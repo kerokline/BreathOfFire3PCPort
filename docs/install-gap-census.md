@@ -251,6 +251,7 @@ Columns:
 | `Encounter_SlotChance+0x38` | `0x669CE8..0x669CED` | language-zero | all 7 | 1 / 4 | `BattleExtra_EquipOpen` (5 bytes copied over character record 7's name) | a blank name copied over the whelp's at that screen (not measured) | **NEEDS FIX** - P3; the US string is found in `BATE.EMI` (exe-chinese-remaining.md 7): a label group anchored on DIV-0020's `Whelp` slot |
 | `CommuName_RecordNames+0xF0` | `0x66A094..0x66A096` | language-zero | all 7 | 1 / 2 | `EffectKind55_DrawCount`, `EffectKind0F_DrawToggles` | a one-glyph count word blank | **NEEDS FIX** - P3; no disc source found (exe-chinese-remaining.md 7, left open) |
 | `CommuName_RecordNames+0xF4` | `0x66A098..0x66A0AC` | language-zero | all 7 | 1 / 20 | `EffectKind5E_DrawMenu` (a menu's title) | the parts menu's title blank | **NEEDS FIX** - P3; find `EffectKind5E`'s PSX twin (exe-chinese-remaining.md 7) |
+| `CommuName_RecordNames+0x10C` (`Effect1b_ToggleText+0x28`) | `0x66A0B0..0x66A0D8` | language | all 7 | 4 / 25 | `SuperCombo_DrawText` (the four prompt texts behind `0x66A0D8`) | Super Combo's prompt boxes blank (D393; seen by the spell sweep, 2026-10-26) | **FIXED under the layer** (2026-10-26) - label group 24 on every build, the JP ones too (install-gap-labels.md 4.5) |
 | `Fish_Kinds` | `0x66ADBA..0x66ADD8` | disc-unplaced | JP | 1 / 14 | `Fish_Begin` / `_Hooked` / `_Swim` (by symbol), `Area_ClassifyPending` | JP: the tail of the fish-kind table zero (not measured) | **NEEDS FIX** - **P2** (JP only), P2, `twin` by byte search (windows on the disc) (1 of 2) |
 | `Title_Sprites` | `0x65385E..0x65385F` | game-value | Western PSX | 1 / 1 | the title's draw (`mode_tasks`) | the Western title mark drawn zero wide (D266) | **OWNER CALL** - D266: a `twin` from `GAME.EMI#1` after the owner's yes (HANDOFF 4) |
 | `EffectKind3C_Op` | `0x653FA8..0x653FBC` | disc-unplaced | US, EU, FR | 1 / 13 | `EffectKind3C_Start` (an EventOp operand) | an object placed from zero (Western) | **NEEDS FIX** - P2, `twin` by byte search (windows on the disc): 1 of 1 |
@@ -618,6 +619,9 @@ Added by the round:
   confirmation pending).
 - **`0x669CE8` and `0x66A098`** on the five Latin builds (groups 17 and 20; PSP-EU's
   17 from `BOOT.BIN`). On the JP builds they are D280's.
+- **`0x66A0B0..0x66A0D8`**, Super Combo's prompt texts, on all seven builds
+  (group 24, 2026-10-26, D393: `MAGIC003.EMI`'s records, `BOOT.BIN`'s on the
+  PSPs; the JP builds' words are the same English, drawn by their own page).
 
 **HARMLESS (unread):** `SharedList_SortSteps+0xC`'s `SKILL` slot `0x664290`, which
 nothing in `BOF3.exe` reads (LA 2.3).

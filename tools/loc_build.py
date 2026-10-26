@@ -2159,6 +2159,16 @@ def convert_battle_commands(game, donor):
 #      German LISTE): SHOP.EMI's slot right before group 9's SKILL slot.
 #  23  the gene list's title, 8 bytes at 0x66B1F0 (GENE): STATUS.EMI's word
 #      after the 16 bytes the PC has at LABEL_GENE_LIST_HEAD.
+#  24  Super Combo's four prompt texts (2026-10-26, the spell sweep's catch,
+#      docs/spell-sweep.md 6; D393): the slots 0x66A0B0 (16), 0x66A0C0,
+#      0x66A0C8, 0x66A0D0 (8 each) behind the pointer table 0x66A0D8, which
+#      SuperCombo_DrawText draws as 12 x 12 quads of the effect's own glyph
+#      page (a byte less 0x3F the glyph, 0xFF a half space) - raw bytes, no
+#      font code of the layer's. MAGIC003.EMI's twin reads them off a table
+#      of four records right after its four length bytes (combo_prompts:
+#      the routine with the `- 0x3F`, its two reads of `which`); every disc
+#      holds the US words but the French, whose first record is longer (its
+#      stride 14, read off the code). On the PSPs, BOOT.BIN's own copy.
 #  11  the zenny unit, 4 bytes at 0x66A31C: the one byte `s`, whose
 #      single-byte slot of the shipped font is the port's coin, repainted
 #      by the overlay into a letter. START.EMI has the US code 0x60 (the
@@ -2196,17 +2206,21 @@ FAERIE_TRAITS, FAERIE_COUNT, FAERIE_STRIDE, FAERIE_DISC_STRIDE = 0x653210, 60, 2
 FAERIE_NAMES = 0x653200     # record r's name field, 16 bytes at + 20 r; its stats follow (FAERIE_TRAITS)
 # Group 20: kind 0x5E's menu title, its PlayStation twin in SCENA10.EMI.
 PARTS_TITLE_ROOM = 20       # the PC's field 0x66A098..0x66A0AC (its NUL at 0x66A0AC)
+# Group 24: Super Combo's prompt texts, the PC's four slots behind 0x66A0D8.
+COMBO_PROMPT_ROOMS = (16, 8, 8, 8)
+COMBO_GLYPH_BASE = 0x3F     # SuperCombo_DrawText's `c - 0x3F`, the glyph's index on the page
 # Group 23: the gene list's title follows the 16 bytes the PC has at LABEL_GENE_LIST_HEAD.
 LABEL_GENE_LIST_HEAD = 0x66B1E0
 LABEL_ROOMS = {1: (8, 8), 2: (8, 8, 8, 8), 3: (16,) * 5, 4: (16,) * 5, 5: (8, 8, 8, 8), 6: (8, 4),
                7: (16,) * 11, 8: (8, 12), 9: (8,), 10: (16,) * 10, 11: (4,), 12: (8, 8, 8), 13: (16,) * 20,
                14: (16,) * 5, 15: (16,) * 6, 16: (16,) * 60, 17: (5,), 18: (16,) * 3, 19: (16,) * 3,
-               20: (PARTS_TITLE_ROOM,), 21: (8, 4, 8), 22: (8,), 23: (8,)}
+               20: (PARTS_TITLE_ROOM,), 21: (8, 4, 8), 22: (8,), 23: (8,), 24: COMBO_PROMPT_ROOMS}
 LABEL_NAMES = {1: "status words", 2: "menu stats", 3: "item types", 4: "skill types", 5: "battle stats",
                6: "master list", 7: "sort menus", 8: "note sort", 9: "ink label", 10: "formations",
                11: "zenny unit", 12: "gene tabs", 13: "village lists", 14: "village words",
                15: "identify words", 16: "faerie names", 17: "guest name", 18: "turn counter",
-               19: "hi-lo choices", 20: "parts title", 21: "panel labels", 22: "list title", 23: "gene title"}
+               19: "hi-lo choices", 20: "parts title", 21: "panel labels", 22: "list title", 23: "gene title",
+               24: "combo prompts"}
 
 
 def label_pointers(donor, at, count):
@@ -2453,6 +2467,104 @@ def parts_title(code, data):
     return found[0] if len(found) == 1 and found[0] else None
 
 
+def combo_prompts(code, data):
+    """Super Combo's four prompt texts (group 24), or None: the PC's
+    SuperCombo_DrawText 0x49B420 draws text `which` of the pointer table
+    0x66A0D8, centred by its length from 0x65A51C, a byte less 0x3F the glyph;
+    its twin (US MAGIC003.EMI 0x801F01E0.., PSP-EU BOOT.BIN) keeps the four
+    lengths and, right after them, four records of one stride (US 13, French
+    14), both indexed by `which` (an `andi 0xFF`). The routine is found by its
+    `addiu rX, rY, -0x3F`; the values linear in that byte are followed through
+    lui / addiu / sll / addu / subu from the routine's `addiu $sp` to there: an
+    lbu at L + 1 * which (the lengths) and an lbu at L + 4 + stride * which
+    (the records, `beqz` on the first byte). The texts are the records to
+    their NULs, each 1..stride - 1 bytes, none empty, the lengths each under
+    the stride. Exactly one such (lengths, stride), else None."""
+    insns = list(mips_insns(code))
+    found = set()
+    for k, ins in enumerate(insns):
+        if not (ins[1] == 0x09 and ins[6] == -COMBO_GLYPH_BASE):
+            continue
+        start = k
+        while start >= 0 and not (insns[start][1] == 0x09 and insns[start][2] == 29 and insns[start][3] == 29
+                                  and insns[start][6] < 0):
+            start -= 1
+        if start < 0 or k - start > 0x200:
+            continue
+        # A value: (constant, {symbol: coefficient}); a symbol is a byte an `andi 0xFF` made.
+        regs, symbols, reads = {0: (0, {})}, 0, []
+
+        def lin(a, b, sign=1):
+            if a is None or b is None:
+                return None
+            coefs = dict(a[1])
+            for sym, c in b[1].items():
+                coefs[sym] = coefs.get(sym, 0) + sign * c
+            return ((a[0] + sign * b[0]) & 0xFFFFFFFF, {sym: c for sym, c in coefs.items() if c})
+
+        for at, op, rs, rt, rd, imm, simm, funct, w in insns[start:k + 1]:
+            if op == 0x0F:                                              # lui
+                regs[rt] = (imm << 16, {})
+            elif op == 0x09:                                            # addiu
+                regs[rt] = lin(regs.get(rs), (simm, {}))
+            elif op == 0x0D:                                            # ori
+                v = regs.get(rs)
+                regs[rt] = (v[0] | imm, {}) if v is not None and not v[1] else None
+            elif op == 0x0C and imm == 0xFF:                            # andi 0xFF: `which`
+                v = regs.get(rs)
+                if v is None:
+                    symbols += 1
+                    v = (0, {symbols: 1})
+                regs[rt] = v
+            elif op == 0 and funct == 0 and w:                          # sll (not nop)
+                v, sa = regs.get(rt), (w >> 6) & 31
+                regs[rd] = None if v is None else ((v[0] << sa) & 0xFFFFFFFF, {s: c << sa for s, c in v[1].items()})
+            elif op == 0 and funct in (0x20, 0x21):                     # add, addu
+                regs[rd] = lin(regs.get(rs), regs.get(rt))
+            elif op == 0 and funct in (0x22, 0x23):                     # sub, subu
+                regs[rd] = lin(regs.get(rs), regs.get(rt), -1)
+            elif op == 0x24:                                            # lbu
+                v = regs.get(rs)
+                if v is not None and len(v[1]) == 1:
+                    (sym, c), = v[1].items()
+                    reads.append((sym, c, (v[0] + simm) & 0xFFFFFFFF))
+                regs[rt] = None
+            elif op == 0x03:                                            # jal
+                for r in MIPS_CALL_CLOBBERS:
+                    regs.pop(r, None)
+            elif op == 0 and funct not in (0x08, 0x09, 0x0C, 0x0D, 0x11, 0x13, 0x18, 0x19, 0x1A, 0x1B):
+                regs[rd] = None
+            elif op in (0x08, 0x0A, 0x0B, 0x0C, 0x0E) or 0x20 <= op <= 0x26:
+                regs[rt] = None
+            regs[0] = (0, {})
+        for sym, c, lengths in reads:
+            if c != 1:
+                continue
+            for sym2, stride, records in reads:
+                if sym2 == sym and stride > 1 and records == lengths + 4:
+                    found.add((lengths, stride))
+    if len(found) != 1:
+        return None
+    lengths, stride = found.pop()
+    counts = [b[lengths + i - d] for d, b in data for i in range(4) if d <= lengths < d + len(b) - 4]
+    texts = [mips_cstr(data, lengths + 4 + stride * i, stride) for i in range(4)]
+    if len(counts) != 4 or any(not 0 < c < stride for c in counts) \
+            or any(t is None or not 0 < len(t) < stride for t in texts):
+        return None
+    return texts
+
+
+def combo_prompt_chunk(code, data, report):
+    """Group 24's chunk from `code` / `data` (an overlay's KSEG0 sections, or
+    BOOT.BIN's), or None with a line in `report`: the four texts raw, the
+    bytes the effect's glyph page is indexed by."""
+    texts = combo_prompts(code, data)
+    if texts is None:
+        report.append("combo prompts: no one routine reading four lengths and four records by `- 0x3F`")
+        return None
+    return label_chunk(24, texts, report, raw=set(range(4)))
+
+
 def module_sections(disc, name):
     """[(dest, bytes)] of the disc's first `name` (an EMI), or None if it has none."""
     found = disc.find(name)
@@ -2485,11 +2597,11 @@ def code_label_chunks(magic, bate, boss, report):
 
 
 def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=None, boss=None, scena10=None,
-                   status=None):
+                   status=None, magic003=None):
     """[(kind, tag, payload)] and a report, from the whole START.EMI, BATTLE.EMI and SHOP.EMI (each may
     be None), every COMMU*.EMI (the faerie village's overlays), the sections of MAGIC060.EMI,
-    BATE.EMI and BOSS025.EMI (code_label_chunks) and SCENA10.EMI (group 20), and the whole
-    STATUS.EMI (group 23)."""
+    BATE.EMI and BOSS025.EMI (code_label_chunks), SCENA10.EMI (group 20) and MAGIC003.EMI
+    (group 24), and the whole STATUS.EMI (group 23)."""
     chunks, report = [], []
     panel_labels = list_title = None
     cut = lambda blob, at, size: blob[at:at + size].split(b"\0")[0]
@@ -2749,6 +2861,11 @@ def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=No
             chunks.append(label_chunk(23, found, report))
         else:
             report.append("gene title: %d words after the PC's bytes in STATUS.EMI, wanted one" % len(found))
+    # 24: Super Combo's prompt texts, read off MAGIC003's twin of SuperCombo_DrawText.
+    if magic003:
+        chunk = combo_prompt_chunk(kseg0(magic003), kseg0(magic003), report)
+        if chunk:
+            chunks.append(chunk)
     return chunks, report
 
 
@@ -3041,8 +3158,12 @@ def convert_labels_psp(game, boot, verbs, magic=None, text_end=None):
             chunks.append(label_chunk(20, [title], report))
         else:
             missing("parts title", "no one \"%s\" print of a title before a counted draw")
+        # 24: Super Combo's prompt texts, BOOT.BIN's own twin of SuperCombo_DrawText (2026-10-26).
+        chunk = combo_prompt_chunk(code, data, report)
+        if chunk:
+            chunks.append(chunk)
     # In convert_labels' order, so that FIRST.DAT is byte for byte the PSX's where the words are.
-    order = (1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 8, 9, 17, 18, 19, 20, 21, 22, 23)
+    order = (1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 8, 9, 17, 18, 19, 20, 21, 22, 23, 24)
     return sorted(chunks, key=lambda c: order.index(c[1])), report
 
 
@@ -4547,14 +4668,26 @@ def build_all(args, disc_path):
                                             read_module(shop_emi) if shop_emi else None, commu,
                                             module_sections(disc, "MAGIC060.EMI"), module_sections(disc, "BATE.EMI"),
                                             module_sections(disc, "BOSS025.EMI"), module_sections(disc, "SCENA10.EMI"),
-                                            read_module(status_emi) if status_emi else None)
+                                            read_module(status_emi) if status_emi else None,
+                                            module_sections(disc, "MAGIC003.EMI"))
         overlays["FIRST.DAT"] += labels
         print("labels: " + (", ".join(report) if report else "not found on this disc"))
-    elif donor_ja and not is_psp(disc) and not args.only:
-        # A Japanese disc builds no labels but group 15: its panel's words are
-        # the PC's own English, and its headings are the small words too.
-        report = []
-        overlays["FIRST.DAT"] += [code_label_chunks(module_sections(disc, "MAGIC060.EMI"), None, None, report)[15]]
+    elif donor_ja and not args.only:
+        # A Japanese disc builds no labels but group 15 (the PlayStation's:
+        # its panel's words are the PC's own English, and its headings are the
+        # small words too) and group 24 (both: Super Combo's prompts are the
+        # English the effect's own page draws; PSP-JP's from BOOT.BIN as
+        # PSP-EU's, 2026-10-26).
+        report, chunks = [], []
+        if not is_psp(disc):
+            chunks.append(code_label_chunks(module_sections(disc, "MAGIC060.EMI"), None, None, report)[15])
+            magic003 = module_sections(disc, "MAGIC003.EMI")
+            chunk = combo_prompt_chunk(kseg0(magic003), kseg0(magic003), report) if magic003 else None
+        else:
+            chunk = combo_prompt_chunk([(0, boot[:disc.text_end])], [(0, boot)], report)
+        if chunk:
+            chunks.append(chunk)
+        overlays["FIRST.DAT"] += chunks
         print("labels: " + ", ".join(report))
     if not donor_ja and not is_psp(disc) and not args.only:
         # DIV-0148: the release's own staff roll (a US or PAL disc). A Japanese
@@ -4916,6 +5049,29 @@ def selftest_code_labels():
     if parts_title(section(printed), section(printed)) != b"Hhhhhh\xffiiiii" \
             or parts_title(section(printed * 2), section(printed * 2)) is not None:
         raise SystemExit("selftest: parts_title")
+    # Group 24: a routine (an `addiu $sp`) masking `which` with `andi 0xFF`,
+    # reading its length at L + which and its record at L + 4 + 13 which (the
+    # US twin's `sll` / `addu` chain), then the `- 0x3F`; a routine whose
+    # stride is 6 (the chain without its last `addu`) reads the records
+    # short and is refused.
+    at, s5, v1 = 1, 21, 3
+    sll = lambda rd, rt, sa: (rt << 16) | (rd << 11) | (sa << 6)
+    addu = lambda rd, rs, rt: (rs << 21) | (rt << 16) | (rd << 11) | 0x21
+    andi = lambda rt, rs, imm: (0x0C << 26) | (rs << 21) | (rt << 16) | imm
+    lbu = lambda rt, rs, imm: (0x24 << 26) | (rs << 21) | (rt << 16) | (imm & 0xFFFF)
+    lengths = base + 0x1000 + len(pool)
+    pool.extend(bytes([2, 5, 4, 4]) + b"Nn\0".ljust(13, b"\x01") + b"Ooooo\0".ljust(13, b"\x01")
+                + b"Pp\xffp\0".ljust(13, b"\x01") + b"Qqqq\0".ljust(13, b"\x01"))
+
+    def prompts(thirteen):
+        return ([addiu(29, 29, -0x20), andi(a2, s5, 0xFF), lui(at, (lengths + 0x8000) >> 16), addu(at, at, a2),
+                 lbu(a0, at, lengths & 0xFFFF), sll(v0, a2, 1), addu(v0, v0, a2), sll(v0, v0, 1 + thirteen)]
+                + ([addu(v0, v0, a2)] if thirteen else [])
+                + [lui(at, (lengths + 4 + 0x8000) >> 16), addu(at, at, v0), lbu(v0, at, (lengths + 4) & 0xFFFF),
+                   addiu(v1, v0, -COMBO_GLYPH_BASE), jr_ra, 0])
+    if combo_prompts(section(prompts(1)), section(prompts(1))) != [b"Nn", b"Ooooo", b"Pp\xffp", b"Qqqq"] \
+            or combo_prompts(section(prompts(0)), section(prompts(0))) is not None:
+        raise SystemExit("selftest: combo_prompts gave %s" % (combo_prompts(section(prompts(1)), section(prompts(1))),))
     # D286's headings: four lui / addiu of an address past the tabs, each
     # beside a count in $a3 and its row in $a1 (7, 7, 7, 0x47); a fourth row
     # of 7 is refused.

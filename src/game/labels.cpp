@@ -141,8 +141,18 @@
 //      and 0x59B050, MenuList_GeneWinDraw, centred likewise) - STATUS.EMI's
 //      word after the bytes the PC has at 0x66B1E0 (the French Gene with its
 //      accent, the German GEN); in place.
+//  24  Super Combo's four prompt texts (2026-10-26, D393, the spell sweep's
+//      catch on a disc-built install): the slots 0x66A0B0 (16), 0x66A0C0,
+//      0x66A0C8 and 0x66A0D0 (8 each) behind the pointer table 0x66A0D8,
+//      which SuperCombo_DrawText 0x49B420 (ours, magic_s02.cpp) reads in
+//      place and draws as 12 x 12 quads of the effect's own glyph page - a
+//      byte less 0x3F the glyph's index, 0xFF a half space - so the bytes
+//      are raw, not the layer's font codes, and the disc's own (MAGIC003.EMI's
+//      records on a PlayStation disc, BOOT.BIN's on a PSP; every disc the US
+//      words but the French first text); in place, each slot witnessed by
+//      its entry of the pointer table.
 //
-// Groups 1, 2, 5, 6, 8..12, 16 and 20..23 are written in place, one byte a letter in the
+// Groups 1, 2, 5, 6, 8..12, 16 and 20..24 are written in place, one byte a letter in the
 // single-byte slots the overlay paints with the dialogue font, so a draw
 // through Text_DrawAt shows them as it shows every other overlay string.
 // Groups 3, 4, 7 and 13 are reached by nothing but their pointer tables (and
@@ -329,6 +339,10 @@ constexpr Table kTables[] = {
      false},
     {22, "list title", 1, {{0x664288, 8, 0x5852A4}}, {}, nullptr, false},
     {23, "gene title", 1, {{0x66B1F0, 8, 0x59B046}}, {}, nullptr, false},
+    // 24: in place behind the pointer table 0x66A0D8 (SuperCombo_DrawText's);
+    // each slot witnessed by its own entry.
+    {24, "combo prompts", 4, {{0x66A0B0, 16, 0x66A0D8}, {0x66A0C0, 8, 0x66A0DC}, {0x66A0C8, 8, 0x66A0E0},
+                              {0x66A0D0, 8, 0x66A0E4}}, {}, nullptr, false},
 };
 
 // The overlay's 8 x 8 set: the US disc's code - 0x30 from here, and a letter

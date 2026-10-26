@@ -303,6 +303,11 @@ this one; the two disc runs are.) `Effect1b_ToggleText+0xE` (Super Combo's
 "GO!!") is still read while zero: the `language` row stands, for a layer
 entry.
 
+**Fixed (2026-10-26, label group 24, DIV-0064 amended; D393):** the four
+texts come from `MAGIC003.EMI`'s twin of `SuperCombo_DrawText` (`BOOT.BIN`'s
+on a PSP), written in place behind `0x66A0D8`
+([`install-gap-labels.md`](install-gap-labels.md) 4.5). `loc_build.py selftest` (the reader on synthetic code: the US chain found, a stride-6 chain refused); the reader over the seven discs (`combo prompts 4` on each: the US words on six, the French first text on `psx-fr`); `importer.py check` and `exe_tables.py check` 0 errors; the US + PSP-EU disc-built install rebuilt from this branch (root `C:\Users\kerok\bof3x-runs\ss1026\sc`) and a PC install copy with an `en-US` layer from it, the sweep's ability 3 alone on each, the install's log `DIV-0064: 4 of 4 combo prompts` on both: the disc install's `a003_1.png` reads READY, `a003_2.png` GO!! and `a003_5.png` O HIT COMBO!! where the before-image's box was empty; the PC copy under `en-US` draws the same frames to the pixel, and under `original` its own bytes (the full-width spaces, text 0 wider). The gap watch (`gap,unread,language`, 900 latches) still lists `0x66A096..0x66A0D8` read 720 times "before a write" with writes 0 - the parked-page blind spot of [`install-gap-reads.md`](install-gap-reads.md) 9.3 (page `0x66A000` is parked on most latches, so the layer's load-time writes are not seen; the row is written by the log line and the shot). Not captured: the French first text under `fr-FR`.
+
 ## 7. Items (`--side item`)
 
 The owner's second half, built the same way: category 0's first id and
