@@ -217,7 +217,10 @@ unsigned char* EnemyLike(std::uint32_t v) { return v & 8 ? mh::SpriteRecord(v) :
 void Seed(unsigned k) {
     unsigned char* const sc = Sprite_Current;
     // Every round: the current enemy points at a record whose +0xF8 leads into
-    // the fuzz's cue table (Paralyzer_Start reads through both, unchecked).
+    // the fuzz's cue table (Paralyzer_Start reads through both; the original
+    // unchecked, ours since DIV-0183 skipping the cue when either pointer is
+    // null - a case never seeded here, since Capcom's clone would fault on it:
+    // the fuzz compares the written-pointer path, the sweep checks the null one).
     unsigned char* const enemy = EnemyLike(mh::Next());
     mh::SetPointer(BattleE3_CurrentEnemy_addr, enemy);
     mh::SetPointer(static_cast<std::uint32_t>(Key(enemy)) + 0xF8, g_cues + 2 * (mh::Next() % 4));

@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 182 entries, DIV-0001..0182, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 183 entries, DIV-0001..0183, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -11526,3 +11526,67 @@ designed in rather than bolted on.
   same code path).
 - **Reversible?** `BOF3X_ORIGINAL=AreaDataReload` keeps the port's
   (the bytes stay until the exe restarts).
+
+### Paralyzer plays no cue when the current enemy has no cue table, instead of reading address 0
+
+- **ID:** DIV-0183
+- **Date:** 2026-10-26
+- **Subsystem:** battle - the magic engine's row 123, `Paralyzer_Start`
+  `0x43F3E0` (ours, `src/game/magic_engine.cpp`; the enemy-only skill,
+  game ability byte 139, id `0x8B`). D102
+  ([`known-defects.md`](known-defects.md)); [`magic_engine.md`](magic_engine.md)
+  section 6 E1; found live by the spell sweep
+  ([`spell-sweep.md`](spell-sweep.md) section 5).
+- **Tier:** Intent - a port repair.
+- **Original behaviour:** the skill's first step plays a sound cue read
+  from the current enemy's cue table: `word [[0x939AD8] + 0xF8]` + 4,
+  handed to `0x437450` (`Sound_PlayEffectUnlessNone`: `Sound_PlayEffect`
+  unless the low word is 0xFFFF), then animation 2 on the caster, the
+  phase on. `0x939AD8` is the enemy object `BattleEnemy_RunAll` ran last,
+  and its `+0xF8` is written by nothing but the event-battle set-ups (62
+  stores at `0x437A55..0x4400D0`, a byte-pattern scan of `.text`; the
+  ordinary set-up `0x494570` / `0x4946C0` never writes it; the records lie
+  in `.data`'s zero-filled tail). Every other reader of the table tests
+  the event-battle byte `0x904AAA` first; this one does not. So in a
+  session where no event battle has written that slot the read is through
+  address 0: an access violation, TCRF's "crashes the game". Measured
+  2026-10-26: the spell sweep's enemy side had the combat route's Gooey
+  cast 139 in an ordinary battle and ours - the same read - died with
+  `CRASH 0: exception 0xC0000005 at bof3x.dll+0x346377`, `Paralyzer_Start`,
+  reading `0x00000000`. After an event battle the pointer stays (nothing
+  clears it) and the skill plays that boss's cue instead.
+- **New behaviour:** when the current-enemy pointer, or the cue pointer at
+  its `+0xF8`, is null, no cue is played and the step goes on as written:
+  animation 2 on the caster, the phase on, so the skill resolves through
+  `MagicFx_WaitOwnerAnim` and `MagicFx_FlagTargetEnd` (flag 0x40 on the
+  target) like any other row. One log line, `DIV-0183`, names the enemy
+  record it skipped the cue for. A written pointer takes the original's
+  path unchanged: the same word, the same +4, the same callee. The word
+  feeds nothing but that one call - `Sound_PlayEffectUnlessNone` reads it
+  and no later phase of the task reads the table - so the skip is the
+  whole of the change.
+- **Rationale:** a crash to the desktop in an ordinary fight is the
+  port's, made by the merge: on the PlayStation row 123 has no MAGIC file
+  and a fixed address in the boss window that only BOSS050's overlay
+  fills, and BOSS050's own set-up writes the pointer before its code can
+  run, so the console never took this read with a null pointer (D102's
+  twin read, 2026-10-23); the PC links every boss overlay resident, so
+  the read is reachable from any fight. There is no original cue to
+  restore - with the pointer null the original fetches nothing playable -
+  so the nearest behaviour to what the code meant is the skill without
+  its sound. Nothing is invented: the animation, the wait and the target
+  flag are Capcom's, in Capcom's order.
+- **Also in the PSX version?** The unchecked read is Capcom's (JP
+  BOSS050.EMI#16 `0x800C1A30` reads `+0xE8` with no test), the null case
+  is not reachable there (above). TCRF's PlayStation crash fits the jump
+  into an unloaded boss window, a different fault.
+- **Verification:** the start-up fuzz (`BOF3X_SHADOW=magic_engine`,
+  2,000 rounds per function) is as it was and seeds a written pointer
+  every round - Capcom's clone would fault on a null one - so it compares
+  the unchanged path: 0 mismatches after the change. The null path live:
+  the spell sweep's enemy side on the PC install, id 139 alone
+  (`tools/spell_sweep.py run --side enemy --ids 139 --enemy-flags 0xE0
+  --chunk 1 --speed 4`), which crashed before the change; see the
+  sweep's result in the report of this entry's commit.
+- **Reversible?** `BOF3X_ORIGINAL=Paralyzer_Start` leaves Capcom's
+  function, its read with it.

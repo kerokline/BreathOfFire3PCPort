@@ -329,6 +329,10 @@ through the same pointer the same way, unchecked, so it faults where
 Capcom's does. Not measured: a block clear through a pointer computed
 elsewhere would not show in these scans; the check is one read of
 `0x93BA58` (+ 0x128 n) in an ordinary battle, or the owner casting it.
+**Measured and fixed 2026-10-26:** the spell sweep cast it from an ordinary
+battle and ours crashed at the read ([`spell-sweep.md`](spell-sweep.md)
+section 5); since DIV-0183 a null pointer plays no cue and the step goes
+on, a written one takes Capcom's path (D102 fixed).
 
 **E2 - Head Cracker's waits have no limit (TCRF: "freezes the game").**
 Three waits, none bounded:

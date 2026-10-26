@@ -2563,7 +2563,7 @@ argument. Ours passes what the callees read.
 
 **Status:** latent, harmless.
 
-## D102 — Paralyzer (row 123) reads through address 0 in an ordinary battle (candidate)
+## D102 — Paralyzer (row 123) reads through address 0 in an ordinary battle (the port's; seen 2026-10-26; fixed by DIV-0183)
 
 **Seen:** not seen here; TCRF reports the skill "crashes the game". Found by
 reading the code while taking it over, 2026-09-26, group E
@@ -2587,8 +2587,15 @@ the original does.** Not measured: a block clear through a pointer computed
 elsewhere would not show in the scan; the check is one read of `0x93BA58`
 (+ 0x128 n) in an ordinary battle, or the owner casting it.
 
-**Status:** candidate (the TCRF crash, explained by reading); fixing it is a
-divergence for the owner to choose.
+**Status:** fixed by DIV-0183 (2026-10-26): a null current-enemy or cue
+pointer plays no cue and the step goes on (animation 2, then the target
+flag), so the skill resolves; a written pointer takes Capcom's path
+unchanged. `BOF3X_ORIGINAL=Paralyzer_Start` for the original's read. Seen
+first the same day: the spell sweep's enemy side
+([`spell-sweep.md`](spell-sweep.md) section 5) had the combat route's
+Gooey cast it in an ordinary battle and ours crashed at the read
+(`bof3x.dll+0x346377`, reading `0x00000000`) - the measurement this entry
+asked for, and the answer: the pointer is 0 there.
 
 **PlayStation (read 2026-10-23, the twin read of
 [`psx-twin-check.md`](psx-twin-check.md)):** The unchecked read is Capcom's, the ordinary-battle crash is the port's.

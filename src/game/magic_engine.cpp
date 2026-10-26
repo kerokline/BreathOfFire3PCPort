@@ -15,16 +15,20 @@
 //     child 0x43FE90, parameter 0x5D), each followed by a wait for the target
 //     to leave state 6.
 //
-// Faithful, latent defects included (docs/magic_engine.md section 6): row 123
-// reads a word through the current enemy's +0xF8 unchecked (only the
-// event-battle set-ups write that pointer), and row 128's waits have no limit.
-// Neither is fixed: a fix is a divergence for the owner to choose.
+// Faithful, latent defects included (docs/magic_engine.md section 6): row
+// 128's waits have no limit, kept as Capcom wrote them (a fix is a divergence
+// for the owner to choose). Row 123 read a word through the current enemy's
+// +0xF8 unchecked (only the event-battle set-ups write that pointer) and
+// crashed in an ordinary battle - the spell sweep reached it 2026-10-26 - so
+// since DIV-0183 a null pointer plays no cue and the skill goes on; a written
+// pointer takes Capcom's path unchanged.
 //
 // Every call goes through the harness (MH_CALL / MH_AT / Phase), so the
 // start-up fuzz can stand recorders in for ours as for the originals' copies.
-// No divergence: each is a faithful replacement, except that a phase past a
-// stack table aborts where the original would call through its own stack
-// (docs/magic_fx_reached.md section 3, the precedent).
+// One divergence, DIV-0183 above; otherwise each is a faithful replacement,
+// except that a phase past a stack table aborts where the original would
+// call through its own stack (docs/magic_fx_reached.md section 3, the
+// precedent).
 #include "game/magic_engine.h"
 
 #include <cstdint>
@@ -172,20 +176,35 @@ MENGINE_EXPORT void __cdecl Paralyzer_Task(void) {
 // through 0x437450 and Sprite_SetAnimation(2); Sprite_Current back, and its
 // phase on.
 //
-// As the original has it - the latent defect of this row: the +0xF8 pointer
-// is read unchecked. Only the event-battle set-ups write it, and every other
-// reader tests the event-battle byte 0x904AAA first; here a pointer an
-// ordinary battle never set is read through, and a null one faults at the
-// read, in ours exactly where it does in Capcom's (docs/magic_engine.md
-// section 6). The cue goes out as the low word, and 0x437450 reads no more.
+// DIVERGENCE DIV-0183: the latent defect of this row (D102, docs/magic_engine.md
+// section 6 E1). The original reads the +0xF8 pointer unchecked. Only the
+// event-battle set-ups write it, and every other reader tests the event-battle
+// byte 0x904AAA first; here a pointer an ordinary battle never set is read
+// through, and a null one faults at the read - the crash the spell sweep met
+// 2026-10-26 (docs/spell-sweep.md section 5) from the combat route's Gooey.
+// Ours: a null current-enemy pointer, or a null cue pointer in it, plays no
+// cue - the one thing the word feeds is 0x437450, Sound_PlayEffect unless
+// 0xFFFF, and nothing later in the task reads it - and the rest of the step
+// runs as written: animation 2 on the caster, the phase on, so the skill
+// resolves through MagicFx_WaitOwnerAnim and MagicFx_FlagTargetEnd. A written
+// pointer takes the original's path unchanged: the cue goes out as the low
+// word, and 0x437450 reads no more. The fuzz seeds a written pointer every
+// round (Capcom's clone would fault on a null one), so it compares the
+// original's path alone; the null path is checked live by the sweep.
+// BOF3X_ORIGINAL=Paralyzer_Start leaves Capcom's function, its read with it.
 MENGINE_EXPORT void __cdecl Paralyzer_Start(void) {
     unsigned char* const slot = Sprite_Current;
     unsigned char* const owner = SlotOwner();
     const unsigned char* const enemy = Pointer(BattleE3_CurrentEnemy_addr);
     Sprite_Current = owner;
-    const unsigned char* const cues = Pointer(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(enemy)) + kEnemyCues);
-    const unsigned cue = static_cast<unsigned>(Word(cues) + 4) & 0xFFFF;
-    MH_AT(PlayCueFn, kPlayCue)(cue);
+    const unsigned char* const cues =
+        enemy != nullptr ? Pointer(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(enemy)) + kEnemyCues) : nullptr;
+    if (cues != nullptr) {   // DIV-0183: no table, no cue
+        const unsigned cue = static_cast<unsigned>(Word(cues) + 4) & 0xFFFF;
+        MH_AT(PlayCueFn, kPlayCue)(cue);
+    } else {
+        bof3::Log("DIV-0183    Paralyzer_Start: no cue table on the current enemy (%p), the cue skipped", enemy);
+    }
     MH_CALL(Sprite_SetAnimation)(2);
     Sprite_Current = slot;
     Bump(slot[1]);

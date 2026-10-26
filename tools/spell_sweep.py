@@ -50,8 +50,9 @@ import tomllib
 
 TOOLS = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(TOOLS)
-SIBLING_NAMES = os.path.join(os.path.dirname(ROOT), 'BreathOfFire3Recomp', 'names', 'abilities.toml')
-SIBLING_ITEMS = os.path.join(os.path.dirname(ROOT), 'BreathOfFire3Recomp', 'names', 'items.toml')
+# The archival sibling, beside the main checkout; a worktree elsewhere passes
+# --sibling (the other row tools' convention: area_rows.py, magic_rows.py).
+SIBLING = os.path.join(os.path.dirname(ROOT), 'BreathOfFire3Recomp')
 
 WORKING = 0x802DC0       # the working member record, Char_AbilityList's battle side
 WORKING_STRIDE = 0x14C
@@ -77,7 +78,7 @@ MEMBER_SECTIONS = ('Skills', 'Attack type spells', 'Assist type spells', 'Heal t
 
 def names():
     """{game id: (name, section)}: the sibling's id + 1."""
-    with open(SIBLING_NAMES, 'rb') as f:
+    with open(os.path.join(SIBLING, 'names', 'abilities.toml'), 'rb') as f:
         d = tomllib.load(f)
     out = {}
     for a in d['ability']:
@@ -87,7 +88,7 @@ def names():
 
 def item_names():
     """{item id: (name, 'consumable')}: the sibling's consumables, the same ids."""
-    with open(SIBLING_ITEMS, 'rb') as f:
+    with open(os.path.join(SIBLING, 'names', 'items.toml'), 'rb') as f:
         d = tomllib.load(f)
     out = {}
     for r in d['item']:
@@ -451,7 +452,9 @@ def report(a):
 
 
 def main():
+    global SIBLING
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('--sibling', default=SIBLING, help="the archival sibling's checkout (names/abilities.toml, names/items.toml)")
     sub = ap.add_subparsers(dest='cmd', required=True)
     p = sub.add_parser('names')
     p.add_argument('--sections', default='')
@@ -484,6 +487,7 @@ def main():
             p.add_argument('--game', default='', help="the game folder (input_run.py --game); a disc-built install's, with BOF3X_EXEIMAGE in --env")
             p.add_argument('--fresh', action='store_true', help='start results.tsv over')
     a = ap.parse_args()
+    SIBLING = a.sibling
     if getattr(a, 'sections', '') == 'member':
         a.sections = set(MEMBER_SECTIONS)
     elif getattr(a, 'sections', ''):
