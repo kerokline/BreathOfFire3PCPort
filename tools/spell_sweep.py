@@ -106,9 +106,9 @@ SPECIAL_1E_ZERO = {0x14}
 MEMBER_SECTIONS = ('Skills', 'Attack type spells', 'Assist type spells', 'Heal type spells')
 
 
-def names():
+def names(sibling=SIBLING):
     """{game id: (name, section)}: the sibling's id + 1."""
-    with open(os.path.join(SIBLING, 'names', 'abilities.toml'), 'rb') as f:
+    with open(os.path.join(sibling, 'names', 'abilities.toml'), 'rb') as f:
         d = tomllib.load(f)
     out = {}
     for a in d['ability']:
@@ -116,9 +116,9 @@ def names():
     return out
 
 
-def item_names():
+def item_names(sibling=SIBLING):
     """{item id: (name, 'consumable')}: the sibling's consumables, the same ids."""
-    with open(os.path.join(SIBLING, 'names', 'items.toml'), 'rb') as f:
+    with open(os.path.join(sibling, 'names', 'items.toml'), 'rb') as f:
         d = tomllib.load(f)
     out = {}
     for r in d['item']:
@@ -127,8 +127,8 @@ def item_names():
     return out
 
 
-def table_for(side):
-    return item_names() if side == 'item' else names()
+def table_for(side, sibling=SIBLING):
+    return item_names(sibling) if side == 'item' else names(sibling)
 
 
 def parse_ids(spec, table, sections):
@@ -422,7 +422,7 @@ def rows_of(chunk, table, side, tag, order, per, end, fail, shots):
 
 
 def run(a):
-    table = table_for(a.side)
+    table = table_for(a.side, a.sibling)
     ids = parse_ids(a.ids, table, a.sections)
     head, _ = route_steps(a.route, a.cut)
     os.makedirs(a.root, exist_ok=True)
@@ -490,7 +490,7 @@ def run(a):
 
 def report(a):
     """results_<side>.tsv rebuilt from the root's bof3x_<side>_NNN.log copies."""
-    table = table_for(a.side)
+    table = table_for(a.side, a.sibling)
     logs = sorted(f for f in os.listdir(a.root) if f.startswith(f'bof3x_{a.side}_') and f.endswith('.log'))
     results = os.path.join(a.root, f'results_{a.side}.tsv')
     with open(results, 'w', encoding='utf-8') as out:
@@ -510,7 +510,6 @@ def report(a):
 
 
 def main():
-    global SIBLING
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--sibling', default=SIBLING, help="the archival sibling's checkout (names/abilities.toml, names/items.toml)")
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -549,14 +548,13 @@ def main():
             p.add_argument('--game', default='', help="the game folder (input_run.py --game); a disc-built install's, with BOF3X_EXEIMAGE in --env")
             p.add_argument('--fresh', action='store_true', help='start results.tsv over')
     a = ap.parse_args()
-    SIBLING = a.sibling
     if getattr(a, 'sections', '') == 'member':
         a.sections = set(MEMBER_SECTIONS)
     elif getattr(a, 'sections', ''):
         a.sections = set(s.strip() for s in a.sections.split(','))
     else:
         a.sections = set()
-    table = table_for(getattr(a, 'side', 'member'))
+    table = table_for(getattr(a, 'side', 'member'), a.sibling)
     if a.cmd == 'names':
         for i in sorted(table):
             if not a.sections or table[i][1] in a.sections:

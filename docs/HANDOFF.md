@@ -81,8 +81,18 @@ hosted cross form).
    - Tool: `--sibling` (found through git from a worktree, overridable), `--poke` / `--peek` per cast.
      **Original-code sweep runs need `bof3x-launcher-dev.exe`**: the release launcher refuses the hosted-only
      switches with a modal dialog (one sat 736 s on the owner's screen).
-   **Next:** the build and self-test of the merged branch (this session), then a PR at the owner's word. Left
-   from the sweep: the twin-read branch merge (item 00000000000000), a sweep by enemy kind, Ward's tilts by eye.
+   - **The twin-read branch is merged into the wave** (item 0000000000000, the owner's word, 2026-10-26 evening).
+     What the sweep's comparisons did not reach among its rows: **`ReviveHalo_MoteCounts` was never read** in
+     any sweep run (`gw_report.tsv`: 0 reads) - Raise Dead (76) and Resurrect (77) spawn the halo's motes only
+     over a fallen member, and the sweep's party never falls (HP 999 before every cast), so a disc install's
+     Revive Halo stays unseen in play; the boss, area and scene rows (`BossGaist_Anims`, the kind-0x18 subs,
+     `Area121_BandHeights`, `Scena02_EffectX`, `LinkedObjectD_Amounts`) are outside a battle sweep altogether;
+     and the two regional fields the reading confirmed (`EffectKind66_States`, area 135's pieces 56 px right on
+     the Western discs; `Rest3e_Windows`, the rest menu re-laid per language) are the owner's calls, not
+     placements. `TornadoMote_Phases+0x10` (the Identify panel's `WEAK / EXP / ITEM / POINT`) the sweep did
+     read, and the panel drew the PC's to the pixel: the PC's draw does not take those labels from the row.
+   **Next:** a PR of `fix/sweep-wave` (built, both self-tests pass, checks 0 errors). Left from the sweep: a
+   sweep by enemy kind; Ward's tilts by eye; a dead-member variant of the sweep (or a route) for Revive Halo.
    Worktrees `ss1026\wt_par`, `wt_sc`, `wt_howl`, `wt_fore`, `wt_wave` and their roots are removable after.
 
 00000000000000. **The spell sweep is built and run** ([`spell-sweep.md`](spell-sweep.md), 2026-10-26, the owner's
@@ -105,8 +115,10 @@ hosted cross form).
    merge at the owner's word - **the sweep on an install rebuilt from it** (section 6.2) shows Air Raid's kicked
    image in its colours where the before-image drew it white, and the watch no longer lists the two placed rows.
 
-0000000000000. **The effect, boss and scene gap rows are placed from the disc** on the worktree branch
-   `worktree-agent-ada98af7cd3367ec1` (off `main` `25d12620`, unpushed, no PR;
+0000000000000. **The effect, boss and scene gap rows are placed from the disc** - **merged into `fix/sweep-wave`
+   on 2026-10-26 evening at the owner's word** (the worktree branch `worktree-agent-ada98af7cd3367ec1`, off `main`
+   `25d12620`; the checks re-run on the merged tree: `exe_tables.py check`, `importer.py check`, `loc_build.py selftest`,
+   0 errors;
    [`exe-immediate-places.md`](exe-immediate-places.md) 7, census 8.5, DIV-0101's amendment of 2026-10-26).
    Every remaining spell / effect / boss / scene `game-value` row was read at its PSX twin: twelve place as
    `immref` (`BossGaist_Anims+0x2`, the kind-0x18 `Sub2E` / `Sub30` / `Sub31` / `Sub45` / `Sub21` states,
