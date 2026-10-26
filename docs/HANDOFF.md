@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-25 night: issue #149's Bone Dance hang and cart reset fixed on `fix/issue-149-bone-dance-cart` (PR #151, DIV-0182), item 000000000000; 2026-10-24: issue #121's lift stall handed over, item 000000, PR #129 for #118 / #120;
+**Status:** IN PROGRESS (2026-10-26: the spell sweep built and run, item 00000000000000; 2026-10-25 night: issue #149's Bone Dance hang and cart reset fixed on `fix/issue-149-bone-dance-cart` (PR #151, DIV-0182), item 000000000000; 2026-10-24: issue #121's lift stall handed over, item 000000, PR #129 for #118 / #120;
 2026-10-23 night: the sound-layer round built on `sound/round`, DIV-0169..0175, D353..D354,
 item 0000, and the twin-diff remainder on `audit/twins-remainder`, item 0b; 2026-10-23 evening: fix wave 1023 merged as
 PR #117, item 000; 2026-10-23: PRs #112, #114, #115, #116)
@@ -47,6 +47,26 @@ and the leftovers in [`quicksave.md`](quicksave.md) (a live screen grab at the t
 hosted cross form).
 
 ## Pick up here
+
+00000000000000. **The spell sweep is built and run** ([`spell-sweep.md`](spell-sweep.md), 2026-10-26, the owner's
+   idea): `tools/spell_sweep.py` casts every ability from the ability window (the id poked into the member's four
+   lists), every enemy-only skill from enemy 0 (its ability bytes and kind row poked, its paralysis cleared) and
+   every consumable from the item window, in the `combat` route's fight made endless (enemy HP 0xFFFF, the party
+   999), six shots a cast; on a disc-built install with `BOF3X_GAPWATCH`. Committed on `tools/spell-sweep` (off `main`
+   `25d12620`, unpushed): the tool, the doc, the README row, IDEAS I51 (the battle command labels, the owner's note). PC: member 157 of 158
+   (Accession skipped by the owner's word), enemy 47 of 48 (Nue Stomp stalls - the harness's limit, the caster's
+   animation), item 55 used and 36 refused by the window. The US-disc + PSP-EU install, before the twin reads:
+   **two real zeros in play** - Air Raid's rising flame image missing (`AirRaidImage_ShadeSteps`, placed the same
+   day by the twin-read branch) and **Super Combo's "GO!!" prompt blank** (`Effect1b_ToggleText+0xE` `0x66A096`,
+   a `language` row no layer writes - LA's kind, [`install-gap-labels.md`](install-gap-labels.md) 4.3's `0x66A094`
+   layout; **needs a layer entry**, nobody's yet). Roots `C:/Users/kerok/bof3x-runs/spellsweep` (PC) and
+   `spellsweep_disc` (the install, `gw` the watch files, `gw_report.tsv`). **Owed:** the owner's eye on the shots
+   (Foretell's blank "Lucky color" box, `pc/run_member_067/a068_5.png`; the Super Combo box); Howling (54) on the
+   disc install leaves the input phase stuck after the three Defends on both disc runs and never on the PC
+   (unexplained, section 6.2); a sweep by enemy kind for the enemy-only skills; the twin-read branch
+   `worktree-agent-ada98af7cd3367ec1` (two signed commits off `main`, 12 rows placed, its own HANDOFF item) to
+   merge at the owner's word - **the sweep on an install rebuilt from it** (section 6.2) shows Air Raid's kicked
+   image in its colours where the before-image drew it white, and the watch no longer lists the two placed rows.
 
 000000000000. **Issue #149 (the D.Zombie's Bone Dance never ends on a disc-built install; the cart drawn where
    the last push rolled it after a reload) is fixed** on `fix/issue-149-bone-dance-cart` (off `main` `95ef451a`,
