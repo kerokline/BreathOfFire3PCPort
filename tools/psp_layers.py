@@ -339,7 +339,7 @@ def build(asked, sources, out, reuse=None):
 
     `reuse`: a previous cache whose layer, and its rows, are taken when built
     the same way (build_reuse.Step, _layer_inputs; IDEAS I42)."""
-    from build_reuse import Step, read_rows, write_rows
+    from build_reuse import Step, read_rows, take, write_rows
     layers = load()
     asked = list(asked) + [n for n, l in layers.items() if l.get("auto") and n not in asked and _psp(l, sources)]
     if not asked:
@@ -360,7 +360,7 @@ def build(asked, sources, out, reuse=None):
                     kept = st.previous(os.path.join("opt", name))
                     kept_rows = read_rows(reuse, "opt-" + name) if kept else None
                     if kept_rows is not None:
-                        shutil.copytree(kept, os.path.join(stage, "opt", name))
+                        take(kept, os.path.join(stage, "opt", name))
                         got = kept_rows
                         print("  opt/%-16s the previous cache's, built from %s the same way" % (name, disc.id))
                     else:

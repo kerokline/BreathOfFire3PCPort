@@ -5,3 +5,5 @@
 #pragma once
 
 void D3dDraw_Inject();
+// DIV-0181: frees the cell textures whose cells an upload of VRAM rect (x, y, w, h) covers.
+void D3dDraw_CellsShadowWritten(int x, int y, int w, int h);

@@ -6,6 +6,7 @@
 #include "bof3/symbols.gen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "game/d3d_draw.h"
 #include "render/render_shim.h"
 
 namespace {
@@ -366,6 +367,7 @@ extern "C" void __cdecl Gfx_InvalidateTextures(const short* rect, int mode) {
     // DIV-0125 (render/fb_grab.h), not in the original: every write of
     // the VRAM shadow passes here, and ends any frame-buffer grab it covers.
     render::ShadowWritten(rect[0], rect[1], rect[2], rect[3]);
+    D3dDraw_CellsShadowWritten(rect[0], rect[1], rect[2], rect[3]);   // DIV-0181
     if (g_original_clone) {
         ShadowCall(rect, mode);
         return;

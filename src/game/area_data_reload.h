@@ -1,4 +1,4 @@
-// DIV-0181: an area's own .data put back when its DAT is loaded, as the
+// DIV-0182: an area's own .data put back when its DAT is loaded, as the
 // PlayStation's overlay reload did. Area 108's three models (entry 0's flags byte
 // and corners moved by the push scene, the cart's faces rewritten by the blast) and area 52's timed
 // scene byte (D145). docs/DIVERGENCE.md.

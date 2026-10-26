@@ -525,7 +525,7 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
         Game_AreaNumber = static_cast<std::uint16_t>(area);
         g.load_dat(static_cast<int>((area & 0xFFFF) + 3));
         while (g.load_done() == 0) g.sleep(1);
-        AreaDataReload_OnLoad(area & 0xFFFF);   // DIV-0181: the area's own .data as the disc holds it
+        AreaDataReload_OnLoad(area & 0xFFFF);   // DIV-0182: the area's own .data as the disc holds it
         Field_InputFlags = Area_Descriptors[Game_AreaNumber][0x32];
         g.clut_restore();
         Gfx_ClutStripDirty = 1;

@@ -412,7 +412,7 @@ void InjectAll() {
     ModeFlow_Inject();          // every call of its clones re-aimed at a recorder, its stack-built table
                                 // re-aimed in the copy, the mode table swapped: order does not matter
     AreaEntry_Inject();         // every call of its clones re-aimed at a recorder: order does not matter
-    AreaDataReload_Inject();    // DIV-0181: a copy of two areas' .data, taken before any scene: before the
+    AreaDataReload_Inject();    // DIV-0182: a copy of two areas' .data, taken before any scene: before the
                                 // first Area_Enter, after nothing else
     GlyphDraw_Inject();         // every call of its clones re-aimed at a recorder, the device a fake:
                                 // order does not matter

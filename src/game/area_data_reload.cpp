@@ -1,4 +1,4 @@
-// DIV-0181: an area's own .data put back when its DAT is loaded.
+// DIV-0182: an area's own .data put back when its DAT is loaded.
 //
 // Two area blocks write their own .data (D145, docs/known-defects.md):
 // Area108_TailPlace moves Area108_Model's flags byte (+3) and the corners of
@@ -74,7 +74,7 @@ void Snapshot() {
         off += g_models[k].bytes;
         g_model_count = k + 1;
     }
-    if (g_model_count == 0) bof3::Fatal("DIV-0181: Area108_Model names no model - not the image's shape");
+    if (g_model_count == 0) bof3::Fatal("DIV-0182: Area108_Model names no model - not the image's shape");
     g_records_len = off;
     g_area52_byte = Mem(Area52_ExtraObjects_addr)[1];
 }
@@ -101,7 +101,7 @@ void AreaDataReload_Inject() {
     Snapshot();
     const std::uint8_t was = 0, is = 1;
     bof3::PatchBytes("AreaDataReload", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_on)), &was, &is, 1);
-    bof3::Log("DIV-0181    area 108's models and area 52's scene byte put back at the area's load (on unless the line above says OFF); "
+    bof3::Log("DIV-0182    area 108's models and area 52's scene byte put back at the area's load (on unless the line above says OFF); "
               "%u models, %u record bytes from 0x%08X",
               g_model_count, g_records_len, g_models[0].records);
 }
@@ -109,10 +109,10 @@ void AreaDataReload_Inject() {
 void AreaDataReload_OnLoad(unsigned area) {
     if (!g_on) return;
     if (area == kArea108) {
-        if (PutBackArea108()) bof3::Log("DIV-0181    area 108's models put back at the area's load");
+        if (PutBackArea108()) bof3::Log("DIV-0182    area 108's models put back at the area's load");
     } else if (area == kArea52) {
         std::uint8_t* const byte = Mem(Area52_ExtraObjects_addr) + 1;
-        if (*byte != g_area52_byte) bof3::Log("DIV-0181    area 52's scene byte %02X put back to %02X at the area's load", *byte, g_area52_byte);
+        if (*byte != g_area52_byte) bof3::Log("DIV-0182    area 52's scene byte %02X put back to %02X at the area's load", *byte, g_area52_byte);
         *byte = g_area52_byte;
     }
 }

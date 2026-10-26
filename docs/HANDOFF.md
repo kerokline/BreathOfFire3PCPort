@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-25 night: issue #149's Bone Dance hang and cart reset fixed on `fix/issue-149-bone-dance-cart`, item 000000000000; 2026-10-24: issue #121's lift stall handed over, item 000000, PR #129 for #118 / #120;
+**Status:** IN PROGRESS (2026-10-25 night: issue #149's Bone Dance hang and cart reset fixed on `fix/issue-149-bone-dance-cart` (PR #151, DIV-0182), item 000000000000; 2026-10-24: issue #121's lift stall handed over, item 000000, PR #129 for #118 / #120;
 2026-10-23 night: the sound-layer round built on `sound/round`, DIV-0169..0175, D353..D354,
 item 0000, and the twin-diff remainder on `audit/twins-remainder`, item 0b; 2026-10-23 evening: fix wave 1023 merged as
 PR #117, item 000; 2026-10-23: PRs #112, #114, #115, #116)
@@ -60,11 +60,10 @@ hosted cross form).
    (`BoneDanceShake_Counts` from `MAGIC057.EMI#3`, `EffectKind75_States+0xC` from `AREA188.EMI#13`), the
    recipes regenerated over the seven discs, `check` 0 errors, `exe_own.py measure` + `gaps` dropping exactly
    those 14 gap rows. **A player's install needs the rebuild** (`importer.py stale` names `exe`). (b) The cart:
-   D145 found in play; DIV-0181 copies area 108's three models (the blast rewrites the cart's 55 faces in place, not only the
+   D145 found in play; DIV-0182 copies area 108's three models (the blast rewrites the cart's 55 faces in place, not only the
    push scene's 33-quad model D145 named) and area 52's scene byte at inject and puts them back when
    `Area_Enter` loads the area's DAT (`src/game/area_data_reload.cpp`; `BOF3X_ORIGINAL=AreaDataReload`).
-   **Numbering:** `fix/issue-142-ryu-facing` also carries a DIV-0181 (the cell-texture rebuild); whichever merges
-   second takes the next number (`ledger_check.py` wants them contiguous). **Owed:** the owner's play of both;
+   (DIV-0182 since the merge of `main`'s DIV-0181, the cell-texture rebuild, PR #148.) **Owed:** the owner's play of both;
    the owner's `zombieDragonAndCartReset` route was recorded before the recorder wrote F-keys, so its two F9
    presses went in by hand (`hold f9 5`); with them the route's reload shows the put-back (frame-exact shots: no planks after the reload; a quicksave after the
    fight reloads with no cart and no planks, by the flags), as does
@@ -116,14 +115,18 @@ hosted cross form).
    way:** `BOF3X_EFFECTLOG=1` (the spawn / first-run census of effect objects, `input-script.md`);
    the hosted all-original replay (`--original '*,-Game_Clock'`) of this route crashes at frame 742
    with the build's launcher and shows only the logo window with the dev launcher - the original
-   side of a scene A/B is not available on this route. **Open:** (a) the owner's "Ryu keeps turning
-   around" in the dialogue - real, deterministic (every run identical, the same `Rand` count each
-   frame): the scene script sets the leader's animation from one site (`SetAnimationAt` 7, then
-   51 / 7 / 43 bursts at the dialogue beats, logged at frames 4012..4033, 4166, 4349) and he faces
-   away at ~4540..4700 and ~4940 from the animation's own frames; `AREA108` is byte-identical on
-   every disc (region-diff.md's census), so the JP PlayStation should show the same - but the
-   owner's US let's-play frames keep Ryu facing Garr. Not settled: a JP-disc look, or the US's
-   main-exe difference in the pose path, decides it. (b) Issue #143 (the mine cart): the owner's
+   side of a scene A/B is not available on this route. **Open:** (a) **the owner's "Ryu keeps turning
+   around" is found and fixed** on `fix/issue-142-ryu-facing` (off `main` `95ef451a`, unpushed): D360, the
+   port's cell-texture cache keeping a part set's composition after a new image is uploaded to the slot
+   (adult Ryu's standing entry 7 and his gesture entries share body cells, so his face from an earlier
+   image showed at animation 7 while the gestures showed the bank's back-right view) - fixed by DIV-0181
+   (an upload frees the cell textures whose cells it covers; `BOF3X_ORIGINAL=CellTextureVram` for the
+   port's). The route's frames with the fix show the back-right view throughout, as the bank's
+   direction-7 entries draw and as a US let's-play looked; the US-disc install draws the same stale
+   frames as the PC, and the JP / US twins of the script op, pose and upload functions are `exact`.
+   `BOF3X_POSELOG=1` is the instrument ([`input-script.md`](input-script.md)). **Owed:** the owner's eye
+   on this scene and on the other turns they remember (the fix is general: any sprite whose parts
+   repeat across images), a state-hash run (render-only; expected identical) and the PR. (b) Issue #143 (the mine cart): the owner's
    route pushes the cart twice on both the PC install and the disc-built `i130` install; the
    reporter's screenshot shows **Ryu** at the cart with Ryu's own line ("Maybe Garr would be able
    to push it..."), so the leader was Ryu at the failed push - `Field_LeaderEffectTest` only pushes

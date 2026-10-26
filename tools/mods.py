@@ -552,10 +552,16 @@ def builder_path(kind):
     return os.path.join(TOOLS, KINDS[kind]["builder"])
 
 
-def build_layer(cache, layer, kind, base, readings, where, what, say, builder=None):
+def build_layer(cache, layer, kind, base, readings, where, what, say, builder=None, reuse=None):
     """A reading-row layer into `cache`: the builder into a new folder, swapped
     in and listed in the manifest. BuildError when the builder or its readings
-    are not there, or the builder fails or writes nothing."""
+    are not there, or the builder fails or writes nothing.
+
+    A measured step named for its layer (build_reuse.ChildStep): `reuse`, a
+    previous cache whose layer is taken when its record holds - the builder's
+    code and data/furigana the same, the readings, the base's text layer (and
+    zh-CN's) the same bytes, the same SudachiPy."""
+    from build_reuse import ChildStep, packages, take, tree_digest
     k = KINDS[kind]
     builder = builder or builder_path(kind)
     if not os.path.isfile(builder):
@@ -567,23 +573,37 @@ def build_layer(cache, layer, kind, base, readings, where, what, say, builder=No
     work = os.path.join(cache, "opt", "." + layer + ".new")
     shutil.rmtree(work, ignore_errors=True)
     os.makedirs(work)
-    # --out is the directory the builder writes its DATs into: the layer's
-    # dat/ (docs/reading-row.md 1.1: cache/opt/<layer>/dat/<NAME>.DAT).
-    cmd = [sys.executable, builder, k["mode"], "--cache", cache, "--lang", base, "--readings", readings,
-           "--out", os.path.join(work, "dat")]
+    with open(readings, "rb") as f:
+        readings_sha = sha_bytes(f.read())
     say("Building %s into opt/%s" % (what, layer))
-    p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    for line in (p.stdout + p.stderr).splitlines():
-        say("  " + line, quiet=True)
-    if p.returncode != 0:
+    try:
+        with ChildStep(cache, reuse, layer, "reading-row", k["mode"], base, where, readings_sha,
+                       tree_digest(os.path.join(cache, "loc", base, "dat")),
+                       tree_digest(os.path.join(cache, "loc", "zh-CN", "dat")), packages("sudachi")) as st:
+            kept = st.previous(os.path.join("opt", layer))
+            if kept:
+                take(kept, work)
+                say("  %s: the previous cache's, built the same way" % layer, quiet=True)
+            else:
+                # --out is the directory the builder writes its DATs into: the layer's
+                # dat/ (docs/reading-row.md 1.1: cache/opt/<layer>/dat/<NAME>.DAT).
+                cmd = [sys.executable, builder, k["mode"], "--cache", cache, "--lang", base, "--readings", readings,
+                       "--out", os.path.join(work, "dat")]
+                p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                                   env=st.env())
+                for line in (p.stdout + p.stderr).splitlines():
+                    say("  " + line, quiet=True)
+                if p.returncode != 0:
+                    last = next((l for l in reversed((p.stderr + p.stdout).splitlines()) if l.strip()), "no output")
+                    raise BuildError("The reading-row builder failed for %s (exit %d): %s"
+                                     % (what, p.returncode, last.strip()))
+            dd = os.path.join(work, "dat")
+            dats = sorted(n for n in os.listdir(dd) if n.upper().endswith(".DAT")) if os.path.isdir(dd) else []
+            if not dats:      # raised inside the step, so it keeps no record of a failed build
+                raise BuildError("The reading-row builder wrote no .DAT into opt/%s/dat for %s" % (layer, what))
+    except BuildError:
         shutil.rmtree(work, ignore_errors=True)
-        last = next((l for l in reversed((p.stderr + p.stdout).splitlines()) if l.strip()), "no output")
-        raise BuildError("The reading-row builder failed for %s (exit %d): %s" % (what, p.returncode, last.strip()))
-    dd = os.path.join(work, "dat")
-    dats = sorted(n for n in os.listdir(dd) if n.upper().endswith(".DAT")) if os.path.isdir(dd) else []
-    if not dats:
-        shutil.rmtree(work, ignore_errors=True)
-        raise BuildError("The reading-row builder wrote no .DAT into opt/%s/dat for %s" % (layer, what))
+        raise
     rows = []
     for n in dats:
         with open(os.path.join(dd, n), "rb") as f:
@@ -597,18 +617,19 @@ def build_layer(cache, layer, kind, base, readings, where, what, say, builder=No
     return layer
 
 
-def build_one(h, cache, r, say, builder=None):
+def build_one(h, cache, r, say, builder=None, reuse=None):
     """One mod's layer into `cache` (its readings from H/mods/<id>/)."""
     return build_layer(cache, layer_name(r), r["kind"], r["base"], os.path.join(mod_dir(h, r["id"]), r["readings"]),
                        "mod:%s@%s:%s" % (r["id"], r["version"], r["base"]), "the mod %s (%s)" % (r["id"], r["name"]),
-                       say, builder)
+                       say, builder, reuse)
 
 
-def setup_step(h, cache, say, only=None, builder=None):
+def setup_step(h, cache, say, only=None, builder=None, reuse=None):
     """The reading-row layers into `cache`, after its language layers (setup's
     new cache, or the home's own for `build`): every listed mod's. A mod whose `requires` the install lacks is skipped with a
     line naming the layers; anything else that cannot be built raises
-    BuildError. Returns (built layers, skipped mod ids)."""
+    BuildError. `reuse`: setup's previous cache, whose layer is taken when
+    built the same way (build_layer). Returns (built layers, skipped mod ids)."""
     done = []
     rows = load_rows(h)
     if only:
@@ -625,7 +646,7 @@ def setup_step(h, cache, say, only=None, builder=None):
                 "(add a disc with that language on the Sources page)" % (r["id"], r["name"], needs))
             skipped.append(r["id"])
             continue
-        done.append(build_one(h, cache, r, say, builder))
+        done.append(build_one(h, cache, r, say, builder, reuse))
     return done, skipped
 
 

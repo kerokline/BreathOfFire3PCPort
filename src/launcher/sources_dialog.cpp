@@ -301,6 +301,8 @@ std::wstring PieceName(const std::string& step) {
         if (step == r.step) return r.name;
     if (step.compare(0, 4, "loc-") == 0) return L"the " + ConfigFromUtf8(step.substr(4)) + L" text";
     if (step.compare(0, 4, "opt-") == 0) return L"the optional layer " + ConfigFromUtf8(step.substr(4));
+    // A second-language or mod reading-row layer: its step is its layer's name.
+    if (step.compare(0, 5, "ruby-") == 0) return L"the reading-row layer " + ConfigFromUtf8(step.substr(5));
     return ConfigFromUtf8(step);
 }
 
