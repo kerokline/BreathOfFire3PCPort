@@ -105,6 +105,21 @@ hosted cross form).
    merge at the owner's word - **the sweep on an install rebuilt from it** (section 6.2) shows Air Raid's kicked
    image in its colours where the before-image drew it white, and the watch no longer lists the two placed rows.
 
+0000000000000. **The effect, boss and scene gap rows are placed from the disc** on the worktree branch
+   `worktree-agent-ada98af7cd3367ec1` (off `main` `25d12620`, unpushed, no PR;
+   [`exe-immediate-places.md`](exe-immediate-places.md) 7, census 8.5, DIV-0101's amendment of 2026-10-26).
+   Every remaining spell / effect / boss / scene `game-value` row was read at its PSX twin: twelve place as
+   `immref` (`BossGaist_Anims+0x2`, the kind-0x18 `Sub2E` / `Sub30` / `Sub31` / `Sub45` / `Sub21` states,
+   `Area121_BandHeights`, `Scena02_EffectX`, `AirRaidImage_ShadeSteps`, `LinkedObjectD_Amounts`,
+   `ReviveHalo_MoteCounts`, `WardMote_Tilts`) through 32 hand-read `symbols.toml` pairings and four rule
+   changes in `exe_tables.py` (the multi-hit twin, the index fold, the symbol-extent end, the section-tail
+   floor); recipes regenerated over the seven discs, `check` 0 errors, `gap` rows US 58 to 48, JP 31 to 21.
+   Confirmed regional, the owner's call: the Western `EffectKind66_States` and `Rest3e_Windows` fields;
+   `TornadoMote_Phases+0x10` is the Identify panel's English labels (a language row). Left: `WardMote_Tilts+0x8`
+   (MAGIC044's two shorts, no reader), `LinkedObjectD_Amounts` on PSP-EU (its `GAME.EMI` pair addresses
+   other bytes), the PSPs' two-byte `Area121_BandHeights+0x1`. **Nothing played**: a disc-built install's
+   D.Zombie-class check (the Ward / Revive / AirRaid spells, area 121's band, scene 2's effects) is owed.
+
 000000000000. **Issue #149 (the D.Zombie's Bone Dance never ends on a disc-built install; the cart drawn where
    the last push rolled it after a reload) is fixed** on `fix/issue-149-bone-dance-cart` (off `main` `95ef451a`,
    unpushed; worktree `C:\Users\kerok\bof3x-runs\i149\wt`, root `C:\Users\kerok\bof3x-runs\i149`, the
