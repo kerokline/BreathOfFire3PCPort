@@ -4396,6 +4396,34 @@ designed in rather than bolted on.
   German install). An overlay built before this sends record 59 empty: its
   fifty-nine names then land in their own records and record 59 keeps the
   shipped name.
+  **Amended 2026-10-26 - group 24, Super Combo's prompt texts** (the spell
+  sweep's catch on a disc-built install, [`spell-sweep.md`](spell-sweep.md) 6;
+  D393; [`install-gap-labels.md`](install-gap-labels.md) 4.5). *Original:*
+  `SuperCombo_DrawText` `0x49B420` (ours, `magic_s02.cpp`) draws text
+  `which` of the pointer table `0x66A0D8` - the four slots `0x66A0B0` (12
+  bytes), `0x66A0C0` (5), `0x66A0C8` (4), `0x66A0D0` (4), the PC's own
+  English - as 12 x 12 quads of the effect's glyph page, a byte less `0x3F`
+  the glyph's index and `0xFF` a half space, centred by the length table
+  `0x65A51C`; text 1 under `SuperCombo_Prompt1`, 2 under `_Prompt2`, 0 under
+  `_ShowCount` (text 3 has no PC reader). The slots are a `language` row
+  no layer wrote, so a disc-built image left them zero and the prompt boxes
+  were blank (the PC's own slot 0 has the full-width `0x20` where the
+  discs have the half space). *New:* group 24 writes the four texts in
+  place, raw (the bytes index the install's own glyph page, not the layer's
+  font), each slot witnessed by its entry of the pointer table, from the
+  twin of `SuperCombo_DrawText`: `MAGIC003.EMI`'s on a PlayStation disc,
+  `BOOT.BIN`'s on a PSP (`combo_prompts`: the routine with the `- 0x3F`,
+  found by following the values linear in its `andi 0xFF` byte to its two
+  reads - the lengths at L + which, the records at L + 4 + stride x which,
+  the stride read off the code: 13 on every disc but the French one's 14).
+  Built for every disc, the Japanese ones too (their words are the same
+  English, drawn by their own page). *Why:* the row's shape is this entry's
+  (a disc's words in a slot the PC's `.data` holds), and the discs' bytes
+  reproduce the PlayStation's prompt exactly - the same page, the same
+  length table. **It changes the PC install's output under every Latin
+  layer**: slot 0's two spaces become the discs' half spaces (6 px each in
+  place of the PC's 12), and under `fr-FR` the first text is the French
+  disc's. *Verification:* `loc_build.py selftest` (the reader on synthetic code: the US chain found, a stride-6 chain refused); the reader over the seven discs (`combo prompts 4` on each: the US words on six, the French first text on `psx-fr`); `importer.py check` and `exe_tables.py check` 0 errors; the US + PSP-EU disc-built install rebuilt from this branch (root `C:\Users\kerok\bof3x-runs\ss1026\sc`) and a PC install copy with an `en-US` layer from it, the sweep's ability 3 alone on each, the install's log `DIV-0064: 4 of 4 combo prompts` on both: the disc install's `a003_1.png` reads READY, `a003_2.png` GO!! and `a003_5.png` O HIT COMBO!! where the before-image's box was empty; the PC copy under `en-US` draws the same frames to the pixel, and under `original` its own bytes (the full-width spaces, text 0 wider). The gap watch (`gap,unread,language`, 900 latches) still lists `0x66A096..0x66A0D8` read 720 times "before a write" with writes 0 - the parked-page blind spot of [`install-gap-reads.md`](install-gap-reads.md) 9.3 (page `0x66A000` is parked on most latches, so the layer's load-time writes are not seen; the row is written by the log line and the shot). Not captured: the French first text under `fr-FR`.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
 

@@ -30,6 +30,7 @@ Addresses, sizes, counts, symbol and file names only (CLAUDE.md rule 1).
 | `Encounter_SlotChance+0x38` `0x669CE8..0x669CED` | all 7 | **FIXED since DIV-0118** on the four Western PSX builds (the census missed it); **now PSP-EU**; JP builds D280's | group 17, PSP-EU from `BOOT.BIN` (section 4.1) |
 | `CommuName_RecordNames+0xF4` `0x66A098..0x66A0AC` | all 7 | **FIXED under the layer** (Western PSX, PSP-EU); JP builds D280's | `EffectKind5E`'s twin found: `SCENA10.EMI`; label group 20 (section 4.2) |
 | `CommuName_RecordNames+0xF0` `0x66A094..0x66A096` | all 7 | **NEEDS FIX stays, no Western source**: the Western routine draws no word; JP's word is in `AREA008.EMI` (D280's) | section 4.3 |
+| `Effect1b_ToggleText+0x28` `0x66A0B0..0x66A0D8` (Super Combo's prompt texts; D393, 2026-10-26) | all 7 | **FIXED under the layer** on every build, the JP ones too | `SuperCombo_DrawText`'s twin in `MAGIC003.EMI` / `BOOT.BIN`; label group 24 (section 4.5) |
 
 "Under the layer": the image's bytes stay zero on a disc-built image; the
 overlay every disc-only install builds from its own disc writes the slot
@@ -235,6 +236,69 @@ or nothing.
   no disc copy (TW); the US routine draws its own controls there. Left as
   a gap, not attempted.
 
+### 4.5 `0x66A0B0`, Super Combo's prompt texts (group 24; 2026-10-26)
+
+Found after the round, by the spell sweep's gap watch on the US + PSP-EU
+disc-built install ([`spell-sweep.md`](spell-sweep.md) 6): the `language`
+row `0x66A096..0x66A0D8` read 90 times before any write by
+`SuperCombo_DrawText` `0x49B420`, and the prompt box at the field's
+centre blank where the PC reads "GO!!" (D393). The row past group 20's
+slot is four slots behind the pointer table `0x66A0D8`: `0x66A0B0` (12
+bytes, room 16), `0x66A0C0` (5, room 8), `0x66A0C8` (4), `0x66A0D0` (4);
+the draw takes a byte less `0x3F` as a glyph of the effect's own page
+(21 a row, from v `0x24`), `0xFF` as a half space, and centres by the
+length table `0x65A51C` (`9, 5, 4, 4`, the overlay's data, placed). Text 1
+is drawn under `SuperCombo_Prompt1`, 2 under `_Prompt2`, 0 under
+`_ShowCount`; text 3 has no reader in `BOF3.exe`.
+
+**The twin** is in `BMAGIC/MAGIC003.EMI` (Super Combo's effect overlay,
+[`magic_s02.md`](magic_s02.md)), section 3 (loaded at `0x801EEC00`): the
+routine at `0x801F01E0..` masks `which` with `andi 0xFF`, reads its
+length at `L + which` and its record's first byte at `L + 4 + 13 which`
+(`sll` / `addu` chain), then takes each byte `- 0x3F` (the `addiu` at
+`0x801F0270`) - the PC's draw to the instruction, with the strings as
+fixed records instead of a pointer table:
+
+| Build | Where | Lengths `L` | Records | Stride |
+|---|---|---|---|---|
+| psx-us, eu-en, de, jp | `MAGIC003.EMI#3` `+0x1E9C` | `0x801F0A9C` | `0x801F0AA0..0x801F0AD4` | 13 (the US words) |
+| psx-fr | `MAGIC003.EMI#3` `+0x1EE0` | `0x801F0AE0` | `0x801F0AE4..0x801F0B1C` | 14 (its own first text, 13 letters; `- 0x3F` at `0x801F0278`) |
+| psp-eu `BOOT.BIN` | the image (first program header) | `0x2F4989` | `0x2F498D..0x2F49C1` | 13 (`- 0x3F` at `0x15394C` and `0x153A78`, one routine) |
+| psp-jp `BOOT.BIN` | the same | `0x2F47E9` | `0x2F47ED..0x2F4821` | 13 (`0x1539EC`, `0x153B18`) |
+
+Each record is the text to its NUL and then fill (`01 02 03 ..`, not
+NULs), so the records are cut by the stride read off the code, not by
+their padding. Both PSP discs' `MAGIC003.EMI` hold the PSX layout too (the
+JP build's); the builder reads the PSPs' from `BOOT.BIN` as groups 17 and
+20 do.
+
+**The fix** (DIV-0064 amended 2026-10-26): `loc_build.py` `combo_prompts`
+follows the values linear in the `andi 0xFF` byte through lui / addiu /
+sll / addu / subu from the routine's `addiu $sp` to the `- 0x3F`, and
+wants one (lengths, stride) pair whose record read is 4 past its length
+read; the four texts are the records to their NULs (each 1..stride - 1
+bytes), the lengths each under the stride. Group 24 sends them raw
+(`label_chunk`'s `raw`, group 15's and 18's way: the bytes index the
+install's page, so no font code of the layer's applies); `labels.cpp`
+writes them in place, each slot witnessed by its entry of `0x66A0D8`.
+Built for every disc: the Western PSX ones through `convert_labels`, the
+PSPs through `convert_labels_psp` (`BOOT.BIN`), and the JP builds beside
+group 15 (the one other group a Japanese disc builds; PSP-JP now builds
+that path too, for this group alone). Under a Latin layer the PC install
+changes: its slot 0's two `0x20` (a full glyph each, 12 px) become the
+discs' `0xFF` half spaces, the PlayStation's own spacing; under `fr-FR`
+the first text is the French disc's. Checks: section 6's table gains the
+2026-10-26 rows below.
+
+| Check (2026-10-26) | Result |
+|---|---|
+| `loc_build.py selftest` (`combo_prompts` on synthetic code: the US `sll` / `addu` chain found, the chain without its last `addu` refused) | ok |
+| `combo_prompts` over the seven discs (`MAGIC003.EMI#3`; the PSPs' `BOOT.BIN`) | `combo prompts 4` on each; US, EU, DE, JP, PSP-EU, PSP-JP the same four texts, FR its own first text |
+| `importer.py check`, `exe_tables.py check` | 0 errors each |
+| `importer.py build` + `install --base` (US disc + PSP-EU) from this branch; `abc_run.py prepare --only pc-enus` (a PC copy, `en-US` from the US disc) | `DIV-0064: 4 of 4 combo prompts` in both installs' logs |
+| `spell_sweep.py run --ids 3` on the disc install (`BOF3X_EXEIMAGE`, `BOF3X_CACHE`, `BOF3X_OPT=none`, `BOF3X_LAYERING=0`, the gap watch `gap,unread,language`) | `a003_1.png` READY, `a003_2.png` GO!!, `a003_5.png` O HIT COMBO!! (the before-image's box empty, `spellsweep_disc\probe_gw\a003_1.png`) |
+| the same on the PC copy under `en-US`, and under `original` | `en-US`: the disc install's frames to the pixel; `original`: the PC's own bytes, text 0's two spaces a full glyph each |
+| `gapwatch.py report` | `0x66A096..0x66A0D8` still "read 720 before a write, writes 0": the parked-page blind spot ([`install-gap-reads.md`](install-gap-reads.md) 9.3); written by the log line and the shots |
 ## 5. Ledger and defect drafts (lettered; the coordinator numbers)
 
 ### DIV-A - DIV-0069 amended: the fishing equip headings from the disc
