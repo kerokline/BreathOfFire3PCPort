@@ -1559,6 +1559,35 @@ designed in rather than bolted on.
   help `0x1A` / `0x31`; the note once also named `0x59AE00`, which is
   `MenuList_GeneWinDraw` and draws no message `0xF` - corrected 2026-10-05
   from a read of both) - not marked by the owner.
+- **Amended 2026-10-26 (issue 152, the faerie board's "Do you accept?"):**
+  the owner's screenshots of the village board's accept prompt (help `0x3D`,
+  `CommuBoard_DrawPanel` `0x458D70`, ours since round fourteen's R4B): the
+  answer is marked by a flashing translucent tile, not a hand, and the
+  original places it at `0xD0 + 36 * answer`, `0x19 + 12 * answer` wide (0
+  Yes) - the Chinese line's words. The English line (the question, spaces,
+  `Yes No` at the line's end, drawn at x `0x1D`) puts `Yes` at 245 and `No`
+  at 277, so the tile on Yes sat in the gap before the word and on No
+  covered `Yes`. **The US disc's twin** (`COMMU01.EMI` section 7,
+  `0x801D3038`, read with capstone 2026-10-26; frost's decompilation has no
+  COMMU01) draws the same line at the same place and its tile at
+  `0xF4 + 32 * answer`, `0x19 - 8 * answer` wide: one unit left of each
+  word, one unit wider than it (244 / 276, 25 / 17). Ours, under a Latin
+  overlay only and after `rest_4b`'s self-test: the line through
+  `YesNoLayout_Tail` as the master's and Manillo's are (`Yes` three spaces
+  left, `No` where it was), and the tile from the measured line - the
+  word's pen place less one, the word's width plus one (`YesNoTail` gains
+  `width[2]`; `BOF3X_ORIGINAL=BoardYesNoLayout`). English: `Yes` 245 ->
+  221, the tile 208 / 244 -> 220 / 276, 25 / 37 -> 25 / 17 wide. **Also in
+  the PSX version?** No - the US disc fitted its tile to its line, as
+  above. **Verification:** `BOF3X_SHADOW=yes_no_layout` now checks the four
+  shapes' answer widths too; `'*'` headless under `original` and
+  `yes_no_layout,rest_4b` under `en-US` 0 mismatches; `fairyVillage.txt`
+  replayed under `en-US`, `fr-FR` and `de-DE` with a shot every 60 frames
+  from 2460 (`analysis/shots/fairy_i152_<lang>`): at frames 2880 and 2940
+  the tile sits over `Yes`, `Oui` and `Ja`, the word's width, the question
+  and `No` / `Non` / `Nein` clear of it; a shot every 6 frames from 2850
+  under `en-US` (`fairy_i152_en-US_dense`) has the row on `No` at 2904..2922,
+  the tile over `No` at its width. Not seen by the owner.
 
 ### Music fades step once per logic frame
 

@@ -23,11 +23,28 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/labels.h"
+#include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_4b_callees.h"
 #include "game/scenario_harness.h"
+#include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+
+// DIVERGENCE DIV-0027 (amended 2026-10-26, issue 152): the faerie board's
+// "Do you accept?  Yes No" (help 0x3D) marks its answer with a flashing tile,
+// not a hand, and the original places the tile at 0xD0 + 36 * the answer,
+// 0x19 + 12 * the answer wide - the Chinese line's words. The English line the
+// overlay carries puts Yes at 245 and No at 277, so the tile on Yes sat in the
+// gap before it and on No covered Yes (the owner's screenshots). The US disc's
+// twin (COMMU01.EMI, 0x801D3038, read 2026-10-26) draws the same line at the
+// same place and its tile at 0xF4 + 32 * the answer, 0x19 - 8 * the answer
+// wide: one unit left of each word, one wider than it. With the flag on
+// (Rest4B_Inject, a Latin overlay, after the self-test, which compares the
+// original's draw) the line is re-spaced and the tile measured from it as the
+// other prompts' hands are (yes_no_layout.cpp's YesNoLayout_Tail): the
+// word's pen place less one, the word's width plus one, in any language.
+unsigned char g_board_yes_no_layout = 0;
 
 namespace {
 
@@ -1193,7 +1210,10 @@ extern "C" void __cdecl CommuBoard_DrawPanel(void) {
     const unsigned help = Rest4b_Help;
     if (help != 0xFFFF) {
         const unsigned char* const text = At(at::kMessagePools + W(at::kMessagePools + 2 * help));
-        SH_CALL(Text_DrawAt)(0x1D, 0x15, 0, 0xFF, text);
+        const bool fitted = g_board_yes_no_layout && help == 0x3D;   // DIV-0027 (amended 2026-10-26)
+        YesNoTail tail = {text, {0, 0}, {0, 0}};
+        if (fitted) tail = YesNoLayout_Tail(text, 0x1D, "the faerie board's accept prompt");
+        SH_CALL(Text_DrawAt)(0x1D, 0x15, 0, 0xFF, tail.line);
         if (Rest4b_Help == 0x3D) {
             SH_CALL(Gpu_SetDrawMode)(Packet(), 0, 0, 0, 0);
             SH_CALL(Gfx_CommitPrim)(1, 0xC);
@@ -1203,13 +1223,14 @@ extern "C" void __cdecl CommuBoard_DrawPanel(void) {
             SH_CALL(Gpu_SetSemiTrans)(q, 1);
             PutFBits(q + 0xC, 0x41B00000u);   // 22.0
             const unsigned t = Rest4b_Toggle;
-            PutF(q + 8, static_cast<float>(static_cast<int>(t * 36 + 0xD0)));
+            if (fitted && t > 1) bof3::Fatal("CommuBoard_DrawPanel: the yes / no row holds %u, not an answer", t);
+            PutF(q + 8, static_cast<float>(fitted ? tail.stop[t] + 1 : static_cast<int>(t * 36 + 0xD0)));   // the stop is the word less two: the tile one unit before the word
             PutFBits(q + 0x18, 0x41400000u);   // 12.0
             q[4] = intensity;
             q[5] = intensity;
             q[6] = 0;
             const unsigned t2 = Rest4b_Toggle;
-            PutF(q + 0x14, static_cast<float>(static_cast<int>(t2 * 12 + 0x19)));
+            PutF(q + 0x14, static_cast<float>(fitted ? tail.width[t2] + 1 : static_cast<int>(t2 * 12 + 0x19)));
             SH_CALL(Gfx_CommitPrim)(1, 0x1C);
         }
     }
@@ -1746,6 +1767,14 @@ extern "C" void __cdecl CommuBoard_PickHelp(unsigned char* cell) {
 
 void Rest4B_Inject() {
     if (bof3::WantsShadow("rest_4b")) rest_4b::SelfTest();
+    // DIVERGENCE DIV-0027 (amended 2026-10-26): after the self-test, which
+    // compares the original's panel; a Latin overlay only (DIV-0056).
+    if (Lang_Latin()) {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("BoardYesNoLayout", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_board_yes_no_layout)),
+                         &was, &is, 1);
+        bof3::Log("DIV-0027    the faerie board's \"Do you accept?\": answers re-spaced, the tile over each");
+    }
     BOF3_INJECT(CommuTail14_Dispatch);
     BOF3_INJECT(CommuTail14_OpenF8);
     BOF3_INJECT(CommuTail14_LoadDat);

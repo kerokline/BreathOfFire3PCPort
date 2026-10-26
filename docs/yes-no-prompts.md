@@ -1,6 +1,7 @@
 # The yes / no prompts outside Menu_YesNo (DIV-0027 amended)
 
-**Status:** IN PROGRESS (2026-10-03, fix wave group YN, branch `fix/1003-yn`).
+**Status:** IN PROGRESS (2026-10-03, fix wave group YN, branch `fix/1003-yn`;
+section 8 added 2026-10-26 for issue 152, the faerie board's tile).
 Built and self-tested headless; **the master's prompt seen fixed** on the
 owner's `masterAndManillo.txt` (2026-10-03, DIV-0027, `00228d9f`); the rest of
 section 6's live check not recorded. The masters screen's headers are
@@ -243,3 +244,36 @@ gives the before picture with everything else equal.
   seven shots of that prompt differ between `mm_after` and `mm_after2`.
 - **"Will that be all?"** (3120..3180) and the stacked `Yes` / `No` under the
   master's messages (4200, 4830): as fixed, and as they were.
+
+## 8. The faerie board's "Do you accept?" (issue 152, 2026-10-26)
+
+The village board's confirm row (`CommuBoard_DrawPanel` `0x458D70`, help
+`0x3D`, `rest_4b.cpp`) is a chooser of the same shape with a flashing
+translucent tile for its cursor instead of a hand. The original's tile:
+x `0xD0 + 36 * answer`, width `0x19 + 12 * answer`, y `0x16`, 12 high (0
+is Yes) - fitted to the Chinese line. The US disc's twin (`COMMU01.EMI`
+section 7, `0x801D3038`; frost's decompilation stops at COMMU00, so it was
+read from the disc with capstone) draws the same line at (`0x1D`, `0x15`)
+and the tile at `0xF4 + 32 * answer`, `0x19 - 8 * answer` wide: one unit
+before each word and one wider - 244 / 276 for `Yes` at 245 and `No` at 277.
+
+| Prompt | Line x | English `Yes` / `No`, before | after | tile x, width before | after |
+|---|---|---|---|---|---|
+| faerie board | 0x1D | 245 / 277 | 221 / 277 | 208, 25 / 244, 37 | 220, 25 / 276, 17 |
+
+Ours: `YesNoLayout_Tail` re-spaces the line as the other prompts' (section
+3) and now also answers each word's pen width (`YesNoTail::width`); the tile
+is drawn at the word's stop plus one (the stop is the word less two) and the
+word's width plus one - the US relation, in any language. Behind the byte
+`g_board_yes_no_layout`, set after `rest_4b`'s self-test under a Latin
+overlay; switch `BOF3X_ORIGINAL=BoardYesNoLayout`. A row value past 1 aborts.
+
+**Route:** `fairyVillage.txt` reaches the prompt (frames 2520, 3000 and 3060
+of `analysis/shots/fairy_loc4`, recorded 2026-10-10; on the 2026-10-26
+build the same route shows it at 2880 and 2940 - the text's timing has
+moved since). **Seen fixed 2026-10-26** on that route under `en-US`,
+`fr-FR` and `de-DE` (`analysis/shots/fairy_i152_<lang>`, a shot every 60
+frames from 2460): the tile over `Yes` / `Oui` / `Ja` at the word's width;
+under `en-US` with a shot every 6 frames from 2850 (`fairy_i152_en-US_dense`)
+the row on `No` (frames 2904..2922) has the tile over `No` at its width.
+Owed the owner's eye.

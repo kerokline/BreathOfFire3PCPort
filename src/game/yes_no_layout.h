@@ -38,7 +38,8 @@ unsigned char YesNoLayout_SaveNameInset();
 // a static buffer, good until the next call.
 struct YesNoTail {
     const unsigned char* line;
-    int stop[2];   // [0] the first answer (Yes), [1] the second (No)
+    int stop[2];    // [0] the first answer (Yes), [1] the second (No)
+    int width[2];   // each answer's pen width on the line (the faerie board's tile, DIV-0027 amended 2026-10-26)
 };
 YesNoTail YesNoLayout_Tail(const unsigned char* s, int x, const char* who);
 
