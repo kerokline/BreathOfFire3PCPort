@@ -4,13 +4,13 @@
 # the image's bytes came from. Keys, verdicts and provenance only - no value (CLAUDE.md rule 1).
 # Every row is listed in recipes/data-known.toml; `data_diff.py check` holds that in CI.
 # views: 860af2bcc8fb016ad04bc8914304bb0ffe7fb7535639846a5628952720e24994
-# image: psp-eu d39fdafd06e9e5c467f566e9130e8af78a1f089afd6abb84bc26a7688776a24c
-# image: psp-jp 66dee6edd13a3a6b01ded035a3e20adedd94a66b7a5745c9689b459325982d50
-# image: psx-de 328ac05d5201401f51c3df1c25f15cf6f2aa3971e8c8a4b1f120cd187927c2d2
-# image: psx-eu-en e7652afa1fe7ad8739ac056ea235d20fa184fdbf36893e33916d5c849bf910ed
-# image: psx-fr 4d2336fa9999d792d1bab82d2ce063a1840e69e0d6c49cc7bff2529ce9bbae10
-# image: psx-jp 8ff95b77b271230628854d120fb11716c02437e9be53d9786f16990c529d719e
-# image: psx-us 8d1b3b6904bbc8779402d0ae06bd1c0d93956faf80fad6dda323808421361d33
+# image: psp-eu dc93b6d4a4b7e584d6b44ac1ea4b8b325ea2cb7855d299cd768bc9f45bf65c8d
+# image: psp-jp 75a9ca530e46f190276b7f5d7471093f9f60278f2a6bbc0810b3abbbf835f86d
+# image: psx-de 2b37e6406cf9361d5b9b82cf73904c4b3f5e3625374044a9bb9931e6b2a343fc
+# image: psx-eu-en c84a85497541b95b56b0b8843556d3f14b827ac808a94ca375285a1f7e3ba956
+# image: psx-fr cfc4d3a9f829905e09c225dc1327f55847d04e25ea6725a5b7d9bbd7cbeedf1d
+# image: psx-jp dc3da38146a445877884ad5adc074f45a20339a372ac01d03ae3350fcb633dc8
+# image: psx-us 12dc53b357b0d6265104f52b890db3819e54eb4a69c87272f3839e834b45c43a
 # compared: psp-eu abilities 4104 runtime 0 hole 0 differ 0
 # compared: psp-eu accessories 728 runtime 0 hole 0 differ 0
 # compared: psp-eu area_descriptor 4200 runtime 0 hole 0 differ 0
