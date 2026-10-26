@@ -292,6 +292,14 @@ logged as its hold starts and nothing waits. With `BOF3X_ORIGINAL=Game_Clock`
 the freeze still works, but the pause is replayed unrendered afterwards, and
 the log says so.
 
+**`BOF3X_POSELOG=1`** (2026-10-25, instrumentation, no ledger entry): every `Sprite_SetAnimationAt`
+and `Sprite_SetFrameQueueUpload` on a party member's sprite (ObjTrio) - the frame, the trio slot, the
+animation, the frame entry's three bytes, the sprite's flags, type, facing, draw flags, texture slot
+and row, flip, column, animation, bank data and script pointers - every VRAM upload the flush makes
+(rect, kind, record), and every cell-texture build and free (entry, cells, VRAM footprint) as
+`poselog` lines in `bof3x.log` (`src/game/sprite_pose.cpp`, `gfx_flush.cpp`, `d3d_draw.cpp`); it is
+how D360 was traced to the cell-texture cache (DIV-0181).
+
 **`BOF3X_EFFECTLOG=1`** (2026-10-25, instrumentation, no ledger entry): every `Effect_Spawn` /
 `Effect_SpawnAt` and every effect object's first run - kind, parameter, slot and frame - as
 `effect` lines in `bof3x.log` (`src/game/rest_2b.cpp`, `frame_callees.cpp`); it is how the
