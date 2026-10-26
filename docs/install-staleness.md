@@ -1,7 +1,10 @@
 # An install against the release: which pieces are stale
 
 **Status:** DONE (built and measured 2026-10-17 on `install/recipe-version`; the
-launcher's prompt built, not yet seen by the owner)
+launcher's prompt built, not yet seen by the owner). Extended 2026-10-25 on
+`launcher/faster-upgrade` (section 5): the second-language and mod layers and
+`opt` measured and reused, the row layers built side by side, kept pieces
+hard-linked - an unchanged upgrade of the owner's seven-source install 248 s -> 31 s.
 
 HANDOFF item 11. A player's install is built once by the importer from their own
 discs (`importer.py setup`, [`install-sources.md`](install-sources.md) 5). A new
@@ -40,10 +43,13 @@ unmeasured, so every step starts with the memos of `tools/` emptied: every
 global a setup tool writes at run time that `MEMOS` does not list.
 
 The steps: `base` (identify, recipe, base policy, every chunk), `snd` / `snd-psp`,
-`bgm`, `exe`, `loc-<tag>`, `opt`, `manifest`, `fmv`, `opt-<psp layer>`, and
-setup's `game-pc` and `game-install`. Reused when their record holds: `snd`,
-each `loc-<tag>`, each PSP layer, and the movie by its own rule
-(`fmv_reusable`, bit-exact arguments). The rest are rebuilt each setup (seconds).
+`bgm`, `exe`, `loc-<tag>`, `opt`, `manifest`, `fmv`, `opt-<psp layer>`,
+setup's mod layers and second-language layers (each named for its layer,
+`ruby-<mod>-<base>` and `ruby-<second>-<main>`, section 5), and setup's
+`game-pc` and `game-install`. Reused when their record holds: `snd`, each
+`loc-<tag>`, `opt`, each PSP layer, each `ruby-` layer, and the movie by its own
+rule (`fmv_reusable`, bit-exact arguments). The rest are rebuilt each setup
+(seconds; section 5 has the numbers).
 
 ## 2. `importer.py stale` and the launcher
 
@@ -100,5 +106,68 @@ rebuilt too only if the image's bytes changed (its input is `base/exe`'s digest)
 - The launcher's prompt has not been seen in a real start (the owner's eye).
 - `psp_layers.py`'s `[psp_layers]` manifest table is written outside any step;
   a change to its writer alone is not seen.
-- A Python a step starts other than `loc_build.py` must import `build_reuse` to
-  be recorded; there is none today.
+- A Python a step starts other than `loc_build.py` and `ruby_build.py` must
+  import `build_reuse` to be recorded; there is none today. A `ChildStep` whose
+  child recorded nothing keeps no record (section 5), so such a piece is
+  rebuilt each time rather than wrongly kept.
+- Not reused, each a second or two: `base` (the chunks), `bgm`, `exe`,
+  `manifest`, the PC game's copy and the game folder's layout. Unpacking a
+  `.zip` source (about 1 s each warm) is redone each setup; keeping the
+  unpacked image would cost its size on disk.
+
+## 5. The upgrade made fast (2026-10-25)
+
+The owner's upgrade of 2026-10-25 (`game\setup.log`: the PC folder, five PSX
+discs, two PSP discs, the furigana mod) took 179 s, and **124 s of it was the
+twenty second-language layers** (`ruby_build.py second`, every ordered pair of
+five held languages), built one after another and never reused - they were
+outside any step. `opt` (10 s) was measured but always rebuilt, and every kept
+piece was copied out of the previous cache. Three changes:
+
+- **The reading-row layers are steps.** `build_reuse.ChildStep` records only
+  the child Python a step starts (`subprocess.run(cmd, env=st.env())`), so
+  several can be open at once from threads; `Step`'s one recorder per process
+  forbids that. Each second-language pair and each mod layer is one, named for
+  its layer, with inputs beside the measured code: the text layers the builder
+  reads (`loc/<lang>`, `loc/<over>` and `loc/zh-CN`, by `tree_digest`), the
+  mod's readings file, and the installed SudachiPy and dictionary versions
+  (`build_reuse.packages("sudachi")`: third-party code nothing measures).
+  `ruby_build.py` imports `build_reuse` first. `data/furigana` joined
+  `SHIPPED_DATA`, so a change to `jp-charset.toml` is seen (the furigana mod
+  reads it; the second-language pairs read no data file) - and
+  `make_release.py`, which ships that list, now ships its 20 KB too. `opt` is
+  taken whole with its rows (`build-keys/opt.rows.json`) when its record holds;
+  its inputs now name the sources as well as the layers.
+- **The second-language builders run side by side**, one per processor
+  (`build_second_layers`, a thread pool; one builder took 6.4 s and peaked
+  near 35 MB). The log lines, the swaps into `opt/` and the manifest rows
+  follow in the pairs' order, so the cache is the same bytes whatever order
+  they finish in. A failure leaves no record for its pair, removes every
+  pair's work folder and stops the setup as before.
+- **Kept pieces are hard-linked, not copied** (`build_reuse.take`): the new
+  cache sits beside the old one and the swap deletes the old, so the link is
+  what remains; a file system without links gets a copy. **The rule this
+  adds:** a taken file is shared with the previous cache until the swap, so no
+  step may write into one in place - replace it (remove, then write). Every
+  step does today. A forced failure after the takes (a builder made to exit 1)
+  left the previous install byte-identical, 12,148 files of 12,148.
+
+Also: `_globals` asks a fresh interpreter for each module value once per run,
+not once per step (about half a second each, some forty steps a setup).
+
+Measured on this machine, a copy of the owner's home
+(`C:\Users\kerok\bof3x-runs\fastup`):
+
+| Run | Total | Second-language rows | `opt` | mods |
+|---|---|---|---|---|
+| before (old code, cold file cache) | 248 s | 138 s | 11.6 s | 15.8 s |
+| new code, the row layers' first records (built in parallel) | 66 s | 22 s | 9.8 s | 3.8 s |
+| again, nothing changed | **31 s** | 1.7 s | 0.2 s | 0.6 s |
+| a statement added to `FontPlan.advance` (run only by `second`) | 94 s* | 24 s | 0.2 s | 0.7 s |
+
+\* 34 s of it one stalled unpack (`psp-jp`; about 1 s in every other run).
+
+Every file of the cache and the game folder was the same bytes as the old
+code's (12,148 files) but `manifest.toml`, whose `built =` time differs. With
+the statement added, `stale` named exactly the twenty pairs (not the mod,
+which does not run that function); setup rebuilt those twenty and kept the mod.

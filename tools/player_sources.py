@@ -612,37 +612,84 @@ def second_language_pairs(cache):
     return [(over, main) for main in held for over in held if over != main]
 
 
-def build_second_layers(cache, say, pairs=None):
+def build_second_layers(cache, say, pairs=None, reuse=None):
     """The second-language layers into `cache`: for each pair, ruby-<second>-<main>
     built by tools/ruby_build.py second into opt/.<layer>.new/dat, swapped into
     opt/<layer>/ and listed in the manifest's [cache] opt rows the way a mod's
     layer is (tools/mods.py build_layer), so the launcher's Row above the text
     offers it. A builder that fails or writes nothing raises SetupError (rule 4).
-    Returns the layers built."""
+    Returns the layers built.
+
+    Each pair is a measured step of its own (build_reuse.ChildStep, named for
+    its layer): `reuse`, a previous cache whose layer is taken when its record
+    holds - the builder's code and data/furigana the same, the three text
+    layers it reads (the two languages' and zh-CN's) the same bytes, the same
+    SudachiPy. The builders run side by side, one per processor; the log,
+    the swaps and the manifest rows follow in the pairs' order, so the cache is
+    the same whatever order they finish in."""
     import mods
+    from concurrent.futures import ThreadPoolExecutor
+    from build_reuse import ChildStep, packages, take, tree_digest
     builder = os.path.join(TOOLS, "ruby_build.py")
     if not os.path.isfile(builder):
         raise SetupError("The second-language rows need tools/ruby_build.py, and this release does not have it.")
-    done = []
-    for over, main in (pairs if pairs is not None else second_language_pairs(cache)):
+    pairs = list(pairs if pairs is not None else second_language_pairs(cache))
+    if not pairs:
+        say("Built 0 second-language row layer(s)")
+        return []
+    # what each builder reads of the cache (ruby_build.py Second: loc/<lang>, loc/<over>, loc/zh-CN)
+    text = {t: tree_digest(os.path.join(cache, "loc", t, "dat")) for t in {t for p in pairs for t in p} | {"zh-CN"}}
+    tokeniser = packages("sudachi")
+
+    def one(pair):
+        """(layer, its log lines, None or the failure's message): built or taken into opt/.<layer>.new."""
+        over, main = pair
         layer = "ruby-%s-%s" % (over, main)
-        final = os.path.join(cache, "opt", layer)
         work = os.path.join(cache, "opt", "." + layer + ".new")
         shutil.rmtree(work, ignore_errors=True)
         os.makedirs(work)
-        cmd = [sys.executable, "-I", builder, "second", "--cache", cache, "--lang", main, "--over", over,
-               "--out", os.path.join(work, "dat")]
-        say("Building the %s rows over the %s text into opt/%s" % (over, main, layer), quiet=True)
-        p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-        for line in (p.stdout + p.stderr).splitlines():
-            say("  " + line, quiet=True)
+        lines = ["Building the %s rows over the %s text into opt/%s" % (over, main, layer)]
+        try:
+            with ChildStep(cache, reuse, layer, "ruby-second", over, main, text[over], text[main], text["zh-CN"],
+                           tokeniser) as st:
+                kept = st.previous(os.path.join("opt", layer))
+                if kept:
+                    take(kept, work)
+                    lines.append("  %s: the previous cache's, built the same way" % layer)
+                    return layer, lines, None
+                cmd = [sys.executable, "-I", builder, "second", "--cache", cache, "--lang", main, "--over", over,
+                       "--out", os.path.join(work, "dat")]
+                p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                                   env=st.env())
+                lines += ["  " + line for line in (p.stdout + p.stderr).splitlines()]
+                dd = os.path.join(work, "dat")
+                dats = [n for n in os.listdir(dd) if n.upper().endswith(".DAT")] if os.path.isdir(dd) else []
+                if p.returncode != 0 or not dats:
+                    last = next((l for l in reversed((p.stderr + p.stdout).splitlines()) if l.strip()), "no output")
+                    # raised inside the step, so it keeps no record of a failed build
+                    raise SetupError("The second-language rows %s could not be built (exit %d, %d files): %s"
+                                     % (layer, p.returncode, len(dats), last.strip()))
+        except SetupError as e:
+            return layer, lines, str(e)
+        return layer, lines, None
+
+    with ThreadPoolExecutor(max_workers=min(len(pairs), os.cpu_count() or 1)) as pool:
+        results = list(pool.map(one, pairs))
+    failed = next((r for r in results if r[2]), None)
+    if failed:
+        for line in failed[1]:
+            say(line, quiet=True)
+        for layer, _, _ in results:
+            shutil.rmtree(os.path.join(cache, "opt", "." + layer + ".new"), ignore_errors=True)
+        raise SetupError(failed[2])
+    done = []
+    for (over, main), (layer, lines, _) in zip(pairs, results):
+        for line in lines:
+            say(line, quiet=True)
+        final = os.path.join(cache, "opt", layer)
+        work = os.path.join(cache, "opt", "." + layer + ".new")
         dd = os.path.join(work, "dat")
-        dats = sorted(n for n in os.listdir(dd) if n.upper().endswith(".DAT")) if os.path.isdir(dd) else []
-        if p.returncode != 0 or not dats:
-            shutil.rmtree(work, ignore_errors=True)
-            last = next((l for l in reversed((p.stderr + p.stdout).splitlines()) if l.strip()), "no output")
-            raise SetupError("The second-language rows %s could not be built (exit %d, %d files): %s"
-                             % (layer, p.returncode, len(dats), last.strip()))
+        dats = sorted(n for n in os.listdir(dd) if n.upper().endswith(".DAT"))
         rows = []
         for n in dats:
             with open(os.path.join(dd, n), "rb") as f:
@@ -823,7 +870,7 @@ def run_setup(a, h, log, progress, total):
                     progress(text, step=False)
             try:
                 with times.step("mods (tools/mods.py)"):
-                    mods.setup_step(h, new_cache, say)
+                    mods.setup_step(h, new_cache, say, reuse=reuse)
             except mods.BuildError as e:
                 raise SetupError(str(e))
         pairs = second_language_pairs(new_cache)
@@ -839,7 +886,7 @@ def run_setup(a, h, log, progress, total):
                 if not quiet:
                     progress(text, step=False)
             with times.step("second-language rows (ruby_build.py)"):
-                build_second_layers(new_cache, say2, pairs)
+                build_second_layers(new_cache, say2, pairs, reuse)
         os.makedirs(new_game)
         if pc:
             progress("Copying the PC game's files (the original folder is not changed)")

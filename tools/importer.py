@@ -71,7 +71,7 @@ import type1        # noqa: E402
 import vag          # noqa: E402  (wave-from-vag, docs/sound-import.md)
 import xa           # noqa: E402  (wave-from-xa)
 import at3          # noqa: E402  (psp-at3, docs/psp-only-build.md 2.1.1)
-from build_reuse import Step, read_rows, tree_digest, write_rows   # noqa: E402  (IDEAS I42, HANDOFF 11)
+from build_reuse import Step, read_rows, take, tree_digest, write_rows   # noqa: E402  (IDEAS I42, HANDOFF 11)
 import seq          # noqa: E402  (base/bgm/, docs/seq-import.md)
 import ppms         # noqa: E402  (base/bgm/ from a PSP disc, docs/psp-music.md)
 import psp_standins  # noqa: E402  (a PSP-only base, docs/psp-stand-ins.md)
@@ -993,7 +993,6 @@ def snd_from_psx(sources, out, reuse=None):
     psp or pc, DIV-0150): base/snd/ would otherwise put them over the
     install's own MP3s (SND/, docs/sound-import.md 7) wherever no source is
     chosen. The tuple ends with that folder."""
-    import shutil
     disc = next((s for s in sources if s.id.startswith("psx-") and hasattr(s, "build")), None)
     if disc is None:
         return None, None
@@ -1007,10 +1006,10 @@ def snd_from_psx(sources, out, reuse=None):
     with Step(out, reuse, "snd", "snd-xa", disc.id, ("pc " if pc else "") + (version or "no ffmpeg")) as st:
         src = st.previous(os.path.join("base", "snd"))
         if src:
-            shutil.copytree(src, dst, dirs_exist_ok=True)
+            take(src, dst)
             jsrc = st.previous(os.path.join("base", "psx-jingles")) if pc and ffmpeg else None
             if jsrc:
-                shutil.copytree(jsrc, jdst, dirs_exist_ok=True)
+                take(jsrc, jdst)
             print("  base/snd  the previous cache's, made from %s the same way (not decoded again)" % disc.id)
             snd = (disc.id, len(os.listdir(dst)))
             if ffmpeg or not pc:
@@ -1136,8 +1135,17 @@ def cmd_build(a):
     with timed("loc (every language)"):
         loc_assets = build_languages(a.lang, sources, a.out, reuse)
     with timed("opt"):
-        with Step(a.out, None, "opt", *a.opt):
-            opt_assets = build_opt(a.opt, sources, a.out, a.opt_recipe)
+        # taken from the previous cache when built the same way: the layers asked for, from the same discs
+        with Step(a.out, reuse, "opt", "opt", *a.opt, *(s.id for s in sources)) as st:
+            opt_assets = read_rows(reuse, "opt") if st.previous() else None
+            if opt_assets is not None and all(os.path.isdir(os.path.join(reuse, "opt", n)) for n in a.opt):
+                for name in a.opt:
+                    take(os.path.join(reuse, "opt", name), os.path.join(a.out, "opt", name))
+                    print("  opt/%-16s the previous cache's, built the same way" % name)
+            else:
+                st.adopted = None       # a record without its rows or layers: built again, and measured
+                opt_assets = build_opt(a.opt, sources, a.out, a.opt_recipe)
+        write_rows(a.out, "opt", opt_assets)
     with Step(a.out, None, "manifest"):
         write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe, exe,
                        bgm, psp_snd, getattr(a, "prefer", None), psx_jingles)
@@ -1264,7 +1272,7 @@ def build_languages(asked, sources, out, reuse=None):
                 if src:
                     # the previous cache's layer, and in the game folder as loc_build would have left it,
                     # for a later layer that reads it (the French and German title menus)
-                    shutil.copytree(src, d, dirs_exist_ok=True)
+                    take(src, d)
                     for name in os.listdir(d):
                         shutil.copyfile(os.path.join(d, name), os.path.join(game, "DAT", tag + "." + name))
                 else:
@@ -1292,7 +1300,6 @@ def build_languages_disc_only(asked, sources, out, reuse=None):
     `reuse`: a previous cache whose layer is taken when built under the same
     key - the donor, this cache's base/dat/ and base/exe/, the layers built
     before it in this run, the code."""
-    import shutil
     import subprocess
     assets = []
     base = None
@@ -1308,7 +1315,7 @@ def build_languages_disc_only(asked, sources, out, reuse=None):
         with Step(out, reuse, "loc-" + tag, "loc-disc-only", tag, donor.id, *base, others) as st:
             src = st.previous(os.path.join("loc", tag, "dat"))
             if src:
-                shutil.copytree(src, d, dirs_exist_ok=True)
+                take(src, d)
             else:
                 r = subprocess.run([sys.executable, os.path.join(TOOLS, "loc_build.py"), "all", "--disc", donor.path,
                                     "--cache", out, "--lang", tag], capture_output=True, text=True)
@@ -2418,7 +2425,6 @@ def fmv_build(sources, out, reuse=None):
     CAPLOGO.PMF instead (tools/psp_fmv.py); otherwise nothing, and no table.
     `reuse`: a previous cache whose movie is taken when fmv_reusable says it
     is this one."""
-    import shutil
     import subprocess
     import psx_disc
     disc = next((s for s in sources if s.id.startswith("psx-") and hasattr(s, "build")), None)
@@ -2461,7 +2467,7 @@ def fmv_build(sources, out, reuse=None):
                           "which only the player's ffmpeg converts")
     elif kept:
         os.makedirs(d, exist_ok=True)
-        shutil.copyfile(kept, dst)
+        take(kept, dst)
         print("  base/fmv  %s from %s: the previous cache's, made the same way (no conversion)" % (FMV_STR, disc.id))
         with open(dst, "rb") as fh:
             row.update(ffmpeg=version, file=FMV_DIR.replace(os.sep, "/") + "/" + FMV_NAME,
