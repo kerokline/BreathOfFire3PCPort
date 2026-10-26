@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-24: issue #121's lift stall handed over, item 000000, PR #129 for #118 / #120;
+**Status:** IN PROGRESS (2026-10-25 night: issue #149's Bone Dance hang and cart reset fixed on `fix/issue-149-bone-dance-cart`, item 000000000000; 2026-10-24: issue #121's lift stall handed over, item 000000, PR #129 for #118 / #120;
 2026-10-23 night: the sound-layer round built on `sound/round`, DIV-0169..0175, D353..D354,
 item 0000, and the twin-diff remainder on `audit/twins-remainder`, item 0b; 2026-10-23 evening: fix wave 1023 merged as
 PR #117, item 000; 2026-10-23: PRs #112, #114, #115, #116)
@@ -47,6 +47,28 @@ and the leftovers in [`quicksave.md`](quicksave.md) (a live screen grab at the t
 hosted cross form).
 
 ## Pick up here
+
+000000000000. **Issue #149 (the D.Zombie's Bone Dance never ends on a disc-built install; the cart drawn where
+   the last push rolled it after a reload) is fixed** on `fix/issue-149-bone-dance-cart` (off `main` `95ef451a`,
+   unpushed; worktree `C:\Users\kerok\bof3x-runs\i149\wt`, root `C:\Users\kerok\bof3x-runs\i149`, the
+   session's disc-built homes `D:\bof3x-runs\i149\home` (the rebuilt image) and `home_old` (the released one)).
+   (a) The hang: `BoneDanceShake_Counts` `0x65AA64` (three beat lengths, 10 / 14 / 14) is a `game-value` gap on
+   every disc-built image, zeroed, so the first beat's countdown wraps to 0xFF and the shaker never hands on
+   ([`magic_c2.md`](magic_c2.md) 2, `BoneDanceShake_Step`). The owning-function search (`exe_tables.find_imm`)
+   now accepts a whole region of three or more non-zero bytes, every one equal, anchored by the twin's address
+   ([`exe-immediate-places.md`](exe-immediate-places.md) 3): two `immref` rows on all seven builds
+   (`BoneDanceShake_Counts` from `MAGIC057.EMI#3`, `EffectKind75_States+0xC` from `AREA188.EMI#13`), the
+   recipes regenerated over the seven discs, `check` 0 errors, `exe_own.py measure` + `gaps` dropping exactly
+   those 14 gap rows. **A player's install needs the rebuild** (`importer.py stale` names `exe`). (b) The cart:
+   D145 found in play; DIV-0181 copies area 108's model and area 52's scene byte at inject and puts them back when
+   `Area_Enter` loads the area's DAT (`src/game/area_data_reload.cpp`; `BOF3X_ORIGINAL=AreaDataReload`).
+   **Numbering:** `fix/issue-142-ryu-facing` also carries a DIV-0181 (the cell-texture rebuild); whichever merges
+   second takes the next number (`ledger_check.py` wants them contiguous). **Owed:** the owner's play of both;
+   the owner's `zombieDragonAndCartReset` route's reload is not a title reload (the area never changes), so the
+   put-back was verified with the `minecartToZombieDragon` route plus an F9 restart and a slot-0 load; and the
+   garrAbility side thread: Garr's ability button does nothing by Capcom's own test (member kind 2 is refused in
+   `Field_LeaderCheckTest`, the PSX `FUN_801B6EB4` the same), his push is the walk-into count, and the cart's
+   "Maybe Garr would be able to push it..." line is its unconditional examine text.
 
 00000000000. **The every-door sweep is built** on `harness/every-door` (off `main` `48511747`, merged with the data diff on `harness/build-diff-prevention`, unpushed;
    [`door-sweep.md`](door-sweep.md)). Run: `abc_run.py prepare --set us-disc`, then `door_sweep.py run --set

@@ -3719,11 +3719,13 @@ that end.
 **Status:** latent: the shipped headers and chains are well-formed by
 reading.
 
-## D145 — The PC keeps an area's `.data` across visits where the PSX reloads the overlay (PC only, latent)
+## D145 — The PC keeps an area's `.data` across visits where the PSX reloads the overlay (PC only, fixed by DIV-0181)
 
-**Seen:** not seen in play; found by reading the code while taking it over,
-2026-09-28, groups AR1C ([`area_w1c.md`](area_w1c.md) §6) and AR2F
-([`area_w2f.md`](area_w2f.md) §6).
+**Seen:** found by reading the code while taking it over, 2026-09-28, groups
+AR1C ([`area_w1c.md`](area_w1c.md) §6) and AR2F ([`area_w2f.md`](area_w2f.md)
+§6); seen in play 2026-10-25 by issue #149's reporter: after a reload of a
+save in the Dauna Mine's area 108 the cart stood where the last push had
+rolled it (the issue's second picture).
 
 **Established:** two area blocks write their own `.data`: `Area52_TailBlock`
 `0x40A670` sets byte `+1` of the descriptor's first extra-object entry
@@ -3736,8 +3738,10 @@ entry to area 52 sees the last scene's byte and a second visit to area 108
 starts from the last scene's positions. Not measured in play; the fuzzes
 seed both.
 
-**Status:** latent, PC only. A DIVERGENCE entry would reset the two on
-entry, if a second visit is found to differ.
+**Status:** fixed by DIV-0181 (2026-10-25): the two areas' bytes are copied
+at inject and put back each time `Area_Enter` loads the area's DAT, the
+moment the PlayStation loaded the overlay. `BOF3X_ORIGINAL=AreaDataReload`
+for the port's.
 
 ## D146 — Choices that leave the message word as they found it (latent)
 

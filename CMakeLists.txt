@@ -210,6 +210,7 @@ add_library(bof3x SHARED
   src/game/mode_flow.cpp
   src/game/mode_flow_fuzz.cpp
   src/game/area_entry.cpp
+  src/game/area_data_reload.cpp
   src/game/area_entry_fuzz.cpp
   src/game/d3d_fuzz.cpp
   src/game/glyph_draw.cpp

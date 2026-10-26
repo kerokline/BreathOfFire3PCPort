@@ -200,7 +200,7 @@ Columns:
 | `EffectKind33_SignZ` | `0x654400..0x654410` | disc-unplaced | all 7 | 1 / 10 | as above | as above | **NEEDS FIX** - P2, `twin` by byte search (windows on the disc): 1 of 1 |
 | `EffectKind65_ShakeSteps` | `0x6549E8..0x6549EC` | game-value | all 7 | 1 / 2 | kind 0x65 (`kShakeSteps`) | no shake | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
 | `EffectKind6D_States` | `0x654A9C..0x654AA0` | game-value | PSX (5) | 1 / 2 | `EffectKind6D_DrawParticle` (kind 0x6F colour) | a colour 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
-| `EffectKind75_States` | `0x654AF8..0x654AFB` | game-value | all 7 | 1 / 3 | `EffectKind75_Run` (two pulse shades) | shade 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
+| `EffectKind75_States` | `0x654AF8..0x654AFB` | game-value | all 7 | 1 / 3 | `EffectKind75_Run` (two pulse shades) | shade 0 | **PLACED 2026-10-25** - an `immref` row on all 7 (`AREA188.EMI#13`, the whole-region floor of exe-immediate-places.md 3; issue #149's round) |
 | `EffectKind86_States` | `0x654D84..0x654D9C` | game-value | JP, US, EU, FR, pJP, pEU | 1 / 13 | `EffectKind86_Spawn` (the 17-byte EventOp_0x operand 0x654D88) | two objects placed from a zero operand (not measured) | **NEEDS FIX** - **P2**; DE disc-unplaced P2, `twin` by byte search (windows on the disc) (1 of 2); else P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
 | `EffectKind99_States` | `0x6550E0..0x655100` | disc-unplaced | all 7 | 1 / 20 | `EffectKind99_Run` (fan link offsets) | fans linked at 0 | **NEEDS FIX** - P2, `twin` by byte search (windows on the disc): 3 of 3 |
 | `EffectKind9A_Branches` | `0x655168..0x655170` | game-value | PSX (5) | 1 / 8 | kind 0x9A, by table | branch 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
@@ -211,7 +211,7 @@ Columns:
 | `AirRaidImage_ShadeSteps` | `0x65A698..0x65A69C` | game-value | PSX (5) | 1 / 4 | magic S04 | shade 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
 | `Magic020Slash_Animations` | `0x65A6DC..0x65A6E8` | game-value | all 7 | 1 / 8 | magic S06 | slash animation 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
 | `WardMote_Tilts` | `0x65A918..0x65A924` | game-value | all 7 | 1 / 5 | `WardMote_PushMatrix` | tilt 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
-| `BoneDanceShake_Counts` | `0x65AA64..0x65AA68` | game-value | all 7 | 1 / 3 | magic C2 | shake count 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
+| `BoneDanceShake_Counts` | `0x65AA64..0x65AA68` | game-value | all 7 | 1 / 3 | magic C2 | shake count 0: **the D.Zombie's Bone Dance never ends on a disc-built install** (issue #149, seen 2026-10-25) | **PLACED 2026-10-25** - an `immref` row on all 7 (`MAGIC057.EMI#3`, the whole-region floor of exe-immediate-places.md 3) |
 | `TornadoMote_Phases` | `0x65AAA8..0x65AAD0` | game-value | all 7 | 1 / 25 | **`Identify_DrawEnemy` / `_DrawMember` / `_DrawItem`** (0x65AAC4.. the question marks); `TornadoMote_Task` below | **the Identify panel's `?` marks blank** (D278, captured 2026-10-13); JP and PSP too by this table | **NEEDS FIX** - **P1**: D278's two `twin` rows (US `0x801F0B88` 4 bytes, `0x801F0B8C` 8), found, not built; the rest P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
 | `ReviveHalo_MoteCounts` | `0x65B1D4..0x65B1D8` | game-value | all 7 | 1 / 2 | magic S17 | 0 motes | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
 | `Magic087_RisePhases` | `0x65B528..0x65B52C` | game-value | all 7 | 1 / 4 | `Magic087_RiseRun` | phase 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
@@ -635,8 +635,9 @@ reach is 38 of the 63 stage-B rows with a twinned reader, against 10 before it
 (FP 5).
 
 - *Twinned, not placed:*
-  - under the four-byte floor: `EffectKind75_States+0xC`,
-    `BoneDanceShake_Counts`, `GameMode3_Steps+0xC`;
+  - under the four-byte floor: `GameMode3_Steps+0xC` (`EffectKind75_States+0xC`
+    and `BoneDanceShake_Counts` placed 2026-10-25 by the whole-region floor,
+    issue #149);
   - the twin's addressed bytes differ, not settled as a finding:
     `EffectKind18Sub31` / `Sub2E` / `Sub30`, `AuraBreathDome_Height`;
   - the twin's body not found once on the other builds: `Sub37` outside psx-jp;

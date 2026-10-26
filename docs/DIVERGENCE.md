@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 180 entries, DIV-0001..0180, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 181 entries, DIV-0001..0181, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -11346,3 +11346,67 @@ designed in rather than bolted on.
   `C:\Users\kerok\bof3x-runs\door135`.
 - **Reversible?** `BOF3X_ORIGINAL=Area135MarkerPlaced` (the original's
   init, crash included); `BOF3X_ORIGINAL=Area135_Init` runs Capcom's.
+
+### An area's own `.data` is put back when its DAT is loaded, as the PlayStation's overlay reload did
+
+- **ID:** DIV-0181
+- **Date:** 2026-10-25
+- **Subsystem:** field - the area load (`Area_Enter` `0x594E60`, ours,
+  `src/game/mode_flow.cpp`) and two area blocks that write their own
+  `.data`: `Area108_TailPlace` `0x417210` (`src/game/area_w2f.cpp`,
+  [`area_w2f.md`](area_w2f.md) 1.1) and `Area52_TailBlock` `0x40A670`
+  (`src/game/area_w1c.cpp`, [`area_w1c.md`](area_w1c.md) 6). D145
+  ([`known-defects.md`](known-defects.md)), found in play by issue #149's
+  reporter. The reset is `src/game/area_data_reload.cpp`.
+- **Tier:** Intent - a port repair.
+- **Original behaviour:** the cart of the Dauna Mine's area 108 is
+  `Area108_Model` (`0x61E508`): a header (an s8 count, 0x21 in the image,
+  a flags byte at +3, a pointer at +4) and 33 records of 0x28 bytes at
+  `0x61D2E4`, four corners of three s16 and a velocity. The push scene's
+  tail (state 4) sets the flags byte `& 0xF1 | 0x41` and state 5 moves
+  every record's corners by its velocity `>> 8` each frame until the
+  timer ends - the cart rolling along the rails is those corners moving
+  in `.data`. Area 52's timed scene sets byte +1 of the area's first
+  extra-object entry (`0x5FE049`) to 0 as it begins and 0xFF as it ends.
+  On the PlayStation each area's code and tables are an overlay
+  (`WORLD02/AREA108.EMI`, `WORLD01/AREA052.EMI`) loaded from disc with the
+  area, so every entry starts from the disc's bytes. The port links every
+  overlay into one image: the bytes stay as the last scene left them
+  until the exe restarts. So on the PC a reload of a save in area 108
+  after a push - or a second visit without quitting - draws the cart
+  where the last scene rolled it, and the next push scene starts from
+  there (issue #149, the reporter's second picture; the owner's reading
+  "it must not reset that bit until the exe is restarted").
+- **New behaviour:** at inject, before any scene, the two areas' bytes
+  are copied (the model's 8-byte header and its `count` records; area
+  52's byte). Each time `Area_Enter` loads an area's DAT - the branch the
+  PlayStation took to load the overlay as well, taken when the area
+  number differs and `Field_Request` is 5, which a save's load reaches
+  through `Game_AreaNumber` 0xFFFF - the copy is put back for area 108 or
+  52. One log line when a put-back changed anything. Nothing else of any
+  area is touched; a same-area change (no DAT load) keeps the bytes, as
+  the PlayStation keeps its loaded overlay.
+- **Rationale:** the PlayStation never showed a rolled cart on entry; the
+  scene's data starts fresh with the area by the console's own loading,
+  not by any code of Capcom's, so putting the image's bytes back at the
+  same moment restores what the scripts were written against. Nothing is
+  invented: the bytes are the image's own, the moment is the DAT load.
+- **Also in the PSX version?** No: the overlay reload is the console's.
+  `Area108_TailPlace`'s twin `0x801F56E0`-side code moves the same
+  records in the overlay's own memory; the next load overwrites them.
+- **Verification:** `tools/recipes/cartReload.txt` (the owner's push route,
+  F9 twice to the title, slot 0 loaded; `--slot0-hold`), speed 4, the PC
+  install: after the route the model's flags byte is 0x41 and record 0's
+  first words `0xFFD90003 0x013F0172` (rolled); the load logs `DIV-0181
+  area 108's cart model put back at the area's load` and the words read
+  0x00, `0x00300003 0x00000050` - the image's - with the cart drawn at its
+  start (`C:\Users\kerok\bof3x-runs\i149\run_reload4\field.png`); the
+  same route under `BOF3X_ORIGINAL=AreaDataReload` (the hosted build)
+  reads 0x41 and the rolled words after the load. Self-test:
+  `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=mode_flow` from an ini-less launcher
+  copy, exit 0, 41,000 rounds over 41 functions, 0 mismatches (the copy is
+  taken before any fuzz; the fuzzes restore the model's bytes). Not yet:
+  the owner's play, area 52's scene (no route; the byte's put-back is the
+  same code path).
+- **Reversible?** `BOF3X_ORIGINAL=AreaDataReload` keeps the port's
+  (the bytes stay until the exe restarts).
