@@ -11359,14 +11359,19 @@ designed in rather than bolted on.
   ([`known-defects.md`](known-defects.md)), found in play by issue #149's
   reporter. The reset is `src/game/area_data_reload.cpp`.
 - **Tier:** Intent - a port repair.
-- **Original behaviour:** the cart of the Dauna Mine's area 108 is
-  `Area108_Model` (`0x61E508`): a header (an s8 count, 0x21 in the image,
-  a flags byte at +3, a pointer at +4) and 33 records of 0x28 bytes at
-  `0x61D2E4`, four corners of three s16 and a velocity. The push scene's
-  tail (state 4) sets the flags byte `& 0xF1 | 0x41` and state 5 moves
-  every record's corners by its velocity `>> 8` each frame until the
-  timer ends - the cart rolling along the rails is those corners moving
-  in `.data`. Area 52's timed scene sets byte +1 of the area's first
+- **Original behaviour:** area 108's extra-object entries at
+  `Area108_Model` (`0x61E508`, 8 bytes each: an s8 quad count, two bytes, a
+  flags byte, a pointer) name three models of 0x28-byte records (four
+  corners of three s16 and a velocity) at `0x61D2E4`: entry 0's 33 quads,
+  entry 1's 55 faces - the cart itself, `Sprite_ObjectsExtra[1]` - and
+  entry 2's 28. The push scene's tail (state 4) sets entry 0's flags byte
+  `& 0xF1 | 0x41` and spawns the blast, effect kind 0x35
+  ([`effect_2b.md`](effect_2b.md) 1.3), whose pieces rewrite the cart's
+  55 faces in place as they fly (measured 2026-10-25 night: record 0's
+  words `0x00700004 0xFFD0FF90 ..` after the load, `0x04F40004 0x053CF956
+  ..` after the blast, and so after a reload); state 5 moves entry 0's
+  corners by their velocities `>> 8` each frame until the timer ends.
+  Area 52's timed scene sets byte +1 of the area's first
   extra-object entry (`0x5FE049`) to 0 as it begins and 0xFF as it ends.
   On the PlayStation each area's code and tables are an overlay
   (`WORLD02/AREA108.EMI`, `WORLD01/AREA052.EMI`) loaded from disc with the
@@ -11378,8 +11383,9 @@ designed in rather than bolted on.
   there (issue #149, the reporter's second picture; the owner's reading
   "it must not reset that bit until the exe is restarted").
 - **New behaviour:** at inject, before any scene, the two areas' bytes
-  are copied (the model's 8-byte header and its `count` records; area
-  52's byte). Each time `Area_Enter` loads an area's DAT - the branch the
+  are copied (every entry of `Area108_Model` whose count is positive and
+  whose pointer lies in `.data` below the table - the image's three - with
+  its `count` records: 4,640 bytes; area 52's byte). Each time `Area_Enter` loads an area's DAT - the branch the
   PlayStation took to load the overlay as well, taken when the area
   number differs and `Field_Request` is 5, which a save's load reaches
   through `Game_AreaNumber` 0xFFFF - the copy is put back for area 108 or
@@ -11394,11 +11400,19 @@ designed in rather than bolted on.
 - **Also in the PSX version?** No: the overlay reload is the console's.
   `Area108_TailPlace`'s twin `0x801F56E0`-side code moves the same
   records in the overlay's own memory; the next load overwrites them.
-- **Verification:** `tools/recipes/cartReload.txt` (the owner's push route,
+- **Verification:** the owner's `zombieDragonAndCartReset.txt` (the push,
+  the blast, the D.Zombie, F9 twice, slot 0 loaded), speed 4, the PC
+  install, shot frame-exactly by `recipe_shots.py` at 11,500: the blast's
+  planks lie on the ground after the reload with the switch off and with
+  only entry 0 restored (`run_s_orig`, `run_s_fix`); none with all three
+  (`run_s_fix2`), the cart's record 0 reading `0x00700004` again. The same
+  route with F12 after the fight and the quicksave loaded instead: no
+  cart and no planks (`run_f12`), the area's scripts deciding by the story
+  flags, as a save made after the blast should. `tools/recipes/cartReload.txt` (the owner's push route,
   F9 twice to the title, slot 0 loaded; `--slot0-hold`), speed 4, the PC
-  install: after the route the model's flags byte is 0x41 and record 0's
+  install: after the route entry 0's flags byte is 0x41 and its record 0's
   first words `0xFFD90003 0x013F0172` (rolled); the load logs `DIV-0181
-  area 108's cart model put back at the area's load` and the words read
+  area 108's models put back at the area's load` and the words read
   0x00, `0x00300003 0x00000050` - the image's - with the cart drawn at its
   start (`C:\Users\kerok\bof3x-runs\i149\run_reload4\field.png`); the
   same route under `BOF3X_ORIGINAL=AreaDataReload` (the hosted build)

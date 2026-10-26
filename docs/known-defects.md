@@ -3738,7 +3738,8 @@ entry to area 52 sees the last scene's byte and a second visit to area 108
 starts from the last scene's positions. Not measured in play; the fuzzes
 seed both.
 
-**Status:** fixed by DIV-0181 (2026-10-25): the two areas' bytes are copied
+**Status:** fixed by DIV-0181 (2026-10-25): the two areas' bytes (area 108's three models - the blast, effect kind 0x35,
+rewrites the cart's faces in place too, which this entry's reading missed - and area 52's byte) are copied
 at inject and put back each time `Area_Enter` loads the area's DAT, the
 moment the PlayStation loaded the overlay. `BOF3X_ORIGINAL=AreaDataReload`
 for the port's.

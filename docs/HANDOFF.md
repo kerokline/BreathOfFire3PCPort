@@ -60,12 +60,16 @@ hosted cross form).
    (`BoneDanceShake_Counts` from `MAGIC057.EMI#3`, `EffectKind75_States+0xC` from `AREA188.EMI#13`), the
    recipes regenerated over the seven discs, `check` 0 errors, `exe_own.py measure` + `gaps` dropping exactly
    those 14 gap rows. **A player's install needs the rebuild** (`importer.py stale` names `exe`). (b) The cart:
-   D145 found in play; DIV-0181 copies area 108's model and area 52's scene byte at inject and puts them back when
+   D145 found in play; DIV-0181 copies area 108's three models (the blast rewrites the cart's 55 faces in place, not only the
+   push scene's 33-quad model D145 named) and area 52's scene byte at inject and puts them back when
    `Area_Enter` loads the area's DAT (`src/game/area_data_reload.cpp`; `BOF3X_ORIGINAL=AreaDataReload`).
    **Numbering:** `fix/issue-142-ryu-facing` also carries a DIV-0181 (the cell-texture rebuild); whichever merges
    second takes the next number (`ledger_check.py` wants them contiguous). **Owed:** the owner's play of both;
-   the owner's `zombieDragonAndCartReset` route's reload is not a title reload (the area never changes), so the
-   put-back was verified with the `minecartToZombieDragon` route plus an F9 restart and a slot-0 load; and the
+   the owner's `zombieDragonAndCartReset` route was recorded before the recorder wrote F-keys, so its two F9
+   presses went in by hand (`hold f9 5`); with them the route's reload shows the put-back (frame-exact shots: no planks after the reload; a quicksave after the
+   fight reloads with no cart and no planks, by the flags), as does
+   `cartReload.txt` (the push route plus an F9 restart and a slot-0 load). The recorder change
+   (`tools/recorder-fkeys`, item 000000) is cherry-picked onto this branch; and the
    garrAbility side thread: Garr's ability button does nothing by Capcom's own test (member kind 2 is refused in
    `Field_LeaderCheckTest`, the PSX `FUN_801B6EB4` the same), his push is the walk-into count, and the cart's
    "Maybe Garr would be able to push it..." line is its unconditional examine text.
@@ -166,7 +170,8 @@ hosted cross form).
    `i121x`). **PR #129** (2026-10-24, open, the owner's listen before merge) fixes #118
    (D355) and #120 (DIV-0177, D356); the owner's `game\` folder runs that build. Local branches from the same
    session: `tools/recorder-fkeys` (the recorder writes F1..F11 and a pause's keys as `key KEY 0`, built and
-   tested by a record-and-replay at the title, **uncommitted** in worktree `i121x\wt`) and `test/alpha4-fasttext`
+   tested by a record-and-replay at the title; committed 2026-10-25 night as `53a1eeaa` and cherry-picked onto
+   `fix/issue-149-bone-dance-cart`, item 000000000000) and `test/alpha4-fasttext`
    (a test build only, not for merge).
 
 00000. **The Sunder loop is built** on `cut/sunder-loop` (off `main` `2f55de72`, worktree

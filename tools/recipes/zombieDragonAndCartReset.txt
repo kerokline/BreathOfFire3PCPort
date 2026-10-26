@@ -436,7 +436,11 @@ wait 180
 hold circle 6
 wait 24
 hold circle 5
-wait 130
+wait 50
+hold f9 5
+wait 40
+hold f9 5
+wait 50
 hold start 4
 wait 64
 hold start 7
