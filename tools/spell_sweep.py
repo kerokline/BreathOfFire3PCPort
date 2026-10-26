@@ -35,6 +35,7 @@ Usage:
   python tools/spell_sweep.py run --route R --cut F --members N --root DIR --launcher EXE
       [--side member|enemy] [--sections "Skills,Attack type spells"] [--ids ..] [--chunk K]
       [--speed 4] [--lang en-US] [--env K=V ...] [--enemy-flags 0x..]
+      [--poke "ADDR TYPE VALUE" ...] [--peek "ADDR TYPE NAME" ...] [--sibling DIR]
   `run` generates a chunk, runs it through input_run.py, reads the launcher's
   bof3x.log, writes results.tsv (id, name, section, status, caster, effect
   handlers, frames) and goes on past a FATAL or FAILED at the id after it.
@@ -224,7 +225,7 @@ def defend_block():
             f'until 0x{STEP:X} u8 != 4 timeout 300']
 
 
-def cast_block(side, ability, name, members, shots, spacing, enemy_flags, enemy_odds=1):
+def cast_block(side, ability, name, members, shots, spacing, enemy_flags, enemy_odds=1, pokes=(), peeks=()):
     tag = f'{"i" if side == "item" else "a"}{ability:03d}'
     L = [f'mark ability {ability} {name}',
          f'until 0x{STEP:X} u8 == 2 timeout 1800']
@@ -257,11 +258,13 @@ def cast_block(side, ability, name, members, shots, spacing, enemy_flags, enemy_
         L += defend_block()[1:]          # the first cross is already up
         for m in range(1, members):
             L += defend_block()
+    L += [f'poke {p}' for p in pokes]          # --poke: after the sweep's own, before the cast
     L += [f'until 0x{PHASE:X} u8 != 1 timeout 900']
     for k in range(shots):
         L += [f'shot {tag}_{k} 2', f'wait {spacing}']
     if side == 'enemy':
         L += [f'peek 0x{ENEMY + 0x105:X} u8 enemy0_command_kind', f'peek 0x{ENEMY + 0x106:X} u16 enemy0_ability']
+    L += [f'peek {p}' for p in peeks]          # --peek: after the shots
     # back to the input phase before the next block, so a stall is this ability's: a message a cast
     # leaves open waits for a button (confirm every twelve frames), a cast that never ends gives up at 480 frames
     L += [f'seek circle 0x{PHASE:X} u8 == 1 max 40']
@@ -285,7 +288,8 @@ def write_recipe(path, a, head, chunk, table, n):
     lines += [f'until 0x{FIELD_MODE:X} u16 == 5 timeout 3000', 'mark in battle'] + prologue_peeks()
     lines += [f'seek circle 0x{PHASE:X} u8 == 1 max 120']
     for i in chunk:
-        lines += cast_block(a.side, i, table[i][0], a.members, a.shots, a.spacing, a.enemy_flags, a.enemy_odds)
+        lines += cast_block(a.side, i, table[i][0], a.members, a.shots, a.spacing, a.enemy_flags, a.enemy_odds,
+                            a.poke, a.peek)
     lines += ['mark chunk done', 'end']
     with open(path, 'w', encoding='utf-8', newline='\n') as f:
         f.write('\n'.join(lines) + '\n')
@@ -476,6 +480,10 @@ def main():
         p.add_argument('--side', choices=('member', 'enemy', 'item'), default='member')
         p.add_argument('--enemy-odds', type=lambda s: int(s, 0), default=1, help="the fight's enemy 0 byte +0x8E (peeked): its row of 0x65563C is poked to 0xFF")
         p.add_argument('--enemy-flags', type=lambda s: int(s, 0), default=0, help="the fight's enemy 0 flag word +0x90 (peeked); bit 0x20 is added")
+        p.add_argument('--poke', action='append', default=[], metavar='"ADDR TYPE VALUE"',
+                       help="an input_run poke added to every cast after the sweep's own (an A/B on one byte)")
+        p.add_argument('--peek', action='append', default=[], metavar='"ADDR TYPE NAME"',
+                       help="an input_run peek logged after every cast's shots")
         if name == 'recipes':
             p.add_argument('--out', required=True)
         else:

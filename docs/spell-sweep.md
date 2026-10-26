@@ -141,7 +141,17 @@ A disc-built install: `--game <install's game dir> --env BOF3X_EXEIMAGE=<its cac
 
 `--sibling DIR` before the subcommand names the archival sibling's checkout
 when the tool runs from a worktree that has none beside it (the other row
-tools' option). The launcher folder must hold no `bof3x.ini` (the play ini's cheats and
+tools' option).
+
+An A/B on one cast: `--ids 68 --chunk 1`, `--poke "0x93BA1F u8 1"` (an
+`input_run` poke added to every cast after the sweep's own) and `--peek
+"0x93BA1F u8 e_fire"` (a peek logged after the shots), both repeatable; the
+same run with `--env BOF3X_ORIGINAL=<the functions>` is Capcom's code on the
+same fight - **through `bof3x-launcher-dev.exe`**, since the release
+launcher refuses the hosted-only switches with a dialog. Added 2026-10-26
+for the Foretell question (section 4).
+
+The launcher folder must hold no `bof3x.ini` (the play ini's cheats and
 options would change the fight; [`abc-harness.md`](abc-harness.md)). One
 game at a time: the driver reads the launcher folder's `bof3x.log`. About
 400 recipe frames an ability, under two seconds at speed 4; a chunk of ten
@@ -178,7 +188,24 @@ cast, the list shot `aNNN_list.png`):
 - Foretell (68): the message reads "Terrible luck.Lucky color:" and then a
   blank box where the colour's word should be (`a068_5.png`). Whether the
   PC's own text has the word, or the box is the game's, is not settled
-  here.
+  here. **Settled 2026-10-26, not a defect:** the box is the game's grey
+  tile. The lucky colour is never a word - `Foretell_DrawTiles` draws one
+  8 x 12 tile per element the enemy is weak to (its resistance class at
+  most 1, holy at most 3) after the colon, and one 0x60 grey tile when
+  there is none ([`magic_s15.md`](magic_s15.md) 1). The route's Gooey
+  (area 20 slot 4) is class 2 in every element and 5 in holy, so grey; the
+  en-US overlay's five messages are the US disc's own bytes word for word,
+  "Terrible luck." with no space before "Lucky" on both. The grade is the
+  fight's, not the pokes': HP 999 / 999 is the same full-HP band the fight
+  starts in, and the party's levels 1 / 1 / 5 against the Gooey's 45 give
+  the lowest level band (5) less the three-against-one bias (12): -7,
+  "Terrible luck". Capcom's own fourteen Foretell functions
+  (`BOF3X_ORIGINAL`, the developer launcher) draw the identical frame
+  (384 grey pixels at the same place), and with the Gooey's fire and holy
+  bytes poked weak (`--poke "0x93BA1F u8 1" --poke "0x93BA24 u8 3"`) ours
+  and Capcom's both draw a red and a white tile. Harness root
+  `C:\Users\kerok\bof3x-runs\ss1026\fore` (`pc_ours`, `pc_orig`,
+  `pc_ours_weak`, `pc_orig_weak`, `pc_levels`).
 - Super Combo (3): the prompt box at the field's centre reads "GO!!" on
   the PC (`a003_1.png`) - and is **blank on the disc-built install**
   (section 6).
