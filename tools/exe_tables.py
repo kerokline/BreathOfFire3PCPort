@@ -499,6 +499,7 @@ def recipe_imm(pc, exe, held, places, pointers, report=print):
             cls[x] = c
     own = own_bytes()
     starts = data_symbols()[0]
+    ends = data_extents()
     jp, out = None, {}
     for bid, disc in held:
         srcs = {(f, s): (base, blob) for f, s, base, blob in exe_twins.sources(disc)}
@@ -513,7 +514,7 @@ def recipe_imm(pc, exe, held, places, pointers, report=print):
         else:
             twins = build_twins(srcs, pairs, jp, need=set(jp[1]) if jp else ())
         stats = collections.Counter()
-        out[bid] = find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, starts, stats)
+        out[bid] = find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, starts, stats, ends)
         report("%s: %d owning-function rows (%s)" % (bid, len(out[bid]), ", ".join(
             "%s %d" % kv for kv in sorted(stats.items()))))
     return out
@@ -616,6 +617,12 @@ def build_twins(srcs, pairs, jp=None, need=()):
                 hits = exe_imm.find_body(sig, srcs[k][1], srcs[k][0])
                 if len(hits) == 1:
                     out[t].add((k, hits[0]))
+                elif g in hits:
+                    # several copies of the body in the file (a templated state function, the boss
+                    # *_Enter functions' three in BOSS035.EMI#16) and one at psx-jp's own address:
+                    # that one is the twin; the byte compare still decides the row
+                    # (docs/exe-immediate-places.md 7.2)
+                    out[t].add((k, g))
     return out
 
 
@@ -623,18 +630,26 @@ def build_twins(srcs, pairs, jp=None, need=()):
 IMM_SKIP = [(0x61B4F0, 0x61B4F7, "Area104_PlateAnims: DIV-0055's re-laid plates, the owner's call")]
 
 
-def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=None):
+IMM_FOLD = 8    # a reader's operand this far below a region that starts at its data symbol is an index fold
+
+
+def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=None, data_ends=None):
     """The owning-function rows for one build (docs/exe-immediate-places.md): for
     each region imm_regions gives, each PC function whose operands name it (from
-    its data symbol's start, `readers` from text_readers), each of that
+    its data symbol's start, `readers` from text_readers; or, for a region that
+    starts at its symbol, up to IMM_FOLD bytes below it - an index the compiler
+    folded into the operand, read as the symbol itself), each of that
     function's twins (build_twins, sym_twins): an `immref` row where an address
     the twin's lui pair forms, displaced as the PC's operand is from the region,
     holds the region's bytes in a section of the twin's file - every number byte
-    from the operand to the region's end (or the section's end) equal to the
-    PC's, four bytes or more of which two non-zero; or an `imm` row where the
-    twin's stores of constants rebuild every non-zero byte of the region, two
-    elements or more. A region two different places fit is left (ambiguous),
-    as is every region nothing fits. `stats`, a Counter, counts why."""
+    from the operand to the region's end (or the section's end, or the reader
+    symbol's declared end in `data_ends` where the bytes past it differ) equal
+    to the PC's, four bytes or more of which two non-zero, or the whole region's
+    non-zero bytes (three, or two at the section's end); or an `imm` row where
+    the twin's stores of constants rebuild every non-zero byte of the region,
+    two elements or more. A region two different places fit is left
+    (ambiguous), as is every region nothing fits. `stats`, a Counter, counts
+    why."""
     import exe_imm
     stats = collections.Counter() if stats is None else stats
     byfile = collections.defaultdict(list)
@@ -650,10 +665,17 @@ def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=
             continue
         j = bisect.bisect_right(data_starts, lo) - 1
         base = data_starts[j] if j >= 0 and data_starts[j] > lo - IMM_REACH else lo
+        sym_end = (data_ends or {}).get(base)
         ops = collections.defaultdict(set)
         for v in rkeys[bisect.bisect_left(rkeys, base):bisect.bisect_left(rkeys, hi)]:
             for f in readers[v]:
                 ops[f].add(v)
+        if base == lo:
+            # the index fold (AirRaidImage_Bounce's [idx*2 + symbol-2], the index from 1): the
+            # operand lies just below the symbol, the twin forms the symbol's own address
+            for v in rkeys[bisect.bisect_left(rkeys, lo - IMM_FOLD):bisect.bisect_left(rkeys, lo)]:
+                for f in readers[v]:
+                    ops[f].add(lo)
         if not ops:
             stats["no reader"] += 1
             continue
@@ -693,31 +715,41 @@ def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=
                         if len(hold) != 1:
                             continue
                         b2, blob2 = srcs[hold[0]]
-                        end, ok, agree, agree_nz = hi, True, 0, 0
+                        end, ok, tail = hi, True, False
                         for x in range(min(a_op, lo), hi):
                             o = addr + (x - a_op) - b2
                             if not 0 <= o < len(blob2):
                                 if x < lo:
                                     ok = False
                                 else:
-                                    end = x
+                                    end, tail = x, True
                                 break
                             if x in ptr:
                                 continue
                             if blob2[o] != pc[x - DATA_LO]:
                                 # the PC's zero tail (alignment) where the PSX packs its next data: the row
-                                # ends there (FP, docs/install-gap-pairs.md); any other difference refuses it
+                                # ends there (FP, docs/install-gap-pairs.md); past the reader symbol's
+                                # declared extent, the bytes are another symbol's and the row ends at
+                                # that extent (WardMote_Tilts, short[4], then MAGIC044's two shorts;
+                                # docs/exe-immediate-places.md 7.2); any other difference refuses it
                                 if x >= lo and not any(pc[x - DATA_LO:hi - DATA_LO]):
                                     end = x
                                     break
+                                if sym_end is not None and lo < sym_end <= x:
+                                    end = sym_end
+                                    break
                                 ok = False
                                 break
-                            agree += 1
-                            agree_nz += pc[x - DATA_LO] != 0
+                        span = [x for x in range(min(a_op, lo), end) if x not in ptr]
+                        agree = len(span)
+                        agree_nz = sum(1 for x in span if pc[x - DATA_LO])
                         # the floor: four bytes of which two non-zero - or a whole region whose every
-                        # non-zero byte (three or more) agrees, the row anchored by the twin's address
-                        # (BoneDanceShake_Counts, three beat lengths and a zero: issue 149)
-                        whole = end >= lo + (nz[-1] + 1 if nz else 0) and agree_nz == len(nz) and agree_nz >= 3
+                        # non-zero byte agrees, the row anchored by the twin's address: three or more
+                        # (BoneDanceShake_Counts, three beat lengths and a zero: issue 149), or two
+                        # where the section ends with the region (Area121_BandHeights, 00 78 C8 at
+                        # AREA121.EMI#14's end; docs/exe-immediate-places.md 7.2)
+                        whole = (end >= lo + (nz[-1] + 1 if nz else 0) and agree_nz == len(nz)
+                                 and (agree_nz >= 3 or (tail and agree >= 3 and agree_nz >= 2)))
                         if not ok or end <= lo or not any(want[:end - lo]) or not ((agree >= 4 and agree_nz >= 2) or whole):
                             continue
                         place = (hold[0][0], addr + (lo - a_op))
@@ -1850,6 +1882,14 @@ def data_symbols():
     with open(os.path.join(ROOT, "symbols.toml"), "rb") as f:
         data = sorted(tomllib.load(f)["data"], key=lambda e: e["pc"])
     return [e["pc"] for e in data], [e["name"] for e in data]
+
+
+def data_extents():
+    """{[[data]] symbol start: its end} for the symbols whose ctype x count gives one."""
+    with open(os.path.join(ROOT, "symbols.toml"), "rb") as f:
+        data = tomllib.load(f)["data"]
+    return {e["pc"]: e["pc"] + exe_twins.CSIZE[e["ctype"]] * e["count"]
+            for e in data if "count" in e and e.get("ctype") in exe_twins.CSIZE}
 
 
 def symbol_at(syms, pc):
