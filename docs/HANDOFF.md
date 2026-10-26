@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-26: the spell sweep built and run, item 00000000000000; 2026-10-25 night: issue #149's Bone Dance hang and cart reset fixed on `fix/issue-149-bone-dance-cart` (PR #151, DIV-0182), item 000000000000; 2026-10-24: issue #121's lift stall handed over, item 000000, PR #129 for #118 / #120;
+**Status:** IN PROGRESS (2026-10-26 evening: the spell sweep's fix wave on `fix/sweep-wave`, item 000000000000000; 2026-10-26: the spell sweep built and run, item 00000000000000; 2026-10-25 night: issue #149's Bone Dance hang and cart reset fixed on `fix/issue-149-bone-dance-cart` (PR #151, DIV-0182), item 000000000000; 2026-10-24: issue #121's lift stall handed over, item 000000, PR #129 for #118 / #120;
 2026-10-23 night: the sound-layer round built on `sound/round`, DIV-0169..0175, D353..D354,
 item 0000, and the twin-diff remainder on `audit/twins-remainder`, item 0b; 2026-10-23 evening: fix wave 1023 merged as
 PR #117, item 000; 2026-10-23: PRs #112, #114, #115, #116)
@@ -47,6 +47,43 @@ and the leftovers in [`quicksave.md`](quicksave.md) (a live screen grab at the t
 hosted cross form).
 
 ## Pick up here
+
+000000000000000. **The spell sweep's fix wave is built and merged locally on `fix/sweep-wave`** (2026-10-26 evening,
+   off `main` `5bd84b98` - the PR #155 merge - unpushed; four agents, one worktree each under
+   `C:\Users\kerok\bof3x-runs\ss1026`, merged one at a time, the three-way `--sibling` overlap in
+   `tools/spell_sweep.py` resolved by hand). What the sweep surfaced and what became of each:
+   - **Paralyzer (139) crashed ours** reading the current enemy's cue table through a null `+0xF8` in an
+     ordinary battle (D102, Capcom's; the sweep's measurement: the pointer is 0 on the Gooey). **Fixed as
+     DIV-0183**: no cue when the table is unset, the caster's animation and the target flag as before; the
+     fuzz keeps the written-pointer path only (DIV-0063's precedent). Sweep row 139 `done` on the PC.
+   - **Super Combo's prompts blank on disc-built installs** (" HIT COMBO!!", "READY", "GO!!", "MISS": raw
+     glyph indices of the effect's page behind `0x66A0D8`, a `language` row). **Fixed as label group 24**
+     (DIV-0064 amended, D393): the four texts read from `MAGIC003.EMI`'s twin records (`BOOT.BIN` on a PSP),
+     every build including JP; the French disc has its own first text. The rebuilt install's shots read READY,
+     GO!!, the count. **Owed the owner's eye:** under any Latin layer the PC install's hit-combo line now takes
+     the disc's half spaces (narrower than the PC's own); the French text in play. The gap watch still lists
+     the row - the parked-page blind spot ([`install-gap-reads.md`](install-gap-reads.md) 9.3), not a miss.
+   - **Howling (54) "stuck input phase" on the disc install: the harness's, three ways** (D391, no DIV):
+     Gooey cast only every other round (the EX-round gate after `Battle_MarkFasterSide`), so half the earlier
+     enemy-side `done` rows cast nothing and chunk parity decided which; Ovum's egg left two crosses and the
+     fixed third Defend pressed into the next round; Howling's sleep kept the party off the cross for a random
+     number of rounds. The enemy side now clears the EX byte, Defends by one `seek right`, waits for the
+     enemy's command kind to read 4 before the shots (the moved peek; a timeout means "did not cast"), and
+     clears the party's low status byte after. **Re-run on both installs: 47 done of 48, row for row the
+     same, the kind-4 pick confirmed on all 48** ([`spell-sweep.md`](spell-sweep.md) 6.3); Nue Stomp's stall
+     stands. The member and item sides keep the fixed Defend blocks - a member-side cast that statuses a
+     member could desync them the same way (not seen).
+   - **Foretell's blank "Lucky color" box: the game's design, not a defect.** The lucky colour is never a
+     word: one tile per element the enemy is weak to, a grey tile when none (the Gooey). The PC's message text
+     is the US disc's byte for byte, and Capcom's own Foretell functions (`BOF3X_ORIGINAL` through the dev
+     launcher) draw the identical frame; with weaknesses poked in both draw the coloured tiles. Settled in
+     [`magic_s15.md`](magic_s15.md) 1 and [`spell-sweep.md`](spell-sweep.md) 4.
+   - Tool: `--sibling` (found through git from a worktree, overridable), `--poke` / `--peek` per cast.
+     **Original-code sweep runs need `bof3x-launcher-dev.exe`**: the release launcher refuses the hosted-only
+     switches with a modal dialog (one sat 736 s on the owner's screen).
+   **Next:** the build and self-test of the merged branch (this session), then a PR at the owner's word. Left
+   from the sweep: the twin-read branch merge (item 00000000000000), a sweep by enemy kind, Ward's tilts by eye.
+   Worktrees `ss1026\wt_par`, `wt_sc`, `wt_howl`, `wt_fore`, `wt_wave` and their roots are removable after.
 
 00000000000000. **The spell sweep is built and run** ([`spell-sweep.md`](spell-sweep.md), 2026-10-26, the owner's
    idea): `tools/spell_sweep.py` casts every ability from the ability window (the id poked into the member's four
