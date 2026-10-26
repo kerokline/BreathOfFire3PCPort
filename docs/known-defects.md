@@ -10122,6 +10122,48 @@ VRAM footprint and an upload over it frees the entry). Seen on captures of
 the owner's route; the owner's eye on the scene and on the other places
 they saw a turn is owed.
 
+## D391 — The spell sweep's enemy side counted crosses and rounds that the fight did not keep: half its casts never happened, and a cast's status desynced the recipe (harness; fixed 2026-10-26)
+
+**Found:** the sweep's own results ([`spell-sweep.md`](spell-sweep.md) 6.1,
+6.2, 2026-10-26): Howling (54) `failed` on the US-disc + PSP-EU install on
+both runs - "the input phase never ends after the three Defends", 900
+frames - and `done` on the PC install on both, unexplained.
+
+**Established** (the same evening, from the two runs' logs and a probe
+recipe with a peek set after every step, root
+`C:/Users/kerok/bof3x-runs/ss1026/howl`): three things of the harness's,
+none of the game's.
+
+1. The route's three members outpace Gooey, so `Battle_MarkFasterSide`
+   marked them after every Gooey cast and the next round was an EX round
+   (`0x904B7A` set): `Battle_BuildTurnOrder` admitted only the marked
+   members - turn order `02 01 00 FF` against a casting round's
+   `02 01 00 03` - and Gooey cast on every other round. The datlog shows
+   every second round loading no `MAGICnnn.DAT`. Half the enemy-side `done`
+   rows of the first runs had cast nothing; which half depended on the
+   chunk's parity, and that parity is why the PC passed Howling (cast after
+   an uncast Ovum) and the disc failed it (cast Ovum the round before).
+2. Ovum's target carries status 0x800 for five rounds (`BattleStep_Restore800`)
+   and `Battle_BuildEntryOrder` leaves it out of the cross, so the round
+   after Ovum had two crosses; the recipe's third Defend block pressed into
+   the next round's first cross and then waited for the input phase to end
+   while the game waited at the second cross. The sound banks "loading
+   during the Defends" were the commit's `BATL_SE.DAT` one Defend early.
+3. Howling puts the other members to sleep (status `+0x90` 0x20, the bit
+   `BattleInput_NextMember` skips; Bone Dance the same) for as many rounds
+   as `BattleStep_PartyWake20`'s roll takes - 750 frames on the probe, four
+   rounds of the fight running by itself - longer than the sweep's wait.
+
+**Status:** harness; fixed in `tools/spell_sweep.py` the same evening: the
+EX-round byte cleared at the cross, the members Defending by one `seek
+right` (the cross's double-tap) for however many crosses a round has, the
+party's low status byte cleared after the shots, and each cast confirmed by
+waiting for the enemy's command kind to read 4 before the shots. Ovum,
+Howling and Bone Dance then cast in one chunk on both installs; the whole
+enemy side re-run on both ([`spell-sweep.md`](spell-sweep.md) 6.3). The
+game's behaviour - the EX round, the egg, the sleep and its roll - is
+Capcom's as read in `battle_damage.cpp`, `battle_setup.md` and
+`battle_phases.cpp`, and nothing of it is changed.
 ## D393 — Super Combo's prompt text is blank on a disc-built install (ours, the language build; fixed by DIV-0064's 2026-10-26 amendment, label group 24)
 
 **Found:** the spell sweep's gap watch, 2026-10-26, on the US PlayStation +

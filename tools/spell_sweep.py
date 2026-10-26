@@ -51,10 +51,35 @@ import tomllib
 
 TOOLS = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(TOOLS)
-# The archival sibling, beside the main checkout; a worktree elsewhere passes
-# --sibling (the other row tools' convention: area_rows.py, magic_rows.py).
-SIBLING = os.path.join(os.path.dirname(ROOT), 'BreathOfFire3Recomp')
+# The archival sibling, beside the main checkout (a worktree's main checkout is
+# found through git); --sibling overrides (the other row tools' convention:
+# area_rows.py, magic_rows.py).
 
+
+def sibling_dir():
+    """The archival sibling's checkout, next to the main checkout (a worktree's
+    main checkout is where its .git file points: abc_run.py's main_checkout)."""
+    for base in (ROOT, _main_checkout()):
+        d = os.path.join(os.path.dirname(base), 'BreathOfFire3Recomp')
+        if os.path.isdir(os.path.join(d, 'names')):
+            return d
+    return os.path.join(os.path.dirname(ROOT), 'BreathOfFire3Recomp')   # --sibling names it when this is wrong
+
+
+def _main_checkout():
+    """A worktree's main checkout (abc_run.py's main_checkout), else ROOT."""
+    try:
+        common = subprocess.run(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'], cwd=ROOT,
+                                capture_output=True, text=True, check=True).stdout.strip()
+        return os.path.dirname(os.path.normpath(common))
+    except (OSError, subprocess.CalledProcessError):
+        return ROOT
+
+
+SIBLING = sibling_dir()
+
+OBJ_TRIO = 0x802D40      # the party's three records (records::PartyMember, 0x14C each); the working record below is +0x80 of each
+MEMBER_STATUS = 0x90     # u16: the member's status word (BattleInput_NextMember skips bit 0x20; 0x800 Ovum's egg)
 WORKING = 0x802DC0       # the working member record, Char_AbilityList's battle side
 WORKING_STRIDE = 0x14C
 HP, AP, MAX_HP, MAX_AP, DEF, AGI = 0x18, 0x1A, 0x20, 0x22, 0x26, 0x28
@@ -67,6 +92,10 @@ ACT_KINDS = 0x65563C     # u8 by the enemy's +0x8E: four 2-bit action kinds
 INV_IDS0, INV_COUNTS0 = 0x904154, 0x904354   # category 0's 128 item ids and counts (the pointers at 0x656B00 / 0x656B14)
 ITEM_SAVED_PAGE = 0x904605                   # the battle item window's saved page, top and cursor (3 bytes)
 PHASE, STEP, COMMAND = 0x904AA0, 0x904AA1, 0x904AA2
+EXTRA_ROUND = 0x904B7A   # u8: the EX round's gate - set at a round's end when a side outpaces the other (Battle_MarkFasterSide);
+                         # the order builders then admit only the marked actors (battle_damage.cpp's Gated), and the
+                         # combat route's three members outpace Gooey every round, so every other round is theirs alone
+ENEMY_COMMAND_KIND = 0x105   # u8: BattleEnemy_PickAction's kind (4 an ability), cleared by EnemyOp_CastDoneCost
 ENEMY_COUNT = 0x904AB2
 FIELD_MODE = 0x66C7E8    # u16: 5 in battle
 
@@ -192,6 +221,10 @@ def enemy_pokes(members, ability, enemy_flags, enemy_odds):
         lines.append(f'poke 0x{r + DEF:X} u16 999')
     e = ENEMY
     lines.append(f'poke 0x{e + ENEMY_STATUS:X} u16 0')
+    # the EX round: the fight's members outpace Gooey, so the round after each of its casts is the party's
+    # alone (0x904B7A set at the round's end; Battle_BuildTurnOrder admits only the marked) - Gooey cast on
+    # every other round of the first runs. Cleared at the cross, before the commit builds the turn order.
+    lines.append(f'poke 0x{EXTRA_ROUND:X} u8 0')
     lines.append(f'poke 0x{ACT_KINDS + enemy_odds:X} u8 0xFF')
     lines.append(f'poke 0x{e + ENEMY_FLAGS:X} u16 0x{enemy_flags | 0x20:X}')
     for k in range(8):
@@ -225,6 +258,19 @@ def defend_block():
             f'until 0x{STEP:X} u8 != 4 timeout 300']
 
 
+def defend_all():
+    """Every cross of this input phase Defends, however many there are: right
+    tapped twice within eight frames chooses the command the cross points at
+    (BattleMenu_CommandSelect's tap rule), and a seek presses until the phase
+    leaves 1. A fixed count of Defend blocks desynced the recipe whenever a
+    cast took a member out of the next round's cross - Ovum's egg (status
+    0x800, five rounds) left two crosses, and the third block's press landed
+    in the round after (Howling on the disc install, docs/spell-sweep.md 6.2)."""
+    return ['set hold 2', 'set gap 4',
+            f'seek right 0x{PHASE:X} u8 != 1 max 40',
+            'set hold 4', 'set gap 8']
+
+
 def cast_block(side, ability, name, members, shots, spacing, enemy_flags, enemy_odds=1, pokes=(), peeks=()):
     tag = f'{"i" if side == "item" else "a"}{ability:03d}'
     L = [f'mark ability {ability} {name}',
@@ -255,15 +301,23 @@ def cast_block(side, ability, name, members, shots, spacing, enemy_flags, enemy_
             L += defend_block()
     else:
         L += enemy_pokes(members, ability, enemy_flags, enemy_odds)
-        L += defend_block()[1:]          # the first cross is already up
-        for m in range(1, members):
-            L += defend_block()
+        L += defend_all()
     L += [f'poke {p}' for p in pokes]          # --poke: after the sweep's own, before the cast
     L += [f'until 0x{PHASE:X} u8 != 1 timeout 900']
+    if side == 'enemy':
+        # the enemy's pick: its command kind +0x105 reads 4 from BattleEnemy_PickAction (its turn, after the
+        # members' Defends) until EnemyOp_CastDoneCost clears it; a timeout here is "the enemy did not cast"
+        L += [f'until 0x{ENEMY + ENEMY_COMMAND_KIND:X} u8 == 4 timeout 300',
+              f'peek 0x{ENEMY + ENEMY_COMMAND_KIND:X} u8 enemy0_command_kind', f'peek 0x{ENEMY + 0x106:X} u16 enemy0_ability']
     for k in range(shots):
         L += [f'shot {tag}_{k} 2', f'wait {spacing}']
     if side == 'enemy':
-        L += [f'peek 0x{ENEMY + 0x105:X} u8 enemy0_command_kind', f'peek 0x{ENEMY + 0x106:X} u16 enemy0_ability']
+        # an enemy skill's status on the party (Howling and Bone Dance put members to sleep, +0x90 bit 0x20)
+        # takes them out of the cross until the round-end wake roll says otherwise - a random number of rounds
+        # the fight runs by itself, Gooey casting again each round. The low status byte is cleared after the
+        # shots (the round after is theirs again); the high byte keeps Ovum's egg (0x800, its own five rounds).
+        for m in range(members):
+            L += [f'poke 0x{OBJ_TRIO + m * WORKING_STRIDE + MEMBER_STATUS:X} u8 0']
     L += [f'peek {p}' for p in peeks]          # --peek: after the shots
     # back to the input phase before the next block, so a stall is this ability's: a message a cast
     # leaves open waits for a button (confirm every twelve frames), a cast that never ends gives up at 480 frames
