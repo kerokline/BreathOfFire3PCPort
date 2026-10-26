@@ -11583,10 +11583,17 @@ designed in rather than bolted on.
 - **Verification:** the start-up fuzz (`BOF3X_SHADOW=magic_engine`,
   2,000 rounds per function) is as it was and seeds a written pointer
   every round - Capcom's clone would fault on a null one - so it compares
-  the unchanged path: 0 mismatches after the change. The null path live:
-  the spell sweep's enemy side on the PC install, id 139 alone
-  (`tools/spell_sweep.py run --side enemy --ids 139 --enemy-flags 0xE0
-  --chunk 1 --speed 4`), which crashed before the change; see the
-  sweep's result in the report of this entry's commit.
+  the unchanged path: 44,000 rounds, 0 mismatches after the change. The
+  null path live, 2026-10-26: the spell sweep's enemy side on the PC
+  install, id 139 alone (`tools/spell_sweep.py run --side enemy --ids 139
+  --enemy-flags 0xE0 --enemy-odds 1 --chunk 1 --speed 4 --env
+  BOF3X_EFFECTLOG=1`, the combat route cut at 501), which crashed before
+  the change: the row `done` in 235 frames, no crash, the log's one
+  `DIV-0183` line naming enemy 0 (`0x93B960`, the Gooey) - so the pointer
+  is 0 there, the measurement D102 asked for - and the shots: the
+  `Paralyzer` banner with the Gooey in its cast pose (`a139_1`), Rei hit
+  for 2 as the target flag's reaction (`a139_2`, HP 997), the next
+  round's cross up (`a139_4`). No effect object: the row has none, only
+  the caster's animation. Run root `C:/Users/kerok/bof3x-runs/ss1026/par`.
 - **Reversible?** `BOF3X_ORIGINAL=Paralyzer_Start` leaves Capcom's
   function, its read with it.

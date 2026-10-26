@@ -139,7 +139,9 @@ A disc-built install: `--game <install's game dir> --env BOF3X_EXEIMAGE=<its cac
 `abc_run.py prepare` ([`abc-harness.md`](abc-harness.md)); then
 `tools/gapwatch.py report <dir> --dll <that run's bof3x.dll>`.
 
-The launcher folder must hold no `bof3x.ini` (the play ini's cheats and
+`--sibling DIR` before the subcommand names the archival sibling's checkout
+when the tool runs from a worktree that has none beside it (the other row
+tools' option). The launcher folder must hold no `bof3x.ini` (the play ini's cheats and
 options would change the fight; [`abc-harness.md`](abc-harness.md)). One
 game at a time: the driver reads the launcher folder's `bof3x.log`. About
 400 recipe frames an ability, under two seconds at speed 4; a chunk of ten
