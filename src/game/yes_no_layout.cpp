@@ -163,16 +163,20 @@ YesNoTail YesNoLayout_Tail(const unsigned char* s, int x, const char* who) {
     for (unsigned m = 0; m < kMoved; ++m) g_tail[out++] = 0x20;
     copy(g2, n);
     g_tail[out] = 0;
-    // The pen's place at each answer, the advances summed as the draw sums them.
-    int pen = x, stop[2] = {0, 0};
+    // The pen's place at each answer, the advances summed as the draw sums
+    // them, and each answer's own width (its letters' advances, to the space
+    // or the end).
+    int pen = x, stop[2] = {0, 0}, width[2] = {0, 0};
     unsigned at = 0, word = 0;
     while (g_tail[at]) {
         if (word < 2 && at == (word == 0 ? starts[w1] - kMoved : starts[w2])) stop[word++] = pen - 2;
-        pen += TextAdvance_Of(g_tail + at);
+        const int advance = TextAdvance_Of(g_tail + at);
+        if (word > 0 && g_tail[at] != 0x20) width[word - 1] += advance;
+        pen += advance;
         at += CharLen(g_tail, at);
     }
     if (word != 2) bof3::Fatal("DIV-0027: %s's re-spaced line lost an answer", who);
-    return {g_tail, {stop[0], stop[1]}};
+    return {g_tail, {stop[0], stop[1]}, {width[0], width[1]}};
 }
 
 namespace {
@@ -292,16 +296,22 @@ void SelfTest() {
         tail(want, c, c.gap1 - kMoved, c.gap2 + kMoved, &w1, &w2);
         const int x = 0x18;
         const YesNoTail got = YesNoLayout_Tail(in, x, "the self-test");
-        int pen = x, at1 = 0, at2 = 0;
+        int pen = x, at1 = 0, at2 = 0, wide1 = 0, wide2 = 0;
         for (unsigned i = 0; want[i]; i += (want[i] & 0x80) ? 2 : 1) {
             if (i == w1) at1 = pen;
             if (i == w2) at2 = pen;
-            pen += TextAdvance_Of(want + i);
+            const int advance = TextAdvance_Of(want + i);
+            if (want[i] != 0x20 && i >= w1 && i < w1 + std::strlen(c.a1)) wide1 += advance;
+            if (want[i] != 0x20 && i >= w2) wide2 += advance;
+            pen += advance;
         }
         if (std::strcmp(reinterpret_cast<const char*>(got.line), reinterpret_cast<const char*>(want)) != 0 ||
             got.stop[0] != at1 - 2 || got.stop[1] != at2 - 2)
             bof3::Fatal("DIV-0027 self-test: \"%s\" re-spaced wrong or stopped at %d / %d, not %d / %d", c.question,
                         got.stop[0], got.stop[1], at1 - 2, at2 - 2);
+        if (got.width[0] != wide1 || got.width[1] != wide2)
+            bof3::Fatal("DIV-0027 self-test: \"%s\"'s answers measured %d / %d wide, not %d / %d", c.question,
+                        got.width[0], got.width[1], wide1, wide2);
     }
     bof3::Log("shadow      yes_no_layout self-test: %u lines re-spaced as wanted, %u prompts' tails and stops",
               (unsigned)(sizeof kCases / sizeof kCases[0]), (unsigned)(sizeof kTails / sizeof kTails[0]));
