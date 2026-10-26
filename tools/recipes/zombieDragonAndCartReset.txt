@@ -1,0 +1,466 @@
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en-US BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+# save minecartToZombieDragon
+wait 44
+hold start 6
+wait 52
+hold start 7
+wait 5
+hold start 5
+wait 40
+hold circle 6
+wait 29
+hold circle 4
+wait 4
+hold circle 3
+wait 61
+hold left 16
+hold down+left 18
+hold down 1
+wait 16
+hold down 15
+hold right+down 64
+hold right 5
+hold right+down 17
+hold right 43
+hold up 5
+wait 1
+hold circle 3
+wait 10
+hold up 1
+hold up+right 34
+hold up 21
+hold circle+up 1
+hold circle 4
+wait 7
+hold left 2
+hold up+left 1
+hold left 1
+wait 12
+hold down 5
+hold down+left 2
+hold left 2
+hold up+left 1
+hold circle 4
+wait 26
+hold down 19
+hold down+left 27
+wait 4
+hold circle 5
+wait 29
+hold circle 5
+wait 14
+hold l1 41
+wait 5
+hold r1 3
+hold r1+circle 3
+hold circle 1
+wait 43
+hold circle 8
+wait 837
+hold r1 4
+hold r1+circle 4
+hold circle 1
+wait 43
+hold circle 5
+wait 19
+hold left 48
+hold square+left 4
+hold left 29
+hold up+left 11
+hold up 3
+wait 5
+hold l1 4
+wait 9
+hold up+left 11
+hold left 6
+hold down+left 6
+hold down 3
+hold right+down 3
+hold right 4
+hold right+down 21
+hold right 1
+wait 309
+hold right 86
+hold right+down 6
+hold right 12
+hold up+right 21
+hold up 17
+hold up+left 10
+hold up 16
+hold up+left 3
+hold up 15
+hold up+left 6
+wait 10
+hold left 2
+hold down+left 10
+hold left 18
+hold up+left 3
+hold up 6
+hold up+right 1
+hold right 2
+wait 15
+hold up+right 52
+wait 255
+hold circle 5
+wait 13
+hold circle 5
+wait 25
+hold circle 4
+wait 4
+hold circle 4
+wait 3
+hold circle 4
+wait 3
+hold circle 3
+wait 4
+hold circle 3
+wait 2
+hold circle 4
+wait 3
+hold circle 3
+wait 33
+hold circle 4
+wait 3
+hold circle 3
+wait 17
+hold circle 3
+wait 10
+hold circle 3
+wait 6
+hold circle 4
+wait 5
+hold circle 4
+wait 8
+hold circle 4
+wait 13
+hold circle 4
+wait 11
+hold circle 5
+wait 12
+hold circle 4
+wait 5
+hold circle 3
+wait 14
+hold circle 4
+wait 48
+hold circle 5
+wait 6
+hold circle 4
+wait 4
+hold circle 4
+wait 4
+hold circle 5
+wait 20
+hold circle 4
+wait 25
+hold circle 4
+wait 9
+hold circle 4
+wait 15
+hold circle 5
+wait 24
+hold circle 6
+wait 13
+hold circle 7
+wait 8
+hold circle 5
+wait 63
+hold circle 4
+wait 5
+hold circle 4
+wait 31
+hold circle 7
+wait 8
+hold circle 6
+wait 248
+hold circle 4
+wait 4
+hold circle 3
+wait 4
+hold circle 3
+wait 17
+hold circle 3
+wait 3
+hold circle 4
+wait 6
+hold circle 3
+wait 5
+hold circle 3
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 2
+hold circle 3
+wait 3
+hold circle 3
+wait 6
+hold circle 4
+wait 112
+hold circle 4
+wait 3
+hold circle 4
+wait 3
+hold circle 3
+wait 21
+hold circle 4
+wait 19
+hold circle 4
+wait 4
+hold circle 4
+wait 31
+hold circle 4
+wait 4
+hold circle 4
+wait 5
+hold circle 3
+wait 4
+hold circle 4
+wait 34
+hold circle 4
+wait 5
+hold circle 3
+wait 4
+hold circle 4
+wait 67
+hold circle 5
+wait 38
+hold circle 5
+wait 59
+hold circle 6
+wait 13
+hold circle 5
+wait 54
+hold circle 5
+wait 9
+hold circle 5
+wait 108
+hold circle 3
+wait 61
+hold circle 6
+wait 8
+hold circle 4
+wait 3
+hold circle 4
+wait 38
+hold circle 4
+wait 8
+hold circle 4
+wait 6
+hold circle 3
+wait 4
+hold circle 3
+wait 55
+hold circle 3
+wait 25
+hold circle 5
+wait 47
+hold circle 5
+wait 93
+hold circle 5
+wait 10
+hold circle 4
+wait 8
+hold circle 4
+wait 42
+hold circle 4
+wait 5
+hold circle 3
+wait 3
+hold circle 3
+wait 95
+hold circle 5
+wait 61
+hold circle 4
+wait 78
+hold circle 3
+wait 50
+hold circle 6
+wait 126
+hold circle 3
+wait 3
+hold circle 3
+wait 3
+hold circle 1
+wait 4
+hold circle 3
+wait 294
+hold left 8
+hold circle+left 4
+hold left 3
+hold circle+left 3
+hold left 5
+wait 38
+hold left 4
+hold circle+left 2
+hold left 4
+hold circle+left 2
+hold left 3
+hold circle+left 2
+hold left 3
+hold circle+left 2
+hold left 3
+hold circle+left 4
+hold left 4
+wait 304
+hold circle 244
+hold up 1
+wait 16
+hold circle 3
+wait 2
+hold circle 3
+wait 601
+hold circle 32
+hold up 52
+hold circle+up 5
+wait 21
+hold up 3
+wait 4
+hold up 3
+wait 9
+hold up 4
+wait 3
+hold up 3
+wait 1
+hold circle 4
+wait 17
+hold circle 4
+wait 3
+hold circle 3
+wait 2
+hold circle 3
+wait 237
+hold circle 26
+wait 18
+hold circle 5
+wait 198
+hold up 2
+hold circle+up 2
+hold circle 2
+wait 8
+hold circle 3
+wait 2
+hold circle 3
+wait 130
+hold up 17
+wait 2
+hold circle 5
+wait 42
+hold up 5
+hold circle+up 2
+hold circle 1
+wait 7
+hold circle 2
+wait 3
+hold circle 2
+wait 512
+hold up 1
+wait 14
+hold up 9
+wait 6
+hold up 6
+hold circle+up 3
+wait 16
+hold down 4
+wait 2
+hold down 3
+wait 3
+hold down 2
+wait 3
+hold down 3
+wait 4
+hold circle 2
+wait 3
+hold circle 3
+wait 258
+hold circle 10
+wait 29
+hold circle 4
+wait 12
+hold circle 3
+wait 59
+hold circle 3
+wait 104
+hold circle 1
+wait 8
+hold circle 4
+wait 395
+hold circle 17
+wait 44
+hold circle 5
+wait 5
+hold circle 4
+wait 11
+hold circle 4
+wait 183
+hold circle 3
+wait 52
+hold circle 4
+wait 9
+hold circle 4
+wait 8
+hold circle 4
+wait 7
+hold circle 4
+wait 49
+hold circle 4
+wait 44
+hold circle 4
+wait 210
+hold circle 3
+wait 39
+hold circle 5
+wait 8
+hold circle 4
+wait 12
+hold circle 4
+wait 5
+hold circle 4
+wait 244
+hold circle 5
+wait 4
+hold circle 4
+wait 4
+hold circle 4
+wait 3
+hold circle 4
+wait 91
+hold circle 4
+wait 55
+hold circle 5
+wait 8
+hold circle 4
+wait 180
+hold circle 6
+wait 24
+hold circle 5
+wait 50
+hold f9 5
+wait 40
+hold f9 5
+wait 50
+hold start 4
+wait 64
+hold start 7
+wait 35
+hold circle 4
+wait 37
+hold circle 4
+wait 9
+hold circle 4
+wait 51
+hold left 14
+hold down+left 19
+wait 35
+hold right 1
+hold right+down 72
+wait 71
+hold l1 4
+wait 15
+hold up 1
+hold up+right 11
+hold right 3
+hold right+down 53
+wait 215

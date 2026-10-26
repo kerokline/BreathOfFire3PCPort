@@ -714,7 +714,11 @@ def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=
                                 break
                             agree += 1
                             agree_nz += pc[x - DATA_LO] != 0
-                        if not ok or end <= lo or not any(want[:end - lo]) or agree < 4 or agree_nz < 2:
+                        # the floor: four bytes of which two non-zero - or a whole region whose every
+                        # non-zero byte (three or more) agrees, the row anchored by the twin's address
+                        # (BoneDanceShake_Counts, three beat lengths and a zero: issue 149)
+                        whole = end >= lo + (nz[-1] + 1 if nz else 0) and agree_nz == len(nz) and agree_nz >= 3
+                        if not ok or end <= lo or not any(want[:end - lo]) or not ((agree >= 4 and agree_nz >= 2) or whole):
                             continue
                         place = (hold[0][0], addr + (lo - a_op))
                         row = {"build": bid, "kind": "immref", "pc": lo, "pc_end": end, "file": k[0], "section": k[1],

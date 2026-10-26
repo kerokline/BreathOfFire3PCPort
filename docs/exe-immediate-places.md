@@ -105,7 +105,11 @@ the engine's own bytes, holding a byte the PC has non-zero:
 3. **Match**: an `immref` where an address a twin's lui pair forms, displaced
    as the reader's operand is from the region, holds the region's bytes. Every
    number byte from the operand to the region's end (or the section's end) must
-   equal the PC's, four or more of them, two non-zero. An `imm` where the twin's
+   equal the PC's, four or more of them, two non-zero - or, since 2026-10-25
+   (issue #149), a whole region of three non-zero bytes or more, every one
+   equal, the row anchored by the twin's address: `BoneDanceShake_Counts`'
+   three beat lengths and `EffectKind75_States+0xC`'s two shades and a step,
+   each followed by a zero the PC pads with. An `imm` where the twin's
    stores of constants rebuild every non-zero byte, two elements or more. A
    region that two places fit is left as ambiguous.
 

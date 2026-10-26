@@ -79,10 +79,8 @@ psx-jp	0x65373A	0x653744	language	language	ConfigScreen_OpenStates+0x66
 psx-jp	0x65374A	0x6537E6	language	language	ConfigScreen_OpenStates+0x76
 psx-jp	0x6537EA	0x653808	language	language	ConfigScreen_OpenStates+0x116
 psx-jp	0x653815	0x65382D	gap	game-value	ConfigScreen_OpenStates+0x141
-psx-jp	0x654AF8	0x654AFB	gap	game-value	EffectKind75_States+0xC
 psx-jp	0x65A698	0x65A69C	gap	game-value	AirRaidImage_ShadeSteps
 psx-jp	0x65A918	0x65A924	gap	game-value	WardMote_Tilts
-psx-jp	0x65AA64	0x65AA68	gap	game-value	BoneDanceShake_Counts
 psx-jp	0x65AAA8	0x65AAC4	gap	game-value	TornadoMote_Phases+0x10
 psx-jp	0x65B1D4	0x65B1D8	gap	game-value	ReviveHalo_MoteCounts
 psx-jp	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
@@ -316,10 +314,8 @@ psx-us	0x654780	0x654782	gap	game-value	EffectKind66_States+0x28
 psx-us	0x65486C	0x65486E	gap	game-value	Rest3e_Windows+0x14
 psx-us	0x654870	0x654872	gap	game-value	Rest3e_Windows+0x18
 psx-us	0x654874	0x654876	gap	game-value	Rest3e_Windows+0x1C
-psx-us	0x654AF8	0x654AFB	gap	game-value	EffectKind75_States+0xC
 psx-us	0x65A698	0x65A69C	gap	game-value	AirRaidImage_ShadeSteps
 psx-us	0x65A918	0x65A924	gap	game-value	WardMote_Tilts
-psx-us	0x65AA64	0x65AA68	gap	game-value	BoneDanceShake_Counts
 psx-us	0x65AAA8	0x65AAC4	gap	game-value	TornadoMote_Phases+0x10
 psx-us	0x65B1D4	0x65B1D8	gap	game-value	ReviveHalo_MoteCounts
 psx-us	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
@@ -574,10 +570,8 @@ psx-eu-en	0x654780	0x654782	gap	game-value	EffectKind66_States+0x28
 psx-eu-en	0x65486C	0x65486E	gap	game-value	Rest3e_Windows+0x14
 psx-eu-en	0x654870	0x654872	gap	game-value	Rest3e_Windows+0x18
 psx-eu-en	0x654874	0x654876	gap	game-value	Rest3e_Windows+0x1C
-psx-eu-en	0x654AF8	0x654AFB	gap	game-value	EffectKind75_States+0xC
 psx-eu-en	0x65A698	0x65A69C	gap	game-value	AirRaidImage_ShadeSteps
 psx-eu-en	0x65A918	0x65A924	gap	game-value	WardMote_Tilts
-psx-eu-en	0x65AA64	0x65AA68	gap	game-value	BoneDanceShake_Counts
 psx-eu-en	0x65AAA8	0x65AAC4	gap	game-value	TornadoMote_Phases+0x10
 psx-eu-en	0x65B1D4	0x65B1D8	gap	game-value	ReviveHalo_MoteCounts
 psx-eu-en	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
@@ -837,10 +831,8 @@ psx-fr	0x654780	0x654782	gap	game-value	EffectKind66_States+0x28
 psx-fr	0x65486C	0x65486E	gap	game-value	Rest3e_Windows+0x14
 psx-fr	0x654870	0x654872	gap	game-value	Rest3e_Windows+0x18
 psx-fr	0x654874	0x654876	gap	game-value	Rest3e_Windows+0x1C
-psx-fr	0x654AF8	0x654AFB	gap	game-value	EffectKind75_States+0xC
 psx-fr	0x65A698	0x65A69C	gap	game-value	AirRaidImage_ShadeSteps
 psx-fr	0x65A918	0x65A924	gap	game-value	WardMote_Tilts
-psx-fr	0x65AA64	0x65AA68	gap	game-value	BoneDanceShake_Counts
 psx-fr	0x65AAA8	0x65AAC4	gap	game-value	TornadoMote_Phases+0x10
 psx-fr	0x65B1D4	0x65B1D8	gap	game-value	ReviveHalo_MoteCounts
 psx-fr	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
@@ -1103,10 +1095,8 @@ psx-de	0x654780	0x654782	gap	game-value	EffectKind66_States+0x28
 psx-de	0x65486C	0x65486E	gap	game-value	Rest3e_Windows+0x14
 psx-de	0x654870	0x654872	gap	game-value	Rest3e_Windows+0x18
 psx-de	0x654874	0x654876	gap	game-value	Rest3e_Windows+0x1C
-psx-de	0x654AF8	0x654AFB	gap	game-value	EffectKind75_States+0xC
 psx-de	0x65A698	0x65A69C	gap	game-value	AirRaidImage_ShadeSteps
 psx-de	0x65A918	0x65A924	gap	game-value	WardMote_Tilts
-psx-de	0x65AA64	0x65AA68	gap	game-value	BoneDanceShake_Counts
 psx-de	0x65AAA8	0x65AAC4	gap	game-value	TornadoMote_Phases+0x10
 psx-de	0x65B1D4	0x65B1D8	gap	game-value	ReviveHalo_MoteCounts
 psx-de	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
@@ -1359,9 +1349,7 @@ psp-jp	0x65372A	0x653734	language	language	ConfigScreen_OpenStates+0x56
 psp-jp	0x65373A	0x6537E6	language	language	ConfigScreen_OpenStates+0x66
 psp-jp	0x6537EA	0x653808	language	language	ConfigScreen_OpenStates+0x116
 psp-jp	0x653815	0x65382D	gap	game-value	ConfigScreen_OpenStates+0x141
-psp-jp	0x654AF8	0x654AFB	gap	game-value	EffectKind75_States+0xC
 psp-jp	0x65A919	0x65A924	gap	game-value	WardMote_Tilts+0x1
-psp-jp	0x65AA64	0x65AA67	gap	game-value	BoneDanceShake_Counts
 psp-jp	0x65AAAD	0x65AABB	gap	game-value	TornadoMote_Phases+0x15
 psp-jp	0x65B1D4	0x65B1D7	gap	game-value	ReviveHalo_MoteCounts
 psp-jp	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
@@ -1591,9 +1579,7 @@ psp-eu	0x65372A	0x653734	language	language	ConfigScreen_OpenStates+0x56
 psp-eu	0x65373A	0x6537E6	language	language	ConfigScreen_OpenStates+0x66
 psp-eu	0x6537EA	0x653808	language	language	ConfigScreen_OpenStates+0x116
 psp-eu	0x653815	0x65382D	gap	game-value	ConfigScreen_OpenStates+0x141
-psp-eu	0x654AF8	0x654AFB	gap	game-value	EffectKind75_States+0xC
 psp-eu	0x65A919	0x65A924	gap	game-value	WardMote_Tilts+0x1
-psp-eu	0x65AA64	0x65AA67	gap	game-value	BoneDanceShake_Counts
 psp-eu	0x65AAAD	0x65AABB	gap	game-value	TornadoMote_Phases+0x15
 psp-eu	0x65B1D4	0x65B1D7	gap	game-value	ReviveHalo_MoteCounts
 psp-eu	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
