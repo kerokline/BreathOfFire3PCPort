@@ -55,11 +55,5 @@ cite = "tables.toml event_op_lengths psx-jp row (read on the JP disc 2026-10-08:
 
 # --- Holes still open ------------------------------------------------------
 
-[[known]]
-id = "fishing-spot-input-flags"
-kind = "hole"
-builds = ["psx-jp", "psx-us", "psx-eu-en", "psx-fr", "psx-de"]
-keys = ["area_descriptor/a089/input_flags", "area_descriptor/a129/input_flags"]
-reason = "areas 89 and 129 (the fishing spots) keep the descriptor's +0x32 byte zero on a PlayStation-built image: no pointer in the region has a placed target and no disc holds the bytes at a neighbour's displacement; GameMode_Enter takes Game_Mode 8 (the fishing screen) on this byte. Not seen in play on a disc-built install"
-cite = "docs/exe-import-engine.md 7.8 Left, 7.9 Left; recipes/exe-gaps.tsv"
-tracked = "docs/HANDOFF.md (the data diff's item): the descriptor-table rule (a descriptor's place through the PSX Area_Descriptors table) would place both"
+# None: the fishing spots' +0x32 bytes (areas 89 and 129) were placed by the descriptor-table rule,
+# docs/exe-import-engine.md 7.11 (2026-10-27).

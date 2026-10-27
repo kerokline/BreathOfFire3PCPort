@@ -85,7 +85,7 @@ entry lists (the run fails); on current `main` none of those.
 | Builds | Key | Bytes from | What it is | Done |
 |---|---|---|---|---|
 | `psp-jp`, `psp-eu` | `area_descriptor/a006/link_last` and 28 `area_link/a006/l01/*` values | `language` (`Area05_MessagesB+0x648`) | area 6's descriptor `+0x2C..+0x3C` (`0x5DFD34..0x5DFD3D`) unplaced; the link index read 0, so the area's second link - an indirect one, three alternatives - was unreachable. The PSP's `BOOT.BIN` carries the nine bytes at its left neighbour's displacement, but they hold one non-zero byte, under the 7.9 rule's two | **fixed** in the importer: section 4 |
-| the five PSX builds | `area_descriptor/a089/input_flags`, `a129/input_flags` | `gap`, `unread` | the fishing spots' `+0x32` byte (exe-import-engine.md 7.8 *Left*): no disc holds it at a neighbour's displacement | listed (`fishing-spot-input-flags`), tracked in HANDOFF: the PSX descriptor-table rule would place it |
+| the five PSX builds | `area_descriptor/a089/input_flags`, `a129/input_flags` | `gap`, `unread` | the fishing spots' `+0x32` byte (exe-import-engine.md 7.8 *Left*): no disc holds it at a neighbour's displacement | **fixed** in the importer (2026-10-27): the descriptor-table rule, exe-import-engine.md 7.11; the entry `fishing-spot-input-flags` dropped |
 
 **Release differences**, every one listed with its ledger entry:
 

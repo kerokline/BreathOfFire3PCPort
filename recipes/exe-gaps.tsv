@@ -6,8 +6,6 @@
 # Addresses, classes and symbol names only (CLAUDE.md rule 1).
 # measured: psx-jp psx-us psx-eu-en psx-fr psx-de psp-jp psp-eu
 build	lo	hi	how	kind	symbol
-psx-jp	0x6130E8	0x6130FC	gap	port-relaid	Area88_DriftUV+0x78
-psx-jp	0x627B38	0x627B50	unread	unread	Area128_Handlers+0xBC
 psx-jp	0x64B390	0x64B397	gap	game-value	Char_DefaultRecords
 psx-jp	0x653144	0x653149	gap	game-value	CommuMusic_LabelC+0x4C
 psx-jp	0x653200	0x653210	gap	language-zero	CommuRank_Modes+0x8C
@@ -223,8 +221,6 @@ psx-jp	0x675284	0x675520	unread	unread	Task_StackTop+0x8A2C
 psx-jp	0x6755D4	0x6755E0	unread	unread	Task_StackTop+0x8D7C
 psx-jp	0x675608	0x675610	unread	unread	Task_StackTop+0x8DB0
 psx-jp	0x675614	0x675980	unread	unread	Task_StackTop+0x8DBC
-psx-us	0x6130E8	0x6130FC	gap	port-relaid	Area88_DriftUV+0x78
-psx-us	0x627B38	0x627B50	unread	unread	Area128_Handlers+0xBC
 psx-us	0x642D7F	0x642D80	language	language	Area175_ScriptMessages+0x8C3
 psx-us	0x6430D7	0x6430D8	language	language	Area175_ScriptMessages+0xC1B
 psx-us	0x64342F	0x643430	language	language	Area175_ScriptMessages+0xF73
@@ -469,8 +465,6 @@ psx-us	0x675284	0x675520	unread	unread	Task_StackTop+0x8A2C
 psx-us	0x6755D4	0x6755E0	unread	unread	Task_StackTop+0x8D7C
 psx-us	0x675608	0x675610	unread	unread	Task_StackTop+0x8DB0
 psx-us	0x675614	0x675980	unread	unread	Task_StackTop+0x8DBC
-psx-eu-en	0x6130E8	0x6130FC	gap	port-relaid	Area88_DriftUV+0x78
-psx-eu-en	0x627B38	0x627B50	unread	unread	Area128_Handlers+0xBC
 psx-eu-en	0x642D7F	0x642D80	language	language	Area175_ScriptMessages+0x8C3
 psx-eu-en	0x6430D7	0x6430D8	language	language	Area175_ScriptMessages+0xC1B
 psx-eu-en	0x64342F	0x643430	language	language	Area175_ScriptMessages+0xF73
@@ -716,8 +710,6 @@ psx-eu-en	0x675284	0x675520	unread	unread	Task_StackTop+0x8A2C
 psx-eu-en	0x6755D4	0x6755E0	unread	unread	Task_StackTop+0x8D7C
 psx-eu-en	0x675608	0x675610	unread	unread	Task_StackTop+0x8DB0
 psx-eu-en	0x675614	0x675980	unread	unread	Task_StackTop+0x8DBC
-psx-fr	0x6130E8	0x6130FC	gap	port-relaid	Area88_DriftUV+0x78
-psx-fr	0x627B38	0x627B50	unread	unread	Area128_Handlers+0xBC
 psx-fr	0x642D7F	0x642D80	language	language	Area175_ScriptMessages+0x8C3
 psx-fr	0x6430D7	0x6430D8	language	language	Area175_ScriptMessages+0xC1B
 psx-fr	0x64342F	0x643430	language	language	Area175_ScriptMessages+0xF73
@@ -970,8 +962,6 @@ psx-fr	0x675284	0x675520	unread	unread	Task_StackTop+0x8A2C
 psx-fr	0x6755D4	0x6755E0	unread	unread	Task_StackTop+0x8D7C
 psx-fr	0x675608	0x675610	unread	unread	Task_StackTop+0x8DB0
 psx-fr	0x675614	0x675980	unread	unread	Task_StackTop+0x8DBC
-psx-de	0x6130E8	0x6130FC	gap	port-relaid	Area88_DriftUV+0x78
-psx-de	0x627B38	0x627B50	unread	unread	Area128_Handlers+0xBC
 psx-de	0x642D7F	0x642D80	language	language	Area175_ScriptMessages+0x8C3
 psx-de	0x6430D7	0x6430D8	language	language	Area175_ScriptMessages+0xC1B
 psx-de	0x64342F	0x643430	language	language	Area175_ScriptMessages+0xF73
