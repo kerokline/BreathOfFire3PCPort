@@ -1208,8 +1208,32 @@ DE), 106 (`psp-jp`), 110 (`psp-eu`). Against the recipe before this the same
 count is 1 per PSX build, area 129's row. So the class hides no hole in what the
 diff decodes; what it may hide elsewhere is outside every decoder.
 
-**Left.** Nothing of the 200 descriptors is unplaced on any build. The play
-check: PLAYCHECK.
+**Seen in play** (root `C:\Users\kerok\bof3x-runs\away1027\desc`, frames
+under `shots\`). Two US-only installs (`importer.py build` from the US cue,
+then `install --base`): `before` from `main`'s recipe, `after` from this one;
+their `.data` images differ in exactly two bytes, `0x6130EA` and `0x627B3A`.
+No recorded route reaches areas 89 or 129, so the check loads a crafted save:
+`camping.DAT` with the block's area word (`+0x24`,
+[`save-interchange.md`](save-interchange.md) 2a) set to 89 or 129 and the
+checksum at `+0x70` recomputed, loaded with `caughFish.txt`'s first 14 lines,
+then 1,500 frames without input, a frame every 150 (`input_run.py
+--no-front`, the game writing its own frames). On the PC install both areas
+open the fishing screen (the rod, the lure line, the catch panel). On `before`
+both open as an ordinary field: a dark screen, the leader standing alone, no
+fishing panel, every frame from 450 on differing from `after`'s in all 307,200
+pixels. On `after` every frame from 900 on (from 450 for area 129) is pixel for
+pixel the PC install's; the earlier frames are the title and load menu, which
+differ between a PC and a disc-built install. The owner's `campingFishing.txt`
+(area 30, the lake, which the map placed whole on every build) is the same on
+both disc-built images and the PC's in eight of its nine shots; the ninth,
+`fishing_equip`, differs from the PC's in 4,028 pixels on `before` and `after`
+alike, so not through this rule (the Western fishing rows, D286's class; not
+read further). So a disc-built PlayStation install at the sea or river fishing
+spot was entered as a field, not the fishing game, until this rule.
+
+**Left.** Nothing of the 200 descriptors is unplaced on any build. Whether the
+field `before` showed would have let the player leave (the fishing spot has no
+links, 7.8) is not tried; `importer.py stale` brings the rebuild.
 
 ## For the other files
 
