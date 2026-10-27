@@ -107,9 +107,16 @@ hosted cross form).
      `BOOT.BIN` jump table into `SimoonDust_Offsets`; `disc_image` now leaves a PSP map segment's bytes in
      ELF-relocated words unplaced where the PC holds a number ([`exe-immediate-places.md`](exe-immediate-places.md)
      7.7), and `psxmap` places the table from `MAGIC103.EMI#3`. Dense Simoon shots match the PSX-only install's.
+   - **The disc-only installs, the whole member side** ([`spell-sweep.md`](spell-sweep.md) 9.4, the owner's ask):
+     the revives over a fallen Ryu on the PC, the US + PSP, the US-only and the PSP-EU-only installs, then all 158
+     member ids on the PC, US-only and PSP-EU-only installs, pixel-compared pair by pair. Two PSP-only breaks,
+     both placed on this branch: the revive halo's motes (D394, a PSP map segment one byte early) and Simoon's two
+     dusts (D245, the PSP map bridging the hole where BOOT.BIN keeps a jump table; 1.7 million units off). Nothing
+     else but the EU layer's words and the PSP's icons. The gap watch saw no game-value row read while zero.
    **Next:** a PR of `fix/sweep-wave` (built, both self-tests pass, checks 0 errors). Left from the sweep: a
-   sweep by enemy kind; Ward's tilts by eye; the two revive questions above against the PlayStation.
-   Worktrees `ss1026\wt_par`, `wt_sc`, `wt_howl`, `wt_fore`, `wt_wave` and their roots are removable after.
+   sweep by enemy kind; Ward's tilts by eye; the 543 popup over a 250 revive against the PlayStation (IDEAS I52's
+   harness, when wanted; the status word's 0x2000 is settled, 9.2); the enemy and item sides on the disc-only
+   installs; a PSP-JP install. Worktrees `ss1026\wt_*` and the roots under `ss1026` are removable after the PR.
 
 00000000000000. **The spell sweep is built and run** ([`spell-sweep.md`](spell-sweep.md), 2026-10-26, the owner's
    idea): `tools/spell_sweep.py` casts every ability from the ability window (the id poked into the member's four

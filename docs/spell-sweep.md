@@ -639,3 +639,47 @@ with the dense shots: `a103_0..39` **differ nowhere** against
 `simoon_psxus` (before: `a103_10..18`, up to 48,298 pixels), the dusts in
 the dome from `a103_10`; the list shot's two PSP icon boxes as ever
 (`cmp_simoon`, root `C:\Users\kerok\bof3x-runs\ss1026\psp`).
+
+### 9.4 The three installs, the whole member side (2026-10-26 night)
+
+The owner's ask behind the revives: "compare a psx only / psp only build
+with the pc based builds to make sure none of the resurrection spells /
+effects were broken on those builds." So the revive set over a fallen Ryu
+on four installs, then the **whole member side** (158 ids, chunks of ten,
+`--confirm circle` - after the load the battle confirms with circle on
+every install, the release's cross is the title and load menu's only) on
+the PC install, a US-PSX-only install and a PSP-EU-only install, each
+built from this branch before the PSP fixes of 9.3, with the gap watch on
+the two disc-only ones; roots `C:\Users\kerok\bof3x-runs\ss1026\rv`
+(`full_pc`, `full_psxus`, `full_pspeu`, `gwfull_*`, the compares
+`cmp3_run_member_*`, `cmp_full_px_*`, `cmp_simoon_dense`).
+
+**The revives over a fallen Ryu** (`--dead 0`, the four installs):
+
+| Install | Raise Dead 76 / 180 | Resurrect 77 / 181 | Ammonia 14 | Frames against the PC (7 a cast) |
+|---|---|---|---|---|
+| PC | 250 | 999 | 1 | - |
+| US disc + PSP-EU (the players' shape) | 250 | 999 | 1 | identical |
+| US disc alone | 250 | 999 | 1 | identical |
+| PSP-EU alone | 250 | 999 | 1 | **the halo without its motes** (9.3, D394), fixed |
+
+**The whole member side**: 157 done of 158 on each of the three installs,
+the same three non-casts everywhere (Pilfer after Weretiger, Accession by
+design, Snooze after it). 1,100 frames a pair through `abc_compare.py`:
+
+| Pair | Frames differing | What |
+|---|---|---|
+| PC against US-PSX-only | 3 | Super Combo's count line (`a003_3..5`): the play install's cache predates label group 24, so it draws the PC's full-width spaces where the layer's text has the disc's half spaces (section 6.2, the owner's eye) |
+| US-PSX-only against PSP-EU-only | 164 | the list shots (the PSP's own icons, two 20 x 20 boxes, every cast); Fire Breath and Ice Breath's banner word (the EU English layer spells them as two words); **Simoon's two dusts missing on the PSP-EU install** (`a103_2`, `a205_2`; the dense shots `simoon_*`: nine frames, 30 to 54 after the cast, the haze growing over the enemy on the PSX install and nothing on the PSP's) - D245, the PSP map's bridged hole, fixed (9.3) |
+| PC against PSP-EU-only | 167 | the two rows above together |
+
+The gap watch on the two disc-only installs over the whole member side
+(18 runs each, 245 / 220 ranges): no `game-value` row read while zero;
+the `language` rows listed before a write are the parked-page blind spot
+of [`install-gap-reads.md`](install-gap-reads.md) 9.3 (Super Combo's
+prompts, the gene window's choices, the menu verbs, Identify's labels, all
+drawn by the layer in the shots) and the empty save slot. So on a
+disc-only install the member side's effects are the PC's but for the two
+PSP rows the sweep found and this branch places. Not swept here: the enemy
+side and the item side on the disc-only installs (the enemy side ran on
+the US + PSP install in 6.3), and a PSP-JP install.
