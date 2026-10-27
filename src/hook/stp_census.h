@@ -12,7 +12,8 @@
 // its (u, v), through the page's texture window, or a cell sprite's records -
 // out of the VRAM shadow and its CLUT, and counts them transparent, bit 15 set
 // or bit 15 clear. Rows aggregate by area, code, tpage, CLUT and window; the
-// file is rewritten every 300 rendered frames.
+// file is rewritten every 60 rendered frames (a harness ends the game by
+// TerminateProcess at the recipe's done, so nothing is written at exit).
 //
 // Instrumentation, not a replacement: unset, the hooks are one test of a bool
 // that is never set. Set, they read game memory and write this module's own

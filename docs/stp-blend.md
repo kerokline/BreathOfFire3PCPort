@@ -150,5 +150,6 @@ Root `C:\Users\kerok\bof3x-runs\stp_census` (`s3*.sh`, `ab_<route>_s3*`); the fi
   the fix removed; on the fixed build, the text "looks much closer to original now to my eye". Then a quick
   playthrough of the committed branch: "confirmed both the fixes" (the rope and the text).
 
-Not reached: the census's missing routes ([`stp-census.md`](stp-census.md) 5); a draw with a D3DBLEND pair other
+Not reached: the routes the census still lacks ([`stp-census.md`](stp-census.md) 6.5; section 6 ran fourteen
+more on 2026-10-27 and found the world map's button legend, mixed, drawn per texel as the PlayStation does); a draw with a D3DBLEND pair other
 than Capcom's four; a grab draw's bit 15 on the PlayStation.

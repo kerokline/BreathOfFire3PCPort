@@ -98,8 +98,12 @@ void SampleCells(unsigned first, unsigned count, unsigned clut, Count* c) {
     }
 }
 
+// Written beside the file and moved over it: the harness's TerminateProcess
+// can land mid-write, and a truncated census lost a whole run (away1027).
 void Write() {
-    FILE* f = std::fopen(g_path, "w");
+    char tmp[MAX_PATH + 8];
+    std::snprintf(tmp, sizeof tmp, "%s.tmp", g_path);
+    FILE* f = std::fopen(tmp, "w");
     if (!f) return;
     std::fprintf(f, "# frames %u, frames with a bit-15-clear texel blended %u, rows %u\n", g_frames,
                  g_frames_changed, static_cast<unsigned>(g_rows.size()));
@@ -111,7 +115,7 @@ void Write() {
                      static_cast<short>(k.window_x), static_cast<short>(k.window_y), static_cast<short>(k.window_w),
                      static_cast<short>(k.window_h), r.draws, r.frames, r.first, r.last, r.zero, r.stp, r.opaque,
                      r.only_stp, r.only_opaque, r.mixed, r.clear, r.u0, r.v0, r.u1, r.v1, r.x0, r.y0, r.x1, r.y1);
-    std::fclose(f);
+    if (std::fclose(f) == 0) MoveFileExA(tmp, g_path, MOVEFILE_REPLACE_EXISTING);
 }
 
 }  // namespace
@@ -120,13 +124,13 @@ void Start() {
     const DWORD n = GetEnvironmentVariableA("BOF3X_STPCENSUS", g_path, sizeof g_path);
     if (n == 0 || n >= sizeof g_path) return;
     g_on = true;
-    bof3::Log("stpcensus   on: %s, rewritten every 300 Direct3D frames", g_path);
+    bof3::Log("stpcensus   on: %s, rewritten every 60 Direct3D frames", g_path);
 }
 
 void Frame() {
     if (g_frame_changed) ++g_frames_changed;
     g_frame_changed = false;
-    if (++g_frames % 300 == 0) Write();
+    if (++g_frames % 60 == 0) Write();   // the harness kills the game at `done`: lose at most a second
 }
 
 void Note(std::uint32_t p) {
