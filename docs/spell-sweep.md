@@ -635,4 +635,7 @@ million units away. Fixed in `disc_image` (the relocated-word rule,
 [`exe-immediate-places.md`](exe-immediate-places.md) 7.7; DIV-0101
 amended), the table then `psxmap`'s from the PSP disc's `MAGIC103.EMI#3`.
 The check, the PSP-only install rebuilt again (`g_pspeu2`), Simoon alone
-with the dense shots: SIMOON_RESULT_PLACEHOLDER
+with the dense shots: `a103_0..39` **differ nowhere** against
+`simoon_psxus` (before: `a103_10..18`, up to 48,298 pixels), the dusts in
+the dome from `a103_10`; the list shot's two PSP icon boxes as ever
+(`cmp_simoon`, root `C:\Users\kerok\bof3x-runs\ss1026\psp`).

@@ -7058,8 +7058,11 @@ so the rule keeps them. The freed bytes are then placed by `psp_exe`'s
 `psxmap` rule from the PSP disc's own `BMAGIC/MAGIC103.EMI#3` at
 `0x801F07AC`, the PSX-JP map's place, equal to the PC's 24 bytes. The "about 600 coincidentally equal bytes" of
 `psp-image.md` 8 were the cost of *splitting runs*; leaving the words out
-of a segment costs none. Verified on the rebuilt PSP-only install:
-SIMOON_RESULT_PLACEHOLDER
+of a segment costs none. Verified on the rebuilt PSP-only install: Simoon alone with 40 shots three
+frames apart against the PSX-only install's (`abc_compare.py`): **40 of 40
+frames differ nowhere** where `a103_10..18` differed before, the two dusts
+rising inside the dome; only the list shot's two PSP icon boxes stay
+(`spell-sweep.md` 9.3).
 
 ## D246 — A PSP-EU `en-150` layer has no Config screen text: its labels and controller names draw blank (ours, the language build; fixed by DIV-0141, 2026-10-17)
 
