@@ -683,3 +683,66 @@ disc-only install the member side's effects are the PC's but for the two
 PSP rows the sweep found and this branch places. Not swept here: the enemy
 side and the item side on the disc-only installs (the enemy side ran on
 the US + PSP install in 6.3), and a PSP-JP install.
+
+## 10. The enemy and item sides on the disc-only installs (2026-10-27)
+
+Section 9.4 compared the whole member side across the PC install, a
+US-PSX-only install and a PSP-EU-only install; this is the same for the
+other two sides. The enemy side (48 ids, `--sections "Enemy only
+skills,Unused/dummy skills,none" --enemy-flags 0xE0`) and the item side
+(`--side item`, the 91 consumables) on the PC install (the main checkout's
+`bof3`, `--lang en-US`), a US-PSX-only install (`importer.py build` from the
+US cue, `install --base`, `en-US`) and a PSP-EU-only install (the PSP-EU iso,
+`en-150`), both built from `away1027/sweep` (main `e84aaf6d` plus the
+`--kind` option), with `BOF3.CFG` copied in, the gap watch on the two
+disc-only ones (`gap,unread,language`); the `combat` route cut at 501, three
+members, chunks of ten, speed 4, `--confirm circle`, `BOF3X_EFFECTLOG=1`. Root
+`C:\Users\kerok\bof3x-runs\away1027\sweep` (`pc_enemy`, `psxus_enemy`,
+`pspeu_enemy`, the `_item` three, `gw_*`, the compares `cmp_*`; the chain
+`chain_part1.sh`). **A disc-only install's run wants `BOF3X_RECIPE_SAVES`**
+naming the main checkout's `tools/recipe_saves` when the tool runs from a
+worktree: `recipe_saves.py` finds the main checkout's saves only for a game
+folder that is the main checkout's (the first attempt's two disc runs ended
+at once, "no recipe save").
+
+| Side | PC | US-PSX-only | PSP-EU-only |
+|---|---|---|---|
+| enemy | 48 done, 0 failed | 48 done | 48 done |
+| item | 55 done, 36 refused | 55 done, the same 36 refused | 55 done, the same 36 refused |
+
+On the enemy side every id was picked (`enemy0_command_kind = 0x4` and the
+id at `+0x106`, 48 of 48 on each install), no until timed out, no crash:
+**Paralyzer (139) casts** where sections 5 and 6.3 crashed on it, DIV-0183
+(PR #156) in. Nue Stomp (1) still leaves the fight stalled after its six
+shots, as from every Gooey (section 11 settles it), and Chlorine (9) is
+re-run in the next chunk. The recipe frames a cast took are the same id for
+id on all three installs, on both sides.
+
+**The pictures** (`abc_compare.py`, tolerance 4, 16 pixels; 288 enemy frames
+and 546 item frames a pair):
+
+| Pair | Enemy frames differing | Item frames differing |
+|---|---|---|
+| PC against US-PSX-only | 0 | 0 |
+| US-PSX-only against PSP-EU-only | 1: UtmostAttack's banner (`a116_1`, box `112,44..212,60`) reads "Vortex Wave" under the EU layer | 91: every list shot, the PSP's two icon boxes (`224,72..240,92`, `224,180..240,200`) and nothing else |
+| PC against PSP-EU-only | 1, the same banner | 91, the same list shots |
+
+So nothing but the two expected rows of 9.4 - the EU layer's words and the
+PSP's icons. No missing effect, zero, hang or stuck phase on either side.
+
+**The gap watch** (`gapwatch.py report`, 6 enemy and 40 item runs on each
+disc-only install; 245 ranges on the US-PSX-only image, 219 on the
+PSP-EU-only): 3 ranges read in some run, 1 before any write, on all four
+reports - the empty save slot (`Encounter_SlotChance+0x1C`, the known
+owner's call), with `Battle_CommandLabels` (the parked-page blind spot,
+[`install-gap-reads.md`](install-gap-reads.md) 9.3) and `Task_StackTop` as
+on every run before. No `game-value` row is read by an enemy skill or a
+consumable on these installs. With 9.4, all three sides are now swept on
+the PC, the US-PSX-only, the PSP-EU-only and the US + PSP-EU installs; not
+swept: a PSP-JP install and the Western PSX discs other than the US one.
+
+The PC runs also wrote agent stp's bit-15 census (`BOF3X_STPCENSUS`, one file
+a chunk, `census\`; [`stp-census.md`](stp-census.md)): 46 files, and every
+row with opaque-only or mixed draws is a page-15 text palette (CLUT `7800`
+in area 0's load screen and area 29's item window, `7807` in the item
+window) - no other row, the rope's included, since the fight has none.
