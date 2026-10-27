@@ -37,7 +37,9 @@ could report a draw as mixed when it is not. None was reported mixed.
 
 ## 3. The runs
 
-At x1 from an ini-less launcher copy, `--lang en-US`, `BOF3X_FILTER=point`; root
+At x1 from an ini-less launcher copy (four files: `bof3x-launcher.exe`, `bof3x-launcher-dev.exe`, `bof3x.dll`,
+`bof3x.exe`; without `bof3x.exe` the launcher stops on a modal "bof3x.exe is missing" dialog, which cost the world-map run on
+2026-10-27, run again by section 6's `chain2.sh`), `--lang en-US`, `BOF3X_FILTER=point`; root
 `C:\Users\kerok\bof3x-runs\stp_census` (`chain.sh`, `census_<route>.tsv`, logs).
 
 | route | save | frames walked | semi-textured draws | changed (opaque only) | frames with a change |

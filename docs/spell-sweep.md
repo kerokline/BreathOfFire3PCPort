@@ -175,8 +175,13 @@ for the Foretell question (section 4).
 `--target-ups N` presses up on the target cursor before the confirm (the
 default puts Rei's cursor on the first fallen member).
 
-The launcher folder must hold no `bof3x.ini` (the play ini's cheats and
-options would change the fight; [`abc-harness.md`](abc-harness.md)). One
+The launcher folder (`<ini-less launcher dir>` above) holds four files -
+`bof3x-launcher.exe`, `bof3x-launcher-dev.exe`, `bof3x.dll` and `bof3x.exe`
+(the exe host) - and no `bof3x.ini` (the play ini's cheats and options would
+change the fight; [`abc-harness.md`](abc-harness.md)). Without `bof3x.exe`
+the launcher stops on a modal "bof3x.exe is missing" dialog that waits for a
+click (2026-10-27); a run with `BOF3X_ORIGINAL` or `BOF3X_SHADOW` goes
+through `bof3x-launcher-dev.exe`, as above. One
 game at a time: the driver reads the launcher folder's `bof3x.log`. About
 400 recipe frames an ability, under two seconds at speed 4; a chunk of ten
 with its launch and route about a minute.
