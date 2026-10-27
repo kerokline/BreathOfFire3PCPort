@@ -5,7 +5,8 @@ PC install, the member and enemy sides on a disc-built install before and
 after the twin-read placements, sections 4 to 7; the enemy side's Howling
 failure explained and the enemy side re-run on both installs the same
 evening, sections 6.2 and 6.3; open: the Super Combo text row, the owner's
-eye). The owner's idea the
+eye; 2026-10-27: the enemy and item sides on the disc-only installs,
+section 10, and the sweep by enemy kind, section 11). The owner's idea the
 same day: "a
 harness where an enemy casts all the spells and abilities in the game, and
 the party has infinite life, just to check the render / functionality of
@@ -454,8 +455,9 @@ the seek gave up (`results_item.tsv`, status `refused`).
   effect that reads its caster's sprite may draw with another's frames, and
   an enemy skill that waits on its own enemy's animation stalls the battle
   from a Gooey (Nue Stomp, section 5). Zeros and hangs it still finds. The
-  enemy-only skills want a sweep by enemy kind - each cast by an enemy that
-  has it - which this does not do.
+  sweep by enemy kind (section 11, 2026-10-27) casts 26 of the 33 enemy
+  skills an enemy carries from that enemy; seven boss-only ones have no
+  route yet.
 - After Weretiger (64) the fight does not come back to a cross for 1,440
   frames of confirms on either install (Rei's changed form acts on its own);
   the driver restarts the chunk at the next id. Likewise after a skill that
@@ -746,3 +748,186 @@ a chunk, `census\`; [`stp-census.md`](stp-census.md)): 46 files, and every
 row with opaque-only or mixed draws is a page-15 text palette (CLUT `7800`
 in area 0's load screen and area 29's item window, `7807` in the item
 window) - no other row, the rope's included, since the fight has none.
+
+## 11. The sweep by enemy kind (2026-10-27)
+
+Section 8's first limit: the enemy-only skills were cast by the combat
+route's Gooey, so a skill that plays its own enemy's animation stalled
+(Nue Stomp) and an effect that reads its caster drew with the Gooey's. This
+casts each one from an enemy that has it.
+
+### 11.1 How a fight's enemy is chosen (measured)
+
+Read in our code and confirmed on the runs below:
+
+- An area's enemies are its own: the area file's kind-0 chunk of tag
+  `0xC2000` (`0x4A8` bytes) loads at `0x8C5580` with the area - eight
+  encounter rows of 9 bytes (`Encounter_Rows`: eight slot kinds, `0xFF`
+  none, `+8` the weight), then eight enemy data records of `0x8C` at
+  `0x8C55C8` (`records::EnemyData`; `tools/enemy_ai.py` reads the same
+  bytes off the player's `AREAnnn.DAT`). The sprites come at the battle's
+  start from the area's own `ENEMYnnn.DAT` (the combat run's datlog:
+  `ENEMY029.DAT` after `BATTLE.DAT`, in area 29).
+- A random encounter: `Field_EncounterDue` (`0x530030`) when the leader's
+  step count `Field_StepCount` (`0x905B80`) reaches the threshold at
+  `ObjTrio + 0x134` in a zone whose `+4` is set; then `Encounter_Place`
+  (`0x591F30`) - `Encounter_PickRow` by weight, `Encounter_FillSlots`
+  (slot k gets row[k], active when `(Rand & 0xF) + 1 <=
+  Encounter_SlotChance[k]`, `0x669CB0`) into `Encounter_Slots`
+  (`0x939F00`, 12 bytes a slot: used, the kind, x, z), which
+  `Battle_InitEnemies` (`0x4942C0`) sets up as enemies 0.. at the battle's
+  start (`Battle_SetupEnemy`, `Battle_CopyEnemyData`).
+- So **poking `+0x8E` in a running fight** changes the odds row only: the
+  sprite, animation bank (`+0x1A` of the data) and AI rows are the slot's.
+  **A poke before the set-up** does it: the rows poked to the wanted slot
+  alone and the threshold passed, in the wanted area.
+
+### 11.2 The tool: `--kind AREA:SLOT --at X:Z:FLAGS`
+
+`spell_sweep.py run --side enemy --kind A:S --at X:Z:F` (`kind_head`): the
+combat route kept to frame 371 (`--field-cut`, the party standing in area
+29's field before the route's own walk), the recipe's `goto A X Z F`
+(`Field_ChangeArea` through the original's entry, the door sweep's step;
+`X:Z:F` a link's arrival in that area, from a door-sweep `steps.json`), a
+settle, then pokes: the eight rows to `[S, 0xFF x 7, weight 2]`, the slot's
+four AI rows off (condition `0x63`, so the pick is the base list the sweep
+pokes - an Egg Gang's row cast ability 69 on the first try), slot 0's chance
+16, the threshold 1 and the step count `0x100`; the leader walks (`--walk`,
+16 frames a direction) until the field mode is 5; 20 frames into the battle
+the members' HP and DEF are poked 999 (a GntOrc's first strike ended the
+combat save's party, levels 1..5, before the first cross). The prologue
+peeks the area and enemy 0's slot (`+0xF0`), so a run says which enemy it
+fought. `--enemy-odds` / `--enemy-flags` take the kind's own odds index
+(`+0x0E`) and flag word (`+0x12`) from its area record.
+
+**Only a kind in a random-encounter row works this way.** The census (below)
+found every enemy-only skill's non-encounter carrier to be a boss kind,
+animation bank `0xFFFF` - an event battle's, set up by `Boss_SetupTable`.
+`--kind 22:1` (area 22's Nue) set up as a random encounter crashes ours in
+the sprite draw (`0x5935B0`'s replacement, `sprite_draw.cpp`, reading
+`0x00000000`, mode 5 step 5; `probe_k22_1`, dump in that folder): a state
+the game never makes, the harness's misuse, not a defect. Those kinds are
+reached by a route that fights them, cut at its battle (`--route R --cut F`
+as for `combat`; the cut is the last frame the game mode `0x66C7E8` is not 5
+before the log's `boss encounter:` line, measured by a copy of the route
+with a mode peek after every line, `away1027\sweep\mp`).
+
+### 11.3 The census: who carries what
+
+Every area's eight records (`AREAnnn.DAT` of the PC install, `enemy_ai.py`'s
+reader), each slot's base list (when its odds row has an ability kind) and
+its AI rows' lists, for the 48 enemy-side ids (game data: the table is in
+the root, `kind_census.json`, not here). **33 of the 48 have a carrier**;
+15 are in no enemy's lists at all - the 11 `Unused/dummy` (25, 80,
+111..113, 145..148, 213, 214), the second Barrier (188), the second Depress
+(211) and 127, 225 - so a cast by "an enemy that has it" does not exist for
+them, and section 5's Gooey casts stand as their only ones. Of the 33, 21
+are carried by a random-encounter kind (one chosen per id with a link
+arrival in its area); the other 12 only by boss kinds: Nue Stomp (the Nues, areas 22 / 23), Astral Warp (Amalgam),
+Bone Dance and RottenBreath (D.Zombie), UtmostAttack (Stallion), and - with
+no route of the owner's reaching them - Head Cracker (Shroom, area 119),
+Holocaust and Venom (Myria, 198), Corona (Gaist, 120), Main Cannon
+(Ammonite, 134), Paralyzer (Chimera, 197) and Eye Beam (Gazer, 77, an AI
+row's).
+
+### 11.4 The runs
+
+The PC install and the US-PSX-only install of section 10 (gap watch on),
+one run a kind, chunks of the ids it carries. Random-encounter kinds by
+`--kind`; boss kinds by `cutsceneAndNue` (cut 4300, the area-23 Nue, boss
+id 2), `ropeAndAmalgam` (cut 4902, boss id 12), `minecartToZombieDragon`
+(cut 5207, boss id 32) and `stallion` (cut 10573, its second fight, boss id
+24). Root `C:\Users\kerok\bof3x-runs\away1027\sweep` (`bykind_pc`,
+`bykind_us`, `kind_table.txt`, the compares `cmpk_*`, the gap watch
+`gw_kind_psxus`, the chains `chain_kind.sh`, `chain_retry*.sh`).
+
+**Every carried skill but the seven boss-only ones without a route is cast
+by its own kind on both installs** - 26 ids, Chlorine counted once though
+two kinds cast it: the prologue's area and slot are the carrier's, the pick
+peek `enemy0_ability` is the id (kind 4), six shots each, no stall, no
+crash, no timeout.
+
+| Id | Skill | Cast by (area / slot) | How |
+|---|---|---|---|
+| 1 | Nue Stomp | Nue (23 / 2) | `cutsceneAndNue` |
+| 9 | Chlorine | Curr (22 / 0); and the Nue | `--kind`; the Nue route |
+| 17 | Astral Warp | Amalgam (28 / 0) | `ropeAndAmalgam` |
+| 18 | Giant Growth | Gonghead (95 / 2) | `--kind` |
+| 23, 37 | Bad back, MagicShuffle | Codger (111 / 0) | `--kind` |
+| 24 | Watch Enemy | Thrasher (127 / 1) | `--kind` |
+| 27 | Hypnotize | Sleepy (105 / 1) | `--kind` |
+| 28 | Devour | Man Trap (95 / 1) | `--kind` |
+| 30 | Molasses | VileWeed (141 / 1) | `--kind` |
+| 31 | Tarbaby | Tar Man (51 / 3) | `--kind` |
+| 32 | Absorb | Audrey (127 / 2) | `--kind` (an AI row's list in the data) |
+| 33 | Healing Herb | Guard (27 / 1) | `--kind` (an AI row's) |
+| 34 | Steroids | BarbBulb (105 / 0) | `--kind` |
+| 35 | Magic Belt | GntOrc (139 / 4) | `--kind` |
+| 50 | Pollen | Big Bulb (117 / 4) | `--kind` |
+| 52 | Ovum | Egg Gang (139 / 2) | `--kind` |
+| 54 | Howling | Cerebus (82 / 2) | `--kind` |
+| 57, 81 | Bone Dance, RottenBreath | D.Zombie (108 / 3) | `minecartToZombieDragon` |
+| 61 | Target | Tricker (35 / 0) | `--kind` (an AI row's) |
+| 86 | Barrier | DeathBot (167 / 0) | `--kind` |
+| 109 | Depress | Spectre (77 / 4) | `--kind` |
+| 114 | Fire Whip | Berserkr (146 / 2) | `--kind` |
+| 116 | UtmostAttack | Stallion (67 / 1) | `stallion`, second fight |
+| 142 | Syphon | BloodBat (77 / 1) | `--kind` |
+
+(The slot an event battle's enemy takes is the boss set-up's, not the area
+record's the census names: the Amalgam fought as slot 0 of area 28, the
+D.Zombie as slot 3 of area 108, the Stallion as slot 1 of area 67.)
+
+**Nue Stomp, answered: no stall from a Nue.** From the area-23 Nue the
+banner shows, the Nue leaves its spot, lands on the party and returns
+(`bykind_pc\r_nue\run_enemy_001\a001_0..5.png`), and the fight is back at
+the cross four confirms later (recipe frame 4619, 240 frames after the
+pick) - on the PC and the US-PSX-only install alike. The stall of sections
+5, 6.3 and 10 is the Gooey's missing animation (the harness's), as section
+5 supposed: nothing of the port's or Capcom's.
+
+**The pictures, PC against US-PSX-only** (`abc_compare.py`, the same root
+name on both sides): **0 frames differ in every one of the 24 runs**, the
+route fights included. (A first pass of eleven kinds differed because the
+tool changed between its PC and US halves - the start-of-battle HP poke
+shifted the frames; re-run as `*_v2` with one tool, they are identical.)
+
+**The gap watch** over the US-PSX-only by-kind runs (24 runs, 245 ranges):
+7 read, 5 before a write - the empty save slot, `Battle_CommandLabels` and
+`Menu_Verbs+0xF4` (the parked-page blind spot), and `Equip_SlotIcons+0xC0`,
+`+0xDC`, `+0xF8` read by `MenuList_IconWheel` in the `stallion` route's
+field menu (rows [`install-gap-reads.md`](install-gap-reads.md) lists read
+on all 77 of its runs, which the census marks HARMLESS, the layer's). **No
+`game-value` row is read by any enemy skill cast by its own kind.**
+
+**What it took to reach the cast** (the field part is the fragile one): the
+first arrival and the square walk (`up,left,down,right`) gave an encounter
+in 9 of the 20 kinds; the others timed out in the field (no encounter in
+3,000 frames: the arrival's zone, a wall, or a placement that failed - not
+told apart) and were tried again from the area's arrivals with a longer
+walk (`up x3, left x3, down x3, right x3`). Two walks went through a link
+into the next area and fought its own rows (138 into 139, 76 into 77) - the
+prologue's area peek shows it - so those two kinds were taken in the area
+they reached (Egg Gang 139 / 2, BloodBat 77 / 1). Area 3's Gonghead met
+nothing from four arrivals; area 95's did.
+
+**Not reached**: the stallion route's first fight (boss id 23, area 67 slot
+0, cut 1939): its enemy made no ability pick within 300 frames of the
+Defends on either install - not read further. The seven boss-only skills
+without a route (above), and the 15 ids no enemy carries.
+
+### 11.5 The recipe for one kind
+
+```
+python tools/spell_sweep.py run --route tools/recipes/combat.txt --cut 501 --members 3 \
+    --side enemy --kind 22:0 --at 0x600000:0x448000:7 --ids 9 --enemy-odds 6 --enemy-flags 0xE0 \
+    --root <root> --launcher <ini-less launcher dir>\bof3x-launcher.exe --speed 4 --confirm circle
+```
+
+`--at` from a door-sweep `steps.json` (an `arr_x`, `arr_z` and the door's
+`flags` whose `arr_area` is the area), `--enemy-odds` / `--enemy-flags` from
+the kind's area record (`tools/enemy_ai.py --area A` reads the file; the two
+bytes are `+0x0E` and `+0x12`). A boss kind: the route that fights it and
+its cut, no `--kind`. From a worktree with a disc-only install,
+`BOF3X_RECIPE_SAVES` names the main checkout's `tools/recipe_saves`
+(section 10).
