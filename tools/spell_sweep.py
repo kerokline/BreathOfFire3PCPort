@@ -83,6 +83,8 @@ MEMBER_STATUS = 0x90     # u16: the member's status word (BattleInput_NextMember
 WORKING = 0x802DC0       # the working member record, Char_AbilityList's battle side
 WORKING_STRIDE = 0x14C
 HP, AP, MAX_HP, MAX_AP, DEF, AGI = 0x18, 0x1A, 0x20, 0x22, 0x26, 0x28
+STATUS = 0x10            # the status word of the working record (ObjTrio's +0x90): 0x4000 is a fallen member,
+                         # the word the hit path writes outright with HP 0 (battle_e3.cpp's two death sites)
 LISTS = (0x60, 0x6A, 0x74, 0x7E)   # the four ten-byte ability lists by type
 ENEMY = 0x93B960
 ENEMY_STRIDE = 0x128
@@ -250,6 +252,40 @@ def item_pokes(members, item):
     return lines
 
 
+def dead_pokes(dead):
+    """--dead: the members made fallen before the cast, as the hit path leaves
+    them - the status word 0x4000 outright and HP 0 (battle_e3.cpp). The
+    command gate (Battle_ActorCanCommand's mask 0x4964) drops them from the
+    cross and the revive abilities and Ammonia find them; the sprite stays in
+    its standing pose, since the death pose is the hit sequence's, which the
+    poke skips. After the sweep's own HP 999 pokes, which it overrides."""
+    lines = []
+    for m in dead:
+        r = WORKING + m * WORKING_STRIDE
+        lines.append(f'poke 0x{r + STATUS:X} u16 0x4000')
+        lines.append(f'poke 0x{r + HP:X} u16 0')
+    return lines
+
+
+def dead_peeks(dead):
+    """After the shots: did the cast bring them back (HP, the status word)."""
+    lines = []
+    for m in dead:
+        r = WORKING + m * WORKING_STRIDE
+        lines.append(f'peek 0x{r + HP:X} u16 dead{m}_hp')
+        lines.append(f'peek 0x{r + STATUS:X} u16 dead{m}_status')
+    return lines
+
+
+def target_ups(n):
+    """The target cursor starts on the caster (Battle_DefaultTarget: the first
+    not-out member from the caster upward) and the party side wraps the index
+    without skipping the fallen, so a revive wants the cursor moved as a
+    player moves it: n presses of up, (dead - caster) mod 3 - in the combat
+    fight Rei (member 2) casts first, so Ryu (0) is one up, Teepo (1) two."""
+    return ['wait 8'] + ['press up', 'wait 8'] * n
+
+
 def defend_block():
     return [f'until 0x{STEP:X} u8 == 2 timeout 900',
             'hold right 12',
@@ -271,34 +307,43 @@ def defend_all():
             'set hold 4', 'set gap 8']
 
 
-def cast_block(side, ability, name, members, shots, spacing, enemy_flags, enemy_odds=1, pokes=(), peeks=()):
+def cast_block(side, ability, name, members, shots, spacing, enemy_flags, enemy_odds=1, pokes=(), peeks=(),
+               dead=(), ups=0):
     tag = f'{"i" if side == "item" else "a"}{ability:03d}'
     L = [f'mark ability {ability} {name}',
          f'until 0x{STEP:X} u8 == 2 timeout 1800']
     if side == 'member':
-        L += member_pokes(members, ability)
+        L += member_pokes(members, ability) + dead_pokes(dead)
         L += ['hold up 12',
               'hold up+circle 4',
               'hold up 8',
               f'until 0x{COMMAND:X} u8 == 1 timeout 120',
               'wait 24',
               f'shot {tag}_list 2',
-              'press circle',
-              f'seek circle 0x{STEP:X} u8 != 4 max 3']
-        for m in range(1, members):
-            L += defend_block()
+              'press circle']
+        L += target_ups(ups)
+        L += [f'seek circle 0x{STEP:X} u8 != 4 max 3']
+        if dead:
+            L += defend_all()           # the fallen are out of the cross: however many crosses are left
+        else:
+            for m in range(1, members):
+                L += defend_block()
     elif side == 'item':
-        L += item_pokes(members, ability)
+        L += item_pokes(members, ability) + dead_pokes(dead)
         L += ['hold down 12',
               'hold down+circle 4',
               'hold down 8',
               f'until 0x{COMMAND:X} u8 == 2 timeout 120',
               'wait 24',
               f'shot {tag}_list 2',
-              'press circle',
-              f'seek circle 0x{STEP:X} u8 != 4 max 3']
-        for m in range(1, members):
-            L += defend_block()
+              'press circle']
+        L += target_ups(ups)
+        L += [f'seek circle 0x{STEP:X} u8 != 4 max 3']
+        if dead:
+            L += defend_all()
+        else:
+            for m in range(1, members):
+                L += defend_block()
     else:
         L += enemy_pokes(members, ability, enemy_flags, enemy_odds)
         L += defend_all()
@@ -318,6 +363,7 @@ def cast_block(side, ability, name, members, shots, spacing, enemy_flags, enemy_
         # shots (the round after is theirs again); the high byte keeps Ovum's egg (0x800, its own five rounds).
         for m in range(members):
             L += [f'poke 0x{OBJ_TRIO + m * WORKING_STRIDE + MEMBER_STATUS:X} u8 0']
+    L += dead_peeks(dead)
     L += [f'peek {p}' for p in peeks]          # --peek: after the shots
     # back to the input phase before the next block, so a stall is this ability's: a message a cast
     # leaves open waits for a button (confirm every twelve frames), a cast that never ends gives up at 480 frames
@@ -343,7 +389,7 @@ def write_recipe(path, a, head, chunk, table, n):
     lines += [f'seek circle 0x{PHASE:X} u8 == 1 max 120']
     for i in chunk:
         lines += cast_block(a.side, i, table[i][0], a.members, a.shots, a.spacing, a.enemy_flags, a.enemy_odds,
-                            a.poke, a.peek)
+                            a.poke, a.peek, a.dead, a.target_ups)
     lines += ['mark chunk done', 'end']
     with open(path, 'w', encoding='utf-8', newline='\n') as f:
         f.write('\n'.join(lines) + '\n')
@@ -537,6 +583,11 @@ def main():
                        help="an input_run poke added to every cast after the sweep's own (an A/B on one byte)")
         p.add_argument('--peek', action='append', default=[], metavar='"ADDR TYPE NAME"',
                        help="an input_run peek logged after every cast's shots")
+        p.add_argument('--dead', default='', metavar='M[,M]',
+                       help="members (0..2) made fallen before every cast - status 0x4000, HP 0 - for the revives; "
+                            "the other crosses then Defend by one seek (defend_all), and the fallen's HP and status are peeked after the shots")
+        p.add_argument('--target-ups', type=int, default=None,
+                       help="presses of up on the target cursor before the confirm (default (first dead - 2) mod 3: Rei casts first in the combat fight)")
         if name == 'recipes':
             p.add_argument('--out', required=True)
         else:
@@ -548,6 +599,10 @@ def main():
             p.add_argument('--game', default='', help="the game folder (input_run.py --game); a disc-built install's, with BOF3X_EXEIMAGE in --env")
             p.add_argument('--fresh', action='store_true', help='start results.tsv over')
     a = ap.parse_args()
+    if hasattr(a, 'dead'):
+        a.dead = tuple(int(x) for x in a.dead.split(',') if x != '')
+        if a.target_ups is None:
+            a.target_ups = (a.dead[0] - 2) % 3 if a.dead else 0
     if getattr(a, 'sections', '') == 'member':
         a.sections = set(MEMBER_SECTIONS)
     elif getattr(a, 'sections', ''):
