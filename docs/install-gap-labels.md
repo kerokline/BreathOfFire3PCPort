@@ -4,7 +4,8 @@
 rows read off all seven discs' code, the builder and the DLL changed, the
 checks in section 6; captures in section 7. Two ledger drafts and the
 defects' new statuses are in section 5, lettered, for the coordinator to
-number. Nothing regenerated is committed.
+number. Nothing regenerated is committed. Section 9 (2026-10-27, `away1027/lang`): the `language`
+rows that are not text, and the name rule's narrowing; its recipes regenerated.
 
 Group LA of [`install-gap-round.md`](install-gap-round.md) 2: the P3 rows of
 [`install-gap-census.md`](install-gap-census.md) 4 that are a disc's words
@@ -431,6 +432,107 @@ boxes (DIV-0069's centring, unchanged here) - for the owner's eye.
   install, the PC's glyph on the PC) or take the West's layout (the narrower
   box, the count at `0xD1`)?
 - The JP builds' rows (group 16, 17, 20, the `0x66A094` word) wait on D280.
+
+## 9. The `language` rows that are not text (2026-10-27, away day, agent `lang`)
+
+**Why.** `exe_own.py`'s symbol-name rule classed a segment `language` from
+a symbol whose name ends `Messages`, `Format`, `Text` and so on, *up to the
+next symbol*. A disc-built image zeroes `language` bytes, expecting a layer
+to write them, and the gap watch and the data diff take the class as
+"text". On 2026-10-25 that hid area 6's descriptor
+([`exe-import-engine.md`](exe-import-engine.md) 7.10). This section reads
+every `language` row of `recipes/exe-gaps.tsv` (both `how` = `language`
+and the `language-zero` gap kind; all seven builds, from `main` `e84aaf6d`)
+to find the others.
+
+**Method.** Scratch scripts in `bof3x-runs\away1027\lang\scripts\` (not in
+the repository): `dump_rows.py` reads each row's bytes from the PC's
+`.data` (`exe_tables.pc_data`), its readers (`analysis/pc_xref.json`, 64
+bytes back, plus the `.data` pointer words into it), and its `src/` names.
+`shape.py` sorts each row's bytes into the port's two-byte glyph codes (lead
+byte `0x80..0x8F`), GBK pairs, ASCII, zeros and other bytes. `cover.py`
+lays the data diff's decoded keys over the rows. `neigh.py` builds each
+disc's image (`exe_tables.disc_built`) and reads what the disc holds at the
+neighbouring places' displacement. 115 distinct rows over the seven builds.
+
+| Rows | Builds | Class assigned | Evidence | Written by | Gap watch |
+|---|---|---|---|---|---|
+| `CommuRank_Modes+0x8C..+0x528`: the 60 faerie names (16 bytes at `0x653200 + 20 r`) | all 7 | text (glyph codes) | 2..8 glyph bytes each, the rest zero; read through `CommuSim_AddRecord`'s `[ecx*4 + 0x653200]` | group 16 on a Latin layer; under `ja-JP` none (D280) | not seen read |
+| `ConfigScreen_OpenStates+0x24..` `0x6536F8..0x653808` | all 7 | text with its layout bytes | 17 records of 16: two layout bytes, then glyph codes | `convert_config` / `convert_config_psp` (17 records, PSP 15) | not seen read |
+| `EffectKind0F_PanelTitles`, `Equip_SlotIcons+0x8` / `+0x14`, `SharedList_SortSteps+0xC`, `MenuList_GeneWinSteps+0x25` / `+0x27` | FR, DE | text (ASCII) | sections 1, 2 | kind 16 tag 3; groups 21, 22, 23 | not seen read |
+| `Cursor_Hidden+0x2C`, `+0x4C` (`0x65DA78`, `0x65DA98`) | all 7 | text (GBK) | the window title and the missing-disc box | ours: DIV-0039 draws English, the bytes are not used | not seen read |
+| The string pool `0x669CCC..0x66A450`: `AreaW0b_ItemNameKey`, `BattleE1_GuestHeadOut`, `Battle_CommandLabels`, `Battle_CommandLabelPointers+0x1C`, `BattleActions_TextCounter+..`, `CommuName_RecordNames+0x1C`, `Effect1b_ToggleText+..`, `Menu_Verbs+..`, `Magic080_TextPointers+0x18`, `Pause_LinesGame+0x8` | all 7 | text (glyph codes, ASCII) | each a string or a fixed-width slot behind a pointer table of its reader (`loc_build.py`'s group comments name each address) | groups 1..24 (`loc_build.py`), `char_names.cpp` (`0x669CD8`, `0x669CE0`), the pause lines DIV-0038 (`pause_text.cpp`); the JP builds' pool: D280 | read and written by the layer: `Battle_CommandLabels`, `Effect1b_ToggleText+0xE` / `+0x60`, `Menu_Verbs+0xF4`, `Magic080_TextPointers+0x18` |
+| `language-zero` rows (`0x6531F4`, `0x653200` JP, `0x669CCC`, `0x669CE8` JP, `0x66A094`, `0x66A098` JP) | as listed | text | `exe_tables.LANGUAGE_ZERO` | none (sections 3, 4; `0x669CCC` the empty slot's text, read in every sweep) | `0x669CCC` read |
+| **`Area08_MessageFormat+0x9FA`, `+0xA04`** (`0x5E1ABA..0x5E1AC0`, `0x5E1AC4..0x5E1AC8`) | PSP-JP, PSP-EU | **game value: area 9's entry script** | area 9's descriptor (`0x5E1AD0`) names `0x5E1AB8` as `entries` (`+0x14`) and `0x5E1ABC` as `scripts` (`+0x18`); no text byte. `BOOT.BIN` packs the entry halfword, so the script sits two bytes before the neighbour's displacement (no word shift of 7.9 reaches it) | nothing: zeroed on both PSP images | not seen read |
+| **`Area175_ScriptMessages+0x8C3`, `+0xC1B`, `+0xF73`, `+0x12CB`, `+0x1623`, `+0x1D03`, `+0x207B`** (one byte each) | US, EU, FR, DE | **game value: an operand of the faerie village areas' scripts** | `0xF1` bytes before each of areas 178..182, 184 and 185's descriptors, inside the block the descriptor names at `+0x10` (area 178's at `0x642D18`, the byte `0x67` into it), one of a run of 16-bit values beside it the shape of message numbers (the reading is not established) | nothing: the Western discs hold another value there (the JP disc and both PSPs hold the PC's); where a map segment runs over it (areas 177, 183) the image takes the Western value, elsewhere the map splits there and the byte is zero | not seen read |
+
+The sweeps' gap-watch reports (`bof3x-runs\spellsweep_disc\gw_report.tsv`,
+`bof3x-runs\ss1026\rv\gw*_report*.txt`, `ss1026\psp\`, `ss1026\sc\`) are
+battles only; no row outside the string pool was read.
+
+**Two non-text rows, both from the name rule** (no hand-listed region was
+wrong). Every other `language` row is text or a text record's layout byte.
+The census of what the rule matches shows why: of 147 symbols it matches,
+most are areas' `Choices` (`unsigned long`), `ChoiceMessages` / `Messages`
+(`unsigned short` message numbers) and the like: numbers whose own bytes a
+disc carries, mostly placed. The name was never wrong about the symbol.
+The fault was the reach past it.
+
+**The rule change** (`tools/exe_own.py`, `name_extent` / `name_class` /
+`name_cuts`): the `language` name rule speaks only for the symbol's own
+bytes. Those are `ctype` x `count` from `symbols.toml` (one element with no
+count). A symbol with no `ctype`, or a `char` array with no count, runs to
+its PC string's NUL. Segments are also cut at those ends, except inside a
+hand-listed `REGIONS` row, where the row decides. Past the end, a segment
+gets the class of any unnamed one: unread when nothing reads it, otherwise
+disc-unplaced or game-value by the disc search. This is narrower than a
+hand-listed range, and it covers the rule's next reach too. The
+`port-relaid` name rule is unchanged.
+
+**Before and after** (`recipes/exe-gaps.tsv` rows / bytes by `how`;
+`exe.toml`), the seven discs through `exe_own.py measure`, `exe_tables.py
+gaps`, `exe_tables.py recipe`, `psp_exe.py recipe`, `exe_tables.py recipe`,
+`exe_own.py measure`, `exe_tables.py gaps`:
+
+| Build | `gap` | `language` | `identical` | `placed_differ` |
+|---|---|---|---|---|
+| `psx-jp` | 21 / 299, unchanged | 88 / 2,736, unchanged | 615,452, unchanged | 3,151, unchanged |
+| `psx-us` | 48 / 680 to 55 / 687 | 89 / 2,824 to 82 / 2,817 | 614,996, unchanged | 3,194, unchanged |
+| `psx-eu-en` | 49 / 723 to 56 / 730 | 89 / 2,824 to 82 / 2,817 | 614,965, unchanged | 3,191, unchanged |
+| `psx-fr` | 52 / 758 to 59 / 765 | 93 / 2,860 to 86 / 2,853 | 614,912, unchanged | 3,193, unchanged |
+| `psx-de` | 52 / 758 to 59 / 765 | 94 / 2,862 to 87 / 2,855 | 614,911, unchanged | 3,192, unchanged |
+| `psp-jp` | 21 / 267, unchanged | 89 / 2,752 to 87 / 2,742 | 613,246 to 613,250 | 3,380, unchanged |
+| `psp-eu` | 20 / 237, unchanged | 89 / 2,798 to 87 / 2,788 | 613,227 to 613,231 | 3,360, unchanged |
+
+`unread` and `keys` are unchanged on every build.
+
+- **Area 9's entry script now places** on both PSP builds. With the row no
+  longer `language`, `psp_exe.py`'s `psxmap` rule (which skips `language`
+  ranges) reads it from the PSP disc's own `WORLD00/AREA009.EMI#13`, byte
+  for byte the PC's: two `exe-psp.tsv` rows a build, 10 bytes. The PSP images'
+  hashes change. A PSP-built install needs the rebuild (`importer.py stale`
+  names `exe`). What area 9 did with a zeroed script was not seen in play.
+- **The faerie village bytes are now `gap` / `game-value`** on the four
+  Western PSX builds (7 one-byte rows on each). No rule places them, because
+  every rule wants the PC's byte and the Western disc holds another value.
+  The image keeps the zero it had. Now the class says so: the gap watch and
+  the data diff see a game value, not text. No data diff key decodes these
+  bytes, so `recipes/data-known.toml` gets no entry (one would match no row and
+  fail `check`). For the owner: which value is right on a Western install?
+  It could be the disc's own, as areas 177 and 183 already get it through
+  the map, or the PC's (JP's). That depends on what the operand selects
+  (if it is a message number, the Western one goes with the Western text).
+  That decides whether a release-difference place is wanted here.
+- **Text rows no layer writes:** none on a Western build beyond the known
+  `language-zero` rows (sections 3, 4: `0x6531F4`, `0x669CCC`, `0x66A094`).
+  On the JP builds the whole string pool, the faerie names and the config
+  labels wait on D280, as before.
+
+Checks: `exe_tables.py check`, `psp_exe.py check`, `importer.py check`,
+`tables.py check`, `ledger_check.py`, `exe_own.py check`, `data_diff.py
+check`, all 0 errors. `data_diff.py run`: 628 rows, the same rows as before,
+only the two PSP image hashes changed. No ledger entry: a placement of disc
+data, DIV-0101's.
 
 ## For the other files (the coordinator's)
 
