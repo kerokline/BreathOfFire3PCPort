@@ -39,6 +39,8 @@ Usage:
   `run` generates a chunk, runs it through input_run.py, reads the launcher's
   bof3x.log, writes results.tsv (id, name, section, status, caster, effect
   handlers, frames) and goes on past a FATAL or FAILED at the id after it.
+  In an --env value, {chunk} becomes the chunk's tag (member_013): one file a
+  chunk for a variable that names an output file (BOF3X_STPCENSUS=DIR/{chunk}.tsv).
 """
 import argparse
 import os
@@ -512,7 +514,7 @@ def run(a):
         if a.game:
             cmd += ['--game', a.game]
         for kv in a.env:
-            cmd += ['--env', kv]
+            cmd += ['--env', kv.replace('{chunk}', tag)]
         t0 = time.time()
         print(f'[{time.strftime("%H:%M:%S")}] chunk {tag}: {len(chunk)} abilities {chunk[0]}..{chunk[-1]}', flush=True)
         with open(os.path.join(a.root, f'run_{tag}.log'), 'w', encoding='utf-8') as f:
@@ -602,7 +604,7 @@ def main():
             p.add_argument('--launcher', required=True)
             p.add_argument('--speed', type=int, default=4)
             p.add_argument('--lang', default='en-US')
-            p.add_argument('--env', action='append', default=[])
+            p.add_argument('--env', action='append', default=[], help='K=V for input_run.py; {chunk} in V becomes the chunk tag')
             p.add_argument('--game', default='', help="the game folder (input_run.py --game); a disc-built install's, with BOF3X_EXEIMAGE in --env")
             p.add_argument('--fresh', action='store_true', help='start results.tsv over')
     a = ap.parse_args()
