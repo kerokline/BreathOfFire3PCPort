@@ -165,6 +165,11 @@ same fight - **through `bof3x-launcher-dev.exe`**, since the release
 launcher refuses the hosted-only switches with a dialog. Added 2026-10-26
 for the Foretell question (section 4).
 
+`--dead M[,M]` makes those members fallen before every cast (status
+`0x4000`, HP 0: the hit path's own death write) for the revives (section 9);
+`--target-ups N` presses up on the target cursor before the confirm (the
+default puts Rei's cursor on the first fallen member).
+
 The launcher folder must hold no `bof3x.ini` (the play ini's cheats and
 options would change the fight; [`abc-harness.md`](abc-harness.md)). One
 game at a time: the driver reads the launcher folder's `bof3x.log`. About
@@ -461,3 +466,56 @@ the seek gave up (`results_item.tsv`, status `refused`).
   a gene set; not swept.
 - One fight, one enemy kind, one area: effects that read the enemy's family
   or the field are seen in one setting.
+
+## 9. The revives over a fallen member (2026-10-26 evening)
+
+The twin read placed `ReviveHalo_MoteCounts` the same day, and no sweep run
+had ever read it (section 6's `gw_report.tsv`: 0 reads): Raise Dead and
+Resurrect spawn the halo's motes over a fallen member, and the sweep's party
+never falls. So `--dead`: before each cast the member's working-record status
+word is poked to `0x4000` and its HP to 0, the two words the hit path writes
+outright at a member's death (`battle_e3.cpp`); the command gate (mask
+`0x4964`) then leaves the member out of the cross, the game draws it lying
+down from the next frame (the pose is the state machine's, not the hit
+sequence's, so the poke is enough), and the other crosses Defend by the
+enemy side's one `seek right` (`defend_all`), since their count has changed.
+The target cursor starts on the caster (`Battle_DefaultTarget`, the first
+not-out member from the caster upward) and the party side wraps the index
+without skipping the fallen, so the recipe presses up `(dead - 2) mod 3`
+times - Rei casts first in this fight - as a player moves it. After the
+shots the fallen member's HP and status word are peeked.
+
+The run: the US-disc + PSP-EU install rebuilt from `fix/sweep-wave` (the twin
+reads and label group 24 in; root `C:\Users\kerok\bof3x-runs\ss1026\rv`,
+`disc` / `disc_item` with the gap watch in `gw`) and the PC install (`pc` /
+`pc_item`), Ryu (member 0) fallen, Rei casting, one id a chunk. Which
+abilities revive was taken from the code, not the names: `ItemUse_Revive`
+is the one field item handler that clears `0x4000` (Ammonia,
+[`item-use.md`](item-use.md)), and MAGIC077 serves both Raise Dead rows and
+both Resurrect rows ([`magic_s17.md`](magic_s17.md)); Benediction
+(MAGIC169, [`magic_s35.md`](magic_s35.md)) was cast as the owner's guess.
+
+| Id | Name | Disc install | PC install | Ryu after (HP / status) |
+|---|---|---|---|---|
+| 76 | Raise Dead | done, 289 frames | done, 289 | 250 / 0 |
+| 77 | Resurrect | done | done | 999 / 0 |
+| 180 | Raise Dead (type 3 row) | done | done | 250 / 0 |
+| 181 | Resurrect (type 3 row) | done | done | 999 / 0 |
+| 169 | Benediction | done, 277 | done, 277 | **0 / 0x6000 - not a revive** |
+| item 14 | Ammonia | done | done | 1 / 0x2000 |
+
+The shots (`a076_2..5.png`): Ryu lying at his spot, the Raise Dead banner,
+Rei's cast glow, the halo's motes rising, then Ryu standing with 250 and a
+green popup; **the disc install's frames are the PC's to the pixel** for
+every row, so the placed row draws as the PC's data did. The gap watch over
+the six runs lists 3 of 245 ranges read, only the empty save slot before a
+write (the placed row is no longer a range it guards; its evidence is the
+shots). Benediction raises the statue over the party and brightens the
+living members (`a169_2`, `a169_4`); Ryu stays fallen with `0x2000` added to
+his status, so it is a party effect on the living, not a revive - what its
+`0x2000` is was not read. Two things for the owner's eye, the same on both
+installs and so ours either way: the green popup over Ryu reads **543** where
+his HP after Raise Dead is 250 (`a076_5.png`); and Ammonia leaves the status
+word `0x2000` with HP 1 where the spells leave 0. Neither is a disc-install
+difference; whether the PlayStation shows the same number is the next
+question for either.

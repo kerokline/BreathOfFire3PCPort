@@ -91,8 +91,14 @@ hosted cross form).
      the Western discs; `Rest3e_Windows`, the rest menu re-laid per language) are the owner's calls, not
      placements. `TornadoMote_Phases+0x10` (the Identify panel's `WEAK / EXP / ITEM / POINT`) the sweep did
      read, and the panel drew the PC's to the pixel: the PC's draw does not take those labels from the row.
+   - **The revives over a fallen member** (`--dead`, [`spell-sweep.md`](spell-sweep.md) 9, the owner's ask the
+     same evening): Raise Dead, Resurrect (both rows each) and Ammonia bring Ryu back on the rebuilt disc install
+     and the PC alike, frames to the pixel, the halo's motes drawn - the placed `ReviveHalo_MoteCounts` seen in
+     play. Benediction is not a revive (the living are brightened, Ryu stays fallen with `0x2000` added).
+     **Owed the owner's eye / the PSX twin:** the green popup over Ryu reads 543 where Raise Dead leaves 250;
+     Ammonia leaves status `0x2000` with HP 1 (both installs the same, so ours either way).
    **Next:** a PR of `fix/sweep-wave` (built, both self-tests pass, checks 0 errors). Left from the sweep: a
-   sweep by enemy kind; Ward's tilts by eye; a dead-member variant of the sweep (or a route) for Revive Halo.
+   sweep by enemy kind; Ward's tilts by eye; the two revive questions above against the PlayStation.
    Worktrees `ss1026\wt_par`, `wt_sc`, `wt_howl`, `wt_fore`, `wt_wave` and their roots are removable after.
 
 00000000000000. **The spell sweep is built and run** ([`spell-sweep.md`](spell-sweep.md), 2026-10-26, the owner's
