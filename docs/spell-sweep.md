@@ -528,8 +528,8 @@ Bit `0x2000` of the status word - the member's `0x802DC0 + m * 0x14C` +0x10
 is the **low-HP mark: set while HP is below a quarter of max HP, cleared
 otherwise**. It is not a revive mark, not a buff, not an exclusion, and it
 is not the round flags' `0x2000` (`EnemyOp_HitEnd` turns round flag 0x40
-into 0x2000 in the round word `0x904AA8`, which `battle_e3.cpp:516` reads) nor the second flags dword's (+0x130 / +0x134, the task-in-
-flight bit `BattleEnd_AwaitMemberTasks` waits on, `battle_turn_steps.cpp:364`).
+into 0x2000 in the round word `0x904AA8`, which `battle_e3.cpp:516`
+reads) nor the second flags dword's (+0x130 / +0x134, the task-in-flight bit `BattleEnd_AwaitMemberTasks` waits on, `battle_turn_steps.cpp:364`).
 The sibling's read of the PSX setup (`names/functions.toml`,
 Battle_Setup's evidence line) names it the same, independently: "sets
 status 0x2000 (low HP) when HP < max/4 else clears it".
