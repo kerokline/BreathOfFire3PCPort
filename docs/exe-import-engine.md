@@ -1227,9 +1227,30 @@ differ between a PC and a disc-built install. The owner's `campingFishing.txt`
 (area 30, the lake, which the map placed whole on every build) is the same on
 both disc-built images and the PC's in eight of its nine shots; the ninth,
 `fishing_equip`, differs from the PC's in 4,028 pixels on `before` and `after`
-alike, so not through this rule (the Western fishing rows, D286's class; not
-read further). So a disc-built PlayStation install at the sea or river fishing
+alike, so not through this rule (read below: the headings' draw under a stale
+overlay). So a disc-built PlayStation install at the sea or river fishing
 spot was entered as a field, not the fishing game, until this rule.
+
+**The `fishing_equip` difference, read** (2026-10-27, from the same frames).
+The 4,028 pixels are two bands, `y 144..167` (`x 116..501`, the `EQUIP` and
+`LURE` title bars) and `y 272..295` (`x 116..215`, the `GUIDE` bar). They are
+the same three words in the same glyphs, only placed differently: centred in
+their bars on the disc-built installs and left-set on the PC's. `before` and
+`after` are identical. The words are `EffectKind0F_PanelTitles`
+(`0x653EA0..0x653EB4`). On the US image that range is not a `language` row
+(only FR and DE have one, D286): it is a `place`, `WORLD00/AREA030.EMI#4:twin`
+from `0x801E21CC`, byte for byte the PC's. So the image is not the cause. The
+draw is: `effect_1b.cpp` `DrawHeading` centres the overlay's word by its real
+width once the fishing chunk's tag 3 is loaded (DIV-0069 as amended for D286,
+[`install-gap-labels.md`](install-gap-labels.md) 1). Without it, it draws the
+original's `count` glyphs at the original's x, which assumes 12-unit glyphs
+and so sets 8-unit Latin left. The disc-built install's log has `DIV-0069: 4 of
+4 fishing headings (D286)`. The PC install's (the tooling folder `bof3\`) does
+not: its `en-US` overlay files are dated 2026-10-13, before tag 3 (2026-10-18),
+the "overlay built before" case that entry names under *Reversible*. This is an
+expected layer difference on a stale overlay, not a row no layer writes. No
+label-group work is needed. A PC install whose `en-US` overlay is rebuilt from
+the US disc should draw the disc-built frames; not run here.
 
 **Left.** Nothing of the 200 descriptors is unplaced on any build. Whether the
 field `before` showed would have let the player leave (the fishing spot has no
