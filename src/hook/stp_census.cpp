@@ -120,13 +120,13 @@ void Start() {
     const DWORD n = GetEnvironmentVariableA("BOF3X_STPCENSUS", g_path, sizeof g_path);
     if (n == 0 || n >= sizeof g_path) return;
     g_on = true;
-    bof3::Log("stpcensus   on: %s, rewritten every 300 Direct3D frames", g_path);
+    bof3::Log("stpcensus   on: %s, rewritten every 60 Direct3D frames", g_path);
 }
 
 void Frame() {
     if (g_frame_changed) ++g_frames_changed;
     g_frame_changed = false;
-    if (++g_frames % 300 == 0) Write();
+    if (++g_frames % 60 == 0) Write();   // the harness kills the game at `done`: lose at most a second
 }
 
 void Note(std::uint32_t p) {
