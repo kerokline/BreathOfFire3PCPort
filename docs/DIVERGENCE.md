@@ -7366,6 +7366,20 @@ designed in rather than bolted on.
   `placed_differ` unchanged; `exe_tables.py check` with the seven discs 0
   errors. Verified by the sweep's Raise Dead and Resurrect on the rebuilt
   PSP-only install (the gap watch and the halo frames against the PC's).
+- Amended 2026-10-26 night, later (D245, Simoon's dusts on a PSP-only
+  install; [`exe-immediate-places.md`](exe-immediate-places.md) 7.7): a
+  `BOOT.BIN` map segment's non-zero bytes that lie in a word the ELF's
+  `R_MIPS_32` relocations make a pointer, where the PC's layout holds a
+  number, are not placed (`disc_image`): the map bridges the bytes between
+  its agreeing runs, and `SimoonDust_Offsets`' 24 bytes were a jump table's
+  bridged over. Of 162 / 161 such bytes on PSP-JP / PSP-EU the 18 non-zero
+  ones are the 18 wrong ones, the rest zero and equal;
+  `psxmap` then places the table from the PSP disc's `MAGIC103.EMI#3`
+  (`0x801F07AC`). `gap` rows unchanged on every build,
+  `placed_differ` 3398 to 3380 on each PSP the PSX five
+  unchanged to the byte; `exe_tables.py check` with the seven discs 0 errors.
+  Verified by the sweep's Simoon on the rebuilt PSP-only install against the
+  PSX-only install's dense shots.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 

@@ -622,3 +622,17 @@ are the PC's to the pixel, the motes rising over Ryu; only the list shot's
 two small boxes (`224,72..244,92`, `224,180..244,200`: the PSP's own icons)
 stay, as on every PSP-built install. Ryu stands after with 250 and 999 as
 in the table.
+
+**Simoon's dusts (D245, the same night).** The full member sweep on the
+PSP-only install (`full_pspeu`) drew Simoon's dome and fan without its two
+dust sprites: the PSX-only install's dense shots (`simoon_psxus`, 40 shots
+three frames apart) show them rising inside the dome over `a103_10..18`,
+the PSP-only install's (`simoon_pspeu`) none, the compare's boxes growing
+from `40,136..96,160` to `0,76..148,188`. The row is `SimoonDust_Offsets`,
+the one placed-but-wrong symbol `psp-image.md` 1 had named: the PSP map
+bridged a jump table into it, and `SimoonDust_Wait` sent the dusts 1.7
+million units away. Fixed in `disc_image` (the relocated-word rule,
+[`exe-immediate-places.md`](exe-immediate-places.md) 7.7; DIV-0101
+amended), the table then `psxmap`'s from the PSP disc's `MAGIC103.EMI#3`.
+The check, the PSP-only install rebuilt again (`g_pspeu2`), Simoon alone
+with the dense shots: SIMOON_RESULT_PLACEHOLDER

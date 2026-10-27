@@ -103,6 +103,10 @@ hosted cross form).
      early for `ReviveMote_Types`, and the three left were under `find_imm`'s floor. The floor now counts the
      symbol's owned tail ([`exe-immediate-places.md`](exe-immediate-places.md) 7.6), the row places on both PSPs,
      and the rebuilt PSP-only install draws the motes. Air Raid's and Ward's PSP notes checked true.
+   - **Simoon's dusts missing on the PSP-only install** (D245 fixed, same branch): the PSP map bridged a
+     `BOOT.BIN` jump table into `SimoonDust_Offsets`; `disc_image` now leaves a PSP map segment's bytes in
+     ELF-relocated words unplaced where the PC holds a number ([`exe-immediate-places.md`](exe-immediate-places.md)
+     7.7), and `psxmap` places the table from `MAGIC103.EMI#3`. Dense Simoon shots match the PSX-only install's.
    **Next:** a PR of `fix/sweep-wave` (built, both self-tests pass, checks 0 errors). Left from the sweep: a
    sweep by enemy kind; Ward's tilts by eye; the two revive questions above against the PlayStation.
    Worktrees `ss1026\wt_par`, `wt_sc`, `wt_howl`, `wt_fore`, `wt_wave` and their roots are removable after.

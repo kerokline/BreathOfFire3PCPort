@@ -503,6 +503,55 @@ reads with these two lines for the PSPs. Played: the PSP-only install
 rebuilt from this branch, Raise Dead and Resurrect over a fallen Ryu
 ([`spell-sweep.md`](spell-sweep.md) 9.3).
 
+### 7.7 The PSP map's relocated words (2026-10-26 night, D245)
+
+Not an `immref` row but the same night's second PSP-only finding, kept here
+beside 7.6 because it is the other way a PSP image held bytes that were not
+the PC's. `SimoonDust_Offsets` `0x65B7F0..0x65B808` (`long[6]`, two x / y / z
+rows `SimoonDust_Wait` adds to the source's position) differed from the PC
+in 18 bytes on both PSP builds (`psp-image.md` 1): the PSP map's `BOOT.BIN`
+segment `0x65B79B..0x65B868` (JP `0x2F5B33`, EU `0x2F5CC3`) *bridges* the
+24 bytes between `SimoonDome_Expand`'s pointer word and `SimoonDust_Phases`
+- `exe_twins.segments` joins runs of one displacement across holes of up to
+`MAP_GAP` 64 bytes, and the hole here is where `BOOT.BIN` keeps a jump table
+(six words the ELF's `R_MIPS_32` relocations make `.text` pointers, JP
+`0x2F5B88..`, EU `0x2F5D18..`). On a PSP-only install Simoon's two dusts
+started 1.7 million units from the caster and never showed.
+
+**The rule (`disc_image`): a `BOOT.BIN` map segment's non-zero bytes in a
+relocated word where the PC's layout holds a number are not placed.** The ELF's
+relocations (`psp_exe.Elf.pointer_words`, cached per disc) and
+`recipes/exe-pointers.tsv`'s pointer words (`pc_pointer_bytes`) are both in
+hand at install, so the rule needs no new recipe. Where the PC's word is a
+pointer too the mask leaves it unfilled anyway, so the rule changes nothing
+there. Measured over the two images before the rule: 162 (JP) / 161 (EU)
+map bytes lie in relocated words at PC numbers; 144 / 143 of them are zero
+and equal the PC's, and the 18 non-zero ones are the 18 that differ, all
+`SimoonDust_Offsets`'. The zero bytes stay placed: a first cut that dropped
+them too freed one zero byte at the end of seventeen data-pointer places on
+each PSP, the places grew over their map segments and `check` refused them
+(and the halo row of 7.6 grew back to `..D8`, its fourth byte being one of
+them). The freed 18 bytes (three of each word, the words' zero top bytes
+still the map's) are then `psp_exe`'s `psxmap` rows from the PSP disc's own
+`BMAGIC/MAGIC103.EMI#3` at `0x801F07AC..`, the PSX-JP map's place, each run
+equal to the PC's. The maps themselves
+(`exe_maps/psp-*.tsv`) are untouched; `psp-image.md` 8's "about 600
+coincidentally equal bytes" was the cost of splitting runs, which this does
+not do.
+
+After (the chain, `gapdiff.py` against the 7.6 state): `gap` rows / bytes /
+PC non-zero unchanged on every build (psp-jp 21 / 267 / 139, psp-eu 20 / 237
+/ 117, the PSX five as 7.6 left them); `exe-psp.tsv` gains four `psxmap` rows
+of three bytes on each PSP (`0x65B7F4`, `0x65B7F8`, `0x65B7FC`, `0x65B804`,
+from `MAGIC103.EMI#3` `0x801F07B0..`; the two zero rows `0x65B7F0` and
+`0x65B800` place nothing, as the rule reads); `exe.toml`'s PSP sections:
+`placed_differ` 3398 -> 3380 (the 18), `placed_equal` +12, `none_pc_zero`
++6, `ranges` 9617 -> 9627; `exe-imm.tsv`, `exe-places.tsv`, `exe-pointers.tsv`,
+`exe-layout.tsv` and `exe-rebuild.tsv` unchanged. `exe_tables.py check` x7
+0 errors, `exe_imm.py selftest` 0 problems, `psp_exe.py check` OK,
+`importer.py check` 0 errors (the two new memos registered in
+`build_reuse.MEMOS`).
+
 ## For the other files
 
 - **`install-gap-census.md` section 8** (the coordinator's): the area message

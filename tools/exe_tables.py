@@ -352,6 +352,34 @@ def table_span(t, syms):
     return syms[t["symbol"]], syms[t["symbol"]] + t["stride"] * t["count"]
 
 
+_RELOCATED = {}            # {id(disc): (the disc, its relocated words)}; a build_reuse memo
+
+
+def psp_relocated_words(disc):
+    """The BOOT.BIN image addresses (word-aligned) of the words the ELF's R_MIPS_32
+    relocations make pointers (.rodata and .data), cached per disc."""
+    k = id(disc)
+    if k not in _RELOCATED:
+        import psp_exe
+        _RELOCATED[k] = (disc, psp_exe.boot_bin(disc).pointer_words)
+    return _RELOCATED[k][1]
+
+
+_PC_POINTER_BYTES = {}     # {the file's mtime: the bytes}; a build_reuse memo
+
+
+def pc_pointer_bytes():
+    """The bytes of the PC's pointer words (recipes/exe-pointers.tsv, re-read when the file
+    changes): a relocated BOOT.BIN word there is a pointer on both sides and the mask leaves
+    it unfilled anyway; a PSP map byte in a relocated word outside them is a pointer's byte
+    where the PC holds a number."""
+    stamp = os.path.getmtime(POINTERS)
+    if stamp not in _PC_POINTER_BYTES:
+        _PC_POINTER_BYTES.clear()
+        _PC_POINTER_BYTES[stamp] = {x for p, n, _ in load_pointers() for x in range(p, p + 4 * n)}
+    return _PC_POINTER_BYTES[stamp]
+
+
 def disc_image(disc, bid, places=(), imm=None):
     """(image, owner, ranges) from a disc alone, before the pointer mask: the
     0x9C000-byte image, a per-byte list of which range wrote it (None:
@@ -370,11 +398,31 @@ def disc_image(disc, bid, places=(), imm=None):
         ranges.append([lo, lo + len(raw), how, where, addr])
         img[lo - DATA_LO:lo - DATA_LO + len(raw)] = raw
         owner[lo - DATA_LO:lo - DATA_LO + len(raw)] = [k] * len(raw)
+    relocated = psp_relocated_words(disc) if "SYSTEM.CNF" not in disc.files else None
     for r in tables.read_map(os.path.join(tables.MAPS, bid + ".tsv")):
         base, blob = src[(r["file"], r["section"])]
         at = r["addr"] - base
-        put(r["pc"], blob[at:at + r["pc_end"] - r["pc"]], "map",
-            r["file"] + ("" if r["section"] is None else "#%d" % r["section"]), r["addr"])
+        where = r["file"] + ("" if r["section"] is None else "#%d" % r["section"])
+        if relocated is None or r["file"] != "BOOT.BIN":
+            put(r["pc"], blob[at:at + r["pc_end"] - r["pc"]], "map", where, r["addr"])
+            continue
+        # a PSP map segment bridges the bytes between its agreeing runs; where a bridged word
+        # is one the ELF's relocations make a pointer and the PC's layout holds a number, the
+        # PSP's bytes are a pointer's (SimoonDust_Offsets under a jump table, D245) - its
+        # non-zero bytes are left for the other rules (a zero byte places nothing, and the
+        # equal ones are all zero: docs/psp-image.md 8, exe-immediate-places.md 7.7)
+        ptrs = pc_pointer_bytes()
+        drop = lambda x: (((r["addr"] + x - r["pc"]) & ~3) in relocated and x not in ptrs
+                          and blob[at + x - r["pc"]] != 0)
+        x = r["pc"]
+        while x < r["pc_end"]:
+            skip = drop(x)
+            y = x
+            while y < r["pc_end"] and drop(y) == skip:
+                y += 1
+            if not skip:
+                put(x, blob[at + x - r["pc"]:at + y - r["pc"]], "map", where, r["addr"] + x - r["pc"])
+            x = y
     for r in places:
         base, blob = src[(r["file"], r["section"])]
         at = r["addr"] - base
