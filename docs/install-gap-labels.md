@@ -5,7 +5,8 @@ rows read off all seven discs' code, the builder and the DLL changed, the
 checks in section 6; captures in section 7. Two ledger drafts and the
 defects' new statuses are in section 5, lettered, for the coordinator to
 number. Nothing regenerated is committed. Section 9 (2026-10-27, `away1027/lang`): the `language`
-rows that are not text, and the name rule's narrowing; its recipes regenerated.
+rows that are not text, and the name rule's narrowing; its recipes regenerated. Section 9.2
+(the same day, `away1027/twins`): the map's tie-break that places the faerie village operand.
 
 Group LA of [`install-gap-round.md`](install-gap-round.md) 2: the P3 rows of
 [`install-gap-census.md`](install-gap-census.md) 4 that are a disc's words
@@ -557,13 +558,134 @@ data, DIV-0101's.
   - Two files cannot be bridged by the map's 64-byte gap rule, so the byte between them stays unplaced.
   - In areas 177 and 183 the run stays in the area's own file, and the bridge takes the Western byte (counted in `placed_differ`).
   - `tools/exe_maps`-based scope (`scripts\tie_scope.py`): exactly 6 such boundaries a Western PSX build (areas 178..182 and 184), none on the JP or PSP builds. Area 185's tail is `AREA183.EMI`'s at another displacement (area 185's layout is `0x64` bytes on).
-- **The fix, not built here.**
+- **The fix, not built here** (built the same day: section 9.2).
   - It is a tie-break in `tools/exe_twins.py` `survey` / `map`: a run that several files hold equally continues the segment before it when that segment's own file holds the run at its own displacement. The survey must record the group's files, and check the bytes against that file.
   - The map then bridges the one byte from the area's own file, and the image takes the Western `0x6D` in all seven, as it already does in four.
   - This means regenerating `exe_maps/` (survey over the seven discs), then the recipe chain of section 9. `placed_differ` rises by the seven bytes on each Western build, as release differences.
   - It is left for the orchestrator because it moves `exe_maps/` and every recipe after it: better done once after the day's merges than on a branch beside `desc`'s.
   - The data diff decodes no talk table, so no `data-known.toml` entry follows.
 - **On the PC install under a Western layer** (not a disc-built image): `.data` keeps the PC's `0xE1`, and the layer's text block is the disc's. Talk script 6 in these eleven areas then opens the Western block's message `0xE1`, not the `0x6D` the Western release shows there. Which line that is was not read (no text is quoted here). This is for the owner: whether a Western layer should carry the operand too.
+
+### 9.2 The map's tie-break: the faerie village operand placed (the same day, agent `twins`)
+
+**What changed.** `tools/exe_twins.py`, the map's choice between equal
+holders (its docstring, and [`exe-tables-by-build.md`](exe-tables-by-build.md)
+2.2, say the same in the tool's terms):
+
+- **The rule.** Each PC byte goes to the longest run holding it; between runs
+  of one length the first by file rank wins (boot, `GAME.EMI`, `BATTLE.EMI`,
+  then the file name). When that choice would start a new segment, and the
+  segment just before it, inside the 64-byte gap bridge, is a place that
+  holds the same run equally, the segment before continues in its own file
+  and displacement. The bridge then takes the bytes between them from that
+  file.
+- **"Holds the run equally"** is one of two measured things, never a name:
+  a file of the run's copy group (the survey's run now records, as `also`,
+  the other files that hold its seed at the same address *and* agree with
+  the PC over the run's whole span, pointer words wild, compared byte for
+  byte against each file), or another run with the same span and length.
+  The tie-break never overrides the longest run, or the PSP's ELF-first
+  order: it replaces only the name order between equals.
+- **Area 185** is the second kind. Its tail (`0x644538..0x644664`, 300 bytes)
+  is held at one address by `AREA183.EMI` and `AREA184.EMI` (the group the
+  name order gave to `AREA183.EMI`), and by `AREA185.EMI` at another
+  address. That other address is area 185's own displacement: the segment
+  before it (`0x6442F4..`) has the same one. So the same rule covers it. The
+  survey found that run by itself, and the map now continues area 185's
+  segment with it. Areas 178..182 (the six-file group, `AREA177.EMI` by
+  name) and 184 (the two-file group, `AREA183.EMI` by name) are the first
+  kind.
+
+**The map's effect** (the survey re-run over the seven discs,
+`bof3x-runs\away1027\twins\after\json`; the map diffed against the
+original code's map from the same survey, `twins\base\maps_orig`): on each
+Western PSX build 14 segments become 7 (`0x642B60..0x642EAC` area 178 to
+`0x6442F4..0x644664` area 185, each now one segment of its own area's
+`EMI#13`); on `psx-jp`, `psp-jp` and `psp-eu` no segment moves. The tie
+fires nowhere else on any build. `lang\scripts\tie_scope.py` after: 0
+boundaries on every build (6 before on each Western build).
+
+**What is committed in `exe_maps/`.** Only that effect, applied to the
+committed maps. A full re-run of `survey` and `map` today also moves other
+segments, with or without the tie-break: 9 to 15 diff lines a build, all
+pass-2 single-table places (`search`, `neighbour`, `name`) that come and go
+because `symbols.toml` and `src/` have grown since the maps were made
+(2026-10-08; 700 candidates now). Run through the recipe chain by itself
+(`twins\drift_wt`, `twins\chain_drift.out`), that drift changes the image on
+the four Western builds (`placed_differ` +1 each) and the recipe files on
+all seven. It is not this rule, so it is left out and reported.
+
+**Before and after** (the recipe chain over the seven discs from this
+branch, `twins\chain.out`; *before* is the integration branch's own chain
+on the same day, `away1027\int\chain.out`, its recipes kept in
+`twins\before_recipes`):
+
+| Build | `gap` rows / bytes | `identical` | `placed_differ` | refused rebuilds | image |
+|---|---|---|---|---|---|
+| `psx-jp` | 20 / 279, unchanged | 615,454, unchanged | 3,151, unchanged | 121, unchanged | unchanged |
+| `psx-us` | 54 / 667 to 47 / 660 | 614,998, unchanged | 3,194 to 3,201 | 191 to 121 | 7 bytes |
+| `psx-eu-en` | 55 / 710 to 48 / 703 | 614,967, unchanged | 3,191 to 3,198 | 195 to 125 | 7 bytes |
+| `psx-fr` | 58 / 745 to 51 / 738 | 614,914, unchanged | 3,193 to 3,200 | 195 to 125 | 7 bytes |
+| `psx-de` | 58 / 745 to 51 / 738 | 614,913, unchanged | 3,192 to 3,199 | 195 to 125 | 7 bytes |
+| `psp-jp` | 21 / 267, unchanged | 613,250, unchanged | 3,380, unchanged | 134, unchanged | unchanged |
+| `psp-eu` | 20 / 237, unchanged | 613,231, unchanged | 3,360, unchanged | 127, unchanged | unchanged |
+
+`unread`, `language` and `keys` rows are unchanged on every build.
+
+- **The image.** Each build's disc-built `.data` from the before recipes and
+  from the after recipes, compared byte for byte (`twins\imgdump.py`): the
+  four Western builds differ at exactly `0x642D7F`, `0x6430D7`, `0x64342F`,
+  `0x643787`, `0x643ADF`, `0x6441BF`, `0x644537` (talk script 6's message
+  number, low byte, in areas 178..182, 184, 185); JP and both PSPs are
+  identical. `exe_tables.py build` from the US cue gives the same image
+  (`verify`: 0 problems). `lang\scripts\talk_img.py` over it and the other
+  six discs: talk script 6 opens `0x006D` in all eleven areas 175..185 on
+  US, EU, FR and DE (seven of them `0x0000` before), and `0x00E1`, the PC's,
+  on JP and both PSPs, as before.
+- **Every other changed row.**
+  - `exe-gaps.tsv`: the 28 one-byte `gap` / `game-value` rows of section 9
+    (`Area175_ScriptMessages+0x8C3` and six more, on four builds) leave.
+  - `exe-places.tsv`: 28 rows change their `file` only (7 a Western build:
+    the 8-byte place after each tail, `0x642EAC`, `0x643204`, `0x64355C`,
+    `0x6438B4`, `0x643C0C`, `0x6442EC`, `0x644664`), from `AREA177.EMI` /
+    `AREA183.EMI` to the area's own file, same range, `agree` and `keys`;
+    `0x644664` also takes `AREA185.EMI`'s own address.
+  - `exe-rebuild.tsv`: 112 refused-rebuild rows leave (28 a Western build:
+    each of the seven areas' talk-table run of 7 words, and three of its
+    descriptor's words). Before, the map run backwards read those pointer
+    words from another area's file and got that area's addresses, so the
+    rebuild refused them and the layout filled them. Now each is read from
+    its own area's file and rebuilds to the PC's value, so the image bytes
+    there are the same (`exe.toml`, a Western build: `rebuild_refused` -70,
+    `rebuild_ambiguous` -72, `layout_words` -142, `rebuilt_equal` +568).
+  - `exe.toml` also carries the four new image hashes and the files'
+    hashes; `data-diff.tsv` the same 618 rows, only the four Western image
+    hashes changed. Nothing else moved.
+- **Release difference, not a divergence.** The bytes are the Western
+  disc's own message number, placed into a disc-built image from the disc:
+  a placement of disc data under DIV-0101, so no ledger entry. The PC
+  install's `.data` is not touched; whether a Western language layer should
+  carry the operand there too stays the owner's question of 9.1.
+- **`data-known.toml`.** No entry: the data diff decodes no talk table, and
+  `data_diff.py check` agrees (0 errors, 4 known entries, as before).
+- **Install staleness.** The four Western images' hashes change, so
+  `importer.py stale` names `exe` on a Western disc-built install built
+  before this, and the launcher's prompt brings the rebuild. Not seen in
+  play: no game was run.
+
+**Checks** (`twins\chain.out`): `exe_tables.py check` (878 refused
+rebuilds, 1,158 before), `psp_exe.py check`, `importer.py check`,
+`tables.py check`, `ledger_check.py`, `data_diff.py check`, `exe_own.py
+check`: 0 errors each. `src/` is untouched, so `codegen_same.py` and the
+self-tests do not apply.
+
+**Chain order after a map change.** The section 9 chain begins with
+`exe_own.py measure`, which builds images from the recipes on disk. With
+the new maps those recipes are stale (`exe-rebuild.tsv` refuses words the
+new maps rebuild to the PC's value), and `measure` stops at `0x642EAC`
+("rerun `recipe`"). So after a map change the chain runs `exe_tables.py
+recipe`, `psp_exe.py recipe`, `exe_tables.py recipe` once first, then the
+section 9 chain.
 
 ## For the other files (the coordinator's)
 

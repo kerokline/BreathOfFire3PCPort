@@ -22,6 +22,19 @@ row's `len` is how much of the table's extent (to the next symbol) the other
 build holds verbatim from that address. `map` turns the runs into
 exe_maps/<build>.tsv.
 
+The map's tie-break (2026-10-27, docs/install-gap-labels.md 9.2): each PC
+byte goes to the longest run holding it, and among runs of one length the
+first by `rank` (boot, GAME.EMI, BATTLE.EMI, then the file name). Where that
+would start a new segment, but the segment just before it (within the 64-byte
+gap bridge) is a place that holds the same run equally - one of the files the
+survey found holding the run's whole span at the same address (a run's `also`,
+compared byte for byte against each file, pointer words wild), or another
+run's file with the same span - the segment before continues in its own file
+and displacement instead. So a stretch several area overlays share stays in
+the area whose bytes lead into it, and the gap bridge reaches a byte between
+them that differs from the PC's. It decides only between equal holders: the
+longest run, and on a PSP disc the ELF's runs first, still win.
+
 Sources searched, per build:
     PSX  the boot EXE SYSTEM.CNF names (addresses as loaded), and every EMI
          section of type 0 bound for main RAM (0x80xxxxxx destinations)
@@ -227,11 +240,12 @@ def runs(pc, wild, srcs):
             continue
         for group in by_addr.values():
             si, at = min(group, key=lambda h: rank(srcs[h[0]][0]))
+            others = tuple(sorted(h for h in group if h != (si, at)))
             for o in keys[ks]:
-                seeds.append((o, si, at, len(group)))
+                seeds.append((o, si, at, len(group), others))
     seeds.sort()
     found, covered = [], set()
-    for o, si, at, copies in seeds:
+    for o, si, at, copies, others in seeds:
         delta = (si, at - o)
         if (delta, o // SEED_STEP) in covered:
             continue
@@ -248,12 +262,25 @@ def runs(pc, wild, srcs):
             b -= 1
         for q in range(a // SEED_STEP, b // SEED_STEP + 1):
             covered.add((delta, q))
-        found.append((lo + a, lo + b, si, srcs[si][2] + at - (o - a), copies))
-    best = {}
+        # The group's other files, kept where they hold the whole run too:
+        # their bytes compared over [a, b) at the same address, pointer
+        # words wild (segments' tie-break reads this, not the name order).
+        held = []
+        for sj, atj in others:
+            start, other = atj - (o - a), srcs[sj][3]
+            if start < 0 or start + (b - a) > len(other):
+                continue
+            if other[start:start + b - a] == blob[at - (o - a):at - (o - a) + b - a] or all(
+                    wild[x] or data[x] == other[start + x - a] for x in range(a, b)):
+                held.append(sj)
+        found.append((lo + a, lo + b, si, srcs[si][2] + at - (o - a), copies, held))
+    best, also = {}, collections.defaultdict(set)
     for r in found:
         k = r[:4]
         best[k] = max(best.get(k, 0), r[4])
-    return sorted(((k + (c,)) for k, c in best.items()), key=lambda r: (-(r[1] - r[0]), r[0]))
+        also[k].update(r[5])
+    return sorted(((k + (c, sorted(also[k], key=lambda sj: rank(srcs[sj][0])))) for k, c in best.items()),
+                  key=lambda r: (-(r[1] - r[0]), r[0]))
 
 
 def rank(file):
@@ -414,7 +441,8 @@ def survey(read, disc, build):
     resolve_multi([r for r, _, _, _ in rows])
     return {"build": build["id"], "sources": len(srcs), "source_bytes": sum(len(s[3]) for s in srcs),
             "runs": [{"pc": r[0], "len": r[1] - r[0], "file": srcs[r[2]][0], "section": srcs[r[2]][1],
-                      "addr": r[3], "copies": r[4]} for r in allruns],
+                      "addr": r[3], "copies": r[4], "also": [[srcs[sj][0], srcs[sj][1]] for sj in r[5]]}
+                     for r in allruns],
             "rows": [r for r, _, _, _ in rows]}
 
 
@@ -462,11 +490,21 @@ def segments(res):
     for i, r in enumerate(order):
         for p in range(r["pc"], r["pc"] + r["len"]):
             owner.setdefault(p, i)
+    equals = collections.defaultdict(set)            # every place that holds a span equally
+    for r in order:
+        span = (psp and r["file"] != "BOOT.BIN", r["pc"], r["len"])
+        delta = r["addr"] - r["pc"]
+        equals[span].add((r["file"], r["section"], delta))
+        for f, sec in r.get("also", ()):
+            equals[span].add((f, sec, delta))
     segs, cur = [], None
     for p in sorted(owner):
         r = order[owner[p]]
         key = (r["file"], r["section"], r["addr"] - r["pc"])
-        if cur and cur["key"] == key and p - cur["end"] <= MAP_GAP and not crosses(cur["pc"], p):
+        bridge = cur and p - cur["end"] <= MAP_GAP and not crosses(cur["pc"], p)
+        if bridge and cur["key"] != key and                 cur["key"] in equals[(psp and r["file"] != "BOOT.BIN", r["pc"], r["len"])]:
+            key = cur["key"]        # the tie-break: the segment before continues in its own file
+        if bridge and cur["key"] == key:
             cur["end"], cur["agree"] = p + 1, cur["agree"] + 1
             cur["copies"] = max(cur["copies"], r.get("copies", 1))
         else:

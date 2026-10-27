@@ -6,11 +6,11 @@
 # views: 860af2bcc8fb016ad04bc8914304bb0ffe7fb7535639846a5628952720e24994
 # image: psp-eu 3d143d22a29e06fff23ed55fb421b1c3f5413f79ee0acc7066a4c6521f46ce61
 # image: psp-jp 3ee878684e9ccd1692f420c54c702530149db5a267c5895452f272a6cfeb30ac
-# image: psx-de 3e2f64551726da5e4c9ff98c3240bba73f0b2b6908446be7d1c7f93244d2337e
-# image: psx-eu-en d0f90394ec059d560814d8bebda1880c88ff56c7ce3a2eb8bf88d69f66fbba1f
-# image: psx-fr 6b921631a703a328f84b27cc1aa9d019b149c0dd3216b384004470aa1f13fb3e
+# image: psx-de 0b6bd33ed80e8d8201bcdc8c4e5ee3de22d3243919cf4f95177a0043838bed3e
+# image: psx-eu-en 96a8984ffe04de8535d3191e1373d3eda01ca12efd78d2d35387111ca82f1f0e
+# image: psx-fr 27d06a14e362b89c41cf7410920fbda8056b4cc6f5e146a40c4428efbdc0ab27
 # image: psx-jp 2239b2c34df3ea427378691597726b474553c6f660333fc963337b3eab51639f
-# image: psx-us 863ba5486d5ba476919eb6ddf75b52f85541335b47ac1de0cb3b3dcbcc3b5b0e
+# image: psx-us f896f0c90bd530930e918bbf546d44b733eb4942770d9dac196cb5e3d4294b91
 # compared: psp-eu abilities 4104 runtime 0 hole 0 differ 0
 # compared: psp-eu accessories 728 runtime 0 hole 0 differ 0
 # compared: psp-eu area_descriptor 4200 runtime 0 hole 0 differ 0
