@@ -38,9 +38,10 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    operand ([`install-gap-labels.md`](install-gap-labels.md) 9.2: `placed_differ` +7 per Western PSX build,
    nothing else moving, `exe_maps/` carrying only the rule's effect - a full survey re-run brings a pass-2
    drift of the maps made on 2026-10-08 that wants its own read before anyone regenerates them in full), and
-   `away1027/docs`, this file's and `STATUS.md`'s rewrite. **Owed, no owner:** rebuild the tooling install's
-   `bof3\DAT\en-US.*.DAT` overlay (2026-10-13, older than DIV-0069's fishing tag 3, so its fishing headings sit left
-   against a disc-built install; 7.11's follow-on) and check the `game\` folder's overlay vintage; the census routes
+   `away1027/docs`, this file's and `STATUS.md`'s rewrite. **Done the same evening:** the tooling install's
+   `bof3\DAT\en-US.*.DAT` overlay rebuilt with `loc_build.py` (it was 2026-10-13's, older than DIV-0069's fishing
+   tag 3; its 247 files were hard links into old harness roots, unlinked first); the `game\` folder's overlay is
+   2026-10-25's and differs from the rebuilt one in `FIRST.DAT` alone. **Owed, no owner:** the census routes
    still not reached ([`stp-census.md`](stp-census.md) 6.5: the minigames other than fishing want the owner's
    recordings). **For the owner** ([`owner-review.md`](owner-review.md), the 2026-10-27 lines): the faerie
    operand under a Western layer on the PC install, area 9 on a PSP-built install, the fishing spots' crafted-save

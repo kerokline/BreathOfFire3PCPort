@@ -781,7 +781,8 @@ checkout's `analysis/` (never in the tree).
 - **The fishing headings in your `game\` build:** if EQUIP, LURE and GUIDE sit left in their bars instead of
   centred, that folder's `en-US` overlay predates DIV-0069's fishing tag 3 (the tooling install `bof3\`'s does:
   dated 2026-10-13 against the tag's 2026-10-18; 7.11's follow-on). Rebuilding the language fixes it; the
-  tooling install's rebuild is owed.
+  tooling install's was rebuilt the same evening. Your `game\` overlay (2026-10-25) differs from it in
+  `FIRST.DAT` alone; the launcher's upgrade brings it current.
 - **The bit-15 pairs** ([`stp-census.md`](stp-census.md) 6.4), under
   `C:\Users\kerok\bof3x-runs\away1027\stp\pairs\`, the legend zooms first:
   `dolphin_f00500_legend_zoom_off_top_on_bottom.png` and `caught_f00600_legend_zoom_off_top_on_bottom.png`

@@ -324,6 +324,20 @@ ours run of a route that lists the saves wants it.
   every route the same pages as `m1023`, three of them after a repeat
   (whelpBoss, the world map and masterAndManillo had sound-page spans on a
   slow first run). Scripts and checks: `C:\Users\kerok\bof3x-runs\sh1023`.
+- **The away day of 2026-10-27** (`cn_<route>_a1027`, the exe host, the
+  `away1027/integration` build; scripts and checks
+  `C:\Users\kerok\bof3x-runs\away1027\sh`): against the `orig4` pairs every
+  route shows the `w1023` pages plus one more, `0x5FD000` (`Area51_Choices`,
+  from tick 0 to the end), and on several routes `0x803000` and sound or
+  VRAM ticks. The new page is **DIV-0176** (`SunderLoop`, PR #126, 2026-10-24,
+  on by default): it patches `0x5FD001`, and a hosted combat run with
+  `--original SunderLoop` shows the `w1023` signature alone. The rest is the
+  merges between `b13eb30a` and `e84aaf6d`: ours at `e84aaf6d` (`cn_<route>_b1027`,
+  a build of that tip) shows the same pages as today's on seven routes; the
+  three that differed (caughFish and dragonTransform on VRAM-shadow and sound
+  ticks, whelpBoss on one-tick VRAM pages) matched the base on a repeat. So the
+  signature from now on is `b1027`'s, and a day whose `src/` change is inert
+  (the census's file writes) is expected to match it page for page.
 - **After a merge wave:** one run of ours per route, `check` against the pair.
   Exit 0 is the bar; a reported page goes through section 2's loop.
 - **Known and not skipped:** `Sound_Channels` `0x6BC8C8` (23 DirectSound

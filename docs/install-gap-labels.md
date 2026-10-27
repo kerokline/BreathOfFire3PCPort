@@ -458,7 +458,7 @@ neighbouring places' displacement. 115 distinct rows over the seven builds.
 
 | Rows | Builds | Class assigned | Evidence | Written by | Gap watch |
 |---|---|---|---|---|---|
-| `CommuRank_Modes+0x8C..+0x528`: the 60 faerie names (16 bytes at `0x653200 + 20 r`) | all 7 | text (glyph codes) | 2..8 glyph bytes each, the rest zero; read through `CommuSim_AddRecord`'s `[ecx*4 + 0x653200]` | group 16 on a Latin layer; under `ja-JP` none (D280) | not seen read |
+| `CommuRank_Modes+0x8C..+0x528`: the 60 faerie names (16 bytes at `0x653200 + 20 r`) | all 7 | text (glyph codes) | 2..8 glyph bytes each, the rest zero; read through `CommuSim_AddRecord`'s `[ecx*4 + 0x653200]` | group 16 on a Latin layer; under `ja-JP` none (D280) | read 2026-10-27: rows 3, 12 and 19 through `CommuSim_AddRecord` <- `CommuSim_AreaEnter` on `fairyVillage`, US-only install (the day's validation, `away1027\int\gw_report_fairyVillage.txt`) |
 | `ConfigScreen_OpenStates+0x24..` `0x6536F8..0x653808` | all 7 | text with its layout bytes | 17 records of 16: two layout bytes, then glyph codes | `convert_config` / `convert_config_psp` (17 records, PSP 15) | not seen read |
 | `EffectKind0F_PanelTitles`, `Equip_SlotIcons+0x8` / `+0x14`, `SharedList_SortSteps+0xC`, `MenuList_GeneWinSteps+0x25` / `+0x27` | FR, DE | text (ASCII) | sections 1, 2 | kind 16 tag 3; groups 21, 22, 23 | not seen read |
 | `Cursor_Hidden+0x2C`, `+0x4C` (`0x65DA78`, `0x65DA98`) | all 7 | text (GBK) | the window title and the missing-disc box | ours: DIV-0039 draws English, the bytes are not used | not seen read |
