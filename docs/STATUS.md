@@ -16,8 +16,10 @@ agent's doc; one line each:
   places on both PSPs from their `AREA009.EMI`; the byte the rule had hidden in the faerie village (areas 178..182,
   184, 185, the four Western PSX builds) is talk script 6's message number, which the Western discs set differently
   (`0x6D`; the PC and the JP disc `0xE1`) - [`install-gap-labels.md`](install-gap-labels.md) 9 and 9.1. The
-  `exe_twins.py` tie-break that places it is in flight on `away1027/twins` (a sixth agent; its result was not in
-  when this was written).
+  `exe_twins.py` tie-break that places it (agent `twins`, the same day; `install-gap-labels.md` 9.2): between
+  equal holders the map continues the segment before in its own file, every Western image holds `0x6D` in all
+  eleven areas, `placed_differ` +7 per Western build and nothing else moves; `exe_maps/` carries only the
+  rule's effect, since a full survey re-run brings an unrelated pass-2 drift (9.2) that wants its own read.
 - **`desc`:** the descriptor-table rule, 7.8's "left" ([`exe-import-engine.md`](exe-import-engine.md) 7.11): each
   build's own `Area_Descriptors` found by shape, the fishing spots' `+0x30..+0x43` (areas 89 and 129) placed on the
   five PSX builds, `placed_differ` unchanged, the `fishing-spot-input-flags` hole gone from `data-known.toml`; a

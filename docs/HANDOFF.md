@@ -34,10 +34,11 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    [`exe-import-engine.md`](exe-import-engine.md) 7.11 (`desc`), [`stp-census.md`](stp-census.md) 6 (`stp`) and
    [`spell-sweep.md`](spell-sweep.md) 10 and 11 (`sweep`); the agents' reports are `away1027\<agent>\REPORT.md`, the
    coordinator's notes `away1027\coordinator_log.md`. The batched validation: the integration's final commit
-   message. **In flight:** `away1027/twins`, the `exe_twins.py` survey tie-break that places the faerie village
-   operand (continue the previous segment's file when it holds the run at its own displacement; expected
-   `placed_differ` +7 per Western PSX build and nothing else moving, then `exe_maps/` and the recipe chain
-   regenerated) - result unknown when this was written. **Owed, no owner:** rebuild the tooling install's
+   message. **Merged with it:** `away1027/twins`, the `exe_twins.py` map tie-break that places the faerie village
+   operand ([`install-gap-labels.md`](install-gap-labels.md) 9.2: `placed_differ` +7 per Western PSX build,
+   nothing else moving, `exe_maps/` carrying only the rule's effect - a full survey re-run brings a pass-2
+   drift of the maps made on 2026-10-08 that wants its own read before anyone regenerates them in full), and
+   `away1027/docs`, this file's and `STATUS.md`'s rewrite. **Owed, no owner:** rebuild the tooling install's
    `bof3\DAT\en-US.*.DAT` overlay (2026-10-13, older than DIV-0069's fishing tag 3, so its fishing headings sit left
    against a disc-built install; 7.11's follow-on) and check the `game\` folder's overlay vintage; the census routes
    still not reached ([`stp-census.md`](stp-census.md) 6.5: the minigames other than fishing want the owner's
