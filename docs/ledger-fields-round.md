@@ -1,7 +1,7 @@
 # The ledger-fields round: staging (IDEAS I33, early decision 1)
 
 **Status:** STAGED (2026-10-27; not launched. The owner's four calls in
-section 6 come first.)
+section 6 are answered; LF0 can start.)
 
 The owner's word, 2026-10-27: stage "the ledger kinds work" as a round. The
 source is [`IDEAS.md`](IDEAS.md) I33's first early decision - *tag the
@@ -83,11 +83,22 @@ new lines; nobody reads the prose for a preset.
   `costly` (the original is only Capcom's function; ours must grow the old
   path), `never` (Forced, or one-way - the tier or the prose says why).
   Measured from the source by LF0's tool, checked by each group.
-- **`Toward:`** `psx`, `psp`, `pc` or `none` - which release's behaviour the
-  new behaviour matches. Read from "Also in the PSX version?" and the
-  rationale: a port repair that restores the PlayStation's behaviour is
-  `psx`; DIV-0176 (Sunder's unused loop) is `none`. This is what the
-  "PlayStation" preset is built from.
+- **`Toward:`** a comma list of the releases whose behaviour the new
+  behaviour matches - `psx`, `psp`, `pc` - or `none` alone. No value implies
+  another: the PSP release is built from the PlayStation's but changed some
+  things (I32), so a cascade from `psx` to `psp` would be false exactly where
+  it matters. Examples: `psx, psp` restores what both consoles do; `psx`
+  alone where the PSP changed it; `psp` alone for one of the PSP's own
+  changes; `pc` where the consoles differ and the PC port's way is kept or
+  chosen; `none` for behaviour no release had (DIV-0176, Sunder's unused
+  loop). Evidence: `psx` from the entry's "Also in the PSX version?" line
+  and rationale; `psp` only where it is shown - a PSP twin read, an entry
+  of the PSP rounds - and otherwise left off, with the entry listed in the
+  group's report. The list never claims more than was measured. The presets
+  read it: *PlayStation* turns on every entry that lists `psx`; a later PSP
+  preset (I32) every entry that lists `psp`. Two entries that are
+  alternatives to each other (one the PlayStation's way, one the PSP's) are
+  listed as a pair by the audit.
 - **`State:`** `active`, `withdrawn` or `superseded by DIV-NNNN`. Today the
   withdrawn and superseded entries say so in prose; a preset must not try to
   switch them.
@@ -209,7 +220,9 @@ Call 3, "anything sensible, as long as it is well documented": the name is
 `BOF3X_ORIGINAL`, `*` and `-name` included) with the ini key `off=`; stage D
 documents it in [`launcher-settings.md`](launcher-settings.md) and the
 ledger's Entry format. Call 4, leave them: "most of them were not desirable
-/ true fixes". Call 1 open.
+/ true fixes". Call 1, the five fields as section 1 gives them, with
+`Toward:` a list and no cascade (the owner asked how an entry matching both
+consoles is tagged; section 1 now says).
 
 ## 7. Ownership, merge order, numbering
 

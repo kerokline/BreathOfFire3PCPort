@@ -55,8 +55,9 @@ hosted cross form).
      tier is already the kind; what presets lack is a machine-readable switch, and the player's build refuses
      `BOF3X_ORIGINAL` (`exe_host.cpp` `RefuseHostedSwitches`), so 118 entries are reversible on the developer's
      machine only. LF0 the schema and `tools/ledger_switches.py`, LF1..LF4 by DIV range, an audit, the strict
-     rule; stage D (the player's switch, the presets) after **the owner's four calls, section 6** - LF0 needs
-     call 1.
+     rule; stage D the player's switch (`BOF3X_OFF`) and the presets. **The owner's four calls are
+     answered** (section 6: the four presets, `Toward:` a list with no cascade, costly entries left); LF0 can
+     start.
    - **The relocatable-image round** ([`relocatable-image-round.md`](relocatable-image-round.md), I44 stage 3).
      Stage A (census, address-independent state hash, loader design) needs no call; stage B rewrites the
      17,259 global sites as `base + offset` with a `constexpr` base so `codegen_same.py` stays the gate; stage C
