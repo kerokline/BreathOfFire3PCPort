@@ -1,9 +1,7 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-26 evening: the spell sweep's fix wave on `fix/sweep-wave`, item 000000000000000; 2026-10-26: the spell sweep built and run, item 00000000000000; 2026-10-25 night: issue #149's Bone Dance hang and cart reset fixed on `fix/issue-149-bone-dance-cart` (PR #151, DIV-0182), item 000000000000; 2026-10-24: issue #121's lift stall handed over, item 000000, PR #129 for #118 / #120;
-2026-10-23 night: the sound-layer round built on `sound/round`, DIV-0169..0175, D353..D354,
-item 0000, and the twin-diff remainder on `audit/twins-remainder`, item 0b; 2026-10-23 evening: fix wave 1023 merged as
-PR #117, item 000; 2026-10-23: PRs #112, #114, #115, #116)
+**Status:** IN PROGRESS (2026-10-27: the away day merged locally on `away1027/integration`, unpushed, item 1; the
+two rounds staged by PR #157, item 2; everything through PR #157 is on `main`)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -17,40 +15,40 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
-**The reading-row round is built** on `localization/second-script` (off `main` `abf915cc`, its end batch on
-`reading-row/end`; [`STATUS.md`](STATUS.md) has the paragraph; item 6a below). **The wide-ring round is on `main`**
-(PR #104; item 0). Before it `main` was `dc921a0c`: since `19180e63` it took the typed-data round's stages A and B (PR #94: 50,943 raw data sites
-to 27,394, the machine code identical; `tools/data_census.py` the CI ratchet), the quicksave round (PR #95: F6 / F7 /
-the F5 menu, DIV-0145..0147, D322), the quicksave's language guard (PR #96: the original Chinese against a
-translation refused before a byte is written; one translation into another kept, IDEAS I47), D266 and DIV-0148
-(PR #98), the day's docs (PR #99), stage C (PR #100) and the reading-row round's staging (PR #101, item 6a).
-**2026-10-21** was a cleanup: every worktree but the main checkout removed and every branch but `main` deleted,
-local and on `origin`, each found merged by `git cherry` first; the owner deleted the older harness roots in the
-user folder (`ab*`, `b_*`, `g_*`, `q_*`, `v_*`, `b1` and the rest), so a doc naming one names a run that is gone.
-**2026-10-20** ([`exe-gap-round.md`](exe-gap-round.md) frames what is left of
-the disc-built image): D266's title mark from the disc (DIV-0101's `titlemark` rule), each Western release's own
-staff roll following the language (DIV-0148, D323), the recipes regenerated with the second pairing pass's rows, the
-ten state-hash pairs re-recorded (`cn_<route>_orig3` / `_orig3b`) and every difference of ours against them traced
-to a ledgered change. **Layers built before DIV-0148 carry no roll**: rebuild a Western language (`importer.py
-build`, or `loc_build.py all --discs` for an install's `DAT\<tag>.*.DAT`) to get the release's credits. **The
-typed-data round's stage C is on `main`** (PR #100)
-([`typed-data-stage-c.md`](typed-data-stage-c.md); each step as run in [`typed-data-round.md`](typed-data-round.md)
-3): C0 one shared views header, C1 the types (the shared 0x80-byte `SpriteHead`, renames, views, new structs), C2 the
-sites they unlock by seven groups, C3 the module-only entries and a naming pass, C4 the tables as `records::` arrays,
-the scratch block renamed `SharedScratch` with its per-function names as typed per-file aliases (the owner's calls),
-the generated `GameData` struct (0x37B000 bytes, 2,965 members) and the strict CI rule (`data_census.py --strict`,
-27,327 exceptions). Family audits after C2 and C4, each with a fix branch. The census reads 27,389, a wider count
-(the `<Name>_addr` and `rv::Bytes` spellings now count), not a regression, every site with a reason; **the machine
-code is identical to `main`'s throughout** (`tools/codegen_same.py`, 640 objects, `0 differ` at every merge).
-Quicksave owed: the owner's play, their call on drawing F6 / F7's confirmation (logged only, as F12's is, DIV-0032),
-and the leftovers in [`quicksave.md`](quicksave.md) (a live screen grab at the take, the cross-reboot base, the
-hosted cross form).
+**`origin/main` is `0ba0f276`** (PR #157, 2026-10-27): since the reading-row round (PR #106) it took the faster
+text, the bit-15 round, the PlayStation verdict pass and twin-diff, fix wave 1023, the sound-layer round, the
+issue fixes of 2026-10-24..26, build-difference prevention (the data diff and the every-door sweep), the spell
+sweep and its fix wave, and the two staged rounds ([`STATUS.md`](STATUS.md) lists them with their PRs). Every
+branch the earlier versions of this file called unpushed is merged; the open work is below. **Today's away day
+is the one unpushed branch meant for a PR** (item 1), and `away1027/twins` is still running. Owed throughout:
+the owner's play, eye and ear ([`owner-review.md`](owner-review.md), item 13). Layers built before DIV-0148 carry
+no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fishing tag 3: rebuild a language
+(`importer.py build`, or `loc_build.py all --discs` for an install's `DAT\<tag>.*.DAT`) before comparing one.
 
 ## Pick up here
 
-0000000000000000. **Two rounds staged, 2026-10-27, not launched** (the owner's word; branch
-   `staging/ledger-and-reloc-1027` off `main` `e84aaf6d`; briefs under `C:\Users\kerok\bof3x-runs\lf1027` and
-   `ri1027`):
+1. **The away day of 2026-10-27 is merged locally on `away1027/integration`** (off `main` `e84aaf6d`, the PR #156
+   merge; four Opus agents, one worktree each under `C:\Users\kerok\bof3x-runs\away1027`, merged one at a time by
+   the coordinator; unpushed, **PR at the owner's word**). [`STATUS.md`](STATUS.md) has a line an agent; the
+   evidence is in [`install-gap-labels.md`](install-gap-labels.md) 9 and 9.1 (`lang`),
+   [`exe-import-engine.md`](exe-import-engine.md) 7.11 (`desc`), [`stp-census.md`](stp-census.md) 6 (`stp`) and
+   [`spell-sweep.md`](spell-sweep.md) 10 and 11 (`sweep`); the agents' reports are `away1027\<agent>\REPORT.md`, the
+   coordinator's notes `away1027\coordinator_log.md`. The batched validation: the integration's final commit
+   message. **Merged with it:** `away1027/twins`, the `exe_twins.py` map tie-break that places the faerie village
+   operand ([`install-gap-labels.md`](install-gap-labels.md) 9.2: `placed_differ` +7 per Western PSX build,
+   nothing else moving, `exe_maps/` carrying only the rule's effect - a full survey re-run brings a pass-2
+   drift of the maps made on 2026-10-08 that wants its own read before anyone regenerates them in full), and
+   `away1027/docs`, this file's and `STATUS.md`'s rewrite. **Done the same evening:** the tooling install's
+   `bof3\DAT\en-US.*.DAT` overlay rebuilt with `loc_build.py` (it was 2026-10-13's, older than DIV-0069's fishing
+   tag 3; its 247 files were hard links into old harness roots, unlinked first); the `game\` folder's overlay is
+   2026-10-25's and differs from the rebuilt one in `FIRST.DAT` alone. **Owed, no owner:** the census routes
+   still not reached ([`stp-census.md`](stp-census.md) 6.5: the minigames other than fishing want the owner's
+   recordings). **For the owner** ([`owner-review.md`](owner-review.md), the 2026-10-27 lines): the faerie
+   operand under a Western layer on the PC install, area 9 on a PSP-built install, the fishing spots' crafted-save
+   evidence, the stp pairs and `kind_sheet.png`, the seven boss-only skills' routes.
+
+2. **Two rounds staged, not launched** (PR #157, merged 2026-10-27, docs only; briefs under
+   `C:\Users\kerok\bof3x-runs\lf1027` and `ri1027`):
    - **The ledger-fields round** ([`ledger-fields-round.md`](ledger-fields-round.md), I33 early decision 1). The
      tier is already the kind; what presets lack is a machine-readable switch, and the player's build refuses
      `BOF3X_ORIGINAL` (`exe_host.cpp` `RefuseHostedSwitches`), so 118 entries are reversible on the developer's
@@ -63,338 +61,76 @@ hosted cross form).
      17,259 global sites as `base + offset` with a `constexpr` base so `codegen_same.py` stays the gate; stage C
      moves the image, proved by the state hash at two bases. **The owner's three calls, section 7.**
    Launch: worktrees off the round branch's tip at the time, `ROUND_TIP` filled into the briefs; game runs by
-   the coordinator only, one at a time.
+   the coordinator only, one at a time. The staging worktree `C:\Users\kerok\bof3x-runs\stg1027\wt` is removable.
 
-000000000000000. **The spell sweep's fix wave is built and merged locally on `fix/sweep-wave`** (2026-10-26 evening,
-   off `main` `5bd84b98` - the PR #155 merge - unpushed; four agents, one worktree each under
-   `C:\Users\kerok\bof3x-runs\ss1026`, merged one at a time, the three-way `--sibling` overlap in
-   `tools/spell_sweep.py` resolved by hand). What the sweep surfaced and what became of each:
-   - **Paralyzer (139) crashed ours** reading the current enemy's cue table through a null `+0xF8` in an
-     ordinary battle (D102, Capcom's; the sweep's measurement: the pointer is 0 on the Gooey). **Fixed as
-     DIV-0183**: no cue when the table is unset, the caster's animation and the target flag as before; the
-     fuzz keeps the written-pointer path only (DIV-0063's precedent). Sweep row 139 `done` on the PC.
-   - **Super Combo's prompts blank on disc-built installs** (" HIT COMBO!!", "READY", "GO!!", "MISS": raw
-     glyph indices of the effect's page behind `0x66A0D8`, a `language` row). **Fixed as label group 24**
-     (DIV-0064 amended, D393): the four texts read from `MAGIC003.EMI`'s twin records (`BOOT.BIN` on a PSP),
-     every build including JP; the French disc has its own first text. The rebuilt install's shots read READY,
-     GO!!, the count. **Owed the owner's eye:** under any Latin layer the PC install's hit-combo line now takes
-     the disc's half spaces (narrower than the PC's own); the French text in play. The gap watch still lists
-     the row - the parked-page blind spot ([`install-gap-reads.md`](install-gap-reads.md) 9.3), not a miss.
-   - **Howling (54) "stuck input phase" on the disc install: the harness's, three ways** (D391, no DIV):
-     Gooey cast only every other round (the EX-round gate after `Battle_MarkFasterSide`), so half the earlier
-     enemy-side `done` rows cast nothing and chunk parity decided which; Ovum's egg left two crosses and the
-     fixed third Defend pressed into the next round; Howling's sleep kept the party off the cross for a random
-     number of rounds. The enemy side now clears the EX byte, Defends by one `seek right`, waits for the
-     enemy's command kind to read 4 before the shots (the moved peek; a timeout means "did not cast"), and
-     clears the party's low status byte after. **Re-run on both installs: 47 done of 48, row for row the
-     same, the kind-4 pick confirmed on all 48** ([`spell-sweep.md`](spell-sweep.md) 6.3); Nue Stomp's stall
-     stands. The member and item sides keep the fixed Defend blocks - a member-side cast that statuses a
-     member could desync them the same way (not seen).
-   - **Foretell's blank "Lucky color" box: the game's design, not a defect.** The lucky colour is never a
-     word: one tile per element the enemy is weak to, a grey tile when none (the Gooey). The PC's message text
-     is the US disc's byte for byte, and Capcom's own Foretell functions (`BOF3X_ORIGINAL` through the dev
-     launcher) draw the identical frame; with weaknesses poked in both draw the coloured tiles. Settled in
-     [`magic_s15.md`](magic_s15.md) 1 and [`spell-sweep.md`](spell-sweep.md) 4.
-   - Tool: `--sibling` (found through git from a worktree, overridable), `--poke` / `--peek` per cast.
-     **Original-code sweep runs need `bof3x-launcher-dev.exe`**: the release launcher refuses the hosted-only
-     switches with a modal dialog (one sat 736 s on the owner's screen).
-   - **The twin-read branch is merged into the wave** (item 0000000000000, the owner's word, 2026-10-26 evening).
-     What the sweep's comparisons did not reach among its rows: **`ReviveHalo_MoteCounts` was never read** in
-     any sweep run (`gw_report.tsv`: 0 reads) - Raise Dead (76) and Resurrect (77) spawn the halo's motes only
-     over a fallen member, and the sweep's party never falls (HP 999 before every cast), so a disc install's
-     Revive Halo stays unseen in play; the boss, area and scene rows (`BossGaist_Anims`, the kind-0x18 subs,
-     `Area121_BandHeights`, `Scena02_EffectX`, `LinkedObjectD_Amounts`) are outside a battle sweep altogether;
-     and the two regional fields the reading confirmed (`EffectKind66_States`, area 135's pieces 56 px right on
-     the Western discs; `Rest3e_Windows`, the rest menu re-laid per language) are the owner's calls, not
-     placements. `TornadoMote_Phases+0x10` (the Identify panel's `WEAK / EXP / ITEM / POINT`) the sweep did
-     read, and the panel drew the PC's to the pixel: the PC's draw does not take those labels from the row.
-   - **The revives over a fallen member** (`--dead`, [`spell-sweep.md`](spell-sweep.md) 9, the owner's ask the
-     same evening): Raise Dead, Resurrect (both rows each) and Ammonia bring Ryu back on the rebuilt disc install
-     and the PC alike, frames to the pixel, the halo's motes drawn - the placed `ReviveHalo_MoteCounts` seen in
-     play. Benediction is not a revive (the living are brightened, Ryu stays fallen with `0x2000` added).
-     **Owed the owner's eye / the PSX twin:** the green popup over Ryu reads 543 where Raise Dead leaves 250;
-     Ammonia leaves status `0x2000` with HP 1 (both installs the same, so ours either way).
-   - **The PSP-only install's halo had no motes** (D394, [`spell-sweep.md`](spell-sweep.md) 9.3,
-     `fix/sweep-psp-halo`): `exe-gaps.tsv` still listed three of the row's four bytes on the PSPs - the twin
-     read's "the PSPs fill it" was a misread; the PSPs' `BOOT.BIN` map takes only the fourth byte, one byte
-     early for `ReviveMote_Types`, and the three left were under `find_imm`'s floor. The floor now counts the
-     symbol's owned tail ([`exe-immediate-places.md`](exe-immediate-places.md) 7.6), the row places on both PSPs,
-     and the rebuilt PSP-only install draws the motes. Air Raid's and Ward's PSP notes checked true.
-   - **Simoon's dusts missing on the PSP-only install** (D245 fixed, same branch): the PSP map bridged a
-     `BOOT.BIN` jump table into `SimoonDust_Offsets`; `disc_image` now leaves a PSP map segment's bytes in
-     ELF-relocated words unplaced where the PC holds a number ([`exe-immediate-places.md`](exe-immediate-places.md)
-     7.7), and `psxmap` places the table from `MAGIC103.EMI#3`. Dense Simoon shots match the PSX-only install's.
-   - **The disc-only installs, the whole member side** ([`spell-sweep.md`](spell-sweep.md) 9.4, the owner's ask):
-     the revives over a fallen Ryu on the PC, the US + PSP, the US-only and the PSP-EU-only installs, then all 158
-     member ids on the PC, US-only and PSP-EU-only installs, pixel-compared pair by pair. Two PSP-only breaks,
-     both placed on this branch: the revive halo's motes (D394, a PSP map segment one byte early) and Simoon's two
-     dusts (D245, the PSP map bridging the hole where BOOT.BIN keeps a jump table; 1.7 million units off). Nothing
-     else but the EU layer's words and the PSP's icons. The gap watch saw no game-value row read while zero.
-   **Next:** a PR of `fix/sweep-wave` (built, both self-tests pass, checks 0 errors). Left from the sweep: a
-   sweep by enemy kind; Ward's tilts by eye; the 543 popup over a 250 revive against the PlayStation (IDEAS I52's
-   harness, when wanted; the status word's 0x2000 is settled, 9.2); the enemy and item sides on the disc-only
-   installs; a PSP-JP install. Worktrees `ss1026\wt_*` and the roots under `ss1026` are removable after the PR.
+3. **The spell sweep** ([`spell-sweep.md`](spell-sweep.md); the tool PR #155, its fix wave PR #156, the enemy and
+   item sides on the disc-only installs and the sweep by enemy kind on item 1's branch). What is left of it:
+   - **Owed the owner's eye:** Super Combo's prompts under a Latin layer on the PC install (label group 24 now
+     takes the disc's half spaces, narrower than the PC's own) and the French disc's own first text in play; the
+     green popup over Ryu reading 543 where Raise Dead leaves 250, and Ammonia leaving status `0x2000` with HP 1
+     (both installs the same, so ours either way; IDEAS I52's harness for the PlayStation side, when wanted);
+     Ward's tilts by eye.
+   - **Not reached:** the seven boss-only skills with no route to their fight (section 11; the owner's
+     recordings or crafted saves); the stallion route's first fight (no pick within 300 frames); by-kind runs on a
+     PSP install; a PSP-JP install; a disc-built install's D.Zombie-class play of the twelve rows the twin read
+     placed (the Ward / Revive / Air Raid spells, area 121's band, scene 2's effects). Rows left unplaced:
+     `WardMote_Tilts+0x8` (MAGIC044's two shorts, no reader), `LinkedObjectD_Amounts` on PSP-EU, the PSPs'
+     two-byte `Area121_BandHeights+0x1`; the regional `EffectKind66_States` and `Rest3e_Windows` fields are the
+     owner's calls ([`exe-immediate-places.md`](exe-immediate-places.md) 7).
+   - **Settled:** Foretell's blank box (the game's design, [`magic_s15.md`](magic_s15.md) 1); Howling's stall
+     (D391, the harness's); Nue Stomp (section 11, the Gooey's missing animation). The member and item sides keep
+     the fixed Defend blocks - a member-side cast that statuses a member could desync them (not seen).
+   The worktree `C:\Users\kerok\bof3x-runs\ss1026\wt_wave` and the roots under `ss1026` are removable.
 
-00000000000000. **The spell sweep is built and run** ([`spell-sweep.md`](spell-sweep.md), 2026-10-26, the owner's
-   idea): `tools/spell_sweep.py` casts every ability from the ability window (the id poked into the member's four
-   lists), every enemy-only skill from enemy 0 (its ability bytes and kind row poked, its paralysis cleared) and
-   every consumable from the item window, in the `combat` route's fight made endless (enemy HP 0xFFFF, the party
-   999), six shots a cast; on a disc-built install with `BOF3X_GAPWATCH`. Committed on `tools/spell-sweep` (off `main`
-   `25d12620`, unpushed): the tool, the doc, the README row, IDEAS I51 (the battle command labels, the owner's note). PC: member 157 of 158
-   (Accession skipped by the owner's word), enemy 47 of 48 (Nue Stomp stalls - the harness's limit, the caster's
-   animation), item 55 used and 36 refused by the window. The US-disc + PSP-EU install, before the twin reads:
-   **two real zeros in play** - Air Raid's rising flame image missing (`AirRaidImage_ShadeSteps`, placed the same
-   day by the twin-read branch) and **Super Combo's "GO!!" prompt blank** (`Effect1b_ToggleText+0xE` `0x66A096`,
-   a `language` row no layer writes - LA's kind, [`install-gap-labels.md`](install-gap-labels.md) 4.3's `0x66A094`
-   layout; **needs a layer entry**, nobody's yet). Roots `C:/Users/kerok/bof3x-runs/spellsweep` (PC) and
-   `spellsweep_disc` (the install, `gw` the watch files, `gw_report.tsv`). **Owed:** the owner's eye on the shots
-   (Foretell's blank "Lucky color" box, `pc/run_member_067/a068_5.png`; the Super Combo box); Howling (54) on the
-   disc install leaves the input phase stuck after the three Defends on both disc runs and never on the PC
-   (unexplained, section 6.2); a sweep by enemy kind for the enemy-only skills; the twin-read branch
-   `worktree-agent-ada98af7cd3367ec1` (two signed commits off `main`, 12 rows placed, its own HANDOFF item) to
-   merge at the owner's word - **the sweep on an install rebuilt from it** (section 6.2) shows Air Raid's kicked
-   image in its colours where the before-image drew it white, and the watch no longer lists the two placed rows.
+4. **Issue #149's Bone Dance and cart** (PR #151, DIV-0182; [`magic_c2.md`](magic_c2.md) 2,
+   [`exe-immediate-places.md`](exe-immediate-places.md) 3). **Owed:** the owner's play of both. The owner's
+   `zombieDragonAndCartReset` route predates the recorder's F-keys, so its two F9 presses went in by hand (`hold f9
+   5`); the garrAbility side thread is settled (Garr's ability button does nothing by Capcom's own test; the cart's
+   "Maybe Garr would be able to push it..." is its unconditional examine text). Root `C:\Users\kerok\bof3x-runs\i149`.
 
-0000000000000. **The effect, boss and scene gap rows are placed from the disc** - **merged into `fix/sweep-wave`
-   on 2026-10-26 evening at the owner's word** (the worktree branch `worktree-agent-ada98af7cd3367ec1`, off `main`
-   `25d12620`; the checks re-run on the merged tree: `exe_tables.py check`, `importer.py check`, `loc_build.py selftest`,
-   0 errors;
-   [`exe-immediate-places.md`](exe-immediate-places.md) 7, census 8.5, DIV-0101's amendment of 2026-10-26).
-   Every remaining spell / effect / boss / scene `game-value` row was read at its PSX twin: twelve place as
-   `immref` (`BossGaist_Anims+0x2`, the kind-0x18 `Sub2E` / `Sub30` / `Sub31` / `Sub45` / `Sub21` states,
-   `Area121_BandHeights`, `Scena02_EffectX`, `AirRaidImage_ShadeSteps`, `LinkedObjectD_Amounts`,
-   `ReviveHalo_MoteCounts`, `WardMote_Tilts`) through 32 hand-read `symbols.toml` pairings and four rule
-   changes in `exe_tables.py` (the multi-hit twin, the index fold, the symbol-extent end, the section-tail
-   floor); recipes regenerated over the seven discs, `check` 0 errors, `gap` rows US 58 to 48, JP 31 to 21.
-   Confirmed regional, the owner's call: the Western `EffectKind66_States` and `Rest3e_Windows` fields;
-   `TornadoMote_Phases+0x10` is the Identify panel's English labels (a language row). Left: `WardMote_Tilts+0x8`
-   (MAGIC044's two shorts, no reader), `LinkedObjectD_Amounts` on PSP-EU (its `GAME.EMI` pair addresses
-   other bytes), the PSPs' two-byte `Area121_BandHeights+0x1`. **Nothing played**: a disc-built install's
-   D.Zombie-class check (the Ward / Revive / AirRaid spells, area 121's band, scene 2's effects) is owed.
+5. **The every-door sweep and the data diff** (PR #147; [`door-sweep.md`](door-sweep.md),
+   [`data-diff.md`](data-diff.md)). **Any recipe regeneration needs a `data_diff.py run` with the seven discs**
+   (data-diff.md 5) before CI passes. Run the sweep: `abc_run.py prepare --set us-disc`, then `door_sweep.py run
+   --set us-disc` (a scratch `--installs` with `discs` at `D:/bof3x-runs/discs`), about 43 minutes an install at
+   `--speed 4`. **Open:** (a) the owner's eye on area 135's marker when a save starts in zone 6 or 7 (DIV-0180
+   places it at its zone-4 start); (b) the owner's saves for area 54 (the rocket route) and area 104 (key item
+   0xA), and their reading of area 122; (c) a whole-sweep re-run with the taps (only six areas were); (d) other
+   donors (a chapter 1 save) for the indirect links' other alternatives, and the `eu` set's installs (their confirm
+   button is cross: `--confirm` and the preamble both); (e) a walking form, which wants each area's walkable cells.
+   The roots `C:\Users\kerok\bof3x-runs\everydoor` and `door135`.
 
-000000000000. **Issue #149 (the D.Zombie's Bone Dance never ends on a disc-built install; the cart drawn where
-   the last push rolled it after a reload) is fixed** on `fix/issue-149-bone-dance-cart` (off `main` `95ef451a`,
-   unpushed; worktree `C:\Users\kerok\bof3x-runs\i149\wt`, root `C:\Users\kerok\bof3x-runs\i149`, the
-   session's disc-built homes `D:\bof3x-runs\i149\home` (the rebuilt image) and `home_old` (the released one)).
-   (a) The hang: `BoneDanceShake_Counts` `0x65AA64` (three beat lengths, 10 / 14 / 14) is a `game-value` gap on
-   every disc-built image, zeroed, so the first beat's countdown wraps to 0xFF and the shaker never hands on
-   ([`magic_c2.md`](magic_c2.md) 2, `BoneDanceShake_Step`). The owning-function search (`exe_tables.find_imm`)
-   now accepts a whole region of three or more non-zero bytes, every one equal, anchored by the twin's address
-   ([`exe-immediate-places.md`](exe-immediate-places.md) 3): two `immref` rows on all seven builds
-   (`BoneDanceShake_Counts` from `MAGIC057.EMI#3`, `EffectKind75_States+0xC` from `AREA188.EMI#13`), the
-   recipes regenerated over the seven discs, `check` 0 errors, `exe_own.py measure` + `gaps` dropping exactly
-   those 14 gap rows. **A player's install needs the rebuild** (`importer.py stale` names `exe`). (b) The cart:
-   D145 found in play; DIV-0182 copies area 108's three models (the blast rewrites the cart's 55 faces in place, not only the
-   push scene's 33-quad model D145 named) and area 52's scene byte at inject and puts them back when
-   `Area_Enter` loads the area's DAT (`src/game/area_data_reload.cpp`; `BOF3X_ORIGINAL=AreaDataReload`).
-   (DIV-0182 since the merge of `main`'s DIV-0181, the cell-texture rebuild, PR #148.) **Owed:** the owner's play of both;
-   the owner's `zombieDragonAndCartReset` route was recorded before the recorder wrote F-keys, so its two F9
-   presses went in by hand (`hold f9 5`); with them the route's reload shows the put-back (frame-exact shots: no planks after the reload; a quicksave after the
-   fight reloads with no cart and no planks, by the flags), as does
-   `cartReload.txt` (the push route plus an F9 restart and a slot-0 load). The recorder change
-   (`tools/recorder-fkeys`, item 000000) is cherry-picked onto this branch; and the
-   garrAbility side thread: Garr's ability button does nothing by Capcom's own test (member kind 2 is refused in
-   `Field_LeaderCheckTest`, the PSX `FUN_801B6EB4` the same), his push is the walk-into count, and the cart's
-   "Maybe Garr would be able to push it..." line is its unconditional examine text.
+6. **Issue #142's scene** (PRs #145 and #148; DIV-0125 amended, DIV-0181 / D360). **Owed:** the owner's eye on
+   the Dauna Mine exchange and on the other turns they remember (DIV-0181 is general: any sprite whose parts repeat
+   across images), and a state-hash run (render-only; expected identical). `BOF3X_POSELOG=1` and
+   `BOF3X_EFFECTLOG=1` are the instruments ([`input-script.md`](input-script.md)); the hosted all-original replay
+   of `minecartToZombieDragon` crashes at frame 742, so that route has no original side. **Issue #143** (the mine
+   cart): the route pushes twice on both installs; the reporter's screenshot shows Ryu at the cart, and
+   `Field_LeaderEffectTest` pushes only for member kinds 3 and 6 - ask the reporter whether Garr was in front, or
+   whether a battle, menu or save came between the pushes.
 
-00000000000. **The every-door sweep is built** on `harness/every-door` (off `main` `48511747`, merged with the data diff on `harness/build-diff-prevention`, unpushed;
-   [`door-sweep.md`](door-sweep.md)). Run: `abc_run.py prepare --set us-disc`, then `door_sweep.py run --set
-   us-disc` (a scratch `--installs` with `discs` at `D:/bof3x-runs/discs`), about 43 minutes an install at
-   `--speed 4`. Root `C:\Users\kerok\bof3x-runs\everydoor`; its `old\` worktree (at `b0fef7a2`) and
-   `c_uspsp_old` are scratch for section 5 - `git worktree remove` it when the branch merges. The direct form,
-   not a walk (section 3 lists what that cannot see). **Done 2026-10-25 on `fix/area-135-door-crash`** (off
-   `harness/build-diff-prevention`, root `C:\Users\kerok\bof3x-runs\door135`): area 135's four crashes were
-   Capcom's port reading address 3 through the never-placed marker, reachable by a save loaded in zones 4/6/7 -
-   fixed as DIV-0180 (section 4a); the eleven stuck doors are event areas (section 4b's table, with the owner's
-   account), and the sweep taps confirm while a change stays pending (`--confirm`, default `circle`). **Open:**
-   (a) the owner's eye on the marker when a save starts in zone 6 or 7 (DIV-0180 places it at its zone-4 start);
-   (b) the owner's saves for area 54 (the rocket route) and area 104 (key item 0xA), and their reading of area
-   122; (c) a whole-sweep re-run with the taps (only six areas were); (d) other donors (a chapter 1 save) for the
-   indirect links' other alternatives, and the `eu` set's installs (their confirm button is cross: `--confirm`
-   and the preamble both); (e) a walking form, which wants each area's walkable cells.
+7. **A disc-built install's exits** (issues #130 / #134, PR #136, [`exe-import-engine.md`](exe-import-engine.md)
+   7.8; #139, PR #144, 7.9; the descriptor holes closed by item 1's 7.11). **Next to track:** the same save - made
+   at the camp diary, not an F12 save - loads into area 62 on the PC install and into camp area 90, then the world
+   map, on the disc-built one, with every gap filled and with a JP-disc image, so not the exe image; the owner's
+   thought (2026-10-24): the area-read logic of a load may differ between releases. Start from the scratch
+   install's `fix2_run.log` against `game\bof3x.log` in the session scratchpad `i130`, then the save's area word
+   and what reads it on each install. **Left:** the `gap` rows no disc has at a neighbour's displacement
+   (`Scena17_EndSteps`, `Equip*`, `Area121_BandHeights`: item 14's round).
 
-0000000000. **The static data diff is built** on `tools/data-diff-gate` (off `main` `48511747`, merged with the every-door sweep on `harness/build-diff-prevention`, unpushed;
-   [`data-diff.md`](data-diff.md)): `tools/data_diff.py run` decodes the area families and every `tables.toml`
-   table from the PC's `.data` and each disc-built image; `check` (CI) holds `recipes/data-diff.tsv` against
-   `recipes/data-known.toml` and `recipes/exe.toml`'s image hashes, so **any recipe regeneration now needs a
-   `data_diff.py run` with the seven discs** (section 5 of the doc) before CI passes. Found and fixed: area 6's
-   link index on both PSP-built images (`exe-import-engine.md` 7.10; a PSP-built install needs the rebuild).
-   **Open hole, listed** (`fishing-spot-input-flags`): areas 89 and 129's descriptor `+0x32` byte on the five
-   PlayStation builds - build the PSX descriptor-table rule (a descriptor's place through the PSX
-   `Area_Descriptors` table, `0x801802EC` JP / `0x8017F974` US, each entry in the area's own `EMI#13`;
-   7.8 *Left*) and drop the entry. **Also seen:** `exe_own.py`'s symbol-name `language` rule classes bytes up
-   to the next symbol, so an unnamed table after a `*Messages` symbol reads as language (area 6's descriptor was
-   one) - worth a pass over `exe-gaps.tsv`'s `language` rows that are not text. PR at the owner's word.
-000000000. **Issue #142 (Dauna Mine's dragon-zombie puddle and circle, half drawn) is fixed** on
-   `fix/issue-142-grab-pairs` (off `main` `c0ba3b64`, PR #145; DIV-0125 amended): the owner's
-   `minecartToZombieDragon` recipe (save in `tools/recipe_saves/`, the first route to reach effect kind
-   0x51) showed the puddle as a thin half-blob with a pale edge and each disc as a half-disc with a
-   straight left side. Kind 0x51 moves the left and right halves of the frame under it into one
-   texture page and textures a quad pair per scanline from the two copies; a draw was tagged with
-   only the most recent grab of its page, so the left quads sampled nothing. Now a draw carries two
-   grabs (`fb_grab::Registry::FindAll`, `PipeState::grab_slot2`, the shader's `t3`), and the grab's
-   edge test has half a cell of slack (a one-pixel seam at the join). Self-tests exit 0 (`'*'` from
-   a clean copy, `inject: 10087 ours`); the replay's frames 2760 / 3300 / 3360 / 6060 match the
-   owner's PlayStation frames (`analysis/shots/issue-142-1025/`, before and after). **Found on the
-   way:** `BOF3X_EFFECTLOG=1` (the spawn / first-run census of effect objects, `input-script.md`);
-   the hosted all-original replay (`--original '*,-Game_Clock'`) of this route crashes at frame 742
-   with the build's launcher and shows only the logo window with the dev launcher - the original
-   side of a scene A/B is not available on this route. **Open:** (a) **the owner's "Ryu keeps turning
-   around" is found and fixed** on `fix/issue-142-ryu-facing` (off `main` `95ef451a`, unpushed): D360, the
-   port's cell-texture cache keeping a part set's composition after a new image is uploaded to the slot
-   (adult Ryu's standing entry 7 and his gesture entries share body cells, so his face from an earlier
-   image showed at animation 7 while the gestures showed the bank's back-right view) - fixed by DIV-0181
-   (an upload frees the cell textures whose cells it covers; `BOF3X_ORIGINAL=CellTextureVram` for the
-   port's). The route's frames with the fix show the back-right view throughout, as the bank's
-   direction-7 entries draw and as a US let's-play looked; the US-disc install draws the same stale
-   frames as the PC, and the JP / US twins of the script op, pose and upload functions are `exact`.
-   `BOF3X_POSELOG=1` is the instrument ([`input-script.md`](input-script.md)). **Owed:** the owner's eye
-   on this scene and on the other turns they remember (the fix is general: any sprite whose parts
-   repeat across images), a state-hash run (render-only; expected identical) and the PR. (b) Issue #143 (the mine cart): the owner's
-   route pushes the cart twice on both the PC install and the disc-built `i130` install; the
-   reporter's screenshot shows **Ryu** at the cart with Ryu's own line ("Maybe Garr would be able
-   to push it..."), so the leader was Ryu at the failed push - `Field_LeaderEffectTest` only pushes
-   for member kinds 3 and 6 (`Field_State +0x89`) at a run. What swapped the leader back after the
-   first push is not found; no swap and no reset is in the route. Ask the reporter whether Garr
-   was in front, or whether a battle, menu or save came between the pushes.
-00000000. **Issue 139 (a disc-built install's Deis's temple exit to area 0) is fixed** on `fix/issue-139-neighbour-places`
-   (off `main` `c0ba3b64`, unpushed; [`exe-import-engine.md`](exe-import-engine.md) 7.9): the exit's first
-   alternative was a `gap` zeroed in the image, the disc's bytes a word away from where either neighbour put them;
-   `find_places` now tries each placed neighbour's displacement and its word shifts on every unplaced run once the
-   keys are done. Recipes regenerated over the seven discs, checks 0 errors, the `i130` image rebuilt and the owner's
-   `deisCave` recipe leaves the temple for Mt. Zublo as the PC does. **A player's install needs the rebuild**
-   (`importer.py stale` names `exe`). **Left:** 60 gap rows on `psx-us` (757 bytes; `Scena17_EndSteps`, `Equip*`,
-   area 89's `+0x30`, `Area121_BandHeights`) are bytes no disc has at a neighbour's displacement; the PSX
-   descriptor-table rule of 7.8 is still the way to area 89's and 129's holes; PR at the owner's word.
+8. **Issue #121's lift stall** (PR #135; [`issue-121-lift-stall.md`](issue-121-lift-stall.md); DIV-0158's pacing
+   floor, D357; the console flash DIV-0178, D358) and #118 / #120 (PR #129). **Owed:** the owner's play with the
+   floor (does instant text still feel instant?), a look at the flash, and the reporter's confirmation on the next
+   build. Instruments under `C:\Users\kerok\bof3x-runs\i121y`. Local branches: `tools/recorder-fkeys` is in `main`
+   (`d2089fde`, by patch) and removable; `test/alpha4-fasttext` is a test build, not for merge.
 
-0000000. **Issues 130 and 134 (a disc-built install's missing exits) are fixed** on `fix/issue-130-descriptor-places`
-   (off `main` `f472072a`, unpushed; [`exe-import-engine.md`](exe-import-engine.md) 7.8): the importer placed no area
-   descriptor whose region the port relaid by a word (the pointer votes tied), so areas 62, 97, 162 and 163's link
-   counts were zero in a disc-built image and `unread` in `exe-gaps.tsv`, which the image zeroes unlogged. Tied
-   data-pointer places are now each tried; the recipes regenerated over the seven discs, checks 0 errors, the
-   owner's `maekyssGorge` recipe leaves area 62 on the rebuilt scratch image (`D:\bof3x-runs\i130`). **A player's
-   install needs the rebuild**: the staleness prompt names `exe`. **Left:** areas 89 and 129 (the fishing spots'
-   `Field_InputFlags` byte, `Game_Mode` 8) and 134 keep a descriptor hole - a rule through the PSX descriptor table
-   would place every descriptor; **next to track:** the same save - made at the camp diary, not an F12 save - loads into area 62 on the PC
-   install and into camp area 90, then the world map, on the disc-built one, with every gap filled and with a
-   JP-disc image, so not the exe image; the owner's thought (2026-10-24): the area-read logic of a load may differ
-   between releases (the US disc's data against the PC's JP-form). Start from the scratch install's `fix2_run.log`
-   against `game\bof3x.log` in the session scratchpad `i130`, then the save's area word and what reads it on each
-   install (the owner's draft replies are there too).
+9. **The sound-layer round** (PR #122; [`sound-layer-round.md`](sound-layer-round.md) sections 4..6, DIV-0169..0175)
+   and **fix wave 1023** (PR #117, DIV-0161..0168). **Nothing heard**: the listens and the two calls (D350, D344)
+   are at the top of [`owner-review.md`](owner-review.md); D340 (`caughFish` never draws the panel's marker) is held
+   with its measurement. The gate's runs and diffs: `C:\Users\kerok\bof3x-runs\sl1023\merge\`. The second twin-diff step's
+   private notes: `D:/bof3x-runs/frost/records_audit/REPORT.md` and `region_census/REPORT.md` (**the PC already
+   carries two US fixes**, so "the PC follows the JP" is not to be assumed per function).
 
-000000. **Issue #121, the lift scene stalling on instant text - reproduced and fixed, unpushed**
-   ([`issue-121-lift-stall.md`](issue-121-lift-stall.md), branch `fix/issue-121-pacing-floor` off PR #129's).
-   ScrubOasis froze in area 99's lift scene (chapter 3 run 7) with `text_speed=1` and Msg Speed Fast. Reproduced
-   on the owner's `liftScene` recording with a one-frame mash and with random stick taps: the lift (the kind-2
-   object) waits on exact script counts with `A1`, and three pages closed faster than Fast can print them leave
-   `C0` past the 0xB it waits for (D357, Capcom's script race, latent until DIV-0158's instant page). Fixed by
-   DIV-0158's amendment, the pacing floor: an instant page is read at once but closes no earlier than Fast's
-   would. The same session fixed the console flash the reporter and the owner both saw wrong (D358, DIV-0178):
-   the port's `Gte_ApplyMatrixLV` wraps its 32-bit products where the PlayStation's splits the vector, so the
-   15-unit beams folded over the horizon; now they rise as on the PSX. **Owed:** the owner's play with the floor
-   (does instant text still feel instant?) and a look at the flash, and the reporter's confirmation on the next
-   build. Instruments under `C:\Users\kerok\bof3x-runs\i121y` (the earlier ones in
-   `i121x`). **PR #129** (2026-10-24, open, the owner's listen before merge) fixes #118
-   (D355) and #120 (DIV-0177, D356); the owner's `game\` folder runs that build. Local branches from the same
-   session: `tools/recorder-fkeys` (the recorder writes F1..F11 and a pause's keys as `key KEY 0`, built and
-   tested by a record-and-replay at the title; committed 2026-10-25 night as `53a1eeaa` and cherry-picked onto
-   `fix/issue-149-bone-dance-cart`, item 000000000000) and `test/alpha4-fasttext`
-   (a test build only, not for merge).
-
-00000. **The Sunder loop is built** on `cut/sunder-loop` (off `main` `2f55de72`, worktree
-   `C:\Users\kerok\bof3x-runs\sunder1024\wt`, unpushed; DIV-0176 `SunderLoop`; [`cut-content.md`](cut-content.md) 4): the
-   one byte at `0x5FD001` of area 51's movement script 3 asks for Capcom's unused looping cut `0x0F` of
-   Sunder's animation instead of the once-and-hold `0x10`, so he keeps going at the mountain top until the
-   scene reaches him. Self-tests exit 0; seen in the patched build at the top
-   (`analysis/shots/sunder-loop-1024/`); **the owner looked (2026-10-24): the hard cut at the hands-down pose is
-   right, on by default; PR opened.** Runs and the live readers (`peek51.py`,
-   `poke51.py`) in `C:\Users\kerok\bof3x-runs\sunder1024`.
-
-0000. **The sound-layer round is built** on `sound/round` (off `main` `300ce67f`; the four group branches `sound/in`,
-   `-sp`, `-st`, `-hm` merged one at a time, unpushed; [`sound-layer-round.md`](sound-layer-round.md) sections 4..6):
-   the PlayStation's positional sound, pause and cuts back in the port's DirectSound layer, each on by default with a
-   `BOF3X_ORIGINAL` switch - DIV-0169 `InnNightPause` (D343; the inn's song halted at the fade and resumed at its
-   position after the morning's message - the PC's song had never returned), 0170 `MoveB8Restart` (op `B8`, areas 142
-   and 174), 0171 `SpriteVoicePosition` (voices panned by their sprite), 0172 `SoundLevelGate` (the level table and
-   `D1`'s distance gate; `Scena01_Scene09`'s `0x1206` now silent, the PlayStation's level 0 - the owner's call), 0173
-   `StopCuts` (D347: all 131 `Music_FadeOutStop` sites pair with a PlayStation stop, so the port's ten-frame fade is a
-   cut - **the owner's ear decides**), 0174 `OneShotKeyOff` (D337's remainder), 0175 `WindowResetFull` (D352, the US's
-   `+0..+0x1F` clear). **Held with measurements:** D350 (the US wait adds 34 / 40 / 58 frames to the en / fr / de attract
-   pass - the owner's call), D344 (two recipes answer a field save's yes: `balioAndSunder_2`, `sigma_swap`; an
-   `--insert` step and re-recordings if wanted), D340 (`caughFish` never draws the panel's marker). D353 settled (region
-   drift), D354 found and fixed (the merged build's first combat run crashed in DSOUND at a bank reload; both DLL-side
-   buffer tables are now told before `Snd_LoadBank` releases). **The gate** (round doc 5): self-tests exit 0 at every
-   step; the state hash on the ten routes shows only the pages the DIVs predict (`0x803000` for DIV-0175, shop's
-   `0x7DE000` for DIV-0169); WAV diffs on shop (the song back from 91 s), combat (no window differs: its cuts fall where a new track
-   starts) and whelpBoss (four windows, each attributed to its switch by one run with that switch off: the pan, the
-   level gate, and the two cuts' missing fade tails; with every switch off the dump equals the original to the
-   sample). Runs and diffs in `C:\Users\kerok\bof3x-runs\sl1023\merge\` (`end_batch*.out`, `wav\`). **Nothing heard**: the listens and the two calls are at the top of
-   [`owner-review.md`](owner-review.md). PR at the owner's word; the twins branch (item 0b) is a second PR. Briefs and
-   runs: `C:\Users\kerok\bof3x-runs\sl1023\` (`brief_common.md`, `groups.md`, `wt_<g>` worktrees, `merge\` the launcher copies, checks,
-   `wav\`).
-
-000. **Fix wave 1023 is built** on `fix/1023-wave` (off `main` `b13eb30a`; branches `fix/1023-bt`, `-fm`, `-sn`
-   merged, unpushed): eight repairs of port defects and of Capcom's JP-build defects the US build fixed, each on
-   by default with a `BOF3X_ORIGINAL` switch - DIV-0161 `BattleDrawSigned` (D336), 0162 `StoreAskWord` (D338),
-   0163 `BattleInitPickClear` (D349), 0164 `SpriteReachWord` (D341), 0165 `MenuSignedXY` (D348), 0166
-   `GeneNameNul` (D351), 0167 `EffectKeyOff` (D337), 0168 `MusicPlayRefusesNone` (D346). Found moot on reading:
-   D335 (every reader takes the low 16 bits, where both machines agree) and D342 (every caller tests 1 or 2).
-   Self-tests `'*'` exit 0; the ten routes against the new `orig4` pairs show only the pre-wave signatures
-   ([`state-hash.md`](state-hash.md) 6). The owner confirmed DIV-0165 on the shops in play ("Shops look
-   great"); PR #117 is open. **Held, each with its reason in its entry:** D350 (the Scena16
-   caption's wait is in the attract demo: measure on the attract run first), D352 (the window reset's full
-   clear: a state-hash comparison first), D343 (the inn night: `shop.txt` with `BOF3X_MUSIC_LOG=1` near recipe
-   frame 2647 to find how the town song returns), D340, D344 (two frames before a save write shift the
-   recipes), D345, D347. **The second twin-diff step** (private notes, a third party's decompilation read):
-   `D:/bof3x-runs/frost/records_audit/REPORT.md` (115 asserted PSX record members, 113 placed, every shift the
-   known drift; naming items N1, N2, N4, N5 for a typing pass) and `D:/bof3x-runs/frost/region_census/REPORT.md`
-   (the 128 US-vs-JP functions: item-record growth, 8-px text, the soft reset, the button swap; **the PC already
-   carries two US fixes** - the shop exit at area 0x5C and the item handback on a cancel - so its source postdates
-   the JP disc's build and "the PC follows the JP" is not to be assumed per function). Brief and groups:
-   `C:\Users\kerok\bof3x-runs\fw1023\`; runs `C:\Users\kerok\bof3x-runs\sh1023`.
-
-00. **The bit-15 round: semi-transparent primitives blend only texels with bit 15** (branch `render/stp-blend`, off
-   `main` `9a4cda2e`). **Step 1, the census, is done** ([`stp-census.md`](stp-census.md), `BOF3X_STPCENSUS`): five
-   routes, 123,467 semi-transparent textured draws, 34,858 the PSX would draw opaque - the rope and the page-15 text
-   palettes (CLUTs `7800` / `7807`, additive, on dark backings) and nothing else; **no primitive mixes the two
-   kinds**; modes 0 and 2, every GT4 and every cell sprite unchanged. CLUT row 480 measured on the twin's savestates:
-   bit 15 clear there too, so the text is Capcom's port as the rope is (section 4). Before step 3: census the routes it
-   did not reach (section 5). **Step 2 is built** ([`stp-blend.md`](stp-blend.md), DIV-0160, D334): bit 15
-   rides in the A1R5G5B5 textures as alpha clear on a colour, plus a one-byte plane per GPU texture at `t2`;
-   no pixel changes (73 shots identical on / off), `BOF3X_STPVIEW=1` shows the plane. **Step 3 is built**:
-   dual-source blending draws a blended draw's bit-15 texels with its own factors and the rest opaque
-   (`StpBlend`); the rope at (81, 62, 25) against the twin's (72, 56, 24), the page-15 text in its palette
-   colour, nothing else moved on four routes (`stp-blend.md` 5); D334 fixed. The owner's playthrough
-   confirmed both fixes (2026-10-23); **PR open** from `render/stp-blend`. Left, unscheduled: the census on the
-   routes it did not reach (`stp-census.md` 5). Found 2026-10-23 on the owner's route `ropeAndAmalgam.txt` (save
-   `ropeAndAmalgam`), recipe frame ~300, the McNeil rooftop (area 28): the rope over the black sky draws at about a
-   quarter of its PSX brightness (median (20, 16, 6) against the twin's (72, 56, 24)).
-   **Established** (runs in `C:\Users\kerok\bof3x-runs\amalgam_111`, the twin's in `C:\Users\kerok\bof3x-runs\rope_psx`):
-   - The rope is 12 map-cell quads, records at cell (0x27, 0x16..0x21), condition `0x0216`, texture word
-     `0xF360B0DD`, drawn by `MapCell_DrawQuads` `0x570020` (PSX `0x80156ABC`). Both machines draw them as `0x2E`
-     (semi-transparent), colour `0x60`, blend mode 3 (background + a quarter of the texel). Flag `0x16` and the map
-     patch at (0x27, 0x15) come from `Scena02_EnterArea` area 0x1C (`src/game/scena_sc2.cpp`).
-   - The PSX (the sibling's runtime, `gpu_frame_27440.json`): the rope's CLUT (48, 483) entries 1..7 have bit 15
-     clear, so the GPU draws them opaque and the blend never applies.
-   - The PC: `Gfx_ConvertRow` (`0x59EBB0`, `src/game/gfx_clut.cpp`) drops bit 15, and `D3d_SetBlend` (`0x59FCA0`,
-     `src/game/d3d_draw.cpp`) blends the whole primitive. The US PSX disc's data in our engine draws the same dim
-     rope, so the data is not the cause. Capcom's port, then: a DIV, not a data fix.
-
-   **The plan** (agreed with the owner 2026-10-23; a round of its own because it changes every semi-transparent
-   textured draw):
-   1. A census: log every semi-transparent textured primitive whose texels include bit-15-clear ones, over several
-      routes (attract, combat, an effects route, `ropeAndAmalgam`), to size the change before building it.
-   2. Carry bit 15 into the textures: the palette path (`Gfx_ConvertRow`) and the direct-colour path
-      (`Tex_Convert16`, which DIV-0159 / PR #112 makes opaque but for 0). The A1R5G5B5 page format has one alpha
-      bit, already transparency, so this likely wants a 32-bit page format in the backend with three alpha levels
-      (transparent, solid, blended) - `render/render_shim.cpp` `CreateSurface`, `render_d3d11.cpp` `Convert` and the
-      pixel shader.
-   3. Draw by texel: for a semi-transparent textured primitive, bit-15-clear texels opaque, bit-15 texels blended
-      (two passes, or dual-source blending in the D3D11 backend).
-   4. A DIV entry and a switch, the existing fuzzes (`tex_page`, `d3d_draw`, `gfx_clut`), A/B frames on the census
-      routes, then the owner's eye on the rope and a few effects.
-
-0. **The wide-ring round is merged** (PR #104); the owner's play of each change
+10. **The wide-ring round is merged** (PR #104); the owner's play of each change
    ([`owner-review.md`](owner-review.md) 2026-10-21: the ring at a pulled-out camera and a quickload across widths;
    the READY! banner and the *Fin* wipe; the table faerie in `dolphinBoss`; areas 31, 90, 198 framed; Garr at the
    camps of areas 53 and 192). Every call is answered (round doc section 6); the end batch's measured gate is its
@@ -402,9 +138,9 @@ hosted cross form).
    it, [`wide-ring.md`](wide-ring.md) 8), the D300 rule's broadening (when a second example is seen). The round's
    runs: `C:\Users\kerok\bof3x-runs\r_ring\<group>`.
 
-0a. **The typed-data round is done through stage C** (PR #100; [`typed-data-stage-c.md`](typed-data-stage-c.md),
+11. **The typed-data round is done through stage C** (PR #100; [`typed-data-stage-c.md`](typed-data-stage-c.md),
    each step as run in [`typed-data-round.md`](typed-data-round.md) 3). Next in that line is I44's stage 3, the
-   relocatable image (the round doc's section 7, not staged), and IDEAS I49 (what `Battle_AutoTargetCheck`'s `+0xBA`
+   relocatable image (staged, item 2), and IDEAS I49 (what `Battle_AutoTargetCheck`'s `+0xBA`
    test means, after `kEnemyHp` became `kEnemyIntel`). **The method that held** (stage C's section 1):
    `tools/codegen_same.py` against a baseline build of the base commit after every batch, `0 differ`; after every
    typing pass a read-only family audit by other agents, because the gate cannot see a pointer typed as the wrong
@@ -412,7 +148,7 @@ hosted cross form).
    removed 2026-10-21). Stage C's scratch: `C:\Users\kerok\bof3x-runs\c_typed` (the coordinator's log `RESUME.md`,
    the briefs, the audit reports `audit\`); stages A and B's scratch is deleted.
 
-0b. **The PlayStation verdict pass and the battle twin-diff** (2026-10-23, `audit/frost-twins`, headless, local):
+12. **The PlayStation verdict pass and the battle twin-diff** (2026-10-23, PRs #115 and #116; the remainder PR #123):
    `tools/region_twin_map.py` maps the US disc's function starts onto the JP overlays by masked instruction words
    (4,131 of 4,397 exact) and onto the PC through our `(PSX 0x...)` citations and the propagated pairs;
    `tools/twin_bundles.py` puts a takeover beside its twin for reading. With it: every ledger line that said
@@ -428,9 +164,8 @@ hosted cross form).
    ten-frame fade where the PSX cuts), D34's remove side, D339's longer list, DIV-0030 / 0027 / 0057 / 0092's
    PlayStation lines answered or corrected (`0x8015DDF4` is `SsSepStop`, not a restart), two citations and
    `region_twin_map.py` fixed (any `PSX 0x...` on a marker's line; a pair matches its own overlay only). Both next
-   steps (the typed-record offsets and the 128 US-vs-JP functions) ran 2026-10-23 evening (item 000). **The remainder ran 2026-10-23
-   night** on `audit/twins-remainder` (worktree `C:\Users\kerok\bof3x-runs\tw1023\wt`, four signed commits, tip `051e9346`, unpushed; its
-   own PR): the "193" was 752 under the old reader - `region_twin_map.py` now reads every citation form and 497 markers
+   steps (the typed-record offsets and the 128 US-vs-JP functions) ran 2026-10-23 evening (fix wave 1023, item 9). **The remainder** (2026-10-23
+   night, `audit/twins-remainder`): the "193" was 752 under the old reader - `region_twin_map.py` now reads every citation form and 497 markers
    were added (19 withheld with reasons, [`twin-pairs-check.md`](twin-pairs-check.md)); `psx_pair.py check` flags
    propagated pairs the `us_jp.tsv` map contradicts and retired 38 (3,292 left; D339 amended: two of its four were
    right, read against the wrong overlay) - **a fresh `propagate` brings them back: run `check --retire` after it**;
@@ -440,10 +175,14 @@ hosted cross form).
    `analysis/pairs_propagated.json` is the retired set. `docs/effect_1e.md` and `install-gap-pairs.md` still cite
    `0x801DA068` (the function before the twin). Maps and bundles: `D:/bof3x-runs/frost/` (`map`, `pilot`, `verdicts`); the private notes in `docs/gitIgnored/`.
 
-1. **The owner's checks** (each in [`owner-review.md`](owner-review.md), newest first):
-   - **The reading-row round** (item 6a): play of the furigana row, F4, a second language and the Mods tab's
+13. **The owner's checks** (each in [`owner-review.md`](owner-review.md), newest first):
+   - **The away day of 2026-10-27** (item 1): the faerie operand's call, area 9 on a PSP-built install, the
+     fishing spots, the stp pairs and the kind sheet, the seven boss-only skills' routes.
+   - **The spell sweep's looks** (item 3), **the sound-layer listens** (item 9), **issues #121, #142, #149** (items
+     8, 6, 4).
+   - **The reading-row round** (item 19): play of the furigana row, F4, a second language and the Mods tab's
      install; nothing to decide unless the gap reads wrong in play.
-   - **The wide-ring round** (item 0): play of the five changes; nothing to decide.
+   - **The wide-ring round** (item 10): play of the five changes; nothing to decide.
    - **Quicksaves** (DIV-0145..0147): not played yet; whether F6 / F7 get an on-screen line (logged only today, as
      F12's is, DIV-0032); IDEAS I47 (one translation's quicksave loaded under another) when they want it.
    - **From the button round (PR #85):** record the minigame starts with `BOF3X_RECORD`
@@ -452,28 +191,22 @@ hosted cross form).
      check, re-prepare a root under `C:\Users\kerok\bof3x-runs\` and regenerate them (`button-routes.md`'s commands,
      `abc_run.py prepare --set sigma`, `sigma_saves.py`, `sigma_sheets.py`, with the new root). **From PR #81:** the stale-install prompt in a real start, the PSP-only title in play, D310.
    - The ultrawide round's and the away day's looks, listens and calls (owner-review's 2026-10-14 and 2026-10-13
-     sections); Peco's EXP table (item 9).
+     sections); Peco's EXP table (item 22).
 
-2. **The exe-gap round** ([`exe-gap-round.md`](exe-gap-round.md), framed, not staged): what is left between a
+14. **The exe-gap round** ([`exe-gap-round.md`](exe-gap-round.md), framed, not staged): what is left between a
    disc-built image and `BOF3X_EXEIMAGE_STRICT=1` as the default - 49..74 `gap` rows per build, STRICT narrowed to a
    reviewed list, D280's `ja-JP` kinds 7..15 (answered yes, not built), the owner's open rows (the empty save slot
-   first), psp-jp's read-watch coverage now that D321 is fixed. Stage 0 and D266 are done (PR #98). Staging it is the
-   owner's word.
+   first), psp-jp's read-watch coverage now that D321 is fixed. Stage 0 and D266 are done (PR #98); issue #139's
+   neighbour rule (7.9), the descriptor-table rule (7.11) and the narrowed `language` rule
+   ([`install-gap-labels.md`](install-gap-labels.md) 9) have moved rows since. Staging it is the owner's word.
 
-3. **The state hash after 2026-10-20** ([`state-hash.md`](state-hash.md) 6): **the ten route pairs re-recorded 2026-10-20** as `cn_<route>_orig3` /
-   `_orig3b` (main's build `84e43c32`, 173 ranges, the same conditions as the `orig2` pairs) and ours checked against
-   each (`cn_<route>_a1020`): combat and shop identical on every tick; the rest differ only by ledgered changes,
-   each confirmed by a hosted run of ours with the change switched off - DIV-0092 (the area's music after a load:
-   field_menu and dragonTransform then identical; cutsceneAndNue and menu_screens the same four pages), the button
-   round's glyphs into VRAM (caughFish by DIV-0138 alone, a bisect over 19 switches; worldMapAndAreaTransition by
-   DIV-0135 alone; masterAndManillo by the glyph set together, not by DIV-0138 or DIV-0140 alone - which one is
-   open), and on whelpBoss DIV-0092 with DIV-0143 then one page, `Sound_Banks`' buffer pointers (heap addresses, raw
-   dumps at tick 10,000: the `Sound_Channels` class, a skip-list candidate). A few VRAM and sound pages at tick 3
-   came in one run of five and are noise. Scripts and checks: `C:\Users\kerok\bof3x-runs\away1020`. **Superseded 2026-10-23 by the `orig4` pairs** (item 000). Before that, stale at the tip since 2026-10-22: nine routes fail
-   against them at the reading-row round's base tip (with PR #105) and at its end alike (D330); re-record before using them as a gate
-   (item 6a).
+15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
+   [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
+   (D330). Open from the `orig3` reading: which of the button round's glyph changes moves `masterAndManillo`'s pages
+   (not DIV-0138 or DIV-0140 alone), and `Sound_Banks`' heap pointers on whelpBoss (a skip-list candidate). Scripts
+   of that reading: `C:\Users\kerok\bof3x-runs\away1020`.
 
-4. **Open technical items, no owner needed:**
+16. **Open technical items, no owner needed:**
    - **The ultrawide round's own** ([`ultrawide-round.md`](ultrawide-round.md) 5b and the group docs): the six
      `# save` headers D298 names; the band census's two follow-ups (D299) and a `+0x83` column naming a census row's
      script; a log line for case zero's north steps; a `gameover` hash at 1 and 2 against narrow for D285; the four
@@ -487,17 +220,16 @@ hosted cross form).
    - D270's look owed; D284 and D285 not traced; D287 (the launcher's clipped lines); DIV-0064's amendment pending
      the owner's confirmation.
 
-5. **The follow-up round: disc-only and PSP polish** (not staged): PSP-EU's image's 39 ranges
+17. **The follow-up round: disc-only and PSP polish** (not staged): PSP-EU's image's 39 ranges
    ([`exe-image-twins-1013.md`](exe-image-twins-1013.md) 6); [`disc-only-round.md`](disc-only-round.md) 5; D246 and
    D257, the owner's. D320 (song 166 on disc-only installs) is open.
 
-6. **The staged localisation PR**: the empty save slot blank as the US disc draws it (`0x669CCC`) and IDEAS I34, the
+18. **The staged localisation PR**: the empty save slot blank as the US disc draws it (`0x669CCC`) and IDEAS I34, the
    name entry back ([`name-entry-restoration.md`](name-entry-restoration.md); its section 8 is the owner's first).
-   The exe-gap round needs its answer too (item 2).
+   The exe-gap round needs its answer too (item 14).
 
-6a. **The reading-row round is built** ([`reading-row-round.md`](reading-row-round.md), status and "as built" at
-   its top; issue #97; IDEAS I21 and I50) on `localization/second-script`, the end batch's fold on
-   `reading-row/end`: **PR next** at the owner's word. The dialogue box draws an optional reading row over each text
+19. **The reading-row round is merged** (PR #106; [`reading-row-round.md`](reading-row-round.md), status and "as
+   built" at its top; issue #97; IDEAS I21 and I50). The dialogue box draws an optional reading row over each text
    row from kind-18 side chunks - furigana from the player's `ja-JP` layer (DIV-0155, the readings shipped as the
    first mod zip, DIV-0157) or any other held language (DIV-0156, every ordered pair built by `setup`); two row
    pairs a page at pen y 2, 9, 21, 28; F4 hides the readings (`ruby_key=` / `BOF3X_RUBY_KEY`, `none` frees it);
@@ -534,26 +266,26 @@ hosted cross form).
    - **The release gate:** SudachiPy and its dictionary are not bundled (`tools/make_release.py` `NOT_BUNDLED`), so
      a player's `setup` with the furigana mod installed stops loudly until the lexicon lands or the owner decides to
      bundle (about 70 MB). Do not release the mod zip as playable before one of the two.
-   - **The state-hash pairs** (D330): re-recorded 2026-10-23 as `orig4` (item 000); the round's own gate was
+   - **The state-hash pairs** (D330): re-recorded 2026-10-23 as `orig4` (item 15); the round's own gate was
      ours against the base tip's runs (`C:\Users\kerok\bof3x-runs\rr_rr\statehash\`).
    - Not reached: AREA014's scarecrow and AREA150's prompt (no route or save), the faerie village's tutorials (no
      recipe), Japanese over English on a capture; a page whose text rows are all empty draws no readings (none
      seen; a rule is the contract's call, RR's hand-back 6). Hand-backs:
      `C:\Users\kerok\bof3x-runs\r_ruby\{fb,ml,pr,rr,sb,sl,os,lx,nr}\HANDBACK.md`.
 
-7. **Work that needs no owner** (each doc's own list is the authority):
+20. **Work that needs no owner** (each doc's own list is the authority):
    [`exe-import-engine.md`](exe-import-engine.md) 5's remainder; [`cache-read.md`](cache-read.md) 10; the music's
    long-fade row ([`music-open-ends.md`](music-open-ends.md) 4) and `SsUtKeyOnV`; the loop rows `084`, `109`, `130`
    ([`wav-dump.md`](wav-dump.md) 5); the exe's remaining Chinese
    ([`exe-chinese-remaining.md`](exe-chinese-remaining.md) 3 and 7).
 
-8. **Small, left over:** [`round-14-cleanup.md`](round-14-cleanup.md) 4's last paragraph; the 61 run-time raw calls
+21. **Small, left over:** [`round-14-cleanup.md`](round-14-cleanup.md) 4's last paragraph; the 61 run-time raw calls
    ([`round-13-cleanup.md`](round-13-cleanup.md) 1.3); E2E's 19 unreachable names
    ([`round-13-review.md`](round-13-review.md) 3); the PSP's eleven map-band changes; Capcom's type-1 routine;
    DIV-0041's terrain margin at the bridge's edge cells; `Sprite_FlashClut`'s row mask; seven older hosts in
    `entries_logic.txt`; `importer.py verify`'s `opt/area4-walls` note on a US-only cache; `dragonMenu`'s frame 720.
 
-9. **Revisit: the PSP's Peco level table is a repair, not a rebalance** (read 2026-10-16; owner's call). DIV-0104 /
+22. **Revisit: the PSP's Peco level table is a repair, not a rebalance** (read 2026-10-16; owner's call). DIV-0104 /
    DIV-0111 and their docs call roster index 6's 249 differing `Char_ExpTable` bytes a PSP balance change; decoded
    row by row they are **one row inserted** (the PSP adds a level-36 row; the PSX's last row is all zero), Capcom's
    defect by the PSX-twin rule, which the PSP fixed. **To do:** (a) the owner decides whether it becomes a
@@ -561,7 +293,7 @@ hosted cross form).
    in play. A second gap (41 -> 42 on the PSP) and Peco's empty level-1 ability are in the same reading (session
    9c821506's scratchpad).
 
-10. **After the first signed release** (`v0.1.0-alpha.3`): submit the binaries' hashes as false positives to
+23. **After the first signed release** (`v0.1.0-alpha.3`): submit the binaries' hashes as false positives to
    Microsoft and Avira; pin jsign's jar by hash ([`releases/README.md`](releases/README.md) "Signing").
 
 **Older open items** (one line each; the pointer holds the detail):
@@ -604,7 +336,11 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   copy with its own `bof3x.ini` (or none: self-tests and references want an ini-less copy, Traps). End a run with
   `taskkill //F //IM BOF3.exe` only for a game you started (the runners do exactly that now,
   [`world-map.md`](world-map.md) §6); batches run detached.
-- **Self-tests, headless:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config` (a hosted run: the player's launcher hands it to `bof3x-launcher-dev.exe` beside it since 2026-10-15, so a clean launcher copy takes that file too, [`launcher-settings.md`](launcher-settings.md) 2):
+- **Self-tests, headless:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config` (a hosted run: the player's launcher hands it to `bof3x-launcher-dev.exe` beside it since 2026-10-15, [`launcher-settings.md`](launcher-settings.md) 2).
+  **A launcher copy holds four files** - `bof3x-launcher.exe`, `bof3x-launcher-dev.exe`, `bof3x.dll` and `bof3x.exe`
+  (the exe host) - and no `bof3x.ini`; without `bof3x.exe` the launcher stops on a modal "bof3x.exe is missing"
+  dialog (Traps). `abc_run.py prepare` copies all four; a hand-made copy must too. Unattended runs that pass a
+  hosted-only switch go through `bof3x-launcher-dev.exe`, since the release launcher refuses them with a dialog:
   exit 0 passed, 3 a Fatal ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). Shadow names per module are in each module's
   doc; comma-separated lists work.
 - **A disc-only install** ([`disc-only-install.md`](disc-only-install.md)): `python tools/importer.py build --source
@@ -675,29 +411,24 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **PR #112 merged** 2026-10-23 (`main` `147c6ae1`; branch `111-amalgam-death`, issue #111): D333 / DIV-0159, a direct-colour page's texels opaque
-  but for 0, so Amalgam's melt draws; the owner's `ropeAndAmalgam.txt` route. Its runs:
-  `C:\Users\kerok\bof3x-runs\amalgam_111` (also the A/B/C root `C:\Users\kerok\bof3x-runs\abc111`, set `us`, built
-  with the discs at `D:\bof3x-runs\discs` through a scratch copy of `abc-installs.toml`) and Capcom's-code runs in
-  `C:\Users\kerok\bof3x-runs\amalgam_111_orig`.
-- **`sound/round`** (item 0000) and **`audit/twins-remainder`** (item 0b), both unpushed, 2026-10-23 night; the main
-  checkout sits on `sound/round`. Worktrees: `C:\Users\kerok\bof3x-runs\sl1023\wt_{in,sp,st,hm}` and `C:\Users\kerok\bof3x-runs\tw1023\wt` (its `base`
-  removed). The merged branches `fix/1023-*`, `audit/frost-twins`, `111-amalgam-death`, `localization/second-script`,
-  `render/stp-blend` and the rest are still local: `git cherry` then delete (Traps).
-- **`render/stp-blend`**: merged as PR #114 (2026-10-23); runs in `C:\Users\kerok\bof3x-runs\stp_census`.
-- The 2026-10-21 cleanup removed all 83 worktrees (every one clean but a typed B1 agent's untracked
-  scratch) and deleted 145 local and 65 `origin` branches; each was classified merged with `git cherry` first, not an
-  ancestry check (Traps). `main` is the only branch, local and remote.
+- **`away1027/integration`** (item 1): the four agents' branches `away1027/{lang,desc,stp,sweep}` merged, the
+  coordinator's batched validation on it; unpushed, PR at the owner's word. **`away1027/twins`** is running (a
+  sixth agent, off the integration). Worktrees `C:\Users\kerok\bof3x-runs\away1027\wt_*`, the game lock
+  `away1027\game.lock` (a directory; `mkdir` takes it), the agents' roots `away1027\<agent>\`.
+- **Merged, still to remove:** the worktrees `C:\Users\kerok\bof3x-runs\ss1026\wt_wave` (`fix/sweep-wave`, PR
+  #156) and `C:\Users\kerok\bof3x-runs\stg1027\wt` (`staging/ledger-and-reloc-1027`, PR #157) and their local
+  branches; `tools/recorder-fkeys` (in `main` by patch as `d2089fde`). About thirty merged branches are still on
+  `origin`; `git cherry` before deleting any (Traps).
+- **Local, not for merge:** `test/alpha4-fasttext` (issue #121's test build) and `gameplay/angel-tower-skip` (one
+  commit, the Angel Tower skip measured and unexplained, IDEAS I32 P1).
 - **Scratch kept, game-derived, never in the tree:** `C:\Users\kerok\bof3x-runs\c_typed` (stage C's log, briefs and
-  audits), `C:\Users\kerok\bof3x-runs\r_ruby` (the reading-row round's briefs, wanted at launch),
-  `C:\Users\kerok\bof3x-runs\rr_sl` (group SL's run) and `typedc-smoke` (stage C's smoke run).
-- **2026-10-20's scratch, game-derived, never in the tree:** `C:\Users\kerok\bof3x-runs\away1020` (launcher copies
-  `L\` (main's build) and `L2\` (the D266 branch's), the game folder `g\` hard-linked from `bof3\`, the runs, the
-  checks, the chain scripts); `D:\bof3x-runs\away1020` (the US and EU disc-only caches `c_us`, `c_eu` and installs
-  `g_us`, `g_eu`, built by the D266 branch); **`D:\bof3x-runs\discs`, the seven discs extracted** - `CDImage\` now
-  holds them zipped, and `recipes/abc-installs.toml` still names `{main}/CDImage/*.cue` (Traps).
+  audits), `C:\Users\kerok\bof3x-runs\r_ruby` (the reading-row round's briefs and hand-backs),
+  `C:\Users\kerok\bof3x-runs\rr_sl` (group SL's run), `amalgam_111` and `stp_census` (PRs #112 and #114's runs),
+  `away1020` and `D:\bof3x-runs\away1020` (2026-10-20's launcher copies, disc-only caches and installs);
+  **`D:\bof3x-runs\discs`, the seven discs extracted** - `CDImage\` holds them zipped, and
+  `recipes/abc-installs.toml` still names `{main}/CDImage/*.cue` (Traps).
 - **Older scratch:** the owner's scratch disc-only installs `C:\b3g` and `C:\b3p` (built before `wmrec`: rebuild
-  or remove). The older A/B/C roots and `lbl13` are gone (2026-10-21).
+  or remove).
 - **Other sessions work in the main checkout**: check `git status` and the branch before a commit there, and never
   build in `build/` while its game runs.
 
@@ -705,7 +436,7 @@ Local only, gitignored, worth keeping:
 
 - `bof3/BOF3.CFG`, `build/bof3x.ini` (the owner's; do not edit); the owner's saves `bof3/BISLPS*.DAT`; **the
   recipes' saves are `tools/recipe_saves/*.DAT`** ([`input-script.md`](input-script.md) §1a).
-- `analysis/statehash/` - **the route pairs `cn_<route>_orig3` / `_orig3b` (2026-10-20)**, the older `_orig2` pairs,
+- `analysis/statehash/` - **the route pairs `cn_<route>_orig4` / `_orig4b` (2026-10-23)**, the older `_orig3` / `_orig2` pairs,
   the overlay pairs `en_<route>_sh3a` / `_sh3b`, `attract_r14_orig*`; `analysis/calltrace/`;
   `analysis/attract/orig_a.tsv`; `analysis/memdump/clutref_*`.
 - `analysis/cache/pc-plus-us`; `bof3/DAT/<tag>.*.DAT`; `analysis/font/`; `analysis/shots/` - every capture and sheet
@@ -716,6 +447,23 @@ Local only, gitignored, worth keeping:
 ## Traps already paid for
 
 _One line each, with a pointer. Add when something costs more than an hour._
+
+- **Never run anything unattended that can show a dialog** (2026-10-27): a launcher copy without `bof3x.exe` stops
+  on a modal "bof3x.exe is missing" dialog, and the release launcher given a hosted-only switch shows another (the
+  736 s one of 2026-10-26); nobody clicks it, the run waits and the game lock stays held. Before a chain starts,
+  check its launcher folder holds the four files (How to run things, the self-tests line) and use
+  `bof3x-launcher-dev.exe` for `BOF3X_ORIGINAL` / `BOF3X_SHADOW` runs.
+- **`exe_tables.py`'s placement rounds are a budget of 8, and the European builds already use 7** (2026-10-27,
+  [`exe-import-engine.md`](exe-import-engine.md) 7.11): a new placement stage run as a round of its own took the
+  neighbour stage's round and 85 places went silently on the three European builds (area 98's exit alternative
+  among them). Share an existing round; `data_diff.py run` is what caught it.
+- **A disc-only install run from a worktree needs `BOF3X_RECIPE_SAVES`** naming the main checkout's
+  `tools/recipe_saves` (2026-10-27, [`spell-sweep.md`](spell-sweep.md) 10): `recipe_saves.py` finds those saves only
+  for a game folder that is the main checkout's, so every run ends at once with "no recipe save".
+- **`spell_sweep.py --kind` with a boss kind crashes in the sprite draw** (2026-10-27,
+  [`spell-sweep.md`](spell-sweep.md) 11): a boss kind (animation bank `0xFFFF`) set up as a random encounter reads
+  address 0 in `sprite_draw.cpp` - a state the game never makes, harness misuse, not a defect. Boss kinds come from
+  the owner's routes cut at their battle.
 
 - **A DLL-side table that holds a DirectSound buffer must be told before `Snd_LoadBank` releases it** (2026-10-23,
   D354): a bank reload at a battle's end freed a buffer DIV-0171's voice table still held, and the next frame's
@@ -1018,7 +766,7 @@ _One line each, with a pointer. Add when something costs more than an hour._
 
 ## Waiting on someone else
 
-- **The owner:** [`owner-review.md`](owner-review.md) - its sections from the newest (item 1), then the older eye, ear and
+- **The owner:** [`owner-review.md`](owner-review.md) - its sections from the newest (item 13), then the older eye, ear and
   play checks and open calls. The owner has played a PSX-only install (the reports of 2026-10-16); nobody has
   played a PSP-only one.
 - **TheRealBiggs** - not yet contacted ([`STATUS.md`](STATUS.md) obligations).

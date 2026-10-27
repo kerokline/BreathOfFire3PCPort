@@ -122,6 +122,50 @@ NAME_RULES = (
     ("port-relaid", r"(DriftUV|PlateAnims|Record8Anims)$"),
     ("language", r"(Messages?[AB]?|Text|TextPointers|Names|Labels?|Verbs|Lines|Format|Glyph|Font|Choices|ChoiceMessages|ScriptMessages)$|^NameTable_|^Pause_Lines|^Commu.*Names"),
 )
+# The `language` name rule speaks for the symbol's own bytes only (name_extent), not for
+# whatever unnamed data follows it up to the next symbol: past the extent a segment is
+# classed by its readers and the disc search as any unnamed one. Before 2026-10-27 the rule
+# ran to the next symbol and reached area 6's descriptor (Area05_MessagesB+0x648, 7.10),
+# area 9's entry script (Area08_MessageFormat+0x9FA, PSP) and a script operand of
+# the faerie village areas (Area175_ScriptMessages+0x8C3 and on, Western PSX):
+# docs/install-gap-labels.md 9.
+NAME_EXTENT_CLASSES = ("language",)
+
+
+def name_extent(e, pc):
+    """The end of the bytes a [[data]] symbol's name speaks for: ctype x count (one element
+    without a count) when symbols.toml's ctype has a size (exe_twins.CSIZE); a symbol of no
+    or another ctype, or a char array of no count, to its PC string's NUL (inclusive)."""
+    size = exe_twins.CSIZE.get(e.get("ctype"))
+    if size is not None and not ("count" not in e and size == 1):
+        return e["pc"] + size * e.get("count", 1)
+    o = e["pc"] - DATA_LO
+    return e["pc"] + (pc.index(b"\0", o) - o) + 1 if 0 <= o < len(pc) and b"\0" in pc[o:] else e["pc"] + 1
+
+
+def name_class(e, lo, pc):
+    """(class, why) by the symbol's name for a segment starting at `lo` under symbol `e`,
+    or (None, None)."""
+    for c, rx in NAME_RULES:
+        if re.search(rx, e["name"]):
+            if c in NAME_EXTENT_CLASSES and lo >= name_extent(e, pc):
+                return None, None
+            return c, "by its symbol's name"
+    return None, None
+
+
+def name_cuts(data, pc):
+    """The extents' ends of the symbols NAME_EXTENT_CLASSES' rules match: where a segment
+    is cut so that the bytes past a symbol's own are classed on their own. Not inside a
+    REGIONS row: there the row decides, and a cut would only split its segment."""
+    out = set()
+    for e in data:
+        for c, rx in NAME_RULES:
+            if c in NAME_EXTENT_CLASSES and re.search(rx, e["name"]):
+                end = name_extent(e, pc)
+                if region_class(end)[0] is None:
+                    out.add(end)
+    return out
 
 # A word recipes/exe-pointers.tsv calls a pointer inside a region exe_own.cpp
 # holds is text (a pointer-shaped run of four characters no disc places): the
@@ -232,6 +276,7 @@ def cmd_measure(a):
     pc, _ = exe_tables.pc_data(os.path.join(a.game, "BOF3.exe"))
     data, funcs = data_symbols()
     dpcs, dnames = [e["pc"] for e in data], [e["name"] for e in data]
+    cuts = sorted(set(dpcs) | name_cuts(data, pc))
     fpcs = [f["pc"] for f in funcs]
     ptr = pointer_bytes()
     src = exe_tables.src_addresses()
@@ -258,7 +303,7 @@ def cmd_measure(a):
         img, owner, ranges, _, _ = exe_tables.disc_built(disc, bid, pointers, refused[bid])
         blob = disc_blob(disc)
         rows = []
-        for lo, hi, nz in segments(pc, owner, ptr, dpcs):
+        for lo, hi, nz in segments(pc, owner, ptr, cuts):
             k = bisect.bisect_right(dpcs, lo) - 1
             sym, base = (dnames[k], dpcs[k]) if k >= 0 else ("?", DATA_LO)
             names = sorted({n for s, e, n in src_iv if s < hi and e > lo})
@@ -272,11 +317,8 @@ def cmd_measure(a):
             pin = sum(ptr_in[t] for t in ptr_targets[bisect.bisect_left(ptr_targets, lo):bisect.bisect_left(ptr_targets, hi)])
             found, tried = on_disc(pc, lo, hi, ptr, blob)
             cls, why = region_class(lo)
-            if cls is None:
-                for c, rx in NAME_RULES:
-                    if re.search(rx, sym):
-                        cls, why = c, "by its symbol's name"
-                        break
+            if cls is None and k >= 0:
+                cls, why = name_class(data[k], lo, pc)
             if cls is None:
                 if not names and not fns and not pin:
                     cls, why = "unread", "no src/ name, no instruction of Capcom's, no pointer word reaches it"

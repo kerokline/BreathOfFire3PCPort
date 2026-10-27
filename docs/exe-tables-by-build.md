@@ -107,7 +107,26 @@ python tools/exe_twins.py map analysis/exe_twins/*.json      # writes exe_maps/<
 Every PC byte goes to the longest run holding it (on a PSP disc the ELF's
 runs first: the copy the PSP's code reads), runs with one displacement merge
 across gaps of at most 64 bytes, and pass 2's single-table places are added
-where no segment holds them. Columns: `pc`, `pc_end`, `file`, `section`,
+where no segment holds them.
+
+**Equal holders** (the tie-break, 2026-10-27,
+[`install-gap-labels.md`](install-gap-labels.md) 9.2). Among runs of one
+length the first by file rank wins (boot, `GAME.EMI`, `BATTLE.EMI`, then by
+name). That choice is arbitrary when several area overlays hold a stretch
+equally, and it used to cut a segment: area 178's run ends one byte before a
+release difference, the 300 bytes after it are held at one address by six
+area files, and the first by name (`AREA177.EMI`) took them, so the 64-byte
+bridge, which works only inside one file and displacement, could not reach
+the byte. The rule: when the byte's run would start a new segment, and the
+segment just before it (inside the bridge's 64 bytes) is a place that holds
+the same run equally, that segment continues in its own file and
+displacement. "Holds equally" is one of two things the survey measured: a
+file of the run's own copy group (the files holding its seed at the same
+address; the survey compares each one's bytes over the run's whole span,
+pointer words wild, and keeps the ones that agree as the run's `also`), or
+another run with the same span, class and length (a copy at another
+address). It never overrides the longest run or the PSP's ELF-first order;
+it only replaces the name order between equals. Columns: `pc`, `pc_end`, `file`, `section`,
 `addr`, `agree` (bytes compared equal), `copies`, `how` (`run`, `search`,
 `neighbour`, `search+neighbour`, `neighbour-file`, `name`). `tables.py check`
 validates each file: a known build, segments in order, inside the data, not

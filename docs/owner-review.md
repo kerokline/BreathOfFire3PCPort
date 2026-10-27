@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-23 evening, the sound-layer round's section at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-27, the away day's lines under "To review in play", "Decisions the measurements raised" and "Parked"; the sound-layer round's section at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -13,7 +13,7 @@ Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
 
-## 2026-10-23 evening, the sound-layer round (built on `sound/round`, not heard)
+## 2026-10-23 evening, the sound-layer round (merged as PR #122, not heard)
 
 The PlayStation's positional sound, pause and cuts back in the port's DirectSound layer
 ([`sound-layer-round.md`](sound-layer-round.md); DIV-0169..0175, each `BOF3X_ORIGINAL=<switch>` for the PC's
@@ -769,6 +769,31 @@ checkout's `analysis/` (never in the tree).
 
 ## To review in play
 
+**The away day of 2026-10-27** (`away1027/integration`, unpushed; [`HANDOFF.md`](HANDOFF.md) item 1):
+
+- **Area 9 on a PSP-built install** ([`install-gap-labels.md`](install-gap-labels.md) 9): its entry script was
+  zero on both PSP-built images until today and is now placed from the PSP's own `AREA009.EMI`. What the zero
+  did in play was never seen. A look at area 9 after the next PSP-built install (the importer's staleness
+  prompt names `exe`).
+- **The fishing spots 89 and 129 on a US-only install** ([`exe-import-engine.md`](exe-import-engine.md) 7.11):
+  they open the fishing screen now, frame for frame as on the PC, but the evidence is a crafted save; no
+  recorded route reaches the sea or river spot. A play to one, or a recording of the walk there.
+- **The fishing headings in your `game\` build:** if EQUIP, LURE and GUIDE sit left in their bars instead of
+  centred, that folder's `en-US` overlay predates DIV-0069's fishing tag 3 (the tooling install `bof3\`'s does:
+  dated 2026-10-13 against the tag's 2026-10-18; 7.11's follow-on). Rebuilding the language fixes it; the
+  tooling install's was rebuilt the same evening. Your `game\` overlay (2026-10-25) differs from it in
+  `FIRST.DAT` alone; the launcher's upgrade brings it current.
+- **The bit-15 pairs** ([`stp-census.md`](stp-census.md) 6.4), under
+  `C:\Users\kerok\bof3x-runs\away1027\stp\pairs\`, the legend zooms first:
+  `dolphin_f00500_legend_zoom_off_top_on_bottom.png` and `caught_f00600_legend_zoom_off_top_on_bottom.png`
+  (DIV-0160 off above, on below: the world map's button legend in its palette colours, not half-blended),
+  then the whole frames `*_off_on_diff.png` in the same folder.
+- **The sweep by enemy kind** ([`spell-sweep.md`](spell-sweep.md) 11):
+  `C:\Users\kerok\bof3x-runs\away1027\sweep\kind_sheet.png`, the 26 enemy skills cast by their own kind.
+- **To record:** seven boss-only skills have no route to a fight that has them - Head Cracker (Shroom, area
+  119), Holocaust and Venom (Myria, 198), Corona (Gaist, 120), Main Cannon (Ammonite, 134), Paralyzer from the
+  Chimera (197) and Eye Beam (Gazer, 77). Each needs a route to that boss, or a save before it.
+
 **State 3, `bof3x.exe` (PR #53, 2026-10-12):** the icon generated from the whelp
 portrait (DIV-0095, [`exe-icon.md`](exe-icon.md)), the window and its DPI scale
 (DIV-0094, DIV-0036 amended) - watched only through the end batch's disc-only
@@ -900,7 +925,7 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
    area 113's reward, area 135's box, chapter 11 step 47, areas 57 / 108 /
    145's shared handler) stop the music themselves first and are not the
    case.
-2. **The layering fix in play** (DIV-0071, HANDOFF item 0000000): a town,
+2. **The layering fix in play** (DIV-0071, a HANDOFF item of 2026-10-03): a town,
    stairs, a bridge, followers close behind, with the default on.
 3. **TILE_1 drawn as one point** ([`d3d-rest.md`](d3d-rest.md) D-a). Shown to
    the owner 2026-10-06 from the `whelpBoss` route's frame 11880 (the dream
@@ -973,7 +998,7 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
   rules, to be verified against the code: a Volt hit by an electric attack
   should change mode and give extra EXP; a Thunder gives about 16; expected
   about 84 x 3 + 16 = 308 with the bonus, 156 without, and 78 x 2 = 156. The
-  first report (2026-10-02, HANDOFF item 00000) was held for a route; this is
+  first report (2026-10-02, then a HANDOFF item) was held for a route; this is
   its substitute. **Staged for tomorrow** as a read of the reward path and
   the mode-change op against the PSX twin, then a route for the owner to
   record (brief `plat2/brief_volt.md` in the session-7d0c9683 scratchpad);
@@ -1074,6 +1099,13 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
 
 ## Decisions the measurements raised
 
+- **The faerie village's talk line under a Western layer on the PC install** (2026-10-27, agent `lang`;
+  [`install-gap-labels.md`](install-gap-labels.md) 9.1): one villager's talk script (script 6, areas 175..185)
+  names its message by number, and the Western discs set it to `0x6D` where the PC and the JP disc have `0xE1`.
+  On a Western disc-built install the disc's `0x6D` is right, and the `exe_twins.py` tie-break in flight places
+  it. The open call is the PC install under a Western language layer: its `.data` keeps `0xE1` while the text
+  block is the disc's, so that villager opens the Western block's message `0xE1`, not the `0x6D` the Western
+  release shows (which line that is was not read). Should a Western layer carry this operand too?
 - **The Capcom game values no disc carries** (2026-10-12, NB and IN of the
   disc-only round; [`exe-engine-own.md`](exe-engine-own.md),
   [`disc-only-install.md`](disc-only-install.md) 4): JP 1,622 / US 2,135
@@ -1284,6 +1316,9 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
 
 ## Parked, documented, revisit if ever seen
 
+- **Area 24's descriptor init word `+0x40..+0x42`** (2026-10-27, [`exe-import-engine.md`](exe-import-engine.md)
+  7.11): null on the PC and the five PSX builds, set on both PSPs. Not placed by the descriptor rule, not read
+  further; nothing in play is known to differ.
 - **The `0x91` camp cells** ([`rest_2d.md`](rest_2d.md) L1,
   [`psx-twin-check.md`](psx-twin-check.md)): 91 real cells where the camp
   opens though the compare says refuse; Capcom's on both machines. The owner
