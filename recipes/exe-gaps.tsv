@@ -1299,7 +1299,6 @@ psp-jp	0x6537EA	0x653808	language	language	ConfigScreen_OpenStates+0x116
 psp-jp	0x653815	0x65382D	gap	game-value	ConfigScreen_OpenStates+0x141
 psp-jp	0x65A920	0x65A924	gap	game-value	WardMote_Tilts+0x8
 psp-jp	0x65AAAD	0x65AABB	gap	game-value	TornadoMote_Phases+0x15
-psp-jp	0x65B1D4	0x65B1D7	gap	game-value	ReviveHalo_MoteCounts
 psp-jp	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
 psp-jp	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psp-jp	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
@@ -1522,7 +1521,6 @@ psp-eu	0x6537EA	0x653808	language	language	ConfigScreen_OpenStates+0x116
 psp-eu	0x653815	0x65382D	gap	game-value	ConfigScreen_OpenStates+0x141
 psp-eu	0x65A920	0x65A924	gap	game-value	WardMote_Tilts+0x8
 psp-eu	0x65AAAD	0x65AABB	gap	game-value	TornadoMote_Phases+0x15
-psp-eu	0x65B1D4	0x65B1D7	gap	game-value	ReviveHalo_MoteCounts
 psp-eu	0x65C1B8	0x65C1BC	unread	unread	MagicBallOrb_Shades+0x10
 psp-eu	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psp-eu	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C

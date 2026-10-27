@@ -580,3 +580,45 @@ Not measured, and not needed: a `--peek` of the word per frame would show
 the `0x4000 -> 0x6000` step on the first gauge frame after the poke; the
 sites above are the only writers of the bit in `src/game`, so the reading
 stands without it.
+
+### 9.3 The PSP-only install (2026-10-26 night, D394)
+
+The same six casts on an install built from the PSP-EU disc alone
+(`importer.py build --source <PSP-EU iso> --lang en-150`, then `install
+--base`; root `C:\Users\kerok\bof3x-runs\ss1026\rv\pspeu`, the gap watch
+in `gw_pspeu`): the halo rose **without its motes** (`a076_4.png` against the
+PC install's), and the gap watch reported `ReviveHalo_MoteCounts`
+`0x65B1D4..0x65B1D7` (`gap`, `game-value`) read 5 times before any write by
+`ReviveHalo_Spawn` `0x4BD380`. Section 9's "placed" was the US disc's: on
+the PSPs `exe-gaps.tsv` still listed three of the four bytes as a gap, and
+the twin read's note "the PSPs fill it"
+([`exe-immediate-places.md`](exe-immediate-places.md) 7.3) was a misread of
+that narrower range.
+
+Why ([`exe-immediate-places.md`](exe-immediate-places.md) 7.6): the PSP
+discs carry `BMAGIC/MAGIC077.EMI` with the twin at the same address
+`0x801EF4A8` and its count table at `0x801F049C` equal to the PC's four bytes,
+and `build_twins` finds the twin by its body on both PSPs; but the PSPs'
+`BOOT.BIN` map segment for `ReviveMote_Types` begins one byte early, on the
+zero low byte of a pointer word before the table, so the free region was three
+bytes, two non-zero, under `find_imm`'s four-byte floor. The fix is a floor
+rule: the reader symbol's bytes past the region that another range already
+holds equal to the PC count when the twin's table holds them too; the row
+places on PSP-JP and PSP-EU (DIV-0101 amended). The two neighbouring "the
+PSPs fill it" notes are true: `AirRaidImage_ShadeSteps`' four bytes and
+`WardMote_Tilts`' first byte are the PSPs' `BOOT.BIN` map's (equal to the
+PC's), the tilts' other seven an `immref` row.
+
+The check: the PSP-only install rebuilt from `fix/sweep-psp-halo` (root
+`C:\Users\kerok\bof3x-runs\ss1026\psp`), abilities 76 and 77 with Ryu
+fallen. The gap watch over the two runs: 3 of 219 ranges read (220 before:
+the row is no longer one it guards), `ReviveHalo_MoteCounts` gone from the
+report, the one read before a write the empty save slot as in section 9. The
+compare against the PC install's section-9 runs (`abc_compare.py`,
+`cmp_076` / `cmp_077`): `a076_0..5` and `a077_0..5` **differ nowhere** -
+the halo frames `a076_3` / `a076_4` that differed in the halo region before
+(boxes `176,28..288,108` and `132,8..320,120`, 22,842 and 37,432 pixels)
+are the PC's to the pixel, the motes rising over Ryu; only the list shot's
+two small boxes (`224,72..244,92`, `224,180..244,200`: the PSP's own icons)
+stay, as on every PSP-built install. Ryu stands after with 250 and 999 as
+in the table.

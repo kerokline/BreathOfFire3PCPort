@@ -644,8 +644,11 @@ def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=
     holds the region's bytes in a section of the twin's file - every number byte
     from the operand to the region's end (or the section's end, or the reader
     symbol's declared end in `data_ends` where the bytes past it differ) equal
-    to the PC's, four bytes or more of which two non-zero, or the whole region's
-    non-zero bytes (three, or two at the section's end); or an `imm` row where
+    to the PC's, four bytes or more of which two non-zero (the reader symbol's
+    bytes past the region that another range already holds equal, and the twin
+    too, count: the PSPs' map and ReviveHalo_MoteCounts' fourth byte), or the
+    whole region's non-zero bytes (three, or two at the section's end); or an
+    `imm` row where
     the twin's stores of constants rebuild every non-zero byte of the region,
     two elements or more. A region two different places fit is left
     (ambiguous), as is every region nothing fits. `stats`, a Counter, counts
@@ -743,6 +746,20 @@ def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=
                         span = [x for x in range(min(a_op, lo), end) if x not in ptr]
                         agree = len(span)
                         agree_nz = sum(1 for x in span if pc[x - DATA_LO])
+                        # the symbol's bytes past the region that another range already holds equal to
+                        # the PC count for the floor when the twin's table holds them too: the PSPs'
+                        # BOOT.BIN map takes ReviveHalo_MoteCounts' fourth byte (a zero, the low byte
+                        # of a pointer word before ReviveMote_Types), leaving three of the four under
+                        # the floor; the row placed stays the region's (docs/exe-immediate-places.md 7.6)
+                        if ok and end == hi and sym_end is not None and sym_end > hi:
+                            for x in range(hi, sym_end):
+                                o = addr + (x - a_op) - b2
+                                if not 0 <= o < len(blob2) or owner[x - DATA_LO] is None or blob2[o] != pc[x - DATA_LO]:
+                                    break
+                                if x in ptr:
+                                    continue
+                                agree += 1
+                                agree_nz += 1 if pc[x - DATA_LO] else 0
                         # the floor: four bytes of which two non-zero - or a whole region whose every
                         # non-zero byte agrees, the row anchored by the twin's address: three or more
                         # (BoneDanceShake_Counts, three beat lengths and a zero: issue 149), or two

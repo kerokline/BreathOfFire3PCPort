@@ -97,6 +97,12 @@ hosted cross form).
      play. Benediction is not a revive (the living are brightened, Ryu stays fallen with `0x2000` added).
      **Owed the owner's eye / the PSX twin:** the green popup over Ryu reads 543 where Raise Dead leaves 250;
      Ammonia leaves status `0x2000` with HP 1 (both installs the same, so ours either way).
+   - **The PSP-only install's halo had no motes** (D394, [`spell-sweep.md`](spell-sweep.md) 9.3,
+     `fix/sweep-psp-halo`): `exe-gaps.tsv` still listed three of the row's four bytes on the PSPs - the twin
+     read's "the PSPs fill it" was a misread; the PSPs' `BOOT.BIN` map takes only the fourth byte, one byte
+     early for `ReviveMote_Types`, and the three left were under `find_imm`'s floor. The floor now counts the
+     symbol's owned tail ([`exe-immediate-places.md`](exe-immediate-places.md) 7.6), the row places on both PSPs,
+     and the rebuilt PSP-only install draws the motes. Air Raid's and Ward's PSP notes checked true.
    **Next:** a PR of `fix/sweep-wave` (built, both self-tests pass, checks 0 errors). Left from the sweep: a
    sweep by enemy kind; Ward's tilts by eye; the two revive questions above against the PlayStation.
    Worktrees `ss1026\wt_par`, `wt_sc`, `wt_howl`, `wt_fore`, `wt_wave` and their roots are removable after.

@@ -7351,6 +7351,21 @@ designed in rather than bolted on.
   fields are confirmed regional (the Western discs hold other values) and
   stay the owner's call; `TornadoMote_Phases+0x10` is the Identify panel's
   English labels, a language row.
+- Amended 2026-10-26 night (D394, the spell sweep's PSP-only run;
+  [`exe-immediate-places.md`](exe-immediate-places.md) 7.6; a worktree off
+  `fix/sweep-wave`): the `immref` rule's floor counts the reader symbol's
+  bytes past the region that another range already holds equal to the PC,
+  when the twin's table holds them too (the owned tail). The PSPs'
+  `BOOT.BIN` map takes `ReviveHalo_MoteCounts`' fourth byte, a zero, one
+  byte early for `ReviveMote_Types`, and the three left were under the
+  four-byte floor though the PSP discs' `MAGIC077.EMI#3` holds the twin and
+  the table equal to the PC's; the halo rose without its motes on a
+  PSP-only install. The row now places on PSP-JP and PSP-EU
+  (`0x65B1D4..0x65B1D7`), the only recipe change: `gap` rows PSP-JP 22 to 21, PSP-EU 21 to 20, the PSX five
+  unchanged to the byte;
+  `placed_differ` unchanged; `exe_tables.py check` with the seven discs 0
+  errors. Verified by the sweep's Raise Dead and Resurrect on the rebuilt
+  PSP-only install (the gap watch and the halo frames against the PC's).
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 

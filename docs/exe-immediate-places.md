@@ -370,9 +370,9 @@ records the first reader's row.
 | `EffectKind18Sub21_States+0x8` | `0x65E330..0x65E333` | `WORLD03/AREA142.EMI#13` `0x801F3118` `EffectKind18Sub52_Draw` | all 7 |
 | `Area121_BandHeights` | `0x624720..0x624723` | `WORLD03/AREA121.EMI#14` `0x801F6390` `_DrawTopBand` (tail floor) | PSX 5 |
 | `Scena02_EffectX` | `0x660E44..0x660E50` (the run begins four zero bytes before the operand: `at` -4) | `SCENARIO/SCENA02.EMI#0` `0x801FCD14` `_PlaceEffect70` | all 7 |
-| `AirRaidImage_ShadeSteps` | `0x65A698..0x65A69C` | `BMAGIC/MAGIC015.EMI#0` `0x801F0864` `_Bounce` (fold) | PSX 5 (the PSPs fill it) |
+| `AirRaidImage_ShadeSteps` | `0x65A698..0x65A69C` | `BMAGIC/MAGIC015.EMI#0` `0x801F0864` `_Bounce` (fold) | PSX 5 (the PSPs' `BOOT.BIN` map holds the four bytes; 7.6) |
 | `LinkedObjectD_Amounts` | `0x660CCC..0x660CD0` | `ETC/GAME.EMI#0` `0x801AE90C` `_ShowAmount` (US `0x801AD90C`, PAL `0x801ADB90`) | JP, US, EU-en, FR, DE, PSP-JP |
-| `ReviveHalo_MoteCounts` | `0x65B1D4..0x65B1D8` | `BMAGIC/MAGIC077.EMI#3` `0x801EF4A8` `_Spawn` | PSX 5 (the PSPs fill it) |
+| `ReviveHalo_MoteCounts` | `0x65B1D4..0x65B1D8` (PSPs `..D7`) | `BMAGIC/MAGIC077.EMI#3` `0x801EF4A8` `_Spawn` | all 7 (the PSPs since 7.6; the pass wrote "the PSPs fill it", a misread) |
 | `WardMote_Tilts` | `0x65A918..0x65A920` (PSPs `+0x1..`) | `BMAGIC/MAGIC043.EMI#3` `0x801EF72C` `_PushMatrix` (symbol end) | PSX 5, PSP-JP, PSP-EU |
 
 Two rows of every Western PSX build changed their named twin without moving:
@@ -435,11 +435,73 @@ bytes / PC non-zero bytes (`gapdiff.py`):
 | psp-eu | 27 / 296 / 156 | 21 / 240 / 119 | 9 -> 16 | +37 |
 
 The rows that closed are exactly 7.3's; the one row that opened on every
-build is `WardMote_Tilts+0x8` (7.4). `placed_differ` is unchanged on every
+build is `WardMote_Tilts+0x8` (7.4). Since 7.6 (2026-10-26 night) psp-jp reads
+21 / 267 / 139 and psp-eu 20 / 237 / 117, `imm_rows` 18 and 17:
+`ReviveHalo_MoteCounts` closed on both. `placed_differ` is unchanged on every
 build. `exe_tables.py check --game --disc` x7: 0 errors (every new row decoded
 on its disc against `BOF3.exe`); `exe_imm.py selftest` 0 problems;
 `psp_exe.py check` OK; `importer.py check` 0 errors. No other recipe moved.
 Nothing played.
+
+### 7.6 The PSP-only install's revive halo (2026-10-26 night, D394)
+
+The spell sweep's PSP-EU-only run ([`spell-sweep.md`](spell-sweep.md) 9.3)
+drew the revive halo without its motes, and its gap watch read
+`ReviveHalo_MoteCounts` `0x65B1D4..0x65B1D7` before any write. 7.3's "PSX 5
+(the PSPs fill it)" was a misread of `exe-gaps.tsv`'s PSP range, which is
+three bytes where the PSX builds' was four: the PSPs fill only the fourth.
+
+What the PSPs hold, read on this branch (`diag.py` / `diag2.py` under
+`C:\Users\kerok\bof3x-runs\ss1026\psp`, addresses and counts only):
+
+- Both PSP discs carry `BMAGIC/MAGIC077.EMI` (and MAGIC076, the same image)
+  with section 3 at `0x801EEC00`, `0x36A4` bytes, as the PSX discs do;
+  `build_twins` finds `ReviveHalo_Spawn`'s psx-jp twin by its body
+  (signature 82 words) exactly once in it, at the same `0x801EF4A8`, on
+  psp-jp and psp-eu. Its lui pair forms `0x801F049C` (insns `48+50`), and
+  the four bytes there equal the PC's `ReviveHalo_MoteCounts` on both. So
+  the pairing was never missing: the twin, the table and the reader all
+  resolved. (The PSP's own `BOOT.BIN` holds no copy of the body: the
+  signature finds nothing in it on either disc. The machinery places from
+  the EMI, so nothing else was needed.)
+- What took the fourth byte: the PSPs' `BOOT.BIN` map segment that places
+  `ReviveMote_Types` (`0x65B1D8..`) begins at `0x65B1D7`, one byte early, on
+  a zero byte that is the low byte of a pointer word before the table
+  (the map's `BOOT.BIN` address, the loaded image's - the file offset is `0x80` more: psp-eu `0x2F56EB`, psp-jp `0x2F555B`). The region
+  `imm_regions` gave `find_imm` was `0x65B1D4..0x65B1D7`: three compared
+  bytes, two non-zero, under the four-byte floor and not a section tail, so
+  `nothing fits` - and the row stayed a gap with the counts zero.
+- The two other "the PSPs fill it" notes are true. `AirRaidImage_ShadeSteps`
+  `0x65A698..0x65A69C`: the PSPs' `BOOT.BIN` map holds all four bytes
+  (psp-eu `0x2F4B38`, psp-jp `0x2F4998`, the same neighbourhood as MAGIC003's data in [`install-gap-labels.md`](install-gap-labels.md) 4.5), equal to the PC's, no
+  `immref` row needed. `WardMote_Tilts`: the map holds `0x65A914..0x65A919`
+  (the first tilt byte, a zero; psp-eu `0x2F4C0A`, psp-jp `0x2F4A6A`) and
+  the `immref` row `0x65A919..0x65A920` (`at` 1) the other seven; the image
+  equals the PC's over the eight.
+
+**The fifth rule (`find_imm`): the owned tail counts for the floor.** When
+the compare reaches the region's end and the reader symbol's declared
+extent runs past it, the bytes from there to the extent that another range
+already holds equal to the PC, and that the twin's table holds equal too,
+add to the floor's counts (`agree`, `agree_nz`); the first byte that is
+unowned or differs ends the walk. The row placed stays the region's
+(`disc_image` writes only what nothing else filled), so `0x65B1D4..0x65B1D7`
+places on the PSPs with pc_end `0x65B1D7`, the PSX rows unchanged at
+`..0x65B1D8`. The floor itself is unchanged: four bytes compared, two
+non-zero, now counted over the symbol where the map already proved the
+rest.
+
+After (the chain of section 6 on this branch over the seven discs;
+`gapdiff.py`'s `gap` rows / bytes / PC non-zero): psp-jp 22 / 270 / 141 ->
+21 / 267 / 139, psp-eu 21 / 240 / 119 -> 20 / 237 / 117, `imm_rows` 17 -> 18
+and 16 -> 17; the five PSX builds unchanged to the byte (`exe-imm.tsv` gains
+the two rows and loses nothing; `exe.toml`'s two PSP sections move by one
+range and three `placed_equal` bytes each); `placed_differ` unchanged.
+`exe_tables.py check --game --disc` x7: 0 errors; `exe_imm.py selftest` 0
+problems; `psp_exe.py check` OK; `importer.py check` 0 errors. 7.5's table
+reads with these two lines for the PSPs. Played: the PSP-only install
+rebuilt from this branch, Raise Dead and Resurrect over a fallen Ryu
+([`spell-sweep.md`](spell-sweep.md) 9.3).
 
 ## For the other files
 

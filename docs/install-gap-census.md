@@ -213,7 +213,7 @@ Columns:
 | `WardMote_Tilts` | `0x65A918..0x65A924` | game-value | all 7 | 1 / 5 | `WardMote_PushMatrix` | tilt 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
 | `BoneDanceShake_Counts` | `0x65AA64..0x65AA68` | game-value | all 7 | 1 / 3 | magic C2 | shake count 0: **the D.Zombie's Bone Dance never ends on a disc-built install** (issue #149, seen 2026-10-25) | **PLACED 2026-10-25** - an `immref` row on all 7 (`MAGIC057.EMI#3`, the whole-region floor of exe-immediate-places.md 3) |
 | `TornadoMote_Phases` | `0x65AAA8..0x65AAD0` | game-value | all 7 | 1 / 25 | **`Identify_DrawEnemy` / `_DrawMember` / `_DrawItem`** (0x65AAC4.. the question marks); `TornadoMote_Task` below | **the Identify panel's `?` marks blank** (D278, captured 2026-10-13); JP and PSP too by this table | **NEEDS FIX** - **P1**: D278's two `twin` rows (US `0x801F0B88` 4 bytes, `0x801F0B8C` 8), found, not built; the rest P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
-| `ReviveHalo_MoteCounts` | `0x65B1D4..0x65B1D8` | game-value | all 7 | 1 / 2 | magic S17 | 0 motes | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
+| `ReviveHalo_MoteCounts` | `0x65B1D4..0x65B1D8` | game-value | all 7 | 1 / 2 | magic S17 | 0 motes: **the revive halo without its motes on a PSP-only install** (D394, the spell sweep 2026-10-26) | **PLACED** - an `immref` row from `MAGIC077.EMI#3` on the PSX 5 (2026-10-26, exe-immediate-places.md 7.3) and on the PSPs (2026-10-26 night, 7.6: the floor counts the symbol's bytes the `BOOT.BIN` map already holds) |
 | `Magic087_RisePhases` | `0x65B528..0x65B52C` | game-value | all 7 | 1 / 4 | `Magic087_RiseRun` | phase 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
 | `Fx106_ShardTables` | `0x65B8F4..0x65B918` | disc-unplaced | PSX (5) | 1 / 18 | `Fx106_DrawSpark` | shards from a zero table | **NEEDS FIX** - P2, `twin` by byte search (windows on the disc): 3 of 3 |
 | `WhelpBreath_GlowAngles` | `0x65BB24..0x65BB28` | game-value | all 7 | 1 / 3 | magic S27 | angle 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
@@ -649,7 +649,8 @@ sign table), `Area121_BandHeights` (PSX 5; a section-tail floor of three
 compared bytes, two non-zero), `Scena02_EffectX`, `AirRaidImage_ShadeSteps`
 (PSX 5; the index-fold shape, the reader's operand two bytes below the symbol),
 `LinkedObjectD_Amounts` (all but PSP-EU, whose `GAME.EMI` pair addresses other
-bytes), `ReviveHalo_MoteCounts` (PSX 5), `WardMote_Tilts` (the row ends at the
+bytes), `ReviveHalo_MoteCounts` (PSX 5 then; the PSPs the same night, D394 -
+the floor counts the symbol's fourth byte the PSPs' map holds), `WardMote_Tilts` (the row ends at the
 symbol's `short[4]` extent; the four bytes after, `02 00 06 00`, are MAGIC044's
 and stay a gap as `WardMote_Tilts+0x8`, no reader). `gap` rows / bytes / PC
 non-zero: psx-jp 31 / 367 / 192 -> 21 / 299 / 147, psx-us 58 / 750 / 539 ->
