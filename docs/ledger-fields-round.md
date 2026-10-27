@@ -203,6 +203,14 @@ none is grown in this one.
    them), or grow the original path in ours for some. The proposal: leave
    them, list them, and let a later round take the ones a player asks for.
 
+**Answered 2026-10-27 (the owner):** call 2, the four presets as proposed.
+Call 3, "anything sensible, as long as it is well documented": the name is
+`BOF3X_OFF` (a comma list of `Switch:` names, the same list syntax as
+`BOF3X_ORIGINAL`, `*` and `-name` included) with the ini key `off=`; stage D
+documents it in [`launcher-settings.md`](launcher-settings.md) and the
+ledger's Entry format. Call 4, leave them: "most of them were not desirable
+/ true fixes". Call 1 open.
+
 ## 7. Ownership, merge order, numbering
 
 | File or area | Owner |
