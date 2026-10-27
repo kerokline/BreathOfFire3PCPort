@@ -153,6 +153,10 @@ A disc-built install: `--game <install's game dir> --env BOF3X_EXEIMAGE=<its cac
 `abc_run.py prepare` ([`abc-harness.md`](abc-harness.md)); then
 `tools/gapwatch.py report <dir> --dll <that run's bof3x.dll>`.
 
+In an `--env` value, `{chunk}` becomes the chunk's tag (`member_013`), so a variable that names an
+output file gets one file a chunk: `--env BOF3X_STPCENSUS=<dir>/{chunk}.tsv` is the bit-15 census of every
+cast ([`stp-census.md`](stp-census.md) 6, 2026-10-27).
+
 `--sibling DIR` before the subcommand names the archival sibling's checkout
 when the tool runs from a worktree that has none beside it (the other row
 tools' option).
