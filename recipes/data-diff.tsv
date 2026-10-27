@@ -4,8 +4,8 @@
 # the image's bytes came from. Keys, verdicts and provenance only - no value (CLAUDE.md rule 1).
 # Every row is listed in recipes/data-known.toml; `data_diff.py check` holds that in CI.
 # views: 860af2bcc8fb016ad04bc8914304bb0ffe7fb7535639846a5628952720e24994
-# image: psp-eu 836b8de1109e22f4917d5c5bd8aae669d44451e08cd1f4c43974bbe223b467e2
-# image: psp-jp 34184245d1aec55e29b3906b123246ef3969fb0200f7bc09e2a5d9365233fc8f
+# image: psp-eu 3d143d22a29e06fff23ed55fb421b1c3f5413f79ee0acc7066a4c6521f46ce61
+# image: psp-jp 3ee878684e9ccd1692f420c54c702530149db5a267c5895452f272a6cfeb30ac
 # image: psx-de 4ce253d2b6c27fdabeefa346283c6ef3f61144c608c27d0bd36960dee20eb6e7
 # image: psx-eu-en 028ff3f667c702fc74ef4d9114c986699e9e380b30aa9325ffa63949a6dfc889
 # image: psx-fr 823464c1d1b20a516aaee2215fa2cdd1ee19384c49ae77fc08ce9565e37b5bc5
