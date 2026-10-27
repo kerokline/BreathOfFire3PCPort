@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-25)
+**Status:** IN PROGRESS (2026-10-27)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -8,104 +8,78 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**Area 135's crash, 2026-10-25, fixed on `fix/area-135-door-crash`** (off `harness/build-diff-prevention`,
-unpushed; DIV-0180; [`door-sweep.md`](door-sweep.md) 4a): the sweep's four crashing doors were a defect of Capcom's
-PC port that a save reaches - area 135's init shows its marker (`Sprite_ObjectsExtra[3]`) in zones 4, 6 and 7 but
-places it only on an entry from zone 1, so a save made in those zones, loaded after a launch, read address 3 through
-the null record (`0x57B844` in Capcom's code, `field_frame.cpp:378` in ours). The init now places an unplaced marker
-by the zone-1 steps first. The eleven stuck doors are event areas' messages and scripts (4b); the sweep now taps
-the confirm button while a change stays pending (`--confirm`) and lists which doors took taps or were moved by an
-event. Re-run over areas 54, 92, 104, 121, 122, 135 on both `us-disc` installs: no door differs, all 23 of area 135
-arrive. Owed: the owner's eye on the marker when a save starts in zone 6 or 7.
+**The away day, 2026-10-27, on `away1027/integration`** (off `main` `e84aaf6d`, the PR #156 merge; four Opus
+agents and a coordinator while the owner was away; unpushed, PR at the owner's word). The evidence is in each
+agent's doc; one line each:
 
-**The every-door sweep, 2026-10-25, built on `harness/every-door`** (off `main` `48511747`, unpushed;
-[`door-sweep.md`](door-sweep.md)): `tools/door_sweep.py` takes every link of every area on two installs - the
-recipe steps `goto` (`Field_ChangeArea`) and `door` (`Area_LinkAt` + `Field_Request` 5, the leader's own two calls
-on a link cell), harness-only, from crafted saves - and compares the arrival area and music; `set.us-disc` is the
-players' US + PSP-EU shape. On the current image the PC and the disc-built install agree on all 1,520 doors driven
-(1,535 planned in 188 areas, the same 15 failing on both) and on all 1,542 links; on the image of `b0fef7a2` (before
-PR #136) it lists 12 doors, all unexplained: 62.1-2 (issue 130), 97.1-2 (issue 134), 98.0 to area 0 with song 2
-(issue 139), 162.1-4 and 163.1-3 - each a port repair already on `main`.
+- **`lang`:** `exe_own.py`'s `language` name rule now covers only its symbol's own bytes. Area 9's entry script
+  places on both PSPs from their `AREA009.EMI`; the byte the rule had hidden in the faerie village (areas 178..182,
+  184, 185, the four Western PSX builds) is talk script 6's message number, which the Western discs set differently
+  (`0x6D`; the PC and the JP disc `0xE1`) - [`install-gap-labels.md`](install-gap-labels.md) 9 and 9.1. The
+  `exe_twins.py` tie-break that places it is in flight on `away1027/twins` (a sixth agent; its result was not in
+  when this was written).
+- **`desc`:** the descriptor-table rule, 7.8's "left" ([`exe-import-engine.md`](exe-import-engine.md) 7.11): each
+  build's own `Area_Descriptors` found by shape, the fishing spots' `+0x30..+0x43` (areas 89 and 129) placed on the
+  five PSX builds, `placed_differ` unchanged, the `fishing-spot-input-flags` hole gone from `data-known.toml`; a
+  crafted save opens both spots on a US-only install frame for frame as on the PC.
+- **`stp`:** the bit-15 census on fourteen more routes and the sweep's member side
+  ([`stp-census.md`](stp-census.md) 6): the world map's button legend is the first family that mixes the two kinds
+  of texel, so DIV-0160's per-texel draw stands and the per-primitive fallback is ruled out; no frame is wrong.
+- **`sweep`:** the enemy and item sides identical on the PC, US-only and PSP-EU-only installs; `--kind` sweeps by
+  enemy kind, 26 ids cast by their own kind, the PC and the US-only install equal to the frame; Nue Stomp cast by a
+  real Nue does not stall (the Gooey's stall was the harness's) - [`spell-sweep.md`](spell-sweep.md) 10 and 11.
+- **The coordinator's batched validation** (self-tests, every check, `data_diff.py`, the recipe chain regenerated
+  once over the seven discs): see the integration's final commit message.
 
-**The static data diff, 2026-10-25, built on `tools/data-diff-gate`** (off `main` `48511747`, unpushed;
-[`data-diff.md`](data-diff.md)): `tools/data_diff.py` decodes the area descriptors, links, zones, music sets and
-every `tables.toml` table from the PC's `.data` and each disc-built image, and fails on a hole or a release
-difference `recipes/data-known.toml` does not list; `check` runs in CI with no game data. On the pre-PR-136 recipe it
-flags areas 62, 97, 162, 163 and 98's alternative; on `main` it found area 6's link index zero on both PSP-built
-images (fixed in the importer, [`exe-import-engine.md`](exe-import-engine.md) 7.10; a PSP-built install needs the
-rebuild) and leaves the fishing spots' `+0x32` byte (89, 129) as the one listed hole.
+No DIV or D number came of it. The owner's calls and looks are in [`owner-review.md`](owner-review.md) (the
+2026-10-27 lines).
 
-**Issue #142, 2026-10-25, fixed on `fix/issue-142-grab-pairs`** (off `main` `c0ba3b64`, PR #145; DIV-0125
-amended): Dauna Mine's dragon-zombie scene drew its puddle as a thin half-blob and its two discs as half-discs.
-Effect kind 0x51 copies the left and right halves of the frame under it into one texture page and textures a
-quad pair per scanline from the two copies; the frame-buffer grab tagged a draw with one grab, the page's most
-recent, so the left quads sampled nothing. A draw now carries two grabs, and the grab's edge test has half a
-cell of slack (a one-pixel seam at the join). Self-tests exit 0; the owner's `minecartToZombieDragon` replay
-matches their PlayStation frames. Open from the same session: Ryu facing the camera and turning during the
-dialogue (deterministic, from the scene's own animation ops), and the reporter's cart (issue #143, the leader
-was Ryu at the failed push; the route pushes twice on both installs) - [`HANDOFF.md`](HANDOFF.md) item 00000000.
-**Issue 139, 2026-10-24, fixed on `fix/issue-139-neighbour-places`** (off `main` `c0ba3b64`, unpushed;
-[`exe-import-engine.md`](exe-import-engine.md) 7.9): a disc-built install's Deis's temple exit led to area 0 at
-(0, 0) - McNeil Village, off the map - because the first exit alternative's eight bytes were a `gap` the image
-zeroes, though the disc carries them between two placed runs whose displacements differ by the port's inserted
-word. The importer now tries every unplaced run at its placed neighbours' displacements (and shifted by one or two
-words), placing what agrees byte for byte; 10 to 20 gap rows close per build, no placed byte moves, the audit of
-the rest is the rule itself. A player's install must be rebuilt (the launcher's staleness prompt).
+**Merged since the reading-row round, everything through PR #157** (`origin/main` `0ba0f276`):
 
-**Issues 130 and 134, 2026-10-24, fixed on `fix/issue-130-descriptor-places`** (off `main` `f472072a`, unpushed;
-[`exe-import-engine.md`](exe-import-engine.md) 7.8): a disc-built install lost the exits of the house near Maekyss
-Gorge and the cave entrances at Mt. Zublo because the importer never placed those areas' descriptors - the port
-relaid them by one word, the pointer votes tied, and the link-count word was zero and classed `unread`. Tied
-data-pointer places are now tried one by one; four descriptors placed on every PlayStation build, three holes left
-(the two fishing spots and the Freighter). A player's install must be rebuilt (the launcher's staleness prompt).
+- **The spell sweep** (PR #155, [`spell-sweep.md`](spell-sweep.md)): `tools/spell_sweep.py` casts every ability,
+  enemy-only skill and consumable in the `combat` route's fight made endless, six shots a cast, with the gap watch on
+  a disc-built install. **Its fix wave** (PR #156, `main` `e84aaf6d`): Paralyzer's crash through a null cue table
+  (D102, DIV-0183), Super Combo's prompts on disc-built installs (label group 24, D393), the harness's Howling stall
+  (D391), Foretell's blank box settled as the game's design, the effect, boss and scene `game-value` rows read at
+  their twins and twelve placed ([`exe-immediate-places.md`](exe-immediate-places.md) 7), the revives over a fallen
+  member, and the PSP-only install's revive halo (D394) and Simoon's dusts (D245).
+- **The ledger-fields and relocatable-image rounds staged** (PR #157, docs only;
+  [`ledger-fields-round.md`](ledger-fields-round.md), [`relocatable-image-round.md`](relocatable-image-round.md)):
+  not launched.
+- **Build-difference prevention** (PR #147, `main` `95ef451a`): the static data diff
+  ([`data-diff.md`](data-diff.md); `data_diff.py check` in CI, so a recipe regeneration needs a `data_diff.py run`
+  over the seven discs), the every-door sweep ([`door-sweep.md`](door-sweep.md): 1,520 doors driven, the PC and the
+  disc-built install agree), and area 135's crash, Capcom's port reading address 3 through a never-placed marker
+  after a save in zones 4, 6 or 7 (DIV-0180).
+- **Issue fixes:** #149, Bone Dance's beat lengths on disc-built installs and area 108's cart put back at the area's
+  load (PR #151, DIV-0182); #142, the dragon-zombie puddle drawn whole (PR #145, DIV-0125 amended) and Ryu's turning
+  in the Dauna Mine exchange, the port's stale cell-texture cache (PR #148, DIV-0181, D360); #132, Garr's spear over
+  Ryu at the camp (PR #146, DIV-0071 amended); #152, the faerie board's Yes / No tile (PR #154, DIV-0027 amended);
+  #139, #130 and #134, a disc-built install's missing or wrong exits (PRs #144 and #136,
+  [`exe-import-engine.md`](exe-import-engine.md) 7.8, 7.9); #121, the lift stall under instant text (PR #135,
+  DIV-0158's pacing floor, D357) with the console flash's 32-bit wrap (DIV-0178, D358); #118 and #120 (PR #129,
+  D355, D356, DIV-0177); #133, fight 26's turn count (PR #137); #127, the battle banner's Latin count (PR #131). A
+  player's disc-built install needs the rebuild for each importer fix (`importer.py stale` names `exe`).
+- **The rest:** the launcher's text in ASD-STE100 and the Renderer box removed (PR #125, #124); a skill the party
+  can still learn named in blue, off by default (PR #138, DIV-0179); a faster upgrade (PR #150); the Sunder loop
+  (PR #126, DIV-0176, the owner's look taken); **the sound-layer round** (PR #122,
+  [`sound-layer-round.md`](sound-layer-round.md), DIV-0169..0175: the PlayStation's positional sound, pause and cuts
+  back - **nothing heard by the owner**) and the twin-diff remainder beside it (PR #123,
+  [`twin-pairs-check.md`](twin-pairs-check.md)); fix wave 1023 (PR #117, DIV-0161..0168); the PlayStation verdict
+  pass and the twin-diff round two (PRs #115, #116, D335..D347); the bit-15 round (PR #114, DIV-0160,
+  [`stp-blend.md`](stp-blend.md)); Amalgam's melt (PR #112, DIV-0159); faster text (PR #110, DIV-0158).
 
-**The Sunder loop, 2026-10-24, built on `cut/sunder-loop`** (off `main` `2f55de72`, unpushed; DIV-0176
-`SunderLoop`; [`cut-content.md`](cut-content.md) 4, IDEAS I22): at Mt. Myrneg's entry area 51's script gave
-Sunder animation `0x10`, 24 frames and then a hold on the standing frame, over two thousand frames before
-the player reaches the top. One byte of the script now asks for the bank's unused looping cut `0x0F` (the same
-steps, no end jump, a puddle in every frame), so he keeps going until the scene starts. Self-tests exit 0;
-seen in the patched build and by the owner (the cut at the scene's hands-down pose kept, on by default); PR open.
-
-**The sound-layer round, 2026-10-23 evening, built on `sound/round`** (off `main` `300ce67f`, unpushed;
-[`sound-layer-round.md`](sound-layer-round.md)). The twin-diff of 2026-10-23 (PRs #115, #116; fix wave 1023, PR #117)
-left one class of port defect: the DirectSound layer had replaced the PlayStation's positional sound, pause and cuts
-with flat effects and fades. Four groups put them back, each on by default with a `BOF3X_ORIGINAL` switch
-(DIV-0169..0175): the inn's night halts the town's song and resumes it where it stopped after the morning's message
-(D343 - the PC's song had never returned), op `B8`'s song restart, voices panned by their sprite's place, the level
-table and the distance gate, cuts where every one of the 131 `Music_FadeOutStop` sites pairs with a PlayStation
-stop (D347, the owner's ear's call), the one-shot key-off, and D352's window reset. Held with measurements for the
-owner: D350 (34..58 frames on the Western attract), D344 (two recipes save), D340. Found on the way: D353 (region
-drift, settled) and D354 (a DSOUND crash at a bank reload, fixed the same night). The gate: self-tests exit 0, the
-ten-route state hash shows only the pages the entries predict, the WAV dumps the changes they describe, every differing window attributed to its entry by a run with
-that switch off. **Nothing heard by the owner** ([`owner-review.md`](owner-review.md)).
-Beside it, `audit/twins-remainder`: 497 twin markers, 38 wrong propagated pairs retired by a `us_jp.tsv` check
-([`twin-pairs-check.md`](twin-pairs-check.md), D339 amended), and the records audit's typing pass with `codegen_same`
-0 differ, audited.
-
-**The reading-row round, 2026-10-22, built on `localization/second-script`** (off `main` `abf915cc`; the end
-batch on `reading-row/end`; **PR next**, nothing pushed; [`reading-row-round.md`](reading-row-round.md), issue #97,
-IDEAS I21 and I50 built). The dialogue box draws an optional **reading row** over each text row: composed messages
-in kind-18 side chunks keyed by slot, the arena's text never rewritten, two row pairs a page at pen y 2, 9, 21, 28
-(bottom-aligned, the owner's even gap), a reading revealed with its word, F4 hiding the readings
-(`ruby_key=`, `BOF3X_RUBY_KEY`) - [`reading-row.md`](reading-row.md). **Furigana** (DIV-0155): built on the
-player's machine from their `ja-JP` layer by `tools/ruby_build.py furigana`, 33,385 readings in 10,324 area
-messages, 0 dropped, 4,559 pages split (a confirm press each), the selftest 41,664 messages at 0 mismatches
-([`reading-row-builder.md`](reading-row-builder.md)). **A second language** (DIV-0156): every ordered pair of held
-languages, 20 with five, by the census's pairing rule, a composed font chunk per layer, `0x13` drawing an inserted
-name at reading size, the Latin row at 1/2 ([`reading-row-second.md`](reading-row-second.md)). **Mods**
-(DIV-0157): a zip of `mod.toml` and data files, the launcher's Mods tab, *Row above the text* (`ruby=`); the
-furigana readings are the first mod, attached to releases ([`mods.md`](mods.md)). The `msgbox` and `menu_windows`
-fuzzes at 0 mismatches; with no layer the state hash differs from the base tip only by run noise, but the `orig3`
-pairs are stale at the tip for every build (D330). The same afternoon: under a layer a timed box stops for a
-confirm press and the offset-pen / effect pages are composed (the opening scene now shows the row; 281 timed stops
-in the furigana layer, 10,518 messages composed; DIV-0155 / DIV-0156 amended), the dropdown hides behind the Mods
-page's *Extras* toggle (`ruby_ui=`, on with the furigana mod), and `setup` carries saves across a re-run (D331); the second mode re-flows pages, never rows (authored
-breaks kept, a third row to a new page; English over Japanese adds 4,395 pages, D332 fixed).
-Findings D326..D332. **Owed:** the owner's play
-([`owner-review.md`](owner-review.md) 2026-10-22), the readings follow-on group (the agent pass ran 2026-10-22 -
-[`readings-audit.md`](readings-audit.md): 92.3 % of 21,207 words agree, 178 candidate rules for the owner's
-approval; the lexicon and the fugashi compare still to do; D328), SudachiPy for a player's build of the mod (not bundled: the release gate), the `orig3` pairs
-re-recorded.
+**The reading-row round, 2026-10-22, merged as PR #106** ([`reading-row-round.md`](reading-row-round.md), issue
+#97, IDEAS I21 and I50 built). The dialogue box draws an optional **reading row** over each text row: composed
+messages in kind-18 side chunks keyed by slot, the arena's text never rewritten, two row pairs a page at pen y 2, 9,
+21, 28, F4 hiding the readings ([`reading-row.md`](reading-row.md)). **Furigana** (DIV-0155) built on the player's
+machine from their `ja-JP` layer ([`reading-row-builder.md`](reading-row-builder.md)); **a second language**
+(DIV-0156), every ordered pair of held languages ([`reading-row-second.md`](reading-row-second.md)); **mods**
+(DIV-0157), the launcher's Mods tab, the furigana readings the first mod ([`mods.md`](mods.md)). Findings
+D326..D332. **Owed:** the owner's play ([`owner-review.md`](owner-review.md) 2026-10-22), the readings follow-on
+(the agent pass ran, [`readings-audit.md`](readings-audit.md): 178 candidate rules for the owner's approval; the
+lexicon and the fugashi compare still to do), SudachiPy for a player's build of the mod (not bundled: the release
+gate).
 
 **The wide-ring round, 2026-10-21, merged as PR #104** (off `main` `31249d0c`, which took PR #103, a
 cleanup with DIV-0149 and DIV-0150; then PR #105 regenerated the recipes;
@@ -231,7 +205,7 @@ merged as PRs #44 (the unified-data round: the importer, the exe tables by build
 #45 (`loc_build all --discs`) and #46 (the PlayStation's music from the disc, DIV-0087), and the owner's play
 reports of 2026-10-07..08 as DIV-0082..0085. **On 2026-10-10 the four PRs were reviewed and the findings fixed** ([`review-2026-10-10.md`](review-2026-10-10.md),
 merged in PR #47 with the faerie village's text; PR #48 the same day read the PSP-only build). **The afternoon of
-2026-10-10 ran the testing catch-up and built the four no-owner items** ([`HANDOFF.md`](HANDOFF.md) items 0..2,
+2026-10-10 ran the testing catch-up and built the four no-owner items** (HANDOFF's items of that day,
 `cleanup/testing-catchup-1010`): the language and layer self-tests pass, the importer's cache is built and installed,
 the state hash is identical to Capcom's code on every tick (the 2026-10-05 route pairs went stale with the owner's
 saves and were re-recorded); the engine reads the cache (DIV-0089), step 8's engine half is begun, a language layer
@@ -360,7 +334,7 @@ re-derived:
 | 10-08 night | **The unified-data round's step 9, music from the disc, in one cloud session** (`claude/audio-sequence-from-disc-…`, cut from `audio/sequence-from-disc`; [`sequenced-music-plan.md`](sequenced-music-plan.md)): the SPU at the register level from nocash's description alone ([`spu-model.md`](spu-model.md), `src/audio/spu.*`, 431,706 host checks); Psy-Q 3.7's libsnd read from `SLPS_009.90` by address and a sequencer with its semantics ([`libsnd-reading.md`](libsnd-reading.md), `src/audio/seq.*`: `SS_TICK60` at 737.137 samples a tick, reverb Room depth 40 and never changed, the title at sequence volume 97); `tools/seq.py` writing `base/bgm/` from any PSX disc - 166 songs, 81 banks, bank format v2 for the 27 VABs with sparse programs ([`seq-import.md`](seq-import.md), [`seq-format.md`](seq-format.md)); **DIV-0087**, the engine seam at `Music_Decode` with the MP3 path kept whole as the fallback (`BOF3X_CACHE` / `cache=`, `BOF3X_MUSIC` / `music=`; [`music-seq-engine.md`](music-seq-engine.md)). **Measured against Mednafen renders of all 165 songs** (157 made in the cloud, bit-identical to the owner's on the boot): 160 at >= 0.99 of 0.25 s windows once the game's VBlank-interrupt jitter (+-1 sample a tick) is put back, every loop period equal in VSyncs, 112 to the sample; three SPU readings the renders demanded (key-on at sample 3, the 6-sample KON latency, silence past the ADPCM). Found: the 38 bundles are copies of seven `BGM` files, the fanfare plays through the fight's bank on the PSX; no note-off status, no tempo event, CC 6 / 7 / 10 / 99 only; song 21 is silent on the PSX too. | 0 | 10,081 | offline: the host tests, `importer.py check`, `seq.py verify`, the render table; mingw GCC syntax checks of the engine sources; **2026-10-09 at the owner's machine: built with llvm-mingw, `sound` and `'*'` narrow and wide 0 mismatches** (the self-test's once-only oracle corrected to one synth across songs, PR #46). **Not heard yet**: the listen with `BOF3X_CACHE` is owed | [`sequenced-music-plan.md`](sequenced-music-plan.md), [`libsnd-reading.md`](libsnd-reading.md) 9, [`music-seq-engine.md`](music-seq-engine.md) |
 | 10-10 | The faerie village's board and the gene window's tabs in English ([`village-text-scan.md`](village-text-scan.md)): DIV-0064's groups 12..14 - `Data` / `Pick` / `Best` (`BATTLE.EMI`), the board's twenty list slots (`COMMU01.EMI`, repointed), its words `Culture`, `faeries` / `faery`, `Cash` / `Pot` (`COMMU05` / `COMMU02`), the Identify panel's headings gone as the US has none (the owner's wiki capture), its small `ITEM` label back, the sixty faeries' names (`COMMU00`'s table, found by the stats - the port's faeries are the PlayStation's fixed sixty); the list boxes sized to their words as the discs sized them (US / DE `0x50`, FR `0x60`); the draws' Chinese-sized glyph counts widened under a written group, the heading centred clear of the page counter, the culture number moved off the word; **DIV-0088**, the board's `Hunt` / `Clear` / `Build` from each disc's paint of the sprite sheet (`<tag>.COMMU01.DAT` / `COMMU05.DAT`); `tools/faerie_names.py` renaming the faeries in a save (the owner's three, six faeries each); `tools/text_scan.py`, the static scan of the exe's text, and the list of what the overlays still leave | 0 | 10,081 | `magic_s12`, `rest_4a` / `4b` / `4c` / `4e` self-tests 0 mismatches; the owner's four routes replayed under `en-US`; `ledger_check` 0 errors | [`village-text-scan.md`](village-text-scan.md), DIV-0064, DIV-0088 |
 | 10-10 | **The week reviewed and fixed** ([`review-2026-10-10.md`](review-2026-10-10.md); `fix/review-1010`, in the localisation branch's PR): five reviewers over PRs #43..#46, then five agents on the findings - a bank change that aborted the sequencer (voices kept the old bank's tones; the PSX's `SsVabClose` leaves them too), the importer's language layers on Windows (symlinks refused), a start-up Fatal from a plausible ini (text layers chosen from the language exported, one tag list), the SPU's aborts logged and the cache checked at start-up, DIV-0081's shifted rows gated on their stand-in as the docstring said (**51 -> 39 rows**, then 37), `loc_build --discs` English first, DIV-0041's wide bands bounded, the bare language codes retired with an error wherever a language is read (the owner's call, first mapped), and **DIV-0080 without Capcom's coordinates** - no rule reproduces the 72 cells (58 others share their signature), so the walls are an `opt/` layer, `area4-walls`, from the player's Western disc - built, installed and played by default where one is a source, `opt=none` to turn off; the cells' coordinates out of the docs; DIV-0081's 151 and 153 refused too (37 rows), the owner's calls the same day. Counting note: `gen_symbols.py`'s 10,082 counts one `impl` row `inject` does not detour; `inject`'s 10,081 is the number | 0 | 10,081 | the llvm-mingw build; `'*'` narrow and wide from an ini-less launcher copy, exit 0, `inject: 10081 ours`, 0 mismatches; `ledger_check` 87 entries 0 errors; `importer.py check` 0 errors; nothing played | [`review-2026-10-10.md`](review-2026-10-10.md) |
-| 10-10 afternoon | **The testing catch-up and the four no-owner items** (`cleanup/testing-catchup-1010`; [`HANDOFF.md`](HANDOFF.md) items 0..2): `'*'` under ja-JP, `'*,-field_c1'` under en-US, `psp-art`; the cache built and installed; the attract identical to the 2026-10-05 pair with `BOF3X_OPT=none`, the routes identical to Capcom's side the same day (the old pairs stale by the owner's saves, re-recorded); the engine reading the cache (DIV-0089, [`cache-read.md`](cache-read.md)), step 8's data-pointer rebuild and places, `.rdata`'s 44 constants and `BOF3X_EXEIMAGE` ([`exe-import-engine.md`](exe-import-engine.md)), the disc-only language build (DIV-0090, [`loc-build-disc-only.md`](loc-build-disc-only.md)), DIV-0081's second cut and the measurement's open ends ([`music-open-ends.md`](music-open-ends.md)), `verify` on `base/bgm/`, the host suite on Windows and in CI, the launcher's Music / Cache / PSP boxes | 0 | 10,081 | `'*'` 0 mismatches narrow (1,064 lines) | this row's docs |
+| 10-10 afternoon | **The testing catch-up and the four no-owner items** (`cleanup/testing-catchup-1010`; HANDOFF's items of that day): `'*'` under ja-JP, `'*,-field_c1'` under en-US, `psp-art`; the cache built and installed; the attract identical to the 2026-10-05 pair with `BOF3X_OPT=none`, the routes identical to Capcom's side the same day (the old pairs stale by the owner's saves, re-recorded); the engine reading the cache (DIV-0089, [`cache-read.md`](cache-read.md)), step 8's data-pointer rebuild and places, `.rdata`'s 44 constants and `BOF3X_EXEIMAGE` ([`exe-import-engine.md`](exe-import-engine.md)), the disc-only language build (DIV-0090, [`loc-build-disc-only.md`](loc-build-disc-only.md)), DIV-0081's second cut and the measurement's open ends ([`music-open-ends.md`](music-open-ends.md)), `verify` on `base/bgm/`, the host suite on Windows and in CI, the launcher's Music / Cache / PSP boxes | 0 | 10,081 | `'*'` 0 mismatches narrow (1,064 lines) | this row's docs |
 | 10-10 evening | **The MP3 decoder replaced** (`platform/mp3-decoder`, DIV-0091, [`mp3-decoder.md`](mp3-decoder.md)): minimp3 (CC0, `third_party/`) answers the eight decoder entries through the callee table, the seam's shape kept; `BOF3X_MP3_COMPARE` runs both decoders over all 177 MP3s from WinMain (the start-up self-tests have no runtime heap for Capcom's): same frame counts, sizes and restart on every file; **D240** - Capcom's leaves the last frame's count at the end of a stream, so the original plays 26 ms of stale music at every rewind (mirrored, the fix is the owner's); ffmpeg sides with ours to within 1 unit where Capcom's is off by up to 370. D241, the owner's report of battle music running on, catalogued | 0 | 10,081 | `sound` and `'*'` headless narrow and wide; the comparison table; **not heard** | [`mp3-decoder.md`](mp3-decoder.md) |
 | 10-10 evening, later | **The C runtime's remainder** (`crt/allocator` over `platform/mp3-decoder` and `crt/atoi-and-startup`; [`crt-rest.md`](crt-rest.md) 2.6, 2.7; [`crt-startup.md`](crt-startup.md)): `Crt_atoi` exact (an Opus agent: MSVC 6's `atol`, wrapping modulo 2^32, 200,000 rounds against Capcom's), `Crt_sscanf` exact over `Cfg_Load`'s `"%d %d"` (200,000 rounds against Capcom's input engine), `malloc` / `calloc` / `free` the toolchain's as a set - every allocator pair inside one heap by an E8 scan of all 115 call sites, `realloc` reachable only through `_tzset`; the start-up read for state 3 (the x87 control word, the main stack, the exit code to reproduce; the heap, per-thread data, stdio, the environment to drop). **The owner's first start crashed** - minimp3's 13 KB stack scratch on a 16 KB task-stack slice; `Mp3_Decode` runs on its own 256 KB stack since, and `Crt_sscanf` learned the decoder's `%lx@%lx` (the `BOF3X_MP3=original` A/B had lost it) | 5 | 10,086 | `crt_rest` 0 mismatches; `'*'` narrow and wide headless, 0; **seen**: the title and the attract sequence through the MP3s with no cache, three minutes, eight tracks | [`crt-rest.md`](crt-rest.md) |
 | 10-11 | **The launcher's Jukebox** (`launcher/music-player`, [`music-player.md`](music-player.md)): the songs from each source the install has - the PSX disc's through the cache and our sequencer, the PC's MP3s through minimp3 with DIV-0081's loops - by number, looping until stopped, out through `waveOut`; the PSP greyed until its music import (step 5); names from `data/music-names.tsv` (copied beside the launcher; columns for the collector's box titles, which take over; provisional names from the two sources below). Measured for the names: the faerie village's music menu (40 rows, the row-to-song table identical in all eight builds, titles at area text slots `0x271..0x298`) and the zophar PSF rip (100 of 101 files to one song by exact EMI match and the driver's sub-song byte) | 0 | 10,086 | the dialog driven by script: both sources list 166, play, stop, close; **not heard** | [`music-player.md`](music-player.md) |
