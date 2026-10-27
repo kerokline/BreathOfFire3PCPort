@@ -24,6 +24,18 @@ A harness, not a route: every recipe it writes pokes the game's memory (the
      value the fight's enemy has, --enemy-flags, with the bit set); the
      members Defend; the shots follow the input phase as above.
 
+  --kind AREA:SLOT --at X:Z:FLAGS   (with --side enemy) the fight's enemy 0 is
+     that area's slot, so an enemy skill is cast by an enemy that has it: the
+     route is kept to --field-cut (the party in the field), `goto` stands the
+     party in AREA at a link's arrival (door_sweep.py's steps.json), the area's
+     eight encounter rows are poked to SLOT alone, the encounter threshold to 1
+     past the step count, and the leader walks (--walk) until the battle; the
+     set-up then loads the enemy's sprite and animations from the area's own
+     data. Only a kind in a random-encounter row: the boss kinds (animation
+     bank 0xFFFF) are an event battle's, reached by a route that fights them
+     (docs/spell-sweep.md 10, 11). --enemy-odds / --enemy-flags take that kind's
+     odds index (+0x0E) and flag word (+0x12) of its area record.
+
 The id -> name table is the archival sibling's names/abilities.toml read one
 id down (the game's list byte N is the sibling's id N - 1: magic_c2.md 1,
 and the sweep's first shot, Nue Stomp at byte 1); its sections sort the ids
@@ -36,6 +48,7 @@ Usage:
       [--side member|enemy] [--sections "Skills,Attack type spells"] [--ids ..] [--chunk K]
       [--speed 4] [--lang en-US] [--env K=V ...] [--enemy-flags 0x..]
       [--poke "ADDR TYPE VALUE" ...] [--peek "ADDR TYPE NAME" ...] [--sibling DIR]
+      [--kind AREA:SLOT --at X:Z:FLAGS [--walk up,left,down,right] [--field-cut 371]]
   `run` generates a chunk, runs it through input_run.py, reads the launcher's
   bof3x.log, writes results.tsv (id, name, section, status, caster, effect
   handlers, frames) and goes on past a FATAL or FAILED at the id after it.
@@ -103,6 +116,16 @@ EXTRA_ROUND = 0x904B7A   # u8: the EX round's gate - set at a round's end when a
 ENEMY_COMMAND_KIND = 0x105   # u8: BattleEnemy_PickAction's kind (4 an ability), cleared by EnemyOp_CastDoneCost
 ENEMY_COUNT = 0x904AB2
 FIELD_MODE = 0x66C7E8    # u16: 5 in battle
+# --kind: the fight's enemy chosen before the battle loads (docs/spell-sweep.md 11)
+GAME_AREA = 0x904EFC     # u16 Game_AreaNumber: the NNN of the AREAnnn.DAT in play
+FIELD_REQUEST = 0x66C7D8 # u8 Field_Request: 5 asks for an area change, 0 once it is done (door_sweep.py)
+ENC_ROWS = 0x8C5580      # Encounter_Rows: 8 rows of 9 bytes (8 slot kinds, 0xFF none; +8 the weight), loaded with the area
+ENC_SLOT_CHANCE = 0x669CB0   # Encounter_SlotChance: u8 x 8, Encounter_FillSlots' bound for (Rand & 0xF) + 1
+ENC_THRESHOLD = 0x802D40 + 0x134   # ObjTrio +0x134: the leader's steps-to-encounter threshold (Field_EncounterDue)
+STEP_COUNT = 0x905B80    # u16 Field_StepCount: the leader's steps toward it
+ENEMY_DATA = 0x8C55C8    # the area's enemy data, 0x8C a slot (+0x38 four AI rows of 16, +0 the condition)
+ENEMY_DATA_STRIDE = 0x8C
+ENEMY_DATA_ID = 0xF0     # u8 of the enemy record: the area's slot it was set up from (Battle_CopyEnemyData)
 
 # Abilities Skill_CanUse mode 2 refuses unless a byte agrees (battle_window_draw.cpp):
 # 0x14 only while the working record's +0x1E is below 5, 0x8C only at 0 AP.
@@ -190,6 +213,45 @@ def route_steps(path, cut):
             frame += cost
             out.append(line)
     return out, frame
+
+
+def kind_head(route, field_cut, area, slot, at, walk, confirm):
+    """--kind: the route kept to `field_cut` (a frame the party stands in the
+    field, before the route's own walk), then the party stood in AREA at the
+    point `at` (x, z, flags: a link's arrival, door_sweep.py's steps.json) by
+    the `goto` step, the area's eight encounter rows poked to SLOT alone (the
+    weight 2 each), slot 0's chance to 16 and the encounter threshold to 1 with
+    the step count past it, and the leader walked by `walk` (directions held
+    16 frames each, round and round) until the field mode is 5. The battle's
+    set-up then builds enemy 0 from that slot of the area's own data and
+    ENEMYnnn.DAT - its sprite, animations and AI as the game loads them."""
+    head, _ = route_steps(route, field_cut)
+    x, z, flags = at
+    L = list(head)
+    L += [f'until 0x{FIELD_MODE:X} u16 == 2 timeout 1800', f'until 0x{FIELD_REQUEST:X} u8 == 0 timeout 1800', 'wait 30',
+          f'mark kind area {area} slot {slot}',
+          f'goto {area} 0x{x:X} 0x{z:X} 0x{flags:X}',
+          'wait 4',
+          f'until 0x{FIELD_REQUEST:X} u8 == 0 timeout 1800',
+          f'until 0x{FIELD_MODE:X} u16 == 2 timeout 1800',
+          'wait 60',
+          f'peek 0x{GAME_AREA:X} u16 kind_area']
+    for r in range(8):
+        base = ENC_ROWS + r * 9
+        L.append(f'poke 0x{base:X} u8 0x{slot:X}')
+        L += [f'poke 0x{base + k:X} u8 0xFF' for k in range(1, 8)]
+        L.append(f'poke 0x{base + 8:X} u8 2')
+    # the kind's four AI rows switched off (condition 0x63, EnemyAI_ChooseActions' "off"; tools/enemy_ai.py), so the
+    # pick is the base list the sweep pokes - an Egg Gang's row cast another ability on the first by-kind run
+    for r in range(4):
+        L.append(f'poke 0x{ENEMY_DATA + slot * ENEMY_DATA_STRIDE + 0x38 + 16 * r:X} u8 0x63')
+    L += [f'poke 0x{ENC_SLOT_CHANCE:X} u8 16',
+          f'poke 0x{ENC_THRESHOLD:X} u16 1',
+          f'poke 0x{STEP_COUNT:X} u16 0x100']
+    for _ in range(12):
+        for d in walk:
+            L.append(f'hold {d} 16')
+    return L
 
 
 def member_pokes(members, ability):
@@ -377,6 +439,8 @@ def cast_block(side, ability, name, members, shots, spacing, enemy_flags, enemy_
 def prologue_peeks():
     e = ENEMY
     return [f'peek 0x{ENEMY_COUNT:X} u8 enemies',
+            f'peek 0x{GAME_AREA:X} u16 area',
+            f'peek 0x{e + ENEMY_DATA_ID:X} u8 enemy0_slot',
             f'peek 0x{e + ENEMY_ODDS:X} u8 enemy0_odds',
             f'peek 0x{e + ENEMY_FLAGS:X} u16 enemy0_flags90',
             f'peek 0x{e + ENEMY_STATUS:X} u16 enemy0_status92',
@@ -389,6 +453,15 @@ def write_recipe(path, a, head, chunk, table, n):
              f'# generated by tools/spell_sweep.py from {os.path.basename(a.route)} cut at frame {a.cut}']
     lines += head
     lines += [f'until 0x{FIELD_MODE:X} u16 == 5 timeout 3000', 'mark in battle'] + prologue_peeks()
+    if a.kind:
+        # an enemy stronger than the combat save's party can act before the first cross (a GntOrc's first
+        # strike ended the party at level 1..5 on the first by-kind run); the members' HP and DEF from the start
+        # (20 frames after the mode change, to be past the battle set-up; member0_hp peeks that the poke held)
+        lines.append('wait 20')
+        for m in range(a.members):
+            r = WORKING + m * WORKING_STRIDE
+            lines += [f'poke 0x{r + MAX_HP:X} u16 999', f'poke 0x{r + HP:X} u16 999', f'poke 0x{r + DEF:X} u16 999']
+        lines.append(f'peek 0x{WORKING + HP:X} u16 member0_hp')
     lines += [f'seek {CONFIRM} 0x{PHASE:X} u8 == 1 max 120']
     for i in chunk:
         lines += cast_block(a.side, i, table[i][0], a.members, a.shots, a.spacing, a.enemy_flags, a.enemy_odds,
@@ -474,10 +547,16 @@ def rows_of(chunk, table, side, tag, order, per, end, fail, shots):
     return rows
 
 
+def make_head(a):
+    if not a.kind:
+        return route_steps(a.route, a.cut)[0]
+    return kind_head(a.route, a.field_cut, a.kind[0], a.kind[1], a.at, a.walk, a.confirm)
+
+
 def run(a):
     table = table_for(a.side, a.sibling)
     ids = parse_ids(a.ids, table, a.sections)
-    head, _ = route_steps(a.route, a.cut)
+    head = make_head(a)
     os.makedirs(a.root, exist_ok=True)
     rec_dir = os.path.join(a.root, 'recipes')
     os.makedirs(rec_dir, exist_ok=True)
@@ -597,6 +676,14 @@ def main():
                             "the other crosses then Defend by one seek (defend_all), and the fallen's HP and status are peeked after the shots")
         p.add_argument('--target-ups', type=int, default=None,
                        help="presses of up on the target cursor before the confirm (default (first dead - 2) mod 3: Rei casts first in the combat fight)")
+        p.add_argument('--kind', default='', metavar='AREA:SLOT',
+                       help="the fight's enemy 0 from this area's slot: the party stood in AREA by `goto`, the area's encounter "
+                            "rows poked to SLOT alone, a step walked until the battle (kind_head; docs/spell-sweep.md 11)")
+        p.add_argument('--at', default='', metavar='X:Z:FLAGS',
+                       help="--kind: where goto stands the party (16.16 cells and the entry flags: a link's arrival, door_sweep's steps.json)")
+        p.add_argument('--walk', default='up,left,down,right', help='--kind: the directions the leader walks, 16 frames each, round and round')
+        p.add_argument('--field-cut', type=int, default=371,
+                       help="--kind: the route kept to this frame - the party in the field, before the route's own walk (combat.txt: 371)")
         if name == 'recipes':
             p.add_argument('--out', required=True)
         else:
@@ -608,6 +695,12 @@ def main():
             p.add_argument('--game', default='', help="the game folder (input_run.py --game); a disc-built install's, with BOF3X_EXEIMAGE in --env")
             p.add_argument('--fresh', action='store_true', help='start results.tsv over')
     a = ap.parse_args()
+    if getattr(a, 'kind', ''):
+        a.kind = tuple(int(v, 0) for v in a.kind.split(':'))
+        if not a.at:
+            raise SystemExit('--kind wants --at X:Z:FLAGS (a link arrival in the area)')
+        a.at = tuple(int(v, 0) for v in a.at.split(':'))
+        a.walk = [d.strip() for d in a.walk.split(',') if d.strip()]
     if hasattr(a, 'dead'):
         a.dead = tuple(int(x) for x in a.dead.split(',') if x != '')
         if a.target_ups is None:
@@ -633,7 +726,8 @@ def main():
         report(a)
         return
     ids = parse_ids(a.ids, table, a.sections)
-    head, reached = route_steps(a.route, a.cut)
+    head = make_head(a)
+    reached = a.field_cut if a.kind else route_steps(a.route, a.cut)[1]
     os.makedirs(a.out, exist_ok=True)
     chunks = [ids[i:i + a.chunk] for i in range(0, len(ids), a.chunk)]
     for n, chunk in enumerate(chunks):
