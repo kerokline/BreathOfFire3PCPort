@@ -1108,6 +1108,154 @@ gone, no other row of any recipe file moved, `placed_differ` unchanged
 install needs the rebuild (`importer.py stale` names `exe`); what area 6's
 second link did on one before is not seen in play.
 
+### 7.11 A descriptor's place through the build's own `Area_Descriptors` (2026-10-27)
+
+**Why.** 7.8 and 7.9 left the fishing spots' descriptors open on every
+PlayStation build: areas 89's and 129's `+0x30..+0x43` (`0x6130E8..0x6130FC`,
+`0x627B38..0x627B4C`; `recipes/data-known.toml`'s hole
+`fishing-spot-input-flags`). The map places the first `0x30` bytes of each
+from `WORLD00/AREA030.EMI#3` (the three fishing spots' section 3 is one
+overlay, `copies` 3 in `exe_maps/`), the run stops at `+0x30`, no pointer in
+the rest has a placed target and no neighbour holds it at its displacement. The
+bytes held the `Field_InputFlags` byte `+0x32`, 8, on which `GameMode_Enter`
+takes `Game_Mode` 8, the fishing screen. Area 134's `+0x48` (7.8's third hole,
+`0x62C168..0x62C175`) is past that area's `0x44`-byte descriptor
+(`0x62C120..0x62C164`) and was placed by 7.9 already (`AREA135.EMI#14`); it is
+not this rule's.
+
+**The table, measured.** A session script (`C:\Users\kerok\bof3x-runs\away1027\desc\scripts\measure_desc.py`,
+output `measure_desc.out`; then `check_table.py`) searched each disc's boot
+file for a 4-aligned run of 200 words whose entry *k* lies in a section of
+area *k*'s own `AREA`*kkk*`.EMI`, with the descriptor's number bytes
+`+0x30..+0x33` there equal to the PC descriptor *k*'s (`Area_Descriptors`
+`0x667590`, `symbols.toml`). One such run on each disc:
+
+| Build | Table | Entries |
+|---|---|---|
+| `psx-jp` | `BOOT` `0x801802EC` (the sibling's `names/area_records.toml`, verified) | 185 in `#13`, 10 in `#14`, 2 in `#9`, 3 in `#3` (areas 30, 89, 129) |
+| `psx-us` | `BOOT` `0x8017F974` | the same sections |
+| `psx-eu-en`, `psx-fr`, `psx-de` | `BOOT` `0x8017FE40` | the same sections |
+| `psp-jp` | `BOOT.BIN` `0x002E32F0` | all 200 inside `BOOT.BIN` (its relocated copy of the descriptors) |
+| `psp-eu` | `BOOT.BIN` `0x002E2B08` | all 200 inside `BOOT.BIN` |
+
+Every number byte of the 200 descriptors at the table's place equals the PC's on
+the five PSX builds (6,716 bytes, 0 differ); on the two PSPs 6,713 equal and 3
+differ, area 24's `+0x40..+0x42`: its init word, null on the PC and not on the
+PSPs (an init function the PC's area 24 does not call; not read further, and
+not this rule's to place: the PSP map covers it). **The regression check**: for areas 62, 97, 162 and 163 the
+table's entry is exactly the place 7.8's tie placed (US `AREA062.EMI#13`
+`0x801F2EC8`, `AREA097.EMI#13` `0x801F2E24`, `AREA162.EMI#13` `0x801F3508`,
+`AREA163.EMI#13` `0x801F34D8`; the same addresses on JP), so the rule and the
+vote land on the same bytes. The fishing spots: areas 89 and 129 both at
+`0x801F2C3C` in their own `#3` on every PSX build; on the PSPs `BOOT.BIN`
+`0x00330CC8` / `0x00342DA0` (JP), `0x00330EA8` / `0x00342F68` (EU), which the
+PSP map segments already cover - the PSPs held all three holes before this.
+
+**The rule** (`exe_tables.descriptor_table`, `find_places`). The table is
+found by shape as above, once per disc, not by a per-build address; no table
+found exactly once, no place. Once the keyed rounds place nothing more, in the
+same round as 7.9's neighbour displacements and ahead of them, what of each
+descriptor `[d, d + 0x44)` is still unplaced is tried at the table entry's
+displacement through `stretches`, area by area in table order: a stretch that
+disagrees nowhere (numbers equal, a data pointer the target's address in the
+build, a code pointer the paired function) and holds four equal bytes, one of
+them a non-zero number byte, is placed with the table entry as its one key. A
+lone pointer word is left to the layout. A first version ran the rule as a
+round of its own: on the three European builds the keyed rounds take seven of
+the eight, so the rule took the eighth from the neighbour rule and 85 of its
+places were lost (area 98's alternative among them, which `data_diff.py run`
+flagged at once); sharing the round fixed it.
+
+**Before and after** (`exe.toml`; `exe-gaps.tsv`'s `gap` rows / bytes, then its
+`unread` rows / bytes). The "before" is a fresh seven-disc run of `main`
+`e84aaf6d` in a detached worktree (`desc\base_wt`): it reproduces the
+committed recipes but for `exe.toml`'s date and `data-diff.tsv`'s build order.
+
+| Build | places | identical | placed_differ | gap rows / bytes | unread rows / bytes |
+|---|---|---|---|---|---|
+| `psx-jp` | 310 to 312 | 615,452 to 615,454 | 3,151, unchanged | 21 / 299 to 20 / 279 | 107 / 37,285 to 106 / 37,261 |
+| `psx-us` | 336 to 338 | 614,996 to 614,998 | 3,194, unchanged | 48 / 680 to 47 / 660 | 108 / 37,294 to 107 / 37,270 |
+| `psx-eu-en` | 346 to 348 | 614,965 to 614,967 | 3,191, unchanged | 49 / 723 to 48 / 703 | 108 / 37,294 to 107 / 37,270 |
+| `psx-fr` | 346 to 348 | 614,912 to 614,914 | 3,193, unchanged | 52 / 758 to 51 / 738 | 108 / 37,294 to 107 / 37,270 |
+| `psx-de` | 347 to 349 | 614,911 to 614,913 | 3,192, unchanged | 52 / 758 to 51 / 738 | 108 / 37,294 to 107 / 37,270 |
+| `psp-jp` | 466, unchanged | 613,246, unchanged | 3,380, unchanged | 21 / 267, unchanged | 106 / 37,265, unchanged |
+| `psp-eu` | 456, unchanged | 613,227, unchanged | 3,360, unchanged | 20 / 237, unchanged | 110 / 37,292, unchanged |
+
+Two place rows per PSX build and nothing else in any recipe file moved: area
+89's `0x6130E8..0x6130FC` from `WORLD02/AREA089.EMI#3` `0x801F2C6C` and area
+129's `0x627B38..0x627B4C` from `WORLD03/AREA129.EMI#3` `0x801F2C6C`, 20 bytes
+agreeing, one key each; the `gap` row `Area88_DriftUV+0x78` and the `unread`
+row `Area128_Handlers+0xBC` leave `exe-gaps.tsv`. `placed_differ` is unchanged:
+no byte other than the PC's. `identical` grows by 2, the two `+0x32` bytes (the
+rest of the 40 were zero on the PC and in the image alike). `data_diff.py run`:
+618 rows, 0 holes, 0 errors once `fishing-spot-input-flags` was dropped from
+`data-known.toml` (628 before, the ten fishing rows gone).
+
+**Checks.** The seven discs through `exe_tables.py recipe`, `psp_exe.py
+recipe`, `exe_tables.py recipe`, `exe_own.py measure` (its `--analysis` the
+checkout's), `exe_tables.py gaps`, `data_diff.py run`; then `exe_tables.py
+check`, `psp_exe.py check`, `importer.py check`, `tables.py check`,
+`ledger_check.py`, `data_diff.py check` and `selftest`, `exe_own.py check`: 0
+errors each. No ledger entry: the place is the disc's own bytes, the PC's
+(DIV-0101 covers the importer). As in 7.8 no `FilledSince` row was added: an
+install built before this is named stale by `importer.py stale` (`exe`).
+
+**The `unread` class.** Of the `unread` rows in `exe-gaps.tsv`, none now lies
+inside a descriptor or inside a value `data_diff.py` decodes (its descriptor,
+link, zone and music-set views and every `tables.toml` table's records, read
+from the PC's image; script `unread_count.py`): 0 of 106 (JP), 107 (US, EU, FR,
+DE), 106 (`psp-jp`), 110 (`psp-eu`). Against the recipe before this the same
+count is 1 per PSX build, area 129's row. So the class hides no hole in what the
+diff decodes; what it may hide elsewhere is outside every decoder.
+
+**Seen in play** (root `C:\Users\kerok\bof3x-runs\away1027\desc`, frames
+under `shots\`). Two US-only installs (`importer.py build` from the US cue,
+then `install --base`): `before` from `main`'s recipe, `after` from this one;
+their `.data` images differ in exactly two bytes, `0x6130EA` and `0x627B3A`.
+No recorded route reaches areas 89 or 129, so the check loads a crafted save:
+`camping.DAT` with the block's area word (`+0x24`,
+[`save-interchange.md`](save-interchange.md) 2a) set to 89 or 129 and the
+checksum at `+0x70` recomputed, loaded with `caughFish.txt`'s first 14 lines,
+then 1,500 frames without input, a frame every 150 (`input_run.py
+--no-front`, the game writing its own frames). On the PC install both areas
+open the fishing screen (the rod, the lure line, the catch panel). On `before`
+both open as an ordinary field: a dark screen, the leader standing alone, no
+fishing panel, every frame from 450 on differing from `after`'s in all 307,200
+pixels. On `after` every frame from 900 on (from 450 for area 129) is pixel for
+pixel the PC install's; the earlier frames are the title and load menu, which
+differ between a PC and a disc-built install. The owner's `campingFishing.txt`
+(area 30, the lake, which the map placed whole on every build) is the same on
+both disc-built images and the PC's in eight of its nine shots; the ninth,
+`fishing_equip`, differs from the PC's in 4,028 pixels on `before` and `after`
+alike, so not through this rule (read below: the headings' draw under a stale
+overlay). So a disc-built PlayStation install at the sea or river fishing
+spot was entered as a field, not the fishing game, until this rule.
+
+**The `fishing_equip` difference, read** (2026-10-27, from the same frames).
+The 4,028 pixels are two bands, `y 144..167` (`x 116..501`, the `EQUIP` and
+`LURE` title bars) and `y 272..295` (`x 116..215`, the `GUIDE` bar). They are
+the same three words in the same glyphs, only placed differently: centred in
+their bars on the disc-built installs and left-set on the PC's. `before` and
+`after` are identical. The words are `EffectKind0F_PanelTitles`
+(`0x653EA0..0x653EB4`). On the US image that range is not a `language` row
+(only FR and DE have one, D286): it is a `place`, `WORLD00/AREA030.EMI#4:twin`
+from `0x801E21CC`, byte for byte the PC's. So the image is not the cause. The
+draw is: `effect_1b.cpp` `DrawHeading` centres the overlay's word by its real
+width once the fishing chunk's tag 3 is loaded (DIV-0069 as amended for D286,
+[`install-gap-labels.md`](install-gap-labels.md) 1). Without it, it draws the
+original's `count` glyphs at the original's x, which assumes 12-unit glyphs
+and so sets 8-unit Latin left. The disc-built install's log has `DIV-0069: 4 of
+4 fishing headings (D286)`. The PC install's (the tooling folder `bof3\`) does
+not: its `en-US` overlay files are dated 2026-10-13, before tag 3 (2026-10-18),
+the "overlay built before" case that entry names under *Reversible*. This is an
+expected layer difference on a stale overlay, not a row no layer writes. No
+label-group work is needed. A PC install whose `en-US` overlay is rebuilt from
+the US disc should draw the disc-built frames; not run here.
+
+**Left.** Nothing of the 200 descriptors is unplaced on any build. Whether the
+field `before` showed would have let the player leave (the fishing spot has no
+links, 7.8) is not tried; `importer.py stale` brings the rebuild.
+
 ## For the other files
 
 Not edited here (the coordinator folds them in):

@@ -896,6 +896,58 @@ def code_pairs(pc, img, owner, ranges, cls):
     return pairs
 
 
+AREA_DESCRIPTORS = 0x667590    # symbols.toml Area_Descriptors: 200 pointers to the 0x44-byte area descriptors
+AREAS, DESCRIPTOR = 200, 0x44
+DESCRIPTOR_KEY = (0x30, 0x34)  # the descriptor's number bytes (link / passage indexes, Field_InputFlags, +0x33)
+
+
+def descriptor_table(pc, srcs):
+    """The build's own Area_Descriptors table (docs/exe-import-engine.md 7.11):
+    [(the PC descriptor's address, (file, section) holding the build's, the
+    build's address)] for the 200 areas, or [] when the boot file holds no such
+    table exactly once. The table is found by shape, not by a per-build address:
+    a 4-aligned run of 200 words in the boot file (BOOT, the PSX boot EXE; or
+    BOOT.BIN, the PSP ELF) whose entry k lies in a section of area k's own
+    AREAkkk.EMI - else, on a PSP whose ELF carries the descriptors, in the boot
+    file itself - with the descriptor's number bytes +0x30..+0x33 there equal
+    to the PC descriptor k's, for every k. Measured (2026-10-27, the seven
+    discs): one table on each, PSX-JP 0x801802EC, PSX-US 0x8017F974, the three
+    European 0x8017FE40, PSP-JP 0x002E32F0, PSP-EU 0x002E2B08."""
+    boots = [k for k in srcs if k[0] in ("BOOT", "BOOT.BIN")]
+    if len(boots) != 1:
+        return []
+    boot = boots[0]
+    bbase, bblob = srcs[boot]
+    areas = collections.defaultdict(list)
+    for k in srcs:
+        m = re.search(r"(?:^|/)AREA(\d{3})\.EMI$", k[0])
+        if m:
+            areas[int(m.group(1))].append(k)
+    pcd = [struct.unpack_from("<I", pc, AREA_DESCRIPTORS + 4 * n - DATA_LO)[0] for n in range(AREAS)]
+    if not all(DATA_LO <= d and d + DESCRIPTOR <= DATA_HI for d in pcd):
+        fail("Area_Descriptors 0x%06X: an entry outside .data" % AREA_DESCRIPTORS)
+    want = [pc[d - DATA_LO + DESCRIPTOR_KEY[0]:d - DATA_LO + DESCRIPTOR_KEY[1]] for d in pcd]
+
+    def home(n, w):
+        held = [k for k in areas.get(n, ()) if srcs[k][0] <= w and w + DESCRIPTOR <= srcs[k][0] + len(srcs[k][1])]
+        if not held and bbase <= w and w + DESCRIPTOR <= bbase + len(bblob):
+            held = [boot]
+        if len(held) != 1:
+            return None
+        base, blob = srcs[held[0]]
+        o = w - base + DESCRIPTOR_KEY[0]
+        return held[0] if blob[o:o + 4] == want[n] else None
+    found = []
+    for o in range(0, len(bblob) - 4 * AREAS + 1, 4):
+        if home(0, struct.unpack_from("<I", bblob, o)[0]) is None:
+            continue
+        ents = struct.unpack_from("<%dI" % AREAS, bblob, o)
+        at = [home(n, w) for n, w in enumerate(ents)]
+        if all(at):
+            found.append([(pcd[n], at[n], ents[n]) for n in range(AREAS)])
+    return found[0] if len(found) == 1 else []
+
+
 def find_places(pc, disc, bid, pointers, rounds=8):
     """Place what the map left unplaced by the PC's own data pointers - the
     twin method keyed by pointers instead of bytes (docs/exe-import-engine.md
@@ -926,6 +978,7 @@ def find_places(pc, disc, bid, pointers, rounds=8):
     for p, n, c in pointers:
         for a in range(p, p + 4 * n, 4):
             cls[a] = c
+    descriptors = descriptor_table(pc, srcs)
     rows = []
     for _ in range(rounds):
         img, owner, ranges = disc_image(disc, bid, rows, imm=())
@@ -974,7 +1027,7 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                     if o % 4 == 0:
                         hits[k, w].append(base + o)
                     o = blob.find(pat, o + 1)
-        def stretches(lo, hi, place, win, target=None, plain=False):
+        def stretches(lo, hi, place, win, target=None, plain=False, desc=False):
             """The stretches of [lo, hi) at `place` (section, displacement) that
             disagree nowhere and are keyed enough to place (step 3). `target`: a
             PC address a pointer from outside the region names the place of
@@ -984,7 +1037,11 @@ def find_places(pc, disc, bid, pointers, rounds=8):
             pointer word ends it), four bytes or more, two of them non-zero - or
             one when the stretch is the whole unplaced run but its pointer words,
             closing it from neighbour to neighbour (section 7.10, area 6's link
-            count on the PSP)."""
+            count on the PSP). `desc`: the place is the descriptor's own through
+            the build's Area_Descriptors table and [lo, hi) lies inside that
+            descriptor (section 7.11); a stretch that disagrees nowhere places on
+            four equal bytes, one of them a non-zero number byte (a pointer word
+            alone is the layout's to fill)."""
             (k, delta), out = place, []
             base, blob = srcs[k]
             res = []
@@ -1033,9 +1090,12 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                     eq = sum(1 for v2 in res[s0:i2] if v2)
                     nz = sum(1 for a, v2 in zip(range(a0, a1), res[s0:i2]) if v2 and pc[a - DATA_LO])
                     nk = sum(1 for a in range(a0 + (-a0 % 4), a1 - 3, 4) if a in keys)
+                    nzn = sum(1 for a, v2 in zip(range(a0, a1), res[s0:i2])
+                              if v2 and pc[a - DATA_LO] and cls.get(a - (a - DATA_LO) % 4) is None)
                     if nk >= 2 or (nk >= 1 and eq >= 16) or (win is not None and a0 <= win and win + 16 <= a1 and eq >= 24) \
                             or (target is not None and a0 <= target and target + 4 <= a1 and eq >= 8) \
-                            or (plain and eq >= 4 and (nz >= 2 or (nz >= 1 and closes(a0, a1)))):
+                            or (plain and eq >= 4 and (nz >= 2 or (nz >= 1 and closes(a0, a1)))) \
+                            or (desc and eq >= 4 and nzn >= 1):
                         out.append({"pc": a0, "pc_end": a1, "file": k[0], "section": k[1],
                                     "addr": a0 + delta, "agree": eq, "keys": nk})
                 s0 = i2 + 1
@@ -1122,6 +1182,24 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                         got.append(r)
             new += got
         if not new:
+            # A descriptor's place is its twin through the build's own
+            # Area_Descriptors table (section 7.11): what of [d, d + 0x44) is
+            # still unplaced is tried at the table entry's displacement, area by
+            # area, a rule rather than a vote. The fishing spots' +0x30..+0x43
+            # (areas 89 and 129, Field_InputFlags 8 at +0x32, on which
+            # GameMode_Enter takes Game_Mode 8) had no pointer with a placed
+            # target and no neighbour at their displacement. After the keys, so a
+            # keyed place keeps its row; in the same round as the neighbours'
+            # displacements and ahead of them (which are a guess where this is the
+            # table's word), so that it takes no round of the eight from them.
+            desc = []
+            for d, k, w in descriptors:
+                for lo, hi in regions:
+                    a0, a1 = max(lo, d), min(hi, d + DESCRIPTOR)
+                    if a0 < a1:
+                        for r in stretches(a0, a1, (k, w - d), None, desc=True):
+                            r["keys"] += 1      # the table entry
+                            desc.append(r)
             # The port's relaid words (section 7.9, issue 139). Once the keys place
             # nothing more, what is left unplaced is tried at each placed neighbour's
             # displacement - the stretch ending at `lo` and the one starting at `hi`,
@@ -1136,7 +1214,7 @@ def find_places(pc, disc, bid, pointers, rounds=8):
             # area 0 at (0, 0). After the keys so that a keyed place is never
             # pre-empted by a neighbour's.
             for lo, hi in regions:
-                got = []
+                got = [r for r in desc if r["pc"] < hi and lo < r["pc_end"]]
                 for x in (lo - 1, hi):
                     if not DATA_LO <= x < DATA_HI or owner[x - DATA_LO] is None:
                         continue
@@ -1155,7 +1233,8 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                             if not any(r["pc"] < g["pc_end"] and g["pc"] < r["pc_end"] for g in got):
                                 r["keys"] += 1
                                 got.append(r)
-                new += got
+                new += [r for r in got if not any(r is q for q in desc)]
+            new += desc
         if not new:
             break
         rows = sorted(rows + new, key=lambda r: r["pc"])
@@ -1204,7 +1283,8 @@ def write_places(places):
                 "# exe_maps/; `agree` bytes compared equal (numbers equal, data pointers the target's\n"
                 "# address in the build), `keys` data pointers voted for the place (in it, or placed\n"
                 "# pointers into it, section 7.7; a placed neighbour whose displacement the bytes agree\n"
-                "# at, section 7.9); `keys` 0 is a place a 16-byte window of numbers found\n"
+                "# at, section 7.9; the build's Area_Descriptors entry, section 7.11); `keys` 0 is a\n"
+                "# place a 16-byte window of numbers found\n"
                 "# once in a neighbour's file (section 7.4), at least 24 bytes agreeing. Addresses and\n"
                 "# counts only (CLAUDE.md rule 1).\n")
         f.write("\t".join(PLACE_COLS) + "\n")

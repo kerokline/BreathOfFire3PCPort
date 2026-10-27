@@ -4,13 +4,13 @@
 # the image's bytes came from. Keys, verdicts and provenance only - no value (CLAUDE.md rule 1).
 # Every row is listed in recipes/data-known.toml; `data_diff.py check` holds that in CI.
 # views: 860af2bcc8fb016ad04bc8914304bb0ffe7fb7535639846a5628952720e24994
-# image: psp-eu 3d143d22a29e06fff23ed55fb421b1c3f5413f79ee0acc7066a4c6521f46ce61
-# image: psp-jp 3ee878684e9ccd1692f420c54c702530149db5a267c5895452f272a6cfeb30ac
-# image: psx-de 4ce253d2b6c27fdabeefa346283c6ef3f61144c608c27d0bd36960dee20eb6e7
-# image: psx-eu-en 028ff3f667c702fc74ef4d9114c986699e9e380b30aa9325ffa63949a6dfc889
-# image: psx-fr 823464c1d1b20a516aaee2215fa2cdd1ee19384c49ae77fc08ce9565e37b5bc5
-# image: psx-jp f1237fbc8d908f9ef7683700f7aadf3617ff0e9b80ea6f031835a59a0ab24511
-# image: psx-us 2ee16a8b8257c8dcdbe2e9066e10cc24d01c1e6f8e7350fb8402a02da054cc72
+# image: psp-eu 836b8de1109e22f4917d5c5bd8aae669d44451e08cd1f4c43974bbe223b467e2
+# image: psp-jp 34184245d1aec55e29b3906b123246ef3969fb0200f7bc09e2a5d9365233fc8f
+# image: psx-de 3e2f64551726da5e4c9ff98c3240bba73f0b2b6908446be7d1c7f93244d2337e
+# image: psx-eu-en d0f90394ec059d560814d8bebda1880c88ff56c7ce3a2eb8bf88d69f66fbba1f
+# image: psx-fr 6b921631a703a328f84b27cc1aa9d019b149c0dd3216b384004470aa1f13fb3e
+# image: psx-jp 2239b2c34df3ea427378691597726b474553c6f660333fc963337b3eab51639f
+# image: psx-us 863ba5486d5ba476919eb6ddf75b52f85541335b47ac1de0cb3b3dcbcc3b5b0e
 # compared: psp-eu abilities 4104 runtime 0 hole 0 differ 0
 # compared: psp-eu accessories 728 runtime 0 hole 0 differ 0
 # compared: psp-eu area_descriptor 4200 runtime 0 hole 0 differ 0
@@ -81,7 +81,7 @@
 # compared: psp-jp weapons 1494 runtime 0 hole 0 differ 0
 # compared: psx-de abilities 4104 runtime 0 hole 0 differ 0
 # compared: psx-de accessories 728 runtime 0 hole 0 differ 0
-# compared: psx-de area_descriptor 4200 runtime 0 hole 2 differ 0
+# compared: psx-de area_descriptor 4200 runtime 0 hole 0 differ 0
 # compared: psx-de area_descriptors 200 runtime 0 hole 0 differ 0
 # compared: psx-de area_link 12556 runtime 0 hole 0 differ 0
 # compared: psx-de area_zone 5528 runtime 0 hole 0 differ 0
@@ -115,7 +115,7 @@
 # compared: psx-de weapons 1494 runtime 0 hole 0 differ 0
 # compared: psx-eu-en abilities 4104 runtime 0 hole 0 differ 0
 # compared: psx-eu-en accessories 728 runtime 0 hole 0 differ 0
-# compared: psx-eu-en area_descriptor 4200 runtime 0 hole 2 differ 0
+# compared: psx-eu-en area_descriptor 4200 runtime 0 hole 0 differ 0
 # compared: psx-eu-en area_descriptors 200 runtime 0 hole 0 differ 0
 # compared: psx-eu-en area_link 12556 runtime 0 hole 0 differ 0
 # compared: psx-eu-en area_zone 5528 runtime 0 hole 0 differ 0
@@ -149,7 +149,7 @@
 # compared: psx-eu-en weapons 1494 runtime 0 hole 0 differ 0
 # compared: psx-fr abilities 4104 runtime 0 hole 0 differ 0
 # compared: psx-fr accessories 728 runtime 0 hole 0 differ 0
-# compared: psx-fr area_descriptor 4200 runtime 0 hole 2 differ 0
+# compared: psx-fr area_descriptor 4200 runtime 0 hole 0 differ 0
 # compared: psx-fr area_descriptors 200 runtime 0 hole 0 differ 0
 # compared: psx-fr area_link 12556 runtime 0 hole 0 differ 0
 # compared: psx-fr area_zone 5528 runtime 0 hole 0 differ 0
@@ -183,7 +183,7 @@
 # compared: psx-fr weapons 1494 runtime 0 hole 0 differ 0
 # compared: psx-jp abilities 4104 runtime 0 hole 0 differ 0
 # compared: psx-jp accessories 728 runtime 0 hole 0 differ 0
-# compared: psx-jp area_descriptor 4200 runtime 0 hole 2 differ 0
+# compared: psx-jp area_descriptor 4200 runtime 0 hole 0 differ 0
 # compared: psx-jp area_descriptors 200 runtime 0 hole 0 differ 0
 # compared: psx-jp area_link 12556 runtime 0 hole 0 differ 0
 # compared: psx-jp area_zone 5528 runtime 0 hole 0 differ 0
@@ -217,7 +217,7 @@
 # compared: psx-jp weapons 1494 runtime 0 hole 0 differ 0
 # compared: psx-us abilities 4104 runtime 0 hole 0 differ 0
 # compared: psx-us accessories 728 runtime 0 hole 0 differ 0
-# compared: psx-us area_descriptor 4200 runtime 0 hole 2 differ 0
+# compared: psx-us area_descriptor 4200 runtime 0 hole 0 differ 0
 # compared: psx-us area_descriptors 200 runtime 0 hole 0 differ 0
 # compared: psx-us area_link 12556 runtime 0 hole 0 differ 0
 # compared: psx-us area_zone 5528 runtime 0 hole 0 differ 0
@@ -250,11 +250,7 @@
 # compared: psx-us steal_rates 8 runtime 0 hole 0 differ 0
 # compared: psx-us weapons 1494 runtime 0 hole 0 differ 0
 build	family	key	verdict	how
-psx-jp	area_descriptor	area_descriptor/a089/input_flags	hole	gap
-psx-jp	area_descriptor	area_descriptor/a129/input_flags	hole	unread
 psx-jp	event_op_lengths	event_op_lengths/0015/length	differ	table
-psx-us	area_descriptor	area_descriptor/a089/input_flags	hole	gap
-psx-us	area_descriptor	area_descriptor/a129/input_flags	hole	unread
 psx-us	fishing_rule_lines	fishing_rule_lines/0002/message	differ	table
 psx-us	fishing_rule_lines	fishing_rule_lines/0003/message	differ	table
 psx-us	fishing_rule_lines	fishing_rule_lines/0020/message	differ	table
@@ -263,8 +259,6 @@ psx-us	fishing_rule_lines	fishing_rule_lines/0022/message	differ	table
 psx-us	fishing_rule_lines	fishing_rule_lines/0023/message	differ	table
 psx-us	fishing_rule_lines	fishing_rule_lines/0024/message	differ	table
 psx-us	fishing_rule_lines	fishing_rule_lines/0025/message	differ	table
-psx-eu-en	area_descriptor	area_descriptor/a089/input_flags	hole	gap
-psx-eu-en	area_descriptor	area_descriptor/a129/input_flags	hole	unread
 psx-eu-en	fishing_rule_lines	fishing_rule_lines/0002/message	differ	table
 psx-eu-en	fishing_rule_lines	fishing_rule_lines/0003/message	differ	table
 psx-eu-en	fishing_rule_lines	fishing_rule_lines/0020/message	differ	table
@@ -273,8 +267,6 @@ psx-eu-en	fishing_rule_lines	fishing_rule_lines/0022/message	differ	table
 psx-eu-en	fishing_rule_lines	fishing_rule_lines/0023/message	differ	table
 psx-eu-en	fishing_rule_lines	fishing_rule_lines/0024/message	differ	table
 psx-eu-en	fishing_rule_lines	fishing_rule_lines/0025/message	differ	table
-psx-fr	area_descriptor	area_descriptor/a089/input_flags	hole	gap
-psx-fr	area_descriptor	area_descriptor/a129/input_flags	hole	unread
 psx-fr	fishing_rule_lines	fishing_rule_lines/0002/message	differ	table
 psx-fr	fishing_rule_lines	fishing_rule_lines/0003/message	differ	table
 psx-fr	fishing_rule_lines	fishing_rule_lines/0020/message	differ	table
@@ -283,8 +275,6 @@ psx-fr	fishing_rule_lines	fishing_rule_lines/0022/message	differ	table
 psx-fr	fishing_rule_lines	fishing_rule_lines/0023/message	differ	table
 psx-fr	fishing_rule_lines	fishing_rule_lines/0024/message	differ	table
 psx-fr	fishing_rule_lines	fishing_rule_lines/0025/message	differ	table
-psx-de	area_descriptor	area_descriptor/a089/input_flags	hole	gap
-psx-de	area_descriptor	area_descriptor/a129/input_flags	hole	unread
 psx-de	fishing_rule_lines	fishing_rule_lines/0002/message	differ	table
 psx-de	fishing_rule_lines	fishing_rule_lines/0003/message	differ	table
 psx-de	fishing_rule_lines	fishing_rule_lines/0020/message	differ	table
