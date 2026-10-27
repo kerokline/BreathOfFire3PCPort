@@ -158,8 +158,9 @@ warp, but that is a hypothesis. A stack of 99 loses one per use (D23).
 the amount's low word (wrapping at 16 bits), HP = max when it is then above
 max (unsigned) or the amount's low word is 0 (a full heal), and
 `Char_ClearStatus(id, 0x2000, battle)` unless max / 4 is above HP - the
-`0x2000` bit, set below a quarter of max HP, reads as "in danger"
-(hypothesis, by the arithmetic only). Answers 1. `Char_HealAp` is the same
+`0x2000` bit, set below a quarter of max HP, is the low-HP mark the gauge
+windows set and clear each frame ([`spell-sweep.md`](spell-sweep.md) 9.2
+lists its sites; `Escape_Chance` and the enemy AI read it). Answers 1. `Char_HealAp` is the same
 on AP without the status.
 
 `Stat_AddClamped(stat, delta)`: the delta as s16. Up: 0 at 999, else add

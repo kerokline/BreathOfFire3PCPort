@@ -687,7 +687,7 @@ Padding:
 |---|---|---|---|
 | `+0x89` | u8 | `char_id` | record +0x09 (battle_setup_callees.h kPCharId; area_entry_callees.h kRecMember) |
 | `+0x8A` | u8 | `level` | record +0x0A (battle_damage_callees.h kPLevel, working +0x7A) |
-| `+0x90` | u16 | `status` | record +0x10 (battle_setup kPStatus; battle_damage kPStatus) |
+| `+0x90` | u16 | `status` | record +0x10 (battle_setup kPStatus; battle_damage kPStatus); 0x4000 fallen (battle_e3.cpp), 0x2000 low HP, HP < max / 4, set and cleared by the gauge window's step (spell-sweep.md 9.2) |
 | `+0x92` | u8 | `weapon` | record +0x12 (battle_setup kPWeapon) |
 | `+0x93` | u8[3] | `armour` | record +0x13..+0x15, CharRecord::armour (char-stats.md 2 Char_ApplyArmour); +0x95 tested for 0x43 by BattleParty_AllDown and cleared before BattleParty_RecalcStats (battle_e3.cpp:780, 845; battle_setup kPArmour3) |
 | `+0x96` | u8[2] | `accessory` | record +0x16 / +0x17 (battle_setup kPAccessory) |
@@ -762,7 +762,7 @@ No members of its own: every byte is `SpriteHead`'s.
 | `+0x8E` | u8 | `odds_index` | EnemyData +0xE (Battle_CopyEnemyData) |
 | `+0x8F` | u8 | `kind_flag` | Battle_EnemyKindFlag (Battle_SetupEnemy) |
 | `+0x90` | u16 | `flags_90` | EnemyData +0x12 (Battle_CopyEnemyData); bit 1 read by BattleEnemy_Chance70 (battle_flow.cpp) |
-| `+0x92` | u16 | `status` | (battle_setup kEStatus; battle_damage kEStatus); 0x4000 dead (battle_flow.cpp) |
+| `+0x92` | u16 | `status` | (battle_setup kEStatus; battle_damage kEStatus); 0x4000 dead (battle_flow.cpp); 0x2000 low HP, HP < max / 4, by the enemy gauge's step - the AI's condition 0x0E (spell-sweep.md 9.2) |
 | `+0x94` | u16 | `zenny` | (battle_flow.cpp, the kill) |
 | `+0x96` | u16 | `exp` | (battle_flow.cpp, the kill) |
 | `+0x98` | u16 | `level` | battle_damage kELevel: u8, also read as a u16 |

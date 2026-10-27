@@ -519,3 +519,64 @@ his HP after Raise Dead is 250 (`a076_5.png`); and Ammonia leaves the status
 word `0x2000` with HP 1 where the spells leave 0. Neither is a disc-install
 difference; whether the PlayStation shows the same number is the next
 question for either.
+
+### 9.2 Status bit 0x2000 (2026-10-26 night, a read of the code)
+
+Bit `0x2000` of the status word - the member's `0x802DC0 + m * 0x14C` +0x10
+(the party record's +0x90, `records::PartyMember::status`) and the enemy's
+`0x93B9E0 + ..` +0x92 (`records::BattleEnemy::status`, the object's +0x12) -
+is the **low-HP mark: set while HP is below a quarter of max HP, cleared
+otherwise**. It is not a revive mark, not a buff, not an exclusion, and it
+is not the round flags' `0x2000` (`EnemyOp_HitEnd` turns round flag 0x40
+into 0x2000 in the round word `0x904AA8`, which `battle_e3.cpp:516` reads) nor the second flags dword's (+0x130 / +0x134, the task-in-
+flight bit `BattleEnd_AwaitMemberTasks` waits on, `battle_turn_steps.cpp:364`).
+The sibling's read of the PSX setup (`names/functions.toml`,
+Battle_Setup's evidence line) names it the same, independently: "sets
+status 0x2000 (low HP) when HP < max/4 else clears it".
+
+Who writes it (every site is an HP-against-quarter test; none else writes
+the bit):
+
+| Site | Record | Writes |
+|---|---|---|
+| `BattleWin_MemberGaugeStates` `0x5975D0` (kind 5, every frame a member's gauge window steps) | member +0x90 | `LowFlag`: `or byte [+1], 0x20` while HP < max / 4, `and word, 0xDFFF` otherwise (`battle_win_states.cpp:125`, 229) |
+| `BattleWin_EnemyGaugeStates` `0x597320` (kind 4) | enemy object +0x12 = record +0x92 | the same `LowFlag` (`battle_win_states.cpp:203`) |
+| the battle setup (`battle_phases.cpp:233`) | member +0x90 | set when HP < max / 4, else cleared, once at battle start; the other counters zeroed beside it |
+| `Char_HealHp` `0x590CE0` (`item_use.cpp:302`) | the field record +0x10 or the working record by the battle flag | `Char_ClearStatus(id, 0x2000)` when HP after the heal is at or above max / 4; sets nothing |
+| `Field_FloorHurt` (`field_e2.cpp:260`) | both the field record +0x10 and Field_State +0x90 | set when HP after the floor's damage is at or below max / 4 |
+| `Menu_DrawMemberStatus` (`map_field_objects.cpp:457`) | the field record +0x10 | set below a quarter, cleared otherwise, each draw of the status window |
+
+Who reads it: `Escape_Chance` `0x44A520` (`battle_e4.cpp:1513`) adds 8
+to the escape chance once when any member not out has the bit; the enemy
+AI's condition `0x0E` (`EnemyAI_ChooseActions`, `battle_damage.cpp:925`) holds
+when another enemy not out has it - "an ally is in danger"; the gauge and
+status windows colour the HP value 4 (the warning colour) on it
+(`battle_win_states.md`, `battle_windows.md`); and `Battle_ActorCanCommand`'s
+mask `0x4964` leaves it out, so a member in danger still commands.
+`Battle_ClearStatus` `0x44F4B0` clears only the bits its mask names (0x4000,
+0x800, 0x80, 0x40, 0x10, 8, 4, 2, 1, and 0x20), so the round-end steps'
+`clear_status(status & 0xBF5F)` never touch it; and the hit path's death
+write (`battle_e3.cpp:506`, 929: `status = 0x4000`, HP 0) drops it, which
+is the `0x4000` the poke copies.
+
+So the table in section 9 reads as the arithmetic says, with Ryu's max HP
+999 (Resurrect's 999 is a full heal) and the quarter 249:
+
+- **Ammonia, 1 / 0x2000**: `ItemUse_Revive` writes HP 1 and
+  `Char_ClearStatus(0x4000)`; `Char_ClearStatus` does not clear 0x2000, and
+  the next frame's `BattleWin_MemberGaugeStates` sets it, 1 < 249. In play
+  the revived member stands with a red HP figure.
+- **Raise Dead 250 / 0, Resurrect 999 / 0**: MAGIC077's revive leaves HP at or
+  above the quarter, and the gauge step clears the bit the frame after.
+- **Benediction, 0 / 0x6000**: Benediction added nothing. The poke wrote
+  `0x4000` with HP 0; 0 < 249, so the first gauge step after it or'ed
+  `0x2000` in - the `0x6000` is the poke's `0x4000` plus the mark, and any
+  cast over the poked member that neither revives nor heals would peek the
+  same. (The revive rows read 0 and not 0x2000 for the same reason in
+  reverse.) Benediction's own effect on the living party is still what
+  `magic_s35.md` reads it as; this section only settles the bit.
+
+Not measured, and not needed: a `--peek` of the word per frame would show
+the `0x4000 -> 0x6000` step on the first gauge frame after the poke; the
+sites above are the only writers of the bit in `src/game`, so the reading
+stands without it.
