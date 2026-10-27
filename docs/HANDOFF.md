@@ -48,6 +48,23 @@ hosted cross form).
 
 ## Pick up here
 
+0000000000000000. **Two rounds staged, 2026-10-27, not launched** (the owner's word; branch
+   `staging/ledger-and-reloc-1027` off `main` `e84aaf6d`; briefs under `C:\Users\kerok\bof3x-runs\lf1027` and
+   `ri1027`):
+   - **The ledger-fields round** ([`ledger-fields-round.md`](ledger-fields-round.md), I33 early decision 1). The
+     tier is already the kind; what presets lack is a machine-readable switch, and the player's build refuses
+     `BOF3X_ORIGINAL` (`exe_host.cpp` `RefuseHostedSwitches`), so 118 entries are reversible on the developer's
+     machine only. LF0 the schema and `tools/ledger_switches.py`, LF1..LF4 by DIV range, an audit, the strict
+     rule; stage D the player's switch (`BOF3X_OFF`) and the presets. **The owner's four calls are
+     answered** (section 6: the four presets, `Toward:` a list with no cascade, costly entries left); LF0 can
+     start.
+   - **The relocatable-image round** ([`relocatable-image-round.md`](relocatable-image-round.md), I44 stage 3).
+     Stage A (census, address-independent state hash, loader design) needs no call; stage B rewrites the
+     17,259 global sites as `base + offset` with a `constexpr` base so `codegen_same.py` stays the gate; stage C
+     moves the image, proved by the state hash at two bases. **The owner's three calls, section 7.**
+   Launch: worktrees off the round branch's tip at the time, `ROUND_TIP` filled into the briefs; game runs by
+   the coordinator only, one at a time.
+
 000000000000000. **The spell sweep's fix wave is built and merged locally on `fix/sweep-wave`** (2026-10-26 evening,
    off `main` `5bd84b98` - the PR #155 merge - unpushed; four agents, one worktree each under
    `C:\Users\kerok\bof3x-runs\ss1026`, merged one at a time, the three-way `--sibling` overlap in
