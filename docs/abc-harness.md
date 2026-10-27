@@ -40,7 +40,10 @@ launcher, DLL and exe; default this checkout's `build/`), `--save NAME` /
 `--no-save` (the save every side loads, section 3a).
 
 What lands under the root: `c_*` caches, `g_*` game folders, `L\` the
-ini-less launcher, `logs\` the importer's output, `runs\<set>_<route>\<install>\`
+ini-less launcher copy (`bof3x-launcher.exe`, `bof3x-launcher-dev.exe`,
+`bof3x.dll`, `bof3x.exe`; a copy made by hand needs all four, or the
+launcher stops on a modal "bof3x.exe is missing" dialog and an unattended
+run waits on it), `logs\` the importer's output, `runs\<set>_<route>\<install>\`
 (the frames, `bof3x.log`, `meta.json`, `_run.txt`), `runs\<set>_<route>\compare\`
 (`index.html`, `sheet_NN.png`, `heat\<pair>\<frame>.png`, `result.json`),
 and `report_<set>_<route>.md`. All of it is game-derived and stays out of
