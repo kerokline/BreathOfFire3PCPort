@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-10-25 evening: D360 a sprite keeping the previous image's composition after a new upload to its slot (Ryu "turning around" in the Dauna Mine exchange), Capcom's port, fixed by DIV-0181; 2026-10-25: D359 Garr's spear over Ryu at the vaccination scene's camp, ours, fixed by DIV-0071's amendment (issue #132); 2026-10-24, later: D358 `Gte_ApplyMatrixLV`'s 32-bit products wrapping, so area 99's console flash folds over the horizon, the port's, fixed by DIV-0178; D357 area 99's lift missing an exact script count when instant pages close faster than Fast prints, Capcom's script race exposed by DIV-0158, closed by its pacing floor (issue #121); 2026-10-24: D355 the Skill Notes count's second number read off our stack, ours, fixed (issue #118); D356 a kind-0 jingle releasing the area's song for good, Capcom's port, restored by DIV-0177 (issue #120); 2026-10-23 evening, fix wave 1023 and the second twin-diff step: D348 the menu box's unsigned x and y, the port's, fixed by DIV-0165; D349..D352 from the US-against-JP region census, Capcom's JP-build defects the US build changed: D349 the battle start's uncleared pick flag, fixed by DIV-0163; D350 the Scena16 caption's missing wait, open, held for timing; D351 the gene name's missing NUL, fixed by DIV-0166; D352 the window reset's five fields, open; D335 and D342 found moot, D336 / D338 / D341 / D337 / D346 fixed by DIV-0161 / 0162 / 0164 / 0167 / 0168, D343 corrected and open; 2026-10-23, later, the field, menu, shop, start and exe twin-diff against the US PlayStation's matched twins, 955 takeovers: D340 the fishing panel's marker and range bar 3 and 19 px right of the JP disc's, D341 two `+0x70` writes keeping bytes the PlayStation zeroes, D342 an object kind answered as the pointer itself, D343 the inn night without the PlayStation's pause and resume, D344 the save confirm's skipped message step, D345 three empty positional-sound hooks, D346 `Music_Play(0xFF)` unguarded, D347 the port's ten-frame fade where the PlayStation cuts, all the port's and latent or unheard; D34 gains its remove side, D339 this round's pairs; 2026-10-23, the battle twin-diff against the US PlayStation's matched twins: D335 the scaled damage's full width, D336 two unsigned coordinate conversions, D337 the effect preload's missing voice key-off, D338 a dword read of a word, all the port's and latent; D339 four propagated pairs unrelated and two citations swapped, tooling; 2026-10-23: D334 semi-transparent textured primitives blending every texel, so the rooftop rope draws dim, Capcom's port, fixed by DIV-0160 (the bit-15 round); D333 a 15-bit direct-colour page drawing nothing, so Amalgam's melt was still missing after DIV-0142, Capcom's (issue #111), fixed by DIV-0159; 2026-10-22: D332 the second-language re-break running a glyph-written speaker name into the speech, ours (group OS), fixed by DIV-0156's amendment (group NR: rows never re-flowed); D331 `setup` dropping an existing install's saves, ours, fixed; the reading-row round's fold-in: D326 the nue save's party names under `ja-JP`, the recipe save's, open; D327 the next-page arrow on a one-pair page, the original's rule under DIV-0155, left for the owner's eye; D328 the furigana readings unproofread, open, the readings follow-on; D329 recorded routes needing a press per page a layer splits and D330 the stale `orig3` state-hash pairs, tooling, open; 2026-10-21, the wide-ring round's fold-in: D292 narrowed to kind 0x8D's first frames by DIV-0041's wide-ring amendment, the owner accepts the remainder; D300 fixed by DIV-0151; D301's sibling case in areas 53 and 192 fixed by DIV-0071's third amendment; 2026-10-19, the quicksave round: D322 the save list's unbounded table, Capcom's, fixed by DIV-0146; 2026-10-18 evening: D279 fixed by DIV-0144 and DIV-0069's amendment, kind 16 and the fishing label built for `ja-JP` (D280's part); 2026-10-18, the install-gap round's fold-in: D319 the German disc-only equipment panel's slot icons, ours, fixed by DIV-0101's amendment; D320 the lost fight's music missing on every PSX-only and PSP-only install, ours, open, through D24; D286's French and German remainder fixed by DIV-0069's amendment and D289 by DIV-0064's, the owner's confirmation pending; D279 gains a second path; 2026-10-18: D318, the bedroom's song through Ryu's dream in Teepo's bed, the port's, fixed by DIV-0143, issue #88; 2026-10-17 night: D317, Amalgam's melt and the other captures into VRAM, the port's, fixed by DIV-0142, issue #84; D316 the event battles' track half on disc-built images, ours, fixed by DIV-0101's amendment, issue #83; 2026-10-17, the button unification round's fold-in — three hundred and eleven entries, D1..D315 with D19, D20, D29 and D309 unused; D314 and D315 numbered 2026-10-17 from the round's docs: PSP-EU's ram text naming the wrong button on its own disc and PSP-EU's well testing the West's buttons, Capcom's, the second changed by DIV-0139; in the same fold-in D272 fixed by DIV-0140, D274 by DIV-0137 (not seen), D275 by DIV-0135, D273 found to be D307 (fixed by DIV-0130) and D246 by DIV-0141; D312 the Controller panel's crash on a PC install with no layer, ours, and D313 the disc-only fishing records, ours, both fixed 2026-10-17; D302..D311 numbered 2026-10-14..17 as found (D302 fixed by DIV-0127, D303 by DIV-0101's amendment, D304 and D306 fixed, D305 refused since 2026-10-16, D307 fixed by DIV-0130, D308 by DIV-0132, D310 and D311 fixed 2026-10-17); 2026-10-14, the ultrawide round's fold-in — two hundred and ninety-eight entries, D1..D301 with D19, D20 and D29 unused; D290..D301 numbered 2026-10-14 from the round's docs: D290 the 16:9 off-screen flag and D291 the windows' late free, ours, fixed by DIV-0041's amendments; D292 the far cameras past the cell ring (I37), D293 the breath mote and D294 the column's sound left at Capcom's bounds, D295 the band's patch cells (the owner: leave for now) and D296 the slide-ins seen in the 21:9 band, ours, open; D297 the grab's four CPU readers, the port's, open; D298 the eight recipes without a save and D299 the band census's blind spots, ours, tooling; D300 the faerie through the table, Capcom's, the owner's call; D301 the camp's fire under Garr, ours, fixed by DIV-0071's amendment; in the same fold-in D215 and D243 restored by DIV-0126, D242 rewritten (the gene crystal is Capcom's order, the owner accepts it; FY's fix was the bulb's filament), D283 fixed by DIV-0041's random split and D285 measured in part; D266..D289 numbered 2026-10-13 from the away day's docs: D266 the Western title mark's width, D267 the Meteor Strike chip's lifts, D268 `AREA111`'s segment over a twin row, D278 the Identify panel's question marks and D282 the Config values (fixed 2026-10-17), the exe image's gaps or map (D278's rows found, not built); D269 the French and German `ITEM` / `EXP`, the language build's, fixed by DIV-0117; D272 the Western dialogue's button names, D279 the Japanese fishing banner's NUL glyph (a crash on PSP-JP, one run in five), D280 the exe's strings under `ja-JP` and D289 group 16's one-record name shift, the language build's (D280 the owner's call); D273 and D274 the Western disc-only world-map and dock legends, ours; D275 the PC's static world-map key art, the port's, D58's class; D276 the all-calls tracer's stall, the tracer's; D277 the US title's copyright line on the Japanese layout, the owner's call; D283 the wide picture's `Rand` (fixed 2026-10-13), D284 area 23's sky and D285 the battle flash phases in wide, ours; D286 the fishing equip headings on the disc-only installs and D287 the launcher's clipped lines, ours; D288 Ryu's corrupted LZSS flag byte, the port's data, the owner's call; D270 the `stallion.txt` crash, the port's (an F12 save in an encounter field), fixed by DIV-0121; D271 the all-Capcom `Rand` parting and D281 the Japan disc's closer world-map camera unclassed (D281 the owner's hypothesis: Capcom's own later change); D254 and D255 seen on PSX-US too, D255 now a hang (the owner's answer required), D264 seen on PSX-US before its fix; D258..D264 fixed by DIV-0101's amendments and D265 with D247 on 2026-10-13; D251..D257 from the PSP-only round's end batch and visual findings: D251 the battle framing, D252 the equip icons and number formats and D253 the areas 16 / 45 crash fixed by DIV-0101's amendment; D254 the load screen's `"%X"` and D255 the inn's missing jingle on a PSX-only install the owner's calls; D256 the PSP title's framing, the owner's look; D257 the PAL banks, the owner's call since 2026-10-08; D56 fixed by DIV-0116 (2026-10-13); D244..D250 from the PSP-only round, numbered 2026-10-12 from its group docs: our importer's, map's, language build's and launcher's, none Capcom's (D246 fixed 2026-10-17 on the owner's decision; D247 fixed 2026-10-13; D249 narrowed by `main`'s DIV-0102 - the launcher refuses an unheld tag on a disc-only install - and kept for the engine alone and PC installs; D250's Language-box note checked: DIV-0102 fixes it); D242 the dragon gene clipped (Capcom's order, accepted 2026-10-14) and D243 the lighthouse's light rays before the flash not drawn (fixed by DIV-0126), the owner's route `eldritchGene.txt`; D240 the MP3 decoder's stale count at the end of a stream (mirrored by DIV-0091, fixed by DIV-0093 on 2026-10-11); D241 the owner's report that battle music runs on after a fight, not looked at; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful); D133..D161 latent, from the tenth round's chapter banks and area blocks, 2026-09-27..28 (D133 in most groups, D135 in some, D136's `Area_Descriptors` reads, D137 and D150 abort in ours where the original would run past, fault or crash; D138 and D145 PC only; the rest faithful); D162..D173 latent, from the eleventh round's boss band, 2026-09-28 (D166 a candidate, D167 a question for the owner, D168 owes a PSX comparison; D162, D163, D164 and D170 abort in ours where the original would jump wild, write past the pool or near address 0; the rest faithful); D174 fixed 2026-09-29; D175..D196 latent, from the twelfth round's battle engine and field remainder, numbered 2026-10-01 from the fourteen group docs (D181 a crash candidate, D184, D187 and D194 the owner's questions; D175 in most groups, D176 in eleven of twelve places, D177, D183, D186, D190 and parts of D178 and D196 abort in ours where the original would jump wild, write past the pool, fault, hang or read off the stack; D192 passes zeros for the original's frame; the rest faithful); D197 fixed by DIV-0070; D198 the port's, seen at scale 4, not fixed; D199 fixed by DIV-0071; D200..D238 latent, from the thirteenth round's effect engine, numbered 2026-10-03 from the thirty-seven group docs (D200..D214 the round's common classes, one entry each; D221, D222, D226 and D231 for the owner's eye, D224 and D225 the owner's questions; D200, D206 in part, D207, D208 in part, D216, D218, D220, D222, D225, D229, D230 and D233 abort in ours where the original would jump wild, write past the pool, fault, hang or read a stray pointer; D227 and D228 the original's, replaced in ours by DIV-0068 and DIV-0072; D226 and D231 PC only; the rest faithful))
+**Status:** IN PROGRESS (2026-10-26 evening, the spell sweep's fix wave: D102 Paralyzer's null cue read, Capcom's, seen and fixed by DIV-0183; D391 the sweep's enemy side counting rounds and crosses the fight did not keep, harness, fixed; D393 Super Combo's prompt text blank on disc-built installs, ours (the language build), fixed by DIV-0064's amendment (label group 24); D394 the revive halo's motes missing on a PSP-only install, ours (the twin read's PSP note), fixed by DIV-0101's amendment (the owned-tail floor); D245 fixed by DIV-0101's amendment (the PSP map's relocated words), Simoon's dusts seen on the rebuilt PSP-only install; Foretell's grey tile settled as the game's design, no entry; 2026-10-25 evening: D360 a sprite keeping the previous image's composition after a new upload to its slot (Ryu "turning around" in the Dauna Mine exchange), Capcom's port, fixed by DIV-0181; 2026-10-25: D359 Garr's spear over Ryu at the vaccination scene's camp, ours, fixed by DIV-0071's amendment (issue #132); 2026-10-24, later: D358 `Gte_ApplyMatrixLV`'s 32-bit products wrapping, so area 99's console flash folds over the horizon, the port's, fixed by DIV-0178; D357 area 99's lift missing an exact script count when instant pages close faster than Fast prints, Capcom's script race exposed by DIV-0158, closed by its pacing floor (issue #121); 2026-10-24: D355 the Skill Notes count's second number read off our stack, ours, fixed (issue #118); D356 a kind-0 jingle releasing the area's song for good, Capcom's port, restored by DIV-0177 (issue #120); 2026-10-23 evening, fix wave 1023 and the second twin-diff step: D348 the menu box's unsigned x and y, the port's, fixed by DIV-0165; D349..D352 from the US-against-JP region census, Capcom's JP-build defects the US build changed: D349 the battle start's uncleared pick flag, fixed by DIV-0163; D350 the Scena16 caption's missing wait, open, held for timing; D351 the gene name's missing NUL, fixed by DIV-0166; D352 the window reset's five fields, open; D335 and D342 found moot, D336 / D338 / D341 / D337 / D346 fixed by DIV-0161 / 0162 / 0164 / 0167 / 0168, D343 corrected and open; 2026-10-23, later, the field, menu, shop, start and exe twin-diff against the US PlayStation's matched twins, 955 takeovers: D340 the fishing panel's marker and range bar 3 and 19 px right of the JP disc's, D341 two `+0x70` writes keeping bytes the PlayStation zeroes, D342 an object kind answered as the pointer itself, D343 the inn night without the PlayStation's pause and resume, D344 the save confirm's skipped message step, D345 three empty positional-sound hooks, D346 `Music_Play(0xFF)` unguarded, D347 the port's ten-frame fade where the PlayStation cuts, all the port's and latent or unheard; D34 gains its remove side, D339 this round's pairs; 2026-10-23, the battle twin-diff against the US PlayStation's matched twins: D335 the scaled damage's full width, D336 two unsigned coordinate conversions, D337 the effect preload's missing voice key-off, D338 a dword read of a word, all the port's and latent; D339 four propagated pairs unrelated and two citations swapped, tooling; 2026-10-23: D334 semi-transparent textured primitives blending every texel, so the rooftop rope draws dim, Capcom's port, fixed by DIV-0160 (the bit-15 round); D333 a 15-bit direct-colour page drawing nothing, so Amalgam's melt was still missing after DIV-0142, Capcom's (issue #111), fixed by DIV-0159; 2026-10-22: D332 the second-language re-break running a glyph-written speaker name into the speech, ours (group OS), fixed by DIV-0156's amendment (group NR: rows never re-flowed); D331 `setup` dropping an existing install's saves, ours, fixed; the reading-row round's fold-in: D326 the nue save's party names under `ja-JP`, the recipe save's, open; D327 the next-page arrow on a one-pair page, the original's rule under DIV-0155, left for the owner's eye; D328 the furigana readings unproofread, open, the readings follow-on; D329 recorded routes needing a press per page a layer splits and D330 the stale `orig3` state-hash pairs, tooling, open; 2026-10-21, the wide-ring round's fold-in: D292 narrowed to kind 0x8D's first frames by DIV-0041's wide-ring amendment, the owner accepts the remainder; D300 fixed by DIV-0151; D301's sibling case in areas 53 and 192 fixed by DIV-0071's third amendment; 2026-10-19, the quicksave round: D322 the save list's unbounded table, Capcom's, fixed by DIV-0146; 2026-10-18 evening: D279 fixed by DIV-0144 and DIV-0069's amendment, kind 16 and the fishing label built for `ja-JP` (D280's part); 2026-10-18, the install-gap round's fold-in: D319 the German disc-only equipment panel's slot icons, ours, fixed by DIV-0101's amendment; D320 the lost fight's music missing on every PSX-only and PSP-only install, ours, open, through D24; D286's French and German remainder fixed by DIV-0069's amendment and D289 by DIV-0064's, the owner's confirmation pending; D279 gains a second path; 2026-10-18: D318, the bedroom's song through Ryu's dream in Teepo's bed, the port's, fixed by DIV-0143, issue #88; 2026-10-17 night: D317, Amalgam's melt and the other captures into VRAM, the port's, fixed by DIV-0142, issue #84; D316 the event battles' track half on disc-built images, ours, fixed by DIV-0101's amendment, issue #83; 2026-10-17, the button unification round's fold-in — three hundred and eleven entries, D1..D315 with D19, D20, D29 and D309 unused; D314 and D315 numbered 2026-10-17 from the round's docs: PSP-EU's ram text naming the wrong button on its own disc and PSP-EU's well testing the West's buttons, Capcom's, the second changed by DIV-0139; in the same fold-in D272 fixed by DIV-0140, D274 by DIV-0137 (not seen), D275 by DIV-0135, D273 found to be D307 (fixed by DIV-0130) and D246 by DIV-0141; D312 the Controller panel's crash on a PC install with no layer, ours, and D313 the disc-only fishing records, ours, both fixed 2026-10-17; D302..D311 numbered 2026-10-14..17 as found (D302 fixed by DIV-0127, D303 by DIV-0101's amendment, D304 and D306 fixed, D305 refused since 2026-10-16, D307 fixed by DIV-0130, D308 by DIV-0132, D310 and D311 fixed 2026-10-17); 2026-10-14, the ultrawide round's fold-in — two hundred and ninety-eight entries, D1..D301 with D19, D20 and D29 unused; D290..D301 numbered 2026-10-14 from the round's docs: D290 the 16:9 off-screen flag and D291 the windows' late free, ours, fixed by DIV-0041's amendments; D292 the far cameras past the cell ring (I37), D293 the breath mote and D294 the column's sound left at Capcom's bounds, D295 the band's patch cells (the owner: leave for now) and D296 the slide-ins seen in the 21:9 band, ours, open; D297 the grab's four CPU readers, the port's, open; D298 the eight recipes without a save and D299 the band census's blind spots, ours, tooling; D300 the faerie through the table, Capcom's, the owner's call; D301 the camp's fire under Garr, ours, fixed by DIV-0071's amendment; in the same fold-in D215 and D243 restored by DIV-0126, D242 rewritten (the gene crystal is Capcom's order, the owner accepts it; FY's fix was the bulb's filament), D283 fixed by DIV-0041's random split and D285 measured in part; D266..D289 numbered 2026-10-13 from the away day's docs: D266 the Western title mark's width, D267 the Meteor Strike chip's lifts, D268 `AREA111`'s segment over a twin row, D278 the Identify panel's question marks and D282 the Config values (fixed 2026-10-17), the exe image's gaps or map (D278's rows found, not built); D269 the French and German `ITEM` / `EXP`, the language build's, fixed by DIV-0117; D272 the Western dialogue's button names, D279 the Japanese fishing banner's NUL glyph (a crash on PSP-JP, one run in five), D280 the exe's strings under `ja-JP` and D289 group 16's one-record name shift, the language build's (D280 the owner's call); D273 and D274 the Western disc-only world-map and dock legends, ours; D275 the PC's static world-map key art, the port's, D58's class; D276 the all-calls tracer's stall, the tracer's; D277 the US title's copyright line on the Japanese layout, the owner's call; D283 the wide picture's `Rand` (fixed 2026-10-13), D284 area 23's sky and D285 the battle flash phases in wide, ours; D286 the fishing equip headings on the disc-only installs and D287 the launcher's clipped lines, ours; D288 Ryu's corrupted LZSS flag byte, the port's data, the owner's call; D270 the `stallion.txt` crash, the port's (an F12 save in an encounter field), fixed by DIV-0121; D271 the all-Capcom `Rand` parting and D281 the Japan disc's closer world-map camera unclassed (D281 the owner's hypothesis: Capcom's own later change); D254 and D255 seen on PSX-US too, D255 now a hang (the owner's answer required), D264 seen on PSX-US before its fix; D258..D264 fixed by DIV-0101's amendments and D265 with D247 on 2026-10-13; D251..D257 from the PSP-only round's end batch and visual findings: D251 the battle framing, D252 the equip icons and number formats and D253 the areas 16 / 45 crash fixed by DIV-0101's amendment; D254 the load screen's `"%X"` and D255 the inn's missing jingle on a PSX-only install the owner's calls; D256 the PSP title's framing, the owner's look; D257 the PAL banks, the owner's call since 2026-10-08; D56 fixed by DIV-0116 (2026-10-13); D244..D250 from the PSP-only round, numbered 2026-10-12 from its group docs: our importer's, map's, language build's and launcher's, none Capcom's (D246 fixed 2026-10-17 on the owner's decision; D247 fixed 2026-10-13; D249 narrowed by `main`'s DIV-0102 - the launcher refuses an unheld tag on a disc-only install - and kept for the engine alone and PC installs; D250's Language-box note checked: DIV-0102 fixes it); D242 the dragon gene clipped (Capcom's order, accepted 2026-10-14) and D243 the lighthouse's light rays before the flash not drawn (fixed by DIV-0126), the owner's route `eldritchGene.txt`; D240 the MP3 decoder's stale count at the end of a stream (mirrored by DIV-0091, fixed by DIV-0093 on 2026-10-11); D241 the owner's report that battle music runs on after a fight, not looked at; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful); D133..D161 latent, from the tenth round's chapter banks and area blocks, 2026-09-27..28 (D133 in most groups, D135 in some, D136's `Area_Descriptors` reads, D137 and D150 abort in ours where the original would run past, fault or crash; D138 and D145 PC only; the rest faithful); D162..D173 latent, from the eleventh round's boss band, 2026-09-28 (D166 a candidate, D167 a question for the owner, D168 owes a PSX comparison; D162, D163, D164 and D170 abort in ours where the original would jump wild, write past the pool or near address 0; the rest faithful); D174 fixed 2026-09-29; D175..D196 latent, from the twelfth round's battle engine and field remainder, numbered 2026-10-01 from the fourteen group docs (D181 a crash candidate, D184, D187 and D194 the owner's questions; D175 in most groups, D176 in eleven of twelve places, D177, D183, D186, D190 and parts of D178 and D196 abort in ours where the original would jump wild, write past the pool, fault, hang or read off the stack; D192 passes zeros for the original's frame; the rest faithful); D197 fixed by DIV-0070; D198 the port's, seen at scale 4, not fixed; D199 fixed by DIV-0071; D200..D238 latent, from the thirteenth round's effect engine, numbered 2026-10-03 from the thirty-seven group docs (D200..D214 the round's common classes, one entry each; D221, D222, D226 and D231 for the owner's eye, D224 and D225 the owner's questions; D200, D206 in part, D207, D208 in part, D216, D218, D220, D222, D225, D229, D230 and D233 abort in ours where the original would jump wild, write past the pool, fault, hang or read a stray pointer; D227 and D228 the original's, replaced in ours by DIV-0068 and DIV-0072; D226 and D231 PC only; the rest faithful))
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
 ([`DIVERGENCE.md`](DIVERGENCE.md)). An entry here is an observation, not a
@@ -2563,7 +2563,7 @@ argument. Ours passes what the callees read.
 
 **Status:** latent, harmless.
 
-## D102 — Paralyzer (row 123) reads through address 0 in an ordinary battle (candidate)
+## D102 — Paralyzer (row 123) reads through address 0 in an ordinary battle (the port's; seen 2026-10-26; fixed by DIV-0183)
 
 **Seen:** not seen here; TCRF reports the skill "crashes the game". Found by
 reading the code while taking it over, 2026-09-26, group E
@@ -2587,8 +2587,15 @@ the original does.** Not measured: a block clear through a pointer computed
 elsewhere would not show in the scan; the check is one read of `0x93BA58`
 (+ 0x128 n) in an ordinary battle, or the owner casting it.
 
-**Status:** candidate (the TCRF crash, explained by reading); fixing it is a
-divergence for the owner to choose.
+**Status:** fixed by DIV-0183 (2026-10-26): a null current-enemy or cue
+pointer plays no cue and the step goes on (animation 2, then the target
+flag), so the skill resolves; a written pointer takes Capcom's path
+unchanged. `BOF3X_ORIGINAL=Paralyzer_Start` for the original's read. Seen
+first the same day: the spell sweep's enemy side
+([`spell-sweep.md`](spell-sweep.md) section 5) had the combat route's
+Gooey cast it in an ordinary battle and ours crashed at the read
+(`bof3x.dll+0x346377`, reading `0x00000000`) - the measurement this entry
+asked for, and the answer: the pointer is 0 there.
 
 **PlayStation (read 2026-10-23, the twin read of
 [`psx-twin-check.md`](psx-twin-check.md)):** The unchecked read is Capcom's, the ordinary-battle crash is the port's.
@@ -7010,7 +7017,7 @@ or one a failed build left short, still does. **Where to start:** refuse
 safer default once SI's stand-ins make a PSP base complete"), naming the
 first few, with no flag to override.
 
-## D245 — `SimoonDust_Offsets` is misplaced in both PSP maps of `.data` (ours, the PSP exe map; not fixed)
+## D245 — `SimoonDust_Offsets` is misplaced in both PSP maps of `.data` (ours, the PSP exe map; fixed by DIV-0101's 2026-10-26 night amendment, the relocated-word rule)
 
 **Found:** the PSP-only round's group IM, 2026-10-12
 ([`psp-image.md`](psp-image.md) 1, `exe_tables.py measure` and the scratch
@@ -7021,12 +7028,41 @@ PC's in 18 bytes on both PSP-JP and PSP-EU (PSX-JP: 0). The map's
 content: the map's fault. It is also 12 of the 124 bytes by which the
 PSP-JP and PSP-EU images differ (`psp-image.md` 6).
 
-**Established:** reported, not fixed. The map is `exe_twins.py`'s; splitting
-PSP runs at relocated words would also unplace about 600 coincidentally
-equal bytes (`psp-image.md` 8). What reads `SimoonDust_Offsets` on a
-PSP-only install (the effect named in it) was not run. **Where to start:**
-make `exe_twins.py` stop a PSP run at a word the ELF's relocations mark,
-and keep the bytes that a second, unrelocated window still places.
+**Established:** the spell sweep's full member run on a PSP-only install
+(2026-10-26 night, [`spell-sweep.md`](spell-sweep.md) 9.3) is the run: Simoon
+(ability 103, its duplicate row 205) draws its dome and fan, but the two
+dust sprites are missing - the PSX-only install's dense shots `a103_10..18`
+show them rising inside the dome, the PSP-only install's none (the compare's
+boxes grow from `40,136..96,160` to `0,76..148,188` over those frames). The
+mechanism: `SimoonDust_Wait` `0x4CFD50` adds the row's three dwords (`+0xB`
+picks row 0 or 1; `magic_s23.md`) to the source actor's position
+`+0x34 / +0x38 / +0x3C` once, and `_Rise` / `_Arc` / `_Fall` / `_Draw` then
+project that point (`BattleActor_UpdateScreenXY`, `MapView_LinkPrimAt`).
+On a PSP-built image the six longs are the jump table's six unrelocated
+`.text` offsets (about 1.7 million each; the PC's rows are zero or small on
+x and y), so the dust starts 1.7 million units from the source on every
+axis and is never on screen. The map's part: a `BOOT.BIN` segment bridges
+the bytes between its agreeing runs, and the 24 bytes between
+`SimoonDome_Expand`'s pointer and `SimoonDust_Phases` were bridged - a
+hole, not an agreement (`exe_twins.segments`, `MAP_GAP` 64). **Fixed** by
+DIV-0101's amendment of 2026-10-26 night: `exe_tables.disc_image` leaves
+unplaced every non-zero byte of a `BOOT.BIN` map segment that lies in a
+word the ELF's `R_MIPS_32` relocations make a pointer where the PC's layout
+holds a number (`psp_relocated_words`, `pc_pointer_bytes`; a zero byte
+places nothing, so it stays). Measured over both PSP images: 162 (JP) / 161
+(EU) map bytes lie in such words, 144 / 143 of them zero and equal to the
+PC's, and the 18 non-zero ones are exactly the 18 that differed, all this
+symbol's; a first cut that dropped the zero bytes too moved seventeen
+data-pointer places by a byte over their map segments and failed `check`,
+so the rule keeps them. The freed bytes are then placed by `psp_exe`'s
+`psxmap` rule from the PSP disc's own `BMAGIC/MAGIC103.EMI#3` at
+`0x801F07AC`, the PSX-JP map's place, equal to the PC's 24 bytes. The "about 600 coincidentally equal bytes" of
+`psp-image.md` 8 were the cost of *splitting runs*; leaving the words out
+of a segment costs none. Verified on the rebuilt PSP-only install: Simoon alone with 40 shots three
+frames apart against the PSX-only install's (`abc_compare.py`): **40 of 40
+frames differ nowhere** where `a103_10..18` differed before, the two dusts
+rising inside the dome; only the list shot's two PSP icon boxes stay
+(`spell-sweep.md` 9.3).
 
 ## D246 — A PSP-EU `en-150` layer has no Config screen text: its labels and controller names draw blank (ours, the language build; fixed by DIV-0141, 2026-10-17)
 
@@ -10114,3 +10150,104 @@ and the PlayStation's script op, pose and upload functions are the JP's
 VRAM footprint and an upload over it frees the entry). Seen on captures of
 the owner's route; the owner's eye on the scene and on the other places
 they saw a turn is owed.
+
+## D391 — The spell sweep's enemy side counted crosses and rounds that the fight did not keep: half its casts never happened, and a cast's status desynced the recipe (harness; fixed 2026-10-26)
+
+**Found:** the sweep's own results ([`spell-sweep.md`](spell-sweep.md) 6.1,
+6.2, 2026-10-26): Howling (54) `failed` on the US-disc + PSP-EU install on
+both runs - "the input phase never ends after the three Defends", 900
+frames - and `done` on the PC install on both, unexplained.
+
+**Established** (the same evening, from the two runs' logs and a probe
+recipe with a peek set after every step, root
+`C:/Users/kerok/bof3x-runs/ss1026/howl`): three things of the harness's,
+none of the game's.
+
+1. The route's three members outpace Gooey, so `Battle_MarkFasterSide`
+   marked them after every Gooey cast and the next round was an EX round
+   (`0x904B7A` set): `Battle_BuildTurnOrder` admitted only the marked
+   members - turn order `02 01 00 FF` against a casting round's
+   `02 01 00 03` - and Gooey cast on every other round. The datlog shows
+   every second round loading no `MAGICnnn.DAT`. Half the enemy-side `done`
+   rows of the first runs had cast nothing; which half depended on the
+   chunk's parity, and that parity is why the PC passed Howling (cast after
+   an uncast Ovum) and the disc failed it (cast Ovum the round before).
+2. Ovum's target carries status 0x800 for five rounds (`BattleStep_Restore800`)
+   and `Battle_BuildEntryOrder` leaves it out of the cross, so the round
+   after Ovum had two crosses; the recipe's third Defend block pressed into
+   the next round's first cross and then waited for the input phase to end
+   while the game waited at the second cross. The sound banks "loading
+   during the Defends" were the commit's `BATL_SE.DAT` one Defend early.
+3. Howling puts the other members to sleep (status `+0x90` 0x20, the bit
+   `BattleInput_NextMember` skips; Bone Dance the same) for as many rounds
+   as `BattleStep_PartyWake20`'s roll takes - 750 frames on the probe, four
+   rounds of the fight running by itself - longer than the sweep's wait.
+
+**Status:** harness; fixed in `tools/spell_sweep.py` the same evening: the
+EX-round byte cleared at the cross, the members Defending by one `seek
+right` (the cross's double-tap) for however many crosses a round has, the
+party's low status byte cleared after the shots, and each cast confirmed by
+waiting for the enemy's command kind to read 4 before the shots. Ovum,
+Howling and Bone Dance then cast in one chunk on both installs; the whole
+enemy side re-run on both ([`spell-sweep.md`](spell-sweep.md) 6.3). The
+game's behaviour - the EX round, the egg, the sleep and its roll - is
+Capcom's as read in `battle_damage.cpp`, `battle_setup.md` and
+`battle_phases.cpp`, and nothing of it is changed.
+## D393 — Super Combo's prompt text is blank on a disc-built install (ours, the language build; fixed by DIV-0064's 2026-10-26 amendment, label group 24)
+
+**Found:** the spell sweep's gap watch, 2026-10-26, on the US PlayStation +
+PSP-EU disc-built install ([`spell-sweep.md`](spell-sweep.md) 6): the
+`language` row `Effect1b_ToggleText+0xE` `0x66A096..0x66A0D8` read 90
+times before any write by `SuperCombo_DrawText` `0x49B420`, and the shot
+`a003_1.png` with the prompt box at the field's centre empty where the PC
+install reads "GO!!".
+
+**Established:** the four prompt texts sit behind the pointer table
+`0x66A0D8` (`0x66A0B0`, `0x66A0C0`, `0x66A0C8`, `0x66A0D0`), bytes the
+draw turns into glyphs of the effect's own page (`c - 0x3F`), a `language`
+row of `recipes/exe-gaps.tsv` that no label group wrote, so a disc-built
+image left it zero and the draw returned at the first byte. The twin keeps
+them as four fixed records after the length bytes in `MAGIC003.EMI`
+(`BOOT.BIN` on a PSP); the PC's reader is the twin's to the instruction
+([`install-gap-labels.md`](install-gap-labels.md) 4.5).
+
+**Status:** ours (the language build's reach, not the port's); fixed by
+DIV-0064's amendment of 2026-10-26 - label group 24 writes the disc's four
+texts in place on every build. Verified by the sweep's ability 3 on the
+rebuilt install (the shot and the gap watch) and on a PC install under
+`en-US`; the French first text is not captured.
+
+## D394 — The revive halo draws no motes on a PSP-only install (ours, the twin read's PSP note; fixed by DIV-0101's 2026-10-26 night amendment, the owned-tail floor)
+
+**Found:** the spell sweep's gap watch and A/B compare, 2026-10-26 night, on
+an install built from the PSP-EU disc alone ([`spell-sweep.md`](spell-sweep.md)
+9.3): the `game-value` row `ReviveHalo_MoteCounts` `0x65B1D4..0x65B1D7` read
+5 times before any write by `ReviveHalo_Spawn` `0x4BD380` under Raise Dead,
+Resurrect and Ammonia, and the shot `a076_4.png` with the halo's ring but no
+motes where the PC install and the PSX-only install draw them.
+
+**Established:** `ReviveHalo_Spawn` spawns `byte [0x65B1D4 + byte +4]` motes
+(rows 0 and 1 the counts for `Revive_IsStrong` 0 / 1, rows 2 and 3 zero;
+[`magic_s17.md`](magic_s17.md)). The twin read of 2026-10-26
+([`exe-immediate-places.md`](exe-immediate-places.md) 7.3) placed the four
+bytes on the five PSX builds from `BMAGIC/MAGIC077.EMI#3` `0x801EF4A8` and
+wrote "the PSPs fill it" against the row - a misread of `exe-gaps.tsv`'s
+narrower PSP range. The PSP discs carry the same overlay with the twin at the
+same address and the count table at `0x801F049C` equal to the PC's four bytes,
+and `build_twins` finds it by its body; but the PSPs' `BOOT.BIN` map segment
+that places `ReviveMote_Types` starts one byte early, on the zero low byte of
+a pointer word before the table, so the free region was three bytes, two
+non-zero - under `find_imm`'s four-byte floor and not at a section's end.
+Nothing placed the counts; a PSP-only image held zeros, and the halo spawned
+no motes.
+
+**Status:** ours (the import engine's floor and the pass's note, not the
+port's); fixed by DIV-0101's amendment of 2026-10-26 night - the floor counts
+the reader symbol's bytes past the region that another range already holds
+equal to the PC when the twin's table holds them too (7.6), and the row places
+on PSP-JP and PSP-EU. Verified by the sweep's abilities 76 / 77 on a PSP-only
+install rebuilt from the branch (the row gone from the gap watch, the halo
+frames matching the PC install's in the halo region). The two neighbouring
+"the PSPs fill it" notes were checked: `AirRaidImage_ShadeSteps`' four bytes
+and `WardMote_Tilts`' first byte are the PSPs' `BOOT.BIN` map's, equal to the
+PC's, and the tilts' other seven an `immref` row - both really filled.

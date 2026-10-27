@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-10-22, I21 and I50 built; 50 entries, I1..I50 - see the index for each one's state)
+**Status:** IN PROGRESS (2026-10-22, I21 and I50 built; 52 entries, I1..I52 - see the index for each one's state)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -96,6 +96,7 @@ rule ([`README.md`](README.md)) here too.
 | I49 | What `Battle_AutoTargetCheck`'s `+0xBA` test means | engine | — | open 2026-10-20: the rename done, the meaning unconfirmed |
 | I50 | A second language in the row above the text: another held language layer re-flowed into the reading rows, page by page, by the same renderer as I21 | game behaviour / localisation | MEDIUM | **built 2026-10-22** (DIV-0156) - every held pair, the reading-row round ([`reading-row-second.md`](reading-row-second.md)); from issue #97 (the owner, 2026-10-20); the owner's play owed |
 | I51 | Revisit the battle command labels: the up command's window is `BattleItem_*` in the source though it is the ability list, the item command is `BattleItemCmd_*`, and the in-game command names of the cross were never checked against the dispatch names | source / naming | LOW | open 2026-10-26 (the owner): found while building the spell sweep ([`spell-sweep.md`](spell-sweep.md)) |
+| I52 | A state-driven injection harness for the PlayStation in Mednafen: pokes and presses gated on the emulator's RAM, so a sweep cast can be compared against a true PSX emulator | harness | LOW | open 2026-10-26 (the owner): only when a run needs comparing against real PlayStation behaviour; reads exist, writes and a driver do not |
 
 ---
 
@@ -2240,3 +2241,10 @@ is not captured).
 **Kind:** source / naming. **Feasibility:** LOW effort; a renaming pass, no behaviour.
 
 What was found while building the spell sweep ([`spell-sweep.md`](spell-sweep.md)): the command cross's up command (`Battle_MenuSteps[1]`, `0x447430`) opens the **ability** window, but its functions are named `BattleItem_Dispatch` .. `BattleItem_Confirm` (`battle_actor_copies.cpp`, [`battle_actor_copies.md`](battle_actor_copies.md); the names were called hypotheses there); the down command (`0x448180`) is the item command, named `BattleItemCmd_*` ([`battle_menu_states.md`](battle_menu_states.md)); [`button-tests.md`](button-tests.md) says the in-game names of rows 1 and 2 were not checked. The pass: confirm each `Battle_MenuSteps` entry's command by playing it (the owner's shots, or the sweep's `shot` of each window), rename in `symbols.toml` and the sources (`gen_symbols.py`), carry the old names in the docs' tables as the catalog's. Addresses stay; only names move (CLAUDE.md rule 3).
+
+## I52 — A state-driven injection harness for the PlayStation in Mednafen
+
+**Ask (2026-10-26, the owner):** log it as a low-priority idea for later, if we ever need to compare runs against a PSX-true emulator.
+**Kind:** harness. **Feasibility:** LOW priority; medium effort.
+
+What exists: the sibling's Mednafen oracle (`../BreathOfFire3Recomp/tools/mednafen_ctl.py`, keystrokes by `SendInput` to the foreground window, snapshots, savestates) and, from the Angel Tower trials ([`angel-tower-ledge.md`](angel-tower-ledge.md) 9), reads of the PSX RAM out of the emulator's process (the party records, the camera focus, the placement scratch). What does not: a write path (the same process-memory mechanism in principle, never exercised) and a driver that gates each press on a RAM condition the way the PC recipes' `until` / `seek` do. A recorded route cannot be replayed there - Mednafen's ticks are not the PC's, so a frame-counted queue diverges at once (the owner, 2026-10-26 night, when the first attempt was stopped). The spell sweep's casts (`--dead`, the list pokes, [`spell-sweep.md`](spell-sweep.md) 9) are the shape such a harness would replay: poke the PSX records (`BATTLE_RAM.md` in the sibling has the layout), read the phase byte, press, re-read. First step, when wanted: a `poke` verb in `mednafen_ctl.py` over `WriteProcessMemory`, checked by reading the word back, then one Raise Dead over a poked-fallen Ryu on the US disc for the 543 popup question.

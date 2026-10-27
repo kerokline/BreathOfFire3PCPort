@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 182 entries, DIV-0001..0182, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 183 entries, DIV-0001..0183, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -4396,6 +4396,34 @@ designed in rather than bolted on.
   German install). An overlay built before this sends record 59 empty: its
   fifty-nine names then land in their own records and record 59 keeps the
   shipped name.
+  **Amended 2026-10-26 - group 24, Super Combo's prompt texts** (the spell
+  sweep's catch on a disc-built install, [`spell-sweep.md`](spell-sweep.md) 6;
+  D393; [`install-gap-labels.md`](install-gap-labels.md) 4.5). *Original:*
+  `SuperCombo_DrawText` `0x49B420` (ours, `magic_s02.cpp`) draws text
+  `which` of the pointer table `0x66A0D8` - the four slots `0x66A0B0` (12
+  bytes), `0x66A0C0` (5), `0x66A0C8` (4), `0x66A0D0` (4), the PC's own
+  English - as 12 x 12 quads of the effect's glyph page, a byte less `0x3F`
+  the glyph's index and `0xFF` a half space, centred by the length table
+  `0x65A51C`; text 1 under `SuperCombo_Prompt1`, 2 under `_Prompt2`, 0 under
+  `_ShowCount` (text 3 has no PC reader). The slots are a `language` row
+  no layer wrote, so a disc-built image left them zero and the prompt boxes
+  were blank (the PC's own slot 0 has the full-width `0x20` where the
+  discs have the half space). *New:* group 24 writes the four texts in
+  place, raw (the bytes index the install's own glyph page, not the layer's
+  font), each slot witnessed by its entry of the pointer table, from the
+  twin of `SuperCombo_DrawText`: `MAGIC003.EMI`'s on a PlayStation disc,
+  `BOOT.BIN`'s on a PSP (`combo_prompts`: the routine with the `- 0x3F`,
+  found by following the values linear in its `andi 0xFF` byte to its two
+  reads - the lengths at L + which, the records at L + 4 + stride x which,
+  the stride read off the code: 13 on every disc but the French one's 14).
+  Built for every disc, the Japanese ones too (their words are the same
+  English, drawn by their own page). *Why:* the row's shape is this entry's
+  (a disc's words in a slot the PC's `.data` holds), and the discs' bytes
+  reproduce the PlayStation's prompt exactly - the same page, the same
+  length table. **It changes the PC install's output under every Latin
+  layer**: slot 0's two spaces become the discs' half spaces (6 px each in
+  place of the PC's 12), and under `fr-FR` the first text is the French
+  disc's. *Verification:* `loc_build.py selftest` (the reader on synthetic code: the US chain found, a stride-6 chain refused); the reader over the seven discs (`combo prompts 4` on each: the US words on six, the French first text on `psx-fr`); `importer.py check` and `exe_tables.py check` 0 errors; the US + PSP-EU disc-built install rebuilt from this branch (root `C:\Users\kerok\bof3x-runs\ss1026\sc`) and a PC install copy with an `en-US` layer from it, the sweep's ability 3 alone on each, the install's log `DIV-0064: 4 of 4 combo prompts` on both: the disc install's `a003_1.png` reads READY, `a003_2.png` GO!! and `a003_5.png` O HIT COMBO!! where the before-image's box was empty; the PC copy under `en-US` draws the same frames to the pixel, and under `original` its own bytes (the full-width spaces, text 0 wider). The gap watch (`gap,unread,language`, 900 latches) still lists `0x66A096..0x66A0D8` read 720 times "before a write" with writes 0 - the parked-page blind spot of [`install-gap-reads.md`](install-gap-reads.md) 9.3 (page `0x66A000` is parked on most latches, so the layer's load-time writes are not seen; the row is written by the log line and the shot). Not captured: the French first text under `fr-FR`.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
 
@@ -7296,6 +7324,62 @@ designed in rather than bolted on.
   by the rule. Live: a US disc-only install built by this branch's importer
   draws the TM whole at (262, 130), against the PC install's (R)
   (`analysis/shots/d266-title-mark-1020/`, local).
+- Amended 2026-10-26 (the effect, boss and scene gap rows read by hand,
+  [`exe-immediate-places.md`](exe-immediate-places.md) 7; a worktree off
+  `main` `25d12620`, not played): the `immref` placement kind's rule grew
+  three ways, each one a shape a disc keeps the PC's bytes in. (1) The
+  twin of a reader is taken from several body matches in a file when one of
+  them is at psx-jp's own address (`build_twins`; the boss `*_Enter`
+  template, `BossGaist_Anims+0x2` on the six builds that lacked it). (2) A
+  reader whose operand lies up to eight bytes below a region that starts at
+  its own data symbol reads that symbol, the index the x86 compiler folded
+  into the operand (`AirRaidImage_Bounce`'s `[idx*2 + 0x65A696]` against the
+  twin's `addiu -1`; `AirRaidImage_ShadeSteps`). (3) A row ends at its
+  reader symbol's declared `ctype x count` extent where the twin's bytes
+  differ past it, the bytes beyond being another symbol's
+  (`WardMote_Tilts`, `short[4]`, then MAGIC044's two shorts), and the
+  whole-region floor of issue 149 also passes a region that ends with its
+  section at three compared bytes, two non-zero (`Area121_BandHeights`,
+  `00 78 C8` at `AREA121.EMI#14`'s end). With 32 `symbols.toml` pairings
+  read by hand (the kind-0x18 sub-programs `Sub2E` / `Sub30` / `Sub31` moved
+  to AREA158 / 161 / 162 by their state bytes), twelve gap rows place from
+  the player's disc: `gap` rows PSX-JP 31 to 21, US 58 to 48, EU 59 to 49,
+  FR 62 to 52, DE 63 to 52, PSP-JP 29 to 22, PSP-EU 27 to 21; one row new
+  on every build (`WardMote_Tilts+0x8`, the MAGIC044 bytes no PC operand
+  names); `placed_differ` unchanged; `exe_tables.py check` with the seven
+  discs 0 errors. The Western `EffectKind66_States` and `Rest3e_Windows`
+  fields are confirmed regional (the Western discs hold other values) and
+  stay the owner's call; `TornadoMote_Phases+0x10` is the Identify panel's
+  English labels, a language row.
+- Amended 2026-10-26 night (D394, the spell sweep's PSP-only run;
+  [`exe-immediate-places.md`](exe-immediate-places.md) 7.6; a worktree off
+  `fix/sweep-wave`): the `immref` rule's floor counts the reader symbol's
+  bytes past the region that another range already holds equal to the PC,
+  when the twin's table holds them too (the owned tail). The PSPs'
+  `BOOT.BIN` map takes `ReviveHalo_MoteCounts`' fourth byte, a zero, one
+  byte early for `ReviveMote_Types`, and the three left were under the
+  four-byte floor though the PSP discs' `MAGIC077.EMI#3` holds the twin and
+  the table equal to the PC's; the halo rose without its motes on a
+  PSP-only install. The row now places on PSP-JP and PSP-EU
+  (`0x65B1D4..0x65B1D7`), the only recipe change: `gap` rows PSP-JP 22 to 21, PSP-EU 21 to 20, the PSX five
+  unchanged to the byte;
+  `placed_differ` unchanged; `exe_tables.py check` with the seven discs 0
+  errors. Verified by the sweep's Raise Dead and Resurrect on the rebuilt
+  PSP-only install (the gap watch and the halo frames against the PC's).
+- Amended 2026-10-26 night, later (D245, Simoon's dusts on a PSP-only
+  install; [`exe-immediate-places.md`](exe-immediate-places.md) 7.7): a
+  `BOOT.BIN` map segment's non-zero bytes that lie in a word the ELF's
+  `R_MIPS_32` relocations make a pointer, where the PC's layout holds a
+  number, are not placed (`disc_image`): the map bridges the bytes between
+  its agreeing runs, and `SimoonDust_Offsets`' 24 bytes were a jump table's
+  bridged over. Of 162 / 161 such bytes on PSP-JP / PSP-EU the 18 non-zero
+  ones are the 18 wrong ones, the rest zero and equal;
+  `psxmap` then places the table from the PSP disc's `MAGIC103.EMI#3`
+  (`0x801F07AC`). `gap` rows unchanged on every build,
+  `placed_differ` 3398 to 3380 on each PSP the PSX five
+  unchanged to the byte; `exe_tables.py check` with the seven discs 0 errors.
+  Verified by the sweep's Simoon on the rebuilt PSP-only install against the
+  PSX-only install's dense shots.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
@@ -11526,3 +11610,74 @@ designed in rather than bolted on.
   same code path).
 - **Reversible?** `BOF3X_ORIGINAL=AreaDataReload` keeps the port's
   (the bytes stay until the exe restarts).
+
+### Paralyzer plays no cue when the current enemy has no cue table, instead of reading address 0
+
+- **ID:** DIV-0183
+- **Date:** 2026-10-26
+- **Subsystem:** battle - the magic engine's row 123, `Paralyzer_Start`
+  `0x43F3E0` (ours, `src/game/magic_engine.cpp`; the enemy-only skill,
+  game ability byte 139, id `0x8B`). D102
+  ([`known-defects.md`](known-defects.md)); [`magic_engine.md`](magic_engine.md)
+  section 6 E1; found live by the spell sweep
+  ([`spell-sweep.md`](spell-sweep.md) section 5).
+- **Tier:** Intent - a port repair.
+- **Original behaviour:** the skill's first step plays a sound cue read
+  from the current enemy's cue table: `word [[0x939AD8] + 0xF8]` + 4,
+  handed to `0x437450` (`Sound_PlayEffectUnlessNone`: `Sound_PlayEffect`
+  unless the low word is 0xFFFF), then animation 2 on the caster, the
+  phase on. `0x939AD8` is the enemy object `BattleEnemy_RunAll` ran last,
+  and its `+0xF8` is written by nothing but the event-battle set-ups (62
+  stores at `0x437A55..0x4400D0`, a byte-pattern scan of `.text`; the
+  ordinary set-up `0x494570` / `0x4946C0` never writes it; the records lie
+  in `.data`'s zero-filled tail). Every other reader of the table tests
+  the event-battle byte `0x904AAA` first; this one does not. So in a
+  session where no event battle has written that slot the read is through
+  address 0: an access violation, TCRF's "crashes the game". Measured
+  2026-10-26: the spell sweep's enemy side had the combat route's Gooey
+  cast 139 in an ordinary battle and ours - the same read - died with
+  `CRASH 0: exception 0xC0000005 at bof3x.dll+0x346377`, `Paralyzer_Start`,
+  reading `0x00000000`. After an event battle the pointer stays (nothing
+  clears it) and the skill plays that boss's cue instead.
+- **New behaviour:** when the current-enemy pointer, or the cue pointer at
+  its `+0xF8`, is null, no cue is played and the step goes on as written:
+  animation 2 on the caster, the phase on, so the skill resolves through
+  `MagicFx_WaitOwnerAnim` and `MagicFx_FlagTargetEnd` (flag 0x40 on the
+  target) like any other row. One log line, `DIV-0183`, names the enemy
+  record it skipped the cue for. A written pointer takes the original's
+  path unchanged: the same word, the same +4, the same callee. The word
+  feeds nothing but that one call - `Sound_PlayEffectUnlessNone` reads it
+  and no later phase of the task reads the table - so the skip is the
+  whole of the change.
+- **Rationale:** a crash to the desktop in an ordinary fight is the
+  port's, made by the merge: on the PlayStation row 123 has no MAGIC file
+  and a fixed address in the boss window that only BOSS050's overlay
+  fills, and BOSS050's own set-up writes the pointer before its code can
+  run, so the console never took this read with a null pointer (D102's
+  twin read, 2026-10-23); the PC links every boss overlay resident, so
+  the read is reachable from any fight. There is no original cue to
+  restore - with the pointer null the original fetches nothing playable -
+  so the nearest behaviour to what the code meant is the skill without
+  its sound. Nothing is invented: the animation, the wait and the target
+  flag are Capcom's, in Capcom's order.
+- **Also in the PSX version?** The unchecked read is Capcom's (JP
+  BOSS050.EMI#16 `0x800C1A30` reads `+0xE8` with no test), the null case
+  is not reachable there (above). TCRF's PlayStation crash fits the jump
+  into an unloaded boss window, a different fault.
+- **Verification:** the start-up fuzz (`BOF3X_SHADOW=magic_engine`,
+  2,000 rounds per function) is as it was and seeds a written pointer
+  every round - Capcom's clone would fault on a null one - so it compares
+  the unchanged path: 44,000 rounds, 0 mismatches after the change. The
+  null path live, 2026-10-26: the spell sweep's enemy side on the PC
+  install, id 139 alone (`tools/spell_sweep.py run --side enemy --ids 139
+  --enemy-flags 0xE0 --enemy-odds 1 --chunk 1 --speed 4 --env
+  BOF3X_EFFECTLOG=1`, the combat route cut at 501), which crashed before
+  the change: the row `done` in 235 frames, no crash, the log's one
+  `DIV-0183` line naming enemy 0 (`0x93B960`, the Gooey) - so the pointer
+  is 0 there, the measurement D102 asked for - and the shots: the
+  `Paralyzer` banner with the Gooey in its cast pose (`a139_1`), Rei hit
+  for 2 as the target flag's reaction (`a139_2`, HP 997), the next
+  round's cross up (`a139_4`). No effect object: the row has none, only
+  the caster's animation. Run root `C:/Users/kerok/bof3x-runs/ss1026/par`.
+- **Reversible?** `BOF3X_ORIGINAL=Paralyzer_Start` leaves Capcom's
+  function, its read with it.

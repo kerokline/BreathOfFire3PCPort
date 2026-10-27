@@ -35,6 +35,7 @@ Usage:
   python tools/spell_sweep.py run --route R --cut F --members N --root DIR --launcher EXE
       [--side member|enemy] [--sections "Skills,Attack type spells"] [--ids ..] [--chunk K]
       [--speed 4] [--lang en-US] [--env K=V ...] [--enemy-flags 0x..]
+      [--poke "ADDR TYPE VALUE" ...] [--peek "ADDR TYPE NAME" ...] [--sibling DIR]
   `run` generates a chunk, runs it through input_run.py, reads the launcher's
   bof3x.log, writes results.tsv (id, name, section, status, caster, effect
   handlers, frames) and goes on past a FATAL or FAILED at the id after it.
@@ -50,12 +51,41 @@ import tomllib
 
 TOOLS = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(TOOLS)
-SIBLING_NAMES = os.path.join(os.path.dirname(ROOT), 'BreathOfFire3Recomp', 'names', 'abilities.toml')
-SIBLING_ITEMS = os.path.join(os.path.dirname(ROOT), 'BreathOfFire3Recomp', 'names', 'items.toml')
+# The archival sibling, beside the main checkout (a worktree's main checkout is
+# found through git); --sibling overrides (the other row tools' convention:
+# area_rows.py, magic_rows.py).
 
+
+def sibling_dir():
+    """The archival sibling's checkout, next to the main checkout (a worktree's
+    main checkout is where its .git file points: abc_run.py's main_checkout)."""
+    for base in (ROOT, _main_checkout()):
+        d = os.path.join(os.path.dirname(base), 'BreathOfFire3Recomp')
+        if os.path.isdir(os.path.join(d, 'names')):
+            return d
+    return os.path.join(os.path.dirname(ROOT), 'BreathOfFire3Recomp')   # --sibling names it when this is wrong
+
+
+def _main_checkout():
+    """A worktree's main checkout (abc_run.py's main_checkout), else ROOT."""
+    try:
+        common = subprocess.run(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'], cwd=ROOT,
+                                capture_output=True, text=True, check=True).stdout.strip()
+        return os.path.dirname(os.path.normpath(common))
+    except (OSError, subprocess.CalledProcessError):
+        return ROOT
+
+
+SIBLING = sibling_dir()
+
+OBJ_TRIO = 0x802D40      # the party's three records (records::PartyMember, 0x14C each); the working record below is +0x80 of each
+MEMBER_STATUS = 0x90     # u16: the member's status word (BattleInput_NextMember skips bit 0x20; 0x800 Ovum's egg)
 WORKING = 0x802DC0       # the working member record, Char_AbilityList's battle side
 WORKING_STRIDE = 0x14C
 HP, AP, MAX_HP, MAX_AP, DEF, AGI = 0x18, 0x1A, 0x20, 0x22, 0x26, 0x28
+CONFIRM = 'circle'       # the confirm button the recipe presses; --confirm cross on a layer whose confirm is cross (en-150's)
+STATUS = 0x10            # the status word of the working record (ObjTrio's +0x90): 0x4000 is a fallen member,
+                         # the word the hit path writes outright with HP 0 (battle_e3.cpp's two death sites)
 LISTS = (0x60, 0x6A, 0x74, 0x7E)   # the four ten-byte ability lists by type
 ENEMY = 0x93B960
 ENEMY_STRIDE = 0x128
@@ -65,6 +95,10 @@ ACT_KINDS = 0x65563C     # u8 by the enemy's +0x8E: four 2-bit action kinds
 INV_IDS0, INV_COUNTS0 = 0x904154, 0x904354   # category 0's 128 item ids and counts (the pointers at 0x656B00 / 0x656B14)
 ITEM_SAVED_PAGE = 0x904605                   # the battle item window's saved page, top and cursor (3 bytes)
 PHASE, STEP, COMMAND = 0x904AA0, 0x904AA1, 0x904AA2
+EXTRA_ROUND = 0x904B7A   # u8: the EX round's gate - set at a round's end when a side outpaces the other (Battle_MarkFasterSide);
+                         # the order builders then admit only the marked actors (battle_damage.cpp's Gated), and the
+                         # combat route's three members outpace Gooey every round, so every other round is theirs alone
+ENEMY_COMMAND_KIND = 0x105   # u8: BattleEnemy_PickAction's kind (4 an ability), cleared by EnemyOp_CastDoneCost
 ENEMY_COUNT = 0x904AB2
 FIELD_MODE = 0x66C7E8    # u16: 5 in battle
 
@@ -75,9 +109,9 @@ SPECIAL_1E_ZERO = {0x14}
 MEMBER_SECTIONS = ('Skills', 'Attack type spells', 'Assist type spells', 'Heal type spells')
 
 
-def names():
+def names(sibling=SIBLING):
     """{game id: (name, section)}: the sibling's id + 1."""
-    with open(SIBLING_NAMES, 'rb') as f:
+    with open(os.path.join(sibling, 'names', 'abilities.toml'), 'rb') as f:
         d = tomllib.load(f)
     out = {}
     for a in d['ability']:
@@ -85,9 +119,9 @@ def names():
     return out
 
 
-def item_names():
+def item_names(sibling=SIBLING):
     """{item id: (name, 'consumable')}: the sibling's consumables, the same ids."""
-    with open(SIBLING_ITEMS, 'rb') as f:
+    with open(os.path.join(sibling, 'names', 'items.toml'), 'rb') as f:
         d = tomllib.load(f)
     out = {}
     for r in d['item']:
@@ -96,8 +130,8 @@ def item_names():
     return out
 
 
-def table_for(side):
-    return item_names() if side == 'item' else names()
+def table_for(side, sibling=SIBLING):
+    return item_names(sibling) if side == 'item' else names(sibling)
 
 
 def parse_ids(spec, table, sections):
@@ -190,6 +224,10 @@ def enemy_pokes(members, ability, enemy_flags, enemy_odds):
         lines.append(f'poke 0x{r + DEF:X} u16 999')
     e = ENEMY
     lines.append(f'poke 0x{e + ENEMY_STATUS:X} u16 0')
+    # the EX round: the fight's members outpace Gooey, so the round after each of its casts is the party's
+    # alone (0x904B7A set at the round's end; Battle_BuildTurnOrder admits only the marked) - Gooey cast on
+    # every other round of the first runs. Cleared at the cross, before the commit builds the turn order.
+    lines.append(f'poke 0x{EXTRA_ROUND:X} u8 0')
     lines.append(f'poke 0x{ACT_KINDS + enemy_odds:X} u8 0xFF')
     lines.append(f'poke 0x{e + ENEMY_FLAGS:X} u16 0x{enemy_flags | 0x20:X}')
     for k in range(8):
@@ -215,55 +253,122 @@ def item_pokes(members, item):
     return lines
 
 
+def dead_pokes(dead):
+    """--dead: the members made fallen before the cast, as the hit path leaves
+    them - the status word 0x4000 outright and HP 0 (battle_e3.cpp). The
+    command gate (Battle_ActorCanCommand's mask 0x4964) drops them from the
+    cross and the revive abilities and Ammonia find them; the sprite stays in
+    its standing pose, since the death pose is the hit sequence's, which the
+    poke skips. After the sweep's own HP 999 pokes, which it overrides."""
+    lines = []
+    for m in dead:
+        r = WORKING + m * WORKING_STRIDE
+        lines.append(f'poke 0x{r + STATUS:X} u16 0x4000')
+        lines.append(f'poke 0x{r + HP:X} u16 0')
+    return lines
+
+
+def dead_peeks(dead):
+    """After the shots: did the cast bring them back (HP, the status word)."""
+    lines = []
+    for m in dead:
+        r = WORKING + m * WORKING_STRIDE
+        lines.append(f'peek 0x{r + HP:X} u16 dead{m}_hp')
+        lines.append(f'peek 0x{r + STATUS:X} u16 dead{m}_status')
+    return lines
+
+
+def target_ups(n):
+    """The target cursor starts on the caster (Battle_DefaultTarget: the first
+    not-out member from the caster upward) and the party side wraps the index
+    without skipping the fallen, so a revive wants the cursor moved as a
+    player moves it: n presses of up, (dead - caster) mod 3 - in the combat
+    fight Rei (member 2) casts first, so Ryu (0) is one up, Teepo (1) two."""
+    return ['wait 8'] + ['press up', 'wait 8'] * n
+
+
 def defend_block():
     return [f'until 0x{STEP:X} u8 == 2 timeout 900',
             'hold right 12',
-            'hold right+circle 4',
+            f'hold right+{CONFIRM} 4',
             'hold right 8',
             f'until 0x{STEP:X} u8 != 4 timeout 300']
 
 
-def cast_block(side, ability, name, members, shots, spacing, enemy_flags, enemy_odds=1):
+def defend_all():
+    """Every cross of this input phase Defends, however many there are: right
+    tapped twice within eight frames chooses the command the cross points at
+    (BattleMenu_CommandSelect's tap rule), and a seek presses until the phase
+    leaves 1. A fixed count of Defend blocks desynced the recipe whenever a
+    cast took a member out of the next round's cross - Ovum's egg (status
+    0x800, five rounds) left two crosses, and the third block's press landed
+    in the round after (Howling on the disc install, docs/spell-sweep.md 6.2)."""
+    return ['set hold 2', 'set gap 4',
+            f'seek right 0x{PHASE:X} u8 != 1 max 40',
+            'set hold 4', 'set gap 8']
+
+
+def cast_block(side, ability, name, members, shots, spacing, enemy_flags, enemy_odds=1, pokes=(), peeks=(),
+               dead=(), ups=0):
     tag = f'{"i" if side == "item" else "a"}{ability:03d}'
     L = [f'mark ability {ability} {name}',
          f'until 0x{STEP:X} u8 == 2 timeout 1800']
     if side == 'member':
-        L += member_pokes(members, ability)
+        L += member_pokes(members, ability) + dead_pokes(dead)
         L += ['hold up 12',
-              'hold up+circle 4',
+              f'hold up+{CONFIRM} 4',
               'hold up 8',
               f'until 0x{COMMAND:X} u8 == 1 timeout 120',
               'wait 24',
               f'shot {tag}_list 2',
-              'press circle',
-              f'seek circle 0x{STEP:X} u8 != 4 max 3']
-        for m in range(1, members):
-            L += defend_block()
+              f'press {CONFIRM}']
+        L += target_ups(ups)
+        L += [f'seek {CONFIRM} 0x{STEP:X} u8 != 4 max 3']
+        if dead:
+            L += defend_all()           # the fallen are out of the cross: however many crosses are left
+        else:
+            for m in range(1, members):
+                L += defend_block()
     elif side == 'item':
-        L += item_pokes(members, ability)
+        L += item_pokes(members, ability) + dead_pokes(dead)
         L += ['hold down 12',
-              'hold down+circle 4',
+              f'hold down+{CONFIRM} 4',
               'hold down 8',
               f'until 0x{COMMAND:X} u8 == 2 timeout 120',
               'wait 24',
               f'shot {tag}_list 2',
-              'press circle',
-              f'seek circle 0x{STEP:X} u8 != 4 max 3']
-        for m in range(1, members):
-            L += defend_block()
+              f'press {CONFIRM}']
+        L += target_ups(ups)
+        L += [f'seek {CONFIRM} 0x{STEP:X} u8 != 4 max 3']
+        if dead:
+            L += defend_all()
+        else:
+            for m in range(1, members):
+                L += defend_block()
     else:
         L += enemy_pokes(members, ability, enemy_flags, enemy_odds)
-        L += defend_block()[1:]          # the first cross is already up
-        for m in range(1, members):
-            L += defend_block()
+        L += defend_all()
+    L += [f'poke {p}' for p in pokes]          # --poke: after the sweep's own, before the cast
     L += [f'until 0x{PHASE:X} u8 != 1 timeout 900']
+    if side == 'enemy':
+        # the enemy's pick: its command kind +0x105 reads 4 from BattleEnemy_PickAction (its turn, after the
+        # members' Defends) until EnemyOp_CastDoneCost clears it; a timeout here is "the enemy did not cast"
+        L += [f'until 0x{ENEMY + ENEMY_COMMAND_KIND:X} u8 == 4 timeout 300',
+              f'peek 0x{ENEMY + ENEMY_COMMAND_KIND:X} u8 enemy0_command_kind', f'peek 0x{ENEMY + 0x106:X} u16 enemy0_ability']
     for k in range(shots):
         L += [f'shot {tag}_{k} 2', f'wait {spacing}']
     if side == 'enemy':
-        L += [f'peek 0x{ENEMY + 0x105:X} u8 enemy0_command_kind', f'peek 0x{ENEMY + 0x106:X} u16 enemy0_ability']
+        # an enemy skill's status on the party (Howling and Bone Dance put members to sleep, +0x90 bit 0x20)
+        # takes them out of the cross until the round-end wake roll says otherwise - a random number of rounds
+        # the fight runs by itself, Gooey casting again each round. The low status byte is cleared after the
+        # shots (the round after is theirs again); the high byte keeps Ovum's egg (0x800, its own five rounds).
+        for m in range(members):
+            L += [f'poke 0x{OBJ_TRIO + m * WORKING_STRIDE + MEMBER_STATUS:X} u8 0']
+    L += dead_peeks(dead)
+    L += [f'peek {p}' for p in peeks]          # --peek: after the shots
     # back to the input phase before the next block, so a stall is this ability's: a message a cast
     # leaves open waits for a button (confirm every twelve frames), a cast that never ends gives up at 480 frames
-    L += [f'seek circle 0x{PHASE:X} u8 == 1 max 40']
+    L += [f'seek {CONFIRM} 0x{PHASE:X} u8 == 1 max 40']
     return L
 
 
@@ -282,10 +387,15 @@ def write_recipe(path, a, head, chunk, table, n):
              f'# generated by tools/spell_sweep.py from {os.path.basename(a.route)} cut at frame {a.cut}']
     lines += head
     lines += [f'until 0x{FIELD_MODE:X} u16 == 5 timeout 3000', 'mark in battle'] + prologue_peeks()
-    lines += [f'seek circle 0x{PHASE:X} u8 == 1 max 120']
+    lines += [f'seek {CONFIRM} 0x{PHASE:X} u8 == 1 max 120']
     for i in chunk:
-        lines += cast_block(a.side, i, table[i][0], a.members, a.shots, a.spacing, a.enemy_flags, a.enemy_odds)
+        lines += cast_block(a.side, i, table[i][0], a.members, a.shots, a.spacing, a.enemy_flags, a.enemy_odds,
+                            a.poke, a.peek, a.dead, a.target_ups)
     lines += ['mark chunk done', 'end']
+    if a.confirm != CONFIRM:
+        # the sweep's own steps take the layer's confirm button; the route's head is the recording's
+        k = len(head) + 2
+        lines[k:] = [l.replace(CONFIRM, a.confirm) for l in lines[k:]]
     with open(path, 'w', encoding='utf-8', newline='\n') as f:
         f.write('\n'.join(lines) + '\n')
     return len(lines)
@@ -363,7 +473,7 @@ def rows_of(chunk, table, side, tag, order, per, end, fail, shots):
 
 
 def run(a):
-    table = table_for(a.side)
+    table = table_for(a.side, a.sibling)
     ids = parse_ids(a.ids, table, a.sections)
     head, _ = route_steps(a.route, a.cut)
     os.makedirs(a.root, exist_ok=True)
@@ -431,7 +541,7 @@ def run(a):
 
 def report(a):
     """results_<side>.tsv rebuilt from the root's bof3x_<side>_NNN.log copies."""
-    table = table_for(a.side)
+    table = table_for(a.side, a.sibling)
     logs = sorted(f for f in os.listdir(a.root) if f.startswith(f'bof3x_{a.side}_') and f.endswith('.log'))
     results = os.path.join(a.root, f'results_{a.side}.tsv')
     with open(results, 'w', encoding='utf-8') as out:
@@ -452,6 +562,7 @@ def report(a):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('--sibling', default=SIBLING, help="the archival sibling's checkout (names/abilities.toml, names/items.toml)")
     sub = ap.add_subparsers(dest='cmd', required=True)
     p = sub.add_parser('names')
     p.add_argument('--sections', default='')
@@ -473,6 +584,17 @@ def main():
         p.add_argument('--side', choices=('member', 'enemy', 'item'), default='member')
         p.add_argument('--enemy-odds', type=lambda s: int(s, 0), default=1, help="the fight's enemy 0 byte +0x8E (peeked): its row of 0x65563C is poked to 0xFF")
         p.add_argument('--enemy-flags', type=lambda s: int(s, 0), default=0, help="the fight's enemy 0 flag word +0x90 (peeked); bit 0x20 is added")
+        p.add_argument('--poke', action='append', default=[], metavar='"ADDR TYPE VALUE"',
+                       help="an input_run poke added to every cast after the sweep's own (an A/B on one byte)")
+        p.add_argument('--peek', action='append', default=[], metavar='"ADDR TYPE NAME"',
+                       help="an input_run peek logged after every cast's shots")
+        p.add_argument('--confirm', default='circle', choices=('circle', 'cross'),
+                       help="the confirm button of the install's layer (en-US circle; en-150 cross)")
+        p.add_argument('--dead', default='', metavar='M[,M]',
+                       help="members (0..2) made fallen before every cast - status 0x4000, HP 0 - for the revives; "
+                            "the other crosses then Defend by one seek (defend_all), and the fallen's HP and status are peeked after the shots")
+        p.add_argument('--target-ups', type=int, default=None,
+                       help="presses of up on the target cursor before the confirm (default (first dead - 2) mod 3: Rei casts first in the combat fight)")
         if name == 'recipes':
             p.add_argument('--out', required=True)
         else:
@@ -484,13 +606,17 @@ def main():
             p.add_argument('--game', default='', help="the game folder (input_run.py --game); a disc-built install's, with BOF3X_EXEIMAGE in --env")
             p.add_argument('--fresh', action='store_true', help='start results.tsv over')
     a = ap.parse_args()
+    if hasattr(a, 'dead'):
+        a.dead = tuple(int(x) for x in a.dead.split(',') if x != '')
+        if a.target_ups is None:
+            a.target_ups = (a.dead[0] - 2) % 3 if a.dead else 0
     if getattr(a, 'sections', '') == 'member':
         a.sections = set(MEMBER_SECTIONS)
     elif getattr(a, 'sections', ''):
         a.sections = set(s.strip() for s in a.sections.split(','))
     else:
         a.sections = set()
-    table = table_for(getattr(a, 'side', 'member'))
+    table = table_for(getattr(a, 'side', 'member'), a.sibling)
     if a.cmd == 'names':
         for i in sorted(table):
             if not a.sections or table[i][1] in a.sections:

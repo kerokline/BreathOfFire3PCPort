@@ -312,9 +312,16 @@ tree.
   would locate them (CD's pairing).
 - The PSX id table (section 5.2) was not built; the PSP's table stood in for
   it in the measurement (equal for ids below 883).
-- `SimoonDust_Offsets`' misplacement is reported, not fixed: the map is
+- ~~`SimoonDust_Offsets`' misplacement is reported, not fixed: the map is
   `exe_twins.py`'s, and splitting PSP runs at relocated words would also
-  unplace about 600 coincidentally equal bytes.
+  unplace about 600 coincidentally equal bytes.~~ **Fixed 2026-10-26 night**
+  (D245, DIV-0101's amendment): not a split of the runs but the map's
+  application - `exe_tables.disc_image` leaves a `BOOT.BIN` segment's bytes
+  unplaced where the ELF relocates the word and the PC's layout holds a
+  number (the bridged bytes between agreeing runs are where this bites);
+  the freed table comes from the PSP disc's `MAGIC103.EMI#3` by `psxmap`.
+  Seen in play: Simoon's dusts on a PSP-only install
+  ([`spell-sweep.md`](spell-sweep.md) 9.3).
 - No live run (the brief's rule).
 
 ## For the other files

@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-26: the spell sweep built and run, item 00000000000000; 2026-10-25 night: issue #149's Bone Dance hang and cart reset fixed on `fix/issue-149-bone-dance-cart` (PR #151, DIV-0182), item 000000000000; 2026-10-24: issue #121's lift stall handed over, item 000000, PR #129 for #118 / #120;
+**Status:** IN PROGRESS (2026-10-26 evening: the spell sweep's fix wave on `fix/sweep-wave`, item 000000000000000; 2026-10-26: the spell sweep built and run, item 00000000000000; 2026-10-25 night: issue #149's Bone Dance hang and cart reset fixed on `fix/issue-149-bone-dance-cart` (PR #151, DIV-0182), item 000000000000; 2026-10-24: issue #121's lift stall handed over, item 000000, PR #129 for #118 / #120;
 2026-10-23 night: the sound-layer round built on `sound/round`, DIV-0169..0175, D353..D354,
 item 0000, and the twin-diff remainder on `audit/twins-remainder`, item 0b; 2026-10-23 evening: fix wave 1023 merged as
 PR #117, item 000; 2026-10-23: PRs #112, #114, #115, #116)
@@ -48,6 +48,76 @@ hosted cross form).
 
 ## Pick up here
 
+000000000000000. **The spell sweep's fix wave is built and merged locally on `fix/sweep-wave`** (2026-10-26 evening,
+   off `main` `5bd84b98` - the PR #155 merge - unpushed; four agents, one worktree each under
+   `C:\Users\kerok\bof3x-runs\ss1026`, merged one at a time, the three-way `--sibling` overlap in
+   `tools/spell_sweep.py` resolved by hand). What the sweep surfaced and what became of each:
+   - **Paralyzer (139) crashed ours** reading the current enemy's cue table through a null `+0xF8` in an
+     ordinary battle (D102, Capcom's; the sweep's measurement: the pointer is 0 on the Gooey). **Fixed as
+     DIV-0183**: no cue when the table is unset, the caster's animation and the target flag as before; the
+     fuzz keeps the written-pointer path only (DIV-0063's precedent). Sweep row 139 `done` on the PC.
+   - **Super Combo's prompts blank on disc-built installs** (" HIT COMBO!!", "READY", "GO!!", "MISS": raw
+     glyph indices of the effect's page behind `0x66A0D8`, a `language` row). **Fixed as label group 24**
+     (DIV-0064 amended, D393): the four texts read from `MAGIC003.EMI`'s twin records (`BOOT.BIN` on a PSP),
+     every build including JP; the French disc has its own first text. The rebuilt install's shots read READY,
+     GO!!, the count. **Owed the owner's eye:** under any Latin layer the PC install's hit-combo line now takes
+     the disc's half spaces (narrower than the PC's own); the French text in play. The gap watch still lists
+     the row - the parked-page blind spot ([`install-gap-reads.md`](install-gap-reads.md) 9.3), not a miss.
+   - **Howling (54) "stuck input phase" on the disc install: the harness's, three ways** (D391, no DIV):
+     Gooey cast only every other round (the EX-round gate after `Battle_MarkFasterSide`), so half the earlier
+     enemy-side `done` rows cast nothing and chunk parity decided which; Ovum's egg left two crosses and the
+     fixed third Defend pressed into the next round; Howling's sleep kept the party off the cross for a random
+     number of rounds. The enemy side now clears the EX byte, Defends by one `seek right`, waits for the
+     enemy's command kind to read 4 before the shots (the moved peek; a timeout means "did not cast"), and
+     clears the party's low status byte after. **Re-run on both installs: 47 done of 48, row for row the
+     same, the kind-4 pick confirmed on all 48** ([`spell-sweep.md`](spell-sweep.md) 6.3); Nue Stomp's stall
+     stands. The member and item sides keep the fixed Defend blocks - a member-side cast that statuses a
+     member could desync them the same way (not seen).
+   - **Foretell's blank "Lucky color" box: the game's design, not a defect.** The lucky colour is never a
+     word: one tile per element the enemy is weak to, a grey tile when none (the Gooey). The PC's message text
+     is the US disc's byte for byte, and Capcom's own Foretell functions (`BOF3X_ORIGINAL` through the dev
+     launcher) draw the identical frame; with weaknesses poked in both draw the coloured tiles. Settled in
+     [`magic_s15.md`](magic_s15.md) 1 and [`spell-sweep.md`](spell-sweep.md) 4.
+   - Tool: `--sibling` (found through git from a worktree, overridable), `--poke` / `--peek` per cast.
+     **Original-code sweep runs need `bof3x-launcher-dev.exe`**: the release launcher refuses the hosted-only
+     switches with a modal dialog (one sat 736 s on the owner's screen).
+   - **The twin-read branch is merged into the wave** (item 0000000000000, the owner's word, 2026-10-26 evening).
+     What the sweep's comparisons did not reach among its rows: **`ReviveHalo_MoteCounts` was never read** in
+     any sweep run (`gw_report.tsv`: 0 reads) - Raise Dead (76) and Resurrect (77) spawn the halo's motes only
+     over a fallen member, and the sweep's party never falls (HP 999 before every cast), so a disc install's
+     Revive Halo stays unseen in play; the boss, area and scene rows (`BossGaist_Anims`, the kind-0x18 subs,
+     `Area121_BandHeights`, `Scena02_EffectX`, `LinkedObjectD_Amounts`) are outside a battle sweep altogether;
+     and the two regional fields the reading confirmed (`EffectKind66_States`, area 135's pieces 56 px right on
+     the Western discs; `Rest3e_Windows`, the rest menu re-laid per language) are the owner's calls, not
+     placements. `TornadoMote_Phases+0x10` (the Identify panel's `WEAK / EXP / ITEM / POINT`) the sweep did
+     read, and the panel drew the PC's to the pixel: the PC's draw does not take those labels from the row.
+   - **The revives over a fallen member** (`--dead`, [`spell-sweep.md`](spell-sweep.md) 9, the owner's ask the
+     same evening): Raise Dead, Resurrect (both rows each) and Ammonia bring Ryu back on the rebuilt disc install
+     and the PC alike, frames to the pixel, the halo's motes drawn - the placed `ReviveHalo_MoteCounts` seen in
+     play. Benediction is not a revive (the living are brightened, Ryu stays fallen with `0x2000` added).
+     **Owed the owner's eye / the PSX twin:** the green popup over Ryu reads 543 where Raise Dead leaves 250;
+     Ammonia leaves status `0x2000` with HP 1 (both installs the same, so ours either way).
+   - **The PSP-only install's halo had no motes** (D394, [`spell-sweep.md`](spell-sweep.md) 9.3,
+     `fix/sweep-psp-halo`): `exe-gaps.tsv` still listed three of the row's four bytes on the PSPs - the twin
+     read's "the PSPs fill it" was a misread; the PSPs' `BOOT.BIN` map takes only the fourth byte, one byte
+     early for `ReviveMote_Types`, and the three left were under `find_imm`'s floor. The floor now counts the
+     symbol's owned tail ([`exe-immediate-places.md`](exe-immediate-places.md) 7.6), the row places on both PSPs,
+     and the rebuilt PSP-only install draws the motes. Air Raid's and Ward's PSP notes checked true.
+   - **Simoon's dusts missing on the PSP-only install** (D245 fixed, same branch): the PSP map bridged a
+     `BOOT.BIN` jump table into `SimoonDust_Offsets`; `disc_image` now leaves a PSP map segment's bytes in
+     ELF-relocated words unplaced where the PC holds a number ([`exe-immediate-places.md`](exe-immediate-places.md)
+     7.7), and `psxmap` places the table from `MAGIC103.EMI#3`. Dense Simoon shots match the PSX-only install's.
+   - **The disc-only installs, the whole member side** ([`spell-sweep.md`](spell-sweep.md) 9.4, the owner's ask):
+     the revives over a fallen Ryu on the PC, the US + PSP, the US-only and the PSP-EU-only installs, then all 158
+     member ids on the PC, US-only and PSP-EU-only installs, pixel-compared pair by pair. Two PSP-only breaks,
+     both placed on this branch: the revive halo's motes (D394, a PSP map segment one byte early) and Simoon's two
+     dusts (D245, the PSP map bridging the hole where BOOT.BIN keeps a jump table; 1.7 million units off). Nothing
+     else but the EU layer's words and the PSP's icons. The gap watch saw no game-value row read while zero.
+   **Next:** a PR of `fix/sweep-wave` (built, both self-tests pass, checks 0 errors). Left from the sweep: a
+   sweep by enemy kind; Ward's tilts by eye; the 543 popup over a 250 revive against the PlayStation (IDEAS I52's
+   harness, when wanted; the status word's 0x2000 is settled, 9.2); the enemy and item sides on the disc-only
+   installs; a PSP-JP install. Worktrees `ss1026\wt_*` and the roots under `ss1026` are removable after the PR.
+
 00000000000000. **The spell sweep is built and run** ([`spell-sweep.md`](spell-sweep.md), 2026-10-26, the owner's
    idea): `tools/spell_sweep.py` casts every ability from the ability window (the id poked into the member's four
    lists), every enemy-only skill from enemy 0 (its ability bytes and kind row poked, its paralysis cleared) and
@@ -67,6 +137,23 @@ hosted cross form).
    `worktree-agent-ada98af7cd3367ec1` (two signed commits off `main`, 12 rows placed, its own HANDOFF item) to
    merge at the owner's word - **the sweep on an install rebuilt from it** (section 6.2) shows Air Raid's kicked
    image in its colours where the before-image drew it white, and the watch no longer lists the two placed rows.
+
+0000000000000. **The effect, boss and scene gap rows are placed from the disc** - **merged into `fix/sweep-wave`
+   on 2026-10-26 evening at the owner's word** (the worktree branch `worktree-agent-ada98af7cd3367ec1`, off `main`
+   `25d12620`; the checks re-run on the merged tree: `exe_tables.py check`, `importer.py check`, `loc_build.py selftest`,
+   0 errors;
+   [`exe-immediate-places.md`](exe-immediate-places.md) 7, census 8.5, DIV-0101's amendment of 2026-10-26).
+   Every remaining spell / effect / boss / scene `game-value` row was read at its PSX twin: twelve place as
+   `immref` (`BossGaist_Anims+0x2`, the kind-0x18 `Sub2E` / `Sub30` / `Sub31` / `Sub45` / `Sub21` states,
+   `Area121_BandHeights`, `Scena02_EffectX`, `AirRaidImage_ShadeSteps`, `LinkedObjectD_Amounts`,
+   `ReviveHalo_MoteCounts`, `WardMote_Tilts`) through 32 hand-read `symbols.toml` pairings and four rule
+   changes in `exe_tables.py` (the multi-hit twin, the index fold, the symbol-extent end, the section-tail
+   floor); recipes regenerated over the seven discs, `check` 0 errors, `gap` rows US 58 to 48, JP 31 to 21.
+   Confirmed regional, the owner's call: the Western `EffectKind66_States` and `Rest3e_Windows` fields;
+   `TornadoMote_Phases+0x10` is the Identify panel's English labels (a language row). Left: `WardMote_Tilts+0x8`
+   (MAGIC044's two shorts, no reader), `LinkedObjectD_Amounts` on PSP-EU (its `GAME.EMI` pair addresses
+   other bytes), the PSPs' two-byte `Area121_BandHeights+0x1`. **Nothing played**: a disc-built install's
+   D.Zombie-class check (the Ward / Revive / AirRaid spells, area 121's band, scene 2's effects) is owed.
 
 000000000000. **Issue #149 (the D.Zombie's Bone Dance never ends on a disc-built install; the cart drawn where
    the last push rolled it after a reload) is fixed** on `fix/issue-149-bone-dance-cart` (off `main` `95ef451a`,

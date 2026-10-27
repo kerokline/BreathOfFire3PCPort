@@ -213,7 +213,7 @@ Columns:
 | `WardMote_Tilts` | `0x65A918..0x65A924` | game-value | all 7 | 1 / 5 | `WardMote_PushMatrix` | tilt 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
 | `BoneDanceShake_Counts` | `0x65AA64..0x65AA68` | game-value | all 7 | 1 / 3 | magic C2 | shake count 0: **the D.Zombie's Bone Dance never ends on a disc-built install** (issue #149, seen 2026-10-25) | **PLACED 2026-10-25** - an `immref` row on all 7 (`MAGIC057.EMI#3`, the whole-region floor of exe-immediate-places.md 3) |
 | `TornadoMote_Phases` | `0x65AAA8..0x65AAD0` | game-value | all 7 | 1 / 25 | **`Identify_DrawEnemy` / `_DrawMember` / `_DrawItem`** (0x65AAC4.. the question marks); `TornadoMote_Task` below | **the Identify panel's `?` marks blank** (D278, captured 2026-10-13); JP and PSP too by this table | **NEEDS FIX** - **P1**: D278's two `twin` rows (US `0x801F0B88` 4 bytes, `0x801F0B8C` 8), found, not built; the rest P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
-| `ReviveHalo_MoteCounts` | `0x65B1D4..0x65B1D8` | game-value | all 7 | 1 / 2 | magic S17 | 0 motes | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
+| `ReviveHalo_MoteCounts` | `0x65B1D4..0x65B1D8` | game-value | all 7 | 1 / 2 | magic S17 | 0 motes: **the revive halo without its motes on a PSP-only install** (D394, the spell sweep 2026-10-26) | **PLACED** - an `immref` row from `MAGIC077.EMI#3` on the PSX 5 (2026-10-26, exe-immediate-places.md 7.3) and on the PSPs (2026-10-26 night, 7.6: the floor counts the symbol's bytes the `BOOT.BIN` map already holds) |
 | `Magic087_RisePhases` | `0x65B528..0x65B52C` | game-value | all 7 | 1 / 4 | `Magic087_RiseRun` | phase 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
 | `Fx106_ShardTables` | `0x65B8F4..0x65B918` | disc-unplaced | PSX (5) | 1 / 18 | `Fx106_DrawSpark` | shards from a zero table | **NEEDS FIX** - P2, `twin` by byte search (windows on the disc): 3 of 3 |
 | `WhelpBreath_GlowAngles` | `0x65BB24..0x65BB28` | game-value | all 7 | 1 / 3 | magic S27 | angle 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
@@ -251,6 +251,7 @@ Columns:
 | `Encounter_SlotChance+0x38` | `0x669CE8..0x669CED` | language-zero | all 7 | 1 / 4 | `BattleExtra_EquipOpen` (5 bytes copied over character record 7's name) | a blank name copied over the whelp's at that screen (not measured) | **NEEDS FIX** - P3; the US string is found in `BATE.EMI` (exe-chinese-remaining.md 7): a label group anchored on DIV-0020's `Whelp` slot |
 | `CommuName_RecordNames+0xF0` | `0x66A094..0x66A096` | language-zero | all 7 | 1 / 2 | `EffectKind55_DrawCount`, `EffectKind0F_DrawToggles` | a one-glyph count word blank | **NEEDS FIX** - P3; no disc source found (exe-chinese-remaining.md 7, left open) |
 | `CommuName_RecordNames+0xF4` | `0x66A098..0x66A0AC` | language-zero | all 7 | 1 / 20 | `EffectKind5E_DrawMenu` (a menu's title) | the parts menu's title blank | **NEEDS FIX** - P3; find `EffectKind5E`'s PSX twin (exe-chinese-remaining.md 7) |
+| `CommuName_RecordNames+0x10C` (`Effect1b_ToggleText+0x28`) | `0x66A0B0..0x66A0D8` | language | all 7 | 4 / 25 | `SuperCombo_DrawText` (the four prompt texts behind `0x66A0D8`) | Super Combo's prompt boxes blank (D393; seen by the spell sweep, 2026-10-26) | **FIXED under the layer** (2026-10-26) - label group 24 on every build, the JP ones too (install-gap-labels.md 4.5) |
 | `Fish_Kinds` | `0x66ADBA..0x66ADD8` | disc-unplaced | JP | 1 / 14 | `Fish_Begin` / `_Hooked` / `_Swim` (by symbol), `Area_ClassifyPending` | JP: the tail of the fish-kind table zero (not measured) | **NEEDS FIX** - **P2** (JP only), P2, `twin` by byte search (windows on the disc) (1 of 2) |
 | `Title_Sprites` | `0x65385E..0x65385F` | game-value | Western PSX | 1 / 1 | the title's draw (`mode_tasks`) | the Western title mark drawn zero wide (D266) | **OWNER CALL** - D266: a `twin` from `GAME.EMI#1` after the owner's yes (HANDOFF 4) |
 | `EffectKind3C_Op` | `0x653FA8..0x653FBC` | disc-unplaced | US, EU, FR | 1 / 13 | `EffectKind3C_Start` (an EventOp operand) | an object placed from zero (Western) | **NEEDS FIX** - P2, `twin` by byte search (windows on the disc): 1 of 1 |
@@ -618,6 +619,9 @@ Added by the round:
   confirmation pending).
 - **`0x669CE8` and `0x66A098`** on the five Latin builds (groups 17 and 20; PSP-EU's
   17 from `BOOT.BIN`). On the JP builds they are D280's.
+- **`0x66A0B0..0x66A0D8`**, Super Combo's prompt texts, on all seven builds
+  (group 24, 2026-10-26, D393: `MAGIC003.EMI`'s records, `BOOT.BIN`'s on the
+  PSPs; the JP builds' words are the same English, drawn by their own page).
 
 **HARMLESS (unread):** `SharedList_SortSteps+0xC`'s `SKILL` slot `0x664290`, which
 nothing in `BOF3.exe` reads (LA 2.3).
@@ -630,6 +634,48 @@ nothing in `BOF3.exe` reads (LA 2.3).
   D280's.
 - The JP builds' `0x653200`, `0x669CE8` and `0x66A098` (D280).
 
+**FIXED 2026-10-26, by hand** ([`exe-immediate-places.md`](exe-immediate-places.md)
+7; a worktree off `main` `25d12620`, recipes regenerated and checked there, not
+played). Each remaining spell / effect / boss / scene `game-value` row was read
+at its PSX twin with capstone: every Capcom value among them is on the disc
+verbatim at the address the twin's own `lui` pair forms, and the rows were
+unplaced only because their readers had no twin or the wrong one (the kind-0x18
+sub-program files were off by one: `Sub2E` is AREA158's, `Sub30` AREA161's,
+`Sub31` AREA162's). Placed as `immref`: `BossGaist_Anims+0x2` (the six builds
+that lacked it, by `build_twins` taking the body hit at psx-jp's own address),
+`EffectKind18Sub2E` / `Sub30` / `Sub31_States+0x14`, `Sub45_States+0xC`,
+`Sub21_States+0x8` (through `EffectKind18Sub52_Draw`, AREA142's copy of the
+sign table), `Area121_BandHeights` (PSX 5; a section-tail floor of three
+compared bytes, two non-zero), `Scena02_EffectX`, `AirRaidImage_ShadeSteps`
+(PSX 5; the index-fold shape, the reader's operand two bytes below the symbol),
+`LinkedObjectD_Amounts` (all but PSP-EU, whose `GAME.EMI` pair addresses other
+bytes), `ReviveHalo_MoteCounts` (PSX 5 then; the PSPs the same night, D394 -
+the floor counts the symbol's fourth byte the PSPs' map holds), `WardMote_Tilts` (the row ends at the
+symbol's `short[4]` extent; the four bytes after, `02 00 06 00`, are MAGIC044's
+and stay a gap as `WardMote_Tilts+0x8`, no reader). `gap` rows / bytes / PC
+non-zero: psx-jp 31 / 367 / 192 -> 21 / 299 / 147, psx-us 58 / 750 / 539 ->
+48 / 680 / 494, psx-eu-en 59 / 789 / 569 -> 49 / 723 / 528, psx-fr 62 / 828 /
+596 -> 52 / 758 / 551, psx-de 63 / 836 / 602 -> 52 / 758 / 551, psp-jp 29 /
+330 / 180 -> 22 / 270 / 141, psp-eu 27 / 296 / 156 -> 21 / 240 / 119;
+`placed_differ` unchanged; `check` 0 errors.
+
+**Read, nowhere on the disc in the PC's shape (2026-10-26, the same doc's 7.4):**
+
+- `EffectKind66_States+0x18` / `+0x20` / `+0x28` and `Rest3e_Windows+0x14` /
+  `+0x18` / `+0x1C` (Western PSX): the Western discs hold other values at the
+  twins' addresses (`AREA135.EMI#14 0x801F6230`: `0x10C / 0x111 / 0x111` for
+  the PC's `0xD4 / 0xD9 / 0xD9`; `SCENA10.EMI#0 0x801FE7CC`: `0x81 / 0x6C /
+  0x70` US and DE, `0x81 / 0x54 / 0x98` FR, for the PC's `0x82 / 0x18 /
+  0x10E`), the JP disc and PSP-EU the PC's. Regional values; **OWNER CALL**
+  (item 11's class).
+- `TornadoMote_Phases+0x10`: the Identify panel's ASCII labels `WEAK` / `EXP`
+  / `ITEM` / `POINT`, which `MAGIC060.EMI#0 0x801F0B64` holds in English on
+  US / EU-en, French on FR (`OBJET`), German on DE (`EP`, `OBJEKT`), and not
+  at all on JP. A `language` row by nature, for LA's layer; only `EXP` has a
+  PC reader (`Identify_DrawMember` / `_DrawEnemy`, unpaired).
+- `Area121_BandHeights+0x1` on the PSPs: two bytes, under every floor.
+
+The list as it stood before that pass (the statuses above supersede it):
 **NEEDS FIX - P3, still** (none seen read in play by RW's routes, RW 5). FP's
 reach is 38 of the 63 stage-B rows with a twinned reader, against 10 before it
 (FP 5).

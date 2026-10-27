@@ -3,7 +3,9 @@
 **Status:** IN PROGRESS (2026-10-18, install-gap round stage A, group OT, branch
 `install-gap/ot` off `06a209bd`. Built, checked and measured on the seven held
 disc builds; the regenerated recipes are not committed, the coordinator
-regenerates them at the merge. Nothing played.)
+regenerates them at the merge. Nothing played. **Section 7 added 2026-10-26:** the
+effect, boss and scene rows read by hand on a worktree off `main` `25d12620`;
+12 rows placed, four rule changes, the recipes regenerated and checked there.)
 
 The kind [`exe-import-engine.md`](exe-import-engine.md) 3.3 measured and did not
 build, staged in [`install-gap-round.md`](install-gap-round.md) 2 (OT): a gap row
@@ -268,6 +270,287 @@ the owner.
 - `psp_exe.py measure`'s `filled_by_psp` counts every `place` whose `from` has
   a `:`, so it now counts the `immref` ranges too, 1 PSP row. That count is
   PB's to adjust if it matters.
+
+## 7. The effect, boss and scene rows read by hand (2026-10-26)
+
+The remaining `game-value` gap rows of the spells, effects, bosses and scenes
+(census 8.5's "twinned, not placed", "readers unpaired" and OF-A lists), each
+read at its PSX twin with capstone from the seven held discs, on a worktree off
+`main` `25d12620`. Scratch under `D:\bof3x-runs\egt` (`egt.py`, `rows.py`,
+`scan.py`, `refscan.py`, `d.py`, `fstart.py`, `bodies.py`, `symfix.py`,
+`gapdiff.py`, `chain.sh`; addresses and counts only). Three things came out of
+the reading, and four rules grew from them.
+
+### 7.1 What the reading found
+
+1. **Every one of these rows that is a Capcom value is on the disc, verbatim,
+   at the address the twin's own `lui` pair forms.** None is folded into
+   instructions: `refscan.py` (every lui + low-half pair in every section's
+   code of psx-us whose formed address, in a section of the same file, holds
+   the row's bytes) finds exactly one reader for `LinkedObjectD_Amounts`
+   (`ETC/GAME.EMI#0` `0x801AD958`) and one for `WardMote_Tilts`
+   (`BMAGIC/MAGIC043.EMI#3` `0x801EF758`), and the area / scene / magic
+   overlays' own readers for the rest (7.3). The rows were unplaced because
+   their readers had no twin in `symbols.toml`, or the wrong one.
+2. **The kind-0x18 sub-program files were off by one.** The `tables` method's
+   slot-to-file choice ([`install-gap-pairs.md`](install-gap-pairs.md)) gave
+   `Sub2E` AREA147, `Sub30` AREA158 and `Sub31` AREA161. The sub-program's seven
+   functions (`0x801F2C04`, `0x2C48`, `0x2DB8`, `0x2EF8`, `0x2F54`, `0x3064`,
+   `0x30D4`) are the same 92-word `_Place` body in AREA158, AREA160, AREA161 and
+   AREA162; AREA147's copy is a 107-word variant with other function starts
+   (`bodies.py`). Each PC sub's state bytes are one file's and no other
+   section's on any disc (`scan.py`): `Sub2E_States+0x14`'s ten bytes are
+   AREA158's at `0x801F3434`, `Sub30`'s six AREA161's at `0x801F3438`,
+   `Sub31`'s six AREA162's at `0x801F342C`. `Sub2F` (AREA160, already placed)
+   fits the same order. `symbols.toml` moved the three subs' 21 entries
+   (`psx_status = "evidence"`, the data match and the body set as evidence).
+   Which PC sub AREA147's variant is was not read.
+3. **One PC function reads another sub's table.** `EffectKind18Sub21_DrawSpiral`
+   (`0x505E60`) is AREA091's `0x801F35F4` (the same sprite set-up as
+   `Area121_DrawTopBand`'s twin, then rsin / rcos over an `lb` sign table).
+   The PC's `EffectKind18Sub52_Draw` (`0x506290`, kind 0x18 slot 0x52's
+   handler) is AREA142's `0x801F3118`: its distance test
+   `|lh - +0x36| + |lh - +0x3A| < 0x15` and its frame-count x sign loop are
+   that function's. It reads the sign table `01 FF 01` from Sub21's states
+   (`0x65E330`), where the PSX Sub52 copy has its own at `0x801F355C`.
+   AREA091, AREA141 and AREA142 each hold the three bytes; the row is placed
+   through AREA142's reader.
+
+### 7.2 The four rule changes (`tools/exe_tables.py`)
+
+- **`build_twins`: several body hits, one at psx-jp's address.** The boss
+  `*_Enter` twins' masked bodies match three functions in `BOSS035.EMI#16`
+  (`0x800C1860`, `0x800C1994`, `0x800C1A98`: the same state-0 template with
+  other tables) on every build but psx-jp, so `build_twins` took none
+  (install-gap-pairs.md 8.1's unapplied follow-up). When the hits include the
+  psx-jp address itself, in the same file section, that hit is the twin. The
+  byte compare still decides the row. `BossGaist_Anims+0x2` places on the six
+  builds that lacked it.
+- **`find_imm`: the index fold (`IMM_FOLD`, 8 bytes).** `AirRaidImage_Bounce`
+  reads its shade table as `[idx*2 + 0x65A696]` for an index that starts at 1:
+  the x86 compiler folded the `-1` into the operand, two bytes below the
+  symbol `AirRaidImage_ShadeSteps` (`0x65A698`), inside `KickImage_Kinds`' last
+  pointer word, so `text_readers` credited it to no region. Its twin
+  (`MAGIC015.EMI#0` `0x801F0864`) keeps the `addiu -1` and forms `0x801F1640`,
+  the table itself. A reader whose operand lies up to 8 bytes below a region
+  that starts at its own data symbol is now a reader of that region, anchored
+  at the symbol (`at` 0). The floor (four bytes, two non-zero) is unchanged;
+  the four shade bytes meet it.
+- **`find_imm`: the row ends at its symbol's declared extent (`data_extents`,
+  `ctype x count`).** `WardMote_Tilts` is `short[4]`, and the PSX table at
+  `MAGIC043.EMI#3` `0x801EFC9C` is `0400 0800 0C00 0000` followed by the
+  overlay's zero padding (the EU disc's copy sits at `0x801EFCA8`). The PC's
+  next four bytes `02 00 06 00` are MAGIC044's: the two shorts before
+  `EvilEyeChild_Kinds`' code-pointer table, at `0x801F0A18` in
+  `MAGIC044.EMI#3`, which no PC operand names. The gap run spans both. Where
+  the twin's bytes differ past the reader symbol's declared end, the row ends
+  there instead of being refused. The tilts' eight bytes place;
+  `WardMote_Tilts+0x8` stays a gap (MAGIC044's bytes, no reader; 7.4).
+- **`find_imm`: the whole-region floor at a section's tail.**
+  `Area121_BandHeights`' region is `00 78 C8 00 00`, and `AREA121.EMI#14` ends
+  with `00 78 C8` at `0x801F68B8`: three compared bytes, two non-zero, and the
+  section's end. Issue 149's whole-region floor asked for three non-zero bytes.
+  A whole region that reaches the section's end with three bytes or more
+  compared, two of them non-zero, now also passes, anchored by the twin.
+
+### 7.3 Placed (`immref`), per build
+
+Each row's twin was read against its PC function (`pcdis.py`, capstone x86)
+before the pairing was written; the `psx_evidence` of each entry says what was
+compared. The two `_Place` / `_DrawRing` readers also pair, but `find_imm`
+records the first reader's row.
+
+| Row | PC range placed | Twin (file, function) | Builds |
+|---|---|---|---|
+| `BossGaist_Anims+0x2` | `0x64D78E..0x64D798` | `BOSS/BOSS035.EMI#16` `0x800C1860` `BossGaist_Enter` (multi-hit) | US, EU-en, FR, DE, PSP-JP, PSP-EU (JP had it) |
+| `EffectKind18Sub2E_States+0x14` | `0x65EB44..0x65EB4E` | `WORLD04/AREA158.EMI#13` `0x801F2C04` `_Run` | JP, US, FR, DE, PSP-JP, PSP-EU (EU-en had a `twin`) |
+| `EffectKind18Sub30_States+0x14` | `0x65EB80..0x65EB86` | `WORLD04/AREA161.EMI#13` `0x801F2C04` | JP, EU-en, DE, PSP-JP, PSP-EU |
+| `EffectKind18Sub31_States+0x14` | `0x65EB9C..0x65EBA2` (JP, PSPs `..A3`) | `WORLD04/AREA162.EMI#13` `0x801F2C04` | all 7 |
+| `EffectKind18Sub45_States+0xC` | `0x65EED8..0x65EEDC` | `WORLD03/AREA143.EMI#13` `0x801F31EC` `_Run` | PSX 5 |
+| `EffectKind18Sub21_States+0x8` | `0x65E330..0x65E333` | `WORLD03/AREA142.EMI#13` `0x801F3118` `EffectKind18Sub52_Draw` | all 7 |
+| `Area121_BandHeights` | `0x624720..0x624723` | `WORLD03/AREA121.EMI#14` `0x801F6390` `_DrawTopBand` (tail floor) | PSX 5 |
+| `Scena02_EffectX` | `0x660E44..0x660E50` (the run begins four zero bytes before the operand: `at` -4) | `SCENARIO/SCENA02.EMI#0` `0x801FCD14` `_PlaceEffect70` | all 7 |
+| `AirRaidImage_ShadeSteps` | `0x65A698..0x65A69C` | `BMAGIC/MAGIC015.EMI#0` `0x801F0864` `_Bounce` (fold) | PSX 5 (the PSPs' `BOOT.BIN` map holds the four bytes; 7.6) |
+| `LinkedObjectD_Amounts` | `0x660CCC..0x660CD0` | `ETC/GAME.EMI#0` `0x801AE90C` `_ShowAmount` (US `0x801AD90C`, PAL `0x801ADB90`) | JP, US, EU-en, FR, DE, PSP-JP |
+| `ReviveHalo_MoteCounts` | `0x65B1D4..0x65B1D8` (PSPs `..D7`) | `BMAGIC/MAGIC077.EMI#3` `0x801EF4A8` `_Spawn` | all 7 (the PSPs since 7.6; the pass wrote "the PSPs fill it", a misread) |
+| `WardMote_Tilts` | `0x65A918..0x65A920` (PSPs `+0x1..`) | `BMAGIC/MAGIC043.EMI#3` `0x801EF72C` `_PushMatrix` (symbol end) | PSX 5, PSP-JP, PSP-EU |
+
+Two rows of every Western PSX build changed their named twin without moving:
+`0x65E2DC..0x65E2E0` and `0x65E2F4..0x65E2F8` (`AREA102.EMI#13`) now name the
+`_Run` twins (`0x801F2C04`, `0x801F3264`) the multi-hit rule gives them, in
+place of the `_Place` / draw twins: the same place, the same bytes (`found`
+keeps the first reader's row; readers sort by PC address).
+
+### 7.4 Not placed, with the evidence
+
+- **`EffectKind66_States+0x18` / `+0x20` / `+0x28`** (Western PSX, three u16
+  x positions `0xD4`, `0xD9`, `0xD9`): `AREA135.EMI#14` at `0x801F6230` holds
+  `0x0D4 / 0x0D9 / 0x0D9` on psx-jp and `0x10C / 0x111 / 0x111` on psx-us (the
+  pieces moved 56 px right for the Latin layout). The PC's values are the JP
+  disc's; the Western discs hold other values, the PC's nowhere. The owner's
+  regional call stands (twins 2).
+- **`Rest3e_Windows+0x14` / `+0x18` / `+0x1C`** (Western PSX): the rest menu's
+  four windows at `SCENA10.EMI#0` `0x801FE7CC` (`EffectKind5E_Wait`'s twin
+  `0x801F7758` reads `0x801FE7DC..`). psx-jp and psp-eu hold the PC's
+  `0x82 / 0x18 / 0x10E`; psx-us and psx-de `0x81 / 0x6C / 0x70`, psx-fr
+  `0x81 / 0x54 / 0x98`: re-laid for each language. The same class as the row
+  above; an owner's call, not a placement.
+- **`TornadoMote_Phases+0x10`** (`0x65AAA8..0x65AAC4`, all 7): the bytes are
+  the ASCII labels `WEAK`, `EXP`, `ITEM`, `POINT` of the Identify panel.
+  `MAGIC060.EMI#0` at `0x801F0B64` holds `WEAK / EXP / `` / ITEM / POINT / GET`
+  on psx-us and psx-eu-en, `OBJET` on psx-fr, `EP` and `OBJEKT` on psx-de, and
+  the psx-jp overlay holds code pointers there (its panel draws no ASCII). A
+  `language` row by nature, not `game-value`: the PC's `EXP` (read at
+  `0x65AAB0` by `Identify_DrawMember` / `_DrawEnemy`, unpaired) equals the US /
+  EU-en disc's; the PC's zero word after it is the disc's `0x60`; `WEAK`,
+  `ITEM` and `POINT` have no PC operand. For LA's layer, not a placement rule.
+- **`WardMote_Tilts+0x8`** (`0x65A920..0x65A924`, `02 00 06 00`): MAGIC044's
+  two shorts before `EvilEyeChild_Kinds` (7.2); no PC operand names them.
+  Left as a gap; the neighbour-displacement place rule (import-engine 7.9)
+  could take it from `MAGIC044.EMI#3 0x801F0A18` once something reads it.
+- **`LinkedObjectD_Amounts` on psp-eu**: the twin's body is in PSP-EU's
+  `GAME.EMI#0` at `0x801AD90C` (the US address) and its pair forms
+  `0x801C9930` (the JP data address), where the extracted section holds other
+  bytes (`01 00 A8 40 ..`); no lui pair of any PSP-EU section addresses
+  `00 00 01 0A`. PSP-EU's `GAME.EMI` mixes the layouts; for the PSP round.
+- **`Area121_BandHeights+0x1` on the PSPs** (`0x624721..0x624723`): the PSPs
+  fill the first byte, and the two left are under every floor (two compared,
+  two non-zero).
+
+### 7.5 Before and after
+
+The chain of section 6 run twice on this worktree over the seven discs
+(`chain.sh`): once unchanged (every recipe byte-identical but `exe.toml`'s
+date), once with the rules and pairings above. `exe-gaps.tsv`'s `gap` rows /
+bytes / PC non-zero bytes (`gapdiff.py`):
+
+| Build | before | after | `imm_rows` | `identical` |
+|---|---|---|---|---|
+| psx-jp | 31 / 367 / 192 | 21 / 299 / 147 | 18 -> 29 | +45 |
+| psx-us | 58 / 750 / 539 | 48 / 680 / 494 | 18 -> 29 | +45 |
+| psx-eu-en | 59 / 789 / 569 | 49 / 723 / 528 | 17 -> 28 | +41 |
+| psx-fr | 62 / 828 / 596 | 52 / 758 / 551 | 16 -> 27 | +45 |
+| psx-de | 63 / 836 / 602 | 52 / 758 / 551 | 18 -> 30 | +51 |
+| psp-jp | 29 / 330 / 180 | 22 / 270 / 141 | 9 -> 17 | +39 |
+| psp-eu | 27 / 296 / 156 | 21 / 240 / 119 | 9 -> 16 | +37 |
+
+The rows that closed are exactly 7.3's; the one row that opened on every
+build is `WardMote_Tilts+0x8` (7.4). Since 7.6 (2026-10-26 night) psp-jp reads
+21 / 267 / 139 and psp-eu 20 / 237 / 117, `imm_rows` 18 and 17:
+`ReviveHalo_MoteCounts` closed on both. `placed_differ` is unchanged on every
+build. `exe_tables.py check --game --disc` x7: 0 errors (every new row decoded
+on its disc against `BOF3.exe`); `exe_imm.py selftest` 0 problems;
+`psp_exe.py check` OK; `importer.py check` 0 errors. No other recipe moved.
+Nothing played.
+
+### 7.6 The PSP-only install's revive halo (2026-10-26 night, D394)
+
+The spell sweep's PSP-EU-only run ([`spell-sweep.md`](spell-sweep.md) 9.3)
+drew the revive halo without its motes, and its gap watch read
+`ReviveHalo_MoteCounts` `0x65B1D4..0x65B1D7` before any write. 7.3's "PSX 5
+(the PSPs fill it)" was a misread of `exe-gaps.tsv`'s PSP range, which is
+three bytes where the PSX builds' was four: the PSPs fill only the fourth.
+
+What the PSPs hold, read on this branch (`diag.py` / `diag2.py` under
+`C:\Users\kerok\bof3x-runs\ss1026\psp`, addresses and counts only):
+
+- Both PSP discs carry `BMAGIC/MAGIC077.EMI` (and MAGIC076, the same image)
+  with section 3 at `0x801EEC00`, `0x36A4` bytes, as the PSX discs do;
+  `build_twins` finds `ReviveHalo_Spawn`'s psx-jp twin by its body
+  (signature 82 words) exactly once in it, at the same `0x801EF4A8`, on
+  psp-jp and psp-eu. Its lui pair forms `0x801F049C` (insns `48+50`), and
+  the four bytes there equal the PC's `ReviveHalo_MoteCounts` on both. So
+  the pairing was never missing: the twin, the table and the reader all
+  resolved. (The PSP's own `BOOT.BIN` holds no copy of the body: the
+  signature finds nothing in it on either disc. The machinery places from
+  the EMI, so nothing else was needed.)
+- What took the fourth byte: the PSPs' `BOOT.BIN` map segment that places
+  `ReviveMote_Types` (`0x65B1D8..`) begins at `0x65B1D7`, one byte early, on
+  a zero byte that is the low byte of a pointer word before the table
+  (the map's `BOOT.BIN` address, the loaded image's - the file offset is `0x80` more: psp-eu `0x2F56EB`, psp-jp `0x2F555B`). The region
+  `imm_regions` gave `find_imm` was `0x65B1D4..0x65B1D7`: three compared
+  bytes, two non-zero, under the four-byte floor and not a section tail, so
+  `nothing fits` - and the row stayed a gap with the counts zero.
+- The two other "the PSPs fill it" notes are true. `AirRaidImage_ShadeSteps`
+  `0x65A698..0x65A69C`: the PSPs' `BOOT.BIN` map holds all four bytes
+  (psp-eu `0x2F4B38`, psp-jp `0x2F4998`, the same neighbourhood as MAGIC003's data in [`install-gap-labels.md`](install-gap-labels.md) 4.5), equal to the PC's, no
+  `immref` row needed. `WardMote_Tilts`: the map holds `0x65A914..0x65A919`
+  (the first tilt byte, a zero; psp-eu `0x2F4C0A`, psp-jp `0x2F4A6A`) and
+  the `immref` row `0x65A919..0x65A920` (`at` 1) the other seven; the image
+  equals the PC's over the eight.
+
+**The fifth rule (`find_imm`): the owned tail counts for the floor.** When
+the compare reaches the region's end and the reader symbol's declared
+extent runs past it, the bytes from there to the extent that another range
+already holds equal to the PC, and that the twin's table holds equal too,
+add to the floor's counts (`agree`, `agree_nz`); the first byte that is
+unowned or differs ends the walk. The row placed stays the region's
+(`disc_image` writes only what nothing else filled), so `0x65B1D4..0x65B1D7`
+places on the PSPs with pc_end `0x65B1D7`, the PSX rows unchanged at
+`..0x65B1D8`. The floor itself is unchanged: four bytes compared, two
+non-zero, now counted over the symbol where the map already proved the
+rest.
+
+After (the chain of section 6 on this branch over the seven discs;
+`gapdiff.py`'s `gap` rows / bytes / PC non-zero): psp-jp 22 / 270 / 141 ->
+21 / 267 / 139, psp-eu 21 / 240 / 119 -> 20 / 237 / 117, `imm_rows` 17 -> 18
+and 16 -> 17; the five PSX builds unchanged to the byte (`exe-imm.tsv` gains
+the two rows and loses nothing; `exe.toml`'s two PSP sections move by one
+range and three `placed_equal` bytes each); `placed_differ` unchanged.
+`exe_tables.py check --game --disc` x7: 0 errors; `exe_imm.py selftest` 0
+problems; `psp_exe.py check` OK; `importer.py check` 0 errors. 7.5's table
+reads with these two lines for the PSPs. Played: the PSP-only install
+rebuilt from this branch, Raise Dead and Resurrect over a fallen Ryu
+([`spell-sweep.md`](spell-sweep.md) 9.3).
+
+### 7.7 The PSP map's relocated words (2026-10-26 night, D245)
+
+Not an `immref` row but the same night's second PSP-only finding, kept here
+beside 7.6 because it is the other way a PSP image held bytes that were not
+the PC's. `SimoonDust_Offsets` `0x65B7F0..0x65B808` (`long[6]`, two x / y / z
+rows `SimoonDust_Wait` adds to the source's position) differed from the PC
+in 18 bytes on both PSP builds (`psp-image.md` 1): the PSP map's `BOOT.BIN`
+segment `0x65B79B..0x65B868` (JP `0x2F5B33`, EU `0x2F5CC3`) *bridges* the
+24 bytes between `SimoonDome_Expand`'s pointer word and `SimoonDust_Phases`
+- `exe_twins.segments` joins runs of one displacement across holes of up to
+`MAP_GAP` 64 bytes, and the hole here is where `BOOT.BIN` keeps a jump table
+(six words the ELF's `R_MIPS_32` relocations make `.text` pointers, JP
+`0x2F5B88..`, EU `0x2F5D18..`). On a PSP-only install Simoon's two dusts
+started 1.7 million units from the caster and never showed.
+
+**The rule (`disc_image`): a `BOOT.BIN` map segment's non-zero bytes in a
+relocated word where the PC's layout holds a number are not placed.** The ELF's
+relocations (`psp_exe.Elf.pointer_words`, cached per disc) and
+`recipes/exe-pointers.tsv`'s pointer words (`pc_pointer_bytes`) are both in
+hand at install, so the rule needs no new recipe. Where the PC's word is a
+pointer too the mask leaves it unfilled anyway, so the rule changes nothing
+there. Measured over the two images before the rule: 162 (JP) / 161 (EU)
+map bytes lie in relocated words at PC numbers; 144 / 143 of them are zero
+and equal the PC's, and the 18 non-zero ones are the 18 that differ, all
+`SimoonDust_Offsets`'. The zero bytes stay placed: a first cut that dropped
+them too freed one zero byte at the end of seventeen data-pointer places on
+each PSP, the places grew over their map segments and `check` refused them
+(and the halo row of 7.6 grew back to `..D8`, its fourth byte being one of
+them). The freed 18 bytes (three of each word, the words' zero top bytes
+still the map's) are then `psp_exe`'s `psxmap` rows from the PSP disc's own
+`BMAGIC/MAGIC103.EMI#3` at `0x801F07AC..`, the PSX-JP map's place, each run
+equal to the PC's. The maps themselves
+(`exe_maps/psp-*.tsv`) are untouched; `psp-image.md` 8's "about 600
+coincidentally equal bytes" was the cost of splitting runs, which this does
+not do.
+
+After (the chain, `gapdiff.py` against the 7.6 state): `gap` rows / bytes /
+PC non-zero unchanged on every build (psp-jp 21 / 267 / 139, psp-eu 20 / 237
+/ 117, the PSX five as 7.6 left them); `exe-psp.tsv` gains four `psxmap` rows
+of three bytes on each PSP (`0x65B7F4`, `0x65B7F8`, `0x65B7FC`, `0x65B804`,
+from `MAGIC103.EMI#3` `0x801F07B0..`; the two zero rows `0x65B7F0` and
+`0x65B800` place nothing, as the rule reads); `exe.toml`'s PSP sections:
+`placed_differ` 3398 -> 3380 (the 18), `placed_equal` +12, `none_pc_zero`
++6, `ranges` 9617 -> 9627; `exe-imm.tsv`, `exe-places.tsv`, `exe-pointers.tsv`,
+`exe-layout.tsv` and `exe-rebuild.tsv` unchanged. `exe_tables.py check` x7
+0 errors, `exe_imm.py selftest` 0 problems, `psp_exe.py check` OK,
+`importer.py check` 0 errors (the two new memos registered in
+`build_reuse.MEMOS`).
 
 ## For the other files
 

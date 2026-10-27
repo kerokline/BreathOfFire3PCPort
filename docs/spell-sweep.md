@@ -2,8 +2,10 @@
 
 **Status:** MEASURED (2026-10-26: built and run - the three sides on the
 PC install, the member and enemy sides on a disc-built install before and
-after the twin-read placements, sections 4 to 7; open: Howling on the disc
-install, the Super Combo text row, the owner's eye). The owner's idea the
+after the twin-read placements, sections 4 to 7; the enemy side's Howling
+failure explained and the enemy side re-run on both installs the same
+evening, sections 6.2 and 6.3; open: the Super Combo text row, the owner's
+eye). The owner's idea the
 same day: "a
 harness where an enemy casts all the spells and abilities in the game, and
 the party has infinite life, just to check the render / functionality of
@@ -92,7 +94,19 @@ id; its action-kind row (`0x65563C[+0x8E]`, four 2-bit kinds chosen by
 - an ability - while the flag word `+0x90` has bit 0x20 (Gooey's 0xE0 has
 it; the sweep sets it anyway). The three crosses Defend; the enemy's turn
 plays the ability at its own target choice (`BattleEnemy_PickTarget` by the
-kind). This is how the 30 enemy-only abilities are reached: a member casting
+kind). Three more pokes and one change of step came from the Howling case
+(section 6.2, 2026-10-26 evening): the EX round's gate `0x904B7A` is cleared
+at the cross (the route's three members outpace Gooey every round, so
+`Battle_MarkFasterSide` gave the party every other round alone and Gooey
+cast on half the rounds of the first runs); the members Defend by a `seek
+right` with a two-frame hold and four-frame gap (right tapped twice within
+eight frames chooses the command the cross points at,
+`BattleMenu_CommandSelect`'s tap rule), one seek for however many crosses
+the round has, since a cast's status takes members out of the next round's
+cross; and after the shots each member's low status byte (`+0x90`) is poked
+to 0, so a sleep (0x20, Howling's and Bone Dance's) does not leave the fight
+running by itself through the wake rolls - the high byte keeps Ovum's egg
+(0x800), which has its own five rounds. This is how the 30 enemy-only abilities are reached: a member casting
 one hits a path Capcom's code never took - Nue Stomp (id 1) from a member
 calls `BattleEnemy_SetAnimationOf` with the member's actor, which the
 original runs on a record outside the eight enemies and ours aborts
@@ -139,6 +153,23 @@ A disc-built install: `--game <install's game dir> --env BOF3X_EXEIMAGE=<its cac
 `abc_run.py prepare` ([`abc-harness.md`](abc-harness.md)); then
 `tools/gapwatch.py report <dir> --dll <that run's bof3x.dll>`.
 
+`--sibling DIR` before the subcommand names the archival sibling's checkout
+when the tool runs from a worktree that has none beside it (the other row
+tools' option).
+
+An A/B on one cast: `--ids 68 --chunk 1`, `--poke "0x93BA1F u8 1"` (an
+`input_run` poke added to every cast after the sweep's own) and `--peek
+"0x93BA1F u8 e_fire"` (a peek logged after the shots), both repeatable; the
+same run with `--env BOF3X_ORIGINAL=<the functions>` is Capcom's code on the
+same fight - **through `bof3x-launcher-dev.exe`**, since the release
+launcher refuses the hosted-only switches with a dialog. Added 2026-10-26
+for the Foretell question (section 4).
+
+`--dead M[,M]` makes those members fallen before every cast (status
+`0x4000`, HP 0: the hit path's own death write) for the revives (section 9);
+`--target-ups N` presses up on the target cursor before the confirm (the
+default puts Rei's cursor on the first fallen member).
+
 The launcher folder must hold no `bof3x.ini` (the play ini's cheats and
 options would change the fight; [`abc-harness.md`](abc-harness.md)). One
 game at a time: the driver reads the launcher folder's `bof3x.log`. About
@@ -176,7 +207,24 @@ cast, the list shot `aNNN_list.png`):
 - Foretell (68): the message reads "Terrible luck.Lucky color:" and then a
   blank box where the colour's word should be (`a068_5.png`). Whether the
   PC's own text has the word, or the box is the game's, is not settled
-  here.
+  here. **Settled 2026-10-26, not a defect:** the box is the game's grey
+  tile. The lucky colour is never a word - `Foretell_DrawTiles` draws one
+  8 x 12 tile per element the enemy is weak to (its resistance class at
+  most 1, holy at most 3) after the colon, and one 0x60 grey tile when
+  there is none ([`magic_s15.md`](magic_s15.md) 1). The route's Gooey
+  (area 20 slot 4) is class 2 in every element and 5 in holy, so grey; the
+  en-US overlay's five messages are the US disc's own bytes word for word,
+  "Terrible luck." with no space before "Lucky" on both. The grade is the
+  fight's, not the pokes': HP 999 / 999 is the same full-HP band the fight
+  starts in, and the party's levels 1 / 1 / 5 against the Gooey's 45 give
+  the lowest level band (5) less the three-against-one bias (12): -7,
+  "Terrible luck". Capcom's own fourteen Foretell functions
+  (`BOF3X_ORIGINAL`, the developer launcher) draw the identical frame
+  (384 grey pixels at the same place), and with the Gooey's fire and holy
+  bytes poked weak (`--poke "0x93BA1F u8 1" --poke "0x93BA24 u8 3"`) ours
+  and Capcom's both draw a red and a white tile. Harness root
+  `C:\Users\kerok\bof3x-runs\ss1026\fore` (`pc_ours`, `pc_orig`,
+  `pc_ours_weak`, `pc_orig_weak`, `pc_levels`).
 - Super Combo (3): the prompt box at the field's centre reads "GO!!" on
   the PC (`a003_1.png`) - and is **blank on the disc-built install**
   (section 6).
@@ -225,9 +273,15 @@ through. **47 done, 1 failed** of 48 after the re-runs; two things in it:
   the same. The sweep reached it from an ordinary battle, as predicted;
   nothing new, now seen.
 
-The enemy's command kind (`+0x105`) peeked after the shots reads 0 on
-every id - the record is cleared by then; the peek is in the wrong place
-and says nothing.
+The enemy's command kind (`+0x105`) peeked after the shots read 0 on
+every id - the record is cleared by then (`EnemyOp_CastDoneCost`); the peek
+was in the wrong place and said nothing. Since 2026-10-26 evening the enemy
+side waits, once the input phase ends, for `+0x105` to read 4
+(`BattleEnemy_PickAction` writes it at the enemy's turn, after the members'
+Defends, 21 frames later in this fight) and peeks the kind and the ability
+there, before the shots; a timeout of that wait (300 frames) is "the enemy
+did not cast", which the first runs could not tell from a cast. The shots
+therefore start at the pick, about 20 frames later than before.
 
 ## 6. The disc-built run with the gap watch
 
@@ -303,6 +357,76 @@ this one; the two disc runs are.) `Effect1b_ToggleText+0xE` (Super Combo's
 "GO!!") is still read while zero: the `language` row stands, for a layer
 entry.
 
+**Fixed (2026-10-26, label group 24, DIV-0064 amended; D393):** the four
+texts come from `MAGIC003.EMI`'s twin of `SuperCombo_DrawText` (`BOOT.BIN`'s
+on a PSP), written in place behind `0x66A0D8`
+([`install-gap-labels.md`](install-gap-labels.md) 4.5). `loc_build.py selftest` (the reader on synthetic code: the US chain found, a stride-6 chain refused); the reader over the seven discs (`combo prompts 4` on each: the US words on six, the French first text on `psx-fr`); `importer.py check` and `exe_tables.py check` 0 errors; the US + PSP-EU disc-built install rebuilt from this branch (root `C:\Users\kerok\bof3x-runs\ss1026\sc`) and a PC install copy with an `en-US` layer from it, the sweep's ability 3 alone on each, the install's log `DIV-0064: 4 of 4 combo prompts` on both: the disc install's `a003_1.png` reads READY, `a003_2.png` GO!! and `a003_5.png` O HIT COMBO!! where the before-image's box was empty; the PC copy under `en-US` draws the same frames to the pixel, and under `original` its own bytes (the full-width spaces, text 0 wider). The gap watch (`gap,unread,language`, 900 latches) still lists `0x66A096..0x66A0D8` read 720 times "before a write" with writes 0 - the parked-page blind spot of [`install-gap-reads.md`](install-gap-reads.md) 9.3 (page `0x66A000` is parked on most latches, so the layer's load-time writes are not seen; the row is written by the log line and the shot). Not captured: the French first text under `fr-FR`.
+
+**Howling: explained** (2026-10-26 evening, D391 in
+[`known-defects.md`](known-defects.md); nothing of the port's or Capcom's).
+Three things of the harness's, read off the two logs and then off a probe
+recipe with a peek set after every step (`C:/Users/kerok/bof3x-runs/ss1026/howl/probe*`):
+
+1. **Gooey cast on every other round.** After each of its casts the EX-round
+   byte `0x904B7A` was set (`Battle_MarkFasterSide`: the route's three
+   members outpace Gooey) and `Battle_BuildTurnOrder` admitted only the
+   marked members (`battle_damage.cpp`'s `Gated`): the turn order read
+   `02 01 00 FF` where a casting round's reads `02 01 00 03`. The datlog
+   shows it as every second round loading no `MAGICnnn.DAT`. So half the
+   enemy-side `done` rows of sections 5 and 6 had cast nothing - which half
+   depended on the chunk's parity: on the PC's second run Ovum (52) fell on
+   an EX round and Howling (54) on a casting one; on the disc runs the other
+   way round. The PC "passed" Howling because it cast it after an uncast
+   Ovum; the disc "failed" it because it had cast Ovum the round before.
+2. **Ovum's egg took Rei out of the cross.** Ovum's target gets status
+   0x800 (`BattleStep_Restore800` lifts it after five rounds: HP and AP to
+   the maximum, `Battle_ClearStatus`); `Battle_BuildEntryOrder` leaves such a
+   member out, so the round after had two crosses, not three. The recipe's
+   third Defend block then pressed into the *next* round's first cross, and
+   its `until 0x904AA0 != 1` waited for the input phase to end while the
+   game waited at the second cross for a press that never came: "the input
+   phase never ends after the three Defends", 900 frames. The sound banks
+   "loading during the Defends" were the commit's `BATL_SE.DAT`
+   (`Battle_CommitRound`'s `load_dat(0xD1)`) one Defend early.
+3. **Howling itself puts Ryu and Teepo to sleep** (status `+0x90` 0x20, the
+   bit `BattleInput_NextMember` skips; Bone Dance sets the same), so once it
+   is really cast the party has no cross until `BattleStep_PartyWake20`'s
+   roll clears it - 750 frames on the probe, four rounds of Gooey casting
+   Howling again, longer than the 480-frame wait after the shots. The PC's
+   second run woke them the next round.
+
+The fix is the harness's (section 1.2): the EX-round byte cleared at the
+cross, one `seek right` Defend for however many crosses the round has, the
+party's low status byte cleared after the shots, and the cast confirmed by
+the pick (section 5's peek). With it Ovum, Howling and Bone Dance cast in
+one chunk on both installs, each with its `MAGICnnn.DAT` load and a kind-4
+peek, and Howling draws on the disc install as on the PC (the members
+stretched tall, the egg with them). The whole enemy side was re-run on
+both installs after the change (section 6.3).
+
+### 6.3 The enemy side re-run with the fix (2026-10-26 evening)
+
+The enemy side (48 ids: the 30 enemy-only, the 11 unused, the 7 unlabelled)
+run again on the US-disc + PSP-EU install (`abc_run.py prepare --set us-disc
+--only psx-us-psp`, root `C:/Users/kerok/bof3x-runs/ss1026/howl`, the main
+checkout's importer at 5bd84b98) and on the PC install, from one ini-less
+launcher copy, chunks of ten at speed 4, about seven minutes a side. **Both
+installs read the same row for row: 47 done, 1 failed** - Paralyzer (139),
+the known crash of row 123 ([`magic_engine.md`](magic_engine.md) 6) - with
+Nue Stomp (1) stalling the fight as before (section 5) and Chlorine (9) and
+Syphon (142) re-run after them. The difference from the first runs is what
+`done` now means: **every one of the 48 ids was picked by Gooey** (the
+`enemy0_command_kind = 0x4` peek before the shots, 48 on each install, each
+with its `MAGICnnn.DAT` load in the datlog), where the first runs had cast
+on every other round. Howling (54): `done` on both, 219 recipe frames, the
+members stretched tall on the disc install's shots as on the PC's.
+
+The gap watch over the disc run's seven chunks (`gapwatch.py report`,
+16,200 latches): 3 of 255 ranges read, 1 before any write - the empty save
+slot (`Encounter_SlotChance+0x1C`, the known owner's call) - and
+`Battle_CommandLabels` and `Task_StackTop` as every run before. No `gap`
+row is read by any enemy-only skill now that each of them is really cast.
+
 ## 7. Items (`--side item`)
 
 The owner's second half, built the same way: category 0's first id and
@@ -342,3 +466,220 @@ the seek gave up (`results_item.tsv`, status `refused`).
   a gene set; not swept.
 - One fight, one enemy kind, one area: effects that read the enemy's family
   or the field are seen in one setting.
+
+## 9. The revives over a fallen member (2026-10-26 evening)
+
+The twin read placed `ReviveHalo_MoteCounts` the same day, and no sweep run
+had ever read it (section 6's `gw_report.tsv`: 0 reads): Raise Dead and
+Resurrect spawn the halo's motes over a fallen member, and the sweep's party
+never falls. So `--dead`: before each cast the member's working-record status
+word is poked to `0x4000` and its HP to 0, the two words the hit path writes
+outright at a member's death (`battle_e3.cpp`); the command gate (mask
+`0x4964`) then leaves the member out of the cross, the game draws it lying
+down from the next frame (the pose is the state machine's, not the hit
+sequence's, so the poke is enough), and the other crosses Defend by the
+enemy side's one `seek right` (`defend_all`), since their count has changed.
+The target cursor starts on the caster (`Battle_DefaultTarget`, the first
+not-out member from the caster upward) and the party side wraps the index
+without skipping the fallen, so the recipe presses up `(dead - 2) mod 3`
+times - Rei casts first in this fight - as a player moves it. After the
+shots the fallen member's HP and status word are peeked.
+
+The run: the US-disc + PSP-EU install rebuilt from `fix/sweep-wave` (the twin
+reads and label group 24 in; root `C:\Users\kerok\bof3x-runs\ss1026\rv`,
+`disc` / `disc_item` with the gap watch in `gw`) and the PC install (`pc` /
+`pc_item`), Ryu (member 0) fallen, Rei casting, one id a chunk. Which
+abilities revive was taken from the code, not the names: `ItemUse_Revive`
+is the one field item handler that clears `0x4000` (Ammonia,
+[`item-use.md`](item-use.md)), and MAGIC077 serves both Raise Dead rows and
+both Resurrect rows ([`magic_s17.md`](magic_s17.md)); Benediction
+(MAGIC169, [`magic_s35.md`](magic_s35.md)) was cast as the owner's guess.
+
+| Id | Name | Disc install | PC install | Ryu after (HP / status) |
+|---|---|---|---|---|
+| 76 | Raise Dead | done, 289 frames | done, 289 | 250 / 0 |
+| 77 | Resurrect | done | done | 999 / 0 |
+| 180 | Raise Dead (type 3 row) | done | done | 250 / 0 |
+| 181 | Resurrect (type 3 row) | done | done | 999 / 0 |
+| 169 | Benediction | done, 277 | done, 277 | **0 / 0x6000 - not a revive** |
+| item 14 | Ammonia | done | done | 1 / 0x2000 |
+
+The shots (`a076_2..5.png`): Ryu lying at his spot, the Raise Dead banner,
+Rei's cast glow, the halo's motes rising, then Ryu standing with 250 and a
+green popup; **the disc install's frames are the PC's to the pixel** for
+every row, so the placed row draws as the PC's data did. The gap watch over
+the six runs lists 3 of 245 ranges read, only the empty save slot before a
+write (the placed row is no longer a range it guards; its evidence is the
+shots). Benediction raises the statue over the party and brightens the
+living members (`a169_2`, `a169_4`); Ryu stays fallen with `0x2000` added to
+his status, so it is a party effect on the living, not a revive - what its
+`0x2000` is was not read. Two things for the owner's eye, the same on both
+installs and so ours either way: the green popup over Ryu reads **543** where
+his HP after Raise Dead is 250 (`a076_5.png`); and Ammonia leaves the status
+word `0x2000` with HP 1 where the spells leave 0. Neither is a disc-install
+difference; whether the PlayStation shows the same number is the next
+question for either.
+
+### 9.2 Status bit 0x2000 (2026-10-26 night, a read of the code)
+
+Bit `0x2000` of the status word - the member's `0x802DC0 + m * 0x14C` +0x10
+(the party record's +0x90, `records::PartyMember::status`) and the enemy's
+`0x93B9E0 + ..` +0x92 (`records::BattleEnemy::status`, the object's +0x12) -
+is the **low-HP mark: set while HP is below a quarter of max HP, cleared
+otherwise**. It is not a revive mark, not a buff, not an exclusion, and it
+is not the round flags' `0x2000` (`EnemyOp_HitEnd` turns round flag 0x40
+into 0x2000 in the round word `0x904AA8`, which `battle_e3.cpp:516`
+reads) nor the second flags dword's (+0x130 / +0x134, the task-in-flight bit `BattleEnd_AwaitMemberTasks` waits on, `battle_turn_steps.cpp:364`).
+The sibling's read of the PSX setup (`names/functions.toml`,
+Battle_Setup's evidence line) names it the same, independently: "sets
+status 0x2000 (low HP) when HP < max/4 else clears it".
+
+Who writes it (every site is an HP-against-quarter test; none else writes
+the bit):
+
+| Site | Record | Writes |
+|---|---|---|
+| `BattleWin_MemberGaugeStates` `0x5975D0` (kind 5, every frame a member's gauge window steps) | member +0x90 | `LowFlag`: `or byte [+1], 0x20` while HP < max / 4, `and word, 0xDFFF` otherwise (`battle_win_states.cpp:125`, 229) |
+| `BattleWin_EnemyGaugeStates` `0x597320` (kind 4) | enemy object +0x12 = record +0x92 | the same `LowFlag` (`battle_win_states.cpp:203`) |
+| the battle setup (`battle_phases.cpp:233`) | member +0x90 | set when HP < max / 4, else cleared, once at battle start; the other counters zeroed beside it |
+| `Char_HealHp` `0x590CE0` (`item_use.cpp:302`) | the field record +0x10 or the working record by the battle flag | `Char_ClearStatus(id, 0x2000)` when HP after the heal is at or above max / 4; sets nothing |
+| `Field_FloorHurt` (`field_e2.cpp:260`) | both the field record +0x10 and Field_State +0x90 | set when HP after the floor's damage is at or below max / 4 |
+| `Menu_DrawMemberStatus` (`map_field_objects.cpp:457`) | the field record +0x10 | set below a quarter, cleared otherwise, each draw of the status window |
+
+Who reads it: `Escape_Chance` `0x44A520` (`battle_e4.cpp:1513`) adds 8
+to the escape chance once when any member not out has the bit; the enemy
+AI's condition `0x0E` (`EnemyAI_ChooseActions`, `battle_damage.cpp:925`) holds
+when another enemy not out has it - "an ally is in danger"; the gauge and
+status windows colour the HP value 4 (the warning colour) on it
+(`battle_win_states.md`, `battle_windows.md`); and `Battle_ActorCanCommand`'s
+mask `0x4964` leaves it out, so a member in danger still commands.
+`Battle_ClearStatus` `0x44F4B0` clears only the bits its mask names (0x4000,
+0x800, 0x80, 0x40, 0x10, 8, 4, 2, 1, and 0x20), so the round-end steps'
+`clear_status(status & 0xBF5F)` never touch it; and the hit path's death
+write (`battle_e3.cpp:506`, 929: `status = 0x4000`, HP 0) drops it, which
+is the `0x4000` the poke copies.
+
+So the table in section 9 reads as the arithmetic says, with Ryu's max HP
+999 (Resurrect's 999 is a full heal) and the quarter 249:
+
+- **Ammonia, 1 / 0x2000**: `ItemUse_Revive` writes HP 1 and
+  `Char_ClearStatus(0x4000)`; `Char_ClearStatus` does not clear 0x2000, and
+  the next frame's `BattleWin_MemberGaugeStates` sets it, 1 < 249. In play
+  the revived member stands with a red HP figure.
+- **Raise Dead 250 / 0, Resurrect 999 / 0**: MAGIC077's revive leaves HP at or
+  above the quarter, and the gauge step clears the bit the frame after.
+- **Benediction, 0 / 0x6000**: Benediction added nothing. The poke wrote
+  `0x4000` with HP 0; 0 < 249, so the first gauge step after it or'ed
+  `0x2000` in - the `0x6000` is the poke's `0x4000` plus the mark, and any
+  cast over the poked member that neither revives nor heals would peek the
+  same. (The revive rows read 0 and not 0x2000 for the same reason in
+  reverse.) Benediction's own effect on the living party is still what
+  `magic_s35.md` reads it as; this section only settles the bit.
+
+Not measured, and not needed: a `--peek` of the word per frame would show
+the `0x4000 -> 0x6000` step on the first gauge frame after the poke; the
+sites above are the only writers of the bit in `src/game`, so the reading
+stands without it.
+
+### 9.3 The PSP-only install (2026-10-26 night, D394)
+
+The same six casts on an install built from the PSP-EU disc alone
+(`importer.py build --source <PSP-EU iso> --lang en-150`, then `install
+--base`; root `C:\Users\kerok\bof3x-runs\ss1026\rv\pspeu`, the gap watch
+in `gw_pspeu`): the halo rose **without its motes** (`a076_4.png` against the
+PC install's), and the gap watch reported `ReviveHalo_MoteCounts`
+`0x65B1D4..0x65B1D7` (`gap`, `game-value`) read 5 times before any write by
+`ReviveHalo_Spawn` `0x4BD380`. Section 9's "placed" was the US disc's: on
+the PSPs `exe-gaps.tsv` still listed three of the four bytes as a gap, and
+the twin read's note "the PSPs fill it"
+([`exe-immediate-places.md`](exe-immediate-places.md) 7.3) was a misread of
+that narrower range.
+
+Why ([`exe-immediate-places.md`](exe-immediate-places.md) 7.6): the PSP
+discs carry `BMAGIC/MAGIC077.EMI` with the twin at the same address
+`0x801EF4A8` and its count table at `0x801F049C` equal to the PC's four bytes,
+and `build_twins` finds the twin by its body on both PSPs; but the PSPs'
+`BOOT.BIN` map segment for `ReviveMote_Types` begins one byte early, on the
+zero low byte of a pointer word before the table, so the free region was three
+bytes, two non-zero, under `find_imm`'s four-byte floor. The fix is a floor
+rule: the reader symbol's bytes past the region that another range already
+holds equal to the PC count when the twin's table holds them too; the row
+places on PSP-JP and PSP-EU (DIV-0101 amended). The two neighbouring "the
+PSPs fill it" notes are true: `AirRaidImage_ShadeSteps`' four bytes and
+`WardMote_Tilts`' first byte are the PSPs' `BOOT.BIN` map's (equal to the
+PC's), the tilts' other seven an `immref` row.
+
+The check: the PSP-only install rebuilt from `fix/sweep-psp-halo` (root
+`C:\Users\kerok\bof3x-runs\ss1026\psp`), abilities 76 and 77 with Ryu
+fallen. The gap watch over the two runs: 3 of 219 ranges read (220 before:
+the row is no longer one it guards), `ReviveHalo_MoteCounts` gone from the
+report, the one read before a write the empty save slot as in section 9. The
+compare against the PC install's section-9 runs (`abc_compare.py`,
+`cmp_076` / `cmp_077`): `a076_0..5` and `a077_0..5` **differ nowhere** -
+the halo frames `a076_3` / `a076_4` that differed in the halo region before
+(boxes `176,28..288,108` and `132,8..320,120`, 22,842 and 37,432 pixels)
+are the PC's to the pixel, the motes rising over Ryu; only the list shot's
+two small boxes (`224,72..244,92`, `224,180..244,200`: the PSP's own icons)
+stay, as on every PSP-built install. Ryu stands after with 250 and 999 as
+in the table.
+
+**Simoon's dusts (D245, the same night).** The full member sweep on the
+PSP-only install (`full_pspeu`) drew Simoon's dome and fan without its two
+dust sprites: the PSX-only install's dense shots (`simoon_psxus`, 40 shots
+three frames apart) show them rising inside the dome over `a103_10..18`,
+the PSP-only install's (`simoon_pspeu`) none, the compare's boxes growing
+from `40,136..96,160` to `0,76..148,188`. The row is `SimoonDust_Offsets`,
+the one placed-but-wrong symbol `psp-image.md` 1 had named: the PSP map
+bridged a jump table into it, and `SimoonDust_Wait` sent the dusts 1.7
+million units away. Fixed in `disc_image` (the relocated-word rule,
+[`exe-immediate-places.md`](exe-immediate-places.md) 7.7; DIV-0101
+amended), the table then `psxmap`'s from the PSP disc's `MAGIC103.EMI#3`.
+The check, the PSP-only install rebuilt again (`g_pspeu2`), Simoon alone
+with the dense shots: `a103_0..39` **differ nowhere** against
+`simoon_psxus` (before: `a103_10..18`, up to 48,298 pixels), the dusts in
+the dome from `a103_10`; the list shot's two PSP icon boxes as ever
+(`cmp_simoon`, root `C:\Users\kerok\bof3x-runs\ss1026\psp`).
+
+### 9.4 The three installs, the whole member side (2026-10-26 night)
+
+The owner's ask behind the revives: "compare a psx only / psp only build
+with the pc based builds to make sure none of the resurrection spells /
+effects were broken on those builds." So the revive set over a fallen Ryu
+on four installs, then the **whole member side** (158 ids, chunks of ten,
+`--confirm circle` - after the load the battle confirms with circle on
+every install, the release's cross is the title and load menu's only) on
+the PC install, a US-PSX-only install and a PSP-EU-only install, each
+built from this branch before the PSP fixes of 9.3, with the gap watch on
+the two disc-only ones; roots `C:\Users\kerok\bof3x-runs\ss1026\rv`
+(`full_pc`, `full_psxus`, `full_pspeu`, `gwfull_*`, the compares
+`cmp3_run_member_*`, `cmp_full_px_*`, `cmp_simoon_dense`).
+
+**The revives over a fallen Ryu** (`--dead 0`, the four installs):
+
+| Install | Raise Dead 76 / 180 | Resurrect 77 / 181 | Ammonia 14 | Frames against the PC (7 a cast) |
+|---|---|---|---|---|
+| PC | 250 | 999 | 1 | - |
+| US disc + PSP-EU (the players' shape) | 250 | 999 | 1 | identical |
+| US disc alone | 250 | 999 | 1 | identical |
+| PSP-EU alone | 250 | 999 | 1 | **the halo without its motes** (9.3, D394), fixed |
+
+**The whole member side**: 157 done of 158 on each of the three installs,
+the same three non-casts everywhere (Pilfer after Weretiger, Accession by
+design, Snooze after it). 1,100 frames a pair through `abc_compare.py`:
+
+| Pair | Frames differing | What |
+|---|---|---|
+| PC against US-PSX-only | 3 | Super Combo's count line (`a003_3..5`): the play install's cache predates label group 24, so it draws the PC's full-width spaces where the layer's text has the disc's half spaces (section 6.2, the owner's eye) |
+| US-PSX-only against PSP-EU-only | 164 | the list shots (the PSP's own icons, two 20 x 20 boxes, every cast); Fire Breath and Ice Breath's banner word (the EU English layer spells them as two words); **Simoon's two dusts missing on the PSP-EU install** (`a103_2`, `a205_2`; the dense shots `simoon_*`: nine frames, 30 to 54 after the cast, the haze growing over the enemy on the PSX install and nothing on the PSP's) - D245, the PSP map's bridged hole, fixed (9.3) |
+| PC against PSP-EU-only | 167 | the two rows above together |
+
+The gap watch on the two disc-only installs over the whole member side
+(18 runs each, 245 / 220 ranges): no `game-value` row read while zero;
+the `language` rows listed before a write are the parked-page blind spot
+of [`install-gap-reads.md`](install-gap-reads.md) 9.3 (Super Combo's
+prompts, the gene window's choices, the menu verbs, Identify's labels, all
+drawn by the layer in the shots) and the empty save slot. So on a
+disc-only install the member side's effects are the PC's but for the two
+PSP rows the sweep found and this branch places. Not swept here: the enemy
+side and the item side on the disc-only installs (the enemy side ran on
+the US + PSP install in 6.3), and a PSP-JP install.
