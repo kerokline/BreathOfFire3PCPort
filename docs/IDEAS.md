@@ -1496,6 +1496,10 @@ vocabulary for the kinds.
 
 ### Outcome
 _(2026-10-04) open; recorded, nothing decided or scheduled._
+_(2026-10-27) early decision 1 staged as a round at the owner's word:
+[`ledger-fields-round.md`](ledger-fields-round.md) - the tier is already the
+kind; the round adds the fields a preset needs and measures which switches a
+player's build can reach._
 
 ## I34 — The name entry back: the community's renamer, and naming at New Game
 
@@ -2033,6 +2037,8 @@ stage 3 open._
 _(2026-10-21) I5 folded in by the owner: recovering Capcom's translation-unit
 boundaries (from the globals' blocks and the `.text` order) as a source-layout
 pass after stage 3 - which of our files should be split or joined to match._
+_(2026-10-27) stage 3 staged at the owner's word:
+[`relocatable-image-round.md`](relocatable-image-round.md)._
 
 ## I45 — Shrink the quicksave files
 
