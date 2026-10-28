@@ -2265,9 +2265,10 @@ designed in rather than bolted on.
   above left the dialog on 2026-09-23 (`src/launcher/config.h:152..155`), and
   `scale=2` is no longer "unset" in effect: the launcher sets `BOF3X_SCALE`
   only for a `scale=` other than 2 (`src/launcher/config.cpp:529`), so a
-  `scale=2` in `bof3x.ini` gives the display's k of the 2026-10-11 amendment,
-  and on a scaled desktop k = 3 or 4 (D395). Only `BOF3X_SCALE=2` in the
-  environment fixes a window at 2, hence the `Switch:` below.
+  `scale=2` in `bof3x.ini` gives the display's k of the 2026-10-11 amendment:
+  on a scaled desktop k = 3 at 150 %, 4 at 200 % (D395). Only
+  `BOF3X_SCALE=2` in the environment fixes a window at 2, hence the
+  `Switch:` below.
 - **Rationale:** the owner's rule, 2026-09-23: "windowed options should be
   the available fixed k values, fullscreen uses largest k that will fit", k
   picked at start-up only. Polygon edges and 3D geometry are then drawn at
