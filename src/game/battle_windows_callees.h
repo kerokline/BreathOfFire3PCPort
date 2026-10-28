@@ -19,36 +19,36 @@ namespace battle_windows {
 
 namespace at {
 
-constexpr std::uint32_t kColour = 0x903A5A;        // s8: the window colour (Config), a CLUT row
+constexpr ::bof3::image::Va kColour{0x903A5A};        // s8: the window colour (Config), a CLUT row
 // kClutShadow: now Gfx_ClutStripSource[0x114] (symbols.toml). 64 bytes a row: word 0 is the window's line colour
 // kPartyObjects: now ObjTrio (symbols.toml). ObjTrio: the battle's party objects, stride 0x14C
 constexpr std::uint32_t kObjectStride = 0x14C;
-constexpr std::uint32_t kPartyBars = 0x80333F;     // 36 bytes a member: +0 +1 +2 +3 the bar bytes
-constexpr std::uint32_t kEnemies = 0x93B9E0;       // EnemyWorkingRecords, stride 0x128: +0 the name, +0xF 1 = has bar
+constexpr ::bof3::image::Va kPartyBars{0x80333F};     // 36 bytes a member: +0 +1 +2 +3 the bar bytes
+constexpr ::bof3::image::Va kEnemies{0x93B9E0};       // EnemyWorkingRecords, stride 0x128: +0 the name, +0xF 1 = has bar
 constexpr std::uint32_t kEnemyStride = 0x128;
-constexpr std::uint32_t kPartyCount = 0x904AB0;    // u8: members in the party row
-constexpr std::uint32_t kCrossSel = 0x904AB4;      // u8 (read as a dword): the command cross's selection
-constexpr std::uint32_t kCrossGrow = 0x904ABC;     // u8 x 5: each arm's growth; +5, +6 the two extras
-constexpr std::uint32_t kCrossExtra5 = 0x904AC1;
-constexpr std::uint32_t kCrossExtra6 = 0x904AC2;
+constexpr ::bof3::image::Va kPartyCount{0x904AB0};    // u8: members in the party row
+constexpr ::bof3::image::Va kCrossSel{0x904AB4};      // u8 (read as a dword): the command cross's selection
+constexpr ::bof3::image::Va kCrossGrow{0x904ABC};     // u8 x 5: each arm's growth; +5, +6 the two extras
+constexpr ::bof3::image::Va kCrossExtra5{0x904AC1};
+constexpr ::bof3::image::Va kCrossExtra6{0x904AC2};
 // kActor: now BattleE4_MenuActor (symbols.toml). the acting member's record pointer (+0x134 bit 1)
-constexpr std::uint32_t kCrossArms = 0x64E2AC;     // (x, y) bytes per arm, 7 of them
+constexpr ::bof3::image::Va kCrossArms{0x64E2AC};     // (x, y) bytes per arm, 7 of them
 // kCommandBoxes: now Battle_CommandBoxes (symbols.toml). Battle_CommandBoxes: s16 x, y per command, stride 8
 // kCommandLabels: now Battle_CommandLabelPointers (symbols.toml). Battle_CommandLabelPointers: 7 pointers to 0x669D28 + 8 i
-constexpr std::uint32_t kSlash = 0x64E31C;         // "/"
-constexpr std::uint32_t kPrintBuf = 0x904BA0;      // the sprintf buffer
-constexpr std::uint32_t kCurrent = 0x905B84;       // the window record Field_RunTaskRecords is running
+constexpr ::bof3::image::Va kSlash{0x64E31C};         // "/"
+constexpr ::bof3::image::Va kPrintBuf{0x904BA0};      // the sprintf buffer
+constexpr ::bof3::image::Va kCurrent{0x905B84};       // the window record Field_RunTaskRecords is running
 // kMsgHead: now BattleWindows_MsgHead (symbols.toml). u8: the battle message ring's read index (0..15)
 // kMsgTail: now BattleActorCopies_QueueWrite (symbols.toml). u8: its write index
-constexpr std::uint32_t kMsgRing = 0x93C2C4;       // 8 bytes an entry: +0 the text pointer
+constexpr ::bof3::image::Va kMsgRing{0x93C2C4};       // 8 bytes an entry: +0 the text pointer
 // kStateTable: now BattleObj_StateTable (symbols.toml). 27 handlers of a party object's state byte +1
 // kPoseFlags: now EventBattle_Flags (symbols.toml). u8, bit 0x20
-constexpr std::uint32_t kBattleKind = 0x904AA0;    // u8, 5 = a kind with its own poses
+constexpr ::bof3::image::Va kBattleKind{0x904AA0};    // u8, 5 = a kind with its own poses
 // kKindFlags: now Battle_EndFlags (symbols.toml). u8, bit 1
-constexpr std::uint32_t kPoseMode = 0x904AA8;      // u8, bit 0x10
+constexpr ::bof3::image::Va kPoseMode{0x904AA8};      // u8, bit 0x10
 // kTickGate: now BattleFlow_AnimGate (symbols.toml). u8: 0x441180 / 0x4411B0 tick unless set
-constexpr std::uint32_t kSkillFlags = 0x65C4DD;    // 24 bytes a skill: bit 3 of this byte
-constexpr std::uint32_t kPoseSet = 0x8C5D80;       // the pose set 0x589110 is handed (0x1800 bytes)
+constexpr ::bof3::image::Va kSkillFlags{0x65C4DD};    // 24 bytes a skill: bit 3 of this byte
+constexpr ::bof3::image::Va kPoseSet{0x8C5D80};       // the pose set 0x589110 is handed (0x1800 bytes)
 // The three handlers of window kind 0x597A30 dispatches on (+0 of its eighth
 // argument). Pointer-reached neighbours, not in this group (ours, by symbol).
 constexpr std::uint32_t kKindHandlers[3] = {bof3::addr::Window_HpGaugeTrack, bof3::addr::Window_HpGaugeDrain, bof3::addr::Window_HpGaugeFill};

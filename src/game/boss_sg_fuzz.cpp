@@ -176,7 +176,7 @@ void Disturb(U h) {
         break;
     }
     case 4: bh::PartyOf(static_cast<unsigned char>(v % 3))[v & 0x100 ? 0 : 8] ^= static_cast<unsigned char>(1 + (v >> 9) % 0x7F); break;
-    case 5: B(at::kFacing) = static_cast<unsigned char>(v); break;
+    case 5: B(::bof3::Img(at::kFacing.v)) = static_cast<unsigned char>(v); break;
     default: Mem(Field_Kind2Z_addr + v % 8)[0] = static_cast<unsigned char>(v >> 3); break;
     }
 }
@@ -381,16 +381,16 @@ void SeedF6(unsigned k) {
         SetLong(s + 0x20, static_cast<std::int32_t>(goal));
         const U pick = bh::Next() % 5;
         SetLong(s + 0x3C, static_cast<std::int32_t>(pick == 0 ? goal : pick == 1 ? goal - 1 : pick == 2 ? goal + 1 : Signed32()));
-        B(at::kTarget) = static_cast<unsigned char>(BSG_PICK(0, 1, 2, 3, 4, 10, 2, 3));
-        B(at::kFacing) = static_cast<unsigned char>(BSG_PICK(0, 1, 2, 3, 0, 1, 2, 3, 0xFF, 0x80));
+        B(::bof3::Img(at::kTarget.v)) = static_cast<unsigned char>(BSG_PICK(0, 1, 2, 3, 4, 10, 2, 3));
+        B(::bof3::Img(at::kFacing.v)) = static_cast<unsigned char>(BSG_PICK(0, 1, 2, 3, 0, 1, 2, 3, 0xFF, 0x80));
         break;
     }
     case 5:
-        B(at::kTarget) = static_cast<unsigned char>(BSG_PICK(0, 1, 2, 3, 4, 10, 2, 3));
+        B(::bof3::Img(at::kTarget.v)) = static_cast<unsigned char>(BSG_PICK(0, 1, 2, 3, 4, 10, 2, 3));
         s[0xB] = static_cast<unsigned char>(BSG_PICK(0, 0, 1, 0x10, 0xFF));
         break;
     case 6:
-    case 8: B(at::kActor) = ActorByte(); break;
+    case 8: B(::bof3::Img(at::kActor.v)) = ActorByte(); break;
     case 7: {
         const U fall = bh::Next() & 0x7F;
         SetLong(s + 0x20, static_cast<std::int32_t>(-fall));

@@ -173,7 +173,7 @@ unsigned char EventAreaFight(unsigned code) {
         return 0;
     }
     if (phase != 0) return 0;
-    if (static_cast<U>(Long(At(Battle_Enemies_addr + 0x92))) & 0x4000) Battle_EndFlags |= 2;
+    if (static_cast<U>(Long(At(::bof3::Img(Battle_Enemies_addr) + 0x92))) & 0x4000) Battle_EndFlags |= 2;
     if (BossH_Enemy1Status & 0x4000) {
         BossSe_Script |= 2;
         Battle_EndFlags |= 2;
@@ -191,13 +191,13 @@ unsigned char EventAreaFight(unsigned code) {
 // loses bit 0x40; then actors 3 and 4 take enemies 1 and 2's poses (what 0)
 // and lose bit 0x40.
 void ExitAreaFight(unsigned tag) {
-    if (!(static_cast<U>(Long(At(Battle_Enemies_addr + 0x92))) & 0x4000)) {
-        BH_CALL(BossActor_CopyFrom)(tag, At(Battle_Enemies_addr), 1);
+    if (!(static_cast<U>(Long(At(::bof3::Img(Battle_Enemies_addr) + 0x92))) & 0x4000)) {
+        BH_CALL(BossActor_CopyFrom)(tag, At(::bof3::Img(Battle_Enemies_addr)), 1);
         BH_CALL(BossActor_ClearBit40)(tag);
     }
-    BH_CALL(BossActor_CopyFrom)(3, At(Battle_Enemies_addr + 0x128), 0);
+    BH_CALL(BossActor_CopyFrom)(3, At(::bof3::Img(Battle_Enemies_addr) + 0x128), 0);
     BH_CALL(BossActor_ClearBit40)(3);
-    BH_CALL(BossActor_CopyFrom)(4, At(Battle_Enemies_addr + 0x250), 0);
+    BH_CALL(BossActor_CopyFrom)(4, At(::bof3::Img(Battle_Enemies_addr) + 0x250), 0);
     BH_CALL(BossActor_ClearBit40)(4);
 }
 
@@ -205,7 +205,7 @@ void ExitAreaFight(unsigned tag) {
 // 0 (`counter`) and takes the end phase's step 1, else step 2.
 void EndCounter(unsigned char counter) {
     if (Battle_EndFlags & 2) {
-        B(at::kCounter0) = counter;
+        B(::bof3::Img(at::kCounter0.v)) = counter;
         EndStep(at::kEndWin);
         return;
     }
@@ -399,7 +399,7 @@ extern "C" void __cdecl BossDodai_Hook(unsigned code) { HookTable("BossDodai_Hoo
 
 // original 0x43AB50: entry 0 of kinds 24 and 26's hook tables (the hook called
 // with 0, the action pick): the action kind 0x904B35 = 0. The word is not read.
-extern "C" void __cdecl BossHook_ActKindNone(unsigned) { B(at::kActKind) = 0; }
+extern "C" void __cdecl BossHook_ActKindNone(unsigned) { B(::bof3::Img(at::kActKind.v)) = 0; }
 
 // original 0x43AB60: BossDodai_Hooks 1 (the hook called with 1, the hit):
 // when 0x939AD8's +0x108 is above 0 (signed word), Sound_PlayById(0x600) or,
@@ -521,10 +521,10 @@ extern "C" unsigned char __cdecl Boss21_Event(unsigned code) {
     if ((code & 0xFF) != 3) return 0;
     for (unsigned i = 0; i <= 2; ++i)
         if ((BH_CALL(Battle_ActorIsOut)((code & 0xFFFFFF00u) | i) & 0xFF) == 0)
-            At(ObjTrio_addr + 0x90 + i * at::kPartyStride)[0] |= 0x10;
+            At(::bof3::Img(ObjTrio_addr) + 0x90 + i * at::kPartyStride)[0] |= 0x10;
     for (unsigned i = 3; i <= 10; ++i)
         if ((BH_CALL(Battle_ActorIsOut)((code & 0xFFFFFF00u) | i) & 0xFF) == 0)
-            At(Battle_Enemies_addr + 0x92 + (i - 3) * at::kEnemyStride)[0] |= 0x10;
+            At(::bof3::Img(Battle_Enemies_addr) + 0x92 + (i - 3) * at::kEnemyStride)[0] |= 0x10;
     return 0;
 }
 

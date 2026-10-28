@@ -140,14 +140,14 @@ unsigned char Enter(U fc, U f4, U f8) {
 // +0x90 bit 14, else + 4 - a byte, 0x8C5D80, 0x1800).
 void PoseParty() {
     for (unsigned m = 0; m < 3; ++m) {
-        unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
+        unsigned char* const p = At(::bof3::Img(ObjTrio_addr) + m * at::kPartyStride);
         auto* const member_rec = rv::As<records::PartyMember>(p);
         if ((member_rec->flags & 1) == 0) continue;
         BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->actor);
         const U flags = static_cast<U>(Long(p + 0x90));
         Sprite_Current = p;
         const unsigned pose = static_cast<unsigned char>(member_rec->direction + ((flags & 0x4000) != 0 ? 0x1C : 4));
-        BH_CALL(Sprite_PoseFromSet)(pose, At(at::kPoseSet), 0x1800);
+        BH_CALL(Sprite_PoseFromSet)(pose, At(::bof3::Img(at::kPoseSet.v)), 0x1800);
     }
 }
 
@@ -296,9 +296,9 @@ extern "C" void __cdecl BossDLord_HookFx(unsigned) {
         bof3::Fatal("BossDLord_HookFx: BattleTask_Create answered slot %u (none free) - the original writes the enemy's "
                     "0x80 bytes past the 48 slots (docs/boss_sj.md section 6)",
                     slot);
-    const U actor = B(at::kActor);
-    const unsigned char* const from = At(Battle_Enemies_addr + (actor - 3u) * at::kEnemyStride);
-    unsigned char* const to = At(BattleTask_Slots_addr + slot * at::kTaskStride);
+    const U actor = B(::bof3::Img(at::kActor.v));
+    const unsigned char* const from = At(::bof3::Img(Battle_Enemies_addr) + (actor - 3u) * at::kEnemyStride);
+    unsigned char* const to = At(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride);
     for (unsigned i = 0; i < 0x80; i += 4) SetLong(to + i, Long(from + i));
     to[1] = 0;
     to[2] = 0;
@@ -360,7 +360,7 @@ extern "C" void __cdecl BossDLordFx_StepDispatch(void) {
 extern "C" void __cdecl BossDLordFx_Start(void) {
     Sprite_Current[0xB] = 0;
     const unsigned type = Battle_Enemies[0].data_id;
-    Sprite_Current[9] = At(at::kEnemyFxSize + type * at::kEnemyDataStride)[0];
+    Sprite_Current[9] = At(::bof3::Img(at::kEnemyFxSize.v) + type * at::kEnemyDataStride)[0];
     BH_CALL(Sprite_SetAnimation)(4);
     BH_CALL(Sprite_ScriptTick)();
     BH_CALL(Sprite_QueueOverlay)();
@@ -384,7 +384,7 @@ extern "C" void __cdecl BossDLordFx_Count(void) {
     }
     BH_CALL(Sprite_ScriptTick)();
     BH_CALL(Sprite_QueueOverlay)();
-    if (B(at::kFlags) & 4) ++Sprite_Current[2];
+    if (B(::bof3::Img(at::kFlags.v)) & 4) ++Sprite_Current[2];
 }
 
 // ===========================================================================
@@ -415,7 +415,7 @@ extern "C" void __cdecl Boss54_Setup(void) {
 // = 0x32, a tail jump to 0x446DE0; else to 0x446E00.
 extern "C" void __cdecl Boss54_End(void) {
     if (Battle_EndFlags & 2) {
-        B(at::kScriptVar3) = 0x32;
+        B(::bof3::Img(at::kScriptVar3.v)) = 0x32;
         BH_AT(Handler, at::kEndWin)();
     } else {
         BH_AT(Handler, at::kEndOther)();

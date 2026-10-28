@@ -27,10 +27,10 @@ namespace at {
 using U = std::uint32_t;
 
 // --- the battle's cells (0x904AA0..0x904BA0) --------------------------------
-constexpr U kFlags = 0x904AA8;            // u8: the round flags' low byte (bit 2 read and set here)
-constexpr U kFight = 0x904AAA;            // u8: the event battle
+constexpr ::bof3::image::Va kFlags{0x904AA8};            // u8: the round flags' low byte (bit 2 read and set here)
+constexpr ::bof3::image::Va kFight{0x904AAA};            // u8: the event battle
 // kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 0 the loss, bit 1 the win
-constexpr U kTarget = 0x904B44;           // u8: the target (set-up 38 writes 0x40, the enemies' side)
+constexpr ::bof3::image::Va kTarget{0x904B44};           // u8: the target (set-up 38 writes 0x40, the enemies' side)
 // kHookEnd: now BattleHook_End (symbols.toml). BattleHook_End
 // kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
 // kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
@@ -39,15 +39,15 @@ constexpr U kTarget = 0x904B44;           // u8: the target (set-up 38 writes 0x
 
 // --- the enemies' objects (0x93B960 + n * 0x128) and the task slots ----------
 // kEnemy7: now Battle_Enemies[7] (symbols.toml). enemy 7's object: set-up 38 makes it Sprite_Current
-constexpr U kEnemy0Type = 0x93BA50;       // enemy 0's +0xF0 (its enemy data record's index): the Arwan task reads it
-constexpr U kTaskOwners = 0x93A080;       // the task slots' +0x80 (their owner), stride 0x84
+constexpr ::bof3::image::Va kEnemy0Type{0x93BA50};       // enemy 0's +0xF0 (its enemy data record's index): the Arwan task reads it
+constexpr ::bof3::image::Va kTaskOwners{0x93A080};       // the task slots' +0x80 (their owner), stride 0x84
 constexpr U kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
-constexpr U kEnemyDataCount = 0x8C5652;   // the area's enemy data records' +0x8A byte (0x8C55C8 + 0x8A), stride 0x8C
+constexpr ::bof3::image::Va kEnemyDataCount{0x8C5652};   // the area's enemy data records' +0x8A byte (0x8C55C8 + 0x8A), stride 0x8C
 constexpr U kEnemyDataStride = 0x8C;
 
 // --- cells outside the battle bytes ------------------------------------------
-constexpr U kScriptVar3 = 0x903848;       // the movement script's variable 3 (field-modes.md)
+constexpr ::bof3::image::Va kScriptVar3{0x903848};       // the movement script's variable 3 (field-modes.md)
 // kCentreX: now BossSi_CentreX (symbols.toml). i32: the fight's centre x (field_hidden_callees.h)
 // kCentreZ: now BossSi_CentreZ (symbols.toml). i32: its z
 // kKind2Z: now Field_Kind2Z (symbols.toml). i32 Field_Kind2Z

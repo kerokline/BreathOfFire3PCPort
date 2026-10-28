@@ -152,7 +152,7 @@ extern "C" void __cdecl Boss22_Setup(void) {
 extern "C" void __cdecl Boss22_End(void) {
     const unsigned char end = Battle_EndFlags;
     const unsigned char music = EventBattle_Flags;
-    B(at::kScriptVar3) = 0xC;
+    B(::bof3::Img(at::kScriptVar3.v)) = 0xC;
     Battle_EndFlags = static_cast<unsigned char>(end | 8);
     EventBattle_Flags = static_cast<unsigned char>(music & 0xBF);
     Music_Track = 0x6A;
@@ -234,9 +234,9 @@ extern "C" void __cdecl Boss30_End(void) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
-    const unsigned char var = B(at::kScriptVar3);
+    const unsigned char var = B(::bof3::Img(at::kScriptVar3.v));
     MoveScript_PartyRecords[0x65] = 0xC;
-    B(at::kScriptVar3) = static_cast<unsigned char>(var + 1);
+    B(::bof3::Img(at::kScriptVar3.v)) = static_cast<unsigned char>(var + 1);
     BH_AT(Handler, at::kEndWin)();
     Music_Track = 0x5A;
 }
@@ -301,7 +301,7 @@ extern "C" void __cdecl Boss24_End(void) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
-    B(at::kScriptVar3) = 5;
+    B(::bof3::Img(at::kScriptVar3.v)) = 5;
     Battle_EndFlags = static_cast<unsigned char>(end | 8);
     Music_Track = 0x44;
     BH_AT(Handler, at::kEndWin)();
@@ -366,17 +366,17 @@ extern "C" void __cdecl BossBeyd_HookPick(unsigned) {
         auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
         enemy_rec->flags_110 = S(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_110)) & 0xFFFFFFFDu);
     }
-    B(at::kActKind) = 1;
+    B(::bof3::Img(at::kActKind.v)) = 1;
 }
 
 // original 0x43BAD0: hook entry 2 (BattleEnemy_RunAll's, each frame). With
 // round-flag bit 1 and Transition_Busy 0: BossActor_ClearBit40(0), then
 // the round flags' word &= 0xFFFD and Draw_PassFlags = 0.
 extern "C" void __cdecl BossBeyd_HookTick(unsigned) {
-    if ((B(at::kFlags) & 2) == 0) return;
+    if ((B(::bof3::Img(at::kFlags.v)) & 2) == 0) return;
     if (Transition_Busy != 0) return;
     BH_CALL(BossActor_ClearBit40)(0);
-    SetWord(At(at::kFlags), Word(At(at::kFlags)) & 0xFFFDu);
+    SetWord(At(::bof3::Img(at::kFlags.v)), Word(At(::bof3::Img(at::kFlags.v))) & 0xFFFDu);
     Draw_PassFlags = 0;
 }
 
@@ -409,7 +409,7 @@ extern "C" void __cdecl BossBeyd2_Death(void) { Death(0xF); }
 extern "C" void __cdecl BossBeyd2_Hook(unsigned word) { DispatchHook("BossBeyd2_Hook", AddressOf(BossBeyd2_Hooks), word); }
 
 // original 0x43BC80: hook entry 0: the battle's target 0x904B44 = 4.
-extern "C" void __cdecl BossBeyd2_HookTarget4(unsigned) { B(at::kTarget) = 4; }
+extern "C" void __cdecl BossBeyd2_HookTarget4(unsigned) { B(::bof3::Img(at::kTarget.v)) = 4; }
 
 // original 0x43BC90: BossKind_Table[32]: jmp [BossZig_States + 4 * +1] (12).
 extern "C" void __cdecl BossZig_Dispatch(void) { Dispatch("BossZig_Dispatch", AddressOf(BossZig_States), 12, 1); }
@@ -466,14 +466,14 @@ extern "C" void __cdecl BossZig_Step5Count(void) {
 // 0x4376A0 (the action's end).
 extern "C" void __cdecl BossZig_Step5Fire(void) {
     if ((BH_CALL(BattleEnemy_ScriptTick)() & 0xFF) == 0) return;
-    BH_CALL(Battle_SetTargetFlag40)(B(at::kTarget));
+    BH_CALL(Battle_SetTargetFlag40)(B(::bof3::Img(at::kTarget.v)));
     if ((static_cast<unsigned>(BH_CALL(Rand)()) & 3) == 0) {
         const unsigned char script = BossSe_Script;
-        B(at::kFlags) |= 0x80;
+        B(::bof3::Img(at::kFlags.v)) |= 0x80;
         BossSe_Script = static_cast<unsigned char>(script | 0x10);
         BH_CALL(BattleTask_Create)(0, 2);
     }
-    B(at::kFlags) |= 4;
+    B(::bof3::Img(at::kFlags.v)) |= 4;
     BH_AT(Handler, at::kEnemyActEnd)();
 }
 
@@ -490,8 +490,8 @@ extern "C" void __cdecl BossZig_Hook(unsigned word) { DispatchHook("BossZig_Hook
 // original 0x43BE70: hook entry 0 (the action pick): without 0x904AAD bit 3 the
 // target 0x904B44 = 3, with it the acting kind 0x904B35 = 0.
 extern "C" void __cdecl BossZig_HookPick(unsigned) {
-    if ((BossSe_Script & 8) == 0) B(at::kTarget) = 3;
-    else B(at::kActKind) = 0;
+    if ((BossSe_Script & 8) == 0) B(::bof3::Img(at::kTarget.v)) = 3;
+    else B(::bof3::Img(at::kActKind.v)) = 0;
 }
 
 // original 0x43BE90: hook entry 1 (the hit): 0x904AAD |= 0x20.
@@ -544,7 +544,7 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
     const unsigned char c = static_cast<unsigned char>(code);
     if (c == 0) {
         const unsigned char round = BossSe_RoundSlot;
-        SetLong(At(at::kTurn), S((static_cast<U>(round) >> 1) + 1));
+        SetLong(At(::bof3::Img(at::kTurn.v)), S((static_cast<U>(round) >> 1) + 1));
         switch (round) {
         case 1: Message(0x1B); break;
         case 2:
@@ -554,13 +554,13 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
             break;
         case 3: Message(0x1D); break;
         case 4:
-            if (B(at::kFlags) & 0x40) break;
+            if (B(::bof3::Img(at::kFlags.v)) & 0x40) break;
             rv::Bytes(ObjTrio)[0x125] = 4;
-            SetWord(At(ObjTrio_addr + 0x126), 0x46);
+            SetWord(At(::bof3::Img(ObjTrio_addr) + 0x126), 0x46);
             break;
         case 5: Message(0x1E); break;
         case 6:
-            if (B(at::kFlags) & 0x40) break;
+            if (B(::bof3::Img(at::kFlags.v)) & 0x40) break;
             Message(0x1F);
             rv::Bytes(ObjTrio)[0x125] = 1;
             rv::Bytes(ObjTrio)[0xba] = 0x64;
@@ -572,12 +572,12 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
     }
     if (c != 3) return 0;
     unsigned char script = BossSe_Script;
-    if ((script & 0x20) == 0 && B(at::kPhase) == 1) {
+    if ((script & 0x20) == 0 && B(::bof3::Img(at::kPhase.v)) == 1) {
         BH_CALL(BattleTask_Create)(0, 8);
         script = static_cast<unsigned char>(BossSe_Script | 0x20);
         BossSe_Script = script;
     }
-    if ((script & 0x10) == 0 && B(at::kPhase) == 3 && BattleActions_Step == 0) {
+    if ((script & 0x10) == 0 && B(::bof3::Img(at::kPhase.v)) == 3 && BattleActions_Step == 0) {
         const U flags = Battle_Enemies[0].flags_110 | 2;
         rv::Bytes(ObjTrio)[0x124] = 3;
         rv::Bytes(ObjTrio)[0x125] = 1;
@@ -588,7 +588,7 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
         Battle_Enemies[0].command_kind = 2;
         BattleDamage_TurnCount = 7;
         static constexpr unsigned char kOrder[7] = {0, 3, 0, 3, 0, 3, 0};
-        for (unsigned i = 0; i < 7; ++i) B(at::kOrder + i) = kOrder[i];
+        for (unsigned i = 0; i < 7; ++i) B(::bof3::Img(at::kOrder.v) + i) = kOrder[i];
         script = static_cast<unsigned char>(script | 0x10);
         BossSe_Script = script;
     }
@@ -598,7 +598,7 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
         return 0;
     }
     if ((script & 2) == 0) {
-        Sprite_Current = At(Battle_Enemies_addr);
+        Sprite_Current = At(::bof3::Img(Battle_Enemies_addr));
         BH_CALL(BattleEnemy_SetAnimation)(8);
         BossSe_Script |= 2;
         return 0;
@@ -614,9 +614,9 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
         member = ObjTrio[0].state;
         if (member == 6) {
             if (ObjTrio[0].step != 1) return 0;
-            SetWord(At(ObjTrio_addr + 0x128), 0);
-            SetWord(At(ObjTrio_addr + 0x12a), 0);
-            B(at::kActKind) = 0xFF;
+            SetWord(At(::bof3::Img(ObjTrio_addr) + 0x128), 0);
+            SetWord(At(::bof3::Img(ObjTrio_addr) + 0x12a), 0);
+            B(::bof3::Img(at::kActKind.v)) = 0xFF;
             return 0;
         }
     } else if (round == 6) {
@@ -625,7 +625,7 @@ extern "C" unsigned char __cdecl Boss25_Event(unsigned code) {
         return 0;
     }
     if (member != 2 || ObjTrio[0].step != 0) return 0;
-    B(at::kFlags) |= 0x40;
+    B(::bof3::Img(at::kFlags.v)) |= 0x40;
     return 0;
 }
 
@@ -646,11 +646,11 @@ extern "C" void __cdecl Boss25_End(void) {
 // copied from 0x939A10 to the party list 0x904065 (rep movsd, rep movsb:
 // forward, the two never overlap).
 extern "C" void __cdecl Boss25_Exit(void) {
-    B(at::kFlags) |= 2;
+    B(::bof3::Img(at::kFlags.v)) |= 2;
     BH_CALL(Transition_Start)(4);
     const unsigned n = BossSe_PartyCopyCount;
     Field_MemberCount = 3;
-    if (n != 0) std::memcpy(At(Cond_Flags_addr + 0xd5), At(at::kPartyCopyFrom), n);
+    if (n != 0) std::memcpy(At(::bof3::Img(Cond_Flags_addr) + 0xd5), At(::bof3::Img(at::kPartyCopyFrom.v)), n);
 }
 
 // original 0x43C200: Boss_SetupTable[26]. The hooks: end Boss26_End, exit
@@ -679,17 +679,17 @@ extern "C" void __cdecl Boss26_Setup(void) {
 extern "C" unsigned char __cdecl Boss26_Event(unsigned code) {
     switch (code & 0xFF) {
     case 0: {
-        const unsigned char actor = B(at::kActor);
-        const unsigned char target = B(at::kTarget);
+        const unsigned char actor = B(::bof3::Img(at::kActor.v));
+        const unsigned char target = B(::bof3::Img(at::kTarget.v));
         if (actor == 3 && target <= 2) {
-            const auto w = static_cast<std::int16_t>(Word(At(ObjTrio_addr + 0x128 + at::kPartyStride * target)));
+            const auto w = static_cast<std::int16_t>(Word(At(::bof3::Img(ObjTrio_addr) + 0x128 + at::kPartyStride * target)));
             if (w > 0) {
                 BattleE1_SumB = S(BattleE1_SumB + static_cast<U>(static_cast<std::int32_t>(w)));
                 return 0;
             }
         }
         if (target != 3 && (target & 0xC0) == 0) return 0;
-        if (B(at::kEnemy0Flags) & 2) {
+        if (B(::bof3::Img(at::kEnemy0Flags.v)) & 2) {
             BattleE1_Count = static_cast<unsigned char>(BattleE1_Count + 1);
             return 0;
         }
@@ -708,10 +708,10 @@ extern "C" unsigned char __cdecl Boss26_Event(unsigned code) {
         }
         return 0;
     case 2:
-        if (static_cast<U>(Long(At(at::kTurn))) == 0x15) Battle_EndFlags |= 4;
+        if (static_cast<U>(Long(At(::bof3::Img(at::kTurn.v)))) == 0x15) Battle_EndFlags |= 4;
         return 0;
     case 3:
-        if ((BossSe_Script & 0x20) == 0 && B(at::kPhase) == 1) {
+        if ((BossSe_Script & 0x20) == 0 && B(::bof3::Img(at::kPhase.v)) == 1) {
             BH_CALL(BattleTask_Create)(0, 8);
             BossSe_Script |= 0x20;
         }
@@ -727,23 +727,23 @@ extern "C" unsigned char __cdecl Boss26_Event(unsigned code) {
 // to 0x446E20 (step 3).
 extern "C" void __cdecl Boss26_End(void) {
     for (unsigned m = 0; m < 3; ++m) {
-        unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
+        unsigned char* const p = At(::bof3::Img(ObjTrio_addr) + m * at::kPartyStride);
         auto* const member_rec = rv::As<records::PartyMember>(p);
         if ((member_rec->flags & 1) == 0) continue;
         BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->actor);
         const U flags = static_cast<U>(Long(p + 0x90));
         Sprite_Current = p;
         const unsigned pose = static_cast<unsigned char>(member_rec->direction + ((flags & 0x4000) != 0 ? 0x1C : 4));
-        BH_CALL(Sprite_PoseFromSet)(pose, At(at::kPoseSet), 0x1800);
+        BH_CALL(Sprite_PoseFromSet)(pose, At(::bof3::Img(at::kPoseSet.v)), 0x1800);
     }
-    B(at::kScriptVar3) = 4;
+    B(::bof3::Img(at::kScriptVar3.v)) = 4;
     BH_AT(Handler, at::kEndThird)();
 }
 
 // original 0x43E790: the exit hook of set-ups 26 and 35 (35 is group BSH's):
 // round-flag bit 1 set, Transition_Start(4).
 extern "C" void __cdecl BossHook_ExitTransition4(void) {
-    B(at::kFlags) |= 2;
+    B(::bof3::Img(at::kFlags.v)) |= 2;
     BH_CALL(Transition_Start)(4);
 }
 
