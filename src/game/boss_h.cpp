@@ -119,7 +119,7 @@ extern "C" void __cdecl BossHook_ExitActor0Bit40(void) { BH_CALL(BossActor_Clear
 // hook called with 0, 0x435BF5): when the leader's target byte +0x124 is 4,
 // the battle's target 0x904B44 = 5. The hook's word is not read.
 extern "C" void __cdecl BossHook_RetargetMember0(unsigned) {
-    if (rv::Bytes(ObjTrio)[0x124] == 4) B(at::kTarget) = 5;
+    if (rv::Bytes(ObjTrio)[0x124] == 4) B(::bof3::Img(at::kTarget.v)) = 5;
 }
 
 // --- the state helpers ---------------------------------------------------------------
@@ -316,7 +316,7 @@ extern "C" void __cdecl BossMap_SetCorners(unsigned cell, unsigned value) {
     for (U j = 0; j < 2; ++j)
         for (U i = 0; i < 2; ++i) {
             const U width = AreaMap_Header[0];
-            SetLong(At(AreaMap_Corners_addr + 4 * (width * (y + j) + x + i)), v);
+            SetLong(At(::bof3::Img(AreaMap_Corners_addr) + 4 * (width * (y + j) + x + i)), v);
         }
 }
 
@@ -344,8 +344,8 @@ extern "C" void __cdecl Boss_SetByLeaderId(void) {
 // +0x134 bit 1, 0x939B1C = its +0x3C.
 extern "C" void __cdecl BossMap_UpdateFromEnemies(void) {
     const struct { U status, object; unsigned flag, cell; } kEnemies[] = {
-        {BossH_Enemy1Status_addr, Battle_Enemies_addr + 0x128, 0x34, 1},
-        {BossH_Enemy2Status_addr, Battle_Enemies_addr + 0x250, 0x33, 0},
+        {::bof3::Img(BossH_Enemy1Status_addr), ::bof3::Img(Battle_Enemies_addr) + 0x128, 0x34, 1},
+        {::bof3::Img(BossH_Enemy2Status_addr), ::bof3::Img(Battle_Enemies_addr) + 0x250, 0x33, 0},
     };
     for (const auto& e : kEnemies) {
         const unsigned status = At(e.status)[1];   // the dword's second byte: +0x93

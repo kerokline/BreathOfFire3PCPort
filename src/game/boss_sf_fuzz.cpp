@@ -139,7 +139,7 @@ const bh::Callee kCallees[] = {
 // The cells beyond the harness's battle frame the 54 read or write.
 const bh::Region kRegions[] = {
     {0x803430, 4},               // the window record byte 0x803433 the count waits on
-    {at::kScriptVar3, 4},        // movement-script variable 3 (set-up 28's end)
+    {at::kScriptVar3.v, 4},        // movement-script variable 3 (set-up 28's end)
 };
 
 // A dispatcher's other state bytes inside its table, so a dispatcher reading
@@ -157,7 +157,7 @@ unsigned AbilityId() {
     const U pick = bh::Next() % 8;
     if (pick < 3) return pick == 0 ? 0x3A : pick == 1 ? 0x81 : 0x82;
     if (pick < 7) {
-        const U base = pick & 1 ? at::kAbilityFlags8 : at::kAbilityFlags4;
+        const U base = pick & 1 ? ::bof3::Img(at::kAbilityFlags8.v) : ::bof3::Img(at::kAbilityFlags4.v);
         const unsigned char bit = pick & 1 ? 8 : 4;
         const bool want = bh::Half();
         for (unsigned tries = 0; tries < 64; ++tries) {
@@ -180,8 +180,8 @@ void Disturb(U h) {
     switch ((h >> 8) % 9) {
     case 0: B(BossSe_Script_addr) = static_cast<unsigned char>(v); break;
     case 1: bh::PartyOf(static_cast<unsigned char>(v % 3))[0x91] ^= 0x40; break;
-    case 2: SetWord(Mem(at::kAbility), v & 1 ? v >> 1 : (v >> 1) % 0x140); break;
-    case 3: B(at::kActKind) = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
+    case 2: SetWord(Mem(::bof3::Img(at::kAbility.v)), v & 1 ? v >> 1 : (v >> 1) % 0x140); break;
+    case 3: B(::bof3::Img(at::kActKind.v)) = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
     case 4: SetWord(Mem(BossSa_EndCount_addr), v & 1 ? (v >> 1) % 9 : v >> 1); break;
     case 5: B(Window20_State_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 6: B(BattleMisc_BannerKinds_addr) ^= 2; break;
@@ -190,7 +190,7 @@ void Disturb(U h) {
         enemy_rec->command_kind = static_cast<unsigned char>(v & 1 ? 4 : v >> 1);
         break;
     }
-    default: Mem(at::kEnemyData + (v % 8) * at::kEnemyDataStride)[0x8A + (v >> 8) % 2] = static_cast<unsigned char>(v >> 4); break;
+    default: Mem(::bof3::Img(at::kEnemyData.v) + (v % 8) * at::kEnemyDataStride)[0x8A + (v >> 8) % 2] = static_cast<unsigned char>(v >> 4); break;
     }
 }
 
@@ -261,7 +261,7 @@ void SeedB27(unsigned) {
     const unsigned cursor = bh::Often() ? bh::Next() % 12 : bh::Next() & 0xFF;
     B(BossSe_RoundSlot_addr) = static_cast<unsigned char>(cursor);
     if (cursor < 0xD5)
-        B(at::kOrderBefore + cursor) =
+        B(::bof3::Img(at::kOrderBefore.v) + cursor) =
             static_cast<unsigned char>(bh::Often() ? bh::Next() % 3 : bh::Often() ? BH_PICK(3, 4, 0xFF, 0x80) : bh::Next());
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = bh::PartyOf(static_cast<unsigned char>(m));
@@ -289,8 +289,8 @@ void SeedFB8(unsigned k) {
     s[1] = static_cast<unsigned char>(k == 0 ? bh::Next() % 2 : bh::Often() ? bh::Next() % 3 : bh::Next());
     B(Window20_State_addr) = static_cast<unsigned char>(bh::Half() ? 0 : bh::Next());
     B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(bh::Half() ? B(BattleMisc_BannerKinds_addr) & 0xFD : B(BattleMisc_BannerKinds_addr) | 2);
-    if (bh::Often()) B(at::kPhase) = static_cast<unsigned char>(bh::Half() ? 5 : BH_PICK(1, 2, 3, 4, 6));
-    SetLong(Mem(at::kTurn), static_cast<std::int32_t>(bh::Often() ? bh::Next() % 0x18 : bh::Next()));
+    if (bh::Often()) B(::bof3::Img(at::kPhase.v)) = static_cast<unsigned char>(bh::Half() ? 5 : BH_PICK(1, 2, 3, 4, 6));
+    SetLong(Mem(::bof3::Img(at::kTurn.v)), static_cast<std::int32_t>(bh::Often() ? bh::Next() % 0x18 : bh::Next()));
 }
 
 // ===========================================================================
@@ -446,10 +446,10 @@ const bh::DataTable kTablesK62[] = {{0x64DDC4, 3, 4, 1}, {0x64DD44, 12}, {0x64DD
 void SeedK62(unsigned k) {
     const bh::Clone& c = kClonesK62[k];
     SeedKindCommon(c);
-    SetWord(Mem(at::kAbility), AbilityId());
-    B(at::kActKind) = static_cast<unsigned char>(bh::Half() ? 4 : BH_PICK(0, 1, 3, 5, 0x84, 0xFF));
+    SetWord(Mem(::bof3::Img(at::kAbility.v)), AbilityId());
+    B(::bof3::Img(at::kActKind.v)) = static_cast<unsigned char>(bh::Half() ? 4 : BH_PICK(0, 1, 3, 5, 0x84, 0xFF));
     SetWord(Mem(BossSa_EndCount_addr), bh::Often() ? BH_PICK(0, 3, 5, 8, 4, 6, 7, 0x103) : bh::Next());
-    B(at::kRoundFlags) = static_cast<unsigned char>(bh::Half() ? B(at::kRoundFlags) | 4 : B(at::kRoundFlags) & 0xFB);
+    B(::bof3::Img(at::kRoundFlags.v)) = static_cast<unsigned char>(bh::Half() ? B(::bof3::Img(at::kRoundFlags.v)) | 4 : B(::bof3::Img(at::kRoundFlags.v)) & 0xFB);
     auto* const enemy_rec = rv::As<records::BattleEnemy>(bh::Pointer(BattleE3_CurrentEnemy_addr));
     enemy_rec->command_kind = static_cast<unsigned char>(bh::Half() ? 4 : BH_PICK(0, 3, 5, 0x84, 0xFF));
     if (bh::Next() % 6 == 0) B(EventBattle_Id_addr) = 0;

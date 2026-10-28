@@ -32,7 +32,7 @@ namespace at {
 constexpr std::uint32_t kTaskSize = 0x84;
 constexpr unsigned kTaskCount = 0x30;
 // kTaskCurrent: now BattleFlow_TaskCurrent (symbols.toml). unsigned char*: the slot being run
-constexpr std::uint32_t kTaskOwner = 0x93B940;    // the running slot's +0x80, copied there by BattleTask_RunAll
+constexpr ::bof3::image::Va kTaskOwner{0x93B940};    // the running slot's +0x80, copied there by BattleTask_RunAll
 // The party's working records (ObjTrio, 0x14C each) and the eight enemy
 // objects (0x128 each): an actor 0..2 is a member, 3.. an enemy.
 // kMembers: now ObjTrio (symbols.toml).
@@ -40,24 +40,24 @@ constexpr std::uint32_t kMemberSize = 0x14C;
 // kEnemies: now Battle_Enemies (symbols.toml).
 constexpr std::uint32_t kEnemySize = 0x128;
 // The battle's globals.
-constexpr std::uint32_t kPhase = 0x904AA0;        // u8 here: the actor watch waits out phase 5, the follower ends outside 1
-constexpr std::uint32_t kRoundCount = 0x904AA2;   // u8, + 1 by the second round hook
-constexpr std::uint32_t kRoundFlags = 0x904AA8;   // dword: 0x400 the actor watch's gate, 0x800 the magic rows'
+constexpr ::bof3::image::Va kPhase{0x904AA0};        // u8 here: the actor watch waits out phase 5, the follower ends outside 1
+constexpr ::bof3::image::Va kRoundCount{0x904AA2};   // u8, + 1 by the second round hook
+constexpr ::bof3::image::Va kRoundFlags{0x904AA8};   // dword: 0x400 the actor watch's gate, 0x800 the magic rows'
 // kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 0 gates the two round hooks
-constexpr std::uint32_t kTurnGate = 0x904B34;     // u8, compared with the owner's actor
+constexpr ::bof3::image::Va kTurnGate{0x904B34};     // u8, compared with the owner's actor
 // The sprite animation set pointer (docs/sprite-pose.md): the pose task and
 // the actor watch point it at 0x8C5D80 around their state call and back at
 // 0x8B3580 (mode_flow's pool) after it.
 // kAnimSet: now BattleE2_AnimSet (symbols.toml).
-constexpr std::uint32_t kAnimSetBattle = 0x8C5D80;
-constexpr std::uint32_t kAnimSetField = 0x8B3580;
+constexpr ::bof3::image::Va kAnimSetBattle{0x8C5D80};
+constexpr ::bof3::image::Va kAnimSetField{0x8B3580};
 // kLastArea: now AreaW2c_LastArea (symbols.toml). u16: the previous area (mode_flow_callees.h)
 // kScriptVar7: now MoveScript_Var7 (symbols.toml). MoveScript_Var7, and the byte after it
 // Constant tables in .data.
 // kPartyOffsets: now BattleWin_MemberTargetOffsets (symbols.toml). s8 pairs (dx, dy) by (sprite +0x2C) * 4 + sprite +8
-constexpr std::uint32_t kPoseClut = 0x64B058;      // u8 by mode +7; the CLUT row is it less 0x50
-constexpr std::uint32_t kPoseAnim = 0x64B064;      // u8 by mode * 2 + (+8 >> 1)
-constexpr std::uint32_t kMagicRows = 0x64C2B8;     // Magic_Rows: 151 x {u16 file, u16 pad, code pointer}
+constexpr ::bof3::image::Va kPoseClut{0x64B058};      // u8 by mode +7; the CLUT row is it less 0x50
+constexpr ::bof3::image::Va kPoseAnim{0x64B064};      // u8 by mode * 2 + (+8 >> 1)
+constexpr ::bof3::image::Va kMagicRows{0x64C2B8};     // Magic_Rows: 151 x {u16 file, u16 pad, code pointer}
 constexpr unsigned kMagicRowCount = 151;
 
 }  // namespace at

@@ -97,13 +97,13 @@ void Disturb() {
     case 10: rv::As<records::PartyMember>(F())->flags_130 = static_cast<std::int32_t>(rv::As<records::PartyMember>(F())->flags_130) ^ static_cast<std::int32_t>(1u << (9 + v % 4)); break;
     case 11: {
         static const unsigned char kBits[] = {4, 0x40, 0x80};
-        if (w % 3 == 0) At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] ^ (w % 2 ? 0x08 : 0x80));
-        else At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] ^ kBits[v % 3]);
+        if (w % 3 == 0) At(::bof3::Img(at::kRoundFlags.v) + 1)[0] = static_cast<unsigned char>(At(::bof3::Img(at::kRoundFlags.v) + 1)[0] ^ (w % 2 ? 0x08 : 0x80));
+        else At(::bof3::Img(at::kRoundFlags.v))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kRoundFlags.v))[0] ^ kBits[v % 3]);
         break;
     }
     case 12: {
         static const unsigned char kPhases[] = {0, 1, 5};
-        At(at::kPhase)[0] = kPhases[v % 3];
+        At(::bof3::Img(at::kPhase.v))[0] = kPhases[v % 3];
         break;
     }
     case 13: At(BattleE4_Picking_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
@@ -113,8 +113,8 @@ void Disturb() {
         At(BattlePhases_B89_addr)[0] = v % 2 ? kKinds[w % 3] : static_cast<unsigned char>(v % 28);
         break;
     }
-    case 16: SetWord(At(at::kSkillId), v % kSkills); break;
-    case 17: At(BattleE3_SoundSet_addr + (w % 3 == 0 ? 0 : w % 3 == 1 ? at::kSwingTarget - BattleE3_SoundSet_addr : BattleE3_Cost_addr - BattleE3_SoundSet_addr))[0] =
+    case 16: SetWord(At(::bof3::Img(at::kSkillId.v)), v % kSkills); break;
+    case 17: At(BattleE3_SoundSet_addr + (w % 3 == 0 ? 0 : w % 3 == 1 ? ::bof3::Img(at::kSwingTarget.v) - BattleE3_SoundSet_addr : BattleE3_Cost_addr - BattleE3_SoundSet_addr))[0] =
                  static_cast<unsigned char>(v);
         break;
     case 18: Slot(S()[5] % kTaskSlots)[9] = static_cast<unsigned char>(static_cast<int>(v % 5) - 2 + (w % 2 ? 11 : -11)); break;
@@ -321,16 +321,16 @@ const Clone kClones[kCount] = {
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {ObjTrio_addr, 3 * at::kMemberSize},   // ObjTrio: Sprite_Current and Field_State point here
-    {at::kPhase, 0x100},                   // the battle's globals, 0x904AA0..0x904B9F
+    {at::kPhase.v, 0x100},                   // the battle's globals, 0x904AA0..0x904B9F
     {BattleTask_Slots_addr, kTaskSlots * at::kTaskSize},
     {0x937F88, 4},                         // Sprite_Current
     {0x905D98, 4},                         // Field_State
     {BattleActorCopies_Command_addr, 4},
     {BossSi_CentreX_addr, 8},
     {MoveScript_TintRecords_addr, kTintSlots * 12},
-    {at::kAttackCount, 0x28},              // constant data from here on - random here, put back after
-    {at::kCastCount, 0x28},
-    {at::kSkillWord, kSkills * 24},
+    {at::kAttackCount.v, 0x28},              // constant data from here on - random here, put back after
+    {at::kCastCount.v, 0x28},
+    {at::kSkillWord.v, kSkills * 24},
 };
 constexpr unsigned kRegionBytes = 3 * 0x14C + 0x100 + kTaskSlots * 0x84 + 4 + 4 + 4 + 8 + kTintSlots * 12 + 0x28 + 0x28 + kSkills * 24;
 
@@ -383,7 +383,7 @@ void Fix() {
         if (Often()) member_rec->direction = static_cast<unsigned char>(Next() % 4);
     }
     SetLong(At(BattleActorCopies_Command_addr), static_cast<std::int32_t>(Address(g_target + Next() % sizeof g_target)));
-    SetWord(At(at::kSkillId), Next() % kSkills);
+    SetWord(At(::bof3::Img(at::kSkillId.v)), Next() % kSkills);
 }
 
 unsigned char* Target() { return move_script::At(static_cast<std::uint32_t>(Long(At(BattleActorCopies_Command_addr)))); }
@@ -396,7 +396,7 @@ void Seed(unsigned k) {
     switch (k) {
     case kIdleFn: {
         static const unsigned char kPhases[] = {0, 1, 1, 5, 5, 2};
-        At(at::kPhase)[0] = kPhases[Next() % 6];
+        At(::bof3::Img(at::kPhase.v))[0] = kPhases[Next() % 6];
         static const unsigned char kArgs[] = {0, 1, 2, 0xFF};
         At(BattleActions_Step_addr)[0] = kArgs[Next() % 4];
         At(BattleE4_AutoMember_addr)[0] = static_cast<unsigned char>(Next() % 3);
@@ -451,7 +451,7 @@ void Seed(unsigned k) {
     case kSwingEnd:
     case kCastDoneFn:
     case kEnd:
-        if (Half()) At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] ^ (k == kEnd ? 0x40 : k == kSwingEnd ? 0x80 : 4));
+        if (Half()) At(::bof3::Img(at::kRoundFlags.v))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kRoundFlags.v))[0] ^ (k == kEnd ? 0x40 : k == kSwingEnd ? 0x80 : 4));
         break;
     case kCastDoneFn2:
         if (Half()) f[0x125] = 4;
@@ -479,9 +479,9 @@ void Cover(unsigned k, const State& in, const State& out) {
     switch (k) {
     case kIdleFn:
         if ((Byte(in, fs + 0x131) ^ Byte(out, fs + 0x131)) & 8) ++g_cover.flips;
-        if (Byte(in, at::kPhase) == 5) ++g_cover.homes;
+        if (Byte(in, at::kPhase.v) == 5) ++g_cover.homes;
         else if (Byte(in, fs + 0x90) & 0x20) ++g_cover.steps;
-        if (Byte(in, at::kPhase) == 1 && Byte(in, BattleActions_Step_addr) > 1) {
+        if (Byte(in, at::kPhase.v) == 1 && Byte(in, BattleActions_Step_addr) > 1) {
             const std::uint32_t sc = static_cast<std::uint32_t>(Byte(in, 0x937F88) | Byte(in, 0x937F89) << 8 | Byte(in, 0x937F8A) << 16 |
                                                                 Byte(in, 0x937F8B) << 24);
             ++(Byte(out, sc + 0x5D) == 0x78 ? g_cover.colours_hit : g_cover.colours_miss);
@@ -495,13 +495,13 @@ void Cover(unsigned k, const State& in, const State& out) {
         break;
     case kSwingCue:
         for (unsigned i = 0; i < out.log_n && i < kLog; ++i)
-            if (out.log[i].what == 9) ++(((Byte(out, at::kRoundFlags) ^ Byte(in, at::kRoundFlags)) & 0x80) ? g_cover.rolled_hit : g_cover.rolled_miss);
+            if (out.log[i].what == 9) ++(((Byte(out, at::kRoundFlags.v) ^ Byte(in, at::kRoundFlags.v)) & 0x80) ? g_cover.rolled_hit : g_cover.rolled_miss);
         break;
     case kCastDoneFn2:
         if (Byte(in, fs + 0x125) == 4) ++g_cover.cost;
         break;
     case kEnd:
-        if (Byte(in, at::kRoundFlags) & 0x40) ++g_cover.ended_kept;
+        if (Byte(in, at::kRoundFlags.v) & 0x40) ++g_cover.ended_kept;
         break;
     default:
         break;

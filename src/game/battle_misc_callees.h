@@ -24,13 +24,13 @@ using U = std::uint32_t;
 // --- Addresses without a name --------------------------------------------------
 // The menu cursor's pulse: a byte counter stepped by 2 and its direction flag
 // (PSX 0x80146304 / 0x80146300).
-constexpr U kPulse = 0x904AC8;
-constexpr U kPulseDown = 0x904AC4;
+constexpr ::bof3::image::Va kPulse{0x904AC8};
+constexpr ::bof3::image::Va kPulseDown{0x904AC4};
 // The actor sound cue table: u16, 3 per cue row, indexed by the actor record's
 // word +0x2C plus cue * 3 (PSX 0x801EAF80).
-constexpr U kCueTable = 0x64E3BC;
+constexpr ::bof3::image::Va kCueTable{0x64E3BC};
 // The current enemy object (0x93B960 + n * 0x128), PSX 0x801EB458.
-constexpr U kCurrentEnemy = 0x939AD8;
+constexpr ::bof3::image::Va kCurrentEnemy{0x939AD8};
 // The enemy objects: 8 of 0x128 bytes; the working record is at +0x80
 // (EnemyWorkingRecords 0x93B9E0). The party's are ObjTrio's, 3 of 0x14C.
 // kEnemyObjects: now Battle_Enemies (symbols.toml).
@@ -42,45 +42,45 @@ constexpr U kPartyStride = 0x14C;
 constexpr U kContextStride = 0x84;
 // The per-set sound lists: 256 pointers, each to dwords (key << 16 | id)
 // ending in -1; the id + 0x1000 is a Sound_LoadStream id.
-constexpr U kSoundLists = 0x6565BC;
+constexpr ::bof3::image::Va kSoundLists{0x6565BC};
 // The actors' "acting" bits: a u16, bit n for actor n (PSX 0x801463BE).
-constexpr U kActorBits = 0x904B82;
+constexpr ::bof3::image::Va kActorBits{0x904B82};
 // Window record 16 of the window task's records (0x803160 + 16 * 0x24) and the
 // three after it: the item window. Record 16's fields the two set-ups write.
 // kItemWindow: now Window16 (symbols.toml).
-constexpr U kItemWindowPage = 0x8033AB;      // byte: the inventory page
-constexpr U kItemWindowCursor = 0x8033AC;    // byte: the cursor's item index
+constexpr ::bof3::image::Va kItemWindowPage{0x8033AB};      // byte: the inventory page
+constexpr ::bof3::image::Va kItemWindowCursor{0x8033AC};    // byte: the cursor's item index
 // kItemWindowExtra: now Window19 (symbols.toml). three bytes 0x80340C..E
-constexpr U kWindowCurrent = 0x905B84;       // the window task's current record
-constexpr U kItemActor = 0x929F06;           // byte: the actor the item window is for
-constexpr U kActingActor = 0x939EC4;         // pointer: the acting actor's context, its byte +5 the actor
-constexpr U kActorPages = 0x9045FC;          // 3 bytes per actor: page, a word's byte, cursor
-constexpr U kCommandSource = 0x939FA0;       // pointer: its dword +0x10 holds the command flags
-constexpr U kPartyPages = 0x904605;          // 3 bytes: page, a byte, cursor (the party's item window)
+constexpr ::bof3::image::Va kWindowCurrent{0x905B84};       // the window task's current record
+constexpr ::bof3::image::Va kItemActor{0x929F06};           // byte: the actor the item window is for
+constexpr ::bof3::image::Va kActingActor{0x939EC4};         // pointer: the acting actor's context, its byte +5 the actor
+constexpr ::bof3::image::Va kActorPages{0x9045FC};          // 3 bytes per actor: page, a word's byte, cursor
+constexpr ::bof3::image::Va kCommandSource{0x939FA0};       // pointer: its dword +0x10 holds the command flags
+constexpr ::bof3::image::Va kPartyPages{0x904605};          // 3 bytes: page, a byte, cursor (the party's item window)
 // The banner pool: 8 entries of 0xC (PSX 0x801EB460): +0 active, +1 kind, +2 a
 // byte, +3 the layer (0 or 1), +4 the text, +8 the timer (a u16, 0xFF forever),
 // +0xA a byte. The current entry, and the kinds seen this frame.
-constexpr U kBanners = 0x93B8E0;
-constexpr U kBannerCurrent = 0x93B8C0;
-constexpr U kBannerKinds = 0x904AE9;
+constexpr ::bof3::image::Va kBanners{0x93B8E0};
+constexpr ::bof3::image::Va kBannerCurrent{0x93B8C0};
+constexpr ::bof3::image::Va kBannerKinds{0x904AE9};
 constexpr U kRetOnly = bof3::addr::BareRet;             // a bare ret: kinds 0, 3 and 4
 constexpr U kBannerKind1 = bof3::addr::BattleBanner_TickKind1;         // kind 1's tick (timer, then NoneOfKind(1))
 constexpr U kBannerKind2 = bof3::addr::BattleBanner_TickKind2;         // kind 2's tick (timer, then NoneOfKind(4))
 // The message queue: 16 entries of 8 (+0, +1 bytes, +4 a dword), its write
 // and read indices (PSX 0x801EB520, 0x801EC298 / 0x801EBE74).
-constexpr U kQueue = 0x93C2C0;
-constexpr U kQueueWrite = 0x93C2A1;
+constexpr ::bof3::image::Va kQueue{0x93C2C0};
+constexpr ::bof3::image::Va kQueueWrite{0x93C2A1};
 // kQueueRead: now BattleWindows_MsgHead (symbols.toml).
 // The banner's text buffer, the message table (localised strings: entry 1 is
 // also the name suffix) and the suffix switch.
-constexpr U kBannerText = 0x904EC0;
-constexpr U kMessages = 0x669DE0;
-constexpr U kNameSuffix = 0x669DE4;
-constexpr U kSuffixOn = 0x904B7A;
+constexpr ::bof3::image::Va kBannerText{0x904EC0};
+constexpr ::bof3::image::Va kMessages{0x669DE0};
+constexpr ::bof3::image::Va kNameSuffix{0x669DE4};
+constexpr ::bof3::image::Va kSuffixOn{0x904B7A};
 // The enemy AI rows: 0x8C bytes per script (the enemy's byte +0xF0), four rows
 // of 16 checked per turn (PSX 0x800E407C, 0x88 per script).
-constexpr U kAiScripts = 0x8C5600;
-constexpr U kActingKind = 0x904B35;          // byte 1 of 0x904B34 (PSX 0x80146371)
+constexpr ::bof3::image::Va kAiScripts{0x8C5600};
+constexpr ::bof3::image::Va kActingKind{0x904B35};          // byte 1 of 0x904B34 (PSX 0x80146371)
 
 // The named data, by the address its symbols.gen.h macro names.
 namespace at {
