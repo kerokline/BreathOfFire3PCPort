@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (launched 2026-10-28 afternoon on `relocatable-image/round`
 off `main` `15518394`, the PR #164 merge; stage A's three agents in worktrees
 under `C:\Users\kerok\bof3x-runs\ri1027`, baseline build `wt_base`. The
-owner's call 1 is answered, section 7; calls 2 and 3 wait on RA3 and RA1.)
+owner's three calls are answered, section 7.)
 
 The owner's word, 2026-10-27: stage "the data image as typed source" work as
 a round. Stages 1 and 2 of [`IDEAS.md`](IDEAS.md) I44 are done (the
@@ -187,9 +187,20 @@ own harness root under `C:\Users\kerok\bof3x-runs\ri1027` (Defender-excluded).
    settled. **Answered 2026-10-28 (the owner): I44's route.** Stages B, C
    and D run as staged.
 2. **The stub page**: kept for one release behind a switch, or removed in
-   stage C. RA3 will measure; the call is the owner's.
+   stage C. RA3 will measure; the call is the owner's. **Answered 2026-10-28 (the owner): removed at the end of stage C**
+   (RA3's option R, [`relocatable-image-design.md`](relocatable-image-design.md)):
+   stage C runs as C1 (the image moved with the stub page intact, proving
+   the move alone) then C2 (the code words bound by name, the page a
+   no-access trap, proving the binding alone); no `BOF3X_STUBPAGE` switch,
+   no mode in the quicksave's build id.
 3. **Stage B's size**: one wave (about 17,000 sites, near the typed-data
-   round's stages A and B together), or two.
+   round's stages A and B together), or two. **Answered 2026-10-28 (the owner): two waves, split by kind**
+   (RA3's reading): wave 1 the data places (RB0, then the file groups,
+   `codegen_same.py` the gate); wave 2 the code places (the helpers, the
+   code-address definitions, the thunk), each a place-or-name judgment the
+   gate cannot see because `Code()` folds to the identity in stage B, proved
+   by C2's run. RB0 prototypes the typed `Va` on one family before wave 1 is
+   sized from RA1's census.
 
 ## 8. The brief, per group
 
