@@ -8,6 +8,11 @@
 #                           Player: lines are checked against still finds every
 #                           kind of name in src/; the exe host and the launcher
 #                           refuse the same hosted-only switches
+#   tools/ledger_registry.py
+#     --check               src/launcher/ledger_registry.h, the launcher's
+#                           table of the ledger's switch fields, is what
+#                           docs/DIVERGENCE.md gives today (regenerated to
+#                           memory and compared)
 #   tools/gen_symbols.py    symbols.toml parses and generates (names, addresses,
 #                           signatures, impl files) - the same step the build
 #                           runs, here without waiting for a toolchain
@@ -68,6 +73,9 @@ jobs:
 
       - name: The switch inventory the ledger's fields are checked against
         run: python tools/ledger_switches.py --check
+
+      - name: The launcher's table of the ledger's switch fields is generated from today's ledger
+        run: python tools/ledger_registry.py --check
 
       - name: symbols.toml generates
         run: python tools/gen_symbols.py --toml symbols.toml --out "$RUNNER_TEMP/symbols.gen.h"
