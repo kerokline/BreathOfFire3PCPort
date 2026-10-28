@@ -127,8 +127,8 @@ void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 // Capcom's phase handlers a table holds, unnamed, in the engine: 0x492750
 // steps +1 on; 0x437CC0 is a bare ret (a step that waits for a child to move
 // +2 on).
-constexpr std::uint32_t kStepOn = bof3::addr::Effect_StateNext;   // 0x492750, ours since round thirteen
-constexpr std::uint32_t kNothing = bof3::addr::BareRet;
+constexpr ::bof3::image::CodeVa kStepOn{bof3::addr::Effect_StateNext};   // 0x492750, ours since round thirteen
+constexpr ::bof3::image::CodeVa kNothing{bof3::addr::BareRet};
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -168,7 +168,7 @@ void CopyRecord(unsigned char* dst, const unsigned char* src) {
 // original 0x4B3F00: the kind-2 task. A three-entry stack table by +1: the
 // engine's 0x492750 (+1 on), Weretiger_Run, Weretiger_End.
 S14_EXPORT void __cdecl Weretiger_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {kStepOn, bof3::addr::Weretiger_Run, bof3::addr::Weretiger_End};
+    static constexpr std::uint32_t kPhases[3] = {kStepOn.v, bof3::addr::Weretiger_Run, bof3::addr::Weretiger_End};
     const unsigned phase = Sc()[1];
     if (phase >= 3) PastTable("Weretiger_Task", phase, 3);
     magic_harness::Phase(kPhases[phase])();
@@ -181,8 +181,8 @@ S14_EXPORT void __cdecl Weretiger_Task(void) {
 S14_EXPORT void __cdecl Weretiger_Run(void) {
     static constexpr std::uint32_t kSteps[12] = {
         bof3::addr::Weretiger_Pose,     bof3::addr::Weretiger_WaitPose, bof3::addr::Weretiger_FocusActor,
-        bof3::addr::Weretiger_Burst,    kNothing,                       bof3::addr::Weretiger_Copy,
-        bof3::addr::Weretiger_Release,  kNothing,                       bof3::addr::Weretiger_LoadForm,
+        bof3::addr::Weretiger_Burst,    kNothing.v,                       bof3::addr::Weretiger_Copy,
+        bof3::addr::Weretiger_Release,  kNothing.v,                       bof3::addr::Weretiger_LoadForm,
         bof3::addr::Weretiger_FadeIn,   bof3::addr::Weretiger_WaitScript, bof3::addr::Weretiger_Return};
     const unsigned phase = Sc()[2];
     if (phase >= 12) PastTable("Weretiger_Run", phase, 12);

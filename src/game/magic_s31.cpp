@@ -134,16 +134,16 @@ void Call3(std::uint32_t address, int a, int b, int c) { MH_WORD(Fn3, address)(a
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};
 using TaskFn = void (__cdecl*)(unsigned char*);
-void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
+void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset.v)(task); }
 
 // The phase handlers of other units a table holds (docs/magic_s31.md
 // section 3): the engine's below by address; the rest ours now and named in
 // the tables (S38's MagicFx_CountDownFlag10, S30's
 // MagicFx_EndWhenChildrenDone, S11's MagicFx_UncountAndFree, S15's
 // ChillRay_Grow / _Shrink, S12's MagicFx_CountDownRelease).
-constexpr std::uint32_t kScriptUntilDone = bof3::addr::BattleFx_ScriptUntilDone;  // engine: the script ticked, the sprite queued, +2 on at the done flag
+constexpr ::bof3::image::CodeVa kScriptUntilDone{bof3::addr::BattleFx_ScriptUntilDone};  // engine: the script ticked, the sprite queued, +2 on at the done flag
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -927,7 +927,7 @@ S31_EXPORT void __cdecl CoronaFlash_Draw(void) {
 // CoronaEnemy_Start, the engine's 0x43EC10 (the script until the done flag),
 // BattleFx_FreeTask.
 S31_EXPORT void __cdecl CoronaEnemy_Task(void) {
-    static constexpr std::uint32_t kSteps[3] = {bof3::addr::CoronaEnemy_Start, kScriptUntilDone,
+    static constexpr std::uint32_t kSteps[3] = {bof3::addr::CoronaEnemy_Start, kScriptUntilDone.v,
                                                 bof3::addr::BattleFx_FreeTask};
     const unsigned phase = Sc()[2];
     if (phase >= 3) PastTable("CoronaEnemy_Task", phase, 3);

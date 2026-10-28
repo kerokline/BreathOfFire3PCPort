@@ -159,8 +159,8 @@ unsigned Alloc(std::uint32_t address) { return MH_WORD(ByteFn, address)() & 0xFF
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
-void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};
+void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset.v)(task); }
 
 // Other units' functions (docs/magic_s38.md section 3) are ours now and
 // called by name: S37's MagicFx_FreeCurrentRecord (a tail jmp) and

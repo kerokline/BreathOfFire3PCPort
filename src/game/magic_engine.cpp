@@ -61,7 +61,7 @@ using move_script::Word;
 constexpr unsigned kEnemyCues = 0xF8;
 // Sound_PlayEffect(id) unless id is 0xFFFF - unnamed, no group's
 // (battle_items_callees.h, enemy_ai_ops_callees.h).
-constexpr std::uint32_t kPlayCue = bof3::addr::Sound_PlayEffectUnlessNone;  // BE3's since round twelve (battle_e3.cpp): the same value, so the fuzz keys stand
+constexpr ::bof3::image::CodeVa kPlayCue{bof3::addr::Sound_PlayEffectUnlessNone};  // BE3's since round twelve (battle_e3.cpp): the same value, so the fuzz keys stand
 using PlayCueFn = void (__cdecl*)(unsigned);
 // A bit per actor with a reaction to show (docs/battle_actions.md).
 // kPending: now BattleActions_Pending (symbols.toml).
@@ -201,7 +201,7 @@ MENGINE_EXPORT void __cdecl Paralyzer_Start(void) {
         enemy != nullptr ? Pointer(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(enemy)) + kEnemyCues) : nullptr;
     if (cues != nullptr) {   // DIV-0183: no table, no cue
         const unsigned cue = static_cast<unsigned>(Word(cues) + 4) & 0xFFFF;
-        MH_AT(PlayCueFn, kPlayCue)(cue);
+        MH_AT(PlayCueFn, kPlayCue.v)(cue);
     } else {
         bof3::Log("DIV-0183    Paralyzer_Start: no cue table on the current enemy (%p), the cue skipped", enemy);
     }

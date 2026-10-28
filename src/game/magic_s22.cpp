@@ -135,10 +135,10 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 
 // The PSX's SetPolyFT3 (POLY_FT3's code 0x24 at +7, the float 0.01 to +0x10,
 // +0x20, +0x30) - Capcom's, unnamed, in no group.
-constexpr std::uint32_t kSetPolyFT3 = bof3::addr::Gpu_SetPolyFT3;
+constexpr ::bof3::image::CodeVa kSetPolyFT3{bof3::addr::Gpu_SetPolyFT3};
 // Rotates the dx / dz pair +0xC / +0x10 of the task it is given by its
 // direction byte +8 - Capcom's, unnamed, in no group (docs/magic_s22.md).
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};
 using PrimFn = void (__cdecl*)(unsigned char*);
 
 // The phase handlers of other units a stack table holds (docs/magic_s22.md)
@@ -247,7 +247,7 @@ S22_EXPORT void __cdecl BlizzardShard_Launch(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->step_x, Long(reinterpret_cast<const unsigned char*>(BlizzardShard_Offsets) + Sc()[4] * 8u));
     rv::Store(rv::Current<records::BattleTask>()->step_z, Long(reinterpret_cast<const unsigned char*>(BlizzardShard_Offsets) + Sc()[4] * 8u + 4));
-    MH_AT(PrimFn, kTurnOffset)(Sc());
+    MH_AT(PrimFn, kTurnOffset.v)(Sc());
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x) +
                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x)));
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z) +
@@ -376,7 +376,7 @@ S22_EXPORT void __cdecl BlizzardShard_DrawCrystal(void) {
         MH_CALL(Gpu_SetDrawMode)(p, 0, 1, 0x95, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
         p = Gfx_PacketNext;
-        MH_AT(PrimFn, kSetPolyFT3)(p);
+        MH_AT(PrimFn, kSetPolyFT3.v)(p);
         SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(1, 0, 0x340, 0x100));
         const unsigned clut = MH_CALL(Gpu_GetClut)(0, 0x1FA);
         const auto u = static_cast<unsigned char>(count << 6);

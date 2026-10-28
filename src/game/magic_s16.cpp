@@ -554,9 +554,9 @@ void ActorStart(const Pool& p) {
 namespace {
 // The task's six phases: its spawn, then the shared tint, brighten and
 // wait (round eight's BattleFx_*), MAGIC070's Sparkle_End, and the finish.
-constexpr std::uint32_t kTask071[6] = {0x4B99C0, bof3::addr::BattleFx_TintActor, bof3::addr::BattleFx_Brighten,
+constexpr std::uint32_t kTask071[6] = {bof3::addr::Magic071_Spawn, bof3::addr::BattleFx_TintActor, bof3::addr::BattleFx_Brighten,
                                        bof3::addr::BattleFx_WaitStep4, bof3::addr::Sparkle_End, bof3::addr::BattleFx_Finish};
-constexpr std::uint32_t kTask072[6] = {0x4BA4F0, bof3::addr::BattleFx_TintActor, bof3::addr::BattleFx_Brighten,
+constexpr std::uint32_t kTask072[6] = {bof3::addr::Magic072_Spawn, bof3::addr::BattleFx_TintActor, bof3::addr::BattleFx_Brighten,
                                        bof3::addr::BattleFx_WaitStep4, bof3::addr::Sparkle_End, bof3::addr::BattleFx_Finish};
 }  // namespace
 
@@ -581,9 +581,9 @@ MS16_EXPORT void __cdecl Magic072_Spawn(void) { Spawn(k072, 2); }
 // MAGIC073 (row 47) and MAGIC074 (row 114): a child on every actor
 
 namespace {
-constexpr std::uint32_t kTask073[2] = {0x4BB000, 0x4BB170};
+constexpr std::uint32_t kTask073[2] = {bof3::addr::Magic073_Spawn, bof3::addr::Magic073_Wait};
 // MAGIC131's wait-and-end, group S30's MagicFx_EndWhenChildrenDone (0x4E5200).
-constexpr std::uint32_t kTask074[2] = {0x4BBDD0, bof3::addr::MagicFx_EndWhenChildrenDone};
+constexpr std::uint32_t kTask074[2] = {bof3::addr::Magic074_Spawn, bof3::addr::MagicFx_EndWhenChildrenDone};
 // The child's six phases: its start, the actor's tint, MAGIC213's brighten
 // (group C1's ActorFx_TintUp, 0x4F4DA0), the wait for four sparkles, the fade,
 // the end.

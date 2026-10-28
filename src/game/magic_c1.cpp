@@ -108,7 +108,7 @@ using ByteFn = unsigned char (__cdecl*)();
 void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Capcom's and other groups' code this group calls (docs/magic_c1.md section 8).
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;  // engine: +0xC / +0x10 of a task turned by its +8
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};  // engine: +0xC / +0x10 of a task turned by its +8
 // Other groups' functions and the phase handlers a stack table holds are ours
 // now and called by name (bof3::addr): Port_DroppedCall (MAGIC124's extent, a
 // bare ret) and S37's MagicFx_FreeCurrentRecord among them.
@@ -908,7 +908,7 @@ namespace {
 void PuffPlace(const unsigned char* base, std::uint32_t offsets) {
     rv::Store(rv::Current<records::BattleTask>()->step_x, Long(Mem(offsets + 12u * Sc()[0xB])));
     rv::Store(rv::Current<records::BattleTask>()->step_z, Long(Mem(offsets + 4 + 12u * Sc()[0xB])));
-    MH_AT(PtrFn, kTurnOffset)(Sc());
+    MH_AT(PtrFn, kTurnOffset.v)(Sc());
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) +
                                                    static_cast<std::uint32_t>(rv::As<records::SpriteHead>(base)->x)));
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z) +
@@ -1142,7 +1142,7 @@ C1_EXPORT void __cdecl InkInkPuff_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     rv::Store(rv::Current<records::BattleTask>()->step_x, Long(Mem(Addr(InkInkPuff_Offsets) + 12u * Sc()[0xB])));
     rv::Store(rv::Current<records::BattleTask>()->step_z, Long(Mem(Addr(InkInkPuff_Offsets) + 4 + 12u * Sc()[0xB])));
-    MH_AT(PtrFn, kTurnOffset)(Sc());
+    MH_AT(PtrFn, kTurnOffset.v)(Sc());
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->x) +
                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x)));
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->z) +

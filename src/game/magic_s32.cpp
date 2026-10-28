@@ -89,9 +89,9 @@ constexpr unsigned kSpiralPoint = 0x34;
 // projected into a vertex (two floats and a depth), and the sign of the cross
 // product of three projected vertices, truncated by _ftol (docs/magic_c2.md
 // section 5 reads the first two).
-constexpr std::uint32_t kSetMapCamera = bof3::addr::EffectGte_LoadMapCamera;
-constexpr std::uint32_t kProjectPoint = bof3::addr::EffectGte_ProjectPoint;
-constexpr std::uint32_t kFacing = bof3::addr::Screen_TriangleWinding;
+constexpr ::bof3::image::CodeVa kSetMapCamera{bof3::addr::EffectGte_LoadMapCamera};
+constexpr ::bof3::image::CodeVa kProjectPoint{bof3::addr::EffectGte_ProjectPoint};
+constexpr ::bof3::image::CodeVa kFacing{bof3::addr::Screen_TriangleWinding};
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
@@ -161,7 +161,7 @@ using ProjectFn = void (__cdecl*)(const std::int32_t*, unsigned char*);
 using FacingFn = int (__cdecl*)(const unsigned char*, const unsigned char*, const unsigned char*);
 using DiscFn = void (__cdecl*)(const unsigned char*, unsigned, unsigned, unsigned);
 void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
-void Project(const std::int32_t* v, unsigned char* out) { MH_AT(ProjectFn, kProjectPoint)(v, out); }
+void Project(const std::int32_t* v, unsigned char* out) { MH_AT(ProjectFn, kProjectPoint.v)(v, out); }
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -631,7 +631,7 @@ S32_EXPORT void __cdecl EyeBeam_Narrow(void) {
 // the cylinder and the spiral (a tail jmp).
 S32_EXPORT void __cdecl EyeBeam_Draw(void) {
     BeamDrawMode();
-    Call0(kSetMapCamera);
+    Call0(kSetMapCamera.v);
     Call0(bof3::addr::EyeBeam_DrawCylinder);
     Call0(bof3::addr::EyeBeam_DrawSpiral);
 }
@@ -676,7 +676,7 @@ S32_EXPORT void __cdecl EyeBeam_DrawCylinder(void) {
         p[4] = 0x80;
         p[5] = 0;
         p[6] = 0;
-        const int facing = MH_AT(FacingFn, kFacing)(p + 8, p + 0x14, p + 0x20);
+        const int facing = MH_AT(FacingFn, kFacing.v)(p + 8, p + 0x14, p + 0x20);
         if (static_cast<short>(facing) < 0) MH_CALL(Gfx_CommitPrim)(1, 0x38);
     }
 }
@@ -690,7 +690,7 @@ S32_EXPORT void __cdecl EyeBeam_DrawCylinder(void) {
 // first, and the segment between them drawn (EyeBeam_DrawSpiralSegment).
 S32_EXPORT void __cdecl EyeBeam_DrawSpiral(void) {
     using PointFn = void (__cdecl*)(unsigned char*);
-    Call0(kSetMapCamera);
+    Call0(kSetMapCamera.v);
     std::uint32_t angle = static_cast<std::uint32_t>(Long(Mem(::bof3::Img(EyeBeam_State_addr) + 0x14)));
     std::int32_t x = BeamX();
     std::int32_t step = 0x1000;
@@ -815,7 +815,7 @@ S32_EXPORT void __cdecl EyeBeamSparks_Spawn(void) {
 // radius down 1; freed at radius 0. Answers in al whether any was live.
 S32_EXPORT unsigned char __cdecl EyeBeamSparks_Draw(void) {
     BeamDrawMode();
-    Call0(kSetMapCamera);
+    Call0(kSetMapCamera.v);
     std::uint32_t e = ::bof3::Img(EyeBeam_Sparks_addr);
     unsigned char any = 0;
     SetLong(Mem(::bof3::Img(EyeBeam_SparkCurrent_addr)), static_cast<std::int32_t>(e));

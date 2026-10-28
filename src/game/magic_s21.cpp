@@ -85,8 +85,8 @@ constexpr std::uint32_t kClutEnd = 0x812B80;
 // MagicFx_FreeCurrentRecord, a pool slot's free, is ours now and by name):
 //   0x5A76F0  a POLY_G4-shaped setter, code 0x5C, the four z at +0x10 ..;
 //   0x5A7570  POLY_F3's setter, code 0x20, the three z at +0x10, +0x1C, +0x28.
-constexpr std::uint32_t kSetPoly5C = bof3::addr::Gpu_SetLineG4;
-constexpr std::uint32_t kSetPolyF3 = bof3::addr::Gpu_SetPolyF3;
+constexpr ::bof3::image::CodeVa kSetPoly5C{bof3::addr::Gpu_SetLineG4};
+constexpr ::bof3::image::CodeVa kSetPolyF3{bof3::addr::Gpu_SetPolyF3};
 using VoidFn = void (__cdecl*)();
 using PrimFn = void (__cdecl*)(unsigned char*);
 
@@ -1095,7 +1095,7 @@ MS21_EXPORT void __cdecl Iceblast_DrawSpires(void) {
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
             MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
             unsigned char* const p = Gfx_PacketNext;
-            MH_AT(PrimFn, kSetPoly5C)(p);
+            MH_AT(PrimFn, kSetPoly5C.v)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
             long depth;
             MH_CALL(Gte_RotTransPers4)(VtxP(0), VtxP(8), VtxP(0x10), VtxP(0x18), F(p, 8), F(p, 0x18), F(p, 0x28), F(p, 0x38),
@@ -1327,7 +1327,7 @@ MS21_EXPORT void __cdecl IceShard_Draw(void) {
         MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
         unsigned char* const p = Gfx_PacketNext;
-        MH_AT(PrimFn, kSetPolyF3)(p);
+        MH_AT(PrimFn, kSetPolyF3.v)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
         SetLong(Scr(0), 0x21 - Sprite_Current[9]);
         int v = MH_CALL(Math_Sin)(((Sprite_Current[9] + 0x10) & 0x3F) << 6);

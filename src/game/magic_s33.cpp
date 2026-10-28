@@ -133,13 +133,13 @@ void Call3(std::uint32_t address, int a, int b, int c) { MH_WORD(Fn3, address)(a
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};
 using TaskFn = void (__cdecl*)(unsigned char*);
-void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
+void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset.v)(task); }
 // Capcom's, unnamed, in no group: resets the acting member's battle state
 // (its +0x138 / +0x13C, flag bits of +0x130 / +0x134, then more; not read to
 // its end here). Takes nothing.
-constexpr std::uint32_t kResetActor = bof3::addr::DragonForm_Transform;   // rebound 2026-09-29 (round twelve, BE6): the value is unchanged, the fuzz keys on it
+constexpr ::bof3::image::CodeVa kResetActor{bof3::addr::DragonForm_Transform};   // rebound 2026-09-29 (round twelve, BE6): the value is unchanged, the fuzz keys on it
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -227,7 +227,7 @@ S33_EXPORT void __cdecl Accession_Task(void) {
 // copied to 0x904EA0; +2 on when 0x904B89 is 3, 0xB or 0xD; +9 3 when the
 // target's party +0x89 is 0, else 0x1E; +1 on.
 S33_EXPORT void __cdecl Accession_Start(void) {
-    MH_AT(Fn0, kResetActor)();
+    MH_AT(Fn0, kResetActor.v)();
     const unsigned kind = Mem(::bof3::Img(BattlePhases_B89_addr))[0];
     Mem(::bof3::Img(0x8031F3))[0] = 1;
     const unsigned id = Mem(::bof3::Img(kBannerIds.v) + kind)[0];

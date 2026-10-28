@@ -86,7 +86,7 @@ constexpr unsigned kMoteRecords = 48;
 // the tables (S30's MagicFx_EndWhenChildrenDone, BattleFx_Finish, S24's
 // MagicFx_EndWithChildren, BattleFx_FreeTask, S37's Combustion_Wait, S11's
 // MagicFx_UncountAndFree, C2's HolocaustBeam_Grow).
-constexpr std::uint32_t kScriptUntilDone = bof3::addr::BattleFx_ScriptUntilDone;  // engine: the script ticked, the sprite queued, +2 on at the done flag
+constexpr ::bof3::image::CodeVa kScriptUntilDone{bof3::addr::BattleFx_ScriptUntilDone};  // engine: the script ticked, the sprite queued, +2 on at the done flag
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
@@ -149,9 +149,9 @@ void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};
 using TaskFn = void (__cdecl*)(unsigned char*);
-void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
+void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset.v)(task); }
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -601,7 +601,7 @@ S09_EXPORT void __cdecl ElemBreathEmitter_Emit(void) {
 // ElemBreathEnemy_Start, the engine's 0x43EC10 (the script until its done
 // flag), BattleFx_FreeTask.
 S09_EXPORT void __cdecl ElemBreathEnemy_Task(void) {
-    static constexpr std::uint32_t kSteps[3] = {bof3::addr::ElemBreathEnemy_Start, kScriptUntilDone,
+    static constexpr std::uint32_t kSteps[3] = {bof3::addr::ElemBreathEnemy_Start, kScriptUntilDone.v,
                                                 bof3::addr::BattleFx_FreeTask};
     Dispatch(kSteps, 3, Sc()[2], "ElemBreathEnemy_Task");
 }

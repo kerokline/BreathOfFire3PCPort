@@ -70,8 +70,8 @@ constexpr unsigned kSlashAnimationCount = 12;
 // of the task it is given by its direction byte +8 (docs/magic_s22.md);
 // 0x435A70 plays animation `animation` on enemy `actor` (BattleEnemy_SetAnimation
 // with 0x939AD8 pointed at that enemy's record and put back).
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
-constexpr std::uint32_t kEnemyAnimation = bof3::addr::BattleEnemy_SetAnimationOf;   // 0x435A70, R3A's (round 14)
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};
+constexpr ::bof3::image::CodeVa kEnemyAnimation{bof3::addr::BattleEnemy_SetAnimationOf};   // 0x435A70, R3A's (round 14)
 // Magic008Dash_Run's stack table names S04's KickImage_Tick (ours now).
 
 unsigned char* Sc() { return Sprite_Current; }
@@ -521,7 +521,7 @@ S06_EXPORT void __cdecl Magic008Dash_Start(void) {
     if (index >= kDashOffsetCount) bof3::Fatal("Magic008Dash_Start: +0xB %u, past the %u offsets", index, kDashOffsetCount);
     tsc->step_x = Long(Mem(::bof3::Img(Magic008Dash_Offsets_addr) + 8 * index));
     tsc->step_z = Long(Mem(::bof3::Img(Magic008Dash_Offsets_addr) + 8 * index + 4));
-    MH_AT(void (__cdecl*)(unsigned char*), kTurnOffset)(Sc());
+    MH_AT(void (__cdecl*)(unsigned char*), kTurnOffset.v)(Sc());
     const unsigned char size = MH_CALL(BattleActor_FxSize)();
     Sc()[9] = size;
     Inc(Sc()[2]);
@@ -668,7 +668,7 @@ bool React() {
         Gfx_UploadQueueY[n] = 0;
     } else {
         Sc()[0x4B] = 0xFF;
-        MH_AT(void (__cdecl*)(unsigned, unsigned), kEnemyAnimation)(ActorByte(), 2);
+        MH_AT(void (__cdecl*)(unsigned, unsigned), kEnemyAnimation.v)(ActorByte(), 2);
     }
     const unsigned char size = MH_CALL(BattleActor_FxSize)();
     Sc()[9] = size;
