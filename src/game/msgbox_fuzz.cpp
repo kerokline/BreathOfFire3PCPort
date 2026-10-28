@@ -376,7 +376,7 @@ const Clone kClones[kCount] = {
 // --- the state a round compares ------------------------------------------
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {kState, 0x30},          // the whole MsgBoxState block
+    {::bof3::Img(kState), 0x30},  // the whole MsgBoxState block
     {WindowRecords_addr, 0x48}, // window records 0 and 1
     {0x8034F2, 4},           // Text_PenY, Text_PenX
     {0x7E1BE4, 2},           // Text_LineX
@@ -672,7 +672,8 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
 
 // The MsgBoxState block is the first region; the two window records the
 // second, at +0x30.
-unsigned Block(const State& s, std::uint32_t address) { return s.memory[address - kState]; }
+unsigned Block(const State& s, std::uint32_t address) { return s.memory[address - kState.v]; }
+unsigned Block(const State& s, ::bof3::image::Va va) { return s.memory[va - kState]; }
 unsigned Window(const State& s, std::uint32_t address) { return s.memory[0x30 + address - WindowRecords_addr]; }
 
 void Cover(unsigned k, const State& before, const State& after) {

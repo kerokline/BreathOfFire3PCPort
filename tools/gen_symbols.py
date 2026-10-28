@@ -66,6 +66,16 @@ keeps its own literal: one inside .text, one that starts inside an earlier
 member (two views of the same bytes: Area00_Choices and Area00_Handlers),
 and a field entry (`field_of`, a field of its block's records).
 
+Names and places (the relocatable-image round's RB0,
+docs/relocatable-image-design.md 2). Every address this emits is a VA, a
+name in the frame BOF3.exe was linked in: `bof3::addr::Name`, `<Name>_addr`
+and `kGameDataVa` stay VAs. What reaches memory places its VA through one
+helper of src/common/image_base.h: a data macro and `BOF3_GAME` through
+`::bof3::Img(va)`, a callable original and `orig::Name` through
+`::bof3::Code(va)`. While `ImageBase()` is 0x400000 both are the identity,
+consteval so the front end folds them, and the machine code is unchanged
+(tools/codegen_same.py).
+
 The output contains addresses and names only — our work product, not game data.
 It is still generated into the build tree rather than committed, so it cannot
 drift from symbols.toml.
@@ -193,10 +203,11 @@ def emit_game_data(w, start, end, members):
     w("}  // namespace bof3")
     w("// The one pointer to the image's data, for code that wants the struct")
     w("// itself (BOF3_GAME->Sprite_Objects[3].x).")
-    w("#define BOF3_GAME (reinterpret_cast<::bof3::GameData *>(::bof3::kGameDataVa))")
+    w("#define BOF3_GAME (reinterpret_cast<::bof3::GameData *>(::bof3::Img(::bof3::kGameDataVa)))")
     w("// Each member's address, from the struct, checked against symbols.toml's")
-    w("// pc: the macros below cast these, so every spelling compiles to the same")
-    w("// absolute address as before.")
+    w("// pc. A VA, a name: the macros below place it through ::bof3::Img, so")
+    w("// every spelling compiles to the same absolute address as before while")
+    w("// the base is 0x400000 (common/image_base.h).")
     w("#pragma clang diagnostic push")
     w('#pragma clang diagnostic ignored "-Winvalid-offsetof"')
     for pc, size, name, ct, n, al in members:
@@ -249,13 +260,18 @@ def main():
     w('// read before any macro below exists (tools/gen_symbols.py, stage C4).')
     w('#include "game/records.h"')
     w('')
+    w('// Img(va) and Code(va): a VA below is a name; these make it a place')
+    w('// (docs/relocatable-image-design.md 2).')
+    w('#include "common/image_base.h"')
+    w('')
     w('namespace bof3::image {')
-    w(f'inline constexpr std::uint32_t kBase = {meta["image_base"]:#x};')
     w(f'inline constexpr std::uint32_t kTimestamp = {meta["pe_timestamp"]:#x};')
     w(f'inline constexpr std::uint32_t kSizeOfImage = {meta["size_of_image"]:#x};')
     w(f'inline constexpr std::uint32_t kTextVa = {meta["text_va"]:#x};')
     w(f'inline constexpr std::uint32_t kTextSize = {meta["text_size"]:#x};')
     w(f'inline constexpr char kSha256[] = "{meta["sha256"]}";')
+    w("// kBase, the linked frame, is common/image_base.h's; symbols.toml agrees.")
+    w(f'static_assert(kBase == {meta["image_base"]:#x}, "the image_base of symbols.toml is the linked frame (common/image_base.h)");')
     w('}  // namespace bof3::image')
     w('')
 
@@ -332,7 +348,7 @@ def main():
 
     w('// --- Functions still Capcom\'s: the name is the original address. ---')
     for e, cc in theirs:
-        w(f'#define {e["name"]} (reinterpret_cast<{e["ret"]} ({cc} *)({e["params"]})>({e["pc"]:#x}))')
+        w(f'#define {e["name"]} (reinterpret_cast<{e["ret"]} ({cc} *)({e["params"]})>(::bof3::Code({e["pc"]:#x})))')
     w('')
     w('// --- Functions that are ours: the name is our implementation. ---')
     for e, cc in ours:
@@ -343,7 +359,7 @@ def main():
     w('// bytes are a jmp to ours, so this is for the detour layer, not for calling.')
     w('namespace bof3::orig {')
     for e, cc in ours:
-        w(f'inline const auto {e["name"]} = reinterpret_cast<{e["ret"]} ({cc} *)({e["params"]})>({e["pc"]:#x});')
+        w(f'inline const auto {e["name"]} = reinterpret_cast<{e["ret"]} ({cc} *)({e["params"]})>(::bof3::Code({e["pc"]:#x}));')
     w('}  // namespace bof3::orig')
     w('')
 
@@ -365,6 +381,7 @@ def main():
         # a GameData member casts its <Name>_addr (from the struct); any other
         # typed entry its literal pc
         at = f'{e["name"]}_addr' if e['name'] in in_gd else f'{e["pc"]:#x}'
+        at = f'::bof3::Img({at})'
         if 'count' in e:
             return f'#define {e["name"]} (reinterpret_cast<{ty} *>({at}))'
         return f'#define {e["name"]} (*reinterpret_cast<{ty} *>({at}))'
