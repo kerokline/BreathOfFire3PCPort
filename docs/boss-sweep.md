@@ -1,13 +1,14 @@
 # The boss sweep: every boss's moves, by its own fight
 
-**Status:** PROPOSED (2026-10-27 evening, the owner's ask before the staged
+**Status:** PROPOSED; steps 1 to 3 MEASURED, sections 5 to 7 (2026-10-27 evening, the owner's ask before the staged
 rounds: "update the spell/item harness to also test boss moves"; the owner's
 suspicion that the kind injections of [`spell-sweep.md`](spell-sweep.md) 11
 could swap the enemy kind and graphic in combat so moves like Nue Stomp render
 from the right body. Section 1 answers that from the code; sections 2 to 4 are
-the plan; the runs and findings will follow as sections. Section 5 is
-step 1, the `battle ID` op and its proof, 2026-10-27 night. Section 7 is
-step 3, the fights played to their deaths on three installs, 2026-10-28.)
+the plan. Section 5 is step 1, the `battle ID` op and its proof,
+2026-10-27 night; section 6 step 2, the fight table and the crafted
+pre-fight saves, 2026-10-27 night; section 7 step 3, the fights played to
+their deaths on three installs, 2026-10-28.)
 
 ## 1. Why a kind swap cannot stage a boss, and what can
 
@@ -96,13 +97,28 @@ report gains the fight, its kinds and the state bytes seen.
 `BOF3X_GAPWATCH`, pictures compared; findings to this doc, defects to
 `known-defects.md`, any behaviour change to the ledger.
 
-## 4. The owner's calls
+## 4. The owner's calls (answered 2026-10-27 evening)
 
-1. Scope: section 2.1 only (the seven skills), or 2.2 too (played fights) -
-   and if 2.2, which bosses first.
-2. Whether the harness may kill a boss (phase transitions, end hooks) or
-   holds every HP, as the spell sweep does.
-3. Installs: PC + US-disc as the spell sweep, or the PSP install as well.
+1. Scope: **both** - the seven boss-only skills (2.1) and the played fights
+   with their scripted moves (2.2).
+2. **The harness may kill a boss.** The owner: two of the recent visual
+   glitches came from boss deaths - the D.Zombie's (fight 32,
+   `minecartToZombieDragon`) and the Amalgam's (fight 12, `ropeAndAmalgam`)
+   death effects were broken; the D.Zombie's is the blood / oil pool,
+   which the owner thinks may be area logic rather than boss logic, so its
+   check reads the field's effect objects after the kill as well as the
+   battle's - so the end phases are wanted - every
+   fight played through to its death animation, its end hook and its exit
+   hook, with shots across them (section 3's `--play` mode drops the boss's
+   HP by poke when the party's own hits are not enough, and keeps the party
+   invulnerable).
+3. Installs: PC, US-disc **and the PSP install** - the owner: it has slight
+   differences sometimes.
+
+So step 3's `--play` is the main mode, not an option: N rounds to the kill,
+a shot at every enemy pick, every state-byte change (the enemy object's
++1..+4, docs/boss_harness.md section 4) and the end sequence, then the
+forced casts of 2.1 on the fights that carry them, before the kill.
 
 ## 5. Step 1: the op and its proof (2026-10-27 night)
 
@@ -206,6 +222,105 @@ battle 2
 until 0x66C7E8 u16 == 5 timeout 600
 ```
 
+## 6. Step 2: the pre-fight states
+
+**Status:** MEASURED (2026-10-27 night, headless, the PC install, branch
+`boss-sweep/prefight-saves` off `main` `fec0624c`, no game code changed).
+The table of every fight - who calls it, the chapter, run and step, the
+area, the actors - is [`boss-fights.md`](boss-fights.md); this section is
+what crafted saves reached.
+
+### 5.1 How
+
+`tools/chapter_jump.py` gained the `bf*` crafts (`list` names them, `make`
+writes them into `--out`; the saves are game data and stay in the harness
+root `C:\Users\kerok\bof3x-runs\bsw1027\saves\crafted`). Each is a donor
+recipe save with the chapter, state 2, the run and step before the
+scene's battle step, the area and position, the counters (block `+0x20`)
+and the chapter flags that keep the load's EnterArea from re-arming
+another run. The runs: a launcher copy with no ini, a game folder of the
+root's own (junctions to the main checkout's `bof3\DAT`, `BGM`, `SND`),
+`BOF3X_OPT=none`, `en-US`, speed 4, `BOF3X_RECIPE_SAVES` naming the
+crafts' folder. The probe recipe (`tools/recipes/bossfight_probe.txt`,
+`--save bfNN` to choose the craft; generated): ending17's load opening,
+then every 10 recipe frames the field mode `0x66C7E8`, `Game_AreaNumber`,
+`EventBattle_Id` `0x904AAA`, run, step, counter 0, `Cond_ByteFD` and the
+block's area word; every 300 frames the 30 `Sprite_Objects` records' type
+`+6` and tag `+0x9E`; at frame 688 the loaded area's encounter rows 4..7
+(which slots have a kind); circle held 2 frames every 40 frames (the
+scenes' message boxes wait for it); a shot every 120 frames. The exact
+frame of a fight came from a second recipe peeking the fight byte and the
+mode every frame with the same presses. The runs are deterministic: the
+10-frame and the 1-frame probes agree.
+
+### 5.2 The seven boss-only skills' fights
+
+| Fight | Enemy | Craft (donor; state) | Result | Fight byte / mode 5 at recipe frame | Tagged actors (index, tag) at 688 |
+|--:|---|---|---|---|---|
+| 28 | Gazer | none needed: the owner's save `midEyeEncounter` is chapter 6 run 0xE **step 0x1E** in area 77, the battle step itself | **the scene starts the fight**; the Gazer drawn | 440 / 441 | (1, 0); row 7 slot 0 |
+| 55 | Myria | `bf55b` (`ending17`; ch 15 run 6 step 0xB, counter 0 = 0xF, area 198 at (0x170000, 0x120000)) | **the scene starts the fight** on its own timers; Myria drawn | 479 / 480 | (5, 0) |
+| 55 | Myria | `bf55` (`ending17`; run 6 step 0 in area 198, as `cs198`) | Myria stands; the scene stalls at step 1 waiting for counter 0 = 5 (it reaches 2; 4,600 frames) | - | (5, 0): ready for `battle 55` |
+| 54 | Shroom | `bf54b` (`radiationRoom`; ch 9 run 9 **step 3**, counter 0 = 0x28, area 119 at (0xA0000, 0x28000), flag 0x16 set, 0x1E clear) | **the scene starts the fight**; the enemy listed in the target box, not in the camera's view in the shots | 440 / 441 | (1, 1); row 6 slot 1 |
+| 54 | Shroom | `bf54` (the same at step 0) | the scene runs (the party dropped in, the lab) and stalls at step 2 waiting for counter 0 = 0x25 (it reaches 4) | - | (1, 1): ready for `battle 54` |
+| 38 | Ammonite | `bf38c` (`radiationRoom`; ch 12 run 9 **step 0x14**, counter 0 = 0x17, area 134 at (0x348000, 0x258000), flags 1 and 0x2F set) | **the scene starts the fight** after the field's own 0x18 / 0x19 bumps; two enemies listed; the camera faces the sea, the Ammonite not in view | 784 / 785 | (0, 0), (1, 1); row 7 slots 0..3 have kinds |
+| 38 | Ammonite | `bf38` (step 0xA, counter 0 = 0) | the scene runs steps 0xA..0x11 and stalls at 0x12 (a held button with counter 1 not 0xFF, or counter 2 = 0x80) | - | (0, 0), (1, 1) |
+| 50 | Chimera | `bf50c` (`adult_ryu`; ch 14 run 5 **step 0xB**, counter 0 = 0x1E, area 197 at (0xB8000, 0x728000), flag 0xD set, 0xF clear) | **the scene starts the fight** on its timers; the Chimera drawn; adult Ryu alone (the donor's party) | 572 / 573 | (0, 0); row 7 slot 0 |
+| 50 | Chimera | `bf50` (step 0xA) | stalls at step 0xA waiting for counter 0 = 0x1C (it stays 0: the entry's `DropIn(2)` for an arrival from zone 5 is not run for a craft) | - | (0, 0): ready for `battle 50` |
+| 35 | Gaist, Torch | `bf35` (`radiationRoom`; ch 10 run 0xD step 0xF, area 120 at (0x250000, 0x748000), zone 5, flags 0x39..0x3B set, 0x3C / 0x3D clear) | stalls at step 0x10 waiting for counter 0 = 0xE (it stays 0xA); the Gaist and the frog stand in the field as **type-1** objects with tag 0: **no type-7 actor at all**. The same with the `ending17` donor's party | - | none |
+| 35 | Gaist, Torch | `bf35b` (step 0x13, counter 0 = 0x13) | the scene calls fight 35 at frame 448 (`boss encounter: id 35`), then **crashes** in the battle's set-up, mode 5 step 5: `0xC0000005` reading `0x0000000C` at `bof3x.dll+0x202795` (dump in the root's `L1`): a battle with no tagged actor, a state the game never makes - the harness's, not a defect | - | none |
+
+So **five of the six carrier fights start headless from a crafted (or the
+owner's) save with no `battle` op at all** - 28, 38, 50, 54, 55: the scene
+calls `Field_StartEventBattle` itself. For a forced cast from a state
+before the scene (the `battle` op), `bf54`, `bf38`, `bf50` and `bf55`
+stand the tagged actors. **Fight 35 (Gaist; Corona) is not reached**: its
+actors become type 7 somewhere in the scene's steps 0x10..0x12, which the
+crafted state does not complete (area 120's scripts never bump counter 0
+past 0xA) - the owner's recording, or a read of area 120's event script.
+
+### 5.3 The cheap ones: chapter 15's ten sample fights (39..48)
+
+`Scena15_EnterArea` starts each sample area's battle on entry, by the zone
+the party arrives in and the area's flags (`scena_sc15.cpp:366..401`). So a
+save in the area at a link's arrival (the recipe op `links` read the
+image's lists) in the right zone, chapter 15 flags 0x20..0x2F clear, starts
+it: the run waits for any held button, then the fight. All ten reached,
+each enemy drawn (`sheet_samples.png` in the root):
+
+| Fight | Craft | Area | Arrival (link): x, z, flags | Zone | Actors (tags) |
+|--:|---|--:|---|--:|---|
+| 39 | `bf39` | 158 | 157.0: 0x98000, 0x1A0000, 1 | 0 | 0, 1, 2 |
+| 40 | `bf40` | 159 | 157.6: 0x48000, 0x1A0000, 1 | 0 | 0, 1 |
+| 41 | `bf41` | 160 | 157.11: 0x1E8000, 0xC0000, 1 | 1 | 0, 1 |
+| 42 | `bf42` | 161 | 157.16: 0x1F0000, 0x48000, 3 | 1 | 0 |
+| 43 | `bf43` | 162 | 157.18: 0xE0000, 0x108000, 7 | 0 | 0 |
+| 44 | `bf44` | 162 | 157.20: 0x1D0000, 0xC8000, 3 | 1 | 2, 3 |
+| 45 | `bf45` | 163 | 157.23: 0x48000, 0x180000, 1 | 0 | 0 |
+| 46 | `bf46` | 164 | 157.27: 0x48000, 0x180000, 1 | 0 | 0..4 |
+| 47 | `bf47` | 165 | 165.1: 0x268000, 0x30000, 5 | 1 | 0 |
+| 48 | `bf48` | 166 | 164.3: 0x88000, 0x1A0000, 1 | 0 | 0, 1, 2 |
+
+Fight byte / mode 5 at recipe frames 563 / 564 (`bf39`, `bf47` measured
+frame by frame; the others at 568 by the 10-frame probe). The donor is
+`adult_ryu`: adult Ryu alone against each. The generic position (0x120000,
+0x180000) is zone 2 in all nine areas: no battle.
+
+### 5.4 What no crafted save reaches yet (for the owner's recordings)
+
+- **Fight 35** (Gaist, Torch, area 120; Corona): section 6.2.
+- **Not tried, no owner's route**: 3 (the owner's `nue2` save is chapter 1
+  run 9 step 0x11 in area 22 and stalls there with no type-7 actor; `nue`,
+  run 8 step 0 in area 23, stalls the same), 4, 5, 6 (zone-dependent:
+  `Cond_ByteFD` is not in the save, the arrival cell picks it), 9, 10, 11,
+  14, 15, 17..22, 25..27, 30, 31, 33, 34, 36, 37, 49, 51, 52, 53. Each has
+  its state in [`boss-fights.md`](boss-fights.md); 25..27 and 36 (and 32)
+  have no starter in chapter code (a field script's op F6), so their crafts
+  would start at the run's first step in the area.
+- **Reached by an owner's route already**: 1 (`battle_commands`), 2
+  (`cutsceneAndNue`), 7 (`whelpBoss`), 8 (`bossAndFlash`), 12
+  (`ropeAndAmalgam`), 13 / 16 (`balioAndSunder_1` / `_2`), 23 / 24
+  (`stallion`), 29 (`dolphinBoss`), 32 (`minecartToZombieDragon`); 28 by the
+  owner's save `midEyeEncounter`.
 ## 7. Step 3: the fights played (2026-10-28)
 
 **Status:** MEASURED (2026-10-28, branch `boss-sweep/play` off
@@ -216,8 +331,7 @@ with the gap watch, `fights.sh` / `fights2.sh` / `casts.sh` the fight
 lists), one folder of frames and a log a run under `pc\`, `us\`, `psp\`,
 `results_fight.tsv` in each, the compares under `cmp\`, the contact sheets
 `end_*.png` / `sheet_*.png`, the scripts in `tools\` (`endsheet.py`,
-`align.py`, `cmp_all.py`). Section numbering: the step-2 branch's section 5
-becomes 6 at its merge, so this is 7.
+`align.py`, `cmp_all.py`).
 
 ### 7.1 The harness
 

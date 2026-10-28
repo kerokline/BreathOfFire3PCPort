@@ -116,6 +116,80 @@ CRAFTS = {
                    x=0x1B0000, z=0x1B8000, cset=[0x1B], cclr=[2, 3],
                    why="area 19 inside Scenario chapter 1's step-hook box (mode_states.cpp): a step "
                        'there arms run 3 (Scena01_Scene03): the camera out to 0xA00 and back'),
+    # The boss sweep's pre-fight states (docs/boss-sweep.md "Step 2", docs/boss-fights.md): each the run and
+    # step before the scene's own Field_StartEventBattle, in the fight's area.
+    'bf54': dict(donor='radiationRoom', chapter=9, state=2, run=9, step=0, area=0x77, flags=1,
+                 x=0xA0000, z=0x28000, cset=[0x16], cclr=[0x1E],
+                 why='fight 54 (Shroom): Scena09_Run9 from step 0 in area 119, as Scena09_StepHook starts it '
+                     '(scena_sc9b.cpp:283-291; flag 0x1E clear, 0x16 set so the entry does not arm run 8)'),
+    'bf35': dict(donor='radiationRoom', chapter=10, state=2, run=0xD, step=0xF, area=0x78, flags=1,
+                 x=0x250000, z=0x748000, cset=[0x39, 0x3A, 0x3B], cclr=[0x3C, 0x3D],
+                 why='fight 35 (Gaist, Torch): Scena10_Run13 from step 0xF in area 120 at the cell '
+                     'Scena10_ArriveHook tests (scena_sc9b.cpp:2375-2381)'),
+    'bf38': dict(donor='radiationRoom', chapter=12, state=2, run=9, step=0xA, area=0x86, flags=1,
+                 x=0x200000, z=0x258000, cset=[1, 0x2F],
+                 why='fight 38 (Ammonite): Scena12_Run9 from step 0xA in area 134, as Scena12_StepHook '
+                     'starts it (scena_sc12.cpp:220-233; flag 0x2F set so the entry does not restart the run)'),
+    'bf50': dict(donor='adult_ryu', chapter=14, state=2, run=5, step=0xA, area=0xC5, flags=1,
+                 x=0xB8000, z=0x728000, cset=[0xD], cclr=[0xF],
+                 why='fight 50 (Chimera): Scena14_Run5 from step 0xA in area 197 (scena_sc13.cpp:1606-1617; '
+                     "the entry's DropIn(2) for an arrival from zone 5 is skipped)"),
+    'bf55': dict(donor='ending17', chapter=15, state=2, run=6, step=0, area=0xC6, flags=0x80,
+                 x=0x160000, z=0x120000, cclr=[0x13, 0x14, 0x15, 0x16],
+                 why='fight 55 (Myria): cs198 from the chapter-17 donor (a four-member party): Scena15_Run6 '
+                     "from step 0, as Scena15_Run5's step 0x24 leaves it (scena_sc15.cpp:1223-1231)"),
+    'bf55b': dict(donor='ending17', chapter=15, state=2, run=6, step=0xB, area=0xC6, flags=0x80,
+                  x=0x170000, z=0x120000, cclr=[0x13, 0x14, 0x15, 0x16], counters=[0xF, 0, 0, 0],
+                  why="fight 55 (Myria) on Scena15_Run6's timers alone: step 0xB with counter 0 at 0xF, so "
+                      "steps 0xB..0xD need no field-script bump (skips the run's music, effects 0xA9 / 0xA8 "
+                      "and step 7's party placement at (0x170000, 0x120000))"),
+    'bf54b': dict(donor='radiationRoom', chapter=9, state=2, run=9, step=3, area=0x77, flags=1,
+                  x=0xA0000, z=0x28000, cset=[0x16], cclr=[0x1E], counters=[0x28, 0, 0, 0],
+                  why="fight 54 (Shroom) at Scena09_Run9's battle step 3 with counter 0 at 0x28 "
+                      "(scena_sc9a.cpp:1151-1155): the step places the party and calls the battle itself"),
+    'bf35b': dict(donor='radiationRoom', chapter=10, state=2, run=0xD, step=0x13, area=0x78, flags=1,
+                  x=0x250000, z=0x748000, cset=[0x39, 0x3A, 0x3B], cclr=[0x3C, 0x3D], counters=[0x13, 0, 0, 0],
+                  why="fight 35 at Scena10_Run13's battle step 0x13 with counter 0 at 0x13 (scena_sc9b.cpp:1995-1999)"),
+    'bf38c': dict(donor='radiationRoom', chapter=12, state=2, run=9, step=0x14, area=0x86, flags=1,
+                  x=0x348000, z=0x258000, cset=[1, 0x2F], counters=[0x17, 0, 0, 0],
+                  why="fight 38 (Ammonite) from Scena12_Run9's step 0x14 (DropIn(4), Kind2_Place(4)) with "
+                      "counter 0 at 0x17: steps 0x15 / 0x16 then wait on the field's 0x18 and 0x19"),
+    'bf50c': dict(donor='adult_ryu', chapter=14, state=2, run=5, step=0xB, area=0xC5, flags=1,
+                  x=0xB8000, z=0x728000, cset=[0xD], cclr=[0xF], counters=[0x1E, 0, 0, 0],
+                  why="fight 50 (Chimera) from Scena14_Run5's step 0xB with counter 0 at 0x1E: the run sets "
+                      "its own timers from there (scena_sc13.cpp:2236-2269)"),
+    # Chapter 15's sample fights: a link's arrival into the area (the image's link lists, the recipe op
+    # `links`) in the zone Scena15_EnterArea starts the area's battle in (scena_sc15.cpp:366-401).
+    'bf39': dict(donor='adult_ryu', chapter=15, state=2, run=0, step=0, area=158, flags=0x1,
+                 x=0x98000, z=0x1a0000, cclr=list(range(0x20, 0x30)),
+                 why='fight 39: area 158 at a link arrival in zone 0; the entry starts its battle (run 2)'),
+    'bf40': dict(donor='adult_ryu', chapter=15, state=2, run=0, step=0, area=159, flags=0x1,
+                 x=0x48000, z=0x1a0000, cclr=list(range(0x20, 0x30)),
+                 why='fight 40: area 159 at a link arrival in zone 0; the entry starts its battle (run 2)'),
+    'bf41': dict(donor='adult_ryu', chapter=15, state=2, run=0, step=0, area=160, flags=0x1,
+                 x=0x1e8000, z=0xc0000, cclr=list(range(0x20, 0x30)),
+                 why='fight 41: area 160 at a link arrival in zone 1; the entry starts its battle (run 2)'),
+    'bf42': dict(donor='adult_ryu', chapter=15, state=2, run=0, step=0, area=161, flags=0x3,
+                 x=0x1f0000, z=0x48000, cclr=list(range(0x20, 0x30)),
+                 why='fight 42: area 161 at a link arrival in zone 1; the entry starts its battle (run 2)'),
+    'bf43': dict(donor='adult_ryu', chapter=15, state=2, run=0, step=0, area=162, flags=0x7,
+                 x=0xe0000, z=0x108000, cclr=list(range(0x20, 0x30)),
+                 why='fight 43: area 162 at a link arrival in zone 0; the entry starts its battle (run 2)'),
+    'bf44': dict(donor='adult_ryu', chapter=15, state=2, run=0, step=0, area=162, flags=0x3,
+                 x=0x1d0000, z=0xc8000, cclr=list(range(0x20, 0x30)),
+                 why='fight 44: area 162 at a link arrival in zone 1; the entry starts its battle (run 2)'),
+    'bf45': dict(donor='adult_ryu', chapter=15, state=2, run=0, step=0, area=163, flags=0x1,
+                 x=0x48000, z=0x180000, cclr=list(range(0x20, 0x30)),
+                 why='fight 45: area 163 at a link arrival in zone 0; the entry starts its battle (run 2)'),
+    'bf46': dict(donor='adult_ryu', chapter=15, state=2, run=0, step=0, area=164, flags=0x1,
+                 x=0x48000, z=0x180000, cclr=list(range(0x20, 0x30)),
+                 why='fight 46: area 164 at a link arrival in zone 0; the entry starts its battle (run 2)'),
+    'bf47': dict(donor='adult_ryu', chapter=15, state=2, run=0, step=0, area=165, flags=0x5,
+                 x=0x268000, z=0x30000, cclr=list(range(0x20, 0x30)),
+                 why='fight 47: area 165 at a link arrival in zone 1; the entry starts its battle (run 2)'),
+    'bf48': dict(donor='adult_ryu', chapter=15, state=2, run=0, step=0, area=166, flags=0x1,
+                 x=0x88000, z=0x1a0000, cclr=list(range(0x20, 0x30)),
+                 why='fight 48: area 166 at a link arrival in zone 0; the entry starts its battle (run 2)'),
 }
 
 
