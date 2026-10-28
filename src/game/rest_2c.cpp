@@ -46,6 +46,13 @@ unsigned char& B(U address) { return *At(address); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 void PutL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
 void PutW(U address, unsigned v) { SetWord(At(address), v); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
+void PutL(::bof3::image::Va va, U v) { PutL(::bof3::Img(va), v); }
+void PutW(::bof3::image::Va va, unsigned v) { PutW(::bof3::Img(va), v); }
 float F(U address) {
     float v;
     std::memcpy(&v, At(address), sizeof v);
@@ -70,7 +77,7 @@ void Jump(U table, unsigned count, unsigned index, const char* who) {
     if (index >= count)
         bof3::Fatal("%s: state %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index, count,
                     static_cast<unsigned>(table), static_cast<unsigned>(table + 4 * index));
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(::bof3::image::Va{table + 4 * index})))();
 }
 
 // The screen title's box the inn and save states draw first: (0x14, 0x12),
@@ -89,21 +96,21 @@ void Message(unsigned id) {
 // unchecked from 0x9036D4. Every writer of that dword keeps it below 16
 // (FieldSave_Choose, Save_QuickWrite, the load menu); past it ours aborts,
 // where the original writes past the sixteen summaries.
-U SummaryOf(U slot, const char* who) {
+::bof3::image::Va SummaryOf(U slot, const char* who) {
     if (slot >= at::kSlotCount)
         bof3::Fatal("%s: save slot %u is past the %u summaries; the original writes at 0x%X", who, static_cast<unsigned>(slot),
-                    at::kSlotCount, static_cast<unsigned>(at::kSummaries + slot * at::kSummaryBytes));
+                    at::kSlotCount, static_cast<unsigned>((at::kSummaries + slot * at::kSummaryBytes).v));
     return at::kSummaries + slot * at::kSummaryBytes;
 }
 
 // The seven dwords Save_BuildBlock filled at 0x904680 into the slot's summary.
 void CopySummary(U slot, const char* who) {
-    const U to = SummaryOf(slot, who);
+    const ::bof3::image::Va to = SummaryOf(slot, who);
     for (U i = 0; i < 7; ++i) PutL(to + 4 * i, L(at::kSummary + 4 * i));
 }
 
 // The window record n's byte / word at +off.
-U Win(unsigned n, unsigned off) { return WindowRecords_addr + n * at::kWindowStride + off; }
+U Win(unsigned n, unsigned off) { return ::bof3::Img(WindowRecords_addr) + n * at::kWindowStride + off; }
 
 // A party id's form: id 4 is drawn and saved as 0xB unless the story byte's
 // low seven bits are 5 or 0xC (Save_BuildBlock's and MasterPanel_DrawFace's
@@ -147,7 +154,7 @@ extern "C" void __cdecl MasterFigure_DrawFaded(void) {
                                 : 0xFF;
     B(at::kFigureRgb + 2) = static_cast<int>(B(at::kFigureRgb + 2)) > t ? static_cast<unsigned char>(B(at::kFigureRgb + 2) + down)
                                                                          : 0;
-    SH_AT(void (__cdecl*)(U), at::kFigureDraw)(at::kFigure);
+    SH_AT(void (__cdecl*)(U), at::kFigureDraw)(::bof3::Img(at::kFigure));
     Rest2c_FigureRgb = r;
     B(at::kFigureRgb + 1) = g;
     B(at::kFigureRgb + 2) = b;
@@ -370,45 +377,45 @@ extern "C" void __cdecl Rest_EndAfterMessage(void) {
 // the self-test, which compares Capcom's mix.
 unsigned char g_summary_record0 = 0;
 extern "C" void __cdecl Save_BuildBlock(void) {
-    PutL(at::kBlock, L(0x8034E0));
-    PutL(at::kBlock + 4, L(0x8034E4));
-    PutL(at::kBlock + 0xC, L(0x8034EC));
-    const U counters = L(0x903848);
-    PutL(at::kBlock + 8, L(0x8034E8));
-    B(0x903A00) = static_cast<unsigned char>(counters);
-    B(0x903A01) = static_cast<unsigned char>(counters >> 8);
-    B(0x903A02) = B(0x90384A);
-    PutL(0x903A08, L(0x802D74));
-    PutL(0x903A0C, L(0x802D78));
-    B(0x903A07) = ObjTrio[0].direction;
-    SaveMenu_SavedButtons = L(0x903580);
-    PutL(0x9046A4, L(0x903588));
-    B(0x903A03) = B(0x90384B);
-    PutL(0x9046A8, L(0x90358C));
+    PutL(at::kBlock, L(::bof3::Img(0x8034E0)));
+    PutL(at::kBlock + 4, L(::bof3::Img(0x8034E4)));
+    PutL(at::kBlock + 0xC, L(::bof3::Img(0x8034EC)));
+    const U counters = L(::bof3::Img(0x903848));
+    PutL(at::kBlock + 8, L(::bof3::Img(0x8034E8)));
+    B(::bof3::Img(0x903A00)) = static_cast<unsigned char>(counters);
+    B(::bof3::Img(0x903A01)) = static_cast<unsigned char>(counters >> 8);
+    B(::bof3::Img(0x903A02)) = B(::bof3::Img(0x90384A));
+    PutL(::bof3::Img(0x903A08), L(::bof3::Img(0x802D74)));
+    PutL(::bof3::Img(0x903A0C), L(::bof3::Img(0x802D78)));
+    B(::bof3::Img(0x903A07)) = ObjTrio[0].direction;
+    SaveMenu_SavedButtons = L(::bof3::Img(0x903580));
+    PutL(::bof3::Img(0x9046A4), L(::bof3::Img(0x903588)));
+    B(::bof3::Img(0x903A03)) = B(::bof3::Img(0x90384B));
+    PutL(::bof3::Img(0x9046A8), L(::bof3::Img(0x90358C)));
     FieldModes_Pending = Game_AreaNumber;
-    PutL(0x9046A0, L(0x903584));
+    PutL(::bof3::Img(0x9046A0), L(::bof3::Img(0x903584)));
     const unsigned record = B(at::kMemberRecord + Cond_Flags[0xd2]);
-    PutW(0x9046AC, Field_CancelButtons);
-    PutW(0x903A50, 0);
-    const U name = CharacterRecords_addr + (g_summary_record0 ? 0u : record) * at::kRecordStride; // DIV-0076
+    PutW(::bof3::Img(0x9046AC), Field_CancelButtons);
+    PutW(::bof3::Img(0x903A50), 0);
+    const U name = ::bof3::Img(CharacterRecords_addr) + (g_summary_record0 ? 0u : record) * at::kRecordStride; // DIV-0076
     SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(at::kSummary)), reinterpret_cast<const char*>(At(name)), 5);
-    SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(0x904696)), reinterpret_cast<const char*>(At(name + 5)), 4);
+    SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(::bof3::Img(0x904696))), reinterpret_cast<const char*>(At(name + 5)), 4);
     for (unsigned i = 0; i < 3; ++i) B(at::kPartyList + 0x623 + i) = FormOf(B(at::kPartyList + i));
-    B(0x904688) = B(0x903A7A);
-    PutL(0x90468C, L(0x9040C8));
-    B(0x904689) = static_cast<unsigned char>(Config_WindowColour);
-    B(0x90468A) = Config_Background;
-    PutL(0x904690, L(0x903A7C));
-    const unsigned char flag = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x92);
-    B(0x904694) = flag;
-    SaveMenu_ScriptFlagsSaved = B(0x9039A2);
+    B(::bof3::Img(0x904688)) = B(::bof3::Img(0x903A7A));
+    PutL(::bof3::Img(0x90468C), L(::bof3::Img(0x9040C8)));
+    B(::bof3::Img(0x904689)) = static_cast<unsigned char>(Config_WindowColour);
+    B(::bof3::Img(0x90468A)) = Config_Background;
+    PutL(::bof3::Img(0x904690), L(::bof3::Img(0x903A7C)));
+    const unsigned char flag = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x92);
+    B(::bof3::Img(0x904694)) = flag;
+    SaveMenu_ScriptFlagsSaved = B(::bof3::Img(0x9039A2));
     U sum = 0;
     for (U i = 0; i < at::kBlockBytes; ++i) {
         const unsigned char v = B(at::kBlock + i);
         B(at::kStaging + i) = v;
         sum += v;
     }
-    std::memset(At(Save_Staging_addr + at::kBlockBytes), 0, at::kStagingClear);
+    std::memset(At(::bof3::Img(Save_Staging_addr) + at::kBlockBytes), 0, at::kStagingClear);
     PutW(at::kChecksum, sum);
     CopySummary(Rest2c_Slot, "Save_BuildBlock");
 }
@@ -849,7 +856,7 @@ namespace {
 // Menu_DrawPanelBox(0x14, 0x10 - 10 * slide, 0x118, 0x13, the window colour).
 void Panels() {
     for (unsigned slot = 0; slot < Field_MemberCount; ++slot) {
-        const unsigned char* const member = At(ObjTrio_addr + 0x148 + slot * at::kObjStride);
+        const unsigned char* const member = At(::bof3::Img(ObjTrio_addr) + 0x148 + slot * at::kObjStride);
         const int y = static_cast<int>(54 * slot + 0x3E);
         SH_CALL(MasterPanel_DrawMember)(0x11 - 36 * Rest2c_TalkSlide, y, member[0], slot);
         SH_CALL(MasterPanel_DrawStats)(0x89 + 40 * Rest2c_TalkSlide, y, member[0]);
@@ -897,11 +904,11 @@ extern "C" void __cdecl MasterTalk_PickAsk(void) {
 // pieces: 0x664468, sixteen of 0x664494 8 apart, 0x6644A0.
 extern "C" void __cdecl MasterPanel_DrawStats(int x, int y, unsigned record) {
     SH_CALL(Menu_DrawBox)(x + 5, y + 3, 0x94, 0x2D, 0, static_cast<unsigned char>(Config_WindowColour));
-    const U r = CharacterRecords_addr + (record & 0xFF) * at::kRecordStride;
+    const U r = ::bof3::Img(CharacterRecords_addr) + (record & 0xFF) * at::kRecordStride;
     char* const buffer = reinterpret_cast<char*>(At(at::kPath));
     const auto* const text = reinterpret_cast<const unsigned char*>(buffer);
     const auto* const format = reinterpret_cast<const char*>(At(at::kFmtNumber));
-    struct Stat { int lx, ly, nx, ny; U label, word; };
+    struct Stat { int lx, ly, nx, ny; ::bof3::image::Va label; U word; };
     const Stat stats[4] = {
         {x + 0xB, y + 8, x + 0x30, y + 0xA, at::kStatLabels, 0x24},
         {x + 0xB, y + 0x15, x + 0x30, y + 0x17, at::kStatLabels + 8, 0x26},
@@ -941,7 +948,7 @@ extern "C" void __cdecl MasterPanel_DrawStats(int x, int y, unsigned record) {
 // CLUT Gpu_GetClut(0x10, 0x1E0), shade 0x80.
 extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, unsigned slot) {
     SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x7D, 0x30, 0, static_cast<unsigned char>(Config_WindowColour));
-    const U r = CharacterRecords_addr + (record & 0xFF) * at::kRecordStride;
+    const U r = ::bof3::Img(CharacterRecords_addr) + (record & 0xFF) * at::kRecordStride;
     const unsigned char id = rv::As<records::CharRecord>(At(r))->char_id;
     const unsigned shade = (B(r + 0x10) >> 6) & 2;
     SH_CALL(MasterPanel_DrawFace)(x + 0x56, y + 2, id, shade);
@@ -952,8 +959,8 @@ extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, un
     SH_CALL(Text_DrawFont8)(x + 0x16, y + 0x17, 0, text);
     const unsigned status = Word(At(r + 0x10));
     U words = 0;
-    if (status & 0x80) words = (status & 0x20) && (B(at::kFrameCounter) & 0x20) == 0 ? at::kStatusB : at::kStatusA;
-    else if (status & 0x20) words = at::kStatusB;
+    if (status & 0x80) words = (status & 0x20) && (B(at::kFrameCounter) & 0x20) == 0 ? ::bof3::Img(at::kStatusB) : ::bof3::Img(at::kStatusA);
+    else if (status & 0x20) words = ::bof3::Img(at::kStatusB);
     if (words != 0) SH_CALL(Text_DrawSmall)(x + 0x2E, y + 0x17, 1, 0x10, At(words));
     const auto* const left = reinterpret_cast<const char*>(At(at::kFmtLeft));
     const auto* const right = reinterpret_cast<const char*>(At(at::kFmtRight));
@@ -975,7 +982,7 @@ extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, un
     const U exp = static_cast<U>(rv::As<records::CharRecord>(At(r))->exp);
     const unsigned level = B(r + 0xA);
     SH_CALL(MasterPanel_DrawExpBar)(x + 0x14, y + 0x12, record, level, exp);
-    SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr)), 0, 0, 0xF, 0);
+    SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(::bof3::Img(Gfx_PacketNext_addr))), 0, 0, 0xF, 0);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
     const unsigned clut = SH_CALL(Gpu_GetClut)(0x10, 0x1E0);
     SH_AT(void (__cdecl*)(int, int, unsigned, unsigned, unsigned, unsigned), at::kGlyph)(
@@ -992,7 +999,7 @@ extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, un
 // past 99 gives -1 for both, the table's equal steps 0): the bar's end is x
 // itself.
 extern "C" void __cdecl MasterPanel_DrawExpBar(int x, int y, unsigned record, unsigned level, unsigned exp) {
-    unsigned char* const prim = *reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr));
+    unsigned char* const prim = *reinterpret_cast<unsigned char**>(At(::bof3::Img(Gfx_PacketNext_addr)));
     SH_CALL(Gpu_SetLineF2)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 0);
     const U x16 = static_cast<U>(x) & 0xFFFF;
@@ -1024,7 +1031,7 @@ extern "C" int __cdecl MasterPanel_ExpForLevel(unsigned record, unsigned level) 
     const unsigned n = level & 0xFF;
     if (n > 0x63) return -1;
     U sum = 0;
-    const U row = at::kExpTable + (record & 0xFF) * 0x318u;
+    const ::bof3::image::Va row = at::kExpTable + (record & 0xFF) * 0x318u;
     for (unsigned i = 0; i < n; ++i) sum += Word(At(row + 8 * i));
     return static_cast<int>(sum);
 }
@@ -1040,7 +1047,7 @@ struct Quad {
     unsigned char u[4], v[4];
 };
 void EdgeQuad(const Quad& q, int clut_x) {
-    unsigned char* const p = *reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr));
+    unsigned char* const p = *reinterpret_cast<unsigned char**>(At(::bof3::Img(Gfx_PacketNext_addr)));
     SH_CALL(Gpu_SetPolyFT4)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 1);
     for (unsigned i = 0; i < 4; ++i) {
@@ -1062,13 +1069,13 @@ void EdgeQuad(const Quad& q, int clut_x) {
 // packet cursor (x 0, y, w, h), then Gpu_SetDrawMode(cursor, 0, 1, 0xF, the
 // RECT) and Gfx_CommitPrim(1, 0xC).
 void WindowMode(unsigned y, unsigned size) {
-    unsigned char* const rect = *reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr));
+    unsigned char* const rect = *reinterpret_cast<unsigned char**>(At(::bof3::Img(Gfx_PacketNext_addr)));
     PutL(at::kPacketNext, Key(rect + 8));
     PutW(Key(rect), 0);
     PutW(Key(rect + 2), y);
     PutW(Key(rect + 4), size);
     PutW(Key(rect + 6), size);
-    SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr)), 0, 1, 0xF, Key(rect));
+    SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(::bof3::Img(Gfx_PacketNext_addr))), 0, 1, 0xF, Key(rect));
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
 }
 
@@ -1148,10 +1155,10 @@ extern "C" void __cdecl Menu_DrawPanelBox(int x, int y, int w, int h, unsigned c
 // (row + 0x1E0) << 6 | x byte >> 4; committed as (1, 0x1C).
 extern "C" void __cdecl MasterPanel_DrawFace(int x, int y, unsigned id, unsigned shade) {
     const unsigned char form = FormOf(static_cast<unsigned char>(id));
-    const U entry = at::kFaceTable + 4u * form;
-    SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr)), 0, 1, 0x1E, 0);
+    const U entry = ::bof3::Img(at::kFaceTable) + 4u * form;
+    SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(::bof3::Img(Gfx_PacketNext_addr))), 0, 1, 0x1E, 0);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
-    unsigned char* const p = *reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr));
+    unsigned char* const p = *reinterpret_cast<unsigned char**>(At(::bof3::Img(Gfx_PacketNext_addr)));
     SH_CALL(Gpu_SetSprt)(p);
     const auto s = static_cast<unsigned char>(shade);
     if (s == 0) {

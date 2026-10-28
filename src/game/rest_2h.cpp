@@ -80,12 +80,17 @@ using Handler = void (__cdecl*)();
 
 unsigned char& B(U address) { return *At(address); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
 int S8(unsigned v) { return static_cast<signed char>(static_cast<unsigned char>(v)); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 
 // The current window record, re-read at every use (the originals reload
 // 0x905B84 after each call).
-unsigned char* Rec() { return At(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))); }
+unsigned char* Rec() { return At(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))); }
 int X(const unsigned char* w) { return rv::As<records::WindowRecord>(w)->x; }
 int Y(const unsigned char* w) { return rv::As<records::WindowRecord>(w)->y; }
 unsigned char Style() { return static_cast<unsigned char>(Config_WindowColour); }
@@ -100,7 +105,7 @@ void Step(const char* who, U table, unsigned entries) {
         bof3::Fatal("%s: the window's step +3 is %u, past the %u entries of 0x%X - the original jumps through the "
                     "dword after (docs/rest_2h.md section 7)",
                     who, index, entries, (unsigned)table);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(::bof3::image::Va{table + 4 * index})))();
 }
 
 // A slide: x (+4) or y (+6) moved by `by`; past `bound` (signed 16-bit; `below`
@@ -118,12 +123,16 @@ void Slide(unsigned at_word, int by, short bound, bool below, short to) {
 
 // CharacterRecords' record n (0xA4 each), unchecked; a member id's record
 // index, 0x66972C[id] read in place (the byte is unbounded, the table is 24).
-unsigned char* Record(U n) { return At(CharacterRecords_addr + n * at::kRecordStride); }
+unsigned char* Record(U n) { return At(::bof3::Img(CharacterRecords_addr) + n * at::kRecordStride); }
 U RecordOf(U id) { return B(at::kMemberMap + (id & 0xFF)); }
 
 char* PrintBuf() { return reinterpret_cast<char*>(At(at::kPrintBuf)); }
 const char* Format(U address) { return reinterpret_cast<const char*>(At(address)); }
 const unsigned char* Text(U address) { return At(address); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+const char* Format(::bof3::image::Va va) { return Format(::bof3::Img(va)); }
+const unsigned char* Text(::bof3::image::Va va) { return Text(::bof3::Img(va)); }
 const unsigned char* Message(unsigned id) { return SH_CALL(Msg_SystemPtr)(id & 0xFFFF); }
 
 
@@ -134,6 +143,7 @@ void PutFloat(unsigned char* at, std::int32_t v) {
 
 void Piece(int x, int y, unsigned id) { SH_CALL(Menu_DrawPiece)(x, y, id, 1); }
 void Pieces(int x, int y, U list) { SH_CALL(Menu_DrawPieces)(x, y, Text(list), 1); }
+void Pieces(int x, int y, ::bof3::image::Va list) { Pieces(x, y, ::bof3::Img(list)); }
 
 }  // namespace
 
@@ -187,10 +197,10 @@ extern "C" void __cdecl MenuList_ReserveWinDraw(unsigned char* obj) {
         const unsigned flags = rv::As<records::CharRecord>(rec)->status;
         U status = 0;
         if (flags & 0x80) {
-            if (flags & 0x20) status = (Frame_Counter & 0x20) ? at::kStatusA : at::kStatusB;
-            else status = at::kStatusA;
+            if (flags & 0x20) status = (Frame_Counter & 0x20) ? ::bof3::Img(at::kStatusA) : ::bof3::Img(at::kStatusB);
+            else status = ::bof3::Img(at::kStatusA);
         } else if (flags & 0x20) {
-            status = at::kStatusB;
+            status = ::bof3::Img(at::kStatusB);
         }
         if (status != 0)
             SH_CALL(Text_DrawSmall)(x7 + 0x30, text_y, colour != 0 ? static_cast<unsigned>(colour) : 1u, 0x10, Text(status));
@@ -553,7 +563,7 @@ extern "C" unsigned char __cdecl MasterWin_Available(unsigned index) {
     const unsigned k = index & 0xFF;
     switch (k) {
     case 0xB: return (Cond_Flags[0xd1] & 8) ? 1 : 0;
-    case 0xC: return SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x6C) ? 1 : 0;
+    case 0xC: return SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x6C) ? 1 : 0;
     case 0xD: return (Cond_Flags[0xd1] & 0x10) ? 1 : 0;
     case 0xE: return (Cond_Flags[0xd1] & 0x20) ? 1 : 0;
     default: break;
@@ -577,7 +587,7 @@ extern "C" unsigned char __cdecl MasterWin_SkillKnown(unsigned skill) {
     const auto s = static_cast<unsigned char>(skill);
     for (U k = 0; k < 7; ++k)
         for (U j = 0; j < 0xA; ++j)
-            if (B(Field_ActorStates_addr + 0x6e + k * at::kRecordStride + j) == s) return 1;
+            if (B(::bof3::Img(Field_ActorStates_addr) + 0x6e + k * at::kRecordStride + j) == s) return 1;
     for (U j = 0; j < 0x80; ++j)
         if (B(at::kSharedList + j) == s) return 1;
     return 0;
@@ -773,8 +783,8 @@ extern "C" void __cdecl BattleEquipWin_DrawItems(unsigned char* w) {
     unsigned char offset = 0, moving = 0;
     const unsigned char top = SH_CALL(Menu_ListScroll)(w + 0xA, &offset, &moving, w + 0x10);
     int text_y = S8(offset) + Y(w) + 0x1A;
-    const U row_ids = at::kUseIds + top;
-    const U row_counts = at::kUseCounts + top;
+    const U row_ids = ::bof3::Img(at::kUseIds) + top;
+    const U row_counts = ::bof3::Img(at::kUseCounts) + top;
     for (unsigned char r = 0; static_cast<int>(r) < static_cast<int>(moving) + 7; ++r, text_y += 0xD) {
         const unsigned char id = B(row_ids + r);
         if (id == 0) continue;
@@ -823,12 +833,12 @@ extern "C" void __cdecl Menu_DrawVerbPair(int x, int y, unsigned selected) {
     const unsigned char style = Style();
     SH_CALL(Menu_DrawBox)(x, y, 0x2D, 0x14, 0, style);
     const auto s = static_cast<unsigned char>(selected);
-    SH_CALL(Text_DrawAt)(x + 0xA, y + 3, s == 0xFF || s == 0 ? 0 : 7, 0x10, Text(Menu_Verbs_addr));
+    SH_CALL(Text_DrawAt)(x + 0xA, y + 3, s == 0xFF || s == 0 ? 0 : 7, 0x10, Text(::bof3::Img(Menu_Verbs_addr)));
     SH_CALL(Menu_DrawPieces)(x, y, Text(s == 0 ? at::kVerbPiecesOn : at::kVerbPiecesOff), 1);
     const int x2 = x + 0x30;
     const unsigned char style2 = Style();
     SH_CALL(Menu_DrawBox)(x2, y, 0x2D, 0x14, 0, style2);
-    SH_CALL(Text_DrawAt)(x2 + 0xA, y + 3, s == 0xFF || s == 1 ? 0 : 7, 0x10, Text(Menu_Verbs_addr + 0x18));
+    SH_CALL(Text_DrawAt)(x2 + 0xA, y + 3, s == 0xFF || s == 1 ? 0 : 7, 0x10, Text(::bof3::Img(Menu_Verbs_addr) + 0x18));
     SH_CALL(Menu_DrawPieces)(x2, y, Text(s == 1 ? at::kVerbPiecesOn : at::kVerbPiecesOff), 1);
 }
 

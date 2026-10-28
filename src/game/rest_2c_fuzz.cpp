@@ -43,6 +43,9 @@ template <typename... T> U PickOf(T... v) {
     return sh::Pick(values, sizeof...(v));
 }
 unsigned char& B(U a) { return *sh::Mem(a); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 void SetW(U a, U v) { SetWord(sh::Mem(a), v); }
 void SetL(U a, U v) { SetLong(sh::Mem(a), static_cast<std::int32_t>(v)); }
 U Win(unsigned n, unsigned off) { return WindowRecords_addr + n * at::kWindowStride + off; }
@@ -228,7 +231,7 @@ U Stir(const U*, U answer) {
 // R2B's 0x57EEF0 draws the record it is handed: its bytes (the faded colour,
 // the scale) are logged at the call, as the draw would see them.
 U FigureDraw(const U*, U answer) {
-    sh::NoteBytes(sh::Mem(at::kFigure), 0x110);
+    sh::NoteBytes(sh::Mem(::bof3::Img(at::kFigure)), 0x110);
     Move(sh::Noise());
     return answer;
 }
@@ -327,12 +330,12 @@ const sh::Region kRegions[] = {
     {WindowRecords_addr, 22 * at::kWindowStride}, // WindowRecords 0x803160..0x803477
     {0x6BC880, 0x48},                             // the save / inn bytes, the sell flags
     {0x903580, 0xC},                              // the buttons' dwords before Field_ConfirmButtons
-    {at::kBlock, 0x24},                           // the save block 0x9039E0..0x903A03 (the master byte 0x9039F5)
+    {::bof3::Img(at::kBlock), 0x24},                           // the save block 0x9039E0..0x903A03 (the master byte 0x9039F5)
     {0x903A94, 0x903F90 - 0x903A94},              // the records past the style region
     {0x904160, 0x400},                            // the save block 0x904160..0x904560
     {0x904700, 0x390},                            // and 0x904700..0x904A90
     {Save_Staging_addr, at::kBlockBytes + at::kStagingClear}, // the staging copy and what it clears
-    {at::kSummaries, at::kSlotCount * at::kSummaryBytes},  // the slots' summaries
+    {::bof3::Img(at::kSummaries), at::kSlotCount * at::kSummaryBytes},  // the slots' summaries
     {Rest2c_Slot_addr, 4},                        // the save cursor
     {0x939880, 0x180},                            // the master's bytes 0x9398CD..0x9398D3, the figure record 0x9398E0..0x9399EC
     {0x7DEE40, 8},                                // the message box's flags 0x7DEE44

@@ -39,6 +39,9 @@ using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
+// A VA held as a ::bof3::image::Va (common/image_base.h), placed here through
+// ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
 using scenario_harness::Phase;
 
 // A typed data symbol's address (symbols.gen.h makes the name a macro).
@@ -55,7 +58,7 @@ constexpr unsigned kEffectCount = 20;
 // any other byte no code of this band stores, and ours aborts.
 const unsigned char* EffectRead(unsigned index, const char* who) {
     if (index < kEffectCount) return rv::Bytes(&Effect_Objects[index]);
-    if (index == 0xFF) return At(Gfx_PacketPools_addr + 0x7560);
+    if (index == 0xFF) return At(::bof3::Img(Gfx_PacketPools_addr) + 0x7560);
     bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original reads at 0x%X", who, index,
                 static_cast<unsigned>(Addr(rv::Bytes(Effect_Objects)) + index * kEffectStride));
     return nullptr;
@@ -116,8 +119,8 @@ U MemberSpriteIndex() {
 // Area08_MessageFormat, amount), Msg_OpenSystem(5), Field_Request = 2,
 // Sprite_Current (read after the calls) state 4.
 void ShowAmount(unsigned amount) {
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(bof3::addr::Text_Records)),
-                         reinterpret_cast<const char*>(At(bof3::addr::Area08_MessageFormat)), amount);
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(bof3::addr::Text_Records))),
+                         reinterpret_cast<const char*>(At(::bof3::Img(bof3::addr::Area08_MessageFormat))), amount);
     SH_CALL(Msg_OpenSystem)(5);
     unsigned char* const c = Sprite_Current;
     Field_Request = 2;
@@ -168,7 +171,7 @@ void RollBody(const Roll& r) {
 }
 
 // CharacterRecords' record n (stride 0xA4), unchecked as the originals index it.
-unsigned char* Record(unsigned n) { return At(CharacterRecords_addr + n * at::kRecordStride); }
+unsigned char* Record(unsigned n) { return At(::bof3::Img(CharacterRecords_addr) + n * at::kRecordStride); }
 
 // The states each Run builds on its stack, in the order it stores them.
 const U kStatesA[] = {bof3::addr::LinkedObjectA_Roll, bof3::addr::LinkedObject_Show2, bof3::addr::LinkedObject_Show5,
@@ -209,7 +212,7 @@ extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
         }
         const unsigned count = At(at::kBankCount)[0];
         const unsigned char* const records = reinterpret_cast<const unsigned char*>(
-            static_cast<std::uintptr_t>(static_cast<U>(Long(At(MoveScript_TintRecords_addr + 0x180)))));
+            static_cast<std::uintptr_t>(static_cast<U>(Long(At(::bof3::Img(MoveScript_TintRecords_addr) + 0x180)))));
         const unsigned bank_byte = rv::As<records::SpriteObject>(s)->column;
         unsigned i = 0;
         while (i < count && records[i * 8 + 7] != bank_byte) ++i;

@@ -69,6 +69,9 @@ template <typename... T> U PickOf(T... v) {
     return sh::Pick(values, sizeof...(v));
 }
 unsigned char* Mem(U a) { return sh::Mem(a); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* Mem(::bof3::image::Va va) { return Mem(::bof3::Img(va)); }
 U SiteTarget(U site) { return site + 5 + static_cast<U>(Long(Mem(site + 1))); }
 
 // --- band_rows.py's call sites (2026-10-04), each checked against the capstone read ---

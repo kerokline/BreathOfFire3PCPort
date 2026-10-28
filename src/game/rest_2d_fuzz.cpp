@@ -47,6 +47,9 @@ template <typename... T> U PickOf(T... v) {
     return sh::Pick(values, sizeof...(v));
 }
 unsigned char& B(U a) { return sh::Mem(a)[0]; }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 
 // --- the clone table (band_rows.py --group R2D --clones --harness scenario, 2026-10-04) ---
 constexpr sh::CallSite kCalls5869A0[] = {{0xC, 0x461EB0}, {0x75, 0x587740}, {0xAA, 0x587740}, {0xB4, 0x587740}, {0x11F, 0x587740},
@@ -392,7 +395,7 @@ void Seed(unsigned k) {
             SetWord(sh::Mem(0x803346), 0);
             SetWord(sh::Mem(0x7E1BEC), Word(sh::Mem(0x90358E)));
             if (sh::Half()) B(0x80333E) = 0;
-            const U list = static_cast<U>(Long(sh::Mem(at::kItemIdLists + 4u * B(0x80333E))));
+            const U list = static_cast<U>(Long(sh::Mem(::bof3::Img(at::kItemIdLists + 4u * B(0x80333E)))));
             B(list + B(0x803340)) = static_cast<unsigned char>(1 + sh::Next() % 92);
             B(Rest2d_ItemsCategory_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, 3));
         }

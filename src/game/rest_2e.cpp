@@ -60,6 +60,12 @@ UC& B(U address) { return *At(address); }
 U W(U address) { return move_script::Word(At(address)); }
 void SetW(U address, U v) { move_script::SetWord(At(address), v); }
 U L(U address) { return static_cast<U>(move_script::Long(At(address))); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+UC& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+U W(::bof3::image::Va va) { return W(::bof3::Img(va)); }
+U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
 int S8(U v) { return static_cast<signed char>(static_cast<UC>(v)); }
 // A .data table symbols.gen.h declares as a pointer: its address.
 U AddrOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -69,40 +75,40 @@ U AddrOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>
 // kMode: now BattleE1_Mode (symbols.toml). the menu block: the screen (FieldMenu_States' index)
 // kState: now FieldS_State (symbols.toml). its state
 // kStep: now FieldS_Step (symbols.toml). its step
-constexpr U kTimer = 0x929F04;         // the open / close countdown
+constexpr ::bof3::image::Va kTimer{0x929F04};         // the open / close countdown
 // kMember: now BattleActorCopies_ItemActor (symbols.toml). s8: a party member (Items, Equipment, Ability)
 // kTarget: now FieldS_Column (symbols.toml). s8: the ability's target member
 // kAnswer: now FieldS_Answer (symbols.toml). s8: a yes / no answer (1 yes)
 // kBackdrop: now Config_Background (symbols.toml). the Config backdrop kind (Menu_DrawBackdrop's)
-constexpr U kPressed = 0x7E1BEC;       // Input_Pressed
+constexpr ::bof3::image::Va kPressed{0x7E1BEC};       // Input_Pressed
 // kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons
 // kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons
-constexpr U kParty = 0x904062;         // the party's member ids
+constexpr ::bof3::image::Va kParty{0x904062};         // the party's member ids
 // kRecords: now CharacterRecords (symbols.toml). CharacterRecords, 0xA4 each
 constexpr U kRecordStride = 0xA4;
 
 // The image's tables, read in place.
-constexpr U kIdLists = 0x656B00;       // Inventory_IdLists, five pointers by category
-constexpr U kCountLists = 0x656B14;    // Inventory_CountLists, five (the fifth 0)
-constexpr U kConsumables = 0x656B28;   // NameTable_Consumables, 22 bytes a record
-constexpr U kConsumableFlags = 0x656B38;  // ... +0x10, the flags byte
-constexpr U kWeaponA = 0x657464;       // NameTable_Weapons + 28 id + 0x14
-constexpr U kWeaponB = 0x657466;       // ... + 0x16
-constexpr U kArmourType = 0x657D7A;    // NameTable_Armour + 26 id + 0x12
-constexpr U kArmourA = 0x657D7B;       // ... + 0x13
-constexpr U kArmourB = 0x657D7C;       // ... + 0x14
-constexpr U kAbilityHelp = 0x65C4DE;   // NameTable_Abilities + 24 id + 6: the help word
-constexpr U kAbilityFlags = 0x65C4D8;  // NameTable_Abilities + 24 id: the first parameter byte
-constexpr U kAbilityRecords = 0x65C4C8;  // Ability_Records, 24 bytes an id (the name first)
+constexpr ::bof3::image::Va kIdLists{0x656B00};       // Inventory_IdLists, five pointers by category
+constexpr ::bof3::image::Va kCountLists{0x656B14};    // Inventory_CountLists, five (the fifth 0)
+constexpr ::bof3::image::Va kConsumables{0x656B28};   // NameTable_Consumables, 22 bytes a record
+constexpr ::bof3::image::Va kConsumableFlags{0x656B38};  // ... +0x10, the flags byte
+constexpr ::bof3::image::Va kWeaponA{0x657464};       // NameTable_Weapons + 28 id + 0x14
+constexpr ::bof3::image::Va kWeaponB{0x657466};       // ... + 0x16
+constexpr ::bof3::image::Va kArmourType{0x657D7A};    // NameTable_Armour + 26 id + 0x12
+constexpr ::bof3::image::Va kArmourA{0x657D7B};       // ... + 0x13
+constexpr ::bof3::image::Va kArmourB{0x657D7C};       // ... + 0x14
+constexpr ::bof3::image::Va kAbilityHelp{0x65C4DE};   // NameTable_Abilities + 24 id + 6: the help word
+constexpr ::bof3::image::Va kAbilityFlags{0x65C4D8};  // NameTable_Abilities + 24 id: the first parameter byte
+constexpr ::bof3::image::Va kAbilityRecords{0x65C4C8};  // Ability_Records, 24 bytes an id (the name first)
 
 // The per-member bytes the screens keep (FS's at::kEquipBytes block 0x939880..).
-constexpr U kEquipTops = 0x939880;     // the equip item list's top by slot + 6 member
-constexpr U kItemCursors = 0x939898;   // the Items list's cursor by category
-constexpr U kItemTops = 0x9398B8;      // and its top
-constexpr U kAbilityCursors = 0x9398C0;  // the ability list's cursor by type + 4 member
+constexpr ::bof3::image::Va kEquipTops{0x939880};     // the equip item list's top by slot + 6 member
+constexpr ::bof3::image::Va kItemCursors{0x939898};   // the Items list's cursor by category
+constexpr ::bof3::image::Va kItemTops{0x9398B8};      // and its top
+constexpr ::bof3::image::Va kAbilityCursors{0x9398C0};  // the ability list's cursor by type + 4 member
 // kViewCursor: now Rest2e_AbilityViewCursor (symbols.toml). the ability view's cursor
 // kViewTop: now Rest2e_AbilityViewTop (symbols.toml). and its top
-constexpr U kPreview = 0x6BDFA8;       // the six previewed equipment bytes
+constexpr ::bof3::image::Va kPreview{0x6BDFA8};       // the six previewed equipment bytes
 // kEquipCursor: now Rest2e_EquipCursor (symbols.toml). FieldEquip_TopMenu's cursor
 // kAbilityResult: now Rest2e_AbilityResult (symbols.toml). the last ability's answer
 // kAbilityCursor: now Rest2e_AbilityCursor (symbols.toml). FieldAbility_TopMenu's cursor
@@ -117,8 +123,8 @@ bool Confirmed(U pressed) { return (static_cast<std::uint32_t>(Field_ConfirmButt
 bool Cancelled(U pressed) { return (static_cast<std::uint32_t>(Field_CancelButtons) & pressed & 0xFFFF) != 0; }
 // A party member's record index: Character_IndexById[the member's id].
 UC RecordOf(U id) { return Character_IndexById[id & 0xFF]; }
-UC PartyRecord(int member) { return RecordOf(B(static_cast<U>(static_cast<int>(kParty) + member))); }
-unsigned char* Record(U index) { return At(CharacterRecords_addr + (index & 0xFF) * kRecordStride); }
+UC PartyRecord(int member) { return RecordOf(B(kParty + member)); }
+unsigned char* Record(U index) { return At(::bof3::Img(CharacterRecords_addr) + (index & 0xFF) * kRecordStride); }
 // The low byte of 1 << n as the originals compute it (an 8-bit shl, or the low
 // byte of a 32-bit one): the count is n's low five bits.
 UC Bit8(U n) {
@@ -230,9 +236,9 @@ void Scroll(U repeat, const ListScroll& s, UC& cl, UC& al) {
         }
     }
 }
-constexpr ListScroll kItemScroll = {0x803340, 0x80333F, 0x803346, 0x7F, 0x77, false};
-constexpr ListScroll kShortScroll = {0x803340, 0x80333F, 0x803346, 0x1F, 0x17, false};
-constexpr ListScroll kViewScroll = {0x8033CF, 0x8033CE, 0x8033CC, 0x11, 9, true};
+constexpr ListScroll kItemScroll = {::bof3::Img(0x803340), ::bof3::Img(0x80333F), ::bof3::Img(0x803346), 0x7F, 0x77, false};
+constexpr ListScroll kShortScroll = {::bof3::Img(0x803340), ::bof3::Img(0x80333F), ::bof3::Img(0x803346), 0x1F, 0x17, false};
+constexpr ListScroll kViewScroll = {::bof3::Img(0x8033CF), ::bof3::Img(0x8033CE), ::bof3::Img(0x8033CC), 0x11, 9, true};
 
 // A party member's cursor moved by 0x1000 / 0x4000 over `count` entries, s8,
 // wrapping (FieldItems_UseOnMember, FieldAbility_PickTarget): the byte as cl.
@@ -333,49 +339,49 @@ void MoveAbilityMember(U repeat, UC count) {
 extern "C" void __cdecl FieldItems_ArrangeCategory(void) {
     Backdrop();
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0xF00C);
-    const U x = L(0x803338) + 0x2A;
-    const U y = W(0x80333A) + 7;
-    SetW(0x8032FC, 0x17);
+    const U x = L(::bof3::Img(0x803338)) + 0x2A;
+    const U y = W(::bof3::Img(0x80333A)) + 7;
+    SetW(::bof3::Img(0x8032FC), 0x17);
     WindowRecords[21].in_use = 1;
-    SetW(0x803458, x);
-    SetW(0x80345A, y);
+    SetW(::bof3::Img(0x803458), x);
+    SetW(::bof3::Img(0x80345A), y);
     const U repeat = AutoRepeat(pressed);
-    B(0x803340) = 0xFF;
+    B(::bof3::Img(0x803340)) = 0xFF;
     bool turned = false;
     U category = 0;
     if (repeat & 0x8000) {
         Sound(0x101);
-        const auto c = static_cast<UC>(B(0x80333E) - 1);
-        SetW(0x803344, 0x32);
-        B(0x80333E) = c;
-        if (S8(c) < 0) B(0x80333E) = 3;
-        category = B(0x80333E);
+        const auto c = static_cast<UC>(B(::bof3::Img(0x80333E)) - 1);
+        SetW(::bof3::Img(0x803344), 0x32);
+        B(::bof3::Img(0x80333E)) = c;
+        if (S8(c) < 0) B(::bof3::Img(0x80333E)) = 3;
+        category = B(::bof3::Img(0x80333E));
         turned = true;
     } else if (repeat & 0x2000) {
         Sound(0x101);
-        auto c = static_cast<UC>(B(0x80333E) + 1);
-        SetW(0x803344, 0x31);
-        B(0x80333E) = c;
+        auto c = static_cast<UC>(B(::bof3::Img(0x80333E)) + 1);
+        SetW(::bof3::Img(0x803344), 0x31);
+        B(::bof3::Img(0x80333E)) = c;
         if (c > 3) {
             c = 0;
-            B(0x80333E) = c;
+            B(::bof3::Img(0x80333E)) = c;
         }
         category = c;
         turned = true;
     }
-    if (turned) B(0x80333F) = B(kItemTops + category);
+    if (turned) B(::bof3::Img(0x80333F)) = B(kItemTops + category);
     const U p = Input_Pressed;
     if (Confirmed(p)) {
         Sound(0x103);
-        B(0x803362) = B(0x80333E);
+        B(::bof3::Img(0x803362)) = B(::bof3::Img(0x80333E));
         const auto step = static_cast<UC>(FieldS_Step + 1);
-        B(0x803359) = 6;
-        B(0x80335A) = 0xF;
-        B(0x803358) = 1;
-        SetW(0x80335C, 0xB4);
-        SetW(0x80335E, 0x3C);
-        B(0x803363) = 0;
-        B(0x803364) = 0xFF;
+        B(::bof3::Img(0x803359)) = 6;
+        B(::bof3::Img(0x80335A)) = 0xF;
+        B(::bof3::Img(0x803358)) = 1;
+        SetW(::bof3::Img(0x80335C), 0xB4);
+        SetW(::bof3::Img(0x80335E), 0x3C);
+        B(::bof3::Img(0x803363)) = 0;
+        B(::bof3::Img(0x803364)) = 0xFF;
         FieldS_Step = step;
         return;
     }
@@ -388,48 +394,48 @@ extern "C" void __cdecl FieldItems_ArrangeCategory(void) {
 // category's FieldItems_ArrangeRows.
 extern "C" void __cdecl FieldItems_ArrangeHow(void) {
     Backdrop();
-    const U row = B(0x803363);
+    const U row = B(::bof3::Img(0x803363));
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0x5000;
-    const U x = L(0x80335C) + 5;
-    const U y = (row << 4) + W(0x80335E) + 0x1A;
-    SetW(0x8032FC, 0x18);
+    const U x = L(::bof3::Img(0x80335C)) + 5;
+    const U y = (row << 4) + W(::bof3::Img(0x80335E)) + 0x1A;
+    SetW(::bof3::Img(0x8032FC), 0x18);
     WindowRecords[21].in_use = 1;
-    SetW(0x803458, x);
-    SetW(0x80345A, y);
-    B(0x803340) = 0xFF;
-    B(0x803364) = 0xFF;
+    SetW(::bof3::Img(0x803458), x);
+    SetW(::bof3::Img(0x80345A), y);
+    B(::bof3::Img(0x803340)) = 0xFF;
+    B(::bof3::Img(0x803364)) = 0xFF;
     const U repeat = AutoRepeat(pressed);
     if (repeat & 0x1000) {
         Sound(0x100);
-        const auto c = static_cast<UC>(B(0x803363) - 1);
-        B(0x803363) = c;
-        if (S8(c) < 0) B(0x803363) = static_cast<UC>(B(AddrOf(FieldItems_ArrangeRows) + 6u * B(0x803362)) - 1);
+        const auto c = static_cast<UC>(B(::bof3::Img(0x803363)) - 1);
+        B(::bof3::Img(0x803363)) = c;
+        if (S8(c) < 0) B(::bof3::Img(0x803363)) = static_cast<UC>(B(AddrOf(FieldItems_ArrangeRows) + 6u * B(::bof3::Img(0x803362))) - 1);
     } else if (repeat & 0x4000) {
         Sound(0x100);
-        const auto c = static_cast<UC>(B(0x803363) + 1);
-        const int last = static_cast<int>(B(AddrOf(FieldItems_ArrangeRows) + 6u * B(0x803362))) - 1;
-        B(0x803363) = c;
-        if (static_cast<int>(c) > last) B(0x803363) = 0;
+        const auto c = static_cast<UC>(B(::bof3::Img(0x803363)) + 1);
+        const int last = static_cast<int>(B(AddrOf(FieldItems_ArrangeRows) + 6u * B(::bof3::Img(0x803362)))) - 1;
+        B(::bof3::Img(0x803363)) = c;
+        if (static_cast<int>(c) > last) B(::bof3::Img(0x803363)) = 0;
     }
     const U p = Input_Pressed;
     if (Confirmed(p)) {
         Sound(0x103);
-        const UC how = B(AddrOf(FieldItems_ArrangeRows) + 1 + 6u * B(0x803362) + B(0x803363));
+        const UC how = B(AddrOf(FieldItems_ArrangeRows) + 1 + 6u * B(::bof3::Img(0x803362)) + B(::bof3::Img(0x803363)));
         if (how != 0) {
             SH_CALL(FieldItems_Sort)(how);
             return;
         }
-        B(0x803341) = 0xFF;
-        const UC cursor = B(kItemCursors + B(0x80333E));
+        B(::bof3::Img(0x803341)) = 0xFF;
+        const UC cursor = B(kItemCursors + B(::bof3::Img(0x80333E)));
         const auto step = static_cast<UC>(FieldS_Step + 1);
-        B(0x803340) = cursor;
+        B(::bof3::Img(0x803340)) = cursor;
         FieldS_Step = step;
         return;
     }
     if (!Cancelled(p)) return;
     Sound(0x106);
     const auto step = static_cast<UC>(FieldS_Step - 1);
-    B(0x803358) = 0;
+    B(::bof3::Img(0x803358)) = 0;
     FieldS_Step = step;
 }
 
@@ -437,32 +443,32 @@ extern "C" void __cdecl FieldItems_ArrangeHow(void) {
 // with another, the list scrolled.
 extern "C" void __cdecl FieldItems_ArrangeMove(void) {
     Backdrop();
-    const U category = B(0x80333E);
-    const UC item = IdList(category, "FieldItems_ArrangeMove")[B(0x803340)];
+    const U category = B(::bof3::Img(0x80333E));
+    const UC item = IdList(category, "FieldItems_ArrangeMove")[B(::bof3::Img(0x803340))];
     const U help = SH_CALL(Item_HelpMessage)(category, item);
-    const U top = B(0x80333F);
-    SetW(0x8032FC, help);
-    const U x = L(0x803338) + 7;
-    B(0x803364) = 0;
-    SetW(0x803458, x);
+    const U top = B(::bof3::Img(0x80333F));
+    SetW(::bof3::Img(0x8032FC), help);
+    const U x = L(::bof3::Img(0x803338)) + 7;
+    B(::bof3::Img(0x803364)) = 0;
+    SetW(::bof3::Img(0x803458), x);
     WindowRecords[21].in_use = 1;
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0x500C);
-    WindowRecords[21].y = 13u * (B(0x803340) - top + 2) + W(0x80333A);
+    WindowRecords[21].y = 13u * (B(::bof3::Img(0x803340)) - top + 2) + W(::bof3::Img(0x80333A));
     const U repeat = AutoRepeat(pressed);
-    const UC was = B(0x803340);
+    const UC was = B(::bof3::Img(0x803340));
     UC cl, al;
     Scroll(repeat, kItemScroll, cl, al);
-    const U now = B(0x80333E);
+    const U now = B(::bof3::Img(0x80333E));
     B(kItemCursors + now) = cl;
     B(kItemTops + now) = al;
     if (was != cl) Sound(0x100);
-    if (W(0x803346) != 0) return;
+    if (W(::bof3::Img(0x803346)) != 0) return;
     const U p = Input_Pressed;
     if (Confirmed(p)) {
-        if (B(0x803341) == 0xFF) {
+        if (B(::bof3::Img(0x803341)) == 0xFF) {
             Sound(0x103);
-            if (IdList(B(0x80333E), "FieldItems_ArrangeMove")[B(0x803340)] != 0) {
-                B(0x803341) = B(0x803340);
+            if (IdList(B(::bof3::Img(0x80333E)), "FieldItems_ArrangeMove")[B(::bof3::Img(0x803340))] != 0) {
+                B(::bof3::Img(0x803341)) = B(::bof3::Img(0x803340));
                 return;
             }
             Sound(0x107);
@@ -470,22 +476,22 @@ extern "C" void __cdecl FieldItems_ArrangeMove(void) {
         }
         Sound(0x103);
         {
-            unsigned char* const ids = IdList(B(0x80333E), "FieldItems_ArrangeMove");
-            const U cursor = B(0x803340);
-            Swap(ids + B(0x803341), ids + cursor);
+            unsigned char* const ids = IdList(B(::bof3::Img(0x80333E)), "FieldItems_ArrangeMove");
+            const U cursor = B(::bof3::Img(0x803340));
+            Swap(ids + B(::bof3::Img(0x803341)), ids + cursor);
         }
         {
-            const U cursor = B(0x803340);
-            unsigned char* const counts = CountList(B(0x80333E), "FieldItems_ArrangeMove");
-            Swap(counts + B(0x803341), counts + cursor);
+            const U cursor = B(::bof3::Img(0x803340));
+            unsigned char* const counts = CountList(B(::bof3::Img(0x80333E)), "FieldItems_ArrangeMove");
+            Swap(counts + B(::bof3::Img(0x803341)), counts + cursor);
         }
-        B(0x803341) = 0xFF;
+        B(::bof3::Img(0x803341)) = 0xFF;
         return;
     }
     if (!Cancelled(p)) return;
     Sound(0x106);
-    if (B(0x803341) != 0xFF) {
-        B(0x803341) = 0xFF;
+    if (B(::bof3::Img(0x803341)) != 0xFF) {
+        B(::bof3::Img(0x803341)) = 0xFF;
         return;
     }
     FieldS_Step = static_cast<UC>(FieldS_Step - 1);
@@ -494,18 +500,18 @@ extern "C" void __cdecl FieldItems_ArrangeMove(void) {
 // original 0x58B750: the Items screen's state 6 - the yes / no to discard.
 extern "C" void __cdecl FieldItems_DiscardConfirm(void) {
     Backdrop();
-    const U category = B(0x80333E);
-    const UC item = IdList(category, "FieldItems_DiscardConfirm")[B(0x803340)];
+    const U category = B(::bof3::Img(0x80333E));
+    const UC item = IdList(category, "FieldItems_DiscardConfirm")[B(::bof3::Img(0x803340))];
     const unsigned char* const name = SH_CALL(Item_NamePtr)(category, item);
     SH_CALL(TextRecord_Set)(0, 0x10, name);
     const int answer = FieldS_Answer;
-    const U x = L(0x8032F0) - static_cast<U>(36 * answer) + 0xE8;
-    const U y = W(0x8032F2) + 5;
+    const U x = L(::bof3::Img(0x8032F0)) - static_cast<U>(36 * answer) + 0xE8;
+    const U y = W(::bof3::Img(0x8032F2)) + 5;
     U pressed = L(kPressed);
-    SetW(0x8032FC, 0x1A);
+    SetW(::bof3::Img(0x8032FC), 0x1A);
     WindowRecords[21].in_use = 1;
-    SetW(0x803458, x);
-    SetW(0x80345A, y);
+    SetW(::bof3::Img(0x803458), x);
+    SetW(::bof3::Img(0x80345A), y);
     if (pressed & 0xA000) {
         Sound(0x101);
         FieldS_Answer = static_cast<UC>(static_cast<unsigned char>(FieldS_Answer) ^ 1);
@@ -514,10 +520,10 @@ extern "C" void __cdecl FieldItems_DiscardConfirm(void) {
     if (Confirmed(pressed)) {
         if (static_cast<unsigned char>(FieldS_Answer) != 0) {
             Sound(0x104);
-            IdList(B(0x80333E), "FieldItems_DiscardConfirm")[B(0x803340)] = 0;
-            CountList(B(0x80333E), "FieldItems_DiscardConfirm")[B(0x803340)] = 0;
+            IdList(B(::bof3::Img(0x80333E)), "FieldItems_DiscardConfirm")[B(::bof3::Img(0x803340))] = 0;
+            CountList(B(::bof3::Img(0x80333E)), "FieldItems_DiscardConfirm")[B(::bof3::Img(0x803340))] = 0;
             const auto state = static_cast<UC>(FieldS_State - 3);
-            B(0x803341) = 0xFF;
+            B(::bof3::Img(0x803341)) = 0xFF;
             FieldS_State = state;
             return;
         }
@@ -526,28 +532,28 @@ extern "C" void __cdecl FieldItems_DiscardConfirm(void) {
     }
     Sound(0x106);
     const auto state = static_cast<UC>(FieldS_State - 3);
-    B(0x803341) = 0xFF;
+    B(::bof3::Img(0x803341)) = 0xFF;
     FieldS_State = state;
 }
 
 // original 0x58B8A0: the Items screen's state 7 - a consumable used on a member.
 extern "C" void __cdecl FieldItems_UseOnMember(void) {
     Backdrop();
-    const U category = B(0x80333E);
-    const U index = B(0x803340);
+    const U category = B(::bof3::Img(0x80333E));
+    const U index = B(::bof3::Img(0x803340));
     unsigned char* const id = IdList(category, "FieldItems_UseOnMember") + index;
     const U counts = CountListAt(category, "FieldItems_UseOnMember");
     SH_CALL(TextRecord_Set)(0, 0x10, At(kConsumables + 22u * *id));
     const int member = BattleActorCopies_ItemActor;
-    SetW(0x8032FC, 0x19);
+    SetW(::bof3::Img(0x8032FC), 0x19);
     WindowRecords[19].in_use = 1;
-    SetW(0x803410, 0xB6);
+    SetW(::bof3::Img(0x803410), 0xB6);
     WindowRecords[19].y = static_cast<U>(54 * member + 0x3E);
     const UC n = PartyCount();
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0x5000;
     const U repeat = AutoRepeat(pressed);
     const UC was = static_cast<unsigned char>(BattleActorCopies_ItemActor);
-    UC cl = MoveMemberS8(BattleActorCopies_ItemActor_addr, repeat, n);
+    UC cl = MoveMemberS8(::bof3::Img(BattleActorCopies_ItemActor_addr), repeat, n);
     if (was != cl) {
         Sound(0x101);
         cl = static_cast<unsigned char>(BattleActorCopies_ItemActor);
@@ -574,82 +580,82 @@ extern "C" void __cdecl FieldItems_UseOnMember(void) {
     }
     const auto state = static_cast<UC>(FieldS_State - 4);
     WindowRecords[19].in_use = 0;
-    B(0x803341) = 0xFF;
+    B(::bof3::Img(0x803341)) = 0xFF;
     FieldS_State = state;
 }
 
 // original 0x58BA40: the Items screen's state 9 - a 32-entry list scrolled.
 extern "C" void __cdecl FieldItems_ViewList32(void) {
     Backdrop();
-    const U category = B(0x80333E);
-    const UC item = IdList(category, "FieldItems_ViewList32")[B(0x803340)];
+    const U category = B(::bof3::Img(0x80333E));
+    const UC item = IdList(category, "FieldItems_ViewList32")[B(::bof3::Img(0x803340))];
     const U help = SH_CALL(Item_HelpMessage)(category, item);
-    const U top = B(0x80333F);
-    SetW(0x8032FC, help);
-    const U x = L(0x803338) + 7;
+    const U top = B(::bof3::Img(0x80333F));
+    SetW(::bof3::Img(0x8032FC), help);
+    const U x = L(::bof3::Img(0x803338)) + 7;
     WindowRecords[21].in_use = 1;
-    SetW(0x803458, x);
+    SetW(::bof3::Img(0x803458), x);
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0x500C);
-    WindowRecords[21].y = 13u * (B(0x803340) - top + 2) + W(0x80333A);
+    WindowRecords[21].y = 13u * (B(::bof3::Img(0x803340)) - top + 2) + W(::bof3::Img(0x80333A));
     const U repeat = AutoRepeat(pressed);
-    const UC was = B(0x803340);
+    const UC was = B(::bof3::Img(0x803340));
     UC cl, al;
     Scroll(repeat, kShortScroll, cl, al);
-    const U now = B(0x80333E);
+    const U now = B(::bof3::Img(0x80333E));
     B(kItemCursors + now) = cl;
     B(kItemTops + now) = al;
     if (was != cl) Sound(0x100);
-    if (W(0x803346) != 0) return;
+    if (W(::bof3::Img(0x803346)) != 0) return;
     if (!Cancelled(static_cast<std::uint32_t>(Input_Pressed))) return;
     Sound(0x106);
     const auto state = static_cast<UC>(FieldS_State - 7);
     const UC t = B(kItemTops);
     FieldS_State = state;
-    B(0x80333E) = 0;
-    B(0x80333F) = t;
-    B(0x803340) = 0xFF;
-    B(0x803341) = 0xFF;
+    B(::bof3::Img(0x80333E)) = 0;
+    B(::bof3::Img(0x80333F)) = t;
+    B(::bof3::Img(0x803340)) = 0xFF;
+    B(::bof3::Img(0x803341)) = 0xFF;
 }
 
 // original 0x58BC30: the Items screen's windows.
 extern "C" void __cdecl FieldItems_InitWindows(void) {
-    B(0x8032EF) = 2;
-    B(0x803313) = 2;
-    B(0x803337) = 2;
-    B(0x80333F) = B(kItemTops);
-    B(0x803340) = 0xFF;
-    B(0x803341) = 0xFF;
-    B(0x8032ED) = 6;
-    B(0x8032EE) = 9;
-    B(0x8032EC) = 1;
-    SetW(0x8032F0, 0x14);
-    SetW(0x8032F2, 0xFFEC);
-    SetW(0x8032FC, 0);
-    B(0x803311) = 6;
-    B(0x803312) = 0xD;
-    B(0x803310) = 1;
-    SetW(0x803314, 0x40);
-    SetW(0x803316, 0xFFEC);
-    B(0x80331A) = 0;
-    B(0x80331B) = 0xFF;
-    B(0x803335) = 6;
-    B(0x803336) = 0xC;
-    B(0x803334) = 1;
-    SetW(0x803338, 0xFF38);
-    SetW(0x80333A, 0x3E);
-    B(0x80333E) = 0;
-    B(0x80333C) = 0;
-    B(0x80333D) = 0;
-    SetW(0x803344, 0);
-    SetW(0x803346, 0);
-    B(0x80340D) = 6;
-    B(0x80340E) = 0xA;
+    B(::bof3::Img(0x8032EF)) = 2;
+    B(::bof3::Img(0x803313)) = 2;
+    B(::bof3::Img(0x803337)) = 2;
+    B(::bof3::Img(0x80333F)) = B(kItemTops);
+    B(::bof3::Img(0x803340)) = 0xFF;
+    B(::bof3::Img(0x803341)) = 0xFF;
+    B(::bof3::Img(0x8032ED)) = 6;
+    B(::bof3::Img(0x8032EE)) = 9;
+    B(::bof3::Img(0x8032EC)) = 1;
+    SetW(::bof3::Img(0x8032F0), 0x14);
+    SetW(::bof3::Img(0x8032F2), 0xFFEC);
+    SetW(::bof3::Img(0x8032FC), 0);
+    B(::bof3::Img(0x803311)) = 6;
+    B(::bof3::Img(0x803312)) = 0xD;
+    B(::bof3::Img(0x803310)) = 1;
+    SetW(::bof3::Img(0x803314), 0x40);
+    SetW(::bof3::Img(0x803316), 0xFFEC);
+    B(::bof3::Img(0x80331A)) = 0;
+    B(::bof3::Img(0x80331B)) = 0xFF;
+    B(::bof3::Img(0x803335)) = 6;
+    B(::bof3::Img(0x803336)) = 0xC;
+    B(::bof3::Img(0x803334)) = 1;
+    SetW(::bof3::Img(0x803338), 0xFF38);
+    SetW(::bof3::Img(0x80333A), 0x3E);
+    B(::bof3::Img(0x80333E)) = 0;
+    B(::bof3::Img(0x80333C)) = 0;
+    B(::bof3::Img(0x80333D)) = 0;
+    SetW(::bof3::Img(0x803344), 0);
+    SetW(::bof3::Img(0x803346), 0);
+    B(::bof3::Img(0x80340D)) = 6;
+    B(::bof3::Img(0x80340E)) = 0xA;
     WindowRecords[19].in_use = 0;
-    B(0x803416) = 1;
-    B(0x803417) = 1;
-    B(0x803455) = 6;
-    B(0x803456) = 0xE;
-    B(0x803457) = 0;
+    B(::bof3::Img(0x803416)) = 1;
+    B(::bof3::Img(0x803417)) = 1;
+    B(::bof3::Img(0x803455)) = 6;
+    B(::bof3::Img(0x803456)) = 0xE;
+    B(::bof3::Img(0x803457)) = 0;
     WindowRecords[21].in_use = 0;
 }
 
@@ -671,7 +677,7 @@ extern "C" void __cdecl FieldMenu_SwapBytes(unsigned char* a, unsigned char* b) 
 // original 0x58BD70: FieldItems_Sorts[0] - the empty entries moved to the end.
 extern "C" void __cdecl FieldItemSort_Compact(void) {
     for (U bound = 0x7F; bound != 0; --bound) {
-        const U category = B(0x80333E);
+        const U category = B(::bof3::Img(0x80333E));
         unsigned char* const ids = IdList(category, "FieldItemSort_Compact");
         const U counts = L(kCountLists + 4 * category);
         for (U i = 0; i < bound; ++i) {
@@ -700,16 +706,16 @@ template <typename Before> void BubbleFixed(U ids, Before before) {
             Swap(At(ids + i + 0x200), At(ids + i + 0x201));
         }
 }
-constexpr U kConsumableIds = 0x904154;   // Inventory_IdLists[0]; the counts 0x904354
-constexpr U kWeaponIds = 0x9041D4;       // [1]
-constexpr U kArmourIds = 0x904254;       // [2]
+constexpr ::bof3::image::Va kConsumableIds{0x904154};   // Inventory_IdLists[0]; the counts 0x904354
+constexpr ::bof3::image::Va kWeaponIds{0x9041D4};       // [1]
+constexpr ::bof3::image::Va kArmourIds{0x904254};       // [2]
 
 }  // namespace
 
 // original 0x58BE00: FieldItems_Sorts[1] - consumables with flag bit 0 first.
 extern "C" void __cdecl FieldItemSort_ConsumableFlag1(void) {
     SH_CALL(FieldItemSort_Compact)();
-    BubbleFixed(kConsumableIds, [](UC x, UC y) {
+    BubbleFixed(::bof3::Img(kConsumableIds), [](UC x, UC y) {
         return (B(kConsumableFlags + 22u * x) & 1) == 0 && (B(kConsumableFlags + 22u * y) & 1) != 0;
     });
 }
@@ -717,7 +723,7 @@ extern "C" void __cdecl FieldItemSort_ConsumableFlag1(void) {
 // original 0x58BEB0: FieldItems_Sorts[2] - consumables with flag bit 1 first.
 extern "C" void __cdecl FieldItemSort_ConsumableFlag2(void) {
     SH_CALL(FieldItemSort_Compact)();
-    BubbleFixed(kConsumableIds, [](UC x, UC y) {
+    BubbleFixed(::bof3::Img(kConsumableIds), [](UC x, UC y) {
         return (B(kConsumableFlags + 22u * x) & 2) == 0 && (B(kConsumableFlags + 22u * y) & 2) != 0;
     });
 }
@@ -725,19 +731,19 @@ extern "C" void __cdecl FieldItemSort_ConsumableFlag2(void) {
 // original 0x58BF60: FieldItems_Sorts[3] - weapons by +0x16, the highest first.
 extern "C" void __cdecl FieldItemSort_WeaponsByPower(void) {
     SH_CALL(FieldItemSort_Compact)();
-    BubbleFixed(kWeaponIds, [](UC x, UC y) { return B(kWeaponB + 28u * x) < B(kWeaponB + 28u * y); });
+    BubbleFixed(::bof3::Img(kWeaponIds), [](UC x, UC y) { return B(kWeaponB + 28u * x) < B(kWeaponB + 28u * y); });
 }
 
 // original 0x58C010: FieldItems_Sorts[4] - armour by +0x14, the highest first.
 extern "C" void __cdecl FieldItemSort_ArmourByPower(void) {
     SH_CALL(FieldItemSort_Compact)();
-    BubbleFixed(kArmourIds, [](UC x, UC y) { return B(kArmourB + 26u * x) < B(kArmourB + 26u * y); });
+    BubbleFixed(::bof3::Img(kArmourIds), [](UC x, UC y) { return B(kArmourB + 26u * x) < B(kArmourB + 26u * y); });
 }
 
 // original 0x58C0B0: FieldItems_Sorts[5] - the category's list by Item_IconKind.
 extern "C" void __cdecl FieldItemSort_ByIconKind(void) {
     SH_CALL(FieldItemSort_Compact)();
-    const UC category = B(0x80333E);
+    const UC category = B(::bof3::Img(0x80333E));
     for (U bound = 0x7F; bound != 0; --bound) {
         unsigned char* const ids = IdList(category, "FieldItemSort_ByIconKind");
         const U counts = CountListAt(category, "FieldItemSort_ByIconKind");
@@ -760,7 +766,7 @@ extern "C" void __cdecl FieldItemSort_ByIconKind(void) {
 extern "C" void __cdecl FieldItemSort_EquipableFirst(void) {
     SH_CALL(FieldItemSort_Compact)();
     const UC record = PartyRecord(BattleActorCopies_ItemActor);
-    const UC category = B(0x80333E);
+    const UC category = B(::bof3::Img(0x80333E));
     const UC bit = Bit8(record);
     for (U bound = 0x7F; bound != 0; --bound) {
         unsigned char* const ids = IdList(category, "FieldItemSort_EquipableFirst");
@@ -782,9 +788,9 @@ extern "C" void __cdecl FieldItemSort_EquipableFirst(void) {
 
 // original 0x58C2A0: three of the Items screen's windows closed.
 extern "C" void __cdecl FieldItems_CloseWindows(void) {
-    B(0x803310) = 0;
-    B(0x803334) = 0;
-    B(0x803358) = 0;
+    B(::bof3::Img(0x803310)) = 0;
+    B(::bof3::Img(0x803334)) = 0;
+    B(::bof3::Img(0x803358)) = 0;
 }
 
 // ===========================================================================
@@ -821,23 +827,23 @@ extern "C" void __cdecl FieldEquip_TopMenu(void) {
     Backdrop();
     const int c = Rest2e_EquipCursor;
     const U help = W(static_cast<U>(static_cast<int>(AddrOf(FieldEquip_TopHelp)) + 2 * c));
-    const U x = L(0x803314) + static_cast<U>(48 * c);
-    SetW(0x8032FC, help);
+    const U x = L(::bof3::Img(0x803314)) + static_cast<U>(48 * c);
+    SetW(::bof3::Img(0x8032FC), help);
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xA000;
     WindowRecords[21].in_use = 1;
-    const U y = W(0x803316) + 4;
-    SetW(0x803458, x);
-    SetW(0x80345A, y);
-    B(0x80331B) = 0xFF;
-    B(0x803341) = 1;
+    const U y = W(::bof3::Img(0x803316)) + 4;
+    SetW(::bof3::Img(0x803458), x);
+    SetW(::bof3::Img(0x80345A), y);
+    B(::bof3::Img(0x80331B)) = 0xFF;
+    B(::bof3::Img(0x803341)) = 1;
     const U repeat = AutoRepeat(pressed);
     const UC was = static_cast<unsigned char>(Rest2e_EquipCursor);
-    const UC cl = TurnFour(Rest2e_EquipCursor_addr, repeat);
+    const UC cl = TurnFour(::bof3::Img(Rest2e_EquipCursor_addr), repeat);
     if (was != cl) Sound(0x101);
     const U p = Input_Pressed;
     if (Confirmed(p)) {
         Sound(0x104);
-        B(0x80331B) = static_cast<unsigned char>(Rest2e_EquipCursor);
+        B(::bof3::Img(0x80331B)) = static_cast<unsigned char>(Rest2e_EquipCursor);
         const auto state = static_cast<UC>(FieldS_State + 1);
         WindowRecords[21].in_use = 0;
         FieldS_State = state;
@@ -847,9 +853,9 @@ extern "C" void __cdecl FieldEquip_TopMenu(void) {
     Sound(0x102);
     Sound(0x106);
     const auto state = static_cast<UC>(FieldS_State + 5);
-    B(0x8032EF) = 1;
-    B(0x803313) = 1;
-    B(0x803337) = 1;
+    B(::bof3::Img(0x8032EF)) = 1;
+    B(::bof3::Img(0x803313)) = 1;
+    B(::bof3::Img(0x803337)) = 1;
     WindowRecords[19].in_use = 0;
     WindowRecords[21].in_use = 0;
     FieldS_State = state;
@@ -859,34 +865,34 @@ extern "C" void __cdecl FieldEquip_TopMenu(void) {
 // original 0x58C4A0: FieldEquip_States[3] - the member.
 extern "C" void __cdecl FieldEquip_PickMember(void) {
     Backdrop();
-    const U m0 = B(0x803340);
-    const U wx = W(0x8031F4);
+    const U m0 = B(::bof3::Img(0x803340));
+    const U wx = W(::bof3::Img(0x8031F4));
     WindowRecords[19].in_use = 1;
-    SetW(0x803410, wx);
+    SetW(::bof3::Img(0x803410), wx);
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0x5000;
     WindowRecords[19].y = 54 * m0 + 0x3E;
     const U repeat = AutoRepeat(pressed);
-    const UC was = B(0x803340);
+    const UC was = B(::bof3::Img(0x803340));
     const UC n = PartyCount();
     if (repeat & 0x1000) {
-        const auto m = static_cast<UC>(B(0x803340) - 1);
-        B(0x803340) = m;
-        if (S8(m) < 0) B(0x803340) = static_cast<UC>(n - 1);
+        const auto m = static_cast<UC>(B(::bof3::Img(0x803340)) - 1);
+        B(::bof3::Img(0x803340)) = m;
+        if (S8(m) < 0) B(::bof3::Img(0x803340)) = static_cast<UC>(n - 1);
     } else if (repeat & 0x4000) {
-        const auto m = static_cast<UC>(B(0x803340) + 1);
-        B(0x803340) = m;
-        if (static_cast<int>(B(0x803340)) > static_cast<int>(n) - 1) B(0x803340) = 0;
+        const auto m = static_cast<UC>(B(::bof3::Img(0x803340)) + 1);
+        B(::bof3::Img(0x803340)) = m;
+        if (static_cast<int>(B(::bof3::Img(0x803340))) > static_cast<int>(n) - 1) B(::bof3::Img(0x803340)) = 0;
     }
-    if (S8(was) != static_cast<int>(B(0x803340))) Sound(0x101);
-    if (static_cast<unsigned char>(Rest2e_EquipCursor) == 1) SH_CALL(FieldEquip_BestByPower)(B(0x803340));
-    if (static_cast<unsigned char>(Rest2e_EquipCursor) == 2) SH_CALL(FieldEquip_BestByOrder)(B(0x803340));
-    SH_CALL(TextRecord_Set)(0, 8, Record(PartyRecord(B(0x803340))));
+    if (S8(was) != static_cast<int>(B(::bof3::Img(0x803340)))) Sound(0x101);
+    if (static_cast<unsigned char>(Rest2e_EquipCursor) == 1) SH_CALL(FieldEquip_BestByPower)(B(::bof3::Img(0x803340)));
+    if (static_cast<unsigned char>(Rest2e_EquipCursor) == 2) SH_CALL(FieldEquip_BestByOrder)(B(::bof3::Img(0x803340)));
+    SH_CALL(TextRecord_Set)(0, 8, Record(PartyRecord(B(::bof3::Img(0x803340)))));
     const int c = Rest2e_EquipCursor;
     const U help = W(static_cast<U>(static_cast<int>(AddrOf(FieldEquip_MemberHelp)) + 2 * c));
     const UC flag = B(static_cast<U>(static_cast<int>(AddrOf(FieldEquip_MemberFlags)) + 2 * c));
     const U p = Input_Pressed;
-    SetW(0x8032FC, help);
-    B(0x803341) = flag;
+    SetW(::bof3::Img(0x8032FC), help);
+    B(::bof3::Img(0x803341)) = flag;
     if (Confirmed(p)) {
         Sound(0x103);
         const UC cursor = static_cast<unsigned char>(Rest2e_EquipCursor);
@@ -895,29 +901,29 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
             UC k = 0;
             if (PartyCount() != 0) {
                 do {
-                    B(0x8031F3 + 0x24u * k) = 7;
+                    B(::bof3::Img(0x8031F3) + 0x24u * k) = 7;
                     ++k;
                 } while (k < PartyCount());
             }
-            const UC m = B(0x803340);
+            const UC m = B(::bof3::Img(0x803340));
             WindowRecords[19].in_use = 0;
-            B(0x803337) = 3;
-            B(0x80333E) = 0;
-            B(0x80333F) = 0xFF;
-            B(0x803359) = 6;
-            B(0x803362) = B(kEquipTops + 6u * m);
+            B(::bof3::Img(0x803337)) = 3;
+            B(::bof3::Img(0x80333E)) = 0;
+            B(::bof3::Img(0x80333F)) = 0xFF;
+            B(::bof3::Img(0x803359)) = 6;
+            B(::bof3::Img(0x803362)) = B(kEquipTops + 6u * m);
             const auto state = static_cast<UC>(FieldS_State + 1);
-            B(0x80335A) = 0x12;
-            B(0x80335B) = 4;
-            B(0x803358) = 1;
-            SetW(0x80335C, 0x140);
-            SetW(0x80335E, 0x3E);
-            B(0x803364) = m;
-            B(0x803363) = 0xFF;
-            B(0x803360) = 0;
-            B(0x803365) = 0;
-            B(0x803361) = 0;
-            SetW(0x803368, 0);
+            B(::bof3::Img(0x80335A)) = 0x12;
+            B(::bof3::Img(0x80335B)) = 4;
+            B(::bof3::Img(0x803358)) = 1;
+            SetW(::bof3::Img(0x80335C), 0x140);
+            SetW(::bof3::Img(0x80335E), 0x3E);
+            B(::bof3::Img(0x803364)) = m;
+            B(::bof3::Img(0x803363)) = 0xFF;
+            B(::bof3::Img(0x803360)) = 0;
+            B(::bof3::Img(0x803365)) = 0;
+            B(::bof3::Img(0x803361)) = 0;
+            SetW(::bof3::Img(0x803368), 0);
             BattleActorCopies_ItemActor = m;
             B(kTimer) = 5;
             FieldS_State = state;
@@ -925,9 +931,9 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
         }
         if (cursor == 3) {
             const auto state = static_cast<UC>(FieldS_State + 5);
-            B(0x803417) = 0;
-            B(0x80333E) = 1;
-            B(0x80333F) = 0xFF;
+            B(::bof3::Img(0x803417)) = 0;
+            B(::bof3::Img(0x80333E)) = 1;
+            B(::bof3::Img(0x80333F)) = 0xFF;
             FieldS_State = state;
             return;
         }
@@ -939,7 +945,7 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
     const auto state = static_cast<UC>(FieldS_State - 1);
     const UC m = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     WindowRecords[19].in_use = 0;
-    B(0x937F8E) = m;
+    B(::bof3::Img(0x937F8E)) = m;
     B(kTimer) = 0;
     FieldS_State = state;
 }
@@ -954,16 +960,16 @@ extern "C" void __cdecl FieldEquip_Close(void) {
     U k = 0;
     if (PartyCount() != 0) {
         do {
-            B(0x8031F3 + 0x24u * k) = 4;
+            B(::bof3::Img(0x8031F3) + 0x24u * k) = 4;
             ++k;
         } while (static_cast<int>(k) < static_cast<int>(PartyCount()));
     }
     const UC m = static_cast<unsigned char>(BattleActorCopies_ItemActor);
-    B(0x80325F) = 2;
-    B(0x803283) = 2;
-    B(0x8032A7) = 2;
-    B(0x8032CB) = 2;
-    B(0x937F8E) = m;
+    B(::bof3::Img(0x80325F)) = 2;
+    B(::bof3::Img(0x803283)) = 2;
+    B(::bof3::Img(0x8032A7)) = 2;
+    B(::bof3::Img(0x8032CB)) = 2;
+    B(::bof3::Img(0x937F8E)) = m;
     B(kTimer) = 0;
     BattleE1_Mode = 1;
     FieldS_State = 0;
@@ -972,10 +978,10 @@ extern "C" void __cdecl FieldEquip_Close(void) {
 // original 0x58CDD0: FieldEquip_States[8] - a slot's item taken off.
 extern "C" void __cdecl FieldEquip_RemoveSlot(void) {
     Backdrop();
-    unsigned char* const record = Record(PartyRecord(B(0x803340)));
+    unsigned char* const record = Record(PartyRecord(B(::bof3::Img(0x803340))));
     U category;
     unsigned char* cell;
-    switch (B(0x80333E)) {
+    switch (B(::bof3::Img(0x80333E))) {
     case 1: category = 2; cell = record + 0x13; break;
     case 2: category = 2; cell = record + 0x14; break;
     case 3: category = 2; cell = record + 0x15; break;
@@ -984,24 +990,24 @@ extern "C" void __cdecl FieldEquip_RemoveSlot(void) {
     default: category = 1; cell = record + 0x12; break;
     }
     const U help = SH_CALL(Item_HelpMessage)(category, *cell);
-    const U x = L(0x803338) + 6;
-    SetW(0x8032FC, help);
-    const U y = 13u * B(0x80333E) + W(0x80333A) + 0x57;
+    const U x = L(::bof3::Img(0x803338)) + 6;
+    SetW(::bof3::Img(0x8032FC), help);
+    const U y = 13u * B(::bof3::Img(0x80333E)) + W(::bof3::Img(0x80333A)) + 0x57;
     WindowRecords[21].in_use = 1;
-    SetW(0x803458, x);
+    SetW(::bof3::Img(0x803458), x);
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0x5000;
-    SetW(0x80345A, y);
+    SetW(::bof3::Img(0x80345A), y);
     const U repeat = AutoRepeat(pressed);
     if (repeat & 0x4000) {
         Sound(0x101);
-        const auto s = static_cast<UC>(B(0x80333E) + 1);
-        B(0x80333E) = s;
-        if (s > 5) B(0x80333E) = 1;
+        const auto s = static_cast<UC>(B(::bof3::Img(0x80333E)) + 1);
+        B(::bof3::Img(0x80333E)) = s;
+        if (s > 5) B(::bof3::Img(0x80333E)) = 1;
     } else if (repeat & 0x1000) {
         Sound(0x101);
-        const auto s = static_cast<UC>(B(0x80333E) - 1);
-        B(0x80333E) = s;
-        if (s < 1) B(0x80333E) = 5;
+        const auto s = static_cast<UC>(B(::bof3::Img(0x80333E)) - 1);
+        B(::bof3::Img(0x80333E)) = s;
+        if (s < 1) B(::bof3::Img(0x80333E)) = 5;
     }
     const UC can = SH_CALL(FieldEquip_PreviewRemove)();
     if (Confirmed(static_cast<std::uint32_t>(Input_Pressed))) {
@@ -1019,49 +1025,49 @@ extern "C" void __cdecl FieldEquip_RemoveSlot(void) {
     if (!Cancelled(static_cast<std::uint32_t>(Input_Pressed))) return;
     Sound(0x106);
     const auto state = static_cast<UC>(FieldS_State - 5);
-    B(0x803417) = 1;
+    B(::bof3::Img(0x803417)) = 1;
     WindowRecords[21].in_use = 0;
-    B(0x80333E) = 0xFF;
+    B(::bof3::Img(0x80333E)) = 0xFF;
     B(kTimer) = 0;
     FieldS_State = state;
 }
 
 // original 0x58CFC0: the Equipment screen's windows.
 extern "C" void __cdecl FieldEquip_InitWindows(void) {
-    B(0x8032ED) = 6;
-    B(0x8032EE) = 9;
-    B(0x8032EF) = 2;
-    B(0x8032EC) = 1;
-    SetW(0x8032F0, 0x14);
-    SetW(0x8032F2, 0xFFEC);
-    SetW(0x8032FC, 0);
-    B(0x803311) = 6;
-    B(0x803312) = 0xD;
-    B(0x803313) = 2;
-    B(0x803310) = 1;
-    SetW(0x803314, 0x40);
-    SetW(0x803316, 0xFFEC);
-    B(0x80331A) = 1;
-    B(0x80331B) = 0xFF;
-    B(0x803335) = 6;
-    B(0x803336) = 0x10;
-    B(0x803337) = 2;
-    B(0x803334) = 1;
-    SetW(0x803338, 0x140);
-    SetW(0x80333A, 0x3E);
-    B(0x803340) = 0;
-    B(0x80333E) = 0xFF;
-    B(0x80333F) = 0xFF;
-    B(0x803341) = 1;
-    move_script::SetLong(At(0x803354), static_cast<std::int32_t>(kPreview));
-    B(0x80340D) = 6;
-    B(0x80340E) = 0xA;
+    B(::bof3::Img(0x8032ED)) = 6;
+    B(::bof3::Img(0x8032EE)) = 9;
+    B(::bof3::Img(0x8032EF)) = 2;
+    B(::bof3::Img(0x8032EC)) = 1;
+    SetW(::bof3::Img(0x8032F0), 0x14);
+    SetW(::bof3::Img(0x8032F2), 0xFFEC);
+    SetW(::bof3::Img(0x8032FC), 0);
+    B(::bof3::Img(0x803311)) = 6;
+    B(::bof3::Img(0x803312)) = 0xD;
+    B(::bof3::Img(0x803313)) = 2;
+    B(::bof3::Img(0x803310)) = 1;
+    SetW(::bof3::Img(0x803314), 0x40);
+    SetW(::bof3::Img(0x803316), 0xFFEC);
+    B(::bof3::Img(0x80331A)) = 1;
+    B(::bof3::Img(0x80331B)) = 0xFF;
+    B(::bof3::Img(0x803335)) = 6;
+    B(::bof3::Img(0x803336)) = 0x10;
+    B(::bof3::Img(0x803337)) = 2;
+    B(::bof3::Img(0x803334)) = 1;
+    SetW(::bof3::Img(0x803338), 0x140);
+    SetW(::bof3::Img(0x80333A), 0x3E);
+    B(::bof3::Img(0x803340)) = 0;
+    B(::bof3::Img(0x80333E)) = 0xFF;
+    B(::bof3::Img(0x80333F)) = 0xFF;
+    B(::bof3::Img(0x803341)) = 1;
+    move_script::SetLong(At(::bof3::Img(0x803354)), static_cast<std::int32_t>(::bof3::Img(kPreview)));
+    B(::bof3::Img(0x80340D)) = 6;
+    B(::bof3::Img(0x80340E)) = 0xA;
     WindowRecords[19].in_use = 0;
-    B(0x803416) = 1;
-    B(0x803417) = 1;
-    B(0x803455) = 6;
-    B(0x803456) = 0xE;
-    B(0x803457) = 0;
+    B(::bof3::Img(0x803416)) = 1;
+    B(::bof3::Img(0x803417)) = 1;
+    B(::bof3::Img(0x803455)) = 6;
+    B(::bof3::Img(0x803456)) = 0xE;
+    B(::bof3::Img(0x803457)) = 0;
     WindowRecords[21].in_use = 0;
 }
 
@@ -1084,7 +1090,7 @@ extern "C" void __cdecl FieldEquip_BestByPower(unsigned member) {
         }
     }
     for (U j = 0; j < 3; ++j) {
-        const U slot = kPreview + 1 + j;
+        const U slot = ::bof3::Img(kPreview) + 1 + j;
         B(slot) = record[0x13 + j];
         best = B(kArmourB + 26u * B(slot));
         for (U k = 0; k < 0x80; ++k) {
@@ -1140,7 +1146,7 @@ extern "C" void __cdecl FieldEquip_BestByOrder(unsigned member) {
         best_a = B(kWeaponA + 28u * id);
     }
     for (U j = 0; j < 3; ++j) {
-        const U slot = kPreview + 1 + j;
+        const U slot = ::bof3::Img(kPreview) + 1 + j;
         B(slot) = record[0x13 + j];
         const UC now = B(slot);
         best_b = B(kArmourB + 26u * now);
@@ -1180,7 +1186,7 @@ extern "C" void __cdecl FieldEquip_BestByOrder(unsigned member) {
 // original 0x58D570: the preview swapped into the member's six slots through
 // the inventory.
 extern "C" void __cdecl FieldEquip_ApplyPreview(void) {
-    unsigned char* const record = Record(PartyRecord(B(0x803340)));
+    unsigned char* const record = Record(PartyRecord(B(::bof3::Img(0x803340))));
     for (U i = 0; i < 6; ++i) {
         const UC item = B(kPreview + i);
         if (item == 0) continue;
@@ -1198,18 +1204,18 @@ extern "C" void __cdecl FieldEquip_ApplyPreview(void) {
 
 // original 0x58D640: the preview with the chosen item in the slot.
 extern "C" void __cdecl FieldEquip_PreviewItem(void) {
-    const UC item = B(0x803365);
-    const UC index = PartyRecord(B(0x803340));
-    const UC category = B(0x803360);
+    const UC item = B(::bof3::Img(0x803365));
+    const UC index = PartyRecord(B(::bof3::Img(0x803340)));
+    const UC category = B(::bof3::Img(0x803360));
     const U mask = SH_CALL(Item_EquipMask)(category, item);
-    B(0x803341) = (Bit8(index) & mask) == 0 ? 1 : 0;
+    B(::bof3::Img(0x803341)) = (Bit8(index) & mask) == 0 ? 1 : 0;
     const unsigned char* const record = Record(index);
     B(kPreview + 1) = record[0x13];
     B(kPreview) = record[0x12];
     B(kPreview + 3) = record[0x15];
     B(kPreview + 2) = record[0x14];
     B(kPreview + 4) = record[0x16];
-    const U slot = B(0x80333E);
+    const U slot = B(::bof3::Img(0x80333E));
     B(kPreview + 5) = record[0x17];
     B(kPreview + slot) = item;
 }
@@ -1217,27 +1223,27 @@ extern "C" void __cdecl FieldEquip_PreviewItem(void) {
 // original 0x58D700: the preview with the slot's item taken off; al 1 when
 // there was one.
 extern "C" unsigned char __cdecl FieldEquip_PreviewRemove(void) {
-    const unsigned char* const record = Record(PartyRecord(B(0x803340)));
+    const unsigned char* const record = Record(PartyRecord(B(::bof3::Img(0x803340))));
     B(kPreview) = record[0x12];
     B(kPreview + 1) = record[0x13];
     B(kPreview + 2) = record[0x14];
     B(kPreview + 3) = record[0x15];
     B(kPreview + 5) = record[0x17];
-    const U slot = B(0x80333E);
+    const U slot = B(::bof3::Img(0x80333E));
     B(kPreview + 4) = record[0x16];
     if (B(kPreview + slot) != 0) {
         B(kPreview + slot) = 0;
-        B(0x803341) = 0;
+        B(::bof3::Img(0x803341)) = 0;
         return 1;
     }
-    B(0x803341) = 1;
+    B(::bof3::Img(0x803341)) = 1;
     return 0;
 }
 
 // original 0x58D7B0: two of the Equipment screen's windows closed.
 extern "C" void __cdecl FieldEquip_CloseWindows(void) {
-    B(0x803334) = 0;
-    B(0x803358) = 0;
+    B(::bof3::Img(0x803334)) = 0;
+    B(::bof3::Img(0x803358)) = 0;
 }
 
 // ===========================================================================
@@ -1256,7 +1262,7 @@ extern "C" void __cdecl FieldAbility_Open(void) {
     SH_AT(Handler, at::kAbilityWindows)();
     Sound(0x102);
     const auto state = static_cast<UC>(FieldS_State + 1);
-    const UC member = B(0x905BA1);
+    const UC member = B(::bof3::Img(0x905BA1));
     B(kTimer) = 5;
     BattleActorCopies_ItemActor = member;
     Rest2e_AbilityCursor = 0;
@@ -1268,25 +1274,25 @@ extern "C" void __cdecl FieldAbility_TopMenu(void) {
     Backdrop();
     const int c = static_cast<signed char>(Rest2e_AbilityCursor);
     const U help = W(static_cast<U>(static_cast<int>(AddrOf(FieldAbility_TopHelp)) + 4 * c));
-    const U x = L(0x803314) + static_cast<U>(48 * c);
-    SetW(0x8032FC, help);
+    const U x = L(::bof3::Img(0x803314)) + static_cast<U>(48 * c);
+    SetW(::bof3::Img(0x8032FC), help);
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xA000;
-    B(0x8033A8) = 0;
-    const U y = W(0x803316) + 4;
+    B(::bof3::Img(0x8033A8)) = 0;
+    const U y = W(::bof3::Img(0x803316)) + 4;
     WindowRecords[21].in_use = 1;
-    SetW(0x803458, x);
-    SetW(0x80345A, y);
-    B(0x80331B) = 0xFF;
+    SetW(::bof3::Img(0x803458), x);
+    SetW(::bof3::Img(0x80345A), y);
+    B(::bof3::Img(0x80331B)) = 0xFF;
     const U repeat = AutoRepeat(pressed);
     const UC was = Rest2e_AbilityCursor;
-    UC cl = TurnFour(Rest2e_AbilityCursor_addr, repeat);
+    UC cl = TurnFour(::bof3::Img(Rest2e_AbilityCursor_addr), repeat);
     if (was != cl) {
         Sound(0x101);
         cl = Rest2e_AbilityCursor;
     }
     const U p = Input_Pressed;
     if (Confirmed(p)) {
-        B(0x80331B) = cl;
+        B(::bof3::Img(0x80331B)) = cl;
         Sound(0x104);
         const UC chosen = Rest2e_AbilityCursor;
         if (chosen == 1) {
@@ -1311,8 +1317,8 @@ extern "C" void __cdecl FieldAbility_TopMenu(void) {
     Sound(0x102);
     Sound(0x106);
     const auto state = static_cast<UC>(FieldS_State + 6);
-    B(0x8032EF) = 1;
-    B(0x803313) = 1;
+    B(::bof3::Img(0x8032EF)) = 1;
+    B(::bof3::Img(0x803313)) = 1;
     WindowRecords[16].state = 1;
     WindowRecords[21].in_use = 0;
     FieldS_State = state;
@@ -1323,32 +1329,32 @@ extern "C" void __cdecl FieldAbility_TopMenu(void) {
 extern "C" void __cdecl FieldAbility_PickMember(void) {
     Backdrop();
     const UC cursor = Rest2e_AbilityCursor;
-    const UC window = B(0x8031F3);
+    const UC window = B(::bof3::Img(0x8031F3));
     WindowRecords[21].in_use = 0;
-    B(0x8033A8) = cursor != 0 ? 3 : 1;
+    B(::bof3::Img(0x8033A8)) = cursor != 0 ? 3 : 1;
     const UC member = Window16_Owner;
     if (window == 0) {
-        const U wx = W(0x8031F4);
+        const U wx = W(::bof3::Img(0x8031F4));
         WindowRecords[19].in_use = 1;
-        B(0x803417) = 1;
-        SetW(0x803410, wx);
-        WindowRecords[19].y = 54u * member + W(0x8031F6);
+        B(::bof3::Img(0x803417)) = 1;
+        SetW(::bof3::Img(0x803410), wx);
+        WindowRecords[19].y = 54u * member + W(::bof3::Img(0x8031F6));
     } else {
         WindowRecords[19].in_use = 0;
     }
     SH_CALL(TextRecord_Set)(0, 8, Record(PartyRecord(member)));
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xF000;
-    SetW(0x8032FC, 0x2F);
+    SetW(::bof3::Img(0x8032FC), 0x2F);
     const U repeat = AutoRepeat(pressed);
-    B(0x8033AC) = 0xFF;
-    B(0x8033AD) = 0xFF;
+    B(::bof3::Img(0x8033AC)) = 0xFF;
+    B(::bof3::Img(0x8033AD)) = 0xFF;
     const UC n = PartyCount();
     const UC was = Window16_Owner;
     MoveAbilityMember(repeat, n);
     if (Rest2e_AbilityCursor == 2) {
-        SetW(0x8033B0, 1);
+        SetW(::bof3::Img(0x8033B0), 1);
     } else {
-        SetW(0x8033B0, 0);
+        SetW(::bof3::Img(0x8033B0), 0);
         UC cl;
         TurnType(repeat, cl);
     }
@@ -1360,9 +1366,9 @@ extern "C" void __cdecl FieldAbility_PickMember(void) {
         Sound(0x104);
         const int m = BattleActorCopies_ItemActor;
         const U type = Window16_Page;
-        const UC kept = B(static_cast<U>(static_cast<int>(kAbilityCursors + type) + 4 * m));
+        const UC kept = B(kAbilityCursors + type + 4 * m);
         const auto state = static_cast<UC>(FieldS_State + 1);
-        B(0x8033AC) = kept;
+        B(::bof3::Img(0x8033AC)) = kept;
         FieldS_State = state;
         return;
     }
@@ -1376,28 +1382,28 @@ extern "C" void __cdecl FieldAbility_PickMember(void) {
 // original 0x58DC40: FieldAbility_States[4] - the ability.
 extern "C" void __cdecl FieldAbility_PickAbility(void) {
     Backdrop();
-    const UC window = B(0x8031F3);
+    const UC window = B(::bof3::Img(0x8031F3));
     const UC member = Window16_Owner;
     if (window == 0) {
-        const U wx = W(0x8031F4);
+        const U wx = W(::bof3::Img(0x8031F4));
         WindowRecords[19].in_use = 1;
-        B(0x803417) = 0;
-        SetW(0x803410, wx);
-        WindowRecords[19].y = 54u * member + W(0x8031F6);
+        B(::bof3::Img(0x803417)) = 0;
+        SetW(::bof3::Img(0x803410), wx);
+        WindowRecords[19].y = 54u * member + W(::bof3::Img(0x8031F6));
     } else {
         WindowRecords[19].in_use = 0;
     }
     const UC type0 = Window16_Page;
     const unsigned char* const list = AbilityList(member, type0);
-    const UC id = list[B(0x8033AC)];
+    const UC id = list[B(::bof3::Img(0x8033AC))];
     const U help = W(kAbilityHelp + 24u * id);
     const UC busy = WindowRecords[16].state;
-    SetW(0x8032FC, help);
+    SetW(::bof3::Img(0x8032FC), help);
     if (busy == 0) {
-        const U cur = B(0x8033AC);
-        const U x = L(0x8033A4) + 7;
+        const U cur = B(::bof3::Img(0x8033AC));
+        const U x = L(::bof3::Img(0x8033A4)) + 7;
         WindowRecords[21].in_use = 1;
-        SetW(0x803458, x);
+        SetW(::bof3::Img(0x803458), x);
         WindowRecords[21].y = 13u * (cur + 2) + static_cast<std::uint32_t>(WindowRecords[16].y);
     } else {
         WindowRecords[21].in_use = 0;
@@ -1408,43 +1414,43 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
     if (Rest2e_AbilityCursor != 2) turned = TurnType(repeat, cl);
     if (turned) {
         const int m = BattleActorCopies_ItemActor;
-        al = B(static_cast<U>(static_cast<int>(kAbilityCursors + cl) + 4 * m));
-        B(0x8033AC) = al;
+        al = B(kAbilityCursors + cl + 4 * m);
+        B(::bof3::Img(0x8033AC)) = al;
     } else {
-        al = B(0x8033AC);
+        al = B(::bof3::Img(0x8033AC));
         cl = Window16_Page;
     }
     const UC was = al;
     if (repeat & 0x1000) {
         if (al > 0) {
             --al;
-            B(0x8033AC) = al;
+            B(::bof3::Img(0x8033AC)) = al;
         }
     } else if (repeat & 0x4000) {
         if (al < 9) {
             ++al;
-            B(0x8033AC) = al;
+            B(::bof3::Img(0x8033AC)) = al;
         }
     }
     if (was != al) {
         Sound(0x100);
-        al = B(0x8033AC);
+        al = B(::bof3::Img(0x8033AC));
         cl = Window16_Page;
     }
     {
         const int m = BattleActorCopies_ItemActor;
-        B(static_cast<U>(static_cast<int>(kAbilityCursors + cl) + 4 * m)) = al;
+        B(kAbilityCursors + cl + 4 * m) = al;
     }
     const U p = Input_Pressed;
     if (Confirmed(p)) {
         const unsigned char* const chosen = AbilityList(Window16_Owner, cl);
-        const UC ability = chosen[B(0x8033AC)];
+        const UC ability = chosen[B(::bof3::Img(0x8033AC))];
         if (ability == 0) {
             Sound(0x107);
             return;
         }
         if (Rest2e_AbilityCursor != 0) {
-            const UC mode = B(0x8033A8);
+            const UC mode = B(::bof3::Img(0x8033A8));
             const UC user = Window16_Owner;
             const UC can = SH_CALL(Skill_CanUse)(mode, user, ability);
             if (can == 0) {
@@ -1452,14 +1458,14 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
                 return;
             }
             const auto state = static_cast<UC>(FieldS_State + 2);
-            const UC kept = B(0x8033AC);
-            B(0x8033AD) = kept;
+            const UC kept = B(::bof3::Img(0x8033AC));
+            B(::bof3::Img(0x8033AD)) = kept;
             FieldS_Answer = 0;
             FieldS_State = state;
             return;
         }
         {
-            const UC mode = B(0x8033A8);
+            const UC mode = B(::bof3::Img(0x8033A8));
             const UC user = Window16_Owner;
             const UC can = SH_CALL(Skill_CanUse)(mode, user, ability);
             if (can == 0) {
@@ -1469,7 +1475,7 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
         }
         if ((B(kAbilityFlags + 24u * ability) & 0x10) != 0) {
             const unsigned char* const again = AbilityList(Window16_Owner, Window16_Page);
-            const UC used = again[B(0x8033AC)];
+            const UC used = again[B(::bof3::Img(0x8033AC))];
             const UC user = PartyRecord(Window16_Owner);
             const UC answer = AbilityUse(user, 0, used);
             Rest2e_AbilityResult = answer;
@@ -1481,22 +1487,22 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
         if (PartyCount() != 0) {
             do {
                 const U o = 36u * k;
-                B(0x80333E + o) = k;
+                B(::bof3::Img(0x80333E) + o) = k;
                 const U y = 54u * k + 0x3E;
                 ++k;
-                B(0x803335 + o) = 6;
-                B(0x803334 + o) = 1;
-                B(0x803336 + o) = 0;
-                B(0x803337 + o) = 0xA;
-                B(0x80333F + o) = 0;
-                B(0x803340 + o) = 0;
-                SetW(0x803338 + o, 0x140);
-                SetW(0x80333A + o, y);
-                B(0x8031F3 + o) = 7;
+                B(::bof3::Img(0x803335) + o) = 6;
+                B(::bof3::Img(0x803334) + o) = 1;
+                B(::bof3::Img(0x803336) + o) = 0;
+                B(::bof3::Img(0x803337) + o) = 0xA;
+                B(::bof3::Img(0x80333F) + o) = 0;
+                B(::bof3::Img(0x803340) + o) = 0;
+                SetW(::bof3::Img(0x803338) + o, 0x140);
+                SetW(::bof3::Img(0x80333A) + o, y);
+                B(::bof3::Img(0x8031F3) + o) = 7;
             } while (k < PartyCount());
         }
-        const UC kept = B(0x8033AC);
-        B(0x8033AD) = kept;
+        const UC kept = B(::bof3::Img(0x8033AC));
+        B(::bof3::Img(0x8033AD)) = kept;
         const auto state = static_cast<UC>(FieldS_State + 1);
         WindowRecords[16].state = 4;
         WindowRecords[21].in_use = 1;
@@ -1508,39 +1514,39 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
     if (!Cancelled(p)) return;
     Sound(0x106);
     const auto state = static_cast<UC>(FieldS_State - 1);
-    B(0x8033AC) = 0xFF;
-    B(0x8033AD) = 0xFF;
+    B(::bof3::Img(0x8033AC)) = 0xFF;
+    B(::bof3::Img(0x8033AD)) = 0xFF;
     FieldS_State = state;
 }
 
 // original 0x58E070: FieldAbility_States[5] - the target.
 extern "C" void __cdecl FieldAbility_PickTarget(void) {
     Backdrop();
-    const UC window = B(0x803337);
+    const UC window = B(::bof3::Img(0x803337));
     WindowRecords[21].in_use = 0;
     if (window == 0) {
         const int t = FieldS_Column;
-        const U wx = W(0x803338);
+        const U wx = W(::bof3::Img(0x803338));
         WindowRecords[19].in_use = 1;
-        B(0x803417) = 1;
-        SetW(0x803410, wx);
-        WindowRecords[19].y = static_cast<U>(54 * t) + W(0x80333A);
+        B(::bof3::Img(0x803417)) = 1;
+        SetW(::bof3::Img(0x803410), wx);
+        WindowRecords[19].y = static_cast<U>(54 * t) + W(::bof3::Img(0x80333A));
     } else {
         WindowRecords[19].in_use = 0;
     }
     const U repeat = AutoRepeat(static_cast<std::uint32_t>(Input_Pressed) & 0xF000);
     const UC n = PartyCount();
     const UC was = static_cast<unsigned char>(FieldS_Column);
-    const UC cl = MoveMemberS8(FieldS_Column_addr, repeat, n);
+    const UC cl = MoveMemberS8(::bof3::Img(FieldS_Column_addr), repeat, n);
     if (was != cl) Sound(0x101);
     const unsigned char* const list = AbilityList(Window16_Owner, Window16_Page);
-    const UC ability = list[B(0x8033AC)];
+    const UC ability = list[B(::bof3::Img(0x8033AC))];
     SH_CALL(TextRecord_Set)(0, 0x10, At(kAbilityRecords + 24u * ability));
     const U p = Input_Pressed;
-    SetW(0x8032FC, 0x30);
+    SetW(::bof3::Img(0x8032FC), 0x30);
     if (Confirmed(p)) {
         const unsigned char* const again = AbilityList(Window16_Owner, Window16_Page);
-        const UC used = again[B(0x8033AC)];
+        const UC used = again[B(::bof3::Img(0x8033AC))];
         const UC target = PartyRecord(FieldS_Column);
         const UC user = PartyRecord(Window16_Owner);
         const UC answer = AbilityUse(user, target, used);
@@ -1557,13 +1563,13 @@ extern "C" void __cdecl FieldAbility_PickTarget(void) {
         do {
             const U o = 36u * k;
             ++k;
-            B(0x803337 + o) = 9;
-            B(0x8031F3 + o) = 8;
+            B(::bof3::Img(0x803337) + o) = 9;
+            B(::bof3::Img(0x8031F3) + o) = 8;
         } while (k < PartyCount());
     }
     const auto state = static_cast<UC>(FieldS_State - 1);
     WindowRecords[16].state = 3;
-    B(0x8033AD) = 0xFF;
+    B(::bof3::Img(0x8033AD)) = 0xFF;
     FieldS_State = state;
 }
 
@@ -1572,12 +1578,12 @@ extern "C" void __cdecl FieldAbility_PickTarget(void) {
 extern "C" void __cdecl FieldAbility_ShareConfirm(void) {
     Backdrop();
     const int answer = FieldS_Answer;
-    const U x = L(0x8032F0) - static_cast<U>(36 * answer) + 0xE8;
-    WindowRecords[21].y = W(0x8032F2) + 5;
+    const U x = L(::bof3::Img(0x8032F0)) - static_cast<U>(36 * answer) + 0xE8;
+    WindowRecords[21].y = W(::bof3::Img(0x8032F2)) + 5;
     U pressed = L(kPressed);
     WindowRecords[21].in_use = 1;
-    SetW(0x803458, x);
-    SetW(0x8032FC, 0x31);
+    SetW(::bof3::Img(0x803458), x);
+    SetW(::bof3::Img(0x8032FC), 0x31);
     if (pressed & 0xA000) {
         Sound(0x101);
         FieldS_Answer = static_cast<UC>(static_cast<unsigned char>(FieldS_Answer) ^ 1);
@@ -1587,21 +1593,21 @@ extern "C" void __cdecl FieldAbility_ShareConfirm(void) {
         if (static_cast<unsigned char>(FieldS_Answer) != 0) {
             Sound(0x104);
             const unsigned char* const list = AbilityList(Window16_Owner, Window16_Page);
-            const UC ability = list[B(0x8033AC)];
+            const UC ability = list[B(::bof3::Img(0x8033AC))];
             SH_CALL(AbilityList_Add)(ability, 0, 1, 0);
             unsigned char* const again = const_cast<unsigned char*>(AbilityList(Window16_Owner, Window16_Page));
-            again[B(0x8033AC)] = 0;
+            again[B(::bof3::Img(0x8033AC))] = 0;
         } else {
             Sound(0x106);
         }
         const auto state = static_cast<UC>(FieldS_State - 2);
-        B(0x8033AD) = 0xFF;
+        B(::bof3::Img(0x8033AD)) = 0xFF;
         FieldS_State = state;
         return;
     }
     if (!Cancelled(pressed)) return;
     const auto state = static_cast<UC>(FieldS_State - 2);
-    B(0x8033AD) = 0xFF;
+    B(::bof3::Img(0x8033AD)) = 0xFF;
     FieldS_State = state;
     Sound(0x106);
 }
@@ -1617,20 +1623,20 @@ extern "C" void __cdecl FieldAbility_ArrangeRun(void) {
 extern "C" void __cdecl FieldAbility_ArrangeMember(void) {
     Backdrop();
     const U member = Window16_Owner;
-    const U wx = W(0x8031F4);
-    SetW(0x8032FC, 0x17);
-    SetW(0x803410, wx);
+    const U wx = W(::bof3::Img(0x8031F4));
+    SetW(::bof3::Img(0x8032FC), 0x17);
+    SetW(::bof3::Img(0x803410), wx);
     const U hand_y = WindowRecords[16].y;
     WindowRecords[19].in_use = 1;
-    const U x = L(0x8033A4) + 0x2A;
-    B(0x803417) = 1;
-    WindowRecords[19].y = 54u * member + W(0x8031F6);
+    const U x = L(::bof3::Img(0x8033A4)) + 0x2A;
+    B(::bof3::Img(0x803417)) = 1;
+    WindowRecords[19].y = 54u * member + W(::bof3::Img(0x8031F6));
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0xF00C);
     WindowRecords[21].in_use = 1;
-    SetW(0x803458, x);
+    SetW(::bof3::Img(0x803458), x);
     WindowRecords[21].y = hand_y + 7;
     const U repeat = AutoRepeat(pressed);
-    B(0x8033AD) = 0xFF;
+    B(::bof3::Img(0x8033AD)) = 0xFF;
     const UC n = PartyCount();
     MoveAbilityMember(repeat, n);
     UC cl;
@@ -1642,13 +1648,13 @@ extern "C" void __cdecl FieldAbility_ArrangeMember(void) {
         const UC three = Window16_Page == 3 ? 1 : 0;
         const auto step = static_cast<UC>(FieldS_Step + 1);
         WindowRecords[19].in_use = 0;
-        B(0x8033E9) = 6;
-        B(0x8033EA) = 0xF;
+        B(::bof3::Img(0x8033E9)) = 6;
+        B(::bof3::Img(0x8033EA)) = 0xF;
         WindowRecords[18].in_use = 1;
-        SetW(0x8033EC, 0x28);
-        SetW(0x8033EE, 0x3C);
-        B(0x8033F2) = static_cast<UC>(three + 5);
-        B(0x8033F3) = 0;
+        SetW(::bof3::Img(0x8033EC), 0x28);
+        SetW(::bof3::Img(0x8033EE), 0x3C);
+        B(::bof3::Img(0x8033F2)) = static_cast<UC>(three + 5);
+        B(::bof3::Img(0x8033F3)) = 0;
         FieldS_Step = step;
         return;
     }
@@ -1663,44 +1669,44 @@ extern "C" void __cdecl FieldAbility_ArrangeMember(void) {
 // FieldAbility_ArrangeRows.
 extern "C" void __cdecl FieldAbility_ArrangeHow(void) {
     Backdrop();
-    const U row = B(0x8033F3);
+    const U row = B(::bof3::Img(0x8033F3));
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0x5000;
-    const U x = L(0x8033EC) + 5;
-    const U y = (row << 4) + W(0x8033EE) + 0x1A;
-    SetW(0x8032FC, 0x18);
-    B(0x8033F4) = 0xFF;
+    const U x = L(::bof3::Img(0x8033EC)) + 5;
+    const U y = (row << 4) + W(::bof3::Img(0x8033EE)) + 0x1A;
+    SetW(::bof3::Img(0x8032FC), 0x18);
+    B(::bof3::Img(0x8033F4)) = 0xFF;
     WindowRecords[21].in_use = 1;
-    SetW(0x803458, x);
-    SetW(0x80345A, y);
-    B(0x8033AC) = 0xFF;
+    SetW(::bof3::Img(0x803458), x);
+    SetW(::bof3::Img(0x80345A), y);
+    B(::bof3::Img(0x8033AC)) = 0xFF;
     const U repeat = AutoRepeat(pressed);
     const U which = Window16_Page == 3 ? 1 : 0;
     const U rows = AddrOf(FieldAbility_ArrangeRows) + 6 * which;
     if (repeat & 0x1000) {
         Sound(0x100);
-        const auto c = static_cast<UC>(B(0x8033F3) - 1);
-        B(0x8033F3) = c;
-        if (S8(c) < 0) B(0x8033F3) = static_cast<UC>(B(rows) - 1);
+        const auto c = static_cast<UC>(B(::bof3::Img(0x8033F3)) - 1);
+        B(::bof3::Img(0x8033F3)) = c;
+        if (S8(c) < 0) B(::bof3::Img(0x8033F3)) = static_cast<UC>(B(rows) - 1);
     } else if (repeat & 0x4000) {
         Sound(0x100);
-        const auto c = static_cast<UC>(B(0x8033F3) + 1);
-        B(0x8033F3) = c;
-        if (static_cast<int>(c) > static_cast<int>(B(rows)) - 1) B(0x8033F3) = 0;
+        const auto c = static_cast<UC>(B(::bof3::Img(0x8033F3)) + 1);
+        B(::bof3::Img(0x8033F3)) = c;
+        if (static_cast<int>(c) > static_cast<int>(B(rows)) - 1) B(::bof3::Img(0x8033F3)) = 0;
     }
     const U p = Input_Pressed;
     if (Confirmed(p)) {
         Sound(0x103);
-        const UC how = B(rows + 1 + B(0x8033F3));
+        const UC how = B(rows + 1 + B(::bof3::Img(0x8033F3)));
         if (how != 0) {
             SH_AT(void (__cdecl*)(unsigned), at::kAbilitySort)(how);
             return;
         }
         const int m = BattleActorCopies_ItemActor;
-        B(0x8033AD) = 0xFF;
+        B(::bof3::Img(0x8033AD)) = 0xFF;
         const U type = Window16_Page;
-        const UC kept = B(static_cast<U>(static_cast<int>(kAbilityCursors + type) + 4 * m));
+        const UC kept = B(kAbilityCursors + type + 4 * m);
         const auto step = static_cast<UC>(FieldS_Step + 1);
-        B(0x8033AC) = kept;
+        B(::bof3::Img(0x8033AC)) = kept;
         FieldS_Step = step;
         return;
     }
@@ -1715,45 +1721,45 @@ extern "C" void __cdecl FieldAbility_ArrangeHow(void) {
 // swapped with another.
 extern "C" void __cdecl FieldAbility_ArrangeMove(void) {
     Backdrop();
-    const U cur = B(0x8033AC);
-    const U x = L(0x8033A4) + 7;
-    SetW(0x803458, x);
+    const U cur = B(::bof3::Img(0x8033AC));
+    const U x = L(::bof3::Img(0x8033A4)) + 7;
+    SetW(::bof3::Img(0x803458), x);
     const UC type = Window16_Page;
-    B(0x8033F4) = 0;
+    B(::bof3::Img(0x8033F4)) = 0;
     const UC member = Window16_Owner;
     WindowRecords[21].in_use = 1;
     WindowRecords[21].y = 13u * (cur + 2) + static_cast<std::uint32_t>(WindowRecords[16].y);
     const unsigned char* const list = AbilityList(member, type);
-    const UC ability = list[B(0x8033AC)];
+    const UC ability = list[B(::bof3::Img(0x8033AC))];
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0x500C);
-    SetW(0x8032FC, W(kAbilityHelp + 24u * ability));
+    SetW(::bof3::Img(0x8032FC), W(kAbilityHelp + 24u * ability));
     const U repeat = AutoRepeat(pressed);
-    UC cl = B(0x8033AC);
+    UC cl = B(::bof3::Img(0x8033AC));
     const UC was = cl;
     if (repeat & 0x1000) {
         if (cl > 0) {
             --cl;
-            B(0x8033AC) = cl;
+            B(::bof3::Img(0x8033AC)) = cl;
         }
     } else if (repeat & 0x4000) {
         if (cl < 9) {
             ++cl;
-            B(0x8033AC) = cl;
+            B(::bof3::Img(0x8033AC)) = cl;
         }
     }
     {
         const int m = BattleActorCopies_ItemActor;
         const U t = Window16_Page;
-        B(static_cast<U>(static_cast<int>(kAbilityCursors + t) + 4 * m)) = cl;
+        B(kAbilityCursors + t + 4 * m) = cl;
     }
     if (was != cl) Sound(0x100);
     const U p = Input_Pressed;
     if (Confirmed(p)) {
-        if (B(0x8033AD) == 0xFF) {
+        if (B(::bof3::Img(0x8033AD)) == 0xFF) {
             const unsigned char* const again = AbilityList(Window16_Owner, Window16_Page);
-            if (again[B(0x8033AC)] != 0) {
+            if (again[B(::bof3::Img(0x8033AC))] != 0) {
                 Sound(0x103);
-                B(0x8033AD) = B(0x8033AC);
+                B(::bof3::Img(0x8033AD)) = B(::bof3::Img(0x8033AC));
                 return;
             }
             Sound(0x107);
@@ -1763,22 +1769,22 @@ extern "C" void __cdecl FieldAbility_ArrangeMove(void) {
         const UC type1 = Window16_Page;
         const UC member1 = Window16_Owner;
         const unsigned char* const at_cursor = AbilityList(member1, type1);
-        unsigned char* const first = const_cast<unsigned char*>(at_cursor) + B(0x8033AC);
+        unsigned char* const first = const_cast<unsigned char*>(at_cursor) + B(::bof3::Img(0x8033AC));
         const UC member2 = Window16_Owner;
         const UC type2 = Window16_Page;
         const unsigned char* const at_pick = AbilityList(member2, type2);
-        unsigned char* const second = const_cast<unsigned char*>(at_pick) + B(0x8033AD);
+        unsigned char* const second = const_cast<unsigned char*>(at_pick) + B(::bof3::Img(0x8033AD));
         Swap(second, first);
-        B(0x8033AD) = 0xFF;
+        B(::bof3::Img(0x8033AD)) = 0xFF;
         return;
     }
     if (!Cancelled(p)) return;
     Sound(0x106);
-    if (B(0x8033AD) == 0xFF) {
+    if (B(::bof3::Img(0x8033AD)) == 0xFF) {
         FieldS_Step = static_cast<UC>(FieldS_Step - 1);
         return;
     }
-    B(0x8033AD) = 0xFF;
+    B(::bof3::Img(0x8033AD)) = 0xFF;
 }
 
 // original 0x58E9D0: FieldAbility_States[8] - the screen closed.
@@ -1791,16 +1797,16 @@ extern "C" void __cdecl FieldAbility_Close(void) {
     U k = 0;
     if (PartyCount() != 0) {
         do {
-            B(0x8031F3 + 0x24u * k) = 4;
+            B(::bof3::Img(0x8031F3) + 0x24u * k) = 4;
             ++k;
         } while (static_cast<int>(k) < static_cast<int>(PartyCount()));
     }
     const UC m = static_cast<unsigned char>(BattleActorCopies_ItemActor);
-    B(0x80325F) = 2;
-    B(0x803283) = 2;
-    B(0x8032A7) = 2;
-    B(0x8032CB) = 2;
-    B(0x905BA1) = m;
+    B(::bof3::Img(0x80325F)) = 2;
+    B(::bof3::Img(0x803283)) = 2;
+    B(::bof3::Img(0x8032A7)) = 2;
+    B(::bof3::Img(0x8032CB)) = 2;
+    B(::bof3::Img(0x905BA1)) = m;
     B(kTimer) = 0;
     BattleE1_Mode = 1;
     FieldS_State = 0;
@@ -1822,8 +1828,8 @@ extern "C" void __cdecl FieldAbility_ViewOpen(void) {
     SH_AT(Handler, at::kAbilityViewWindow)();
     const UC cursor = Rest2e_AbilityViewCursor;
     const UC top = Rest2e_AbilityViewTop;
-    B(0x8033CF) = cursor;
-    B(0x8033CE) = top;
+    B(::bof3::Img(0x8033CF)) = cursor;
+    B(::bof3::Img(0x8033CE)) = top;
     Sound(0x102);
     const auto step = static_cast<UC>(FieldS_Step + 1);
     B(kTimer) = 7;
@@ -1841,17 +1847,17 @@ extern "C" void __cdecl FieldAbility_ViewWait(void) {
 // original 0x58EB00: FieldAbility_ViewSteps[2] - the list scrolled.
 extern "C" void __cdecl FieldAbility_ViewBrowse(void) {
     Backdrop();
-    const UC h = B(0x8033D0);
-    SetW(0x8032FC, h != 0 ? h + 0x4183u : 0);
-    const U top = B(0x8033CE);
-    const U cur = B(0x8033CF);
-    const U x = L(0x8033C8) + 7;
-    SetW(0x803458, x);
+    const UC h = B(::bof3::Img(0x8033D0));
+    SetW(::bof3::Img(0x8032FC), h != 0 ? h + 0x4183u : 0);
+    const U top = B(::bof3::Img(0x8033CE));
+    const U cur = B(::bof3::Img(0x8033CF));
+    const U x = L(::bof3::Img(0x8033C8)) + 7;
+    SetW(::bof3::Img(0x803458), x);
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0x500C);
     WindowRecords[21].in_use = 1;
-    WindowRecords[21].y = 13u * (cur - top + 2) + W(0x8033CA);
+    WindowRecords[21].y = 13u * (cur - top + 2) + W(::bof3::Img(0x8033CA));
     const U repeat = AutoRepeat(pressed);
-    const UC was = B(0x8033CF);
+    const UC was = B(::bof3::Img(0x8033CF));
     UC cl, al;
     Scroll(repeat, kViewScroll, cl, al);
     Rest2e_AbilityViewCursor = cl;
@@ -1861,7 +1867,7 @@ extern "C" void __cdecl FieldAbility_ViewBrowse(void) {
     Sound(0x106);
     const auto step = static_cast<UC>(FieldS_Step + 1);
     WindowRecords[21].in_use = 0;
-    B(0x8033C7) = 1;
+    B(::bof3::Img(0x8033C7)) = 1;
     B(kTimer) = 7;
     FieldS_Step = step;
 }

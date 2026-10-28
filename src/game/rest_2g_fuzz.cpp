@@ -41,6 +41,9 @@ using U = std::uint32_t;
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U address) { return sh::Mem(address); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* Mem(::bof3::image::Va va) { return Mem(::bof3::Img(va)); }
 unsigned char* Rec(unsigned k) { return Mem(WindowRecords_addr + at::kWindowStride * (k % at::kWindowCount)); }
 unsigned char* Current() { return sh::Pointer(BattleWinStates_Current_addr); }
 U PickOf(std::initializer_list<U> v) { return *(v.begin() + sh::Next() % v.size()); }
@@ -211,8 +214,8 @@ const sh::DataTable kTables[] = {
 const sh::Region kRegions[] = {
     {WindowRecords_addr, at::kWindowCount * at::kWindowStride}, // WindowRecords 0x803160..0x803477
     {0x903A94, 0x903F90 - 0x903A94},                         // CharacterRecords past the style region
-    {at::kGridWords, 0x24},                                  // the eighteen words GeneWin_GridOpen clears
-    {at::kGridCells, 0x14},                                  // the eighteen grid cells
+    {::bof3::Img(at::kGridWords), 0x24},                                  // the eighteen words GeneWin_GridOpen clears
+    {::bof3::Img(at::kGridCells), 0x14},                                  // the eighteen grid cells
     {BattleTask_Slots_addr, at::kTaskCount * at::kTaskStride}, // the battle task pool
 };
 

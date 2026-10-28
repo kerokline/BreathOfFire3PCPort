@@ -55,11 +55,11 @@ using Handler = void (__cdecl*)();
 // kMode: now BattleE1_Mode (symbols.toml). u8: Shisu_Modes' index
 // kState: now FieldS_State (symbols.toml). u8: the mode's state
 // kStep: now FieldS_Step (symbols.toml). u8: Shisu_ShowSteps' index
-constexpr U kTimer = 0x929F04;         // u8: the show's fade level
+constexpr ::bof3::image::Va kTimer{0x929F04};         // u8: the show's fade level
 
 // The screen's own cells 0x9399E0..0x9399FF.
-constexpr U kOwned = 0x9399E0;         // u8 x 4: the four items' counts (Inventory_Count)
-constexpr U kGiven = 0x9399E4;         // u8 x 4: how many of each the player put in
+constexpr ::bof3::image::Va kOwned{0x9399E0};         // u8 x 4: the four items' counts (Inventory_Count)
+constexpr ::bof3::image::Va kGiven{0x9399E4};         // u8 x 4: how many of each the player put in
 // kRounds: now Rest2b_Rounds (symbols.toml). u8: shows run so far (8 at most); also read as a dword & 0xFF
 // kSide: now Rest2b_Side (symbols.toml). u8: the pick screen's 0 / 1 choice
 // kCursor: now Rest2b_Cursor (symbols.toml). u8: the count screen's row 0..3 (0xFF backs out)
@@ -75,21 +75,21 @@ constexpr U kGiven = 0x9399E4;         // u8 x 4: how many of each the player pu
 // (16.16), +0x40 the scale, +0x48 "no scale", +0x50 the quads, +0x54 the
 // model's header (count byte +0, flags +3), +0x5D..+0x5F the colour, +0x64 /
 // +0x68 / +0x6C the angles.
-constexpr U kModelA = 0x9398E0;
-constexpr U kModelB = 0x939960;
+constexpr ::bof3::image::Va kModelA{0x9398E0};
+constexpr ::bof3::image::Va kModelB{0x939960};
 // kADone: now Rest2c_FigureDone (symbols.toml).
 // kAY: now Rest2c_FigureY (symbols.toml).
 // kAAngle: now Rest2c_FigureAngle (symbols.toml).
 // kAState: now Rest2b_ModelAState (symbols.toml).
-constexpr U kAColour = kModelA + 0x5D;
+constexpr ::bof3::image::Va kAColour = kModelA + 0x5D;
 // kBScale: now Rest2c_FigureLift (symbols.toml).
 // kBState: now Rest2b_ModelBState (symbols.toml).
 // kBDone: now Rest2b_ModelBDone (symbols.toml).
 // kBY: now Rest2b_ModelBY (symbols.toml).
 // kBColour: now Rest2b_ModelBRgb (symbols.toml).
 // kBAngle: now Rest2b_ModelBAngle (symbols.toml).
-constexpr U kSavedB = 0x6BC878;        // u8 x 3: model B's colour while the show fades
-constexpr U kSavedA = 0x6BC87C;        // u8 x 3: model A's
+constexpr ::bof3::image::Va kSavedB{0x6BC878};        // u8 x 3: model B's colour while the show fades
+constexpr ::bof3::image::Va kSavedA{0x6BC87C};        // u8 x 3: model A's
 
 // kModelFile: now Rest2b_ModelFile (symbols.toml). pointer: the two models' headers (+0, +8) and quad pointers (+4, +0xC)
 // kLevelByte: now Rest2b_SavedScaleIndex (symbols.toml). u8 (save data) the scale index is read from
@@ -97,13 +97,16 @@ constexpr U kSavedA = 0x6BC87C;        // u8 x 3: model A's
 // kStyle: now Config_WindowColour (symbols.toml). s8: the window style (its colour row)
 // kClutShadow: now Gfx_ClutStripSource[0x114] (symbols.toml). 0x40 bytes a style: the window colour's first word
 // kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the scenario step the result hands over
-constexpr U kCounterB = 0x90384B;      // u8: the chapter's counter byte (1 low score, 2 high)
+constexpr ::bof3::image::Va kCounterB{0x90384B};      // u8: the chapter's counter byte (1 low score, 2 high)
 // kRank: now AreaW3c_ItemPick (symbols.toml). u8: the score's rank 0..5
-constexpr U kTriggerCounter = 0x903848;   // u8: the chapters' counter the handlers wait on
+constexpr ::bof3::image::Va kTriggerCounter{0x903848};   // u8: the chapters' counter the handlers wait on
 
 // WindowRecords (0x803160, 0x24 a record): records 0..3 are this screen's.
-constexpr U kWin0 = 0x803160, kWin1 = 0x803184, kWin2 = 0x8031A8, kWin3 = 0x8031CC;
-constexpr U kMessage = 0x803194;       // u16: record 1 +0x10, the message the screen shows
+constexpr ::bof3::image::Va kWin0{0x803160};
+constexpr ::bof3::image::Va kWin1{0x803184};
+constexpr ::bof3::image::Va kWin2{0x8031A8};
+constexpr ::bof3::image::Va kWin3{0x8031CC};
+constexpr ::bof3::image::Va kMessage{0x803194};       // u16: record 1 +0x10, the message the screen shows
 
 // Image floats (.rdata, read in place): the screen-space offsets the model's
 // projected x and y are moved by.
@@ -115,6 +118,14 @@ U W(U address) { return Word(At(address)); }
 void SetW(U address, U v) { SetWord(At(address), v); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+U W(::bof3::image::Va va) { return W(::bof3::Img(va)); }
+void SetW(::bof3::image::Va va, U v) { SetW(::bof3::Img(va), v); }
+U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
+void SetL(::bof3::image::Va va, U v) { SetL(::bof3::Img(va), v); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <class T> T Get(const unsigned char* p, unsigned offset) {
     T v;
@@ -254,7 +265,7 @@ extern "C" void __cdecl Menu_DrawGreyHLine(int x, int y, unsigned w, unsigned br
 // Menu_DrawLine reads their low words: the same lines.
 extern "C" void __cdecl Menu_DrawOutlineNotched(int x, int y, int w, int h, int flags) {
     const int row = Config_WindowColour;
-    const unsigned char* const entry = At(Gfx_ClutStripSource_addr + 0x228 + static_cast<U>(row * 64));
+    const unsigned char* const entry = At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<U>(row * 64));
     const U c = Word(entry);
     const auto r = static_cast<unsigned char>((entry[0] & 0x1F) << 3);
     const auto gr = static_cast<unsigned char>(((c >> 5) & 0x1F) << 3);
@@ -708,7 +719,7 @@ extern "C" void __cdecl Shisu_SetupWindows(void) {
     WindowRecords[3].x = 0xFF88;
     WindowRecords[3].y = 0x3F;
     B(kWin3 + 0xA) = 0xFF;
-    SetL(kWin3 + 0x20, Rest2b_Owned_addr);
+    SetL(kWin3 + 0x20, ::bof3::Img(Rest2b_Owned_addr));
 }
 
 // original 0x57EAC0: window 0's first byte 0, windows 1..3's +3 = 1.

@@ -56,6 +56,10 @@ using Handler = void (__cdecl*)();
 
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char B(U address) { return At(address)[0]; }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 short S(const unsigned char* p) { return static_cast<short>(Word(p)); }
 std::int32_t Sx(const unsigned char* p) { return static_cast<std::int32_t>(S(p)); }
 
@@ -63,7 +67,7 @@ std::int32_t Sx(const unsigned char* p) { return static_cast<std::int32_t>(S(p))
 // original re-reads it. Volatile so that ours cannot cache it either: the
 // fuzz's stand-ins repoint it between calls.
 unsigned char* Rec() {
-    return At(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr)));
+    return At(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr))));
 }
 
 // `call [table + 4 * record +3]` over a .data table of `entries` handlers, read
@@ -76,7 +80,7 @@ void State(const char* who, U table, unsigned entries) {
         bof3::Fatal("%s: the window record's +3 is %u, past the %u states of 0x%X - the original calls through the dword "
                     "after (docs/rest_2g.md section 7)",
                     who, s, entries, (unsigned)table);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * s)))))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(::bof3::image::Va{table + 4 * s})))))();
 }
 
 // `call [esp + 4 * byte]` over a stack table of `n` immediates: a Fatal past
@@ -156,7 +160,7 @@ extern "C" unsigned __cdecl BattleResultWin_ExpToNext(unsigned slot) {
     const unsigned id = B(at::kObjTrio + 0x89 + at::kObjStride * s);
     const U arg = ((s * 5) & 0xFFFFFF00u) | id;
     const unsigned r = SH_AT(unsigned (__cdecl*)(unsigned), rest_2g::kRosterIndex)(arg) & 0xFF;
-    const unsigned char* const rec = At(CharacterRecords_addr + at::kCharStride * r);
+    const unsigned char* const rec = At(::bof3::Img(CharacterRecords_addr) + at::kCharStride * r);
     const unsigned rows = rec[0xA] + 1u;
     U sum = 0;
     for (unsigned k = 0; k < rows; ++k) sum += Word(At(at::kExpTable + 0x318 * r + 8 * k));
@@ -207,7 +211,7 @@ extern "C" void __cdecl GeneWin_GridOpen(void) {
             bof3::Fatal("GeneWin_GridOpen: BattleTask_Create answered slot %u, past the %u of the pool - the original "
                         "writes its +0xB / +0x4B past the pool (docs/rest_2g.md section 7)",
                         slot, at::kTaskCount);
-        unsigned char* const task = At(BattleTask_Slots_addr + at::kTaskStride * slot);
+        unsigned char* const task = At(::bof3::Img(BattleTask_Slots_addr) + at::kTaskStride * slot);
         task[0x4B] = static_cast<unsigned char>(i);
         task[0xB] = static_cast<unsigned char>(i);
     }
@@ -331,7 +335,7 @@ extern "C" void __cdecl MenuList_WideTitleBox(void) {
 // blink +0xB, the sides 6.
 extern "C" void __cdecl MenuList_CursorBox(void) {
     const unsigned char* const r = Rec();
-    const U pair = MenuList_CursorBoxSizes_addr + 4u * r[0xA];
+    const U pair = ::bof3::Img(MenuList_CursorBoxSizes_addr) + 4u * r[0xA];
     SH_CALL(Menu_DrawCursorBox)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, Word(At(pair)), Word(At(pair + 2)), r[0xB], 6);
 }
 
