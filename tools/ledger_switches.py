@@ -32,9 +32,11 @@ The names, each with every file and line that reads it, and one class:
                HostedOnlyAsked); the two lists must agree
 
 What each class gives an entry switched by it (the `Player:` field,
-docs/DIVERGENCE.md "Entry format"): launcher and env `yes`, code `cheap`,
-detour and hosted-only `costly`. Once src/ reads PLAYER_SWITCH (and the
-launcher the ini key PLAYER_INI) a code name is a player's switch, so `yes`.
+docs/DIVERGENCE.md "Entry format"): launcher, env and code `yes`, detour and
+hosted-only `costly`. A code name is a player's switch through PLAYER_SWITCH
+(src/hook/detour.cpp, both hosts) and the launcher's ini key PLAYER_INI -
+the ledger-fields round's stage D, 2026-10-28, which retired the `cheap`
+value code names gave before; `--check` fails if src/ stops reading either.
 
 The entries: each `Reversible?` line's names - `BOF3X_ORIGINAL=<names>`,
 other `BOF3X_*` names, `ini=value` pairs of the launcher's keys - their
@@ -64,9 +66,10 @@ TOOLING_ENV_RE = re.compile(r'BOF3X_\w*LOG')
 # prose too: its names are listed, and the row says to read it by hand.
 LONG_PROSE = 600
 
-# What each class gives an entry, best first.
-PLAYER_OF = {'launcher': 'yes', 'env': 'yes', 'code': 'cheap', 'detour': 'costly', 'hosted-only': 'costly'}
-PLAYER_RANK = {'yes': 0, 'cheap': 1, 'costly': 2, 'never': 3}
+# What each class gives an entry, best first. `code` gave `cheap` until stage D
+# (2026-10-28) made BOF3X_OFF read by src/; `cheap` is retired.
+PLAYER_OF = {'launcher': 'yes', 'env': 'yes', 'code': 'yes', 'detour': 'costly', 'hosted-only': 'costly'}
+PLAYER_RANK = {'yes': 0, 'costly': 2, 'never': 3}
 
 CLASSES = ('code', 'detour', 'instrument', 'launcher', 'env', 'hosted-only')
 
@@ -190,10 +193,7 @@ class Inventory:
         return None
 
     def player(self, key):
-        c = self.cls(key)
-        if c == 'code' and self.player_switch_built:
-            return 'yes'
-        return PLAYER_OF.get(c)
+        return PLAYER_OF.get(self.cls(key))
 
 
 API_CALL = re.compile(r'(?<![\w.>])(?:(?:::)?bof3::)?(PatchBytes|RetargetCall|Inject|BOF3_INJECT)\s*\(')
@@ -373,6 +373,10 @@ def inventory():
     scan_env(inv, texts)
     inv.env_names = {k[4:] for k in inv.names if k.startswith('env:') and '=' not in k}
     inv.player_switch_built = PLAYER_SWITCH in inv.env_names and PLAYER_INI in inv.ini_keys
+    if not inv.player_switch_built:
+        inv.problems.append(f'src/ no longer reads {PLAYER_SWITCH}, or the launcher its ini key {PLAYER_INI}=: '
+                            "a code name is then no player's switch, and the ledger's Player: yes for "
+                            'one is false')
     if not any(inv.cls(k) == 'code' for k in inv.names):
         inv.problems.append('no PatchBytes or RetargetCall name found - the tool no longer reads src/')
     if not any(inv.cls(k) == 'detour' for k in inv.names):
@@ -522,13 +526,13 @@ def counts(inv, rows):
     for r in rows:
         pl[r['player'] or '(by hand)'] = pl.get(r['player'] or '(by hand)', 0) + 1
     lines.append('Player from the best switch: ' + ', '.join(
-        f'{k} {pl.get(k, 0)}' for k in ('yes', 'cheap', 'costly', 'never', '(by hand)')))
+        f'{k} {pl.get(k, 0)}' for k in ('yes', 'costly', 'never', '(by hand)')))
     lines.append(f'entries whose Reversible? is over {LONG_PROSE} characters (read by hand): '
                  f'{sum(1 for r in rows if r["long"])}')
     unread = [r for r in rows if r['unread']]
     lines.append(f'entries whose Reversible? names something src/ does not read: {len(unread)}')
     lines.append(f'the player\'s switch {PLAYER_SWITCH} / ini {PLAYER_INI}=: '
-                 + ('read by src/ - code names count as yes' if inv.player_switch_built else 'not built yet'))
+                 + ('read by src/ - code names count as yes' if inv.player_switch_built else 'NOT read by src/'))
     return lines
 
 
