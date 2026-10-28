@@ -3,8 +3,8 @@
 **Status:** IN PROGRESS (launched 2026-10-28 afternoon on `relocatable-image/round`
 off `main` `15518394`, the PR #164 merge; stage A's three agents in worktrees
 under `C:\Users\kerok\bof3x-runs\ri1027`, baseline build `wt_base`. The
-owner's three calls are answered, section 7. Stage B wave 1 merged and gated
-2026-10-28 evening, section 3; wave 2 next.)
+owner's three calls are answered, section 7. Stage B merged and gated 2026-10-28
+evening, both waves, section 3; stage C next.)
 
 The owner's word, 2026-10-27: stage "the data image as typed source" work as
 a round. Stages 1 and 2 of [`IDEAS.md`](IDEAS.md) I44 are done (the
@@ -334,6 +334,72 @@ and patch read-backs; the slot-and-witness tables (`labels.cpp`,
 checks; `wide_staging`'s script VAs; `exe_icon.cpp:61`'s `kIconRects`; the
 unidentified literals (50 battle, 2 field, menu_lists / menu_windows rows,
 `0x663C8C`), each listed with file and line in its report.
+
+### Stage B wave 2 as run (2026-10-28 evening, RC0 and RC1..RC4)
+
+**RC0** (`relocatable-image/rc0`, report `ri1027\rc0\REPORT.md`): `::bof3::image::CodeVa`
+beside `Va` (a separate type: a `Va` cannot go where a code VA is wanted);
+`::bof3::Code(va)` stays the consteval place-maker and is now applied **once
+inside** the four harness `*_AT` macros, so 787 call lines needed no edit and a
+run-time value given to `*_AT` no longer compiles (the compiler sorts every
+site); new `*_WORD` macros and `::bof3::CodePlace(word)` (`always_inline`
+`constexpr`, the identity in stage B, code unchanged in every object) for the
+words known only at run time - the `Phase` / `CallN` / `Alloc` / `EndStep`
+helpers' bodies, 68 direct run-time lines, d3d_list's `H`; the 24 callee-table
+casts through `Code()`; the `DirectSoundCreate` thunk a `CodeVa` with its stage
+C binding written beside it. `tools/reloc_census.py` `BASE_HELPERS = {Img, Code,
+CodePlace}`. **How stage C tells a VA from a word that is already a place:** by
+value - a word in the linked code range `0x401000..0x5C4000` is a VA to bind,
+anything else passes through - which holds only while no place of ours lies in
+that range (the forced base must check it).
+
+**RC1..RC4** (four Opus agents, reports `ri1027\rc<n>\REPORT.md`; merged one at a
+time, gate after each): **860 code-address constants became `CodeVa`** (magic
+45 + RC0's 5, battle and rest 292, field and scenario 232, effect / engine /
+area / ui 291), each use decided by the compiler's diagnostic or by reading:
+**a place** (a callee-table `Fn<>` / `Raw<>` cell, a task entry handed to
+`Task_Create` / `Task_Restart`, a hook word stored where the game calls it -
+`BattleHook_*`, the enemy record's `+0xF4`, 184 boss hook stores - the window
+procedures, `Boot_Task`) is `::bof3::Code(kX.v)`; **a name** (a `*_AT`
+argument, a `Phase` / `CallN` argument, a cell of our own table of VAs that
+`Phase` places at run time, an `Inject` / `PatchBytes` / `RetargetCall` /
+`OperandCall` argument, a clone row, a `Log` argument, every fuzz row and
+`case` label) is `kX.v`; a word read from a table and called without a helper
+goes through `CodePlace` (two effect step words, battle_fx_tasks' `H`, the
+battle window and win-state dispatchers). `code_literal` fell 928 -> 923
+(magic_s16's stack table by name); `abs_call` stays 1,340 by construction (the
+census has no class for "placed at its helper"). The gate on the merged tree:
+build green; `codegen_same.py` 647 objects, 1 differ (RA2's `statehash.cpp.obj`); `reloc_census --check`, `data_census --check` (27,434) and `--strict`, `typed_left --check` clean; the headless self-tests in both hosts exit 0 with `inject: 10087 ours`.
+
+**What the groups learnt:** `Code(Code(x))` compiles and passes the gate, so a
+`*_AT` or `RetargetCall` argument wrapped by mistake is caught only by reading
+(RC4); a `CodeVa` through varargs compiles silently and only `-Wformat` on
+`Log` catches it, a `Fatal` without the attribute would not (RC2); a two-name
+`CodeVa a{..}, b{..};` line is not a census definition (RC3); `typed_left`
+names a row by the first call after a `}` at column 0, so a `Code(` on the
+first line after a namespace close renames a block (RC2); the effect_1b fuzz's
+stringifying macro took `.v` inside.
+
+**For stage C2's binder** (each report's last section): `Code()` runs at DLL
+initialisation in every namespace-scope `kOriginals` table (RC0's 24 casts,
+RC1's 7, RC2's 82, RC3's 59, RC4's about 85 cells), so the bind table is a
+constant and **a miss in a table must return the trap page, not `Fatal`**
+(cells with no bound function: the eight `Mp3_*`, d3d_list's 15 software
+handlers, `kAreaExits` = `WorldMap_ExitRecords`, `BareRet`); the still-Capcom
+callees (`Crt_GetPtd` hosted only; `Crt_findfirst` / `Crt_findnext` /
+`Crt_sprintf` / `Crt_ftol` now `CodeVa`, `kFtol` called through `SH_AT`) want a
+check of placed-or-named; the fuzz `Stub(F)` helpers turn a function pointer
+back into a `StandIn` key and will miss once `Code()` is a lookup; code-byte
+readers (`bof3::Operand` at magic_s02 / s20, `Widescreen_*`, `Imm16Bound`,
+`CodeReads`, the title `StubFor` cases) read Capcom's `.text`, which is
+`PAGE_NOACCESS` in mode B; the handler-word-is-code checks (eight, listed by
+RA1) and the code-VA-against-word comparisons (`scena_sc6:2297` with its fuzz
+write, `rest_2d:133/139`, `rest_2f:1477/1521`, `rest_3g:803-804`,
+`menu_verbs:149`, `yes_no_layout:397`, `object_kinds:984-989`,
+`mode_states:47/387` mid-function tails with nothing to bind) are stage C's
+readings; about 330 clone call-table literals and the clone / relocation
+arguments want `Code()` inside `CloneOriginal` / `Relocate` / `Patch32`, not
+at the rows.
 
 ## 4. Stage C: the move (one agent, then the coordinator's runs)
 
