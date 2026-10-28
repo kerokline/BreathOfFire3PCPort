@@ -580,13 +580,19 @@ bool g_watch_shots = false;
 
 bool Readable(std::uint32_t a, std::uint32_t n);
 
-// A range the watch cannot read (no page, or none committed) reads as 0xEE
-// bytes. Callers hold BOF3X_GAPWATCH's guards off around their reads
-// (GapWatch_Pause / GapWatch_Tick, as DeviceLatch does for the state hash):
-// a watch is no reader of the game's, and a guarded page is not Readable.
+// Callers hold BOF3X_GAPWATCH's guards off around their reads (GapWatch_Pause
+// / GapWatch_Tick, as DeviceLatch does for the state hash): a watch is no
+// reader of the game's. A page still not Readable then - one the watch keeps
+// parked - is read as `peek` reads it, a byte at a time through the watch's
+// handler; below 0x10000 the range reads as 0xEE bytes.
+std::uint32_t Read(std::uint32_t addr, unsigned width);
 void WatchRead(std::uint32_t addr, unsigned len, unsigned char* out) {
-    if (!Readable(addr, len)) { std::memset(out, 0xEE, len); return; }
-    std::memcpy(out, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(addr)), len);
+    if (Readable(addr, len)) {
+        std::memcpy(out, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(addr)), len);
+        return;
+    }
+    if (addr < 0x10000) { std::memset(out, 0xEE, len); return; }
+    for (unsigned i = 0; i < len; ++i) out[i] = static_cast<unsigned char>(Read(addr + i, 1));
 }
 
 std::string WatchHex(const unsigned char* b, unsigned len) {
