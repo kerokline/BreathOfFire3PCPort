@@ -69,8 +69,8 @@ void ByForm(const char* who, U table) { Dispatch(who, "the form word +0x2C", tab
 
 // Field_DirectionSteps' row for a direction, read in place with the direction
 // unmasked, as the originals index it.
-U StepX(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8 + 4))); }
+U StepX(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8))); }
+U StepZ(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4))); }
 
 // The animation offset of a direction as the originals compute it: dec eax;
 // cdq; sub eax, edx; sar eax, 1 on the zero-extended byte - (d - 1) / 2
@@ -108,8 +108,8 @@ void SideProbe(unsigned d, U row) {
 }
 void SideProbes() {
     S()[0x2B] = 1;
-    SideProbe(3, Field_DirectionSteps_addr + 0x18);
-    SideProbe(5, Field_DirectionSteps_addr + 0x28);
+    SideProbe(3, ::bof3::Img(Field_DirectionSteps_addr) + 0x18);
+    SideProbe(5, ::bof3::Img(Field_DirectionSteps_addr) + 0x28);
 }
 
 // Sprite_ObjectAt's index, as the originals use it: bit 0 of the object's
@@ -124,9 +124,9 @@ void FlagObject(const char* who, unsigned char found) {
                     "byte outside them (docs/rest_1e.md section 5)",
                     who, static_cast<unsigned>(found));
     if (i < static_cast<int>(at::kObjectCount))
-        At(Sprite_Objects_addr + 0x80 + static_cast<U>(i) * at::kObjectStride)[0] |= 1;
+        At(::bof3::Img(Sprite_Objects_addr) + 0x80 + static_cast<U>(i) * at::kObjectStride)[0] |= 1;
     else
-        At(Sprite_ObjectsExtra_addr + 0x80 + static_cast<U>(i - static_cast<int>(at::kObjectCount)) * at::kObjectStride)[0] |= 1;
+        At(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x80 + static_cast<U>(i - static_cast<int>(at::kObjectCount)) * at::kObjectStride)[0] |= 1;
 }
 
 // An Effect_Objects record by an index the original uses unchecked; ours aborts
@@ -227,7 +227,7 @@ unsigned char CellPickup(unsigned x, unsigned z) {
     } else if (cell == 0xF8) {
         SH_CALL(Effect_SpawnAtCell)(0, x, z);
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, at::kPickupItem);
-        for (unsigned k = 0; k < 16; k += 4) SetLong(At(bof3::addr::Text_Records + k), Long(name + k));
+        for (unsigned k = 0; k < 16; k += 4) SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
         if (Al(SH_CALL(Inventory_Add)(0, at::kPickupItem, 1)) != 0) {
             SH_CALL(Sound_PlayEffect)(at::kSoundTaken);
             SH_CALL(Msg_OpenSystem)(2);
@@ -303,7 +303,7 @@ unsigned char StrikeCell(unsigned x, unsigned z) {
     if (roll < 7) {
         SH_CALL(Effect_SpawnAtCellHigh)(3, x, z);
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, at::kStrikeItem);
-        for (unsigned k = 0; k < 16; k += 4) SetLong(At(bof3::addr::Text_Records + k), Long(name + k));
+        for (unsigned k = 0; k < 16; k += 4) SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
         if (Al(SH_CALL(Inventory_Add)(0, at::kStrikeItem, 1)) != 0) {
             SH_CALL(Sound_PlayEffect)(at::kSoundTaken);
             SH_CALL(Msg_OpenSystem)(2);

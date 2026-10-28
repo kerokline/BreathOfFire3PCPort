@@ -20546,13 +20546,10 @@ src/game/rest_1a.cpp	MarkObject	global	B	at::kExtraFlags	0	0x802080	-	index	at::
 src/game/rest_1a.cpp	char	record	L	row + 4	0	-	-	no-struct	L(row + 4): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_1a.cpp	Form0Begin	record	Word	Sc() + 0x2C	0	-	via=Sc	gate	compiled differently when typed (bisected per site)	b1-rest
 src/game/rest_1a.cpp	Form0Resolve	record	Long	s + 0x38	0	-	via=Sc	gate	compiled differently when typed (bisected per site)	b1-rest
-src/game/rest_1a.cpp	CellPickup	record	At	bof3::addr::Text_Records + k	0	-	base=Text_Records	computed	base=Text_Records (At(bof3::addr::Text_Records + k))	b1-rest
 src/game/rest_1a.cpp	CellPickup	record	Long	name + k	0	-	via=SH_CALL	computed	via=SH_CALL (Long(name + k))	b1-rest
-src/game/rest_1a.cpp	PartyFormAction0_ByForm	global	At	Cond_Flags_addr + 0x8	0	0x903f98	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Cond_Flags_addr - -)	c4-tc
 src/game/rest_1a.cpp	PartyAction0_Form2Begin	record	Word	Sc() + 0x2C	0	-	via=Sc	gate	compiled differently when typed (bisected per site)	b1-rest
 src/game/rest_1a.cpp	PartyAction0_Form2Begin	global	B	at::kScriptFlags3	0	0x9039a3	-	inside-entry	at::kScriptFlags3 0x9039a3 Field_ScriptFlags+0x1	b0
 src/game/rest_1a.cpp	PartyAction0_Form2Begin	global	B	at::kScriptFlags3	1	0x9039a3	-	inside-entry	at::kScriptFlags3 0x9039a3 Field_ScriptFlags+0x1	b0
-src/game/rest_1a.cpp	PartyAction2_CellStrike	record	At	bof3::addr::Text_Records + k	0	-	base=Text_Records	computed	base=Text_Records (At(bof3::addr::Text_Records + k))	b1-rest
 src/game/rest_1a.cpp	PartyAction2_CellStrike	record	Long	name + k	0	-	via=SH_CALL	computed	via=SH_CALL (Long(name + k))	b1-rest
 src/game/rest_1a.cpp	PartyAction2_Form2Strike	record	Word	Sc() + 0x2C	0	-	via=Sc	gate	compiled differently when typed (bisected per site)	b1-rest
 src/game/rest_1a.cpp	PartyAction2_Form2Strike	record	Long	s + 0x38	0	-	via=Sc	gate	compiled differently when typed (bisected per site)	b1-rest
@@ -20574,13 +20571,9 @@ src/game/rest_1a_fuzz.cpp	Disturb	record	SetWord	s + 0x3E	0	-	via=Sc	seam	harnes
 src/game/rest_1a_fuzz.cpp	Disturb	global	Mem	SharedScratch_addr	0	0x903850	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (SharedScratch_addr - -)	c4-tc
 src/game/rest_1a_fuzz.cpp	Disturb	record	SetWord	s + 0x2C	0	-	via=Sc	seam	harness file: the harness stands Sprite_Current on a Sprite_Objects record (scenario_harness.cpp:1304, :188) where the module under test reads a party record; the seed's family is the harness's, not the game's	b1-rest
 src/game/rest_1a_fuzz.cpp	Disturb	record	Mem	bof3::addr::Text_Records + 4 * (v % 4)	0	-	base=Text_Records	no-struct	Mem(bof3::addr::Text_Records + 4 * (v % 4)): base=Text_Records, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_1b.cpp	ByForm	global	At	Field_DirectionSteps_addr + d * 8	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
-src/game/rest_1b.cpp	ByForm	global	At	Field_DirectionSteps_addr + d * 8 + 4	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
 src/game/rest_1b.cpp	ByForm	record	Word	s + 0x2C	0	-	-	gate	compiled differently when typed (bisected per site)	b1-rest
-src/game/rest_1b.cpp	CellPickup	record	At	bof3::addr::Text_Records + k	0	-	base=Text_Records	computed	base=Text_Records (At(bof3::addr::Text_Records + k))	b1-rest
 src/game/rest_1b.cpp	CellPickup	record	Long	name + k	0	-	via=SH_CALL	computed	via=SH_CALL (Long(name + k))	b1-rest
 src/game/rest_1b.cpp	Form1Begin	global	At	kScriptFlagsHigh	0	0x9039a3	-	inside-entry	kScriptFlagsHigh 0x9039a3 Field_ScriptFlags+0x1	b0
-src/game/rest_1b.cpp	CellHit	record	At	bof3::addr::Text_Records + k	0	-	base=Text_Records	computed	base=Text_Records (At(bof3::addr::Text_Records + k))	b1-rest
 src/game/rest_1b.cpp	CellHit	record	Long	name + k	0	-	via=SH_CALL	computed	via=SH_CALL (Long(name + k))	b1-rest
 src/game/rest_1b_fuzz.cpp	Steps	global	Mem	Field_DirectionSteps_addr	0	0x6697b0	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Field_DirectionSteps_addr - -)	c4-tc
 src/game/rest_1b_fuzz.cpp	FxSlope	global	Mem	SharedScratch_addr	0	0x903850	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (SharedScratch_addr - -)	c4-tc
@@ -20595,19 +20588,13 @@ src/game/rest_1b_fuzz.cpp	Disturb	record	SetLong	s + (v & 1 ? 0x34 : 0x38)	0	-	v
 src/game/rest_1b_fuzz.cpp	Disturb	record	SetWord	s + 0x3E	0	-	via=S	seam	harness file: the harness stands Sprite_Current on a Sprite_Objects record (scenario_harness.cpp:1304, :188) where the module under test reads a party record; the seed's family is the harness's, not the game's	b1-rest
 src/game/rest_1b_fuzz.cpp	Disturb	record	SetWord	s + (v & 1 ? 0x2C : 0x58)	0	-	via=S	computed	via=S (SetWord(s + (v & 1 ? 0x2C : 0x58)))	b1-rest
 src/game/rest_1b_fuzz.cpp	Disturb	record	SetLong	Steps() + 4 * (v % 16)	0	-	via=Steps	computed	via=Steps (SetLong(Steps() + 4 * (v % 16)))	b1-rest
-src/game/rest_1c.cpp	ByForm	global	At	Field_DirectionSteps_addr + d * 8	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
-src/game/rest_1c.cpp	ByForm	global	At	Field_DirectionSteps_addr + d * 8 + 4	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
-src/game/rest_1c.cpp	Turn	global	At	Sprite_Objects_addr + 0x80 + found * kObjectStride	0	0x7dee80	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
-src/game/rest_1c.cpp	Turn	global	At	Sprite_ObjectsExtra_addr + 0x80 + (found - 0x1E) * kObjectSt	0	0x802000	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
 src/game/rest_1c.cpp	ProbeSide	record	At	row + 4	0	-	-	no-struct	At(row + 4): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_1c.cpp	TargetAhead	record	Word	Sprite_Current + 0x2C	0	-	base=Sprite_Current	gate	compiled differently when typed (bisected per site)	b1-rest
 src/game/rest_1c.cpp	Form2Begin	record	Word	s + 0x3E	0	-	base=Sprite_Current	width	PartyMember +0x3e w2 (Word(s + 0x3E))	b1-rest
 src/game/rest_1c.cpp	Form0Resolve	record	Long	s + 0x38	0	-	base=Sprite_Current	gate	compiled differently when typed (bisected per site)	b1-rest
-src/game/rest_1c.cpp	CellPickup	record	At	bof3::addr::Text_Records + k	0	-	base=Text_Records	computed	base=Text_Records (At(bof3::addr::Text_Records + k))	b1-rest
 src/game/rest_1c.cpp	CellPickup	record	Long	name + k	0	-	via=SH_CALL	computed	via=SH_CALL (Long(name + k))	b1-rest
 src/game/rest_1c.cpp	BlockedResolve	record	Word	Sprite_Current + 0x2C	0	-	base=Sprite_Current	gate	compiled differently when typed (bisected per site)	b1-rest
 src/game/rest_1c.cpp	BlockedResolve	record	Long	c + 0x38	0	-	base=Sprite_Current	gate	compiled differently when typed (bisected per site)	b1-rest
-src/game/rest_1c.cpp	CellHit	record	At	bof3::addr::Text_Records + k	0	-	base=Text_Records	computed	base=Text_Records (At(bof3::addr::Text_Records + k))	b1-rest
 src/game/rest_1c.cpp	CellHit	record	Long	name + k	0	-	via=SH_CALL	computed	via=SH_CALL (Long(name + k))	b1-rest
 src/game/rest_1c.cpp	Kind30Begin	record	Word	s + 0x2C	0	-	base=Sprite_Current	gate	compiled differently when typed (bisected per site)	b1-rest
 src/game/rest_1c.cpp	Kind30Begin	global	At	kScriptFlagsHigh	0	0x9039a3	-	inside-entry	kScriptFlagsHigh 0x9039a3 Field_ScriptFlags+0x1	b0
@@ -20624,18 +20611,10 @@ src/game/rest_1c_fuzz.cpp	Disturb	record	SetLong	s + (v & 1 ? 0x34 : 0x38)	0	-	b
 src/game/rest_1c_fuzz.cpp	Disturb	record	SetWord	s + 0x3E	0	-	base=Sprite_Current	seam	harness file: the harness stands Sprite_Current on a Sprite_Objects record (scenario_harness.cpp:1304, :188) where the module under test reads a party record; the seed's family is the harness's, not the game's	b1-rest
 src/game/rest_1c_fuzz.cpp	Disturb	global	Mem	SharedScratch_addr	0	0x903850	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (SharedScratch_addr - -)	c4-tc
 src/game/rest_1c_fuzz.cpp	Disturb	record	SetLong	Steps() + 4 * (v % 16)	0	-	via=Steps	computed	via=Steps (SetLong(Steps() + 4 * (v % 16)))	b1-rest
-src/game/rest_1d.cpp	void	record	At	table + 4 * index	0	-	-	computed	- (At(table + 4 * index))	b1-rest
-src/game/rest_1d.cpp	StepX	global	At	Field_DirectionSteps_addr + d * 8	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
-src/game/rest_1d.cpp	StepX	global	At	Field_DirectionSteps_addr + d * 8 + 4	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
 src/game/rest_1d.cpp	SoundOfForm	record	Word	Sprite_Current + 0x2C	0	-	base=Sprite_Current	gate	compiled differently when typed (bisected per site)	b1-rest
-src/game/rest_1d.cpp	MarkObject	global	At	Sprite_Objects_addr + 0x80 + found * kSpriteStride	0	0x7dee80	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
-src/game/rest_1d.cpp	MarkObject	global	At	Sprite_ObjectsExtra_addr + 0x80 + (found - 0x1E) * kSpriteSt	0	0x802000	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
 src/game/rest_1d.cpp	FormBegin	record	Word	Sprite_Current + 0x3E	0	-	base=Sprite_Current	width	PartyMember +0x3e w2 (Word(Sprite_Current + 0x3E))	b1-rest
-src/game/rest_1d.cpp	CellPickup	record	At	bof3::addr::Text_Records + k	0	-	base=Text_Records	computed	base=Text_Records (At(bof3::addr::Text_Records + k))	b1-rest
 src/game/rest_1d.cpp	CellPickup	record	Long	name + k	0	-	via=SH_CALL	computed	via=SH_CALL (Long(name + k))	b1-rest
 src/game/rest_1d.cpp	Kind30Begin	global	At	at::kScriptFlagsHi	0	0x9039a3	-	name	at::kScriptFlagsHi 0x9039a3 Field_ScriptFlags+0x1	b0
-src/game/rest_1d.cpp	PartyAction9_CellPickup	global	At	Effect_Objects_addr + index * kEffectStride	0	0x7e11e0	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
-src/game/rest_1d.cpp	PartyAction12_CellHit	record	At	bof3::addr::Text_Records + k	0	-	base=Text_Records	computed	base=Text_Records (At(bof3::addr::Text_Records + k))	b1-rest
 src/game/rest_1d.cpp	PartyAction12_CellHit	record	Long	name + k	0	-	via=SH_CALL	computed	via=SH_CALL (Long(name + k))	b1-rest
 src/game/rest_1d_fuzz.cpp	FxSlope	global	Mem	SharedScratch_addr	0	0x903850	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (SharedScratch_addr - -)	c4-tc
 src/game/rest_1d_fuzz.cpp	FxGround	record	Word	s + 0x3E	0	-	base=Sprite_Current	seam	harness file: the harness stands Sprite_Current on a Sprite_Objects record (scenario_harness.cpp:1304, :188) where the module under test reads a party record; the seed's family is the harness's, not the game's	b1-rest
@@ -20653,17 +20632,11 @@ src/game/rest_1d_fuzz.cpp	Disturb	global	Mem	SharedScratch_addr	0	0x903850	-	sea
 src/game/rest_1d_fuzz.cpp	Disturb	global	Mem	Field_DirectionSteps_addr	0	0x6697b0	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Field_DirectionSteps_addr - -)	c4-tc
 src/game/rest_1d_fuzz.cpp	Disturb	record	SetLong	sh::Mem(Field_DirectionSteps_addr) + 4 * (v % 16)	0	-	via=Mem	computed	via=Mem (SetLong(sh::Mem(Field_DirectionSteps_addr) + 4 * (v % 16)))	b1-rest
 src/game/rest_1e.cpp	char	record	At	table + 4 * index	0	-	-	computed	- (At(table + 4 * index))	b1-rest
-src/game/rest_1e.cpp	Table	global	At	Field_DirectionSteps_addr + d * 8	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
-src/game/rest_1e.cpp	Table	global	At	Field_DirectionSteps_addr + d * 8 + 4	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
 src/game/rest_1e.cpp	SideProbe	record	At	row + 4	0	-	-	no-struct	At(row + 4): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_1e.cpp	FlagObject	global	At	Sprite_Objects_addr + 0x80 + static_cast<U>(i) * at::kObject	0	0x7dee80	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
-src/game/rest_1e.cpp	FlagObject	global	At	Sprite_ObjectsExtra_addr + 0x80 + static_cast<U>(i - static_	0	0x802000	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
 src/game/rest_1e.cpp	Form2Begin	record	Word	s + 0x3E	0	-	via=S	width	PartyMember +0x3e w2 (Word(s + 0x3E))	b1-rest
 src/game/rest_1e.cpp	Form2Begin	record	Word	S() + 0x2C	0	-	via=S	gate	compiled differently when typed (bisected per site)	b1-rest
-src/game/rest_1e.cpp	CellPickup	record	At	bof3::addr::Text_Records + k	0	-	base=Text_Records	computed	base=Text_Records (At(bof3::addr::Text_Records + k))	b1-rest
 src/game/rest_1e.cpp	CellPickup	record	Long	name + k	0	-	via=SH_CALL	computed	via=SH_CALL (Long(name + k))	b1-rest
 src/game/rest_1e.cpp	Strike	record	Word	S() + 0x2C	0	-	via=S	gate	compiled differently when typed (bisected per site)	b1-rest
-src/game/rest_1e.cpp	StrikeCell	record	At	bof3::addr::Text_Records + k	0	-	base=Text_Records	computed	base=Text_Records (At(bof3::addr::Text_Records + k))	b1-rest
 src/game/rest_1e.cpp	StrikeCell	record	Long	name + k	0	-	via=SH_CALL	computed	via=SH_CALL (Long(name + k))	b1-rest
 src/game/rest_1e_fuzz.cpp	Steps	global	Mem	Field_DirectionSteps_addr	0	0x6697b0	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Field_DirectionSteps_addr - -)	c4-tc
 src/game/rest_1e_fuzz.cpp	FxSlope	global	Mem	SharedScratch_addr	0	0x903850	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (SharedScratch_addr - -)	c4-tc
@@ -20679,10 +20652,7 @@ src/game/rest_1e_fuzz.cpp	Disturb	record	SetWord	s + 0x3E	0	-	base=Sprite_Curren
 src/game/rest_1e_fuzz.cpp	Disturb	record	SetWord	s + 0x2C	0	-	base=Sprite_Current	seam	harness file: the harness stands Sprite_Current on a Sprite_Objects record (scenario_harness.cpp:1304, :188) where the module under test reads a party record; the seed's family is the harness's, not the game's	b1-rest
 src/game/rest_1e_fuzz.cpp	Disturb	global	Mem	SharedScratch_addr	0	0x903850	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (SharedScratch_addr - -)	c4-tc
 src/game/rest_1e_fuzz.cpp	Disturb	record	SetLong	Steps() + 4 * (v % 16)	0	-	via=Steps	computed	via=Steps (SetLong(Steps() + 4 * (v % 16)))	b1-rest
-src/game/rest_1f.cpp	void	global	At	kCells	0	0x903850	-	no-entry	kCells 0x903850 -	b0
-src/game/rest_1f.cpp	void	global	At	Field_DirectionSteps_addr + d * 8	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
-src/game/rest_1f.cpp	void	global	At	Field_DirectionSteps_addr + d * 8 + 4	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
-src/game/rest_1f.cpp	CopyName	record	At	bof3::addr::Text_Records + k	0	-	base=Text_Records	computed	base=Text_Records (At(bof3::addr::Text_Records + k))	b1-rest
+src/game/rest_1f.cpp	At	global	At	kCells	0	0x903850	-	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
 src/game/rest_1f.cpp	CopyName	record	Long	name + k	0	-	param	computed	param (Long(name + k))	b1-rest
 src/game/rest_1f.cpp	BeginShape	record	Word	Sc() + 0x3E	0	-	via=Sc	width	PartyMember +0x3e w2 (Word(Sc() + 0x3E))	b1-rest
 src/game/rest_1f.cpp	BeginShape	record	Word	Sc() + 0x2C	0	-	via=Sc	gate	compiled differently when typed (bisected per site)	b1-rest
@@ -20720,8 +20690,6 @@ src/game/rest_1f_fuzz.cpp	Disturb	record	SetWord	s + 0x2C	0	-	via=Sc	seam	harnes
 src/game/rest_1g.cpp	void	record	Long	p + at	0	-	-	computed	- (Long(p + at))	b1-rest
 src/game/rest_1g.cpp	void	record	SetLong	p + at	0	-	-	computed	- (SetLong(p + at))	b1-rest
 src/game/rest_1g.cpp	void	record	Word	p + at	0	-	-	computed	- (Word(p + at))	b1-rest
-src/game/rest_1g.cpp	void	global	At	Fish_Kinds_addr + kKindStride * kind + at	0	0x66a690	-	expr	the address is part of a larger expression typed_convert does not rewrite (Fish_Kinds_addr - -)	c4-tc
-src/game/rest_1g.cpp	void	global	At	Fish_Kinds_addr + kKindStride * kind + at	1	0x66a690	-	expr	the address is part of a larger expression typed_convert does not rewrite (Fish_Kinds_addr - -)	c4-tc
 src/game/rest_1g.cpp	void	global	At	kDirAnims	0	0x660340	-	no-entry	kDirAnims 0x660340 -	b0
 src/game/rest_1g.cpp	void	global	At	kDirAnims	1	0x660340	-	no-entry	kDirAnims 0x660340 -	b0
 src/game/rest_1g.cpp	LeaderPanel_S1Begin	global	B	kItemA	0	0x904130	-	no-entry	kItemA 0x904130 -	b0
@@ -20795,8 +20763,6 @@ src/game/rest_1g.cpp	Fish_AdjustStrength	record	Word	am + 0x98	0	-	via=AM	union	
 src/game/rest_1g.cpp	Fish_AdjustStrength	record	SetWord	am + 0x9A	2	-	via=AM	union	SpriteObject +0x98/+0x9A/+0x9C read as the fish's strength max / strength / size (rest_1g.md 74, 90); records.h names them half_w / half_d / counter	b1-rest
 src/game/rest_1g.cpp	Fish_AdjustStrength	record	SetWord	am + 0x9A	3	-	via=AM	union	SpriteObject +0x98/+0x9A/+0x9C read as the fish's strength max / strength / size (rest_1g.md 74, 90); records.h names them half_w / half_d / counter	b1-rest
 src/game/rest_1g.cpp	Fish_Step	record	Word	s + 0x14	0	-	via=S	width	SpriteObject +0x14 w2 (Word(s + 0x14))	b1-rest
-src/game/rest_1g.cpp	Fish_Heading	global	At	MoveCmd_F9Steps_addr + 8u * s[8]	0	0x6696dc	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (MoveCmd_F9Steps_addr - -)	c4-tc
-src/game/rest_1g.cpp	Fish_Heading	global	At	MoveCmd_F9Steps_addr + 4 + 8u * s[8]	0	0x6696dc	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (MoveCmd_F9Steps_addr - -)	c4-tc
 src/game/rest_1g.cpp	Fish_Heading	record	At	at - 4	0	-	-	computed	- (At(at - 4))	b1-rest
 src/game/rest_1g.cpp	Fish_LureInReach	record	Bytes	rv::Bytes(Effect_Objects)	0	-	base=Effect_Objects	view	a typed record's own bytes at an offset its struct does not name for this reader (rv::Bytes; stage C4)	c4-rule
 src/game/rest_1g_fuzz.cpp	Mem	global	Mem	Field_ActiveMember_addr	0	0x9035a4	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Field_ActiveMember_addr - -)	c4-tc

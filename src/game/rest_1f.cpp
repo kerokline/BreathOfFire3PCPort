@@ -35,12 +35,15 @@ using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
+// A VA held as a ::bof3::image::Va (common/image_base.h), placed here through
+// ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
 using Handler = void (__cdecl*)();
 using Pickup = unsigned char (__cdecl*)(unsigned, unsigned);
 
 // kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs (x, z)
-constexpr U kCellOffsets = 0x66971C;   // two signed bytes a direction: the cell ahead
-constexpr U kCells = SharedScratch_addr; // SharedScratch: cell 0 the sloped flag, 1..7 the kinds, 8..0xB the classes
+constexpr ::bof3::image::Va kCellOffsets{0x66971C};   // two signed bytes a direction: the cell ahead
+constexpr ::bof3::image::Va kCells{SharedScratch_addr}; // SharedScratch: cell 0 the sloped flag, 1..7 the kinds, 8..0xB the classes
 constexpr U kObjectStride = 0xA4;
 constexpr unsigned kObjectCount = 0x1E;   // Sprite_Objects; 0x1E.. Sprite_ObjectsExtra's four
 constexpr unsigned kEffectCount = 20;
@@ -57,8 +60,8 @@ unsigned char& Cell(unsigned i) { return At(kCells)[i & 0xFF]; }
 // A Field_DirectionSteps row, read in place with the direction unmasked (the
 // originals' `shl eax, 3` on the zero-extended byte): a byte above 7 reads the
 // .data after the table, as they do.
-U StepX(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8 + 4))); }
+U StepX(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8))); }
+U StepZ(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4))); }
 // The pose offset of a direction: (d - 1) / 2 as the originals compute it
 // (`dec eax; cdq; sub eax, edx; sar eax, 1`), so direction 0 gives 0.
 unsigned char HalfTurn(unsigned char d) { return static_cast<unsigned char>((static_cast<int>(d) - 1) / 2); }
@@ -122,7 +125,7 @@ void MarkObject(unsigned char found, const char* who) {
 
 // The 16 bytes of an item's name copied to Text_Records, as four dwords.
 void CopyName(const unsigned char* name) {
-    for (unsigned k = 0; k < 16; k += 4) SetLong(At(bof3::addr::Text_Records + k), Long(name + k));
+    for (unsigned k = 0; k < 16; k += 4) SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
 }
 
 // --- the shapes three sets share (docs/rest_1f.md section 1.2) -------------------------------

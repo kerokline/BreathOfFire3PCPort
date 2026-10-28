@@ -62,20 +62,20 @@ using Handler = void (__cdecl*)();
 // kEff0State: now Effect_Objects[0].state (symbols.toml). record 0 +1
 // kEff0Depth: now Effect_Objects_addr + 0x7 (symbols.toml). record 0 +7 (signed)
 // kEff0Byte0A: now Effect_Objects_addr + 0xa (symbols.toml). record 0 +0xA
-constexpr U kEff0StepX = 0x7E11EC;     // record 0 +0xC
-constexpr U kEff0StepY = 0x7E11F0;     // record 0 +0x10
-constexpr U kEff0StepZ = 0x7E11F4;     // record 0 +0x14
-constexpr U kEff0X = 0x7E1214;         // record 0 +0x34
-constexpr U kEff0Z = 0x7E1218;         // record 0 +0x38
-constexpr U kEff0Height = 0x7E121E;    // record 0 +0x3E (s16)
+constexpr ::bof3::image::Va kEff0StepX{0x7E11EC};     // record 0 +0xC
+constexpr ::bof3::image::Va kEff0StepY{0x7E11F0};     // record 0 +0x10
+constexpr ::bof3::image::Va kEff0StepZ{0x7E11F4};     // record 0 +0x14
+constexpr ::bof3::image::Va kEff0X{0x7E1214};         // record 0 +0x34
+constexpr ::bof3::image::Va kEff0Z{0x7E1218};         // record 0 +0x38
+constexpr ::bof3::image::Va kEff0Height{0x7E121E};    // record 0 +0x3E (s16)
 // kEff1State: now Effect_Objects[1].state (symbols.toml). record 1 +1
 // kEff3State: now Effect_Objects[3].state (symbols.toml). record 3 +1
 // kEff3Mode: now Effect_Objects[3].param (symbols.toml). record 3 +6
 // kEff3Started: now Effect_Objects_addr + 0x187 (symbols.toml). record 3 +7
 // kEff4State: now Effect_Objects[4].state (symbols.toml). record 4 +1
 // kEff4Mode: now Effect_Objects[4].param (symbols.toml). record 4 +6
-constexpr U kEff5Frame = 0x7E1470;     // record 5 +0x10 (s32)
-constexpr U kEff5Level = 0x7E1490;     // record 5 +0x30 (a byte, and a s16)
+constexpr ::bof3::image::Va kEff5Frame{0x7E1470};     // record 5 +0x10 (s32)
+constexpr ::bof3::image::Va kEff5Level{0x7E1490};     // record 5 +0x30 (a byte, and a s16)
 // kEff6State: now Effect_Objects[6].state (symbols.toml). record 6 +1
 // kEff6Dir: now Effect_Objects_addr + 0x308 (symbols.toml). record 6 +8
 // The choice menu's page words, its own (EffectWork), not the head's height.
@@ -88,31 +88,31 @@ inline auto& kEff6Shown = rv::As<records::EffectWork>(rv::Bytes(&Effect_Objects[
 // kRecordA: now Effect1a_PanelScript (symbols.toml). pointer: a 10-byte record (the rod's: 0x66A4E8 + 10 * (0x904130 - 0x2E))
 // kRecordB: now Effect1a_PanelSet (symbols.toml). pointer: a 20-byte record (the lure's: 0x66A528 + 20 * (0x90412E - 0x1C))
 // kItemB: now CharStats_ExtraItem (symbols.toml). u8 (save data)
-constexpr U kItemA = 0x904130;         // u8 (save data)
+constexpr ::bof3::image::Va kItemA{0x904130};         // u8 (save data)
 // kWarned: now Effect1e_Choice (symbols.toml). u8: set once by LeaderPanel_S1Buttons
 // kPressNow: now Effect1e_PressNow (symbols.toml). u8: Input_Pressed & 0xE020 non-zero (LeaderPanel_PressLatch)
 // kPressWas: now Effect1e_PressWas (symbols.toml). u8: Effect1e_PressNow's previous value
-constexpr U kComboStep = 0x6BC70C;     // u8 x 4: each sequence's position
-constexpr U kComboTimer = 0x6BC710;    // u8 x 4: each sequence's frames left
+constexpr ::bof3::image::Va kComboStep{0x6BC70C};     // u8 x 4: each sequence's position
+constexpr ::bof3::image::Va kComboTimer{0x6BC710};    // u8 x 4: each sequence's frames left
 // kPoseWas: now Effect1e_PoseWas (symbols.toml). u8 (E1E's)
 // kPose: now Effect1e_Pose (symbols.toml). u8 (E1E's)
 // kBiteHeld: now Fish_Nibbling (symbols.toml). u8: a fish is nibbling (Fish_Swim sets, Fish_Settle clears)
 inline auto& kHoldFlag = SharedScratch.b_00;  // u8 (E1E reads it after LeaderPanel_HoldTest)
-constexpr U kPoolWordData = 0x803642;  // u16: MessagePools offset of the data page's title
-constexpr U kPoolWordRule = 0x803660;  // u16: the rule page's (read as a dword & 0xFFFF)
-constexpr U kPoolWordStage1 = 0x803600;  // u16 (read as a dword & 0xFFFF)
-constexpr U kPools = 0x803580;         // MessagePools
+constexpr ::bof3::image::Va kPoolWordData{0x803642};  // u16: MessagePools offset of the data page's title
+constexpr ::bof3::image::Va kPoolWordRule{0x803660};  // u16: the rule page's (read as a dword & 0xFFFF)
+constexpr ::bof3::image::Va kPoolWordStage1{0x803600};  // u16 (read as a dword & 0xFFFF)
+constexpr ::bof3::image::Va kPools{0x803580};         // MessagePools
 // kSpot: now AreaEntry_PendingFlags (symbols.toml). u8: the fishing spot (Field_StepCount +8)
-constexpr U kDrawMode = 0x93985C;      // u8 x 4, cleared by LeaderPanel_S11Switch
+constexpr ::bof3::image::Va kDrawMode{0x93985C};      // u8 x 4, cleared by LeaderPanel_S11Switch
 
 // Image tables (.data, read in place).
 // kFishKinds: now Fish_Kinds (symbols.toml). 36 bytes a kind: chances, banks, levels, sizes
-constexpr U kSpotCounts = 0x66A9CC;    // 23 bytes a spot: how many of each kind
-constexpr U kComboTable = 0x66A4C8;    // 4 rows of 8: a sequence pointer, a depth byte
-constexpr U kRecordsA = 0x66A4E8;      // the 10-byte records
-constexpr U kRecordsB = 0x66A528;      // the 20-byte records
-constexpr U kDirAnims = 0x660340;      // 2 bytes a direction: an animation, +0x2A's byte
-constexpr U kS6Frames = 0x660364;      // u16 by kind: Fish_S6Wait's frame
+constexpr ::bof3::image::Va kSpotCounts{0x66A9CC};    // 23 bytes a spot: how many of each kind
+constexpr ::bof3::image::Va kComboTable{0x66A4C8};    // 4 rows of 8: a sequence pointer, a depth byte
+constexpr ::bof3::image::Va kRecordsA{0x66A4E8};      // the 10-byte records
+constexpr ::bof3::image::Va kRecordsB{0x66A528};      // the 20-byte records
+constexpr ::bof3::image::Va kDirAnims{0x660340};      // 2 bytes a direction: an animation, +0x2A's byte
+constexpr ::bof3::image::Va kS6Frames{0x660364};      // u16 by kind: Fish_S6Wait's frame
 // kF9Steps: now MoveCmd_F9Steps (symbols.toml). MoveCmd_F9Steps: 8 rows of two longs
 constexpr U kF9StepsEnd = 0x669720;
 
@@ -128,6 +128,14 @@ std::int32_t L(U address) { return Long(At(address)); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
 U W(U address) { return Word(At(address)); }
 void SetW(U address, U v) { SetWord(At(address), v); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+std::int32_t L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
+void SetL(::bof3::image::Va va, U v) { SetL(::bof3::Img(va), v); }
+U W(::bof3::image::Va va) { return W(::bof3::Img(va)); }
+void SetW(::bof3::image::Va va, U v) { SetW(::bof3::Img(va), v); }
 // The address of a typed alias, for the accessors above.
 U AddrOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -143,8 +151,8 @@ unsigned char* RecordB() { return At(Effect1a_PanelSet); }
 
 // A byte of the kind table: the kind's 36-byte row at `at`, read in place with
 // the kind unbounded (the originals' `lea edx, [eax + eax*8]` on the byte).
-unsigned char Kind(unsigned kind, unsigned at) { return At(Fish_Kinds_addr + kKindStride * kind + at)[0]; }
-U KindWord(unsigned kind, unsigned at) { return Word(At(Fish_Kinds_addr + kKindStride * kind + at)); }
+unsigned char Kind(unsigned kind, unsigned at) { return At(::bof3::Img(Fish_Kinds_addr) + kKindStride * kind + at)[0]; }
+U KindWord(unsigned kind, unsigned at) { return Word(At(::bof3::Img(Fish_Kinds_addr) + kKindStride * kind + at)); }
 unsigned char DirAnim(unsigned d) { return At(kDirAnims + 2 * d)[0]; }
 unsigned char DirByte(unsigned d) { return At(kDirAnims + 2 * d + 1)[0]; }
 
@@ -549,9 +557,9 @@ extern "C" void __cdecl LeaderPanel_UseItemEnd(void) {
 // as the original computes it; nothing is read here).
 extern "C" void __cdecl LeaderPanel_SetRecords(void) {
     const unsigned b = CharStats_ExtraItem;
-    if (b != 0) Effect1a_PanelSet = kRecordsB + 20u * (b - 0x1Cu);
+    if (b != 0) Effect1a_PanelSet = ::bof3::Img(kRecordsB) + 20u * (b - 0x1Cu);
     const unsigned a = B(kItemA);
-    if (a != 0) Effect1a_PanelScript = kRecordsA + 10u * (a - 0x2Eu);
+    if (a != 0) Effect1a_PanelScript = ::bof3::Img(kRecordsA) + 10u * (a - 0x2Eu);
 }
 
 // original 0x52B2A0: record 3's mode = `mode`'s byte; when its +1 is 0, 4 or 6,
@@ -610,7 +618,7 @@ extern "C" void __cdecl LeaderPanel_EffectsStep(void) {
     unsigned char now = Effect1e_PressNow;
     unsigned char depth = rv::Bytes(Effect_Objects)[0x7];
     for (unsigned i = 0; i < 4; ++i) {
-        const U row = kComboTable + 8 * i;
+        const U row = ::bof3::Img(kComboTable) + 8 * i;
         const unsigned char step = B(kComboStep + i);
         const unsigned char* const at = At(static_cast<U>(L(row)) + step);
         const unsigned char want = static_cast<unsigned char>(at[0] & 0x7F);
@@ -1047,7 +1055,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
     const auto lo = static_cast<unsigned char>(level - width);
     const auto hi = static_cast<unsigned char>(width + level);
     unsigned char* s = S();
-    const U chances = Fish_Kinds_addr + kKindStride * s[6];
+    const U chances = ::bof3::Img(Fish_Kinds_addr) + kKindStride * s[6];
     if (L(s, 0x38) <= 0x8000) {
         SetL(kEff5Frame, 0xFFFFFFF9u);
         Effect_Objects[0].state = 0;
@@ -1421,9 +1429,9 @@ extern "C" void __cdecl Fish_Step(void) {
 // size) equal them, 8 when none does.
 extern "C" void __cdecl Fish_Heading(void) {
     unsigned char* s = S();
-    SetL(s, 0xC, static_cast<U>(Long(At(MoveCmd_F9Steps_addr + 8u * s[8]))));
+    SetL(s, 0xC, static_cast<U>(Long(At(::bof3::Img(MoveCmd_F9Steps_addr) + 8u * s[8]))));
     s = S();
-    SetL(s, 0x10, static_cast<U>(Long(At(MoveCmd_F9Steps_addr + 4 + 8u * s[8]))));
+    SetL(s, 0x10, static_cast<U>(Long(At(::bof3::Img(MoveCmd_F9Steps_addr) + 4 + 8u * s[8]))));
     s = S();
     if (s[8] == 2 || s[8] == 6) {
         SetL(s, 0xC, static_cast<U>(L(s, 0xC)) << 1);

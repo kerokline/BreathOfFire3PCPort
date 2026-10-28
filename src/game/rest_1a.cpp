@@ -38,6 +38,11 @@ using move_script::Word;
 
 unsigned char& B(U a) { return *At(a); }
 std::int32_t L(U a) { return Long(At(a)); }
+// The same for a VA held as a ::bof3::image::Va (common/image_base.h): placed
+// here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+std::int32_t L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fs() { return Field_State; }
 
@@ -72,7 +77,7 @@ Handler CodeAt(U table, unsigned count, unsigned index, const char* who) {
     if (index >= count)
         bof3::Fatal("%s: index %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index,
                     count, static_cast<unsigned>(table), static_cast<unsigned>(cell));
-    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(L(cell))));
+    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(L(::bof3::image::Va{cell}))));
 }
 
 // Sprite_ObjectAt's answer marked: bit 0 of the object's +0x80 - 0..0x1D a
@@ -139,8 +144,8 @@ void Form0Begin() {
         ++Sc()[2];
     } else {
         Sc()[0x2B] = 1;
-        SideProbe(Field_DirectionSteps_addr + 0x18, 3);
-        SideProbe(Field_DirectionSteps_addr + 0x28, 5);
+        SideProbe(::bof3::Img(Field_DirectionSteps_addr) + 0x18, 3);
+        SideProbe(::bof3::Img(Field_DirectionSteps_addr) + 0x28, 5);
         SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(Word(Sc() + 0x2C) + 0x100));
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(Sc()[8]) + 0x42));
         Sc()[0xA] = 5;
@@ -210,7 +215,7 @@ unsigned char CellPickup(unsigned x, unsigned z) {
     } else if (cell == 0xF8) {
         SH_CALL(Effect_SpawnAtCell)(0, x, z);
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, 0x56);
-        for (unsigned k = 0; k < 16; k += 4) SetLong(At(bof3::addr::Text_Records + k), Long(name + k));
+        for (unsigned k = 0; k < 16; k += 4) SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
         if (SH_CALL(Inventory_Add)(0, 0x56, 1) != 0) {
             SH_CALL(Sound_PlayEffect)(0x106);
             SH_CALL(Msg_OpenSystem)(2);
@@ -398,7 +403,7 @@ extern "C" void __cdecl PartyAction2_Form2State1(void) { CodeAt(PartyAction2_For
 // from 3 (|d - 5| > |d - 3|), else facing 5 and the pose 0x52. A facing f:
 // +0xB = Sprite_TurnSense(f), +3 = f. Then +9 = 2 and +2 one on.
 extern "C" void __cdecl PartyFormAction_Form0Begin(void) {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x8), 0x16) != 0) {
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x8), 0x16) != 0) {
         if (static_cast<unsigned char>(SH_CALL(Party_Count)(0)) == 1 && (Field_InputFlags & 0x40) == 0) Sc()[4] = 0x50;
         else Sc()[4] = 0x40;
     } else {
@@ -607,7 +612,7 @@ extern "C" unsigned char __cdecl PartyAction2_CellStrike(unsigned x, unsigned z)
     if (roll < 7) {
         SH_CALL(Effect_SpawnAtCellHigh)(3, x, z);
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, 0x29);
-        for (unsigned k = 0; k < 16; k += 4) SetLong(At(bof3::addr::Text_Records + k), Long(name + k));
+        for (unsigned k = 0; k < 16; k += 4) SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
         if (SH_CALL(Inventory_Add)(0, 0x29, 1) != 0) {
             SH_CALL(Sound_PlayEffect)(0x106);
             SH_CALL(Msg_OpenSystem)(2);
@@ -685,7 +690,7 @@ extern "C" void __cdecl PartyAction2_Form2Strike(void) {
 // first).
 extern "C" void __cdecl PartyAction_FinishPalette(void) {
     if (Sc()[0xB] == 1) {
-        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(static_cast<std::uintptr_t>(Gfx_ClutStripSource_addr + 0x1e00 + (static_cast<U>(Sc()[5]) << 6))), 0);
+        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(static_cast<std::uintptr_t>(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (static_cast<U>(Sc()[5]) << 6))), 0);
         Sc()[0xB] = 2;
     }
     const unsigned char b = Sc()[0xB];

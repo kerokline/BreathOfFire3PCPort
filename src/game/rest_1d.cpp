@@ -38,6 +38,9 @@ using U = std::uint32_t;
 using move_script::At;
 using move_script::Long;
 using move_script::Word;
+// A VA held as a ::bof3::image::Va (common/image_base.h), placed here through
+// ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
 
 constexpr unsigned kSpriteStride = 0xA4;
 constexpr unsigned kEffectStride = 0x80;
@@ -54,15 +57,15 @@ void Jump(U table, unsigned count, unsigned index, const char* who) {
     if (index >= count)
         bof3::Fatal("%s: state %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index, count,
                     static_cast<unsigned>(table), static_cast<unsigned>(table + 4 * index));
-    const auto entry = static_cast<U>(Long(At(table + 4 * index)));
+    const auto entry = static_cast<U>(Long(At(::bof3::image::Va{table + 4 * index})));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(entry))();
 }
 
 // Field_DirectionSteps' row for a direction, read in place with the byte
 // unmasked (`shl eax, 3` on the zero-extended byte), as every reader of it in
 // the originals does (docs/rest_0a.md section 5).
-U StepX(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8 + 4))); }
+U StepX(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8))); }
+U StepZ(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4))); }
 
 // The pose offset of a direction as the originals compute it: (d - 1) / 2 as a
 // signed division (cdq, sub, sar), so direction 0 gives 0; then `add al, k`.
@@ -92,8 +95,8 @@ void MarkObject(unsigned char found, bool is_signed, const char* who) {
     if (found > 0x21)
         bof3::Fatal("%s: Sprite_ObjectAt answered %u, past the 34 sprite records; the original marks it unchecked (%s)", who, found,
                     is_signed ? "signed" : "unsigned");
-    if (found < 0x1E) At(Sprite_Objects_addr + 0x80 + found * kSpriteStride)[0] |= 1;
-    else At(Sprite_ObjectsExtra_addr + 0x80 + (found - 0x1E) * kSpriteStride)[0] |= 1;
+    if (found < 0x1E) At(::bof3::Img(Sprite_Objects_addr) + 0x80 + found * kSpriteStride)[0] |= 1;
+    else At(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x80 + (found - 0x1E) * kSpriteStride)[0] |= 1;
 }
 
 // The point two steps ahead of Sprite_Current (x + 2 * step, z + 2 * step).
@@ -227,7 +230,7 @@ unsigned char CellPickup(unsigned x, unsigned z) {
     } else if (cell == 0xF8) {
         SH_CALL(Effect_SpawnAtCell)(0, x, z);
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, 0x56);
-        for (unsigned k = 0; k < 16; k += 4) move_script::SetLong(At(bof3::addr::Text_Records + k), Long(name + k));
+        for (unsigned k = 0; k < 16; k += 4) move_script::SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
         if (SH_CALL(Inventory_Add)(0, 0x56, 1) != 0) {
             SH_CALL(Sound_PlayEffect)(0x106);
             SH_CALL(Msg_OpenSystem)(2);
@@ -410,7 +413,7 @@ extern "C" void __cdecl PartyAction11_Form0Begin(void) { Kind30Begin("PartyActio
 // (docs/rest_1d.md section 5, L1).
 extern "C" void __cdecl PartyAction_WaitEffectDone(void) {
     const unsigned index = Sprite_Current[0xB];
-    if (At(Effect_Objects_addr + index * kEffectStride)[0] == 0) Field_State[0x137] = 0;
+    if (At(::bof3::Img(Effect_Objects_addr) + index * kEffectStride)[0] == 0) Field_State[0x137] = 0;
     SH_CALL(Sprite_ScriptTick)();
 }
 
@@ -520,7 +523,7 @@ extern "C" unsigned char __cdecl PartyAction12_CellHit(unsigned x, unsigned z) {
     if (roll < 7) {
         SH_CALL(Effect_SpawnAtCellHigh)(3, x, z);
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, 0x29);
-        for (unsigned k = 0; k < 16; k += 4) move_script::SetLong(At(bof3::addr::Text_Records + k), Long(name + k));
+        for (unsigned k = 0; k < 16; k += 4) move_script::SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
         if (SH_CALL(Inventory_Add)(0, 0x29, 1) != 0) {
             SH_CALL(Sound_PlayEffect)(0x106);
             SH_CALL(Msg_OpenSystem)(2);
