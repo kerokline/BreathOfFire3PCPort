@@ -3,7 +3,8 @@
 **Status:** IN PROGRESS (launched 2026-10-28 afternoon on `relocatable-image/round`
 off `main` `15518394`, the PR #164 merge; stage A's three agents in worktrees
 under `C:\Users\kerok\bof3x-runs\ri1027`, baseline build `wt_base`. The
-owner's three calls are answered, section 7.)
+owner's three calls are answered, section 7. Stage B wave 1 merged and gated
+2026-10-28 evening, section 3; wave 2 next.)
 
 The owner's word, 2026-10-27: stage "the data image as typed source" work as
 a round. Stages 1 and 2 of [`IDEAS.md`](IDEAS.md) I44 are done (the
@@ -264,6 +265,75 @@ follow the typed-data round's file families, sized from RA1's census (about
 Every group's gate: build, `codegen_same.py` `0 differ`, the headless
 self-tests. A range comparison RA1 listed is not converted by a group: it
 goes to the coordinator with its reading.
+
+### Stage B wave 1 as run (2026-10-28 afternoon, RB0 and RB1..RB6)
+
+**RB0** (`relocatable-image/rb0`, report `ri1027\rb0\REPORT.md`): `tools/gen_symbols.py`
+emits every data accessor through `::bof3::Img(va)` and every callable
+original through `::bof3::Code(va)`; `src/common/image_base.h` holds
+`image::kBase` (one name: `kLinkedBase` was not added), `ImageBase()`,
+`Img`, `Code` - **`consteval`, not `constexpr`**: `constexpr` helpers changed
+18 objects' code (folding after inlining), `consteval` none. `image::Va`
+prototyped on the message box (3 decisions per 195 uses).
+
+**RB1..RB6** (six Opus agents, one family group each from RA1's split, worktrees
+`ri1027\wt_rb<n>`, reports `ri1027\rb<n>\REPORT.md`; merged one at a time, gate after
+each, round tip `f357193e` before this fold-in). Every data place in `src/game`,
+`src/input` and `src/render` goes through `Img`: about 2,300 data constants
+became `::bof3::image::Va` (battle 600, rest 478, effect/engine/platform 464,
+area and ui 558, magic 173; field and scenario kept integer names and placed
+each site), about 3,900 `<Name>_addr` places and about 1,000 identified raw
+literals are wrapped, the 29 asm template addresses are `"i"(::bof3::Img(...))`
+operands (`task_sched.cpp`, `field_e2.cpp`, `field_modes.cpp`; **stage C must
+rewrite them again, an `"i"` operand wants a constant**). Census gates after
+the wave: raw_literal 1,962 -> 727, asm_text 29 -> 0, range_cmp 157 -> 140
+(table walks whose both ends are now placed), addr_eq 84 -> 86 and ptr_sub
+67 -> 69 (RA2's statehash code), code gates unchanged (wave 2). `data_census`
+27,435 -> 27,434 sites, `--strict` clean, `typed_left --check` current.
+
+**What held, and what did not** (every group measured it):
+- **RB0's accessor `Va` overloads do not hold the gate.** `Img(image::Va)` is
+  `constexpr` and folds only after inlining: the code changed in five battle
+  functions, nine rest functions, `_PartyForm_Swap`, `Identify_DrawEnemy`,
+  `Party_SetUpMembers`, eleven effect objects (loop-base hoisting, strength
+  reduction, scheduling, `.rdata` string order); a non-inline helper given a
+  `Va` overload is emitted under the overload's mangled name. **The spelling
+  that holds everywhere is the consteval `::bof3::Img(kX.v)`** (a computed
+  address `Img(kX.v) + off`); no place overloads remain in the tree.
+- `Img()` in a **fuzz** static region table reorders `.rdata`
+  (`battle_odds_fuzz.cpp`); those tables name the VA as `kX.v`. Non-fuzz
+  self-test tables with `Img()` literals compared identical and were kept
+  (RB4 finding 2, RB5 point 3, RB6's title_states tables).
+- `data_census.py` keys a site by its spelling: RB2's `see_through_base()`
+  reads `::bof3::Img(X)` as `X` and `kX.v` as `kX` for `data_census` and
+  `typed_left` only (one version merged; the other groups' copies reverted).
+  Multi-declarator `constexpr Va kA{..}, kB{..};` lines are not read: split
+  one per line.
+- `reloc_census.py` missed eleven accessor sites the groups found by grep
+  (RB1 five, RB6 six); a group working from census rows alone misses them.
+- A census symbol plus a `call` context does not prove a place: `0x800000`
+  (`Gfx_PacketPools+0x1e400`, `aligned_8000`) is a height (RB3 finding 5).
+- Pointer values stored into game memory (frame-set tables, pool tables) are
+  places (RB1, RB3); `rdata::Const` constants are our own copies, never
+  placed; helpers that read a table and print it in a Fatal now receive the
+  place, so in stage C those messages print the place (RB3, RB4).
+
+**The coordinator's readings:** RB3's four forced comparisons (rest_2f
+`TacticsMembers_Build`, rest_3g panels, rest_4a price tiers, rest_4d text
+records) and RB6's table walks compare a placed cursor against a placed end:
+correct, both move together. RB6's two mixed subtractions (`title_states.cpp`
+`Byte()`, `window_task.cpp`'s Fatal index) now subtract the placed address
+(`5b8b0da8`). RB2's `battle_e6.cpp:250` loop: both ends places, correct.
+
+**Left for stage C** (each report's "sites left"): the range comparisons
+whose loop starts at a `<Name>_addr` or whose constant is used only in the
+comparison (`kPoolEnd`, `kClut`, `kChannelsEnd`, `kDataStart/End`, ...); the
+membership tests (`InData`, `InPool`, `InImage`, `text_draw:693`); the clone
+and patch read-backs; the slot-and-witness tables (`labels.cpp`,
+`config_text`, `fishing_text`, `pause_text`); the eight handler-word-is-code
+checks; `wide_staging`'s script VAs; `exe_icon.cpp:61`'s `kIconRects`; the
+unidentified literals (50 battle, 2 field, menu_lists / menu_windows rows,
+`0x663C8C`), each listed with file and line in its report.
 
 ## 4. Stage C: the move (one agent, then the coordinator's runs)
 
