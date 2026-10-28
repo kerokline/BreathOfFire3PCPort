@@ -168,8 +168,8 @@ constexpr uint32_t kGlyphWidths = 0x66208C; // Scena17_GlyphWidths: 0x40 bytes
 // kRuns19: now Scena19_Runs (symbols.toml). Scena19_Runs, 1
 // kObjects19: now Scena19_Objects (symbols.toml). Scena19_Objects, 1
 
-constexpr uint32_t kBootTask = bof3::addr::Boot_Task;    // Boot_Task's address, as the original pushes it
-constexpr uint32_t kEndTask = bof3::addr::Scena17_EndTask;     // Scena17_EndTask's, likewise
+constexpr ::bof3::image::CodeVa kBootTask{bof3::addr::Boot_Task};    // Boot_Task's address, as the original pushes it
+constexpr ::bof3::image::CodeVa kEndTask{bof3::addr::Scena17_EndTask};     // Scena17_EndTask's, likewise
 
 constexpr uint32_t kTextLo = 0x401000, kTextHi = 0x5C3000;
 
@@ -477,7 +477,7 @@ SC15_EXPORT void __cdecl Scena15_BattleSetup(unsigned n) {
     const int32_t x = static_cast<int32_t>(static_cast<short>(W(rec + 4))) << 8;
     const unsigned kind = B(rec + 9);
     Field_ScriptFlags2 = Field_ScriptFlags2 & 0xFFEFu;
-    SH_AT(void (__cdecl*)(long, long, unsigned), kPartyPlace)(x, z, kind);
+    SH_AT(void (__cdecl*)(long, long, unsigned), kPartyPlace.v)(x, z, kind);
     Draw_OtSlot = 4;
     MoveScript_Var7 = 2;
     Step(0);
@@ -1030,12 +1030,12 @@ SC15_EXPORT void __cdecl Scena15_Run4(void) {
 // the record.
 SC15_EXPORT void __cdecl Scena15_EventObjects(void) {
     for (unsigned i = 0; i < 3; ++i) {
-        const unsigned char s = SH_AT(unsigned char (__cdecl*)(), kEventSlot)();
+        const unsigned char s = SH_AT(unsigned char (__cdecl*)(), kEventSlot.v)();
         kSlotWord = s;
         if (s != 0xFF) SH_CALL(EventOp_0x)(At(::bof3::Img(Scena15_EventOps_addr) + 0x11u * i));
     }
     for (unsigned i = 0; i < 2; ++i) {
-        const unsigned char s = SH_AT(unsigned char (__cdecl*)(), kEventSlot)();
+        const unsigned char s = SH_AT(unsigned char (__cdecl*)(), kEventSlot.v)();
         kSlotWord = s;
         if (s != 0xFF) SH_CALL(EventOp_6x)(At(::bof3::Img(Scena15_EventOps_addr) + 0x38 + 0x10u * i));
     }
@@ -1177,8 +1177,8 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
         return;
     case 0x19:
         if (Transition_Busy != 0) return;
-        SH_AT(VoidFn, kSoundStop)();
-        SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(kBootTask)));
+        SH_AT(VoidFn, kSoundStop.v)();
+        SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
         return;
     case 0x1E:
         DropIn(0x12);
@@ -1330,7 +1330,7 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
         if (!TimerDone()) break;
         NewEffect(0xA8);
         Draw_PassFlags = 0x1F;
-        SH_AT(void (__cdecl*)(long, long, unsigned), kPartyPlace)(0x170000, 0x120000, 0x22);
+        SH_AT(void (__cdecl*)(long, long, unsigned), kPartyPlace.v)(0x170000, 0x120000, 0x22);
         Step(8);
         break;
     case 8:
@@ -1564,7 +1564,7 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
             Transition(0xF);
             Step(0x34);
         }
-        SH_AT(VoidFn, kViewShift)();
+        SH_AT(VoidFn, kViewShift.v)();
         break;
     case 0x34:
         if (Transition_Busy != 0) break;
@@ -1584,7 +1584,7 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
         Field_ScriptFlags = Field_ScriptFlags & 0xFFF7u;
         EndRun();
         kind2->state = 0;
-        SH_AT(VoidFn, kStatusBit80)();
+        SH_AT(VoidFn, kStatusBit80.v)();
         break;
     default: break;
     }
@@ -1650,8 +1650,8 @@ SC15_EXPORT void __cdecl Scena15_ObjectTalk(unsigned char* object, unsigned char
     const unsigned area = Area();
     const uint32_t who = (static_cast<uint32_t>(reinterpret_cast<std::uintptr_t>(object)) & 0xFFFFFF00u) |
                          B(::bof3::Img(kTalkWho) + object[0x86]);
-    const unsigned id = area == 0xC0 ? SH_AT(unsigned (__cdecl*)(uint32_t), kTalkIdC0)(who)
-                                     : SH_AT(unsigned (__cdecl*)(uint32_t), kTalkId)(who);
+    const unsigned id = area == 0xC0 ? SH_AT(unsigned (__cdecl*)(uint32_t), kTalkIdC0.v)(who)
+                                     : SH_AT(unsigned (__cdecl*)(uint32_t), kTalkId.v)(who);
     Say(id);
 }
 
@@ -2316,8 +2316,8 @@ SC15_EXPORT void __cdecl Scena17_Outro11(void) {
         RunUp();
         return;
     }
-    SH_AT(VoidFn, kSoundStop)();
-    SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(kBootTask)));
+    SH_AT(VoidFn, kSoundStop.v)();
+    SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
 }
 
 // original 0x56CB60: step 12: part 0, step 0, the task restarted at
@@ -2325,7 +2325,7 @@ SC15_EXPORT void __cdecl Scena17_Outro11(void) {
 SC15_EXPORT void __cdecl Scena17_Outro12(void) {
     MoveScript_PartyRecords[0x63] = 0;
     MoveScript_Var7 = 0;
-    SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(kEndTask)));
+    SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kEndTask.v))));
 }
 
 // original 0x56CB80: chapter 17's vtable slot 1 (PSX 0x801F88C4):
@@ -2587,7 +2587,7 @@ SC15_EXPORT void __cdecl Scena17_DrawLine(int x, int y, const unsigned char* tex
 // 0xF0) - bytes - to OT slot 1.
 SC15_EXPORT void __cdecl Scena17_DrawGlyph(int x, int y, unsigned palette, unsigned glyph) {
     unsigned char* const p = Packet();
-    SH_AT(void (__cdecl*)(unsigned char*), kPrimSprt16)(p);
+    SH_AT(void (__cdecl*)(unsigned char*), kPrimSprt16.v)(p);
     Rgb(p, 4, 0x80);
     SetCoord(p + 8, static_cast<unsigned>(x));
     SetCoord(p + 0xC, static_cast<unsigned>(y));
@@ -2640,7 +2640,7 @@ SC15_EXPORT void __cdecl Scena17_EndReturn(void) {
     auto* const member0 = ObjTrio;
     SetAt(::bof3::Img(Cond_Flags_addr) + 0xa0, 0x92);
     for (unsigned i = 9; i <= 0x16; ++i) ClearAt(::bof3::Img(Cond_Flags_addr) + 0x78, i);
-    SH_AT(VoidFn, kPartyPass)();
+    SH_AT(VoidFn, kPartyPass.v)();
     Game_AreaNumber = 0x8F;
     Clear40();
     rv::Store<uint32_t>(member0->x, 0xF0000);
@@ -2678,8 +2678,8 @@ SC15_EXPORT void __cdecl Scena17_EndRestart(void) {
     B(::bof3::Img(kCounter1)) = 0;
     B(::bof3::Img(kCounter2)) = 0;
     B(::bof3::Img(kCounter3)) = 0;
-    SH_AT(VoidFn, kSoundStop)();
-    SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(kBootTask)));
+    SH_AT(VoidFn, kSoundStop.v)();
+    SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
 }
 
 // ===========================================================================

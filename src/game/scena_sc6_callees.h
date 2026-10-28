@@ -112,16 +112,16 @@ constexpr unsigned kLeapPhaseCount = 3;
 constexpr unsigned kCellCount = 4;
 // kCellHandlers: now Scena06_CellHandlers (symbols.toml). Scena06_CellHandlers, 4
 constexpr unsigned kCellHandlerCount = 4;
-constexpr std::uint32_t kBareRet = bof3::addr::BareRet;    // a bare ret: Runs[0], Objects[0], CellHandlers[1]
+constexpr ::bof3::image::CodeVa kBareRet{bof3::addr::BareRet};    // a bare ret: Runs[0], Objects[0], CellHandlers[1]
 
 // Callees nobody owns (above).
-constexpr std::uint32_t kPartyPass = bof3::addr::Party_HealJoined;
-constexpr std::uint32_t kPartyPlace = bof3::addr::Party_PlaceForBattle;
-constexpr std::uint32_t kSetBit80 = bof3::addr::Field_SetStatus80;
-constexpr std::uint32_t kCellFind = bof3::addr::Field_CellTriggerAt;
-constexpr std::uint32_t kKeyItemPut = bof3::addr::KeyItem_Add;
-constexpr std::uint32_t kZennyAdd = bof3::addr::Zenny_Add;
-constexpr std::uint32_t kSoundJmp = bof3::addr::Sound_StopMusic;
+constexpr ::bof3::image::CodeVa kPartyPass{bof3::addr::Party_HealJoined};
+constexpr ::bof3::image::CodeVa kPartyPlace{bof3::addr::Party_PlaceForBattle};
+constexpr ::bof3::image::CodeVa kSetBit80{bof3::addr::Field_SetStatus80};
+constexpr ::bof3::image::CodeVa kCellFind{bof3::addr::Field_CellTriggerAt};
+constexpr ::bof3::image::CodeVa kKeyItemPut{bof3::addr::KeyItem_Add};
+constexpr ::bof3::image::CodeVa kZennyAdd{bof3::addr::Zenny_Add};
+constexpr ::bof3::image::CodeVa kSoundJmp{bof3::addr::Sound_StopMusic};
 
 }  // namespace at
 

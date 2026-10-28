@@ -55,24 +55,24 @@ constexpr std::uint32_t kCorner = 0x92A0C0;       // MapView_CornerPtr
 
 // --- callees nobody owns, by address -----------------------------------------
 // SE's (round ten): an event battle's set-up by index.
-constexpr std::uint32_t kEventBattle = bof3::addr::Field_StartEventBattle;
+constexpr ::bof3::image::CodeVa kEventBattle{bof3::addr::Field_StartEventBattle};
 // Nobody's: x, z and an index - an event battle's party placement (0x903780 / 84).
-constexpr std::uint32_t kPlaceParty = bof3::addr::Party_PlaceForBattle;
+constexpr ::bof3::image::CodeVa kPlaceParty{bof3::addr::Party_PlaceForBattle};
 // Nobody's: the camera turned toward an s16 angle at an s8 speed; al 1 while turning.
-constexpr std::uint32_t kTurnCamera = bof3::addr::Camera_EaseAngleFB;
+constexpr ::bof3::image::CodeVa kTurnCamera{bof3::addr::Camera_EaseAngleFB};
 // Nobody's: the view shift after a focus test (PSX 0x80155154).
-constexpr std::uint32_t kViewShift = bof3::addr::MapView_FillCells;
+constexpr ::bof3::image::CodeVa kViewShift{bof3::addr::MapView_FillCells};
 // Nobody's: Field_StatusBits |= 0x80.
-constexpr std::uint32_t kStatus80 = bof3::addr::Field_SetStatus80;
+constexpr ::bof3::image::CodeVa kStatus80{bof3::addr::Field_SetStatus80};
 
-inline void EventBattle(unsigned n) { SH_AT(void (__cdecl*)(unsigned), kEventBattle)(n); }
+inline void EventBattle(unsigned n) { SH_AT(void (__cdecl*)(unsigned), kEventBattle.v)(n); }
 inline void PlaceParty(std::uint32_t x, std::uint32_t z, unsigned n) {
-    SH_AT(void (__cdecl*)(std::uint32_t, std::uint32_t, unsigned), kPlaceParty)(x, z, n);
+    SH_AT(void (__cdecl*)(std::uint32_t, std::uint32_t, unsigned), kPlaceParty.v)(x, z, n);
 }
 inline unsigned char TurnCamera(unsigned angle, unsigned speed) {
-    return SH_AT(unsigned char (__cdecl*)(unsigned, unsigned), kTurnCamera)(angle, speed);
+    return SH_AT(unsigned char (__cdecl*)(unsigned, unsigned), kTurnCamera.v)(angle, speed);
 }
-inline void ViewShift() { SH_AT(void (__cdecl*)(), kViewShift)(); }
-inline void Status80() { SH_AT(void (__cdecl*)(), kStatus80)(); }
+inline void ViewShift() { SH_AT(void (__cdecl*)(), kViewShift.v)(); }
+inline void Status80() { SH_AT(void (__cdecl*)(), kStatus80.v)(); }
 
 }  // namespace scena_sc0

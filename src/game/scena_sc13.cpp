@@ -93,8 +93,8 @@ void DropIn(unsigned n) { SH_CALL(Party_DropIn)(n); }
 void Transition(unsigned char k) { SH_CALL(Transition_Start)(k); }
 void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(id); }
 void FadeOutStop(int f) { SH_CALL(Music_FadeOutStop)(f); }
-void PartyPass() { SH_AT(VoidFn, at::kPartyPass)(); }
-void SetBit80() { SH_AT(VoidFn, at::kSetBit80)(); }
+void PartyPass() { SH_AT(VoidFn, at::kPartyPass.v)(); }
+void SetBit80() { SH_AT(VoidFn, at::kSetBit80.v)(); }
 
 // The chapter's message: Msg_OpenScript(id), the request byte 2.
 void Say(unsigned short id) {
@@ -234,7 +234,7 @@ static void EnterArea13Body() {
                 const unsigned char slot = Take(::bof3::Img(Scena13_Slot_addr));
                 if (slot != 0xFF) FxCam(slot, 0x13, -0x2AA, AngleY(), 0x2C6, 0xFF);
             } else if (!Flag(0x12)) {
-                SH_AT(ArgFn, at::kArea143)(1);
+                SH_AT(ArgFn, at::kArea143.v)(1);
                 SetPass(0);
                 Sound(0x203);
             } else if (!Flag(0x13)) {
@@ -248,7 +248,7 @@ static void EnterArea13Body() {
                 CallA(5);
                 DropIn(3);
             } else if (!Flag(0x12)) {
-                SH_AT(ArgFn, at::kArea143)(0);
+                SH_AT(ArgFn, at::kArea143.v)(0);
             }
         }
     }
@@ -445,10 +445,10 @@ SC13_EXPORT void __cdecl Scena13_Run2(void) {
 // record's +0 set and its slot to the word 0x903850 before EventOp_6x runs
 // one of two 16-byte event-op records of Scena13_EventOps on it.
 static void SpawnPair(std::uint32_t first, std::uint32_t second) {
-    const unsigned char a = SH_AT(ByteFn, at::kFreeSprite)();
+    const unsigned char a = SH_AT(ByteFn, at::kFreeSprite.v)();
     if (a == 0xFF) return;
     Sprite(a)[0] = 1;
-    const unsigned char b = SH_AT(ByteFn, at::kFreeSprite)();
+    const unsigned char b = SH_AT(ByteFn, at::kFreeSprite.v)();
     if (b == 0xFF) {
         Sprite(a)[0] = 0;
         return;
@@ -516,7 +516,7 @@ SC13_EXPORT void __cdecl Scena13_Run3(void) {
         StopRun();
         return;
     case 0xA:
-        SH_AT(FindByteFn, at::kFindByte)(0xB);
+        SH_AT(FindByteFn, at::kFindByte.v)(0xB);
         SH_CALL(Kind2_Place)(2);
         SetStep(0xB);
         return;
@@ -722,8 +722,8 @@ static std::uint32_t Level(std::int32_t angle) {
 }
 SC13_EXPORT void __cdecl Scena13_ToneLevels(unsigned angle) {
     const std::int32_t a = static_cast<std::int32_t>(angle & 0xFFFF);
-    SH_AT(LevelFn, at::kVoiceLevel)(0x208, Level((a - 0x4C0) >> 1));
-    SH_AT(LevelFn, at::kVoiceLevel)(0x207, Level((a - 0xCC0) >> 1));
+    SH_AT(LevelFn, at::kVoiceLevel.v)(0x208, Level((a - 0x4C0) >> 1));
+    SH_AT(LevelFn, at::kVoiceLevel.v)(0x207, Level((a - 0xCC0) >> 1));
 }
 
 // original 0x563090: run 5, steps 0..3, 5, 6, 0xA..0x10 - a dial: the dword
@@ -1168,7 +1168,7 @@ SC13_EXPORT void __cdecl Scena13_Run7(void) {
         Field_Kind2X = 0x240000;
         Field_Kind2Z = 0x1C8000;
         SH_CALL(Field_ViewReset)();
-        SH_AT(PlaceFn, at::kPartyPlace)(0x288000, 0x1D8000, 0x25);
+        SH_AT(PlaceFn, at::kPartyPlace.v)(0x288000, 0x1D8000, 0x25);
         SetStep(0x1A);
         BumpCounter0();
         return;
@@ -1482,7 +1482,7 @@ static void FxAtCell(unsigned slot, unsigned char kind) {
 static void JoinAt(unsigned n, unsigned d, int x, int z, unsigned kind) {
     CallA(n);
     DropIn(d);
-    SH_AT(PlaceFn, at::kPartyPlace)(x, z, kind);
+    SH_AT(PlaceFn, at::kPartyPlace.v)(x, z, kind);
 }
 static bool Pending1314() { return Flag(0x13) && !Flag(0x14); }
 
@@ -1514,7 +1514,7 @@ static void EnterArea14Body() {
         if (FD() == 1 && !Flag(0x18)) {
             Set(0x18);
             DropIn(4);
-            SH_AT(VoidFn, at::kArea141c)();
+            SH_AT(VoidFn, at::kArea141c.v)();
         }
     }
     if (Area() == 0x8E) {
@@ -1752,7 +1752,7 @@ SC13_EXPORT void __cdecl Scena14_Run2(void) {
     case 1: {
         if (!TimerRuns()) {
             Camera_Distance = 0x76C;
-            SH_AT(PlaceFn, at::kPartyPlace)(0x248000, 0x168000, 0x25);
+            SH_AT(PlaceFn, at::kPartyPlace.v)(0x248000, 0x168000, 0x25);
             SetStep(2);
             MapView_Redraw = 2;
             TrioFlags48();
@@ -1820,7 +1820,7 @@ SC13_EXPORT void __cdecl Scena14_Run2(void) {
     }
     case 8:
         Sound(0x201);
-        SH_AT(PlaceFn, at::kPartyPlace)(0x188000, 0x168000, 0x31);
+        SH_AT(PlaceFn, at::kPartyPlace.v)(0x188000, 0x168000, 0x31);
         SH_CALL(Field_StartEventBattle)(0x31);
         SetStep(9);
         return;
@@ -2062,7 +2062,7 @@ SC13_EXPORT void __cdecl Scena14_ScrollView(void) {
     const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(fx + 0x140000), static_cast<long>(fz));
     kind2->height_whole = static_cast<std::uint16_t>(h);
     SH_CALL(MapView_SetElevation)(static_cast<int>(h));
-    SH_AT(VoidFn, at::kViewShift)();
+    SH_AT(VoidFn, at::kViewShift.v)();
     const std::uint32_t ex = static_cast<std::uint32_t>(xobj0->x) + 0x140000;
     const std::uint32_t ez = static_cast<std::uint32_t>(xobj0->z);
     xobj0->x = ex;
@@ -2229,7 +2229,7 @@ SC13_EXPORT void __cdecl Scena14_Run5(void) {
         return;
     case 0xA:
         if (Counter(0) != 0x1C) return;
-        SH_AT(PlaceFn, at::kPartyPlace)(0xB8000, 0x728000, 0x25);
+        SH_AT(PlaceFn, at::kPartyPlace.v)(0xB8000, 0x728000, 0x25);
         SetStep(0xB);
         return;
     case 0xB:
@@ -2291,9 +2291,9 @@ SC13_EXPORT void __cdecl Scena14_Run5(void) {
         return;
     case 0x1F:
         if (Counter(0) != 1) return;
-        SH_AT(VoidFn, at::kSound587B80)();
+        SH_AT(VoidFn, at::kSound587B80.v)();
         SH_CALL(Sound_LoadStream)(2);
-        SH_AT(ArgFn, at::kParty591900)(0xD);
+        SH_AT(ArgFn, at::kParty591900.v)(0xD);
         Say(0x1D);
         SetStep(0x20);
         return;
@@ -2646,10 +2646,10 @@ static void RestoreRecords() {
 SC13_EXPORT void __cdecl Scena14_Run7(void) {
     switch (Step()) {
     case 0: Farewell(0x15, 1, 0); return;
-    case 1: Farewell(0x16, 2, at::kArea141a); return;
-    case 2: Farewell(0x17, 3, at::kArea141b); return;
-    case 3: Farewell(0x19, 6, at::kArea141d); return;
-    case 4: Farewell(0x1A, 7, at::kArea141e); return;
+    case 1: Farewell(0x16, 2, at::kArea141a.v); return;
+    case 2: Farewell(0x17, 3, at::kArea141b.v); return;
+    case 3: Farewell(0x19, 6, at::kArea141d.v); return;
+    case 4: Farewell(0x1A, 7, at::kArea141e.v); return;
     case 5: Farewell(0x1C, 0, 0); return;
     case 6:
         if (Counter(0) != 7) return;
@@ -2685,7 +2685,7 @@ SC13_EXPORT void __cdecl Scena14_Run7(void) {
         return;
     case 0xD:
         if (Counter(0) != 0) return;
-        SH_AT(PlaceFn, at::kPartyPlace)(0x2C8000, 0x278000, 0x25);
+        SH_AT(PlaceFn, at::kPartyPlace.v)(0x2C8000, 0x278000, 0x25);
         SH_CALL(Field_StartEventBattle)(0x33);
         SetStep(0xE);
         return;
@@ -2738,7 +2738,7 @@ SC13_EXPORT void __cdecl Scena14_Run7(void) {
         Draw_SortOnX = 0;
         MapView_Redraw = 2;
         DropIn(0xA);
-        SH_AT(PlaceFn, at::kPartyPlace)(0x258000, 0x278000, 0x22);
+        SH_AT(PlaceFn, at::kPartyPlace.v)(0x258000, 0x278000, 0x22);
         RestoreRecords();
         SetPass(0x1F);
         Transition(1);
@@ -2760,9 +2760,9 @@ SC13_EXPORT void __cdecl Scena14_Run7(void) {
         StopRun();
         return;
     case 0x1E:
-        SH_AT(VoidFn, at::kSound587B80)();
+        SH_AT(VoidFn, at::kSound587B80.v)();
         SH_CALL(Sound_LoadStream)(2);
-        SH_AT(ArgFn, at::kParty591900)(0xC);
+        SH_AT(ArgFn, at::kParty591900.v)(0xC);
         Say(0x2A);
         SetStep(0x1F);
         return;
@@ -2798,7 +2798,7 @@ SC13_EXPORT void __cdecl Scena14_ObjectTrigger(unsigned char* object) {
 // 0xC0 0x42C0A0(who), elsewhere 0x42BA90(who) (each an index into its own
 // five-entry table, area 192's and area 191's) - opened, Field_Request 2.
 static void AreaLine(unsigned who) {
-    const unsigned id = Area() == 0xC0 ? SH_AT(ScriptIdFn, at::kArea192)(who) : SH_AT(ScriptIdFn, at::kArea191)(who);
+    const unsigned id = Area() == 0xC0 ? SH_AT(ScriptIdFn, at::kArea192.v)(who) : SH_AT(ScriptIdFn, at::kArea191.v)(who);
     Msg(static_cast<unsigned short>(id));
     SetRequest(2);
 }

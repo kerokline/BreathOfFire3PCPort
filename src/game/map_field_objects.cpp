@@ -69,7 +69,7 @@ const Callees kOriginals = {
     As<int (__cdecl*)(char*, const char*, unsigned)>(Crt_sprintf),
     As<void (__cdecl*)(int, int, int, const unsigned char*)>(Text_DrawFont8),
     reinterpret_cast<const unsigned char* (__cdecl*)(int, int, unsigned, unsigned, const unsigned char*)>(
-        static_cast<std::uintptr_t>(::bof3::Code(kTinyFont))),
+        static_cast<std::uintptr_t>(::bof3::Code(kTinyFont.v))),
     As<U (__cdecl*)(int, int, const unsigned char*, int)>(Menu_DrawPieces),
     As<U (__cdecl*)(int, int, unsigned, unsigned, unsigned)>(Menu_DrawExpBar),
     As<void (__cdecl*)(unsigned char*)>(Gpu_SetSprt8),

@@ -58,7 +58,8 @@ unsigned char NextStep(unsigned char* object, std::uint16_t position) {
 // fire), and the position is at the end of the script one round in four. The
 // whole object and the return value compared. Sprite_Current is put back.
 
-constexpr std::uint32_t kBlock = 0x589350, kBlockSize = 0x180;
+constexpr ::bof3::image::CodeVa kBlock{0x589350};
+constexpr std::uint32_t kBlockSize = 0x180;
 
 struct Originals {
     void (__cdecl* start)(unsigned);
@@ -199,9 +200,9 @@ void SpriteAnim_Inject() {
     // in the block - three calls and a tail jump to 0x589470 - lands inside it
     // (disasm 2026-09-20). Cloned as one, before any of it is patched.
     if (bof3::WantsShadow("sprite_anim")) {
-        auto* block = static_cast<unsigned char*>(bof3::CloneOriginal("sprite_anim block", kBlock, kBlockSize));
+        auto* block = static_cast<unsigned char*>(bof3::CloneOriginal("sprite_anim block", kBlock.v, kBlockSize));
         if (block) {
-            auto at = [block](std::uint32_t original) { return static_cast<void*>(block + (original - kBlock)); };
+            auto at = [block](std::uint32_t original) { return static_cast<void*>(block + (original - kBlock.v)); };
             SelfTest(Originals{
                 reinterpret_cast<void (__cdecl*)(unsigned)>(at(bof3::addr::Sprite_ScriptStart)),
                 reinterpret_cast<unsigned char (__cdecl*)()>(at(bof3::addr::Sprite_ScriptTick)),

@@ -126,14 +126,14 @@ void __cdecl TChangeArea(unsigned area, int x, int z, unsigned flags) { Stub(Fie
 void __cdecl TSound(unsigned short id) { Stub(Sound_PlayEffect)(id); }
 void __cdecl TCallA(unsigned n) { Stub(Scenario_CallA)(n); }
 void __cdecl TCallB(unsigned n) { Stub(Scenario_CallB)(n); }
-void __cdecl TPlace(int x, int z, unsigned kind) { Raw<PlaceFn>(at::kPartyPlace)(x, z, kind); }
+void __cdecl TPlace(int x, int z, unsigned kind) { Raw<PlaceFn>(::bof3::Code(at::kPartyPlace.v))(x, z, kind); }
 void __cdecl TBattle(unsigned kind) { Stub(Field_StartEventBattle)(kind); }
 unsigned __cdecl TDropIn(unsigned e) { return Stub(Party_DropIn)(e); }
 void __cdecl TKind2(unsigned char a) { Stub(Kind2_Place)(a); }
 void __cdecl TTransition(unsigned char k) { Stub(Transition_Start)(k); }
 void __cdecl TFadeOutStop(int f) { Stub(Music_FadeOutStop)(f); }
 void __cdecl TPartyCounter() { Stub(Scena05_PartyCounter)(); }
-void __cdecl TSetBit80() { Raw<VoidFn>(at::kSetBit80)(); }
+void __cdecl TSetBit80() { Raw<VoidFn>(::bof3::Code(at::kSetBit80.v))(); }
 int __cdecl TLoadFile(unsigned t) { return Stub(Music_LoadFile)(t); }
 int __cdecl TLoadDone() { return Stub(File_LoadDone)(); }
 void __cdecl TSleep(int f) { Stub(Task_Sleep)(f); }
@@ -293,9 +293,9 @@ const sh::Callee kCallees[] = {
     // group SE's, ours: called by name (the standard set lists it by address)
     {SC5_OURS(Field_StartEventBattle), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
     // a pass over the eight records at 0x903A70 and the party
-    {SC5_RAW("0x533E50", at::kPartyPass), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC5_RAW("0x533E50", at::kPartyPass.v), 0, {}, sh::Answer::kGarbage, 0, 0},
     // the cell-record search: the records, the count, the cell; none or 0..1
-    {SC5_RAW("0x56D800", at::kCellFind), 4, {kAll, kU8, kU8, kU8}, sh::Answer::kByte, 0xFF, 1},
+    {SC5_RAW("0x56D800", at::kCellFind.v), 4, {kAll, kU8, kU8, kU8}, sh::Answer::kByte, 0xFF, 1},
     // the bank's own, called directly: counter 1 from the party bytes (the
     // effect above); the effect record at the leader (its kind logged)
     {SC5_OURS(Scena05_PartyCounter), 0, {}, sh::Answer::kGarbage, 0, 0, {}, &PartyCounterEffect},

@@ -231,7 +231,7 @@ constexpr unsigned kNHandlers = sizeof kHandlers / sizeof kHandlers[0];
 
 DrawFn Clone(const Handler& h, bool reaim) {
     const void* stubs[6] = {P(StubPrimColor), P(StubBind), P(StubRet), P(StubRet), P(StubBlend), P(StubShade)};
-    const U callees[6] = {0x59FBA0, 0x59FFE0, kRetOnly, kRetOnly, 0x59FCA0, 0x59FD80};
+    const U callees[6] = {0x59FBA0, 0x59FFE0, kRetOnly.v, kRetOnly.v, 0x59FCA0, 0x59FD80};
     bof3::CloneCall calls[6];
     for (int i = 0; i < 6; ++i) calls[i] = {h.calls[i], stubs[i], callees[i]};
     auto* code = static_cast<unsigned char*>(bof3::CloneOriginal(h.name, h.original, h.size, calls, 6));

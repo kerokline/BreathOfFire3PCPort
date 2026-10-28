@@ -52,8 +52,8 @@ using move_script::At;
 void Set(unsigned a, unsigned b, unsigned c) { SH_CALL(PartySet_Load)(a, b, c, 0); }
 void Reload() { SH_CALL(Field_PartyLoad)(0); }
 void Join(unsigned id) { SH_CALL(Party_Join)(id); }
-void Leave(unsigned id) { SH_AT(void (__cdecl*)(unsigned), at::kLeave)(id); }
-void Palettes() { SH_AT(void (__cdecl*)(), at::kPalettes)(); }
+void Leave(unsigned id) { SH_AT(void (__cdecl*)(unsigned), at::kLeave.v)(id); }
+void Palettes() { SH_AT(void (__cdecl*)(), at::kPalettes.v)(); }
 
 // Field member i (ObjTrio + 0x14C i, unchecked) and its character id +0x89.
 unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }

@@ -148,7 +148,7 @@ const sh::Callee kCallees[] = {
     {SX2_OURS(SndBuf_Stop), 1, {kAll}, kG, 0, 0, {}, &Stir},
     {SX2_OURS(Camera_TurnStepFB), 2, {kAll, kAll}, sh::Answer::kFlag, 0, 0},
     // nobody's, by address
-    {"0x5A6C60", at::kSndBufVolume, at::kSndBufVolume, 2, {kAll, kAll}, kG, 0, 0, {}, &Stir},
+    {"0x5A6C60", at::kSndBufVolume.v, at::kSndBufVolume.v, 2, {kAll, kAll}, kG, 0, 0, {}, &Stir},
 };
 #undef SX2_OURS
 

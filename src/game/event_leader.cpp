@@ -52,10 +52,10 @@ const Callees kOriginals = {
     Field_MemberSprite, Sprite_LoadPalette, MapView_SetElevation, Encounter_RollInitiative, Sprite_ScriptTick,
     Area_PassageAhead, EventScript_Run, Msg_OpenScript, Msg_OpenSystem, Flags_Test, Flags_Set, Sound_PlayEffect,
     Item_NamePtr, Inventory_Add, MoveCmd_TestFC, MapView_SlopeAt, Sprite_ObjectAt,
-    Fn<unsigned char (__cdecl*)(long, long, unsigned)>(fn::kPathClear),
-    Fn<void (__cdecl*)(int)>(fn::kGiveZenny),
-    Fn<const unsigned char* (__cdecl*)()>(fn::kAreaExits),
-    Fn<unsigned char (__cdecl*)(long, long, long)>(fn::kWayBlockedWide),
+    Fn<unsigned char (__cdecl*)(long, long, unsigned)>(::bof3::Code(fn::kPathClear.v)),
+    Fn<void (__cdecl*)(int)>(::bof3::Code(fn::kGiveZenny.v)),
+    Fn<const unsigned char* (__cdecl*)()>(::bof3::Code(fn::kAreaExits.v)),
+    Fn<unsigned char (__cdecl*)(long, long, long)>(::bof3::Code(fn::kWayBlockedWide.v)),
 };
 Callees g = kOriginals;
 

@@ -235,8 +235,8 @@ const sh::Callee kCallees[] = {
     // the engine's panel sprite (0x52CFE0): reads the sprite as a byte (+0x34
     // and eax, 0xFF), the slot whole (Gfx_CommitPrim's), x and y as words
     // (+0x1F / +0x11 movsx)
-    {"0x52CFE0", at::kDrawSprite, at::kDrawSprite, 4, {kU8, kAll, kU16, kU16}, kG, 0, 0, {}, &FxSprite, nullptr, true},
-    {"0x52CED0", at::kKindTotal, at::kKindTotal, 0, {}, kG, 0, 0, {}, &FxTotal, nullptr, true},
+    {"0x52CFE0", at::kDrawSprite.v, at::kDrawSprite.v, 4, {kU8, kAll, kU16, kU16}, kG, 0, 0, {}, &FxSprite, nullptr, true},
+    {"0x52CED0", at::kKindTotal.v, at::kKindTotal.v, 0, {}, kG, 0, 0, {}, &FxTotal, nullptr, true},
     // standard entries re-listed with the width the callee reads
     {FE1_OURS(Text_DrawAt), 5, {kU16, kU16, kU8, kU8, kAll}, kG, 0, 0, {}, &FxText, nullptr, true},
     {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 3, {kAll, 0, kAll}, kG, 0, 0, {0, 16, 0}, &FxSprintf, nullptr, true},
@@ -256,20 +256,20 @@ const sh::Callee kCallees[] = {
     {FE1_OURS(Field_PendingNext), 0, {}, kF, 0, 0, {}, &FxNext},
     {FE1_OURS(Field_PendingRelease), 1, {kU8}, kF, 0, 0},
     // FE2's (round twelve wave two), raw until it merges
-    {"Field_ObjectTrigger", at::kObjectTrigger, at::kObjectTrigger, 1, {0}, kG, 0, 0, {}, &FxTrigger},
-    {"0x535FC0", at::kJumpPose, at::kJumpPose, 0, {}, kG, 0, 0},
-    {"0x535FE0", at::kJumpSetUp, at::kJumpSetUp, 0, {}, kG, 0, 0},
-    {"0x536050", at::kJumpOut1, at::kJumpOut1, 0, {}, kF, 0, 0},
-    {"0x5360C0", at::kJumpOut2, at::kJumpOut2, 0, {}, kF, 0, 0},
-    {"0x536130", at::kJumpOut3, at::kJumpOut3, 0, {}, kF, 0, 0},
-    {"0x536170", at::kJumpOut4, at::kJumpOut4, 0, {}, kF, 0, 0},
-    {"0x5364D0", at::kJumpAirA, at::kJumpAirA, 0, {}, kG, 0, 0},
-    {"0x536550", at::kJumpAirB, at::kJumpAirB, 0, {}, kG, 0, 0},
-    {"0x5365D0", at::kJumpAirC, at::kJumpAirC, 0, {}, kG, 0, 0},
-    {"0x536290", at::kJumpIn0, at::kJumpIn0, 0, {}, kG, 0, 0},
-    {"0x5362D0", at::kJumpIn1, at::kJumpIn1, 0, {}, kF, 0, 0},
-    {"0x5363C0", at::kJumpIn2, at::kJumpIn2, 0, {}, kF, 0, 0},
-    {"0x536440", at::kJumpIn3, at::kJumpIn3, 0, {}, kG, 0, 0},
+    {"Field_ObjectTrigger", at::kObjectTrigger.v, at::kObjectTrigger.v, 1, {0}, kG, 0, 0, {}, &FxTrigger},
+    {"0x535FC0", at::kJumpPose.v, at::kJumpPose.v, 0, {}, kG, 0, 0},
+    {"0x535FE0", at::kJumpSetUp.v, at::kJumpSetUp.v, 0, {}, kG, 0, 0},
+    {"0x536050", at::kJumpOut1.v, at::kJumpOut1.v, 0, {}, kF, 0, 0},
+    {"0x5360C0", at::kJumpOut2.v, at::kJumpOut2.v, 0, {}, kF, 0, 0},
+    {"0x536130", at::kJumpOut3.v, at::kJumpOut3.v, 0, {}, kF, 0, 0},
+    {"0x536170", at::kJumpOut4.v, at::kJumpOut4.v, 0, {}, kF, 0, 0},
+    {"0x5364D0", at::kJumpAirA.v, at::kJumpAirA.v, 0, {}, kG, 0, 0},
+    {"0x536550", at::kJumpAirB.v, at::kJumpAirB.v, 0, {}, kG, 0, 0},
+    {"0x5365D0", at::kJumpAirC.v, at::kJumpAirC.v, 0, {}, kG, 0, 0},
+    {"0x536290", at::kJumpIn0.v, at::kJumpIn0.v, 0, {}, kG, 0, 0},
+    {"0x5362D0", at::kJumpIn1.v, at::kJumpIn1.v, 0, {}, kF, 0, 0},
+    {"0x5363C0", at::kJumpIn2.v, at::kJumpIn2.v, 0, {}, kF, 0, 0},
+    {"0x536440", at::kJumpIn3.v, at::kJumpIn3.v, 0, {}, kG, 0, 0},
 };
 #undef FE1_OURS
 

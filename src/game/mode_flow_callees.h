@@ -84,11 +84,11 @@ constexpr std::uint32_t kTintMarks = 0x7E06A0;       // 16 dwords set to -1 by M
 
 // Entries of task records a Task_Create names (the original's addresses: a
 // task started at one of these reaches ours through its detour).
-constexpr std::uint32_t kTransitionEntry = bof3::addr::Transition_Task;
-constexpr std::uint32_t kTitleLoadEntry = bof3::addr::Title_LoadTask;
+constexpr ::bof3::image::CodeVa kTransitionEntry{bof3::addr::Transition_Task};
+constexpr ::bof3::image::CodeVa kTitleLoadEntry{bof3::addr::Title_LoadTask};
 // Callees with no name in symbols.gen.h, called by address.
-constexpr std::uint32_t kEntryPoint = bof3::addr::Area_LinkAt;      // GameMode_Enter's, on input bit 0: the area's entry list; unread
-constexpr std::uint32_t kPlaceParty = bof3::addr::Party_DropIn;      // Area_Enter's, on flag 0x80: the party placement (field_modes' kPlaceParty)
+constexpr ::bof3::image::CodeVa kEntryPoint{bof3::addr::Area_LinkAt};      // GameMode_Enter's, on input bit 0: the area's entry list; unread
+constexpr ::bof3::image::CodeVa kPlaceParty{bof3::addr::Party_DropIn};      // Area_Enter's, on flag 0x80: the party placement (field_modes' kPlaceParty)
 
 using Handler = void (__cdecl*)();
 

@@ -48,7 +48,7 @@ const Callees kOriginals = {
     MapView_CheckHeightScale,
     AreaMap_Slope,
     D3d_PrimColor,
-    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly))),
+    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
     D3d_SetBlend,
     D3d_SetShadeMode,
 };

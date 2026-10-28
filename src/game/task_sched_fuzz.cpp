@@ -431,7 +431,7 @@ void Pass(const TaskSchedFuzzSide& side, std::uint32_t plan, unsigned frames, co
 }  // namespace
 
 void SelfTest() {
-    void* copy = bof3::CloneOriginal("task_sched unit", kUnit, kUnitSize);
+    void* copy = bof3::CloneOriginal("task_sched unit", kUnit.v, kUnitSize);
     const auto base = Address(copy);
     const TaskSchedFuzzSide theirs = {
         At(base + kAtRunAll), At(base + kAtBack),  At(base + kAtSetBase), At(base + kAtCreate),

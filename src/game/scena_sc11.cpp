@@ -572,8 +572,8 @@ SC11_EXPORT void __cdecl Scena11_Scene4(void) {
     case 1:
         Sprite_Current = rv::Bytes(ObjTrio);
         Field_State = rv::Bytes(ObjTrio);
-        SH_AT(void (__cdecl*)(unsigned), kSpriteSetUp)(0);
-        SH_AT(void (__cdecl*)(unsigned, unsigned), kCountDown)(1, 6);
+        SH_AT(void (__cdecl*)(unsigned), kSpriteSetUp.v)(0);
+        SH_AT(void (__cdecl*)(unsigned, unsigned), kCountDown.v)(1, 6);
         SH_CALL(Msg_OpenSystem)(0xD9);
         Field_Request = 2;
         MoveScript_PartyRecords[0x65] = 2;
@@ -922,7 +922,7 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
         return;
     case 35:
         if (B(::bof3::Img(kCounter0)) != 6) return;
-        SH_AT(void (__cdecl*)(unsigned, unsigned), kCountDown)(0xFFFF, 7);
+        SH_AT(void (__cdecl*)(unsigned, unsigned), kCountDown.v)(0xFFFF, 7);
         SH_CALL(ScriptFlags_Clear40)();
         EndScene();
         return;
@@ -964,7 +964,7 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
     }
     case 46:
         if (B(::bof3::Img(kCounter0)) != 4) return;
-        SH_AT(void (__cdecl*)(), kSoundJmp)();
+        SH_AT(void (__cdecl*)(), kSoundJmp.v)();
         SH_CALL(Sound_LoadStream)(2);
         MoveScript_PartyRecords[0x65] = 0x2F;
         return;
@@ -1271,7 +1271,7 @@ SC11_EXPORT void __cdecl Scena11_Scene9(void) {
         if (Field_Request == 2) return;
         MoveScript_PartyRecords[0x65] = 0;
         MoveScript_Var7 = 0;
-        SH_AT(void (__cdecl*)(), kStatusBit80)();
+        SH_AT(void (__cdecl*)(), kStatusBit80.v)();
         Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags ^ 0x16);
         B(::bof3::Img(kCounter2)) = 2;
         ChangeArea(0x79, 0x290000, 0x330000, 7);

@@ -243,12 +243,12 @@ const sh::Callee kCallees[] = {
     // the size read as a word (mov ax, [esp + 0x34]), the shade as a byte
     {FC2_OURS(EffectKind30_SparkQuad), 3, {kW, k16, k8}, kG, 0, 0},
     // nobody's, or another wave-two group's, by address
-    {"0x494110", at::kProjectPoint, at::kProjectPoint, 2, {kW, 0}, kG, 0, 0, {12, 0}, &FxProjectPoint, nullptr, true},
-    {"0x4941E0", at::kProjectSize, at::kProjectSize, 3, {kW, 0, 0}, kG, 0, 0, {12, 4, 0}, &FxProjectSize, nullptr, true},
+    {"0x494110", at::kProjectPoint.v, at::kProjectPoint.v, 2, {kW, 0}, kG, 0, 0, {12, 0}, &FxProjectPoint, nullptr, true},
+    {"0x4941E0", at::kProjectSize.v, at::kProjectSize.v, 3, {kW, 0, 0}, kG, 0, 0, {12, 4, 0}, &FxProjectSize, nullptr, true},
     // x, y read as s16 (movsx), the third argument never, the fourth's byte (and 0xFF)
-    {"0x46D5F0", at::kDrawNumber, at::kDrawNumber, 4, {k16, k16, 0, k8}, kG, 0, 0},
-    {"0x5728D0 (FE2)", at::kClearCell, at::kClearCell, 2, {k16, k16}, kG, 0, 0},
-    {"0x5307C0 (FE1)", at::kZennyFind, at::kZennyFind, 1, {kW}, kG, 0, 0},
+    {"0x46D5F0", at::kDrawNumber.v, at::kDrawNumber.v, 4, {k16, k16, 0, k8}, kG, 0, 0},
+    {"0x5728D0 (FE2)", at::kClearCell.v, at::kClearCell.v, 2, {k16, k16}, kG, 0, 0},
+    {"0x5307C0 (FE1)", at::kZennyFind.v, at::kZennyFind.v, 1, {kW}, kG, 0, 0},
     // standard entries re-listed (docs/field_c2.md section 4): the answers the
     // callers compare, the bytes the callees read, the stack pointers unlogged
     {FC2_OURS(Sprite_ObjectAt), 3, {kW, kW, kW}, kG, 0, 0, {}, &FxObjectAt},

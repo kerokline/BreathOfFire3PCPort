@@ -89,7 +89,7 @@ void DropIn(unsigned e) { SH_CALL(Party_DropIn)(e); }
 void Kind2(unsigned char a) { SH_CALL(Kind2_Place)(a); }
 void Sound(unsigned short id) { SH_CALL(Sound_PlayEffect)(id); }
 void Transition(unsigned char k) { SH_CALL(Transition_Start)(k); }
-void PartyPass() { SH_AT(VoidFn, at::kPartyPass)(); }
+void PartyPass() { SH_AT(VoidFn, at::kPartyPass.v)(); }
 
 // The chapter's message: Msg_OpenScript(id), the request byte 2, the step.
 void Say(unsigned short id, unsigned char step) {
@@ -129,7 +129,7 @@ void LoadMusic(unsigned track) {
 // Field_StartEventBattle(kind) (group SE's).
 void Battle(unsigned kind) {
     auto* const member0 = ObjTrio;
-    SH_AT(PlaceFn, at::kPartyPlace)(member0->x, member0->z, kind);
+    SH_AT(PlaceFn, at::kPartyPlace.v)(member0->x, member0->z, kind);
     SH_CALL(Field_StartEventBattle)(kind);
 }
 
@@ -180,7 +180,7 @@ SC5_EXPORT void __cdecl Scena05_ObjectTrigger(unsigned char* object) {
 // match, or 0xFF; negative (as a signed byte) answers 0xFF; else a tail jump
 // through Scena05_CellHooks with (a, b), whose al is the answer.
 SC5_EXPORT unsigned char __cdecl Scena05_CellHook(unsigned a, unsigned b) {
-    const unsigned char found = SH_AT(CellFindFn, at::kCellFind)(reinterpret_cast<const void*>(::bof3::Img(Scena05_CellRecords_addr)), 2, a, b);
+    const unsigned char found = SH_AT(CellFindFn, at::kCellFind.v)(reinterpret_cast<const void*>(::bof3::Img(Scena05_CellRecords_addr)), 2, a, b);
     const int index = static_cast<signed char>(found);
     if (index < 0) return 0xFF;
     return reinterpret_cast<CellEntry>(static_cast<std::uintptr_t>(
@@ -363,7 +363,7 @@ void EnterAreaBody() {
     // 0x2D: flag 0x32 set, 0x3E clear - Flags_Set(0x3E), 0x56D6F0.
     if (Area() == 0x2D && Flag(0x32) && !Flag(0x3E)) {
         Set(0x3E);
-        SH_AT(VoidFn, at::kSetBit80)();
+        SH_AT(VoidFn, at::kSetBit80.v)();
     }
     // 0x31: flag 9 set, 0xA clear - run 6, the step and counters 0; by the
     // selector 1 Party_DropIn(4), 2 call B 3 / call A 5 / drop-in 4, 6 call
@@ -529,7 +529,7 @@ void EnterAreaBody() {
             ClearCounters();
         } else if (c == 2) {
             ClearCounters();
-            SH_AT(PlaceFn, at::kPartyPlace)(0xC90000, 0xE0000, 0x15);
+            SH_AT(PlaceFn, at::kPartyPlace.v)(0xC90000, 0xE0000, 0x15);
         }
     }
 }
@@ -588,7 +588,7 @@ SC5_EXPORT void __cdecl Scena05_Run4(void) {
         break;
     case 2:
         if (Counter(0) != 0xD) break;
-        SH_AT(PlaceFn, at::kPartyPlace)(0x3E0000, 0x200000, 0x11);
+        SH_AT(PlaceFn, at::kPartyPlace.v)(0x3E0000, 0x200000, 0x11);
         SetStep(3);
         break;
     case 3:

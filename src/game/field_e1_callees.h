@@ -10,31 +10,31 @@
 namespace field_e1::at {
 
 // --- callees nobody owns (engine rows, no group of round twelve), by address ---
-constexpr std::uint32_t kDrawMode = bof3::addr::UiSprite_SetMode;   // (index, slot): a draw-mode primitive from the 16-byte records
+constexpr ::bof3::image::CodeVa kDrawMode{bof3::addr::UiSprite_SetMode};   // (index, slot): a draw-mode primitive from the 16-byte records
                                                   // 0x660394, committed
-constexpr std::uint32_t kDrawSprite = bof3::addr::UiSprite_Draw;   // (sprite, slot, x, y) -> unsigned char *: a sprite primitive
+constexpr ::bof3::image::CodeVa kDrawSprite{bof3::addr::UiSprite_Draw};   // (sprite, slot, x, y) -> unsigned char *: a sprite primitive
                                                   // from the 16-byte records 0x660438 at (x, y) (words), committed;
                                                   // eax the primitive
-constexpr std::uint32_t kKindPoints = bof3::addr::FieldPanel_KindPoints;   // (kind, count) -> u16: a kind's points for a count, from the
+constexpr ::bof3::image::CodeVa kKindPoints{bof3::addr::FieldPanel_KindPoints};   // (kind, count) -> u16: a kind's points for a count, from the
                                                   // 36-byte records 0x66A6AC (count at or above +3: the word +6)
-constexpr std::uint32_t kKindTotal = bof3::addr::FieldPanel_KindTotal;   // () -> u16: kKindPoints summed over the 32 bytes 0x9040EC
-constexpr std::uint32_t kDrawQuad = ::bof3::addr::Panel_DrawEdgeQuad;   // 0x468950 (E1B's): (x, y, height, which): a textured quad, committed
+constexpr ::bof3::image::CodeVa kKindTotal{bof3::addr::FieldPanel_KindTotal};   // () -> u16: kKindPoints summed over the 32 bytes 0x9040EC
+constexpr ::bof3::image::CodeVa kDrawQuad{::bof3::addr::Panel_DrawEdgeQuad};   // 0x468950 (E1B's): (x, y, height, which): a textured quad, committed
 
 // --- callees round twelve's FE2 owns (docs/scenario_harness.md 7.6), raw until it merges ---
-constexpr std::uint32_t kObjectTrigger = bof3::addr::Field_ObjectTrigger;   // Field_ObjectTrigger(object): FE2's
-constexpr std::uint32_t kJumpPose = bof3::addr::Leader_Pose3C;        // (): the jump's first pose (0x3C or 0x3D by +8)
-constexpr std::uint32_t kJumpSetUp = bof3::addr::Leader_HopStart;       // (): Field_JumpSetUp, the frames, the pose, a step
-constexpr std::uint32_t kJumpOut1 = bof3::addr::Leader_HopFlight;        // () -> al: FE2's
-constexpr std::uint32_t kJumpOut2 = bof3::addr::Leader_HopPose;        // () -> al
-constexpr std::uint32_t kJumpOut3 = bof3::addr::Leader_Pose3E;        // () -> al
-constexpr std::uint32_t kJumpOut4 = bof3::addr::Leader_StepUp;        // () -> al
-constexpr std::uint32_t kJumpAirA = bof3::addr::Leader_Rise;        // (): by Field_InputHeld bit 12
-constexpr std::uint32_t kJumpAirB = bof3::addr::Leader_Sink;        // (): by bit 14
-constexpr std::uint32_t kJumpAirC = bof3::addr::Leader_TurnBack;        // (): by the button map word 0x903580
-constexpr std::uint32_t kJumpIn0 = bof3::addr::Leader_Pose34;         // ()
-constexpr std::uint32_t kJumpIn1 = bof3::addr::Leader_StepDown;         // () -> al
-constexpr std::uint32_t kJumpIn2 = bof3::addr::Leader_HopStartAfterTick;         // () -> al
-constexpr std::uint32_t kJumpIn3 = bof3::addr::Leader_HopFall;         // () (a tail jump)
+constexpr ::bof3::image::CodeVa kObjectTrigger{bof3::addr::Field_ObjectTrigger};   // Field_ObjectTrigger(object): FE2's
+constexpr ::bof3::image::CodeVa kJumpPose{bof3::addr::Leader_Pose3C};        // (): the jump's first pose (0x3C or 0x3D by +8)
+constexpr ::bof3::image::CodeVa kJumpSetUp{bof3::addr::Leader_HopStart};       // (): Field_JumpSetUp, the frames, the pose, a step
+constexpr ::bof3::image::CodeVa kJumpOut1{bof3::addr::Leader_HopFlight};        // () -> al: FE2's
+constexpr ::bof3::image::CodeVa kJumpOut2{bof3::addr::Leader_HopPose};        // () -> al
+constexpr ::bof3::image::CodeVa kJumpOut3{bof3::addr::Leader_Pose3E};        // () -> al
+constexpr ::bof3::image::CodeVa kJumpOut4{bof3::addr::Leader_StepUp};        // () -> al
+constexpr ::bof3::image::CodeVa kJumpAirA{bof3::addr::Leader_Rise};        // (): by Field_InputHeld bit 12
+constexpr ::bof3::image::CodeVa kJumpAirB{bof3::addr::Leader_Sink};        // (): by bit 14
+constexpr ::bof3::image::CodeVa kJumpAirC{bof3::addr::Leader_TurnBack};        // (): by the button map word 0x903580
+constexpr ::bof3::image::CodeVa kJumpIn0{bof3::addr::Leader_Pose34};         // ()
+constexpr ::bof3::image::CodeVa kJumpIn1{bof3::addr::Leader_StepDown};         // () -> al
+constexpr ::bof3::image::CodeVa kJumpIn2{bof3::addr::Leader_HopStartAfterTick};         // () -> al
+constexpr ::bof3::image::CodeVa kJumpIn3{bof3::addr::Leader_HopFall};         // () (a tail jump)
 
 // --- data ---
 // The .data dispatch tables this group's dispatchers read in place (entries to

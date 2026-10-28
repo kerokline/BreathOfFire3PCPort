@@ -290,8 +290,8 @@ const sh::Callee kCallees[] = {
     {FC1_OURS(EffectKind17_CellBlocked), 2, {0xFFFF, 0xFFFF}, kF, 0, 0, {}, &Stir},
     {FC1_OURS(EffectKind1B_Hit), 0, {}, kF, 0, 0, {}, &Stir},
     // group FC2's, by address until it merges (kPhase: void, no arguments)
-    {"0x46D0E0", at::kFc2Aim, at::kFc2Aim, 0, {}, sh::Answer::kPhase, 0, 0},
-    {"0x46BF80", at::kFc2Place, at::kFc2Place, 0, {}, sh::Answer::kPhase, 0, 0},
+    {"0x46D0E0", at::kFc2Aim.v, at::kFc2Aim.v, 0, {}, sh::Answer::kPhase, 0, 0},
+    {"0x46BF80", at::kFc2Place.v, at::kFc2Place.v, 0, {}, sh::Answer::kPhase, 0, 0},
     // re-listed from the standard sets: the masks of what the callee reads
     // (the original pushes whole registers holding a word or a byte), answers
     // in range, and louder where the caller reads a cell after the call

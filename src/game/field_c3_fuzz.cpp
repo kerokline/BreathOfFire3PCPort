@@ -278,18 +278,18 @@ const sh::Callee kCallees[] = {
     {C3_OURS(Field_ObjectFadeIn), 1, {kAll}, kG, 0, 0},
     {C3_OURS(Field_ObjectTurn), 1, {kAll}, kG, 0, 0},
     // FE2's, by address (docs/field_c3.md section 8)
-    {"0x536F10", at::kEventObjectFrame, at::kEventObjectFrame, 0, {}, kG, 0, 0},
-    {"0x535FC0", at::kUpFace, at::kUpFace, 0, {}, kG, 0, 0},
-    {"0x535FE0", at::kDownJumpSetUp, at::kDownJumpSetUp, 0, {}, kG, 0, 0},
-    {"0x536290", at::kUpLanded, at::kUpLanded, 0, {}, kG, 0, 0},
-    {"0x536050", at::kDownWait1, at::kDownWait1, 0, {}, kF, 0, 0},
-    {"0x5360C0", at::kDownWait2, at::kDownWait2, 0, {}, kF, 0, 0},
-    {"0x536130", at::kDownWait3, at::kDownWait3, 0, {}, kF, 0, 0},
-    {"0x536170", at::kDownWait4, at::kDownWait4, 0, {}, kF, 0, 0},
-    {"0x5362D0", at::kUpWait5, at::kUpWait5, 0, {}, kF, 0, 0},
-    {"0x5363C0", at::kUpWait6, at::kUpWait6, 0, {}, kF, 0, 0},
-    {"0x536440", at::kUpWait7, at::kUpWait7, 0, {}, kF, 0, 0},
-    {"0x534C20", at::kRecoilFace, at::kRecoilFace, 1, {0xFF}, kG, 0, 0},   // and eax, 0xFF at +0xE
+    {"0x536F10", at::kEventObjectFrame.v, at::kEventObjectFrame.v, 0, {}, kG, 0, 0},
+    {"0x535FC0", at::kUpFace.v, at::kUpFace.v, 0, {}, kG, 0, 0},
+    {"0x535FE0", at::kDownJumpSetUp.v, at::kDownJumpSetUp.v, 0, {}, kG, 0, 0},
+    {"0x536290", at::kUpLanded.v, at::kUpLanded.v, 0, {}, kG, 0, 0},
+    {"0x536050", at::kDownWait1.v, at::kDownWait1.v, 0, {}, kF, 0, 0},
+    {"0x5360C0", at::kDownWait2.v, at::kDownWait2.v, 0, {}, kF, 0, 0},
+    {"0x536130", at::kDownWait3.v, at::kDownWait3.v, 0, {}, kF, 0, 0},
+    {"0x536170", at::kDownWait4.v, at::kDownWait4.v, 0, {}, kF, 0, 0},
+    {"0x5362D0", at::kUpWait5.v, at::kUpWait5.v, 0, {}, kF, 0, 0},
+    {"0x5363C0", at::kUpWait6.v, at::kUpWait6.v, 0, {}, kF, 0, 0},
+    {"0x536440", at::kUpWait7.v, at::kUpWait7.v, 0, {}, kF, 0, 0},
+    {"0x534C20", at::kRecoilFace.v, at::kRecoilFace.v, 1, {0xFF}, kG, 0, 0},   // and eax, 0xFF at +0xE
     // field-standard ones re-listed with the mask the callee reads (the callers
     // push whole registers; docs/field_c3.md section 3 has each read) or a
     // louder stand-in

@@ -144,17 +144,17 @@ void WaitFile() {
 
 // --- the callees nobody owns, by address -------------------------------------
 
-void PlaceParty(std::int32_t x, std::int32_t z, unsigned k) { SH_AT(void (__cdecl*)(std::int32_t, std::int32_t, unsigned), scena_sc7::kPlaceParty)(x, z, k); }
-void PartyRestore() { SH_AT(void (__cdecl*)(), scena_sc7::kPartyRestore)(); }
-void StatusBit80() { SH_AT(void (__cdecl*)(), scena_sc7::kStatusBit80)(); }
+void PlaceParty(std::int32_t x, std::int32_t z, unsigned k) { SH_AT(void (__cdecl*)(std::int32_t, std::int32_t, unsigned), scena_sc7::kPlaceParty.v)(x, z, k); }
+void PartyRestore() { SH_AT(void (__cdecl*)(), scena_sc7::kPartyRestore.v)(); }
+void StatusBit80() { SH_AT(void (__cdecl*)(), scena_sc7::kStatusBit80.v)(); }
 unsigned char CellFind(std::uint32_t records, unsigned n, int x, int z) {
-    return static_cast<unsigned char>(SH_AT(std::uint32_t (__cdecl*)(std::uint32_t, unsigned, int, int), scena_sc7::kCellFind)(records, n, x, z));
+    return static_cast<unsigned char>(SH_AT(std::uint32_t (__cdecl*)(std::uint32_t, unsigned, int, int), scena_sc7::kCellFind.v)(records, n, x, z));
 }
-std::uint32_t SpriteFindFree() { return SH_AT(std::uint32_t (__cdecl*)(), scena_sc7::kSpriteFindFree)(); }
-void MusicStop() { SH_AT(void (__cdecl*)(), scena_sc7::kMusicStop)(); }
-void KeyItemAdd(unsigned id) { SH_AT(void (__cdecl*)(unsigned), scena_sc7::kKeyItemAdd)(id); }
-void Call591BE0(unsigned a, unsigned b) { SH_AT(void (__cdecl*)(unsigned, unsigned), scena_sc7::kCall591BE0)(a, b); }
-void Call498DE0(unsigned a) { SH_AT(void (__cdecl*)(unsigned), scena_sc7::kCall498DE0)(a); }
+std::uint32_t SpriteFindFree() { return SH_AT(std::uint32_t (__cdecl*)(), scena_sc7::kSpriteFindFree.v)(); }
+void MusicStop() { SH_AT(void (__cdecl*)(), scena_sc7::kMusicStop.v)(); }
+void KeyItemAdd(unsigned id) { SH_AT(void (__cdecl*)(unsigned), scena_sc7::kKeyItemAdd.v)(id); }
+void Call591BE0(unsigned a, unsigned b) { SH_AT(void (__cdecl*)(unsigned, unsigned), scena_sc7::kCall591BE0.v)(a, b); }
+void Call498DE0(unsigned a) { SH_AT(void (__cdecl*)(unsigned), scena_sc7::kCall498DE0.v)(a); }
 
 // --- the effects ---------------------------------------------------------------
 

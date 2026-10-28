@@ -79,8 +79,8 @@ constexpr std::uint32_t kRecordAreasEnd = 0x653A5C;  // eleven records
 }  // namespace at
 
 // Callees with no name in symbols.gen.h: other groups' functions this round.
-constexpr std::uint32_t kSetCell = bof3::addr::AreaMap_SetByte;      // group DD's
-constexpr std::uint32_t kFlagsClear40 = bof3::addr::ScriptFlags_Clear40; // group DD's; ScriptFlags_Clear40
+constexpr ::bof3::image::CodeVa kSetCell{bof3::addr::AreaMap_SetByte};      // group DD's
+constexpr ::bof3::image::CodeVa kFlagsClear40{bof3::addr::ScriptFlags_Clear40}; // group DD's; ScriptFlags_Clear40
 
 using Handler = void (__cdecl*)();
 

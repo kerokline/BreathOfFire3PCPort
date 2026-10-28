@@ -67,9 +67,9 @@ template <typename T, typename F> T As(F f) { return reinterpret_cast<T>(reinter
 const Callees kOriginals = {
     Rand,
     AreaMap_Elevation,
-    Fn<void (__cdecl*)(int, int, int)>(kSetCell),
+    Fn<void (__cdecl*)(int, int, int)>(::bof3::Code(kSetCell.v)),
     ScriptFlags_Set40,
-    Fn<void (__cdecl*)()>(kFlagsClear40),
+    Fn<void (__cdecl*)()>(::bof3::Code(kFlagsClear40.v)),
     Msg_OpenScript,
     AreaMap_ByteAt,
     Sprite_SetAnimation,

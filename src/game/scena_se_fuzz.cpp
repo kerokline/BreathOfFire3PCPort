@@ -96,7 +96,7 @@ const sh::Callee kCallees[] = {
     {SE_OURS(Sprite_SetAnimationBank), 1, {0xFFFFu}, sh::Answer::kFlag, 0, 0, {}, &StirOp},
     {SE_OURS(AreaMap_Elevation), 2, {0xFFFFFFFFu, 0xFFFFFFFFu}, kG, 0, 0, {}, &StirOp},
     // nobody's: the members' palettes reloaded
-    {"0x533E00", at::kPartyPalettes, at::kPartyPalettes, 0, {}, kG, 0, 0},
+    {"0x533E00", at::kPartyPalettes.v, at::kPartyPalettes.v, 0, {}, kG, 0, 0},
 };
 
 // --- the state -------------------------------------------------------------------

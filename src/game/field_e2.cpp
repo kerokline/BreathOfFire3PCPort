@@ -253,7 +253,7 @@ extern "C" void __cdecl Field_FloorHurt(unsigned kind_arg) {
     if (kind > 8) bof3::Fatal("Field_FloorHurt: kind %u past the nine the stack table holds", (unsigned)kind);
     const unsigned char* const t = kTable + 3u * kind;
     SH_CALL(Char_LoseHp)(t[0], rv::As<records::PartyMember>(Field_State)->char_id);
-    SH_AT(void (__cdecl*)(unsigned, unsigned), at::kHpLoss2)(t[1], rv::As<records::PartyMember>(Field_State)->char_id);
+    SH_AT(void (__cdecl*)(unsigned, unsigned), at::kHpLoss2.v)(t[1], rv::As<records::PartyMember>(Field_State)->char_id);
     const unsigned char flags = t[2];
     if (flags & 0x80) Field_State[0x124] = 0xA;
     if (flags & 0x20) Field_State[0x125] = 0x28;
@@ -1111,11 +1111,11 @@ extern "C" void __cdecl FieldTail_LoadBank(void) {
     case 1:
         if (SH_CALL(File_LoadDone)() == 0) return;
         SH_CALL(Gfx_ClutStripCopyRow)(2);
-        SH_AT(void (__cdecl*)(), at::kLoadWait)();
+        SH_AT(void (__cdecl*)(), at::kLoadWait.v)();
         AreaW0c_TailState = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
         return;
     case 2:
-        SH_AT(void (__cdecl*)(), at::kLoadStep)();
+        SH_AT(void (__cdecl*)(), at::kLoadStep.v)();
         return;
     case 3: {
         const auto set = static_cast<unsigned char>(AreaW0b_PartySet | 0x80);
@@ -1646,10 +1646,10 @@ namespace {
 U TradeRecord(int k) {
     return ::bof3::Img(at::kTradeRecords) + static_cast<U>(B(::bof3::Img(at::kTradeIndex) + static_cast<U>(k + AreaEntry_PendingFlags * 10))) * 8u;
 }
-void TradeBox() { SH_AT(void (__cdecl*)(int, int, int, int, int), at::kTradeBox)(0x14, 0x12, 0x118, 0x13, 0); }
-void TradeList(unsigned flag) { SH_AT(void (__cdecl*)(unsigned), at::kTradeList)(flag); }
+void TradeBox() { SH_AT(void (__cdecl*)(int, int, int, int, int), at::kTradeBox.v)(0x14, 0x12, 0x118, 0x13, 0); }
+void TradeList(unsigned flag) { SH_AT(void (__cdecl*)(unsigned), at::kTradeList.v)(flag); }
 unsigned char TradeLacks(unsigned k, unsigned quantity) {
-    return SH_AT(unsigned char (__cdecl*)(unsigned, unsigned), at::kTradeLacks)(k, quantity);
+    return SH_AT(unsigned char (__cdecl*)(unsigned, unsigned), at::kTradeLacks.v)(k, quantity);
 }
 const unsigned char* Pool(U word_cell) { return At(::bof3::Img(bof3::addr::MessagePools) + (L(word_cell) & 0xFFFF)); }
 }  // namespace
@@ -1662,8 +1662,8 @@ extern "C" void __cdecl ItemTrade_Open(void) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(::bof3::Img(ItemTrade_OpenSteps_addr), Effect1g_TradeStep, "ItemTrade_Open")))();
     TradeBox();
     TradeList(0);
-    SH_AT(void (__cdecl*)(), at::kTradeCursor)();
-    SH_AT(void (__cdecl*)(), at::kTradeFrame)();
+    SH_AT(void (__cdecl*)(), at::kTradeCursor.v)();
+    SH_AT(void (__cdecl*)(), at::kTradeFrame.v)();
 }
 
 // original 0x5939A0 (ItemTrade_OpenSteps[0]; PSX 0x800F50B4): Transition_Start(1), the pick
@@ -1673,7 +1673,7 @@ extern "C" void __cdecl ItemTrade_OpenStart(void) {
     SH_CALL(Transition_Start)(1);
     Effect1g_TradePick = 0;
     Effect1g_TradeQuantity = 1;
-    Effect1g_TradeRowCount = SH_AT(unsigned char (__cdecl*)(), at::kTradeRows)();
+    Effect1g_TradeRowCount = SH_AT(unsigned char (__cdecl*)(), at::kTradeRows.v)();
     Effect1g_TradeStep = static_cast<unsigned char>(Effect1g_TradeStep + 1);
 }
 
@@ -1691,8 +1691,8 @@ extern "C" void __cdecl ItemTrade_OpenWait(void) {
 // (0x1A, 0x51 + 13 * the s8 pick).
 extern "C" void __cdecl ItemTrade_Run(void) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(::bof3::Img(ItemTrade_RunSteps_addr), Effect1g_TradeStep, "ItemTrade_Run")))();
-    SH_AT(void (__cdecl*)(), at::kTradeFrame)();
-    SH_AT(void (__cdecl*)(), at::kTradeCursor)();
+    SH_AT(void (__cdecl*)(), at::kTradeFrame.v)();
+    SH_AT(void (__cdecl*)(), at::kTradeCursor.v)();
     const unsigned char pick = static_cast<unsigned char>(Effect1g_TradePick);
     if (pick & 0xC0) return;
     SH_CALL(Menu_DrawHand)(0x1A, static_cast<int>(13u * static_cast<U>(S8(pick)) + 0x51u), 0);
@@ -1808,7 +1808,7 @@ extern "C" void __cdecl ItemTrade_PickCount(void) {
     TradeBox();
     SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, Pool(::bof3::Img(at::kPoolWordPick)));
     TradeList(1);
-    SH_AT(void (__cdecl*)(), at::kTradeCount)();
+    SH_AT(void (__cdecl*)(), at::kTradeCount.v)();
     SH_CALL(Menu_DrawHand)(0x1A, 0x6B, 0);
 }
 
@@ -1888,7 +1888,7 @@ extern "C" void __cdecl ItemTrade_Confirm(void) {
                 Effect1g_TradePick = pick;
                 const U record = TradeRecord(S8(pick));
                 SH_CALL(Inventory_Add)(B(record + 1), B(record), static_cast<unsigned char>(Effect1g_TradeQuantity));
-                SH_AT(void (__cdecl*)(), at::kTradeTake)();
+                SH_AT(void (__cdecl*)(), at::kTradeTake.v)();
                 Effect1g_TradeQuantity = 1;
                 Effect1g_TradeStep = 0;
             }
@@ -1911,7 +1911,7 @@ extern "C" void __cdecl ItemTrade_Confirm(void) {
     }
     TradeList(1);
     if (Effect1g_TradeStep == 0) return;
-    SH_AT(void (__cdecl*)(), at::kTradeCount)();
+    SH_AT(void (__cdecl*)(), at::kTradeCount.v)();
 }
 
 // ============================================================================

@@ -46,10 +46,10 @@ const Callees kOriginals = {
     Transition_Start, Field_WaitTransition, Area_Enter, Area_EntryWalk, MoveScript_TintReset,
     Field_SlotRelease, Field_SlotsReleaseAll, Gfx_ClutStripRestore, File_LoadDone, Gfx_ClearRect,
     Gpu_GetTPage, Gpu_SetDrawMode, Gfx_CommitPrim, Gpu_SetTile, Gpu_SetSemiTrans,
-    Field_PartyLoad, Field_ChangeArea, Fn<void (__cdecl*)(unsigned, unsigned)>(kEntryPoint), Field_EncounterThresholdRoll,
+    Field_PartyLoad, Field_ChangeArea, Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kEntryPoint.v)), Field_EncounterThresholdRoll,
     Field_Frame, Effect_ClearAll, Music_Play, LoadDatFile, Field_PartySetUp, Area_ZoneIdAt, Field_ViewReset,
     Gte_SetColorMatrix, Scenario_Start, Area_RunPlacement, Flags_Clear, Field_ModeDispatch, Field_PartyFirstFrame,
-    MoveCmd_TestFB, Fn<unsigned char (__cdecl*)(unsigned)>(kPlaceParty), Field_MembersFrame, Port_DroppedCall,
+    MoveCmd_TestFB, Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(kPlaceParty.v)), Field_MembersFrame, Port_DroppedCall,
     Title_Task, Gfx_ClearImage,
     {Transition_Kind00, Transition_Kind01, Transition_Kind02, Transition_Kind03, Transition_Kind04,
      Transition_Kind05, Transition_Kind06, Transition_Kind07, Transition_Kind08, Transition_Kind09,
@@ -103,7 +103,7 @@ unsigned char SlotByte(const unsigned char& argument) { return *reinterpret_cast
 extern "C" void __cdecl Transition_Start(unsigned char kind) {
     if (Transition_Busy != 0) return;
     ModeFlow_TransitionKind = SlotByte(kind);
-    g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(kTransitionEntry)));
+    g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTransitionEntry.v))));
 }
 
 // original 0x495070: task 2's body (PSX 0x8014EC28). Builds a 21-entry table
@@ -703,7 +703,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Boot_Task(void) {
     SetLong(At(::bof3::Img(MoveScript_TintRecords_addr) + 0x180), 0x8C3584);
     g.clut_restore();
     Gfx_ClutStripDirty = static_cast<unsigned char>(Gfx_ClutStripDirty + 1);
-    g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(kTitleLoadEntry)));
+    g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));
     g.task_exit();
 }
 

@@ -110,7 +110,7 @@ void __cdecl TLoadDat(int i) { Stub(LoadDatFile)(i); }
 void __cdecl TShake(unsigned s) { Stub(Scena15_Shake)(s); }
 int __cdecl TLoadDone() { return Stub(File_LoadDone)(); }
 void __cdecl TMusicPlay(unsigned t, int f) { Stub(Music_Play)(t, f); }
-void __cdecl TPartyPlace(long x, long z, unsigned k) { StubAt<void (__cdecl*)(long, long, unsigned)>(kPartyPlace)(x, z, k); }
+void __cdecl TPartyPlace(long x, long z, unsigned k) { StubAt<void (__cdecl*)(long, long, unsigned)>(kPartyPlace.v)(x, z, k); }
 void __cdecl TFadeOut(int f) { Stub(Music_FadeOut)(f); }
 void __cdecl TFadeOutStop(int f) { Stub(Music_FadeOutStop)(f); }
 void __cdecl TStartBattle(unsigned id) { Stub(Field_StartEventBattle)(id); }
@@ -118,8 +118,8 @@ void __cdecl TRandomPause() { Stub(Scena15_RandomPause)(); }
 void __cdecl TSound(unsigned short id) { Stub(Sound_PlayEffect)(id); }
 void __cdecl TChangeArea(unsigned a, int x, int z, unsigned f) { Stub(Field_ChangeArea)(a, x, z, f); }
 void __cdecl TMsg(unsigned short id) { Stub(Msg_OpenScript)(id); }
-void __cdecl TViewShift() { StubAt<void (__cdecl*)()>(kViewShift)(); }
-void __cdecl TStatus80() { StubAt<void (__cdecl*)()>(kStatusBit80)(); }
+void __cdecl TViewShift() { StubAt<void (__cdecl*)()>(kViewShift.v)(); }
+void __cdecl TStatus80() { StubAt<void (__cdecl*)()>(kStatusBit80.v)(); }
 void __cdecl TClearPrivate() { Stub(Task_ClearPrivate)(); }
 void __cdecl TWindowReset() { Stub(Window_ResetAll)(); }
 void __cdecl TSleep(int f) { Stub(Task_Sleep)(f); }
@@ -314,7 +314,7 @@ const sh::Callee kCallees[] = {
     {SC15_OURS(Gpu_SetSemiTrans), 2, {kAll, kAll}, sh::Answer::kGarbage, 0, 0},
     {SC15_OURS(Gpu_SetPolyG3), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
     {SC15_OURS(Gpu_SetPolyF4), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC15_RAW("0x5A7730", kPrimSprt16), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
+    {SC15_RAW("0x5A7730", kPrimSprt16.v), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
     {SC15_OURS(Math_Sin), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
     {SC15_OURS(Math_Cos), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
     {SC15_OURS(Gte_PushMatrix), 0, {}, sh::Answer::kGarbage, 0, 0},
@@ -328,12 +328,12 @@ const sh::Callee kCallees[] = {
     {SC15_OURS(Gte_PrimDepths3_10B), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
     {SC15_OURS(Gte_StoreDepthF3), 3, {kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0},
     // nobody's this wave, by address
-    {SC15_RAW("0x57CD90", kEventSlot), 0, {}, sh::Answer::kByte, 0xFF, 0x1D},
-    {SC15_RAW("0x533E50", kPartyPass), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC15_RAW("0x587860", kSoundStop), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC15_RAW("0x423380", kViewShift), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC15_RAW("0x42C0A0", kTalkIdC0), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC15_RAW("0x42BA90", kTalkId), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
+    {SC15_RAW("0x57CD90", kEventSlot.v), 0, {}, sh::Answer::kByte, 0xFF, 0x1D},
+    {SC15_RAW("0x533E50", kPartyPass.v), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC15_RAW("0x587860", kSoundStop.v), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC15_RAW("0x423380", kViewShift.v), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC15_RAW("0x42C0A0", kTalkIdC0.v), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
+    {SC15_RAW("0x42BA90", kTalkId.v), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
 };
 constexpr unsigned kCalleesN = sizeof kCallees / sizeof kCallees[0];
 

@@ -95,14 +95,14 @@ std::int32_t Abs32(std::int32_t v) {
 // --- the callees nobody owns, and FE2's, by address -----------------------------
 using Void0 = void (__cdecl*)();
 using Byte0 = unsigned char (__cdecl*)();
-void DrawMode(unsigned index, unsigned slot) { SH_AT(void (__cdecl*)(unsigned, unsigned), at::kDrawMode)(index, slot); }
+void DrawMode(unsigned index, unsigned slot) { SH_AT(void (__cdecl*)(unsigned, unsigned), at::kDrawMode.v)(index, slot); }
 unsigned char* DrawSprite(unsigned sprite, unsigned slot, int x, int y) {
-    return SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, int, int), at::kDrawSprite)(sprite, slot, x, y);
+    return SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, int, int), at::kDrawSprite.v)(sprite, slot, x, y);
 }
-unsigned KindPoints(unsigned kind, unsigned count) { return SH_AT(unsigned (__cdecl*)(unsigned, unsigned), at::kKindPoints)(kind, count); }
-unsigned KindTotal() { return SH_AT(unsigned (__cdecl*)(), at::kKindTotal)(); }
+unsigned KindPoints(unsigned kind, unsigned count) { return SH_AT(unsigned (__cdecl*)(unsigned, unsigned), at::kKindPoints.v)(kind, count); }
+unsigned KindTotal() { return SH_AT(unsigned (__cdecl*)(), at::kKindTotal.v)(); }
 void DrawQuad(int x, int y, unsigned height, unsigned which) {
-    SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kDrawQuad)(x, y, height, which);
+    SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kDrawQuad.v)(x, y, height, which);
 }
 void Fe2(std::uint32_t address) { SH_WORD(Void0, address)(); }
 unsigned char Fe2Al(std::uint32_t address) { return SH_WORD(Byte0, address)(); }
@@ -391,7 +391,7 @@ extern "C" void __cdecl Field_PassageTrigger(void) {
     const unsigned char* const fs = Fs();
     object[0x86] = fs[0x12A];
     SetWord(object + 0x88, Word(fs + 0x12C));
-    if (object[0x86] != 0xFF) SH_AT(void (__cdecl*)(unsigned char*), at::kObjectTrigger)(object);
+    if (object[0x86] != 0xFF) SH_AT(void (__cdecl*)(unsigned char*), at::kObjectTrigger.v)(object);
     rv::As<records::PartyMember>(Sc())->step = 2;
 }
 
@@ -400,7 +400,7 @@ extern "C" void __cdecl Field_JumpState(void) { CodeAt(::bof3::Img(Field_JumpSte
 
 // original 0x52F970 (PSX 0x801B429C): jump step 0 - 0x535FC0 (the first pose), step 2.
 extern "C" void __cdecl Field_JumpBegin(void) {
-    Fe2(at::kJumpPose);
+    Fe2(at::kJumpPose.v);
     rv::As<records::PartyMember>(Sc())->step = 2;
 }
 
@@ -410,7 +410,7 @@ extern "C" void __cdecl Field_JumpOut(void) { CodeAt(::bof3::Img(Field_JumpOutSt
 // original 0x52F9A0 (PSX 0x801B430C): jump-out 0 - 0x535FE0 (Field_JumpSetUp's caller); with
 // +5 0 and neither script flag's bit 3, Field_JumpCamera; +3 = 1.
 extern "C" void __cdecl Field_JumpOut0(void) {
-    Fe2(at::kJumpSetUp);
+    Fe2(at::kJumpSetUp.v);
     if (rv::As<records::PartyMember>(Sc())->actor == 0 && !ScriptFlag8()) SH_CALL(Field_JumpCamera)();
     rv::As<records::PartyMember>(Sc())->state3 = 1;
 }
@@ -418,18 +418,18 @@ extern "C" void __cdecl Field_JumpOut0(void) {
 // original 0x52F9E0 (PSX 0x801B4380) / 0x52FA00 / 0x52FA20: jump-out 1..3 - FE2's step, and
 // when it answers al not 0, +3 one on.
 extern "C" void __cdecl Field_JumpOut1(void) {
-    if (Fe2Al(at::kJumpOut1)) rv::As<records::PartyMember>(Sc())->state3 = 2;
+    if (Fe2Al(at::kJumpOut1.v)) rv::As<records::PartyMember>(Sc())->state3 = 2;
 }
 extern "C" void __cdecl Field_JumpOut2(void) {
-    if (Fe2Al(at::kJumpOut2)) rv::As<records::PartyMember>(Sc())->state3 = 3;
+    if (Fe2Al(at::kJumpOut2.v)) rv::As<records::PartyMember>(Sc())->state3 = 3;
 }
 extern "C" void __cdecl Field_JumpOut3(void) {
-    if (Fe2Al(at::kJumpOut3)) rv::As<records::PartyMember>(Sc())->state3 = 4;
+    if (Fe2Al(at::kJumpOut3.v)) rv::As<records::PartyMember>(Sc())->state3 = 4;
 }
 
 // original 0x52FA40 (PSX 0x801B4434): jump-out 4 - 0x536170; when al: step 2, +3 = 0.
 extern "C" void __cdecl Field_JumpOut4(void) {
-    if (!Fe2Al(at::kJumpOut4)) return;
+    if (!Fe2Al(at::kJumpOut4.v)) return;
     rv::As<records::PartyMember>(Sc())->step = 2;
     rv::As<records::PartyMember>(Sc())->state3 = 0;
 }
@@ -440,9 +440,9 @@ extern "C" void __cdecl Field_JumpOut4(void) {
 // Field_JumpCamera (a tail jump).
 extern "C" void __cdecl Field_JumpAir(void) {
     const std::uint16_t held = Field_InputHeld;
-    if (held & 0x1000) Fe2(at::kJumpAirA);
-    else if (held & 0x4000) Fe2(at::kJumpAirB);
-    else if (W(::bof3::Img(at::kButtonMap)) & held) Fe2(at::kJumpAirC);
+    if (held & 0x1000) Fe2(at::kJumpAirA.v);
+    else if (held & 0x4000) Fe2(at::kJumpAirB.v);
+    else if (W(::bof3::Img(at::kButtonMap)) & held) Fe2(at::kJumpAirC.v);
     if (ScriptFlag8()) return;
     SH_CALL(MapView_SetElevation)(static_cast<short>(rv::As<records::PartyMember>(Sc())->height_whole));
     SH_CALL(Field_JumpCamera)();
@@ -453,25 +453,25 @@ extern "C" void __cdecl Field_JumpIn(void) { CodeAt(::bof3::Img(Field_JumpInStep
 
 // original 0x52FAE0 (PSX 0x801B457C): jump-in 0 - 0x536290, +3 = 1.
 extern "C" void __cdecl Field_JumpIn0(void) {
-    Fe2(at::kJumpIn0);
+    Fe2(at::kJumpIn0.v);
     rv::As<records::PartyMember>(Sc())->state3 = 1;
 }
 
 // original 0x52FAF0 (PSX 0x801B45A8): jump-in 1 - 0x5362D0; when al, +3 = 2.
 extern "C" void __cdecl Field_JumpIn1(void) {
-    if (Fe2Al(at::kJumpIn1)) rv::As<records::PartyMember>(Sc())->state3 = 2;
+    if (Fe2Al(at::kJumpIn1.v)) rv::As<records::PartyMember>(Sc())->state3 = 2;
 }
 
 // original 0x52FB10 (PSX 0x801B45E4): jump-in 2 - 0x5363C0; when al: with +5 0 and neither
 // script flag's bit 3, Field_JumpCamera; +3 = 3.
 extern "C" void __cdecl Field_JumpIn2(void) {
-    if (!Fe2Al(at::kJumpIn2)) return;
+    if (!Fe2Al(at::kJumpIn2.v)) return;
     if (rv::As<records::PartyMember>(Sc())->actor == 0 && !ScriptFlag8()) SH_CALL(Field_JumpCamera)();
     rv::As<records::PartyMember>(Sc())->state3 = 3;
 }
 
 // original 0x52FB50 (PSX 0x801B4668): jump-in 3 - a tail jump to 0x536440.
-extern "C" void __cdecl Field_JumpIn3(void) { Fe2(at::kJumpIn3); }
+extern "C" void __cdecl Field_JumpIn3(void) { Fe2(at::kJumpIn3.v); }
 
 // original 0x52FBB0 (PSX 0x801B4714): leader state 11 - the step of Field_ContentSteps[+2],
 // then Sprite_ScriptTick (a tail jump).

@@ -79,7 +79,7 @@ constexpr U kObjectStride = 0xA4;
 // kSpriteCurrent: now Sprite_Current (symbols.toml).
 // The 8 px UI font (x, y, colour, count, text) -> text end - group DB's
 // (round eight), called through its address (ours, named by symbol).
-constexpr U kTinyFont = bof3::addr::Text_DrawSmall;
+constexpr ::bof3::image::CodeVa kTinyFont{bof3::addr::Text_DrawSmall};
 
 // The named tables, by the address their symbols.gen.h macros name.
 namespace at {

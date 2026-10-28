@@ -115,9 +115,9 @@ void MusicPlay(unsigned track) { SH_CALL(Music_Play)(track, 8); }
 void MusicStop(int frames) { SH_CALL(Music_FadeOutStop)(frames); }
 void Sound(unsigned short id) { SH_CALL(Sound_PlayEffect)(id); }
 void Battle(unsigned id) { SH_CALL(Field_StartEventBattle)(id); }
-void PartyPass() { SH_AT(VoidFn, at::kPartyPass)(); }
-void PartyPlace(int x, int z, unsigned kind) { SH_AT(PlaceFn, at::kPartyPlace)(x, z, kind); }
-void ZennyAdd(unsigned amount) { SH_AT(ZennyFn, at::kZennyAdd)(amount, 0); }
+void PartyPass() { SH_AT(VoidFn, at::kPartyPass.v)(); }
+void PartyPlace(int x, int z, unsigned kind) { SH_AT(PlaceFn, at::kPartyPlace.v)(x, z, kind); }
+void ZennyAdd(unsigned amount) { SH_AT(ZennyFn, at::kZennyAdd.v)(amount, 0); }
 
 // A run's end: ScriptFlags_Clear40, then the step and the run 0.
 void EndRun() {
@@ -362,7 +362,7 @@ SC6_EXPORT void __cdecl Scena06_EnterArea(void) {
         unsigned char* const bits = Bits();
         ClearCounters();
         SH_CALL(Flags_Set)(bits, 0x3F);
-        SH_AT(VoidFn, at::kSetBit80)();
+        SH_AT(VoidFn, at::kSetBit80.v)();
     }
     if (Area() == 0x57) {
         const unsigned c2 = Counter(2);
@@ -663,7 +663,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
         SetStep(0xE);
         Set(0xB);
         Set(9);
-        SH_AT(ByteFn, at::kKeyItemPut)(4);
+        SH_AT(ByteFn, at::kKeyItemPut.v)(4);
         return;
     case 14: {
         if (Counter(0) != 0x32) return;
@@ -1391,7 +1391,7 @@ SC6_EXPORT void __cdecl Scena06_Run10(void) {
         return;
     case 1:
         if (Counter(0) != 8) return;
-        SH_AT(VoidFn, at::kSoundJmp)();
+        SH_AT(VoidFn, at::kSoundJmp.v)();
         SH_CALL(Sound_LoadStream)(2);
         SetStep(2);
         return;
@@ -2290,11 +2290,11 @@ SC6_EXPORT unsigned char __cdecl Scena06_StepHook(int x, int z) {
 // Scena06_CellHandlers with (x, z), whose al is the answer. Entry 1 is the
 // bare ret 0x437CC0: its al is what 0x56D800 left in eax, the index found.
 SC6_EXPORT unsigned char __cdecl Scena06_CellHook(int x, int z) {
-    const unsigned char found = SH_AT(CellFindFn, at::kCellFind)(reinterpret_cast<const void*>(::bof3::Img(Scena06_Cells_addr)), 4, x, z);
+    const unsigned char found = SH_AT(CellFindFn, at::kCellFind.v)(reinterpret_cast<const void*>(::bof3::Img(Scena06_Cells_addr)), 4, x, z);
     const int index = static_cast<signed char>(found);
     if (index < 0) return 0xFF;
     const std::uint32_t entry = Entry(::bof3::Img(Scena06_CellHandlers_addr), index, at::kCellHandlerCount, "Scena06_CellHook");
-    if (entry == at::kBareRet) return found;
+    if (entry == at::kBareRet.v) return found;
     return reinterpret_cast<CellEntry>(static_cast<std::uintptr_t>(entry))(x, z);
 }
 

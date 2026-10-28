@@ -98,7 +98,7 @@ extern "C" void __cdecl Scena08_PartyJoin784(void) {
     SH_CALL(Party_Join)(7);
     SH_CALL(Party_Join)(8);
     SH_CALL(Party_Join)(4);
-    SH_AT(void (__cdecl*)(), at::kPartyPalettes)();
+    SH_AT(void (__cdecl*)(), at::kPartyPalettes.v)();
 }
 
 // original 0x524870: an effect object of kind 0x34 at the cell (x, z). With

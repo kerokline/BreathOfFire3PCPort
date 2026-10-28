@@ -168,7 +168,7 @@ extern "C" void __cdecl Party_PlaceForBattle(std::int32_t x, std::int32_t z, uns
             slot_arg = (slot_arg & 0xFFFFFF00u) | j;
             if (j >= 3) break;
         }
-        SH_AT(void (__cdecl*)(std::int32_t, std::int32_t, std::uint32_t), at::kFormationPlace)(
+        SH_AT(void (__cdecl*)(std::int32_t, std::int32_t, std::uint32_t), at::kFormationPlace.v)(
             static_cast<std::int32_t>(BossSi_CentreX), static_cast<std::int32_t>(BossSi_CentreZ), slot_arg);
         unsigned char* const s = Sprite_Current;
         unsigned char* const pos = At(::bof3::Img(at::kSlotPositions) + (slot_arg & 0xFF) * 8);
@@ -380,7 +380,7 @@ extern "C" void __cdecl MapView_FillCells(void) {
 extern "C" std::uint32_t __cdecl Camera_TurnToDegrees(unsigned angle_arg, unsigned step_arg) {
     const std::int32_t step = Degrees(S8(static_cast<unsigned char>(step_arg)));
     const std::int32_t angle = Degrees(static_cast<short>(angle_arg)) & 0xFFF;
-    return SH_AT(std::uint32_t (__cdecl*)(std::int32_t, std::int32_t), at::kCameraTurnYaw)(angle, step);
+    return SH_AT(std::uint32_t (__cdecl*)(std::int32_t, std::int32_t), at::kCameraTurnYaw.v)(angle, step);
 }
 
 // original 0x57C6B0: Cond_AngleFB eased toward an angle (s16 degrees, as a
@@ -449,7 +449,7 @@ extern "C" unsigned char __cdecl AbilityList_Add(unsigned id_arg, unsigned membe
     unsigned char* list;
     unsigned slots;
     if (static_cast<unsigned char>(shared) == 0) {
-        list = SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, unsigned), at::kAbilityListOf)(member, id_arg, which);
+        list = SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, unsigned), at::kAbilityListOf.v)(member, id_arg, which);
         slots = 10;
     } else {
         list = At(::bof3::Img(at::kAbilityShared));

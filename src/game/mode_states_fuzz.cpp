@@ -233,7 +233,7 @@ const void* StubFor(std::uint32_t target) {
     case 0x4549F0: return f(kStubs.clut_copy_row);
     case 0x57C4C0: return f(kStubs.face_direction);
     case 0x454770: return f(kStubs.bank_file);
-    case kAfterShop: return f(kStubs.after_shop);
+    case kAfterShop.v: return f(kStubs.after_shop);
     case 0x516D50: return f(kStubs.emit_glyph);
     case 0x56E6C0: return f(kStubs.areamap_frame);
     case 0x57B780: return f(kStubs.extra_screens);
@@ -243,9 +243,9 @@ const void* StubFor(std::uint32_t target) {
     case 0x454AD0: return f(kStubs.tint_frame);
     case 0x592F00: return f(kStubs.draw_frame);
     case 0x56D690: return f(kStubs.mode_dispatch);
-    case kMenuStates: return f(kStubs.menu_states);
+    case kMenuStates.v: return f(kStubs.menu_states);
     case 0x59E230: return f(kStubs.task_records);
-    case kShopStates: return f(kStubs.shop_states);
+    case kShopStates.v: return f(kStubs.shop_states);
     case 0x534590: return f(kStubs.shade_begin);
     case 0x534790: return f(kStubs.shade_step);
     case 0x57C140: return f(kStubs.flags_test);

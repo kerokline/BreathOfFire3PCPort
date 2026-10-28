@@ -19,7 +19,7 @@ namespace sprt_draw {
 using U = std::uint32_t;
 
 // A bare `ret` (24 callers); each handler calls it twice with a 1 pushed.
-constexpr U kRetOnly = bof3::addr::BareRet;
+constexpr ::bof3::image::CodeVa kRetOnly{bof3::addr::BareRet};
 
 // Data the handlers read, all Capcom's addresses (docs/sprt-draw.md section 2).
 // kScaleX: now D3d_ScaleX (symbols.toml). D3d_ScaleX, float

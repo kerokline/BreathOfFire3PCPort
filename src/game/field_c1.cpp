@@ -1006,7 +1006,7 @@ extern "C" unsigned char __cdecl EffectKind17_CellBlocked(unsigned cell_x, unsig
 // +0x89) is 1, else 0x12; +0 |= 2; +1 up.
 extern "C" void __cdecl EffectKind1B_Start(void) {
     Cur()[8] = ObjTrio[0].direction;
-    SH_AT(void (__cdecl*)(), at::kFc2Aim)();
+    SH_AT(void (__cdecl*)(), at::kFc2Aim.v)();
     Cur()[0x27] = 0x7B;
     SH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>((Cur()[8] >> 1) + 0x4A));
     SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1ec0)), 1);
@@ -1137,7 +1137,7 @@ extern "C" void __cdecl EffectKind30_Start(void) {
     rv::As<records::EffectObject>(Cur())->step_z = 0;
     rv::Store<U>(rv::As<records::EffectObject>(Cur())->step_y, 0);
     rv::As<records::EffectObject>(Cur())->timer = 0;
-    SH_AT(void (__cdecl*)(), at::kFc2Place)();
+    SH_AT(void (__cdecl*)(), at::kFc2Place.v)();
     Cur()[0xB] = 0;
     rv::As<records::EffectObject>(Cur())->state = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->state + 1);
     SH_CALL(Sprite_UpdateScreenA)();
