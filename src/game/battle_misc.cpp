@@ -103,10 +103,10 @@ U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p
 U SpriteCurrent() { return Long(At(at::Sprite_CurrentAt())); }
 void SetSpriteCurrent(U v) { PutLong(At(at::Sprite_CurrentAt()), v); }
 U CurrentEnemy() { return static_cast<U>(reinterpret_cast<std::uintptr_t>(BattleE3_CurrentEnemy)); }
-unsigned char* Banner(U i) { return At(kBanners + i * 0xC); }
+unsigned char* Banner(U i) { return At(::bof3::Img(kBanners.v) + i * 0xC); }
 
 // The context a slot byte names: 0x93A000 + slot * 0x84, no bound.
-U Context(U slot) { return BattleTask_Slots_addr + (slot & 0xFF) * kContextStride; }
+U Context(U slot) { return ::bof3::Img(BattleTask_Slots_addr) + (slot & 0xFF) * kContextStride; }
 
 }  // namespace
 
@@ -128,14 +128,14 @@ extern "C" long __cdecl Battle_WrapIndex(long high, long low, long value) {
 // Byte arithmetic. The one caller (0x42EED0, before the menu's dispatch)
 // reloads eax.
 extern "C" void __cdecl Battle_PulseStep(void) {
-    const unsigned char c = At(kPulse)[0];
+    const unsigned char c = At(::bof3::Img(kPulse.v))[0];
     if (c >= 0x1F) BattleMisc_PulseDown = 1;
     if (c == 0) {
         BattleMisc_PulseDown = 0;
-        At(kPulse)[0] = static_cast<unsigned char>(c + 2);
+        At(::bof3::Img(kPulse.v))[0] = static_cast<unsigned char>(c + 2);
         return;
     }
-    At(kPulse)[0] = static_cast<unsigned char>(BattleMisc_PulseDown == 1 ? c - 2 : c + 2);
+    At(::bof3::Img(kPulse.v))[0] = static_cast<unsigned char>(BattleMisc_PulseDown == 1 ? c - 2 : c + 2);
 }
 
 // original 0x446A50 (PSX 0x801DD820 Battle_PlayActorCue): Sound_PlayEffect of the
@@ -147,7 +147,7 @@ extern "C" void __cdecl Battle_PulseStep(void) {
 extern "C" unsigned long __cdecl Battle_PlayActorCue(unsigned cue) {
     const U record = Long(At(at::Field_StateAt()));
     const U index = Word(At(record + 0x2C)) + (cue & 0xFF) * 3;
-    const U id = (record & 0xFFFF0000u) | Word(At(kCueTable + index * 2));
+    const U id = (record & 0xFFFF0000u) | Word(At(::bof3::Img(kCueTable.v) + index * 2));
     return g.play_effect(id);
 }
 
@@ -198,7 +198,7 @@ extern "C" void __cdecl Battle_InitActorContexts(void) {
         }
     }
     for (U i = 0; i < 8; ++i) {
-        const U object = Battle_Enemies_addr + i * kEnemyStride;
+        const U object = ::bof3::Img(Battle_Enemies_addr) + i * kEnemyStride;
         if (At(object)[0] & 1) {
             SetSpriteCurrent(object);
             BattleE3_CurrentEnemy = reinterpret_cast<records::BattleEnemy*>(static_cast<std::uintptr_t>(object));
@@ -228,7 +228,7 @@ extern "C" unsigned long __cdecl Battle_SpawnActorCopies(void) {
             object = at::ObjTrioAt() + index * kPartyStride;
             if (!(At(object)[0] & 1) || (At(object + 0x134)[0] & 8)) continue;
         } else {
-            object = Battle_Enemies_addr + (index - 3) * kEnemyStride;
+            object = ::bof3::Img(Battle_Enemies_addr) + (index - 3) * kEnemyStride;
             eax = g.actor_out(index);
             if ((eax & 0xFF) != 0 || (At(object + 0x114)[0] & 8)) continue;
         }
@@ -260,7 +260,7 @@ extern "C" unsigned long __cdecl Battle_SpawnActorCopies(void) {
 // shifted down, logically); a -1 there: al 1; else Sound_LoadStream(its low half
 // + 0x1000), al 0. The four callers test al.
 extern "C" unsigned char __cdecl Battle_LoadSoundByKey(unsigned key, unsigned set) {
-    U p = Long(At(kSoundLists + (set & 0xFF) * 4));
+    U p = Long(At(::bof3::Img(kSoundLists.v) + (set & 0xFF) * 4));
     if (p == 0) return 1;
     U e = Long(At(p));
     if (e != 0xFFFFFFFFu) {
@@ -304,7 +304,7 @@ extern "C" unsigned long __cdecl Battle_ClearActorBit(unsigned actor) {
 // 0x591E50 masks off. The one caller (0x447776) tests al.
 extern "C" unsigned char __cdecl ItemMenu_CanUseSelected(void) {
     const U list = g.item_list(static_cast<unsigned char>(BattleActorCopies_ItemActor), Window16_Page, 1);
-    const U item = At(list + At(WindowRecords_addr + 0x24c)[0])[0];
+    const U item = At(list + At(::bof3::Img(WindowRecords_addr) + 0x24c)[0])[0];
     const U high = list & 0xFFFF0000u;
     const U usable = g.item_usable(2, high | static_cast<unsigned char>(BattleActorCopies_ItemActor), high | item);
     return (usable & 0xFF) == 0;
@@ -320,7 +320,7 @@ extern "C" unsigned char __cdecl ItemMenu_CanUseSelected(void) {
 // 0x80340D = 8. In that order. The one caller (0x447469) reloads eax.
 extern "C" void __cdecl ItemMenu_SetupForActor(void) {
     const U acting = static_cast<U>(reinterpret_cast<std::uintptr_t>(BattleE4_MenuActor));
-    unsigned char* const w = At(Window16_addr);
+    unsigned char* const w = At(::bof3::Img(Window16_addr));
     auto* const window_rec = rv::As<records::WindowRecord>(w);
     window_rec->in_use = 1;
     window_rec->handler = 8;
@@ -329,12 +329,12 @@ extern "C" void __cdecl ItemMenu_SetupForActor(void) {
     const U actor = At(acting + 5)[0];
     w[0xA] = static_cast<unsigned char>(actor);
     w[0xD] = 0xFF;
-    const unsigned char page = At(kActorPages + actor * 3)[0];
+    const unsigned char page = At(::bof3::Img(kActorPages.v) + actor * 3)[0];
     w[8] = 2;
     w[0xB] = page;
     w[9] = 0;
-    PutWord(w + 0x10, At(kActorPages + 1 + actor * 3)[0]);
-    w[0xC] = At(kActorPages + 2 + actor * 3)[0];
+    PutWord(w + 0x10, At(::bof3::Img(kActorPages.v) + 1 + actor * 3)[0]);
+    w[0xC] = At(::bof3::Img(kActorPages.v) + 2 + actor * 3)[0];
     const U flags = Long(At(BattleActorCopies_Command + 0x10));
     PutWord(w + 0x14, ((flags & 2) && !(flags & 0x20000)) ? 2 : 0);
     window_rec->x = 0x140;
@@ -357,15 +357,15 @@ extern "C" unsigned char __cdecl Battle_ReturnTrue(void) { return 1; }
 // word +4 = 0xFF56, word +6 = 0x3F, 0x80340C = 0, 0x80340D = 8, 0x80340E = 0.
 // eax is 0 at the end (xor eax, eax); ours returns it.
 extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
-    unsigned char* const w = At(Window16_addr);
+    unsigned char* const w = At(::bof3::Img(Window16_addr));
     auto* const window_rec = rv::As<records::WindowRecord>(w);
     const unsigned char a = BattleMisc_PartyPages;
     window_rec->in_use = 1;
     window_rec->kind = 1;
     w[0xA] = a;
-    const unsigned char b = At(BattleMisc_PartyPages_addr + 1)[0];
+    const unsigned char b = At(::bof3::Img(BattleMisc_PartyPages_addr) + 1)[0];
     w[0xB] = b;
-    const unsigned char c = At(BattleMisc_PartyPages_addr + 2)[0];
+    const unsigned char c = At(::bof3::Img(BattleMisc_PartyPages_addr) + 2)[0];
     window_rec->state = 2;
     w[8] = 2;
     window_rec->handler = 8;
@@ -388,7 +388,7 @@ extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
 extern "C" unsigned long __cdecl ItemMenu_FreeWindows(void) {
     U eax = 0;
     for (U k = 0; k < 4; ++k) {
-        BattleWinStates_Current = Window16_addr + k * 0x24;
+        BattleWinStates_Current = ::bof3::Img(Window16_addr) + k * 0x24;
         eax = g.free_window();
     }
     return eax;
@@ -470,7 +470,7 @@ extern "C" unsigned long __cdecl BattleBanner_ClearAll(void) {
         Banner(i)[1] = 0;
         Banner(i)[2] = 0;
     }
-    return kBanners + 1 + 8 * 12;
+    return ::bof3::Img(kBanners.v) + 1 + 8 * 12;
 }
 
 // original 0x44A830 (PSX 0x801DE820 BattleBanner_NoneOfKind): al 0 when an active
@@ -487,7 +487,7 @@ extern "C" unsigned char __cdecl BattleBanner_NoneOfKind(unsigned kind) {
 // (index + 1) & 0xF. eax the entry's offset, index * 8 (0x42FF2F returns it).
 extern "C" unsigned long __cdecl BattleQueue_Push(unsigned a, unsigned b, unsigned long value) {
     const U index = BattleActorCopies_QueueWrite;
-    unsigned char* const entry = At(kQueue + index * 8);
+    unsigned char* const entry = At(::bof3::Img(kQueue.v) + index * 8);
     entry[0] = static_cast<unsigned char>(a);
     entry[1] = static_cast<unsigned char>(b);
     PutLong(entry + 4, static_cast<U>(value));
@@ -507,7 +507,7 @@ extern "C" unsigned char __cdecl BattleQueue_Pending(void) {
 // DIVERGENCE DIV-0052: 12 bytes, the US release's count, once a language
 // overlay has repointed the table at its longer words (src/game/battle_text.cpp).
 extern "C" unsigned long __cdecl BattleBanner_SetMessage(unsigned msg, unsigned b2) {
-    const U eax = g.copy_n(kBannerText, Long(At(kMessages + (msg & 0xFF) * 4)), BattleMessages_CopyRoom());
+    const U eax = g.copy_n(::bof3::Img(kBannerText.v), Long(At(::bof3::Img(kMessages.v) + (msg & 0xFF) * 4)), BattleMessages_CopyRoom());
     Banner(0)[2] = static_cast<unsigned char>(b2);
     return eax;
 }
@@ -521,19 +521,19 @@ extern "C" unsigned long __cdecl BattleBanner_SetMessage(unsigned msg, unsigned 
 // rep movsb). Then BattleBanner_Set(0, 1, 1, 0, 0xFF, kBannerText), whose eax
 // is returned.
 extern "C" unsigned long __cdecl BattleBanner_ShowName(const unsigned char* actor) {
-    g.copy_n(kBannerText, Addr(actor) + 0x80, 8);
+    g.copy_n(::bof3::Img(kBannerText.v), Addr(actor) + 0x80, 8);
     if (BattlePhases_B7A != 0) {
         const U src = BattleMisc_NameSuffix;
         U n = 0;
         while (At(src + n)[0] != 0) ++n;
         ++n;
-        U dst = kBannerText;
+        U dst = ::bof3::Img(kBannerText.v);
         while (At(dst)[0] != 0) ++dst;
         U k = 0;
         for (; k + 4 <= (n & ~3u); k += 4) PutLong(At(dst + k), Long(At(src + k)));
         for (U r = 0; r < (n & 3); ++r, ++k) At(dst + k)[0] = At(src + k)[0];
     }
-    return g.banner_set(0, 1, 1, 0, 0xFF, kBannerText);
+    return g.banner_set(0, 1, 1, 0, 0xFF, ::bof3::Img(kBannerText.v));
 }
 
 // --- the enemy AI's per-turn rows -------------------------------------------------------
@@ -571,9 +571,9 @@ extern "C" unsigned long __cdecl EnemyAI_TurnCheck(void) {
     static constexpr U kMasks[9] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x100, 0x80};
     for (U i = 0; i < 4; ++i) {
         const U actor = CurrentEnemy();
-        const U row = kAiScripts + At(actor + 0xF0)[0] * 0x8Cu + i * 16;
+        const U row = ::bof3::Img(kAiScripts.v) + At(actor + 0xF0)[0] * 0x8Cu + i * 16;
         const U op = At(row)[0];
-        const U acting = At(kActingKind)[0];
+        const U acting = At(::bof3::Img(kActingKind.v))[0];
         switch (op) {
         case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8:
             if (g.ai_condition(kMasks[op]) & 0xFF) FireRow(CurrentEnemy(), row, i);

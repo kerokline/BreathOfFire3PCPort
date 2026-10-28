@@ -85,7 +85,7 @@ const bh::Callee kCallees[] = {
 
 // The cells beyond the harness's battle frame the 44 read or write.
 const bh::Region kRegions[] = {
-    {at::kScriptVar3, 4},        // movement-script variable 3 (set-up 54's end)
+    {at::kScriptVar3.v, 4},        // movement-script variable 3 (set-up 54's end)
     {0x9035A4, 4},               // Field_ActiveMember (set-up 52's exit)
 };
 
@@ -138,7 +138,7 @@ void SeedKind(unsigned k) {
         s[9] = Byte({0, 0, 0, 1, 0xFF, 0x80});
         // an enemy 3..10 two times in three, else the harness's member 0..2
         // (whose object "0x93B960 - (3 - actor) * 0x128" is inside the task slots)
-        if (bh::Often()) B(at::kActor) = static_cast<unsigned char>(3 + bh::Next() % 8);
+        if (bh::Often()) B(::bof3::Img(at::kActor.v)) = static_cast<unsigned char>(3 + bh::Next() % 8);
         break;
     default: break;
     }
@@ -147,7 +147,7 @@ void SeedKind(unsigned k) {
 // What the kinds' functions read again after a call: the acting enemy
 // (BossDLord_HookFx reads 0x904B34 after BattleTask_Create; the harness moves
 // it only to a member).
-void DisturbKind(U h) { B(at::kActor) = static_cast<unsigned char>(3 + (h >> 16) % 8); }
+void DisturbKind(U h) { B(::bof3::Img(at::kActor.v)) = static_cast<unsigned char>(3 + (h >> 16) % 8); }
 
 // --- the effect tasks --------------------------------------------------------------
 
@@ -193,7 +193,7 @@ void DisturbTask(U h) {
     case 0: Owner()[1] = static_cast<unsigned char>(v & 1 ? 2 : (v >> 1) % 7); break;
     case 1: Owner()[0xB] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 2: SetWord(Mem(BossSa_EndCount_addr), v % 10); break;
-    default: B(at::kFlags) = static_cast<unsigned char>(B(at::kFlags) ^ 4); break;
+    default: B(::bof3::Img(at::kFlags.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kFlags.v)) ^ 4); break;
     }
 }
 

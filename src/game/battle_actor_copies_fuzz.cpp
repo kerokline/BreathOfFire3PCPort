@@ -70,12 +70,12 @@ U Watched() {
     h = Fnv(h, At(0x904AA0), 0x28);   // the phase bytes .. 0x904AC7
     h = Fnv(h, g_cmd, sizeof g_cmd);
     h = Fnv(h, g_act, sizeof g_act);
-    h = Fnv(h, At(at::kRepeatLatch), 2);
+    h = Fnv(h, At(::bof3::Img(at::kRepeatLatch.v)), 2);
     h = Fnv(h, At(WindowRecords_addr + 0x93), 1);
     h = Fnv(h, At(0x8033A0), 0x80);   // the item window's record and its cursor fields
     h = Fnv(h, At(BattleActorCopies_ItemActor_addr), 1);
     h = Fnv(h, At(0x93C2A0), 0xA0);   // the message queue
-    h = Fnv(h, At(at::kActorPages), 0x300);
+    h = Fnv(h, At(::bof3::Img(at::kActorPages.v)), 0x300);
     return h;
 }
 
@@ -98,13 +98,13 @@ void Disturb() {
     case 9: SetWord(At(Input_Pressed_addr), w); break;
     case 10: SetWord(At(v % 2 ? Field_CancelButtons_addr : Field_ConfirmButtons_addr), v % 3 == 0 ? 0 : 1u << (w % 16)); break;
     case 11: B(Battle_EnemyCount_addr) = static_cast<unsigned char>(v % 9); break;
-    case 12: B(at::kPartyCount) = static_cast<unsigned char>(v % 5); break;
+    case 12: B(::bof3::Img(at::kPartyCount.v)) = static_cast<unsigned char>(v % 5); break;
     case 13: Cmd()[0] = static_cast<unsigned char>(v); break;
     case 14: g_list[w % sizeof g_list] = static_cast<unsigned char>(v % 4 == 0 ? 0x97 : v); break;
     case 15: {
         // the flags of the item a list read would give, most of the time
         const unsigned id = g_list[w % sizeof g_list];
-        B(at::kItemRecords + id * at::kItemRecordSize) = static_cast<unsigned char>(v);
+        B(::bof3::Img(at::kItemRecords.v) + id * at::kItemRecordSize) = static_cast<unsigned char>(v);
         break;
     }
     case 16: SetWord(At(WindowRecords_addr + 0x250), v % 2 ? v % 9 : w); break;
@@ -301,17 +301,17 @@ const Clone kClones[kCount] = {
 struct Region { U at, size; };
 const Region kRegions[] = {
     {0x904AA0, 0x40},             // the phase bytes, 0x904AAF, the counts, 0x904AC3
-    {at::kRepeatLatch, 2},
+    {at::kRepeatLatch.v, 2},
     {Input_Pressed_addr, 2},
-    {at::kConfirm, 4},            // and Field_CancelButtons
+    {at::kConfirm.v, 4},            // and Field_CancelButtons
     {0x8031F0, 4},                // window record 4's first bytes (0x8031F3)
     {0x8033A0, 0x80},             // the item window's record 16 .. its cursor fields 0x803413
     {BattleActorCopies_ItemActor_addr, 1},
     {BattleE4_MenuActor_addr, 4},
     {BattleActorCopies_Command_addr, 4},
     {0x93C2A0, 0xA0},             // the message queue's indices and entries
-    {at::kActorPages, 0x300},     // 3 bytes for each of 256 owners
-    {at::kItemRecords, 0x1800},   // constant data - random here, put back after: 256 item records
+    {at::kActorPages.v, 0x300},     // 3 bytes for each of 256 owners
+    {at::kItemRecords.v, 0x1800},   // constant data - random here, put back after: 256 item records
 };
 constexpr unsigned kRegionBytes = 0x40 + 2 + 2 + 4 + 4 + 0x80 + 1 + 4 + 4 + 0xA0 + 0x300 + 0x1800;
 
@@ -371,8 +371,8 @@ void Fix() {
 // Buttons: none, the cancel set, the confirm set, both, anything.
 void SeedButtons() {
     SetWord(At(Field_CancelButtons_addr), Half() ? 1u << (Next() % 16) : Next());
-    SetWord(At(at::kConfirm), Half() ? 1u << (Next() % 16) : Next());
-    const unsigned cancel = Word(At(Field_CancelButtons_addr)), confirm = Word(At(at::kConfirm));
+    SetWord(At(::bof3::Img(at::kConfirm.v)), Half() ? 1u << (Next() % 16) : Next());
+    const unsigned cancel = Word(At(Field_CancelButtons_addr)), confirm = Word(At(::bof3::Img(at::kConfirm.v)));
     unsigned pressed;
     switch (Next() % 6) {
     case 0: pressed = 0; break;
@@ -390,7 +390,7 @@ void SeedTarget() {
     if (Often()) Cmd()[0] = Pick(kTargets);
     static const unsigned char kCounts[] = {0, 1, 2, 3, 4, 5, 8, 0xFF};
     if (Often()) B(Battle_EnemyCount_addr) = Pick(kCounts);
-    if (Often()) B(at::kPartyCount) = Pick(kCounts);
+    if (Often()) B(::bof3::Img(at::kPartyCount.v)) = Pick(kCounts);
 }
 
 // Each branch's boundaries, on top of the random bytes.
@@ -431,8 +431,8 @@ void Seed(unsigned k) {
             // the window's own buttons: one cancel bit, one confirm bit apart
             // from it, and one of them pressed
             SetWord(At(Field_CancelButtons_addr), 1u << (Next() % 8));
-            SetWord(At(at::kConfirm), 1u << (8 + Next() % 8));
-            SetWord(At(Input_Pressed_addr), Word(At(Half() ? at::kConfirm : Field_CancelButtons_addr)));
+            SetWord(At(::bof3::Img(at::kConfirm.v)), 1u << (8 + Next() % 8));
+            SetWord(At(Input_Pressed_addr), Word(At(Half() ? ::bof3::Img(at::kConfirm.v) : Field_CancelButtons_addr)));
         }
         break;
     }

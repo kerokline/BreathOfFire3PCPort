@@ -116,11 +116,11 @@ void Setup(U end, U exit, U event) {
 // The event hooks' shared cases (the same code in B04, B05, B06 and B07).
 // Phase 0: with round-flag bit 0x40 and the target 0, 0x904AAD bit 0.
 void EventRoundFlag() {
-    if ((B(0x904AA8) & 0x40) && B(at::kTarget) == 0) BossSe_Script |= 1;
+    if ((B(0x904AA8) & 0x40) && B(::bof3::Img(at::kTarget.v)) == 0) BossSe_Script |= 1;
 }
 // The action phase's test: actor 0, command kind 4, command id 0x78.
 bool LeaderCommand78() {
-    if (B(at::kActor) != 0 || B(at::kCommandKind) != 4) return false;
+    if (B(::bof3::Img(at::kActor.v)) != 0 || B(::bof3::Img(at::kCommandKind.v)) != 4) return false;
     return Word(At(BattleSprites_Action) + 2) == 0x78;
 }
 // Phase 3: the leader's HP 0 clears its +0x134 bit 1.
@@ -131,11 +131,11 @@ void EventLeaderDown() {
 // target 0x40, and the battle's command kind and target the same.
 void EventLeaderCommand() {
     if (!(BossSe_Script & 1)) return;
-    SetWord(At(ObjTrio_addr + 0x126), 0x78);
+    SetWord(At(::bof3::Img(ObjTrio_addr) + 0x126), 0x78);
     rv::Bytes(ObjTrio)[0x125] = 4;
-    B(at::kCommandKind) = 4;
+    B(::bof3::Img(at::kCommandKind.v)) = 4;
     rv::Bytes(ObjTrio)[0x124] = 0x40;
-    B(at::kTarget) = 0x40;
+    B(::bof3::Img(at::kTarget.v)) = 0x40;
 }
 
 // The event hook of set-ups 4, 5 and 6 (three copies of one body).
@@ -210,8 +210,8 @@ void ExitPosePair(unsigned tag0, unsigned char flip) {
         BH_CALL(BossActor_ClearBit40)(tag0 + 1);
         return;
     }
-    PoseActor(tag0, Battle_Enemies_addr, BossSb_Enemy0Pose_addr, flip);
-    PoseActor(tag0 + 1, Battle_Enemies_addr + 0x128, BossSb_Enemy1Pose_addr, flip);
+    PoseActor(tag0, ::bof3::Img(Battle_Enemies_addr), ::bof3::Img(BossSb_Enemy0Pose_addr), flip);
+    PoseActor(tag0 + 1, ::bof3::Img(Battle_Enemies_addr) + 0x128, ::bof3::Img(BossSb_Enemy1Pose_addr), flip);
 }
 
 // The exit hook of set-ups 8, 9, 10: actor `tag` shown, found, bank 0x83,
@@ -230,7 +230,7 @@ void ExitPoseOne(unsigned tag, bool flip) {
 // script's variable 3 = `var`, 0x446DE0; otherwise 0x446E00.
 void EndVar(unsigned char var) {
     if (Battle_EndFlags & 2) {
-        B(at::kScriptVar3) = var;
+        B(::bof3::Img(at::kScriptVar3.v)) = var;
         BH_AT(Handler, at::kEndWin)();
         return;
     }
@@ -365,8 +365,8 @@ extern "C" void __cdecl Boss06_Exit(void) {
         BH_CALL(BossActor_ClearBit40)(5);
         return;
     }
-    PoseActor(4, Battle_Enemies_addr, BossSb_Enemy0Pose_addr, 1);
-    PoseActor(5, Battle_Enemies_addr + 0x128, BossSb_Enemy1Pose_addr, 1);
+    PoseActor(4, ::bof3::Img(Battle_Enemies_addr), ::bof3::Img(BossSb_Enemy0Pose_addr), 1);
+    PoseActor(5, ::bof3::Img(Battle_Enemies_addr) + 0x128, ::bof3::Img(BossSb_Enemy1Pose_addr), 1);
     SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(BossSb_Enemy1Place));
     SetLong(Sprite_Current + 0x38, Battle_Enemies[1].z);
     SetLong(Sprite_Current + 0x3C, Battle_Enemies[1].height);
@@ -441,13 +441,13 @@ extern "C" unsigned char __cdecl Boss07_Event(unsigned code) {
         if (LeaderCommand78()) {
             Battle_EndFlags |= 4;
             rv::Bytes(ObjTrio)[0x134] &= 0xFD;
-            char* const text = reinterpret_cast<char*>(At(at::kBannerText));
-            BH_CALL(Str_CopyN)(text, reinterpret_cast<const char*>(At(at::kBannerSource)), 0x10);
+            char* const text = reinterpret_cast<char*>(At(::bof3::Img(at::kBannerText.v)));
+            BH_CALL(Str_CopyN)(text, reinterpret_cast<const char*>(At(::bof3::Img(at::kBannerSource.v))), 0x10);
             BH_CALL(BattleBanner_Add)(1, 1, 0, 0x1E, text);
             WindowRecords[4].state = 1;
-            Sprite_Current = At(ObjTrio_addr);
+            Sprite_Current = At(::bof3::Img(ObjTrio_addr));
             BH_CALL(Sprite_SetAnimation)(0x2C);
-            B(at::kPhase) = 4;
+            B(::bof3::Img(at::kPhase.v)) = 4;
             BossSb_Countdown = 0x3C;
             BattleActions_Step = 2;
         }
@@ -504,7 +504,7 @@ extern "C" void __cdecl Boss13_Setup(void) { Setup(bof3::addr::Boss13_End, bof3:
 // 0x446E20, then 0x92BF18 = 3.
 extern "C" void __cdecl Boss13_End(void) {
     const unsigned char end = Battle_EndFlags;
-    B(at::kScriptVar3) = 0x32;
+    B(::bof3::Img(at::kScriptVar3.v)) = 0x32;
     if (end & 2) {
         BH_AT(Handler, at::kEndWin)();
         return;

@@ -90,7 +90,7 @@ Fake& g_fake = g_fakes[0];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 32); }
 void SetPointer(std::uint32_t cell, const void* p) { SetLong(At(cell), static_cast<std::int32_t>(Address(p))); }
 unsigned char* Pointer(std::uint32_t cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Long(At(cell)))); }
-unsigned char* Sparkle(unsigned k) { return At(at::kSparklePool + (k % 4) * at::kSparkleStride); }
+unsigned char* Sparkle(unsigned k) { return At(::bof3::Img(at::kSparklePool.v) + (k % 4) * at::kSparkleStride); }
 
 // Every cell below is one some function reads again after a call.
 void Disturb() {
@@ -103,7 +103,7 @@ void Disturb() {
     case 2: Sprite_Current = g_sprites[v & 1]; break;
     case 3: Gfx_PacketNext = PrimAt(v); break;
     case 4: SetPointer(SndStream_Buffer_addr, &g_fakes[v & 1]); break;
-    case 5: SetWord(At(at::kScratch + 2 * (v % 8)), h >> 16); break;
+    case 5: SetWord(At(::bof3::Img(at::kScratch.v) + 2 * (v % 8)), h >> 16); break;
     case 6: SetWord(At(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 7: {
         static const unsigned kFields[] = {5, 6, 7, 3, 4, 8, 9, 0xA, 0xC, 0x20, 0x21, 0x22, 0x14, 0x18};
@@ -529,15 +529,15 @@ static_assert(kStopK + 1 == kCount, "the seeding's indices");
 
 struct Region { std::uint32_t at, size; };
 Region g_regions[] = {
-    {at::kSparklePool, at::kSparkles * at::kSparkleStride},   // the pool
+    {at::kSparklePool.v, at::kSparkles * at::kSparkleStride},   // the pool
     {BattleItems_SparkleCurrent_addr, 4},
     {BattleE2_Owner_addr, 4},
-    {at::kScratch, 0x10},
+    {at::kScratch.v, 0x10},
     {Prim_VertexScratch_addr, 0x20},
-    {at::kSparkleOffsets, 0x104},                             // 0x65AD34..0x65AE38: the sparkles' tables, Sparkle_Types[0..3]
+    {at::kSparkleOffsets.v, 0x104},                             // 0x65AD34..0x65AE38: the sparkles' tables, Sparkle_Types[0..3]
     {0x937F88, 0x10},                                         // Sprite_Current, Frame_Counter (0x937F94)
     {0x7E0670, 4},                                            // Gfx_PacketNext
-    {at::kActorIndex, 4},
+    {at::kActorIndex.v, 4},
     {BattlePhases_B89_addr, 1},
     {EventBattle_Id_addr, 1},
     {ObjTrio_addr, 3 * at::kPartyStride},
@@ -549,7 +549,7 @@ Region g_regions[] = {
     {0, 2 * kRecordBytes},                                    // g_sprites
     {0, 2 * kRecordBytes},                                    // g_actors
     {0, 0x40},                                                // g_cues
-    {at::kEnemyFxSize, 8 * 0x8C},                             // the enemy effect sizes of types 0..7
+    {at::kEnemyFxSize.v, 8 * 0x8C},                             // the enemy effect sizes of types 0..7
 };
 constexpr unsigned kRegionBytes = at::kSparkles * at::kSparkleStride + 4 + 4 + 0x10 + 0x20 + 0x104 + 0x10 + 4 + 4 + 1 + 1 +
                                   3 * at::kPartyStride + 8 * at::kEnemyStride + 4 + 4 + 4 + kPrimBytes +
@@ -585,10 +585,10 @@ void Fix(const void* const* types) {
     SetPointer(BattleE2_Owner_addr, g_actors[Next() & 1]);
     Sprite_Current = g_sprites[Next() & 1];
     Gfx_PacketNext = PrimAt(Next());
-    At(at::kActorIndex)[0] = static_cast<unsigned char>(Next() % 11);
+    At(::bof3::Img(at::kActorIndex.v))[0] = static_cast<unsigned char>(Next() % 11);
     for (unsigned j = 0; j < 8; ++j)
         SetPointer(Battle_Enemies_addr + j * at::kEnemyStride + 0xF8, g_cues + Next() % 0x20);
-    for (unsigned t = 0; t < 4; ++t) SetPointer(at::kSparkleTypes + 4 * t, types[t]);
+    for (unsigned t = 0; t < 4; ++t) SetPointer(::bof3::Img(at::kSparkleTypes.v) + 4 * t, types[t]);
     SetPointer(Snd_Device_addr, Next() % 4 == 0 ? nullptr : &g_fake);
     SetPointer(SndStream_Buffer_addr, Next() % 4 == 0 ? nullptr : &g_fake);
 }
@@ -614,8 +614,8 @@ Args Seed(unsigned k) {
         if (Often()) cur[at::kTimer] = kTimer[Next() % 4];
         static const std::uint16_t kOffsets[] = {0, 1, 0xFFFF, 0x7FFF, 0x8000, 7, 0xFFF8};
         const unsigned row = cur[at::kLimit] & 0x1F;
-        if (Often()) SetWord(At(at::kSparkleOffsets + row * 4), kOffsets[Next() % 7]);
-        if (Half()) SetWord(At(at::kSparkleOffsets + row * 4 + 2), kOffsets[Next() % 7]);
+        if (Often()) SetWord(At(::bof3::Img(at::kSparkleOffsets.v) + row * 4), kOffsets[Next() % 7]);
+        if (Half()) SetWord(At(::bof3::Img(at::kSparkleOffsets.v) + row * 4 + 2), kOffsets[Next() % 7]);
         break;
     }
     case kRiseK:
@@ -635,13 +635,13 @@ Args Seed(unsigned k) {
     }
     case kAllocK:
         for (unsigned i = 0; i < at::kSparkles; ++i) {
-            unsigned char* const s = At(at::kSparklePool + i * at::kSparkleStride);
+            unsigned char* const s = At(::bof3::Img(at::kSparklePool.v) + i * at::kSparkleStride);
             s[0] = static_cast<unsigned char>(s[0] | 1);
         }
         if (Next() % 5) {
             static const unsigned kFree[] = {0, 1, 0x7E, 0x7F};
             const unsigned f = Half() ? kFree[Next() % 4] : Next() % at::kSparkles;
-            unsigned char* const s = At(at::kSparklePool + f * at::kSparkleStride);
+            unsigned char* const s = At(::bof3::Img(at::kSparklePool.v) + f * at::kSparkleStride);
             s[0] = static_cast<unsigned char>(s[0] & 0xFE);
         }
         break;
@@ -656,8 +656,8 @@ Args Seed(unsigned k) {
     case kSoundK:
     case kFxSizeK: {
         static const unsigned char kIndex[] = {0, 2, 3, 4, 10, 1};
-        At(at::kActorIndex)[0] = kIndex[Next() % 6];
-        const unsigned index = At(at::kActorIndex)[0];
+        At(::bof3::Img(at::kActorIndex.v))[0] = kIndex[Next() % 6];
+        const unsigned index = At(::bof3::Img(at::kActorIndex.v))[0];
         if (k == kSetAnimK) args.a[0] = Stale(0xFF, Half() ? 0xFF : Next() & 0xFF);
         if (k == kFlashK) {
             args.a[0] = Stale(0xFF, kIndex[Next() % 6]);

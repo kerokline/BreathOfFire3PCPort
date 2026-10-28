@@ -37,15 +37,15 @@ constexpr std::uint32_t kMemberSize = 0x14C;
 // kTasks: now BattleTask_Slots (symbols.toml).
 constexpr std::uint32_t kTaskSize = 0x84;
 // The battle's globals (PSX 0x801462E0..).
-constexpr std::uint32_t kPhase = 0x904AA0;        // u8: 1 and 5 matter to 0x441570
+constexpr ::bof3::image::Va kPhase{0x904AA0};        // u8: 1 and 5 matter to 0x441570
 // kPhaseArg: now BattleActions_Step (symbols.toml). u8: above 1 in phase 1, the targeted colour
-constexpr std::uint32_t kRoundFlags = 0x904AA8;   // dword / u16 / u8: bits 2, 6, 7, 11, 15 read or set here
-constexpr std::uint32_t kPoseBase = 0x904AAC;     // u8: 0x441200's pose base
+constexpr ::bof3::image::Va kRoundFlags{0x904AA8};   // dword / u16 / u8: bits 2, 6, 7, 11, 15 read or set here
+constexpr ::bof3::image::Va kPoseBase{0x904AAC};     // u8: 0x441200's pose base
 // kTargetMember: now BattleE4_AutoMember (symbols.toml). u8: the member whose character 0x441570 compares
-constexpr std::uint32_t kTintOn = 0x904AAF;       // u8: non-zero while the target tint is shown
-constexpr std::uint32_t kTintLevel = 0x904AC8;    // u8: the tint's three channel bytes
-constexpr std::uint32_t kSwingTarget = 0x904B44;  // u8: Battle_SetTargetFlag40's target after a swing
-constexpr std::uint32_t kSkillId = 0x904B80;      // u16: the skill (24-byte records at 0x65C4DC)
+constexpr ::bof3::image::Va kTintOn{0x904AAF};       // u8: non-zero while the target tint is shown
+constexpr ::bof3::image::Va kTintLevel{0x904AC8};    // u8: the tint's three channel bytes
+constexpr ::bof3::image::Va kSwingTarget{0x904B44};  // u8: Battle_SetTargetFlag40's target after a swing
+constexpr ::bof3::image::Va kSkillId{0x904B80};      // u16: the skill (24-byte records at 0x65C4DC)
 // kSkillCost: now BattleE3_Cost (symbols.toml). u8: subtracted from Field_State +0x9A after a skill
 // kCastKind: now BattlePhases_B89 (symbols.toml). u8: 4, 7 and 8 are special to states 7
 // kSoundSet: now BattleE3_SoundSet (symbols.toml). u8: Battle_LoadSoundByKey's set
@@ -53,15 +53,15 @@ constexpr std::uint32_t kSkillId = 0x904B80;      // u16: the skill (24-byte rec
 // kHomeX: now BossSi_CentreX (symbols.toml). dword: x in phase 5 with 0x904AA8 bit 15
 // kHomeY: now BossSi_CentreZ (symbols.toml). dword: y
 // kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords, 12 bytes each: +2..+4 written
-constexpr std::uint32_t kSkillWord = 0x65C4DC;    // u16 of each 24-byte skill record (bit 11: 0x65C4DD bit 3)
+constexpr ::bof3::image::Va kSkillWord{0x65C4DC};    // u16 of each 24-byte skill record (bit 11: 0x65C4DD bit 3)
 // Byte tables after the state table.
-constexpr std::uint32_t kAttackCount = 0x64E04C;  // u8 by character: +9 / +0xA of 0x441890
-constexpr std::uint32_t kAttackCountBy = 0x64E058;// u8 by 0x904B89: the same while +0x134 has bit 1
-constexpr std::uint32_t kCastCount = 0x64E0F0;    // u8 by character: +9 of 0x442A00
-constexpr std::uint32_t kCastCountBy = 0x64E0FC;  // u8 by 0x904B89: the same while +0x134 has bit 1
+constexpr ::bof3::image::Va kAttackCount{0x64E04C};  // u8 by character: +9 / +0xA of 0x441890
+constexpr ::bof3::image::Va kAttackCountBy{0x64E058};// u8 by 0x904B89: the same while +0x134 has bit 1
+constexpr ::bof3::image::Va kCastCount{0x64E0F0};    // u8 by character: +9 of 0x442A00
+constexpr ::bof3::image::Va kCastCountBy{0x64E0FC};  // u8 by 0x904B89: the same while +0x134 has bit 1
 
 // The dispatch tables (code pointers, indices unchecked).
-constexpr std::uint32_t kStates = 0x64DFE0;       // BattleObj_StateTable, 27 dwords by +1 (BattleObj_RunState's)
+constexpr ::bof3::image::Va kStates{0x64DFE0};       // BattleObj_StateTable, 27 dwords by +1 (BattleObj_RunState's)
 // kIdleSubs: now BattleObj_StateTable[0xd] (symbols.toml). by +2, called by state 3 (slots 13 and 14 of 0x64DFE0)
 // kAttackByChar: now BattleObj_StateTable[0xf] (symbols.toml). by Field_State +0x89, state 4's tail jump (slots 15..)
 // kAttackSpecial: now BattleObj_StateTable[0x1a] (symbols.toml). the dword state 4 jumps through while +0x134 bit 0 (slot 26)
