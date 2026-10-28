@@ -1,7 +1,9 @@
 # The relocatable-image round: staging (IDEAS I44, stage 3)
 
-**Status:** STAGED (2026-10-27; not launched. The owner's calls in section 7
-come first; stage A needs none of them.)
+**Status:** IN PROGRESS (launched 2026-10-28 afternoon on `relocatable-image/round`
+off `main` `15518394`, the PR #164 merge; stage A's three agents in worktrees
+under `C:\Users\kerok\bof3x-runs\ri1027`, baseline build `wt_base`. The
+owner's call 1 is answered, section 7; calls 2 and 3 wait on RA3 and RA1.)
 
 The owner's word, 2026-10-27: stage "the data image as typed source" work as
 a round. Stages 1 and 2 of [`IDEAS.md`](IDEAS.md) I44 are done (the
@@ -182,7 +184,8 @@ own harness root under `C:\Users\kerok\bof3x-runs\ri1027` (Defender-excluded).
    system letting a program map low memory (not verified on any system; on
    macOS the default zero page covers the low 4 GB). The proposal is I44's
    route; stage A is useful to both, so it can start before this is
-   settled.
+   settled. **Answered 2026-10-28 (the owner): I44's route.** Stages B, C
+   and D run as staged.
 2. **The stub page**: kept for one release behind a switch, or removed in
    stage C. RA3 will measure; the call is the owner's.
 3. **Stage B's size**: one wave (about 17,000 sites, near the typed-data
