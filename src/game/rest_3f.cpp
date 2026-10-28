@@ -74,6 +74,10 @@ std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char* P(::bof3::image::Va va) { return P(::bof3::Img(va)); }
 // Twelve bytes moved as the original moves them (three dword movs).
 void Copy12(unsigned char* to, const unsigned char* from) {
     for (unsigned i = 0; i < 12; i += 4) SetUL(to + i, UL(from + i));
@@ -129,8 +133,8 @@ U PixRecord(const char* who) {
     if (k >= at::kPixRecords)
         bof3::Fatal("%s: the capture record 0x%X is %u, past the %u of 0x%X - the original reads EffectKindA1_States' "
                     "code pointers as a rectangle (docs/rest_3f.md section 7)",
-                    who, (unsigned)Rest3f_PixIndex_addr, k, at::kPixRecords, (unsigned)at::kPixTable);
-    return at::kPixTable + 8 * k;
+                    who, (unsigned)Rest3f_PixIndex_addr, k, at::kPixRecords, (unsigned)at::kPixTable.v);
+    return ::bof3::Img(at::kPixTable) + 8 * k;
 }
 unsigned char* Particle(unsigned i) { return P(at::kParticles + i * at::kPartStride); }
 constexpr unsigned kEffectRecords = 20;   // Effect_Objects, 20 of 0x80
@@ -203,7 +207,7 @@ void ReadBack(const char* who) {
     SH_AT(void (__cdecl*)(const short*, unsigned char*), at::kStoreImage)(rect, EffectKind30_Shards);
     unsigned char* const s = S();
     Rest3f_PixCursor = static_cast<U>(reinterpret_cast<std::uintptr_t>(EffectKind30_Shards));
-    Rest3f_PartCursor = at::kParticles;
+    Rest3f_PartCursor = ::bof3::Img(at::kParticles);
     Rest3f_PartCount = 0;
     s[9] = 0;
     NextState();
@@ -714,7 +718,7 @@ extern "C" void __cdecl EffectKind9E_Flash(void) {
     s = S();
     SH_CALL(EffectKind9E_DrawPlate)(Point(s + 0x34), Point(s + 0xC));
     s = S();
-    unsigned char* const w = At(Rest3f_9EWall_addr);
+    unsigned char* const w = At(::bof3::Img(Rest3f_9EWall_addr));
     SetUL(w, 0u - rv::As<records::EffectWork>(s)->work_0c);
     SetUL(w + 4, 0u - rv::As<records::EffectWork>(s)->work_10);
     SetUL(w + 8, 0u - UL(s + 0x14));
@@ -730,7 +734,7 @@ extern "C" void __cdecl EffectKind9E_Flash(void) {
 extern "C" void __cdecl EffectKind9E_Hold(void) {
     {
         unsigned char* const s = S();
-        unsigned char* const w = At(Rest3f_9EWall_addr);
+        unsigned char* const w = At(::bof3::Img(Rest3f_9EWall_addr));
         const U v = UL(w + 8) + Sar(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_20), 1);
         SetUL(w + 8, v);
         if (v == UL(s + 0x14)) SetUL(w + 8, 0u - v);
@@ -753,7 +757,7 @@ extern "C" void __cdecl EffectKind9E_Hold(void) {
             rv::As<records::EffectObject>(s)->z = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) + 0xFFFFC000u;
     } else {
         unsigned char* const s = S();
-        SH_CALL(EffectKind9E_DrawWall)(Point(s + 0x34), reinterpret_cast<const long*>(At(Rest3f_9EWall_addr)));
+        SH_CALL(EffectKind9E_DrawWall)(Point(s + 0x34), reinterpret_cast<const long*>(At(::bof3::Img(Rest3f_9EWall_addr))));
     }
     unsigned char* const s = S();
     if (At(at::kCounter)[0] == s[7]) s[1] = static_cast<unsigned char>(s[1] + 1);

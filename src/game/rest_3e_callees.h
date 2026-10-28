@@ -24,15 +24,15 @@ constexpr std::uint32_t kR3FRing = bof3::addr::EffectKind5F_DrawLineDisc;
 constexpr std::uint32_t kSqrt = bof3::addr::Gte_SquareRoot0;
 
 // --- the leader (ObjTrio record 0) ---------------------------------------------------
-constexpr std::uint32_t kLeaderX = 0x802D74;        // ObjTrio +0x34, 16.16
-constexpr std::uint32_t kLeaderZ = 0x802D78;        // +0x38
-constexpr std::uint32_t kLeaderY = 0x802D7C;        // +0x3C, the height
+constexpr ::bof3::image::Va kLeaderX{0x802D74};        // ObjTrio +0x34, 16.16
+constexpr ::bof3::image::Va kLeaderZ{0x802D78};        // +0x38
+constexpr ::bof3::image::Va kLeaderY{0x802D7C};        // +0x3C, the height
 
 // --- the shards' model copy (EffectShards_LoadModel) ----------------------------------
-constexpr std::uint32_t kModelCopy = 0x8C5D80;      // the model bytes are copied here, +0x50 aimed at it
+constexpr ::bof3::image::Va kModelCopy{0x8C5D80};      // the model bytes are copied here, +0x50 aimed at it
 constexpr unsigned kModelFace = 0x28;               // bytes a face: the copy's count is the byte *(+0x54) * 0x28
-constexpr std::uint32_t kNumberFormat = 0x5E10C0;   // Area08_MessageFormat, the Crt_sprintf format of the number
-constexpr std::uint32_t kText = 0x904BA0;           // the text scratch Crt_sprintf writes and the draws read
+constexpr ::bof3::image::Va kNumberFormat{0x5E10C0};   // Area08_MessageFormat, the Crt_sprintf format of the number
+constexpr ::bof3::image::Va kText{0x904BA0};           // the text scratch Crt_sprintf writes and the draws read
 
 // --- the glow sparks: 8 records of 0x1C at EffectKind30_Shards -------------------------
 constexpr unsigned kSparks = 8;
@@ -43,7 +43,7 @@ constexpr unsigned kSoundGlow = 0x200;
 constexpr unsigned kSoundRise = 0x201;
 
 // --- the dust: 64 records of 0x20 ------------------------------------------------------
-constexpr std::uint32_t kDust = 0x92D1DC;
+constexpr ::bof3::image::Va kDust{0x92D1DC};
 constexpr unsigned kDustCount = 0x40;
 constexpr unsigned kDustStride = 0x20;
 constexpr rdata::Const kHalfWidth{0x5C41B8};      // a float constant of the image: the column's half width
@@ -53,23 +53,23 @@ constexpr rdata::Const kHalfWidth{0x5C41B8};      // a float constant of the ima
 // 0x654868; the menu box 0x654870, the list box 0x654878, the panel 0x654880
 // and its box 0x654888; the sprite's offsets 0x654890 / 0x654891; the hand
 // 0x654894 (x the low byte, y the high).
-constexpr std::uint32_t kWindows = 0x654858;
-constexpr std::uint32_t kBoard = 0x654868;
-constexpr std::uint32_t kMenuBox = 0x654870;
-constexpr std::uint32_t kListBox = 0x654878;
-constexpr std::uint32_t kPanel = 0x654880;
-constexpr std::uint32_t kPanelBox = 0x654888;
+constexpr ::bof3::image::Va kWindows{0x654858};
+constexpr ::bof3::image::Va kBoard{0x654868};
+constexpr ::bof3::image::Va kMenuBox{0x654870};
+constexpr ::bof3::image::Va kListBox{0x654878};
+constexpr ::bof3::image::Va kPanel{0x654880};
+constexpr ::bof3::image::Va kPanelBox{0x654888};
 // kSpriteDx: now Rest3e_SpriteDx (symbols.toml).
 // kSpriteDy: now Rest3e_SpriteDy (symbols.toml).
 // kHand: now Rest3e_Hand (symbols.toml).
-constexpr std::uint32_t kRows = 0x6548BC;           // 8 rows of 3 mark indices (0xA none)
-constexpr std::uint32_t kMarks = 0x6548D4;          // the marks' (dx, dy) words, 4 bytes each
+constexpr ::bof3::image::Va kRows{0x6548BC};           // 8 rows of 3 mark indices (0xA none)
+constexpr ::bof3::image::Va kMarks{0x6548D4};          // the marks' (dx, dy) words, 4 bytes each
 constexpr unsigned kMarkCount = 11;                 // to the format string 0x654900
-constexpr std::uint32_t kStringFormat = 0x654900;   // the format the item's name and the title go through
-constexpr std::uint32_t kCountFormat = 0x65306C;    // the count's format (kind 0x5D)
-constexpr std::uint32_t kListFormat = 0x653EC0;     // the count's format (kind 0x5E's list)
-constexpr std::uint32_t kTitle = 0x66A098;          // the menu's title text
-constexpr std::uint32_t kCounts = 0x903A10;         // 8 bytes: a count per item, held at 100
+constexpr ::bof3::image::Va kStringFormat{0x654900};   // the format the item's name and the title go through
+constexpr ::bof3::image::Va kCountFormat{0x65306C};    // the count's format (kind 0x5D)
+constexpr ::bof3::image::Va kListFormat{0x653EC0};     // the count's format (kind 0x5E's list)
+constexpr ::bof3::image::Va kTitle{0x66A098};          // the menu's title text
+constexpr ::bof3::image::Va kCounts{0x903A10};         // 8 bytes: a count per item, held at 100
 constexpr unsigned kItems = 8;
 constexpr unsigned kFirstItem = 0x4E;               // the items 0x4E..0x55
 // kStyle: now Config_WindowColour (symbols.toml). the window style byte

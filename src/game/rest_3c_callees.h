@@ -44,17 +44,17 @@ namespace at {
 using U = std::uint32_t;
 
 // --- the acting cells (the battle bytes 0x904AA0..0x904BA0) ---
-constexpr U kFlags2 = 0x904AA9;           // u8: the round flags' second byte (0x20, 0x40 set here)
-constexpr U kPartyCount = 0x904AB0;       // u8: the members in battle, 0..3 (ObjTrio's)
-constexpr U kTurnOrder = 0x904ACC;        // u8[11]: the actors in turn order, 0xFF a spent slot
+constexpr ::bof3::image::Va kFlags2{0x904AA9};           // u8: the round flags' second byte (0x20, 0x40 set here)
+constexpr ::bof3::image::Va kPartyCount{0x904AB0};       // u8: the members in battle, 0..3 (ObjTrio's)
+constexpr ::bof3::image::Va kTurnOrder{0x904ACC};        // u8[11]: the actors in turn order, 0xFF a spent slot
 // kTurnCursor: now BossSe_RoundSlot (symbols.toml). u8: the order's front (the loops start one before it)
 // kTurnCount: now BattleDamage_TurnCount (symbols.toml). u8: how many of kTurnOrder are filled, 0..11
-constexpr U kActor = 0x904B34;            // u8: the acting actor 0..10 (read as a dword where noted)
-constexpr U kActingKind = 0x904B35;       // u8: 4 an ability
-constexpr U kOtherActor = 0x904B44;       // u8: the battle's other target cell (copied by slot 74)
-constexpr U kTarget = 0x904B54;           // u8: the effect's target 0..10 (read as a dword where noted)
-constexpr U kResult = 0x904B60;           // unsigned char *: the result record (+4 HP, +6 AP delta, +8 flags)
-constexpr U kAbility = 0x904B80;          // u16: the acting ability
+constexpr ::bof3::image::Va kActor{0x904B34};            // u8: the acting actor 0..10 (read as a dword where noted)
+constexpr ::bof3::image::Va kActingKind{0x904B35};       // u8: 4 an ability
+constexpr ::bof3::image::Va kOtherActor{0x904B44};       // u8: the battle's other target cell (copied by slot 74)
+constexpr ::bof3::image::Va kTarget{0x904B54};           // u8: the effect's target 0..10 (read as a dword where noted)
+constexpr ::bof3::image::Va kResult{0x904B60};           // unsigned char *: the result record (+4 HP, +6 AP delta, +8 flags)
+constexpr ::bof3::image::Va kAbility{0x904B80};          // u16: the acting ability
 // kPairActor: now BattleFlow_ActorAt (symbols.toml). u8: slot 74 stores the actor here ...
 // kPairOther: now BattlePhases_B8B (symbols.toml). u8: ... and kOtherActor here
 // kGate: now BattleFlow_AnimGate (symbols.toml). u8: slot 97 stores 4
@@ -63,7 +63,7 @@ constexpr U kAbility = 0x904B80;          // u16: the acting ability
 
 // --- the damage formula's cells (battle_damage_callees.h) ---
 // kTargetDef: now BattleDamage_TargetDef (symbols.toml). u16: zeroed by slots 62 and 63 before Battle_CalcDamage
-constexpr U kAttackerAtk = 0x939FE4;      // u16: the attacker's power, read as a dword & 0xFFFF
+constexpr ::bof3::image::Va kAttackerAtk{0x939FE4};      // u16: the attacker's power, read as a dword & 0xFFFF
 // kHitPercent: now BattleE4_HitEnemy (symbols.toml). u8: slot 94 stores 100
 
 // --- the records ---
@@ -75,10 +75,10 @@ constexpr U kEnemyStride = 0x128;
 constexpr unsigned kEnemyMax = 8;
 // kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords, stride 0xA4
 constexpr U kCharStride = 0xA4;
-constexpr U kEnemyData = 0x8C55C8;        // the area's enemy data records, stride 0x8C (+0x24 the word slot 106 reads)
+constexpr ::bof3::image::Va kEnemyData{0x8C55C8};        // the area's enemy data records, stride 0x8C (+0x24 the word slot 106 reads)
 constexpr U kEnemyDataStride = 0x8C;
 constexpr U kAbilityStride = 0x18;        // NameTable_Abilities: +3 the power byte
-constexpr U kHitScale = 0x64E944;         // .data s8[7], Capcom's: slot 103's per-hit factor in tenths (3 past the seventh)
+constexpr ::bof3::image::Va kHitScale{0x64E944};         // .data s8[7], Capcom's: slot 103's per-hit factor in tenths (3 past the seventh)
 
 // --- the callees of R3B and R3D, ours ---
 constexpr U kSkillByAbility = bof3::addr::EffectSlot04_SkillPower;   // R3B's

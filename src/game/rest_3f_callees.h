@@ -22,7 +22,7 @@ constexpr rdata::Const kTrailHalfX{0x5C41B8};     // EffectKind9C_DrawTrail's ha
 constexpr rdata::Const kTrailHalfY{0x5C41C0};     // ... and across y (float)
 
 // --- cells -------------------------------------------------------------------------------
-constexpr std::uint32_t kCounter = 0x903848;        // the chapter's count (a byte compared)
+constexpr ::bof3::image::Va kCounter{0x903848};        // the chapter's count (a byte compared)
 // EffectKind69_DrawLines' working cells: the relocated PSX scratchpad
 // (SharedScratch) +0, +4, +8 and Scratch_Swap (+0xC)
 inline auto& kLineAmp = SharedScratch.d_00;  // the wave's amplitude, a dword
@@ -37,19 +37,19 @@ constexpr unsigned k9EWallSize = 0xC;
 // The capture records: 8 bytes each (s16 dx, s16 dy, s16 width, s16 height),
 // indexed by the byte kPixIndex; three records before EffectKindA1_States
 // (0x655220), so ours aborts past 3.
-constexpr std::uint32_t kPixTable = 0x655208;
+constexpr ::bof3::image::Va kPixTable{0x655208};
 constexpr unsigned kPixRecords = 3;
 // kPixCursor: now Rest3f_PixCursor (symbols.toml). unsigned short *: the next pixel of the read-back
 // kPartCursor: now Rest3f_PartCursor (symbols.toml). unsigned char *: the next free particle
 // kPartCount: now Rest3f_PartCount (symbols.toml). unsigned short: the particles made
-constexpr std::uint32_t kPixIndex = 0x6769BA;       // unsigned char: the capture record (both captures write 1)
+constexpr ::bof3::image::Va kPixIndex{0x6769BA};       // unsigned char: the capture record (both captures write 1)
 constexpr std::uint32_t kPixCellsSize = 0xC;
 // The read-back buffer is EffectKind30_Shards (0x92BF80, shared scratch); the
 // particles 0x14 bytes each from kParticles, unbounded (docs/rest_3f.md
 // section 7): +0 drawn this frame (flips every frame), +1 a delay, +2 the
 // pixel (15-bit), +4 / +8 x and y (floats), +0xC the depth (a float copied),
 // +0x10 / +0x11 the step (s8 each).
-constexpr std::uint32_t kParticles = 0x931980;
+constexpr ::bof3::image::Va kParticles{0x931980};
 constexpr std::uint32_t kPartStride = 0x14;
 // The VRAM rectangle the capture draws into and reads back: (0x340, 0x100).
 constexpr int kCaptureX = 0x340;

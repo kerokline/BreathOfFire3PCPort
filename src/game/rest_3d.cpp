@@ -51,6 +51,12 @@ using move_script::Word;
 unsigned char& B(U address) { return At(address)[0]; }
 std::uint16_t W(U address) { return Word(At(address)); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+std::uint16_t W(::bof3::image::Va va) { return W(::bof3::Img(va)); }
+U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
 S32 S16(U v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); }
 
 // An actor's record as the originals index it: the low byte, 0..2 a party
@@ -58,8 +64,8 @@ S32 S16(U v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); 
 // 32 bits, unbounded either way (an index past the records reads or writes
 // whatever lies there, on both sides).
 bool IsMember(U actor) { return (actor & 0xFF) <= 2; }
-U PartyAt(U actor) { return ObjTrio_addr + (actor & 0xFF) * at::kPartyStride; }
-U EnemyAt(U actor) { return Battle_Enemies_addr + ((actor & 0xFF) - 3u) * at::kEnemyStride; }
+U PartyAt(U actor) { return ::bof3::Img(ObjTrio_addr) + (actor & 0xFF) * at::kPartyStride; }
+U EnemyAt(U actor) { return ::bof3::Img(Battle_Enemies_addr) + ((actor & 0xFF) - 3u) * at::kEnemyStride; }
 unsigned char* Party(U actor) { return At(PartyAt(actor)); }
 unsigned char* Enemy(U actor) { return At(EnemyAt(actor)); }
 
@@ -89,8 +95,8 @@ unsigned Target() { return B(at::kTarget); }
 U Ability() { return L(at::kAbility) & 0xFFFF; }
 // NameTable_Abilities (24 bytes an ability): +3 the s8 stat step, +4 the word
 // whose low nine bits are the status / element mask.
-U AbilityMask() { return W(bof3::addr::NameTable_Abilities + 4 + Ability() * 24) & 0x1FF; }
-unsigned char AbilityStep() { return B(bof3::addr::NameTable_Abilities + 3 + Ability() * 24); }
+U AbilityMask() { return W(::bof3::Img(bof3::addr::NameTable_Abilities) + 4 + Ability() * 24) & 0x1FF; }
+unsigned char AbilityStep() { return B(::bof3::Img(bof3::addr::NameTable_Abilities) + 3 + Ability() * 24); }
 
 // The two terms of the status roll, read before the rate lookup:
 // a = min(u16 0x939FEA * 100 / 500 + 50, 100) and
@@ -140,14 +146,14 @@ using Void0 = void (__cdecl*)();
 // for the last of the mask's bits 0x40 / 0x80 / 0x100 set (+0xB5..+0xB7 of a
 // member, +0xC5..+0xC7 of an enemy), 0 when none is.
 extern "C" int __cdecl Battle_PsiStatusDeathAffinity(unsigned target, unsigned mask) {
-    return ClassLookup(Battle_PsiAffinityRates_addr, target, mask);
+    return ClassLookup(::bof3::Img(Battle_PsiAffinityRates_addr), target, mask);
 }
 
 // original 0x44F770: the status rate - as Battle_PsiStatusDeathAffinity with
 // the table 0x64E96C, and 0xFFFF (the rolls' "cannot be resisted") when the
 // mask has none of 0x1C0.
 extern "C" int __cdecl Battle_StatusResistRate(unsigned actor, unsigned mask) {
-    const S32 v = ClassLookup(Battle_StatusResistRates_addr, actor, mask);
+    const S32 v = ClassLookup(::bof3::Img(Battle_StatusResistRates_addr), actor, mask);
     return (mask & 0x1C0) == 0 ? 0xFFFF : v;
 }
 
@@ -251,7 +257,7 @@ extern "C" unsigned char __cdecl Battle_LacksArmour(unsigned actor, unsigned ite
 extern "C" void __cdecl Battle_InflictStatus(unsigned target, unsigned status) {
     const bool member = IsMember(target);
     const U offset = member ? (target & 0xFF) * at::kPartyStride : ((target & 0xFF) - 3u) * at::kEnemyStride;
-    const U record = (member ? ObjTrio_addr : Battle_Enemies_addr) + offset;
+    const U record = (member ? ::bof3::Img(ObjTrio_addr) : ::bof3::Img(Battle_Enemies_addr)) + offset;
     const U word_at = record + (member ? 0x90u : 0x92u);
     const U cur = W(word_at);
     const U s = status & 0xFF;
@@ -491,17 +497,17 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
     if (!IsMember(t)) return;
     {
         unsigned char* const p = Party(t);
-        unsigned char* const c = At(CharacterRecords_addr + p[0x148] * at::kCharacterStride);
+        unsigned char* const c = At(::bof3::Img(CharacterRecords_addr) + p[0x148] * at::kCharacterStride);
         if (c[0x1E] < 9) {
             c[0x1E] = static_cast<unsigned char>(c[0x1E] + 1);
             p[0x9E] = static_cast<unsigned char>(p[0x9E] + 1);
         }
-        BH_CALL(Char_RecalcStats)(At(CharacterRecords_addr + p[0x148] * at::kCharacterStride));
+        BH_CALL(Char_RecalcStats)(At(::bof3::Img(CharacterRecords_addr) + p[0x148] * at::kCharacterStride));
     }
     unsigned n = PartySizeForWrite("Effect118_RaiseCharByte1E");
     for (unsigned m = 0; m < n; ++m) {
         unsigned char* const p = Party(m);
-        const unsigned char* const c = At(CharacterRecords_addr + p[0x148] * at::kCharacterStride);
+        const unsigned char* const c = At(::bof3::Img(CharacterRecords_addr) + p[0x148] * at::kCharacterStride);
         for (unsigned i = 0; i < 6; ++i) p[0x92 + i] = c[0x12 + i];
         for (unsigned i = 0; i < 0x20; ++i) p[0xC0 + i] = c[0x20 + i];
     }

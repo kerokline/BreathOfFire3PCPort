@@ -62,6 +62,11 @@ U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 void SetUL(U a, U v) { SetUL(At(a), v); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+U UL(::bof3::image::Va va) { return UL(::bof3::Img(va)); }
+void SetUL(::bof3::image::Va va, U v) { SetUL(::bof3::Img(va), v); }
 std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 std::int32_t S8(unsigned char b) { return static_cast<signed char>(b); }
@@ -346,7 +351,7 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
         bof3::Fatal("Battle_PlaceBossActor: count %u, past the %u enemy records - the original writes past them "
                     "(docs/rest_3g.md section 7)",
                     n, at::kEnemyCount);
-    unsigned char* const e = At(Battle_Enemies_addr + at::kEnemyStride * n);
+    unsigned char* const e = At(::bof3::Img(Battle_Enemies_addr) + at::kEnemyStride * n);
     for (unsigned i = 0; i < 0x80; i += 4) SetUL(e + i, UL(actor + i));
     Sprite_Current = e;
     unsigned char* const s = S();
@@ -372,9 +377,9 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
     s[8] = static_cast<unsigned char>(At(at::kFormation)[0] ^ 2);
     s[0x48] = 0;
     SH_CALL(Battle_CopyEnemyData)(count, kind);
-    psp_code::MyriaItem(At(Battle_Enemies_addr + at::kEnemyStride * n), Game_AreaNumber, EventBattle_Id);
+    psp_code::MyriaItem(At(::bof3::Img(Battle_Enemies_addr) + at::kEnemyStride * n), Game_AreaNumber, EventBattle_Id);
     SH_CALL(Battle_SetEnemyOffset)(count, kind & 0xFF);
-    At(Battle_Enemies_addr + at::kEnemyStride * n + 0x8F)[0] = 0;
+    At(::bof3::Img(Battle_Enemies_addr) + at::kEnemyStride * n + 0x8F)[0] = 0;
     actor[0] = static_cast<unsigned char>(actor[0] | 0x40);
     Battle_EnemyCount = static_cast<unsigned char>(Battle_EnemyCount + 1);
 }
@@ -383,7 +388,7 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
 // Escape_Leave): bytes +0..+4 of the eight enemy records 0.
 extern "C" void __cdecl BattleEnemy_ClearStates(void) {
     for (unsigned i = 0; i < at::kEnemyCount; ++i) {
-        unsigned char* const e = At(Battle_Enemies_addr + at::kEnemyStride * i);
+        unsigned char* const e = At(::bof3::Img(Battle_Enemies_addr) + at::kEnemyStride * i);
         for (unsigned k = 0; k < 5; ++k) e[k] = 0;
     }
 }
@@ -446,7 +451,7 @@ void LoadBank() {
 extern "C" void __cdecl GameMode8_Leave(void) {
     {
         const unsigned char was = AreaW0b_PartySet;
-        At(Field_ScriptFlags2_addr)[0] = static_cast<unsigned char>(At(Field_ScriptFlags2_addr)[0] | 0x40);
+        At(::bof3::Img(Field_ScriptFlags2_addr))[0] = static_cast<unsigned char>(At(::bof3::Img(Field_ScriptFlags2_addr))[0] | 0x40);
         const unsigned char b = static_cast<unsigned char>(was | 0x80);
         AreaW0b_PartySet = b;
         SH_CALL(Snd_LoadBankFile)((b & 0x7Fu) + 0x2C2u);
@@ -545,7 +550,7 @@ extern "C" void __cdecl GameMode11_Look(void) {
 extern "C" void __cdecl GameMode11_LookEnd(void) {
     SH_CALL(Look_Return)();
     SH_CALL(Mode11_FieldFrame)();
-    if (static_cast<std::uint16_t>(Camera_Angles[0]) == 0xFD56 && Word(At(Cond_AngleFB_addr)) == 0x200) Game_Step = 0;
+    if (static_cast<std::uint16_t>(Camera_Angles[0]) == 0xFD56 && Word(At(::bof3::Img(Cond_AngleFB_addr))) == 0x200) Game_Step = 0;
 }
 
 // ===========================================================================
@@ -589,7 +594,7 @@ extern "C" unsigned __cdecl Quake_VertexLift(long x, long z) {
 extern "C" int __cdecl Area109_SwitchPattern(void) {
     U bits = 0;
     for (unsigned i = 0; i < 3; ++i) {
-        const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), At(at::kPatternFlags + i)[0]);
+        const unsigned char set = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), At(at::kPatternFlags + i)[0]);
         if (set != 0) bits |= 1u << i;
     }
     return static_cast<int>(bits + 1);
@@ -602,12 +607,12 @@ extern "C" int __cdecl Area109_SwitchPattern(void) {
 // 0x202; al 1. Otherwise al 0 (the rest of eax the caller's).
 extern "C" unsigned char __cdecl Area109_SwitchHook(long x, long z) {
     if ((static_cast<U>(x) & 0xFF) != 0x1C || (static_cast<U>(z) & 0xFF) != 6 || ObjTrio[0].direction != 3) return 0;
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x1C) != 0) return 0;
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C) != 0) return 0;
     const int pattern = SH_CALL(Area109_SwitchPattern)();
     int bits = pattern % 6;
     for (unsigned i = 0; i < 3; ++i) {
-        SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), At(at::kPatternFlags + i)[0]);
-        if (bits & 1) SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), At(at::kPatternFlags + i)[0]);
+        SH_CALL(Flags_Clear)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), At(at::kPatternFlags + i)[0]);
+        if (bits & 1) SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), At(at::kPatternFlags + i)[0]);
         bits >>= 1;
     }
     SH_CALL(Effect_HoldFlag1C)(0xF);
@@ -628,7 +633,7 @@ extern "C" unsigned char __cdecl Area109_SwitchHook(long x, long z) {
 extern "C" void __cdecl EffectKind18Sub41_DrawPanels(unsigned lift, unsigned texture) {
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, 0);
     SH_CALL(Gfx_CommitPrim)(5, 0xC);
-    for (U from = at::kPanelVertices; from < at::kPanelVerticesEnd; from += 12) {
+    for (U from = ::bof3::Img(at::kPanelVertices); from < ::bof3::Img(at::kPanelVerticesEnd); from += 12) {
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
@@ -915,7 +920,7 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
             SH_CALL(Gte_LoadVertices3)(reinterpret_cast<const unsigned long*>(v + 8));
             SH_CALL(Gte_Rtpt)();
             {
-                const U last = at::kLayerLast + (Gfx_BufferIndex - row * 6u) * 8u;
+                const U last = ::bof3::Img(at::kLayerLast) + (Gfx_BufferIndex - row * 6u) * 8u;
                 unsigned char* const quad = item + Gfx_BufferIndex * 0x48u;
                 SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(last))), AddressOf(quad));
             }

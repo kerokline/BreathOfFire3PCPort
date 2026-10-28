@@ -35,6 +35,9 @@ namespace {
 namespace bh = boss_harness;
 using U = std::uint32_t;
 using bh::Mem;
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* Mem(::bof3::image::Va va) { return Mem(::bof3::Img(va)); }
 using move_script::SetLong;
 using move_script::SetWord;
 using S = bh::Shape;
@@ -309,7 +312,7 @@ const bh::DataTable kTables[] = {
 // The cells beyond the engine frame the group reads or writes.
 const bh::Region kRegions[] = {
     {0x903B24, 0x903F90 - 0x903B24},   // CharacterRecords past the engine frame's 0x903A50..0x903B24 (records 0..7)
-    {at::kRepeatLatch, 4},             // Input_AutoRepeat's latch (BattleItem_SideBegin zeroes it)
+    {::bof3::Img(at::kRepeatLatch), 4},             // Input_AutoRepeat's latch (BattleItem_SideBegin zeroes it)
     // past the window records to the chapter bytes, and past those: a party
     // record by an actor or a target byte 3..10, as slots 6 and 47 index it
     {0x803478, 0x8034E0 - 0x803478},

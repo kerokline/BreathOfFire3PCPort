@@ -54,6 +54,12 @@ using move_script::Word;
 unsigned char& B(U address) { return At(address)[0]; }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 unsigned char* PtrAt(U cell) { return At(L(cell)); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
+unsigned char* PtrAt(::bof3::image::Va va) { return PtrAt(::bof3::Img(va)); }
 U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 // Sprite_Current, the running task slot (0x93B8C4) and its owner (0x93B940),
@@ -73,7 +79,7 @@ unsigned long Dispatch(const char* who, U table, unsigned index, unsigned entrie
         bof3::Fatal("%s: the step byte is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_3a.md section 7)",
                     who, index, entries, (unsigned)table);
-    return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(L(table + 4 * index)))(through);
+    return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(L(::bof3::image::Va{table + 4 * index})))(through);
 }
 
 // call [esp + 4 * index] through a table the original builds on its stack:
@@ -91,7 +97,7 @@ void CallStack(const char* who, const U* table, unsigned n, unsigned index) {
 // original writes into the window records (docs/rest_3a.md section 7).
 unsigned char* MemberForWrite(unsigned index, const char* who) {
     if (index > 2) bof3::Fatal("%s: the member index is %u, past ObjTrio's three - the original writes on past them", who, index);
-    return At(ObjTrio_addr + index * at::kMemberSize);
+    return At(::bof3::Img(ObjTrio_addr) + index * at::kMemberSize);
 }
 
 }  // namespace
@@ -200,12 +206,12 @@ void W16(U address, unsigned v) { SetWord(At(address), v); }
 // 0's +0xC the first of the party list's three entries (0x904062) that is 0
 // or 7 (left as it was when none is). Each store as the original orders it.
 extern "C" void __cdecl BattleExtra_EquipSetupWindows(void) {
-    B(0x803161) = 2;
-    B(0x803162) = 2;
-    B(0x803163) = 2;
-    B(0x803160) = 1;
-    W16(0x803164, 0x140);
-    W16(0x803166, 0x3E);
+    B(::bof3::Img(0x803161)) = 2;
+    B(::bof3::Img(0x803162)) = 2;
+    B(::bof3::Img(0x803163)) = 2;
+    B(::bof3::Img(0x803160)) = 1;
+    W16(::bof3::Img(0x803164), 0x140);
+    W16(::bof3::Img(0x803166), 0x3E);
     for (unsigned i = 0;;) {
         const unsigned char who = B(at::kPartyList + i);
         if (who == 0 || who == 7) {
@@ -215,43 +221,43 @@ extern "C" void __cdecl BattleExtra_EquipSetupWindows(void) {
         i = (i + 1) & 0xFF;
         if (i >= 3) break;
     }
-    SetLong(At(0x803180), static_cast<std::int32_t>(at::kChosen));
-    SetLong(At(0x8031A4), static_cast<std::int32_t>(at::kChosen));
-    B(0x8031AA) = 4;
-    W16(0x8031AE, 0xFFEC);
-    W16(0x8031D2, 0xFFEC);
-    B(0x8031CE) = 4;
-    B(0x803169) = 0;
-    B(0x80316B) = 0;
+    SetLong(At(::bof3::Img(0x803180)), static_cast<std::int32_t>(::bof3::Img(at::kChosen)));
+    SetLong(At(::bof3::Img(0x8031A4)), static_cast<std::int32_t>(::bof3::Img(at::kChosen)));
+    B(::bof3::Img(0x8031AA)) = 4;
+    W16(::bof3::Img(0x8031AE), 0xFFEC);
+    W16(::bof3::Img(0x8031D2), 0xFFEC);
+    B(::bof3::Img(0x8031CE)) = 4;
+    B(::bof3::Img(0x803169)) = 0;
+    B(::bof3::Img(0x80316B)) = 0;
     Window0_ParamA = 0;
     Window0_Category = 0;
     Window0_Item = 0;
     Window0_Arrows = 0;
-    B(0x803185) = 2;
+    B(::bof3::Img(0x803185)) = 2;
     WindowRecords[1].kind = 3;
     WindowRecords[1].state = 2;
     WindowRecords[1].in_use = 1;
-    W16(0x803188, 0xFF56);
-    W16(0x80318A, 0x3E);
-    B(0x803190) = 7;
+    W16(::bof3::Img(0x803188), 0xFF56);
+    W16(::bof3::Img(0x80318A), 0x3E);
+    B(::bof3::Img(0x803190)) = 7;
     Window1_ParamA = 0;
-    B(0x80318F) = 0xFF;
+    B(::bof3::Img(0x80318F)) = 0xFF;
     Window1_Master = 1;
-    B(0x8031A9) = 2;
+    B(::bof3::Img(0x8031A9)) = 2;
     WindowRecords[2].state = 2;
     WindowRecords[2].in_use = 1;
-    W16(0x8031AC, 0x14);
-    W16(0x8031B8, 0);
-    W16(0x8031BA, 0x118);
-    B(0x8031CD) = 2;
-    B(0x8031CF) = 3;
-    B(0x8031CC) = 1;
-    W16(0x8031D0, 0xA4);
-    W16(0x8031DC, 0);
-    W16(0x8031DE, 0x80);
-    B(0x8031F1) = 2;
-    B(0x8031F2) = 1;
-    B(0x8031F0) = 0;
+    W16(::bof3::Img(0x8031AC), 0x14);
+    W16(::bof3::Img(0x8031B8), 0);
+    W16(::bof3::Img(0x8031BA), 0x118);
+    B(::bof3::Img(0x8031CD)) = 2;
+    B(::bof3::Img(0x8031CF)) = 3;
+    B(::bof3::Img(0x8031CC)) = 1;
+    W16(::bof3::Img(0x8031D0), 0xA4);
+    W16(::bof3::Img(0x8031DC), 0);
+    W16(::bof3::Img(0x8031DE), 0x80);
+    B(::bof3::Img(0x8031F1)) = 2;
+    B(::bof3::Img(0x8031F2)) = 1;
+    B(::bof3::Img(0x8031F0)) = 0;
 }
 
 // original 0x42E250 (BattleExtra_EquipListInput's confirm): for each of the
@@ -264,14 +270,14 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleExtra_EquipCom
     for (unsigned i = 0; i < at::kChosenCount; ++i) {
         const unsigned char chosen = B(at::kChosen + i);
         if (chosen == 0) continue;
-        unsigned char* const held = At(Rest3a_GuestEquip_addr + i);
+        unsigned char* const held = At(::bof3::Img(Rest3a_GuestEquip_addr) + i);
         if (chosen == held[0]) continue;
         BH_CALL(Inventory_Remove)(B(at::kCategories + i), chosen, 1);
         const unsigned char back = held[0];
         BH_CALL(Inventory_Add)(B(at::kCategories + i), back, 1);
         held[0] = B(at::kChosen + i);
     }
-    BH_CALL(Char_RecalcStats)(At(CharacterRecords_addr + 0x47c));
+    BH_CALL(Char_RecalcStats)(At(::bof3::Img(CharacterRecords_addr) + 0x47c));
 }
 
 // original 0x42E2F0 (BattleExtra_EquipListInput, each frame): window 13's
@@ -382,7 +388,7 @@ namespace {
 // callee does not read (bits 0..14 only).
 void FlashTile() {
     const unsigned page = BH_CALL(Gpu_GetTPage)(0, 0, 0x3C0, 0);
-    BH_CALL(Gpu_SetDrawMode)(PtrAt(0x7E0670), 0, 0, page & 0xFFFF, 0);
+    BH_CALL(Gpu_SetDrawMode)(PtrAt(::bof3::Img(0x7E0670)), 0, 0, page & 0xFFFF, 0);
     BH_CALL(Gfx_CommitPrim)(1, 0xC);
     const unsigned char actor = B(at::kActor);
     unsigned colour;
@@ -409,7 +415,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxFlash_Banner
     const U text = B(at::kActor) < 3 ? Rest3a_BannerParty : Rest3a_BannerEnemy;
     BH_CALL(BattleBanner_Add)(1, 0, 0, 0x1E, reinterpret_cast<const char*>(static_cast<std::uintptr_t>(text)));
     unsigned char* const s = Slot();
-    B(0x8031F3) = 1;
+    B(::bof3::Img(0x8031F3)) = 1;
     SetLong(s + 0xC, 0x100);
     SetLong(Slot() + 0x10, 0);
     Slot()[9] = 2;
@@ -554,7 +560,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_WatchIconSt
     if (icon == 0xFF) return;
     if (icon >= at::kStatusIconCount)
         bof3::Fatal("BattleFx_WatchIconStart: icon %u, past the %u-entry table 0x%X (docs/rest_3a.md section 7)", icon,
-                    at::kStatusIconCount, (unsigned)at::kStatusIcons);
+                    at::kStatusIconCount, (unsigned)at::kStatusIcons.v);
     if (B(at::kStatusIcons + icon) == 0xFF) return;
     Sc()[0xB] = icon;
     Sc()[0x29] = 2;
@@ -652,14 +658,14 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxReform_Reloa
     unsigned char* const owner = Owner();
     unsigned char* const kept = Sc();
     Sprite_Current = owner;
-    SetLong(At(Field_State_addr), static_cast<std::int32_t>(Addr(MemberForWrite(owner[5], "BattleFxReform_Reload"))));
+    SetLong(At(::bof3::Img(Field_State_addr)), static_cast<std::int32_t>(Addr(MemberForWrite(owner[5], "BattleFxReform_Reload"))));
     BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(owner[8] + 4));
     BH_CALL(Sprite_ReleaseTint)(MemberForWrite(Sc()[5], "BattleFxReform_Reload"));
     const unsigned palette = Sc()[5];
     MemberForWrite(palette, "BattleFxReform_Reload");   // the palette slot is the member's: past 2 it writes on
-    BH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + (palette << 6))), 0);
+    BH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (palette << 6))), 0);
     const unsigned member = Sc()[5];
-    BH_CALL(Battle_StatusTint)(Word(At(ObjTrio_addr + 0x90 + member * at::kMemberSize)));
+    BH_CALL(Battle_StatusTint)(Word(At(::bof3::Img(ObjTrio_addr) + 0x90 + member * at::kMemberSize)));
     BH_CALL(Sprite_SetClutStp)();
     unsigned char* const field = Field_State;
     rv::As<records::PartyMember>(field)->flags_134 = static_cast<std::int32_t>(rv::As<records::PartyMember>(field)->flags_134 & 0xFFFFFFFEu);
@@ -732,7 +738,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxRestore_Load
     } else {
         const bool first = low();
         const unsigned set = AreaW0b_PartySet;
-        const U table = L(first ? Rest3a_RestoreFilesA_addr : Rest3a_RestoreFilesB_addr);
+        const U table = L(first ? ::bof3::Img(Rest3a_RestoreFilesA_addr) : ::bof3::Img(Rest3a_RestoreFilesB_addr));
         if (set >= at::kPartySetCount)
             bof3::Fatal("BattleFxRestore_LoadDat: party set %u, past the %u entries of 0x%X (docs/rest_3a.md section 7)", set,
                         at::kPartySetCount, (unsigned)table);
@@ -782,7 +788,7 @@ unsigned char* EnemyByActor(unsigned actor, const char* who) {
         bof3::Fatal("%s: actor %u is no enemy (3..10) - the original runs BattleEnemy_SetAnimation on a record outside the "
                     "eight (docs/rest_3a.md section 7)",
                     who, actor & 0xFF);
-    return At(Battle_Enemies_addr + index * at::kEnemySize);
+    return At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemySize);
 }
 }  // namespace
 
@@ -825,8 +831,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_SetAnima
 // on a whelp slot past the eight records (section 7).
 extern "C" void __cdecl NewGame_InitCharacters(void) {
     for (unsigned n = 0; n < 7; ++n) {
-        unsigned char* const record = At(CharacterRecords_addr + n * at::kCharSize);
-        std::memcpy(record, At(Char_DefaultRecords_addr + n * at::kCharSize), at::kCharSize);
+        unsigned char* const record = At(::bof3::Img(CharacterRecords_addr) + n * at::kCharSize);
+        std::memcpy(record, At(::bof3::Img(Char_DefaultRecords_addr) + n * at::kCharSize), at::kCharSize);
         const std::int32_t level = record[0xA];
         const unsigned divisor = B(at::kLevelDivisors + 2 * n);
         if (divisor == 0) bof3::Fatal("NewGame_InitCharacters: record %u's divisor is 0 - the original faults", n);
@@ -838,7 +844,7 @@ extern "C" void __cdecl NewGame_InitCharacters(void) {
     const unsigned slot = Char_WhelpSlot;
     if (slot >= at::kCharCount)
         bof3::Fatal("NewGame_InitCharacters: Char_WhelpSlot is %u, past the %u records - the original writes on", slot, at::kCharCount);
-    std::memcpy(At(CharacterRecords_addr + slot * at::kCharSize), At(at::kWhelpRecord), at::kCharSize);
+    std::memcpy(At(::bof3::Img(CharacterRecords_addr) + slot * at::kCharSize), At(at::kWhelpRecord), at::kCharSize);
 }
 
 // ============================================================================

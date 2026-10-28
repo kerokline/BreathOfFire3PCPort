@@ -63,6 +63,12 @@ void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned W(U a) { return Word(At(a)); }
 unsigned char& B(U a) { return At(a)[0]; }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+U UL(::bof3::image::Va va) { return UL(::bof3::Img(va)); }
+unsigned W(::bof3::image::Va va) { return W(::bof3::Img(va)); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
@@ -197,7 +203,7 @@ extern "C" void __cdecl EffectShards_LoadModel(void) {
         rv::As<records::EffectObject>(s)->script = rv::As<records::EffectObject>(s)->script + 1;
         s = S();
     }
-    rv::As<records::EffectObject>(s)->script = at::kModelCopy;
+    rv::As<records::EffectObject>(s)->script = ::bof3::Img(at::kModelCopy);
     SH_CALL(EffectKind30_ShardsInit)();
     SH_CALL(EffectKind30_SparksInit)();
     S()[9] = 0x10;
@@ -893,7 +899,7 @@ extern "C" void __cdecl EffectDust_DrawFan(const unsigned char* dust) {
 // ===========================================================================
 
 namespace {
-unsigned char* Window(unsigned j) { return At(Rest3e_Windows_addr + 8 * j); }
+unsigned char* Window(unsigned j) { return At(::bof3::Img(Rest3e_Windows_addr) + 8 * j); }
 
 // The three windows' outlines at the size the step +9 gives (n = +9 * 16, at
 // most each window's w and h); counted: how many of the six sides were at
@@ -1254,7 +1260,7 @@ constexpr std::uint32_t kIconCircle = 0xA00 + 100 + 1;
 // The port's stand-ins: 0x66A2FC's first six dwords, the one-byte strings
 // 0x461C00 draws for circle, cross, triangle, square, L1, R1 (read with
 // capstone, 2026-10-17: [0x66A2FC] for 0x20 .. [0x66A310] for 8).
-constexpr U kStandIns = 0x66A2FC;
+constexpr ::bof3::image::Va kStandIns{0x66A2FC};
 
 Shape ShapeOfBit(std::uint16_t bit) {
     for (unsigned k = 0; k < 6; ++k)

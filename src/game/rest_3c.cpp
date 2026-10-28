@@ -56,14 +56,22 @@ void SetW(U address, unsigned v) { SetWord(At(address), v); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 S32 S16(unsigned v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); }
 unsigned char* Ptr(U cell) { return At(L(cell)); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+std::uint16_t W(::bof3::image::Va va) { return W(::bof3::Img(va)); }
+void SetW(::bof3::image::Va va, unsigned v) { SetW(::bof3::Img(va), v); }
+U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
+unsigned char* Ptr(::bof3::image::Va va) { return Ptr(::bof3::Img(va)); }
 // The result record, read from its cell each time the original reads it.
 unsigned char* Result() { return Ptr(at::kResult); }
 
 // A record by an actor byte, as the original computes the address: unchecked
 // (a read), the enemy's index the byte less 3 in 32 bits.
-unsigned char* Party(U member) { return At(ObjTrio_addr + member * at::kPartyStride); }
-unsigned char* Enemy(U index) { return At(Battle_Enemies_addr + index * at::kEnemyStride); }
-unsigned char* CharRecord(U character) { return At(CharacterRecords_addr + character * at::kCharStride); }
+unsigned char* Party(U member) { return At(::bof3::Img(ObjTrio_addr) + member * at::kPartyStride); }
+unsigned char* Enemy(U index) { return At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemyStride); }
+unsigned char* CharRecord(U character) { return At(::bof3::Img(CharacterRecords_addr) + character * at::kCharStride); }
 // ... and for a write: a Fatal past the three members or the eight enemies,
 // where the original writes on into what follows them.
 unsigned char* PartyWrite(U member, const char* who) {
@@ -351,7 +359,7 @@ extern "C" void __cdecl Effect_RestoreAp10(void) {
 // ability 0x66 set; the HP delta Effect_SkillDamage(actor, target, that power,
 // 0), then halved (signed, truncated) through the result cell read again.
 extern "C" void __cdecl Effect_AsAbility66Half(void) {
-    const unsigned power = B(bof3::addr::NameTable_Abilities + 0x66 * at::kAbilityStride + 3);
+    const unsigned power = B(::bof3::Img(bof3::addr::NameTable_Abilities) + 0x66 * at::kAbilityStride + 3);
     const unsigned target = B(at::kTarget);
     const unsigned actor = B(at::kActor);
     B(at::kActingKind) = 4;
@@ -641,7 +649,7 @@ extern "C" void __cdecl Effect_MultiHit(void) {
 extern "C" void __cdecl Effect_SkillDamageLessDef(void) {
     const U ability = L(at::kAbility) & 0xFFFF;
     const unsigned target = B(at::kTarget);
-    const unsigned power = B(bof3::addr::NameTable_Abilities + ability * at::kAbilityStride + 3);
+    const unsigned power = B(::bof3::Img(bof3::addr::NameTable_Abilities) + ability * at::kAbilityStride + 3);
     const unsigned actor = B(at::kActor);
     const int damage = BH_CALL(Effect_SkillDamage)(actor, target, power, 0);
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<unsigned>(damage));

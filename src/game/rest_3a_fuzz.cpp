@@ -30,6 +30,9 @@ namespace {
 namespace bh = boss_harness;
 using U = std::uint32_t;
 using bh::Mem;
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* Mem(::bof3::image::Va va) { return Mem(::bof3::Img(va)); }
 using move_script::SetLong;
 using move_script::SetWord;
 using S = bh::Shape;
@@ -232,7 +235,7 @@ const bh::Region kOutsideRegions[] = {
     {AreaW0b_MapMode_addr, 1},
 };
 const bh::Region kEngineRegions[] = {
-    {at::kChosen, 0x10},          // the six chosen bytes and what follows them
+    {::bof3::Img(at::kChosen), 0x10},          // the six chosen bytes and what follows them
     {0x903B24, 0x46C},            // character records 1..7 past the engine frame's 0x903A50..0x903B24
     {0x904060, 8},                // the party list
     {Game_AreaNumber_addr, 2},
@@ -249,6 +252,9 @@ const bh::Region kEngineRegions[] = {
 // ===========================================================================
 
 unsigned char& B(U address) { return Mem(address)[0]; }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 unsigned char Byte(std::initializer_list<U> often) {
     if (!bh::Often()) return static_cast<unsigned char>(bh::Next());
     const U* v = often.begin();

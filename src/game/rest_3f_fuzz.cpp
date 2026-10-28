@@ -171,6 +171,9 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 unsigned char* At(U a) { return P(a); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -275,7 +278,7 @@ const sh::Region kRegions[] = {
     {Rest3f_9EWall_addr, 0x10},
     {Rest3f_PixCursor_addr, at::kPixCellsSize},
     {kShardsEnd, kPixelsEnd - kShardsEnd},
-    {at::kParticles, kPartRoom * at::kPartStride},
+    {::bof3::Img(at::kParticles), kPartRoom * at::kPartStride},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -303,7 +306,7 @@ void SeedSplit() {
         SetWord(P(cursor + 2 * at), (sh::Next() | 1) & 0xFFFF);
     }
     const U first = sh::Next() % (kPartRoom - 24);
-    SetLong(At(Rest3f_PartCursor_addr), static_cast<std::int32_t>(at::kParticles + first * at::kPartStride));
+    SetLong(At(Rest3f_PartCursor_addr), static_cast<std::int32_t>(::bof3::Img(at::kParticles) + first * at::kPartStride));
 }
 
 void Seed(unsigned k) {

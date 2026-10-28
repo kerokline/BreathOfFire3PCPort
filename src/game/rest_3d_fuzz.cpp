@@ -34,6 +34,9 @@ namespace {
 namespace bh = boss_harness;
 using U = std::uint32_t;
 using bh::Mem;
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* Mem(::bof3::image::Va va) { return Mem(::bof3::Img(va)); }
 using move_script::SetLong;
 using move_script::SetWord;
 using S = bh::Shape;

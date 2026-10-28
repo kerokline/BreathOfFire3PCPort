@@ -58,15 +58,22 @@ std::uint16_t W(U address) { return Word(At(address)); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 S32 S16(std::uint16_t v) { return static_cast<std::int16_t>(v); }
 unsigned char* Ptr(U cell) { return At(L(cell)); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+std::uint16_t W(::bof3::image::Va va) { return W(::bof3::Img(va)); }
+U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
+unsigned char* Ptr(::bof3::image::Va va) { return Ptr(::bof3::Img(va)); }
 unsigned char* Result() { return Ptr(at::kResult); }
 
 // The records as the originals index them: a party record by the byte
 // itself (0x802D40 + 0x14C n, any n), an enemy object by the byte less 3
 // (0x93B960 + 0x128 (n - 3), the difference in 32 bits - a byte below 3
 // lands before the enemies). Neither is checked, as in the original.
-unsigned char* Party(unsigned n) { return At(ObjTrio_addr + (n & 0xFF) * at::kPartyStride); }
-unsigned char* Enemy(unsigned n) { return At(Battle_Enemies_addr + static_cast<U>(static_cast<S32>(n & 0xFF) - 3) * at::kEnemyStride); }
-unsigned char* CharRecord(unsigned roster) { return At(CharacterRecords_addr + (roster & 0xFF) * at::kCharStride); }
+unsigned char* Party(unsigned n) { return At(::bof3::Img(ObjTrio_addr) + (n & 0xFF) * at::kPartyStride); }
+unsigned char* Enemy(unsigned n) { return At(::bof3::Img(Battle_Enemies_addr) + static_cast<U>(static_cast<S32>(n & 0xFF) - 3) * at::kEnemyStride); }
+unsigned char* CharRecord(unsigned roster) { return At(::bof3::Img(CharacterRecords_addr) + (roster & 0xFF) * at::kCharStride); }
 unsigned char* AbilityRow(unsigned id) { return At(at::kAbilityRows + (id & 0xFFFF) * at::kAbilityStride); }
 
 // R3D's callees, ours, by address (named in rest_3b_callees.h).
@@ -83,12 +90,12 @@ void Inflict(U status) { BH_AT(U1, at::kRollInflict)(status); }
 // jmp [table + 4 * byte]: the byte below `entries`, else a Fatal where the
 // original jumps through the dword after its table.
 void Dispatch(const char* who, U cell, U table, unsigned entries) {
-    const unsigned state = B(cell);
+    const unsigned state = B(::bof3::image::Va{cell});
     if (state >= entries)
         bof3::Fatal("%s: the state byte 0x%X is %u, past the %u entries of 0x%X - the original jumps through the dword "
                     "after (docs/rest_3b.md section 5)",
                     who, (unsigned)cell, state, entries, (unsigned)table);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * state)))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(::bof3::image::Va{table + 4 * state})))();
 }
 
 // The power word Battle_CalcDamage reads, from the acting actor's record:
@@ -682,7 +689,7 @@ void StatSumHit(U addend) {
 }  // namespace
 
 // original 0x44CB90 (slot 35): StatSumHit with the addend 0x939FE6.
-extern "C" void __cdecl EffectSlot35_StatSumHit(void) { StatSumHit(Rest3b_PowerAdd_addr); }
+extern "C" void __cdecl EffectSlot35_StatSumHit(void) { StatSumHit(::bof3::Img(Rest3b_PowerAdd_addr)); }
 
 // original 0x44CC60 (slot 36): Effect_SkillDamage(actor, target, 0x14, 0).
 extern "C" void __cdecl EffectSlot36_Skill20(void) { SkillHit(0x14); }
@@ -705,7 +712,7 @@ extern "C" void __cdecl EffectSlot40_StatAAHit(void) {
 }
 
 // original 0x44CDB0 (slot 41): StatSumHit with the addend 0x939FE8.
-extern "C" void __cdecl EffectSlot41_StatSumHit2(void) { StatSumHit(Rest3b_PowerAdd2_addr); }
+extern "C" void __cdecl EffectSlot41_StatSumHit2(void) { StatSumHit(::bof3::Img(Rest3b_PowerAdd2_addr)); }
 
 // original 0x44CE80 (slot 42): the power word = the actor's +0xA4 / +0xB4
 // doubled (16 bits); Battle_CalcDamage(actor, target, 0x20).
