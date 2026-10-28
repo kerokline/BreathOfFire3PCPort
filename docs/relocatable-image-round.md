@@ -108,6 +108,80 @@ A design doc in the shape of `state3-design.md`, answering with measurements:
   refuse), the crash reporter's addresses, and `tools/` that name Capcom's
   addresses in the exe host.
 
+### RA1 as run (2026-10-28)
+
+`tools/reloc_census.py` on the round tip `15518394`, its output
+`analysis/reloc_census.tsv` (the method, every class and the scope rules are
+in its docstring; it reuses `data_census.py`'s reader). A site is one token
+of our C++ naming an address in `0x400000..0x93F000` (or our draw pool); 40
+seconds, deterministic (two runs byte-identical).
+
+| Class | game | platform | hosted | fuzz | launcher | all |
+|---|--:|--:|--:|--:|--:|--:|
+| `accessor` (a generated typed name) | 22,356 | 169 | 0 | 3,425 | 2 | 25,952 |
+| `accessor_addr` (`Name_addr`, `bof3::addr::Name`) | 5,461 | 16 | 0 | 7,281 | 0 | 12,758 |
+| `inject` (`BOF3_INJECT`, `Inject(...)`) | 10,071 | 0 | 0 | 18 | 0 | 10,089 |
+| `image_meta` (`bof3::image::kBase`, `kTextVa`) | 1 | 6 | 0 | 0 | 0 | 7 |
+| `at_global` | 5,182 | 1 | 0 | 1,614 | 0 | 6,797 |
+| `module_const` | 2,159 | 53 | 0 | 1,103 | 0 | 3,315 |
+| `code_const` (a code address by name) | 2,386 | 19 | 82 | 5,395 | 0 | 7,882 |
+| `raw_literal` | 1,837 | 125 | 0 | 2,143 | 0 | 4,105 |
+| `code_literal` | 862 | 66 | 10 | 44,183 | 0 | 45,121 |
+| `asm_operand` | 14 | 0 | 0 | 0 | 0 | 14 |
+| `asm_text` (a literal in a naked function's template) | 29 | 0 | 0 | 1 | 0 | 30 |
+| `abs_call` (a code address called) | 1,330 | 10 | 26 | 14 | 0 | 1,380 |
+| `range_cmp` | 138 | 19 | 0 | 114 | 0 | 271 |
+| `addr_eq` (`==`, `!=`, `case`) | 67 | 17 | 172 | 1,865 | 0 | 2,121 |
+| `ptr_sub` | 47 | 20 | 0 | 74 | 0 | 141 |
+| `const_def` (3,281 spell a literal, 1,018 derived) | 3,934 | 23 | 0 | 342 | 0 | 4,299 |
+| **all** | 55,874 | 544 | 290 | 67,572 | 2 | 124,282 |
+
+**Scope rules.** `fuzz`: `data_census.py`'s file rule (`_fuzz.`,
+`_harness`, `fuzz_`). `hosted`: a site in another file that only the hosted
+build executes - inside `CloneOriginal(...)`, inside a `StubFor` / `StubAt`
+body (a clone's callee table), or a code address inside `PatchBytes(...)` /
+`RetargetCall(...)`. `launcher`: another process, reads `BOF3.exe` as a file.
+`platform`: `src/hook`, `render`, `audio`, `input`, `common`.
+
+**What a stage B group edits** is every game and platform site but the
+generated names (`accessor`, `accessor_addr`, `inject`, `image_meta`: RB0's,
+through `gen_symbols.py`) and the readings (`range_cmp`, `addr_eq`: the
+coordinator's): **18,097 sites in 511 files**. Of the literal sites, 2,992
+are constant definitions that spell an image literal - with the
+`base + offset` spelling these are the edit points, and the 7,341 game
+references to `at::` and module constants follow them without an edit while
+the base is `constexpr`.
+
+**Proposed stage B groups** (`--groups 6`, families whole; the file list per
+group is written by `--groups 6 --groups-tsv FILE`):
+
+| Group | Families | Files | Sites |
+|---|---|--:|--:|
+| 1 | magic | 50 | 3,205 |
+| 2 | battle | 78 | 3,005 |
+| 3 | rest | 51 | 2,769 |
+| 4 | effect, engine, platform | 131 | 2,748 |
+| 5 | field, scenario | 98 | 3,181 |
+| 6 | area, ui | 103 | 3,189 |
+
+**The readings** (`--ranges`): 157 range comparisons and 84 equality tests
+in the game and platform scopes, plus the calls of the range helpers
+the census finds (seven in the game, of `InData`, `InImage` and `InPool`;
+eight in the fuzz). Read by kind in the
+RA1 report: table-walk loop bounds (both ends image constants - they move
+together), membership tests on a run-time pointer, eight "is this handler
+word inside Capcom's `.text`" checks that a code word bound to our function
+will fail, world coordinates that only look like addresses (never to be
+converted), and the platform's own layout checks.
+
+**`--check`** fails when a gated count rises in the game or platform scope
+(the literal, call and reading classes: `asm_operand` 14, `asm_text` 29,
+`abs_call` 1,340, `range_cmp` 157, `addr_eq` 84, `ptr_sub` 67, literal
+`const_def` 2,992, `raw_literal` 1,962, `code_literal` 928). The counts are
+stable run to run, so the check can join `checks.yml` beside
+`data_census.py --check`; stage B lowers every gate, and each group commits
+the regenerated file.
+
 ## 3. Stage B: the spelling (file groups, in parallel, after RA1 and RA3 merge)
 
 First **RB0** (one agent, alone): `tools/gen_symbols.py` emits every

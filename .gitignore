@@ -67,6 +67,10 @@ layout.bin
 # ...and the ledger's switch inventory: names and file:line from src/ and
 # docs/DIVERGENCE.md only (tools/ledger_switches.py, the ledger-fields round).
 !/analysis/ledger_switches.tsv
+# ...and the relocation census: addresses, names and our own source lines
+# from src/ and symbols.toml (tools/reloc_census.py, the relocatable-image
+# round); its --check reads the #gate lines.
+!/analysis/reloc_census.tsv
 
 # Symbol/name data IS tracked — it is our own work product, not game data.
 !/names/
