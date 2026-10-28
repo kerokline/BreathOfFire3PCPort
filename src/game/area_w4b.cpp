@@ -163,7 +163,7 @@ void MembersFrame(const at::Rects& t) {
             unsigned char* const record = PartyRecord(m);
             Field_State = record;
             Sprite_Current = record;
-            const unsigned char found = AH_AT(RectFn, t.fn_rect)(m);
+            const unsigned char found = AH_WORD(RectFn, t.fn_rect)(m);
             const U bit = 1u << (m & 31);
             const auto bit8 = static_cast<unsigned char>((m & 31) < 8 ? bit : 0);
             if (found == 0xFF) {

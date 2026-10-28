@@ -687,7 +687,7 @@ extern "C" void __cdecl PartyForm_DrawSliding(void) {
 // rel32 - so the divergence and its BOF3X_ORIGINAL=Menu_DrawFrame switch work
 // for ours as for Capcom's body (docs/field_s.md section 5).
 extern "C" void __cdecl PartyForm_DrawReserve(int x, int y) {
-    SH_AT(void (__cdecl*)(int, int, int, int), field_s::FrameCallTarget())(x, y, 0x12, 0x15);
+    SH_WORD(void (__cdecl*)(int, int, int, int), field_s::FrameCallTarget())(x, y, 0x12, 0x15);
     const int X = x + 7;
     int Y = y + 6;
     if (FieldS_ReserveCount == 0) return;

@@ -2611,7 +2611,7 @@ static void Farewell(unsigned flag, unsigned member, std::uint32_t setup) {
     Clear40();
     Set(flag);
     DropIn(member);
-    if (setup != 0) SH_AT(VoidFn, setup)();
+    if (setup != 0) SH_WORD(VoidFn, setup)();
     StopRun();
 }
 

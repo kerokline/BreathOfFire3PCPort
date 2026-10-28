@@ -152,8 +152,8 @@ void CopyRecord(unsigned char* to, const unsigned char* from) {
 using Fn0 = void (__cdecl*)();
 using Fn1 = void (__cdecl*)(unsigned);
 using Alloc = unsigned char (__cdecl*)();
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
-void Call1(std::uint32_t address, unsigned a) { MH_AT(Fn1, address)(a); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
+void Call1(std::uint32_t address, unsigned a) { MH_WORD(Fn1, address)(a); }
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).

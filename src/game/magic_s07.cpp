@@ -140,7 +140,7 @@ unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, para
 using Fn0 = void (__cdecl*)();
 using ByteFn = unsigned char (__cdecl*)();
 using Fn2 = void (__cdecl*)(unsigned, unsigned);
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);

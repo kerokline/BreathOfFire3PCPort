@@ -318,7 +318,7 @@ void FrameSlideIn(const WorldMapTables& t) {
 // ours passes the word sign-extended.
 void FrameHold(const WorldMapTables& t) {
     if (AreaW0b_MapMode == 2) Cur()[2] = 3;
-    AH_AT(DrawAt, t.fn_draw_frame)(0x10, S16(Cur() + 0x2E));
+    AH_WORD(DrawAt, t.fn_draw_frame)(0x10, S16(Cur() + 0x2E));
 }
 
 // State 3: the word +0x2E -= 0x10; at -0x30 and below +2 = 0; unless the
@@ -334,7 +334,7 @@ void FrameSlideOut(const WorldMapTables& t) {
         o[2] = 1;
         o = Cur();
     }
-    AH_AT(DrawAt, t.fn_draw_frame)(0x10, S16(o + 0x2E));
+    AH_WORD(DrawAt, t.fn_draw_frame)(0x10, S16(o + 0x2E));
 }
 
 // The region box, state 1: y +0x30 -= 10; at 0xC8 and below (s16) +3 + 1;
@@ -352,7 +352,7 @@ void BoxSlideIn(const WorldMapTables& t) {
         o[3] = 3;
         o = Cur();
     }
-    AH_AT(DrawAt, t.fn_draw_hud)(0x5C, S16(o + 0x30));
+    AH_WORD(DrawAt, t.fn_draw_hud)(0x5C, S16(o + 0x30));
 }
 
 // State 2: while +0xB is 0 +9 + 1, at 0x5A and above (u8) +0xB + 1; when the
@@ -371,7 +371,7 @@ void BoxHold(const WorldMapTables& t) {
         o[3] = static_cast<unsigned char>(o[3] + 1);
         o = Cur();
     }
-    AH_AT(DrawAt, t.fn_draw_hud)(0x5C, S16(o + 0x30));
+    AH_WORD(DrawAt, t.fn_draw_hud)(0x5C, S16(o + 0x30));
 }
 
 // State 3: y +0x30 += 10; at 0xF0 and above (s16) +3 = 0; unless the mode
@@ -388,7 +388,7 @@ void BoxSlideOut(const WorldMapTables& t) {
         o[3] = 1;
         o = Cur();
     }
-    AH_AT(DrawAt, t.fn_draw_hud)(0x5C, S16(o + 0x30));
+    AH_WORD(DrawAt, t.fn_draw_hud)(0x5C, S16(o + 0x30));
 }
 
 // The dial frame at (x, y) (area 33's WorldMap_DrawFrame 0x404390,
@@ -408,7 +408,7 @@ void BoxSlideOut(const WorldMapTables& t) {
 void DrawFrame(const WorldMapTables& t, int x, int y) {
     if ((Draw_PassFlags & 0x1B) == 0) return;
     world_map_legend::Begin();   // DIV-0135: which page; the port's key names painted over
-    const auto sprite = AH_AT(DrawSpriteAt, t.fn_draw_sprite);
+    const auto sprite = AH_WORD(DrawSpriteAt, t.fn_draw_sprite);
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x9C, 0);
     AH_CALL(Gfx_CommitPrim)(1, 0xC);
     sprite(x, y, 0);
@@ -465,8 +465,8 @@ void DrawSprite(const WorldMapTables& t, int x, int y, unsigned index) {
 // areas 87 and 88, 0x803584 for area 45, 0x803588 for area 16).
 void DrawHud(const WorldMapTables& t, int x, int y) {
     if ((Draw_PassFlags & 0x1B) == 0) return;
-    AH_AT(DrawSpriteAt, t.fn_draw_sprite)(x, y, 4);
-    AH_AT(DrawSpriteAt, t.fn_draw_sprite)(x + 0x80, y, 5);
+    AH_WORD(DrawSpriteAt, t.fn_draw_sprite)(x, y, 4);
+    AH_WORD(DrawSpriteAt, t.fn_draw_sprite)(x + 0x80, y, 5);
     const unsigned char* const text = At(::bof3::Img(at::kAreaText.v) + (static_cast<U>(Long(At(t.label_offset))) & 0xFFFF));
     AH_CALL(Text_DrawAt)(x + 4, y + 4, 0, 0xFF, text);
 }
@@ -936,7 +936,7 @@ void MembersFrame(const TwinTables& t) {
             unsigned char* const rec = PartyRecord(m);
             Field_State = rec;
             Sprite_Current = rec;
-            const unsigned char found = AH_AT(RectFn, t.fn_member_rect)(m);
+            const unsigned char found = AH_WORD(RectFn, t.fn_member_rect)(m);
             const U bit = 1u << (m & 31);
             const auto bit8 = static_cast<unsigned char>((m & 31) < 8 ? bit : 0);
             if (found == 0xFF) {

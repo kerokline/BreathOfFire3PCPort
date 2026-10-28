@@ -252,7 +252,7 @@ const Call kPauseAllCalls[] = {{0xD, 0x5A6C30, reinterpret_cast<const void*>(&St
                                {0x2A, 0x5A71C0, reinterpret_cast<const void*>(&StubStreamStop)},
                                {0x2F, 0x5A6FF0, reinterpret_cast<const void*>(&SoundRestFuzz_Halt)}};
 const Call kSetVolumeCalls[] = {{0x22, 0x5B9550, nullptr}};   // the CRT's _ftol: pure x87, the copy keeps it
-const Call kInitCalls[] = {{0x18, kDirectSoundCreate, reinterpret_cast<const void*>(&StubCreate)}};
+const Call kInitCalls[] = {{0x18, kDirectSoundCreate.v, reinterpret_cast<const void*>(&StubCreate)}};
 const Clone kClones[kCount] = {
     {"Sound_StopMusic", 0x587B80, 0x5, kStopMusicCalls, 1},
     {"Sound_ResumeAll", 0x587B90, 0x5, kResumeAllCalls, 1},

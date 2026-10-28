@@ -511,7 +511,7 @@ extern "C" void __cdecl ConfigScreen_DrawButtons(int sel, int x, int y) {
 // and Config_DrawRowOptions, each with the row's state (RowState, read afresh).
 extern "C" void __cdecl Config_DrawPanel(int x, int y) {
     const unsigned char settings[6] = {static_cast<unsigned char>(ModeFlow_ConfigBytes), static_cast<unsigned char>(Config_WindowColour), Config_Background, Rest4f_Setting3, FieldE2_RunDefault, 0};
-    SH_AT(Frame, MenuFrame_Draw())(x, y, 0x21, 0xD);
+    SH_WORD(Frame, MenuFrame_Draw())(x, y, 0x21, 0xD);
     const int x5 = x + 5;
     int row_y = y + 9;
     for (unsigned row = 0; row < 6; ++row) {
@@ -546,7 +546,7 @@ extern "C" void __cdecl Config_DrawRowOptions(int x, int y, unsigned row, unsign
             const ConfigTextOperands& ops = ConfigText_Operands();   // at::kOptionWidth, kOptionBigSite
             const U width = ops.option_x8 ? n * 8u : n * 12u;   // DIV-0017's shl eax,1, or the original's lea
             const U xc = rx - width / 2 + static_cast<U>(x) + 0x74;
-            SH_AT(DrawText, ops.big_draw)(static_cast<int>(xc), y - 2, static_cast<int>(colour), n, text);
+            SH_WORD(DrawText, ops.big_draw)(static_cast<int>(xc), y - 2, static_cast<int>(colour), n, text);
         } else {
             const U xc = rx - (n * 8u) / 2 + static_cast<U>(x) + 0x74;
             SH_CALL(Text_DrawSmall)(static_cast<int>(xc), y + 1, colour, n, text);
@@ -566,7 +566,7 @@ extern "C" void __cdecl Config_DrawRowOptions(int x, int y, unsigned row, unsign
 extern "C" void __cdecl Config_DrawControllerPanel(int x, int y) {
     const int w = ConfigText_Operands().frame_w;   // at::kPadFrameW: 0xC, DIV-0051's 0xD
     const int h = kPadFrameRows;                    // at::kPadFrameH, never patched
-    SH_AT(Frame, MenuFrame_Draw())(x, y, w, h);
+    SH_WORD(Frame, MenuFrame_Draw())(x, y, w, h);
     static const unsigned char kWords[6] = {0, 1, 6, 2, 3, 4};
     const U hi = static_cast<U>(y);
     for (unsigned row = 0; row < 6; ++row) {
@@ -599,7 +599,7 @@ extern "C" void __cdecl Config_DrawControllerRow(int x, int y, int row) {
     const U len = static_cast<U>(std::strlen(reinterpret_cast<const char*>(name)));
     const U k = ops.name_x4 ? 4 : 6;   // DIV-0026's lea [ecx+ecx], or the original's [ecx+ecx*2]
     const int edge = ops.name_edge;
-    SH_AT(DrawText, ops.name_draw)(x - static_cast<int>(len * k) + edge, y + 1, 0, 0xFF, name);
+    SH_WORD(DrawText, ops.name_draw)(x - static_cast<int>(len * k) + edge, y + 1, 0, 0xFF, name);
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetLineF2)(prim);
     const int xs = static_cast<int>(static_cast<U>(x) & 0xFFFF);

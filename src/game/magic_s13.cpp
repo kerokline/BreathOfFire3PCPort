@@ -90,7 +90,7 @@ unsigned RandByte() { return static_cast<unsigned>(MH_CALL(Rand)()) & 0xFFu; }
 // BOF3X_ORIGINAL), in the fuzz that address's recorder.
 using Fn0 = void (__cdecl*)();
 using AllocFn = unsigned char (__cdecl*)();
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 unsigned Alloc() { return MH_AT(AllocFn, bof3::addr::SuddenDeathMote_Alloc)() & 0xFFu; }
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {

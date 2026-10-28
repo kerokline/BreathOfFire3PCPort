@@ -142,7 +142,7 @@ int Cos(int a) { return MH_CALL(Math_Cos)(a); }
 // This group's functions called by address, as the originals call them: in
 // the game the jmp Inject put there (or Capcom's code under
 // BOF3X_ORIGINAL), in the fuzz that address's recorder.
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // A .data table's entry, read in place, the index unchecked (as the
 // originals' `jmp / call [eax*4 + table]`).

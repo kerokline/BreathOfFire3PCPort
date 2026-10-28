@@ -145,7 +145,7 @@ bool CountDown() {
 }
 
 using Fn0 = void (__cdecl*)();
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // A draw-mode packet (tpage `tpage`, dithered) committed to layer `layer`.
 void DrawMode(unsigned tpage, unsigned layer) {

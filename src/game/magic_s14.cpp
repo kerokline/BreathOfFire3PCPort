@@ -122,7 +122,7 @@ unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, para
 // the game the jmp Inject put there (or Capcom's code under
 // BOF3X_ORIGINAL), in the fuzz that address's recorder.
 using Fn0 = void (__cdecl*)();
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Capcom's phase handlers a table holds, unnamed, in the engine: 0x492750
 // steps +1 on; 0x437CC0 is a bare ret (a step that waits for a child to move

@@ -171,13 +171,19 @@ template <typename F> inline F Call(F callee) {
 // A named callee, Capcom's or ours alike: SH_CALL(Flags_Test)(row, 3).
 #define SH_CALL(name) ::scenario_harness::Call(name)
 // An unnamed one, by its address: SH_AT(void (__cdecl*)(unsigned), 0x4410B0)(1).
-#define SH_AT(type, address) ::scenario_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(address)))
+#define SH_AT(type, address) ::scenario_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(::bof3::Code(address))))
+// One known only at run time - a cell of our own table of VAs, a helper's
+// parameter, or a word the game holds - through ::bof3::CodePlace, which
+// in stage C tells a VA from a word that already is a place
+// (src/common/image_base.h). SH_AT takes a constant only: Code() is
+// consteval, so a run-time value there does not compile.
+#define SH_WORD(type, word) ::scenario_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(::bof3::CodePlace(word))))
 
 // A handler a chapter dispatches to through a table (a .data state or run
 // table, a stack table's immediate): called by the address the table holds,
 // which in the game is Capcom's function or the jmp Inject put there to ours.
 using Handler = void (__cdecl*)();
-inline Handler Phase(std::uint32_t address) { return SH_AT(Handler, address); }
+inline Handler Phase(std::uint32_t address) { return SH_WORD(Handler, address); }
 
 // --- for a group's fuzz --------------------------------------------------------
 

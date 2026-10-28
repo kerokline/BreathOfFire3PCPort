@@ -135,7 +135,7 @@ bool IsOut(unsigned actor) { return (MH_CALL(Battle_ActorIsOut)(actor & 0xFF) & 
 // the game the jmp Inject put there (or Capcom's code under
 // BOF3X_ORIGINAL), in the fuzz that address's recorder.
 using Fn0 = void (__cdecl*)();
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).

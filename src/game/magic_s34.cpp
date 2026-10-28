@@ -135,8 +135,8 @@ int Cos(int a) { return MH_CALL(Math_Cos)(a); }
 using Fn0 = void (__cdecl*)();
 using Fn2 = void (__cdecl*)(unsigned, unsigned);
 using ByteFn = unsigned char (__cdecl*)();
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
-void Call2(std::uint32_t address, unsigned a, unsigned b) { MH_AT(Fn2, address)(a, b); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
+void Call2(std::uint32_t address, unsigned a, unsigned b) { MH_WORD(Fn2, address)(a, b); }
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -222,7 +222,7 @@ void StartMotes(std::uint32_t pool, unsigned motes, std::uint32_t alloc) {
         Inc(s[1]);
     }
     for (unsigned i = 0; i < motes; ++i) {
-        const unsigned index = MH_AT(ByteFn, alloc)() & 0xFFu;
+        const unsigned index = MH_WORD(ByteFn, alloc)() & 0xFFu;
         if (index == 0xFF) continue;
         unsigned char* const rec = MoteRecord(pool, index);
         records::BattleTask* const trec = rv::As<records::BattleTask>(rec);

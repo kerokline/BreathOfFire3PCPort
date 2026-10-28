@@ -199,7 +199,13 @@ template <typename F> inline F Call(F callee) {
 // A named callee, Capcom's or ours alike: BH_CALL(Sprite_ScriptTick)().
 #define BH_CALL(name) ::boss_harness::Call(name)
 // An unnamed one, by its address: BH_AT(void (__cdecl*)(), 0x446E20)().
-#define BH_AT(type, address) ::boss_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(address)))
+#define BH_AT(type, address) ::boss_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(::bof3::Code(address))))
+// One known only at run time - a cell of our own table of VAs, a helper's
+// parameter, or a word the game holds - through ::bof3::CodePlace, which
+// in stage C tells a VA from a word that already is a place
+// (src/common/image_base.h). BH_AT takes a constant only: Code() is
+// consteval, so a run-time value there does not compile.
+#define BH_WORD(type, word) ::boss_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(::bof3::CodePlace(word))))
 
 // A handler a boss function reaches by an address in its own code (a stack
 // table's immediate, a direct call to a function of its group): called by that
@@ -209,13 +215,13 @@ template <typename F> inline F Call(F callee) {
 // (DataTable) - and so is a hook stored in a cell (0x904B64..6C, an enemy's
 // +0xF4): the fuzz keeps recorders there.
 using Handler = void (__cdecl*)();
-inline Handler Phase(std::uint32_t address) { return BH_AT(Handler, address); }
+inline Handler Phase(std::uint32_t address) { return BH_WORD(Handler, address); }
 // A handler that answers in al (a kind's state that tail-jumps to
 // Sprite_ScriptTick), and a hook's shape: one word in, al out.
 using AnswerHandler = std::uint32_t (__cdecl*)();
 using Hook = std::uint32_t (__cdecl*)(unsigned);
-inline AnswerHandler PhaseA(std::uint32_t address) { return BH_AT(AnswerHandler, address); }
-inline Hook PhaseHook(std::uint32_t address) { return BH_AT(Hook, address); }
+inline AnswerHandler PhaseA(std::uint32_t address) { return BH_WORD(AnswerHandler, address); }
+inline Hook PhaseHook(std::uint32_t address) { return BH_WORD(Hook, address); }
 
 // --- for a group's fuzz --------------------------------------------------------
 

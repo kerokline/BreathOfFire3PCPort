@@ -1,4 +1,4 @@
-// The image's base and the two helpers that turn one of Capcom's addresses
+// The image's base and the helpers that turn one of Capcom's addresses
 // into a place (docs/relocatable-image-design.md 2).
 //
 // Every address in our source is written as Capcom's address, a VA in the
@@ -8,6 +8,9 @@
 //
 //   Img(va)   a place in the image's data (.rdata, .data, .bss, .pool);
 //   Code(va)  a place to call or jump to in the image's code.
+//
+// and a code word known only at run time - a VA or a word the game holds -
+// becomes one through CodePlace(word).
 //
 // Stage B of the relocatable-image round (docs/relocatable-image-round.md 3):
 // the base is 0x400000, so Img and Code are the identity, and the machine code
@@ -53,6 +56,26 @@ consteval std::uint32_t Img(std::uint32_t va) { return ImageBase() + (va - image
 // A VA in the image's code, as a place to call. The identity in stage B.
 consteval std::uint32_t Code(std::uint32_t va) { return va; }
 
+// A code word known only at run time, as a place to call (design 4.4: the
+// call-through helpers' fix point). Two kinds of word reach it, and in our
+// source they look alike: a code VA (a cell of one of our own constant tables
+// picked by an index, a helper's parameter, a ternary of two constants), and a
+// word the game holds (a cell of a .data step table, an operand read from the
+// code), which is already a place - stage C binds those cells to our functions
+// (mode B) or rebases them (mode S). Code() cannot take either: it is consteval.
+//
+// Stage B: the identity. Stage C tells the two apart by the value: a word in
+// the linked code range 0x401000..0x5C4000 is a VA and becomes Code(va) at run
+// time (mode B: the bound function, a Fatal naming the VA on a miss; mode S:
+// its place in the moved stub page); any other word is a place and passes
+// through. That holds while no place of ours lies in the linked code range:
+// at base 0x400000 the range is the image's own stub page, and at a forced
+// base the fence reserves it (design 1.5), which the loader must check.
+//
+// constexpr and always_inline so it leaves no call behind (the gate,
+// tools/codegen_same.py); a constant argument belongs in Code(), not here.
+[[gnu::always_inline]] constexpr std::uint32_t CodePlace(std::uint32_t word) { return word; }
+
 // --- A VA as a type, bof3::image::Va (design 2.2; RB0's prototype) ----------
 //
 // A VA held in an image::Va is a name the compiler keeps apart from a place: it adds
@@ -75,6 +98,28 @@ constexpr Va operator-(Va a, std::int32_t n) { return Va{a.v - static_cast<std::
 constexpr Va operator-(Va a, std::uint32_t n) { return Va{a.v - n}; }
 constexpr std::int32_t operator-(Va a, Va b) { return static_cast<std::int32_t>(a.v - b.v); }
 constexpr bool operator==(Va a, Va b) { return a.v == b.v; }
+}  // namespace image
+
+// --- A code VA as a type, bof3::image::CodeVa (design 4.4) -------------------
+//
+// The same shape as Va, for an address in Capcom's code: a name that adds an
+// offset, subtracts to a distance, and does not convert to an integer. It is a
+// separate type so neither is passed where the other is meant: a Va handed to
+// a code place, or a CodeVa to a data accessor, does not compile (stage C2's
+// reviewer relies on that). There is no Code(CodeVa) and no Img(CodeVa): a
+// code constant is placed as ::bof3::Code(kX.v), consteval, the only spelling
+// that leaves the machine code as it was (wave 1, RB2 and RB4 finding 1), and
+// named as kX.v (a log line, an Inject argument, a VA a test compares).
+namespace image {
+struct CodeVa {
+    std::uint32_t v;
+};
+constexpr CodeVa operator+(CodeVa a, std::int32_t n) { return CodeVa{a.v + static_cast<std::uint32_t>(n)}; }
+constexpr CodeVa operator+(CodeVa a, std::uint32_t n) { return CodeVa{a.v + n}; }
+constexpr CodeVa operator-(CodeVa a, std::int32_t n) { return CodeVa{a.v - static_cast<std::uint32_t>(n)}; }
+constexpr CodeVa operator-(CodeVa a, std::uint32_t n) { return CodeVa{a.v - n}; }
+constexpr std::int32_t operator-(CodeVa a, CodeVa b) { return static_cast<std::int32_t>(a.v - b.v); }
+constexpr bool operator==(CodeVa a, CodeVa b) { return a.v == b.v; }
 }  // namespace image
 
 // A Va as a place. constexpr, not consteval: a Va may be computed at run time

@@ -129,8 +129,8 @@ unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, para
 // BOF3X_ORIGINAL), in the fuzz that address's recorder.
 using Fn0 = void (__cdecl*)();
 using Fn3 = void (__cdecl*)(int, int, int);
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
-void Call3(std::uint32_t address, int a, int b, int c) { MH_AT(Fn3, address)(a, b, c); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
+void Call3(std::uint32_t address, int a, int b, int c) { MH_WORD(Fn3, address)(a, b, c); }
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).

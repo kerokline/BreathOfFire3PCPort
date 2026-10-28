@@ -116,8 +116,8 @@ unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, para
 using Fn0 = void (__cdecl*)();
 using Fn2 = void (__cdecl*)(int, int);
 using ReachFn = int (__cdecl*)(unsigned char*);
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
-void Call2(std::uint32_t address, int a, int b) { MH_AT(Fn2, address)(a, b); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
+void Call2(std::uint32_t address, int a, int b) { MH_WORD(Fn2, address)(a, b); }
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).

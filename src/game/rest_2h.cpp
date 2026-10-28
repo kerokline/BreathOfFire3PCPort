@@ -165,7 +165,7 @@ void Pieces(int x, int y, U list) { SH_CALL(Menu_DrawPieces)(x, y, Text(list), 1
 // reads the byte); obj +4, +6, +0xA and +0x20 are read once after the first
 // call, the count again at each row's end.
 extern "C" void __cdecl MenuList_ReserveWinDraw(unsigned char* obj) {
-    SH_AT(void (__cdecl*)(int, int, int, int), MenuFrame_Draw())(X(obj), Y(obj), 0x12, 0x15);
+    SH_WORD(void (__cdecl*)(int, int, int, int), MenuFrame_Draw())(X(obj), Y(obj), 0x12, 0x15);
     const int x7 = X(obj) + 7;
     int y = Y(obj) + 6;
     if (obj[0xA] == 0) return;
@@ -792,7 +792,7 @@ extern "C" void __cdecl BattleEquipWin_DrawItems(unsigned char* w) {
     const unsigned char* const title = At(L(::bof3::Img(at::kUseTitles.v) + 4 * title_cat));
     const unsigned char length = SH_CALL(Text_CharCount)(title);
     using DrawAt = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
-    SH_AT(DrawAt, ListTitle_SiteDraw())(6 * (0xD - static_cast<int>(length)) + X(w), title_y, 0, 0x10, title);
+    SH_WORD(DrawAt, ListTitle_SiteDraw())(6 * (0xD - static_cast<int>(length)) + X(w), title_y, 0, 0x10, title);
     SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(at::kFmtCount.v)), static_cast<unsigned>(n), 0x80u);
     SH_CALL(Text_DrawFont8)(X(w) + 0x55, Y(w) + 0x7A, 0, Text(::bof3::Img(at::kPrintBuf.v)));
     Pieces(X(w), Y(w), ::bof3::Img(at::kUsePiecesA.v));

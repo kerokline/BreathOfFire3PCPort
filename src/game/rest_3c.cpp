@@ -109,7 +109,7 @@ U Resisted() { return BH_AT(A2, at::kResisted)(B(::bof3::Img(at::kActor.v)), B(:
 U AsAbility(unsigned ability, U tail) {
     B(::bof3::Img(at::kActingKind.v)) = 4;
     SetW(::bof3::Img(at::kAbility.v), ability);
-    return BH_AT(A0, tail)();
+    return BH_WORD(A0, tail)();
 }
 
 // The party's stats derived again, as BattleParty_RecalcStats (BE3's 0x442310)

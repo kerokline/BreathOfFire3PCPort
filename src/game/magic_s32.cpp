@@ -160,7 +160,7 @@ using PtrFn = void (__cdecl*)(unsigned char*);
 using ProjectFn = void (__cdecl*)(const std::int32_t*, unsigned char*);
 using FacingFn = int (__cdecl*)(const unsigned char*, const unsigned char*, const unsigned char*);
 using DiscFn = void (__cdecl*)(const unsigned char*, unsigned, unsigned, unsigned);
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 void Project(const std::int32_t* v, unsigned char* out) { MH_AT(ProjectFn, kProjectPoint)(v, out); }
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {

@@ -120,7 +120,7 @@ void RestoreOrMark(unsigned flag, U fc, U hook, U f8) {
 }
 
 // The end phase's steps (nobody's; the harness's standard set).
-void EndStep(U step) { BH_AT(Handler, step)(); }
+void EndStep(U step) { BH_WORD(Handler, step)(); }
 
 // Set-ups 18..20's end hooks: the win hands the chapter the step `win_step`
 // (by 0x904AAD bit 1: `step_if_1` or `step_if_not`) and takes step 1; enemy 2

@@ -132,7 +132,7 @@ void Sound(unsigned id) { MH_CALL(Sound_PlayById)(static_cast<unsigned short>(id
 using Fn0 = void (__cdecl*)();
 using ByteFn = unsigned char (__cdecl*)();
 using TaskFn = void (__cdecl*)(unsigned char*);
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).

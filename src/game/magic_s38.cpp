@@ -154,8 +154,8 @@ using Fn0 = void (__cdecl*)();
 using ByteFn = unsigned char (__cdecl*)();
 using TaskFn = void (__cdecl*)(unsigned char*);
 using BurstFn = void (__cdecl*)(int, int, int, int);
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
-unsigned Alloc(std::uint32_t address) { return MH_AT(ByteFn, address)() & 0xFFu; }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
+unsigned Alloc(std::uint32_t address) { return MH_WORD(ByteFn, address)() & 0xFFu; }
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).

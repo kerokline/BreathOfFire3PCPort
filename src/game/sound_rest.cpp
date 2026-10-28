@@ -50,7 +50,7 @@ void Release(void* object) { Method<ComCall>(object, sound::kRelease)(object); }
 
 const Callees kOriginals = {
     SndBuf_Stop, SndStream_Stop, Music_Halt, Music_Resume, Music_IsPlaying,
-    reinterpret_cast<long (__stdcall*)(const void*, void**, void*)>(static_cast<std::uintptr_t>(kDirectSoundCreate)),
+    reinterpret_cast<long (__stdcall*)(const void*, void**, void*)>(static_cast<std::uintptr_t>(::bof3::Code(kDirectSoundCreate.v))),
 };
 
 }  // namespace sound_rest

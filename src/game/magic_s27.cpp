@@ -132,8 +132,8 @@ std::uint32_t CosShlW(int a, unsigned n, unsigned add) {
 using Fn0 = void (__cdecl*)();
 using Fn1 = void (__cdecl*)(unsigned);
 using PrimFn = void (__cdecl*)(unsigned char*);
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
-void Call1(std::uint32_t address, unsigned a) { MH_AT(Fn1, address)(a); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
+void Call1(std::uint32_t address, unsigned a) { MH_WORD(Fn1, address)(a); }
 
 // The projections with the arguments the originals push: the depth and flag
 // pointers past the vertices (ours reads the first).

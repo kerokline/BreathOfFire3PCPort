@@ -103,13 +103,19 @@ template <typename F> inline F Call(F callee) {
 // A named callee, Capcom's or ours alike: AH_CALL(Flags_Test)(bits, 0x13).
 #define AH_CALL(name) ::area_harness::Call(name)
 // An unnamed one, by its address: AH_AT(void (__cdecl*)(unsigned, unsigned, unsigned), 0x579F00)(x, z, 0).
-#define AH_AT(type, address) ::area_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(address)))
+#define AH_AT(type, address) ::area_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(::bof3::Code(address))))
+// One known only at run time - a cell of our own table of VAs, a helper's
+// parameter, or a word the game holds - through ::bof3::CodePlace, which
+// in stage C tells a VA from a word that already is a place
+// (src/common/image_base.h). AH_AT takes a constant only: Code() is
+// consteval, so a run-time value there does not compile.
+#define AH_WORD(type, word) ::area_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(::bof3::CodePlace(word))))
 
 // A phase an area function dispatches to through a table (a stack table's
 // immediate, a .data entry): called by the address the table holds, which in
 // the game is Capcom's function or the jmp Inject put there to ours.
 using Handler = void (__cdecl*)();
-inline Handler Phase(std::uint32_t address) { return AH_AT(Handler, address); }
+inline Handler Phase(std::uint32_t address) { return AH_WORD(Handler, address); }
 // A hook's shape (Area_StepHook's, Area_ArriveHook's, the cell hook's
 // entries): (x, z) in, al out.
 using Hook = int (__cdecl*)(unsigned, unsigned);

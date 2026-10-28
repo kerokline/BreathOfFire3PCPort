@@ -27,7 +27,7 @@ namespace glyph_draw {
 const Callees kOriginals = {
     D3d_PrimColor,
     Font_GlyphTexture,
-    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(kRetOnly)),
+    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly))),
     D3d_SetBlend,
     D3d_SetShadeMode,
     Font_BuildGlyphTexture,

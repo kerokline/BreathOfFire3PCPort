@@ -671,7 +671,7 @@ extern "C" void __cdecl FieldCore_DownBegin(void) {
 namespace {
 // FieldCore_DownSteps[1..4]: +4 = next when the FE2 step answers al.
 void DownWait(U callee, unsigned char next) {
-    if (SH_AT(unsigned char (__cdecl*)(), callee)() != 0) S()[4] = next;
+    if (SH_WORD(unsigned char (__cdecl*)(), callee)() != 0) S()[4] = next;
 }
 }  // namespace
 

@@ -75,13 +75,19 @@ template <typename F> inline F Call(F callee) {
 // A named callee, Capcom's or ours alike: MH_CALL(Rand)().
 #define MH_CALL(name) ::magic_harness::Call(name)
 // An unnamed one, by its address: MH_AT(void (__cdecl*)(unsigned, unsigned), 0x4B58F0)(item, category).
-#define MH_AT(type, address) ::magic_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(address)))
+#define MH_AT(type, address) ::magic_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(::bof3::Code(address))))
+// One known only at run time - a cell of our own table of VAs, a helper's
+// parameter, or a word the game holds - through ::bof3::CodePlace, which
+// in stage C tells a VA from a word that already is a place
+// (src/common/image_base.h). MH_AT takes a constant only: Code() is
+// consteval, so a run-time value there does not compile.
+#define MH_WORD(type, word) ::magic_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(::bof3::CodePlace(word))))
 
 // A phase handler an effect dispatches to through a table (a stack table's
 // immediate, a .data entry): called by the address the table holds, which in
 // the game is Capcom's function or the jmp Inject put there to ours.
 using Handler = void (__cdecl*)();
-inline Handler Phase(std::uint32_t address) { return MH_AT(Handler, address); }
+inline Handler Phase(std::uint32_t address) { return MH_WORD(Handler, address); }
 
 // --- for a group's fuzz --------------------------------------------------------
 

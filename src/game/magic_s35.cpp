@@ -138,10 +138,10 @@ using Fn0 = void (__cdecl*)();
 using Fn1 = void (__cdecl*)(int);
 using Fn2 = void (__cdecl*)(unsigned, unsigned);
 using FnAlloc = std::uint32_t (__cdecl*)();
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
-void Call1(std::uint32_t address, int a) { MH_AT(Fn1, address)(a); }
-void Call2(std::uint32_t address, unsigned a, unsigned b) { MH_AT(Fn2, address)(a, b); }
-unsigned Alloc(std::uint32_t address) { return MH_AT(FnAlloc, address)() & 0xFFu; }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
+void Call1(std::uint32_t address, int a) { MH_WORD(Fn1, address)(a); }
+void Call2(std::uint32_t address, unsigned a, unsigned b) { MH_WORD(Fn2, address)(a, b); }
+unsigned Alloc(std::uint32_t address) { return MH_WORD(FnAlloc, address)() & 0xFFu; }
 
 // The one tail jump to another unit (docs/magic_s35.md section 3), S37's
 // MagicFx_FreeCurrentRecord, is ours now and called by name.

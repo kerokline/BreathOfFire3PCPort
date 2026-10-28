@@ -104,8 +104,8 @@ unsigned KindTotal() { return SH_AT(unsigned (__cdecl*)(), at::kKindTotal)(); }
 void DrawQuad(int x, int y, unsigned height, unsigned which) {
     SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kDrawQuad)(x, y, height, which);
 }
-void Fe2(std::uint32_t address) { SH_AT(Void0, address)(); }
-unsigned char Fe2Al(std::uint32_t address) { return SH_AT(Byte0, address)(); }
+void Fe2(std::uint32_t address) { SH_WORD(Void0, address)(); }
+unsigned char Fe2Al(std::uint32_t address) { return SH_WORD(Byte0, address)(); }
 
 void Text(int x, int y, int colour, int count, std::uint32_t text) {
     SH_CALL(Text_DrawAt)(x, y, colour, count, At(text));
