@@ -450,7 +450,7 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
             rv::Store<std::uint32_t>(Effect_Objects[0].step_y, static_cast<U>(Long(RecordB() + 8)));
             animation = 5;
         } else if (held & Sigma(0x20)) {
-            const unsigned char sloped = B(0x903850);
+            const unsigned char sloped = B(::bof3::Img(0x903850));
             SetL(at::kEff0StepX, 0);
             if (sloped != 0) {
                 unsigned char* const r = RecordB();
@@ -465,7 +465,7 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
                 rv::Store<std::uint32_t>(Effect_Objects[0].step_y, static_cast<U>(Long(r + 4)));
                 animation = 3;
             }
-        } else if (B(0x903850) != 0) {
+        } else if (B(::bof3::Img(0x903850)) != 0) {
             unsigned char* const r = RecordB();
             Effect1e_Pose = 2;
             SetL(at::kEff0StepX, 0);

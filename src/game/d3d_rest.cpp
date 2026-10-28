@@ -181,7 +181,7 @@ long SetStageState(U stage, U type, U value) {
 // DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
 long DrawVertices(U type, U count) {
     void** device = Device();
-    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, D3d_Vertices_addr, count, 0);
+    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
 }
 // A surface pointer read from its global at the moment of the call.
 void** SurfaceAt(U address) { return *reinterpret_cast<void** volatile*>(At(address)); }
@@ -508,9 +508,9 @@ void D3d_AfterDraw() {
     const U step_y = X87MulFtol(D3d_ScaleY, FloatAt(kFixedOne));
     alignas(4) unsigned char desc[0x7C];
     g.init_desc(desc);
-    if (Lock(SurfaceAt(D3d_CaptureSurface_addr), desc) != 0) return;
+    if (Lock(SurfaceAt(::bof3::Img(D3d_CaptureSurface_addr)), desc) != 0) return;
     U out = Long(desc + 0x24);
-    if (Lock(SurfaceAt(DDraw_BackBuffer_addr), desc) != 0) return;
+    if (Lock(SurfaceAt(::bof3::Img(DDraw_BackBuffer_addr)), desc) != 0) return;
     const bool narrow = D3dRest_ScreenBpp == 2;
     const U from = Long(desc + 0x24);
     U y = 0;
@@ -532,12 +532,12 @@ void D3d_AfterDraw() {
         }
         y += step_y;
     }
-    Unlock(SurfaceAt(DDraw_BackBuffer_addr));
-    Unlock(SurfaceAt(D3d_CaptureSurface_addr));
+    Unlock(SurfaceAt(::bof3::Img(DDraw_BackBuffer_addr)));
+    Unlock(SurfaceAt(::bof3::Img(D3d_CaptureSurface_addr)));
     const U dst_rect[4] = {0, 0, Long(At(::bof3::Img(D3dRest_CaptureW_addr))) & 0xFFFF, static_cast<std::uint32_t>(D3dRest_CaptureH)};
     const U src_rect[4] = {0, 0, 0x140, 0xF0};
-    void** source = SurfaceAt(D3d_CaptureSurface_addr);
-    void** texture = SurfaceAt(D3d_CaptureTexSurface_addr);
+    void** source = SurfaceAt(::bof3::Img(D3d_CaptureSurface_addr));
+    void** texture = SurfaceAt(::bof3::Img(D3d_CaptureTexSurface_addr));
     reinterpret_cast<Com6>(Method(texture, 0x14))(texture, Addr(dst_rect), Addr(source), Addr(src_rect), 0x1000000, 0);
     D3d_CaptureReady = 1;
 }
@@ -558,7 +558,7 @@ void D3d_AfterDraw() {
 int Gfx_StoreImage(const short* rect, void* to) {
     const unsigned char* r = reinterpret_cast<const unsigned char*>(rect);
     const U x = static_cast<U>(Short(r)), y = static_cast<U>(Short(r + 2));
-    U from = Gfx_VramShadow_addr + ((y << 10) + x) * 2;
+    U from = ::bof3::Img(Gfx_VramShadow_addr) + ((y << 10) + x) * 2;
     const U bytes = static_cast<U>(Short(r + 4)) << 1;
     if (Short(r + 6) <= 0) return static_cast<int>(bytes);
     U dest = Addr(to);

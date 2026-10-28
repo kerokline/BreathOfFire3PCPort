@@ -46,7 +46,7 @@ const Callees kOriginals = {
     Pad_Read,
     Crt_fopen, Crt_fgets, Crt_atoi, Cast<int (__cdecl*)(const char*, const char*, void*, void*)>(Crt_sscanf), Crt_fclose,
     Cfg_SetKeyTable, Cfg_SetDefaultKeys,
-    Cast<int (__cdecl*)(char*, const char*, const char*, const char*)>(Crt_sprintf), Shell_ImportGetDriveType_addr,
+    Cast<int (__cdecl*)(char*, const char*, const char*, const char*)>(Crt_sprintf), ::bof3::Img(Shell_ImportGetDriveType_addr),
     Gte_InitGeom, Gte_SetGeomOffset, Gte_SetGeomScreen, DInput_Init,
     reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(kSoundSetup)), Port_DroppedCall,
     Gpu_SetDefDrawEnv, Gpu_SetDefDispEnv, Gfx_InitBufferBlock, Gfx_BeginFrame, Task_SetStackBase,
@@ -217,8 +217,8 @@ extern "C" int __cdecl Disc_Probe(const char* local_file, const char* disc_file)
     char path[0x50];
     for (U i = 0; i < 10; ++i) {
         File_CdRootBuf[0] = static_cast<unsigned char>('C' + i);
-        if (drive_type(Str(File_CdRootBuf_addr)) != kDriveCdrom) continue;
-        g.format(path, Str(kRootFormat), Str(File_CdRootBuf_addr), disc_file);
+        if (drive_type(Str(::bof3::Img(File_CdRootBuf_addr))) != kDriveCdrom) continue;
+        g.format(path, Str(kRootFormat), Str(::bof3::Img(File_CdRootBuf_addr)), disc_file);
         void* const disc = g.open(path, Str(kModeRb));
         if (disc != nullptr) {
             g.close(disc);
@@ -285,7 +285,7 @@ extern "C" void __cdecl Gfx_LinkOTags(void) {
         const U link = Long(kGfxOtPointers + 4 * i);
         const U buffer = Gfx_BufferIndex;
         const U block = Addr(Gfx_CurrentEnv);
-        g.add_prim(Longs(block + kBlockOt + 4 * i), Longs(Gfx_OtHeads_addr + (i + buffer * 8) * 4), Longs(link));
+        g.add_prim(Longs(block + kBlockOt + 4 * i), Longs(::bof3::Img(Gfx_OtHeads_addr) + (i + buffer * 8) * 4), Longs(link));
     }
 }
 

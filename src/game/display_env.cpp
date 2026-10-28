@@ -96,7 +96,7 @@ using namespace display_env;
 // The eax the original leaves is not read by its caller.
 void Gpu_PutDispEnv(const unsigned char* env) {
     if (Word(kDispEnv + 2) != Word(Addr(env) + 2)) g.present();
-    CopyDwords(Gpu_DispEnv_addr, Addr(env), 5);
+    CopyDwords(::bof3::Img(Gpu_DispEnv_addr), Addr(env), 5);
 }
 
 // 0x5A7890, PutDrawEnv by shape; once a rendered frame from WinMain
@@ -115,7 +115,7 @@ void Gpu_PutDrawEnv(const unsigned char* env) {
     if (Gpu_DrawEnv[0x19] != r || Gpu_DrawEnv[0x1a] != At(e + 0x1A)[0] ||
         Gpu_DrawEnv[0x1b] != At(e + 0x1B)[0])
         g.set_back_color(r, At(e + 0x1A)[0], At(e + 0x1B)[0]);
-    CopyDwords(Gpu_DrawEnv_addr, e, 0x17);
+    CopyDwords(::bof3::Img(Gpu_DrawEnv_addr), e, 0x17);
 }
 
 // 0x5A78E0, SetDefDispEnv by shape; twice from the set-up 0x4FD110. The
@@ -242,7 +242,7 @@ void D3d_SetBackColor(unsigned r, unsigned g, unsigned b) {
 // from the record each time) and its buffer SndBuf_FromWave of that. An
 // entry whose offset is 0 keeps the buffer dword the payload's head carried.
 void Snd_LoadBank(unsigned bank, const void* payload, unsigned size) {
-    const U record = Sound_Banks_addr + (static_cast<U>(bank) - 1u) * kBankBytes;
+    const U record = ::bof3::Img(Sound_Banks_addr) + (static_cast<U>(bank) - 1u) * kBankBytes;
     const U old = Long(record + kBankHeader);
     if (old != 0) {
         g.free(At(old));

@@ -311,7 +311,7 @@ U Source(U page, U mode, std::int32_t key_x, std::int32_t key_y) {
     case 2: x += static_cast<U>(key_x) * 2; break;
     default: break;
     }
-    return Gfx_VramShadow_addr + (y << 11) + x;
+    return ::bof3::Img(Gfx_VramShadow_addr) + (y << 11) + x;
 }
 
 U Generation(U row_address) { return Long(row_address); }
@@ -345,7 +345,7 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
     const U p = static_cast<U>(page);
     const U m = static_cast<U>(mode);
     U slot = 0;
-    for (U e = Gfx_TexCache_addr + ((p * 3) << 8); slot < 0x20; ++slot, e += kEntryBytes)
+    for (U e = ::bof3::Img(Gfx_TexCache_addr) + ((p * 3) << 8); slot < 0x20; ++slot, e += kEntryBytes)
         if (At(e)[0] == 0) break;
     // Diagnostic only, no behaviour: a page with no free entry (the original
     // draws the primitive untextured, D3d_BindTexture with a 0) is logged, the
@@ -373,7 +373,7 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
     const U src = Source(p, m, Short(kTexKey), Short(kTexKey + 2));
     Desc desc;
     Dd_InitSurfaceDesc(desc.b);
-    const U entry = Gfx_TexCache_addr + ((p << 5) + slot) * kEntryBytes;
+    const U entry = ::bof3::Img(Gfx_TexCache_addr) + ((p << 5) + slot) * kEntryBytes;
     const U surface_slot = entry + 0x10;
     U result;
     if (Gfx_RenderFlags & 1) {
@@ -435,7 +435,7 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
 // staging surface, then a Blt of {0, 0, 256, 256} into the entry's surface.
 void D3d_RefreshPageTexture(int page, int slot) {
     const U p = static_cast<U>(page);
-    const U entry = Gfx_TexCache_addr + ((p << 5) + static_cast<U>(slot)) * kEntryBytes;
+    const U entry = ::bof3::Img(Gfx_TexCache_addr) + ((p << 5) + static_cast<U>(slot)) * kEntryBytes;
     At(entry)[0] = 1;
     const U mode = At(entry)[1];
     const U src = Source(p, mode, Short(entry + 8), Short(entry + 0xA));
@@ -458,7 +458,7 @@ void D3d_RefreshPageTexture(int page, int slot) {
     const void* table = g.clut_pixels(Word(At(entry + 2)));
     Dd_InitSurfaceDesc(desc.b);
     const bool software = (Gfx_RenderFlags & 1) != 0;
-    const U locked = software ? entry + 0x10 : Dd_StageSurface_addr;
+    const U locked = software ? entry + 0x10 : ::bof3::Img(Dd_StageSurface_addr);
     if (Com(Long(locked), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return;
     if (At(entry)[1] != 0)
         g.convert8(desc.Surface(), At(src), table, Short(entry + 0xC), Short(entry + 0xE), static_cast<int>(desc.Pitch()));

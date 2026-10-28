@@ -327,29 +327,29 @@ extern "C" void __cdecl EffectKind5C_Run(void) {
 }
 
 // original 0x462BA0 (Effect_KindHandlers 1): EffectKind01_States by +1.
-extern "C" void __cdecl EffectKind01_Run(void) { Run("EffectKind01_Run", EffectKind01_States_addr, 2, S()[1]); }
+extern "C" void __cdecl EffectKind01_Run(void) { Run("EffectKind01_Run", ::bof3::Img(EffectKind01_States_addr), 2, S()[1]); }
 // original 0x462E50 (Effect_KindHandlers 7): EffectKind07_States by +1.
-extern "C" void __cdecl EffectKind07_Run(void) { Run("EffectKind07_Run", EffectKind07_States_addr, 5, S()[1]); }
+extern "C" void __cdecl EffectKind07_Run(void) { Run("EffectKind07_Run", ::bof3::Img(EffectKind07_States_addr), 5, S()[1]); }
 // original 0x463040 (Effect_KindHandlers 8): EffectKind08_States by +1.
-extern "C" void __cdecl EffectKind08_Run(void) { Run("EffectKind08_Run", EffectKind08_States_addr, 4, S()[1]); }
+extern "C" void __cdecl EffectKind08_Run(void) { Run("EffectKind08_Run", ::bof3::Img(EffectKind08_States_addr), 4, S()[1]); }
 // original 0x463440 (Effect_KindHandlers 9): EffectKind09_States by +1.
-extern "C" void __cdecl EffectKind09_Run(void) { Run("EffectKind09_Run", EffectKind09_States_addr, 10, S()[1]); }
+extern "C" void __cdecl EffectKind09_Run(void) { Run("EffectKind09_Run", ::bof3::Img(EffectKind09_States_addr), 10, S()[1]); }
 // original 0x463EE0 (Effect_KindHandlers 0xB): EffectKind0B_States by +1.
-extern "C" void __cdecl EffectKind0B_Run(void) { Run("EffectKind0B_Run", EffectKind0B_States_addr, 5, S()[1]); }
+extern "C" void __cdecl EffectKind0B_Run(void) { Run("EffectKind0B_Run", ::bof3::Img(EffectKind0B_States_addr), 5, S()[1]); }
 // original 0x464660 (Effect_KindHandlers 2): EffectKind02_States by +1.
-extern "C" void __cdecl EffectKind02_Run(void) { Run("EffectKind02_Run", EffectKind02_States_addr, 5, S()[1]); }
+extern "C" void __cdecl EffectKind02_Run(void) { Run("EffectKind02_Run", ::bof3::Img(EffectKind02_States_addr), 5, S()[1]); }
 // original 0x464F20 (Effect_KindHandlers 3): EffectKind03_States by +1.
-extern "C" void __cdecl EffectKind03_Run(void) { Run("EffectKind03_Run", EffectKind03_States_addr, 4, S()[1]); }
+extern "C" void __cdecl EffectKind03_Run(void) { Run("EffectKind03_Run", ::bof3::Img(EffectKind03_States_addr), 4, S()[1]); }
 // original 0x465310 (Effect_KindHandlers 5): EffectKind05_States by +1.
-extern "C" void __cdecl EffectKind05_Run(void) { Run("EffectKind05_Run", EffectKind05_States_addr, 6, S()[1]); }
+extern "C" void __cdecl EffectKind05_Run(void) { Run("EffectKind05_Run", ::bof3::Img(EffectKind05_States_addr), 6, S()[1]); }
 // original 0x4658C0 (Effect_KindHandlers 0xA): EffectKind0A_States by +1.
-extern "C" void __cdecl EffectKind0A_Run(void) { Run("EffectKind0A_Run", EffectKind0A_States_addr, 2, S()[1]); }
+extern "C" void __cdecl EffectKind0A_Run(void) { Run("EffectKind0A_Run", ::bof3::Img(EffectKind0A_States_addr), 2, S()[1]); }
 // original 0x465A60 (Effect_KindHandlers 0xC): EffectKind0C_States by +1.
-extern "C" void __cdecl EffectKind0C_Run(void) { Run("EffectKind0C_Run", EffectKind0C_States_addr, 3, S()[1]); }
+extern "C" void __cdecl EffectKind0C_Run(void) { Run("EffectKind0C_Run", ::bof3::Img(EffectKind0C_States_addr), 3, S()[1]); }
 // original 0x465F10 (Effect_KindHandlers 0xD): EffectKind0D_States by +1.
-extern "C" void __cdecl EffectKind0D_Run(void) { Run("EffectKind0D_Run", EffectKind0D_States_addr, 5, S()[1]); }
+extern "C" void __cdecl EffectKind0D_Run(void) { Run("EffectKind0D_Run", ::bof3::Img(EffectKind0D_States_addr), 5, S()[1]); }
 // original 0x4667A0 (Effect_KindHandlers 0x1A): EffectKind1A_States by +1.
-extern "C" void __cdecl EffectKind1A_Run(void) { Run("EffectKind1A_Run", EffectKind1A_States_addr, 17, S()[1]); }
+extern "C" void __cdecl EffectKind1A_Run(void) { Run("EffectKind1A_Run", ::bof3::Img(EffectKind1A_States_addr), 17, S()[1]); }
 
 // original 0x466080 (Effect_KindHandlers 0xF): unless the record is record 3
 // (0x7E1360) or record 3's +1 is above 3, Effect_Release (a tail jump); else
@@ -360,7 +360,7 @@ extern "C" void __cdecl EffectKind0F_Run(void) {
         SH_CALL(Effect_Release)();
         return;
     }
-    Run("EffectKind0F_Run", EffectKind0F_States_addr, 13, s[1]);
+    Run("EffectKind0F_Run", ::bof3::Img(EffectKind0F_States_addr), 13, s[1]);
 }
 
 // ===========================================================================

@@ -137,7 +137,8 @@ constexpr const char* kStrSpeed2 = "Speed x2";
 constexpr const char* kStrSpeed1 = "Speed x1";
 constexpr const char* kStrFrameSaved = "Frame saved";
 constexpr const char* kStrFrameNotSaved = "Frame not saved";
-constexpr U kEnvBase = 0x903880, kEnvStride = 0x90;   // the two display-environment pairs
+constexpr ::bof3::image::Va kEnvBase{0x903880};   // the two display-environment pairs
+constexpr U kEnvStride = 0x90;
 constexpr int kOverlayFrames = 0x78;
 
 // DIV-0034: how far behind the clock the deadline may fall before it restarts.
@@ -340,7 +341,7 @@ extern "C" void __cdecl Display_WindowMoved(int x, int y) {
 }
 
 extern "C" char* __cdecl Display_DeviceName(int device) {
-    return reinterpret_cast<char*>(static_cast<std::uintptr_t>(0x6C3A68 + static_cast<U>(device) * 0x13C));
+    return reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(0x6C3A68) + static_cast<U>(device) * 0x13C));
 }
 
 extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned int wparam, long lparam) {
@@ -764,7 +765,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 // (0x4FCF0F..0x4FCF3A); that float is not written here.
                 ++deadline_frames;
                 Gfx_BufferIndex ^= 1;
-                unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(kEnvBase + Gfx_BufferIndex * kEnvStride));
+                unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(kEnvBase.v) + Gfx_BufferIndex * kEnvStride));
                 Gfx_CurrentEnv = env;
                 Gpu_ClearOTagR(reinterpret_cast<unsigned long*>(env + 0x70), 8);
                 Gfx_BeginFrame();
@@ -901,10 +902,10 @@ void PatchImport(U slot, F& real, F ours) {
 
 void WinMain_Inject() {
     if (GetEnvironmentVariableA("BOF3X_EXITTRACE", nullptr, 0) > 0) {
-        PatchImport(Imp_ExitProcess_addr, g_real_exit, &TracedExitProcess);
-        PatchImport(Imp_TerminateProcess_addr, g_real_terminate, &TracedTerminateProcess);
-        PatchImport(Imp_PostQuitMessage_addr, g_real_post_quit, &TracedPostQuitMessage);
-        PatchImport(PsxRest_ImportMessageBoxA_addr, g_real_message_box, &TracedMessageBoxA);
+        PatchImport(::bof3::Img(Imp_ExitProcess_addr), g_real_exit, &TracedExitProcess);
+        PatchImport(::bof3::Img(Imp_TerminateProcess_addr), g_real_terminate, &TracedTerminateProcess);
+        PatchImport(::bof3::Img(Imp_PostQuitMessage_addr), g_real_post_quit, &TracedPostQuitMessage);
+        PatchImport(::bof3::Img(PsxRest_ImportMessageBoxA_addr), g_real_message_box, &TracedMessageBoxA);
         if (!AddVectoredExceptionHandler(0, TracedUnhandled)) bof3::Fatal("exittrace: no vectored handler");
         bof3::Log("exittrace   ExitProcess, TerminateProcess, PostQuitMessage and MessageBoxA log their callers; "
                   "breakpoints and single steps no handler took are logged");

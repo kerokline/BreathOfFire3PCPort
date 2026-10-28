@@ -205,27 +205,27 @@ unsigned PureMasks() {
 }
 
 // Part 2: four of ours under the live table.
-U16* Words() { return reinterpret_cast<U16*>(static_cast<std::uintptr_t>(0x903580)); }
+U16* Words() { return reinterpret_cast<U16*>(static_cast<std::uintptr_t>(::bof3::Img(0x903580))); }
 unsigned char& B(U address) { return *reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 
 struct Cell { U address, size; };
 constexpr Cell kCells[] = {
-    {0x903580, 18},   // the nine pad words
-    {0x7E1BEC, 2},    // Input_Pressed
-    {0x937F88, 4},    // Sprite_Current
-    {0x7E1261, 1},    // Effect_Objects record 1 +1
-    {0x7E1361, 1},    // record 3 +1
-    {0x90412E, 1},    // the fishing's item bytes
-    {0x904130, 1},
-    {0x6BC708, 2},    // LeaderPanel_PressLatch's two, LeaderPanel_S1Buttons' warned byte
-    {0x6BC717, 1},
-    {0x676284, 1},    // kind 0x8C's frame count
-    {0x67628C, 2},    // its count
-    {0x7E1BE8, 2},    // Input_Held
-    {0x904AA1, 2},    // the battle's step and sub-step
-    {0x904AA5, 2},    // the command cross's tap timer and tap command
-    {0x904AB4, 1},    // the command the cross points at
-    {0x904AC3, 1},    // the menu index
+    {::bof3::Img(0x903580), 18},   // the nine pad words
+    {::bof3::Img(0x7E1BEC), 2},    // Input_Pressed
+    {::bof3::Img(0x937F88), 4},    // Sprite_Current
+    {::bof3::Img(0x7E1261), 1},    // Effect_Objects record 1 +1
+    {::bof3::Img(0x7E1361), 1},    // record 3 +1
+    {::bof3::Img(0x90412E), 1},    // the fishing's item bytes
+    {::bof3::Img(0x904130), 1},
+    {::bof3::Img(0x6BC708), 2},    // LeaderPanel_PressLatch's two, LeaderPanel_S1Buttons' warned byte
+    {::bof3::Img(0x6BC717), 1},
+    {::bof3::Img(0x676284), 1},    // kind 0x8C's frame count
+    {::bof3::Img(0x67628C), 2},    // its count
+    {::bof3::Img(0x7E1BE8), 2},    // Input_Held
+    {::bof3::Img(0x904AA1), 2},    // the battle's step and sub-step
+    {::bof3::Img(0x904AA5), 2},    // the command cross's tap timer and tap command
+    {::bof3::Img(0x904AB4), 1},    // the command the cross points at
+    {::bof3::Img(0x904AC3), 1},    // the menu index
 };
 struct Saved { unsigned char bytes[64]; };
 
@@ -256,7 +256,7 @@ U RunS1(U16 press) {
     Effect_Objects[1].state = 0x55;
     Effect_Objects[3].state = 0x66;
     CharStats_ExtraItem = 0;
-    B(0x904130) = 1;
+    B(::bof3::Img(0x904130)) = 1;
     Effect1e_Choice = 0;
     Input_Pressed = press;
     ::LeaderPanel_S1Buttons();
@@ -297,14 +297,14 @@ U RunCountPress(U16 press) {
 U RunCross(U16 press) {
     BossSb_Countdown = 0;   // the tap timer
     BattleE5_GeneRow = 0;
-    B(0x904AB4) = 0x77;   // the cross's command, a stand-in
+    B(::bof3::Img(0x904AB4)) = 0x77;   // the cross's command, a stand-in
     BattleActions_Step = 0x31;
     BattleE4_Step2 = 0x42;
     BattleActorCopies_EntryCount = 1;
     Input_Held = static_cast<U16>(press & ~0x100u);
     Input_Pressed = 0;
     ::BattleMenu_CommandSelect();
-    return static_cast<U>(B(0x904AB4)) | static_cast<std::uint32_t>(BossSb_Countdown) << 8 | static_cast<std::uint32_t>(BattleE5_GeneRow) << 16 |
+    return static_cast<U>(B(::bof3::Img(0x904AB4))) | static_cast<std::uint32_t>(BossSb_Countdown) << 8 | static_cast<std::uint32_t>(BattleE5_GeneRow) << 16 |
            static_cast<U>(BattleActions_Step ^ BattleE4_Step2 ^ static_cast<unsigned char>(BattleActorCopies_EntryCount)) << 24;
 }
 

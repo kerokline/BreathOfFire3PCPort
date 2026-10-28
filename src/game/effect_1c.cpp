@@ -412,7 +412,7 @@ extern "C" void __cdecl EffectKind1D_Hold(void) {
     SH_CALL(EffectKind1D_DrawRing)(0xFF);
     if (Frame_Counter & 1) SH_AT(unsigned char (__cdecl*)(void), at::kShardSpawn)();
     SH_CALL(EffectKind1D_MoveShards)();
-    if (At(0x903848)[0] == 0x1F) {
+    if (At(::bof3::Img(0x903848))[0] == 0x1F) {
         Cur()[9] = 0xFC;
         unsigned char* const s = Cur();
         s[1] = static_cast<unsigned char>(s[1] + 1);

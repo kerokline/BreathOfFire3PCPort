@@ -144,7 +144,7 @@ U HeightAt(const char* who, std::int32_t column) {
         bof3::Fatal("%s: column %d, past the 80 heights at 0x676114 - the original reads what lies beside them "
                     "(docs/effect_2c.md section 6)",
                     who, (int)column);
-    return EffectKind6B_Heights_addr + 2u * static_cast<U>(column);
+    return ::bof3::Img(EffectKind6B_Heights_addr) + 2u * static_cast<U>(column);
 }
 
 // +9 down one (Sprite_Current read for each access, as the originals); at 0,
@@ -506,7 +506,7 @@ extern "C" void __cdecl EffectKind40_ShardsClear(void) {
 extern "C" void __cdecl EffectKind40_ShardsStep(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     DrawMode(1, 1, 3);
-    U p = EffectKind30_Shards_addr;
+    U p = ::bof3::Img(EffectKind30_Shards_addr);
     SetUL(at::kShardCursor, p);
     for (unsigned n = at::kShardCount; n != 0; --n) {
         if (At(p)[0] != 0) {
@@ -540,15 +540,15 @@ extern "C" void __cdecl EffectKind40_ShardDraw(void) {
         bof3::Fatal("EffectKind40_ShardDraw: the shard's height +8 is 0 - the original faults on the divide "
                     "(docs/effect_2c.md section 6)");
     std::int32_t q = static_cast<std::int32_t>(static_cast<U>(SW(p + 4)) << 7) / d;
-    StF(p + 0xC, I(q) + FAt(EffectKind30_Shards_addr + 0x300));
+    StF(p + 0xC, I(q) + FAt(::bof3::Img(EffectKind30_Shards_addr) + 0x300));
     p = EffectKind40_ShardCursor;
     d = SW(p + 8);
     if (d == 0)
         bof3::Fatal("EffectKind40_ShardDraw: the shard's height +8 is 0 - the original faults on the divide "
                     "(docs/effect_2c.md section 6)");
     q = static_cast<std::int32_t>(static_cast<U>(SW(p + 6)) << 7) / d;
-    StF(p + 0x10, I(q) + FAt(EffectKind30_Shards_addr + 0x300 + 4));
-    const LD depth = FAt(EffectKind30_Shards_addr + 0x300 + 8);
+    StF(p + 0x10, I(q) + FAt(::bof3::Img(EffectKind30_Shards_addr) + 0x300 + 4));
+    const LD depth = FAt(::bof3::Img(EffectKind30_Shards_addr) + 0x300 + 8);
     StF(EffectKind40_ShardCursor + 0x14, depth);
     const unsigned char* const s = EffectKind40_ShardCursor;
     unsigned prev = 0;
@@ -556,8 +556,8 @@ extern "C" void __cdecl EffectKind40_ShardDraw(void) {
     do {
         ++step;
         const unsigned next = step & 0x1Fu;
-        const U vn = EffectKind30_Shards_addr + 0x30c + 12u * next;
-        const U vp = EffectKind30_Shards_addr + 0x30c + 12u * prev;
+        const U vn = ::bof3::Img(EffectKind30_Shards_addr) + 0x30c + 12u * next;
+        const U vp = ::bof3::Img(EffectKind30_Shards_addr) + 0x30c + 12u * prev;
         const LD dx = FAt(vn) - FAt(vp);
         const LD dy = FAt(vn + 4) - FAt(vp + 4);
         const LD px = F(s + 0xC) - FAt(vp);
@@ -590,7 +590,7 @@ extern "C" void __cdecl EffectKind40_ShardSpawn(unsigned char* shard) {
 // original 0x475A60 (0x23 bytes): the first shard record of the 32 not in use,
 // the cursor 0x67610C left on it (past the last, and 0 answered, when none).
 extern "C" unsigned char* __cdecl EffectKind40_ShardFind(void) {
-    U p = EffectKind30_Shards_addr;
+    U p = ::bof3::Img(EffectKind30_Shards_addr);
     SetUL(at::kShardCursor, p);
     for (unsigned char n = 0;;) {
         if (At(p)[0] == 0) return At(p);
@@ -631,7 +631,7 @@ extern "C" void __cdecl EffectKind40_DrawDisc(unsigned radius) {
     SetUL(q + 4, v + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
     SetUL(q + 8, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
     SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(p));
-    U rim = EffectKind30_Shards_addr + 0x30c;
+    U rim = ::bof3::Img(EffectKind30_Shards_addr) + 0x30c;
     for (unsigned n = 0x20; n != 0; --n) {
         unsigned char* const prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyG3)(prim);
@@ -748,7 +748,7 @@ extern "C" void __cdecl EffectKind43_Setup(void) {
 // nothing): in use, its side +3 the byte 0x6761B4 (then flipped), its phase +2
 // = 0.
 extern "C" void __cdecl EffectKind43_AddSpark(void) {
-    U p = EffectKind30_Shards_addr;
+    U p = ::bof3::Img(EffectKind30_Shards_addr);
     for (unsigned n = 0; At(p)[0] != 0;) {
         p += at::kSparkStride43;
         ++n;
@@ -958,7 +958,7 @@ extern "C" void __cdecl EffectKind6B_Scatter(void) {
     SetUL(q + 8, static_cast<std::uint32_t>(Sprite_Objects[2].height));
     alignas(4) unsigned char o[12];
     SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(o));
-    U pixel = EffectKind30_Shards_addr;
+    U pixel = ::bof3::Img(EffectKind30_Shards_addr);
     U particle = ::bof3::Img(at::kPixels);
     EffectKind6B_PixelCount = 0;
     unsigned char row = 0;
@@ -1311,7 +1311,7 @@ extern "C" void __cdecl EffectKind44_SparksClear(void) {
 // ground's (AreaMap_Elevation's s16 << 16); its trail drawn
 // (EffectKind44_SparkTrail); its life +1 down, at 0 out of use.
 extern "C" void __cdecl EffectKind44_SparksStep(void) {
-    U p = EffectKind30_Shards_addr + 0xfc;
+    U p = ::bof3::Img(EffectKind30_Shards_addr) + 0xfc;
     SetUL(at::kSparkCursor, p);
     for (unsigned n = at::kSparkCount44; n != 0; --n) {
         if (At(p)[0] != 0) {
@@ -1449,7 +1449,7 @@ extern "C" void __cdecl EffectKind44_SparkEmit(void) {
 // original 0x477180 (0x25 bytes): the first spark record of the eight not in
 // use, the cursor 0x6761B8 left on it (past the last, and 0 answered, when none).
 extern "C" unsigned char* __cdecl EffectKind44_SparkFind(void) {
-    U p = EffectKind30_Shards_addr + 0xfc;
+    U p = ::bof3::Img(EffectKind30_Shards_addr) + 0xfc;
     SetUL(at::kSparkCursor, p);
     for (unsigned char n = 0;;) {
         if (At(p)[0] == 0) return At(p);

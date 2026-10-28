@@ -192,7 +192,7 @@ extern "C" void __cdecl ItemTrade_FullMessage(void) {
 // ItemTrade_LeaveSteps 0x66A494 by the step byte 0x93985E, unbounded, as the
 // original (past the two entries ours aborts where the table runs into bytes).
 extern "C" void __cdecl ItemTrade_Leave(void) {
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(ItemTrade_LeaveSteps_addr, Effect1g_TradeStep, "ItemTrade_Leave")))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(::bof3::Img(ItemTrade_LeaveSteps_addr), Effect1g_TradeStep, "ItemTrade_Leave")))();
 }
 
 // original 0x594100 (ItemTrade_LeaveSteps[0], hidden in Sprite_ClutWord's

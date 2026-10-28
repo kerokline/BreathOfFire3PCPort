@@ -260,7 +260,7 @@ extern "C" void __cdecl EffectKind0F_ListClose() {
 // 0xE, EffectKind0F_Children[+2] (a tail jump); else Effect_Release.
 extern "C" void __cdecl EffectKind0F_Child() {
     if (rv::Bytes(&Effect_Objects[6])[0x8] == 0 && Effect_Objects[6].state == 0xE) {
-        StepAt(EffectKind0F_Children_addr, Sc()[2], at::kChildrenCount, "EffectKind0F_Child")();
+        StepAt(::bof3::Img(EffectKind0F_Children_addr), Sc()[2], at::kChildrenCount, "EffectKind0F_Child")();
         return;
     }
     SH_CALL(Effect_Release)();
@@ -269,22 +269,22 @@ extern "C" void __cdecl EffectKind0F_Child() {
 // originals 0x467520, 0x4677F0, 0x467A60, 0x467D60, 0x468020, 0x468320 (kind 0xF
 // states 30..35, EffectKind0F_Children 0..5): each sub-kind's step table by +3.
 extern "C" void __cdecl EffectKind0F_Child0() {
-    StepAt(EffectKind0F_Child0Steps_addr, Sc()[3], at::kChild0Count, "EffectKind0F_Child0")();
+    StepAt(::bof3::Img(EffectKind0F_Child0Steps_addr), Sc()[3], at::kChild0Count, "EffectKind0F_Child0")();
 }
 extern "C" void __cdecl EffectKind0F_Child1() {
-    StepAt(EffectKind0F_Child1Steps_addr, Sc()[3], at::kChild1Count, "EffectKind0F_Child1")();
+    StepAt(::bof3::Img(EffectKind0F_Child1Steps_addr), Sc()[3], at::kChild1Count, "EffectKind0F_Child1")();
 }
 extern "C" void __cdecl EffectKind0F_Child2() {
-    StepAt(EffectKind0F_Child2Steps_addr, Sc()[3], at::kChild2Count, "EffectKind0F_Child2")();
+    StepAt(::bof3::Img(EffectKind0F_Child2Steps_addr), Sc()[3], at::kChild2Count, "EffectKind0F_Child2")();
 }
 extern "C" void __cdecl EffectKind0F_Child3() {
-    StepAt(EffectKind0F_Child3Steps_addr, Sc()[3], at::kChild3Count, "EffectKind0F_Child3")();
+    StepAt(::bof3::Img(EffectKind0F_Child3Steps_addr), Sc()[3], at::kChild3Count, "EffectKind0F_Child3")();
 }
 extern "C" void __cdecl EffectKind0F_Child4() {
-    StepAt(EffectKind0F_Child4Steps_addr, Sc()[3], at::kChild4Count, "EffectKind0F_Child4")();
+    StepAt(::bof3::Img(EffectKind0F_Child4Steps_addr), Sc()[3], at::kChild4Count, "EffectKind0F_Child4")();
 }
 extern "C" void __cdecl EffectKind0F_Child5() {
-    StepAt(EffectKind0F_Child5Steps_addr, Sc()[3], at::kChild5Count, "EffectKind0F_Child5")();
+    StepAt(::bof3::Img(EffectKind0F_Child5Steps_addr), Sc()[3], at::kChild5Count, "EffectKind0F_Child5")();
 }
 
 // --- sub-kind 0 (EffectKind0F_Child0Steps) --------------------------------------------
@@ -823,16 +823,16 @@ extern "C" void __cdecl EffectKind0F_DrawMessageList(int x, int y) {
     }
     auto line = static_cast<unsigned char>(Long(s + 0x14));
     for (unsigned n = 0; n < lines; ++n) {
-        const std::uint16_t id = WordOf(EffectKind0F_RuleLineIds_addr, at::kLineCount, line, kWho);
+        const std::uint16_t id = WordOf(::bof3::Img(EffectKind0F_RuleLineIds_addr), at::kLineCount, line, kWho);
         if (id != 0xFFFF) DrawAt(x + 6, static_cast<int>(top + 13 * n), 0, 0xFF, Pool(id));
         line = static_cast<unsigned char>(line + 1);
         if (line > 0x35) line = 0;
     }
     SH_CALL(Menu_DrawBox)(x, y + 6, 0xF2, 0xE, 0, Style());
     SH_CALL(Menu_DrawBox)(x, y + 0x94, 0xF2, 0xB, 0x30, Style());
-    DrawAt(x + 0x3D, y + 6, 0, 0xFF, Pool(WordOf(EffectKind0F_RuleTitleIds_addr, at::kTitleCount, rv::As<records::EffectObject>(Sc())->height_frac, kWho)));
+    DrawAt(x + 0x3D, y + 6, 0, 0xFF, Pool(WordOf(::bof3::Img(EffectKind0F_RuleTitleIds_addr), at::kTitleCount, rv::As<records::EffectObject>(Sc())->height_frac, kWho)));
     SH_CALL(EffectKind0F_DrawListFrame)(x, y);
-    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(EffectKind0F_PageFormat_addr)), rv::As<records::EffectObject>(Sc())->height_frac + 1u);
+    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(::bof3::Img(EffectKind0F_PageFormat_addr))), rv::As<records::EffectObject>(Sc())->height_frac + 1u);
     SH_CALL(Text_DrawFont8)(x + 0xCA, y + 0x92, 0, Text(::bof3::Img(at::kPrint.v)));
 }
 
@@ -901,7 +901,7 @@ extern "C" void __cdecl Panel_DrawEdgeQuad(int x, int y, unsigned height, unsign
 extern "C" void __cdecl EffectKind0F_DrawCountHeader() {
     DrawMode(0, 1);
     DrawSprite(0x12, 1, 0xF0, 0x42);
-    SH_CALL(Text_DrawFont12)(0x119, 0x45, 0, Text(EffectKind0F_CountLabel_addr));
+    SH_CALL(Text_DrawFont12)(0x119, 0x45, 0, Text(::bof3::Img(EffectKind0F_CountLabel_addr)));
     SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Boss26Fx_CountFormat),
                          static_cast<int>(static_cast<short>(rv::As<records::EffectObject>(Sc())->height_whole)) + 1);
     if (B(::bof3::Img(at::kPrint.v)) == 0x20) B(::bof3::Img(at::kPrint.v)) = 0x20;
@@ -1007,7 +1007,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsB(int x, int y) {
     if (static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c) >= rv::As<records::EffectObject>(s)->work_18) rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectObject>(s)->work_18 == 0 ? 0 : rv::As<records::EffectObject>(s)->work_18 - 1);
     SH_CALL(EffectKind0F_DrawItemFrame)(x, y);
     SH_CALL(EffectKind0F_DrawScrollMark)(x + 0x80, y + 0x1C, 0x72);
-    DrawHeading(0, x + 0x35, y + 7, 3, EffectKind0F_PanelTitles_addr);
+    DrawHeading(0, x + 0x35, y + 7, 3, ::bof3::Img(EffectKind0F_PanelTitles_addr));
 }
 
 // original 0x468E50 (x, y, height; PSX 0x801D82F4): a POLY_FT4 (the cursor read once, before
@@ -1115,7 +1115,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsA(int x, int y) {
         if (a != 0) mark = static_cast<unsigned char>(mark + (s[8] != 0 ? a * 2 : a * 0xFE));
     }
     SH_CALL(EffectKind0F_DrawScrollMark)(x + 0x80, y + mark, height);
-    DrawHeading(1, x + 0x2F, y + 7, 4, EffectKind0F_PanelTitles_addr + 0x4);
+    DrawHeading(1, x + 0x2F, y + 7, 4, ::bof3::Img(EffectKind0F_PanelTitles_addr) + 0x4);
 }
 
 // original 0x469210 (x, y): the twin frame; the label 0x653EA8 at (x + 0x2A, y
@@ -1127,7 +1127,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsA(int x, int y) {
 // unless word +0x2C is 0xFFFF, that script-pool message at (0x19, 0x9A).
 extern "C" void __cdecl EffectKind0F_DrawEquipped(int x, int y) {
     SH_CALL(EffectKind0F_DrawTwinFrame)(x, y);
-    DrawHeading(2, x + 0x2A, y + 7, 5, EffectKind0F_PanelTitles_addr + 0x8);
+    DrawHeading(2, x + 0x2A, y + 7, 5, ::bof3::Img(EffectKind0F_PanelTitles_addr) + 0x8);
     const unsigned char bits = Sc()[7];
     const U ix = static_cast<U>(x) + 0x10u;
     auto icon = [ix](int iy, unsigned char item, U flag) { Call5(at::kE1gItemIcon, ix, static_cast<U>(iy), item, 3, flag); };
@@ -1151,7 +1151,7 @@ extern "C" void __cdecl EffectKind0F_DrawEquipped(int x, int y) {
         icon(y + 0x2A, CharStats_ExtraItem, 0);
         DrawAt(x + 0x1C, y + 0x28, Sc()[7] & 2, NameCount(), AccessoryName(CharStats_ExtraItem));
     }
-    DrawHeading(3, x + 0x2A, y + 0x47, 5, EffectKind0F_PanelTitles_addr + 0xd);
+    DrawHeading(3, x + 0x2A, y + 0x47, 5, ::bof3::Img(EffectKind0F_PanelTitles_addr) + 0xd);
     const std::uint16_t message = rv::As<records::EffectObject>(Sc())->column;
     if (message != 0xFFFF) DrawAt(0x19, 0x9A, 0, 0xFF, Pool(message));
 }
@@ -1460,7 +1460,7 @@ extern "C" void __cdecl EffectKind12_DrawGradient() {
 
 // original 0x46A5E0 (Effect_KindHandlers[0x14]): EffectKind14_States[+1], a tail jump.
 extern "C" void __cdecl EffectKind14_Run() {
-    StepAt(EffectKind14_States_addr, Sc()[1], at::kKind14Count, "EffectKind14_Run")();
+    StepAt(::bof3::Img(EffectKind14_States_addr), Sc()[1], at::kKind14Count, "EffectKind14_Run")();
 }
 
 void Effect1B_Inject() {

@@ -152,7 +152,7 @@ U Frame(const char* who) {
         bof3::Fatal("%s: the frame byte 0x676266 is %u, past the two frames at 0x654948 - the original reads what "
                     "follows (docs/effect_3a.md section 6)",
                     who, v);
-    return EffectKind61_Frames_addr + 8 * v;
+    return ::bof3::Img(EffectKind61_Frames_addr) + 8 * v;
 }
 
 // Effect_FindFree's record (answer & 0xFF, as the original widens it): a Fatal
@@ -309,7 +309,7 @@ extern "C" void __cdecl EffectKind61_Scatter(void) {
         bof3::Fatal("EffectKind61_Scatter: the frame is %d x %d - the original's row and column bytes never reach past "
                     "0xFF, it never ends (docs/effect_3a.md section 6)",
                     (int)SW(f + 4), (int)SW(f + 6));
-    U pixel = EffectKind30_Shards_addr;
+    U pixel = ::bof3::Img(EffectKind30_Shards_addr);
     unsigned char row = 0;
     do {
         const std::int32_t width = SW(f + 4);

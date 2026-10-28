@@ -190,7 +190,7 @@ struct Extent {
 };
 void DrawCells(U first, U count, const void* palette, const Desc& desc, Extent* extent) {
     if (static_cast<std::int32_t>(first) >= static_cast<std::int32_t>(first + count)) return;
-    U record = SpriteCell_Table_addr + first * 8;
+    U record = ::bof3::Img(SpriteCell_Table_addr) + first * 8;
     U n = count;
     do {
         const unsigned char* r = At(record);
@@ -201,7 +201,7 @@ void DrawCells(U first, U count, const void* palette, const Desc& desc, Extent* 
         const U u = mode != 0 ? r[6] : static_cast<U>(r[6]) >> 1;
         const U w = (r[3] & 0xFu) << 3;
         const U h = (static_cast<U>(r[3]) >> 1) & 0x78;
-        const U src = Gfx_VramShadow_addr + (((((tpage & 0x10) << 4) + r[7]) << 11) + u) + ((tpage & 0xF) << 7);
+        const U src = ::bof3::Img(Gfx_VramShadow_addr) + (((((tpage & 0x10) << 4) + r[7]) << 11) + u) + ((tpage & 0xF) << 7);
         const U bpp = At(::bof3::Img(Gfx_PixelFormat_addr))[3];
         const U dst = desc.Surface() + static_cast<U>(x + 0xA0) * bpp + static_cast<U>(y + 0x80) * desc.Pitch();
         const bool flip = (Word(r + 4) & 0x200) != 0;
@@ -314,7 +314,7 @@ long Dd_ClearSurface(void* surface) {
 // any, then all 0x28 bytes zeroed. No bound on `slot`. Callers
 // D3d_BuildCellTexture and the Direct3D teardown 0x5A6760 (all 128).
 void D3d_FreeCellTexture(int slot) {
-    const U entry = D3d_CellTexCache_addr + static_cast<U>(slot) * kCellEntryBytes;
+    const U entry = ::bof3::Img(D3d_CellTexCache_addr) + static_cast<U>(slot) * kCellEntryBytes;
     const U texture = Long(entry + 0x24);
     if (texture != 0) Com(texture, kRelease);
     const U surface = Long(entry + 0x20);
@@ -343,7 +343,7 @@ void Font_BuildGlyphTexture(int slot, unsigned glyph, unsigned clut) {
     const U src = Long(kGlyphData) + glyph * 0x120u;
     Desc desc;
     Dd_InitSurfaceDesc(desc.b);
-    const U entry = Font_TexCache_addr + static_cast<U>(slot) * kFontEntryBytes;
+    const U entry = ::bof3::Img(Font_TexCache_addr) + static_cast<U>(slot) * kFontEntryBytes;
     const U surface_slot = entry + 8;
     if (Gfx_RenderFlags & 1) {
         if (Long(surface_slot) == 0) {
@@ -425,7 +425,7 @@ void D3d_BuildCellTexture(int slot, unsigned first, unsigned count, unsigned clu
     Com(Long(kStage), kUnlock, 0u);
     D3d_FreeCellTexture(slot);
 
-    const U entry = D3d_CellTexCache_addr + static_cast<U>(slot) * kCellEntryBytes;
+    const U entry = ::bof3::Img(D3d_CellTexCache_addr) + static_cast<U>(slot) * kCellEntryBytes;
     PutWord(entry + 8, static_cast<U>(extent.left));
     PutWord(entry + 0xA, static_cast<U>(extent.right));
     PutWord(entry + 0xC, static_cast<U>(extent.top));
@@ -491,7 +491,7 @@ void D3d_RefreshCellTexture(int slot, unsigned first, unsigned count, unsigned c
     const void* palette = g.clut_pixels(clut);
     DrawCells(first, count, palette, desc, nullptr);
     Com(Long(kStage), kUnlock, 0u);
-    const U entry = D3d_CellTexCache_addr + static_cast<U>(slot) * kCellEntryBytes;
+    const U entry = ::bof3::Img(D3d_CellTexCache_addr) + static_cast<U>(slot) * kCellEntryBytes;
     PutLong(entry + 0x1C, Long(kClutRows + (clut >> 6) * 8));
     Rect from = {Short(entry + 8) + 0xA0, Short(entry + 0xC) + 0x80, Short(entry + 0xA) + 0xA0,
                  Short(entry + 0xE) + 0x80};

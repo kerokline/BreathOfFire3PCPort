@@ -1027,7 +1027,7 @@ extern "C" void __cdecl EffectKind6C_Live(void) {
 // distance sar 7; +0 = 1, +1 = 0, the word +0x24 = 0, +3 = 0x40, +0x26 = 7, +2 =
 // 4.
 extern "C" void __cdecl EffectKind6C_ScatterSparks(void) {
-    Effect3c_ShardCursor = EffectKind30_Shards_addr;
+    Effect3c_ShardCursor = ::bof3::Img(EffectKind30_Shards_addr);
     for (unsigned left = at::kSparkCount; left != 0; --left) {
         SetUL(Spark() + 4, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
         SetUL(Spark() + 8, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
@@ -1063,7 +1063,7 @@ extern "C" unsigned char __cdecl EffectKind6C_DrawSparks(void) {
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, tpage, 0);
     SH_CALL(Gfx_CommitPrim)(2, 0xC);
     unsigned char any = 0;
-    U c = EffectKind30_Shards_addr;
+    U c = ::bof3::Img(EffectKind30_Shards_addr);
     Effect3c_ShardCursor = c;
     for (unsigned n = at::kSparkCount; n != 0; --n) {
         if (At(c)[0] != 0) {

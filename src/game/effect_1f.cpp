@@ -65,7 +65,7 @@ void SetLong(U a, U v) { std::memcpy(At(a), &v, 4); }
 
 // Effect record 6's cells, the menu's state.
 unsigned char& R6(unsigned offset) { return B(at::kRecord6 + offset); }
-U R6Address(unsigned offset) { return Effect_Objects_addr + 0x300 + offset; }
+U R6Address(unsigned offset) { return ::bof3::Img(Effect_Objects_addr) + 0x300 + offset; }
 
 // jmp [table + 4 * index], unchecked in the original: the table's words read in
 // place (the fuzz swaps them for recorders), a Fatal past its entries, where
@@ -416,7 +416,7 @@ extern "C" void __cdecl Effect_ResetFirstSeven(void) {
 // idiv threshold) * points, divided by 10 (signed; every value is small and
 // not negative), in eax whole.
 extern "C" unsigned long __cdecl FieldPanel_KindPoints(unsigned kind, unsigned count) {
-    const U record = Fish_Kinds_addr + 0x10 + 36u * (kind & 0xFF);
+    const U record = ::bof3::Img(Fish_Kinds_addr) + 0x10 + 36u * (kind & 0xFF);
     const unsigned threshold = B(record + 0xF);
     const unsigned low = count & 0xFFFF;
     if (low >= threshold) return (count & 0xFFFF0000u) | Word(record + 0x12);

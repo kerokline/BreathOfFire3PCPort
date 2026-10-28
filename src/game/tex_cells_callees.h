@@ -30,7 +30,7 @@ constexpr ::bof3::image::Va kDevice{0x7CC350};       // D3d_Device, an IDirect3D
 // D3d_DeviceDesc 0x7CC238, a D3DDEVICEDESC: the triangle caps' dwTextureCaps
 // (+0x84) and the texture size limits (+0xAC..+0xB8).
 // kTexCaps: now D3d_DeviceDesc[0x84] (symbols.toml). low byte: bit 1 D3DPTEXTURECAPS_POW2, bit 5 SQUAREONLY
-constexpr U kMinTexWidth = 0x7CC2E4, kMinTexHeight = 0x7CC2E8, kMaxTexWidth = 0x7CC2EC, kMaxTexHeight = 0x7CC2F0;
+constexpr ::bof3::image::Va kMinTexWidth{0x7CC2E4}, kMinTexHeight{0x7CC2E8}, kMaxTexWidth{0x7CC2EC}, kMaxTexHeight{0x7CC2F0};
 
 using Unpack = void(__cdecl*)(void* dst, const void* src, const void* palette, int w, int h, int pitch);
 

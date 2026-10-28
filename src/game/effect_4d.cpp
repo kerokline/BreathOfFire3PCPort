@@ -374,7 +374,7 @@ extern "C" void __cdecl EffectKind95_Start(void) {
 // clock's frame count (the high byte's bits 0..6) up 1; at 30 (40 when bit 7 is
 // set) it is 0 and the ticks (the low byte) up 1. At 15 ticks: +1 up.
 extern "C" void __cdecl EffectKind95_Clock(void) {
-    if (Kind95Held(ObjTrio_addr + 0x3cf)) return;
+    if (Kind95Held(::bof3::Img(ObjTrio_addr) + 0x3cf)) return;
     const unsigned w = Effect4d_Kind95Clock;
     auto ticks = static_cast<unsigned char>(w);
     const unsigned mode = (w >> 15) & 1u;
@@ -392,7 +392,7 @@ extern "C" void __cdecl EffectKind95_Clock(void) {
 // 0x802E77): ScriptFlags_Set40; the chapter's step 0x8034E5 = 5 and run
 // MoveScript_Var7 = 7; a tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind95_Finish(void) {
-    if (Kind95Held(ObjTrio_addr + 0x137)) return;
+    if (Kind95Held(::bof3::Img(ObjTrio_addr) + 0x137)) return;
     SH_CALL(ScriptFlags_Set40)();
     MoveScript_PartyRecords[0x65] = 5;
     MoveScript_Var7 = 7;

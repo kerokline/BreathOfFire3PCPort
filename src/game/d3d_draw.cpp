@@ -167,7 +167,7 @@ long Scene(U offset) {   // 0x24 BeginScene, 0x28 EndScene
 // DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
 long DrawVertices(U type, U count) {
     void** device = Device();
-    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, D3d_Vertices_addr, count, 0);
+    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
 }
 
 unsigned char* Vertex(U i) { return At(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }

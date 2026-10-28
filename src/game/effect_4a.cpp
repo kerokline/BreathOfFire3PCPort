@@ -145,7 +145,7 @@ void Again() {
 // (signed): true, with 0x903849 0xFF, 0x90384A / B 0 and the step 0x14.
 bool PastLine() {
     const std::int32_t x = ObjTrio[2].x;
-    Field_State = P(ObjTrio_addr + 0x298);
+    Field_State = P(::bof3::Img(ObjTrio_addr) + 0x298);
     if (x < at::kTrio2Line) return false;
     B(at::kCounterB) = 0xFF;
     B(at::kCounterC) = 0;
@@ -167,7 +167,7 @@ bool CountingHeld() {
 
 // original 0x488020 (EffectKind82_States[11], hidden in 0x487BF0): record 0
 // reached the leader: +1 0xD, +9 0; else +1 0xC.
-extern "C" void __cdecl EffectKind82_Check11(void) { Check(Sprite_Objects_addr + 0x34, 0xC); }
+extern "C" void __cdecl EffectKind82_Check11(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0x34, 0xC); }
 
 // original 0x488060 (state 12): +1 0; 0x903849 0 when it is 0xFF or 0x90384A
 // is 0x80.
@@ -227,7 +227,7 @@ extern "C" void __cdecl EffectKind83_Run(void) {
 // 0x4882C4 and the jump table 0x4882B0 in the code), else nothing.
 extern "C" void __cdecl EffectKind83_Wait(void) {
     unsigned char* s = S();
-    if (Reached(Sprite_Objects_addr + 0x34)) {
+    if (Reached(::bof3::Img(Sprite_Objects_addr) + 0x34)) {
         s[1] = 0x16;
         s = S();
     }
@@ -246,46 +246,46 @@ extern "C" void __cdecl EffectKind83_Wait(void) {
 
 // original 0x4883D0 (state 2, a start no list of the cut has): record 1's x
 // + 0x4000 four times (a cell), +1 3.
-extern "C" void __cdecl EffectKind83_Push2(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x34, 4, 0x4000u, 3, -1); }
+extern "C" void __cdecl EffectKind83_Push2(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x34, 4, 0x4000u, 3, -1); }
 // original 0x488410 (state 3): record 1 reached: +1 0xD, +9 0; else +1 4.
-extern "C" void __cdecl EffectKind83_Check3(void) { Check(Sprite_Objects_addr + 0xd8, 4); }
+extern "C" void __cdecl EffectKind83_Check3(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0xd8, 4); }
 // original 0x488450 (state 4): a push, +1 5.
-extern "C" void __cdecl EffectKind83_Push4(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x34, 4, 0x4000u, 5, -1); }
+extern "C" void __cdecl EffectKind83_Push4(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x34, 4, 0x4000u, 5, -1); }
 // original 0x488490 (state 5): reached: +1 0xD; else +1 6.
-extern "C" void __cdecl EffectKind83_Check5(void) { Check(Sprite_Objects_addr + 0xd8, 6); }
+extern "C" void __cdecl EffectKind83_Check5(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0xd8, 6); }
 // original 0x4884D0 (state 6): a push, +1 7.
-extern "C" void __cdecl EffectKind83_Push6(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x34, 4, 0x4000u, 7, -1); }
+extern "C" void __cdecl EffectKind83_Push6(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x34, 4, 0x4000u, 7, -1); }
 // original 0x488510 (state 7): reached: +1 0xD; else +1 8.
-extern "C" void __cdecl EffectKind83_Check7(void) { Check(Sprite_Objects_addr + 0xd8, 8); }
+extern "C" void __cdecl EffectKind83_Check7(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0xd8, 8); }
 // original 0x488550 (state 8): a push, +1 9.
-extern "C" void __cdecl EffectKind83_Push8(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x34, 4, 0x4000u, 9, -1); }
+extern "C" void __cdecl EffectKind83_Push8(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x34, 4, 0x4000u, 9, -1); }
 // original 0x488590 (state 9): reached: +1 0xD; else +1 0xA.
-extern "C" void __cdecl EffectKind83_Check9(void) { Check(Sprite_Objects_addr + 0xd8, 0xA); }
+extern "C" void __cdecl EffectKind83_Check9(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0xd8, 0xA); }
 // original 0x4885D0 (state 10): a push, +1 0xB.
-extern "C" void __cdecl EffectKind83_Push10(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x34, 4, 0x4000u, 0xB, -1); }
+extern "C" void __cdecl EffectKind83_Push10(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x34, 4, 0x4000u, 0xB, -1); }
 // original 0x488610 (state 11): reached: +1 0xD; else +1 0xC.
-extern "C" void __cdecl EffectKind83_Check11(void) { Check(Sprite_Objects_addr + 0xd8, 0xC); }
+extern "C" void __cdecl EffectKind83_Check11(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0xd8, 0xC); }
 
 // original 0x433640 (EffectKind83_States[12], and the stack table of the
 // battle's BattleFx_ActorWatch 0x433460, its state 2; hidden in 0x432F10): +1 0.
 extern "C" void __cdecl Sprite_StateRestart(void) { S()[1] = 0; }
 
 // original 0x488650 (state 13): record 1's z + 0x4000 twice, +1 0xE, +9 8.
-extern "C" void __cdecl EffectKind83_Nudge13(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x38, 2, 0x4000u, 0xE, 8); }
+extern "C" void __cdecl EffectKind83_Nudge13(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x38, 2, 0x4000u, 0xE, 8); }
 
 // original 0x488690 (state 14 of kinds 0x82 and 0x83): +9 down; +1 0xF when it
 // was 0.
 extern "C" void __cdecl EffectKind83_Hold14(void) { Hold(0xF); }
 
 // original 0x4886B0 (state 15): record 1's z - 0x4000 four times, +1 0x10, +9 8.
-extern "C" void __cdecl EffectKind83_Nudge15(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x38, 4, 0xFFFFC000u, 0x10, 8); }
+extern "C" void __cdecl EffectKind83_Nudge15(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x38, 4, 0xFFFFC000u, 0x10, 8); }
 
 // original 0x4886F0 (state 16 of kinds 0x82 and 0x83): +9 down; +1 0x11 when
 // it was 0.
 extern "C" void __cdecl EffectKind83_Hold16(void) { Hold(0x11); }
 
 // original 0x488710 (state 17): record 1's z + 0x4000 twice, +1 0x12.
-extern "C" void __cdecl EffectKind83_Nudge17(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x38, 2, 0x4000u, 0x12, -1); }
+extern "C" void __cdecl EffectKind83_Nudge17(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x38, 2, 0x4000u, 0x12, -1); }
 
 // original 0x488750 (state 18): +2 up one; when it was 0xF or more +1 0xD;
 // else kind 0x82's state 20 in line (EffectKind83_States[20] is BareRet).

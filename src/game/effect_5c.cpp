@@ -1539,7 +1539,7 @@ extern "C" void __cdecl EffectKind18Sub17_Count(void) {
 // original 0x5039B0 (sub-state 7): the enemy wait on EnemyWorkingRecords record
 // 0 (0x93B9F2); +9 up; E5D's quads variant 1.
 extern "C" void __cdecl EffectKind18Sub17_WaitEnemy0(void) {
-    unsigned char* const s = EnemyWait(Battle_Enemies_addr + 0x92);
+    unsigned char* const s = EnemyWait(::bof3::Img(Battle_Enemies_addr) + 0x92);
     s[9] = static_cast<unsigned char>(s[9] + 1);
     Quads(1);
 }
@@ -1620,7 +1620,7 @@ extern "C" void __cdecl EffectKind18Sub17_Count12(void) {
 // original 0x503CA0 (sub-state 13): the enemy wait on EnemyWorkingRecords record
 // 1 (0x93BB1A); +9 up.
 extern "C" void __cdecl EffectKind18Sub17_WaitEnemy1(void) {
-    unsigned char* const s = EnemyWait(BossH_Enemy1Status_addr);
+    unsigned char* const s = EnemyWait(::bof3::Img(BossH_Enemy1Status_addr));
     s[9] = static_cast<unsigned char>(s[9] + 1);
 }
 

@@ -149,8 +149,8 @@ void Closed() {
 // local, which Gte_RotTransPers4 does not read).
 void Project(unsigned char* p) {
     long depth;
-    SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(Vertex(Prim_VertexScratch_addr)), reinterpret_cast<const short*>(Vertex(Prim_VertexScratch_addr + 0x8)),
-                               reinterpret_cast<const short*>(Vertex(Prim_VertexScratch_addr + 0x10)), reinterpret_cast<const short*>(Vertex(Prim_VertexScratch_addr + 0x18)),
+    SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(Vertex(::bof3::Img(Prim_VertexScratch_addr))), reinterpret_cast<const short*>(Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x8)),
+                               reinterpret_cast<const short*>(Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x10)), reinterpret_cast<const short*>(Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x18)),
                                reinterpret_cast<float*>(p + 8), reinterpret_cast<float*>(p + 0x18),
                                reinterpret_cast<float*>(p + 0x28), reinterpret_cast<float*>(p + 0x38), &depth);
     SH_CALL(Gte_PrimDepths4_10)(p);
@@ -164,8 +164,8 @@ U GroundOf(U word) { return static_cast<U>(S16(word) + 0x4000) << 9; }
 // point read after the second call: v0 and v1 `low` less half the ground's
 // height, v2 and v3 `high` less it (sub-kinds 0x27 and 0x28: 0x40 and 0x180).
 void GroundFixed(U low, U high) {
-    unsigned char* const v0 = Vertex(Prim_VertexScratch_addr);
-    unsigned char* const v1 = Vertex(Prim_VertexScratch_addr + 0x8);
+    unsigned char* const v0 = Vertex(::bof3::Img(Prim_VertexScratch_addr));
+    unsigned char* const v1 = Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x8);
     U gx = GroundOf(Word(v0)), gz = GroundOf(static_cast<std::uint16_t>(rv::As<records::SVector>(v0)->y));
     long e = Elevation(gx, gz);
     rv::Store<std::uint32_t>(rv::As<records::SVector>(v0)->z, low - Half(e));
@@ -183,8 +183,8 @@ void GroundFixed(U low, U high) {
 // half the ground's and less +0x3E (Sprite_Current read after each call), v0
 // and v1 0x180 lower.
 void GroundLifted() {
-    unsigned char* const v0 = Vertex(Prim_VertexScratch_addr);
-    unsigned char* const v1 = Vertex(Prim_VertexScratch_addr + 0x8);
+    unsigned char* const v0 = Vertex(::bof3::Img(Prim_VertexScratch_addr));
+    unsigned char* const v1 = Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x8);
     U gz = GroundOf(static_cast<std::uint16_t>(rv::As<records::SVector>(v0)->y)), gx = GroundOf(Word(v0));
     long e = Elevation(gx, gz);
     rv::Store<std::uint32_t>(rv::As<records::SVector>(v0)->z, 0u - Half(e) - rv::As<records::EffectObject>(S())->height_whole - 0x180u);
@@ -216,10 +216,10 @@ void LinkAtRecord(int dy, unsigned size) {
 // The panel's four corners on the axis +8 does not pick: c = (w << 7) - 0x3FC0
 // of the record's other cell word, into the four vertices' word `off`.
 void Across(unsigned off, U c) {
-    SetWord(Vertex(Prim_VertexScratch_addr + 0x18) + off, c);
-    SetWord(Vertex(Prim_VertexScratch_addr + 0x10) + off, c);
-    SetWord(Vertex(Prim_VertexScratch_addr + 0x8) + off, c);
-    SetWord(Vertex(Prim_VertexScratch_addr) + off, c);
+    SetWord(Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x18) + off, c);
+    SetWord(Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x10) + off, c);
+    SetWord(Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x8) + off, c);
+    SetWord(Vertex(::bof3::Img(Prim_VertexScratch_addr)) + off, c);
 }
 
 }  // namespace
@@ -448,7 +448,7 @@ extern "C" void __cdecl EffectKind18Sub42_Draw(unsigned variant, int height) {
         U point = ::bof3::Img(at::kSub42Shapes.v) + 12 * shape;
         for (unsigned j = 0; j < 4; ++j, point += 3) {
             s = S();
-            unsigned char* const v = Vertex(Prim_VertexScratch_addr + 8 * j);
+            unsigned char* const v = Vertex(::bof3::Img(Prim_VertexScratch_addr) + 8 * j);
             SetWord(v, ((static_cast<U>(S8(B(point))) + dx + Word(s + 0x36)) << 7) - 0x4040u);
             rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, ((static_cast<U>(S8(B(point + 1))) + Word(s + 0x3A) + dz) << 7) - 0x4040u);
             rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, (static_cast<U>(S8(B(point + 2))) << 7) - static_cast<U>(height) + lift);
@@ -827,10 +827,10 @@ extern "C" void __cdecl EffectKind18Sub4B_Run(void) {
     DrawMode();
     SH_CALL(Gfx_CommitPrim)(6, 0xC);
     const U texture = v | 0xBB509100u;
-    unsigned char* const v0 = Vertex(Prim_VertexScratch_addr);
-    unsigned char* const v1 = Vertex(Prim_VertexScratch_addr + 0x8);
-    unsigned char* const v2 = Vertex(Prim_VertexScratch_addr + 0x10);
-    unsigned char* const v3 = Vertex(Prim_VertexScratch_addr + 0x18);
+    unsigned char* const v0 = Vertex(::bof3::Img(Prim_VertexScratch_addr));
+    unsigned char* const v1 = Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x8);
+    unsigned char* const v2 = Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x10);
+    unsigned char* const v3 = Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x18);
     for (U k = 0; k < 3; ++k) {
         unsigned char* const p = Quad();
         const U a = k * 0xA00, c = k * 0x180;
@@ -968,10 +968,10 @@ extern "C" void __cdecl EffectKind18Sub3C_Run(void) {
 // of 0x65E9E4; each linked at the point with 0x48 bytes.
 extern "C" void __cdecl EffectKind18Sub3C_Draw(int edge) {
     unsigned char* s = S();
-    unsigned char* const v0 = Vertex(Prim_VertexScratch_addr);
-    unsigned char* const v1 = Vertex(Prim_VertexScratch_addr + 0x8);
-    unsigned char* const v2 = Vertex(Prim_VertexScratch_addr + 0x10);
-    unsigned char* const v3 = Vertex(Prim_VertexScratch_addr + 0x18);
+    unsigned char* const v0 = Vertex(::bof3::Img(Prim_VertexScratch_addr));
+    unsigned char* const v1 = Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x8);
+    unsigned char* const v2 = Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x10);
+    unsigned char* const v3 = Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x18);
     SetWord(v2, Word(s + 0x30) - 0x3BC0u);
     SetWord(v0, Word(s + 0x30) - 0x3BC0u);
     SetWord(v3, Word(s + 0x30) - 0x3AC0u);

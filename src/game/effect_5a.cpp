@@ -170,7 +170,7 @@ void Copy(U a, U b, U c, U d) { SH_CALL(Gfx_ClutStripCopy16)(a, b, c, d); }
 // --- sub-kind 7 / 8's door ------------------------------------------------------------
 unsigned Door(const char* who, const unsigned char* s) { return static_cast<unsigned>(Index(who, s[0xB], at::kDoors7, at::kRows7)); }
 bool DoorFlag(unsigned k) {
-    return SH_CALL(Flags_Test)(At(0x903F90 + 8u * T(::bof3::Img(at::kFlagRows7.v) + k)), T(::bof3::Img(at::kFlagBits7.v) + k)) != 0;
+    return SH_CALL(Flags_Test)(At(::bof3::Img(0x903F90) + 8u * T(::bof3::Img(at::kFlagRows7.v) + k)), T(::bof3::Img(at::kFlagBits7.v) + k)) != 0;
 }
 void DrawDoor() {
     SH_CALL(EffectKind18_07_Draw)();
@@ -862,12 +862,12 @@ extern "C" void __cdecl EffectKind18_08_Crash(void) {
         Prim_VertexScratch[0].y = vy & 0xFFFF;
         Prim_VertexScratch[0].z = Word(s + 0x3E);
         long depth;
-        SH_CALL(Gte_RotTransPers)(reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr))), reinterpret_cast<unsigned long*>(At(0x903820)), &depth);
+        SH_CALL(Gte_RotTransPers)(reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr))), reinterpret_cast<unsigned long*>(At(::bof3::Img(0x903820))), &depth);
         SH_CALL(Gte_PrimDepthFlat4_10)(p);
-        FildSubr2(S()[9], At(0x903820), p + 0x28, p + 8);
-        FildSubr2(S()[9], At(0x903824), p + 0x1C, p + 0xC);
-        FildAdd2(S()[9], At(0x903820), p + 0x38, p + 0x18);
-        FildAdd2(S()[9], At(0x903824), p + 0x3C, p + 0x2C);
+        FildSubr2(S()[9], At(::bof3::Img(0x903820)), p + 0x28, p + 8);
+        FildSubr2(S()[9], At(::bof3::Img(0x903824)), p + 0x1C, p + 0xC);
+        FildAdd2(S()[9], At(::bof3::Img(0x903820)), p + 0x38, p + 0x18);
+        FildAdd2(S()[9], At(::bof3::Img(0x903824)), p + 0x3C, p + 0x2C);
         SH_CALL(Prim_SetTexture)(0xBA689124u - (static_cast<U>(S()[9]) << 19), p, 1);
         s = S();
         SH_CALL(MapView_LinkPrimAt)((UL(s + 0x34) + 0x4000) << 9, (UL(s + 0x38) + 0x4000) << 9, 6, 0x48);

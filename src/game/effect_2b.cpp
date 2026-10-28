@@ -411,7 +411,7 @@ extern "C" void __cdecl EffectKind35_FreeModel(void) {
 // set to EffectKind30_Shards, then sixteen times EffectKind1E_ShardInit(the
 // cursor) (E1C's, ours) and the cursor up 0x28 (read again after the call).
 extern "C" void __cdecl EffectKind35_ShardsInit(void) {
-    SetCursor(EffectKind30_Shards_addr);
+    SetCursor(::bof3::Img(EffectKind30_Shards_addr));
     for (U i = 0; i < at::kShard35Count; ++i) {
         SH_CALL(EffectKind1E_ShardInit)(Cursor());
         SetCursor(Key(Cursor()) + 0x28);
@@ -425,7 +425,7 @@ extern "C" void __cdecl EffectKind35_ShardsInit(void) {
 // 1 when any was in use.
 extern "C" unsigned char __cdecl EffectKind35_ShardsDraw(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
-    U c = EffectKind30_Shards_addr;
+    U c = ::bof3::Img(EffectKind30_Shards_addr);
     SetCursor(c);
     unsigned char any = 0;
     for (U i = 0; i < at::kShard35Count; ++i) {

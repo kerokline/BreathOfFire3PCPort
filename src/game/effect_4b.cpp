@@ -205,7 +205,7 @@ unsigned char* Sprite(unsigned k, const char* who) {
 // ===========================================================================
 
 namespace {
-U PanePoint(unsigned n) { return EffectKind30_Shards_addr + 0xa8 + at::kPanePointStride * n; }
+U PanePoint(unsigned n) { return ::bof3::Img(EffectKind30_Shards_addr) + 0xa8 + at::kPanePointStride * n; }
 unsigned char* Pane(unsigned i) { return At(::bof3::Img(EffectKind30_Shards_addr) + at::kPaneStride * i); }
 void SetPanePoints(unsigned i, unsigned p0, unsigned p1, unsigned p2, unsigned p3) {
     unsigned char* const r = Pane(i);

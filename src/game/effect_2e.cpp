@@ -139,7 +139,7 @@ void AtLeader() {
 // (0x4799C0); +0xC = 0x28, +2 up.
 void SpiralStart(unsigned turn) {
     unsigned char* s = S();
-    Effect2e_SpiralPtr = EffectKind30_Shards_addr + 0x524;
+    Effect2e_SpiralPtr = ::bof3::Img(EffectKind30_Shards_addr) + 0x524;
     SetUL(At(::bof3::Img(EffectKind30_Shards_addr) + 0x524), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x));
     SetUL(At(::bof3::Img(EffectKind30_Shards_addr) + 0x524 + 4), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
     const U height = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height) + 0x2000000u;
@@ -198,7 +198,7 @@ extern "C" void __cdecl EffectKind48_State7_Start(void) {
     Ground(0);
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
-    Effect2d_DustAnchor = Effect2e_RingRecord_addr;
+    Effect2d_DustAnchor = ::bof3::Img(Effect2e_RingRecord_addr);
     Effect2e_RingRecord = static_cast<std::uint32_t>(so->x);
     SetUL(At(::bof3::Img(Effect2e_RingRecord_addr) + 4), static_cast<std::uint32_t>(so->z));
     SetUL(At(::bof3::Img(Effect2e_RingRecord_addr) + 8), static_cast<std::uint32_t>(so->height));
@@ -680,7 +680,7 @@ extern "C" void __cdecl EffectKind4A_TrailDraw(void) {
     SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(::bof3::Img(EffectKind30_Shards_addr) + 0x20)), b);
     unsigned char red = 0x40;
     unsigned char half = 0x20;
-    U edge = EffectKind30_Shards_addr + 0x20;
+    U edge = ::bof3::Img(EffectKind30_Shards_addr) + 0x20;
     for (unsigned n = 0; n < at::kTrailCount - 1; ++n) {
         unsigned char* const prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyG4)(prim);
