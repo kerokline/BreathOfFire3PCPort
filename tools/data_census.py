@@ -700,6 +700,24 @@ def function_start(f, line):
     return lo
 
 
+def see_through_base(code):
+    """code with every `::bof3::Img(` wrapper blanked to spaces, its argument
+    left in place: the relocatable-image round (docs/relocatable-image-round.md)
+    places a VA through ::bof3::Img, which is the identity while the image sits
+    at its linked base, so the site is the one the census counted before -
+    the same accessor, the same expression, the same key in typed_left.tsv.
+    Positions and lines do not move."""
+    out = list(code)
+    for m in re.finditer(r'(?<![\w:])(?:::)?bof3::Img\s*\(', code):
+        r = balanced_args(code, m.end() - 1)
+        if r is None:
+            continue
+        for i in range(m.start(), m.end()):
+            out[i] = ' '
+        out[r[1] - 1] = ' '
+    return ''.join(out)
+
+
 def strip_suffix(tok):
     """`12u` -> `12`, `0xA4UL` -> `0xA4`; a name is left alone."""
     return re.sub(r'^(0[xX][0-9A-Fa-f]+|\d+)[uUlL]+$', r'\1', tok)
@@ -836,7 +854,7 @@ def scan(files, syms):
     call_re = re.compile(r'(?<![\w.>:])(?:\w+::)*(' + '|'.join(sorted(ACCESSORS, key=len, reverse=True)) +
                          r')\s*\(')
     for f in files:
-        code = f.code
+        code = see_through_base(f.code)
         fuzz = '1' if re.search(r'_fuzz\.|_harness|fuzz_', f.rel) else '0'
 
         def at_value(m, k=None, f=f):
@@ -896,7 +914,8 @@ def scan(files, syms):
             if any(at_is_data(f, am, m.end()) for am in AT_REF.finditer(top)):
                 continue
             ln = line_of(f.starts, m.start())
-            expr = ' '.join(arg.split())[:60]
+            # (a parenthesis's inner space is see_through_base's blank, never a key's)
+            expr = re.sub(r'\(\s+', '(', re.sub(r'\s+\)', ')', ' '.join(arg.split())))[:60]
             lm = LIT.match(arg)
             if lm:
                 v = int(lm.group(1), 16)
