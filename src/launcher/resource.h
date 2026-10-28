@@ -17,6 +17,7 @@
 #define IDD_PAGE_MODS     118   // the Mods tab (docs/mods.md; side-loaded files later, IDEAS I33)
 #define IDD_PAGE_EXTRA    119   // the Mods tab's second sub-page, Extras (ruby_ui=; owner, 2026-10-22)
 #define IDR_BACKGROUND    120   // docs/images/launcherBackground.png, the title page's picture
+#define IDD_PAGE_PRESET   121   // the Settings tab's second sub-page: the preset (preset=; docs/launcher-settings.md)
 #define IDC_CONFIGURE   1020
 #define IDC_BACK        1021
 #define IDC_TAB0        1022    // the six tabs, IDC_TAB0 + page
@@ -153,3 +154,11 @@
 #define IDC_EXTRA_TEXTNOTE  1723
 #define IDC_EXTRA_LEARNBLUE 1724  // A skill to learn in blue: unlearned_blue= (DIV-0179)
 #define IDC_EXTRA_LEARNNOTE 1725
+
+// The preset (launcher/config.h, docs/launcher-settings.md "preset="): its box,
+// its sentence, the list of what it changes, and the line under Settings that
+// says why a setting is grey.
+#define IDC_PRESET       1730
+#define IDC_PRESETNOTE   1731
+#define IDC_PRESETLIST   1732
+#define IDC_PRESETGREY   1733
