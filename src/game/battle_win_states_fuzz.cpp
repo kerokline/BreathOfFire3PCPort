@@ -131,8 +131,8 @@ void Disturb() {
         break;
     }
     case 5: SetLong(At(BattleActorCopies_Command_addr), static_cast<std::int32_t>(Address(g_buf.targets + v % kTargets))); break;
-    case 6: At(at::kCrossSel)[0] = static_cast<unsigned char>(v % 8); break;
-    case 7: At(at::kCrossGrow + v % 7)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
+    case 6: At(::bof3::Img(at::kCrossSel.v))[0] = static_cast<unsigned char>(v % 8); break;
+    case 7: At(::bof3::Img(at::kCrossGrow.v) + v % 7)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
     case 8: {
         static const unsigned kFields[] = {0x12, 0x13, 0x24, 0x25, 0x30, 0x31};
         Enemy(v % 6)[kFields[(h >> 20) % 6]] = byte;
@@ -143,7 +143,7 @@ void Disturb() {
         Member(v % 5)[kFields[(h >> 20) % 10]] = byte;
         break;
     }
-    case 10: At(at::kBanners + (h >> 20) % 0x60)[0] = byte; break;
+    case 10: At(::bof3::Img(at::kBanners.v) + (h >> 20) % 0x60)[0] = byte; break;
     case 11: At(BattleWinStates_LabelGate_addr)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
     default: break;
     }
@@ -468,18 +468,18 @@ void Seed(unsigned k) {
     }
     case kCrossGrow:
         for (unsigned j = 0; j < 7; ++j)
-            At(at::kCrossGrow + j)[0] = static_cast<unsigned char>(Half() ? 0 : Often() ? Next() % 0x12 : Next());
+            At(::bof3::Img(at::kCrossGrow.v) + j)[0] = static_cast<unsigned char>(Half() ? 0 : Often() ? Next() % 0x12 : Next());
         break;
     case kCrossFrame: {
         static const unsigned char kGrow[] = {0, 1, 2, 6, 7, 8, 9, 10};
-        At(at::kCrossSel)[0] = static_cast<unsigned char>(Often() ? Next() % 8 : Next());
+        At(::bof3::Img(at::kCrossSel.v))[0] = static_cast<unsigned char>(Often() ? Next() % 8 : Next());
         for (unsigned j = 0; j < 7; ++j)
-            At(at::kCrossGrow + j)[0] = Often() ? kGrow[Next() % 8] : static_cast<unsigned char>(Next());
+            At(::bof3::Img(at::kCrossGrow.v) + j)[0] = Often() ? kGrow[Next() % 8] : static_cast<unsigned char>(Next());
         break;
     }
     case kLabelFrame: At(BattleWinStates_LabelGate_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next()); break;
     case kBannerFrame:
-        for (unsigned b = 0; b < 8; ++b) At(at::kBanners + at::kBannerStride * b + 2)[0] = static_cast<unsigned char>(Half() ? 0 : Next());
+        for (unsigned b = 0; b < 8; ++b) At(::bof3::Img(at::kBanners.v) + at::kBannerStride * b + 2)[0] = static_cast<unsigned char>(Half() ? 0 : Next());
         break;
     case kEnemyStates: case kEnemyOpen: case kEnemyFrame: case kEnemyTarget:
         for (unsigned e = 0; e < 6; ++e) SeedEnemy(e);

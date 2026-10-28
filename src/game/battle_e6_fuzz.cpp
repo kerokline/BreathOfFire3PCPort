@@ -259,7 +259,7 @@ const bh::DataTable kTaskTables[] = {{BattleFxDash_Steps_addr, 7}, {BattleFxPose
 unsigned char g_cell[0x200];
 
 const bh::Region kRegions[] = {
-    {at::kMixSums, 0x10},                 // the sums, the form and group codes
+    {at::kMixSums.v, 0x10},                 // the sums, the form and group codes
     {0x939B20, 0x3A0},                    // the party's backup past the engine region (0x939AE0 + 3 x 0x14C)
     {Cond_Flags_addr + 0xf8, 0x20},       // the action flag set
     {Character_IndexById_addr, 0x18},  // Character_IndexById (the roll's table pick)
@@ -315,22 +315,22 @@ U Dirty(U v) { return (bh::Half() ? bh::Next() & 0xFFFFFF00u : 0) | (v & 0xFF); 
 void SeedGenes() {
     Mem(BattleE5_GeneCount_addr)[0] = bh::Often() ? Small(4) : Small(8);
     for (unsigned i = 0; i < 3; ++i)
-        Mem(at::kGenes + i)[0] = bh::Often() ? Small(0x11) : static_cast<unsigned char>(bh::Next());
-    if (bh::Half()) Mem(at::kGenes + bh::Next() % 3)[0] = static_cast<unsigned char>(0xA + bh::Next() % 3);
+        Mem(::bof3::Img(at::kGenes.v) + i)[0] = bh::Often() ? Small(0x11) : static_cast<unsigned char>(bh::Next());
+    if (bh::Half()) Mem(::bof3::Img(at::kGenes.v) + bh::Next() % 3)[0] = static_cast<unsigned char>(0xA + bh::Next() % 3);
 }
 // The actor's record: its character index small (record 0 is in the state)
 void SeedMember() {
-    unsigned char* const r = Party(Mem(at::kActor)[0]);
+    unsigned char* const r = Party(Mem(::bof3::Img(at::kActor.v))[0]);
     r[0x148] = bh::Often() ? 0 : Small(9);
-    Mem(at::kPartyCount)[0] = Small(4);
+    Mem(::bof3::Img(at::kPartyCount.v))[0] = Small(4);
 }
 // An action id whose row's nibble has non-zero odds in both tables (the
 // original divides by them; a zero is ours' abort, not a count).
 unsigned SafeAction() {
     for (unsigned tries = 0; tries < 256; ++tries) {
         const unsigned id = bh::Often() ? bh::Next() % 0x200 : bh::Next() & 0xFFFF;
-        const unsigned nibble = Mem(at::kActionRows + id * at::kActionRowStride)[0] >> 4;
-        if (Mem(at::kRollOdds)[nibble] != 0 && Mem(at::kRollOddsB)[nibble] != 0) return id;
+        const unsigned nibble = Mem(::bof3::Img(at::kActionRows.v) + id * at::kActionRowStride)[0] >> 4;
+        if (Mem(::bof3::Img(at::kRollOdds.v))[nibble] != 0 && Mem(::bof3::Img(at::kRollOddsB.v))[nibble] != 0) return id;
     }
     return 0;
 }
@@ -374,10 +374,10 @@ void Seed(unsigned k) {
         SeedGenes();
         SeedMember();
         if (c.base == 0x451750) {
-            if (bh::Half()) Mem(at::kGenes + bh::Next() % 3)[0] = 0x10;
-            Mem(at::kPartySize)[0] = bh::Often() ? 3 : static_cast<unsigned char>(bh::Next());
+            if (bh::Half()) Mem(::bof3::Img(at::kGenes.v) + bh::Next() % 3)[0] = 0x10;
+            Mem(::bof3::Img(at::kPartySize.v))[0] = bh::Often() ? 3 : static_cast<unsigned char>(bh::Next());
         }
-        if (c.base == 0x452570) g_args[0] = Dirty(bh::Half() ? Mem(at::kGenes + bh::Next() % 3)[0] : bh::Next());
+        if (c.base == 0x452570) g_args[0] = Dirty(bh::Half() ? Mem(::bof3::Img(at::kGenes.v) + bh::Next() % 3)[0] : bh::Next());
         break;
     case 0x4516F0: {
         SeedGenes();
@@ -385,7 +385,7 @@ void Seed(unsigned k) {
         const unsigned slot = bh::Often() ? bh::Next() % 3 : bh::Next() & 0xFF;
         if (bh::Half()) {
             Mem(BattleE5_GeneCount_addr)[0] = static_cast<unsigned char>(1 + bh::Next() % 3);
-            Mem(at::kGenes + bh::Next() % 3)[0] = Mem(at::kRecipeGenes)[recipe * 3 + slot];
+            Mem(::bof3::Img(at::kGenes.v) + bh::Next() % 3)[0] = Mem(::bof3::Img(at::kRecipeGenes.v))[recipe * 3 + slot];
         }
         g_args[0] = Dirty(recipe);
         g_args[1] = Dirty(slot);
@@ -398,14 +398,14 @@ void Seed(unsigned k) {
         for (unsigned i = 0; i < 5; ++i) g_args[i] = Dirty(Signed(6));
         break;
     case 0x451DA0:
-        for (unsigned i = 0; i < 14; ++i) Mem(at::kMixSums + i)[0] = Signed(2);
+        for (unsigned i = 0; i < 14; ++i) Mem(::bof3::Img(at::kMixSums.v) + i)[0] = Signed(2);
         Mem(BattleE6_FormCode_addr)[0] = bh::Often() ? Small(4) : static_cast<unsigned char>(bh::Next());
         break;
     case 0x451FE0: {
         const unsigned row = bh::Often() ? bh::Next() % 15 : bh::Next() & 0xFF;
         const unsigned count = bh::Often() ? bh::Next() % 10 : bh::Next() & 0xFF;
-        unsigned char* const list = Party(Mem(at::kActor)[0]) + 0xF4;
-        if (count && bh::Half()) list[bh::Next() % count] = Mem(at::kAbilityRows)[row * 3 + bh::Next() % 3];
+        unsigned char* const list = Party(Mem(::bof3::Img(at::kActor.v))[0]) + 0xF4;
+        if (count && bh::Half()) list[bh::Next() % count] = Mem(::bof3::Img(at::kAbilityRows.v))[row * 3 + bh::Next() % 3];
         g_args[0] = Dirty(row);
         g_args[1] = Dirty(count);
         break;
@@ -417,7 +417,7 @@ void Seed(unsigned k) {
     case 0x4523C0: {
         // the actor a member or not; one member out at most (OutEffect)
         const unsigned actor = bh::Half() ? bh::Next() % 3 : 3 + bh::Next() % 3;
-        Mem(at::kActor)[0] = static_cast<unsigned char>(actor);
+        Mem(::bof3::Img(at::kActor.v))[0] = static_cast<unsigned char>(actor);
         g_out_rule = true;
         g_out = actor >= 3 ? bh::Next() % 4 : actor;   // 3: none
         for (unsigned m = 0; m < 3; ++m) Party(m)[0x89] = bh::Often() ? static_cast<unsigned char>(1 + bh::Next() % 8) : Small(0x100);
@@ -439,7 +439,7 @@ void Seed(unsigned k) {
         const unsigned m = bh::Often() ? bh::Next() % 3 : bh::Next() % 4;
         unsigned char* const r = Party(m);
         if (bh::Often()) r[0x130] |= 1;
-        if (bh::Often()) r[0x124] = Mem(at::kActor)[0];
+        if (bh::Often()) r[0x124] = Mem(::bof3::Img(at::kActor.v))[0];
         r[0x89] = Small(0x18);
         if (bh::Half()) Mem(Character_IndexById_addr + r[0x89])[0] = 6;
         SetWord(bh::Pointer(BattleSprites_Action_addr) + 2, SafeAction());
@@ -468,7 +468,7 @@ void Seed(unsigned k) {
     // --- the tasks
     case 0x452720:
         if (bh::Half()) SetLong(s + 0x20, static_cast<std::int32_t>(static_cast<U>(Long(s + 0x3C)) + (bh::Next() & 0x3FFFFFF)));
-        Mem(at::kFormTable)[0] = bh::Often() ? Small(8) : static_cast<unsigned char>(bh::Next());
+        Mem(::bof3::Img(at::kFormTable.v))[0] = bh::Often() ? Small(8) : static_cast<unsigned char>(bh::Next());
         break;
     case 0x4527F0:
         s[0xB] = bh::Often() ? Small(3) : static_cast<unsigned char>(bh::Next());
@@ -539,8 +539,8 @@ void Disturb(U h) {
     case 0: Mem(BattleE6_FormCode_addr)[0] = b; break;
     case 1: Mem(BattleE6_FormGroupWork_addr)[0] = b; break;
     case 2: Mem(BattleE5_GeneCount_addr)[0] = static_cast<unsigned char>(b % 6); break;
-    case 3: Mem(at::kGenes + b % 3)[0] = static_cast<unsigned char>(h >> 24); break;
-    case 4: Mem(at::kPartySize)[0] = b; break;
+    case 3: Mem(::bof3::Img(at::kGenes.v) + b % 3)[0] = static_cast<unsigned char>(h >> 24); break;
+    case 4: Mem(::bof3::Img(at::kPartySize.v))[0] = b; break;
     default: Mem(BattlePhases_B89_addr)[0] = h & 0x1000000 ? 0x16 : b; break;
     }
 }
@@ -594,7 +594,7 @@ void PartnerMissingTest() {
         {0, {1, 1, 1}, {0, 9, 9}, 0xFF},   // both in, no pairing at all: 0xFF, as before
     };
     unsigned char saved[3][3];
-    const unsigned char actor = Mem(at::kActor)[0];
+    const unsigned char actor = Mem(::bof3::Img(at::kActor.v))[0];
     for (unsigned m = 0; m < 3; ++m) {
         saved[m][0] = Party(m)[0];
         saved[m][1] = Party(m)[0x91];
@@ -602,7 +602,7 @@ void PartnerMissingTest() {
     }
     unsigned n = 0;
     for (const Row& r : kRows) {
-        Mem(at::kActor)[0] = r.actor;
+        Mem(::bof3::Img(at::kActor.v))[0] = r.actor;
         for (unsigned m = 0; m < 3; ++m) {
             Party(m)[0] = static_cast<unsigned char>((saved[m][0] & 0xFE) | (r.in[m] ? 1 : 0));
             Party(m)[0x91] = static_cast<unsigned char>(saved[m][1] & ~0x40);
@@ -613,7 +613,7 @@ void PartnerMissingTest() {
             bof3::Fatal("battle_e6 DragonForm_PartyRecipe (DIV-0063): row %u answers 0x%02X, not 0x%02X", n, got, r.answer);
         ++n;
     }
-    Mem(at::kActor)[0] = actor;
+    Mem(::bof3::Img(at::kActor.v))[0] = actor;
     for (unsigned m = 0; m < 3; ++m) {
         Party(m)[0] = saved[m][0];
         Party(m)[0x91] = saved[m][1];

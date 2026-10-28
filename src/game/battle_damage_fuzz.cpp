@@ -99,18 +99,18 @@ void Disturb() {
     case 8: if (party) r[at::kPCharIndex] = static_cast<unsigned char>(v & 1 ? 5 : v); else r[at::kEFamily] = v & 1 ? 4 : 1; break;
     case 9: r[party ? at::kPSurvive : at::kEHoly] = v; break;
     case 10: At(SharedScratch_addr)[0] ^= static_cast<unsigned char>(bit); break;
-    case 11: At(at::kBattleFlags)[0] ^= 0x80; break;
+    case 11: At(::bof3::Img(at::kBattleFlags.v))[0] ^= 0x80; break;
     case 12: At(Cond_Flags_addr + 0xd0)[0] = v & 1 ? 2 : v; break;
-    case 13: At(at::kCuredBits + (v & 1))[0] = v; break;
-    case 14: At(at::kAttackerAtk + (v & 1))[0] = static_cast<unsigned char>(h >> 24); break;
+    case 13: At(::bof3::Img(at::kCuredBits.v) + (v & 1))[0] = v; break;
+    case 14: At(::bof3::Img(at::kAttackerAtk.v) + (v & 1))[0] = static_cast<unsigned char>(h >> 24); break;
     case 15: At(BattleDamage_AttackerInt_addr + (v & 1))[0] = static_cast<unsigned char>(h >> 24); break;
-    case 16: At(at::kTurnWork + (h >> 24) % 44)[0] = v; break;
+    case 16: At(::bof3::Img(at::kTurnWork.v) + (h >> 24) % 44)[0] = v; break;
     case 17: At(BattleActorCopies_EntryCount_addr)[0] = static_cast<unsigned char>(v % 3); break;
     case 18: r[party ? at::kPAgi : at::kEAgi] = v; break;
     case 19: if (!party) r[at::kEObject + 0xF0] = static_cast<unsigned char>(v % 16); break;
-    case 20: At(at::kTurnCounter)[0] = static_cast<unsigned char>(v % 12); break;
+    case 20: At(::bof3::Img(at::kTurnCounter.v))[0] = static_cast<unsigned char>(v % 12); break;
     case 21: At(Battle_PartyStanding_addr + v % 3)[0] = static_cast<unsigned char>(h >> 26); break;
-    case 22: At(at::kAiScripts + (h >> 16) % 0x900)[0] = static_cast<unsigned char>(0xB + v % 0x1D); break;
+    case 22: At(::bof3::Img(at::kAiScripts.v) + (h >> 16) % 0x900)[0] = static_cast<unsigned char>(0xB + v % 0x1D); break;
     default: r[party ? at::kPCommand : at::kECommand] = v; break;
     }
 }
@@ -138,7 +138,7 @@ unsigned char __cdecl StubLevelClass(unsigned level, unsigned row) {
     const std::uint32_t h = Hash();
     // the turn work's value words, which Battle_BuildTurnOrder reads after this call
     if (h % 3 == 0)
-        for (unsigned i = 0; i < 11; ++i) SetWord(At(at::kTurnWork + 4 * i), (h >> (i % 16)) * 0x9E37u);
+        for (unsigned i = 0; i < 11; ++i) SetWord(At(::bof3::Img(at::kTurnWork.v) + 4 * i), (h >> (i % 16)) * 0x9E37u);
     return static_cast<unsigned char>(h % 8 == 0 ? 7 + (h >> 4) % 3 : (h >> 4) % 7);
 }
 int TargetHp() {
@@ -233,7 +233,7 @@ int __cdecl StubPartyDef() {
     Record(16);
     Disturb();
     const std::uint32_t h = Hash();
-    return static_cast<int>(h % 2 ? (h & 0xFFFF0000u) | Word(At(at::kAttackerAtk)) : h >> 4);
+    return static_cast<int>(h % 2 ? (h & 0xFFFF0000u) | Word(At(::bof3::Img(at::kAttackerAtk.v))) : h >> 4);
 }
 int __cdecl StubPsiAffinity(unsigned target, unsigned mask) {
     Record(17, target, mask);
@@ -295,7 +295,7 @@ template <unsigned N> void __cdecl StubHandler() {
     if (h % 5 == 0) SetLong(At(BattleDamage_Result_addr), static_cast<std::int32_t>(Address(g_bufs + (h & 0x100 ? 0x10 : 0x20))));
     if (h % 7 == 0) {
         g_actor[1] = (h >> 8) % 12;
-        At(at::kTarget)[0] = static_cast<unsigned char>(g_actor[1]);
+        At(::bof3::Img(at::kTarget.v))[0] = static_cast<unsigned char>(g_actor[1]);
     }
     Disturb();
 }
@@ -414,9 +414,9 @@ void MakeRegions() {
     g_regions[0] = {ObjTrio_addr + 0x10 - 0x10, 0x4C0}; // ObjTrio: the three party objects, to 0x8031FF (0x8031F3)
     g_regions[1] = {SharedScratch_addr, 4};
     g_regions[2] = {0x904000, 0xC00};                  // 0x904060, the battle state 0x904AA8..0x904B9B
-    g_regions[3] = {at::kTurnWork, 0x580};             // the turn work, the damage scratch stats 0x939F86..0x939FEB
+    g_regions[3] = {::bof3::Img(at::kTurnWork.v), 0x580};             // the turn work, the damage scratch stats 0x939F86..0x939FEB
     g_regions[4] = {Battle_Enemies_addr + 0x80 - 0x80, 0xBA0}; // the enemy objects and records, room for actor 11
-    g_regions[5] = {at::kAiScripts, 0x900};            // AI scripts 0..15
+    g_regions[5] = {::bof3::Img(at::kAiScripts.v), 0x900};            // AI scripts 0..15
     g_regions[6] = {Address(g_bufs), sizeof g_bufs};
 }
 
@@ -479,11 +479,11 @@ void SeedActor(unsigned a) {
 void SeedCommon() {
     SetLong(At(BattleSprites_Action_addr), static_cast<std::int32_t>(Address(g_bufs)));
     SetLong(At(BattleDamage_Result_addr), static_cast<std::int32_t>(Address(g_bufs + (Half() ? 0x10 : 0x20))));
-    At(at::kTarget)[0] = static_cast<unsigned char>(Actor());
-    At(at::kActing)[0] = static_cast<unsigned char>(Actor());
+    At(::bof3::Img(at::kTarget.v))[0] = static_cast<unsigned char>(Actor());
+    At(::bof3::Img(at::kActing.v))[0] = static_cast<unsigned char>(Actor());
     g_bufs[3] = static_cast<unsigned char>(Next() % 4);   // the item command's category
-    if (Half()) SetWord(At(at::kAbility), Half() ? Next() % 227 : Next() % 0x1EC);
-    else SetWord(At(at::kAbility), 0xA3);
+    if (Half()) SetWord(At(::bof3::Img(at::kAbility.v)), Half() ? Next() % 227 : Next() % 0x1EC);
+    else SetWord(At(::bof3::Img(at::kAbility.v)), 0xA3);
 }
 
 Args Seed(unsigned k) {
@@ -493,7 +493,7 @@ Args Seed(unsigned k) {
     x.actor[0] = Actor();
     x.actor[1] = Actor();
     if (Half()) x.actor[1] = x.actor[0] <= 2 ? 3 + Next() % 8 : Next() % 3;
-    if (Half()) At(at::kBattleFlags)[0] = static_cast<unsigned char>(Half() ? 0x80 : 0);
+    if (Half()) At(::bof3::Img(at::kBattleFlags.v))[0] = static_cast<unsigned char>(Half() ? 0x80 : 0);
     if (Half()) At(Cond_Flags_addr + 0xd0)[0] = static_cast<unsigned char>(Half() ? 2 : Next() % 4);
     if (Half()) At(BattlePhases_B7A_addr)[0] = static_cast<unsigned char>(Half() ? 0 : 1);
     if (Half()) At(BattleFlow_AnimGate_addr)[0] = static_cast<unsigned char>(Half() ? 0 : 1);
@@ -545,7 +545,7 @@ Args Seed(unsigned k) {
         x.a[0] = ActorArg(x.actor[0]);
         At(BattleDamage_TurnCount_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 12 : Next());
         for (unsigned i = 0; i < 11; ++i)
-            if (Half()) At(at::kTurnOrder + i)[0] = static_cast<unsigned char>(x.actor[0]);
+            if (Half()) At(::bof3::Img(at::kTurnOrder.v) + i)[0] = static_cast<unsigned char>(x.actor[0]);
         break;
     }
     case kApplyK:
@@ -573,7 +573,7 @@ Args Seed(unsigned k) {
             // flag bit 1's roll, which can take a 1 back to 0 for the minimum-1 tests
             unsigned char* const f = x.actor[1] <= 2 ? PartyAt(x.actor[1]) + at::kPFlags : EnemyAt(x.actor[1]) + at::kEFlags;
             if (Half()) f[0] = static_cast<unsigned char>((f[0] | 2) & ~1u);
-            if (Half()) At(at::kBattleFlags)[0] = 0;
+            if (Half()) At(::bof3::Img(at::kBattleFlags.v))[0] = 0;
         }
         if (k == kApplyK && Half() && x.actor[1] <= 2) PartyAt(x.actor[1])[at::kPSurvive] = static_cast<unsigned char>(Next() % 3);
         x.a[0] = ActorArg(x.actor[0]);
@@ -583,7 +583,7 @@ Args Seed(unsigned k) {
         if (Half()) {
             // the attack against the defence: equal, one either side
             const unsigned atk = Next() % 400;
-            SetWord(At(at::kAttackerAtk), atk);
+            SetWord(At(::bof3::Img(at::kAttackerAtk.v)), atk);
             SetWord(At(BattleDamage_TargetDef_addr), atk + Next() % 3 - 1);
         }
         break;
@@ -605,8 +605,8 @@ Args Seed(unsigned k) {
             if (Half()) enemy_rec->level = rv::As<records::PartyMember>(PartyAt(0) - 0x10)->level - 5 + Next() % 3 - 1;
         }
         for (unsigned i = 0; i < 0x900; i += 16)
-            if (Often()) At(at::kAiScripts + i)[0] = static_cast<unsigned char>(0xB + Next() % 0x1D);
-        if (Half()) SetLong(At(at::kTurnCounter), static_cast<std::int32_t>(Next() % 13 + (Half() ? 0 : (Next() % 4) << 8)));
+            if (Often()) At(::bof3::Img(at::kAiScripts.v) + i)[0] = static_cast<unsigned char>(0xB + Next() % 0x1D);
+        if (Half()) SetLong(At(::bof3::Img(at::kTurnCounter.v)), static_cast<std::int32_t>(Next() % 13 + (Half() ? 0 : (Next() % 4) << 8)));
         for (unsigned i = 0; i < 3; ++i)
             if (Half()) At(Battle_PartyStanding_addr + i)[0] = static_cast<unsigned char>(Next() % 3);
         if (Half()) At(BattleDamage_AiByteB97_addr)[0] = static_cast<unsigned char>(Next() % 2);
@@ -618,9 +618,9 @@ Args Seed(unsigned k) {
     }
     case kResultK:
         SeedActor(x.actor[1]);
-        SeedActor(At(at::kActing)[0]);
-        At(at::kTarget)[0] = static_cast<unsigned char>(x.actor[1]);
-        if (Half()) At(at::kActing + 1)[0] = 4;
+        SeedActor(At(::bof3::Img(at::kActing.v))[0]);
+        At(::bof3::Img(at::kTarget.v))[0] = static_cast<unsigned char>(x.actor[1]);
+        if (Half()) At(::bof3::Img(at::kActing.v) + 1)[0] = 4;
         break;
     case kSkillK:
     case kHealK:
@@ -640,7 +640,7 @@ Args Seed(unsigned k) {
             x.a[3] = Byte(Next() % 2);
             if (Half()) SetWord(At(BattleDamage_TargetInt_addr), 245 + Next() % 12); // 100 - INT / 5 around 50
             if (Half()) SetWord(At(BattleDamage_AttackerInt_addr), Next() % 300);
-            if (Half()) At(at::kTarget)[0] = static_cast<unsigned char>(Next() % 4);
+            if (Half()) At(::bof3::Img(at::kTarget.v))[0] = static_cast<unsigned char>(Next() % 4);
         }
         break;
     default: break;
@@ -693,9 +693,9 @@ void SelfTest() {
     static State saved, input, their_out, our_out;
     Capture(saved);
     for (unsigned i = 0; i < 4; ++i) {
-        g_saved_categories[i] = static_cast<std::uint32_t>(Long(At(at::kItemHandlers + 4 * i)));
+        g_saved_categories[i] = static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kItemHandlers.v) + 4 * i)));
         for (unsigned j = 0; j < 256; ++j) g_categories[i][j] = static_cast<unsigned char>(Next() % at::kHandlerCount);
-        SetLong(At(at::kItemHandlers + 4 * i), static_cast<std::int32_t>(Address(g_categories[i])));
+        SetLong(At(::bof3::Img(at::kItemHandlers.v) + 4 * i), static_cast<std::int32_t>(Address(g_categories[i])));
     }
     for (unsigned i = 0; i < at::kHandlerCount; ++i) {
         g_saved_handlers[i] = static_cast<std::uint32_t>(Long(At(Effect_Handlers_addr + 4 * i)));
@@ -749,7 +749,7 @@ void SelfTest() {
     }
     g = kOriginals;
     for (unsigned i = 0; i < at::kHandlerCount; ++i) SetLong(At(Effect_Handlers_addr + 4 * i), static_cast<std::int32_t>(g_saved_handlers[i]));
-    for (unsigned i = 0; i < 4; ++i) SetLong(At(at::kItemHandlers + 4 * i), static_cast<std::int32_t>(g_saved_categories[i]));
+    for (unsigned i = 0; i < 4; ++i) SetLong(At(::bof3::Img(at::kItemHandlers.v) + 4 * i), static_cast<std::int32_t>(g_saved_categories[i]));
     Apply(saved);
 
     bof3::Log("shadow      battle_damage self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, "

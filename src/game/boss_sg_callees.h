@@ -27,13 +27,13 @@ namespace at {
 using U = std::uint32_t;
 
 // --- the battle's cells (0x904AA0..0x904BA0) ---------------------------------
-constexpr U kFight = 0x904AAA;            // u8: the event battle (Boss_SetupTable's index)
-constexpr U kFacing = 0x904AAC;           // u8: the battle's facing (inventory_ops.md; read as a dword, & 0xFF)
+constexpr ::bof3::image::Va kFight{0x904AAA};            // u8: the event battle (Boss_SetupTable's index)
+constexpr ::bof3::image::Va kFacing{0x904AAC};           // u8: the battle's facing (inventory_ops.md; read as a dword, & 0xFF)
 // kScript: now BossSe_Script (symbols.toml). u8: the fights' script bits (bit 2 set by kind 40's death flash)
 // kMusicFlags: now EventBattle_Flags (symbols.toml). u8: bit 0x40 keeps the battle's music
 // kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 1 the win; bit 2 read by set-up 33; bit 3 set by set-up 32
-constexpr U kActor = 0x904B34;            // u8: the acting actor (3..10 an enemy)
-constexpr U kTarget = 0x904B44;           // u8: the target (0..2 a member, 3..10 an enemy)
+constexpr ::bof3::image::Va kActor{0x904B34};            // u8: the acting actor (3..10 an enemy)
+constexpr ::bof3::image::Va kTarget{0x904B44};           // u8: the target (0..2 a member, 3..10 an enemy)
 
 // --- the hooks -----------------------------------------------------------------
 // kHookEnd: now BattleHook_End (symbols.toml). BattleHook_End
@@ -56,12 +56,12 @@ constexpr U kPartyStride = 0x14C;
 
 // --- other cells ------------------------------------------------------------
 // kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter run's step
-constexpr U kPoseSet = 0x8C5D80;          // the frame set set-up 32's end hook poses the party from
+constexpr ::bof3::image::Va kPoseSet{0x8C5D80};          // the frame set set-up 32's end hook poses the party from
 // Signed byte pairs (x, z) indexed by the facing 0x904AAC (four pairs; the
 // facing is read whole, & 0xFF, unchecked). Shared with engine code outside the
 // band (0x44A18E, 0x44A302, 0x44A352, 0x452756 read it too - an E8 / immediate
 // scan, 2026-09-28), so not named here; F6's rise reads it.
-constexpr U kFacingOffsets = 0x64E4F4;
+constexpr ::bof3::image::Va kFacingOffsets{0x64E4F4};
 
 // --- the callees nobody owns ------------------------------------------------
 constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1

@@ -212,8 +212,8 @@ extern "C" unsigned long __cdecl BossSample6_Hook(unsigned word) {
 // enemy 7's object.
 extern "C" void __cdecl Boss38_Setup(void) {
     SetupOwnEnd(bof3::addr::Boss38_End);
-    B(at::kTarget) = 0x40;
-    Sprite_Current = At(Battle_Enemies_addr + 0x818);
+    B(::bof3::Img(at::kTarget.v)) = 0x40;
+    Sprite_Current = At(::bof3::Img(Battle_Enemies_addr) + 0x818);
     BH_CALL(MagicFx_CenterOnSide)();
     const unsigned char* const s = Sprite_Current;
     const U cx = BossSi_CentreX;
@@ -227,7 +227,7 @@ extern "C" void __cdecl Boss38_Setup(void) {
 // 5, the chapter's step 0x20, Music_Track = 0x77, step 1; otherwise step 2.
 extern "C" void __cdecl Boss38_End(void) {
     if (Battle_EndFlags & 2) {
-        B(at::kScriptVar3) = 5;
+        B(::bof3::Img(at::kScriptVar3.v)) = 5;
         MoveScript_PartyRecords[0x65] = 0x20;
         Music_Track = 0x77;
         BH_AT(Handler, at::kEndWin)();
@@ -431,14 +431,14 @@ extern "C" unsigned long __cdecl BossArwan_State4Dispatch(unsigned word) {
 // BareRet: the task moves the enemy to state 5).
 extern "C" void __cdecl BossArwan_State4Fx(void) {
     const unsigned type = rv::As<records::BattleEnemy>(Enemy())->data_id;
-    Sprite_Current[9] = At(at::kEnemyDataCount + at::kEnemyDataStride * type)[0];
+    Sprite_Current[9] = At(::bof3::Img(at::kEnemyDataCount.v) + at::kEnemyDataStride * type)[0];
     const unsigned slot = BH_CALL(BattleTask_Create)(3, 7) & 0xFF;
     if (slot >= at::kTaskCount)
         bof3::Fatal("BossArwan_State4Fx: BattleTask_Create answered slot %u, past the %u - the original stores the owner "
                     "at 0x%X (docs/boss_si.md section 6)",
                     slot, at::kTaskCount, (unsigned)(BattleTask_Slots_addr + 0x80 + at::kTaskStride * slot));
     unsigned char* const s = Sprite_Current;
-    SetLong(At(BattleTask_Slots_addr + 0x80 + at::kTaskStride * slot), S(AddressOf(s)));
+    SetLong(At(::bof3::Img(BattleTask_Slots_addr) + 0x80 + at::kTaskStride * slot), S(AddressOf(s)));
     s[2] = static_cast<unsigned char>(s[2] + 1);
 }
 
@@ -446,7 +446,7 @@ extern "C" void __cdecl BossArwan_State4Fx(void) {
 // MagicFx_DoneAndFree, sets it): 0x4376F0, then a tail jump to 0x4376A0 (the
 // turn closed). Otherwise nothing.
 extern "C" void __cdecl BossArwan_State5Await(void) {
-    if (!(B(at::kFlags) & 4)) return;
+    if (!(B(::bof3::Img(at::kFlags.v)) & 4)) return;
     BH_AT(Handler, at::kTurnChance)();
     BH_AT(Handler, at::kTurnClose)();
 }
@@ -486,7 +486,7 @@ extern "C" unsigned long __cdecl BossArwanFx_Dispatch(void) {
 // +0x29 = 2, Sprite_SetAnimation(2); Sprite_Current put back.
 extern "C" void __cdecl BossArwanFx_Start(void) {
     Sprite_Current[1] = static_cast<unsigned char>(Sprite_Current[1] + 1);
-    Sprite_Current[9] = At(at::kEnemyDataCount + at::kEnemyDataStride * Battle_Enemies[0].data_id)[0];
+    Sprite_Current[9] = At(::bof3::Img(at::kEnemyDataCount.v) + at::kEnemyDataStride * Battle_Enemies[0].data_id)[0];
     Sprite_Current[0xA] = 0x2D;
     unsigned char* const task = Sprite_Current;
     Sprite_Current = Owner();
@@ -527,7 +527,7 @@ extern "C" void __cdecl BossArwanFx_Count(void) {
     }
     Owner()[1] = 5;
     Owner()[2] = 0;
-    BH_CALL(Battle_SetTargetFlag40)(B(at::kTarget));
+    BH_CALL(Battle_SetTargetFlag40)(B(::bof3::Img(at::kTarget.v)));
     Sprite_Current[1] = static_cast<unsigned char>(Sprite_Current[1] + 1);
 }
 

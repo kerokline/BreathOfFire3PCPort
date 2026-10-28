@@ -128,7 +128,7 @@ void EndStep(U anims, unsigned animation) {
 bool EndWalk() {
     BH_CALL(Sprite_ScriptTickOnce)();
     const unsigned index = BH_CALL(BossActor_Index)(0);
-    unsigned char* const actor = At(Sprite_Objects_addr + 0x80 + index * at::kObjectStride);
+    unsigned char* const actor = At(::bof3::Img(Sprite_Objects_addr) + 0x80 + index * at::kObjectStride);
     if (BH_CALL(MoveCmd_OpE9)(actor, 0, -0xE, 0x40, 0xFC00, 0xFF, 0) != 0) return false;
     BH_CALL(Battle_ClearActorBit)(Sprite_Current[5]);
     return true;
@@ -139,7 +139,7 @@ bool EndWalk() {
 bool PickSpent() {
     if (rv::As<records::BattleEnemy>(Enemy())->hp != 0xFFFF) return false;
     unsigned char* const s = Sprite_Current;
-    B(at::kActionKind) = 3;
+    B(::bof3::Img(at::kActionKind.v)) = 3;
     s[4] = 0;
     return true;
 }
@@ -153,7 +153,7 @@ template <typename F> void EndByBits(F with, unsigned counter, unsigned track) {
         return;
     }
     with();
-    B(at::kMoveVar3) = static_cast<unsigned char>(counter);
+    B(::bof3::Img(at::kMoveVar3.v)) = static_cast<unsigned char>(counter);
     Music_Track = static_cast<unsigned char>(track);
     BH_AT(Handler, at::kEndWin)();
 }
@@ -281,28 +281,28 @@ extern "C" void __cdecl Boss01_Setup(void) { SetHooks(at::kBoss01End, at::kBoss0
 extern "C" unsigned char __cdecl Boss01_Event(unsigned phase) {
     switch (phase & 0xFF) {
     case 0:
-        if ((B(at::kRoundFlags) & 0x40) && B(at::kTarget) == 0) BossSe_Script |= 1;
+        if ((B(::bof3::Img(at::kRoundFlags.v)) & 0x40) && B(::bof3::Img(at::kTarget.v)) == 0) BossSe_Script |= 1;
         break;
     case 1:
-        if (B(at::kActor) == 0 && B(at::kActionKind) == 4 && Word(At(BattleSprites_Action) + 2) == 0x78) {
-            for (const U enemy : {Battle_Enemies_addr, Battle_Enemies_addr + 0x128}) {
+        if (B(::bof3::Img(at::kActor.v)) == 0 && B(::bof3::Img(at::kActionKind.v)) == 4 && Word(At(BattleSprites_Action) + 2) == 0x78) {
+            for (const U enemy : {::bof3::Img(Battle_Enemies_addr), ::bof3::Img(Battle_Enemies_addr) + 0x128}) {
                 SetWord(At(enemy + 0xA4), 1);
                 SetWord(At(enemy + 0xB0), 1);
             }
-            SetLong(At(ObjTrio_addr + 0x134), static_cast<std::int32_t>(static_cast<U>(Long(At(ObjTrio_addr + 0x134))) & ~2u));
+            SetLong(At(::bof3::Img(ObjTrio_addr) + 0x134), static_cast<std::int32_t>(static_cast<U>(Long(At(::bof3::Img(ObjTrio_addr) + 0x134))) & ~2u));
         }
         break;
     case 5:
         if (BossSe_Script & 1) {
-            SetWord(At(ObjTrio_addr + 0x126), 0x78);
+            SetWord(At(::bof3::Img(ObjTrio_addr) + 0x126), 0x78);
             rv::Bytes(ObjTrio)[0x125] = 4;
-            B(at::kActionKind) = 4;
+            B(::bof3::Img(at::kActionKind.v)) = 4;
             rv::Bytes(ObjTrio)[0x124] = 0x40;
-            B(at::kTarget) = 0x40;
+            B(::bof3::Img(at::kTarget.v)) = 0x40;
         }
         break;
     case 6:
-        SetLong(At(ObjTrio_addr + 0x134), static_cast<std::int32_t>(static_cast<U>(Long(At(ObjTrio_addr + 0x134))) | 2u));
+        SetLong(At(::bof3::Img(ObjTrio_addr) + 0x134), static_cast<std::int32_t>(static_cast<U>(Long(At(::bof3::Img(ObjTrio_addr) + 0x134))) | 2u));
         break;
     default:
         break;
@@ -330,7 +330,7 @@ extern "C" void __cdecl Boss01_End(void) {
 // Sprite_SetAnimation(1 for tag 6, 0 for tag 7), then the actor's words
 // +0x58 / +0x5A the enemy's - Sprite_Current read again at each store.
 extern "C" void __cdecl Boss01_Exit(void) {
-    const struct { unsigned tag; U enemy; unsigned animation; } kActors[] = {{6, Battle_Enemies_addr, 1}, {7, Battle_Enemies_addr + 0x128, 0}};
+    const struct { unsigned tag; U enemy; unsigned animation; } kActors[] = {{6, ::bof3::Img(Battle_Enemies_addr), 1}, {7, ::bof3::Img(Battle_Enemies_addr) + 0x128, 0}};
     for (const auto& a : kActors) {
         BH_CALL(BossActor_ClearBit40)(a.tag);
         BH_CALL(BossActor_CopyFrom)(a.tag, At(a.enemy), 1);
@@ -482,7 +482,7 @@ extern "C" void __cdecl Boss03_Setup(void) { SetHooks(at::kBoss03End, at::kExitA
 // BossActor_CopyFrom(0, enemy 0's object, 0) (its pose), counter 0x6D, track
 // 0x18, step 1; else step 2.
 extern "C" void __cdecl Boss03_End(void) {
-    EndByBits([] { BH_CALL(BossActor_CopyFrom)(0, At(Battle_Enemies_addr), 0); }, 0x6D, 0x18);
+    EndByBits([] { BH_CALL(BossActor_CopyFrom)(0, At(::bof3::Img(Battle_Enemies_addr)), 0); }, 0x6D, 0x18);
 }
 
 // original 0x438270: Boss_SetupTable[39] - BattleHook_End
@@ -524,8 +524,8 @@ extern "C" void __cdecl BossWeretigr_State4Fx(void) {
         bof3::Fatal("BossWeretigr_State4Fx: BattleTask_Create answered slot %u (all 48 taken) - the original copies into "
                     "0x93A000 + %u * 0x84, past the pool (docs/boss_sa.md section 6)",
                     n, n);
-    unsigned char* const task = At(BattleTask_Slots_addr + n * at::kTaskStride);
-    const U from = Battle_Enemies_addr + static_cast<U>(static_cast<std::int32_t>(B(at::kActor)) - 3) * at::kEnemyStride;
+    unsigned char* const task = At(::bof3::Img(BattleTask_Slots_addr) + n * at::kTaskStride);
+    const U from = ::bof3::Img(Battle_Enemies_addr) + static_cast<U>(static_cast<std::int32_t>(B(::bof3::Img(at::kActor.v))) - 3) * at::kEnemyStride;
     for (U i = 0; i < 0x80; i += 4) SetLong(task + i, Long(At(from + i)));
     task[6] = 3;
     task[5] = 6;
@@ -560,7 +560,7 @@ extern "C" void __cdecl BossWeretigr_State4Cue(void) {
 // jump to 0x4376A0 (the turn closed: +1 = 2, +2 = 0).
 extern "C" void __cdecl BossWeretigr_State4End(void) {
     if (rv::Current<records::BattleEnemy>()->flags & 0x40) return;
-    B(at::kRoundFlags) |= 4;
+    B(::bof3::Img(at::kRoundFlags.v)) |= 4;
     BH_AT(Handler, at::kTurnChance)();
     BH_AT(Handler, at::kTurnClose)();
 }
@@ -582,7 +582,7 @@ extern "C" void __cdecl BossWeretigr_EndMove(void) {
     if (!EndWalk()) return;
     const unsigned exp = rv::As<records::BattleEnemy>(Enemy())->exp * Cheats_ExpMultiplier();
     Battle_EndFlags |= 2;
-    AddLong(At(Battle_ExpTotal_addr), exp);
+    AddLong(At(::bof3::Img(Battle_ExpTotal_addr)), exp);
     BH_CALL(Effect_Release)();
 }
 
