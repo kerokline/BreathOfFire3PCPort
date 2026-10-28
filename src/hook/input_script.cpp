@@ -72,6 +72,13 @@
 //                           crafted save's load and every scripted change go
 //                           through - to stand the party in an area. Likewise
 //                           a harness's step.
+//   battle ID               Field_StartEventBattle(ID) through the original's
+//                           entry: the event battle ID (a byte) begins as a
+//                           scenario's call begins it - its enemies are the
+//                           field actors tagged with the fight's encounter
+//                           row's slots, so the scene's actors must already
+//                           stand in the field (docs/boss-sweep.md). Likewise
+//                           a harness's step.
 //   hold KEY N              a keyboard key (f1..f12, escape, enter, space, or a
 //                           virtual-key number) held N frames: WM_KEYDOWN posted
 //                           to the game window as the step starts, WM_KEYUP as
@@ -116,7 +123,7 @@ namespace bof3 {
 void RandCountFrame();   // below, outside the anonymous namespace
 namespace {
 
-enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Poke, Music, Mark, Key, Quit, End, Links, Door, Goto };
+enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Poke, Music, Mark, Key, Quit, End, Links, Door, Goto, Battle };
 enum class Op { Eq, Ne, Any, None };
 
 struct Step {
@@ -130,7 +137,7 @@ struct Step {
     unsigned width = 0;    // 1, 2, 4
     Op op = Op::Eq;
     std::uint32_t value = 0;
-    std::uint32_t arg[4] = {};   // door X Z, goto AREA X Z FLAGS
+    std::uint32_t arg[4] = {};   // door X Z, goto AREA X Z FLAGS, battle ID
     std::string text;
 };
 
@@ -395,6 +402,11 @@ void Load(const char* path) {
             st.kind = Kind::Goto;
             for (int k = 0; k < 4; ++k) st.arg[k] = Number(line, t[k + 1]);
             if (st.arg[0] > 0xFFFF || st.arg[3] > 0xFF) ParseError(line, "goto AREA (a word) X Z FLAGS (a byte), got", s);
+        } else if (w == "battle") {
+            need(2, 2);
+            st.kind = Kind::Battle;
+            st.arg[0] = Number(line, t[1]);
+            if (st.arg[0] > 0xFF) ParseError(line, "battle ID (a byte), got", s);
         } else if (w == "quit") {
             if (t.size() != 1 && t.size() != 3) ParseError(line, "quit [timeout N], got", s);
             st.kind = Kind::Quit;
@@ -715,6 +727,13 @@ unsigned short NextWord() {
                 (unsigned)s.arg[1], (unsigned)s.arg[2], (unsigned)s.arg[3], (unsigned)Game_AreaNumber, g_frame);
             bof3::orig::Field_ChangeArea(s.arg[0], static_cast<int>(s.arg[1]), static_cast<int>(s.arg[2]), s.arg[3]);
             Log("input       goto: track %u; recipe frame %u", (unsigned)Read(AreaW1f_MusicCurrent_addr, 1), g_frame);
+            LogFlush();
+            Advance();
+            continue;
+        case Kind::Battle:
+            // Through the original's entry, as the scenario code calls it.
+            Log("input       battle id %u in area %u; recipe frame %u", (unsigned)s.arg[0], (unsigned)Game_AreaNumber, g_frame);
+            bof3::orig::Field_StartEventBattle(s.arg[0]);
             LogFlush();
             Advance();
             continue;
@@ -1160,6 +1179,7 @@ bool ShotSoon() {
         case Kind::Links:
         case Kind::Door:
         case Kind::Goto:
+        case Kind::Battle:
             break;   // no frame of their own
         default:
             return false;
