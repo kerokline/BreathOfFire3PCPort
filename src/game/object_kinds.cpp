@@ -93,8 +93,8 @@ Callees Originals() {
             Area_ObjectHandler,
             Field_ObjectTrigger,
             EventScript_Run,
-            reinterpret_cast<void (__cdecl*)(unsigned short)>(static_cast<std::uintptr_t>(bof3::addr::Msg_OpenScript)),
-            reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(bof3::addr::Msg_OpenSystem))};
+            reinterpret_cast<void (__cdecl*)(unsigned short)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Msg_OpenScript))),
+            reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Msg_OpenSystem)))};
 }
 Callees g = Originals();
 

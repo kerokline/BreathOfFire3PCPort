@@ -19,7 +19,7 @@ namespace d3d_list {
 
 namespace {
 using Handler = long(__cdecl*)(const unsigned char*);
-Handler H(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(address)); }
+Handler H(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(address))); }
 }  // namespace
 
 // The handlers of each table, by entry, as the original's case blocks call them.

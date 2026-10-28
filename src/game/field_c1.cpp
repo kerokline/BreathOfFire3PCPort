@@ -170,7 +170,7 @@ extern "C" void __cdecl Config_DrawRowLabel(int x, int y, unsigned row, unsigned
         const int anchor = ops.anchor;
         const U big = ops.big_draw;
         using Draw = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
-        SH_AT(Draw, big)(x - width + anchor, y - 1, 0, 0xFF, label);
+        SH_WORD(Draw, big)(x - width + anchor, y - 1, 0, 0xFF, label);
         if (FieldS_Step != 1) SH_CALL(Menu_DrawHand)(x + 4, y, 0);
     } else {
         const int anchor = ops.anchor;

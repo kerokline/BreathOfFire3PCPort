@@ -476,7 +476,7 @@ extern "C" unsigned long __cdecl BossArwanFx_Dispatch(void) {
         bof3::Fatal("BossArwanFx_Dispatch: step +1 is %u, past the 4 of its stack table - the original calls through its "
                     "caller's frame (docs/boss_si.md section 6)",
                     step);
-    return BH_AT(unsigned long (__cdecl*)(), kSteps[step])();
+    return BH_WORD(unsigned long (__cdecl*)(), kSteps[step])();
 }
 
 // original 0x43F630: the task's step 0. +1 up by one; +9 = the +0x8A byte of

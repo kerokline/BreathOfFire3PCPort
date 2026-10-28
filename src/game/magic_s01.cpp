@@ -100,7 +100,7 @@ void EnemyAnimation(unsigned anim) { MH_AT(EnemyAnimationFn, kEnemyAnimation)(Ac
 // game the jmp Inject put there (or Capcom's code under BOF3X_ORIGINAL), in
 // the fuzz that address's recorder.
 using Fn0 = void (__cdecl*)();
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Gte_RotTransPers3 as the original pushes it: one pointer more than
 // symbols.toml's prototype carries (a flag word the callee may write).

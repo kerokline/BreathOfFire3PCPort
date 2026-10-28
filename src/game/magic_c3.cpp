@@ -83,7 +83,7 @@ int Sqrt(int v) { return MH_AT(SqrtFn, kSqrt)(v); }
 // MagicFx_CountDownRelease / _CountDown2Release, S30's MagicFx_CountUp9By2.
 
 using Fn0 = void (__cdecl*)();
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 using BallDrawFn = void (__cdecl*)(int, int, int, int, int, int);
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {

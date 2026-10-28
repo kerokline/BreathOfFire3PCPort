@@ -154,7 +154,7 @@ void Fill3(unsigned char* p, unsigned char v) { p[0] = p[1] = p[2] = v; }
 
 using TaskFn = void (__cdecl*)(unsigned char*);
 using AllocFn = unsigned char (__cdecl*)();
-void CallOwn(std::uint32_t address) { MH_AT(Handler, address)(); }
+void CallOwn(std::uint32_t address) { MH_WORD(Handler, address)(); }
 
 }  // namespace
 

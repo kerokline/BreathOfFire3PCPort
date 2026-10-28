@@ -128,7 +128,7 @@ PLATFORM_DIRS = ('src/hook/', 'src/render/', 'src/audio/', 'src/input/', 'src/co
 # for data and Code for code. ImageBase() takes no address, so it is not one.
 # Two other functions are spelled Code - code_bytes.cpp's reader and
 # boss_sh_fuzz.cpp's draw - and neither is given an image literal.
-BASE_HELPERS = frozenset({'Img', 'Code'})
+BASE_HELPERS = frozenset({'Img', 'Code', 'CodePlace'})
 # gen_symbols.py's `namespace bof3::image` names that are addresses
 IMAGE_META = ('kBase', 'kTextVa')
 

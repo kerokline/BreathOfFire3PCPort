@@ -144,7 +144,7 @@ void Commit(unsigned slot, unsigned size) { MH_CALL(Gfx_CommitPrim)(slot, size);
 // under BOF3X_ORIGINAL) and in the fuzz that address's recorder.
 using Fn0 = void (__cdecl*)();
 using AllocFn = unsigned char (__cdecl*)();
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // The projections with the arguments the originals push: Gte_RotTransPers4
 // gets the depth and flag pointers, Gte_RotTransPers the flag pointer too.

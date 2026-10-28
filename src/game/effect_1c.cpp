@@ -158,7 +158,7 @@ unsigned char MoveShards(U draw) {
         unsigned char* const shard = At(Shards() + r * at::kShardStride);
         if (!shard[0]) continue;
         rv::Store<std::uint32_t>(rv::As<records::EffectSpeck>(shard)->height, static_cast<std::uint32_t>(rv::As<records::EffectSpeck>(shard)->height) - (static_cast<U>(static_cast<int>(static_cast<std::int16_t>(rv::As<records::EffectSpeck>(shard)->fall))) << 8));
-        SH_AT(void (__cdecl*)(unsigned char*), draw)(shard);
+        SH_WORD(void (__cdecl*)(unsigned char*), draw)(shard);
         if (rv::As<records::EffectSpeck>(shard)->height < rv::Current<records::EffectObject>()->height) shard[0] = 0;
         any = 1;
     }

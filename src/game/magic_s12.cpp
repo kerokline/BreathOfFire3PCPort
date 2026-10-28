@@ -153,7 +153,7 @@ using FnXY = void (__cdecl*)(int, int);
 using SmallFn = const unsigned char* (__cdecl*)(int, int, unsigned, unsigned, const unsigned char*);   // Text_DrawSmall
 using BoolFn = unsigned char (__cdecl*)();
 using ItemFn = const unsigned char* (__cdecl*)(unsigned, unsigned, int);
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // The GTE calls as the originals push them: one pointer more than
 // symbols.toml's prototypes carry (a flag word the callee may write).

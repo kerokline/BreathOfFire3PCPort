@@ -169,11 +169,11 @@ void DrawMode(unsigned id, unsigned slot) { SH_AT(void (__cdecl*)(unsigned, unsi
 void DrawSprite(unsigned id, unsigned slot, int x, int y) {
     SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, int, int), at::kDrawSprite)(id, slot, x, y);
 }
-void Call3(U address, U a, U b, U c) { SH_AT(void (__cdecl*)(U, U, U), address)(a, b, c); }
-void Call4(U address, U a, U b, U c, U d) { SH_AT(void (__cdecl*)(U, U, U, U), address)(a, b, c, d); }
-void Call5(U address, U a, U b, U c, U d, U e) { SH_AT(void (__cdecl*)(U, U, U, U, U), address)(a, b, c, d, e); }
+void Call3(U address, U a, U b, U c) { SH_WORD(void (__cdecl*)(U, U, U), address)(a, b, c); }
+void Call4(U address, U a, U b, U c, U d) { SH_WORD(void (__cdecl*)(U, U, U, U), address)(a, b, c, d); }
+void Call5(U address, U a, U b, U c, U d, U e) { SH_WORD(void (__cdecl*)(U, U, U, U, U), address)(a, b, c, d, e); }
 void Call6(U address, U a, U b, U c, U d, U e, U f) {
-    SH_AT(void (__cdecl*)(U, U, U, U, U, U), address)(a, b, c, d, e, f);
+    SH_WORD(void (__cdecl*)(U, U, U, U, U, U), address)(a, b, c, d, e, f);
 }
 void DrawAt(int x, int y, int colour, int count, const unsigned char* text) {
     SH_CALL(Text_DrawAt)(x, y, colour, count, text);

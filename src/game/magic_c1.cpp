@@ -105,7 +105,7 @@ unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, para
 using Fn0 = void (__cdecl*)();
 using PtrFn = void (__cdecl*)(unsigned char*);
 using ByteFn = unsigned char (__cdecl*)();
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Capcom's and other groups' code this group calls (docs/magic_c1.md section 8).
 constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;  // engine: +0xC / +0x10 of a task turned by its +8
@@ -1031,7 +1031,7 @@ void SpawnOnActors(unsigned parameter, bool index) {
 // the record, not the number.
 void SpawnRecords(std::uint32_t alloc, std::uint32_t pool, unsigned first, unsigned step, unsigned end) {
     for (unsigned i = 0, delay = first; delay < end; ++i, delay += step) {
-        const unsigned idx = MH_AT(ByteFn, alloc)();
+        const unsigned idx = MH_WORD(ByteFn, alloc)();
         if (idx == 0xFF) continue;
         unsigned char* const rec = Mem(pool + idx * 0x84u);
         unsigned char* const self = Sc();

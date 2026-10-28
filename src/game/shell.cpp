@@ -48,7 +48,7 @@ const Callees kOriginals = {
     Cfg_SetKeyTable, Cfg_SetDefaultKeys,
     Cast<int (__cdecl*)(char*, const char*, const char*, const char*)>(Crt_sprintf), ::bof3::Img(Shell_ImportGetDriveType_addr),
     Gte_InitGeom, Gte_SetGeomOffset, Gte_SetGeomScreen, DInput_Init,
-    reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(kSoundSetup)), Port_DroppedCall,
+    reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup))), Port_DroppedCall,
     Gpu_SetDefDrawEnv, Gpu_SetDefDispEnv, Gfx_InitBufferBlock, Gfx_BeginFrame, Task_SetStackBase,
     Gpu_ClearOTagR, Gpu_AddPrim,
 };

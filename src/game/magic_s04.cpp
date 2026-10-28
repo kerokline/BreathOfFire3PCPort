@@ -113,7 +113,7 @@ int Cos(int angle) { return MH_CALL(Math_Cos)(angle); }
 // recorder.
 using Fn0 = void (__cdecl*)();
 using ByteFn = unsigned char (__cdecl*)();
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Capcom's code this group calls (docs/magic_s04.md section 3); other groups'
 // phase handlers (S35's LastResort_WaitChildren, S05's Magic018Row53_Wait,

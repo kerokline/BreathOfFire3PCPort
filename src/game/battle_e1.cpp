@@ -695,7 +695,7 @@ extern "C" unsigned char __cdecl BattleAction_PickRandomAbility(void) {
     }
     if (!(flags & 0x40)) return B(::bof3::Img(at::kActor.v));
     const bool second = party ? (flags & 0x20) != 0 : (flags & 0x20) == 0;
-    return BH_AT(unsigned char (__cdecl*)(), second ? at::kSideTargetB : at::kSideTargetA)();
+    return BH_WORD(unsigned char (__cdecl*)(), second ? at::kSideTargetB : at::kSideTargetA)();
 }
 
 // original 0x42FE20 (BattleAction_AfterSteps[1]): nothing while the message
