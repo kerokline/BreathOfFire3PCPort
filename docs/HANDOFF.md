@@ -46,15 +46,17 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      PR #161 merge; LF0, four groups, an audit and a fix agent, one worktree each under
      `C:\Users\kerok\bof3x-runs\lf1027`, merged one at a time; unpushed, **PR at the owner's word**;
      [`ledger-fields-round.md`](ledger-fields-round.md), the "as run" sections of 2, 3 and 4; the reports
-     `lf1027\<group>\REPORT.md`). Every entry carries `Switch:` / `Default:` / `Player:` / `Toward:` / `State:`,
-     `ledger_check.py` is strict, and the counts are in [`STATUS.md`](STATUS.md). **Next: stage D** (section 5),
+     `lf1027\<group>\REPORT.md`). Every entry carries the six fields `Switch:` / `Default:` / `Player:` / `Toward:` /
+     `Languages:` / `State:`, `ledger_check.py` is strict, and the counts are in [`STATUS.md`](STATUS.md). **Next: stage D** (section 5),
      to brief once the owner has read section 4's "as run": `BOF3X_OFF` (ini `off=`) read beside
      `BOF3X_ORIGINAL` for the 67 `cheap` names, a generated registry from the fields, the four presets in the
      launcher's Configure page, and the proof (the state hash of the exe host under `BOF3X_OFF=<name>` against
      the hosted build under `BOF3X_ORIGINAL=<name>`, one batched run). Traps paid for: an empty `ini:opt=`
-     means the key set to empty, not unset (DIV-0110..0113); the `lang`-only entries' `Default:` is `on`, so no
-     preset may turn one off without saying it changes the language; the `Reversible?` prose of DIV-0141, 0145,
-     0147 and 0148 still says "not a switch" and is reworded when the switch exists. **For the owner:** the
+     means the key set to empty, not unset (DIV-0110..0113); an entry whose `Languages:` is not `any` (every
+     `Switch: lang` entry among them) is governed by the language pick - on under those languages, inert under
+     the others - so a preset skips it when the chosen language is not listed and never turns one on or off
+     against the pick; the `Reversible?` prose of DIV-0141,
+     0145, 0147 and 0148 still says "not a switch" and is reworded when the switch exists. **For the owner:** the
      `env:` form LF0 added to `Switch:` (accept or drop); D395 (`scale=2` cannot pin k = 2 on a scaled desktop;
      a launcher fix, its own PR); the ten `Toward: none` entries that want a twin read (section 3's "as run").
      The worktrees under `lf1027` are removable once the PR is in. Also on the branch: the regenerated

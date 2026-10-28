@@ -14,13 +14,16 @@ The divergence ledger, docs/DIVERGENCE.md (CLAUDE.md rule 2):
   * IDs run DIV-0001, DIV-0002, ... with no gap and no repeat;
   * the Status line's "N entries, DIV-0001..NNNN" matches the entries;
   * every DIV-NNNN cited anywhere in the repository exists;
-  * the five switch fields (the ledger-fields round, docs/ledger-fields-round.md
-    sections 1 and 2): `Switch:`, `Default:`, `Player:`, `Toward:`, `State:`,
-    each one line in its grammar; every `Switch:` name one that src/ or the
-    launcher reads (tools/ledger_switches.py's inventory); `Player:` the value
-    the names' classes give (`yes` refused on a name the player's build cannot
-    reach), `never` for a Forced entry and for `Switch: none`; a superseding
-    entry that exists. A missing or malformed field is an error (STRICT_FIELDS,
+  * the six switch fields (the ledger-fields round, docs/ledger-fields-round.md
+    sections 1 and 2): `Switch:`, `Default:`, `Player:`, `Toward:`,
+    `Languages:`, `State:`, each one line in its grammar; every `Switch:` name
+    one that src/ or the launcher reads (tools/ledger_switches.py's inventory);
+    `Player:` the value the names' classes give (`yes` refused on a name the
+    player's build cannot reach), `never` for a Forced entry and for
+    `Switch: none`; `Languages:` `any` or tags the engine knows
+    (tools/language_tags.py) and `original`, never `any` for `Switch: lang`,
+    and `Default: on - under its languages` for an entry it limits; a
+    superseding entry that exists. A missing or malformed field is an error (STRICT_FIELDS,
     set by the round's stage C). Each run also tests these checks on the worked
     examples, DIV-0176 and DIV-0183, each with one field line changed, added or
     removed (FIXTURE_CASES).
@@ -42,6 +45,7 @@ import argparse, os, re, sys, tomllib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import ledger_switches   # noqa: E402 - the switch inventory, beside this file
+import language_tags     # noqa: E402 - the engine's language tags, beside this file
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LEDGER = os.path.join('docs', 'DIVERGENCE.md')
@@ -58,14 +62,22 @@ TIERS = ('Forced', 'Intent', 'Sensible', 'Extension')
 # The switch fields (docs/DIVERGENCE.md "Entry format"; the ledger-fields
 # round, docs/ledger-fields-round.md section 1), one line each, after
 # Reversible?. A value may be followed by " - <clause>".
-SWITCH_FIELDS = ['Switch', 'Default', 'Player', 'Toward', 'State']
+SWITCH_FIELDS = ['Switch', 'Default', 'Player', 'Toward', 'Languages', 'State']
 # Set by the round's stage C (2026-10-28, after the audit's edits): every entry
-# carries the five, and a missing one is an error like any other. Were a sixth
-# field added, False would count the entries still without it as a note until
-# they are filled, as stage B did.
+# carries the six (`Languages:` added the same day, filled on every entry before
+# it was listed here), and a missing one is an error like any other. Were a
+# seventh field added, False would count the entries still without it as a note
+# until they are filled, as stage B did.
 STRICT_FIELDS = True
 PLAYER_VALUES = ('yes', 'cheap', 'costly', 'never')
 TOWARD_VALUES = ('psx', 'psp', 'pc')
+# `Languages:` (the owner's call, 2026-10-28: explicit tags, no class names):
+# `any` alone, or the tags the engine knows - imported, so the ledger cannot
+# name one src/game/language_tags.h does not - and `original`, the port's own
+# text (BOF3X_LANG unset or `original`).
+LANGUAGE_VALUES = tuple(language_tags.TAGS) + ('original',)
+# The Default clause of an entry whose Languages is not `any` and Default `on`.
+LANG_DEFAULT = 'under its languages'
 # (DIV id, field) -> why: an entry whose line of that name predates the switch
 # fields and means something else. Its line is not read as the field; the
 # check fails once the line is renamed, so the list cannot go stale.
@@ -250,7 +262,7 @@ def check_switch_fields(r, fielded, defined, inv, whole=True):
     missing = {f: [] for f in SWITCH_FIELDS}
     filled, clash_seen = 0, set()
     for did, where, chunk in fielded:
-        vals = {}
+        vals, default_clause = {}, ''
         for f in SWITCH_FIELDS:
             lines = field_lines(chunk, f)
             if (did, f) in FIELD_CLASH and lines:
@@ -265,15 +277,19 @@ def check_switch_fields(r, fielded, defined, inv, whole=True):
                     r.error(f'{where}: {did} has no "- **{f}:**" field')
                 continue
             vals[f] = lines[0]
+            if f == 'Default':
+                m = re.search(r'^- \*\*Default:\*\*[ \t]*\S+(?: - (.*))?$', chunk, re.M)
+                default_clause = (m.group(1) or '').strip() if m else ''
         if len(vals) == len(SWITCH_FIELDS):
             filled += 1
         m = re.search(r'^- \*\*Tier:\*\*\s*(\w+)', chunk, re.M)
         tier = m.group(1) if m else None
 
         # Switch: none alone, or distinct names, each one src/ or the launcher reads.
-        sw_player, sw_none = None, False
+        sw_player, sw_none, sw_lang = None, False, False
         if 'Switch' in vals:
             toks = [t.strip().strip('`') for t in vals['Switch'].split(',')]
+            sw_lang = 'lang' in toks
             if toks == ['none']:
                 sw_none = True
             elif 'none' in toks or '' in toks:
@@ -321,6 +337,27 @@ def check_switch_fields(r, fielded, defined, inv, whole=True):
                 r.error(f'{where}: {did} Toward {vals["Toward"]!r}: none alone, or a list of distinct '
                         f'{", ".join(TOWARD_VALUES)}')
 
+        # Languages: any alone, or distinct tags the engine knows and `original`;
+        # the language pick governs an entry it limits, so `Switch: lang` names
+        # some, and its `Default: on` is read under them.
+        if 'Languages' in vals:
+            toks = [t.strip().strip('`') for t in vals['Languages'].split(',')]
+            if toks == ['any']:
+                if sw_lang:
+                    r.error(f'{where}: {did} has Switch: lang, so Languages names the languages it acts under, '
+                            'not any')
+            elif 'any' in toks or '' in toks:
+                r.error(f'{where}: {did} Languages {vals["Languages"]!r}: `any` stands alone, and no tag is empty')
+            elif len(set(toks)) != len(toks):
+                r.error(f'{where}: {did} Languages names a language twice')
+            elif not set(toks) <= set(LANGUAGE_VALUES):
+                bad = ', '.join(t for t in toks if t not in LANGUAGE_VALUES)
+                r.error(f'{where}: {did} Languages: {bad} is not a tag the engine knows - '
+                        f'any, or a list of {", ".join(LANGUAGE_VALUES)} (tools/language_tags.py TAGS)')
+            elif vals.get('Default') == 'on' and not default_clause.startswith(LANG_DEFAULT):
+                r.error(f'{where}: {did} Languages {vals["Languages"]}: its Default reads '
+                        f'"on - {LANG_DEFAULT}"')
+
         # State: active, withdrawn, or superseded by an entry that exists.
         if 'State' in vals:
             st = vals['State']
@@ -340,7 +377,7 @@ def check_switch_fields(r, fielded, defined, inv, whole=True):
         if missing[f] and not STRICT_FIELDS:
             r.note(f'{len(missing[f])} entries have no "{f}:" field (the ledger-fields round\'s stage B '
                    f'fills them): {id_ranges(missing[f])}')
-    r.note(f'{filled} of {len(fielded)} entries carry all five switch fields')
+    r.note(f'{filled} of {len(fielded)} entries carry all {len(SWITCH_FIELDS)} switch fields')
 
 
 def check_citations(r, defined):
@@ -392,9 +429,11 @@ FIXTURE_CASES = [
     ('DIV-0176', {'Player': 'costly'}, 'not what its Switch names give'),
     ('DIV-0176', {'Player': 'maybe'}, 'is not one of'),
     ('DIV-0176', {'Switch': 'ini:wide=0', 'Player': 'yes'}, None),
-    ('DIV-0176', {'Switch': 'lang', 'Player': 'yes'}, None),
+    ('DIV-0176', {'Switch': 'lang', 'Player': 'yes', 'Languages': 'en-US, en-150, fr-FR, de-DE, ja-JP',
+                  'Default': 'on - under its languages'}, None),
     ('DIV-0176', {'Switch': 'lang, SunderLoop', 'Player': 'yes'}, 'they give cheap'),
-    ('DIV-0176', {'Switch': 'lang, SunderLoop', 'Player': 'cheap'}, None),
+    ('DIV-0176', {'Switch': 'lang, SunderLoop', 'Player': 'cheap', 'Languages': 'fr-FR',
+                  'Default': 'on - under its languages'}, None),
     ('DIV-0176', {'Switch': 'env:BOF3X_MP3=original', 'Player': 'costly'}, None),
     ('DIV-0176', {'Switch': 'env:BOF3X_MP3=original', 'Player': 'yes'}, 'cannot reach every name'),
     ('DIV-0176', {'Tier': 'Forced'}, 'is Forced'),
@@ -413,6 +452,17 @@ FIXTURE_CASES = [
     ('DIV-0183', {'Player': 'never'}, None),
     ('DIV-0176', {'-State': ''}, 'has no "- **State:**" field'),
     ('DIV-0183', {'-Toward': ''}, 'has no "- **Toward:**" field'),
+    ('DIV-0176', {'Languages': 'xx-XX'}, 'not a tag the engine knows'),
+    ('DIV-0176', {'Languages': 'en'}, 'not a tag the engine knows'),
+    ('DIV-0176', {'Switch': 'lang', 'Player': 'yes'}, 'Switch: lang, so Languages'),
+    ('DIV-0176', {'Switch': 'lang', 'Player': 'yes', 'Languages': 'ja-JP',
+                  'Default': 'on - under its languages'}, None),
+    ('DIV-0176', {'Languages': 'en-US, en-150, fr-FR, de-DE', 'Default': 'on - under its languages; why'}, None),
+    ('DIV-0176', {'Languages': 'original', 'Default': 'off'}, None),
+    ('DIV-0176', {'Languages': 'ja-JP'}, 'its Default reads'),
+    ('DIV-0176', {'Languages': 'ja-JP, ja-JP'}, 'names a language twice'),
+    ('DIV-0176', {'Languages': 'any, ja-JP'}, '`any` stands alone'),
+    ('DIV-0183', {'-Languages': ''}, 'has no "- **Languages:**" field'),
 ]
 
 
@@ -438,7 +488,7 @@ def selftest_fields(r, fielded, defined, inv):
     have = {did: chunk for did, _, chunk in fielded if did in FIXTURE_IDS}
     for did in FIXTURE_IDS:
         if did not in have or any(not field_lines(have[did], f) for f in SWITCH_FIELDS):
-            r.error(f'{did} is the switch fields\' worked example and must carry all five '
+            r.error(f'{did} is the switch fields\' worked example and must carry all {len(SWITCH_FIELDS)} '
                     '(ledger_check.py FIXTURE_IDS)')
             return
     past = f'DIV-{max(int(x[4:]) for x in defined) + 1:04d}'

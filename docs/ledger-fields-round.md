@@ -99,6 +99,19 @@ new lines; nobody reads the prose for a preset.
   preset (I32) every entry that lists `psp`. Two entries that are
   alternatives to each other (one the PlayStation's way, one the PSP's) are
   listed as a pair by the audit.
+- **`Languages:`** (added 2026-10-28, the owner's call: "I'd rather the line
+  allow a list than use value sets") the languages under which the entry's
+  new behaviour acts, so that the launcher's language pick selects the
+  entries that belong to it: `any` alone (the entry does not depend on the
+  language chosen), or a comma list of distinct tags from the engine's list
+  (`tools/language_tags.py` `TAGS`: `en-US`, `en-150`, `fr-FR`, `de-DE`,
+  `ja-JP`) and `original` (the port's own text, `BOF3X_LANG` unset). No
+  class names: a Latin-gated entry lists the four Latin tags, so a German- or
+  French-only entry can be said. The code decides the list, not the prose;
+  a layer built from a disc the install may lack is still listed. `Switch:
+  lang` requires a list; a list means the language pick governs the entry
+  (on under those languages, inert under the others, whatever a preset
+  says), and its `Default: on` reads `on - under its languages`.
 - **`State:`** `active`, `withdrawn` or `superseded by DIV-NNNN`. Today the
   withdrawn and superseded entries say so in prose; a preset must not try to
   switch them.
@@ -398,6 +411,7 @@ in `src/`, as before; the impl count).
 | `Default:` | on 165, off 19 |
 | `Player:` | **yes 59, cheap 67, costly 28, never 30** |
 | `Toward:` | `psx` 87, `psp` 13, `psx, psp` 3, `none` 81 (90 list `psx`, 16 list `psp`, none `pc`) |
+| `Languages:` | `any` 137; a list 47: the five tags 19, the Latin four 20, `ja-JP` 4, `fr-FR, de-DE` 1, `fr-FR` 1, `en-150` 1, `original` 1 (added after stage C, below) |
 | `State:` | active 182, withdrawn 2 (DIV-0037, DIV-0067) |
 
 So: 59 entries a player can switch today, 67 that stage D's `BOF3X_OFF`
@@ -450,7 +464,89 @@ DIV-0141, 0145, 0147 and 0148, which still says "not a switch" against
 their new `Switch:` values, to be reworded when the switch exists; an empty
 `ini:opt=` means "the key set to empty", not unset (DIV-0110..0113's
 switch); the lang-only entries, which a preset must not turn off without
-saying it changes the language.
+saying it changes the language (answered by the `Languages:` field, below).
+
+### Languages as run (2026-10-28, off the round branch at `281d597c`)
+
+**The owner's call (2026-10-28):** a sixth field that says which languages
+an entry acts under, so that the launcher's language pick selects the
+entries that belong to that language and a preset never turns one on or off
+against it; explicit tags, no class names, so that a German- or French-only
+entry can be said. One Opus agent (`lf1027\LFlang\REPORT.md`) added the
+field to the Entry format, `tools/ledger_check.py` and every entry.
+
+**The rules** (each a sentence of the Entry format's "The switch fields",
+each a check under the strict rule):
+
+1. `any` alone, or distinct tags from `tools/language_tags.py` `TAGS` and
+   `original`; the checker imports the list, so the ledger cannot name a tag
+   the engine does not know.
+2. `Switch: lang` requires a list; a list means the language pick governs
+   the entry - on under those languages, inert under the others, whatever a
+   preset says.
+3. Such an entry's `Default: on` reads `on - under its languages` (the
+   checker refuses another clause); `off` stays for one that waits for its
+   own switch under its languages too (DIV-0155..0157, the reading row).
+4. Stage D's registry carries the field (section 5, amended).
+
+The self-test grew ten cases (49 in all), among them an unknown tag (`xx-XX`,
+and the retired bare `en`) and `Switch: lang` with `Languages: any`, both
+errors.
+
+**The counts** (184 entries): `any` 137, a list 47. Per tag: `en-US` 39,
+`en-150` 40, `fr-FR` 41, `de-DE` 40, `ja-JP` 23, `original` 1. The 24
+`Switch: lang` entries all carry a list. The lists:
+
+| Languages | Entries |
+|---|---|
+| the five tags | DIV-0005..0008, 0013, 0014, 0016, 0038, 0051, 0053, 0055, 0064, 0069, 0088, 0090, 0097, 0117, 0128, 0156 |
+| `en-US, en-150, fr-FR, de-DE` | DIV-0009, 0015, 0017..0020, 0026, 0027, 0029, 0052, 0058..0061, 0083, 0084, 0118..0120, 0148 |
+| `ja-JP` | DIV-0056, 0057, 0155, 0157 |
+| `fr-FR, de-DE` | DIV-0054 |
+| `fr-FR` | DIV-0098 |
+| `en-150` | DIV-0141 |
+| `original` | DIV-0102 |
+
+**The cases decided** (each with its evidence in the report):
+
+- **A chunk a Japanese disc does not build is Latin-only.** `loc_build.py`
+  builds kinds 7..12 (Config, verbs, default names, merchant, battle labels
+  and messages), label groups other than 15 and 24, and kind 17 (the staff
+  roll) for Latin discs alone (`build_all`), so DIV-0015, 0018..0020, 0052,
+  0118..0120 and 0148 are the Latin four, though none tests `Lang_Latin`.
+- **An entry whose chunk every layer carries is the five tags**, even where
+  its title says English: DIV-0006 (every font has kind 4), 0008 (the
+  Japanese names too), 0013 (the US and JP white rows), 0014 (the Japanese
+  title sheet is the US one), 0016 (the guard follows every table), 0038
+  (kind 14 in all four languages), 0064 (a Japanese layer carries groups 15
+  and 24), 0069 (kind 16 in every layer since D279), 0088
+  (`build_village_sheet` runs on every disc; a disc-only Japanese layer's
+  sheet is its disc's).
+- **Two halves under different gates take the union:** DIV-0051 (the icon
+  column under `Lang_Latin`, the Japanese icons under `ja-JP`), DIV-0128
+  (`Lang_Latin() || Lang_Japanese()`).
+- **A mechanism every language passes through is `any`**, though it serves
+  the layers: DIV-0086 (the optional layers, walked under any language and
+  `original`; only its text layers are language-bound), 0089 (the cache),
+  0070 and 0144 (the shout's and the fishing banner's empty glyphs, armed
+  unconditionally), 0133..0140 (the buttons follow the Config under every
+  language; the language picks only the glyph family), 0145 (the quicksave's
+  refusal across languages), DIV-0039 (the window title, "whatever
+  `BOF3X_LANG` says").
+- **An install's sources are not a language:** DIV-0080 (`area4-walls`, an
+  optional layer from a Western disc), 0101, 0103..0107, 0114, 0115, 0130,
+  0131, 0134 are `any`.
+- **A disc-only language layer is its tags:** DIV-0090 and 0097 the five
+  (`original` is refused on such an install), DIV-0098 `fr-FR`; DIV-0102,
+  the refusal itself, is `original`, the field's one use of that value.
+- **The layout switch of DIV-0056 is `ja-JP`:** under a Latin language
+  nothing changed when `Lang_FullWidth` was added; under `ja-JP` the Latin
+  layouts are withheld. DIV-0054 is `fr-FR, de-DE` (the accented cells);
+  its rule 2, the PC's slot count, runs for every build but changes only
+  where the tables disagree (15 French and 11 German areas).
+- **The reading row:** DIV-0155 and 0157 `ja-JP` (the furigana builder reads
+  Japanese text only, `tools/mods.py:89`), DIV-0156 the five (every ordered
+  pair, under the main language); all three keep `Default: off`.
 
 ## 5. Stage D: the player's switch and the presets (after the owner's calls)
 
@@ -462,8 +558,12 @@ Not to be briefed until section 6's calls 2..4 are answered; the shape:
   hosted A/B meaning is unchanged. `bof3x.exe` refuses a name it does not
   know, loudly (rule 4), not silently.
 - **A generated registry** from the ledger's fields (`data/divergence.toml`
-  or a generated header): id, switch, default, player, toward, tier. The
-  launcher's presets read it; the in-game log names the preset in force.
+  or a generated header): id, switch, default, player, toward, languages,
+  tier. The launcher's presets read it; the in-game log names the preset in
+  force. **Amended 2026-10-28 (the `Languages:` field, section 4):** the
+  presets' logic skips an entry whose `Languages:` excludes the language
+  chosen, and treats a `Switch: lang` entry as part of the language: no
+  preset turns one on or off against the player's pick.
 - **The presets** in the launcher's Configure page, in ASD-STE100 text (the
   launcher is player-facing text, CLAUDE.md conventions): a box with the
   owner's preset names, and the list of what each changes.
