@@ -20,10 +20,10 @@ The divergence ledger, docs/DIVERGENCE.md (CLAUDE.md rule 2):
     launcher reads (tools/ledger_switches.py's inventory); `Player:` the value
     the names' classes give (`yes` refused on a name the player's build cannot
     reach), `never` for a Forced entry and for `Switch: none`; a superseding
-    entry that exists. Until STRICT_FIELDS is set (stage C of the round) a
-    missing field is a counted note, not an error; a malformed one is an error
-    already. Each run also tests these checks on the worked examples, DIV-0176
-    and DIV-0183, each with one field line changed (FIXTURE_CASES).
+    entry that exists. A missing or malformed field is an error (STRICT_FIELDS,
+    set by the round's stage C). Each run also tests these checks on the worked
+    examples, DIV-0176 and DIV-0183, each with one field line changed, added or
+    removed (FIXTURE_CASES).
 
 The ownership ledger, symbols.toml `impl` against the detours in src/:
   * every function detoured to ours (BOF3_INJECT, or a direct bof3::Inject
@@ -59,9 +59,11 @@ TIERS = ('Forced', 'Intent', 'Sensible', 'Extension')
 # round, docs/ledger-fields-round.md section 1), one line each, after
 # Reversible?. A value may be followed by " - <clause>".
 SWITCH_FIELDS = ['Switch', 'Default', 'Player', 'Toward', 'State']
-# False while the round's stage B fills the entries: a missing switch field is
-# a note. Stage C sets it, and a missing field is an error like any other.
-STRICT_FIELDS = False
+# Set by the round's stage C (2026-10-28, after the audit's edits): every entry
+# carries the five, and a missing one is an error like any other. Were a sixth
+# field added, False would count the entries still without it as a note until
+# they are filled, as stage B did.
+STRICT_FIELDS = True
 PLAYER_VALUES = ('yes', 'cheap', 'costly', 'never')
 TOWARD_VALUES = ('psx', 'psp', 'pc')
 # (DIV id, field) -> why: an entry whose line of that name predates the switch
@@ -309,7 +311,7 @@ def check_switch_fields(r, fielded, defined, inv, whole=True):
                     built = 'is' if inv.player_switch_built else 'is not yet'
                     r.error(f'{where}: {did} Player {pv}: {why} - they give {sw_player} '
                             f'(tools/ledger_switches.py; {ledger_switches.PLAYER_SWITCH} {built} read by src/)')
-                if vals.get('Default') == 'off' and pv != 'yes':
+                if vals.get('Default') == 'off' and pv != 'yes' and vals.get('State') == 'active':
                     r.note(f'{did}: Default off and Player {pv}: a player who cannot switch it on never gets it')
 
         # Toward: none alone, or a list of distinct releases; no cascade.
@@ -318,10 +320,6 @@ def check_switch_fields(r, fielded, defined, inv, whole=True):
             if toks != ['none'] and (not set(toks) <= set(TOWARD_VALUES) or len(set(toks)) != len(toks)):
                 r.error(f'{where}: {did} Toward {vals["Toward"]!r}: none alone, or a list of distinct '
                         f'{", ".join(TOWARD_VALUES)}')
-            m = re.search(r'^- \*\*Also in the PSX version\?\*\*\s*(\w+)', chunk, re.M)
-            if 'psx' in toks and m and m.group(1).lower() == 'yes':
-                r.note(f'{did}: Toward lists psx, and "Also in the PSX version?" starts Yes (the original '
-                       "behaviour is the PlayStation's too) - check")
 
         # State: active, withdrawn, or superseded by an entry that exists.
         if 'State' in vals:
@@ -413,6 +411,8 @@ FIXTURE_CASES = [
     ('DIV-0176', {'+Switch': 'SunderLoop'}, 'want one'),
     ('DIV-0183', {'Player': 'cheap'}, 'they give costly'),
     ('DIV-0183', {'Player': 'never'}, None),
+    ('DIV-0176', {'-State': ''}, 'has no "- **State:**" field'),
+    ('DIV-0183', {'-Toward': ''}, 'has no "- **Toward:**" field'),
 ]
 
 
@@ -420,6 +420,12 @@ def fixture_chunk(chunk, changes):
     for f, v in changes.items():
         if f.startswith('+'):
             chunk += f'\n- **{f[1:]}:** {v}'
+            continue
+        if f.startswith('-'):
+            pat = re.compile(r'^- \*\*' + re.escape(f[1:]) + r':\*\*.*\n?', re.M)
+            if not pat.search(chunk):
+                raise KeyError(f[1:])
+            chunk = pat.sub('', chunk, count=1)
             continue
         pat = re.compile(r'^- \*\*' + re.escape(f) + r':\*\*.*$', re.M)
         if not pat.search(chunk):

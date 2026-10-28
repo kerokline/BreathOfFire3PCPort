@@ -81,7 +81,9 @@ ledger stays trustworthy.
   design choice.
 - **Also in the PSX version?** yes / no / unknown — whether the archival sibling
   shows the same behaviour. This is what distinguishes a *port* bug from an
-  *original* one, and it changes how confident the fix should be.
+  *original* one, and it changes how confident the fix should be. The answer
+  is for the *original* behaviour (is the port's way the PlayStation's too?);
+  where the new behaviour is the PlayStation's, say so after the answer.
 - **Reversible?** whether it sits behind a config toggle, and the key if so.
 - **Switch:** SunderLoop | ini:<key>=<value> | env:<BOF3X_NAME>=<value> | lang | none
 - **Default:** on | off
@@ -99,21 +101,28 @@ says the same thing for a person. Each field is **one line**, its value
 first; an optional " - <clause>" after the value says why where the value is
 not obvious, as on the Tier line. Added by the ledger-fields round
 ([`ledger-fields-round.md`](ledger-fields-round.md) sections 1 and 6, the
-owner's calls of 2026-10-27); until its stage C the checker counts a missing
-field as a note, a malformed one as an error.
+owner's calls of 2026-10-27); since its stage C (2026-10-28) the checker
+refuses a missing field as it refuses a malformed one.
 
 **`Switch:`** the names that, set together, turn this entry off and nothing
 more than they must: a comma list, or `none` alone. A wider switch that also
 turns it off (a whole function's detour beside a one-byte patch of ours, the
 language beside one of its layouts) stays in `Reversible?` only, so that a
 preset which sets every listed name changes this entry and not its
-neighbours. A name is one of:
+neighbours. The rule: the narrowest runtime name that turns the whole entry
+off, and among equally narrow names the best class (`yes` before `cheap`
+before `costly`). `lang` is a runtime name like any other: when no narrower
+name turns the whole entry off, the entry is `Switch: lang`, `Player: yes`.
+A build-time handle (a `loc_build.py` or importer option, a rebuilt layer)
+is never a switch, and does not make an entry `none` while the language
+turns it off; `none` is for an entry no runtime name turns off. A name is
+one of:
 
 | Form | What it is | Example |
 |---|---|---|
 | a bare name | a `BOF3X_ORIGINAL` name: the first argument of a `PatchBytes`, `RetargetCall` or `Inject` in `src/` | `SunderLoop` (DIV-0176) |
 | `ini:<key>=<value>` | a `bof3x.ini` key the launcher reads, at the value that turns the entry off | `ini:wide=0` (DIV-0041) |
-| `env:<BOF3X_NAME>=<value>` | an environment name `src/` reads and the launcher has no key for; an empty value means unset | `env:BOF3X_LAYERING=0` (DIV-0071) |
+| `env:<BOF3X_NAME>=<value>` | an environment name `src/` reads and the launcher has no key for, or whose launcher key cannot ask for that value (DIV-0036's `BOF3X_SCALE=2`, DIV-0150's `BOF3X_MUSIC=seq`); an empty value means unset | `env:BOF3X_LAYERING=0` (DIV-0071) |
 | `lang` | the language is the switch: `BOF3X_LANG`, the launcher's language box | DIV-0008 |
 | `none` | nothing turns it off | DIV-0067 (withdrawn) |
 
@@ -125,7 +134,12 @@ which takes these names, as `BOF3X_ORIGINAL` does, `*` and `-name` included).
 
 **`Default:`** `on` when a player who changes nothing gets the new
 behaviour (most entries; DIV-0176), `off` when it waits to be asked for (a
-cheat, an opt-in look: DIV-0045's multipliers, DIV-0012's point filter).
+cheat, an opt-in look: DIV-0045's multipliers, DIV-0012's point filter). It
+is read with the player's own choices and the install's contents as they
+are - the language, the wide picture, the cache: an entry that acts only
+under an overlay (or a wide mode, or a cache) is `on` when it acts there
+without a further change (DIV-0005); `off` is for what waits for its own
+switch to be asked for.
 
 **`Player:`** whether the player's build (`bof3x.exe`) can turn the entry
 off. `tools/ledger_switches.py` measures it from the source, one class per
@@ -151,8 +165,9 @@ read, or the PSP changed it; `psp` alone for one of the PSP's own changes
 (DIV-0108's battle rules); `pc` where the consoles differ and the port's way
 is kept or chosen; `none` for behaviour no release had (DIV-0176, Sunder's
 unused loop) or not measured. `psx` cites the entry's "Also in the PSX
-version?" line and rationale; `psp` only a PSP twin read or a PSP round's
-entry. The list never claims more than was measured. The "PlayStation"
+version?" line and rationale; `psp` only a PSP twin read, a PSP round's
+entry, or a capture of the PSP drawing the entry's own case (DIV-0160,
+DIV-0184). The list never claims more than was measured. The "PlayStation"
 preset turns on every entry that lists `psx`.
 
 **`State:`** `active`; `withdrawn` (the entry stays as the record, nothing
@@ -505,7 +520,7 @@ designed in rather than bolted on.
   mention, and the dialogue draws the button the Config has put that role on.
 - **Reversible?** Yes: unset `BOF3X_LANG`, or `BOF3X_ORIGINAL=LoadDatFile`.
 - **Switch:** lang
-- **Default:** off - the launcher's default is the port's Chinese text (a disc-only install's is the first language it holds, DIV-0102)
+- **Default:** on - in the language the player chose; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes - `BOF3X_ORIGINAL=LoadDatFile` is wider: our loader also walks DIV-0086's layers and DIV-0089's cache
 - **Toward:** none - each PlayStation language is its own build (above)
 - **State:** active
@@ -599,7 +614,7 @@ designed in rather than bolted on.
   `Text_DrawString` and `Text_DrawImmediate` take the table whatever the
   switch says (corrected 2026-10-28, the ledger-fields round).
 - **Switch:** lang
-- **Default:** off - the launcher's default is the port's Chinese text (a disc-only install's is the first language it holds, DIV-0102)
+- **Default:** on - in the language the player chose; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes - `BOF3X_ORIGINAL=MsgBox_DrawChar` alone no longer turns it off (Reversible? above)
 - **Toward:** psx - the Western builds advance by their cell's width, 8, as a constant; the table gives 8 but for DIV-0009's two glyphs
 - **State:** active
@@ -647,7 +662,7 @@ designed in rather than bolted on.
   alone is NOT safe with it set (the original would read an arena the pool
   was never copied to).
 - **Switch:** lang
-- **Default:** off - the launcher's default is the port's Chinese text (a disc-only install's is the first language it holds, DIV-0102)
+- **Default:** on - in the language the player chose; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes - `BOF3X_ORIGINAL=Msg_SystemPtr` alone is not safe with an overlay (above)
 - **Toward:** psx - the US release moved the pool out of the script's way too, to `0x8001A000` (above)
 - **State:** active
@@ -702,7 +717,7 @@ designed in rather than bolted on.
   tables.
 - **Reversible?** Yes: unset `BOF3X_LANG`. The write is to process memory.
 - **Switch:** lang
-- **Default:** off - the launcher's default is the port's Chinese text (a disc-only install's is the first language it holds, DIV-0102)
+- **Default:** on - in the language the player chose; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes
 - **Toward:** psx - the US release's own names and pools, verbatim (above)
 - **State:** active
@@ -744,9 +759,9 @@ designed in rather than bolted on.
 - **Also in the PSX version?** no - the US release, this entry's original,
   advances every character by 8 (above).
 - **Reversible?** Yes: build the overlays with `--mono`.
-- **Switch:** none
+- **Switch:** lang - the overlay's font; `loc_build.py --mono` is a build-time choice, not a switch
 - **Default:** on - `tools/loc_build.py` builds the overlays tightened unless `--mono`
-- **Player:** never - a build-time choice of the overlay's data, no name the game reads; the language box is wider
+- **Player:** yes - the language box
 - **Toward:** none - the US release advances every character by 8 (above)
 - **State:** active
 
@@ -931,9 +946,9 @@ designed in rather than bolted on.
   `BOF3X_LANG=en` (names not yet converted) are drawn with the darker ramp.
 - **Also in the PSX version?** this restores the PSX values.
 - **Reversible?** rebuild with `--pc-white`, or play without `BOF3X_LANG`.
-- **Switch:** none
+- **Switch:** lang - the overlay's shades; `--pc-white` is a build-time choice, not a switch
 - **Default:** on - `tools/loc_build.py` writes the disc's shades unless `--pc-white`
-- **Player:** never - a build-time choice of the overlay's data, no name the game reads; the language box is wider
+- **Player:** yes - the language box
 - **Toward:** psx - the disc's own shades (above)
 - **State:** active
 - **Checked:** live VRAM row 0 reads the disc's values in an attract run;
@@ -980,7 +995,7 @@ designed in rather than bolted on.
   `BOF3X_ORIGINAL=TitleMenu_Widths` keeps the original widths (the English
   rows are then cut off - for A/B only).
 - **Switch:** lang
-- **Default:** off - the launcher's default is the port's Chinese text (a disc-only install's is the first language it holds, DIV-0102)
+- **Default:** on - in the language the player chose; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes - `BOF3X_ORIGINAL=TitleMenu_Widths` keeps the widths only (for A/B)
 - **Toward:** psx - the first two rows are the PlayStation's lettering; the third row is ours (above)
 - **State:** active
@@ -1074,7 +1089,7 @@ designed in rather than bolted on.
   the layout is the original's, while the options and controller names, which
   are data writes rather than patches, are English. For A/B only.
 - **Switch:** lang
-- **Default:** off - the launcher's default is the port's Chinese text (a disc-only install's is the first language it holds, DIV-0102)
+- **Default:** on - in the language the player chose; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes - `BOF3X_ORIGINAL=ConfigText` leaves the options and the controller names in the overlay's language (for A/B)
 - **Toward:** psx - the PlayStation's own text, its quirks included (above)
 - **State:** active
@@ -1145,7 +1160,7 @@ designed in rather than bolted on.
 - **Reversible?** play without `BOF3X_LANG`: the table is the shipped one, the
   count is `0x993` and the bound is the original's `0xA00`.
 - **Switch:** lang
-- **Default:** off - the launcher's default is the port's Chinese text (a disc-only install's is the first language it holds, DIV-0102)
+- **Default:** on - in the language the player chose; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes
 - **Toward:** psx - the 8 x 8 cells are the PlayStation's own; the guard has no PSX counterpart in evidence (above)
 - **State:** active
@@ -1243,7 +1258,7 @@ designed in rather than bolted on.
 - **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=MenuVerbs` keeps
   the original centring (for A/B only - the English labels then sit left).
 - **Switch:** lang
-- **Default:** off - the launcher's default is the port's Chinese text (a disc-only install's is the first language it holds, DIV-0102)
+- **Default:** on - in the language the player chose; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes - `BOF3X_ORIGINAL=MenuVerbs` keeps the centring only (for A/B)
 - **Toward:** psx - the PlayStation's strings (above)
 - **State:** active
@@ -1283,7 +1298,7 @@ designed in rather than bolted on.
 - **Also in the PSX version?** Yes - the PlayStation's strings.
 - **Reversible?** play without `BOF3X_LANG`.
 - **Switch:** lang
-- **Default:** off - the launcher's default is the port's Chinese text (a disc-only install's is the first language it holds, DIV-0102)
+- **Default:** on - in the language the player chose; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes
 - **Toward:** psx - the PlayStation's strings (above)
 - **State:** active
@@ -1321,7 +1336,7 @@ designed in rather than bolted on.
   ([`save-interchange.md`](save-interchange.md) §2).
 - **Reversible?** play without `BOF3X_LANG`.
 - **Switch:** lang
-- **Default:** off - the launcher's default is the port's Chinese text (a disc-only install's is the first language it holds, DIV-0102)
+- **Default:** on - in the language the player chose; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes
 - **Toward:** psx - the PlayStation's default names; it also asks for Ryu's, which the port does not (above)
 - **State:** active
@@ -2246,6 +2261,14 @@ designed in rather than bolted on.
   so the window opens the same apparent size as before and the player
   resizes from there (the owner's rule, 2026-10-11). The hosted build is
   told 96 dpi and keeps k = 2. `DisplaySetup_WindowedScale`.
+  **Amended 2026-10-28 (the ledger-fields round):** the "Window size" box
+  above left the dialog on 2026-09-23 (`src/launcher/config.h:152..155`), and
+  `scale=2` is no longer "unset" in effect: the launcher sets `BOF3X_SCALE`
+  only for a `scale=` other than 2 (`src/launcher/config.cpp:529`), so a
+  `scale=2` in `bof3x.ini` gives the display's k of the 2026-10-11 amendment:
+  on a scaled desktop k = 3 at 150 %, 4 at 200 % (D395). Only
+  `BOF3X_SCALE=2` in the environment fixes a window at 2, hence the
+  `Switch:` below.
 - **Rationale:** the owner's rule, 2026-09-23: "windowed options should be
   the available fixed k values, fullscreen uses largest k that will fit", k
   picked at start-up only. Polygon edges and 3D geometry are then drawn at
@@ -2407,6 +2430,11 @@ designed in rather than bolted on.
   cycled a name and both readouts went to the log.
 - **New behaviour:** neither key does anything, beyond ending a pause as
   every non-F9 key does. F8, F9 and F12 are unchanged.
+  **Amended 2026-10-28 (the ledger-fields round):** neither key is idle any
+  more - F7 quick-loads since the quicksave round (DIV-0145,
+  `src/game/win_main.cpp:486..489`) and F11 writes the frame to a file
+  (tooling, `:499..502`). What this entry removed, the renderer cycle and the
+  frame-rate readout, stays gone.
 - **Rationale:** the owner, 2026-09-23: "those aren't really necessary as
   function keys". With the backend there is one device.
 - **Also in the PSX version?** No.
@@ -3540,9 +3568,9 @@ designed in rather than bolted on.
   after any stall inside DIV-0034's 500 ms that spans an area change. Not a
   divergence - a defect of ours.
 - **Reversible?** F1 again; with the loop, `BOF3X_ORIGINAL=Game_WinMain`.
-- **Switch:** Game_WinMain - the only name: the loop and the window procedure are one detour, which carries DIV-0047 too
+- **Switch:** Game_WndProc - F1 is read in the window procedure (`src/game/win_main.cpp:505`), its own `Inject` (`:919`); `Game_WinMain`, a separate `Inject` (`:918`), turns it off too, with DIV-0032, 0034, 0039, 0047
 - **Default:** on
-- **Player:** costly - F1 is read only in our window procedure (`src/game/win_main.cpp`), a detour name only
+- **Player:** costly - a detour name only (`src/game/win_main.cpp:919`)
 - **Toward:** none - no release has it
 - **State:** active
 
@@ -6391,7 +6419,7 @@ designed in rather than bolted on.
   `dat\` (DIV-0109..0111), read from the cache only (`install --opt` refuses
   them), and a layer's banks reach `Snd_LoadBankFile` too (DIV-0113). The
   limit of "more than 8" layers is 16 (`kOptMax`; `ConfigOptValid` follows).
-- **Switch:** ini:opt=none - also takes off DIV-0080's default layer; only a list without the PSP layers takes off them alone
+- **Switch:** ini:opt= - the default list (`kOptDefault`, `src/launcher/config.h:304`) holds no PSP layer; `opt=none` also takes off DIV-0080's
 - **Default:** off - the PSP layers wait to be named (the suites, DIV-0107)
 - **Player:** yes
 - **Toward:** psp - the PSP releases' palettes, textures, texture coordinates and names
@@ -8401,7 +8429,7 @@ designed in rather than bolted on.
   1; IDEAS I32 P17). The owner: keep it a toggle (`myria-item`), as built.
 
 - **Switch:** ini:psp=none
-- **Default:** off
+- **Default:** off - unset, on where the cache's `base_policy` is psp (`src/game/psp_code.cpp:150`)
 - **Player:** yes - `psp=` / `BOF3X_PSP` (`src/game/psp_code.cpp`); unset, on only where the cache's `base_policy` is psp (a PSP-only install)
 - **Toward:** psp - the PSP's own two rules, read from `BOOT.BIN` (the PSP-only round, group PB)
 - **State:** active
@@ -10187,9 +10215,9 @@ designed in rather than bolted on.
   owner.
 - **Reversible?** No toggle; a layer built from a PSX disc, or from the PC
   install, is unchanged.
-- **Switch:** none - built into the PSP-EU layer's Config chunk by `loc_build.py`; no runtime name, and the language box turns it off only with the whole layer
+- **Switch:** lang - a chunk of the PSP-EU layer (`loc_build.py`); no narrower runtime name
 - **Default:** on
-- **Player:** never - one-way at build time: a layer built without the chunk is the only way back
+- **Player:** yes - the language box; a layer built without the chunk is the build-time way
 - **Toward:** psx - the chunk is byte-identical to the PSX-EU layer's (New behaviour above)
 - **State:** active
 
@@ -10465,9 +10493,9 @@ designed in rather than bolted on.
   host under the original and under en-US, both passing.
 - **Reversible?** The keys are ours; without them nothing of the game
   changes. Not a switch.
-- **Switch:** none - F6 and F7 are ours and change nothing until pressed
+- **Switch:** Game_WndProc - F6 / F7 are read only in our window procedure (`src/game/win_main.cpp:483`, `:487`), its own `Inject` (`:919`), which also carries DIV-0033's freeze, 0040, 0042
 - **Default:** on
-- **Player:** never - nothing to turn off: no name disarms the keys (`src/game/win_main.cpp` `Game_WndProc`)
+- **Player:** costly - a detour name only (`src/game/win_main.cpp:919`)
 - **Toward:** none - no release has save states
 - **State:** active
 
@@ -10540,9 +10568,9 @@ designed in rather than bolted on.
   `quick_menu.txt` in the proof batch.
 - **Reversible?** Not a switch: F5 is ours (nothing of Capcom's is
   replaced; without the key nothing changes).
-- **Switch:** none - F5 is ours and changes nothing until pressed
+- **Switch:** Game_WndProc - F5 is read only in our window procedure (`src/game/win_main.cpp:443`, then `src/game/quick_menu.cpp:420`), its own `Inject` (`:919`)
 - **Default:** on
-- **Player:** never - nothing to turn off: no name disarms the key (`src/game/win_main.cpp` `Game_WndProc`)
+- **Player:** costly - a detour name only (`src/game/win_main.cpp:919`)
 - **Toward:** none - no release has quicksaves
 - **State:** active
 
@@ -10602,9 +10630,9 @@ designed in rather than bolted on.
 - **Reversible?** Rebuild the language without the chunk, or play the
   original text: the roll then reads `.data`'s table (on a Western disc-only
   install, D323's patchwork). Not a runtime switch.
-- **Switch:** none - a chunk of the language layer (`loc_build.py`, kind 17); the language box turns it off only with all the layer's text
+- **Switch:** lang - a chunk of the language layer (kind 17), as DIV-0064's labels are; no narrower runtime name
 - **Default:** on
-- **Player:** never - one-way at build time: a layer rebuilt without the chunk is the only way back
+- **Player:** yes - the language box; a layer rebuilt without the chunk is the build-time way
 - **Toward:** psx - each release's own roll from the player's disc; a PSP layer carries none
 - **State:** active
 
