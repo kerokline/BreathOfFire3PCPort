@@ -56,6 +56,7 @@ namespace at = effect_3a::at;
 using U = std::uint32_t;
 using LD = long double;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -67,6 +68,7 @@ void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 std::int32_t SW(U a) { return SW(At(a)); }
 unsigned char& B(U a) { return At(a)[0]; }
+[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
@@ -276,7 +278,7 @@ extern "C" void __cdecl EffectKind61_Store(void) {
     if (!CountDown()) return;
     const U f = Frame("EffectKind61_Store");
     alignas(4) short rect[4] = {0x340, 0x100, static_cast<short>(Word(At(f + 4))), static_cast<short>(Word(At(f + 6)))};
-    SH_AT(void (__cdecl*)(const short*, void*), at::kStoreImage)(rect, At(EffectKind30_Shards_addr));
+    SH_AT(void (__cdecl*)(const short*, void*), at::kStoreImage)(rect, At(::bof3::Img(EffectKind30_Shards_addr)));
     NextState();
 }
 
@@ -724,7 +726,7 @@ extern "C" void __cdecl EffectKind64_Rise(void) {
     rv::Current<records::EffectObject>()->z = rv::As<records::EffectObject>(S())->angle[1];
     rv::Current<records::EffectObject>()->height = rv::As<records::EffectObject>(S())->angle[2];
     for (unsigned i = 0; i < at::kShardCount64; ++i)
-        SH_CALL(EffectKind64_InitShard)(At(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride64));
+        SH_CALL(EffectKind64_InitShard)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xc0 + i * at::kShardStride64));
     SH_CALL(Sound_PlayEffect)(0x207);
 }
 
@@ -1079,7 +1081,7 @@ extern "C" void __cdecl EffectKind64_DrawShards(void) {
     DrawMode(1, 0x380, 0x100, 1, 2);
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned i = 0; i < at::kShardCount64; ++i) {
-        unsigned char* const shard = At(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride64);
+        unsigned char* const shard = At(::bof3::Img(EffectKind30_Shards_addr) + 0xc0 + i * at::kShardStride64);
         SH_AT(void (__cdecl*)(unsigned char*), at::kShardDraw)(shard);
         rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->angle[2], rv::As<records::EffectShard>(shard)->angle[2] + 0x10u);
     }

@@ -19,13 +19,13 @@ constexpr U kFontEntryBytes = 0x14;
 // kCellCache: now D3d_CellTexCache (symbols.toml). D3d_CellTexCache: 128 entries of 0x28
 constexpr U kCellEntryBytes = 0x28;
 // kCellTable: now SpriteCell_Table (symbols.toml). SpriteCell_Table: 8-byte records
-constexpr U kBackdrop = 0x6BEA00;     // Dd_CellBackdrop: a 320 x 240 surface, or 0
-constexpr U kGlyphData = 0x7CC35C;    // Font_GlyphData: 288-byte 4-bit glyphs of 24 x 24
+constexpr ::bof3::image::Va kBackdrop{0x6BEA00};     // Dd_CellBackdrop: a 320 x 240 surface, or 0
+constexpr ::bof3::image::Va kGlyphData{0x7CC35C};    // Font_GlyphData: 288-byte 4-bit glyphs of 24 x 24
 // kVram: now Gfx_VramShadow (symbols.toml). Gfx_VramShadow: 1024 x 512 cells of 16 bits, rows 0x800 bytes
-constexpr U kClutRows = 0x6C2A40;     // Gfx_ClutRows: u32 generation, u32 pointer, per VRAM row
+constexpr ::bof3::image::Va kClutRows{0x6C2A40};     // Gfx_ClutRows: u32 generation, u32 pointer, per VRAM row
 // kRenderFlags: now Gfx_RenderFlags (symbols.toml). Gfx_RenderFlags: bit 0 the software surfaces, bit 5 colour-keyed textures
-constexpr U kStage = 0x7CC344;        // Dd_StageSurface: 320 x 256
-constexpr U kDevice = 0x7CC350;       // D3d_Device, an IDirect3DDevice3 *
+constexpr ::bof3::image::Va kStage{0x7CC344};        // Dd_StageSurface: 320 x 256
+constexpr ::bof3::image::Va kDevice{0x7CC350};       // D3d_Device, an IDirect3DDevice3 *
 // kPixelFormat: now Gfx_PixelFormat (symbols.toml). Gfx_PixelFormat: byte +3 bytes per pixel
 // D3d_DeviceDesc 0x7CC238, a D3DDEVICEDESC: the triangle caps' dwTextureCaps
 // (+0x84) and the texture size limits (+0xAC..+0xB8).

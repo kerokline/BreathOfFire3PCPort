@@ -12,7 +12,7 @@
 namespace effect_5e::at {
 
 // --- cells ------------------------------------------------------------------------
-constexpr std::uint32_t kCounter = 0x903848;        // the chapter counter byte the sub-kinds wait on and raise
+constexpr ::bof3::image::Va kCounter{0x903848};        // the chapter counter byte the sub-kinds wait on and raise
                                                     // (scenario_harness kCounter)
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0: the story flags Flags_Test reads
 // kFlagRow50: now Cond_Flags[0x50] (symbols.toml). Cond_Flags + 0x50: the row sub-kind 0x24 sets bit 4 of
@@ -38,32 +38,32 @@ constexpr unsigned kSub23Flag = 0x28;               // the story flag sub-kind 0
 constexpr unsigned kSub39Flag = 0x5A;               // ... and sub-kind 0x39
 
 // --- .data the code indexes (read in place) -------------------------------------------
-constexpr std::uint32_t kSub24Points = 0x65E6A4;    // four (x, z) signed-byte pairs, sub-kind 0x24's four corners
+constexpr ::bof3::image::Va kSub24Points{0x65E6A4};    // four (x, z) signed-byte pairs, sub-kind 0x24's four corners
 constexpr unsigned kSub24PointCount = 4;
-constexpr std::uint32_t kTrailPairs = 0x65E6CC;     // 34 signed-byte pairs, the trail's polyline (to EffectKind18Sub3F_States)
+constexpr ::bof3::image::Va kTrailPairs{0x65E6CC};     // 34 signed-byte pairs, the trail's polyline (to EffectKind18Sub3F_States)
 constexpr unsigned kTrailPairCount = 34;
 // Sub-kind 0x25's variants (+0x36 at its start), eight of each:
-constexpr std::uint32_t kSub25Heights = 0x65E764;   // s16: +0x3E
-constexpr std::uint32_t kSub25Pages = 0x65E774;     // u16: +0x2E (the texture word's low half)
-constexpr std::uint32_t kSub25Cells = 0x65E784;     // byte pairs: +0x36, +0x3A (the cell)
-constexpr std::uint32_t kSub25Lids = 0x65E794;      // bytes: +0x32 (0: none, else an index of kSub25Textures)
+constexpr ::bof3::image::Va kSub25Heights{0x65E764};   // s16: +0x3E
+constexpr ::bof3::image::Va kSub25Pages{0x65E774};     // u16: +0x2E (the texture word's low half)
+constexpr ::bof3::image::Va kSub25Cells{0x65E784};     // byte pairs: +0x36, +0x3A (the cell)
+constexpr ::bof3::image::Va kSub25Lids{0x65E794};      // bytes: +0x32 (0: none, else an index of kSub25Textures)
 constexpr unsigned kSub25Variants = 8;
-constexpr std::uint32_t kSub25Textures = 0x65E79C;  // dwords; entry 0's two low bytes are the leaves' signs (1, -1)
+constexpr ::bof3::image::Va kSub25Textures{0x65E79C};  // dwords; entry 0's two low bytes are the leaves' signs (1, -1)
 constexpr unsigned kSub25TextureCount = 5;
 // Sub-kind 0x26's variants, five of each:
-constexpr std::uint32_t kSub26Heights = 0x65E7C4;   // s16: +0x3E
-constexpr std::uint32_t kSub26Lifts = 0x65E7D0;     // s16: +0x2E (subtracted from the height)
-constexpr std::uint32_t kSub26Pages = 0x65E7DC;     // dwords: +0x20 (the texture word)
-constexpr std::uint32_t kSub26Cells = 0x65E7F0;     // byte pairs: +0x36, +0x3A
-constexpr std::uint32_t kSub26Lids = 0x65E7FC;      // bytes: +0x32
+constexpr ::bof3::image::Va kSub26Heights{0x65E7C4};   // s16: +0x3E
+constexpr ::bof3::image::Va kSub26Lifts{0x65E7D0};     // s16: +0x2E (subtracted from the height)
+constexpr ::bof3::image::Va kSub26Pages{0x65E7DC};     // dwords: +0x20 (the texture word)
+constexpr ::bof3::image::Va kSub26Cells{0x65E7F0};     // byte pairs: +0x36, +0x3A
+constexpr ::bof3::image::Va kSub26Lids{0x65E7FC};      // bytes: +0x32
 constexpr unsigned kSub26Variants = 5;
-constexpr std::uint32_t kSub26Textures = 0x65E804;  // dwords; entry 0's two low bytes the leaves' signs
+constexpr ::bof3::image::Va kSub26Textures{0x65E804};  // dwords; entry 0's two low bytes the leaves' signs
 constexpr unsigned kSub26TextureCount = 3;
 // Sub-kind 0x39's three quads:
-constexpr std::uint32_t kSub39Signs = 0x65E820;     // two signed bytes (1, -1), by the variant's bit 0
-constexpr std::uint32_t kSub39Vertices = 0x65E824;  // 3 quads x 4 vertices x (x, y, z) s16
+constexpr ::bof3::image::Va kSub39Signs{0x65E820};     // two signed bytes (1, -1), by the variant's bit 0
+constexpr ::bof3::image::Va kSub39Vertices{0x65E824};  // 3 quads x 4 vertices x (x, y, z) s16
 constexpr unsigned kSub39Quads = 3;
-constexpr std::uint32_t kSub39Textures = 0x65E86C;  // nine dwords, by quad + 3 * variant (E5F's state table
+constexpr ::bof3::image::Va kSub39Textures{0x65E86C};  // nine dwords, by quad + 3 * variant (E5F's state table
 constexpr unsigned kSub39TextureCount = 9;          // 0x65E890 follows)
 
 }  // namespace effect_5e::at

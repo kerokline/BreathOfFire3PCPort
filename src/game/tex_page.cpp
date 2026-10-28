@@ -43,12 +43,14 @@ std::uint32_t g_direct_opaque = 0;   // DIV-0159; 1 through PatchBytes("DirectOp
 namespace {
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va address) { return At(::bof3::Img(address)); }
 U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U Long(U address) {
     U v;
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
+[[gnu::always_inline]] inline U Long(::bof3::image::Va address) { return Long(::bof3::Img(address)); }
 U Long(const unsigned char* p) {
     U v;
     std::memcpy(&v, p, sizeof v);
@@ -64,6 +66,7 @@ std::int32_t Short(U address) {
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
+[[gnu::always_inline]] inline std::int32_t Short(::bof3::image::Va address) { return Short(::bof3::Img(address)); }
 void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
 void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutWord(unsigned char* p, U v) {
@@ -109,8 +112,8 @@ struct Rect {
 struct Packer {
     U shift_r, shift_g, shift_b, mask_r, mask_g, mask_b;
     Packer()
-        : shift_r(At(Gfx_PixelFormat_addr + 4)[0] & 31u), shift_g(At(Gfx_PixelFormat_addr + 8)[0] & 31u),
-          shift_b(At(Gfx_PixelFormat_addr + 0xC)[0] & 31u), mask_r(Gfx_PixelFormat[4]),
+        : shift_r(At(::bof3::Img(Gfx_PixelFormat_addr) + 4)[0] & 31u), shift_g(At(::bof3::Img(Gfx_PixelFormat_addr) + 8)[0] & 31u),
+          shift_b(At(::bof3::Img(Gfx_PixelFormat_addr) + 0xC)[0] & 31u), mask_r(Gfx_PixelFormat[4]),
           mask_g(Gfx_PixelFormat[5]), mask_b(Gfx_PixelFormat[6]) {}
     U operator()(U r, U g, U b) const {
         return ((r >> shift_r) & mask_r) | ((g >> shift_g) & mask_g) | ((b >> shift_b) & mask_b);
@@ -130,7 +133,7 @@ struct Packer {
 template <int Bits> void ConvertIndexed(void* dst, const void* src, const void* clut, int w, int h, int pitch) {
     constexpr U kPerLong = 32 / Bits;
     constexpr U kMask = (1u << Bits) - 1;
-    const bool wide = At(Gfx_PixelFormat_addr)[3] == 4;
+    const bool wide = At(::bof3::Img(Gfx_PixelFormat_addr))[3] == 4;
     const auto* table = static_cast<const unsigned char*>(clut);
     auto* d = static_cast<unsigned char*>(dst);
     U total = 0x100;
@@ -200,7 +203,7 @@ void Tex_Convert8(void* dst, const void* src, const void* clut, int w, int h, in
 // (render::StpTexels, armed only with DIV-0159), a cell with bit 15 set takes
 // no opaque bits - its colour with alpha clear, as Gfx_ConvertRow writes it.
 void Tex_Convert16(void* dst, const void* src, int w, int h, int pitch) {
-    const bool wide = At(Gfx_PixelFormat_addr)[3] == 4;
+    const bool wide = At(::bof3::Img(Gfx_PixelFormat_addr))[3] == 4;
     const Packer pack;
     const U opaque = g_direct_opaque != 0 ? static_cast<U>(Gfx_PixelFormat[7]) : 0;
     const bool stp = render::StpTexels();   // DIV-0160
@@ -312,6 +315,7 @@ U Source(U page, U mode, std::int32_t key_x, std::int32_t key_y) {
 }
 
 U Generation(U row_address) { return Long(row_address); }
+[[gnu::always_inline]] inline U Generation(::bof3::image::Va row_address) { return Generation(::bof3::Img(row_address)); }
 
 }  // namespace
 }  // namespace tex_page

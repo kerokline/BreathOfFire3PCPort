@@ -63,6 +63,7 @@ namespace at = effect_4f::at;
 using U = std::uint32_t;
 using LD = long double;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -74,6 +75,7 @@ U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 U SW(const unsigned char* p) { return static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(Word(p)))); }
 unsigned char& B(U a) { return At(a)[0]; }
+[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 void SetBits(unsigned char* to, U bits) { std::memcpy(to, &bits, 4); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
@@ -155,11 +157,11 @@ bool CountDown() {
     return s[9] == 0;
 }
 
-unsigned char* Drop(U i) { return At(EffectKind30_Shards_addr + i * at::kDropStride); }
+unsigned char* Drop(U i) { return At(::bof3::Img(EffectKind30_Shards_addr) + i * at::kDropStride); }
 unsigned char* Source(U i) { return At(at::kSources + i * at::kSourceStride); }
 unsigned char* Bar(U i) { return At(at::kBars + i * at::kBarStride); }
-unsigned char* Spark(U i) { return At(EffectKind30_Shards_addr + i * at::kSparkStride); }
-unsigned char* Shard(U i) { return At(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride); }
+unsigned char* Spark(U i) { return At(::bof3::Img(EffectKind30_Shards_addr) + i * at::kSparkStride); }
+unsigned char* Shard(U i) { return At(::bof3::Img(EffectKind30_Shards_addr) + 0xc0 + i * at::kShardStride); }
 
 // kind 0xB9's glow: group E4E's 0x4901D0 (point, size word, colour byte), raw
 // until it merges.

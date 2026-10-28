@@ -61,11 +61,15 @@ using move_script::Word;
 unsigned char* S() { return Sprite_Current; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
+[[gnu::always_inline]] inline U UL(::bof3::image::Va a) { return UL(::bof3::Img(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 void SetUL(U a, U v) { SetUL(At(a), v); }
+[[gnu::always_inline]] inline void SetUL(::bof3::image::Va a, U v) { SetUL(::bof3::Img(a), v); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 std::int32_t SW(U a) { return SW(At(a)); }
+[[gnu::always_inline]] inline std::int32_t SW(::bof3::image::Va a) { return SW(::bof3::Img(a)); }
 unsigned char& B(U a) { return At(a)[0]; }
+[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
@@ -196,7 +200,7 @@ extern "C" void __cdecl EffectKind3E_Start(void) {
 // by +2, a call, unbounded.
 extern "C" void __cdecl EffectKind3E_Bolts(void) {
     for (unsigned i = 0; i < 4; ++i) {
-        const unsigned char* const c = At(EffectKind3E_BoltCells_addr + 4 * i);
+        const unsigned char* const c = At(::bof3::Img(EffectKind3E_BoltCells_addr) + 4 * i);
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, static_cast<U>(c[0]) << 16 | 0x8000u);
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, static_cast<U>(c[1]) << 16 | 0x8000u);
         rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_18, static_cast<U>(c[2]) << 16 | 0x8000u);
@@ -486,7 +490,7 @@ extern "C" void __cdecl EffectKind40_Grow(void) {
 // original 0x4757F0 (0x2B bytes): the 32 shard records' in-use bytes cleared
 // through the cursor 0x67610C (left past the last).
 extern "C" void __cdecl EffectKind40_ShardsClear(void) {
-    SetUL(at::kShardCursor, EffectKind30_Shards_addr);
+    SetUL(at::kShardCursor, ::bof3::Img(EffectKind30_Shards_addr));
     for (unsigned n = at::kShardCount; n != 0; --n) {
         EffectKind40_ShardCursor[0] = 0;
         SetUL(at::kShardCursor, UL(at::kShardCursor) + at::kShardStride);
@@ -737,7 +741,7 @@ extern "C" void __cdecl EffectKind43_Setup(void) {
     auto* const so = rv::AsConst<records::EffectObject>(s);
     const long ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
     rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
-    for (unsigned i = 0; i < at::kSparkCount43; ++i) At(EffectKind30_Shards_addr + i * at::kSparkStride43)[0] = 0;
+    for (unsigned i = 0; i < at::kSparkCount43; ++i) At(::bof3::Img(EffectKind30_Shards_addr) + i * at::kSparkStride43)[0] = 0;
 }
 
 // original 0x476290 (0x32 bytes): the first spark record not in use (none:
@@ -779,7 +783,7 @@ extern "C" void __cdecl EffectKind43_AddSpark(void) {
 extern "C" unsigned char __cdecl EffectKind43_SparksRun(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char any = 0;
-    unsigned char* r = At(EffectKind30_Shards_addr);
+    unsigned char* r = At(::bof3::Img(EffectKind30_Shards_addr));
     for (unsigned n = at::kSparkCount43; n != 0; --n, r += at::kSparkStride43) {
         if (r[0] == 0) continue;
         switch (r[2]) {
@@ -931,7 +935,7 @@ extern "C" void __cdecl EffectKind6B_Store(void) {
     s = S();
     if (s[9] != 0) return;
     alignas(4) short rect[4] = {0x340, 0x100, EffectKind6B_Frame[2], EffectKind6B_Frame[3]};
-    SH_AT(void (__cdecl*)(const short*, void*), at::kStoreImage)(rect, At(EffectKind30_Shards_addr));
+    SH_AT(void (__cdecl*)(const short*, void*), at::kStoreImage)(rect, At(::bof3::Img(EffectKind30_Shards_addr)));
     NextState();
 }
 
@@ -955,7 +959,7 @@ extern "C" void __cdecl EffectKind6B_Scatter(void) {
     alignas(4) unsigned char o[12];
     SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(o));
     U pixel = EffectKind30_Shards_addr;
-    U particle = at::kPixels;
+    U particle = ::bof3::Img(at::kPixels);
     EffectKind6B_PixelCount = 0;
     unsigned char row = 0;
     if (EffectKind6B_Frame[3] <= 0) {
@@ -1007,7 +1011,7 @@ extern "C" void __cdecl EffectKind6B_Scatter(void) {
 // flagged 3 - live, waiting on its count; Sound_PlayEffect(0x200); +1 up.
 extern "C" void __cdecl EffectKind6B_Arm(void) {
     U n = EffectKind6B_PixelCount;
-    for (U p = at::kPixels; n != 0; --n, p += at::kPixelStride) At(p)[0] = 3;
+    for (U p = ::bof3::Img(at::kPixels); n != 0; --n, p += at::kPixelStride) At(p)[0] = 3;
     SH_CALL(Sound_PlayEffect)(0x200);
     NextState();
 }
@@ -1024,7 +1028,7 @@ extern "C" void __cdecl EffectKind6B_Fall(void) {
     unsigned char none = 1;
     if (EffectKind6B_PixelCount != 0) {
         U i = 0;
-        U particle = at::kPixels;
+        U particle = ::bof3::Img(at::kPixels);
         do {
             unsigned char* const p = At(particle);
             const unsigned char flags = p[0];
@@ -1084,7 +1088,7 @@ extern "C" void __cdecl EffectKind44_Start(void) {
     rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<std::uint32_t>(Sprite_Objects[1].height));
     const unsigned char* const s = S();
     auto* const so = rv::AsConst<records::EffectObject>(s);
-    SetUL(at::kRingCell, EffectKind30_Shards_addr);
+    SetUL(at::kRingCell, ::bof3::Img(EffectKind30_Shards_addr));
     SetUL(at::kShards, static_cast<std::uint32_t>(so->x));
     SetUL(at::kShards + 4, static_cast<std::uint32_t>(so->z));
     SetUL(at::kShards + 8, static_cast<std::uint32_t>(so->height) + 0x8000000u);
@@ -1093,7 +1097,7 @@ extern "C" void __cdecl EffectKind44_Start(void) {
     SetUL(at::kShards + 0x18, static_cast<std::uint32_t>(so->height));
     EffectKind30_Shards[0x22] = 0x20;
     EffectKind30_Shards[0x23] = 0;
-    SetWord(At(EffectKind30_Shards_addr + 0x20), 0);
+    SetWord(At(::bof3::Img(EffectKind30_Shards_addr) + 0x20), 0);
     SH_CALL(EffectKind44_SparksClear)();
     S()[9] = 0x10;
     NextState();
@@ -1298,7 +1302,7 @@ extern "C" void __cdecl EffectKind44_RingCone(const unsigned char* ring) {
 // eight times the in-use byte it points at cleared - the cursor never moves,
 // so only the first of the eight records is (docs/effect_2c.md section 7).
 extern "C" void __cdecl EffectKind44_SparksClear(void) {
-    SetUL(at::kSparkCursor, EffectKind30_Shards_addr + 0xfc);
+    SetUL(at::kSparkCursor, ::bof3::Img(EffectKind30_Shards_addr) + 0xfc);
     for (unsigned n = at::kSparkCount44; n != 0; --n) EffectKind44_SparkCursor[0] = 0;
 }
 

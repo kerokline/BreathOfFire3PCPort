@@ -101,6 +101,8 @@ U Place(const char* who, U table, unsigned count) {
                     who, (int)i, count, (unsigned)table);
     return static_cast<U>(i);
 }
+// The table only names itself in the message: its VA, not a place.
+[[gnu::always_inline]] inline U Place(const char* who, ::bof3::image::Va table, unsigned count) { return Place(who, table.v, count); }
 
 // The leader against the record's cell (+0x36 x, +0x3A z, s16 cells; the
 // leader's point 16.16). Along the axis +8 picks (z when set), the leader's
@@ -273,10 +275,10 @@ extern "C" void __cdecl EffectKind18Sub27_Start(void) {
     unsigned char* const s = S();
     s[8] = rv::As<records::EffectObject>(s)->z_whole == 0 ? 1 : 0;
     const U i = Place("EffectKind18Sub27_Start", at::kSub27Cell, at::kSub27Places);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, B(at::kSub27Cell + 2 * i));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, B(at::kSub27Cell + 2 * i + 1));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, W(at::kSub27Height + 2 * i));
-    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, W(at::kSub27Texture + 2 * i));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, B(::bof3::Img(at::kSub27Cell.v) + 2 * i));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, B(::bof3::Img(at::kSub27Cell.v) + 2 * i + 1));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, W(::bof3::Img(at::kSub27Height.v) + 2 * i));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, W(::bof3::Img(at::kSub27Texture.v) + 2 * i));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0);
     ++s[2];
     if (Near(s, s[8] != 0)) {
@@ -354,7 +356,7 @@ extern "C" void __cdecl EffectKind18Sub28_Start(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, 0xFA40);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0);
     ++S()[2];
-    const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x54);
+    const unsigned char set = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x54);
     if (set == 0) {
         S()[2] = 5;
         SH_CALL(EffectKind18Sub28_Draw)();
@@ -400,7 +402,7 @@ extern "C" void __cdecl EffectKind18Sub28_Close(void) {
 // original 0x5094A0 (state 5): story flag 0x54 set: the sound 0x200 unless
 // Field_Request, +2 = 2. The draw.
 extern "C" void __cdecl EffectKind18Sub28_WaitFlag(void) {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x54) != 0) {
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x54) != 0) {
         if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(0x200);
         S()[2] = 2;
     }
@@ -428,8 +430,8 @@ extern "C" void __cdecl EffectKind18Sub42_Draw(unsigned variant, int height) {
     if (variant >= at::kSub42Variants)
         bof3::Fatal("EffectKind18Sub42_Draw: variant %u, past the two piece lists of 0x%X - the original reads the "
                     "tables after them (docs/effect_5f.md section 6)",
-                    variant, (unsigned)at::kSub42Pieces);
-    U piece = at::kSub42Pieces + 0x18 * variant;
+                    variant, at::kSub42Pieces.v);
+    U piece = ::bof3::Img(at::kSub42Pieces.v) + 0x18 * variant;
     for (unsigned n = 0; n < at::kSub42PieceCount; ++n, piece += 4) {
         unsigned char* s = S();
         const U dx = B(piece), dz = B(piece + 1);
@@ -438,12 +440,12 @@ extern "C" void __cdecl EffectKind18Sub42_Draw(unsigned variant, int height) {
         DrawMode();
         SH_CALL(MapView_LinkPrimAt)(xx, zz, 1, 0xC);
         unsigned char* const p = Quad();
-        const U lift = W(at::kSub42Lift + 2 * variant);
+        const U lift = W(::bof3::Img(at::kSub42Lift.v) + 2 * variant);
         const U shape = B(piece + 2);
         if (shape >= at::kSub42ShapeCount)
             bof3::Fatal("EffectKind18Sub42_Draw: shape %u, past the three of 0x%X (docs/effect_5f.md section 6)",
-                        (unsigned)shape, (unsigned)at::kSub42Shapes);
-        U point = at::kSub42Shapes + 12 * shape;
+                        (unsigned)shape, at::kSub42Shapes.v);
+        U point = ::bof3::Img(at::kSub42Shapes.v) + 12 * shape;
         for (unsigned j = 0; j < 4; ++j, point += 3) {
             s = S();
             unsigned char* const v = Vertex(Prim_VertexScratch_addr + 8 * j);
@@ -452,7 +454,7 @@ extern "C" void __cdecl EffectKind18Sub42_Draw(unsigned variant, int height) {
             rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, (static_cast<U>(S8(B(point + 2))) << 7) - static_cast<U>(height) + lift);
         }
         Project(p);
-        SH_CALL(Prim_SetTexture)(((B(at::kSub42ShapeTexture + shape) + 0x1200u) << 16) + B(piece + 3), p, 1);
+        SH_CALL(Prim_SetTexture)(((B(::bof3::Img(at::kSub42ShapeTexture.v) + shape) + 0x1200u) << 16) + B(piece + 3), p, 1);
         SH_CALL(MapView_LinkPrimAt)(xx, zz, 1, 0x48);
     }
 }
@@ -494,7 +496,7 @@ extern "C" unsigned char __cdecl EffectKind18Sub42_MemberNear(long x, long z) {
 extern "C" void __cdecl EffectKind18Sub42_Start(void) {
     unsigned char* const s = S();
     const U i = Place("EffectKind18Sub42_Start", at::kSub42Places, at::kSub42PlaceCount);
-    const U place = at::kSub42Places + 4 * i;
+    const U place = ::bof3::Img(at::kSub42Places.v) + 4 * i;
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, B(place));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, B(place + 1));
     s[8] = At(place + 2)[0];
@@ -515,7 +517,7 @@ extern "C" void __cdecl EffectKind18Sub42_Start(void) {
 // draw. Otherwise nothing, not even the draw.
 extern "C" void __cdecl EffectKind18Sub42_WaitFlag(void) {
     unsigned char* s = S();
-    const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), s[0xB]);
+    const unsigned char set = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), s[0xB]);
     s = S();
     if (static_cast<unsigned char>(set ^ s[8]) == 0) return;
     const unsigned char who = SH_CALL(EffectKind18Sub42_MemberNear)(static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) | 0x8000u),
@@ -559,10 +561,10 @@ extern "C" void __cdecl EffectKind18Sub42_Mark(void) {
         const U x = static_cast<U>(S16(Word(s + 0x36))) + b + flat * i;
         const U z = static_cast<U>(S16(Word(s + 0x3A))) + flat + b * i;
         const U width = AreaMap_Header[0];
-        const U cell = x + width * z + W(at::kMapCellBase) * 2;
+        const U cell = x + width * z + W(::bof3::Img(at::kMapCellBase.v)) * 2;
         const U word = Word(AreaMap_Header + cell * 2);
         const U half = static_cast<U>(static_cast<std::int32_t>(static_cast<std::uint32_t>(AreaMap_Header[1]) * width + 1) / 2);
-        const U texture = at::kMapTextures + 4 * (half + W(at::kMapCellBase) + word);
+        const U texture = ::bof3::Img(at::kMapTextures.v) + 4 * (half + W(::bof3::Img(at::kMapCellBase.v)) + word);
         const U item = static_cast<U>(SH_CALL(MapView_ItemAt)(static_cast<long>(x), static_cast<long>(z)));
         s = S();
         if (item >= draw_pool::Count())
@@ -592,7 +594,7 @@ extern "C" void __cdecl EffectKind18Sub42_Mark(void) {
 // Otherwise nothing.
 extern "C" void __cdecl EffectKind18Sub42_WaitFlagBack(void) {
     unsigned char* s = S();
-    const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), s[0xB]);
+    const unsigned char set = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), s[0xB]);
     s = S();
     const U clear = set == 0 ? 1u : 0u;
     if (clear == s[8]) return;
@@ -645,7 +647,7 @@ extern "C" void __cdecl EffectKind18Sub29_Draw(void) {
         LinkAtRecord(-1, 0xC);
         unsigned char* const p = Quad();
         s = S();
-        const U d = static_cast<U>(S8(B(at::kSub29Slide + k)));
+        const U d = static_cast<U>(S8(B(::bof3::Img(at::kSub29Slide.v) + k)));
         if (s[8] != 0) {
             const U a = ((k + rv::As<records::EffectObject>(s)->x_whole) << 7) - rv::As<records::EffectWork>(s)->work_30 * d - 0x4040u;
             Prim_VertexScratch[2].x = a;
@@ -678,13 +680,13 @@ void Start29(const char* who) {
     unsigned char* s = S();
     s[8] = rv::As<records::EffectObject>(s)->z_whole == 0 ? 1 : 0;
     const U i = Place(who, at::kSub29Cell, at::kSub29Places);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, B(at::kSub29Cell + 2 * i));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, B(at::kSub29Cell + 2 * i + 1));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, B(::bof3::Img(at::kSub29Cell.v) + 2 * i));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, B(::bof3::Img(at::kSub29Cell.v) + 2 * i + 1));
     s = S();
     const long e = Elevation(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
     s = S();
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, 0u - Half(e) - W(at::kSub29Height + 2 * i));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_20, UL(at::kSub29Texture + 4 * i));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, 0u - Half(e) - W(::bof3::Img(at::kSub29Height.v) + 2 * i));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_20, UL(::bof3::Img(at::kSub29Texture.v) + 4 * i));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0);
     ++s[2];
 }
@@ -767,7 +769,7 @@ extern "C" void __cdecl EffectKind18Sub49_WaitCue(void) {
         if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(0x200);
         ++S()[2];
     }
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x8F) != 0) StepIfNear(false);
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x8F) != 0) StepIfNear(false);
     SH_CALL(EffectKind18Sub29_Draw)();
 }
 
@@ -807,8 +809,8 @@ extern "C" void __cdecl EffectKind18Sub4B_Run(void) {
         s = S();
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, (r & 0xFF) + ((v * 3 + 6) << 9));
         const U pick = rv::As<records::EffectObject>(s)->x_frac == 0 ? 1u : 0u;
-        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, B(at::kSub4BBounds + 2 * pick));
-        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, B(at::kSub4BBounds + 2 * pick + 1));
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, B(::bof3::Img(at::kSub4BBounds.v) + 2 * pick));
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, B(::bof3::Img(at::kSub4BBounds.v) + 2 * pick + 1));
         unsigned char* const z = S() + 0x3A;
         const U r2 = static_cast<U>(SH_CALL(Rand)());
         SetWord(z, Word(z) + (r2 & 7));
@@ -876,7 +878,7 @@ extern "C" void __cdecl EffectKind18Sub2A_Draw(void) {
     for (U k = 0; k < 2; ++k, --page) {
         unsigned char* const p = Quad();
         s = S();
-        const U d = static_cast<U>(S8(B(at::kSub2ASlide + k)));
+        const U d = static_cast<U>(S8(B(::bof3::Img(at::kSub2ASlide.v) + k)));
         if (s[8] != 0) {
             const U a = rv::As<records::EffectWork>(s)->work_30 * d + (Word(s + 0x36) << 7) - 0x3F40u;
             Prim_VertexScratch[2].x = a;
@@ -908,12 +910,12 @@ extern "C" void __cdecl EffectKind18Sub2A_Start(void) {
     unsigned char* s = S();
     s[8] = rv::As<records::EffectObject>(s)->z_whole == 0 ? 1 : 0;
     const U i = Place("EffectKind18Sub2A_Start", at::kSub2ACell, at::kSub2APlaces);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, B(at::kSub2ACell + 2 * i));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, B(at::kSub2ACell + 2 * i + 1));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, B(::bof3::Img(at::kSub2ACell.v) + 2 * i));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, B(::bof3::Img(at::kSub2ACell.v) + 2 * i + 1));
     s = S();
     const long e = Elevation(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
     s = S();
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, 0u - Half(e) - W(at::kSub2AHeight + 2 * i));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, 0u - Half(e) - W(::bof3::Img(at::kSub2AHeight.v) + 2 * i));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0);
     ++s[2];
     if (Near(s, s[8] != 0)) {
@@ -1004,7 +1006,7 @@ extern "C" void __cdecl EffectKind18Sub3C_Draw(int edge) {
             rv::Store<std::uint32_t>(rv::As<records::SVector>(v2)->z, t);
         }
         Project(p);
-        SH_CALL(Prim_SetTexture)(UL(at::kSub3CTextures + 4 * k), p, 1);
+        SH_CALL(Prim_SetTexture)(UL(::bof3::Img(at::kSub3CTextures.v) + 4 * k), p, 1);
         LinkAtRecord(2, 0x48);
     }
 }
@@ -1019,7 +1021,7 @@ extern "C" void __cdecl EffectKind18Sub3C_Start(void) {
 // original 0x50ACF0 (state 1): story flag 0x67 set: the sound 0x200 unless
 // Field_Request, +2 up; the draw on the ground.
 extern "C" void __cdecl EffectKind18Sub3C_WaitFlag(void) {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x67) != 0) {
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x67) != 0) {
         if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(0x200);
         ++S()[2];
     }

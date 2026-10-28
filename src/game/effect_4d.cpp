@@ -62,6 +62,7 @@ namespace {
 namespace at = effect_4d::at;
 using U = std::uint32_t;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -77,7 +78,7 @@ U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // imul of two whole registers: the low 32 bits.
 U Mul(U a, std::int32_t b) { return a * static_cast<U>(b); }
-unsigned char* Debris(unsigned i) { return At(EffectKind30_Shards_addr + 0xc0 + at::kDebrisStride * i); }
+unsigned char* Debris(unsigned i) { return At(::bof3::Img(EffectKind30_Shards_addr) + 0xc0 + at::kDebrisStride * i); }
 unsigned char* Spark(unsigned i) { return EffectKind30_Shards + at::kSparkStride * i; }
 
 // --- x87 as the original has it (the game's control word: round to nearest, 53
@@ -985,7 +986,7 @@ extern "C" void __cdecl EffectKind9A_Start(void) {
 // read again, the kept record's +1 and +9 set, Sprite_Current put back.
 void Kind9ANudge(unsigned offset, U step, unsigned char state, unsigned char count) {
     unsigned char* const kept = Sprite_Current;
-    Sprite_Current = At(Sprite_Objects_addr + 0xa4);
+    Sprite_Current = At(::bof3::Img(Sprite_Objects_addr) + 0xa4);
     for (unsigned n = 4; n != 0; --n) {
         unsigned char* const o = Sprite_Current;
         SetUL(o + offset, UL(o + offset) + step);

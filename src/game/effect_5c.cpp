@@ -69,6 +69,7 @@ namespace {
 namespace at = effect_5c::at;
 using U = std::uint32_t;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -142,6 +143,7 @@ unsigned char Sub50Byte(const char* who, U table, unsigned index) {
                     who, index, at::kSub50FlagCount, (unsigned)table);
     return At(table + index)[0];
 }
+[[gnu::always_inline]] inline unsigned char Sub50Byte(const char* who, ::bof3::image::Va table, unsigned index) { return Sub50Byte(who, ::bof3::Img(table), index); }
 
 // Effect_FindFree's record (answer & 0xFF, as the originals widen it): a Fatal
 // on an answer past the twenty (the callee answers 0xFF or 0..19; the original
@@ -276,7 +278,7 @@ extern "C" void __cdecl EffectKind18Sub50_Start(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, (0u - HalfOf(ground)) - Word(At(AddressOf(EffectKind18Sub50_Heights) + 2 * v)));
     s[0xB] = static_cast<unsigned char>(s[0xB] + 1);
     const unsigned char flag = Sub50Byte(kWho, AddressOf(EffectKind18Sub50_Flags), s[0xB]);
-    const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), flag);
+    const unsigned char set = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x48), flag);
     s = S();
     if (set) {
         s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -293,13 +295,13 @@ extern "C" void __cdecl EffectKind18Sub50_Start(void) {
 extern "C" void __cdecl EffectKind18Sub50_Shine(void) {
     static const char kWho[] = "EffectKind18Sub50_Shine";
     unsigned char* s = S();
-    if (!SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), Sub50Byte(kWho, AddressOf(EffectKind18Sub50_Flags), s[0xB]))) {
+    if (!SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x48), Sub50Byte(kWho, AddressOf(EffectKind18Sub50_Flags), s[0xB]))) {
         s = S();
         s[9] = 9;
         s[2] = static_cast<unsigned char>(s[2] + 1);
     }
     s = S();
-    const U light = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), Sub50Byte(kWho, at::kSub50Lights, s[0xB])) & 0xFFu;
+    const U light = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x48), Sub50Byte(kWho, at::kSub50Lights, s[0xB])) & 0xFFu;
     s = S();
     SH_CALL(EffectKind18Sub50_DrawWall)(s[0xB] + light * 4u + 1u, 0x40);
     SH_CALL(EffectKind18Sub50_DrawLine)();
@@ -317,7 +319,7 @@ extern "C" void __cdecl EffectKind18Sub50_Sink(void) {
     s = S();
     const U height = static_cast<U>(s[9]) << 3;
     const unsigned char flag = Sub50Byte(kWho, at::kSub50Lights, s[0xB]);
-    const U light = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), flag) & 0xFFu;
+    const U light = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x48), flag) & 0xFFu;
     s = S();
     SH_CALL(EffectKind18Sub50_DrawWall)(s[0xB] + light * 4u + 1u, height);
     SH_CALL(EffectKind18Sub50_DrawLine)();
@@ -328,7 +330,7 @@ extern "C" void __cdecl EffectKind18Sub50_Sink(void) {
 // wall.
 extern "C" void __cdecl EffectKind18Sub50_WaitSet(void) {
     unsigned char* s = S();
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), Sub50Byte("EffectKind18Sub50_WaitSet", AddressOf(EffectKind18Sub50_Flags), s[0xB]))) {
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x48), Sub50Byte("EffectKind18Sub50_WaitSet", AddressOf(EffectKind18Sub50_Flags), s[0xB]))) {
         s = S();
         s[9] = 9;
         s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -349,7 +351,7 @@ extern "C" void __cdecl EffectKind18Sub50_Flash(void) {
     LinkAtRecord(0xC);
     s = S();
     const unsigned char flag = Sub50Byte(kWho, at::kSub50Lights, s[0xB]);
-    const U light = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), flag) & 0xFFu;
+    const U light = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x48), flag) & 0xFFu;
     s = S();
     SH_CALL(EffectKind18Sub50_DrawWall)(s[0xB] + light * 4u + 1u, 0x40);
     unsigned char* const prim = Gfx_PacketNext;
@@ -474,7 +476,7 @@ extern "C" void __cdecl EffectKind18Sub10_Run(void) {
 // 0xFF00, +2 = 3. The panel either way.
 extern "C" void __cdecl EffectKind18Sub10_Start(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0);
-    if (!SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), 0xF)) {
+    if (!SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x48), 0xF)) {
         Sub10Cells(0x52);
         S()[2] = 5;
         SH_CALL(EffectKind18Sub10_DrawPanel)();
@@ -542,7 +544,7 @@ extern "C" void __cdecl EffectKind18Sub10_SlideIn(void) {
 // original 0x501E20 (sub-state 5): row-9 flag 0xF set: the two cells' map bytes
 // 0xA1, +2 = 1. A tail jump to the panel.
 extern "C" void __cdecl EffectKind18Sub10_WaitFlag(void) {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), 0xF)) {
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x48), 0xF)) {
         Sub10Cells(0xA1);
         S()[2] = 1;
     }
@@ -875,11 +877,11 @@ namespace {
 // Sub-kind 0x11's end: story flag 0x22, or 0x21 with Cond_ByteFA (s8) at most
 // 7 - in the original's order; sub-kind 0x12's: story flag 0x20.
 bool Sub11Done() {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x22)) return true;
-    if (!SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x21)) return false;
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x22)) return true;
+    if (!SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x21)) return false;
     return Cond_ByteFA <= 7;
 }
-bool Sub12Done() { return SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x20) != 0; }
+bool Sub12Done() { return SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x20) != 0; }
 // The map bytes of cells (0x45, 0x3C) and (0x46, 0x3C).
 void TileCells(unsigned char v) {
     SetCell(MapWidth() * 60u + 0x45u, v);
@@ -1258,10 +1260,10 @@ extern "C" void __cdecl EffectKind18Sub15_LinkLayer(unsigned size) {
             bof3::Log("draworder   packet pool full: the sky's %u-byte primitive skipped (EffectKind18Sub15_LinkLayer)", bytes);
         return;
     }
-    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(DrawLayers_addr + 0x2f4 + 8 * buffer)))),
+    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8 * buffer)))),
                           AddressOf(next));
     unsigned char* const now = Gfx_PacketNext;
-    SetUL(At(DrawLayers_addr + 0x2f4 + 8u * Gfx_BufferIndex), AddressOf(now));
+    SetUL(At(::bof3::Img(DrawLayers_addr) + 0x2f4 + 8u * Gfx_BufferIndex), AddressOf(now));
     Gfx_PacketNext = now + bytes;
 }
 

@@ -94,6 +94,7 @@ template <typename... T> U PickOf(T... v) {
     return sh::Pick(values, sizeof...(v));
 }
 unsigned char* M(U a) { return sh::Mem(a); }
+[[gnu::always_inline]] inline unsigned char* M(::bof3::image::Va a) { return M(::bof3::Img(a)); }
 void Put16(U a, U v) {
     const auto w = static_cast<std::uint16_t>(v);
     std::memcpy(M(a), &w, 2);
@@ -201,7 +202,7 @@ const sh::DataTable kTables[] = {
 // sprites, the input cells, the buttons, the pools, the save block's
 // 0x904098..0x904160 with 0x9040EC and the extra slots): category 3's id list.
 const sh::Region kRegions[] = {
-    {at::kAccessoryIds, 0x80},
+    {::bof3::Img(at::kAccessoryIds), 0x80},
 };
 
 // --- the seeds ----------------------------------------------------------------
@@ -213,7 +214,7 @@ unsigned g_nA, g_nB;
 void Kinds() {
     if (g_nA || g_nB) return;
     for (unsigned id = 0; id < 256; ++id) {
-        const unsigned char k = *reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(at::kAccessoryKind + 24 * id));
+        const unsigned char k = *reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(at::kAccessoryKind + 24 * id)));
         if (k == 0xA) g_kindA[g_nA++] = static_cast<unsigned char>(id);
         if (k == 0xB) g_kindB[g_nB++] = static_cast<unsigned char>(id);
     }
@@ -254,7 +255,7 @@ void Menu() {
     // the list's kind-0xA count, which the confirm's scroll pull compares with
     U count = 0;
     for (unsigned i = 0; i < 0x80; ++i)
-        if (*reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(at::kAccessoryKind + 24 * M(at::kAccessoryIds)[i])) == 0xA) ++count;
+        if (*reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(at::kAccessoryKind + 24 * M(at::kAccessoryIds)[i]))) == 0xA) ++count;
     const U cursor = Counter();
     Put32(Effect_Objects_addr + 0x300 + 0xC, cursor);
     Put32(Effect_Objects_addr + 0x300 + 0x18, PickOf(Counter(), cursor + 1, cursor + 2, cursor + 3, cursor));
@@ -275,7 +276,7 @@ void Menu() {
     if (at36 >= 0 && at36 < 0x80 && sh::Half()) M(at::kAccessoryIds)[at36] = IdOf(1);
     if (at3A >= 0 && at3A < 0x80 && sh::Half()) M(at::kAccessoryIds)[at3A] = IdOf(0);
     M(at::kExtraAccessory)[0] = static_cast<unsigned char>(PickOf(0, sh::Next(), IdOf(1), 0));
-    const unsigned char under = *reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(at::kAccessoryIds + static_cast<U>(static_cast<int>(at3A))));
+    const unsigned char under = *reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(at::kAccessoryIds + static_cast<U>(static_cast<int>(at3A)))));
     M(CharStats_ExtraItem_addr)[0] = static_cast<unsigned char>(PickOf(0, sh::Next(), under, under, IdOf(0)));
     Buttons();
 }
@@ -356,7 +357,7 @@ void Disturb(U h) {
     case 3: Put16(Effect_Objects_addr + 0x300 + 0x38, v >> 3); break;
     case 4: Put16(0x7E1BEC, v >> 5); break;
     case 5: Put16((v & 1) ? 0x903590 : 0x90358E, 1u << ((v >> 1) % 16)); break;
-    case 6: M((v & 1) ? CharStats_ExtraItem_addr : at::kExtraAccessory)[0] = static_cast<unsigned char>(v >> 3); break;
+    case 6: M((v & 1) ? ::bof3::Img(CharStats_ExtraItem_addr) : ::bof3::Img(at::kExtraAccessory))[0] = static_cast<unsigned char>(v >> 3); break;
     case 7: M(at::kAccessoryIds)[v % 0x80] = static_cast<unsigned char>(v >> 7); break;
     case 8: M(at::kKindCounts)[v % 0x20] = static_cast<unsigned char>(v >> 5); break;
     case 9: {

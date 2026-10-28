@@ -48,6 +48,7 @@ namespace {
 namespace at = effect_2e::at;
 using U = std::uint32_t;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -76,6 +77,7 @@ void StoreSum(unsigned char* out, U whole, const unsigned char* f) {
 void Copy12(unsigned char* to, const void* from) { std::memcpy(to, from, 12); }
 // The pointer a .data cell holds.
 unsigned char* Cell(U cell) { return At(UL(At(cell))); }
+[[gnu::always_inline]] inline unsigned char* Cell(::bof3::image::Va cell) { return Cell(::bof3::Img(cell)); }
 
 // mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + byte]; jmp [table +
 // eax * 4]: the table's `entries` handlers read in place (the fuzz swaps the
@@ -138,12 +140,12 @@ void AtLeader() {
 void SpiralStart(unsigned turn) {
     unsigned char* s = S();
     Effect2e_SpiralPtr = EffectKind30_Shards_addr + 0x524;
-    SetUL(At(EffectKind30_Shards_addr + 0x524), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x));
-    SetUL(At(EffectKind30_Shards_addr + 0x524 + 4), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
+    SetUL(At(::bof3::Img(EffectKind30_Shards_addr) + 0x524), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x));
+    SetUL(At(::bof3::Img(EffectKind30_Shards_addr) + 0x524 + 4), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
     const U height = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height) + 0x2000000u;
     Effect2e_SpiralTurn = turn;
-    SetUL(At(EffectKind30_Shards_addr + 0x524 + 8), height);
-    SH_AT(void (__cdecl*)(unsigned char*), at::kSpiralInit)(At(EffectKind30_Shards_addr + 0x524));
+    SetUL(At(::bof3::Img(EffectKind30_Shards_addr) + 0x524 + 8), height);
+    SH_AT(void (__cdecl*)(unsigned char*), at::kSpiralInit)(At(::bof3::Img(EffectKind30_Shards_addr) + 0x524));
     s = S();
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, 0x28);
     NextStep();
@@ -162,8 +164,8 @@ void SpiralTurn(unsigned turn) {
 
 // State 12's frame: the burst record stepped (0x4794D0) and drawn (0x4796B0).
 void BurstFrame() {
-    SH_AT(void (__cdecl*)(unsigned char*), at::kBurstStep)(At(EffectKind30_Shards_addr + 0xe0));
-    SH_AT(void (__cdecl*)(unsigned char*), at::kBurstDraw)(At(EffectKind30_Shards_addr + 0xe0));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kBurstStep)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kBurstDraw)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
 }
 
 // A draw mode: Gpu_GetTPage(0, 1, x, y) into Gpu_SetDrawMode(packet, 0, dtd,
@@ -198,9 +200,9 @@ extern "C" void __cdecl EffectKind48_State7_Start(void) {
     auto* const so = rv::As<records::EffectObject>(s);
     Effect2d_DustAnchor = Effect2e_RingRecord_addr;
     Effect2e_RingRecord = static_cast<std::uint32_t>(so->x);
-    SetUL(At(Effect2e_RingRecord_addr + 4), static_cast<std::uint32_t>(so->z));
-    SetUL(At(Effect2e_RingRecord_addr + 8), static_cast<std::uint32_t>(so->height));
-    SetWord(At(Effect2e_RingRecord_addr + 0x10), 0);
+    SetUL(At(::bof3::Img(Effect2e_RingRecord_addr) + 4), static_cast<std::uint32_t>(so->z));
+    SetUL(At(::bof3::Img(Effect2e_RingRecord_addr) + 8), static_cast<std::uint32_t>(so->height));
+    SetWord(At(::bof3::Img(Effect2e_RingRecord_addr) + 0x10), 0);
     s[9] = 0;
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x5F);
     NextStep();
@@ -367,7 +369,7 @@ extern "C" void __cdecl EffectKind48_State12_Run(void) {
 // stepped 32 times (0x4794D0); when +6 is set Sound_PlayEffect(0x203); +2 up.
 extern "C" void __cdecl EffectKind48_State12_Start(void) {
     SetWord(At(at::kBurstSize), 0xC0);
-    for (int i = 0; i < 0x20; ++i) SH_AT(void (__cdecl*)(unsigned char*), at::kBurstStep)(At(EffectKind30_Shards_addr + 0xe0));
+    for (int i = 0; i < 0x20; ++i) SH_AT(void (__cdecl*)(unsigned char*), at::kBurstStep)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
     if (S()[6] != 0) SH_CALL(Sound_PlayEffect)(0x203);
     NextStep();
 }
@@ -451,7 +453,7 @@ extern "C" long __cdecl EffectAngle_Mean(unsigned a, unsigned b) {
 // the light (32-bit), when above 0 the square root (0x5A7A90) at most 0xFFF,
 // sar 7, else 0. al 0.
 extern "C" unsigned char __cdecl EffectSphere_Build(void) {
-    unsigned char* v = At(Effect2e_SphereVerts_addr);
+    unsigned char* v = At(::bof3::Img(Effect2e_SphereVerts_addr));
     SetWord(v, 0);
     SetWord(v + 2, 0);
     SetWord(v + 4, 0x1000);
@@ -493,12 +495,12 @@ extern "C" unsigned char __cdecl EffectSphere_Build(void) {
         const U e = k + 1 < 0x20 ? k + 1 : 0;
         quad(0x1C1 + k, 0x1C1 + e, 0x1E1, 0x1E1);
     }
-    unsigned char* const light = At(Effect2e_SphereLight_addr);
+    unsigned char* const light = At(::bof3::Img(Effect2e_SphereLight_addr));
     SetUL(light, 0);
     SetUL(light + 4, 0x1000);
     SetUL(light + 8, 0x1000);
     SH_CALL(Gte_VectorNormal)(reinterpret_cast<const long*>(light), reinterpret_cast<long*>(light));
-    const unsigned char* vert = At(Effect2e_SphereVerts_addr);
+    const unsigned char* vert = At(::bof3::Img(Effect2e_SphereVerts_addr));
     unsigned char* shade = At(at::kSphereShades);
     for (unsigned i = 0; i < at::kSphereVertCount; ++i, vert += 8, ++shade) {
         const U dot = SW(vert + 4) * UL(light + 8) + SW(vert) * UL(light) + SW(vert + 2) * UL(light + 4);
@@ -534,7 +536,7 @@ unsigned SphereVertex(U n) {
 // vertex's shade (r = g = b), committed 0x44. al 0.
 extern "C" unsigned char __cdecl EffectSphere_Draw(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
-    const unsigned char* v = At(Effect2e_SphereVerts_addr);
+    const unsigned char* v = At(::bof3::Img(Effect2e_SphereVerts_addr));
     for (unsigned i = 0; i < at::kSphereVertCount; ++i, v += 8) {
         const unsigned char* const s = S();
         long point[3];
@@ -597,7 +599,7 @@ extern "C" void __cdecl EffectKind4A_Follow(void) {
     }
     SH_CALL(EffectKind4A_TrailStep)();
     SH_CALL(EffectKind4A_TrailDraw)();
-    SH_CALL(EffectKind4A_DrawGlow)(reinterpret_cast<const long*>(At(EffectKind30_Shards_addr)), 0x80, 0x80, 0);
+    SH_CALL(EffectKind4A_DrawGlow)(reinterpret_cast<const long*>(At(::bof3::Img(EffectKind30_Shards_addr))), 0x80, 0x80, 0);
     SH_CALL(Gte_PopMatrix)();
     unsigned char* t;
     if (!CountDownC(&t)) return;
@@ -613,7 +615,7 @@ extern "C" void __cdecl EffectKind4A_TrailInit(void) {
     Effect2e_TrailTurn = 0;
     Effect2e_TrailSpin = 0;
     for (unsigned i = 0; i < at::kTrailCount; ++i) {
-        unsigned char* const p = At(EffectKind30_Shards_addr + at::kTrailStride * i);
+        unsigned char* const p = At(::bof3::Img(EffectKind30_Shards_addr) + at::kTrailStride * i);
         SetUL(p, static_cast<std::uint32_t>(so->x));
         rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(p)->z, static_cast<std::uint32_t>(so->z));
         rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(p)->height, static_cast<std::uint32_t>(so->height));
@@ -631,10 +633,10 @@ extern "C" void __cdecl EffectKind4A_TrailInit(void) {
 // c, height - (s << 8).
 extern "C" void __cdecl EffectKind4A_TrailStep(void) {
     for (int i = static_cast<int>(at::kTrailCount) - 2; i >= 0; --i)
-        std::memcpy(At(EffectKind30_Shards_addr + at::kTrailStride * (i + 1)), At(EffectKind30_Shards_addr + at::kTrailStride * i), at::kTrailStride);
+        std::memcpy(At(::bof3::Img(EffectKind30_Shards_addr) + at::kTrailStride * (i + 1)), At(::bof3::Img(EffectKind30_Shards_addr) + at::kTrailStride * i), at::kTrailStride);
     const U frame = Frame_Counter;
     const unsigned char* s = S();
-    unsigned char* const head = At(EffectKind30_Shards_addr);
+    unsigned char* const head = At(::bof3::Img(EffectKind30_Shards_addr));
     SetUL(head, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x));
     rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(head)->z, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
     const U bob = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(~(frame << 7) & 0xFFFFu)));
@@ -643,11 +645,11 @@ extern "C" void __cdecl EffectKind4A_TrailStep(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(head)->height, (bob << 10) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
     rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(head)->angle, Effect2e_TrailTurn);
     if (spin != 0) {
-        AddWord(At(Effect2e_TrailTurn_addr), 0x40);
+        AddWord(At(::bof3::Img(Effect2e_TrailTurn_addr)), 0x40);
         if (Effect2e_TrailTurn == 0) Effect2e_TrailSpin = 0;
     }
     for (unsigned i = 0; i < at::kTrailCount; ++i) {
-        unsigned char* const p = At(EffectKind30_Shards_addr + at::kTrailStride * i);
+        unsigned char* const p = At(::bof3::Img(EffectKind30_Shards_addr) + at::kTrailStride * i);
         const U c = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(rv::As<records::EffectTrailPoint>(p)->angle))) << 3;
         const U n = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(rv::As<records::EffectTrailPoint>(p)->angle))) << 3;
         const U x = UL(p);
@@ -674,8 +676,8 @@ extern "C" void __cdecl EffectKind4A_TrailDraw(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     float a[3];
     float b[3];
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(EffectKind30_Shards_addr + 0x10)), a);
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(EffectKind30_Shards_addr + 0x20)), b);
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(::bof3::Img(EffectKind30_Shards_addr) + 0x10)), a);
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(::bof3::Img(EffectKind30_Shards_addr) + 0x20)), b);
     unsigned char red = 0x40;
     unsigned char half = 0x20;
     U edge = EffectKind30_Shards_addr + 0x20;

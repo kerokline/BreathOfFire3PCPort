@@ -54,6 +54,7 @@ namespace {
 namespace at = effect_2g::at;
 using U = std::uint32_t;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -62,8 +63,11 @@ using move_script::Word;
 unsigned char* S() { return Sprite_Current; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
+[[gnu::always_inline]] inline U UL(::bof3::image::Va a) { return UL(::bof3::Img(a)); }
 U W(U a) { return Word(At(a)); }
+[[gnu::always_inline]] inline U W(::bof3::image::Va a) { return W(::bof3::Img(a)); }
 unsigned char& B(U a) { return *At(a); }
+[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 std::int32_t S16(U v) { return static_cast<std::int16_t>(v & 0xFFFFu); }
 std::int32_t S8(unsigned char v) { return static_cast<signed char>(v); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -201,9 +205,9 @@ extern "C" void __cdecl EffectKind66_Close(void) {
 extern "C" void __cdecl EffectKind66_Message(void) {
     if (W(at::kMessageWord) == 0xFFFF) return;
     SH_CALL(MsgBox_FrameTask)();
-    const unsigned char state = B(bof3::addr::MsgBoxState);
+    const unsigned char state = B(::bof3::Img(bof3::addr::MsgBoxState));
     if (state == 2) {
-        B(bof3::addr::MsgBoxState) = 7;
+        B(::bof3::Img(bof3::addr::MsgBoxState)) = 7;
         Msgbox_Delay = 0xA;
         return;
     }
@@ -225,7 +229,7 @@ extern "C" void __cdecl EffectKind66_DrawPiece(unsigned piece, unsigned place) {
         bof3::Fatal("EffectKind66_DrawPiece: piece %u, place %u - past the four pieces of 0x654788 or the three places of "
                     "0x654770 (docs/effect_2g.md section 6)",
                     t, r);
-    const U place_at = at::kKind66Places + 8 * r;
+    const U place_at = ::bof3::Img(at::kKind66Places + 8 * r);
     const std::int32_t x = S16(W(place_at)), y = S16(W(place_at + 2));
     const std::int32_t w = S16(W(place_at + 4)), h = S16(W(place_at + 6));
     StoreFloat(p + 8, x);
@@ -236,7 +240,7 @@ extern "C" void __cdecl EffectKind66_DrawPiece(unsigned piece, unsigned place) {
     StoreFloat(p + 0x2C, y + h);
     StoreFloat(p + 0x38, x + w);
     StoreFloat(p + 0x3C, y + h);
-    const U uv = at::kKind66Pieces + 4 * t;
+    const U uv = ::bof3::Img(at::kKind66Pieces + 4 * t);
     const unsigned char u = B(uv), v = B(uv + 1), du = B(uv + 2), dv = B(uv + 3);
     p[0x14] = u;
     p[0x15] = v;
@@ -268,7 +272,7 @@ extern "C" void __cdecl EffectKind18Sub20_Run(void) {
 // original 0x47DFF0 (sub-state 0): story flag 0x2A set: the height +0x3C =
 // -0x180 and +2 = 3; clear: +0x3C = -0x90 and +2 up. Then the draw (a tail jump).
 extern "C" void __cdecl EffectKind18Sub20_Start(void) {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub20Flag)) {
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), at::kSub20Flag)) {
         rv::Current<records::EffectObject>()->height = 0xFFFFFE80u;
         S()[2] = 3;
     } else {
@@ -282,7 +286,7 @@ extern "C" void __cdecl EffectKind18Sub20_Start(void) {
 // set, sound 0x202 and +2 up (read after the sound). Nothing drawn.
 extern "C" void __cdecl EffectKind18Sub20_WaitSet(void) {
     Cond_ByteFE = 1;
-    if (!SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub20Flag)) return;
+    if (!SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), at::kSub20Flag)) return;
     SH_CALL(Sound_PlayEffect)(0x202);
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
@@ -305,7 +309,7 @@ extern "C" void __cdecl EffectKind18Sub20_Lower(void) {
 // clear, MoveCmd_TestFB(0x27, 0x2F), sound 0x202 and +2 up. Nothing drawn.
 extern "C" void __cdecl EffectKind18Sub20_WaitClear(void) {
     Cond_ByteFE = 2;
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub20Flag)) return;
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), at::kSub20Flag)) return;
     SH_CALL(MoveCmd_TestFB)(0x27, 0x2F);
     SH_CALL(Sound_PlayEffect)(0x202);
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
@@ -383,7 +387,7 @@ extern "C" void __cdecl EffectKind18Sub20_Draw(void) {
 
 namespace {
 
-unsigned char* Member1() { return At(ObjTrio_addr + 0x14c); }
+unsigned char* Member1() { return At(::bof3::Img(ObjTrio_addr) + 0x14c); }
 
 // Field_State and Sprite_Current to ObjTrio record 1 (the second member).
 void OnMember1() {
@@ -487,7 +491,7 @@ extern "C" void __cdecl EffectKind15_Cooldown(void) {
     B(at::kCue) = 0;
     unsigned char wait;
     if (mark) {
-        SetWord(At(MoveScript_PartyRecords_addr + 0x66), 0);
+        SetWord(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), 0);
         wait = 2;
     } else {
         wait = B(at::kKind15Wait);
@@ -615,7 +619,7 @@ extern "C" void __cdecl EffectKind54_Strike(void) {
         B(at::kHit) = 2;
         B(at::kScore) = score;
         SH_CALL(Sound_PlayEffect)(0x20D);
-        if (Word(S() + 0x58) <= 4) SetWord(At(MoveScript_PartyRecords_addr + 0x66), 0xFF);
+        if (Word(S() + 0x58) <= 4) SetWord(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), 0xFF);
         SH_CALL(Sprite_SetAnimation)(2);
         self[1] = 7;
         Sprite_Current = self;

@@ -15,13 +15,13 @@ namespace display_env {
 using U = std::uint32_t;
 
 // --- Data, all Capcom's addresses (docs/display-env.md section 1) -----------
-constexpr U kDispEnv = 0x7DECE0;        // Gpu_DispEnv: the last DISPENV put, 0x14 bytes
+constexpr ::bof3::image::Va kDispEnv{0x7DECE0};        // Gpu_DispEnv: the last DISPENV put, 0x14 bytes
 // kDrawEnv: now Gpu_DrawEnv (symbols.toml). Gpu_DrawEnv: the last DRAWENV put, 0x5C bytes
 // kDrawEnvBackground: now Gpu_DrawEnv[0x18] (symbols.toml). Gpu_DrawEnv +0x18, the DRAWENV's isbg byte
-constexpr U kRenderFlags = 0x6C3A4C;    // Gfx_RenderFlags: bit 0 software, bit 0x200 (a dword test) windowed
+constexpr ::bof3::image::Va kRenderFlags{0x6C3A4C};    // Gfx_RenderFlags: bit 0 software, bit 0x200 (a dword test) windowed
 // kPrimary: now DDraw_Primary (symbols.toml). DDraw_Primary, an IDirectDrawSurface *
 // kBackBuffer: now DDraw_BackBuffer (symbols.toml). DDraw_BackBuffer
-constexpr U kViewport = 0x7CC354;       // D3d_Viewport, an IDirect3DViewport *
+constexpr ::bof3::image::Va kViewport{0x7CC354};       // D3d_Viewport, an IDirect3DViewport *
 // kBackMaterial: now D3d_BackMaterial (symbols.toml). D3d_BackMaterial, an IDirect3DMaterial *
 // kBackHandle: now D3d_BackMaterialHandle (symbols.toml). D3d_BackMaterialHandle, what SetBackground takes
 // kScreenRect: now Gfx_ScreenRect (symbols.toml). Gfx_ScreenRect, {0, 0, 640, 480} in the image

@@ -214,7 +214,7 @@ extern "C" void __cdecl EffectKind18Sub5C_DrawPanel(unsigned side, int dy) {
             bof3::Fatal("EffectKind18Sub5C_DrawPanel: side %u, past the two its tables hold - the original reads on into "
                         "the next variant's textures (docs/effect_6d.md section 7)",
                         side);
-        const U sign = S8U(At(at::kSub5CSides)[side]);
+        const U sign = S8U(At(::bof3::Img(at::kSub5CSides.v))[side]);
         const U x = (static_cast<U>(S16(s + 0x36)) << 7) - sign * static_cast<U>(S16(s + 0x30)) + side * 0xC0u - 0x4040u;
         SetUL(At(AddressOf(MapView_ScreenXY)), FloatBits(I(x)));
         const U y = (static_cast<U>(S16(s + 0x3A)) << 7) - 0x4040u;
@@ -227,7 +227,7 @@ extern "C" void __cdecl EffectKind18Sub5C_DrawPanel(unsigned side, int dy) {
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
         for (U v = 0; v < 4; ++v) {
-            const unsigned char* const t = At(at::kSub5CVertices + 6 * (4 * i + v));
+            const unsigned char* const t = At(::bof3::Img(at::kSub5CVertices.v) + 6 * (4 * i + v));
             unsigned char* const out = Vertices() + 8 * v;
             SetWord(out, Ftol(static_cast<long double>(S16(t)) + Fl(AddressOf(MapView_ScreenXY))));
             rv::Store<std::uint32_t>(rv::As<records::SVector>(out)->y, Ftol(static_cast<long double>(S16(t + 2)) + Fl(AddressOf(MapView_ScreenXY) + 4)));
@@ -238,8 +238,8 @@ extern "C" void __cdecl EffectKind18Sub5C_DrawPanel(unsigned side, int dy) {
         if (variant >= at::kSub5CVariants)
             bof3::Fatal("EffectKind18Sub5C_DrawPanel: +0xB is %u, past the two variants of 0x%X - the original reads on "
                         "into EffectKind18Sub5E_States (docs/effect_6d.md section 7)",
-                        (unsigned)variant, (unsigned)at::kSub5CTextures);
-        SH_CALL(Prim_SetTexture)(UL(at::kSub5CTextures + 4 * (3 * side + 6 * variant + i)), p, 1);
+                        (unsigned)variant, at::kSub5CTextures.v);
+        SH_CALL(Prim_SetTexture)(UL(::bof3::Img(at::kSub5CTextures.v) + 4 * (3 * side + 6 * variant + i)), p, 1);
         Link(dy, 0x48);
     }
 }
@@ -265,10 +265,10 @@ extern "C" void __cdecl EffectKind18Sub5C_Place(void) {
     unsigned char* const s = S();
     const U v = Variant("EffectKind18Sub5C_Place", s, at::kSub5CVariants);
     s[0xB] = static_cast<unsigned char>(v);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(at::kSub5CCells + 2 * v)[0]);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(at::kSub5CCells + 2 * v + 1)[0]);
-    s[8] = At(at::kSub5CFlags + v)[0];
-    SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), s[8]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(::bof3::Img(at::kSub5CCells.v) + 2 * v)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(::bof3::Img(at::kSub5CCells.v) + 2 * v + 1)[0]);
+    s[8] = At(::bof3::Img(at::kSub5CFlags.v) + v)[0];
+    SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), s[8]);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0);
     StepUp();
     Sub5CPair(1);
@@ -289,7 +289,7 @@ extern "C" void __cdecl EffectKind18Sub5C_WaitNear(void) {
     const bool near = Abs(FromCentre(LeaderZ(), S16(s + 0x3A))) <= 0x8000 &&
                       Abs(FromEdge(LeaderX(), S16(s + 0x36)) - 0x10000u) <= 0x20000;
     if (!near && !forced) return;
-    SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), s[8]);
+    SH_CALL(Flags_Clear)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), s[8]);
     if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(at::kSoundOpen));
     StepUp();
     Sub5CPair(1);
@@ -321,7 +321,7 @@ extern "C" void __cdecl EffectKind18Sub5C_WaitFar(void) {
 // at -1 (-2 from 0x80).
 extern "C" void __cdecl EffectKind18Sub5C_Close(void) {
     if (Slide(0xFFF0u) <= 0) {
-        SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), S()[8]);
+        SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), S()[8]);
         Shut();
     }
     Sub5CPair(Sub5CDy());
@@ -354,7 +354,7 @@ extern "C" void __cdecl EffectKind18Sub5E_Draw(void) {
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
         unsigned char* const s = S();
-        const U sign = S8U(At(at::kSub5ESides)[i]);
+        const U sign = S8U(At(::bof3::Img(at::kSub5ESides.v))[i]);
         const long y0 = Ground(v + 2);
         const U slid = rv::As<records::EffectWork>(s)->work_30 * sign + (static_cast<U>(rv::As<records::EffectObject>(s)->x_whole) << 7);
         rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, slid - 0x3F40u);
@@ -476,7 +476,7 @@ extern "C" void __cdecl EffectKind18Sub5D_Draw(void) {
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
         unsigned char* const s = S();
-        const U sign = S8U(At(at::kSub5DSides)[side]);
+        const U sign = S8U(At(::bof3::Img(at::kSub5DSides.v))[side]);
         const U slide = rv::As<records::EffectWork>(s)->work_30 * sign;
         if (s[8] != 0) {
             const U x = (side + rv::As<records::EffectObject>(s)->x_whole) << 7;
@@ -514,11 +514,11 @@ extern "C" void __cdecl EffectKind18Sub5D_Place(void) {
     unsigned char* const s = S();
     s[8] = rv::As<records::EffectObject>(s)->z_whole == 0 ? 1 : 0;
     const U v = Variant("EffectKind18Sub5D_Place", s, at::kSub5DVariants);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(at::kSub5DCells + 2 * v)[0]);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(at::kSub5DCells + 2 * v + 1)[0]);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, Word(At(at::kSub5DLifts + 2 * v)));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_20, UL(at::kSub5DTextures + 4 * v));
-    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, Word(At(at::kSub5DHeights + 2 * v)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(::bof3::Img(at::kSub5DCells.v) + 2 * v)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(::bof3::Img(at::kSub5DCells.v) + 2 * v + 1)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, Word(At(::bof3::Img(at::kSub5DLifts.v) + 2 * v)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_20, UL(::bof3::Img(at::kSub5DTextures.v) + 4 * v));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, Word(At(::bof3::Img(at::kSub5DHeights.v) + 2 * v)));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0);
     s[2] = static_cast<unsigned char>(s[2] + 1);
     if (LeaderAt(s, s[8] != 0, 0x8000, 0x10000)) {
@@ -678,7 +678,7 @@ extern "C" void __cdecl EffectKind18Sub61_DrawOverlay(int y) {
         SH_CALL(Gfx_CommitPrim)(7, 0x48);
     };
     for (U k = 0; k < at::kOverlayCount; ++k) {
-        const unsigned char* const e = At(at::kOverlayPieces + at::kOverlayStride * k);
+        const unsigned char* const e = At(::bof3::Img(at::kOverlayPieces.v) + at::kOverlayStride * k);
         const U x = static_cast<U>(S16(e)), top = static_cast<U>(S16(e + 2)) + dy;
         const U w = static_cast<U>(S16(e + 4)), h = static_cast<U>(S16(e + 6));
         const U bottom = static_cast<U>(S16(e + 2)) + (dy + h);
@@ -699,7 +699,7 @@ extern "C" void __cdecl EffectKind18Sub61_DrawOverlay(int y) {
         // j covers columns j * w .. from the edge; the even runs mirror,
         // the odd ones read forward. Every span follows the w - 1 rule.
         for (U k = 0; k < at::kOverlayCount; ++k) {
-            const unsigned char* const e = At(at::kOverlayPieces + at::kOverlayStride * k);
+            const unsigned char* const e = At(::bof3::Img(at::kOverlayPieces.v) + at::kOverlayStride * k);
             const U x = static_cast<U>(S16(e)), top = static_cast<U>(S16(e + 2)) + dy;
             const U w = static_cast<U>(S16(e + 4)), h = static_cast<U>(S16(e + 6));
             const U bottom = top + h;
@@ -954,25 +954,25 @@ extern "C" void __cdecl EffectKind18Sub61_DrawTracks(void) {
         for (U corner = 8; corner < 0x48; corner += 0x10) std::memcpy(p + corner, item + corner, 12);
     };
     for (U r = 0; r < at::kFollowerCount; ++r) {
-        const unsigned char* const follower = At(Sprite_Objects_addr + 0xd8 + at::kFollowerStride * r);
+        const unsigned char* const follower = At(::bof3::Img(Sprite_Objects_addr) + 0xd8 + at::kFollowerStride * r);
         const std::int32_t cell = I(UL(follower) + 0x4000u) >> 16;
-        unsigned char* const head = At(at::kTrackHeads + r);
+        unsigned char* const head = At(::bof3::Img(at::kTrackHeads.v) + r);
         const U h = *head;
         if (h >= at::kTrackEntries)
             bof3::Fatal("EffectKind18Sub61_DrawTracks: follower %u's head is %u, past the ring's %u entries - the "
                         "original reads and writes past it (docs/effect_6d.md section 7)",
                         (unsigned)r, (unsigned)h, at::kTrackEntries);
-        const unsigned char* const last = At(at::kTrackRing + at::kTrackStride * h + 3 * r);
+        const unsigned char* const last = At(::bof3::Img(at::kTrackRing.v) + at::kTrackStride * h + 3 * r);
         if (static_cast<std::int32_t>(last[0]) > cell) {
             const U next = (h + 1) & 0x1F;
             *head = static_cast<unsigned char>(next);
-            unsigned char* const mark = At(at::kTrackRing + at::kTrackStride * next + 3 * r);
+            unsigned char* const mark = At(::bof3::Img(at::kTrackRing.v) + at::kTrackStride * next + 3 * r);
             mark[0] = static_cast<unsigned char>(cell);
             mark[1] = follower[6];
             mark[2] = static_cast<unsigned char>((last[2] - 1) & 1);
         }
         for (U k = 0; k < at::kTrackEntries; ++k) {
-            const unsigned char* const t = At(at::kTrackRing + 3 * r + at::kTrackStride * k);
+            const unsigned char* const t = At(::bof3::Img(at::kTrackRing.v) + 3 * r + at::kTrackStride * k);
             const unsigned char* item = SH_CALL(MapView_ItemHalfAt)(t[0], t[1]);
             if (item == nullptr) continue;
             {
@@ -980,18 +980,18 @@ extern "C" void __cdecl EffectKind18Sub61_DrawTracks(void) {
                 SH_CALL(Gpu_SetPolyFT4)(p);
                 SH_CALL(Gpu_SetShadeTex)(p, 1);
                 copy(p, item);
-                SH_CALL(Prim_SetTexture)(At(at::kTrackTextures + 2 * r)[0] + t[2] + 0x25808000u, p, 1);
+                SH_CALL(Prim_SetTexture)(At(::bof3::Img(at::kTrackTextures.v) + 2 * r)[0] + t[2] + 0x25808000u, p, 1);
                 SH_CALL(MapView_LinkPrimAt)(static_cast<U>(t[0]) << 16, static_cast<U>(t[1]) << 16, 0, 0x48);
             }
-            const U step = S8U(At(at::kTrackSteps + r)[0]);
+            const U step = S8U(At(::bof3::Img(at::kTrackSteps.v) + r)[0]);
             item = SH_CALL(MapView_ItemHalfAt)(t[0], static_cast<long>(t[1] + step));
             if (item == nullptr) continue;
             unsigned char* const p = Gfx_PacketNext;
             SH_CALL(Gpu_SetPolyFT4)(p);
             SH_CALL(Gpu_SetShadeTex)(p, 1);
             copy(p, item);
-            SH_CALL(Prim_SetTexture)(At(at::kTrackTextures + 2 * r + 1)[0] + t[2] + 0x25808000u, p, 1);
-            const U step2 = S8U(At(at::kTrackSteps + r)[0]);
+            SH_CALL(Prim_SetTexture)(At(::bof3::Img(at::kTrackTextures.v) + 2 * r + 1)[0] + t[2] + 0x25808000u, p, 1);
+            const U step2 = S8U(At(::bof3::Img(at::kTrackSteps.v) + r)[0]);
             SH_CALL(MapView_LinkPrimAt)(static_cast<U>(t[0]) << 16, (t[1] + step2) << 16, 0, 0x48);
         }
     }
@@ -1054,7 +1054,7 @@ extern "C" void __cdecl EffectKind18Sub61_Reset(void) {
     rv::Current<records::EffectObject>()->z = 0;
     rv::Current<records::EffectObject>()->x = 0x54;
     rv::Current<records::EffectObject>()->height = 0;
-    unsigned char* const ring = At(at::kTrackRing);
+    unsigned char* const ring = At(::bof3::Img(at::kTrackRing.v));
     ring[0] = 0x7E;
     ring[1] = 0x14;
     ring[2] = 1;
@@ -1067,11 +1067,11 @@ extern "C" void __cdecl EffectKind18Sub61_Reset(void) {
 // original 0x515160 (step 6, and step 5's call): both heads 0, every mark's
 // cell x 0xFF (none drawn), the first entry's parities 1 and 0; Cond_ByteFE 0.
 extern "C" void __cdecl EffectKind18Sub61_ClearTracks(void) {
-    SetWord(At(at::kTrackHeads), 0);
+    SetWord(At(::bof3::Img(at::kTrackHeads.v)), 0);
     for (U r = 0; r < 2; ++r)
-        for (U k = 0; k < at::kTrackEntries; ++k) At(at::kTrackRing + 3 * r + at::kTrackStride * k)[0] = 0xFF;
-    At(at::kTrackRing)[2] = 1;
-    At(at::kTrackRing)[5] = 0;
+        for (U k = 0; k < at::kTrackEntries; ++k) At(::bof3::Img(at::kTrackRing.v) + 3 * r + at::kTrackStride * k)[0] = 0xFF;
+    At(::bof3::Img(at::kTrackRing.v))[2] = 1;
+    At(::bof3::Img(at::kTrackRing.v))[5] = 0;
     Cond_ByteFE = 0;
 }
 
@@ -1093,8 +1093,8 @@ extern "C" void __cdecl EffectKind18Sub61_Rearm(void) {
 // bytes 1 and 3 by the step at + 3 less + 2. Then Sprite_ObjectsExtra[0]'s
 // height from the ground at its point, its +0x14 0, MapView_Redraw 2.
 extern "C" void __cdecl EffectKind18Sub62_Ripple(void) {
-    const std::int32_t row0 = S16(at::kKind2ZCell) - 0x14;
-    const std::int32_t col0 = S16(at::kKind2XCell) - 0x14;
+    const std::int32_t row0 = S16(::bof3::Img(at::kKind2ZCell.v)) - 0x14;
+    const std::int32_t col0 = S16(::bof3::Img(at::kKind2XCell.v)) - 0x14;
     Camera_Distance = 0x5DC;
     for (U j = 0; j < 35; ++j) {
         const U phase = 3 * j;
@@ -1146,9 +1146,9 @@ extern "C" void __cdecl EffectKind18Sub63_Glow(void) {
         SH_CALL(Gpu_SetPolyG4)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
         {
-            const U k = At(at::kGlowOrder + n)[0];
+            const U k = At(::bof3::Img(at::kGlowOrder.v) + n)[0];
             for (U i = 0; i < 2; ++i) {
-                const unsigned char* const point = At(at::kGlowPoints + 8 * (k + i));
+                const unsigned char* const point = At(::bof3::Img(at::kGlowPoints.v) + 8 * (k + i));
                 SetWord(v + 8 * i, Word(point));
                 SetWord(v + 8 * i + 2, Word(point + 2));
                 SetWord(v + 8 * i + 4, Word(point + 4));
@@ -1156,26 +1156,26 @@ extern "C" void __cdecl EffectKind18Sub63_Glow(void) {
         }
         for (U i = 0; i < 2; ++i) {
             unsigned char* const out = v + 0x10 + 8 * i;
-            const U k = At(at::kGlowOrder + n)[0] + i;
+            const U k = At(::bof3::Img(at::kGlowOrder.v) + n)[0] + i;
             const U sn = static_cast<U>(SH_CALL(Math_Sin)(S16(AddressOf(&Cond_AngleFB)) + 0x200));
-            const U x = static_cast<U>(Div4096(sn * static_cast<U>(S16(at::kGlowReach + 4 * k)))) + Word(At(at::kGlowPoints + 8 * k));
+            const U x = static_cast<U>(Div4096(sn * static_cast<U>(S16(::bof3::Img(at::kGlowReach.v) + 4 * k)))) + Word(At(::bof3::Img(at::kGlowPoints.v) + 8 * k));
             SetWord(out, x);
-            const U k2 = At(at::kGlowOrder + n)[0] + i;
+            const U k2 = At(::bof3::Img(at::kGlowOrder.v) + n)[0] + i;
             const U cs = static_cast<U>(SH_CALL(Math_Cos)(S16(AddressOf(&Cond_AngleFB)) + 0x200));
-            const U y = static_cast<U>(Div4096(cs * static_cast<U>(S16(at::kGlowReach + 4 * k2)))) + Word(At(at::kGlowPoints + 8 * k2 + 2));
+            const U y = static_cast<U>(Div4096(cs * static_cast<U>(S16(::bof3::Img(at::kGlowReach.v) + 4 * k2)))) + Word(At(::bof3::Img(at::kGlowPoints.v) + 8 * k2 + 2));
             SetWord(out + 2, y);
-            SetWord(out + 4, Word(At(at::kGlowReach + 4 * k2 + 2)));
+            SetWord(out + 4, Word(At(::bof3::Img(at::kGlowReach.v) + 4 * k2 + 2)));
         }
         long depth;
         SH_CALL(Gte_RotTransPers4)(Vertex(0), Vertex(1), Vertex(2), Vertex(3), reinterpret_cast<float*>(p + 8),
                                    reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                    reinterpret_cast<float*>(p + 0x38), &depth);
         SH_CALL(Gte_PrimDepths4_10B)(p);
-        const unsigned char near0 = At(at::kGlowPoints + 8 * At(at::kGlowOrder + n)[0] + 6)[0];
+        const unsigned char near0 = At(::bof3::Img(at::kGlowPoints.v) + 8 * At(::bof3::Img(at::kGlowOrder.v) + n)[0] + 6)[0];
         p[6] = near0;
         p[5] = near0;
         p[4] = near0;
-        const unsigned char near1 = At(at::kGlowPoints + 8 * At(at::kGlowOrder + n)[0] + 0xE)[0];
+        const unsigned char near1 = At(::bof3::Img(at::kGlowPoints.v) + 8 * At(::bof3::Img(at::kGlowOrder.v) + n)[0] + 0xE)[0];
         p[0x36] = 0;
         p[0x16] = near1;
         p[0x15] = near1;
@@ -1285,8 +1285,8 @@ extern "C" void __cdecl EffectKind18Sub64_Place(void) {
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
     const U v = Variant("EffectKind18Sub64_Place", s, at::kSub64Variants);
-    so->x = static_cast<U>(At(at::kSub64Cells + 2 * v)[0]) << 16;
-    so->z = static_cast<U>(At(at::kSub64Cells + 2 * v + 1)[0]) << 16;
+    so->x = static_cast<U>(At(::bof3::Img(at::kSub64Cells.v) + 2 * v)[0]) << 16;
+    so->z = static_cast<U>(At(::bof3::Img(at::kSub64Cells.v) + 2 * v + 1)[0]) << 16;
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, Battle_Enemies_addr + 0x128 + at::kEnemyStride * v);
     s[9] = 0;
     s[0xA] = 0;
@@ -1313,7 +1313,7 @@ extern "C" void __cdecl EffectKind18Sub64_Watch(void) {
     if (WatchedIs(6, 3)) S()[2] = 5;
     if (WatchedIs(6, 4)) S()[2] = 3;
     if (WatchedIs(3, 1)) {
-        const U scale = (UL(at::kBattleWord) * 6 + 0x3Fu) & 0xF8u;
+        const U scale = (UL(::bof3::Img(at::kBattleWord.v)) * 6 + 0x3Fu) & 0xF8u;
         SH_CALL(EffectKind18Sub64_Draw)(scale, 0x40, 1, 0);
         return;
     }
@@ -1388,12 +1388,12 @@ extern "C" void __cdecl EffectKind18Sub64_Swell(void) {
 extern "C" void __cdecl EffectKind18Sub65_ShadeCluts(int level) {
     const U l = static_cast<U>(level);
     for (U k = 0; k < at::kClutWords; ++k) {
-        const U colour = Word(At(Gfx_ClutStripSource_addr + 0x800 + 2 * k));
+        const U colour = Word(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x800 + 2 * k));
         U out = static_cast<U>(I(((colour >> 10) & 0x1F) * l) / 128);
         out = (out << 5) | static_cast<U>(I(((colour >> 5) & 0x1F) * l) / 128);
         out = (out << 5) | static_cast<U>(I((colour & 0x1F) * l) / 128);
         if (out == 0 && colour != 0) out = 0x8000;
-        SetWord(At(Gfx_ClutStrip_addr + 0x800 + 2 * k), out);
+        SetWord(At(::bof3::Img(Gfx_ClutStrip_addr) + 0x800 + 2 * k), out);
     }
     Gfx_ClutStripDirty = 1;
 }
@@ -1412,7 +1412,7 @@ extern "C" void __cdecl EffectKind18Sub65_Start(void) {
 
 // original 0x516A30 (sub-state 1): the counter byte 0x903848 0xD: +2 up.
 extern "C" void __cdecl EffectKind18Sub65_Wait(void) {
-    if (At(at::kCounter48)[0] == 0xD) StepUp();
+    if (At(::bof3::Img(at::kCounter48.v))[0] == 0xD) StepUp();
 }
 
 // original 0x516A50 (sub-state 2): +9 up; the rows at level +9; from 0x80 a tail

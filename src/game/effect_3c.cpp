@@ -55,6 +55,7 @@ namespace {
 namespace at = effect_3c::at;
 using U = std::uint32_t;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -76,7 +77,7 @@ U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n
 U Half(U v) { return Sar(v + (S32(v) < 0 ? 1u : 0u), 1); }
 // imul of two whole registers: the low 32 bits.
 U Mul(U a, std::int32_t b) { return a * static_cast<U>(b); }
-const unsigned char* Story() { return At(Cond_Flags_addr + 0xa0); }
+const unsigned char* Story() { return At(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 
 // --- x87 as the original has it (the game's control word: round to nearest, 53
 // bits); every value goes through the FPU as Capcom's does.
@@ -195,7 +196,7 @@ unsigned char Kind6FColour(unsigned byte, const char* who) {
     if (k >= at::kKind6FColourCount)
         bof3::Fatal("%s: +6 is %u, past kind 0x6F's one colour row at 0x%X - the original reads EffectKind6F_States' "
                     "bytes as a colour (docs/effect_3c.md section 6)",
-                    who, k, (unsigned)at::kKind6FColour);
+                    who, k, at::kKind6FColour.v);
     return At(at::kKind6FColour + 3 * k + byte)[0];
 }
 
@@ -371,7 +372,7 @@ extern "C" void __cdecl EffectKind6D_Move(void) {
 // original 0x4842F0: +0 = 0 in the 32 particles of the block 0x92C780 +
 // 0x500 * +6 (+6 unbounded: the block is computed, not checked).
 extern "C" void __cdecl EffectKind6D_ClearParticles(void) {
-    U p = at::kParticles + at::kParticleBlock * S()[6];
+    U p = ::bof3::Img(at::kParticles + at::kParticleBlock * S()[6]);
     for (unsigned n = at::kParticleCount; n != 0; --n, p += at::kParticleStride) At(p)[0] = 0;
 }
 
@@ -418,7 +419,7 @@ extern "C" void __cdecl EffectKind6D_DrawParticle(unsigned char* p) {
     if (k >= at::kParticleShapeCount)
         bof3::Fatal("EffectKind6D_DrawParticle: +4 is %u, past the eight shapes at 0x%X - the original reads what "
                     "follows (docs/effect_3c.md section 6)",
-                    k, (unsigned)at::kParticleShapes);
+                    k, at::kParticleShapes.v);
     const unsigned char* const row = At(at::kParticleShapes + 8 * k);
     FildAdd(SW(row + 0), prim + 8, prim + 0x14);
     FildAdd(SW(row + 2), prim + 0xC, prim + 0x18);
@@ -604,7 +605,7 @@ extern "C" void __cdecl EffectKind6F_PushParty(unsigned which) {
     U slot = which;
     const unsigned sel = which & 0xFFu;
     if (sel > 1) return;
-    const U cells = sel == 0 ? at::kKind6FCellsZ : at::kKind6FCellsX;
+    const U cells = ::bof3::Img(sel == 0 ? at::kKind6FCellsZ : at::kKind6FCellsX);
     for (unsigned i = 0; i < 4; ++i) {
         const U cell = At(cells + i)[0];
         if (sel == 0) {

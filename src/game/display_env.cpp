@@ -38,12 +38,14 @@ U Long(U address) {
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
+[[gnu::always_inline]] inline U Long(::bof3::image::Va address) { return Long(::bof3::Img(address)); }
 void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
 U Word(U address) {
     std::uint16_t v;
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
+[[gnu::always_inline]] inline U Word(::bof3::image::Va address) { return Word(::bof3::Img(address)); }
 void PutWord(U address, U v) {
     const std::uint16_t w = static_cast<std::uint16_t>(v);
     std::memcpy(At(address), &w, sizeof w);
@@ -76,7 +78,7 @@ void ClearBack() {
         Method<ComBlt>(back, kBlt)(back, nullptr, nullptr, nullptr, kBltWait | kBltColorFill, fx);
     } else {
         void* const viewport = D3d_Viewport;
-        Method<ComClear>(viewport, kClear)(viewport, 1, At(Gfx_ScreenRect_addr), kClearTarget);
+        Method<ComClear>(viewport, kClear)(viewport, 1, At(::bof3::Img(Gfx_ScreenRect_addr)), kClearTarget);
     }
 }
 
@@ -164,7 +166,7 @@ void Gfx_Present(void) {
     void* const primary = DDraw_Primary;
     long result;
     if (flags & 0x200)
-        result = Method<ComBlt>(primary, kBlt)(primary, At(Gfx_WindowRect_addr), DDraw_BackBuffer, At(Gfx_ScreenRect_addr), kBltWait,
+        result = Method<ComBlt>(primary, kBlt)(primary, At(::bof3::Img(Gfx_WindowRect_addr)), DDraw_BackBuffer, At(::bof3::Img(Gfx_ScreenRect_addr)), kBltWait,
                                                nullptr);
     else
         result = Method<ComFlip>(primary, kFlip)(primary, DDraw_BackBuffer, kFlipWait);
@@ -187,7 +189,7 @@ void Gfx_ClearPresent(unsigned flags) {
     const U render = Long(kRenderFlags);
     void* const primary = DDraw_Primary;
     if (render & 0x200) {
-        Method<ComBlt>(primary, kBlt)(primary, At(Gfx_WindowRect_addr), DDraw_BackBuffer, At(Gfx_ScreenRect_addr), kBltWait, nullptr);
+        Method<ComBlt>(primary, kBlt)(primary, At(::bof3::Img(Gfx_WindowRect_addr)), DDraw_BackBuffer, At(::bof3::Img(Gfx_ScreenRect_addr)), kBltWait, nullptr);
         return;
     }
     Method<ComFlip>(primary, kFlip)(primary, DDraw_BackBuffer, kFlipWait);

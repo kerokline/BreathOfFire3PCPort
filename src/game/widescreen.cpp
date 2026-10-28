@@ -504,7 +504,7 @@ void Widescreen_CheckSlides() {
     static const unsigned kWidths[] = {0, kColumns16x9, kColumns21x9};
     constexpr int kMaxFrames = 0x10000 / 0x20 + 8;
 
-    volatile U* const current = reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr));
+    volatile U* const current = reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)));
     const U current_was = *current;
     alignas(4) unsigned char rec[kRecordSize];
     Split split;

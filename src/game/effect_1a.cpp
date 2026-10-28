@@ -69,6 +69,13 @@ std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(move_
 std::int32_t SL(const unsigned char* p) { return move_script::Long(p); }
 unsigned char B(U a) { return At(a)[0]; }
 unsigned char* PtrAt(U cell) { return At(L(cell)); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img, and nowhere else.
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return At(::bof3::Img(a)); }
+[[gnu::always_inline]] inline U L(::bof3::image::Va a) { return L(::bof3::Img(a)); }
+[[gnu::always_inline]] inline U W(::bof3::image::Va a) { return W(::bof3::Img(a)); }
+[[gnu::always_inline]] inline unsigned char B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
+[[gnu::always_inline]] inline unsigned char* PtrAt(::bof3::image::Va cell) { return PtrAt(::bof3::Img(cell)); }
 // The high half of a register the original pushes whole after loading a byte
 // or word into its low half (`mov ax, [..]` over a pointer it held).
 U Hi(U v) { return v & 0xFFFF0000u; }
@@ -108,7 +115,7 @@ unsigned char* Extra(const char* who, U index) {
         bof3::Fatal("%s: extra sprite index %u, past the four Sprite_ObjectsExtra records - the original reads what "
                     "follows (docs/effect_1a.md section 6)",
                     who, (unsigned)index);
-    return At(Sprite_ObjectsExtra_addr + index * at::kObjectStride);
+    return At(::bof3::Img(Sprite_ObjectsExtra_addr) + index * at::kObjectStride);
 }
 // Sprite_Objects record `index` (the byte 0x939A1C): thirty of them.
 unsigned char* Object(const char* who, U index) {
@@ -116,7 +123,7 @@ unsigned char* Object(const char* who, U index) {
         bof3::Fatal("%s: object index %u (0x939A1C), past the thirty Sprite_Objects records - the original reads what "
                     "follows (docs/effect_1a.md section 6)",
                     who, (unsigned)index);
-    return At(Sprite_Objects_addr + index * at::kObjectStride);
+    return At(::bof3::Img(Sprite_Objects_addr) + index * at::kObjectStride);
 }
 // Effect_FindFree's record: a Fatal on an answer past the twenty (the callee
 // answers 0xFF or 0..19; the original would write past the pool). `index` is
@@ -126,10 +133,10 @@ unsigned char* Spawned(const char* who, std::int32_t index) {
         bof3::Fatal("%s: Effect_FindFree answered %d, past the 20 records - the original writes past the pool "
                     "(docs/effect_1a.md section 6)",
                     who, (int)index);
-    return At(Effect_Objects_addr + static_cast<U>(index) * at::kEffectStride);
+    return At(::bof3::Img(Effect_Objects_addr) + static_cast<U>(index) * at::kEffectStride);
 }
 // Kind 0xF's text record `index` (+0x4B): thirteen of 8 bytes.
-U Text(const char* who, unsigned index) {
+::bof3::image::Va Text(const char* who, unsigned index) {
     if (index >= at::kKind0FTextCount)
         bof3::Fatal("%s: text index +0x4B is %u, past the thirteen records of 0x653B98 (docs/effect_1a.md section 6)",
                     who, index);
@@ -162,7 +169,7 @@ LabelDraw Label(const char* who, unsigned index) {
     return {l.pen, L(at::kLabelTexts + 4 * l.entry)};
 }
 // Kind 0xF's row table 0x653C04: nine rows of four bytes, by +6 and a column.
-U RowByte(const char* who, unsigned row, unsigned column) {
+::bof3::image::Va RowByte(const char* who, unsigned row, unsigned column) {
     const U offset = row * 4u + column;
     if (offset >= at::kKind0FRowBytes)
         bof3::Fatal("%s: row %u column %u, past the table 0x653C04 (docs/effect_1a.md section 6)", who, row, column);
@@ -540,7 +547,7 @@ extern "C" void __cdecl EffectHud_Draw(int x, int y) {
         count = static_cast<signed char>(0x3E - rv::Bytes(Effect_Objects)[0x3a]);
         if (count < 0) count = 0;
     }
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextBuffer)), reinterpret_cast<const char*>(At(Boss26Fx_CountFormat_addr)),
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextBuffer)), reinterpret_cast<const char*>(At(::bof3::Img(Boss26Fx_CountFormat_addr))),
                          static_cast<int>(count));
     const int colour = (count >= 0x32 && ObjTrio[0].step == 4 && (Frame_Counter & 4) != 0) ? 2 : 0;
     SH_CALL(Text_DrawFont12)(x + 0xEE, y + 0x1A, colour, At(at::kTextBuffer));
@@ -1103,7 +1110,7 @@ extern "C" void __cdecl EffectKind05_Bounce(void) {
 // Sprite_Objects record the byte 0x939A1C names; Sprite_ScriptTick; 0x52CD50
 // (a tail jump). PSX 0x801D28D8.
 extern "C" void __cdecl EffectKind05_Follow(void) {
-    SH_CALL(Sprite_EnsureAnimation)(SL(At(Effect_Objects_addr + 0x280 + 0x10)) >= 0 ? 3 : 2);
+    SH_CALL(Sprite_EnsureAnimation)(SL(At(::bof3::Img(Effect_Objects_addr) + 0x280 + 0x10)) >= 0 ? 3 : 2);
     rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Object("EffectKind05_Follow", Effect1a_PanelObject))->x));
     rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Object("EffectKind05_Follow", Effect1a_PanelObject))->z));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Object("EffectKind05_Follow", Effect1a_PanelObject))->height_whole));

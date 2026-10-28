@@ -280,7 +280,7 @@ const sh::DataTable kTables[] = {
 // the standard 0x644 to the end of kind 0x35's face copies (0x92CFC0; kind
 // 0x3B's spirals end at 0x92CDB4), the shard cursor, the fuzz's model.
 const sh::Region kRegions[] = {
-    {EffectKind30_Shards_addr + 0x644, at::kPool35End - (EffectKind30_Shards_addr + 0x644)},
+    {EffectKind30_Shards_addr + 0x644, at::kPool35End.v - (EffectKind30_Shards_addr + 0x644)},
     {EffectKind35_ShardCursor_addr, 4},
     {0, sizeof g_model},
 };
@@ -372,7 +372,7 @@ void Args(unsigned k, U* a) {
     case k35Quad: a[0] = Key(Shard(i)); break;
     case k35Turn: {
         const U n = i % at::kPiece35Count;
-        a[0] = at::kCopies35 + 0x28 * n;
+        a[0] = ::bof3::Img(at::kCopies35 + 0x28 * n);
         a[1] = Key(g_model) + 0x28 * n;
         a[2] = EffectKind30_Shards_addr + 0x280 + 0x18 * n;
         break;

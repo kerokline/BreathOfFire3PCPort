@@ -109,7 +109,7 @@ constexpr Site kSites[] = {
 // kPadMasks: now Battle_CommandPadMasks (symbols.toml).
 constexpr unsigned kNPadMasks = 6;
 U16 PadMask(unsigned k) {
-    return *reinterpret_cast<const U16*>(static_cast<std::uintptr_t>(Battle_CommandPadMasks_addr + 2 * k));
+    return *reinterpret_cast<const U16*>(static_cast<std::uintptr_t>(::bof3::Img(Battle_CommandPadMasks_addr) + 2 * k));
 }
 
 unsigned g_bad = 0;

@@ -27,18 +27,18 @@ constexpr std::uint32_t kDustStep = bof3::addr::EffectDust_Run;      // 0x47A200
 
 // Data.
 // kFlagRow: now Chapter_FlagRow (symbols.toml). unsigned char *: the chapter's flag row (scenario_harness at::kFlagRow)
-constexpr std::uint32_t kCounter0 = 0x903848;      // the chapters' counter byte (scenario_harness at::kCounter)
+constexpr ::bof3::image::Va kCounter0{0x903848};      // the chapters' counter byte (scenario_harness at::kCounter)
 // kPanelColour: now Effect2d_PanelColour (symbols.toml). three bytes: the blue, green and red of kind 0x45's lines and
                                                    // rectangles (committed at +6, +5, +4)
 // kDustAnchor: now Effect2d_DustAnchor (symbols.toml). a pointer (0x4789D0, kind 0x49's variant 4, sets it to 0x92D1C8):
                                                    // variant 3's burst adds to the word at +0x10 through it
-constexpr std::uint32_t kDust = 0x92D1DC;          // variant 3's dust, 64 records of 0x20
+constexpr ::bof3::image::Va kDust{0x92D1DC};          // variant 3's dust, 64 records of 0x20
 // kGlow: now EffectKind30_Shards[0xe0] (symbols.toml). the glow record variant 2's states hand 0x4794D0 / 0x4796B0
 // kGlowHeight: now EffectKind30_Shards[0x51e] (symbols.toml). a word of that record's that variant 2's states move
-constexpr std::uint32_t kTwinOps = 0x654540;       // kind 0x47's two EventOp_0x operands, 17 bytes each, by +0xB
-constexpr std::uint32_t kTwinAnims = 0x654564;     // kind 0x47's five (animation byte, animation, start) triples
-constexpr std::uint32_t kBurstMask = 0x6545EC;     // variant 3's per-step bit masks, a byte by +9
-constexpr std::uint32_t kBurstCount = 0x6545F4;    // variant 3's per-step dust counts, a byte by +9
+constexpr ::bof3::image::Va kTwinOps{0x654540};       // kind 0x47's two EventOp_0x operands, 17 bytes each, by +0xB
+constexpr ::bof3::image::Va kTwinAnims{0x654564};     // kind 0x47's five (animation byte, animation, start) triples
+constexpr ::bof3::image::Va kBurstMask{0x6545EC};     // variant 3's per-step bit masks, a byte by +9
+constexpr ::bof3::image::Va kBurstCount{0x6545F4};    // variant 3's per-step dust counts, a byte by +9
 // kObject2: now Sprite_Objects[2] (symbols.toml). Sprite_Objects record 2 (its +0 and +0x4B, as the leader's)
 constexpr std::uint32_t kEffectStride = 0x80;      // Effect_Objects' records
 constexpr unsigned kEffects = 20;                  // Effect_Objects' twenty

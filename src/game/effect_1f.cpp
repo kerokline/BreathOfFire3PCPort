@@ -46,6 +46,7 @@ using bof3x::input::sigma::Sigma;
 unsigned char* At(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char& B(U a) { return *At(a); }
+[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 std::uint16_t Word(U a) {
     std::uint16_t v;
     std::memcpy(&v, At(a), 2);
@@ -82,8 +83,9 @@ void Hand(int x, int y) { SH_CALL(Menu_DrawHand)(x, y, 0); }
 // Text_DrawAt(0x1D, 0x14, 0, 0xFF, MessagePools + the pool's word at `cell`):
 // the original adds the word, zero-extended (movzx or `and 0xFFFF`), to 0x803580.
 void Label(U cell) {
-    SH_CALL(Text_DrawAt)(0x1D, 0x14, 0, 0xFF, At(bof3::addr::MessagePools + Word(cell)));
+    SH_CALL(Text_DrawAt)(0x1D, 0x14, 0, 0xFF, At(::bof3::Img(bof3::addr::MessagePools) + Word(cell)));
 }
+[[gnu::always_inline]] inline void Label(::bof3::image::Va cell) { Label(::bof3::Img(cell)); }
 // The id at the s16 index of the category-3 list, and its record's kind byte
 // (24-byte NameTable_Accessories records, +0x12): both read in place, unchecked
 // as in the original.

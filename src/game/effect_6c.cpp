@@ -78,6 +78,7 @@ namespace {
 namespace at = effect_6c::at;
 using U = std::uint32_t;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -87,11 +88,15 @@ using Handler = scenario_harness::Handler;
 unsigned char* S() { return Sprite_Current; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
+[[gnu::always_inline]] inline U UL(::bof3::image::Va a) { return UL(::bof3::Img(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 void SetUL(U a, U v) { SetUL(At(a), v); }
+[[gnu::always_inline]] inline void SetUL(::bof3::image::Va a, U v) { SetUL(::bof3::Img(a), v); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 std::int32_t S16(U a) { return S16(At(a)); }
+[[gnu::always_inline]] inline std::int32_t S16(::bof3::image::Va a) { return S16(::bof3::Img(a)); }
 std::int32_t S8(U a) { return static_cast<signed char>(*At(a)); }
+[[gnu::always_inline]] inline std::int32_t S8(::bof3::image::Va a) { return S8(::bof3::Img(a)); }
 std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
@@ -111,9 +116,11 @@ float F(const unsigned char* p) {
 }
 float F(U a) { return F(At(a)); }
 double D(U a) { return static_cast<double>(F(a)); }
+[[gnu::always_inline]] inline double D(::bof3::image::Va a) { return D(::bof3::Img(a)); }
 void SetF(unsigned char* p, float f) { std::memcpy(p, &f, sizeof f); }
 void SetD(unsigned char* p, double d) { SetF(p, static_cast<float>(d)); }
 void SetD(U a, double d) { SetD(At(a), d); }
+[[gnu::always_inline]] inline void SetD(::bof3::image::Va a, double d) { SetD(::bof3::Img(a), d); }
 // fild dword: a whole number, exact in double.
 double Fi(U v) { return static_cast<double>(I(v)); }
 // fld dword / fstp dword: the bits kept, but a signalling NaN made quiet.
@@ -167,11 +174,11 @@ unsigned char* Item(const char* who, U item) {
 unsigned char* CellRecord(U x, U z, U run) {
     const U header = UL(at::kAreaHeader);
     const U width = header & 0xFF;
-    const U base = Word(At(AreaMap_Header_addr + 0x2));
-    const U word = Word(At(AreaMap_Header_addr + 2 * (x + width * z + 2 * base)));
+    const U base = Word(At(::bof3::Img(AreaMap_Header_addr) + 0x2));
+    const U word = Word(At(::bof3::Img(AreaMap_Header_addr) + 2 * (x + width * z + 2 * base)));
     const U height = (header >> 8) & 0xFF;
     const U half = (height * width + 1) / 2;   // cdq; sub eax, edx; sar 1 - never negative here
-    return At(AreaMap_Header_addr + 4 * (base + word + half + run));
+    return At(::bof3::Img(AreaMap_Header_addr) + 4 * (base + word + half + run));
 }
 
 }  // namespace
@@ -272,7 +279,7 @@ extern "C" void __cdecl EffectKind18Sub44_Follow(void) {
     rv::Current<records::EffectObject>()->screen_xf = 0x43200000u; // 160.0f
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0xA0);
     if (static_cast<std::uint32_t>(ObjTrio[0].step_y) != 0) {
-        CopyQuiet(S() + 0x78, At(MapView_ScreenXY_addr + 0x4));
+        CopyQuiet(S() + 0x78, At(::bof3::Img(MapView_ScreenXY_addr) + 0x4));
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, Ftol(D(at::kScreenY)));
         ObjTrio[0].screen_y = Ftol(D(at::kScreenY));
     } else {
@@ -587,7 +594,7 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
         p[4] = p[5] = p[6] = 0xFF;
         SH_CALL(EffectKind18Sub44_Commit)(0x1C);
     }
-    const U clock = Word(At(Cond_Flags_addr + 0xcc));
+    const U clock = Word(At(::bof3::Img(Cond_Flags_addr) + 0xcc));
     if (clock < 0x1B0) {
         SetV(0xC, 0x80);
         SetV(0xA, 0x80);
@@ -616,7 +623,7 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
         if (n >= at::kSkyTintSteps)
             bof3::Fatal("EffectKind18Sub44_Draw: the frame word 0x%X is step %u, past the %u tints of 0x%X - the "
                         "original reads on into the twinkle offsets (docs/effect_6c.md section 7)",
-                        (unsigned)clock, (unsigned)n, at::kSkyTintSteps, (unsigned)at::kSkyTints);
+                        (unsigned)clock, (unsigned)n, at::kSkyTintSteps, at::kSkyTints.v);
         const U past = FloorZero(n - 6);
         SetV(0, 0x80u - past * 12u);
         SetV(4, (0x10 - n) << 3);
@@ -718,7 +725,7 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
         if (level != 0)
             SH_CALL(EffectKind18Sub44_DrawGlow)(I(level), I(AngleX(((Cond_AngleFB - 0x800u) & 0xFFF) - 0x400u) - 0x28u));
     }
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x70), 4) == 0) return;
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x70), 4) == 0) return;
     const std::int32_t x = S16(at::kKind2XHigh), z = S16(at::kKind2ZHigh);
     const U dx = static_cast<U>(x - 0x1780), dz = static_cast<U>(z - 0xE00);
     U level = 0x100u - DivP2(Abs(dz) + Abs(dx), 2);
@@ -750,7 +757,7 @@ extern "C" void __cdecl EffectKind18Sub45_DrawRing(int outer_word, int inner_wor
     if (half >= at::kRingHalves)
         bof3::Fatal("EffectKind18Sub45_DrawRing: the half %u, past the %u pairs of 0x%X - the original reads sub-kind "
                     "0x51's rectangles (docs/effect_6c.md section 7)",
-                    (unsigned)half, at::kRingHalves, (unsigned)at::kRingUv);
+                    (unsigned)half, at::kRingHalves, at::kRingUv.v);
     for (U angle = 0; I(angle) < 0x20000; angle += 0x1000) {
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(p);
@@ -863,7 +870,7 @@ U Variant51(const char* who) {
     if (v < 0 || v >= static_cast<std::int32_t>(at::kRect51Variants))
         bof3::Fatal("%s: the variant +0x36 is %d, past the %u rectangles of 0x%X - the original reads on into "
                     "EffectKind18Sub51_States (docs/effect_6c.md section 7)",
-                    who, (int)v, at::kRect51Variants, (unsigned)at::kRect51);
+                    who, (int)v, at::kRect51Variants, at::kRect51.v);
     return static_cast<U>(v);
 }
 U Rect51(const char* who, unsigned field) { return At(at::kRect51 + 4 * Variant51(who) + field)[0]; }
@@ -910,8 +917,8 @@ extern "C" void __cdecl EffectKind18Sub51_Wait(void) {
         if (Cond_ByteFE == 1) s[2] = static_cast<unsigned char>(s[2] + 1);
         return;
     }
-    const bool set = v == 0 ? SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x70), 0x14) != 0
-                            : SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x7A + (v - 2)) != 0;
+    const bool set = v == 0 ? SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x70), 0x14) != 0
+                            : SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x7A + (v - 2)) != 0;
     if (set) S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
 
@@ -1064,7 +1071,7 @@ extern "C" void __cdecl EffectKind18Sub55_Run(void) {
 // original 0x5128D0 (sub-state 1): once flag 0xE of 0x904000 is set, +9 0 and
 // +2 up. The squares drawn (0x80, 0).
 extern "C" void __cdecl EffectKind18Sub55_Wait(void) {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x70), 0xE) != 0) {
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x70), 0xE) != 0) {
         S()[9] = 0;
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
     }
@@ -1128,10 +1135,10 @@ extern "C" void __cdecl EffectKind18Sub59_DrawRing(int glow_word) {
             SH_CALL(Gpu_SetSemiTrans)(p, 1);
             struct Corner { unsigned at; U b; U radius; U height; };
             const Corner corners[] = {
-                {0, b0, at::kRadii59 + 7 + ki, at::kHeights59 + 7 + ki},
-                {8, b1, at::kRadii59 + 7 + ki, at::kHeights59 + 7 + ki},
-                {0x10, b0, at::kRadii59 + 8 + ki, at::kHeights59 + 8 + ki},
-                {0x18, b1, at::kRadii59 + 8 + ki, at::kHeights59 + 8 + ki},
+                {0, b0, ::bof3::Img(at::kRadii59 + 7 + ki), ::bof3::Img(at::kHeights59 + 7 + ki)},
+                {8, b1, ::bof3::Img(at::kRadii59 + 7 + ki), ::bof3::Img(at::kHeights59 + 7 + ki)},
+                {0x10, b0, ::bof3::Img(at::kRadii59 + 8 + ki), ::bof3::Img(at::kHeights59 + 8 + ki)},
+                {0x18, b1, ::bof3::Img(at::kRadii59 + 8 + ki), ::bof3::Img(at::kHeights59 + 8 + ki)},
             };
             for (const Corner& c : corners) {
                 const U sine = static_cast<U>(SH_CALL(Math_Sin)(I(c.b)));
@@ -1196,7 +1203,7 @@ extern "C" void __cdecl EffectKind18Sub59_DrawRing(int glow_word) {
             SetV(0x12, Ftol(Fi(Sar(cosine, 8) * *At(at::kRadii59 + 8)) + D(at::kScreenY)));
             SetV(0x14, 0u - (static_cast<U>(*At(at::kHeights59 + 8)) << 5));
             long a;
-            SH_CALL(Gte_RotTransPers)(Vx(2), reinterpret_cast<unsigned long*>(At(Effect6c_GlowXY_addr)), &a);
+            SH_CALL(Gte_RotTransPers)(Vx(2), reinterpret_cast<unsigned long*>(At(::bof3::Img(Effect6c_GlowXY_addr))), &a);
             const std::int32_t divisor = static_cast<std::int16_t>(Camera_Distance) + 0x1194;
             if (divisor == 0)
                 bof3::Fatal("EffectKind18Sub59_DrawRing: Camera_Distance is -0x1194, the glow's divisor 0 - the original "
@@ -1456,7 +1463,7 @@ extern "C" void __cdecl EffectKind18Sub5A_Run(void) {
 // second cycle); else +2 up.
 extern "C" void __cdecl EffectKind18Sub5A_Start(void) {
     S()[9] = 0;
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x80) != 0)
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x80) != 0)
         S()[2] = 5;
     else
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
@@ -1480,7 +1487,7 @@ extern "C" void __cdecl EffectKind18Sub5A_Animate(void) {
 // 0); the first records of cells (0x11, 0x61) and (0x12, 0x61) given 0xE6 and
 // 0xE7 and their items textured (2) - DIV-0062's site 0x5139C2; +2 up.
 extern "C" void __cdecl EffectKind18Sub5A_Set(void) {
-    SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x80);
+    SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x80);
     S()[9] = 0;
     SH_CALL(EffectKind18Sub5A_Move)(0xC0, 0);
     for (U e = 0; I(e) < 2; ++e) {
@@ -1503,6 +1510,7 @@ void Cycle5A(U rows, int y) {
     s[9] = static_cast<unsigned char>(n < 0x18 ? n : 0);
     SH_CALL(EffectKind18Sub5A_Move)(*At(rows + S()[9] / 6), y);
 }
+[[gnu::always_inline]] inline void Cycle5A(::bof3::image::Va rows, int y) { Cycle5A(::bof3::Img(rows), y); }
 }  // namespace
 
 // original 0x5139F0 (sub-state 4): the cycle through kSlide5A, y 0xC0.
@@ -1528,7 +1536,7 @@ extern "C" void __cdecl EffectKind18Sub5B_DrawPart(int part_word) {
     if (part >= at::kParts5BCount)
         bof3::Fatal("EffectKind18Sub5B_DrawPart: part %u, past the %u ranges of 0x%X - the original reads on "
                     "(docs/effect_6c.md section 7)",
-                    (unsigned)part, at::kParts5BCount, (unsigned)at::kParts5B);
+                    (unsigned)part, at::kParts5BCount, at::kParts5B.v);
     for (U j = *At(at::kParts5B + 2 * part); I(j) < I(*At(at::kParts5B + 2 * part + 1)); ++j) {
         const unsigned char* const r = At(at::kPieces5B + at::kPieceStride * j);
         unsigned char* const p = Gfx_PacketNext;
@@ -1575,7 +1583,7 @@ extern "C" void __cdecl EffectKind18Sub5B_Run(void) {
 // original 0x513CF0 (sub-state 0): story flag 0x81 set: +2 = 6 (opened
 // already); else Cond_ByteFE 3 and +2 up.
 extern "C" void __cdecl EffectKind18Sub5B_Start(void) {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x81) != 0) {
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x81) != 0) {
         S()[2] = 6;
         return;
     }
@@ -1649,7 +1657,7 @@ extern "C" void __cdecl EffectKind18Sub5B_Lift(void) {
     Part(2);
     S()[9] = static_cast<unsigned char>(S()[9] + 1);
     if (S()[9] <= 0x30) return;
-    SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x81);
+    SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x81);
     SH_CALL(MoveCmd_TestFB)(0x30, 0x71);
     SH_CALL(Effect_Release)();
 }
@@ -1658,7 +1666,7 @@ extern "C" void __cdecl EffectKind18Sub5B_Lift(void) {
 // cleared, sound 0x206, the parts at -384 / 384 / 0 lifted 384, +9 0x60, +2 up.
 extern "C" void __cdecl EffectKind18Sub5B_Reopen(void) {
     if (Cond_ByteFE != 2) return;
-    SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), 0x81);
+    SH_CALL(Flags_Clear)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x81);
     SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(at::kSoundStep5B));
     SetOffset(0xC3C00000u, 0);   // -384.0f
     Part(0);

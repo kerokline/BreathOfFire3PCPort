@@ -194,8 +194,8 @@ extern "C" int __cdecl Music_LoadFile(unsigned track) {
     const bool pc_first = music_seq::PcFirst();               // DIV-0150
     if (!pc_first && music_seq::LoadFile(track)) return 0;  // DIV-0087
     char looping[0x28], once[0x28];
-    g.sprintf(looping, reinterpret_cast<const char*>(kLoopingName), track);
-    g.sprintf(once, reinterpret_cast<const char*>(kOnceName), track);
+    g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName)), track);
+    g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName)), track);
     Music_FileLoops = 1;
     int handle = g.file_open(looping, 0, 0);
     if (handle == -1) {
@@ -860,7 +860,7 @@ extern "C" void* __cdecl Music_OpenDecoder(const void* file, unsigned size) {
     g.mp3_memory_io(io);
     g.mp3_set_io(decoder, io);
     char name[0x20];
-    g.sprintf(name, reinterpret_cast<const char*>(kMemoryName), size, file);
+    g.sprintf(name, reinterpret_cast<const char*>(::bof3::Img(kMemoryName)), size, file);
     if (g.mp3_open(decoder, name, -1) != 0) return nullptr;
     return g.mp3_start(decoder) == 0 ? decoder : nullptr;
 }
@@ -1588,8 +1588,8 @@ int MusicFileSize(unsigned track) {
     const bool pc_first = music_seq::PcFirst();  // DIV-0150, as Music_LoadFile
     if (!pc_first && music_seq::Probe(track, &size)) return size;
     char looping[0x28], once[0x28];
-    g.sprintf(looping, reinterpret_cast<const char*>(kLoopingName), track);
-    g.sprintf(once, reinterpret_cast<const char*>(kOnceName), track);
+    g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName)), track);
+    g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName)), track);
     int handle = g.file_open(looping, 0, 0);
     if (handle == -1) handle = g.file_open(once, 0, 0);
     if (handle == -1) return pc_first && music_seq::Probe(track, &size) ? size : -1;

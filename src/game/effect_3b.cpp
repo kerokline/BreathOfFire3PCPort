@@ -63,8 +63,10 @@ U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 void SetUL(U a, U v) { SetUL(At(a), v); }
+[[gnu::always_inline]] inline void SetUL(::bof3::image::Va a, U v) { SetUL(::bof3::Img(a), v); }
 U W(U a) { return Word(At(a)); }
 unsigned char& B(U a) { return *At(a); }
+[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 U S16(U v) { return static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(v & 0xFFFFu))); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
@@ -72,6 +74,7 @@ U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n
 // imul (32 bits kept)
 U Mul(int a, U b) { return static_cast<U>(a) * b; }
 void AddWord(U a, U d) { SetWord(At(a), W(a) + d); }
+[[gnu::always_inline]] inline void AddWord(::bof3::image::Va a, U d) { AddWord(::bof3::Img(a), d); }
 
 // --- x87 as the original has it (the game's control word: round to nearest, 53
 // bits); every value goes through the FPU as Capcom's does.
@@ -475,7 +478,7 @@ extern "C" void __cdecl EffectKind65_Check(void) {
 extern "C" void __cdecl EffectKind65_WaitInput(void) {
     if (Input_Held == 0) return;
     SH_CALL(Sound_PlayEffect)(0x202);
-    SH_CALL(Flags_Toggle)(At(Cond_Flags_addr + 0xa0), at::kKind65Flag);
+    SH_CALL(Flags_Toggle)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), at::kKind65Flag);
     S()[9] = 0x3C;
     S()[1] = 3;
 }
@@ -748,8 +751,8 @@ extern "C" void __cdecl EffectKind69_DrawColumn(unsigned width, unsigned base, u
     const auto shade = [] { return SharedScratch.b_08; };
     const auto quad = [](unsigned char* p) {
         long depth;
-        SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(At(Prim_VertexScratch_addr)), reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 0x8)),
-                                   reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 0x10)), reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 0x18)),
+        SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr))), reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 0x8)),
+                                   reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 0x10)), reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 0x18)),
                                    reinterpret_cast<float*>(p + 8), reinterpret_cast<float*>(p + 0x18),
                                    reinterpret_cast<float*>(p + 0x28), reinterpret_cast<float*>(p + 0x38), &depth);
         SH_CALL(Gte_PrimDepths4_10B)(p);

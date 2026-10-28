@@ -28,6 +28,7 @@ namespace {
 namespace at = game_last::at;
 using U = std::uint32_t;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using Handler = void(__cdecl*)();
 
 }  // namespace

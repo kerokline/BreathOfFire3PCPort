@@ -59,6 +59,7 @@ namespace {
 namespace at = effect_4c::at;
 using U = std::uint32_t;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -299,7 +300,7 @@ extern "C" void __cdecl EffectKind8D_Start(void) {
     unsigned char* const s = S();
     Camera_Distance = 0x1C80;
     MapView_Redraw = 2;
-    for (unsigned i = 0; i < 3; ++i) At(ObjTrio_addr + 0x48 + at::kObjStride * i)[0] = 1;
+    for (unsigned i = 0; i < 3; ++i) At(::bof3::Img(ObjTrio_addr) + 0x48 + at::kObjStride * i)[0] = 1;
     s[0x5F] = 0x7F;
     S()[0x5E] = 0x7F;
     S()[0x5D] = 0x7F;
@@ -340,7 +341,7 @@ extern "C" void __cdecl EffectKind8D_Pull(void) {
 // original 0x48B2F0 (state 3): the byte after MoveScript_Var7 (0x8034E5) up;
 // a tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind8D_End(void) {
-    unsigned char* const step = At(MoveScript_PartyRecords_addr + 0x65);
+    unsigned char* const step = At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65);
     step[0] = static_cast<unsigned char>(step[0] + 1);
     SH_CALL(Effect_Release)();
 }
@@ -438,7 +439,7 @@ extern "C" void __cdecl EffectKind8E_DrawChip(unsigned char* p) {
     if (k >= at::kChipShapeCount)
         bof3::Fatal("EffectKind8E_DrawChip: +4 is %u, past the eight shapes at 0x%X - the original reads what "
                     "follows (docs/effect_4c.md section 6)",
-                    k, (unsigned)at::kChipShapes);
+                    k, at::kChipShapes.v);
     const unsigned char* const row = At(at::kChipShapes + 8 * k);
     FildAdd(SW(row + 0), prim + 8, prim + 0x14);
     FildAdd(SW(row + 2), prim + 0xC, prim + 0x18);
@@ -649,13 +650,13 @@ extern "C" void __cdecl EffectKind8F_Sequence(void) {
             if (a >= at::kStageCount)
                 bof3::Fatal("EffectKind8F_Sequence: the stage byte 0x%X is %u, past the five rows of 0x%X - the "
                             "original reads on (docs/effect_4c.md section 6)",
-                            (unsigned)Effect4c_Stage_addr, a, (unsigned)at::kStageCounts);
+                            (unsigned)Effect4c_Stage_addr, a, at::kStageCounts.v);
             SH_CALL(EffectKind8F_SpawnShuffled)(At(at::kStageCounts + a)[0]);
             const unsigned b = Effect4c_Stage;
             if (b >= at::kStageCount)
                 bof3::Fatal("EffectKind8F_Sequence: the stage byte 0x%X is %u, past the five rows of 0x%X - the "
                             "original reads on (docs/effect_4c.md section 6)",
-                            (unsigned)Effect4c_Stage_addr, b, (unsigned)at::kStageWaits);
+                            (unsigned)Effect4c_Stage_addr, b, at::kStageWaits.v);
             rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, At(at::kStageWaits + b)[0]);
         } else {
             rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, wait - 1);
@@ -683,7 +684,7 @@ extern "C" void __cdecl EffectKind8F_SpawnShard(unsigned i) {
     if (k >= at::kShardRowCount)
         bof3::Fatal("EffectKind8F_SpawnShard: row %u, past the sixteen of 0x%X - the original reads what follows "
                     "(docs/effect_4c.md section 6)",
-                    k, (unsigned)at::kShardStarts);
+                    k, at::kShardStarts.v);
     r[0] = 1;
     r[1] = 0;
     r[2] = 0;

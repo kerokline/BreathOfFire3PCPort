@@ -39,12 +39,14 @@ using U = std::uint32_t;
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
+[[gnu::always_inline]] inline void PutLong(::bof3::image::Va address, U v) { PutLong(::bof3::Img(address), v); }
 void PutWord(U address, U v) {
     const std::uint16_t w = static_cast<std::uint16_t>(v);
     std::memcpy(At(address), &w, sizeof w);
 }
 void PutFloat(U address, float v) { std::memcpy(At(address), &v, sizeof v); }
 void PutPtr(U address, const void* p) { PutLong(address, static_cast<U>(reinterpret_cast<std::uintptr_t>(p))); }
+[[gnu::always_inline]] inline void PutPtr(::bof3::image::Va address, const void* p) { PutPtr(::bof3::Img(address), p); }
 void Zero(U address, U bytes) { std::memset(At(address), 0, bytes); }
 
 // --- the globals (display-setup.md section 3) -------------------------------------
@@ -64,7 +66,7 @@ constexpr U kCellCacheBytes = 0x1400;
 // kPixelFormat: now Gfx_PixelFormat (symbols.toml).
 constexpr U kPixelFormatRecord = 0x40;
 // kShadeCache: now D3d_ShadeModeCache (symbols.toml).
-constexpr U kRenderFlags = 0x6C3A4C;
+constexpr ::bof3::image::Va kRenderFlags{0x6C3A4C};
 // kUnread6C3A48: now Display_ZeroedUnread (symbols.toml).
 // kTexCoords: now D3d_TexCoords (symbols.toml).
 // kDeviceCountLess1: now Display_DeviceCountLess1 (symbols.toml).
@@ -73,7 +75,7 @@ constexpr U kModeLists = 0x6BE1E8, kModeListsBytes = 0x810;
 // kDirectDraw: now Dd_DirectDraw (symbols.toml).
 // kClipper: now PsxRest_Clipper (symbols.toml).
 // kZBuffer: now PsxRest_ZBuffer (symbols.toml).
-constexpr U kDirect3D = 0x7CC34C;
+constexpr ::bof3::image::Va kDirect3D{0x7CC34C};
 // kScreenRight: now Gfx_ScreenRect[2] (symbols.toml).
 // kScreenBottom: now Gfx_ScreenRect[3] (symbols.toml).
 // kModeBpp: now Display_ModeBpp (symbols.toml).
@@ -172,8 +174,8 @@ void Rescale(U k) {
     PutFloat(D3d_ScaleX_addr, static_cast<float>(k));
     PutFloat(D3d_ScaleY_addr, static_cast<float>(k));
     SprtDraw_SetScale(k);
-    auto* primary = *reinterpret_cast<render::Surface**>(At(DDraw_Primary_addr));
-    auto* back = *reinterpret_cast<render::Surface**>(At(DDraw_BackBuffer_addr));
+    auto* primary = *reinterpret_cast<render::Surface**>(At(::bof3::Img(DDraw_Primary_addr)));
+    auto* back = *reinterpret_cast<render::Surface**>(At(::bof3::Img(DDraw_BackBuffer_addr)));
     if (primary && back) {
         if (!render::ResizeSurface(primary, width, height) || !render::ResizeSurface(back, width, height))
             bof3::Fatal("Display_Setup: out of memory resizing the primary and back surfaces to %u x %u", width, height);
@@ -296,7 +298,7 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     DDraw_BackBuffer = back;
     PsxRest_Clipper = 0;
     PsxRest_ZBuffer = 0;
-    *reinterpret_cast<U*>(At(Gfx_RenderFlags_addr)) |= 0x200;
+    *reinterpret_cast<U*>(At(::bof3::Img(Gfx_RenderFlags_addr))) |= 0x200;
     (void)fullscreen;   // never forced: no display mode is set (DIV-0031)
 
     // 2.9 the device
@@ -306,8 +308,8 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     FillFormat(Gfx_PixelFormat_addr + 0 * kPixelFormatRecord, kFormatAlpha, kRankAlpha);
     FillFormat(Gfx_PixelFormat_addr + 1 * kPixelFormatRecord, kFormatOpaque, kRankOpaque);
     FillFormat(Gfx_PixelFormat_addr + 2 * kPixelFormatRecord, kFormatScreen, kRankScreen);
-    if (kNoAlphaFormat) *reinterpret_cast<U*>(At(Gfx_RenderFlags_addr)) |= 0x20;
-    if (!Dd_CreatePlainSurface(0x140, 0x100, reinterpret_cast<void**>(At(Dd_StageSurface_addr)), 0))
+    if (kNoAlphaFormat) *reinterpret_cast<U*>(At(::bof3::Img(Gfx_RenderFlags_addr))) |= 0x20;
+    if (!Dd_CreatePlainSurface(0x140, 0x100, reinterpret_cast<void**>(At(::bof3::Img(Dd_StageSurface_addr))), 0))
         bof3::Fatal("Display_Setup: the staging surface");
     Display_BackPitch = back->pitch;
 

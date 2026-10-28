@@ -80,6 +80,7 @@ float Float(const unsigned char* p) {
     return v;
 }
 float FloatAt(U address) { return Float(At(address)); }
+[[gnu::always_inline]] inline float FloatAt(::bof3::image::Va address) { return FloatAt(::bof3::Img(address)); }
 void PutWord(unsigned char* p, U v) {
     const std::uint16_t w = static_cast<std::uint16_t>(v);
     std::memcpy(p, &w, sizeof w);
@@ -145,7 +146,7 @@ inline float X87IntSubDivInt(std::int32_t e, float k, std::int32_t n) {
 // --- the device --------------------------------------------------------------
 
 // D3d_Device, read afresh before every COM call as the original does.
-void** Device() { return *reinterpret_cast<void** volatile*>(At(D3d_Device_addr)); }
+void** Device() { return *reinterpret_cast<void** volatile*>(At(::bof3::Img(D3d_Device_addr))); }
 void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 using Com1 = long(__stdcall*)(void*);
 using Com3 = long(__stdcall*)(void*, U, U);
@@ -169,7 +170,7 @@ long DrawVertices(U type, U count) {
     return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, D3d_Vertices_addr, count, 0);
 }
 
-unsigned char* Vertex(U i) { return At(D3d_Vertices_addr + i * 0x20); }
+unsigned char* Vertex(U i) { return At(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
 
 // sx, sy = scale times the primitive's float x, y; sz the primitive's z as it
 // is (a mov); rhw = 0.1 / z.
@@ -251,7 +252,7 @@ void D3d_SetBlend(unsigned code, unsigned mode) {
 // 0x59FD80. SHADEMODE (9), only when it differs from the cache; the cache is
 // written after the call.
 void D3d_SetShadeMode(unsigned mode) {
-    if (*reinterpret_cast<volatile U*>(At(D3d_ShadeModeCache_addr)) == mode) return;
+    if (*reinterpret_cast<volatile U*>(At(::bof3::Img(D3d_ShadeModeCache_addr))) == mode) return;
     SetRenderState(9, mode);
     D3d_ShadeModeCache = mode;
 }
@@ -274,7 +275,7 @@ long D3d_BindTexture(unsigned tpage, unsigned clut) {
         texture = static_cast<U>(g.tex_build(page, static_cast<int>(clut), mode));
         Scene(0x24);   // BeginScene
     } else {
-        const unsigned char* e = At(Gfx_TexCache_addr + static_cast<U>(page * 32 + slot) * 0x18);
+        const unsigned char* e = At(::bof3::Img(Gfx_TexCache_addr) + static_cast<U>(page * 32 + slot) * 0x18);
         const unsigned char state = e[0];
         texture = Long(e + 0x14);
         if (state == 2) {
@@ -289,7 +290,7 @@ long D3d_BindTexture(unsigned tpage, unsigned clut) {
     // window w x h its 256 texels tile - so a frame-buffer grab there can be
     // sampled. Does nothing under Capcom's DirectX 6 objects.
     if (mode & 2) {
-        const unsigned char* key = At(Gfx_TexCacheKey_addr);
+        const unsigned char* key = At(::bof3::Img(Gfx_TexCacheKey_addr));
         render::NoteDirectPage(reinterpret_cast<void*>(static_cast<std::uintptr_t>(texture)),
                                (page & 0xF) * 64 + Short(key), (page & 0x10) * 16 + Short(key + 2), Short(key + 4),
                                Short(key + 6));
@@ -356,7 +357,7 @@ namespace {
 // blend - and no specular: the colour helper is handed a null pointer, so the
 // vertices' specular, tu and tv are left as the last draw left them.
 long DrawLines(const unsigned char* prim, U corners) {
-    const U mode = Long(At(Gfx_DrawTpage_addr)) & 0xFFFF;
+    const U mode = Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF;
     unsigned long diffuse;
     g.prim_color(prim[4], prim[5], prim[6], prim[7], mode, &diffuse, nullptr);
     for (U i = 0; i < corners; ++i) {
@@ -367,7 +368,7 @@ long DrawLines(const unsigned char* prim, U corners) {
     SetTexture(0, 0);
     g.ret_only(0);
     g.ret_only(1);
-    g.set_blend(prim[7], Long(At(Gfx_DrawTpage_addr)) & 0xFFFF);
+    g.set_blend(prim[7], Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF);
     g.set_shade(1);
     return d3d_lines::g_wide ? d3d_lines::DrawWide(corners) : DrawVertices(3, corners);   // LINESTRIP; DIV-0079 the quads
 }
@@ -387,7 +388,7 @@ long D3d_DrawLineF4(const unsigned char* prim) { return DrawLines(prim, 4); }
 // through fld / fst to all four corners (a signalling NaN comes out quiet, unlike
 // the other handlers' mov).
 long D3d_DrawTile(const unsigned char* prim) {
-    const U mode = Long(At(Gfx_DrawTpage_addr)) & 0xFFFF;
+    const U mode = Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF;
     unsigned long diffuse;
     g.prim_color(prim[4], prim[5], prim[6], prim[7], mode, &diffuse, nullptr);
     const float x = Float(prim + 8), y = Float(prim + 0xC), z = Float(prim + 0x10);
@@ -409,7 +410,7 @@ long D3d_DrawTile(const unsigned char* prim) {
     SetTexture(0, 0);
     g.ret_only(1);
     g.ret_only(1);
-    g.set_blend(prim[7], Long(At(Gfx_DrawTpage_addr)) & 0xFFFF);
+    g.set_blend(prim[7], Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF);
     g.set_shade(1);
     return DrawVertices(5, 4);
 }
@@ -428,7 +429,7 @@ long D3d_DrawCellSprite(const unsigned char* prim) {
     unsigned long diffuse, specular;
     g.prim_color(prim[4], prim[5], prim[6], prim[7], Word(prim + 0x1E), &diffuse, &specular);
     const int index = g.cell_texture(Word(prim + 0x18), Word(prim + 0x1A), Word(prim + 0x1C), Word(prim + 0x1E));
-    const unsigned char* e = At(D3d_CellTexCache_addr + static_cast<U>(index) * kCellEntry);
+    const unsigned char* e = At(::bof3::Img(D3d_CellTexCache_addr) + static_cast<U>(index) * kCellEntry);
     const bool flip = (prim[0x1F] & 4) != 0;
     const float x = Float(prim + 8), y = Float(prim + 0xC), sx = Float(prim + 0x10), sy = Float(prim + 0x14);
     const float left = X87IntMulAddMul(Short(e + 8), sx, x, D3d_ScaleX, flip);
@@ -503,7 +504,7 @@ void NoteCellFoot(U slot, unsigned first, unsigned count) {
     if (slot >= 128) return;
     CellFoot f{0, 0, 0, 0, 0};
     for (unsigned k = 0; k < count; ++k) {
-        const unsigned char* r = At(SpriteCell_Table_addr + (first + k) * 8u);
+        const unsigned char* r = At(::bof3::Img(SpriteCell_Table_addr) + (first + k) * 8u);
         const unsigned size = r[3], tpage = Word(r + 4), u = r[6], v = r[7];
         const bool four_bit = (tpage & 0x180) == 0;
         const int w_tex = static_cast<int>(size & 0xF) * 8, h = static_cast<int>(size >> 4) * 8;
@@ -531,7 +532,7 @@ void D3dDraw_CellsShadowWritten(int x, int y, int w, int h) {
         CellFoot& f = g_cell_foot[i];
         if (!f.valid) continue;
         if (f.x1 < x || f.x0 > x1 || f.y1 < y || f.y0 > y1) continue;
-        if (Long(At(D3d_CellTexCache_addr + i * kCellEntry)) != 0) {
+        if (Long(At(::bof3::Img(D3d_CellTexCache_addr) + i * kCellEntry)) != 0) {
             if (PoseLogOn())
                 bof3::Log("poselog     frame %lu cell free entry %u (upload %d,%d %dx%d over foot %d,%d..%d,%d)", static_cast<unsigned long>(Frame_Counter),
                           static_cast<unsigned>(i), x, y, w, h, f.x0, f.y0, f.x1, f.y1);
@@ -546,7 +547,7 @@ int D3d_CellTexture(unsigned first, unsigned count, unsigned clut, unsigned flag
     U victim = count;
     U i;
     for (i = 0; i < kCellEntries; ++i) {
-        const unsigned char* e = At(D3d_CellTexCache_addr + i * kCellEntry);
+        const unsigned char* e = At(::bof3::Img(D3d_CellTexCache_addr) + i * kCellEntry);
         if (Long(e) == 0) {
             g.cell_build(static_cast<int>(i), first, count, clut, flags & 0x800);
             NoteCellFoot(i, first, count);
@@ -555,9 +556,9 @@ int D3d_CellTexture(unsigned first, unsigned count, unsigned clut, unsigned flag
         if (Word(e + 0x12) == count && Word(e + 0x10) == clut) {
             U sum = 0;
             const U bytes = count * 8;
-            for (U k = 0; k < bytes; k += 4) sum += Long(At(SpriteCell_Table_addr + first * 8 + k));
+            for (U k = 0; k < bytes; k += 4) sum += Long(At(::bof3::Img(SpriteCell_Table_addr) + first * 8 + k));
             if (Long(e + 0x18) == sum) {
-                if (Long(e + 0x1C) != Long(At(Gfx_ClutRows_addr + (clut >> 6) * 8)) && Word(e + 0x14) == 0)
+                if (Long(e + 0x1C) != Long(At(::bof3::Img(Gfx_ClutRows_addr) + (clut >> 6) * 8)) && Word(e + 0x14) == 0)
                     g.cell_refresh(static_cast<int>(i), first, count, clut);
                 goto used;
             }
@@ -582,7 +583,7 @@ int D3d_CellTexture(unsigned first, unsigned count, unsigned clut, unsigned flag
     NoteCellFoot(i, first, count);
 used:
     const unsigned char render_flags = Gfx_RenderFlags;
-    unsigned char* e = At(D3d_CellTexCache_addr + i * kCellEntry);
+    unsigned char* e = At(::bof3::Img(D3d_CellTexCache_addr) + i * kCellEntry);
     PutWord(e + 0x16, Word(e + 0x16) + 1);
     PutWord(e + 0x14, 1);
     if (!(render_flags & 1)) SetTexture(0, Long(e + 0x24));

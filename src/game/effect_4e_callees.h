@@ -25,15 +25,15 @@ constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV;  // (matr
 
 // --- the image's cells ---------------------------------------------------------
 // kLeaderPoint: now ObjTrio[0].x (symbols.toml). ObjTrio + 0x34: the leader's x, z, height (three dwords)
-constexpr std::uint32_t kCounter = 0x903848;       // u8: the chapter's count (scenario_harness at::kCounter)
+constexpr ::bof3::image::Va kCounter{0x903848};       // u8: the chapter's count (scenario_harness at::kCounter)
 constexpr rdata::Const kHalf{0x5C41B8};          // float (.rdata): the trail's half-width (effect_3a_callees.h kHalf)
 
 // --- kind 0xA0's two pools (nothing else in the image reads them) --------------
 // kSparks: now EffectKindA0_Sparks (symbols.toml). EffectKindA0_Sparks: 16 sparks of 0x18 (EffectKind64's form)
 constexpr unsigned kSparkCount = 0x10;
 constexpr std::uint32_t kSparkStride = 0x18;
-constexpr std::uint32_t kShards = 0x676430;        // EffectKindA0_Shards: 32 shards of 0x2C, two runs of 16
-constexpr std::uint32_t kShardsB = 0x6766F0;       // the second run of 16 (kShards + 16 * 0x2C)
+constexpr ::bof3::image::Va kShards{0x676430};        // EffectKindA0_Shards: 32 shards of 0x2C, two runs of 16
+constexpr ::bof3::image::Va kShardsB{0x6766F0};       // the second run of 16 (kShards + 16 * 0x2C)
 constexpr unsigned kShardCount = 0x20;
 constexpr unsigned kShardRun = 0x10;
 constexpr std::uint32_t kShardStride = 0x2C;

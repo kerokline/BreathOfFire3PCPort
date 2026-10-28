@@ -163,6 +163,7 @@ static_assert(kCount == sizeof kAll / sizeof kAll[0], "one enum entry a clone, i
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+[[gnu::always_inline]] inline unsigned char* P(::bof3::image::Va a) { return P(::bof3::Img(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -402,7 +403,7 @@ void Args(unsigned k, U* a) {
         break;
     }
     case k4AGlow: a[0] = EffectKind30_Shards_addr + at::kTrailStride * (i % at::kTrailCount); break;
-    case k4BDebris: a[0] = at::kDebris + at::kDebrisStride * (i % at::kDebrisCount); break;
+    case k4BDebris: a[0] = ::bof3::Img(at::kDebris + at::kDebrisStride * (i % at::kDebrisCount)); break;
     default: break;
     }
 }

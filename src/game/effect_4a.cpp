@@ -57,8 +57,10 @@ U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 std::int32_t SL(U a) { return Long(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 unsigned char& B(U a) { return *At(a); }
+[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+[[gnu::always_inline]] inline unsigned char* P(::bof3::image::Va a) { return P(::bof3::Img(a)); }
 
 using Handler = scenario_harness::Handler;
 
@@ -380,7 +382,7 @@ extern "C" void __cdecl EffectKind84_Pause(void) {
     s[9] = static_cast<unsigned char>(was - 1);
     if (was != 0) return;
     unsigned char* const t = S();
-    SetWord(At(MoveScript_PartyRecords_addr + 0x66), 0);
+    SetWord(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), 0);
     t[1] = 1;
 }
 
@@ -640,7 +642,7 @@ extern "C" void __cdecl EffectKind87_Restore(void) {
 // original 0x489020 (state 8): Effect_Release, then the step word 0x8034E6 0.
 extern "C" void __cdecl EffectKind87_End(void) {
     SH_CALL(Effect_Release)();
-    SetWord(At(MoveScript_PartyRecords_addr + 0x66), 0);
+    SetWord(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), 0);
 }
 
 void Effect4A_Inject() {

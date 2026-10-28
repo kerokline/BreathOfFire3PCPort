@@ -23,7 +23,7 @@ constexpr std::uint32_t kRayDraw = bof3::addr::EffectKind24_DrawRay;       // 0x
                                                    // leader's point (ObjTrio +0x34..+0x3C). Writes nothing of it
 
 // Data.
-constexpr std::uint32_t kCounter0 = 0x903848;      // the chapters' counter byte (scenario_harness at::kCounter):
+constexpr ::bof3::image::Va kCounter0{0x903848};      // the chapters' counter byte (scenario_harness at::kCounter):
                                                    // EffectKind22_WaitArms adds 1 when its arms are done
 // kLeaderX: now ObjTrio[0].x (symbols.toml). ObjTrio record 0 (the leader) +0x34, x (16.16)
 // kLeaderZ: now ObjTrio[0].z (symbols.toml). +0x38, z

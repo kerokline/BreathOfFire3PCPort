@@ -8754,7 +8754,7 @@ src/game/effect_1c.cpp	DebrisLoop	record	SetWord	d + 0x24	0	-	-	family	SetWord(d
 src/game/effect_1c.cpp	DebrisLoop	record	Word	d + 0x24	0	-	-	family	Word(d + 0x24): local d = At(base + 0x2C * i)	b1-effect
 src/game/effect_1c.cpp	DebrisLoop	record	SetWord	d + 0x2A	0	-	-	family	SetWord(d + 0x2a): local d = At(base + 0x2C * i)	b1-effect
 src/game/effect_1c.cpp	DebrisLoop	record	Word	d + 0x2A	0	-	-	family	Word(d + 0x2a): local d = At(base + 0x2C * i)	b1-effect
-src/game/effect_1c.cpp	EffectKind1E_DebrisDraw	global	DebrisLoop	at::kDebris	0	0x92c780	-	no-entry	at::kDebris 0x92c780 -	b0
+src/game/effect_1c.cpp	DebrisLoop	global	DebrisLoop	at::kDebris	0	0x92c780	-	no-entry	at::kDebris 0x92c780 -	b0
 src/game/effect_1c.cpp	EffectKind1E_DrawModel	record	At	face + 2 + 6 * k + 2 * j	0	-	base=Sprite_ObjectsExtra;stride=0x28	computed	At(face + -): the offset is not a constant	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_Winding	record	Word	a + 2	0	-	-	family	Word(b + 0x2): parameter b of EffectKind1E_Winding	b1-effect
 src/game/effect_1c.cpp	EffectKind1E_Winding	record	Word	b + 2	0	-	-	family	Word(a + 0x2): parameter a of EffectKind1E_Winding	b1-effect
@@ -8916,7 +8916,7 @@ src/game/effect_1e_fuzz.cpp	Disturb	global	Mem	Effect_Objects_addr + 0x181	0	0x7
 src/game/effect_1e_fuzz.cpp	Disturb	global	Mem	Effect1a_PanelObject_addr	0	0x939a1c	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Effect1a_PanelObject_addr - -)	c4-tc
 src/game/effect_1f.cpp	SetLong	global	B	at::kRecord6	0	0x7e14e0	-	gate	at::kRecord6 0x7e14e0 Effect_Objects+0x300	b0
 src/game/effect_1f.cpp	Sound	record	At	bof3::addr::MessagePools + Word(cell)	0	-	base=MessagePools	base-form	At(bof3::addr::MessagePools + -): bof3::addr::MessagePools	b1-effect
-src/game/effect_1f.cpp	IdAt	global	B	at::kAccessoryIds	0	0x9042d4	-	no-entry	at::kAccessoryIds 0x9042d4 -	b0
+src/game/effect_1f.cpp	Label	global	B	at::kAccessoryIds	0	0x9042d4	-	no-entry	at::kAccessoryIds 0x9042d4 -	b0
 src/game/effect_1f.cpp	KindOf	global	B	at::kAccessoryKind	0	0x658462	-	no-entry	at::kAccessoryKind 0x658462 -	b0
 src/game/effect_1f.cpp	ExtraSlots_Enter	global	-	at::kLabelA	0	0x803622	-	no-entry	at::kLabelA 0x803622 -	b0
 src/game/effect_1f.cpp	ExtraSlots_Enter	global	-	at::kLabelB	0	0x803624	-	no-entry	at::kLabelB 0x803624 -	b0
@@ -9622,9 +9622,9 @@ src/game/effect_2c_fuzz.cpp	Seed	global	Mem	at::kCounter	1	0x903848	-	no-entry	a
 src/game/effect_2c_fuzz.cpp	Disturb	global	Mem	at::kCounter	0	0x903848	-	no-entry	at::kCounter 0x903848 -	b0
 src/game/effect_2c_fuzz.cpp	Disturb	record	SetWord	s + 0x32	0	-	base=Sprite_Current	harness	SetWord(s + 0x32): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_2c_fuzz.cpp	Disturb	record	SetWord	s + 0x2E	0	-	base=Sprite_Current	harness	SetWord(s + 0x2e): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
-src/game/effect_2d.cpp	S	global	At	Chapter_FlagRow_addr	0	0x929ed0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Chapter_FlagRow_addr - -)	c4-tc
-src/game/effect_2d.cpp	S	global	At	Effect2d_PanelColour_addr	0	0x6761c4	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Effect2d_PanelColour_addr - -)	c4-tc
-src/game/effect_2d.cpp	S	record	At	table + 4 * state	0	-	-	computed	At(table + -): the offset is not a constant	b1-effect
+src/game/effect_2d.cpp	At	global	At	Chapter_FlagRow_addr	0	0x929ed0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Chapter_FlagRow_addr - -)	c4-tc
+src/game/effect_2d.cpp	At	global	At	Effect2d_PanelColour_addr	0	0x6761c4	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Effect2d_PanelColour_addr - -)	c4-tc
+src/game/effect_2d.cpp	At	record	At	table + 4 * state	0	-	-	computed	At(table + -): the offset is not a constant	b1-effect
 src/game/effect_2d.cpp	EffectKind45_Run	record	SetWord	EffectKind30_Shards + 4 * i	0	-	base=EffectKind30_Shards	computed	SetWord(EffectKind30_Shards + -): the offset is not a constant	b1-effect
 src/game/effect_2d.cpp	EffectKind45_Run	record	SetWord	EffectKind30_Shards + 4 * i + 2	0	-	base=EffectKind30_Shards	computed	SetWord(EffectKind30_Shards + -): the offset is not a constant	b1-effect
 src/game/effect_2d.cpp	EffectKind45_Tune	record	Word	s + 0x30	0	-	via=S	union	Word(s + 0x30): EffectObject 0x30 via Word; EffectObject +2/+6/+9/+0xC/+0x10/+0x2E/+0x30 reused per kind (docs/effect_1a.md 2.2, 2.5, 2.6; effect_2d.cpp kind 0x45); PartyMember +0x124..+0x13F (typed-records 3)	b1-effect
@@ -9675,8 +9675,8 @@ src/game/effect_2d.cpp	EffectKind49_V3Burst	record	SetWord	anchor + 0x10	0	-	-	f
 src/game/effect_2d.cpp	EffectKind49_V3Burst	record	Word	anchor + 0x10	0	-	-	family	Word(anchor + 0x10): local anchor = *reinterpret_cast<unsigned char**>(At(Ef	b1-effect
 src/game/effect_2d.cpp	EffectKind49_V3Burst	global	At	at::kBurstCount	1	0x6545f4	-	no-entry	at::kBurstCount 0x6545f4 -	b0
 src/game/effect_2d.cpp	EffectKind49_V3Burst	global	At	at::kBurstCount	2	0x6545f4	-	no-entry	at::kBurstCount 0x6545f4 -	b0
-src/game/effect_2d_fuzz.cpp	FxPuffFind	global	FindFirstFree	at::kDust	0	0x92d1dc	-	no-entry	at::kDust 0x92d1dc -	b0
-src/game/effect_2d_fuzz.cpp	FxPuffFind	global	At	Effect2d_PanelColour_addr	0	0x6761c4	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Effect2d_PanelColour_addr - -)	c4-tc
+src/game/effect_2d_fuzz.cpp	FindFirstFree	global	FindFirstFree	at::kDust	0	0x92d1dc	-	no-entry	at::kDust 0x92d1dc -	b0
+src/game/effect_2d_fuzz.cpp	FindFirstFree	global	At	Effect2d_PanelColour_addr	0	0x6761c4	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Effect2d_PanelColour_addr - -)	c4-tc
 src/game/effect_2d_fuzz.cpp	History	record	SetWord	at + 4 * i	0	-	param	computed	SetWord(at + -): the offset is not a constant	b1-effect
 src/game/effect_2d_fuzz.cpp	History	record	SetWord	at + 4 * i + 2	0	-	param	computed	SetWord(at + -): the offset is not a constant	b1-effect
 src/game/effect_2d_fuzz.cpp	Seed	record	SetWord	s + 0x2E	0	-	base=Sprite_Current	harness	SetWord(s + 0x2e): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
@@ -10056,8 +10056,8 @@ src/game/effect_2g_fuzz.cpp	Seed	global	Mem	at::kHit	1	0x903849	-	no-entry	at::k
 src/game/effect_2g_fuzz.cpp	Seed	global	Mem	at::kHit	2	0x903849	-	no-entry	at::kHit 0x903849 -	b0
 src/game/effect_2g_fuzz.cpp	Disturb	record	SetLong	s + 0x3C	0	-	base=Sprite_Current	harness	SetLong(s + 0x3c): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_2g_fuzz.cpp	Disturb	record	SetWord	s + 0x58	0	-	base=Sprite_Current	harness	SetWord(s + 0x58): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
-src/game/effect_3a.cpp	S	record	UL	from + i	0	-	-	computed	UL(from + -): the offset is not a constant	b1-effect
-src/game/effect_3a.cpp	S	record	SetUL	to + i	0	-	-	computed	SetUL(to + -): the offset is not a constant	b1-effect
+src/game/effect_3a.cpp	At	record	UL	from + i	0	-	-	computed	UL(from + -): the offset is not a constant	b1-effect
+src/game/effect_3a.cpp	At	record	SetUL	to + i	0	-	-	computed	SetUL(to + -): the offset is not a constant	b1-effect
 src/game/effect_3a.cpp	Ray	global	At	at::kParticles	0	0x92df80	-	no-entry	at::kParticles 0x92df80 -	b0
 src/game/effect_3a.cpp	EffectKind60_DrawLine	record	SetUL	p + 8	0	-	base=Gfx_PacketNext	no-struct	SetUL(p + 0x8): local p = Gfx_PacketNext (a GPU packet, vertex or particle pool: no records.h struct)	b1-effect
 src/game/effect_3a.cpp	EffectKind60_DrawLine	record	UL	o + 4	0	-	-	family	UL(o + 0x4): parameter o of EffectKind60_DrawLine	b1-effect
@@ -10275,7 +10275,7 @@ src/game/effect_3b_fuzz.cpp	Disturb	global	Mem	Effect3c_ShardCursor_addr	0	0x676
 src/game/effect_3b_fuzz.cpp	Disturb	global	Mem	at::kCounter	0	0x903848	-	no-entry	at::kCounter 0x903848 -	b0
 src/game/effect_3b_fuzz.cpp	Disturb	record	SetLong	s + 0x18	0	-	base=Sprite_Current	harness	SetLong(s + 0x18): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_3b_fuzz.cpp	Disturb	global	Mem	Prim_VertexScratch_addr + 2 * (v % 16)	0	0x9037a0	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Prim_VertexScratch_addr - -)	c4-tc
-src/game/effect_3c.cpp	void	global	At	Cond_Flags_addr + 0xa0	0	0x904030	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Cond_Flags_addr - -)	c4-tc
+src/game/effect_3c.cpp	At	global	At	Cond_Flags_addr + 0xa0	0	0x904030	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Cond_Flags_addr - -)	c4-tc
 src/game/effect_3c.cpp	static_assert	record	At	table + 4 * state	0	-	-	computed	At(table + -): the offset is not a constant	b1-effect
 src/game/effect_3c.cpp	Kind6FColour	global	-	at::kKind6FColour	0	0x654a9c	-	no-entry	at::kKind6FColour 0x654a9c -	b0
 src/game/effect_3c.cpp	Kind6FColour	global	At	at::kKind6FColour	0	0x654a9c	-	no-entry	at::kKind6FColour 0x654a9c -	b0
@@ -10402,14 +10402,14 @@ src/game/effect_3c_fuzz.cpp	FxSpread	record	Long	s + 0x38	0	-	base=Sprite_Curren
 src/game/effect_3c_fuzz.cpp	FxSpread	record	Long	s + 0x3C	0	-	base=Sprite_Current	harness	Long(s + 0x3c): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_3c_fuzz.cpp	FxTile	record	Long	s + 0x5C	0	-	base=Sprite_Current	harness	Long(s + 0x5c): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_3c_fuzz.cpp	-	global	-	at::kParticles	0	0x92c780	-	no-entry	at::kParticles 0x92c780 -	b0
-src/game/effect_3c_fuzz.cpp	Seed	global	Pool	at::kParticles	0	0x92c780	-	no-entry	at::kParticles 0x92c780 -	b0
-src/game/effect_3c_fuzz.cpp	Seed	global	P	at::kParticles	0	0x92c780	-	no-entry	at::kParticles 0x92c780 -	b0
-src/game/effect_3c_fuzz.cpp	Seed	record	Long	s + 0x14	0	-	base=Sprite_Current	harness	Long(s + 0x14): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
-src/game/effect_3c_fuzz.cpp	Seed	record	SetLong	s + 0x1C	0	-	base=Sprite_Current	harness	SetLong(s + 0x1c): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
-src/game/effect_3c_fuzz.cpp	Seed	record	SetLong	e + 0x14	0	-	via=Rec	harness	SetLong(e + 0x14): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
-src/game/effect_3c_fuzz.cpp	Seed	record	SetLong	e + 0x1C	0	-	via=Rec	harness	SetLong(e + 0x1c): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
-src/game/effect_3c_fuzz.cpp	Seed	record	SetLong	e + 0x24	0	-	via=Rec	harness	SetLong(e + 0x24): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
-src/game/effect_3c_fuzz.cpp	Seed	record	SetLong	s + 0x14	0	-	base=Sprite_Current	harness	SetLong(s + 0x14): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
+src/game/effect_3c_fuzz.cpp	Pool	global	Pool	at::kParticles	0	0x92c780	-	no-entry	at::kParticles 0x92c780 -	b0
+src/game/effect_3c_fuzz.cpp	Pool	global	P	at::kParticles	0	0x92c780	-	no-entry	at::kParticles 0x92c780 -	b0
+src/game/effect_3c_fuzz.cpp	Pool	record	Long	s + 0x14	0	-	base=Sprite_Current	harness	Long(s + 0x14): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
+src/game/effect_3c_fuzz.cpp	Pool	record	SetLong	s + 0x1C	0	-	base=Sprite_Current	harness	SetLong(s + 0x1c): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
+src/game/effect_3c_fuzz.cpp	Pool	record	SetLong	e + 0x14	0	-	via=Rec	harness	SetLong(e + 0x14): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
+src/game/effect_3c_fuzz.cpp	Pool	record	SetLong	e + 0x1C	0	-	via=Rec	harness	SetLong(e + 0x1c): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
+src/game/effect_3c_fuzz.cpp	Pool	record	SetLong	e + 0x24	0	-	via=Rec	harness	SetLong(e + 0x24): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
+src/game/effect_3c_fuzz.cpp	Pool	record	SetLong	s + 0x14	0	-	base=Sprite_Current	harness	SetLong(s + 0x14): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_3c_fuzz.cpp	Args	global	-	at::kParticles	0	0x92c780	-	no-entry	at::kParticles 0x92c780 -	b0
 src/game/effect_3c_fuzz.cpp	Disturb	global	Mem	Effect3c_ShardCursor_addr	0	0x67626c	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Effect3c_ShardCursor_addr - -)	c4-tc
 src/game/effect_3c_fuzz.cpp	Disturb	global	Mem	Effect3c_SparkCursor_addr	0	0x676274	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Effect3c_SparkCursor_addr - -)	c4-tc
@@ -10863,7 +10863,7 @@ src/game/effect_4c_fuzz.cpp	Disturb	record	SetWord	s + 0x2E + 2 * (v & 1)	0	-	ba
 src/game/effect_4c_fuzz.cpp	Disturb	record	Long	s + 0x14	0	-	base=Sprite_Current	harness	Long(s + 0x14): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_4c_fuzz.cpp	Disturb	record	SetLong	s + 0x1C	0	-	base=Sprite_Current	harness	SetLong(s + 0x1c): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_4c_fuzz.cpp	Disturb	record	SetLong	s + 0xC + 4 * (v & 1)	0	-	base=Sprite_Current	computed	SetLong(s + -): the offset is not a constant	b1-effect
-src/game/effect_4d.cpp	S	global	At	EffectKind30_Shards_addr + 0xc0 + at::kDebrisStride * i	0	0x92bf80	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (EffectKind30_Shards_addr - -)	c4-tc
+src/game/effect_4d.cpp	At	global	At	EffectKind30_Shards_addr + 0xc0 + at::kDebrisStride * i	0	0x92bf80	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (EffectKind30_Shards_addr - -)	c4-tc
 src/game/effect_4d.cpp	static_assert	record	At	table + 4 * state	0	-	-	computed	At(table + -): the offset is not a constant	b1-effect
 src/game/effect_4d.cpp	TintTile	record	SetUL	prim + 8	0	-	base=Gfx_PacketNext	no-struct	SetUL(prim + 0x8): local prim = Gfx_PacketNext (a GPU packet, vertex or particle pool: no records.h struct)	b1-effect
 src/game/effect_4d.cpp	TintTile	record	SetUL	prim + 0xC	0	-	base=Gfx_PacketNext	no-struct	SetUL(prim + 0xc): local prim = Gfx_PacketNext (a GPU packet, vertex or particle pool: no records.h struct)	b1-effect
@@ -10947,8 +10947,8 @@ src/game/effect_4d_fuzz.cpp	Disturb	global	Mem	at::kCounter	0	0x903848	-	no-entr
 src/game/effect_4d_fuzz.cpp	Disturb	global	Mem	Effect4d_Kind96Index_addr	0	0x676299	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Effect4d_Kind96Index_addr - -)	c4-tc
 src/game/effect_4d_fuzz.cpp	Disturb	global	Mem	Effect4d_Kind95Clock_addr	0	0x67629a	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Effect4d_Kind95Clock_addr - -)	c4-tc
 src/game/effect_4d_fuzz.cpp	Disturb	record	SetLong	s + 0x74 + 4 * (v % 3)	0	-	base=Sprite_Current	computed	SetLong(s + -): the offset is not a constant	b1-effect
-src/game/effect_4e.cpp	S	record	UL	from + i	0	-	-	computed	UL(from + -): the offset is not a constant	b1-effect
-src/game/effect_4e.cpp	S	record	SetUL	to + i	0	-	-	computed	SetUL(to + -): the offset is not a constant	b1-effect
+src/game/effect_4e.cpp	At	record	UL	from + i	0	-	-	computed	UL(from + -): the offset is not a constant	b1-effect
+src/game/effect_4e.cpp	At	record	SetUL	to + i	0	-	-	computed	SetUL(to + -): the offset is not a constant	b1-effect
 src/game/effect_4e.cpp	EffectKind9B_DrawRing	record	SetUL	a + 4	0	-	-	family	SetUL(a + 0x4): local a: no declaration read	b1-effect
 src/game/effect_4e.cpp	EffectKind9B_DrawRing	record	UL	o + 4	0	-	via=Bytes	family	UL(o + 0x4): local o = Bytes(point)	b1-effect
 src/game/effect_4e.cpp	EffectKind9B_DrawRing	record	SetUL	a + 8	0	-	-	family	SetUL(a + 0x8): local a: no declaration read	b1-effect
@@ -11091,8 +11091,8 @@ src/game/effect_4e_fuzz.cpp	Seed	record	Long	s + 0xC	0	-	base=Sprite_Current	har
 src/game/effect_4e_fuzz.cpp	Seed	record	SetLong	s + 0x18	0	-	base=Sprite_Current	harness	SetLong(s + 0x18): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_4e_fuzz.cpp	Disturb	record	SetWord	s + 0x2E	0	-	base=Sprite_Current	harness	SetWord(s + 0x2e): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_4e_fuzz.cpp	Disturb	global	Mem	at::kCounter	0	0x903848	-	no-entry	at::kCounter 0x903848 -	b0
-src/game/effect_4f.cpp	S	record	UL	from + i	0	-	-	computed	UL(from + -): the offset is not a constant	b1-effect
-src/game/effect_4f.cpp	S	record	SetUL	to + i	0	-	-	computed	SetUL(to + -): the offset is not a constant	b1-effect
+src/game/effect_4f.cpp	At	record	UL	from + i	0	-	-	computed	UL(from + -): the offset is not a constant	b1-effect
+src/game/effect_4f.cpp	At	record	SetUL	to + i	0	-	-	computed	SetUL(to + -): the offset is not a constant	b1-effect
 src/game/effect_4f.cpp	Point	record	UL	table + 4 * state	0	-	-	computed	UL(table + -): the offset is not a constant	b1-effect
 src/game/effect_4f.cpp	Drop	global	At	EffectKind30_Shards_addr + i * at::kDropStride	0	0x92bf80	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (EffectKind30_Shards_addr - -)	c4-tc
 src/game/effect_4f.cpp	Drop	global	At	at::kSources	0	0x92d780	-	no-entry	at::kSources 0x92d780 -	b0
@@ -11218,7 +11218,6 @@ src/game/effect_4f.cpp	ShardCorner	record	SW	shard + e + 4	0	-	param	computed	SW
 src/game/effect_4f.cpp	ShardCorner	record	SetUL	v + 8	0	-	param	no-struct	SetUL(v + 0x8): parameter v of ShardCorner (a GPU packet, vertex or particle pool: no records.h struct)	b1-effect
 src/game/effect_4f.cpp	ShardCorner	record	SetUL	v + 4	0	-	param	no-struct	SetUL(v + 0x4): parameter v of ShardCorner (a GPU packet, vertex or particle pool: no records.h struct)	b1-effect
 src/game/effect_4f_fuzz.cpp	FxFindFreeDrop	global	Mem	EffectKind30_Shards_addr + at::kDropStride * i	0	0x92bf80	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (EffectKind30_Shards_addr - -)	c4-tc
-src/game/effect_4f_fuzz.cpp	-	global	-	at::kPoolsEnd	0	0x92d880	-	no-entry	at::kPoolsEnd 0x92d880 -	b0
 src/game/effect_4f_fuzz.cpp	Rec	global	P	at::kSources	0	0x92d780	-	no-entry	at::kSources 0x92d780 -	b0
 src/game/effect_4f_fuzz.cpp	Rec	global	P	at::kBars	0	0x92d820	-	no-entry	at::kBars 0x92d820 -	b0
 src/game/effect_4f_fuzz.cpp	SeedBars	record	SetWord	b + 4	0	-	via=BarAt	harness	SetWord(b + 0x4): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
@@ -11230,9 +11229,9 @@ src/game/effect_4f_fuzz.cpp	Seed	record	SetLong	s + 0x34	0	-	base=Sprite_Current
 src/game/effect_4f_fuzz.cpp	Disturb	global	Mem	at::kCounter	0	0x903848	-	no-entry	at::kCounter 0x903848 -	b0
 src/game/effect_4f_fuzz.cpp	Disturb	global	Mem	Camera_Angles_addr + 0x2	0	0x929eca	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Camera_Angles_addr - -)	c4-tc
 src/game/effect_4f_fuzz.cpp	Disturb	record	SetWord	BarAt(v % at::kBarCount) + 4	0	-	via=BarAt	base-form	SetWord(BarAt(v % at::kBarCount) + -): BarAt(v % at::kBarCount)	b1-effect
-src/game/effect_5a.cpp	Vertex	global	At	Prim_VertexScratch_addr + 8 * k	0	0x9037a0	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
-src/game/effect_5a.cpp	Vertex	global	At	Prim_VertexScratch_addr + 8 * k + 2	0	0x9037a0	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
-src/game/effect_5a.cpp	Vertex	global	At	Prim_VertexScratch_addr + 8 * k + 4	0	0x9037a0	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
+src/game/effect_5a.cpp	Index	global	At	Prim_VertexScratch_addr + 8 * k	0	0x9037a0	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
+src/game/effect_5a.cpp	Index	global	At	Prim_VertexScratch_addr + 8 * k + 2	0	0x9037a0	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
+src/game/effect_5a.cpp	Index	global	At	Prim_VertexScratch_addr + 8 * k + 4	0	0x9037a0	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
 src/game/effect_5a.cpp	Project4	global	At	Prim_VertexScratch_addr	0	0x9037a0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Prim_VertexScratch_addr - -)	c4-tc
 src/game/effect_5a.cpp	Project4	global	At	Prim_VertexScratch_addr + 8	0	0x9037a8	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Prim_VertexScratch_addr - -)	c4-tc
 src/game/effect_5a.cpp	Project4	global	At	Prim_VertexScratch_addr + 0x10	0	0x9037b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Prim_VertexScratch_addr - -)	c4-tc
@@ -11338,9 +11337,9 @@ src/game/effect_5a_fuzz.cpp	Disturb	raw	Mem	0x905E20	0	0x905e20	-	harness	a fuzz
 src/game/effect_5a_fuzz.cpp	Disturb	record	SetWord	s + 0x3A	0	-	base=Sprite_Current	harness	SetWord(s + 0x3a): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_5a_fuzz.cpp	Disturb	record	SetLong	s + 0xC	0	-	base=Sprite_Current	harness	SetLong(s + 0xc): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_5a_fuzz.cpp	Disturb	record	SetWord	s + 0x3E	0	-	base=Sprite_Current	harness	SetWord(s + 0x3e): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
-src/game/effect_5b.cpp	S	global	At	Prim_VertexScratch_addr + 8 * v + 2 * k	0	0x9037a0	-	expr	the address is part of a larger expression typed_convert does not rewrite (Prim_VertexScratch_addr - -)	c4-tc
-src/game/effect_5b.cpp	S	global	At	Prim_VertexScratch_addr + 8 * v + 2 * k	1	0x9037a0	-	expr	the address is part of a larger expression typed_convert does not rewrite (Prim_VertexScratch_addr - -)	c4-tc
-src/game/effect_5b.cpp	S	global	At	Prim_VertexScratch_addr + 8 * v	0	0x9037a0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Prim_VertexScratch_addr - -)	c4-tc
+src/game/effect_5b.cpp	At	global	At	Prim_VertexScratch_addr + 8 * v + 2 * k	0	0x9037a0	-	expr	the address is part of a larger expression typed_convert does not rewrite (Prim_VertexScratch_addr - -)	c4-tc
+src/game/effect_5b.cpp	At	global	At	Prim_VertexScratch_addr + 8 * v + 2 * k	1	0x9037a0	-	expr	the address is part of a larger expression typed_convert does not rewrite (Prim_VertexScratch_addr - -)	c4-tc
+src/game/effect_5b.cpp	At	global	At	Prim_VertexScratch_addr + 8 * v	0	0x9037a0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Prim_VertexScratch_addr - -)	c4-tc
 src/game/effect_5b.cpp	Halve	record	At	table + 4 * sub	0	-	-	computed	At(table + -): the offset is not a constant	b1-effect
 src/game/effect_5b.cpp	Byte	record	B	array + index	0	-	param	computed	B(array + -): the offset is not a constant	b1-effect
 src/game/effect_5b.cpp	Prim	global	At	Cond_Flags_addr + 0xa0	0	0x904030	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Cond_Flags_addr - -)	c4-tc
@@ -11710,20 +11709,20 @@ src/game/effect_5e.cpp	StartLid	record	At	t.pages + 2 * i	0	-	param	base-form	At
 src/game/effect_5e.cpp	StartLid	record	B	t.lids + i	0	-	param	base-form	B(t.lids + -): t.lids	b1-effect
 src/game/effect_5e.cpp	-	global	-	at::kSub25Cells	0	0x65e784	-	no-entry	at::kSub25Cells 0x65e784 -	b0
 src/game/effect_5e.cpp	-	global	-	at::kSub25Heights	0	0x65e764	-	no-entry	at::kSub25Heights 0x65e764 -	b0
-src/game/effect_5e.cpp	-	global	-	at::kSub25Pages	0	0x65e774	-	no-entry	at::kSub25Pages 0x65e774 -	b0
 src/game/effect_5e.cpp	-	global	-	at::kSub25Lids	0	0x65e794	-	no-entry	at::kSub25Lids 0x65e794 -	b0
+src/game/effect_5e.cpp	-	global	-	at::kSub25Pages	0	0x65e774	-	no-entry	at::kSub25Pages 0x65e774 -	b0
 src/game/effect_5e.cpp	-	global	-	at::kSub26Cells	0	0x65e7f0	-	no-entry	at::kSub26Cells 0x65e7f0 -	b0
 src/game/effect_5e.cpp	-	global	-	at::kSub26Heights	0	0x65e7c4	-	no-entry	at::kSub26Heights 0x65e7c4 -	b0
-src/game/effect_5e.cpp	-	global	-	at::kSub26Lifts	0	0x65e7d0	-	no-entry	at::kSub26Lifts 0x65e7d0 -	b0
 src/game/effect_5e.cpp	-	global	-	at::kSub26Lids	0	0x65e7fc	-	no-entry	at::kSub26Lids 0x65e7fc -	b0
+src/game/effect_5e.cpp	-	global	-	at::kSub26Lifts	0	0x65e7d0	-	no-entry	at::kSub26Lifts 0x65e7d0 -	b0
 src/game/effect_5e.cpp	-	global	-	at::kSub26Pages	0	0x65e7dc	-	no-entry	at::kSub26Pages 0x65e7dc -	b0
 src/game/effect_5e.cpp	LidTexture	record	UL	table + 4 * static_cast<U>(index)	0	-	param	computed	UL(table + -): the offset is not a constant	b1-effect
-src/game/effect_5e.cpp	Leaf	record	SB	signs + i	0	-	param	computed	SB(signs + -): the offset is not a constant	b1-effect
-src/game/effect_5e.cpp	Leaf	record	SB	signs + i	1	-	param	computed	SB(signs + -): the offset is not a constant	b1-effect
-src/game/effect_5e.cpp	LidCorners	record	W	s + 0x36	0	-	param	family	W(s + 0x36): parameter s of LidCorners	b1-effect
-src/game/effect_5e.cpp	LidCorners	record	W	s + 0x36	1	-	param	family	W(s + 0x36): parameter s of LidCorners	b1-effect
-src/game/effect_5e.cpp	LidCorners	record	W	s + 0x3A	0	-	param	family	W(s + 0x3a): parameter s of LidCorners	b1-effect
-src/game/effect_5e.cpp	LidCorners	record	W	s + 0x3A	1	-	param	family	W(s + 0x3a): parameter s of LidCorners	b1-effect
+src/game/effect_5e.cpp	LidTexture	record	SB	signs + i	0	-	-	computed	SB(signs + -): the offset is not a constant	b1-effect
+src/game/effect_5e.cpp	LidTexture	record	SB	signs + i	1	-	-	computed	SB(signs + -): the offset is not a constant	b1-effect
+src/game/effect_5e.cpp	Leaf	record	W	s + 0x36	0	-	param	family	W(s + 0x36): parameter s of LidCorners	b1-effect
+src/game/effect_5e.cpp	Leaf	record	W	s + 0x36	1	-	param	family	W(s + 0x36): parameter s of LidCorners	b1-effect
+src/game/effect_5e.cpp	Leaf	record	W	s + 0x3A	0	-	param	family	W(s + 0x3a): parameter s of LidCorners	b1-effect
+src/game/effect_5e.cpp	Leaf	record	W	s + 0x3A	1	-	param	family	W(s + 0x3a): parameter s of LidCorners	b1-effect
 src/game/effect_5e.cpp	CellEdge	record	W	s + 0x3A	0	-	param	family	W(s + 0x3a): parameter s of CellEdge	b1-effect
 src/game/effect_5e.cpp	CellEdge	record	W	s + 0x36	0	-	param	family	W(s + 0x36): parameter s of CellEdge	b1-effect
 src/game/effect_5e.cpp	EffectKind18Sub25_Draw	global	-	at::kSub25Textures	0	0x65e79c	-	no-entry	at::kSub25Textures 0x65e79c -	b0
@@ -11774,8 +11773,8 @@ src/game/effect_5e_fuzz.cpp	Disturb	record	Word	s + 0x2E	0	-	base=Sprite_Current
 src/game/effect_5e_fuzz.cpp	Disturb	global	Mem	(v & 1) ? (ObjTrio_addr + 0x34) : (ObjTrio_addr + 0x38)	0	0x802d40	-	bare	the address handed on as a value (rule 4) (ObjTrio_addr - -)	c4-tc
 src/game/effect_5e_fuzz.cpp	Disturb	global	Mem	(v & 1) ? (ObjTrio_addr + 0x34) : (ObjTrio_addr + 0x38)	1	0x802d40	-	bare	the address handed on as a value (rule 4) (ObjTrio_addr - -)	c4-tc
 src/game/effect_5f.cpp	Half	record	UL	table + 4 * state	0	-	-	computed	UL(table + -): the offset is not a constant	b1-effect
-src/game/effect_5f.cpp	Within	record	Word	s + 0x36	0	-	-	family	Word(s + 0x36): parameter s of Within	b1-effect
-src/game/effect_5f.cpp	Within	record	Word	s + 0x3A	0	-	-	family	Word(s + 0x3a): parameter s of Within	b1-effect
+src/game/effect_5f.cpp	Place	record	Word	s + 0x36	0	-	-	family	Word(s + 0x36): parameter s of Within	b1-effect
+src/game/effect_5f.cpp	Place	record	Word	s + 0x3A	0	-	-	family	Word(s + 0x3a): parameter s of Within	b1-effect
 src/game/effect_5f.cpp	Across	record	SetWord	Vertex(Prim_VertexScratch_addr + 0x18) + off	0	-	via=Vertex	base-form	SetWord(Vertex(Prim_VertexScratch_addr + 0x18) + -): Vertex(Prim_VertexScratch_addr + 0x18)	b1-effect
 src/game/effect_5f.cpp	Across	record	SetWord	Vertex(Prim_VertexScratch_addr + 0x10) + off	0	-	via=Vertex	base-form	SetWord(Vertex(Prim_VertexScratch_addr + 0x10) + -): Vertex(Prim_VertexScratch_addr + 0x10)	b1-effect
 src/game/effect_5f.cpp	Across	record	SetWord	Vertex(Prim_VertexScratch_addr + 0x8) + off	0	-	via=Vertex	base-form	SetWord(Vertex(Prim_VertexScratch_addr + 0x8) + -): Vertex(Prim_VertexScratch_addr + 0x8)	b1-effect
@@ -11892,7 +11891,7 @@ src/game/effect_5f_fuzz.cpp	Args	record	Long	o + 0x38	0	-	via=ObjectOf	harness	L
 src/game/effect_5f_fuzz.cpp	Disturb	record	SetWord	s + 0x30	0	-	base=Sprite_Current	harness	SetWord(s + 0x30): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_5f_fuzz.cpp	Disturb	record	SetWord	s + 0x3E	0	-	base=Sprite_Current	harness	SetWord(s + 0x3e): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_5f_fuzz.cpp	Disturb	global	Mem	(v & 1) ? (ObjTrio_addr + 0x34) : (ObjTrio_addr + 0x38)	0	0x802d40	-	bare	the address handed on as a value (rule 4) (ObjTrio_addr - -)	c4-tc
-src/game/effect_5g.cpp	S	record	At	table + 4 * sub	0	-	-	computed	At(table + -): the offset is not a constant	b1-effect
+src/game/effect_5g.cpp	At	record	At	table + 4 * sub	0	-	-	computed	At(table + -): the offset is not a constant	b1-effect
 src/game/effect_5g.cpp	Ground	record	Word	s + 0x3E	0	-	param	family	Word(s + 0x3e): parameter s of Lift	b1-effect
 src/game/effect_5g.cpp	PanelMode	global	At	at::kSub2CCells	0	0x65ea3c	-	no-entry	at::kSub2CCells 0x65ea3c -	b0
 src/game/effect_5g.cpp	PanelMode	global	At	at::kSub2CCells	1	0x65ea3c	-	no-entry	at::kSub2CCells 0x65ea3c -	b0
@@ -20499,7 +20498,7 @@ src/game/object_kinds.cpp	Seed	record	SetWord	object + 0x98 + axis * 2	0	-	-	har
 src/game/object_kinds.cpp	Seed	record	SetLong	object + 0x34 + axis * 4	0	-	-	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/object_kinds.cpp	Seed	record	Long	step + axis * 4	0	-	stride=0x8	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/object_kinds.cpp	ObjectKinds_Inject	global	At	Field_ObjectFadeOutSteps_addr + 4 * i	0	0x65f654	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_ObjectFadeOutSteps_addr - -)	c4-tc
-src/game/psx_rest.cpp	PutLong	record	PutLong	address + i * 4	0	-	param	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (param)	b1-scen_ui
+src/game/psx_rest.cpp	Long	record	PutLong	address + i * 4	0	-	param	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (param)	b1-scen_ui
 src/game/psx_rest.cpp	Gfx_FreeClutRows	record	PutLong	at - 4	0	-	stride=0x8	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (stride=0x8)	b1-scen_ui
 src/game/psx_rest.cpp	Display_Teardown	global	Long	kRenderFlags	0	0x6c3a4c	-	width	kRenderFlags 0x6c3a4c Gfx_RenderFlags	b0
 src/game/psx_rest.cpp	Display_Teardown	global	PutLong	kDirectDraw	0	0x7cc334	-	type	kDirectDraw 0x7cc334 Dd_DirectDraw	b0

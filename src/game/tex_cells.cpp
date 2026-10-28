@@ -45,6 +45,7 @@ U Long(U address) {
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
+[[gnu::always_inline]] inline U Long(::bof3::image::Va address) { return Long(::bof3::Img(address)); }
 U Long(const unsigned char* p) {
     U v;
     std::memcpy(&v, p, sizeof v);
@@ -114,7 +115,7 @@ struct Rect {
 template <int Bits, bool Flip> void CellUnpack(void* dst, const void* src, const void* palette, int w, int h, int pitch) {
     constexpr U kPerLong = 32 / Bits;
     constexpr U kMask = (1u << Bits) - 1;
-    const bool wide = At(Gfx_PixelFormat_addr)[3] == 4;
+    const bool wide = At(::bof3::Img(Gfx_PixelFormat_addr))[3] == 4;
     const auto* table = static_cast<const unsigned char*>(palette);
     const U width = static_cast<U>(w);
     U s = Addr(src);
@@ -201,7 +202,7 @@ void DrawCells(U first, U count, const void* palette, const Desc& desc, Extent* 
         const U w = (r[3] & 0xFu) << 3;
         const U h = (static_cast<U>(r[3]) >> 1) & 0x78;
         const U src = Gfx_VramShadow_addr + (((((tpage & 0x10) << 4) + r[7]) << 11) + u) + ((tpage & 0xF) << 7);
-        const U bpp = At(Gfx_PixelFormat_addr)[3];
+        const U bpp = At(::bof3::Img(Gfx_PixelFormat_addr))[3];
         const U dst = desc.Surface() + static_cast<U>(x + 0xA0) * bpp + static_cast<U>(y + 0x80) * desc.Pitch();
         const bool flip = (Word(r + 4) & 0x200) != 0;
         const Unpack unpack = flip ? (mode != 0 ? g.unpack8_flip : g.unpack4_flip) : (mode != 0 ? g.unpack8 : g.unpack4);
@@ -230,7 +231,7 @@ using namespace tex_cells;
 // entry). The original's four-texel tail (0x5A9EEB, 0x5A9FE7) is dead: its
 // column count starts at 24 and steps 8.
 void Font_UnpackGlyph(void* dst, const void* src, const void* palette, int pitch) {
-    const bool wide = At(Gfx_PixelFormat_addr)[3] == 4;
+    const bool wide = At(::bof3::Img(Gfx_PixelFormat_addr))[3] == 4;
     const auto* table = static_cast<const unsigned char*>(palette);
     const auto* s = static_cast<const unsigned char*>(src);
     auto* d = static_cast<unsigned char*>(dst);

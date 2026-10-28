@@ -32,19 +32,24 @@ namespace psx_rest {
 namespace {
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va address) { return At(::bof3::Img(address)); }
 U Long(U address) {
     U v;
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
+[[gnu::always_inline]] inline U Long(::bof3::image::Va address) { return Long(::bof3::Img(address)); }
 void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
+[[gnu::always_inline]] inline void PutLong(::bof3::image::Va address, U v) { PutLong(::bof3::Img(address), v); }
 void PutWord(U address, std::uint16_t v) { std::memcpy(At(address), &v, sizeof v); }
 void* Ptr(U address) { return At(Long(address)); }
+[[gnu::always_inline]] inline void* Ptr(::bof3::image::Va address) { return Ptr(::bof3::Img(address)); }
 
 // `rep stosd` of zeros: n dwords from address, first to last.
 void ZeroDwords(U address, U n) {
     for (U i = 0; i < n; ++i) PutLong(address + i * 4, 0);
 }
+[[gnu::always_inline]] inline void ZeroDwords(::bof3::image::Va address, U n) { ZeroDwords(::bof3::Img(address), n); }
 
 // One COM pointer released through its vtable's +8 if it is not null. The
 // caller says whether the slot is zeroed after (inside the test, as the
@@ -302,7 +307,7 @@ extern "C" void __cdecl Display_TextOut(int x, int y, const char* text) {
 // after the first table's twenty. Nothing checks the code; nothing reads the
 // box's answer.
 extern "C" void __cdecl Display_ErrorBox(int code) {
-    const U base = code < 100 ? kErrorText : kErrorTextHigh;
+    const ::bof3::image::Va base = code < 100 ? kErrorText : kErrorTextHigh;
     const char* const text = reinterpret_cast<const char*>(Ptr(base + static_cast<U>(code) * 4));
     g.message_box(nullptr, text, reinterpret_cast<const char*>(At(kErrorCaption)), kIconHand);
 }

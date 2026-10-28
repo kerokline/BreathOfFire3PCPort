@@ -72,13 +72,16 @@ using Handler = scenario_harness::Handler;
 unsigned char* S() { return Sprite_Current; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
+[[gnu::always_inline]] inline U UL(::bof3::image::Va a) { return UL(::bof3::Img(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 U W(const unsigned char* p) { return Word(p); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 std::int32_t S16(U v) { return static_cast<std::int16_t>(v & 0xFFFFu); }
 // movsx of a .data byte, as the 32 bits the original holds
 U SB(U a) { return static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(*At(a)))); }
+[[gnu::always_inline]] inline U SB(::bof3::image::Va a) { return SB(::bof3::Img(a)); }
 unsigned char& B(U a) { return *At(a); }
+[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // mov eax, magic; imul x; sar edx, shift; mov eax, edx; shr eax, 31; add edx,
@@ -188,7 +191,7 @@ extern "C" void __cdecl EffectKind18Sub23_Run(void) {
 // tail jump to Effect_Release; else +2 up and a tail jump to the draw.
 extern "C" void __cdecl EffectKind18Sub23_Start(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0);
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub23Flag)) {
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), at::kSub23Flag)) {
         SH_CALL(Effect_Release)();
         return;
     }
@@ -198,7 +201,7 @@ extern "C" void __cdecl EffectKind18Sub23_Start(void) {
 
 // original 0x506A60 (sub-state 1): once story flag 0x28 is set, +2 up; the draw.
 extern "C" void __cdecl EffectKind18Sub23_WaitFlag(void) {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub23Flag)) Step();
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), at::kSub23Flag)) Step();
     SH_CALL(EffectKind18Sub23_Draw)();
 }
 
@@ -328,7 +331,7 @@ extern "C" void __cdecl EffectKind18Sub24_Run(void) {
 // height 0x3A0, level 0x80), +0xB = 2, +9 = 0, sound 0x204, +2 up, the draw.
 extern "C" void __cdecl EffectKind18Sub24_Start(void) {
     if (!Cue(at::kSub24Cue)) return;
-    SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0x50), 4);
+    SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0x50), 4);
     Place(0x4B8000, 0x568000, 0x3A0, 0x80);
     unsigned char* const s = S();
     s[0xB] = 2;
@@ -555,7 +558,7 @@ extern "C" void __cdecl EffectKind18Sub24_DrawTrail(int from, int to, int angle,
                 bof3::Fatal("EffectKind18Sub24_DrawTrail: segment %d reads pairs %d and %d of the trail's %u - the "
                             "original reads the .data either side (docs/effect_5e.md section 6)",
                             static_cast<int>(i), static_cast<int>(i), static_cast<int>(i + 1), at::kTrailPairCount);
-            const U pair = at::kTrailPairs + 2 * i;
+            const U pair = ::bof3::Img(at::kTrailPairs + 2 * i);
             const U s = static_cast<U>(scale);
             rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, 0);
             rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, SB(pair + 1) * s);
@@ -829,14 +832,14 @@ extern "C" void __cdecl EffectKind18Sub3F_WhiteOut(void) {
 extern "C" void __cdecl EffectKind18Sub3F_ShadeClut(int level) {
     const U l = static_cast<U>(level);
     for (U k = 0; k < at::kClutRowWords; ++k) {
-        const U colour = W(At(Gfx_ClutStripSource_addr + 0x800 + 2 * k));
+        const U colour = W(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x800 + 2 * k));
         const U blue = ((colour >> 10) & 0x1F) * l, green = ((colour >> 5) & 0x1F) * l, red = (colour & 0x1F) * l;
         U out = Sar(blue, 7) << 5;
         out |= Sar(green, 7);
         out <<= 5;
         out |= Sar(red, 7);
         out |= colour & 0x8000;
-        SetWord(At(Gfx_ClutStrip_addr + 0x800 + 2 * k), out);
+        SetWord(At(::bof3::Img(Gfx_ClutStrip_addr) + 0x800 + 2 * k), out);
     }
     Gfx_ClutStripDirty = 1;
 }
@@ -929,10 +932,11 @@ void StartLid(const Variants& t) {
         S()[2] = 3;
     }
 }
-const Variants kSub25 = {"EffectKind18Sub25_Start", at::kSub25Cells, at::kSub25Heights, at::kSub25Pages,
-                         at::kSub25Lids, 0, at::kSub25Variants};
-const Variants kSub26 = {"EffectKind18Sub26_Start", at::kSub26Cells, at::kSub26Heights, at::kSub26Lifts,
-                         at::kSub26Lids, at::kSub26Pages, at::kSub26Variants};
+const Variants kSub25 = {"EffectKind18Sub25_Start", ::bof3::Img(at::kSub25Cells), ::bof3::Img(at::kSub25Heights),
+                         ::bof3::Img(at::kSub25Pages), ::bof3::Img(at::kSub25Lids), 0, at::kSub25Variants};
+const Variants kSub26 = {"EffectKind18Sub26_Start", ::bof3::Img(at::kSub26Cells), ::bof3::Img(at::kSub26Heights),
+                         ::bof3::Img(at::kSub26Lifts), ::bof3::Img(at::kSub26Lids), ::bof3::Img(at::kSub26Pages),
+                         at::kSub26Variants};
 
 // Sub-state 1 of both: when the leader is at the cell, sound 0x200 unless
 // Field_Request is set, +2 up.
@@ -979,6 +983,7 @@ U LidTexture(const char* who, U table, unsigned count, std::int32_t index) {
                     who, index, count, (unsigned)table);
     return UL(table + 4 * static_cast<U>(index));
 }
+[[gnu::always_inline]] inline U LidTexture(const char* who, ::bof3::image::Va table, unsigned count, std::int32_t index) { return LidTexture(who, ::bof3::Img(table), count, index); }
 
 // The two leaves of both draws: each leaf i (0, 1) moves by +0x30 times the
 // sign byte i of the table (1, -1) across the cell; along x when +8 is set
@@ -1007,6 +1012,7 @@ void Leaf(U i, U signs) {
         rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, b);
     }
 }
+[[gnu::always_inline]] inline void Leaf(U i, ::bof3::image::Va signs) { Leaf(i, ::bof3::Img(signs)); }
 
 // The lid's corners over the cell.
 void LidCorners(const unsigned char* s) {
@@ -1209,7 +1215,7 @@ extern "C" void __cdecl EffectKind18Sub39_Run(void) {
 // original 0x508AA0 (sub-state 0): story flag 0x5A set: +0x30 0x80, +2 = 3, the
 // draw of the halves (0, -2); clear: +0x30 0, +2 up, the draws (0, 1), (1, 1).
 extern "C" void __cdecl EffectKind18Sub39_Start(void) {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub39Flag)) {
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), at::kSub39Flag)) {
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0x80);
         S()[2] = 3;
         SH_CALL(EffectKind18Sub39_Draw)(0, -2);
@@ -1224,7 +1230,7 @@ extern "C" void __cdecl EffectKind18Sub39_Start(void) {
 // original 0x508B00 (sub-state 1): once story flag 0x5A is set, sound 0x208
 // unless Field_Request is set, +2 up. The draws (0, 1), (1, 1).
 extern "C" void __cdecl EffectKind18Sub39_WaitFlag(void) {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub39Flag)) {
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), at::kSub39Flag)) {
         if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(0x208);
         Step();
     }
@@ -1255,7 +1261,7 @@ extern "C" void __cdecl EffectKind18Sub39_Hold(void) {
 // 3 * variant of kSub39Textures (nine; past them ours aborts), each linked at
 // the record's point with dy (0x48 bytes).
 extern "C" void __cdecl EffectKind18Sub39_Draw(U variant, int dy) {
-    const U sign_at = at::kSub39Signs + (variant & 1);
+    const U sign_at = ::bof3::Img(at::kSub39Signs + (variant & 1));
     const U shift = (variant & 1) << 7;
     unsigned char* const v = Vtx();
     for (U q = 0; q < at::kSub39Quads; ++q) {
@@ -1263,7 +1269,7 @@ extern "C" void __cdecl EffectKind18Sub39_Draw(U variant, int dy) {
         const U sign = SB(sign_at);
         const unsigned char* const s = S();
         for (U k = 0; k < 4; ++k) {
-            const U vertex = at::kSub39Vertices + 0x18 * q + 6 * k;
+            const U vertex = ::bof3::Img(at::kSub39Vertices + 0x18 * q + 6 * k);
             const U x = W(At(vertex)) - W(s + 0x30) * sign + shift;
             SetWord(v + 8 * k + 2, W(At(vertex + 2)));
             SetWord(v + 8 * k, x);
@@ -1275,7 +1281,7 @@ extern "C" void __cdecl EffectKind18Sub39_Draw(U variant, int dy) {
         if (index >= at::kSub39TextureCount)
             bof3::Fatal("EffectKind18Sub39_Draw: variant %d asks for texture %u of the %u at 0x%X - the original reads "
                         "the .data after (docs/effect_5e.md section 6)",
-                        static_cast<int>(variant), index, at::kSub39TextureCount, (unsigned)at::kSub39Textures);
+                        static_cast<int>(variant), index, at::kSub39TextureCount, at::kSub39Textures.v);
         SH_CALL(Prim_SetTexture)(UL(at::kSub39Textures + 4 * index), p, 1);
         LinkAtRecord(dy, 0x48);
     }

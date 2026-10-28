@@ -189,6 +189,7 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
+[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -300,9 +301,9 @@ const std::uint8_t kKinds[] = {0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0
 // the sources after them.
 const sh::Region kRegions[] = {
     {0x676278, 8},
-    {at::kDials, 4},
+    {::bof3::Img(at::kDials), 4},
     {0x9039F4, 4},
-    {0x92C5C4, at::kSources + at::kSourceCount * at::kSourceStride - 0x92C5C4},
+    {0x92C5C4, (at::kSources + at::kSourceCount * at::kSourceStride).v - 0x92C5C4},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -316,7 +317,7 @@ void Records() {
     for (unsigned r = 0; r < 20; ++r) {
         unsigned char* const e = Rec(r);
         e[6] = static_cast<unsigned char>(sh::Next() % at::kDialCount);
-        SetLong(e + 0x4C, static_cast<std::int32_t>(at::kDials + (sh::Half() ? e[6] : sh::Next() % at::kDialCount)));
+        SetLong(e + 0x4C, static_cast<std::int32_t>(::bof3::Img(at::kDials + (sh::Half() ? e[6] : sh::Next() % at::kDialCount))));
     }
 }
 
@@ -420,7 +421,7 @@ void Seed(unsigned k) {
 void Args(unsigned k, U* a) {
     switch (k) {
     case k7DDial:
-        a[2] = at::kDialGrids + at::kGridSize * (sh::Next() % at::kDialCount);
+        a[2] = ::bof3::Img(at::kDialGrids + at::kGridSize * (sh::Next() % at::kDialCount));
         a[3] = (sh::Next() & 0xFFFFFF00u) | (sh::Next() % at::kGridColumns);
         break;
     case k7DMark: a[2] = (sh::Next() & 0xFFFFFF00u) | PickOf(1, 0xFF, 0, 2, 0xFE, sh::Next() & 0xFF); break;

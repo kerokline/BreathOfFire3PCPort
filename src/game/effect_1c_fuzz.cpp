@@ -148,6 +148,7 @@ static_assert(kCount == sizeof kAll / sizeof kAll[0], "one enum entry a clone, i
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
+[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
@@ -296,7 +297,7 @@ const sh::DataTable kTables[] = {
 // specks past the standard 0x644 (with kind 0x1E's pieces 0x92C0C0.. and debris
 // 0x92C780..0x92CA40 after), the shard cursor, the fuzz's model and count.
 const sh::Region kRegions[] = {
-    {EffectKind30_Shards_addr + 0x644, at::kDebris + 16 * 0x2C - (EffectKind30_Shards_addr + 0x644)},
+    {EffectKind30_Shards_addr + 0x644, at::kDebris.v + 16 * 0x2C - (EffectKind30_Shards_addr + 0x644)},
     {EffectKind1E_ShardCursor_addr, 4},
     {0, sizeof g_model},
     {0, sizeof g_count},
@@ -386,7 +387,7 @@ void Args(unsigned k, U* a) {
         a[1] = Key(g_model) + 0x28 * (i % at::kPieceCount);
         a[2] = EffectKind30_Shards_addr + 0x140 + 0x18 * (i % at::kPieceCount);
         break;
-    case k1EDebrisOne: a[0] = at::kDebris + 0x2C * (i % 16); break;
+    case k1EDebrisOne: a[0] = ::bof3::Img(at::kDebris + 0x2C * (i % 16)); break;
     default: break;
     }
 }

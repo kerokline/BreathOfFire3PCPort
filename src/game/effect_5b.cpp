@@ -48,6 +48,7 @@ namespace at = effect_5b::at;
 using U = std::uint32_t;
 using I = std::int32_t;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -59,16 +60,17 @@ void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<I>(v)); }
 // movsx word
 I SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char& B(U a) { return *At(a); }
+[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 
 using Handler = scenario_harness::Handler;
 
 // Prim_VertexScratch's four SVECTORs (0x9037A0, A8, B0, B8): word k of vertex v.
 // kScratch: now Prim_VertexScratch (symbols.toml).
-U VW(unsigned v, unsigned k) { return Word(At(Prim_VertexScratch_addr + 8 * v + 2 * k)); }
+U VW(unsigned v, unsigned k) { return Word(At(::bof3::Img(Prim_VertexScratch_addr) + 8 * v + 2 * k)); }
 I VS(unsigned v, unsigned k) { return static_cast<std::int16_t>(VW(v, k)); }
-void SetV(unsigned v, unsigned k, U value) { SetWord(At(Prim_VertexScratch_addr + 8 * v + 2 * k), value); }
-const short* Vertex(unsigned v) { return reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 8 * v)); }
+void SetV(unsigned v, unsigned k, U value) { SetWord(At(::bof3::Img(Prim_VertexScratch_addr) + 8 * v + 2 * k), value); }
+const short* Vertex(unsigned v) { return reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 8 * v)); }
 
 // cdq; xor eax, edx; sub eax, edx (INT_MIN stays itself)
 I Abs(I v) {
@@ -106,6 +108,7 @@ unsigned Byte(const char* who, U array, unsigned extent, U index) {
                     who, static_cast<int>(index), extent, (unsigned)array);
     return B(array + index);
 }
+[[gnu::always_inline]] inline unsigned Byte(const char* who, ::bof3::image::Va array, unsigned extent, U index) { return Byte(who, ::bof3::Img(array), extent, index); }
 
 // --- the CRT's _ftol 0x5B9550 on st(0) (truncation set in a copy of the control
 // word for one fistp to 64 bits, the word put back), the low dword -------------
@@ -191,8 +194,8 @@ float F(U a) {
 }
 
 unsigned char* Prim() { return Gfx_PacketNext; }
-unsigned char* Flags() { return At(Cond_Flags_addr + 0xa0); }
-unsigned char* Row9() { return At(Cond_Flags_addr + 0x48); }
+unsigned char* Flags() { return At(::bof3::Img(Cond_Flags_addr) + 0xa0); }
+unsigned char* Row9() { return At(::bof3::Img(Cond_Flags_addr) + 0x48); }
 
 // The four-vertex projection every quad here makes of Prim_VertexScratch into a
 // primitive whose vertices are `stride` apart from +8 (0x10 textured, 0xC flat).
@@ -777,6 +780,7 @@ extern "C" void __cdecl EffectKind18Sub0E_DrawGate(void) {
 
 namespace {
 unsigned Sub13(const char* who, U array) { return Byte(who, array, at::kSub13Count, S()[0xB]); }
+[[gnu::always_inline]] inline unsigned Sub13(const char* who, ::bof3::image::Va array) { return Sub13(who, ::bof3::Img(array)); }
 }  // namespace
 
 // original 0x500300 (EffectKind18_States[19], hidden in 0x500160): jmp

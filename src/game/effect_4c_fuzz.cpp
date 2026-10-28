@@ -167,6 +167,7 @@ static_assert(kCount == sizeof kAll / sizeof kAll[0], "one enum entry a clone, i
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+[[gnu::always_inline]] inline unsigned char* P(::bof3::image::Va a) { return P(::bof3::Img(a)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
@@ -287,7 +288,7 @@ const std::uint8_t kKinds[] = {0x8D, 0x8E, 0x8F, 0x90, 0x93, 0x99};
 // standard 0x644 bytes at EffectKind30_Shards (to 0x92E580).
 const sh::Region kRegions[] = {
     {Effect4c_Stage_addr, 8},
-    {EffectKind30_Shards_addr + sh::at::kShardsSize, at::kShardEnd - (EffectKind30_Shards_addr + sh::at::kShardsSize)},
+    {EffectKind30_Shards_addr + sh::at::kShardsSize, at::kShardEnd.v - (EffectKind30_Shards_addr + sh::at::kShardsSize)},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -304,6 +305,7 @@ void Pool(U base, U stride, unsigned n) {
         r[2] = static_cast<unsigned char>(PickOf(1, 1, 2, 0, 0x20, sh::Next()));
     }
 }
+[[gnu::always_inline]] inline void Pool(::bof3::image::Va base, U stride, unsigned n) { Pool(::bof3::Img(base), stride, n); }
 // A particle's height near the floor 0xFE000000 and its speed round it.
 void Floor(unsigned char* y, unsigned char* vy) {
     if (sh::Half()) return;
@@ -430,7 +432,7 @@ void Seed(unsigned k) {
 void Args(unsigned k, U* a) {
     switch (k) {
     case k8EDrawChip: a[0] = Shards() + at::kChipStride * (sh::Next() % at::kChipCount); break;
-    case k8EDrawDot: a[0] = at::kDots + at::kDotStride * (sh::Next() % at::kDotCount); break;
+    case k8EDrawDot: a[0] = ::bof3::Img(at::kDots + at::kDotStride * (sh::Next() % at::kDotCount)); break;
     case k8EInitChips:
     case k8EInitDots: {
         const U first = PickOf(0, 0x20, 0x60, 0x7F, 0x80, sh::Next() % 0x81);

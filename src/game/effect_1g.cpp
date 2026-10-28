@@ -40,12 +40,14 @@ namespace {
 
 namespace at = effect_1g::at;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetWord;
 using move_script::Word;
 using U = std::uint32_t;
 
 unsigned char& B(U a) { return *At(a); }
+[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 U L(U a) { return static_cast<U>(Long(At(a))); }
 std::uint16_t W(U a) { return Word(At(a)); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -70,10 +72,11 @@ U CodeAt(U table, U index, const char* who) {
 // again before each use). Unchecked, as the originals: an entry past its row's
 // 0xFF, or a row past the table, reads further into .data (docs/effect_1g.md
 // section 6).
-U Record(U k) { return at::kTradeRecords + 8u * B(at::kTradeIndex + k + 10u * AreaEntry_PendingFlags); }
+U Record(U k) { return ::bof3::Img(at::kTradeRecords + 8u * B(at::kTradeIndex + k + 10u * AreaEntry_PendingFlags)); }
 
 // A prompt: MessagePools + the u16 at `word`.
-const unsigned char* Pool(U word) { return At(bof3::addr::MessagePools + W(word)); }
+const unsigned char* Pool(U word) { return At(::bof3::Img(bof3::addr::MessagePools) + W(word)); }
+[[gnu::always_inline]] inline const unsigned char* Pool(::bof3::image::Va word) { return Pool(::bof3::Img(word)); }
 char* NumberText() { return reinterpret_cast<char*>(At(at::kNumberText)); }
 const char* NumberFormat() { return reinterpret_cast<const char*>(At(at::kNumberFormat)); }
 
@@ -403,7 +406,7 @@ extern "C" unsigned char __cdecl ItemTrade_Lacks(unsigned entry, unsigned quanti
 // original 0x594790 (PSX twin 0x800F66EC): the entries in the screen's row -
 // its bytes from the first up to the first 0xFF, ten at most.
 extern "C" unsigned char __cdecl ItemTrade_RowCount(void) {
-    const U row = at::kTradeIndex + 10u * AreaEntry_PendingFlags;
+    const U row = ::bof3::Img(at::kTradeIndex + 10u * AreaEntry_PendingFlags);
     unsigned char n = 0;
     while (B(row + n) != 0xFF) {
         ++n;

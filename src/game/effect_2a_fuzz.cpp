@@ -357,7 +357,7 @@ const sh::DataTable kTables[] = {
 // 0x644 bytes of EffectKind30_Shards to the spark centre and points (0x92D410).
 const sh::Region kRegions[] = {
     {Effect2a_Segments_addr, Effect2a_LinkZ_addr + 4 - Effect2a_Segments_addr},
-    {EffectKind30_Shards_addr + 0x644, at::kPoolEnd - (EffectKind30_Shards_addr + 0x644)},
+    {EffectKind30_Shards_addr + 0x644, at::kPoolEnd.v - (EffectKind30_Shards_addr + 0x644)},
 };
 
 const std::uint8_t kKinds[] = {0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E};
@@ -457,7 +457,7 @@ void Seed(unsigned k) {
     SeedPool();
     SeedRadius();
     if (sh::Next() % 3 == 0)
-        sh::Mem(at::kCounter0)[0] = static_cast<unsigned char>(PickOf(3, 0x29, 0x28, 2, 4, 0x2A));
+        sh::Mem(::bof3::Img(at::kCounter0))[0] = static_cast<unsigned char>(PickOf(3, 0x29, 0x28, 2, 4, 0x2A));
     // the colour index +6 inside its three entries mostly (past them the
     // original reads the bytes after the table: image data)
     if (sh::Often()) s[6] = static_cast<unsigned char>(sh::Next() % 3);

@@ -359,9 +359,9 @@ void Seed(unsigned k) {
     // written (its +8 from the old +0x3A being 0), the rest against the record's
     U table = 0;
     switch (k) {
-    case k27Start: table = at::kSub27Cell; break;
-    case k29Start: table = at::kSub29Cell; break;
-    case k2AStart: table = at::kSub2ACell; break;
+    case k27Start: table = ::bof3::Img(at::kSub27Cell); break;
+    case k29Start: table = ::bof3::Img(at::kSub29Cell); break;
+    case k2AStart: table = ::bof3::Img(at::kSub2ACell); break;
     default: break;
     }
     if (table != 0) {

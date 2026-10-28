@@ -198,6 +198,7 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
+[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -317,7 +318,7 @@ const std::uint8_t kKinds[] = {0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x9D, 0x9F, 0
 // 0x87's point rows in the image's .data (rows 8..13 written), Draw_OtSlot.
 const sh::Region kRegions[] = {
     {Effect4b_SoundIndex_addr, at::kKind8CCellsSize},
-    {at::kKind87Points, at::kKind87PointCount * at::kKind87PointStride},
+    {::bof3::Img(at::kKind87Points), at::kKind87PointCount * at::kKind87PointStride},
     {0x92BF19, 1},   // Draw_OtSlot
 };
 

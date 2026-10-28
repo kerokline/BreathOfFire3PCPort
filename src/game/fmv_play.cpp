@@ -47,17 +47,18 @@ using U = std::uint32_t;
 
 // The seven MCI strings, each referenced by this function alone (pe_xref.py,
 // docs/replacing-mci.md section 1).
-constexpr U kFmtOpen = 0x66B674;        // "open avivideo!%s alias vfw"
-constexpr U kFmtOpenRoot = 0x66B654;    // "open avivideo!%s%s alias vfw"
-constexpr U kFmtWindow = 0x66B62C;      // "window vfw handle %d"
-constexpr U kPlay = 0x66B5E8;           // "play vfw window from 0 notify"
-constexpr U kStop = 0x66B5D8;           // "stop vfw wait"
-constexpr U kClose = 0x66B644;          // "close vfw wait"
-constexpr U kPause = 0x66B690;          // "pause vfw"
-constexpr U kResume = 0x66B69C;         // "resume vfw"
+constexpr ::bof3::image::Va kFmtOpen{0x66B674};        // "open avivideo!%s alias vfw"
+constexpr ::bof3::image::Va kFmtOpenRoot{0x66B654};    // "open avivideo!%s%s alias vfw"
+constexpr ::bof3::image::Va kFmtWindow{0x66B62C};      // "window vfw handle %d"
+constexpr ::bof3::image::Va kPlay{0x66B5E8};           // "play vfw window from 0 notify"
+constexpr ::bof3::image::Va kStop{0x66B5D8};           // "stop vfw wait"
+constexpr ::bof3::image::Va kClose{0x66B644};          // "close vfw wait"
+constexpr ::bof3::image::Va kPause{0x66B690};          // "pause vfw"
+constexpr ::bof3::image::Va kResume{0x66B69C};         // "resume vfw"
 // 0x66B608 "put vfw destination at 0 0 640 480" is the literal DIV-0035
 // replaces with a computed rectangle.
 const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+[[gnu::always_inline]] inline const char* Str(::bof3::image::Va address) { return Str(::bof3::Img(address)); }
 
 // DIV-0035: where the 640 x 480 video lands in a client of cw x ch. DIV-0042
 // (the owner, 2026-09-23): with snap, the largest whole multiple of 640 x 480

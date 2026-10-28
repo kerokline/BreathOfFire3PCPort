@@ -159,6 +159,7 @@ static_assert(kCount == sizeof kAll / sizeof kAll[0], "one enum entry a clone, i
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
+[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -249,12 +250,12 @@ U Cell() { return sh::Often() ? sh::Next() % 0x80 : sh::Next() & 0xFFFF; }
 struct Placing { U cells; unsigned room; };
 Placing PlaceOf(unsigned k) {
     switch (k) {
-    case k33Place: return {at::kSub33Cells, at::kRoom2};
-    case k34Place: return {at::kSub34Cells, at::kRoom2};
-    case k37Place: return {at::kSub37Cells, at::kRoom2};
-    case k35Place: return {at::kSub35Cells, at::kRoom4};
-    case k38Place: return {at::kSub38Cells, at::kRoom4};
-    case k3BPlace: return {at::kSub3BCells, at::kRoom2};
+    case k33Place: return {::bof3::Img(at::kSub33Cells), at::kRoom2};
+    case k34Place: return {::bof3::Img(at::kSub34Cells), at::kRoom2};
+    case k37Place: return {::bof3::Img(at::kSub37Cells), at::kRoom2};
+    case k35Place: return {::bof3::Img(at::kSub35Cells), at::kRoom4};
+    case k38Place: return {::bof3::Img(at::kSub38Cells), at::kRoom4};
+    case k3BPlace: return {::bof3::Img(at::kSub3BCells), at::kRoom2};
     default: return {0, 0};
     }
 }

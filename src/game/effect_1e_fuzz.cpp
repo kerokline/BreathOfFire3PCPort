@@ -144,6 +144,7 @@ constexpr sh::Answer kF = sh::Answer::kFlag;
 constexpr U kAll = 0xFFFFFFFFu;
 
 unsigned char* Mem(U a) { return sh::Mem(a); }
+[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 unsigned char* Sc() { return Sprite_Current; }
 
 template <typename... T> U PickOf(T... v) {
@@ -255,7 +256,7 @@ const sh::DataTable kTables[] = {
 const sh::Region kRegions[] = {
     {0x939A00, 0x30},
     {0x6BC700, 0x20},
-    {at::kPools, 0xE8},
+    {::bof3::Img(at::kPools), 0xE8},
     {0x66C7E8, 4},
     {0x903584, 0x10},
 };

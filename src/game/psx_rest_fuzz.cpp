@@ -175,7 +175,7 @@ constexpr Region kRegions[] = {
     {Gfx_TexCache_addr - 0x10, 0x6020},     // Gfx_TexCache
     {Font_TexCache_addr - 0x10, 0xA20},     // Font_TexCache
     {0x7CADE0, 0x60},                       // the after-draw block and the orphans, to D3d_CellTexCache
-    {kBackdropBlock - 8, 0x28},             // the backdrop block
+    {::bof3::Img(kBackdropBlock - 8), 0x28},             // the backdrop block
     {0x7CC330, 0x30},                       // the DirectX 6 slots
     {0x7DE3B8, 0x10},                       // Snd_Device, Snd_Primary
 };
@@ -559,7 +559,7 @@ void FillSmall() {
         PutLong(at, RandomCom(3));
         AddHot(at, kNullable);
     }
-    for (U at = kBackdropBlock - 8; at < kBackdropBlock + 0x20; at += 4) PutLong(at, Next());
+    for (U at = ::bof3::Img(kBackdropBlock - 8); at < ::bof3::Img(kBackdropBlock + 0x20); at += 4) PutLong(at, Next());
     for (U at = Dd_CellBackdrop_addr; at < Dd_CellBackdrop_addr + 0x14; at += 4) {
         PutLong(at, RandomCom(3));
         AddHot(at, kNullable);

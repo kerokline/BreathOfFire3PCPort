@@ -40,6 +40,7 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 unsigned char& B(U a) { return sh::Mem(a)[0]; }
+[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 unsigned char* Rec(unsigned k) { return sh::EffectRecord(k); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
@@ -226,8 +227,8 @@ const sh::Callee kCallees[] = {
 
 // Beyond effect mode's standard regions.
 const sh::Region kRegions[] = {
-    {at::kItemIds, 0x80},        // the accessories' ids (seeded below 52)
-    {at::kItemCounts, 0x80},     // their counts
+    {::bof3::Img(at::kItemIds), 0x80},        // the accessories' ids (seeded below 52)
+    {::bof3::Img(at::kItemCounts), 0x80},     // their counts
     {0x803668, 0x318},           // MessagePools past the standard 0xE8, to 0x803980 (the offsets the ids reach)
     {Gfx_ClutStripSource_addr + 0x228, 0x400}, // the colour words of styles 0..15 (the seed keeps the style byte there)
 };

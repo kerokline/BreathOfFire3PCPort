@@ -49,6 +49,7 @@ namespace {
 
 namespace at = effect_1c::at;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -699,8 +700,8 @@ extern "C" void __cdecl EffectKind1E_ShardNext3(void) {
 extern "C" void __cdecl EffectKind1E_SplitModel(void) {
     U src = Sprite_ObjectsExtra[0].script;
     for (U i = 0; i < at::kPieceCount; ++i) {
-        unsigned char* const d = At(EffectKind30_Shards_addr + 0x3c8 + 0x28 * i);
-        unsigned char* const r = At(EffectKind30_Shards_addr + 0x140 + 0x18 * i);
+        unsigned char* const d = At(::bof3::Img(EffectKind30_Shards_addr) + 0x3c8 + 0x28 * i);
+        unsigned char* const r = At(::bof3::Img(EffectKind30_Shards_addr) + 0x140 + 0x18 * i);
         for (U j = 0; j < 0x28; j += 4) SetUL(d + j, UL(At(src + j)));
         SetWord(r + 0, static_cast<U>((SW(d + 0x14) + SW(d + 2) + SW(d + 8) + SW(d + 0xE)) >> 2));
         SetWord(r + 2, static_cast<U>((SW(d + 0xA) + SW(d + 0x10) + SW(d + 4) + SW(d + 0x16)) >> 2));
@@ -727,12 +728,12 @@ extern "C" void __cdecl EffectKind1E_StepPieces(void) {
     const U model = Sprite_ObjectsExtra[0].script;
     for (U i = 0; i < at::kPieceCount; ++i) {
         const U odd = Frame_Counter & 1;
-        unsigned char* const r = At(EffectKind30_Shards_addr + 0x140 + 0x18 * i);
+        unsigned char* const r = At(::bof3::Img(EffectKind30_Shards_addr) + 0x140 + 0x18 * i);
         SetWord(r + 0, Word(r + 0) + Word(r + 8));
         SetWord(r + 2, Word(r + 2) + Word(r + 0xA));
         SetWord(r + 0xC, Word(r + 0xC) + odd);
         SetWord(r + 4, Word(r + 4) + Word(r + 0xC));
-        SH_CALL(EffectKind1E_TurnPiece)(At(EffectKind30_Shards_addr + 0x3c8 + 0x28 * i), At(model + 0x28 * i), r);
+        SH_CALL(EffectKind1E_TurnPiece)(At(::bof3::Img(EffectKind30_Shards_addr) + 0x3c8 + 0x28 * i), At(model + 0x28 * i), r);
     }
 }
 
@@ -824,6 +825,7 @@ unsigned char* DebrisLoop(U base, unsigned count) {
     }
     return s;
 }
+[[gnu::always_inline]] inline unsigned char* DebrisLoop(::bof3::image::Va base, unsigned count) { return DebrisLoop(::bof3::Img(base), count); }
 
 // original 0x46EBA0: a draw mode (DebrisMode, dtd 0) committed;
 // EffectGte_LoadMapCamera; the sixteen debris drawn (DebrisLoop).

@@ -56,6 +56,7 @@ namespace at = effect_4e::at;
 using U = std::uint32_t;
 using LD = long double;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;

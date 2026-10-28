@@ -53,6 +53,7 @@ Callees g = kOriginals;
 namespace {
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va address) { return At(::bof3::Img(address)); }
 U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U Word(const unsigned char* p) {
     std::uint16_t v;
@@ -75,6 +76,7 @@ float Float(const unsigned char* p) {
     return v;
 }
 float FloatAt(U address) { return Float(At(address)); }
+[[gnu::always_inline]] inline float FloatAt(::bof3::image::Va address) { return FloatAt(::bof3::Img(address)); }
 void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 
@@ -159,7 +161,7 @@ inline U X87FimulFtol(std::int32_t c, float k, std::int32_t chan) {
 // --- the COM objects ---------------------------------------------------------
 
 // D3d_Device, read afresh before every call as the original does.
-void** Device() { return *reinterpret_cast<void** volatile*>(At(D3d_Device_addr)); }
+void** Device() { return *reinterpret_cast<void** volatile*>(At(::bof3::Img(D3d_Device_addr))); }
 void* Method(void** object, U offset) { return (*reinterpret_cast<void***>(object))[offset / 4]; }
 using Com2 = long(__stdcall*)(void*, U);
 using Com3 = long(__stdcall*)(void*, U, U);
@@ -189,8 +191,8 @@ long Lock(void** surface, void* desc) {
 }
 long Unlock(void** surface) { return reinterpret_cast<Com2>(Method(surface, 0x80))(surface, 0); }
 
-unsigned char* Vertex(U i) { return At(D3d_Vertices_addr + i * 0x20); }
-U DrawMode() { return Long(At(Gfx_DrawTpage_addr)) & 0xFFFF; }
+unsigned char* Vertex(U i) { return At(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
+U DrawMode() { return Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF; }
 
 // sx, sy = scale times the corner's float x, y; sz its z as it is (a mov);
 // rhw = 0.1 / z.
@@ -253,11 +255,11 @@ U D3d_PageTexel4(U clut, U page, U uv) {
     U row = ((page & 0x10) << 4) + static_cast<U>(static_cast<std::int32_t>(uv) >> 8);
     const U offset = ((row << 4) + (page & 0xF)) << 7;
     const U column = static_cast<U>(static_cast<std::int32_t>(uv) >> 1) & 0x7F;
-    const U texels = At(Gfx_VramShadow_addr + offset + column)[0];
+    const U texels = At(::bof3::Img(Gfx_VramShadow_addr) + offset + column)[0];
     const U shift = (static_cast<U>(~uv) & 1) << 2;
     const U index = (texels >> shift) & 0xF;
     const unsigned char* palette = static_cast<const unsigned char*>(g.clut_pixels(clut));
-    if (At(Gfx_PixelFormat_addr + 3)[0] == 2) return Word(palette + index * 2);
+    if (At(::bof3::Img(Gfx_PixelFormat_addr) + 3)[0] == 2) return Word(palette + index * 2);
     return Long(palette + index * 4);
 }
 
@@ -275,7 +277,7 @@ U D3d_PageTexel4(U clut, U page, U uv) {
 // is a POLY_F3 (code 0x20) of the modulated colour.
 void D3d_FlattenFT3(unsigned char* prim, U uv) {
     const U pixel = D3d_PageTexel4(Word(prim + 0xE), Word(prim + 0x16), uv & 0xFFFF);
-    const unsigned char* format = At(Gfx_PixelFormat_addr);
+    const unsigned char* format = At(::bof3::Img(Gfx_PixelFormat_addr));
     const U green = ((Long(format + 0x14) & pixel) << (Long(format + 0x8) & 31)) >> 16;
     const U blue = ((Long(format + 0x18) & pixel) << (Long(format + 0xC) & 31)) >> 16;
     const U red = ((Long(format + 0x10) & pixel) << (Long(format + 0x4) & 31)) >> 16;
@@ -483,22 +485,22 @@ void D3d_SetAlphaModulate(unsigned on) {
 // Display_Setup and the teardown reads the ready word or the texture.
 void D3d_AfterDraw() {
     if (Gfx_RenderFlags & 1) return;
-    if (Long(At(D3d_CaptureSurface_addr)) == 0) {
-        PutLong(At(D3dRest_CaptureScale_addr), 0x3F800000); // 1.0
+    if (Long(At(::bof3::Img(D3d_CaptureSurface_addr))) == 0) {
+        PutLong(At(::bof3::Img(D3dRest_CaptureScale_addr)), 0x3F800000); // 1.0
         D3dRest_CaptureW = 0x140;
         D3dRest_CaptureH = 0xF0;
-        if (!g.create_plain(0x140, 0x140, reinterpret_cast<void**>(At(D3d_CaptureSurface_addr)), 2)) return;
-        g.fit_size(Long(At(D3dRest_CaptureW_addr)) & 0xFFFF, static_cast<std::uint32_t>(D3dRest_CaptureH), reinterpret_cast<unsigned*>(At(kCaptureTexW)),
+        if (!g.create_plain(0x140, 0x140, reinterpret_cast<void**>(At(::bof3::Img(D3d_CaptureSurface_addr))), 2)) return;
+        g.fit_size(Long(At(::bof3::Img(D3dRest_CaptureW_addr))) & 0xFFFF, static_cast<std::uint32_t>(D3dRest_CaptureH), reinterpret_cast<unsigned*>(At(kCaptureTexW)),
                    reinterpret_cast<unsigned*>(At(kCaptureTexH)));
         if (!g.create_texture(Long(At(kCaptureTexW)) & 0xFFFF, Word(At(kCaptureTexH)),
-                              reinterpret_cast<void**>(At(D3d_CaptureTexSurface_addr)),
-                              reinterpret_cast<void**>(At(D3d_CaptureTexture_addr)), 2))
+                              reinterpret_cast<void**>(At(::bof3::Img(D3d_CaptureTexSurface_addr))),
+                              reinterpret_cast<void**>(At(::bof3::Img(D3d_CaptureTexture_addr))), 2))
             return;
         const U width = Word(At(kCaptureTexW));
         if (width < 0x140) {
             const U height = D3dRest_CaptureH;
             D3dRest_CaptureW = width;
-            PutFloat(At(D3dRest_CaptureScale_addr), X87IntMul(static_cast<std::int32_t>(width), FloatAt(kPerColumn)));
+            PutFloat(At(::bof3::Img(D3dRest_CaptureScale_addr)), X87IntMul(static_cast<std::int32_t>(width), FloatAt(kPerColumn)));
             D3dRest_CaptureH = X87IntMulFtol(static_cast<std::int32_t>(height), D3dRest_CaptureScale);
         }
     }
@@ -532,7 +534,7 @@ void D3d_AfterDraw() {
     }
     Unlock(SurfaceAt(DDraw_BackBuffer_addr));
     Unlock(SurfaceAt(D3d_CaptureSurface_addr));
-    const U dst_rect[4] = {0, 0, Long(At(D3dRest_CaptureW_addr)) & 0xFFFF, static_cast<std::uint32_t>(D3dRest_CaptureH)};
+    const U dst_rect[4] = {0, 0, Long(At(::bof3::Img(D3dRest_CaptureW_addr))) & 0xFFFF, static_cast<std::uint32_t>(D3dRest_CaptureH)};
     const U src_rect[4] = {0, 0, 0x140, 0xF0};
     void** source = SurfaceAt(D3d_CaptureSurface_addr);
     void** texture = SurfaceAt(D3d_CaptureTexSurface_addr);

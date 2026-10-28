@@ -58,6 +58,7 @@ namespace {
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
+[[gnu::always_inline]] inline const char* Str(::bof3::image::Va address) { return Str(::bof3::Img(address)); }
 unsigned long* Longs(U address) { return reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(address)); }
 U Addr(const volatile void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U Long(U address) {
@@ -65,6 +66,7 @@ U Long(U address) {
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
+[[gnu::always_inline]] inline U Long(::bof3::image::Va address) { return Long(::bof3::Img(address)); }
 
 }  // namespace
 }  // namespace shell
@@ -148,7 +150,7 @@ extern "C" __attribute__((naked)) void __cdecl Cfg_Load(void) {
 extern "C" void __cdecl Cfg_SetDefaultKeys(void) {
     unsigned char rule[0x80];
     bof3x::input::DefaultKeyTable(rule, sizeof rule);
-    std::memcpy(At(Key_Table_addr), rule, sizeof rule);
+    std::memcpy(At(::bof3::Img(Key_Table_addr)), rule, sizeof rule);
 }
 
 // Key_TableDefault 0x66C648 written from the engine's rule at map time, so
@@ -162,7 +164,7 @@ void Shell_MapDefaultKeys() {
     const bool present = bof3::ExeFile_Present();
     if (present) {
         if (bof3::IsExeHost()) bof3::ExeFile_Read(Key_TableDefault_addr, theirs, sizeof theirs);
-        else std::memcpy(theirs, At(Key_TableDefault_addr), sizeof theirs);
+        else std::memcpy(theirs, At(::bof3::Img(Key_TableDefault_addr)), sizeof theirs);
         for (unsigned i = 0; i < sizeof rule; i += 4)
             if (std::memcmp(rule + i, theirs + i, 4) != 0)
                 bof3::Fatal("keys: the default key table's entry %u is key 0x%02X%02X bits 0x%02X%02X by the engine's "
@@ -170,7 +172,7 @@ void Shell_MapDefaultKeys() {
                             rule[i + 3], rule[i + 2], theirs[i + 1], theirs[i], theirs[i + 3], theirs[i + 2],
                             (unsigned)(Key_TableDefault_addr + i));
     }
-    std::memcpy(At(Key_TableDefault_addr), rule, sizeof rule);
+    std::memcpy(At(::bof3::Img(Key_TableDefault_addr)), rule, sizeof rule);
     bof3::Log("keys: Key_TableDefault 0x%06X written from the engine's rule (%u keys)%s", (unsigned)Key_TableDefault_addr,
               (unsigned)bof3x::input::DefaultKeys().size(),
               present ? ", equal to BOF3.exe's" : "; no BOF3.exe to compare it with");

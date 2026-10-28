@@ -54,6 +54,7 @@ namespace at = effect_2f::at;
 using U = std::uint32_t;
 using LD = long double;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -891,7 +892,7 @@ extern "C" void __cdecl EffectKind51_DrawRing(unsigned radius) {
 
 namespace {
 
-unsigned char* Trail() { return At(EffectKind30_Shards_addr + 0xe0); }
+unsigned char* Trail() { return At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0); }
 
 // The timer byte +9 down; at 0, +9 = `reload` and +2 up.
 void SubCountDown(unsigned char reload) {
@@ -1442,7 +1443,7 @@ extern "C" void __cdecl EffectKind56_Markers(void) {
 // MapView_GroundAt(x, z)'s low word << 16. The callers push an argument it
 // never reads.
 extern "C" void __cdecl EffectKind56_Place(void) {
-    const unsigned char* const extra = At(Sprite_ObjectsExtra_addr + 0x34);
+    const unsigned char* const extra = At(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x34);
     rv::Store<U>(rv::Current<records::EffectObject>()->x, UL(extra));
     rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(extra + 4));
     rv::Store<U>(rv::Current<records::EffectObject>()->height, UL(extra + 8));

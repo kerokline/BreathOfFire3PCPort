@@ -69,6 +69,7 @@ namespace {
 namespace at = effect_1e::at;
 using U = std::uint32_t;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -77,8 +78,11 @@ using Handler = void (__cdecl*)();
 
 unsigned char* S() { return Sprite_Current; }
 unsigned char& B(U address) { return At(address)[0]; }
+[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va address) { return B(::bof3::Img(address)); }
 std::int32_t L(U address) { return Long(At(address)); }
+[[gnu::always_inline]] inline std::int32_t L(::bof3::image::Va address) { return L(::bof3::Img(address)); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
+[[gnu::always_inline]] inline void SetL(::bof3::image::Va address, U v) { SetL(::bof3::Img(address), v); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // A register loaded with Sprite_Current, then `movzx ax, byte [reg + n]`: the
 // pointer's upper half above the byte.
@@ -116,6 +120,7 @@ unsigned char* RecordB() { return reinterpret_cast<unsigned char*>(Effect1a_Pane
 
 // A message of the script pools: MessagePools + the u16 at `cell`.
 const unsigned char* Pool(U cell) { return At(at::kPools + Word(At(cell))); }
+[[gnu::always_inline]] inline const unsigned char* Pool(::bof3::image::Va cell) { return Pool(::bof3::Img(cell)); }
 
 // --- the callees ------------------------------------------------------------------------
 void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }

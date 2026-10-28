@@ -172,6 +172,7 @@ static_assert(kCount == sizeof kAll / sizeof kAll[0], "one enum entry a clone, i
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
+[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -272,7 +273,7 @@ void Seed(unsigned k) {
         bool along = s[8] != 0;
         U x = Word(s + 0x36), z = Word(s + 0x3A);
         if (k == k25Start || k == k26Start) {
-            const U cells = k == k25Start ? at::kSub25Cells : at::kSub26Cells;
+            const U cells = ::bof3::Img(k == k25Start ? at::kSub25Cells : at::kSub26Cells);
             along = Word(s + 0x3A) == 0;
             x = move_script::At(cells + 2 * Word(s + 0x36))[0];
             z = move_script::At(cells + 2 * Word(s + 0x36) + 1)[0];

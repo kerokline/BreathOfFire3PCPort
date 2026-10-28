@@ -285,7 +285,7 @@ unsigned char* Member(const char* who, unsigned m) {
         bof3::Fatal("%s: Party_MemberAt answered %u - the original indexes ObjTrio past its three records "
                     "(docs/effect_2a.md section 2)",
                     who, m);
-    return At(ObjTrio_addr + at::kObjStride * m);
+    return At(::bof3::Img(ObjTrio_addr) + at::kObjStride * m);
 }
 
 // Kind 0x2A's row: the ground under +0xC / +0x10, both points' heights 0x100
@@ -321,7 +321,7 @@ void LinkedMode(unsigned abr, int dtd) {
 }
 
 // The pool's records.
-unsigned char* Pool(U stride, unsigned i) { return At(EffectKind30_Shards_addr + stride * i); }
+unsigned char* Pool(U stride, unsigned i) { return At(::bof3::Img(EffectKind30_Shards_addr) + stride * i); }
 
 }  // namespace
 
@@ -346,14 +346,14 @@ extern "C" void __cdecl EffectKind28_Start(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, height);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, static_cast<U>(ground));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->reach, 0);
-    const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0xB);
+    const unsigned char set = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0xB);
     S()[1] = set == 0 ? 1 : 2;
 }
 
 // original 0x470390 (state 1): once story flag 0xB is set, +1 = 0 (back to the
 // start).
 extern "C" void __cdecl EffectKind28_WaitFlag(void) {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0xB) != 0) S()[1] = 0;
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0xB) != 0) S()[1] = 0;
 }
 
 // original 0x4703B0 (state 2): the beam from +0xC to +0x18 drawn, the row
@@ -362,7 +362,7 @@ extern "C" void __cdecl EffectKind28_Beam(void) {
     const unsigned char* const s = S();
     SH_CALL(EffectKind28_DrawBeam)(reinterpret_cast<const long*>(s + 0xC), reinterpret_cast<const long*>(s + 0x18));
     SH_CALL(EffectKind28_PushParty)();
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0xB) == 0) S()[1] = 0;
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0xB) == 0) S()[1] = 0;
 }
 
 // original 0x4703F0: for each of the eight x cells of the byte table 0x654308:
@@ -372,7 +372,7 @@ extern "C" void __cdecl EffectKind28_Beam(void) {
 // The record's point is left at the last cell.
 extern "C" void __cdecl EffectKind28_PushParty(void) {
     for (unsigned i = 0; i < 8; ++i) {
-        rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<U>(At(at::kPushCells28)[i]) << 16);
+        rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<U>(At(::bof3::Img(at::kPushCells28.v))[i]) << 16);
         rv::Current<records::EffectObject>()->z = 0x100000;
         const unsigned char* const s = S();
         auto* const so = rv::AsConst<records::EffectObject>(s);
@@ -393,7 +393,7 @@ extern "C" void __cdecl EffectKind28_PushParty(void) {
 // 0x400 at a, + 0xC00 at b), the screen words through _ftol; then
 // EffectKind28_DrawSides between the two ends.
 extern "C" void __cdecl EffectKind28_DrawBeam(const long* a, const long* b) {
-    DrawBeam(a, b, at::kBeamColours28, &EffectKind28_DrawEnd, &EffectKind28_DrawSides);
+    DrawBeam(a, b, ::bof3::Img(at::kBeamColours28.v), &EffectKind28_DrawEnd, &EffectKind28_DrawSides);
 }
 
 // original 0x470640 (0x160 bytes): eight semi-transparent Gouraud triangles at
@@ -403,7 +403,7 @@ extern "C" void __cdecl EffectKind28_DrawBeam(const long* a, const long* b) {
 // low word and the next 0x100 on (the angle stepped whole, masked for each
 // call): half a circle. x, y, radius are read as s16.
 extern "C" void __cdecl EffectKind28_DrawEnd(unsigned x, unsigned y, unsigned radius, unsigned angle) {
-    DrawEnd(at::kBeamColours28, x, y, radius, angle);
+    DrawEnd(::bof3::Img(at::kBeamColours28.v), x, y, radius, angle);
 }
 
 // original 0x4707A0 (0x234 bytes): at the packet cursor a semi-transparent
@@ -415,7 +415,7 @@ extern "C" void __cdecl EffectKind28_DrawEnd(unsigned x, unsigned y, unsigned ra
 // angles' + 0x800 not masked again.
 extern "C" void __cdecl EffectKind28_DrawSides(unsigned x0, unsigned y0, unsigned r0, unsigned a0, unsigned x1,
                                                unsigned y1, unsigned r1, unsigned a1) {
-    DrawSides(at::kBeamColours28, x0, y0, r0, a0, x1, y1, r1, a1);
+    DrawSides(::bof3::Img(at::kBeamColours28.v), x0, y0, r0, a0, x1, y1, r1, a1);
 }
 
 // ===========================================================================
@@ -514,7 +514,7 @@ extern "C" void __cdecl EffectKind29_DrawBoxes(const unsigned char* boxes) {
         const U x = UL(box), z = UL(box + 4), h = UL(box + 8), dz = UL(box + 0x10), dh = UL(box + 0x14);
         const U corners[4][3] = {{x, z + dz, h + dh}, {x, z - dz, h + dh}, {x, z + dz, h}, {x, z - dz, h}};
         for (unsigned c = 0; c < 4; ++c)
-            for (unsigned k = 0; k < 3; ++k) SetUL(At(at::kBoxPoints + 0x10 * (4 * b + c) + 4 * k), corners[c][k]);
+            for (unsigned k = 0; k < 3; ++k) SetUL(At(::bof3::Img(at::kBoxPoints.v) + 0x10 * (4 * b + c) + 4 * k), corners[c][k]);
     }
     SH_CALL(EffectGte_LoadMapCamera)();
     SH_CALL(EffectKind29_DrawFace)(0, 1, 2, 3, 1, 1);
@@ -540,7 +540,7 @@ extern "C" void __cdecl EffectKind29_DrawFace(unsigned i0, unsigned i1, unsigned
         if (index[k] >= at::kBoxPointCount)
             bof3::Fatal("EffectKind29_DrawFace: corner %u is %u, past the eight at 0x676080 (docs/effect_2a.md section 2)",
                         k, index[k]);
-        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(at::kBoxPoints + 0x10 * index[k])),
+        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(::bof3::Img(at::kBoxPoints.v) + 0x10 * index[k])),
                                         reinterpret_cast<float*>(p + 8 + 0x10 * k));
     }
     const auto bit = static_cast<unsigned char>(Frame_Counter & 1u);
@@ -588,7 +588,7 @@ extern "C" void __cdecl EffectKind29_DrawSegments(unsigned t, unsigned shade) {
     SH_CALL(EffectGte_LoadMapCamera)();
     const U tt = t & 0xFFu, level = shade & 0xFFu;
     for (unsigned k = 0; k < at::kSegmentCount; ++k) {
-        const unsigned char* const a = At(Effect2a_Segments_addr + at::kSegmentStride * k);
+        const unsigned char* const a = At(::bof3::Img(Effect2a_Segments_addr) + at::kSegmentStride * k);
         const unsigned char* const b = a + 0x10;
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetLineG2)(p);
@@ -620,7 +620,7 @@ extern "C" void __cdecl EffectKind2A_Run(void) { Dispatch("EffectKind2A_Run", Ad
 // original 0x4710C0 (state 0): +1 = 2 while story flag 0xD is clear, 1 once it
 // is set; the dword +0x3C = 0x1000000 either way.
 extern "C" void __cdecl EffectKind2A_Start(void) {
-    const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0xD);
+    const unsigned char set = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0xD);
     S()[1] = set == 0 ? 2 : 1;
     rv::Current<records::EffectObject>()->height = 0x1000000;
 }
@@ -632,7 +632,7 @@ extern "C" void __cdecl EffectKind2A_Beam(void) {
     S()[6] = 1;
     RowPoints2A(0x118000);
     Row2A();
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0xD) == 0) S()[1] = 2;
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0xD) == 0) S()[1] = 2;
 }
 
 // original 0x4711B0 (state 2): the same beam at z 0xD8000 (+6 = 0) and at
@@ -645,7 +645,7 @@ extern "C" void __cdecl EffectKind2A_Beams(void) {
     S()[6] = 2;
     RowPoints2A(0x158000);
     Row2A();
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0xD) != 0) S()[1] = 1;
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0xD) != 0) S()[1] = 1;
 }
 
 // original 0x4712E0: for the ten x cells 0x61..0x6A (each + 0x8000, the cell's
@@ -661,7 +661,7 @@ extern "C" void __cdecl EffectKind2A_PushParty(void) {
         rv::Current<records::EffectObject>()->x = x | 0x8000u;
         unsigned char* const s = S();
         auto* const so = rv::As<records::EffectObject>(s);
-        so->z = static_cast<U>(At(at::kPushRows2A + 2u * s[6])[0]) << 16;
+        so->z = static_cast<U>(At(::bof3::Img(at::kPushRows2A.v) + 2u * s[6])[0]) << 16;
         const unsigned char* const t = S();
         auto* const to = rv::AsConst<records::EffectObject>(t);
         const unsigned char m = SH_CALL(Party_MemberAt)(to->x, to->z, 0);
@@ -671,25 +671,25 @@ extern "C" void __cdecl EffectKind2A_PushParty(void) {
         const std::int32_t past = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z) - static_cast<std::uint32_t>(membero->z));
         member[8] = past > 0 ? 5 : 1;
         if (member[1] != 1) continue;
-        SH_CALL(Member_SetState2_8)(m, At(at::kPushRows2A + 2u * S()[6] + 1)[0]);
+        SH_CALL(Member_SetState2_8)(m, At(::bof3::Img(at::kPushRows2A.v) + 2u * S()[6] + 1)[0]);
     }
 }
 
 // original 0x4713C0 (0x1CC bytes): EffectKind28_DrawBeam's copy - its colours
 // 0x654328, its end and side draws EffectKind2A_DrawEnd / _DrawSides.
 extern "C" void __cdecl EffectKind2A_DrawBeam(const long* a, const long* b) {
-    DrawBeam(a, b, at::kBeamColours2A, &EffectKind2A_DrawEnd, &EffectKind2A_DrawSides);
+    DrawBeam(a, b, ::bof3::Img(at::kBeamColours2A.v), &EffectKind2A_DrawEnd, &EffectKind2A_DrawSides);
 }
 
 // original 0x471590 (0x160 bytes): EffectKind28_DrawEnd's copy (colours 0x654328).
 extern "C" void __cdecl EffectKind2A_DrawEnd(unsigned x, unsigned y, unsigned radius, unsigned angle) {
-    DrawEnd(at::kBeamColours2A, x, y, radius, angle);
+    DrawEnd(::bof3::Img(at::kBeamColours2A.v), x, y, radius, angle);
 }
 
 // original 0x4716F0 (0x234 bytes): EffectKind28_DrawSides' copy (colours 0x654328).
 extern "C" void __cdecl EffectKind2A_DrawSides(unsigned x0, unsigned y0, unsigned r0, unsigned a0, unsigned x1,
                                                unsigned y1, unsigned r1, unsigned a1) {
-    DrawSides(at::kBeamColours2A, x0, y0, r0, a0, x1, y1, r1, a1);
+    DrawSides(::bof3::Img(at::kBeamColours2A.v), x0, y0, r0, a0, x1, y1, r1, a1);
 }
 
 // ===========================================================================
@@ -732,7 +732,7 @@ extern "C" void __cdecl EffectKind2B_Rise(void) {
 extern "C" void __cdecl EffectKind2B_Specks(void) {
     if (Frame_Counter & 1u) SH_CALL(EffectSpecks_Spawn)();
     SH_CALL(EffectSpecks_Move)();
-    if (At(at::kCounter0)[0] == 0x29) NextState();
+    if (At(::bof3::Img(at::kCounter0.v))[0] == 0x29) NextState();
 }
 
 // original 0x471A10 (state 3): the specks moved; once none is left, +0x32 =
@@ -898,9 +898,9 @@ static void SparkCentreFromExtra() {
     const U h = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].height);
     const U x = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].x);
     const U z = static_cast<std::uint32_t>(Sprite_ObjectsExtra[0].z);
-    SetUL(At(at::kSparkCentre), x);
-    SetUL(At(at::kSparkCentre + 4), z);
-    SetUL(At(at::kSparkCentre + 8), Sar(h, 8));
+    SetUL(At(::bof3::Img(at::kSparkCentre.v)), x);
+    SetUL(At(::bof3::Img(at::kSparkCentre.v) + 4), z);
+    SetUL(At(::bof3::Img(at::kSparkCentre.v) + 8), Sar(h, 8));
 }
 
 // original 0x471EC0 (state 0): the centre from Sprite_ObjectsExtra[0]; eight
@@ -910,9 +910,9 @@ static void SparkCentreFromExtra() {
 extern "C" void __cdecl EffectKind2C_Start(void) {
     SparkCentreFromExtra();
     for (unsigned i = 0; i < 8; ++i) {
-        unsigned char* const pt = At(at::kSparkPoints + 0x10 * i);
-        SetUL(pt, UL(At(at::kSparkOffsetX + 4 * i)) + UL(At(at::kSparkCentre)));
-        const U z = UL(At(at::kSparkOffsetZ + 4 * i)) + UL(At(at::kSparkCentre + 4));
+        unsigned char* const pt = At(::bof3::Img(at::kSparkPoints.v) + 0x10 * i);
+        SetUL(pt, UL(At(::bof3::Img(at::kSparkOffsetX.v) + 4 * i)) + UL(At(::bof3::Img(at::kSparkCentre.v))));
+        const U z = UL(At(::bof3::Img(at::kSparkOffsetZ.v) + 4 * i)) + UL(At(::bof3::Img(at::kSparkCentre.v) + 4));
         SetUL(pt + 4, z);
         const long ground = SH_CALL(AreaMap_Elevation)(Long(pt), static_cast<long>(z));
         SetUL(pt + 8, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 8);
@@ -934,8 +934,8 @@ extern "C" void __cdecl EffectKind2C_Emit(void) {
         for (unsigned i = 0; i < 8; ++i) {
             unsigned char* const r = SH_CALL(EffectSparks_FindFree)();
             if (!r) continue;
-            const unsigned char* const c = At(at::kSparkCentre);
-            const unsigned char* const pt = At(at::kSparkPoints + 0x10 * i);
+            const unsigned char* const c = At(::bof3::Img(at::kSparkCentre.v));
+            const unsigned char* const pt = At(::bof3::Img(at::kSparkPoints.v) + 0x10 * i);
             for (unsigned k = 0; k < 4; ++k) SetUL(r + 4 * k, UL(c + 4 * k));
             for (unsigned k = 0; k < 3; ++k) SetUL(r + 0x10 + 4 * k, Sar(UL(pt + 4 * k) - UL(c + 4 * k), 4));
             SH_CALL(Gte_VectorNormal)(reinterpret_cast<const long*>(r + 0x10), reinterpret_cast<long*>(r + 0x10));
@@ -1089,7 +1089,7 @@ extern "C" void __cdecl EffectKind2E_Trickle(void) {
         }
     }
     SH_CALL(EffectSparks_Move)();
-    if (At(at::kCounter0)[0] == 3) NextState();
+    if (At(::bof3::Img(at::kCounter0.v))[0] == 3) NextState();
 }
 
 // original 0x4720F0 (state 2): sixteen free sparks at Sprite_Objects[1]'s point
@@ -1231,7 +1231,7 @@ extern "C" void __cdecl EffectKind2D_Close(void) {
     unsigned char* const t = S();
     t[9] = static_cast<unsigned char>(t[9] - 1);
     if (S()[9] != 0) return;
-    At(at::kCounter0)[0] = 0x31;
+    At(::bof3::Img(at::kCounter0.v))[0] = 0x31;
     SetWord(q + 0xC, 2);
     SetWord(q + 0xE, 0);
     S()[9] = 0xF;
@@ -1254,8 +1254,8 @@ extern "C" void __cdecl EffectKind2D_Lift(void) {
 // original 0x472770 (state 7): the byte 0x7DEE44 |= 2, the counter byte
 // 0x903848 = 0x32, a tail jmp to Effect_Release.
 extern "C" void __cdecl EffectKind2D_End(void) {
-    At(at::kMessageBits)[0] = static_cast<unsigned char>(At(at::kMessageBits)[0] | 2);
-    At(at::kCounter0)[0] = 0x32;
+    At(::bof3::Img(at::kMessageBits.v))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kMessageBits.v))[0] | 2);
+    At(::bof3::Img(at::kCounter0.v))[0] = 0x32;
     SH_CALL(Effect_Release)();
 }
 

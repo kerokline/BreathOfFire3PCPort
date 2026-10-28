@@ -176,6 +176,7 @@ static_assert(kCount == sizeof kAll / sizeof kAll[0], "one enum entry a clone, i
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+[[gnu::always_inline]] inline unsigned char* P(::bof3::image::Va a) { return P(::bof3::Img(a)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
@@ -305,7 +306,7 @@ const std::uint8_t kKinds[] = {0x6D, 0x6E, 0x6F, 0x72, 0x73, 0x74, 0x75};
 const sh::Region kRegions[] = {
     {Effect3c_ShardCursor_addr, 4},
     {Effect3c_SparkCursor_addr, 4},
-    {at::kParticles, 2 * at::kParticleBlock},
+    {::bof3::Img(at::kParticles), 2 * at::kParticleBlock},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -322,6 +323,7 @@ void Pool(U base, U stride, unsigned n) {
         r[2] = static_cast<unsigned char>(PickOf(1, 1, 2, 0, 0x20, sh::Next()));
     }
 }
+[[gnu::always_inline]] inline void Pool(::bof3::image::Va base, U stride, unsigned n) { Pool(::bof3::Img(base), stride, n); }
 
 void Seed(unsigned k) {
     unsigned char* const s = Sprite_Current;
@@ -418,7 +420,7 @@ void Seed(unsigned k) {
 void Args(unsigned k, U* a) {
     switch (k) {
     case k6EShardInit: a[0] = Shards() + at::kShardStride * (sh::Next() % at::kShardCount); break;
-    case k6DDrawParticle: a[0] = at::kParticles + at::kParticleStride * (sh::Next() % (2 * at::kParticleCount)); break;
+    case k6DDrawParticle: a[0] = ::bof3::Img(at::kParticles + at::kParticleStride * (sh::Next() % (2 * at::kParticleCount))); break;
     case k6FPushParty: a[0] = (sh::Next() & 0xFFFFFF00u) | PickOf(0, 1, 0, 1, 2, sh::Next()); break;
     case k6FDrawSegment:
         a[0] = Key(Sprite_Current + 0xC);

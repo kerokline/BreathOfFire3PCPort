@@ -413,7 +413,7 @@ constexpr unsigned kTableFaerieScript = 1;
 // `height` gets that cell's.
 bool TableFaerie(const unsigned char* sprite, int feet, int cell_x, int cell_z, Height* height) {
     if (Game_AreaNumber != kTableArea) return false;
-    const unsigned char* const objects = reinterpret_cast<const unsigned char*>(Sprite_Objects_addr);
+    const unsigned char* const objects = reinterpret_cast<const unsigned char*>(::bof3::Img(Sprite_Objects_addr));
     if (sprite < objects || sprite >= objects + 30u * 0xA4u || (sprite - objects) % 0xA4u != 0) return false;
     if (sprite[0x83] != kTableFaerieScript) return false;
     if (cell_x <= 0 || cell_z <= 0 || cell_x >= AreaMap_Header[0] || cell_z >= AreaMap_Header[1]) return false;

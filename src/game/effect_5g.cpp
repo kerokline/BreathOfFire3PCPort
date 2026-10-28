@@ -55,6 +55,7 @@ namespace {
 namespace at = effect_5g::at;
 using U = std::uint32_t;
 using move_script::At;
+[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -339,7 +340,7 @@ extern "C" void __cdecl EffectKind18Sub3A_DrawPanel(unsigned side, int dy) {
         if (side >= at::kSidesRoom)
             bof3::Fatal("EffectKind18Sub3A_DrawPanel: side %u, past the %u bytes of 0x%X - the original reads on into "
                         "EffectKind18Sub4A_States (docs/effect_5g.md section 6)",
-                        side, at::kSidesRoom, (unsigned)at::kSub3ASides);
+                        side, at::kSidesRoom, at::kSub3ASides.v);
         const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(at::kSub3ASides)[side])));
         const U slide = sign * Word(s + 0x30);
         const U x = (side + rv::As<records::EffectObject>(s)->x_whole) << 7;
@@ -475,7 +476,7 @@ extern "C" void __cdecl EffectKind18Sub36_Pulse(void) {
     if (step >= at::kSub36Steps)
         bof3::Fatal("EffectKind18Sub36_Pulse: +2 is %u, past the %u steps of 0x%X - the original reads on into "
                     "sub-kind 0x2C's heights (docs/effect_5g.md section 6)",
-                    step, at::kSub36Steps, (unsigned)at::kSub36Blues);
+                    step, at::kSub36Steps, at::kSub36Blues.v);
     p[6] = static_cast<unsigned char>(At(at::kSub36Blues)[step] << 3);
     SH_CALL(Gfx_CommitPrim)(3, 0x38);
     if ((Frame_Counter & 7) == 0) {

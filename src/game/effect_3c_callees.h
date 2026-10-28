@@ -28,11 +28,11 @@ constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV;   // (mat
 constexpr std::uint32_t kPolyF3 = bof3::addr::Gpu_SetPolyF3;         // (unsigned char *prim): a flat triangle's 0x2C bytes set up
 
 // --- cells ------------------------------------------------------------------------
-constexpr std::uint32_t kShardCursor = 0x67626C;    // unsigned char *: the 0x28-byte shard kinds 0x6C (E3B's) and 0x6E
+constexpr ::bof3::image::Va kShardCursor{0x67626C};    // unsigned char *: the 0x28-byte shard kinds 0x6C (E3B's) and 0x6E
                                                     // step (E3B's code writes it too: named by neither group yet)
-constexpr std::uint32_t kSparkCursor = 0x676274;    // unsigned char *: the 0x18-byte spark kind 0x73 steps (only this
+constexpr ::bof3::image::Va kSparkCursor{0x676274};    // unsigned char *: the 0x18-byte spark kind 0x73 steps (only this
                                                     // band's code reads or writes it)
-constexpr std::uint32_t kParticles = 0x92C780;      // kind 0x6D: 32 records of 0x28 per block, the block +6 * 0x500
+constexpr ::bof3::image::Va kParticles{0x92C780};      // kind 0x6D: 32 records of 0x28 per block, the block +6 * 0x500
 constexpr std::uint32_t kParticleBlock = 0x500;
 constexpr unsigned kParticleCount = 32;
 constexpr std::uint32_t kParticleStride = 0x28;
@@ -44,13 +44,13 @@ constexpr unsigned kSparkCount = 32;                // kind 0x73: 32 records of 
 constexpr std::uint32_t kSparkStride = 0x18;
 
 // --- .data read in place --------------------------------------------------------
-constexpr std::uint32_t kParticleShapes = 0x654A5C; // kind 0x6D: eight rows of four s16 (two corner offsets), by +4
+constexpr ::bof3::image::Va kParticleShapes{0x654A5C}; // kind 0x6D: eight rows of four s16 (two corner offsets), by +4
 constexpr unsigned kParticleShapeCount = 8;
-constexpr std::uint32_t kKind6FColour = 0x654A9C;   // kind 0x6F: one row of three colour bytes (r, g, b), by +6 * 3;
+constexpr ::bof3::image::Va kKind6FColour{0x654A9C};   // kind 0x6F: one row of three colour bytes (r, g, b), by +6 * 3;
                                                     // the next row would run into EffectKind6F_States
 constexpr unsigned kKind6FColourCount = 1;
-constexpr std::uint32_t kKind6FCellsZ = 0x654AB0;   // kind 0x6F: four z cells (bytes) along x 0x5C, EffectKind6F_PushParty(0)
-constexpr std::uint32_t kKind6FCellsX = 0x654AB4;   // kind 0x6F: four x cells (bytes) along z 0x44, EffectKind6F_PushParty(1)
+constexpr ::bof3::image::Va kKind6FCellsZ{0x654AB0};   // kind 0x6F: four z cells (bytes) along x 0x5C, EffectKind6F_PushParty(0)
+constexpr ::bof3::image::Va kKind6FCellsX{0x654AB4};   // kind 0x6F: four x cells (bytes) along z 0x44, EffectKind6F_PushParty(1)
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags' story row (Flags_Test's bank)
 
 // --- ranges -----------------------------------------------------------------------

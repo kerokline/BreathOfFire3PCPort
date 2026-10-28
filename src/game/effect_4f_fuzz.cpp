@@ -159,6 +159,7 @@ static_assert(kCount == sizeof kAll / sizeof kAll[0], "one enum entry a clone, i
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+[[gnu::always_inline]] inline unsigned char* P(::bof3::image::Va a) { return P(::bof3::Img(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -253,7 +254,7 @@ const std::uint8_t kKinds[] = {0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xB0, 0xB1, 0
 // Beyond the standard effect regions (0x92BF80 + 0x644): the rest of kind 0xAB's
 // 256 drops, its eight sources and kind 0xB0's sixteen bars, to 0x92D880.
 const sh::Region kRegions[] = {
-    {0x92C5C4, at::kPoolsEnd - 0x92C5C4},
+    {0x92C5C4, at::kPoolsEnd.v - 0x92C5C4},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -308,7 +309,7 @@ void Seed(unsigned k) {
     s[9] = static_cast<unsigned char>(PickOf(1, 1, 0, 2, 0x10, 0x11, 0xF0, 0xFF, sh::Next()));
     s[6] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, sh::Next()));
     Draw_PassFlags = static_cast<unsigned char>(PickOf(0, 0, 1, 2, sh::Next()));
-    sh::Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(3, 3, 2, 4, sh::Next()));
+    sh::Mem(::bof3::Img(at::kCounter))[0] = static_cast<unsigned char>(PickOf(3, 3, 2, 4, sh::Next()));
     switch (k) {
     case kABMove:
     case kABDrawDrop: SeedDrops(); break;
@@ -387,7 +388,7 @@ void Disturb(U h) {
         if (sh::InRegions(s, 0x80)) s[6] = static_cast<unsigned char>(v);
         break;
     case 2: Draw_PassFlags = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;
-    case 3: sh::Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 3u : v >> 1); break;
+    case 3: sh::Mem(::bof3::Img(at::kCounter))[0] = static_cast<unsigned char>((v & 1) ? 3u : v >> 1); break;
     case 4: SetWord(sh::Mem(Camera_Angles_addr + 0x2), (v & 1) ? 0xF1u : v >> 1); break;
     case 5:
         if (sh::InRegions(s, 0x80)) s[3] = static_cast<unsigned char>(v);
