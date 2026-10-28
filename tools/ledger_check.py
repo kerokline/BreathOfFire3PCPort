@@ -22,7 +22,8 @@ The divergence ledger, docs/DIVERGENCE.md (CLAUDE.md rule 2):
     reach), `never` for a Forced entry and for `Switch: none`; a superseding
     entry that exists. Until STRICT_FIELDS is set (stage C of the round) a
     missing field is a counted note, not an error; a malformed one is an error
-    already.
+    already. Each run also tests these checks on the worked examples, DIV-0176
+    and DIV-0183, each with one field line changed (FIXTURE_CASES).
 
 The ownership ledger, symbols.toml `impl` against the detours in src/:
   * every function detoured to ours (BOF3_INJECT, or a direct bof3::Inject
