@@ -70,8 +70,11 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      green popup over Ryu reading 543 where Raise Dead leaves 250, and Ammonia leaving status `0x2000` with HP 1
      (both installs the same, so ours either way; IDEAS I52's harness for the PlayStation side, when wanted);
      Ward's tilts by eye.
-   - **Not reached:** the seven boss-only skills with no route to their fight (section 11; the owner's
-     recordings or crafted saves); the stallion route's first fight (no pick within 300 frames); by-kind runs on a
+   - **The boss sweep** ([`boss-sweep.md`](boss-sweep.md), 2026-10-27/28, branch `boss-sweep/integration`): the
+     `battle ID` op, crafted pre-fight saves ([`boss-fights.md`](boss-fights.md)) and `spell_sweep.py run --fight`:
+     fifteen fights played to the death on PC, US-disc and PSP, six of the seven boss-only skills cast by their
+     own boss; left: fight 35 (Gaist, Corona - the owner's recording), the owner's calls in its section 7.9.
+   - **Not reached:** fight 35's Corona (above); the stallion route's first fight (no pick within 300 frames); by-kind runs on a
      PSP install; a PSP-JP install; a disc-built install's D.Zombie-class play of the twelve rows the twin read
      placed (the Ward / Revive / Air Raid spells, area 121's band, scene 2's effects). Rows left unplaced:
      `WardMote_Tilts+0x8` (MAGIC044's two shorts, no reader), `LinkedObjectD_Amounts` on PSP-EU, the PSPs'

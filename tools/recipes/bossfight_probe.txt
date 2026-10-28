@@ -1,0 +1,1447 @@
+# save bf55b
+# The boss sweep's pre-fight probe (docs/boss-sweep.md 5.1): a crafted save from
+# tools/chapter_jump.py's bf* crafts (input_run.py --save bfNN chooses another), loaded as
+# ending17.txt loads; then every 10 recipe frames the field mode, area, EventBattle_Id, run,
+# step, counter 0, Cond_ByteFD and the block's area word; every 300 frames the field objects'
+# type and tag; at frame 688 the area's encounter rows 4..7; circle held 2 frames every 40
+# frames for the scenes' message boxes; a shot every 120 frames. Generated - shot names are
+# recipe frames, so do not insert lines by hand.
+wait 53
+hold start 4
+wait 67
+hold start 6
+wait 47
+hold circle 4
+wait 54
+wait 5
+wait 4
+wait 4
+wait 5
+wait 6
+wait 5
+wait 5
+wait 27
+hold circle 5
+wait 85
+hold circle 2
+mark frame 388
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+peek 0x7dee86 u8 o00_type
+peek 0x7def1e u8 o00_tag
+peek 0x7def2a u8 o01_type
+peek 0x7defc2 u8 o01_tag
+peek 0x7defce u8 o02_type
+peek 0x7df066 u8 o02_tag
+peek 0x7df072 u8 o03_type
+peek 0x7df10a u8 o03_tag
+peek 0x7df116 u8 o04_type
+peek 0x7df1ae u8 o04_tag
+peek 0x7df1ba u8 o05_type
+peek 0x7df252 u8 o05_tag
+peek 0x7df25e u8 o06_type
+peek 0x7df2f6 u8 o06_tag
+peek 0x7df302 u8 o07_type
+peek 0x7df39a u8 o07_tag
+peek 0x7df3a6 u8 o08_type
+peek 0x7df43e u8 o08_tag
+peek 0x7df44a u8 o09_type
+peek 0x7df4e2 u8 o09_tag
+peek 0x7df4ee u8 o10_type
+peek 0x7df586 u8 o10_tag
+peek 0x7df592 u8 o11_type
+peek 0x7df62a u8 o11_tag
+peek 0x7df636 u8 o12_type
+peek 0x7df6ce u8 o12_tag
+peek 0x7df6da u8 o13_type
+peek 0x7df772 u8 o13_tag
+peek 0x7df77e u8 o14_type
+peek 0x7df816 u8 o14_tag
+peek 0x7df822 u8 o15_type
+peek 0x7df8ba u8 o15_tag
+peek 0x7df8c6 u8 o16_type
+peek 0x7df95e u8 o16_tag
+peek 0x7df96a u8 o17_type
+peek 0x7dfa02 u8 o17_tag
+peek 0x7dfa0e u8 o18_type
+peek 0x7dfaa6 u8 o18_tag
+peek 0x7dfab2 u8 o19_type
+peek 0x7dfb4a u8 o19_tag
+peek 0x7dfb56 u8 o20_type
+peek 0x7dfbee u8 o20_tag
+peek 0x7dfbfa u8 o21_type
+peek 0x7dfc92 u8 o21_tag
+peek 0x7dfc9e u8 o22_type
+peek 0x7dfd36 u8 o22_tag
+peek 0x7dfd42 u8 o23_type
+peek 0x7dfdda u8 o23_tag
+peek 0x7dfde6 u8 o24_type
+peek 0x7dfe7e u8 o24_tag
+peek 0x7dfe8a u8 o25_type
+peek 0x7dff22 u8 o25_tag
+peek 0x7dff2e u8 o26_type
+peek 0x7dffc6 u8 o26_tag
+peek 0x7dffd2 u8 o27_type
+peek 0x7e006a u8 o27_tag
+peek 0x7e0076 u8 o28_type
+peek 0x7e010e u8 o28_tag
+peek 0x7e011a u8 o29_type
+peek 0x7e01b2 u8 o29_tag
+shot f00388 1
+wait 9
+mark frame 398
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 408
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 418
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 428
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 438
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 448
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 458
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 468
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 478
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 488
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 498
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 508
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+shot f00508 1
+wait 9
+mark frame 518
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 528
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 538
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 548
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 558
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 568
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 578
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 588
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 598
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 608
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 618
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 628
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+shot f00628 1
+wait 9
+mark frame 638
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 648
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 658
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 668
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 678
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 688
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+peek 0x7dee86 u8 o00_type
+peek 0x7def1e u8 o00_tag
+peek 0x7def2a u8 o01_type
+peek 0x7defc2 u8 o01_tag
+peek 0x7defce u8 o02_type
+peek 0x7df066 u8 o02_tag
+peek 0x7df072 u8 o03_type
+peek 0x7df10a u8 o03_tag
+peek 0x7df116 u8 o04_type
+peek 0x7df1ae u8 o04_tag
+peek 0x7df1ba u8 o05_type
+peek 0x7df252 u8 o05_tag
+peek 0x7df25e u8 o06_type
+peek 0x7df2f6 u8 o06_tag
+peek 0x7df302 u8 o07_type
+peek 0x7df39a u8 o07_tag
+peek 0x7df3a6 u8 o08_type
+peek 0x7df43e u8 o08_tag
+peek 0x7df44a u8 o09_type
+peek 0x7df4e2 u8 o09_tag
+peek 0x7df4ee u8 o10_type
+peek 0x7df586 u8 o10_tag
+peek 0x7df592 u8 o11_type
+peek 0x7df62a u8 o11_tag
+peek 0x7df636 u8 o12_type
+peek 0x7df6ce u8 o12_tag
+peek 0x7df6da u8 o13_type
+peek 0x7df772 u8 o13_tag
+peek 0x7df77e u8 o14_type
+peek 0x7df816 u8 o14_tag
+peek 0x7df822 u8 o15_type
+peek 0x7df8ba u8 o15_tag
+peek 0x7df8c6 u8 o16_type
+peek 0x7df95e u8 o16_tag
+peek 0x7df96a u8 o17_type
+peek 0x7dfa02 u8 o17_tag
+peek 0x7dfa0e u8 o18_type
+peek 0x7dfaa6 u8 o18_tag
+peek 0x7dfab2 u8 o19_type
+peek 0x7dfb4a u8 o19_tag
+peek 0x7dfb56 u8 o20_type
+peek 0x7dfbee u8 o20_tag
+peek 0x7dfbfa u8 o21_type
+peek 0x7dfc92 u8 o21_tag
+peek 0x7dfc9e u8 o22_type
+peek 0x7dfd36 u8 o22_tag
+peek 0x7dfd42 u8 o23_type
+peek 0x7dfdda u8 o23_tag
+peek 0x7dfde6 u8 o24_type
+peek 0x7dfe7e u8 o24_tag
+peek 0x7dfe8a u8 o25_type
+peek 0x7dff22 u8 o25_tag
+peek 0x7dff2e u8 o26_type
+peek 0x7dffc6 u8 o26_tag
+peek 0x7dffd2 u8 o27_type
+peek 0x7e006a u8 o27_tag
+peek 0x7e0076 u8 o28_type
+peek 0x7e010e u8 o28_tag
+peek 0x7e011a u8 o29_type
+peek 0x7e01b2 u8 o29_tag
+peek 0x8c55a4 u8 row4_s0
+peek 0x8c55a5 u8 row4_s1
+peek 0x8c55a6 u8 row4_s2
+peek 0x8c55a7 u8 row4_s3
+peek 0x8c55a8 u8 row4_s4
+peek 0x8c55a9 u8 row4_s5
+peek 0x8c55aa u8 row4_s6
+peek 0x8c55ab u8 row4_s7
+peek 0x8c55ad u8 row5_s0
+peek 0x8c55ae u8 row5_s1
+peek 0x8c55af u8 row5_s2
+peek 0x8c55b0 u8 row5_s3
+peek 0x8c55b1 u8 row5_s4
+peek 0x8c55b2 u8 row5_s5
+peek 0x8c55b3 u8 row5_s6
+peek 0x8c55b4 u8 row5_s7
+peek 0x8c55b6 u8 row6_s0
+peek 0x8c55b7 u8 row6_s1
+peek 0x8c55b8 u8 row6_s2
+peek 0x8c55b9 u8 row6_s3
+peek 0x8c55ba u8 row6_s4
+peek 0x8c55bb u8 row6_s5
+peek 0x8c55bc u8 row6_s6
+peek 0x8c55bd u8 row6_s7
+peek 0x8c55bf u8 row7_s0
+peek 0x8c55c0 u8 row7_s1
+peek 0x8c55c1 u8 row7_s2
+peek 0x8c55c2 u8 row7_s3
+peek 0x8c55c3 u8 row7_s4
+peek 0x8c55c4 u8 row7_s5
+peek 0x8c55c5 u8 row7_s6
+peek 0x8c55c6 u8 row7_s7
+wait 10
+mark frame 698
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 708
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 718
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 728
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 738
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 748
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+shot f00748 1
+wait 9
+mark frame 758
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 768
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 778
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 788
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 798
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 808
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 818
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 828
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 838
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 848
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 858
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 868
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+shot f00868 1
+wait 9
+mark frame 878
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 888
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 898
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 908
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 918
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 928
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 938
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 948
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 958
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 968
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 978
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 988
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+peek 0x7dee86 u8 o00_type
+peek 0x7def1e u8 o00_tag
+peek 0x7def2a u8 o01_type
+peek 0x7defc2 u8 o01_tag
+peek 0x7defce u8 o02_type
+peek 0x7df066 u8 o02_tag
+peek 0x7df072 u8 o03_type
+peek 0x7df10a u8 o03_tag
+peek 0x7df116 u8 o04_type
+peek 0x7df1ae u8 o04_tag
+peek 0x7df1ba u8 o05_type
+peek 0x7df252 u8 o05_tag
+peek 0x7df25e u8 o06_type
+peek 0x7df2f6 u8 o06_tag
+peek 0x7df302 u8 o07_type
+peek 0x7df39a u8 o07_tag
+peek 0x7df3a6 u8 o08_type
+peek 0x7df43e u8 o08_tag
+peek 0x7df44a u8 o09_type
+peek 0x7df4e2 u8 o09_tag
+peek 0x7df4ee u8 o10_type
+peek 0x7df586 u8 o10_tag
+peek 0x7df592 u8 o11_type
+peek 0x7df62a u8 o11_tag
+peek 0x7df636 u8 o12_type
+peek 0x7df6ce u8 o12_tag
+peek 0x7df6da u8 o13_type
+peek 0x7df772 u8 o13_tag
+peek 0x7df77e u8 o14_type
+peek 0x7df816 u8 o14_tag
+peek 0x7df822 u8 o15_type
+peek 0x7df8ba u8 o15_tag
+peek 0x7df8c6 u8 o16_type
+peek 0x7df95e u8 o16_tag
+peek 0x7df96a u8 o17_type
+peek 0x7dfa02 u8 o17_tag
+peek 0x7dfa0e u8 o18_type
+peek 0x7dfaa6 u8 o18_tag
+peek 0x7dfab2 u8 o19_type
+peek 0x7dfb4a u8 o19_tag
+peek 0x7dfb56 u8 o20_type
+peek 0x7dfbee u8 o20_tag
+peek 0x7dfbfa u8 o21_type
+peek 0x7dfc92 u8 o21_tag
+peek 0x7dfc9e u8 o22_type
+peek 0x7dfd36 u8 o22_tag
+peek 0x7dfd42 u8 o23_type
+peek 0x7dfdda u8 o23_tag
+peek 0x7dfde6 u8 o24_type
+peek 0x7dfe7e u8 o24_tag
+peek 0x7dfe8a u8 o25_type
+peek 0x7dff22 u8 o25_tag
+peek 0x7dff2e u8 o26_type
+peek 0x7dffc6 u8 o26_tag
+peek 0x7dffd2 u8 o27_type
+peek 0x7e006a u8 o27_tag
+peek 0x7e0076 u8 o28_type
+peek 0x7e010e u8 o28_tag
+peek 0x7e011a u8 o29_type
+peek 0x7e01b2 u8 o29_tag
+shot f00988 1
+wait 9
+mark frame 998
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1008
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1018
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1028
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 1038
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1048
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1058
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1068
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 1078
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1088
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1098
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1108
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+shot f01108 1
+wait 9
+mark frame 1118
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1128
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1138
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1148
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 1158
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1168
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1178
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1188
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 1198
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1208
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1218
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1228
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+shot f01228 1
+wait 9
+mark frame 1238
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1248
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1258
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1268
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 1278
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1288
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+peek 0x7dee86 u8 o00_type
+peek 0x7def1e u8 o00_tag
+peek 0x7def2a u8 o01_type
+peek 0x7defc2 u8 o01_tag
+peek 0x7defce u8 o02_type
+peek 0x7df066 u8 o02_tag
+peek 0x7df072 u8 o03_type
+peek 0x7df10a u8 o03_tag
+peek 0x7df116 u8 o04_type
+peek 0x7df1ae u8 o04_tag
+peek 0x7df1ba u8 o05_type
+peek 0x7df252 u8 o05_tag
+peek 0x7df25e u8 o06_type
+peek 0x7df2f6 u8 o06_tag
+peek 0x7df302 u8 o07_type
+peek 0x7df39a u8 o07_tag
+peek 0x7df3a6 u8 o08_type
+peek 0x7df43e u8 o08_tag
+peek 0x7df44a u8 o09_type
+peek 0x7df4e2 u8 o09_tag
+peek 0x7df4ee u8 o10_type
+peek 0x7df586 u8 o10_tag
+peek 0x7df592 u8 o11_type
+peek 0x7df62a u8 o11_tag
+peek 0x7df636 u8 o12_type
+peek 0x7df6ce u8 o12_tag
+peek 0x7df6da u8 o13_type
+peek 0x7df772 u8 o13_tag
+peek 0x7df77e u8 o14_type
+peek 0x7df816 u8 o14_tag
+peek 0x7df822 u8 o15_type
+peek 0x7df8ba u8 o15_tag
+peek 0x7df8c6 u8 o16_type
+peek 0x7df95e u8 o16_tag
+peek 0x7df96a u8 o17_type
+peek 0x7dfa02 u8 o17_tag
+peek 0x7dfa0e u8 o18_type
+peek 0x7dfaa6 u8 o18_tag
+peek 0x7dfab2 u8 o19_type
+peek 0x7dfb4a u8 o19_tag
+peek 0x7dfb56 u8 o20_type
+peek 0x7dfbee u8 o20_tag
+peek 0x7dfbfa u8 o21_type
+peek 0x7dfc92 u8 o21_tag
+peek 0x7dfc9e u8 o22_type
+peek 0x7dfd36 u8 o22_tag
+peek 0x7dfd42 u8 o23_type
+peek 0x7dfdda u8 o23_tag
+peek 0x7dfde6 u8 o24_type
+peek 0x7dfe7e u8 o24_tag
+peek 0x7dfe8a u8 o25_type
+peek 0x7dff22 u8 o25_tag
+peek 0x7dff2e u8 o26_type
+peek 0x7dffc6 u8 o26_tag
+peek 0x7dffd2 u8 o27_type
+peek 0x7e006a u8 o27_tag
+peek 0x7e0076 u8 o28_type
+peek 0x7e010e u8 o28_tag
+peek 0x7e011a u8 o29_type
+peek 0x7e01b2 u8 o29_tag
+wait 10
+mark frame 1298
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1308
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 1318
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1328
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1338
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1348
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+shot f01348 1
+wait 9
+mark frame 1358
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1368
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1378
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1388
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 1398
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1408
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1418
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1428
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+hold circle 2
+wait 8
+mark frame 1438
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1448
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1458
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1468
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+shot f01468 1
+wait 9
+mark frame 1478
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1488
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+mark frame 1498
+peek 0x66C7E8 u16 mode
+peek 0x904EFC u16 area
+peek 0x904AAA u8 fight
+peek 0x8034E4 u8 run
+peek 0x8034E5 u8 step
+peek 0x903848 u8 c0
+peek 0x8034F1 u8 fd
+peek 0x903A04 u16 barea
+wait 10
+end

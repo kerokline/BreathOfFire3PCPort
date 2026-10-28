@@ -641,10 +641,519 @@ def report(a):
     print(results)
 
 
+
+# --- --fight: an event battle staged by `battle ID`, played, and killed (docs/boss-sweep.md 7) ---
+SPRITE_OBJECTS = 0x7DEE80    # Sprite_Objects: 30 field actors of 0xA4; +6 the type (7 a boss actor), +0x9E its slot
+SPRITE_STRIDE = 0xA4
+FIGHT_BYTE = 0x904AAA        # EventBattle_Id
+ENEMIES_LEFT = 0x904AB3      # u8: Battle_EnemyDefeated / EnemyOp_LeaveEnd count it down; 0 sets the win
+BATTLE_END = 0x904AE8        # u8: bit 0 the loss, bit 1 the win (BattleHook_End picks the way out by it)
+HOOKS = 0x904B64             # BattleHook_End, BattleHook_Exit, BattleHook_Event: three dwords a set-up stores
+CENTRE = 0x903780            # BossSi_CentreX / Z: Party_PlaceForBattle's (x, z), the fight's centre
+KIND2 = 0x905E60             # Field_Kind2Z, Field_Kind2X: the camera's focus object's cell
+FOCUS = 0x929F14             # MapView_FocusX / Z: the view's focus, stepping toward Kind2
+EFFECTS = 0x7E11E0           # Effect_Objects: 20 of 0x80; +0 in use, +1..+4 the state, +5 the kind (Effect_KindHandlers)
+EFFECT_STRIDE, EFFECT_COUNT = 0x80, 20
+ENEMY_KIND = 0x100           # u8 of the enemy record: BossKind_Table's index (boss_harness.md 4)
+
+
+def frames_of(path):
+    """A recorded route as (header lines, [(buttons, shot name or None)] one a
+    frame): only `wait N`, `hold B N`, `shot NAME 1 [B]` and `key K 0` (kept
+    with the frame after it) after the header."""
+    header, frames, keys = [], [], []
+    with open(path, encoding='utf-8') as f:
+        for line in f:
+            t = line.split('#')[0].split()
+            if not t:
+                if not frames and not keys:
+                    header.append(line.rstrip('\n'))
+                continue
+            if t[0] == 'wait':
+                n = int(t[1])
+                frames += [('', None, keys)] + [('', None, [])] * (n - 1) if n else []
+            elif t[0] == 'hold':
+                n = int(t[2])
+                frames += [(t[1], None, keys)] + [(t[1], None, [])] * (n - 1) if n else []
+            elif t[0] == 'shot' and len(t) >= 3 and t[2] == '1':
+                frames.append((t[3] if len(t) == 4 else '', t[1], keys))
+            elif t[0] == 'key' and len(t) == 3 and t[2] == '0':
+                keys = keys + [line.strip()]
+                continue
+            else:
+                raise SystemExit(f'{path}: not a recorded route line: {line.strip()}')
+            keys = []
+    return header, frames
+
+
+def emit_frames(frames, before=None, shots=None, start=0, keep_names=False):
+    """The frames back as recipe lines: before(i) gives no-frame lines put before
+    frame i, shots {i: name} turns frame i into a one-frame shot holding its
+    buttons (so no input moves: tools/recipe_shots.py's rule). The route's own
+    shots are dropped unless keep_names."""
+    out = []
+    run_b, run_n = None, 0
+
+    def flush():
+        nonlocal run_b, run_n
+        if run_n:
+            out.append(f'wait {run_n}' if run_b == '' else f'hold {run_b} {run_n}')
+        run_b, run_n = None, 0
+    for k, (b, own, keys) in enumerate(frames):
+        i = start + k
+        extra = (before(i) if before else []) + list(keys)
+        name = (shots or {}).get(i) or (own if keep_names else None)
+        if extra or name:
+            flush()
+            out += extra
+        if name:
+            out.append(f'shot {name} 1' + (f' {b}' if b else ''))
+            continue
+        if b != run_b:
+            flush()
+            run_b = b
+        run_n += 1
+    flush()
+    return out
+
+
+def actor_peeks(tag):
+    """The 30 field actors' flags +0 (bit 0x40 not drawn: the battle copies the actor's first 0x80 bytes into the
+    enemy record, so a hidden actor is a hidden boss), type and slot (BossActor_Find's test), before the op."""
+    L = []
+    for r in range(30):
+        a = SPRITE_OBJECTS + r * SPRITE_STRIDE
+        L += [f'peek 0x{a:X} u8 s{r}_flags_{tag}', f'peek 0x{a + 6:X} u8 s{r}_type_{tag}', f'peek 0x{a + 0x9E:X} u8 s{r}_slot_{tag}']
+    return L
+
+
+def fight_watches(enemies, shots=True, effects=True):
+    """The watches of a played fight (input_script's `watch`): the battle bytes,
+    the end byte and the hooks, the fight's centre, the camera's focus, each
+    enemy's state bytes +1..+4, HP and kind, the field's effect objects. A shot at
+    every change of the phase / step bytes, an enemy's state bytes, the enemy
+    count and the end byte - the enemy's pick shows as its state change."""
+    s = ' shot' if shots else ''
+    L = [f'watch 0x{FIELD_MODE:X} 2 mode',
+         f'watch 0x{FIGHT_BYTE:X} 1 fight',
+         f'watch 0x{PHASE:X} 2 phase_step{s}',
+         f'watch 0x{ENEMY_COUNT:X} 2 enemies_count_left{s}',
+         f'watch 0x{BATTLE_END:X} 1 battle_end{s}',
+         f'watch 0x{HOOKS:X} 12 hooks',
+         f'watch 0x{CENTRE:X} 8 centre',
+         f'watch 0x{KIND2:X} 8 kind2_zx',
+         f'watch 0x{FOCUS:X} 8 focus',
+         f'watch 0x{GAME_AREA:X} 2 area']
+    for k in range(enemies):
+        e = ENEMY + k * ENEMY_STRIDE
+        L += [f'watch 0x{e + 1:X} 4 enemy{k}_state{s}',
+              f'watch 0x{e + ENEMY_HP:X} 2 enemy{k}_hp',
+              f'watch 0x{e + ENEMY_COMMAND_KIND:X} 1 enemy{k}_pick{s}',
+              f'watch 0x{e + ENEMY_KIND:X} 1 enemy{k}_kind']
+    if effects:
+        for r in range(EFFECT_COUNT):
+            a = EFFECTS + r * EFFECT_STRIDE
+            L.append(f'watch 0x{a:X} 6 effect{r}')
+    return L
+
+
+def party_pokes(members):
+    """The party invulnerable: HP, max HP and DEF 999 (the by-kind sweep's start-of-battle pokes),
+    and the low status byte cleared so a sleep does not take a member out of the cross."""
+    L = []
+    for m in range(members):
+        r = WORKING + m * WORKING_STRIDE
+        L += [f'poke 0x{r + MAX_HP:X} u16 999', f'poke 0x{r + HP:X} u16 999', f'poke 0x{r + DEF:X} u16 999',
+              f'poke 0x{OBJ_TRIO + m * WORKING_STRIDE + MEMBER_STATUS:X} u8 0']
+    return L
+
+
+def fight_head(a):
+    """--fight ID: the route kept to --cut, or to --field-cut and then `goto`
+    (--goto AREA:X:Z:FLAGS, for a fight whose actor is the area's own object),
+    the members placed as the scene places them (--place X:Z: `place X Z ID`,
+    Party_PlaceForBattle), the actors peeked, the watches set, `battle ID` (which
+    refuses with no tagged actor in the field), the battle's start."""
+    if a.goto:
+        head, _ = route_steps(a.route, a.field_cut)
+        area, x, z, flags = a.goto
+        L = list(head)
+        L += [f'until 0x{FIELD_MODE:X} u16 == 2 timeout 1800', f'until 0x{FIELD_REQUEST:X} u8 == 0 timeout 1800', 'wait 30',
+              f'goto {area} 0x{x:X} 0x{z:X} 0x{flags:X}', 'wait 4',
+              f'until 0x{FIELD_REQUEST:X} u8 == 0 timeout 1800', f'until 0x{FIELD_MODE:X} u16 == 2 timeout 1800',
+              f'wait {a.settle}']
+    else:
+        L, _ = route_steps(a.route, a.cut)
+        L = list(L)
+    L += [f'peek 0x{GAME_AREA:X} u16 fight_area', f'peek 0x{FIELD_MODE:X} u16 fight_mode_before',
+          f'peek 0x{FIGHT_BYTE:X} u8 fight_byte_before']
+    L += actor_peeks('before')
+    L += fight_watches(a.enemies, shots=True, effects=True)
+    # --pre-poke: the scene's state the staging lacks (the Amalgam: its actor shown, +0 bit 0x40 clear)
+    L += [f'poke {p}' for p in a.pre_poke]
+    if a.camera:
+        # the camera's focus where the scene left it (Field_Kind2X / Z, which AreaMap_Frame steps the view
+        # toward), read off the route's own fight (the reference's kind2_zx watch at its call): `view X Z`
+        # (a poke of the two alone leaves the view stepping toward them and the battle's start waiting: trial 1)
+        L += [f'view 0x{a.camera[0]:X} 0x{a.camera[1]:X}', 'wait 2']
+    if a.place:
+        L += [f'place 0x{a.place[0]:X} 0x{a.place[1]:X} {a.fight}', 'wait 1']
+    # --scene: the route's own scene has called the fight by --cut (no op): the head only waits for it
+    L += [f'mark fight {a.fight} staged'] + ([] if a.scene else [f'battle {a.fight}']) + [
+          f'until 0x{FIELD_MODE:X} u16 == 5 timeout 600', 'mark in battle', 'wait 20']
+    if not a.mortal:
+        L += party_pokes(a.members)
+    L += ['wait 45'] + prologue_peeks() + [f'peek 0x{ENEMY + ENEMY_KIND:X} u8 enemy0_kind',
+                                         f'peek 0x{ENEMY + ENEMY_STRIDE + ENEMY_KIND:X} u8 enemy1_kind',
+                                         f'peek 0x{ENEMY + 2 * ENEMY_STRIDE + ENEMY_KIND:X} u8 enemy2_kind',
+                                         f'peek 0x{ENEMY + ENEMY_STRIDE + ENEMY_DATA_ID:X} u8 enemy1_slot',
+                                         f'peek 0x{ENEMY + ENEMY_STRIDE + ENEMY_HP:X} u16 enemy1_hp']
+    return L
+
+
+def fight_body(a, table):
+    """After the head: the forced casts of --ids (the enemy side's pokes, enemy 0),
+    then --play N rounds of Defend, then --kill: the boss's HP poked to --kill-hp
+    at each cross and every cross Attacking, until the field is back (mode 2),
+    the result screen's messages confirmed; the end byte, the hooks and the
+    field's effect objects peeked after the return."""
+    c = a.confirm
+    L = [f'seek {c} 0x{PHASE:X} u8 == 1 max 120']
+    ids = parse_ids(a.ids, table, a.sections) if a.ids else []
+    for i in ids:
+        L += cast_block('enemy', i, table[i][0], a.members, a.shots, a.spacing, a.enemy_flags, a.enemy_odds,
+                        a.poke, a.peek)
+    for r in range(a.play):
+        L += [f'until 0x{STEP:X} u8 == 2 timeout 1800', f'mark round {r}']
+        if not a.mortal:
+            L += party_pokes(a.members)
+        L += defend_all()
+        L += [f'until 0x{PHASE:X} u8 != 1 timeout 900',
+              f'seek {c} 0x{PHASE:X} u8 == 1 max {a.round_presses}']
+    if a.to_end and not a.kill:
+        # no kill: the confirm alone at each cross (command 0, the attack on the default target) until the fight
+        # ends by itself - a scripted loss (fight 13: Balio and Sunder's HP 0xFFFF and their hit hooks) or a leave
+        L += ['mark to the end', f'every {a.every}']
+    if a.kill:
+        targets = [int(k) for k in a.kill_enemies.split(',')]
+        for r in range(a.kill_rounds):
+            L += [f'until 0x{STEP:X} u8 == 2 timeout 1800', f'mark kill round {r}']
+            if r == 0:
+                L.append(f'every {a.every}')   # timed frames from the last cross through the death and the return
+            if not a.mortal:
+                L += party_pokes(a.members)
+            for k in targets:
+                L.append(f'poke 0x{ENEMY + k * ENEMY_STRIDE + ENEMY_HP:X} u16 {a.kill_hp}')
+            # the confirm alone at each cross chooses command 0, the attack, and the target cursor's
+            # default (an enemy): one seek for however many crosses the round has
+            L += [f'seek {c} 0x{PHASE:X} u8 != 1 max 40',
+                  f'until 0x{PHASE:X} u8 != 1 timeout 900',
+                  f'peek 0x{BATTLE_END:X} u8 kill{r}_battle_end',
+                  f'peek 0x{ENEMIES_LEFT:X} u8 kill{r}_enemies_left']
+            if r + 1 < a.kill_rounds:
+                # the fight over: the field mode leaves 5 and the next round's cross never comes
+                L += [f'seek {c} 0x{PHASE:X} u8 == 1 max {a.round_presses}']
+        L.append('mark kill done')
+    if a.kill or a.to_end:
+        # the death, the end and exit hooks, the result screen, the return: confirm every 12 frames
+        L += [f'seek {c} 0x{FIELD_MODE:X} u16 == 2 max {a.return_presses}', 'mark field again',
+              f'peek 0x{BATTLE_END:X} u8 return_battle_end', f'peek 0x{HOOKS:X} u32 return_hook_end',
+              f'peek 0x{HOOKS + 4:X} u32 return_hook_exit', f'peek 0x{HOOKS + 8:X} u32 return_hook_event',
+              f'peek 0x{GAME_AREA:X} u16 return_area', f'peek 0x{FIGHT_BYTE:X} u8 return_fight']
+        for r in range(EFFECT_COUNT):
+            e = EFFECTS + r * EFFECT_STRIDE
+            L += [f'peek 0x{e:X} u8 return_effect{r}_use', f'peek 0x{e + 5:X} u8 return_effect{r}_kind']
+        if a.after_confirm:
+            # the field's own scene after the fight goes on: a confirm every 30 frames for its messages
+            L += ['press circle', 'wait 18'] * (a.after // 30)
+        else:
+            L.append(f'wait {a.after}')
+        L.append('every 0')
+    L += ['watch off', 'mark chunk done', 'end']
+    return L
+
+
+def write_fight_recipe(path, a, table):
+    lines = [f'# boss sweep: fight {a.fight} staged by `battle` - a harness recipe (pokes), not a route',
+             f'# generated by tools/spell_sweep.py --fight from {os.path.basename(a.route)}']
+    head = fight_head(a)
+    lines += head
+    body = fight_body(a, table)
+    lines += body
+    with open(path, 'w', encoding='utf-8', newline='\n') as f:
+        f.write('\n'.join(lines) + '\n')
+    return len(lines)
+
+
+def write_fight_reference(path, a):
+    """The route's own fight as the reference: the route unchanged frame for
+    frame (watches and peeks cost none), the same watches set at --watch-from,
+    the actors peeked at the frame before the scenario's call (--cut)."""
+    header, frames = frames_of(a.route)
+
+    def before(i):
+        L = []
+        if i == a.watch_from:
+            L += fight_watches(a.enemies, shots=True, effects=True)
+        if a.every_from and i == a.every_from:
+            L.append(f'every {a.every}')
+        if a.every_to and i == a.every_to:
+            L.append('every 0')
+        if i == a.cut:
+            L += [f'peek 0x{GAME_AREA:X} u16 fight_area'] + actor_peeks('before')
+        return L
+    body = emit_frames(frames, before)
+    lines = header + [f'# boss sweep: the route\'s own fight {a.fight}, watches from frame {a.watch_from} - a reference, the route\'s inputs unchanged']
+    lines += body + ['watch off', 'mark chunk done', 'end']
+    with open(path, 'w', encoding='utf-8', newline='\n') as f:
+        f.write('\n'.join(lines) + '\n')
+    return len(frames)
+
+
+WATCH_LINE = re.compile(r'input\s+watch (\S+) ([0-9A-F]+) -> ([0-9A-F]+) recipe frame (\d+)')
+WATCH_SET = re.compile(r'input\s+watch (\S+) 0x[0-9A-F]+ len \d+(?: shot)? = ([0-9A-F]+); recipe frame (\d+)')
+PEEK_LINE = re.compile(r'input\s+peek (\S+) = (0x[0-9A-Fa-f]+)')
+FRAME_SAVED = re.compile(r'input\s+frame (w\d+) saved')
+BOSS_LINE = re.compile(r'boss encounter: id (\d+) \(0x[0-9A-F]+\) -> set-up (0x[0-9A-F]+)')
+BATTLE_OP = re.compile(r'input\s+battle id (\d+) in area (\d+); tagged actors(.*); recipe frame (\d+)')
+
+
+def read_fight_log(path):
+    """One fight's facts from its log: the watches' changes (frame, name, old, new),
+    the peeks, the shots, the set-up line, the op's tagged actors, the end."""
+    w, peeks, shots = [], {}, []
+    facts = {'setup': '', 'tagged': '', 'end': '', 'fail': ''}
+    with open(path, encoding='utf-8', errors='replace') as f:
+        for line in f:
+            line = line.rstrip('\n')
+            m = WATCH_LINE.match(line)
+            if m:
+                w.append((int(m.group(4)), m.group(1), m.group(2), m.group(3)))
+                continue
+            m = WATCH_SET.match(line)
+            if m:
+                w.append((int(m.group(3)), m.group(1), '', m.group(2)))
+                continue
+            m = PEEK_LINE.match(line)
+            if m:
+                peeks[m.group(1)] = int(m.group(2), 16)
+                continue
+            m = FRAME_SAVED.match(line)
+            if m:
+                shots.append(m.group(1))
+                continue
+            m = BOSS_LINE.search(line)
+            if m:
+                facts['setup'] = f'id {m.group(1)} -> {m.group(2)}'
+                continue
+            m = BATTLE_OP.match(line)
+            if m:
+                facts['tagged'] = m.group(3).strip()
+                continue
+            if 'mark chunk done' in line:
+                facts['end'] = 'done'
+            elif (line.startswith('FATAL') or line.startswith('CRASH') or 'timed out' in line or 'gave up' in line
+                  or 'refused' in line) and not facts['fail']:
+                facts['fail'] = line.strip()
+    return w, peeks, shots, facts
+
+
+def le(hexs, off, n):
+    b = bytes.fromhex(hexs)[off:off + n]
+    return int.from_bytes(b, 'little')
+
+
+def fight_summary(path, fight=None):
+    """The report row of one fight run: kinds, the state bytes each enemy went
+    through, the frames of the fight's start, the kill (the end byte's win
+    bit), the end and exit hooks seen, the return (mode 2 again), the shots.
+    The fight is the one whose byte (0x904AAA) became `fight` (any event battle
+    when None): a route can fight others before it."""
+    w, peeks, shots, facts = read_fight_log(path)
+    called = next((f for f, n, o, v in w if n == 'fight' and o and int(v, 16) != 0
+                   and (fight is None or int(v, 16) == fight)), None)
+    after = called if called is not None else -1
+    start = next((f for f, n, o, v in w if n == 'mode' and o and f >= after and le(v, 0, 2) == 5), None)
+    s0 = start if start is not None else 10 ** 9
+    back = next((f for f, n, o, v in w if n == 'mode' and o and f > s0 and le(v, 0, 2) == 2), None)
+    e0 = back if back is not None else 10 ** 9
+    win = next((f for f, n, o, v in w if n == 'battle_end' and o and s0 < f <= e0 and le(v, 0, 1) & 2), None)
+    lost = next((f for f, n, o, v in w if n == 'battle_end' and o and s0 < f <= e0 and le(v, 0, 1) & 1), None)
+    left0 = next((f for f, n, o, v in w if n == 'enemies_count_left' and o and s0 + 60 < f <= e0
+                  and le(v, 1, 1) == 0), None)
+    states = {}
+    kinds = {}
+    for f, n, o, v in w:
+        if not s0 <= f <= e0:
+            continue
+        m = re.match(r'enemy(\d)_state$', n)
+        if m:
+            st = v[:2] + '.' + v[2:4] + '.' + v[4:6] + '.' + v[6:8]
+            states.setdefault(int(m.group(1)), [])
+            if st not in states[int(m.group(1))]:
+                states[int(m.group(1))].append(st)
+        m = re.match(r'enemy(\d)_kind$', n)
+        if m and int(v, 16):
+            kinds[int(m.group(1))] = int(v, 16)
+    hooks = [(f, v) for f, n, o, v in w if n == 'hooks' and o and s0 < f <= e0 + 30]
+    effects_after = sorted({n for f, n, o, v in w if n.startswith('effect') and back is not None and back <= f <= back + 600})
+    return {'called': called, 'start': start, 'back': back, 'win': win, 'lost': lost, 'none_left': left0,
+            'states': states, 'kinds': kinds, 'hooks': hooks, 'effects_after': effects_after, 'peeks': peeks,
+            'shots': shots, 'facts': facts}
+
+
+def run_fight(a):
+    table = table_for('enemy', a.sibling)
+    os.makedirs(a.root, exist_ok=True)
+    tag = a.tag or f'fight{a.fight:02d}'
+    recipe = os.path.join(a.root, f'{tag}.txt')
+    if a.reference:
+        n = write_fight_reference(recipe, a)
+        print(recipe, n, 'route frames (reference)')
+    else:
+        n = write_fight_recipe(recipe, a, table)
+        print(recipe, n, 'lines')
+    if a.cmd == 'recipes':
+        return
+    out = os.path.join(a.root, tag)
+    log = os.path.join(os.path.dirname(a.launcher), 'bof3x.log')
+    if os.path.exists(log):
+        os.remove(log)
+    cmd = [sys.executable, os.path.join(TOOLS, 'input_run.py'), recipe, '--out', out, '--launcher', a.launcher,
+           '--speed', str(a.speed), '--no-front', '--minutes', str(a.minutes), '--lang', a.lang]
+    if a.game:
+        cmd += ['--game', a.game]
+    for kv in a.env:
+        cmd += ['--env', kv.replace('{chunk}', tag)]
+    t0 = time.time()
+    print(f'[{time.strftime("%H:%M:%S")}] fight {a.fight} ({tag})', flush=True)
+    os.makedirs(out, exist_ok=True)
+    with open(os.path.join(a.root, f'run_{tag}.log'), 'w', encoding='utf-8') as f:
+        subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, cwd=ROOT)
+    if not os.path.exists(log):
+        print('    no log')
+        return
+    shutil.copy(log, os.path.join(a.root, f'bof3x_{tag}.log'))
+    to_png(out)
+    s = fight_summary(log, a.fight)
+    write_fight_row(a, tag, s)
+    print(f'    {time.time() - t0:.0f} s; {fight_row_text(a, tag, s)}', flush=True)
+
+
+FIGHT_COLUMNS = ('tag', 'fight', 'setup', 'tagged', 'kinds', 'states', 'start', 'win', 'lost', 'none_left',
+                 'hooks', 'back', 'effects_after_return', 'shots', 'end')
+
+
+def to_png(folder):
+    """The game's w*.bmp / t*.bmp frames as PNG (a tenth of the size), the BMPs removed."""
+    try:
+        from PIL import Image
+    except ImportError:
+        return
+    for f in os.listdir(folder):
+        if f.endswith('.bmp') and f[0] in 'wt':
+            p = os.path.join(folder, f)
+            try:
+                Image.open(p).convert('RGB').save(p[:-4] + '.png')
+                os.remove(p)
+            except OSError:
+                pass
+
+
+def fight_row(a, tag, s):
+    f = s['facts']
+    kinds = ' '.join(f'e{k}:{v}' for k, v in sorted(s['kinds'].items()))
+    states = ' | '.join(f'e{k}: ' + ' '.join(v) for k, v in sorted(s['states'].items()))
+    hooks = ' '.join(f'{fr}:{v}' for fr, v in s['hooks'])
+    shots = f'{len(s["shots"])} ({s["shots"][0]}..{s["shots"][-1]})' if s['shots'] else '0'
+    return (tag, a.fight, f['setup'], f['tagged'], kinds, states, s['start'], s['win'], s['lost'], s['none_left'],
+            hooks, s['back'], ' '.join(s['effects_after']), shots, f['end'] or f['fail'])
+
+
+def fight_row_text(a, tag, s):
+    return '; '.join(f'{k} {v}' for k, v in zip(FIGHT_COLUMNS, fight_row(a, tag, s)) if k not in ('states', 'hooks'))
+
+
+def write_fight_row(a, tag, s):
+    results = os.path.join(a.root, 'results_fight.tsv')
+    new = not os.path.exists(results)
+    with open(results, 'a', encoding='utf-8') as f:
+        if new:
+            f.write('# tools/spell_sweep.py run --fight: one row a fight run (docs/boss-sweep.md 7). Addresses, ids and frames only.\n')
+            f.write('\t'.join(FIGHT_COLUMNS) + '\n')
+        f.write('\t'.join('' if x is None else str(x) for x in fight_row(a, tag, s)) + '\n')
+
+
+def selftest():
+    """The --fight helpers without a game: a recorded route survives frames_of /
+    emit_frames frame for frame with watches put in (no frame of their own) and a
+    shot in place of a frame; the fight recipe has its steps in order; a
+    synthetic log reads back as the report row's facts."""
+    import tempfile
+    d = tempfile.mkdtemp()
+    route = os.path.join(d, 'r.txt')
+    with open(route, 'w', encoding='utf-8') as f:
+        f.write('# Recorded\n# save x\nwait 10\nhold circle 4\nkey f9 0\nwait 3\nshot rec1 1 left\nhold up 5\n')
+    h, fr = frames_of(route)
+    assert h == ['# Recorded', '# save x'] and len(fr) == 23, (h, len(fr))
+    assert fr[10][0] == 'circle' and fr[14][2] == ['key f9 0'] and fr[17] == ('left', 'rec1', []), fr[10:18]
+    back = emit_frames(fr, keep_names=True)
+    assert back == ['wait 10', 'hold circle 4', 'key f9 0', 'wait 3', 'shot rec1 1 left', 'hold up 5'], back
+    out = emit_frames(fr, before=lambda i: ['watch 0x1 1 x'] if i == 5 else [], shots={12: 'b1'})
+    assert out == ['wait 5', 'watch 0x1 1 x', 'wait 5', 'hold circle 2', 'shot b1 1 circle', 'hold circle 1',
+                   'key f9 0', 'wait 3', 'hold left 1', 'hold up 5'], out   # the route's own shot dropped, its buttons kept
+    frames = sum(int(l.split()[-1]) for l in out if l.split()[0] in ('wait', 'hold')) + sum(1 for l in out if l.startswith('shot'))
+    assert frames == len(fr), frames
+    # the fight recipe: the head's steps in order
+    a = argparse.Namespace(route=route, cut=12, field_cut=0, goto=(), settle=150, place=(0x1C0000, 0x5B0000),
+                           camera=(0x190000, 0x5B0000), pre_poke=['0x7DF3A0 u8 1'], fight=12, enemies=2, members=3,
+                           play=2, kill=True, kill_hp=1, kill_enemies='0', kill_rounds=1, every=3, after=300,
+                           round_presses=60, return_presses=250, mortal=False, to_end=False, after_confirm=False, scene=False, confirm='circle', ids='', sections=set(), shots=6,
+                           spacing=30, enemy_flags=0, enemy_odds=1, poke=[], peek=[], members_dead=())
+    L = fight_head(a) + fight_body(a, {})
+    idx = [next(i for i, l in enumerate(L) if l.startswith(w)) for w in
+           ('peek 0x7DEE86 u8 s0_type_before', 'watch 0x66C7E8 2 mode', 'poke 0x7DF3A0 u8 1', 'view 0x190000 0x5B0000',
+            'place 0x1C0000 0x5B0000 12', 'battle 12', 'until 0x66C7E8 u16 == 5', 'mark round 0', 'mark round 1',
+            'mark kill round 0', 'every 3', 'seek circle 0x904AA0 u8 != 1 max 40', 'seek circle 0x66C7E8 u16 == 2', 'every 0', 'watch off', 'end')]
+    assert idx == sorted(idx), idx
+    assert sum(1 for l in L if l.startswith('mark round')) == 2 and 'poke 0x93BA04 u16 1' in L
+    assert sum(1 for l in L if l.startswith('watch 0x')) <= 64
+    # the log reader
+    log = os.path.join(d, 'bof3x.log')
+    with open(log, 'w', encoding='utf-8') as f:
+        f.write('\n'.join([
+            'input       watch mode 0x0066C7E8 len 2 = 0200; recipe frame 500',
+            'input       watch enemy0_kind 0x0093BA60 len 1 = 00; recipe frame 500',
+            'input       battle id 12 in area 28; tagged actors 8:slot0; recipe frame 516',
+            'input       watch mode 0200 -> 0500 recipe frame 521',
+            'boss encounter: id 12 (0x0C) -> set-up 0x004398E0',
+            'input       watch enemy0_kind 00 -> 0C recipe frame 578',
+            'input       watch hooks 000000000000000000000000 -> 00994300C07C4300F0C94300 recipe frame 578',
+            'input       watch enemy0_state 03000000 -> 06040000 recipe frame 2060',
+            'input       watch enemies_count_left 0101 -> 0100 recipe frame 2106',
+            'input       watch battle_end 00 -> 02 recipe frame 2106',
+            'input       frame w002106 saved mode 5 area 28 (Frame_Counter 1)',
+            'input       watch mode 0500 -> 0200 recipe frame 2194',
+            'input       watch effect3 000000000000 -> 010100000041 recipe frame 2200',
+            'input       peek return_battle_end = 0x2A (42) recipe frame 2197',
+            'input       mark chunk done recipe frame 2500']) + '\n')
+    s = fight_summary(log)
+    assert (s['start'], s['win'], s['none_left'], s['back'], s['lost']) == (521, 2106, 2106, 2194, None), s
+    assert s['kinds'] == {0: 12} and s['states'] == {0: ['06.04.00.00']} and s['effects_after'] == ['effect3'], s
+    assert s['facts']['setup'] == 'id 12 -> 0x004398E0' and s['facts']['tagged'] == '8:slot0' and s['facts']['end'] == 'done'
+    assert s['peeks']['return_battle_end'] == 0x2A and s['shots'] == ['w002106'] and s['hooks'][0][0] == 578
+    shutil.rmtree(d, ignore_errors=True)
+    print('spell_sweep selftest: ok (routes, the fight recipe, the log reader)')
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--sibling', default=SIBLING, help="the archival sibling's checkout (names/abilities.toml, names/items.toml)")
     sub = ap.add_subparsers(dest='cmd', required=True)
+    sub.add_parser('selftest', help='the --fight helpers on synthetic routes and logs (no game)')
+    p = sub.add_parser('fightlog', help="a fight run's log read again: the report row's facts")
+    p.add_argument('log')
+    p.add_argument('--fight', type=lambda v: int(v, 0), default=None)
     p = sub.add_parser('names')
     p.add_argument('--sections', default='')
     p.add_argument('--side', choices=('member', 'enemy', 'item'), default='member')
@@ -684,6 +1193,42 @@ def main():
         p.add_argument('--walk', default='up,left,down,right', help='--kind: the directions the leader walks, 16 frames each, round and round')
         p.add_argument('--field-cut', type=int, default=371,
                        help="--kind: the route kept to this frame - the party in the field, before the route's own walk (combat.txt: 371)")
+        # --fight: an event battle staged by `battle ID` and played (docs/boss-sweep.md 7)
+        p.add_argument('--fight', type=lambda s: int(s, 0), default=None, metavar='ID',
+                       help="stage event battle ID by the `battle` op after the route's --cut (or --field-cut and --goto), and play it")
+        p.add_argument('--goto', default='', metavar='AREA:X:Z:FLAGS',
+                       help="--fight: the route kept to --field-cut, then `goto` (an actor that is the area's own object)")
+        p.add_argument('--settle', type=int, default=150, help='--fight --goto: frames in the field after the arrival')
+        p.add_argument('--place', default='', metavar='X:Z',
+                       help="--fight: `place X Z ID` (Party_PlaceForBattle) before the op, the scene's own placement")
+        p.add_argument('--camera', default='', metavar='X:Z',
+                       help="--fight: Field_Kind2X / Z poked (the view's focus) before the op, as the scene left them")
+        p.add_argument('--pre-poke', action='append', default=[], metavar='"ADDR TYPE VALUE"',
+                       help="--fight: a poke before the op - scene state the staging lacks, read off the reference's peeks")
+        p.add_argument('--every', type=int, default=3, help='--kill: a timed frame every N recipe frames from the kill on')
+        p.add_argument('--every-from', type=int, default=0, help='--reference: timed frames (--every) from this route frame')
+        p.add_argument('--every-to', type=int, default=0, help='--reference: ... to this one')
+        p.add_argument('--enemies', type=int, default=3, help='--fight: enemy records watched (state bytes, HP, pick, kind)')
+        p.add_argument('--play', type=int, default=0, metavar='N', help='--fight: N rounds of Defend after the casts')
+        p.add_argument('--round-presses', type=int, default=60,
+                       help='--fight: confirms pressed (every 12 frames) for a round to come back to the cross')
+        p.add_argument('--kill', action='store_true', help='--fight: then the kill - HP poked low, every cross Attacks')
+        p.add_argument('--scene', action='store_true',
+                       help="--fight: no `battle` op - the route's scene calls the fight itself before --cut (a crafted pre-fight save)")
+        p.add_argument('--mortal', action='store_true', help='--fight: no HP / DEF pokes on the party (a fight the game ends by a loss)')
+        p.add_argument('--to-end', action='store_true', help='--fight: after the rounds, confirm until the field is back, no kill')
+        p.add_argument('--kill-hp', type=int, default=1, help='--kill: the HP poked into each --kill-enemies record at the cross')
+        p.add_argument('--kill-enemies', default='0', metavar='K[,K]', help='--kill: the enemy records poked')
+        p.add_argument('--kill-rounds', type=int, default=1, help='--kill: rounds of Attack (a fight whose hit hook puts HP back)')
+        p.add_argument('--return-presses', type=int, default=250,
+                       help='--kill: confirms pressed (every 12 frames) through the death and the result screen until the field')
+        p.add_argument('--after', type=int, default=300, help='--kill: frames watched in the field after the return')
+        p.add_argument('--after-confirm', action='store_true',
+                       help="--kill / --to-end: the frames after the return confirm every 30 (the area's own scene goes on)")
+        p.add_argument('--reference', action='store_true',
+                       help="--fight: the route's own fight instead, its inputs unchanged, the same watches from --watch-from")
+        p.add_argument('--watch-from', type=int, default=0, help='--reference: the route frame the watches start at')
+        p.add_argument('--tag', default='', help='--fight: the name of the run (default fightNN)')
         if name == 'recipes':
             p.add_argument('--out', required=True)
         else:
@@ -694,6 +1239,7 @@ def main():
             p.add_argument('--env', action='append', default=[], help='K=V for input_run.py; {chunk} in V becomes the chunk tag')
             p.add_argument('--game', default='', help="the game folder (input_run.py --game); a disc-built install's, with BOF3X_EXEIMAGE in --env")
             p.add_argument('--fresh', action='store_true', help='start results.tsv over')
+            p.add_argument('--minutes', type=float, default=15.0, help='--fight: input_run.py --minutes')
     a = ap.parse_args()
     if getattr(a, 'kind', ''):
         a.kind = tuple(int(v, 0) for v in a.kind.split(':'))
@@ -712,6 +1258,30 @@ def main():
     else:
         a.sections = set()
     table = table_for(getattr(a, 'side', 'member'), a.sibling)
+    if a.cmd == 'selftest':
+        selftest()
+        return
+    if a.cmd == 'fightlog':
+        s = fight_summary(a.log, a.fight)
+        for k in ('called', 'start', 'win', 'lost', 'none_left', 'back', 'kinds', 'effects_after'):
+            print(f'{k}: {s[k]}')
+        print('setup:', s['facts']['setup'], '| end:', s['facts']['end'] or s['facts']['fail'])
+        for k, v in sorted(s['states'].items()):
+            print(f'enemy{k} states: {" ".join(v)}')
+        for f, v in s['hooks']:
+            print(f'hooks at {f}: end 0x{le(v, 0, 4):X} exit 0x{le(v, 4, 4):X} event 0x{le(v, 8, 4):X}')
+        print(f'shots: {len(s["shots"])}')
+        return
+    if getattr(a, 'fight', None) is not None:
+        a.goto = tuple(int(v, 0) for v in a.goto.split(':')) if a.goto else ()
+        a.place = tuple(int(v, 0) for v in a.place.split(':')) if a.place else ()
+        a.camera = tuple(int(v, 0) for v in a.camera.split(':')) if a.camera else ()
+        if a.ids == '1-227':
+            a.ids = ''           # --fight casts only the ids it is given
+        if a.cmd == 'recipes':
+            a.root = a.out
+        run_fight(a)
+        return
     if a.cmd == 'names':
         for i in sorted(table):
             if not a.sections or table[i][1] in a.sections:

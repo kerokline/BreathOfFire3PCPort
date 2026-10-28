@@ -860,7 +860,7 @@ crash, no timeout.
 |---|---|---|---|
 | 1 | Nue Stomp | Nue (23 / 2) | `cutsceneAndNue` |
 | 9 | Chlorine | Curr (22 / 0); and the Nue | `--kind`; the Nue route |
-| 17 | Astral Warp | Amalgam (28 / 0) | `ropeAndAmalgam` |
+| 17 | Astral Warp | Amalgam (28 / 1) | `ropeAndAmalgam` |
 | 18 | Giant Growth | Gonghead (95 / 2) | `--kind` |
 | 23, 37 | Bad back, MagicShuffle | Codger (111 / 0) | `--kind` |
 | 24 | Watch Enemy | Thrasher (127 / 1) | `--kind` |
@@ -875,17 +875,19 @@ crash, no timeout.
 | 50 | Pollen | Big Bulb (117 / 4) | `--kind` |
 | 52 | Ovum | Egg Gang (139 / 2) | `--kind` |
 | 54 | Howling | Cerebus (82 / 2) | `--kind` |
-| 57, 81 | Bone Dance, RottenBreath | D.Zombie (108 / 3) | `minecartToZombieDragon` |
+| 57, 81 | Bone Dance, RottenBreath | D.Zombie (108 / 2) | `minecartToZombieDragon` |
 | 61 | Target | Tricker (35 / 0) | `--kind` (an AI row's) |
 | 86 | Barrier | DeathBot (167 / 0) | `--kind` |
 | 109 | Depress | Spectre (77 / 4) | `--kind` |
 | 114 | Fire Whip | Berserkr (146 / 2) | `--kind` |
-| 116 | UtmostAttack | Stallion (67 / 1) | `stallion`, second fight |
+| 116 | UtmostAttack | Stallion (67 / 0) | `stallion`, second fight |
 | 142 | Syphon | BloodBat (77 / 1) | `--kind` |
 
 (The slot an event battle's enemy takes is the boss set-up's, not the area
-record's the census names: the Amalgam fought as slot 0 of area 28, the
-D.Zombie as slot 3 of area 108, the Stallion as slot 1 of area 67.)
+record's the census names. Corrected 2026-10-28: the three slots above were
+first read as 0, 3 and 1 off peeks taken at mode 5's first frame, before the
+set-up writes `+0xF0` some 57 frames in; read after it, they are 1, 2 and 0,
+the census's - [`boss-sweep.md`](boss-sweep.md) 7.6.)
 
 **Nue Stomp, answered: no stall from a Nue.** From the area-23 Nue the
 banner shows, the Nue leaves its spot, lands on the party and returns
