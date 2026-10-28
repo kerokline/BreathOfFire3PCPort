@@ -46,7 +46,7 @@ namespace at {
 // kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs (x, z)
 // kSpriteFlag: now Sprite_Objects[0].context (symbols.toml). Sprite_Objects + 0x80, by 0xA4 a record
 // kExtraFlag: now Sprite_ObjectsExtra[0].context (symbols.toml). Sprite_ObjectsExtra + 0x80, by 0xA4 a record
-constexpr std::uint32_t kScriptFlagsHi = 0x9039A3;  // Field_ScriptFlags' high byte (bit 0x10: the word's 0x1000)
+constexpr ::bof3::image::Va kScriptFlagsHi{0x9039A3};  // Field_ScriptFlags' high byte (bit 0x10: the word's 0x1000)
 
 }  // namespace at
 }  // namespace rest_1d

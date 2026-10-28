@@ -334,14 +334,14 @@ void SeedMaster() {
     Field_MemberCount = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 3, 3));
     Field_Request = static_cast<unsigned char>(PickOf(2, 0, 0, 1, 5, sh::Next()));
     B(Cond_Flags_addr + 0xd1) = static_cast<unsigned char>(PickOf(0, 8, 0x10, 0x20, 0x38, sh::Next()));
-    B(at::kScriptObject) = static_cast<unsigned char>(sh::Next() % 30);
+    B(::bof3::Img(at::kScriptObject.v)) = static_cast<unsigned char>(sh::Next() % 30);
     // the ability bits: none, all, or random words
     for (unsigned i = 0; i < 8; ++i) SetLong(sh::Mem(Cond_Flags_addr + 0xf8 + 4 * i), static_cast<std::int32_t>(PickOf(0, 0, kW, sh::Next())));
     Frame_Counter = PickOf(0, 6, 8, 0xE, 0xF0, sh::Next());
 }
 
 void SeedMenu() {
-    B(at::kMenuTimer) = static_cast<unsigned char>(PickOf(0, 1, 1, 2, 5, 8, sh::Next()));
+    B(::bof3::Img(at::kMenuTimer.v)) = static_cast<unsigned char>(PickOf(0, 1, 1, 2, 5, 8, sh::Next()));
     B(MenuLists_Cursor_addr) = static_cast<unsigned char>(PickOf(0, 1, 4, 6, sh::Next()));
     B(BattleActorCopies_ItemActor_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, 3, 0x80, sh::Next() % 3));
     for (unsigned i = 0; i < 3; ++i) B(Cond_Flags_addr + 0xd2 + i) = static_cast<unsigned char>(PickOf(0, 1, 2, 5, 0xFF, sh::Next() % 24));
@@ -353,8 +353,8 @@ void SeedMenu() {
     SetWord(sh::Mem(0x803346), PickOf(0, 0, 0, 0x10, sh::Next()));
     B(0x80333C) = static_cast<unsigned char>(PickOf(1, 3, sh::Next()));
     for (unsigned c = 0; c < 5; ++c) {
-        B(at::kItemsPicks + c) = static_cast<unsigned char>(sh::Next() & 0x7F);
-        B(at::kItemsTops + c) = static_cast<unsigned char>(sh::Next() & 0x7F);
+        B(::bof3::Img(at::kItemsPicks.v) + c) = static_cast<unsigned char>(sh::Next() & 0x7F);
+        B(::bof3::Img(at::kItemsTops.v) + c) = static_cast<unsigned char>(sh::Next() & 0x7F);
     }
     // the inventory: empty slots, counts 1 and 2
     for (unsigned i = 0; i < 0x400; ++i) {
@@ -392,7 +392,7 @@ void Seed(unsigned k) {
             SetWord(sh::Mem(0x803346), 0);
             SetWord(sh::Mem(0x7E1BEC), Word(sh::Mem(0x90358E)));
             if (sh::Half()) B(0x80333E) = 0;
-            const U list = static_cast<U>(Long(sh::Mem(at::kItemIdLists + 4u * B(0x80333E))));
+            const U list = static_cast<U>(Long(sh::Mem(::bof3::Img(at::kItemIdLists.v) + 4u * B(0x80333E))));
             B(list + B(0x803340)) = static_cast<unsigned char>(1 + sh::Next() % 92);
             B(Rest2d_ItemsCategory_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, 3));
         }
@@ -453,7 +453,7 @@ void Disturb(U h) {
     case 4: sh::Mem(CharacterRecords_addr + ((v >> 2) % 8) * at::kRecordStride)[0x1F] = static_cast<unsigned char>(v & 1 ? B(AreaW0c_TailSub_addr) : v >> 2); break;
     case 5: Field_Request = static_cast<unsigned char>(v & 1 ? 2 : v >> 1); break;
     case 6: Field_MemberCount = static_cast<unsigned char>(v % 4); break;
-    case 7: B(at::kMenuTimer) = static_cast<unsigned char>(v % 3 == 0 ? 0 : v); break;
+    case 7: B(::bof3::Img(at::kMenuTimer.v)) = static_cast<unsigned char>(v % 3 == 0 ? 0 : v); break;
     case 8: B(BattleActorCopies_ItemActor_addr) = static_cast<unsigned char>(v & 1 ? (v >> 1) % 3 : v >> 1); break;
     case 9: B(Rest2d_ItemsCategory_addr) = static_cast<unsigned char>(v & 1 ? (v >> 1) % 4 : v >> 1); break;
     case 10: B(0x80333E) = static_cast<unsigned char>(v % 4); break;

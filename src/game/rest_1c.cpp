@@ -58,7 +58,7 @@ inline auto& kSloped = SharedScratch.b_00;  // SharedScratch's first byte: AreaM
 // kObjectFlag: now Sprite_Objects[0].context (symbols.toml). Sprite_Objects + 0x80
 // kExtraFlag: now Sprite_ObjectsExtra[0].context (symbols.toml). Sprite_ObjectsExtra + 0x80
 constexpr U kObjectStride = 0xA4;
-constexpr U kScriptFlagsHigh = 0x9039A3;               // Field_ScriptFlags' high byte
+constexpr ::bof3::image::Va kScriptFlagsHigh{0x9039A3};               // Field_ScriptFlags' high byte
 constexpr U kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
 
@@ -103,8 +103,8 @@ void ByStep(U table, const char* who) { Entry(table, Sprite_Current[3], who)(); 
 
 // Field_DirectionSteps' row for a direction, read in place with the direction
 // unmasked (`shl eax, 3` on the zero-extended byte), as the originals read it.
-U StepX(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8 + 4))); }
+U StepX(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8))); }
+U StepZ(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4))); }
 
 // The animation offset of a direction as the originals compute it: (d - 1) / 2
 // as a signed division (cdq, sub, sar), so direction 0 gives 0; plus a base, as
@@ -126,8 +126,8 @@ void MarkObject(unsigned char found, const char* who) {
     if (found > 0x21)
         bof3::Fatal("%s: Sprite_ObjectAt answered 0x%02X, past the 34 objects; the original writes bit 0 of +0x80 there unchecked",
                     who, found);
-    if (found < 0x1E) At(Sprite_Objects_addr + 0x80 + found * kObjectStride)[0] |= 1;
-    else At(Sprite_ObjectsExtra_addr + 0x80 + (found - 0x1E) * kObjectStride)[0] |= 1;
+    if (found < 0x1E) At(::bof3::Img(Sprite_Objects_addr) + 0x80 + found * kObjectStride)[0] |= 1;
+    else At(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x80 + (found - 0x1E) * kObjectStride)[0] |= 1;
 }
 
 // An Effect_Objects record by an index the original writes through unchecked;
@@ -176,8 +176,8 @@ unsigned char __cdecl BlockedAhead() { return SH_CALL(PartyAction_BlockedAhead)(
 // Sprite_EnsureAnimation(the turn + 0x42), +0xA = 5.
 void BeginLevel() {
     Sprite_Current[0x2B] = 1;
-    ProbeSide(Field_DirectionSteps_addr + 0x18, 3);
-    ProbeSide(Field_DirectionSteps_addr + 0x28, 5);
+    ProbeSide(::bof3::Img(Field_DirectionSteps_addr) + 0x18, 3);
+    ProbeSide(::bof3::Img(Field_DirectionSteps_addr) + 0x28, 5);
     SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(Word(Sprite_Current + 0x2C) + 0x100));
     SH_CALL(Sprite_EnsureAnimation)(Turned(Sprite_Current[8], 0x42));
     Sprite_Current[0xA] = 5;
@@ -283,7 +283,7 @@ unsigned char CellPickup(unsigned x, unsigned z, unsigned times) {
     } else if (cell == 0xF8) {
         SH_CALL(Effect_SpawnAtCell)(0, x, z);
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, 0x56);
-        for (unsigned k = 0; k < 16; k += 4) SetLong(At(bof3::addr::Text_Records + k), Long(name + k));
+        for (unsigned k = 0; k < 16; k += 4) SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
         if (SH_CALL(Inventory_Add)(0, 0x56, 1) != 0) {
             SH_CALL(Sound_PlayEffect)(0x106);
             SH_CALL(Msg_OpenSystem)(2);
@@ -385,7 +385,7 @@ unsigned char CellHit(unsigned x, unsigned z) {
     if (roll < 7) {
         SH_CALL(Effect_SpawnAtCellHigh)(3, x, z);
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, 0x29);
-        for (unsigned k = 0; k < 16; k += 4) SetLong(At(bof3::addr::Text_Records + k), Long(name + k));
+        for (unsigned k = 0; k < 16; k += 4) SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
         if (SH_CALL(Inventory_Add)(0, 0x29, 1) != 0) {
             SH_CALL(Sound_PlayEffect)(0x106);
             SH_CALL(Msg_OpenSystem)(2);
@@ -427,7 +427,7 @@ void Kind30Begin(const char* who) {
         SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(Word(s + 0x2C) + 0x100));
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 8));
         Field_State[0x128] = 2;
-        At(kScriptFlagsHigh)[0] |= 0x10;
+        At(::bof3::Img(kScriptFlagsHigh.v))[0] |= 0x10;
         SH_CALL(Field_JumpStart)();
         --Sprite_Current[9];
         SH_CALL(Field_LeaderStepTick)();

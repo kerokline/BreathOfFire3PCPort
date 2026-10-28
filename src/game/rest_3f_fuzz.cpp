@@ -275,7 +275,7 @@ const sh::Region kRegions[] = {
     {Rest3f_9EWall_addr, 0x10},
     {Rest3f_PixCursor_addr, at::kPixCellsSize},
     {kShardsEnd, kPixelsEnd - kShardsEnd},
-    {at::kParticles, kPartRoom * at::kPartStride},
+    {at::kParticles.v, kPartRoom * at::kPartStride},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -303,7 +303,7 @@ void SeedSplit() {
         SetWord(P(cursor + 2 * at), (sh::Next() | 1) & 0xFFFF);
     }
     const U first = sh::Next() % (kPartRoom - 24);
-    SetLong(At(Rest3f_PartCursor_addr), static_cast<std::int32_t>(at::kParticles + first * at::kPartStride));
+    SetLong(At(Rest3f_PartCursor_addr), static_cast<std::int32_t>(::bof3::Img(at::kParticles.v) + first * at::kPartStride));
 }
 
 void Seed(unsigned k) {
@@ -324,7 +324,7 @@ void Seed(unsigned k) {
     unsigned char* const s = Sprite_Current;
     s[6] = static_cast<unsigned char>(PickOf(0, 0, 1, 4, 5, 8, 9, 0xC, 0xD, sh::Next()));
     s[0xB] = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 3, sh::Next()));
-    At(at::kCounter)[0] = static_cast<unsigned char>(PickOf(0x29, 0xE, 9, 0x2B, 0, 0x28, sh::Next()));
+    At(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>(PickOf(0x29, 0xE, 9, 0x2B, 0, 0x28, sh::Next()));
     switch (k) {
     case k60Start:
     case k60SlideBoth:
@@ -345,11 +345,11 @@ void Seed(unsigned k) {
             SetLong(At(Rest3f_9EWall_addr + 8), static_cast<std::int32_t>(static_cast<U>(Long(s + 0x14)) -
                                                                       static_cast<U>(rv::As<records::EffectObject>(s)->work_20 >> 1) +
                                                                       PickOf(0, 0, 1, 0xFFFFFFFFu)));
-        if (sh::Half()) s[7] = At(at::kCounter)[0];
+        if (sh::Half()) s[7] = At(::bof3::Img(at::kCounter.v))[0];
         break;
     case kA1Capture:
     case kA3Capture:
-        if (sh::Half()) At(at::kCounter)[0] = 0x29;
+        if (sh::Half()) At(::bof3::Img(at::kCounter.v))[0] = 0x29;
         break;
     case kA1ReadBack:
     case kA3ReadBack: At(Rest3f_PixIndex_addr)[0] = static_cast<unsigned char>(PickOf(1, 1, 0, 2)); break;
@@ -362,7 +362,7 @@ void Seed(unsigned k) {
         SetWord(At(Rest3f_PartCount_addr), PickOf(0, 1, 15, 16, 17, 33, kPartRoom, sh::Next() % (kPartRoom + 1)));
         break;
     case kA9Wait:
-        if (sh::Half()) At(at::kCounter)[0] = 9;
+        if (sh::Half()) At(::bof3::Img(at::kCounter.v))[0] = 9;
         break;
     case kA8Start:
     case kA8Bars:
@@ -377,7 +377,7 @@ void Seed(unsigned k) {
             b[2] = static_cast<unsigned char>(PickOf(0, 1, 2, 2, 3, sh::Next()));
             SetWord(b + 4, PickOf(0, 8, 7, 9, 0xF0, 0x7FFF, 0x8000, sh::Next()));
         }
-        if (k == kA8Bars && sh::Half()) At(at::kCounter)[0] = 0xE;
+        if (k == kA8Bars && sh::Half()) At(::bof3::Img(at::kCounter.v))[0] = 0xE;
         break;
     case kABDrops: Draw_PassFlags = static_cast<unsigned char>(PickOf(0, 0, 1, 2, sh::Next())); break;
     default: break;
@@ -445,7 +445,7 @@ void Disturb(U h) {
         break;
     case 3: {
         static const unsigned char kCounts[] = {0x29, 0xE, 9, 0x2B};
-        At(at::kCounter)[0] = (v & 1) ? kCounts[(v >> 1) % 4] : static_cast<unsigned char>(v >> 1);
+        At(::bof3::Img(at::kCounter.v))[0] = (v & 1) ? kCounts[(v >> 1) % 4] : static_cast<unsigned char>(v >> 1);
         break;
     }
     case 4: Draw_PassFlags = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;

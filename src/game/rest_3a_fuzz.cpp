@@ -232,7 +232,7 @@ const bh::Region kOutsideRegions[] = {
     {AreaW0b_MapMode_addr, 1},
 };
 const bh::Region kEngineRegions[] = {
-    {at::kChosen, 0x10},          // the six chosen bytes and what follows them
+    {at::kChosen.v, 0x10},          // the six chosen bytes and what follows them
     {0x903B24, 0x46C},            // character records 1..7 past the engine frame's 0x903A50..0x903B24
     {0x904060, 8},                // the party list
     {Game_AreaNumber_addr, 2},
@@ -302,7 +302,7 @@ void SeedEngine(unsigned k) {
     case 0x42E250:   // each chosen byte 0, the one held, or another
         for (U i = 0; i < at::kChosenCount; ++i) {
             const unsigned pick = bh::Next() % 3;
-            Mem(at::kChosen + i)[0] = pick == 0 ? 0 : pick == 1 ? Mem(Rest3a_GuestEquip_addr + i)[0] : static_cast<unsigned char>(bh::Next());
+            Mem(::bof3::Img(at::kChosen.v) + i)[0] = pick == 0 ? 0 : pick == 1 ? Mem(Rest3a_GuestEquip_addr + i)[0] : static_cast<unsigned char>(bh::Next());
         }
         break;
     case 0x42E2F0:   // window 1's slot cursor inside the six bytes (0 and 3 the screen's two slots)
@@ -318,7 +318,7 @@ void SeedEngine(unsigned k) {
         Slot()[1] = static_cast<unsigned char>(bh::Next() % 3);
         break;
     case 0x432FC0: case 0x433020: case 0x4330E0:
-        Mem(at::kActor)[0] = Byte({0, 1, 2, 3, 4, 10});
+        Mem(::bof3::Img(at::kActor.v))[0] = Byte({0, 1, 2, 3, 4, 10});
         Slot()[9] = Byte({0, 1, 2});
         break;
     case 0x433300:
@@ -333,7 +333,7 @@ void SeedEngine(unsigned k) {
         Sprite_Current[9] = Byte({1, 2, 0});
         break;
     case 0x433790:   // the round flags' bit 2, the owner a member or an enemy, its status
-        Mem(at::kFlags)[0] = static_cast<unsigned char>(bh::Half() ? Mem(at::kFlags)[0] | 4 : Mem(at::kFlags)[0] & ~4);
+        Mem(::bof3::Img(at::kFlags.v))[0] = static_cast<unsigned char>(bh::Half() ? Mem(::bof3::Img(at::kFlags.v))[0] | 4 : Mem(::bof3::Img(at::kFlags.v))[0] & ~4);
         Owner()[5] = static_cast<unsigned char>(bh::Next() % 11);
         break;
     case 0x4339D0: case 0x433B20:   // the owner's scale at its ends
@@ -349,9 +349,9 @@ void SeedEngine(unsigned k) {
         Owner()[8] = Byte({0, 1, 2, 3});
         break;
     case 0x433C00: {
-        U flags = static_cast<U>(move_script::Long(Mem(at::kFlags)));
+        U flags = static_cast<U>(move_script::Long(Mem(::bof3::Img(at::kFlags.v))));
         flags = bh::Half() ? flags | 0x8000 : flags & ~0x8000u;
-        SetLong(Mem(at::kFlags), static_cast<std::int32_t>(flags));
+        SetLong(Mem(::bof3::Img(at::kFlags.v)), static_cast<std::int32_t>(flags));
         Owner()[8] = Byte({0, 1, 2});
         break;
     }
@@ -394,7 +394,7 @@ void DisturbEngine(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 10) {
     case 0: B(BattleE4_Step2_addr) = b; break;
-    case 1: B(at::kChosen + (h >> 24) % at::kChosenCount) = b; break;
+    case 1: B(::bof3::Img(at::kChosen.v) + (h >> 24) % at::kChosenCount) = b; break;
     case 2: B(Rest3a_GuestEquip_addr + (h >> 24) % at::kChosenCount) = b; break;
     case 3: B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(b % at::kPartySetCount); break;
     case 4: Slot()[9 + (h >> 24) % 2] = b; break;

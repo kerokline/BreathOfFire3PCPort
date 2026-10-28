@@ -55,13 +55,13 @@ constexpr unsigned kFormActionCount = 19;
 // kLeaderState: now ObjTrio[0].state (symbols.toml). ObjTrio +1
 // kLeaderStep: now ObjTrio[0].step (symbols.toml). ObjTrio +2
 // kCondRow1: now Cond_Flags[8] (symbols.toml). Cond_Flags + 8: the flag row Flags_Test reads (bit 0x16)
-constexpr std::uint32_t kScriptFlags3 = 0x9039A3;    // Field_ScriptFlags + 1: the u16's high byte
+constexpr ::bof3::image::Va kScriptFlags3{0x9039A3};    // Field_ScriptFlags + 1: the u16's high byte
 inline auto& kScratchFlag = SharedScratch.b_00;  // SharedScratch's flag byte (MapView_SlopeAt's)
-constexpr std::uint32_t kSteps = 0x6697B0;           // Field_DirectionSteps, 8 rows of two longs
+constexpr ::bof3::image::Va kSteps{0x6697B0};           // Field_DirectionSteps, 8 rows of two longs
 // kSideStep3: now Field_DirectionSteps[6] (symbols.toml). its row 3, read by address
 // kSideStep5: now Field_DirectionSteps[0xa] (symbols.toml). its row 5
-constexpr std::uint32_t kObjectFlags = 0x7DEF00;     // Sprite_Objects + 0x80 (30 of 0xA4)
-constexpr std::uint32_t kExtraFlags = 0x802080;      // Sprite_ObjectsExtra + 0x80 (4 of 0xA4)
+constexpr ::bof3::image::Va kObjectFlags{0x7DEF00};     // Sprite_Objects + 0x80 (30 of 0xA4)
+constexpr ::bof3::image::Va kExtraFlags{0x802080};      // Sprite_ObjectsExtra + 0x80 (4 of 0xA4)
 constexpr std::uint32_t kObjectStride = 0xA4;
 // kPalettes: now Gfx_ClutStripSource[0xf00] (symbols.toml). Sprite_LoadPalette's destination: + Sprite_Current +5 * 0x40
 constexpr std::uint32_t kMemberStride = 0x14C;       // ObjTrio's records

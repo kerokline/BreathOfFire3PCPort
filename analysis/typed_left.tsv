@@ -20926,8 +20926,8 @@ src/game/rest_2b.cpp	Shisu_PickCounts	global	SetW	kMessage	2	0x803194	-	no-entry
 src/game/rest_2b.cpp	Shisu_PickCounts	global	L	kWin3	0	0x8031cc	-	no-entry	kWin3 0x8031cc -	b0
 src/game/rest_2b.cpp	Shisu_PickCounts	global	B	kWin0	0	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_2b.cpp	Shisu_PickCounts	global	B	kWin3	0	0x8031cc	-	no-entry	kWin3 0x8031cc -	b0
-src/game/rest_2b.cpp	Shisu_ShowLanded	global	B	kAColour	0	0x93993d	-	inside-entry	kAColour 0x93993d Rest2c_FigureRgb	b0
-src/game/rest_2b.cpp	Shisu_ShowLanded	global	B	kAColour	1	0x93993d	-	inside-entry	kAColour 0x93993d Rest2c_FigureRgb	b0
+src/game/rest_2b.cpp	Shisu_ShowLanded	record	B	kAColour + 1	0	-	-	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
+src/game/rest_2b.cpp	Shisu_ShowLanded	record	B	kAColour + 2	0	-	-	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
 src/game/rest_2b.cpp	Shisu_ShowLanded	global	B	kSavedA	0	0x6bc87c	-	no-entry	kSavedA 0x6bc87c -	b0
 src/game/rest_2b.cpp	Shisu_ShowLanded	global	B	kSavedB	0	0x6bc878	-	no-entry	kSavedB 0x6bc878 -	b0
 src/game/rest_2b.cpp	Shisu_ShowLanded	global	B	kSavedA	1	0x6bc87c	-	no-entry	kSavedA 0x6bc87c -	b0
@@ -20937,9 +20937,9 @@ src/game/rest_2b.cpp	Shisu_ShowLanded	global	B	kSavedB	2	0x6bc878	-	no-entry	kSa
 src/game/rest_2b.cpp	Shisu_ShowLanded	global	B	kTimer	0	0x929f04	-	no-entry	kTimer 0x929f04 -	b0
 src/game/rest_2b.cpp	Brighten	global	B	kSavedA	0	0x6bc87c	-	no-entry	kSavedA 0x6bc87c -	b0
 src/game/rest_2b.cpp	Brighten	global	B	kSavedA	1	0x6bc87c	-	no-entry	kSavedA 0x6bc87c -	b0
-src/game/rest_2b.cpp	Brighten	global	B	kAColour	0	0x93993d	-	inside-entry	kAColour 0x93993d Rest2c_FigureRgb	b0
-src/game/rest_2b.cpp	Brighten	global	B	kAColour	1	0x93993d	-	inside-entry	kAColour 0x93993d Rest2c_FigureRgb	b0
+src/game/rest_2b.cpp	Brighten	record	B	kAColour + 1	0	-	param	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
 src/game/rest_2b.cpp	Brighten	global	B	kSavedA	2	0x6bc87c	-	no-entry	kSavedA 0x6bc87c -	b0
+src/game/rest_2b.cpp	Brighten	record	B	kAColour + 2	0	-	param	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
 src/game/rest_2b.cpp	Brighten	global	B	kSavedB	0	0x6bc878	-	no-entry	kSavedB 0x6bc878 -	b0
 src/game/rest_2b.cpp	Brighten	global	B	kSavedB	1	0x6bc878	-	no-entry	kSavedB 0x6bc878 -	b0
 src/game/rest_2b.cpp	Brighten	global	B	kSavedB	2	0x6bc878	-	no-entry	kSavedB 0x6bc878 -	b0
@@ -20950,16 +20950,16 @@ src/game/rest_2b.cpp	Shisu_ShowFlash	global	B	kTimer	3	0x929f04	-	no-entry	kTime
 src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kTimer	0	0x929f04	-	no-entry	kTimer 0x929f04 -	b0
 src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kSavedA	0	0x6bc87c	-	no-entry	kSavedA 0x6bc87c -	b0
 src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kSavedA	1	0x6bc87c	-	no-entry	kSavedA 0x6bc87c -	b0
-src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kAColour	0	0x93993d	-	inside-entry	kAColour 0x93993d Rest2c_FigureRgb	b0
-src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kAColour	1	0x93993d	-	inside-entry	kAColour 0x93993d Rest2c_FigureRgb	b0
+src/game/rest_2b.cpp	Shisu_ShowFade	record	B	kAColour + 1	0	-	-	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
 src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kSavedA	2	0x6bc87c	-	no-entry	kSavedA 0x6bc87c -	b0
+src/game/rest_2b.cpp	Shisu_ShowFade	record	B	kAColour + 2	0	-	-	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
 src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kSavedB	0	0x6bc878	-	no-entry	kSavedB 0x6bc878 -	b0
 src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kSavedB	1	0x6bc878	-	no-entry	kSavedB 0x6bc878 -	b0
 src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kSavedB	2	0x6bc878	-	no-entry	kSavedB 0x6bc878 -	b0
 src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kTimer	1	0x929f04	-	no-entry	kTimer 0x929f04 -	b0
 src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kSavedA	3	0x6bc87c	-	no-entry	kSavedA 0x6bc87c -	b0
-src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kAColour	2	0x93993d	-	inside-entry	kAColour 0x93993d Rest2c_FigureRgb	b0
-src/game/rest_2b.cpp	Shisu_ShowFade	global	B	kAColour	3	0x93993d	-	inside-entry	kAColour 0x93993d Rest2c_FigureRgb	b0
+src/game/rest_2b.cpp	Shisu_ShowFade	record	B	kAColour + 2	1	-	-	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
+src/game/rest_2b.cpp	Shisu_ShowFade	record	B	kAColour + 1	1	-	-	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
 src/game/rest_2b.cpp	Shisu_CountItems	global	B	kOwned	0	0x9399e0	-	no-entry	kOwned 0x9399e0 -	b0
 src/game/rest_2b.cpp	Shisu_SetupWindows	global	SetW	kWin1	0	0x803184	-	inside-entry	kWin1 0x803184 Window1	b0
 src/game/rest_2b.cpp	Shisu_SetupWindows	global	SetW	kWin2	0	0x8031a8	-	inside-entry	kWin2 0x8031a8 Window2	b0
@@ -20992,8 +20992,8 @@ src/game/rest_2b.cpp	Shisu_InitModels	global	B	kModelA	0	0x9398e0	-	no-entry	kMo
 src/game/rest_2b.cpp	Shisu_InitModels	global	SetL	kModelA	2	0x9398e0	-	no-entry	kModelA 0x9398e0 -	b0
 src/game/rest_2b.cpp	Shisu_InitModels	global	SetL	kModelA	3	0x9398e0	-	no-entry	kModelA 0x9398e0 -	b0
 src/game/rest_2b.cpp	Shisu_InitModels	global	SetL	kModelA	4	0x9398e0	-	no-entry	kModelA 0x9398e0 -	b0
-src/game/rest_2b.cpp	Shisu_InitModels	global	B	kAColour	0	0x93993d	-	inside-entry	kAColour 0x93993d Rest2c_FigureRgb	b0
-src/game/rest_2b.cpp	Shisu_InitModels	global	B	kAColour	1	0x93993d	-	inside-entry	kAColour 0x93993d Rest2c_FigureRgb	b0
+src/game/rest_2b.cpp	Shisu_InitModels	record	B	kAColour + 1	0	-	-	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
+src/game/rest_2b.cpp	Shisu_InitModels	record	B	kAColour + 2	0	-	-	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
 src/game/rest_2b.cpp	Shisu_InitModels	global	SetL	kModelA	5	0x9398e0	-	no-entry	kModelA 0x9398e0 -	b0
 src/game/rest_2b.cpp	Shisu_InitModels	global	SetL	kModelA	6	0x9398e0	-	no-entry	kModelA 0x9398e0 -	b0
 src/game/rest_2b.cpp	Shisu_ModelBDraw	global	At	kModelB	0	0x939960	-	no-entry	kModelB 0x939960 -	b0

@@ -58,7 +58,7 @@ using rest_2f::kTitleCall;
 // kStep: now FieldS_State (symbols.toml). the screen's step
 // kSub: now FieldS_Step (symbols.toml). its sub-step
 // kByte03: now Rest2d_MenuSub (symbols.toml).
-constexpr U kTimer = 0x929F04;       // a countdown of frames
+constexpr ::bof3::image::Va kTimer{0x929F04};       // a countdown of frames
 // kTopCursor: now MenuLists_Cursor (symbols.toml). the top bar's cursor
 // kShown: now BattleActorCopies_ItemActor (symbols.toml). the party slot a screen shows (s8)
 // kCol: now FieldS_Column (symbols.toml). Tactics' members screen: the cursor's column (0 party, 1 reserve), s8
@@ -68,7 +68,7 @@ constexpr U kTimer = 0x929F04;       // a countdown of frames
 // kDirect: now ScenaSc6_Load10 (symbols.toml). 1: Tactics was entered at its step 5 (the cancel leaves the menu)
 
 // Tactics' own cells (0x6BDFBC..0x6BDFD8).
-constexpr U kGrid = 0x6BDFBC;        // 3 x 3 bytes: the formation's cells that may be picked
+constexpr ::bof3::image::Va kGrid{0x6BDFBC};        // 3 x 3 bytes: the formation's cells that may be picked
 // kSetCol: now Rest2f_SetCol (symbols.toml). the formation set: column 1..2, row (0x904060 = col + 2 row - 1)
 // kPickCol: now Rest2f_PickCol (symbols.toml). the cell picked: 0x7F none
 // kSetRow: now Rest2f_SetRow (symbols.toml).
@@ -76,23 +76,23 @@ constexpr U kGrid = 0x6BDFBC;        // 3 x 3 bytes: the formation's cells that 
 // kCurCol: now Rest2f_CursorCol (symbols.toml). the grid cursor
 // kCurRow: now Rest2f_CursorRow (symbols.toml).
 // kTopChoice: now Rest2f_TopChoice (symbols.toml). the screen's top: 0 formation, 1 members
-constexpr U kMemberFlags = 0x6BDFCC; // two bytes a row: party, reserve
+constexpr ::bof3::image::Va kMemberFlags{0x6BDFCC}; // two bytes a row: party, reserve
 // kSwappedA: now Rest2f_SwappedA (symbols.toml). the two rows the last formation swap moved
 // kSwappedB: now Rest2f_SwappedB (symbols.toml).
-constexpr U kReserve = 0x6BDFD4;     // the reserve's member ids
+constexpr ::bof3::image::Va kReserve{0x6BDFD4};     // the reserve's member ids
 // kRefused: now Rest2f_Refused (symbols.toml). the member a swap refused, 0xFF none (= kReserve + 3)
 // kConfigSaved: now Rest2f_ConfigCursor (symbols.toml). the top bar's cursor while Config runs (= kReserve + 4)
 
 // Save data and the records.
 // kFormation: now Cond_Flags[0xd0] (symbols.toml). the formation set (u8)
 // kFormationBits: now Cond_Flags[0xd1] (symbols.toml). which of the six cells may hold a member
-constexpr U kParty = 0x904062;       // the party's member ids (0x904065: the battle order's copy)
-constexpr U kPartyCopy = 0x904065;
+constexpr ::bof3::image::Va kParty{0x904062};       // the party's member ids (0x904065: the battle order's copy)
+constexpr ::bof3::image::Va kPartyCopy{0x904065};
 // kCharacters: now CharacterRecords (symbols.toml). CharacterRecords: 0xA4 a member
 constexpr U kCharacterStride = 0xA4;
-constexpr U kWorking = 0x802DC0;     // the party's working records' +0x80 (ObjTrio + 0x80), 0x14C a slot
+constexpr ::bof3::image::Va kWorking{0x802DC0};     // the party's working records' +0x80 (ObjTrio + 0x80), 0x14C a slot
 constexpr U kWorkingStride = 0x14C;
-constexpr U kEffectState = 0x66972C; // Character_IndexById: the record of a member id
+constexpr ::bof3::image::Va kEffectState{0x66972C}; // Character_IndexById: the record of a member id
 // kStyle: now Config_WindowColour (symbols.toml). the window colour
 // kBackdrop: now Config_Background (symbols.toml). the Config "Background" byte
 // kGameStep: now Game_Step (symbols.toml). Game_Step (u16)
@@ -103,44 +103,44 @@ constexpr U kEffectState = 0x66972C; // Character_IndexById: the record of a mem
 // kCurrent: now BattleWinStates_Current (symbols.toml). the window record Field_RunTaskRecords runs
 // kWindows: now WindowRecords (symbols.toml). WindowRecords
 constexpr U kWindowStride = 0x24;
-constexpr U kPools = 0x803580;       // MessagePools
-constexpr U kPrint = 0x904BA0;       // the print buffer
+constexpr ::bof3::image::Va kPools{0x803580};       // MessagePools
+constexpr ::bof3::image::Va kPrint{0x904BA0};       // the print buffer
 // The members screen's portrait cells: 0x9398C0 + 4 row, 0x939880 / 0x9398A0 + 6 row.
-constexpr U kPortrait4 = 0x9398C0;
-constexpr U kPortraitA = 0x939880;
-constexpr U kPortraitB = 0x9398A0;
+constexpr ::bof3::image::Va kPortrait4{0x9398C0};
+constexpr ::bof3::image::Va kPortraitA{0x939880};
+constexpr ::bof3::image::Va kPortraitB{0x9398A0};
 
 // Window kind 1's message cells (the choice list).
 // kListText: now MenuWindows_ListText (symbols.toml). the choices' text (a pointer)
 // kListLast: now MenuWindows_ListCount (symbols.toml). the last choice's index (s8)
 // kListCursor: now AreaW0c_ChoiceAnswer (symbols.toml). the cursor (s8)
-constexpr U kListRows = 0x7DEE6F;    // a byte a choice: its line, then its y
+constexpr ::bof3::image::Va kListRows{0x7DEE6F};    // a byte a choice: its line, then its y
 
 // Image tables, read in place.
-constexpr U kFormCells = 0x667450;   // 3 x 3 of 8 bytes: x, y words, a byte (the formation's cursor places)
-constexpr U kMemberCells = 0x6674C8; // 2 a row of 8 bytes: the members screen's cursor places
-constexpr U kApCost = 0x65C4DA;      // Ability_Records + 0x12: the AP cost byte, 24 a record
-constexpr U kTradeKinds = 0x66AD10;  // 10 a spot: the trade's kind
-constexpr U kTradeNeeds = 0x66AB5A;  // 8 a kind: three item bytes, then their counts at +3
-constexpr U kIdLists = 0x656B00;     // Inventory_IdLists
-constexpr U kCountLists = 0x656B14;  // Inventory_CountLists
-constexpr U kListTitles = 0x66AF10;  // Win2_DrawItemList's titles by category
-constexpr U kShisuTitle = 0x66AE90;  // Win1_DrawShisuPanel's title (a string)
-constexpr U kShisuIds = 0x66AE8C;    // its four rows' item ids
-constexpr U kShisuPiecesA = 0x66AE74;
-constexpr U kShisuPiecesB = 0x66AE80;
-constexpr U kListPieces0 = 0x66AE98; // Win2_DrawItemList's arrows: up off / on, down off / on
-constexpr U kListPieces2 = 0x66AEB0;
-constexpr U kListPieces1 = 0x66AEA4;
-constexpr U kListPieces3 = 0x66AEBC;
-constexpr U kUsedFormat = 0x6639C8;  // "%3d/%3d"
+constexpr ::bof3::image::Va kFormCells{0x667450};   // 3 x 3 of 8 bytes: x, y words, a byte (the formation's cursor places)
+constexpr ::bof3::image::Va kMemberCells{0x6674C8}; // 2 a row of 8 bytes: the members screen's cursor places
+constexpr ::bof3::image::Va kApCost{0x65C4DA};      // Ability_Records + 0x12: the AP cost byte, 24 a record
+constexpr ::bof3::image::Va kTradeKinds{0x66AD10};  // 10 a spot: the trade's kind
+constexpr ::bof3::image::Va kTradeNeeds{0x66AB5A};  // 8 a kind: three item bytes, then their counts at +3
+constexpr ::bof3::image::Va kIdLists{0x656B00};     // Inventory_IdLists
+constexpr ::bof3::image::Va kCountLists{0x656B14};  // Inventory_CountLists
+constexpr ::bof3::image::Va kListTitles{0x66AF10};  // Win2_DrawItemList's titles by category
+constexpr ::bof3::image::Va kShisuTitle{0x66AE90};  // Win1_DrawShisuPanel's title (a string)
+constexpr ::bof3::image::Va kShisuIds{0x66AE8C};    // its four rows' item ids
+constexpr ::bof3::image::Va kShisuPiecesA{0x66AE74};
+constexpr ::bof3::image::Va kShisuPiecesB{0x66AE80};
+constexpr ::bof3::image::Va kListPieces0{0x66AE98}; // Win2_DrawItemList's arrows: up off / on, down off / on
+constexpr ::bof3::image::Va kListPieces2{0x66AEB0};
+constexpr ::bof3::image::Va kListPieces1{0x66AEA4};
+constexpr ::bof3::image::Va kListPieces3{0x66AEBC};
+constexpr ::bof3::image::Va kUsedFormat{0x6639C8};  // "%3d/%3d"
 
 unsigned char& B(U address) { return At(address)[0]; }
 U W(U address) { return Word(At(address)); }
 void SetW(U address, U v) { SetWord(At(address), v); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // Window record n's byte / word at `at`.
-U Rec(unsigned n, unsigned at) { return WindowRecords_addr + kWindowStride * n + at; }
+U Rec(unsigned n, unsigned at) { return ::bof3::Img(WindowRecords_addr) + kWindowStride * n + at; }
 // The record Field_RunTaskRecords runs, read afresh at each use.
 unsigned char* Cur() { return At(BattleWinStates_Current); }
 int Wx(const unsigned char* r) { return static_cast<int>(rv::As<records::WindowRecord>(r)->x); }
@@ -170,7 +170,7 @@ void Row(int x, U y, unsigned colour, unsigned category, unsigned id, unsigned c
 }
 
 // The member a CharacterRecords flag test is about: record Character_IndexById[id].
-unsigned char* Character(unsigned char id) { return At(CharacterRecords_addr + kCharacterStride * B(kEffectState + id)); }
+unsigned char* Character(unsigned char id) { return At(::bof3::Img(CharacterRecords_addr) + kCharacterStride * B(::bof3::Img(kEffectState.v) + id)); }
 
 // DIV-0059's site, read at inject (0: not read yet - the fuzz's runs, before
 // the patch is read back, call Text_DrawAt as the original's copy does).
@@ -264,7 +264,7 @@ extern "C" void __cdecl AbilityList_SortByApDown(void) {
         if (a == 0) return false;
         const unsigned char b = p[1];
         if (b == 0) return false;
-        return B(kApCost + 24u * a) < B(kApCost + 24u * b);
+        return B(::bof3::Img(kApCost.v) + 24u * a) < B(::bof3::Img(kApCost.v) + 24u * b);
     });
 }
 
@@ -277,7 +277,7 @@ extern "C" void __cdecl AbilityList_SortByApUp(void) {
         if (a == 0) return false;
         const unsigned char b = p[1];
         if (b == 0) return false;
-        return B(kApCost + 24u * a) > B(kApCost + 24u * b);
+        return B(::bof3::Img(kApCost.v) + 24u * a) > B(::bof3::Img(kApCost.v) + 24u * b);
     });
 }
 
@@ -348,7 +348,7 @@ extern "C" void __cdecl Tactics_Open(void) {
     Sound(0x102);
     const unsigned char step = FieldS_State;
     FieldS_Step = 0;
-    B(kTimer) = 5;
+    B(::bof3::Img(kTimer.v)) = 5;
     FieldS_State = static_cast<unsigned char>(step + 1);
 }
 
@@ -399,7 +399,7 @@ extern "C" void __cdecl Tactics_Top(void) {
         B(Rec(21, 0)) = 0;
         FieldS_Step = 0;
         FieldS_State = static_cast<unsigned char>(step + c + 1);
-        B(kTimer) = 5;
+        B(::bof3::Img(kTimer.v)) = 5;
         return;
     }
     if (!(static_cast<std::uint32_t>(Field_CancelButtons) & now)) return;
@@ -413,7 +413,7 @@ extern "C" void __cdecl Tactics_Top(void) {
     B(Rec(20, 0)) = 0;
     FieldS_State = static_cast<unsigned char>(step + 3);
     FieldS_Step = 0;
-    B(kTimer) = 5;
+    B(::bof3::Img(kTimer.v)) = 5;
 }
 
 // original 0x58F2F0: TacticsMenu_Steps[2] - jmp through TacticsFormation_Steps
@@ -436,8 +436,8 @@ template <typename Body> void ForParty(Body body) {
 }
 // The countdown: one less; true when it reached 0.
 bool CountedDown() {
-    const unsigned char t = static_cast<unsigned char>(B(kTimer) - 1);
-    B(kTimer) = t;
+    const unsigned char t = static_cast<unsigned char>(B(::bof3::Img(kTimer.v)) - 1);
+    B(::bof3::Img(kTimer.v)) = t;
     return t == 0;
 }
 }  // namespace
@@ -480,7 +480,7 @@ extern "C" void __cdecl TacticsFormation_Pick(void) {
         const unsigned char pick = Rest2f_PickCol;
         B(Rec(19, 0)) = 0;
         if (pick != 0x7F) {
-            const U e = kFormCells + 8u * static_cast<U>(Rest2f_PickRow * 3 + static_cast<signed char>(pick));
+            const U e = ::bof3::Img(kFormCells.v) + 8u * static_cast<U>(Rest2f_PickRow * 3 + static_cast<signed char>(pick));
             B(Rec(19, 0)) = 1;
             B(Rec(19, 0xB)) = 0;
             SetW(Rec(19, 4), W(e));
@@ -494,7 +494,7 @@ extern "C" void __cdecl TacticsFormation_Pick(void) {
         const int c = static_cast<signed char>(col);
         B(Rec(20, 0)) = 1;
         B(Rec(20, 0xB)) = 1;
-        const U e = kFormCells + 8u * static_cast<U>(3 * row + c);
+        const U e = ::bof3::Img(kFormCells.v) + 8u * static_cast<U>(3 * row + c);
         SetW(Rec(20, 4), W(e));
         SetW(Rec(20, 6), W(e + 2));
         B(Rec(20, 0xA)) = static_cast<unsigned char>(B(e + 4) + 1);
@@ -522,8 +522,8 @@ extern "C" void __cdecl TacticsFormation_Pick(void) {
             Rest2f_PickRow = static_cast<unsigned char>(Rest2f_CursorRow);
         } else {
             Sound(0x104);
-            unsigned char* const picked = At(Cond_Flags_addr + 0xd5 + static_cast<std::uint32_t>(Rest2f_PickRow));
-            unsigned char* const cursor = At(Cond_Flags_addr + 0xd5 + static_cast<std::uint32_t>(Rest2f_CursorRow));
+            unsigned char* const picked = At(::bof3::Img(Cond_Flags_addr) + 0xd5 + static_cast<std::uint32_t>(Rest2f_PickRow));
+            unsigned char* const cursor = At(::bof3::Img(Cond_Flags_addr) + 0xd5 + static_cast<std::uint32_t>(Rest2f_CursorRow));
             Swap(cursor, picked);
             const unsigned char a = static_cast<unsigned char>(Rest2f_CursorRow), b = static_cast<unsigned char>(Rest2f_PickRow);
             if (a != b) {
@@ -548,13 +548,13 @@ extern "C" void __cdecl TacticsFormation_Pick(void) {
             ScenaSc6_Load10 = 0;
         } else {
             const unsigned char set = static_cast<unsigned char>(static_cast<unsigned char>(Rest2f_SetRow) * 2 + static_cast<unsigned char>(Rest2f_SetCol) - 1);
-            B(kTimer) = 0;
+            B(::bof3::Img(kTimer.v)) = 0;
             Cond_Flags[0xd0] = set;
             Sound(0x102);
             for (unsigned n = 12; n <= 17; ++n)
                 if (B(Rec(n, 0)) != 0 && B(Rec(n, 2)) == 0xB) B(Rec(n, 3)) = 1;
             const unsigned char sub = FieldS_Step;
-            B(kTimer) = 5;
+            B(::bof3::Img(kTimer.v)) = 5;
             FieldS_Step = static_cast<unsigned char>(sub + 1);
         }
     }
@@ -575,7 +575,7 @@ extern "C" void __cdecl TacticsFormation_Pick(void) {
         row = static_cast<unsigned char>(row + step);
         if (static_cast<signed char>(row) < 0) row = 2;
         else if (static_cast<signed char>(row) > 2) row = 0;
-    } while (*static_cast<volatile unsigned char*>(At(kGrid + static_cast<U>(3 * static_cast<signed char>(row) + ccol))) == 0);
+    } while (*static_cast<volatile unsigned char*>(At(::bof3::Img(kGrid.v) + static_cast<U>(3 * static_cast<signed char>(row) + ccol))) == 0);
     Rest2f_CursorRow = row;
     unsigned char before;
     if (Rest2f_PickCol == 0) {
@@ -592,7 +592,7 @@ extern "C" void __cdecl TacticsFormation_Pick(void) {
             c = static_cast<unsigned char>(c + hdelta);
             if (static_cast<signed char>(c) < 0) c = 2;
             else if (static_cast<signed char>(c) > 2) c = 0;
-        } while (*static_cast<volatile unsigned char*>(At(kGrid + static_cast<U>(base + static_cast<signed char>(c)))) == 0);
+        } while (*static_cast<volatile unsigned char*>(At(::bof3::Img(kGrid.v) + static_cast<U>(base + static_cast<signed char>(c)))) == 0);
         Rest2f_CursorCol = c;
     }
     if (before != c || old_row != row) Sound(0x101);
@@ -623,7 +623,7 @@ extern "C" void __cdecl TacticsMembers_Enter(void) {
     if (!CountedDown()) return;
     ForParty([](unsigned char i) {
         const U r = Rec(4u + i, 0);
-        const unsigned char id = B(Cond_Flags_addr + 0xd2 + 3u * B(r + 0xB) + B(r + 0xA));
+        const unsigned char id = B(::bof3::Img(Cond_Flags_addr) + 0xd2 + 3u * B(r + 0xB) + B(r + 0xA));
         if (Character(id)[0xB] & 2) B(r + 0xC) = 1;
     });
     FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
@@ -643,7 +643,7 @@ extern "C" void __cdecl TacticsMembers_Enter(void) {
 extern "C" void __cdecl TacticsMembers_Pick(void) {
     Backdrop();
     {
-        const U e = kMemberCells + 8u * static_cast<U>(FieldS_Column + 2 * BattleE1_ModeByte9);
+        const U e = ::bof3::Img(kMemberCells.v) + 8u * static_cast<U>(FieldS_Column + 2 * BattleE1_ModeByte9);
         B(Rec(20, 0)) = 0;
         B(Rec(19, 0)) = 1;
         B(Rec(19, 0xB)) = 1;
@@ -652,7 +652,7 @@ extern "C" void __cdecl TacticsMembers_Pick(void) {
         SetW(Rec(19, 6), W(e + 2));
         const unsigned char held = static_cast<unsigned char>(FieldS_PickRow);
         if (held != 0x7F) {
-            const U f = kMemberCells + 8u * static_cast<U>(ShopStates_Clear0A + 2 * static_cast<signed char>(held));
+            const U f = ::bof3::Img(kMemberCells.v) + 8u * static_cast<U>(ShopStates_Clear0A + 2 * static_cast<signed char>(held));
             B(Rec(20, 0)) = 1;
             B(Rec(20, 0xB)) = 0;
             SetW(Rec(20, 4), W(f));
@@ -732,7 +732,7 @@ extern "C" void __cdecl TacticsMembers_Pick(void) {
         return;
     }
     const unsigned char sub = FieldS_Step;
-    B(kTimer) = 5;
+    B(::bof3::Img(kTimer.v)) = 5;
     B(Rec(12, 3)) = 1;
     FieldS_Step = static_cast<unsigned char>(sub + 1);
     B(Rec(19, 0)) = 0;
@@ -758,7 +758,7 @@ extern "C" void __cdecl Tactics_Close(void) {
     if (!CountedDown()) return;
     SH_CALL(FieldMenu_FreeRecords12To18)();
     ForParty([](unsigned char i) { B(Rec(4u + i, 3)) = 4; });
-    B(kTimer) = 5;
+    B(::bof3::Img(kTimer.v)) = 5;
     for (unsigned n = 7; n <= 10; ++n) B(Rec(n, 3)) = 2;
     BattleE1_Mode = 1;
     FieldS_State = 0;
@@ -799,7 +799,7 @@ extern "C" void __cdecl Tactics_OpenFormation(void) {
     SH_CALL(TacticsFormation_Build)();
     FieldS_State = 2;
     FieldS_Step = 0;
-    B(kTimer) = 5;
+    B(::bof3::Img(kTimer.v)) = 5;
 }
 
 // original 0x58FD60: called by Tactics_Top and Tactics_OpenFormation - the
@@ -827,7 +827,7 @@ extern "C" void __cdecl TacticsFormation_Build(void) {
     unsigned char mask = 1, n = 0;
     for (unsigned char row = 0; row < 3; ++row) {
         for (unsigned char col = 0; col < 3; ++col) {
-            unsigned char* const cell = At(kGrid + 3u * row + col);
+            unsigned char* const cell = At(::bof3::Img(kGrid.v) + 3u * row + col);
             if (col == 0 && row < count) {
                 *cell = 1;
                 continue;
@@ -878,8 +878,8 @@ extern "C" void __cdecl TacticsMembers_Build(void) {
     for (U r = CharacterRecords_addr; r < CharacterRecords_addr + 8 * kCharacterStride; r += kCharacterStride) {
         if (!(B(r + 0xB) & 1)) continue;
         unsigned j = 0;
-        while (j < count && B(r + 9) != B(kParty + j)) ++j;
-        if (j == count) B(kReserve + n++) = B(r + 9);
+        while (j < count && B(r + 9) != B(::bof3::Img(kParty.v) + j)) ++j;
+        if (j == count) B(::bof3::Img(kReserve.v) + n++) = B(r + 9);
     }
     B(Rec(12, 0xA)) = n;
     B(Rec(12, 0)) = 1;
@@ -888,15 +888,15 @@ extern "C" void __cdecl TacticsMembers_Build(void) {
     B(Rec(12, 3)) = 2;
     SetW(Rec(12, 4), 0x140);
     SetW(Rec(12, 6), 0x3B);
-    SetLong(At(Rec(12, 0x20)), static_cast<std::int32_t>(kReserve));
+    SetLong(At(Rec(12, 0x20)), static_cast<std::int32_t>(::bof3::Img(kReserve.v)));
     unsigned from = 0;
     if (count > 0) {
-        for (unsigned i = 0; i < count; ++i) B(kMemberFlags + 2 * i) = 1;
+        for (unsigned i = 0; i < count; ++i) B(::bof3::Img(kMemberFlags.v) + 2 * i) = 1;
         from = count;
     }
     if (count == 0 || count < 3)
-        for (U p = kMemberFlags + 2 * from; p < kMemberFlags + 6; p += 2) B(p) = 0;
-    for (unsigned j = 0; j < n; ++j) B(kMemberFlags + 1 + 2 * j) = 1;
+        for (U p = ::bof3::Img(kMemberFlags.v) + 2 * from; p < ::bof3::Img(kMemberFlags.v) + 6; p += 2) B(p) = 0;
+    for (unsigned j = 0; j < n; ++j) B(::bof3::Img(kMemberFlags.v) + 1 + 2 * j) = 1;
     FieldS_Column = 0;
     BattleE1_ModeByte9 = 0;
     ShopStates_Clear0A = 0x7F;
@@ -918,8 +918,8 @@ extern "C" unsigned char __cdecl TacticsMembers_Swap(void) {
     const unsigned char col = static_cast<unsigned char>(FieldS_Column);
     if (col == static_cast<unsigned char>(ShopStates_Clear0A)) {
         if (col != 0) {
-            Swap(At(kReserve + static_cast<std::uint32_t>(BattleE1_ModeByte9)),
-                 At(kReserve + static_cast<std::uint32_t>(FieldS_PickRow)));
+            Swap(At(::bof3::Img(kReserve.v) + static_cast<std::uint32_t>(BattleE1_ModeByte9)),
+                 At(::bof3::Img(kReserve.v) + static_cast<std::uint32_t>(FieldS_PickRow)));
             return 0xFF;
         }
         {
@@ -929,10 +929,10 @@ extern "C" unsigned char __cdecl TacticsMembers_Swap(void) {
             const unsigned char a = B(h), b = B(r);
             B(r) = a;
             B(h) = b;
-            Swap(At(Cond_Flags_addr + 0xd2 + static_cast<U>(row)), At(Cond_Flags_addr + 0xd2 + static_cast<U>(held)));
+            Swap(At(::bof3::Img(Cond_Flags_addr) + 0xd2 + static_cast<U>(row)), At(::bof3::Img(Cond_Flags_addr) + 0xd2 + static_cast<U>(held)));
         }
         const int held = FieldS_PickRow, row = BattleE1_ModeByte9;
-        U p = kPortrait4 + 4u * static_cast<U>(held), q = kPortrait4 + 4u * static_cast<U>(row);
+        U p = ::bof3::Img(kPortrait4.v) + 4u * static_cast<U>(held), q = ::bof3::Img(kPortrait4.v) + 4u * static_cast<U>(row);
         for (unsigned k = 0; k < 4; ++k, ++p, ++q) {
             const unsigned char x = B(p), y = B(q);
             B(q) = x;
@@ -940,14 +940,14 @@ extern "C" unsigned char __cdecl TacticsMembers_Swap(void) {
         }
         const U c = 6u * static_cast<U>(held), e = 6u * static_cast<U>(row);
         for (unsigned k = 0; k < 6; ++k) {
-            unsigned char x = B(kPortraitB + c + k);
-            unsigned char y = B(kPortraitB + e + k);
-            B(kPortraitB + e + k) = x;
-            x = B(kPortraitA + c + k);
-            B(kPortraitB + c + k) = y;
-            y = B(kPortraitA + e + k);
-            B(kPortraitA + e + k) = x;
-            B(kPortraitA + c + k) = y;
+            unsigned char x = B(::bof3::Img(kPortraitB.v) + c + k);
+            unsigned char y = B(::bof3::Img(kPortraitB.v) + e + k);
+            B(::bof3::Img(kPortraitB.v) + e + k) = x;
+            x = B(::bof3::Img(kPortraitA.v) + c + k);
+            B(::bof3::Img(kPortraitB.v) + c + k) = y;
+            y = B(::bof3::Img(kPortraitA.v) + e + k);
+            B(::bof3::Img(kPortraitA.v) + e + k) = x;
+            B(::bof3::Img(kPortraitA.v) + c + k) = y;
         }
         return 0xFF;
     }
@@ -955,12 +955,12 @@ extern "C" unsigned char __cdecl TacticsMembers_Swap(void) {
     unsigned char a, b;
     if (col == 0) {
         row = BattleE1_ModeByte9;
-        a = B(kParty + static_cast<U>(row));
-        b = B(kReserve + static_cast<std::uint32_t>(FieldS_PickRow));
+        a = B(::bof3::Img(kParty.v) + static_cast<U>(row));
+        b = B(::bof3::Img(kReserve.v) + static_cast<std::uint32_t>(FieldS_PickRow));
     } else {
         row = FieldS_PickRow;
-        a = B(kParty + static_cast<U>(row));
-        b = B(kReserve + static_cast<std::uint32_t>(BattleE1_ModeByte9));
+        a = B(::bof3::Img(kParty.v) + static_cast<U>(row));
+        b = B(::bof3::Img(kReserve.v) + static_cast<std::uint32_t>(BattleE1_ModeByte9));
     }
     if (Character(a)[0xB] & 2) return a;
     if (Character(b)[0xB] & 2) return b;
@@ -968,19 +968,19 @@ extern "C" unsigned char __cdecl TacticsMembers_Swap(void) {
     unsigned char i = 0;
     if (PartyCount() != 0) {
         do {
-            if (B(kParty + i) == a) B(kParty + i) = b;
-            if (B(kPartyCopy + i) == a) B(kPartyCopy + i) = b;
+            if (B(::bof3::Img(kParty.v) + i) == a) B(::bof3::Img(kParty.v) + i) = b;
+            if (B(::bof3::Img(kPartyCopy.v) + i) == a) B(::bof3::Img(kPartyCopy.v) + i) = b;
             ++i;
         } while (i < PartyCount());
     }
     const unsigned char reserve = B(Rec(12, 0xA));
     for (unsigned j = 0; j < reserve; ++j)
-        if (B(kReserve + j) == b) B(kReserve + j) = a;
-    SetLong(At(kPortrait4 + 4u * static_cast<U>(row)), 0);
-    SetLong(At(kPortraitA + 6u * static_cast<U>(row)), 0);
-    SetW(kPortraitA + 6u * static_cast<U>(row) + 4, 0);
-    SetLong(At(kPortraitB + 6u * static_cast<U>(row)), 0);
-    SetW(kPortraitB + 6u * static_cast<U>(row) + 4, 0);
+        if (B(::bof3::Img(kReserve.v) + j) == b) B(::bof3::Img(kReserve.v) + j) = a;
+    SetLong(At(::bof3::Img(kPortrait4.v) + 4u * static_cast<U>(row)), 0);
+    SetLong(At(::bof3::Img(kPortraitA.v) + 6u * static_cast<U>(row)), 0);
+    SetW(::bof3::Img(kPortraitA.v) + 6u * static_cast<U>(row) + 4, 0);
+    SetLong(At(::bof3::Img(kPortraitB.v) + 6u * static_cast<U>(row)), 0);
+    SetW(::bof3::Img(kPortraitB.v) + 6u * static_cast<U>(row) + 4, 0);
     return 0xFF;
 }
 
@@ -1013,7 +1013,7 @@ extern "C" void __cdecl ConfigMenu_Open(void) {
     const unsigned char step = FieldS_State;
     const unsigned char cursor = static_cast<unsigned char>(MenuLists_Cursor);
     FieldS_State = static_cast<unsigned char>(step + 1);
-    B(kTimer) = 5;
+    B(::bof3::Img(kTimer.v)) = 5;
     FieldS_Step = 0;
     Rest2d_MenuSub = 2;
     Rest2f_ConfigCursor = cursor;
@@ -1038,7 +1038,7 @@ extern "C" void __cdecl ConfigMenu_Close(void) {
     });
     const unsigned char cursor = Rest2f_ConfigCursor;
     for (unsigned n = 7; n <= 10; ++n) B(Rec(n, 3)) = 2;
-    B(kTimer) = 0;
+    B(::bof3::Img(kTimer.v)) = 0;
     BattleE1_Mode = 1;
     FieldS_State = 0;
     FieldS_Step = 0;
@@ -1086,7 +1086,7 @@ extern "C" unsigned __cdecl Stat_AddClampedTo(unsigned short* stat, unsigned cap
 // counts the 0x80 bytes at 0x904574. Answers al.
 extern "C" unsigned char __cdecl AbilityList_CountSet(unsigned member, unsigned which, unsigned current) {
     const U m = member & 0xFF;
-    const U base = (current & 0xFF) == 0 ? CharacterRecords_addr + kCharacterStride * m : kWorking + kWorkingStride * m;
+    const U base = (current & 0xFF) == 0 ? ::bof3::Img(CharacterRecords_addr) + kCharacterStride * m : ::bof3::Img(kWorking.v) + kWorkingStride * m;
     U p;
     unsigned n = 10;
     switch (which & 0xFF) {
@@ -1095,7 +1095,7 @@ extern "C" unsigned char __cdecl AbilityList_CountSet(unsigned member, unsigned 
     case 2: p = base + 0x74; break;
     case 3: p = base + 0x7E; break;
     default:
-        p = 0x904574;
+        p = ::bof3::Img(0x904574);
         n = 0x80;
         break;
     }
@@ -1115,12 +1115,12 @@ extern "C" void __cdecl ItemTrade_TakeNeeds(void) {
     for (U k = 0; k < 3; ++k) {
         const int c = Effect1g_TradePick;
         const U row = 10u * AreaEntry_PendingFlags;
-        const U kind = B(kTradeKinds + static_cast<U>(c) + row);
-        if (B(kTradeNeeds + 8 * kind + k) == 0xFF) return;
-        const auto q = static_cast<signed char>(B(kTradeNeeds + 8 * kind + 3 + k));
+        const U kind = B(::bof3::Img(kTradeKinds.v) + static_cast<U>(c) + row);
+        if (B(::bof3::Img(kTradeNeeds.v) + 8 * kind + k) == 0xFF) return;
+        const auto q = static_cast<signed char>(B(::bof3::Img(kTradeNeeds.v) + 8 * kind + 3 + k));
         const U count = static_cast<U>(static_cast<std::uint16_t>(q * Effect1g_TradeQuantity));
-        const U kind2 = B(kTradeKinds + (static_cast<U>(c) & 0xF) + row);
-        const U item = static_cast<unsigned char>(B(kTradeNeeds + k + 8 * kind2) + 0x38);
+        const U kind2 = B(::bof3::Img(kTradeKinds.v) + (static_cast<U>(c) & 0xF) + row);
+        const U item = static_cast<unsigned char>(B(::bof3::Img(kTradeNeeds.v) + k + 8 * kind2) + 0x38);
         SH_CALL(Inventory_Remove)(0, item, count);
     }
 }
@@ -1138,7 +1138,7 @@ extern "C" void __cdecl Window_Kind1List(void) {
     if (MenuWindows_ListCount < 0) return;
     int n = 0;
     do {
-        const U y = (text & 0xFFFF0000u) | B(kListRows + static_cast<U>(n));
+        const U y = (text & 0xFFFF0000u) | B(::bof3::Img(kListRows.v) + static_cast<U>(n));
         text = Key(SH_CALL(Text_DrawImmediate)(0x3A, static_cast<int>(y), At(text)));
         ++n;
     } while (n <= MenuWindows_ListCount);
@@ -1149,7 +1149,7 @@ extern "C" void __cdecl Window_Kind1List(void) {
 extern "C" void __cdecl Window_Kind1Cursor(void) {
     const int c = AreaW0c_ChoiceAnswer;
     const unsigned char* const r = Cur();
-    const U y = B(kListRows + static_cast<U>(c));
+    const U y = B(::bof3::Img(kListRows.v) + static_cast<U>(c));
     const U hi = c < 0 ? 0xFFFF0000u : 0u;
     const U x = (hi | static_cast<std::uint16_t>(static_cast<short>(rv::As<records::WindowRecord>(r)->x) >> 4)) + 4u;
     SH_CALL(Menu_DrawHand)(static_cast<int>(x), static_cast<int>(y), 0);
@@ -1170,7 +1170,7 @@ extern "C" void __cdecl Window_Kind1Layout(void) {
         const unsigned char* text = At(MenuWindows_ListText);
         unsigned char n = 0;
         do {
-            B(kListRows + n) = lines;
+            B(::bof3::Img(kListRows.v) + n) = lines;
             for (bool more = true; more; ++text) {
                 const unsigned char c = *text;
                 switch (c) {
@@ -1220,8 +1220,8 @@ extern "C" void __cdecl Window_Kind1Layout(void) {
     if (last < 0) return;
     unsigned char add = 0, n = 0;
     do {
-        const unsigned char v = B(kListRows + n);
-        B(kListRows + n) = static_cast<unsigned char>(static_cast<unsigned char>(v * 13) + add + top);
+        const unsigned char v = B(::bof3::Img(kListRows.v) + n);
+        B(::bof3::Img(kListRows.v) + n) = static_cast<unsigned char>(static_cast<unsigned char>(v * 13) + add + top);
         add = static_cast<unsigned char>(add + 2);
         ++n;
     } while (static_cast<int>(n) <= MenuWindows_ListCount);
@@ -1252,8 +1252,8 @@ extern "C" void __cdecl Win1_TitleStrip(void) {
     r = Cur();
     const U v = Word(r + 0x10);
     if (v == 0) return;
-    const U at = kPools + 2u * static_cast<U>(static_cast<int>(static_cast<short>(v)));
-    const unsigned char* const text = At(kPools + W(at));
+    const U at = ::bof3::Img(kPools.v) + 2u * static_cast<U>(static_cast<int>(static_cast<short>(v)));
+    const unsigned char* const text = At(::bof3::Img(kPools.v) + W(at));
     SH_CALL(Text_DrawAt)(static_cast<int>((rv::As<records::WindowRecord>(r)->x + 7u) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(r)->y + 3u) & 0xFFFF), 0, 0xFF,
                          text);
 }
@@ -1289,21 +1289,21 @@ extern "C" void __cdecl Win1_DrawShisuPanel(unsigned char* rec) {
         const unsigned colour = held != 0 ? 0 : 7;
         const unsigned dim = held != 0 ? 0 : 1;
         if (i != rec[0xA]) {
-            Row(Wx(rec) + 7, (13u * (i + 2u) + rv::As<records::WindowRecord>(rec)->y) & 0xFFFF, colour, 0, B(kShisuIds + i), held, dim);
+            Row(Wx(rec) + 7, (13u * (i + 2u) + rv::As<records::WindowRecord>(rec)->y) & 0xFFFF, colour, 0, B(::bof3::Img(kShisuIds.v) + i), held, dim);
             continue;
         }
-        if (held != 0) Row(Wx(rec) + 7, (13u * (i + 2u) + rv::As<records::WindowRecord>(rec)->y) & 0xFFFF, 7, 0, B(kShisuIds + i), held, 1);
+        if (held != 0) Row(Wx(rec) + 7, (13u * (i + 2u) + rv::As<records::WindowRecord>(rec)->y) & 0xFFFF, 7, 0, B(::bof3::Img(kShisuIds.v) + i), held, 1);
         const unsigned char again = At(static_cast<U>(Long(rec + 0x20)))[i];
-        Row(Wx(rec) + 7, ((13u * i + rv::As<records::WindowRecord>(rec)->y) & 0xFFFF) + 0x18u, colour, 0, B(kShisuIds + i), again, dim);
+        Row(Wx(rec) + 7, ((13u * i + rv::As<records::WindowRecord>(rec)->y) & 0xFFFF) + 0x18u, colour, 0, B(::bof3::Img(kShisuIds.v) + i), again, dim);
     }
     {
         unsigned n = 0;
-        while (B(kShisuTitle + n) != 0) ++n;
+        while (B(::bof3::Img(kShisuTitle.v) + n) != 0) ++n;
         const int x = static_cast<int>((6u * (13u - n) + rv::As<records::WindowRecord>(rec)->x) & 0xFFFF);
-        SH_CALL(Text_DrawAt)(x, static_cast<int>((rv::As<records::WindowRecord>(rec)->y + 7u) & 0xFFFF), 0, 0x10, At(kShisuTitle));
+        SH_CALL(Text_DrawAt)(x, static_cast<int>((rv::As<records::WindowRecord>(rec)->y + 7u) & 0xFFFF), 0, 0x10, At(::bof3::Img(kShisuTitle.v)));
     }
-    SH_CALL(Menu_DrawPieces)(Wx(rec), Wy(rec), At(kShisuPiecesA), 1);
-    SH_CALL(Menu_DrawPieces)(Wx(rec), Wy(rec), At(kShisuPiecesB), 1);
+    SH_CALL(Menu_DrawPieces)(Wx(rec), Wy(rec), At(::bof3::Img(kShisuPiecesA.v)), 1);
+    SH_CALL(Menu_DrawPieces)(Wx(rec), Wy(rec), At(::bof3::Img(kShisuPiecesB.v)), 1);
     for (unsigned i = 0; i < 10; ++i) Piece(Wx(rec) + static_cast<int>(8 * i + 0x28), Wy(rec), 1);
     for (unsigned i = 0; i < 17; ++i) Piece(Wx(rec), Wy(rec) + static_cast<int>(8 * i + 0x18), 4);
     Piece(Wx(rec) + 0x90, Wy(rec) + 0x18, 0x20);
@@ -1433,16 +1433,16 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
     const unsigned char top = SH_CALL(Menu_ListScroll)(rec + 0xB, &offset, &moving, rec + 0x12);
     const unsigned rows = moving + 9u;
     const U category = rec[0xA];
-    const unsigned char* ids = At(static_cast<U>(Long(At(kIdLists + 4 * category)))) + top;
-    const unsigned char* counts = At(static_cast<U>(Long(At(kCountLists + 4 * category)))) + top;
+    const unsigned char* ids = At(static_cast<U>(Long(At(::bof3::Img(kIdLists.v) + 4 * category)))) + top;
+    const unsigned char* counts = At(static_cast<U>(Long(At(::bof3::Img(kCountLists.v) + 4 * category)))) + top;
     U y = static_cast<std::uint16_t>(static_cast<signed char>(offset) + rv::As<records::WindowRecord>(rec)->y) + 0x1Au;
     for (unsigned char i = 0; i < rows; ++i, ++ids, ++counts, y += 0xD) {
         const unsigned char item = *ids;
         if (item == 0) continue;
         unsigned char dim = 1;
         if (rec[9] == 0) {
-            const unsigned char who = B(Cond_Flags_addr + 0xd2 + static_cast<std::uint32_t>(BattleActorCopies_ItemActor));
-            const unsigned char member = B(kEffectState + who);
+            const unsigned char who = B(::bof3::Img(Cond_Flags_addr) + 0xd2 + static_cast<std::uint32_t>(BattleActorCopies_ItemActor));
+            const unsigned char member = B(::bof3::Img(kEffectState.v) + who);
             dim = SH_CALL(Item_CanUse)(rec[8], member, rec[0xA], item) ? 0 : 1;
         }
         unsigned char colour = dim ? 7 : 0;
@@ -1470,7 +1470,7 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
         const U cat = rec[0xA];
         const unsigned grey = rec[9] ? 7 : 0;
         const int y7 = static_cast<int>((rv::As<records::WindowRecord>(rec)->y + 7u) & 0xFFFF);
-        const unsigned char* const title = At(static_cast<U>(Long(At(kListTitles + 4 * cat))));
+        const unsigned char* const title = At(static_cast<U>(Long(At(::bof3::Img(kListTitles.v) + 4 * cat))));
         const unsigned n = SH_CALL(Text_CharCount)(title);
         const int x = static_cast<int>((6u * (13u - n) + rv::As<records::WindowRecord>(rec)->x) & 0xFFFF);
         const U site = g_title_call;
@@ -1481,14 +1481,14 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
         const unsigned char cat = rec[0xA];
         const U room = cat == 4 ? 0x20 : 0x80;
         const unsigned char used = SH_CALL(Inventory_CountUsed)(cat);
-        SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(kPrint)), reinterpret_cast<const char*>(At(kUsedFormat)),
+        SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(kPrint.v))), reinterpret_cast<const char*>(At(::bof3::Img(kUsedFormat.v))),
                              static_cast<U>(used), room);
         const unsigned grey = rec[9] ? 7 : 0;
         SH_CALL(Text_DrawFont8)(static_cast<int>((rv::As<records::WindowRecord>(rec)->x + 0x55u) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(rec)->y + 0x92u) & 0xFFFF),
-                                static_cast<int>(grey), At(kPrint));
+                                static_cast<int>(grey), At(::bof3::Img(kPrint.v)));
     }
-    SH_CALL(Menu_DrawPieces)(Wx(rec), Wy(rec), At(rec[0x10] & 2 ? kListPieces2 : kListPieces0), 1);
-    SH_CALL(Menu_DrawPieces)(Wx(rec), Wy(rec), At(rec[0x10] & 1 ? kListPieces3 : kListPieces1), 1);
+    SH_CALL(Menu_DrawPieces)(Wx(rec), Wy(rec), At(rec[0x10] & 2 ? ::bof3::Img(kListPieces2.v) : ::bof3::Img(kListPieces0.v)), 1);
+    SH_CALL(Menu_DrawPieces)(Wx(rec), Wy(rec), At(rec[0x10] & 1 ? ::bof3::Img(kListPieces3.v) : ::bof3::Img(kListPieces1.v)), 1);
     {
         const U w = rv::As<records::ItemListWindow>(rec)->arrows;
         if ((w & 0xF0) == 0) rv::As<records::ItemListWindow>(rec)->arrows = 0;
@@ -1507,7 +1507,7 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
     {
         const U cat = rec[0xA];
         const U total = cat == 4 ? 0x20 : 0x80;
-        SH_CALL(Menu_DrawScrollBar)(At(static_cast<U>(Long(At(kIdLists + 4 * cat)))), rec[0xB], Wx(rec) + 0x90, Wy(rec) + 0x18, 9,
+        SH_CALL(Menu_DrawScrollBar)(At(static_cast<U>(Long(At(::bof3::Img(kIdLists.v) + 4 * cat)))), rec[0xB], Wx(rec) + 0x90, Wy(rec) + 0x18, 9,
                                     total, 0x74);
     }
 }

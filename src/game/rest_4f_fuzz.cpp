@@ -428,7 +428,7 @@ void Seed(unsigned k) {
     unsigned char* const s = Sprite_Current;
     // the menu block and the settings
     B(Rest2d_MenuSub_addr) = static_cast<unsigned char>(sh::Next() % at::kConfigOpenCount);
-    B(at::kCounter) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, sh::Next()));
+    B(::bof3::Img(at::kCounter.v)) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, sh::Next()));
     B(MenuLists_Cursor_addr) = CursorFor(k, sh::Next());
     if (sh::Half()) {
         static const U kKeys[] = {0, 0x1000, 0x4000, 0xA000, 0x2000, 0x8000, 0x800, 0x20, 0x40, 0x10, 0x80, 0x24, 0xFC};
@@ -446,7 +446,7 @@ void Seed(unsigned k) {
     case k08Start:
     case k08Line: break;
     case k08Trace:
-    case k08Two: B(at::kChapterByte4A) = static_cast<unsigned char>(PickOf(0x32, 0x34, sh::Next())); break;
+    case k08Two: B(::bof3::Img(at::kChapterByte4A.v)) = static_cast<unsigned char>(PickOf(0x32, 0x34, sh::Next())); break;
     case k09Open1: rv::As<records::EffectObject>(s)->work_18 = static_cast<std::int32_t>(PickOf(0x58, 0x50, 0x60, sh::Next())); break;
     case k09Open2: rv::As<records::EffectObject>(s)->work_1c = static_cast<std::int32_t>(PickOf(0x10, 0x90, 0x20, 0xA0, sh::Next())); break;
     case k09Open3: s[0xB] = static_cast<unsigned char>(PickOf(0x50, 0x40, sh::Next())); break;
@@ -456,7 +456,7 @@ void Seed(unsigned k) {
     case k09Open7: s[7] = static_cast<unsigned char>(PickOf(0x58, 0x50, sh::Next())); break;
     case k09Open8:
         rv::As<records::EffectObject>(s)->work_20 = static_cast<std::int32_t>(PickOf(0x8, 0x58, 0x10, sh::Next()));
-        B(at::kChapterCount) = static_cast<unsigned char>(sh::Next());
+        B(::bof3::Img(at::kChapterCount.v)) = static_cast<unsigned char>(sh::Next());
         break;
     case k09Spin:
     case k09Blades:
@@ -491,7 +491,7 @@ void Seed(unsigned k) {
     case k02Tint3:
     case k02Dark:
     case k02Wait:
-        SetWord(P(at::kKind02Word), PickOf(0x37, 0x38, 0x39, 0x8000, 0x7FFF, sh::Next()));
+        SetWord(P(::bof3::Img(at::kKind02Word.v)), PickOf(0x37, 0x38, 0x39, 0x8000, 0x7FFF, sh::Next()));
         B(ObjTrio_addr + 2) = static_cast<unsigned char>(PickOf(1, 0, 2, sh::Next()));
         if (k == k02Bright) s[0x5D] = static_cast<unsigned char>(PickOf(0xB0, 0xA0, 0x70, 0x6F, sh::Next()));
         if (k == k02Dark) s[0x5D] = static_cast<unsigned char>(PickOf(0x90, 0x80, 0xA0, sh::Next()));
@@ -568,7 +568,7 @@ void Disturb(U h) {
         break;
     }
     case 3:
-        if (v & 1) B(at::kCounter) = static_cast<unsigned char>((v >> 1) % 6);
+        if (v & 1) B(::bof3::Img(at::kCounter.v)) = static_cast<unsigned char>((v >> 1) % 6);
         else B(MenuLists_Cursor_addr) = CursorFor(g_current, v >> 1);
         break;
     case 4: {
@@ -576,7 +576,7 @@ void Disturb(U h) {
         B(kCells[v % 5]) = static_cast<unsigned char>((v >> 3) & 3);
         break;
     }
-    case 5: B(at::kChapterByte4A) = static_cast<unsigned char>((v & 1) ? ((v & 2) ? 0x32u : 0x34u) : v >> 2); break;
+    case 5: B(::bof3::Img(at::kChapterByte4A.v)) = static_cast<unsigned char>((v & 1) ? ((v & 2) ? 0x32u : 0x34u) : v >> 2); break;
     default: Input_Pressed = static_cast<unsigned short>(v); break;
     }
 }

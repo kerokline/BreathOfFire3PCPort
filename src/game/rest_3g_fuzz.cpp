@@ -291,7 +291,7 @@ void Seed(unsigned k) {
     switch (k) {
     case kACFadeIn:
     case kACFadeOut: s[9] = static_cast<unsigned char>(PickOf(1, 2, 7, 8, 9, 0, sh::Next())); break;
-    case kADRise: Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(0xB, 0xB, 0xA, 0xC, sh::Next())); break;
+    case kADRise: Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>(PickOf(0xB, 0xB, 0xA, 0xC, sh::Next())); break;
     case kBALine: rv::As<records::EffectObject>(s)->screen_x = PickOf(0x149, 0x149, 0x14A, 0x148, 0, sh::Next()); break;
     case kWinding:
         // three screen points: small floats, often two equal, the cross product's sign either way
@@ -407,7 +407,7 @@ void Disturb(U h) {
     case 1:
         if (sh::InRegions(s, 0x80)) rv::As<records::EffectObject>(s)->screen_x = (v & 1) ? 0x149u : v >> 1;
         break;
-    case 2: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 0xB : v >> 1); break;
+    case 2: Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>((v & 1) ? 0xB : v >> 1); break;
     case 3: Mem(Music_Track_addr)[0] = static_cast<unsigned char>((v & 1) ? Mem(AreaW1f_MusicCurrent_addr)[0] : v >> 1); break;
     case 4: MapView_Redraw = static_cast<unsigned char>(v % 4); break;
     case 5: SetWord(Mem((v & 1) ? Camera_Angles_addr : Cond_AngleFB_addr), (v & 2) ? ((v & 1) ? 0xFD56u : 0x200u) : v >> 2); break;
