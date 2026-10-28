@@ -92,13 +92,13 @@ int S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 // Field_State's party slot + 1 as the originals compute it: (Field_State -
 // ObjTrio) / 0x14C (a signed divide), + 1, a byte.
 unsigned char FieldStateSlot() {
-    const auto d = static_cast<std::int32_t>(Addr(Field_State) - ObjTrio_addr);
+    const auto d = static_cast<std::int32_t>(Addr(Field_State) - ::bof3::Img(ObjTrio_addr));
     return static_cast<unsigned char>(d / 0x14C + 1);
 }
 // Field_ActiveMember's index among Sprite_ObjectsExtra's records as the
 // originals compute it: (Field_ActiveMember - 0x802000) / 0xA4, signed.
 std::int32_t ActiveMemberExtra() {
-    return static_cast<std::int32_t>(Addr(Field_ActiveMember) - Sprite_ObjectsExtra_addr) / static_cast<std::int32_t>(at::kExtraStride);
+    return static_cast<std::int32_t>(Addr(Field_ActiveMember) - ::bof3::Img(Sprite_ObjectsExtra_addr)) / static_cast<std::int32_t>(at::kExtraStride);
 }
 
 // ---- area 111's grid ----
@@ -780,8 +780,9 @@ extern "C" void __cdecl Area111_StepToExtra(void) {
     const unsigned char* const cur = Sprite_Current;
     const U k = static_cast<U>(rv::As<records::SpriteHead>(cur)->work_18);
     const U record = ::bof3::Img(Sprite_ObjectsExtra_addr) + k * at::kExtraStride;
-    if (record < at::kDataStart || record > at::kDataEnd - 0x3C)
-        bof3::Fatal("Area111_StepToExtra: extra object %u lies at 0x%X, outside the image's .data", k, record);
+    if (record < ::bof3::Img(at::kDataStart) || record > ::bof3::Img(at::kDataEnd) - 0x3C)
+        bof3::Fatal("Area111_StepToExtra: extra object %u lies at 0x%X (VA 0x%X), outside the image's .data", k, record,
+                    ::bof3::VaOf(record));
     const unsigned char* const extra = Mem(record);
     const U z0 = static_cast<U>(Long(cur + 0x38));
     U x = static_cast<U>(rv::As<records::SpriteObject>(extra)->x);

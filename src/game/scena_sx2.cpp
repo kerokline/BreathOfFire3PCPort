@@ -217,7 +217,7 @@ extern "C" void __cdecl Member_SetState2_8(unsigned member, unsigned value) {
 // before Task_Restart(Boot_Task).
 // PSX 0x8015D8AC (pairs_propagated "call").
 extern "C" void __cdecl Sound_StopChannels(void) {
-    for (std::uint32_t p = Addr(Sound_Channels); p < at::kChannelsEnd; p += 4) {
+    for (std::uint32_t p = Addr(Sound_Channels); p < ::bof3::Img(at::kChannelsEnd); p += 4) {
         const std::uint32_t buffer = U(Long(At(p)));
         if (buffer == 0) continue;
         SH_CALL(SndBuf_Stop)(At(buffer));

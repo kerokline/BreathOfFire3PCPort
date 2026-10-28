@@ -12,19 +12,15 @@
 // and a code word known only at run time - a VA or a word the game holds -
 // becomes one through CodePlace(word).
 //
-// Stage B of the relocatable-image round (docs/relocatable-image-round.md 3):
-// the base is 0x400000, so Img and Code are the identity, and the machine code
-// must be the same as with the bare literal (tools/codegen_same.py). For that
-// they are consteval, not constexpr: the front end then writes the folded
-// address into the IR, as it does for a literal. A constexpr call is folded
-// only once the optimiser inlines it, after the early passes have already run
-// on a call - measured on this branch, 2026-10-28: the generated header
-// spelled through constexpr helpers changed the code of 18 objects
-// (mode_tasks.cpp's Title_DrawLogo the first: a different register
-// allocation), through consteval ones none. Stage C makes ImageBase() a
-// run-time value in both hosts (design 1.4) and Code() the bound function
-// (design 4.4); the names stay, and the consteval goes with that one decision.
-// Meanwhile a VA computed at run time is not an argument here.
+// Stage B of the relocatable-image round (docs/relocatable-image-round.md 3)
+// wrote every place through these helpers while they were consteval
+// identities, so the machine code stayed the same (tools/codegen_same.py).
+// Stage C makes ImageBase() a run-time value in both hosts (design 1.4): the
+// helpers are inline functions of it, and a place is no longer a constant
+// expression - a table of places is initialised at run time, and a VA kept
+// for a constant context (a case label, a static_assert, an asm "i" operand)
+// stays a name. Stage C1 moves the stub page with the image (mode S: Code is
+// Img); stage C2 binds code words to our functions (mode B, design 4.4).
 //
 // Header-only and free of Windows: the generated symbol header includes it,
 // and so does the launcher (src/launcher/exe_image.cpp).
@@ -45,36 +41,68 @@ namespace image {
 inline constexpr std::uint32_t kBase = 0x400000;
 }  // namespace image
 
-// Where the image is. A function rather than a constant so the name survives
-// stage C, where it is read once at run time (design 2.2). The literal is
-// image::kBase's value: in stage B the image runs where it was linked.
-consteval std::uint32_t ImageBase() { return 0x400000; }
+// Where the image is (design 1.4): a run-time value in both hosts, since one
+// bof3x.dll serves both. Hosted it reads 0x400000 (BOF3.exe is fixed there);
+// in the exe host, wherever bof3x.exe's header put it - 0x400000 for the
+// player's executable, another base for a developer's (make_exe.py
+// --image-base, the launcher's BOF3X_IMAGEBASE). It is the main module's
+// base, what GetModuleHandle(nullptr) answers, read from the process
+// environment block (PEB +8, ImageBaseAddress; fs:0x30 holds the PEB): valid
+// from before any DLL initialises, so also in the namespace-scope tables built
+// from places that run in the DLL's CRT start-up, before DllMain - with no
+// variable to set first and no test of one at each of the ~17,000 places.
+// The asm is not volatile and touches no memory the compiler knows of, so a
+// function reads it once (the value never changes in a process's life).
+// DetectHost checks it against GetModuleHandle(nullptr), the hosts'
+// identities and the 16 MB window (host.cpp). The launcher, which includes
+// this header through the generated one, never places an address.
+[[gnu::always_inline]] inline std::uint32_t ImageBase() {
+    std::uint32_t base;
+    asm("movl %%fs:0x30, %0\n\t"
+        "movl 8(%0), %0"
+        : "=r"(base));
+    return base;
+}
 
 // A VA in the image's data, as a place.
-consteval std::uint32_t Img(std::uint32_t va) { return ImageBase() + (va - image::kBase); }
+[[gnu::always_inline]] inline std::uint32_t Img(std::uint32_t va) { return ImageBase() + (va - image::kBase); }
 
-// A VA in the image's code, as a place to call. The identity in stage B.
-consteval std::uint32_t Code(std::uint32_t va) { return va; }
+// A place in the image as its VA, for a message: the logs, symbols.toml and
+// the tools speak VAs (docs/relocatable-image-design.md 8, 9).
+[[gnu::always_inline]] inline std::uint32_t VaOf(std::uint32_t place) { return place - ImageBase() + image::kBase; }
+
+// The linked range of Capcom's code, 0x401000..0x5C4000 (BOF3.exe's .text to
+// .rdata; .stub's extent in bof3x.exe, exe_layout.h).
+namespace image {
+inline constexpr std::uint32_t kCodeLo = 0x401000;
+inline constexpr std::uint32_t kCodeHi = 0x5C4000;
+}  // namespace image
+
+// A VA in the image's code, as a place to call. Stage C1 (mode S, design 6.1):
+// the stub page moves with the image, so a code VA's place is Img(va) - the
+// jmp Inject wrote there, or int3.
+[[gnu::always_inline]] inline std::uint32_t Code(std::uint32_t va) { return Img(va); }
 
 // A code word known only at run time, as a place to call (design 4.4: the
 // call-through helpers' fix point). Two kinds of word reach it, and in our
 // source they look alike: a code VA (a cell of one of our own constant tables
 // picked by an index, a helper's parameter, a ternary of two constants), and a
 // word the game holds (a cell of a .data step table, an operand read from the
-// code), which is already a place - stage C binds those cells to our functions
-// (mode B) or rebases them (mode S). Code() cannot take either: it is consteval.
+// code), which is already a place - rebased by the loader (mode S), or a
+// pointer of ours.
 //
-// Stage B: the identity. Stage C tells the two apart by the value: a word in
-// the linked code range 0x401000..0x5C4000 is a VA and becomes Code(va) at run
-// time (mode B: the bound function, a Fatal naming the VA on a miss; mode S:
-// its place in the moved stub page); any other word is a place and passes
-// through. That holds while no place of ours lies in the linked code range:
-// at base 0x400000 the range is the image's own stub page, and at a forced
-// base the fence reserves it (design 1.5), which the loader must check.
-//
-// constexpr and always_inline so it leaves no call behind (the gate,
-// tools/codegen_same.py); a constant argument belongs in Code(), not here.
-[[gnu::always_inline]] constexpr std::uint32_t CodePlace(std::uint32_t word) { return word; }
+// Told apart by the value: a word in the linked code range
+// image::kCodeLo..kCodeHi is a VA and becomes Code(va); any other word is a
+// place and passes through. That holds while no place of ours lies in the
+// linked code range: at base 0x400000 the range is the image's own stub page
+// (Img is the identity there, so a word read from the game is its own place);
+// a moved image lies wholly off the linked span 0x400000..0x98F000 (host.cpp
+// refuses any other base), the developer launcher and the loader fence the
+// span's free parts (launcher.cpp FenceLinkedSpan, exe_host.cpp Fence), and
+// a module found in the linked code range is a Fatal.
+[[gnu::always_inline]] inline std::uint32_t CodePlace(std::uint32_t word) {
+    return word - image::kCodeLo < image::kCodeHi - image::kCodeLo ? Code(word) : word;
+}
 
 // --- A VA as a type, bof3::image::Va (design 2.2; RB0's prototype) ----------
 //
@@ -122,8 +150,8 @@ constexpr std::int32_t operator-(CodeVa a, CodeVa b) { return static_cast<std::i
 constexpr bool operator==(CodeVa a, CodeVa b) { return a.v == b.v; }
 }  // namespace image
 
-// A Va as a place. constexpr, not consteval: a Va may be computed at run time
-// (a table's VA plus a scaled index).
-constexpr std::uint32_t Img(image::Va va) { return ImageBase() + (va.v - image::kBase); }
+// A Va as a place: a Va may be computed at run time (a table's VA plus a
+// scaled index).
+[[gnu::always_inline]] inline std::uint32_t Img(image::Va va) { return Img(va.v); }
 
 }  // namespace bof3

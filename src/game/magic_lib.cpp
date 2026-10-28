@@ -342,7 +342,7 @@ MLIB_EXPORT void __cdecl MagicFx_LinkByDepth(unsigned x, unsigned z, int* keys, 
     const unsigned sz = size & 0xFF;
     unsigned char* const next_cell = reinterpret_cast<unsigned char*>(&Gfx_PacketNext);
     if (depth < 0 || depth >= kDepths ||
-        kPoolEnd + (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) <= U32(next_cell) + sz) {
+        ::bof3::Img(kPoolEnd) + (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) <= U32(next_cell) + sz) {
         SetLong(next_cell, I32(U32(next_cell) - n * sz));
         return;
     }

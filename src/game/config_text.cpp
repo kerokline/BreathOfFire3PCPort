@@ -94,8 +94,11 @@ constexpr LabelSite kLabelSites[kLabels] = {
 // The values of ours (ConfigText_Operands), the original's until a patch goes
 // in; and, for the hosted check, the bytes of each multi-byte patch as they
 // stand (the original's, then the replacement).
+// The labels are the strings' places (Config_DrawRowLabel draws them); hosted,
+// where the code holds the VAs, Img is the identity.
 ConfigTextOperands g_ops = {
-    {0x669F0C, 0x669F18, 0x669F24, 0x669F2C, 0x669F34, 0x669F3C},
+    {::bof3::Img(0x669F0C), ::bof3::Img(0x669F18), ::bof3::Img(0x669F24), ::bof3::Img(0x669F2C), ::bof3::Img(0x669F34),
+     ::bof3::Img(0x669F3C)},
     0x3A, false, false, 0x516B30, 0x516B30, false, 0x20, 0x68, true, 0xC,
 };
 std::uint8_t g_anchor_now = 0x3A;
@@ -244,7 +247,7 @@ extern "C" void __cdecl Config_DrawControllerCell(int x, int y, unsigned int wor
         }
         SH_CALL(Text_DrawAt)(x + 4, y, c.color, 3, glyph);
         SH_CALL(Text_DrawAt)(x - 0x10, y, 0, c.letter_count,
-                             reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(c.letter)));
+                             reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(c.letter))));
         return;
     }
     if (!(word & 0x100)) return;
@@ -340,9 +343,9 @@ void ConfigText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint3
         std::memcpy(g_ctrl[i], s, std::strlen(s) + 1);
         auto* entry = reinterpret_cast<std::uint32_t*>(
             static_cast<std::uintptr_t>(::bof3::Img(kCtrlPointers.v) + i * sizeof(std::uint32_t)));
-        if (*entry != kCtrlExpected[i])
-            bof3::Fatal("config: controller pointer %u holds 0x%08X, expected 0x%08X", (unsigned)i,
-                        (unsigned)*entry, (unsigned)kCtrlExpected[i]);
+        if (*entry != ::bof3::Img(kCtrlExpected[i]))   // a pointer word: the place
+            bof3::Fatal("config: controller pointer %u holds 0x%08X, expected 0x%08X (VA 0x%08X)", (unsigned)i,
+                        (unsigned)*entry, (unsigned)::bof3::Img(kCtrlExpected[i]), (unsigned)kCtrlExpected[i]);
         *entry = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(g_ctrl[i]));
     }
 

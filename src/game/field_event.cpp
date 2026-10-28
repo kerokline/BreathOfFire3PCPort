@@ -325,7 +325,7 @@ extern "C" void __cdecl Sprite_LoadPalette(unsigned short* dst, unsigned index) 
     std::memcpy(&bank, Sprite_Current + 0x4C, sizeof bank);
     const unsigned char* const offsets = bank + Long(bank + 4);
     const std::uint32_t d = Address(dst);
-    const auto half = static_cast<std::int32_t>(d - Gfx_ClutStripSource_addr) >> 1;
+    const auto half = static_cast<std::int32_t>(d - ::bof3::Img(Gfx_ClutStripSource_addr)) >> 1;
     unsigned char* twin = At(::bof3::Img(Gfx_ClutStrip_addr) + static_cast<std::uint32_t>(half) * 2u);
     const unsigned char* from = offsets + Long(offsets + (index & 0xFF) * 4u);
     auto* to = reinterpret_cast<unsigned char*>(dst);

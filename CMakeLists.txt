@@ -56,6 +56,21 @@ add_custom_command(
   VERBATIM)
 add_custom_target(bof3x_symbols DEPENDS "${_gen_hdr}")
 
+# --- recipes/exe-pointers.tsv -> bof3/rebase.gen.h ----------------------------
+# The pointer words of .data the exe host moves with the image when bof3x.exe
+# lies at another base (docs/relocatable-image-design.md 3): addresses and
+# counts only, as symbols.gen.h.
+set(_rebase_hdr "${_gen_dir}/bof3/rebase.gen.h")
+add_custom_command(
+  OUTPUT "${_rebase_hdr}"
+  COMMAND "${BOF3X_PYTHON}" "${CMAKE_SOURCE_DIR}/tools/gen_rebase.py"
+          --pointers "${CMAKE_SOURCE_DIR}/recipes/exe-pointers.tsv" --out "${_rebase_hdr}"
+  DEPENDS "${CMAKE_SOURCE_DIR}/recipes/exe-pointers.tsv"
+          "${CMAKE_SOURCE_DIR}/tools/gen_rebase.py"
+  COMMENT "Generating bof3/rebase.gen.h from recipes/exe-pointers.tsv"
+  VERBATIM)
+add_custom_target(bof3x_rebase DEPENDS "${_rebase_hdr}")
+
 # --- recipes/suites.toml -> launcher/suites.gen.h ----------------------------
 # The launcher's three suites (docs/launcher-suites.md): the catalogue, checked
 # against recipes/opt.toml and fixtures.toml, as C++ constants.
@@ -726,7 +741,7 @@ add_library(bof3x SHARED
   src/game/crt_rest.cpp
   src/game/crt_rest_fuzz.cpp
   src/hook/bof3x.rc)
-add_dependencies(bof3x bof3x_symbols)
+add_dependencies(bof3x bof3x_symbols bof3x_rebase)
 target_include_directories(bof3x PRIVATE src third_party "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
 # The Direct3D 11 render backend (docs/render-backend.md): the OS's own
@@ -778,6 +793,32 @@ add_custom_command(
   COMMENT "Writing and verifying bof3x.exe (tools/make_exe.py)"
   VERBATIM)
 add_custom_target(bof3x_exe ALL DEPENDS "${_exe_stamp}")
+
+# The same executable at base 0xA00000, for the relocatable image's proof
+# (docs/relocatable-image-design.md 1.5): its span 0xA00000..0xF8F000 lies in
+# the 16 MB window and off Capcom's range 0x400000..0x98F000, which the engine
+# then fences, so an address left absolute faults at its own VA. Started only
+# by the launcher's developer switch BOF3X_IMAGEBASE=0xA00000; never shipped.
+set(_exe_moved_out "${CMAKE_BINARY_DIR}/bof3x-A00000.exe")
+set(_exe_moved_stamp "${CMAKE_BINARY_DIR}/bof3x_exe_A00000.verified")
+add_custom_command(
+  OUTPUT "${_exe_moved_out}" "${_exe_moved_stamp}"
+  COMMAND "${BOF3X_PYTHON}" "${CMAKE_SOURCE_DIR}/tools/make_exe.py"
+          --layout "${CMAKE_SOURCE_DIR}/src/hook/exe_layout.h"
+          --dll "$<TARGET_FILE:bof3x>"
+          --version "${PROJECT_VERSION}" --version-tag "${BOF3X_VERSION_TAG}"
+          --image-base 0xA00000
+          --out "${_exe_moved_out}"
+  COMMAND "${CMAKE_COMMAND}" -E touch "${_exe_moved_stamp}"
+  DEPENDS bof3x
+          "${CMAKE_SOURCE_DIR}/tools/make_exe.py"
+          "${CMAKE_SOURCE_DIR}/tools/pe_read.py"
+          "${CMAKE_SOURCE_DIR}/src/hook/exe_layout.h"
+          "${CMAKE_SOURCE_DIR}/data/icon/bof3x.ico"
+          "${_gen_dir}/version.gen.h"
+  COMMENT "Writing and verifying bof3x-A00000.exe (tools/make_exe.py --image-base)"
+  VERBATIM)
+add_custom_target(bof3x_exe_moved ALL DEPENDS "${_exe_moved_stamp}")
 
 # --- the launcher ------------------------------------------------------------
 # The settings dialog is a Win32 DIALOGEX resource driven by DialogBoxParam:

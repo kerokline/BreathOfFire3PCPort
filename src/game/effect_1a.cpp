@@ -82,7 +82,7 @@ void Run(const char* who, U table, unsigned entries, unsigned state) {
     if (state >= entries)
         bof3::Fatal("%s: state byte +1 is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/effect_1a.md section 6)",
-                    who, state, entries, (unsigned)table);
+                    who, state, entries, (unsigned)::bof3::VaOf(table));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * state)))();
 }
 
@@ -98,7 +98,7 @@ void RecordHandler(const char* who, U slot) {
     if (handler == 0)
         bof3::Fatal("%s: world map record %u has no handler at +0x%X (area 104's record) - the original jumps to 0 "
                     "(docs/effect_1a.md section 6)",
-                    who, (unsigned)index, (unsigned)(slot - 0x653910));
+                    who, (unsigned)index, (unsigned)(slot - ::bof3::Img(0x653910)));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(handler))();
 }
 
@@ -305,10 +305,10 @@ U OptionBits() {
 
 // original 0x462B00 (Effect_KindHandlers 0xE): the world map record's +4
 // handler by WorldMap_RecordIndex's low byte (Area33_Record04Run on Yraall's).
-extern "C" void __cdecl EffectKind0E_WorldMap(void) { RecordHandler("EffectKind0E_WorldMap", WorldMap_Records_addr + 0x4); }
+extern "C" void __cdecl EffectKind0E_WorldMap(void) { RecordHandler("EffectKind0E_WorldMap", ::bof3::Img(WorldMap_Records_addr) + 0x4); }
 
 // original 0x462B20 (Effect_KindHandlers 0x16): the record's +8 handler.
-extern "C" void __cdecl EffectKind16_WorldMap(void) { RecordHandler("EffectKind16_WorldMap", WorldMap_Records_addr + 0x8); }
+extern "C" void __cdecl EffectKind16_WorldMap(void) { RecordHandler("EffectKind16_WorldMap", ::bof3::Img(WorldMap_Records_addr) + 0x8); }
 
 // original 0x462B60 (Effect_KindHandlers 0x5C): Area104_Kind5CRun in area
 // 0x68, Area121_Kind5CRun anywhere else (both tail jumps).
@@ -349,7 +349,7 @@ extern "C" void __cdecl EffectKind1A_Run(void) { Run("EffectKind1A_Run", ::bof3:
 // EffectKind0F_States by +1.
 extern "C" void __cdecl EffectKind0F_Run(void) {
     unsigned char* const s = S();
-    if (Key(s) != (Effect_Objects_addr + 0x180) && Effect_Objects[3].state <= 3) {
+    if (Key(s) != (::bof3::Img(Effect_Objects_addr) + 0x180) && Effect_Objects[3].state <= 3) {
         SH_CALL(Effect_Release)();
         return;
     }
@@ -859,8 +859,8 @@ extern "C" void __cdecl EffectKind03_Fade(void) {
 // - drawn by EffectHud_DrawCount at (record 0's word +0x2E + 0xA, its dword
 // +0x30 - 0x18), slot 2. PSX 0x801D1F38 (table-anchored).
 extern "C" void __cdecl EffectKind03_ShowName(void) {
-    const U name = (Frame_Counter & 0x40) != 0 ? at::kAccessoryNames + (L(::bof3::Img(at::kAccessoryA.v)) & 0xFF) * 0x18u
-                                               : at::kAccessoryNames + CharStats_ExtraItem * 0x18u;
+    const U name = (Frame_Counter & 0x40) != 0 ? ::bof3::Img(at::kAccessoryNames) + (L(::bof3::Img(at::kAccessoryA.v)) & 0xFF) * 0x18u
+                                               : ::bof3::Img(at::kAccessoryNames) + CharStats_ExtraItem * 0x18u;
     DrawText(0x8A, 0xC8, 0, FishingText_NameCount(), name);   // DIV-0069: 12 under a Latin overlay, else 8
     const unsigned char* const set = PtrAt(::bof3::Img(at::kPanelSet.v));
     const auto left = static_cast<signed char>(rv::Bytes(Effect_Objects)[0x7] - set[0xF]);

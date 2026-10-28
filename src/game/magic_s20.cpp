@@ -272,7 +272,7 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
             Bump(sc[0xB], 1);
         }
     }
-    for (std::uint32_t a = kClutRow + 2; a < kClutRow + 0x20; a += 2) SetWord(Mem(a), Word(Mem(a - 0x7400)) | 0x8000u);
+    for (std::uint32_t a = ::bof3::Img(kClutRow) + 2; a < ::bof3::Img(kClutRow) + 0x20; a += 2) SetWord(Mem(a), Word(Mem(a - 0x7400)) | 0x8000u);
     SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3400), Word(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3400 - 0x7400)));
     Gfx_ClutStripDirty = 1;
     Bump(Sprite_Current[1], 1);
@@ -1053,7 +1053,7 @@ S20_EXPORT void __cdecl Magic092_Start(void) {
         Bump(sc[0xB], 1);
     }
     SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3400), 0);
-    for (std::uint32_t a = kClutRow + 2; a < kClutRow + 0x20; a += 2) SetWord(Mem(a), Word(Mem(a - 0x4000)) | 0x8000u);
+    for (std::uint32_t a = ::bof3::Img(kClutRow) + 2; a < ::bof3::Img(kClutRow) + 0x20; a += 2) SetWord(Mem(a), Word(Mem(a - 0x4000)) | 0x8000u);
     Gfx_ClutStripDirty = 1;
     Bump(Sprite_Current[1], 1);
 }

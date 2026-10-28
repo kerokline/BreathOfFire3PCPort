@@ -97,7 +97,7 @@ void Dispatch(const char* who, U table, unsigned entries, unsigned index, const 
     if (index >= entries)
         bof3::Fatal("%s: %s is %u, past the %u handlers of 0x%X - the original jumps through the dword after "
                     "(docs/rest_4f.md section 7)",
-                    who, byte, index, entries, (unsigned)table);
+                    who, byte, index, entries, (unsigned)::bof3::VaOf(table));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
 }
 

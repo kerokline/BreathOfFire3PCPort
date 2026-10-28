@@ -119,7 +119,7 @@ extern "C" unsigned __cdecl Sprite_AddDrawRecords(unsigned long* record) {
     const unsigned tpage = Gpu_GetTPage(0, mode & 3, 0x2C0, 0x100);
     unsigned char* const start = Gfx_PacketNext;
     const std::uint32_t bytes = static_cast<std::uint32_t>(count) * kPrimBytes;
-    const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + kPoolLimit;
+    const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
     if (limit < static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(start)) + bytes) return 0;
 
     const unsigned semi_trans = (mode >> 6) & 1;
@@ -309,7 +309,7 @@ void SelfTest(Fn theirs) {
         if (count < 0) ++negative;
         if (scratch.object[0x48] != 0) ++unscaled;
         if (count > 0 && (scratch.data[3] & 0x80)) ++lit;
-        const bool room = count >= 0 && (static_cast<std::uint32_t>(buffer) << 16) + kPoolLimit >=
+        const bool room = count >= 0 && (static_cast<std::uint32_t>(buffer) << 16) + ::bof3::Img(kPoolLimit) >=
                                             static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(packet)) + bytes;
         if (!room) ++no_room; else quads += static_cast<unsigned>(count);
 

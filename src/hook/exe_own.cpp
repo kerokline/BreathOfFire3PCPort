@@ -11,6 +11,7 @@
 #include <initializer_list>
 #include <vector>
 
+#include "common/image_base.h"
 #include "hook/detour.h"
 #include "hook/exe_host.h"
 #include "hook/exe_image.h"
@@ -327,7 +328,7 @@ void ExeOwn_Verify(const std::uint8_t* pc_data, const char* against) {
 }
 
 void ExeOwn_CheckAtStart() {
-    const auto* live = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(kDataVa));
+    const auto* live = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(Img(kDataVa)));
     // A disc-built image mapped (the disc-only round, IN): the running .data
     // holds the fill itself, so the regions are verified against the file's
     // .data when the file is there, and cannot be without it.

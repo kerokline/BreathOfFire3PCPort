@@ -534,7 +534,7 @@ void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_
                 ++drawn;
                 cells += input.frame[offset];
                 if (object[0x48] != 0) ++scaled;
-                const std::uint32_t limit = (static_cast<std::uint32_t>(input.buffer_index) << 16) + 0x7F1BACu;
+                const std::uint32_t limit = (static_cast<std::uint32_t>(input.buffer_index) << 16) + ::bof3::Img(0x7F1BACu);
                 if (limit <= static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(input.packet_next)) + kPrimBytes)
                     ++full;
             }

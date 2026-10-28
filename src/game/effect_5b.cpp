@@ -103,7 +103,7 @@ unsigned Byte(const char* who, U array, unsigned extent, U index) {
     if (index >= extent)
         bof3::Fatal("%s: index %d past the %u bytes of 0x%X - the original reads what follows "
                     "(docs/effect_5b.md section 7)",
-                    who, static_cast<int>(index), extent, (unsigned)array);
+                    who, static_cast<int>(index), extent, (unsigned)::bof3::VaOf(array));
     return B(array + index);
 }
 
@@ -533,7 +533,7 @@ extern "C" void __cdecl EffectKind18Sub0B_Fade(void) {
 extern "C" void __cdecl EffectKind18Sub0B_DrawTiles(int height, unsigned long colour) {
     const U texture = static_cast<U>(colour) | 0xB600B100u;
     const U y = static_cast<U>(height);
-    for (U t = at::kSub0BTiles + 1; static_cast<I>(t) < static_cast<I>(at::kSub0BTilesEnd); t += 3) {
+    for (U t = ::bof3::Img(at::kSub0BTiles) + 1; static_cast<I>(t) < static_cast<I>(::bof3::Img(at::kSub0BTilesEnd)); t += 3) {
         unsigned char* const prim = Prim();
         SH_CALL(Gpu_SetPolyFT4)(prim);
         SH_CALL(Gpu_SetShadeTex)(prim, 0);

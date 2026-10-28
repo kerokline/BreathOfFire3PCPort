@@ -372,7 +372,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(u
     if (draw_order::Tagging())
         bof3::Log("draworder   linked %08X (%u bytes) into row %d from %08X", prim, bytes, row,
                   static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(__builtin_return_address(0))));
-    const U bound = (static_cast<U>(At(at::Gfx_BufferIndexAt())[0]) << 16) + kPoolBound;
+    const U bound = (static_cast<U>(At(at::Gfx_BufferIndexAt())[0]) << 16) + ::bof3::Img(kPoolBound);
     if (bound <= prim + bytes) {
         if (draw_order::Tagging())
             bof3::Log("draworder   packet pool full: a %u-byte primitive for row %d skipped (MapView_LinkPrimAt) from %08X", bytes, row,

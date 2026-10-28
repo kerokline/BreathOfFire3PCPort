@@ -12,7 +12,7 @@ emits, for every named function and data item:
       - no `impl`  -> a macro casting the literal address to a typed function
                       pointer, so our code calls Capcom's code;
       - `impl`     -> an ordinary prototype for OUR function, plus an
-                      `orig::Name` pointer to the address it displaced.
+                      `orig::Name` naming the address it displaced.
     Call sites are the same in both cases, so taking over a function is: write
     it, add `impl` to its symbols.toml entry, add one BOF3_INJECT line.
   * for data with a `ctype`: a macro giving a typed lvalue (scalar) or a typed
@@ -72,9 +72,9 @@ name in the frame BOF3.exe was linked in: `bof3::addr::Name`, `<Name>_addr`
 and `kGameDataVa` stay VAs. What reaches memory places its VA through one
 helper of src/common/image_base.h: a data macro and `BOF3_GAME` through
 `::bof3::Img(va)`, a callable original and `orig::Name` through
-`::bof3::Code(va)`. While `ImageBase()` is 0x400000 both are the identity,
-consteval so the front end folds them, and the machine code is unchanged
-(tools/codegen_same.py).
+`::bof3::Code(va)`, applied where the name is used (a macro's expansion, an
+`orig::Name` converted or called), since `ImageBase()` is a run-time value
+(relocatable-image round stage C).
 
 The output contains addresses and names only — our work product, not game data.
 It is still generated into the build tree rather than committed, so it cannot
@@ -357,9 +357,21 @@ def main():
     w('')
     w('// The address each of ours displaced. After BOF3_INJECT its first five')
     w('// bytes are a jmp to ours, so this is for the detour layer, not for calling.')
+    w('// Each is a constant object that places its VA when it is used - converted')
+    w('// to the function pointer or called - not a pointer variable: with the base')
+    w('// a run-time value (common/image_base.h), a variable would be initialised at')
+    w('// start-up in every translation unit that includes this header.')
+    w('namespace bof3::detail {')
+    w('template <class F, std::uint32_t Va>')
+    w('struct Original {')
+    w('    operator F() const { return reinterpret_cast<F>(static_cast<std::uintptr_t>(::bof3::Code(Va))); }')
+    w('    template <class... A>')
+    w('    decltype(auto) operator()(A&&... a) const { return static_cast<F>(*this)(static_cast<A&&>(a)...); }')
+    w('};')
+    w('}  // namespace bof3::detail')
     w('namespace bof3::orig {')
     for e, cc in ours:
-        w(f'inline const auto {e["name"]} = reinterpret_cast<{e["ret"]} ({cc} *)({e["params"]})>(::bof3::Code({e["pc"]:#x}));')
+        w(f'inline constexpr ::bof3::detail::Original<{e["ret"]} ({cc} *)({e["params"]}), {e["pc"]:#x}> {e["name"]}{{}};')
     w('}  // namespace bof3::orig')
     w('')
 

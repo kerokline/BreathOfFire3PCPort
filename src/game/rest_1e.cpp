@@ -57,7 +57,7 @@ void Dispatch(const char* who, const char* by, U table, unsigned index, unsigned
     if (index >= entries)
         bof3::Fatal("%s: %s is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_1e.md section 5)",
-                    who, by, index, entries, static_cast<unsigned>(table));
+                    who, by, index, entries, static_cast<unsigned>(::bof3::VaOf(table)));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))))();
 }
 // A state table's address (symbols.toml [[data]]: the name is a pointer to its

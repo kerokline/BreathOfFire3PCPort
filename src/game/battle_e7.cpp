@@ -823,7 +823,7 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
     if (n > 5) n = 5;
     BH_CALL(Text_DrawAt)(xi - 6 * static_cast<int>(n) + 0x3E, yi + 7, 0, 5, ch);
     for (unsigned k = 0; k < 4; ++k)
-        BH_CALL(Text_DrawAt)(xi + 5, yi + label_y + 13 * static_cast<int>(k), 0, 4, Text(at::kStatLabels[k]));
+        BH_CALL(Text_DrawAt)(xi + 5, yi + label_y + 13 * static_cast<int>(k), 0, 4, Text(::bof3::Img(at::kStatLabels[k])));
     BH_CALL(Char_RecalcStats)(ch);
     static constexpr unsigned kStats[4] = {0x24, 0x26, 0x2A, 0x28};
     for (unsigned k = 0; k < 4; ++k) {

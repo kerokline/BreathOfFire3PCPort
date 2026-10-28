@@ -64,7 +64,7 @@ void BattleMessages_Apply(std::uint32_t tag, const std::uint8_t* payload, std::u
         // Once repointed the table names ours; a second overlay walk may
         // apply the chunk again.
         const auto ours = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(g_messages[i]));
-        if (table[i] != kShipped[i] && table[i] != ours)
+        if (table[i] != ::bof3::Img(kShipped[i]) && table[i] != ours)   // a pointer word: the place
             bof3::Fatal("battle messages: pointer %u holds 0x%08X, expected 0x%08X", (unsigned)i,
                         (unsigned)table[i], (unsigned)kShipped[i]);
         std::memset(g_messages[i], 0, sizeof g_messages[i]);

@@ -44,8 +44,8 @@ constexpr unsigned kMemberStride = 0x14C;
 // with the direction unmasked, as the originals index it (`shl eax, 3` on the
 // zero-extended byte): the table has 8 rows; a byte above 7 reads the .data
 // after it (docs/rest_0a.md section 5).
-U StepX(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8 + 4))); }
+U StepX(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8))); }
+U StepZ(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4))); }
 
 // A 16.16 coordinate's cell, the high word, as the originals pass it to
 // AreaMap_ByteAt (a dword whose low word is the cell; the callee reads that
@@ -64,7 +64,7 @@ const unsigned char* EffectByArgument(unsigned index, const char* who) {
     return rv::Bytes(Effect_Objects) + i * kEffectStride;
 }
 
-const unsigned char* Member(unsigned m) { return At(ObjTrio_addr + 0x14c + (m - 1) * kMemberStride); }
+const unsigned char* Member(unsigned m) { return At(::bof3::Img(ObjTrio_addr) + 0x14c + (m - 1) * kMemberStride); }
 
 bool MapTarget(unsigned char b) { return b == 0xF2; }
 bool MapBlocked(unsigned char b) { return b == 0xF0 || b == 0xF1 || b == 0xF4 || b == 0xF6 || b == 0xF7; }

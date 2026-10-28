@@ -30,6 +30,7 @@
 #include <cstdio>
 #include <cstring>
 
+#include "common/image_base.h"
 #include "hook/host.h"
 #include "hook/log.h"
 
@@ -287,7 +288,7 @@ void StackWatch_Start() {
         // The armed path checked once here, on this thread, before the game
         // runs: it logs, leaves eax = Task_StackTop as stored, keeps the other
         // registers; Task_StackTop is put back (the game sets it itself).
-        const std::uint32_t saved = Long(kTaskStackTop);
+        const std::uint32_t saved = Long(Img(kTaskStackTop));
         g_checking = true;
         std::uint32_t eax, ecx, edx;
         asm volatile("movl $0x11111111, %%ecx\n\t"
@@ -299,8 +300,8 @@ void StackWatch_Start() {
                      :
                      : "ecx", "edx", "cc", "memory");
         g_checking = false;
-        const std::uint32_t stored = Long(kTaskStackTop);
-        std::memcpy(reinterpret_cast<void*>(static_cast<std::uintptr_t>(kTaskStackTop)), &saved, sizeof saved);
+        const std::uint32_t stored = Long(Img(kTaskStackTop));
+        std::memcpy(reinterpret_cast<void*>(static_cast<std::uintptr_t>(Img(kTaskStackTop))), &saved, sizeof saved);
         if (eax != stored || ecx != 0x11111111u || edx != 0x22222222u)
             Fatal("stackwatch: the armed Task_SetStackBase left eax 0x%08X (stored 0x%08X), ecx 0x%08X, edx 0x%08X",
                   (unsigned)eax, (unsigned)stored, (unsigned)ecx, (unsigned)edx);
@@ -335,7 +336,7 @@ void StackWatch_Exit() {
         Log("stackwatch exit: Task_SetStackBase never ran on the main thread; no slices to report");
         return;
     }
-    const std::uint32_t top = Long(kTaskStackTop);
+    const std::uint32_t top = Long(Img(kTaskStackTop));
     for (std::uint32_t k = 0; k < kSlices; ++k) {
         const std::uint32_t hi = top - k * kSlice, lo = hi - kSlice;
         std::uint32_t changed = hi;   // the lowest dword written since the copy
@@ -359,7 +360,7 @@ void StackWatch_Exit() {
 extern "C" void __cdecl StackWatch_AtSetStackBase(unsigned long arrival_esp) {
     using namespace bof3;
     const std::uint32_t esp = static_cast<std::uint32_t>(arrival_esp);
-    const std::uint32_t top = Long(kTaskStackTop);
+    const std::uint32_t top = Long(Img(kTaskStackTop));
     const std::uint32_t bottom = top - kSlices * kSlice;
     DWORD protect = 0;
     const std::uint32_t low = CommittedLow(g_base - 1, &protect);

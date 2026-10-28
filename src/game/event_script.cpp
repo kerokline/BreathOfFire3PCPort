@@ -58,13 +58,13 @@ std::uint32_t Dword(const unsigned char* p) {
 // The count and the bank word (see the top of the file).
 short Count() {
     short v;
-    std::memcpy(&v, At(SharedScratch_addr), sizeof v);
+    std::memcpy(&v, At(::bof3::Img(SharedScratch_addr)), sizeof v);
     return v;
 }
 void SetCount(unsigned v) { SharedScratch.w_00 = v; }
 unsigned short Bank() {
     unsigned short v;
-    std::memcpy(&v, At(SharedScratch_addr) + 2, sizeof v);
+    std::memcpy(&v, At(::bof3::Img(SharedScratch_addr)) + 2, sizeof v);
     return v;
 }
 void SetBank(unsigned v) { SharedScratch.w_02 = v; }

@@ -534,7 +534,7 @@ extern "C" void __cdecl Area144_SpawnEffect85(void) {
         ScriptStep(-2);
         return;
     }
-    const auto index = static_cast<std::int32_t>(Key(Field_ActiveMember) - 0x7DEE80u) / 0xA4;
+    const auto index = static_cast<std::int32_t>(Key(Field_ActiveMember) - ::bof3::Img(0x7DEE80u)) / 0xA4;
     unsigned char* const e = EffectAt(slot);
     e[0] = 1;
     e[5] = 0x85;
@@ -610,7 +610,7 @@ extern "C" void __cdecl Area145_ChoiceRun3(void) {
 // i: +2 = 0x10, +1 = 0, dword +0xC = 0x200 / (s8)+2 (read back: 0x20); the
 // script object's +0 | 8.
 extern "C" void __cdecl Area145_PartyRecord16(void) {
-    const auto index = static_cast<unsigned char>(static_cast<std::int32_t>(Key(Field_ActiveMember) - Sprite_ObjectsExtra_addr) / 0xA4);
+    const auto index = static_cast<unsigned char>(static_cast<std::int32_t>(Key(Field_ActiveMember) - ::bof3::Img(Sprite_ObjectsExtra_addr)) / 0xA4);
     B(::bof3::Img(at::kRecordIndex.v)) = index;
     unsigned char* const rec = Mem(::bof3::Img(MoveScript_PartyRecords_addr) + index * 16u);
     rec[2] = 0x10;
@@ -640,7 +640,7 @@ extern "C" void __cdecl Area145_DropStart(void) {
     Sprite_Current[4] = 1;
     AH_CALL(Sprite_SetAnimation)(0x3B);
     MoveScript_Object[0] = static_cast<unsigned char>(MoveScript_Object[0] | 0x40);
-    const auto index = static_cast<std::int32_t>(Key(Field_State) - 0x802D40u) / 0x14C;
+    const auto index = static_cast<std::int32_t>(Key(Field_State) - ::bof3::Img(0x802D40u)) / 0x14C;
     MoveScript_Object[1] = static_cast<unsigned char>(static_cast<U>(index) * 0x14u);
     ScriptStep(-2);
 }

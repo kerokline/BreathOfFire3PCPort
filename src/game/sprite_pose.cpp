@@ -105,13 +105,13 @@ static bool PoseLogOn() {
 }
 static void PoseLog(const char* what, const void* object, unsigned a, unsigned b) {
     const std::uintptr_t o = reinterpret_cast<std::uintptr_t>(object);
-    if (o < 0x802D40u || o >= 0x802D40u + 3u * 0x14Cu) return;
+    if (o < ::bof3::Img(0x802D40u) || o >= ::bof3::Img(0x802D40u) + 3u * 0x14Cu) return;
     const unsigned char* const s = static_cast<const unsigned char*>(object);
     std::uint32_t anim_data, script;
     std::memcpy(&anim_data, s + 0x4C, 4);
     std::memcpy(&script, s + 0x50, 4);
     bof3::Log("poselog     frame %lu %s trio %u a %u b %u | flags %02X type %u facing %u draw %02X slot %u row %u flip %u col %u anim %u data %08X script %08X",
-              static_cast<unsigned long>(Frame_Counter), what, static_cast<unsigned>((o - 0x802D40u) / 0x14Cu), a, b,
+              static_cast<unsigned long>(Frame_Counter), what, static_cast<unsigned>((o - ::bof3::Img(0x802D40u)) / 0x14Cu), a, b,
               s[0], s[6], s[8], s[0x24], s[0x25], s[0x26], s[0x2A], s[0x2C], s[0x4B], anim_data, script);
 }
 extern "C" void __cdecl Sprite_SetAnimationAt(unsigned char animation, unsigned short start) {

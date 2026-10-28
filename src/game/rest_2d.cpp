@@ -58,7 +58,7 @@ using Handler = void (__cdecl*)();
 void Jump(U table, unsigned count, unsigned index, const char* who) {
     if (index >= count)
         bof3::Fatal("%s: step %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index, count,
-                    static_cast<unsigned>(table), static_cast<unsigned>(table + 4 * index));
+                    static_cast<unsigned>(::bof3::VaOf(table)), static_cast<unsigned>(::bof3::VaOf(table + 4 * index)));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))))();
 }
 
@@ -68,7 +68,7 @@ void Jump(U table, unsigned count, unsigned index, const char* who) {
 U RecordChecked(U base, U stride, unsigned count, unsigned index, const char* array, const char* who) {
     if (index >= count)
         bof3::Fatal("%s: %s index %u is past its %u records; the original writes at 0x%X", who, array, index, count,
-                    static_cast<unsigned>(base + index * stride));
+                    static_cast<unsigned>(::bof3::VaOf(base + index * stride)));
     return base + index * stride;
 }
 U Window(unsigned index, const char* who) {

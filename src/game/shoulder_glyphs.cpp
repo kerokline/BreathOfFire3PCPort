@@ -329,7 +329,7 @@ void SelfTest() {
     // The geometry the plans assume, against the live rectangle table.
     unsigned rects = 0;
     for (const Label& l : kLabels) {
-        const unsigned char* r = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(0x663C8Cu + 4u * l.id));
+        const unsigned char* r = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(0x663C8Cu) + 4u * l.id));
         Check(r[2] == kPieceW && r[3] == (l.id == 0x16 ? 16 : 24), "a labelled piece's size", static_cast<int>(l.id), r[2], r[3]);
         ++rects;
     }

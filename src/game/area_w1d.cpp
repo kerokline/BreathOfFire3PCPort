@@ -436,7 +436,7 @@ extern "C" unsigned char __cdecl Area59_Trigger24(unsigned char*, unsigned char*
     Focus()[1] = 4;
     Focus()[0x83] = 0;
     SetWord(Focus() + 0x8A, 0);
-    const auto offset = static_cast<std::int32_t>(Key(Focus()) - Sprite_Objects_addr);
+    const auto offset = static_cast<std::int32_t>(Key(Focus()) - ::bof3::Img(Sprite_Objects_addr));
     B(::bof3::Img(AreaW0a_TailKind_addr)) = 4;
     B(::bof3::Img(AreaW0c_TailSub_addr)) = 5;
     B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(offset / static_cast<std::int32_t>(at::kObjectStride));

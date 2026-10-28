@@ -814,7 +814,7 @@ bool Logged(const State& s, std::uint32_t what) {
     return false;
 }
 void Cover(unsigned k, const State& in, const State& out) {
-    constexpr std::uint32_t aState = ::bof3::Img(0x66C808), aBadge = ::bof3::Img(0x66C7F8), aBlink = ::bof3::Img(0x66C806);
+    const std::uint32_t aState = ::bof3::Img(0x66C808), aBadge = ::bof3::Img(0x66C7F8), aBlink = ::bof3::Img(0x66C806);
     // (State 7 does not move the word: it ends the task - counted by the call.)
     if (k < kStateMenu && Half(out, aState) == ((Half(in, aState) + 1) & 0xFFFF)) ++g_cover.state_advanced[k];
     if (k == kStateMenu && Logged(out, 16)) ++g_cover.state_advanced[k];

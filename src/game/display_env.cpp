@@ -252,7 +252,7 @@ void Snd_LoadBank(unsigned bank, const void* payload, unsigned size) {
             sound_st::Released(buffer);       // DIV-0174's remembered one-shots
             g.release(At(buffer));
             const U now = Long(entry);
-            for (U c = Sound_Channels_addr; c < kChannelsEnd; c += 4)
+            for (U c = ::bof3::Img(Sound_Channels_addr); c < ::bof3::Img(kChannelsEnd); c += 4)
                 if (Long(c) == now) PutLong(c, 0);
         }
     }

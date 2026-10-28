@@ -951,7 +951,7 @@ extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned
     case 0x10:
         if (to == 0x11) {
             const unsigned char* const s = Sprite_Current;
-            if (Address(s) == FieldEvent_Object905DA0_addr) return (s[0xB] & 1) ? 0 : 0xFF;
+            if (Address(s) == ::bof3::Img(FieldEvent_Object905DA0_addr)) return (s[0xB] & 1) ? 0 : 0xFF;
             return (Field_State[0x138] & 1) ? 0 : 0xFF;
         }
         [[fallthrough]];

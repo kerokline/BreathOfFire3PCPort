@@ -144,7 +144,7 @@ constexpr ::bof3::image::Va kLeaderCellZ{0x905E62};
 
 // Area 104: WorldMap_Records record 6 (0x6539B8: +0 0x414760, +0xC 0x414A90,
 // +0x10 0x41B730 - AR3B's), WorldMap_FieldHooks entry 6 (0x662E08).
-constexpr WorldMapTables kWm104 = {
+const WorldMapTables kWm104 = {
     "Area104",
     ::bof3::Img(0x61B4F0),                              // one plate animation (place 0x65), then a zero record
     ::bof3::Img(0x61BB7C), ::bof3::Img(0x61BB90), ::bof3::Img(0x61BB98), ::bof3::Img(0x61BBA8),

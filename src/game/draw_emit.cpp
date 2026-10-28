@@ -311,7 +311,7 @@ void SelfTestOpen(OpenFn theirs) {
 // As the original has it: the slot is not checked against the eight there are.
 extern "C" void __cdecl Gfx_CommitPrim(unsigned slot, unsigned size) {
     size &= 0xFF;
-    const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + kPoolLimit;
+    const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
     const std::uint32_t next = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Gfx_PacketNext));
     if (limit <= next + size) {
         // Diagnostic only (BOF3X_DRAWORDER): the original's silent skip.

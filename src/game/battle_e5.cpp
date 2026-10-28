@@ -398,10 +398,10 @@ extern "C" void __cdecl Effect_QuarterAttack(void) {
 // and the dword 0x939EF0 are read once, before the members (no call in the
 // loop, and the members do not overlap them).
 extern "C" void __cdecl BattleForm_ApplyStats(void) {
-    const U ef0 = L(0x939EF0);
-    const std::uint16_t ee8 = W(0x939EE8);
-    const std::uint16_t ee0 = W(0x939EE0);
-    const std::uint16_t ee4 = W(0x939EE4);
+    const U ef0 = L(::bof3::Img(0x939EF0));
+    const std::uint16_t ee8 = W(::bof3::Img(0x939EE8));
+    const std::uint16_t ee0 = W(::bof3::Img(0x939EE0));
+    const std::uint16_t ee4 = W(::bof3::Img(0x939EE4));
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const c = Party(m) + 0x9E;
         auto* const member_rec = rv::As<records::PartyMember>(c - 0x9E);
@@ -410,19 +410,19 @@ extern "C" void __cdecl BattleForm_ApplyStats(void) {
         const std::uint16_t hp = static_cast<std::uint16_t>(S16(ee0) - product / 10);
         rv::Store<unsigned>(member_rec->base_max_hp, hp);
         member_rec->max_hp = hp;
-        rv::Store<unsigned>(member_rec->base_atk, member_rec->base_atk + W(0x939EE2));
+        rv::Store<unsigned>(member_rec->base_atk, member_rec->base_atk + W(::bof3::Img(0x939EE2)));
         member_rec->atk = member_rec->base_atk;
         rv::Store<unsigned>(member_rec->base_def, member_rec->base_def + ee4);
         member_rec->def = member_rec->base_def;
-        rv::Store<unsigned>(member_rec->base_agi, member_rec->base_agi + W(0x939EE6));
+        rv::Store<unsigned>(member_rec->base_agi, member_rec->base_agi + W(::bof3::Img(0x939EE6)));
         member_rec->agi = member_rec->base_agi;
         rv::Store<unsigned>(member_rec->base_intel, member_rec->base_intel + ee8);
         member_rec->intel = member_rec->base_intel;
         for (unsigned i = 0; i < 6; ++i) {
-            c[0x31 + i] = B(0x939EEA + i);
+            c[0x31 + i] = B(::bof3::Img(0x939EEA) + i);
             c[0x11 + i] = c[0x31 + i];
         }
-        const unsigned char last = B(0x939EF2);
+        const unsigned char last = B(::bof3::Img(0x939EF2));
         c[0x37] = static_cast<unsigned char>(ef0);
         c[0x17] = static_cast<unsigned char>(ef0);
         c[0x38] = static_cast<unsigned char>(ef0 >> 8);

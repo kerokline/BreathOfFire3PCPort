@@ -110,7 +110,7 @@ using Handler = void (__cdecl*)();
 Handler StepAt(U table, unsigned index, unsigned count, const char* who) {
     if (index >= count)
         bof3::Fatal("%s: index %u past the %u entries of 0x%X (the original jumps through what follows)", who, index,
-                    count, (unsigned)table);
+                    count, (unsigned)::bof3::VaOf(table));
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))));
 }
 // A byte of one of the image's scripts or tables: past its end the original
@@ -122,13 +122,13 @@ Handler StepAt(U table, unsigned index, unsigned count, const char* who) {
 unsigned char ByteOf(U table, unsigned bytes, int index, const char* who) {
     if (index < -4 || (index >= 0 && static_cast<unsigned>(index) >= bytes))
         bof3::Fatal("%s: byte %d of the %u-byte table 0x%X (the original reads past it)", who, index, bytes,
-                    (unsigned)table);
+                    (unsigned)::bof3::VaOf(table));
     return B(static_cast<U>(static_cast<std::int32_t>(table) + index));
 }
 std::uint16_t WordOf(U table, unsigned count, unsigned index, const char* who) {
     if (index >= count)
         bof3::Fatal("%s: word %u of the %u-word table 0x%X (the original reads past it)", who, index, count,
-                    (unsigned)table);
+                    (unsigned)::bof3::VaOf(table));
     return Word(At(table + 2 * index));
 }
 // The record Effect_FindFree answered, written without the original checking

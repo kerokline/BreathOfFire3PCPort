@@ -855,7 +855,7 @@ MS17_EXPORT void __cdecl LeechShell_Draw(void) {
     long line_depths[12];
     long projected;
     unsigned d = 0;
-    for (std::uint32_t lat = LeechShell_Angles_addr + 0x20; lat < LeechShell_Angles_addr + 0x28; lat += 4) {
+    for (std::uint32_t lat = ::bof3::Img(LeechShell_Angles_addr) + 0x20; lat < ::bof3::Img(LeechShell_Angles_addr) + 0x28; lat += 4) {
         // the band's first edge, at longitude 0x180
         SetWord(VB(8), static_cast<unsigned>(M(Cos(Table(lat - 4)), H())));
         int s = Sin(Table(lat - 4));
@@ -876,7 +876,7 @@ MS17_EXPORT void __cdecl LeechShell_Draw(void) {
         c = Sin(0x180);
         SetWord(VB(0x1C), static_cast<unsigned>(M(t, c)));
         unsigned number = 1;
-        for (std::uint32_t lon = LeechShell_Angles_addr + 4; lon < LeechShell_Angles_addr + 0x1C; lon += 4, ++number, ++d) {
+        for (std::uint32_t lon = ::bof3::Img(LeechShell_Angles_addr) + 4; lon < ::bof3::Img(LeechShell_Angles_addr) + 0x1C; lon += 4, ++number, ++d) {
             unsigned char* const p = Gfx_PacketNext;
             MH_CALL(Gpu_SetPolyF4)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -909,9 +909,9 @@ MS17_EXPORT void __cdecl LeechShell_Draw(void) {
         }
     }
     unsigned base = 0;
-    for (std::uint32_t lat = LeechShell_Angles_addr + 0x1C; lat < LeechShell_Angles_addr + 0x2C; lat += 8, base += 2) {
+    for (std::uint32_t lat = ::bof3::Img(LeechShell_Angles_addr) + 0x1C; lat < ::bof3::Img(LeechShell_Angles_addr) + 0x2C; lat += 8, base += 2) {
         unsigned n = 0;
-        for (std::uint32_t lon = LeechShell_Angles_addr + 0xC; lon < LeechShell_Angles_addr + 0x24; lon += 0xC, ++n) {
+        for (std::uint32_t lon = ::bof3::Img(LeechShell_Angles_addr) + 0xC; lon < ::bof3::Img(LeechShell_Angles_addr) + 0x24; lon += 0xC, ++n) {
             unsigned char* const p = Gfx_PacketNext;
             MH_CALL(Gpu_SetPolyF4)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, 1);

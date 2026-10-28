@@ -209,7 +209,7 @@ U16* Words() { return reinterpret_cast<U16*>(static_cast<std::uintptr_t>(::bof3:
 unsigned char& B(U address) { return *reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 
 struct Cell { U address, size; };
-constexpr Cell kCells[] = {
+const Cell kCells[] = {
     {::bof3::Img(0x903580), 18},   // the nine pad words
     {::bof3::Img(0x7E1BEC), 2},    // Input_Pressed
     {::bof3::Img(0x937F88), 4},    // Sprite_Current

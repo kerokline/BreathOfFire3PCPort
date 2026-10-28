@@ -329,7 +329,7 @@ void Emit(int x, int y, unsigned index, const unsigned char* at, unsigned clut_b
     const unsigned glyphs = TextDraw_GlyphCount();
     if (index > (glyphs ? glyphs - 1 : 0xA00u)) Refuse(at, "is a glyph past the loaded table, in a ruby row");
     if (g_hidden) return;   // the study key: laid out, not drawn
-    const std::uint8_t* const pair = reinterpret_cast<const std::uint8_t*>(bof3::addr::Text_ClipPairs) + ((clut_byte & 0xFF) >> 4) * 2;
+    const std::uint8_t* const pair = reinterpret_cast<const std::uint8_t*>(::bof3::Img(bof3::addr::Text_ClipPairs)) + ((clut_byte & 0xFF) >> 4) * 2;
     const int u = pair[0], v = pair[1];
     unsigned char* const p = Gfx_PacketNext;
     const auto put = [](unsigned char* to, unsigned value) {
@@ -825,7 +825,7 @@ extern "C" void __cdecl MsgBox_Reset(void) {
 // depend on - 0x595A80 tests al, and the two tail jumps at 0x595855 and
 // 0x595A6E hand it to their own callers (docs/msgbox.md section 2).
 extern "C" unsigned char __cdecl MsgBox_FrameTask(void) {
-    auto* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
+    auto* const win0 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 0 * sizeof(records::WindowRecord));
     const int x = static_cast<short>(win0->x) >> 4;
     const int y = static_cast<short>(win0->y) >> 4;
     MsgBox_LineX = static_cast<short>(x + 10);
@@ -1320,7 +1320,7 @@ extern "C" void __cdecl MsgBox_State2(void) { Call(g.sub2, 2, ItemUse_SubState, 
 // original 0x497EE0. Any button pressed - or either kept flag 0x40 / 0x80
 // still set - closes window 0 and holds the printer (flag 4).
 extern "C" void __cdecl MsgBox_State2Press(void) {
-    auto* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
+    auto* const win0 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 0 * sizeof(records::WindowRecord));
     if (Input_Pressed == 0 && (B(kFlags) & 0xC0) == 0) return;
     rv::Store<unsigned>(win0->state, win0->state + 1);
     const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
@@ -1331,7 +1331,7 @@ extern "C" void __cdecl MsgBox_State2Press(void) {
 // original 0x497F20, shared by state 2 and state 7: once window 0 reports 4
 // the box is done (flag 2), which is what MsgBox_FrameTask returns.
 extern "C" void __cdecl MsgBox_State2Closed(void) {
-    auto* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
+    auto* const win0 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 0 * sizeof(records::WindowRecord));
     if (win0->state == 4) SetB(kFlags, B(kFlags) | 2u);
 }
 
@@ -1398,7 +1398,7 @@ extern "C" void __cdecl MsgBox_State4(void) { Call(g.sub4, 8, ItemUse_SubState, 
 // original 0x4980B0. Claims window 1 as kind 1 (a choice list), tells window
 // 0 to go to state 3, and holds the printer.
 extern "C" void __cdecl MsgBox_ChoiceOpen(void) {
-    auto* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
+    auto* const win0 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 0 * sizeof(records::WindowRecord));
     AreaW0c_ChoiceAnswer = 0;
     g.window_alloc(1, 0);
     const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
@@ -1411,7 +1411,7 @@ extern "C" void __cdecl MsgBox_ChoiceOpen(void) {
 // original 0x4980F0. Waits until window 1 is open and window 0 has finished
 // its own move.
 extern "C" void __cdecl MsgBox_ChoiceWaitOpen(void) {
-    auto* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
+    auto* const win0 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 0 * sizeof(records::WindowRecord));
     if (WindowRecords[1].state == 2 && win0->state == 4) ItemUse_SubState = ItemUse_SubState + 1;
 }
 
@@ -1424,7 +1424,7 @@ extern "C" void __cdecl MsgBox_ChoiceWaitOpen(void) {
 // SIGNED against the last row, and the top one on the sign of the decremented
 // byte - so a cursor of 0x80 stays where it is going down.
 extern "C" void __cdecl MsgBox_ChoiceInput(void) {
-    auto* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
+    auto* const win0 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 0 * sizeof(records::WindowRecord));
     const unsigned pressed = Input_Pressed;
     if ((Field_CancelButtons & pressed) != 0) {
         const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
@@ -1454,7 +1454,7 @@ extern "C" void __cdecl MsgBox_ChoiceInput(void) {
 // original 0x4981A0. Once window 0 reports 2 the hold flag is toggled off and
 // the state's own index goes back to 0.
 extern "C" void __cdecl MsgBox_ChoiceWaitShut(void) {
-    auto* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
+    auto* const win0 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 0 * sizeof(records::WindowRecord));
     if (win0->state != 2) return;
     SetW(kFlags, W(kFlags) ^ 4u);
     ItemUse_SubState = 0;
@@ -1463,7 +1463,7 @@ extern "C" void __cdecl MsgBox_ChoiceWaitShut(void) {
 // original 0x498230. Re-opens the message at the answer's own text and
 // releases the hold.
 extern "C" void __cdecl MsgBox_ChoiceReopen(void) {
-    auto* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
+    auto* const win0 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 0 * sizeof(records::WindowRecord));
     if (win0->state != 2) return;
     Msgbox_Delay = 0x10;
     g.reopen();
@@ -1474,7 +1474,7 @@ extern "C" void __cdecl MsgBox_ChoiceReopen(void) {
 // set (which MsgBox_Reset keeps only 0x40 of, so it is cleared on the next
 // message), window 0 to state 4, and state 2 sub 1 - the wait for it to shut.
 extern "C" void __cdecl MsgBox_ChoiceDone(void) {
-    auto* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
+    auto* const win0 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 0 * sizeof(records::WindowRecord));
     if (WindowRecords[1].state != 4) return;
     SetB(kFlags, B(kFlags) | 0x80u);
     rv::Store<unsigned>(win0->state, 4);
@@ -1557,7 +1557,7 @@ extern "C" void __cdecl MsgBox_MenuDone(void) {
 // original 0x498450. State 6: back to state 0 once window 0 reports 2. No
 // path in this file reaches it - nothing writes 6 to 0x7DEE40 (section 2).
 extern "C" void __cdecl MsgBox_State6(void) {
-    auto* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
+    auto* const win0 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 0 * sizeof(records::WindowRecord));
     if (win0->state == 2) SetB(kState, 0);
 }
 
@@ -1571,7 +1571,7 @@ extern "C" void __cdecl MsgBox_State7(void) { Call(g.sub7, 2, ItemUse_SubState, 
 // As the original has it: the delay is tested BEFORE the decrement, so a 0
 // does the work and leaves 0xFF.
 extern "C" void __cdecl MsgBox_State7Delay(void) {
-    auto* const win0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
+    auto* const win0 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 0 * sizeof(records::WindowRecord));
     const unsigned char was = Msgbox_Delay;
     Msgbox_Delay = static_cast<unsigned char>(was - 1);
     if (was != 0) return;
@@ -1837,7 +1837,7 @@ extern "C" void __cdecl MsgBox_EffectDraw(unsigned color, const unsigned char* t
 // forced to 0xFF on failure (`or al, 0xFF`), so a caller that passes a slot
 // with high bytes set gets them back. No bound on the slot.
 extern "C" unsigned __cdecl Window_Alloc(unsigned slot, unsigned kind) {
-    unsigned char* const rec = At(WindowRecords_addr + (slot & 0xFF) * 0x24u);
+    unsigned char* const rec = At(::bof3::Img(WindowRecords_addr) + (slot & 0xFF) * 0x24u);
     if (rec[0] != 0) return slot | 0xFFu;
     rec[0] = 1;
     rec[1] = static_cast<unsigned char>(kind);

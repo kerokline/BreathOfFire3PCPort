@@ -6,19 +6,27 @@
 //  1. host detection (DllMain) - and the switches that need Capcom's code
 //     refused: BOF3X_ORIGINAL, BOF3X_SHADOW, BOF3X_MP3=original,
 //     BOF3X_CALLTRACE
-//  2. the layout: our sections where exe_layout.h puts them
+//  2. the fence: when the image lies elsewhere than 0x400000 (a developer's
+//     bof3x.exe written by make_exe.py --image-base,
+//     docs/relocatable-image-design.md 1.5), the free parts of the linked
+//     span reserved no-access; then the layout: our sections where
+//     exe_layout.h puts them, relative to the image's base
 //  3. the data: the player's BOF3.exe by SHA-256 when it is there (optional
 //     with BOF3X_EXEIMAGE set: a disc-built install has none); .rdata the
 //     engine's own (rdata::Map: the 44 constants and the keyboard format;
 //     the slots in 4), nothing of it from the file; .data from
 //     BOF3X_EXEIMAGE's cache when set, else the file's; the default key
-//     table written from the engine's rule; the .bss asserted zero
+//     table written from the engine's rule; the .bss asserted zero; then
+//     every pointer word checked and moved with the image (design 3)
 //  4. the fourteen import slots our code calls through, bound and read back
 //  5. the x87 control word 0x027F, read back; MXCSR logged
 //  6. .stub filled with int3; the state hash's census; InjectAll writes the
 //     jmps (and DrawPool_Reserve takes .pool); DirectSoundCreate's thunk;
 //     the census after; .stub checked to hold nothing but those; then
 //     read-execute
+//
+// Every address below is a VA, Capcom's frame; its place is Img(va)
+// (common/image_base.h), the identity at the player's base.
 //  7. the unhandled-exception filter; Game_WinMain on this thread (whose
 //     loop generates the icon, DIV-0095, exe_icon.h)
 #include "hook/exe_host.h"
@@ -29,6 +37,7 @@
 #include <cstring>
 #include <string>
 
+#include "bof3/rebase.gen.h"
 #include "bof3/symbols.gen.h"
 #include "common/sha256.h"
 #include "game/rdata_consts.h"
@@ -55,7 +64,13 @@ namespace {
 
 using namespace exe_layout;
 
-void* At(std::uint32_t va) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(va)); }
+// A place as a pointer, and a VA's place (image_base.h): every constant of
+// exe_layout.h is a VA, in the frame the image was linked in; the image lies
+// at ImageBase(), 0x400000 for the player's executable, and the log prints
+// both where they differ.
+void* At(std::uint32_t place) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(place)); }
+void* Place(std::uint32_t va) { return At(Img(va)); }
+std::uint32_t AsU32(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
 bool EnvSet(const char* name) { return GetEnvironmentVariableA(name, nullptr, 0) > 0; }
 
@@ -80,19 +95,20 @@ void RefuseHostedSwitches() {
 // --- 2. The layout ---------------------------------------------------------
 
 void CheckSection(const char* name, std::uint32_t va, std::uint32_t size, bool exec) {
-    for (std::uint32_t a = va; a < va + size;) {
+    for (std::uint32_t a = Img(va); a < Img(va) + size;) {
         MEMORY_BASIC_INFORMATION m{};
         if (!VirtualQuery(At(a), &m, sizeof m)) Fatal("layout: VirtualQuery(0x%08X) failed, error %lu", (unsigned)a, GetLastError());
         const DWORD p = m.Protect & 0xFF;
         const bool writable = p == PAGE_READWRITE || p == PAGE_WRITECOPY || p == PAGE_EXECUTE_READWRITE ||
                               p == PAGE_EXECUTE_WRITECOPY;
         const bool executable = p == PAGE_EXECUTE_READWRITE || p == PAGE_EXECUTE_WRITECOPY;
-        if (m.State != MEM_COMMIT || m.Type != MEM_IMAGE || m.AllocationBase != At(kImageBase) || !writable ||
+        if (m.State != MEM_COMMIT || m.Type != MEM_IMAGE || m.AllocationBase != At(ImageBase()) || !writable ||
             executable != exec)
-            Fatal("layout: %s at 0x%08X is not our image's %s section (state 0x%lX type 0x%lX protect 0x%lX base %p): "
-                  "a rebased or rewritten bof3x.exe",
-                  name, (unsigned)a, exec ? "read-write-execute" : "read-write", m.State, m.Type, m.Protect, m.AllocationBase);
-        a = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(m.BaseAddress)) + static_cast<std::uint32_t>(m.RegionSize);
+            Fatal("layout: %s at 0x%08X (VA 0x%08X) is not our image's %s section (state 0x%lX type 0x%lX protect "
+                  "0x%lX base %p): a rewritten bof3x.exe",
+                  name, (unsigned)a, (unsigned)(a - Img(va) + va), exec ? "read-write-execute" : "read-write", m.State,
+                  m.Type, m.Protect, m.AllocationBase);
+        a = AsU32(m.BaseAddress) + static_cast<std::uint32_t>(m.RegionSize);
     }
 }
 
@@ -100,9 +116,99 @@ void CheckLayout() {
     CheckSection(".stub", kStubVa, kStubSize, true);
     CheckSection(".game", kGameVa, kGameSize, false);
     CheckSection(".pool", kPoolVa, kPoolSize, false);
-    Log("layout: .stub 0x%08X +0x%X RWX, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h",
+    Log("layout: .stub 0x%08X +0x%X RWX, .game 0x%08X +0x%X RW, .pool 0x%08X +0x%X RW, as exe_layout.h (VAs; the "
+        "image at 0x%08X)",
         (unsigned)kStubVa, (unsigned)kStubSize, (unsigned)kGameVa, (unsigned)kGameSize, (unsigned)kPoolVa,
-        (unsigned)kPoolSize);
+        (unsigned)kPoolSize, (unsigned)ImageBase());
+}
+
+// --- 2a. The fence (docs/relocatable-image-design.md 1.5) --------------------
+
+// The linked span, 0x400000 to the executable's SizeOfImage: every VA of
+// ours names a place in it.
+std::uint32_t LinkedEnd() {
+    const auto* base = static_cast<const std::uint8_t*>(At(ImageBase()));
+    const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(base + reinterpret_cast<const IMAGE_DOS_HEADER*>(base)->e_lfanew);
+    return kImageBase + nt->OptionalHeader.SizeOfImage;
+}
+
+// When the image lies elsewhere than 0x400000, the free parts of the linked
+// span are reserved no-access for the life of the process: an address our
+// source left absolute - a data VA read or written as a place, a code VA
+// called - then faults at its own VA, and the crash reporter names it. By
+// Engine_Main the process's own early allocations (its heaps, mapped NLS and
+// locale files, thread stacks) hold most of the span - measured 2026-10-28,
+// all but 64 KB - so the developer launcher reserves it first, while the
+// process is suspended (launcher.cpp FenceLinkedSpan); those reservations are
+// counted here, and what is still free is taken. What neither could take is
+// logged region by region (design 13). A module in the linked code range is a Fatal: CodePlace
+// (image_base.h) reads a word there as a VA, and a word into a module there
+// would be one of its functions.
+// The largest free run below 16 MB at this point (design 13, option A: an
+// image in a VirtualAlloc block would need 0x587000 bytes there). A
+// measurement for the log; it changes nothing.
+void LogLowFreeRun() {
+    std::uint32_t best = 0, best_at = 0;
+    for (std::uint32_t a = 0x10000; a < 0x1000000;) {
+        MEMORY_BASIC_INFORMATION m{};
+        if (!VirtualQuery(At(a), &m, sizeof m)) break;
+        const std::uint32_t r_lo = AsU32(m.BaseAddress);
+        std::uint32_t r_hi = r_lo + static_cast<std::uint32_t>(m.RegionSize);
+        if (r_hi > 0x1000000) r_hi = 0x1000000;
+        if (m.State == MEM_FREE && r_hi - a > best) best = r_hi - a, best_at = a;
+        a = r_hi;
+    }
+    Log("fence: the largest free run below 16 MB at Engine_Main is 0x%X bytes at 0x%08X (the image takes 0x%X)",
+        (unsigned)best, (unsigned)best_at, (unsigned)(kPoolVa + kPoolSize - kImageBase));
+}
+
+void Fence() {
+    const std::uint32_t lo = kImageBase, hi = LinkedEnd();
+    LogLowFreeRun();
+    if (ImageBase() == kImageBase) {
+        Log("fence: the image at its linked base 0x%08X; nothing to fence", (unsigned)lo);
+        return;
+    }
+    std::uint32_t fenced = 0, regions = 0, other = 0;
+    for (std::uint32_t a = lo; a < hi;) {
+        MEMORY_BASIC_INFORMATION m{};
+        if (!VirtualQuery(At(a), &m, sizeof m)) Fatal("fence: VirtualQuery(0x%08X) failed, error %lu", (unsigned)a, GetLastError());
+        const std::uint32_t r_lo = AsU32(m.BaseAddress);
+        std::uint32_t r_hi = r_lo + static_cast<std::uint32_t>(m.RegionSize);
+        if (r_hi > hi) r_hi = hi;
+        if (m.State == MEM_FREE) {
+            // A reservation starts at a 64 KB boundary.
+            const std::uint32_t from = (a + 0xFFFF) & ~0xFFFFu;
+            if (from > a) Log("fence: 0x%08X..0x%08X free, not taken (below a 64 KB boundary)", (unsigned)a, (unsigned)(from < r_hi ? from : r_hi));
+            if (from < r_hi) {
+                if (!VirtualAlloc(At(from), r_hi - from, MEM_RESERVE, PAGE_NOACCESS))
+                    Fatal("fence: cannot reserve 0x%08X..0x%08X, error %lu", (unsigned)from, (unsigned)r_hi, GetLastError());
+                fenced += r_hi - from;
+                ++regions;
+            }
+        } else if (m.State == MEM_RESERVE && m.Type == MEM_PRIVATE && m.AllocationProtect == PAGE_NOACCESS) {
+            // The developer launcher's reservation, made while this process
+            // was suspended (launcher.cpp FenceLinkedSpan): already a fence.
+            fenced += r_hi - a;
+            ++regions;
+        } else {
+            char path[MAX_PATH] = "";
+            if (m.Type == MEM_IMAGE) GetModuleFileNameA(static_cast<HMODULE>(m.AllocationBase), path, sizeof path);
+            Log("fence: 0x%08X..0x%08X not free, left: state 0x%lX type 0x%lX protect 0x%lX allocation %p%s%s",
+                (unsigned)a, (unsigned)r_hi, m.State, m.Type, m.Protect, m.AllocationBase, *path ? ", " : "", path);
+            other += r_hi - a;
+            if (m.Type == MEM_IMAGE && a < image::kCodeHi && r_hi > image::kCodeLo)
+                Fatal("fence: the module %s lies at 0x%08X..0x%08X, in the linked code range 0x%X..0x%X, where a code "
+                      "word is read as a VA (CodePlace); start bof3x.exe at another base",
+                      *path ? path : "(unnamed)", (unsigned)a, (unsigned)r_hi, (unsigned)image::kCodeLo,
+                      (unsigned)image::kCodeHi);
+        }
+        a = r_hi;
+    }
+    Log("fence: the image at 0x%08X, moved from 0x%08X: 0x%X bytes of the linked span 0x%08X..0x%08X reserved "
+        "no-access in %u regions, 0x%X bytes held by something else (above)",
+        (unsigned)ImageBase(), (unsigned)lo, (unsigned)fenced, (unsigned)lo, (unsigned)hi, (unsigned)regions,
+        (unsigned)other);
 }
 
 // --- 3. The data -----------------------------------------------------------
@@ -186,28 +292,79 @@ void CopyData() {
     OpenExe();
 
     // .game is a zero-filled section: asserted, not trusted, before the copy.
-    const auto* game = static_cast<const std::uint8_t*>(At(kGameVa));
+    const auto* game = static_cast<const std::uint8_t*>(Place(kGameVa));
     for (std::uint32_t i = 0; i < kGameSize; ++i)
-        if (game[i]) Fatal("data: .game is not zero at 0x%08X before the copy", (unsigned)(kGameVa + i));
+        if (game[i]) Fatal("data: .game is not zero at VA 0x%08X before the copy", (unsigned)(kGameVa + i));
 
     // .rdata: the engine's own, none of it from the file (rdata_consts.h);
     // the import slots are bound in step 4.
     rdata::Map();
-    const bool from_cache = ExeImage_Source(At(kDataVa), kDataVa, kDataBytes, kBssEnd);
-    if (!from_cache) ReadAt(g_data.raw, At(kDataVa), kDataBytes, ".data");
+    const bool from_cache = ExeImage_Source(Place(kDataVa), kDataVa, kDataBytes, kBssEnd);
+    if (!from_cache) ReadAt(g_data.raw, Place(kDataVa), kDataBytes, ".data");
     Shell_MapDefaultKeys();   // Key_TableDefault from the engine's rule, against the file's when it is there
-    ExeImage_LayOptTables(At(kDataVa), kDataVa, kDataBytes);   // DIV-0111: a BOF3X_OPT layer's .data ranges
+    ExeImage_LayOptTables(Place(kDataVa), kDataVa, kDataBytes);   // DIV-0111: a BOF3X_OPT layer's .data ranges
     ExeImage_CompareWithFile();   // a disc-built image, filled, against the file's .data when it is there
 
     // .bss: the original loader zeroed it, and so did ours - asserted, to
     // Capcom's .rsrc's end.
     for (std::uint32_t a = kDataVa + kDataBytes; a < kGameVa + kGameSize; ++a)
-        if (*static_cast<const std::uint8_t*>(At(a))) Fatal("data: .bss is not zero at 0x%08X after the copy", (unsigned)a);
+        if (*static_cast<const std::uint8_t*>(Place(a))) Fatal("data: .bss is not zero at VA 0x%08X after the copy", (unsigned)a);
     Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
         "zero 0x%08X..0x%08X (virtual end 0x%08X)",
         (unsigned)kRdataVa, (unsigned)kRdataBytes, (unsigned)kDataVa, (unsigned)kDataBytes,
         from_cache ? "BOF3X_EXEIMAGE's data.bin" : "the file", (unsigned)(kDataVa + kDataBytes),
         (unsigned)(kGameVa + kGameSize), (unsigned)kBssEnd);
+}
+
+// --- 3a. The rebase (docs/relocatable-image-design.md 3) ----------------------
+
+// After the copy and every fill, before anything of ours writes .data
+// (BindSlots, the state hash's census, InjectAll, the language overlays): each
+// pointer word of rebase.gen.h (recipes/exe-pointers.tsv's runs, less four
+// numbers the recipe holds as pointers, tools/gen_rebase.py) is checked to
+// hold an address in its section's linked range - else a Fatal naming the
+// word: a layer or a cache that wrote a number over a pointer is refused, not
+// moved - and then moved by ImageBase() - 0x400000. Code words move too
+// (mode S, design 6.1): they name places in the moved stub page. At the
+// player's base the move is zero and the check still runs: it is the loader's
+// own test of the table against the data it copied.
+void Rebase() {
+    struct Linked {
+        const char* name;
+        std::uint32_t lo, hi;
+    };
+    const Linked linked[4] = {
+        {"data", kDataVa, kBssEnd},
+        {"bss", kDataVa, kBssEnd},
+        {"rdata", kRdataVa, kDataVa},
+        {"text", kStubVa, kStubVa + kStubSize},
+    };
+    const std::uint32_t move = ImageBase() - kImageBase;
+    unsigned words[4] = {};
+    for (const rebase::Run& r : rebase::kRuns) {
+        const Linked& want = linked[r.to];
+        if (r.pc < kDataVa || r.pc + 4u * r.words > kDataVa + kDataBytes)
+            Fatal("rebase: the run 0x%08X x%u lies outside .data's file bytes", (unsigned)r.pc, (unsigned)r.words);
+        for (unsigned k = 0; k < r.words; ++k) {
+            const std::uint32_t va = r.pc + 4 * k;
+            std::uint32_t v;
+            std::memcpy(&v, Place(va), 4);
+            if (v < want.lo || v >= want.hi)
+                Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
+                      "recipes/exe-pointers.tsv lists (a layer or a cache wrote a number there)",
+                      want.name, (unsigned)va, (unsigned)v, (unsigned)want.lo, (unsigned)want.hi);
+            v += move;
+            std::memcpy(Place(va), &v, 4);
+        }
+        words[r.to] += r.words;
+    }
+    for (unsigned c = 0; c < 4; ++c)
+        if (words[c] != rebase::kWords[c])
+            Fatal("rebase: %u %s words moved, the table counts %u", words[c], linked[c].name, rebase::kWords[c]);
+    Log("rebase: %u runs, words data %u, bss %u, rdata %u, text %u (%u held as pointers left as numbers) checked in "
+        "their linked ranges and moved by 0x%X (the image at 0x%08X)",
+        rebase::kRunCount, words[rebase::kData], words[rebase::kBss], words[rebase::kRdata], words[rebase::kText],
+        rebase::kNotMoved, (unsigned)move, (unsigned)ImageBase());
 }
 
 // --- 4. The import slots ---------------------------------------------------
@@ -252,12 +409,12 @@ FARPROC Resolve(const Slot& s) {
 void BindSlots() {
     for (const Slot& s : kSlots) {
         const FARPROC fn = Resolve(s);
-        std::memcpy(At(s.at), &fn, 4);
+        std::memcpy(Place(s.at), &fn, 4);
     }
     // The self-test: every row read back, and GetTickCount called through its slot.
     for (const Slot& s : kSlots) {
         FARPROC now;
-        std::memcpy(&now, At(s.at), 4);
+        std::memcpy(&now, Place(s.at), 4);
         if (now != Resolve(s)) Fatal("slots: 0x%08X does not read back as %s!%s", (unsigned)s.at, s.dll, s.name ? s.name : "#1");
     }
     const DWORD before = GetTickCount();
@@ -287,23 +444,28 @@ void SetX87() {
 
 // DirectSoundCreate's import thunk, `jmp [0x5C4014]`, which Snd_Init calls
 // as a function (sound_rest_callees.h kDirectSoundCreate): ours now, with
-// the slot BindSlots filled.
+// the slot BindSlots filled. The operand is the slot's place.
 constexpr std::uint32_t kDirectSoundThunk = 0x5ACBBC;
-constexpr std::uint8_t kThunk[6] = {0xFF, 0x25, 0x14, 0x40, 0x5C, 0x00};
+constexpr std::uint32_t kDirectSoundSlot = 0x5C4014;
+constexpr unsigned kThunkBytes = 6;
 
 void FillStub() {
     DWORD old = 0;
-    if (!VirtualProtect(At(kStubVa), kStubSize, PAGE_EXECUTE_READWRITE, &old))
+    if (!VirtualProtect(Place(kStubVa), kStubSize, PAGE_EXECUTE_READWRITE, &old))
         Fatal("stub: VirtualProtect(.stub) failed, error %lu", GetLastError());
-    std::memset(At(kStubVa), 0xCC, kStubSize);
-    Log("stub: .stub 0x%08X..0x%08X filled with int3", (unsigned)kStubVa, (unsigned)(kStubVa + kStubSize));
+    std::memset(Place(kStubVa), 0xCC, kStubSize);
+    Log("stub: .stub 0x%08X..0x%08X filled with int3 (VA 0x%08X..0x%08X)", (unsigned)Img(kStubVa),
+        (unsigned)Img(kStubVa + kStubSize), (unsigned)kStubVa, (unsigned)(kStubVa + kStubSize));
 }
 
 void WriteThunk() {
-    auto* p = static_cast<std::uint8_t*>(At(kDirectSoundThunk));
-    for (unsigned i = 0; i < sizeof kThunk; ++i)
+    auto* p = static_cast<std::uint8_t*>(Place(kDirectSoundThunk));
+    for (unsigned i = 0; i < kThunkBytes; ++i)
         if (p[i] != 0xCC) Fatal("stub: DirectSoundCreate's thunk 0x%08X overlaps a jmp (0x%02X at +%u)", (unsigned)kDirectSoundThunk, p[i], i);
-    std::memcpy(p, kThunk, sizeof kThunk);
+    const std::uint32_t slot = Img(kDirectSoundSlot);
+    const std::uint8_t thunk[kThunkBytes] = {0xFF, 0x25, static_cast<std::uint8_t>(slot), static_cast<std::uint8_t>(slot >> 8),
+                                             static_cast<std::uint8_t>(slot >> 16), static_cast<std::uint8_t>(slot >> 24)};
+    std::memcpy(p, thunk, kThunkBytes);
 }
 
 // The inventory's self-test (docs/state3-design.md section 7): nothing of
@@ -311,7 +473,7 @@ void WriteThunk() {
 // RetargetCall into Capcom's code writes nothing in this host
 // (docs/operand-store.md), so every other byte must still be int3.
 void CheckStub() {
-    const auto* page = static_cast<const std::uint8_t*>(At(kStubVa));
+    const auto* page = static_cast<const std::uint8_t*>(Place(kStubVa));   // indexed by VA - kStubVa
     static std::uint8_t mine[kStubSize];   // 1: written by a jmp or the thunk
     unsigned jmps = 0;
     for (int i = 0; i < OwnedCount(); ++i) {
@@ -324,7 +486,7 @@ void CheckStub() {
         }
         ++jmps;
     }
-    for (unsigned k = 0; k < sizeof kThunk; ++k) mine[kDirectSoundThunk - kStubVa + k] = 1;
+    for (unsigned k = 0; k < kThunkBytes; ++k) mine[kDirectSoundThunk - kStubVa + k] = 1;
     unsigned stray = 0;
     std::uint32_t first = 0;
     for (std::uint32_t i = 0; i < kStubSize; ++i) {
@@ -341,14 +503,14 @@ void CheckStub() {
 
 void ProtectStub() {
     DWORD old = 0;
-    if (!VirtualProtect(At(kStubVa), kStubSize, PAGE_EXECUTE_READ, &old))
+    if (!VirtualProtect(Place(kStubVa), kStubSize, PAGE_EXECUTE_READ, &old))
         Fatal("stub: VirtualProtect(.stub, read-execute) failed, error %lu", GetLastError());
-    FlushInstructionCache(GetCurrentProcess(), At(kStubVa), kStubSize);
-    for (std::uint32_t a = kStubVa; a < kStubVa + kStubSize;) {
+    FlushInstructionCache(GetCurrentProcess(), Place(kStubVa), kStubSize);
+    for (std::uint32_t a = Img(kStubVa); a < Img(kStubVa) + kStubSize;) {
         MEMORY_BASIC_INFORMATION m{};
         VirtualQuery(At(a), &m, sizeof m);
         if (m.Protect != PAGE_EXECUTE_READ) Fatal("stub: 0x%08X is protect 0x%lX after the change", (unsigned)a, m.Protect);
-        a = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(m.BaseAddress)) + static_cast<std::uint32_t>(m.RegionSize);
+        a = AsU32(m.BaseAddress) + static_cast<std::uint32_t>(m.RegionSize);
     }
     Log("stub: .stub is read-execute; a later write faults");
 }
@@ -433,8 +595,10 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
     Log("code page: GetACP() = %u%s", GetACP(), GetACP() == CP_UTF8 ? " (UTF-8, as the manifest asks)" : " (not UTF-8: the manifest's activeCodePage was not honoured)");
 
     RefuseHostedSwitches();
+    Fence();
     CheckLayout();
     CopyData();
+    Rebase();
     BindSlots();
     SetX87();
 
@@ -445,7 +609,8 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
         std::swprintf(name, 64, L"Local\\bof3x_unattended_%lu", GetCurrentProcessId());
         CreateEventW(nullptr, TRUE, FALSE, name);
     }
-    StateHash_BeforeInjects(module);   // .data as the engine copied it
+    StateHash_SetImageBase(ImageBase());   // .data read at its place; a moved image's range folded
+    StateHash_BeforeInjects(module);   // .data as the engine copied and moved it
     FillStub();
     InjectAll();
     WriteThunk();

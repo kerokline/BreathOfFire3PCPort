@@ -143,7 +143,7 @@ constexpr ::bof3::image::Va kArea141Script6A8{0x62F6A8};
 constexpr unsigned kArea142StateCount = 2;
 
 // The run records area 141 paints (kArea141Runs + 5 * i).
-constexpr std::uint32_t Run(unsigned i) { return ::bof3::Img(kArea141Runs.v) + 5 * i; }   // a place
+inline std::uint32_t Run(unsigned i) { return ::bof3::Img(kArea141Runs.v) + 5 * i; }   // a place
 
 }  // namespace at
 }  // namespace area_w3e

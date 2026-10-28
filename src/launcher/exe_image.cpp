@@ -53,7 +53,7 @@ bool ExeImageRead(const std::wstring& exe, std::uint32_t va, std::uint32_t size,
 }
 
 bool ExeDefaultKeys(const std::wstring& exe, std::vector<input::KeyBinding>& keys, std::string& why) {
-    const auto va = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Key_TableDefault));
+    const std::uint32_t va = Key_TableDefault_addr;   // a VA, read from the file: the launcher places nothing
     const std::uint32_t size = Key_TableDefault_count * sizeof Key_TableDefault[0];
     std::vector<unsigned char> table;
     if (!ExeImageRead(exe, va, size, table, why)) return false;

@@ -87,7 +87,7 @@ const Callees kOriginals = {
 Callees g = kOriginals;
 
 float g_far[kFarEntries];
-U g_far_base = kCapcomFarBase;
+U g_far_base = ::bof3::Img(kCapcomFarBase);   // a place: the handlers read the edge there
 
 // Exactly the expression of the re-aimed copies that carried DIV-0010 from
 // 2026-09-20 (src/game/gfx_sprite_uv.cpp, now gone): (float(j) + inset) / 256
@@ -292,14 +292,14 @@ void SprtDraw_Inject() {
 
     // DIVERGENCE DIV-0010: the far texture edge from our table. Patched into
     // our own base so that it has a name of its own for BOF3X_ORIGINAL.
-    const U was = kCapcomFarBase;
+    const U was = ::bof3::Img(kCapcomFarBase);
     const U is = static_cast<U>(reinterpret_cast<std::uintptr_t>(g_far));
     std::uint8_t was_bytes[4], is_bytes[4];
     std::memcpy(was_bytes, &was, 4);
     std::memcpy(is_bytes, &is, 4);
     bof3::PatchBytes("SpriteFarEdge", static_cast<U>(reinterpret_cast<std::uintptr_t>(&g_far_base)), was_bytes,
                      is_bytes, 4);
-    bof3::Log("DIV-0010    our sprite handlers' far texture edge: %s", g_far_base == kCapcomFarBase
+    bof3::Log("DIV-0010    our sprite handlers' far texture edge: %s", g_far_base == ::bof3::Img(kCapcomFarBase)
                                                                           ? "Capcom's, tc[u + w - 1]"
                                                                           : "the last pixel on the last texel's centre");
 }

@@ -76,7 +76,7 @@ Handler StateEntry(const char* who, U table, unsigned index) {
 // effect spawns keep (the originals' multiply by 0x63E7063F, sar 6, plus the
 // sign bit: truncating toward 0).
 unsigned char MemberIndex() {
-    const auto d = static_cast<std::int32_t>(Key(Field_ActiveMember) - Sprite_Objects_addr);
+    const auto d = static_cast<std::int32_t>(Key(Field_ActiveMember) - ::bof3::Img(Sprite_Objects_addr));
     return static_cast<unsigned char>(d / static_cast<std::int32_t>(at::kObjectStride));
 }
 

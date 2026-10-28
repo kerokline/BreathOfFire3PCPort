@@ -34,6 +34,8 @@ import argparse, ctypes, ctypes.wintypes as w, os, struct, subprocess, sys, time
 
 k = ctypes.WinDLL('kernel32', use_last_error=True)
 u = ctypes.WinDLL('user32')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import proc_image  # noqa: E402
 ntdll = ctypes.WinDLL('ntdll')
 
 A_FLIP, A_ACTIVE, A_MSG, A_AREA, A_SEQ, A_TLSIDX = (
@@ -65,10 +67,13 @@ class Game:
         self.h = k.OpenProcess(0x0410, False, pid)
         if not self.h:
             sys.exit(f'OpenProcess failed: {ctypes.get_last_error()}')
+        self.move = proc_image.move_of(self.h)   # the image's move (tools/proc_image.py)
 
     def rd(self, addr, n):
+        """n bytes at addr: a VA of the image placed by the move, any other address as it is."""
         buf = ctypes.create_string_buffer(n)
         got = ctypes.c_size_t()
+        addr = proc_image.place(addr, self.move)
         if not k.ReadProcessMemory(self.h, ctypes.c_void_p(addr), buf, n, ctypes.byref(got)):
             raise EOFError
         return buf.raw

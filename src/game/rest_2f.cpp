@@ -875,7 +875,7 @@ extern "C" void __cdecl TacticsMembers_Build(void) {
     const unsigned char count = PartyCount();
     unsigned char n = 0;
     B(Rec(12, 0xA)) = 0;
-    for (U r = CharacterRecords_addr; r < CharacterRecords_addr + 8 * kCharacterStride; r += kCharacterStride) {
+    for (U r = ::bof3::Img(CharacterRecords_addr); r < ::bof3::Img(CharacterRecords_addr) + 8 * kCharacterStride; r += kCharacterStride) {
         if (!(B(r + 0xB) & 1)) continue;
         unsigned j = 0;
         while (j < count && B(r + 9) != B(::bof3::Img(kParty.v) + j)) ++j;

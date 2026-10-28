@@ -79,7 +79,7 @@ using Handler = void (__cdecl*)();
 void Jump(U table, unsigned count, int index, const char* who) {
     if (index < 0 || static_cast<unsigned>(index) >= count)
         bof3::Fatal("%s: state %d is outside its table's %u entries at 0x%X; the original jumps through 0x%X", who, index, count,
-                    static_cast<unsigned>(table), static_cast<unsigned>(table + 4 * static_cast<U>(index)));
+                    static_cast<unsigned>(::bof3::VaOf(table)), static_cast<unsigned>(::bof3::VaOf(table + 4 * static_cast<U>(index))));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * static_cast<U>(index))))();
 }
 
@@ -982,7 +982,7 @@ extern "C" void __cdecl CommuBoard_Confirm(void) {
             const bool same = static_cast<int>(B(slot)) == Rest4b_Pick + 4 && static_cast<int>(B(slot + 1)) == Rest4b_PickB &&
                               static_cast<int>(B(slot + 2)) == Rest4b_PickC;
             if (!same) {
-                for (U r = Community_Records_addr; r < at::kMembersEnd; r += at::kMemberStride) {
+                for (U r = ::bof3::Img(Community_Records_addr); r < ::bof3::Img(at::kMembersEnd); r += at::kMemberStride) {
                     if (B(r + 1) != arg) continue;
                     PutL(r + 4, Game_BattleCount);
                     B(r + 2) = 0;
@@ -1348,7 +1348,7 @@ extern "C" void __cdecl CommuBoard_DrawSlotLines(unsigned slot, unsigned steady)
 extern "C" unsigned char __cdecl Commu_CountInSlot(unsigned slot) {
     const unsigned char s = static_cast<unsigned char>(slot);
     unsigned char n = 0;
-    for (U r = Community_Records_addr; r < at::kMembersEnd; r += at::kMemberStride)
+    for (U r = ::bof3::Img(Community_Records_addr); r < ::bof3::Img(at::kMembersEnd); r += at::kMemberStride)
         if (B(r) != 0 && B(r + 1) == s) ++n;
     return n;
 }

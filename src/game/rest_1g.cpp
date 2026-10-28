@@ -1462,7 +1462,7 @@ extern "C" void __cdecl Fish_Heading(void) {
         }
     }
     unsigned row = 0;
-    for (U at = MoveCmd_F9Steps_addr + 4; at < kF9StepsEnd; at += 8, ++row) {
+    for (U at = ::bof3::Img(MoveCmd_F9Steps_addr) + 4; at < ::bof3::Img(kF9StepsEnd); at += 8, ++row) {
         const U sx = static_cast<U>(Long(At(at - 4)));
         const U sz = static_cast<U>(Long(At(at)));
         const U wx = Abs32(sx) <= 0x400 ? sx + sx : sx;

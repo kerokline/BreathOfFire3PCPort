@@ -636,7 +636,7 @@ void WavDump_Start() {
         Log("wav         BOF3X_SPEED=%s: the logic frames outrun the device, so the music's queue runs dry (counted as "
             "underrun samples); effects are mixed as ever", speed);
 
-    void** const slot = reinterpret_cast<void**>(static_cast<std::uintptr_t>(Imp_DirectSoundCreate_addr));
+    void** const slot = reinterpret_cast<void**>(static_cast<std::uintptr_t>(Img(Imp_DirectSoundCreate_addr)));
     HMODULE dsound = GetModuleHandleA("dsound.dll");
     void* const real = dsound ? reinterpret_cast<void*>(GetProcAddress(dsound, MAKEINTRESOURCEA(1))) : nullptr;
     if (!real) Fatal("wav: DSOUND.dll is not loaded, or has no DirectSoundCreate (#1)");

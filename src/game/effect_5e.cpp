@@ -977,7 +977,7 @@ U LidTexture(const char* who, U table, unsigned count, std::int32_t index) {
     if (index < 0 || index >= static_cast<std::int32_t>(count))
         bof3::Fatal("%s: the lid +0x32 is %d, past the %u textures of 0x%X - the original reads the .data after "
                     "(docs/effect_5e.md section 6)",
-                    who, index, count, (unsigned)table);
+                    who, index, count, (unsigned)::bof3::VaOf(table));
     return UL(table + 4 * static_cast<U>(index));
 }
 

@@ -65,7 +65,7 @@ void Dispatch(const char* who, const unsigned long* table, unsigned entries, U b
     if (index >= entries)
         bof3::Fatal("%s: the byte 0x%X is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_4c.md section 7)",
-                    who, (unsigned)byte_address, index, entries, (unsigned)Key(table));
+                    who, (unsigned)::bof3::VaOf(byte_address), index, entries, (unsigned)::bof3::VaOf(Key(table)));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
 }
 

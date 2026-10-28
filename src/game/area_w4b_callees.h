@@ -122,8 +122,8 @@ struct Rects {
     std::uint32_t fn_rect; // the copy's own rectangle search (called by address)
 };
 constexpr unsigned kRectStride = 5;
-constexpr Rects kRects169 = {"Area169", ::bof3::Img(0x63CA3C), 2, bof3::addr::Area169_MemberRect};
-constexpr Rects kRects171 = {"Area171", ::bof3::Img(0x63D84C), 2, bof3::addr::Area171_MemberRect};
+const Rects kRects169 = {"Area169", ::bof3::Img(0x63CA3C), 2, bof3::addr::Area169_MemberRect};
+const Rects kRects171 = {"Area171", ::bof3::Img(0x63D84C), 2, bof3::addr::Area171_MemberRect};
 // Area 170: the four input directions its tail's state 53 swaps, by the held
 // word's top nibble (16 bytes).
 // kArea170InputSwap: now Area170_InputSwap (symbols.toml).

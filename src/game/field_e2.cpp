@@ -74,9 +74,10 @@ using Handler = void (__cdecl*)();
 U CodeAt(U table, U index, const char* who) {
     const U cell = table + 4u * index;
     const U entry = L(cell);
-    if (!scenario_harness::g_active && (entry < at::kTextLo || entry >= at::kTextHi))
-        bof3::Fatal("%s: index %u reads 0x%X at 0x%X, not code - past its table (the original jumps there)", who,
-                    (unsigned)index, (unsigned)entry, (unsigned)cell);
+    // A code word holds a place in the moved stub page (mode S): the code range at the image's base.
+    if (!scenario_harness::g_active && (entry < ::bof3::Img(at::kTextLo) || entry >= ::bof3::Img(at::kTextHi)))
+        bof3::Fatal("%s: index %u reads 0x%X at 0x%X (VA 0x%X), not code - past its table (the original jumps there)", who,
+                    (unsigned)index, (unsigned)entry, (unsigned)cell, (unsigned)::bof3::VaOf(cell));
     return entry;
 }
 
@@ -118,13 +119,17 @@ void FollowAndTick(unsigned char* s) {
 // words where the callers left them. Unchecked, as the original - chapter 0's
 // table pointer is 0 (docs/field_e2.md section 6).
 extern "C" __attribute__((naked)) void __cdecl Scenario_CallB(unsigned) {
-    asm("movsbl %c0, %%eax\n\t"            // Cond_ByteFA, the chapter
+    // edx holds the image's move first (Bof3_ImageMove, src/hook/host.cpp;
+    // task_sched.cpp says why the VAs are displacements); eax, ecx and edx are
+    // the three the original writes.
+    asm("movl _Bof3_ImageMove, %%edx\n\t"
+        "movsbl %c0(%%edx), %%eax\n\t"     // Cond_ByteFA, the chapter
         "movl 4(%%esp), %%ecx\n\t"
-        "movl %c1(,%%eax,4), %%edx\n\t"    // Scenario_CallBTables
+        "movl %c1(%%edx,%%eax,4), %%edx\n\t"   // Scenario_CallBTables
         "andl $0xFF, %%ecx\n\t"
         "jmp *(%%edx,%%ecx,4)"
         :
-        : "i"(::bof3::Img(0x8034E0)), "i"(::bof3::Img(0x660BD4)));
+        : "i"(0x8034E0), "i"(0x660BD4));
 }
 
 // original 0x5343C0: with no pair of the sixty at 0x9046D0 (+0 in use, +1 the
@@ -136,7 +141,7 @@ extern "C" void __cdecl Records_CountUnpaired(unsigned key, U* counter) {
     for (U r = 0; r < 8; ++r) {
         if (B(::bof3::Img(at::kRecords) + 8u * r) != 4) continue;
         if (B(::bof3::Img(at::kRecords) + 1u + 8u * r) != static_cast<unsigned char>(key)) continue;
-        for (U p = Community_Records_addr + 1u; p < at::kPairsEnd + 1u; p += 8)
+        for (U p = ::bof3::Img(Community_Records_addr) + 1u; p < ::bof3::Img(at::kPairsEnd) + 1u; p += 8)
             if (B(p - 1) != 0 && B(p) == r + 1u) ++named;
     }
     if (named == 0) ++*counter;
@@ -150,7 +155,7 @@ extern "C" void __cdecl Records_CountUnpairedOfKind(unsigned kind) {
         unsigned char named = 0;
         if (B(::bof3::Img(at::kRecords) + 8u * r) != static_cast<unsigned char>(kind)) continue;
         if (B(::bof3::Img(at::kRecords) + 3u + 8u * r) == 0) continue;
-        for (U p = Community_Records_addr + 1u; p < at::kPairsEnd + 1u; p += 8)
+        for (U p = ::bof3::Img(Community_Records_addr) + 1u; p < ::bof3::Img(at::kPairsEnd) + 1u; p += 8)
             if (B(p - 1) != 0 && B(p) == r + 1u) ++named;
         if (named == 0) SetL(::bof3::Img(at::kRecords) + 4u + 8u * r, L(::bof3::Img(at::kRecords) + 4u + 8u * r) + 1u);
     }
@@ -185,7 +190,7 @@ extern "C" void __cdecl Field_AfterBattleTally(void) {
             }
         if (found) {
             unsigned char a = 0, b = 0;
-            for (U p = Community_Records_addr + 1u; p < at::kPairsEnd + 1u; p += 8) {
+            for (U p = ::bof3::Img(Community_Records_addr) + 1u; p < ::bof3::Img(at::kPairsEnd) + 1u; p += 8) {
                 if (B(p - 1) == 0) continue;
                 if (B(p) == 0xA) ++a;
                 else if (B(p) == 0xB) ++b;

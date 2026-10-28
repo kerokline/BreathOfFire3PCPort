@@ -180,9 +180,10 @@ constexpr uint32_t kTextLo = 0x401000, kTextHi = 0x5C3000;
 uint32_t CodeAt(uint32_t table, int index, const char* who) {
     const uint32_t at = table + 4u * static_cast<uint32_t>(index);
     const uint32_t entry = L(at);
-    if (!scenario_harness::g_active && (entry < kTextLo || entry >= kTextHi))
-        bof3::Fatal("%s: index %d reads 0x%X at 0x%X, not code - past its table (the original jumps there)", who, index,
-                    (unsigned)entry, (unsigned)at);
+    // A code word holds a place in the moved stub page (mode S): the code range at the image's base.
+    if (!scenario_harness::g_active && (entry < ::bof3::Img(kTextLo) || entry >= ::bof3::Img(kTextHi)))
+        bof3::Fatal("%s: index %d reads 0x%X at 0x%X (VA 0x%X), not code - past its table (the original jumps there)", who,
+                    index, (unsigned)entry, (unsigned)at, (unsigned)::bof3::VaOf(at));
     return entry;
 }
 VoidFn Handler(uint32_t table, int index, const char* who) {

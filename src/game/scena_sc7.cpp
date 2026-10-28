@@ -2262,7 +2262,7 @@ extern "C" void __cdecl Scena08_Scene8(void) {
         SetLong(At(::bof3::Img(Scena08_Kept_addr) + 0x8), Long(At(p + 0x38)));
         // (p - Sprite_Objects) / 0xA4, a signed division truncated toward 0.
         Scena08_Kept[0] =
-            static_cast<unsigned char>(static_cast<std::int32_t>(p - Sprite_Objects_addr) / static_cast<std::int32_t>(at::kSpriteStride));
+            static_cast<unsigned char>(static_cast<std::int32_t>(p - ::bof3::Img(Sprite_Objects_addr)) / static_cast<std::int32_t>(at::kSpriteStride));
         DropIn(2);
         SetStep(0x1B);
         return;

@@ -68,7 +68,7 @@ constexpr ::bof3::image::Va kStandIns{0x66A2FC};
 
 bool InPool(const std::uint8_t* p) {
     const auto a = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p));
-    return a >= kPool && a < kPool + kPoolRoom;
+    return a >= ::bof3::Img(kPool) && a < ::bof3::Img(kPool) + kPoolRoom;   // a text pointer: a place
 }
 
 bool InButtonArea() {
@@ -691,7 +691,7 @@ void ButtonText_Arm() {
     for (int i = 0; i < 6 && port; ++i) {
         const auto p = reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(kStandIns.v)))[i];
         const auto* s = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(p));
-        port = p >= 0x400000u && p < 0x700000u && button_text::IsPortStandIn(s[0]) && s[1] == 0;
+        port = p >= ::bof3::Img(0x400000u) && p < ::bof3::Img(0x700000u) && button_text::IsPortStandIn(s[0]) && s[1] == 0;   // a pointer word: a place
         if (!port && g_bt.layer == button_text::Layer::kNone)
             bof3::Fatal("ButtonText: 0x461C00's stand-in %d (0x%08X) is not a one-byte stand-in, and with no "
                         "language layer the PC's colour cue needs it",

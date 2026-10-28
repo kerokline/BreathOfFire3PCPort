@@ -182,7 +182,7 @@ MS21_EXPORT void __cdecl Inferno_Task(void) {
 // Gfx_ClutStripDirty; sound 0x100. The pool's answer is used unchecked (0xFF
 // with every slot in use: a write past the pool).
 MS21_EXPORT void __cdecl Inferno_Start(void) {
-    for (std::uint32_t p = FlamePool_addr + 1; p < FlamePool_addr + kPoolSlots * at::kTaskStride + 1; p += at::kTaskStride) {
+    for (std::uint32_t p = ::bof3::Img(FlamePool_addr) + 1; p < ::bof3::Img(FlamePool_addr) + kPoolSlots * at::kTaskStride + 1; p += at::kTaskStride) {
         Mem(p)[-1] = 0;
         Mem(p)[0] = 0;
         Mem(p)[1] = 0;
@@ -223,7 +223,7 @@ MS21_EXPORT void __cdecl Inferno_Start(void) {
         slot[9] = U8((i + 3) << 3);
         Bump(sc[0xB]);
     }
-    for (std::uint32_t p = kClut; p < kClutEnd; p += 2) SetWord(Mem(p), Word(Mem(p - 0x4000)) | 0x8000u);
+    for (std::uint32_t p = ::bof3::Img(kClut); p < ::bof3::Img(kClutEnd); p += 2) SetWord(Mem(p), Word(Mem(p - 0x4000)) | 0x8000u);
     Mem(::bof3::Img(Gfx_ClutStripDirty_addr))[0] = 1;
     MH_CALL(Sound_PlayById)(0x100);
 }

@@ -210,7 +210,7 @@ void SelfTest() {
         return;
     }
     // The clone calls IntersectRect through the game's import slot.
-    if (*reinterpret_cast<void**>(static_cast<std::uintptr_t>(0x5C4168)) == nullptr) {
+    if (*reinterpret_cast<void**>(static_cast<std::uintptr_t>(::bof3::Img(0x5C4168))) == nullptr) {
         bof3::Log("shadow      Gfx_InvalidateTextures self-test SKIPPED: import slot 0x5C4168 not bound yet");
         return;
     }

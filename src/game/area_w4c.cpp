@@ -69,7 +69,7 @@ unsigned char* EffectAt(const char* who, unsigned slot) {
 // it: (the pointer - Sprite_Objects) / 0xA4, C's truncating signed division
 // (imul 0x63E7063F, sar 6, plus the sign bit); only its low byte is kept.
 unsigned char ActiveMemberIndex() {
-    const auto diff = static_cast<std::int32_t>(Key(Field_ActiveMember) - Sprite_Objects_addr);
+    const auto diff = static_cast<std::int32_t>(Key(Field_ActiveMember) - ::bof3::Img(Sprite_Objects_addr));
     return static_cast<unsigned char>(diff / static_cast<std::int32_t>(at::kObjectStride));
 }
 

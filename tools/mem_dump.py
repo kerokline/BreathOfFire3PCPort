@@ -52,6 +52,7 @@ import argparse, ctypes, hashlib, json, os, sys, time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from attract_watch import find_game  # noqa: E402
+import proc_image  # noqa: E402
 
 k = ctypes.WinDLL('kernel32', use_last_error=True)
 ntdll = ctypes.WinDLL('ntdll')
@@ -66,9 +67,14 @@ A_QCOUNT, A_STRIP = 0x9035A0, 0x937F90
 A_CLUTROWS, N_CLUTROWS, CLUT_BUF = 0x6C2A40, 512, 0x400
 
 
+_move = 0   # the image's move, set once the process is open (tools/proc_image.py)
+
+
 def read(h, addr, size):
+    """size bytes at addr: a VA of the image placed by the move, any other address as it is."""
     buf = ctypes.create_string_buffer(size)
     got = ctypes.c_size_t()
+    addr = proc_image.place(addr, _move)
     if not k.ReadProcessMemory(h, ctypes.c_void_p(addr), buf, size, ctypes.byref(got)) or got.value != size:
         sys.exit(f'ReadProcessMemory {addr:#x}+{size:#x} failed: {ctypes.get_last_error()}')
     return buf.raw
@@ -89,6 +95,8 @@ def dump(a):
     h = k.OpenProcess(0x0410 | 0x0800, False, pid)
     if not h:
         sys.exit(f'OpenProcess failed: {ctypes.get_last_error()}')
+    global _move
+    _move = proc_image.move_of(h)
     t0 = time.time()
     while int.from_bytes(read(h, A_AREA, 2), 'little') != a.area:
         if time.time() - t0 > a.timeout:

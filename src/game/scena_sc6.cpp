@@ -2294,7 +2294,7 @@ SC6_EXPORT unsigned char __cdecl Scena06_CellHook(int x, int z) {
     const int index = static_cast<signed char>(found);
     if (index < 0) return 0xFF;
     const std::uint32_t entry = Entry(::bof3::Img(Scena06_CellHandlers_addr), index, at::kCellHandlerCount, "Scena06_CellHook");
-    if (entry == at::kBareRet.v) return found;
+    if (entry == ::bof3::Code(at::kBareRet.v)) return found;   // a code word in .data: its place (moved with the image)
     return reinterpret_cast<CellEntry>(static_cast<std::uintptr_t>(entry))(x, z);
 }
 

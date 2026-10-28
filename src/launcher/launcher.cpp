@@ -131,6 +131,39 @@ void RemoveOldIconFiles() {
 }
 
 #if BOF3X_HOSTED
+// BOF3X_IMAGEBASE (docs/relocatable-image-design.md 1.5): the moved
+// executable's fence, laid while the child is suspended - its image, ntdll
+// and its first thread's stack mapped, nothing of its heaps or mapped files
+// yet. Every free 64 KB-aligned part of the linked span 0x400000..0x98F000
+// (the span bof3x.exe holds at its own base, exe_layout.h) is reserved
+// no-access for the life of the process; the engine's own fence (exe_host.cpp
+// Fence) counts these and takes what is still free at Engine_Main.
+void FenceLinkedSpan(HANDLE process) {
+    constexpr std::uint32_t kLo = 0x400000, kHi = 0x98F000;
+    std::uint32_t fenced = 0, taken = 0;
+    for (std::uint32_t a = kLo; a < kHi;) {
+        MEMORY_BASIC_INFORMATION m{};
+        if (!VirtualQueryEx(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(a)), &m, sizeof m))
+            Die(L"BOF3X_IMAGEBASE: VirtualQueryEx(0x%08X) failed (%lu)", a, GetLastError());
+        const auto lo = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(m.BaseAddress));
+        std::uint32_t hi = lo + static_cast<std::uint32_t>(m.RegionSize);
+        if (hi > kHi) hi = kHi;
+        const std::uint32_t from = (a + 0xFFFF) & ~0xFFFFu;
+        if (m.State == MEM_FREE && from < hi) {
+            if (!VirtualAllocEx(process, reinterpret_cast<LPVOID>(static_cast<std::uintptr_t>(from)), hi - from, MEM_RESERVE,
+                                PAGE_NOACCESS))
+                Die(L"BOF3X_IMAGEBASE: cannot reserve 0x%08X..0x%08X in the game process (%lu)", from, hi, GetLastError());
+            fenced += hi - from;
+        } else if (m.State != MEM_FREE) {
+            taken += hi - a;
+        }
+        a = hi;
+    }
+    std::fwprintf(stderr, L"bof3x-launcher: BOF3X_IMAGEBASE: 0x%X bytes of 0x%08X..0x%08X reserved no-access in the "
+                          L"suspended game process, 0x%X already held\n",
+                  fenced, kLo, kHi, taken);
+}
+
 // DIV-0062: the draw-item pool's room. The pool's items are linked into the
 // game's ordering table by 24-bit addresses, so its array must sit below
 // 16 MB - and by the time the DLL runs, the child's low memory is cut up by
@@ -203,8 +236,8 @@ void LoadDllInto(HANDLE process, const std::wstring& dll) {
 [[noreturn]] void ForwardToDevLauncher(int argc, wchar_t** argv) {
     const std::wstring dev = OwnDirectory() + L"\\bof3x-launcher-dev.exe";
     if (!FileExists(dev))
-        Die(L"--host bof3 and the hosted-only switches (BOF3X_ORIGINAL, BOF3X_SHADOW, BOF3X_CALLTRACE, "
-            L"BOF3X_MP3=original) are the developer launcher's, bof3x-launcher-dev.exe, which a source build "
+        Die(L"--host bof3, the hosted-only switches (BOF3X_ORIGINAL, BOF3X_SHADOW, BOF3X_CALLTRACE, "
+            L"BOF3X_MP3=original) and a moved image (BOF3X_IMAGEBASE) are the developer launcher's, bof3x-launcher-dev.exe, which a source build "
             L"writes beside this one; a release does not ship it.");
     std::wstring line = L"\"" + dev + L"\"";
     for (int i = 1; i < argc; ++i) line += L" \"" + std::wstring(argv[i]) + L"\"";
@@ -319,7 +352,42 @@ int wmain(int argc, wchar_t** argv) {
     if (host_asked < 0 && hosted)
         std::fwprintf(stderr, L"bof3x-launcher: a hosted-only switch is set (BOF3X_ORIGINAL, BOF3X_SHADOW, "
                               L"BOF3X_CALLTRACE or BOF3X_MP3=original): starting the hosted build, as --host bof3\n");
-    const std::wstring ours = OwnDirectory() + L"\\bof3x.exe";
+    // BOF3X_IMAGEBASE (a developer switch, docs/relocatable-image-design.md
+    // 1.5; no ini key): our executable written at another base by
+    // tools/make_exe.py --image-base, bof3x-<BASE>.exe beside this launcher
+    // (the build writes bof3x-A00000.exe). 0x400000 is bof3x.exe itself.
+    // BOF3.exe cannot move: the hosted build refuses the switch. The game
+    // inherits the variable and checks its own base against it (host.cpp).
+    //
+    // A moved executable is the developer launcher's to start: before the
+    // game runs, it reserves the free parts of the linked span
+    // 0x400000..0x98F000 in the new process no-access (FenceLinkedSpan), so an
+    // address the source left absolute faults at its own VA rather than
+    // reading the heap or a mapped file that would otherwise land there
+    // (measured 2026-10-28: with bof3x.exe at 0xA00000 the process's own early
+    // allocations hold all but 64 KB of the span by Engine_Main). The player's
+    // launcher writes nothing into another process, so it hands the switch on.
+    std::wstring ours = OwnDirectory() + L"\\bof3x.exe";
+    bool moved = false;
+    if (wchar_t base_text[32]; GetEnvironmentVariableW(L"BOF3X_IMAGEBASE", base_text, 32) > 0) {
+        wchar_t* end = nullptr;
+        const unsigned long base = std::wcstoul(base_text, &end, 0);
+        if (!end || *end || end == base_text) Die(L"BOF3X_IMAGEBASE=%ls is not a number", base_text);
+        if (hosted) Die(L"BOF3X_IMAGEBASE=%ls: BOF3.exe is fixed at 0x400000; only bof3x.exe moves (--host exe)", base_text);
+#if !BOF3X_HOSTED
+        if (base != 0x400000) ForwardToDevLauncher(argc, argv);
+#endif
+        moved = base != 0x400000;
+        if (base != 0x400000) {
+            wchar_t name[32];
+            std::swprintf(name, 32, L"\\bof3x-%lX.exe", base);
+            ours = OwnDirectory() + name;
+            if (!FileExists(ours))
+                Die(L"BOF3X_IMAGEBASE=%ls: %ls is missing (tools/make_exe.py --image-base 0x%lX writes it)", base_text,
+                    ours.c_str(), base);
+        }
+        std::fwprintf(stderr, L"bof3x-launcher: BOF3X_IMAGEBASE=%ls: starting %ls\n", base_text, ours.c_str());
+    }
     if (!hosted && !FileExists(ours))
         Die(L"%ls is missing; it belongs next to this launcher (or start the hosted build with --host bof3).",
             ours.c_str());
@@ -549,8 +617,17 @@ int wmain(int argc, wchar_t** argv) {
         std::wstring line = L"\"" + ours + L"\"" + game_args;
         // Started by us: bof3x.exe started any other way hands over to us (exe_host.cpp HandOffToLauncher).
         SetEnvironmentVariableW(L"BOF3X_LAUNCHER", L"1");
-        if (!CreateProcessW(ours.c_str(), line.data(), nullptr, nullptr, FALSE, 0, nullptr, game_dir.c_str(), &si, &pi))
+        if (!CreateProcessW(ours.c_str(), line.data(), nullptr, nullptr, FALSE, moved ? CREATE_SUSPENDED : 0, nullptr,
+                            game_dir.c_str(), &si, &pi))
             Die(L"CreateProcess failed for %ls (%lu)", ours.c_str(), GetLastError());
+#if BOF3X_HOSTED
+        if (moved) {
+            g_child = pi.hProcess;
+            FenceLinkedSpan(pi.hProcess);
+            if (ResumeThread(pi.hThread) == static_cast<DWORD>(-1)) Die(L"ResumeThread failed (%lu)", GetLastError());
+            g_child = nullptr;
+        }
+#endif
         if (SelfTestOnly()) {   // as the hosted path: the pid, then the game process's exit code
             std::fwprintf(stderr, L"bof3x-launcher: self-test only, game pid %lu (bof3x.exe)\n", pi.dwProcessId);
             std::fflush(stderr);

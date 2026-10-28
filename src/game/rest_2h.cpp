@@ -99,7 +99,7 @@ void Step(const char* who, U table, unsigned entries) {
     if (index >= entries)
         bof3::Fatal("%s: the window's step +3 is %u, past the %u entries of 0x%X - the original jumps through the "
                     "dword after (docs/rest_2h.md section 7)",
-                    who, index, entries, (unsigned)table);
+                    who, index, entries, (unsigned)::bof3::VaOf(table));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
 }
 

@@ -100,7 +100,7 @@ void Objects() {
     g_s.synth = new psx::MusicSynth;
 }
 
-bool Mono() { return *reinterpret_cast<const volatile unsigned char*>(static_cast<std::uintptr_t>(Rest4f_Setting3_addr)) != 0; }
+bool Mono() { return *reinterpret_cast<const volatile unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(Rest4f_Setting3_addr))) != 0; }
 
 // The whole of `path` through the sound layer's file callees into `out`
 // (the bank; the song is read in LoadFile as the original reads an MP3).

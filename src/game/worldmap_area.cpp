@@ -203,7 +203,7 @@ extern "C" void __cdecl WorldMap33_PlaceMessage(void) {
         g.flags_set40();
         const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
-        for (U a = WorldMap33_PlaceMessages_addr; a < at::kPlaceMessagesEnd; a += 0x20, ++row)
+        for (U a = ::bof3::Img(WorldMap33_PlaceMessages_addr); a < ::bof3::Img(at::kPlaceMessagesEnd); a += 0x20, ++row)
             if (Word(At(a)) == place) break;
         const std::int32_t index = (row << 4) + static_cast<signed char>(Cond_ByteFA);
         const unsigned message = Word(At(::bof3::Img(WorldMap33_PlaceMessages_addr) + static_cast<U>(index * 2)));
@@ -590,7 +590,7 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
 extern "C" unsigned __cdecl WorldMap_RecordIndex(void) {
     const unsigned area = Game_AreaNumber;
     unsigned index = 0;
-    for (U a = WorldMap_Records_addr + 0x18; a < at::kRecordAreasEnd; a += at::kRecordSize, ++index)
+    for (U a = ::bof3::Img(WorldMap_Records_addr) + 0x18; a < ::bof3::Img(at::kRecordAreasEnd); a += at::kRecordSize, ++index)
         if (At(a)[0] == area) break;
     return index;
 }

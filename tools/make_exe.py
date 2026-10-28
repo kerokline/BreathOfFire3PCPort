@@ -2,6 +2,7 @@
 """Write bof3x.exe, our own executable, and verify what was written.
 
     python tools/make_exe.py --layout src/hook/exe_layout.h --dll build/bof3x.dll --out build/bof3x.exe
+    python tools/make_exe.py ... --image-base 0xA00000 --out build/bof3x-A00000.exe
 
 docs/state3-design.md sections 1.2 and 1.3. The image is based at 0x400000
 and spans Capcom's address range with sections of its own, so the loader
@@ -19,6 +20,18 @@ No relocations, no dynamic base, stack reserve / commit from the layout
 header. The file holds no game data: the section table is layout, as
 symbols.toml's addresses are, and every constant comes from
 src/hook/exe_layout.h, the table the engine reads too.
+
+--image-base writes the same executable at another base
+(docs/relocatable-image-design.md 1.5): every section at the same RVA, the
+entry's five absolute operands (call [IAT slot]) written for that base, the
+rest of the file unchanged. The engine reads the base at run time
+(src/common/image_base.h) and moves the image's pointer words to it; the
+launcher's developer switch BOF3X_IMAGEBASE starts such a file, named
+bof3x-<BASE>.exe beside it (BASE in upper-case hex, no 0x). The base must
+keep the image below 16 MB (the ordering table's 24-bit links,
+src/game/draw_pool.cpp) and, unless it is 0x400000, the image wholly off the
+linked span 0x400000..0x98F000 (image_base.h CodePlace): 0x990000..0xA70000,
+checked here and again by the engine.
 
 An Authenticode signature (signtool, after the build) appends a certificate
 table to the file and names it in data directory 4; --verify-only accepts a
@@ -290,12 +303,42 @@ def build_entry(base, slots):
     return code
 
 
-def write(layout, out_path, version, tag):
-    base = layout['ImageBase']
-    stub_rva = layout['StubVa'] - base
-    game_rva = layout['GameVa'] - base
-    pool_rva = layout['PoolVa'] - base
-    own_rva = layout['OwnVa'] - base
+# The 16 MB window (docs/relocatable-image-design.md 1.2): the image's end,
+# base + SizeOfImage up to .pool's end, at or below 0x1000000; 64 KB aligned;
+# the first allocatable address the floor. And a moved image lies wholly off
+# the linked span 0x400000..0x400000 + SizeOfImage, where the engine reads a
+# word that may be a VA or a place as a VA (image_base.h CodePlace,
+# detour.cpp PatchBytes) and fences what is free (src/hook/host.cpp checks
+# the same).
+WINDOW_LO, WINDOW_TOP = 0x10000, 0x1000000
+# SizeOfImage, as write() lays the sections out: .rsrc's end, page-aligned.
+# Known only once the file is written, so the span checked here is up to our
+# own sections' start plus the eight pages they take today (0x98F000), and
+# verify() checks the written file's SizeOfImage again.
+OWN_PAGES = 8
+
+
+def check_base(layout, base, size_of_image=None):
+    """None if `base` is a base the engine accepts, else why not."""
+    linked = layout['ImageBase']
+    if base % 0x10000:
+        return f'{base:#x} is not a multiple of 64 KB'
+    end = base + (layout['PoolVa'] + layout['PoolSize'] - linked)
+    if base < WINDOW_LO or end > WINDOW_TOP:
+        return f'the image at {base:#x} ends at {end:#x}: outside {WINDOW_LO:#x}..{WINDOW_TOP:#x} (24-bit ordering-table links)'
+    span = size_of_image or (layout['OwnVa'] - linked + OWN_PAGES * SECTION_ALIGN)
+    if base != linked and base < linked + span and base + span > linked:
+        return (f'the image at {base:#x}..{base + span:#x} overlaps the linked span {linked:#x}..{linked + span:#x}, '
+                'where a word is read as a VA')
+    return None
+
+
+def write(layout, out_path, version, tag, base):
+    linked = layout['ImageBase']
+    stub_rva = layout['StubVa'] - linked
+    game_rva = layout['GameVa'] - linked
+    pool_rva = layout['PoolVa'] - linked
+    own_rva = layout['OwnVa'] - linked
 
     # .idata and its slots first: the entry names them.
     text_rva = own_rva
@@ -366,12 +409,16 @@ def write(layout, out_path, version, tag):
     return slots
 
 
-def verify(layout, out_path, dll_path, version, tag):
+def verify(layout, out_path, dll_path, version, tag, base):
     """Read the file back with pe_read and check every property the design
-    names. Returns a list of failures."""
+    names, at `base` (the layout's ImageBase, or --image-base's). Returns a
+    list of failures."""
     pe = Pe(open(out_path, 'rb').read())
-    base = layout['ImageBase']
+    linked = layout['ImageBase']
     bad = []
+    why = check_base(layout, base, pe.size_of_image)
+    if why:
+        bad.append(f'ImageBase: {why}')
 
     def check(what, got, want):
         if got != want:
@@ -394,7 +441,7 @@ def verify(layout, out_path, dll_path, version, tag):
         s = by.get(name)
         if not s:
             continue
-        check(f'{name} VA', hex(base + s['va']), hex(va))
+        check(f'{name} VA', hex(base + s['va']), hex(base + va - linked))
         check(f'{name} size', hex(s['vsz']), hex(size))
     if '.stub' in by:
         check('.stub has no file bytes', by['.stub']['rsz'], 0)
@@ -408,7 +455,12 @@ def verify(layout, out_path, dll_path, version, tag):
     if '.text' in by:
         t = by['.text']
         check('entry in .text', t['va'] <= pe.entry_rva < t['va'] + t['vsz'], True)
-        check('own sections start at OwnVa', hex(base + t['va']), hex(layout['OwnVa']))
+        check('own sections start at OwnVa', hex(base + t['va']), hex(base + layout['OwnVa'] - linked))
+        # The entry's five call [IAT slot] operands, absolute: at this base.
+        code = pe.data[t['raw']:t['raw'] + t['vsz']]
+        calls = [struct.unpack_from('<I', code, i + 2)[0] for i in range(len(code) - 5) if code[i:i + 2] == b'\xFF\x15']
+        lo, hi = base + t['va'], base + pe.size_of_image
+        check('entry calls through the IAT at this base', [hex(c) for c in calls if not lo <= c < hi], [])
     # Sections in order, each where the last ended (page-aligned), nothing overlapping.
     end = HEADERS_SIZE
     for s in pe.sections:
@@ -458,6 +510,9 @@ def main():
     ap.add_argument('--version', default='0.0.0', help="the version block's numbers, major.minor.patch (CMake project(VERSION))")
     ap.add_argument('--version-tag', default=None, help='its ProductVersion string, the release tag (default v<version>)')
     ap.add_argument('--verify-only', action='store_true', help='check an existing file, write nothing')
+    ap.add_argument('--image-base', type=lambda v: int(v, 0), default=None,
+                    help="the executable's base (default the layout's kImageBase, 0x400000): a developer's moved "
+                         'image (docs/relocatable-image-design.md 1.5)')
     a = ap.parse_args()
     layout = read_layout(a.layout)
     m = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)', a.version)
@@ -465,9 +520,13 @@ def main():
         sys.exit(f'make_exe: --version {a.version!r} is not major.minor.patch')
     version = tuple(int(x) for x in m.groups()) + (0,)
     tag = a.version_tag or 'v' + a.version
+    base = layout['ImageBase'] if a.image_base is None else a.image_base
+    why = check_base(layout, base)
+    if why:
+        sys.exit(f'make_exe: --image-base: {why}')
     if not a.verify_only:
-        write(layout, a.out, version, tag)
-    bad, pe = verify(layout, a.out, a.dll, version, tag)
+        write(layout, a.out, version, tag, base)
+    bad, pe = verify(layout, a.out, a.dll, version, tag, base)
     if bad:
         if not a.verify_only:
             os.remove(a.out)

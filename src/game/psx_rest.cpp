@@ -164,7 +164,7 @@ extern "C" void __cdecl Gte_ApplyMatrixSV(const short* matrix, const short* vect
 // 512 pairs) to Crt_free, and the pair - the generation counter with it -
 // zeroed. A pair whose pointer is null is left as it is.
 extern "C" void __cdecl Gfx_FreeClutRows() {
-    for (U at = Gfx_ClutRows_addr + 4; at < kClutRowsEnd + 4; at += 8) {
+    for (U at = ::bof3::Img(Gfx_ClutRows_addr) + 4; at < ::bof3::Img(kClutRowsEnd) + 4; at += 8) {
         void* const row = Ptr(at);
         if (!row) continue;
         g.free(row);
@@ -177,7 +177,7 @@ extern "C" void __cdecl Gfx_FreeClutRows() {
 // its first entry whose state byte is 0: the texture at +0x14 released, then
 // the surface at +0x10 - read after that Release - and the 0x18 bytes zeroed.
 extern "C" void __cdecl Gfx_ReleaseTexCache() {
-    for (U page = Gfx_TexCache_addr; page < kTexCacheEnd; page += kTexPageBytes) {
+    for (U page = ::bof3::Img(Gfx_TexCache_addr); page < ::bof3::Img(kTexCacheEnd); page += kTexPageBytes) {
         for (U i = 0; i < 0x20; ++i) {
             const U entry = page + i * kTexEntryBytes;
             if (!At(entry)[0]) break;
@@ -192,7 +192,7 @@ extern "C" void __cdecl Gfx_ReleaseTexCache() {
 // the surface +8 (read after), the entry's five dwords zeroed and its glyph
 // word +0 set back to 0xFFFF - the set-up's empty value.
 extern "C" void __cdecl Font_ReleaseTexCache() {
-    for (U entry = Font_TexCache_addr; entry < kFontCacheEnd; entry += kFontEntryBytes) {
+    for (U entry = ::bof3::Img(Font_TexCache_addr); entry < ::bof3::Img(kFontCacheEnd); entry += kFontEntryBytes) {
         ReleaseIf(entry + 0xC, false);
         ReleaseIf(entry + 8, false);
         ZeroDwords(entry, 5);
@@ -204,7 +204,7 @@ extern "C" void __cdecl Font_ReleaseTexCache() {
 // instruction of the image names: +0x10 then +8, +0x14 then +0xC, +4, +0 -
 // each released and zeroed when it is not null (docs/psx-rest.md section 2).
 extern "C" void __cdecl Display_ReleaseOrphans() {
-    for (U at = PsxRest_Orphans_addr + 8; at < PsxRest_Orphans_addr + 0x10; at += 4) {
+    for (U at = ::bof3::Img(PsxRest_Orphans_addr) + 8; at < ::bof3::Img(PsxRest_Orphans_addr) + 0x10; at += 4) {
         ReleaseIf(at + 8, true);
         ReleaseIf(at, true);
     }
@@ -217,7 +217,7 @@ extern "C" void __cdecl Display_ReleaseOrphans() {
 // then the seven dwords from 0x6BE9F8 zeroed, and 0x6BE9FC = 0x12345678,
 // which nothing reads.
 extern "C" void __cdecl Display_ReleaseBackdrop() {
-    for (U at = kBackdropPairs; at < kBackdropPairs + 8; at += 4) {
+    for (U at = ::bof3::Img(kBackdropPairs); at < ::bof3::Img(kBackdropPairs) + 8; at += 4) {
         ReleaseIf(at + 8, false);
         ReleaseIf(at, false);
     }
