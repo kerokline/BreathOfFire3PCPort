@@ -1039,6 +1039,7 @@ def counts_of(sites, helper_calls, extra):
     c['value_literal'] = sum(1 for r in sites if r['class'] == 'value_literal')
     c['base_offset'] = sum(1 for r in sites if r['class'] == 'base_offset')
     c['module_srcwide_not_counted'] = extra['module_srcwide_not_counted']
+    c['asm_operands_all'] = extra['asm_operands_all']
     c['at_ambiguous'] = sum(1 for r in real if r['kind'] == 'ambiguous')
     for k in ('raw_literal', 'code_literal'):
         for cx in ('accessor', 'cast', 'call', 'init', 'subscript', 'template', 'static_assert', '-'):

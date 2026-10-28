@@ -25452,6 +25452,7 @@ file	src/render/render_shim.cpp	platform	render	accessor	1
 #count value_literal	28
 #count base_offset	0
 #count module_srcwide_not_counted	1325
+#count asm_operands_all	489
 #count at_ambiguous	0
 #count raw_literal_ctx_accessor	912
 #count raw_literal_ctx_cast	16
