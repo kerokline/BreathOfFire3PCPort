@@ -276,11 +276,36 @@ def split_decls(body):
     return out
 
 
+# The relocatable-image round's place helper (src/common/image_base.h):
+# `::bof3::Img(va)` turns a VA into a place and changes nothing about how the
+# access is spelled, so the census reads through it - `Mem(::bof3::Img(X_addr)
+# + 4)` is the site `Mem(X_addr + 4)` was, under the same typed_left key.
+IMG_CALL = re.compile(r'(?<![\w:])(?:::)?bof3::Img\s*\(')
+
+
+def unwrap_img(code):
+    """Drop every `::bof3::Img(` and its closing parenthesis - and a `.v`
+    just inside it, `Img(kX.v)` being kX's place - keeping every newline."""
+    drop = set()
+    for m in IMG_CALL.finditer(code):
+        depth, i = 1, m.end()
+        while i < len(code) and depth:
+            depth += {'(': 1, ')': -1}.get(code[i], 0)
+            i += 1
+        if depth:
+            continue
+        drop.update(range(m.start(), m.end()))
+        drop.add(i - 1)
+        if code[i - 3:i - 1] == '.v':
+            drop.update((i - 3, i - 2))
+    return ''.join(c for k, c in enumerate(code) if k not in drop)
+
+
 class SourceFile:
     def __init__(self, rel, text):
         self.rel = rel
         self.raw = text
-        self.code = strip_code(text)
+        self.code = unwrap_img(strip_code(text))
         self.starts = line_starts(self.code)
         self.lines = self.code.split('\n')
         self.includes = [m.group(1) for m in re.finditer(r'#\s*include\s*"([^"]+)"', text)]
