@@ -101,8 +101,8 @@ says the same thing for a person. Each field is **one line**, its value
 first; an optional " - <clause>" after the value says why where the value is
 not obvious, as on the Tier line. Added by the ledger-fields round
 ([`ledger-fields-round.md`](ledger-fields-round.md) sections 1 and 6, the
-owner's calls of 2026-10-27); until its stage C the checker counts a missing
-field as a note, a malformed one as an error.
+owner's calls of 2026-10-27); since its stage C (2026-10-28) the checker
+refuses a missing field as it refuses a malformed one.
 
 **`Switch:`** the names that, set together, turn this entry off and nothing
 more than they must: a comma list, or `none` alone. A wider switch that also
