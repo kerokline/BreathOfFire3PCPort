@@ -94,20 +94,20 @@ void ChangeArea(unsigned area, int x, int z, unsigned flags) { SH_CALL(Field_Cha
 // The scenes' common end: counters 1..3, the step and MoveScript_Var7 cleared
 // (and counter 0 by the callers that clear it first).
 void EndScene() {
-    B(kCounter1) = 0;
-    B(kCounter2) = 0;
-    B(kCounter3) = 0;
+    B(::bof3::Img(kCounter1)) = 0;
+    B(::bof3::Img(kCounter2)) = 0;
+    B(::bof3::Img(kCounter3)) = 0;
     MoveScript_PartyRecords[0x65] = 0;
     MoveScript_Var7 = 0;
 }
 void EndSceneAll() {
-    B(kCounter0) = 0;
+    B(::bof3::Img(kCounter0)) = 0;
     EndScene();
 }
 
 // An item's 16-byte name record copied into Text_Records, dword by dword.
 void CopyName(const unsigned char* name) {
-    for (unsigned i = 0; i < 16; i += 4) SetLong(At(kTextRecords + i), Long(name + i));
+    for (unsigned i = 0; i < 16; i += 4) SetLong(At(::bof3::Img(kTextRecords) + i), Long(name + i));
 }
 
 // The slot just taken (kSlot, read back): live, `kind`, at (x, Camera_Angles[1], z),
@@ -140,7 +140,7 @@ bool EffectLive(unsigned slot) { return EffectRecord(slot)[0] != 0; }
 // original 0x55C040: chapter 11's vtable slot 0 (PSX 0x801F7288): a tail jump
 // through Scena11_States on the s8 0x8034E2 - 0 Scena11_Start, 1
 // Scena11_EnterArea, 2 Scena11_Run. Unchecked.
-SC11_EXPORT void __cdecl Scena11_Frame(void) { Entry(Scena11_States_addr, static_cast<signed char>(MoveScript_PartyRecords[0x62]))(); }
+SC11_EXPORT void __cdecl Scena11_Frame(void) { Entry(::bof3::Img(Scena11_States_addr), static_cast<signed char>(MoveScript_PartyRecords[0x62]))(); }
 
 // original 0x55C050: state 0: the pass flags 0x1F, state 1.
 SC11_EXPORT void __cdecl Scena11_Start(void) {
@@ -156,10 +156,10 @@ namespace {
 void Area65Start() {
     SH_CALL(ScriptFlags_Set40)();
     const unsigned party = AreaW0b_PartySet & 0x7Fu;
-    B(kCounter0) = 0;
-    B(kCounter1) = 0;
-    B(kCounter2) = 0;
-    B(kCounter3) = 0;
+    B(::bof3::Img(kCounter0)) = 0;
+    B(::bof3::Img(kCounter1)) = 0;
+    B(::bof3::Img(kCounter2)) = 0;
+    B(::bof3::Img(kCounter3)) = 0;
     Draw_PassFlags = 0;
     MoveScript_PartyRecords[0x65] = 0;
     MoveScript_Var7 = 8;
@@ -190,7 +190,7 @@ void Area65Start() {
 // read back).
 SC11_EXPORT void __cdecl Scena11_EnterArea(void) {
     if (Game_AreaNumber == 0x65) {
-        switch (B(kCounter2)) {
+        switch (B(::bof3::Img(kCounter2))) {
         case 0:
             if (SH_CALL(Flags_Test)(Flags(), 0xC) != 0 && SH_CALL(Flags_Test)(Flags(), 0xE) == 0) Area65Start();
             break;
@@ -209,17 +209,17 @@ SC11_EXPORT void __cdecl Scena11_EnterArea(void) {
     }
     const unsigned area = Game_AreaNumber;
     if (area == 0x79) {
-        if (B(kCounter2) == 1) Draw_PassFlags = 0;
+        if (B(::bof3::Img(kCounter2)) == 1) Draw_PassFlags = 0;
         MoveScript_PartyRecords[0x62] = 2;
         return;
     }
     if (area == 0x82) {
-        if (B(kCounter2) == 1) Draw_PassFlags = 0x1F;
+        if (B(::bof3::Img(kCounter2)) == 1) Draw_PassFlags = 0x1F;
         MoveScript_PartyRecords[0x62] = 2;
         return;
     }
     if (area == 0x83) {
-        switch (B(kCounter2)) {
+        switch (B(::bof3::Img(kCounter2))) {
         case 1:
             SH_CALL(MapView_SetElevation)(0x498);
             MapView_Redraw = 2;
@@ -240,7 +240,7 @@ SC11_EXPORT void __cdecl Scena11_EnterArea(void) {
     }
     const unsigned again = Game_AreaNumber;
     if (again == 0x84) {
-        switch (B(kCounter2)) {
+        switch (B(::bof3::Img(kCounter2))) {
         case 1:
             Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags | 0x16);
             Draw_PassFlags = 0;
@@ -255,7 +255,7 @@ SC11_EXPORT void __cdecl Scena11_EnterArea(void) {
         return;
     }
     if (again == 0x88) {
-        switch (B(kCounter2)) {
+        switch (B(::bof3::Img(kCounter2))) {
         case 1:
             CallB(3);
             break;
@@ -280,10 +280,10 @@ SC11_EXPORT void __cdecl Scena11_EnterArea(void) {
     }
     const unsigned last = Game_AreaNumber;
     if (last == 0x2D || last == 0x41 || last == 0x57 || last == 0x10 || last == 0x73) {
-        B(kCounter0) = 0;
-        B(kCounter1) = 0;
-        B(kCounter2) = 0;
-        B(kCounter3) = 0;
+        B(::bof3::Img(kCounter0)) = 0;
+        B(::bof3::Img(kCounter1)) = 0;
+        B(::bof3::Img(kCounter2)) = 0;
+        B(::bof3::Img(kCounter3)) = 0;
         MoveScript_PartyRecords[0x65] = 0;
         MoveScript_Var7 = 0;
     }
@@ -293,7 +293,7 @@ SC11_EXPORT void __cdecl Scena11_EnterArea(void) {
 // original 0x55C360: state 2: a tail jump through Scena11_Runs on
 // MoveScript_Var7 (s8, unchecked) - 0 and 7 a bare ret, 1..6, 8, 9 the
 // scenes. Ten entries; 10.. read Scena11_Triggers' words.
-SC11_EXPORT void __cdecl Scena11_Run(void) { Entry(Scena11_Runs_addr, MoveScript_Var7)(); }
+SC11_EXPORT void __cdecl Scena11_Run(void) { Entry(::bof3::Img(Scena11_Runs_addr), MoveScript_Var7)(); }
 
 // ===========================================================================
 // The scenes (each a switch on the step 0x8034E5)
@@ -318,7 +318,7 @@ SC11_EXPORT void __cdecl Scena11_Scene1(void) {
         return;
     }
     case 1:
-        if (B(kCounter0) != 1) return;
+        if (B(::bof3::Img(kCounter0)) != 1) return;
         SH_CALL(Transition_Start)(0xD);
         MoveScript_PartyRecords[0x65] = 2;
         return;
@@ -328,17 +328,17 @@ SC11_EXPORT void __cdecl Scena11_Scene1(void) {
         MoveScript_PartyRecords[0x65] = 3;
         return;
     case 3:
-        if (B(kCounter0) != 2) return;
-        B(kCounter0) = 0;
-        B(kCounter2) = 2;
+        if (B(::bof3::Img(kCounter0)) != 2) return;
+        B(::bof3::Img(kCounter0)) = 0;
+        B(::bof3::Img(kCounter2)) = 2;
         MoveScript_PartyRecords[0x65] = 4;
         ChangeArea(0x83, 0x50000, 0x5D0000, 0x83);
         ModeFlow_AreaTransition = 0xFF;
         return;
     case 4:
-        if (B(kCounter0) != 1) return;
-        B(kCounter0) = 0;
-        B(kCounter2) = 0;
+        if (B(::bof3::Img(kCounter0)) != 1) return;
+        B(::bof3::Img(kCounter0)) = 0;
+        B(::bof3::Img(kCounter2)) = 0;
         Camera_ShiftY = 0;
         MapView_Redraw = 2;
         MoveScript_PartyRecords[0x65] = 5;
@@ -349,18 +349,18 @@ SC11_EXPORT void __cdecl Scena11_Scene1(void) {
     case 6: MoveScript_PartyRecords[0x65] = 7; return;
     case 7: MoveScript_PartyRecords[0x65] = 8; return;
     case 8: {
-        if (B(kCounter0) != 1) return;
+        if (B(::bof3::Img(kCounter0)) != 1) return;
         unsigned char* const f = Flags();
-        B(kCounter0) = 0;
+        B(::bof3::Img(kCounter0)) = 0;
         MoveScript_PartyRecords[0x65] = 9;
         SH_CALL(Flags_Set)(f, 1);
         ChangeArea(0x83, 0x50000, 0x5D0000, 0x84);
         return;
     }
     case 9:
-        if (B(kCounter0) != 2) return;
-        B(kCounter0) = 0;
-        B(kCounter2) = 1;
+        if (B(::bof3::Img(kCounter0)) != 2) return;
+        B(::bof3::Img(kCounter0)) = 0;
+        B(::bof3::Img(kCounter2)) = 1;
         MoveScript_PartyRecords[0x65] = 0xA;
         ChangeArea(0x83, 0x200000, 0x2F0000, 0x85);
         return;
@@ -372,13 +372,13 @@ SC11_EXPORT void __cdecl Scena11_Scene1(void) {
         return;
     case 11:
         if (Field_Kind2Hold == 0) {
-            B(kCounter0) = 1;
+            B(::bof3::Img(kCounter0)) = 1;
             MoveScript_PartyRecords[0x65] = 0xC;
             return;
         }
         [[fallthrough]];
     case 12:
-        if (B(kCounter0) != 2) return;
+        if (B(::bof3::Img(kCounter0)) != 2) return;
         SH_CALL(Transition_Start)(0xD);
         MoveScript_PartyRecords[0x65] = 0xD;
         return;
@@ -388,17 +388,17 @@ SC11_EXPORT void __cdecl Scena11_Scene1(void) {
         MoveScript_PartyRecords[0x65] = 0xE;
         return;
     case 14: {
-        if (B(kCounter0) != 3) return;
-        B(kCounter2) = 3;
+        if (B(::bof3::Img(kCounter0)) != 3) return;
+        B(::bof3::Img(kCounter2)) = 3;
         unsigned char* const f = Flags();
-        B(kCounter0) = 0;
+        B(::bof3::Img(kCounter0)) = 0;
         MoveScript_PartyRecords[0x65] = 0xF;
         SH_CALL(Flags_Set)(f, 2);
         ChangeArea(0x83, 0x70000, 0x5C0000, 0x86);
         return;
     }
     case 15:
-        if (B(kCounter0) != 0x14) return;
+        if (B(::bof3::Img(kCounter0)) != 0x14) return;
         SH_CALL(Flags_Set)(Flags(), 0);
         SH_CALL(Flags_Set)(Flags(), 4);
         SH_CALL(ScriptFlags_Clear40)();
@@ -433,12 +433,12 @@ SC11_EXPORT void __cdecl Scena11_Scene2(void) {
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (Field_Request == 2) return;
-        B(kCounter0) = 1;
+        B(::bof3::Img(kCounter0)) = 1;
         SH_CALL(Party_DropIn)(0);
         MoveScript_PartyRecords[0x65] = 1;
         return;
     case 1:
-        if (B(kCounter0) != 3) return;
+        if (B(::bof3::Img(kCounter0)) != 3) return;
         SH_CALL(Flags_Set)(Flags(), 5);
         SH_CALL(ScriptFlags_Clear40)();
         EndScene();
@@ -458,12 +458,12 @@ SC11_EXPORT void __cdecl Scena11_Scene3(void) {
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (Field_Request == 2) return;
-        B(kCounter0) = 1;
+        B(::bof3::Img(kCounter0)) = 1;
         SH_CALL(Party_DropIn)(4);
         MoveScript_PartyRecords[0x65] = 1;
         return;
     case 1:
-        if (B(kCounter0) != 6) return;
+        if (B(::bof3::Img(kCounter0)) != 6) return;
         SH_CALL(Flags_Set)(Flags(), 6);
         SH_CALL(ScriptFlags_Clear40)();
         EndScene();
@@ -484,18 +484,18 @@ SC11_EXPORT void __cdecl Scena11_Scene3(void) {
         return;
     case 12:
         if (Field_Request == 2) return;
-        if (B(kCounter0) != 6) return;
+        if (B(::bof3::Img(kCounter0)) != 6) return;
         SH_CALL(ScriptFlags_Clear40)();
         EndSceneAll();
         return;
     case 15:
-        B(kCounter0) = 1;
+        B(::bof3::Img(kCounter0)) = 1;
         SH_CALL(Party_DropIn)(5);
         MoveScript_PartyRecords[0x65] = 0x10;
         return;
     case 16:
         if (Field_Request == 2) return;
-        if (B(kCounter0) != 5) return;
+        if (B(::bof3::Img(kCounter0)) != 5) return;
         SH_CALL(ScriptFlags_Clear40)();
         SH_CALL(Flags_Set)(Flags(), 9);
         EndScene();
@@ -639,13 +639,13 @@ SC11_EXPORT void __cdecl Scena11_Scene5(void) {
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (Field_Request == 2) return;
-        B(kCounter0) = 1;
+        B(::bof3::Img(kCounter0)) = 1;
         SH_CALL(Party_DropIn)(1);
         MoveScript_PartyRecords[0x65] = 1;
         return;
     case 1:
-        if (B(kCounter0) != 3) return;
-        B(kCounter0) = 0;
+        if (B(::bof3::Img(kCounter0)) != 3) return;
+        B(::bof3::Img(kCounter0)) = 0;
         SH_CALL(Music_FadeOutStop)(0x1E);
         SH_CALL(Flags_Set)(Flags(), 7);
         MoveScript_PartyRecords[0x65] = 2;
@@ -653,16 +653,16 @@ SC11_EXPORT void __cdecl Scena11_Scene5(void) {
         AreaW1f_MusicCurrent = 0x7D;
         return;
     case 2:
-        if (B(kCounter0) != 5) return;
+        if (B(::bof3::Img(kCounter0)) != 5) return;
         MoveScript_PartyRecords[0x65] = 3;
         return;
     case 3:
-        if (B(kCounter0) != 9) return;
+        if (B(::bof3::Img(kCounter0)) != 9) return;
         MoveScript_PartyRecords[0x65] = 4;
         return;
     case 4:
     case 0x2A: {
-        const unsigned char c = B(kCounter0);
+        const unsigned char c = B(::bof3::Img(kCounter0));
         if (c == 3) {
             SH_CALL(Party_DropIn)(3);
             MoveScript_PartyRecords[0x65] = 2;
@@ -737,7 +737,7 @@ SC11_EXPORT void __cdecl Scena11_Scene5(void) {
         AreaW1f_MusicCurrent = 0x7C;
         return;
     case 13:
-        if (B(kCounter0) != 1) return;
+        if (B(::bof3::Img(kCounter0)) != 1) return;
         SH_CALL(ScriptFlags_Clear40)();
         MoveScript_PartyRecords[0x65] = 0;
         MoveScript_Var7 = 0;
@@ -756,13 +756,13 @@ SC11_EXPORT void __cdecl Scena11_Scene5(void) {
         return;
     case 17:
         if (SH_CALL(Sound_StreamDone)() == 0) return;
-        B(kCounter0) = 2;
+        B(::bof3::Img(kCounter0)) = 2;
         MoveScript_PartyRecords[0x65] = 0x12;
         return;
     case 18: {
-        if (B(kCounter0) != 5) return;
+        if (B(::bof3::Img(kCounter0)) != 5) return;
         unsigned char* const f = Flags();
-        B(kCounter0) = 0;
+        B(::bof3::Img(kCounter0)) = 0;
         MoveScript_PartyRecords[0x65] = 0x13;
         SH_CALL(Flags_Set)(f, 8);
         ChangeArea(0x44, 0x2E8000, 0x178000, 0x86);
@@ -770,7 +770,7 @@ SC11_EXPORT void __cdecl Scena11_Scene5(void) {
         return;
     }
     case 19:
-        if (B(kCounter0) != 1) return;
+        if (B(::bof3::Img(kCounter0)) != 1) return;
         if (SH_CALL(Inventory_Add)(0, 0x24, 4) == 0) {
             CopyName(SH_CALL(Item_NamePtr)(0, 0x24));
             SH_CALL(Msg_OpenScript)(0x33);
@@ -785,31 +785,31 @@ SC11_EXPORT void __cdecl Scena11_Scene5(void) {
         return;
     case 20:
         if (Field_Request == 2) return;
-        B(kCounter0) = 2;
+        B(::bof3::Img(kCounter0)) = 2;
         MoveScript_PartyRecords[0x65] = 0x16;
         return;
     case 22:
-        if (B(kCounter0) != 3) return;
+        if (B(::bof3::Img(kCounter0)) != 3) return;
         SH_CALL(ScriptFlags_Clear40)();
         MoveScript_PartyRecords[0x65] = 0;
         MoveScript_Var7 = 0;
         return;
     case 0x28:
         if (Field_Request == 2) return;
-        if (B(kCounter0) == 0xFF) {
+        if (B(::bof3::Img(kCounter0)) == 0xFF) {
             SH_CALL(ScriptFlags_Clear40)();
-            B(kCounter0) = 0;
+            B(::bof3::Img(kCounter0)) = 0;
             MoveScript_PartyRecords[0x65] = 0;
             MoveScript_Var7 = 0;
             return;
         }
-        B(kCounter0) = 0;
+        B(::bof3::Img(kCounter0)) = 0;
         SH_CALL(Party_DropIn)(9);
         MoveScript_PartyRecords[0x65] = 0x29;
         return;
     case 0x29:
-        if (B(kCounter0) != 1) return;
-        B(kCounter0) = 0;
+        if (B(::bof3::Img(kCounter0)) != 1) return;
+        B(::bof3::Img(kCounter0)) = 0;
         MoveScript_PartyRecords[0x65] = 0x2A;
         SH_CALL(Music_FadeOutStop)(0x1E);
         ChangeArea(0x44, 0x300000, 0x198000, 0x88);
@@ -832,12 +832,12 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (Field_Request == 2) return;
-        B(kCounter0) = 1;
+        B(::bof3::Img(kCounter0)) = 1;
         SH_CALL(Party_DropIn)(1);
         MoveScript_PartyRecords[0x65] = 1;
         return;
     case 1:
-        if (B(kCounter0) != 7) return;
+        if (B(::bof3::Img(kCounter0)) != 7) return;
         if (Field_Request == 2) return;
         Field_Request = 8;
         Draw_PassFlags = 0;
@@ -846,7 +846,7 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
         if (Field_Request != 0) return;
         unsigned char* const f = Flags();
         MoveScript_PartyRecords[0x65] = 6;
-        B(kCounter0) = 0;
+        B(::bof3::Img(kCounter0)) = 0;
         SH_CALL(Flags_Set)(f, 0xA);
         ChangeArea(0x82, 0x290000, 0x540000, 0x82);
         return;
@@ -857,7 +857,7 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
         return;
     case 7:
     case 14:
-        if (B(kCounter0) != 3) return;
+        if (B(::bof3::Img(kCounter0)) != 3) return;
         SH_CALL(ScriptFlags_Clear40)();
         EndScene();
         return;
@@ -877,7 +877,7 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
     case 12:
         if (Field_Request != 0) return;
         MoveScript_PartyRecords[0x65] = 0xD;
-        B(kCounter0) = 0;
+        B(::bof3::Img(kCounter0)) = 0;
         ChangeArea(0x82, 0x290000, 0x540000, 0x82);
         return;
     case 13:
@@ -886,9 +886,9 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
         return;
     case 20:
         if (Field_Request != 0) return;
-        B(kCounter0) = 0;
+        B(::bof3::Img(kCounter0)) = 0;
         SH_CALL(Flags_Set)(Flags(), 0xA);
-        if (B(kCounter3) == 1) {
+        if (B(::bof3::Img(kCounter3)) == 1) {
             MoveScript_PartyRecords[0x65] = 0x1E;
             ChangeArea(0x82, 0x290000, 0x540000, 0x83);
             AreaW1f_MusicCurrent = 0xFF;
@@ -902,7 +902,7 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
         MoveScript_PartyRecords[0x65] = 0x1F;
         return;
     case 31:
-        if (B(kCounter0) != 1) return;
+        if (B(::bof3::Img(kCounter0)) != 1) return;
         SH_CALL(Sound_LoadStream)(7);
         MoveScript_PartyRecords[0x65] = 0x20;
         return;
@@ -911,17 +911,17 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
         MoveScript_PartyRecords[0x65] = 0x21;
         return;
     case 33:
-        if (B(kCounter0) != 4) return;
+        if (B(::bof3::Img(kCounter0)) != 4) return;
         SH_CALL(Sound_LoadStream)(6);
         MoveScript_PartyRecords[0x65] = 0x22;
         return;
     case 34:
         if (SH_CALL(Sound_StreamDone)() == 0) return;
-        B(kCounter0) = 5;
+        B(::bof3::Img(kCounter0)) = 5;
         MoveScript_PartyRecords[0x65] = 0x23;
         return;
     case 35:
-        if (B(kCounter0) != 6) return;
+        if (B(::bof3::Img(kCounter0)) != 6) return;
         SH_AT(void (__cdecl*)(unsigned, unsigned), kCountDown)(0xFFFF, 7);
         SH_CALL(ScriptFlags_Clear40)();
         EndScene();
@@ -931,14 +931,14 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
         MoveScript_PartyRecords[0x65] = 0x29;
         return;
     case 41:
-        if (B(kCounter0) != 5) return;
+        if (B(::bof3::Img(kCounter0)) != 5) return;
         SH_CALL(Port_DroppedCall)(1);
         MoveScript_PartyRecords[0x65] = 0x2A;
         return;
     case 42:
-        if (B(kCounter0) != 0xA) return;
+        if (B(::bof3::Img(kCounter0)) != 0xA) return;
         SH_CALL(Music_FadeOutStop)(0x1E);
-        B(kCounter0) = 0;
+        B(::bof3::Img(kCounter0)) = 0;
         MoveScript_PartyRecords[0x65] = 0x2B;
         SH_CALL(Transition_Start)(0xD);
         return;
@@ -956,14 +956,14 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
         if (Field_Request == 2) return;
         unsigned char* const f = Flags();
         MoveScript_PartyRecords[0x65] = 0x2E;
-        B(kCounter2) = 1;
+        B(::bof3::Img(kCounter2)) = 1;
         SH_CALL(Flags_Set)(f, 0xB);
         ChangeArea(0x82, 0x290000, 0x530000, 0x85);
         SH_CALL(Music_Play)(0x83, 8);
         return;
     }
     case 46:
-        if (B(kCounter0) != 4) return;
+        if (B(::bof3::Img(kCounter0)) != 4) return;
         SH_AT(void (__cdecl*)(), kSoundJmp)();
         SH_CALL(Sound_LoadStream)(2);
         MoveScript_PartyRecords[0x65] = 0x2F;
@@ -974,7 +974,7 @@ SC11_EXPORT void __cdecl Scena11_Scene6(void) {
         MoveScript_PartyRecords[0x65] = 0x30;
         return;
     case 48:
-        if (B(kCounter0) != 0xA) return;
+        if (B(::bof3::Img(kCounter0)) != 0xA) return;
         SH_CALL(Flags_Set)(Flags(), 0xC);
         SH_CALL(ScriptFlags_Clear40)();
         EndScene();
@@ -1027,32 +1027,32 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
     }
     case 4:
         if (Field_Kind2Hold != 0) return;
-        B(kCounter0) = 1;
+        B(::bof3::Img(kCounter0)) = 1;
         MoveScript_PartyRecords[0x65] = 6;
         return;
     case 6:
-        if (B(kCounter0) != 4) return;
+        if (B(::bof3::Img(kCounter0)) != 4) return;
         if (!TakeSlot()) return;
-        B(kCounter3) = kSlot;
+        B(::bof3::Img(kCounter3)) = kSlot;
         MoveScript_PartyRecords[0x65] = 7;
         Place(0x13, -0x2EC, 0x200, 0xA);
         return;
     case 7:
-        if (!EffectLive(B(kCounter3))) {
-            B(kCounter3) = 0;
-            B(kCounter0) = 5;
+        if (!EffectLive(B(::bof3::Img(kCounter3)))) {
+            B(::bof3::Img(kCounter3)) = 0;
+            B(::bof3::Img(kCounter0)) = 5;
             MoveScript_PartyRecords[0x65] = 8;
             return;
         }
         [[fallthrough]];
     case 8:
-        if (B(kCounter0) != 0xA) return;
+        if (B(::bof3::Img(kCounter0)) != 0xA) return;
         if (!TakeSlot()) return;
         MoveScript_PartyRecords[0x65] = 9;
         Place(0x13, -0x2AA, 0x200, 0xA);
         return;
     case 9:
-        if (B(kCounter0) != 0x14) return;
+        if (B(::bof3::Img(kCounter0)) != 0x14) return;
         SH_CALL(Transition_Start)(0xD);
         MoveScript_PartyRecords[0x65] = 0xA;
         return;
@@ -1069,14 +1069,14 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
     case 12:
         if (Field_Request == 2) return;
         MoveScript_PartyRecords[0x65] = 0xD;
-        B(kCounter0) = 0;
-        B(kCounter2) = 1;
+        B(::bof3::Img(kCounter0)) = 0;
+        B(::bof3::Img(kCounter2)) = 1;
         ChangeArea(0x65, 0x490000, 0x90000, 0x81);
         return;
     case 13:
-        if (B(kCounter0) != 0x14) return;
-        B(kCounter0) = 0;
-        B(kCounter2) = 1;
+        if (B(::bof3::Img(kCounter0)) != 0x14) return;
+        B(::bof3::Img(kCounter0)) = 0;
+        B(::bof3::Img(kCounter2)) = 1;
         MoveScript_PartyRecords[0x65] = 0xE;
         ChangeArea(0x84, 0x530000, 0x1B0000, 0x83);
         return;
@@ -1086,7 +1086,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         Camera_Distance = static_cast<short>(Camera_Distance + 0xF880);
         MapView_Redraw = 2;
         if (TakeSlot()) {
-            B(kCounter3) = kSlot;
+            B(::bof3::Img(kCounter3)) = kSlot;
             MoveScript_PartyRecords[0x65] = 0xF;
             Place(0x13, -0x3C8, 0x258, 4);
         }
@@ -1100,8 +1100,8 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         Cond_ByteFE = 0x23;
         return;
     case 15:
-        if (EffectLive(B(kCounter3))) return;
-        B(kCounter3) = 0;
+        if (EffectLive(B(::bof3::Img(kCounter3)))) return;
+        B(::bof3::Img(kCounter3)) = 0;
         SH_CALL(Msg_OpenScript)(0x1A);
         Field_Request = 2;
         MoveScript_PartyRecords[0x65] = 0x10;
@@ -1113,55 +1113,55 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         return;
     case 17:
         if (Transition_Busy != 0) return;
-        B(kCounter0) = 1;
+        B(::bof3::Img(kCounter0)) = 1;
         Draw_PassFlags = 0x1F;
         MoveScript_PartyRecords[0x65] = 0x12;
         return;
     case 18: {
-        if (B(kCounter0) != 2) return;
+        if (B(::bof3::Img(kCounter0)) != 2) return;
         if (!TakeSlot()) return;
-        B(kCounter3) = kSlot;
+        B(::bof3::Img(kCounter3)) = kSlot;
         MoveScript_PartyRecords[0x65] = 0x13;
         unsigned char* const e = Place(0x31, -0x370, 0x258, 0x3C);
         rv::As<records::EffectObject>(e)->step_x = 0x580;
         return;
     }
     case 19:
-        if (EffectLive(B(kCounter3))) return;
-        B(kCounter3) = 0;
-        B(kCounter0) = 3;
+        if (EffectLive(B(::bof3::Img(kCounter3)))) return;
+        B(::bof3::Img(kCounter3)) = 0;
+        B(::bof3::Img(kCounter0)) = 3;
         MoveScript_PartyRecords[0x65] = 0x14;
         return;
     case 20:
-        if (B(kCounter0) != 4) return;
+        if (B(::bof3::Img(kCounter0)) != 4) return;
         if (!TakeSlot()) return;
-        B(kCounter3) = kSlot;
+        B(::bof3::Img(kCounter3)) = kSlot;
         MoveScript_PartyRecords[0x65] = 0x15;
         Place(0x13, -0x256, 0xE2, 0x3C);
         return;
     case 21: {
-        if (B(kCounter0) != 6) return;
-        if (EffectLive(B(kCounter3))) return;
-        B(kCounter3) = 0;
+        if (B(::bof3::Img(kCounter0)) != 6) return;
+        if (EffectLive(B(::bof3::Img(kCounter3)))) return;
+        B(::bof3::Img(kCounter3)) = 0;
         if (!TakeSlot()) return;
-        B(kCounter3) = kSlot;
+        B(::bof3::Img(kCounter3)) = kSlot;
         MoveScript_PartyRecords[0x65] = 0x16;
         unsigned char* const e = Place(0x31, -0x386, 0xE2, 0x3C);
         rv::As<records::EffectObject>(e)->step_x = 0;
         return;
     }
     case 22:
-        if (EffectLive(B(kCounter3))) return;
-        B(kCounter3) = 0;
-        B(kCounter0) = 7;
+        if (EffectLive(B(::bof3::Img(kCounter3)))) return;
+        B(::bof3::Img(kCounter3)) = 0;
+        B(::bof3::Img(kCounter0)) = 7;
         MoveScript_PartyRecords[0x65] = 0x1B;
         return;
     case 27: {
-        if (B(kCounter0) != 0x16) return;
+        if (B(::bof3::Img(kCounter0)) != 0x16) return;
         unsigned char* const f = Flags();
-        B(kCounter0) = 0;
-        B(kCounter1) = 0;
-        B(kCounter2) = 2;
+        B(::bof3::Img(kCounter0)) = 0;
+        B(::bof3::Img(kCounter1)) = 0;
+        B(::bof3::Img(kCounter2)) = 2;
         Draw_PassFlags = 0;
         MoveScript_PartyRecords[0x65] = 0x1D;
         SH_CALL(Flags_Set)(f, 0xF);
@@ -1170,19 +1170,19 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         return;
     }
     case 29:
-        if (B(kCounter0) != 1) return;
-        B(kCounter0) = 2;
+        if (B(::bof3::Img(kCounter0)) != 1) return;
+        B(::bof3::Img(kCounter0)) = 2;
         MoveScript_PartyRecords[0x65] = 0x1F;
         return;
     case 31:
-        if (B(kCounter0) != 3) return;
-        B(kCounter0) = 4;
+        if (B(::bof3::Img(kCounter0)) != 3) return;
+        B(::bof3::Img(kCounter0)) = 4;
         MoveScript_PartyRecords[0x65] = 0x21;
         return;
     case 33: {
-        if (B(kCounter0) != 0xA) return;
+        if (B(::bof3::Img(kCounter0)) != 0xA) return;
         unsigned char* const f = Flags();
-        B(kCounter0) = 0;
+        B(::bof3::Img(kCounter0)) = 0;
         MoveScript_PartyRecords[0x65] = 0x22;
         SH_CALL(Flags_Set)(f, 0x10);
         ChangeArea(0x83, 0x200000, 0x2F0000, 0x87);
@@ -1193,15 +1193,15 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         MoveScript_PartyRecords[0x65] = 0x23;
         return;
     case 35:
-        if (B(kCounter0) != 2) return;
+        if (B(::bof3::Img(kCounter0)) != 2) return;
         SH_CALL(Transition_Start)(4);
         MoveScript_PartyRecords[0x65] = 0x24;
         return;
     case 36:
         if (Transition_Busy != 0) return;
-        B(kCounter0) = 0;
+        B(::bof3::Img(kCounter0)) = 0;
         Draw_PassFlags = 0;
-        B(kCounter2) = 2;
+        B(::bof3::Img(kCounter2)) = 2;
         MoveScript_PartyRecords[0x65] = 0x25;
         return;
     case 37: {
@@ -1217,7 +1217,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         MoveScript_PartyRecords[0x65] = 0x27;
         return;
     case 39:
-        if (B(kCounter0) != 0x15) return;
+        if (B(::bof3::Img(kCounter0)) != 0x15) return;
         SH_CALL(Flags_Set)(Flags(), 0x12);
         SH_CALL(ScriptFlags_Clear40)();
         EndSceneAll();
@@ -1235,28 +1235,28 @@ SC11_EXPORT void __cdecl Scena11_Scene9(void) {
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (Field_Request == 2) return;
-        B(kCounter0) = 1;
+        B(::bof3::Img(kCounter0)) = 1;
         SH_CALL(Party_DropIn)(9);
         MoveScript_PartyRecords[0x65] = 1;
         return;
     case 1:
-        if (B(kCounter0) != 7) return;
+        if (B(::bof3::Img(kCounter0)) != 7) return;
         SH_CALL(Flags_Set)(Flags(), 0x13);
         SH_CALL(ScriptFlags_Clear40)();
         EndSceneAll();
         return;
     case 5:
         if (Field_Request == 2) return;
-        B(kCounter0) = 1;
+        B(::bof3::Img(kCounter0)) = 1;
         SH_CALL(Party_DropIn)(0xA);
         MoveScript_PartyRecords[0x65] = 6;
         return;
     case 6:
-        if (B(kCounter0) != 6) return;
+        if (B(::bof3::Img(kCounter0)) != 6) return;
         MoveScript_PartyRecords[0x65] = 7;
         return;
     case 7:
-        if (B(kCounter0) != 0xF) return;
+        if (B(::bof3::Img(kCounter0)) != 0xF) return;
         SH_CALL(Transition_Start)(4);
         MoveScript_PartyRecords[0x65] = 8;
         return;
@@ -1273,7 +1273,7 @@ SC11_EXPORT void __cdecl Scena11_Scene9(void) {
         MoveScript_Var7 = 0;
         SH_AT(void (__cdecl*)(), kStatusBit80)();
         Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags ^ 0x16);
-        B(kCounter2) = 2;
+        B(::bof3::Img(kCounter2)) = 2;
         ChangeArea(0x79, 0x290000, 0x330000, 7);
         return;
     default:
@@ -1290,7 +1290,7 @@ SC11_EXPORT void __cdecl Scena11_Scene9(void) {
 SC11_EXPORT void __cdecl Scena11_ObjectTrigger(unsigned char* object) {
     unsigned char* const f = Flags();
     const unsigned k = object[0x86];
-    reinterpret_cast<void (__cdecl*)(unsigned char*, unsigned char*)>(Entry(Scena11_Triggers_addr, static_cast<int>(k)))(object, f);
+    reinterpret_cast<void (__cdecl*)(unsigned char*, unsigned char*)>(Entry(::bof3::Img(Scena11_Triggers_addr), static_cast<int>(k)))(object, f);
 }
 
 namespace {
@@ -1299,9 +1299,9 @@ namespace {
 // a step and a scene. (Stored in the original's order; nothing between.)
 void StartScene(unsigned char step, signed char scene) {
     SH_CALL(ScriptFlags_Set40)();
-    B(kCounter1) = 0;
-    B(kCounter2) = 0;
-    B(kCounter3) = 0;
+    B(::bof3::Img(kCounter1)) = 0;
+    B(::bof3::Img(kCounter2)) = 0;
+    B(::bof3::Img(kCounter3)) = 0;
     MoveScript_PartyRecords[0x65] = step;
     MoveScript_Var7 = scene;
 }
@@ -1315,9 +1315,9 @@ SC11_EXPORT void __cdecl Scena11_Trigger01(void) {
     if (SH_CALL(Flags_Test)(Flags(), 5) != 0) return;
     SH_CALL(ScriptFlags_Set40)();
     unsigned char* const f = Flags();
-    B(kCounter1) = 0;
-    B(kCounter2) = 0;
-    B(kCounter3) = 0;
+    B(::bof3::Img(kCounter1)) = 0;
+    B(::bof3::Img(kCounter2)) = 0;
+    B(::bof3::Img(kCounter3)) = 0;
     MoveScript_PartyRecords[0x65] = 0;
     MoveScript_Var7 = 2;
     SH_CALL(Flags_Set)(f, 5);
@@ -1337,10 +1337,10 @@ SC11_EXPORT void __cdecl Scena11_Trigger10(void) { StartScene(0x14, 0xB); }
 SC11_EXPORT void __cdecl Scena11_Trigger11(void) {
     SH_CALL(ScriptFlags_Set40)();
     MoveScript_PartyRecords[0x65] = 2;
-    B(kCounter0) = 0;
-    B(kCounter1) = 0;
-    B(kCounter2) = 0;
-    B(kCounter3) = 0;
+    B(::bof3::Img(kCounter0)) = 0;
+    B(::bof3::Img(kCounter1)) = 0;
+    B(::bof3::Img(kCounter2)) = 0;
+    B(::bof3::Img(kCounter3)) = 0;
     MoveScript_Var7 = 0xB;
 }
 SC11_EXPORT void __cdecl Scena11_Trigger12(void) { StartScene(0, 0xE); }

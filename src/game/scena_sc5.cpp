@@ -48,19 +48,19 @@ std::uint16_t& W(std::uint32_t a) { return *reinterpret_cast<std::uint16_t*>(sta
 std::uint32_t& D(std::uint32_t a) { return *reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(a)); }
 
 unsigned Area() { return Game_AreaNumber; }
-unsigned char Counter(unsigned k) { return B(at::kCounters + k); }
-void SetCounter(unsigned k, unsigned char v) { B(at::kCounters + k) = v; }
+unsigned char Counter(unsigned k) { return B(::bof3::Img(at::kCounters) + k); }
+void SetCounter(unsigned k, unsigned char v) { B(::bof3::Img(at::kCounters) + k) = v; }
 void SetStep(unsigned char v) { MoveScript_PartyRecords[0x65] = v; }
 void SetRun(unsigned char v) { MoveScript_Var7 = v; }
 void SetPass(unsigned char v) { Draw_PassFlags = v; }
 unsigned char Request() { return Field_Request; }
 void SetRequest(unsigned char v) { Field_Request = v; }
 bool WaitClear() { return Transition_Busy == 0; }
-bool MsgDone() { return (B(at::kMsgFlags) & 2) == 2; }
+bool MsgDone() { return (B(::bof3::Img(at::kMsgFlags)) & 2) == 2; }
 unsigned Sel() { return AreaW0b_PartySet & 0x7Fu; }
 void MusicCurrent(unsigned char v) { AreaW1f_MusicCurrent = v; }
 // Field_ScriptFlags: `or byte [0x9039A2], v` / `xor word [0x9039A2], v`.
-void ScriptOr(unsigned char v) { B(at::kScriptFlags) = static_cast<unsigned char>(B(at::kScriptFlags) | v); }
+void ScriptOr(unsigned char v) { B(::bof3::Img(at::kScriptFlags)) = static_cast<unsigned char>(B(::bof3::Img(at::kScriptFlags)) | v); }
 void ScriptXor(std::uint16_t v) { Field_ScriptFlags = static_cast<std::uint16_t>(Field_ScriptFlags ^ v); }
 
 // The four counters 0x903848..B zeroed, in that order; the three from 1.
@@ -74,7 +74,7 @@ void ClearCounters123() {
 // The flag bits are read from 0x929ED0 afresh for every call, as the
 // originals load the dword before each push.
 unsigned char* Bits() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
-unsigned char* Story() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Cond_Flags_addr + 0xa0)); }
+unsigned char* Story() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(Cond_Flags_addr) + 0xa0)); }
 bool Flag(unsigned i) { return SH_CALL(Flags_Test)(Bits(), i) != 0; }   // test al, al
 void Set(unsigned i) { SH_CALL(Flags_Set)(Bits(), i); }
 void Clr(unsigned i) { SH_CALL(Flags_Clear)(Bits(), i); }
@@ -154,7 +154,7 @@ std::uint32_t Entry(std::uint32_t table, int index, unsigned count, const char* 
 // (group SC13's), 1 Scena05_EnterArea, 2 Scena05_Run.
 SC5_EXPORT void __cdecl Scena05_Frame(void) {
     const int state = static_cast<signed char>(MoveScript_PartyRecords[0x62]);
-    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(Scena05_States_addr, state, at::kStateCount, "Scena05_Frame")))();
+    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena05_States_addr), state, at::kStateCount, "Scena05_Frame")))();
 }
 
 // original 0x546AB0: state 2, a tail jump through Scena05_Runs on the s8 run
@@ -162,7 +162,7 @@ SC5_EXPORT void __cdecl Scena05_Frame(void) {
 // 16..22 the runs below.
 SC5_EXPORT void __cdecl Scena05_Run(void) {
     const int run = MoveScript_Var7;
-    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(Scena05_Runs_addr, run, at::kRunCount, "Scena05_Run")))();
+    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena05_Runs_addr), run, at::kRunCount, "Scena05_Run")))();
 }
 
 // original 0x54A2A0: slot 1, called by 0x56D6D0 with the object that
@@ -172,7 +172,7 @@ SC5_EXPORT void __cdecl Scena05_ObjectTrigger(unsigned char* object) {
     const std::uint32_t bits = Chapter_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
-        Entry(Scena05_Objects_addr, static_cast<int>(index), at::kObjectCount, "Scena05_ObjectTrigger")))(object, bits);
+        Entry(::bof3::Img(Scena05_Objects_addr), static_cast<int>(index), at::kObjectCount, "Scena05_ObjectTrigger")))(object, bits);
 }
 
 // original 0x54A800: slot 4, the cell hook (0x56D7A0, a cell (a, b) faced):
@@ -180,11 +180,11 @@ SC5_EXPORT void __cdecl Scena05_ObjectTrigger(unsigned char* object) {
 // match, or 0xFF; negative (as a signed byte) answers 0xFF; else a tail jump
 // through Scena05_CellHooks with (a, b), whose al is the answer.
 SC5_EXPORT unsigned char __cdecl Scena05_CellHook(unsigned a, unsigned b) {
-    const unsigned char found = SH_AT(CellFindFn, at::kCellFind)(reinterpret_cast<const void*>(Scena05_CellRecords_addr), 2, a, b);
+    const unsigned char found = SH_AT(CellFindFn, at::kCellFind)(reinterpret_cast<const void*>(::bof3::Img(Scena05_CellRecords_addr)), 2, a, b);
     const int index = static_cast<signed char>(found);
     if (index < 0) return 0xFF;
     return reinterpret_cast<CellEntry>(static_cast<std::uintptr_t>(
-        Entry(Scena05_CellHooks_addr, index, at::kCellHookCount, "Scena05_CellHook")))(a, b);
+        Entry(::bof3::Img(Scena05_CellHooks_addr), index, at::kCellHookCount, "Scena05_CellHook")))(a, b);
 }
 
 // A step hook's hit: ScriptFlags_Set40, the four counters 0, the step and the
@@ -264,7 +264,7 @@ unsigned char CellCue(unsigned flag, unsigned char step) {
     SetCounter(3, 0);
     Sound(0x202);
     SetStep(step);
-    W(at::kTimer) = 0;
+    W(::bof3::Img(at::kTimer)) = 0;
     return 1;
 }
 }  // namespace
@@ -325,9 +325,9 @@ SC5_EXPORT void __cdecl Scena05_Object07(void) { StartRun(0x12, false); }
 // 0x904062..64 is 5, then 2 when any is 6 (two passes, the second wins).
 SC5_EXPORT void __cdecl Scena05_PartyCounter(void) {
     for (unsigned i = 0; i < 3; ++i)
-        if (B(at::kParty + i) == 5) SetCounter(1, 1);
+        if (B(::bof3::Img(at::kParty) + i) == 5) SetCounter(1, 1);
     for (unsigned i = 0; i < 3; ++i)
-        if (B(at::kParty + i) == 6) SetCounter(1, 2);
+        if (B(::bof3::Img(at::kParty) + i) == 6) SetCounter(1, 2);
 }
 
 // original 0x54A1E0: Sprite_Current = ObjTrio record 0; Effect_FindFree into
@@ -337,17 +337,17 @@ SC5_EXPORT void __cdecl Scena05_PartyCounter(void) {
 // table is 8 long and the member a byte), the words +0x2E / +0x30 from the
 // sprite's. Each store re-reads the slot from the sprite, as the original.
 SC5_EXPORT void __cdecl Scena05_SpawnMember(unsigned char kind) {
-    D(at::kSpriteCurrent) = ObjTrio_addr;
+    D(::bof3::Img(at::kSpriteCurrent)) = ::bof3::Img(ObjTrio_addr);
     const unsigned char slot = SH_CALL(Effect_FindFree)();
     unsigned char* const sprite = Sprite_Current;
     sprite[0xB] = slot;
     if (sprite[0xB] == 0xFF) return;
-    auto effect = [&]() { return &B(at::kEffects + static_cast<std::uint32_t>(sprite[0xB]) * at::kEffectStride); };
+    auto effect = [&]() { return &B(::bof3::Img(at::kEffects) + static_cast<std::uint32_t>(sprite[0xB]) * at::kEffectStride); };
     effect()[0] = 1;
     effect()[5] = 6;
     effect()[6] = static_cast<unsigned char>(kind + 0x70);
     *reinterpret_cast<std::uint32_t*>(effect() + 0xC) = 0;
-    const std::int32_t lift = static_cast<signed char>(B(at::kMemberBytes + Cond_Flags[0xd2]));
+    const std::int32_t lift = static_cast<signed char>(B(::bof3::Img(at::kMemberBytes) + Cond_Flags[0xd2]));
     *reinterpret_cast<std::int32_t*>(effect() + 0x10) = lift;
     *reinterpret_cast<std::uint16_t*>(effect() + 0x2E) = *reinterpret_cast<const std::uint16_t*>(sprite + 0x2E);
     *reinterpret_cast<std::uint16_t*>(effect() + 0x30) = *reinterpret_cast<const std::uint16_t*>(sprite + 0x30);
@@ -1542,21 +1542,21 @@ SC5_EXPORT void __cdecl Scena05_Run17(void) {
     case 0xA:
         if (Counter(0) != 5) break;
         SetStep(0xB);
-        W(at::kTimer) = 0;
+        W(::bof3::Img(at::kTimer)) = 0;
         break;
     case 0xB: {
-        const std::uint16_t t = static_cast<std::uint16_t>(W(at::kTimer) + 1);
-        W(at::kTimer) = t;
+        const std::uint16_t t = static_cast<std::uint16_t>(W(::bof3::Img(at::kTimer)) + 1);
+        W(::bof3::Img(at::kTimer)) = t;
         if (t >= 0xC8) {
             Sound(0x209);
-            W(at::kTimer) = 0;
+            W(::bof3::Img(at::kTimer)) = 0;
             SetStep(0xC);
         }
         SH_CALL(Port_DroppedCall)(0x10);   // the original pushes 4 above the first: unread
         SH_CALL(Port_DroppedCall)(0x10);
         if (static_cast<signed char>(ScenaSc5_Level) > 8) break;
         Sound(0x209);
-        W(at::kTimer) = 0;
+        W(::bof3::Img(at::kTimer)) = 0;
         SetStep(0xC);
         break;
     }
