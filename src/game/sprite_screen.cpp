@@ -195,8 +195,10 @@ void __cdecl StubDropped(unsigned char) { Record(3); }
 void __cdecl StubOverlay() { Record(4); }
 const Callees kStubs = {StubInheritKey, StubProject, StubDropped, StubOverlay};
 
-constexpr std::uint32_t kUpdate = 0x588F20, kUpdateSize = 0x1C0, kOverlay = 0x5890E0, kOverlaySize = 0x2F;
-constexpr std::uint32_t kFtol = 0x5B9550;
+constexpr ::bof3::image::CodeVa kUpdate{0x588F20};
+constexpr ::bof3::image::CodeVa kOverlay{0x5890E0};
+constexpr std::uint32_t kUpdateSize = 0x1C0, kOverlaySize = 0x2F;
+constexpr ::bof3::image::CodeVa kFtol{0x5B9550};
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
@@ -298,10 +300,10 @@ void SpriteScreen_Inject() {
     if (bof3::WantsShadow("sprite_screen")) {
         const auto f = [](auto p) { return reinterpret_cast<const void*>(p); };
         const bof3::CloneCall overlay_calls[] = {{0x29, f(&StubDropped)}};
-        void* const overlay = bof3::CloneOriginal("Sprite_QueueOverlay", kOverlay, kOverlaySize, overlay_calls, 1);
+        void* const overlay = bof3::CloneOriginal("Sprite_QueueOverlay", kOverlay.v, kOverlaySize, overlay_calls, 1);
         const bof3::CloneCall update_calls[] = {{0x0E, f(&StubOverlay)}, {0xE8, f(&StubInheritKey)}, {0x138, f(&StubProject)},
                                                 {0x15A, nullptr}, {0x17A, nullptr}, {0x1B0, f(&StubDropped)}};
-        void* const update = bof3::CloneOriginal("Sprite_UpdateScreen", kUpdate, kUpdateSize, update_calls, 6);
+        void* const update = bof3::CloneOriginal("Sprite_UpdateScreen", kUpdate.v, kUpdateSize, update_calls, 6);
         (void)kFtol;
         SelfTest(reinterpret_cast<Fn>(update), reinterpret_cast<Fn>(overlay));
     }

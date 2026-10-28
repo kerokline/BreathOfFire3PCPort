@@ -43,12 +43,12 @@ void __cdecl TCallA(unsigned n) { Stub(Scenario_CallA)(n); }
 void __cdecl TCallB(unsigned n) { Stub(Scenario_CallB)(n); }
 unsigned __cdecl TDropIn(unsigned e) { return Stub(Party_DropIn)(e); }
 void __cdecl TGrey() { Stub(Scena14_GreyClut)(); }
-void __cdecl TPlace(int x, int z, unsigned kind) { StubAt<PlaceFn>(at::kPartyPlace)(x, z, kind); }
+void __cdecl TPlace(int x, int z, unsigned kind) { StubAt<PlaceFn>(at::kPartyPlace.v)(x, z, kind); }
 unsigned char __cdecl TSpawn(unsigned kind, unsigned x, unsigned y, unsigned z, unsigned life, unsigned w) {
     return Stub(Scena14_SpawnEffect)(kind, x, y, z, life, w);
 }
 void __cdecl TSound(unsigned short id) { Stub(Sound_PlayEffect)(id); }
-void __cdecl TArea141c() { StubAt<VoidFn>(at::kArea141c)(); }
+void __cdecl TArea141c() { StubAt<VoidFn>(at::kArea141c.v)(); }
 long __cdecl TElevation(long x, long z) { return Stub(AreaMap_Elevation)(x, z); }
 unsigned char __cdecl TFindFree() { return Stub(Effect_FindFree)(); }
 void __cdecl TViewReset() { Stub(Field_ViewReset)(); }
@@ -356,20 +356,20 @@ const sh::Callee kCallees[] = {
     {SC13_OURS(Scena14_ScrollView), 0, {}, sh::Answer::kPhase, 0, 0},
     {SC13_OURS(Scena14_TalkByMember), 2, {kAll, kAll}, sh::Answer::kGarbage, 0, 0},
     // nobody's (group SX's this wave, or area code of a later one)
-    {SC13_RAW("0x533E50", at::kPartyPass), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC13_RAW("0x57CD90", at::kFreeSprite), 0, {}, sh::Answer::kByte, 0xFF, 0x1D},
-    {SC13_RAW("0x587B80", at::kSound587B80), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC13_RAW("0x591900", at::kParty591900), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC13_RAW("0x587890", at::kVoiceLevel), 2, {kU16, kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC13_RAW("0x591920", at::kFindByte), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC13_RAW("0x420A90", at::kArea143), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC13_RAW("0x4204D0", at::kArea141a), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC13_RAW("0x420580", at::kArea141b), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC13_RAW("0x4205D0", at::kArea141c), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC13_RAW("0x420670", at::kArea141d), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC13_RAW("0x420710", at::kArea141e), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC13_RAW("0x42BA90", at::kArea191), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC13_RAW("0x42C0A0", at::kArea192), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
+    {SC13_RAW("0x533E50", at::kPartyPass.v), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC13_RAW("0x57CD90", at::kFreeSprite.v), 0, {}, sh::Answer::kByte, 0xFF, 0x1D},
+    {SC13_RAW("0x587B80", at::kSound587B80.v), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC13_RAW("0x591900", at::kParty591900.v), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC13_RAW("0x587890", at::kVoiceLevel.v), 2, {kU16, kAll}, sh::Answer::kGarbage, 0, 0},
+    {SC13_RAW("0x591920", at::kFindByte.v), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
+    {SC13_RAW("0x420A90", at::kArea143.v), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
+    {SC13_RAW("0x4204D0", at::kArea141a.v), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC13_RAW("0x420580", at::kArea141b.v), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC13_RAW("0x4205D0", at::kArea141c.v), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC13_RAW("0x420670", at::kArea141d.v), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC13_RAW("0x420710", at::kArea141e.v), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC13_RAW("0x42BA90", at::kArea191.v), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
+    {SC13_RAW("0x42C0A0", at::kArea192.v), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
     // the log slots of the object tables' stand-ins (keyed on the dispatchers'
     // own addresses, which no clone calls)
     {"Scena13_Objects[i]", 0x564120, 0x564120, 3, {kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0, {}, nullptr,

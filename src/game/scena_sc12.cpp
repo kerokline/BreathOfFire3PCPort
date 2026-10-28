@@ -76,7 +76,7 @@ void Msg(unsigned short id) { SH_CALL(Msg_OpenScript)(id); }
 void ChangeArea(unsigned area, int x, int z, unsigned flags) { SH_CALL(Field_ChangeArea)(area, x, z, flags); }
 void CallA(unsigned n) { SH_CALL(Scenario_CallA)(n); }
 void CallB(unsigned n) { SH_CALL(Scenario_CallB)(n); }
-void PartyPass() { SH_AT(VoidFn, at::kPartyPass)(); }
+void PartyPass() { SH_AT(VoidFn, at::kPartyPass.v)(); }
 
 // The chapter's message: Msg_OpenScript(id), the request byte 2.
 void Say(unsigned short id) {
@@ -278,7 +278,7 @@ SC12_EXPORT unsigned char __cdecl Scena12_StepHook(int x, int z) {
 // match, or 0xFF; negative (as a signed byte) answers 0xFF; else a tail jump
 // through Scena12_CellHooks with (a, b), whose al is the answer.
 SC12_EXPORT unsigned char __cdecl Scena12_CellHook(unsigned a, unsigned b) {
-    const unsigned char found = SH_AT(CellFindFn, at::kCellFind)(reinterpret_cast<const void*>(::bof3::Img(Scena12_CellRecords_addr)), 4, a, b);
+    const unsigned char found = SH_AT(CellFindFn, at::kCellFind.v)(reinterpret_cast<const void*>(::bof3::Img(Scena12_CellRecords_addr)), 4, a, b);
     const int index = static_cast<signed char>(found);
     if (index < 0) return 0xFF;
     return reinterpret_cast<CellEntry>(static_cast<std::uintptr_t>(
@@ -1325,8 +1325,8 @@ void Run9Roll() {
             if (B(::bof3::Img(at::kPartyBytes) + i) == kValue[k]) Msg(kMessage[k]);
 }
 
-void Place(int x, int z) { SH_AT(PlaceFn, at::kPartyPlace)(x, z, 0x26); }
-void BattleBytes() { SH_AT(KindFn, at::kBattleBytes)(0x26); }
+void Place(int x, int z) { SH_AT(PlaceFn, at::kPartyPlace.v)(x, z, 0x26); }
+void BattleBytes() { SH_AT(KindFn, at::kBattleBytes.v)(0x26); }
 
 }  // namespace
 
@@ -1505,7 +1505,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
         SetStep(0);
         SetRun(0);
         Set(0x3F);
-        SH_AT(VoidFn, at::kSetBit80)();
+        SH_AT(VoidFn, at::kSetBit80.v)();
         ChangeArea(0x7E, 0x500000, 0x1E0000, 4);
         break;
     default:

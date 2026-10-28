@@ -86,10 +86,10 @@ constexpr unsigned kCellRecordCount = 2;
 constexpr unsigned kCellHookCount = 2;
 
 // Callees nobody owns (above).
-constexpr std::uint32_t kPartyPlace = bof3::addr::Party_PlaceForBattle;
-constexpr std::uint32_t kPartyPass = bof3::addr::Party_HealJoined;
-constexpr std::uint32_t kSetBit80 = bof3::addr::Field_SetStatus80;
-constexpr std::uint32_t kCellFind = bof3::addr::Field_CellTriggerAt;
+constexpr ::bof3::image::CodeVa kPartyPlace{bof3::addr::Party_PlaceForBattle};
+constexpr ::bof3::image::CodeVa kPartyPass{bof3::addr::Party_HealJoined};
+constexpr ::bof3::image::CodeVa kSetBit80{bof3::addr::Field_SetStatus80};
+constexpr ::bof3::image::CodeVa kCellFind{bof3::addr::Field_CellTriggerAt};
 
 }  // namespace at
 

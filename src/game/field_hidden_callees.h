@@ -71,10 +71,10 @@ constexpr unsigned kKindStride = 0x8C;
 }  // namespace at
 
 // Nobody's (see above).
-constexpr std::uint32_t kTargetAhead = bof3::addr::PartyAction_TargetAhead;   // 0x51C390, round fourteen R0A
-constexpr std::uint32_t kSpawnAtCell = bof3::addr::Effect_SpawnAtCell;
-constexpr std::uint32_t kFoundZenny = bof3::addr::Field_GiveZenny;   // 0x5307C0, round twelve FE1
-constexpr std::uint32_t kClearCell = bof3::addr::AreaMap_ClearCell;
+constexpr ::bof3::image::CodeVa kTargetAhead{bof3::addr::PartyAction_TargetAhead};   // 0x51C390, round fourteen R0A
+constexpr ::bof3::image::CodeVa kSpawnAtCell{bof3::addr::Effect_SpawnAtCell};
+constexpr ::bof3::image::CodeVa kFoundZenny{bof3::addr::Field_GiveZenny};   // 0x5307C0, round twelve FE1
+constexpr ::bof3::image::CodeVa kClearCell{bof3::addr::AreaMap_ClearCell};
 
 using Handler = void (__cdecl*)();
 using Byte0 = std::uint32_t (__cdecl*)();   // a u8 answer in al, no arguments

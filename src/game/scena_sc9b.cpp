@@ -121,8 +121,8 @@ void SetElevation(int v) { SH_CALL(MapView_SetElevation)(v); }
 long Elevation(long x, long z) { return SH_CALL(AreaMap_Elevation)(x, z); }
 bool LoadDone() { return SH_CALL(File_LoadDone)() != 0; }   // test eax, eax
 unsigned char FindFree() { return SH_CALL(Effect_FindFree)(); }
-void PartyPlace(int x, int z, unsigned kind) { SH_AT(PlaceFn, at::kPartyPlace)(x, z, kind); }
-void SetBit80() { SH_AT(VoidFn, at::kSetBit80)(); }
+void PartyPlace(int x, int z, unsigned kind) { SH_AT(PlaceFn, at::kPartyPlace.v)(x, z, kind); }
+void SetBit80() { SH_AT(VoidFn, at::kSetBit80.v)(); }
 void Shake() { SH_CALL(Scena10_Shake)(); }
 
 // The chapter's message: Msg_OpenScript(id), the request byte 2.
@@ -1030,7 +1030,7 @@ SC9B_EXPORT unsigned char __cdecl Scena09_StepHook(int x, int z) { return StepHo
 // 14, x, z); a negative answer (as a signed byte) answers 0xFF; else a tail
 // jump through Scena09_CellHooks with (x, z) in place, whose al is the answer.
 SC9B_EXPORT unsigned char __cdecl Scena09_CellHook(int x, int z) {
-    const unsigned char found = SH_AT(CellFindFn, at::kCellFind)(reinterpret_cast<const void*>(::bof3::Img(Scena09_Cells_addr)), 0xE, x, z);
+    const unsigned char found = SH_AT(CellFindFn, at::kCellFind.v)(reinterpret_cast<const void*>(::bof3::Img(Scena09_Cells_addr)), 0xE, x, z);
     const int index = static_cast<signed char>(found);
     if (index < 0) return 0xFF;
     return reinterpret_cast<CellEntry>(static_cast<std::uintptr_t>(
@@ -1566,8 +1566,8 @@ SC9B_EXPORT void __cdecl Scena10_Run3(void) {
         return;
     case 0x11:
         if (Request() == 2) return;
-        SH_AT(KeyItemFn, at::kKeyItemAdd)(9);
-        SH_AT(VoidFn, at::kMusicStop)();
+        SH_AT(KeyItemFn, at::kKeyItemAdd.v)(9);
+        SH_AT(VoidFn, at::kMusicStop.v)();
         SH_CALL(Sound_LoadStream)(2);
         D(::bof3::Img(at::kTally)) = 0;
         ScenaSc9b_TallyWord = 0;
@@ -2045,7 +2045,7 @@ SC9B_EXPORT void __cdecl Scena10_Run13(void) {
 // original 0x5594D0: called by run 3 - 0x57CD90 (a free Sprite_Objects index)
 // to the word 0x903850; on one, EventOp_0x(Scena10_SpriteScript).
 SC9B_EXPORT void __cdecl Scena10_SpriteOp(void) {
-    const unsigned char v = SH_AT(ByteFn, at::kSpriteFindFree)();
+    const unsigned char v = SH_AT(ByteFn, at::kSpriteFindFree.v)();
     at::kEffectSlot.w_00 = v;
     if (v == 0xFF) return;
     SH_CALL(EventOp_0x)(reinterpret_cast<const unsigned char*>(::bof3::Img(Scena10_SpriteScript_addr)));

@@ -123,14 +123,14 @@ constexpr std::uint32_t kShake7 = 0x661244;       // Scena07_Shake, 4 s8
 }  // namespace at
 
 // Callees nobody owns this wave, by address (docs/scena_sc7.md section 6).
-constexpr std::uint32_t kPlaceParty = bof3::addr::Party_PlaceForBattle;       // (x, z, u8): the party placed at a point for an event battle
-constexpr std::uint32_t kPartyRestore = bof3::addr::Party_HealJoined;     // (): the party's records refreshed
-constexpr std::uint32_t kStatusBit80 = bof3::addr::Field_SetStatus80;      // (): Field_StatusBits |= 0x80
-constexpr std::uint32_t kCellFind = bof3::addr::Field_CellTriggerAt;         // (records, n, x, z): the cell record matched, negative none
-constexpr std::uint32_t kSpriteFindFree = bof3::addr::Sprite_FindFree;   // (): a free Sprite_Objects index 0..0x1D, 0xFF none
-constexpr std::uint32_t kMusicStop = bof3::addr::Sound_StopMusic;        // (): the music buffer stopped
-constexpr std::uint32_t kKeyItemAdd = bof3::addr::KeyItem_Add;       // (u8): into the first free of 32 bytes at 0x904554
-constexpr std::uint32_t kCall591BE0 = bof3::addr::Zenny_Add;       // (0xBB8, 0): chapter 8 run 4 calls it once (not read here)
-constexpr std::uint32_t kCall498DE0 = bof3::addr::Char_LevelUp;       // (4): chapter 8's join calls it before the record's stats (not read here)
+constexpr ::bof3::image::CodeVa kPlaceParty{bof3::addr::Party_PlaceForBattle};       // (x, z, u8): the party placed at a point for an event battle
+constexpr ::bof3::image::CodeVa kPartyRestore{bof3::addr::Party_HealJoined};     // (): the party's records refreshed
+constexpr ::bof3::image::CodeVa kStatusBit80{bof3::addr::Field_SetStatus80};      // (): Field_StatusBits |= 0x80
+constexpr ::bof3::image::CodeVa kCellFind{bof3::addr::Field_CellTriggerAt};         // (records, n, x, z): the cell record matched, negative none
+constexpr ::bof3::image::CodeVa kSpriteFindFree{bof3::addr::Sprite_FindFree};   // (): a free Sprite_Objects index 0..0x1D, 0xFF none
+constexpr ::bof3::image::CodeVa kMusicStop{bof3::addr::Sound_StopMusic};        // (): the music buffer stopped
+constexpr ::bof3::image::CodeVa kKeyItemAdd{bof3::addr::KeyItem_Add};       // (u8): into the first free of 32 bytes at 0x904554
+constexpr ::bof3::image::CodeVa kCall591BE0{bof3::addr::Zenny_Add};       // (0xBB8, 0): chapter 8 run 4 calls it once (not read here)
+constexpr ::bof3::image::CodeVa kCall498DE0{bof3::addr::Char_LevelUp};       // (4): chapter 8's join calls it before the record's stats (not read here)
 
 }  // namespace scena_sc7

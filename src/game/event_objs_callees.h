@@ -34,15 +34,15 @@ constexpr unsigned kRecordSize = 0xA4;
 // AreaMap_Slope(x, z, direction), MapView_HeightScale = 0; the slope's long
 // back and SharedScratch's first byte 1 on a slope, else 0. The direction is
 // read as its low byte.
-constexpr std::uint32_t kSlopeAt = bof3::addr::MapView_SlopeAt;
+constexpr ::bof3::image::CodeVa kSlopeAt{bof3::addr::MapView_SlopeAt};
 // Unread beyond their use here (none reached by the shop route):
-constexpr std::uint32_t kCellsAllWide = bof3::addr::AreaMap_CellsAllWide;   // AreaMap_CellsAll's other footprint (3 x 3)
-constexpr std::uint32_t kCellsNoneWide = bof3::addr::AreaMap_CellsNoneWide;  // AreaMap_CellsNone's
-constexpr std::uint32_t kTurnProbe = bof3::addr::Field_WayBlocked;      // (x, z, 0, height word): al, the way is blocked
-constexpr std::uint32_t kFloorHurt = bof3::addr::Field_FloorHurt;      // (kind byte): the floor's damage by kind 0..8
-constexpr std::uint32_t kFlash = bof3::addr::Sprite_FlashClut;          // (n byte): the leader's CLUT flash, sound 0x108
-constexpr std::uint32_t kHpLose = bof3::addr::Char_LoseHp;         // (amount, member byte): ax, the HP taken
-constexpr std::uint32_t kHpGain = bof3::addr::Char_GainHp;   // R2A: (amount, member byte)
+constexpr ::bof3::image::CodeVa kCellsAllWide{bof3::addr::AreaMap_CellsAllWide};   // AreaMap_CellsAll's other footprint (3 x 3)
+constexpr ::bof3::image::CodeVa kCellsNoneWide{bof3::addr::AreaMap_CellsNoneWide};  // AreaMap_CellsNone's
+constexpr ::bof3::image::CodeVa kTurnProbe{bof3::addr::Field_WayBlocked};      // (x, z, 0, height word): al, the way is blocked
+constexpr ::bof3::image::CodeVa kFloorHurt{bof3::addr::Field_FloorHurt};      // (kind byte): the floor's damage by kind 0..8
+constexpr ::bof3::image::CodeVa kFlash{bof3::addr::Sprite_FlashClut};          // (n byte): the leader's CLUT flash, sound 0x108
+constexpr ::bof3::image::CodeVa kHpLose{bof3::addr::Char_LoseHp};         // (amount, member byte): ax, the HP taken
+constexpr ::bof3::image::CodeVa kHpGain{bof3::addr::Char_GainHp};   // R2A: (amount, member byte)
 
 struct Callees {
     void (__cdecl* jump_setup)();                                              // Field_JumpSetUp (ours)

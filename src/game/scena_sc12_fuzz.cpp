@@ -105,7 +105,7 @@ void __cdecl TKind2(unsigned char a) { Stub(Kind2_Place)(a); }
 unsigned __cdecl TDropIn(unsigned e) { return Stub(Party_DropIn)(e); }
 void __cdecl TMusicPlay(unsigned t, int f) { Stub(Music_Play)(t, f); }
 void __cdecl TTransition(unsigned char k) { Stub(Transition_Start)(k); }
-void __cdecl TPartyPass() { Stub(reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(at::kPartyPass)))(); }
+void __cdecl TPartyPass() { Stub(reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(at::kPartyPass.v)))(); }
 void __cdecl TFadeOutStop(int f) { Stub(Music_FadeOutStop)(f); }
 void __cdecl TLoadStream(unsigned id) { Stub(Sound_LoadStream)(id); }
 int __cdecl TStreamDone() { return Stub(Sound_StreamDone)(); }
@@ -231,9 +231,9 @@ const sh::Callee kCallees[] = {
     // tested on al alone (test al, al): garbage above a 0 must not matter
     {SC12_OURS(Flags_Test), 2, {kAll, kU8}, sh::Answer::kFlag, 0, 0},
     // a pass over the eight records at 0x903A70 and the party
-    {SC12_RAW("0x533E50", at::kPartyPass), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC12_RAW("0x533E50", at::kPartyPass.v), 0, {}, sh::Answer::kGarbage, 0, 0},
     // the cell-record search: the records, the count, the cell; none or 0..3
-    {SC12_RAW("0x56D800", at::kCellFind), 4, {kAll, kU8, kU8, kU8}, sh::Answer::kByte, 0xFF, 3},
+    {SC12_RAW("0x56D800", at::kCellFind.v), 4, {kAll, kU8, kU8, kU8}, sh::Answer::kByte, 0xFF, 3},
     // the log slots of the table stand-ins above (keyed on the dispatchers'
     // own addresses, which no clone calls)
     {"Scena12_Objects[i]", 0x561880, 0x561880, 3, {kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0, {}, nullptr,

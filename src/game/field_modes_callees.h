@@ -38,13 +38,13 @@ constexpr std::uint32_t kSlot_addr = SharedScratch_addr; // kSlot's address, for
 
 // The callees without a name in symbols.toml (docs/field-modes.md section 6
 // has what each is): called by address.
-constexpr std::uint32_t kChangeArea = bof3::addr::Field_ChangeArea;       // PSX Field_ChangeArea 0x801A0A30
-constexpr std::uint32_t kStartMusic = bof3::addr::Music_LoadFile;       // PSX 0x801625AC
-constexpr std::uint32_t kTaskEnd = bof3::addr::Task_Exit;          // ends the current task; never returns
-constexpr std::uint32_t kEffectAlloc = bof3::addr::Effect_FindFree;      // PSX 0x8019701C
-constexpr std::uint32_t kPlaceParty = bof3::addr::Party_DropIn;       // PSX 0x801BF1A8
-constexpr std::uint32_t kOpenScript = bof3::addr::Msg_OpenScript;       // Msg_OpenScript
-constexpr std::uint32_t kViewShift = bof3::addr::MapView_FillCells;        // PSX 0x80155154
+constexpr ::bof3::image::CodeVa kChangeArea{bof3::addr::Field_ChangeArea};       // PSX Field_ChangeArea 0x801A0A30
+constexpr ::bof3::image::CodeVa kStartMusic{bof3::addr::Music_LoadFile};       // PSX 0x801625AC
+constexpr ::bof3::image::CodeVa kTaskEnd{bof3::addr::Task_Exit};          // ends the current task; never returns
+constexpr ::bof3::image::CodeVa kEffectAlloc{bof3::addr::Effect_FindFree};      // PSX 0x8019701C
+constexpr ::bof3::image::CodeVa kPlaceParty{bof3::addr::Party_DropIn};       // PSX 0x801BF1A8
+constexpr ::bof3::image::CodeVa kOpenScript{bof3::addr::Msg_OpenScript};       // Msg_OpenScript
+constexpr ::bof3::image::CodeVa kViewShift{bof3::addr::MapView_FillCells};        // PSX 0x80155154
 
 struct Callees {
     void (__cdecl* call_a)(unsigned);                                             // Scenario_CallA (ours)

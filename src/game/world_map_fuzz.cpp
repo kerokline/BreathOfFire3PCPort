@@ -399,7 +399,7 @@ void RelocateStepTable(void* copy) {
     for (U i = 0; i < 4; ++i) {
         const U target = GetLong(At(WorldMap33_FrameStates_addr + i * 4));
         if (i == 0) {
-            if (target != kState0) bof3::Fatal("world_map: state table entry 0 is 0x%X, not 0x411310", (unsigned)target);
+            if (target != kState0.v) bof3::Fatal("world_map: state table entry 0 is 0x%X, not 0x411310", (unsigned)target);
             g_step_table[0] = Addr(As<const void*>(&StubState0));
         } else {
             if (target < kBase || target >= kBase + kSize)

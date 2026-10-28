@@ -60,15 +60,15 @@ constexpr std::uint32_t kShopByteC = 0x929EC2;     // u8: 1
 
 // Callees no group owns (SH_AT), with the types the originals call them by.
 namespace callee {
-constexpr std::uint32_t kPartyPlace = bof3::addr::Party_PlaceForBattle;    // void (int x, int z, unsigned kind): the party placed for an event battle
-constexpr std::uint32_t kPartyRestore = bof3::addr::Party_HealJoined;  // void (void): the members' records rebuilt (Char_RecalcStats)
-constexpr std::uint32_t kStatusBit80 = bof3::addr::Field_SetStatus80;   // void (void): Field_StatusBits |= 0x80
-constexpr std::uint32_t kMusicStop = bof3::addr::Sound_StopMusic;     // void (void): a jmp to 0x5A6FF0, the sound layer
-constexpr std::uint32_t kItemPut = bof3::addr::AbilityList_Add;       // (u8 item, x, u8, y): an item handed back to the inventory
-constexpr std::uint32_t kInventoryTake = bof3::addr::Inventory_Remove; // (category, item, count): the item's count lowered
-constexpr std::uint32_t kMoneyTake = bof3::addr::Zenny_Sub;     // unsigned char (amount, flag): al 0 when the party has too little
-constexpr std::uint32_t kMoneyGive = bof3::addr::Zenny_Add;     // (amount, flag): the party's money raised
-constexpr std::uint32_t kTurnTest = bof3::addr::Camera_TurnFBToDegrees;      // unsigned char (s16 a, s8 b): 0x57C650 on the two scaled, al tested - nobody's
+constexpr ::bof3::image::CodeVa kPartyPlace{bof3::addr::Party_PlaceForBattle};    // void (int x, int z, unsigned kind): the party placed for an event battle
+constexpr ::bof3::image::CodeVa kPartyRestore{bof3::addr::Party_HealJoined};  // void (void): the members' records rebuilt (Char_RecalcStats)
+constexpr ::bof3::image::CodeVa kStatusBit80{bof3::addr::Field_SetStatus80};   // void (void): Field_StatusBits |= 0x80
+constexpr ::bof3::image::CodeVa kMusicStop{bof3::addr::Sound_StopMusic};     // void (void): a jmp to 0x5A6FF0, the sound layer
+constexpr ::bof3::image::CodeVa kItemPut{bof3::addr::AbilityList_Add};       // (u8 item, x, u8, y): an item handed back to the inventory
+constexpr ::bof3::image::CodeVa kInventoryTake{bof3::addr::Inventory_Remove}; // (category, item, count): the item's count lowered
+constexpr ::bof3::image::CodeVa kMoneyTake{bof3::addr::Zenny_Sub};     // unsigned char (amount, flag): al 0 when the party has too little
+constexpr ::bof3::image::CodeVa kMoneyGive{bof3::addr::Zenny_Add};     // (amount, flag): the party's money raised
+constexpr ::bof3::image::CodeVa kTurnTest{bof3::addr::Camera_TurnFBToDegrees};      // unsigned char (s16 a, s8 b): 0x57C650 on the two scaled, al tested - nobody's
 
 using VoidFn = void (__cdecl*)();
 using PartyPlaceFn = void (__cdecl*)(int, int, unsigned);

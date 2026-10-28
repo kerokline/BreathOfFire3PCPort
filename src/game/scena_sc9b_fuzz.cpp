@@ -280,7 +280,7 @@ const sh::Callee kCallees9[] = {
     // tested on al alone (test al, al): garbage above a 0 must not matter
     {SC9B_OURS(Flags_Test), 2, {kAll, kU8}, sh::Answer::kFlag, 0, 0},
     // the cell-record search: the records, the count, the cell; none or 0..13
-    {SC9B_RAW("0x56D800", at::kCellFind), 4, {kAll, kU8, kAll, kAll}, sh::Answer::kByte, 0xFF, 0x0D},
+    {SC9B_RAW("0x56D800", at::kCellFind.v), 4, {kAll, kU8, kAll, kAll}, sh::Answer::kByte, 0xFF, 0x0D},
     // the log slot of the cell stand-ins above
     {"Scena09_CellHooks[i]", 0x557A20, 0x557A20, 3, {kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0, {}, nullptr,
      reinterpret_cast<const void*>(&CellEntry9<0>)},
@@ -533,9 +533,9 @@ const sh::Callee kCallees10[] = {
     {SC9B_OURS(Inventory_Add), 3, {kU8, kU8, kU8}, sh::Answer::kFlag, 0, 0},
     {SC9B_OURS(Item_NamePtr), 2, {kU8, kU8}, sh::Answer::kGarbage, 0, 0, {}, &NameRecord},
     // nobody's (group SX's this wave)
-    {SC9B_RAW("0x591900", at::kKeyItemAdd), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC9B_RAW("0x587B80", at::kMusicStop), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC9B_RAW("0x57CD90", at::kSpriteFindFree), 0, {}, sh::Answer::kByte, 0xFF, 0x1D},
+    {SC9B_RAW("0x591900", at::kKeyItemAdd.v), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
+    {SC9B_RAW("0x587B80", at::kMusicStop.v), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC9B_RAW("0x57CD90", at::kSpriteFindFree.v), 0, {}, sh::Answer::kByte, 0xFF, 0x1D},
     // this group's own, called directly (E8)
     {SC9B_OURS(Scena10_StartRun1), 0, {}, sh::Answer::kPhase, 0, 0},
     {SC9B_OURS(Scena10_SpriteOp), 0, {}, sh::Answer::kPhase, 0, 0},

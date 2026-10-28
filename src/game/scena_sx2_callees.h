@@ -7,7 +7,7 @@
 namespace scena_sx2::at {
 
 // Callees nobody owns, called through the harness by address (SH_AT).
-constexpr std::uint32_t kSndBufVolume = bof3::addr::SndBuf_SetVolume;     // (buffer, level): a DirectSound buffer's SetVolume (vtable +0x3C)
+constexpr ::bof3::image::CodeVa kSndBufVolume{bof3::addr::SndBuf_SetVolume};     // (buffer, level): a DirectSound buffer's SetVolume (vtable +0x3C)
                                                       // of (level x two constants - a constant) through __ftol; nothing
                                                       // for a null buffer. The sound module's; nobody's
 

@@ -132,23 +132,23 @@ constexpr std::uint32_t kShake14 = 0x661868;    // Scena14_ShakeOffsets, 4 signe
 constexpr unsigned kObjectCount14 = 8;
 
 // Callees nobody owns (above).
-constexpr std::uint32_t kPartyPass = bof3::addr::Party_HealJoined;
-constexpr std::uint32_t kPartyPlace = bof3::addr::Party_PlaceForBattle;
-constexpr std::uint32_t kSetBit80 = bof3::addr::Field_SetStatus80;
-constexpr std::uint32_t kViewShift = bof3::addr::MapView_FillCells;
-constexpr std::uint32_t kFreeSprite = bof3::addr::Sprite_FindFree;
-constexpr std::uint32_t kSound587B80 = bof3::addr::Sound_StopMusic;
-constexpr std::uint32_t kParty591900 = bof3::addr::KeyItem_Add;
-constexpr std::uint32_t kVoiceLevel = bof3::addr::Sound_SetCueVolume;
-constexpr std::uint32_t kFindByte = bof3::addr::KeyItem_Remove;
-constexpr std::uint32_t kArea143 = bof3::addr::Area143_ClutShiftRight;
-constexpr std::uint32_t kArea141a = bof3::addr::Area141_PlacePairAnimated;
-constexpr std::uint32_t kArea141b = bof3::addr::Area141_PlaceOneAnimated;
-constexpr std::uint32_t kArea141c = bof3::addr::Area141_PlacePair6x;
-constexpr std::uint32_t kArea141d = bof3::addr::Area141_PlacePair0x;
-constexpr std::uint32_t kArea141e = bof3::addr::Area141_PlaceOne0x;
-constexpr std::uint32_t kArea191 = bof3::addr::Area191_TalkMessage;
-constexpr std::uint32_t kArea192 = bof3::addr::Area192_TalkMessage;
+constexpr ::bof3::image::CodeVa kPartyPass{bof3::addr::Party_HealJoined};
+constexpr ::bof3::image::CodeVa kPartyPlace{bof3::addr::Party_PlaceForBattle};
+constexpr ::bof3::image::CodeVa kSetBit80{bof3::addr::Field_SetStatus80};
+constexpr ::bof3::image::CodeVa kViewShift{bof3::addr::MapView_FillCells};
+constexpr ::bof3::image::CodeVa kFreeSprite{bof3::addr::Sprite_FindFree};
+constexpr ::bof3::image::CodeVa kSound587B80{bof3::addr::Sound_StopMusic};
+constexpr ::bof3::image::CodeVa kParty591900{bof3::addr::KeyItem_Add};
+constexpr ::bof3::image::CodeVa kVoiceLevel{bof3::addr::Sound_SetCueVolume};
+constexpr ::bof3::image::CodeVa kFindByte{bof3::addr::KeyItem_Remove};
+constexpr ::bof3::image::CodeVa kArea143{bof3::addr::Area143_ClutShiftRight};
+constexpr ::bof3::image::CodeVa kArea141a{bof3::addr::Area141_PlacePairAnimated};
+constexpr ::bof3::image::CodeVa kArea141b{bof3::addr::Area141_PlaceOneAnimated};
+constexpr ::bof3::image::CodeVa kArea141c{bof3::addr::Area141_PlacePair6x};
+constexpr ::bof3::image::CodeVa kArea141d{bof3::addr::Area141_PlacePair0x};
+constexpr ::bof3::image::CodeVa kArea141e{bof3::addr::Area141_PlaceOne0x};
+constexpr ::bof3::image::CodeVa kArea191{bof3::addr::Area191_TalkMessage};
+constexpr ::bof3::image::CodeVa kArea192{bof3::addr::Area192_TalkMessage};
 
 }  // namespace at
 

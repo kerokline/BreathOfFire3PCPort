@@ -237,11 +237,11 @@ const sh::Callee kCallees[] = {
     // Capcom's, named
     {SC6_OURS(MoveCmd_OpDB), 0, {}, sh::Answer::kGarbage, 0, 0},
     // nobody's, by address
-    {SC6_RAW("0x533E50", at::kPartyPass), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC6_RAW("0x56D800", at::kCellFind), 4, {kAll, kU8, kU8, kU8}, sh::Answer::kByte, 0xFF, 3},
-    {SC6_RAW("0x591900", at::kKeyItemPut), 1, {kU8}, sh::Answer::kGarbage, 0, 0},    // al unread
-    {SC6_RAW("0x591BE0", at::kZennyAdd), 2, {kAll, kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC6_RAW("0x587B80", at::kSoundJmp), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC6_RAW("0x533E50", at::kPartyPass.v), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC6_RAW("0x56D800", at::kCellFind.v), 4, {kAll, kU8, kU8, kU8}, sh::Answer::kByte, 0xFF, 3},
+    {SC6_RAW("0x591900", at::kKeyItemPut.v), 1, {kU8}, sh::Answer::kGarbage, 0, 0},    // al unread
+    {SC6_RAW("0x591BE0", at::kZennyAdd.v), 2, {kAll, kU8}, sh::Answer::kGarbage, 0, 0},
+    {SC6_RAW("0x587B80", at::kSoundJmp.v), 0, {}, sh::Answer::kGarbage, 0, 0},
     // the log slots of the table stand-ins above
     {"Scena06_Objects[i]", 0x54E440, 0x54E440, 3, {kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0, {}, nullptr,
      reinterpret_cast<const void*>(&ObjectEntry<0>)},
@@ -358,7 +358,7 @@ void Seed(unsigned k) {
     for (unsigned i = 0; i < at::kObjectCount; ++i) SetD(Scena06_Objects_addr + 4 * i, KeyOf(kObjectEntries[i]));
     for (unsigned i = 0; i < at::kLeapPhaseCount; ++i) SetD(Scena06_LeapPhases_addr + 4 * i, KeyOf(kLeapEntries[i]));
     for (unsigned i = 0; i < at::kCellHandlerCount; ++i) SetD(Scena06_CellHandlers_addr + 4 * i, KeyOf(kCellEntries[i]));
-    if (sh::Half()) SetD(Scena06_CellHandlers_addr + 4, at::kBareRet);
+    if (sh::Half()) SetD(Scena06_CellHandlers_addr + 4, ::bof3::Code(at::kBareRet.v));
     // every member's record byte inside the eight records
     for (unsigned i = 0; i < 0x18; ++i) B(Character_IndexById_addr + i) = static_cast<unsigned char>(sh::Next() & 7);
     // the cells the chapter compares, each most of the time at a value a

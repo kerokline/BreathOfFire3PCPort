@@ -691,7 +691,8 @@ struct Clone {
     std::uint32_t pace[3];
     int n_pace;
 };
-constexpr std::uint32_t kFadeBase = 0x5193B0, kFadeSize = 0x249, kFadeInOffset = 0x130;
+constexpr ::bof3::image::CodeVa kFadeBase{0x5193B0};
+constexpr std::uint32_t kFadeSize = 0x249, kFadeInOffset = 0x130;
 const Clone kClones[] = {
     {"Field_ObjectWander", 0x517640, 0x14F,
      {{0x7b, 0x518dd0}, {0x90, 0x5b93d2}, {0xc1, 0x518ca0}, {0x112, 0x5196e0}, {0x139, 0x518d10}, {0x142, 0x518980}}, 6, {0x21, 0x6f, 0xab}, 3},
@@ -703,7 +704,7 @@ const Clone kClones[] = {
      {{0x7a, 0x518dd0}, {0x8f, 0x5b93d2}, {0xc0, 0x518ca0}, {0xdd, 0x518000}, {0x129, 0x5196e0}, {0x15e, 0x518d10}, {0x167, 0x518980}}, 7, {0x20, 0x6e, 0xaa}, 3},
     {"Field_ObjectWait", 0x518AC0, 0x31, {}, 0, {}, 0},
     {"Field_ObjectStill", 0x517FE0, 0x17, {}, 0, {}, 0},
-    {"Field_ObjectFadeOut", kFadeBase, kFadeSize, {{0x2e, 0x454cc0}, {0xf4, 0x454d60}, {0x15e, 0x454cc0}, {0x217, 0x454d60}}, 4, {}, 0},
+    {"Field_ObjectFadeOut", kFadeBase.v, kFadeSize, {{0x2e, 0x454cc0}, {0xf4, 0x454d60}, {0x15e, 0x454cc0}, {0x217, 0x454d60}}, 4, {}, 0},
     {"Field_ObjectFadeIn", 0, 0, {}, 0, {}, 0},   // FadeOut's copy + 0x130
     {"Field_ObjectTurn", 0x5196E0, 0x103, {{0x4d, 0x518080}, {0x84, 0x578c10}}, 2, {}, 0},
     {"Field_ObjectLinked", 0x519600, 0x6F, {{0x35, 0x537540}, {0x68, 0x537540}}, 2, {}, 0},
@@ -980,11 +981,11 @@ void ObjectKinds_Inject() {
             for (int i = 0; i < c.n_pace; ++i) Patch32(clones[k], c.pace[i], kPaceTable, Address(g_pace_stubs), c.name);
         }
         // The fades: the four case addresses of 0x65F654 / 0x65F65C, moved.
-        const std::uint32_t moved = Address(clones[kFadeOut]) - kFadeBase;
+        const std::uint32_t moved = Address(clones[kFadeOut]) - kFadeBase.v;
         for (unsigned i = 0; i < 4; ++i) {
             std::uint32_t target;
             std::memcpy(&target, At(::bof3::Img(Field_ObjectFadeOutSteps_addr) + 4 * i), sizeof target);
-            if (target < kFadeBase || target >= kFadeBase + kFadeSize) bof3::Fatal("object_kinds: fade case %u is 0x%X", i, (unsigned)target);
+            if (target < kFadeBase.v || target >= kFadeBase.v + kFadeSize) bof3::Fatal("object_kinds: fade case %u is 0x%X", i, (unsigned)target);
             g_fade_table[i] = target + moved;
         }
         Patch32(clones[kFadeOut], 0xE, 0x65F654, Address(&g_fade_table[0]), "Field_ObjectFadeOut");

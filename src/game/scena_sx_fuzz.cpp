@@ -173,9 +173,9 @@ const sh::Callee kCallees[] = {
     {SX_OURS(MapView_PlaceRuns), 0, {}, kG, 0, 0, {}, &Stir},
     {SX_OURS(Sound_PlayEffect), 1, {0xFFFF}, kG, 0, 0, {}, &Stir},
     // nobody's, by address
-    {"0x532FD0", at::kFormationPlace, at::kFormationPlace, 3, {kAll, kAll, kAll}, kG, 0, 0, {}, &Stir},
-    {"0x591EC0", at::kAbilityListOf, at::kAbilityListOf, 3, {kAll, kAll, kAll}, kG, 0, 0, {}, &ListOf},
-    {"0x57C5A0", at::kCameraTurnYaw, at::kCameraTurnYaw, 2, {kAll, kAll}, sh::Answer::kFlag, 0, 0},
+    {"0x532FD0", at::kFormationPlace.v, at::kFormationPlace.v, 3, {kAll, kAll, kAll}, kG, 0, 0, {}, &Stir},
+    {"0x591EC0", at::kAbilityListOf.v, at::kAbilityListOf.v, 3, {kAll, kAll, kAll}, kG, 0, 0, {}, &ListOf},
+    {"0x57C5A0", at::kCameraTurnYaw.v, at::kCameraTurnYaw.v, 2, {kAll, kAll}, sh::Answer::kFlag, 0, 0},
 };
 #undef SX_OURS
 

@@ -99,9 +99,9 @@ void Clear40() { SH_CALL(ScriptFlags_Clear40)(); }
 void LoadStream(unsigned id) { SH_CALL(Sound_LoadStream)(id); }
 bool StreamDone() { return SH_CALL(Sound_StreamDone)() != 0; }
 void Battle(unsigned id) { SH_CALL(Field_StartEventBattle)(id); }
-void PartyRestore() { SH_AT(cl::VoidFn, cl::kPartyRestore)(); }
-void PartyPlace(int x, int z, unsigned kind) { SH_AT(cl::PartyPlaceFn, cl::kPartyPlace)(x, z, kind); }
-bool TurnTest(int a, int b) { return SH_AT(cl::TurnTestFn, cl::kTurnTest)(a, b) != 0; }
+void PartyRestore() { SH_AT(cl::VoidFn, cl::kPartyRestore.v)(); }
+void PartyPlace(int x, int z, unsigned kind) { SH_AT(cl::PartyPlaceFn, cl::kPartyPlace.v)(x, z, kind); }
+bool TurnTest(int a, int b) { return SH_AT(cl::TurnTestFn, cl::kTurnTest.v)(a, b) != 0; }
 // Music_LoadFile(track), then Task_Sleep(1) until File_LoadDone.
 void LoadMusic(unsigned track) {
     SH_CALL(Music_LoadFile)(track);
@@ -1773,7 +1773,7 @@ extern "C" void __cdecl Scena02_Scene15(void) {
         SetFlag(0x20);
         ScriptXor(0x80);
         EndAll();
-        SH_AT(cl::VoidFn, cl::kStatusBit80)();
+        SH_AT(cl::VoidFn, cl::kStatusBit80.v)();
         return;
     default:   // 2..4, and 8 and up
         return;
@@ -1784,7 +1784,7 @@ extern "C" void __cdecl Scena02_Scene15(void) {
 // raised), flag 0x23, sound 0x106, the end.
 extern "C" void __cdecl Scena02_Scene17(void) {
     if (Step() != 0) return;
-    SH_AT(cl::MoneyGiveFn, cl::kMoneyGive)(0x32, 0);
+    SH_AT(cl::MoneyGiveFn, cl::kMoneyGive.v)(0x32, 0);
     SetFlag(0x23);
     Sound(0x106);
     EndPlain();
@@ -1796,7 +1796,7 @@ namespace {
 // = 9, the others cleared, the end, flags 0x24, 0x25 and sound 0x106; not:
 // message 0x6D and the step `refused`.
 void Scene18Pay(unsigned refused) {
-    if (SH_AT(cl::MoneyTakeFn, cl::kMoneyTake)(0x32, 0) != 0) {
+    if (SH_AT(cl::MoneyTakeFn, cl::kMoneyTake.v)(0x32, 0) != 0) {
         Counter(0) = 9;
         Counter(1) = 0;
         Counter(2) = 0;
@@ -1894,7 +1894,7 @@ extern "C" void __cdecl Scena02_Scene19(void) {
     case 0:
         Counter(0) = 0x15;
         SetFlag(0x27);
-        SH_AT(cl::InventoryTakeFn, cl::kInventoryTake)(4, 2, 1, 0);
+        SH_AT(cl::InventoryTakeFn, cl::kInventoryTake.v)(4, 2, 1, 0);
         SetStep(1);
         return;
     case 1:
@@ -2073,7 +2073,7 @@ extern "C" void __cdecl Scena02_Scene1B(void) {
         Draw_PassFlags = 0;
         PartyRestore();
         SetStep(0x15);
-        SH_AT(cl::VoidFn, cl::kMusicStop)();
+        SH_AT(cl::VoidFn, cl::kMusicStop.v)();
         return;
     case 0x15:
         LoadStream(0);
@@ -2466,7 +2466,7 @@ extern "C" void __cdecl Scena02_StripMember(unsigned char member) {
     for (unsigned i = 0; i < 10; ++i, ++p) {
         const unsigned char item = p[0];
         if (item == 0) continue;
-        SH_AT(cl::ItemPutFn, cl::kItemPut)(item, 0, 1, 0);
+        SH_AT(cl::ItemPutFn, cl::kItemPut.v)(item, 0, 1, 0);
         p[0] = 0;
     }
 }

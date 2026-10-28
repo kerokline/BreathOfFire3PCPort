@@ -10,19 +10,19 @@ namespace field_s::at {
 
 // Callees nobody owns (or another group of this wave owns), called through the
 // harness by address (SH_AT).
-constexpr std::uint32_t kDrawTag = bof3::addr::Menu_DrawTile16;          // (x, y, kind, dim): a 16 x 8 SPRT on page 0x2F at (x, y), u = kind << 4,
+constexpr ::bof3::image::CodeVa kDrawTag{bof3::addr::Menu_DrawTile16};          // (x, y, kind, dim): a 16 x 8 SPRT on page 0x2F at (x, y), u = kind << 4,
                                                       // v 0xD8, shade 0x80 or 0x10 by dim, 16-bit x and y; round twelve group FO's
-constexpr std::uint32_t kSwapBytes = bof3::addr::FieldMenu_SwapBytes;  // (a, b): swaps the bytes a and b point at; R2E's
-constexpr std::uint32_t kAbilityListCount = bof3::addr::AbilityList_CountSet; // (member, which, current) -> al: one of a record's four
+constexpr ::bof3::image::CodeVa kSwapBytes{bof3::addr::FieldMenu_SwapBytes};  // (a, b): swaps the bytes a and b point at; R2E's
+constexpr ::bof3::image::CodeVa kAbilityListCount{bof3::addr::AbilityList_CountSet}; // (member, which, current) -> al: one of a record's four
                                                       // ability lists (or the current name's); nobody's
-constexpr std::uint32_t kEquipPreview = bof3::addr::FieldEquip_PreviewItem;  // (): the equip screen's preview bytes 0x6BDFA8.. and 0x803341
+constexpr ::bof3::image::CodeVa kEquipPreview{bof3::addr::FieldEquip_PreviewItem};  // (): the equip screen's preview bytes 0x6BDFA8.. and 0x803341
                                                       // from the member and the chosen item; R2E's
-constexpr std::uint32_t kEquipApply = bof3::addr::FieldEquip_ApplyPreview;  // (): the previewed items swapped into the member's six slots
+constexpr ::bof3::image::CodeVa kEquipApply{bof3::addr::FieldEquip_ApplyPreview};  // (): the previewed items swapped into the member's six slots
                                                       // through the inventory, then Char_RecalcStats; R2E's
 
 // DIV-0011's site inside PartyForm_DrawReserve (menu_frame.cpp kReserveListSite):
 // E8 rel32, re-aimed at Menu_DrawFrame; the original's callee the empty 0x4DF820.
-constexpr std::uint32_t kFrameSite = 0x581313;
+constexpr ::bof3::image::CodeVa kFrameSite{0x581313};
 
 // The menu block (docs/menu-screens.md section 1; scenario_harness at::kMenuBlock).
 // kMode: now BattleE1_Mode (symbols.toml). u8: the field menus' mode (ShopMode_States' index)

@@ -87,19 +87,19 @@ void SetFlag(unsigned n) { SH_CALL(Flags_Set)(Bank(), n); }
 
 // --- the callees nobody owns, by address -------------------------------------
 
-void CallB(unsigned n) { SH_AT(void (__cdecl*)(unsigned), scena_sc3::kCallB)(n); }
-void PlaceParty(std::int32_t x, std::int32_t z, unsigned k) { SH_AT(void (__cdecl*)(std::int32_t, std::int32_t, unsigned), scena_sc3::kPlaceParty)(x, z, k); }
-void PartyRestore() { SH_AT(void (__cdecl*)(), scena_sc3::kPartyRestore)(); }
-void StatusBit80() { SH_AT(void (__cdecl*)(), scena_sc3::kStatusBit80)(); }
+void CallB(unsigned n) { SH_AT(void (__cdecl*)(unsigned), scena_sc3::kCallB.v)(n); }
+void PlaceParty(std::int32_t x, std::int32_t z, unsigned k) { SH_AT(void (__cdecl*)(std::int32_t, std::int32_t, unsigned), scena_sc3::kPlaceParty.v)(x, z, k); }
+void PartyRestore() { SH_AT(void (__cdecl*)(), scena_sc3::kPartyRestore.v)(); }
+void StatusBit80() { SH_AT(void (__cdecl*)(), scena_sc3::kStatusBit80.v)(); }
 unsigned char CellFind(std::uint32_t records, unsigned n, int x, int z) {
-    return static_cast<unsigned char>(SH_AT(std::uint32_t (__cdecl*)(std::uint32_t, unsigned, int, int), scena_sc3::kCellFind)(records, n, x, z));
+    return static_cast<unsigned char>(SH_AT(std::uint32_t (__cdecl*)(std::uint32_t, unsigned, int, int), scena_sc3::kCellFind.v)(records, n, x, z));
 }
-unsigned char SpriteFindFree() { return static_cast<unsigned char>(SH_AT(std::uint32_t (__cdecl*)(), scena_sc3::kSpriteFindFree)()); }
-void MusicStop() { SH_AT(void (__cdecl*)(), scena_sc3::kMusicStop)(); }
-void ItemEvent(unsigned id, unsigned b, unsigned c, unsigned d) { SH_AT(void (__cdecl*)(unsigned, unsigned, unsigned, unsigned), scena_sc3::kItemEvent)(id, b, c, d); }
-void KeyItemAdd(unsigned id) { SH_AT(void (__cdecl*)(unsigned), scena_sc3::kKeyItemAdd)(id); }
-void LeaderState5(unsigned k) { SH_AT(void (__cdecl*)(unsigned), scena_sc3::kLeaderState5)(k); }
-void EventObjFace() { SH_AT(void (__cdecl*)(), scena_sc3::kEventObjFace)(); }
+unsigned char SpriteFindFree() { return static_cast<unsigned char>(SH_AT(std::uint32_t (__cdecl*)(), scena_sc3::kSpriteFindFree.v)()); }
+void MusicStop() { SH_AT(void (__cdecl*)(), scena_sc3::kMusicStop.v)(); }
+void ItemEvent(unsigned id, unsigned b, unsigned c, unsigned d) { SH_AT(void (__cdecl*)(unsigned, unsigned, unsigned, unsigned), scena_sc3::kItemEvent.v)(id, b, c, d); }
+void KeyItemAdd(unsigned id) { SH_AT(void (__cdecl*)(unsigned), scena_sc3::kKeyItemAdd.v)(id); }
+void LeaderState5(unsigned k) { SH_AT(void (__cdecl*)(unsigned), scena_sc3::kLeaderState5.v)(k); }
+void EventObjFace() { SH_AT(void (__cdecl*)(), scena_sc3::kEventObjFace.v)(); }
 
 // --- the effects ---------------------------------------------------------------
 

@@ -52,9 +52,9 @@ constexpr std::uint32_t kSmallUV = 0x65F5A8;        // u8 pairs by colour >> 4: 
 
 // Callees with no name in symbols.gen.h: other groups' functions this round,
 // and one unread function, called by address.
-constexpr std::uint32_t kMenuStates = bof3::addr::FieldMenu_Run;   // group DH's: jmp [0x6672B4 + 4 * u8 0x929F00], the field menu
-constexpr std::uint32_t kShopStates = bof3::addr::ShopMode_Dispatch;   // group DF's: the shop overlay's first table
-constexpr std::uint32_t kAfterShop = bof3::addr::CommuSim_RollOffers;    // R4A's (round 14), ours: called by Shop_Close after DAT 0x12A is loaded
+constexpr ::bof3::image::CodeVa kMenuStates{bof3::addr::FieldMenu_Run};   // group DH's: jmp [0x6672B4 + 4 * u8 0x929F00], the field menu
+constexpr ::bof3::image::CodeVa kShopStates{bof3::addr::ShopMode_Dispatch};   // group DF's: the shop overlay's first table
+constexpr ::bof3::image::CodeVa kAfterShop{bof3::addr::CommuSim_RollOffers};    // R4A's (round 14), ours: called by Shop_Close after DAT 0x12A is loaded
 
 using Handler = void (__cdecl*)();
 

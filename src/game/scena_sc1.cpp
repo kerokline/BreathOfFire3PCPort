@@ -96,9 +96,9 @@ void Set40() { SH_CALL(ScriptFlags_Set40)(); }
 void Clear40() { SH_CALL(ScriptFlags_Clear40)(); }
 void LoadStream() { SH_CALL(Sound_LoadStream)(0); }
 bool StreamDone() { return SH_CALL(Sound_StreamDone)() != 0; }
-void PartyRestore() { SH_AT(cl::VoidFn, cl::kPartyRestore)(); }
-void PartyPlace(int x, int z, unsigned facing) { SH_AT(cl::PartyPlaceFn, cl::kPartyPlace)(x, z, facing); }
-bool AngleTest(int a, int b) { return SH_AT(cl::AngleTestFn, cl::kAngleTest)(a, b) != 0; }
+void PartyRestore() { SH_AT(cl::VoidFn, cl::kPartyRestore.v)(); }
+void PartyPlace(int x, int z, unsigned facing) { SH_AT(cl::PartyPlaceFn, cl::kPartyPlace.v)(x, z, facing); }
+bool AngleTest(int a, int b) { return SH_AT(cl::AngleTestFn, cl::kAngleTest.v)(a, b) != 0; }
 void SetCell(unsigned x, unsigned z, unsigned value) { SH_CALL(AreaMap_SetByte)(x, z, value); }
 
 // An effect slot taken into 0x903850; false (the slot 0xFF stored) when none
@@ -784,7 +784,7 @@ extern "C" void __cdecl Scena01_Scene08(void) {
     case 0x39:
         if (Counter(0) != 0x23) return;
         SetStep(0x3A);
-        SH_AT(cl::SeHelperFn, cl::kSeHelper)(2);
+        SH_AT(cl::SeHelperFn, cl::kSeHelper.v)(2);
         return;
     case 0x3A:
         if (Counter(0) != 0x24) return;
@@ -1026,7 +1026,7 @@ extern "C" void __cdecl Scena01_Scene09(void) {
         return;
     case 0x24:
         if (Counter(0) != 0x6C) return;
-        SH_AT(cl::SeHelperFn, cl::kSeHelper)(3);
+        SH_AT(cl::SeHelperFn, cl::kSeHelper.v)(3);
         SetStep(0x25);
         return;
     case 0x25:
@@ -1526,7 +1526,7 @@ extern "C" void __cdecl Scena01_Scene0E(void) {
         SetRun(0);
         Draw_PassFlags = 0;
         ChangeArea(0xF, 0x360000, 0x500000, 0);
-        SH_AT(cl::VoidFn, cl::kStatusBit80)();
+        SH_AT(cl::VoidFn, cl::kStatusBit80.v)();
         return;
     default:   // 1, 2, 6, and 0xA and up
         return;
@@ -2076,7 +2076,7 @@ extern "C" void __cdecl Scena01_Object11(unsigned char*, unsigned char*) {
 // same arguments. The original indexes the table by any al of 0..0x7F; ours
 // aborts past its two.
 extern "C" unsigned char __cdecl Scena01_CellHook(int x, int z) {
-    const unsigned char found = SH_AT(cl::CellFindFn, cl::kCellFind)(At(::bof3::Img(Scena01_Cells_addr)), 2, x, z);
+    const unsigned char found = SH_AT(cl::CellFindFn, cl::kCellFind.v)(At(::bof3::Img(Scena01_Cells_addr)), 2, x, z);
     if (static_cast<signed char>(found) < 0) return 0xFF;
     if (found >= at::kCellCount)
         bof3::Fatal("Scena01_CellHook: cell %u past Scena01_CellHandlers (%u entries)", found, at::kCellCount);

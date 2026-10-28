@@ -13,13 +13,13 @@
 namespace scena_sx::at {
 
 // Callees nobody owns, called through the harness by address (SH_AT).
-constexpr std::uint32_t kFormationPlace = bof3::addr::Party_PlaceInFormation;   // (x, z, slot): Sprite_Current placed at the event battle's
+constexpr ::bof3::image::CodeVa kFormationPlace{bof3::addr::Party_PlaceInFormation};   // (x, z, slot): Sprite_Current placed at the event battle's
                                                       // formation offset for the slot, its ground from
                                                       // MapView_GroundAt; nobody's (Party_PlaceForBattle's one callee)
-constexpr std::uint32_t kAbilityListOf = bof3::addr::AbilityList_ForType;    // (member, id, which) -> unsigned char *: one of four 10-byte
+constexpr ::bof3::image::CodeVa kAbilityListOf{bof3::addr::AbilityList_ForType};    // (member, id, which) -> unsigned char *: one of four 10-byte
                                                       // lists of the member's record (+0x60 / +0x6A / +0x74 / +0x7E)
                                                       // by the id's class; nobody's (a twin of Char_AbilityList)
-constexpr std::uint32_t kCameraTurnYaw = bof3::addr::Camera_TurnStep;    // (angle, step): Camera_Angles[0] toward the angle, al 1 while
+constexpr ::bof3::image::CodeVa kCameraTurnYaw{bof3::addr::Camera_TurnStep};    // (angle, step): Camera_Angles[0] toward the angle, al 1 while
                                                       // turning; nobody's (Camera_TurnToDegrees' one callee)
 
 // Data.

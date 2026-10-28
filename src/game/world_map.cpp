@@ -45,13 +45,13 @@ template <typename T, typename F> T As(F f) { return reinterpret_cast<T>(reinter
 template <typename T> T Raw(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
 
 const Callees kOriginals = {
-    Raw<void (__cdecl*)()>(kState0),
+    Raw<void (__cdecl*)()>(::bof3::Code(kState0.v)),
     WorldMap_DrawFrame,
     Gpu_SetDrawMode,
     Gfx_CommitPrim,
     WorldMap_DrawSprite,
     AreaMap_ByteAt,
-    Raw<unsigned char (__cdecl*)(short, short)>(kCellEvent),
+    Raw<unsigned char (__cdecl*)(short, short)>(::bof3::Code(kCellEvent.v)),
     WorldMap_DrawNeedle,
     Gpu_SetSprt,
     Gpu_SetSemiTrans,

@@ -80,7 +80,7 @@ namespace sprt_draw {
 const Callees kOriginals = {
     D3d_PrimColor,
     D3d_BindTexture,
-    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly))),
+    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
     D3d_SetBlend,
     D3d_SetShadeMode,
 };

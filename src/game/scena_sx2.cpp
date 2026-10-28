@@ -241,7 +241,7 @@ extern "C" void __cdecl Sound_SetCueVolume(unsigned cue, unsigned level) {
         const std::uint32_t voice = U(Long(At(cue_at + 4 * k)));
         if (voice == 0) continue;
         const std::uint32_t buffer = U(Long(At(Addr(Sound_Banks) + at::kBankVoices + bank + (voice & 0xFF) * 8)));
-        SH_AT(void (__cdecl*)(std::uint32_t, std::uint32_t), at::kSndBufVolume)(buffer, level);
+        SH_AT(void (__cdecl*)(std::uint32_t, std::uint32_t), at::kSndBufVolume.v)(buffer, level);
     }
 }
 

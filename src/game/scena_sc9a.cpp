@@ -100,8 +100,8 @@ void LoadStream(unsigned id) { SH_CALL(Sound_LoadStream)(id); }
 bool StreamDone() { return SH_CALL(Sound_StreamDone)() != 0; }   // test eax, eax
 void FadeOutStop(int frames) { SH_CALL(Music_FadeOutStop)(frames); }
 void MusicPlay(unsigned track, int frames) { SH_CALL(Music_Play)(track, frames); }
-void PartyPass() { SH_AT(VoidFn, at::kPartyPass)(); }
-void PartyPlace(int x, int z, unsigned kind) { SH_AT(PlaceFn, at::kPartyPlace)(x, z, kind); }
+void PartyPass() { SH_AT(VoidFn, at::kPartyPass.v)(); }
+void PartyPlace(int x, int z, unsigned kind) { SH_AT(PlaceFn, at::kPartyPlace.v)(x, z, kind); }
 
 // The chapter's message: Msg_OpenScript(id), the request byte 2.
 void Say(unsigned short id) {
@@ -1344,7 +1344,7 @@ SC9A_EXPORT void __cdecl Scena09_Run11(void) {
         Clear40();
         DropIn(3);
         SetCounter(0, 0x20);
-        SH_AT(VoidFn, at::kSetBit80)();
+        SH_AT(VoidFn, at::kSetBit80.v)();
         SetRun(0);
         SetStep(0);
         break;

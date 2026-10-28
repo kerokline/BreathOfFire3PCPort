@@ -100,7 +100,7 @@ void __cdecl TChangeArea(unsigned area, int x, int z, unsigned flags) { Stub(Fie
 void __cdecl TKind2(unsigned char a) { Stub(Kind2_Place)(a); }
 unsigned __cdecl TDropIn(unsigned e) { return Stub(Party_DropIn)(e); }
 void __cdecl TTransition(unsigned char k) { Stub(Transition_Start)(k); }
-void __cdecl TPartyPass() { Stub(reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(at::kPartyPass)))(); }
+void __cdecl TPartyPass() { Stub(reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(at::kPartyPass.v)))(); }
 void __cdecl TFadeOutStop(int f) { Stub(Music_FadeOutStop)(f); }
 void __cdecl TLoadStream(unsigned id) { Stub(Sound_LoadStream)(id); }
 int __cdecl TStreamDone() { return Stub(Sound_StreamDone)(); }
@@ -218,7 +218,7 @@ const sh::Callee kCallees[] = {
     // group SE's (round ten): the event battle's set-up by the id's byte
     {SC9A_OURS(Field_StartEventBattle), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
     // a pass over the eight records at 0x903A70 and the party
-    {SC9A_RAW("0x533E50", at::kPartyPass), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC9A_RAW("0x533E50", at::kPartyPass.v), 0, {}, sh::Answer::kGarbage, 0, 0},
     // the log slot of the object stand-ins above (keyed on the dispatcher's
     // own address, which no clone calls)
     {"Scena09_Objects[i]", 0x5570D0, 0x5570D0, 3, {kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0, {}, nullptr,

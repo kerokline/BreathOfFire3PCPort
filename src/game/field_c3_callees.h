@@ -12,23 +12,23 @@ namespace field_c3::at {
 // analysis/round12_cut.tsv), called through the harness by address (SH_AT)
 // until they merge; the coordinator rebinds them after (docs/field_c3.md
 // section 8). All FE2's.
-constexpr std::uint32_t kEventObjectFrame = bof3::addr::Mode11_ObjectDraw;   // FE2: void(void); Sprite_Current = 0x905DA0, the event object's frame
-constexpr std::uint32_t kUpFace = bof3::addr::Leader_Pose3C;             // FE2: void(void); animation 0x3C facing 7, else 0x3D
-constexpr std::uint32_t kDownJumpSetUp = bof3::addr::Leader_HopStart;      // FE2: void(void); pace +0x70 + 2, Field_JumpSetUp, the frames doubled
-constexpr std::uint32_t kDownWait1 = bof3::addr::Leader_HopFlight;          // FE2: unsigned char(void); al 1 when +9 has run out
-constexpr std::uint32_t kDownWait2 = bof3::addr::Leader_HopPose;          // FE2: unsigned char(void)
-constexpr std::uint32_t kDownWait3 = bof3::addr::Leader_Pose3E;          // FE2: unsigned char(void)
-constexpr std::uint32_t kDownWait4 = bof3::addr::Leader_StepUp;          // FE2: unsigned char(void)
-constexpr std::uint32_t kUpLanded = bof3::addr::Leader_Pose34;           // FE2: void(void); a CLUT word 0, animation 0x37 facing 7, else 0x34
-constexpr std::uint32_t kUpWait5 = bof3::addr::Leader_StepDown;            // FE2: unsigned char(void)
-constexpr std::uint32_t kUpWait6 = bof3::addr::Leader_HopStartAfterTick;            // FE2: unsigned char(void)
-constexpr std::uint32_t kUpWait7 = bof3::addr::Leader_HopFall;            // FE2: unsigned char(void); al 1 once the object is back in state 1
-constexpr std::uint32_t kRecoilFace = bof3::addr::Field_FloorHurt;         // FE2: void(unsigned char), reads the byte (and eax, 0xFF)
+constexpr ::bof3::image::CodeVa kEventObjectFrame{bof3::addr::Mode11_ObjectDraw};   // FE2: void(void); Sprite_Current = 0x905DA0, the event object's frame
+constexpr ::bof3::image::CodeVa kUpFace{bof3::addr::Leader_Pose3C};             // FE2: void(void); animation 0x3C facing 7, else 0x3D
+constexpr ::bof3::image::CodeVa kDownJumpSetUp{bof3::addr::Leader_HopStart};      // FE2: void(void); pace +0x70 + 2, Field_JumpSetUp, the frames doubled
+constexpr ::bof3::image::CodeVa kDownWait1{bof3::addr::Leader_HopFlight};          // FE2: unsigned char(void); al 1 when +9 has run out
+constexpr ::bof3::image::CodeVa kDownWait2{bof3::addr::Leader_HopPose};          // FE2: unsigned char(void)
+constexpr ::bof3::image::CodeVa kDownWait3{bof3::addr::Leader_Pose3E};          // FE2: unsigned char(void)
+constexpr ::bof3::image::CodeVa kDownWait4{bof3::addr::Leader_StepUp};          // FE2: unsigned char(void)
+constexpr ::bof3::image::CodeVa kUpLanded{bof3::addr::Leader_Pose34};           // FE2: void(void); a CLUT word 0, animation 0x37 facing 7, else 0x34
+constexpr ::bof3::image::CodeVa kUpWait5{bof3::addr::Leader_StepDown};            // FE2: unsigned char(void)
+constexpr ::bof3::image::CodeVa kUpWait6{bof3::addr::Leader_HopStartAfterTick};            // FE2: unsigned char(void)
+constexpr ::bof3::image::CodeVa kUpWait7{bof3::addr::Leader_HopFall};            // FE2: unsigned char(void); al 1 once the object is back in state 1
+constexpr ::bof3::image::CodeVa kRecoilFace{bof3::addr::Field_FloorHurt};         // FE2: void(unsigned char), reads the byte (and eax, 0xFF)
 
 // Callees nobody owns, in the harness's field-standard set by address.
-constexpr std::uint32_t kPartyScreens = bof3::addr::Mode11_ListedSpriteScreens;   // R2A: void(void), mode 11's frame's sixth call
-constexpr std::uint32_t kMenuDispatchA = bof3::addr::BattleExtra_Dispatch;      // void(void): jmp through 0x64ADAC by the menu byte 0x929F00
-constexpr std::uint32_t kMenuDispatchB = bof3::addr::Shisu_ModeDispatch;      // void(void): jmp through 0x663DD0 by the menu byte 0x929F00
+constexpr ::bof3::image::CodeVa kPartyScreens{bof3::addr::Mode11_ListedSpriteScreens};   // R2A: void(void), mode 11's frame's sixth call
+constexpr ::bof3::image::CodeVa kMenuDispatchA{bof3::addr::BattleExtra_Dispatch};      // void(void): jmp through 0x64ADAC by the menu byte 0x929F00
+constexpr ::bof3::image::CodeVa kMenuDispatchB{bof3::addr::Shisu_ModeDispatch};      // void(void): jmp through 0x663DD0 by the menu byte 0x929F00
 
 // Data.
 // kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember (unsigned char *): its cell, a region of the fuzz's

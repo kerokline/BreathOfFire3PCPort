@@ -44,7 +44,7 @@ constexpr U kRunHeads = 0x8CB57C;
 // kDrawTpage: now Gfx_DrawTpage (symbols.toml). Gfx_DrawTpage, the low word read
 constexpr rdata::Const kRhwNumerator{0x5C4610};  // float 0.1
 // kDevice: now D3d_Device (symbols.toml). D3d_Device
-constexpr U kRetOnly = bof3::addr::BareRet;       // a bare ret
+constexpr ::bof3::image::CodeVa kRetOnly{bof3::addr::BareRet};       // a bare ret
 
 // The named data, by the address its symbols.gen.h macro names (the macros are
 // typed lvalues or pointers, so bof3::addr's constants are shadowed by them).

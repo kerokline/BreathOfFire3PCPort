@@ -386,10 +386,10 @@ const void* StubFor(std::uint32_t target) {
     case 0x572790: return f(&StubTestFC);
     case 0x5725C0: return f(&StubSlopeAt);
     case 0x531CF0: return f(&StubObjectAt);
-    case fn::kPathClear: return f(&StubPathClear);
-    case fn::kGiveZenny: return f(&StubGiveZenny);
-    case fn::kAreaExits: return f(&StubAreaExits);
-    case fn::kWayBlockedWide: return f(&StubWayBlockedWide);
+    case fn::kPathClear.v: return f(&StubPathClear);
+    case fn::kGiveZenny.v: return f(&StubGiveZenny);
+    case fn::kAreaExits.v: return f(&StubAreaExits);
+    case fn::kWayBlockedWide.v: return f(&StubWayBlockedWide);
     case 0x52EBA0: return f(&StubSpotFree);
     case 0x535640: return f(&StubWayBlocked4);
     case 0x535730: return f(&StubCellsBlock);

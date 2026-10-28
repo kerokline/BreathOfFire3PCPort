@@ -82,9 +82,9 @@ constexpr unsigned kRunCount = 17;
 constexpr unsigned kObjectCount = 16;
 
 // Callees nobody owns (above).
-constexpr std::uint32_t kPartyPass = bof3::addr::Party_HealJoined;
-constexpr std::uint32_t kPartyPlace = bof3::addr::Party_PlaceForBattle;
-constexpr std::uint32_t kSetBit80 = bof3::addr::Field_SetStatus80;
+constexpr ::bof3::image::CodeVa kPartyPass{bof3::addr::Party_HealJoined};
+constexpr ::bof3::image::CodeVa kPartyPlace{bof3::addr::Party_PlaceForBattle};
+constexpr ::bof3::image::CodeVa kSetBit80{bof3::addr::Field_SetStatus80};
 
 }  // namespace at
 

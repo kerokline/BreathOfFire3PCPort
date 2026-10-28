@@ -117,7 +117,7 @@ U CodeAt(U table, U index, const char* who) {
 using Handler = void (__cdecl*)();
 
 // The swap helper 0x58BD50 (nobody's): the two bytes exchanged.
-void SwapBytes(U a, U b) { SH_AT(void (__cdecl*)(unsigned char*, unsigned char*), at::kSwapBytes)(At(a), At(b)); }
+void SwapBytes(U a, U b) { SH_AT(void (__cdecl*)(unsigned char*, unsigned char*), at::kSwapBytes.v)(At(a), At(b)); }
 
 // The five-byte stretch of window stores two SharedList states and
 // SharedList_UseItem make (windows 2 and 3 of WindowRecords, 0x8031A8 and
@@ -701,7 +701,7 @@ extern "C" void __cdecl PartyForm_DrawReserve(int x, int y) {
         SH_CALL(Menu_DrawBox)(X, Y, 0x7D, 0x30, 0x80, static_cast<unsigned char>(Config_WindowColour));
         SH_CALL(Menu_DrawItemIcon)(X + 0x56, Y, rec[9], (rec[0x10] >> 6) & 2);
         SH_CALL(Text_DrawAt)(X + 0x14, base - 0x14, 0, 5, rec);
-        SH_AT(void (__cdecl*)(int, int, int, int), at::kDrawTag)(X + 2, base, 3, 0);
+        SH_AT(void (__cdecl*)(int, int, int, int), at::kDrawTag.v)(X + 2, base, 3, 0);
         SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(at::kFmtLevel)), rec[0xA]);
         DrawFont8(pen, base, 0);
         const U flags = W(RecAddr(index) + 0x10);
@@ -714,7 +714,7 @@ extern "C" void __cdecl PartyForm_DrawReserve(int x, int y) {
         }
         if (status != 0) SH_CALL(Text_DrawSmall)(X + 0x30, base, 1, 0x10, Text(status));
         const int hp_y = base + 8;
-        SH_AT(void (__cdecl*)(int, int, int, int), at::kDrawTag)(X + 2, hp_y, 0, 0);
+        SH_AT(void (__cdecl*)(int, int, int, int), at::kDrawTag.v)(X + 2, hp_y, 0, 0);
         if (rec[0x11] & 0x20) colour = 4;
         const U hp = W(RecAddr(index) + 0x18);
         if (hp <= 1) colour = 2;
@@ -724,7 +724,7 @@ extern "C" void __cdecl PartyForm_DrawReserve(int x, int y) {
         SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(at::kFmtFigureB)), W(RecAddr(index) + 0x20));
         DrawFont8(pen, hp_y, colour);
         const int ap_y = base + 0x10;
-        SH_AT(void (__cdecl*)(int, int, int, int), at::kDrawTag)(X + 2, ap_y, 1, 0);
+        SH_AT(void (__cdecl*)(int, int, int, int), at::kDrawTag.v)(X + 2, ap_y, 1, 0);
         const U quarter = (static_cast<U>(rv::As<records::CharRecord>(Rec(index))->stats.max_ap) >> 2) & 0xFFFF;
         const U ap = W(RecAddr(index) + 0x1A);
         colour = 0;
@@ -1774,7 +1774,7 @@ extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
     const int title_y = w->y + 7;
     const unsigned char length = SH_CALL(Text_CharCount)(Text(::bof3::Img(at::kListTitle)));
     SH_CALL(Text_DrawAt)(6 * (0xD - static_cast<int>(length)) + w->x, title_y, 0, 0x10, Text(::bof3::Img(at::kListTitle)));
-    const U count = SH_AT(U (__cdecl*)(unsigned, unsigned, unsigned), at::kAbilityListCount)(0, 0xFF, 0) & 0xFF;
+    const U count = SH_AT(U (__cdecl*)(unsigned, unsigned, unsigned), at::kAbilityListCount.v)(0, 0xFF, 0) & 0xFF;
     SH_CALL(Crt_sprintf)(PrintBuf(), Format(::bof3::Img(at::kFmtCount)), count, 0x80u);  // D355: the stray push, the total
     DrawFont8(w->x + 0x55, w->y + 0x92, 0);
     SH_CALL(Menu_DrawPieces)(w->x, w->y, Text(::bof3::Img(at::kPiecesA)), 1);
@@ -2047,7 +2047,7 @@ extern "C" void __cdecl Equip_ChooseItem(void) {
     win21->y = hand_y;
     SetW(::bof3::Img(0x8032FC), SH_CALL(Item_HelpMessage)(B(::bof3::Img(0x803360)), B(::bof3::Img(0x803365))));
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & Sigma(0xF00C));
-    SH_AT(void (__cdecl*)(), at::kEquipPreview)();
+    SH_AT(void (__cdecl*)(), at::kEquipPreview.v)();
     unsigned char al = B(::bof3::Img(0x803363));
     const unsigned char before = al;
     unsigned char cl;
@@ -2118,7 +2118,7 @@ extern "C" void __cdecl Equip_ChooseItem(void) {
     if (Confirmed(pressed)) {
         if (B(::bof3::Img(0x803365)) != 0) {
             Sound(0x104);
-            SH_AT(void (__cdecl*)(), at::kEquipApply)();
+            SH_AT(void (__cdecl*)(), at::kEquipApply.v)();
             const auto state = FieldS_State;
             B(::bof3::Img(0x803363)) = 0xFF;
             FieldS_State = static_cast<unsigned char>(state - 1);

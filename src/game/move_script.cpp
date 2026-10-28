@@ -578,7 +578,9 @@ const Callees kStubs = {
 
 // Where each copy's calls go: the E8 offsets, by capstone 2026-09-22 (every
 // relative call of the two ranges; every jump stays inside).
-constexpr std::uint32_t kStep = 0x576B50, kStepSize = 0x730, kGroupF = 0x577760, kGroupFSize = 0x470;
+constexpr ::bof3::image::CodeVa kStep{0x576B50};
+constexpr ::bof3::image::CodeVa kGroupF{0x577760};
+constexpr std::uint32_t kStepSize = 0x730, kGroupFSize = 0x470;
 constexpr Table kStepTables[] = {{0x64, 0x1A0, 11}, {0x327, 0x6E8, 15}};
 constexpr Table kGroupFTable = {0x2E, 0x430, 16};
 
@@ -853,9 +855,9 @@ void MoveScript_Inject() {
             {0x39B, cast(&StubKind)}, {0x3C6, cast(&StubAttach)}, {0x3E9, cast(&StubTestFB)}, {0x3FF, cast(&StubTestFC)},
             {0x410, cast(&StubSound)},
         };
-        void* const group_f = bof3::CloneOriginal("MoveScript_GroupF", kGroupF, kGroupFSize, f_calls,
+        void* const group_f = bof3::CloneOriginal("MoveScript_GroupF", kGroupF.v, kGroupFSize, f_calls,
                                                   static_cast<int>(sizeof f_calls / sizeof f_calls[0]));
-        Relocate(group_f, kGroupF, kGroupFSize, kGroupFTable);
+        Relocate(group_f, kGroupF.v, kGroupFSize, kGroupFTable);
         const bof3::CloneCall step_calls[] = {
             {0x7F, cast(&StubKind)}, {0x8F, cast(&StubMove)}, {0xA8, cast(&StubMoveKind2)},
             {0xD4, cast(&StubGroup<6>)}, {0xEF, cast(&StubGroup<8>)}, {0x10A, cast(&StubGroup<9>)},
@@ -868,9 +870,9 @@ void MoveScript_Inject() {
             {0x5EF, cast(&StubElevation)}, {0x693, cast(&StubSetAnimationAt)}, {0x6A7, cast(&StubSetAnimation)},
             {0x6B8, cast(&StubGroupB)},
         };
-        void* const step = bof3::CloneOriginal("MoveScript_Step", kStep, kStepSize, step_calls,
+        void* const step = bof3::CloneOriginal("MoveScript_Step", kStep.v, kStepSize, step_calls,
                                                static_cast<int>(sizeof step_calls / sizeof step_calls[0]));
-        for (const Table& t : kStepTables) Relocate(step, kStep, kStepSize, t);
+        for (const Table& t : kStepTables) Relocate(step, kStep.v, kStepSize, t);
         SelfTest(reinterpret_cast<unsigned char (__cdecl*)(unsigned char*, const unsigned char*)>(step));
     }
     if (bof3::WantsShadow("move_counters")) {

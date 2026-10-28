@@ -59,12 +59,12 @@ constexpr std::uint32_t kShopByteC = 0x929EC2;     // u8: 1
 
 // Callees no group owns (SH_AT), with the types the originals call them by.
 namespace callee {
-constexpr std::uint32_t kPartyPlace = bof3::addr::Party_PlaceForBattle;    // void (int x, int z, unsigned facing): every member to (x, z)
-constexpr std::uint32_t kPartyRestore = bof3::addr::Party_HealJoined;  // void (void): the members' records rebuilt (Char_RecalcStats)
-constexpr std::uint32_t kAngleTest = bof3::addr::Camera_TurnToDegrees;     // unsigned char (s16 a, s8 b): 0x57C5A0 on the two scaled; al tested
-constexpr std::uint32_t kStatusBit80 = bof3::addr::Field_SetStatus80;   // void (void): Field_StatusBits |= 0x80
-constexpr std::uint32_t kCellFind = bof3::addr::Field_CellTriggerAt;      // unsigned char (const record *, n, x, z): the record's index or 0xFF
-constexpr std::uint32_t kSeHelper = bof3::addr::Field_StartEventBattle;      // void (unsigned char n): group SE's (round ten wave one)
+constexpr ::bof3::image::CodeVa kPartyPlace{bof3::addr::Party_PlaceForBattle};    // void (int x, int z, unsigned facing): every member to (x, z)
+constexpr ::bof3::image::CodeVa kPartyRestore{bof3::addr::Party_HealJoined};  // void (void): the members' records rebuilt (Char_RecalcStats)
+constexpr ::bof3::image::CodeVa kAngleTest{bof3::addr::Camera_TurnToDegrees};     // unsigned char (s16 a, s8 b): 0x57C5A0 on the two scaled; al tested
+constexpr ::bof3::image::CodeVa kStatusBit80{bof3::addr::Field_SetStatus80};   // void (void): Field_StatusBits |= 0x80
+constexpr ::bof3::image::CodeVa kCellFind{bof3::addr::Field_CellTriggerAt};      // unsigned char (const record *, n, x, z): the record's index or 0xFF
+constexpr ::bof3::image::CodeVa kSeHelper{bof3::addr::Field_StartEventBattle};      // void (unsigned char n): group SE's (round ten wave one)
 
 using PartyPlaceFn = void (__cdecl*)(int, int, unsigned);
 using VoidFn = void (__cdecl*)();

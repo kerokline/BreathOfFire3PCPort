@@ -644,21 +644,21 @@ const void* StubFor(std::uint32_t target) {
     case 0x5720C0: return f(g_stubs.elevation);
     case 0x579DB0: return f(g_stubs.set_flags);
     case 0x5891F0: return f(g_stubs.set_animation);
-    case fn::kFaceObject: return f(g_stubs.face);
-    case fn::kEncounterArea: return f(g_stubs.encounter_area);
-    case fn::kExitGateway: return f(g_stubs.exit_gateway);
-    case fn::kExitFromCell: return f(g_stubs.exit_from_cell);
-    case fn::kCellAroundLarge: return f(g_stubs.cell_around_large);
-    case fn::kCellHook: return f(g_stubs.cell_hook);
-    case fn::kSetCell: return f(g_stubs.set_cell);
-    case fn::kPartyVisible: return f(g_stubs.party_visible);
-    case fn::kMemberFits: return f(g_stubs.member_fits);
-    case fn::kLeaderMove: return f(g_stubs.leader_move);
-    case fn::kLeaderFollow: return f(g_stubs.leader_follow);
-    case fn::kLeaderGround: return f(g_stubs.leader_ground);
-    case fn::kStepCode: return f(g_stubs.step_code);
-    case fn::kSlopeAt: return f(g_stubs.slope_at);
-    case fn::kTestFB: return f(g_stubs.test_fb);
+    case fn::kFaceObject.v: return f(g_stubs.face);
+    case fn::kEncounterArea.v: return f(g_stubs.encounter_area);
+    case fn::kExitGateway.v: return f(g_stubs.exit_gateway);
+    case fn::kExitFromCell.v: return f(g_stubs.exit_from_cell);
+    case fn::kCellAroundLarge.v: return f(g_stubs.cell_around_large);
+    case fn::kCellHook.v: return f(g_stubs.cell_hook);
+    case fn::kSetCell.v: return f(g_stubs.set_cell);
+    case fn::kPartyVisible.v: return f(g_stubs.party_visible);
+    case fn::kMemberFits.v: return f(g_stubs.member_fits);
+    case fn::kLeaderMove.v: return f(g_stubs.leader_move);
+    case fn::kLeaderFollow.v: return f(g_stubs.leader_follow);
+    case fn::kLeaderGround.v: return f(g_stubs.leader_ground);
+    case fn::kStepCode.v: return f(g_stubs.step_code);
+    case fn::kSlopeAt.v: return f(g_stubs.slope_at);
+    case fn::kTestFB.v: return f(g_stubs.test_fb);
     default: bof3::Fatal("event_ops: no stand-in for a call to 0x%X", (unsigned)target); return nullptr;
     }
 }
