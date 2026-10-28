@@ -134,8 +134,8 @@ The checker refuses a name nothing in `src/` or the launcher reads, a probe
 and the player's switch itself (`BOF3X_OFF`, ini `off=`: stage D's switch,
 which takes the bare names of class `code` - those of a `PatchBytes` or a
 `RetargetCall` - in `BOF3X_ORIGINAL`'s list syntax, `*` and `-name`
-included; a detour's name in it, or a name no code of the start-up asked
-for, stops the game with a message - for a detour, one that points at the
+included; a detour's name in it, or a name that is not a code name, stops
+the game with a message - for a detour, one that points at the
 hosted build's `BOF3X_ORIGINAL`: [`launcher-settings.md`](launcher-settings.md)
 section 3.2).
 

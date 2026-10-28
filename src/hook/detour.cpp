@@ -6,6 +6,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "hook/code_bytes.h"
+#include "hook/code_names.h"
 #include "hook/host.h"
 #include "hook/log.h"
 
@@ -84,6 +85,21 @@ bool NameNamed(const char* list, const char* name) {
     return false;
 }
 
+// True if the n characters at `s` are one of the code names src/ has - the
+// generated list (code_names.h, tools/ledger_switches.py), sorted by strcmp.
+bool KnownCodeName(const char* s, size_t n) {
+    int lo = 0, hi = code_names::kCount;
+    while (lo < hi) {
+        const int mid = (lo + hi) / 2;
+        const char* k = code_names::kNames[mid];
+        int c = std::strncmp(k, s, n);
+        if (c == 0) c = k[n] == '\0' ? 0 : 1;
+        if (c == 0) return true;
+        if (c < 0) lo = mid + 1; else hi = mid;
+    }
+    return false;
+}
+
 // Every code name a PatchBytes or a (not instrument) RetargetCall asked for,
 // once each, with the variable that turned it off (null: on). InjectReport
 // checks BOF3X_OFF's names against this. 83 names in src/ on 2026-10-28.
@@ -103,6 +119,12 @@ const char* CodeOff(const char* name) {
     for (int i = 0; i < g_code_count; ++i)
         if (std::strcmp(g_code[i].name, name) == 0) return off;
     if (g_code_count == kMaxCodeNames) Fatal("%s: more than %d code names", name, kMaxCodeNames);
+    // The list BOF3X_OFF is checked against must hold every name the code
+    // asks for; a name it lacks is a stale src/hook/code_names.h.
+    if (!KnownCodeName(name, std::strlen(name)))
+        Fatal("%s: a PatchBytes or RetargetCall name that src/hook/code_names.h does not list; "
+              "run python tools/ledger_switches.py and rebuild",
+              name);
     g_code[g_code_count++] = {name, off};
     return off;
 }
@@ -333,10 +355,12 @@ void InjectReport() {
         if (std::strcmp(g_code[i].off, "BOF3X_ORIGINAL") == 0) ++by_original; else ++by_off;
     }
     Log("code names: %d asked for, %d off by BOF3X_ORIGINAL, %d off by BOF3X_OFF", g_code_count, by_original, by_off);
-    // Every name BOF3X_OFF gives (bare or after `-`) must be a code name that
-    // this start-up asked for: a misspelt name, an instrument hook, or a code
-    // name whose divergence is not in force under these settings would
-    // otherwise do nothing and say nothing (CLAUDE.md rule 4).
+    // Every name BOF3X_OFF gives (bare or after `-`) must be a code name: a
+    // misspelt name or an instrument hook would otherwise do nothing and say
+    // nothing (CLAUDE.md rule 4), so it stops the game. A code name of
+    // src/ (code_names.h) that this start did not ask for is a change not in
+    // force under these settings - a language layout under another language,
+    // the wide mode, the point filter, a cheat: logged, and the game runs.
     const char* list = OffList();
     if (*list) Log("BOF3X_OFF=%s", list);
     for (const char* p = list; *p;) {
@@ -347,14 +371,16 @@ void InjectReport() {
         if (q < end && *q == '-') ++q;
         const size_t n = static_cast<size_t>(end - q);
         if (end > p && !(end - p == 1 && *p == '*')) {
-            bool known = false;
-            for (int i = 0; i < g_code_count && !known; ++i)
-                known = std::strlen(g_code[i].name) == n && std::memcmp(g_code[i].name, q, n) == 0;
-            if (!known)
-                Fatal("BOF3X_OFF names \"%.*s\", but no code of this start-up uses that name. "
-                      "Use a code name from the ledger's Switch: lines (python tools/ledger_switches.py). "
-                      "A code name is not used when its change is not active with these settings "
-                      "(the language, the wide mode, the filter or a cheat).",
+            bool asked = false;
+            for (int i = 0; i < g_code_count && !asked; ++i)
+                asked = std::strlen(g_code[i].name) == n && std::memcmp(g_code[i].name, q, n) == 0;
+            if (!asked && n > 0 && KnownCodeName(q, n))
+                Log("BOF3X_OFF: %.*s is not active in this start (its change is off with these settings: "
+                    "the language, the wide mode, the filter or a cheat), so it has nothing to turn off",
+                    (int)n, q);
+            else if (!asked)
+                Fatal("BOF3X_OFF names \"%.*s\", which is not a code name. "
+                      "Use a code name from the ledger's Switch: lines (python tools/ledger_switches.py).",
                       (int)(end - p), p);
         }
         p = end;

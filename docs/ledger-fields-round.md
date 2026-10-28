@@ -602,8 +602,9 @@ page, the registry or the presets (D1, D2).
    not reach it) with a `Fatal` that names it and says the original
    function is the hosted build's `BOF3X_ORIGINAL`. `InjectReport` counts
    the code names asked for and refuses every name in `BOF3X_OFF` (bare or
-   after `-`) that no `PatchBytes` / `RetargetCall` of the start-up asked
-   for. `RefuseHostedSwitches` is unchanged. *My choices:* a separate
+   after `-`) that is not a code name; a code name the start-up did not ask
+   for is logged as not active (step 6, below). `RefuseHostedSwitches` is
+   unchanged. *My choices:* a separate
    `WantsOff` beside `WantsOriginal` (the class is fixed by the call, so an
    argument bought nothing); `BOF3X_OFF` read once into a static buffer
    (injection is single-threaded); a `-name` must be a code name too, since
@@ -646,9 +647,9 @@ page, the registry or the presets (D1, D2).
    `BOF3X_ORIGINAL=SunderLoop BOF3X_OFF=Paralyzer_Start` exit 3. The
    state-hash proof against the hosted build is the coordinator's.
 
-**Finding (for the coordinator; not numbered):** 23 of the 83 code names
-are asked for only under a setting, so the end-of-injection check refuses
-them in a start without it. A plain exe-host self-test (`--no-config`)
+**Finding, fixed as step 6 (the coordinator's call, 2026-10-28):** 23 of
+the 83 code names are asked for only under a setting, so the first build's
+end-of-injection check refused them in a start without it. A plain exe-host self-test (`--no-config`)
 asks for 60 code names, 58 under `BOF3X_OFF=*` (two are asked for only
 when an earlier one is on). Not asked in a plain start: the language
 layouts (`BattleBannerCentre`, `BattleListTitleCentre`,
@@ -658,13 +659,33 @@ layouts (`BattleBannerCentre`, `BattleListTitleCentre`,
 `PauseText`, `SaveNameInset`, `ShopAskRow`, `ShopYesNoLayout`,
 `TitleMenu_Widths`, `TradeConfirmLayout`, `TradeLeaveLayout`,
 `YesNoLayout`), `Widescreen`, `Gfx_FilterPoint`, `Cheat_StealAlways`. So
-an `off=YesNoLayout` written under a Latin language stops the game once
-the player picks the original text. The presets (D1/D2) should send a
-name only where its entry's `Languages:` (and wide or filter setting)
-holds, or the check should know every code name at build time (a table
-of the 83 checked against `src/` by `ledger_switches.py --check`) and
-only log a known name that is not in force. The brief's rule is built as
-written; the choice is the coordinator's.
+an `off=YesNoLayout` written under a Latin language stopped the game once
+the player picked the original text.
+
+6. **Step 6, the fix.** `tools/ledger_switches.py` now also writes
+   `src/hook/code_names.h`: a constexpr array of the 83 class-`code` names,
+   sorted in `strcmp` order, generated, not typed. Its `--check` (already in
+   `checks.yml`) fails, naming the names, when the checked-in header is not
+   what `src/` gives (tried: one name taken out of the header, error; put
+   back, 0 errors). `detour.cpp` `KnownCodeName` searches it. At
+   `InjectReport` a name in `BOF3X_OFF` that is a known code name but was
+   not asked for is logged once - "BOF3X_OFF: YesNoLayout is not active in
+   this start (its change is off with these settings: the language, the
+   wide mode, the filter or a cheat), so it has nothing to turn off" - and
+   the game runs; a name that is not a code name stays a `Fatal`, as does a
+   detour's. *My choices:* the file is `code_names.h`, not `.gen.h`, since
+   in this repo `*.gen.h` are build-tree outputs (`symbols.gen.h`) and this
+   one is checked in, as D1's `ledger_registry.h` is; the log names the
+   possible causes, not the one cause, because the engine does not record
+   why a module skipped its `PatchBytes`; and `CodeOff` stops the game if a
+   `PatchBytes` / `RetargetCall` asks for a name the header lacks (a stale
+   header in a local build that CI's `--check` has not seen yet). Proof,
+   exe host: `BOF3X_OFF=YesNoLayout` exit 0, the log line above;
+   `BOF3X_OFF=NoSuchName` exit 3, "BOF3X_OFF names "NoSuchName", which is
+   not a code name"; plain 0, `*` 0 (58 off), `Paralyzer_Start` 3;
+   `BOF3X_LANG=en-US BOF3X_OFF=YesNoLayout,ConfigText` exit 0, 77 code
+   names asked for, both off by `BOF3X_OFF`; the hosted fuzz
+   (`BOF3X_SHADOW='*'`) exit 0.
 
 ## 6. For the owner
 

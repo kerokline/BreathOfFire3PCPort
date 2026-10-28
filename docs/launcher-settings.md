@@ -373,22 +373,30 @@ class, and the ones `BOF3X_OFF` takes are class `code` (in
 reachable this way: its original behaviour is Capcom's function, which
 `bof3x.exe` does not have.
 
-**A name the game does not use stops the game with a message** (CLAUDE.md
+**A name that is not a code name stops the game with a message** (CLAUDE.md
 rule 4: refuse loudly, never silently), in a message box and the log's
 `FATAL:` line, exit code 3:
 
 - a **detour's** name, bare or as `-name`, stops the game at once and says
   that the original function is the hosted build's `BOF3X_ORIGINAL=<name>`
   (`bof3x-launcher --host bof3`). `*` does not reach detours.
-- a name that **no `PatchBytes` or `RetargetCall` asked for** by the end of
-  injection (`InjectReport`) stops the game and names it: a misspelt name,
-  an instrument hook's (`InputScript`, `StateHash`: no name turns those off),
-  or a code name whose change is not in force with these settings. Some code
-  names are asked for only under a setting: 23 of the 83 are not asked for in
-  a plain start (no language, no wide mode, the linear filter, no cheat) -
-  the language layouts (`YesNoLayout`, `ConfigText`, ...), `Widescreen`,
-  `Gfx_FilterPoint`, `Cheat_StealAlways` - so `off=YesNoLayout` stops a
-  start with the original text.
+- a name that is **not one of the code names** at all - a misspelt name, an
+  instrument hook's (`InputScript`, `StateHash`: no name turns those off) -
+  stops the game at the end of injection (`InjectReport`) and names it. The
+  code names are `src/hook/code_names.h`, which `tools/ledger_switches.py`
+  generates from `src/` (every class `code` name, sorted); its `--check`, in
+  CI, fails when the checked-in header is not what `src/` gives, and the game
+  stops if a `PatchBytes` or `RetargetCall` asks for a name the header lacks.
+
+**A code name whose change is not active in this start is logged, and the
+game runs.** Some code names are asked for only under a setting: 23 of the
+83 are not asked for in a plain start (no language, no wide mode, the linear
+filter, no cheat) - the language layouts (`YesNoLayout`, `ConfigText`, ...),
+`Widescreen`, `Gfx_FilterPoint`, `Cheat_StealAlways`. With one of them in
+`off=` and its change off anyway, the log says `BOF3X_OFF: YesNoLayout is not
+active in this start (...), so it has nothing to turn off`, once, at the end of
+injection. So an `off=` written under one language still starts under
+another.
 
 **What the log says.** Each name turned off logs its `OFF` line with the
 variable that turned it off - `patch   OFF  SunderLoop ... left alone

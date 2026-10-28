@@ -325,7 +325,7 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "psp=" + cfg.psp + "\r\n";
     out += "# the changes to turn off: code names from the ledger's Switch: lines, comma-separated (BOF3X_OFF,\r\n";
     out += "# docs/launcher-settings.md). * turns off all code names. -name keeps that change on. Empty: none.\r\n";
-    out += "# If the game does not use a name, the game stops and shows a message\r\n";
+    out += "# If a name is not a code name, the game stops and shows a message\r\n";
     out += "off=" + cfg.off + "\r\n";
     out += "# the importer's cache folder; its base\\bgm songs play through the sequencer (DIV-0087, docs/music-seq-engine.md)\r\n";
     out += "cache=" + cfg.cache + "\r\n";
