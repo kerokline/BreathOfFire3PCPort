@@ -10533,8 +10533,9 @@ designed in rather than bolted on.
   half-transparent grey box over the map. That is the PlayStation's plate: the owner's PSP capture of
   2026-10-27 (Eastern Wyndia) shows it black, and the dial's glass translucent (DIV-0184). The census
   agent's report folded the plate into the legend family without naming it; the owner saw it in
-  `caught_f00600_off_on_diff.png` the same evening. No further change: the plate is this entry's rule
-  applied to a draw the port had marked semi-transparent.
+  `caught_f00600_off_on_diff.png` the same evening, and judged the pairs: "the texel changes look
+  excellent". No further change: the plate is this entry's rule applied to a draw the port had marked
+  semi-transparent.
 
 ### Two battle draws take their coordinates signed: a box or cell partly off the left or top edge clips
 

@@ -788,7 +788,8 @@ checkout's `analysis/` (never in the tree).
   and asked for D42's repair. Built: the on/off pair of `worldMapAndAreaTransition` is under
   `C:\Users\kerok\bof3x-runs\away1027\d42\`. The plate's black is DIV-0160's rule (its amendment of the
   same day); the glass is the flip. `BOF3X_ORIGINAL=DialTranslucent` gives the port's opaque dial back.
-- **The bit-15 pairs** ([`stp-census.md`](stp-census.md) 6.4), under
+- ~~**The bit-15 pairs**~~ **seen the same evening** - the owner: "the texel changes look excellent"; the
+  region plate's black matched against a PSP capture (DIV-0160's amendment, DIV-0184). Were under
   `C:\Users\kerok\bof3x-runs\away1027\stp\pairs\`, the legend zooms first:
   `dolphin_f00500_legend_zoom_off_top_on_bottom.png` and `caught_f00600_legend_zoom_off_top_on_bottom.png`
   (DIV-0160 off above, on below: the world map's button legend in its palette colours, not half-blended),
