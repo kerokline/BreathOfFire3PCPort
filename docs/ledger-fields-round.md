@@ -632,6 +632,19 @@ page, the registry or the presets (D1, D2).
    `BOF3X_ORIGINAL=Game_WndProc`. **`Player:` now yes 126, costly 28,
    never 30.** `analysis/ledger_switches.tsv` regenerated.
 4. **`launcher-settings.md`** section 3's table row and section 3.2.
+5. **The proof** (`lfd1028\d0\proof.sh`, logs beside it; every run
+   `BOF3X_SELFTEST_ONLY=1 build/bof3x-launcher.exe --game <main>/bof3
+   --no-config`, no `bof3x.ini` in `build/`): the exe host plain, exit 0;
+   `BOF3X_SHADOW='*'` (the hosted fuzz), exit 0; the exe host with
+   `BOF3X_OFF=SunderLoop`, exit 0, `patch OFF SunderLoop ... (BOF3X_OFF)`;
+   `BOF3X_OFF='*'`, exit 0, 58 off; `BOF3X_OFF=NoSuchName`, exit 3, the
+   `FATAL` names it; `BOF3X_OFF=Paralyzer_Start`, exit 3, the `FATAL`
+   names the hosted build's `BOF3X_ORIGINAL`. Beyond the brief, hosted:
+   `BOF3X_SHADOW='*' BOF3X_OFF=SunderLoop` exit 0 (off by `BOF3X_OFF`);
+   `BOF3X_ORIGINAL=SunderLoop BOF3X_OFF=SunderLoop,Game_Clock` exit 0
+   (SunderLoop logged as `BOF3X_ORIGINAL`'s, Game_Clock as `BOF3X_OFF`'s);
+   `BOF3X_ORIGINAL=SunderLoop BOF3X_OFF=Paralyzer_Start` exit 3. The
+   state-hash proof against the hosted build is the coordinator's.
 
 **Finding (for the coordinator; not numbered):** 23 of the 83 code names
 are asked for only under a setting, so the end-of-injection check refuses
