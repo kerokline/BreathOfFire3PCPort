@@ -189,6 +189,8 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
             cfg.opt = value;
         } else if (key == "psp") {  // DIV-0108: kept as written, the DLL refuses an unknown name
             cfg.psp = value;
+        } else if (key == "off") {  // BOF3X_OFF: kept as written, the game refuses a name it does not read
+            cfg.off = value;
         } else if (key == "cache") {  // DIV-0087: a path; the dll refuses one that is not a directory
             cfg.cache = ConfigCacheFromIni(value);   // UTF-8 (state 3); an older ini's ANSI bytes once
         } else if (key == "ffmpeg") {  // the importer's, for the PSP's music (docs/install-sources.md)
@@ -321,6 +323,10 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# the PSP's battle rules (DIV-0108, docs/psp-battle-changes.md): duel-loss, myria-item, or none;\r\n";
     out += "# empty: on when the cache's base is the PSP's, else off. The data suite writes them here\r\n";
     out += "psp=" + cfg.psp + "\r\n";
+    out += "# the changes to turn off: code names from the ledger's Switch: lines, comma-separated (BOF3X_OFF,\r\n";
+    out += "# docs/launcher-settings.md). * turns off all code names. -name keeps that change on. Empty: none.\r\n";
+    out += "# If a name is not a code name, the game stops and shows a message\r\n";
+    out += "off=" + cfg.off + "\r\n";
     out += "# the importer's cache folder; its base\\bgm songs play through the sequencer (DIV-0087, docs/music-seq-engine.md)\r\n";
     out += "cache=" + cfg.cache + "\r\n";
     out += "# ffmpeg.exe for the importer (the PSP's music); empty: BOF3X_FFMPEG or PATH (docs/install-sources.md)\r\n";
@@ -478,6 +484,12 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     // the DLL its default (the cache's base_policy). The DLL checks the names.
     if (GetEnvironmentVariableW(L"BOF3X_PSP", existing, 64) == 0 && !cfg.psp.empty())
         SetEnvironmentVariableA("BOF3X_PSP", cfg.psp.c_str());
+
+    // The player's switch: the ini's off= as BOF3X_OFF, for both hosts (the
+    // game checks the names: detour.cpp InjectReport). An environment's
+    // BOF3X_OFF wins, as for the others; empty sends nothing.
+    if (GetEnvironmentVariableW(L"BOF3X_OFF", nullptr, 0) == 0 && !cfg.off.empty())
+        SetEnvironmentVariableA("BOF3X_OFF", cfg.off.c_str());
 
     // DIV-0087: the cache root and the music source, as the ini has them; the
     // dll checks both.

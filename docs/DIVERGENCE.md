@@ -87,7 +87,7 @@ ledger stays trustworthy.
 - **Reversible?** whether it sits behind a config toggle, and the key if so.
 - **Switch:** SunderLoop | ini:<key>=<value> | env:<BOF3X_NAME>=<value> | lang | none
 - **Default:** on | off
-- **Player:** yes | cheap | costly | never
+- **Player:** yes | costly | never
 - **Toward:** psx, psp, pc (a list) | none
 - **Languages:** any | en-US, en-150, fr-FR, de-DE, ja-JP, original (a list)
 - **State:** active | withdrawn | superseded by DIV-NNNN
@@ -132,7 +132,12 @@ The checker refuses a name nothing in `src/` or the launcher reads, a probe
 (an `instrument` hook, which no name switches off), the tooling switches
 (`BOF3X_SHADOW`, `BOF3X_CALLTRACE`; a `BOF3X_ORIGINAL` name is written bare),
 and the player's switch itself (`BOF3X_OFF`, ini `off=`: stage D's switch,
-which takes these names, as `BOF3X_ORIGINAL` does, `*` and `-name` included).
+which takes the bare names of class `code` - those of a `PatchBytes` or a
+`RetargetCall` - in `BOF3X_ORIGINAL`'s list syntax, `*` and `-name`
+included; a detour's name in it, or a name that is not a code name, stops
+the game with a message - for a detour, one that points at the
+hosted build's `BOF3X_ORIGINAL`: [`launcher-settings.md`](launcher-settings.md)
+section 3.2).
 
 **`Default:`** `on` when a player who changes nothing gets the new
 behaviour (most entries; DIV-0176), `off` when it waits to be asked for (a
@@ -151,14 +156,17 @@ name; the checker refuses a value the `Switch:` names do not give.
 
 | Value | Meaning | From the names' classes | Example |
 |---|---|---|---|
-| `yes` | a player can switch it today | every name a launcher key, an environment name both hosts read, or `lang` | DIV-0008 (`lang`) |
-| `cheap` | the original behaviour is in our code already; only the player's switch is missing | a `PatchBytes` or `RetargetCall` name (class `code`), none worse | DIV-0176 (`SunderLoop`) |
+| `yes` | a player can switch it today | every name a launcher key, an environment name both hosts read, `lang`, or a `PatchBytes` or `RetargetCall` name (class `code`: through `BOF3X_OFF`, ini `off=`) | DIV-0008 (`lang`), DIV-0176 (`SunderLoop`) |
 | `costly` | the original is only Capcom's function, which `bof3x.exe` does not map; ours must grow the old path | a name only `Inject` takes (class `detour`), or a switch `bof3x.exe` refuses (`hosted-only`: `RefuseHostedSwitches`) | DIV-0183 (`Paralyzer_Start`) |
 | `never` | no preset turns it off: Forced (the tier says why), or one-way (the clause says why) | any; the only value for a Forced entry and for `Switch: none` | DIV-0021 (Forced), DIV-0067 |
 
-With more than one name the worst class decides. Once `src/` reads
-`BOF3X_OFF` (stage D) a `code` name is a player's switch, and `cheap` becomes
-`yes`; the checker says so.
+With more than one name the worst class decides. **`cheap` is retired**
+(stage D of the ledger-fields round, 2026-10-28): it meant that the original
+behaviour is in our code already and only the player's switch is missing.
+Both hosts now read `BOF3X_OFF` (`src/hook/detour.cpp`; the launcher's ini
+key `off=`), so a `code` name is a player's switch and its entry is `yes`,
+written `yes - BOF3X_OFF=<names> (ini off=)`. The checker refuses `cheap`
+and says why.
 
 **`Toward:`** the releases whose behaviour the new behaviour matches: a
 list of `psx`, `psp`, `pc`, or `none` alone. No value implies another - the
@@ -861,9 +869,10 @@ designed in rather than bolted on.
   else). With both, the handlers are Capcom's. Either gives exactly
   Capcom's texture coordinates: `BOF3X_SHADOW=sprt_draw` checks ours with
   `SpriteFarEdge` off byte for byte against copies of Capcom's bytes.
+  A player turns it off with `BOF3X_OFF=SpriteFarEdge` (the ini's `off=`).
 - **Switch:** SpriteFarEdge
 - **Default:** on
-- **Player:** cheap - `PatchBytes("SpriteFarEdge")` in our handlers (`src/game/sprt_draw.cpp`)
+- **Player:** yes - BOF3X_OFF=SpriteFarEdge (ini off=)
 - **Toward:** psx - the PlayStation's GPU copies a sprite texel for texel, the last as wide as the first (above)
 - **Languages:** any
 - **State:** active
@@ -910,9 +919,10 @@ designed in rather than bolted on.
   places one piece a tile where the PlayStation placed one sprite a strip.
 - **Also in the PSX version?** no - the PlayStation draws the frame.
 - **Reversible?** `BOF3X_ORIGINAL=Menu_DrawFrame`.
+  A player turns it off with `BOF3X_OFF=Menu_DrawFrame` (the ini's `off=`).
 - **Switch:** Menu_DrawFrame
 - **Default:** on
-- **Player:** cheap - `RetargetCall("Menu_DrawFrame")` at the four frame calls (`src/game/menu_frame.cpp`)
+- **Player:** yes - BOF3X_OFF=Menu_DrawFrame (ini off=)
 - **Toward:** psx - the PlayStation draws the frame (above)
 - **Languages:** any
 - **State:** active
@@ -1257,9 +1267,10 @@ designed in rather than bolted on.
   began off the panel's edge, under the cursor.
 - **Also in the PSX version?** Yes - this is the PlayStation's behaviour.
 - **Reversible?** play without `BOF3X_LANG`, or `BOF3X_ORIGINAL=ConfigText`.
+  A player turns it off with `BOF3X_OFF=ConfigText` (the ini's `off=`).
 - **Switch:** ConfigText
 - **Default:** on - under its languages
-- **Player:** cheap - `PatchBytes` and `RetargetCall` under "ConfigText" (`src/game/config_text.cpp`), which also take DIV-0015's label pointers
+- **Player:** yes - BOF3X_OFF=ConfigText (ini off=)
 - **Toward:** psx - the PlayStation's behaviour (above)
 - **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/config_text.cpp:403`)
 - **State:** active
@@ -1526,10 +1537,11 @@ designed in rather than bolted on.
   does not see the clock. **Confirmed in game by the owner, 2026-09-22:** the
   game's speed is recovered.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Game_Clock` leaves the slot on
-  Windows' clock. No config toggle.
+  Windows' clock.
+  A player turns it off with `BOF3X_OFF=Game_Clock` (the ini's `off=`).
 - **Switch:** Game_Clock
 - **Default:** on
-- **Player:** cheap - `PatchBytes("Game_Clock")` on the exe's import slot (`src/game/game_clock.cpp`)
+- **Player:** yes - BOF3X_OFF=Game_Clock (ini off=)
 - **Toward:** none - the PlayStation paces by vertical blank: not applicable (above)
 - **Languages:** any
 - **State:** active
@@ -1703,9 +1715,10 @@ designed in rather than bolted on.
   evening, at scale 4: "the lettering looks perfect so far".**
 - **Reversible?** Yes: `BOF3X_ORIGINAL=GlyphTexelCentres` (our function,
   Capcom's arithmetic) or `BOF3X_ORIGINAL=D3d_DrawGlyph` (Capcom's function).
+  A player turns it off with `BOF3X_OFF=GlyphTexelCentres` (the ini's `off=`).
 - **Switch:** GlyphTexelCentres
 - **Default:** on
-- **Player:** cheap - `PatchBytes("GlyphTexelCentres")` in our glyph handler (`src/game/glyph_draw.cpp`)
+- **Player:** yes - BOF3X_OFF=GlyphTexelCentres (ini off=)
 - **Toward:** psx - the PlayStation's GPU samples whole texels and has no such edge (above)
 - **Languages:** any
 - **State:** active
@@ -1743,9 +1756,10 @@ designed in rather than bolted on.
   now", the frame "Perfect!".
 - **Reversible?** Yes: `BOF3X_ORIGINAL=ConfigController`. Only under a
   language overlay, not with `BOF3X_LANG=original`.
+  A player turns it off with `BOF3X_OFF=ConfigController` (the ini's `off=`).
 - **Switch:** ConfigController
 - **Default:** on - under its languages
-- **Player:** cheap - `PatchBytes` and `RetargetCall` under "ConfigController" (`src/game/config_text.cpp`), which also take DIV-0051's panel widths
+- **Player:** yes - BOF3X_OFF=ConfigController (ini off=)
 - **Toward:** none - not applicable: the text is the overlay's (above)
 - **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/config_text.cpp:403`)
 - **State:** active
@@ -1798,9 +1812,10 @@ designed in rather than bolted on.
   most, they think, which would come close but should fit.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=YesNoLayout`. Only under a language
   overlay, not with `BOF3X_LANG=original`.
+  A player turns it off with `BOF3X_OFF=YesNoLayout` (the ini's `off=`).
 - **Switch:** YesNoLayout
 - **Default:** on - under its languages
-- **Player:** cheap - `PatchBytes` under "YesNoLayout" (`src/game/yes_no_layout.cpp`)
+- **Player:** yes - BOF3X_OFF=YesNoLayout (ini off=)
 - **Toward:** none - the US disc moved the stops too, by numbers its unread code holds (above)
 - **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/yes_no_layout.cpp:346`)
 - **State:** active
@@ -1948,9 +1963,10 @@ designed in rather than bolted on.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=MusicFadePerFrame` (our function,
   Capcom's per-spin steps) or `BOF3X_ORIGINAL=Sound_Tick` (Capcom's
   function).
+  A player turns it off with `BOF3X_OFF=MusicFadePerFrame` (the ini's `off=`).
 - **Switch:** MusicFadePerFrame
 - **Default:** on
-- **Player:** cheap - `PatchBytes("MusicFadePerFrame")` sets our flag (`src/game/sound.cpp`)
+- **Player:** yes - BOF3X_OFF=MusicFadePerFrame (ini off=)
 - **Toward:** psx - the PlayStation counts its fades in frames (above)
 - **Languages:** any
 - **State:** active
@@ -1986,9 +2002,10 @@ designed in rather than bolted on.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=SaveNameInset`. Only under a
   language overlay, not with `BOF3X_LANG=original` (it rides in
   `YesNoLayout_Inject`, `src/game/yes_no_layout.cpp`).
+  A player turns it off with `BOF3X_OFF=SaveNameInset` (the ini's `off=`).
 - **Switch:** SaveNameInset
 - **Default:** on - under its languages
-- **Player:** cheap - `PatchBytes("SaveNameInset")` (`src/game/yes_no_layout.cpp`)
+- **Player:** yes - BOF3X_OFF=SaveNameInset (ini off=)
 - **Toward:** none - no cut to fix there: the PlayStation draws its own font (above)
 - **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin`: it rides in `YesNoLayout_Inject` (`src/game/yes_no_layout.cpp:346`)
 - **State:** active
@@ -2455,9 +2472,10 @@ designed in rather than bolted on.
   unchanged against the installed ones; the in-game check for fr, de and ja
   is owed ([`new-code-audit.md`](new-code-audit.md) A2).
 - **Reversible?** `BOF3X_ORIGINAL=PauseText`, or no `BOF3X_LANG`.
+  A player turns it off with `BOF3X_OFF=PauseText` (the ini's `off=`).
 - **Switch:** PauseText
 - **Default:** on - under its languages, in a layer that carries the lines (kind 14)
-- **Player:** cheap - `PatchBytes("PauseText")` (`src/game/pause_text.cpp`)
+- **Player:** yes - BOF3X_OFF=PauseText (ini off=)
 - **Toward:** none - the console has no F9 (above)
 - **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - kind 14 in every layer (`tools/loc_build.py` `PAUSE_LINES`: en, fr, de, ja)
 - **State:** active
@@ -4280,9 +4298,10 @@ designed in rather than bolted on.
   evening: "that looks good".**
 - **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=MenuTitleCentre`
   keeps the overlay and the original's x.
+  A player turns it off with `BOF3X_OFF=MenuTitleCentre` (the ini's `off=`).
 - **Switch:** MenuTitleCentre
 - **Default:** on - under its languages
-- **Player:** cheap
+- **Player:** yes - BOF3X_OFF=MenuTitleCentre (ini off=)
 - **Toward:** none - the US disc's centring was not checked ("Also in the PSX version?" above)
 - **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/menu_lists.cpp:633`)
 - **State:** active
@@ -4341,9 +4360,10 @@ designed in rather than bolted on.
   case owed their eye.
 - **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=BattleListTitleCentre`
   keeps the overlay and the original's x.
+  A player turns it off with `BOF3X_OFF=BattleListTitleCentre` (the ini's `off=`).
 - **Switch:** BattleListTitleCentre
 - **Default:** on - under its languages
-- **Player:** cheap
+- **Player:** yes - BOF3X_OFF=BattleListTitleCentre (ini off=)
 - **Toward:** none - the US disc's centring was not checked ("Also in the PSX version?" above)
 - **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/battle_draw.cpp:468`)
 - **State:** active
@@ -4386,9 +4406,10 @@ designed in rather than bolted on.
   the US photograph's arrangement. The owner's capture is the record.
 - **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=BattleResultExpLayout`
   keeps the overlay and the original's x.
+  A player turns it off with `BOF3X_OFF=BattleResultExpLayout` (the ini's `off=`).
 - **Switch:** BattleResultExpLayout
 - **Default:** on - under its languages
-- **Player:** cheap
+- **Player:** yes - BOF3X_OFF=BattleResultExpLayout (ini off=)
 - **Toward:** psx - the US version's layout, read by eye off the owner's photograph
 - **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/battle_result.cpp:487`)
 - **State:** active
@@ -4440,9 +4461,10 @@ designed in rather than bolted on.
   or an Instant Kill seen in game.
 - **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=BattleBannerCentre`
   keeps the overlay, the original's x and its character cap.
+  A player turns it off with `BOF3X_OFF=BattleBannerCentre` (the ini's `off=`).
 - **Switch:** BattleBannerCentre
 - **Default:** on - under its languages
-- **Player:** cheap
+- **Player:** yes - BOF3X_OFF=BattleBannerCentre (ini off=)
 - **Toward:** psx - the US draw centres on the letters' width; the small box stays the port's (the amendment)
 - **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/battle_win_states.cpp:541`)
 - **State:** active
@@ -4523,9 +4545,10 @@ designed in rather than bolted on.
   we do not own, and one original body on the old arrays beside ours on the
   new would hand one item to two cells. Logged, 2026-09-29 (the capture
   review of rounds 10..12).
+  A player turns it off with `BOF3X_OFF=DrawPool` (the ini's `off=`).
 - **Switch:** DrawPool
 - **Default:** on
-- **Player:** cheap
+- **Player:** yes - BOF3X_OFF=DrawPool (ini off=)
 - **Toward:** none - the pool is the port's; the PlayStation drew its cells from the ordering table
 - **Languages:** any
 - **State:** active
@@ -4998,9 +5021,10 @@ designed in rather than bolted on.
   box. The owner, in game the same day: correct.
 - **Reversible?** `BOF3X_ORIGINAL=BattleEquipWin_Draw` leaves Capcom's
   function and its rows.
+  A player turns it off with `BOF3X_OFF=BattleEquipLabelsRow` (the ini's `off=`).
 - **Switch:** BattleEquipLabelsRow - `PatchBytes`, `src/game/battle_e7.cpp` `BattleE7_Inject`; `BattleEquipWin_Draw` (the prose's) leaves the whole window to Capcom
 - **Default:** on
-- **Player:** cheap
+- **Player:** yes - BOF3X_OFF=BattleEquipLabelsRow (ini off=)
 - **Toward:** psx - ours does what the PlayStation's equip window does ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -5385,9 +5409,10 @@ designed in rather than bolted on.
   owner's call, [`msgbox.md`](msgbox.md) §3).
 - **Reversible?** `BOF3X_ORIGINAL=MsgBox_EffectDraw` runs Capcom's draw,
   stale quad and all.
+  A player turns it off with `BOF3X_OFF=MsgBoxEffectSpaceSkips` (the ini's `off=`).
 - **Switch:** MsgBoxEffectSpaceSkips - `PatchBytes`, `src/game/msgbox.cpp` `MsgBox_Inject`; `MsgBox_EffectDraw` (the prose's) leaves the whole draw to Capcom
 - **Default:** on
-- **Player:** cheap
+- **Player:** yes - BOF3X_OFF=MsgBoxEffectSpaceSkips (ini off=)
 - **Toward:** none - the same slip is in the PlayStation's twin ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -5806,9 +5831,10 @@ designed in rather than bolted on.
   established.
 - **Reversible?** `BOF3X_ORIGINAL=CommuName_SlotEntry,CommuName_MemberEntry`
   runs Capcom's steps, which do not return from the entry.
+  A player turns it off with `BOF3X_OFF=CommuNameEntryAbandons` (the ini's `off=`).
 - **Switch:** CommuNameEntryAbandons - `PatchBytes`, `src/game/rest_4d.cpp` `Rest4D_Inject`; the prose's detours leave both steps to Capcom
 - **Default:** on
-- **Player:** cheap
+- **Player:** yes - BOF3X_OFF=CommuNameEntryAbandons (ini off=)
 - **Toward:** none - the PlayStation has the name entry, which the port removed; ending the step unanswered is ours
 - **Languages:** any
 - **State:** active
@@ -5845,9 +5871,10 @@ designed in rather than bolted on.
   2026-10-06:** a save with another member leading loads showing Ryu's level
   and name together.
 - **Reversible?** `BOF3X_ORIGINAL=Save_BuildBlock` runs Capcom's.
+  A player turns it off with `BOF3X_OFF=SaveSummaryRecord0` (the ini's `off=`).
 - **Switch:** SaveSummaryRecord0 - `PatchBytes`, `src/game/rest_2c.cpp` `Rest2C_Inject`; `Save_BuildBlock` (the prose's) leaves the whole builder to Capcom
 - **Default:** on
-- **Player:** cheap
+- **Player:** yes - BOF3X_OFF=SaveSummaryRecord0 (ini off=)
 - **Toward:** psx - the PlayStation's builder names and levels record 0 ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -5930,9 +5957,10 @@ designed in rather than bolted on.
   before), 0 mismatches. The switch-on path is not compared against the
   original (it exists to differ); not yet seen live.
 - **Reversible?** `BOF3X_ORIGINAL=Cfg_Load` runs Capcom's.
+  A player turns it off with `BOF3X_OFF=CfgOwnKeyTable` (the ini's `off=`).
 - **Switch:** CfgOwnKeyTable - `PatchBytes`, `src/game/shell.cpp` `Shell_Inject`; `Cfg_Load` (the prose's) leaves the whole reader to Capcom
 - **Default:** on
-- **Player:** cheap
+- **Player:** yes - BOF3X_OFF=CfgOwnKeyTable (ini off=)
 - **Toward:** none - the PlayStation has no `BOF3.CFG`
 - **Languages:** any
 - **State:** active
@@ -6342,9 +6370,10 @@ designed in rather than bolted on.
   portraits - the owner's US capture beside it, the same.
 - **Reversible?** play without `BOF3X_LANG`, or
   `BOF3X_ORIGINAL=MasterPupilLabel` keeps the overlay and the box.
+  A player turns it off with `BOF3X_OFF=MasterPupilLabel` (the ini's `off=`).
 - **Switch:** MasterPupilLabel
 - **Default:** on - under its languages
-- **Player:** cheap
+- **Player:** yes - BOF3X_OFF=MasterPupilLabel (ini off=)
 - **Toward:** psx - the PlayStation's layout brought back
 - **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/rest_2h.cpp:882`)
 - **State:** active
@@ -6378,9 +6407,10 @@ designed in rather than bolted on.
 - **Reversible?** play without `BOF3X_LANG`, or
   `BOF3X_ORIGINAL=FormationNameCentre` keeps the overlay's words at the
   port's x.
+  A player turns it off with `BOF3X_OFF=FormationNameCentre` (the ini's `off=`).
 - **Switch:** FormationNameCentre
 - **Default:** on - under its languages
-- **Player:** cheap
+- **Player:** yes - BOF3X_OFF=FormationNameCentre (ini off=)
 - **Toward:** psx - the PlayStation's own placement brought back
 - **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/field_o.cpp:1319`)
 - **State:** active
@@ -7148,9 +7178,10 @@ designed in rather than bolted on.
   `BOF3X_ORIGINAL=GameMode5_Leave,GameMode_Start`. There is no runtime
   switch for the resume alone (the restart from the top under the fallback
   would be a code change: no `Arm` in `GameMode5_Leave`).
+  A player turns it off with `BOF3X_OFF=AreaTrackFallback` (the ini's `off=`).
 - **Switch:** AreaTrackFallback
 - **Default:** on
-- **Player:** cheap
+- **Player:** yes - BOF3X_OFF=AreaTrackFallback (ini off=)
 - **Toward:** psx - the PlayStation resumes the area's song after a battle; after an event battle it starts it from the top, which ours does not ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -8953,9 +8984,10 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=EncounterOnScreenLowerBounds` keeps ours with
   the port's bounds; `BOF3X_ORIGINAL=Encounter_OnScreen` runs Capcom's
   function.
+  A player turns it off with `BOF3X_OFF=EncounterOnScreenLowerBounds` (the ini's `off=`).
 - **Switch:** EncounterOnScreenLowerBounds
 - **Default:** on
-- **Player:** cheap - `PatchBytes("EncounterOnScreenLowerBounds")` (`src/game/inventory_ops.cpp`) arms the flag; the port's bounds are in ours
+- **Player:** yes - BOF3X_OFF=EncounterOnScreenLowerBounds (ini off=)
 - **Toward:** psx - the PlayStation's unsigned bounds test
 - **Languages:** any
 - **State:** active
@@ -9210,9 +9242,10 @@ designed in rather than bolted on.
   fuzz runs Capcom's rule (the switch `g_edge_no_area` is armed after it).
   **Not seen by the owner.**
 - **Reversible?** `BOF3X_ORIGINAL=EdgeNoArea`.
+  A player turns it off with `BOF3X_OFF=EdgeNoArea` (the ini's `off=`).
 - **Switch:** EdgeNoArea
 - **Default:** on
-- **Player:** cheap - `PatchBytes("EdgeNoArea")` (`src/game/event_leader.cpp`) arms `g_edge_no_area`; Capcom's rule is in ours
+- **Player:** yes - BOF3X_OFF=EdgeNoArea (ini off=)
 - **Toward:** none - the PlayStation has the same unbounded lookup; the hold is no release's
 - **Languages:** any
 - **State:** active
@@ -9471,9 +9504,10 @@ designed in rather than bolted on.
   play (no recorded route reaches them).
 - **Reversible?** `BOF3X_ORIGINAL=DiagonalIdentity` (ours writes Capcom's 1s);
   `BOF3X_ORIGINAL=EffectGte_SetDiagonalOne` (Capcom's function).
+  A player turns it off with `BOF3X_OFF=DiagonalIdentity` (the ini's `off=`).
 - **Switch:** DiagonalIdentity
 - **Default:** on
-- **Player:** cheap - `PatchBytes("DiagonalIdentity")` (`src/game/effect_gte.cpp`) arms the word; Capcom's 1s are in ours
+- **Player:** yes - BOF3X_OFF=DiagonalIdentity (ini off=)
 - **Toward:** psx - the PlayStation twin stores 0x1000
 - **Languages:** any
 - **State:** active
@@ -9819,9 +9853,10 @@ designed in rather than bolted on.
   sound 46,000; sound_rest 27,000). **Not yet heard by the owner.**
 - **Reversible?** `BOF3X_ORIGINAL=FishPanelDuck` (the patch's name): the
   fade to nothing and back.
+  A player turns it off with `BOF3X_OFF=FishPanelDuck` (the ini's `off=`).
 - **Switch:** FishPanelDuck
 - **Default:** on
-- **Player:** cheap - `PatchBytes("FishPanelDuck")` (`src/game/effect_1e.cpp`) arms the flag; the original fades are in ours
+- **Player:** yes - BOF3X_OFF=FishPanelDuck (ini off=)
 - **Toward:** psx - the PlayStation ducks
 - **Languages:** any
 - **State:** active
@@ -9872,9 +9907,10 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=ButtonSigma` (`σ` the identity; it also
   turns off DIV-0139). A save written under it keeps its words 7 / 8 as saved;
   holding Start while it loads writes the defaults.
+  A player turns it off with `BOF3X_OFF=ButtonSigma` (the ini's `off=`).
 - **Switch:** ButtonSigma
 - **Default:** on
-- **Player:** cheap - `PatchBytes("ButtonSigma")` (`src/input/sigma.cpp`); it also turns off DIV-0139, and no narrower name exists
+- **Player:** yes - BOF3X_OFF=ButtonSigma (ini off=)
 - **Toward:** none - the PlayStation has the same third flow ("Yes" above)
 - **Languages:** any
 - **State:** active
@@ -9921,9 +9957,10 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=StartConfigBySource`. For the other
   reading of answer 2 (a layer's release counts as a source),
   `kPcIsJapanSource` in `sigma.cpp` is a one-line change.
+  A player turns it off with `BOF3X_OFF=StartConfigBySource` (the ini's `off=`).
 - **Switch:** StartConfigBySource
 - **Default:** on
-- **Player:** cheap - `PatchBytes("StartConfigBySource")` (`src/input/sigma.cpp`)
+- **Player:** yes - BOF3X_OFF=StartConfigBySource (ini off=)
 - **Toward:** psx, psp - each release's own defaults, the PlayStation West's and PSP-EU's among them
 - **Languages:** any
 - **State:** active
@@ -9984,9 +10021,10 @@ designed in rather than bolted on.
   importer's half: a cache built without a PSX disc, or by an importer from
   before this change (the engine then repaints the page itself, unless
   switched off).
+  A player turns it off with `BOF3X_OFF=WorldMapLegend` (the ini's `off=`).
 - **Switch:** WorldMapLegend
 - **Default:** on
-- **Player:** cheap - `PatchBytes("WorldMapLegend")` (`src/game/world_map.cpp`), the engine's half; the importer's half is the install's sources
+- **Player:** yes - BOF3X_OFF=WorldMapLegend (ini off=)
 - **Toward:** psx - the PlayStation draws the glyph of the button the save holds
 - **Languages:** any
 - **State:** active
@@ -10043,9 +10081,10 @@ designed in rather than bolted on.
   own defaults). The round's validation ([`button-routes.md`](button-routes.md)
   9, 9.1): swapped, the reel label trades on all four installs.
 - **Reversible?** `BOF3X_ORIGINAL=FishingLabelSigma`.
+  A player turns it off with `BOF3X_OFF=FishingLabelSigma` (the ini's `off=`).
 - **Switch:** FishingLabelSigma
 - **Default:** on
-- **Player:** cheap - `PatchBytes("FishingLabelSigma")` (`src/game/fishing_text.cpp`)
+- **Player:** yes - BOF3X_OFF=FishingLabelSigma (ini off=)
 - **Toward:** none - the PlayStation's labels are fixed ("Yes" above)
 - **Languages:** any
 - **State:** active
@@ -10092,9 +10131,10 @@ designed in rather than bolted on.
   placed save `dock128` is the owner's to record).
 - **Reversible?** `BOF3X_ORIGINAL=DockLegend` (the page as it is), or
   `BOF3X_ORIGINAL=EffectKind5E_DrawPanel`.
+  A player turns it off with `BOF3X_OFF=DockLegend` (the ini's `off=`).
 - **Switch:** DockLegend
 - **Default:** on
-- **Player:** cheap - `PatchBytes("DockLegend")` (`src/game/rest_3e.cpp`); narrower than the detour `EffectKind5E_DrawPanel`
+- **Player:** yes - BOF3X_OFF=DockLegend (ini off=)
 - **Toward:** none - the PlayStation's legend is baked art ("Yes" above)
 - **Languages:** any
 - **State:** active
@@ -10189,9 +10229,10 @@ designed in rather than bolted on.
     mismatches; ButtonText 180 mentions, 0 mismatches. Not yet run on a
     Japanese install.
 - **Reversible?** `BOF3X_ORIGINAL=ShoulderGlyphs`.
+  A player turns it off with `BOF3X_OFF=ShoulderGlyphs` (the ini's `off=`).
 - **Switch:** ShoulderGlyphs
 - **Default:** on
-- **Player:** cheap - `PatchBytes("ShoulderGlyphs")` (`src/game/shoulder_glyphs.cpp`)
+- **Player:** yes - BOF3X_OFF=ShoulderGlyphs (ini off=)
 - **Toward:** none - the PlayStation's labels are baked ("Yes" above)
 - **Languages:** any
 - **State:** active
@@ -10273,9 +10314,10 @@ designed in rather than bolted on.
   `Sigma` is the identity and every test is the original's. There is no
   separate switch: a swapped Config with DIV-0133 off but this on would
   split the flow, so the two are kept together.
+  A player turns it off with `BOF3X_OFF=ButtonSigma` (the ini's `off=`).
 - **Switch:** ButtonSigma - DIV-0133's switch too: the two are kept together (Reversible? above)
 - **Default:** on
-- **Player:** cheap - `PatchBytes("ButtonSigma")`, `src/input/sigma.cpp:492`
+- **Player:** yes - BOF3X_OFF=ButtonSigma (ini off=)
 - **Toward:** none - every release hard-codes these tests in its own terms ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -10346,9 +10388,10 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=ButtonText`: both readers draw every
   mention as its text has it (`=MsgBox_Step` and `=Text_DrawString` too).
   The codes alone change nothing drawn.
+  A player turns it off with `BOF3X_OFF=ButtonText` (the ini's `off=`).
 - **Switch:** ButtonText
 - **Default:** on
-- **Player:** cheap - `PatchBytes("ButtonText")`, `src/game/text_draw.cpp:707`; both readers (`msgbox.cpp`, `text_draw.cpp`) ask its flag
+- **Player:** yes - BOF3X_OFF=ButtonText (ini off=)
 - **Toward:** none - no release draws a mention as the button the Config has put the role on
 - **Languages:** any
 - **State:** active
@@ -10387,8 +10430,9 @@ designed in rather than bolted on.
   filled after and pixel-equal to the PSX-US install's; PSX-US and PC +
   `en-US` 32 of 32 frames equal before and after (D246). Not seen by the
   owner.
-- **Reversible?** No toggle; a layer built from a PSX disc, or from the PC
-  install, is unchanged.
+- **Reversible?** By the language only (the language box, `BOF3X_LANG`):
+  the original text, and a layer built from a PSX disc or from the PC
+  install, are unchanged. No narrower runtime switch.
 - **Switch:** lang - a chunk of the PSP-EU layer (`loc_build.py`); no narrower runtime name
 - **Default:** on - under its languages
 - **Player:** yes - the language box; a layer built without the chunk is the build-time way
@@ -10462,9 +10506,10 @@ designed in rather than bolted on.
     the melt plays.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteCapture` (Capcom's draw), or
   `BOF3X_ORIGINAL=Sprite_Draw`.
+  A player turns it off with `BOF3X_OFF=SpriteCapture` (the ini's `off=`).
 - **Switch:** SpriteCapture
 - **Default:** on
-- **Player:** cheap - `PatchBytes("SpriteCapture")`, `src/game/sprite_draw.cpp:842`
+- **Player:** yes - BOF3X_OFF=SpriteCapture (ini off=)
 - **Toward:** psx - "Also in the PSX version?" says this is what the PlayStation does
 - **Languages:** any
 - **State:** active
@@ -10524,9 +10569,10 @@ designed in rather than bolted on.
   - Not heard yet.
 - **Reversible?** `BOF3X_ORIGINAL=AreaKeepStoppingNone` (Capcom's keep),
   or `BOF3X_ORIGINAL=Area_PickMusic`.
+  A player turns it off with `BOF3X_OFF=AreaKeepStoppingNone` (the ini's `off=`).
 - **Switch:** AreaKeepStoppingNone
 - **Default:** on
-- **Player:** cheap - `src/game/window_task.cpp:810`
+- **Player:** yes - BOF3X_OFF=AreaKeepStoppingNone (ini off=)
 - **Toward:** psx - "Also in the PSX version?" says this is what the PlayStation does
 - **Languages:** any
 - **State:** active
@@ -10596,9 +10642,10 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=FishingEmptyLine` and / or
   `BOF3X_ORIGINAL=FishingLowGlyph` (the original's draws; on a Japanese
   disc-only install with a layer built before the fix the crash comes back).
+  A player turns it off with `BOF3X_OFF=FishingEmptyLine,FishingLowGlyph` (the ini's `off=`).
 - **Switch:** FishingEmptyLine, FishingLowGlyph
 - **Default:** on
-- **Player:** cheap - both `PatchBytes`, `src/game/effect_1a.cpp:2148` and `:2150`
+- **Player:** yes - BOF3X_OFF=FishingEmptyLine,FishingLowGlyph (ini off=)
 - **Toward:** none - no release shows the case: the PlayStation's strings are never empty ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -10670,7 +10717,10 @@ designed in rather than bolted on.
   The language refusal (2026-10-20): the `snapshot` self-test in the exe
   host under the original and under en-US, both passing.
 - **Reversible?** The keys are ours; without them nothing of the game
-  changes. Not a switch.
+  changes. They are read only in our window procedure, so only the hosted
+  build's `BOF3X_ORIGINAL=Game_WndProc` turns them off (Capcom's window
+  procedure, with DIV-0033's freeze, 0040, 0042 and 0048 off too); the
+  player's build has no switch for them.
 - **Switch:** Game_WndProc - F6 / F7 are read only in our window procedure (`src/game/win_main.cpp:483`, `:487`), its own `Inject` (`:919`), which also carries DIV-0033's freeze, 0040, 0042
 - **Default:** on
 - **Player:** costly - a detour name only (`src/game/win_main.cpp:919`)
@@ -10709,9 +10759,10 @@ designed in rather than bolted on.
   mismatches after the split ([`quicksave.md`](quicksave.md) QM.3).
 - **Reversible?** `BOF3X_ORIGINAL=SaveLists` (the original's pattern and its
   unbounded table, quicksaves included in the list).
+  A player turns it off with `BOF3X_OFF=SaveLists` (the ini's `off=`).
 - **Switch:** SaveLists
 - **Default:** on
-- **Player:** cheap - `src/game/save_menu.cpp:352`
+- **Player:** yes - BOF3X_OFF=SaveLists (ini off=)
 - **Toward:** none - the save list is the PC port's own; a memory card has none
 - **Languages:** any
 - **State:** active
@@ -10746,8 +10797,11 @@ designed in rather than bolted on.
   at the release); live, three quicksaves listed and the second loaded back
   to its frame, a damaged file refused with the menu kept open; the recipe
   `quick_menu.txt` in the proof batch.
-- **Reversible?** Not a switch: F5 is ours (nothing of Capcom's is
-  replaced; without the key nothing changes).
+- **Reversible?** F5 is ours (nothing of Capcom's is replaced; without the
+  key nothing changes). It is read only in our window procedure, so only the
+  hosted build's `BOF3X_ORIGINAL=Game_WndProc` turns it off (Capcom's window
+  procedure, with DIV-0033's freeze, 0040, 0042, 0048 and 0145 off too); the
+  player's build has no switch for it.
 - **Switch:** Game_WndProc - F5 is read only in our window procedure (`src/game/win_main.cpp:443`, then `src/game/quick_menu.cpp:420`), its own `Inject` (`:919`)
 - **Default:** on
 - **Player:** costly - a detour name only (`src/game/win_main.cpp:919`)
@@ -10808,9 +10862,10 @@ designed in rather than bolted on.
   and roll the US credits to "Presented by CAPCOM" and "Fin"; the EU
   disc-only install logs `293 lines` and rolls the PAL credits to the same end; the PC install's original text rolls the
   Japanese credits as before. `data_census.py --check` 27,406 sites.
-- **Reversible?** Rebuild the language without the chunk, or play the
-  original text: the roll then reads `.data`'s table (on a Western disc-only
-  install, D323's patchwork). Not a runtime switch.
+- **Reversible?** By the language (the language box, `BOF3X_LANG`): play
+  the original text, or rebuild the language without the chunk, and the roll
+  reads `.data`'s table (on a Western disc-only install, D323's patchwork).
+  No narrower runtime switch.
 - **Switch:** lang - a chunk of the language layer (kind 17), as DIV-0064's labels are; no narrower runtime name
 - **Default:** on - under its languages
 - **Player:** yes - the language box; a layer rebuilt without the chunk is the build-time way
@@ -10849,9 +10904,10 @@ designed in rather than bolted on.
   switch is armed): 52,000 rounds, 0 mismatches; the switch logs ON. Not yet
   heard in the PC build.
 - **Reversible?** `BOF3X_ORIGINAL=EventBattleKeepsMusic`.
+  A player turns it off with `BOF3X_OFF=EventBattleKeepsMusic` (the ini's `off=`).
 - **Switch:** EventBattleKeepsMusic
 - **Default:** on
-- **Player:** cheap - `src/game/mode_rest.cpp:473`
+- **Player:** yes - BOF3X_OFF=EventBattleKeepsMusic (ini off=)
 - **Toward:** psx - the PlayStation's behaviour brought back ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -11043,9 +11099,10 @@ designed in rather than bolted on.
   folder with no game, and the rerun is held while another session's test
   chain uses the game.
 - **Reversible?** `BOF3X_ORIGINAL=PadReset`.
+  A player turns it off with `BOF3X_OFF=PadReset` (the ini's `off=`).
 - **Switch:** PadReset
 - **Default:** on
-- **Player:** cheap - `src/game/win_main.cpp:915`
+- **Player:** yes - BOF3X_OFF=PadReset (ini off=)
 - **Toward:** psx - the Western discs' pad reset; the Japanese disc has none
 - **Languages:** any
 - **State:** active
@@ -11086,9 +11143,10 @@ designed in rather than bolted on.
 - **Verification:** builds clean. The cap is armed after the `field_event`
   self-test, which still compares Capcom's roll. Not yet run live.
 - **Reversible?** `BOF3X_ORIGINAL=MantleCap`.
+  A player turns it off with `BOF3X_OFF=MantleCap` (the ini's `off=`).
 - **Switch:** MantleCap
 - **Default:** on
-- **Player:** cheap - `src/game/field_event.cpp:880`
+- **Player:** yes - BOF3X_OFF=MantleCap (ini off=)
 - **Toward:** none - the wrap is Capcom's on every release
 - **Languages:** any
 - **State:** active
@@ -11119,9 +11177,10 @@ designed in rather than bolted on.
   self-test, whose F7 / F8 controls still plant the full loops against
   Capcom's and are refused. Not yet played; D63's live outline applies.
 - **Reversible?** `BOF3X_ORIGINAL=ExtraRoundClear`.
+  A player turns it off with `BOF3X_OFF=ExtraRoundClear` (the ini's `off=`).
 - **Switch:** ExtraRoundClear
 - **Default:** on
-- **Player:** cheap - `src/game/battle_turn_steps.cpp:522`
+- **Player:** yes - BOF3X_OFF=ExtraRoundClear (ini off=)
 - **Toward:** none - the JP disc keeps the mark, as the PC did
 - **Languages:** any
 - **State:** active
@@ -11588,9 +11647,10 @@ designed in rather than bolted on.
     what that page holds; the owner's look when a route gets there.
 - **Reversible?** `BOF3X_ORIGINAL=DirectOpaque`, or
   `BOF3X_ORIGINAL=Tex_Convert16`.
+  A player turns it off with `BOF3X_OFF=DirectOpaque` (the ini's `off=`).
 - **Switch:** DirectOpaque - also disarms DIV-0160, which needs it
 - **Default:** on
-- **Player:** cheap - `src/game/tex_page.cpp:473`
+- **Player:** yes - BOF3X_OFF=DirectOpaque (ini off=)
 - **Toward:** psx - the PlayStation draws every non-zero direct-colour texel
 - **Languages:** any
 - **State:** active
@@ -11633,9 +11693,10 @@ designed in rather than bolted on.
   and only under our backend (`InitShim` has run): under `BOF3X_ORIGINAL=Display_Setup`, Capcom's DirectX 6
   objects would read alpha clear as transparent, so the converters keep Capcom's rule there.
   `BOF3X_STPVIEW=1` (diagnostic) draws the texels the plane marks in magenta.
+  A player turns it off with `BOF3X_OFF=StpTexels` (the ini's `off=`).
 - **Switch:** StpTexels - turns both steps off (`StpBlend` is armed only with it, `src/game/tex_page.cpp:481..486`, `src/render/render_shim.cpp:1082`); `StpBlend` alone leaves step 2
 - **Default:** on
-- **Player:** cheap - `PatchBytes("StpTexels")`, `src/game/tex_page.cpp:481`
+- **Player:** yes - BOF3X_OFF=StpTexels (ini off=)
 - **Toward:** psx, psp - the PlayStation draws by bit 15; the owner's PSP capture of 2026-10-27 shows the plate opaque and the glass blended (the amendment below)
 - **Languages:** any
 - **State:** active
@@ -11690,9 +11751,10 @@ designed in rather than bolted on.
   play.
 - **Reversible?** `BOF3X_ORIGINAL=BattleDrawSigned` (both functions; one
   switch byte in each module).
+  A player turns it off with `BOF3X_OFF=BattleDrawSigned` (the ini's `off=`).
 - **Switch:** BattleDrawSigned
 - **Default:** on
-- **Player:** cheap - one switch byte in each module, `src/game/battle_e7.cpp:923`, `src/game/battle_window_draw.cpp:580`
+- **Player:** yes - BOF3X_OFF=BattleDrawSigned (ini off=)
 - **Toward:** psx - the PlayStation draws them clipped
 - **Languages:** any
 - **State:** active
@@ -11723,9 +11785,10 @@ designed in rather than bolted on.
   `battle_e5` fuzz runs before the switch is armed, so it still compares
   Capcom's dword read).
 - **Reversible?** `BOF3X_ORIGINAL=StoreAskWord`.
+  A player turns it off with `BOF3X_OFF=StoreAskWord` (the ini's `off=`).
 - **Switch:** StoreAskWord
 - **Default:** on
-- **Player:** cheap - `src/game/battle_e5.cpp:1234`
+- **Player:** yes - BOF3X_OFF=StoreAskWord (ini off=)
 - **Toward:** psx - the PlayStation reads the halfword
 - **Languages:** any
 - **State:** active
@@ -11765,9 +11828,10 @@ designed in rather than bolted on.
   `battle_phases` fuzz runs before the switch is armed, so it still compares
   Capcom's resets).
 - **Reversible?** `BOF3X_ORIGINAL=BattleInitPickClear`.
+  A player turns it off with `BOF3X_OFF=BattleInitPickClear` (the ini's `off=`).
 - **Switch:** BattleInitPickClear
 - **Default:** on
-- **Player:** cheap - `src/game/battle_phases.cpp:186`
+- **Player:** yes - BOF3X_OFF=BattleInitPickClear (ini off=)
 - **Toward:** psx - the US disc clears it; the JP disc is as the PC
 - **Languages:** any
 - **State:** active
@@ -11800,9 +11864,10 @@ designed in rather than bolted on.
   with the switch off, and `BOF3X_SHADOW='*'` exits 0 with it armed after them. The repaired branch is not
   exercised by a fuzz: it differs from Capcom's copy only in the three upper bytes.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteReachWord` (both stores).
+  A player turns it off with `BOF3X_OFF=SpriteReachWord` (the ini's `off=`).
 - **Switch:** SpriteReachWord
 - **Default:** on
-- **Player:** cheap - both stores, `src/game/event_script.cpp:589`, `src/game/sprite_pose.cpp:329`
+- **Player:** yes - BOF3X_OFF=SpriteReachWord (ini off=)
 - **Toward:** psx - the PlayStation stores the whole word
 - **Languages:** any
 - **State:** active
@@ -11831,9 +11896,10 @@ designed in rather than bolted on.
   recorded routes keep their frames. The owner looked at the shops in play, 2026-10-23: "Shops look great". A
   gene choice sliding in or out has not been looked at.
 - **Reversible?** `BOF3X_ORIGINAL=MenuSignedXY`.
+  A player turns it off with `BOF3X_OFF=MenuSignedXY` (the ini's `off=`).
 - **Switch:** MenuSignedXY
 - **Default:** on
-- **Player:** cheap - `src/game/menu_windows.cpp:1675`
+- **Player:** yes - BOF3X_OFF=MenuSignedXY (ini off=)
 - **Toward:** psx - the PlayStation draws the fill to the edge
 - **Languages:** any
 - **State:** active
@@ -11859,9 +11925,10 @@ designed in rather than bolted on.
 - **Verification:** builds; the `field_e2` fuzz compares Capcom's unterminated copy before the switch is
   armed, and `BOF3X_SHADOW='*'` exits 0. Not seen in play: no recorded route finds a gene.
 - **Reversible?** `BOF3X_ORIGINAL=GeneNameNul`.
+  A player turns it off with `BOF3X_OFF=GeneNameNul` (the ini's `off=`).
 - **Switch:** GeneNameNul
 - **Default:** on
-- **Player:** cheap - `src/game/field_e2.cpp:1922`
+- **Player:** yes - BOF3X_OFF=GeneNameNul (ini off=)
 - **Toward:** psx - the US disc terminates; the JP disc does not
 - **Languages:** any
 - **State:** active
@@ -11898,9 +11965,10 @@ designed in rather than bolted on.
   hash sees it: `Sound_Channels` is in `.data`, so a battle where a loop was remembered at an action's start
   differs from the reference there.
 - **Reversible?** `BOF3X_ORIGINAL=EffectKeyOff`.
+  A player turns it off with `BOF3X_OFF=EffectKeyOff` (the ini's `off=`).
 - **Switch:** EffectKeyOff
 - **Default:** on
-- **Player:** cheap - `src/game/battle_actions.cpp:715`
+- **Player:** yes - BOF3X_OFF=EffectKeyOff (ini off=)
 - **Toward:** psx - the PlayStation's key-off ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -11931,9 +11999,10 @@ designed in rather than bolted on.
   every compared byte unchanged, no call out, eax the selection; 0 mismatches. `BOF3X_SELFTEST_ONLY=1
   BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not seen on a route.
 - **Reversible?** `BOF3X_ORIGINAL=MusicPlayRefusesNone`.
+  A player turns it off with `BOF3X_OFF=MusicPlayRefusesNone` (the ini's `off=`).
 - **Switch:** MusicPlayRefusesNone
 - **Default:** on
-- **Player:** cheap - `src/game/sound.cpp:2004`
+- **Player:** yes - BOF3X_OFF=MusicPlayRefusesNone (ini off=)
 - **Toward:** psx - the PlayStation's twins refuse it
 - **Languages:** any
 - **State:** active
@@ -12020,9 +12089,10 @@ designed in rather than bolted on.
   decoder's staging and heap. A quicksave taken between nightfall and morning does not carry the taken
   song, so a load into that span ends the night as the PC did.
 - **Reversible?** `BOF3X_ORIGINAL=InnNightPause`.
+  A player turns it off with `BOF3X_OFF=InnNightPause` (the ini's `off=`).
 - **Switch:** InnNightPause
 - **Default:** on
-- **Player:** cheap - `src/game/sound_in.cpp:404`
+- **Player:** yes - BOF3X_OFF=InnNightPause (ini off=)
 - **Toward:** psx - the PlayStation halts and resumes the song ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -12070,9 +12140,10 @@ designed in rather than bolted on.
   `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not heard; not run on a route.
   The state hash sees it where a route reaches a B8: `Music_Track`, `Music_Volume`, the fade and the stream.
 - **Reversible?** `BOF3X_ORIGINAL=MoveB8Restart`.
+  A player turns it off with `BOF3X_OFF=MoveB8Restart` (the ini's `off=`).
 - **Switch:** MoveB8Restart
 - **Default:** on
-- **Player:** cheap - `src/game/sound_sp.cpp:670`
+- **Player:** yes - BOF3X_OFF=MoveB8Restart (ini off=)
 - **Toward:** psx - the PlayStation's step ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -12131,9 +12202,10 @@ designed in rather than bolted on.
   branches. `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not heard. No game
   memory is written: the state hash cannot see it.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteVoicePosition`.
+  A player turns it off with `BOF3X_OFF=SpriteVoicePosition` (the ini's `off=`).
 - **Switch:** SpriteVoicePosition
 - **Default:** on
-- **Player:** cheap - `src/game/sound_sp.cpp:672`
+- **Player:** yes - BOF3X_OFF=SpriteVoicePosition (ini off=)
 - **Toward:** psx - the PlayStation's positional sound ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -12186,9 +12258,10 @@ designed in rather than bolted on.
   known to reach areas 3, 8 or 9 or that scenario step. The state hash sees it only where a `BD` / `D1` is gated
   out: the cue is not played, so `Sound_Channels` keeps what the cue would have stopped or started.
 - **Reversible?** `BOF3X_ORIGINAL=SoundLevelGate`.
+  A player turns it off with `BOF3X_OFF=SoundLevelGate` (the ini's `off=`).
 - **Switch:** SoundLevelGate
 - **Default:** on
-- **Player:** cheap - `src/game/sound_sp.cpp:675`
+- **Player:** yes - BOF3X_OFF=SoundLevelGate (ini off=)
 - **Toward:** psx - the PlayStation's step ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -12284,9 +12357,10 @@ designed in rather than bolted on.
   (with DIV-0174 beside it). Not heard; not run on a route (headless group). The end batch's WAV dump of `whelpBoss.txt`
   should show the bedroom's song ending at f10821 and nothing after it until track 7.
 - **Reversible?** `BOF3X_ORIGINAL=StopCuts` (DIV-0028's fade), or `BOF3X_ORIGINAL=Music_FadeOutStop`.
+  A player turns it off with `BOF3X_OFF=StopCuts` (the ini's `off=`).
 - **Switch:** StopCuts
 - **Default:** on
-- **Player:** cheap - `src/game/sound_st.cpp:52`
+- **Player:** yes - BOF3X_OFF=StopCuts (ini off=)
 - **Toward:** psx - the PlayStation's `SsSepStop` ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -12341,9 +12415,10 @@ designed in rather than bolted on.
   - Nothing is written to game memory, so the state hash sees nothing.
   - Not heard; not run on a route.
 - **Reversible?** `BOF3X_ORIGINAL=OneShotKeyOff`, independently of `BOF3X_ORIGINAL=EffectKeyOff` (DIV-0167).
+  A player turns it off with `BOF3X_OFF=OneShotKeyOff` (the ini's `off=`).
 - **Switch:** OneShotKeyOff - independent of DIV-0167's `EffectKeyOff`
 - **Default:** on
-- **Player:** cheap - `src/game/sound_st.cpp:98`
+- **Player:** yes - BOF3X_OFF=OneShotKeyOff (ini off=)
 - **Toward:** psx - the PlayStation's key-off ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -12386,9 +12461,10 @@ designed in rather than bolted on.
   freed records' bytes in `WindowRecords`, so the state hash shows `0x803000` on six of the ten routes and the
   attract with the switch on - the signature of this entry.
 - **Reversible?** `BOF3X_ORIGINAL=WindowResetFull`.
+  A player turns it off with `BOF3X_OFF=WindowResetFull` (the ini's `off=`).
 - **Switch:** WindowResetFull
 - **Default:** on
-- **Player:** cheap - `src/game/mode_flow.cpp:770`
+- **Player:** yes - BOF3X_OFF=WindowResetFull (ini off=)
 - **Toward:** psx - the US disc clears the whole record; the JP disc is as the PC
 - **Languages:** any
 - **State:** active
@@ -12439,9 +12515,10 @@ designed in rather than bolted on.
   that page from its first tick - the signature of this entry; the `combat` run against the `orig4` pair:
   two pages over 2,561 ticks, `0x5FD000` on every tick (this entry) and `0x803000` on 653 (DIV-0175's window records, already on `main`), nothing else; the references disagree on 7 pages of noise (`C:/Users/kerok/bof3x-runs/sunder1024/sh/check_combat.txt`).
 - **Reversible?** `BOF3X_ORIGINAL=SunderLoop`.
+  A player turns it off with `BOF3X_OFF=SunderLoop` (the ini's `off=`).
 - **Switch:** SunderLoop
 - **Default:** on
-- **Player:** cheap - `PatchBytes("SunderLoop")` writes a `.data` byte in both hosts; only the player's switch is missing
+- **Player:** yes - BOF3X_OFF=SunderLoop (ini off=)
 - **Toward:** none - the loop is no release's: the PlayStation's script asks for the once-cut too ("Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -12505,9 +12582,10 @@ designed in rather than bolted on.
   silent to the end; a 2-second quiet stretch before the jingle in the x2 dump is not attributed. Not heard
   by the owner; the playing case (no bracket) is covered by the self-test only.
 - **Reversible?** `BOF3X_ORIGINAL=JingleResume`.
+  A player turns it off with `BOF3X_OFF=JingleResume` (the ini's `off=`).
 - **Switch:** JingleResume
 - **Default:** on
-- **Player:** cheap - `src/game/sound_in.cpp:410`
+- **Player:** yes - BOF3X_OFF=JingleResume (ini off=)
 - **Toward:** psx - the PlayStation's song plays on under its jingles
 - **Languages:** any
 - **State:** active
@@ -12568,9 +12646,10 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=ApplyMatrixLVExact` keeps the port's
   wrapping products with ours running; `BOF3X_ORIGINAL=Gte_ApplyMatrixLV`
   runs Capcom's.
+  A player turns it off with `BOF3X_OFF=ApplyMatrixLVExact` (the ini's `off=`).
 - **Switch:** ApplyMatrixLVExact
 - **Default:** on
-- **Player:** cheap - `src/game/psx_gte.cpp:286`
+- **Player:** yes - BOF3X_OFF=ApplyMatrixLVExact (ini off=)
 - **Toward:** psx - the PlayStation's GTE computes the product exactly
 - **Languages:** any
 - **State:** active
@@ -12698,9 +12777,10 @@ designed in rather than bolted on.
   `C:\Users\kerok\bof3x-runs\door135`.
 - **Reversible?** `BOF3X_ORIGINAL=Area135MarkerPlaced` (the original's
   init, crash included); `BOF3X_ORIGINAL=Area135_Init` runs Capcom's.
+  A player turns it off with `BOF3X_OFF=Area135MarkerPlaced` (the ini's `off=`).
 - **Switch:** Area135MarkerPlaced
 - **Default:** on
-- **Player:** cheap - `src/game/area_w3d.cpp:974`
+- **Player:** yes - BOF3X_OFF=Area135MarkerPlaced (ini off=)
 - **Toward:** none - the PlayStation would draw the marker from whatever RAM holds (reasoned, not measured: "Also in the PSX version?" above)
 - **Languages:** any
 - **State:** active
@@ -12777,9 +12857,10 @@ designed in rather than bolted on.
   render-only change, nothing of the game's state is touched).
 - **Reversible?** `BOF3X_ORIGINAL=CellTextureVram` keeps the port's cache
   (the stale compositions included).
+  A player turns it off with `BOF3X_OFF=CellTextureVram` (the ini's `off=`).
 - **Switch:** CellTextureVram
 - **Default:** on
-- **Player:** cheap - `src/game/d3d_draw.cpp:603`
+- **Player:** yes - BOF3X_OFF=CellTextureVram (ini off=)
 - **Toward:** psx - the PlayStation's GPU samples VRAM at every draw
 - **Languages:** any
 - **State:** active
@@ -12861,9 +12942,10 @@ designed in rather than bolted on.
   same code path).
 - **Reversible?** `BOF3X_ORIGINAL=AreaDataReload` keeps the port's
   (the bytes stay until the exe restarts).
+  A player turns it off with `BOF3X_OFF=AreaDataReload` (the ini's `off=`).
 - **Switch:** AreaDataReload
 - **Default:** on
-- **Player:** cheap - `src/game/area_data_reload.cpp:103`
+- **Player:** yes - BOF3X_OFF=AreaDataReload (ini off=)
 - **Toward:** psx - the PlayStation's overlay reload put the bytes back
 - **Languages:** any
 - **State:** active
@@ -12982,9 +13064,10 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=DialTranslucent` keeps the port's operand (the dial opaque).
   With `BOF3X_ORIGINAL=StpBlend` as well, the whole dial would blend at half - the third
   picture D42 refused - so this entry is meant to be on only with DIV-0160.
+  A player turns it off with `BOF3X_OFF=DialTranslucent` (the ini's `off=`).
 - **Switch:** DialTranslucent
 - **Default:** on
-- **Player:** cheap - `src/game/world_map.cpp:699`
+- **Player:** yes - BOF3X_OFF=DialTranslucent (ini off=)
 - **Toward:** psx, psp - the PlayStation's operand; the owner's PSP capture of 2026-10-27 shows the glass the same
 - **Languages:** any
 - **State:** active
