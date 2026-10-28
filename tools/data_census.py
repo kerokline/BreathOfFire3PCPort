@@ -326,42 +326,7 @@ class SourceFile:
         return False
 
 
-# The relocatable-image round's helper (src/common/image_base.h): a place
-# spelled `::bof3::Img(va)` is the VA `va` placed, so the census reads through
-# it - `At(::bof3::Img(X_addr) + 4)` is the site `At(X_addr + 4)` it was, and a
-# VA held as a `bof3::image::Va` read by name (`at::kX.v`) is `at::kX`. Without
-# this a stage B edit would move every key of analysis/typed_left.tsv and make
-# `Img` look like an accessor. tools/reloc_census.py reads the tree as written
-# (it counts the helper), so the see-through is load_sources' option.
-_IMG_OPEN = re.compile(r'(?:::)?bof3::Img\(')
-_VA_NAME = re.compile(r'\b(k\w+)\.v\b')
-
-
-def see_through_base(text):
-    out, i = [], 0
-    while True:
-        m = _IMG_OPEN.search(text, i)
-        if not m:
-            out.append(text[i:])
-            break
-        depth, j = 1, m.end()
-        while j < len(text) and depth:
-            if text[j] == '(':
-                depth += 1
-            elif text[j] == ')':
-                depth -= 1
-            j += 1
-        if depth:
-            out.append(text[i:m.end()])
-            i = m.end()
-            continue
-        out.append(text[i:m.start()])
-        out.append(see_through_base(text[m.end():j - 1]))
-        i = j
-    return _VA_NAME.sub(r'\1', ''.join(out))
-
-
-def load_sources(see_through=False):
+def load_sources():
     files = []
     src = os.path.join(ROOT, 'src')
     for dirpath, dirnames, filenames in os.walk(src):
@@ -371,8 +336,7 @@ def load_sources(see_through=False):
                 p = os.path.join(dirpath, fn)
                 rel = os.path.relpath(p, ROOT).replace(os.sep, '/')
                 with open(p, encoding='utf-8', errors='replace') as f:
-                    text = f.read()
-                    files.append(SourceFile(rel, see_through_base(text) if see_through else text))
+                    files.append(SourceFile(rel, f.read()))
     files.sort(key=lambda f: f.rel)
     return files
 
@@ -1222,7 +1186,7 @@ def main():
     if a.strict:
         sys.exit(strict())
     syms = Symbols(a.toml)
-    files = load_sources(see_through=True)
+    files = load_sources()
     sites, consts, files, unresolved_refs = scan(files, syms)
     counts = counts_of(sites, consts, files, syms, unresolved_refs)
     if a.check:
