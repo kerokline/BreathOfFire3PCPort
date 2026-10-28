@@ -258,8 +258,8 @@ const sh::Callee kCallees[] = {
     {E2D_OURS(EffectGte_ProjectSize), 3, {0, 0, 0}, kG, 0, 0, {12, 2, 0}, &FxProjectSize, nullptr, true},
     // nobody's (the effect-standard rows answer garbage): the finds answer as
     // the real ones, so the null test is reached (the starts then fill what they get)
-    {"0x47CF20", at::kPuffFindFree, at::kPuffFindFree, 0, {}, kG, 0, 0, {}, &FxPuffFind},
-    {"0x47A130", at::kDustFindFree, at::kDustFindFree, 0, {}, kG, 0, 0, {}, &FxDustFind},
+    {"0x47CF20", at::kPuffFindFree.v, at::kPuffFindFree.v, 0, {}, kG, 0, 0, {}, &FxPuffFind},
+    {"0x47A130", at::kDustFindFree.v, at::kDustFindFree.v, 0, {}, kG, 0, 0, {}, &FxDustFind},
 };
 #undef E2D_OURS
 

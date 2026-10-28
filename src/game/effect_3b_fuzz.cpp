@@ -289,8 +289,8 @@ const sh::Callee kCallees[] = {
     // the spark record (the cursor's value, the same on both passes) and its 0x28 bytes
     {E3B_OURS(EffectKind6C_DrawSpark), 1, {kW}, kG, 0, 0, {0x28}, nullptr, nullptr, true},
     // raw: E4D's tint and the lines no group owns
-    {"0x48CA90", at::kScreenTint, at::kScreenTint, 0, {}, kG, 0, 0, {}, &FxScreenTint, nullptr, true},   // at::kScreenTint
-    {"EffectKind69_DrawLines", at::kKind69Lines, at::kKind69Lines, 0, {}, kG, 0, 0, {}, &FxLines, nullptr, true},        // at::kKind69Lines
+    {"0x48CA90", at::kScreenTint.v, at::kScreenTint.v, 0, {}, kG, 0, 0, {}, &FxScreenTint, nullptr, true},   // at::kScreenTint.v
+    {"EffectKind69_DrawLines", at::kKind69Lines.v, at::kKind69Lines.v, 0, {}, kG, 0, 0, {}, &FxLines, nullptr, true},        // at::kKind69Lines.v
     // standard rows re-listed: kind 0x69's spawner never answered none
     {E3B_OURS(Effect_FindFree), 0, {}, sh::Answer::kByte, 0xFF, 0x13, {}, &FxFindFree, nullptr, true},
     // the vertex on the stack hashed by its six bytes (its pad, the callers'

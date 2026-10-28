@@ -464,7 +464,7 @@ extern "C" void __cdecl Area170_ScriptFlagsClear1010(void) { Field_ScriptFlags =
 // 3 with Cond_ByteFD 2 plays it.
 extern "C" void __cdecl Area170_Init(void) {
     if (B(::bof3::Img(AreaW0a_TailKind_addr)) == 0x33) B(::bof3::Img(AreaW0a_TailKind_addr)) = 0x25;
-    AH_AT(Handler, at::kArea170MapSetUp)();
+    AH_AT(Handler, at::kArea170MapSetUp.v)();
     if (B(::bof3::Img(AreaW1a_EntryZone_addr)) == 2) {
         if (Cond_ByteFD != 1) return;
         AH_CALL(Sound_PlayEffect)(0x20C);

@@ -50,7 +50,7 @@ const Callees kOriginals = {
     Rand,
     MapView_GroundAt,
     Effect_FindFree,
-    Fn<void (__cdecl*)(unsigned, unsigned, unsigned char*, unsigned)>(kSetAnimFrom),
+    Fn<void (__cdecl*)(unsigned, unsigned, unsigned char*, unsigned)>(::bof3::Code(kSetAnimFrom.v)),
     Sprite_ScriptTick,
     Sprite_ShadeFadeBegin,
     Sprite_ShadeRaise,

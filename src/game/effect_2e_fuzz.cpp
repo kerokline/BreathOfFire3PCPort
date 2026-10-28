@@ -273,14 +273,14 @@ const sh::Callee kCallees[] = {
     // E3C's debris draw reads the record's 0x2C bytes; E2F's disc reads the
     // radius as an s16 (movsx word [esp + 0x38] at 0x47B808 - the callers push
     // a whole register, its upper half theirs), the rim as a byte (bl)
-    {"0x485030 (E3C)", at::kDebrisDraw, at::kDebrisDraw, 1, {kW}, kG, 0, 0, {0x2C}, nullptr, nullptr, true},
-    {"0x47B7D0 (E2F)", at::kDiscDraw, at::kDiscDraw, 3, {k16, kW, k8}, kG, 0, 0},
+    {"0x485030 (E3C)", at::kDebrisDraw.v, at::kDebrisDraw.v, 1, {kW}, kG, 0, 0, {0x2C}, nullptr, nullptr, true},
+    {"0x47B7D0 (E2F)", at::kDiscDraw.v, at::kDiscDraw.v, 3, {k16, kW, k8}, kG, 0, 0},
     // nobody's, re-listed louder: the free spark answered as a record or 0, the
     // set logging the record it is handed
-    {"0x47CF20", at::kSparkFree, at::kSparkFree, 0, {}, kG, 0, 0, {}, &FxSparkFree},
-    {"0x479160", at::kSparkSet, at::kSparkSet, 1, {kW}, kG, 0, 0, {}, &FxSparkSet, nullptr, true},
-    {"0x479260", at::kSparksRun, at::kSparksRun, 0, {}, kF, 0, 0, {}, nullptr, nullptr, true},
-    {"0x5A7A90", at::kSqrt, at::kSqrt, 1, {kW}, kG, 0, 0, {}, &FxSqrt, nullptr, true},
+    {"0x47CF20", at::kSparkFree.v, at::kSparkFree.v, 0, {}, kG, 0, 0, {}, &FxSparkFree},
+    {"0x479160", at::kSparkSet.v, at::kSparkSet.v, 1, {kW}, kG, 0, 0, {}, &FxSparkSet, nullptr, true},
+    {"0x479260", at::kSparksRun.v, at::kSparksRun.v, 0, {}, kF, 0, 0, {}, nullptr, nullptr, true},
+    {"0x5A7A90", at::kSqrt.v, at::kSqrt.v, 1, {kW}, kG, 0, 0, {}, &FxSqrt, nullptr, true},
     // the light, in place at 0x931168 (both pointers fixed cells, logged)
     {E2E_OURS(Gte_VectorNormal), 2, {kW, kW}, kG, 0, 0, {12, 0}, &FxNormal, nullptr, true},
     // standard entries re-listed: the stack pointers never logged (their

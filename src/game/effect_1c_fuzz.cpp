@@ -263,12 +263,12 @@ const sh::Callee kCallees[] = {
     {E1C_OURS(EffectKind1E_Winding), 3, {kW, kW, kW}, kG, 0, 0, {}, &FxWinding},   // the caller tests ax against 0
     {E1C_OURS(EffectKind20_Draw), 0, {}, kPh, 0, 0},
     // other groups' of round thirteen, by address (docs/effect_1c.md section 6)
-    {"0x471D10 (E2A)", at::kShardSpawn, at::kShardSpawn, 0, {}, kG, 0, 0, {}, &FxShardSpawn},
-    {"0x471E20 (E2A)", at::kShardTile, at::kShardTile, 1, {kW}, kG, 0, 0, {0x10}, nullptr, nullptr, true},
-    {"0x485030 (E3C)", at::kDebrisDraw, at::kDebrisDraw, 1, {kW}, kG, 0, 0, {0x2C}, nullptr, nullptr, true},
-    {"0x4851E0 (E3C)", at::kDebrisInit, at::kDebrisInit, 1, {kW}, kG, 0, 0, {}, &FxDebrisInit},
+    {"0x471D10 (E2A)", at::kShardSpawn.v, at::kShardSpawn.v, 0, {}, kG, 0, 0, {}, &FxShardSpawn},
+    {"0x471E20 (E2A)", at::kShardTile.v, at::kShardTile.v, 1, {kW}, kG, 0, 0, {0x10}, nullptr, nullptr, true},
+    {"0x485030 (E3C)", at::kDebrisDraw.v, at::kDebrisDraw.v, 1, {kW}, kG, 0, 0, {0x2C}, nullptr, nullptr, true},
+    {"0x4851E0 (E3C)", at::kDebrisInit.v, at::kDebrisInit.v, 1, {kW}, kG, 0, 0, {}, &FxDebrisInit},
     // the point copied on the stack (12 read), three words, the shade and flag bytes
-    {"0x493090 (E4F)", at::kCone, at::kCone, 6, {0, k16, k16, k16, k8, k8}, kG, 0, 0, {12}, nullptr, nullptr, true},
+    {"0x493090 (E4F)", at::kCone.v, at::kCone.v, 6, {0, k16, k16, k16, k8, k8}, kG, 0, 0, {12}, nullptr, nullptr, true},
     // standard entries re-listed louder: the stack pointers never logged, the
     // outs filled, the SVECTORs' padding (the callers' leftovers) not hashed
     {E1C_OURS(EffectGte_ProjectPoint), 2, {0, 0}, kG, 0, 0, {12, 0}, &FxProjectPoint, nullptr, true},

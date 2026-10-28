@@ -269,9 +269,9 @@ const ah::Callee kCallees[] = {
     {W2D_OURS(AreaMap_SetByte), 3, {kU16, kU16, kU8}, ah::Answer::kGarbage, 0, 0},
     {W2D_OURS(AreaMap_ByteAt), 2, {kU16, kU16}, ah::Answer::kFlag, 0, 0},
     {W2D_OURS(AreaMap_Elevation), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &ElevationEffect},
-    {"FlagsToggle_57C160", at::kFlagsToggle, at::kFlagsToggle, 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
+    {"FlagsToggle_57C160", at::kFlagsToggle.v, at::kFlagsToggle.v, 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
     // the point three dwords on the caller's stack: its bytes, not its address
-    {"RingAt_4220D0", at::kRingAt, at::kRingAt, 1, {0}, ah::Answer::kGarbage, 0, 0, {12}},
+    {"RingAt_4220D0", at::kRingAt.v, at::kRingAt.v, 1, {0}, ah::Answer::kGarbage, 0, 0, {12}},
     // slots inside the group's four effect records, or none
     {W2D_OURS(Effect_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x03, {}, &FindFreeEffect},
     {W2D_OURS(Sound_PlayEffect), 1, {kU16}, ah::Answer::kGarbage, 0, 0, {}, &SoundEffect},

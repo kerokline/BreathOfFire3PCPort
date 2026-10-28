@@ -151,7 +151,7 @@ void Project(unsigned char* p) {
 }
 
 // E6A's panel draw 0x50E1C0 (void, on Sprite_Current), raw until E6A merges.
-void DrawE6A() { scenario_harness::Phase(at::kE6ADraw)(); }
+void DrawE6A() { scenario_harness::Phase(at::kE6ADraw.v)(); }
 void Draw35() { SH_CALL(EffectKind18Sub35_Draw)(); }
 void Draw3B() { SH_CALL(EffectKind18Sub3B_Draw)(); }
 using Draw = void (*)();
@@ -818,9 +818,9 @@ extern "C" void __cdecl EffectKind18Sub41_Hold(void) {
         if (d < 0x19) {
             const U first = static_cast<U>(At(::bof3::Img(at::kSub41MarkA.v))[d]) << 2;
             const U second = At(::bof3::Img(at::kSub41MarkB.v))[d >> 1];
-            SH_AT(void(__cdecl*)(U, U), at::kWaveMark)(first, second);
+            SH_AT(void(__cdecl*)(U, U), at::kWaveMark.v)(first, second);
         }
-        SH_AT(void(__cdecl*)(U), at::kWaveStep)(S()[0xA]);
+        SH_AT(void(__cdecl*)(U), at::kWaveStep.v)(S()[0xA]);
     }
     S()[0xA] = static_cast<unsigned char>(S()[0xA] + 1);
     if (S()[0xA] > 0x30) SH_CALL(Effect_Release)();
@@ -901,8 +901,8 @@ extern "C" void __cdecl EffectKind18Sub44_Start(void) {
 // original 0x510C80 (sub-state 1): E6C's 0x510C90, then a tail jump to E6C's
 // 0x510EB0 (both void, on Sprite_Current; raw until E6C merges).
 extern "C" void __cdecl EffectKind18Sub44_Step(void) {
-    scenario_harness::Phase(at::kE6CStep)();
-    scenario_harness::Phase(at::kE6CTail)();
+    scenario_harness::Phase(at::kE6CStep.v)();
+    scenario_harness::Phase(at::kE6CTail.v)();
 }
 
 void Effect6B_Inject() {

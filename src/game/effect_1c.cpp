@@ -278,7 +278,7 @@ extern "C" void __cdecl EffectKind1C_Start(void) {
 // at 0 (a wrap), +9 0x20 and +1 up.
 extern "C" void __cdecl EffectKind1C_Rise(void) {
     SH_CALL(EffectKind1C_DrawRing)(Cur()[9]);
-    if (!(Frame_Counter & 1)) SH_AT(unsigned char (__cdecl*)(void), at::kShardSpawn)();
+    if (!(Frame_Counter & 1)) SH_AT(unsigned char (__cdecl*)(void), at::kShardSpawn.v)();
     SH_CALL(EffectKind1C_MoveShards)();
     unsigned char* s = Cur();
     s[9] = static_cast<unsigned char>(s[9] + 4);
@@ -295,7 +295,7 @@ extern "C" void __cdecl EffectKind1C_Rise(void) {
 // and +1 up.
 extern "C" void __cdecl EffectKind1C_Hold(void) {
     SH_CALL(EffectKind1C_DrawRing)(0xFF);
-    if (!(Frame_Counter & 1)) SH_AT(unsigned char (__cdecl*)(void), at::kShardSpawn)();
+    if (!(Frame_Counter & 1)) SH_AT(unsigned char (__cdecl*)(void), at::kShardSpawn.v)();
     SH_CALL(EffectKind1C_MoveShards)();
     unsigned char* s = Cur();
     s[9] = static_cast<unsigned char>(s[9] - 1);
@@ -366,7 +366,7 @@ extern "C" void __cdecl EffectKind1C_DrawRing(unsigned brightness) {
 
 // original 0x46DD00: kind 0x1C's specks moved and drawn (EffectSpecks_Draw, a
 // TILE_1 linked at the speck's point); al 1 when any was in use.
-extern "C" unsigned char __cdecl EffectKind1C_MoveShards(void) { return MoveShards(at::kShardTile); }
+extern "C" unsigned char __cdecl EffectKind1C_MoveShards(void) { return MoveShards(at::kShardTile.v); }
 
 // ===========================================================================
 // Kind 0x1D: Effect_KindHandlers[0x1D], EffectKind1D_States by +1
@@ -392,7 +392,7 @@ extern "C" void __cdecl EffectKind1D_Start(void) {
 // at 0, +9 0x20 and +1 up.
 extern "C" void __cdecl EffectKind1D_Rise(void) {
     SH_CALL(EffectKind1D_DrawRing)(Cur()[9]);
-    if (Frame_Counter & 1) SH_AT(unsigned char (__cdecl*)(void), at::kShardSpawn)();
+    if (Frame_Counter & 1) SH_AT(unsigned char (__cdecl*)(void), at::kShardSpawn.v)();
     SH_CALL(EffectKind1D_MoveShards)();
     unsigned char* s = Cur();
     s[9] = static_cast<unsigned char>(s[9] + 4);
@@ -409,7 +409,7 @@ extern "C" void __cdecl EffectKind1D_Rise(void) {
 // is 0x1F - then +9 0xFC and +1 up.
 extern "C" void __cdecl EffectKind1D_Hold(void) {
     SH_CALL(EffectKind1D_DrawRing)(0xFF);
-    if (Frame_Counter & 1) SH_AT(unsigned char (__cdecl*)(void), at::kShardSpawn)();
+    if (Frame_Counter & 1) SH_AT(unsigned char (__cdecl*)(void), at::kShardSpawn.v)();
     SH_CALL(EffectKind1D_MoveShards)();
     if (At(::bof3::Img(0x903848))[0] == 0x1F) {
         Cur()[9] = 0xFC;
@@ -476,7 +476,7 @@ extern "C" void __cdecl EffectShards_Clear(void) {
 
 // original 0x46E140: kind 0x1D's specks moved and drawn by 0x46E190 (the same
 // TILE_1, committed at slot 1); al 1 when any was in use.
-extern "C" unsigned char __cdecl EffectKind1D_MoveShards(void) { return MoveShards(at::kShardTile2); }
+extern "C" unsigned char __cdecl EffectKind1D_MoveShards(void) { return MoveShards(at::kShardTile2.v); }
 
 // ===========================================================================
 // Kind 0x1E: Effect_KindHandlers[0x1E], EffectKind1E_States by +1
@@ -799,8 +799,8 @@ extern "C" void __cdecl EffectKind1E_DebrisInitOne(unsigned char* debris) {
     SH_CALL(Gte_RotMatrixZ)(static_cast<short>(az), m.m);
     SH_CALL(Gte_PushMatrix)();
     using Turn = void (__cdecl*)(const short*, const short*, short*);
-    SH_AT(Turn, at::kMatrixVector)(m.m, reinterpret_cast<const short*>(debris + 0x10), reinterpret_cast<short*>(debris + 0x10));
-    SH_AT(Turn, at::kMatrixVector)(m.m, reinterpret_cast<const short*>(debris + 0x18), reinterpret_cast<short*>(debris + 0x18));
+    SH_AT(Turn, at::kMatrixVector.v)(m.m, reinterpret_cast<const short*>(debris + 0x10), reinterpret_cast<short*>(debris + 0x10));
+    SH_AT(Turn, at::kMatrixVector.v)(m.m, reinterpret_cast<const short*>(debris + 0x18), reinterpret_cast<short*>(debris + 0x18));
     SH_CALL(Gte_PopMatrix)();
     SetWord(debris + 0x28, (static_cast<U>(SH_CALL(Rand)()) & 3u) + 10u);
     SetWord(debris + 0x20, 0);
@@ -817,7 +817,7 @@ unsigned char* DebrisLoop(U base, unsigned count) {
     unsigned char* s = nullptr;
     for (unsigned i = 0; i < count; ++i) {
         unsigned char* const d = At(base + 0x2C * i);
-        SH_AT(void (__cdecl*)(unsigned char*), at::kDebrisDraw)(d);
+        SH_AT(void (__cdecl*)(unsigned char*), at::kDebrisDraw.v)(d);
         s = Cur();
         SetWord(d + 0x24, Word(d + 0x24) + 0x10u);
         SetWord(d + 0x2A, Word(d + 0x2A) + (s[9] < 4 ? 0x20u : 0xFFFEu));
@@ -911,7 +911,7 @@ extern "C" void __cdecl EffectKind1F_Run(void) { Entry(AddressOf(EffectKind1F_St
 // original 0x46EEB0 (EffectKind1F_States[0]): 32 debris records of 0x2C at
 // EffectKind30_Shards set up (E3C's 0x4851E0); +9 0, +1 up.
 extern "C" void __cdecl EffectKind1F_Start(void) {
-    for (U i = 0; i < 32; ++i) SH_AT(void (__cdecl*)(unsigned char*), at::kDebrisInit)(At(Shards() + 0x2C * i));
+    for (U i = 0; i < 32; ++i) SH_AT(void (__cdecl*)(unsigned char*), at::kDebrisInit.v)(At(Shards() + 0x2C * i));
     Cur()[9] = 0;
     unsigned char* const s = Cur();
     s[1] = static_cast<unsigned char>(s[1] + 1);
@@ -1045,7 +1045,7 @@ extern "C" void __cdecl EffectKind20_Draw(void) {
     const U width = (static_cast<std::uint32_t>(so->z) & 0xFFFF0000u) | Word(s + 0x64);
     const U height = (static_cast<std::uint32_t>(so->height) & 0xFFFF0000u) | Word(s + 0x68);
     const U angle = (static_cast<std::uint32_t>(so->z) & 0xFFFF0000u) | Word(s + 0x6C);
-    SH_AT(void (__cdecl*)(const long*, U, U, U, U, U), at::kCone)(point, width, height, angle, 0xC0, 0);
+    SH_AT(void (__cdecl*)(const long*, U, U, U, U, U), at::kCone.v)(point, width, height, angle, 0xC0, 0);
 }
 
 void Effect1C_Inject() {

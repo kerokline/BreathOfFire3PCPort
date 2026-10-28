@@ -755,8 +755,8 @@ extern "C" void __cdecl EffectKind97_DebrisInit(unsigned char* d) {
     SH_CALL(Gte_RotMatrixY)(-static_cast<int>(static_cast<short>(ay)), m.m);
     SH_CALL(Gte_RotMatrixZ)(static_cast<short>(az), m.m);
     using Turn = void (__cdecl*)(const short*, const short*, short*);
-    SH_AT(Turn, at::kMatrixVector)(m.m, reinterpret_cast<const short*>(d + 0x10), reinterpret_cast<short*>(d + 0x10));
-    SH_AT(Turn, at::kMatrixVector)(m.m, reinterpret_cast<const short*>(d + 0x18), reinterpret_cast<short*>(d + 0x18));
+    SH_AT(Turn, at::kMatrixVector.v)(m.m, reinterpret_cast<const short*>(d + 0x10), reinterpret_cast<short*>(d + 0x10));
+    SH_AT(Turn, at::kMatrixVector.v)(m.m, reinterpret_cast<const short*>(d + 0x18), reinterpret_cast<short*>(d + 0x18));
     SetWord(d + 0x28, (static_cast<U>(SH_CALL(Rand)()) & 3u) + 4u);
     SetWord(d + 0x20, 0);
     SetWord(d + 0x22, 0);

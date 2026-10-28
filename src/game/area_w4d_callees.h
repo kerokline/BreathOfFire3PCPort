@@ -113,7 +113,7 @@ constexpr unsigned kArea175ScriptCount = 14;
 // 0x455F40 / 0x4561A0 (read 2026-09-28 to 0x4554F8; the rest is its
 // owner's). Area 179's init (shared by areas 175..185) calls it when
 // Cond_ByteFA is above 7.
-constexpr std::uint32_t kFieldReset = bof3::addr::CommuSim_AreaEnter;   // the value unchanged, the fuzz keys stand
+constexpr ::bof3::image::CodeVa kFieldReset{bof3::addr::CommuSim_AreaEnter};   // the value unchanged, the fuzz keys stand
 
 }  // namespace at
 }  // namespace area_w4d

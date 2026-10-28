@@ -187,7 +187,7 @@ const ah::Callee kCallees[] = {
     {W0C_OURS(Transition_Start), 1, {kU8}, ah::Answer::kGarbage, 0, 0},
     {W0C_OURS(Effect_Release), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W0C_OURS(WorldMap_RecordIndex), 0, {}, ah::Answer::kGarbage, 0, 0},
-    {"PositionHook_4220D0", at::kPositionHook, at::kPositionHook, 1, {kAll}, ah::Answer::kGarbage, 0, 0, {12}},
+    {"PositionHook_4220D0", at::kPositionHook.v, at::kPositionHook.v, 1, {kAll}, ah::Answer::kGarbage, 0, 0, {12}},
 };
 #undef W0C_OURS
 

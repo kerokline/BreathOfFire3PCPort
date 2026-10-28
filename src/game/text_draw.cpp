@@ -131,7 +131,8 @@ void TextLog(std::uint32_t caller, const unsigned char* text) {
 // table is only read and stays where it is. The recursive call at +0xF1 is
 // relative and inside the range: the copy calls the copy. The call of
 // Text_EmitGlyph at +0x166 goes to the recorder.
-constexpr std::uint32_t kBody = 0x516B70, kSize = 0x1E0;
+constexpr ::bof3::image::CodeVa kBody{0x516B70};
+constexpr std::uint32_t kSize = 0x1E0;
 constexpr std::uint32_t kJmpDisp = 0x79, kJumpTable = 0x198, kJumpEntries = 7, kEmitCall = 0x166;
 
 struct Emit {
@@ -157,17 +158,17 @@ using DrawFn = const unsigned char* (__cdecl*)(unsigned, unsigned, const unsigne
 
 void SelfTest(void* clone) {
     auto* code = static_cast<std::uint8_t*>(clone);
-    const std::uint32_t moved = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(code)) - kBody;
+    const std::uint32_t moved = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(code)) - kBody.v;
     for (std::uint32_t i = 0; i < kJumpEntries; ++i) {
         std::uint32_t target;
         std::memcpy(&target, code + kJumpTable + 4 * i, sizeof target);
-        if (target < kBody || target >= kBody + kSize) bof3::Fatal("Text_DrawString: jump table entry %u is 0x%X", (unsigned)i, (unsigned)target);
+        if (target < kBody.v || target >= kBody.v + kSize) bof3::Fatal("Text_DrawString: jump table entry %u is 0x%X", (unsigned)i, (unsigned)target);
         target += moved;
         std::memcpy(code + kJumpTable + 4 * i, &target, sizeof target);
     }
     std::uint32_t disp;
     std::memcpy(&disp, code + kJmpDisp, sizeof disp);
-    if (disp != kBody + kJumpTable) bof3::Fatal("Text_DrawString: no jump table operand at +0x%X", (unsigned)kJmpDisp);
+    if (disp != kBody.v + kJumpTable) bof3::Fatal("Text_DrawString: no jump table operand at +0x%X", (unsigned)kJmpDisp);
     disp += moved;
     std::memcpy(code + kJmpDisp, &disp, sizeof disp);
     const auto theirs = reinterpret_cast<DrawFn>(clone);

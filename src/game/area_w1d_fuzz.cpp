@@ -264,7 +264,7 @@ const ah::Callee kCallees[] = {
     {W1D_OURS(Inventory_Count), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &CountAnswer},
     {W1D_OURS(Inventory_Remove), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {W1D_OURS(Item_NamePtr), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &NameEffect},
-    {"PositionHook_4220D0", at::kPositionHook, at::kPositionHook, 1, {kAll}, ah::Answer::kGarbage, 0, 0, {12}},
+    {"PositionHook_4220D0", at::kPositionHook.v, at::kPositionHook.v, 1, {kAll}, ah::Answer::kGarbage, 0, 0, {12}},
 };
 #undef W1D_OURS
 #undef W1D_THEIRS

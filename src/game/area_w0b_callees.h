@@ -105,8 +105,8 @@ constexpr ::bof3::image::Va kA16Buttons8End{0x5E6010};
 }  // namespace at
 
 // The unowned callees (above).
-constexpr std::uint32_t kMoneyTake = bof3::addr::Zenny_Sub;
-constexpr std::uint32_t kMoneyGive = bof3::addr::Zenny_Add;
-constexpr std::uint32_t kInventoryTake = bof3::addr::Inventory_Remove;
+constexpr ::bof3::image::CodeVa kMoneyTake{bof3::addr::Zenny_Sub};
+constexpr ::bof3::image::CodeVa kMoneyGive{bof3::addr::Zenny_Add};
+constexpr ::bof3::image::CodeVa kInventoryTake{bof3::addr::Inventory_Remove};
 
 }  // namespace area_w0b

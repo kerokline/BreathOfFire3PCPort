@@ -157,12 +157,12 @@ constexpr WorldMapTables kWm104 = {
 }  // namespace at
 
 // The unowned callees (above).
-constexpr std::uint32_t kTurnToward121 = bof3::addr::Area121_DirectionTo;
-constexpr std::uint32_t kMenuButton121 = bof3::addr::Area121_MenuButton;
-constexpr std::uint32_t kHoldButton121 = bof3::addr::Area121_Request4Button;
-constexpr std::uint32_t kTurnKeys121 = bof3::addr::Area121_TurnInput;
-constexpr std::uint32_t kGaugeFrame121 = bof3::addr::Area121_GaugeSprite;
-constexpr std::uint32_t kKind5CState4 = bof3::addr::Area121_RingRise;
-constexpr std::uint32_t kSetPolyF3 = bof3::addr::Gpu_SetPolyF3;
+constexpr ::bof3::image::CodeVa kTurnToward121{bof3::addr::Area121_DirectionTo};
+constexpr ::bof3::image::CodeVa kMenuButton121{bof3::addr::Area121_MenuButton};
+constexpr ::bof3::image::CodeVa kHoldButton121{bof3::addr::Area121_Request4Button};
+constexpr ::bof3::image::CodeVa kTurnKeys121{bof3::addr::Area121_TurnInput};
+constexpr ::bof3::image::CodeVa kGaugeFrame121{bof3::addr::Area121_GaugeSprite};
+constexpr ::bof3::image::CodeVa kKind5CState4{bof3::addr::Area121_RingRise};
+constexpr ::bof3::image::CodeVa kSetPolyF3{bof3::addr::Gpu_SetPolyF3};
 
 }  // namespace area_w2e

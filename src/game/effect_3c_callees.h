@@ -14,18 +14,18 @@ namespace effect_3c::at {
 // --- callees another group of round thirteen owns (analysis/round13_cut.tsv),
 // called through the harness by address (SH_AT) until the coordinator rebinds
 // them ---------------------------------------------------------------------------
-constexpr std::uint32_t kShardsSpread = bof3::addr::EffectKind6C_ScatterSparks;   // E3B's (void): the sixteen 0x28-byte shard records at
+constexpr ::bof3::image::CodeVa kShardsSpread{bof3::addr::EffectKind6C_ScatterSparks};   // E3B's (void): the sixteen 0x28-byte shard records at
                                                     // EffectKind30_Shards set round Sprite_Current's point (+0x34 /
                                                     // +0x38 / +0x3C), Rand directions; steps the cursor kShardCursor
-constexpr std::uint32_t kShardQuad = bof3::addr::EffectKind6C_DrawSpark;      // E3B's (unsigned char *shard): a shard's POLY_FT4 at Gfx_PacketNext,
+constexpr ::bof3::image::CodeVa kShardQuad{bof3::addr::EffectKind6C_DrawSpark};      // E3B's (unsigned char *shard): a shard's POLY_FT4 at Gfx_PacketNext,
                                                     // its point +4, its size +0x24 (EffectGte_ProjectSize), linked
-constexpr std::uint32_t kScreenTile = bof3::addr::Effect_DrawScreenTint;     // E4D's (void): a full-screen TILE of Sprite_Current's +0x5D..+0x5F,
+constexpr ::bof3::image::CodeVa kScreenTile{bof3::addr::Effect_DrawScreenTint};     // E4D's (void): a full-screen TILE of Sprite_Current's +0x5D..+0x5F,
                                                     // semi-transparent, committed (Gfx_CommitPrim(5, ..))
 
 // --- library layer (nobody's), the effect-standard set lists both --------------
-constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV;   // (matrix, in, out): an SVECTOR turned by the 3 x 3 (18 bytes read),
+constexpr ::bof3::image::CodeVa kMatrixVector{bof3::addr::Gte_ApplyMatrixSV};   // (matrix, in, out): an SVECTOR turned by the 3 x 3 (18 bytes read),
                                                     // 6 bytes written; in and out may be one (effect_1c_callees.h)
-constexpr std::uint32_t kPolyF3 = bof3::addr::Gpu_SetPolyF3;         // (unsigned char *prim): a flat triangle's 0x2C bytes set up
+constexpr ::bof3::image::CodeVa kPolyF3{bof3::addr::Gpu_SetPolyF3};         // (unsigned char *prim): a flat triangle's 0x2C bytes set up
 
 // --- cells ------------------------------------------------------------------------
 constexpr ::bof3::image::Va kShardCursor{0x67626C};    // unsigned char *: the 0x28-byte shard kinds 0x6C (E3B's) and 0x6E

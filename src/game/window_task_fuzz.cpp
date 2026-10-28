@@ -262,7 +262,7 @@ const void* StubFor(std::uint32_t target) {
     case bof3::addr::Window_DrawOutline:   return f(&StubDrawOutline);
     case bof3::addr::Window_DrawLine:      return f(&StubDrawLine);
     case bof3::addr::Window_FreeCurrent:   return f(&StubFreeCurrent);
-    case kMsgBoxFrameTask:                 return f(&StubMsgBoxFrame);
+    case kMsgBoxFrameTask.v:                 return f(&StubMsgBoxFrame);
     case bof3::addr::Gpu_SetDrawMode:      return f(&StubDrawMode);
     case bof3::addr::Gfx_CommitPrim:       return f(&StubCommit);
     case bof3::addr::Gpu_SetTile:          return f(&StubSetTile);
@@ -272,11 +272,11 @@ const void* StubFor(std::uint32_t target) {
     case bof3::addr::Gpu_SetSemiTrans:     return f(&StubSetSemi);
     case bof3::addr::Gpu_GetTPage:         return f(&StubGetTPage);
     case bof3::addr::Gpu_GetClut:          return f(&StubGetClut);
-    case kListSetUp:                       return f(&StubHandler<20>);
-    case kListDraw:                        return f(&StubHandler<21>);
-    case kListCursorDraw:                  return f(&StubHandler<22>);
-    case kSetDraw:                         return f(&StubHandler<23>);
-    case kSetCursorDraw:                   return f(&StubHandler<24>);
+    case kListSetUp.v:                       return f(&StubHandler<20>);
+    case kListDraw.v:                        return f(&StubHandler<21>);
+    case kListCursorDraw.v:                  return f(&StubHandler<22>);
+    case kSetDraw.v:                         return f(&StubHandler<23>);
+    case kSetCursorDraw.v:                   return f(&StubHandler<24>);
     default: bof3::Fatal("window_task: no stand-in for a call to 0x%X", static_cast<unsigned>(target)); return nullptr;
     }
 }
@@ -311,13 +311,13 @@ constexpr Call kChangeAreaCalls[] = {{0x2B, bof3::addr::Area_ClassifyPending}, {
 constexpr Call kZoneIdCalls[] = {{0x11, bof3::addr::Area_ZoneAtIn}};
 constexpr Call kPickMusicCalls[] = {{0x23, bof3::addr::Area_ZoneAtIn}, {0x78, bof3::addr::Flags_Test}};
 constexpr Call kGrowCalls[] = {{0x18C, bof3::addr::Window_DrawOutline}};
-constexpr Call kKind0FrameCalls[] = {{0x2D, bof3::addr::Window_DrawFrame}, {0x35, kMsgBoxFrameTask}};
-constexpr Call kShrinkCalls[] = {{0x1FA, bof3::addr::Window_DrawOutline}, {0x20E, kMsgBoxFrameTask}};
-constexpr Call kKind0CloseCalls[] = {{0x00, kMsgBoxFrameTask}, {0x0E, bof3::addr::Window_FreeCurrent}};
-constexpr Call kKind1OpenCalls[] = {{0x00, kListSetUp}};
-constexpr Call kKind1FrameCalls[] = {{0x27, bof3::addr::Window_DrawFrame}, {0x2F, kListDraw}, {0x34, kListCursorDraw}};
+constexpr Call kKind0FrameCalls[] = {{0x2D, bof3::addr::Window_DrawFrame}, {0x35, kMsgBoxFrameTask.v}};
+constexpr Call kShrinkCalls[] = {{0x1FA, bof3::addr::Window_DrawOutline}, {0x20E, kMsgBoxFrameTask.v}};
+constexpr Call kKind0CloseCalls[] = {{0x00, kMsgBoxFrameTask.v}, {0x0E, bof3::addr::Window_FreeCurrent}};
+constexpr Call kKind1OpenCalls[] = {{0x00, kListSetUp.v}};
+constexpr Call kKind1FrameCalls[] = {{0x27, bof3::addr::Window_DrawFrame}, {0x2F, kListDraw.v}, {0x34, kListCursorDraw.v}};
 constexpr Call kFreeStateCalls[] = {{0x00, bof3::addr::Window_FreeCurrent}};
-constexpr Call kKind2FrameCalls[] = {{0x27, bof3::addr::Window_DrawFrame}, {0x2F, kSetDraw}, {0x34, kSetCursorDraw}};
+constexpr Call kKind2FrameCalls[] = {{0x27, bof3::addr::Window_DrawFrame}, {0x2F, kSetDraw.v}, {0x34, kSetCursorDraw.v}};
 constexpr Call kDrawFrameCalls[] = {
     {0x015, bof3::addr::Gpu_SetDrawMode},  {0x01E, bof3::addr::Gfx_CommitPrim},   {0x02A, bof3::addr::Gpu_SetTile},
     {0x09B, bof3::addr::Gpu_SetSemiTrans}, {0x0A4, bof3::addr::Gfx_CommitPrim},   {0x0DF, bof3::addr::Gpu_SetDrawMode},

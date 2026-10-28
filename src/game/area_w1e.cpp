@@ -67,10 +67,12 @@ Handler StateEntry(const char* who, U table, unsigned count, unsigned index) {
 }
 
 // Area 65's own functions another of them calls directly.
-constexpr U kFrameStep65 = bof3::addr::Area65_FrameStep, kFrameHold65 = bof3::addr::Area65_FrameHold,
-    kBoxStep65 = bof3::addr::Area65_BoxStep;
-constexpr U kDrawFrame65 = bof3::addr::Area65_DrawFrame, kDrawSprite65 = bof3::addr::Area65_DrawSprite,
-    kDrawHud65 = bof3::addr::Area65_DrawHud;
+constexpr ::bof3::image::CodeVa kFrameStep65{bof3::addr::Area65_FrameStep};
+constexpr ::bof3::image::CodeVa kFrameHold65{bof3::addr::Area65_FrameHold};
+constexpr ::bof3::image::CodeVa kBoxStep65{bof3::addr::Area65_BoxStep};
+constexpr ::bof3::image::CodeVa kDrawFrame65{bof3::addr::Area65_DrawFrame};
+constexpr ::bof3::image::CodeVa kDrawSprite65{bof3::addr::Area65_DrawSprite};
+constexpr ::bof3::image::CodeVa kDrawHud65{bof3::addr::Area65_DrawHud};
 using DrawAt = void (__cdecl*)(int, int);
 using DrawSpriteAt = void (__cdecl*)(int, int, unsigned);
 
@@ -306,8 +308,8 @@ extern "C" void __cdecl Area65_HudRun(void) { StateEntry("Area65_HudRun", ::bof3
 // original 0x40BDE0 (Area65_HudStates 1; area 45's 0x408060): `call 0x40BDF0;
 // jmp 0x40BEC0` - the frame's slide, then the region box's.
 extern "C" void __cdecl Area65_HudFrame(void) {
-    area_harness::Phase(kFrameStep65)();
-    area_harness::Phase(kBoxStep65)();
+    area_harness::Phase(kFrameStep65.v)();
+    area_harness::Phase(kBoxStep65.v)();
 }
 
 // original 0x40BDF0 (area 45's 0x408070): Area65_FrameStates 0x60489C by +2 -
@@ -322,7 +324,7 @@ extern "C" void __cdecl Area65_FrameSlideIn(void) {
     rv::Current<records::EffectWork>()->work_2e = static_cast<std::uint16_t>(rv::Current<records::EffectWork>()->work_2e) + 0x10u;
     unsigned char* const o = Cur();
     if (S16(o + 0x2E) >= 0x10) o[2] = static_cast<unsigned char>(o[2] + 1);
-    area_harness::Phase(kFrameHold65)();
+    area_harness::Phase(kFrameHold65.v)();
 }
 
 // original 0x40BE40 (Area65_FrameStates 2; area 45's 0x4080C0): the mode byte
@@ -331,7 +333,7 @@ extern "C" void __cdecl Area65_FrameSlideIn(void) {
 // sign-extended.
 extern "C" void __cdecl Area65_FrameHold(void) {
     if (AreaW0b_MapMode == 2) Cur()[2] = 3;
-    AH_AT(DrawAt, kDrawFrame65)(0x10, S16(Cur() + 0x2E));
+    AH_AT(DrawAt, kDrawFrame65.v)(0x10, S16(Cur() + 0x2E));
 }
 
 // original 0x40BE70 (Area65_FrameStates 3; area 45's 0x4080F0): the word
@@ -348,7 +350,7 @@ extern "C" void __cdecl Area65_FrameSlideOut(void) {
         o[2] = 1;
         o = Cur();
     }
-    AH_AT(DrawAt, kDrawFrame65)(0x10, S16(o + 0x2E));
+    AH_AT(DrawAt, kDrawFrame65.v)(0x10, S16(o + 0x2E));
 }
 
 // original 0x40BEC0 (area 45's 0x408140): Area65_BoxStates 0x6048AC by +3 -
@@ -370,7 +372,7 @@ extern "C" void __cdecl Area65_BoxSlideIn(void) {
         o[3] = 3;
         o = Cur();
     }
-    AH_AT(DrawAt, kDrawHud65)(0x5C, S16(o + 0x30));
+    AH_AT(DrawAt, kDrawHud65.v)(0x5C, S16(o + 0x30));
 }
 
 // original 0x40BF50 (Area65_BoxStates 2; area 45's 0x4081D0): while +0xB is 0
@@ -390,7 +392,7 @@ extern "C" void __cdecl Area65_BoxHold(void) {
         o[3] = static_cast<unsigned char>(o[3] + 1);
         o = Cur();
     }
-    AH_AT(DrawAt, kDrawHud65)(0x5C, S16(o + 0x30));
+    AH_AT(DrawAt, kDrawHud65.v)(0x5C, S16(o + 0x30));
 }
 
 // original 0x40BFC0 (Area65_BoxStates 3; area 45's 0x408240): y +0x30 += 10;
@@ -408,7 +410,7 @@ extern "C" void __cdecl Area65_BoxSlideOut(void) {
         o[3] = 1;
         o = Cur();
     }
-    AH_AT(DrawAt, kDrawHud65)(0x5C, S16(o + 0x30));
+    AH_AT(DrawAt, kDrawHud65.v)(0x5C, S16(o + 0x30));
 }
 
 // original 0x40C020 (area 45's Area45_DrawFrame 0x4082A0, instruction for
@@ -430,23 +432,23 @@ extern "C" void __cdecl Area65_DrawFrame(int x, int y) {
     world_map_legend::Begin();   // DIV-0135: which page; the port's key names painted over
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x9C, 0);
     AH_CALL(Gfx_CommitPrim)(1, 0xC);
-    AH_AT(DrawSpriteAt, kDrawSprite65)(x, y, 0);
+    AH_AT(DrawSpriteAt, kDrawSprite65.v)(x, y, 0);
     const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
                                                        static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v)))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
-    if (!withheld1) AH_AT(DrawSpriteAt, kDrawSprite65)(x + 0x30, y, 1);
-    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite65), ::bof3::Img(Area65_Buttons_addr), 6, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000))), x + 0x38, y + 8,
+    if (!withheld1) AH_AT(DrawSpriteAt, kDrawSprite65.v)(x + 0x30, y, 1);
+    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite65.v), ::bof3::Img(Area65_Buttons_addr), 6, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000))), x + 0x38, y + 8,
                           withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
-    if (!withheld2) AH_AT(DrawSpriteAt, kDrawSprite65)(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite65), ::bof3::Img(Area65_Buttons_addr), 8, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c))), x + 0x38, y + 0x10,
+    if (!withheld2) AH_AT(DrawSpriteAt, kDrawSprite65.v)(x + 0x30, y + 0x10, 2);
+    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite65.v), ::bof3::Img(Area65_Buttons_addr), 8, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c))), x + 0x38, y + 0x10,
                           withheld2);
     bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
                                             static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v))))) != 0;
     if (!third) third = (Field_ScriptFlags2 & 0x1000) != 0;
     if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
     if (!third) third = (Field_ScriptFlags & 0x4000) != 0;
-    if (third) AH_AT(DrawSpriteAt, kDrawSprite65)(x + 0x30, y + 0x18, 3);
+    if (third) AH_AT(DrawSpriteAt, kDrawSprite65.v)(x + 0x30, y + 0x18, 3);
     world_map_legend::Start(x + 0x30, y + 0x18, !third);
     AH_CALL(WorldMap_DrawNeedle)(x + 0x18, y + 0x18);
 }
@@ -484,8 +486,8 @@ extern "C" void __cdecl Area65_DrawSprite(int x, int y, unsigned index) {
 // 16's copy reads 0x803588).
 extern "C" void __cdecl Area65_DrawHud(int x, int y) {
     if ((Draw_PassFlags & 0x1B) == 0) return;
-    AH_AT(DrawSpriteAt, kDrawSprite65)(x, y, 4);
-    AH_AT(DrawSpriteAt, kDrawSprite65)(x + 0x80, y, 5);
+    AH_AT(DrawSpriteAt, kDrawSprite65.v)(x, y, 4);
+    AH_AT(DrawSpriteAt, kDrawSprite65.v)(x + 0x80, y, 5);
     const unsigned char* const text = At(::bof3::Img(at::kAreaText.v) + (static_cast<U>(Long(At(::bof3::Img(at::kAreaTextOffset.v)))) & 0xFFFF));
     AH_CALL(Text_DrawAt)(x + 4, y + 4, 0, 0xFF, text);
 }

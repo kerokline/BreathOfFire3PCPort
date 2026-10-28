@@ -496,7 +496,7 @@ extern "C" void __cdecl Area135_SpawnCopy(void) {
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, tSelf->z);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, tSelf->height);
     Sprite_Current = self;
-    AH_AT(void (__cdecl*)(), area_w3d::kEngine46D710)();
+    AH_AT(void (__cdecl*)(), area_w3d::kEngine46D710.v)();
     Sprite_Current[0xA] = Sprite_Current[9];
     Sprite_Current[9] = 0;
     Sprite_Current[4] = static_cast<unsigned char>(Sprite_Current[4] + 1);
@@ -517,7 +517,7 @@ extern "C" void __cdecl Area135_SpawnCountdown(void) {
         return;
     }
     again[9] = again[0xA];
-    AH_AT(void (__cdecl*)(), area_w3d::kEngine46D770)();
+    AH_AT(void (__cdecl*)(), area_w3d::kEngine46D770.v)();
     Sprite_Current[9] = 0;
 }
 

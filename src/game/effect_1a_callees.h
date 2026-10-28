@@ -16,29 +16,29 @@ namespace effect_1a::at {
 // s16 x, s16 y), eax the primitive; the depth pair +0x40 / +0x44 of
 // Sprite_Current from 0x4650000 / (+0x60 - 2 * s16 +0x3E) after a
 // Sprite_UpdateScreen with +0x3C zeroed around it.
-constexpr std::uint32_t kDrawModeRecord = bof3::addr::UiSprite_SetMode;
-constexpr std::uint32_t kDrawSpriteRecord = bof3::addr::UiSprite_Draw;
-constexpr std::uint32_t kDepthPair = bof3::addr::Sprite_UpdateScreenScaled;
+constexpr ::bof3::image::CodeVa kDrawModeRecord{bof3::addr::UiSprite_SetMode};
+constexpr ::bof3::image::CodeVa kDrawSpriteRecord{bof3::addr::UiSprite_Draw};
+constexpr ::bof3::image::CodeVa kDepthPair{bof3::addr::Sprite_UpdateScreenScaled};
 // E1B's (round thirteen): a window frame and fill (x, y, w, h, colour), each
 // read as 16 bits (0x469790 / 0x469960 `and 0xFFFF`), the colour's byte; the
 // three option boxes and their labels (x, y, bits byte); a message line (pen
 // byte, text, width byte, x word); the member rows (x, y); the two item
 // lists (x, y); the panel's title and count.
-constexpr std::uint32_t kWindowBox = bof3::addr::Panel_DrawWindow;
-constexpr std::uint32_t kOptionBoxes = bof3::addr::EffectKind0F_DrawToggles;
-constexpr std::uint32_t kMessageLine = bof3::addr::EffectKind0F_DrawGlyph;
-constexpr std::uint32_t kMemberRows = bof3::addr::EffectKind0F_DrawEquipped;
-constexpr std::uint32_t kItemListA = bof3::addr::EffectKind0F_DrawItemsB;
-constexpr std::uint32_t kItemListB = bof3::addr::EffectKind0F_DrawItemsA;
-constexpr std::uint32_t kPanelTitle = bof3::addr::EffectKind0F_DrawCountHeader;
+constexpr ::bof3::image::CodeVa kWindowBox{bof3::addr::Panel_DrawWindow};
+constexpr ::bof3::image::CodeVa kOptionBoxes{bof3::addr::EffectKind0F_DrawToggles};
+constexpr ::bof3::image::CodeVa kMessageLine{bof3::addr::EffectKind0F_DrawGlyph};
+constexpr ::bof3::image::CodeVa kMemberRows{bof3::addr::EffectKind0F_DrawEquipped};
+constexpr ::bof3::image::CodeVa kItemListA{bof3::addr::EffectKind0F_DrawItemsB};
+constexpr ::bof3::image::CodeVa kItemListB{bof3::addr::EffectKind0F_DrawItemsA};
+constexpr ::bof3::image::CodeVa kPanelTitle{bof3::addr::EffectKind0F_DrawCountHeader};
 // Ours since round fourteen (R4F), by address until the round's rebinding: a
 // sprite primitive by the word it is handed.
-constexpr std::uint32_t kKind07Sprite = bof3::addr::EffectKind07_DrawSprite;
+constexpr ::bof3::image::CodeVa kKind07Sprite{bof3::addr::EffectKind07_DrawSprite};
 // Capcom's, unnamed (kEffectStd's rows): a string's characters counted (a byte
 // above 0x7F takes two); the library layer's primitive from a RECT (prim, rect),
 // 12 bytes written.
-constexpr std::uint32_t kStringCount = bof3::addr::EffectKind0F_CharCount;
-constexpr std::uint32_t kPrimFromRect = bof3::addr::Gpu_SetTexWindow;
+constexpr ::bof3::image::CodeVa kStringCount{bof3::addr::EffectKind0F_CharCount};
+constexpr ::bof3::image::CodeVa kPrimFromRect{bof3::addr::Gpu_SetTexWindow};
 
 // --- the image's tables, read in place (never copied) ------------------------------
 // kRecordSlot4: now WorldMap_Records[1] (symbols.toml). WorldMap_Records' +4 (kind 0xE's handler)

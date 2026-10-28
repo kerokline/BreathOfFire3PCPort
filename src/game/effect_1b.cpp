@@ -165,9 +165,9 @@ int NameCount() { return static_cast<int>(FishingText_NameCount()); }
 const unsigned char* Pool(unsigned id) { return At(::bof3::Img(at::kPools.v) + Word(At(::bof3::Img(at::kPools.v) + 2 * id))); }
 
 // --- the callees by address (E1F's, E1A's, E1G's) ------------------------------------
-void DrawMode(unsigned id, unsigned slot) { SH_AT(void (__cdecl*)(unsigned, unsigned), at::kDrawMode)(id, slot); }
+void DrawMode(unsigned id, unsigned slot) { SH_AT(void (__cdecl*)(unsigned, unsigned), at::kDrawMode.v)(id, slot); }
 void DrawSprite(unsigned id, unsigned slot, int x, int y) {
-    SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, int, int), at::kDrawSprite)(id, slot, x, y);
+    SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, int, int), at::kDrawSprite.v)(id, slot, x, y);
 }
 void Call3(U address, U a, U b, U c) { SH_WORD(void (__cdecl*)(U, U, U), address)(a, b, c); }
 void Call4(U address, U a, U b, U c, U d) { SH_WORD(void (__cdecl*)(U, U, U, U), address)(a, b, c, d); }
@@ -425,7 +425,7 @@ extern "C" void __cdecl EffectKind0F_Child1Meter() {
     } else if (mode == 1 && (Frame_Counter & 1) == 0) {
         s[6] = static_cast<unsigned char>(s[6] + 1);
     }
-    Call4(at::kE1aBarG4, 0x39, 0x97, Word(Sc() + 0xC), 1);
+    Call4(at::kE1aBarG4.v, 0x39, 0x97, Word(Sc() + 0xC), 1);
     SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Boss26Fx_CountFormat), static_cast<unsigned>(Sc()[6]));
     SH_CALL(Text_DrawFont12)(0xAA, 0x94, 0, Text(::bof3::Img(at::kPrint.v)));
     SH_CALL(Sprite_QueueOverlay)();
@@ -485,12 +485,12 @@ extern "C" void __cdecl EffectKind0F_Child2Gauge() {
         const auto v = static_cast<unsigned char>(s[6] + step);
         s[6] = (v & 0x80) != 0 ? 0 : (v > 0x18 ? 0x18 : v);
     }
-    Call3(at::kE1aGaugeA, 0xE4, 0x68, 1);
-    Call3(at::kE1aGaugeB, 0xE4, 0x78, 1);
+    Call3(at::kE1aGaugeA.v, 0xE4, 0x68, 1);
+    Call3(at::kE1aGaugeB.v, 0xE4, 0x78, 1);
     DrawMode(0, 1);
     DrawSprite(0x14, 1, 0xDC, 0x60);
     s = Sc();
-    if (at_(3 * s[0xA] - 1) != 0) Call3(at::kE1aGaugeMark, 0xF4, ((ScKey() & 0xFFFF0000u) | s[6]) + 0x68u, 1);
+    if (at_(3 * s[0xA] - 1) != 0) Call3(at::kE1aGaugeMark.v, 0xF4, ((ScKey() & 0xFFFF0000u) | s[6]) + 0x68u, 1);
 }
 
 // original 0x467CA0 (PSX 0x801D6430): bank 0x2B; +0x24 0x80, +0x29 = +0x2A = 0, +0x48 2, dwords
@@ -553,7 +553,7 @@ extern "C" void __cdecl EffectKind0F_Child3Grid() {
     unsigned char* s = Sc();
     unsigned column;
     if (s[0xA] != 0) {
-        Call4(at::kE1aDigits, 0xD4, 0x8A, 0, (ScKey() & 0xFFFFFF00u) | static_cast<unsigned char>(s[0xB] + 1));
+        Call4(at::kE1aDigits.v, 0xD4, 0x8A, 0, (ScKey() & 0xFFFFFF00u) | static_cast<unsigned char>(s[0xB] + 1));
         s = Sc();
         column = s[9] / 12u;
     } else {
@@ -662,8 +662,8 @@ extern "C" void __cdecl EffectKind0F_Child4Move() {
     }
     MoveCursor(::bof3::Img(at::kChild4Script.v), kWho);
     SH_CALL(EffectKind0F_DrawCursorPanel)(MoveByte(::bof3::Img(at::kChild4Script.v), 4 * Sc()[0xA] - 1, kWho) >= 0 ? 1u : 0u);
-    Call4(at::kE1aMarker, 0x7E, 0x5C, 0, 1);
-    Call6(at::kE1aRange, 0x8F, 0x69, 0x20, 0, 1, 0);
+    Call4(at::kE1aMarker.v, 0x7E, 0x5C, 0, 1);
+    Call6(at::kE1aRange.v, 0x8F, 0x69, 0x20, 0, 1, 0);
 }
 
 // original 0x468210 (down, a byte): Sprite_QueueOverlay; the draw mode (0, 1),
@@ -685,8 +685,8 @@ extern "C" void __cdecl EffectKind0F_DrawCursorPanel(unsigned down) {
     s = Sc();
     const std::int32_t cx = static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c), cy = static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10);
     const U outside = (cy >= cx && cy <= cx + 0x20) ? 0u : 1u;
-    Call6(at::kE1aRange, Word(s + 0xC), 0xB3, 0x20, static_cast<unsigned char>((s[6] & 7) << 1), 1, outside);
-    Call4(at::kE1aMarker, Word(Sc() + 0x10), 0xB3, (down & 0xFF) == 0 ? 0u : 1u, 1);
+    Call6(at::kE1aRange.v, Word(s + 0xC), 0xB3, 0x20, static_cast<unsigned char>((s[6] & 7) << 1), 1, outside);
+    Call4(at::kE1aMarker.v, Word(Sc() + 0x10), 0xB3, (down & 0xFF) == 0 ? 0u : 1u, 1);
 }
 
 // original 0x468340 (PSX 0x801D6F50): EffectKind0F_Child4Start, then +0xB = 0x37.
@@ -1130,7 +1130,7 @@ extern "C" void __cdecl EffectKind0F_DrawEquipped(int x, int y) {
     DrawHeading(2, x + 0x2A, y + 7, 5, ::bof3::Img(EffectKind0F_PanelTitles_addr) + 0x8);
     const unsigned char bits = Sc()[7];
     const U ix = static_cast<U>(x) + 0x10u;
-    auto icon = [ix](int iy, unsigned char item, U flag) { Call5(at::kE1gItemIcon, ix, static_cast<U>(iy), item, 3, flag); };
+    auto icon = [ix](int iy, unsigned char item, U flag) { Call5(at::kE1gItemIcon.v, ix, static_cast<U>(iy), item, 3, flag); };
     if ((bits & 0x80) != 0) {
         icon(y + 0x1C, B(::bof3::Img(at::kEquipA.v)), 0);
         DrawAt(x + 0x1C, y + 0x1A, 0, NameCount(), AccessoryName(B(::bof3::Img(at::kEquipA.v))));

@@ -10,7 +10,7 @@
 namespace effect_5a::at {
 
 // --- a callee no group of round thirteen holds, called by address (SH_AT) --
-constexpr std::uint32_t kPattern = bof3::addr::Area109_SwitchPattern;      // (void) -> eax: the three story flags 0x65DE60 as bits, plus 1 (1..8)
+constexpr ::bof3::image::CodeVa kPattern{bof3::addr::Area109_SwitchPattern};      // (void) -> eax: the three story flags 0x65DE60 as bits, plus 1 (1..8)
 
 // --- the flag rows ------------------------------------------------------------
 // kFlagRow2: now Cond_Flags[0x10] (symbols.toml). Cond_Flags + 2 * 8 (sub-kind 4's flag 0x17)

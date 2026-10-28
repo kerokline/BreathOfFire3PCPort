@@ -109,17 +109,17 @@ constexpr unsigned kArea52CellSwitchCount = 4;
 
 // 0x57C160 (0x1F bytes): (bits, index) - bits[index >> 3] ^= 1 << (index & 7),
 // the index a byte: Flags_Set / Flags_Clear's sibling that toggles. Engine.
-constexpr std::uint32_t kFlagsToggle = bof3::addr::Flags_Toggle;
+constexpr ::bof3::image::CodeVa kFlagsToggle{bof3::addr::Flags_Toggle};
 // 0x572620 (0x2F bytes): (x, z, value) - AreaMap_Header[HeightBase * 4 +
 // width * z + x] = value, x and z sign-extended words, value a byte: the
 // area block's second byte layer, as AreaMap_SetByte writes the first. Engine.
-constexpr std::uint32_t kSetLayerByte = bof3::addr::AreaMap_SetHeight;
+constexpr ::bof3::image::CodeVa kSetLayerByte{bof3::addr::AreaMap_SetHeight};
 // 0x57C8A0 (0x35 bytes): (member, v) - party record member's +1 = 2, +2 = 8,
 // +3 = 0, +0xB = v; both arguments bytes. Engine.
-constexpr std::uint32_t kMemberSetState = bof3::addr::Member_SetState2_8;
+constexpr ::bof3::image::CodeVa kMemberSetState{bof3::addr::Member_SetState2_8};
 // 0x469FE0 (0x3C bytes): (v) - Effect_FindFree; a free slot gets +0 = 1,
 // kind +5 = 4, +9 = v, and story flag 0x1C is set. Engine.
-constexpr std::uint32_t kSpawnKind4 = bof3::addr::Effect_HoldFlag1C;
+constexpr ::bof3::image::CodeVa kSpawnKind4{bof3::addr::Effect_HoldFlag1C};
 
 }  // namespace at
 }  // namespace area_w1c

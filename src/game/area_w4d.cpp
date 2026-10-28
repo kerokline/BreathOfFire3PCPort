@@ -237,7 +237,7 @@ extern "C" void __cdecl Area178_ChoiceMessageEF(void) {
 // 0x455450. The hook's arm byte cleared; Cond_ByteFD not 0:
 // Sound_PlayEffect(0x20C).
 extern "C" void __cdecl Area179_Init(void) {
-    if (Cond_ByteFA > 7) AH_AT(void (__cdecl*)(void), at::kFieldReset)();
+    if (Cond_ByteFA > 7) AH_AT(void (__cdecl*)(void), at::kFieldReset.v)();
     const unsigned char fd = Cond_ByteFD;
     B(::bof3::Img(AreaW4d_HookArmed_addr)) = 0;
     if (fd != 0) AH_CALL(Sound_PlayEffect)(0x20C);

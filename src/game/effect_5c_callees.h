@@ -11,12 +11,12 @@
 namespace effect_5c::at {
 
 // --- group E5D's (wave five; E5D merges before E5C) --------------------------------
-constexpr std::uint32_t kDrawMoveStep = bof3::addr::EffectKind18Sub17_CopyFrame;   // (step): a Gpu_SetDrawMove from the byte pairs at 0x65E268 + 2 *
+constexpr ::bof3::image::CodeVa kDrawMoveStep{bof3::addr::EffectKind18Sub17_CopyFrame};   // (step): a Gpu_SetDrawMove from the byte pairs at 0x65E268 + 2 *
                                                     // step and Sprite_Current +0xB, committed at slot 6 (0x18) - the
                                                     // step read as a whole word (an index)
-constexpr std::uint32_t kDrawQuads = bof3::addr::EffectKind18Sub17_DrawPatch;      // (variant): the scenario harness's 0x503FA0 row (E5D's; sixteen
+constexpr ::bof3::image::CodeVa kDrawQuads{bof3::addr::EffectKind18Sub17_DrawPatch};      // (variant): the scenario harness's 0x503FA0 row (E5D's; sixteen
                                                     // textured quads round Sprite_Current's point)
-constexpr std::uint32_t kDrawMoves = bof3::addr::EffectKind18Sub17_ScrollTexture;      // (void): four Gpu_SetDrawMoves at Sprite_Current +0x34 / +0x38's
+constexpr ::bof3::image::CodeVa kDrawMoves{bof3::addr::EffectKind18Sub17_ScrollTexture};      // (void): four Gpu_SetDrawMoves at Sprite_Current +0x34 / +0x38's
                                                     // cell; sub-kind 0x17's states tail-jump to it
 
 // --- cells ------------------------------------------------------------------------

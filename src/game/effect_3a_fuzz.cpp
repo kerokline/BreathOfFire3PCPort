@@ -256,14 +256,14 @@ const sh::Callee kCallees[] = {
     {E3A_OURS(EffectKind68_DrawWall), 1, {k8}, kG, 0, 0},
     // group E4F's two (wave four), raw: the spark it spawns into the pool (no
     // argument) and a shard of 0x2C read to +0x2B
-    {"0x493B50", at::kSparkSpawn, at::kSparkSpawn, 0, {}, kG, 0, 0},
-    {"0x493C60", at::kShardDraw, at::kShardDraw, 1, {kW}, kG, 0, 0, {0x2C}, nullptr, nullptr, true},
+    {"0x493B50", at::kSparkSpawn.v, at::kSparkSpawn.v, 0, {}, kG, 0, 0},
+    {"0x493C60", at::kShardDraw.v, at::kShardDraw.v, 1, {kW}, kG, 0, 0, {0x2C}, nullptr, nullptr, true},
     // standard rows re-listed: the cursor with the glow's depths levelled;
     // Sprite_SetAnimation logging Sprite_Current; 0x59E930 filling the pixels
     {E3A_OURS(Gfx_CommitPrim), 2, {k8, k8}, kG, 0, 0, {0, 0}, &FxCommit, nullptr, true},
     {E3A_OURS(Gpu_SetPolyG3), 1, {kW}, kG, 0, 0, {16}, &FxTriangle, nullptr, true},
     {E3A_OURS(Sprite_SetAnimation), 1, {k8}, kG, 0, 0, {}, &FxOnCurrent, nullptr, true},
-    {"Gfx_StoreImage", at::kStoreImage, at::kStoreImage, 2, {0, kW}, kG, 0, 0, {8, 0}, &FxStoreImage, nullptr, true},
+    {"Gfx_StoreImage", at::kStoreImage.v, at::kStoreImage.v, 2, {0, kW}, kG, 0, 0, {8, 0}, &FxStoreImage, nullptr, true},
 };
 #undef E3A_OURS
 

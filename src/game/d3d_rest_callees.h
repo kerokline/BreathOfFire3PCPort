@@ -16,7 +16,7 @@ namespace d3d_rest {
 using U = std::uint32_t;
 
 // A bare `ret` (d3d_draw_callees.h kRetOnly): every handler calls it twice.
-constexpr U kRetOnly = bof3::addr::BareRet;
+constexpr ::bof3::image::CodeVa kRetOnly{bof3::addr::BareRet};
 
 // Data the handlers read, all Capcom's addresses (docs/d3d-draw.md section 2).
 // kScaleX: now D3d_ScaleX (symbols.toml). D3d_ScaleX, float

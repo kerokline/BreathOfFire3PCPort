@@ -165,7 +165,7 @@ unsigned char* Shard(U i) { return At(::bof3::Img(EffectKind30_Shards_addr) + 0x
 // until it merges.
 void Glow(unsigned char* s) {
     using Draw = void (__cdecl*)(const long*, unsigned, unsigned);
-    SH_AT(Draw, at::kGlowDraw)(Point(s + 0x64), Word(s + 0x2E), 6);
+    SH_AT(Draw, at::kGlowDraw.v)(Point(s + 0x64), Word(s + 0x2E), 6);
 }
 
 // The opening of kind 0xB9's states 4..7: the frame +6 up, and on every fourth
@@ -740,7 +740,7 @@ extern "C" unsigned char __cdecl EffectKindB0_StepBars(unsigned length) {
             break;
         default: break;
         }
-        if (b[2] != 0) SH_AT(void (__cdecl*)(unsigned char*), at::kBarDraw)(b);
+        if (b[2] != 0) SH_AT(void (__cdecl*)(unsigned char*), at::kBarDraw.v)(b);
     }
     return any;
 }

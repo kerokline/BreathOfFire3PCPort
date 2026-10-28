@@ -320,8 +320,8 @@ const ah::Callee kCallees[] = {
     // Capcom's, unnamed: the map camera; a point projected (its vector a
     // local of the caller's: its twelve bytes; the vertex it writes, the
     // caller's local, not by address)
-    {"SetMapCamera_494060", at::kSetMapCamera, at::kSetMapCamera, 0, {}, ah::Answer::kGarbage, 0, 0},
-    {"ProjectPoint_494110", at::kProjectPoint, at::kProjectPoint, 2, {kAll, 0}, ah::Answer::kGarbage, 0, 0, {12}, &ProjectEffect},
+    {"SetMapCamera_494060", at::kSetMapCamera.v, at::kSetMapCamera.v, 0, {}, ah::Answer::kGarbage, 0, 0},
+    {"ProjectPoint_494110", at::kProjectPoint.v, at::kProjectPoint.v, 2, {kAll, 0}, ah::Answer::kGarbage, 0, 0, {12}, &ProjectEffect},
     // the group's own, called directly: the cylinders (the point by its
     // twelve bytes), the trails (the timer's low word, the record's low
     // byte; answers 0..2)

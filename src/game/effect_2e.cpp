@@ -143,7 +143,7 @@ void SpiralStart(unsigned turn) {
     const U height = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height) + 0x2000000u;
     Effect2e_SpiralTurn = turn;
     SetUL(At(::bof3::Img(EffectKind30_Shards_addr) + 0x524 + 8), height);
-    SH_AT(void (__cdecl*)(unsigned char*), at::kSpiralInit)(At(::bof3::Img(EffectKind30_Shards_addr) + 0x524));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kSpiralInit.v)(At(::bof3::Img(EffectKind30_Shards_addr) + 0x524));
     s = S();
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, 0x28);
     NextStep();
@@ -152,7 +152,7 @@ void SpiralStart(unsigned turn) {
 // while +0xC is above 8 (signed) its turn word +0xD10 up `turn`; +0xC down, at 0
 // a tail jmp to Effect_Release.
 void SpiralTurn(unsigned turn) {
-    SH_AT(void (__cdecl*)(unsigned char*), at::kSpiralDraw)(Cell(::bof3::Img(at::kSpiralPtr.v)));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kSpiralDraw.v)(Cell(::bof3::Img(at::kSpiralPtr.v)));
     const unsigned char* s = S();
     if (SL(s + 0xC) > 8) AddWord(Cell(::bof3::Img(at::kSpiralPtr.v)) + 0xD10, turn);
     unsigned char* t;
@@ -162,8 +162,8 @@ void SpiralTurn(unsigned turn) {
 
 // State 12's frame: the burst record stepped (0x4794D0) and drawn (0x4796B0).
 void BurstFrame() {
-    SH_AT(void (__cdecl*)(unsigned char*), at::kBurstStep)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
-    SH_AT(void (__cdecl*)(unsigned char*), at::kBurstDraw)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kBurstStep.v)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kBurstDraw.v)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
 }
 
 // A draw mode: Gpu_GetTPage(0, 1, x, y) into Gpu_SetDrawMode(packet, 0, dtd,
@@ -216,7 +216,7 @@ extern "C" void __cdecl EffectKind48_State7_Swell(void) {
     const unsigned index = s[9];
     if ((s[0xC] & At(::bof3::Img(at::kState7Steps.v))[index]) == 0) AddWord(Cell(::bof3::Img(at::kRingPtr.v)) + 0x10, At(::bof3::Img(at::kState7Adds.v))[index]);
     if ((s[0xC] & 0xF) == 0) s[9] = static_cast<unsigned char>(s[9] + 1);
-    SH_AT(void (__cdecl*)(unsigned char*), at::kRing)(Cell(::bof3::Img(at::kRingPtr.v)));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kRing.v)(Cell(::bof3::Img(at::kRingPtr.v)));
     if (!CountDownC(&s)) return;
     SetUL(s + 0xC, 0x10);
     NextStep();
@@ -226,7 +226,7 @@ extern "C" void __cdecl EffectKind48_State7_Swell(void) {
 // down, at 0 +2 up.
 extern "C" void __cdecl EffectKind48_State7_Widen(void) {
     AddWord(Cell(::bof3::Img(at::kRingPtr.v)) + 0x10, 4);
-    SH_AT(void (__cdecl*)(unsigned char*), at::kRing)(Cell(::bof3::Img(at::kRingPtr.v)));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kRing.v)(Cell(::bof3::Img(at::kRingPtr.v)));
     unsigned char* s;
     if (!CountDownC(&s)) return;
     s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -237,7 +237,7 @@ extern "C" void __cdecl EffectKind48_State7_Widen(void) {
 // Effect_Release.
 extern "C" void __cdecl EffectKind48_State7_Lift(void) {
     AddLong(Cell(::bof3::Img(at::kRingPtr.v)) + 8, 0x1000000u);
-    SH_AT(void (__cdecl*)(unsigned char*), at::kRing)(Cell(::bof3::Img(at::kRingPtr.v)));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kRing.v)(Cell(::bof3::Img(at::kRingPtr.v)));
     if (SL(Cell(::bof3::Img(at::kRingPtr.v)) + 8) < 0x10000000) return;
     SH_CALL(Effect_Release)();
 }
@@ -276,7 +276,7 @@ extern "C" void __cdecl EffectKind48_State9_Run(void) {
 extern "C" void __cdecl EffectKind48_State9_Start(void) {
     AtLeader();
     Ground(0);
-    SH_AT(void (__cdecl*)(), at::kSparksInit)();
+    SH_AT(void (__cdecl*)(), at::kSparksInit.v)();
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x28);
     S()[6] = 1;
     NextStep();
@@ -287,12 +287,12 @@ extern "C" void __cdecl EffectKind48_State9_Start(void) {
 // +0xC's low two bits are 0 and one was found, set (0x479160); the sparks run
 // (0x479260); +0xC down, at 0 +2 up.
 extern "C" void __cdecl EffectKind48_State9_Emit(void) {
-    SH_AT(void (__cdecl*)(unsigned char*), at::kSpiralDraw)(Cell(::bof3::Img(at::kSpiralPtr.v)));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kSpiralDraw.v)(Cell(::bof3::Img(at::kSpiralPtr.v)));
     if (SL(S() + 0xC) > 8) {
-        unsigned char* const spark = SH_AT(unsigned char* (__cdecl*)(), at::kSparkFree)();
-        if ((S()[0xC] & 3) == 0 && spark != nullptr) SH_AT(void (__cdecl*)(unsigned char*), at::kSparkSet)(spark);
+        unsigned char* const spark = SH_AT(unsigned char* (__cdecl*)(), at::kSparkFree.v)();
+        if ((S()[0xC] & 3) == 0 && spark != nullptr) SH_AT(void (__cdecl*)(unsigned char*), at::kSparkSet.v)(spark);
     }
-    SH_AT(unsigned char (__cdecl*)(), at::kSparksRun)();
+    SH_AT(unsigned char (__cdecl*)(), at::kSparksRun.v)();
     unsigned char* s;
     if (!CountDownC(&s)) return;
     s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -301,7 +301,7 @@ extern "C" void __cdecl EffectKind48_State9_Emit(void) {
 // original 0x478D20 (step 2): the sparks run; when none is left (al 0), a tail
 // jmp to Effect_Release.
 extern "C" void __cdecl EffectKind48_State9_Drain(void) {
-    if (SH_AT(unsigned char (__cdecl*)(), at::kSparksRun)() != 0) return;
+    if (SH_AT(unsigned char (__cdecl*)(), at::kSparksRun.v)() != 0) return;
     SH_CALL(Effect_Release)();
 }
 
@@ -367,7 +367,7 @@ extern "C" void __cdecl EffectKind48_State12_Run(void) {
 // stepped 32 times (0x4794D0); when +6 is set Sound_PlayEffect(0x203); +2 up.
 extern "C" void __cdecl EffectKind48_State12_Start(void) {
     SetWord(At(::bof3::Img(at::kBurstSize.v)), 0xC0);
-    for (int i = 0; i < 0x20; ++i) SH_AT(void (__cdecl*)(unsigned char*), at::kBurstStep)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
+    for (int i = 0; i < 0x20; ++i) SH_AT(void (__cdecl*)(unsigned char*), at::kBurstStep.v)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
     if (S()[6] != 0) SH_CALL(Sound_PlayEffect)(0x203);
     NextStep();
 }
@@ -506,7 +506,7 @@ extern "C" unsigned char __cdecl EffectSphere_Build(void) {
             *shade = 0;
             continue;
         }
-        U root = static_cast<U>(SH_AT(long (__cdecl*)(long), at::kSqrt)(static_cast<long>(dot)));
+        U root = static_cast<U>(SH_AT(long (__cdecl*)(long), at::kSqrt.v)(static_cast<long>(dot)));
         if (static_cast<std::int32_t>(root) > 0xFFF) root = 0xFFF;
         *shade = static_cast<unsigned char>(Sar(root, 7));
     }
@@ -777,7 +777,7 @@ extern "C" void __cdecl EffectKind4B_Scatter(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned i = 0; i < at::kDebrisCount; ++i) {
         unsigned char* const d = At(::bof3::Img(at::kDebris.v) + at::kDebrisStride * i);
-        SH_AT(void (__cdecl*)(unsigned char*), at::kDebrisDraw)(d);
+        SH_AT(void (__cdecl*)(unsigned char*), at::kDebrisDraw.v)(d);
         const unsigned char* const s = S();
         AddWord(d + 0x24, 0x10);
         AddWord(d + 0x2A, s[9] < 4 ? 0x20u : 0xFFFEu);
@@ -818,8 +818,8 @@ extern "C" void __cdecl EffectKind4B_DebrisInit(unsigned char* debris) {
     SH_CALL(Gte_RotMatrixY)(-static_cast<int>(static_cast<short>(ay)), m.m);
     SH_CALL(Gte_RotMatrixZ)(static_cast<short>(az), m.m);
     using Turn = void (__cdecl*)(const short*, const short*, short*);
-    SH_AT(Turn, at::kMatrixVector)(m.m, reinterpret_cast<const short*>(debris + 0x10), reinterpret_cast<short*>(debris + 0x10));
-    SH_AT(Turn, at::kMatrixVector)(m.m, reinterpret_cast<const short*>(debris + 0x18), reinterpret_cast<short*>(debris + 0x18));
+    SH_AT(Turn, at::kMatrixVector.v)(m.m, reinterpret_cast<const short*>(debris + 0x10), reinterpret_cast<short*>(debris + 0x10));
+    SH_AT(Turn, at::kMatrixVector.v)(m.m, reinterpret_cast<const short*>(debris + 0x18), reinterpret_cast<short*>(debris + 0x18));
     SetWord(debris + 0x28, (static_cast<U>(SH_CALL(Rand)()) & 0xFu) + 1u);
     SetWord(debris + 0x20, 0);
     SetWord(debris + 0x22, 0);
@@ -1048,7 +1048,7 @@ extern "C" void __cdecl EffectKind4E_Start(void) {
 namespace {
 // E2F's disc (0x47B7D0) at the record's screen point: radius (read as an s16;
 // the callers push a whole register), centre 0x80, rim 0.
-void Disc(unsigned radius) { SH_AT(void (__cdecl*)(unsigned, unsigned, unsigned), at::kDiscDraw)(radius, 0x80, 0); }
+void Disc(unsigned radius) { SH_AT(void (__cdecl*)(unsigned, unsigned, unsigned), at::kDiscDraw.v)(radius, 0x80, 0); }
 }  // namespace
 
 // original 0x47B6E0 (state 1): the disc, radius +9; +9 up 0xF; above 0x3C

@@ -14,23 +14,23 @@ namespace effect_1c::at {
 // Callees another group of round thirteen owns (analysis/round13_cut.tsv),
 // called through the harness by address (SH_AT) until the coordinator rebinds
 // them; or nobody's.
-constexpr std::uint32_t kShardSpawn = bof3::addr::EffectSpecks_Spawn;   // 0x471D10, E2A's (void): a free record of EffectKind30_Shards' 0x80 (+0 == 0) set
+constexpr ::bof3::image::CodeVa kShardSpawn{bof3::addr::EffectSpecks_Spawn};   // 0x471D10, E2A's (void): a free record of EffectKind30_Shards' 0x80 (+0 == 0) set
                                                   // round Sprite_Current's point - +0 1, +1 0x40, +2 a word 0x1000 +
                                                   // Rand & 0xFFF, +4 / +8 x / z at a random angle and Rand % the radius
                                                   // +0x2E, +0xC the height + (+0x30 << 16); al the index, 0x80 none
-constexpr std::uint32_t kShardTile = bof3::addr::EffectSpecks_Draw;    // 0x471E20, E2A's (unsigned char *shard): a white or black TILE_1 at the shard's
+constexpr ::bof3::image::CodeVa kShardTile{bof3::addr::EffectSpecks_Draw};    // 0x471E20, E2A's (unsigned char *shard): a white or black TILE_1 at the shard's
                                                   // point (+4..+0xF, EffectGte_ProjectPoint), linked at its x, z
-constexpr std::uint32_t kShardTile2 = bof3::addr::EffectKind1D_DrawSpeck;   // 0x46E190, R3E's (round fourteen; PSX twin 0x801F752C): the same
+constexpr ::bof3::image::CodeVa kShardTile2{bof3::addr::EffectKind1D_DrawSpeck};   // 0x46E190, R3E's (round fourteen; PSX twin 0x801F752C): the same
                                                   // TILE_1 committed by Gfx_CommitPrim(1, 0x14) instead of linked
-constexpr std::uint32_t kDebrisDraw = bof3::addr::EffectDebris_Draw;   // 0x485030, E3C's (unsigned char *debris): a G3 of the 0x2C-byte debris record,
+constexpr ::bof3::image::CodeVa kDebrisDraw{bof3::addr::EffectDebris_Draw};   // 0x485030, E3C's (unsigned char *debris): a G3 of the 0x2C-byte debris record,
                                                   // its point +0, two edges +0x10 / +0x18 turned by +0x24 and scaled by
                                                   // +0x28, the shade +0x2A clamped to a byte; Gfx_CommitPrim(1, 0x34)
-constexpr std::uint32_t kDebrisInit = bof3::addr::EffectDebris_InitOne;   // 0x4851E0, E3C's (unsigned char *debris): EffectKind1E_DebrisInitOne with the
+constexpr ::bof3::image::CodeVa kDebrisInit{bof3::addr::EffectDebris_InitOne};   // 0x4851E0, E3C's (unsigned char *debris): EffectKind1E_DebrisInitOne with the
                                                   // edges' angle 0x20 and the scale 8 + Rand % 8 (0x2C bytes written)
-constexpr std::uint32_t kCone = bof3::addr::Effect_DrawEllipse;         // 0x493090, E4F's (const long *point, w, h, angle - three s16 -, shade byte,
+constexpr ::bof3::image::CodeVa kCone{bof3::addr::Effect_DrawEllipse};         // 0x493090, E4F's (const long *point, w, h, angle - three s16 -, shade byte,
                                                   // flag byte): G3 triangles round the point's screen position, sized
                                                   // by EffectGte_ProjectSize (w, h) and turned by the angle
-constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV; // library layer (ours, psx_rest.cpp): (matrix, in, out) - an SVECTOR turned by
+constexpr ::bof3::image::CodeVa kMatrixVector{bof3::addr::Gte_ApplyMatrixSV}; // library layer (ours, psx_rest.cpp): (matrix, in, out) - an SVECTOR turned by
                                                   // the 3 x 3 (18 bytes read), 6 bytes written; in and out may be one
 
 // Data.

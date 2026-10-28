@@ -12,14 +12,14 @@ namespace effect_3a::at {
 
 // --- callees nobody of ours names, called by address (SH_AT) ------------------
 // Capcom's library layer and renderer (the effect-standard set lists both):
-constexpr std::uint32_t kStoreImage = bof3::addr::Gfx_StoreImage;   // (const short *rect, void *to): the VRAM rectangle (x, y, w, h,
+constexpr ::bof3::image::CodeVa kStoreImage{bof3::addr::Gfx_StoreImage};   // (const short *rect, void *to): the VRAM rectangle (x, y, w, h,
                                                    // s16) read back into `to` (effect_2c_callees.h kStoreImage)
-constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV;  // (matrix, in, out): an SVECTOR turned by the 3 x 3
+constexpr ::bof3::image::CodeVa kMatrixVector{bof3::addr::Gte_ApplyMatrixSV};  // (matrix, in, out): an SVECTOR turned by the 3 x 3
                                                    // (effect_2e_callees.h kMatrixVector)
 // Group E4F's (wave four), rebound to its names (the values unchanged):
-constexpr std::uint32_t kSparkSpawn = bof3::addr::EffectKindB9_SpawnSpark;    // 0x493B50, (void): the first free of the eight sparks at 0x92BF80 in use at
+constexpr ::bof3::image::CodeVa kSparkSpawn{bof3::addr::EffectKindB9_SpawnSpark};    // 0x493B50, (void): the first free of the eight sparks at 0x92BF80 in use at
                                                    // Sprite_Current's point, life 0x10, size 0x100, colours 0x40 / 0
-constexpr std::uint32_t kShardDraw = bof3::addr::EffectKindB9_DrawShard;     // 0x493C60, (unsigned char *shard): one shard of 0x2C (EffectKind64_InitShard's)
+constexpr ::bof3::image::CodeVa kShardDraw{bof3::addr::EffectKindB9_DrawShard};     // 0x493C60, (unsigned char *shard): one shard of 0x2C (EffectKind64_InitShard's)
                                                    // drawn, a POLY_G3; reads it to +0x2B, writes nothing of it
 
 // --- the shared buffer at 0x92BF80 (EffectKind30_Shards and after) -----------

@@ -106,7 +106,7 @@ constexpr unsigned kArea59EffectStateCount = 2;
 // 0x4220D0 (0x27A bytes, area band, group AR3F's block; area_w0c's
 // kPositionHook): takes a pointer to three dwords (x, z, y) - area 59's
 // effect step hands it the object's position on the stack.
-constexpr std::uint32_t kPositionHook = bof3::addr::Area146_DrawGlowCylinder;
+constexpr ::bof3::image::CodeVa kPositionHook{bof3::addr::Area146_DrawGlowCylinder};
 
 }  // namespace at
 }  // namespace area_w1d

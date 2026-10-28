@@ -111,13 +111,13 @@ constexpr unsigned kGridX = 0x94, kGridZ = 0x20, kGridSide = 4;
 
 // 0x57CD90: a free Sprite_Objects index 0..0x1D in al, 0xFF none
 // (docs/scena_sc3.md).
-constexpr std::uint32_t kFreeObject = bof3::addr::Sprite_FindFree;
+constexpr ::bof3::image::CodeVa kFreeObject{bof3::addr::Sprite_FindFree};
 // 0x591900 (u8 id): the id into the first free of the 32 key-item bytes
 // (docs/scena_sc6.md).
-constexpr std::uint32_t kKeyItemAdd = bof3::addr::KeyItem_Add;
+constexpr ::bof3::image::CodeVa kKeyItemAdd{bof3::addr::KeyItem_Add};
 // 0x591B60 (category, item, count, 0): the inventory take (round10 doc
 // section 7).
-constexpr std::uint32_t kInventoryTake = bof3::addr::Inventory_Remove;
+constexpr ::bof3::image::CodeVa kInventoryTake{bof3::addr::Inventory_Remove};
 
 }  // namespace at
 }  // namespace area_w1a

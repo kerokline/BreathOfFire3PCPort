@@ -190,7 +190,7 @@ constexpr Call kMsgOutCalls[] = {{0x33, bof3::addr::BattleWin_DrawMessageBox}, {
 
 const Imm kBannerImms[] = {
     {0x0F, bof3::addr::BattleWin_BannerSlideIn, &StubHandler<10>},
-    {0x17, kNop, &StubHandler<11>},
+    {0x17, kNop.v, &StubHandler<11>},
     {0x22, bof3::addr::BattleWin_BannerSlideOut, &StubHandler<12>},
 };
 const Imm kMessageImms[] = {

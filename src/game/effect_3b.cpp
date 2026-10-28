@@ -172,8 +172,8 @@ unsigned char* Spawned(const char* who, U answer) {
 unsigned char* Parent() { return EffectKind69_Parent; }
 unsigned char* Spark() { return reinterpret_cast<unsigned char*>(Effect3c_ShardCursor); }
 
-void ScreenTint() { SH_AT(void (__cdecl*)(), at::kScreenTint)(); }
-void Kind69Lines() { SH_AT(void (__cdecl*)(), at::kKind69Lines)(); }
+void ScreenTint() { SH_AT(void (__cdecl*)(), at::kScreenTint.v)(); }
+void Kind69Lines() { SH_AT(void (__cdecl*)(), at::kKind69Lines.v)(); }
 
 // The point +0x34 projected into the floats +0x74.. (EffectGte_ProjectPoint).
 void ProjectHere() {

@@ -426,7 +426,7 @@ namespace {
 // The end of states 1..4: the tile (E4D's 0x48CA90), then a tail jump to
 // EffectKind85_ShowObjects.
 void FadeAndShow() {
-    SH_AT(Handler, at::kFade)();
+    SH_AT(Handler, at::kFade.v)();
     SH_CALL(EffectKind85_ShowObjects)();
 }
 }  // namespace
@@ -607,7 +607,7 @@ extern "C" void __cdecl EffectKind87_Run(void) {
 extern "C" void __cdecl EffectKind87_Start(void) {
     S()[6] = Draw_PassFlags;
     Draw_PassFlags = 0x1B;
-    SH_AT(Handler, at::kKind87Setup)();
+    SH_AT(Handler, at::kKind87Setup.v)();
     unsigned char* const s = S();
     Effect4b_SoundIndex = 0;
     s[1] = static_cast<unsigned char>(s[1] + 1);
@@ -616,16 +616,16 @@ extern "C" void __cdecl EffectKind87_Start(void) {
 // original 0x488FB0 (state 1): E4B's 0x489220 answered 0 (al): E4B's 0x4891F0,
 // Sound_PlayEffect(0x203), +1 up one.
 extern "C" void __cdecl EffectKind87_Step1(void) {
-    const unsigned char going = SH_AT(unsigned char (__cdecl*)(), at::kKind87Step)();
+    const unsigned char going = SH_AT(unsigned char (__cdecl*)(), at::kKind87Step.v)();
     if (going != 0) return;
-    SH_AT(Handler, at::kKind87Reset)();
+    SH_AT(Handler, at::kKind87Reset.v)();
     SH_CALL(Sound_PlayEffect)(0x203);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 
 // original 0x488FE0 (state 2): 0x489220 answered 0: +1 up one.
 extern "C" void __cdecl EffectKind87_Step2(void) {
-    const unsigned char going = SH_AT(unsigned char (__cdecl*)(), at::kKind87Step)();
+    const unsigned char going = SH_AT(unsigned char (__cdecl*)(), at::kKind87Step.v)();
     if (going == 0) S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 

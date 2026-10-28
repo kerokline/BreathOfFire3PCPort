@@ -768,7 +768,7 @@ extern "C" void __cdecl EffectKind55_Finish(void) {
 // (Text_DrawFont12 at (0x7D, 0x3B)); then the scratch made "." and drawn at
 // (0x95, 0x39) and (0x95, 0x3D) - a colon.
 extern "C" void __cdecl EffectKind55_DrawTime(void) {
-    SH_AT(void (__cdecl*)(int, int, int, int, int), at::kBox)(0x78, 0x38, 0x46, 0x14, 1);
+    SH_AT(void (__cdecl*)(int, int, int, int, int), at::kBox.v)(0x78, 0x38, 0x46, 0x14, 1);
     unsigned char* const s = S();
     const int hundredths = S8(s[0x5D]) * 100 / 30;
     const int seconds = S8(s[0x5E]);
@@ -786,7 +786,7 @@ extern "C" void __cdecl EffectKind55_DrawTime(void) {
 // (0xCD, 0xA3); the text 0x66A094 at (0xE5, 0xA4) by Text_DrawAt (colour 0, all
 // of it).
 extern "C" void __cdecl EffectKind55_DrawCount(void) {
-    SH_AT(void (__cdecl*)(int, int, int, int, int), at::kBox)(0xC8, 0xA0, 0x2E, 0x14, 1);
+    SH_AT(void (__cdecl*)(int, int, int, int, int), at::kBox.v)(0xC8, 0xA0, 0x2E, 0x14, 1);
     char* const text = reinterpret_cast<char*>(At(::bof3::Img(at::kText.v)));
     SH_CALL(Crt_sprintf)(text, Boss26Fx_CountFormat, static_cast<unsigned>(B(::bof3::Img(at::kScore.v))));
     SH_CALL(Text_DrawFont12)(0xCD, 0xA3, 0, reinterpret_cast<const unsigned char*>(text));
@@ -974,7 +974,7 @@ extern "C" void __cdecl EffectKind5B_DrawBeam(unsigned length, unsigned abr) {
     SetWord(rect + 2, 0x40);
     SetWord(rect + 4, 0x10);
     SetWord(rect + 6, 0x10);
-    SH_AT(Rect, at::kPrimFromRect)(Gfx_PacketNext, rect);
+    SH_AT(Rect, at::kPrimFromRect.v)(Gfx_PacketNext, rect);
     unsigned char* s = S();
     SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 1, 0xC);
     const U d = (length & 0xFFFF) << 15;
@@ -1029,7 +1029,7 @@ extern "C" void __cdecl EffectKind5B_DrawBeam(unsigned length, unsigned abr) {
     SetWord(rect + 2, 0);
     SetWord(rect + 4, 0x100);
     SetWord(rect + 6, 0x100);
-    SH_AT(Rect, at::kPrimFromRect)(Gfx_PacketNext, rect);
+    SH_AT(Rect, at::kPrimFromRect.v)(Gfx_PacketNext, rect);
     s = S();
     SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 1, 0xC);
 }

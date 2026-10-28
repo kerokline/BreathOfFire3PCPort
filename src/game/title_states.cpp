@@ -34,9 +34,9 @@ constexpr ::bof3::image::Va kScenarioBytes{0x8034E0};  // Cond_ByteFA and the ni
 // kSubState: now ScenaSc7_DrawPool (symbols.toml). the dispatcher 0x56D8B0's bytes (PSX 0x801448E4)
 // kSubInitTable: now Scenario_SubInitTable (symbols.toml). 16 bytes Scenario_SubInit copies (PSX 0x801C94A4)
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, where they go (PSX 0x80144F24)
-constexpr std::uint32_t kDemoEntry = bof3::addr::Field_Task;      // task 0's entry for the demo (the field task)
-constexpr std::uint32_t kMenuEntry = bof3::addr::TitleTask_Run;      // task 0's entry for the title menu
-constexpr std::uint32_t kModeDispatch = bof3::addr::Field_ModeDispatch;   // Field_ModeDispatch, another file's: called by address
+constexpr ::bof3::image::CodeVa kDemoEntry{bof3::addr::Field_Task};      // task 0's entry for the demo (the field task)
+constexpr ::bof3::image::CodeVa kMenuEntry{bof3::addr::TitleTask_Run};      // task 0's entry for the title menu
+constexpr ::bof3::image::CodeVa kModeDispatch{bof3::addr::Field_ModeDispatch};   // Field_ModeDispatch, another file's: called by address
 const std::uint32_t kCondFlags = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Cond_Flags));
 
 // DIVERGENCE DIV-0131 (D256): on a PSP base (a PSP-only install, the cache's
@@ -95,7 +95,7 @@ const Callees kOriginals = {
     Port_DroppedCall, LoadDatFile, File_LoadDone, Task_Sleep, Gfx_ClutStripRestore, Music_Play, Transition_Start,
     Title_FadeMusic, Title_StopMusic, Effect_ClearAll, Scenario_Start, Task_Create, Music_FadeOut, Music_FadeOutStop,
     Title_DrawBadge, Task_Exit, Gpu_SetDrawMode, Gfx_CommitPrim, Title_Sprite, Prim_SetShade, Scenario_Load,
-    Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kModeDispatch))),
+    Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kModeDispatch.v))),
 };
 Callees g = kOriginals;
 
@@ -202,7 +202,7 @@ extern "C" void __cdecl Title_StateStartDemo(void) {
     At(::bof3::Img(kPlayClock.v))[0] = 0;
     Draw_PassFlags = 0;
     g.scenario_start(0x10);
-    g.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(kDemoEntry)));
+    g.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kDemoEntry.v))));
     BumpState();
 }
 
@@ -251,7 +251,7 @@ extern "C" void __cdecl Title_StateMenu(void) {
     if (Transition_Busy != 0) return;
     g.stop_music();
     g.dropped(0);
-    g.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(kMenuEntry)));
+    g.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kMenuEntry.v))));
     g.task_exit();
 }
 

@@ -76,9 +76,9 @@ Handler StateEntry(const char* who, const char* what, U table, unsigned count, u
 }
 
 // Area 85's shift of CLUT row 6, called by its init by the original address.
-constexpr U kClutShift85 = bof3::addr::Area85_ClutShift;
+constexpr ::bof3::image::CodeVa kClutShift85{bof3::addr::Area85_ClutShift};
 // Area 86's member test, called by its cell hook.
-constexpr U kMemberNear86 = bof3::addr::Area86_MemberNear;
+constexpr ::bof3::image::CodeVa kMemberNear86{bof3::addr::Area86_MemberNear};
 using ShiftFn = void (__cdecl*)(int);
 using NearFn = unsigned char (__cdecl*)(unsigned, unsigned);
 using ObjectFn = void (__cdecl*)(unsigned char*);
@@ -193,15 +193,15 @@ extern "C" void __cdecl Area85_SetUpObject(void) {
 // script 0x611814) - a new one started (its slot not read);
 // Sprite_SetAnimation(0).
 extern "C" void __cdecl Area85_StartSlotScript(void) {
-    AH_AT(ObjectFn, area_w2b::kSlotsReleaseFor)(Cur());
-    AH_AT(SlotFn, area_w2b::kSlotStart)(Cur(), At(::bof3::Img(at::kA85SlotScript.v)));
+    AH_AT(ObjectFn, area_w2b::kSlotsReleaseFor.v)(Cur());
+    AH_AT(SlotFn, area_w2b::kSlotStart.v)(Cur(), At(::bof3::Img(at::kA85SlotScript.v)));
     AH_CALL(Sprite_SetAnimation)(0);
 }
 
 // original 0x40F990 (area 85's handler 7, and area 198's handler 3: one body,
 // in area 85's block): 0x454A80(Sprite_Current) - the object's Field_Slots
 // scripts released.
-extern "C" void __cdecl Area85_ReleaseSlots(void) { AH_AT(ObjectFn, area_w2b::kSlotsReleaseFor)(Cur()); }
+extern "C" void __cdecl Area85_ReleaseSlots(void) { AH_AT(ObjectFn, area_w2b::kSlotsReleaseFor.v)(Cur()); }
 
 // original 0x40F9A0 (area 85's handler 8): the word Sprite_Current +0x3E +=
 // 0x18.
@@ -215,7 +215,7 @@ extern "C" void __cdecl Area85_Sound201(void) {
 
 // original 0x40F9D0 (area 85's init, its descriptor 0x6117A8's +0x40):
 // Area85_ClutShift(-8).
-extern "C" void __cdecl Area85_Init(void) { AH_AT(ShiftFn, kClutShift85)(-8); }
+extern "C" void __cdecl Area85_Init(void) { AH_AT(ShiftFn, kClutShift85.v)(-8); }
 
 // original 0x40F9E0 (called by Area85_Init with -8, and by engine code at
 // 0x478649 - an effect state's frame, with its record's dword +0x10): for
@@ -263,14 +263,14 @@ extern "C" unsigned char __cdecl Area86_SwitchHook(unsigned x, unsigned z) {
     const unsigned char* const rect = At(::bof3::Img(Area86_Rects_addr) + k * 4);
     for (std::int32_t cx = rect[0]; cx < rect[2]; ++cx) {
         for (std::int32_t cz = rect[1]; cz < rect[3]; ++cz) {
-            const auto near = static_cast<signed char>(AH_AT(NearFn, kMemberNear86)(static_cast<unsigned>(cx), static_cast<unsigned>(cz)));
+            const auto near = static_cast<signed char>(AH_AT(NearFn, kMemberNear86.v)(static_cast<unsigned>(cx), static_cast<unsigned>(cz)));
             if (near >= 0) return 0;
         }
     }
     if (AH_CALL(Flags_Test)(Bank(), 0x1C) != 0) return 0;
-    AH_AT(BitsFn, area_w2b::kFlagsToggle)(Bank(), At(::bof3::Img(Area86_Switches_addr) + 3 + k * 4)[0]);
+    AH_AT(BitsFn, area_w2b::kFlagsToggle.v)(Bank(), At(::bof3::Img(Area86_Switches_addr) + 3 + k * 4)[0]);
     AH_CALL(Sound_PlayEffect)(0x200);
-    AH_AT(ValueFn, area_w2b::kSpawnKind4)(0xF);
+    AH_AT(ValueFn, area_w2b::kSpawnKind4.v)(0xF);
     return 1;
 }
 

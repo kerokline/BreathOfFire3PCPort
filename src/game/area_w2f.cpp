@@ -1200,7 +1200,7 @@ extern "C" void __cdecl Area112_EffectRing(void) {
     point[1] = tCur->z;
     point[2] = tCur->height;
     point[3] = 0;
-    AH_AT(void (__cdecl*)(const long*), at::kRingAt)(point);
+    AH_AT(void (__cdecl*)(const long*), at::kRingAt.v)(point);
 }
 
 // ===========================================================================

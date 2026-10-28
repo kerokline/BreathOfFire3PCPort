@@ -196,10 +196,10 @@ const sh::Callee kCallees[] = {
     {E6B_OURS(EffectKind18Sub40_Draw), 1, {kW}, kG, 0, 0},
     {E6B_OURS(EffectKind18Sub41_Draw), 2, {kW, kW}, kG, 0, 0},
     // group E6A's (wave six), raw: void, on Sprite_Current
-    {"0x50E1C0", at::kE6ADraw, at::kE6ADraw, 0, {}, kG, 0, 0, {}, &FxCurrent},
+    {"0x50E1C0", at::kE6ADraw.v, at::kE6ADraw.v, 0, {}, kG, 0, 0, {}, &FxCurrent},
     // group E6C's (wave six), raw: void
-    {"0x510C90", at::kE6CStep, at::kE6CStep, 0, {}, kPh, 0, 0},
-    {"0x510EB0", at::kE6CTail, at::kE6CTail, 0, {}, kPh, 0, 0},
+    {"0x510C90", at::kE6CStep.v, at::kE6CStep.v, 0, {}, kPh, 0, 0},
+    {"0x510EB0", at::kE6CTail.v, at::kE6CTail.v, 0, {}, kPh, 0, 0},
 };
 #undef E6B_RAW
 #undef E6B_OURS

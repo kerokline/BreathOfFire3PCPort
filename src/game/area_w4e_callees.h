@@ -154,14 +154,14 @@ constexpr std::uint32_t kEventOpRecord = 0x11;           // one EventOp_0x recor
 // 0x511C10 (long x, long z): the map's height at (x, z) from the area block's
 // corner table (AreaMap_Corners), answered in ax (the callers sign-extend it).
 // Engine; no group's.
-constexpr std::uint32_t kHeightAt = bof3::addr::AreaMap_CornerHeight;   // 0x511C10, E6C's
+constexpr ::bof3::image::CodeVa kHeightAt{bof3::addr::AreaMap_CornerHeight};   // 0x511C10, E6C's
 // 0x42C2D0 (no arguments): area 192's block (group AR4F's band this wave):
 // each of eight actor records (CharacterRecords) with bit 0 of +0xB has its
 // words +0x20 / +0x22 copied to +0x18 / +0x1A and its word +0x10 cleared;
 // then each of Field_MemberCount's party lists' actors is copied whole (0xA4
 // bytes) to its party record's +0x80. Called raw by area 191's tail kind 53,
 // state 3.
-constexpr std::uint32_t kRestoreRecords = bof3::addr::Area192_RestoreCharacters;
+constexpr ::bof3::image::CodeVa kRestoreRecords{bof3::addr::Area192_RestoreCharacters};
 
 }  // namespace at
 }  // namespace area_w4e

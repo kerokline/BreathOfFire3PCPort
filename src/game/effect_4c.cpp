@@ -309,7 +309,7 @@ extern "C" void __cdecl EffectKind8D_Start(void) {
 
 // original 0x48B280 (state 1): a tail jump to E4D's screen tint 0x48CA90 (the
 // tint held; nothing here moves +1 on).
-extern "C" void __cdecl EffectKind8D_Hold(void) { SH_AT(VoidFn, at::kScreenTile)(); }
+extern "C" void __cdecl EffectKind8D_Hold(void) { SH_AT(VoidFn, at::kScreenTile.v)(); }
 
 // original 0x48B290 (state 2): +9 down; not 0: Camera_Distance - 0x2A and,
 // while +0x5D is not 0, the tint +0x5D / +0x5E / +0x5F each down one (+0x5D
@@ -334,7 +334,7 @@ extern "C" void __cdecl EffectKind8D_Pull(void) {
         s[1] = 3;
     }
     MapView_Redraw = 2;
-    SH_AT(VoidFn, at::kScreenTile)();
+    SH_AT(VoidFn, at::kScreenTile.v)();
 }
 
 // original 0x48B2F0 (state 3): the byte after MoveScript_Var7 (0x8034E5) up;
@@ -431,7 +431,7 @@ extern "C" void __cdecl EffectKind8E_DrawChip(unsigned char* p) {
     DrawMode(1, 0x3C0, 0, 0);
     SH_CALL(MapView_LinkPrimAt)(UL(p + 0x18), UL(p + 0x1C), -2, 0xC);
     unsigned char* const prim = Gfx_PacketNext;
-    SH_AT(RecordFn, at::kPolyF3)(prim);
+    SH_AT(RecordFn, at::kPolyF3.v)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
     SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(p + 0x18), reinterpret_cast<float*>(prim + 8));
     const unsigned k = p[4];
@@ -1067,7 +1067,7 @@ extern "C" void __cdecl EffectKind99_DrawFan(const long* point, long radius, uns
         const U lz = static_cast<U>(point[1]) + static_cast<U>(dz);
         SH_CALL(MapView_LinkPrimAt)(lx, lz, 0, 0x38);
         unsigned char* const prim = Gfx_PacketNext;
-        SH_AT(RecordFn, at::kPolyF3)(prim);
+        SH_AT(RecordFn, at::kPolyF3.v)(prim);
         SH_CALL(Gpu_SetSemiTrans)(prim, 1);
         std::memcpy(prim + 8, centre, 12);
         std::memcpy(prim + 0x14, edge, 12);

@@ -69,8 +69,8 @@ constexpr ::bof3::image::Va kRepeatLatch{0x7E01B8};   // u16
 
 }  // namespace at
 
-constexpr std::uint32_t kSystemChoice = bof3::addr::MsgBox_SystemChoice;  // MsgBox_SystemChoice (docs/item-use.md)
-constexpr std::uint32_t kInventoryAdd = bof3::addr::Inventory_Add;  // Inventory_Add; called with a fourth dword it does not read
+constexpr ::bof3::image::CodeVa kSystemChoice{bof3::addr::MsgBox_SystemChoice};  // MsgBox_SystemChoice (docs/item-use.md)
+constexpr ::bof3::image::CodeVa kInventoryAdd{bof3::addr::Inventory_Add};  // Inventory_Add; called with a fourth dword it does not read
 
 using Handler = unsigned char (__cdecl*)(unsigned, unsigned);
 using Choice = void (__cdecl*)();

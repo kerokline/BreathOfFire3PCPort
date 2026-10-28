@@ -928,9 +928,9 @@ extern "C" void __cdecl EffectKind18_08_DrawTilted(unsigned angle) {
 extern "C" void __cdecl EffectKind18_09_Pattern(void) {
     static const char kWho[] = "EffectKind18_09_Pattern";
     using Fn = U(__cdecl*)();
-    const U pattern = SH_AT(Fn, at::kPattern)();
+    const U pattern = SH_AT(Fn, at::kPattern.v)();
     if (static_cast<U>(S()[2]) != pattern) {
-        const U again = SH_AT(Fn, at::kPattern)();
+        const U again = SH_AT(Fn, at::kPattern.v)();
         S()[2] = static_cast<unsigned char>(again);
         unsigned char* const s = S();
         rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, Word(At(::bof3::Img(at::kHeights9.v) + 2 * static_cast<U>(Index(kWho, s[2], at::kPatterns, at::kHeights9.v)))));

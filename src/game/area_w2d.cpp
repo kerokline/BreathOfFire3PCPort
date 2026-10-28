@@ -65,7 +65,7 @@ Handler StateEntry(const char* who, U table, unsigned count, unsigned index) {
 
 // The callee nobody owns (area_w2d_callees.h): story-flag toggle.
 void FlagsToggle(unsigned char* bits, unsigned index) {
-    AH_AT(void (__cdecl*)(unsigned char*, unsigned), at::kFlagsToggle)(bits, index);
+    AH_AT(void (__cdecl*)(unsigned char*, unsigned), at::kFlagsToggle.v)(bits, index);
 }
 // The map byte setter, as the originals pass it: x and z words, a value byte.
 void SetByte(unsigned x, unsigned z, unsigned value) { AH_CALL(AreaMap_SetByte)(x, z, value); }
@@ -767,7 +767,7 @@ extern "C" void __cdecl Area100_EffectB7Ring(void) {
     point[1] = tCur->z;
     point[2] = tCur->height;
     point[3] = 0;
-    AH_AT(void (__cdecl*)(const long*), at::kRingAt)(point);
+    AH_AT(void (__cdecl*)(const long*), at::kRingAt.v)(point);
 }
 
 // ===========================================================================

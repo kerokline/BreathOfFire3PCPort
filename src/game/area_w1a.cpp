@@ -263,7 +263,7 @@ extern "C" void __cdecl Area39_SwapKeyItemE(void) {
             B(::bof3::Img(at::kKeyItems.v) + i) = 4;
             return;
         }
-    AH_AT(void (__cdecl*)(unsigned), at::kKeyItemAdd)(4);
+    AH_AT(void (__cdecl*)(unsigned), at::kKeyItemAdd.v)(4);
 }
 
 // original 0x405750 (Area39_Handlers[13], also area 130's +0x3C[4]; PSX
@@ -284,7 +284,7 @@ extern "C" void __cdecl Area39_Counter1Not4(void) { B(::bof3::Img(at::kCounter1.
 // the running script's position back 2 (the op again next frame); else event
 // op Area40_PlaceOp places it.
 extern "C" void __cdecl Area40_PlaceObject(void) {
-    const unsigned char free = AH_AT(unsigned char (__cdecl*)(), at::kFreeObject)();
+    const unsigned char free = AH_AT(unsigned char (__cdecl*)(), at::kFreeObject.v)();
     SetWord(Mem(::bof3::Img(at::kScratchWord.v)), free);
     if (free == 0xFF) {
         AddWord(MoveScript_Object + 0xA, -2);
@@ -633,7 +633,7 @@ extern "C" void __cdecl Area41_ChoiceTrade(void) {
             B(::bof3::Img(AreaW0c_AnswerMark_addr)) = 6;
             return;
         }
-    for (unsigned item : kItems) AH_AT(void (__cdecl*)(unsigned, unsigned, unsigned, unsigned), at::kInventoryTake)(0, item, 1, 0);
+    for (unsigned item : kItems) AH_AT(void (__cdecl*)(unsigned, unsigned, unsigned, unsigned), at::kInventoryTake.v)(0, item, 1, 0);
     SetMessage(0x62);
 }
 

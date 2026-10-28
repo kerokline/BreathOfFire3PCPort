@@ -354,7 +354,7 @@ extern "C" void __cdecl EffectKind33_DrawQuarter(const long* centre, long radius
         const auto z = static_cast<unsigned long>(static_cast<U>(centre[1]) + static_cast<U>(dz));
         SH_CALL(MapView_LinkPrimAt)(x, z, 0, 0x38);
         unsigned char* const prim = Gfx_PacketNext;
-        SH_AT(void (__cdecl*)(unsigned char*), at::kSetPolyF3)(prim);
+        SH_AT(void (__cdecl*)(unsigned char*), at::kSetPolyF3.v)(prim);
         SH_CALL(Gpu_SetSemiTrans)(prim, 1);
         std::memcpy(prim + 8, mid, 12);
         std::memcpy(prim + 0x14, edge, 12);
@@ -934,7 +934,7 @@ extern "C" void __cdecl EffectKind3B_DrawSpiral(unsigned char* spiral) {
         q[2] = static_cast<long>(UL(spiral + 8));
         long d[3] = {static_cast<long>(static_cast<U>(q[0]) - last_x), static_cast<long>(static_cast<U>(q[1]) - last_z), 0};
         const long squared = SH_CALL(Gte_VectorNormal)(d, d);
-        length += SH_AT(U (__cdecl*)(long), at::kSqrt)(squared);
+        length += SH_AT(U (__cdecl*)(long), at::kSqrt.v)(squared);
         const long perp[3] = {static_cast<long>(0u - static_cast<U>(d[1])), d[0], 0};
         long edge[3];
         edge[0] = static_cast<long>(static_cast<U>(q[0]) + static_cast<U>(MulSar(Spread(length), static_cast<U>(perp[0]), 12)));

@@ -77,7 +77,7 @@ void ChoiceMessageCounter0(std::uint32_t table, unsigned char on0, unsigned char
 
 // The story-flag toggle nobody owns (area_w2a_callees.h).
 void FlagsToggle(unsigned char* bits, unsigned index) {
-    AH_AT(void (__cdecl*)(unsigned char*, unsigned), at::kFlagsToggle)(bits, index);
+    AH_AT(void (__cdecl*)(unsigned char*, unsigned), at::kFlagsToggle.v)(bits, index);
 }
 
 // Area 77's ten spawns (as area 49's SpawnAtMember, docs/area_w1c.md):
@@ -155,7 +155,7 @@ extern "C" int __cdecl Area77_CellHook(long x, long z) {
     if (AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C)) return 0;
     FlagsToggle(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), B(::bof3::Img(Area77_CellSwitches_addr) + i * 4u + 3));
     AH_CALL(Sound_PlayEffect)(0x201);
-    AH_AT(void (__cdecl*)(unsigned), at::kSpawnKind4)(0xF);
+    AH_AT(void (__cdecl*)(unsigned), at::kSpawnKind4.v)(0xF);
     return 1;
 }
 

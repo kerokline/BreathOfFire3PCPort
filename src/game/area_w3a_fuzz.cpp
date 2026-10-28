@@ -567,7 +567,7 @@ static_assert(k116Ring + 1 == AH_COUNT(kClones116), "area 116's seeding indices"
 const ah::Callee kCallees116[] = {
     kSet40,
     // the point's three dwords read through the pointer (docs/area_w2d.md)
-    {"RingAt_4220D0", kRingAt, kRingAt, 1, {0}, ah::Answer::kGarbage, 0, 0, {12}},
+    {"RingAt_4220D0", kRingAt.v, kRingAt.v, 1, {0}, ah::Answer::kGarbage, 0, 0, {12}},
 };
 const ah::DataTable kTables116[] = {{0x620664, 2}};   // Area116_EffectStates
 const ah::Region kRegions116[] = {{AreaW0c_AnswerMark_addr, 1}};

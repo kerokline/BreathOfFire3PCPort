@@ -321,8 +321,8 @@ const sh::Callee kCallees[] = {
     // points (the effect-standard row writes 8 at each: this caller's are the
     // ring's projections, which the real one only reads); the read-back's
     // rectangle hashed and its target logged and filled
-    {"0x4941B0", at::kWinding, at::kWinding, 3, {0, 0, 0}, kG, 0, 0, {8, 8, 8}, nullptr, nullptr, true},
-    {"Gfx_StoreImage", at::kStoreImage, at::kStoreImage, 2, {0, kW}, kG, 0, 0, {8, 0}, &FxStoreImage, nullptr, true},
+    {"0x4941B0", at::kWinding.v, at::kWinding.v, 3, {0, 0, 0}, kG, 0, 0, {8, 8, 8}, nullptr, nullptr, true},
+    {"Gfx_StoreImage", at::kStoreImage.v, at::kStoreImage.v, 2, {0, kW}, kG, 0, 0, {8, 0}, &FxStoreImage, nullptr, true},
 };
 #undef E2C_OURS
 

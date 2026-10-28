@@ -159,10 +159,10 @@ const sh::Callee kCallees[] = {
     // the group's own, called by name: kind 0x85's tail
     {E4A_OURS(EffectKind85_ShowObjects), 0, {}, kPh, 0, 0},
     // later groups' of the round, by address (docs/effect_4a.md section 8)
-    {"0x48CA90 (E4D)", at::kFade, at::kFade, 0, {}, kG, 0, 0, {}, &FxFade},
-    {"0x489030 (E4B)", at::kKind87Setup, at::kKind87Setup, 0, {}, kPh, 0, 0},
-    {"0x489220 (E4B)", at::kKind87Step, at::kKind87Step, 0, {}, kF, 0, 0},
-    {"0x4891F0 (E4B)", at::kKind87Reset, at::kKind87Reset, 0, {}, kPh, 0, 0},
+    {"0x48CA90 (E4D)", at::kFade.v, at::kFade.v, 0, {}, kG, 0, 0, {}, &FxFade},
+    {"0x489030 (E4B)", at::kKind87Setup.v, at::kKind87Setup.v, 0, {}, kPh, 0, 0},
+    {"0x489220 (E4B)", at::kKind87Step.v, at::kKind87Step.v, 0, {}, kF, 0, 0},
+    {"0x4891F0 (E4B)", at::kKind87Reset.v, at::kKind87Reset.v, 0, {}, kPh, 0, 0},
     // re-listed: the field-standard row leaves Sprite_Current where it was
     {E4A_OURS(EventOp_0x), 1, {kW}, kG, 0, 0, {16}, &FxPlace, nullptr, true},
 };

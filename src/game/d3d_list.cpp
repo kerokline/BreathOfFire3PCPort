@@ -27,7 +27,7 @@ const Callees kOriginals = {
     {
         // the software surfaces, first table 0x59F2A0
         H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
-        H(0x5A42E0), H(kRetOnly), H(kRetOnly), H(kRetOnly), H(kRetOnly), H(kRetOnly), H(kRetOnly),
+        H(0x5A42E0), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v),
         H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
     },
     {

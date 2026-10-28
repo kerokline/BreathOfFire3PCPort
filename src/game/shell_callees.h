@@ -52,7 +52,7 @@ constexpr U kDriveCdrom = 5;          // DRIVE_CDROM
 
 // The sound set-up Game_Init calls (0x4FD144), not ours and not named
 // tonight: the platform round's sound group reads it (docs/shell.md section 6).
-constexpr U kSoundSetup = bof3::addr::Snd_Init;   // ours since group PS (the same night), the value unchanged
+constexpr ::bof3::image::CodeVa kSoundSetup{bof3::addr::Snd_Init};   // ours since group PS (the same night), the value unchanged
 
 using DriveTypeFn = unsigned (__stdcall*)(const char* root);   // GetDriveTypeA
 

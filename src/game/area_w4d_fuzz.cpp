@@ -334,7 +334,7 @@ const ah::Callee kCallees[] = {
     {W4D_OURS(ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &Set40Effect},
     {W4D_OURS(Area131_DisarmTail), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesReturnPoint},
     // Capcom's, unnamed: the engine's field reset
-    {"FieldReset_455450", at::kFieldReset, at::kFieldReset, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &FieldResetEffect},
+    {"FieldReset_455450", at::kFieldReset.v, at::kFieldReset.v, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &FieldResetEffect},
     // the draw: the vertex by its six bytes, the tile by its address in the
     // buffer, the depth local not at all; the CRT's _ftol the originals'
     // own (both copies keep it)

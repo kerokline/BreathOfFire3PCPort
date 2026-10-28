@@ -12,15 +12,15 @@ namespace effect_4e::at {
 
 // --- callees nobody of ours names, called by address (SH_AT) ------------------
 // Catalog part 6 rows ("Scenario effects"), in no group of round thirteen:
-constexpr std::uint32_t kTrail9C = bof3::addr::EffectKind9C_DrawTrail;     // (const long *from, const long *to, unsigned char shade): two
+constexpr ::bof3::image::CodeVa kTrail9C{bof3::addr::EffectKind9C_DrawTrail};     // (const long *from, const long *to, unsigned char shade): two
                                                  // POLY_G4 and TILE_1 dots between the two points projected
                                                  // (the effect-standard row: both points 12 read, the byte)
-constexpr std::uint32_t kGlowA7 = bof3::addr::EffectKindA7_DrawGlow;      // (const long *point, short size, unsigned char colour): a glow
+constexpr ::bof3::image::CodeVa kGlowA7{bof3::addr::EffectKindA7_DrawGlow};      // (const long *point, short size, unsigned char colour): a glow
                                                  // of 32 POLY_G3 (EffectKindA0_DrawGlow's form, slot 7)
-constexpr std::uint32_t kDiscA9 = bof3::addr::EffectKindA9_DrawDisc;      // (short x, short y, unsigned char shade): a disc of POLY_G3 on
+constexpr ::bof3::image::CodeVa kDiscA9{bof3::addr::EffectKindA9_DrawDisc};      // (short x, short y, unsigned char shade): a disc of POLY_G3 on
                                                  // screen (two words read, the third pushed 0x80)
 // Capcom's library layer (the effect-standard set lists it):
-constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV;  // (matrix, in, out): an SVECTOR turned by the 3 x 3
+constexpr ::bof3::image::CodeVa kMatrixVector{bof3::addr::Gte_ApplyMatrixSV};  // (matrix, in, out): an SVECTOR turned by the 3 x 3
                                                    // (effect_3a_callees.h kMatrixVector)
 
 // --- the image's cells ---------------------------------------------------------

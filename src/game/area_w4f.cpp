@@ -83,14 +83,14 @@ unsigned char MemberIndex() {
 using ObjectFn = void (__cdecl*)(unsigned char*);
 using SlotFn = unsigned char (__cdecl*)(unsigned char*, const unsigned char*);
 // 0x454A80(object): the object's Field_Slots scripts released.
-void ReleaseSlots(unsigned char* object) { AH_AT(ObjectFn, at::kSlotsReleaseFor)(object); }
+void ReleaseSlots(unsigned char* object) { AH_AT(ObjectFn, at::kSlotsReleaseFor.v)(object); }
 // 0x455290(object, script): a Field_Slots script started (its answer unread
 // here).
-void StartSlot(unsigned char* object, U script) { AH_AT(SlotFn, at::kSlotStart)(object, Mem(script)); }
+void StartSlot(unsigned char* object, U script) { AH_AT(SlotFn, at::kSlotStart.v)(object, Mem(script)); }
 // 0x441090(value, sign): the high word of a 16.16 value, rounded up when sign
 // is not negative (ax).
 unsigned short RoundHigh(std::int32_t value, std::int32_t sign) {
-    return AH_AT(unsigned short (__cdecl*)(std::int32_t, std::int32_t), at::kRoundHigh)(value, sign);
+    return AH_AT(unsigned short (__cdecl*)(std::int32_t, std::int32_t), at::kRoundHigh.v)(value, sign);
 }
 
 // Area 192's choice 2 and area 193's choice 3 (0x42BD60, 0x42C430: one body,

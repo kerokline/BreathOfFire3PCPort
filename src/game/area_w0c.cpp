@@ -621,7 +621,7 @@ extern "C" void __cdecl Area36_EffectStep(void) {
     const unsigned char* const cur = Sprite_Current;
     const auto* const tCur = rv::AsConst<records::EffectObject>(cur);
     std::int32_t position[3] = {tCur->x, tCur->z, tCur->height};
-    AH_AT(void (__cdecl*)(std::int32_t*), at::kPositionHook)(position);
+    AH_AT(void (__cdecl*)(std::int32_t*), at::kPositionHook.v)(position);
 }
 
 // ===========================================================================

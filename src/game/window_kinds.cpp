@@ -60,11 +60,11 @@ const Callees kOriginals = {
     BattleWin_DrawMessage,
     BattleMsg_Advance,
     Window_FreeCurrent,
-    {As<Handler>(bof3::addr::BattleWin_BannerSlideIn), As<Handler>(kNop), As<Handler>(bof3::addr::BattleWin_BannerSlideOut)},
-    {As<Handler>(bof3::addr::BattleWin_MessageWait), As<Handler>(bof3::addr::BattleWin_MessageSlideIn),
-     As<Handler>(bof3::addr::BattleWin_MessageShow), As<Handler>(bof3::addr::BattleWin_MessageSlideOut)},
-    {As<Handler>(kResultKinds[0]), As<Handler>(kResultKinds[1]), nullptr, nullptr, As<Handler>(kResultKinds[4]),
-     As<Handler>(kResultKinds[5])},
+    {As<Handler>(::bof3::Code(bof3::addr::BattleWin_BannerSlideIn)), As<Handler>(::bof3::Code(kNop.v)), As<Handler>(::bof3::Code(bof3::addr::BattleWin_BannerSlideOut))},
+    {As<Handler>(::bof3::Code(bof3::addr::BattleWin_MessageWait)), As<Handler>(::bof3::Code(bof3::addr::BattleWin_MessageSlideIn)),
+     As<Handler>(::bof3::Code(bof3::addr::BattleWin_MessageShow)), As<Handler>(::bof3::Code(bof3::addr::BattleWin_MessageSlideOut))},
+    {As<Handler>(::bof3::Code(kResultKinds[0])), As<Handler>(::bof3::Code(kResultKinds[1])), nullptr, nullptr, As<Handler>(::bof3::Code(kResultKinds[4])),
+     As<Handler>(::bof3::Code(kResultKinds[5]))},
 };
 Callees g = kOriginals;
 

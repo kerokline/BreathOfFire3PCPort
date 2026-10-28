@@ -276,7 +276,7 @@ const void* StubFor(U target) {
     case bof3::addr::Transition_Start:     return f(&StubTransition);
     case bof3::addr::Sprite_FaceDirection: return f(&StubFace);
     case bof3::addr::Window_ResetAll:      return f(&StubResetWindows);
-    case kCrtSprintf:                      return f(&StubSprintf);
+    case kCrtSprintf.v:                      return f(&StubSprintf);
     case bof3::addr::TextRecord_Set:       return f(&StubTextRecord);
     case bof3::addr::SaveMenu_DrawChoices: return f(&StubChoices);
     case bof3::addr::Menu_DrawBlackScreen: return f(&StubBlack);
@@ -296,7 +296,7 @@ struct Clone {
 namespace a = bof3::addr;
 constexpr Call kEnd[] = {{0x39, a::Sprite_FaceDirection}, {0x68, a::Window_ResetAll}};
 constexpr Call kTitleIn[] = {{0x25, a::Menu_DrawTitleBox}, {0x5E, a::Msg_OpenSystem}};
-constexpr Call kGreeting[] = {{0x11, a::Menu_DrawTitleBox}, {0x39, kCrtSprintf}, {0x47, a::TextRecord_Set},
+constexpr Call kGreeting[] = {{0x11, a::Menu_DrawTitleBox}, {0x39, kCrtSprintf.v}, {0x47, a::TextRecord_Set},
                               {0x51, a::Msg_SystemPtr},     {0x62, a::Text_DrawAt}, {0x74, a::Menu_DrawMoneyBox},
                               {0x9F, a::Sound_PlayEffect}};
 constexpr Call kChoicesIn[] = {{0x18, a::SaveMenu_DrawChoices}, {0x2F, a::Menu_DrawTitleBox}, {0x45, a::Msg_SystemPtr},

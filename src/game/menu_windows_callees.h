@@ -85,19 +85,19 @@ constexpr std::uint32_t kStatLabels[3] = {0x66A0F8, 0x66A100, 0x66A110};
 }  // namespace at
 
 // Other groups' functions, by address (the round's rule).
-constexpr std::uint32_t kStatIcon = bof3::addr::Menu_DrawIcon;      // (kind, x, y, w, h, shade), W
-constexpr std::uint32_t kDrawHand = bof3::addr::Menu_DrawHand;      // Menu_DrawHand (x, y, unused), W
-constexpr std::uint32_t kEquipCompare = bof3::addr::Equip_PreviewSlot;  // (member, slot, item, u8 out[4], u16 out[4]), W
-constexpr std::uint32_t kItemName = bof3::addr::Item_NamePtr;      // (category, id) -> name, W
-constexpr std::uint32_t kItemKind = bof3::addr::Item_IconKind;      // (category, id) -> 0..15, W
-constexpr std::uint32_t kEquipMask = bof3::addr::Item_EquipMask;     // (category, id) -> the members who can equip it, W
-constexpr std::uint32_t kItemFlagsOf = bof3::addr::Item_UseFlags;   // (category, id) -> flags, W (group TWO's, 2026-10-06)
-constexpr std::uint32_t kHasKeyItem = bof3::addr::KeyItem_Has;    // (id) -> 1 when held, W
-constexpr std::uint32_t kCountOwned = bof3::addr::Inventory_Count;    // (category, id, where) -> u16, W
-constexpr std::uint32_t kCountCategory = bof3::addr::Inventory_CountUsed; // (category) -> u8, W
-constexpr std::uint32_t kPriceScale = bof3::addr::Shop_ScalePrice;    // (price, percent) -> price * percent / 100, at least 1, X
-constexpr std::uint32_t kSellPrice = bof3::addr::Shop_SellPrice;     // (category, id, flag) -> the price a shop pays, X
-constexpr std::uint32_t kSetLineF3 = bof3::addr::Gpu_SetLineF3;     // the PSX setter (prim), M
+constexpr ::bof3::image::CodeVa kStatIcon{bof3::addr::Menu_DrawIcon};      // (kind, x, y, w, h, shade), W
+constexpr ::bof3::image::CodeVa kDrawHand{bof3::addr::Menu_DrawHand};      // Menu_DrawHand (x, y, unused), W
+constexpr ::bof3::image::CodeVa kEquipCompare{bof3::addr::Equip_PreviewSlot};  // (member, slot, item, u8 out[4], u16 out[4]), W
+constexpr ::bof3::image::CodeVa kItemName{bof3::addr::Item_NamePtr};      // (category, id) -> name, W
+constexpr ::bof3::image::CodeVa kItemKind{bof3::addr::Item_IconKind};      // (category, id) -> 0..15, W
+constexpr ::bof3::image::CodeVa kEquipMask{bof3::addr::Item_EquipMask};     // (category, id) -> the members who can equip it, W
+constexpr ::bof3::image::CodeVa kItemFlagsOf{bof3::addr::Item_UseFlags};   // (category, id) -> flags, W (group TWO's, 2026-10-06)
+constexpr ::bof3::image::CodeVa kHasKeyItem{bof3::addr::KeyItem_Has};    // (id) -> 1 when held, W
+constexpr ::bof3::image::CodeVa kCountOwned{bof3::addr::Inventory_Count};    // (category, id, where) -> u16, W
+constexpr ::bof3::image::CodeVa kCountCategory{bof3::addr::Inventory_CountUsed}; // (category) -> u8, W
+constexpr ::bof3::image::CodeVa kPriceScale{bof3::addr::Shop_ScalePrice};    // (price, percent) -> price * percent / 100, at least 1, X
+constexpr ::bof3::image::CodeVa kSellPrice{bof3::addr::Shop_SellPrice};     // (category, id, flag) -> the price a shop pays, X
+constexpr ::bof3::image::CodeVa kSetLineF3{bof3::addr::Gpu_SetLineF3};     // the PSX setter (prim), M
 
 struct Callees {
     // other modules' (ours) and Capcom's

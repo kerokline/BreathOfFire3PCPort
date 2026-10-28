@@ -251,8 +251,8 @@ const ah::Callee kCallees[] = {
     {W3D_OURS(Area135_Kind2ToObject0), 1, {kU16}, ah::Answer::kGarbage, 0, 0, {}, &Kind2Effect},
     {W3D_OURS(Area135_OpenMessage), 1, {kU8}, ah::Answer::kGarbage, 0, 0, {}, &MessageEffect},
     // engine callees nobody owns (raw)
-    {"Engine_46D710", kEngine46D710, kEngine46D710, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
-    {"Engine_46D770", kEngine46D770, kEngine46D770, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
+    {"Engine_46D710", kEngine46D710.v, kEngine46D710.v, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
+    {"Engine_46D770", kEngine46D770.v, kEngine46D770.v, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
     // named, beyond the standard set
     {W3D_OURS(ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W3D_OURS(ScriptFlags_Clear40), 0, {}, ah::Answer::kGarbage, 0, 0},

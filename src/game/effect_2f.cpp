@@ -693,7 +693,7 @@ extern "C" void __cdecl EffectKind51_DrawColumn(unsigned half, unsigned sway) {
     U i = 0;
     do {
         const U kk = S16(k);
-        const U w = static_cast<U>(SH_AT(long (__cdecl*)(long), at::kSqrt)(static_cast<long>(hh - kk * kk)));
+        const U w = static_cast<U>(SH_AT(long (__cdecl*)(long), at::kSqrt.v)(static_cast<long>(hh - kk * kk)));
         if (i >= at::kAngles)
             bof3::Fatal("EffectKind51_DrawColumn: row %u of %d, past the %u words of EffectKind51_Angles - the original "
                         "reads past them (docs/effect_2f.md section 2)",
@@ -945,7 +945,7 @@ extern "C" void __cdecl EffectKind52_SparksEmit(void) {
     if (rv::As<records::EffectObject>(S())->frame_word == 4) SH_CALL(Sound_PlayEffect)(0x201);
     if ((S()[0x5A] & 7) == 0) {
         unsigned char* const spark = SH_CALL(EffectSpark_FindFree)();
-        if (spark != nullptr) SH_AT(void (__cdecl*)(unsigned char*), at::kSparkInit)(spark);
+        if (spark != nullptr) SH_AT(void (__cdecl*)(unsigned char*), at::kSparkInit.v)(spark);
     }
     SH_CALL(EffectKind52_MoveSparks)();
     unsigned char* const s = S();
@@ -1050,8 +1050,8 @@ extern "C" unsigned char __cdecl EffectKind52_MoveSparks(void) {
                         "the original calls through the dword after (docs/effect_2f.md section 2)",
                         i, state, EffectKind52_SparkStates_count);
         reinterpret_cast<void (__cdecl*)(unsigned char*)>(
-            static_cast<std::uintptr_t>(UL(At(AddressOf(EffectKind52_SparkStates) + 4 * state))))(k);
-        SH_AT(void (__cdecl*)(unsigned char*), at::kSparkDraw)(k);
+            static_cast<std::uintptr_t>(::bof3::CodePlace(UL(At(AddressOf(EffectKind52_SparkStates) + 4 * state)))))(k);
+        SH_AT(void (__cdecl*)(unsigned char*), at::kSparkDraw.v)(k);
         any = 1;
     }
     return any;
@@ -1145,7 +1145,7 @@ extern "C" void __cdecl EffectKind52_TrailUpdate(unsigned char* trail) {
     SetWord(trail + 0x1C, Word(angles));
     for (unsigned k = 0; k < 0x1E; ++k)
         SetWord(trail + 0x3C + 0x20 * k,
-                static_cast<U>(SH_AT(long (__cdecl*)(unsigned, unsigned), at::kAngleMean)(Word(angles + 2 * k),
+                static_cast<U>(SH_AT(long (__cdecl*)(unsigned, unsigned), at::kAngleMean.v)(Word(angles + 2 * k),
                                                                                           Word(angles + 2 * k + 2))));
     SetWord(trail + 0x3FC, Word(trail + 0x43C));
 }
@@ -1375,7 +1375,7 @@ extern "C" void __cdecl EffectKind53_TexWindow(unsigned x, unsigned y, unsigned 
     SetWord(rect + 2, y);
     SetWord(rect + 4, w);
     SetWord(rect + 6, h);
-    SH_AT(void (__cdecl*)(unsigned char*, unsigned char*), at::kPrimRect)(Gfx_PacketNext, rect);
+    SH_AT(void (__cdecl*)(unsigned char*, unsigned char*), at::kPrimRect.v)(Gfx_PacketNext, rect);
     const unsigned char* const s = S();
     SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 0, 0xC);
 }

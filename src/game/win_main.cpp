@@ -582,7 +582,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
     // is ours when injected and Capcom's when not.
     WNDCLASSA wc = {};
     wc.style = 0;
-    wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(bof3::addr::Game_WndProc));
+    wc.lpfnWndProc = reinterpret_cast<WNDPROC>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Game_WndProc)));
     wc.hInstance = hinstance;
     wc.hIcon = LoadIconA(hinstance, Str(::bof3::Img(kStrIcon.v)));
     wc.hCursor = LoadCursorA(nullptr, IDC_ARROW);
@@ -659,7 +659,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         int speed = 1;   // the period in force: g_frame_ms / speed (DIV-0048)
         unsigned stream_hold_frames = 0;   // BOF3X_SPEED: frames held at speed 1 for a playing stream
         while (!quit) {
-            Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(bof3::addr::Boot_Task)));
+            Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Boot_Task))));
             deadline_base = Now() + kFirstFrameMs;
             deadline_frames = 0;
             for (;;) {

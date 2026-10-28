@@ -785,7 +785,7 @@ extern "C" void __cdecl Area116_EffectB8Ring(void) {
     point[1] = rv::As<records::SpriteHead>(cur)->z;
     point[2] = rv::As<records::SpriteHead>(cur)->height;
     point[3] = 0;
-    AH_AT(RingFn, area_w3a::kRingAt)(point);
+    AH_AT(RingFn, area_w3a::kRingAt.v)(point);
 }
 
 // ===========================================================================
