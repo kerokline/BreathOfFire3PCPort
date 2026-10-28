@@ -358,7 +358,7 @@ const Region kRegions[] = {
     {Address(rv::Bytes(Effect_Objects)), kEffects * kEffectBytes},
     {Address(Field_Slots), kSlots * kSlotBytes},
     {Address(rv::Bytes(ObjTrio)), kMembersSpan},
-    {kTintFrom, kTintSpan},
+    {::bof3::Img(kTintFrom), kTintSpan},
     {Address(g_sprites), sizeof g_sprites},
     {Address(Camera_Angles), 6},
     {Address(CameraTurn_Angles), 12},
@@ -446,11 +446,11 @@ void SeedEffect(unsigned char* o) {
 unsigned char g_depths[256];
 unsigned g_depth_n;
 std::uint32_t SpriteInRecords(unsigned index) {
-    if (Often()) return 0x7E0700u + index * kTintBytes - 0x27;   // +0x27 on its own +0: the bit-7 test's re-read
+    if (Often()) return ::bof3::Img(0x7E0700u) + index * kTintBytes - 0x27;   // +0x27 on its own +0: the bit-7 test's re-read
     for (;;) {
         const unsigned at = Next() % ((index + 1) * kTintBytes);   // where +0x27 lands, from record 0
         if (at / kTintBytes == index && at % kTintBytes >= 8) continue;
-        return 0x7E0700u + at - 0x27;
+        return ::bof3::Img(0x7E0700u) + at - 0x27;
     }
 }
 void SeedTint(unsigned char* r, unsigned index) {

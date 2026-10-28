@@ -115,7 +115,7 @@ void Tick() {
 // the signed cell coordinates, unchecked; read in place.
 U CellWord(short cx, short cz) {
     const int width = static_cast<int>(AreaMap_Header[0]);
-    const int index = width * cz + static_cast<int>(Word(At(AreaMap_Header_addr + 0x2))) * 2 + cx;
+    const int index = width * cz + static_cast<int>(Word(At(::bof3::Img(AreaMap_Header_addr) + 0x2))) * 2 + cx;
     return Word(At(AddressOf(AreaMap_Header) + static_cast<U>(index) * 2u));
 }
 
@@ -261,7 +261,7 @@ extern "C" void __cdecl EffectKind04_HoldTick(void) {
     records::EffectObject* const o = rv::As<records::EffectObject>(Cur());
     const unsigned char left = o->timer;
     if (left == 0) {
-        SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), 0x1C);
+        SH_CALL(Flags_Clear)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C);
         SH_CALL(Effect_Release)();
         return;
     }
@@ -603,11 +603,11 @@ extern "C" void __cdecl EffectKind17_Push(void) {
     o = rv::As<records::EffectObject>(Cur());
     rv::Bytes(o)[0xA] = static_cast<unsigned char>((static_cast<int>(rv::Bytes(o)[0xA]) + 1) >> 1);
     const U push = static_cast<U>(rv::Bytes(o)[0xA]) * 3u * 0x400u - 0xC00u;
-    o->step_x = L(At(MoveCmd_F9Steps_addr + 8u * rv::Bytes(o)[8])) << 2;
+    o->step_x = L(At(::bof3::Img(MoveCmd_F9Steps_addr) + 8u * rv::Bytes(o)[8])) << 2;
     U v = static_cast<U>(o->step_x);
     if (S32(v) > 0) o->step_x = v + push;
     else if (S32(v) < 0) o->step_x = v - push;
-    o->step_z = L(At(MoveCmd_F9Steps_addr + 4 + 8u * rv::Bytes(o)[8])) << 2;
+    o->step_z = L(At(::bof3::Img(MoveCmd_F9Steps_addr) + 4 + 8u * rv::Bytes(o)[8])) << 2;
     v = static_cast<U>(o->step_z);
     if (S32(v) > 0) o->step_z = v + push;
     else if (S32(v) < 0) o->step_z = v - push;
@@ -682,10 +682,10 @@ extern "C" void __cdecl EffectKind17_Slide(void) {
     if (Field_Kind2Hold == 0 && far > 0x40000 && static_cast<U>(Field_Kind2X) == static_cast<U>(ObjTrio[0].x) &&
         static_cast<U>(Field_Kind2Z) == static_cast<U>(ObjTrio[0].z)) {
         o = rv::As<records::EffectObject>(Cur());
-        if (S32(static_cast<U>(o->step_x)) > 0) SetWord(At(at::kKind2XHigh), Word(At(at::kKind2XHigh)) + 5u);
-        else if (S32(static_cast<U>(o->step_x)) < 0) SetWord(At(at::kKind2XHigh), Word(At(at::kKind2XHigh)) - 5u);
-        else if (S32(static_cast<U>(o->step_z)) > 0) SetWord(At(at::kKind2ZHigh), Word(At(at::kKind2ZHigh)) + 5u);
-        else if (S32(static_cast<U>(o->step_z)) < 0) SetWord(At(at::kKind2ZHigh), Word(At(at::kKind2ZHigh)) - 5u);
+        if (S32(static_cast<U>(o->step_x)) > 0) SetWord(At(::bof3::Img(at::kKind2XHigh)), Word(At(::bof3::Img(at::kKind2XHigh))) + 5u);
+        else if (S32(static_cast<U>(o->step_x)) < 0) SetWord(At(::bof3::Img(at::kKind2XHigh)), Word(At(::bof3::Img(at::kKind2XHigh))) - 5u);
+        else if (S32(static_cast<U>(o->step_z)) > 0) SetWord(At(::bof3::Img(at::kKind2ZHigh)), Word(At(::bof3::Img(at::kKind2ZHigh))) + 5u);
+        else if (S32(static_cast<U>(o->step_z)) < 0) SetWord(At(::bof3::Img(at::kKind2ZHigh)), Word(At(::bof3::Img(at::kKind2ZHigh))) - 5u);
         const short ground = S16(static_cast<U>(SH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z)));
         const short view = S16(static_cast<U>(MapView_Elevation));
         MoveScript_FAWord = 0;
@@ -1009,14 +1009,14 @@ extern "C" void __cdecl EffectKind1B_Start(void) {
     SH_AT(void (__cdecl*)(), at::kFc2Aim)();
     Cur()[0x27] = 0x7B;
     SH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>((Cur()[8] >> 1) + 0x4A));
-    SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1ec0)), 1);
+    SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1ec0)), 1);
     rv::Store<U>(rv::As<records::EffectObject>(Cur())->x, static_cast<U>(ObjTrio[0].x));
     rv::Store<U>(rv::As<records::EffectObject>(Cur())->z, static_cast<U>(ObjTrio[0].z));
     rv::Store<unsigned>(rv::As<records::EffectObject>(Cur())->height_whole, ObjTrio[0].height_whole + 0xC0u);
     records::EffectObject* o = rv::As<records::EffectObject>(Cur());
-    o->step_x = L(At(MoveCmd_F9Steps_addr + 8u * rv::Bytes(o)[8])) << 4;
+    o->step_x = L(At(::bof3::Img(MoveCmd_F9Steps_addr) + 8u * rv::Bytes(o)[8])) << 4;
     o = rv::As<records::EffectObject>(Cur());
-    o->step_z = L(At(MoveCmd_F9Steps_addr + 4 + 8u * rv::Bytes(o)[8])) << 4;
+    o->step_z = L(At(::bof3::Img(MoveCmd_F9Steps_addr) + 4 + 8u * rv::Bytes(o)[8])) << 4;
     Cur()[0xA] = ObjTrio[0].char_id == 1 ? 0xA : 0x12;
     rv::As<records::EffectObject>(Cur())->flags = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->flags | 2);
     rv::As<records::EffectObject>(Cur())->state = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->state + 1);

@@ -97,8 +97,8 @@ Handler Entry(std::uint32_t table, unsigned index) {
 }
 // Field_DirectionSteps' row for a direction (two longs, x then z), the
 // direction unchecked: the table has 8 rows.
-long StepX(unsigned d) { return Long(At(Field_DirectionSteps_addr + d * 8)); }
-long StepZ(unsigned d) { return Long(At(Field_DirectionSteps_addr + d * 8 + 4)); }
+long StepX(unsigned d) { return Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8)); }
+long StepZ(unsigned d) { return Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4)); }
 long Add(long a, long b) { return static_cast<long>(static_cast<std::uint32_t>(a) + static_cast<std::uint32_t>(b)); }
 // An effect object by its index: Effect_Objects + index * 0x80, unchecked.
 unsigned char* Effect(unsigned index) { return rv::Bytes(Effect_Objects) + (index << 7); }
@@ -208,12 +208,12 @@ FH_EXPORT void __cdecl PartyAction_Finish(void) {
 // original 0x51F1B0: party set 5's action - the entry of PartyAction5_Forms
 // 0x65FC18 that the u16 +0x2C picks (0x51E910, PartyAction5_Form1, PartyAction_NoAction), jumped
 // to, the index unchecked.
-FH_EXPORT void __cdecl PartyAction5_ByForm(void) { Entry(PartyAction5_Forms_addr, rv::Current<records::PartyMember>()->column)(); }
+FH_EXPORT void __cdecl PartyAction5_ByForm(void) { Entry(::bof3::Img(PartyAction5_Forms_addr), rv::Current<records::PartyMember>()->column)(); }
 
 // original 0x51E910: party set 5's form 0 - the entry of
 // PartyAction5_Form0States 0x65FBC0 that +2 picks (0x51E930, 0x51EAF0,
 // 0x51DA30), jumped to, the index unchecked.
-FH_EXPORT void __cdecl PartyAction5_Form0(void) { Entry(PartyAction5_Form0States_addr, rv::Current<records::PartyMember>()->step)(); }
+FH_EXPORT void __cdecl PartyAction5_Form0(void) { Entry(::bof3::Img(PartyAction5_Form0States_addr), rv::Current<records::PartyMember>()->step)(); }
 
 namespace {
 // PartyAction5_Form0Begin's side probe: the point one step in direction `d`
@@ -296,9 +296,9 @@ FH_EXPORT void __cdecl PartyAction5_Form0Resolve(void) {
         if (found != 0xFF) {
             const int i = static_cast<signed char>(found);
             if (i < 0x1E)
-                At(Sprite_Objects_addr + 0x80 + static_cast<std::uint32_t>(i * static_cast<int>(at::kObjectStride)))[0] |= 1;
+                At(::bof3::Img(Sprite_Objects_addr) + 0x80 + static_cast<std::uint32_t>(i * static_cast<int>(at::kObjectStride)))[0] |= 1;
             else
-                At(Sprite_ObjectsExtra_addr + 0x80 + static_cast<std::uint32_t>((i - 0x1E) * static_cast<int>(at::kObjectStride)))[0] |= 1;
+                At(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x80 + static_cast<std::uint32_t>((i - 0x1E) * static_cast<int>(at::kObjectStride)))[0] |= 1;
         }
         const unsigned cx = x >> 16, cz = z >> 16;
         if (Al(g.cell_pickup(cx, cz)) == 0) {
@@ -345,7 +345,7 @@ FH_EXPORT unsigned char __cdecl Field_CellPickup(unsigned x, unsigned z) {
     } else if (cell == 0xF8) {
         g.spawn_at_cell(0, x, z);
         const unsigned char* const name = g.item_name(0, 0x56);
-        for (unsigned k = 0; k < 16; k += 4) SetLong(At(bof3::addr::Text_Records + k), Long(name + k));
+        for (unsigned k = 0; k < 16; k += 4) SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
         if (Al(g.inventory_add(0, 0x56, 1)) != 0) {
             g.play_effect(0x106);
             g.msg_open(2);
@@ -442,7 +442,7 @@ FH_EXPORT unsigned char __cdecl Encounter_PickRow(void) {
     const unsigned char roll = static_cast<unsigned char>((Al(static_cast<std::uint32_t>(g.rand())) & 0xF) + 1);
     unsigned char sum = 0;
     for (unsigned char row = 0; row < 8; ++row) {
-        sum = static_cast<unsigned char>(sum + Byte(at::kRows + 8 + row * 9u));
+        sum = static_cast<unsigned char>(sum + Byte(::bof3::Img(at::kRows) + 8 + row * 9u));
         if (roll <= sum) return row;
     }
     return 0;
@@ -455,7 +455,7 @@ FH_EXPORT unsigned char __cdecl Encounter_PickRow(void) {
 FH_EXPORT unsigned char __cdecl Encounter_FillSlots(const unsigned char* row) {
     unsigned char n = 0;
     for (unsigned k = 0; k < 8; ++k) {
-        unsigned char* const slot = At(Encounter_Slots_addr + k * at::kEnemyStride);
+        unsigned char* const slot = At(::bof3::Img(Encounter_Slots_addr) + k * at::kEnemyStride);
         const unsigned char kind = row[k];
         slot[1] = kind;
         if (kind == 0xFF) {
@@ -463,7 +463,7 @@ FH_EXPORT unsigned char __cdecl Encounter_FillSlots(const unsigned char* row) {
             continue;
         }
         const int roll = (g.rand() & 0xF) + 1;
-        if (roll > static_cast<int>(Byte(at::kSlotChance + k))) {
+        if (roll > static_cast<int>(Byte(::bof3::Img(at::kSlotChance) + k))) {
             slot[0] = 0;
         } else {
             slot[0] = 1;
@@ -496,7 +496,7 @@ FH_EXPORT unsigned char __cdecl Encounter_FillSlots(const unsigned char* row) {
 // argument's slot. Neither slot is read by a caller again.
 FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_centre) {
     unsigned char answer = 1;
-    Sprite_Current = At(at::kScratchSprite);
+    Sprite_Current = At(::bof3::Img(at::kScratchSprite));
     unsigned char f = static_cast<unsigned char>(facing);
     if (f >= 4) f = static_cast<unsigned char>((FieldHidden_Facing + 1) & 3);
     FieldHidden_Facing = f;
@@ -505,19 +505,19 @@ FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_c
         BossSi_CentreZ = static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2Z) & 0xFFFF8000u);
     }
     const unsigned row = Al(g.pick_row());
-    const unsigned char* const picked = At(Encounter_Rows_addr + row * 9);
+    const unsigned char* const picked = At(::bof3::Img(Encounter_Rows_addr) + row * 9);
     FieldHidden_RowUsed = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(picked));
     const unsigned char count = Al(g.fill_slots(picked));
     FieldHidden_EnemyCount = count;
     if (count == 0) return 0;
-    At(at::kBattleFacing)[0] = FieldHidden_Facing;
+    At(::bof3::Img(at::kBattleFacing))[0] = FieldHidden_Facing;
     if (Al(g.place_party()) == 0 || Al(g.place_enemies()) == 0 || Al(g.reachable()) == 0) answer = 0;
     g.push_matrix();
     g.aim_camera(FieldHidden_Facing);
     for (unsigned char m = 0; m < Al(g.party_count(1)); ++m) {
-        const long x = Long(At(at::kMemberPos + m * 8u));
-        const long z = Long(At(at::kMemberPos + m * 8u + 4));
-        const unsigned char id = Byte(at::kPartyList2 + m);
+        const long x = Long(At(::bof3::Img(at::kMemberPos) + m * 8u));
+        const long z = Long(At(::bof3::Img(at::kMemberPos) + m * 8u + 4));
+        const unsigned char id = Byte(::bof3::Img(at::kPartyList2) + m);
         const unsigned wide = (id == 2 || id == 6) ? 1u : 0u;
         if (Al(g.on_screen(x, z, (facing & 0xFFFFFF00u) | wide, 0x20)) == 0) {
             g.pop_matrix();
@@ -525,8 +525,8 @@ FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_c
         }
     }
     for (unsigned k = 0; k < 8; ++k) {
-        unsigned char* const slot = At(Encounter_Slots_addr + k * at::kEnemyStride);
-        const unsigned char* const kind = At(at::kKinds + slot[1] * at::kKindStride);
+        unsigned char* const slot = At(::bof3::Img(Encounter_Slots_addr) + k * at::kEnemyStride);
+        const unsigned char* const kind = At(::bof3::Img(at::kKinds) + slot[1] * at::kKindStride);
         if (slot[0] == 0) continue;
         if (Al(g.on_screen(Long(slot + 4), Long(slot + 8), kind[0x86], kind[0x87])) == 0) {
             slot[0] = 0;

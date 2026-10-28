@@ -137,7 +137,7 @@ inline float X87Div(float a, float b) {
 }
 
 // D3d_Device, read afresh before every COM call as the original does.
-void** Device() { return *reinterpret_cast<void** volatile*>(At(D3d_Device_addr)); }
+void** Device() { return *reinterpret_cast<void** volatile*>(At(::bof3::Img(D3d_Device_addr))); }
 void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 using Com3 = long(__stdcall*)(void*, U, U);
 using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
@@ -148,10 +148,10 @@ long SetTexture(U stage, U texture) {
 // DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
 long DrawVertices(U type, U count) {
     void** device = Device();
-    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, D3d_Vertices_addr, count, 0);
+    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
 }
-unsigned char* Vertex(U i) { return At(D3d_Vertices_addr + i * 0x20); }
-U DrawMode() { return Long(At(Gfx_DrawTpage_addr)) & 0xFFFF; }
+unsigned char* Vertex(U i) { return At(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
+U DrawMode() { return Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF; }
 // sx, sy = the scales times the corner's float x, y; sz its z as it is (a mov);
 // rhw = 0.1 / z. Diffuse as given; specular, tu and tv are not written.
 void PutFlatCorner(unsigned char* out, const unsigned char* xyz, U diffuse) {
@@ -175,7 +175,7 @@ U TileTest(U x_arg, U z_arg, U want) {
     const U cell = Word(At(at::MapView_CellsAt() + (ring.column + ring.row * 28u) * 2u));
     if (cell == 0) return ring.column & 0xFFFF0000u;    // mov ax, [cell]; xor al, al
     const U index = cell + (Long(At(at::AreaMap_CellBaseAt())) & 0xFFFF);
-    const U count = Long(At(kRunHeads + index * 4u)) >> 16;
+    const U count = Long(At(::bof3::Img(kRunHeads) + index * 4u)) >> 16;
     U walk = at::AreaMap_HeaderAt() + index * 4u;
     const U end = walk + count * 4u - 4u;
     if (walk == end) return index & 0xFFFFFF00u;          // mov al, bl with bl 0
@@ -375,7 +375,7 @@ extern "C" void __cdecl AreaMap_ApplyPatch(const unsigned char* entry) {
         switch (kind) {
         case 0: {
             const U header = Long(At(Header(0)));
-            const U offset = Word(At(AreaMap_Header_addr + 0x2));
+            const U offset = Word(At(::bof3::Img(AreaMap_Header_addr) + 0x2));
             const U width = header & 0xFF;
             const U tile = Word(At(Header(0) + (x + width * y + offset * 2u) * 2u));
             const auto area = static_cast<std::int32_t>(((header >> 8) & 0xFF) * width + 1u);
@@ -450,7 +450,7 @@ extern "C" void __cdecl MapCell_FlatOverlay(int faces, unsigned item) {
             PutLong(packet + 8 + corner * 0xC, Long(src + 8 + corner * 0x10));
             PutLong(packet + 0xC + corner * 0xC, Long(src + 0xC + corner * 0x10));
         }
-        const unsigned char* const colour = At(kOverlayColours + static_cast<U>(faces >> 3) * 2u);
+        const unsigned char* const colour = At(::bof3::Img(kOverlayColours) + static_cast<U>(faces >> 3) * 2u);
         packet[4] = static_cast<unsigned char>((colour[0] & 0x1F) << 3);
         packet[5] = static_cast<unsigned char>(((Word(colour) >> 5) & 0x1F) << 3);
         packet[6] = static_cast<unsigned char>(((Word(colour) >> 10) & 0x1F) << 3);

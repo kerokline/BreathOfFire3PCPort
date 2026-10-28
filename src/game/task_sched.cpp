@@ -63,41 +63,47 @@ void SetLong(unsigned char* at, std::uint32_t v) { std::memcpy(at, &v, sizeof v)
 // As the original has it: the sleep word is decremented before it is tested,
 // so a sleep of 0 lasts 65536 frames, and state 0x100 is not free (a word).
 extern "C" __attribute__((naked)) void __cdecl Task_RunAll(void) {
-    asm("pushl %ebx\n\t"
-        "pushl %ecx\n\t"
-        "pushl %esi\n\t"
-        "pushl %edi\n\t"
-        "pushl %ebp\n\t"
-        "movl %esp, 0x66C854\n\t"          // Task_SchedulerEsp
-        "xorl %edx, %edx\n"
+    asm("pushl %%ebx\n\t"
+        "pushl %%ecx\n\t"
+        "pushl %%esi\n\t"
+        "pushl %%edi\n\t"
+        "pushl %%ebp\n\t"
+        "movl %%esp, %c0\n\t"              // Task_SchedulerEsp
+        "xorl %%edx, %%edx\n"
         ".Ltask_sched_walk:\n\t"
-        "movl %edx, 0x66C850\n\t"          // Task_CurrentOffset
-        "cmpw $0, 0x66C7D0(%edx)\n\t"      // state 0: a free record
+        "movl %%edx, %c1\n\t"              // Task_CurrentOffset
+        "cmpw $0, %c2(%%edx)\n\t"          // state 0: a free record
         "je .Ltask_sched_next\n\t"
-        "cmpw $1, 0x66C7D0(%edx)\n\t"      // state 1: sleeping
+        "cmpw $1, %c2(%%edx)\n\t"          // state 1: sleeping
         "jne .Ltask_sched_enter\n\t"
-        "decw 0x66C7D2(%edx)\n\t"          // the sleep word, 16 bits
+        "decw %c3(%%edx)\n\t"              // the sleep word, 16 bits
         "jne .Ltask_sched_next\n\t"
-        "movw $2, 0x66C7D0(%edx)\n"
+        "movw $2, %c2(%%edx)\n"
         ".Ltask_sched_enter:\n\t"
-        "movl 0x66C7D4(%edx), %esp\n\t"    // the task's saved esp
-        "popl %ebp\n\t"
-        "popl %edi\n\t"
-        "popl %esi\n\t"
-        "popl %edx\n\t"
-        "popl %ecx\n\t"
-        "popl %ebx\n\t"
+        "movl %c4(%%edx), %%esp\n\t"       // the task's saved esp
+        "popl %%ebp\n\t"
+        "popl %%edi\n\t"
+        "popl %%esi\n\t"
+        "popl %%edx\n\t"
+        "popl %%ecx\n\t"
+        "popl %%ebx\n\t"
         "ret\n"                            // into the task
         ".Ltask_sched_next:\n\t"
-        "addl $0x20, %edx\n\t"
-        "cmpl $0x80, %edx\n\t"
+        "addl $0x20, %%edx\n\t"
+        "cmpl $0x80, %%edx\n\t"
         "jb .Ltask_sched_walk\n\t"
-        "popl %ebp\n\t"
-        "popl %edi\n\t"
-        "popl %esi\n\t"
-        "popl %ecx\n\t"
-        "popl %ebx\n\t"
-        "ret");
+        "popl %%ebp\n\t"
+        "popl %%edi\n\t"
+        "popl %%esi\n\t"
+        "popl %%ecx\n\t"
+        "popl %%ebx\n\t"
+        "ret"
+        :
+        : "i"(::bof3::Img(0x66C854)),
+          "i"(::bof3::Img(0x66C850)),
+          "i"(::bof3::Img(0x66C7D0)),
+          "i"(::bof3::Img(0x66C7D2)),
+          "i"(::bof3::Img(0x66C7D4)));
 }
 
 // original 0x5A98F0: not a function but the landing inside Task_RunAll that
@@ -105,8 +111,10 @@ extern "C" __attribute__((naked)) void __cdecl Task_RunAll(void) {
 // offset: the scheduler's esp back, and the walk goes on at the next record.
 // Its own entry so that BOF3X_ORIGINAL can switch it with the rest.
 extern "C" __attribute__((naked)) void __cdecl Task_BackToScheduler(void) {
-    asm("movl 0x66C854, %esp\n\t"          // Task_SchedulerEsp
-        "jmp .Ltask_sched_next");
+    asm("movl %c0, %%esp\n\t"              // Task_SchedulerEsp
+        "jmp .Ltask_sched_next"
+        :
+        : "i"(::bof3::Img(0x66C854)));
 }
 
 // original 0x5A9907: the top of the stack arena, 0x4000 below esp as it
@@ -117,23 +125,25 @@ extern "C" __attribute__((naked)) void __cdecl Task_BackToScheduler(void) {
 extern "C" __attribute__((naked)) void __cdecl Task_SetStackBase(void) {
     asm("cmpb $0, _StackWatch_Armed\n\t"
         "jne .Ltask_sched_setbase_watch\n\t"
-        "movl %esp, %eax\n\t"
-        "subl $0x4000, %eax\n\t"
-        "movl %eax, 0x66C858\n\t"          // Task_StackTop
+        "movl %%esp, %%eax\n\t"
+        "subl $0x4000, %%eax\n\t"
+        "movl %%eax, %c0\n\t"              // Task_StackTop
         "ret\n"
         ".Ltask_sched_setbase_watch:\n\t"
-        "movl %esp, %eax\n\t"
-        "subl $0x4000, %eax\n\t"
-        "movl %eax, 0x66C858\n\t"          // Task_StackTop
+        "movl %%esp, %%eax\n\t"
+        "subl $0x4000, %%eax\n\t"
+        "movl %%eax, %c0\n\t"              // Task_StackTop
         "pushfl\n\t"
         "pushal\n\t"
-        "leal 36(%esp), %ecx\n\t"          // the arrival esp
-        "pushl %ecx\n\t"
+        "leal 36(%%esp), %%ecx\n\t"        // the arrival esp
+        "pushl %%ecx\n\t"
         "call _StackWatch_AtSetStackBase\n\t"
-        "addl $4, %esp\n\t"
+        "addl $4, %%esp\n\t"
         "popal\n\t"
         "popfl\n\t"
-        "ret");
+        "ret"
+        :
+        : "i"(::bof3::Img(0x66C858)));
 }
 
 // original 0x5A9949: the current task sleeps for `frames` (the low 16 bits;
@@ -142,20 +152,25 @@ extern "C" __attribute__((naked)) void __cdecl Task_SetStackBase(void) {
 // address; the record gets that esp, and the task leaves through the landing.
 // eax is left the caller's edx.
 extern "C" __attribute__((naked)) void __cdecl Task_Sleep(int) {
-    asm("movl 4(%esp), %eax\n\t"           // frames
-        "pushl %edx\n\t"
-        "movl 0x66C850, %edx\n\t"          // Task_CurrentOffset
-        "movw $1, 0x66C7D0(%edx)\n\t"      // state: sleeping
-        "movw %ax, 0x66C7D2(%edx)\n\t"     // the sleep word
-        "popl %eax\n\t"                    // the caller's edx
-        "pushl %ebx\n\t"
-        "pushl %ecx\n\t"
-        "pushl %eax\n\t"
-        "pushl %esi\n\t"
-        "pushl %edi\n\t"
-        "pushl %ebp\n\t"
-        "movl %esp, 0x66C7D4(%edx)\n\t"    // the saved esp
-        "jmp _Task_BackToScheduler");
+    asm("movl 4(%%esp), %%eax\n\t"         // frames
+        "pushl %%edx\n\t"
+        "movl %c0, %%edx\n\t"              // Task_CurrentOffset
+        "movw $1, %c1(%%edx)\n\t"          // state: sleeping
+        "movw %%ax, %c2(%%edx)\n\t"        // the sleep word
+        "popl %%eax\n\t"                   // the caller's edx
+        "pushl %%ebx\n\t"
+        "pushl %%ecx\n\t"
+        "pushl %%eax\n\t"
+        "pushl %%esi\n\t"
+        "pushl %%edi\n\t"
+        "pushl %%ebp\n\t"
+        "movl %%esp, %c3(%%edx)\n\t"       // the saved esp
+        "jmp _Task_BackToScheduler"
+        :
+        : "i"(::bof3::Img(0x66C850)),
+          "i"(::bof3::Img(0x66C7D0)),
+          "i"(::bof3::Img(0x66C7D2)),
+          "i"(::bof3::Img(0x66C7D4)));
 }
 
 // original 0x5A9976 (PSX 0x8014B848): the current task starts again at `entry` on the next
@@ -164,32 +179,45 @@ extern "C" __attribute__((naked)) void __cdecl Task_Sleep(int) {
 // above the six dwords; then the landing - it never returns. ebx is left the
 // new saved esp, eax the entry.
 extern "C" __attribute__((naked)) void __cdecl Task_Restart(void*) {
-    asm("movl 4(%esp), %eax\n\t"           // entry
-        "movl 0x66C850, %edx\n\t"          // Task_CurrentOffset
-        "movw $2, 0x66C7D0(%edx)\n\t"      // state: runnable
-        "movl %edx, %ebx\n\t"
-        "shrl $5, %ebx\n\t"                // the slot
-        "imull $0x4000, %ebx, %ebx\n\t"
-        "subl 0x66C858, %ebx\n\t"          // Task_StackTop
-        "negl %ebx\n\t"
-        "subl $0x1C, %ebx\n\t"
-        "movl %ebx, 0x66C7D4(%edx)\n\t"    // the saved esp
-        "movl %eax, 0x18(%ebx)\n\t"        // the entry, where the ret reaches it
-        "jmp _Task_BackToScheduler");
+    asm("movl 4(%%esp), %%eax\n\t"         // entry
+        "movl %c0, %%edx\n\t"              // Task_CurrentOffset
+        "movw $2, %c1(%%edx)\n\t"          // state: runnable
+        "movl %%edx, %%ebx\n\t"
+        "shrl $5, %%ebx\n\t"               // the slot
+        "imull $0x4000, %%ebx, %%ebx\n\t"
+        "subl %c2, %%ebx\n\t"              // Task_StackTop
+        "negl %%ebx\n\t"
+        "subl $0x1C, %%ebx\n\t"
+        "movl %%ebx, %c3(%%edx)\n\t"       // the saved esp
+        "movl %%eax, 0x18(%%ebx)\n\t"      // the entry, where the ret reaches it
+        "jmp _Task_BackToScheduler"
+        :
+        : "i"(::bof3::Img(0x66C850)),
+          "i"(::bof3::Img(0x66C7D0)),
+          "i"(::bof3::Img(0x66C858)),
+          "i"(::bof3::Img(0x66C7D4)));
 }
 
 // original 0x5A99AD: the current task ends: the six dwords +0..+0x17 of its
 // record zeroed (state, sleep, saved esp and the private words +8..+0x17;
 // +0x18..+0x1F are kept), then the landing - it never returns.
 extern "C" __attribute__((naked)) void __cdecl Task_Exit(void) {
-    asm("movl 0x66C850, %edx\n\t"          // Task_CurrentOffset
-        "movl $0, 0x66C7D0(%edx)\n\t"
-        "movl $0, 0x66C7D4(%edx)\n\t"
-        "movl $0, 0x66C7D8(%edx)\n\t"
-        "movl $0, 0x66C7DC(%edx)\n\t"
-        "movl $0, 0x66C7E0(%edx)\n\t"
-        "movl $0, 0x66C7E4(%edx)\n\t"
-        "jmp _Task_BackToScheduler");
+    asm("movl %c0, %%edx\n\t"              // Task_CurrentOffset
+        "movl $0, %c1(%%edx)\n\t"
+        "movl $0, %c2(%%edx)\n\t"
+        "movl $0, %c3(%%edx)\n\t"
+        "movl $0, %c4(%%edx)\n\t"
+        "movl $0, %c5(%%edx)\n\t"
+        "movl $0, %c6(%%edx)\n\t"
+        "jmp _Task_BackToScheduler"
+        :
+        : "i"(::bof3::Img(0x66C850)),
+          "i"(::bof3::Img(0x66C7D0)),
+          "i"(::bof3::Img(0x66C7D4)),
+          "i"(::bof3::Img(0x66C7D8)),
+          "i"(::bof3::Img(0x66C7DC)),
+          "i"(::bof3::Img(0x66C7E0)),
+          "i"(::bof3::Img(0x66C7E4)));
 }
 
 // original 0x5A9914: task `slot` runs `entry` from the next walk that reaches
@@ -203,7 +231,7 @@ extern "C" void __cdecl Task_Create(int slot, void* entry) {
     using namespace task_sched;
     const auto k = static_cast<std::uint32_t>(slot);
     if (k >= kTasks) bof3::Fatal("Task_Create: slot %d, past the four task records", slot);
-    unsigned char* record = At(bof3::addr::Task_Records + k * kRecordSize);
+    unsigned char* record = At(::bof3::Img(bof3::addr::Task_Records) + k * kRecordSize);
     SetWord(record + kState, kRunnable);
     const std::uint32_t sp = static_cast<std::uint32_t>(Task_StackTop) - k * kStackSize - kFirstFrame;
     SetLong(record + kSavedEsp, sp);
@@ -214,7 +242,7 @@ extern "C" void __cdecl Task_Create(int slot, void* entry) {
 // dwords; +0x18..+0x1F, task 0's Game_Mode and Game_Step, are kept).
 extern "C" void __cdecl Task_ClearPrivate(void) {
     using namespace task_sched;
-    unsigned char* record = At(bof3::addr::Task_Records + static_cast<std::uint32_t>(Task_CurrentOffset));
+    unsigned char* record = At(::bof3::Img(bof3::addr::Task_Records) + static_cast<std::uint32_t>(Task_CurrentOffset));
     for (std::uint32_t at = kPrivate; at < kPrivate + 0x10; at += 4) SetLong(record + at, 0);
 }
 

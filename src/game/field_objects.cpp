@@ -444,7 +444,7 @@ const Region kRegions[] = {
     {Address(rv::Bytes(&Sprite_Kind2)), sizeof(records::SpriteObject)},
     {Address(rv::Bytes(Sprite_ObjectsExtra)), 8 * 0xA4},
     {Address(MoveScript_PartyRecords), MoveScript_PartyRecords_count},
-    {SharedScratch_addr, 4},
+    {::bof3::Img(SharedScratch_addr), 4},
     {Address(&Field_Request), 1},
     {Address(rv::Bytes(Sprite_Objects)), (Sprite_Objects_count * sizeof(records::SpriteObject))}, // what a handle names
 };
