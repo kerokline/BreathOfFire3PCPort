@@ -20,12 +20,17 @@
 
 #include "common/home.h"
 #include "input/pad_sdl.h"
+#include "launcher/ledger_registry.h"
 #include "launcher/music_player.h"
 #include "launcher/resource.h"
 #include "launcher/sources_dialog.h"
 #include "launcher/suites.h"
 
 namespace bof3x {
+// The presets' table, generated from the ledger by tools/ledger_registry.py
+// (docs/ledger-fields-round.md section 5): it compiles, and it is whole.
+static_assert(ledger::kEntryCount > 0 && ledger::TableIsWhole());
+
 namespace {
 
 // The Controls page's cells (DIV-0050, below with the page's code).
@@ -47,7 +52,10 @@ struct SubPage {
     const wchar_t* label;   // the sub-tab button's, when the tab has more than one
 };
 constexpr SubPage kSubPages[] = {
-    {kPageSettings, IDD_PAGE_SETTINGS, nullptr},
+    // Settings and the preset (launcher/config.h; docs/launcher-settings.md
+    // "preset="), on a sub-page of its own: its list does not fit beside them.
+    {kPageSettings, IDD_PAGE_SETTINGS, L"Settings"},
+    {kPageSettings, IDD_PAGE_PRESET, L"Preset"},
     {kPageControls, IDD_PAGE_CONTROLS, L"Directions and buttons"},
     {kPageControls, IDD_PAGE_CONTROLS2, L"Shoulders, Start and Select"},
     {kPageMusic, IDD_PAGE_MUSIC, nullptr},
@@ -495,6 +503,137 @@ void MusicRefresh(HWND dlg, const DialogState& state) {
     Select(dlg, IDC_MUSIC, sel < 0 ? MusicIndex(ConfigMusicSource(state.cfg->music, state.cfg->opt)) : sel);
 }
 
+// ---- The preset (launcher/config.h; docs/launcher-settings.md "preset=") -----
+//
+// The Settings tab's Preset sub-page: the box (kPresets' order), the preset's
+// sentence, and a read-only list of what it changes when the game starts -
+// ConfigPresetPlan for the language in the Language box, on this install, as
+// the launch will make it. A control whose ini key the preset sets is grey,
+// with a line under Settings: the player's value stays in bof3x.ini, and the
+// game gets the preset's.
+
+// The controls of the ini keys a preset can set today (the ledger's ini:
+// switches of Default on entries): display=, background=, music=. scale= and
+// opt= have no control of their own.
+struct PresetControl {
+    const char* key;
+    int id;
+    const wchar_t* label;
+};
+constexpr PresetControl kPresetControls[] = {
+    {"display", IDC_DISPLAY, L"Display"},
+    {"background", IDC_BACKGROUND, L"Keep the game running when its window is not active"},
+    {"music", IDC_MUSIC, L"Music (Music page)"},
+};
+
+std::wstring PresetTitle(const ledger::Entry& e) {
+    std::wstring t = ConfigFromUtf8(std::string(e.title));
+    t.erase(std::remove(t.begin(), t.end(), L'`'), t.end());   // the ledger's code marks
+    return t;
+}
+
+std::wstring PresetLine(const ledger::Entry& e) {
+    wchar_t id[16];
+    std::swprintf(id, 16, L"DIV-%04u  ", static_cast<unsigned>(e.id));
+    return std::wstring(L"  ") + id + PresetTitle(e);
+}
+
+void PresetRefresh(HWND dlg, DialogState& state) {
+    if (!state.cfg) return;
+    const int sel = Selected(dlg, IDC_PRESET);
+    const Preset preset = kPresets[sel >= 0 && static_cast<size_t>(sel) < std::size(kPresets) ? sel : 0].id;
+    Config chosen = *state.cfg;
+    chosen.language = LanguageChosen(dlg, state);
+    if (chosen.language.empty()) chosen.language = kLanguageOriginal;
+    const std::string language = ConfigLanguagePlayed(state.game_dir, chosen);
+    const PresetPlan plan = ConfigPresetPlan(state.game_dir, *state.cfg, preset, language);
+    SetText(dlg, IDC_PRESETNOTE, PresetOf(preset).note);
+
+    std::wstring out = L"For the language that you selected: ";
+    out += language == kLanguageOriginal ? L"Chinese (PC script)" : LanguageLabel(language);
+    out += L".\r\n";
+    std::vector<const wchar_t*> greyed;
+    for (const PresetControl& c : kPresetControls) {
+        const bool set = PresetOverrides(plan, c.key);
+        Enable(dlg, c.id, !set);
+        if (set) greyed.push_back(c.label);
+    }
+    SetText(dlg, IDC_PRESETGREY, PresetOverrides(plan, "display") || PresetOverrides(plan, "background")
+                                     ? L"A grey setting: the preset (Preset page) sets it when the game starts."
+                                     : L"");
+    if (plan.items.empty()) {
+        out += L"\r\nThis preset turns off no change.\r\n";
+        SetText(dlg, IDC_PRESETLIST, out.c_str());
+        return;
+    }
+    if (!greyed.empty()) {
+        out += L"\r\nThe preset sets these settings in place of yours (they are grey):";
+        for (size_t i = 0; i < greyed.size(); ++i) out += (i ? L", " : L" ") + std::wstring(greyed[i]);
+        out += L".\r\n";
+    }
+
+    std::wstring off, here, kept, cannot, also;
+    int n_off = 0, n_here = 0, n_kept = 0, n_cannot = 0, n_also = 0, n_lang = 0, n_skip = 0, n_never = 0;
+    for (const PresetPlan::Item& item : plan.items) {
+        const ledger::Entry& e = *item.entry;
+        switch (item.action) {
+        case PresetAction::kOff: {
+            const int count = static_cast<int>(ledger::SwitchesEnd(e) - ledger::SwitchesBegin(e));
+            const int left = count - static_cast<int>(item.not_here.size() + item.kept.size());
+            std::wstring why;
+            for (const auto& [sw, reason] : item.not_here)
+                why += (why.empty() ? L" - " : L"; ") + ConfigFromUtf8(sw.substr(4)) + L": " + ConfigFromUtf8(reason);
+            for (const auto& [sw, reason] : item.kept)
+                why += (why.empty() ? L" - " : L"; ") + ConfigFromUtf8(sw.substr(4)) + L": " + ConfigFromUtf8(reason);
+            if (left == 0 && !item.not_here.empty()) {
+                here += PresetLine(e) + why + L"\r\n";
+                ++n_here;
+            } else if (left == 0) {
+                kept += PresetLine(e) + why + L"\r\n";
+                ++n_kept;
+            } else {
+                std::wstring sw;
+                for (const ledger::Switch* s = ledger::SwitchesBegin(e); s != ledger::SwitchesEnd(e); ++s)
+                    if (s->form == ledger::SwitchForm::Ini || s->form == ledger::SwitchForm::Env)
+                        sw += (sw.empty() ? L" (" : L", ") + ConfigFromUtf8(std::string(s->text.substr(4)));
+                if (!sw.empty()) sw += L")";
+                off += PresetLine(e) + sw + why + L"\r\n";
+                ++n_off;
+            }
+            break;
+        }
+        case PresetAction::kCannot: cannot += PresetLine(e) + L"\r\n"; ++n_cannot; break;
+        case PresetAction::kAlsoAvailable: also += PresetLine(e) + L"\r\n"; ++n_also; break;
+        case PresetAction::kLangGoverned: ++n_lang; break;
+        case PresetAction::kSkippedLanguage: ++n_skip; break;
+        case PresetAction::kNever: ++n_never; break;
+        default: break;
+        }
+    }
+    auto section = [&out](const wchar_t* head, int n, const std::wstring& lines) {
+        if (n == 0) return;
+        wchar_t count[16];
+        std::swprintf(count, 16, L" (%d)", n);
+        out += L"\r\n";
+        out += head;
+        out += count;
+        out += L":\r\n";
+        out += lines;
+    };
+    section(L"Turned off when the game starts", n_off, off);
+    section(L"Not on this install: the preset cannot turn these off here", n_here, here);
+    section(L"Kept: a setting of yours or of the environment controls these", n_kept, kept);
+    section(L"This build cannot turn these off", n_cannot, cannot);
+    section(L"Also available: the preset keeps these on, but they are off. Turn them on yourself", n_also, also);
+    wchar_t tail[320];
+    std::swprintf(tail, std::size(tail),
+                  L"\r\nNot changed: %d follow the language that you select (no preset changes the language), "
+                  L"%d are not used with this language, %d must stay on (Forced, or they cannot go back).\r\n",
+                  n_lang, n_skip, n_never);
+    out += tail;
+    SetText(dlg, IDC_PRESETLIST, out.c_str());
+}
+
 // ---- Pad navigation of the dialogs (the owner, 2026-09-24: from the couch) --
 //
 // Every dialog polls the pad on a timer and, when it is the active window,
@@ -626,6 +765,16 @@ void Populate(HWND dlg, DialogState& state) {
     SuitesRefresh(dlg, state);
 
     Check(dlg, IDC_SHOW, cfg.show_launcher);
+
+    // The preset, after the boxes it may grey (PresetRefresh).
+    SendMessageW(Item(dlg, IDC_PRESET), CB_RESETCONTENT, 0, 0);
+    int preset = 0;
+    for (size_t i = 0; i < std::size(kPresets); ++i) {
+        AddItem(dlg, IDC_PRESET, kPresets[i].label);
+        if (kPresets[i].id == cfg.preset) preset = static_cast<int>(i);
+    }
+    Select(dlg, IDC_PRESET, preset);
+    PresetRefresh(dlg, state);
 }
 
 // The inverse of Populate. Every look but the first takes the point filter
@@ -652,6 +801,8 @@ void ReadBack(HWND dlg, const DialogState& state) {
     cfg.ruby_ui_named = true;
     cfg.text_faster = Checked(dlg, IDC_EXTRA_TEXTSPEED);
     cfg.unlearned_blue = Checked(dlg, IDC_EXTRA_LEARNBLUE);
+    const int preset = Selected(dlg, IDC_PRESET);   // a grey box above keeps the player's value
+    if (preset >= 0 && static_cast<size_t>(preset) < std::size(kPresets)) cfg.preset = kPresets[preset].id;
 
     // The Music box (DIV-0150): the source music= already means keeps the line
     // as written (an empty music=, seq or mp3 too); another writes its name.
@@ -1484,7 +1635,11 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             if (HIWORD(wp) == CBN_SELCHANGE) {
                 SuitesRefresh(dlg, *state);   // a names layer's note follows the language
                 RubyRefresh(dlg, *state);     // the rows above it too
+                PresetRefresh(dlg, *state);   // and what the preset turns off
             }
+            return TRUE;
+        case IDC_PRESET:
+            if (HIWORD(wp) == CBN_SELCHANGE) PresetRefresh(dlg, *state);
             return TRUE;
         case IDC_RUBY:
             if (HIWORD(wp) == CBN_SELCHANGE) RubyPicked(dlg, *state);

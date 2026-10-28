@@ -14,6 +14,7 @@
 //    it is the port's own documented input, so this is not a divergence.
 #pragma once
 
+#include <cstdint>
 #include <iterator>
 #include <string>
 #include <string_view>
@@ -22,6 +23,7 @@
 
 #include "game/language_tags.h"
 #include "input/bindings.h"
+#include "launcher/ledger_registry.h"
 
 namespace bof3x {
 
@@ -62,6 +64,13 @@ constexpr const char* kLanguageOriginal = "original";
 
 enum class Filter { kLinear, kPoint };   // the original's, and DIV-0012's
 enum class Display { kFullscreen, kWindowed };
+
+// The presets (the owner's call 2 of 2026-10-27, docs/ledger-fields-round.md
+// section 5; docs/launcher-settings.md "preset="): one choice that turns off a
+// set of the ledger's entries at launch, on top of bof3x.ini. Recommended (the
+// default) turns off nothing. The rules are PresetClassify's, below; the
+// reference they must agree with is `python tools/ledger_registry.py presets`.
+enum class Preset { kRecommended, kShipped, kRepaired, kPlayStation };
 
 struct Config {
     std::string language = kLanguageOriginal;
@@ -123,6 +132,20 @@ struct Config {
     // data suite's two code members change it only when the suite's choice is
     // changed (SuitesPspEdit).
     std::string psp;
+    // The player's switch (docs/launcher-settings.md, "off="): BOF3X_OFF's
+    // list of code names - the ledger's `Switch:` names that a PatchBytes or a
+    // RetargetCall reads (python tools/ledger_switches.py) - in
+    // BOF3X_ORIGINAL's list syntax: `*` every code name, `-name` takes one
+    // back out. Empty (the default): none off. Kept as written; the game
+    // refuses a name it does not read (detour.cpp InjectReport). Not a
+    // hosted-only switch: both hosts read it.
+    std::string off;
+    // The preset (preset=recommended|shipped|repaired|playstation; the
+    // Configure page's Preset box): applied at launch on top of every other
+    // key, which it does not rewrite (ConfigPresetPlan / ConfigPresetApply).
+    // Any other value is dropped to the default, as filter= is, and said on
+    // stderr; BOF3X_PRESET in the environment wins (ConfigPresetFromEnvironment).
+    Preset preset = Preset::kRecommended;
     // DIV-0087: the importer's cache root (BOF3X_CACHE), whose base\bgm songs
     // play through the sequencer, and the music source (BOF3X_MUSIC; DIV-0150:
     // "psx", "psp" or "pc", the source played first - ConfigMusicSource; the
@@ -152,8 +175,15 @@ struct Config {
     // DIV-0036 / DIV-0042: the first window's size, 320 x 240 times this,
     // 2..8 (BOF3X_SCALE), used only until the game has saved a placement of
     // its own (bof3x.window beside the dll). Not in the dialog since
-    // 2026-09-23: the window is resized instead.
+    // 2026-09-23: the window is resized instead. scale_named: the ini had a
+    // scale= line with a value 2..8, which goes to the game as BOF3X_SCALE,
+    // 2 included; an empty or missing scale= sends nothing, and the game then
+    // takes k from the display's scale (DIV-0036's 2026-10-11 amendment). Until
+    // 2026-10-28 scale=2 sent nothing and ConfigSave wrote scale=2 back for a
+    // player who named none, so the ini could neither fix k = 2 nor say
+    // "follow the display" (D395).
     int scale = 2;
+    bool scale_named = false;
     // DIV-0043: the SatPixie look (BOF3X_PRESENT=satpixie), the Look box's
     // third entry, over the point filter, with its parameters
     // (BOF3X_SATPIXIE). (Our own CRT look, DIV-0037, sat between Sharp and
@@ -429,5 +459,113 @@ std::vector<RubyChoice> ConfigRubyChoices(const std::wstring& game_dir, const st
 // the layer not built here.
 std::string ConfigRubyPlayable(const std::wstring& game_dir, const std::string& ruby, const std::string& language,
                                const std::wstring& cache = std::wstring(), const std::wstring& music = std::wstring());
+
+// ---- The presets (docs/launcher-settings.md "preset=") -------------------------
+//
+// A preset reads the ledger's switch fields (launcher/ledger_registry.h,
+// generated from docs/DIVERGENCE.md) and only ever turns entries off, by their
+// Switch: names: a code name goes into BOF3X_OFF, an ini: value overrides what
+// the launcher sends for that key, an env: value is set when the environment
+// has none. The rules (docs/ledger-fields-round.md section 5, "D1 as run"):
+//   Recommended  nothing.
+//   As shipped   every entry a player can turn off (Player yes, Default on, active).
+//   Repaired     those of them whose tier is Sensible or Extension; Intent and Forced stay.
+//   PlayStation  those of them whose Toward: names a release and not psx (the
+//                owner's call of 2026-10-28: Toward none stays, as psx does).
+// An entry whose Languages: omits the language played is skipped; a Switch:
+// lang entry is the language pick's, never a preset's; Player costly is listed
+// as "this build cannot"; a Default: off entry the preset would keep on
+// (Repaired: Intent and Forced, PlayStation: psx) is listed as "also available".
+
+// The preset's ini value, the box's label and the sentence under the box.
+struct PresetInfo {
+    Preset id;
+    const char* name;      // preset=, BOF3X_PRESET
+    const wchar_t* label;  // the Preset box's entry
+    const wchar_t* note;   // what the preset does, under the box
+};
+inline constexpr PresetInfo kPresets[] = {
+    {Preset::kRecommended, "recommended", L"Recommended - the changes of this project (the default)",
+     L"The game uses the settings of the other pages. This preset turns off no change."},
+    {Preset::kShipped, "shipped", L"As shipped - the PC version as it was released",
+     L"This preset turns off all the changes that this build can turn off. Some changes stay on: the list "
+     L"below shows them."},
+    {Preset::kRepaired, "repaired", L"Repaired - only the repairs of defects",
+     L"This preset keeps the repairs of defects. It turns off the other changes that this build can turn off: "
+     L"the looks, the conveniences and the extensions."},
+    {Preset::kPlayStation, "playstation", L"PlayStation - as the PlayStation version",
+     L"This preset turns off the changes that make the game different from the PlayStation version. The repairs "
+     L"and the other changes stay on."},
+};
+// The preset an ini or BOF3X_PRESET value names, or nullptr.
+const PresetInfo* PresetNamed(std::string_view name);
+const PresetInfo& PresetOf(Preset preset);
+
+// What a preset does with one entry, under one language. The names are
+// tools/ledger_registry.py's actions (PresetActionName), so the launcher host
+// tests compare the two (tools/launcher_host/presets.tsv).
+enum class PresetAction {
+    kNone,             // the preset has nothing to do with the entry
+    kOff,              // turned off by its Switch: names
+    kSkippedLanguage,  // its Languages: omits the language played: inert there
+    kLangGoverned,     // Switch: lang - the language pick's, which no preset changes
+    kCannot,           // Player costly: the original is only Capcom's function
+    kAlsoAvailable,    // Default off, and the preset would keep it on: the player turns it on
+    kNever,            // Player never: Forced or one-way (left alone)
+    kAlreadyOff,       // Default off: already off (left alone)
+    kInactive,         // State withdrawn or superseded (left alone)
+};
+const char* PresetActionName(PresetAction action);
+// The Languages: bit of a language played: "original" (or empty) or a tag of
+// kLanguages; 0 for any other value, under which no listed entry acts.
+std::uint8_t PresetLanguageBit(std::string_view language);
+PresetAction PresetClassify(Preset preset, const ledger::Entry& entry, std::uint8_t language);
+
+// What a preset does at launch on this install, for the language played.
+struct PresetPlan {
+    Preset preset = Preset::kRecommended;
+    std::string language;   // "original" or a tag
+    struct Item {
+        const ledger::Entry* entry;
+        PresetAction action;
+        // kOff only: each Switch: name the launch does not apply, with why -
+        // the install cannot take it ("not on this install"), or a setting of
+        // the player's or the environment's decides it ("kept").
+        std::vector<std::pair<std::string, std::string>> not_here, kept;
+    };
+    std::vector<Item> items;   // every entry the preset concerns, the ledger's order
+    std::string off;           // the code names, comma-separated, distinct, the ledger's order
+    std::vector<std::pair<std::string, std::string>> ini;   // key, value: what the launcher sends instead
+    std::vector<std::pair<std::string, std::string>> env;   // variable, value: set where the environment has none
+};
+// The plan of `preset` for `language` (ConfigLanguagePlayed) on the install
+// in `game_dir` with the settings `cfg`. Reads the environment (a variable it
+// has is kept) and the install (the install rules: music=pc needs BGM\*.DAT;
+// music=psx and psp a cache with those songs; BOF3X_CACHE_DATA=0 and
+// BOF3X_EXEIMAGE_STRICT=1 a PC install, BOF3.exe in `game_dir`); an
+// opt= value only overrides an empty opt= (the launcher's default list, the
+// case the ledger's ini:opt=none is written for); an env: value is kept where
+// an ini value of the same plan decides that variable (music=pc and
+// BOF3X_MUSIC).
+PresetPlan ConfigPresetPlan(const std::wstring& game_dir, const Config& cfg, Preset preset,
+                            const std::string& language);
+// Whether the plan overrides the ini key `key` (the dialog greys its control).
+bool PresetOverrides(const PresetPlan& plan, std::string_view key);
+// The settings the game is given: `cfg` with the plan's ini values, its other
+// keys as read, and off= the plan's code names then the player's own list
+// (BOF3X_OFF's syntax: a player's -name keeps that change on).
+Config ConfigPresetApply(const Config& cfg, const PresetPlan& plan);
+// BOF3X_PRESET (the engine logs it) and the plan's env values, each where the
+// environment has none: before ConfigApplyEnvironment, which then keeps them.
+void ConfigPresetEnvironment(const PresetPlan& plan);
+// One block on stderr: the preset, the language, the counts, every switch
+// applied and every one not.
+void ConfigPresetReport(const PresetPlan& plan);
+// The language the game is given (ConfigApplyEnvironment's rule): BOF3X_LANG
+// when set, else the ini's when its overlay is built, else "original".
+std::string ConfigLanguagePlayed(const std::wstring& game_dir, const Config& cfg);
+// BOF3X_PRESET in the environment wins over preset=, as every variable does;
+// false with `error` set when it names no preset.
+bool ConfigPresetFromEnvironment(Config& cfg, std::string& error);
 
 }  // namespace bof3x

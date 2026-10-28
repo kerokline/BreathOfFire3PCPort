@@ -158,7 +158,13 @@ From the owner's two mock-ups. One `DIALOGEX` (`IDD_CONFIG`) with two faces:
   row (16 dialog units) and the page's group box shortens by as much; shown,
   they move back down (the owner, 2026-10-22: "gives slightly more space";
   `RubyUiShow`, checked in `dialog_test.py` by the Look box's top). The SatPixie options, the capture,
-  the Jukebox and the Sources page are still their own dialogs. Control ids
+  the Jukebox and the Sources page are still their own dialogs. Since
+  2026-10-28 (the ledger-fields round's stage D) **Settings has two
+  sub-pages, Settings and Preset**: the Preset page holds the preset's box
+  and the list of what it changes (section 3.3), which does not fit beside
+  the settings; the Settings page was made 14 dialog units shorter (176) to
+  fit under the sub-row, and gained one line at its foot that says why a
+  setting is grey. Control ids
   are unique across the pages, so the code finds any of them through the
   window (`Item`, `config_dialog.cpp`), and the pages forward what their
   controls say to it.
@@ -212,8 +218,10 @@ close box after the same change left the ini byte for byte.
 | Widescreen (2026-09-23) | `BOF3X_WIDE=1` when on | ours — DIV-0041 |
 | Optional layers (2026-10-08): `opt=` in the ini - empty (the default), `none`, or a comma-separated list of `opt/` layer names; since 2026-10-10 the dialog's PSP extras group (§3.1), since 2026-10-12 the dialog's three suites ([`launcher-suites.md`](launcher-suites.md); up to 16 layers) | `BOF3X_OPT=<list>`, only the layers whose `DAT\<layer>.*` are installed and whose language (a `-<tag>` suffix) is the one played. **Empty** names the default layers that are installed - since 2026-10-10 `area4-walls` (DIV-0080) when `DAT\area4-walls.*.DAT` is there; **`none`** names none; a list is exactly that list (so one without `area4-walls` turns the walls off). A value it cannot honour (a character other than a letter, digit, `-` or `,`, an empty name, `none` in a list, a name twice, more than 8, one over 23 characters) **stops the launcher** with a message rather than falling back to the default | ours — DIV-0086, DIV-0080, [`opt-layers.md`](opt-layers.md) section 5 |
 | Cheats... (2026-09-24): EXP and zenny sliders, steal switch | `BOF3X_EXP` / `BOF3X_ZENNY` when not 1, `BOF3X_STEAL=1` when on | ours — DIV-0045, DIV-0046; [`cheats.md`](cheats.md) |
-| (Window size, removed 2026-09-23 evening) | `BOF3X_SCALE`, from `scale=` in the ini, when not 2 | the first window's size only, until the game saves `bof3x.window` (DIV-0042) |
+| (Window size, removed 2026-09-23 evening) | `BOF3X_SCALE`, from `scale=` in the ini whenever it names 2..8, 2 included; an empty `scale=` sends nothing and the game follows the display's scale (DIV-0036). Written back as read, empty when not named. Until 2026-10-28 it was sent only when not 2 and written back as `scale=2` for every player, so the ini could not fix k = 2 (D395) | the first window's size only, until the game saves `bof3x.window` (DIV-0042) |
 | Keep running unfocused (2026-09-23) | `BOF3X_BACKGROUND=0` when off | ours — DIV-0033 |
+| The player's switch (2026-10-28; the ini only, no control yet): the changes to turn off, by their code names | `off=` in the ini, **empty by default** (none off), kept as written and written back as read; handed over as `BOF3X_OFF` to either host unless the environment sets it | ours - the ledger-fields round's stage D; section 3.2 below |
+| Preset (2026-10-28, Settings, Preset): Recommended, As shipped, Repaired, PlayStation | `preset=recommended` (the default), `shipped`, `repaired` or `playstation` in the ini, always written; another value is the default, said on stderr. Applied at launch on top of the ini, which it does not rewrite: its code names into `BOF3X_OFF` with `off=`, its ini values in place of the ini's, its env values where the environment has none; `BOF3X_PRESET` to the game, which logs it | ours - the ledger-fields round's stage D; section 3.3 below |
 | Controls... (2026-09-24): fourteen rows, two key cells and two pad cells each - click a cell and press the key or pad input, Escape cancels, Clear empties - the face-button layout | `key.NAME=action` and `pad.NAME=action` lines in the ini; `BOF3X_KEYS` / `BOF3X_PAD` when they differ from the default | ours — DIV-0050; [`controls.md`](controls.md) §4.2. Unset, the DLL leaves the game's own key table (`BOF3.CFG` lines 3+ or its default) and uses the default pad map |
 
 | Music and Cache folder (2026-10-10, §3.1): the source played first - the PlayStation's, the PSP's or the PC's MP3s (DIV-0150, 2026-10-21); the importer's cache, typed or Browse... | `BOF3X_MUSIC` always, `BOF3X_CACHE` when not empty; `music=` / `cache=` in the ini | ours - DIV-0087, DIV-0150, [`music-seq-engine.md`](music-seq-engine.md) 2 |
@@ -339,6 +347,141 @@ Rules the writer follows:
   save never turns an empty one into a list that pins the default off. A
   harness that must not get the layer sets `BOF3X_OPT=none`.
 
+### 3.2 The player's switch: `off=` and `BOF3X_OFF` (2026-10-28)
+
+**What it is.** One switch, read by both hosts (`bof3x.exe` and the hosted
+build), that turns off a change of this project whose original behaviour is
+in our code already: a ledger entry whose `Switch:` is a *code name* - the
+first argument of a `PatchBytes` or a `RetargetCall` in `src/`
+([`DIVERGENCE.md`](DIVERGENCE.md) "Entry format", "The switch fields"). Such
+an entry is `Player: yes - BOF3X_OFF=<name> (ini off=)`; on 2026-10-28 there
+are 67 of them, and 83 code names in `src/`. The owner named it (the
+ledger-fields round, [`ledger-fields-round.md`](ledger-fields-round.md)
+section 6, call 3). It is not a hosted-only switch: the player's launcher
+starts `bof3x.exe` with it and does not hand over to the developer's.
+
+For example (one line at a time; the ini takes no comment after a value):
+`off=SunderLoop,Game_Clock` turns those two changes off and leaves the
+others as they are; `off=*` turns every code name off; `off=*,-SaveLists`
+every code name but `SaveLists`.
+
+**The list syntax** is `BOF3X_ORIGINAL`'s (`src/hook/detour.cpp`
+`NameListed`): names separated by commas or spaces; `*` is every code name;
+`-name` takes that name back out of `*`, wherever it stands. The ini's
+`off=` goes to the game as `BOF3X_OFF` (`ConfigApplyEnvironment`), only when
+the environment has no `BOF3X_OFF` of its own - the environment wins, as for
+every key. An empty `off=` sends nothing.
+
+**Which names.** The ledger's `Switch:` lines name them;
+`python tools/ledger_switches.py` lists every name `src/` reads with its
+class, and the ones `BOF3X_OFF` takes are class `code` (in
+`analysis/ledger_switches.tsv`, `switch` rows whose class is `code`). A
+`Switch:` that is a detour (class `detour`, `Player: costly`) is not
+reachable this way: its original behaviour is Capcom's function, which
+`bof3x.exe` does not have.
+
+**A name that is not a code name stops the game with a message** (CLAUDE.md
+rule 4: refuse loudly, never silently), in a message box and the log's
+`FATAL:` line, exit code 3:
+
+- a **detour's** name, bare or as `-name`, stops the game at once and says
+  that the original function is the hosted build's `BOF3X_ORIGINAL=<name>`
+  (`bof3x-launcher --host bof3`). `*` does not reach detours.
+- a name that is **not one of the code names** at all - a misspelt name, an
+  instrument hook's (`InputScript`, `StateHash`: no name turns those off) -
+  stops the game at the end of injection (`InjectReport`) and names it. The
+  code names are `src/hook/code_names.h`, which `tools/ledger_switches.py`
+  generates from `src/` (every class `code` name, sorted); its `--check`, in
+  CI, fails when the checked-in header is not what `src/` gives, and the game
+  stops if a `PatchBytes` or `RetargetCall` asks for a name the header lacks.
+
+**A code name whose change is not active in this start is logged, and the
+game runs.** Some code names are asked for only under a setting: 23 of the
+83 are not asked for in a plain start (no language, no wide mode, the linear
+filter, no cheat) - the language layouts (`YesNoLayout`, `ConfigText`, ...),
+`Widescreen`, `Gfx_FilterPoint`, `Cheat_StealAlways`. With one of them in
+`off=` and its change off anyway, the log says `BOF3X_OFF: YesNoLayout is not
+active in this start (...), so it has nothing to turn off`, once, at the end of
+injection. So an `off=` written under one language still starts under
+another.
+
+**What the log says.** Each name turned off logs its `OFF` line with the
+variable that turned it off - `patch   OFF  SunderLoop ... left alone
+(BOF3X_OFF)` - and after injection `code names: N asked for, N off by
+BOF3X_ORIGINAL, N off by BOF3X_OFF` and the list as given. In the hosted
+build a code name in both `BOF3X_ORIGINAL` and `BOF3X_OFF` is logged as
+`BOF3X_ORIGINAL`'s; the hosted A/B meaning of `BOF3X_ORIGINAL` is unchanged.
+
+### 3.3 The presets: `preset=` (2026-10-28)
+
+**What it is.** One choice that turns off a set of this project's changes,
+read from the ledger's switch fields ([`DIVERGENCE.md`](DIVERGENCE.md)
+"The switch fields") through the generated table
+`src/launcher/ledger_registry.h`: the owner's call 2 of 2026-10-27, four
+presets ([`ledger-fields-round.md`](ledger-fields-round.md) section 5). A
+preset only ever turns changes **off**, by their `Switch:` names; it never
+turns one on.
+
+| Preset | `preset=` | Turns off |
+|---|---|---|
+| Recommended (the default) | `recommended` | nothing: the game gets the ini as it is |
+| As shipped | `shipped` | every change a player can turn off (`Player: yes`, `Default: on`, `State: active`) |
+| Repaired | `repaired` | those of them whose tier is Sensible or Extension; the repairs (Intent) and Forced stay |
+| PlayStation | `playstation` | those of them whose `Toward:` names a release and not `psx` (today DIV-0123 alone); `Toward: none` stays (the owner, 2026-10-28) |
+
+Under every preset: an entry whose `Languages:` omits the language played is
+not used with it and is left; a `Switch: lang` entry follows the language
+box, which no preset changes; a `Player: costly` entry is listed as "this
+build cannot turn it off" (the owner's call 4); a `Player: never` entry
+(Forced, or one-way) stays on; a `Default: off` entry that the preset would
+keep on (Repaired: Intent and Forced; PlayStation: `psx`) is listed as "also
+available", for the player to turn on. `python tools/ledger_registry.py
+presets [--language <tag>|original]` prints the same lists, and the launcher
+host tests compare the two for `original` and `en-US`
+(`tools/launcher_host/presets_<language>.tsv`, made by its `--tsv`;
+regenerate them when the ledger's fields change).
+
+**How it is applied** (`ConfigPresetPlan`, `ConfigPresetApply`,
+`ConfigPresetEnvironment` in `src/launcher/config.cpp`), at launch, after the
+dialog, for the language the game is given:
+
+- a **code name** goes into `BOF3X_OFF`: the preset's names first, then the
+  player's own `off=` list, so a player's `-name` keeps that change on. An
+  environment's `BOF3X_OFF` wins unchanged, as every variable does.
+- an **`ini:` value** is what the launcher sends to the game for that key in
+  place of the ini's - `display=windowed` and `scale=2` (DIV-0036; the display
+  line of `BOF3.CFG` too), `background=0` (DIV-0033), `music=pc` (DIV-0087),
+  `opt=none` (DIV-0080) - read as the ini's own line would be. The ini is
+  not rewritten. On the Settings and Music pages a control whose key the
+  preset sets is grey, and a line under Settings says why.
+- an **`env:` value** is set when the environment has none (`BOF3X_LAYERING=0`,
+  `BOF3X_FRAME_MS=33.334`, ...), before the launcher's own variables, which
+  then keep it.
+
+**What a preset leaves**, each listed on the Preset page and on stderr:
+
+- *not on this install*: `music=pc` without a `BGM\` folder of the PC's MP3s
+  (the Music box's own test); `music=psx` / `psp` without those songs in the
+  cache; `BOF3X_CACHE_DATA=0` and `BOF3X_EXEIMAGE_STRICT=1` without `BOF3.exe`
+  in the game folder (a disc-built install has no PC `DAT\` to read in place
+  of the cache, and its `.data` has gaps that the strict switch refuses).
+- *kept*: `opt=none` when the ini's `opt=` names its own list (the ledger's
+  `ini:opt=none` is written for the default list, `area4-walls` alone; over a
+  list it would take off the player's suites too); an env value the
+  environment already sets; and an env value of a variable that an ini
+  value of the same preset decides - `music=pc` sends `BOF3X_MUSIC=pc`, so
+  DIV-0150's `BOF3X_MUSIC=seq` is not set (where `music=pc` is not on this
+  install, `seq` is).
+
+**`BOF3X_PRESET`** goes to the game with the preset's name; the game logs it
+once, beside the language (`src/game/dat_load.cpp`: `preset      shipped
+(BOF3X_PRESET), language en-US`), in both hosts, and reads it for nothing
+else. Set in the launcher's environment it chooses the preset in place of
+`preset=` (the environment wins); a value that is not a preset stops the
+launcher with a message. The launcher's stderr gives the plan: the preset,
+the language, the counts, the code names for `BOF3X_OFF`, the ini values,
+the env values, and each switch not on this install or kept.
+
 ### The pad in the launcher (2026-09-24)
 
 With the settings dialog open the launcher holds the pad through SDL, and
@@ -401,7 +544,7 @@ screen=clean               # clean | satpixie (DIV-0043); crt (DIV-0037, withdra
 satpixie.acc_modulate=0.65 # ... fourteen satpixie.* lines, the preset's names
 display=fullscreen         # fullscreen (a borderless window) | windowed -> BOF3.CFG line 1
 snap=1                     # DIV-0042
-scale=2                    # 2..8, the first window only, until bof3x.window exists
+scale=                     # 2..8, the first window only, until bof3x.window exists; empty follows the display (D395)
 wide=0                     # DIV-0041
 background=1               # DIV-0033
 renderer=1                 # 1 | 0                  -> BOF3.CFG line 2
@@ -414,6 +557,9 @@ pad.layout=positional      # positional | nintendo | auto
 pad.south=cross            # ... eighteen pad.* lines
 show_launcher=1            # 0 starts the game straight away
 ```
+
+Since 2026-10-28 the file also has `off=` (section 3.2) and
+`preset=recommended` (section 3.3) after `psp=`.
 
 (The five-key example this replaced was the 2026-09-20 file.)
 
@@ -429,7 +575,8 @@ list on 2026-09-21. Since then `ConfigApplyEnvironment` fills thirteen the
 same way, each only when unset and only when the setting is not at its
 default: also `BOF3X_BACKGROUND`, `BOF3X_PRESENT`, `BOF3X_SATPIXIE`,
 `BOF3X_SNAP`, `BOF3X_WIDE`, `BOF3X_SCALE`, `BOF3X_EXP`, `BOF3X_ZENNY`,
-`BOF3X_STEAL`, `BOF3X_KEYS` and `BOF3X_PAD` - `src/launcher/config.cpp`.) So a harness that
+`BOF3X_STEAL`, `BOF3X_KEYS` and `BOF3X_PAD` - `src/launcher/config.cpp`;
+`BOF3X_SCALE` since 2026-10-28 whenever `scale=` names a value, 2 included, D395.) So a harness that
 must run a particular configuration sets both variables explicitly. The DLL
 reads `BOF3X_LANG=original` as no overlay, and `BOF3X_FILTER=linear` is the
 port's own filter. `tools/attract_run.py` pins both by default (`--lang`,

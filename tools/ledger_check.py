@@ -69,7 +69,13 @@ SWITCH_FIELDS = ['Switch', 'Default', 'Player', 'Toward', 'Languages', 'State']
 # seventh field added, False would count the entries still without it as a note
 # until they are filled, as stage B did.
 STRICT_FIELDS = True
-PLAYER_VALUES = ('yes', 'cheap', 'costly', 'never')
+PLAYER_VALUES = ('yes', 'costly', 'never')
+# Retired by the round's stage D (2026-10-28): `cheap` meant "the original is
+# in our code, only the player's switch is missing"; src/ reads BOF3X_OFF now,
+# so such an entry is `yes` (docs/ledger-fields-round.md section 2).
+PLAYER_RETIRED = {'cheap': (f'was retired by stage D (2026-10-28): src/ reads '
+                            f'{ledger_switches.PLAYER_SWITCH} (ini {ledger_switches.PLAYER_INI}=) in both hosts, '
+                            "so a code name is a player's switch: write yes")}
 TOWARD_VALUES = ('psx', 'psp', 'pc')
 # `Languages:` (the owner's call, 2026-10-28: explicit tags, no class names):
 # `any` alone, or the tags the engine knows - imported, so the ledger cannot
@@ -314,7 +320,9 @@ def check_switch_fields(r, fielded, defined, inv, whole=True):
         # Player: the value the Switch names' classes give, or never.
         if 'Player' in vals:
             pv = vals['Player']
-            if pv not in PLAYER_VALUES:
+            if pv in PLAYER_RETIRED:
+                r.error(f'{where}: {did} Player {pv} {PLAYER_RETIRED[pv]}')
+            elif pv not in PLAYER_VALUES:
                 r.error(f'{where}: {did} Player {pv!r} is not one of {", ".join(PLAYER_VALUES)}')
             else:
                 if tier == 'Forced' and pv != 'never':
@@ -324,9 +332,7 @@ def check_switch_fields(r, fielded, defined, inv, whole=True):
                 if sw_player and pv != 'never' and pv != sw_player:
                     why = ("the player's build cannot reach every name of its Switch" if pv == 'yes'
                            else 'that is not what its Switch names give')
-                    built = 'is' if inv.player_switch_built else 'is not yet'
-                    r.error(f'{where}: {did} Player {pv}: {why} - they give {sw_player} '
-                            f'(tools/ledger_switches.py; {ledger_switches.PLAYER_SWITCH} {built} read by src/)')
+                    r.error(f'{where}: {did} Player {pv}: {why} - they give {sw_player} (tools/ledger_switches.py)')
                 if vals.get('Default') == 'off' and pv != 'yes' and vals.get('State') == 'active':
                     r.note(f'{did}: Default off and Player {pv}: a player who cannot switch it on never gets it')
 
@@ -406,8 +412,9 @@ def check_citations(r, defined):
                f'divergences are expected here): {", ".join(quiet)}')
 
 
-# The worked examples as fixtures: DIV-0176 (a code name, cheap) and DIV-0183
-# (a detour name, costly) as the ledger has them must pass, and each case
+# The worked examples as fixtures: DIV-0176 (a code name, yes through
+# BOF3X_OFF; `cheap` until stage D) and DIV-0183 (a detour name, costly) as the
+# ledger has them must pass, and each case
 # below - one field line changed - must give the error it names (None: none).
 FIXTURE_IDS = ('DIV-0176', 'DIV-0183')
 FIXTURE_CASES = [
@@ -425,15 +432,17 @@ FIXTURE_CASES = [
     ('DIV-0176', {'Switch': 'env:BOF3X_NO_SUCH_NAME=1'}, 'nothing in src/ reads BOF3X_NO_SUCH_NAME'),
     ('DIV-0176', {'Switch': 'ini:no_such_key=1'}, 'not one the launcher reads'),
     ('DIV-0176', {'Switch': 'sunder loop'}, 'is not a switch name'),
-    ('DIV-0176', {'Player': 'yes'}, "cannot reach every name"),
+    ('DIV-0176', {'Player': 'cheap'}, 'was retired by stage D'),
+    ('DIV-0176', {'Player': 'cheap - only the switch is missing'}, 'was retired by stage D'),
+    ('DIV-0176', {'Switch': 'SunderLoop, Paralyzer_Start'}, "cannot reach every name"),
     ('DIV-0176', {'Player': 'costly'}, 'not what its Switch names give'),
     ('DIV-0176', {'Player': 'maybe'}, 'is not one of'),
     ('DIV-0176', {'Switch': 'ini:wide=0', 'Player': 'yes'}, None),
     ('DIV-0176', {'Switch': 'lang', 'Player': 'yes', 'Languages': 'en-US, en-150, fr-FR, de-DE, ja-JP',
                   'Default': 'on - under its languages'}, None),
-    ('DIV-0176', {'Switch': 'lang, SunderLoop', 'Player': 'yes'}, 'they give cheap'),
-    ('DIV-0176', {'Switch': 'lang, SunderLoop', 'Player': 'cheap', 'Languages': 'fr-FR',
+    ('DIV-0176', {'Switch': 'lang, SunderLoop', 'Player': 'yes', 'Languages': 'fr-FR',
                   'Default': 'on - under its languages'}, None),
+    ('DIV-0176', {'Switch': 'SunderLoop, Paralyzer_Start', 'Player': 'costly'}, None),
     ('DIV-0176', {'Switch': 'env:BOF3X_MP3=original', 'Player': 'costly'}, None),
     ('DIV-0176', {'Switch': 'env:BOF3X_MP3=original', 'Player': 'yes'}, 'cannot reach every name'),
     ('DIV-0176', {'Tier': 'Forced'}, 'is Forced'),
@@ -448,7 +457,8 @@ FIXTURE_CASES = [
     ('DIV-0176', {'State': 'superseded by <past the last>'}, 'not in the ledger'),
     ('DIV-0176', {'State': 'retired'}, 'is not active, withdrawn'),
     ('DIV-0176', {'+Switch': 'SunderLoop'}, 'want one'),
-    ('DIV-0183', {'Player': 'cheap'}, 'they give costly'),
+    ('DIV-0183', {'Player': 'yes'}, 'cannot reach every name'),
+    ('DIV-0183', {'Player': 'cheap'}, 'was retired by stage D'),
     ('DIV-0183', {'Player': 'never'}, None),
     ('DIV-0176', {'-State': ''}, 'has no "- **State:**" field'),
     ('DIV-0183', {'-Toward': ''}, 'has no "- **Toward:**" field'),

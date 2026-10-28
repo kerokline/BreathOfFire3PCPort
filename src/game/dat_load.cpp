@@ -843,6 +843,16 @@ void DatLoad_Inject() {
     // DAT\en.* is no overlay this project builds any more.
     if (const char* use = bof3x::RetiredLanguageReplacement(g_lang))
         bof3::Fatal("DIV-0005: BOF3X_LANG=%s is retired; use %s", g_lang, use);
+    {
+        // The launcher's preset (src/launcher/config.h, docs/launcher-settings.md
+        // "preset="), logged once beside the language. Read only to be logged:
+        // the launcher has already applied it, through BOF3X_OFF and the others.
+        char preset[32];
+        const DWORD pn = GetEnvironmentVariableA("BOF3X_PRESET", preset, sizeof preset);
+        bof3::Log("preset      %s (BOF3X_PRESET), language %s",
+                  pn == 0 ? "none named (not started by the launcher)" : pn >= sizeof preset ? "(too long)" : preset,
+                  g_lang[0] ? g_lang : "original");
+    }
     RefuseOriginalWithoutChinese();  // DIV-0102
     if (g_lang[0]) MsgPool_Relocate();  // DIV-0007: English text runs past the pool's place
     if (g_lang[0]) bof3::Log("DIV-0005: language overlays DAT\\%s.*.DAT", g_lang);

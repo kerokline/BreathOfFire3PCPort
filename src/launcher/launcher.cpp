@@ -518,11 +518,25 @@ int wmain(int argc, wchar_t** argv) {
                       game_dir.c_str(), image_set ? L"BOF3X_EXEIMAGE's cache (the environment's)" : cache.c_str());
     }
 
+    // The preset (launcher/config.h, docs/launcher-settings.md "preset="), at
+    // launch on top of the settings, which it does not rewrite: its code names
+    // go into BOF3X_OFF with the player's off=, its ini values are what the game
+    // gets in place of the ini's (BOF3.CFG's display line too), its env values
+    // are set where the environment has none, and BOF3X_PRESET names it for the
+    // game's log. BOF3X_PRESET in the environment chooses it, as every variable wins.
+    std::string preset_error;
+    if (!bof3x::ConfigPresetFromEnvironment(cfg, preset_error)) Die(L"%hs", preset_error.c_str());
+    const bof3x::PresetPlan plan =
+        bof3x::ConfigPresetPlan(game_dir, cfg, cfg.preset, bof3x::ConfigLanguagePlayed(game_dir, cfg));
+    bof3x::ConfigPresetReport(plan);
+    const bof3x::Config played = bof3x::ConfigPresetApply(cfg, plan);
+
     std::wstring cfg_error;
-    if (!SelfTestOnly() && !bof3x::ConfigApplyGameCfg(game_dir, cfg, cfg_error))
+    if (!SelfTestOnly() && !bof3x::ConfigApplyGameCfg(game_dir, played, cfg_error))
         Die(L"%ls\n\nDisplay and renderer are set through that file, which is the game's "
             L"own input. Check that the game directory is writable.", cfg_error.c_str());
-    bof3x::ConfigApplyEnvironment(game_dir, cfg, hosted);   // hosted: no layer that build refuses
+    bof3x::ConfigPresetEnvironment(plan);   // before the ini's, which then keep them
+    bof3x::ConfigApplyEnvironment(game_dir, played, hosted);   // hosted: no layer that build refuses
 
     STARTUPINFOW si{};
     si.cb = sizeof si;

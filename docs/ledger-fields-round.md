@@ -584,6 +584,403 @@ so the ini can neither pin k = 2 nor say "follow the display"
 ([`known-defects.md`](known-defects.md)); the presets' launcher work takes
 the fix with it, DIV-0036's switch and prose updated to match.
 
+### D0 as run (2026-10-28, off `ledger-fields/stage-d` at `de7aeb3d`)
+
+One Opus agent, worktree `C:\Users\kerok\bof3x-runs\lfd1028\wt_d0`,
+branch `ledger-fields/d0`; report `lfd1028\d0\REPORT.md`. The player's
+switch, the launcher's key, the tools and the ledger; not the Configure
+page, the registry or the presets (D1, D2).
+
+**The coordinator's decisions, as built:**
+
+1. **Both hosts read `BOF3X_OFF`** (`src/hook/detour.cpp`): `PatchBytes`
+   and a non-instrument `RetargetCall` ask `CodeOff(name)`, which answers
+   `BOF3X_ORIGINAL` (unchanged, `WantsOriginal`), else `BOF3X_OFF`
+   (`WantsOff`, the same `NameListed`), else on; the `OFF` log line names
+   the variable. A name in both is `BOF3X_ORIGINAL`'s. `Inject` stops on a
+   non-instrument detour named in `BOF3X_OFF` (bare or `-name`; `*` does
+   not reach it) with a `Fatal` that names it and says the original
+   function is the hosted build's `BOF3X_ORIGINAL`. `InjectReport` counts
+   the code names asked for and refuses every name in `BOF3X_OFF` (bare or
+   after `-`) that is not a code name; a code name the start-up did not ask
+   for is logged as not active (step 6, below). `RefuseHostedSwitches` is
+   unchanged. *My choices:* a separate
+   `WantsOff` beside `WantsOriginal` (the class is fixed by the call, so an
+   argument bought nothing); `BOF3X_OFF` read once into a static buffer
+   (injection is single-threaded); a `-name` must be a code name too, since
+   an exclusion that matches nothing is as silent as a misspelt name; an
+   instrument hook's name is refused by the end-of-injection check (the
+   input recorder's and the state hash's `RetargetCall`s run after
+   `InjectReport`, in `InputScript_Start`, so they are never "asked for").
+2. **The launcher's `off=`** (`src/launcher/config.cpp`): kept as written,
+   written back as read with a three-line ASD-STE100 comment, sent as
+   `BOF3X_OFF` to either host when the environment has none. Not added to
+   `HostedOnlyAsked`. `tools/launcher_host/config_tests.cpp` `TestOff`: the
+   round trip, both hosts, the environment winning, the empty default (332
+   checks, 0 failures).
+3. **The ledger.** `ledger_switches.py`: `code` gives `yes`; `--check`
+   fails if `src/` stops reading `BOF3X_OFF` or the launcher `off=`.
+   `ledger_check.py`: `cheap` refused with "was retired by stage D
+   (2026-10-28) ... write yes"; DIV-0176 is a `yes` fixture now, the cases
+   that used it as `cheap` rewritten (52 cases, 49 before).
+   `DIVERGENCE.md`: the Entry format's `Player:` line and table (the
+   `cheap` row folded into `yes`, with the retirement note), the 67 entries
+   `Player: yes - BOF3X_OFF=<names> (ini off=)` and a last `Reversible?`
+   line "A player turns it off with `BOF3X_OFF=<names>` (the ini's
+   `off=`)." (`lfd1028\d0\edit_ledger.py`; DIV-0022's "No config toggle."
+   dropped, the sentence made it false); DIV-0141 and 0148 say the
+   language is the switch, DIV-0145 and 0147 the hosted build's
+   `BOF3X_ORIGINAL=Game_WndProc`. **`Player:` now yes 126, costly 28,
+   never 30.** `analysis/ledger_switches.tsv` regenerated.
+4. **`launcher-settings.md`** section 3's table row and section 3.2.
+5. **The proof** (`lfd1028\d0\proof.sh`, logs beside it; every run
+   `BOF3X_SELFTEST_ONLY=1 build/bof3x-launcher.exe --game <main>/bof3
+   --no-config`, no `bof3x.ini` in `build/`): the exe host plain, exit 0;
+   `BOF3X_SHADOW='*'` (the hosted fuzz), exit 0; the exe host with
+   `BOF3X_OFF=SunderLoop`, exit 0, `patch OFF SunderLoop ... (BOF3X_OFF)`;
+   `BOF3X_OFF='*'`, exit 0, 58 off; `BOF3X_OFF=NoSuchName`, exit 3, the
+   `FATAL` names it; `BOF3X_OFF=Paralyzer_Start`, exit 3, the `FATAL`
+   names the hosted build's `BOF3X_ORIGINAL`. Beyond the brief, hosted:
+   `BOF3X_SHADOW='*' BOF3X_OFF=SunderLoop` exit 0 (off by `BOF3X_OFF`);
+   `BOF3X_ORIGINAL=SunderLoop BOF3X_OFF=SunderLoop,Game_Clock` exit 0
+   (SunderLoop logged as `BOF3X_ORIGINAL`'s, Game_Clock as `BOF3X_OFF`'s);
+   `BOF3X_ORIGINAL=SunderLoop BOF3X_OFF=Paralyzer_Start` exit 3. The
+   state-hash proof against the hosted build is the coordinator's.
+
+**Finding, fixed as step 6 (the coordinator's call, 2026-10-28):** 23 of
+the 83 code names are asked for only under a setting, so the first build's
+end-of-injection check refused them in a start without it. A plain exe-host self-test (`--no-config`)
+asks for 60 code names, 58 under `BOF3X_OFF=*` (two are asked for only
+when an earlier one is on). Not asked in a plain start: the language
+layouts (`BattleBannerCentre`, `BattleListTitleCentre`,
+`BattleResultExpLayout`, `BoardYesNoLayout`, `ConfigController`,
+`ConfigJapaneseIcons`, `ConfigText`, `FormationNameCentre`,
+`MasterAskLayout`, `MasterPupilLabel`, `MenuTitleCentre`, `MenuVerbs`,
+`PauseText`, `SaveNameInset`, `ShopAskRow`, `ShopYesNoLayout`,
+`TitleMenu_Widths`, `TradeConfirmLayout`, `TradeLeaveLayout`,
+`YesNoLayout`), `Widescreen`, `Gfx_FilterPoint`, `Cheat_StealAlways`. So
+an `off=YesNoLayout` written under a Latin language stopped the game once
+the player picked the original text.
+
+6. **Step 6, the fix.** `tools/ledger_switches.py` now also writes
+   `src/hook/code_names.h`: a constexpr array of the 83 class-`code` names,
+   sorted in `strcmp` order, generated, not typed. Its `--check` (already in
+   `checks.yml`) fails, naming the names, when the checked-in header is not
+   what `src/` gives (tried: one name taken out of the header, error; put
+   back, 0 errors). `detour.cpp` `KnownCodeName` searches it. At
+   `InjectReport` a name in `BOF3X_OFF` that is a known code name but was
+   not asked for is logged once - "BOF3X_OFF: YesNoLayout is not active in
+   this start (its change is off with these settings: the language, the
+   wide mode, the filter or a cheat), so it has nothing to turn off" - and
+   the game runs; a name that is not a code name stays a `Fatal`, as does a
+   detour's. *My choices:* the file is `code_names.h`, not `.gen.h`, since
+   in this repo `*.gen.h` are build-tree outputs (`symbols.gen.h`) and this
+   one is checked in, as D1's `ledger_registry.h` is; the log names the
+   possible causes, not the one cause, because the engine does not record
+   why a module skipped its `PatchBytes`; and `CodeOff` stops the game if a
+   `PatchBytes` / `RetargetCall` asks for a name the header lacks (a stale
+   header in a local build that CI's `--check` has not seen yet). Proof,
+   exe host: `BOF3X_OFF=YesNoLayout` exit 0, the log line above;
+   `BOF3X_OFF=NoSuchName` exit 3, "BOF3X_OFF names "NoSuchName", which is
+   not a code name"; plain 0, `*` 0 (58 off), `Paralyzer_Start` 3;
+   `BOF3X_LANG=en-US BOF3X_OFF=YesNoLayout,ConfigText` exit 0, 77 code
+   names asked for, both off by `BOF3X_OFF`; the hosted fuzz
+   (`BOF3X_SHADOW='*'`) exit 0.
+
+### D1 as run (2026-10-28, off the stage branch at `de7aeb3d`)
+
+**What landed.** `tools/ledger_registry.py` reads the ledger through
+`tools/ledger_switches.py`'s own `ledger_entries` and `field` (imported) and
+writes `src/launcher/ledger_registry.h`, checked in: a `constexpr` table,
+`bof3x::ledger::kEntries` (184) and `kSwitches` (181), of plain structs -
+id, title, `Tier`, `State` (with `superseded_by`), the `Switch:` names each
+with its `SwitchForm` (`Name`, `Ini`, `Env`, `Lang`; `Switch: none` is a
+count of 0), `default_on`, `Player`, a `Toward` bit set and a `Languages`
+bit set (the `tools/language_tags.py` order, then `original`; `kLangAny`
+alone for `any`). No allocation, no parser. `Key()` and `Value()` are spans
+of the switch's own text, so the header holds no `"BOF3X_..."` literal that
+`ledger_switches.py` would count as a reader of that name (the tool refuses
+to write one; the inventory's TSV is the same with the header present or
+not). The header ends in a `static_assert` that the table is whole, and
+`src/launcher/config_dialog.cpp` includes it with a second one, so the
+launcher's build compiles it (and `-std=c++17 -fsyntax-only` on the header
+alone passes). `--check` regenerates to memory and fails with a diff
+summary; it is a step of `checks.yml` beside `ledger_switches.py --check`.
+It exits 0 on this tree and 1 on a scratch ledger with DIV-0176's
+`Default:` turned to `off` (`--ledger <path>`). It reads `Player:` as the
+ledger has it, so after D0's `cheap` to `yes` the header is regenerated with
+no change to the tool. A Windows checkout's CRLF is normalised before the
+comparison (`core.autocrlf` is on here; CI's Linux checkout is LF).
+
+**The presets, as a reference** (`python tools/ledger_registry.py presets
+[--language <tag>|original|all] [--tsv <path>]`; the launcher's code is
+D2's and must agree with it). The rules as the coordinator set them, the
+owner's calls of 2026-10-27/28 read literally, recorded verbatim:
+
+- A preset only ever turns entries **off** by applying their `Switch:`
+  names; it never turns an entry on (an `ini:` / `env:` switch gives only
+  the off value, so "on" is not derivable in general). An entry a preset
+  would want on that is `Default: off` is listed under the preset as "also
+  available, switch it yourself" instead.
+- Only `Player: yes` entries (after D0 that includes every former `cheap`;
+  until then treat `cheap` as `yes` too, and say so) with `Default: on` and
+  `State: active` can be turned off. `costly`, `never` (Forced), withdrawn
+  and superseded entries are never touched; the `costly` ones are listed as
+  "this build cannot" (the owner's call 4).
+- *Recommended*: nothing (the defaults).
+- *As shipped*: every such entry off.
+- *Repaired*: every such Sensible and Extension entry off; Intent and Forced
+  stay.
+- *PlayStation* (**the owner's call of 2026-10-28**, replacing the
+  coordinator's reading): every such entry whose `Toward:` lists a release
+  and does not list `psx` off - today the `psp`-only ones, `pc` when one
+  exists. `Toward: none` means the entry is related to no release, a generic
+  repair rather than a versioned one, so every `none` entry, like every
+  `psx` entry, stays at its default. *Also available* stays: the
+  `Default: off` entries that list `psx`. (The reading it replaced turned
+  off every entry that does not list `psx`, `none` included; it was dropped
+  because `none` mixes shared defects, console-less platform mechanics and
+  unmeasured cases, so it turned back on two crash fixes and the port's
+  window handling - the flag below.)
+- Language rule (section 4 "Languages as run", rule 2): an entry whose
+  `Languages:` is not `any` is governed by the language pick: skip it when
+  the chosen language is not listed, and never apply a `Switch: lang` entry's
+  switch (a preset never changes the language). `original` is a language for
+  this purpose.
+- An entry whose switch names are more than one applies them all.
+- The install rule (an `ini:` off value the install cannot take, such as
+  `music=pc` on a disc-only install) is the launcher's, not yours: print the
+  switch and let D2 decide at launch.
+
+**The order the tool applies them** (D1's reading; `classify` in the tool
+is the one place it is written): an entry the preset neither wants off nor
+wants on at `Default: off` is not its concern; then not active (left alone);
+then a `Languages:` list that omits the language (*skipped by language*,
+before every other test, since the entry is inert there); then a wanted-on
+`Default: off` entry (*also available*: Repaired wants Intent and Forced
+on, PlayStation every `psx` entry; Recommended and As shipped want none on);
+then `Default: off` (left alone, already off, so a `Default: off` entry is
+never counted *cannot*); then a `lang` switch name (*lang-governed*); then
+`Player: never` (left alone); then `costly` (*cannot*); else *off*, by every
+name of its `Switch:`. The printout counts the five actions and, apart, the
+three kinds left alone (never, already off, not active), so that a preset
+that wants every entry off (As shipped) accounts for all 184.
+
+**The counts** (184 entries; the 67 `Player: cheap` read as `yes`):
+
+| Language | Preset | off | skipped by language | lang-governed | cannot | also available | left alone: never / already off / not active |
+|---|---|---|---|---|---|---|---|
+| `original` | Recommended | 0 | 0 | 0 | 0 | 0 | 0 / 0 / 0 |
+| `original` | As shipped | 74 | 46 | 0 | 23 | 0 | 25 / 14 / 2 |
+| `original` | Repaired | 32 | 45 | 0 | 14 | 0 | 14 / 14 / 2 |
+| `original` | PlayStation | 1 | 0 | 0 | 0 | 1 | 4 / 8 / 0 |
+| `en-US` | Recommended | 0 | 0 | 0 | 0 | 0 | 0 / 0 / 0 |
+| `en-US` | As shipped | 85 | 8 | 20 | 28 | 0 | 26 / 15 / 2 |
+| `en-US` | Repaired | 43 | 8 | 20 | 18 | 0 | 15 / 15 / 2 |
+| `en-US` | PlayStation | 1 | 0 | 0 | 0 | 1 | 4 / 8 / 0 |
+
+Of the *off* rows, the `cheap` ones (a player's only once `BOF3X_OFF` is
+read): `original` 56 / 24 / 0 (As shipped / Repaired / PlayStation),
+`en-US` 67 / 35 / 0. PlayStation's one *off* is DIV-0123 (`psp` alone,
+`env:BOF3X_WIDE_STAGING=0`), the same under every language; its one *also
+available* is DIV-0012, the point filter.
+
+**For the owner, from D1, answered 2026-10-28.** D1 flagged that the
+coordinator's PlayStation reading turned off every switchable `Toward: none`
+entry, and that `none` held a defect every release shares (DIV-0121,
+0153), platform mechanics a console has nothing to match (DIV-0022, 0033,
+0036, which applies `display=windowed`, 0062, 0078, 0089, 0101, 0146) and
+behaviour not measured (DIV-0071, 0144, 0180 - a crash fix - and, under the
+Latin four, 0027, 0058, 0059). The owner's answer: `none` is related to no
+release, so the PlayStation preset leaves it alone (the rule above).
+
+### D2 as run (2026-10-28, off the stage branch at `f493bafb`)
+
+One Opus agent, worktree `C:\Users\kerok\bof3x-runs\lfd1028\wt_d2`, branch
+`ledger-fields/d2`; report `lfd1028\d2\REPORT.md`. The presets in the
+launcher, applied at launch, the Configure page's box, and D395.
+
+**D395, fixed** (the coordinator's decision 4): `Config::scale_named`;
+`ConfigLoad` takes `scale=` 2..8 as named and an empty one as not named;
+`ConfigApplyEnvironment` sends `BOF3X_SCALE` whenever named, 2 included;
+`ConfigSave` writes the value back, or `scale=` empty under a comment that
+says empty follows the display. DIV-0036's `Switch:` is
+`ini:display=windowed, ini:scale=2`, its `Reversible?` and `Player:` say
+so, and an amendment records the fix; D395's entry and the status line of
+`known-defects.md` say fixed. No new DIV entry: the default does not move.
+One consequence to know: an ini an earlier launcher wrote holds `scale=2`
+for every player (it wrote the default back), which now fixes k = 2 on a
+scaled desktop where it used to follow the display.
+
+**The presets, as built** (`src/launcher/config.h` / `config.cpp`):
+
+1. `preset=recommended|shipped|repaired|playstation`, default
+   `recommended`, always written with an ASD-STE100 comment; another value
+   is the default, said on stderr (as `filter=` drops a value it does not
+   know; *my choice*, against stopping the launcher). `BOF3X_PRESET` in the
+   launcher's environment chooses it, as every variable wins; a value that
+   is not a preset stops the launcher with a message.
+2. `PresetClassify` is `tools/ledger_registry.py`'s `classify`, in the same
+   order, over `ledger_registry.h`; the launcher host tests compare every
+   entry under every preset, for `original` and `en-US`, with the tool's
+   `--tsv` rows (`tools/launcher_host/presets_<language>.tsv`, checked in):
+   the action, the title and the `Switch:` names. Equal (3,224 checks in
+   all, 0 failures; a planted fault in the fixture fails).
+3. **At launch** (`launcher.cpp`, after the dialog, before `BOF3.CFG` and the
+   environment are written), for the language the game is given
+   (`ConfigLanguagePlayed`): `ConfigPresetPlan` makes the plan,
+   `ConfigPresetApply` gives the game a copy of the settings - the preset's
+   `ini:` values read as the ini's own lines would be (`ConfigLoad`'s parser,
+   now an overload on the text so that `ledger_switches.py` still finds the
+   keys in `ConfigLoad`), and `off=` the preset's code names then the
+   player's list, so a player's `-name` keeps a change on - and
+   `ConfigPresetEnvironment` sets `BOF3X_PRESET` and the `env:` values where
+   the environment has none, before the launcher's own variables. The ini is
+   never rewritten. An environment's `BOF3X_OFF` wins unchanged.
+4. **The install rules** (*my reading* of decision 2, documented in
+   `launcher-settings.md` 3.3), each listed as "not on this install":
+   `music=pc` without `BGM\*.DAT` (the Music box's own test), `music=psx` /
+   `psp` without those songs in the cache, and two `env:` values a
+   disc-built install cannot take, `BOF3X_CACHE_DATA=0` (no PC `DAT\` to read
+   in place of the cache) and `BOF3X_EXEIMAGE_STRICT=1` (its `.data` has gaps
+   the strict switch refuses) - D1's flag on DIV-0101. Listed as "kept": an
+   env value the environment sets; `opt=none` over an ini whose `opt=` names
+   its own list (the ledger's `ini:opt=none` is written for the default
+   list; over a list it would take the player's suites off too); and an
+   `env:` value whose variable an `ini:` value of the same plan decides
+   (`IniVariable`): `music=pc` sends `BOF3X_MUSIC=pc`, so DIV-0150's
+   `BOF3X_MUSIC=seq` is not set where `music=pc` is; where it is not on this
+   install, `seq` is.
+5. **The Configure page**: the Settings tab has two sub-pages, Settings and
+   Preset (the list does not fit beside the settings in 640 x 480; the
+   Settings template is 14 units shorter, 176, to fit under the sub-row).
+   Preset holds the box, the preset's sentence, and a read-only list for the
+   language in the Language box on this install: turned off (id, title, the
+   ini and env values), not on this install, kept, this build cannot (the
+   `costly` ones), also available, then one line counting those the language
+   decides, those not used with it and those that must stay on. A control
+   whose key the preset sets - Display, Keep the game running, Music - is
+   grey (*my choice* of decision 2's two), with a line under Settings that
+   says why; its value stays the player's and is saved as such. Seen at 100 %
+   by PrintWindow from a scratch launcher (`lfd1028\d2\shots`): both
+   sub-pages inside the 640 x 480 window.
+6. **The game's log**: `src/game/dat_load.cpp` logs `preset      <name>
+   (BOF3X_PRESET), language <tag>` once, beside the language, in both hosts;
+   it reads the variable for nothing else.
+
+**The ini: values a preset applies today** (Default on, Player yes): As
+shipped `display=windowed`, `scale=2`, `background=0`, `music=pc`,
+`opt=none`; Repaired the same less `opt=none` (DIV-0080 is Intent); the
+`env:` values As shipped eleven (`BOF3X_FRAME_MS`, `LAYERING`, `TILE1`,
+`LINES`, `MUSIC_LOOPS`, `SIDE_DUP`, `CACHE_DATA`, `EXEIMAGE_STRICT`,
+`WIDE_STAGING`, `WIDE_HIDE`, `FBGRAB`), Repaired four, PlayStation one
+(`BOF3X_WIDE_STAGING=0`). No `ini:ruby=` is ever applied: DIV-0155..0157 are
+`Default: off` (D1's flag on the empty value is moot today; an empty value
+would set the key empty, as the ledger's grammar says).
+
+**The proof** (`lfd1028\d2\proof.sh`, logs beside it; every run
+`BOF3X_SELFTEST_ONLY=1 ... --game <main>/bof3 --no-config`, serial): the exe
+host from `build/` (no ini) exit 0, `preset recommended`, 60 code names, 0
+off; then a scratch copy of the launcher with a scratch ini per preset, each
+exit 0: `recommended` 0 off; `shipped` 56 names in `BOF3X_OFF`, 55 off
+(`StpTexels` logged as not active: it is asked for only with `DirectOpaque`
+on); `repaired` 25 names, 25 off; `playstation` no name, `BOF3X_WIDE_STAGING=0`;
+`shipped` under `language=en-US` 67 names, 65 off of 73 asked (`PauseText`
+and `StpTexels` logged as not active); `shipped`
+with `off=-SunderLoop` 54 off (the player's exclusion kept); `preset=recommended`
+with `BOF3X_PRESET=repaired` gives repaired's plan; `BOF3X_PRESET=asshipped`
+stops the launcher, exit 1, with its message.
+
+### D3 as run: the proof (2026-10-28, the coordinator, at `f493bafb` + D2)
+
+The switch's proof, one batched run by the coordinator, game runs
+serialised, from an ini-less copy of the stage build at `f493bafb` (D0 and
+D1 merged; D2 changes no engine behaviour but a log line) in
+`C:\Users\kerok\bof3x-runs\lfd1028\L`; scripts, run logs and diffs under
+`lfd1028\sh`; hashes `analysis/statehash/cn_<route>_d*.sh`. The conditions
+of the `orig4` references (`BOF3X_OPT=none`, `BOF3X_LAYERING=0`,
+`tools/statehash_skip.txt`, `--no-front`).
+
+**The pair, per route:** the exe host under `BOF3X_OFF=<names>` (`dOff`)
+against the hosted build under `BOF3X_ORIGINAL=<the same names>` (`dOrig`),
+`statehash.py diff`, page for page. The names are the 67 `Switch:` names of
+the former `cheap` entries less `Game_Clock` (66): with DIV-0022 off Capcom's
+clock is the wall clock and the play-time digits drift with the run's pace,
+the reason the references are recorded with `"*,-Game_Clock"` (section 6 of
+[`state-hash.md`](state-hash.md)). `*` was not used: 16 of the 83 code names
+belong to `costly` entries whose switch is a detour, and the hosted side's
+list must match the exe host's.
+
+| Route | Ticks | Result |
+|---|---|---|
+| worldMapAndAreaTransition | 2,113 | identical on every tick |
+| dragonTransform | 4,289 | identical on every tick |
+| cutsceneAndNue | 7,425 | identical on every tick |
+| combat | 2,561 | `0x7DE000` 890 ticks; VRAM-shadow pages and `0x937000` at ticks 2..5; `0x7C9000` at tick 2,503, one tick |
+| shop | 3,137 | `0x7DE000` 427 ticks; the first-ticks class |
+| field_menu | 1,409 | `0x7DE000` 146 ticks |
+| menu_screens | 1,729 | `0x7DE000` and the first-ticks class, tick 3 only |
+| caughFish | 3,841 | the same, tick 3 only |
+| masterAndManillo | 5,505 | `0x7DE000` 4 ticks; the first-ticks class |
+| whelpBoss | 13,185 | `0x7DE000` 4 ticks; VRAM-shadow ticks; `0x937000` 3 ticks |
+
+Two classes, both known: the VRAM shadow and `0x937000` (`Gfx_CurrentEnv`,
+`Sprite_Current`) at the first ticks of a run (noise, section 6 of
+`state-hash.md`), and `0x7DE000` (`Snd_BufferDesc`, `Snd_WaveFormat`,
+`Music_Events`, `Snd_Device`: the DirectSound page).
+
+**The controls, on combat, shop and whelpBoss** (`control.sh`, `sound.sh`,
+`env.sh`), to settle `0x7DE000`:
+
+- *No list at all*, exe host against hosted (`dCtlOff` / `dCtlOrig`): combat
+  identical on all 2,561 ticks; whelpBoss `0x7DE000` on 17 ticks; shop
+  `0x7DE000` on 33 ticks plus the runner's known end-of-run pages
+  (ticks 2,715..2,758, the slot-0 restore).
+- *Same host, the two variables*: the hosted build under `BOF3X_OFF=<names>`
+  (`dOffH`) against `dOrig`: combat, shop and whelpBoss differ on `0x7DE000`
+  alone (780, 297, 71 ticks) and the first-ticks class.
+- *Injection state*: the hosted self-test (`BOF3X_SELFTEST_ONLY=1
+  --host bof3`) under each variable with the same list logs the same 54
+  names off, the same 74 OFF lines, and `inject: 0 left original`
+  (`sh/st_orig.off`, `sh/st_off.off`: the only diff is the counting line
+  that names the variable). So the DLL's state is the same under both.
+- *Is `0x7DE000` the variable's?* No: a repeat of `dOrig` (`dOrigR`, the
+  same list, the same host) differs from it on `0x7DE000` for 779 ticks; a
+  repeat of `dOffH` was identical once (`dOffH2`), and the same run with one
+  more environment variable (`BOF3X_PAD=xxxxx`, `dOffPad`) differs from
+  `dOffH` on `0x7DE000` for 575 ticks. Leaving `MusicFadePerFrame` out of
+  the list as well (`dOff2` / `dOrig2`) changes nothing (706 ticks).
+
+So `0x7DE000` is run-to-run noise that the list makes frequent: with the
+sound entries at Capcom's behaviour the page varies with the run (its heap
+pointers with the environment's size, its counters with the pace), whatever
+variable turned them off. It is the class `state-hash.md` section 6 names
+as a skip-list candidate (`Snd_Device` / `Music_Events`, DirectSound heap
+pointers) and stays open there; which of the sound names makes it vary was
+not bisected. **Every other page is identical between `BOF3X_OFF` and
+`BOF3X_ORIGINAL` on all ten routes**, and the DLL's injection state is the
+same under both: the player's switch gives the hosted A/B's result for the
+66 names, as section 5 asked.
+
+**Not proved here:** `Game_Clock` (left out, above; its off path is the
+same code in both hosts, `src/game/game_clock.cpp`), the 20 language-gated
+names under a Latin language (the routes run without a layer; the hosted
+self-test under `BOF3X_LANG=en-US` shows them asked for and off, D0's
+proof), and a preset's `ini:` / `env:` switches, which are the launcher's
+keys as before this stage.
+
+**The hosted fuzz and a list:** D396 ([`known-defects.md`](known-defects.md)):
+a fuzz row that assumes its own switch is on (DIV-0075's) fails under a list
+that turns it off, so no run above combined `BOF3X_SHADOW` with a list.
+
+**Left after the stage** (the coordinator): D2's open items (the Configure
+page at 200 % scale by the owner's eye; the fixture TSVs unchecked in CI,
+since `launcher_host` needs Windows; `InjectReport`'s `BOF3X_OFF=` log line
+cut at about 1 KB with 67 names; inis written before this stage hold an
+auto-written `scale=2`, which now fixes k = 2 on a scaled desktop until the
+line is emptied - it matters only until the game has saved its own
+placement, `bof3x.window`); the PSP preset (I32); the sound page's bisect.
+
 ## 6. For the owner
 
 1. **The field set** of section 1: the five names and their values. Is

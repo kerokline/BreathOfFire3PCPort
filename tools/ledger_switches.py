@@ -1,9 +1,15 @@
 #!/usr/bin/env python
 """Every switch name src/ reads, its class, and what it makes of each ledger entry.
 
-    python tools/ledger_switches.py           # write analysis/ledger_switches.tsv, print the counts
-    python tools/ledger_switches.py --check   # the readers below still find what they must; writes nothing
+    python tools/ledger_switches.py           # write analysis/ledger_switches.tsv and src/hook/code_names.h, print the counts
+    python tools/ledger_switches.py --check   # the readers below still find what they must, and the
+                                              # checked-in code_names.h is the inventory's; writes nothing
     python tools/ledger_switches.py --out F   # write the TSV somewhere else
+
+src/hook/code_names.h is generated here: every name of class `code`, sorted,
+as a constexpr array. src/hook/detour.cpp reads it to tell a known code name
+that this start did not ask for (logged: not active) from a name that is no
+code name at all (BOF3X_OFF refuses it).
 
 Reads only src/ and docs/DIVERGENCE.md - no game data, no build tree - so it
 runs anywhere, CI included (.github/workflows/checks.yml). The ledger-fields
@@ -32,9 +38,11 @@ The names, each with every file and line that reads it, and one class:
                HostedOnlyAsked); the two lists must agree
 
 What each class gives an entry switched by it (the `Player:` field,
-docs/DIVERGENCE.md "Entry format"): launcher and env `yes`, code `cheap`,
-detour and hosted-only `costly`. Once src/ reads PLAYER_SWITCH (and the
-launcher the ini key PLAYER_INI) a code name is a player's switch, so `yes`.
+docs/DIVERGENCE.md "Entry format"): launcher, env and code `yes`, detour and
+hosted-only `costly`. A code name is a player's switch through PLAYER_SWITCH
+(src/hook/detour.cpp, both hosts) and the launcher's ini key PLAYER_INI -
+the ledger-fields round's stage D, 2026-10-28, which retired the `cheap`
+value code names gave before; `--check` fails if src/ stops reading either.
 
 The entries: each `Reversible?` line's names - `BOF3X_ORIGINAL=<names>`,
 other `BOF3X_*` names, `ini=value` pairs of the launcher's keys - their
@@ -47,6 +55,7 @@ import argparse, os, re, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LEDGER = os.path.join('docs', 'DIVERGENCE.md')
 TSV = os.path.join('analysis', 'ledger_switches.tsv')
+CODE_NAMES_H = os.path.join('src', 'hook', 'code_names.h')
 
 # The player's switch of the ledger-fields round's stage D (the owner,
 # 2026-10-27, docs/ledger-fields-round.md section 6 call 3): a comma list of
@@ -64,9 +73,10 @@ TOOLING_ENV_RE = re.compile(r'BOF3X_\w*LOG')
 # prose too: its names are listed, and the row says to read it by hand.
 LONG_PROSE = 600
 
-# What each class gives an entry, best first.
-PLAYER_OF = {'launcher': 'yes', 'env': 'yes', 'code': 'cheap', 'detour': 'costly', 'hosted-only': 'costly'}
-PLAYER_RANK = {'yes': 0, 'cheap': 1, 'costly': 2, 'never': 3}
+# What each class gives an entry, best first. `code` gave `cheap` until stage D
+# (2026-10-28) made BOF3X_OFF read by src/; `cheap` is retired.
+PLAYER_OF = {'launcher': 'yes', 'env': 'yes', 'code': 'yes', 'detour': 'costly', 'hosted-only': 'costly'}
+PLAYER_RANK = {'yes': 0, 'costly': 2, 'never': 3}
 
 CLASSES = ('code', 'detour', 'instrument', 'launcher', 'env', 'hosted-only')
 
@@ -190,10 +200,7 @@ class Inventory:
         return None
 
     def player(self, key):
-        c = self.cls(key)
-        if c == 'code' and self.player_switch_built:
-            return 'yes'
-        return PLAYER_OF.get(c)
+        return PLAYER_OF.get(self.cls(key))
 
 
 API_CALL = re.compile(r'(?<![\w.>])(?:(?:::)?bof3::)?(PatchBytes|RetargetCall|Inject|BOF3_INJECT)\s*\(')
@@ -373,6 +380,10 @@ def inventory():
     scan_env(inv, texts)
     inv.env_names = {k[4:] for k in inv.names if k.startswith('env:') and '=' not in k}
     inv.player_switch_built = PLAYER_SWITCH in inv.env_names and PLAYER_INI in inv.ini_keys
+    if not inv.player_switch_built:
+        inv.problems.append(f'src/ no longer reads {PLAYER_SWITCH}, or the launcher its ini key {PLAYER_INI}=: '
+                            "a code name is then no player's switch, and the ledger's Player: yes for "
+                            'one is false')
     if not any(inv.cls(k) == 'code' for k in inv.names):
         inv.problems.append('no PatchBytes or RetargetCall name found - the tool no longer reads src/')
     if not any(inv.cls(k) == 'detour' for k in inv.names):
@@ -522,24 +533,63 @@ def counts(inv, rows):
     for r in rows:
         pl[r['player'] or '(by hand)'] = pl.get(r['player'] or '(by hand)', 0) + 1
     lines.append('Player from the best switch: ' + ', '.join(
-        f'{k} {pl.get(k, 0)}' for k in ('yes', 'cheap', 'costly', 'never', '(by hand)')))
+        f'{k} {pl.get(k, 0)}' for k in ('yes', 'costly', 'never', '(by hand)')))
     lines.append(f'entries whose Reversible? is over {LONG_PROSE} characters (read by hand): '
                  f'{sum(1 for r in rows if r["long"])}')
     unread = [r for r in rows if r['unread']]
     lines.append(f'entries whose Reversible? names something src/ does not read: {len(unread)}')
     lines.append(f'the player\'s switch {PLAYER_SWITCH} / ini {PLAYER_INI}=: '
-                 + ('read by src/ - code names count as yes' if inv.player_switch_built else 'not built yet'))
+                 + ('read by src/ - code names count as yes' if inv.player_switch_built else 'NOT read by src/'))
     return lines
+
+
+def code_names_header(inv):
+    """src/hook/code_names.h: the class-code names, sorted (byte order, as
+    std::strcmp sorts them)."""
+    names = sorted((k for k in inv.names if inv.cls(k) == 'code'), key=lambda s: s.encode())
+    L = ['// GENERATED by tools/ledger_switches.py from src/ - do not edit.',
+         '// Regenerate with `python tools/ledger_switches.py`; CI runs it with --check and',
+         '// fails when this file is not what the inventory gives (.github/workflows/checks.yml).',
+         '//',
+         '// Every code name: the first argument of a PatchBytes or a RetargetCall in src/',
+         "// (class `code`, analysis/ledger_switches.tsv), sorted. BOF3X_OFF takes these",
+         '// names (src/hook/detour.cpp): one this start did not ask for is logged as not',
+         '// active; a name not in this list stops the game (docs/launcher-settings.md 3.2).',
+         '#pragma once',
+         '',
+         'namespace bof3::code_names {',
+         '',
+         f'constexpr int kCount = {len(names)};',
+         'constexpr const char* kNames[kCount] = {']
+    L += [f'    "{n}",' for n in names]
+    L += ['};', '', '}  // namespace bof3::code_names', '']
+    return '\n'.join(L)
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
-    ap.add_argument('--check', action='store_true', help='check the readers; write nothing')
+    ap.add_argument('--check', action='store_true', help='check the readers and code_names.h; write nothing')
     ap.add_argument('--out', default=os.path.join(ROOT, TSV))
     a = ap.parse_args()
 
     inv = inventory()
     rows = entry_rows(inv)
+    header = code_names_header(inv)
+    header_path = os.path.join(ROOT, CODE_NAMES_H)
+    if a.check:
+        try:
+            with open(header_path, encoding='utf-8', newline='') as f:
+                have = f.read().replace('\r\n', '\n')   # a Windows checkout's line ends
+        except FileNotFoundError:
+            have = None
+        if have != header:
+            want_n = set(re.findall(r'^    "(\w+)",$', header, re.M))
+            have_n = set(re.findall(r'^    "(\w+)",$', have or '', re.M))
+            inv.problems.append(
+                f'{CODE_NAMES_H.replace(os.sep, "/")} is ' + ('missing' if have is None else 'not what the inventory gives')
+                + (f' (not in it: {", ".join(sorted(want_n - have_n)) or "-"}; not in src/: '
+                   f'{", ".join(sorted(have_n - want_n)) or "-"})' if have is not None else '')
+                + '; run python tools/ledger_switches.py and commit the header')
     for p in inv.problems:
         print(f'error: {p}')
     if not rows:
@@ -552,9 +602,12 @@ def main():
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     with open(a.out, 'w', encoding='utf-8', newline='\n') as f:
         f.write(tsv(inv, rows))
+    with open(header_path, 'w', encoding='utf-8', newline='\n') as f:
+        f.write(header)
     for line in counts(inv, rows):
         print(line)
     print(f'wrote {os.path.relpath(os.path.abspath(a.out), ROOT)}')
+    print(f'wrote {CODE_NAMES_H} ({header.count(chr(10) + "    ")} names)')
     return 1 if inv.problems else 0
 
 

@@ -144,11 +144,13 @@ std::string Trim(const std::string& s) {
 
 }  // namespace
 
-bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
-    error.clear();
-    std::string text;
-    if (!ReadWhole(path, text)) return false;
-
+namespace {
+// bof3x.ini's lines into `cfg`: the file's reader (ConfigLoad below), and the
+// presets' (an ini: switch is one line of it, so a preset's value is read as
+// the ini's own line would be). An overload of ConfigLoad on the text, not a
+// name of its own: tools/ledger_switches.py reads the ini keys the launcher
+// takes from ConfigLoad's first definition.
+void ConfigLoad(const std::string& text, Config& cfg, std::string& error) {
     // A file that names any key or pad binding replaces the whole default
     // list, so what the file says is what the game gets - not the defaults
     // with the file's lines appended.
@@ -189,6 +191,16 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
             cfg.opt = value;
         } else if (key == "psp") {  // DIV-0108: kept as written, the DLL refuses an unknown name
             cfg.psp = value;
+        } else if (key == "off") {  // BOF3X_OFF: kept as written, the game refuses a name it does not read
+            cfg.off = value;
+        } else if (key == "preset") {  // the presets: a name of kPresets, else the default
+            if (const PresetInfo* p = PresetNamed(value)) {
+                cfg.preset = p->id;
+            } else {
+                cfg.preset = Preset::kRecommended;
+                std::fprintf(stderr, "bof3x-launcher: bof3x.ini's preset=%s is not recommended, shipped, repaired or "
+                             "playstation; the preset is recommended\n", value.c_str());
+            }
         } else if (key == "cache") {  // DIV-0087: a path; the dll refuses one that is not a directory
             cfg.cache = ConfigCacheFromIni(value);   // UTF-8 (state 3); an older ini's ANSI bytes once
         } else if (key == "ffmpeg") {  // the importer's, for the PSP's music (docs/install-sources.md)
@@ -275,11 +287,26 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
             pad_seen = true;
             input::ParsePad(key.substr(4) + "=" + value, ',', cfg.bindings.pad, cfg.bindings.layout);
         } else if (key == "scale") {
-            if (value.size() == 1 && value[0] >= '2' && value[0] <= '8') cfg.scale = value[0] - '0';
+            // D395: 2..8 is named (BOF3X_SCALE sent, 2 too); empty follows the display
+            if (value.size() == 1 && value[0] >= '2' && value[0] <= '8') {
+                cfg.scale = value[0] - '0';
+                cfg.scale_named = true;
+            } else if (value.empty()) {
+                cfg.scale = 2;
+                cfg.scale_named = false;
+            }
         }
         // An unknown key is left alone rather than rejected: a newer build's
         // file must not stop an older launcher.
     }
+}
+}  // namespace
+
+bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
+    error.clear();
+    std::string text;
+    if (!ReadWhole(path, text)) return false;
+    ConfigLoad(text, cfg, error);
     return true;
 }
 
@@ -321,6 +348,14 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# the PSP's battle rules (DIV-0108, docs/psp-battle-changes.md): duel-loss, myria-item, or none;\r\n";
     out += "# empty: on when the cache's base is the PSP's, else off. The data suite writes them here\r\n";
     out += "psp=" + cfg.psp + "\r\n";
+    out += "# the changes to turn off: code names from the ledger's Switch: lines, comma-separated (BOF3X_OFF,\r\n";
+    out += "# docs/launcher-settings.md). * turns off all code names. -name keeps that change on. Empty: none.\r\n";
+    out += "# If a name is not a code name, the game stops and shows a message\r\n";
+    out += "off=" + cfg.off + "\r\n";
+    out += "# the preset (docs/launcher-settings.md): recommended (the default, this project's changes) | shipped\r\n";
+    out += "# (the PC version as it was released) | repaired (only the repairs of defects) | playstation (as the\r\n";
+    out += "# PlayStation version). It turns off changes when the game starts. It does not change this file\r\n";
+    out += std::string("preset=") + PresetOf(cfg.preset).name + "\r\n";
     out += "# the importer's cache folder; its base\\bgm songs play through the sequencer (DIV-0087, docs/music-seq-engine.md)\r\n";
     out += "cache=" + cfg.cache + "\r\n";
     out += "# ffmpeg.exe for the importer (the PSP's music); empty: BOF3X_FFMPEG or PATH (docs/install-sources.md)\r\n";
@@ -338,8 +373,9 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
            "\r\n";
     out += "# 1 the picture at whole multiples of its size (DIV-0042) | 0 stretched to the window's height\r\n";
     out += std::string("snap=") + (cfg.snap ? "1" : "0") + "\r\n";
-    out += "# 2..8: the first window's size, 320 x 240 times this, until the game saves its own (bof3x.window)\r\n";
-    out += "scale=" + std::to_string(cfg.scale) + "\r\n";
+    out += "# 2..8: the first window's size, 320 x 240 times this, until the game saves its own (bof3x.window).\r\n";
+    out += "# Empty: the size follows the display's scale (2 at 100 %, 3 at 150 %, 4 at 200 %)\r\n";
+    out += "scale=" + (cfg.scale_named ? std::to_string(cfg.scale) : std::string()) + "\r\n";
     out += "# 1 the 16:9 picture, 426 x 240 | 2 the 21:9 picture, 560 x 240 (DIV-0041) | 0 the original's 320 x 240\r\n";
     out += "wide=" + std::to_string(cfg.wide) + "\r\n";
     out += "# 1 keeps the game running while its window is not in front (DIV-0033) | 0 the original's freeze\r\n";
@@ -479,6 +515,12 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     if (GetEnvironmentVariableW(L"BOF3X_PSP", existing, 64) == 0 && !cfg.psp.empty())
         SetEnvironmentVariableA("BOF3X_PSP", cfg.psp.c_str());
 
+    // The player's switch: the ini's off= as BOF3X_OFF, for both hosts (the
+    // game checks the names: detour.cpp InjectReport). An environment's
+    // BOF3X_OFF wins, as for the others; empty sends nothing.
+    if (GetEnvironmentVariableW(L"BOF3X_OFF", nullptr, 0) == 0 && !cfg.off.empty())
+        SetEnvironmentVariableA("BOF3X_OFF", cfg.off.c_str());
+
     // DIV-0087: the cache root and the music source, as the ini has them; the
     // dll checks both.
     // Neither names one: the home's own cache, when the Sources page built it
@@ -526,7 +568,8 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     if (GetEnvironmentVariableW(L"BOF3X_WIDE", existing, 64) == 0 && (cfg.wide == 1 || cfg.wide == 2))
         SetEnvironmentVariableW(L"BOF3X_WIDE", cfg.wide == 2 ? L"2" : L"1");
 
-    if (GetEnvironmentVariableW(L"BOF3X_SCALE", existing, 64) == 0 && cfg.scale != 2) {
+    // D395: whenever the ini named scale=, 2 included; unnamed, the game follows the display
+    if (GetEnvironmentVariableW(L"BOF3X_SCALE", existing, 64) == 0 && cfg.scale_named) {
         const wchar_t k[2] = {static_cast<wchar_t>(L'0' + cfg.scale), 0};
         SetEnvironmentVariableW(L"BOF3X_SCALE", k);
     }
@@ -1137,6 +1180,277 @@ bool ConfigCheckEnvironmentLanguage(std::string& error) {
         error = std::string("BOF3X_LANG=") + lang + " is retired; use " + use + " (DIV-0005)";
         return false;
     }
+    return true;
+}
+
+// ---- The presets (config.h; docs/launcher-settings.md "preset=") ---------------
+
+const PresetInfo* PresetNamed(std::string_view name) {
+    for (const PresetInfo& p : kPresets)
+        if (name == p.name) return &p;
+    return nullptr;
+}
+
+const PresetInfo& PresetOf(Preset preset) {
+    for (const PresetInfo& p : kPresets)
+        if (p.id == preset) return p;
+    return kPresets[0];   // unreachable: kPresets holds every Preset
+}
+
+const char* PresetActionName(PresetAction action) {
+    switch (action) {
+    case PresetAction::kNone: return "none";
+    case PresetAction::kOff: return "off";
+    case PresetAction::kSkippedLanguage: return "skipped-language";
+    case PresetAction::kLangGoverned: return "lang-governed";
+    case PresetAction::kCannot: return "cannot";
+    case PresetAction::kAlsoAvailable: return "also-available";
+    case PresetAction::kNever: return "never";
+    case PresetAction::kAlreadyOff: return "already-off";
+    case PresetAction::kInactive: return "inactive";
+    }
+    return "none";
+}
+
+std::uint8_t PresetLanguageBit(std::string_view language) {
+    if (language.empty() || language == kLanguageOriginal) return ledger::kLangOriginal;
+    constexpr std::pair<std::string_view, std::uint8_t> kBits[] = {
+        {"en-US", ledger::kLangEnUs}, {"en-150", ledger::kLangEn150}, {"fr-FR", ledger::kLangFrFr},
+        {"de-DE", ledger::kLangDeDe}, {"ja-JP", ledger::kLangJaJp}};
+    static_assert(std::size(kBits) == std::size(kLanguages), "a language without its Languages: bit");
+    for (const auto& [tag, bit] : kBits)
+        if (language == tag) return bit;
+    return 0;
+}
+
+namespace {
+
+// The preset's own wish, before the entry's fields say whether it can have it
+// (tools/ledger_registry.py wants_off, wants_on).
+bool PresetWantsOff(Preset preset, const ledger::Entry& e) {
+    switch (preset) {
+    case Preset::kRecommended: return false;
+    case Preset::kShipped: return true;
+    case Preset::kRepaired: return e.tier == ledger::Tier::Sensible || e.tier == ledger::Tier::Extension;
+    case Preset::kPlayStation:
+        // the owner's call of 2026-10-28: Toward none is a generic repair, tied
+        // to no release, and stays; an entry naming a release and not psx goes
+        return e.toward != 0 && (e.toward & ledger::kTowardPsx) == 0;
+    }
+    return false;
+}
+
+bool PresetWantsOn(Preset preset, const ledger::Entry& e) {
+    if (preset == Preset::kRepaired) return e.tier == ledger::Tier::Intent || e.tier == ledger::Tier::Forced;
+    if (preset == Preset::kPlayStation) return (e.toward & ledger::kTowardPsx) != 0;
+    return false;
+}
+
+bool IsDir(const std::wstring& d) {
+    const DWORD a = GetFileAttributesW(d.c_str());
+    return a != INVALID_FILE_ATTRIBUTES && (a & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+// Why this install cannot take an ini: value, or empty when it can. The Music
+// box's own test (config_dialog.cpp MusicRefresh) for music=; any other key
+// can be set on any install.
+std::string IniNotHere(const std::wstring& game_dir, const Config& cfg, const std::string& key,
+                       const std::string& value) {
+    if (key != "music") return std::string();
+    const std::wstring cache = ConfigCacheRoot(cfg), data = ConfigCacheDataRoot(cfg);
+    const bool psp_base = ManifestPspBase(CachedManifest(cache));
+    const bool songs = !cache.empty() && IsDir(cache + L"\\base\\bgm");
+    if ((value == "pc" || value == "mp3") && !AnyMatch(game_dir + L"\\BGM\\*.DAT"))
+        return "no BGM\\ folder with the PC's MP3 music in the game folder";
+    if (value == "psx" && !(songs && !psp_base)) return "the cache has no PlayStation music";
+    if (value == "psp" && !(psp_base ? songs : ConfigOptInstalled(game_dir, "psp-music", data, cache)))
+        return "the cache has no PSP music";
+    return std::string();
+}
+
+// Why this install cannot take an env: value, or empty when it can: the two
+// that stop a disc-built install (no BOF3.exe), whose DAT\ is not the PC's
+// and whose .data has gaps (DIV-0089, DIV-0101).
+std::string EnvNotHere(const std::wstring& game_dir, const std::string& name, const std::string& value) {
+    const bool pc = AnyMatch(game_dir + L"\\BOF3.exe");
+    if (name == "BOF3X_CACHE_DATA" && value == "0" && !pc)
+        return "a disc-built install (no BOF3.exe) has no PC DAT folder to read in place of the cache";
+    if (name == "BOF3X_EXEIMAGE_STRICT" && value != "0" && !pc)
+        return "a disc-built install (no BOF3.exe) has gaps in its .data, which the strict switch refuses";
+    return std::string();
+}
+
+// The variable the launcher sends for an ini key (ConfigApplyEnvironment).
+const char* IniVariable(std::string_view key) {
+    constexpr std::pair<std::string_view, const char*> kFeeds[] = {
+        {"language", "BOF3X_LANG"},       {"opt", "BOF3X_OPT"},       {"ruby", "BOF3X_OPT"},
+        {"ruby_key", "BOF3X_RUBY_KEY"},   {"psp", "BOF3X_PSP"},       {"off", "BOF3X_OFF"},
+        {"cache", "BOF3X_CACHE"},         {"music", "BOF3X_MUSIC"},   {"filter", "BOF3X_FILTER"},
+        {"background", "BOF3X_BACKGROUND"}, {"screen", "BOF3X_PRESENT"}, {"text_speed", "BOF3X_TEXT_SPEED"},
+        {"unlearned_blue", "BOF3X_UNLEARNED_BLUE"}, {"snap", "BOF3X_SNAP"}, {"wide", "BOF3X_WIDE"},
+        {"scale", "BOF3X_SCALE"},         {"cheat.exp", "BOF3X_EXP"}, {"cheat.zenny", "BOF3X_ZENNY"},
+        {"cheat.steal", "BOF3X_STEAL"}};
+    for (const auto& [k, v] : kFeeds)
+        if (key == k) return v;
+    return nullptr;
+}
+
+bool EnvironmentHas(const std::string& name) { return GetEnvironmentVariableA(name.c_str(), nullptr, 0) > 0; }
+
+void AddOnce(std::vector<std::pair<std::string, std::string>>& list, const std::string& k, const std::string& v) {
+    for (const auto& kv : list)
+        if (kv.first == k) return;
+    list.emplace_back(k, v);
+}
+
+}  // namespace
+
+PresetAction PresetClassify(Preset preset, const ledger::Entry& e, std::uint8_t language) {
+    const bool off = PresetWantsOff(preset, e), on = PresetWantsOn(preset, e);
+    if (!off && !(on && !e.default_on)) return PresetAction::kNone;
+    if (e.state != ledger::State::Active) return PresetAction::kInactive;
+    if (!ledger::ActsUnder(e, language)) return PresetAction::kSkippedLanguage;
+    if (!off) return PresetAction::kAlsoAvailable;
+    if (!e.default_on) return PresetAction::kAlreadyOff;
+    for (const ledger::Switch* s = ledger::SwitchesBegin(e); s != ledger::SwitchesEnd(e); ++s)
+        if (s->form == ledger::SwitchForm::Lang) return PresetAction::kLangGoverned;
+    if (e.player == ledger::Player::Never) return PresetAction::kNever;
+    if (e.player == ledger::Player::Costly) return PresetAction::kCannot;
+    return PresetAction::kOff;   // Player yes (and the retired cheap, read as yes, as the tool does)
+}
+
+PresetPlan ConfigPresetPlan(const std::wstring& game_dir, const Config& cfg, Preset preset,
+                            const std::string& language) {
+    PresetPlan plan;
+    plan.preset = preset;
+    plan.language = language.empty() ? std::string(kLanguageOriginal) : language;
+    const std::uint8_t bit = PresetLanguageBit(plan.language);
+    std::vector<std::string> names;
+    for (const ledger::Entry& e : ledger::kEntries) {
+        const PresetAction action = PresetClassify(preset, e, bit);
+        if (action == PresetAction::kNone) continue;
+        PresetPlan::Item item{&e, action, {}, {}};
+        if (action == PresetAction::kOff) {
+            for (const ledger::Switch* s = ledger::SwitchesBegin(e); s != ledger::SwitchesEnd(e); ++s) {
+                const std::string key(ledger::Key(*s)), value(ledger::Value(*s)), text(s->text);
+                if (s->form == ledger::SwitchForm::Name) {
+                    if (std::find(names.begin(), names.end(), key) == names.end()) names.push_back(key);
+                } else if (s->form == ledger::SwitchForm::Ini) {
+                    if (const std::string why = IniNotHere(game_dir, cfg, key, value); !why.empty())
+                        item.not_here.emplace_back(text, why);
+                    else if (key == "opt" && !cfg.opt.empty() && cfg.opt != value)
+                        item.kept.emplace_back(text, "bof3x.ini's opt= names its own list of layers");
+                    else
+                        AddOnce(plan.ini, key, value);
+                }
+            }
+        }
+        plan.items.push_back(std::move(item));
+    }
+    // The env: values after every ini: value, so that an ini value of this plan
+    // decides its own variable (music=pc and BOF3X_MUSIC=seq: the PC's MP3s).
+    for (PresetPlan::Item& item : plan.items) {
+        if (item.action != PresetAction::kOff) continue;
+        for (const ledger::Switch* s = ledger::SwitchesBegin(*item.entry); s != ledger::SwitchesEnd(*item.entry); ++s) {
+            if (s->form != ledger::SwitchForm::Env) continue;
+            const std::string name(ledger::Key(*s)), value(ledger::Value(*s)), text(s->text);
+            std::string by_ini;
+            for (const auto& [k, v] : plan.ini)
+                if (const char* var = IniVariable(k); var && name == var) by_ini = k + "=" + v;
+            if (EnvironmentHas(name))
+                item.kept.emplace_back(text, "the environment sets " + name);
+            else if (const std::string why = EnvNotHere(game_dir, name, value); !why.empty())
+                item.not_here.emplace_back(text, why);
+            else if (!by_ini.empty())
+                item.kept.emplace_back(text, "the preset's " + by_ini + " decides " + name);
+            else if (!value.empty())   // an empty value is unset, which the environment already is
+                AddOnce(plan.env, name, value);
+        }
+    }
+    for (const std::string& n : names) plan.off += (plan.off.empty() ? "" : ",") + n;
+    return plan;
+}
+
+bool PresetOverrides(const PresetPlan& plan, std::string_view key) {
+    for (const auto& kv : plan.ini)
+        if (kv.first == key) return true;
+    return false;
+}
+
+Config ConfigPresetApply(const Config& cfg, const PresetPlan& plan) {
+    Config out = cfg;
+    for (const auto& [key, value] : plan.ini) {
+        std::string error;
+        ConfigLoad(key + "=" + value + "\n", out, error);   // read as the ini's own line would be
+    }
+    if (!plan.off.empty()) out.off = plan.off + (cfg.off.empty() ? "" : "," + cfg.off);
+    return out;
+}
+
+void ConfigPresetEnvironment(const PresetPlan& plan) {
+    if (!EnvironmentHas("BOF3X_PRESET")) SetEnvironmentVariableA("BOF3X_PRESET", PresetOf(plan.preset).name);
+    for (const auto& [name, value] : plan.env)
+        if (!EnvironmentHas(name)) SetEnvironmentVariableA(name.c_str(), value.c_str());
+}
+
+void ConfigPresetReport(const PresetPlan& plan) {
+    int count[9] = {};
+    for (const PresetPlan::Item& item : plan.items) ++count[static_cast<int>(item.action)];
+    int not_here = 0, kept = 0;
+    for (const PresetPlan::Item& item : plan.items) {
+        not_here += item.not_here.empty() ? 0 : 1;
+        kept += item.kept.empty() ? 0 : 1;
+    }
+    std::fprintf(stderr, "bof3x-launcher: preset %s, language %s: %d off, %d this build cannot turn off, %d not "
+                 "under this language, %d follow the language, %d also available; %d with a switch not on this "
+                 "install, %d with a switch kept\n",
+                 PresetOf(plan.preset).name, plan.language.c_str(), count[static_cast<int>(PresetAction::kOff)],
+                 count[static_cast<int>(PresetAction::kCannot)],
+                 count[static_cast<int>(PresetAction::kSkippedLanguage)],
+                 count[static_cast<int>(PresetAction::kLangGoverned)],
+                 count[static_cast<int>(PresetAction::kAlsoAvailable)], not_here, kept);
+    if (!plan.off.empty()) std::fprintf(stderr, "bof3x-launcher: preset: code names to BOF3X_OFF: %s\n", plan.off.c_str());
+    std::string line;
+    for (const auto& [k, v] : plan.ini) line += (line.empty() ? "" : ", ") + k + "=" + v;
+    if (!line.empty()) std::fprintf(stderr, "bof3x-launcher: preset: the game gets %s in place of bof3x.ini's\n", line.c_str());
+    line.clear();
+    for (const auto& [k, v] : plan.env) line += (line.empty() ? "" : ", ") + k + "=" + v;
+    if (!line.empty()) std::fprintf(stderr, "bof3x-launcher: preset: set where the environment has none: %s\n", line.c_str());
+    for (const PresetPlan::Item& item : plan.items) {
+        for (const auto& [sw, why] : item.not_here)
+            std::fprintf(stderr, "bof3x-launcher: preset: DIV-%04u %s not on this install: %s\n",
+                         static_cast<unsigned>(item.entry->id), sw.c_str(), why.c_str());
+        for (const auto& [sw, why] : item.kept)
+            std::fprintf(stderr, "bof3x-launcher: preset: DIV-%04u %s kept: %s\n", static_cast<unsigned>(item.entry->id),
+                         sw.c_str(), why.c_str());
+    }
+}
+
+std::string ConfigLanguagePlayed(const std::wstring& game_dir, const Config& cfg) {
+    char lang[8];   // as the DLL reads it (dat_load.cpp g_lang): longer is none
+    const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+    if (n > 0) return n >= sizeof lang || std::strcmp(lang, kLanguageOriginal) == 0 ? kLanguageOriginal : lang;
+    if (cfg.language != kLanguageOriginal) {
+        const std::vector<std::string> built = ConfigLanguagesAvailable(game_dir, ConfigCacheDataRoot(cfg));
+        if (std::find(built.begin(), built.end(), cfg.language) != built.end()) return cfg.language;
+    }
+    return kLanguageOriginal;
+}
+
+bool ConfigPresetFromEnvironment(Config& cfg, std::string& error) {
+    char name[32];
+    const DWORD n = GetEnvironmentVariableA("BOF3X_PRESET", name, sizeof name);
+    if (n == 0) return true;
+    const PresetInfo* p = n < sizeof name ? PresetNamed(name) : nullptr;
+    if (!p) {
+        error = std::string("BOF3X_PRESET=") + (n < sizeof name ? name : "(too long)") +
+                " is not a preset. Use recommended, shipped, repaired or playstation (docs/launcher-settings.md).";
+        return false;
+    }
+    if (p->id != cfg.preset)
+        std::fprintf(stderr, "bof3x-launcher: BOF3X_PRESET=%s in the environment, in place of bof3x.ini's preset=%s\n",
+                     p->name, PresetOf(cfg.preset).name);
+    cfg.preset = p->id;
     return true;
 }
 
