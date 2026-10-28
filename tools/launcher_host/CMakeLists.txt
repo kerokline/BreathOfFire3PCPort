@@ -25,3 +25,5 @@ add_executable(config_tests config_tests.cpp ${REPO_SRC}/launcher/config.cpp ${R
                ${REPO_SRC}/input/bindings.cpp "${_suites_hdr}")
 target_include_directories(config_tests PRIVATE ${REPO_SRC} "${CMAKE_BINARY_DIR}/gen")
 target_compile_options(config_tests PRIVATE -Wall -Wextra)
+# The presets' reference rows (tools/ledger_registry.py presets --tsv), read by TestPresetsFixture.
+target_compile_definitions(config_tests PRIVATE BOF3X_LAUNCHER_HOST_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
