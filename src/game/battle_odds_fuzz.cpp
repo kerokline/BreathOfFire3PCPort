@@ -52,7 +52,6 @@ using d3d_fuzz::Next;
 using d3d_fuzz::Record;
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
 U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U GetLong(const unsigned char* p) {
     U v;
@@ -167,7 +166,7 @@ U __cdecl StubNoneOfKind(U kind) {
     Record(1, kind, GetLong(At(BattleMisc_BannerCurrent_addr)), At(BattleMisc_BannerKinds_addr)[0]);
     const U h = Mix(1);
     switch ((h >> 4) % 5) {
-    case 0: PutLong(At(BattleMisc_BannerCurrent_addr), ::bof3::Img(kBanners) + ((h >> 8) % 8) * 0xC); break;
+    case 0: PutLong(At(BattleMisc_BannerCurrent_addr), ::bof3::Img(kBanners.v) + ((h >> 8) % 8) * 0xC); break;
     case 1: At(BattleMisc_BannerKinds_addr)[0] = static_cast<unsigned char>(h >> 12); break;
     case 2: At(WindowRecords_addr + 3)[0] = static_cast<unsigned char>(h >> 16); At(WindowRecords_addr + 4 * 0x24 + 3)[0] = static_cast<unsigned char>(h >> 20); break;
     default: break;
@@ -187,7 +186,7 @@ U __cdecl StubCalcDamage(U attacker, U target, U element) {
 }
 // BattleTask_FreeCurrent: what the caller did before its tail jump shows.
 U __cdecl StubFreeTask() {
-    Record(3, GetLong(At(kSprite)), GetLong(At(kRoundFlags)));
+    Record(3, GetLong(At(kSprite)), GetLong(At(::bof3::Img(kRoundFlags.v))));
     return Mix(5);
 }
 // Sprite_ReleaseTint and Sprite_SetTint: the object; each may move
@@ -219,9 +218,9 @@ U __cdecl StubFxSize() {
 // Battle_SetTargetFlag40 reads its argument's low byte (battle_sprites.cpp);
 // it may change the round's flags, or'ed after it.
 U __cdecl StubSetFlag40(U target) {
-    Record(7, target & 0xFF, GetLong(At(kRoundFlags)));
+    Record(7, target & 0xFF, GetLong(At(::bof3::Img(kRoundFlags.v))));
     const U h = Mix(12);
-    if (h % 3 == 0) At(kRoundFlags)[0] = static_cast<unsigned char>(h >> 8);
+    if (h % 3 == 0) At(::bof3::Img(kRoundFlags.v))[0] = static_cast<unsigned char>(h >> 8);
     return Mix(13);
 }
 
@@ -328,11 +327,11 @@ bool Called(const d3d_fuzz::Log& log, U what) {
 
 // The pool, the current entry one of its eight; its timer at the edges.
 void RandomBanner() {
-    FillRandom(::bof3::Img(kBanners), 0x60);
+    FillRandom(::bof3::Img(kBanners.v), 0x60);
     FillRandom(WindowRecords_addr, kWindowBytes);
     At(BattleMisc_BannerKinds_addr)[0] = static_cast<unsigned char>(Next() % 2 ? Pick({0, 1, 2, 3, 4, 0xFF}) : Next());
     At(kScratch)[0] = static_cast<unsigned char>(Next());
-    const U entry = ::bof3::Img(kBanners) + (Next() % 8) * 0xC;
+    const U entry = ::bof3::Img(kBanners.v) + (Next() % 8) * 0xC;
     PutLong(At(BattleMisc_BannerCurrent_addr), entry);
     At(entry + 1)[0] = static_cast<unsigned char>(Next() % 3 ? Pick({1, 2, 0, 3, 4}) : Next());
     PutWord(At(entry + 8), Next() % 4 ? Pick({0, 1, 1, 1, 2, 0xFF, 0x100, 0xFE, 0x1FF, 0xFFFF, 0x8000}) : Next());
@@ -364,8 +363,8 @@ void FuzzHalf(Tally& t, const void* clone, unsigned rounds) {
         g_round = 0x400000u + r;
         FillRandom(Addr(g_results), sizeof g_results);
         PutLong(At(BattleDamage_Result_addr), Addr(g_results) + Next() % 0x38);
-        PutLong(At(kActing), Next() % 2 ? (Next() & 0xFFFF0000u) | (Next() % 11) : Next());
-        At(kTarget)[0] = static_cast<unsigned char>(Next() % 2 ? Next() % 11 : Next());
+        PutLong(At(::bof3::Img(kActing.v)), Next() % 2 ? (Next() & 0xFFFF0000u) | (Next() % 11) : Next());
+        At(::bof3::Img(kTarget.v))[0] = static_cast<unsigned char>(Next() % 2 ? Next() % 11 : Next());
         Pass(t, clone, As<const void*>(&Effect_HalfAttack));
     }
     g_test = kTestNone;
@@ -375,7 +374,7 @@ void FuzzFree(Tally& t, const void* clone, unsigned rounds) {
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0x500000u + r;
         PutLong(At(kSprite), Next());
-        PutLong(At(kRoundFlags), Next());
+        PutLong(At(::bof3::Img(kRoundFlags.v)), Next());
         Pass(t, clone, As<const void*>(&BattleFx_FreeTask));
     }
 }
@@ -452,8 +451,8 @@ void FuzzFinish(Tally& t, const void* clone, unsigned rounds) {
         const U s = SomeObject(Next());
         if (Next() % 2) At(s + 0xB)[0] = 0;
         PutLong(At(kSprite), s);
-        At(kFlagTarget)[0] = static_cast<unsigned char>(Next() % 2 ? Pick({0, 1, 2, 3, 0x40, 0x80, 0xC0}) : Next());
-        PutLong(At(kRoundFlags), Next());
+        At(::bof3::Img(kFlagTarget.v))[0] = static_cast<unsigned char>(Next() % 2 ? Pick({0, 1, 2, 3, 0x40, 0x80, 0xC0}) : Next());
+        PutLong(At(::bof3::Img(kRoundFlags.v)), Next());
         Pass(t, clone, As<const void*>(&BattleFx_Finish));
         t.hits += Called(g_theirs, 7);
     }

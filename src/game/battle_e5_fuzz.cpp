@@ -238,8 +238,8 @@ const bh::DataTable kTables[] = {
 
 // The cells beyond the engine frame the group reads or writes.
 const bh::Region kRegions[] = {
-    {at::kGeneFlags, 0x14},     // the 18 gene flags
-    {at::kRepeatLatch, 4},      // Input_AutoRepeat's latch (zeroed by DragonCmd_Open)
+    {at::kGeneFlags.v, 0x14},     // the 18 gene flags
+    {at::kRepeatLatch.v, 4},      // Input_AutoRepeat's latch (zeroed by DragonCmd_Open)
     {0x93C320, 0x20},           // the message window's line list past the enemies' tail (lines 12..15)
 };
 
@@ -289,7 +289,7 @@ void Cursor(U window, unsigned a_max, unsigned b_max) {
 // The eighteen slots: a gene byte 0..17 or 0xFF, the fourth byte 0xFF (empty) a third of the time.
 void Slots() {
     for (unsigned s = 0; s < 18; ++s) {
-        unsigned char* const p = Mem(at::kSlots + 4 * s);
+        unsigned char* const p = Mem(::bof3::Img(at::kSlots.v) + 4 * s);
         for (unsigned j = 0; j < 3; ++j) p[j] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? 0xFF : bh::Next() % 18);
         p[3] = static_cast<unsigned char>(bh::Next() % 3 == 0 ? 0xFF : bh::Next() % 18);
     }
@@ -302,10 +302,10 @@ void DragonFrame() {
     Mem(BattleE5_GeneRow_addr)[0] = static_cast<unsigned char>(BH_PICK(0, 1, 2, 0xFF)); // a gene's flag is written: never past the grid
     Mem(BattleE1_Roster_addr)[0] = static_cast<unsigned char>(bh::Next() % 7);
     Mem(BattleE5_GeneCount_addr)[0] = static_cast<unsigned char>(bh::Next() % 5);
-    for (unsigned j = 0; j < 3; ++j) Mem(at::kGenes + j)[0] = static_cast<unsigned char>(bh::Next() % 20);   // written through
-    for (unsigned i = 0; i < 18; ++i) Mem(at::kGeneFlags + i)[0] = static_cast<unsigned char>(bh::Half() ? 0 : 1 + bh::Next() % 3);
+    for (unsigned j = 0; j < 3; ++j) Mem(::bof3::Img(at::kGenes.v) + j)[0] = static_cast<unsigned char>(bh::Next() % 20);   // written through
+    for (unsigned i = 0; i < 18; ++i) Mem(::bof3::Img(at::kGeneFlags.v) + i)[0] = static_cast<unsigned char>(bh::Half() ? 0 : 1 + bh::Next() % 3);
     Mem(BattleActions_ApCost_addr)[0] = Byte({0, 1, 8, 0x20, 0xFF});
-    SetWord(Mem(at::kAsk), Word16({0, 1, 2, 0x100}));
+    SetWord(Mem(::bof3::Img(at::kAsk.v)), Word16({0, 1, 2, 0x100}));
     Slots();
     Cursor(Window18_addr, 4, 3);
     Cursor(Window19_addr, 10, 3);
@@ -329,20 +329,20 @@ void Seed(unsigned k) {
         auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(g_enemy));
         enemy_rec->data_id = static_cast<unsigned char>(bh::Next() % 7);
         for (unsigned i = 0; i < 4; ++i)
-            Mem(at::kAiScripts + enemy_rec->data_id * 0x8C + i * 16)[0] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? 0x63 : bh::Next());
+            Mem(::bof3::Img(at::kAiScripts.v) + enemy_rec->data_id * 0x8C + i * 16)[0] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? 0x63 : bh::Next());
         break;
     }
     case 0x44B320: {   // EnemyAI_CondElement: +0x108, the acting kind, the actor, the ability, the weapons
         rv::Store<unsigned>(rv::As<records::BattleEnemy>(bh::Pointer(BattleE3_CurrentEnemy_addr))->hp_change, Word16({0, 0, 1, 0x100}));
-        Mem(at::kActingKind)[0] = Byte({4, 4, 1, 1, 0, 2, 5, 0x81});
-        Mem(at::kActor)[0] = Byte({0, 1, 2, 3, 0x80});
-        SetWord(Mem(at::kAbility), Word16({0, 1, 0x10, 0x4E, 0xA3, 0xC0}));
+        Mem(::bof3::Img(at::kActingKind.v))[0] = Byte({4, 4, 1, 1, 0, 2, 5, 0x81});
+        Mem(::bof3::Img(at::kActor.v))[0] = Byte({0, 1, 2, 3, 0x80});
+        SetWord(Mem(::bof3::Img(at::kAbility.v)), Word16({0, 1, 0x10, 0x4E, 0xA3, 0xC0}));
         for (unsigned m = 0; m < 3; ++m) rv::As<records::PartyMember>(Member(m))->weapon = static_cast<unsigned char>(bh::Next() % 0x80);
         break;
     }
     case 0x44B3A0: {   // EnemyAI_ApplyAction: the row (kind 0..8 and past), HP, the message count at its end
         g_obj = Enemy(bh::Next());
-        g_row = at::kAiScripts + (bh::Next() % 0x40) * 16;
+        g_row = ::bof3::Img(at::kAiScripts.v) + (bh::Next() % 0x40) * 16;
         unsigned char* const row = Mem(g_row);
         row[1] = Byte({0, 1, 2, 3, 4, 5, 6, 7, 8});
         row[2] = Byte({0, 1, 2, 3, 0x80, 0x81, 0xFF, 0x40});
@@ -368,7 +368,7 @@ void Seed(unsigned k) {
     case 0x44B920: {   // EnemyAI_DedupMessages: up to eight entries with repeats
         Mem(BattleE5_EnemyMessageCount_addr)[0] = static_cast<unsigned char>(bh::Next() % 9);
         for (unsigned i = 0; i < 8; ++i) {
-            unsigned char* const q = Mem(at::kEnemyMessages + 4 * i);
+            unsigned char* const q = Mem(::bof3::Img(at::kEnemyMessages.v) + 4 * i);
             q[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next() % 11);
             SetWord(q + 2, Word16({1, 2, 3, 2}));
         }
@@ -378,8 +378,8 @@ void Seed(unsigned k) {
     case 0x44C3D0:
     case 0x44C5C0:
     case 0x44CCA0: {   // the effects: the target and the actor on both sides, the flag, the stats near their maxima
-        Mem(at::kTarget)[0] = static_cast<unsigned char>(bh::Next() % 11);   // 0..10: past 10 the objects run off the image
-        Mem(at::kActor)[0] = static_cast<unsigned char>(bh::Next() % 11);
+        Mem(::bof3::Img(at::kTarget.v))[0] = static_cast<unsigned char>(bh::Next() % 11);   // 0..10: past 10 the objects run off the image
+        Mem(::bof3::Img(at::kActor.v))[0] = static_cast<unsigned char>(bh::Next() % 11);
         for (unsigned m = 0; m < 3; ++m) {
             auto* const member = rv::As<records::PartyMember>(Member(m));
             member->flags_130 = static_cast<std::int32_t>(bh::Half() ? bh::Next() | 0x10000 : bh::Next() & ~0x10000u);
@@ -460,11 +460,11 @@ void Disturb(U h) {
     case 3: Mem(BattleE5_GeneRow_addr)[0] = static_cast<unsigned char>(b % 4 == 3 ? 0xFF : b % 3); break;
     case 4: Mem(BattleE1_Roster_addr)[0] = static_cast<unsigned char>(b % 7); break;
     case 5: Mem(BattleE5_GeneCount_addr)[0] = static_cast<unsigned char>(b % 5); break;
-    case 6: Mem(at::kMsgCount)[0] = b; break;
-    case 7: SetWord(Mem(at::kAsk), b & 3); break;
+    case 6: Mem(::bof3::Img(at::kMsgCount.v))[0] = b; break;
+    case 7: SetWord(Mem(::bof3::Img(at::kAsk.v)), b & 3); break;
     case 8: SetWord(Mem(b & 1 ? Window18_addr + 0x10 : Window19_addr + 0x10), (b >> 1) % 4); break;
-    case 9: Mem(at::kTarget)[0] = static_cast<unsigned char>(b % 11); break;
-    case 10: Mem(at::kActor)[0] = static_cast<unsigned char>(b % 11); break;
+    case 9: Mem(::bof3::Img(at::kTarget.v))[0] = static_cast<unsigned char>(b % 11); break;
+    case 10: Mem(::bof3::Img(at::kActor.v))[0] = static_cast<unsigned char>(b % 11); break;
     default:
         if (g_obj) {
             g_obj[0x92] = b;
