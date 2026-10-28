@@ -578,6 +578,12 @@ Not to be briefed until section 6's calls 2..4 are answered; the shape:
 The `costly` entries are listed for a later round, each with its size;
 none is grown in this one.
 
+**Also in stage D (the owner, 2026-10-28):** D395 - the launcher sends
+`BOF3X_SCALE` only when `scale=` is not 2 and always writes the key back,
+so the ini can neither pin k = 2 nor say "follow the display"
+([`known-defects.md`](known-defects.md)); the presets' launcher work takes
+the fix with it, DIV-0036's switch and prose updated to match.
+
 ## 6. For the owner
 
 1. **The field set** of section 1: the five names and their values. Is
@@ -606,6 +612,14 @@ ledger's Entry format. Call 4, leave them: "most of them were not desirable
 / true fixes". Call 1, the five fields as section 1 gives them, with
 `Toward:` a list and no cascade (the owner asked how an entry matching both
 consoles is tagged; section 1 now says).
+
+**Answered 2026-10-28 (the owner), on section 4's "as run":** the `env:`
+form LF0 added to `Switch:` is accepted; the "starts Yes" note's removal
+is accepted; D395 (`scale=2` cannot pin k = 2) is fixed in stage D; call 4
+affirmed ("leave them, list them, and let a later round take the ones a
+player asks for" - the 28 are listed in section 4); and the language
+question of rules A and B is settled by the `Languages:` field, a list of
+explicit tags and no class names (section 4, "Languages as run").
 
 ## 7. Ownership, merge order, numbering
 

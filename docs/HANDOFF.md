@@ -56,9 +56,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      `Switch: lang` entry among them) is governed by the language pick - on under those languages, inert under
      the others - so a preset skips it when the chosen language is not listed and never turns one on or off
      against the pick; the `Reversible?` prose of DIV-0141,
-     0145, 0147 and 0148 still says "not a switch" and is reworded when the switch exists. **For the owner:** the
-     `env:` form LF0 added to `Switch:` (accept or drop); D395 (`scale=2` cannot pin k = 2 on a scaled desktop;
-     a launcher fix, its own PR); the ten `Toward: none` entries that want a twin read (section 3's "as run").
+     0145, 0147 and 0148 still says "not a switch" and is reworded when the switch exists. **The owner's calls of 2026-10-28** (round doc section 6): the `env:` form and the dropped "starts Yes" note
+     accepted, D395 fixed in stage D, the 28 `costly` left and listed. **For the owner:** the ten `Toward: none` entries that want a twin read (section 3's "as run").
      The worktrees under `lf1027` are removable once the PR is in. Also on the branch: the regenerated
      `analysis/data_census.tsv` the owner found loose on `main` (line numbers only).
    - **The relocatable-image round, not launched** ([`relocatable-image-round.md`](relocatable-image-round.md),

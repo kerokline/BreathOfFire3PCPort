@@ -10256,7 +10256,7 @@ frames matching the PC install's in the halo region). The two neighbouring
 and `WardMote_Tilts`' first byte are the PSPs' `BOOT.BIN` map's, equal to the
 PC's, and the tilts' other seven an `immref` row - both really filled.
 
-## D395 — `scale=2` in `bof3x.ini` cannot fix a window at k = 2 on a scaled desktop (ours, the launcher's; open)
+## D395 — `scale=2` in `bof3x.ini` cannot fix a window at k = 2 on a scaled desktop (ours, the launcher's; open, to be fixed in the ledger-fields round's stage D - the owner, 2026-10-28)
 
 **Found:** the ledger-fields round, 2026-10-28: LF1, filling DIV-0036's
 switch fields, found that `scale=2` does not fix the window's factor; the
