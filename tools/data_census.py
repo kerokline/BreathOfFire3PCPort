@@ -356,7 +356,11 @@ def see_through_base(text):
     return VA_NAME.sub(r'\1', ''.join(out))
 
 
-def load_sources():
+def load_sources(see_through_base_helpers=False):
+    """Every source under src/. With see_through_base_helpers (this census
+    and tools/typed_left.py, whose keys must agree) a site placed through the
+    base reads as before; reloc_census reads the spelling as written, since
+    the base helper is what it measures."""
     files = []
     src = os.path.join(ROOT, 'src')
     for dirpath, dirnames, filenames in os.walk(src):
@@ -366,7 +370,8 @@ def load_sources():
                 p = os.path.join(dirpath, fn)
                 rel = os.path.relpath(p, ROOT).replace(os.sep, '/')
                 with open(p, encoding='utf-8', errors='replace') as f:
-                    files.append(SourceFile(rel, see_through_base(f.read())))
+                    text = f.read()
+                    files.append(SourceFile(rel, see_through_base(text) if see_through_base_helpers else text))
     files.sort(key=lambda f: f.rel)
     return files
 
@@ -1216,7 +1221,7 @@ def main():
     if a.strict:
         sys.exit(strict())
     syms = Symbols(a.toml)
-    files = load_sources()
+    files = load_sources(see_through_base_helpers=True)
     sites, consts, files, unresolved_refs = scan(files, syms)
     counts = counts_of(sites, consts, files, syms, unresolved_refs)
     if a.check:
