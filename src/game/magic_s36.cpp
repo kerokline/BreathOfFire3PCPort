@@ -121,9 +121,9 @@ void Call2(std::uint32_t address, int a, int b) { MH_WORD(Fn2, address)(a, b); }
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};
 using TaskFn = void (__cdecl*)(unsigned char*);
-void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
+void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset.v)(task); }
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);

@@ -88,9 +88,9 @@ std::uint32_t Twice(int v) { return static_cast<std::uint32_t>(static_cast<int>(
 // The engine's 0x435A70 (in no group, unnamed): BattleEnemy_SetAnimation(anim)
 // on the enemy of battle index `actor` (0x93B960 + 0x128 (actor - 3),
 // unchecked), 0x939AD8 put back after. Row 1 hands it the acting actor.
-constexpr std::uint32_t kEnemyAnimation = bof3::addr::BattleEnemy_SetAnimationOf;   // 0x435A70, R3A's (round 14)
+constexpr ::bof3::image::CodeVa kEnemyAnimation{bof3::addr::BattleEnemy_SetAnimationOf};   // 0x435A70, R3A's (round 14)
 using EnemyAnimationFn = void (__cdecl*)(unsigned, unsigned);
-void EnemyAnimation(unsigned anim) { MH_AT(EnemyAnimationFn, kEnemyAnimation)(ActorByte(), anim); }
+void EnemyAnimation(unsigned anim) { MH_AT(EnemyAnimationFn, kEnemyAnimation.v)(ActorByte(), anim); }
 
 // The phase handlers of other units the children's tables hold
 // (docs/magic_s01.md section 3) are ours now and named in the tables: S04's

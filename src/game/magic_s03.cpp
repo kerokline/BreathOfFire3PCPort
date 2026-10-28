@@ -128,9 +128,9 @@ void Call2(std::uint32_t address, unsigned a, unsigned b) { MH_WORD(Fn2, address
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};
 using TaskFn = void (__cdecl*)(unsigned char*);
-void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
+void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset.v)(task); }
 
 // The phase handlers of other units a table holds (docs/magic_s03.md
 // section 3) are ours now and named in the tables: S12's

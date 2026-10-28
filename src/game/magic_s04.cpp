@@ -118,11 +118,11 @@ void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 // Capcom's code this group calls (docs/magic_s04.md section 3); other groups'
 // phase handlers (S35's LastResort_WaitChildren, S05's Magic018Row53_Wait,
 // S11's MagicFx_UncountAndFree) are ours now and named in the tables.
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;       // engine: +0xC / +0x10 of a task turned by its +8
-constexpr std::uint32_t kPolyF3 = bof3::addr::Gpu_SetPolyF3;           // libgpu SetPolyF3 by shape (code 0x20), unnamed
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};       // engine: +0xC / +0x10 of a task turned by its +8
+constexpr ::bof3::image::CodeVa kPolyF3{bof3::addr::Gpu_SetPolyF3};           // libgpu SetPolyF3 by shape (code 0x20), unnamed
 using TaskFn = void (__cdecl*)(unsigned char*);
 using PrimFn = void (__cdecl*)(unsigned char*);
-void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
+void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset.v)(task); }
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -623,7 +623,7 @@ S04_EXPORT void __cdecl SnapSpark_Draw(void) {
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
     LinkAtSprite(0xC);
     unsigned char* const p = Gfx_PacketNext;
-    MH_AT(PrimFn, kPolyF3)(p);
+    MH_AT(PrimFn, kPolyF3.v)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     SetVW(0, static_cast<unsigned>(ShlSar(Sin(0), 4, 12)));
     SetVW(2, static_cast<unsigned>(ShlSar(Cos(0), 4, 12)));

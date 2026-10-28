@@ -141,14 +141,14 @@ void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
-void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};
+void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset.v)(task); }
 // The engine's enemy animations, unnamed, in no group: an enemy by battle
 // index - 3 (the index's low byte) given animation `arg` through
 // BattleEnemy_SetAnimation; 0x435A20 makes it Sprite_Current for the call,
 // 0x435A70 does not (docs/magic_s01.md).
-constexpr std::uint32_t kEnemyAnimCurrent = bof3::addr::BattleEnemy_SetAnimationAs;   // 0x435A20
-constexpr std::uint32_t kEnemyAnim = bof3::addr::BattleEnemy_SetAnimationOf;   // 0x435A70
+constexpr ::bof3::image::CodeVa kEnemyAnimCurrent{bof3::addr::BattleEnemy_SetAnimationAs};   // 0x435A20
+constexpr ::bof3::image::CodeVa kEnemyAnim{bof3::addr::BattleEnemy_SetAnimationOf};   // 0x435A70
 
 // The phase handlers and callees of other units (docs/magic_s10.md section 3)
 // are ours now and called by name: S38's MagicFx_CountDownFlag10 and
@@ -736,7 +736,7 @@ S10_EXPORT void __cdecl Howling_Start(void) {
     if ((TargetByte() & 0x40) != 0) {
         for (unsigned i = 0; i < 8; ++i) {
             if ((MH_CALL(Battle_ActorIsOut)(i + 3) & 0xFF) != 0) continue;
-            MH_AT(AnimFn, kEnemyAnimCurrent)(i + 3, 4);
+            MH_AT(AnimFn, kEnemyAnimCurrent.v)(i + 3, 4);
             CopyToChild(EnemyByOrder(i), i);
         }
     } else {
@@ -1463,7 +1463,7 @@ S10_EXPORT void __cdecl SacrificeActor_Split(void) {
             return;
         }
     }
-    MH_AT(AnimFn, kEnemyAnim)(actor, 4);
+    MH_AT(AnimFn, kEnemyAnim.v)(actor, 4);
     Sc()[9] = 0x1E;
     Inc(Sc()[2]);
 }
@@ -1495,7 +1495,7 @@ S10_EXPORT void __cdecl SacrificeActor_Return(void) {
     }
     const std::uint32_t actor = static_cast<std::uint32_t>(Long(Mem(::bof3::Img(at::kActor))));
     if ((actor & 0xFF) < 3) MemberAndCopyAnimation(actor & 0xFF, 0x1C);
-    else MH_AT(AnimFn, kEnemyAnim)(actor, 4);
+    else MH_AT(AnimFn, kEnemyAnim.v)(actor, 4);
     Inc(Sc()[2]);
 }
 

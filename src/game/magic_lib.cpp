@@ -47,7 +47,7 @@ constexpr ::bof3::image::Va kStatsCopy{0x939F80};      // 32 bytes: the actor's 
 // kFormation: now BattlePhases_B89 (symbols.toml).
 // The buff roll: 0x44FC10(stat), 1 in al when it was resisted - unnamed, the
 // engine's (in no group: docs/magic_lib.md section 4).
-constexpr std::uint32_t kBuffRoll = bof3::addr::Effect_RollStatStep;   // R3D's (round fourteen, docs/rest_3d.md)
+constexpr ::bof3::image::CodeVa kBuffRoll{bof3::addr::Effect_RollStatStep};   // R3D's (round fourteen, docs/rest_3d.md)
 using BuffRollFn = unsigned char (__cdecl*)(unsigned);
 
 // The packet pools' end (Gfx_PacketPools + 0x10000 - 0x54, symbols.toml), per
@@ -296,7 +296,7 @@ MLIB_EXPORT unsigned char __cdecl MagicFx_ApplyBuff(unsigned stat, unsigned acto
         stats = EnemyRecord(a) + 0xB0;
     }
     for (unsigned i = 0; i < 32; i += 4) SetLong(Mem(::bof3::Img(kStatsCopy.v) + i), Long(stats + i));
-    const unsigned char resisted = MH_AT(BuffRollFn, kBuffRoll)(stat);
+    const unsigned char resisted = MH_AT(BuffRollFn, kBuffRoll.v)(stat);
     Mem(::bof3::Img(kResultTarget.v))[0] = kept_target;
     SetLong(Mem(::bof3::Img(BattleDamage_Result_addr)), kept_record);
     return resisted == 0 ? 1 : 0;

@@ -85,7 +85,7 @@ constexpr ::bof3::image::Va kM092SparkPhases{0x65B5F4};   // by +2: four
 // kStatByVariant: now MagicFx_BuffStats (symbols.toml).
 // Magic088_Variant's byte table (in .text, after its jump table): the jump
 // table's index by the ability id - 0x1E, 0xA3 entries.
-constexpr std::uint32_t kVariantIndex = 0x4C488C;
+constexpr ::bof3::image::CodeVa kVariantIndex{0x4C488C};
 
 // That table as the switch it was compiled from - the function's logic, ours
 // since the function is (docs/operand-store.md): by the ability id - 0x1E,
@@ -1331,7 +1331,7 @@ void MagicS20_Inject() {
     {
         static std::uint8_t index[0xA3];   // VariantCase as the compiler's byte table, for the hosted check
         for (unsigned k = 0; k < sizeof index; ++k) index[k] = static_cast<std::uint8_t>(VariantCase(k));
-        bof3::Operand("Magic088_Variant byte table", kVariantIndex, index, sizeof index);
+        bof3::Operand("Magic088_Variant byte table", kVariantIndex.v, index, sizeof index);
     }
     if (bof3::WantsShadow("magic_s20")) magic_s20::SelfTest();
     BOF3_INJECT(Magic087_Task);

@@ -74,9 +74,9 @@ constexpr ::bof3::image::Va kAngleB{0x903852};
 
 // Capcom's, unnamed, in no group: fild the argument, fsqrt, tail jmp to the
 // CRT's _ftol (0x5B9550) - an integer square root, truncated.
-constexpr std::uint32_t kSqrt = bof3::addr::Gte_SquareRoot0;
+constexpr ::bof3::image::CodeVa kSqrt{bof3::addr::Gte_SquareRoot0};
 using SqrtFn = int (__cdecl*)(int);
-int Sqrt(int v) { return MH_AT(SqrtFn, kSqrt)(v); }
+int Sqrt(int v) { return MH_AT(SqrtFn, kSqrt.v)(v); }
 
 // The phase handlers of other units a table holds (docs/magic_c3.md section 3)
 // are ours now and named in the tables: the engine's MagicFx_DoneAndFree, S12's

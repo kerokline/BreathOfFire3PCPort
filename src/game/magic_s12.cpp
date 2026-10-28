@@ -82,7 +82,7 @@ constexpr ::bof3::image::Va kAbility{0x904B80};
 constexpr ::bof3::image::Va kAbilityStep{0x65C4DB};
 // Capcom's, unnamed, in no group: a stat change for the target
 // (MagicFx_ApplyBuff's 0x44F650 calls it the same way).
-constexpr std::uint32_t kStatChanged = bof3::addr::Battle_RecalcStats;   // rebound 2026-09-29 (round twelve, BE6): the value is unchanged, the fuzz keys on it
+constexpr ::bof3::image::CodeVa kStatChanged{bof3::addr::Battle_RecalcStats};   // rebound 2026-09-29 (round twelve, BE6): the value is unchanged, the fuzz keys on it
 // Celerity_Start's CLUT strip: 16 words at +0 and 16 at +0x20, copied over.
 // kClutFrom: now Gfx_ClutStripSource[0x1a00] (symbols.toml).
 // kClutTo: now Gfx_ClutStrip[0x1a00] (symbols.toml).
@@ -864,7 +864,7 @@ MS12_EXPORT void __cdecl Celerity_ApplyStat(unsigned stat) {
         return;
     }
     cell[0] = static_cast<unsigned char>(cell[0] + static_cast<unsigned char>(step));
-    MH_AT(FnU, kStatChanged)(TargetByte());
+    MH_AT(FnU, kStatChanged.v)(TargetByte());
 }
 
 // original 0x4B2120: the children (kind 1, parameter 0x4A): jmp

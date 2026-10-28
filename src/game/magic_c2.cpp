@@ -77,8 +77,8 @@ constexpr std::uint32_t kStreak = 0x3C;
 // rotation and translation set from Camera_Angles and the map focus (no
 // arguments), and a world point (x, z, height << 16) projected into a
 // primitive's vertex (docs/magic_c2.md section 5).
-constexpr std::uint32_t kSetMapCamera = bof3::addr::EffectGte_LoadMapCamera;
-constexpr std::uint32_t kProjectPoint = bof3::addr::EffectGte_ProjectPoint;
+constexpr ::bof3::image::CodeVa kSetMapCamera{bof3::addr::EffectGte_LoadMapCamera};
+constexpr ::bof3::image::CodeVa kProjectPoint{bof3::addr::EffectGte_ProjectPoint};
 // Other units' functions (docs/magic_c2.md section 6) are ours now and called
 // by name: the engine's MagicFx_WaitOwnerAnim, S38's MagicFx_CountDownFlag10,
 // S37's MagicFx_FreeCurrentRecord.
@@ -831,7 +831,7 @@ C2_EXPORT unsigned char __cdecl UtmostAttack_DrawStreaks(void) {
     const unsigned tpage = MH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100) & 0xFFFF;
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, tpage, 0);
     MH_CALL(Gfx_CommitPrim)(3, 0xC);
-    Call0(kSetMapCamera);
+    Call0(kSetMapCamera.v);
     for (unsigned i = 0; i < 128; ++i) {
         unsigned char* const r = Mem(::bof3::Img(kStreaks.v) + i * kStreak);
         if (r[0] == 0) continue;
@@ -862,15 +862,15 @@ C2_EXPORT void __cdecl UtmostAttack_DrawStreak(unsigned char* streak) {
     MH_CALL(Gpu_SetPolyG4)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     std::int32_t v[3] = {Add(Long(streak + 4), 0x1000), Long(streak + 8), Long(streak + 0xC)};
-    MH_AT(ProjectFn, kProjectPoint)(v, p + 8);
+    MH_AT(ProjectFn, kProjectPoint.v)(v, p + 8);
     v[0] = Add(Long(streak + 4), -0x1000);
-    MH_AT(ProjectFn, kProjectPoint)(v, p + 0x18);
+    MH_AT(ProjectFn, kProjectPoint.v)(v, p + 0x18);
     v[0] = Add(Long(streak + 0x14), 0x1000);
     v[1] = Long(streak + 0x18);
     v[2] = Long(streak + 0x1C);
-    MH_AT(ProjectFn, kProjectPoint)(v, p + 0x28);
+    MH_AT(ProjectFn, kProjectPoint.v)(v, p + 0x28);
     v[0] = Add(Long(streak + 0x14), -0x1000);
-    MH_AT(ProjectFn, kProjectPoint)(v, p + 0x38);
+    MH_AT(ProjectFn, kProjectPoint.v)(v, p + 0x38);
     for (unsigned k = 0; k < 3; ++k) {
         const unsigned char first = streak[0x34 + k];
         p[0x14 + k] = first;

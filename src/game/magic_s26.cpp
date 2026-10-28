@@ -95,8 +95,8 @@ void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Rotates the dx / dz pair +0xC / +0x10 of the task it is given by its
 // direction byte +8 - Capcom's, unnamed, in no group (docs/magic_s22.md).
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
-void Turn() { MH_AT(void (__cdecl*)(unsigned char*), kTurnOffset)(Sc()); }
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};
+void Turn() { MH_AT(void (__cdecl*)(unsigned char*), kTurnOffset.v)(Sc()); }
 
 // The GTE and GPU callees with the arguments the originals push: the
 // projections get the depth and flag pointers the originals pass (the

@@ -82,7 +82,7 @@ constexpr ::bof3::image::Va kTexts{0x66A0D8};         // pointers to the prompt 
 constexpr ::bof3::image::Va kStrikeTints{0x65A584};   // MAGIC004: 3 bytes a kind
 constexpr ::bof3::image::Va kFxDelays{0x65A5A8};      // bytes: the effect's sound delay, by kind
 constexpr ::bof3::image::Va kStrikeSounds{0x65A5B4};  // words: the hit sound, by kind (0 none)
-constexpr std::uint32_t kKindIndex = 0x49C0CC;     // .text: ElemStrike_Kind's byte table, 0x99 entries
+constexpr ::bof3::image::CodeVa kKindIndex{0x49C0CC};     // .text: ElemStrike_Kind's byte table, 0x99 entries
 
 // ElemStrike_Kind's case by the ability word less 4: the switch the compiler
 // made the byte table at kKindIndex of - the function's logic, ours since the
@@ -157,9 +157,9 @@ void Call1(std::uint32_t address, unsigned a) { MH_WORD(Fn1, address)(a); }
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};
 using TaskFn = void (__cdecl*)(unsigned char*);
-void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
+void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset.v)(task); }
 
 // Other units' functions (docs/magic_s02.md section 3) are ours now and called
 // by name: S06's Magic008_DrawFlash, S37's MagicFx_FreeCurrentRecord (the
@@ -1037,7 +1037,7 @@ void MagicS02_Inject() {
     {
         static std::uint8_t index[0x99];   // KindCase as the compiler's byte table, for the hosted check
         for (std::uint32_t i = 0; i < sizeof index; ++i) index[i] = static_cast<std::uint8_t>(KindCase(i));
-        bof3::Operand("ElemStrike_Kind byte table", kKindIndex, index, sizeof index);
+        bof3::Operand("ElemStrike_Kind byte table", kKindIndex.v, index, sizeof index);
     }
     if (bof3::WantsShadow("magic_s02")) magic_s02::SelfTest();
     BOF3_INJECT(SuperCombo_Task);

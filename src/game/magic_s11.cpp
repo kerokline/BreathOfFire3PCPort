@@ -87,7 +87,7 @@ constexpr std::uint32_t kPoolStride = 0x84;
 
 // Callees other groups own: the engine's by address; S36's AuraBreath_InReach
 // and S37's MagicFx_FreeCurrentRecord, ours now, by name.
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;   // engine, unnamed: a task's +0xC / +0x10 turned by its +8
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};   // engine, unnamed: a task's +0xC / +0x10 turned by its +8
 using Fn0 = void (__cdecl*)();
 using NearFn = int (__cdecl*)(unsigned char*);
 using TaskFn = void (__cdecl*)(unsigned char*);
@@ -624,7 +624,7 @@ S11_EXPORT void __cdecl Tornado_Start(void) {
     Sc()[8] = Pointer(::bof3::Img(MagicS23_ActorSprite_addr))[8];
     rv::Current<records::BattleTask>()->step_x = 0x40000;
     rv::Current<records::BattleTask>()->step_z = 0;
-    MH_AT(TaskFn, kTurnOffset)(Sc());
+    MH_AT(TaskFn, kTurnOffset.v)(Sc());
     rv::Store(rv::Current<records::BattleTask>()->work_18, Add(rv::Current<records::BattleTask>()->step_x, static_cast<int>(Field_Kind2X)));
     rv::Store(rv::Current<records::BattleTask>()->work_1c, Add(rv::Current<records::BattleTask>()->step_z, static_cast<int>(Field_Kind2Z)));
     int v = Sin(0);

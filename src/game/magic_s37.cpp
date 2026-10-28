@@ -136,8 +136,8 @@ void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
-void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};
+void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset.v)(task); }
 
 // The phase handlers of MAGIC226/227 a table holds (S38's
 // MagicFx_CountDownFlag10 and MeteorStrikeRock_Hide) are ours now and named

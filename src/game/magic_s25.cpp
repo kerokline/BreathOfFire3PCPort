@@ -107,13 +107,13 @@ using PrimFn = void (__cdecl*)(unsigned char*);
 
 // libgpu's SetPolyF3 (code 0x20) and SetLineG4 (code 0x5C), unnamed, in no
 // group (psx_gpu's neighbours; docs/magic_s25.md section 7).
-constexpr std::uint32_t kSetPolyF3 = bof3::addr::Gpu_SetPolyF3;
-constexpr std::uint32_t kSetLineG4 = bof3::addr::Gpu_SetLineG4;
+constexpr ::bof3::image::CodeVa kSetPolyF3{bof3::addr::Gpu_SetPolyF3};
+constexpr ::bof3::image::CodeVa kSetLineG4{bof3::addr::Gpu_SetLineG4};
 // The effect library (group L), by name: MagicFx_CenterOnSide (the effect's
 // sprite to the middle of the target side), MagicFx_StepTowardPoint (one step
 // towards a point), MagicFx_NearPoint3D ("is the sprite within a box of the
 // point"). The engine's 0x446770 turns +0xC / +0x10 by the facing +8.
-constexpr std::uint32_t kTurnByFacing = bof3::addr::Battle_TurnVectorC;
+constexpr ::bof3::image::CodeVa kTurnByFacing{bof3::addr::Battle_TurnVectorC};
 // Other units' phases in the stack tables, by name: S17's Leech_WaitOrbs
 // ("free once the owner's +0xB is 0xFF") and the engine's MagicFx_DoneAndFree.
 
@@ -365,7 +365,7 @@ S25_EXPORT void __cdecl SpellSleep_DrawFan(void) {
         SetWord(V(0x12), static_cast<unsigned>(ax));
         if (counter > 0x11 || counter < -0x2F) {
             unsigned char* const p = Gfx_PacketNext;
-            MH_AT(PrimFn, kSetPolyF3)(p);
+            MH_AT(PrimFn, kSetPolyF3.v)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, semi);
             Rtp3(p, 8, 0x14, 0x20);
             MH_CALL(Gte_PrimDepths3_0C)(p);
@@ -625,7 +625,7 @@ S25_EXPORT void __cdecl SpellSleep_DrawTrailLines(void) {
         }
         LinkAtSprite(2, 0xC);
         unsigned char* const p = Gfx_PacketNext;
-        MH_AT(PrimFn, kSetLineG4)(p);
+        MH_AT(PrimFn, kSetLineG4.v)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
         Rtp4(p, 8, 0x18, 0x28, 0x38);
         MH_CALL(Gte_PrimDepths4_10C)(p);
@@ -756,7 +756,7 @@ S25_EXPORT void __cdecl SpellConfuse_Child(void) {
 S25_EXPORT void __cdecl SpellConfuse_ChildInit(void) {
     rv::Current<records::BattleTask>()->step_x = 0x20000;
     rv::Current<records::BattleTask>()->step_z = 0;
-    MH_AT(void (__cdecl*)(unsigned char*), kTurnByFacing)(Sprite_Current);
+    MH_AT(void (__cdecl*)(unsigned char*), kTurnByFacing.v)(Sprite_Current);
     unsigned char* sc = Sprite_Current;
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     tsc->x = tsc->x + tsc->step_x;
