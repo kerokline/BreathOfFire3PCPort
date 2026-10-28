@@ -794,6 +794,103 @@ behaviour not measured (DIV-0071, 0144, 0180 - a crash fix - and, under the
 Latin four, 0027, 0058, 0059). The owner's answer: `none` is related to no
 release, so the PlayStation preset leaves it alone (the rule above).
 
+### D2 as run (2026-10-28, off the stage branch at `f493bafb`)
+
+One Opus agent, worktree `C:\Users\kerok\bof3x-runs\lfd1028\wt_d2`, branch
+`ledger-fields/d2`; report `lfd1028\d2\REPORT.md`. The presets in the
+launcher, applied at launch, the Configure page's box, and D395.
+
+**D395, fixed** (the coordinator's decision 4): `Config::scale_named`;
+`ConfigLoad` takes `scale=` 2..8 as named and an empty one as not named;
+`ConfigApplyEnvironment` sends `BOF3X_SCALE` whenever named, 2 included;
+`ConfigSave` writes the value back, or `scale=` empty under a comment that
+says empty follows the display. DIV-0036's `Switch:` is
+`ini:display=windowed, ini:scale=2`, its `Reversible?` and `Player:` say
+so, and an amendment records the fix; D395's entry and the status line of
+`known-defects.md` say fixed. No new DIV entry: the default does not move.
+One consequence to know: an ini an earlier launcher wrote holds `scale=2`
+for every player (it wrote the default back), which now fixes k = 2 on a
+scaled desktop where it used to follow the display.
+
+**The presets, as built** (`src/launcher/config.h` / `config.cpp`):
+
+1. `preset=recommended|shipped|repaired|playstation`, default
+   `recommended`, always written with an ASD-STE100 comment; another value
+   is the default, said on stderr (as `filter=` drops a value it does not
+   know; *my choice*, against stopping the launcher). `BOF3X_PRESET` in the
+   launcher's environment chooses it, as every variable wins; a value that
+   is not a preset stops the launcher with a message.
+2. `PresetClassify` is `tools/ledger_registry.py`'s `classify`, in the same
+   order, over `ledger_registry.h`; the launcher host tests compare every
+   entry under every preset, for `original` and `en-US`, with the tool's
+   `--tsv` rows (`tools/launcher_host/presets_<language>.tsv`, checked in):
+   the action, the title and the `Switch:` names. Equal (3,224 checks in
+   all, 0 failures; a planted fault in the fixture fails).
+3. **At launch** (`launcher.cpp`, after the dialog, before `BOF3.CFG` and the
+   environment are written), for the language the game is given
+   (`ConfigLanguagePlayed`): `ConfigPresetPlan` makes the plan,
+   `ConfigPresetApply` gives the game a copy of the settings - the preset's
+   `ini:` values read as the ini's own lines would be (`ConfigLoad`'s parser,
+   now an overload on the text so that `ledger_switches.py` still finds the
+   keys in `ConfigLoad`), and `off=` the preset's code names then the
+   player's list, so a player's `-name` keeps a change on - and
+   `ConfigPresetEnvironment` sets `BOF3X_PRESET` and the `env:` values where
+   the environment has none, before the launcher's own variables. The ini is
+   never rewritten. An environment's `BOF3X_OFF` wins unchanged.
+4. **The install rules** (*my reading* of decision 2, documented in
+   `launcher-settings.md` 3.3), each listed as "not on this install":
+   `music=pc` without `BGM\*.DAT` (the Music box's own test), `music=psx` /
+   `psp` without those songs in the cache, and two `env:` values a
+   disc-built install cannot take, `BOF3X_CACHE_DATA=0` (no PC `DAT\` to read
+   in place of the cache) and `BOF3X_EXEIMAGE_STRICT=1` (its `.data` has gaps
+   the strict switch refuses) - D1's flag on DIV-0101. Listed as "kept": an
+   env value the environment sets; `opt=none` over an ini whose `opt=` names
+   its own list (the ledger's `ini:opt=none` is written for the default
+   list; over a list it would take the player's suites off too); and an
+   `env:` value whose variable an `ini:` value of the same plan decides
+   (`IniVariable`): `music=pc` sends `BOF3X_MUSIC=pc`, so DIV-0150's
+   `BOF3X_MUSIC=seq` is not set where `music=pc` is; where it is not on this
+   install, `seq` is.
+5. **The Configure page**: the Settings tab has two sub-pages, Settings and
+   Preset (the list does not fit beside the settings in 640 x 480; the
+   Settings template is 14 units shorter, 176, to fit under the sub-row).
+   Preset holds the box, the preset's sentence, and a read-only list for the
+   language in the Language box on this install: turned off (id, title, the
+   ini and env values), not on this install, kept, this build cannot (the
+   `costly` ones), also available, then one line counting those the language
+   decides, those not used with it and those that must stay on. A control
+   whose key the preset sets - Display, Keep the game running, Music - is
+   grey (*my choice* of decision 2's two), with a line under Settings that
+   says why; its value stays the player's and is saved as such. Seen at 100 %
+   by PrintWindow from a scratch launcher (`lfd1028\d2\shots`): both
+   sub-pages inside the 640 x 480 window.
+6. **The game's log**: `src/game/dat_load.cpp` logs `preset      <name>
+   (BOF3X_PRESET), language <tag>` once, beside the language, in both hosts;
+   it reads the variable for nothing else.
+
+**The ini: values a preset applies today** (Default on, Player yes): As
+shipped `display=windowed`, `scale=2`, `background=0`, `music=pc`,
+`opt=none`; Repaired the same less `opt=none` (DIV-0080 is Intent); the
+`env:` values As shipped eleven (`BOF3X_FRAME_MS`, `LAYERING`, `TILE1`,
+`LINES`, `MUSIC_LOOPS`, `SIDE_DUP`, `CACHE_DATA`, `EXEIMAGE_STRICT`,
+`WIDE_STAGING`, `WIDE_HIDE`, `FBGRAB`), Repaired four, PlayStation one
+(`BOF3X_WIDE_STAGING=0`). No `ini:ruby=` is ever applied: DIV-0155..0157 are
+`Default: off` (D1's flag on the empty value is moot today; an empty value
+would set the key empty, as the ledger's grammar says).
+
+**The proof** (`lfd1028\d2\proof.sh`, logs beside it; every run
+`BOF3X_SELFTEST_ONLY=1 ... --game <main>/bof3 --no-config`, serial): the exe
+host from `build/` (no ini) exit 0, `preset recommended`, 60 code names, 0
+off; then a scratch copy of the launcher with a scratch ini per preset, each
+exit 0: `recommended` 0 off; `shipped` 56 names in `BOF3X_OFF`, 55 off
+(`StpTexels` logged as not active: it is asked for only with `DirectOpaque`
+on); `repaired` 25 names, 25 off; `playstation` no name, `BOF3X_WIDE_STAGING=0`;
+`shipped` under `language=en-US` 67 names, 65 off of 73 asked (`PauseText`
+and `StpTexels` logged as not active); `shipped`
+with `off=-SunderLoop` 54 off (the player's exclusion kept); `preset=recommended`
+with `BOF3X_PRESET=repaired` gives repaired's plan; `BOF3X_PRESET=asshipped`
+stops the launcher, exit 1, with its message.
+
 ## 6. For the owner
 
 1. **The field set** of section 1: the five names and their values. Is

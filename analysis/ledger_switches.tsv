@@ -10210,8 +10210,8 @@ switch	env:BOF3X_BSI_RUN	env	yes		src/game/boss_si_fuzz.cpp:153	read in src/
 switch	env:BOF3X_BSJ_RUN	env	yes		src/game/boss_sj_fuzz.cpp:324	read in src/
 switch	env:BOF3X_BW_TRACE	env	yes		src/game/battle_windows_fuzz.cpp:746	read in src/
 switch	env:BOF3X_BWS_TRACE	env	yes		src/game/battle_win_states_fuzz.cpp:534	read in src/
-switch	env:BOF3X_CACHE	launcher	yes		src/launcher/config.cpp:530 src/game/dat_cache.cpp:393 src/game/music_seq.cpp:448 src/game/psp_code.cpp:38 src/game/shoulder_glyphs.cpp:416 src/hook/exe_image.cpp:434 src/input/sigma.cpp:127 src/launcher/config.cpp:528 src/launcher/config.cpp:532 src/launcher/config.cpp:665 src/launcher/config.cpp:1288 src/launcher/config_dialog.cpp:227 src/launcher/launcher.cpp:442 src/launcher/music_player.cpp:400	read in src/, set by the launcher
-switch	env:BOF3X_CACHE_DATA	env	yes		src/game/dat_cache.cpp:389 src/hook/exe_image.cpp:431 src/launcher/config.cpp:658 src/launcher/config.cpp:1276 src/launcher/config_dialog.cpp:245	read in src/
+switch	env:BOF3X_CACHE	launcher	yes		src/launcher/config.cpp:530 src/game/dat_cache.cpp:393 src/game/music_seq.cpp:448 src/game/psp_code.cpp:38 src/game/shoulder_glyphs.cpp:416 src/hook/exe_image.cpp:434 src/input/sigma.cpp:127 src/launcher/config.cpp:528 src/launcher/config.cpp:532 src/launcher/config.cpp:665 src/launcher/config.cpp:1288 src/launcher/config_dialog.cpp:230 src/launcher/launcher.cpp:442 src/launcher/music_player.cpp:400	read in src/, set by the launcher
+switch	env:BOF3X_CACHE_DATA	env	yes		src/game/dat_cache.cpp:389 src/hook/exe_image.cpp:431 src/launcher/config.cpp:658 src/launcher/config.cpp:1276 src/launcher/config_dialog.cpp:248	read in src/
 switch	env:BOF3X_CALLTRACE	hosted-only	costly		src/hook/exe_host.cpp:75 src/launcher/launcher.cpp:67 src/game/crt_rest.cpp:422 src/hook/calltrace.cpp:313 src/hook/input_script.cpp:1187	read in src/, refused by bof3x.exe
 switch	env:BOF3X_CALLTRACE_DETAIL	env	yes		src/hook/calltrace.cpp:385	read in src/
 switch	env:BOF3X_CALLTRACE_MODE	env	yes		src/hook/calltrace.cpp:377	read in src/
