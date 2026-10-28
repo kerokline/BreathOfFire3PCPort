@@ -22685,29 +22685,21 @@ src/game/rest_3g_fuzz.cpp	CheckPspMyriaItem	raw	At	0x904EFC	0	0x904efc	-	width	r
 src/game/rest_3g_fuzz.cpp	CheckPspMyriaItem	global	At	EventBattle_Id_addr	0	0x904aaa	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (EventBattle_Id_addr - -)	c4-tc
 src/game/rest_3g_fuzz.cpp	CheckPspMyriaItem	raw	At	0x904EFC	1	0x904efc	-	width	raw literal on Game_AreaNumber: the access is not the entry's width / an element, or typed_convert --gate refused it	c2-rest
 src/game/rest_3g_fuzz.cpp	CheckPspMyriaItem	global	At	EventBattle_Id_addr	1	0x904aaa	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (EventBattle_Id_addr - -)	c4-tc
-src/game/rest_4a.cpp	UL	global	At	Community_Records_addr + 8u * i	0	0x9046d0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Community_Records_addr - -)	c4-tc
-src/game/rest_4a.cpp	UL	global	At	Community_Buildings_addr + 8u * b	0	0x9048b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Community_Buildings_addr - -)	c4-tc
 src/game/rest_4a.cpp	UL	global	At	at::kRecordTraits	0	0x653200	-	no-entry	at::kRecordTraits 0x653200 -	b0
-src/game/rest_4a.cpp	UL	global	At	Sprite_Objects_addr + 0x88 + at::kSpriteStride * object	0	0x7dee80	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Sprite_Objects_addr - -)	c4-tc
 src/game/rest_4a.cpp	UL	global	At	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
 src/game/rest_4a.cpp	UL	global	At	at::kEvents	0	0x904ca0	-	no-entry	at::kEvents 0x904ca0 -	b0
 src/game/rest_4a.cpp	UL	global	At	at::kEvents	1	0x904ca0	-	no-entry	at::kEvents 0x904ca0 -	b0
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	UL	at::kBattleFlags	0	0x904aa8	-	no-entry	at::kBattleFlags 0x904aa8 -	b0
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
-src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	Battle_Enemies_addr + 0x92 + e	0	0x93b960	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Battle_Enemies_addr - -)	c4-tc
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	UL	at::kEnemyFlags	0	0x93ba74	-	no-entry	at::kEnemyFlags 0x93ba74 -	b0
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	at::kEnemyIntel	0	0x93ba1a	-	ptr	a pointer form: At(at::kEnemyIntel + e) is read through Word() at an enemy index (the module name back, 2026-10-20; was Battle_Enemies_addr + 0xba + e)	owner-1020
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	at::kAutoMode	0	0x904b35	-	no-entry	at::kAutoMode 0x904b35 -	b0
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	at::kTarget	1	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
-src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	Battle_Enemies_addr + 0x106 + e	0	0x93b960	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Battle_Enemies_addr - -)	c4-tc
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	at::kAbilityFlags	0	0x65c4d8	-	untyped-entry	at::kAbilityFlags 0x65c4d8 NameTable_Abilities	b0
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	at::kTarget	2	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	at::kTarget	3	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	at::kTarget	4	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/rest_4a.cpp	Battle_AutoTargetCheck	global	At	at::kTarget	5	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
-src/game/rest_4a.cpp	Battle_MemberActionIs0E	global	At	ObjTrio_addr + 0x126 + at::kMemberStride * (member & 0xFFu)	0	0x802d40	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (ObjTrio_addr - -)	c4-tc
-src/game/rest_4a.cpp	Battle_MemberAutoFixed	global	At	ObjTrio_addr + 0x142 + at::kMemberStride * m	0	0x802d40	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
-src/game/rest_4a.cpp	Battle_MemberAutoFixed	global	At	ObjTrio_addr + 0x125 + at::kMemberStride * m	0	0x802d40	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (ObjTrio_addr - -)	c4-tc
 src/game/rest_4a.cpp	Battle_MemberAutoFixed	global	At	at::kAutoMode	0	0x904b35	-	no-entry	at::kAutoMode 0x904b35 -	b0
 src/game/rest_4a.cpp	Battle_MemberAutoFixed	global	At	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/rest_4a.cpp	Field_RunSlot	record	UL	r + 0xC	0	-	base=Field_Slots	no-struct	UL(r + 0xC): base=Field_Slots, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -22745,8 +22737,8 @@ src/game/rest_4a.cpp	CommuSim_TickKindD	global	At	at::kArmour	0	0x657d79	-	no-en
 src/game/rest_4a.cpp	CommuSim_TickKindD	global	At	at::kArmour	1	0x657d79	-	no-entry	at::kArmour 0x657d79 -	b0
 src/game/rest_4a.cpp	CommuSim_TickKindD	global	At	at::kAccessories	0	0x658461	-	no-entry	at::kAccessories 0x658461 -	b0
 src/game/rest_4a.cpp	CommuSim_TickKindD	global	At	at::kAccessories	1	0x658461	-	no-entry	at::kAccessories 0x658461 -	b0
-src/game/rest_4a.cpp	CommuSim_TickKindD	global	-	at::kPriceTiers	0	0x652928	-	no-entry	at::kPriceTiers 0x652928 -	b0
-src/game/rest_4a.cpp	CommuSim_TickKindD	global	-	at::kPriceTiersEnd	0	0x652958	-	no-entry	at::kPriceTiersEnd 0x652958 -	b0
+src/game/rest_4a.cpp	CommuSim_TickKindD	global	Img	at::kPriceTiers	0	0x652928	-	no-entry	at::kPriceTiers 0x652928 -	b0
+src/game/rest_4a.cpp	CommuSim_TickKindD	global	Img	at::kPriceTiersEnd	0	0x652958	-	no-entry	at::kPriceTiersEnd 0x652958 -	b0
 src/game/rest_4a.cpp	CommuSim_TickKindD	global	At	at::kPriceTiers	0	0x652928	-	no-entry	at::kPriceTiers 0x652928 -	b0
 src/game/rest_4a.cpp	CommuSim_TickKindD	global	At	at::kPriceTiers	1	0x652928	-	no-entry	at::kPriceTiers 0x652928 -	b0
 src/game/rest_4a.cpp	CommuSim_TickKindB	record	SetUL	bl + 4	0	-	via=Bld	no-struct	SetUL(bl + 4): via=Bld, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -22767,25 +22759,20 @@ src/game/rest_4a.cpp	CommuSim_RollOffers	global	SetUL	at::kOfferWords	1	0x675f60
 src/game/rest_4a.cpp	CommuSim_RollOffers	global	SetUL	at::kOfferWords	2	0x675f60	-	no-entry	at::kOfferWords 0x675f60 -	b0
 src/game/rest_4a.cpp	CommuSim_RollOffers	global	SetUL	at::kOfferWords	3	0x675f60	-	no-entry	at::kOfferWords 0x675f60 -	b0
 src/game/rest_4a.cpp	CommuSim_RollOffers	global	At	at::kOfferWords	0	0x675f60	-	no-entry	at::kOfferWords 0x675f60 -	b0
-src/game/rest_4a.cpp	CommuSim_RollOffers	global	-	at::kOfferWords	0	0x675f60	-	no-entry	at::kOfferWords 0x675f60 -	b0
+src/game/rest_4a.cpp	CommuSim_RollOffers	global	Img	at::kOfferWords	0	0x675f60	-	no-entry	at::kOfferWords 0x675f60 -	b0
 src/game/rest_4a.cpp	CommuSim_RollOffers	record	At	group + 2 * k	0	-	table=0x675f60	computed	table=0x675f60 (At(group + 2 * k))	b1-rest
 src/game/rest_4a.cpp	CommuSim_RollOffers	global	At	at::kOfferWords	1	0x675f60	-	no-entry	at::kOfferWords 0x675f60 -	b0
 src/game/rest_4a.cpp	CommuSim_PlaceObjects	global	SetUL	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
 src/game/rest_4a.cpp	CommuSim_PlaceObjects	global	SetUL	at::kResidentCounts	1	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
-src/game/rest_4a.cpp	CommuSim_PlaceObjects	global	At	Sprite_Objects_addr + at::kSpriteStride * o	0	0x7dee80	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
 src/game/rest_4a.cpp	BankAndFace	global	At	at::kBanks	0	0x6528f4	-	no-entry	at::kBanks 0x6528f4 -	b0
-src/game/rest_4a.cpp	CommuSim_PlaceLoose	global	At	Sprite_Objects_addr + at::kSpriteStride * o	0	0x7dee80	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Sprite_Objects_addr - -)	c4-tc
 src/game/rest_4a.cpp	CommuSim_PlaceLoose	global	At	at::kObjectPlaces	0	0x652960	-	no-entry	at::kObjectPlaces 0x652960 -	b0
 src/game/rest_4a.cpp	CommuSim_PlaceLoose	global	At	at::kObjectPlaces	1	0x652960	-	no-entry	at::kObjectPlaces 0x652960 -	b0
 src/game/rest_4a.cpp	CommuSim_PlaceLoose	global	At	at::kObjectPlaces	2	0x652960	-	no-entry	at::kObjectPlaces 0x652960 -	b0
-src/game/rest_4a.cpp	CommuSim_PlaceResident	global	At	Sprite_Objects_addr + at::kSpriteStride * o	0	0x7dee80	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Sprite_Objects_addr - -)	c4-tc
 src/game/rest_4a.cpp	CommuSim_PlaceResident	global	At	at::kResidentPlaces	0	0x65299c	-	no-entry	at::kResidentPlaces 0x65299c -	b0
 src/game/rest_4a.cpp	CommuSim_PlaceResident	global	At	at::kResidentPlaces	1	0x65299c	-	no-entry	at::kResidentPlaces 0x65299c -	b0
 src/game/rest_4a.cpp	CommuSim_PlaceResident	global	At	at::kResidentPlaces	2	0x65299c	-	no-entry	at::kResidentPlaces 0x65299c -	b0
 src/game/rest_4a.cpp	CommuSim_PlaceResident	global	At	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
-src/game/rest_4a.cpp	CommuPose_Kind0	global	At	Sprite_Objects_addr + 0x6 + at::kSpriteStride * o	0	0x7dee80	-	addr-form	an <Name>_addr spelling typed_convert left (a pointer form, a computed index, or a gated refusal)	c4-rule
 src/game/rest_4a.cpp	CommuPose_Kind8	global	At	at::kOfferWords	0	0x675f60	-	no-entry	at::kOfferWords 0x675f60 -	b0
-src/game/rest_4a.cpp	CommuPose_KindB	global	At	Cond_Flags_addr + 0xa0	0	0x904030	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Cond_Flags_addr - -)	c4-tc
 src/game/rest_4a.cpp	Row	global	At	at::kNumberFormat	0	0x5e10c0	-	untyped-entry	at::kNumberFormat 0x5e10c0 Area08_MessageFormat	b0
 src/game/rest_4a.cpp	FieldTrigger01	global	At	at::kCountA	0	0x9040c8	-	no-entry	at::kCountA 0x9040c8 -	b0
 src/game/rest_4a.cpp	FieldTrigger01	global	Row	at::kTextRow0	0	0x904ce0	-	untyped-entry	at::kTextRow0 0x904ce0 Text_Records	b0
@@ -22803,11 +22790,11 @@ src/game/rest_4a_fuzz.cpp	ClockEffect	global	Mem	Game_BattleCount_addr	0	0x90413
 src/game/rest_4a_fuzz.cpp	ClockEffect	global	Mem	Game_BattleCount_addr	1	0x904134	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4a_Clock_addr - -)	c4-tc
 src/game/rest_4a_fuzz.cpp	CountEffect	global	Mem	Rest4a_RemovedCount_addr	0	0x9039a0	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4a_RemovedCount_addr - -)	c4-tc
 src/game/rest_4a_fuzz.cpp	ElevationEffect	global	Mem	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
-src/game/rest_4a_fuzz.cpp	-	global	-	at::kEvents	0	0x904ca0	-	no-entry	at::kEvents 0x904ca0 -	b0
-src/game/rest_4a_fuzz.cpp	-	global	-	at::kSpawned	0	0x904f00	-	no-entry	at::kSpawned 0x904f00 -	b0
-src/game/rest_4a_fuzz.cpp	-	global	-	at::kEventCount	0	0x937f80	-	name	at::kEventCount 0x937f80 Rest4b_BusyB	b0
-src/game/rest_4a_fuzz.cpp	-	global	-	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
-src/game/rest_4a_fuzz.cpp	-	global	-	at::kShopRecords	0	0x658930	-	untyped-entry	at::kShopRecords 0x658930 Shop_Records	b0
+src/game/rest_4a_fuzz.cpp	bof3::Img	global	Img	at::kEvents	0	0x904ca0	-	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
+src/game/rest_4a_fuzz.cpp	bof3::Img	global	Img	at::kSpawned	0	0x904f00	-	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
+src/game/rest_4a_fuzz.cpp	bof3::Img	global	Img	at::kEventCount	0	0x937f80	-	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
+src/game/rest_4a_fuzz.cpp	bof3::Img	global	Img	at::kResidentCounts	0	0x675f58	-	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
+src/game/rest_4a_fuzz.cpp	bof3::Img	global	Img	at::kShopRecords	0	0x658930	-	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
 src/game/rest_4a_fuzz.cpp	Rec	global	Mem	Community_Records_addr + 8 * i	0	0x9046d0	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Community_Records_addr - -)	c4-tc
 src/game/rest_4a_fuzz.cpp	Rec	global	Mem	Community_Buildings_addr + 8 * b	0	0x9048b0	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Community_Buildings_addr - -)	c4-tc
 src/game/rest_4a_fuzz.cpp	Rec	global	Mem	Game_BattleCount_addr	0	0x904134	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4a_Clock_addr - -)	c4-tc
@@ -22833,7 +22820,7 @@ src/game/rest_4a_fuzz.cpp	SeedBattle	global	Mem	Battle_PartyStanding_addr	0	0x90
 src/game/rest_4a_fuzz.cpp	SeedBattle	raw	Mem	0x93B960 + at::kEnemyStride * e	0	0x93b960	-	computed	a raw literal address plus an index or offset (0x93B960 + at::kEnemyStride * e)	c2-rest
 src/game/rest_4a_fuzz.cpp	SeedBattle	global	Mem	ObjTrio_addr + 0x126 + at::kMemberStride * m	0	0x802d40	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (ObjTrio_addr - -)	c4-tc
 src/game/rest_4a_fuzz.cpp	SeedBattle	global	Mem	ObjTrio_addr + 0x142 + at::kMemberStride * m	0	0x802d40	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (ObjTrio_addr - -)	c4-tc
-src/game/rest_4a_fuzz.cpp	AbilityBit4	global	Mem	at::kAbilityFlags	0	0x65c4d8	-	untyped-entry	at::kAbilityFlags 0x65c4d8 NameTable_Abilities	b0
+src/game/rest_4a_fuzz.cpp	AbilityBit4	global	Img	at::kAbilityFlags	0	0x65c4d8	-	untyped-entry	at::kAbilityFlags 0x65c4d8 NameTable_Abilities	b0
 src/game/rest_4a_fuzz.cpp	SeedAutoTarget	global	Mem	at::kBattleFlags	0	0x904aa8	-	no-entry	at::kBattleFlags 0x904aa8 -	b0
 src/game/rest_4a_fuzz.cpp	SeedAutoTarget	global	Mem	at::kBattleFlags	1	0x904aa8	-	no-entry	at::kBattleFlags 0x904aa8 -	b0
 src/game/rest_4a_fuzz.cpp	SeedAutoTarget	global	Mem	BattlePhases_B8B_addr	0	0x904b8b	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (BattlePhases_B8B_addr - -)	c4-tc
@@ -22850,15 +22837,14 @@ src/game/rest_4a_fuzz.cpp	Args	global	Mem	BattlePhases_B8B_addr	0	0x904b8b	-	sea
 src/game/rest_4a_fuzz.cpp	Args	global	Mem	BattlePhases_B8B_addr	1	0x904b8b	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (BattlePhases_B8B_addr - -)	c4-tc
 src/game/rest_4a_fuzz.cpp	Disturb	global	Mem	Game_BattleCount_addr	0	0x904134	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4a_Clock_addr - -)	c4-tc
 src/game/rest_4a_fuzz.cpp	Disturb	global	Mem	Game_BattleCount_addr	1	0x904134	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4a_Clock_addr - -)	c4-tc
-src/game/rest_4a_fuzz.cpp	Disturb	global	-	at::kEventCount	0	0x937f80	-	name	at::kEventCount 0x937f80 Rest4b_BusyB	b0
+src/game/rest_4a_fuzz.cpp	Disturb	global	Img	at::kEventCount	0	0x937f80	-	name	at::kEventCount 0x937f80 Rest4b_BusyB	b0
 src/game/rest_4a_fuzz.cpp	Disturb	global	Mem	BattlePhases_B8B_addr	0	0x904b8b	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (BattlePhases_B8B_addr - -)	c4-tc
 src/game/rest_4a_fuzz.cpp	Disturb	global	Mem	Battle_PartyStanding_addr	0	0x904ab1	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Battle_PartyStanding_addr - -)	c4-tc
 src/game/rest_4a_fuzz.cpp	Disturb	global	Mem	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
 src/game/rest_4a_fuzz.cpp	Disturb	global	Mem	at::kOfferWords	0	0x675f60	-	no-entry	at::kOfferWords 0x675f60 -	b0
-src/game/rest_4b.cpp	B	record	L	table + 4 * static_cast<U>(index)	0	-	-	no-struct	L(table + 4 * static_cast<U>(index)): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
+src/game/rest_4b.cpp	Slot	global	Img	at::kSlots	0	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
 src/game/rest_4b.cpp	Slot	global	-	at::kSlots	0	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
-src/game/rest_4b.cpp	Slot	global	-	at::kSlots	1	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
-src/game/rest_4b.cpp	Slot	global	-	at::kSlots	2	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
+src/game/rest_4b.cpp	Slot	global	Img	at::kSlots	1	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
 src/game/rest_4b.cpp	StateBy	global	B	at::kFrame	0	0x937f94	-	width	at::kFrame 0x937f94 Frame_Counter	b0
 src/game/rest_4b.cpp	Column	global	PutL	at::kTextRecords	0	0x904ce0	-	untyped-entry	at::kTextRecords 0x904ce0 Text_Records	b0
 src/game/rest_4b.cpp	Column	global	PutL	at::kTextRecords	1	0x904ce0	-	untyped-entry	at::kTextRecords 0x904ce0 Text_Records	b0
@@ -22878,13 +22864,13 @@ src/game/rest_4b.cpp	CommuTail_RandomGift	global	B	at::kMembers	0	0x9046d0	-	no-
 src/game/rest_4b.cpp	CommuTail_RandomGift	record	B	Member(AreaW0c_TailSub, " ") + 2	0	-	via=Member	no-struct	B(Member(AreaW0c_TailSub, " ") + 2): via=Member, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuTail_RandomGift	global	B	at::kMembers	1	0x9046d0	-	no-entry	at::kMembers 0x9046d0 -	b0
 src/game/rest_4b.cpp	CommuTail_RandomGift	record	B	Slot(slot) + 1	0	-	via=Slot	no-struct	B(Slot(slot) + 1): via=Slot, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4b.cpp	CommuTail_RandomGift	global	-	at::kGiftItems	0	0x652a10	-	no-entry	at::kGiftItems 0x652a10 -	b0
+src/game/rest_4b.cpp	CommuTail_RandomGift	global	Img	at::kGiftItems	0	0x652a10	-	no-entry	at::kGiftItems 0x652a10 -	b0
 src/game/rest_4b.cpp	CommuTail_RandomGift	record	B	pair + 1	0	-	table=0x652a10	no-struct	B(pair + 1): table=0x652a10, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuTail_RandomGift	record	B	Member(AreaW0c_TailSub, " ") + 2	1	-	via=Member	no-struct	B(Member(AreaW0c_TailSub, " ") + 2): via=Member, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuTail23_LoadDat	global	B	at::kScriptFlags2	0	0x905ba4	-	width	at::kScriptFlags2 0x905ba4 Field_ScriptFlags2	b0
 src/game/rest_4b.cpp	CommuTail24_LoadDat	global	B	at::kScriptFlags2	0	0x905ba4	-	width	at::kScriptFlags2 0x905ba4 Field_ScriptFlags2	b0
 src/game/rest_4b.cpp	CommuTail_NibbleGift	global	B	at::kMembers	0	0x9046d0	-	no-entry	at::kMembers 0x9046d0 -	b0
-src/game/rest_4b.cpp	CommuTail_NibbleGift	global	-	at::kGiftLines	0	0x652ac4	-	no-entry	at::kGiftLines 0x652ac4 -	b0
+src/game/rest_4b.cpp	CommuTail_NibbleGift	global	Img	at::kGiftLines	0	0x652ac4	-	no-entry	at::kGiftLines 0x652ac4 -	b0
 src/game/rest_4b.cpp	CommuTail_NibbleGift	record	W	row + 4	0	-	table=0x652ac4	no-struct	W(row + 4): table=0x652ac4, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuTail_NibbleGift	global	B	at::kMembers	1	0x9046d0	-	no-entry	at::kMembers 0x9046d0 -	b0
 src/game/rest_4b.cpp	CommuTail_NibbleGift	global	B	at::kMembers	2	0x9046d0	-	no-entry	at::kMembers 0x9046d0 -	b0
@@ -22896,12 +22882,7 @@ src/game/rest_4b.cpp	CommuTail_NibbleGift	record	W	row + 2	0	-	table=0x652ac4	no
 src/game/rest_4b.cpp	CommuTail25_LoadDat	global	B	at::kScriptFlags2	0	0x905ba4	-	width	at::kScriptFlags2 0x905ba4 Field_ScriptFlags2	b0
 src/game/rest_4b.cpp	CommuTail26_LoadDat	global	B	at::kScriptFlags2	0	0x905ba4	-	width	at::kScriptFlags2 0x905ba4 Field_ScriptFlags2	b0
 src/game/rest_4b.cpp	CommuBoard_Grid	global	B	at::kAreaLimits	0	0x653601	-	no-entry	at::kAreaLimits 0x653601 -	b0
-src/game/rest_4b.cpp	CommuBoard_Grid	global	At	AreaW0c_TailSub_addr	0	0x9039f5	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (AreaW0c_TailSub_addr - -)	c4-tc
-src/game/rest_4b.cpp	CommuBoard_MoveRecord	global	At	Rest4b_Pick_addr	0	0x675f7f	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Rest4b_Pick_addr - -)	c4-tc
-src/game/rest_4b.cpp	CommuBoard_MoveRecord	global	At	Rest4b_Pick_addr	1	0x675f7f	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Rest4b_Pick_addr - -)	c4-tc
 src/game/rest_4b.cpp	CommuBoard_MoveRecord	global	B	at::kPick	0	0x675f7f	-	gate	at::kPick 0x675f7f Rest4b_Pick	b0
-src/game/rest_4b.cpp	CommuBoard_MoveRecordB	global	At	Rest4b_Pick_addr	0	0x675f7f	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Rest4b_Pick_addr - -)	c4-tc
-src/game/rest_4b.cpp	CommuBoard_MoveRecordB	global	At	Rest4b_Pick_addr	1	0x675f7f	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Rest4b_Pick_addr - -)	c4-tc
 src/game/rest_4b.cpp	CommuBoard_MoveRecordB	global	B	at::kPick	0	0x675f7f	-	gate	at::kPick 0x675f7f Rest4b_Pick	b0
 src/game/rest_4b.cpp	CommuBoard_PickList	global	B	at::kPickNext	0	0x652b44	-	no-entry	at::kPickNext 0x652b44 -	b0
 src/game/rest_4b.cpp	CommuBoard_PickList	record	B	slot + 1	0	-	base=AreaW0c_TailSub	no-struct	B(slot + 1): base=AreaW0c_TailSub, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -22921,47 +22902,46 @@ src/game/rest_4b.cpp	CommuBoard_Confirm	record	B	SlotToWrite(arg, " ") + 3	0	-	v
 src/game/rest_4b.cpp	CommuBoard_Confirm	record	B	SlotToWrite(AreaW0c_TailSub, " ") + 1	0	-	via=SlotToWrite	no-struct	B(SlotToWrite(AreaW0c_TailSub, " ") + 1): via=SlotToWrite, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_Confirm	record	B	SlotToWrite(AreaW0c_TailSub, " ") + 2	0	-	via=SlotToWrite	no-struct	B(SlotToWrite(AreaW0c_TailSub, " ") + 2): via=SlotToWrite, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	global	At	at::kNames	0	0x9048f0	-	no-entry	at::kNames 0x9048f0 -	b0
-src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	global	-	at::kBars	0	0x653210	-	no-entry	at::kBars 0x653210 -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	global	Img	at::kBars	0	0x653210	-	no-entry	at::kBars 0x653210 -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	record	B	bars + 1	0	-	table=0x653210	no-struct	B(bars + 1): table=0x653210, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	record	B	bars + 2	0	-	table=0x653210	no-struct	B(bars + 2): table=0x653210, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	record	B	bars + 3	0	-	table=0x653210	no-struct	B(bars + 3): table=0x653210, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	global	B	at::kSlots	0	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
-src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	global	-	at::kBarHighlight	0	0x652b60	-	no-entry	at::kBarHighlight 0x652b60 -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	global	Img	at::kBarHighlight	0	0x652b60	-	no-entry	at::kBarHighlight 0x652b60 -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	record	B	bars + 1	1	-	table=0x653210	no-struct	B(bars + 1): table=0x653210, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	record	B	bars + 2	1	-	table=0x653210	no-struct	B(bars + 2): table=0x653210, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawRecordCard	record	B	bars + 3	1	-	table=0x653210	no-struct	B(bars + 3): table=0x653210, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	At	at::kMessagePools	0	0x803580	-	no-entry	at::kMessagePools 0x803580 -	b0
-src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	W	at::kMessagePools	0	0x803580	-	no-entry	at::kMessagePools 0x803580 -	b0
-src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	-	at::kSlots	0	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
-src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	B	at::kAreaLimits	0	0x653601	-	no-entry	at::kAreaLimits 0x653601 -	b0
-src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	B	at::kSlotIcons	0	0x652b6c	-	no-entry	at::kSlotIcons 0x652b6c -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	Img	at::kMessagePools	0	0x803580	-	no-entry	at::kMessagePools 0x803580 -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	Img	at::kMessagePools	1	0x803580	-	no-entry	at::kMessagePools 0x803580 -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	Img	at::kSlots	0	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
+src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	Img	at::kAreaLimits	0	0x653601	-	no-entry	at::kAreaLimits 0x653601 -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	Img	at::kSlotIcons	0	0x652b6c	-	no-entry	at::kSlotIcons 0x652b6c -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawPanel	record	B	slot + 1	0	-	table=0x9048a8;stride=0x8	no-struct	B(slot + 1): table=0x9048a8;stride=0x8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	B	at::kSlotIcons	1	0x652b6c	-	no-entry	at::kSlotIcons 0x652b6c -	b0
-src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	At	at::kTextBuffer	0	0x904ba0	-	no-entry	at::kTextBuffer 0x904ba0 -	b0
-src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	At	Boss26Fx_CountFormat_addr	0	0x64d3ec	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Boss26Fx_CountFormat_addr - -)	c4-tc
-src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	At	at::kTextBuffer	1	0x904ba0	-	no-entry	at::kTextBuffer 0x904ba0 -	b0
-src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	At	at::kPanelLabel	0	0x669e10	-	no-entry	at::kPanelLabel 0x669e10 -	b0
-src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	At	at::kNumberFormat	0	0x5e10c0	-	untyped-entry	at::kNumberFormat 0x5e10c0 Area08_MessageFormat	b0
-src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	At	at::kTextBuffer	2	0x904ba0	-	no-entry	at::kTextBuffer 0x904ba0 -	b0
-src/game/rest_4b.cpp	CommuBoard_DrawSlotLines	global	-	at::kSlotLines	0	0x652b7c	-	no-entry	at::kSlotLines 0x652b7c -	b0
-src/game/rest_4b.cpp	CommuBoard_DrawSlotLines	global	B	at::kAreaLimits	0	0x653601	-	no-entry	at::kAreaLimits 0x653601 -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	Img	at::kSlotIcons	1	0x652b6c	-	no-entry	at::kSlotIcons 0x652b6c -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	Img	at::kTextBuffer	0	0x904ba0	-	no-entry	at::kTextBuffer 0x904ba0 -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	Img	at::kTextBuffer	1	0x904ba0	-	no-entry	at::kTextBuffer 0x904ba0 -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	Img	at::kPanelLabel	0	0x669e10	-	no-entry	at::kPanelLabel 0x669e10 -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	Img	at::kNumberFormat	0	0x5e10c0	-	untyped-entry	at::kNumberFormat 0x5e10c0 Area08_MessageFormat	b0
+src/game/rest_4b.cpp	CommuBoard_DrawPanel	global	Img	at::kTextBuffer	2	0x904ba0	-	no-entry	at::kTextBuffer 0x904ba0 -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawSlotLines	global	Img	at::kSlotLines	0	0x652b7c	-	no-entry	at::kSlotLines 0x652b7c -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawSlotLines	global	Img	at::kAreaLimits	0	0x653601	-	no-entry	at::kAreaLimits 0x653601 -	b0
 src/game/rest_4b.cpp	Commu_CountInSlot	global	-	at::kMembersEnd	0	0x9048b0	-	no-entry	at::kMembersEnd 0x9048b0 -	b0
 src/game/rest_4b.cpp	Commu_CountInSlot	record	B	r + 1	0	-	stride=0x8	no-struct	B(r + 1): table=0x9046d0;stride=0x8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	Commu_NthInSlot	record	B	r + 1	0	-	-	no-struct	B(r + 1): table=0x9046d0, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawDigits	global	B	at::kDigitCells	0	0x652c0c	-	no-entry	at::kDigitCells 0x652c0c -	b0
-src/game/rest_4b.cpp	CommuBoard_DrawSprite	global	-	at::kSprites	0	0x652c18	-	no-entry	at::kSprites 0x652c18 -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawSprite	global	Img	at::kSprites	0	0x652c18	-	no-entry	at::kSprites 0x652c18 -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawSprite	record	B	e + 1	0	-	table=0x652c18	no-struct	B(e + 1): table=0x652c18, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawSprite	record	B	e + 2	0	-	table=0x652c18	no-struct	B(e + 2): table=0x652c18, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawSprite	record	B	e + 3	0	-	table=0x652c18	no-struct	B(e + 3): table=0x652c18, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawSprite	record	B	e + 4	0	-	table=0x652c18	no-struct	B(e + 4): table=0x652c18, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawSprite	record	B	e + 5	0	-	table=0x652c18	no-struct	B(e + 5): table=0x652c18, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawListBox	global	L	at::kListTextA	0	0x669e68	-	no-entry	at::kListTextA 0x669e68 -	b0
-src/game/rest_4b.cpp	CommuBoard_DrawListBoxB	global	-	at::kLists	0	0x652c6c	-	no-entry	at::kLists 0x652c6c -	b0
+src/game/rest_4b.cpp	CommuBoard_DrawListBoxB	global	Img	at::kLists	0	0x652c6c	-	no-entry	at::kLists 0x652c6c -	b0
 src/game/rest_4b.cpp	CommuBoard_DrawListBoxB	record	B	row + 1	0	-	table=0x652c6c	no-struct	B(row + 1): table=0x652c6c, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawListBoxB	record	B	row + 1	1	-	table=0x652c6c	no-struct	B(row + 1): table=0x652c6c, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawListBoxB	record	B	row + 1	2	-	table=0x652c6c	no-struct	B(row + 1): table=0x652c6c, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_DrawListBoxB	global	L	at::kListTexts	0	0x669ee0	-	no-entry	at::kListTexts 0x669ee0 -	b0
-src/game/rest_4b.cpp	CommuBoard_SlotRecordXY	global	-	at::kSlotOffsets	0	0x652c74	-	no-entry	at::kSlotOffsets 0x652c74 -	b0
+src/game/rest_4b.cpp	CommuBoard_SlotRecordXY	global	Img	at::kSlotOffsets	0	0x652c74	-	no-entry	at::kSlotOffsets 0x652c74 -	b0
 src/game/rest_4b.cpp	CommuBoard_SlotRecordXY	record	W	e + 2	0	-	table=0x652c74	no-struct	W(e + 2): table=0x652c74, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	CommuBoard_PlaceRecord	global	B	at::kAreaLimits	0	0x653601	-	no-entry	at::kAreaLimits 0x653601 -	b0
 src/game/rest_4b.cpp	CommuBoard_PlaceRecord	record	B	r + 1	0	-	via=Member	no-struct	B(r + 1): via=Member, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -22971,7 +22951,7 @@ src/game/rest_4b.cpp	CommuBoard_SlotHelp	record	B	slot + 1	0	-	via=Slot	no-struc
 src/game/rest_4b.cpp	CommuBoard_PickHelp	global	W	at::kSlotHelp	0	0x652c72	-	no-entry	at::kSlotHelp 0x652c72 -	b0
 src/game/rest_4b.cpp	CommuBoard_PickHelp	global	B	at::kAreaLimits	0	0x653601	-	no-entry	at::kAreaLimits 0x653601 -	b0
 src/game/rest_4b.cpp	CommuBoard_PickHelp	global	W	at::kPickHelp	0	0x652af0	-	index	at::kPickHelp 0x652af0 CommuTail26_States+0xc	b0
-src/game/rest_4b_fuzz.cpp	B	global	-	at::kSlots	0	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
+src/game/rest_4b_fuzz.cpp	B	global	Img	at::kSlots	0	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
 src/game/rest_4b_fuzz.cpp	Move	global	B	AreaW0c_TailState_addr	0	0x9039f4	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (AreaW0c_TailState_addr - -)	c4-tc
 src/game/rest_4b_fuzz.cpp	Move	global	B	AreaW0c_TailSub_addr	0	0x9039f5	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (AreaW0c_TailSub_addr - -)	c4-tc
 src/game/rest_4b_fuzz.cpp	Move	global	B	Rest4b_BoardState_addr	0	0x939a3e	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4b_BoardState_addr - -)	c4-tc
@@ -22989,7 +22969,7 @@ src/game/rest_4b_fuzz.cpp	Move	global	B	Rest4b_Toggle_addr + (w % 2 ? 1 : 0)	0	0
 src/game/rest_4b_fuzz.cpp	Move	global	B	Rest4b_CursorMode_addr + w % 3	0	0x675f74	-	expr	the address is part of a larger expression typed_convert does not rewrite (Rest4b_CursorMode_addr - -)	c4-tc
 src/game/rest_4b_fuzz.cpp	RandMove	global	B	AreaW0c_TailSub_addr	0	0x9039f5	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (AreaW0c_TailSub_addr - -)	c4-tc
 src/game/rest_4b_fuzz.cpp	ListBoxMove	global	B	Rest4b_PickD_addr	0	0x675f83	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4b_PickD_addr - -)	c4-tc
-src/game/rest_4b_fuzz.cpp	-	global	-	at::kTextRecords	0	0x904ce0	-	untyped-entry	at::kTextRecords 0x904ce0 Text_Records	b0
+src/game/rest_4b_fuzz.cpp	bof3::Img	global	Img	at::kTextRecords	0	0x904ce0	-	img	a VA placed through ::bof3::Img (relocatable-image round, stage B): the place of a module or at:: data constant, raw by design	rb3
 src/game/rest_4b_fuzz.cpp	SeedButtons	global	SetW	Field_ConfirmButtons_addr	0	0x90358e	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Field_ConfirmButtons_addr - -)	c4-tc
 src/game/rest_4b_fuzz.cpp	SeedButtons	global	SetW	Field_CancelButtons_addr	0	0x903590	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Field_CancelButtons_addr - -)	c4-tc
 src/game/rest_4b_fuzz.cpp	SeedButtons	global	SetW	Input_Pressed_addr	0	0x7e1bec	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Input_Pressed_addr - -)	c4-tc
@@ -23062,19 +23042,18 @@ src/game/rest_4b_fuzz.cpp	Seed	global	B	Rest4b_Pick_addr	2	0x675f7f	-	seam	the a
 src/game/rest_4b_fuzz.cpp	Seed	global	SetW	Rest4b_Help_addr	0	0x675f7a	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4b_Help_addr - -)	c4-tc
 src/game/rest_4b_fuzz.cpp	Args	global	B	at::kLists	0	0x652c6c	-	no-entry	at::kLists 0x652c6c -	b0
 src/game/rest_4c.cpp	PutWord	record	SetWord	p + offset	0	-	param	computed	param (SetWord(p + offset))	b1-rest
-src/game/rest_4c.cpp	Secret	record	At	bof3::addr::Text_Records - 0x140	0	-	base=Text_Records	computed	base=Text_Records (At(bof3::addr::Text_Records - 0x140))	b1-rest
 src/game/rest_4c.cpp	ClosePhase	global	L	at::kMusic	0	0x675f90	-	width	at::kMusic 0x675f90 Rest4d_KeptTrack	b0
 src/game/rest_4c.cpp	Commu_DrawPiece	global	At	at::kPieces	0	0x652d04	-	no-entry	at::kPieces 0x652d04 -	b0
 src/game/rest_4c.cpp	Commu_DrawZennyBox	global	Text	at::kZennyTitle	0	0x669f60	-	no-entry	at::kZennyTitle 0x669f60 -	b0
 src/game/rest_4c.cpp	Commu_DrawZennyBox	global	At	at::kFmtWide	0	0x64addc	-	no-entry	at::kFmtWide 0x64addc -	b0
 src/game/rest_4c.cpp	Commu_DrawZennyBox	global	Text	at::kZennyUnit	0	0x66a31c	-	no-entry	at::kZennyUnit 0x66a31c -	b0
-src/game/rest_4c.cpp	Commu_DrawStakeBox	global	Text	at::kBetTitle	0	0x669f68	-	no-entry	at::kBetTitle 0x669f68 -	b0
-src/game/rest_4c.cpp	Commu_DrawStakeBox	global	L	at::kBet	0	0x675f88	-	no-entry	at::kBet 0x675f88 -	b0
-src/game/rest_4c.cpp	Commu_DrawStakeBox	global	-	at::kFmtWide	0	0x64addc	-	no-entry	at::kFmtWide 0x64addc -	b0
-src/game/rest_4c.cpp	Commu_DrawStakeBox	global	-	at::kFmt1	0	0x65306c	-	no-entry	at::kFmt1 0x65306c -	b0
-src/game/rest_4c.cpp	Commu_DrawStakeBox	global	-	at::kFmt2	0	0x653074	-	no-entry	at::kFmt2 0x653074 -	b0
-src/game/rest_4c.cpp	Commu_DrawStakeBox	global	-	at::kFmt3	0	0x65307c	-	no-entry	at::kFmt3 0x65307c -	b0
-src/game/rest_4c.cpp	Commu_DrawStakeBox	global	Text	at::kZennyUnit	0	0x66a31c	-	no-entry	at::kZennyUnit 0x66a31c -	b0
+src/game/rest_4c.cpp	Commu_DrawStakeBox	global	Img	at::kBetTitle	0	0x669f68	-	no-entry	at::kBetTitle 0x669f68 -	b0
+src/game/rest_4c.cpp	Commu_DrawStakeBox	global	Img	at::kBet	0	0x675f88	-	no-entry	at::kBet 0x675f88 -	b0
+src/game/rest_4c.cpp	Commu_DrawStakeBox	global	Img	at::kFmtWide	0	0x64addc	-	no-entry	at::kFmtWide 0x64addc -	b0
+src/game/rest_4c.cpp	Commu_DrawStakeBox	global	Img	at::kFmt1	0	0x65306c	-	no-entry	at::kFmt1 0x65306c -	b0
+src/game/rest_4c.cpp	Commu_DrawStakeBox	global	Img	at::kFmt2	0	0x653074	-	no-entry	at::kFmt2 0x653074 -	b0
+src/game/rest_4c.cpp	Commu_DrawStakeBox	global	Img	at::kFmt3	0	0x65307c	-	no-entry	at::kFmt3 0x65307c -	b0
+src/game/rest_4c.cpp	Commu_DrawStakeBox	global	Img	at::kZennyUnit	0	0x66a31c	-	no-entry	at::kZennyUnit 0x66a31c -	b0
 src/game/rest_4c.cpp	CommuHiLo_DrawRow	global	B	at::kPicks	0	0x675fa1	-	no-entry	at::kPicks 0x675fa1 -	b0
 src/game/rest_4c.cpp	CommuHiLo_DrawRow	global	B	at::kCards	0	0x675f98	-	no-entry	at::kCards 0x675f98 -	b0
 src/game/rest_4c.cpp	CommuHiLo_Shuffle	global	B	at::kCards	0	0x675f98	-	no-entry	at::kCards 0x675f98 -	b0
@@ -23136,7 +23115,7 @@ src/game/rest_4c.cpp	CommuHitBlow_Score	global	At	at::kTextB	1	0x904d00	-	no-ent
 src/game/rest_4c.cpp	CommuHitBlow_NextGuess	global	At	at::kRecords	0	0x675f9b	-	no-entry	at::kRecords 0x675f9b -	b0
 src/game/rest_4c.cpp	CommuHitBlow_Prize	global	B	at::kPrizes	0	0x652d94	-	no-entry	at::kPrizes 0x652d94 -	b0
 src/game/rest_4c.cpp	CommuHitBlow_Prize	global	B	at::kPrizes	1	0x652d94	-	no-entry	at::kPrizes 0x652d94 -	b0
-src/game/rest_4c.cpp	CommuHitBlow_End	global	-	at::kRecords	0	0x675f9b	-	no-entry	at::kRecords 0x675f9b -	b0
+src/game/rest_4c.cpp	CommuHitBlow_End	global	Img	at::kRecords	0	0x675f9b	-	no-entry	at::kRecords 0x675f9b -	b0
 src/game/rest_4c.cpp	CommuHitBlow_End	record	B	rec + 2	0	-	table=0x675f9b	no-struct	B(rec + 2): table=0x675f9b, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4c.cpp	CommuHitBlow_End	record	B	rec + 1	0	-	table=0x675f9b	no-struct	B(rec + 1): table=0x675f9b, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4c.cpp	CommuHitBlow_End	global	B	at::kCards	0	0x675f98	-	no-entry	at::kCards 0x675f98 -	b0
@@ -23194,7 +23173,6 @@ src/game/rest_4c_fuzz.cpp	MoveCell	global	B	at::kCards	0	0x675f98	-	no-entry	at:
 src/game/rest_4c_fuzz.cpp	MoveCell	global	B	at::kDigits_addr	0	0x903850	-	expr	the address is part of a larger expression typed_convert does not rewrite (at::kDigits_addr - -)	c4-tc
 src/game/rest_4c_fuzz.cpp	MoveCell	global	B	(b & 1) ? Rest4c_Lost_addr : Rest4c_Again_addr	0	0x675f8f	-	expr	the address is part of a larger expression typed_convert does not rewrite (Rest4c_Lost_addr - -)	c4-tc
 src/game/rest_4c_fuzz.cpp	MoveCell	global	B	AreaW0c_TailState_addr	0	0x9039f4	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (AreaW0c_TailState_addr - -)	c4-tc
-src/game/rest_4d.cpp	B	record	L	table + 4 * index	0	-	-	no-struct	L(table + 4 * index): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4d.cpp	Scratch	global	At	at::kTextScratch	0	0x904ba0	-	no-entry	at::kTextScratch 0x904ba0 -	b0
 src/game/rest_4d.cpp	Scratch	global	Text	at::kPoolWords	0	0x803580	-	no-entry	at::kPoolWords 0x803580 -	b0
 src/game/rest_4d.cpp	Scratch	record	At	words + 2u * static_cast<U>(index)	0	-	param	computed	param (At(words + 2u * static_cast<U>(index)))	b1-rest
@@ -23222,7 +23200,7 @@ src/game/rest_4d.cpp	CommuDraw_Pick	global	B	at::kPicked	0	0x675fc0	-	no-entry	a
 src/game/rest_4d.cpp	CommuDraw_Pick	global	B	at::kPicked	1	0x675fc0	-	no-entry	at::kPicked 0x675fc0 -	b0
 src/game/rest_4d.cpp	CommuDraw_Pick	global	B	at::kPicked	2	0x675fc0	-	no-entry	at::kPicked 0x675fc0 -	b0
 src/game/rest_4d.cpp	CommuDraw_Pick	global	B	at::kPicked	3	0x675fc0	-	no-entry	at::kPicked 0x675fc0 -	b0
-src/game/rest_4d.cpp	CommuDraw_Pick	global	-	at::kTextRecords	0	0x904ce0	-	untyped-entry	at::kTextRecords 0x904ce0 Text_Records	b0
+src/game/rest_4d.cpp	CommuDraw_Pick	global	Img	at::kTextRecords	0	0x904ce0	-	untyped-entry	at::kTextRecords 0x904ce0 Text_Records	b0
 src/game/rest_4d.cpp	CommuDraw_Pick	global	B	at::kDrawRows	0	0x652dec	-	no-entry	at::kDrawRows 0x652dec -	b0
 src/game/rest_4d.cpp	CommuDraw_Pick	global	B	at::kDrawPools	0	0x652e34	-	no-entry	at::kDrawPools 0x652e34 -	b0
 src/game/rest_4d.cpp	CommuDraw_Pick	global	B	at::kPicked	4	0x675fc0	-	no-entry	at::kPicked 0x675fc0 -	b0
@@ -23232,9 +23210,9 @@ src/game/rest_4d.cpp	CommuDraw_Pick	global	B	at::kDrawPools	1	0x652e34	-	no-entr
 src/game/rest_4d.cpp	CommuDraw_Pick	global	B	at::kPicked	6	0x675fc0	-	no-entry	at::kPicked 0x675fc0 -	b0
 src/game/rest_4d.cpp	CommuDraw_Pick	global	PoolText	at::kDrawWords	0	0x803780	-	no-entry	at::kDrawWords 0x803780 -	b0
 src/game/rest_4d.cpp	CommuDraw_Pick	record	B	record + n	0	-	table=0x904ce0;stride=0x20	no-struct	B(record + n): table=0x904ce0;stride=0x20, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4d.cpp	CommuDraw_Pick	global	-	at::kTextRecordsEnd	0	0x904e00	-	no-entry	at::kTextRecordsEnd 0x904e00 -	b0
+src/game/rest_4d.cpp	CommuDraw_Pick	global	Img	at::kTextRecordsEnd	0	0x904e00	-	no-entry	at::kTextRecordsEnd 0x904e00 -	b0
 src/game/rest_4d.cpp	CommuDraw_Pick	global	B	at::kDrawPicks	0	0x652e3c	-	no-entry	at::kDrawPicks 0x652e3c -	b0
-src/game/rest_4d.cpp	CommuDraw_Pick	global	-	at::kDrawPicks	0	0x652e3c	-	no-entry	at::kDrawPicks 0x652e3c -	b0
+src/game/rest_4d.cpp	CommuDraw_Pick	global	Img	at::kDrawPicks	0	0x652e3c	-	no-entry	at::kDrawPicks 0x652e3c -	b0
 src/game/rest_4d.cpp	CommuDraw_Pick	record	B	pick + 1	0	-	table=0x652e3c	no-struct	B(pick + 1): table=0x652e3c, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4d.cpp	CommuDraw_Pick	global	B	at::kDrawPools	2	0x652e34	-	no-entry	at::kDrawPools 0x652e34 -	b0
 src/game/rest_4d.cpp	CommuDraw_Pick	global	B	at::kName	1	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
@@ -23268,9 +23246,7 @@ src/game/rest_4d.cpp	CommuName_MemberChoose	global	B	at::kCursor	0	0x675f8c	-	ga
 src/game/rest_4d.cpp	CommuName_MemberChoose	global	B	at::kCursor	1	0x675f8c	-	gate	at::kCursor 0x675f8c Rest4c_Count	b0
 src/game/rest_4d.cpp	CommuName_MemberPanelOut	global	-	at::kRecordFlagsEnd	0	0x903ef7	-	no-entry	at::kRecordFlagsEnd 0x903ef7 -	b0
 src/game/rest_4d.cpp	CommuName_MemberPanelOut	global	S8	at::kCursor	0	0x675f8c	-	gate	at::kCursor 0x675f8c Rest4c_Count	b0
-src/game/rest_4d.cpp	CommuName_MemberEntryIn	global	B	CharacterRecords_addr + at::kRecordStride * record + i	0	0x903a70	-	expr	the address is part of a larger expression typed_convert does not rewrite (CharacterRecords_addr - -)	c4-tc
 src/game/rest_4d.cpp	CommuName_MemberEntryIn	global	B	at::kName	0	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
-src/game/rest_4d.cpp	CommuName_MemberEntryIn	global	B	CharacterRecords_addr + at::kRecordStride * again + i	0	0x903a70	-	expr	the address is part of a larger expression typed_convert does not rewrite (CharacterRecords_addr - -)	c4-tc
 src/game/rest_4d.cpp	CommuName_MemberEntryIn	global	B	at::kName	1	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
 src/game/rest_4d.cpp	CommuName_MemberEntryOut	global	B	at::kName	0	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
 src/game/rest_4d.cpp	CommuName_MemberEntryOut	global	B	at::kName	1	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
@@ -23294,9 +23270,9 @@ src/game/rest_4d_fuzz.cpp	Move	global	B	Rest4d_EntryColumn_addr	0	0x675f94	-	sea
 src/game/rest_4d_fuzz.cpp	Move	global	B	Rest4d_KeptTrack_addr	0	0x675f90	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4d_KeptTrack_addr - -)	c4-tc
 src/game/rest_4d_fuzz.cpp	Move	global	B	at::kSlotNames	0	0x9048f0	-	no-entry	at::kSlotNames 0x9048f0 -	b0
 src/game/rest_4d_fuzz.cpp	Move	global	B	CharacterRecords_addr + at::kRecordStride * ((h >> 16) % 7)	0	0x903a70	-	expr	the address is part of a larger expression typed_convert does not rewrite (CharacterRecords_addr - -)	c4-tc
-src/game/rest_4d_fuzz.cpp	Disturb	global	-	at::kBoardFmt3	0	0x653088	-	no-entry	at::kBoardFmt3 0x653088 -	b0
-src/game/rest_4d_fuzz.cpp	Disturb	global	-	at::kNumberFmt	0	0x5e10c0	-	untyped-entry	at::kNumberFmt 0x5e10c0 Area08_MessageFormat	b0
-src/game/rest_4d_fuzz.cpp	RandomNameAnswer	global	Mem	at::kName	0	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
+src/game/rest_4d_fuzz.cpp	Disturb	global	Img	at::kBoardFmt3	0	0x653088	-	no-entry	at::kBoardFmt3 0x653088 -	b0
+src/game/rest_4d_fuzz.cpp	Disturb	global	Img	at::kNumberFmt	0	0x5e10c0	-	untyped-entry	at::kNumberFmt 0x5e10c0 Area08_MessageFormat	b0
+src/game/rest_4d_fuzz.cpp	RandomNameAnswer	global	Img	at::kName	0	0x675f98	-	no-entry	at::kName 0x675f98 -	b0
 src/game/rest_4d_fuzz.cpp	NthSlotAnswer	global	B	at::kSlotNames	0	0x9048f0	-	no-entry	at::kSlotNames 0x9048f0 -	b0
 src/game/rest_4d_fuzz.cpp	NearCursor	global	B	Rest4c_Count_addr	0	0x675f8c	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4c_Count_addr - -)	c4-tc
 src/game/rest_4d_fuzz.cpp	HeaderMove	global	SetW	Rest4d_Header_addr	0	0x675f92	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4d_Header_addr - -)	c4-tc
@@ -23339,7 +23315,6 @@ src/game/rest_4d_fuzz.cpp	MemberEntryAbandoned	global	B	Rest4c_Step_addr	1	0x939
 src/game/rest_4e.cpp	Put	global	At	kScriptPool	0	0x803580	-	no-entry	kScriptPool 0x803580 -	b0
 src/game/rest_4e.cpp	Put	global	W	kScriptPool	0	0x803580	-	no-entry	kScriptPool 0x803580 -	b0
 src/game/rest_4e.cpp	Put	record	L	table + 4 * index	0	-	-	no-struct	L(table + 4 * index): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4e.cpp	EntryRecord	global	At	Community_Records_addr + 8 * e	0	0x9046d0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Community_Records_addr - -)	c4-tc
 src/game/rest_4e.cpp	CommuEntry_DrawPanel	global	At	kEdit	0	0x675f98	-	no-entry	kEdit 0x675f98 -	b0
 src/game/rest_4e.cpp	CommuEntry_DrawPanel	global	At	kEntryNames	0	0x9048f0	-	no-entry	kEntryNames 0x9048f0 -	b0
 src/game/rest_4e.cpp	CommuEntry_DrawPanel	global	B	kBars	0	0x653210	-	no-entry	kBars 0x653210 -	b0
@@ -23347,14 +23322,12 @@ src/game/rest_4e.cpp	Commu_DrawPiece6	global	At	kPieces	0	0x652ee4	-	no-entry	kP
 src/game/rest_4e.cpp	CommuName_MakeRandom	global	At	kEdit	0	0x675f98	-	no-entry	kEdit 0x675f98 -	b0
 src/game/rest_4e.cpp	CommuName_MakeRandom	global	At	kEdit	1	0x675f98	-	no-entry	kEdit 0x675f98 -	b0
 src/game/rest_4e.cpp	CommuName_MakeRandom	global	B	kEdit	0	0x675f98	-	no-entry	kEdit 0x675f98 -	b0
-src/game/rest_4e.cpp	CommuMember_DrawPanel	global	At	CharacterRecords_addr + kMemberStride * (member & 0xFF)	0	0x903a70	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (CharacterRecords_addr - -)	c4-tc
 src/game/rest_4e.cpp	CommuMember_DrawPanel	global	At	kEdit	0	0x675f98	-	no-entry	kEdit 0x675f98 -	b0
 src/game/rest_4e.cpp	CommuMember_DrawPanel	global	At	kPanelPieces	0	0x652f5c	-	no-entry	kPanelPieces 0x652f5c -	b0
 src/game/rest_4e.cpp	CommuMember_DrawPortrait	global	At	kPortraits	0	0x652f38	-	no-entry	kPortraits 0x652f38 -	b0
 src/game/rest_4e.cpp	CommuMember_DrawAll	global	B	kMembers	0	0x903a70	-	no-entry	kMembers 0x903a70 -	b0
 src/game/rest_4e.cpp	CommuMember_Count	global	B	kMembers	0	0x903a70	-	no-entry	kMembers 0x903a70 -	b0
 src/game/rest_4e.cpp	CommuMember_Nth	global	B	kMembers	0	0x903a70	-	no-entry	kMembers 0x903a70 -	b0
-src/game/rest_4e.cpp	CommuName_CommitMember	global	At	CharacterRecords_addr + kMemberStride * i	0	0x903a70	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (CharacterRecords_addr - -)	c4-tc
 src/game/rest_4e.cpp	CommuName_CommitMember	global	SetL	kTextRecords	0	0x904ce0	-	untyped-entry	kTextRecords 0x904ce0 Text_Records	b0
 src/game/rest_4e.cpp	CommuName_CommitMember	global	L	kEdit	0	0x675f98	-	no-entry	kEdit 0x675f98 -	b0
 src/game/rest_4e.cpp	CommuName_CommitMember	global	SetL	kTextRecords	1	0x904ce0	-	untyped-entry	kTextRecords 0x904ce0 Text_Records	b0
@@ -23373,7 +23346,6 @@ src/game/rest_4e.cpp	CommuName_CommitEntry	global	L	kEdit	1	0x675f98	-	no-entry	
 src/game/rest_4e.cpp	CommuName_CommitEntry	global	SetL	kTextRecords	1	0x904ce0	-	untyped-entry	kTextRecords 0x904ce0 Text_Records	b0
 src/game/rest_4e.cpp	CommuName_CommitEntry	global	B	kEdit	0	0x675f98	-	no-entry	kEdit 0x675f98 -	b0
 src/game/rest_4e.cpp	CommuName_CommitEntry	global	B	kEdit	1	0x675f98	-	no-entry	kEdit 0x675f98 -	b0
-src/game/rest_4e.cpp	CommuMusic_Open	global	At	CharacterRecords_addr + kMemberStride * i	0	0x903a70	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (CharacterRecords_addr - -)	c4-tc
 src/game/rest_4e.cpp	CommuMusic_Open	global	At	kTextRecords	0	0x904ce0	-	untyped-entry	kTextRecords 0x904ce0 Text_Records	b0
 src/game/rest_4e.cpp	TrackIndex	global	B	kEntries	0	0x9046d0	-	no-entry	kEntries 0x9046d0 -	b0
 src/game/rest_4e.cpp	TrackIndex	global	B	kTrackCounts	0	0x9048ab	-	base-form	Community_Buildings +3 by a 1-based kind: kTrackCounts (0x9048AB) = Community_Buildings - 8 + 3 (rest_4e.cpp kTrackCounts); the base lies in Community_Records' last record (C4 audit B F1)	c4-fix
@@ -23387,7 +23359,6 @@ src/game/rest_4e.cpp	CommuMusic_DrawList	global	At	kGlyphsB	0	0x653148	-	no-entr
 src/game/rest_4e.cpp	CommuMusic_DrawList	global	At	kGlyphsC	1	0x65314c	-	no-entry	kGlyphsC 0x65314c -	b0
 src/game/rest_4e.cpp	CommuMusic_DrawList	global	At	kGlyphsA	0	0x653144	-	no-entry	kGlyphsA 0x653144 -	b0
 src/game/rest_4e.cpp	CommuMusic_DrawLabel	global	At	kEight	0	0x5c41cc	-	computed	a raw literal address plus an index or offset (kEight)	c2-rest
-src/game/rest_4e.cpp	ItemList	record	L	bof3::addr::Inventory_IdLists + 4 * tab	0	-	base=Inventory_IdLists	no-struct	L(bof3::addr::Inventory_IdLists + 4 * tab): base=Inventory_IdLists, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4e.cpp	CommuItem_Choose	global	L	kWin0	0	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_4e.cpp	CommuItem_Choose	global	SetW	kWin1	0	0x803184	-	inside-entry	kWin1 0x803184 Window1	b0
 src/game/rest_4e.cpp	CommuItem_Choose	global	B	kTop	0	0x80316b	-	no-entry	kTop 0x80316b -	b0
@@ -23403,11 +23374,6 @@ src/game/rest_4e.cpp	CommuItem_Choose	global	B	kTop	6	0x80316b	-	no-entry	kTop 0
 src/game/rest_4e.cpp	CommuItem_Choose	global	B	kTop	7	0x80316b	-	no-entry	kTop 0x80316b -	b0
 src/game/rest_4e.cpp	CommuItem_Choose	global	B	kTop	8	0x80316b	-	no-entry	kTop 0x80316b -	b0
 src/game/rest_4e.cpp	CommuItem_Choose	global	W	kScroll	0	0x803172	-	no-entry	kScroll 0x803172 -	b0
-src/game/rest_4e.cpp	CommuItem_Confirm	global	At	Community_Records_addr + 8u * AreaW0c_TailSub	0	0x9046d0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Community_Records_addr - -)	c4-tc
-src/game/rest_4e.cpp	CommuItem_Confirm	record	B	bof3::addr::NameTable_Consumables + 0x10 + 22 * item	0	-	base=NameTable_Consumables	no-struct	B(bof3::addr::NameTable_Consumables + 0x10 + 22 * item): base=NameTable_Consumables, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4e.cpp	CommuItem_Confirm	record	B	bof3::addr::NameTable_Weapons + 0x11 + 28 * item	0	-	base=NameTable_Weapons	no-struct	B(bof3::addr::NameTable_Weapons + 0x11 + 28 * item): base=NameTable_Weapons, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4e.cpp	CommuItem_Confirm	record	B	bof3::addr::NameTable_Armour + 0x11 + 26 * item	0	-	base=NameTable_Armour	no-struct	B(bof3::addr::NameTable_Armour + 0x11 + 26 * item): base=NameTable_Armour, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4e.cpp	CommuItem_Confirm	record	B	bof3::addr::NameTable_Accessories + 0x11 + 24 * item	0	-	base=NameTable_Accessories	no-struct	B(bof3::addr::NameTable_Accessories + 0x11 + 24 * item): base=NameTable_Accessories, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4e.cpp	CommuItem_Confirm	global	At	kTextRecords	0	0x904ce0	-	untyped-entry	kTextRecords 0x904ce0 Text_Records	b0
 src/game/rest_4e.cpp	CommuItem_SetupWindow	global	B	kWin0	0	0x803160	-	no-entry	kWin0 0x803160 -	b0
 src/game/rest_4e.cpp	CommuItem_SetupWindow	global	B	kWin0	1	0x803160	-	no-entry	kWin0 0x803160 -	b0
@@ -23527,7 +23493,6 @@ src/game/rest_4e_fuzz.cpp	Disturb	global	B	Community_Records_addr + 8 * B(AreaW0
 src/game/rest_4e_fuzz.cpp	Disturb	global	B	CommuList_Page_addr	0	0x675fdb	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (CommuList_Page_addr - -)	c4-tc
 src/game/rest_4e_fuzz.cpp	Disturb	global	B	CommuMusic_SavedTrack_addr	0	0x675fd0	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (CommuMusic_SavedTrack_addr - -)	c4-tc
 src/game/rest_4e_fuzz.cpp	Disturb	global	B	Rest4c_Count_addr	0	0x675f8c	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4c_Count_addr - -)	c4-tc
-src/game/rest_4f.cpp	Dispatch	record	L	table + 4 * index	0	-	param	no-struct	L(table + 4 * index): param, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4f.cpp	CursorId	global	L	at::kCounter	0	0x929f04	-	no-entry	at::kCounter 0x929f04 -	b0
 src/game/rest_4f.cpp	SetDefaults	global	SetW	at::kButtons	0	0x903580	-	width	at::kButtons 0x903580 Gfx_UnpackScratch+0x1f000	b0
 src/game/rest_4f.cpp	SetDefaults	global	SetW	at::kButtons	1	0x903580	-	width	at::kButtons 0x903580 Gfx_UnpackScratch+0x1f000	b0
@@ -23557,7 +23522,7 @@ src/game/rest_4f.cpp	ConfigScreen_Controller	global	SetW	at::kButtons	0	0x903580
 src/game/rest_4f.cpp	ConfigScreen_Controller	global	W	at::kButtons	0	0x903580	-	width	at::kButtons 0x903580 Gfx_UnpackScratch+0x1f000	b0
 src/game/rest_4f.cpp	ConfigScreen_Controller	global	W	at::kButtons	1	0x903580	-	index	at::kButtons 0x903580 Gfx_UnpackScratch+0x1f000	b0
 src/game/rest_4f.cpp	ConfigScreen_Controller	global	B	at::kPadRows	0	0x6536f0	-	no-entry	at::kPadRows 0x6536f0 -	b0
-src/game/rest_4f.cpp	ConfigScreen_Controller	global	-	at::kPadRowsByCursor	0	0x6536e8	-	no-entry	at::kPadRowsByCursor 0x6536e8 -	b0
+src/game/rest_4f.cpp	ConfigScreen_Controller	global	Img	at::kPadRowsByCursor	0	0x6536e8	-	no-entry	at::kPadRowsByCursor 0x6536e8 -	b0
 src/game/rest_4f.cpp	ConfigScreen_Controller	global	B	at::kPadRows	1	0x6536f0	-	no-entry	at::kPadRows 0x6536f0 -	b0
 src/game/rest_4f.cpp	ConfigScreen_Controller	global	SetW	at::kButtons	1	0x903580	-	index	at::kButtons 0x903580 Gfx_UnpackScratch+0x1f000	b0
 src/game/rest_4f.cpp	ConfigScreen_Controller	global	SetW	at::kButtons	2	0x903580	-	width	at::kButtons 0x903580 Gfx_UnpackScratch+0x1f000	b0
@@ -23568,12 +23533,12 @@ src/game/rest_4f.cpp	ConfigScreen_SlideOut	global	B	at::kCounter	1	0x929f04	-	no
 src/game/rest_4f.cpp	ConfigScreen_SlideOut	global	B	at::kCounter	2	0x929f04	-	no-entry	at::kCounter 0x929f04 -	b0
 src/game/rest_4f.cpp	ConfigScreen_SlideOut	global	B	at::kCounter	3	0x929f04	-	no-entry	at::kCounter 0x929f04 -	b0
 src/game/rest_4f.cpp	ConfigScreen_SlideOut	global	B	at::kCounter	4	0x929f04	-	no-entry	at::kCounter 0x929f04 -	b0
-src/game/rest_4f.cpp	Config_DrawRowOptions	global	B	at::kOptionFirst	0	0x653808	-	no-entry	at::kOptionFirst 0x653808 -	b0
-src/game/rest_4f.cpp	Config_DrawRowOptions	global	B	at::kOptionCount	0	0x653810	-	no-entry	at::kOptionCount 0x653810 -	b0
-src/game/rest_4f.cpp	Config_DrawRowOptions	global	-	at::kOptionRecords	0	0x6536f8	-	no-entry	at::kOptionRecords 0x6536f8 -	b0
+src/game/rest_4f.cpp	Config_DrawRowOptions	global	Img	at::kOptionFirst	0	0x653808	-	no-entry	at::kOptionFirst 0x653808 -	b0
+src/game/rest_4f.cpp	Config_DrawRowOptions	global	Img	at::kOptionCount	0	0x653810	-	no-entry	at::kOptionCount 0x653810 -	b0
+src/game/rest_4f.cpp	Config_DrawRowOptions	global	Img	at::kOptionRecords	0	0x6536f8	-	no-entry	at::kOptionRecords 0x6536f8 -	b0
 src/game/rest_4f.cpp	Config_DrawRowOptions	record	B	rec + 1	0	-	table=0x6536f8;stride=0x10	no-struct	B(rec + 1): table=0x6536f8;stride=0x10, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4f.cpp	Config_DrawRowOptions	record	At	rec + 2	0	-	table=0x6536f8;stride=0x10	no-struct	At(rec + 2): table=0x6536f8;stride=0x10, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_4f.cpp	Config_DrawRowOptions	global	B	at::kOptionCount	1	0x653810	-	no-entry	at::kOptionCount 0x653810 -	b0
+src/game/rest_4f.cpp	Config_DrawRowOptions	global	Img	at::kOptionCount	1	0x653810	-	no-entry	at::kOptionCount 0x653810 -	b0
 src/game/rest_4f.cpp	Config_DrawControllerPanel	global	W	at::kButtons	0	0x903580	-	index	at::kButtons 0x903580 Gfx_UnpackScratch+0x1f000	b0
 src/game/rest_4f.cpp	Config_DrawControllerRow	global	-	at::kPadNames	0	0x66a368	-	no-entry	at::kPadNames 0x66a368 -	b0
 src/game/rest_4f.cpp	Config_DrawControllerRow	global	L	at::kPadNames	0	0x66a368	-	no-entry	at::kPadNames 0x66a368 -	b0

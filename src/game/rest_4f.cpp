@@ -67,6 +67,13 @@ std::int32_t SL(const unsigned char* p) { return Long(p); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 U W(U a) { return Word(At(a)); }
 void SetW(U a, U v) { SetWord(At(a), v); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
+U W(::bof3::image::Va va) { return W(::bof3::Img(va)); }
+void SetW(::bof3::image::Va va, U v) { SetW(::bof3::Img(va), v); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // Config_DrawControllerPanel's frame rows: the imm8 of its `push 0xF`
@@ -98,7 +105,7 @@ void Dispatch(const char* who, U table, unsigned entries, unsigned index, const 
         bof3::Fatal("%s: %s is %u, past the %u handlers of 0x%X - the original jumps through the dword after "
                     "(docs/rest_4f.md section 7)",
                     who, byte, index, entries, (unsigned)table);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(::bof3::image::Va{table + 4 * index})))();
 }
 
 // ===========================================================================
@@ -326,9 +333,9 @@ extern "C" void __cdecl ConfigScreen_Rows(void) {
     if (row <= 5) {
         const U held = L(at::kPressedDword);
         switch (row) {
-        case 0: StepSetting(ModeFlow_ConfigBytes_addr, 2, false); break;
-        case 1: StepSetting(Config_WindowColour_addr, 3, false); break;
-        case 2: StepSetting(Config_Background_addr, 3, true); break;
+        case 0: StepSetting(::bof3::Img(ModeFlow_ConfigBytes_addr), 2, false); break;
+        case 1: StepSetting(::bof3::Img(Config_WindowColour_addr), 3, false); break;
+        case 2: StepSetting(::bof3::Img(Config_Background_addr), 3, true); break;
         case 3:
             if (held & 0xA000) {
                 Sound(0x101);
@@ -426,10 +433,10 @@ extern "C" void __cdecl ConfigScreen_Controller(void) {
         for (; r < at::kPadRowCount; ++r)
             if (W(at::kButtons + 2u * B(at::kPadRows + r)) & bits) break;
         const unsigned char c = static_cast<unsigned char>(MenuLists_Cursor);
-        const U by_cursor = at::kPadRowsByCursor + static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(c)));
+        const U by_cursor = ::bof3::Img(at::kPadRowsByCursor) + static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(c)));
         if (r != at::kPadRowCount) {
-            const U from = Gfx_UnpackScratch_addr + 0x1f000 + 2u * B(by_cursor);
-            const U to = Gfx_UnpackScratch_addr + 0x1f000 + 2u * B(at::kPadRows + r);
+            const U from = ::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000 + 2u * B(by_cursor);
+            const U to = ::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000 + 2u * B(at::kPadRows + r);
             SetW(to, W(from));
         }
         SetW(at::kButtons + 2u * B(by_cursor), bits);
@@ -533,9 +540,9 @@ extern "C" void __cdecl Config_DrawPanel(int x, int y) {
 // rest small (count * 8, Text_DrawSmall) at y + 1.
 extern "C" void __cdecl Config_DrawRowOptions(int x, int y, unsigned row, unsigned setting, unsigned state) {
     const U r = row & 0xFF;
-    const U first = B(at::kOptionFirst + r);
-    if (B(at::kOptionCount + r) == 0) return;
-    U rec = at::kOptionRecords + first * 16;
+    const U first = B(::bof3::Img(at::kOptionFirst.v) + r);
+    if (B(::bof3::Img(at::kOptionCount.v) + r) == 0) return;
+    U rec = ::bof3::Img(at::kOptionRecords.v) + first * 16;
     const unsigned chosen = setting & 0xFF;
     for (unsigned i = 0;;) {
         const U colour = (row & 0xFFFFFF00u) | (chosen == i ? 2u : 0u);
@@ -553,7 +560,7 @@ extern "C" void __cdecl Config_DrawRowOptions(int x, int y, unsigned row, unsign
         }
         rec += 16;
         ++i;
-        if (static_cast<std::int16_t>(i) >= static_cast<std::int16_t>(B(at::kOptionCount + r))) break;
+        if (static_cast<std::int16_t>(i) >= static_cast<std::int16_t>(B(::bof3::Img(at::kOptionCount.v) + r))) break;
     }
 }
 
@@ -594,7 +601,7 @@ extern "C" void __cdecl Config_DrawControllerRow(int x, int y, int row) {
     if (r >= at::kPadNameCount)
         bof3::Fatal("Config_DrawControllerRow: row %u, past the six names of 0x%X - the original reads the dword after "
                     "as a string (docs/rest_4f.md section 7)",
-                    (unsigned)r, (unsigned)at::kPadNames);
+                    (unsigned)r, (unsigned)at::kPadNames.v);
     const auto* const name = At(L(at::kPadNames + 4 * r));
     const U len = static_cast<U>(std::strlen(reinterpret_cast<const char*>(name)));
     const U k = ops.name_x4 ? 4 : 6;   // DIV-0026's lea [ecx+ecx], or the original's [ecx+ecx*2]
@@ -1243,7 +1250,7 @@ U Hi(const void* p) { return Key(p) & 0xFFFF0000u; }
 // Palette 0x7B: entries 1..30 the leader's palette (ObjTrio 0's +0x27) with bit
 // 15 set, entries 0 and 31 zero; Gfx_ClutStripDirty is set by the callers.
 void TintPalette() {
-    const U from = Gfx_ClutStrip_addr + 2 + static_cast<std::uint32_t>(ObjTrio[0].clut) * at::kClutBytes;
+    const U from = ::bof3::Img(Gfx_ClutStrip_addr) + 2 + static_cast<std::uint32_t>(ObjTrio[0].clut) * at::kClutBytes;
     for (U i = 0; i < 30; ++i) SetW(at::kClut7B + 2 + 2 * i, W(from + 2 * i) | 0x8000);
     Gfx_ClutStrip[0xf60] = 0;
     Gfx_ClutStrip[0xf7f] = 0;

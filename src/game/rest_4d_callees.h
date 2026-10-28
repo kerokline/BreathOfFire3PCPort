@@ -28,40 +28,40 @@ namespace at {
 // kMemberRandomSteps: now CommuName_MemberRandomSteps (symbols.toml). CommuName_MemberRandomSteps: 3, by 0x939A3F (state 2, step 6)
 // kMemberEntrySteps: now CommuName_MemberEntrySteps (symbols.toml). CommuName_MemberEntrySteps: 5, by 0x939A3F (state 2, step 7)
 // The name pointers CommuName_MemberEntryOut reads by a record index: 7.
-constexpr std::uint32_t kRecordNames = 0x669FA4;       // CommuName_RecordNames
+constexpr ::bof3::image::Va kRecordNames{0x669FA4};       // CommuName_RecordNames
 constexpr unsigned kRecordNameCount = 7;
 
 // --- the byte tables read in place (game data, never copied) -------------------
-constexpr std::uint32_t kDrawRows = 0x652DEC;     // 8 rows of 9 category bytes, 9 the end
-constexpr std::uint32_t kDrawPools = 0x652E34;    // 4 x (first message, count)
-constexpr std::uint32_t kDrawPicks = 0x652E3C;    // 4 x (threshold, category, category or 0xFF)
-constexpr std::uint32_t kSlotDefaults = 0x653200; // 20 bytes a slot; the first five a name (R4A reads it too)
-constexpr std::uint32_t kPoolWords = 0x803580;    // MessagePools: u16 offsets from 0x803580
-constexpr std::uint32_t kDrawWords = 0x803780;    // the draw's message offsets (MessagePools + 0x200)
-constexpr std::uint32_t kTitleWords = 0x803746;   // the title line's, by 0x675F8C (MessagePools + 0x1C6)
-constexpr std::uint32_t kBoardText = 0x653084;    // CommuBoard's Font8 text
-constexpr std::uint32_t kBoardFmt3 = 0x653088;    // a format of three numbers
-constexpr std::uint32_t kBoardBlankA = 0x653090;  // a format of no number
-constexpr std::uint32_t kBoardBlankB = 0x653094;  // a format of no number
-constexpr std::uint32_t kNumberFmt = 0x5E10C0;    // a format of one number (Area08_MessageFormat)
+constexpr ::bof3::image::Va kDrawRows{0x652DEC};     // 8 rows of 9 category bytes, 9 the end
+constexpr ::bof3::image::Va kDrawPools{0x652E34};    // 4 x (first message, count)
+constexpr ::bof3::image::Va kDrawPicks{0x652E3C};    // 4 x (threshold, category, category or 0xFF)
+constexpr ::bof3::image::Va kSlotDefaults{0x653200}; // 20 bytes a slot; the first five a name (R4A reads it too)
+constexpr ::bof3::image::Va kPoolWords{0x803580};    // MessagePools: u16 offsets from 0x803580
+constexpr ::bof3::image::Va kDrawWords{0x803780};    // the draw's message offsets (MessagePools + 0x200)
+constexpr ::bof3::image::Va kTitleWords{0x803746};   // the title line's, by 0x675F8C (MessagePools + 0x1C6)
+constexpr ::bof3::image::Va kBoardText{0x653084};    // CommuBoard's Font8 text
+constexpr ::bof3::image::Va kBoardFmt3{0x653088};    // a format of three numbers
+constexpr ::bof3::image::Va kBoardBlankA{0x653090};  // a format of no number
+constexpr ::bof3::image::Va kBoardBlankB{0x653094};  // a format of no number
+constexpr ::bof3::image::Va kNumberFmt{0x5E10C0};    // a format of one number (Area08_MessageFormat)
 
 // --- the community's cells ------------------------------------------------------------
 // kGame: now AreaW0c_TailState (symbols.toml). the community's game (R4B's 0x652A70 index)
 // kPointer: now Rest4d_Pointer (symbols.toml). a record pointer: its +5 is a slot index
 // kHow: now Rest4b_BoardFlag (symbols.toml). read once message 0xF2 is closed: 0 step 6, else step 7
 // kAgain: now Rest4d_Again (symbols.toml). read once message 0xF3 / 0xF4 is closed (the two asks take it oppositely)
-constexpr std::uint32_t kState = 0x939A3E;        // the game's state
+constexpr ::bof3::image::Va kState{0x939A3E};        // the game's state
 // kStep2: now Rest4c_Step (symbols.toml). a step's own step
 // kStep: now Rest4b_BoardStep (symbols.toml). the state's step
-constexpr std::uint32_t kCursor = 0x675F8C;       // s8: a cursor (the draw's row)
+constexpr ::bof3::image::Va kCursor{0x675F8C};       // s8: a cursor (the draw's row)
 // kYes: now Rest4c_Cursor (symbols.toml). s8: the yes / no cursor (CommuBoard: the lifted column)
 // kKeptTrack: now Rest4d_KeptTrack (symbols.toml). the music track kept across the draw
 // kHeader: now Rest4d_Header (symbols.toml). u16: the header's message (0xFFFF none)
 // kEntryColumn: now Rest4d_EntryColumn (symbols.toml). the entry's column
-constexpr std::uint32_t kCount = 0x675F95;        // a frame counter (the panels' slide, the reveal)
+constexpr ::bof3::image::Va kCount{0x675F95};        // a frame counter (the panels' slide, the reveal)
 // kEntryDone: now Rest4d_EntryDone (symbols.toml). BareRetZero's answer
-constexpr std::uint32_t kName = 0x675F98;         // five name bytes; the draw's picks, 10 a category
-constexpr std::uint32_t kPicked = 0x675FC0;       // the draw's four counts
+constexpr ::bof3::image::Va kName{0x675F98};         // five name bytes; the draw's picks, 10 a category
+constexpr ::bof3::image::Va kPicked{0x675FC0};       // the draw's four counts
 // kTitleA: now Rest4d_TitleA (symbols.toml). the title's two messages
 // kTitleB: now Rest4d_TitleB (symbols.toml).
 // kEntryA: now Rest4d_EntryA (symbols.toml). three bytes handed to BareRet
@@ -69,16 +69,16 @@ constexpr std::uint32_t kPicked = 0x675FC0;       // the draw's four counts
 // kEntryC: now Rest4d_EntryC (symbols.toml).
 // kSlots: now Community_Records (symbols.toml). 60 cells of 8: in use when the first byte is not 0
 constexpr std::uint32_t kSlotsEnd = 0x9048B0;
-constexpr std::uint32_t kSlotNames = 0x9048F0;    // 5 bytes a slot
+constexpr ::bof3::image::Va kSlotNames{0x9048F0};    // 5 bytes a slot
 // kRecords: now CharacterRecords (symbols.toml). the character records, 0xA4 each
 constexpr std::uint32_t kRecordStride = 0xA4;
-constexpr std::uint32_t kRecordFlags = 0x903A7B;  // +0xB: bit 0 the record is in the party's list
+constexpr ::bof3::image::Va kRecordFlags{0x903A7B};  // +0xB: bit 0 the record is in the party's list
 constexpr std::uint32_t kRecordFlagsEnd = 0x903EF7;   // 7 records
 // kColour: now Config_WindowColour (symbols.toml). the window style byte
 // kPressed: now Input_Pressed (symbols.toml). Input_Pressed (u16)
-constexpr std::uint32_t kTextScratch = 0x904BA0;  // the text scratch
-constexpr std::uint32_t kTextRecords = 0x904CE0;  // Text_Records, 0x20 each
-constexpr std::uint32_t kTextRecordsEnd = 0x904E00;   // nine
+constexpr ::bof3::image::Va kTextScratch{0x904BA0};  // the text scratch
+constexpr ::bof3::image::Va kTextRecords{0x904CE0};  // Text_Records, 0x20 each
+constexpr ::bof3::image::Va kTextRecordsEnd{0x904E00};   // nine
 
 // --- callees of other groups of this wave, by address ------------------------------------
 constexpr std::uint32_t kBoardCell = bof3::addr::Commu_DrawCard;    // R4C: a cell (x, y, value; 0xFF blank)

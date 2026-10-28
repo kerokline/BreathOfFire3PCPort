@@ -61,6 +61,14 @@ unsigned W(U address) { return Word(At(address)); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 void PutW(U address, unsigned v) { SetWord(At(address), v); }
 void PutL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+unsigned W(::bof3::image::Va va) { return W(::bof3::Img(va)); }
+U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
+void PutW(::bof3::image::Va va, unsigned v) { PutW(::bof3::Img(va), v); }
+void PutL(::bof3::image::Va va, U v) { PutL(::bof3::Img(va), v); }
 short S16(U address) { return static_cast<short>(Word(At(address))); }
 void PutF(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 void PutFBits(unsigned char* p, U bits) { std::memcpy(p, &bits, sizeof bits); }
@@ -80,7 +88,7 @@ void Jump(U table, unsigned count, int index, const char* who) {
     if (index < 0 || static_cast<unsigned>(index) >= count)
         bof3::Fatal("%s: state %d is outside its table's %u entries at 0x%X; the original jumps through 0x%X", who, index, count,
                     static_cast<unsigned>(table), static_cast<unsigned>(table + 4 * static_cast<U>(index)));
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * static_cast<U>(index))))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(::bof3::image::Va{table + 4 * static_cast<U>(index)})))();
 }
 
 // The community record k (0x9046D0 + 8k): ours writes only the 60; past them
@@ -89,18 +97,18 @@ U Member(unsigned k, const char* who) {
     if (k >= 60)
         bof3::Fatal("%s: community record %u is past the 60 at 0x9046D0; the original writes at 0x%X", who, k,
                     static_cast<unsigned>(Community_Records_addr + 8 * k));
-    return Community_Records_addr + 8 * k;
+    return ::bof3::Img(Community_Records_addr) + 8 * k;
 }
 
 // A slot's bytes (0x9048A8 + 8 * slot, the slots 1..8 at 0x9048B0): read in
 // place for any slot byte, as the original reads them.
-U Slot(unsigned slot) { return at::kSlots + 8 * slot; }
+U Slot(unsigned slot) { return ::bof3::Img(at::kSlots) + 8 * slot; }
 // ... and written only for the eight (section 5).
 U SlotToWrite(unsigned slot, const char* who) {
     if (slot - 1 >= 8)
         bof3::Fatal("%s: slot %u is outside the eight at 0x9048B0; the original writes at 0x%X", who, slot,
-                    static_cast<unsigned>(at::kSlots + 8 * slot));
-    return at::kSlots + 8 * slot;
+                    static_cast<unsigned>((at::kSlots + 8 * slot).v));
+    return ::bof3::Img(at::kSlots) + 8 * slot;
 }
 
 // The field tail's state byte, moved by one as the original's inc / dec do.
@@ -322,7 +330,7 @@ extern "C" void __cdecl CommuTail_RandomGift(void) {
             ++tier;
         }
         const unsigned pick = static_cast<unsigned>(SH_CALL(Rand)() & 0xF);
-        const U pair = at::kGiftItems + 2 * (pick + static_cast<U>(tier - 1) * 16);
+        const U pair = ::bof3::Img(at::kGiftItems) + 2 * (pick + static_cast<U>(tier - 1) * 16);
         const unsigned char item = B(pair), category = B(pair + 1);
         const unsigned char added = SH_CALL(Inventory_Add)(category, item, 1);
         if (added == 0) {
@@ -403,7 +411,7 @@ extern "C" void __cdecl CommuTail_NibbleGift(void) {
     const unsigned arg = AreaW0c_TailSub;
     const unsigned char bits = B(at::kMembers + 3 + 8 * arg);
     const unsigned n = bits >> 4;
-    const U row = at::kGiftLines + 6 * n;
+    const U row = ::bof3::Img(at::kGiftLines) + 6 * n;
     unsigned message;
     if (W(row + 4) == 0) {
         message = W(row);
@@ -560,7 +568,7 @@ extern "C" void __cdecl CommuBoard_Grid(void) {
             SH_CALL(Sound_PlayEffect)(0x107);
         }
     } else {
-        SH_CALL(CommuBoard_MoveGridCursor)(At(AreaW0c_TailSub_addr));
+        SH_CALL(CommuBoard_MoveGridCursor)(At(::bof3::Img(AreaW0c_TailSub_addr)));
     }
     SH_CALL(CommuBoard_DrawPanel)();
     SH_CALL(CommuBoard_DrawSlotLines)(AreaW0c_TailSub, 0);
@@ -677,8 +685,8 @@ extern "C" void __cdecl CommuBoard_MoveRecord(void) {
         placed = SH_CALL(CommuBoard_PlaceRecord)(0);
         if (placed) Rest4b_Help = 0xB5;
     } else {
-        SH_CALL(CommuBoard_MoveGridCursor)(At(Rest4b_Pick_addr));
-        SH_CALL(CommuBoard_PickHelp)(At(Rest4b_Pick_addr));
+        SH_CALL(CommuBoard_MoveGridCursor)(At(::bof3::Img(Rest4b_Pick_addr)));
+        SH_CALL(CommuBoard_PickHelp)(At(::bof3::Img(Rest4b_Pick_addr)));
     }
     SH_CALL(CommuBoard_DrawPanel)();
     SH_CALL(CommuBoard_DrawSlotLines)(AreaW0c_TailSub, 1);
@@ -764,8 +772,8 @@ extern "C" void __cdecl CommuBoard_MoveRecordB(void) {
         placed = SH_CALL(CommuBoard_PlaceRecord)(1);
         if (placed) Rest4b_Help = 0xB5;
     } else {
-        SH_CALL(CommuBoard_MoveGridCursor)(At(Rest4b_Pick_addr));
-        SH_CALL(CommuBoard_PickHelp)(At(Rest4b_Pick_addr));
+        SH_CALL(CommuBoard_MoveGridCursor)(At(::bof3::Img(Rest4b_Pick_addr)));
+        SH_CALL(CommuBoard_PickHelp)(At(::bof3::Img(Rest4b_Pick_addr)));
     }
     SH_CALL(CommuBoard_DrawPanel)();
     SH_CALL(CommuBoard_DrawSlotLines)(AreaW0c_TailSub, 1);
@@ -1074,7 +1082,7 @@ extern "C" void __cdecl CommuBoard_DrawRecordCard(int x, int y, unsigned record,
     p[6] = 0;
     PutF(p + 0xC, static_cast<float>(static_cast<short>(y) + 0x12));
     SH_CALL(Gfx_CommitPrim)(1, 0x1C);
-    const U bars = at::kBars + 20 * r;
+    const U bars = ::bof3::Img(at::kBars) + 20 * r;
     const int bx = x + 6;
     if ((highlight & 0xFF) == 0) {
         SH_CALL(CommuBoard_DrawBar)(bx, y + 0x12, B(bars) * 12, 0, 0);
@@ -1091,7 +1099,7 @@ extern "C" void __cdecl CommuBoard_DrawRecordCard(int x, int y, unsigned record,
         k = static_cast<unsigned char>(pick - 8);
     else
         k = B(at::kSlots + 8 * static_cast<U>(static_cast<int>(pick)));
-    const U lit = at::kBarHighlight + k;
+    const U lit = ::bof3::Img(at::kBarHighlight) + k;
     SH_CALL(CommuBoard_DrawBar)(bx, y + 0x12, B(bars) * 12, 0, B(lit) == 0 ? 1 : 0);
     SH_CALL(CommuBoard_DrawBar)(bx, y + 0x16, B(bars + 1) * 12, 1, B(lit) == 1 ? 1 : 0);
     SH_CALL(CommuBoard_DrawBar)(bx, y + 0x1A, B(bars + 2) * 12, 2, B(lit) == 2 ? 1 : 0);
@@ -1209,7 +1217,7 @@ extern "C" void __cdecl CommuBoard_DrawPanel(void) {
     SH_CALL(Menu_DrawOutlineNotched)(0x16, 0x14, 0x113, 0xF, 0);
     const unsigned help = Rest4b_Help;
     if (help != 0xFFFF) {
-        const unsigned char* const text = At(at::kMessagePools + W(at::kMessagePools + 2 * help));
+        const unsigned char* const text = At(::bof3::Img(at::kMessagePools.v) + W(::bof3::Img(at::kMessagePools.v) + 2 * help));
         const bool fitted = g_board_yes_no_layout && help == 0x3D;   // DIV-0027 (amended 2026-10-26)
         YesNoTail tail = {text, {0, 0}, {0, 0}};
         if (fitted) tail = YesNoLayout_Tail(text, 0x1D, "the faerie board's accept prompt");
@@ -1247,20 +1255,20 @@ extern "C" void __cdecl CommuBoard_DrawPanel(void) {
         for (unsigned j = 0; j < n; ++j)
             SH_CALL(CommuBoard_DrawSprite)(static_cast<int>(j % 5) * 8 + 0xF6, static_cast<int>(j / 5) * 7 + ry + 0x44, 1);
     }
-    U slot = at::kSlots + 8;
+    U slot = ::bof3::Img(at::kSlots.v) + 8;
     for (unsigned char i = 0; i < 8; ++i, slot += 8) {
         const int sy = (i >> 2) * 61;
         const int sx = static_cast<int>(i % 4) * 52;
         SH_CALL(Menu_DrawOutlineNotched)(sx + 0x20, sy + 0x6B, 0x28, 0x28, 1);
-        if (i >= B(at::kAreaLimits + static_cast<std::uint32_t>(Game_AreaNumber))) {
+        if (i >= B(::bof3::Img(at::kAreaLimits.v) + static_cast<std::uint32_t>(Game_AreaNumber))) {
             SH_CALL(Menu_DrawBox)(sx + 0x20, sy + 0x6B, 0x28, 0x28, 1, static_cast<unsigned char>(Config_WindowColour));
             continue;
         }
         SH_CALL(CommuBoard_DrawSprite)(sx + 0x1A, sy + 0x5B, 0);
         const unsigned char kind = B(slot);
         if (kind != 0) {
-            const unsigned char digit = kind == 5 ? static_cast<unsigned char>(B(at::kSlotIcons + 5) + B(slot + 1))
-                                                  : B(at::kSlotIcons + kind);
+            const unsigned char digit = kind == 5 ? static_cast<unsigned char>(B(::bof3::Img(at::kSlotIcons.v) + 5) + B(slot + 1))
+                                                  : B(::bof3::Img(at::kSlotIcons.v) + kind);
             SH_CALL(CommuBoard_DrawDigits)(sx + 0x22, sy + 0x6C, digit);
         }
         const unsigned char id = static_cast<unsigned char>(i + 1);
@@ -1272,17 +1280,17 @@ extern "C" void __cdecl CommuBoard_DrawPanel(void) {
         }
     }
     SH_CALL(CommuBoard_DrawSprite)(0x30, 0x4C, 2);
-    char* const out = reinterpret_cast<char*>(At(at::kTextBuffer));
-    SH_CALL(Crt_sprintf)(out, reinterpret_cast<const char*>(At(Boss26Fx_CountFormat_addr)), Rest4b_CountA);
-    SH_CALL(Text_DrawFont12)(0x50, 0x4C, 0, At(at::kTextBuffer));
+    char* const out = reinterpret_cast<char*>(At(::bof3::Img(at::kTextBuffer.v)));
+    SH_CALL(Crt_sprintf)(out, reinterpret_cast<const char*>(At(::bof3::Img(Boss26Fx_CountFormat_addr))), Rest4b_CountA);
+    SH_CALL(Text_DrawFont12)(0x50, 0x4C, 0, At(::bof3::Img(at::kTextBuffer.v)));
     // DIV-0064 group 14: the label from the overlay's buffer, its count 2 the
     // Chinese word's (the overlay's is longer); the number after it then
     // moves from 0x98 - under the seven letters of `Culture` - to 0xBE, where
     // the US screen has it (the owner's web reference, 2026-10-10).
     const bool words = Labels_Written(14);
-    SH_CALL(Text_DrawAt)(0x78, 0x4C, 0, words ? 0xFF : 2, words ? Labels_Slot(14, 0) : At(at::kPanelLabel));
-    SH_CALL(Crt_sprintf)(out, reinterpret_cast<const char*>(At(at::kNumberFormat)), static_cast<std::uint32_t>(Rest4a_LevelLit));
-    SH_CALL(Text_DrawFont12)(words ? 0xBE : 0x98, 0x4C, 0, At(at::kTextBuffer));
+    SH_CALL(Text_DrawAt)(0x78, 0x4C, 0, words ? 0xFF : 2, words ? Labels_Slot(14, 0) : At(::bof3::Img(at::kPanelLabel.v)));
+    SH_CALL(Crt_sprintf)(out, reinterpret_cast<const char*>(At(::bof3::Img(at::kNumberFormat.v))), static_cast<std::uint32_t>(Rest4a_LevelLit));
+    SH_CALL(Text_DrawFont12)(words ? 0xBE : 0x98, 0x4C, 0, At(::bof3::Img(at::kTextBuffer.v)));
 }
 
 // original 0x4591A0: the panel's frame of sprites: the corners 6, 8, 0xB, 0xD
@@ -1317,8 +1325,8 @@ extern "C" void __cdecl CommuBoard_DrawSlotLines(unsigned slot, unsigned steady)
     const unsigned char s = static_cast<unsigned char>(slot);
     unsigned char* p = Packet();
     SH_CALL(Gpu_SetLineF3)(p);
-    const U row = at::kSlotLines + 12 * s;
-    const auto locked = [s] { return s != 0 && s < 9 && s > B(at::kAreaLimits + static_cast<std::uint32_t>(Game_AreaNumber)); };
+    const U row = ::bof3::Img(at::kSlotLines.v) + 12 * s;
+    const auto locked = [s] { return s != 0 && s < 9 && s > B(::bof3::Img(at::kAreaLimits.v) + static_cast<std::uint32_t>(Game_AreaNumber)); };
     PutF(p + 8, static_cast<float>(locked() ? S16(row + 4) : S16(row)));
     PutF(p + 0xC, static_cast<float>(S16(row + 2)));
     PutF(p + 0x14, static_cast<float>(S16(row + 8)));
@@ -1359,7 +1367,7 @@ extern "C" unsigned __cdecl Commu_NthInSlot(unsigned slot, unsigned nth) {
     const unsigned char s = static_cast<unsigned char>(slot), want = static_cast<unsigned char>(nth);
     unsigned char seen = 0;
     for (unsigned k = 0; k < 60; ++k) {
-        const U r = Community_Records_addr + 8 * k;
+        const U r = ::bof3::Img(Community_Records_addr) + 8 * k;
         if (B(r) == 0 || B(r + 1) != s) continue;
         if (seen == want) return k;
         ++seen;
@@ -1530,7 +1538,7 @@ extern "C" void __cdecl CommuBoard_DrawSprite(int x, int y, unsigned id) {
     SH_CALL(Gpu_SetSprt)(q);
     PutF(q + 8, static_cast<float>(static_cast<short>(x)));
     PutF(q + 0xC, static_cast<float>(static_cast<short>(y)));
-    const U e = at::kSprites + 6 * (id & 0xFF);
+    const U e = ::bof3::Img(at::kSprites) + 6 * (id & 0xFF);
     q[0x14] = B(e);
     q[0x15] = B(e + 1);
     PutW(q + 0x18, B(e + 2));
@@ -1611,7 +1619,7 @@ extern "C" int __cdecl CommuBoard_ListY(void) {
 // and its lines (the pointers 0x669EE0[first + i]) at (x + 6, y + 2 + 16 * i),
 // colour 7 * steady. Answers the y it drew at (ax).
 extern "C" unsigned short __cdecl CommuBoard_DrawListBoxB(int x, int y, unsigned list, unsigned steady) {
-    const U row = at::kLists + 2 * (list & 0xFF);
+    const U row = ::bof3::Img(at::kLists) + 2 * (list & 0xFF);
     const int h = B(row + 1) * 16;
     if (h + static_cast<short>(y) + 4 > 0xD8) y = 0xD4 - h;
     const unsigned char flag = static_cast<unsigned char>(steady);
@@ -1645,7 +1653,7 @@ extern "C" void __cdecl CommuBoard_SlotRecordXY(short* x, short* y, unsigned slo
         *y = static_cast<short>(cy);
         return;
     }
-    const U e = at::kSlotOffsets + 4 * (t + static_cast<unsigned char>(kk - 1));
+    const U e = ::bof3::Img(at::kSlotOffsets) + 4 * (t + static_cast<unsigned char>(kk - 1));
     *x = static_cast<short>(W(e) + static_cast<unsigned>(cx));
     *y = static_cast<short>(W(e + 2) + static_cast<unsigned>(cy));
 }

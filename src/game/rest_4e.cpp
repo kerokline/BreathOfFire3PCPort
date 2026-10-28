@@ -57,28 +57,28 @@ using Handler = void (__cdecl*)();
 
 // The band's own cells 0x675F8C..0x675FDB.
 // kCursor: now Rest4c_Count (symbols.toml). u8: which name the commits write (the n-th in use)
-constexpr U kEdit = 0x675F98;          // u8 x 32: the name being edited (CommuName_MakeRandom clears 32)
+constexpr ::bof3::image::Va kEdit{0x675F98};          // u8 x 32: the name being edited (CommuName_MakeRandom clears 32)
 constexpr U kEditSize = 0x20;
 // kSavedTrack: now CommuMusic_SavedTrack (symbols.toml). u8: Music_Track when the list opened
 // kSlide: now CommuMusic_Slide (symbols.toml). u8: the list's slide 4..0
 // kTrack: now CommuMusic_Track (symbols.toml). s16: the list's row, the track index
 // kItemSlide: now CommuItem_Slide (symbols.toml). u8: the item window's slide 0..4
-constexpr U kPages = 0x675FD8;         // u8 x 3: the three lists' page counts
-constexpr U kPage = 0x675FDB;          // s8: the page shown, over the three lists
+constexpr ::bof3::image::Va kPages{0x675FD8};         // u8 x 3: the three lists' page counts
+constexpr ::bof3::image::Va kPage{0x675FDB};          // s8: the page shown, over the three lists
 
 // The 60-entry table (8 bytes an entry: +0 in use, +1 a kind, +2 / +3 an item
 // and its tab, +4 a dword) and its 60 names of 5 bytes; the entry 0x9039F5.
-constexpr U kEntries = 0x9046D0;
-constexpr U kEntryNames = 0x9048F0;
+constexpr ::bof3::image::Va kEntries{0x9046D0};
+constexpr ::bof3::image::Va kEntryNames{0x9048F0};
 constexpr unsigned kEntryCount = 60;
 // kEntry: now AreaW0c_TailSub (symbols.toml). u8: the entry the item and track screens are for
 // kFacility: now AreaW0c_TailState (symbols.toml). u8: the facility table 0x652AE4's index (R4B's reader)
-constexpr U kTrackCounts = 0x9048AB;   // u8 at + 8 * kind: the track count of a kind (the records 0x9048B0..)
+constexpr ::bof3::image::Va kTrackCounts{0x9048AB};   // u8 at + 8 * kind: the track count of a kind (the records 0x9048B0..)
 // kEntryDword: now Game_BattleCount (symbols.toml). u32: copied into the entry's +4 when an item is given
 
 // The seven character records (CharacterRecords 0x903A70, 0xA4 each; +0 the
 // name, +9 the portrait, +0xB bit 0 present).
-constexpr U kMembers = 0x903A70;
+constexpr ::bof3::image::Va kMembers{0x903A70};
 constexpr U kMemberStride = 0xA4;
 constexpr unsigned kMemberCount = 7;
 
@@ -86,39 +86,44 @@ constexpr unsigned kMemberCount = 7;
 // 0x904A90 (entries 0x904F00.., 20 a page), 0x937F80 (pairs 0x904CA0.., 8 a
 // page).
 // kListA: now Rest4a_RemovedCount (symbols.toml).
-constexpr U kListAEntries = 0x9039C0;
+constexpr ::bof3::image::Va kListAEntries{0x9039C0};
 // kListB: now Rest4b_BusyA (symbols.toml).
-constexpr U kListBEntries = 0x904F00;
+constexpr ::bof3::image::Va kListBEntries{0x904F00};
 // kListC: now Rest4b_BusyB (symbols.toml).
-constexpr U kListCPairs = 0x904CA0;
+constexpr ::bof3::image::Va kListCPairs{0x904CA0};
 
 // WindowRecords 0 and 1 (0x24 each): the item window and its cursor.
-constexpr U kWin0 = 0x803160, kWin1 = 0x803184;
-constexpr U kWinOff = WindowRecords_addr + 3; // u8: window 0 shut (the slide waits for 0)
+constexpr ::bof3::image::Va kWin0{0x803160};
+constexpr ::bof3::image::Va kWin1{0x803184};
+constexpr ::bof3::image::Va kWinOff{WindowRecords_addr + 3}; // u8: window 0 shut (the slide waits for 0)
 // kTab: now Window0_ParamA (symbols.toml). u8: the tab 0..3 (Inventory_IdLists' index)
-constexpr U kTop = WindowRecords_addr + 0xB; // u8: the first row shown
+constexpr ::bof3::image::Va kTop{WindowRecords_addr + 0xB}; // u8: the first row shown
 // kRow: now Window0_Cursor (symbols.toml). u8: the row
 // kTabMove: now Window0_Arrows (symbols.toml). u16: 0x31 / 0x32 when the tab moved
-constexpr U kScroll = WindowRecords_addr + 0x12; // u16: 0xF0 / 0x10 while the list scrolls
+constexpr ::bof3::image::Va kScroll{WindowRecords_addr + 0x12}; // u16: 0xF0 / 0x10 while the list scrolls
 
-constexpr U kTextRecords = 0x904CE0;   // Text_Records (0x20 each)
-constexpr U kTextBuffer = 0x904BA0;    // the text scratch sprintf writes
-constexpr U kScriptPool = 0x803580;    // Msg_OpenScript's pool: base + u16[base + 2 id]
+constexpr ::bof3::image::Va kTextRecords{0x904CE0};   // Text_Records (0x20 each)
+constexpr ::bof3::image::Va kTextBuffer{0x904BA0};    // the text scratch sprintf writes
+constexpr ::bof3::image::Va kScriptPool{0x803580};    // Msg_OpenScript's pool: base + u16[base + 2 id]
 
 // Image tables, read in place.
-constexpr U kPieces = 0x652EE4;        // 6 bytes a piece: u, v, w, h, clut x, clut row
-constexpr U kPortraits = 0x652F38;     // 4 bytes a portrait: u, v, clut x, clut row
-constexpr U kPanelPieces = 0x652F5C;   // the member panel's Menu_DrawPieces list
-constexpr U kTracks = 0x653098;        // u8 x 40: the list's tracks
+constexpr ::bof3::image::Va kPieces{0x652EE4};        // 6 bytes a piece: u, v, w, h, clut x, clut row
+constexpr ::bof3::image::Va kPortraits{0x652F38};     // 4 bytes a portrait: u, v, clut x, clut row
+constexpr ::bof3::image::Va kPanelPieces{0x652F5C};   // the member panel's Menu_DrawPieces list
+constexpr ::bof3::image::Va kTracks{0x653098};        // u8 x 40: the list's tracks
 // kLabelA: now CommuMusic_LabelA (symbols.toml).
 // kLabelB: now CommuMusic_LabelB (symbols.toml).
 // kLabelC: now CommuMusic_LabelC (symbols.toml). pointers to three labels
-constexpr U kGlyphsA = 0x653144, kGlyphsB = 0x653148, kGlyphsC = 0x65314C;
-constexpr U kBars = 0x653210;          // 20 bytes an entry: its four bars' lengths
-constexpr U kPairMessages = 0x653180;  // 4 bytes a kind: the message id, a "name" word
-constexpr U kTilesTop = 0x6531A0, kTilesBottom = 0x6531C0, kTilesSide = 0x6531E0;
-constexpr U kPageFormat = 0x6531F4;    // "page / pages"
-constexpr U kOneGlyph = 0x669F08;
+constexpr ::bof3::image::Va kGlyphsA{0x653144};
+constexpr ::bof3::image::Va kGlyphsB{0x653148};
+constexpr ::bof3::image::Va kGlyphsC{0x65314C};
+constexpr ::bof3::image::Va kBars{0x653210};          // 20 bytes an entry: its four bars' lengths
+constexpr ::bof3::image::Va kPairMessages{0x653180};  // 4 bytes a kind: the message id, a "name" word
+constexpr ::bof3::image::Va kTilesTop{0x6531A0};
+constexpr ::bof3::image::Va kTilesBottom{0x6531C0};
+constexpr ::bof3::image::Va kTilesSide{0x6531E0};
+constexpr ::bof3::image::Va kPageFormat{0x6531F4};    // "page / pages"
+constexpr ::bof3::image::Va kOneGlyph{0x669F08};
 constexpr rdata::Const kFour{0x5C41C8}, kEight{0x5C41CC};   // the floats 4.0, 8.0 (rdata_consts.h)
 
 unsigned char& B(U address) { return At(address)[0]; }
@@ -126,6 +131,14 @@ U W(U address) { return Word(At(address)); }
 void SetW(U address, U v) { SetWord(At(address), v); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+U W(::bof3::image::Va va) { return W(::bof3::Img(va)); }
+void SetW(::bof3::image::Va va, U v) { SetW(::bof3::Img(va), v); }
+U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
+void SetL(::bof3::image::Va va, U v) { SetL(::bof3::Img(va), v); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <class T> T Get(const unsigned char* p, unsigned offset) {
     T v;
@@ -154,7 +167,7 @@ unsigned char* EntryRecord(const char* who) {
     const unsigned e = AreaW0c_TailSub;
     if (e >= kEntryCount)
         bof3::Fatal("%s: the entry 0x9039F5 is %u, past the 60 of 0x9046D0 (docs/rest_4e.md section 7)", who, e);
-    return At(Community_Records_addr + 8 * e);
+    return At(::bof3::Img(Community_Records_addr) + 8 * e);
 }
 
 // --- the callees ------------------------------------------------------------------------
@@ -365,7 +378,7 @@ extern "C" unsigned __cdecl CommuName_MakeRandom(void) {
 // CharacterRecords, unbounded: the panels are the seven records'.
 extern "C" void __cdecl CommuMember_DrawPanel(int x, int y, unsigned member, unsigned editing) {
     Box(x + 3, y + 3, 0x7D, 0x2D, 0);
-    const unsigned char* const record = At(CharacterRecords_addr + kMemberStride * (member & 0xFF));
+    const unsigned char* const record = At(::bof3::Img(CharacterRecords_addr) + kMemberStride * (member & 0xFF));
     SH_CALL(CommuMember_DrawPortrait)(x + 6, y + 2, record[9], 0);
     const unsigned char* const name = (editing & 0xFF) == 0 ? record : At(kEdit);
     SH_CALL(Text_DrawAt)(x + 0x3B, y + 0x19, 0, 5, name);
@@ -551,7 +564,7 @@ extern "C" void __cdecl CommuName_CommitMember(void) {
             bof3::Fatal("CommuName_CommitMember (0x45F5A0): CommuMember_Nth answered %u, past the seven records - "
                         "the original writes past them (docs/rest_4e.md section 7)",
                         i);
-        return At(CharacterRecords_addr + kMemberStride * i);
+        return At(::bof3::Img(CharacterRecords_addr) + kMemberStride * i);
     };
     const unsigned char* const old = member();
     SetL(kTextRecords, Get<U>(old, 0));
@@ -638,7 +651,7 @@ extern "C" void __cdecl CommuMusic_OpenDispatch(void) {
 // row 0, the slide 4, the step + 1.
 extern "C" void __cdecl CommuMusic_Open(void) {
     for (unsigned i = 0; i < kMemberCount; ++i) {
-        const unsigned char* const record = At(CharacterRecords_addr + kMemberStride * i);
+        const unsigned char* const record = At(::bof3::Img(CharacterRecords_addr) + kMemberStride * i);
         unsigned char* const text = At(kTextRecords + 0x20 * i);
         Put<U>(text, 0, Get<U>(record, 0));
         Put<U>(text, 4, Get<U>(record, 4));
@@ -941,7 +954,7 @@ const unsigned char* ItemList(const char* who, unsigned tab) {
     if (tab >= 5)
         bof3::Fatal("%s: the tab 0x80316A is %u, past the five of Inventory_IdLists (docs/rest_4e.md section 7)", who,
                     tab);
-    return At(L(bof3::addr::Inventory_IdLists + 4 * tab));
+    return At(L(::bof3::Img(bof3::addr::Inventory_IdLists) + 4 * tab));
 }
 
 // original 0x45FE90: CommuItem_Steps[2] - the inventory window: its frame (the
@@ -1079,15 +1092,15 @@ extern "C" void __cdecl CommuItem_Cancel(void) {
 extern "C" void __cdecl CommuItem_Confirm(void) {
     if (!ItemClosed()) return;
     SH_CALL(Window_ResetAll)();
-    const unsigned char* const entry = At(Community_Records_addr + 8u * AreaW0c_TailSub);
+    const unsigned char* const entry = At(::bof3::Img(Community_Records_addr) + 8u * AreaW0c_TailSub);
     const unsigned char tab = entry[3];
     const unsigned item = entry[2];
     unsigned char kind;
     switch (tab & 0xF) {
-    case 0: kind = B(bof3::addr::NameTable_Consumables + 0x10 + 22 * item); break;
-    case 1: kind = B(bof3::addr::NameTable_Weapons + 0x11 + 28 * item); break;
-    case 2: kind = B(bof3::addr::NameTable_Armour + 0x11 + 26 * item); break;
-    default: kind = B(bof3::addr::NameTable_Accessories + 0x11 + 24 * item); break;
+    case 0: kind = B(::bof3::Img(bof3::addr::NameTable_Consumables) + 0x10 + 22 * item); break;
+    case 1: kind = B(::bof3::Img(bof3::addr::NameTable_Weapons) + 0x11 + 28 * item); break;
+    case 2: kind = B(::bof3::Img(bof3::addr::NameTable_Armour) + 0x11 + 26 * item); break;
+    default: kind = B(::bof3::Img(bof3::addr::NameTable_Accessories) + 0x11 + 24 * item); break;
     }
     if (kind & 8) {
         OpenMessage(0xEB);
@@ -1269,7 +1282,7 @@ void ListHeading(int x, int y, unsigned icon, unsigned title, U count) {
 // at (x + 0x14, y + 0x2C + 16 i) and message 0x3A (bit 7 set) or 0x39 at (x +
 // 0x70, ...); the count read again each row.
 extern "C" void __cdecl CommuRank_DrawListA(int x, int y, unsigned page) {
-    ListHeading(x, y, 1, 0x38, Rest4a_RemovedCount_addr);
+    ListHeading(x, y, 1, 0x38, ::bof3::Img(Rest4a_RemovedCount_addr));
     const unsigned base = 7 * (page & 0xFF);
     for (unsigned i = 0; i < 7; ++i) {
         if (static_cast<int>(base + i) >= Rest4a_RemovedCount) break;
@@ -1305,7 +1318,7 @@ extern "C" void __cdecl CommuRank_DrawIcon(int x, int y, unsigned icon) {
 // name the entry the byte 0x904F00 + 15 page + i names: 15, where the count
 // steps by 20 (docs/rest_4e.md section 7, L4).
 extern "C" void __cdecl CommuRank_DrawListB(int x, int y, unsigned page) {
-    ListHeading(x, y, 0, 0x3B, Rest4b_BusyA_addr);
+    ListHeading(x, y, 0, 0x3B, ::bof3::Img(Rest4b_BusyA_addr));
     const unsigned p = page & 0xFF;
     for (unsigned i = 0; i < 20; ++i) {
         if (static_cast<int>(20 * p + i) >= Rest4b_BusyA) break;

@@ -37,7 +37,7 @@ namespace at {
 
 // --- the board's cells -------------------------------------------------------------
 // kBoardFlag: now Rest4b_BoardFlag (symbols.toml). picks the stream (8 when 0, else 0xA)
-constexpr std::uint32_t kBoardTrack = 0x939A3D;     // the music track kept across the stream
+constexpr ::bof3::image::Va kBoardTrack{0x939A3D};     // the music track kept across the stream
 // kBoardState: now Rest4b_BoardState (symbols.toml). CommuBoard_States' index
 // kBoardStep: now Rest4b_BoardStep (symbols.toml). CommuBoard_Steps' / _StepsB' index
 // kCursorMode: now Rest4b_CursorMode (symbols.toml). the grid cursor's mode: 0, 1, 2
@@ -48,7 +48,7 @@ constexpr std::uint32_t kBoardTrack = 0x939A3D;     // the music track kept acro
 // kToggle: now Rest4b_Toggle (symbols.toml). a 0 / 1 toggle (the yes / no row)
 // kPickC: now Rest4b_PickC (symbols.toml).
 // kPickB: now Rest4b_PickB (symbols.toml).
-constexpr std::uint32_t kPick = 0x675F7F;           // s8: the picked slot
+constexpr ::bof3::image::Va kPick{0x675F7F};           // s8: the picked slot
 // kListCursor: now Rest4b_ListCursor (symbols.toml). s8: the list cursor
 // kKeptStep: now Rest4b_KeptStep (symbols.toml). the step kept by R4C's 0x459EE0
 // kPickE: now Rest4b_PickE (symbols.toml).
@@ -59,60 +59,60 @@ constexpr std::uint32_t kPick = 0x675F7F;           // s8: the picked slot
 
 // --- the community records (the save block) ------------------------------------------
 // kCountA: now Rest4b_CountA (symbols.toml). s8, printed by the panel
-constexpr std::uint32_t kListCount = 0x9046CB;      // the lists' length
+constexpr ::bof3::image::Va kListCount{0x9046CB};      // the lists' length
 // kCountC: now Rest4a_LevelLit (symbols.toml). printed by the panel
-constexpr std::uint32_t kMembers = 0x9046D0;        // 60 records of 8: +0 used, +1 slot, +2 item, +3 two nibbles, +4 a time
+constexpr ::bof3::image::Va kMembers{0x9046D0};        // 60 records of 8: +0 used, +1 slot, +2 item, +3 two nibbles, +4 a time
 constexpr std::uint32_t kMemberStride = 8;
 constexpr std::uint32_t kMembersEnd = 0x9048B0;
-constexpr std::uint32_t kSlots = 0x9048A8;          // by a slot 1..8: 0x9048B0 + 8 * (slot - 1); +0 kind, +1, +2, +3, +4 a time
-constexpr std::uint32_t kNames = 0x9048F0;          // 5 bytes a record
+constexpr ::bof3::image::Va kSlots{0x9048A8};          // by a slot 1..8: 0x9048B0 + 8 * (slot - 1); +0 kind, +1, +2, +3, +4 a time
+constexpr ::bof3::image::Va kNames{0x9048F0};          // 5 bytes a record
 // kClock: now Game_BattleCount (symbols.toml). u32: the time the records' +4 are taken from
 // kSoundBankBits: now AreaW0b_PartySet (symbols.toml). bit 7 set, the low seven pick the sound bank
 // kMusicTrack: now Music_Track (symbols.toml). Music_Track
 
 // --- cells read by the game's other code -----------------------------------------------
 // kRequest: now Field_Request (symbols.toml). Field_Request
-constexpr std::uint32_t kMessageIndex = 0x7DEE48;   // MsgBoxState's message index (u16)
+constexpr ::bof3::image::Va kMessageIndex{0x7DEE48};   // MsgBoxState's message index (u16)
 // kScriptFlags: now Rest4a_RemovedCount (symbols.toml). Field_ScriptFlags
-constexpr std::uint32_t kScriptFlags2 = 0x905BA4;   // Field_ScriptFlags2 (u16)
+constexpr ::bof3::image::Va kScriptFlags2{0x905BA4};   // Field_ScriptFlags2 (u16)
 // kBusyA: now Rest4b_BusyA (symbols.toml).
 // kBusyB: now Rest4b_BusyB (symbols.toml).
-constexpr std::uint32_t kSpriteCurrent = 0x937F88;  // Sprite_Current
+constexpr ::bof3::image::Va kSpriteCurrent{0x937F88};  // Sprite_Current
 // kClutDirty: now Gfx_ClutStripDirty (symbols.toml). Gfx_ClutStripDirty
-constexpr std::uint32_t kFrame = 0x937F94;          // Frame_Counter
+constexpr ::bof3::image::Va kFrame{0x937F94};          // Frame_Counter
 // kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
 // kPressed: now Input_Pressed (symbols.toml). Input_Pressed (u16)
 // kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons (u16)
 // kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons (u16)
 // kColour: now Config_WindowColour (symbols.toml). the window style byte
 // kArea: now Game_AreaNumber (symbols.toml). Game_AreaNumber (u16)
-constexpr std::uint32_t kTextRecords = 0x904CE0;    // Text_Records' first 16 bytes
-constexpr std::uint32_t kTextBuffer = 0x904BA0;     // the text scratch sprintf writes
-constexpr std::uint32_t kMessagePools = 0x803580;   // MessagePools
+constexpr ::bof3::image::Va kTextRecords{0x904CE0};    // Text_Records' first 16 bytes
+constexpr ::bof3::image::Va kTextBuffer{0x904BA0};     // the text scratch sprintf writes
+constexpr ::bof3::image::Va kMessagePools{0x803580};   // MessagePools
 
 // --- constant tables the code reads in place (indexes as the code computes them) -------
-constexpr std::uint32_t kGiftItems = 0x652A10;      // 48 pairs (item, category) by tier and a draw
-constexpr std::uint32_t kGiftLines = 0x652AC4;      // 6 bytes by a nibble: message, message, count
-constexpr std::uint32_t kPickHelp = 0x652AF0;       // u16 by a slot's kind
-constexpr std::uint32_t kPickHelpB = 0x652AF8;      // u16 by 0x675F7F
-constexpr std::uint32_t kPickNext = 0x652B44;       // bytes by 0x675F7F
-constexpr std::uint32_t kPickNextHelp = 0x652B50;   // u16 by 0x675F83
-constexpr std::uint32_t kPickPairs = 0x652B58;      // two bytes by 0x675F83: a count, a next
-constexpr std::uint32_t kBarHighlight = 0x652B60;   // bytes by a slot's kind
-constexpr std::uint32_t kSlotIcons = 0x652B6C;      // bytes by a slot's kind
-constexpr std::uint32_t kSlotLines = 0x652B7C;      // 12 bytes a slot: six s16
-constexpr std::uint32_t kDigitCells = 0x652C0C;     // bytes by a number
-constexpr std::uint32_t kSprites = 0x652C18;        // 6 bytes a sprite: u, v, w, h, clut x, clut y
-constexpr std::uint32_t kLists = 0x652C6C;          // two bytes a list: first, count
-constexpr std::uint32_t kSlotHelp = 0x652C72;       // u16 by a slot past 8
-constexpr std::uint32_t kSlotOffsets = 0x652C74;    // 4 bytes: s16 x, s16 y
-constexpr std::uint32_t kBars = 0x653210;           // 20 bytes a record id: four bar lengths first
-constexpr std::uint32_t kAreaLimits = 0x653601;     // a byte by Game_AreaNumber
-constexpr std::uint32_t kPanelLabel = 0x669E10;     // the panel's label text
-constexpr std::uint32_t kListTextA = 0x669E68;      // pointers: the record list's lines
-constexpr std::uint32_t kListTexts = 0x669EE0;      // pointers: the lists' lines
+constexpr ::bof3::image::Va kGiftItems{0x652A10};      // 48 pairs (item, category) by tier and a draw
+constexpr ::bof3::image::Va kGiftLines{0x652AC4};      // 6 bytes by a nibble: message, message, count
+constexpr ::bof3::image::Va kPickHelp{0x652AF0};       // u16 by a slot's kind
+constexpr ::bof3::image::Va kPickHelpB{0x652AF8};      // u16 by 0x675F7F
+constexpr ::bof3::image::Va kPickNext{0x652B44};       // bytes by 0x675F7F
+constexpr ::bof3::image::Va kPickNextHelp{0x652B50};   // u16 by 0x675F83
+constexpr ::bof3::image::Va kPickPairs{0x652B58};      // two bytes by 0x675F83: a count, a next
+constexpr ::bof3::image::Va kBarHighlight{0x652B60};   // bytes by a slot's kind
+constexpr ::bof3::image::Va kSlotIcons{0x652B6C};      // bytes by a slot's kind
+constexpr ::bof3::image::Va kSlotLines{0x652B7C};      // 12 bytes a slot: six s16
+constexpr ::bof3::image::Va kDigitCells{0x652C0C};     // bytes by a number
+constexpr ::bof3::image::Va kSprites{0x652C18};        // 6 bytes a sprite: u, v, w, h, clut x, clut y
+constexpr ::bof3::image::Va kLists{0x652C6C};          // two bytes a list: first, count
+constexpr ::bof3::image::Va kSlotHelp{0x652C72};       // u16 by a slot past 8
+constexpr ::bof3::image::Va kSlotOffsets{0x652C74};    // 4 bytes: s16 x, s16 y
+constexpr ::bof3::image::Va kBars{0x653210};           // 20 bytes a record id: four bar lengths first
+constexpr ::bof3::image::Va kAreaLimits{0x653601};     // a byte by Game_AreaNumber
+constexpr ::bof3::image::Va kPanelLabel{0x669E10};     // the panel's label text
+constexpr ::bof3::image::Va kListTextA{0x669E68};      // pointers: the record list's lines
+constexpr ::bof3::image::Va kListTexts{0x669EE0};      // pointers: the lists' lines
 // kCountFormat: now Boss26Fx_CountFormat (symbols.toml). Boss26Fx_CountFormat
-constexpr std::uint32_t kNumberFormat = 0x5E10C0;   // Area08_MessageFormat
+constexpr ::bof3::image::Va kNumberFormat{0x5E10C0};   // Area08_MessageFormat
 
 // --- other groups' functions of this wave, by address --------------------------------
 constexpr std::uint32_t kR4ACountSlots = bof3::addr::CommuSim_SumKindsAB;  // R4A: void(void)

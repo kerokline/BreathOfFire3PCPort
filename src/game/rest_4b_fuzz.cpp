@@ -43,9 +43,13 @@ template <typename... T> U PickOf(T... v) {
 }
 unsigned char& B(U a) { return *sh::Mem(a); }
 void SetW(U a, U v) { SetWord(sh::Mem(a), v); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+void SetW(::bof3::image::Va va, U v) { SetW(::bof3::Img(va), v); }
 void SetL(U a, U v) { SetLong(sh::Mem(a), static_cast<std::int32_t>(v)); }
 U Rec(unsigned k) { return Community_Records_addr + 8 * k; }
-U SlotAt(unsigned s) { return at::kSlots + 8 * s; }   // s 1..8
+U SlotAt(unsigned s) { return ::bof3::Img(at::kSlots) + 8 * s; }   // s 1..8
 
 // --- the clone table (band_rows.py --group R4B --clones --harness scenario, 2026-10-05) ---
 constexpr sh::CallSite kCalls456D60[] = {{0x20, 0x4976D0}};
@@ -400,7 +404,7 @@ const sh::Region kRegions[] = {
     {0x904700, 0x394},         // the records to 0x9048B0, the slots, the names, 0x904A90
     {0x937F80, 8},             // 0x937F80
     {0x7DEE40, 0x10},          // MsgBoxState's message index 0x7DEE48
-    {at::kTextRecords, 0x10},  // Text_Records' first 16 bytes
+    {::bof3::Img(at::kTextRecords), 0x10},  // Text_Records' first 16 bytes
 };
 
 // --- the seed ----------------------------------------------------------------------------

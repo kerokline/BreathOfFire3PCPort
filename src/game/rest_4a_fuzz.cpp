@@ -42,6 +42,9 @@ using move_script::SetWord;
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* Mem(::bof3::image::Va va) { return Mem(::bof3::Img(va)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -298,13 +301,13 @@ const sh::Region kRegions[] = {
     {0x93B960, 0x940},              // the eight enemy records
     {0x9035C0, 0x80},               // Field_Slots
     {0x80F580, 0x4000},             // Gfx_ClutStrip
-    {at::kEvents, 0x200},           // the event queue and Text_Records' first rows
-    {at::kSpawned, 0x20},           // the spawned list's first bytes
+    {::bof3::Img(at::kEvents), 0x200},           // the event queue and Text_Records' first rows
+    {::bof3::Img(at::kSpawned), 0x20},           // the spawned list's first bytes
     {0x9039A8, 0x5C},               // the removed list, the tail kind and sub-kind, to 0x903A04
-    {at::kEventCount, 8},           // the event count
-    {at::kResidentCounts, 0x1C},    // the resident counts and the offer words (.data)
+    {::bof3::Img(at::kEventCount), 8},           // the event count
+    {::bof3::Img(at::kResidentCounts), 0x1C},    // the resident counts and the offer words (.data)
     {Rest4d_Pointer_addr, 4},       // the trigger's object
-    {at::kShopRecords, 0x480},      // Shop_Records' first 50 (.data)
+    {::bof3::Img(at::kShopRecords), 0x480},      // Shop_Records' first 50 (.data)
     {AreaW2c_LastArea_addr, 4},     // the area the field came from
 };
 
@@ -432,7 +435,7 @@ U AbilityBit4(U r) {
     U found[0x100];
     unsigned n = 0;
     for (U i = 0; i < 0x100; ++i)
-        if ((Mem(at::kAbilityFlags + at::kAbilityStride * i)[0] & 0x90) == 0x10) found[n++] = i;
+        if ((Mem(::bof3::Img(at::kAbilityFlags.v) + at::kAbilityStride * i)[0] & 0x90) == 0x10) found[n++] = i;
     return n != 0 ? found[r % n] : r % 0x100;
 }
 void SeedAutoTarget() {
@@ -591,7 +594,7 @@ void Disturb(U h) {
         }
         break;
     case 4: Bld((v >> 2) % 8)[1] = static_cast<unsigned char>((v >> 5) % 3); break;      // a building's level (0..2: kind 9's odds)
-    case 5: Mem((v & 1) ? at::kEventCount : Rest4a_RemovedCount_addr)[0] = static_cast<unsigned char>((v >> 1) % 0x20); break;
+    case 5: Mem((v & 1) ? ::bof3::Img(at::kEventCount) : Rest4a_RemovedCount_addr)[0] = static_cast<unsigned char>((v >> 1) % 0x20); break;
     case 6:
         Mem(BattlePhases_B8B_addr)[0] = static_cast<unsigned char>((v >> 1) % 11);
         Mem(Battle_PartyStanding_addr)[0] = static_cast<unsigned char>(v & 1);

@@ -48,6 +48,13 @@ unsigned char& B(U address) { return At(address)[0]; }
 signed char S8(U address) { return static_cast<signed char>(At(address)[0]); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+signed char S8(::bof3::image::Va va) { return S8(::bof3::Img(va)); }
+U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
+void SetL(::bof3::image::Va va, U v) { SetL(::bof3::Img(va), v); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 void PutFloat(unsigned char* p, unsigned offset, int v) {
     const float f = static_cast<float>(v);
@@ -61,7 +68,7 @@ int S16(U v) { return static_cast<std::int16_t>(v & 0xFFFF); }
 // fuzz swaps the cells for recorders); a Fatal past them, where the original
 // jumps through the dword after.
 void Dispatch(const char* who, const unsigned long* table, unsigned entries, U byte_address) {
-    const unsigned index = B(byte_address);
+    const unsigned index = B(::bof3::image::Va{byte_address});
     if (index >= entries)
         bof3::Fatal("%s: the byte 0x%X is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_4c.md section 7)",
@@ -97,7 +104,10 @@ void Secret(int x, int y, unsigned show) { SH_AT(void (__cdecl*)(int, int, unsig
 unsigned Rnd() { return static_cast<unsigned>(SH_CALL(Rand)()); }
 int Request() { return Field_Request; }
 const unsigned char* Text(U address) { return At(address); }
-char* Buffer() { return reinterpret_cast<char*>(At(bof3::addr::Text_Records - 0x140)); }   // 0x904BA0
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+const unsigned char* Text(::bof3::image::Va va) { return Text(::bof3::Img(va)); }
+char* Buffer() { return reinterpret_cast<char*>(At(::bof3::Img(bof3::addr::Text_Records) - 0x140)); }   // 0x904BA0
 
 // The first game's two boxes at their resting places (the money box at 0x26,
 // 0x10, the stake box at 0xA8, 0x10, plain) - the tail of most of its states.
@@ -284,26 +294,26 @@ extern "C" void __cdecl Commu_DrawStakeBox(int x, int y, unsigned digits) {
     SH_CALL(Menu_DrawBox)(x + 1, y + 1, 0x6A, 0x28, 0x80, static_cast<int>(style));
     SH_CALL(Commu_DrawFrame)(x, y);
     SH_CALL(Text_DrawAt)(x + 0x24, y + 7, 0, Labels_Written(14) ? 0xFF : 3,
-                         Labels_Written(14) ? Labels_Slot(14, 4) : Text(at::kBetTitle));   // DIV-0064 group 14
-    const auto amount = static_cast<std::int32_t>(L(at::kBet));
-    U format = at::kFmtWide;
+                         Labels_Written(14) ? Labels_Slot(14, 4) : Text(::bof3::Img(at::kBetTitle.v)));   // DIV-0064 group 14
+    const auto amount = static_cast<std::int32_t>(L(::bof3::Img(at::kBet.v)));
+    U format = ::bof3::Img(at::kFmtWide.v);
     int left = x + 6;
     switch (digits & 0xFF) {
     case 2:
-        if (amount < 10) format = at::kFmt1, left = x + 0x42;
+        if (amount < 10) format = ::bof3::Img(at::kFmt1.v), left = x + 0x42;
         break;
     case 3:
-        if (amount < 100) format = at::kFmt2, left = x + 0x36;
+        if (amount < 100) format = ::bof3::Img(at::kFmt2.v), left = x + 0x36;
         break;
     case 4:
-        if (amount < 1000) format = at::kFmt3, left = x + 0x2A;
+        if (amount < 1000) format = ::bof3::Img(at::kFmt3.v), left = x + 0x2A;
         break;
     default:
         break;
     }
     SH_CALL(Crt_sprintf)(Buffer(), reinterpret_cast<const char*>(At(format)), amount);
     SH_CALL(Text_DrawFont12)(left, y + 0x18, 0, reinterpret_cast<const unsigned char*>(Buffer()));
-    SH_CALL(Text_DrawAt)(x + 0x5A, y + 0x18, 0, 1, Text(at::kZennyUnit));
+    SH_CALL(Text_DrawAt)(x + 0x5A, y + 0x18, 0, 1, Text(::bof3::Img(at::kZennyUnit.v)));
 }
 
 // ==== the first game: CommuHiLo ===========================================================
@@ -1280,8 +1290,8 @@ extern "C" void __cdecl CommuHitBlow_Score(void) {
             if (i != j && rec[i] == B(at::kCards + j)) ++blows;
     rec[3] = hits;
     rec[4] = blows;
-    char* const text_a = reinterpret_cast<char*>(At(bof3::addr::Text_Records));
-    const auto* const format = reinterpret_cast<const char*>(At(bof3::addr::Area08_MessageFormat));
+    char* const text_a = reinterpret_cast<char*>(At(::bof3::Img(bof3::addr::Text_Records)));
+    const auto* const format = reinterpret_cast<const char*>(At(::bof3::Img(bof3::addr::Area08_MessageFormat)));
     if (hits != 3) {
         SH_CALL(Crt_sprintf)(text_a, format, static_cast<unsigned>(hits));
         SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextB)), format, static_cast<unsigned>(blows));
@@ -1423,7 +1433,7 @@ extern "C" void __cdecl CommuHitBlow_End(void) {
         const auto n = static_cast<unsigned char>(Rest4d_Count + 1);
         Rest4d_Count = n;
         Room("CommuHitBlow_End (0x45C0C0)", "the row", r, 0, 7);
-        const U rec = at::kRecords + 5 * r;
+        const U rec = ::bof3::Img(at::kRecords) + 5 * r;
         Card(0xA8 - 16 * n, 0x78 - 0xE * n, B(rec + 2));
         int m = Rest4d_Count;
         Card(8 * (0x11 - m), 0x78 - 0xE * m, B(rec + 1));

@@ -41,6 +41,10 @@ template <typename... T> U PickOf(T... v) {
 }
 unsigned char& B(U a) { return *sh::Mem(a); }
 void SetW(U a, U v) { SetWord(sh::Mem(a), v); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+void SetW(::bof3::image::Va va, U v) { SetW(::bof3::Img(va), v); }
 
 // --- the clone table (band_rows.py --group R4D --clones --harness scenario, 2026-10-05) ---
 constexpr sh::CallSite kCalls45C400[] = {{0x1B, 0x57CF60}, {0x22, 0x45C700}, {0x59, 0x5B9380}, {0x7A, 0x516F60}, {0x89, 0x5B9380},
@@ -249,8 +253,8 @@ void Disturb(U h) { Move(h); }
 // two, three or five words, so the standard row's third word is the caller's
 // stack in two of them.
 U Sprintf(const U* a, U) {
-    if (a[1] == at::kBoardFmt3) sh::Note(a[2], a[3], a[4]);
-    else if (a[1] == at::kNumberFmt) sh::Note(a[2]);
+    if (a[1] == ::bof3::Img(at::kBoardFmt3)) sh::Note(a[2], a[3], a[4]);
+    else if (a[1] == ::bof3::Img(at::kNumberFmt)) sh::Note(a[2]);
     auto* const dst = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
     if (!sh::InRegions(dst, 8)) return 0;
     const unsigned n = sh::Noise() % 8;
@@ -261,7 +265,7 @@ U Sprintf(const U* a, U) {
 // R4E's 0x45ED70: clears and writes the 0x20 bytes at 0x675F98 and answers the
 // name's length + 1 (the caller copies that many with rep movs): 0..0x24.
 U RandomNameAnswer(const U*, U) {
-    sh::FillBytes(sh::Mem(at::kName), 0x20);
+    sh::FillBytes(sh::Mem(::bof3::Img(at::kName)), 0x20);
     return sh::Noise() % 0x25;
 }
 // CommuName_NthSlot's stand-in: a slot 0..3 three times in four, so that two

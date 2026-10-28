@@ -51,12 +51,18 @@ U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 void SetUL(U a, U v) { SetUL(At(a), v); }
 unsigned char* Ptr(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+U UL(::bof3::image::Va va) { return UL(::bof3::Img(va)); }
+void SetUL(::bof3::image::Va va, U v) { SetUL(::bof3::Img(va), v); }
+unsigned char* Ptr(::bof3::image::Va va) { return Ptr(::bof3::Img(va)); }
 
 // The community's records and buildings, and the traits table by record.
-unsigned char* Rec(U i) { return At(Community_Records_addr + 8u * i); }
-unsigned char* Bld(U b) { return At(Community_Buildings_addr + 8u * b); }
+unsigned char* Rec(U i) { return At(::bof3::Img(Community_Records_addr) + 8u * i); }
+unsigned char* Bld(U b) { return At(::bof3::Img(Community_Buildings_addr) + 8u * b); }
 unsigned char Trait(U i, U field) { return At(at::kRecordTraits + at::kTraitStride * i + field)[0]; }
-unsigned char* Pose(U object) { return At(Sprite_Objects_addr + 0x88 + at::kSpriteStride * object); }
+unsigned char* Pose(U object) { return At(::bof3::Img(Sprite_Objects_addr) + 0x88 + at::kSpriteStride * object); }
 unsigned char Count(U building) { return At(at::kResidentCounts + building)[0]; }
 
 // The event queue: kind at +0, the record at +1 (the levels and the area
@@ -116,13 +122,13 @@ extern "C" unsigned char __cdecl Battle_AutoTargetCheck(unsigned actor) {
         return 0;
     }
     const U e = at::kEnemyStride * (static_cast<U>(a) - 3);
-    if (Word(At(at::kEnemyIntel + e)) > 1 && !(At(Battle_Enemies_addr + 0x92 + e)[0] & 0x20) && !(UL(at::kEnemyFlags + e) & 0x4000))
+    if (Word(At(at::kEnemyIntel + e)) > 1 && !(At(::bof3::Img(Battle_Enemies_addr) + 0x92 + e)[0] & 0x20) && !(UL(at::kEnemyFlags + e) & 0x4000))
         return 1;
     if (At(at::kAutoMode)[0] != 4) {
         At(at::kTarget)[0] = forced;
         return 0;
     }
-    const unsigned char bits = At(at::kAbilityFlags + at::kAbilityStride * Word(At(Battle_Enemies_addr + 0x106 + e)))[0];
+    const unsigned char bits = At(at::kAbilityFlags + at::kAbilityStride * Word(At(::bof3::Img(Battle_Enemies_addr) + 0x106 + e)))[0];
     if (bits & 0x10) {
         if (bits & 0x80) At(at::kTarget)[0] = 0xC0;
         else At(at::kTarget)[0] = forced >= 3 ? 0x80 : 0x40;
@@ -190,7 +196,7 @@ extern "C" unsigned char __cdecl Battle_RandomLiveEnemy(void) {
 // original 0x454260 (no PSX twin paired): 1 when the member's action word
 // (ObjTrio + 0x126 of the argument's low byte, unchecked) is 0xE or 0x128.
 extern "C" unsigned char __cdecl Battle_MemberActionIs0E(unsigned member) {
-    const unsigned short w = Word(At(ObjTrio_addr + 0x126 + at::kMemberStride * (member & 0xFFu)));
+    const unsigned short w = Word(At(::bof3::Img(ObjTrio_addr) + 0x126 + at::kMemberStride * (member & 0xFFu)));
     if (w == 0xE) return 1;
     return w == 0x128 ? 1 : 0;
 }
@@ -202,7 +208,7 @@ extern "C" unsigned char __cdecl Battle_MemberActionIs0E(unsigned member) {
 // the target 0x904B44 the answer.
 extern "C" void __cdecl Battle_MemberAutoFixed(unsigned member) {
     const U m = member & 0xFFu;
-    auto odds = static_cast<signed char>(At(ObjTrio_addr + 0x142 + at::kMemberStride * m)[0]);
+    auto odds = static_cast<signed char>(At(::bof3::Img(ObjTrio_addr) + 0x142 + at::kMemberStride * m)[0]);
     if (odds > 5) odds = 5;
     const int r = SH_CALL(Rand)();
     const int roll = r % 20;
@@ -213,7 +219,7 @@ extern "C" void __cdecl Battle_MemberAutoFixed(unsigned member) {
         const int r2 = SH_CALL(Rand)();
         target = SH_CALL(Battle_DefaultTarget)((static_cast<U>(r2) & 0xFFFFFF00u) | static_cast<unsigned char>((r2 & 7) + 3));
     }
-    At(ObjTrio_addr + 0x125 + at::kMemberStride * m)[0] = 1;
+    At(::bof3::Img(ObjTrio_addr) + 0x125 + at::kMemberStride * m)[0] = 1;
     At(at::kAutoMode)[0] = 1;
     At(at::kTarget)[0] = target;
 }
@@ -650,10 +656,10 @@ extern "C" void __cdecl CommuSim_TickKindD(void) {
                 break;
             }
             U tier = 0;
-            for (U p = at::kPriceTiers; price > Word(At(p));) {
+            for (U p = ::bof3::Img(at::kPriceTiers); price > Word(At(p));) {
                 p += 6;
                 ++tier;
-                if (p >= at::kPriceTiersEnd) break;
+                if (p >= ::bof3::Img(at::kPriceTiersEnd)) break;
             }
             const U stamp = rv::As<records::CommunityRecord>(r)->stamp;
             if (Game_BattleCount - stamp < Word(At(at::kPriceTiers + 6 * tier + 2))) continue;
@@ -810,7 +816,7 @@ extern "C" void __cdecl CommuSim_RollOffers(void) {
     SetUL(at::kOfferWords + 0xC, 0);
     SetWord(At(at::kOfferWords + 0x10), 0);
     for (U g = 0; g < 3; ++g) {
-        const U group = at::kOfferWords + 6 * g;
+        const U group = ::bof3::Img(at::kOfferWords) + 6 * g;
         U filled = 0;
         do {
             auto n = static_cast<unsigned char>(SH_CALL(Rand)() & 0x1F);
@@ -871,7 +877,7 @@ extern "C" void __cdecl CommuSim_PlaceObjects(void) {
         ++object;
     }
     if (static_cast<int>(object) < 0x14)
-        for (U o = object; o < 0x14; ++o) At(Sprite_Objects_addr + at::kSpriteStride * o)[0] = 0;
+        for (U o = object; o < 0x14; ++o) At(::bof3::Img(Sprite_Objects_addr) + at::kSpriteStride * o)[0] = 0;
 }
 
 namespace {
@@ -892,7 +898,7 @@ void BankAndFace() {
 // Sprite_Current); +5 the record; the bank and the facing.
 extern "C" void __cdecl CommuSim_PlaceLoose(unsigned record, unsigned object) {
     const U o = object & 0xFFu;
-    unsigned char* const base = At(Sprite_Objects_addr + at::kSpriteStride * o);
+    unsigned char* const base = At(::bof3::Img(Sprite_Objects_addr) + at::kSpriteStride * o);
     Sprite_Current = base;
     base[6] = 1;
     if (At(at::kObjectPlaces + 3 * o + 2)[0] != 0) {
@@ -927,7 +933,7 @@ extern "C" void __cdecl CommuSim_PlaceResident(unsigned record, unsigned object)
     const auto building = static_cast<unsigned char>(Rec(record & 0xFFu)[1] - 1);
     const U o = object & 0xFFu;
     const U row = 3u * building;
-    unsigned char* const base = At(Sprite_Objects_addr + at::kSpriteStride * o);
+    unsigned char* const base = At(::bof3::Img(Sprite_Objects_addr) + at::kSpriteStride * o);
     Sprite_Current = base;
     Sprite_Current[5] = static_cast<unsigned char>(record);
     Sprite_Current[1] = 6;
@@ -969,7 +975,7 @@ extern "C" void __cdecl CommuPose_Kind0(unsigned object) {
     auto roll = static_cast<unsigned char>(SH_CALL(Rand)() & 7);
     if (roll > 4) roll = static_cast<unsigned char>(roll + 0xFC);
     const U o = object & 0xFFu;
-    At(Sprite_Objects_addr + 0x6 + at::kSpriteStride * o)[0] = 1;
+    At(::bof3::Img(Sprite_Objects_addr) + 0x6 + at::kSpriteStride * o)[0] = 1;
     SetWord(Pose(o), roll + 0xC2u);
 }
 
@@ -1087,7 +1093,7 @@ extern "C" void __cdecl CommuPose_KindB(unsigned object, unsigned building) {
         return;
     }
     if (count == 1) {
-        const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x92);
+        const unsigned char set = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x92);
         SetWord(Pose(o), set ? 0xC00B : 0xD4);
         return;
     }
@@ -1127,6 +1133,9 @@ unsigned char TailTriggerSub(unsigned char* object, unsigned char kind, unsigned
     return 0;
 }
 char* Row(U a) { return reinterpret_cast<char*>(At(a)); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+char* Row(::bof3::image::Va va) { return Row(::bof3::Img(va)); }
 const char* Format() { return reinterpret_cast<const char*>(At(at::kNumberFormat)); }
 }  // namespace
 

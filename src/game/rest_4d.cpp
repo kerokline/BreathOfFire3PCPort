@@ -47,6 +47,13 @@ U L(U address) { return static_cast<U>(Long(At(address))); }
 void PutL(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutF(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 const unsigned char* Text(U address) { return At(address); }
+// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
+// the VA is placed here, through ::bof3::Img.
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+int S8(::bof3::image::Va va) { return S8(::bof3::Img(va)); }
+U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
+const unsigned char* Text(::bof3::image::Va va) { return Text(::bof3::Img(va)); }
 
 // A state table's handler, jumped to as the original's `jmp [table + 4 *
 // index]` does: the index must lie inside the table's own count (the states
@@ -60,7 +67,7 @@ void Jump(U table, unsigned count, unsigned index, const char* who) {
     if (index >= count)
         bof3::Fatal("%s: state %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index, count,
                     static_cast<unsigned>(table), static_cast<unsigned>(table + 4 * index));
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(::bof3::image::Va{table + 4 * index})))();
 }
 
 // --- the callees of other groups of this wave, by address ---------------------------
@@ -103,7 +110,7 @@ unsigned char DroppedZero() {
 char* Scratch() { return reinterpret_cast<char*>(At(at::kTextScratch)); }
 
 // A message's text: MessagePools' word at `words + 2 * index` from 0x803580.
-const unsigned char* PoolText(U words, int index) {
+const unsigned char* PoolText(::bof3::image::Va words, int index) {
     return Text(at::kPoolWords + Word(At(words + 2u * static_cast<U>(index))));
 }
 
@@ -343,7 +350,7 @@ extern "C" void __cdecl CommuDraw_Pick(void) {
     B(at::kPicked + 2) = 0;
     B(at::kPicked + 3) = 0;
     int row = static_cast<signed char>(row0);
-    U record = at::kTextRecords;
+    U record = ::bof3::Img(at::kTextRecords);
     for (unsigned i = 0;; ++i) {
         const unsigned category = B(at::kDrawRows + static_cast<U>(row * 9 + static_cast<int>(i)));
         if (category == 9) break;
@@ -362,7 +369,7 @@ extern "C" void __cdecl CommuDraw_Pick(void) {
             if (++n >= 0x20) break;
         }
         record += 0x20;
-        if (record >= at::kTextRecordsEnd) break;
+        if (record >= ::bof3::Img(at::kTextRecordsEnd)) break;
         row = Rest4c_Count;
     }
 
@@ -375,7 +382,7 @@ extern "C" void __cdecl CommuDraw_Pick(void) {
     } else if (cursor == 7) {
         if (j == 3) j = 2;
     }
-    const U pick = at::kDrawPicks + 3 * j;
+    const U pick = ::bof3::Img(at::kDrawPicks) + 3 * j;
     if ((static_cast<unsigned>(SH_CALL(Rand)()) & 1) != 0) {
         const unsigned i = PickOfCategory(pick + 1);
         const unsigned category = B(pick + 1);
@@ -1069,11 +1076,11 @@ extern "C" void __cdecl CommuName_MemberEntryIn(void) {
     if (Rest4d_Count != 0) return;
     for (unsigned i = 0; i < 5; ++i) {
         const unsigned record = NthMember(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
-        if (B(CharacterRecords_addr + at::kRecordStride * record + i) == 0) {
+        if (B(::bof3::Img(CharacterRecords_addr) + at::kRecordStride * record + i) == 0) {
             B(at::kName + i) = 0x20;
         } else {
             const unsigned again = NthMember(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
-            B(at::kName + i) = B(CharacterRecords_addr + at::kRecordStride * again + i);
+            B(at::kName + i) = B(::bof3::Img(CharacterRecords_addr) + at::kRecordStride * again + i);
         }
     }
     const auto step = static_cast<unsigned char>(Rest4c_Step + 1);
