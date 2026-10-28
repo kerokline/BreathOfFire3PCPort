@@ -83,7 +83,81 @@ ledger stays trustworthy.
   shows the same behaviour. This is what distinguishes a *port* bug from an
   *original* one, and it changes how confident the fix should be.
 - **Reversible?** whether it sits behind a config toggle, and the key if so.
+- **Switch:** SunderLoop | ini:<key>=<value> | env:<BOF3X_NAME>=<value> | lang | none
+- **Default:** on | off
+- **Player:** yes | cheap | costly | never
+- **Toward:** psx, psp, pc (a list) | none
+- **State:** active | withdrawn | superseded by DIV-NNNN
 ```
+
+### The switch fields
+
+The last five lines are for a tool, not a reader: a preset ("As shipped",
+"Repaired", "Recommended", "PlayStation") is built from them, and
+`tools/ledger_check.py` checks them. `Reversible?` stays the prose it is and
+says the same thing for a person. Each field is **one line**, its value
+first; an optional " - <clause>" after the value says why where the value is
+not obvious, as on the Tier line. Added by the ledger-fields round
+([`ledger-fields-round.md`](ledger-fields-round.md) sections 1 and 6, the
+owner's calls of 2026-10-27); until its stage C the checker counts a missing
+field as a note, a malformed one as an error.
+
+**`Switch:`** the names that, set together, turn this entry off and nothing
+more than they must: a comma list, or `none` alone. A wider switch that also
+turns it off (a whole function's detour beside a one-byte patch of ours, the
+language beside one of its layouts) stays in `Reversible?` only, so that a
+preset which sets every listed name changes this entry and not its
+neighbours. A name is one of:
+
+| Form | What it is | Example |
+|---|---|---|
+| a bare name | a `BOF3X_ORIGINAL` name: the first argument of a `PatchBytes`, `RetargetCall` or `Inject` in `src/` | `SunderLoop` (DIV-0176) |
+| `ini:<key>=<value>` | a `bof3x.ini` key the launcher reads, at the value that turns the entry off | `ini:wide=0` (DIV-0041) |
+| `env:<BOF3X_NAME>=<value>` | an environment name `src/` reads and the launcher has no key for; an empty value means unset | `env:BOF3X_LAYERING=0` (DIV-0071) |
+| `lang` | the language is the switch: `BOF3X_LANG`, the launcher's language box | DIV-0008 |
+| `none` | nothing turns it off | DIV-0067 (withdrawn) |
+
+The checker refuses a name nothing in `src/` or the launcher reads, a probe
+(an `instrument` hook, which no name switches off), the tooling switches
+(`BOF3X_SHADOW`, `BOF3X_CALLTRACE`; a `BOF3X_ORIGINAL` name is written bare),
+and the player's switch itself (`BOF3X_OFF`, ini `off=`: stage D's switch,
+which takes these names, as `BOF3X_ORIGINAL` does, `*` and `-name` included).
+
+**`Default:`** `on` when a player who changes nothing gets the new
+behaviour (most entries; DIV-0176), `off` when it waits to be asked for (a
+cheat, an opt-in look: DIV-0045's multipliers, DIV-0012's point filter).
+
+**`Player:`** whether the player's build (`bof3x.exe`) can turn the entry
+off. `tools/ledger_switches.py` measures it from the source, one class per
+name; the checker refuses a value the `Switch:` names do not give.
+
+| Value | Meaning | From the names' classes | Example |
+|---|---|---|---|
+| `yes` | a player can switch it today | every name a launcher key, an environment name both hosts read, or `lang` | DIV-0008 (`lang`) |
+| `cheap` | the original behaviour is in our code already; only the player's switch is missing | a `PatchBytes` or `RetargetCall` name (class `code`), none worse | DIV-0176 (`SunderLoop`) |
+| `costly` | the original is only Capcom's function, which `bof3x.exe` does not map; ours must grow the old path | a name only `Inject` takes (class `detour`), or a switch `bof3x.exe` refuses (`hosted-only`: `RefuseHostedSwitches`) | DIV-0183 (`Paralyzer_Start`) |
+| `never` | no preset turns it off: Forced (the tier says why), or one-way (the clause says why) | any; the only value for a Forced entry and for `Switch: none` | DIV-0021 (Forced), DIV-0067 |
+
+With more than one name the worst class decides. Once `src/` reads
+`BOF3X_OFF` (stage D) a `code` name is a player's switch, and `cheap` becomes
+`yes`; the checker says so.
+
+**`Toward:`** the releases whose behaviour the new behaviour matches: a
+list of `psx`, `psp`, `pc`, or `none` alone. No value implies another - the
+PSP release changed some of the PlayStation's behaviour, so `psx` does not
+imply `psp`. `psx, psp` restores what both consoles do (DIV-0184's dial,
+where the PSP was seen too); `psx` alone where only the PlayStation was
+read, or the PSP changed it; `psp` alone for one of the PSP's own changes
+(DIV-0108's battle rules); `pc` where the consoles differ and the port's way
+is kept or chosen; `none` for behaviour no release had (DIV-0176, Sunder's
+unused loop) or not measured. `psx` cites the entry's "Also in the PSX
+version?" line and rationale; `psp` only a PSP twin read or a PSP round's
+entry. The list never claims more than was measured. The "PlayStation"
+preset turns on every entry that lists `psx`.
+
+**`State:`** `active`; `withdrawn` (the entry stays as the record, nothing
+is left to switch: DIV-0067); or `superseded by DIV-NNNN`, an entry that
+exists. A preset never switches an entry that is not active.
 
 ### Tiers
 
@@ -11235,6 +11309,11 @@ designed in rather than bolted on.
   that page from its first tick - the signature of this entry; the `combat` run against the `orig4` pair:
   two pages over 2,561 ticks, `0x5FD000` on every tick (this entry) and `0x803000` on 653 (DIV-0175's window records, already on `main`), nothing else; the references disagree on 7 pages of noise (`C:/Users/kerok/bof3x-runs/sunder1024/sh/check_combat.txt`).
 - **Reversible?** `BOF3X_ORIGINAL=SunderLoop`.
+- **Switch:** SunderLoop
+- **Default:** on
+- **Player:** cheap - `PatchBytes("SunderLoop")` writes a `.data` byte in both hosts; only the player's switch is missing
+- **Toward:** none - the loop is no release's: the PlayStation's script asks for the once-cut too ("Also in the PSX version?" above)
+- **State:** active
 
 ### The area's song comes back after a jingle
 
@@ -11692,6 +11771,11 @@ designed in rather than bolted on.
   the caster's animation. Run root `C:/Users/kerok/bof3x-runs/ss1026/par`.
 - **Reversible?** `BOF3X_ORIGINAL=Paralyzer_Start` leaves Capcom's
   function, its read with it.
+- **Switch:** Paralyzer_Start
+- **Default:** on
+- **Player:** costly - the original path is Capcom's function (a detour name only); ours would have to grow its null read, a crash
+- **Toward:** none - the null case is not reachable on the PlayStation, so no release shows the skill without its cue
+- **State:** active
 
 ### The world map's dial is drawn semi-transparent, so its glass shows the map as on the PlayStation
 

@@ -13,7 +13,17 @@ The divergence ledger, docs/DIVERGENCE.md (CLAUDE.md rule 2):
   * its Tier is one the ledger's "Tiers" table defines;
   * IDs run DIV-0001, DIV-0002, ... with no gap and no repeat;
   * the Status line's "N entries, DIV-0001..NNNN" matches the entries;
-  * every DIV-NNNN cited anywhere in the repository exists.
+  * every DIV-NNNN cited anywhere in the repository exists;
+  * the five switch fields (the ledger-fields round, docs/ledger-fields-round.md
+    sections 1 and 2): `Switch:`, `Default:`, `Player:`, `Toward:`, `State:`,
+    each one line in its grammar; every `Switch:` name one that src/ or the
+    launcher reads (tools/ledger_switches.py's inventory); `Player:` the value
+    the names' classes give (`yes` refused on a name the player's build cannot
+    reach), `never` for a Forced entry and for `Switch: none`; a superseding
+    entry that exists. Until STRICT_FIELDS is set (stage C of the round) a
+    missing field is a counted note, not an error; a malformed one is an error
+    already. Each run also tests these checks on the worked examples, DIV-0176
+    and DIV-0183, each with one field line changed (FIXTURE_CASES).
 
 The ownership ledger, symbols.toml `impl` against the detours in src/:
   * every function detoured to ours (BOF3_INJECT, or a direct bof3::Inject
@@ -30,6 +40,9 @@ cannot go stale.
 """
 import argparse, os, re, sys, tomllib
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ledger_switches   # noqa: E402 - the switch inventory, beside this file
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LEDGER = os.path.join('docs', 'DIVERGENCE.md')
 
@@ -41,6 +54,23 @@ REQUIRED = ['ID', 'Date', 'Subsystem', 'Tier', 'Original behaviour', 'New behavi
 # The tiers docs/DIVERGENCE.md "Tiers" defines. The field is the tier word,
 # optionally followed by " - <why>".
 TIERS = ('Forced', 'Intent', 'Sensible', 'Extension')
+
+# The switch fields (docs/DIVERGENCE.md "Entry format"; the ledger-fields
+# round, docs/ledger-fields-round.md section 1), one line each, after
+# Reversible?. A value may be followed by " - <clause>".
+SWITCH_FIELDS = ['Switch', 'Default', 'Player', 'Toward', 'State']
+# False while the round's stage B fills the entries: a missing switch field is
+# a note. Stage C sets it, and a missing field is an error like any other.
+STRICT_FIELDS = False
+PLAYER_VALUES = ('yes', 'cheap', 'costly', 'never')
+TOWARD_VALUES = ('psx', 'psp', 'pc')
+# (DIV id, field) -> why: an entry whose line of that name predates the switch
+# fields and means something else. Its line is not read as the field; the
+# check fails once the line is renamed, so the list cannot go stale.
+FIELD_CLASH = {
+    ('DIV-0169', 'State'): 'a "State:" line on the DLL state the entry keeps (2026-10-23), older than the '
+                           'switch fields; its stage-B group renames it',
+}
 
 # (DIV id, missing field) -> why it is accepted. Content only the author can
 # write; the check will not invent it.
@@ -81,7 +111,7 @@ def walk(top, exts):
 
 # --- the divergence ledger ---------------------------------------------------
 
-def check_divergence(r):
+def check_divergence(r, inv):
     text = read(LEDGER)
     head, sep, body = text.partition('\n## Entries\n')
     if not sep:
@@ -100,7 +130,7 @@ def check_divergence(r):
         elif cur is not None:
             cur['lines'].append(line)
 
-    ids, used_known = [], set()
+    ids, used_known, fielded = [], set(), []
     for e in entries:
         where = f'{LEDGER}:{e["line"]} "{e["title"]}"'
         chunk = '\n'.join(e['lines'])
@@ -112,6 +142,7 @@ def check_divergence(r):
             continue
         did = found[0]
         ids.append((did, where))
+        fielded.append((did, where, chunk))
         for field in REQUIRED:
             pat = r'^- \*\*' + re.escape(field) + r'(?: \([^)]*\))?:?\*\*'
             if re.search(pat, chunk, re.M):
@@ -152,7 +183,169 @@ def check_divergence(r):
         if n != len(ids) or top != last:
             r.error(f'{LEDGER}: Status line says {n} entries to {top}; '
                     f'the ledger has {len(ids)} to {last}')
+    check_switch_fields(r, fielded, set(seen), inv)
+    selftest_fields(r, fielded, set(seen), inv)
     return set(seen)
+
+
+# --- the switch fields -------------------------------------------------------
+
+def id_ranges(ids):
+    """DIV-0001, DIV-0002, DIV-0003, DIV-0007 -> 'DIV-0001..0003, DIV-0007'."""
+    nums, out = sorted(int(x[4:]) for x in ids), []
+    i = 0
+    while i < len(nums):
+        j = i
+        while j + 1 < len(nums) and nums[j + 1] == nums[j] + 1:
+            j += 1
+        out.append(f'DIV-{nums[i]:04d}' + (f'..{nums[j]:04d}' if j > i else ''))
+        i = j + 1
+    return ', '.join(out)
+
+
+def switch_token(inv, tok):
+    """(class, Player value, error) for one `Switch:` name."""
+    if tok == 'lang':
+        return 'launcher', 'yes', None
+    m = re.fullmatch(r'ini:([a-z_]+(?:\.[a-z_0-9]+)?)=(\S*)', tok)
+    if m:
+        key = m.group(1)
+        if key == ledger_switches.PLAYER_INI:
+            return None, None, f"ini:{key}= is the player's switch itself; `Switch:` names what it takes"
+        if key not in inv.ini_keys and key.split('.')[0] + '.' not in inv.ini_keys:
+            return None, None, f'ini key {key!r} is not one the launcher reads (src/launcher/config.cpp ConfigLoad)'
+        return 'launcher', 'yes', None
+    m = re.fullmatch(r'env:(BOF3X_[A-Z0-9_]+)=(\S*)', tok)
+    if m:
+        name, value = m.groups()
+        if name == ledger_switches.PLAYER_SWITCH:
+            return None, None, f"{name} is the player's switch itself; `Switch:` names what it takes"
+        if name in ledger_switches.TOOLING_ENV:
+            return None, None, (f'{name} is tooling, not a switch: a BOF3X_ORIGINAL name is written bare '
+                                '(`SunderLoop`), and the fuzz and the trace switch no entry')
+        if name not in inv.env_names:
+            return None, None, f'nothing in src/ reads {name}'
+        key = f'env:{name}={value}' if f'env:{name}={value}' in inv.names else f'env:{name}'
+        return inv.cls(key), inv.player(key), None
+    if re.fullmatch(r'[A-Za-z_]\w*', tok):
+        cls = inv.cls(tok)
+        if cls is None:
+            return None, None, (f'nothing in src/ reads the name {tok!r} (not a PatchBytes, RetargetCall or '
+                                'Inject name)')
+        if cls == 'instrument':
+            return None, None, f'{tok} is a probe (instrument), which no name switches off'
+        return cls, inv.player(tok), None
+    return None, None, (f'{tok!r} is not a switch name: a BOF3X_ORIGINAL name, ini:<key>=<value>, '
+                        'env:<BOF3X_NAME>=<value> or lang')
+
+
+def field_lines(chunk, name):
+    """[value] for every `- **<name>:**` line of the entry: the text before an
+    optional " - <clause>"."""
+    return [m.group(1).split(' - ', 1)[0].strip()
+            for m in re.finditer(r'^- \*\*' + re.escape(name) + r':\*\*[ \t]*(.*)$', chunk, re.M)]
+
+
+def check_switch_fields(r, fielded, defined, inv, whole=True):
+    rank = ledger_switches.PLAYER_RANK
+    missing = {f: [] for f in SWITCH_FIELDS}
+    filled, clash_seen = 0, set()
+    for did, where, chunk in fielded:
+        vals = {}
+        for f in SWITCH_FIELDS:
+            lines = field_lines(chunk, f)
+            if (did, f) in FIELD_CLASH and lines:
+                clash_seen.add((did, f))
+                r.note(f'{did}: its "{f}:" line is not the switch field ({FIELD_CLASH[did, f]})')
+                lines = lines[1:]
+            if len(lines) > 1:
+                r.error(f'{where}: {did} has {len(lines)} "{f}:" lines, want one')
+            if not lines:
+                missing[f].append(did)
+                if STRICT_FIELDS:
+                    r.error(f'{where}: {did} has no "- **{f}:**" field')
+                continue
+            vals[f] = lines[0]
+        if len(vals) == len(SWITCH_FIELDS):
+            filled += 1
+        m = re.search(r'^- \*\*Tier:\*\*\s*(\w+)', chunk, re.M)
+        tier = m.group(1) if m else None
+
+        # Switch: none alone, or distinct names, each one src/ or the launcher reads.
+        sw_player, sw_none = None, False
+        if 'Switch' in vals:
+            toks = [t.strip().strip('`') for t in vals['Switch'].split(',')]
+            if toks == ['none']:
+                sw_none = True
+            elif 'none' in toks or '' in toks:
+                r.error(f'{where}: {did} Switch {vals["Switch"]!r}: `none` stands alone, and no name is empty')
+            else:
+                if len(set(toks)) != len(toks):
+                    r.error(f'{where}: {did} Switch names a switch twice')
+                worst = None
+                for t in toks:
+                    cls, pv, err = switch_token(inv, t)
+                    if err:
+                        r.error(f'{where}: {did} Switch: {err}')
+                        worst = None
+                        break
+                    if worst is None or rank[pv] > rank[worst]:
+                        worst = pv
+                sw_player = worst
+
+        if 'Default' in vals and vals['Default'] not in ('on', 'off'):
+            r.error(f'{where}: {did} Default {vals["Default"]!r} is not on or off')
+
+        # Player: the value the Switch names' classes give, or never.
+        if 'Player' in vals:
+            pv = vals['Player']
+            if pv not in PLAYER_VALUES:
+                r.error(f'{where}: {did} Player {pv!r} is not one of {", ".join(PLAYER_VALUES)}')
+            else:
+                if tier == 'Forced' and pv != 'never':
+                    r.error(f'{where}: {did} is Forced, which no preset can turn off: Player is never')
+                if sw_none and pv != 'never':
+                    r.error(f'{where}: {did} has Switch: none, so Player is never, not {pv}')
+                if sw_player and pv != 'never' and pv != sw_player:
+                    why = ("the player's build cannot reach every name of its Switch" if pv == 'yes'
+                           else 'that is not what its Switch names give')
+                    built = 'is' if inv.player_switch_built else 'is not yet'
+                    r.error(f'{where}: {did} Player {pv}: {why} - they give {sw_player} '
+                            f'(tools/ledger_switches.py; {ledger_switches.PLAYER_SWITCH} {built} read by src/)')
+                if vals.get('Default') == 'off' and pv != 'yes':
+                    r.note(f'{did}: Default off and Player {pv}: a player who cannot switch it on never gets it')
+
+        # Toward: none alone, or a list of distinct releases; no cascade.
+        if 'Toward' in vals:
+            toks = [t.strip() for t in vals['Toward'].split(',')]
+            if toks != ['none'] and (not set(toks) <= set(TOWARD_VALUES) or len(set(toks)) != len(toks)):
+                r.error(f'{where}: {did} Toward {vals["Toward"]!r}: none alone, or a list of distinct '
+                        f'{", ".join(TOWARD_VALUES)}')
+            m = re.search(r'^- \*\*Also in the PSX version\?\*\*\s*(\w+)', chunk, re.M)
+            if 'psx' in toks and m and m.group(1).lower() == 'yes':
+                r.note(f'{did}: Toward lists psx, and "Also in the PSX version?" starts Yes (the original '
+                       "behaviour is the PlayStation's too) - check")
+
+        # State: active, withdrawn, or superseded by an entry that exists.
+        if 'State' in vals:
+            st = vals['State']
+            m = re.fullmatch(r'superseded by (DIV-\d{4})', st)
+            if st not in ('active', 'withdrawn') and not m:
+                r.error(f'{where}: {did} State {st!r} is not active, withdrawn or superseded by DIV-NNNN')
+            elif m and (m.group(1) not in defined or m.group(1) == did):
+                r.error(f'{where}: {did} is superseded by {m.group(1)}, which is '
+                        + ('itself' if m.group(1) == did else 'not in the ledger'))
+            elif st == 'active' and re.search(r'\*\*Withdrawn\b|\bSUPERSEDED by\b', chunk):
+                r.note(f"{did}: State active, and the entry's prose says withdrawn or superseded - check")
+
+    for key in (FIELD_CLASH.keys() - clash_seen) if whole else ():
+        r.error(f'ledger_check.py FIELD_CLASH lists the "{key[1]}:" line of {key[0]}, which is gone - '
+                'remove the FIELD_CLASH line')
+    for f in SWITCH_FIELDS:
+        if missing[f] and not STRICT_FIELDS:
+            r.note(f'{len(missing[f])} entries have no "{f}:" field (the ledger-fields round\'s stage B '
+                   f'fills them): {id_ranges(missing[f])}')
+    r.note(f'{filled} of {len(fielded)} entries carry all five switch fields')
 
 
 def check_citations(r, defined):
@@ -179,6 +372,88 @@ def check_citations(r, defined):
     if quiet:
         r.note(f'{len(quiet)} entries not cited in src/ (data-only or tooling '
                f'divergences are expected here): {", ".join(quiet)}')
+
+
+# The worked examples as fixtures: DIV-0176 (a code name, cheap) and DIV-0183
+# (a detour name, costly) as the ledger has them must pass, and each case
+# below - one field line changed - must give the error it names (None: none).
+FIXTURE_IDS = ('DIV-0176', 'DIV-0183')
+FIXTURE_CASES = [
+    ('DIV-0176', {}, None),
+    ('DIV-0183', {}, None),
+    ('DIV-0176', {'Switch': 'NoSuchSwitchName'}, 'nothing in src/ reads the name'),
+    ('DIV-0176', {'Switch': 'SunderLoop, SunderLoop'}, 'names a switch twice'),
+    ('DIV-0176', {'Switch': 'none, SunderLoop'}, '`none` stands alone'),
+    ('DIV-0176', {'Switch': 'none'}, 'Switch: none, so Player is never'),
+    ('DIV-0176', {'Switch': 'none', 'Player': 'never'}, None),
+    ('DIV-0176', {'Switch': 'InputScript'}, 'a probe'),
+    ('DIV-0176', {'Switch': 'env:BOF3X_OFF=SunderLoop'}, "the player's switch itself"),
+    ('DIV-0176', {'Switch': 'ini:off=SunderLoop'}, "the player's switch itself"),
+    ('DIV-0176', {'Switch': 'env:BOF3X_SHADOW=sound'}, 'is tooling'),
+    ('DIV-0176', {'Switch': 'env:BOF3X_NO_SUCH_NAME=1'}, 'nothing in src/ reads BOF3X_NO_SUCH_NAME'),
+    ('DIV-0176', {'Switch': 'ini:no_such_key=1'}, 'not one the launcher reads'),
+    ('DIV-0176', {'Switch': 'sunder loop'}, 'is not a switch name'),
+    ('DIV-0176', {'Player': 'yes'}, "cannot reach every name"),
+    ('DIV-0176', {'Player': 'costly'}, 'not what its Switch names give'),
+    ('DIV-0176', {'Player': 'maybe'}, 'is not one of'),
+    ('DIV-0176', {'Switch': 'ini:wide=0', 'Player': 'yes'}, None),
+    ('DIV-0176', {'Switch': 'lang', 'Player': 'yes'}, None),
+    ('DIV-0176', {'Switch': 'lang, SunderLoop', 'Player': 'yes'}, 'they give cheap'),
+    ('DIV-0176', {'Switch': 'lang, SunderLoop', 'Player': 'cheap'}, None),
+    ('DIV-0176', {'Switch': 'env:BOF3X_MP3=original', 'Player': 'costly'}, None),
+    ('DIV-0176', {'Switch': 'env:BOF3X_MP3=original', 'Player': 'yes'}, 'cannot reach every name'),
+    ('DIV-0176', {'Tier': 'Forced'}, 'is Forced'),
+    ('DIV-0176', {'Tier': 'Forced', 'Player': 'never'}, None),
+    ('DIV-0176', {'Default': 'maybe'}, 'is not on or off'),
+    ('DIV-0176', {'Toward': 'psx, psp'}, None),
+    ('DIV-0176', {'Toward': 'psx, psx'}, 'list of distinct'),
+    ('DIV-0176', {'Toward': 'none, psx'}, 'list of distinct'),
+    ('DIV-0176', {'Toward': 'ps2'}, 'list of distinct'),
+    ('DIV-0176', {'State': 'superseded by DIV-0183'}, None),
+    ('DIV-0176', {'State': 'superseded by DIV-0176'}, 'which is itself'),
+    ('DIV-0176', {'State': 'superseded by <past the last>'}, 'not in the ledger'),
+    ('DIV-0176', {'State': 'retired'}, 'is not active, withdrawn'),
+    ('DIV-0176', {'+Switch': 'SunderLoop'}, 'want one'),
+    ('DIV-0183', {'Player': 'cheap'}, 'they give costly'),
+    ('DIV-0183', {'Player': 'never'}, None),
+]
+
+
+def fixture_chunk(chunk, changes):
+    for f, v in changes.items():
+        if f.startswith('+'):
+            chunk += f'\n- **{f[1:]}:** {v}'
+            continue
+        pat = re.compile(r'^- \*\*' + re.escape(f) + r':\*\*.*$', re.M)
+        if not pat.search(chunk):
+            raise KeyError(f)
+        chunk = pat.sub(lambda m: f'- **{f}:** {v}', chunk, count=1)
+    return chunk
+
+
+def selftest_fields(r, fielded, defined, inv):
+    have = {did: chunk for did, _, chunk in fielded if did in FIXTURE_IDS}
+    for did in FIXTURE_IDS:
+        if did not in have or any(not field_lines(have[did], f) for f in SWITCH_FIELDS):
+            r.error(f'{did} is the switch fields\' worked example and must carry all five '
+                    '(ledger_check.py FIXTURE_IDS)')
+            return
+    past = f'DIV-{max(int(x[4:]) for x in defined) + 1:04d}'
+    for did, changes, want in FIXTURE_CASES:
+        changes = {f: v.replace('<past the last>', past) for f, v in changes.items()}
+        t = Report()
+        try:
+            chunk = fixture_chunk(have[did], changes)
+        except KeyError as e:
+            r.error(f'self-test: {did} has no "{e.args[0]}:" line to change')
+            continue
+        check_switch_fields(t, [(did, f'self-test {did} {changes}', chunk)], defined, inv, whole=False)
+        if want is None and t.errors:
+            r.error(f'self-test: {did} with {changes} should pass, gave: {t.errors[0]}')
+        elif want is not None and not any(want in e for e in t.errors):
+            r.error(f'self-test: {did} with {changes} should give "{want}", gave '
+                    + (repr(t.errors[0]) if t.errors else 'no error'))
+    r.note(f'switch fields self-test: {len(FIXTURE_CASES)} cases on {", ".join(FIXTURE_IDS)}')
 
 
 # --- the ownership ledger ----------------------------------------------------
@@ -249,7 +524,10 @@ def main():
     a = ap.parse_args()
 
     r = Report()
-    defined = check_divergence(r)
+    inv = ledger_switches.inventory()
+    for p in inv.problems:
+        r.error(f'tools/ledger_switches.py: {p}')
+    defined = check_divergence(r, inv)
     check_citations(r, defined)
     check_ownership(r)
     check_stubs(r)

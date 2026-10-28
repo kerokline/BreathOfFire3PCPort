@@ -135,6 +135,95 @@ this doc ("LF0 as run").
 Done: `ledger_check.py` exits 0 on `main`'s ledger with the notes counted;
 the tool's TSV committed with its counts in this doc; the two examples in.
 
+### LF0 as run (2026-10-28, from `main` `fec0624c`)
+
+**What landed.** `DIVERGENCE.md`'s Entry format has the five lines and a
+section, "The switch fields", with the grammar and one example per value.
+`tools/ledger_switches.py` writes `analysis/ledger_switches.tsv` (a
+`.gitignore` exception beside `data_census.tsv`) and prints the counts below;
+`--check` (in `checks.yml`) fails when its readers stop finding a kind of
+name, or when the exe host's `RefuseHostedSwitches` and the launcher's
+`HostedOnlyAsked` disagree. `tools/ledger_check.py` reads the five fields:
+malformed is an error now, missing a counted note until `STRICT_FIELDS`
+(stage C). DIV-0176 (`Switch: SunderLoop`, `Player: cheap`) and DIV-0183
+(`Switch: Paralyzer_Start`, `Player: costly`) are filled; every run of the
+checker tests its field checks on those two with one line changed (37
+cases).
+
+**For the groups.**
+
+- The TSV has two kinds of row. `switch` rows: every name, its class, the
+  `Player:` value it gives alone, every `file:line` that reads it. `entry`
+  rows: the names the entry's `Reversible?` gives with their classes, the
+  best `Player:` value among them, and a note (tier, kind, a long prose
+  field, a prose that starts "No" but names a switch). The entry rows are a
+  starting point read from prose, not the answer: `Switch:` is the narrowest
+  set of names that turns the entry off, which the group picks.
+- `Switch:` forms: a bare `BOF3X_ORIGINAL` name, `ini:<key>=<value>`,
+  `env:<BOF3X_NAME>=<value>` (added here: section 1 has no form for an
+  environment name the launcher has no key for), `lang`, `none`. Section 1's
+  example `ini:layering=0` is not a key: the launcher has no `layering=`
+  (`ConfigLoad`, `src/launcher/config.cpp:164..279`), so DIV-0071's
+  would be `env:BOF3X_LAYERING=0` (LF2's call).
+- `Player:` must equal what the `Switch:` names give (the worst of them), or
+  be `never`; `never` for a Forced entry and for `Switch: none`.
+- The classes are six, not four: `env` (an environment name both hosts read
+  that the launcher does not set: `yes`) and `instrument` (the input
+  recorder's, the input script's, the state hash's and the WAV dump's
+  hooks on the input latch: no name switches them off) join `code`, `detour`, `launcher`, `hosted-only`.
+- DIV-0169 already has a `- **State:**` line, on the DLL state it keeps
+  (2026-10-23). The checker skips it (`FIELD_CLASH`) and fails once it is
+  renamed; LF4 renames it.
+
+**Section 0 again, by the tool**, on `fec0624c` (184 entries, DIV-0184
+added since the first cut):
+
+| What | First cut (`e84aaf6d`) | The tool |
+|---|---|---|
+| Tier: Sensible / Intent / Forced / Extension | 114 / 53 / 10 / 7 | 114 / 54 / 9 / 7 |
+| `Reversible?` naming `BOF3X_ORIGINAL=` | 118 entries | 119 entries (145 mentions) |
+| `Reversible?` naming `BOF3X_LANG` / the language alone | 37 mentions / 15 | 36 entries / 15 |
+| `Reversible?` that starts "No" | 6 entries | 4 (DIV-0044, 0082, 0095, 0141) |
+
+The Forced count: the first cut's 10 is 9 entries and the template's
+`Forced | Intent | ...` line, whose first word it read; its row sums to 184
+on 183 entries. Intent's one more is DIV-0184. The "No" count is by field
+start; DIV-0044 and DIV-0082 start "No switch of its own" and name a detour,
+so they are counted by that name below.
+
+| How the entry is switched today (by its narrowest switch) | First cut | The tool | `Player:` it gives |
+|---|---|---|---|
+| a name our code reads (`PatchBytes`, `RetargetCall`) | 63 | 55 | cheap |
+| a detour name only | 49 | 52 | costly |
+| a launcher / ini / environment key | 44 | 24 | yes |
+| the language alone | 15 | 15 | yes |
+| nothing: "No", "Not a switch", "Nothing to reverse" | 6 | 5 | never |
+| a code name and a detour name (alternatives) | 6 | 15 | the code name's |
+| no switch name the tool can read (build-time, data, files) | - | 18 | by hand |
+
+By the best switch each `Reversible?` names: **74 entries `yes`, 52
+`cheap`, 35 `costly`, 5 `never`, 18 by hand.** Ten `Reversible?` fields are
+longer than 600 characters (amendments, verification); their names include
+diagnostics, and the group reads them (DIV-0160's best is `BOF3X_STPVIEW`,
+a magenta debug view, `src/render/render_d3d11.cpp:859`; its switch is
+`StpBlend`). Three entries name a hosted-only switch (`BOF3X_MP3=original`:
+DIV-0091, 0093, 0094). No `Reversible?` names a switch `src/` does not read.
+
+Where the first cut differs, and why (it was not kept, so this is read from
+its own description, not re-run): **no `WantsOriginal` branch exists in
+ours** - `WantsOriginal` is called only inside `src/hook/detour.cpp`
+(`Inject`, `RetargetCall`, `PatchBytes`), so "a name our own code reads" is
+exactly the `PatchBytes` / `RetargetCall` names (83, wrappers such as
+`config_text.cpp`'s `Patch` traced); the tool puts an entry with both a
+code name and a detour name in the alternatives row (15) rather than in
+`code`; and the first cut's 44 "something else" held the 18 entries with no
+runtime switch at all (a re-encoded file, a build option, the importer's
+sources), which are now their own row. Names in all: 83 `code`, 10,088
+`detour` (every `Inject`), 4 `instrument`, 47 `launcher` (26 ini keys, 20
+environment names the launcher sets, `lang`), 200 `env`, 4 `hosted-only`.
+`BOF3X_OFF` is not read by `src/` yet; when it is (stage D), `cheap` becomes
+`yes` and the checker says so.
+
 ## 3. Stage B: the entries (four groups, in parallel, after LF0 merges)
 
 | Group | Entries | Note |
