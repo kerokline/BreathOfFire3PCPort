@@ -1,5 +1,9 @@
 # tools/reloc_census.py: every site in src/ that names the game image's address. Addresses and names only (docs/relocatable-image-round.md 2, RA1). Site rows: game, platform, hosted and launcher scopes, less accessor, accessor_addr, inject (counted in the file rows).
 #rec	file	line	class	detail	token	value	kind	scope	family	ctx	symbol	how	expr
+site	src/common/image_base.h	42	const_def	literal	kBase	0x400000	base	platform	common	module	-	-	inline constexpr std::uint32_t kBase = 0x400000;
+site	src/common/image_base.h	48	raw_literal	-	0x400000	0x400000	base	platform	common	-	-	aligned_8000	consteval std::uint32_t ImageBase() { return 0x400000; }
+site	src/common/image_base.h	51	ptr_sub	runtime_left	image::kBase	0x400000	base	platform	common	-	-	-	consteval std::uint32_t Img(std::uint32_t va) { return ImageBase() + (va - image::kBase); }
+site	src/common/image_base.h	82	ptr_sub	runtime_left	image::kBase	0x400000	base	platform	common	-	-	-	constexpr std::uint32_t Img(image::Va va) { return ImageBase() + (va.v - image::kBase); }
 site	src/game/area_cell_hook.cpp	20	const_def	literal	at::kPairs	0x662f28	data	game	area	at	Area_CellHooks	-	constexpr std::uint32_t kPairs = 0x662F28;
 site	src/game/area_data_reload.cpp	60	range_cmp	<	Area108_Model_addr	0x61e508	data	game	area	-	Area108_Model	-	bool InData(std::uint32_t at) { return at >= bof3::kGameDataVa && at < Area108_Model_addr; }
 site	src/game/area_data_reload.cpp	60	range_cmp	>=	bof3::kGameDataVa	-	data	game	area	-	-	-	bool InData(std::uint32_t at) { return at >= bof3::kGameDataVa && at < Area108_Model_addr; }
@@ -12617,7 +12621,7 @@ site	src/game/msgbox.cpp	1250	module_const	-	kState	0x7dee40	data	game	ui	access
 site	src/game/msgbox.cpp	1256	module_const	-	kAt	0x7dee50	data	game	ui	accessor	MenuWindows_ListText	include	SetPtr(kAt, at);
 site	src/game/msgbox.cpp	1257	module_const	-	kState	0x7dee40	data	game	ui	accessor	-	include	SetB(kState, 7);
 site	src/game/msgbox.cpp	1274	module_const	-	kFlags	0x7dee44	data	game	ui	accessor	-	include	if ((B(kFlags) & 0x10) == 0) {
-site	src/game/msgbox.cpp	1283	module_const	-	kSpeedTable	0x658e94	data	game	ui	cast	-	include	Msgbox_Delay = B(static_cast<std::uint32_t>(kSpeedTable + speed + row));
+site	src/game/msgbox.cpp	1283	module_const	-	kSpeedTable	0x658e94	data	game	ui	accessor	-	include	Msgbox_Delay = B(kSpeedTable + speed + row);
 site	src/game/msgbox.cpp	1284	module_const	-	kFlags	0x7dee44	data	game	ui	accessor	-	include	if (L(kFlags) & 0x100u) {
 site	src/game/msgbox.cpp	1286	module_const	-	kState	0x7dee40	data	game	ui	accessor	-	include	SetB(kState, 1);
 site	src/game/msgbox.cpp	1289	module_const	-	kState	0x7dee40	data	game	ui	accessor	-	include	SetB(kState, 0);
@@ -12691,24 +12695,24 @@ site	src/game/msgbox.cpp	1943	module_const	-	kFlags	0x7dee44	data	game	ui	access
 site	src/game/msgbox.cpp	2006	code_const	gen_func	bof3::addr::MsgBox_StatePrint	0x497b30	code	game	ui	call	MsgBox_StatePrint	-	ruby::g_armed = bof3::IsEnabled(bof3::addr::MsgBox_Step) && bof3::IsEnabled(bof3::addr::MsgBox_StatePrint);
 site	src/game/msgbox.cpp	2006	code_const	gen_func	bof3::addr::MsgBox_Step	0x497840	code	game	ui	call	MsgBox_Step	-	ruby::g_armed = bof3::IsEnabled(bof3::addr::MsgBox_Step) && bof3::IsEnabled(bof3::addr::MsgBox_StatePrint);
 site	src/game/msgbox.cpp	2033	code_const	gen_func	bof3::addr::MsgBox_StatePrint	0x497b30	code	game	ui	call	MsgBox_StatePrint	-	if (g_text_faster && !bof3::IsEnabled(bof3::addr::MsgBox_StatePrint))
-site	src/game/msgbox_callees.h	27	const_def	literal	kState	0x7dee40	data	game	ui	module	-	-	constexpr std::uint32_t kState = 0x7DEE40;
-site	src/game/msgbox_callees.h	31	const_def	literal	kFlags	0x7dee44	data	game	ui	module	-	-	constexpr std::uint32_t kFlags = 0x7DEE44;
-site	src/game/msgbox_callees.h	35	const_def	literal	kMessage	0x7dee48	data	game	ui	module	-	-	constexpr std::uint32_t kMessage = 0x7DEE48;
-site	src/game/msgbox_callees.h	37	const_def	literal	kBase	0x7dee4c	data	game	ui	module	Msgbox_Base	-	constexpr std::uint32_t kBase = 0x7DEE4C;
-site	src/game/msgbox_callees.h	38	const_def	literal	kAt	0x7dee50	data	game	ui	module	MenuWindows_ListText	-	constexpr std::uint32_t kAt = 0x7DEE50;
-site	src/game/msgbox_callees.h	39	const_def	literal	kResume	0x7dee54	data	game	ui	module	Msgbox_Resume	-	constexpr std::uint32_t kResume = 0x7DEE54;
-site	src/game/msgbox_callees.h	41	const_def	literal	kStepCount	0x7dee59	data	game	ui	module	Msgbox_StepCount	-	constexpr std::uint32_t kStepCount = 0x7DEE59;
-site	src/game/msgbox_callees.h	48	const_def	literal	kChoiceLast	0x7dee66	data	game	ui	module	MenuWindows_ListCount	-	constexpr std::uint32_t kChoiceLast = 0x7DEE66;
-site	src/game/msgbox_callees.h	50	const_def	literal	kEffectOff	0x7dee68	data	game	ui	module	-	-	constexpr std::uint32_t kEffectOff = 0x7DEE68;
-site	src/game/msgbox_callees.h	56	const_def	literal	kWindow0State	0x803163	data	game	ui	module	WindowRecords+0x3	-	constexpr std::uint32_t kWindow0State = 0x803163;
-site	src/game/msgbox_callees.h	63	const_def	literal	kScriptPool	0x803580	data	game	ui	module	-	-	constexpr std::uint32_t kScriptPool = 0x803580;
-site	src/game/msgbox_callees.h	64	const_def	literal	kPoolSelector	0x803584	data	game	ui	module	-	-	constexpr std::uint32_t kPoolSelector = 0x803584;
-site	src/game/msgbox_callees.h	65	const_def	literal	kTextRecords	0x904cdf	data	game	ui	module	-	-	constexpr std::uint32_t kTextRecords = 0x904CDF;
-site	src/game/msgbox_callees.h	66	const_def	literal	kCharRecords	0x903a6f	data	game	ui	module	-	-	constexpr std::uint32_t kCharRecords = 0x903A6F;
-site	src/game/msgbox_callees.h	68	const_def	literal	kNameMap	0x66972c	data	game	ui	module	Character_IndexById	-	constexpr std::uint32_t kNameMap = 0x66972C;
-site	src/game/msgbox_callees.h	69	const_def	literal	kSpeedTable	0x658e94	data	game	ui	module	-	-	constexpr std::uint32_t kSpeedTable = 0x658E94;
-site	src/game/msgbox_callees.h	70	const_def	literal	kEffectTable	0x658e98	data	game	ui	module	-	-	constexpr std::uint32_t kEffectTable = 0x658E98;
-site	src/game/msgbox_callees.h	72	const_def	literal	kClipTable	0x658f00	data	game	ui	module	-	-	constexpr std::uint32_t kClipTable = 0x658F00;
+site	src/game/msgbox_callees.h	27	const_def	literal	kState	0x7dee40	data	game	ui	module	-	-	constexpr ::bof3::image::Va kState{0x7DEE40};
+site	src/game/msgbox_callees.h	31	const_def	literal	kFlags	0x7dee44	data	game	ui	module	-	-	constexpr ::bof3::image::Va kFlags{0x7DEE44};
+site	src/game/msgbox_callees.h	35	const_def	literal	kMessage	0x7dee48	data	game	ui	module	-	-	constexpr ::bof3::image::Va kMessage{0x7DEE48};
+site	src/game/msgbox_callees.h	37	const_def	literal	kBase	0x7dee4c	data	game	ui	module	Msgbox_Base	-	constexpr ::bof3::image::Va kBase{0x7DEE4C};
+site	src/game/msgbox_callees.h	38	const_def	literal	kAt	0x7dee50	data	game	ui	module	MenuWindows_ListText	-	constexpr ::bof3::image::Va kAt{0x7DEE50};
+site	src/game/msgbox_callees.h	39	const_def	literal	kResume	0x7dee54	data	game	ui	module	Msgbox_Resume	-	constexpr ::bof3::image::Va kResume{0x7DEE54};
+site	src/game/msgbox_callees.h	41	const_def	literal	kStepCount	0x7dee59	data	game	ui	module	Msgbox_StepCount	-	constexpr ::bof3::image::Va kStepCount{0x7DEE59};
+site	src/game/msgbox_callees.h	48	const_def	literal	kChoiceLast	0x7dee66	data	game	ui	module	MenuWindows_ListCount	-	constexpr ::bof3::image::Va kChoiceLast{0x7DEE66};
+site	src/game/msgbox_callees.h	50	const_def	literal	kEffectOff	0x7dee68	data	game	ui	module	-	-	constexpr ::bof3::image::Va kEffectOff{0x7DEE68};
+site	src/game/msgbox_callees.h	56	const_def	literal	kWindow0State	0x803163	data	game	ui	module	WindowRecords+0x3	-	constexpr ::bof3::image::Va kWindow0State{0x803163};
+site	src/game/msgbox_callees.h	63	const_def	literal	kScriptPool	0x803580	data	game	ui	module	-	-	constexpr ::bof3::image::Va kScriptPool{0x803580};
+site	src/game/msgbox_callees.h	64	const_def	literal	kPoolSelector	0x803584	data	game	ui	module	-	-	constexpr ::bof3::image::Va kPoolSelector{0x803584};
+site	src/game/msgbox_callees.h	65	const_def	literal	kTextRecords	0x904cdf	data	game	ui	module	-	-	constexpr ::bof3::image::Va kTextRecords{0x904CDF};
+site	src/game/msgbox_callees.h	66	const_def	literal	kCharRecords	0x903a6f	data	game	ui	module	-	-	constexpr ::bof3::image::Va kCharRecords{0x903A6F};
+site	src/game/msgbox_callees.h	68	const_def	literal	kNameMap	0x66972c	data	game	ui	module	Character_IndexById	-	constexpr ::bof3::image::Va kNameMap{0x66972C};
+site	src/game/msgbox_callees.h	69	const_def	literal	kSpeedTable	0x658e94	data	game	ui	module	-	-	constexpr ::bof3::image::Va kSpeedTable{0x658E94};
+site	src/game/msgbox_callees.h	70	const_def	literal	kEffectTable	0x658e98	data	game	ui	module	-	-	constexpr ::bof3::image::Va kEffectTable{0x658E98};
+site	src/game/msgbox_callees.h	72	const_def	literal	kClipTable	0x658f00	data	game	ui	module	-	-	constexpr ::bof3::image::Va kClipTable{0x658F00};
 site	src/game/msgbox_callees.h	75	const_def	derived	kRetOnly	0x437cc0	code	game	ui	module	BareRet	-	constexpr std::uint32_t kRetOnly = bof3::addr::BareRet;
 site	src/game/msgbox_callees.h	76	const_def	derived	kEffectDraw	0x4987e0	code	game	ui	module	MsgBox_EffectDraw	-	constexpr std::uint32_t kEffectDraw = bof3::addr::MsgBox_EffectDraw;
 site	src/game/msgbox_callees.h	77	const_def	derived	kPageArrow	0x498d20	code	game	ui	module	MsgBox_DrawArrow	-	constexpr std::uint32_t kPageArrow = bof3::addr::MsgBox_DrawArrow;
@@ -21091,6 +21095,9 @@ helper	src/hook/statehash.cpp	187	Fold	src/hook/statehash.cpp:174	platform	retur
 helper	src/hook/statehash.cpp	320	Fold	src/hook/statehash.cpp:174	platform	if (!Fold(folds, nfolds, w, &c)) continue;
 helper	src/hook/statehash.cpp	529	InImage	src/hook/statehash.cpp:187	platform	if (InImage(w)) g_sites.push_back(off);
 #rec	file	scope	family	class	n
+file	src/common/image_base.h	platform	common	const_def_literal	1
+file	src/common/image_base.h	platform	common	ptr_sub	2
+file	src/common/image_base.h	platform	common	raw_literal	1
 file	src/game/area_011.cpp	game	area	accessor	8
 file	src/game/area_011.cpp	game	area	accessor_addr	5
 file	src/game/area_011.cpp	game	area	inject	3
@@ -24160,7 +24167,7 @@ file	src/game/msgbox_fuzz.cpp	fuzz	ui	addr_eq	52
 file	src/game/msgbox_fuzz.cpp	fuzz	ui	code_literal	203
 file	src/game/msgbox_fuzz.cpp	fuzz	ui	const_def_literal	1
 file	src/game/msgbox_fuzz.cpp	fuzz	ui	module_const	37
-file	src/game/msgbox_fuzz.cpp	fuzz	ui	ptr_sub	2
+file	src/game/msgbox_fuzz.cpp	fuzz	ui	ptr_sub	3
 file	src/game/msgbox_fuzz.cpp	fuzz	ui	raw_literal	3
 file	src/game/music_seq.cpp	game	engine	accessor	67
 file	src/game/music_seq.cpp	game	engine	addr_eq	1
@@ -25385,11 +25392,11 @@ file	src/render/gfx_snapshot.cpp	platform	render	accessor	30
 file	src/render/gfx_snapshot.cpp	platform	render	addr_eq	1
 file	src/render/gfx_snapshot.cpp	platform	render	raw_literal	21
 file	src/render/render_shim.cpp	platform	render	accessor	1
-#count sites	124306
+#count sites	124311
 #count sites_game	55874
-#count sites_platform	568
+#count sites_platform	572
 #count sites_hosted	290
-#count sites_fuzz	67572
+#count sites_fuzz	67573
 #count sites_launcher	2
 #count class_accessor	25952
 #count class_accessor_game	22356
@@ -25421,9 +25428,9 @@ file	src/render/render_shim.cpp	platform	render	accessor	1
 #count class_code_const_hosted	82
 #count class_code_const_fuzz	5395
 #count class_code_const_launcher	0
-#count class_raw_literal	4105
+#count class_raw_literal	4106
 #count class_raw_literal_game	1837
-#count class_raw_literal_platform	125
+#count class_raw_literal_platform	126
 #count class_raw_literal_hosted	0
 #count class_raw_literal_fuzz	2143
 #count class_raw_literal_launcher	0
@@ -25463,15 +25470,15 @@ file	src/render/render_shim.cpp	platform	render	accessor	1
 #count class_addr_eq_hosted	172
 #count class_addr_eq_fuzz	1865
 #count class_addr_eq_launcher	0
-#count class_ptr_sub	143
+#count class_ptr_sub	146
 #count class_ptr_sub_game	47
-#count class_ptr_sub_platform	22
+#count class_ptr_sub_platform	24
 #count class_ptr_sub_hosted	0
-#count class_ptr_sub_fuzz	74
+#count class_ptr_sub_fuzz	75
 #count class_ptr_sub_launcher	0
-#count class_const_def	4300
+#count class_const_def	4301
 #count class_const_def_game	3934
-#count class_const_def_platform	24
+#count class_const_def_platform	25
 #count class_const_def_hosted	0
 #count class_const_def_fuzz	342
 #count class_const_def_launcher	0
@@ -25487,7 +25494,7 @@ file	src/render/render_shim.cpp	platform	render	accessor	1
 #count class_image_meta_hosted	0
 #count class_image_meta_fuzz	0
 #count class_image_meta_launcher	0
-#count const_def_literal	3281
+#count const_def_literal	3282
 #count const_def_derived	1019
 #count value_literal	28
 #count base_offset	0
@@ -25501,7 +25508,7 @@ file	src/render/render_shim.cpp	platform	render	accessor	1
 #count raw_literal_ctx_subscript	0
 #count raw_literal_ctx_template	0
 #count raw_literal_ctx_static_assert	0
-#count raw_literal_ctx_-	93
+#count raw_literal_ctx_-	94
 #count code_literal_ctx_accessor	2
 #count code_literal_ctx_cast	3
 #count code_literal_ctx_call	221
@@ -25516,23 +25523,23 @@ file	src/render/render_shim.cpp	platform	render	accessor	1
 #count constexpr_context_refs_nonfuzz	181
 #count ptr_sub_two_constants	68
 #count range_helper_calls	18
-#count files_with_sites	817
-#count files_with_sites_nonfuzz	551
+#count files_with_sites	818
+#count files_with_sites_nonfuzz	552
 #count gate_asm_operand	14
 #count gate_asm_text	29
 #count gate_abs_call	1340
 #count gate_range_cmp	164
 #count gate_addr_eq	87
-#count gate_ptr_sub	69
-#count gate_const_def_literal	2992
-#count gate_raw_literal	1962
+#count gate_ptr_sub	71
+#count gate_const_def_literal	2993
+#count gate_raw_literal	1963
 #count gate_code_literal	928
 #gate asm_operand	14
 #gate asm_text	29
 #gate abs_call	1340
 #gate range_cmp	164
 #gate addr_eq	87
-#gate ptr_sub	69
-#gate const_def_literal	2992
-#gate raw_literal	1962
+#gate ptr_sub	71
+#gate const_def_literal	2993
+#gate raw_literal	1963
 #gate code_literal	928
