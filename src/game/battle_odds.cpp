@@ -55,6 +55,7 @@ namespace {
 using namespace battle_odds;
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
 U Word(const unsigned char* p) {
     std::uint16_t v;
     std::memcpy(&v, p, sizeof v);

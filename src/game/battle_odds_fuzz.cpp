@@ -52,6 +52,7 @@ using d3d_fuzz::Next;
 using d3d_fuzz::Record;
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
 U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U GetLong(const unsigned char* p) {
     U v;
@@ -122,15 +123,15 @@ bool FirstDifference(const Region* r, int n, const State& a, const State& b, U* 
 
 // Every game region any test touches, saved once and put back at the end.
 const Region g_all[] = {
-    {BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60}, {BattleMisc_BannerKinds_addr, 1}, {kScratch, 1},       {WindowRecords_addr, kWindowBytes},
-    {BattleDamage_Result_addr, 4},        {kTarget, 1},     {kActing, 4},      {BattleOdds_ActorObject_addr, 4},   {kFlagTarget, 1},
-    {kRoundFlags, 4},    {kSprite, 4},     {kTints, kTintBytes},
+    {BattleMisc_BannerCurrent_addr, 4}, {kBanners.v, 0x60}, {BattleMisc_BannerKinds_addr, 1}, {kScratch, 1},       {WindowRecords_addr, kWindowBytes},
+    {BattleDamage_Result_addr, 4},        {kTarget.v, 1},     {kActing.v, 4},      {BattleOdds_ActorObject_addr, 4},   {kFlagTarget.v, 1},
+    {kRoundFlags.v, 4},    {kSprite, 4},     {kTints, kTintBytes},
 };
 
 // Every region a function could write, the game's and the fuzz's.
 const Region g_writes[] = {
-    {BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60},  {BattleMisc_BannerKinds_addr, 1}, {kScratch, 1},
-    {WindowRecords_addr, kWindowBytes}, {BattleDamage_Result_addr, 4}, {kRoundFlags, 4},  {BattleOdds_ActorObject_addr, 4},
+    {BattleMisc_BannerCurrent_addr, 4}, {kBanners.v, 0x60},  {BattleMisc_BannerKinds_addr, 1}, {kScratch, 1},
+    {WindowRecords_addr, kWindowBytes}, {BattleDamage_Result_addr, 4}, {kRoundFlags.v, 4},  {BattleOdds_ActorObject_addr, 4},
     {kSprite, 4},        {kTints, kTintBytes}, {0, sizeof g_objects}, {0, sizeof g_results},
 };
 Region g_regions[sizeof g_writes / sizeof g_writes[0]];
@@ -166,7 +167,7 @@ U __cdecl StubNoneOfKind(U kind) {
     Record(1, kind, GetLong(At(BattleMisc_BannerCurrent_addr)), At(BattleMisc_BannerKinds_addr)[0]);
     const U h = Mix(1);
     switch ((h >> 4) % 5) {
-    case 0: PutLong(At(BattleMisc_BannerCurrent_addr), kBanners + ((h >> 8) % 8) * 0xC); break;
+    case 0: PutLong(At(BattleMisc_BannerCurrent_addr), ::bof3::Img(kBanners) + ((h >> 8) % 8) * 0xC); break;
     case 1: At(BattleMisc_BannerKinds_addr)[0] = static_cast<unsigned char>(h >> 12); break;
     case 2: At(WindowRecords_addr + 3)[0] = static_cast<unsigned char>(h >> 16); At(WindowRecords_addr + 4 * 0x24 + 3)[0] = static_cast<unsigned char>(h >> 20); break;
     default: break;
@@ -327,11 +328,11 @@ bool Called(const d3d_fuzz::Log& log, U what) {
 
 // The pool, the current entry one of its eight; its timer at the edges.
 void RandomBanner() {
-    FillRandom(kBanners, 0x60);
+    FillRandom(::bof3::Img(kBanners), 0x60);
     FillRandom(WindowRecords_addr, kWindowBytes);
     At(BattleMisc_BannerKinds_addr)[0] = static_cast<unsigned char>(Next() % 2 ? Pick({0, 1, 2, 3, 4, 0xFF}) : Next());
     At(kScratch)[0] = static_cast<unsigned char>(Next());
-    const U entry = kBanners + (Next() % 8) * 0xC;
+    const U entry = ::bof3::Img(kBanners) + (Next() % 8) * 0xC;
     PutLong(At(BattleMisc_BannerCurrent_addr), entry);
     At(entry + 1)[0] = static_cast<unsigned char>(Next() % 3 ? Pick({1, 2, 0, 3, 4}) : Next());
     PutWord(At(entry + 8), Next() % 4 ? Pick({0, 1, 1, 1, 2, 0xFF, 0x100, 0xFE, 0x1FF, 0xFFFF, 0x8000}) : Next());
