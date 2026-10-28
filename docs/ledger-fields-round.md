@@ -628,11 +628,17 @@ owner's calls of 2026-10-27/28 read literally, recorded verbatim:
 - *As shipped*: every such entry off.
 - *Repaired*: every such Sensible and Extension entry off; Intent and Forced
   stay.
-- *PlayStation*: every such entry whose `Toward:` does not list `psx` off
-  (**the coordinator's reading** of "every `Toward: psx` on, every `Toward: pc`
-  off": no entry lists `pc`, so the literal rule turns nothing off; this
-  reading turns off what no PlayStation release had - `none` and `psp`-only
-  - and leaves every `psx` entry on.)
+- *PlayStation* (**the owner's call of 2026-10-28**, replacing the
+  coordinator's reading): every such entry whose `Toward:` lists a release
+  and does not list `psx` off - today the `psp`-only ones, `pc` when one
+  exists. `Toward: none` means the entry is related to no release, a generic
+  repair rather than a versioned one, so every `none` entry, like every
+  `psx` entry, stays at its default. *Also available* stays: the
+  `Default: off` entries that list `psx`. (The reading it replaced turned
+  off every entry that does not list `psx`, `none` included; it was dropped
+  because `none` mixes shared defects, console-less platform mechanics and
+  unmeasured cases, so it turned back on two crash fixes and the port's
+  window handling - the flag below.)
 - Language rule (section 4 "Languages as run", rule 2): an entry whose
   `Languages:` is not `any` is governed by the language pick: skip it when
   the chosen language is not listed, and never apply a `Switch: lang` entry's
@@ -664,33 +670,26 @@ that wants every entry off (As shipped) accounts for all 184.
 | `original` | Recommended | 0 | 0 | 0 | 0 | 0 | 0 / 0 / 0 |
 | `original` | As shipped | 74 | 46 | 0 | 23 | 0 | 25 / 14 / 2 |
 | `original` | Repaired | 32 | 45 | 0 | 14 | 0 | 14 / 14 / 2 |
-| `original` | PlayStation | 28 | 15 | 0 | 18 | 1 | 18 / 13 / 2 |
+| `original` | PlayStation | 1 | 0 | 0 | 0 | 1 | 4 / 8 / 0 |
 | `en-US` | Recommended | 0 | 0 | 0 | 0 | 0 | 0 / 0 / 0 |
 | `en-US` | As shipped | 85 | 8 | 20 | 28 | 0 | 26 / 15 / 2 |
 | `en-US` | Repaired | 43 | 8 | 20 | 18 | 0 | 15 / 15 / 2 |
-| `en-US` | PlayStation | 34 | 4 | 2 | 19 | 1 | 19 / 14 / 2 |
+| `en-US` | PlayStation | 1 | 0 | 0 | 0 | 1 | 4 / 8 / 0 |
 
 Of the *off* rows, the `cheap` ones (a player's only once `BOF3X_OFF` is
-read): `original` 56 / 24 / 18 (As shipped / Repaired / PlayStation),
-`en-US` 67 / 35 / 24. PlayStation's one *also available* is DIV-0012, the
-point filter.
+read): `original` 56 / 24 / 0 (As shipped / Repaired / PlayStation),
+`en-US` 67 / 35 / 0. PlayStation's one *off* is DIV-0123 (`psp` alone,
+`env:BOF3X_WIDE_STAGING=0`), the same under every language; its one *also
+available* is DIV-0012, the point filter.
 
-**For the owner, from D1** (no number assigned): the PlayStation reading
-turns off every active `Toward: none` entry a player can switch, and `none`
-holds three things the `Toward:` clauses tell apart in prose only:
-behaviour no release had, a defect every release shares among them
-(DIV-0121's edge hold, "the PlayStation has the same unbounded lookup";
-DIV-0153's wrap), where turning it off is faithful; platform mechanics a
-console has nothing to match (DIV-0022's clock, 0033's background running,
-0036's integer scale, which applies `display=windowed`, 0062, 0078, 0089's
-cache, 0101's strict image, 0146's save list), where turning it off gives the
-PC port's behaviour, not the PlayStation's; and behaviour not measured
-(stage B's "for want of a read": DIV-0071, 0144 and 0180 are turned off
-under every language and DIV-0027, 0058, 0059 under the Latin four,
-DIV-0180 being a crash fix whose PlayStation case is "reasoned, not
-measured"; DIV-0004 and 0127 are *cannot*, DIV-0063 `never`). Whether the PlayStation preset
-should skip the "not applicable" kind, which the field cannot say today, is
-the owner's call before D2 builds the box.
+**For the owner, from D1, answered 2026-10-28.** D1 flagged that the
+coordinator's PlayStation reading turned off every switchable `Toward: none`
+entry, and that `none` held a defect every release shares (DIV-0121,
+0153), platform mechanics a console has nothing to match (DIV-0022, 0033,
+0036, which applies `display=windowed`, 0062, 0078, 0089, 0101, 0146) and
+behaviour not measured (DIV-0071, 0144, 0180 - a crash fix - and, under the
+Latin four, 0027, 0058, 0059). The owner's answer: `none` is related to no
+release, so the PlayStation preset leaves it alone (the rule above).
 
 ## 6. For the owner
 

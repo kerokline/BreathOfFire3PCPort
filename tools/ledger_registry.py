@@ -305,7 +305,10 @@ def wants_off(preset, r):
     if preset == 'repaired':
         return r['tier'] in ('Sensible', 'Extension')
     if preset == 'playstation':
-        return 'psx' not in r['toward']
+        # The owner's call of 2026-10-28: `Toward: none` is a generic repair,
+        # tied to no release, and stays; only an entry that names a release
+        # and not the PlayStation (`psp` alone, `pc`) is turned off.
+        return bool(r['toward']) and 'psx' not in r['toward']
     raise ValueError(preset)
 
 
