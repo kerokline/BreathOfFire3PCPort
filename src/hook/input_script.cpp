@@ -78,7 +78,33 @@
 //                           field actors tagged with the fight's encounter
 //                           row's slots, so the scene's actors must already
 //                           stand in the field (docs/boss-sweep.md). Likewise
-//                           a harness's step.
+//                           a harness's step. With no such actor in the field
+//                           (Sprite_Objects 0..29, type +6 of 7) the step
+//                           refuses: logged, and the recipe FAILS, since the
+//                           fight would have no enemy (an empty fight pressed
+//                           into crashes, boss-sweep.md 5.1); `battle ID any`
+//                           stages it anyway.
+//   place X Z ID            Party_PlaceForBattle(X, Z, ID) through the
+//                           original's entry (X, Z 16.16): the members stood
+//                           at the event battle ID's formation round (X, Z),
+//                           as a scene's code does before its battle call.
+//                           Likewise a harness's step.
+//   view X Z                the camera's focus Field_Kind2X / Z = X, Z (16.16)
+//                           and Field_ViewReset through the original's entry:
+//                           the view rebuilt there at once, as a scene does
+//                           before a battle it frames (scena_sc13.cpp's run
+//                           at step 0x19). Likewise a harness's step.
+//   watch ADDR LEN NAME [shot]  from this frame on, LEN bytes (1..64) at ADDR
+//                           compared at every new frame, each change logged
+//                           (`input watch NAME OLD -> NEW`); `shot` also writes
+//                           that frame to BOF3X_SHOT_DIR as w<FRAME>.bmp, with
+//                           every frame drawn while such a watch is on. Up to
+//                           64 watches; `watch off` ends them all. Reads only,
+//                           no frame of its own.
+//   every N                 from here on a frame every N recipe frames written
+//                           to BOF3X_SHOT_DIR as t<FRAME>.bmp, as
+//                           BOF3X_SHOT_EVERY does from the start (and in its
+//                           place); `every 0` stops. No frame of its own.
 //   hold KEY N              a keyboard key (f1..f12, escape, enter, space, or a
 //                           virtual-key number) held N frames: WM_KEYDOWN posted
 //                           to the game window as the step starts, WM_KEYUP as
@@ -123,7 +149,7 @@ namespace bof3 {
 void RandCountFrame();   // below, outside the anonymous namespace
 namespace {
 
-enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Poke, Music, Mark, Key, Quit, End, Links, Door, Goto, Battle };
+enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Poke, Music, Mark, Key, Quit, End, Links, Door, Goto, Battle, Place, View, Watch, Every };
 enum class Op { Eq, Ne, Any, None };
 
 struct Step {
@@ -403,10 +429,44 @@ void Load(const char* path) {
             for (int k = 0; k < 4; ++k) st.arg[k] = Number(line, t[k + 1]);
             if (st.arg[0] > 0xFFFF || st.arg[3] > 0xFF) ParseError(line, "goto AREA (a word) X Z FLAGS (a byte), got", s);
         } else if (w == "battle") {
-            need(2, 2);
+            need(2, 3);
             st.kind = Kind::Battle;
             st.arg[0] = Number(line, t[1]);
             if (st.arg[0] > 0xFF) ParseError(line, "battle ID (a byte), got", s);
+            if (t.size() == 3) {
+                if (t[2] != "any") ParseError(line, "battle ID [any], got", t[2]);
+                st.arg[1] = 1;
+            }
+        } else if (w == "place") {
+            need(4, 4);
+            st.kind = Kind::Place;
+            for (int k = 0; k < 3; ++k) st.arg[k] = Number(line, t[k + 1]);
+            if (st.arg[2] > 0xFF) ParseError(line, "place X Z ID (a byte), got", s);
+        } else if (w == "view") {
+            need(3, 3);
+            st.kind = Kind::View;
+            st.arg[0] = Number(line, t[1]);
+            st.arg[1] = Number(line, t[2]);
+        } else if (w == "every") {
+            need(2, 2);
+            st.kind = Kind::Every;
+            st.n = Number(line, t[1]);
+            if (st.n > 1000000) ParseError(line, "every N (0..1000000), got", t[1]);
+        } else if (w == "watch") {
+            st.kind = Kind::Watch;
+            if (t.size() == 2 && t[1] == "off") {
+                st.n = 0;
+            } else {
+                if (t.size() != 4 && t.size() != 5) ParseError(line, "watch ADDR LEN NAME [shot] or watch off, got", s);
+                st.addr = Number(line, t[1]);
+                st.n = Number(line, t[2]);
+                if (st.n == 0 || st.n > 64) ParseError(line, "watch LEN is 1..64, got", t[2]);
+                st.text = t[3];
+                if (t.size() == 5) {
+                    if (t[4] != "shot") ParseError(line, "watch ADDR LEN NAME [shot], got", t[4]);
+                    st.value = 1;
+                }
+            }
         } else if (w == "quit") {
             if (t.size() != 1 && t.size() != 3) ParseError(line, "quit [timeout N], got", s);
             st.kind = Kind::Quit;
@@ -491,6 +551,78 @@ void SaveTimed() {
     if (g_shot_dir.empty() || g_every == 0 || g_frame % g_every != 0) return;
     char name[16];
     std::snprintf(name, sizeof name, "t%06u", g_frame);
+    std::wstring path = g_shot_dir + L"\\";
+    for (const char* c = name; *c; ++c) path += static_cast<wchar_t>(*c);
+    path += L".bmp";
+    const bool clock = GameClock_Pause();
+    const bool ok = render::SaveFrame(path.c_str());
+    if (clock) GameClock_Resume();
+    Log("input       frame %s %s mode %u area %u (Frame_Counter %u)", name, ok ? "saved" : "NOT saved",
+        (unsigned)Game_Mode, (unsigned)Game_AreaNumber, g_last_frame);
+}
+
+// `watch ADDR LEN NAME [shot]`: a range compared at every new frame, each
+// change logged with the bytes before and after; a shot watch writes the
+// frame presented before this latch - the first picture drawn after the
+// change - as w<FRAME>.bmp, once a frame however many ranges changed. Reads
+// only, like `peek`: instrumentation, no ledger entry.
+constexpr unsigned kSpriteObjects = 30;               // Sprite_Objects' records (BossActor_Find's walk)
+constexpr std::uint32_t kSpriteObjectStride = 0xA4;
+struct Watch {
+    std::uint32_t addr;
+    unsigned len;
+    bool shot;
+    std::string name;
+    unsigned char last[64];
+};
+std::vector<Watch> g_watches;
+bool g_watch_shots = false;
+
+bool Readable(std::uint32_t a, std::uint32_t n);
+
+void WatchRead(std::uint32_t addr, unsigned len, unsigned char* out) {
+    if (!Readable(addr, len)) { std::memset(out, 0xEE, len); return; }
+    std::memcpy(out, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(addr)), len);
+}
+
+std::string WatchHex(const unsigned char* b, unsigned len) {
+    std::string h;
+    char c[4];
+    for (unsigned i = 0; i < len; ++i) { std::snprintf(c, sizeof c, "%02X", b[i]); h += c; }
+    return h;
+}
+
+void WatchStep(const Step& s) {
+    if (s.n == 0) {
+        Log("input       watch off (%u ranges); recipe frame %u", (unsigned)g_watches.size(), g_frame);
+        g_watches.clear();
+        g_watch_shots = false;
+        return;
+    }
+    if (g_watches.size() >= 64) Fatal("BOF3X_INPUT line %d: more than 64 watches", s.line);
+    Watch w{s.addr, s.n, s.value != 0, s.text, {}};
+    WatchRead(w.addr, w.len, w.last);
+    Log("input       watch %s 0x%08X len %u%s = %s; recipe frame %u", w.name.c_str(), (unsigned)w.addr, w.len,
+        w.shot ? " shot" : "", WatchHex(w.last, w.len).c_str(), g_frame);
+    g_watch_shots = g_watch_shots || w.shot;
+    g_watches.push_back(w);
+}
+
+void WatchTick() {
+    if (g_watches.empty()) return;
+    bool shoot = false;
+    for (Watch& w : g_watches) {
+        unsigned char now[64];
+        WatchRead(w.addr, w.len, now);
+        if (std::memcmp(now, w.last, w.len) == 0) continue;
+        Log("input       watch %s %s -> %s recipe frame %u", w.name.c_str(), WatchHex(w.last, w.len).c_str(),
+            WatchHex(now, w.len).c_str(), g_frame);
+        std::memcpy(w.last, now, w.len);
+        shoot = shoot || w.shot;
+    }
+    if (!shoot || g_shot_dir.empty()) return;
+    char name[16];
+    std::snprintf(name, sizeof name, "w%06u", g_frame);
     std::wstring path = g_shot_dir + L"\\";
     for (const char* c = name; *c; ++c) path += static_cast<wchar_t>(*c);
     path += L".bmp";
@@ -730,11 +862,58 @@ unsigned short NextWord() {
             LogFlush();
             Advance();
             continue;
-        case Kind::Battle:
+        case Kind::Battle: {
+            // The fight's enemies are the field actors tagged with its row's
+            // slots (BossActor_Find: Sprite_Objects type +6 of 7, the slot at
+            // +0x9E); with none, the set-up leaves an empty fight.
+            std::string tags;
+            for (unsigned i = 0; i < kSpriteObjects; ++i) {
+                const std::uint32_t r = Sprite_Objects_addr + i * kSpriteObjectStride;
+                if (Read(r + 6, 1) != 7) continue;
+                char b[32];
+                std::snprintf(b, sizeof b, " %u:slot%u", i, (unsigned)Read(r + 0x9E, 1));
+                tags += b;
+            }
+            if (tags.empty() && s.arg[1] == 0) {
+                Log("input       line %d: battle id %u refused: no tagged actor (type 7) in the field of area %u; recipe frame %u",
+                    s.line, (unsigned)s.arg[0], (unsigned)Game_AreaNumber, g_frame);
+                Finish("FAILED");
+                return 0;
+            }
             // Through the original's entry, as the scenario code calls it.
-            Log("input       battle id %u in area %u; recipe frame %u", (unsigned)s.arg[0], (unsigned)Game_AreaNumber, g_frame);
+            Log("input       battle id %u in area %u; tagged actors%s; recipe frame %u", (unsigned)s.arg[0],
+                (unsigned)Game_AreaNumber, tags.empty() ? " none" : tags.c_str(), g_frame);
             bof3::orig::Field_StartEventBattle(s.arg[0]);
             LogFlush();
+            Advance();
+            continue;
+        }
+        case Kind::Place:
+            // Through the original's entry, as a scene calls it before its battle.
+            Log("input       place x 0x%X z 0x%X for battle %u in area %u; recipe frame %u", (unsigned)s.arg[0],
+                (unsigned)s.arg[1], (unsigned)s.arg[2], (unsigned)Game_AreaNumber, g_frame);
+            bof3::orig::Party_PlaceForBattle(static_cast<int>(s.arg[0]), static_cast<int>(s.arg[1]), s.arg[2]);
+            LogFlush();
+            Advance();
+            continue;
+        case Kind::View:
+            // As a scene frames its battle: the focus, then the view reset through the original's entry.
+            Log("input       view x 0x%X z 0x%X in area %u (focus was x 0x%X z 0x%X); recipe frame %u", (unsigned)s.arg[0],
+                (unsigned)s.arg[1], (unsigned)Game_AreaNumber, (unsigned)Field_Kind2X, (unsigned)Field_Kind2Z, g_frame);
+            Field_Kind2X = static_cast<long>(s.arg[0]);
+            Field_Kind2Z = static_cast<long>(s.arg[1]);
+            bof3::orig::Field_ViewReset();
+            LogFlush();
+            Advance();
+            continue;
+        case Kind::Watch:
+            WatchStep(s);
+            Advance();
+            continue;
+        case Kind::Every:
+            if (s.n != 0 && g_shot_dir.empty()) Fatal("BOF3X_INPUT line %d: every needs BOF3X_SHOT_DIR: the game writes the frames there", s.line);
+            g_every = s.n;
+            Log("input       every %u: a frame every %u recipe frames from recipe frame %u", s.n, s.n, g_frame);
             Advance();
             continue;
         case Kind::Key: {
@@ -800,6 +979,7 @@ void __cdecl ScriptedLatch() {
         RandCountFrame();
         if (!g_active) return;
         SaveTimed();
+        WatchTick();
     }
     Input_Held = g_cur;
     Input_Previous = g_prev;
@@ -1180,6 +1360,10 @@ bool ShotSoon() {
         case Kind::Door:
         case Kind::Goto:
         case Kind::Battle:
+        case Kind::Place:
+        case Kind::View:
+        case Kind::Watch:
+        case Kind::Every:
             break;   // no frame of their own
         default:
             return false;
@@ -1193,6 +1377,7 @@ bool InputScript_ShotPending() {
     if (!g_active || !g_scripted) return false;
     if (g_index < g_steps.size() && g_steps[g_index].kind == Kind::Shot) return true;
     if (ShotSoon()) return true;
+    if (g_watch_shots) return true;   // a `watch ... shot` is on: any frame may be written
     // BOF3X_SHOT_EVERY: a latch within the next kShotLeadPasses writes a frame
     if (g_every == 0) return false;
     for (unsigned k = 1; k <= kShotLeadPasses; ++k)
