@@ -237,14 +237,14 @@ void SeedB34(unsigned k) {
         g_code = Code(bh::Half() ? 1 : 5);
         SeedPicked();
         const unsigned char picked = B(BossSh_Picked_addr);
-        B(at::kFlags + 1) = static_cast<unsigned char>(bh::Often() ? B(at::kFlags + 1) & 0x7F : B(at::kFlags + 1) | 0x80);
+        B(::bof3::Img(at::kFlags.v) + 1) = static_cast<unsigned char>(bh::Often() ? B(::bof3::Img(at::kFlags.v) + 1) & 0x7F : B(::bof3::Img(at::kFlags.v) + 1) | 0x80);
         const U bits = g_code == 1 ? (bh::Often() ? 1 : bh::Next() & 3) : (bh::Often() ? 0 : bh::Next() & 3);
         B(BossSe_Script_addr) = static_cast<unsigned char>((bh::Next() & 0xFC) | bits);
         for (unsigned m = 0; m < 3; ++m) {
             unsigned char& f = B(ObjTrio_addr + 0x91 + m * at::kPartyStride);
             f = static_cast<unsigned char>(bh::Half() ? f | 0x20 : f & ~0x20u);
         }
-        B(at::kActor) = static_cast<unsigned char>(bh::Often() ? picked : BH_PICK(0, 1, 2, 3, 4));
+        B(::bof3::Img(at::kActor.v)) = static_cast<unsigned char>(bh::Often() ? picked : BH_PICK(0, 1, 2, 3, 4));
         // the action record: one of the harness's records
         bh::SetPointer(BattleSprites_Action_addr, bh::SpriteRecord(bh::Next()));
         break;
@@ -282,8 +282,8 @@ const bh::DataTable kTablesK41[] = {{Key(BossGaist_Hooks), 3, 4, 1}, {Key(BossGa
 void SeedK41(unsigned k) {
     SeedKind(k);
     if (k == 3) {
-        B(at::kFlags) = static_cast<unsigned char>(bh::Half() ? bh::Next() | 2 : bh::Next() & ~2u);
-        B(at::kFlags + 1) = static_cast<unsigned char>(bh::Next());
+        B(::bof3::Img(at::kFlags.v)) = static_cast<unsigned char>(bh::Half() ? bh::Next() | 2 : bh::Next() & ~2u);
+        B(::bof3::Img(at::kFlags.v) + 1) = static_cast<unsigned char>(bh::Next());
         SetWord(Mem(Transition_Busy_addr), bh::Often() ? BH_PICK(0, 0, 1, 0x100, 0x8000) : bh::Next());
     }
 }

@@ -215,8 +215,8 @@ const bh::DataTable kTables[] = {
 
 // The cells beyond the engine frame that the group reads or writes.
 const bh::Region kRegions[] = {
-    {at::kTallyText, 0x20},       // BATE's sprintf buffer; also where 0x904ABC + 0x904AB4 lands past the battle bytes
-    {at::kTallyShown, 0x3C},      // the tally's counters, targets and 0x675EBE..C0
+    {at::kTallyText.v, 0x20},       // BATE's sprintf buffer; also where 0x904ABC + 0x904AB4 lands past the battle bytes
+    {at::kTallyShown.v, 0x3C},      // the tally's counters, targets and 0x675EBE..C0
     {Transition_Busy_addr, 2}, // Transition_Busy
     {0x903B24, 0x46C},            // character records 1..7 past the engine frame's 0x903A50..0x903B24
     {BattleE1_SumA_addr, 0xC},    // 0x939A04..0x939A0F
@@ -224,7 +224,7 @@ const bh::Region kRegions[] = {
     {Gfx_ClutStrip_addr + 0x3400, 0x200},
     {Gfx_ClutStrip_addr + 0x1e00, 0x200},
     {AreaW0b_PartySet_addr, 1},
-    {at::kRandomIds24, 0x40},     // the random picks' id tables (.data): drawn, so every flags branch is reached
+    {at::kRandomIds24.v, 0x40},     // the random picks' id tables (.data): drawn, so every flags branch is reached
 };
 
 // ===========================================================================
@@ -272,7 +272,7 @@ void SeedLevels() {
 void Seed(unsigned k) {
     // every round: the party count inside the three records (the loops index
     // ObjTrio by it; the originals' past 3 is described, not drawn)
-    Mem(at::kPartyCount)[0] = static_cast<unsigned char>(bh::Often() ? 1 + bh::Next() % 3 : bh::Next() % 4);
+    Mem(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(bh::Often() ? 1 + bh::Next() % 3 : bh::Next() % 4);
     Mem(FieldS_Column_addr)[0] = static_cast<unsigned char>(bh::Next() & 0x7F); // never negative (section 7)
     if (bh::Half()) SetWord(Mem(Transition_Busy_addr), 0);
     switch (g_base[k].base) {
@@ -281,9 +281,9 @@ void Seed(unsigned k) {
         Mem(FieldS_Column_addr)[0] = static_cast<unsigned char>(row);
         if (row < 6 && bh::Often()) {
             const U shown = bh::Half() ? bh::Next() % 1000 : bh::Next();
-            SetLong(Mem(at::kTallyShown + 4 * row), static_cast<std::int32_t>(shown));
-            const U step = Mem(at::kTallyStep + row)[0];
-            SetLong(Mem(at::kTallyTarget + 4 * row), static_cast<std::int32_t>(shown + step + (bh::Next() % 5) - 2));
+            SetLong(Mem(::bof3::Img(at::kTallyShown.v) + 4 * row), static_cast<std::int32_t>(shown));
+            const U step = Mem(::bof3::Img(at::kTallyStep.v) + row)[0];
+            SetLong(Mem(::bof3::Img(at::kTallyTarget.v) + 4 * row), static_cast<std::int32_t>(shown + step + (bh::Next() % 5) - 2));
         }
         Mem(Input_Pressed_addr)[0] = bh::Half() ? 0 : static_cast<unsigned char>(bh::Next());
         break;
@@ -292,7 +292,7 @@ void Seed(unsigned k) {
         SetLong(Mem(BattleE1_SumB_addr), static_cast<std::int32_t>(bh::Often() ? BH_PICK(0, 0x31, 0x32, 0x33, 0x4F, 0x50, 0x51) : bh::Next()));
         break;
     case 0x42DC80: case 0x42E050:   // the timers at 1, and around
-        Mem(at::kModeTimer)[0] = Byte({1, 1, 2, 0, 0xFF});
+        Mem(::bof3::Img(at::kModeTimer.v))[0] = Byte({1, 1, 2, 0, 0xFF});
         break;
     case 0x42DCF0:
         Mem(Window1_addr + 0xA)[0] = Byte({0, 3, 1, 2});
@@ -307,8 +307,8 @@ void Seed(unsigned k) {
         SeedButtons();
         break;
     case 0x42EDA0: case 0x42EEA0:   // the menu member and its cross size at the ends
-        Mem(at::kMenuMember)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 3 : bh::Next());
-        Mem(at::kCrossGrow + Mem(at::kMenuMember)[0])[0] = Byte({0, 1, 2, 3, 4, 7, 8, 9, 0xFF});
+        Mem(::bof3::Img(at::kMenuMember.v))[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 3 : bh::Next());
+        Mem(::bof3::Img(at::kCrossGrow.v) + Mem(::bof3::Img(at::kMenuMember.v))[0])[0] = Byte({0, 1, 2, 3, 4, 7, 8, 9, 0xFF});
         break;
     case 0x42EE00: {
         const unsigned held = move_script::Word(Mem(Input_Held_addr));
@@ -319,7 +319,7 @@ void Seed(unsigned k) {
         Mem(BattleActorCopies_EntryCount_addr)[0] = Byte({0, 1, 2, 3, 0xFF, 0x80, 5});
         for (U e = 0; e < 3; ++e) {   // the entry order, and the entries' item commands
             const unsigned char who = Byte({0, 1, 2, 0xFF, 0, 1, 2, 4});
-            Mem(at::kEntryFirst + e)[0] = who;
+            Mem(::bof3::Img(at::kEntryFirst.v) + e)[0] = who;
             if (who <= 2) MemberAt(who)[0x125] = Byte({5, 5, 4});
         }
         Mem(BattleFlow_AnimGate_addr)[0] = bh::Half() ? 0 : static_cast<unsigned char>(bh::Next());
@@ -329,8 +329,8 @@ void Seed(unsigned k) {
         if (bh::Half()) SetWord(Mem(BattleActions_Pending_addr), 0);
         break;
     case 0x42F9D0:
-        SetWord(Mem(at::kActionId), Word16({0x24, 0x25, 0x8C, 0x24, 0x25, 0x8C, 0x23, 0}));
-        Mem(at::kActor)[0] = Byte({0, 1, 2, 3, 4, 10});
+        SetWord(Mem(::bof3::Img(at::kActionId.v)), Word16({0x24, 0x25, 0x8C, 0x24, 0x25, 0x8C, 0x23, 0}));
+        Mem(::bof3::Img(at::kActor.v))[0] = Byte({0, 1, 2, 3, 4, 10});
         break;
     case 0x42FE20: {
         Mem(BattleE1_MessageUp_addr)[0] = Byte({0, 0, 1});
@@ -341,13 +341,13 @@ void Seed(unsigned k) {
         }
         // the acting enemy (its +0x106 is read unchecked; an actor past 0x30
         // reads past the image and faults on both sides - section 7)
-        Mem(at::kActor)[0] = static_cast<unsigned char>(BH_PICK(3, 4, 5, 6, 10, 3, 10, 0, 2));
+        Mem(::bof3::Img(at::kActor.v))[0] = static_cast<unsigned char>(BH_PICK(3, 4, 5, 6, 10, 3, 10, 0, 2));
         break;
     }
     case 0x4315C0:   // the members' busy bit, the cursor at the count
         for (U i = 0; i < 3; ++i)
             if (bh::Often()) MemberAt(i)[0x131] = static_cast<unsigned char>(MemberAt(i)[0x131] & ~0x20);
-        if (bh::Often()) Mem(BossSb_Countdown_addr)[0] = Mem(at::kPartyCount)[0];
+        if (bh::Often()) Mem(BossSb_Countdown_addr)[0] = Mem(::bof3::Img(at::kPartyCount.v))[0];
         break;
     case 0x4319B0: case 0x431FE0:
         for (U i = 0; i < 3; ++i) {
@@ -409,7 +409,7 @@ void Disturb(U h) {
     switch ((h >> 8) % 14) {
     case 0: Mem(FieldS_State_addr)[0] = b; break;
     case 1: Mem(FieldS_Step_addr)[0] = b; break;
-    case 2: Mem(at::kTallyTarget + 0xC + (h >> 24) % 3 * 4)[0] = b; break;
+    case 2: Mem(::bof3::Img(at::kTallyTarget.v) + 0xC + (h >> 24) % 3 * 4)[0] = b; break;
     case 3: Mem(Config_Background_addr)[0] = b; break;
     case 4: Mem(WindowRecords_addr + 0xA + (h >> 24) % 2)[0] = b; break;
     case 5: Mem(Window1_addr + 0xA)[0] = b; break;
@@ -417,10 +417,10 @@ void Disturb(U h) {
     case 7: Mem(Input_Pressed_addr + (h >> 24) % 2)[0] = b; break;
     case 8: Mem(Input_Held_addr + (h >> 24) % 2)[0] = b; break;
     case 9: Mem(BattleE1_Roster_addr)[0] = static_cast<unsigned char>(b % 8); break;
-    case 10: SetWord(Mem(at::kOldLevel), b); break;
+    case 10: SetWord(Mem(::bof3::Img(at::kOldLevel.v)), b); break;
     case 11: SetWord(Mem(BattleResult_TickStep_addr), b); break;
-    case 12: SetWord(Mem(at::kActionId), h & 0x1000000 ? 0x25 : b); break;
-    default: Mem(at::kPartyCount)[0] = static_cast<unsigned char>(b % 4); break;
+    case 12: SetWord(Mem(::bof3::Img(at::kActionId.v)), h & 0x1000000 ? 0x25 : b); break;
+    default: Mem(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(b % 4); break;
     }
 }
 

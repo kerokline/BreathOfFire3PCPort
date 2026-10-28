@@ -99,23 +99,23 @@ void Disturb() {
     case 10: rv::Store<std::int32_t>(rv::As<records::BattleEnemy>(Current())->flags_110, static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
     case 11: {
         static const unsigned kBits[] = {0x40, 0x80, 0x1000, 0x2000};
-        SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) ^ kBits[v % 4]);
+        SetWord(At(::bof3::Img(at::kRoundFlags.v)), Word(At(::bof3::Img(at::kRoundFlags.v))) ^ kBits[v % 4]);
         break;
     }
     case 12: At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
     case 13: At(BattleE4_Picking_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
-    case 14: At(at::kActionKind)[0] = static_cast<unsigned char>(v % 7); break;
-    case 15: SetWord(At(at::kMagicId), (w % 4) << 8 | v); break;
-    case 16: At(at::kTarget)[0] = static_cast<unsigned char>(v); break;
-    case 17: SetWord(At(at::kStatusAdd), w); break;
+    case 14: At(::bof3::Img(at::kActionKind.v))[0] = static_cast<unsigned char>(v % 7); break;
+    case 15: SetWord(At(::bof3::Img(at::kMagicId.v)), (w % 4) << 8 | v); break;
+    case 16: At(::bof3::Img(at::kTarget.v))[0] = static_cast<unsigned char>(v); break;
+    case 17: SetWord(At(::bof3::Img(at::kStatusAdd.v)), w); break;
     case 18: SetPtr(BattleDamage_Result_addr, EnemyObj(v) + 0x104); break;
     case 19: g_target[w % kTargets] = static_cast<unsigned char>(v); break;
     case 20: Sprite_Current[8] = static_cast<unsigned char>(v % 5); break;
     case 21: At(BattleTask_Slots_addr + Sprite_Current[5] * at::kTaskSize)[9] = static_cast<unsigned char>(v); break;
-    case 22: At(at::kPulse)[0] = static_cast<unsigned char>(v); break;
+    case 22: At(::bof3::Img(at::kPulse.v))[0] = static_cast<unsigned char>(v); break;
     default: {
-        const unsigned id = Word(At(at::kMagicId)) & 0xFF;
-        At((w % 2 ? at::kAbilityFlags8 : at::kAbilityFlagsD) + id * 24)[0] ^= static_cast<unsigned char>(1u << (v % 8));
+        const unsigned id = Word(At(::bof3::Img(at::kMagicId.v))) & 0xFF;
+        At((w % 2 ? ::bof3::Img(at::kAbilityFlags8.v) : ::bof3::Img(at::kAbilityFlagsD.v)) + id * 24)[0] ^= static_cast<unsigned char>(1u << (v % 8));
         break;
     }
     }
@@ -150,7 +150,7 @@ unsigned char __cdecl StubScriptTickOnce() {
 }
 unsigned char __cdecl StubChance70() {
     Record(4, Sc(), En());
-    if (Hash() % 2) SetWord(At(at::kMagicId), (Hash() >> 8) & 0xFF);
+    if (Hash() % 2) SetWord(At(::bof3::Img(at::kMagicId.v)), (Hash() >> 8) & 0xFF);
     Disturb();
     const std::uint32_t h = Hash();
     return static_cast<unsigned char>(h % 2 ? 0 : (h >> 8) | 1);
@@ -340,8 +340,8 @@ const Region kRegions[] = {
     {BattleTask_Slots_addr, 0x22A0}, // the 48 slots (an actor's slot up to 63 runs into the enemy objects), the objects
     {0x937F88, 4},               // Sprite_Current
     {BattleE3_CurrentEnemy_addr, 4},
-    {at::kStatBlock, 0x24},      // the 32 bytes copied in, the pointer 0x939FA0
-    {at::kRoundFlags - 8, 0x260},  // the battle's globals 0x904AA0..0x904D00
+    {at::kStatBlock.v, 0x24},      // the 32 bytes copied in, the pointer 0x939FA0
+    {::bof3::Img(at::kRoundFlags.v) - 8, 0x260},  // the battle's globals 0x904AA0..0x904D00
     {MoveScript_TintRecords_addr, 0x300}, // tint records 0..63
     {0x65C4D0, 0x1800},          // the ability records 0..255 (constant data - random here, put back after)
 };
@@ -392,8 +392,8 @@ void Fix() {
     }
     SetPtr(BattleActorCopies_Command_addr, g_target + Next() % kTargets);
     SetPtr(BattleDamage_Result_addr, EnemyObj(Next()) + 0x104);
-    SetWord(At(at::kMagicId), (Half() ? (Next() % 4) << 8 : 0) | (Next() & 0xFF));
-    At(at::kActionKind)[0] = static_cast<unsigned char>(Next() % 7);
+    SetWord(At(::bof3::Img(at::kMagicId.v)), (Half() ? (Next() % 4) << 8 : 0) | (Next() & 0xFF));
+    At(::bof3::Img(at::kActionKind.v))[0] = static_cast<unsigned char>(Next() % 7);
     if (Half()) At(EventBattle_Id_addr)[0] = 0;
     if (Half()) At(BattleE4_Picking_addr)[0] = 0;
 }
@@ -436,26 +436,26 @@ void Seed(unsigned k) {
     }
     case kReceive: {
         static const unsigned char kKinds[] = {0, 1, 1, 2, 3, 4, 4, 5, 5, 6};
-        At(at::kActionKind)[0] = kKinds[Next() % 10];
+        At(::bof3::Img(at::kActionKind.v))[0] = kKinds[Next() % 10];
         if (Often()) enemy_rec->shown = static_cast<unsigned char>(Next() % 4);
         static const std::uint16_t kDelta[] = {0, 0, 1, 0xFFFF, 0x7FFF, 0x8000, 100};
         enemy_rec->hp_change = kDelta[Next() % 7];
         enemy_rec->ap_change = Often() ? kDelta[Next() % 7] : Next();
         if (Half()) enemy_rec->hp = 0;
         if (Often()) e[0x111] = static_cast<unsigned char>(e[0x111] & ~2u);
-        if (Half()) SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & ~0x2000u);
-        if (Half()) At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] | 0x80);
+        if (Half()) SetWord(At(::bof3::Img(at::kRoundFlags.v)), Word(At(::bof3::Img(at::kRoundFlags.v))) & ~0x2000u);
+        if (Half()) At(::bof3::Img(at::kRoundFlags.v))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kRoundFlags.v))[0] | 0x80);
         if (Half()) At(EventBattle_Id_addr)[0] = 0;
-        if (Half()) SetWord(At(at::kMagicId), Next() & 0xFF);
+        if (Half()) SetWord(At(::bof3::Img(at::kMagicId.v)), Next() & 0xFF);
         break;
     }
     case kHitEnd: {
         if (Often()) e[0x93] = static_cast<unsigned char>(e[0x93] & ~0x40u);
-        if (Often()) At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] & ~0x40u);
-        if (Often()) At(at::kTarget)[0] = static_cast<unsigned char>(At(at::kTarget)[0] & 0x3F);
+        if (Often()) At(::bof3::Img(at::kRoundFlags.v))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kRoundFlags.v))[0] & ~0x40u);
+        if (Often()) At(::bof3::Img(at::kTarget.v))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kTarget.v))[0] & 0x3F);
         static const unsigned char kKinds[] = {1, 1, 4, 4, 4, 0, 5};
-        At(at::kActionKind)[0] = kKinds[Next() % 7];
-        if (Half()) SetWord(At(at::kMagicId), Next() & 0xFF);
+        At(::bof3::Img(at::kActionKind.v))[0] = kKinds[Next() % 7];
+        if (Half()) SetWord(At(::bof3::Img(at::kMagicId.v)), Next() & 0xFF);
         break;
     }
     case kSquash: {

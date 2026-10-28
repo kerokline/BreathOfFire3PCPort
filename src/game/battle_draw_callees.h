@@ -35,21 +35,23 @@ constexpr U kRetOnly = bof3::addr::BareRet;       // a bare ret
 // --- the battle menu's lists ---------------------------------------------------
 // kColour: now Config_WindowColour (symbols.toml). s8: the window colour (Config), a CLUT row
 // kMenuMember: now BattleActorCopies_ItemActor (symbols.toml). s8: the member the menu is on
-constexpr U kBattleParty = 0x904065;   // the second of the two 3-byte party lists (0x904062 the first)
-constexpr U kMemberRecord = 0x66972C;  // u8 per party entry: its character record (Character_IndexById)
-constexpr U kInventory = 0x656B00;     // 5 pointers: each category's item ids
-constexpr U kCounts = 0x656B14;        // 5 pointers: each category's counts (the fifth, key items, 0)
-constexpr U kItemLabels = 0x66B58C;    // 5 pointers: the item list's title by category
-constexpr U kSkillLabels = 0x66B5A0;   // 4 pointers: the skill list's title by kind (+0xB)
+constexpr ::bof3::image::Va kBattleParty{0x904065};   // the second of the two 3-byte party lists (0x904062 the first)
+constexpr ::bof3::image::Va kMemberRecord{0x66972C};  // u8 per party entry: its character record (Character_IndexById)
+constexpr ::bof3::image::Va kInventory{0x656B00};     // 5 pointers: each category's item ids
+constexpr ::bof3::image::Va kCounts{0x656B14};        // 5 pointers: each category's counts (the fifth, key items, 0)
+constexpr ::bof3::image::Va kItemLabels{0x66B58C};    // 5 pointers: the item list's title by category
+constexpr ::bof3::image::Va kSkillLabels{0x66B5A0};   // 4 pointers: the skill list's title by kind (+0xB)
 // kSkillLabelAlt: now BattleDraw_SkillLabelAlt (symbols.toml). a pointer: the title while word +0x14 is set (0x66A220)
-constexpr U kSkillRecords = 0x65C4C8;  // 0x18-byte records by skill id, the name first
-constexpr U kPrintBuf = 0x904BA0;      // the sprintf buffer every number goes through
-constexpr U kFmt3d3d = 0x6639C8;       // "%3d/%3d"
+constexpr ::bof3::image::Va kSkillRecords{0x65C4C8};  // 0x18-byte records by skill id, the name first
+constexpr ::bof3::image::Va kPrintBuf{0x904BA0};      // the sprintf buffer every number goes through
+constexpr ::bof3::image::Va kFmt3d3d{0x6639C8};       // "%3d/%3d"
 // Menu_DrawPieces lists (3-byte records to an id of 0xFF), chosen by two flag
 // bits of the window record; the field's item list uses its own four
 // (0x663484..0x6634A8).
-constexpr U kTitleBit1Off = 0x66B4B0, kTitleBit1On = 0x66B4C8;   // by bit 1 of the flags byte
-constexpr U kTitleBit0Off = 0x66B4BC, kTitleBit0On = 0x66B4D4;   // by bit 0
+constexpr ::bof3::image::Va kTitleBit1Off{0x66B4B0};
+constexpr ::bof3::image::Va kTitleBit1On{0x66B4C8};   // by bit 1 of the flags byte
+constexpr ::bof3::image::Va kTitleBit0Off{0x66B4BC};
+constexpr ::bof3::image::Va kTitleBit0On{0x66B4D4};   // by bit 0
 
 // --- the area tint ---------------------------------------------------------------
 // kStatusBits: now Field_StatusBits (symbols.toml). Field_StatusBits: bit 0 holds the tint off

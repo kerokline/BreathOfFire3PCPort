@@ -326,7 +326,41 @@ class SourceFile:
         return False
 
 
-def load_sources():
+# The relocatable-image round (docs/relocatable-image-round.md): a data
+# address placed through the image's base is spelled ::bof3::Img(X), and a VA
+# held as an image::Va constant kX is named kX.v (src/common/image_base.h).
+# Neither changes which memory a site reaches, so the census reads through
+# both: ::bof3::Img(X) as X and kX.v as kX, the line breaks kept. The keys of
+# analysis/typed_left.tsv stay what they were.
+IMG_CALL = re.compile(r'(?<![\w:])(?:::)?bof3::Img\s*\(')
+VA_NAME = re.compile(r'(?<![\w.])(k\w*)\.v\b')
+
+
+def see_through_base(text):
+    if 'Img' not in text and '.v' not in text:
+        return text
+    out, pos = [], 0
+    for m in IMG_CALL.finditer(text):
+        if m.start() < pos:
+            continue
+        depth, i = 1, m.end()
+        while i < len(text) and depth:
+            depth += {'(': 1, ')': -1}.get(text[i], 0)
+            i += 1
+        if depth:
+            break
+        out.append(text[pos:m.start()])
+        out.append(see_through_base(text[m.end():i - 1]))
+        pos = i
+    out.append(text[pos:])
+    return VA_NAME.sub(r'\1', ''.join(out))
+
+
+def load_sources(see_through_base_helpers=False):
+    """Every source under src/. With see_through_base_helpers (this census
+    and tools/typed_left.py, whose keys must agree) a site placed through the
+    base reads as before; reloc_census reads the spelling as written, since
+    the base helper is what it measures."""
     files = []
     src = os.path.join(ROOT, 'src')
     for dirpath, dirnames, filenames in os.walk(src):
@@ -336,7 +370,8 @@ def load_sources():
                 p = os.path.join(dirpath, fn)
                 rel = os.path.relpath(p, ROOT).replace(os.sep, '/')
                 with open(p, encoding='utf-8', errors='replace') as f:
-                    files.append(SourceFile(rel, f.read()))
+                    text = f.read()
+                    files.append(SourceFile(rel, see_through_base(text) if see_through_base_helpers else text))
     files.sort(key=lambda f: f.rel)
     return files
 
@@ -1186,7 +1221,7 @@ def main():
     if a.strict:
         sys.exit(strict())
     syms = Symbols(a.toml)
-    files = load_sources()
+    files = load_sources(see_through_base_helpers=True)
     sites, consts, files, unresolved_refs = scan(files, syms)
     counts = counts_of(sites, consts, files, syms, unresolved_refs)
     if a.check:

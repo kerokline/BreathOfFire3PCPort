@@ -26,12 +26,13 @@
 
 #include <cstring>
 
+#include "common/image_base.h"
 #include "hook/log.h"
 
 namespace {
 
 constexpr std::uint32_t kCount = 12;
-constexpr std::uint32_t kTable = 0x669DE0;
+constexpr ::bof3::image::Va kTable{0x669DE0};
 constexpr std::uint32_t kRoom = 12;       // bytes a message; the US copy's count
 constexpr std::uint32_t kPcRoom = 8;      // the PC's (0x44A8E4, push 8)
 
@@ -47,7 +48,7 @@ std::uint32_t g_room = kPcRoom;
 
 void BattleMessages_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
     if (tag != 0) bof3::Fatal("battle message chunk tag is 0x%X, expected 0", (unsigned)tag);
-    auto* const table = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(kTable));
+    auto* const table = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(kTable.v)));
     const std::uint8_t* p = payload;
     const std::uint8_t* const end = payload + size;
     if (p >= end || *p++ != kCount) bof3::Fatal("battle message chunk: count is not %u", (unsigned)kCount);

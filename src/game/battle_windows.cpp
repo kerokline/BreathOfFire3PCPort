@@ -68,7 +68,7 @@ const Callees kOriginals = {
     Fn<void (__cdecl*)(int, int, int, int, unsigned, unsigned, unsigned)>(kLineSemi1),
     Fn<unsigned (__cdecl*)(unsigned)>(kEnemyNameShown),
     Fn<const unsigned char* (__cdecl*)(int, int, unsigned, unsigned, const unsigned char*)>(kTinyFont),
-    reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(BattleObj_StateTable_addr)),
+    reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleObj_StateTable_addr))),
     {at::kKindHandlers[0], at::kKindHandlers[1], at::kKindHandlers[2]},
     BattleObj_RunState,
     BattleWin_DrawCommandIcon,
@@ -88,7 +88,7 @@ using move_script::Word;
 
 std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char* Ptr(std::uint32_t at) { return At(static_cast<std::uint32_t>(Long(At(at)))); }
-unsigned char* Current() { return Ptr(at::kCurrent); }
+unsigned char* Current() { return Ptr(::bof3::Img(at::kCurrent.v)); }
 unsigned char* FieldState() { return Field_State; }
 unsigned char* Sprite() { return Sprite_Current; }
 
@@ -104,7 +104,7 @@ void PutFloat(unsigned char* at, std::int32_t v) {
 struct Rgb { unsigned r, g, b; };
 Rgb WindowRgb() {
     const int row = Config_WindowColour;
-    const unsigned w = Word(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(row * 64)));
+    const unsigned w = Word(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<std::uint32_t>(row * 64)));
     return {(w & 0x1F) << 3, ((w >> 5) & 0x1F) << 3, ((w >> 10) & 0x1F) << 3};
 }
 
@@ -127,7 +127,7 @@ unsigned Darker(unsigned c) {
 }
 
 // A party member's battle object (ObjTrio, stride 0x14C) and its words.
-unsigned char* Member(unsigned i) { return At(ObjTrio_addr + at::kObjectStride * i); }
+unsigned char* Member(unsigned i) { return At(::bof3::Img(ObjTrio_addr) + at::kObjectStride * i); }
 
 // A status colour from the member's +0x90 flags: 2 when bit 14 (grey),
 // else what the caller derives.
@@ -208,13 +208,13 @@ extern "C" unsigned char __cdecl BattleObj_ScriptTickOnce() {
 // (0x65C4DD + 24 skill), 8 or 0x28, 5 -> 4; 3 and above 5 change nothing and
 // answer the action. The answer is the callee's eax.
 extern "C" unsigned __cdecl BattleObj_PickPose() {
-    const bool own_poses = At(at::kBattleKind)[0] == 5 && (Battle_EndFlags & 2) != 0;
+    const bool own_poses = At(::bof3::Img(at::kBattleKind.v))[0] == 5 && (Battle_EndFlags & 2) != 0;
     if (own_poses) {
         const bool high = (EventBattle_Flags & 0x20) != 0;
         if (FieldState()[0x91] & 0x40)
-            return g.pose_from(static_cast<unsigned char>(Sprite()[8] + 0x1C), at::kPoseSet, 0x1800);
-        if (high) return g.pose_from(Sprite()[0x4B], at::kPoseSet, 0x1800);
-        return g.pose_from(static_cast<unsigned char>(Sprite()[8] + 0x20), at::kPoseSet, 0x1800);
+            return g.pose_from(static_cast<unsigned char>(Sprite()[8] + 0x1C), ::bof3::Img(at::kPoseSet.v), 0x1800);
+        if (high) return g.pose_from(Sprite()[0x4B], ::bof3::Img(at::kPoseSet.v), 0x1800);
+        return g.pose_from(static_cast<unsigned char>(Sprite()[8] + 0x20), ::bof3::Img(at::kPoseSet.v), 0x1800);
     }
     unsigned char* const f = FieldState();
     auto* const member_rec = rv::As<records::PartyMember>(f);
@@ -222,7 +222,7 @@ extern "C" unsigned __cdecl BattleObj_PickPose() {
     const auto pose = [](unsigned add) { return g.ensure_pose(static_cast<unsigned char>(Sprite()[8] + add)); };
     if (flags & 0x4000) return pose(0x1C);
     if (flags & 0x0800) return pose(0x30);
-    if (At(at::kPoseMode)[0] & 0x10) {
+    if (At(::bof3::Img(at::kPoseMode.v))[0] & 0x10) {
         if (flags & 4) return pose(4);
         if (flags & 0x20C0) return pose(0x18);
         return pose(8);
@@ -236,7 +236,7 @@ extern "C" unsigned __cdecl BattleObj_PickPose() {
     case 4: {
         if (f[0x134] & 4) return pose(0x38);
         const unsigned skill = rv::As<records::PartyMember>(f)->queued_id;  // f: Field_State, the member
-        return pose((At(at::kSkillFlags + skill * 24)[0] & 8) ? 8 : 0x28);
+        return pose((At(::bof3::Img(at::kSkillFlags.v) + skill * 24)[0] & 8) ? 8 : 0x28);
     }
     case 5: return pose(4);
     default: return action;   // 3, and anything past the table's six
@@ -256,18 +256,18 @@ extern "C" unsigned __cdecl BattleObj_PickPose() {
 // frame's tile). The count is read again after each member.
 extern "C" void __cdecl BattleWin_DrawPartyStatus(int x, int y) {
     OpenDrawMode(0);
-    const unsigned count = At(at::kPartyCount)[0];
+    const unsigned count = At(::bof3::Img(at::kPartyCount.v))[0];
     g.draw_edge(x, y, static_cast<unsigned char>((count + 5) << 1), 1);
-    g.draw_edge(x, y + 0x18, static_cast<unsigned char>((At(at::kPartyCount)[0] << 1) + 0xB), 1);
-    g.draw_tile(x, y + 2, static_cast<unsigned char>(At(at::kPartyCount)[0] + 0xD), 1);
+    g.draw_edge(x, y + 0x18, static_cast<unsigned char>((At(::bof3::Img(at::kPartyCount.v))[0] << 1) + 0xB), 1);
+    g.draw_tile(x, y + 2, static_cast<unsigned char>(At(::bof3::Img(at::kPartyCount.v))[0] + 0xD), 1);
     const Rgb c = WindowRgb();
-    if (At(at::kPartyCount)[0] == 0) return;
+    if (At(::bof3::Img(at::kPartyCount.v))[0] == 0) return;
     int slot = x;           // the original keeps x + 0x5E i in its first argument's slot
     int xs = x + 0x14;
     unsigned i = 0;
     do {
         g.draw_tile_rgb(xs, y + 0xE, 9, 0, 0);
-        const unsigned char* const bars = At(WindowRecords_addr + 0x1df + 36 * i);
+        const unsigned char* const bars = At(::bof3::Img(WindowRecords_addr) + 0x1df + 36 * i);
         const unsigned char b1 = bars[2], b0 = bars[0];
         g.draw_bar(xs, y + 0xE, b0, b1, 0);
         unsigned char* const m = Member(i);
@@ -296,7 +296,7 @@ extern "C" void __cdecl BattleWin_DrawPartyStatus(int x, int y) {
         slot += 0x5E;
         xs += 0x5E;
         i = static_cast<unsigned char>(i + 1);
-    } while (i < At(at::kPartyCount)[0]);
+    } while (i < At(::bof3::Img(at::kPartyCount.v))[0]);
 }
 
 namespace {
@@ -318,23 +318,23 @@ unsigned ArmShade(unsigned j) {
 // 0x904AC1 / 0x904AC2 are set. The selection is re-read after each icon;
 // the shade stays what the last arm set when the selection is 5 or more.
 extern "C" void __cdecl BattleWin_DrawCommandCross(int x, int y) {
-    std::uint32_t sel = static_cast<std::uint32_t>(Long(At(at::kCrossSel)));
+    std::uint32_t sel = static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kCrossSel.v))));
     unsigned shade = 0;
     for (unsigned j = 0; j < 5; ++j) {
         if (j == (sel & 0xFF)) continue;
         shade = ArmShade(j);
-        const unsigned char grow = At(at::kCrossGrow + j)[0];
+        const unsigned char grow = At(::bof3::Img(at::kCrossGrow.v) + j)[0];
         const unsigned half = grow >> 1;
-        const unsigned char* const arm = At(at::kCrossArms + 2 * j);
+        const unsigned char* const arm = At(::bof3::Img(at::kCrossArms.v) + 2 * j);
         const unsigned size = static_cast<unsigned char>(grow + 0x10);
         g.icon(j, static_cast<unsigned>(x + arm[0] - static_cast<int>(half)),
                static_cast<unsigned>(y + arm[1] - static_cast<int>(half)), size, size, shade);
-        sel = static_cast<std::uint32_t>(Long(At(at::kCrossSel)));
+        sel = static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kCrossSel.v))));
     }
     const unsigned k = sel & 0xFF;
     if (k < 5) shade = ArmShade(k);
-    const unsigned char grow = At(at::kCrossGrow + k)[0];
-    const unsigned char* const arm = At(at::kCrossArms + 2 * k);
+    const unsigned char grow = At(::bof3::Img(at::kCrossGrow.v) + k)[0];
+    const unsigned char* const arm = At(::bof3::Img(at::kCrossArms.v) + 2 * k);
     if (grow == 0) {
         g.icon(sel, static_cast<unsigned>(x + arm[0]), static_cast<unsigned>(y + arm[1]), 0x10, 0x10, shade);
     } else {
@@ -344,10 +344,10 @@ extern "C" void __cdecl BattleWin_DrawCommandCross(int x, int y) {
                        static_cast<unsigned>(y + arm[1] - static_cast<int>(half)), size, size, shade);
     }
     for (unsigned e = 5; e < 7; ++e) {
-        const unsigned char grow2 = At(e == 5 ? at::kCrossExtra5 : at::kCrossExtra6)[0];
+        const unsigned char grow2 = At(e == 5 ? ::bof3::Img(at::kCrossExtra5.v) : ::bof3::Img(at::kCrossExtra6.v))[0];
         if (grow2 == 0) continue;
         const unsigned half = grow2 >> 1;
-        const unsigned char* const arm2 = At(at::kCrossArms + 2 * e);
+        const unsigned char* const arm2 = At(::bof3::Img(at::kCrossArms.v) + 2 * e);
         const unsigned size = static_cast<unsigned char>(grow2 + 0x10);
         g.command_icon(e, static_cast<unsigned>(x + arm2[0] - static_cast<int>(half)),
                        static_cast<unsigned>(y + arm2[1] - static_cast<int>(half)), size, size, 0x80);
@@ -463,8 +463,8 @@ extern "C" void __cdecl BattleWin_DrawMediumBox(int x, int y) { PlainBox(x, y, 0
 extern "C" void __cdecl BattleWin_DrawCommandLabel(unsigned k) {
     OpenDrawMode(0);
     const unsigned i = k & 0xFF;
-    const int y = Word(At(Battle_CommandBoxes_addr + 8 * i + 2));
-    const int x = Word(At(Battle_CommandBoxes_addr + 8 * i));
+    const int y = Word(At(::bof3::Img(Battle_CommandBoxes_addr) + 8 * i + 2));
+    const int x = Word(At(::bof3::Img(Battle_CommandBoxes_addr) + 8 * i));
     const Rgb c = WindowRgb();
     g.draw_tile(x, y + 2, 5, 1);
     g.draw_edge(x, y, 0xA, 1);
@@ -473,7 +473,7 @@ extern "C" void __cdecl BattleWin_DrawCommandLabel(unsigned k) {
     g.line_semi1(x + 2, y + 3, x + 2, y + 0x10, c.r, c.g, c.b);
     g.line_semi0(x + 0x25, y + 2, x + 0x25, y + 0x10, c.r, c.g, c.b);
     g.line_semi0(x + 2, y + 0x10, x + 0x25, y + 0x10, c.r, c.g, c.b);
-    const auto* const label = At(static_cast<std::uint32_t>(Long(At(Battle_CommandLabelPointers_addr + 4 * i))));
+    const auto* const label = At(static_cast<std::uint32_t>(Long(At(::bof3::Img(Battle_CommandLabelPointers_addr) + 4 * i))));
     g.text_draw_at(x + 8, y + 3, 0, 8, label);
 }
 
@@ -508,12 +508,12 @@ void EnemyGauge(int x, int y, std::uint32_t enemy) {
 // darker (clamped at 0).
 extern "C" void __cdecl BattleWin_DrawTargetEnemy(int x, int y, unsigned t) {
     OpenDrawMode(0);
-    const unsigned w = Word(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(
+    const unsigned w = Word(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<std::uint32_t>(
                                   Config_WindowColour * 64)));
     const unsigned r = (w & 0x1F) << 3, gr = ((w >> 5) & 0x1F) << 3, b = ((w >> 10) & 0x1F) << 3;
     const unsigned e = static_cast<unsigned char>(t - 3);
     TargetFrame(x, y);
-    const std::uint32_t enemy = Battle_Enemies_addr + 0x80 + at::kEnemyStride * e;
+    const std::uint32_t enemy = ::bof3::Img(Battle_Enemies_addr) + 0x80 + at::kEnemyStride * e;
     EnemyGauge(x, y, enemy);
     std::uint8_t expanded[33];   // DIV-0057: the 8-unit draw is Capcom's, so pairs go in as their glyphs
     g.tiny_font(x + 4, y + 3, 0, 8, TextPairs_Expand(At(enemy), expanded, sizeof expanded));
@@ -530,14 +530,14 @@ extern "C" void __cdecl BattleWin_DrawTargetEnemy(int x, int y, unsigned t) {
 extern "C" void __cdecl BattleWin_DrawEnemyStatus(int x, int y, unsigned t) {
     OpenDrawMode(0);
     const int row = Config_WindowColour;
-    const unsigned w = Word(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(row * 64)));
+    const unsigned w = Word(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<std::uint32_t>(row * 64)));
     const unsigned r = (w & 0x1F) << 3, gr = ((w >> 5) & 0x1F) << 3, b = ((w >> 10) & 0x1F) << 3;
     const unsigned e = static_cast<unsigned char>(t - 3);
     g.draw_tile(x, y + 2, 8, 1);
     g.draw_tile_rgb(x + 6, y + 0xB, 9, 0, 0);
     g.draw_edge(x, y, 2, 1);
     g.draw_edge(x, y + 0x13, 3, 1);
-    const std::uint32_t enemy = Battle_Enemies_addr + 0x80 + at::kEnemyStride * e;
+    const std::uint32_t enemy = ::bof3::Img(Battle_Enemies_addr) + 0x80 + at::kEnemyStride * e;
     EnemyGauge(x, y, enemy);
     std::uint8_t expanded[33];   // DIV-0057, as in BattleWin_DrawTargetEnemy
     if (static_cast<unsigned char>(g.enemy_name_shown(e)) != 0)
@@ -555,7 +555,7 @@ extern "C" void __cdecl BattleWin_DrawEnemyStatus(int x, int y, unsigned t) {
 // 0, the two outer lines and the two inner ones 0x10 darker.
 extern "C" void __cdecl BattleWin_DrawTargetMember(int x, int y, unsigned m) {
     OpenDrawMode(0);
-    const unsigned w = Word(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(
+    const unsigned w = Word(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<std::uint32_t>(
                                   Config_WindowColour * 64)));
     const unsigned r = (w & 0x1F) << 3, gr = ((w >> 5) & 0x1F) << 3, b = ((w >> 10) & 0x1F) << 3;
     g.draw_tile(x + 4, y + 8, 8, 1);
@@ -572,8 +572,8 @@ extern "C" void __cdecl BattleWin_DrawTargetMember(int x, int y, unsigned m) {
     g.draw_digit(x + 2, y + 0xA, 0);
     g.draw_value(x + 0x14, y + 0xC, colour, member_rec->hp);
     const unsigned slash_colour = (member_rec->status >> 13) & 2;
-    char* const buf = reinterpret_cast<char*>(At(at::kPrintBuf));
-    g.sprintf_(buf, reinterpret_cast<const char*>(At(at::kSlash)));
+    char* const buf = reinterpret_cast<char*>(At(::bof3::Img(at::kPrintBuf.v)));
+    g.sprintf_(buf, reinterpret_cast<const char*>(At(::bof3::Img(at::kSlash.v))));
     g.font8(x + 0x28, y + 0xA, static_cast<int>(slash_colour), reinterpret_cast<const unsigned char*>(buf));
     // the slash's colour, not the first value's: the original keeps both in
     // its first argument's slot, the second over the first
@@ -639,7 +639,7 @@ extern "C" void __cdecl BattleWin_DrawMessage() {
     const records::WindowRecord* win = rv::As<records::WindowRecord>(Current());
     g.message_box(win->x, win->y);
     const unsigned index = BattleWindows_MsgHead;
-    const auto* const text = At(static_cast<std::uint32_t>(Long(At(at::kMsgRing + 8 * index))));
+    const auto* const text = At(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kMsgRing.v) + 8 * index))));
     win = rv::As<records::WindowRecord>(Current());
     g.text_draw_at(static_cast<std::uint16_t>(win->x + 4), static_cast<std::uint16_t>(win->y + 3), 0, 0xFF,
                    text);

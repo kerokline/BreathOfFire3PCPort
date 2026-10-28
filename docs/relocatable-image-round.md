@@ -109,6 +109,25 @@ function hashes as the bare tag where Capcom's references hold his address
 (123 pages), so the binder must give the hash the our-function to Capcom-
 address map. Report: `C:\Users\kerok\bof3x-runs\ri1027\ra2\REPORT.md`.
 
+**The proof as run (2026-10-28 afternoon, `ri1027\ra2\sh`, checks `check_<route>_orig4r*.txt`).**
+Every route shows pages `0x929000` / `0x92A000` / `0x905000` (`Save_Staging` and
+its neighbours) from the first save-list read: the owner's save slot 6 was
+written at 00:11 that night, after the `orig4` pairs of 2026-10-23, and the
+morning's quiet Capcom-side runs of the ledger stage D proof (`cn_<route>_dOrig`,
+a build without RA2) show exactly those three pages against the same pairs on
+every route - so they are the saves, not the hash. The afternoon's runs were
+first lost to the owner at the machine (the game pauses on focus loss: two
+replays exited mid-recipe, a desktop-width page changed at tick 250), then run
+beside six building agents, which adds transient VRAM-shadow, unpack-scratch
+and sound pages and, on `cutsceneAndNue`, two field pages from a tick that
+differs between the two sides (pace noise). Nothing systematic beyond the
+saves appeared. **The authoritative proof is `ri1027\ra2\proof_unattended.sh`
+re-run with no agent building and nobody at the machine**; its three controls
+(caughFish on `main`'s build and on 2026-10-27's, cutsceneAndNue on
+2026-10-27's) separate the saves from the build. The `orig4` pairs want
+re-recording with the current saves before stage C's `orig5f` pairs, or the
+save-list pages a skip entry (the coordinator's call).
+
 ### RA3: the loader's design
 **As run (2026-10-28, `relocatable-image/ra3` `23d2baac`):**
 [`relocatable-image-design.md`](relocatable-image-design.md), DRAFT, every

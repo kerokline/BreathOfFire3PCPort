@@ -61,8 +61,8 @@ void SetW(U address, unsigned v) { SetWord(At(address), v); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 S32 S16(std::uint16_t v) { return static_cast<std::int16_t>(v); }
 unsigned char* Ptr(U cell) { return At(L(cell)); }
-unsigned char* Party(unsigned member) { return At(ObjTrio_addr + member * at::kPartyStride); }
-unsigned char* EnemyObj(unsigned n) { return At(Battle_Enemies_addr + n * at::kEnemyStride); }
+unsigned char* Party(unsigned member) { return At(::bof3::Img(ObjTrio_addr) + member * at::kPartyStride); }
+unsigned char* EnemyObj(unsigned n) { return At(::bof3::Img(Battle_Enemies_addr) + n * at::kEnemyStride); }
 
 // The callees nobody owns yet, by address (battle_e5_callees.h).
 using Void0 = void (__cdecl*)();
@@ -99,7 +99,7 @@ extern "C" unsigned char __cdecl EnemyAI_OtherRowsDone(unsigned row, unsigned en
     for (unsigned i = 0; i < 4; ++i) {
         if (i == skip) continue;
         const unsigned script = obj[0xF0];
-        if (B(at::kAiScripts + script * 0x8C + i * 16) == 0x63) return 0;
+        if (B(::bof3::Img(at::kAiScripts.v) + script * 0x8C + i * 16) == 0x63) return 0;
         if ((BH_CALL(EnemyAI_RowDone)(obj, i) & 0xFF) == 0) return 0;
     }
     return 1;
@@ -125,15 +125,15 @@ extern "C" void __cdecl EnemyAI_SetRowDone(unsigned char* enemy, unsigned row, u
 // the mask's low byte. Anything else 0. al out.
 extern "C" unsigned char __cdecl EnemyAI_CondElement(unsigned mask) {
     if (static_cast<std::uint16_t>(BattleE3_CurrentEnemy->hp_change) == 0) return 0;
-    const unsigned actor = B(at::kActor);
-    const unsigned kind = B(at::kActingKind);
+    const unsigned actor = B(::bof3::Img(at::kActor.v));
+    const unsigned kind = B(::bof3::Img(at::kActingKind.v));
     if (kind == 4) {
-        const unsigned ability = L(at::kAbility) & 0xFFFF;
-        return (W(at::kAbilityRows + ability * 24) & mask & 0xFFFF) != 0;
+        const unsigned ability = L(::bof3::Img(at::kAbility.v)) & 0xFFFF;
+        return (W(::bof3::Img(at::kAbilityRows.v) + ability * 24) & mask & 0xFFFF) != 0;
     }
     if (kind != 1 || actor > 2 || (mask & 0x100) != 0) return 0;
     const unsigned weapon = rv::As<records::PartyMember>(Party(actor))->weapon;
-    return (B(at::kWeaponElement + weapon * 28) & mask & 0xFF) != 0;
+    return (B(::bof3::Img(at::kWeaponElement.v) + weapon * 28) & mask & 0xFF) != 0;
 }
 
 // original 0x44B5E0 (called by EnemyAI_ApplyAction for kind 3): one of the
@@ -234,8 +234,8 @@ extern "C" void __cdecl EnemyAI_ApplyAction(unsigned char* enemy, const unsigned
     if (enemy_rec->hp != 0 && Word(row + 6) != 0) {
         const unsigned n = BattleE5_EnemyMessageCount;
         if (n < 8) {
-            B(at::kEnemyMessages + n * 4) = static_cast<unsigned char>(enemy_rec->actor - 3);
-            SetW(at::kEnemyMessages + n * 4 + 2, Word(row + 6));
+            B(::bof3::Img(at::kEnemyMessages.v) + n * 4) = static_cast<unsigned char>(enemy_rec->actor - 3);
+            SetW(::bof3::Img(at::kEnemyMessages.v) + n * 4 + 2, Word(row + 6));
             BattleE5_EnemyMessageCount = static_cast<unsigned char>(n + 1);
         }
     }
@@ -253,7 +253,7 @@ extern "C" void __cdecl EnemyAI_DedupMessages(void) {
     U kept[8];
     unsigned k = 0;
     for (unsigned i = 0; i < n; ++i) {
-        const U entry = at::kEnemyMessages + 4 * i;
+        const U entry = ::bof3::Img(at::kEnemyMessages.v) + 4 * i;
         bool dup = false;
         if (k != 0) {
             const unsigned char group = EnemyObj(B(entry))[0x8C];
@@ -268,7 +268,7 @@ extern "C" void __cdecl EnemyAI_DedupMessages(void) {
         kept[k++] = L(entry);
     }
     BattleE5_EnemyMessageCount = static_cast<unsigned char>(k);
-    for (unsigned i = 0; i < k; ++i) SetLong(At(at::kEnemyMessages + 4 * i), static_cast<S32>(kept[i]));
+    for (unsigned i = 0; i < k; ++i) SetLong(At(::bof3::Img(at::kEnemyMessages.v) + 4 * i), static_cast<S32>(kept[i]));
 }
 
 // ===========================================================================
@@ -278,7 +278,7 @@ extern "C" void __cdecl EnemyAI_DedupMessages(void) {
 namespace {
 
 U Key(const unsigned char* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
-unsigned char* Result() { return Ptr(at::kResult); }
+unsigned char* Result() { return Ptr(::bof3::Img(at::kResult.v)); }
 
 // The drains' shared body (0x44C3D0 HP: the result's word +4, the party's
 // +0x98 / +0xA0, the enemy's +0xA4 / +0xB0, flag 4, Battle_SetDamagePopup;
@@ -302,7 +302,7 @@ struct Drain {
 };
 
 void DrainTarget(const Drain& d) {
-    const unsigned t = B(at::kTarget);
+    const unsigned t = B(::bof3::Img(at::kTarget.v));
     if (t <= 2) {
         unsigned char* const p = Party(t);
         SetWord(Result() + d.at, (L(Key(p) + 0x130) & 0x10000) ? 0u : Word(p + d.party_stat) / 5u);
@@ -313,7 +313,7 @@ void DrainTarget(const Drain& d) {
 }
 
 void DrainActor(const Drain& d) {
-    const unsigned a = B(at::kActor);
+    const unsigned a = B(::bof3::Img(at::kActor.v));
     unsigned char* stat;
     U max_at;
     if (a <= 2) {
@@ -324,12 +324,12 @@ void DrainActor(const Drain& d) {
         max_at = Key(EnemyObj(a - 3)) + d.enemy_max;
     }
     if (static_cast<S32>(Word(stat)) + S16(Word(Result() + d.at)) > static_cast<S32>(W(max_at)))
-        Ptr(at::kActingSprite2)[8] = static_cast<unsigned char>(Ptr(at::kActingSprite2)[8] | d.flag);
+        Ptr(::bof3::Img(at::kActingSprite2.v))[8] = static_cast<unsigned char>(Ptr(::bof3::Img(at::kActingSprite2.v))[8] | d.flag);
     const U result = BattleDamage_Result;
     const U change = BH_AT(U3, at::kStatAdd)(Key(stat), (result & 0xFFFF0000u) | W(max_at), Word(At(result) + d.at));
-    if (d.ap) BH_AT(U2, at::kApPopup)(0u - change, B(at::kActor));
-    else BH_CALL(Battle_SetDamagePopup)(0u - change, B(at::kActor));
-    Ptr(at::kActingSprite2)[8] = 0;
+    if (d.ap) BH_AT(U2, at::kApPopup)(0u - change, B(::bof3::Img(at::kActor.v)));
+    else BH_CALL(Battle_SetDamagePopup)(0u - change, B(::bof3::Img(at::kActor.v)));
+    Ptr(::bof3::Img(at::kActingSprite2.v))[8] = 0;
 }
 
 constexpr Drain kDrainHp = {4, 0x98, 0xA0, 0xA4, 0xB0, 4, 1, false};
@@ -342,12 +342,12 @@ constexpr Drain kDrainAp = {6, 0x9A, 0xA2, 0xA6, 0xB2, 8, 2, true};
 // / 5 as the HP delta, the acting sprite's +8 = 1, and the actor's HP raised
 // by it (Drain above).
 extern "C" void __cdecl Effect_DrainHp(void) {
-    if (BH_AT(U2, at::kResisted)(B(at::kActor), B(at::kTarget)) & 0xFF) {
+    if (BH_AT(U2, at::kResisted)(B(::bof3::Img(at::kActor.v)), B(::bof3::Img(at::kTarget.v))) & 0xFF) {
         Result()[8] = 1;
         return;
     }
     DrainTarget(kDrainHp);
-    Ptr(at::kActingSprite2)[8] = kDrainHp.mark;
+    Ptr(::bof3::Img(at::kActingSprite2.v))[8] = kDrainHp.mark;
     DrainActor(kDrainHp);
 }
 
@@ -355,12 +355,12 @@ extern "C" void __cdecl Effect_DrainHp(void) {
 // acting kind 4 and the ability 0x4E and jumps here): the AP drain, as the
 // HP drain on AP, with the result's +8 = 2 as well and the pop-up 0x453EB0.
 extern "C" void __cdecl Effect_DrainAp(void) {
-    if (BH_AT(U2, at::kResisted)(B(at::kActor), B(at::kTarget)) & 0xFF) {
+    if (BH_AT(U2, at::kResisted)(B(::bof3::Img(at::kActor.v)), B(::bof3::Img(at::kTarget.v))) & 0xFF) {
         Result()[8] = 2;
         return;
     }
     DrainTarget(kDrainAp);
-    Ptr(at::kActingSprite2)[8] = kDrainAp.mark;
+    Ptr(::bof3::Img(at::kActingSprite2.v))[8] = kDrainAp.mark;
     Result()[8] = kDrainAp.mark;
     DrainActor(kDrainAp);
 }
@@ -371,15 +371,15 @@ extern "C" void __cdecl Effect_DrainAp(void) {
 // target), then a tail jump to 0x44FB30.
 extern "C" void __cdecl Effect_QuarterAttack(void) {
     if ((BH_CALL(Rand)() & 0x7F) < 0x20) {
-        const unsigned target = B(at::kTarget);
-        const unsigned actor = B(at::kActor);
-        B(at::kFlags) = static_cast<unsigned char>(B(at::kFlags) | 0x80);
+        const unsigned target = B(::bof3::Img(at::kTarget.v));
+        const unsigned actor = B(::bof3::Img(at::kActor.v));
+        B(::bof3::Img(at::kFlags.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kFlags.v)) | 0x80);
         const short delta = BH_CALL(Battle_CalcDamage)(actor, target, 0xFFFF);
         rv::Store<unsigned>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(delta));
         return;
     }
     Result()[8] = 1;
-    BH_CALL(Battle_SetDamagePopup)(0, B(at::kTarget));
+    BH_CALL(Battle_SetDamagePopup)(0, B(::bof3::Img(at::kTarget.v)));
     BH_AT(Void0, at::kMissTail)();
 }
 
@@ -461,7 +461,7 @@ const unsigned char* Line(unsigned id) { return BH_CALL(Msg_SystemPtr)(id); }
 // The message window's last line (0x93C2C4 + ((0x93C2A1 - 1) & 15) * 8),
 // the count read after the Msg_SystemPtr call that made the text.
 void ShowLine(const unsigned char* text) {
-    SetLong(At(at::kMsgText + ((BattleActorCopies_QueueWrite - 1u) & 0xF) * 8), static_cast<S32>(Key(text)));
+    SetLong(At(::bof3::Img(at::kMsgText.v) + ((BattleActorCopies_QueueWrite - 1u) & 0xF) * 8), static_cast<S32>(Key(text)));
 }
 unsigned char* Member() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor); }
 void MarkMember() {
@@ -521,10 +521,10 @@ void MoveCursor(U window, U keys, S32 sum_max, S32 a_max) {
 // +5): 1 when the member has it.
 unsigned char Affordable(U slot) {
     if (B(slot + 3) == 0xFF) return 0;
-    unsigned char cost = B(at::kGeneCostTable + B(slot));
-    if (B(slot + 1) != 0xFF) cost = static_cast<unsigned char>(cost + B(at::kGeneCostTable + B(slot + 1)));
-    if (B(slot + 2) != 0xFF) cost = static_cast<unsigned char>(cost + B(at::kGeneCostTable + B(slot + 2)));
-    return cost <= W(0x802DDA + rv::As<records::PartyMember>(Member())->actor * at::kPartyStride);
+    unsigned char cost = B(::bof3::Img(at::kGeneCostTable.v) + B(slot));
+    if (B(slot + 1) != 0xFF) cost = static_cast<unsigned char>(cost + B(::bof3::Img(at::kGeneCostTable.v) + B(slot + 1)));
+    if (B(slot + 2) != 0xFF) cost = static_cast<unsigned char>(cost + B(::bof3::Img(at::kGeneCostTable.v) + B(slot + 2)));
+    return cost <= W(::bof3::Img(0x802DDA) + rv::As<records::PartyMember>(Member())->actor * at::kPartyStride);
 }
 
 // A slot's genes into 0x904B84..86 (0x450610, 0x450E70): the count 0x904B87
@@ -535,7 +535,7 @@ void TakeSlot(U slot) {
     for (unsigned j = 0; j < 3; ++j) {
         const unsigned char g = B(slot + j);
         if (g == 0xFF) continue;
-        B(at::kGenes + j) = g;
+        B(::bof3::Img(at::kGenes.v) + j) = g;
         BattleE5_GeneCount = static_cast<unsigned char>(BattleE5_GeneCount + 1);
     }
 }
@@ -559,10 +559,10 @@ void OpenList(U slot, U window, unsigned char kind, unsigned x, unsigned line) {
 
 void ReopenMenu(unsigned x) {
     BH_CALL(Window_Alloc)(0x15, 5);
-    B(at::kWin21 + 2) = 0;
-    B(at::kWin21 + 3) = 0;
-    SetW(at::kWin21 + 4, x);
-    SetW(at::kWin21 + 6, 0x3F);
+    B(::bof3::Img(at::kWin21.v) + 2) = 0;
+    B(::bof3::Img(at::kWin21.v) + 3) = 0;
+    SetW(::bof3::Img(at::kWin21.v) + 4, x);
+    SetW(::bof3::Img(at::kWin21.v) + 6, 0x3F);
 }
 
 void BackToMenu(U window) {
@@ -579,13 +579,13 @@ void BackToMenu(U window) {
 
 // original 0x44FF10 (0x64ECCC[0]; PSX 0x800A162C): jmp [0x64ECE8 + 4 * 0x904AA4], two steps.
 extern "C" unsigned long __cdecl DragonCmd_LoadDispatch(unsigned long through) {
-    return Dispatch("DragonCmd_LoadDispatch", DragonCmd_LoadSteps_addr, 2, through);
+    return Dispatch("DragonCmd_LoadDispatch", ::bof3::Img(DragonCmd_LoadSteps_addr), 2, through);
 }
 
 // original 0x44FF30 (0x64ECE8[0]; PSX 0x800A1668): window 16's +3 zero: LoadDatFile(0xCC) and
 // the next step; else nothing.
 extern "C" void __cdecl DragonCmd_LoadStart(void) {
-    if (B(at::kWin16 + 3) != 0) return;
+    if (B(::bof3::Img(at::kWin16.v) + 3) != 0) return;
     BH_CALL(LoadDatFile)(0xCC);
     NextStep();
 }
@@ -613,23 +613,23 @@ extern "C" void __cdecl DragonCmd_LoadWait(void) {
 // and the menu's line 0x904AA5 = 1; 0x4525B0; the next part.
 extern "C" void __cdecl DragonCmd_Open(void) {
     BH_CALL(Window_Alloc)(0x15, 5);
-    B(at::kWin21 + 2) = 0;
-    B(at::kWin21 + 3) = 0;
-    SetW(at::kWin21 + 4, 0x142);
-    SetW(at::kWin21 + 6, 0x3F);
-    B(at::kWin21 + 0xA) = 0;
+    B(::bof3::Img(at::kWin21.v) + 2) = 0;
+    B(::bof3::Img(at::kWin21.v) + 3) = 0;
+    SetW(::bof3::Img(at::kWin21.v) + 4, 0x142);
+    SetW(::bof3::Img(at::kWin21.v) + 6, 0x3F);
+    B(::bof3::Img(at::kWin21.v) + 0xA) = 0;
     BH_CALL(Window_Alloc)(0x11, 5);
-    B(at::kWin17 + 2) = 1;
-    B(at::kWin17 + 3) = 0;
+    B(::bof3::Img(at::kWin17.v) + 2) = 1;
+    B(::bof3::Img(at::kWin17.v) + 3) = 0;
     Sound(0x102);
     const U genes = Gene_Bits;
-    for (unsigned i = 0; i < 18; ++i) B(at::kGeneFlags + i) = static_cast<unsigned char>((genes >> i) & 1);
-    SetW(at::kRepeatLatch, 0);
+    for (unsigned i = 0; i < 18; ++i) B(::bof3::Img(at::kGeneFlags.v) + i) = static_cast<unsigned char>((genes >> i) & 1);
+    SetW(::bof3::Img(at::kRepeatLatch.v), 0);
     BossSb_Countdown = 1;
     BattleE5_GeneRow = 0;
     BattleE1_Roster = 0;
-    SetW(at::kWord72, 0);
-    SetW(at::kAsk, 0);
+    SetW(::bof3::Img(at::kWord72.v), 0);
+    SetW(::bof3::Img(at::kAsk.v), 0);
     BattleE5_GeneCount = 0;
     BattleActions_ApCost = 0;
     BH_AT(Void0, at::kDragonTask)();
@@ -642,7 +642,7 @@ extern "C" void __cdecl DragonCmd_Open(void) {
 
 // original 0x450070 (0x64ECCC[2]; PSX 0x800A1868): jmp [0x64ECF0 + 4 * 0x904AA4], five steps.
 extern "C" unsigned long __cdecl DragonCmd_MenuDispatch(unsigned long through) {
-    return Dispatch("DragonCmd_MenuDispatch", DragonCmd_MenuSteps_addr, 5, through);
+    return Dispatch("DragonCmd_MenuDispatch", ::bof3::Img(DragonCmd_MenuSteps_addr), 5, through);
 }
 
 // original 0x450090 (0x64ECF0[0]; PSX 0x800A18A4): the menu's line 0x42 + 0x904AA5 shown;
@@ -696,7 +696,7 @@ extern "C" void __cdecl DragonCmd_MenuPick(void) {
 
 // original 0x4501E0 (0x64ECF0[2]; PSX 0x800A1A70): window 21's +3 = 2 (closing), the next step.
 extern "C" void __cdecl DragonCmd_MenuClose(void) {
-    CloseList(Window21_addr);
+    CloseList(::bof3::Img(Window21_addr));
     NextStep();
 }
 
@@ -730,21 +730,21 @@ extern "C" void __cdecl DragonCmd_MenuCancelLoad(void) {
 
 // original 0x450280 (0x64ECCC[3]; PSX 0x800A1B70): jmp [0x64ED04 + 4 * 0x904AA4], seven steps.
 extern "C" unsigned long __cdecl DragonCmd_SlotsDispatch(unsigned long through) {
-    return Dispatch("DragonCmd_SlotsDispatch", DragonCmd_SlotsSteps_addr, 7, through);
+    return Dispatch("DragonCmd_SlotsDispatch", ::bof3::Img(DragonCmd_SlotsSteps_addr), 7, through);
 }
 
 // original 0x4502A0 (0x64ED04[0]; PSX 0x800A1BAC): window 21's +3 = 2, +0xA = 0; the next step.
 extern "C" void __cdecl DragonCmd_SlotsCloseMenu(void) {
     const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
-    B(at::kWin21 + 3) = 2;
-    B(at::kWin21 + 0xA) = 0;
+    B(::bof3::Img(at::kWin21.v) + 3) = 2;
+    B(::bof3::Img(at::kWin21.v) + 0xA) = 0;
     BattleE4_Step4 = step;
 }
 
 // original 0x4502C0 (0x64ED04[1]; PSX 0x800A1BD8): window 21 closed: its +0 zeroed, window 18
 // claimed (kind 5; +2 2, +3 0, at 0xFF5B, 0x3F, its cursor 0, 0), line 0x59,
 // 0x904AA5 |= 0x80, the next step.
-extern "C" void __cdecl DragonCmd_SlotsOpen(void) { OpenList(0x12, Window18_addr, 2, 0xFF5B, 0x59); }
+extern "C" void __cdecl DragonCmd_SlotsOpen(void) { OpenList(0x12, ::bof3::Img(Window18_addr), 2, 0xFF5B, 0x59); }
 
 // original 0x450340 (0x64ED04[2]): the first list's cursor, once window 18's
 // x is 0x5B. The repeat keys of 0x500C; cancel: sound 0x106, the next step
@@ -754,7 +754,7 @@ extern "C" void __cdecl DragonCmd_SlotsOpen(void) { OpenList(0x12, Window18_addr
 // step 0 - else sound 0x107; then the cursor moved in six slots (MoveCursor:
 // a + b below 5, a at most 3).
 extern "C" void __cdecl DragonCmd_SlotsCursor(void) {
-    if (W(at::kWin18 + 4) != 0x5B) return;
+    if (W(::bof3::Img(at::kWin18.v) + 4) != 0x5B) return;
     const U keys = Repeat(Sigma(0x500C));
     U pressed = Pressed();
     if (Cancel(pressed)) {
@@ -772,7 +772,7 @@ extern "C" void __cdecl DragonCmd_SlotsCursor(void) {
         pressed = Pressed();
     }
     if (pressed & Sigma(0x10)) {
-        if (B(SlotOf(at::kSlots, Window18_addr) + 3) != 0xFF) {
+        if (B(SlotOf(::bof3::Img(at::kSlots.v), ::bof3::Img(Window18_addr)) + 3) != 0xFF) {
             Sound(0x104);
             BattleE4_Step3 = 6;
             BattleE4_Step4 = 0;
@@ -780,33 +780,33 @@ extern "C" void __cdecl DragonCmd_SlotsCursor(void) {
         }
         Sound(0x107);
     }
-    MoveCursor(Window18_addr, keys, 5, 3);
+    MoveCursor(::bof3::Img(Window18_addr), keys, 5, 3);
 }
 
 // original 0x450510 (called by DragonCmd_SlotsCursor; PSX 0x800A1F40): the first list's slot
 // at the cursor priced against the member's AP (Affordable). al out.
-extern "C" unsigned char __cdecl DragonCmd_SlotAffordable(void) { return Affordable(SlotOf(at::kSlots, Window18_addr)); }
+extern "C" unsigned char __cdecl DragonCmd_SlotAffordable(void) { return Affordable(SlotOf(::bof3::Img(at::kSlots.v), ::bof3::Img(Window18_addr))); }
 
 // original 0x4505A0 (0x64ED04[3]; PSX 0x800A2020): window 21 claimed again (+2 / +3 0, at
 // 0x142, 0x3F), window 18's +3 = 2, the next step.
 extern "C" void __cdecl DragonCmd_SlotsCancel(void) {
     ReopenMenu(0x142);
     const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
-    B(at::kWin18 + 3) = 2;
+    B(::bof3::Img(at::kWin18.v) + 3) = 2;
     BattleE4_Step4 = step;
 }
 
 // original 0x4505E0 (0x64ED04[4]; PSX 0x800A2088): window 18 closed: back to the menu (part 2,
 // step 0, 0x904AA5's bit 7 cleared).
-extern "C" void __cdecl DragonCmd_SlotsBack(void) { BackToMenu(Window18_addr); }
+extern "C" void __cdecl DragonCmd_SlotsBack(void) { BackToMenu(::bof3::Img(Window18_addr)); }
 
 // original 0x450610 (0x64ED04[5]; PSX 0x800A20CC): the slot at the cursor taken (TakeSlot),
 // 0x4525B0, window 18's +3 = 2, the member's +0x134 |= 4, the next step.
 extern "C" void __cdecl DragonCmd_SlotsConfirm(void) {
-    TakeSlot(SlotOf(at::kSlots, Window18_addr));
+    TakeSlot(SlotOf(::bof3::Img(at::kSlots.v), ::bof3::Img(Window18_addr)));
     BH_AT(Void0, at::kDragonTask)();
     auto* const member_rec = rv::As<records::PartyMember>(Member());
-    B(at::kWin18 + 3) = 2;
+    B(::bof3::Img(at::kWin18.v) + 3) = 2;
     member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
     NextStep();
 }
@@ -830,14 +830,14 @@ extern "C" void __cdecl DragonCmd_SlotsClose(void) {
 
 // original 0x4506C0 (0x64ECCC[4]; PSX 0x800A222C): jmp [0x64ED20 + 4 * 0x904AA4], five steps.
 extern "C" unsigned long __cdecl DragonCmd_GenesDispatch(unsigned long through) {
-    return Dispatch("DragonCmd_GenesDispatch", DragonCmd_GenesSteps_addr, 5, through);
+    return Dispatch("DragonCmd_GenesDispatch", ::bof3::Img(DragonCmd_GenesSteps_addr), 5, through);
 }
 
 // original 0x4506E0 (0x64ED20[0]; PSX 0x800A2268): window 17's +3 = 2, window 4's +3 = 1, the
 // next step.
 extern "C" void __cdecl DragonCmd_GenesOpen(void) {
     const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
-    B(at::kWin17 + 3) = 2;
+    B(::bof3::Img(at::kWin17.v) + 3) = 2;
     WindowRecords[4].state = 1;
     BattleE4_Step4 = step;
 }
@@ -866,7 +866,7 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
         const unsigned char row = BattleE5_GeneRow;
         if (row != 0xFF) {
             const unsigned col = BattleE1_Roster;
-            if (B(at::kGeneFlags + col + 6u * row) != 0) id = (col + 6u * row + 0x4172) & 0xFFFF;
+            if (B(::bof3::Img(at::kGeneFlags.v) + col + 6u * row) != 0) id = (col + 6u * row + 0x4172) & 0xFFFF;
         }
         const unsigned char* const text = Line(id);
         BH_CALL(BattleBanner_Set)(0, 1, 1, 0, 0xFF, reinterpret_cast<const char*>(text));
@@ -878,13 +878,13 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
         if (n != 0) {
             const unsigned char last = static_cast<unsigned char>(n - 1);
             BattleE5_GeneCount = last;
-            B(at::kGeneFlags + B(at::kGenes + last)) = 1;
+            B(::bof3::Img(at::kGeneFlags.v) + B(::bof3::Img(at::kGenes.v) + last)) = 1;
             BH_AT(Void0, at::kDragonTask)();
             Sound(0x106);
             return;
         }
         const unsigned char pick = static_cast<unsigned char>(BossSb_Countdown & 0x7F);
-        B(at::kWin17 + 3) = 1;
+        B(::bof3::Img(at::kWin17.v) + 3) = 1;
         WindowRecords[4].state = 2;
         BossSb_Countdown = pick;
         BattleE4_Step3 = 2;
@@ -902,7 +902,7 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
             Sound(0x107);
         } else {
             const unsigned char col = BattleE1_Roster;
-            unsigned char* const flag = At(at::kGeneFlags + col + 6u * row);
+            unsigned char* const flag = At(::bof3::Img(at::kGeneFlags.v) + col + 6u * row);
             if (*flag == 0) {
                 Sound(0x107);
                 return;
@@ -912,7 +912,7 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
                 Sound(0x106);
             } else {
                 *flag = 0;
-                B(at::kGenes + n) = static_cast<unsigned char>(row * 6 + col);
+                B(::bof3::Img(at::kGenes.v) + n) = static_cast<unsigned char>(row * 6 + col);
                 BattleE5_GeneCount = static_cast<unsigned char>(BattleE5_GeneCount + 1);
                 BH_AT(Void0, at::kDragonTask)();
                 Sound(0x103);
@@ -931,7 +931,7 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
             id = BattleE5_GeneCount != 0 ? 0x57 : 0x58;
         } else {
             const unsigned char col = BattleE1_Roster;
-            id = B(at::kGeneFlags + col + 6u * row) != 0 ? (col + 6u * row + 0x45) & 0xFFFF : 0x4000;
+            id = B(::bof3::Img(at::kGeneFlags.v) + col + 6u * row) != 0 ? (col + 6u * row + 0x45) & 0xFFFF : 0x4000;
         }
         ShowLine(Line(id));
     }
@@ -960,7 +960,7 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
 extern "C" void __cdecl DragonCmd_GenesConfirm(void) {
     Sound(0x104);
     auto* const member_rec = rv::As<records::PartyMember>(Member());
-    B(at::kWin21 + 3) = 2;
+    B(::bof3::Img(at::kWin21.v) + 3) = 2;
     member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
     NextStep();
 }
@@ -985,7 +985,7 @@ extern "C" void __cdecl DragonCmd_GenesClose(void) {
 extern "C" void __cdecl DragonCmd_Commit(void) {
     if (BH_CALL(File_LoadDone)() == 0) return;
     BH_CALL(Gfx_ClutStripCopyRow)(0x1B);
-    unsigned char* const command = Ptr(at::kCommandRecord);
+    unsigned char* const command = Ptr(::bof3::Img(at::kCommandRecord.v));
     Gfx_ClutStripDirty = 1;
     BattleE4_Picking = 0;
     command[1] = 4;
@@ -997,27 +997,27 @@ extern "C" void __cdecl DragonCmd_Commit(void) {
     BattleE4_Step2 = 0;
     BattleE4_Step3 = 0;
     BattleE4_Step4 = 0;
-    B(at::kMsgFlag + line * 8) = 1;
+    B(::bof3::Img(at::kMsgFlag.v) + line * 8) = 1;
 }
 
 // --- part 5: the second list (0x904620, window 19) ------------------------------------
 
 // original 0x450B20 (0x64ECCC[5]; PSX 0x800A2914): jmp [0x64ED34 + 4 * 0x904AA4], seven steps.
 extern "C" unsigned long __cdecl DragonCmd_Slots2Dispatch(unsigned long through) {
-    return Dispatch("DragonCmd_Slots2Dispatch", DragonCmd_Slots2Steps_addr, 7, through);
+    return Dispatch("DragonCmd_Slots2Dispatch", ::bof3::Img(DragonCmd_Slots2Steps_addr), 7, through);
 }
 
 // original 0x450B40 (0x64ED34[0]; PSX 0x800A2950): window 21's +3 = 2, +0xA = 1; the next step.
 extern "C" void __cdecl DragonCmd_Slots2CloseMenu(void) {
     const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
-    B(at::kWin21 + 3) = 2;
-    B(at::kWin21 + 0xA) = 1;
+    B(::bof3::Img(at::kWin21.v) + 3) = 2;
+    B(::bof3::Img(at::kWin21.v) + 0xA) = 1;
     BattleE4_Step4 = step;
 }
 
 // original 0x450B60 (0x64ED34[1]; PSX 0x800A2980): as DragonCmd_SlotsOpen for window 19 (slot
 // 0x13; +2 3, at 0x15B) and line 0x63.
-extern "C" void __cdecl DragonCmd_Slots2Open(void) { OpenList(0x13, Window19_addr, 3, 0x15B, 0x63); }
+extern "C" void __cdecl DragonCmd_Slots2Open(void) { OpenList(0x13, ::bof3::Img(Window19_addr), 3, 0x15B, 0x63); }
 
 // original 0x450BE0 (0x64ED34[2]; PSX 0x800A2A4C): the second list's cursor, once window 19's
 // x is 0x5B: as DragonCmd_SlotsCursor without the bit-0x10 branch - cancel:
@@ -1025,7 +1025,7 @@ extern "C" void __cdecl DragonCmd_Slots2Open(void) { OpenList(0x13, Window19_add
 // 0x104, step 5 - else sound 0x107; the cursor in twelve slots (a + b below
 // 0xB, a at most 9).
 extern "C" void __cdecl DragonCmd_Slots2Cursor(void) {
-    if (W(at::kWin19 + 4) != 0x5B) return;
+    if (W(::bof3::Img(at::kWin19.v) + 4) != 0x5B) return;
     const U keys = Repeat(Sigma(0x500C));
     const U pressed = Pressed();
     if (Cancel(pressed)) {
@@ -1041,35 +1041,35 @@ extern "C" void __cdecl DragonCmd_Slots2Cursor(void) {
         }
         Sound(0x107);
     }
-    MoveCursor(Window19_addr, keys, 0xB, 9);
+    MoveCursor(::bof3::Img(Window19_addr), keys, 0xB, 9);
 }
 
 // original 0x450D60 (called by DragonCmd_Slots2Cursor; PSX 0x800A2C68): the second list's
 // slot at the cursor priced against the member's AP. al out.
-extern "C" unsigned char __cdecl DragonCmd_Slot2Affordable(void) { return Affordable(SlotOf(at::kSlots2, Window19_addr)); }
+extern "C" unsigned char __cdecl DragonCmd_Slot2Affordable(void) { return Affordable(SlotOf(::bof3::Img(at::kSlots2.v), ::bof3::Img(Window19_addr))); }
 
 // original 0x450DF0 (0x64ED34[3]; PSX 0x800A2D48): window 21 claimed again (at 0xFF42, 0x3F,
 // +0xA 1), window 19's +3 = 2, the next step.
 extern "C" void __cdecl DragonCmd_Slots2Cancel(void) {
     ReopenMenu(0xFF42);
     const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
-    B(at::kWin21 + 0xA) = 1;
-    B(at::kWin19 + 3) = 2;
+    B(::bof3::Img(at::kWin21.v) + 0xA) = 1;
+    B(::bof3::Img(at::kWin19.v) + 3) = 2;
     BattleE4_Step4 = step;
 }
 
 // original 0x450E40 (0x64ED34[4]; PSX 0x800A2DBC): window 19 closed: back to the menu.
-extern "C" void __cdecl DragonCmd_Slots2Back(void) { BackToMenu(Window19_addr); }
+extern "C" void __cdecl DragonCmd_Slots2Back(void) { BackToMenu(::bof3::Img(Window19_addr)); }
 
 // original 0x450E70 (0x64ED34[5]; PSX 0x800A2E00): the second list's slot taken (TakeSlot),
 // 0x4525B0, sound 0x104, window 19's +3 = 2, the member's +0x134 |= 4, the
 // next step.
 extern "C" void __cdecl DragonCmd_Slots2Confirm(void) {
-    TakeSlot(SlotOf(at::kSlots2, Window19_addr));
+    TakeSlot(SlotOf(::bof3::Img(at::kSlots2.v), ::bof3::Img(Window19_addr)));
     BH_AT(Void0, at::kDragonTask)();
     Sound(0x104);
     auto* const member_rec = rv::As<records::PartyMember>(Member());
-    B(at::kWin19 + 3) = 2;
+    B(::bof3::Img(at::kWin19.v) + 3) = 2;
     member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
     NextStep();
 }
@@ -1093,27 +1093,27 @@ extern "C" void __cdecl DragonCmd_Slots2Close(void) {
 // original 0x450F30 (0x64ECCC[6]; PSX 0x800A2F58): jmp [0x64ED50 + 4 * 0x904AA4], seven steps
 // (the last, 0x451480, BE6's).
 extern "C" unsigned long __cdecl DragonCmd_StoreDispatch(unsigned long through) {
-    return Dispatch("DragonCmd_StoreDispatch", DragonCmd_StoreSteps_addr, 7, through);
+    return Dispatch("DragonCmd_StoreDispatch", ::bof3::Img(DragonCmd_StoreSteps_addr), 7, through);
 }
 
 // original 0x450F50 (0x64ED50[0]; PSX 0x800A2F94): window 18's +3 = 3, window 19 claimed
 // (slot 0x13: +3 0, its cursor 0, 0, +2 4, at 0x15B, 0x3F), the next step.
 extern "C" void __cdecl DragonCmd_StoreOpen(void) {
-    B(at::kWin18 + 3) = 3;
+    B(::bof3::Img(at::kWin18.v) + 3) = 3;
     BH_CALL(Window_Alloc)(0x13, 5);
-    B(at::kWin19 + 3) = 0;
-    SetW(at::kWin19 + 0x10, 0);
-    SetW(at::kWin19 + 0x12, 0);
+    B(::bof3::Img(at::kWin19.v) + 3) = 0;
+    SetW(::bof3::Img(at::kWin19.v) + 0x10, 0);
+    SetW(::bof3::Img(at::kWin19.v) + 0x12, 0);
     const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
-    B(at::kWin19 + 2) = 4;
-    SetW(at::kWin19 + 4, 0x15B);
-    SetW(at::kWin19 + 6, 0x3F);
+    B(::bof3::Img(at::kWin19.v) + 2) = 4;
+    SetW(::bof3::Img(at::kWin19.v) + 4, 0x15B);
+    SetW(::bof3::Img(at::kWin19.v) + 6, 0x3F);
     BattleE4_Step4 = step;
 }
 
 // original 0x450FA0 (0x64ED50[1]; PSX 0x800A3010): window 19's x 0xA3: the next step.
 extern "C" void __cdecl DragonCmd_StoreWait(void) {
-    if (W(at::kWin19 + 4) == 0xA3) NextStep();
+    if (W(::bof3::Img(at::kWin19.v) + 4) == 0xA3) NextStep();
 }
 
 // original 0x450FC0 (0x64ED50[2]; PSX 0x800A3044): the destination's cursor: line 0x61; the
@@ -1130,15 +1130,15 @@ extern "C" void __cdecl DragonCmd_StoreCursor(void) {
         return;
     }
     if (Confirm(pressed)) {
-        if (B(SlotOf(at::kSlots2, Window19_addr) + 3) == 0xFF) {
+        if (B(SlotOf(::bof3::Img(at::kSlots2.v), ::bof3::Img(Window19_addr)) + 3) == 0xFF) {
             BattleE4_Step4 = 4;
         } else {
-            SetW(at::kAsk, 0);
+            SetW(::bof3::Img(at::kAsk.v), 0);
             BattleE4_Step4 = 3;
         }
         Sound(0x104);
     }
-    MoveCursor(Window19_addr, keys, 0xB, 9);
+    MoveCursor(::bof3::Img(Window19_addr), keys, 0xB, 9);
 }
 
 // original 0x451160 (0x64ED50[3]; PSX 0x800A3294): the overwrite prompt: line 0x62; the
@@ -1162,7 +1162,7 @@ extern "C" void __cdecl DragonCmd_StoreAsk(void) {
     ShowLine(Line(0x62));
     const U keys = Repeat(0xA000);
     const U pressed = Pressed();
-    if (Cancel(pressed) || (Confirm(pressed) && W(at::kAsk) != 0)) {
+    if (Cancel(pressed) || (Confirm(pressed) && W(::bof3::Img(at::kAsk.v)) != 0)) {
         Sound(0x106);
         BattleE4_Step4 = static_cast<unsigned char>(BattleE4_Step4 - 1);
         return;
@@ -1172,8 +1172,8 @@ extern "C" void __cdecl DragonCmd_StoreAsk(void) {
         NextStep();
         return;
     }
-    if (keys & 0xA000) SetW(at::kAsk, W(at::kAsk) ^ 1u);
-    const U ask = L(at::kAsk);
+    if (keys & 0xA000) SetW(::bof3::Img(at::kAsk.v), W(::bof3::Img(at::kAsk.v)) ^ 1u);
+    const U ask = L(::bof3::Img(at::kAsk.v));
     const U answer = g_store_ask_word ? (ask & 0xFFFFu) : ask;
     BH_CALL(Menu_DrawHand)(static_cast<int>(answer * 0x22 + 0xD5), 0x18, 0);
 }
@@ -1182,8 +1182,8 @@ extern "C" void __cdecl DragonCmd_StoreAsk(void) {
 // into the second list's at its cursor, byte by byte (each read before its
 // write, as the original), the next step.
 extern "C" void __cdecl DragonCmd_StoreCopy(void) {
-    const U from = SlotOf(at::kSlots, Window18_addr);
-    const U to = SlotOf(at::kSlots2, Window19_addr);
+    const U from = SlotOf(::bof3::Img(at::kSlots.v), ::bof3::Img(Window18_addr));
+    const U to = SlotOf(::bof3::Img(at::kSlots2.v), ::bof3::Img(Window19_addr));
     for (unsigned j = 0; j < 4; ++j) B(to + j) = B(from + j);
     NextStep();
 }
@@ -1205,7 +1205,7 @@ extern "C" void __cdecl DragonCmd_StoreSource(void) {
     }
     // DIVERGENCE DIV-0139: Japan's triangle through σ (0x4512EB `or cl, 0x10`)
     if (((Field_ConfirmButtons | Sigma(0x10)) & pressed & 0xFFFF) != 0) {
-        if (B(SlotOf(at::kSlots, Window18_addr) + 3) != 0xFF) {
+        if (B(SlotOf(::bof3::Img(at::kSlots.v), ::bof3::Img(Window18_addr)) + 3) != 0xFF) {
             Sound(0x104);
             BattleE4_Step4 = 2;
             return;
@@ -1214,14 +1214,14 @@ extern "C" void __cdecl DragonCmd_StoreSource(void) {
         pressed = Pressed();
     }
     if (pressed & Sigma(0x10)) {
-        if (B(SlotOf(at::kSlots, Window18_addr) + 3) != 0xFF) {
+        if (B(SlotOf(::bof3::Img(at::kSlots.v), ::bof3::Img(Window18_addr)) + 3) != 0xFF) {
             Sound(0x104);
             BattleE4_Step4 = 2;
             return;
         }
         Sound(0x107);
     }
-    MoveCursor(Window18_addr, keys, 5, 3);
+    MoveCursor(::bof3::Img(Window18_addr), keys, 5, 3);
 }
 
 // ============================================================================

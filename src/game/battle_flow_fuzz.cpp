@@ -84,7 +84,7 @@ void Disturb() {
     const unsigned v = (h >> 12) & 0xFF;
     const unsigned w = h >> 20;
     switch ((h >> 4) % 20) {
-    case 0: At(at::kPhase)[0] = static_cast<unsigned char>(v % 6); break;
+    case 0: At(::bof3::Img(at::kPhase.v))[0] = static_cast<unsigned char>(v % 6); break;
     case 1: At(EventBattle_Id_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 2: SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(v % 8)); break;
     case 3: Sprite_Current = EnemyObj(v % 8); break;
@@ -112,15 +112,15 @@ void Disturb() {
         break;
     }
     case 10: At(Battle_EnemiesLeft_addr)[0] = static_cast<unsigned char>(v % 3); break;
-    case 11: At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] ^ 0x40); break;
+    case 11: At(::bof3::Img(at::kRoundFlags.v) + 1)[0] = static_cast<unsigned char>(At(::bof3::Img(at::kRoundFlags.v) + 1)[0] ^ 0x40); break;
     case 12: At(BattleFlow_ActorAt_addr)[0] = static_cast<unsigned char>(v % 11); break;
-    case 13: SetWord(At(at::kMagicId), v % 3 == 0 ? 0xA1 : v); break;
+    case 13: SetWord(At(::bof3::Img(at::kMagicId.v)), v % 3 == 0 ? 0xA1 : v); break;
     case 14: {
         unsigned char* const s = move_script::At(static_cast<std::uint32_t>(Long(At(BattleFlow_TaskCurrent_addr))));
         SetWord(s + 0x32 + 4 * (w % 3), h >> 16);
         break;
     }
-    case 15: At(at::kNumberText + w % 8)[0] = static_cast<unsigned char>(v % 3 == 0 ? ' ' : v); break;
+    case 15: At(::bof3::Img(at::kNumberText.v) + w % 8)[0] = static_cast<unsigned char>(v % 3 == 0 ? ' ' : v); break;
     case 16: {
         unsigned char* const e = move_script::At(static_cast<std::uint32_t>(Long(At(BattleE3_CurrentEnemy_addr))));
         if (v % 2) e[0x8C] = static_cast<unsigned char>(w);
@@ -148,7 +148,7 @@ template <unsigned N> void __cdecl StubHandler() { Record(N, Id(Sprite_Current),
 // BattleTask_Create, the text after Gpu_GetClut.
 void __cdecl StubEventHook(int n) {
     Record(40, static_cast<std::uint32_t>(n));
-    if (Hash() % 2) At(at::kPhase)[0] = static_cast<unsigned char>((Hash() >> 8) % 6);
+    if (Hash() % 2) At(::bof3::Img(at::kPhase.v))[0] = static_cast<unsigned char>((Hash() >> 8) % 6);
     Disturb();
 }
 void __cdecl StubEnemyHook(int n) {
@@ -198,7 +198,7 @@ void __cdecl StubLoadDat(int file) { Record(52, static_cast<std::uint32_t>(file)
 // the enemy objects - the original's 0xFF writes outside the image).
 unsigned char __cdecl StubTaskCreate(unsigned kind, unsigned parameter) {
     Record(53, kind & 0xFF, parameter & 0xFF);
-    if (Hash() % 2) SetWord(At(at::kMagicId), (Hash() >> 8) & 0xFF);
+    if (Hash() % 2) SetWord(At(::bof3::Img(at::kMagicId.v)), (Hash() >> 8) & 0xFF);
     Disturb();
     const std::uint32_t h = Hash();
     return static_cast<unsigned char>(h % 8 == 0 ? 0x30 + (h >> 8) % 0x10 : (h >> 8) % at::kTaskCount);
@@ -264,7 +264,7 @@ unsigned __cdecl StubGetClut(int x, int y) {
     Record(59, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
     if (Hash() % 2)
         for (unsigned i = 0; i < 8; ++i) {
-            unsigned char* const c = At(at::kNumberText + i);
+            unsigned char* const c = At(::bof3::Img(at::kNumberText.v) + i);
             if (c[0] != 0 && c[0] != 0xFF) c[0] = static_cast<unsigned char>(c[0] + 1);
         }
     Disturb();
@@ -394,11 +394,11 @@ const Region kRegions[] = {
     {BattleTask_Slots_addr, 0x22A0}, // the 48 slots, 0x93B8C4, 0x93B940, the eight enemy objects
     {0x937F88, 4},               // Sprite_Current
     {BattleE3_CurrentEnemy_addr, 4},
-    {at::kPhase, 0x260},         // the battle's globals, the drop list, the event hook, the text; to 0x904D00
+    {at::kPhase.v, 0x260},         // the battle's globals, the drop list, the event hook, the text; to 0x904D00
     {ObjTrio_addr, 0x3E4},       // ObjTrio
     {0x64B284, 0x1C0},           // constant data from here on - random here, put back after: the item rows 0..2
     {0x675ED8, 0x100},           // the item rows 3
-    {at::kAbilityRows, 0x8E8},   // the ability rows and the magic files
+    {at::kAbilityRows.v, 0x8E8},   // the ability rows and the magic files
     {0x65C4D0, 0x1800},          // the ability records' flag bytes
 };
 constexpr unsigned kRegionBytes = 0x22A0 + 4 + 4 + 0x260 + 0x3E4 + 0x1C0 + 0x100 + 0x8E8 + 0x1800;
@@ -462,10 +462,10 @@ void Fix() {
         e[0xAA] = static_cast<unsigned char>(Next() % 8);   // drop classes inside the chance table: a class
         e[0xAE] = static_cast<unsigned char>(Next() % 8);   // above 7 reads the original's stack (ours aborts)
     }
-    At(at::kPhase)[0] = static_cast<unsigned char>(Next() % 6);
+    At(::bof3::Img(at::kPhase.v))[0] = static_cast<unsigned char>(Next() % 6);
     SetPtr(BattleHook_Event_addr, reinterpret_cast<const void*>(&StubEventHook));
-    SetWord(At(at::kMagicId), Next() & 0xFF);
-    At(at::kNumberText + 0x20)[0] = 0;
+    SetWord(At(::bof3::Img(at::kMagicId.v)), Next() & 0xFF);
+    At(::bof3::Img(at::kNumberText.v) + 0x20)[0] = 0;
     if (Half()) At(EventBattle_Id_addr)[0] = 0;
     if (Half()) At(BattleFlow_AnimGate_addr)[0] = 0;
 }
@@ -481,7 +481,7 @@ Args Seed(unsigned k) {
     g_chance_edges = k == kChance70;
     switch (k) {
     case kPhaseDispatch:
-        SetLong(At(at::kPhase), static_cast<std::int32_t>(Garbage(0xFF, Next() % 6)));
+        SetLong(At(::bof3::Img(at::kPhase.v)), static_cast<std::int32_t>(Garbage(0xFF, Next() % 6)));
         break;
     case kTaskRunAll:
         for (unsigned i = 0; i < at::kTaskCount; ++i) {
@@ -524,9 +524,9 @@ Args Seed(unsigned k) {
         if (Half()) At(BattleFlow_AnimGate_addr)[0] = 0;
         if (Half()) e[0x114] = static_cast<unsigned char>(e[0x114] | 0x10);
         static const unsigned char kTurn[] = {0, 1, 2, 3, 4, 0xFF};
-        At(at::kTurnGate)[0] = kTurn[Next() % 6];
-        if (Half()) At(at::kFormation)[0] = 4;
-        if (Half()) SetWord(At(at::kMagicId), Half() ? 0xA1 : 0x1A1);
+        At(::bof3::Img(at::kTurnGate.v))[0] = kTurn[Next() % 6];
+        if (Half()) At(::bof3::Img(at::kFormation.v))[0] = 4;
+        if (Half()) SetWord(At(::bof3::Img(at::kMagicId.v)), Half() ? 0xA1 : 0x1A1);
         if (Often()) e[0x90] = static_cast<unsigned char>(e[0x90] | 2);
         if (Half()) e[0x111] = static_cast<unsigned char>(e[0x111] & 0x7F);
         if (k == kChance70 && Often()) {
@@ -534,9 +534,9 @@ Args Seed(unsigned k) {
             // gate's edge, and the roll itself, in most rounds
             e[0x92] = static_cast<unsigned char>(e[0x92] & ~0x64u);
             e[0x93] = static_cast<unsigned char>(e[0x93] & ~0x40u);
-            At(at::kTurnGate)[0] = static_cast<unsigned char>(Next() % 3);
-            if (At(at::kFormation)[0] == 4 && Half()) At(at::kFormation)[0] = 5;
-            else SetWord(At(at::kMagicId), Half() ? 0xA0 : 0x1A1);
+            At(::bof3::Img(at::kTurnGate.v))[0] = static_cast<unsigned char>(Next() % 3);
+            if (At(::bof3::Img(at::kFormation.v))[0] == 4 && Half()) At(::bof3::Img(at::kFormation.v))[0] = 5;
+            else SetWord(At(::bof3::Img(at::kMagicId.v)), Half() ? 0xA0 : 0x1A1);
             if (Half()) At(BattleFlow_AnimGate_addr)[0] = 0;
             else e[0x114] = static_cast<unsigned char>(e[0x114] | 0x10);
             e[0x90] = static_cast<unsigned char>(e[0x90] | 2);
@@ -545,8 +545,8 @@ Args Seed(unsigned k) {
             case 0: e[0x92] = static_cast<unsigned char>(e[0x92] | (Half() ? 4 : Half() ? 0x20 : 0x40)); break;
             case 6: e[0x92] = static_cast<unsigned char>(e[0x92] | 4); break;
             case 1: e[0x93] = static_cast<unsigned char>(e[0x93] | 0x40); break;
-            case 2: At(at::kTurnGate)[0] = 3; break;
-            case 3: At(at::kFormation)[0] = 4; SetWord(At(at::kMagicId), 0xA1); break;
+            case 2: At(::bof3::Img(at::kTurnGate.v))[0] = 3; break;
+            case 3: At(::bof3::Img(at::kFormation.v))[0] = 4; SetWord(At(::bof3::Img(at::kMagicId.v)), 0xA1); break;
             case 4: At(BattleFlow_AnimGate_addr)[0] = 1; e[0x114] = static_cast<unsigned char>(e[0x114] & ~0x10u); break;
             case 5: e[0x90] = static_cast<unsigned char>(e[0x90] & ~2u); break;
             default: break;
@@ -556,7 +556,7 @@ Args Seed(unsigned k) {
     }
     case kDefeated: {
         At(Battle_EnemiesLeft_addr)[0] = static_cast<unsigned char>(Next() % 3);
-        if (Half()) At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] | 0x40);
+        if (Half()) At(::bof3::Img(at::kRoundFlags.v) + 1)[0] = static_cast<unsigned char>(At(::bof3::Img(at::kRoundFlags.v) + 1)[0] | 0x40);
         if (Half()) At(BattleFlow_ActorAt_addr)[0] = Sprite_Current[5];
         if (Half()) SetLong(At(Battle_ExpTotal_addr), static_cast<std::int32_t>(0xFFFFFFFFu - Next() % 0x100));
         break;
@@ -570,7 +570,7 @@ Args Seed(unsigned k) {
         static const unsigned char kCounts[] = {0, 0, 1, 2, 3, 5, 14, 15, 15, 16};
         At(Battle_DropCount_addr)[0] = Often() ? kCounts[Next() % 10] : static_cast<unsigned char>(Next() % 17);
         for (unsigned i = 0; i < 16; ++i)
-            if (Often()) SetWord(At(at::kDropItems + i * 2), Next() % 5);
+            if (Often()) SetWord(At(::bof3::Img(at::kDropItems.v) + i * 2), Next() % 5);
         break;
     }
     case kItemMagic:
@@ -579,7 +579,7 @@ Args Seed(unsigned k) {
         if (Half()) {
             // the row this id reaches: its file none
             const unsigned w = args.a[0] & 0xFFFF;
-            const auto* const tables = reinterpret_cast<const unsigned char* const*>(static_cast<std::uintptr_t>(at::kItemRows));
+            const auto* const tables = reinterpret_cast<const unsigned char* const*>(static_cast<std::uintptr_t>(::bof3::Img(at::kItemRows.v)));
             SetWord(At(Magic_Rows_addr + tables[w >> 8][w & 0xFF] * 8), 0xFFFF);
         }
         break;
@@ -587,7 +587,7 @@ Args Seed(unsigned k) {
     case kAbilityMagic:
     case kAbilityLoad: {
         args.a[0] = Garbage(0xFF, Next() & 0xFF);
-        if (Half()) SetWord(At(Magic_Rows_addr + At(at::kAbilityRows)[args.a[0] & 0xFF] * 8), 0xFFFF);
+        if (Half()) SetWord(At(Magic_Rows_addr + At(::bof3::Img(at::kAbilityRows.v))[args.a[0] & 0xFF] * 8), 0xFFFF);
         break;
     }
     case kDigits: {
@@ -600,7 +600,7 @@ Args Seed(unsigned k) {
     }
     case kNumber:
         args.a[3] = Often() ? Garbage(0xFFFF, Next() % 1000) : Next();
-        for (unsigned i = 0; i < 0x20; ++i) At(at::kNumberText + i)[0] = static_cast<unsigned char>(Next() % 5 == 0 ? 0 : Next());
+        for (unsigned i = 0; i < 0x20; ++i) At(::bof3::Img(at::kNumberText.v) + i)[0] = static_cast<unsigned char>(Next() % 5 == 0 ? 0 : Next());
         break;
     case kActorIsOut: {
         args.a[0] = Garbage(0xFF, Next() % 11);
@@ -639,17 +639,17 @@ void Cover(unsigned k, const State& in, const State& out) {
         if ((out.result & 0xFF) == 0xFF) ++g_cover.created_none;
         break;
     case kRollDrops: {
-        const unsigned before = Byte(in, at::kDropCount), after = Byte(out, at::kDropCount);
+        const unsigned before = Byte(in, at::kDropCount.v), after = Byte(out, at::kDropCount.v);
         bool merged = false;
-        for (unsigned i = 0; i < before && i < 16; ++i) if (Byte(out, at::kDropCounts + i) != Byte(in, at::kDropCounts + i)) merged = true;
-        if (after != before || Byte(out, at::kDropCounts + before) == 1) ++g_cover.appended;
+        for (unsigned i = 0; i < before && i < 16; ++i) if (Byte(out, at::kDropCounts.v + i) != Byte(in, at::kDropCounts.v + i)) merged = true;
+        if (after != before || Byte(out, at::kDropCounts.v + before) == 1) ++g_cover.appended;
         if (merged) ++g_cover.merged;
         for (unsigned i = 0; i < out.log_n && i < kLog; ++i) if (out.log[i].what == 46) ++g_cover.drops;
         break;
     }
     case kDefeated:
-        if ((Byte(out, at::kBattleEnd) & 2) && !(Byte(in, at::kBattleEnd) & 2)) ++g_cover.battle_end;
-        if ((Byte(in, at::kRoundFlags + 1) & 0x40) && !(Byte(out, at::kRoundFlags + 1) & 0x40)) ++g_cover.flag_cleared;
+        if ((Byte(out, at::kBattleEnd.v) & 2) && !(Byte(in, at::kBattleEnd.v) & 2)) ++g_cover.battle_end;
+        if ((Byte(in, at::kRoundFlags.v + 1) & 0x40) && !(Byte(out, at::kRoundFlags.v + 1) & 0x40)) ++g_cover.flag_cleared;
         break;
     case kAbilityMagic:
         if (out.log_n >= 2 && out.log[1].what == 53) ++g_cover.second_task;
@@ -658,9 +658,9 @@ void Cover(unsigned k, const State& in, const State& out) {
         unsigned drawn = 0;
         for (unsigned i = 0; i < out.log_n && i < kLog; ++i) if (out.log[i].what == 60) ++drawn;
         unsigned chars = 0;
-        while (chars < 0x20 && Byte(out, at::kNumberText + chars) != 0) ++chars;
+        while (chars < 0x20 && Byte(out, at::kNumberText.v + chars) != 0) ++chars;
         if (drawn) ++g_cover.texts;
-        for (unsigned i = 0; i < 8; ++i) if (Byte(out, at::kNumberText + i) == ' ') { ++g_cover.spaces; break; }
+        for (unsigned i = 0; i < 8; ++i) if (Byte(out, at::kNumberText.v + i) == ' ') { ++g_cover.spaces; break; }
         break;
     }
     default:
