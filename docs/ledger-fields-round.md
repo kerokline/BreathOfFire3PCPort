@@ -584,6 +584,114 @@ so the ini can neither pin k = 2 nor say "follow the display"
 ([`known-defects.md`](known-defects.md)); the presets' launcher work takes
 the fix with it, DIV-0036's switch and prose updated to match.
 
+### D1 as run (2026-10-28, off the stage branch at `de7aeb3d`)
+
+**What landed.** `tools/ledger_registry.py` reads the ledger through
+`tools/ledger_switches.py`'s own `ledger_entries` and `field` (imported) and
+writes `src/launcher/ledger_registry.h`, checked in: a `constexpr` table,
+`bof3x::ledger::kEntries` (184) and `kSwitches` (181), of plain structs -
+id, title, `Tier`, `State` (with `superseded_by`), the `Switch:` names each
+with its `SwitchForm` (`Name`, `Ini`, `Env`, `Lang`; `Switch: none` is a
+count of 0), `default_on`, `Player`, a `Toward` bit set and a `Languages`
+bit set (the `tools/language_tags.py` order, then `original`; `kLangAny`
+alone for `any`). No allocation, no parser. `Key()` and `Value()` are spans
+of the switch's own text, so the header holds no `"BOF3X_..."` literal that
+`ledger_switches.py` would count as a reader of that name (the tool refuses
+to write one; the inventory's TSV is the same with the header present or
+not). The header ends in a `static_assert` that the table is whole, and
+`src/launcher/config_dialog.cpp` includes it with a second one, so the
+launcher's build compiles it (and `-std=c++17 -fsyntax-only` on the header
+alone passes). `--check` regenerates to memory and fails with a diff
+summary; it is a step of `checks.yml` beside `ledger_switches.py --check`.
+It exits 0 on this tree and 1 on a scratch ledger with DIV-0176's
+`Default:` turned to `off` (`--ledger <path>`). It reads `Player:` as the
+ledger has it, so after D0's `cheap` to `yes` the header is regenerated with
+no change to the tool. A Windows checkout's CRLF is normalised before the
+comparison (`core.autocrlf` is on here; CI's Linux checkout is LF).
+
+**The presets, as a reference** (`python tools/ledger_registry.py presets
+[--language <tag>|original|all] [--tsv <path>]`; the launcher's code is
+D2's and must agree with it). The rules as the coordinator set them, the
+owner's calls of 2026-10-27/28 read literally, recorded verbatim:
+
+- A preset only ever turns entries **off** by applying their `Switch:`
+  names; it never turns an entry on (an `ini:` / `env:` switch gives only
+  the off value, so "on" is not derivable in general). An entry a preset
+  would want on that is `Default: off` is listed under the preset as "also
+  available, switch it yourself" instead.
+- Only `Player: yes` entries (after D0 that includes every former `cheap`;
+  until then treat `cheap` as `yes` too, and say so) with `Default: on` and
+  `State: active` can be turned off. `costly`, `never` (Forced), withdrawn
+  and superseded entries are never touched; the `costly` ones are listed as
+  "this build cannot" (the owner's call 4).
+- *Recommended*: nothing (the defaults).
+- *As shipped*: every such entry off.
+- *Repaired*: every such Sensible and Extension entry off; Intent and Forced
+  stay.
+- *PlayStation*: every such entry whose `Toward:` does not list `psx` off
+  (**the coordinator's reading** of "every `Toward: psx` on, every `Toward: pc`
+  off": no entry lists `pc`, so the literal rule turns nothing off; this
+  reading turns off what no PlayStation release had - `none` and `psp`-only
+  - and leaves every `psx` entry on.)
+- Language rule (section 4 "Languages as run", rule 2): an entry whose
+  `Languages:` is not `any` is governed by the language pick: skip it when
+  the chosen language is not listed, and never apply a `Switch: lang` entry's
+  switch (a preset never changes the language). `original` is a language for
+  this purpose.
+- An entry whose switch names are more than one applies them all.
+- The install rule (an `ini:` off value the install cannot take, such as
+  `music=pc` on a disc-only install) is the launcher's, not yours: print the
+  switch and let D2 decide at launch.
+
+**The order the tool applies them** (D1's reading; `classify` in the tool
+is the one place it is written): an entry the preset neither wants off nor
+wants on at `Default: off` is not its concern; then not active (left alone);
+then a `Languages:` list that omits the language (*skipped by language*,
+before every other test, since the entry is inert there); then a wanted-on
+`Default: off` entry (*also available*: Repaired wants Intent and Forced
+on, PlayStation every `psx` entry; Recommended and As shipped want none on);
+then `Default: off` (left alone, already off, so a `Default: off` entry is
+never counted *cannot*); then a `lang` switch name (*lang-governed*); then
+`Player: never` (left alone); then `costly` (*cannot*); else *off*, by every
+name of its `Switch:`. The printout counts the five actions and, apart, the
+three kinds left alone (never, already off, not active), so that a preset
+that wants every entry off (As shipped) accounts for all 184.
+
+**The counts** (184 entries; the 67 `Player: cheap` read as `yes`):
+
+| Language | Preset | off | skipped by language | lang-governed | cannot | also available | left alone: never / already off / not active |
+|---|---|---|---|---|---|---|---|
+| `original` | Recommended | 0 | 0 | 0 | 0 | 0 | 0 / 0 / 0 |
+| `original` | As shipped | 74 | 46 | 0 | 23 | 0 | 25 / 14 / 2 |
+| `original` | Repaired | 32 | 45 | 0 | 14 | 0 | 14 / 14 / 2 |
+| `original` | PlayStation | 28 | 15 | 0 | 18 | 1 | 18 / 13 / 2 |
+| `en-US` | Recommended | 0 | 0 | 0 | 0 | 0 | 0 / 0 / 0 |
+| `en-US` | As shipped | 85 | 8 | 20 | 28 | 0 | 26 / 15 / 2 |
+| `en-US` | Repaired | 43 | 8 | 20 | 18 | 0 | 15 / 15 / 2 |
+| `en-US` | PlayStation | 34 | 4 | 2 | 19 | 1 | 19 / 14 / 2 |
+
+Of the *off* rows, the `cheap` ones (a player's only once `BOF3X_OFF` is
+read): `original` 56 / 24 / 18 (As shipped / Repaired / PlayStation),
+`en-US` 67 / 35 / 24. PlayStation's one *also available* is DIV-0012, the
+point filter.
+
+**For the owner, from D1** (no number assigned): the PlayStation reading
+turns off every active `Toward: none` entry a player can switch, and `none`
+holds three things the `Toward:` clauses tell apart in prose only:
+behaviour no release had, a defect every release shares among them
+(DIV-0121's edge hold, "the PlayStation has the same unbounded lookup";
+DIV-0153's wrap), where turning it off is faithful; platform mechanics a
+console has nothing to match (DIV-0022's clock, 0033's background running,
+0036's integer scale, which applies `display=windowed`, 0062, 0078, 0089's
+cache, 0101's strict image, 0146's save list), where turning it off gives the
+PC port's behaviour, not the PlayStation's; and behaviour not measured
+(stage B's "for want of a read": DIV-0071, 0144 and 0180 are turned off
+under every language and DIV-0027, 0058, 0059 under the Latin four,
+DIV-0180 being a crash fix whose PlayStation case is "reasoned, not
+measured"; DIV-0004 and 0127 are *cannot*, DIV-0063 `never`). Whether the PlayStation preset
+should skip the "not applicable" kind, which the field cannot say today, is
+the owner's call before D2 builds the box.
+
 ## 6. For the owner
 
 1. **The field set** of section 1: the five names and their values. Is

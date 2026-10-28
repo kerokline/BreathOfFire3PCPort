@@ -20,12 +20,17 @@
 
 #include "common/home.h"
 #include "input/pad_sdl.h"
+#include "launcher/ledger_registry.h"
 #include "launcher/music_player.h"
 #include "launcher/resource.h"
 #include "launcher/sources_dialog.h"
 #include "launcher/suites.h"
 
 namespace bof3x {
+// The presets' table, generated from the ledger by tools/ledger_registry.py
+// (docs/ledger-fields-round.md section 5): it compiles, and it is whole.
+static_assert(ledger::kEntryCount > 0 && ledger::TableIsWhole());
+
 namespace {
 
 // The Controls page's cells (DIV-0050, below with the page's code).
