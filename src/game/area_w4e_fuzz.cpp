@@ -379,8 +379,8 @@ const ah::Callee kCallees[] = {
     {W4E_OURS(EventOp_0x), 1, {kAll}, ah::Answer::kGarbage, 0, 0},
     {W4E_OURS(Effect_Release), 0, {}, ah::Answer::kGarbage, 0, 0},
     // Capcom's, unnamed: the height (x, z); area 192's record restore
-    {"HeightAt_511C10", at::kHeightAt, at::kHeightAt, 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &HeightEffect},
-    {"RestoreRecords_42C2D0", at::kRestoreRecords, at::kRestoreRecords, 0, {}, ah::Answer::kGarbage, 0, 0},
+    {"HeightAt_511C10", at::kHeightAt.v, at::kHeightAt.v, 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &HeightEffect},
+    {"RestoreRecords_42C2D0", at::kRestoreRecords.v, at::kRestoreRecords.v, 0, {}, ah::Answer::kGarbage, 0, 0},
     // the group's own, called directly
     // (kPhase: logs the object it ran for, like a handler; it runs no effect)
     {W4E_OURS(Area189_ZeroSpeeds), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},

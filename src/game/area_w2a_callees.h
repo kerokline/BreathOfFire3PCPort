@@ -112,11 +112,11 @@ constexpr unsigned kArea79StateCount = 2;
 // 0x57C160 (0x1F bytes): (bits, index) - bits[index >> 3] ^= 1 << (index & 7),
 // the index a byte: Flags_Set / Flags_Clear's sibling that toggles
 // (docs/area_w1c.md section 9). Engine.
-constexpr std::uint32_t kFlagsToggle = bof3::addr::Flags_Toggle;
+constexpr ::bof3::image::CodeVa kFlagsToggle{bof3::addr::Flags_Toggle};
 // 0x469FE0 (0x3C bytes): (v) - Effect_FindFree; a free slot gets +0 = 1,
 // kind +5 = 4, +9 = v, and story flag 0x1C is set (docs/area_w1c.md
 // section 9). Engine.
-constexpr std::uint32_t kSpawnKind4 = bof3::addr::Effect_HoldFlag1C;
+constexpr ::bof3::image::CodeVa kSpawnKind4{bof3::addr::Effect_HoldFlag1C};
 
 }  // namespace at
 }  // namespace area_w2a

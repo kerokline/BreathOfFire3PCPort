@@ -492,12 +492,12 @@ extern "C" void __cdecl Area148_DrawBeam(const long* from, const long* ahead) {
     if (Draw_PassFlags == 0) return;
     if (AH_CALL(Flags_Test)(Bank(), 0x6A) == 0) return;
     DrawModeLink(1);
-    AH_AT(void (__cdecl*)(), area_w3g::kSetMapCamera)();
+    AH_AT(void (__cdecl*)(), area_w3g::kSetMapCamera.v)();
     unsigned char* const prim = Gfx_PacketNext;
     AH_CALL(Gpu_SetLineF2)(prim);
     AH_CALL(Gpu_SetSemiTrans)(prim, 0);
-    AH_AT(ProjectFn, area_w3g::kProjectPoint)(from, prim + 8);
-    AH_AT(ProjectFn, area_w3g::kProjectPoint)(ahead, prim + 0x14);
+    AH_AT(ProjectFn, area_w3g::kProjectPoint.v)(from, prim + 8);
+    AH_AT(ProjectFn, area_w3g::kProjectPoint.v)(ahead, prim + 0x14);
     prim[4] = BeamColour(0);
     prim[5] = BeamColour(1);
     prim[6] = BeamColour(2);
@@ -507,9 +507,9 @@ extern "C" void __cdecl Area148_DrawBeam(const long* from, const long* ahead) {
     const U angle = static_cast<U>(AH_CALL(Math_Ratan2)(FloatOf(static_cast<std::int32_t>(dy)), FloatOf(static_cast<std::int32_t>(dx))));
     const short offset[2] = {0x40, 0};
     U size = 0;
-    AH_AT(ScreenSizeFn, area_w3g::kScreenSize)(from, offset, &size);
+    AH_AT(ScreenSizeFn, area_w3g::kScreenSize.v)(from, offset, &size);
     const U r1 = (Frame_Counter & 1) + size;
-    AH_AT(ScreenSizeFn, area_w3g::kScreenSize)(ahead, offset, &size);
+    AH_AT(ScreenSizeFn, area_w3g::kScreenSize.v)(ahead, offset, &size);
     const U r2 = (Frame_Counter & 1) + size;
     AH_CALL(Area148_DrawBeamFan)(static_cast<int>(Ftol(prim + 0x14)), static_cast<int>(Ftol(prim + 0x18)), static_cast<int>(r2),
                                  static_cast<int>(angle + 0xC00));
@@ -629,7 +629,7 @@ void ShiftMap(int sign, U focus, bool effects) {
     const long h = AH_CALL(AreaMap_Elevation)(x, z);
     Sprite_Kind2.height_whole = static_cast<U>(h);
     AH_CALL(MapView_SetElevation)(static_cast<int>(h));
-    AH_AT(void (__cdecl*)(), area_w3g::kViewShift)();
+    AH_AT(void (__cdecl*)(), area_w3g::kViewShift.v)();
     if (effects) {
         for (U k = 0; k < at::kEffectCount; ++k) {
             unsigned char* const e = EffectAt(k);

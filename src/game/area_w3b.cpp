@@ -775,7 +775,7 @@ extern "C" void __cdecl Area121_DrawDrift(void) { DrawDrift(); }
 // 104's block: +0xA counted down, the charge on +0xB).
 extern "C" void __cdecl Area121_LeaderRun(void) {
     StateEntry("Area121", "LeaderRun", ::bof3::Img(Area121_LeaderStates_addr), 2, Cur()[2])();
-    AH_AT(Handler, area_w3b::kLeaderCharge104)();
+    AH_AT(Handler, area_w3b::kLeaderCharge104.v)();
 }
 
 // original 0x41B9F0 (Area121_LeaderStates 0; also Area121_LeaderStep's tail):
@@ -797,7 +797,7 @@ extern "C" void __cdecl Area121_LeaderRun(void) {
 // Field_JumpCheckHeight, +9 - 1, Field_LeaderStepTick, +0x137 = +2 = 1 (the
 // step). Any other target: nothing.
 extern "C" void __cdecl Area121_LeaderControl(void) {
-    if (AH_AT(ByteFn, area_w3b::kStepOffObject)() != 0) return;
+    if (AH_AT(ByteFn, area_w3b::kStepOffObject.v)() != 0) return;
     if ((Field_ScriptFlags & 0x100) != 0) return;
     if ((Field_ScriptFlags2 & 0x40) != 0) return;
     if (Field_Request != 0) return;
@@ -807,17 +807,17 @@ extern "C" void __cdecl Area121_LeaderControl(void) {
         if ((Field_ActorStates[state[0x148] * at::kObjectStride] & 0x20) == 0) state[0x136] = 0;
     }
     if (AH_CALL(Field_LeaderCellEvent)() != 0) return;
-    if (AH_AT(ByteFn, area_w3b::kMenuButton)() != 0) return;
+    if (AH_AT(ByteFn, area_w3b::kMenuButton.v)() != 0) return;
     if (AH_CALL(Field_LeaderTalkTest)() != 0) return;
-    if (AH_AT(ByteFn, area_w3b::kRequest4Button)() != 0) return;
+    if (AH_AT(ByteFn, area_w3b::kRequest4Button.v)() != 0) return;
     const unsigned char old = Cur()[8];
-    const unsigned char turned = AH_AT(ByteFn, area_w3b::kTurnInput)();
+    const unsigned char turned = AH_AT(ByteFn, area_w3b::kTurnInput.v)();
     unsigned char* o = Cur();
     const bool pressed = (Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f002)) & Input_Held & 0xFFFFu) != 0;
     if ((turned == 0 && !pressed) || o[0xB] == 0x40) {
         o[8] = old;
         Field_State[0x137] = 0;
-        AH_AT(Handler, area_w3b::kLeaderHalt104)();
+        AH_AT(Handler, area_w3b::kLeaderHalt104.v)();
         Cur()[9] = 0;
         Cur()[2] = 0;
         return;
@@ -863,10 +863,10 @@ extern "C" void __cdecl Area121_LeaderControl(void) {
     if (AH_CALL(Field_LeaderPushObjects)() != 0) {
         Field_State[0x137] = 0;
         Cur()[2] = 0;
-        AH_AT(Handler, area_w3b::kPushObject)();
+        AH_AT(Handler, area_w3b::kPushObject.v)();
         return;
     }
-    AH_AT(Handler, area_w3b::kLeaderPace104)();
+    AH_AT(Handler, area_w3b::kLeaderPace104.v)();
     if (Field_State[0x128] == 4 && Cur()[8] != old) {
         Cur()[8] = old;
         Field_State[0x137] = 0;
@@ -905,7 +905,7 @@ extern "C" void __cdecl Area121_PushObject(void) {
             return;
         }
     }
-    if (AH_AT(StepFn, area_w3b::kStepAround)(x, z, k) == 0) return;
+    if (AH_AT(StepFn, area_w3b::kStepAround.v)(x, z, k) == 0) return;
     AH_CALL(Field_JumpStart)();
     Cur()[9] = static_cast<unsigned char>(Cur()[9] - 1);
     AH_CALL(Field_LeaderStepTick)();
@@ -920,7 +920,7 @@ extern "C" void __cdecl Area121_PushObject(void) {
 // Eight turns without: 0.
 extern "C" unsigned char __cdecl Area121_StepAround(long x, long z, unsigned k) {
     if ((k & 0xFF) == 0xFF) return 0;
-    const unsigned char direction = AH_AT(StepFn, area_w3b::kDirectionTo)(x, z, k);
+    const unsigned char direction = AH_AT(StepFn, area_w3b::kDirectionTo.v)(x, z, k);
     Cur()[8] = direction;
     for (unsigned i = 0; i < 8; ++i) {
         if (AH_CALL(Field_LeaderStepTarget)() == 0 && AH_CALL(Sprite_ObjectAt)(x, z, 0) == 0xFF) return 1;
@@ -955,7 +955,7 @@ extern "C" unsigned char __cdecl Area121_StepOffObject(void) {
     const unsigned char* o = Cur();
     const unsigned char k = AH_CALL(Sprite_ObjectAt)(rv::As<records::SpriteHead>(o)->x, rv::As<records::SpriteHead>(o)->z, 1);
     o = Cur();
-    if (AH_AT(StepFn, area_w3b::kStepAround)(rv::As<records::SpriteHead>(o)->x, rv::As<records::SpriteHead>(o)->z, k) == 0) return 0;
+    if (AH_AT(StepFn, area_w3b::kStepAround.v)(rv::As<records::SpriteHead>(o)->x, rv::As<records::SpriteHead>(o)->z, k) == 0) return 0;
     AH_CALL(Field_JumpStart)();
     Cur()[9] = static_cast<unsigned char>(Cur()[9] - 1);
     AH_CALL(Field_LeaderStepTick)();
@@ -1003,7 +1003,7 @@ extern "C" void __cdecl Area121_LeaderStep(void) {
     const unsigned char facing = Cur()[8];
     Field_StepCount = static_cast<unsigned short>(Field_StepCount + 1);
     if (facing == 2 || facing == 6) Field_StepCount = static_cast<unsigned short>(Field_StepCount + 1);
-    AH_AT(Handler, area_w3b::kLeaderHalt104)();
+    AH_AT(Handler, area_w3b::kLeaderHalt104.v)();
     o = Cur();
     if (AH_CALL(Scenario_ArriveHook)(rv::As<records::SpriteHead>(o)->x, rv::As<records::SpriteHead>(o)->z) != 0) {
         Cur()[2] = 0;
@@ -1013,7 +1013,7 @@ extern "C" void __cdecl Area121_LeaderStep(void) {
     if ((Field_ScriptFlags & 0x100) == 0 && (Field_ScriptFlags2 & 0x40) == 0) {
         const unsigned buttons = Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f002)) | Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000)) | 0xF000u;
         if ((Field_InputHeld & buttons) != 0) {
-            AH_AT(Handler, area_w3b::kLeaderControl)();
+            AH_AT(Handler, area_w3b::kLeaderControl.v)();
             return;
         }
     }
@@ -1090,7 +1090,7 @@ extern "C" void __cdecl Area121_Kind5CStart(void) {
     Cur()[0x5E] = 0x80;
     Cur()[0x5F] = 0x80;
     Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);
-    AH_AT(Handler, area_w3b::kKind5CFollow)();
+    AH_AT(Handler, area_w3b::kKind5CFollow.v)();
     if (Game_AreaNumber == 0x68 && AH_CALL(KeyItem_Has)(0xA) == 0) return;
     for (U i = 0; i < 4; ++i) {
         const unsigned char slot = AH_CALL(Effect_FindFree)();
@@ -1116,8 +1116,8 @@ extern "C" void __cdecl Area121_Kind5CFollow(void) {
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, ObjTrio[0].height_whole);
     AH_CALL(Sprite_UpdateScreenA)();
     if ((Draw_PassFlags & 0x1B) == 0) return;
-    const auto gauge = AH_AT(GaugeFn, area_w3b::kGaugeSprite);
-    const auto row = AH_AT(RowFn, area_w3b::kGaugeRow104);
+    const auto gauge = AH_AT(GaugeFn, area_w3b::kGaugeSprite.v);
+    const auto row = AH_AT(RowFn, area_w3b::kGaugeRow104.v);
     if ((Field_StatusBits & 0x40) != 0) {
         gauge(0xDC, 0x10, 0);
         row(0x40, 0);
@@ -1168,11 +1168,11 @@ extern "C" void __cdecl Area121_GaugeSprite(int x, int y, unsigned n) {
 // Area121_Kind5CFollow.
 extern "C" void __cdecl Area121_Kind5CFace(void) {
     if (Cur()[8] != ObjTrio[0].direction) {
-        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep)(Cur()[8], ObjTrio[0].direction) != 0) return;
-        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep)(Cur()[8] ^ 4u, ObjTrio[0].direction) != 0) return;
+        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep.v)(Cur()[8], ObjTrio[0].direction) != 0) return;
+        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep.v)(Cur()[8] ^ 4u, ObjTrio[0].direction) != 0) return;
         ObjTrio[0].direction = Cur()[8];
     }
-    AH_AT(Handler, area_w3b::kKind5CFollow)();
+    AH_AT(Handler, area_w3b::kKind5CFollow.v)();
 }
 
 // original 0x41C440 (a, b; called by Area121_Kind5CFace): the facings a and b
@@ -1203,7 +1203,7 @@ extern "C" unsigned char __cdecl Area121_Kind5CTurnStep(unsigned a, unsigned b) 
     unsigned char* const o = Cur();
     ObjTrio[0].direction = o[8];
     o[9] = 8;
-    AH_AT(Handler, area_w3b::kKind5CTurn)();
+    AH_AT(Handler, area_w3b::kKind5CTurn.v)();
     Cur()[1] = 2;
     return 1;
 }
@@ -1218,10 +1218,10 @@ extern "C" void __cdecl Area121_Kind5CTurn(void) {
     unsigned char* const o = Cur();
     if (o[9] == 0) {
         o[1] = 1;
-        AH_AT(Handler, area_w3b::kKind5CFace)();
+        AH_AT(Handler, area_w3b::kKind5CFace.v)();
         return;
     }
-    AH_AT(Handler, area_w3b::kKind5CFollow)();
+    AH_AT(Handler, area_w3b::kKind5CFollow.v)();
 }
 
 // original 0x41C560 (Area121_Kind5CStates 3, a ring's wait): +0xA counts down;
@@ -1236,7 +1236,7 @@ extern "C" void __cdecl Area121_RingWait(void) {
     rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->x, ObjTrio[0].x);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, ObjTrio[0].z);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(ObjTrio[0].height) + 0x800000u));
-    AH_AT(Handler, area_w3b::kRingRise)();
+    AH_AT(Handler, area_w3b::kRingRise.v)();
     Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);
 }
 

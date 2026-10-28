@@ -350,7 +350,7 @@ extern "C" void __cdecl EffectKind77_Show(void) {
 // count (0x939A00's low byte) printed by the format 0x653074 into 0x904BA0 and
 // drawn by Text_DrawFont12 at (0x8F, 0x21), colour 0.
 extern "C" void __cdecl EffectKind77_DrawCount(void) {
-    SH_AT(void (__cdecl*)(int, int, int, int, int), at::kBox)(0x8A, 0x1E, 0x2D, 0x14, 1);
+    SH_AT(void (__cdecl*)(int, int, int, int, int), at::kBox.v)(0x8A, 0x1E, 0x2D, 0x14, 1);
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(P(::bof3::Img(at::kText.v))), reinterpret_cast<const char*>(P(::bof3::Img(at::kTallyFormat.v))),
                          static_cast<int>(B(::bof3::Img(at::kTally.v))));
     SH_CALL(Text_DrawFont12)(0x8F, 0x21, 0, P(::bof3::Img(at::kText.v)));
@@ -442,7 +442,7 @@ extern "C" void __cdecl EffectKind78_DrawRing(unsigned cx, unsigned cy, unsigned
     U angle = 0;
     for (U k = 0; k < 0x20; ++k) {
         unsigned char* const p = Gfx_PacketNext;
-        SH_AT(void (__cdecl*)(unsigned char*), at::kPolyF3)(p);
+        SH_AT(void (__cdecl*)(unsigned char*), at::kPolyF3.v)(p);
         angle += 0x80;
         const U a = angle & 0xFFFFu;
         Copy4(p + 8, centre_x);
@@ -576,7 +576,7 @@ extern "C" void __cdecl EffectKind7D_FillF4(unsigned x0, unsigned y0, unsigned x
 extern "C" void __cdecl EffectKind7D_FillF3(unsigned x0, unsigned y0, unsigned x1, unsigned y1, unsigned x2,
                                              unsigned y2, unsigned r, unsigned g, unsigned b, unsigned abe) {
     unsigned char* const p = Gfx_PacketNext;
-    SH_AT(void (__cdecl*)(unsigned char*), at::kPolyF3)(p);
+    SH_AT(void (__cdecl*)(unsigned char*), at::kPolyF3.v)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, abe & 0xFFu);
     Fild(p + 8, S16(x0));
     Fild(p + 0xC, S16(y0));

@@ -58,28 +58,28 @@ const Callees kOriginals = {
     Crt_findfirst, Crt_findnext,
     Rand,
     Snd_LoadBank, Sound_PlayEffect, Music_Stop, Music_Start, Music_SetVolume, Music_IsPlaying,
-    Fn<void (__cdecl*)(const void*)>(kVoicePlay), Fn<int (__cdecl*)()>(kVoiceIsPlaying),
+    Fn<void (__cdecl*)(const void*)>(::bof3::Code(kVoicePlay.v)), Fn<int (__cdecl*)()>(::bof3::Code(kVoiceIsPlaying.v)),
     Char_ClearStatus,
-    Fn<void (__cdecl*)(unsigned char*)>(kRecalcStats),
+    Fn<void (__cdecl*)(unsigned char*)>(::bof3::Code(kRecalcStats.v)),
     Flags_Test, Party_Count,
-    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(kItemPrice),
-    Fn<unsigned char (__cdecl*)(unsigned)>(kShopFlag),
-    Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(kInventoryRemove),
-    Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(kInventoryAdd),
-    Fn<void (__cdecl*)(int, int, int, int, int, unsigned)>(kWindowFrame),
-    Fn<void (__cdecl*)(int, int, int, int)>(kWindowBox),
-    Fn<void (__cdecl*)(unsigned)>(kWindowBack),
-    Fn<void (__cdecl*)(int, int, int, int, unsigned)>(kWindowFrame5),
-    Fn<void (__cdecl*)(unsigned, int, int, const unsigned char*)>(kSlotDraw),
-    Fn<void (__cdecl*)(int, int, int, int, unsigned, int)>(kSlotCursor),
-    Fn<unsigned char (__cdecl*)()>(kMenuYesNo),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kItemPrice.v)),
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(kShopFlag.v)),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(kInventoryRemove.v)),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(kInventoryAdd.v)),
+    Fn<void (__cdecl*)(int, int, int, int, int, unsigned)>(::bof3::Code(kWindowFrame.v)),
+    Fn<void (__cdecl*)(int, int, int, int)>(::bof3::Code(kWindowBox.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kWindowBack.v)),
+    Fn<void (__cdecl*)(int, int, int, int, unsigned)>(::bof3::Code(kWindowFrame5.v)),
+    Fn<void (__cdecl*)(unsigned, int, int, const unsigned char*)>(::bof3::Code(kSlotDraw.v)),
+    Fn<void (__cdecl*)(int, int, int, int, unsigned, int)>(::bof3::Code(kSlotCursor.v)),
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(kMenuYesNo.v)),
     Msg_SystemPtr, Text_DrawAt,
-    Fn<void (__cdecl*)(int, int, int)>(kDrawHand),
+    Fn<void (__cdecl*)(int, int, int)>(::bof3::Code(kDrawHand.v)),
     Input_AutoRepeat,
     Gpu_SetTile, Gpu_SetSprt, Gpu_SetSemiTrans, Gpu_SetDrawMode, Gpu_GetTPage, Gpu_GetClut, Gfx_CommitPrim,
     Transition_Start, Field_MemberSprite, Sprite_SetAnimation, NewGame_InitCharacters, Scenario_Start,
     Scenario_Load, Field_PartyLoad, PartySet_Select, File_LoadDone, Task_Sleep,
-    Fn<void (__cdecl*)(U)>(kTaskRestart),
+    Fn<void (__cdecl*)(U)>(::bof3::Code(kTaskRestart.v)),
     Save_ListFiles, Save_ReadFile, Save_ReadSummaries,
     TitleMenu_DrawFrame, TitleMenu_DrawRows, TitleMenu_DrawRow, TitleMenu_DrawPiece, SaveMenu_DrawSlots,
     NewGame_RollGrowth, NewGame_RollSum,
@@ -1291,7 +1291,7 @@ extern "C" void __cdecl TitleFlow_EnterGame(void) {
         g.roll_growth(i);
         g.recalc(At(::bof3::Img(CharacterRecords_addr) + i * at::kCharStride));
     }
-    g.task_restart(at::kGameTask);
+    g.task_restart(::bof3::Code(at::kGameTask.v));
 }
 
 #pragma clang attribute pop

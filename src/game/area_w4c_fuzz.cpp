@@ -189,8 +189,8 @@ const ah::Callee kCallees[] = {
     // kPhase recorder returns before the effect)
     {W4C_OURS(Area174_SetPose), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
     // engine callees nobody owns (raw)
-    {"0x454A80", kSlotsReleaseFor, kSlotsReleaseFor, 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
-    {"0x455290", kSlotStart, kSlotStart, 2, {kAll, kAll}, ah::Answer::kByte, 0xFF, 0x07, {}, &MovesCurrent},
+    {"0x454A80", kSlotsReleaseFor.v, kSlotsReleaseFor.v, 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
+    {"0x455290", kSlotStart.v, kSlotStart.v, 2, {kAll, kAll}, ah::Answer::kByte, 0xFF, 0x07, {}, &MovesCurrent},
     // named, beyond the standard set
     {W4C_OURS(Effect_FindFree), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &EffectSlotEffect},
     {W4C_OURS(ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0},

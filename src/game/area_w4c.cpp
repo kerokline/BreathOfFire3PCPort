@@ -325,8 +325,8 @@ extern "C" void __cdecl Area173_Init(void) {
 // object, read again, Area174_SlotScript) - one started (its slot not read);
 // the object (read again) +0x2A = 1; Sprite_SetAnimation(9).
 extern "C" void __cdecl Area174_RestartSlotScript(void) {
-    AH_AT(ObjectFn, area_w4c::kSlotsReleaseFor)(Sprite_Current);
-    AH_AT(SlotFn, area_w4c::kSlotStart)(Sprite_Current, Mem(::bof3::Img(Area174_SlotScript_addr)));
+    AH_AT(ObjectFn, area_w4c::kSlotsReleaseFor.v)(Sprite_Current);
+    AH_AT(SlotFn, area_w4c::kSlotStart.v)(Sprite_Current, Mem(::bof3::Img(Area174_SlotScript_addr)));
     Sprite_Current[0x2A] = 1;
     AH_CALL(Sprite_SetAnimation)(9);
 }
@@ -558,7 +558,7 @@ extern "C" void __cdecl Area174_FadeOut(void) {
 // original 0x4290E0 (Area174_Handlers[17]; PSX 0x801F4D1C): Field_Request 5:
 // 0x454A80(the running object) - its Field_Slots scripts released.
 extern "C" void __cdecl Area174_ReleaseOnRequest5(void) {
-    if (Field_Request == 5) AH_AT(ObjectFn, area_w4c::kSlotsReleaseFor)(Sprite_Current);
+    if (Field_Request == 5) AH_AT(ObjectFn, area_w4c::kSlotsReleaseFor.v)(Sprite_Current);
 }
 
 // original 0x429100 (Area174_Handlers[18]; PSX 0x801F4D54):

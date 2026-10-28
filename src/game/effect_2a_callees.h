@@ -14,10 +14,10 @@ namespace effect_2a::at {
 
 // Library-layer callees nobody owns (catalog part 2), called through the
 // harness by address (SH_AT).
-constexpr std::uint32_t kRootWord = bof3::addr::Gte_SquareRoot0;       // (long n): fild, fsqrt, a tail jmp to _ftol - the square root of n
+constexpr ::bof3::image::CodeVa kRootWord{bof3::addr::Gte_SquareRoot0};       // (long n): fild, fsqrt, a tail jmp to _ftol - the square root of n
                                                     // truncated, in eax; the kind-0x2D disc takes its low word as a row's
                                                     // half width (the effect-standard row stands in for it)
-constexpr std::uint32_t kFtol = 0x5B9550;           // the CRT's _ftol: pops st(0), answers edx:eax (the harness calls it
+constexpr ::bof3::image::CodeVa kFtol{0x5B9550};           // the CRT's _ftol: pops st(0), answers edx:eax (the harness calls it
                                                     // for real on both sides, kThrough)
 
 // Data the functions read or write in place.

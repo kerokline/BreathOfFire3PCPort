@@ -167,7 +167,7 @@ constexpr std::uint32_t kIconCircle = kUiGlyphs + kSetCells + 1, kIconCross = kI
 // ends four past it.
 constexpr int kIconX = -0x0C;   // the owner, 2026-09-24: half a glyph right of -0x14
 
-constexpr std::uint32_t kTextDrawAt = 0x516B30;   // Text_DrawAt: the sites' target in Capcom's bytes, a patch fact (raw)
+constexpr ::bof3::image::CodeVa kTextDrawAt{0x516B30};   // Text_DrawAt: the sites' target in Capcom's bytes, a patch fact (raw)
 constexpr std::uint32_t kBigLabelCall = 0x46189F, kBigOptionCall = 0x4619F9;
 constexpr std::uint32_t kCtrlNameCall = 0x461B43;   // Config_DrawControllerRow's one draw (DIV-0026)
 
@@ -430,9 +430,9 @@ void ConfigText_Inject() {
     //                 -> shl eax,1 / nop      (then shl 2)  count * 8
     // which makes each the same number its small branch already computes, so a
     // row does not move when the cursor lands on it - as on the disc.
-    bof3::RetargetCall("ConfigText", kBigLabelCall, kTextDrawAt,
+    bof3::RetargetCall("ConfigText", kBigLabelCall, kTextDrawAt.v,
                        reinterpret_cast<void*>(&ConfigText_DrawSelected));
-    bof3::RetargetCall("ConfigText", kBigOptionCall, kTextDrawAt,
+    bof3::RetargetCall("ConfigText", kBigOptionCall, kTextDrawAt.v,
                        reinterpret_cast<void*>(&ConfigText_DrawSelected));
     static const std::uint8_t label_was[] = {0x8D, 0x0C, 0x49, 0xD1, 0xE1};
     static const std::uint8_t label_is[] = {0xC1, 0xE1, 0x02, 0x90, 0x90};
@@ -466,7 +466,7 @@ void ConfigText_Inject() {
     // every patch here (docs/glyph-draw.md section 8 had it for this one).
     {
         // One name again: all of the controller panel's go in, or none.
-        const bool ctrl_on = bof3::RetargetCall("ConfigController", kCtrlNameCall, kTextDrawAt,
+        const bool ctrl_on = bof3::RetargetCall("ConfigController", kCtrlNameCall, kTextDrawAt.v,
                                                 reinterpret_cast<void*>(&ConfigText_DrawSelected));
         static const std::uint8_t ctrl_was[] = {0x8D, 0x04, 0x49};
         static const std::uint8_t ctrl_is[] = {0x8D, 0x04, 0x09};

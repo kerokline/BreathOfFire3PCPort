@@ -83,7 +83,7 @@ constexpr U kCharStride = 0xA4;
 constexpr ::bof3::image::Va kGrowthTable{0x667248};    // 8 x {lo, hi, n}
 constexpr ::bof3::image::Va kGrowthValues{0x667260};   // u8 per roll sum
 constexpr ::bof3::image::Va kGrowth{0x903640};         // 8 x 5 bytes, written then cleared
-constexpr U kGameTask = bof3::addr::Field_Task;       // task 0's body for a game
+constexpr ::bof3::image::CodeVa kGameTask{bof3::addr::Field_Task};       // task 0's body for a game
 constexpr ::bof3::image::Va kMenuStates{0x929F02};     // 0x929F02, 0x929F03, 0x929F05 cleared
 // The title menu's pieces.
 // kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
@@ -124,24 +124,24 @@ constexpr U kDiscountItem = 0x1B;
 }  // namespace at
 
 // --- Other groups' functions and Capcom's own, by address ---------------------
-constexpr U kWindowFrame = bof3::addr::Menu_DrawBox;    // group Y: (x, y, w, h, 0, colour)
-constexpr U kWindowBox = bof3::addr::Menu_DrawBorder;      // group Y: (x, y, w, h)
-constexpr U kWindowBack = bof3::addr::Menu_DrawBackdrop;     // group Y: (style byte)
-constexpr U kWindowFrame5 = bof3::addr::Menu_DrawTitleBox;   // group Y: (x, y, w, h, colour byte)
-constexpr U kSlotDraw = bof3::addr::Menu_DrawSaveSlot;   // 0x576960, FO: (slot, x, y, summary or 0)
-constexpr U kSlotCursor = bof3::addr::Menu_DrawCursorBox;     // group Y: (x, y, w, h, flag, n)
-constexpr U kItemPrice = bof3::addr::Item_BasePrice;      // group Y: (kind, item) -> price in ax
-constexpr U kMenuYesNo = bof3::addr::Menu_YesNo;      // Menu_YesNo, group Y
-constexpr U kDrawHand = bof3::addr::Menu_DrawHand;       // Menu_DrawHand, group W
-constexpr U kRecalcStats = bof3::addr::Char_RecalcStats;    // Char_RecalcStats, group W
-constexpr U kShopFlag = bof3::addr::KeyItem_Has;       // group W: (1) -> al
-constexpr U kInventoryRemove = bof3::addr::Inventory_Remove;   // (kind, item, count, 0)
-constexpr U kInventoryAdd = bof3::addr::Inventory_Add;   // Inventory_Add, group W; a fourth dword it does not read
-constexpr U kFindFirst = 0x5B979A;      // the CRT's _findfirst
-constexpr U kFindNext = 0x5B9867;       // the CRT's _findnext
-constexpr U kTaskRestart = bof3::addr::Task_Restart;    // restarts the current task at an entry; never returns
-constexpr U kVoicePlay = bof3::addr::SndStream_Play;      // a stream of kind 1 or more: plays the WAV file image
-constexpr U kVoiceIsPlaying = bof3::addr::SndStream_IsPlaying;
+constexpr ::bof3::image::CodeVa kWindowFrame{bof3::addr::Menu_DrawBox};    // group Y: (x, y, w, h, 0, colour)
+constexpr ::bof3::image::CodeVa kWindowBox{bof3::addr::Menu_DrawBorder};      // group Y: (x, y, w, h)
+constexpr ::bof3::image::CodeVa kWindowBack{bof3::addr::Menu_DrawBackdrop};     // group Y: (style byte)
+constexpr ::bof3::image::CodeVa kWindowFrame5{bof3::addr::Menu_DrawTitleBox};   // group Y: (x, y, w, h, colour byte)
+constexpr ::bof3::image::CodeVa kSlotDraw{bof3::addr::Menu_DrawSaveSlot};   // 0x576960, FO: (slot, x, y, summary or 0)
+constexpr ::bof3::image::CodeVa kSlotCursor{bof3::addr::Menu_DrawCursorBox};     // group Y: (x, y, w, h, flag, n)
+constexpr ::bof3::image::CodeVa kItemPrice{bof3::addr::Item_BasePrice};      // group Y: (kind, item) -> price in ax
+constexpr ::bof3::image::CodeVa kMenuYesNo{bof3::addr::Menu_YesNo};      // Menu_YesNo, group Y
+constexpr ::bof3::image::CodeVa kDrawHand{bof3::addr::Menu_DrawHand};       // Menu_DrawHand, group W
+constexpr ::bof3::image::CodeVa kRecalcStats{bof3::addr::Char_RecalcStats};    // Char_RecalcStats, group W
+constexpr ::bof3::image::CodeVa kShopFlag{bof3::addr::KeyItem_Has};       // group W: (1) -> al
+constexpr ::bof3::image::CodeVa kInventoryRemove{bof3::addr::Inventory_Remove};   // (kind, item, count, 0)
+constexpr ::bof3::image::CodeVa kInventoryAdd{bof3::addr::Inventory_Add};   // Inventory_Add, group W; a fourth dword it does not read
+constexpr ::bof3::image::CodeVa kFindFirst{0x5B979A};      // the CRT's _findfirst
+constexpr ::bof3::image::CodeVa kFindNext{0x5B9867};       // the CRT's _findnext
+constexpr ::bof3::image::CodeVa kTaskRestart{bof3::addr::Task_Restart};    // restarts the current task at an entry; never returns
+constexpr ::bof3::image::CodeVa kVoicePlay{bof3::addr::SndStream_Play};      // a stream of kind 1 or more: plays the WAV file image
+constexpr ::bof3::image::CodeVa kVoiceIsPlaying{bof3::addr::SndStream_IsPlaying};
 
 struct Callees {
     // Files and the C runtime

@@ -173,23 +173,23 @@ U RowByte(const char* who, unsigned row, unsigned column) {
 // (0x52CFE0 the primitive); E1B's are typed to answer eax too, because the
 // original loads a byte or a word into the low half of the register the
 // answer left and pushes it whole (docs/effect_1a.md section 5).
-U DrawMode(U id, U slot) { return SH_AT(U (__cdecl*)(U, U), at::kDrawModeRecord)(id, slot); }
-U DrawSprite(U id, U slot, U x, U y) { return SH_AT(U (__cdecl*)(U, U, U, U), at::kDrawSpriteRecord)(id, slot, x, y); }
-void DepthPair() { SH_AT(void (__cdecl*)(), at::kDepthPair)(); }
+U DrawMode(U id, U slot) { return SH_AT(U (__cdecl*)(U, U), at::kDrawModeRecord.v)(id, slot); }
+U DrawSprite(U id, U slot, U x, U y) { return SH_AT(U (__cdecl*)(U, U, U, U), at::kDrawSpriteRecord.v)(id, slot, x, y); }
+void DepthPair() { SH_AT(void (__cdecl*)(), at::kDepthPair.v)(); }
 U WindowBox(U x, U y, U w, U h, U colour) {
-    return SH_AT(U (__cdecl*)(U, U, U, U, U), at::kWindowBox)(x, y, w, h, colour);
+    return SH_AT(U (__cdecl*)(U, U, U, U, U), at::kWindowBox.v)(x, y, w, h, colour);
 }
-U OptionBoxes(U x, U y, U bits) { return SH_AT(U (__cdecl*)(U, U, U), at::kOptionBoxes)(x, y, bits); }
+U OptionBoxes(U x, U y, U bits) { return SH_AT(U (__cdecl*)(U, U, U), at::kOptionBoxes.v)(x, y, bits); }
 U MessageLine(U pen, U text, U width, U x) {
-    return SH_AT(U (__cdecl*)(U, U, U, U), at::kMessageLine)(pen, text, width, x);
+    return SH_AT(U (__cdecl*)(U, U, U, U), at::kMessageLine.v)(pen, text, width, x);
 }
-U MemberRows(U x, U y) { return SH_AT(U (__cdecl*)(U, U), at::kMemberRows)(x, y); }
-U ItemListA(U x, U y) { return SH_AT(U (__cdecl*)(U, U), at::kItemListA)(x, y); }
-U ItemListB(U x, U y) { return SH_AT(U (__cdecl*)(U, U), at::kItemListB)(x, y); }
-void PanelTitle() { SH_AT(void (__cdecl*)(), at::kPanelTitle)(); }
-U StringCount(U text) { return SH_AT(U (__cdecl*)(U), at::kStringCount)(text); }
+U MemberRows(U x, U y) { return SH_AT(U (__cdecl*)(U, U), at::kMemberRows.v)(x, y); }
+U ItemListA(U x, U y) { return SH_AT(U (__cdecl*)(U, U), at::kItemListA.v)(x, y); }
+U ItemListB(U x, U y) { return SH_AT(U (__cdecl*)(U, U), at::kItemListB.v)(x, y); }
+void PanelTitle() { SH_AT(void (__cdecl*)(), at::kPanelTitle.v)(); }
+U StringCount(U text) { return SH_AT(U (__cdecl*)(U), at::kStringCount.v)(text); }
 void PrimFromRect(unsigned char* prim, unsigned char* rect) {
-    SH_AT(void (__cdecl*)(unsigned char*, unsigned char*), at::kPrimFromRect)(prim, rect);
+    SH_AT(void (__cdecl*)(unsigned char*, unsigned char*), at::kPrimFromRect.v)(prim, rect);
 }
 const unsigned char* TextAt(U address) { return At(address); }
 void DrawText(U x, U y, U colour, U count, U text) {
@@ -504,7 +504,7 @@ extern "C" void __cdecl EffectKind07_Start(void) {
 // primitive); +0x5D, +0x5E, +0x5F up by 2; at +0x5D 0x80 the counter byte
 // 0x903848 = 0x14, +1 = 2, +9 = 0xFF.
 extern "C" void __cdecl EffectKind07_FadeIn(void) {
-    SH_AT(void (__cdecl*)(U), at::kKind07Sprite)(1);
+    SH_AT(void (__cdecl*)(U), at::kKind07Sprite.v)(1);
     S()[0x5D] = static_cast<unsigned char>(S()[0x5D] + 2);
     S()[0x5E] = static_cast<unsigned char>(S()[0x5E] + 2);
     S()[0x5F] = static_cast<unsigned char>(S()[0x5F] + 2);

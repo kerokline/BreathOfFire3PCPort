@@ -839,7 +839,7 @@ extern "C" void __cdecl EffectKind49_V0Run(void) {
 // original 0x478590 (variant 0, state 0): the puffs cleared (0x4790C0); the
 // dword +0xC = 0x40; +2 up.
 extern "C" void __cdecl EffectKind49_V0Start(void) {
-    SH_AT(void (__cdecl*)(), at::kPuffsClear)();
+    SH_AT(void (__cdecl*)(), at::kPuffsClear.v)();
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x40);
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
@@ -849,10 +849,10 @@ extern "C" void __cdecl EffectKind49_V0Start(void) {
 // (0x479260); +0xC down, at 0 +2 up.
 extern "C" void __cdecl EffectKind49_V0Emit(void) {
     if ((S()[0xC] & 7) == 0) {
-        unsigned char* const puff = SH_AT(unsigned char* (__cdecl*)(), at::kPuffFindFree)();
-        if (puff != nullptr) SH_AT(void (__cdecl*)(unsigned char*), at::kPuffStart)(puff);
+        unsigned char* const puff = SH_AT(unsigned char* (__cdecl*)(), at::kPuffFindFree.v)();
+        if (puff != nullptr) SH_AT(void (__cdecl*)(unsigned char*), at::kPuffStart.v)(puff);
     }
-    SH_AT(unsigned char (__cdecl*)(), at::kPuffsStep)();
+    SH_AT(unsigned char (__cdecl*)(), at::kPuffsStep.v)();
     unsigned char* s = S();
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c - 1u);
     s = S();
@@ -862,7 +862,7 @@ extern "C" void __cdecl EffectKind49_V0Emit(void) {
 // original 0x4785F0 (variant 0, state 2): the puffs stepped; none live:
 // Effect_Release (a tail jump).
 extern "C" void __cdecl EffectKind49_V0End(void) {
-    if (SH_AT(unsigned char (__cdecl*)(), at::kPuffsStep)() == 0) SH_CALL(Effect_Release)();
+    if (SH_AT(unsigned char (__cdecl*)(), at::kPuffsStep.v)() == 0) SH_CALL(Effect_Release)();
 }
 
 // original 0x478600: variant 1, jmp [EffectKind49_V1States + +2 * 4], unbounded.
@@ -913,8 +913,8 @@ extern "C" void __cdecl EffectKind49_V2Launch(void) {
 namespace {
 // Variant 2's glow record 0x92C060 stepped (0x4794D0) and drawn (0x4796B0).
 void Glow() {
-    SH_AT(void (__cdecl*)(unsigned char*), at::kGlowStep)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
-    SH_AT(void (__cdecl*)(unsigned char*), at::kGlowDraw)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kGlowStep.v)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kGlowDraw.v)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
 }
 }  // namespace
 
@@ -983,7 +983,7 @@ extern "C" void __cdecl EffectKind49_V3Start(void) {
     auto* const so = rv::AsConst<records::EffectObject>(s);
     const long ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
     rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<U>(static_cast<std::int32_t>(static_cast<short>(ground))) << 16);
-    SH_AT(void (__cdecl*)(), at::kDustClear)();
+    SH_AT(void (__cdecl*)(), at::kDustClear.v)();
     S()[9] = 0;
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x5F);
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
@@ -1007,15 +1007,15 @@ extern "C" void __cdecl EffectKind49_V3Burst(void) {
         if (At(::bof3::Img(at::kBurstCount.v))[s[9]] != 0) {
             unsigned char n = 0;
             do {
-                unsigned char* const dust = SH_AT(unsigned char* (__cdecl*)(), at::kDustFindFree)();
-                if (dust != nullptr) SH_AT(void (__cdecl*)(unsigned char*), at::kDustStart)(dust);
+                unsigned char* const dust = SH_AT(unsigned char* (__cdecl*)(), at::kDustFindFree.v)();
+                if (dust != nullptr) SH_AT(void (__cdecl*)(unsigned char*), at::kDustStart.v)(dust);
                 s = S();
                 n = static_cast<unsigned char>(n + 1);
             } while (n < At(::bof3::Img(at::kBurstCount.v))[s[9]]);
         }
     }
     if ((s[0xC] & 0xF) == 0) s[9] = static_cast<unsigned char>(s[9] + 1);
-    SH_AT(unsigned char (__cdecl*)(), at::kDustStep)();
+    SH_AT(unsigned char (__cdecl*)(), at::kDustStep.v)();
     s = S();
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c - 1u);
     s = S();
@@ -1025,7 +1025,7 @@ extern "C" void __cdecl EffectKind49_V3Burst(void) {
 // original 0x4789A0 (variant 3, state 2): the dust stepped; none live:
 // Effect_Release (a tail jump).
 extern "C" void __cdecl EffectKind49_V3End(void) {
-    if (SH_AT(unsigned char (__cdecl*)(), at::kDustStep)() == 0) SH_CALL(Effect_Release)();
+    if (SH_AT(unsigned char (__cdecl*)(), at::kDustStep.v)() == 0) SH_CALL(Effect_Release)();
 }
 
 // original 0x4789B0: variant 4, jmp [EffectKind49_V4States + +2 * 4], unbounded

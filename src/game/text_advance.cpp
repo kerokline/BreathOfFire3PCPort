@@ -34,7 +34,7 @@ namespace {
 
 constexpr int kOriginalAdvance = 12;       // 0x497A44: add bp, 0xC
 constexpr std::uint32_t kCallSite = 0x497A22;  // MsgBox_Step: call Text_DrawAt
-constexpr std::uint32_t kCallee = 0x516B30;    // Text_DrawAt; its name is a macro here
+constexpr ::bof3::image::CodeVa kCallee{0x516B30};    // Text_DrawAt; its name is a macro here
 
 std::uint8_t* g_advances;
 std::uint32_t g_count;
@@ -97,6 +97,6 @@ void TextAdvance_Set(const std::uint8_t* advances, std::uint32_t count, std::uin
 }
 
 void TextAdvance_Inject() {
-    bof3::RetargetCall("MsgBox_DrawChar", kCallSite, kCallee,
+    bof3::RetargetCall("MsgBox_DrawChar", kCallSite, kCallee.v,
                        reinterpret_cast<void*>(&MsgBox_DrawChar));
 }

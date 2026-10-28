@@ -280,9 +280,9 @@ const ah::Callee kCallees[] = {
     {W4F_OURS(Sprite_QueueOverlay), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
     {W4F_OURS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},
     // Capcom's, unnamed (area_w4f_callees.h)
-    {"SlotsRelease_454A80", at::kSlotsReleaseFor, at::kSlotsReleaseFor, 1, {kAll}, ah::Answer::kGarbage, 0, 0},
-    {"SlotStart_455290", at::kSlotStart, at::kSlotStart, 2, {kAll, kAll}, ah::Answer::kByte, 0xFF, 0x07},
-    {"RoundHigh_441090", at::kRoundHigh, at::kRoundHigh, 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0},
+    {"SlotsRelease_454A80", at::kSlotsReleaseFor.v, at::kSlotsReleaseFor.v, 1, {kAll}, ah::Answer::kGarbage, 0, 0},
+    {"SlotStart_455290", at::kSlotStart.v, at::kSlotStart.v, 2, {kAll, kAll}, ah::Answer::kByte, 0xFF, 0x07},
+    {"RoundHigh_441090", at::kRoundHigh.v, at::kRoundHigh.v, 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     // the group's own, called directly: the second talk table (the index,
     // rank and level as bytes; who is passed and unread), the restore, the
     // drop, effect kind 0xA6's state 1 (also its table's entry 1)

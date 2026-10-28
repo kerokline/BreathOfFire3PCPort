@@ -11,19 +11,19 @@ namespace effect_2d::at {
 // scenario harness's effect-standard rows stand in for them), called through
 // the harness by address (SH_AT). Kind 0x49's variants 0 and 3 run on them;
 // read 2026-09-29 for what they take and answer (docs/effect_2d.md section 8).
-constexpr std::uint32_t kPuffsClear = bof3::addr::EffectGlowSparks_Clear;    // 0x4790C0, R3E's: (void): byte +0 of the 8 puffs of 0x1C at EffectKind30_Shards
+constexpr ::bof3::image::CodeVa kPuffsClear{bof3::addr::EffectGlowSparks_Clear};    // 0x4790C0, R3E's: (void): byte +0 of the 8 puffs of 0x1C at EffectKind30_Shards
                                                    // = 0, and the two bytes 0x6761C8 / 0x6761C9 = 0
-constexpr std::uint32_t kPuffFindFree = bof3::addr::EffectSpark_FindFree;  // (void): the first of those 8 puffs whose +0 is 0, or null (eax)
-constexpr std::uint32_t kPuffStart = bof3::addr::EffectGlowSparks_StartRise;     // 0x4790F0, R3E's: (unsigned char *puff): its +0..+0x17 set from Rand and
+constexpr ::bof3::image::CodeVa kPuffFindFree{bof3::addr::EffectSpark_FindFree};  // (void): the first of those 8 puffs whose +0 is 0, or null (eax)
+constexpr ::bof3::image::CodeVa kPuffStart{bof3::addr::EffectGlowSparks_StartRise};     // 0x4790F0, R3E's: (unsigned char *puff): its +0..+0x17 set from Rand and
                                                    // Sprite_Current's point
-constexpr std::uint32_t kPuffsStep = bof3::addr::EffectGlowSparks_Run;     // 0x479260, R3E's: (void): a draw mode, the map camera, each live puff stepped
+constexpr ::bof3::image::CodeVa kPuffsStep{bof3::addr::EffectGlowSparks_Run};     // 0x479260, R3E's: (void): a draw mode, the map camera, each live puff stepped
                                                    // through 0x654660 by its +1 and drawn; al 1 when any was live
-constexpr std::uint32_t kGlowStep = bof3::addr::EffectGlowTrail_Update;      // 0x4794D0, R3E's: (unsigned char *glow): the glow record 0x92C060 stepped
-constexpr std::uint32_t kGlowDraw = bof3::addr::EffectGlowTrail_Draw;      // 0x4796B0, R3E's: (unsigned char *glow): the glow record 0x92C060 drawn
-constexpr std::uint32_t kDustClear = bof3::addr::EffectDust_Clear;     // 0x47A110, R3E's: (void): byte +0 of the 64 dust records of 0x20 at 0x92D1DC = 0
-constexpr std::uint32_t kDustFindFree = bof3::addr::EffectDust_FindFree;  // 0x47A130, R3E's: (void): the first of those 64 whose +0 is 0, or null (eax)
-constexpr std::uint32_t kDustStart = bof3::addr::EffectDust_Start;     // 0x47A150, R3E's: (unsigned char *dust): its record set from Sprite_Current and Rand
-constexpr std::uint32_t kDustStep = bof3::addr::EffectDust_Run;      // 0x47A200, R3E's: (void): the live dust drawn and stepped; al 1 when any was live
+constexpr ::bof3::image::CodeVa kGlowStep{bof3::addr::EffectGlowTrail_Update};      // 0x4794D0, R3E's: (unsigned char *glow): the glow record 0x92C060 stepped
+constexpr ::bof3::image::CodeVa kGlowDraw{bof3::addr::EffectGlowTrail_Draw};      // 0x4796B0, R3E's: (unsigned char *glow): the glow record 0x92C060 drawn
+constexpr ::bof3::image::CodeVa kDustClear{bof3::addr::EffectDust_Clear};     // 0x47A110, R3E's: (void): byte +0 of the 64 dust records of 0x20 at 0x92D1DC = 0
+constexpr ::bof3::image::CodeVa kDustFindFree{bof3::addr::EffectDust_FindFree};  // 0x47A130, R3E's: (void): the first of those 64 whose +0 is 0, or null (eax)
+constexpr ::bof3::image::CodeVa kDustStart{bof3::addr::EffectDust_Start};     // 0x47A150, R3E's: (unsigned char *dust): its record set from Sprite_Current and Rand
+constexpr ::bof3::image::CodeVa kDustStep{bof3::addr::EffectDust_Run};      // 0x47A200, R3E's: (void): the live dust drawn and stepped; al 1 when any was live
 
 // Data.
 // kFlagRow: now Chapter_FlagRow (symbols.toml). unsigned char *: the chapter's flag row (scenario_harness at::kFlagRow)

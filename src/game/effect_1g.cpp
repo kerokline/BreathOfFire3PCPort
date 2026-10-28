@@ -78,10 +78,10 @@ char* NumberText() { return reinterpret_cast<char*>(At(::bof3::Img(at::kNumberTe
 const char* NumberFormat() { return reinterpret_cast<const char*>(At(::bof3::Img(at::kNumberFormat.v))); }
 
 // E1B's frame of the trade screen, as every state draws it.
-void TradeBox() { SH_AT(void (__cdecl*)(int, int, int, int, int), at::kTradeBox)(0x14, 0x12, 0x118, 0x13, 0); }
-void PieceMode(unsigned id) { SH_AT(void (__cdecl*)(unsigned, unsigned), at::kPieceMode)(id, 1); }
-void Piece(unsigned id, U x, U y) { SH_AT(void (__cdecl*)(unsigned, unsigned, U, U), at::kPiece)(id, 1, x, y); }
-void Quad(U x, U y, unsigned length, unsigned piece) { SH_AT(void (__cdecl*)(U, U, unsigned, unsigned), at::kQuad)(x, y, length, piece); }
+void TradeBox() { SH_AT(void (__cdecl*)(int, int, int, int, int), at::kTradeBox.v)(0x14, 0x12, 0x118, 0x13, 0); }
+void PieceMode(unsigned id) { SH_AT(void (__cdecl*)(unsigned, unsigned), at::kPieceMode.v)(id, 1); }
+void Piece(unsigned id, U x, U y) { SH_AT(void (__cdecl*)(unsigned, unsigned, U, U), at::kPiece.v)(id, 1, x, y); }
+void Quad(U x, U y, unsigned length, unsigned piece) { SH_AT(void (__cdecl*)(U, U, unsigned, unsigned), at::kQuad.v)(x, y, length, piece); }
 
 }  // namespace
 

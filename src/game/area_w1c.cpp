@@ -52,10 +52,10 @@ void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 
 // The four callees nobody owns, by their raw addresses (area_w1c_callees.h).
 void FlagsToggle(unsigned char* bits, unsigned index) {
-    AH_AT(void (__cdecl*)(unsigned char*, unsigned), at::kFlagsToggle)(bits, index);
+    AH_AT(void (__cdecl*)(unsigned char*, unsigned), at::kFlagsToggle.v)(bits, index);
 }
 void SetLayer(unsigned x, unsigned z, unsigned value) {
-    AH_AT(void (__cdecl*)(unsigned long, unsigned long, unsigned), at::kSetLayerByte)(x, z, value);
+    AH_AT(void (__cdecl*)(unsigned long, unsigned long, unsigned), at::kSetLayerByte.v)(x, z, value);
 }
 
 // The map byte setter, as the originals pass it: x and z words, a value byte.
@@ -523,7 +523,7 @@ extern "C" int __cdecl Area49_CellHook(long x, long z) {
     if (i == at::kArea49CellSwitchCount) return 0;
     if (AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C)) return 0;
     FlagsToggle(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), B(::bof3::Img(Area49_CellSwitches_addr) + i * 4u + 3));
-    AH_AT(void (__cdecl*)(unsigned), at::kSpawnKind4)(0xF);
+    AH_AT(void (__cdecl*)(unsigned), at::kSpawnKind4.v)(0xF);
     AH_CALL(Sound_PlayEffect)(0x202);
     return 1;
 }
@@ -684,7 +684,7 @@ extern "C" void __cdecl Area51_MemberAtObject(void) {
     if (member == 0xFF) return;
     if (Field_ScriptFlags2 & 0x1000) return;
     if (Field_Request != 0) return;
-    AH_AT(void (__cdecl*)(unsigned, unsigned), at::kMemberSetState)(member, 1);
+    AH_AT(void (__cdecl*)(unsigned, unsigned), at::kMemberSetState.v)(member, 1);
 }
 
 // original 0x409D30 (Area51_Choices[2] = Area51_Handlers[1]; PSX 0x801F2C7C):

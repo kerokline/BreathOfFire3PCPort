@@ -130,26 +130,26 @@ constexpr WorldMapTables kWm121 = {
 }  // namespace at
 
 // The unowned callees (above).
-constexpr std::uint32_t kLeaderHalt104 = bof3::addr::Area104_StopMotion;
-constexpr std::uint32_t kLeaderPace104 = bof3::addr::Area104_PoseByCharge;
-constexpr std::uint32_t kLeaderCharge104 = bof3::addr::Area104_LeaderCharge;
-constexpr std::uint32_t kGaugeRow104 = bof3::addr::Area104_DrawGauge;
+constexpr ::bof3::image::CodeVa kLeaderHalt104{bof3::addr::Area104_StopMotion};
+constexpr ::bof3::image::CodeVa kLeaderPace104{bof3::addr::Area104_PoseByCharge};
+constexpr ::bof3::image::CodeVa kLeaderCharge104{bof3::addr::Area104_LeaderCharge};
+constexpr ::bof3::image::CodeVa kGaugeRow104{bof3::addr::Area104_DrawGauge};
 
 // Area 121's own functions another of them calls directly (by the original
 // address, so the fuzz can stand a recorder in).
-constexpr std::uint32_t kPushObject = bof3::addr::Area121_PushObject;
-constexpr std::uint32_t kStepAround = bof3::addr::Area121_StepAround;
-constexpr std::uint32_t kDirectionTo = bof3::addr::Area121_DirectionTo;
-constexpr std::uint32_t kStepOffObject = bof3::addr::Area121_StepOffObject;
-constexpr std::uint32_t kLeaderControl = bof3::addr::Area121_LeaderControl;
-constexpr std::uint32_t kMenuButton = bof3::addr::Area121_MenuButton;
-constexpr std::uint32_t kRequest4Button = bof3::addr::Area121_Request4Button;
-constexpr std::uint32_t kTurnInput = bof3::addr::Area121_TurnInput;
-constexpr std::uint32_t kKind5CFollow = bof3::addr::Area121_Kind5CFollow;
-constexpr std::uint32_t kGaugeSprite = bof3::addr::Area121_GaugeSprite;
-constexpr std::uint32_t kKind5CFace = bof3::addr::Area121_Kind5CFace;
-constexpr std::uint32_t kKind5CTurnStep = bof3::addr::Area121_Kind5CTurnStep;
-constexpr std::uint32_t kKind5CTurn = bof3::addr::Area121_Kind5CTurn;
-constexpr std::uint32_t kRingRise = bof3::addr::Area121_RingRise;
+constexpr ::bof3::image::CodeVa kPushObject{bof3::addr::Area121_PushObject};
+constexpr ::bof3::image::CodeVa kStepAround{bof3::addr::Area121_StepAround};
+constexpr ::bof3::image::CodeVa kDirectionTo{bof3::addr::Area121_DirectionTo};
+constexpr ::bof3::image::CodeVa kStepOffObject{bof3::addr::Area121_StepOffObject};
+constexpr ::bof3::image::CodeVa kLeaderControl{bof3::addr::Area121_LeaderControl};
+constexpr ::bof3::image::CodeVa kMenuButton{bof3::addr::Area121_MenuButton};
+constexpr ::bof3::image::CodeVa kRequest4Button{bof3::addr::Area121_Request4Button};
+constexpr ::bof3::image::CodeVa kTurnInput{bof3::addr::Area121_TurnInput};
+constexpr ::bof3::image::CodeVa kKind5CFollow{bof3::addr::Area121_Kind5CFollow};
+constexpr ::bof3::image::CodeVa kGaugeSprite{bof3::addr::Area121_GaugeSprite};
+constexpr ::bof3::image::CodeVa kKind5CFace{bof3::addr::Area121_Kind5CFace};
+constexpr ::bof3::image::CodeVa kKind5CTurnStep{bof3::addr::Area121_Kind5CTurnStep};
+constexpr ::bof3::image::CodeVa kKind5CTurn{bof3::addr::Area121_Kind5CTurn};
+constexpr ::bof3::image::CodeVa kRingRise{bof3::addr::Area121_RingRise};
 
 }  // namespace area_w3b

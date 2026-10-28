@@ -185,7 +185,7 @@ U FxFindFree(const U*, U answer) {
 }
 
 #define E1B_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
-#define E1B_RAW(address) #address, address, address
+#define E1B_RAW(address) #address, address.v, address.v   // a CodeVa: the string names the constant, the cells its VA
 constexpr sh::Answer kG = sh::Answer::kGarbage;
 const sh::Callee kCallees[] = {
     {E1B_OURS(Effect_FindFree), 0, {}, sh::Answer::kByte, 0xFF, 0x13, {}, &FxFindFree, nullptr, true},

@@ -387,7 +387,7 @@ void CloneAll() {
                                  {0x0C, F(&StubGeomOffset), 0x5A7AE0},
                                  {0x16, F(&StubGeomScreen), 0x5A7B00},
                                  {0x28, F(&StubDInput), 0x5A94C0},
-                                 {0x34, F(&StubSound), kSoundSetup},
+                                 {0x34, F(&StubSound), kSoundSetup.v},
                                  {0x3B, F(&StubDropped), 0x4DF820},
                                  {0x53, F(&StubDrawEnv), 0x5A7910},
                                  {0x6E, F(&StubDispEnv), 0x5A78E0},

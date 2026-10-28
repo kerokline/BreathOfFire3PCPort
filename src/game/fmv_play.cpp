@@ -117,7 +117,7 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
 
     (void)fullscreen;   // DIV-0035: no Fmv_EnterFullscreen, whatever it says
 
-    const LONG saved_proc = SetWindowLongA(hwnd, GWL_WNDPROC, static_cast<LONG>(bof3::addr::Fmv_WndProc));
+    const LONG saved_proc = SetWindowLongA(hwnd, GWL_WNDPROC, static_cast<LONG>(::bof3::Code(bof3::addr::Fmv_WndProc)));
     Crt_sprintf(command, Str(::bof3::Img(kFmtWindow.v)), hwnd);
     mciSendStringA(command, nullptr, 0, nullptr);
 

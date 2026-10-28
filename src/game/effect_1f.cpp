@@ -437,7 +437,7 @@ extern "C" unsigned short __cdecl FieldPanel_KindTotal(void) {
 // original 0x52CF00: game mode 8's frame (its step 1; step 0 calls it once).
 extern "C" void __cdecl GameMode8_Frame(void) {
     SH_CALL(Field_MembersFrame)();
-    SH_AT(void (__cdecl*)(), at::kMode8Panel)();
+    SH_AT(void (__cdecl*)(), at::kMode8Panel.v)();
     SH_CALL(AreaMap_Frame)();
     SH_CALL(Party_UpdateScreens)();
     SH_CALL(Sprite_UpdateAllScaled)();
@@ -447,7 +447,7 @@ extern "C" void __cdecl GameMode8_Frame(void) {
 
 // original 0x52CF30 (PSX 0x801E0C78): game mode 8's step 3, a tail jump to 0x593950 (the item
 // trade's dispatcher by the byte 0x93985C).
-extern "C" void __cdecl GameMode8_TradeStep(void) { SH_AT(void (__cdecl*)(), at::kTradeDispatch)(); }
+extern "C" void __cdecl GameMode8_TradeStep(void) { SH_AT(void (__cdecl*)(), at::kTradeDispatch.v)(); }
 
 // original 0x52CF40 (PSX 0x801E0C98): the frame game mode 8's step 2 draws while it waits.
 extern "C" void __cdecl GameMode8_WaitFrame(void) {

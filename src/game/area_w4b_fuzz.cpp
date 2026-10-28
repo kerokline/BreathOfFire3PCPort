@@ -417,7 +417,7 @@ const ah::Callee kCallees[] = {
     {W4B_OURS(Msg_OpenScript), 1, {kU16}, ah::Answer::kGarbage, 0, 0, {}, &TailEffect},
     {W4B_OURS(Msg_OpenSystem), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &TailEffect},
     {W4B_OURS(Sound_PlayEffect), 1, {kU16}, ah::Answer::kGarbage, 0, 0, {}, &ZoneEffect},
-    {"MapSetUp_486D60", at::kArea170MapSetUp, at::kArea170MapSetUp, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &ZoneEffect},
+    {"MapSetUp_486D60", at::kArea170MapSetUp.v, at::kArea170MapSetUp.v, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &ZoneEffect},
     // slots inside the group's four effect records, or none
     {W4B_OURS(Effect_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x03, {}, &FindFreeEffect},
     {W4B_OURS(Sprite_SetAnimation), 1, {kU8}, ah::Answer::kGarbage, 0, 0, {}, &AnimationEffect},

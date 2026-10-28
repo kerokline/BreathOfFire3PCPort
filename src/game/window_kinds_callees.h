@@ -51,7 +51,7 @@ constexpr ::bof3::image::Va kScratch_addr{SharedScratch_addr}; // kScratch's add
 }  // namespace at
 
 // The callees with no name of their own in symbols.gen.h.
-constexpr std::uint32_t kNop = bof3::addr::BareRet;           // a bare `ret` (symbols.toml, Battle_ElementAffinity's note)
+constexpr ::bof3::image::CodeVa kNop{bof3::addr::BareRet};           // a bare `ret` (symbols.toml, Battle_ElementAffinity's note)
 // Record handler 4's six kinds, by record byte +2. Slots 2 and 3 are not
 // immediates: the original stores eax (0) there - two holes in the table.
 // 0x598570 and 0x5986C0 are group CD's (round eight); 0x5984B0 is group BE7's

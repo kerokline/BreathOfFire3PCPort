@@ -276,7 +276,7 @@ extern "C" void __cdecl EffectKind61_Store(void) {
     if (!CountDown()) return;
     const U f = Frame("EffectKind61_Store");
     alignas(4) short rect[4] = {0x340, 0x100, static_cast<short>(Word(At(f + 4))), static_cast<short>(Word(At(f + 6)))};
-    SH_AT(void (__cdecl*)(const short*, void*), at::kStoreImage)(rect, At(::bof3::Img(EffectKind30_Shards_addr)));
+    SH_AT(void (__cdecl*)(const short*, void*), at::kStoreImage.v)(rect, At(::bof3::Img(EffectKind30_Shards_addr)));
     NextState();
 }
 
@@ -735,7 +735,7 @@ void SparkTick() {
     unsigned char* const s = S();
     const unsigned char frame = s[6];
     s[6] = static_cast<unsigned char>(frame + 1);
-    if ((frame & 3) == 0) SH_AT(void (__cdecl*)(void), at::kSparkSpawn)();
+    if ((frame & 3) == 0) SH_AT(void (__cdecl*)(void), at::kSparkSpawn.v)();
 }
 }  // namespace
 
@@ -1062,8 +1062,8 @@ extern "C" void __cdecl EffectKind64_InitShard(unsigned char* shard) {
     SH_CALL(Gte_RotMatrixY)(-static_cast<std::int32_t>(static_cast<std::int16_t>(y)), m);
     SH_CALL(Gte_RotMatrixZ)(static_cast<std::int16_t>(z), m);
     using Turn = void (__cdecl*)(const short*, short*, short*);
-    SH_AT(Turn, at::kMatrixVector)(m, reinterpret_cast<short*>(shard + 0x10), reinterpret_cast<short*>(shard + 0x10));
-    SH_AT(Turn, at::kMatrixVector)(m, reinterpret_cast<short*>(shard + 0x18), reinterpret_cast<short*>(shard + 0x18));
+    SH_AT(Turn, at::kMatrixVector.v)(m, reinterpret_cast<short*>(shard + 0x10), reinterpret_cast<short*>(shard + 0x10));
+    SH_AT(Turn, at::kMatrixVector.v)(m, reinterpret_cast<short*>(shard + 0x18), reinterpret_cast<short*>(shard + 0x18));
     const U speed = (static_cast<U>(SH_CALL(Rand)()) & 2u) + 3u;
     rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->shade, 0x20);
     rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->speed, speed);
@@ -1080,7 +1080,7 @@ extern "C" void __cdecl EffectKind64_DrawShards(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned i = 0; i < at::kShardCount64; ++i) {
         unsigned char* const shard = At(::bof3::Img(EffectKind30_Shards_addr) + 0xc0 + i * at::kShardStride64);
-        SH_AT(void (__cdecl*)(unsigned char*), at::kShardDraw)(shard);
+        SH_AT(void (__cdecl*)(unsigned char*), at::kShardDraw.v)(shard);
         rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->angle[2], rv::As<records::EffectShard>(shard)->angle[2] + 0x10u);
     }
 }
@@ -1205,7 +1205,7 @@ extern "C" unsigned char __cdecl EffectKind68_StepMotes(void) {
                         "the original calls through the dword after (docs/effect_3a.md section 6)",
                         i, state, EffectKind68_MoteStates_count);
         reinterpret_cast<void (__cdecl*)(unsigned char*)>(
-            static_cast<std::uintptr_t>(UL(reinterpret_cast<const unsigned char*>(EffectKind68_MoteStates) + 4 * state)))(mote);
+            static_cast<std::uintptr_t>(::bof3::CodePlace(UL(reinterpret_cast<const unsigned char*>(EffectKind68_MoteStates) + 4 * state))))(mote);
         SH_CALL(EffectKind68_DrawMote)(mote);
         any = 1;
     }

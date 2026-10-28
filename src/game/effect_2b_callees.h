@@ -13,9 +13,9 @@ namespace effect_2b::at {
 
 // Callees nobody owns (the library layer), called through the harness by
 // address (SH_AT).
-constexpr std::uint32_t kSetPolyF3 = bof3::addr::Gpu_SetPolyF3;   // (unsigned char *prim): POLY_F3's code 0x20 at +7 and the three z
+constexpr ::bof3::image::CodeVa kSetPolyF3{bof3::addr::Gpu_SetPolyF3};   // (unsigned char *prim): POLY_F3's code 0x20 at +7 and the three z
                                                  // at +0x10, +0x1C, +0x28 (0.01f); unnamed (magic_s04.cpp, magic_s21.cpp)
-constexpr std::uint32_t kSqrt = bof3::addr::Gte_SquareRoot0;        // (long): an integer square root through _ftol, answered in eax
+constexpr ::bof3::image::CodeVa kSqrt{bof3::addr::Gte_SquareRoot0};        // (long): an integer square root through _ftol, answered in eax
                                                  // (magic_c3.cpp's kSqrt)
 
 // The pools. EffectKind30_Shards 0x92BF80 is shared by every kind that keeps

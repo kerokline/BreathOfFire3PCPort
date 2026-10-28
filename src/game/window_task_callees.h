@@ -65,12 +65,12 @@ constexpr ::bof3::image::Va kMusicSets{0x669A48};      // 8-byte records: const 
 // MsgBox_FrameTask is group H's - its entry and body are theirs; we only call
 // it, and only through this address (as title_states.cpp calls
 // Field_ModeDispatch).
-constexpr std::uint32_t kMsgBoxFrameTask = bof3::addr::MsgBox_FrameTask;   // PSX 0x80150508
-constexpr std::uint32_t kListSetUp = bof3::addr::Window_Kind1Layout;         // kind 1's state 0 calls it; R2F's (round fourteen)
-constexpr std::uint32_t kListDraw = bof3::addr::Window_Kind1List;          // kind 1's frame; R2F's
-constexpr std::uint32_t kListCursorDraw = bof3::addr::Window_Kind1Cursor;    // kind 1's frame, a tail jump; R2F's
-constexpr std::uint32_t kSetDraw = bof3::addr::Window_Kind2List;           // kind 2's frame (menu_windows.cpp)
-constexpr std::uint32_t kSetCursorDraw = bof3::addr::Window_DrawCursor;     // kind 2's frame, a tail jump (mode_states.cpp)
+constexpr ::bof3::image::CodeVa kMsgBoxFrameTask{bof3::addr::MsgBox_FrameTask};   // PSX 0x80150508
+constexpr ::bof3::image::CodeVa kListSetUp{bof3::addr::Window_Kind1Layout};         // kind 1's state 0 calls it; R2F's (round fourteen)
+constexpr ::bof3::image::CodeVa kListDraw{bof3::addr::Window_Kind1List};          // kind 1's frame; R2F's
+constexpr ::bof3::image::CodeVa kListCursorDraw{bof3::addr::Window_Kind1Cursor};    // kind 1's frame, a tail jump; R2F's
+constexpr ::bof3::image::CodeVa kSetDraw{bof3::addr::Window_Kind2List};           // kind 2's frame (menu_windows.cpp)
+constexpr ::bof3::image::CodeVa kSetCursorDraw{bof3::addr::Window_DrawCursor};     // kind 2's frame, a tail jump (mode_states.cpp)
 
 // The nine handlers of Field_RunTaskRecords' local table, every one ours now:
 // entry 0 is Window_Run, entries 1..8 are the other record kinds.

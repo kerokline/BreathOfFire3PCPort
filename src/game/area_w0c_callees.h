@@ -95,7 +95,7 @@ constexpr unsigned kArea36EffectStateCount = 2;
 // dwords (a position); called by area 36's effect state 1 and from engine
 // code at 0x475CE2 / 0x47EF32. Unread here: a raw address until its group
 // names it.
-constexpr std::uint32_t kPositionHook = bof3::addr::Area146_DrawGlowCylinder;
+constexpr ::bof3::image::CodeVa kPositionHook{bof3::addr::Area146_DrawGlowCylinder};
 
 }  // namespace at
 }  // namespace area_w0c

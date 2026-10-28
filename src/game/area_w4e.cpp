@@ -114,7 +114,7 @@ void CopyFloatX87(unsigned char* to, const unsigned char* from) {
 
 // 0x511C10 (x, z): the map's height, in ax.
 using HeightFn = short (__cdecl*)(long, long);
-short HeightAt(U x, U z) { return AH_AT(HeightFn, at::kHeightAt)(static_cast<long>(x), static_cast<long>(z)); }
+short HeightAt(U x, U z) { return AH_AT(HeightFn, at::kHeightAt.v)(static_cast<long>(x), static_cast<long>(z)); }
 
 // Area 189: the pending area change of its walk and exit button:
 // Field_ChangeArea(the area word, x, z, the flags byte) from the four cells.
@@ -956,7 +956,7 @@ extern "C" void __cdecl Area191_Tail53(void) {
         if (Transition_Busy != 0) return;
         Draw_PassFlags = 0;
         AH_CALL(Sound_StopMusic)();
-        AH_AT(void (__cdecl*)(), at::kRestoreRecords)();
+        AH_AT(void (__cdecl*)(), at::kRestoreRecords.v)();
         AH_CALL(Sound_LoadStream)(0);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 4;
         return;

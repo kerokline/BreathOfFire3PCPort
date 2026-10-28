@@ -47,9 +47,9 @@ const Callees kOriginals = {
     Party_Count,
     Rand,
     Char_RecalcStats,
-    Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(kInventoryAdd),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(kInventoryAdd.v)),
     Flags_Test,
-    Fn<void (__cdecl*)()>(kSystemChoice),
+    Fn<void (__cdecl*)()>(::bof3::Code(kSystemChoice.v)),
 };
 Callees g = kOriginals;
 

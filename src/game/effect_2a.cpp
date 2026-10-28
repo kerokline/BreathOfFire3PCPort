@@ -1306,7 +1306,7 @@ extern "C" void __cdecl EffectKind2D_DrawDisc(const unsigned char* q) {
         std::int32_t i = minus;
         std::int32_t count = static_cast<std::int32_t>(h) - minus + 1;
         do {
-            const U root = SH_AT(U (__cdecl*)(long), at::kRootWord)(static_cast<long>(square - i * i));
+            const U root = SH_AT(U (__cdecl*)(long), at::kRootWord.v)(static_cast<long>(square - i * i));
             const std::int32_t w = static_cast<std::int16_t>(root);
             unsigned char* const p = Gfx_PacketNext;
             SH_CALL(Gpu_SetTile1)(p);

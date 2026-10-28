@@ -14,7 +14,7 @@ namespace d3d_list {
 
 using U = std::uint32_t;
 
-constexpr U kRetOnly = bof3::addr::BareRet;
+constexpr ::bof3::image::CodeVa kRetOnly{bof3::addr::BareRet};
 // kDevice: now D3d_Device (symbols.toml). D3d_Device
 // kRenderFlags: now Gfx_RenderFlags (symbols.toml). Gfx_RenderFlags, byte: bit 0 the software surfaces
 // kDrawEnable: now Gfx_DrawEnable (symbols.toml). Gfx_DrawEnable, byte (0x7DED16 the byte before it)

@@ -494,9 +494,9 @@ const ah::Clone kClones21[] = {
     W0B_C(Area21_ChoiceTrade, 0x402EE0, 0xAF, kCalls402EE0, S::kChoice),
 };
 const ah::Callee kCallees21[] = {
-    {"money take 0x591BC0", kMoneyTake, kMoneyTake, 1, {kAll}, ah::Answer::kFlag, 0, 0},
-    {"money give 0x591BE0", kMoneyGive, kMoneyGive, 2, {kAll, kU8}, ah::Answer::kFlag, 0, 0},
-    {"inventory take 0x591B60", kInventoryTake, kInventoryTake, 3, {kU8, kU8, kU8}, ah::Answer::kFlag, 0, 0},
+    {"money take 0x591BC0", kMoneyTake.v, kMoneyTake.v, 1, {kAll}, ah::Answer::kFlag, 0, 0},
+    {"money give 0x591BE0", kMoneyGive.v, kMoneyGive.v, 2, {kAll, kU8}, ah::Answer::kFlag, 0, 0},
+    {"inventory take 0x591B60", kInventoryTake.v, kInventoryTake.v, 3, {kU8, kU8, kU8}, ah::Answer::kFlag, 0, 0},
     {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {"Inventory_Count", bof3::addr::Inventory_Count, KeyOf(&::Inventory_Count), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &CountEffect, nullptr},
 };

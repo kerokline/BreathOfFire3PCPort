@@ -127,8 +127,8 @@ constexpr ::bof3::image::Va kFlag3A79{0x903A79};         // the record +4 state:
 }  // namespace at
 
 // The unowned callees (above).
-constexpr std::uint32_t kDrawWindow = bof3::addr::Area75_DrawWindow;
-constexpr std::uint32_t kFreeObject = bof3::addr::Sprite_FindFree;
-constexpr std::uint32_t kFlagsToggle = bof3::addr::Flags_Toggle;
+constexpr ::bof3::image::CodeVa kDrawWindow{bof3::addr::Area75_DrawWindow};
+constexpr ::bof3::image::CodeVa kFreeObject{bof3::addr::Sprite_FindFree};
+constexpr ::bof3::image::CodeVa kFlagsToggle{bof3::addr::Flags_Toggle};
 
 }  // namespace area_w1b

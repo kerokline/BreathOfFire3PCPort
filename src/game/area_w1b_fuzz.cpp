@@ -127,8 +127,8 @@ U RankEffect(const U* a, U answer) {
 const ah::Callee kCallees42[] = {
     {"Flags_Test", bof3::addr::Flags_Test, KeyOf(&::Flags_Test), 2, {kAll, kU8}, ah::Answer::kBool, 0, 0, {}, &RankEffect, nullptr},
     {"Area42_CheckAll", 0x4068D0, 0x4068D0, 0, {}, ah::Answer::kPhase, 0, 0},
-    {"window 0x40E750", kDrawWindow, kDrawWindow, 5, {kAll, kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
-    {"free object 0x57CD90", kFreeObject, kFreeObject, 0, {}, ah::Answer::kByte, 0xFF, 0x1D},
+    {"window 0x40E750", kDrawWindow.v, kDrawWindow.v, 5, {kAll, kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
+    {"free object 0x57CD90", kFreeObject.v, kFreeObject.v, 0, {}, ah::Answer::kByte, 0xFF, 0x1D},
     {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 4, {kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     // its 13-byte operand logged
     {"EventOp_9x", bof3::addr::EventOp_9x, KeyOf(&::EventOp_9x), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {13}},
@@ -293,7 +293,7 @@ const ah::Callee kCallees44[] = {
     // the x pushed with the caller's esi / edi high half above it (read as an s16)
     {"AreaMap_SetByte", bof3::addr::AreaMap_SetByte, KeyOf(&::AreaMap_SetByte), 3, {kU16, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     // the flag byte pushed with a table pointer's high bytes above it
-    {"flag toggle 0x57C160", kFlagsToggle, kFlagsToggle, 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
+    {"flag toggle 0x57C160", kFlagsToggle.v, kFlagsToggle.v, 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
     // the member stands on extra object 0 or 1 (0x1E, 0x1F) now and then
     {"Sprite_FindNearby", bof3::addr::Sprite_FindNearby, KeyOf(&::Sprite_FindNearby), 0, {}, ah::Answer::kByte, 0x1C, 0x21},
     kSet40, kClear40,

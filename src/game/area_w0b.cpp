@@ -56,10 +56,12 @@ signed char Choice() { return AreaW0c_ChoiceAnswer; }
 
 // Area 16's own functions another of them calls directly, by their original
 // addresses (each is patched to ours; the fuzz stands a recorder in).
-constexpr U kFrameStep16 = bof3::addr::Area16_FrameStep, kFrameHold16 = bof3::addr::Area16_FrameHold,
-    kBoxStep16 = bof3::addr::Area16_BoxStep;
-constexpr U kDrawFrame16 = bof3::addr::Area16_DrawFrame, kDrawSprite16 = bof3::addr::Area16_DrawSprite,
-    kDrawHud16 = bof3::addr::Area16_DrawHud;
+constexpr ::bof3::image::CodeVa kFrameStep16{bof3::addr::Area16_FrameStep};
+constexpr ::bof3::image::CodeVa kFrameHold16{bof3::addr::Area16_FrameHold};
+constexpr ::bof3::image::CodeVa kBoxStep16{bof3::addr::Area16_BoxStep};
+constexpr ::bof3::image::CodeVa kDrawFrame16{bof3::addr::Area16_DrawFrame};
+constexpr ::bof3::image::CodeVa kDrawSprite16{bof3::addr::Area16_DrawSprite};
+constexpr ::bof3::image::CodeVa kDrawHud16{bof3::addr::Area16_DrawHud};
 using DrawAt = void (__cdecl*)(int, int);
 using DrawSpriteAt = void (__cdecl*)(int, int, unsigned);
 
@@ -290,8 +292,8 @@ extern "C" void __cdecl Area16_HudRun(void) { Entry(::bof3::Img(Area16_HudStates
 // original 0x4020A0 (Area16_HudStates 1; area 33's 0x404150): `call
 // 0x4020B0; jmp 0x402180` - the frame's slide, then the region box's.
 extern "C" void __cdecl Area16_HudFrame(void) {
-    area_harness::Phase(kFrameStep16)();
-    area_harness::Phase(kBoxStep16)();
+    area_harness::Phase(kFrameStep16.v)();
+    area_harness::Phase(kBoxStep16.v)();
 }
 
 // original 0x4020B0 (area 33's WorldMap_FrameStep's dispatch): Area16_FrameStates
@@ -305,7 +307,7 @@ extern "C" void __cdecl Area16_FrameSlideIn(void) {
     rv::Current<records::EffectWork>()->work_2e = static_cast<std::uint16_t>(rv::Current<records::EffectWork>()->work_2e) + 0x10u;
     unsigned char* const o = Cur();
     if (S16(o + 0x2E) >= 0x10) o[2] = static_cast<unsigned char>(o[2] + 1);
-    area_harness::Phase(kFrameHold16)();
+    area_harness::Phase(kFrameHold16.v)();
 }
 
 // original 0x402100 (Area16_FrameStates 2): the mode byte 2 makes +2 = 3;
@@ -313,7 +315,7 @@ extern "C" void __cdecl Area16_FrameSlideIn(void) {
 // half the drawing never reads: ours passes the word sign-extended.
 extern "C" void __cdecl Area16_FrameHold(void) {
     if (AreaW0b_MapMode == 2) Cur()[2] = 3;
-    AH_AT(DrawAt, kDrawFrame16)(0x10, S16(Cur() + 0x2E));
+    AH_AT(DrawAt, kDrawFrame16.v)(0x10, S16(Cur() + 0x2E));
 }
 
 // original 0x402130 (Area16_FrameStates 3): the word +0x2E -= 0x10; at -0x30
@@ -330,7 +332,7 @@ extern "C" void __cdecl Area16_FrameSlideOut(void) {
         o[2] = 1;
         o = Cur();
     }
-    AH_AT(DrawAt, kDrawFrame16)(0x10, S16(o + 0x2E));
+    AH_AT(DrawAt, kDrawFrame16.v)(0x10, S16(o + 0x2E));
 }
 
 // original 0x402180 (area 33's WorldMapHud_BoxStep 0x404230): Area16_BoxStates
@@ -353,7 +355,7 @@ extern "C" void __cdecl Area16_BoxSlideIn(void) {
         o[3] = 3;
         o = Cur();
     }
-    AH_AT(DrawAt, kDrawHud16)(0x5C, S16(o + 0x30));
+    AH_AT(DrawAt, kDrawHud16.v)(0x5C, S16(o + 0x30));
 }
 
 // original 0x402210 (Area16_BoxStates 2; area 33's 0x4042C0): while +0xB is 0
@@ -373,7 +375,7 @@ extern "C" void __cdecl Area16_BoxHold(void) {
         o[3] = static_cast<unsigned char>(o[3] + 1);
         o = Cur();
     }
-    AH_AT(DrawAt, kDrawHud16)(0x5C, S16(o + 0x30));
+    AH_AT(DrawAt, kDrawHud16.v)(0x5C, S16(o + 0x30));
 }
 
 // original 0x402280 (Area16_BoxStates 3; area 33's 0x404330): y +0x30 += 10;
@@ -391,7 +393,7 @@ extern "C" void __cdecl Area16_BoxSlideOut(void) {
         o[3] = 1;
         o = Cur();
     }
-    AH_AT(DrawAt, kDrawHud16)(0x5C, S16(o + 0x30));
+    AH_AT(DrawAt, kDrawHud16.v)(0x5C, S16(o + 0x30));
 }
 
 // original 0x4022E0 (area 33's WorldMap_DrawFrame 0x404390, instruction for
@@ -413,23 +415,23 @@ extern "C" void __cdecl Area16_DrawFrame(int x, int y) {
     world_map_legend::Begin();   // DIV-0135: which page; the port's key names painted over
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x9C, 0);
     AH_CALL(Gfx_CommitPrim)(1, 0xC);
-    AH_AT(DrawSpriteAt, kDrawSprite16)(x, y, 0);
+    AH_AT(DrawSpriteAt, kDrawSprite16.v)(x, y, 0);
     const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
                                                        static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v)))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
-    if (!withheld1) AH_AT(DrawSpriteAt, kDrawSprite16)(x + 0x30, y, 1);
-    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite16), ::bof3::Img(Area16_Buttons_addr), 6, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000))), x + 0x38, y + 8,
+    if (!withheld1) AH_AT(DrawSpriteAt, kDrawSprite16.v)(x + 0x30, y, 1);
+    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite16.v), ::bof3::Img(Area16_Buttons_addr), 6, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000))), x + 0x38, y + 8,
                           withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
-    if (!withheld2) AH_AT(DrawSpriteAt, kDrawSprite16)(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite16), ::bof3::Img(Area16_Buttons_addr), 8, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c))), x + 0x38, y + 0x10,
+    if (!withheld2) AH_AT(DrawSpriteAt, kDrawSprite16.v)(x + 0x30, y + 0x10, 2);
+    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite16.v), ::bof3::Img(Area16_Buttons_addr), 8, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c))), x + 0x38, y + 0x10,
                           withheld2);
     bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
                                             static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v))))) != 0;
     if (!third) third = (Field_ScriptFlags2 & 0x1000) != 0;
     if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
     if (!third) third = (Field_ScriptFlags & 0x4000) != 0;
-    if (third) AH_AT(DrawSpriteAt, kDrawSprite16)(x + 0x30, y + 0x18, 3);
+    if (third) AH_AT(DrawSpriteAt, kDrawSprite16.v)(x + 0x30, y + 0x18, 3);
     world_map_legend::Start(x + 0x30, y + 0x18, !third);
     AH_CALL(WorldMap_DrawNeedle)(x + 0x18, y + 0x18);
 }
@@ -466,8 +468,8 @@ extern "C" void __cdecl Area16_DrawSprite(int x, int y, unsigned index) {
 // word of the dword 0x803588, read after the sprites).
 extern "C" void __cdecl Area16_DrawHud(int x, int y) {
     if ((Draw_PassFlags & 0x1B) == 0) return;
-    AH_AT(DrawSpriteAt, kDrawSprite16)(x, y, 4);
-    AH_AT(DrawSpriteAt, kDrawSprite16)(x + 0x80, y, 5);
+    AH_AT(DrawSpriteAt, kDrawSprite16.v)(x, y, 4);
+    AH_AT(DrawSpriteAt, kDrawSprite16.v)(x + 0x80, y, 5);
     const unsigned char* const text = At(::bof3::Img(at::kAreaText.v) + (static_cast<U>(Long(At(::bof3::Img(at::kAreaTextOffset.v)))) & 0xFFFF));
     AH_CALL(Text_DrawAt)(x + 4, y + 4, 0, 0xFF, text);
 }
@@ -779,7 +781,7 @@ extern "C" void __cdecl Area21_ChoicePay(void) {
         SetMessage(0x17);
         return;
     }
-    AH_AT(unsigned char (__cdecl*)(unsigned, unsigned), area_w0b::kMoneyTake)(0x14, 0);
+    AH_AT(unsigned char (__cdecl*)(unsigned, unsigned), area_w0b::kMoneyTake.v)(0x14, 0);
     SetMessage(0x11);
 }
 
@@ -814,8 +816,8 @@ extern "C" void __cdecl Area21_ChoiceTrade(void) {
     const unsigned n = counter != 0 ? (counter + 1) * 10 : 10;
     AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kTextRow1.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kFormat.v))), n);
     SetMessage(0x30);
-    AH_AT(unsigned char (__cdecl*)(unsigned, unsigned), area_w0b::kMoneyGive)(n, 0);
-    AH_AT(unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned), area_w0b::kInventoryTake)(0, 3, 1, 0);
+    AH_AT(unsigned char (__cdecl*)(unsigned, unsigned), area_w0b::kMoneyGive.v)(n, 0);
+    AH_AT(unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned), area_w0b::kInventoryTake.v)(0, 3, 1, 0);
     AH_CALL(Flags_Set)(Pointer(::bof3::Img(at::kFlagBase.v)), 0x12);
 }
 

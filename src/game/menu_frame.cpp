@@ -50,7 +50,7 @@
 
 namespace {
 
-constexpr std::uint32_t kEmptyFunction = 0x4DF820;   // Port_DroppedCall: the sites' target in Capcom's bytes, a patch fact (raw)
+constexpr ::bof3::image::CodeVa kEmptyFunction{0x4DF820};   // Port_DroppedCall: the sites' target in Capcom's bytes, a patch fact (raw)
 constexpr std::uint32_t kConfigPanelSite = 0x461778;       // in Config_DrawPanel: push 0xD, push 0x21, y, x
 constexpr std::uint32_t kControllerPanelSite = 0x461A84;   // in Config_DrawControllerPanel: push 0xF, push 0xC, y, x
 // The reserve list of "change party members", 0x12 by 0x15 cells. The
@@ -92,7 +92,7 @@ void __cdecl Menu_DrawFrame(int x_in, int y_in, int w_in, int h_in) {
 }
 
 // What the four sites call now (MenuFrame_Draw).
-std::uint32_t g_frame_draw = kEmptyFunction;
+std::uint32_t g_frame_draw = kEmptyFunction.v;
 
 }  // namespace
 
@@ -103,7 +103,7 @@ void MenuFrame_Inject() {
     unsigned on = 0;
     for (const std::uint32_t site : kSites) {
         bof3::OperandCall("DIV-0011 panel frame", site, &g_frame_draw);
-        on += bof3::RetargetCall("Menu_DrawFrame", site, kEmptyFunction, reinterpret_cast<void*>(&Menu_DrawFrame)) ? 1 : 0;
+        on += bof3::RetargetCall("Menu_DrawFrame", site, kEmptyFunction.v, reinterpret_cast<void*>(&Menu_DrawFrame)) ? 1 : 0;
     }
     if (on != 0 && on != 4) bof3::Fatal("DIV-0011: %u of the four frame calls re-aimed", on);   // one name: all or none
     if (on) g_frame_draw = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&Menu_DrawFrame));

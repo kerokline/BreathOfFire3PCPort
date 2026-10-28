@@ -82,7 +82,7 @@ constexpr ::bof3::image::Va kTablesEnd{0x663FB8};     // the next table (0x58030
 
 // Crt_sprintf is Capcom's, so its name in symbols.gen.h is a macro, not an
 // addr constant the fuzz's call tables could use.
-constexpr U kCrtSprintf = 0x5B9380;
+constexpr ::bof3::image::CodeVa kCrtSprintf{0x5B9380};
 
 struct Callees {
     void (__cdecl* title_box)(int, int, int, int, int);                              // Menu_DrawTitleBox

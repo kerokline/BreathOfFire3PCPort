@@ -95,8 +95,8 @@ const ah::Callee kCallees85[] = {
     {"MoveCmd_MoveKind2", bof3::addr::MoveCmd_MoveKind2, KeyOf(&::MoveCmd_MoveKind2), 1, {kU8}, ah::Answer::kGarbage, 0, 0},
     // a slot of the twenty or none (0xFF), garbage above
     {"Effect_FindFree", bof3::addr::Effect_FindFree, KeyOf(&::Effect_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x13},
-    {"0x454A80", kSlotsReleaseFor, kSlotsReleaseFor, 1, {kAll}, ah::Answer::kGarbage, 0, 0},
-    {"0x455290", kSlotStart, kSlotStart, 2, {kAll, kAll}, ah::Answer::kByte, 0xFF, 0x07},
+    {"0x454A80", kSlotsReleaseFor.v, kSlotsReleaseFor.v, 1, {kAll}, ah::Answer::kGarbage, 0, 0},
+    {"0x455290", kSlotStart.v, kSlotStart.v, 2, {kAll, kAll}, ah::Answer::kByte, 0xFF, 0x07},
     {"Area85_ClutShift", 0x40F9E0, 0x40F9E0, 1, {kAll}, ah::Answer::kGarbage, 0, 0},
 };
 
@@ -187,8 +187,8 @@ U NearAnswer(const U*, U answer) {
 const ah::Callee kCallees86[] = {
     {"Area86_MemberNear", 0x40FB70, 0x40FB70, 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &NearAnswer, nullptr},
     // the index pushed with Flags_Test's answer above its byte
-    {"0x57C160", kFlagsToggle, kFlagsToggle, 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
-    {"0x469FE0", kSpawnKind4, kSpawnKind4, 1, {kAll}, ah::Answer::kGarbage, 0, 0},
+    {"0x57C160", kFlagsToggle.v, kFlagsToggle.v, 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
+    {"0x469FE0", kSpawnKind4.v, kSpawnKind4.v, 1, {kAll}, ah::Answer::kGarbage, 0, 0},
 };
 const ah::Region kRegions86[] = {{AreaW2c_LastArea_addr, 2}};
 

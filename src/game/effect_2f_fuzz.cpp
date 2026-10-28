@@ -313,8 +313,8 @@ const sh::Callee kCallees[] = {
     // nobody's this round, by address: E2E's angle mean reads both words & 0xFFF
     // (0x479970: and eax, 0xFFF; and ecx, 0xFFF); the spark draw 0x4792E0 reads
     // the spark's shade +3 and point +0xC..+0x17
-    {"0x479970", at::kAngleMean, at::kAngleMean, 2, {0xFFFu, 0xFFFu}, kG, 0, 0, {}, nullptr, nullptr, true},
-    {"0x4792E0", at::kSparkDraw, at::kSparkDraw, 1, {kW}, kG, 0, 0, {0x18}, nullptr, nullptr, true},
+    {"0x479970", at::kAngleMean.v, at::kAngleMean.v, 2, {0xFFFu, 0xFFFu}, kG, 0, 0, {}, nullptr, nullptr, true},
+    {"0x4792E0", at::kSparkDraw.v, at::kSparkDraw.v, 1, {kW}, kG, 0, 0, {0x18}, nullptr, nullptr, true},
     // standard rows re-listed: the point and the out are often stack locals
     // (their addresses differ between the copy and ours) - hashed, not logged
     {E2F_OURS(EffectGte_ProjectPoint), 2, {0, 0}, kG, 0, 0, {12, 0}, &FxProjectPoint, nullptr, true},

@@ -931,7 +931,7 @@ extern "C" void __cdecl EffectKind6B_Store(void) {
     s = S();
     if (s[9] != 0) return;
     alignas(4) short rect[4] = {0x340, 0x100, EffectKind6B_Frame[2], EffectKind6B_Frame[3]};
-    SH_AT(void (__cdecl*)(const short*, void*), at::kStoreImage)(rect, At(::bof3::Img(EffectKind30_Shards_addr)));
+    SH_AT(void (__cdecl*)(const short*, void*), at::kStoreImage.v)(rect, At(::bof3::Img(EffectKind30_Shards_addr)));
     NextState();
 }
 
@@ -1279,10 +1279,10 @@ extern "C" void __cdecl EffectKind44_RingCone(const unsigned char* ring) {
         ++step;
         const unsigned char* const pj = ring + 0x3C + 12u * (step & 0xFu);
         const U facing = SH_AT(U (__cdecl*)(const unsigned char*, const unsigned char*, const unsigned char*),
-                               at::kWinding)(ring + 0x24, pi, pj);
+                               at::kWinding.v)(ring + 0x24, pi, pj);
         if (static_cast<std::int16_t>(facing) > 0) {
             unsigned char* const prim = Gfx_PacketNext;
-            SH_AT(void (__cdecl*)(unsigned char*), at::kSetPolyF3)(prim);
+            SH_AT(void (__cdecl*)(unsigned char*), at::kSetPolyF3.v)(prim);
             SH_CALL(Gpu_SetSemiTrans)(prim, 1);
             Copy12(prim + 8, ring + 0x24);
             Copy12(prim + 0x14, pi);

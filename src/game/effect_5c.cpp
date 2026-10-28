@@ -241,9 +241,9 @@ void LinkAtRecord(unsigned size) {
 }
 
 // E5D's three (raw until E5D merges).
-void Step(unsigned step) { SH_AT(StepFn, at::kDrawMoveStep)(step); }
-void Quads(unsigned variant) { SH_AT(QuadsFn, at::kDrawQuads)(variant); }
-void Moves() { SH_AT(MovesFn, at::kDrawMoves)(); }
+void Step(unsigned step) { SH_AT(StepFn, at::kDrawMoveStep.v)(step); }
+void Quads(unsigned variant) { SH_AT(QuadsFn, at::kDrawQuads.v)(variant); }
+void Moves() { SH_AT(MovesFn, at::kDrawMoves.v)(); }
 
 }  // namespace
 

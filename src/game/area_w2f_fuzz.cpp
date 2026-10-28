@@ -283,7 +283,7 @@ const ah::Callee kCallees[] = {
     {W2F_OURS(Flags_Toggle), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
     {W2F_OURS(Flags_Set), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesAnswer},
     // the point three dwords on the caller's stack: its bytes, not its address
-    {"RingAt_4220D0", at::kRingAt, at::kRingAt, 1, {0}, ah::Answer::kGarbage, 0, 0, {12}},
+    {"RingAt_4220D0", at::kRingAt.v, at::kRingAt.v, 1, {0}, ah::Answer::kGarbage, 0, 0, {12}},
     // slots inside the group's four effect records, or none
     {W2F_OURS(Effect_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x03, {}, &MovesCurrent},
     {W2F_OURS(Sprite_SetTint), 5, {kAll, kU8, kU8, kU8, kU8}, ah::Answer::kFlag, 0, 0, {}, &MovesMember},

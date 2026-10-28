@@ -10,18 +10,18 @@ namespace effect_1e::at {
 // Callees another group of round thirteen owns (analysis/round13_cut.tsv),
 // called through the harness by address (SH_AT) until they merge; the
 // coordinator rebinds them after (docs/effect_1e.md section 8).
-constexpr std::uint32_t kBoxPrims = bof3::addr::Panel_DrawWindow;       // E1B: void(int x, int y, int w, int h, colour); reads each & 0xFFFF, the colour a byte
-constexpr std::uint32_t kClearEffects = bof3::addr::Effect_ResetFirstSeven;   // E1F: void(void); Effect_Objects +0..+3 of all 20 cleared, 7..19 released, record 1 +1 = 2
+constexpr ::bof3::image::CodeVa kBoxPrims{bof3::addr::Panel_DrawWindow};       // E1B: void(int x, int y, int w, int h, colour); reads each & 0xFFFF, the colour a byte
+constexpr ::bof3::image::CodeVa kClearEffects{bof3::addr::Effect_ResetFirstSeven};   // E1F: void(void); Effect_Objects +0..+3 of all 20 cleared, 7..19 released, record 1 +1 = 2
 
 // Callees nobody owns (catalog part 7, "Unlabelled"; not in the round's cut),
 // read to their last instruction for their arguments (docs/effect_1e.md
 // section 3). Each is in the harness's effect-standard set by address.
-constexpr std::uint32_t kPoseSound = bof3::addr::LeaderPanel_PoseSound;      // void(void): a sound by 0x6BC71D when it differs from 0x6BC71C
-constexpr std::uint32_t kUseItemEnd = bof3::addr::LeaderPanel_UseItemEnd;     // void(void): animation 9, sound 0x204, effect record 4's +1 up, +3 up, Sprite_ScriptTick (a tail jmp)
-constexpr std::uint32_t kEffect3Mode = bof3::addr::LeaderPanel_Effect3Mode;    // void(unsigned char mode): effect record 3's +6 = mode, +1 up (and +7 = 1) when +1 is 0, 4 or 6
-constexpr std::uint32_t kHoldTest = bof3::addr::LeaderPanel_HoldTest;       // void(void): 0x903850 and Sprite_Current +0xA by Input_Pressed / Input_Held bit 0x4000
-constexpr std::uint32_t kEffectsStep = bof3::addr::LeaderPanel_EffectsStep;    // void(void): 0x52B460, then the 0x6BC70C.. counters against the tables from 0x66A4C8
-constexpr std::uint32_t kLeaveOnPress = bof3::addr::LeaderPanel_LeaveOnPress;   // unsigned char(unsigned buttons): Input_Pressed & buttons -> Transition_Start(2), +2 = 8, +3 = 0, al 1
+constexpr ::bof3::image::CodeVa kPoseSound{bof3::addr::LeaderPanel_PoseSound};      // void(void): a sound by 0x6BC71D when it differs from 0x6BC71C
+constexpr ::bof3::image::CodeVa kUseItemEnd{bof3::addr::LeaderPanel_UseItemEnd};     // void(void): animation 9, sound 0x204, effect record 4's +1 up, +3 up, Sprite_ScriptTick (a tail jmp)
+constexpr ::bof3::image::CodeVa kEffect3Mode{bof3::addr::LeaderPanel_Effect3Mode};    // void(unsigned char mode): effect record 3's +6 = mode, +1 up (and +7 = 1) when +1 is 0, 4 or 6
+constexpr ::bof3::image::CodeVa kHoldTest{bof3::addr::LeaderPanel_HoldTest};       // void(void): 0x903850 and Sprite_Current +0xA by Input_Pressed / Input_Held bit 0x4000
+constexpr ::bof3::image::CodeVa kEffectsStep{bof3::addr::LeaderPanel_EffectsStep};    // void(void): 0x52B460, then the 0x6BC70C.. counters against the tables from 0x66A4C8
+constexpr ::bof3::image::CodeVa kLeaveOnPress{bof3::addr::LeaderPanel_LeaveOnPress};   // unsigned char(unsigned buttons): Input_Pressed & buttons -> Transition_Start(2), +2 = 8, +3 = 0, al 1
 
 // Data: the state machine's cells (docs/effect_1e.md section 2).
 constexpr ::bof3::image::Va kSpriteIndex{0x939A1C};    // u8: the Sprite_Objects record the stages read (0xFF: none; 0x5289C0 writes it)

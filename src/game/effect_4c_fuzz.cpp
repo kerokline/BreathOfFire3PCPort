@@ -268,7 +268,7 @@ const sh::Callee kCallees[] = {
     // a group of an earlier wave's, ours by name, its stand-in the real one's answer
     {E4C_OURS(EffectKind6E_FindShard), 0, {}, kG, 0, 0, {}, &FxFind16},
     // another group's of this round, by address until it merges
-    {"0x48CA90 (E4D)", at::kScreenTile, at::kScreenTile, 0, {}, kG, 0, 0, {}, &FxTile},
+    {"0x48CA90 (E4D)", at::kScreenTile.v, at::kScreenTile.v, 0, {}, kG, 0, 0, {}, &FxTile},
     // re-listed: the standard row's fractional floats never reach a NaN, which
     // the chip draw quiets in its FPU copy of the depth
     {E4C_OURS(EffectGte_ProjectPoint), 2, {0, 0}, kG, 0, 0, {12, 0}, &FxProjectPoint, nullptr, true},

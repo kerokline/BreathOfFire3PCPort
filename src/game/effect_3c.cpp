@@ -226,7 +226,7 @@ extern "C" void __cdecl EffectKind6E_Run(void) {
 // shard spread (0x483C10), +9 = 0xB4, +1 up.
 extern "C" void __cdecl EffectKind6E_Start(void) {
     Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags | 0x40u);
-    SH_AT(VoidFn, at::kShardsSpread)();
+    SH_AT(VoidFn, at::kShardsSpread.v)();
     S()[9] = 0xB4;
     Step(1);
 }
@@ -333,7 +333,7 @@ extern "C" unsigned char __cdecl EffectKind6E_DrawShards(void) {
                 cur[0] = 0;
                 cur = At(Effect3c_ShardCursor);
             }
-            SH_AT(RecordFn, at::kShardQuad)(cur);
+            SH_AT(RecordFn, at::kShardQuad.v)(cur);
             c = Effect3c_ShardCursor;
             any = 1;
         }
@@ -411,7 +411,7 @@ extern "C" void __cdecl EffectKind6D_DrawParticle(unsigned char* p) {
     DrawMode(1, 0x3C0, 0, 0);
     SH_CALL(MapView_LinkPrimAt)(UL(p + 0x18), UL(p + 0x1C), 0, 0xC);
     unsigned char* const prim = Gfx_PacketNext;
-    SH_AT(RecordFn, at::kPolyF3)(prim);
+    SH_AT(RecordFn, at::kPolyF3.v)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
     SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(p + 0x18), reinterpret_cast<float*>(prim + 8));
     const unsigned k = p[4];
@@ -841,8 +841,8 @@ extern "C" void __cdecl EffectDebris_InitOne(unsigned char* d) {
     SH_CALL(Gte_RotMatrixY)(-static_cast<int>(static_cast<short>(ay)), m.m);
     SH_CALL(Gte_RotMatrixZ)(static_cast<short>(az), m.m);
     using Turn = void (__cdecl*)(const short*, const short*, short*);
-    SH_AT(Turn, at::kMatrixVector)(m.m, reinterpret_cast<const short*>(d + 0x10), reinterpret_cast<short*>(d + 0x10));
-    SH_AT(Turn, at::kMatrixVector)(m.m, reinterpret_cast<const short*>(d + 0x18), reinterpret_cast<short*>(d + 0x18));
+    SH_AT(Turn, at::kMatrixVector.v)(m.m, reinterpret_cast<const short*>(d + 0x10), reinterpret_cast<short*>(d + 0x10));
+    SH_AT(Turn, at::kMatrixVector.v)(m.m, reinterpret_cast<const short*>(d + 0x18), reinterpret_cast<short*>(d + 0x18));
     SetWord(d + 0x28, (static_cast<U>(SH_CALL(Rand)()) & 7u) + 8u);
     SetWord(d + 0x20, 0);
     SetWord(d + 0x22, 0);
@@ -1221,14 +1221,14 @@ extern "C" void __cdecl EffectKind75_Brighten(void) {
     } else {
         S()[1] = 2;
     }
-    SH_AT(VoidFn, at::kScreenTile)();
+    SH_AT(VoidFn, at::kScreenTile.v)();
     SH_CALL(EffectKind75_MarkSprites)();
 }
 
 // original 0x485C50 (state 2): the screen tile and a tail jump to
 // EffectKind75_MarkSprites.
 extern "C" void __cdecl EffectKind75_Hold(void) {
-    SH_AT(VoidFn, at::kScreenTile)();
+    SH_AT(VoidFn, at::kScreenTile.v)();
     SH_CALL(EffectKind75_MarkSprites)();
 }
 

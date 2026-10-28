@@ -115,7 +115,7 @@ void SkipIf(U cell, unsigned char value) {
 // ---- the glow cylinder (0x420B50, area 143's; 0x4220D0, area 146's) ----
 
 using ProjectFn = void (__cdecl*)(const std::int32_t*, std::uint32_t*);
-void Project(const std::int32_t* v, std::uint32_t* out) { AH_AT(ProjectFn, at::kProjectPoint)(v, out); }
+void Project(const std::int32_t* v, std::uint32_t* out) { AH_AT(ProjectFn, at::kProjectPoint.v)(v, out); }
 // The radius of the ring: Math_Cos / Math_Sin's answer << 9, then >> 4
 // arithmetic (32 world units a unit of the trig table; the shift wraps as
 // the original's).
@@ -137,7 +137,7 @@ void DrawModeAt(int dtd, U x, U z) {
 // Each quad is linked (0x44) between a draw-mode packet with dtd 1 and one
 // with dtd 0, all three at the new pair's (x, z).
 void GlowCylinder(const std::int32_t* p) {
-    AH_AT(void (__cdecl*)(), at::kSetMapCamera)();
+    AH_AT(void (__cdecl*)(), at::kSetMapCamera.v)();
     std::int32_t v[3];
     std::uint32_t a[3], b[3];
     // the point's words read after each trig call, as the originals do

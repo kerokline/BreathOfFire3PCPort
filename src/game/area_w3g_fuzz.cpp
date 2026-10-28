@@ -313,10 +313,10 @@ const ah::Callee kCallees1481[] = {
     {"Member_SetState2_8", bof3::addr::Member_SetState2_8, KeyOf(&::Member_SetState2_8), 2, {kU8, kU8}, ah::Answer::kGarbage, 0, 0},
     {"Math_Ratan2", bof3::addr::Math_Ratan2, KeyOf(&::Math_Ratan2), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {"Ftol_5B9550", 0x5B9550, 0x5B9550, 0, {}, ah::Answer::kThrough, 0, 0},
-    {"SetMapCamera_494060", kSetMapCamera, kSetMapCamera, 0, {}, ah::Answer::kGarbage, 0, 0},
-    {"ProjectPoint_494110", kProjectPoint, kProjectPoint, 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {12}, &ProjectEffect, nullptr},
+    {"SetMapCamera_494060", kSetMapCamera.v, kSetMapCamera.v, 0, {}, ah::Answer::kGarbage, 0, 0},
+    {"ProjectPoint_494110", kProjectPoint.v, kProjectPoint.v, 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {12}, &ProjectEffect, nullptr},
     // the offset pair is a stack local of the caller's: logged through the pointer
-    {"ScreenSize_4941E0", kScreenSize, kScreenSize, 3, {kAll, 0, 0}, ah::Answer::kGarbage, 0, 0, {12, 4}, &SizeEffect, nullptr},
+    {"ScreenSize_4941E0", kScreenSize.v, kScreenSize.v, 3, {kAll, 0, 0}, ah::Answer::kGarbage, 0, 0, {12, 4}, &SizeEffect, nullptr},
     {"MapView_LinkPrimAt", bof3::addr::MapView_LinkPrimAt, KeyOf(&::MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0,
      {}, &LinkEffect, nullptr},
     {"Gpu_SetDrawMode", bof3::addr::Gpu_SetDrawMode, KeyOf(&::Gpu_SetDrawMode), 5, {kAll, kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0,
@@ -445,7 +445,7 @@ static_assert(k149Init + 1 == AH_COUNT(kClones149), "area 149's seeding indices"
 const ah::Callee kCallees149[] = {
     kFindFree,
     {"Area149_SpawnDust", 0x4232B0, KeyOf(&::Area149_SpawnDust), 1, {kU8}, ah::Answer::kGarbage, 0, 0},
-    {"ViewShift_56FCA0", kViewShift, kViewShift, 0, {}, ah::Answer::kGarbage, 0, 0},
+    {"ViewShift_56FCA0", kViewShift.v, kViewShift.v, 0, {}, ah::Answer::kGarbage, 0, 0},
 };
 const ah::DataTable kTables149[] = {{0x6361FC, 4}};   // Area149_DustStates
 const ah::Region kRegions149[] = {{Effect_Objects_addr, 20 * 0x80}, {MapView_FocusX_addr, 4}, {MapView_Origin_addr, 2}, {kFzKind2Sprite, 0xC},

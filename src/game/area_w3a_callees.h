@@ -141,6 +141,6 @@ constexpr U kA117Choice2Cases = 0x41A080;   // 5 entries, in the function's own 
 }  // namespace at
 
 // The unowned callee (above).
-constexpr std::uint32_t kRingAt = bof3::addr::Area146_DrawGlowCylinder;
+constexpr ::bof3::image::CodeVa kRingAt{bof3::addr::Area146_DrawGlowCylinder};
 
 }  // namespace area_w3a

@@ -10,14 +10,14 @@ namespace effect_1d::at {
 // Callees nobody owns this round (catalog part 6, "Scenario event banks" by
 // their PSX twin's section; read 2026-09-29 for what they read and write):
 // called through the harness by address (SH_AT).
-constexpr std::uint32_t kArmVertices = bof3::addr::EffectKind21_ArmPoints;   // 0x46F570, R3E's: (unsigned char *arm): arm = record + 0xC. Reads the words
+constexpr ::bof3::image::CodeVa kArmVertices{bof3::addr::EffectKind21_ArmPoints};   // 0x46F570, R3E's: (unsigned char *arm): arm = record + 0xC. Reads the words
                                                    // +0x4C (an angle), +0x4E, +0x50 (two turns), +0x52 (a length)
                                                    // and the dwords +0..+8 (the centre); writes four points of 0x10
                                                    // at +0xC..+0x4B. EffectGte_SetDiagonalOne, Math_*, 0x5A7F80,
                                                    // 0x5A7FF0, 0x5A7CF0
-constexpr std::uint32_t kArmDraw = bof3::addr::EffectKind21_DrawArm;       // 0x46F690, R3E's: (unsigned char *arm): a draw mode, EffectGte_LoadMapCamera,
+constexpr ::bof3::image::CodeVa kArmDraw{bof3::addr::EffectKind21_DrawArm};       // 0x46F690, R3E's: (unsigned char *arm): a draw mode, EffectGte_LoadMapCamera,
                                                    // then 0x46F6F0 twice - two Gouraud triangles of the four points
-constexpr std::uint32_t kRayDraw = bof3::addr::EffectKind24_DrawRay;       // 0x46FAE0, R3E's: (const unsigned char *ray): ray = record + 0xC. Reads the words
+constexpr ::bof3::image::CodeVa kRayDraw{bof3::addr::EffectKind24_DrawRay};       // 0x46FAE0, R3E's: (const unsigned char *ray): ray = record + 0xC. Reads the words
                                                    // +0 (a length), +2 / +4 (two angles), +6 / +8 (two scales) and
                                                    // the bytes +0xA..+0xC (a colour); four Gouraud lines from the
                                                    // leader's point (ObjTrio +0x34..+0x3C). Writes nothing of it

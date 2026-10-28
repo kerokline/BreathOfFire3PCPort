@@ -144,7 +144,7 @@ constexpr unsigned kArea172EffectCount = 3;
 // (MapView_ItemAt, Prim_SetTexture) over tables of the 0x63CAxx block. Not
 // read further here. Ours since round thirteen: EffectKind7D_SetMap (E3D,
 // docs/effect_3d.md), which kind 0x7D's state 2 calls too.
-constexpr std::uint32_t kArea170MapSetUp = bof3::addr::EffectKind7D_SetMap;
+constexpr ::bof3::image::CodeVa kArea170MapSetUp{bof3::addr::EffectKind7D_SetMap};
 
 }  // namespace at
 }  // namespace area_w4b

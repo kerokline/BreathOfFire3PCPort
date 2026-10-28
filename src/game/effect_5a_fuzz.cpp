@@ -224,7 +224,7 @@ const sh::Callee kCallees[] = {
     {E5A_OURS(Gfx_DrawSunsetGlow), 0, {}, kPh, 0, 0},
     // no group's: re-listed over effect mode's kFlag row (a byte with garbage
     // above), which the whole-eax compare cannot use
-    {"0x4FEE70 (no group)", at::kPattern, at::kPattern, 0, {}, kG, 0, 0, {}, &FxPattern},
+    {"0x4FEE70 (no group)", at::kPattern.v, at::kPattern.v, 0, {}, kG, 0, 0, {}, &FxPattern},
     // re-listed: dy (a signed byte to the real one) masked to its byte
     {E5A_OURS(MapView_LinkPrimAt), 4, {kW, kW, 0xFF, 0xFF}, kG, 0, 0, {}, &FxLink, nullptr, true},
 };

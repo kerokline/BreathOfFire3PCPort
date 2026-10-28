@@ -109,8 +109,8 @@ void RandCount_Start() {
     // The counter goes there as an instrument; a local constant, not
     // bof3::addr::Rand, so the ownership ledger does not read a second
     // takeover (tools/ledger_check.py).
-    constexpr std::uint32_t kRand = bof3::addr::Rand;
-    bof3::Inject("Rand", kRand, reinterpret_cast<void*>(&CountingOriginal), true);
+    constexpr ::bof3::image::CodeVa kRand{bof3::addr::Rand};
+    bof3::Inject("Rand", kRand.v, reinterpret_cast<void*>(&CountingOriginal), true);
     g_counting = true;
     bof3::Log("input       randlog: Rand left original, counted at its entry, one line a frame");
 }

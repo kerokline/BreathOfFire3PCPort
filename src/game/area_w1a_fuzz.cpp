@@ -214,9 +214,9 @@ const ah::Callee kCallees[] = {
     {W1A_OURS(Area40_PuzzleSolved), 0, {}, ah::Answer::kFlag, 0, 0},
     {W1A_OURS(Area41_TintUp), 0, {}, ah::Answer::kPhase, 0, 0},
     // group SX's, by raw address
-    {"FreeObject_57CD90", at::kFreeObject, at::kFreeObject, 0, {}, ah::Answer::kByte, 0xFF, 0x1D, {}, &FreeObjectEffect},
-    {"KeyItemAdd_591900", at::kKeyItemAdd, at::kKeyItemAdd, 1, {kAll}, ah::Answer::kGarbage, 0, 0},
-    {"InventoryTake_591B60", at::kInventoryTake, at::kInventoryTake, 4, {kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
+    {"FreeObject_57CD90", at::kFreeObject.v, at::kFreeObject.v, 0, {}, ah::Answer::kByte, 0xFF, 0x1D, {}, &FreeObjectEffect},
+    {"KeyItemAdd_591900", at::kKeyItemAdd.v, at::kKeyItemAdd.v, 1, {kAll}, ah::Answer::kGarbage, 0, 0},
+    {"InventoryTake_591B60", at::kInventoryTake.v, at::kInventoryTake.v, 4, {kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
 };
 #undef W1A_OURS
 

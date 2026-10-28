@@ -283,9 +283,9 @@ const sh::Callee kCallees[] = {
     {E3C_OURS(EffectKind74_Draw), 0, {}, kPh, 0, 0},
     {E3C_OURS(EffectKind75_MarkSprites), 0, {}, kPh, 0, 0},
     // other groups' of this round, by address until they merge
-    {"0x483C10 (E3B)", at::kShardsSpread, at::kShardsSpread, 0, {}, kG, 0, 0, {}, &FxSpread},
-    {"0x483DA0 (E3B)", at::kShardQuad, at::kShardQuad, 1, {kW}, kG, 0, 0, {0x28}, nullptr, nullptr, true},
-    {"0x48CA90 (E4D)", at::kScreenTile, at::kScreenTile, 0, {}, kG, 0, 0, {}, &FxTile},
+    {"0x483C10 (E3B)", at::kShardsSpread.v, at::kShardsSpread.v, 0, {}, kG, 0, 0, {}, &FxSpread},
+    {"0x483DA0 (E3B)", at::kShardQuad.v, at::kShardQuad.v, 1, {kW}, kG, 0, 0, {0x28}, nullptr, nullptr, true},
+    {"0x48CA90 (E4D)", at::kScreenTile.v, at::kScreenTile.v, 0, {}, kG, 0, 0, {}, &FxTile},
     // re-listed: the standard row's fractional floats never reach _ftol's
     // indefinite nor a NaN, which the particle draw quiets in its FPU copy
     {E3C_OURS(EffectGte_ProjectPoint), 2, {0, 0}, kG, 0, 0, {12, 0}, &FxProjectPoint, nullptr, true},

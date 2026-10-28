@@ -303,14 +303,14 @@ const ah::Callee kCallees[] = {
     {W2E_OURS(Flags_Test), 2, {kAll, kU8}, ah::Answer::kBool, 0, 0, {}, &FlagsAnswer, nullptr},
     {W2E_OURS(Field_LeaderPushObjects), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &HalfNo, nullptr},
     // area 121's (AR3B's band this wave), by raw address
-    {W2E_RAW("0x41BE10", kTurnToward121), 3, {kAll, kAll, kU8}, ah::Answer::kByte, 0, 7, {}, &MovesCurrent, nullptr},
-    {W2E_RAW("0x41C0A0", kMenuButton121), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
-    {W2E_RAW("0x41C0E0", kHoldButton121), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
-    {W2E_RAW("0x41C110", kTurnKeys121), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &TurnKeysEffect, nullptr},
-    {W2E_RAW("0x41C350", kGaugeFrame121), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
-    {W2E_RAW("0x41C5B0", kKind5CState4), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent, nullptr},
+    {W2E_RAW("0x41BE10", kTurnToward121.v), 3, {kAll, kAll, kU8}, ah::Answer::kByte, 0, 7, {}, &MovesCurrent, nullptr},
+    {W2E_RAW("0x41C0A0", kMenuButton121.v), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
+    {W2E_RAW("0x41C0E0", kHoldButton121.v), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
+    {W2E_RAW("0x41C110", kTurnKeys121.v), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &TurnKeysEffect, nullptr},
+    {W2E_RAW("0x41C350", kGaugeFrame121.v), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
+    {W2E_RAW("0x41C5B0", kKind5CState4.v), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent, nullptr},
     // an engine GPU setter nobody owns (POLY_F3)
-    {W2E_RAW("0x5A7570", kSetPolyF3), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &F3Effect, nullptr},
+    {W2E_RAW("0x5A7570", kSetPolyF3.v), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &F3Effect, nullptr},
     // the group's own, called directly
     {W2E_RAW("Area104_BuildMinimap", 0x416020), 0, {}, ah::Answer::kPhase, 0, 0},
     {W2E_RAW("Area104_LeaderIdle", 0x415040), 0, {}, ah::Answer::kPhase, 0, 0},

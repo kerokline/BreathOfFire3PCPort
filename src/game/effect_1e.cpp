@@ -129,13 +129,13 @@ void Total(U y) { SH_CALL(FieldPanel_DrawTotal)(0xB0, static_cast<int>(y)); }
 void Message(U y, unsigned id) { SH_CALL(FieldPanel_DrawMessage)(8, static_cast<int>(y), id); }
 void Hand(U x, U y) { SH_CALL(Menu_DrawHand)(static_cast<int>(x), static_cast<int>(y), 0); }
 void Text(int x, int y, const unsigned char* text) { SH_CALL(Text_DrawAt)(x, y, 0, 0xFF, text); }
-void BoxPrims(U y) { SH_AT(void (__cdecl*)(int, int, int, int, int), at::kBoxPrims)(0x14, static_cast<int>(y), 0x118, 0x13, 0); }
+void BoxPrims(U y) { SH_AT(void (__cdecl*)(int, int, int, int, int), at::kBoxPrims.v)(0x14, static_cast<int>(y), 0x118, 0x13, 0); }
 void MusicTo(unsigned track) {
     SH_CALL(Music_FadeOutStop)(0xA);
     SH_CALL(Music_Play)(track, 8);
 }
-void Effect3Mode(unsigned mode) { SH_AT(void (__cdecl*)(unsigned), at::kEffect3Mode)(mode); }
-void PoseSound() { SH_AT(void (__cdecl*)(), at::kPoseSound)(); }
+void Effect3Mode(unsigned mode) { SH_AT(void (__cdecl*)(unsigned), at::kEffect3Mode.v)(mode); }
+void PoseSound() { SH_AT(void (__cdecl*)(), at::kPoseSound.v)(); }
 
 // The stage-4 panel's first three draws, as seven of its steps begin: the
 // header at x 0, the picked record's kind icon at 0x80, its row (the kind, the
@@ -424,8 +424,8 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
         const long h = SH_CALL(AreaMap_Elevation)(Effect_Objects[0].x, Effect_Objects[0].z);
         Effect_Objects[0].height_whole = static_cast<unsigned>(h);
     }
-    SH_AT(void (__cdecl*)(), at::kHoldTest)();
-    SH_AT(void (__cdecl*)(), at::kEffectsStep)();
+    SH_AT(void (__cdecl*)(), at::kHoldTest.v)();
+    SH_AT(void (__cdecl*)(), at::kEffectsStep.v)();
     Effect1e_PoseWas = Effect1e_Pose;
     if (rv::Bytes(Effect_Objects)[0xb] != 0) pose = false;
     if (pose) {
@@ -1006,7 +1006,7 @@ extern "C" void __cdecl LeaderPanel_UseItem(void) {
         CharStats_ExtraItem = 0;
         CharStats_ExtraCount = 0;
     }
-    SH_AT(void (__cdecl*)(), at::kUseItemEnd)();
+    SH_AT(void (__cdecl*)(), at::kUseItemEnd.v)();
 }
 
 // original 0x52A260 (PSX twin 0x801DC594): LeaderPanel_Stage5Steps[1] - effect
@@ -1024,7 +1024,7 @@ extern "C" void __cdecl LeaderPanel_S5Wait(void) {
 // Stage6Steps[2], Stage7Steps[2] - 0x52B330(0x60) (a press of 0x60 leaves for
 // stage 8), Sprite_ScriptTick.
 extern "C" void __cdecl LeaderPanel_Leave(void) {
-    SH_AT(unsigned char (__cdecl*)(unsigned), at::kLeaveOnPress)(Sigma(0x60));
+    SH_AT(unsigned char (__cdecl*)(unsigned), at::kLeaveOnPress.v)(Sigma(0x60));
     Tick();
 }
 
@@ -1077,7 +1077,7 @@ extern "C" void __cdecl LeaderPanel_S8Leave(void) {
     Field_Kind2X = 0xF0000;
     Field_Kind2Z = 0x3C0000;
     SH_CALL(Field_ViewReset)();
-    SH_AT(void (__cdecl*)(), at::kClearEffects)();
+    SH_AT(void (__cdecl*)(), at::kClearEffects.v)();
     SH_CALL(Transition_Start)(3);
     if (Field_State[0x89] == 0)
         SH_CALL(Sprite_SetAnimationAt)(0xA, 2);

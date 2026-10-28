@@ -30,7 +30,8 @@ const std::uint8_t* At(std::uint32_t address) {
 // holds absolute addresses: the copy's entries are moved into the copy and
 // the `jmp [eax*4 + table]` at +0x2A re-aimed. The one call, Text_DrawAt at
 // +0x100, goes to the recorder.
-constexpr std::uint32_t kBody = 0x5961C0, kSize = 0x164;
+constexpr ::bof3::image::CodeVa kBody{0x5961C0};
+constexpr std::uint32_t kSize = 0x164;
 constexpr std::uint32_t kJmpDisp = 0x2D, kJumpTable = 0x13C, kJumpEntries = 10, kDrawCall = 0x100;
 
 struct Draw {
@@ -54,18 +55,18 @@ using ImmediateFn = const unsigned char* (__cdecl*)(int, int, const unsigned cha
 
 void SelfTest(void* clone) {
     auto* code = static_cast<std::uint8_t*>(clone);
-    const std::uint32_t moved = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(code)) - kBody;
+    const std::uint32_t moved = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(code)) - kBody.v;
     for (std::uint32_t i = 0; i < kJumpEntries; ++i) {
         std::uint32_t target;
         std::memcpy(&target, code + kJumpTable + 4 * i, sizeof target);
-        if (target < kBody || target >= kBody + kSize)
+        if (target < kBody.v || target >= kBody.v + kSize)
             bof3::Fatal("Text_DrawImmediate: jump table entry %u is 0x%X", (unsigned)i, (unsigned)target);
         target += moved;
         std::memcpy(code + kJumpTable + 4 * i, &target, sizeof target);
     }
     std::uint32_t disp;
     std::memcpy(&disp, code + kJmpDisp, sizeof disp);
-    if (disp != kBody + kJumpTable) bof3::Fatal("Text_DrawImmediate: no jump table operand at +0x%X", (unsigned)kJmpDisp);
+    if (disp != kBody.v + kJumpTable) bof3::Fatal("Text_DrawImmediate: no jump table operand at +0x%X", (unsigned)kJmpDisp);
     disp += moved;
     std::memcpy(code + kJmpDisp, &disp, sizeof disp);
     const auto theirs = reinterpret_cast<ImmediateFn>(clone);
