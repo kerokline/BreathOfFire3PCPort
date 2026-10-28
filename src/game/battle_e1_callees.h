@@ -34,7 +34,7 @@ using U = std::uint32_t;
 // kMode: now BattleE1_Mode (symbols.toml). u8: BATE's state (BattleExtra_Dispatch 0x42D710 dispatches it through BattleExtra_States 0x64ADAC)
 // kModeStep: now FieldS_State (symbols.toml). u8: the state's step
 // kModeSub: now FieldS_Step (symbols.toml). u8: the step's sub-step
-constexpr U kModeTimer = 0x929F04;   // u8: a frame count the steps count down
+constexpr ::bof3::image::Va kModeTimer{0x929F04};   // u8: a frame count the steps count down
 // kTallyRow: now FieldS_Column (symbols.toml). s8: the tally counter being counted up (0..5; 6 done)
 // kModeByte9: now BattleE1_ModeByte9 (symbols.toml). u8: cleared as the equipment screen opens
 // kWaitWord: now Transition_Busy (symbols.toml). u16 Transition_Busy: a transition is running while non-zero
@@ -42,13 +42,13 @@ constexpr U kModeTimer = 0x929F04;   // u8: a frame count the steps count down
 // kBoxColour: now Config_WindowColour (symbols.toml). u8: Menu_DrawBox's colour byte
 
 // The tally's six counters: shown (counted up), target, the step per frame.
-constexpr U kTallyShown = 0x675E88;  // u32 x 6: what the window shows
-constexpr U kTallyTarget = 0x675EA0; // u32 x 6: where each count stops
-constexpr U kTallyStep = 0x64ADD0;   // u8 x 6 (.data): each count's step per frame
-constexpr U kTallyFmtWide = 0x64ADDC;   // .data: the sprintf format of the first column
-constexpr U kTallyFmtNarrow = 0x64ADD8; // .data: the second column's
-constexpr U kTallyText = 0x904BA0;   // char[]: the sprintf buffer the tally draws from
-constexpr U kEquipOpenBytes = 0x675EBE;  // u8 x 3 (0x675EBE, BF, C0): set as the equipment screen opens
+constexpr ::bof3::image::Va kTallyShown{0x675E88};  // u32 x 6: what the window shows
+constexpr ::bof3::image::Va kTallyTarget{0x675EA0}; // u32 x 6: where each count stops
+constexpr ::bof3::image::Va kTallyStep{0x64ADD0};   // u8 x 6 (.data): each count's step per frame
+constexpr ::bof3::image::Va kTallyFmtWide{0x64ADDC};   // .data: the sprintf format of the first column
+constexpr ::bof3::image::Va kTallyFmtNarrow{0x64ADD8}; // .data: the second column's
+constexpr ::bof3::image::Va kTallyText{0x904BA0};   // char[]: the sprintf buffer the tally draws from
+constexpr ::bof3::image::Va kEquipOpenBytes{0x675EBE};  // u8 x 3 (0x675EBE, BF, C0): set as the equipment screen opens
 
 // What the tally adds up (written by fight 26's event hook, boss_se.md).
 // kSumA: now BattleE1_SumA (symbols.toml). u32
@@ -61,68 +61,68 @@ constexpr U kEquipOpenBytes = 0x675EBE;  // u8 x 3 (0x675EBE, BF, C0): set as th
 // kGuest: now CharacterRecords[7] (symbols.toml).
 // kGuestEquipA: now Rest3a_GuestEquip (symbols.toml). +0x12
 // kGuestEquipB: now BattleE1_GuestEquipB (symbols.toml). +0x15
-constexpr U kGuestHpMax = 0x903F0C;   // +0x20
+constexpr ::bof3::image::Va kGuestHpMax{0x903F0C};   // +0x20
 // kGuestStat24: now BossSe_CarryB4 (symbols.toml). +0x24
 // kGuestStat26: now BossSe_CarryB6 (symbols.toml). +0x26
 // kGuestHpBase: now BattleE1_GuestHpBase (symbols.toml). +0x40
 // kGuestStat44: now BattleE1_GuestStat44 (symbols.toml). +0x44
 // kGuestStat46: now BattleE1_GuestStat46 (symbols.toml). +0x46
-constexpr U kGuestHeadIn = 0x669CE8;  // .data: 5 bytes copied into the record as the equipment screen opens
+constexpr ::bof3::image::Va kGuestHeadIn{0x669CE8};  // .data: 5 bytes copied into the record as the equipment screen opens
 // kGuestHeadOut: now BattleE1_GuestHeadOut (symbols.toml). .data: 5 bytes copied into it as BATE leaves
 
 // The window records BATE's equipment screen uses (WindowRecords 0x803160,
 // 0x24 each).
-constexpr U kWin0 = 0x803160;
-constexpr U kWin1 = 0x803184;
-constexpr U kWin2 = 0x8031A8;
+constexpr ::bof3::image::Va kWin0{0x803160};
+constexpr ::bof3::image::Va kWin1{0x803184};
+constexpr ::bof3::image::Va kWin2{0x8031A8};
 // kWin3: now WindowRecords[3] (symbols.toml).
 // kWin4: now WindowRecords[4] (symbols.toml).
 // kWin21: now Window21 (symbols.toml).
 
 // --- the battle engine ---
-constexpr U kStep = 0x904AA1;
+constexpr ::bof3::image::Va kStep{0x904AA1};
 // kSubStep: now BattleE4_Step2 (symbols.toml).
 // kSubStep2: now BattleE4_Step3 (symbols.toml).
 // kSubStep3: now BattleE4_Step4 (symbols.toml).
 // kMemberAt: now BossSb_Countdown (symbols.toml). u8: the party slot a step walks (the result's, the ability notice's)
 // kRoster: now BattleE1_Roster (symbols.toml). u8: that slot's roster index
-constexpr U kFlags = 0x904AA8;       // u8: the round flags' low byte
-constexpr U kPartyCount = 0x904AB0;  // u8
-constexpr U kMenuMember = 0x904AB4;  // u8: the member the command menu is for
-constexpr U kEntryFirst = 0x904AB6;  // u8: the entry order's first byte
-constexpr U kCrossGrow = 0x904ABC;   // u8 per member: the command cross's size
+constexpr ::bof3::image::Va kFlags{0x904AA8};       // u8: the round flags' low byte
+constexpr ::bof3::image::Va kPartyCount{0x904AB0};  // u8
+constexpr ::bof3::image::Va kMenuMember{0x904AB4};  // u8: the member the command menu is for
+constexpr ::bof3::image::Va kEntryFirst{0x904AB6};  // u8: the entry order's first byte
+constexpr ::bof3::image::Va kCrossGrow{0x904ABC};   // u8 per member: the command cross's size
 // kEntryCount: now BattleActorCopies_EntryCount (symbols.toml). s8: the entries in the order
-constexpr U kBattleEnd = 0x904AE8;
-constexpr U kActor = 0x904B34;
+constexpr ::bof3::image::Va kBattleEnd{0x904AE8};
+constexpr ::bof3::image::Va kActor{0x904B34};
 // kActing: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting sprite
-constexpr U kActing2 = 0x904B40;     // unsigned char *: the action record (+2 the ability id)
+constexpr ::bof3::image::Va kActing2{0x904B40};     // unsigned char *: the action record (+2 the ability id)
 // kLossBar: now BattleResult_TickStep (symbols.toml). u16: the loss screen's bar width
-constexpr U kOldLevel = 0x904B72;    // u16
-constexpr U kNewLevel = 0x904B74;    // u16
-constexpr U kActionId = 0x904B80;    // u16
+constexpr ::bof3::image::Va kOldLevel{0x904B72};    // u16
+constexpr ::bof3::image::Va kNewLevel{0x904B74};    // u16
+constexpr ::bof3::image::Va kActionId{0x904B80};    // u16
 // kEffectBits: now BattleActions_Pending (symbols.toml). u16: a bit per actor with an effect still running
 // kAutoTest: now BattleFlow_AnimGate (symbols.toml). u8
 // kMessageUp: now BattleE1_MessageUp (symbols.toml). u8
 // kBannerText: now BattleE1_BannerText (symbols.toml). .data: the banner string pointer kind 3's first step shows
-constexpr U kHoldIcons = 0x64E2AC;   // .data: 7 byte pairs, the command icons' offsets
-constexpr U kLevelMsgPtr = 0x93B8E4; // const char *: the level-up line (Msg_SystemPtr(7))
+constexpr ::bof3::image::Va kHoldIcons{0x64E2AC};   // .data: 7 byte pairs, the command icons' offsets
+constexpr ::bof3::image::Va kLevelMsgPtr{0x93B8E4}; // const char *: the level-up line (Msg_SystemPtr(7))
 // kPartySetByte: now AreaW0b_PartySet (symbols.toml). u8: & 0x7F the party set PartySet_Select loads
-constexpr U kAnimBuffer = 0x8C5D80;  // Sprite_AnimFromSet's buffer (0x1800 bytes)
-constexpr U kRandomIds24 = 0x64AEC8;   // .data: 32 ability ids, the random pick of action 0x24
-constexpr U kRandomIds25 = 0x64AEE8;   // .data: 32, of actions 0x25 and 0x8C
-constexpr U kCharExpTable = 0x658F48;  // Char_ExpTable: 99 records of 8 bytes per character
+constexpr ::bof3::image::Va kAnimBuffer{0x8C5D80};  // Sprite_AnimFromSet's buffer (0x1800 bytes)
+constexpr ::bof3::image::Va kRandomIds24{0x64AEC8};   // .data: 32 ability ids, the random pick of action 0x24
+constexpr ::bof3::image::Va kRandomIds25{0x64AEE8};   // .data: 32, of actions 0x25 and 0x8C
+constexpr ::bof3::image::Va kCharExpTable{0x658F48};  // Char_ExpTable: 99 records of 8 bytes per character
 
 // Named cells symbols.toml types as data (their names are macros there):
 // kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
 // kInputHeld: now Input_Held (symbols.toml). Input_Held (u16)
-constexpr U kInputPressed = 0x7E1BEC;  // Input_Pressed (u16)
+constexpr ::bof3::image::Va kInputPressed{0x7E1BEC};  // Input_Pressed (u16)
 // kConfirmButtons: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons (u16)
 // kCancelButtons: now Field_CancelButtons (symbols.toml). Field_CancelButtons (u16)
 
 // The party (ObjTrio) and the character records.
 // kMembers: now ObjTrio (symbols.toml).
 constexpr U kMemberSize = 0x14C;
-constexpr U kCharRecords = 0x903A70;
+constexpr ::bof3::image::Va kCharRecords{0x903A70};
 constexpr U kCharSize = 0xA4;
 
 // The loss screen's two CLUT runs greyed on the way out (0x100 words each).

@@ -43,10 +43,10 @@ using move_script::Word;
 // kObjects: now Sprite_Objects (symbols.toml). Sprite_Objects
 constexpr U kObjectStride = 0xA4;
 constexpr unsigned kObjectCount = 30;
-constexpr U kEnemyData = 0x8C55C8;    // the area's eight enemy data records
+constexpr ::bof3::image::Va kEnemyData{0x8C55C8};    // the area's eight enemy data records
 constexpr U kEnemyDataStride = 0x8C;
 
-unsigned char* ObjectAt(unsigned i) { return At(Sprite_Objects_addr + i * kObjectStride); }
+unsigned char* ObjectAt(unsigned i) { return At(::bof3::Img(Sprite_Objects_addr) + i * kObjectStride); }
 bool Tagged(const unsigned char* o, unsigned tag) { return o[6] == 7 && o[0x9E] == (tag & 0xFF); }
 
 // The actor BossActor_Find answers, or a Fatal where the original would write
@@ -67,7 +67,7 @@ unsigned char* FoundOrAbort(const char* who, unsigned tag) {
 // byte, or 0xFF. Answers in al (the original keeps the caller's upper eax).
 extern "C" unsigned char __cdecl EnemyData_FindByTag(unsigned tag) {
     for (unsigned i = 0; i < 8; ++i)
-        if (At(kEnemyData + i * kEnemyDataStride)[0xC] == (tag & 0xFF)) return static_cast<unsigned char>(i);
+        if (At(::bof3::Img(kEnemyData.v) + i * kEnemyDataStride)[0xC] == (tag & 0xFF)) return static_cast<unsigned char>(i);
     return 0xFF;
 }
 

@@ -40,8 +40,8 @@ constexpr unsigned kTaskCount = 48;
 constexpr std::uint32_t kPartyStride = 0x14C;
 // kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords, stride 0xA4
 constexpr std::uint32_t kCharStride = 0xA4;
-constexpr std::uint32_t kPrintBuf = 0x904BA0;        // the battle windows' sprintf buffer
-constexpr std::uint32_t kLevelBufs = 0x904D20;       // the level-up window's eight buffers of 0x20
+constexpr ::bof3::image::Va kPrintBuf{0x904BA0};        // the battle windows' sprintf buffer
+constexpr ::bof3::image::Va kLevelBufs{0x904D20};       // the level-up window's eight buffers of 0x20
 // kStep2: now BattleE4_Step3 (symbols.toml). the battle's step bytes
 // kStep3: now BattleE4_Step4 (symbols.toml).
 // kGeneChoice: now BossSb_Countdown (symbols.toml). bit 7 fixed, bits 0..6 the choice (0..2)
@@ -49,39 +49,39 @@ constexpr std::uint32_t kLevelBufs = 0x904D20;       // the level-up window's ei
 // kGeneColumn: now BattleE1_Roster (symbols.toml).
 // kApCost: now BattleActions_ApCost (symbols.toml). u8: the AP cost (battle_actions.md)
 // kDropCount: now Battle_DropCount (symbols.toml). u8: the drops listed
-constexpr std::uint32_t kDropItems = 0x904AF4;       // u16 x n: category << 8 | item
-constexpr std::uint32_t kDropCounts = 0x904B14;      // u8 x n
-constexpr std::uint32_t kGeneList = 0x904608;        // 4-byte rows: three cost indices (0xFF none), a form byte
-constexpr std::uint32_t kGeneList2 = 0x904620;       // the second list's rows (12)
-constexpr std::uint32_t kScrollMarks = 0x939848;     // 6 bytes: the first list's form bytes + 1
-constexpr std::uint32_t kScrollMarks2 = 0x939850;    // 12 bytes: the second list's
-constexpr std::uint32_t kCostTable = 0x64EC9C;       // u8 by cost index
-constexpr std::uint32_t kFormLabels = 0x64ECB0;      // u8 message id by form (& 0x1F)
-constexpr std::uint32_t kFormCells = 0x66AF70;       // u8 icon cell by form
-constexpr std::uint32_t kTitles = 0x66AF64;          // 5-byte strings by title index
-constexpr std::uint32_t kChoiceTexts = 0x66A164;     // three text pointers
-constexpr std::uint32_t kIconKinds = 0x66AF24;       // u8 icon by Item_IconKind
-constexpr std::uint32_t kLevelTable = 0x658F48;      // Char_ExpTable: 99 rows of 8 bytes per character
-constexpr std::uint32_t kAbilityRecords = 0x65C4C8;  // Ability_Records, stride 24
-constexpr std::uint32_t kEquipCategories = 0x66B5BC; // u8 x 6: the equipment slots' item categories
-constexpr std::uint32_t kEquipIcons = 0x66B5B4;      // u8 x 6
+constexpr ::bof3::image::Va kDropItems{0x904AF4};       // u16 x n: category << 8 | item
+constexpr ::bof3::image::Va kDropCounts{0x904B14};      // u8 x n
+constexpr ::bof3::image::Va kGeneList{0x904608};        // 4-byte rows: three cost indices (0xFF none), a form byte
+constexpr ::bof3::image::Va kGeneList2{0x904620};       // the second list's rows (12)
+constexpr ::bof3::image::Va kScrollMarks{0x939848};     // 6 bytes: the first list's form bytes + 1
+constexpr ::bof3::image::Va kScrollMarks2{0x939850};    // 12 bytes: the second list's
+constexpr ::bof3::image::Va kCostTable{0x64EC9C};       // u8 by cost index
+constexpr ::bof3::image::Va kFormLabels{0x64ECB0};      // u8 message id by form (& 0x1F)
+constexpr ::bof3::image::Va kFormCells{0x66AF70};       // u8 icon cell by form
+constexpr ::bof3::image::Va kTitles{0x66AF64};          // 5-byte strings by title index
+constexpr ::bof3::image::Va kChoiceTexts{0x66A164};     // three text pointers
+constexpr ::bof3::image::Va kIconKinds{0x66AF24};       // u8 icon by Item_IconKind
+constexpr ::bof3::image::Va kLevelTable{0x658F48};      // Char_ExpTable: 99 rows of 8 bytes per character
+constexpr ::bof3::image::Va kAbilityRecords{0x65C4C8};  // Ability_Records, stride 24
+constexpr ::bof3::image::Va kEquipCategories{0x66B5BC}; // u8 x 6: the equipment slots' item categories
+constexpr ::bof3::image::Va kEquipIcons{0x66B5B4};      // u8 x 6
 // kFieldMember: now BattleActorCopies_ItemActor (symbols.toml). s8: BATE's member (0x904065's index)
-constexpr std::uint32_t kPartyOrder = 0x904065;      // u8 x n: the party's members
+constexpr ::bof3::image::Va kPartyOrder{0x904065};      // u8 x n: the party's members
 // kMemberIds: now Character_IndexById (symbols.toml). Character_IndexById: a member byte by slot
 
 // --- .data strings and piece lists (addresses only) -------------------------
-constexpr std::uint32_t kFmtNumber = 0x5E10C0;       // Area08_MessageFormat
-constexpr std::uint32_t kFmtAbility = 0x654900;
-constexpr std::uint32_t kFmtCount = 0x653EC0;
+constexpr ::bof3::image::Va kFmtNumber{0x5E10C0};       // Area08_MessageFormat
+constexpr ::bof3::image::Va kFmtAbility{0x654900};
+constexpr ::bof3::image::Va kFmtCount{0x653EC0};
 // kFmtAp: now Boss26Fx_CountFormat (symbols.toml). Boss26Fx_CountFormat
-constexpr std::uint32_t kFmtCost = 0x66AF8C;
-constexpr std::uint32_t kFmtStat = 0x64E324;
-constexpr std::uint32_t kApLabel = 0x66AF38;
-constexpr std::uint32_t kChoicePieces = 0x66AF3C;
-constexpr std::uint32_t kChoicePiecesOn = 0x66AF44;
-constexpr std::uint32_t kListPieces = 0x66AF4C;
-constexpr std::uint32_t kListPieces2 = 0x66AF58;
-constexpr std::uint32_t kEquipPieces = 0x66B508;
+constexpr ::bof3::image::Va kFmtCost{0x66AF8C};
+constexpr ::bof3::image::Va kFmtStat{0x64E324};
+constexpr ::bof3::image::Va kApLabel{0x66AF38};
+constexpr ::bof3::image::Va kChoicePieces{0x66AF3C};
+constexpr ::bof3::image::Va kChoicePiecesOn{0x66AF44};
+constexpr ::bof3::image::Va kListPieces{0x66AF4C};
+constexpr ::bof3::image::Va kListPieces2{0x66AF58};
+constexpr ::bof3::image::Va kEquipPieces{0x66B508};
 constexpr std::uint32_t kStatLabels[4] = {0x66A0F8, 0x66A100, 0x66A108, 0x66A110};
 
 }  // namespace at

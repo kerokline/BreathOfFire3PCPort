@@ -23,7 +23,7 @@ namespace at {
 constexpr std::uint32_t kPartyStride = 0x14C;
 // kEnemies: now Battle_Enemies (symbols.toml). eight 0x128-byte enemy records, actor 3..10 (index actor - 3)
 constexpr std::uint32_t kEnemyStride = 0x128;
-constexpr std::uint32_t kEnemyData = 0x8C55C8;      // the loaded enemy data, 0x8C bytes per id: +0 the 12-byte name
+constexpr ::bof3::image::Va kEnemyData{0x8C55C8};      // the loaded enemy data, 0x8C bytes per id: +0 the 12-byte name
 constexpr std::uint32_t kEnemyDataStride = 0x8C;
 // kEncounter: now Encounter_Slots (symbols.toml). eight 12-byte records: +0 used, +1 id, +4 x, +8 z
 // kPopups: now BattleTask_Slots (symbols.toml). 0x84-byte records (0x435180 hands out a free one)
@@ -31,36 +31,36 @@ constexpr std::uint32_t kPopupStride = 0x84;
 // kWindows: now WindowRecords (symbols.toml). 0x24-byte window records (0x59E2D0 claims one)
 constexpr std::uint32_t kWindowStride = 0x24;
 // kAction: now BattleSprites_Action (symbols.toml). pointer: the current action; its u16 at +2 is the action id
-constexpr std::uint32_t kTarget = 0x904B44;         // byte: the target actor, or 0x40 / 0x80 / 0xC0 a side
-constexpr std::uint32_t kActor = 0x904B34;          // byte (read as a dword by some): the acting actor
-constexpr std::uint32_t kAutoMode = 0x904B35;       // byte
-constexpr std::uint32_t kBattleFlags = 0x904AA8;    // dword; bit 4 of the low byte, bit 7 the critical hit
-constexpr std::uint32_t kPartyCount = 0x904AB0;     // byte
+constexpr ::bof3::image::Va kTarget{0x904B44};         // byte: the target actor, or 0x40 / 0x80 / 0xC0 a side
+constexpr ::bof3::image::Va kActor{0x904B34};          // byte (read as a dword by some): the acting actor
+constexpr ::bof3::image::Va kAutoMode{0x904B35};       // byte
+constexpr ::bof3::image::Va kBattleFlags{0x904AA8};    // dword; bit 4 of the low byte, bit 7 the critical hit
+constexpr ::bof3::image::Va kPartyCount{0x904AB0};     // byte
 // kPartyPick: now Battle_PartyStanding (symbols.toml). byte, tested against 1
-constexpr std::uint32_t kEnemyCount = 0x904AB2;     // byte
+constexpr ::bof3::image::Va kEnemyCount{0x904AB2};     // byte
 // kEnemyPick: now Battle_EnemiesLeft (symbols.toml). byte, tested against 1; = kEnemyCount after set-up
-constexpr std::uint32_t kBoss = 0x904AAA;           // byte: 0 an ordinary encounter, else the boss handler's index
-constexpr std::uint32_t kLayout = 0x904AAC;         // byte (read as a dword): the battle layout
+constexpr ::bof3::image::Va kBoss{0x904AAA};           // byte: 0 an ordinary encounter, else the boss handler's index
+constexpr ::bof3::image::Va kLayout{0x904AAC};         // byte (read as a dword): the battle layout
 // kFormation: now Cond_Flags[0xd0] (symbols.toml). byte (read as a dword): the formation, 1..4
 // kKindFlags: now Cond_Flags[0xd8] (symbols.toml). bitset by enemy kind
 // kActionFlags: now Cond_Flags[0xf8] (symbols.toml). bitset by action id
 // kHitBlock: now BattleSprites_HitBlock (symbols.toml). pointer; its byte +0xC bit 1
 // kEnemyOffsets: now BattleE3_CurrentEnemy (symbols.toml). pointer; bytes +0xF2 / +0xF3
-constexpr std::uint32_t kActions = 0x65C4D8;        // 0x18 bytes per action id: +0 flags, +1, +4 u16, +5
+constexpr ::bof3::image::Va kActions{0x65C4D8};        // 0x18 bytes per action id: +0 flags, +1, +4 u16, +5
 constexpr std::uint32_t kActionStride = 0x18;
-constexpr std::uint32_t kHitClass = 0x657465;       // a byte every 0x1C, by the party record's +0x92
-constexpr std::uint32_t kHitSounds = 0x64F10C;      // u16 sound ids, [class + critical * 7]
+constexpr ::bof3::image::Va kHitClass{0x657465};       // a byte every 0x1C, by the party record's +0x92
+constexpr ::bof3::image::Va kHitSounds{0x64F10C};      // u16 sound ids, [class + critical * 7]
 // kPartyOffsets: now BattleWin_MemberTargetOffsets (symbols.toml). two signed bytes per (sprite +8) + (Field_State +0x89) * 4
-constexpr std::uint32_t kNamePlaces = 0x656A34;     // two u16 per layout: x, y
-constexpr std::uint32_t kBossHandlers = 0x656954;   // a handler per boss index, tail-jumped to
-constexpr std::uint32_t kClutMap = 0x7E06A0;        // 4 rows x 16 cells: the owner of each clut cell, 0xFF free
+constexpr ::bof3::image::Va kNamePlaces{0x656A34};     // two u16 per layout: x, y
+constexpr ::bof3::image::Va kBossHandlers{0x656954};   // a handler per boss index, tail-jumped to
+constexpr ::bof3::image::Va kClutMap{0x7E06A0};        // 4 rows x 16 cells: the owner of each clut cell, 0xFF free
 // kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords: 32 records of 12 bytes
-constexpr std::uint32_t kTintsEnd = 0x7E0880;
+constexpr ::bof3::image::Va kTintsEnd{0x7E0880};
 inline auto& kCells = SharedScratch;  // SharedScratch: bytes 0 / 1 the clut map row / cell found
-constexpr std::uint32_t kCells_addr = SharedScratch_addr; // kCells's address, for the raw accessors that take one
-constexpr std::uint32_t kClutCount = 0x6528C4;      // bytes by the sprite's +0x28: entries / 16
-constexpr std::uint32_t kClutDivisor = 0x6528CC;    // bytes by +0x28: slots per strip row
-constexpr std::uint32_t kClutStep = 0x6528D4;       // bytes by +0x28: the column step
+constexpr ::bof3::image::Va kCells_addr{SharedScratch_addr}; // kCells's address, for the raw accessors that take one
+constexpr ::bof3::image::Va kClutCount{0x6528C4};      // bytes by the sprite's +0x28: entries / 16
+constexpr ::bof3::image::Va kClutDivisor{0x6528CC};    // bytes by +0x28: slots per strip row
+constexpr ::bof3::image::Va kClutStep{0x6528D4};       // bytes by +0x28: the column step
 }  // namespace at
 
 struct Callees {

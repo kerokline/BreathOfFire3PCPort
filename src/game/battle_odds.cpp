@@ -154,8 +154,8 @@ extern "C" unsigned long __cdecl Effect_Heal20(void) {
 // low bytes only. eax is Battle_CalcDamage's with the low word halved; the
 // result pointer is read after the call.
 extern "C" unsigned long __cdecl Effect_HalfAttack(void) {
-    const U target = At(kTarget)[0];
-    const U actor = At(kActing)[0];
+    const U target = At(::bof3::Img(kTarget.v))[0];
+    const U actor = At(::bof3::Img(kActing.v))[0];
     const U amount = g.calc_damage(actor, target, 0xFFFF);
     const U half = static_cast<std::uint16_t>(static_cast<std::int16_t>(amount) >> 1);
     rv::Store<U>(rv::As<records::ActionRecord>(At(BattleDamage_Result))->hp_change, half);
@@ -237,8 +237,8 @@ extern "C" unsigned long __cdecl BattleFx_WaitStep4(void) {
 extern "C" unsigned long __cdecl BattleFx_Finish(void) {
     const U s = SpriteCurrent();
     if (At(s + 0xB)[0] != 0) return s;
-    g.set_flag40(At(kFlagTarget)[0]);
-    At(kRoundFlags)[0] = static_cast<unsigned char>(At(kRoundFlags)[0] | 4);
+    g.set_flag40(At(::bof3::Img(kFlagTarget.v))[0]);
+    At(::bof3::Img(kRoundFlags.v))[0] = static_cast<unsigned char>(At(::bof3::Img(kRoundFlags.v))[0] | 4);
     return g.free_task();
 }
 

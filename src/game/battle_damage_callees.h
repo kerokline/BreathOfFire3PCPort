@@ -43,7 +43,7 @@ constexpr unsigned kPCharIndex = 0x138;             // u8, record +0x148: the ch
 // The enemies: EnemyWorkingRecords 0x93B9E0, 0x128 apart; the "object" the AI
 // and the tests address is the record - 0x80 (0x93B960), so an enemy's
 // present byte is the previous record's +0xA8.
-constexpr std::uint32_t kEnemy = 0x93B9E0;
+constexpr ::bof3::image::Va kEnemy{0x93B9E0};
 constexpr std::uint32_t kEnemyStride = 0x128;
 constexpr int kEObject = -0x80;
 constexpr int kEPresent = -0x80;     // u8, bit 0
@@ -61,54 +61,54 @@ constexpr unsigned kEScript = 0x70;   // u8, object +0xF0: which AI script
 constexpr unsigned kERowsDone = 0x71; // u8, object +0xF1: a bit per script row fired
 
 // The damage scratch: the two actors' stats copied out (PSX 0x801EC23C..).
-constexpr std::uint32_t kTargetDef = 0x939F86;     // u16 (PSX 0x801EC25E)
-constexpr std::uint32_t kTargetInt = 0x939F8A;     // u16 (PSX 0x801EC262)
-constexpr std::uint32_t kAttackerAtk = 0x939FE4;   // u16, read as a dword & 0xFFFF (PSX 0x801EC27C)
-constexpr std::uint32_t kAttackerInt = 0x939FEA;   // u16, the charge multiplies it (PSX 0x801EC282)
-constexpr std::uint32_t kTurnWork = 0x939A80;      // 11 x (s16 value, u16 actor), the order before sorting
+constexpr ::bof3::image::Va kTargetDef{0x939F86};     // u16 (PSX 0x801EC25E)
+constexpr ::bof3::image::Va kTargetInt{0x939F8A};     // u16 (PSX 0x801EC262)
+constexpr ::bof3::image::Va kAttackerAtk{0x939FE4};   // u16, read as a dword & 0xFFFF (PSX 0x801EC27C)
+constexpr ::bof3::image::Va kAttackerInt{0x939FEA};   // u16, the charge multiplies it (PSX 0x801EC282)
+constexpr ::bof3::image::Va kTurnWork{0x939A80};      // 11 x (s16 value, u16 actor), the order before sorting
 
 // The battle state (PSX 0x801462E4.., the same order).
-constexpr std::uint32_t kBattleFlags = 0x904AA8;   // u8, bit 7 (PSX 0x801462E4)
-constexpr std::uint32_t kPartyCount = 0x904AB0;    // u8 (PSX 0x801462EC)
+constexpr ::bof3::image::Va kBattleFlags{0x904AA8};   // u8, bit 7 (PSX 0x801462E4)
+constexpr ::bof3::image::Va kPartyCount{0x904AB0};    // u8 (PSX 0x801462EC)
 // kAiByteB1: now Battle_PartyStanding (symbols.toml). u8, AI opcodes 0x1D / 0x1E
 // kAiByteB2: now Battle_EnemyCount (symbols.toml). u8, AI opcodes 0xF / 0x1F
 // kAiByteB3: now Battle_EnemiesLeft (symbols.toml). u8, AI opcodes 0xF / 0x10 / 0x1F / 0x20
-constexpr std::uint32_t kEntryOrder = 0x904AB6;    // 3 actor bytes, 0xFF-ended (PSX 0x801462F2)
+constexpr ::bof3::image::Va kEntryOrder{0x904AB6};    // 3 actor bytes, 0xFF-ended (PSX 0x801462F2)
 // kEntryCount: now BattleActorCopies_EntryCount (symbols.toml). u8 (PSX 0x801462FF)
-constexpr std::uint32_t kTurnOrder = 0x904ACC;     // 11 actor bytes (PSX 0x80146308)
+constexpr ::bof3::image::Va kTurnOrder{0x904ACC};     // 11 actor bytes (PSX 0x80146308)
 // kTurnCursor: now BossSe_RoundSlot (symbols.toml). u8 (PSX 0x8014631E)
 // kTurnCount: now BattleDamage_TurnCount (symbols.toml). u8 (PSX 0x8014631F)
 // kSideOut: now BattlePhases_Initiative (symbols.toml). u8: 1 the enemies may not act, 2 the party, 3 neither
-constexpr std::uint32_t kActing = 0x904B34;        // u8 the acting actor, then u8 its kind (4 an ability)
+constexpr ::bof3::image::Va kActing{0x904B34};        // u8 the acting actor, then u8 its kind (4 an ability)
 // kItemCommand: now BattleSprites_Action (symbols.toml). pointer: +2 a u16 (category << 8 | item)
-constexpr std::uint32_t kTarget = 0x904B54;        // u8 the target of the result (PSX 0x80146390)
+constexpr ::bof3::image::Va kTarget{0x904B54};        // u8 the target of the result (PSX 0x80146390)
 // kResult: now BattleDamage_Result (symbols.toml). pointer: the result record, +4 HP and +6 AP delta
 // kGate: now BattlePhases_B7A (symbols.toml). u8: when set, an actor takes part only with flag 0x8000
-constexpr std::uint32_t kAbility = 0x904B80;       // u16 the ability id (PSX 0x801463BC)
+constexpr ::bof3::image::Va kAbility{0x904B80};       // u16 the ability id (PSX 0x801463BC)
 // kGate2: now BattleFlow_AnimGate (symbols.toml). u8: when set, an actor acts only with flag 0x10 (PSX 0x801463CA)
-constexpr std::uint32_t kTurnCounter = 0x904B90;   // u32 (PSX 0x801463CC)
+constexpr ::bof3::image::Va kTurnCounter{0x904B90};   // u32 (PSX 0x801463CC)
 // kAiByteB97: now BattleDamage_AiByteB97 (symbols.toml). u8, AI opcode 0x27
-constexpr std::uint32_t kCuredBits = 0x904B9A;     // u16, |0x40 / |0x20 when a hit cures a status
+constexpr ::bof3::image::Va kCuredBits{0x904B9A};     // u16, |0x40 / |0x20 when a hit cures a status
 // kPartyCut: now Cond_Flags[0xd0] (symbols.toml). u8, 2: a quarter off damage to the party (PSX 0x80144F54)
-constexpr std::uint32_t kInstantKill = 0x8031F3;   // u8, set with the flag-0x100 kill (PSX 0x801483BF)
+constexpr ::bof3::image::Va kInstantKill{0x8031F3};   // u8, set with the flag-0x100 kill (PSX 0x801483BF)
 // kKillMessage: now BattleDamage_KillMessage (symbols.toml). u32 handed to 0x44A650 (PSX &0x801EAFF8)
 
 // The AI scripts: 0x8C bytes a script, 16-byte rows, byte 0 the condition.
-constexpr std::uint32_t kAiScripts = 0x8C5600;
+constexpr ::bof3::image::Va kAiScripts{0x8C5600};
 constexpr std::uint32_t kAiScriptStride = 0x8C;
 
 // Tables in .data (read, never written).
-constexpr std::uint32_t kTurnPercent = 0x64E328;    // s16 x 6 by level class (the party's ability bonus)
-constexpr std::uint32_t kTurnJitter = 0x64E334;     // s8 x 16 per level class (the enemies' order)
-constexpr std::uint32_t kLevelRows = 0x64E374;      // u8 x 6 per row: 0 the enemies', 1 the party's
-constexpr std::uint32_t kBonusDivisor = 0x64E380;   // u8, by an index that is always 0 (Battle_BaseDamage)
-constexpr std::uint32_t kSkillHandler = 0x64E540;   // u8 per ability id: the handler
-constexpr std::uint32_t kItemHandlers = 0x64E72C;   // 4 pointers to u8 per item id, by category
+constexpr ::bof3::image::Va kTurnPercent{0x64E328};    // s16 x 6 by level class (the party's ability bonus)
+constexpr ::bof3::image::Va kTurnJitter{0x64E334};     // s8 x 16 per level class (the enemies' order)
+constexpr ::bof3::image::Va kLevelRows{0x64E374};      // u8 x 6 per row: 0 the enemies', 1 the party's
+constexpr ::bof3::image::Va kBonusDivisor{0x64E380};   // u8, by an index that is always 0 (Battle_BaseDamage)
+constexpr ::bof3::image::Va kSkillHandler{0x64E540};   // u8 per ability id: the handler
+constexpr ::bof3::image::Va kItemHandlers{0x64E72C};   // 4 pointers to u8 per item id, by category
 // kHandlers: now Effect_Handlers (symbols.toml). 130 effect handlers
 constexpr unsigned kHandlerCount = 130;
-constexpr std::uint32_t kPowerVariance = 0x64E94C;  // u16 x 8: 85..120 percent (Effect_SkillDamage)
-constexpr std::uint32_t kElementTable = 0x64E95C;   // s16 per affinity class (Battle_ElementAffinity)
-constexpr std::uint32_t kHealTable = 0x64E99C;      // s16 per holy class (Effect_HealAmount)
+constexpr ::bof3::image::Va kPowerVariance{0x64E94C};  // u16 x 8: 85..120 percent (Effect_SkillDamage)
+constexpr ::bof3::image::Va kElementTable{0x64E95C};   // s16 per affinity class (Battle_ElementAffinity)
+constexpr ::bof3::image::Va kHealTable{0x64E99C};      // s16 per holy class (Effect_HealAmount)
 constexpr std::uint32_t kWeaponElement = 0x13;      // NameTable_Weapons record +0x13
 constexpr unsigned kWeaponStride = 0x1C;
 constexpr unsigned kAbilityStride = 0x18;           // NameTable_Abilities: +1 skill class, +3 heal power, +4 element mask

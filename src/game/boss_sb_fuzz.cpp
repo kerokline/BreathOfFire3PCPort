@@ -47,7 +47,7 @@ bh::Clone Row(const char* name, U base, U size, const bh::CallSite* calls, int n
 
 // The cells outside the standard regions the group's functions write.
 const bh::Region kRegions[] = {
-    {BossH_LeaderPick_addr, 1}, {at::kScriptVar3, 1}, {WindowRecords_addr + 0x93, 1}, {Draw_PassFlags_addr, 1}, {Music_Track_addr, 1},
+    {BossH_LeaderPick_addr, 1}, {at::kScriptVar3.v, 1}, {WindowRecords_addr + 0x93, 1}, {Draw_PassFlags_addr, 1}, {Music_Track_addr, 1},
 };
 
 // ===========================================================================
@@ -66,13 +66,13 @@ void SeedBattleEnd() {
 // round flags' bit 0x40, the target, 0x904AAD bit 0, the leader's HP, the
 // battle-end byte's bit 2, the countdown 0x904AA5.
 void SeedEvent() {
-    Mem(at::kActor)[0] = Byte(bh::Often() ? 0 : BH_PICK(1, 2, 3, 0x80, 0x100));
-    Mem(at::kCommandKind)[0] = Byte(bh::Often() ? 4 : BH_PICK(3, 5, 0x84, 0, 0x44));
+    Mem(::bof3::Img(at::kActor.v))[0] = Byte(bh::Often() ? 0 : BH_PICK(1, 2, 3, 0x80, 0x100));
+    Mem(::bof3::Img(at::kCommandKind.v))[0] = Byte(bh::Often() ? 4 : BH_PICK(3, 5, 0x84, 0, 0x44));
     unsigned char* const command = bh::SpriteRecord(bh::Next()) + 4 * (bh::Next() % 16);
     bh::SetPointer(BattleSprites_Action_addr, command);
     SetWord(command + 2, bh::Often() ? 0x78 : bh::Half() ? BH_PICK(0x77, 0x79, 0x178, 0xF8, 0x7078, 0x178, 0x7078, 0) : bh::Next() & 0xFFFF);
     Mem(0x904AA8)[0] = Byte(bh::Half() ? bh::Next() | 0x40 : bh::Next() & ~0x40u);
-    Mem(at::kTarget)[0] = Byte(bh::Half() ? 0 : BH_PICK(1, 3, 0x40, 0x80, 0xFF));
+    Mem(::bof3::Img(at::kTarget.v))[0] = Byte(bh::Half() ? 0 : BH_PICK(1, 3, 0x40, 0x80, 0xFF));
     Mem(BossSe_Script_addr)[0] = Byte(bh::Half() ? bh::Next() | 1 : bh::Next() & ~1u);
     SetWord(Mem(ObjTrio_addr + 0x98), bh::Half() ? 0 : BH_PICK(1, 0x100, 0x8000, 0xFFFF));
     Mem(Battle_EndFlags_addr)[0] = Byte(bh::Half() ? bh::Next() | 4 : bh::Next() & ~4u);

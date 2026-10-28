@@ -104,16 +104,16 @@ void Disturb() {
     if (h % 4 == 0) return;
     const unsigned v = (h >> 12) & 0xFF;
     switch ((h >> 4) % 12) {
-    case 0: At(at::kPartyCount)[0] = static_cast<unsigned char>(v); break;
+    case 0: At(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(v); break;
     case 1: At(Config_WindowColour_addr)[0] = static_cast<unsigned char>(static_cast<signed char>(v % 17) - 8); break;
     case 2: {
         // a character of the print buffer, never its tail (Fix keeps 0x30.. 0)
-        unsigned char* const b = At(at::kPrintBuf);
+        unsigned char* const b = At(::bof3::Img(at::kPrintBuf.v));
         b[(h >> 20) % 8] = static_cast<unsigned char>(v % 3 == 0 ? 0x20 : 0x30 + v % 11);
         break;
     }
     case 3: {
-        unsigned char* const w = At(at::kWorking + ((h >> 20) % 4) * at::kWorkingStride);
+        unsigned char* const w = At(::bof3::Img(at::kWorking.v) + ((h >> 20) % 4) * at::kWorkingStride);
         static const unsigned kFields[] = {0x10, 0x1A, 0x1B, 0x1E, 0x16, 0x17};
         w[kFields[(h >> 24) % 6]] = static_cast<unsigned char>(v % 3 == 0 ? v : v % 8);
         break;
@@ -125,7 +125,7 @@ void Disturb() {
         break;
     }
     case 5: {
-        unsigned char* const a = At(at::kAbilities + ((h >> 20) % 0x100) * at::kAbilityStride);
+        unsigned char* const a = At(::bof3::Img(at::kAbilities.v) + ((h >> 20) % 0x100) * at::kAbilityStride);
         static const unsigned kFields[] = {0x10, 0x12, 0x14, 0x15};
         a[kFields[(h >> 28) % 4]] = static_cast<unsigned char>(v);
         break;
@@ -275,7 +275,7 @@ unsigned char __cdecl StubApCost(unsigned member, unsigned id, unsigned battle) 
     if (Hash() % 3 == 0 && (member & 0xFF) < ((battle & 0xFF) == 0 ? 10u : 4u)) {
         const unsigned m = member & 0xFF;
         unsigned char* const r = (battle & 0xFF) == 0 ? At(CharacterRecords_addr + m * at::kCharStride)
-                                                      : At(at::kWorking + m * at::kWorkingStride);
+                                                      : At(::bof3::Img(at::kWorking.v) + m * at::kWorkingStride);
         SetWord(r + 0x1A, (Hash() >> 8) % 21);
         ++g_log_n;   // a different stream for the answer below
     }
@@ -381,23 +381,23 @@ struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {WindowRecords_addr, 22 * at::kWindowStride},           // WindowRecords
     {0x7E0670, 4},                                          // Gfx_PacketNext (into our pool)
-    {at::kWorking, 4 * at::kWorkingStride},                 // the party's working records
+    {at::kWorking.v, 4 * at::kWorkingStride},                 // the party's working records
     {CharacterRecords_addr, 10 * at::kCharStride},          // CharacterRecords
     {0x903A50, 0x20},                                       // the window colour 0x903A5A
     {0x904040, 0x40},                                       // the party lists 0x904062
     {0x904650, 0x20},                                       // the flag words 0x90465C, 0x904660
     {0x904AA0, 0x20},                                       // 0x904AAA, the party size 0x904AB0
-    {at::kPrintBuf, 0x40},                                  // the sprintf buffer
+    {at::kPrintBuf.v, 0x40},                                  // the sprintf buffer
     {Character_IndexById_addr, 0x18},                    // character -> record
-    {at::kAbilities, 0x100 * at::kAbilityStride},           // the ability table
+    {at::kAbilities.v, 0x100 * at::kAbilityStride},           // the ability table
     {Gfx_ClutStripSource_addr + 0x208 - 0x200, 0x500},      // the CLUT shadow around the rows seeded
     {Battle_Enemies_addr + 0x80 - 3 * at::kEnemyStride, 11 * at::kEnemyStride}, // enemies -3 .. 7
     // the shapes, the tile sizes, window 1's x table - around the ":" format
     // at 0x64E320, which a random byte could turn into a conversion that
     // reads an argument never passed
-    {at::kQuadShapes, 0x1D8},
-    {at::kFmtNone + 4, 0xE4},
-    {at::kSkillIcons, 0x100},                               // the skill row's icons
+    {at::kQuadShapes.v, 0x1D8},
+    {::bof3::Img(at::kFmtNone.v) + 4, 0xE4},
+    {at::kSkillIcons.v, 0x100},                               // the skill row's icons
 };
 constexpr unsigned kRegionBytes = 22 * at::kWindowStride + 4 + 4 * at::kWorkingStride + 10 * at::kCharStride + 0x20 +
                                   0x40 + 0x20 + 0x20 + 0x40 + 0x18 + 0x100 * at::kAbilityStride + 0x500 +
@@ -432,7 +432,7 @@ void Apply(const State& s) {
 }
 
 unsigned char* Window(unsigned slot) { return At(WindowRecords_addr + slot * at::kWindowStride); }
-unsigned char* Ability(unsigned id) { return At(at::kAbilities + (id & 0xFF) * at::kAbilityStride); }
+unsigned char* Ability(unsigned id) { return At(::bof3::Img(at::kAbilities.v) + (id & 0xFF) * at::kAbilityStride); }
 unsigned char* Enemy(std::int32_t index) {
     return At(Battle_Enemies_addr + 0x80 + static_cast<std::uint32_t>(index * static_cast<std::int32_t>(at::kEnemyStride)));
 }
@@ -442,7 +442,7 @@ unsigned char* Enemy(std::int32_t index) {
 // the party's indexes inside the regions (mostly), the strings ended.
 void Fix() {
     Gfx_PacketNext = g_buf.pool + Next() % 0x40;
-    unsigned char* const buf = At(at::kPrintBuf);
+    unsigned char* const buf = At(::bof3::Img(at::kPrintBuf.v));
     std::memset(buf + 0x20, 0, 0x20);
     if (Often()) At(Config_WindowColour_addr)[0] = static_cast<unsigned char>(static_cast<signed char>(Next() % 17) - 8);
     for (unsigned k = 0; k < 8; ++k)
@@ -462,7 +462,7 @@ void Fix() {
             if (Often()) r[s] = static_cast<unsigned char>(0x18 + Next() % 4);
     }
     for (unsigned m = 0; m < 4; ++m) {
-        unsigned char* const w = At(at::kWorking + m * at::kWorkingStride);
+        unsigned char* const w = At(::bof3::Img(at::kWorking.v) + m * at::kWorkingStride);
         if (Often()) SetWord(w + 0x1A, Half() ? 0 : Next() % 21);
         if (Often()) w[0x1E] = static_cast<unsigned char>(3 + Next() % 4);
         for (unsigned s = 0x16; s <= 0x17; ++s)
@@ -498,7 +498,7 @@ Args Seed(unsigned k) {
     case kOpenSub3:
         for (unsigned s = 1; s <= 4; ++s)
             if (Half()) Window(s)[0] = 0;
-        if (Half()) At(at::kPartyCount)[0] = static_cast<unsigned char>(Next() % 4);
+        if (Half()) At(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(Next() % 4);
         break;
     case kNumber: {
         static const std::uint32_t kValues[] = {0xFFFF, 0x1FFFF, 0xFFFFFFFFu, 0xFFFE, 0, 9, 10, 99, 100, 999, 1000, 9999, 10000, 0x8000, 0x7FFF};
@@ -560,7 +560,7 @@ Args Seed(unsigned k) {
         unsigned char* const a = Ability(args.a[2]);
         a[0x10] = static_cast<unsigned char>(Often() ? Next() | 3 : Next());
         a[0x15] = static_cast<unsigned char>(Often() ? Next() & ~4u : Next() | 4);
-        unsigned char* const w = At(at::kWorking + (args.a[1] & 3) * at::kWorkingStride);
+        unsigned char* const w = At(::bof3::Img(at::kWorking.v) + (args.a[1] & 3) * at::kWorkingStride);
         w[0x10] = static_cast<unsigned char>(Often() ? Next() & ~0x10u : Next() | 0x10);
         break;
     }
@@ -619,7 +619,7 @@ void Cover(unsigned k, const State& in, const State& out, std::uint32_t result, 
 void CoverApCost(const Args& args) {
     const unsigned m = args.a[0] & 0xFF;
     const unsigned char* const r = (args.a[2] & 0xFF) == 0 ? At(CharacterRecords_addr + m * at::kCharStride)
-                                                           : At(at::kWorking + m * at::kWorkingStride);
+                                                           : At(::bof3::Img(at::kWorking.v) + m * at::kWorkingStride);
     if (r[0x16] == 0x1A || r[0x17] == 0x1A) ++g_cover.cost_half;
     else if (r[0x16] == 0x19 || r[0x17] == 0x19) ++g_cover.cost_quarter;
     else ++g_cover.cost_plain;

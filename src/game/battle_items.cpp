@@ -102,13 +102,13 @@ void PutDword(unsigned char* at, std::uint32_t v) { std::memcpy(at, &v, sizeof v
 
 // The sparkle being updated, and the battle actor the effect plays on - each
 // read from its cell every time the original reads it.
-unsigned char* Cur() { return *reinterpret_cast<unsigned char**>(At(BattleItems_SparkleCurrent_addr)); }
-unsigned char* Actor() { return *reinterpret_cast<unsigned char**>(At(BattleE2_Owner_addr)); }
+unsigned char* Cur() { return *reinterpret_cast<unsigned char**>(At(::bof3::Img(BattleItems_SparkleCurrent_addr))); }
+unsigned char* Actor() { return *reinterpret_cast<unsigned char**>(At(::bof3::Img(BattleE2_Owner_addr))); }
 
 // The scratch words: SharedScratch + k, and the vertex scratch + k.
-unsigned char* Scr(unsigned k) { return At(at::kScratch + k); }
+unsigned char* Scr(unsigned k) { return At(::bof3::Img(at::kScratch.v) + k); }
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
-unsigned char* Vtx(unsigned k) { return At(Prim_VertexScratch_addr + k); }
+unsigned char* Vtx(unsigned k) { return At(::bof3::Img(Prim_VertexScratch_addr) + k); }
 const short* VtxP(unsigned k) { return reinterpret_cast<const short*>(Vtx(k)); }
 
 // `imul` then `sar 0xC`: a 32-bit product that wraps, shifted arithmetically.
@@ -150,7 +150,7 @@ template <typename F> F Method(void* object, unsigned offset) {
     std::memcpy(&f, *reinterpret_cast<unsigned char**>(object) + offset, sizeof f);
     return f;
 }
-void*& StreamBuffer() { return *reinterpret_cast<void**>(At(SndStream_Buffer_addr)); }
+void*& StreamBuffer() { return *reinterpret_cast<void**>(At(::bof3::Img(SndStream_Buffer_addr))); }
 constexpr long kBufferLost = static_cast<long>(0x88780096u);   // DSERR_BUFFERLOST
 
 }  // namespace
@@ -190,7 +190,7 @@ extern "C" void __cdecl Gpu_SetTile1(unsigned char* prim) {
 // after it are data, and nothing checks the type - 0x4B8D70 sets it to 0.
 extern "C" void __cdecl Sparkle_Dispatch(void) {
     const unsigned type = Cur()[at::kType];
-    reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(Long(At(at::kSparkleTypes + 4 * type))))();
+    reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(Long(At(::bof3::Img(at::kSparkleTypes.v) + 4 * type))))();
 }
 
 // original 0x4B9090 (PSX MAGIC070 0x801EF47C's slot): the launch. The delay +5
@@ -212,22 +212,22 @@ extern "C" void __cdecl Sparkle_Launch(void) {
     SetWord(Cur() + at::kY, Word(Actor() + 0x30));
     c = Cur();
     unsigned char* const x = c + at::kX;
-    if (S16(At(at::kSparkleOffsets + (c[at::kLimit] & 0x1F) * 4)) < 0) {
+    if (S16(At(::bof3::Img(at::kSparkleOffsets.v) + (c[at::kLimit] & 0x1F) * 4)) < 0) {
         const int r = g.rand();
         const unsigned char* const c2 = Cur();
-        const auto dx = static_cast<std::uint16_t>(Word(At(at::kSparkleOffsets + (c2[at::kLimit] & 0x1F) * 4)) - (r & 7));
+        const auto dx = static_cast<std::uint16_t>(Word(At(::bof3::Img(at::kSparkleOffsets.v) + (c2[at::kLimit] & 0x1F) * 4)) - (r & 7));
         SetWord(x, Word(x) + dx);
     } else {
         const int r = g.rand();
         const unsigned char* const c2 = Cur();
-        const auto dx = static_cast<std::uint16_t>((r & 7) + Word(At(at::kSparkleOffsets + (c2[at::kLimit] & 0x1F) * 4)));
+        const auto dx = static_cast<std::uint16_t>((r & 7) + Word(At(::bof3::Img(at::kSparkleOffsets.v) + (c2[at::kLimit] & 0x1F) * 4)));
         SetWord(x, Word(x) + dx);
     }
     unsigned char* const y = Cur() + at::kY;
     {
         const int r = g.rand();
         const unsigned char* const c2 = Cur();
-        const auto dy = static_cast<std::uint16_t>((r & 7) + Word(At(at::kSparkleOffsets + 2 + (c2[at::kLimit] & 0x1F) * 4)));
+        const auto dy = static_cast<std::uint16_t>((r & 7) + Word(At(::bof3::Img(at::kSparkleOffsets.v) + 2 + (c2[at::kLimit] & 0x1F) * 4)));
         SetWord(y, Word(y) - dy);
     }
     c = Cur();
@@ -243,7 +243,7 @@ extern "C" void __cdecl Sparkle_Launch(void) {
     {
         const int r = g.rand();
         c = Cur();
-        c[at::kLimit] = static_cast<unsigned char>((r & 6) + At(at::kSparkleLife)[c[at::kKind]]);
+        c[at::kLimit] = static_cast<unsigned char>((r & 6) + At(::bof3::Img(at::kSparkleLife.v))[c[at::kKind]]);
     }
     Cur()[at::kTimer] = 0x10;
     Cur()[at::kCount] = 0;
@@ -407,7 +407,7 @@ extern "C" void __cdecl Sparkle_DrawDisc(void) {
     SetWord(Scr(4), static_cast<unsigned>((r & 3) + c[at::kCount]));
     SetWord(Scr(0), Word(c + at::kX));
     SetWord(Scr(2), Word(c + at::kY));
-    const unsigned char* const rgb = At(at::kSparkleColours + (c[at::kShade] + c[at::kKind] * 4u) * 3u);
+    const unsigned char* const rgb = At(::bof3::Img(at::kSparkleColours.v) + (c[at::kShade] + c[at::kKind] * 4u) * 3u);
     SetWord(Scr(8), rgb[0] * static_cast<unsigned>(c[at::kTimer]));
     SetWord(Scr(0xA), rgb[1] * static_cast<unsigned>(c[at::kTimer]));
     SetWord(Scr(0xC), rgb[2] * static_cast<unsigned>(c[at::kTimer]));
@@ -443,7 +443,7 @@ extern "C" void __cdecl Sparkle_DrawDisc(void) {
 extern "C" unsigned char __cdecl Sparkle_Alloc(void) {
     unsigned char i = 0;
     do {
-        unsigned char* const s = At(at::kSparklePool + i * at::kSparkleStride);
+        unsigned char* const s = At(::bof3::Img(at::kSparklePool.v) + i * at::kSparkleStride);
         if ((s[at::kFlags] & 1) == 0) {
             s[at::kFlags] = static_cast<unsigned char>(s[at::kFlags] | 1);
             return i;
@@ -662,7 +662,7 @@ extern "C" void __cdecl MagicFx_DrawDisc(void) {
 // the actor's own pointer, pushed whole; the enemy's index in the low byte of
 // the caller's ecx (0x435A20 reads only that byte).
 extern "C" void __cdecl BattleActor_SetAnimation(unsigned offset, unsigned arg) {
-    const unsigned char index = At(at::kActorIndex)[0];
+    const unsigned char index = At(::bof3::Img(at::kActorIndex.v))[0];
     unsigned char* const actor = Actor();
     unsigned char* const saved = Sprite_Current;
     Sprite_Current = actor;
@@ -699,11 +699,11 @@ extern "C" void __cdecl BattleActor_Flash(unsigned index) {
     if (g.is_out(index) != 0) return;
     const unsigned i = index & 0xFF;
     if (i < 3) {
-        unsigned char* const r = At(ObjTrio_addr + i * at::kPartyStride);
+        unsigned char* const r = At(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride);
         if (r[0x90] & 0x80) g.set_tint(r, 0xFFFFFFFAu, 0xFFFFFFF6u, 0, 0);
         return;
     }
-    unsigned char* const r = At(Battle_Enemies_addr + (i - 3) * at::kEnemyStride);
+    unsigned char* const r = At(::bof3::Img(Battle_Enemies_addr) + (i - 3) * at::kEnemyStride);
     if (r[0x92] & 0x80) g.set_tint(r, 0xFFFFFFFAu, 0xFFFFFFF6u, 0, 0);
 }
 
@@ -713,15 +713,15 @@ extern "C" void __cdecl BattleActor_Flash(unsigned index) {
 // word (+0xF8's) through 0x437450 when 0x904AAA is set, else Sound_PlayById
 // 0x600 + 2 * its type byte +0xF0. The arguments' low bytes are what is read.
 extern "C" void __cdecl BattleActor_PlaySound(unsigned first, unsigned second) {
-    const unsigned char index = At(at::kActorIndex)[0];
+    const unsigned char index = At(::bof3::Img(at::kActorIndex.v))[0];
     if (index < 3) {
-        Field_State = At(ObjTrio_addr + index * at::kPartyStride);
+        Field_State = At(::bof3::Img(ObjTrio_addr) + index * at::kPartyStride);
         const auto a = static_cast<unsigned char>(first);
         if (a != 0) g.actor_sound(static_cast<unsigned char>(a + 1));
         if (static_cast<unsigned char>(second) != 0) g.actor_sound(second);
         return;
     }
-    auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(At(Battle_Enemies_addr + (index - 3u) * at::kEnemyStride));
+    auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(At(::bof3::Img(Battle_Enemies_addr) + (index - 3u) * at::kEnemyStride));
     if (EventBattle_Id != 0) {
         const auto* const cue = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::int32_t>(enemy_rec->cue_table)));
         g.enemy_sound(Word(cue));
@@ -736,14 +736,14 @@ extern "C" void __cdecl BattleActor_PlaySound(unsigned first, unsigned second) {
 // its +0x89; an enemy: the byte at 0x8C5652 + 0x8C * its type. Only al is
 // defined in the original's answer; all ten callers store al.
 extern "C" unsigned char __cdecl BattleActor_FxSize(void) {
-    const unsigned char index = At(at::kActorIndex)[0];
+    const unsigned char index = At(::bof3::Img(at::kActorIndex.v))[0];
     if (index < 3) {
-        const unsigned char* const r = At(ObjTrio_addr + index * at::kPartyStride);
-        if (r[0x134] & 2) return At(at::kFxSizeAltTable)[BattlePhases_B89];
-        return At(at::kFxSizeTable)[r[0x89]];
+        const unsigned char* const r = At(::bof3::Img(ObjTrio_addr) + index * at::kPartyStride);
+        if (r[0x134] & 2) return At(::bof3::Img(at::kFxSizeAltTable.v))[BattlePhases_B89];
+        return At(::bof3::Img(at::kFxSizeTable.v))[r[0x89]];
     }
-    const unsigned char type = At(Battle_Enemies_addr + (index - 3u) * at::kEnemyStride + 0xF0)[0];
-    return At(at::kEnemyFxSize + type * 0x8Cu)[0];
+    const unsigned char type = At(::bof3::Img(Battle_Enemies_addr) + (index - 3u) * at::kEnemyStride + 0xF0)[0];
+    return At(::bof3::Img(at::kEnemyFxSize.v) + type * 0x8Cu)[0];
 }
 
 // ===========================================================================

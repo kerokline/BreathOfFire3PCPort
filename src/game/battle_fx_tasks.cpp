@@ -97,8 +97,8 @@ unsigned char* Sc() { return Sprite_Current; }
 // it, the enemy index (actor - 3) is not checked, and the arithmetic is the
 // original's 32-bit wrap.
 unsigned char* ActorFlagByte(unsigned actor) {
-    if (actor <= 2) return At(ObjTrio_addr + 0x130 + actor * at::kMemberSize);
-    return At(Battle_Enemies_addr + 0x110 + (actor - 3u) * at::kEnemySize);
+    if (actor <= 2) return At(::bof3::Img(ObjTrio_addr) + 0x130 + actor * at::kMemberSize);
+    return At(::bof3::Img(Battle_Enemies_addr) + 0x110 + (actor - 3u) * at::kEnemySize);
 }
 
 void CallIndex(const Handler* table, unsigned n, unsigned index, const char* who) {
@@ -144,10 +144,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleMagicFx_Dispat
 // slot pointer, and not checked; ours aborts past row 150 (the table's 151
 // rows all hold .text pointers; row 151's is 0x9A1A9B1B, not code).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleMagicRow_Run(void) {
-    if ((static_cast<std::uint32_t>(Long(At(at::kRoundFlags))) & 0x800) == 0) return;
+    if ((static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kRoundFlags.v)))) & 0x800) == 0) return;
     const unsigned row = Sc()[5];
     if (row >= at::kMagicRowCount) bof3::Fatal("BattleMagicRow_Run: row %u, past Magic_Rows' 151", row);
-    reinterpret_cast<Handler>(PtrAt(at::kMagicRows + row * 8 + 4))();
+    reinterpret_cast<Handler>(PtrAt(::bof3::Img(at::kMagicRows.v) + row * 8 + 4))();
 }
 
 // ===========================================================================
@@ -220,18 +220,18 @@ extern "C" void __cdecl BattleFx_PopupStart(void) {
     unsigned actor = o[5];
     if (actor <= 2) {
         std::uint32_t k = Word(o + 0x2C) * 4u + o[8];
-        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->x_whole, static_cast<unsigned>(static_cast<signed char>(At(BattleWin_MemberTargetOffsets_addr + k * 2)[0])) + Word(o + 0x2E));
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->x_whole, static_cast<unsigned>(static_cast<signed char>(At(::bof3::Img(BattleWin_MemberTargetOffsets_addr) + k * 2)[0])) + Word(o + 0x2E));
         s = Cur();
         o = OwnerOf(s);
         k = Word(o + 0x2C) * 4u + o[8];
-        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->z_whole, static_cast<unsigned>(static_cast<signed char>(At(BattleWin_MemberTargetOffsets_addr + 1 + k * 2)[0])) + Word(o + 0x30));
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->z_whole, static_cast<unsigned>(static_cast<signed char>(At(::bof3::Img(BattleWin_MemberTargetOffsets_addr) + 1 + k * 2)[0])) + Word(o + 0x30));
     } else {
-        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->x_whole, static_cast<unsigned>(static_cast<signed char>(At(Battle_Enemies_addr + 0xF2 + (actor - 3u) * at::kEnemySize)[0])) +
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->x_whole, static_cast<unsigned>(static_cast<signed char>(At(::bof3::Img(Battle_Enemies_addr) + 0xF2 + (actor - 3u) * at::kEnemySize)[0])) +
                               Word(o + 0x2E));
         s = Cur();
         o = OwnerOf(s);
         actor = o[5];
-        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->z_whole, static_cast<unsigned>(static_cast<signed char>(At(Battle_Enemies_addr + 0xF3 + (actor - 3u) * at::kEnemySize)[0])) +
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->z_whole, static_cast<unsigned>(static_cast<signed char>(At(::bof3::Img(Battle_Enemies_addr) + 0xF3 + (actor - 3u) * at::kEnemySize)[0])) +
                               Word(o + 0x30));
     }
     unsigned char* d = Cur();
@@ -335,9 +335,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PopupEnd(vo
 // put back unconditionally; the index is not checked (ours aborts past 1).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PoseTask(void) {
     auto* const task_rec = rv::As<records::BattleTask>(Sc());
-    BattleE2_AnimSet = static_cast<std::int32_t>(at::kAnimSetBattle);
+    BattleE2_AnimSet = static_cast<std::int32_t>(::bof3::Img(at::kAnimSetBattle.v));
     CallIndex(g.pose, 2, task_rec->state, "BattleFx_PoseTask");
-    BattleE2_AnimSet = static_cast<std::int32_t>(at::kAnimSetField);
+    BattleE2_AnimSet = static_cast<std::int32_t>(::bof3::Img(at::kAnimSetField.v));
 }
 
 // original 0x4331D0 (state 0): Sprite_Current's draw bytes - +0x29 = 0, +0x25
@@ -357,7 +357,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PoseStart(v
     {
         unsigned char* const sc = Sc();
         auto* const task_rec = rv::As<records::BattleTask>(sc);
-        task_rec->clut = static_cast<unsigned char>(At(at::kPoseClut + sc[7])[0] - 0x50);
+        task_rec->clut = static_cast<unsigned char>(At(::bof3::Img(at::kPoseClut.v) + sc[7])[0] - 0x50);
     }
     Sc()[0x28] = 0;
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, 0);
@@ -370,7 +370,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PoseStart(v
     }
     rv::As<records::BattleTask>(Sc())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Sc())->state + 1);
     unsigned char* const sc = Sc();
-    g.set_animation(At(at::kPoseAnim + (sc[8] >> 1) + sc[7] * 2u)[0]);
+    g.set_animation(At(::bof3::Img(at::kPoseAnim.v) + (sc[8] >> 1) + sc[7] * 2u)[0]);
     g.queue_overlay();
 }
 
@@ -404,11 +404,11 @@ extern "C" void __cdecl BattleFx_StepReset(void) {
 // As the original has it: the phase is read before Sprite_Current; the
 // index is not checked (ours aborts past 4).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_ActorWatch(void) {
-    if (At(at::kPhase)[0] == 5) return;
+    if (At(::bof3::Img(at::kPhase.v))[0] == 5) return;
     auto* const task_rec = rv::As<records::BattleTask>(Sc());
-    BattleE2_AnimSet = static_cast<std::int32_t>(at::kAnimSetBattle);
+    BattleE2_AnimSet = static_cast<std::int32_t>(::bof3::Img(at::kAnimSetBattle.v));
     CallIndex(g.watch, 5, task_rec->state, "BattleFx_ActorWatch");
-    BattleE2_AnimSet = static_cast<std::int32_t>(at::kAnimSetField);
+    BattleE2_AnimSet = static_cast<std::int32_t>(::bof3::Img(at::kAnimSetField.v));
 }
 
 // original 0x4334C0 (state 0): waits on its owner's actor (the owner
@@ -423,19 +423,19 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_ActorWatch(
 // enemy index is not checked. Battle_ActorIsOut is handed the owner's
 // address with the actor in its low byte; it reads the byte.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_ActorWatchTest(void) {
-    const std::uint32_t flags = static_cast<std::uint32_t>(Long(At(at::kRoundFlags)));
-    const unsigned char* o = PtrAt(at::kTaskOwner);
-    if ((flags & 0x400) != 0 && o[5] == At(at::kTurnGate)[0]) return;
+    const std::uint32_t flags = static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kRoundFlags.v))));
+    const unsigned char* o = PtrAt(::bof3::Img(at::kTaskOwner.v));
+    if ((flags & 0x400) != 0 && o[5] == At(::bof3::Img(at::kTurnGate.v))[0]) return;
     const unsigned actor = o[5];
     const unsigned arg = (Address(o) & 0xFFFFFF00u) | actor;
     if (actor <= 2) {
         if (g.actor_is_out(arg) != 0) return;
-        const unsigned now = PtrAt(at::kTaskOwner)[5];
-        if ((At(ObjTrio_addr + 0x90 + now * at::kMemberSize)[0] & 0x58) == 0) return;
+        const unsigned now = PtrAt(::bof3::Img(at::kTaskOwner.v))[5];
+        if ((At(::bof3::Img(ObjTrio_addr) + 0x90 + now * at::kMemberSize)[0] & 0x58) == 0) return;
     } else {
         if (g.actor_is_out(arg) != 0) return;
-        const unsigned now = PtrAt(at::kTaskOwner)[5];
-        if ((At(Battle_Enemies_addr + 0x92 + (now - 3u) * at::kEnemySize)[0] & 0x58) == 0) return;
+        const unsigned now = PtrAt(::bof3::Img(at::kTaskOwner.v))[5];
+        if ((At(::bof3::Img(Battle_Enemies_addr) + 0x92 + (now - 3u) * at::kEnemySize)[0] & 0x58) == 0) return;
     }
     rv::As<records::BattleTask>(Sc())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Sc())->state + 1);
 }
@@ -468,19 +468,19 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_FollowOwner
                                        {0x49, 1}, {0x4C, 4}, {0x50, 4}, {0x54, 4}, {0x27, 1}, {0x28, 1}, {0x2A, 1},
                                        {0x34, 4}, {0x38, 4}, {0x3C, 4}};
     {
-        const unsigned char b = PtrAt(at::kTaskOwner)[0];
+        const unsigned char b = PtrAt(::bof3::Img(at::kTaskOwner.v))[0];
         rv::As<records::BattleTask>(Sc())->flags = static_cast<unsigned char>(b | 0x20);
     }
     for (const Copy& c : kCopies) {
-        const unsigned char* const o = PtrAt(at::kTaskOwner);
+        const unsigned char* const o = PtrAt(::bof3::Img(at::kTaskOwner.v));
         unsigned char* const sc = Sc();
         if (c.size == 1) sc[c.offset] = o[c.offset];
         else if (c.size == 2) SetWord(sc + c.offset, Word(o + c.offset));
         else SetLong(sc + c.offset, Long(o + c.offset));
     }
     g.update_screen();
-    if ((PtrAt(at::kTaskOwner)[0] & 1) == 0) g.free_current();
-    if (At(at::kPhase)[0] != 1) g.free_current();
+    if ((PtrAt(::bof3::Img(at::kTaskOwner.v))[0] & 1) == 0) g.free_current();
+    if (At(::bof3::Img(at::kPhase.v))[0] != 1) g.free_current();
 }
 
 // ===========================================================================
@@ -499,7 +499,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleHook_Area189Sc
     if ((Battle_EndFlags & 1) == 0) return;
     if (AreaW2c_LastArea != 0xBD) return;
     MoveScript_Var7 = 1;
-    At(MoveScript_Var7_addr + 1)[0] = 0x19;
+    At(::bof3::Img(MoveScript_Var7_addr) + 1)[0] = 0x19;
     g.script_flags_set40();
     g.after_area_script();
 }

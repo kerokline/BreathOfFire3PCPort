@@ -39,25 +39,25 @@ using U = std::uint32_t;
 
 // --- the battle's cells -----------------------------------------------------
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy EnemyRunAll is running (its object)
-constexpr U kRoundFlags = 0x904AA8;       // u8: the round flags' low byte
+constexpr ::bof3::image::Va kRoundFlags{0x904AA8};       // u8: the round flags' low byte
 // kEventFlags: now BossSe_Script (symbols.toml). u8: bit 0 set by the hooks of kinds 1 and 39 at a quarter of HP, and by Boss01_Event
 // kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 0 the loss, bit 1 the win, bit 2 set by Gary's end (tested with 6 by set-ups 2, 3)
 // kExp: now Battle_ExpTotal (symbols.toml). u32: the experience the battle pays (Battle_EnemyDefeated adds +0x96)
-constexpr U kActor = 0x904B34;            // u8: the acting actor, 3.. an enemy
-constexpr U kActionKind = 0x904B35;       // u8: the action's kind (4 an ability)
+constexpr ::bof3::image::Va kActor{0x904B34};            // u8: the acting actor, 3.. an enemy
+constexpr ::bof3::image::Va kActionKind{0x904B35};       // u8: the action's kind (4 an ability)
 // kAction: now BattleSprites_Action (symbols.toml). pointer: the action's record, +2 the action's id (u16)
-constexpr U kTarget = 0x904B44;           // u8: the battle's target
+constexpr ::bof3::image::Va kTarget{0x904B44};           // u8: the battle's target
 // kEndCount: now BossSa_EndCount (symbols.toml). u16: Mogu's end count (0x3C), Gary's end waits for it to be 0
 // kChapterRun: now MoveScript_Var7 (symbols.toml). u8: the chapter's run
 // kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter run's step
 // kWindowPass: now BossSa_WindowPass (symbols.toml). u8: the window records' pass byte (symbols.toml, the 0x59E230 evidence)
-constexpr U kMoveVar3 = 0x903848;         // u8: MoveScript counter 0 (op A0's; the message choices' "variable 3")
+constexpr ::bof3::image::Va kMoveVar3{0x903848};         // u8: MoveScript counter 0 (op A0's; the message choices' "variable 3")
 // kTaskSlots: now BattleTask_Slots (symbols.toml). BattleTask_Create's slots, 0x84 bytes each
 constexpr U kTaskStride = 0x84;
 // kEnemies: now Battle_Enemies (symbols.toml). the enemies' objects, 0x128 bytes each
 constexpr U kEnemyStride = 0x128;
 // kEnemy1: now Battle_Enemies[1] (symbols.toml). enemy 1's object
-constexpr U kFieldActors = 0x7DEF00;      // Sprite_Objects + 0x80: MoveCmd_OpE9's object for field object i (+ i * 0xA4)
+constexpr ::bof3::image::Va kFieldActors{0x7DEF00};      // Sprite_Objects + 0x80: MoveCmd_OpE9's object for field object i (+ i * 0xA4)
 constexpr U kObjectStride = 0xA4;
 
 // --- the party's leader (ObjTrio + 0) ---------------------------------------

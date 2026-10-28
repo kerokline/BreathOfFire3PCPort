@@ -92,7 +92,7 @@ void Disturb() {
     case 7: SetWord(At(Input_Pressed_addr), w); break;
     case 8: SetWord(At(v % 2 ? Field_ConfirmButtons_addr : Field_CancelButtons_addr), w); break;
     case 9: At(BattleActorCopies_QueueWrite_addr)[0] = static_cast<unsigned char>(v); break;
-    case 10: At(v % 2 ? at::kPartyCount : Battle_EnemyCount_addr)[0] = static_cast<unsigned char>(w); break;
+    case 10: At(v % 2 ? ::bof3::Img(at::kPartyCount.v) : Battle_EnemyCount_addr)[0] = static_cast<unsigned char>(w); break;
     case 11: if (v % 2) SetLong(list + 4, static_cast<std::int32_t>(h * 0x9E3779B1u)); else SetWord(list + 6, w); break;
     case 12: SetWord(list + 0x12, v % 3 == 0 ? w : 0); break;
     case 13: At(BattleActorCopies_EntryCount_addr)[0] = static_cast<unsigned char>(v); break;
@@ -202,7 +202,7 @@ unsigned char __cdecl StubFlags(unsigned category, unsigned item) {
 unsigned char __cdecl StubReturnTrue() {
     Record(14, Id(CurrentCmd()));
     MoveCommand();
-    if (Hash() % 4 == 1) At(at::kPartyCount)[0] = static_cast<unsigned char>(Hash() >> 8);
+    if (Hash() % 4 == 1) At(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
     const std::uint32_t h = Hash();
     return static_cast<unsigned char>(h % 3 == 0 ? 0 : h >> 8);
@@ -321,7 +321,7 @@ const Region kRegions[] = {
     {ObjTrio_addr, 0x3E4},       // ObjTrio
     {BattleActorCopies_Command_addr, 4},
     {BattleE4_MenuActor_addr, 4},
-    {at::kRepeatLatch, 2},
+    {at::kRepeatLatch.v, 2},
     {Input_Pressed_addr, 2},
     {Field_ConfirmButtons_addr, 4}, // Field_ConfirmButtons, Field_CancelButtons
 };
@@ -419,7 +419,7 @@ void Seed(unsigned k) {
         SeedPad();
         CurrentCmd()[0] = EdgeTarget();
         At(Battle_EnemyCount_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 6 : Next());
-        At(at::kPartyCount)[0] = static_cast<unsigned char>(Often() ? Next() % 4 : Next());
+        At(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(Often() ? Next() % 4 : Next());
         break;
     case kList: {
         if (Next() % 8 != 0) list[3] = 0;
