@@ -49,4 +49,32 @@ consteval std::uint32_t Img(std::uint32_t va) { return ImageBase() + (va - image
 // A VA in the image's code, as a place to call. The identity in stage B.
 consteval std::uint32_t Code(std::uint32_t va) { return va; }
 
+// --- A VA as a type, bof3::image::Va (design 2.2; RB0's prototype) ----------
+//
+// A VA held in an image::Va is a name the compiler keeps apart from a place: it adds
+// an offset (a Va), two of them subtract to a distance (an integer), and it
+// does not convert to an integer. So a memory accessor given a Va places it
+// through its Va overload, and a site that would use a VA as a value - store
+// it, compare it with a place, pass it as an integer - does not compile until
+// someone decides what it means: Img(va) for a place, va.v for the name.
+//
+// It lives in bof3::image, not bof3: gapwatch.cpp, snapshot.cpp and
+// gfx_snapshot.cpp each have a function bof3::(anonymous)::Va (a pointer as
+// an integer), which a bof3::Va would make ambiguous.
+namespace image {
+struct Va {
+    std::uint32_t v;
+};
+constexpr Va operator+(Va a, std::int32_t n) { return Va{a.v + static_cast<std::uint32_t>(n)}; }
+constexpr Va operator+(Va a, std::uint32_t n) { return Va{a.v + n}; }
+constexpr Va operator-(Va a, std::int32_t n) { return Va{a.v - static_cast<std::uint32_t>(n)}; }
+constexpr Va operator-(Va a, std::uint32_t n) { return Va{a.v - n}; }
+constexpr std::int32_t operator-(Va a, Va b) { return static_cast<std::int32_t>(a.v - b.v); }
+constexpr bool operator==(Va a, Va b) { return a.v == b.v; }
+}  // namespace image
+
+// A Va as a place. constexpr, not consteval: a Va may be computed at run time
+// (a table's VA plus a scaled index).
+constexpr std::uint32_t Img(image::Va va) { return ImageBase() + (va.v - image::kLinkedBase); }
+
 }  // namespace bof3

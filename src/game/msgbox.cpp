@@ -1280,7 +1280,7 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
                 auto row = ModeFlow_ConfigBytes;
                 const bool instant = g_text_faster && row == 0;
                 if (g_text_faster && row == 1) row = 0;   // Med. at Fast's delays
-                Msgbox_Delay = B(static_cast<std::uint32_t>(kSpeedTable + speed + row));
+                Msgbox_Delay = B(kSpeedTable + speed + row);
                 if (L(kFlags) & 0x100u) {
                     Msgbox_Delay = 3;
                     SetB(kState, 1);
