@@ -408,6 +408,42 @@ turn on 90 entries; no entry lists `pc`, so that preset turns nothing off
 by the field alone. Ten `Toward: none` rest on a read not done (the stage
 B list above) and want the twin.
 
+**The 28 `costly` entries, listed** (the owner's call 4, affirmed
+2026-10-28: left, listed, a later round takes the ones a player asks for).
+The size is the group's or the audit's estimate of growing the original
+path in ours; "small" is one gate or flag around a path ours already has.
+
+| Entry | Tier | `Switch:` | Growing the original path |
+|---|---|---|---|
+| DIV-0002 | Intent | `Save_WriteFile` | small: one `Save_ListFiles()` call to gate |
+| DIV-0003 | Intent | `File_OpenWrite` | small, but the original path is a crash: not worth growing |
+| DIV-0004 | Intent | `Gfx_BeginFrame` | small: gate the upload drain |
+| DIV-0031 | Sensible | `Display_Setup` | very large: Capcom's DirectDraw / Direct3D 3 renderer; in practice cannot be grown |
+| DIV-0032 | Sensible | `Game_WinMain, Game_WndProc, Cursor_Sync, Display_WindowMoved, Display_DeviceName` | large: Capcom's window and loop |
+| DIV-0034 | Intent | `Game_WinMain` | small: gate the frame-debt clamp |
+| DIV-0035 | Sensible | `Fmv_Play` | medium: Capcom's display mode-set around the FMV player |
+| DIV-0039 | Sensible | `Game_WinMain` | small: choose Capcom's GBK strings over ours |
+| DIV-0040 | Sensible | `Game_WndProc` | large: F7 device cycling and F11 overlays, which our back end lacks |
+| DIV-0042 | Sensible | `Game_WndProc` | small to medium: refuse `WM_SIZING` in our window procedure |
+| DIV-0044 | Intent | `Display_Setup` | small: drop the depth-0 primitive in `render_shim.cpp` |
+| DIV-0048 | Sensible | `Game_WndProc` | small: F1 is read only in our window procedure |
+| DIV-0049 | Sensible | `Fmv_WndProc` | small: the pause / resume pair already sits behind `WinMain_Background()` |
+| DIV-0050 | Sensible | `DInput_Init, Pad_Read, DInput_Shutdown` | large: the whole DirectInput joystick path; probably not wanted |
+| DIV-0051 | Sensible | `ConfigController, Config_DrawControllerCell, ConfigJapaneseIcons` | moderate: the original glyph cell of `Config_DrawControllerCell` |
+| DIV-0066 | Sensible | `Fmv_Play` | small: the pad poll in our `Fmv_Play` pump |
+| DIV-0082 | Intent | `Battle_CopyEnemyData` | small: one byte store |
+| DIV-0091 | Sensible | `env:BOF3X_MP3=original` | hosted-only by design: Capcom's MP3 decoder is not in `bof3x.exe`'s image |
+| DIV-0093 | Sensible | `env:BOF3X_MP3=original` | small on its own (one constant, `kCapcomEosBytes`, already in `src/audio/mp3.cpp`), but the switch is DIV-0091's |
+| DIV-0118 | Sensible | `BattleExtra_EquipOpen` | small: one flag to copy from `0x669CE8` again |
+| DIV-0119 | Sensible | `Boss26Fx_DrawCount` | small: a flag forcing our no-overlay draw |
+| DIV-0120 | Sensible | `CommuHiLo_DrawChoice` | small: as DIV-0119 |
+| DIV-0127 | Intent | `EffectKind18Sub61_DrawOverlay, Scena17_DrawLetterbox` | small: ours already emits Capcom's packets for the fuzz; a code name around that path |
+| DIV-0128 | Intent | `Identify_DrawElements` | small: a flag forcing our `original`-language glyph path |
+| DIV-0129 | Intent | `Sound_StreamDone` | small for the engine half (one flag); the jingles are the install's sources, no runtime switch |
+| DIV-0145 | Extension | `Game_WndProc` | small: gate the F6 / F7 reads in our window procedure |
+| DIV-0147 | Extension | `Game_WndProc` | small: gate the F5 read in our window procedure |
+| DIV-0183 | Intent | `Paralyzer_Start` | the original path is a null read, a crash: not worth growing |
+
 **Left for stage D** (section 5, not briefed): `BOF3X_OFF` read beside
 `BOF3X_ORIGINAL` for the 67 `cheap` names; the `Reversible?` prose of
 DIV-0141, 0145, 0147 and 0148, which still says "not a switch" against
