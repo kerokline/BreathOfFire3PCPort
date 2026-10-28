@@ -37,11 +37,15 @@ STATE = {0: 'free', 1: 'sleeping', 2: 'runnable'}
 
 
 def find_game():
-    """The running game's pid: BOF3.exe (hosted) or bof3x.exe (ours)."""
-    for image in ('BOF3.exe', 'bof3x.exe'):
+    """The running game's pid: BOF3.exe (hosted), bof3x.exe (ours) or a
+    developer's bof3x-<BASE>.exe (BOF3X_IMAGEBASE)."""
+    for image in ('BOF3.exe', 'bof3x.exe', 'bof3x-*'):
         out = subprocess.run(['tasklist', '/FI', f'IMAGENAME eq {image}', '/FO', 'CSV', '/NH'],
                              capture_output=True, text=True).stdout
-        rows = [r for r in out.splitlines() if r.lower().startswith('"%s"' % image.lower())]
+        name = lambda r: r.split('","')[0].strip('"').lower()
+        rows = [r for r in out.splitlines()
+                if (name(r) == image.lower() or (image.endswith('*') and name(r).startswith(image[:-1].lower())))
+                and not name(r).startswith('bof3x-launcher')]
         if rows:
             return int(rows[0].split('","')[1])
     sys.exit('neither BOF3.exe nor bof3x.exe is running')
