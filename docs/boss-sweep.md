@@ -6,7 +6,8 @@ suspicion that the kind injections of [`spell-sweep.md`](spell-sweep.md) 11
 could swap the enemy kind and graphic in combat so moves like Nue Stomp render
 from the right body. Section 1 answers that from the code; sections 2 to 4 are
 the plan; the runs and findings will follow as sections. Section 5 is
-step 1, the `battle ID` op and its proof, 2026-10-27 night.)
+step 1, the `battle ID` op and its proof, 2026-10-27 night. Section 7 is
+step 3, the fights played to their deaths on three installs, 2026-10-28.)
 
 ## 1. Why a kind swap cannot stage a boss, and what can
 
@@ -160,7 +161,7 @@ appear with that arrival. The scenario's call runs in frame 4902, mode 5 at
 4904, `boss encounter: id 12 (0x0C) -> set-up 0x004398E0` at about 4961.
 Prologue: 1 enemy, enemy 0 slot **1** (`+0xF0`; spell-sweep 11.4's table
 gives the Amalgam slot 0, but this peek reads 1 in the route's own fight and
-in every trial below), odds 18, flags `0xE0`.
+in every trial below - 1 is right: section 7.6), odds 18, flags `0xE0`.
 
 | Trial | Tagged actor at the call | Result |
 |---|---|---|
@@ -204,3 +205,369 @@ peek 0x904AAA u8 ebid_before_battle  # 0: the scenario has not called it
 battle 2
 until 0x66C7E8 u16 == 5 timeout 600
 ```
+
+## 7. Step 3: the fights played (2026-10-28)
+
+**Status:** MEASURED (2026-10-28, branch `boss-sweep/play` off
+`boss-sweep/battle-op`; the PC install, a US-PSX-only install and a
+PSP-EU-only install). Root `C:\Users\kerok\bof3x-runs\bsw1027\play`: the
+runners (`ss.sh` the PC install, `ssd.sh psxus|pspeu` a disc-only install
+with the gap watch, `fights.sh` / `fights2.sh` / `casts.sh` the fight
+lists), one folder of frames and a log a run under `pc\`, `us\`, `psp\`,
+`results_fight.tsv` in each, the compares under `cmp\`, the contact sheets
+`end_*.png` / `sheet_*.png`, the scripts in `tools\` (`endsheet.py`,
+`align.py`, `cmp_all.py`). Section numbering: the step-2 branch's section 5
+becomes 6 at its merge, so this is 7.
+
+### 7.1 The harness
+
+**Recipe ops** (`src/hook/input_script.cpp`, [`input-script.md`](input-script.md) 2;
+harness steps and instrumentation, no ledger entry):
+
+- `battle ID` now logs the tagged field actors it finds (`Sprite_Objects`
+  type `+6` 7, the slot `+0x9E`: `tagged actors 8:slot0`) and **refuses**
+  when there are none - the recipe FAILS before the call, so the empty
+  fight of 5.1 (which crashes ours once buttons are pressed into it) is no
+  longer reachable by mistake. `battle ID any` stages it anyway.
+- `place X Z ID`: `Party_PlaceForBattle` (`0x532ED0`) through the
+  original's entry, as a scene places the members before its battle call.
+- `view X Z`: `Field_Kind2X` / `Z` and `Field_ViewReset` (`0x56F670`) through
+  the original's entry, as a scene frames its battle (chapter 14's run at
+  step 0x19 does exactly this before its `Party_PlaceForBattle`).
+- `watch ADDR LEN NAME [shot]`: a range compared at every new frame, each
+  change logged with the bytes before and after; with `shot` the frame is
+  written (`wFFFFFF.bmp`) and every frame drawn while the watch is on. Its
+  reads hold the gap watch's guards off (as the state hash's do), and a
+  page the gap watch keeps parked is read as `peek` reads it - the first
+  disc runs read `0x66C7E8` as `EEEE` until that (commits `01ca409a`,
+  `97a21b02`).
+- `every N`: timed frames (`tFFFFFF.bmp`) from a recipe step, as
+  `BOF3X_SHOT_EVERY` from the start.
+
+**`spell_sweep.py run --fight ID`** (`tools/spell_sweep.py`):
+
+- **Head.** The route to `--cut`; or to `--field-cut` and `goto` (`--goto
+  AREA:X:Z:FLAGS`) for a fight whose actor is the area's object; then
+  `--pre-poke` (scene state the staging lacks), `--camera X:Z` (`view`),
+  `--place X:Z` (`place`), the 30 actors' flags / type / slot peeked, the
+  watches set (mode, fight byte, phase / step, enemy count and enemies
+  left, the end byte `0x904AE8`, the hooks `0x904B64..6F`, the fight's
+  centre `0x903780`, the camera's focus, the area, each enemy's state
+  bytes `+1..+4`, HP, pick `+0x105` and kind `+0x100`, and the 20
+  `Effect_Objects` `0x7E11E0` records' first six bytes), `battle ID`,
+  until mode 5, the party's HP / max HP / DEF 999, the prologue peeks 65
+  frames in (they now come after the set-up: section 7.6).
+- **`--ids`**: the enemy side's forced casts (section 11's pokes) on enemy 0.
+- **`--play N`**: N rounds of Defend (one `seek` for however many crosses),
+  the party's pokes at every cross; a shot at every phase / step change,
+  every change of an enemy's state bytes, every pick and every change of
+  the end byte and the counts.
+- **`--kill`**: at the next cross `every 3` (timed frames from here to the
+  end), the HP of the `--kill-enemies` records poked to `--kill-hp` (1),
+  and the confirm alone at each cross - command 0, the attack, on the
+  cursor's default target - one seek through the round; then confirms
+  every 12 frames until the field mode is 2 again, through the death, the
+  end and exit hooks and the result screen; the end byte, the hooks, the
+  area, the fight byte and the 20 effect records peeked after the return;
+  `--after` frames more in the field (`--after-confirm`: a confirm every
+  30 for the area's own scene). `--mortal` / `--to-end` for a fight the
+  game ends with a loss: no party pokes, the confirm until the field.
+- **`--reference`**: the route's own fight instead - the route frame for
+  frame (watches cost no frame), the same watches from `--watch-from`,
+  timed frames over `--every-from` .. `--every-to`.
+- **The report.** `results_fight.tsv`: the fight, the set-up line, the
+  tagged actors, the kinds, the state bytes each enemy went through, the
+  frames of the call, mode 5, the win (`0x904AE8` bit 1) or the loss
+  (bit 0), the last enemy gone, the hooks, the return, the effect records
+  that changed after it, the shots. `spell_sweep.py fightlog LOG --fight
+  N` reads a log again; `spell_sweep.py selftest` checks the route
+  expander, the fight recipe's order and the log reader without a game.
+
+**What the staging needs, measured beyond 5.3:**
+
+1. **The cut is the frame three before the fight byte's first read** (the
+   scene's own call is then still to come): 5.1's Nue and 5.2's Amalgam
+   agree, and every routed fight below was staged so. One trap: the
+   Stallion's second fight cut at 10572 sat in a talk (mode 4) - the op
+   ran, and the battle never began (`until` mode 5 timed out); at 10574,
+   after the talk, it did.
+2. **`goto` staging needs the scene's view and the actor shown.** The
+   Amalgam from cut 300 + `goto` (5.2's last row) was fought off screen;
+   `place` alone did not change the picture (the camera stays at the
+   arrival). A **poke** of `Field_Kind2X` / `Z` alone left the view
+   stepping toward the new focus and the battle's start waiting - mode 5
+   for 1,440 frames with no set-up line (trial 1). `view` rebuilds the view
+   at once, as the scenes do; with it and `place`, the framing is the
+   route's. The Amalgam was then fought **invisible** until its death: the
+   area's actor record 8 stands with `+0` = `0x41` (bit 0x40, not drawn)
+   where the route's scene has made it `0x01` by its call, and the battle
+   copies the actor's first 0x80 bytes into enemy 0. `--pre-poke
+   "0x7DF3A0 u8 1"` (record 8's `+0`) shows it.
+3. **After the fight the scenario does not resume** (5.3.4 again): the
+   D.Zombie's post-fight scene and the departure of section 7.5 are only in
+   the route's own run.
+
+### 7.2 The framing proof: the Amalgam
+
+The staged fight (`goto 28 0x270000 0x568000 3`, `--pre-poke`, `view
+0x190000 0x5B0000` - the reference's `Field_Kind2X` / `Z` at its call -
+`place 0x1C0000 0x5B0000 12` - the scene's own call, `scena_sc2.cpp`
+run 0x11 step 0x11) against the route's own fight, frames renamed by their
+offset from each fight's first mode-5 frame (`align.py`) and compared with
+`abc_compare.py` (`cmp\out_a_t5`): the camera, the floor, the walls, the
+party's three places and the cross are the route's to the pixel; what
+differs is the boss's idle pose (the animation's phase: 9.3 % of the frame
+at +57, the box `0,8 .. 136,108` around it), the bystander at the top left
+(the scene's: lying in the route, standing in the staging) and the HP
+digits (the party's 999 pokes). Before the `view` the boss and party were
+off screen (`sheet_t2_death.png`); before the `pre-poke`, the boss
+invisible through the rounds (`sheet_t4b.png`).
+
+### 7.3 The fights on the PC install
+
+The routes cut three frames before their own call (the staged rounds
+Defend, so the fights run longer than the owner's); `--play 3 --kill`
+unless the row says otherwise. Fights 28..55 start from step 2's crafted
+saves (the coordinator's note; the probe `bossfight_probe.txt` of branch
+`boss-sweep/prefight-saves` with its `# save` line changed, copies in the
+root's `s2\`, the saves in its `saves\`), the op three frames before
+their scene's call (38: the scene's own call, `--scene`, since frame 781
+sat in a talk). Frames are recipe frames. Hooks: end /
+exit / event as the set-up stored them - the same in the route's own
+fight for all ten (the references' `hooks` watch).
+
+| Fight | Boss (kinds) | Staging | Mode 5 | End | Return | Hooks | Enemy 0's state bytes (first byte.second) | What the frames show |
+|--:|---|---|--:|---|--:|---|---|---|
+| 2 | Nue (1) | `cutsceneAndNue` cut 4233 | 4237 | win 5447 (the Nue's "Escape"; no enemy defeated) | 5574 | `0x4381E0` / `0x437CC0` / `0x4381B0` | 2, 3, 5.0-1, 8.0-2, 3.1, 6.1.0-2, 9.1.0.0-3 | the Nue flees as in the route (`end_pc_nue.png`); no post-fight scene |
+| 7 | Worker, Operator (4, 5) | `whelpBoss` cut 711, `--play 0 --to-end` | 715 | neither bit: the set-up's script ends it at 959 | 959 | `0x438DD0` / `0x438E30` / `0x438C50` | 2, 3, 3.1, 5.0-1 | a scripted fight of one exchange; `--play 2` ran out of rounds (the seek gave up) |
+| 8 | kind 8, one enemy (the image of Torast, Kassen, Galtel, Doksen: boss-fights.md) | `bossAndFlash` cut 1747, kill 0..3 | 1751 | win 2699 | 2786 | `0x439260` / `0x439280` / `0x43C9F0` | 2, 3, 7.1-2, 8.0-2, 5.0-1, 3.1, 6.1.0-2, 6.4.0.0-3, 6.4.1 | the boss's death; effect records 1 and 2 change after the return, as in the route's own run |
+| 12 | Amalgam (12) | section 7.2 | 521 | win 2006 | 2098 | `0x439900` / `0x437CC0` / `0x43C9F0` | 2, 3, 5.0-1, 7.1-2, 8.0-2, 3.1, 6.1.0-2, **6.4.0-3** | **the stretch and the melt** (section 7.4) |
+| 13 | Balio, Sunder (13, 14) | `balioAndSunder_1` cut 2259, `--mortal --to-end` | 2263 | **loss** 3551 (HP `0xFFFF`, the hit hooks) | 3599 | `0x43A000` / `0x438E30` / `0x43C9F0` | 2, 3, 7.1-2, 8.0-2, 5.0-1, 3.1, 6.1.0-2 | Lightning on the party, the loss and the scene after it (`end_pc_balio13.png`) |
+| 16 | Balio, Sunder, Nina (13, 14, 17) | `balioAndSunder_2` cut 17194, kill 0..2, 3 rounds | 17198 | win 20226 (Sunder's "Escape") | 20271 | `0x43A190` / `0x43A230` / `0x43A060` | 2, 3, 7.1-2, 8.0-2, 5.0-1, 3.1, 6.1.0-2, 6.3.0-4, 9.1-2 | the HP-1 hooks hold; the set-up's event hook ends it with the escape (`end_pc_balio16.png`) |
+| 23 | Bully 1..3 (28) | `stallion` cut 1939, kill 0..2 | 1942 | win 3749 | 3816 | `0x43B730` / `0x43B750` / `0x43C9F0` | 2, 3, 5.0-1, 3.1, 6.1.0-2, 6.4.0-3 | the three fall one by one (`end_pc_stallion23.png`) |
+| 24 | Stallion (29) | `stallion` cut 10574 | 10577 | win 11396 | 11466 | `0x43B890` / `0x43B8C0` / `0x43C9F0` | 2, 3, 7.1-2, 8.0-2, 6.1.0-2, 3.1, 6.4.0-3 | the death the owner's route never reached (it ends mid-fight) (`end_s24.png`) |
+| 29 | Dolphin (34) | `dolphinBoss` cut 9955 | 9958 | win 10917 | 10992 | `0x43CE70` / `0x43A4A0` / `0x43C9F0` | 2, 3, 5.0-1, 7.1-2, 8.0-2, 3.1, 6.1, 6.3.0-4, 6.1.1-2, 6.4.0-3 | the dolphin's sink (`end_pc_dolphin29.png`) |
+| 32 | D.Zombie (38) | `minecartToZombieDragon` cut 5230, `--after-confirm` | 5233 | win 6125 | 6195 | `0x43D270` / `0x43D3A0` / `0x43C9F0` | 2, 3, 8.0-2, 3.1, 6.1.0-2, 6.4 | section 7.5 |
+| 28 | Gazer (33) | step 2's `midEyeEncounter` probe cut 437 | 442 | win 1553 | 1974 | `0x43CA00` / `0x43A4A0` / `0x43C9F0` | 2, 3, 4.1-2, 5.0-1, 8.0-2, 3.1, 6.1.0-2, 6.4.0-3 | the camera as the scene leaves it: the Gazer at the top left, the party off screen (`end_pc_gazer28.png`) |
+| 38 | Ammonite (45, two) | step 2's `bf38c` probe, `--scene` cut 800 (the scene's own call at 865) | 866 | win 2386 | 2636 | `0x43EED0` / `0x437CC0` / `0x43C9F0` | 2, 3, 7.1-2, 8.0-2, 6.1.0-2, 3.1, 6.3.0-4, 6.4.0-3 | the camera faces the sea (step 2's note), the enemies out of view; the result screen as usual |
+| 50 | Chimera (57) | step 2's `bf50c` probe cut 569, `--play 0 --confirm cross` | 572 | win 945 | 1933 | `0x43F380` / `0x437CC0` / `0x43C9F0` | (kill at the first cross) | adult Ryu alone (the donor's party); the donor save confirms with cross, and with circle the kill's seek gave up at the cross; with `--play 3` the fight was **lost** at 739 (the lone member disabled: no cross is left) |
+| 54 | Shroom (61) | step 2's `bf54b` probe cut 437 | 442 | win 1443 | 1499 | `0x43FC60` / `0x437CC0` / `0x43C9F0` | 2, 3, 5.0-1, 7.1-2, 8.0-2, 3.1, 6.1.0-2, 6.4.0-3 | the enemy out of the camera's view (step 2's note) |
+| 55 | Myria (62) | step 2's `bf55b` probe cut 476 | 479 | win 1561 | 1589 | `0x440700` / `0x440820` / `0x43C9F0` | 2, 2.1, 3, 7.1-2, 8.0-2, 6.1.0-2, 3.1, 6.4 | Myria above the stage; her death one frame of `6.4`, the field after it (`end_pc_myria55.png`) |
+
+`6.4.*` is the common death the sweep sees most (state 6 the hit, step 4
+its ending); the Amalgam's `6.4.2` holds 43 frames, its melt (D317's
+`_DeathMelt`). The fights whose bosses carry hit hooks or event hooks
+(2, 7, 13, 16) end by the set-up's script, not by the kill.
+
+### 7.4 The Amalgam's death: the melt shows (D317, DIV-0142 / DIV-0159)
+
+The route's own death (`ref_amalgam2`, frames 7600..7950 every 3) and the
+staged one (`amalgam_t5`) aligned on the first frame of state `6.4`
+(route 7668, staged 2060): the hit, then from +2 the body **stretches into
+vertical streaks, red and green, and sinks into a column** that thins to a
+line and is gone at +46 (`sheet_death_a.png`: +0, +2, +12, +24, +36, +45),
+"You defeated a powerful enemy!" at +60 in both. The streaks are the page
+`(0x340, 0x100)` drawn by `BossAmalgam_DrawStreak` - the picture DIV-0142
+(the capture into VRAM) and DIV-0159 (the direct-colour texels' alpha)
+restored together; D317's "scoots back and freezes" and D333's empty melt
+are not seen. The staged and the route's frames differ only where the
+fights differ (Ryu fallen in the owner's fight, the HP digits, the damage
+popup's number, the bystander).
+
+### 7.5 The D.Zombie, the pool, and the departure after the fight
+
+- **In the fight** the red pool under the dragon is part of the field
+  behind the battle: drawn in the route's fight and the staged one alike,
+  to the pixel apart from the actors (`pool_pair.png`, `end_dz1.png`). The
+  death is one frame of state `6.4` and the win; nothing is drawn for the
+  dragon's death in battle - the dragon stays on its pool.
+- **After the return** the staged run stands in the field with the pool and
+  the dragon until the end (`end_dz3.png`, 1,100 frames of confirms): the
+  scenario does not resume (7.1.3). **The departure is the route's alone**
+  (`ref_dzombie2`, the route with timed frames 5560..6400): the talk
+  (mode 4 at 5732, 5905), then at 6044 the scene's effect record 0 takes
+  **kind 0x51** (`010B00000051`: in use, state 0xB, `_RingClose` - [`effect_2f.md`](effect_2f.md) 1.3) and the
+  frame shows - from 6045 - the dragon and the pool gone, then a disc of
+  the field picture filling the screen at 6048..6054 and closing to a point
+  by 6066 (`dz_fx.png`), released at 6064; the field without them from
+  6069.
+- So the "blood / oil pool" the owner reports is **kind 0x51** - an effect
+  the chapter-8 scene spawns in the field after the battle has returned,
+  not the boss's code: the owner's hypothesis ("area logic after the
+  return") stands. It is the effect DIV-0125's amendment of 2026-10-25
+  (issue #142) fixed: its column's two grabs into one page, "the puddle
+  that spreads into the pool and the circle that closes on the way out".
+  In these frames **the circle is whole** - both halves, no straight left
+  side, no seam - so what DIV-0125's amendment describes is what plays now.
+  Whether the disc's picture inside the circle should be sharper than the
+  soft, blurred field it shows here is not settled by these frames: the
+  owner's PlayStation frames (named in DIV-0125's amendment) are the
+  reference for that, not read here. The puddle's spread is earlier in
+  the route (frames 2760..3360 of `minecartToZombieDragon`, DIV-0125's
+  verification frames), before the fight - not in this sweep's window.
+
+### 7.6 The slot question (step 1's discrepancy) settled
+
+Enemy 0's `+0xF0` is the area slot `Battle_CopyEnemyData` was given, and
+is written by the set-up, 57 frames after mode 5. Section 11.4 of
+[`spell-sweep.md`](spell-sweep.md) took its prologue peeks at the first
+frame of mode 5 (the `until` passes at the route's own call), **before the
+set-up** - its logs read `enemies = 0` there for the Amalgam and the
+Stallion - so its slots are what the previous fight left: the Amalgam
+**1** (not 0), the D.Zombie **2** (not 3) and the Stallion **0** (not 1),
+read 65 frames in on every install here, and the census's own carriers
+agree (`kind_census.json`: Amalgam 28 / 1, D>Zombie 108 / 2, Stallion 67 /
+0). spell-sweep.md 11.4's table and its parenthesis want those three
+corrected; its casts are unaffected (the casts poke the ability list, not
+the slot). Noted for its owner; this doc's 5.2 already reads 1.
+
+### 7.7 Three installs
+
+The same recipes on a **US-PSX-only** install (`abc_run.py prepare --only
+psx-us`, `en-US`, the gap watch on, `gap,unread,language`) and a
+**PSP-EU-only** install (`--only psp-eu`, `en-150`), both built from this
+branch's tree into the root's `abc\` (a scratch installs file naming
+`D:\bof3x-runs\discs`), run through the root's launcher copy with
+`BOF3X_EXEIMAGE` and `BOF3X_CACHE` naming the cache. **Every fight reached
+the same recipe frames on all three installs** - the call, mode 5, the win
+or the loss, the return, to the frame (the `results_fight.tsv` rows of
+`pc\`, `us\` / `psxus\` and `psp\` / `pspeu\`). The pictures, every frame
+the runs wrote (the watch shots and the timed frames, matched by recipe
+frame; `cmp_all.py`, `abc_compare.py`'s tolerance 4 / 16 pixels):
+
+| Fight | Frames | PC - US | PC - PSP | US - PSP |
+|---|--:|--:|--:|--:|
+| 2 Nue | 518 | 0 | 0 | 0 |
+| 7 Worker, Operator | 211 | 0 | 0 | 0 |
+| 8 kind 8 | 350 | 0 | 0 | 0 |
+| 12 Amalgam | 389 | 0 | 0 | 0 |
+| 13 Balio, Sunder | 570 | 0 | 0 | 0 |
+| 16 Balio, Sunder, Nina | 1,322 | 0 | 0 | 0 |
+| 23 Bullies | 606 | 0 | 0 | 0 |
+| 24 Stallion | 332 | 0 | **201** | **201** |
+| 29 Dolphin | 391 | 0 | 0 | 0 |
+| 32 D.Zombie | 549 | 0 | 0 | 0 |
+| 32, the route's own run (the departure) | 309 | 0 | 2 | 2 |
+| 28 Gazer | 443 | 1 | 1 | 0 |
+| 38 Ammonite | 568 | 1 | 1 | 0 |
+| 50 Chimera | 593 | 172 | 172 | 0 |
+| 54 Shroom | 314 | 1 | 224 | 223 |
+| 55 Myria | 400 | 1 | 1 | 0 |
+
+(Fight 7's 21 frames on one side only are the PC root's first, failed
+attempt's, left in the folder.) Every difference, read:
+
+- **Fight 24, PSP: the Stallion is brown and blue** where the PC and the
+  US disc draw it pale (`stallion_psp.png`, the box round the boss on
+  every frame until it falls). The PSP release's recolour -
+  [`psp-stallion.md`](psp-stallion.md): two 16-colour rows of area 67,
+  data only - which a PSP-only base draws as its own (DIV-0103's area art).
+  `recipes/abc-known.toml`'s `psp-area-art` rule covers mode 2 only, so
+  the comparer calls these frames unexplained; a battle-mode twin of the
+  rule would explain them. Not a defect.
+- **Fight 54, PSP: two small patches of the lab's wall** (0.5 % of the
+  frame, `shroom_psp.png`) - the PSP's own area pages in battle, the same
+  class as fight 24.
+- **The D.Zombie route, PSP: two frames of the ability window's L1 / R1
+  page icons** (`dz_psp.png`) - the PSP layer's button glyphs (the button
+  round's class).
+- **Fights 28, 38, 50, 54, 55, PC against both disc installs: `f00388`**,
+  the probe's shot of the load screen - the PC's game folder lists the
+  owner's other slots, the disc installs' folders hold none. The harness's.
+- **Fight 50, PC against both: the party's name box** (`chim.png`): the
+  crafted save's donor (`adult_ryu`) names Ryu with a glyph the PC's font
+  draws and the disc installs' fonts leave blank - the save's, the class
+  of D326. The harness's.
+
+So **no boss death, end hook, exit hook or return differs between the PC
+install, the US disc and the PSP disc** in these fights beyond the PSP's
+own colours and pages. The D.Zombie's departure (section 7.5) is the same
+picture on all three.
+
+**The gap watch** over the US-disc runs (`gapwatch.py report` over
+`gw_psxus`, 26 runs - the names of the runs, the reruns writing over the first): 11 of 236 ranges read in some
+run, 8 before any write - every one the class the spell sweep's runs list:
+the empty save slot (`Encounter_SlotChance+0x1C`), `Battle_CommandLabels`
+and `Menu_Verbs+0xF4` (the parked-page blind spot), `Equip_SlotIcons+0xC0`
+.. `+0xF8` (the `stallion` route's field menu), and the Config rows and
+`Menu_Verbs` / `Effect1b_ToggleText+0x60` the `balioAndSunder_2` route's
+own Config visit reads ([`install-gap-reads.md`](install-gap-reads.md)).
+The PSP-EU-only runs (`gw_pspeu`, 26 runs, 217 ranges) read the same
+eleven. **No `gap` row is read by a boss's death, a hook or a return.**
+
+### 7.8 The carried skills, cast by their own bosses
+
+`--ids` on each fight (the enemy side's pokes on enemy 0, its odds and
+flags from the prologue's peeks), then the kill, on all three installs:
+
+| Id | Skill | Boss (fight) | Picked (`+0x106`) | Notes |
+|--:|---|---|---|---|
+| 1, 9 | Nue Stomp, Chlorine | Nue (2) | 1, 9 | |
+| 17 | Astral Warp | Amalgam (12) | 17 | |
+| 57, 81 | Bone Dance, RottenBreath | D.Zombie (32) | 57, 81 | |
+| 86, 116 | Barrier, UtmostAttack | Stallion (24) | 86, **97 (Jolt)** then, with the AI rows off, 86, 116 | the Stallion's AI rows are live in a staged fight (the by-kind sweep's `--kind` switches them off in the area's data; the fight mode does not): with them, it picked Jolt over the poked list. `--pre-poke` of the four rows' conditions (`0x8C5600 + 16 r` = `0x63`, area 67's slot 0) makes the pick the list |
+| 128 | Head Cracker | Shroom (54) | 128 | **section 2.1's skill** |
+| 129, 130 | Holocaust, Venom | Myria (55) | 129, 130 | **2.1's** |
+| 138 | Main Cannon | Ammonite (38) | 138 | **2.1's** |
+| 139 | Paralyzer | Chimera (50) | 139 | **2.1's**; the donor's lone member paralysed, "Your party was wiped out" - the loss, no kill (a party of one, the craft's) |
+| 150 | Eye Beam | Gazer (28) | **27 (Hypnotize)**, then with the AI rows off (`0x8C5718 + 16 r`, area 77's slot 2) 150 | **2.1's** |
+
+**Six of section 2.1's seven boss-only skills are cast by their own
+bosses** on the PC, the US disc and the PSP disc (`casts_boss.png`; Holocaust's beams from its fifth shot, `holo.png`);
+Corona (Gaist, fight 35) is not reached. The pictures across the installs:
+0 frames differ for the routed casts but the PSP's Stallion colours (207
+frames, as 7.7) and for the crafted ones but the load screen and the
+name box (7.7). Several of the crafted fights frame the enemies out of
+view (the scene's camera: step 2's notes), so a cast's own art on the
+boss is not always in the shot - Head Cracker and Main Cannon among them.
+
+
+### 7.9 For the coordinator
+
+- No new defect is established by these frames: every death and return
+  played on all three installs as on the PC, and the two the owner named
+  are what the fixes (DIV-0142 / DIV-0159 for the Amalgam, DIV-0125's
+  amendment for the D.Zombie's kind 0x51) describe. Nothing here is a
+  known-defects.md entry.
+- The D.Zombie's departure circle (7.5): the owner's eye on `dz_fx.png`
+  against their PlayStation frames, if the report was about the picture
+  *inside* the circle rather than its shape.
+- spell-sweep.md 11.4: the three slots of 7.6.
+- `--goto` staging leaves area actors hidden until the scene shows them
+  (7.1.2); each new `goto`-staged fight wants its actors' `+0` read off the
+  route's peeks (`s*_flags_before`) and poked.
+- `recipes/abc-known.toml`: `psp-area-art` keys on mode 2; the PSP's own
+  palettes and pages show in battle too (fights 24 and 54, 7.7). A mode-5
+  twin of the rule is a one-line call for whoever owns the file.
+- The fight mode leaves the boss's AI rows live (7.8): forced casts on a
+  boss with AI rows want `--pre-poke` of its rows; an `--ai-off` option on
+  the slot would make that one switch.
+
+### 7.10 Not reached
+
+- **Fight 35** (Gaist; Corona): the coordinator's note - no type-7 actor, skipped.
+- **Chimera's kill** (fight 50): the cast of Paralyzer wipes out the donor's
+  one-member party; the kill runs only without the cast.
+- The post-fight scenes of staged fights (7.1.3) - the route's own run is
+  the reference for those (done for the D.Zombie).
+- Fight 7's own rounds: the set-up's script ends the fight after one
+  exchange, so it is played `--to-end` without a kill.
+
+### 7.11 The recipe for one fight
+
+```
+python tools/spell_sweep.py run --route tools/recipes/minecartToZombieDragon.txt --fight 32 --cut 5230 \
+    --enemies 3 --play 3 --kill --after 1200 --after-confirm \
+    --root <root> --launcher <ini-less launcher dir>\bof3x-launcher.exe --game <the game folder> \
+    --lang en-US --speed 4 --env BOF3X_OPT=none --env BOF3X_LAYERING=0
+python tools/spell_sweep.py run --route tools/recipes/ropeAndAmalgam.txt --fight 12 --cut 300 --field-cut 300 \
+    --goto 28:0x270000:0x568000:3 --pre-poke "0x7DF3A0 u8 1" --camera 0x190000:0x5B0000 --place 0x1C0000:0x5B0000 \
+    --enemies 1 --play 3 --kill ...
+python tools/spell_sweep.py run --route R --fight N --reference --cut C --watch-from F --every-from A --every-to B ...
+python tools/spell_sweep.py fightlog <root>\bof3x_<tag>.log --fight N
+```
+
+The cut: the frame three before the route's `fight` watch first changes
+(a `--reference` run gives it). A disc-only install as spell-sweep.md 10:
+`--game`, `BOF3X_EXEIMAGE` and `BOF3X_CACHE` naming its cache,
+`BOF3X_RECIPE_SAVES` the main checkout's saves.
