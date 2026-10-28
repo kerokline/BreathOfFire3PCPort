@@ -33,7 +33,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -105,7 +104,7 @@ std::int32_t PtrValue(const void* p) { return static_cast<std::int32_t>(static_c
 unsigned char* Record(const Pool& p, unsigned index) { return Mem(p.pool + index * kSparkleStride); }
 unsigned char* Cur(const Pool& p) { return Pointer(p.current); }
 unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
-unsigned char* Scr(unsigned k) { return Mem(kScratch + k); }
+unsigned char* Scr(unsigned k) { return Mem(::bof3::Img(kScratch.v) + k); }
 short S16(const unsigned char* a) { return static_cast<short>(Word(a)); }
 
 // `imul` then `sar 0xC`: a 32-bit product that wraps, shifted arithmetically.

@@ -35,7 +35,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -99,10 +98,10 @@ unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
@@ -620,7 +619,7 @@ S11_EXPORT void __cdecl Tornado_Start(void) {
     SpawnRing(4, 1, 0x100, 0);
     for (unsigned k = 0; k < 16; ++k) Gfx_ClutStrip[0x1A00 + k] = static_cast<unsigned short>(Gfx_ClutStripSource[0x1A00 + k] | 0x8000);
     Gfx_ClutStrip[0x1A00] = Gfx_ClutStripSource[0x1A00];
-    Mem(kFlagsB)[0] = static_cast<unsigned char>(Mem(kFlagsB)[0] | 2);
+    Mem(::bof3::Img(kFlagsB.v))[0] = static_cast<unsigned char>(Mem(::bof3::Img(kFlagsB.v))[0] | 2);
     Gfx_ClutStripDirty = 1;
     Sc()[8] = Pointer(::bof3::Img(MagicS23_ActorSprite_addr))[8];
     rv::Current<records::BattleTask>()->step_x = 0x40000;

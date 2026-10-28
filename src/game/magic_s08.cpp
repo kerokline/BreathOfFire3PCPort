@@ -35,7 +35,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -79,10 +78,10 @@ unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char* Source() { return Pointer(::bof3::Img(BattleOdds_ActorObject_addr)); }
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
@@ -614,7 +613,7 @@ S08_EXPORT void __cdecl CounterMark_Place(void) {
     unsigned row;
     if (member[0x134] & 2) {
         table = ::bof3::Img(CounterMark_FormOffsets_addr);
-        row = Mem(kFormBytes + Mem(::bof3::Img(BattlePhases_B89_addr))[0])[0];
+        row = Mem(::bof3::Img(kFormBytes.v) + Mem(::bof3::Img(BattlePhases_B89_addr))[0])[0];
     } else {
         table = ::bof3::Img(CounterMark_MemberOffsets_addr);
         row = member[0x89];
@@ -854,7 +853,7 @@ S08_EXPORT void __cdecl Ward_Fade(void) {
     }
     MH_CALL(Tint_Release)(s[0xA]);
     MH_CALL(BattleActor_Flash)(TargetByte());
-    if (Word(Mem(kAbility)) == 0x2B) {
+    if (Word(Mem(::bof3::Img(kAbility.v))) == 0x2B) {
         const unsigned char took = MH_CALL(MagicFx_ApplyBuff)(1, TargetByte());
         const unsigned slot = NewTask(0x48);
         unsigned char* const self = Sc();
@@ -999,7 +998,7 @@ S08_EXPORT void __cdecl WardMote_Draw(void) {
     SetSW(0, s[9] * 8u);
     SetSW(2, s[9] * 12u);
     unsigned last;
-    if (Word(Mem(kAbility)) == 0x2B) {
+    if (Word(Mem(::bof3::Img(kAbility.v))) == 0x2B) {
         std::uint32_t r = RandCall();
         SetSW(6, ((r & 7) + 4) * Sc()[0xA]);
         r = RandCall();

@@ -40,7 +40,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -93,12 +92,12 @@ unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
-void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
+std::int32_t SD(unsigned k) { return Long(Mem(::bof3::Img(kS.v) + k)); }
+void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(::bof3::Img(kS.v) + k), static_cast<std::int32_t>(v)); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
@@ -290,11 +289,11 @@ S09_EXPORT void __cdecl BoneDartChild_Task(void) {
 // call through `steps` (four entries) by +2; the screen update while +0 and
 // +2 are set.
 static void BoneDartChildRun(const std::uint32_t* steps, const char* who) {
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect.v)));
     Dispatch(steps, 4, Sc()[2], who);
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x4A99C0: the dart, through BoneDartShaft_Steps (the last
@@ -1204,7 +1203,7 @@ S09_EXPORT void __cdecl PollenMote_Fade(void) {
 namespace {
 
 // The ability word: 0x32 (Pollen read one id down) or another (Venom Breath).
-bool PollenShades() { return Word(Mem(kAbilityId)) == 0x32; }
+bool PollenShades() { return Word(Mem(::bof3::Img(kAbilityId.v))) == 0x32; }
 
 // A screen-space point at radius dword 0x903850 + `r` of angle `a` from the
 // task's screen point, as floats: the radius and the point read after the

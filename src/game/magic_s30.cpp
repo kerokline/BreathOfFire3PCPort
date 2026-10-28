@@ -32,7 +32,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -80,10 +79,10 @@ unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char* Cur() { return Pointer(::bof3::Img(KaiserMote_Current_addr)); }
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
@@ -554,13 +553,13 @@ S30_EXPORT void __cdecl Kaiser_ReloadParty(void) {
         if (m[0x89] == 4 && (m[0x134] & 1) != 0) found = true;
     }
     if (found) {
-        const auto bit = [] { return (Mem(kFacing)[0] & 2) != 0; };
+        const auto bit = [] { return (Mem(::bof3::Img(kFacing.v))[0] & 2) != 0; };
         if (Mem(::bof3::Img(AreaW0b_PartySet_addr))[0] == 7) MH_CALL(LoadDatFile)(bit() ? 0x126 : 0x122);
         if (Mem(::bof3::Img(AreaW0b_PartySet_addr))[0] == 0xD) MH_CALL(LoadDatFile)(bit() ? 0x127 : 0x123);
         if (Mem(::bof3::Img(AreaW0b_PartySet_addr))[0] == 0xE) MH_CALL(LoadDatFile)(bit() ? 0x128 : 0x124);
         if (Mem(::bof3::Img(AreaW0b_PartySet_addr))[0] == 0xF) MH_CALL(LoadDatFile)(bit() ? 0x129 : 0x125);
     } else {
-        const unsigned mode = (Mem(kFacing)[0] & 2) != 0 ? 2 : 1;
+        const unsigned mode = (Mem(::bof3::Img(kFacing.v))[0] & 2) != 0 ? 2 : 1;
         MH_CALL(PartySet_Select)(Mem(::bof3::Img(AreaW0b_PartySet_addr))[0] & 0x7Fu, mode);
     }
     Inc(Sc()[1]);
@@ -571,14 +570,14 @@ S30_EXPORT void __cdecl Kaiser_ReloadParty(void) {
 // both indices unchecked; +1 on.
 S30_EXPORT void __cdecl Kaiser_LoadSetFile(void) {
     if (MH_CALL(File_LoadDone)() == 0) return;
-    const unsigned half = (Mem(kFacing)[0] & 2) != 0 ? 4 : 0;
+    const unsigned half = (Mem(::bof3::Img(kFacing.v))[0] & 2) != 0 ? 4 : 0;
     const unsigned set = Mem(::bof3::Img(AreaW0b_PartySet_addr))[0];
     const unsigned form = Mem(::bof3::Img(BattlePhases_B89_addr))[0];
-    const std::uint32_t table = static_cast<std::uint32_t>(Long(Mem(kSetFiles + form * 8 + half)));
+    const std::uint32_t table = static_cast<std::uint32_t>(Long(Mem(::bof3::Img(kSetFiles.v) + form * 8 + half)));
     // The original reads through the entry unchecked; a null one faults.
     if (table == 0)
         bof3::Fatal("Kaiser_LoadSetFile: 0x904B89 is %u, whose file table (0x%X) is null", form,
-                    (unsigned)(kSetFiles + form * 8 + half).v);
+                    (unsigned)(kSetFiles.v + form * 8 + half));
     MH_CALL(LoadDatFile)(Word(Mem(table + set * 2)));
     Inc(Sc()[1]);
 }
@@ -652,7 +651,7 @@ namespace {
 
 // The facing test the sprite's phases share: 0x904AAC neither 0 nor 3.
 bool FacingAcross() {
-    const unsigned f = Mem(kFacing)[0];
+    const unsigned f = Mem(::bof3::Img(kFacing.v))[0];
     return f != 0 && f != 3;
 }
 // One step of the sprite's glide: the velocity +0xC / +0x10 by +0x18 / +0x1C,

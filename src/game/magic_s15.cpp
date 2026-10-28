@@ -37,7 +37,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -88,12 +87,12 @@ unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(::bof3::Img(at::kActor)))) & 0xFF; }
 unsigned TargetIndex() { return static_cast<unsigned>(Long(Mem(::bof3::Img(at::kTarget)))) & 0xFF; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
-void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
+std::int32_t SD(unsigned k) { return Long(Mem(::bof3::Img(kS.v) + k)); }
+void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(::bof3::Img(kS.v) + k), static_cast<std::int32_t>(v)); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
@@ -1156,9 +1155,9 @@ S15_EXPORT void __cdecl InfluenceMark_Start(void) {
     unsigned lift;
     if (index < 3) {
         const unsigned char* const r = PartyRecord(index);
-        lift = Mem(kPartyLift + 2u * r[0x89] + (r[8] <= 1 ? 0u : 1u))[0];
+        lift = Mem(::bof3::Img(kPartyLift.v) + 2u * r[0x89] + (r[8] <= 1 ? 0u : 1u))[0];
     } else {
-        lift = Mem(kEnemyLift + EnemyRecord(index)[0xF0] * kEnemyLiftStride)[0];
+        lift = Mem(::bof3::Img(kEnemyLift.v) + EnemyRecord(index)[0xF0] * kEnemyLiftStride)[0];
     }
     rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y) - lift);
     Sc()[9] = 0;

@@ -34,7 +34,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -343,7 +342,7 @@ S02_EXPORT void __cdecl SuperCombo_PickButton(void) {
     unsigned char* const s = Sc();
     const unsigned char count = s[0xA];
     if (count < 0x10) {
-        s[9] = Mem(kButtonTimes)[count];
+        s[9] = Mem(::bof3::Img(kButtonTimes.v))[count];
         Inc(Sc()[1]);
         return;
     }
@@ -362,7 +361,7 @@ S02_EXPORT void __cdecl SuperCombo_ReadButton(void) {
     const std::uint16_t pressed = Input_Pressed;
     if ((pressed & 0xF0) != 0) {
         unsigned char* const s = Sc();
-        const std::uint16_t wanted = Mem(kButtons)[s[0xB]];
+        const std::uint16_t wanted = Mem(::bof3::Img(kButtons.v))[s[0xB]];
         s[9] = 6;
         if (pressed == wanted) {
             Inc(s[0xA]);
@@ -534,7 +533,7 @@ S02_EXPORT void __cdecl SuperComboImage_Start(void) {
     Sc()[0x5F] = shade();
     Sc()[0x5E] = shade();
     unsigned char* const s = Sc();
-    const unsigned char* const tint = Mem(kImageTints + 3u * s[0xB]);
+    const unsigned char* const tint = Mem(::bof3::Img(kImageTints.v) + 3u * s[0xB]);
     MH_CALL(Sprite_SetTint)(s, tint[0], tint[1], tint[2], 1);
     Inc(Sc()[2]);
 }
@@ -581,13 +580,13 @@ S02_EXPORT void __cdecl SuperComboHit_Task(void) {
 // queued; the battle's table (0x8B3580) back.
 S02_EXPORT void __cdecl SuperComboHit_Run(void) {
     static constexpr std::uint32_t kSteps[2] = {bof3::addr::SuperComboHit_Start, bof3::addr::SuperComboHit_Play};
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetHit)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetHit.v)));
     const unsigned phase = Sc()[2];
     if (phase >= 2) PastTable("SuperComboHit_Run", phase, 2);
     magic_harness::Phase(kSteps[phase])();
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_QueueOverlay)();
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x49B0F0: +9 down; at 0 the entry placed at the source sprite
@@ -609,7 +608,7 @@ S02_EXPORT void __cdecl SuperComboHit_Start(void) {
     rv::Store<unsigned>(rv::As<records::BattleTask>(s)->column, 0);
     s[0x2B] = 0;
     s[0x28] = 0;
-    s[0x27] = static_cast<unsigned char>(Mem(kHitAnims)[s[0xB]] - 0x50);
+    s[0x27] = static_cast<unsigned char>(Mem(::bof3::Img(kHitAnims.v))[s[0xB]] - 0x50);
     s[0x2A] = (s[4] & 1) != 0 ? 1 : 0;
     MH_CALL(Sprite_SetAnimation)(Sc()[0xB]);
     Inc(Sc()[2]);
@@ -696,14 +695,14 @@ S02_EXPORT void __cdecl SuperCombo_SpawnHits(void) {
 S02_EXPORT void __cdecl SuperCombo_DrawText(unsigned which) {
     DrawModeCommit(0x15, 2);
     const unsigned k = which & 0xFF;
-    const unsigned length = Mem(kTextLengths)[k];
+    const unsigned length = Mem(::bof3::Img(kTextLengths.v))[k];
     const unsigned char* const s = Sc();
     std::uint16_t x = static_cast<std::uint16_t>(static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x) - 6 * length);
     const short y = S16(s + 0x30);
-    if (Pointer(kTexts + 4 * k)[0] == 0) return;
+    if (Pointer(::bof3::Img(kTexts.v) + 4 * k)[0] == 0) return;
     unsigned char i = 0;
     do {
-        const unsigned char c = Pointer(kTexts + 4 * k)[i];
+        const unsigned char c = Pointer(::bof3::Img(kTexts.v) + 4 * k)[i];
         if (c == 0xFF) {
             x = static_cast<std::uint16_t>(x - 6);
         } else {
@@ -718,7 +717,7 @@ S02_EXPORT void __cdecl SuperCombo_DrawText(unsigned which) {
         }
         i = static_cast<unsigned char>(i + 1);
         x = static_cast<std::uint16_t>(x + 0xC);
-    } while (Pointer(kTexts + 4 * k)[i] != 0);
+    } while (Pointer(::bof3::Img(kTexts.v) + 4 * k)[i] != 0);
 }
 
 // original 0x49B5F0: a draw-mode packet, then button `button` (u8) as a 12 x 12
@@ -734,7 +733,7 @@ S02_EXPORT void __cdecl SuperCombo_DrawButton(unsigned button) {
     Quad12(p, x, y);
     const unsigned b = button & 0xFF;
     rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 0, 0x3C0, 0) & 0xFFFF);
-    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(Mem(kButtonCluts)[b], 0x1E0) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(Mem(::bof3::Img(kButtonCluts.v))[b], 0x1E0) & 0xFFFF);
     GlyphUv(p, (b + 0xF) * 12, (b + 0x10) * 12, 0x30, 0x3C);
     MH_CALL(Gfx_CommitPrim)(2, 0x48);
 }
@@ -772,7 +771,7 @@ S02_EXPORT void __cdecl SuperCombo_DrawCount(unsigned count) {
 S02_EXPORT void __cdecl SuperCombo_DrawBox(unsigned which) {
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x55, 0);
     MH_CALL(Gfx_CommitPrim)(2, 0xC);
-    const unsigned char* const box = Mem(kBoxes + 8 * (which & 0xFF));
+    const unsigned char* const box = Mem(::bof3::Img(kBoxes.v) + 8 * (which & 0xFF));
     for (int grow : {4, 6}) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetTile)(p);
@@ -856,7 +855,7 @@ S02_EXPORT void __cdecl ElemStrike_Start(void) {
         Inc(s[0xB]);
     }
     Owner()[0] |= 0x40;
-    Mem(kFxBits)[0] |= 0x20;
+    Mem(::bof3::Img(kFxBits.v))[0] |= 0x20;
     for (unsigned k = 0x1A00; k < 0x1B00; ++k) Gfx_ClutStrip[k] = Gfx_ClutStripSource[k];
     Gfx_ClutStripDirty = 1;
 }
@@ -871,7 +870,7 @@ S02_EXPORT void __cdecl ElemStrike_Tint(void) {
     unsigned char* const record = TargetRecord(static_cast<unsigned>(Long(Mem(::bof3::Img(at::kTarget)))) & 0xFF);
     for (unsigned c = 0; c < 3; ++c) {
         unsigned char* const s = Sc();
-        s[0x5D + c] = Mem(kStrikeTints + 3u * s[4] + c)[0];
+        s[0x5D + c] = Mem(::bof3::Img(kStrikeTints.v) + 3u * s[4] + c)[0];
     }
     MH_CALL(Sprite_ReleaseTint)(record);
     const unsigned char* const s = Sc();
@@ -881,7 +880,7 @@ S02_EXPORT void __cdecl ElemStrike_Tint(void) {
     Owner()[0] &= 0xBF;
     MH_CALL(Battle_SetTargetFlags)(TargetByte(), 0x20);
     MH_CALL(Sound_PlayById)(0x100);
-    const std::uint16_t ability = Word(Mem(kAbility));
+    const std::uint16_t ability = Word(Mem(::bof3::Img(kAbility.v)));
     if (ability > 0x84 && ability <= 0x88) MH_CALL(Sound_PlayById)(0x101);
     Inc(Sc()[1]);
 }
@@ -891,7 +890,7 @@ S02_EXPORT void __cdecl ElemStrike_Tint(void) {
 S02_EXPORT void __cdecl ElemStrike_Hit(void) {
     const unsigned char* const s = Sc();
     if (s[0xB] != 0) return;
-    const std::uint16_t sound = Word(Mem(kStrikeSounds + 2u * s[4]));
+    const std::uint16_t sound = Word(Mem(::bof3::Img(kStrikeSounds.v) + 2u * s[4]));
     if (sound != 0) MH_CALL(Sound_PlayById)(sound);
     MH_CALL(Battle_SetTargetFlag40)(TargetByte());
     Sc()[9] = 0;
@@ -932,7 +931,7 @@ S02_EXPORT void __cdecl ElemStrike_End(void) {
 S02_EXPORT void __cdecl ElemStrike_Kind(void) {
     static constexpr unsigned char kCases[12][2] = {{0, 0}, {1, 1}, {0, 2},   {1, 3},   {0, 4}, {1, 8},
                                                     {1, 9}, {1, 0xA}, {1, 0xB}, {1, 5}, {0, 6}, {0, 7}};
-    const std::uint32_t index = (static_cast<std::uint32_t>(Long(Mem(kAbility))) & 0xFFFF) - 4u;
+    const std::uint32_t index = (static_cast<std::uint32_t>(Long(Mem(::bof3::Img(kAbility.v)))) & 0xFFFF) - 4u;
     const unsigned c = KindCase(index);   // past 0x98 the last case, as the original's bound
     if (c >= 12) PastTable("ElemStrike_Kind", c, 12);
     Sc()[3] = kCases[c][0];
@@ -965,7 +964,7 @@ S02_EXPORT void __cdecl ElemStrikeCopy_Run(void) {
 S02_EXPORT void __cdecl ElemStrikeCopy_Play(void) {
     Tick();
     if (!CountDown(9)) return;
-    MH_CALL(BattleActor_PlaySound)(Word(Mem(kAbility)) >= 0x85 ? 2 : 0, 4);
+    MH_CALL(BattleActor_PlaySound)(Word(Mem(::bof3::Img(kAbility.v))) >= 0x85 ? 2 : 0, 4);
     Inc(Sc()[2]);
 }
 
@@ -977,10 +976,10 @@ S02_EXPORT void __cdecl ElemStrikeFx_Run(void) {
                                                 bof3::addr::ElemStrikeFx_Play};
     DrawModeCommit(0x15, 3);
     const unsigned phase = Sc()[2];
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect.v)));
     if (phase >= 3) PastTable("ElemStrikeFx_Run", phase, 3);
     magic_harness::Phase(kSteps[phase])();
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x49C280: at the source sprite, 0x800000 higher; the sprite bytes
@@ -1012,7 +1011,7 @@ S02_EXPORT void __cdecl ElemStrikeFx_Start(void) {
     rv::Store<unsigned>(rv::As<records::BattleTask>(s)->column, 0);
     s[0x2B] = 1;
     MH_CALL(Sprite_SetAnimation)(0);
-    Sc()[9] = Mem(kFxDelays)[Sc()[4]];
+    Sc()[9] = Mem(::bof3::Img(kFxDelays.v))[Sc()[4]];
     Inc(Sc()[2]);
 }
 

@@ -30,7 +30,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -73,11 +72,11 @@ unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(::bof3::Img(at::kActor)))) & 0xFF; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
+std::int32_t SD(unsigned k) { return Long(Mem(::bof3::Img(kS.v) + k)); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
@@ -1032,7 +1031,7 @@ S36_EXPORT void __cdecl IntimidateBurst_Run(void) {
     static constexpr std::uint32_t kSteps[4] = {bof3::addr::IntimidateBurst_Start, bof3::addr::IntimidateBurst_Rise,
                                                 bof3::addr::IntimidateBurst_Play, bof3::addr::IntimidateBurst_Fade};
     const unsigned phase = Sc()[2];
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect.v)));
     if (phase >= 4) PastTable("IntimidateBurst_Run", phase, 4);
     magic_harness::Phase(kSteps[phase])();
     if (Sc()[0] != 0) {
@@ -1040,7 +1039,7 @@ S36_EXPORT void __cdecl IntimidateBurst_Run(void) {
         Call0(bof3::addr::IntimidateBurst_DrawDisc);
         if (Sc()[2] < 3) MH_CALL(Sprite_UpdateScreen)();
     }
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x4F47B0: the sprite set up (+0x25 0x1D, +0x26 0, +0x27 0xA0, +0x28

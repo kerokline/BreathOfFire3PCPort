@@ -26,7 +26,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -84,8 +83,8 @@ std::int32_t AddL(std::int32_t a, std::uint32_t b) { return static_cast<std::int
 // scratch Prim_VertexScratch + k: three SVECTORs at +0, +8, +0x10, +0x18.
 constexpr ::bof3::image::Va kDs{SharedScratch_addr};
 // kVx: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch
-short Ds(unsigned k) { return static_cast<short>(Word(Mem(kDs + k))); }
-void SetDs(unsigned k, unsigned v) { SetWord(Mem(kDs + k), v); }
+short Ds(unsigned k) { return static_cast<short>(Word(Mem(::bof3::Img(kDs.v) + k))); }
+void SetDs(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kDs.v) + k), v); }
 short Vx(unsigned k) { return static_cast<short>(Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k))); }
 void SetVx(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v); }
 const short* VxP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
@@ -643,8 +642,8 @@ MS18_EXPORT void __cdecl Buff_Fade(void) {
 // 0x52 and answers 0, 0x211 becomes 0x54 and 1, 0x14 and 0x117 become 0x55
 // and 2, any other 3. Only the low word of 0x904B80 is read.
 MS18_EXPORT unsigned char __cdecl Buff_Kind(void) {
-    const unsigned id = Word(Mem(kActionId));
-    if (Mem(kCommandKind)[0] == 4) {
+    const unsigned id = Word(Mem(::bof3::Img(kActionId.v)));
+    if (Mem(::bof3::Img(kCommandKind.v))[0] == 4) {
         switch (id) {
         case 0x52: case 0xB8: return 0;
         case 0x54: case 0xBA: return 1;
@@ -653,9 +652,9 @@ MS18_EXPORT unsigned char __cdecl Buff_Kind(void) {
         }
     }
     switch (id) {
-    case 0x10B: SetWord(Mem(kActionId), 0x52); return 0;
-    case 0x211: SetWord(Mem(kActionId), 0x54); return 1;
-    case 0x14: case 0x117: SetWord(Mem(kActionId), 0x55); return 2;
+    case 0x10B: SetWord(Mem(::bof3::Img(kActionId.v)), 0x52); return 0;
+    case 0x211: SetWord(Mem(::bof3::Img(kActionId.v)), 0x54); return 1;
+    case 0x14: case 0x117: SetWord(Mem(::bof3::Img(kActionId.v)), 0x55); return 2;
     default: return 3;
     }
 }

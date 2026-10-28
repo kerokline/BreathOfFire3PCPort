@@ -43,7 +43,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -74,7 +73,7 @@ using move_script::Word;
 constexpr ::bof3::image::Va kScratch{SharedScratch_addr};
 unsigned char* V(unsigned k) { return Mem(::bof3::Img(Prim_VertexScratch_addr) + k); }
 const short* VP(unsigned k) { return reinterpret_cast<const short*>(V(k)); }
-unsigned char* S(unsigned k) { return Mem(kScratch + k); }
+unsigned char* S(unsigned k) { return Mem(::bof3::Img(kScratch.v) + k); }
 std::int32_t SL(unsigned k) { return Long(S(k)); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 
@@ -1038,11 +1037,11 @@ S25_EXPORT void __cdecl SpellDepress_Start(void) {
     const std::uint32_t corners = ::bof3::Img(bof3::addr::SpellDepress_Corners);
     unsigned corner;
     if (Mem(::bof3::Img(at::kTarget))[0] & 0x40) {
-        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Mem(corners + (Mem(kSideCorner)[0]) * 8)));
-        corner = Mem(kSideCorner)[0];
+        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Mem(corners + (Mem(::bof3::Img(kSideCorner.v))[0]) * 8)));
+        corner = Mem(::bof3::Img(kSideCorner.v))[0];
     } else {
-        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Mem(corners + (Mem(kSideCorner)[0] ^ 2u) * 8)));
-        corner = Mem(kSideCorner)[0] ^ 2u;
+        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Mem(corners + (Mem(::bof3::Img(kSideCorner.v))[0] ^ 2u) * 8)));
+        corner = Mem(::bof3::Img(kSideCorner.v))[0] ^ 2u;
     }
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(Mem(corners + 4 + corner * 8)));
     rv::Store<std::int32_t>(rv::Current<records::BattleTask>()->angle[0], 0);

@@ -29,7 +29,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -484,13 +483,11 @@ unsigned char Pulse(int angle) {
     return static_cast<unsigned char>(t * Sc()[9]);
 }
 short AngleWord(std::uint32_t cell) { return static_cast<short>(Word(Mem(cell))); }
-short AngleWord(::bof3::image::Va cell) { return AngleWord(::bof3::Img(cell)); }
 unsigned SetAngle(std::uint32_t cell, unsigned byte, unsigned add) {
     const unsigned a = ((byte + add) & 0x3F) << 6;
     SetWord(Mem(cell), a);
     return a;
 }
-unsigned SetAngle(::bof3::image::Va cell, unsigned byte, unsigned add) { return SetAngle(::bof3::Img(cell), byte, add); }
 
 // The quad's corners (0, 0)..(319, 239); under DIV-0041 x runs from
 // Widescreen_FillX() to 319 + the columns (the PSP's -32..351), 0..319 while
@@ -525,38 +522,38 @@ C3_EXPORT void __cdecl Magic111Wash_Draw(void) {
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     FullScreen(p, 0x18, 0x1C, 0x28, 0x2C, 0x38, 0x3C);
 
-    unsigned a = SetAngle(kAngleA, Sc()[0xC], 0);
-    SetAngle(kAngleB, Sc()[0x10], 0);
+    unsigned a = SetAngle(::bof3::Img(kAngleA.v), Sc()[0xC], 0);
+    SetAngle(::bof3::Img(kAngleB.v), Sc()[0x10], 0);
     unsigned char c0 = Pulse(static_cast<short>(a));
-    unsigned char c1 = Pulse(AngleWord(kAngleB));
-    unsigned char c2 = Pulse(AngleWord(kAngleB));
+    unsigned char c1 = Pulse(AngleWord(::bof3::Img(kAngleB.v)));
+    unsigned char c2 = Pulse(AngleWord(::bof3::Img(kAngleB.v)));
     p[4] = c0;
     p[5] = c1;
     p[6] = c2;
 
-    SetAngle(kAngleA, Sc()[0xC], 0xF);
-    unsigned b = SetAngle(kAngleB, Sc()[0x10], 0xF);
+    SetAngle(::bof3::Img(kAngleA.v), Sc()[0xC], 0xF);
+    unsigned b = SetAngle(::bof3::Img(kAngleB.v), Sc()[0x10], 0xF);
     c0 = Pulse(static_cast<short>(b));
-    c1 = Pulse(AngleWord(kAngleA));
-    c2 = Pulse(AngleWord(kAngleB));
+    c1 = Pulse(AngleWord(::bof3::Img(kAngleA.v)));
+    c2 = Pulse(AngleWord(::bof3::Img(kAngleB.v)));
     p[0x14] = c0;
     p[0x15] = c1;
     p[0x16] = c2;
 
-    SetAngle(kAngleA, Sc()[0xC], 0x1F);
-    b = SetAngle(kAngleB, Sc()[0x10], 0x1F);
+    SetAngle(::bof3::Img(kAngleA.v), Sc()[0xC], 0x1F);
+    b = SetAngle(::bof3::Img(kAngleB.v), Sc()[0x10], 0x1F);
     c0 = Pulse(static_cast<short>(b));
-    c1 = Pulse(AngleWord(kAngleB));
-    c2 = Pulse(AngleWord(kAngleA));
+    c1 = Pulse(AngleWord(::bof3::Img(kAngleB.v)));
+    c2 = Pulse(AngleWord(::bof3::Img(kAngleA.v)));
     p[0x24] = c0;
     p[0x25] = c1;
     p[0x26] = c2;
 
-    a = SetAngle(kAngleA, Sc()[0xC], 0x100 - 0x11);
-    SetAngle(kAngleB, Sc()[0x10], 0x100 - 0x11);
+    a = SetAngle(::bof3::Img(kAngleA.v), Sc()[0xC], 0x100 - 0x11);
+    SetAngle(::bof3::Img(kAngleB.v), Sc()[0x10], 0x100 - 0x11);
     c0 = Pulse(static_cast<short>(a));
-    c1 = Pulse(AngleWord(kAngleA));
-    c2 = Pulse(AngleWord(kAngleB));
+    c1 = Pulse(AngleWord(::bof3::Img(kAngleA.v)));
+    c2 = Pulse(AngleWord(::bof3::Img(kAngleB.v)));
     p[0x34] = c0;
     p[0x35] = c1;
     p[0x36] = c2;

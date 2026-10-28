@@ -30,7 +30,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -71,12 +70,11 @@ constexpr unsigned kPoolSlots = 32;
 // four SVECTORs 8 bytes apart, A0 / A8 / B0 / B8.
 constexpr ::bof3::image::Va kScratch{SharedScratch_addr};
 // kVertex: now Prim_VertexScratch (symbols.toml).
-unsigned char* Scr(unsigned off) { return Mem(kScratch + off); }
+unsigned char* Scr(unsigned off) { return Mem(::bof3::Img(kScratch.v) + off); }
 unsigned char* Vtx(unsigned off) { return Mem(::bof3::Img(Prim_VertexScratch_addr) + off); }
 const short* VtxP(unsigned off) { return reinterpret_cast<const short*>(Vtx(off)); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 std::int32_t L(std::uint32_t address) { return Long(Mem(address)); }
-std::int32_t L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
 
 // A CLUT strip's two copies: the live one at 0x812980 and the buffer 0x4000
 // below it (docs/magic_fx_reached.md section 4, FxDiscFan_Start's).
@@ -780,27 +778,27 @@ MS21_EXPORT void __cdecl FrostRing_DrawShards(void) {
             SetLong(Scr(4), Mul(sc[9], n) << 2);
             SetLong(Scr(8), -5 * Mul(j + 1, sc[9]));
         }
-        SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(0), L(kScratch)) >> 12));
-        SetWord(Vtx(0x12), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), L(kScratch)) >> 12));
+        SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(0), L(::bof3::Img(kScratch.v))) >> 12));
+        SetWord(Vtx(0x12), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), L(::bof3::Img(kScratch.v))) >> 12));
         SetWord(Vtx(0x14), 0);
         int a1 = 0x100;
         for (int a2 = 0x200; a2 < 0x1200; a2 += 0x200, a1 += 0x200) {
-            SetWord(Vtx(0), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a1), L(kScratch + 4)) >> 12));
+            SetWord(Vtx(0), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a1), L(::bof3::Img(kScratch.v) + 4)) >> 12));
             const int s1 = MH_CALL(Math_Sin)(a1);
             const std::uint16_t h = Word(Scr(8)), px = Word(Vtx(0x10));
-            SetWord(Vtx(2), static_cast<unsigned>(Mul(s1, L(kScratch + 4)) >> 12));
+            SetWord(Vtx(2), static_cast<unsigned>(Mul(s1, L(::bof3::Img(kScratch.v) + 4)) >> 12));
             const std::uint16_t pz = Word(Vtx(0x12));
             SetWord(Vtx(4), h);
             SetWord(Vtx(8), px);
             SetWord(Vtx(0xA), pz);
             SetWord(Vtx(0xC), 0);
-            SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a2), L(kScratch)) >> 12));
+            SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a2), L(::bof3::Img(kScratch.v))) >> 12));
             const int s2 = MH_CALL(Math_Sin)(a2);
             const int ox = S16(Vtx(0x10));
             const unsigned char* const s = Sprite_Current;
             const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             SetWord(Vtx(0x14), 0);
-            const std::int32_t oz = Mul(s2, L(kScratch)) >> 12;
+            const std::int32_t oz = Mul(s2, L(::bof3::Img(kScratch.v))) >> 12;
             SetWord(Vtx(0x12), static_cast<unsigned>(oz));
             const unsigned long x = static_cast<unsigned long>((static_cast<std::uint32_t>(ox) << 9) +
                                                                static_cast<std::uint32_t>(ts->x));
@@ -815,7 +813,7 @@ MS21_EXPORT void __cdecl FrostRing_DrawShards(void) {
             if (s3[1] == 3) {
                 SetLong(Scr(0xC), r16);
                 const int less = -(r16 / 16) * (s3[9] >> 1);
-                const std::int32_t v = L(kScratch + 0xC) + less;
+                const std::int32_t v = L(::bof3::Img(kScratch.v) + 0xC) + less;
                 SetLong(Scr(0xC), v);
                 if (v < 0) SetLong(Scr(0xC), 1);
                 p[4] = 1;
@@ -903,14 +901,14 @@ MS21_EXPORT void __cdecl FrostRing_DrawDisc(void) {
         PutF(p, 8, S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x2E));
         PutF(p, 0xC, S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x30));
         int v = MH_CALL(Math_Sin)(a);
-        PutF(p, 0x18, (Mul(v, L(kScratch)) >> 12) + S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x2E));
+        PutF(p, 0x18, (Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x2E));
         v = MH_CALL(Math_Cos)(a);
         a += 0x80;
-        PutF(p, 0x1C, (Mul(v, L(kScratch)) >> 12) + S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x30));
+        PutF(p, 0x1C, (Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x30));
         v = MH_CALL(Math_Sin)(a);
-        PutF(p, 0x28, (Mul(v, L(kScratch)) >> 12) + S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x2E));
+        PutF(p, 0x28, (Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x2E));
         v = MH_CALL(Math_Cos)(a);
-        const std::int32_t y2 = (Mul(v, L(kScratch)) >> 12) + S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x30);
+        const std::int32_t y2 = (Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x30);
         p[4] = 0x20;
         p[5] = 0x20;
         p[6] = 0xC0;
@@ -1048,15 +1046,15 @@ static Spire SpireRow(int i) {
 static void SpireColumn(int i, const Spire& s, int a, unsigned idx) {
     SetLong(Scr(4), s.base0);
     SetLong(Scr(0), static_cast<signed char>(Mem(::bof3::Img(Iceblast_Jitter_addr) + idx)[0]) + s.base0);
-    SetWord(Vtx(0), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(kScratch)) >> 12));
-    SetWord(Vtx(2), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a), L(kScratch)) >> 12));
+    SetWord(Vtx(0), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(::bof3::Img(kScratch.v))) >> 12));
+    SetWord(Vtx(2), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a), L(::bof3::Img(kScratch.v))) >> 12));
     SetWord(Vtx(4), static_cast<unsigned>(s.h0 - static_cast<signed char>(Mem(::bof3::Img(Iceblast_Jitter_addr) + idx)[0])));
     SetLong(Scr(4), s.base1);
     SetLong(Scr(0), static_cast<signed char>(Mem(::bof3::Img(Iceblast_Jitter_addr) + idx + 8)[0]) + s.base1);
-    SetWord(Vtx(8), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(kScratch)) >> 12));
+    SetWord(Vtx(8), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(::bof3::Img(kScratch.v))) >> 12));
     const int c = MH_CALL(Math_Cos)(a);
     const signed char j1 = static_cast<signed char>(Mem(::bof3::Img(Iceblast_Jitter_addr) + idx + 8)[0]);
-    SetWord(Vtx(0xA), static_cast<unsigned>(Mul(c, L(kScratch)) >> 12));
+    SetWord(Vtx(0xA), static_cast<unsigned>(Mul(c, L(::bof3::Img(kScratch.v))) >> 12));
     SetWord(Vtx(0xC), static_cast<unsigned>(s.h1 - j1));
     if (i == 5) {
         SetWord(Vtx(0xA), 0);
@@ -1226,8 +1224,8 @@ MS21_EXPORT void __cdecl Iceblast_DrawSpiresInner(void) {
 // 1); each linked at the task's position.
 MS21_EXPORT void __cdecl Iceblast_DrawDisc(void) {
     SetLong(Scr(0), 0x1C0);
-    SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), L(kScratch)) >> 12));
-    SetWord(Vtx(0x12), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(0), L(kScratch)) >> 12));
+    SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), L(::bof3::Img(kScratch.v))) >> 12));
+    SetWord(Vtx(0x12), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(0), L(::bof3::Img(kScratch.v))) >> 12));
     for (int a = 0x100; a < 0x1100; a += 0x100) {
         const std::uint16_t y = Word(Vtx(0x12)), x = Word(Vtx(0x10));
         SetWord(Vtx(0), 0);
@@ -1236,10 +1234,10 @@ MS21_EXPORT void __cdecl Iceblast_DrawDisc(void) {
         SetWord(Vtx(8), x);
         SetWord(Vtx(0xA), y);
         SetWord(Vtx(0xC), 0);
-        SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(kScratch)) >> 12));
+        SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(::bof3::Img(kScratch.v))) >> 12));
         const int c = MH_CALL(Math_Cos)(a);
         unsigned char* const mode = Gfx_PacketNext;
-        SetWord(Vtx(0x12), static_cast<unsigned>(Mul(c, L(kScratch)) >> 12));
+        SetWord(Vtx(0x12), static_cast<unsigned>(Mul(c, L(::bof3::Img(kScratch.v))) >> 12));
         SetWord(Vtx(0x14), 0);
         MH_CALL(Gpu_SetDrawMode)(mode, 0, 1, 0x35, 0);
         LinkAtTask(2, 0xC);
@@ -1311,9 +1309,9 @@ MS21_EXPORT void __cdecl IceShard_Draw(void) {
         else
             SetLong(Scr(0), radius + sc[9] * 4);
         const int s = MH_CALL(Math_Sin)(a);
-        std::uint16_t px = static_cast<std::uint16_t>(Mul(s, L(kScratch)) >> 12);
+        std::uint16_t px = static_cast<std::uint16_t>(Mul(s, L(::bof3::Img(kScratch.v))) >> 12);
         const int c = MH_CALL(Math_Cos)(a);
-        std::uint16_t pz = static_cast<std::uint16_t>(Mul(c, L(kScratch)) >> 12);
+        std::uint16_t pz = static_cast<std::uint16_t>(Mul(c, L(::bof3::Img(kScratch.v))) >> 12);
         std::uint16_t py = static_cast<std::uint16_t>(lift - static_cast<signed char>(jit[0]));
         const unsigned char* const s2 = Sprite_Current;
         const records::BattleTask* const ts2 = rv::AsConst<records::BattleTask>(s2);
@@ -1333,18 +1331,18 @@ MS21_EXPORT void __cdecl IceShard_Draw(void) {
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
         SetLong(Scr(0), 0x21 - Sprite_Current[9]);
         int v = MH_CALL(Math_Sin)(((Sprite_Current[9] + 0x10) & 0x3F) << 6);
-        SetWord(Vtx(0), static_cast<unsigned>((Mul(v, L(kScratch)) >> 12) + px));
+        SetWord(Vtx(0), static_cast<unsigned>((Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + px));
         v = MH_CALL(Math_Cos)(((Sprite_Current[9] + 0x10) & 0x3F) << 6);
-        SetWord(Vtx(2), static_cast<unsigned>((Mul(v, L(kScratch)) >> 12) + pz));
+        SetWord(Vtx(2), static_cast<unsigned>((Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + pz));
         v = MH_CALL(Math_Sin)(((Sprite_Current[9] - 0x18) & 0x3F) << 6);
-        SetWord(Vtx(8), static_cast<unsigned>((Mul(v, L(kScratch)) >> 12) + px));
+        SetWord(Vtx(8), static_cast<unsigned>((Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + px));
         v = MH_CALL(Math_Cos)(((Sprite_Current[9] - 0x18) & 0x3F) << 6);
-        SetWord(Vtx(0xA), static_cast<unsigned>((Mul(v, L(kScratch)) >> 12) + pz));
+        SetWord(Vtx(0xA), static_cast<unsigned>((Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + pz));
         v = MH_CALL(Math_Sin)(((Sprite_Current[9] - 0xF) & 0x3F) << 6);
-        SetWord(Vtx(0x10), static_cast<unsigned>((Mul(v, L(kScratch)) >> 12) + px));
+        SetWord(Vtx(0x10), static_cast<unsigned>((Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + px));
         v = MH_CALL(Math_Cos)(((Sprite_Current[9] - 0xF) & 0x3F) << 6);
         unsigned char* const s3 = Sprite_Current;
-        SetWord(Vtx(0x12), static_cast<unsigned>((Mul(v, L(kScratch)) >> 12) + pz));
+        SetWord(Vtx(0x12), static_cast<unsigned>((Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + pz));
         const std::uint16_t y = static_cast<std::uint16_t>(py + s3[9] * 4u);
         SetWord(Vtx(0x14), y);
         SetWord(Vtx(0xC), y);

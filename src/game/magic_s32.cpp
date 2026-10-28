@@ -31,7 +31,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -101,9 +100,9 @@ unsigned char* PoolRecord(unsigned i) { return Mem(::bof3::Img(WallOfFire_Pool_a
 unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 int SS(unsigned k) { return static_cast<short>(SW(k)); }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
 std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
 const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
@@ -375,7 +374,7 @@ S32_EXPORT void __cdecl WallOfFire_DrawDisc(void) {
         SetVW(4, 0);
         Rtp3(p);
         MH_CALL(Gte_PrimDepths3_10B)(p);
-        const unsigned char shade = Mem(kS + 0xE)[0];
+        const unsigned char shade = Mem(::bof3::Img(kS.v) + 0xE)[0];
         p[4] = shade;
         p[5] = shade;
         p[6] = shade;
@@ -499,7 +498,7 @@ S32_EXPORT void __cdecl WallOfFireSpark_Draw(void) {
         PutFloat(p + 0x28, Add(MulSar(v, SS(0), 12), S16(Sc() + 0x2E)));
         v = Cos(a);
         PutFloat(p + 0x2C, Add(MulSar(v, SS(0), 12), S16(Sc() + 0x30)));
-        p[4] = Mem(kS + 0xE)[0];
+        p[4] = Mem(::bof3::Img(kS.v) + 0xE)[0];
         const auto fifth = static_cast<unsigned char>(SS(0xE) / 5);
         p[5] = fifth;
         p[6] = fifth;
@@ -706,7 +705,7 @@ S32_EXPORT void __cdecl EyeBeam_DrawSpiral(void) {
     for (unsigned n = 0x80; n != 0; --n) {
         x = Add(x, step);
         step += 0x40;
-        for (unsigned k = 0; k < kSpiralPoint; k += 4) SetLong(Mem(kSpiralLast + k), Long(Mem(::bof3::Img(EyeBeam_SpiralPoints_addr) + 0x34 + k)));
+        for (unsigned k = 0; k < kSpiralPoint; k += 4) SetLong(Mem(::bof3::Img(kSpiralLast.v) + k), Long(Mem(::bof3::Img(EyeBeam_SpiralPoints_addr) + 0x34 + k)));
         angle += 0x80;
         const int r = RandCall();
         SetLong(point, Add(static_cast<std::int32_t>((static_cast<std::uint32_t>(r & 0xFFF) - 0x800u) << 4), x));
@@ -716,7 +715,7 @@ S32_EXPORT void __cdecl EyeBeam_DrawSpiral(void) {
         s = Sin(static_cast<int>(a));
         SetLong(point + 8, RingH(s, S16(Mem(::bof3::Img(EyeBeam_State_addr) + 0x12))));
         MH_AT(PointFn, bof3::addr::EyeBeam_ProjectSpiralPoint)(point);
-        MH_AT(PointFn, bof3::addr::EyeBeam_DrawSpiralSegment)(Mem(kSpiralLast));
+        MH_AT(PointFn, bof3::addr::EyeBeam_DrawSpiralSegment)(Mem(::bof3::Img(kSpiralLast.v)));
     }
 }
 

@@ -30,7 +30,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -81,12 +80,12 @@ unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char* Cur() { return Pointer(::bof3::Img(CureMote_Current_addr)); }
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
-void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
+std::int32_t SD(unsigned k) { return Long(Mem(::bof3::Img(kS.v) + k)); }
+void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(::bof3::Img(kS.v) + k), static_cast<std::int32_t>(v)); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
@@ -735,7 +734,7 @@ S35_EXPORT void __cdecl Cure_Task(void) {
         unsigned char* const r = CureRecord(n);
         if ((r[0] & 1) == 0) continue;
         const std::int32_t mote_owner = Long(r + 0x28);
-        magic_harness::SetPointer(kCureCurrent, r);
+        magic_harness::SetPointer(::bof3::Img(kCureCurrent.v), r);
         SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), mote_owner);
         Call0(bof3::addr::CureMote_Task);
         SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
@@ -1145,7 +1144,7 @@ S35_EXPORT void __cdecl Benediction_Start(void) {
 S35_EXPORT void __cdecl Benediction_Spawn(void) {
     Inc(Sc()[9]);
     if (Sc()[9] != 0x10) return;
-    if ((TargetByte() & 0x80) != 0 && Mem(kPartyCount)[0] != 0) {
+    if ((TargetByte() & 0x80) != 0 && Mem(::bof3::Img(kPartyCount.v))[0] != 0) {
         unsigned char delay = 1;
         unsigned char n = 0;
         do {
@@ -1159,7 +1158,7 @@ S35_EXPORT void __cdecl Benediction_Spawn(void) {
             Inc(s[0xB]);
             AddB(delay, 0x28);
             ++n;
-        } while (n < Mem(kPartyCount)[0]);
+        } while (n < Mem(::bof3::Img(kPartyCount.v))[0]);
     }
     Inc(Sc()[1]);
 }

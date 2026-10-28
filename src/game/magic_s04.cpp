@@ -34,7 +34,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -72,11 +71,11 @@ unsigned char* Source() { return Pointer(::bof3::Img(BattleOdds_ActorObject_addr
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 unsigned char ActorByte() { return Mem(::bof3::Img(at::kActor))[0]; }
 
-std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
-void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
-short SS(unsigned k) { return static_cast<short>(Word(Mem(kS + k))); }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
+std::int32_t SD(unsigned k) { return Long(Mem(::bof3::Img(kS.v) + k)); }
+void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(::bof3::Img(kS.v) + k), static_cast<std::int32_t>(v)); }
+short SS(unsigned k) { return static_cast<short>(Word(Mem(::bof3::Img(kS.v) + k))); }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
@@ -1124,11 +1123,11 @@ S04_EXPORT void __cdecl AirRaidImage_Bounce(void) {
     if (b != 0) {
         const unsigned char d = s[0x5D];
         if (d != 0x80) {
-            s[0x5D] = static_cast<unsigned char>(d - Mem(kSteps + 2u * b)[0]);
+            s[0x5D] = static_cast<unsigned char>(d - Mem(::bof3::Img(kSteps.v) + 2u * b)[0]);
             s = Sc();
-            s[0x5E] = static_cast<unsigned char>(s[0x5E] - Mem(kSteps + 1 + 2u * s[0xB])[0]);
+            s[0x5E] = static_cast<unsigned char>(s[0x5E] - Mem(::bof3::Img(kSteps.v) + 1 + 2u * s[0xB])[0]);
             s = Sc();
-            s[0x5F] = static_cast<unsigned char>(s[0x5F] - Mem(kSteps + 1 + 2u * s[0xB])[0]);
+            s[0x5F] = static_cast<unsigned char>(s[0x5F] - Mem(::bof3::Img(kSteps.v) + 1 + 2u * s[0xB])[0]);
             s = Sc();
         }
     } else {

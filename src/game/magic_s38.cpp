@@ -38,7 +38,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -96,12 +95,12 @@ unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 unsigned char ActorByte() { return Mem(::bof3::Img(at::kActor))[0]; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
-void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
+std::int32_t SD(unsigned k) { return Long(Mem(::bof3::Img(kS.v) + k)); }
+void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(::bof3::Img(kS.v) + k), static_cast<std::int32_t>(v)); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
@@ -431,7 +430,7 @@ S38_EXPORT void __cdecl TempestGust_Launch(void) {
         unsigned char* const s = Sc();
         rv::Store(rv::As<records::BattleTask>(s)->step_y, Long(Mem(::bof3::Img(TempestGust_Angles_addr) + 4u * s[8])));
     }
-    Sc()[0xB] = Word(Mem(kAbility)) == 0xDF ? 0 : 0x10;
+    Sc()[0xB] = Word(Mem(::bof3::Img(kAbility.v))) == 0xDF ? 0 : 0x10;
     Sc()[9] = 0;
     Sc()[0xA] = 0;
     Inc(Sc()[2]);
@@ -657,7 +656,7 @@ S38_EXPORT void __cdecl Magic225Veil_Run(void) {
                                                 addr::BarrierRing_Grow, addr::Magic225Veil_WaitBuffs,
                                                 addr::Magic225Veil_End};
     const unsigned phase = Sc()[2];
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect.v)));
     Dispatch(kSteps, 5, phase, "Magic225Veil_Run");
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) {
@@ -667,7 +666,7 @@ S38_EXPORT void __cdecl Magic225Veil_Run(void) {
         MH_AT(BurstFn, addr::Magic225Veil_DrawBurst)(0x40, 0xF0, 0x6C, 2);
         MH_AT(BurstFn, addr::Magic225Veil_DrawBurst)(0x140, 0xF0, 0x5C, 3);
     }
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x4F9450: the actor's sprite (0x904B3C) and the side's live
@@ -836,11 +835,11 @@ S38_EXPORT void __cdecl Magic225Shard_Run(void) {
     static constexpr std::uint32_t kSteps[3] = {addr::Magic225Shard_Launch, addr::Magic225Shard_Fly,
                                                 addr::Magic225Shard_Fall};
     const unsigned phase = Sc()[2];
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect.v)));
     Dispatch(kSteps, 3, phase, "Magic225Shard_Run");
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x4F9AA0: +9 down; at 0 the shard starts at the acting actor's
@@ -1053,7 +1052,7 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Run(void) {
                                                 addr::MeteorStrikeRock_Shake, addr::MeteorStrikeRock_Hide,
                                                 addr::MeteorStrikeRock_End};
     const unsigned phase = Sc()[2];
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect.v)));
     Dispatch(kSteps, 5, phase, "MeteorStrikeRock_Run");
     const unsigned char* const s = Sc();
     if ((s[0] & 1) != 0 && s[2] != 0) {
@@ -1064,7 +1063,7 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Run(void) {
         Call0(addr::MeteorStrikeRock_DrawRing);
         MH_CALL(Gte_PopMatrix)();
     }
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x4FA030: the rock starts at the owner, its direction; lifted by

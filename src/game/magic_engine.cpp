@@ -35,7 +35,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -308,7 +307,7 @@ MENGINE_EXPORT void __cdecl HeadCracker_WaitCaster(void) {
 MENGINE_EXPORT void __cdecl HeadCracker_Drop(void) {
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x5D);
     unsigned char* const self = Sprite_Current;
-    magic_harness::SetPointer(kSlotOwners + (slot & 0xFF) * at::kTaskStride, self);
+    magic_harness::SetPointer(::bof3::Img(kSlotOwners.v) + (slot & 0xFF) * at::kTaskStride, self);
     Bump(self[0xA]);
     Bump(Sprite_Current[1]);
 }

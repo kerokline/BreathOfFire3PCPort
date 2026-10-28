@@ -35,7 +35,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -83,10 +82,10 @@ unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 unsigned char ActorByte() { return Mem(::bof3::Img(at::kActor))[0]; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
@@ -266,10 +265,10 @@ S10_EXPORT void __cdecl OvumChild_Task(void) {
 S10_EXPORT void __cdecl OvumChild_Run(void) {
     static constexpr std::uint32_t kSteps[3] = {addr::OvumChild_Start, addr::MainCannonBlast_Play, addr::BattleFx_FreeTask};
     const unsigned phase = Sc()[2];
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBlast)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBlast.v)));
     Dispatch(kSteps, 3, phase, "OvumChild_Run");
     if (Sc()[0] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x4ABE80: the sprite fields (+0x24..+0x2D); sound 0x102 for the
@@ -388,7 +387,7 @@ S10_EXPORT void __cdecl LavaburstChild_Run(void) {
     static constexpr std::uint32_t kSteps[5] = {addr::LavaburstChild_Launch, addr::LavaburstChild_Rise,
                                                 addr::LavaburstChild_Shake, addr::LavaburstChild_Settle,
                                                 addr::LavaburstChild_End};
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect.v)));
     Dispatch(kSteps, 5, Sc()[2], "LavaburstChild_Run");
     const unsigned char* const s = Sc();
     if ((s[0] & 1) != 0 && s[2] != 0 && s[2] < 4) {
@@ -399,7 +398,7 @@ S10_EXPORT void __cdecl LavaburstChild_Run(void) {
         Call0(addr::MeteorStrikeRock_DrawRing);
         MH_CALL(Gte_PopMatrix)();
     }
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x4AC160: +9 down; at 0 the child starts: at an angle +0xB << 9

@@ -20,7 +20,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -284,10 +283,10 @@ MLIB_EXPORT void __cdecl BuffPopup_Draw(unsigned icon) {
 // +0xB0 copied to 0x939F80; 0x44FC10(stat); both put back. 1 in al when the
 // roll answered 0 (not resisted), else 0. The actor unchecked above 2.
 MLIB_EXPORT unsigned char __cdecl MagicFx_ApplyBuff(unsigned stat, unsigned actor) {
-    const unsigned char kept_target = Mem(kResultTarget)[0];
+    const unsigned char kept_target = Mem(::bof3::Img(kResultTarget.v))[0];
     const std::int32_t kept_record = Long(Mem(::bof3::Img(BattleDamage_Result_addr)));
     const unsigned a = actor & 0xFF;
-    Mem(kResultTarget)[0] = static_cast<unsigned char>(a);
+    Mem(::bof3::Img(kResultTarget.v))[0] = static_cast<unsigned char>(a);
     const unsigned char* stats;
     if (a < 3) {
         SetLong(Mem(::bof3::Img(BattleDamage_Result_addr)), I32(Addr(PartyRecord(a) + 0x124)));
@@ -296,9 +295,9 @@ MLIB_EXPORT unsigned char __cdecl MagicFx_ApplyBuff(unsigned stat, unsigned acto
         SetLong(Mem(::bof3::Img(BattleDamage_Result_addr)), I32(Addr(EnemyRecord(a) + 0x104)));
         stats = EnemyRecord(a) + 0xB0;
     }
-    for (unsigned i = 0; i < 32; i += 4) SetLong(Mem(kStatsCopy + i), Long(stats + i));
+    for (unsigned i = 0; i < 32; i += 4) SetLong(Mem(::bof3::Img(kStatsCopy.v) + i), Long(stats + i));
     const unsigned char resisted = MH_AT(BuffRollFn, kBuffRoll)(stat);
-    Mem(kResultTarget)[0] = kept_target;
+    Mem(::bof3::Img(kResultTarget.v))[0] = kept_target;
     SetLong(Mem(::bof3::Img(BattleDamage_Result_addr)), kept_record);
     return resisted == 0 ? 1 : 0;
 }
@@ -513,7 +512,7 @@ MLIB_EXPORT unsigned char __cdecl BattleActor_FxSizeB(void) {
         if (r[0x134] & 2) return FxSizeB_AltTable[Mem(::bof3::Img(BattlePhases_B89_addr))[0]];
         return FxSizeB_Table[r[0x89]];
     }
-    return Mem(kEnemyFxSizeB + EnemyRecord(i)[0xF0] * 0x8Cu)[0];
+    return Mem(::bof3::Img(kEnemyFxSizeB.v) + EnemyRecord(i)[0xF0] * 0x8Cu)[0];
 }
 
 // original 0x4FC2D0: Sprite_Current's +0xC and +0x10 (dwords) from the pair

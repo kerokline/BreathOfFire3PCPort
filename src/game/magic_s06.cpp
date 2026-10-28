@@ -35,7 +35,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -80,7 +79,7 @@ unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 unsigned char ActorByte() { return Mem(::bof3::Img(at::kActor))[0]; }
 unsigned char* Source() { return Pointer(::bof3::Img(BattleOdds_ActorObject_addr)); }
-std::uint16_t Ability() { return Word(Mem(kAbility)); }
+std::uint16_t Ability() { return Word(Mem(::bof3::Img(kAbility.v))); }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
@@ -938,13 +937,13 @@ S06_EXPORT void __cdecl Magic020Shadow_Approach(void) {
 // sprite queued (Sprite_QueueOverlay); the table the battle's (0x8B3580) again.
 S06_EXPORT void __cdecl Magic020Slash_Run(void) {
     static constexpr std::uint32_t kSteps[2] = {bof3::addr::Magic020Slash_Start, bof3::addr::Magic020Slash_Play};
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetSlash)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetSlash.v)));
     const unsigned phase = Sc()[2];
     if (phase >= 2) PastTable("Magic020Slash_Run", phase, 2);
     magic_harness::Phase(kSteps[phase])();
     const unsigned char* const sc = Sc();
     if (sc[0] != 0 && sc[2] != 0) MH_CALL(Sprite_QueueOverlay)();
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x4A3950: +9 (its delay) down; at 0: the direction and position the
@@ -1002,10 +1001,10 @@ S06_EXPORT void __cdecl Magic020_DrawFade(void) {
     PutU32(p + 0x14, std::bit_cast<std::uint32_t>(Widescreen_FillWidth()));   // kF320 narrow
     PutU32(p + 0x18, kF240);
     const unsigned grey = (static_cast<unsigned>(Sc()[9]) * 15u) & 0xFFFF;
-    SetWord(Mem(kShade), grey);
+    SetWord(Mem(::bof3::Img(kShade.v)), grey);
     p[4] = static_cast<unsigned char>(grey);
-    p[5] = Mem(kShade)[0];
-    p[6] = Mem(kShade)[0];
+    p[5] = Mem(::bof3::Img(kShade.v))[0];
+    p[6] = Mem(::bof3::Img(kShade.v))[0];
     MH_CALL(Gfx_CommitPrim)(2, 0x1C);
     DrawMode(0x15, 2);
 }

@@ -37,7 +37,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -79,12 +78,12 @@ unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(::bof3::Img(at::kActor)))) & 0xFF; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
-void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
+std::int32_t SD(unsigned k) { return Long(Mem(::bof3::Img(kS.v) + k)); }
+void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(::bof3::Img(kS.v) + k), static_cast<std::int32_t>(v)); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
@@ -1039,12 +1038,12 @@ S31_EXPORT void __cdecl MainCannonChild_Task(void) {
 S31_EXPORT void __cdecl MainCannonShell_Run(void) {
     static constexpr std::uint32_t kSteps[3] = {bof3::addr::MainCannonShell_Aim, bof3::addr::MainCannonShell_Fly,
                                                 bof3::addr::BattleFx_FreeTask};
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect.v)));
     const unsigned phase = Sc()[2];
     if (phase >= 3) PastTable("MainCannonShell_Run", phase, 3);
     magic_harness::Phase(kSteps[phase])();
     if (Sc()[0] & 1) MH_CALL(Sprite_QueueOverlay)();
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 namespace {
@@ -1148,12 +1147,12 @@ S31_EXPORT void __cdecl MainCannonShell_Fly(void) {
 S31_EXPORT void __cdecl MainCannonBlast_Run(void) {
     static constexpr std::uint32_t kSteps[3] = {bof3::addr::MainCannonBlast_Start, bof3::addr::MainCannonBlast_Play,
                                                 bof3::addr::MagicFx_UncountAndFree};
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBlast)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBlast.v)));
     const unsigned phase = Sc()[2];
     if (phase >= 3) PastTable("MainCannonBlast_Run", phase, 3);
     magic_harness::Phase(kSteps[phase])();
     if (Sc()[0] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x4E85B0: the blast's sprite fields (+0x24..+0x2D), animation 5,

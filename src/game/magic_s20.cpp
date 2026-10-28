@@ -34,7 +34,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -124,13 +123,13 @@ constexpr std::uint32_t kEnemyLiftStride = 0x8C;
 // MagicFx_ApplyBuff, S32's WallOfFire_DrawDisc and WallOfFireSpark_Draw.
 using VoidFn = void (__cdecl*)();
 
-unsigned char* Scr(unsigned k) { return Mem(kScratch + k); }
+unsigned char* Scr(unsigned k) { return Mem(::bof3::Img(kScratch.v) + k); }
 unsigned char* Vtx(unsigned k) { return Mem(::bof3::Img(Prim_VertexScratch_addr) + k); }
 const short* VtxP(unsigned k) { return reinterpret_cast<const short*>(Vtx(k)); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 unsigned char* Task(unsigned index) { return Mem(::bof3::Img(BattleTask_Slots_addr) + index * at::kTaskStride); }
-unsigned char* PoolA(unsigned index) { return Mem(kPoolA + index * kPoolStride); }
-unsigned char* PoolB(unsigned index) { return Mem(kPoolB + index * kPoolStride); }
+unsigned char* PoolA(unsigned index) { return Mem(::bof3::Img(kPoolA.v) + index * kPoolStride); }
+unsigned char* PoolB(unsigned index) { return Mem(::bof3::Img(kPoolB.v) + index * kPoolStride); }
 unsigned char* Enemy(unsigned i) { return Mem(::bof3::Img(Battle_Enemies_addr) + i * at::kEnemyStride); }
 unsigned char* Member(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
 unsigned char* Tint(unsigned i) { return Mem(::bof3::Img(0x7E0700) + i * 12); }   // MoveScript_TintRecords, unchecked
@@ -144,7 +143,6 @@ void Bump(unsigned char& b, int by) { b = static_cast<unsigned char>(b + by); }
 magic_harness::Handler Entry(std::uint32_t table, unsigned index) {
     return reinterpret_cast<magic_harness::Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(table + 4 * index)))));
 }
-magic_harness::Handler Entry(::bof3::image::Va table, unsigned index) { return Entry(::bof3::Img(table), index); }
 
 // `imul` then `sar`: a 32-bit product that wraps, shifted arithmetically.
 int MulSar(int a, int b, int by) {
@@ -252,7 +250,7 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
             tt->x = te->x;
             tt->z = te->z;
             rv::Store(tt->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(te->height) + 0x800000u));
-            rv::Store<unsigned>(tt->height_whole, tt->height_whole + Mem(kEnemyLift + e[0xF0] * kEnemyLiftStride)[0]);
+            rv::Store<unsigned>(tt->height_whole, tt->height_whole + Mem(::bof3::Img(kEnemyLift.v) + e[0xF0] * kEnemyLiftStride)[0]);
             Bump(sc[0xB], 1);
         }
     } else {
@@ -282,10 +280,10 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
 
 // original 0x4C3700: the child (kind 1, parameter 0x27): a jmp through
 // 0x65B4E8 by +1 (one entry, Magic087_ChildPhase; the index unchecked).
-S20_EXPORT void __cdecl Magic087_Child(void) { Entry(kM087ChildTypes, Sprite_Current[1])(); }
+S20_EXPORT void __cdecl Magic087_Child(void) { Entry(::bof3::Img(kM087ChildTypes.v), Sprite_Current[1])(); }
 
 // original 0x4C3720: a jmp through 0x65B4EC by +2 (five phases, unchecked).
-S20_EXPORT void __cdecl Magic087_ChildPhase(void) { Entry(kM087ChildPhases, Sprite_Current[2])(); }
+S20_EXPORT void __cdecl Magic087_ChildPhase(void) { Entry(::bof3::Img(kM087ChildPhases.v), Sprite_Current[2])(); }
 
 // original 0x4C3740: phase 0. +0xB 0; eight pool-A motes, each owned by the
 // child (Sprite_Current read after each alloc) and counted in its +0xB: four
@@ -451,13 +449,13 @@ S20_EXPORT void __cdecl Magic087_DrawColumn(int offset) {
 // original 0x4C3CC0: a pool-A mote: a jmp through 0x65B500 by +1 (four
 // entries - types 0 and 1 Magic087_OrbitRun, 2 and 3 Magic087_RiseRun -
 // unchecked).
-S20_EXPORT void __cdecl Magic087_MoteRun(void) { Entry(kM087MoteTypes, Sprite_Current[1])(); }
+S20_EXPORT void __cdecl Magic087_MoteRun(void) { Entry(::bof3::Img(kM087MoteTypes.v), Sprite_Current[1])(); }
 
 // original 0x4C3CE0: an orbiting mote. Its phase +2 through 0x65B510 (four,
 // unchecked); then while it lives, in phases 1 and 2, its triangle under its
 // own matrix.
 S20_EXPORT void __cdecl Magic087_OrbitRun(void) {
-    Entry(kM087OrbitPhases, Sprite_Current[2])();
+    Entry(::bof3::Img(kM087OrbitPhases.v), Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0) return;
     const unsigned char phase = sc[2];
@@ -532,7 +530,7 @@ S20_EXPORT void __cdecl Magic087_OrbitFade(void) {
 // original 0x4C3F20: a rising mote. Its phase +2 through 0x65B520 (two,
 // unchecked); then while it lives, past phase 0, its triangle.
 S20_EXPORT void __cdecl Magic087_RiseRun(void) {
-    Entry(kM087RisePhases, Sprite_Current[2])();
+    Entry(::bof3::Img(kM087RisePhases.v), Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(Magic087_PushMatrix)();
@@ -638,7 +636,7 @@ S20_EXPORT void __cdecl Magic087_DrawTriangle(void) {
                                reinterpret_cast<float*>(p + 0x28), &depth);
     MH_CALL(Gte_PrimDepths3_10C)(p);
     sc = Sprite_Current;
-    SetLong(Scr(8), static_cast<std::int32_t>(Mem(kM087Shades)[sc[4]] * static_cast<unsigned>(sc[0xA])));
+    SetLong(Scr(8), static_cast<std::int32_t>(Mem(::bof3::Img(kM087Shades.v))[sc[4]] * static_cast<unsigned>(sc[0xA])));
     TriangleShade(p);
     LinkAtCurrent(0x34);
     p = Gfx_PacketNext;
@@ -796,8 +794,8 @@ S20_EXPORT void __cdecl Magic088_Apply(void) {
 // any other id is 3. On the other side: id 0x112 becomes 0x5A and answers 0,
 // any other 3. Only al is defined.
 S20_EXPORT unsigned char __cdecl Magic088_Variant(void) {
-    unsigned char* const id = Mem(kAbility);
-    if (Mem(kSide)[0] == 4) {
+    unsigned char* const id = Mem(::bof3::Img(kAbility.v));
+    if (Mem(::bof3::Img(kSide.v))[0] == 4) {
         const unsigned k = Word(id) - 0x1Eu;
         if (k > 0xA2) return 3;
         const unsigned variant = VariantCase(k);
@@ -816,13 +814,13 @@ S20_EXPORT unsigned char __cdecl Magic088_Variant(void) {
 
 // original 0x4C4930: the child (kind 1, parameter 0x20): a jmp through
 // 0x65B574 by +1 (two entries, the fan and the wave, unchecked).
-S20_EXPORT void __cdecl Magic088_Child(void) { Entry(kM088ChildTypes, Sprite_Current[1])(); }
+S20_EXPORT void __cdecl Magic088_Child(void) { Entry(::bof3::Img(kM088ChildTypes.v), Sprite_Current[1])(); }
 
 // original 0x4C4950: the fan. Its phase +2 through 0x65B57C (three - other
 // overlays' 0x4C2D10, 0x4EF840, 0x4B1740 - unchecked); then while it lives
 // the fan under the actor's matrix.
 S20_EXPORT void __cdecl Magic088_FanRun(void) {
-    Entry(kM088FanPhases, Sprite_Current[2])();
+    Entry(::bof3::Img(kM088FanPhases.v), Sprite_Current[2])();
     if (Sprite_Current[0] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
     MH_CALL(Magic088_DrawFan)();
@@ -878,7 +876,7 @@ S20_EXPORT void __cdecl Magic088_DrawFan(void) {
 // while it lives, past phase 0, the bands stepped and drawn under the
 // actor's matrix.
 S20_EXPORT void __cdecl Magic088_WaveRun(void) {
-    Entry(kM088WavePhases, Sprite_Current[2])();
+    Entry(::bof3::Img(kM088WavePhases.v), Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -912,7 +910,7 @@ S20_EXPORT void __cdecl Magic088_WaveFade(void) {
 // up by one, the odd ones down.
 S20_EXPORT void __cdecl Magic088_WaveStep(void) {
     for (unsigned i = 0; i < 6; ++i) {
-        unsigned char* const d = Mem(kM088WaveBands + 4 * i);
+        unsigned char* const d = Mem(::bof3::Img(kM088WaveBands.v) + 4 * i);
         SetLong(d, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(d)) + ((i & 1) ? 0xFFFFFFFFu : 1u)));
     }
 }
@@ -936,15 +934,15 @@ S20_EXPORT void __cdecl Magic088_DrawWave(void) {
     LinkAtCurrent(0xC);
     SetWord(Scr(8), Sprite_Current[9]);
     for (unsigned b = 0; b < 6; ++b) {
-        const unsigned char* const phase = Mem(kM088WaveBands + 4 * b);
+        const unsigned char* const phase = Mem(::bof3::Img(kM088WaveBands.v) + 4 * b);
         const unsigned char* const sc = Sprite_Current;
         SetWord(Scr(2), (b + 1) << 5);
         SetWord(Scr(0), b << 5);
         const unsigned row = (b + sc[4] * 6u) * 3u;
         const unsigned half = sc[9] >> 1;
-        SetWord(Scr(0xA), Mem(kM088Colours)[row] * half);
-        SetWord(Scr(0xC), Mem(kM088Colours + 1)[row] * (sc[9] >> 1));
-        SetWord(Scr(0xE), Mem(kM088Colours + 2)[row] * (sc[9] >> 1));
+        SetWord(Scr(0xA), Mem(::bof3::Img(kM088Colours.v))[row] * half);
+        SetWord(Scr(0xC), Mem(::bof3::Img(kM088Colours.v) + 1)[row] * (sc[9] >> 1));
+        SetWord(Scr(0xE), Mem(::bof3::Img(kM088Colours.v) + 2)[row] * (sc[9] >> 1));
         SetWord(Scr(6), (phase[0] & 0xFu) << 8);
         int v = MH_CALL(Math_Cos)(0);
         SetWord(Vtx(8), static_cast<unsigned>(MulSar(v, S16(Scr(2)), 12)));
@@ -1062,14 +1060,14 @@ S20_EXPORT void __cdecl Magic092_Start(void) {
 
 // original 0x4C58A0: the child (kind 1, parameter 0x28): a jmp through
 // 0x65B5C8 by +1 (one entry, Magic092_ChildRun; unchecked).
-S20_EXPORT void __cdecl Magic092_Child(void) { Entry(kM092ChildTypes, Sprite_Current[1])(); }
+S20_EXPORT void __cdecl Magic092_Child(void) { Entry(::bof3::Img(kM092ChildTypes.v), Sprite_Current[1])(); }
 
 // original 0x4C58C0: its phase +2 through 0x65B5CC (four - _ChildSpawn,
 // _ChildTint, 0x4E93C0 (MAGIC144's: on at +0xB bit 7), _ChildEnd -
 // unchecked); then while it lives, past phase 0, 0x4E9420 (MAGIC144's draw)
 // under the actor's matrix.
 S20_EXPORT void __cdecl Magic092_ChildRun(void) {
-    Entry(kM092ChildPhases, Sprite_Current[2])();
+    Entry(::bof3::Img(kM092ChildPhases.v), Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -1144,13 +1142,13 @@ S20_EXPORT void __cdecl Magic092_ChildEnd(void) {
 
 // original 0x4C5B10: a pool-B mote: a jmp through 0x65B5DC by +1 (two: the
 // flame, the spark; unchecked).
-S20_EXPORT void __cdecl Magic092_MoteRun(void) { Entry(kM092MoteTypes, Sprite_Current[1])(); }
+S20_EXPORT void __cdecl Magic092_MoteRun(void) { Entry(::bof3::Img(kM092MoteTypes.v), Sprite_Current[1])(); }
 
 // original 0x4C5B30: the flame. Its phase +2 through 0x65B5E4 (four - MAGIC144's
 // 0x4E9630 and 0x4E9690, _FlameGrow, MAGIC144's 0x4E96B0 - unchecked); then
 // while it lives, past phase 0, the screen point and the flame (a tail jmp).
 S20_EXPORT void __cdecl Magic092_FlameRun(void) {
-    Entry(kM092FlamePhases, Sprite_Current[2])();
+    Entry(::bof3::Img(kM092FlamePhases.v), Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -1307,7 +1305,7 @@ S20_EXPORT void __cdecl Magic092_DrawFlame(void) {
 // point moved 16 left (type +0xB 1) or right and 12 up, and 0x4E9850
 // (MAGIC144's draw; a tail jmp).
 S20_EXPORT void __cdecl Magic092_SparkRun(void) {
-    Entry(kM092SparkPhases, Sprite_Current[2])();
+    Entry(::bof3::Img(kM092SparkPhases.v), Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(BattleActor_UpdateScreenXY)();

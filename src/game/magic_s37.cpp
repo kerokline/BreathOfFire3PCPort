@@ -37,7 +37,6 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
-#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -85,12 +84,12 @@ unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
-void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
+std::int32_t SD(unsigned k) { return Long(Mem(::bof3::Img(kS.v) + k)); }
+void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(::bof3::Img(kS.v) + k), static_cast<std::int32_t>(v)); }
 
 std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
@@ -451,7 +450,7 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Task(void) {
 S37_EXPORT void __cdecl MagmaBreathRecord_Run(void) {
     static constexpr std::uint32_t kSteps[4] = {addr::MagmaBreathRecord_Launch, addr::MagmaBreathRecord_Fly,
                                                 addr::MagmaBreathRecord_Land, addr::MagmaBreathRecord_Burn};
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect.v)));
     Dispatch(kSteps, 4, Sc()[2], "MagmaBreathRecord_Run");
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) {
@@ -460,7 +459,7 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Run(void) {
         Call0(addr::MagmaBreathRecord_DrawGlow);
         MH_CALL(Gte_PopMatrix)();
     }
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x4F5C30: +9 down; at 0 the record starts: the acting actor's
@@ -751,7 +750,7 @@ S37_EXPORT void __cdecl GeoBreathChild_Run(void) {
     static constexpr std::uint32_t kSteps[8] = {
         addr::GeoBreathChild_Start, addr::GeoBreathChild_Swirl,  addr::GeoBreathChild_Burst, addr::GeoBreathChild_Shake,
         addr::GeoBreathChild_Quake, addr::GeoBreathChild_Settle, addr::BuffRing_Wait,         addr::GeoBreathChild_End};
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect.v)));
     Dispatch(kSteps, 8, Sc()[2], "GeoBreathChild_Run");
     const unsigned char* const s = Sc();
     if ((s[0] & 1) != 0 && s[2] != 0) {
@@ -761,7 +760,7 @@ S37_EXPORT void __cdecl GeoBreathChild_Run(void) {
         Call0(addr::GeoBreathChild_DrawRing);
         MH_CALL(Gte_PopMatrix)();
     }
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x4F64C0: the child at its owner's point, 0x1600000 above it; its
@@ -1106,14 +1105,14 @@ S37_EXPORT void __cdecl CombustionSprite_Run(void) {
     static constexpr std::uint32_t kSteps[6] = {addr::CombustionSprite_Start, addr::CombustionSprite_Fall,
                                                 addr::CombustionSprite_Shake, addr::CombustionSprite_Flash,
                                                 addr::MeteorStrikeRock_Hide,  addr::CombustionSprite_Fade};
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect.v)));
     Dispatch(kSteps, 6, Sc()[2], "CombustionSprite_Run");
     const unsigned char* const s = Sc();
     if ((s[0] & 1) != 0 && s[2] != 0) {
         MH_CALL(BattleActor_UpdateScreenXY)();
         MH_CALL(Sprite_UpdateScreen)();
     }
-    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x4F73F0: +9 down; at 0 the sprite starts 0x7800000 over its
