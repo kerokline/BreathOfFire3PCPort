@@ -48,8 +48,8 @@ using move_script::Word;
 // kActorObject: now MagicS23_ActorSprite (symbols.toml).
 // kTargetObject: now BattleOdds_ActorObject (symbols.toml).
 // The acting block's command kind, and the action's id (docs/battle_actions.md).
-constexpr std::uint32_t kCommandKind = 0x904B35;
-constexpr std::uint32_t kActionId = 0x904B80;
+constexpr ::bof3::image::Va kCommandKind{0x904B35};
+constexpr ::bof3::image::Va kActionId{0x904B80};
 
 // Buff_Start's CLUT strip: 16 words at +0 and 16 at +0x20, copied over.
 // kClutFrom: now Gfx_ClutStripSource[0x1a00] (symbols.toml).
@@ -72,8 +72,8 @@ using Avg3Fn = long (__cdecl*)(const short*, const short*, const short*, float*,
 template <typename T, typename F> T As(F* f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
 
 unsigned char* SC() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* Slot(unsigned char k) { return Mem(BattleTask_Slots_addr + k * at::kTaskStride); }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char* Slot(unsigned char k) { return Mem(::bof3::Img(BattleTask_Slots_addr) + k * at::kTaskStride); }
 std::int32_t Ptr(const unsigned char* p) { return static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Drop(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
@@ -81,13 +81,13 @@ std::int32_t AddL(std::int32_t a, std::uint32_t b) { return static_cast<std::int
 
 // The scratch words SharedScratch + k (the PSX scratchpad's) and the vertex
 // scratch Prim_VertexScratch + k: three SVECTORs at +0, +8, +0x10, +0x18.
-constexpr std::uint32_t kDs = SharedScratch_addr;
+constexpr ::bof3::image::Va kDs{SharedScratch_addr};
 // kVx: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch
-short Ds(unsigned k) { return static_cast<short>(Word(Mem(kDs + k))); }
-void SetDs(unsigned k, unsigned v) { SetWord(Mem(kDs + k), v); }
-short Vx(unsigned k) { return static_cast<short>(Word(Mem(Prim_VertexScratch_addr + k))); }
-void SetVx(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v); }
-const short* VxP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+short Ds(unsigned k) { return static_cast<short>(Word(Mem(::bof3::Img(kDs.v) + k))); }
+void SetDs(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kDs.v) + k), v); }
+short Vx(unsigned k) { return static_cast<short>(Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k))); }
+void SetVx(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v); }
+const short* VxP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 // `imul` (a 32-bit product that wraps) then `sar n`; `shl l` then `sar r`.
 int MulSar(int a, int b, int n) {
@@ -219,7 +219,7 @@ MS18_EXPORT void __cdecl DrainOrbA_Task(void) { OrbTask<&::DrainOrb_Draw>(DrainO
 // in the high word of +0x3C; +0xB (the draw's radius) 0x10, +9 0x10, +0xA
 // 0xB0; on.
 MS18_EXPORT void __cdecl DrainOrbA_Place(void) {
-    PlaceAt(Pointer(BattleOdds_ActorObject_addr), 0xFFFFC000u, 0xFFFFC000u, 0x4000000u);
+    PlaceAt(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)), 0xFFFFC000u, 0xFFFFC000u, 0x4000000u);
     SC()[0xB] = 0x10;
     SC()[9] = 0x10;
     SC()[0xA] = 0xB0;
@@ -269,7 +269,7 @@ MS18_EXPORT void __cdecl DrainOrbB_Task(void) { OrbTask<&::DrainOrb_Draw>(DrainO
 MS18_EXPORT void __cdecl DrainOrbB_Place(void) {
     Drop(SC()[9]);
     if (SC()[9] != 0) return;
-    PlaceAt(Pointer(MagicS23_ActorSprite_addr), 0xFFFFC000u, 0xFFFFC000u, 0x4000000u);
+    PlaceAt(Pointer(::bof3::Img(MagicS23_ActorSprite_addr)), 0xFFFFC000u, 0xFFFFC000u, 0x4000000u);
     SC()[0xB] = 0x10;
     SC()[9] = 0x10;
     SC()[0xA] = 0;
@@ -439,7 +439,7 @@ MS18_EXPORT void __cdecl DrainOrbC_Task(void) { OrbTask<&::DrainOrb_DrawDisc>(Dr
 
 // original 0x4BF560: at the target's object; +9 4, +0xA 0xB0; on.
 MS18_EXPORT void __cdecl DrainOrbC_Place(void) {
-    PlaceAt(Pointer(BattleOdds_ActorObject_addr), 0, 0, 0);
+    PlaceAt(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)), 0, 0, 0);
     SC()[9] = 4;
     SC()[0xA] = 0xB0;
     Bump(SC()[2]);
@@ -469,7 +469,7 @@ MS18_EXPORT void __cdecl DrainOrbD_Task(void) { OrbTask<&::DrainOrb_DrawDisc>(Dr
 MS18_EXPORT void __cdecl DrainOrbD_Place(void) {
     Drop(SC()[9]);
     if (SC()[9] != 0) return;
-    PlaceAt(Pointer(MagicS23_ActorSprite_addr), 0, 0, 0);
+    PlaceAt(Pointer(::bof3::Img(MagicS23_ActorSprite_addr)), 0, 0, 0);
     SC()[9] = 4;
     Bump(SC()[2]);
 }
@@ -554,7 +554,7 @@ MS18_EXPORT void __cdecl Buff_Task(void) {
 // 0x80E980 (16 + 16 words) to 0x812980, Gfx_ClutStripDirty 1,
 // Sound_PlayById(0x100).
 MS18_EXPORT void __cdecl Buff_Start(void) {
-    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+    const unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     SC()[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
     rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
@@ -591,8 +591,8 @@ MS18_EXPORT void __cdecl Buff_Start(void) {
         Bump(sc[0xB]);
     }
     for (unsigned i = 0; i < 0x20; i += 2) {
-        SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + i)));
-        SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + 0x20 + i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + 0x20 + i)));
+        SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3400 + i), Word(Mem(::bof3::Img(Gfx_ClutStripSource_addr) + 0x3400 + i)));
+        SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3400 + 0x20 + i), Word(Mem(::bof3::Img(Gfx_ClutStripSource_addr) + 0x3400 + 0x20 + i)));
     }
     Gfx_ClutStripDirty = 1;
     MH_CALL(Sound_PlayById)(0x100);
@@ -619,10 +619,10 @@ MS18_EXPORT void __cdecl Buff_Fade(void) {
     Drop(tints[sc[0xA] * 12u + 4]);
     Drop(sc[9]);
     if (SC()[9] != 0) return;
-    MH_CALL(Sprite_ReleaseTint)(Pointer(BattleOdds_ActorObject_addr));
-    MH_CALL(BattleActor_Flash)(Mem(at::kTarget)[0]);
-    const unsigned char target = Mem(at::kTarget)[0];
-    const unsigned char byte = Mem(MagicFx_BuffStats_addr)[SC()[4]];
+    MH_CALL(Sprite_ReleaseTint)(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)));
+    MH_CALL(BattleActor_Flash)(Mem(::bof3::Img(at::kTarget))[0]);
+    const unsigned char target = Mem(::bof3::Img(at::kTarget))[0];
+    const unsigned char byte = Mem(::bof3::Img(MagicFx_BuffStats_addr))[SC()[4]];
     const unsigned char suits = MH_CALL(MagicFx_ApplyBuff)(byte, target);
     unsigned char* const t = Slot(MH_CALL(BattleTask_Create)(1, 0x48));
     records::BattleTask* const tt = rv::As<records::BattleTask>(t);
@@ -642,8 +642,8 @@ MS18_EXPORT void __cdecl Buff_Fade(void) {
 // 0x52 and answers 0, 0x211 becomes 0x54 and 1, 0x14 and 0x117 become 0x55
 // and 2, any other 3. Only the low word of 0x904B80 is read.
 MS18_EXPORT unsigned char __cdecl Buff_Kind(void) {
-    const unsigned id = Word(Mem(kActionId));
-    if (Mem(kCommandKind)[0] == 4) {
+    const unsigned id = Word(Mem(::bof3::Img(kActionId.v)));
+    if (Mem(::bof3::Img(kCommandKind.v))[0] == 4) {
         switch (id) {
         case 0x52: case 0xB8: return 0;
         case 0x54: case 0xBA: return 1;
@@ -652,9 +652,9 @@ MS18_EXPORT unsigned char __cdecl Buff_Kind(void) {
         }
     }
     switch (id) {
-    case 0x10B: SetWord(Mem(kActionId), 0x52); return 0;
-    case 0x211: SetWord(Mem(kActionId), 0x54); return 1;
-    case 0x14: case 0x117: SetWord(Mem(kActionId), 0x55); return 2;
+    case 0x10B: SetWord(Mem(::bof3::Img(kActionId.v)), 0x52); return 0;
+    case 0x211: SetWord(Mem(::bof3::Img(kActionId.v)), 0x54); return 1;
+    case 0x14: case 0x117: SetWord(Mem(::bof3::Img(kActionId.v)), 0x55); return 2;
     default: return 3;
     }
 }

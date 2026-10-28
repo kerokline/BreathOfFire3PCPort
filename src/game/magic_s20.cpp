@@ -58,29 +58,29 @@ using move_script::Word;
 
 // The two pools of 0x84-byte motes: MAGIC087's 80 and MAGIC092's 48, each
 // walked by its task with Sprite_Current the mote and 0x93B940 its +0x80.
-constexpr std::uint32_t kPoolA = 0x6906D8;
+constexpr ::bof3::image::Va kPoolA{0x6906D8};
 constexpr unsigned kPoolACount = 0x50;
-constexpr std::uint32_t kPoolB = 0x693018;
+constexpr ::bof3::image::Va kPoolB{0x693018};
 constexpr unsigned kPoolBCount = 0x30;
 constexpr std::uint32_t kPoolStride = 0x84;
 
 // The .data dispatch tables, read in place (docs/magic_s20.md section 2).
-constexpr std::uint32_t kM087ChildTypes = 0x65B4E8;    // by +1: 0x4C3720
-constexpr std::uint32_t kM087ChildPhases = 0x65B4EC;   // by +2: five
-constexpr std::uint32_t kM087MoteTypes = 0x65B500;     // by +1: orbit, orbit, rise, rise
-constexpr std::uint32_t kM087OrbitPhases = 0x65B510;   // by +2: four
-constexpr std::uint32_t kM087RisePhases = 0x65B520;    // by +2: two
-constexpr std::uint32_t kM087Shades = 0x65B528;        // u8 by +4
-constexpr std::uint32_t kM088Colours = 0x65B52C;       // u8 rgb rows, row = +4 * 6 + band
-constexpr std::uint32_t kM088ChildTypes = 0x65B574;    // by +1: fan, wave
-constexpr std::uint32_t kM088FanPhases = 0x65B57C;     // by +2: three, other overlays'
-constexpr std::uint32_t kM088WaveBands = 0x65B588;     // six dwords, stepped +1 / -1
-constexpr std::uint32_t kM088WavePhases = 0x65B5A8;    // by +2: four
-constexpr std::uint32_t kM092ChildTypes = 0x65B5C8;    // by +1: 0x4C58C0
-constexpr std::uint32_t kM092ChildPhases = 0x65B5CC;   // by +2: four
-constexpr std::uint32_t kM092MoteTypes = 0x65B5DC;     // by +1: flame, spark
-constexpr std::uint32_t kM092FlamePhases = 0x65B5E4;   // by +2: four
-constexpr std::uint32_t kM092SparkPhases = 0x65B5F4;   // by +2: four
+constexpr ::bof3::image::Va kM087ChildTypes{0x65B4E8};    // by +1: 0x4C3720
+constexpr ::bof3::image::Va kM087ChildPhases{0x65B4EC};   // by +2: five
+constexpr ::bof3::image::Va kM087MoteTypes{0x65B500};     // by +1: orbit, orbit, rise, rise
+constexpr ::bof3::image::Va kM087OrbitPhases{0x65B510};   // by +2: four
+constexpr ::bof3::image::Va kM087RisePhases{0x65B520};    // by +2: two
+constexpr ::bof3::image::Va kM087Shades{0x65B528};        // u8 by +4
+constexpr ::bof3::image::Va kM088Colours{0x65B52C};       // u8 rgb rows, row = +4 * 6 + band
+constexpr ::bof3::image::Va kM088ChildTypes{0x65B574};    // by +1: fan, wave
+constexpr ::bof3::image::Va kM088FanPhases{0x65B57C};     // by +2: three, other overlays'
+constexpr ::bof3::image::Va kM088WaveBands{0x65B588};     // six dwords, stepped +1 / -1
+constexpr ::bof3::image::Va kM088WavePhases{0x65B5A8};    // by +2: four
+constexpr ::bof3::image::Va kM092ChildTypes{0x65B5C8};    // by +1: 0x4C58C0
+constexpr ::bof3::image::Va kM092ChildPhases{0x65B5CC};   // by +2: four
+constexpr ::bof3::image::Va kM092MoteTypes{0x65B5DC};     // by +1: flame, spark
+constexpr ::bof3::image::Va kM092FlamePhases{0x65B5E4};   // by +2: four
+constexpr ::bof3::image::Va kM092SparkPhases{0x65B5F4};   // by +2: four
 // The library's stat index by MAGIC088's variant (+4): read in place.
 // kStatByVariant: now MagicFx_BuffStats (symbols.toml).
 // Magic088_Variant's byte table (in .text, after its jump table): the jump
@@ -102,13 +102,13 @@ unsigned VariantCase(unsigned k) {
 
 // The effect's scratch (words 0x903850..0x90385E, Scratch_Swap among them)
 // and the vertex scratch (Prim_VertexScratch: SVECTORs 8 bytes apart).
-constexpr std::uint32_t kScratch = SharedScratch_addr;
+constexpr ::bof3::image::Va kScratch{SharedScratch_addr};
 // kVertex: now Prim_VertexScratch (symbols.toml).
 
 // The ability id (u16) and the actor's side byte 0x904B35 (4 for the party's
 // commands, by MAGIC088's reading).
-constexpr std::uint32_t kAbility = 0x904B80;
-constexpr std::uint32_t kSide = 0x904B35;
+constexpr ::bof3::image::Va kAbility{0x904B80};
+constexpr ::bof3::image::Va kSide{0x904B35};
 
 // The CLUT strip rows the starts write (docs/magic_fx_reached.md: kClutRow).
 constexpr std::uint32_t kClutRow = 0x812980;
@@ -116,24 +116,24 @@ constexpr std::uint32_t kClutRow = 0x812980;
 
 // An enemy record's byte +0xF0 (its type) indexes a 0x8C-stride table whose
 // byte at 0x8C564F lifts MAGIC087's column (read in place).
-constexpr std::uint32_t kEnemyLift = 0x8C564F;
+constexpr ::bof3::image::Va kEnemyLift{0x8C564F};
 constexpr std::uint32_t kEnemyLiftStride = 0x8C;
 
 // Other groups' callees, ours now, by name: the effect library's
 // MagicFx_ApplyBuff, S32's WallOfFire_DrawDisc and WallOfFireSpark_Draw.
 using VoidFn = void (__cdecl*)();
 
-unsigned char* Scr(unsigned k) { return Mem(kScratch + k); }
-unsigned char* Vtx(unsigned k) { return Mem(Prim_VertexScratch_addr + k); }
+unsigned char* Scr(unsigned k) { return Mem(::bof3::Img(kScratch.v) + k); }
+unsigned char* Vtx(unsigned k) { return Mem(::bof3::Img(Prim_VertexScratch_addr) + k); }
 const short* VtxP(unsigned k) { return reinterpret_cast<const short*>(Vtx(k)); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
-unsigned char* Task(unsigned index) { return Mem(BattleTask_Slots_addr + index * at::kTaskStride); }
-unsigned char* PoolA(unsigned index) { return Mem(kPoolA + index * kPoolStride); }
-unsigned char* PoolB(unsigned index) { return Mem(kPoolB + index * kPoolStride); }
-unsigned char* Enemy(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
-unsigned char* Member(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* Tint(unsigned i) { return Mem(0x7E0700 + i * 12); }   // MoveScript_TintRecords, unchecked
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
+unsigned char* Task(unsigned index) { return Mem(::bof3::Img(BattleTask_Slots_addr) + index * at::kTaskStride); }
+unsigned char* PoolA(unsigned index) { return Mem(::bof3::Img(kPoolA.v) + index * kPoolStride); }
+unsigned char* PoolB(unsigned index) { return Mem(::bof3::Img(kPoolB.v) + index * kPoolStride); }
+unsigned char* Enemy(unsigned i) { return Mem(::bof3::Img(Battle_Enemies_addr) + i * at::kEnemyStride); }
+unsigned char* Member(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
+unsigned char* Tint(unsigned i) { return Mem(::bof3::Img(0x7E0700) + i * 12); }   // MoveScript_TintRecords, unchecked
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 std::int32_t PtrValue(const unsigned char* p) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)));
 }
@@ -203,16 +203,16 @@ S20_EXPORT void __cdecl Magic087_Task(void) {
     if (phase >= 2) bof3::Fatal("Magic087_Task: phase %u, past the two-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
     unsigned char* const sc = Sprite_Current;
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < kPoolACount; ++i) {
         unsigned char* const m = PoolA(i);
         records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         if ((m[0] & 1) == 0) continue;
         const std::int32_t its = static_cast<std::int32_t>(tm->owner);
         Sprite_Current = m;
-        SetLong(Mem(BattleE2_Owner_addr), its);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), its);
         MH_CALL(Magic087_MoteRun)();
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
         Sprite_Current = sc;
     }
 }
@@ -234,7 +234,7 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
         m[1] = 0;
         m[2] = 0;
     }
-    if (Mem(at::kTarget)[0] & 0x40) {
+    if (Mem(::bof3::Img(at::kTarget))[0] & 0x40) {
         unsigned char nine = 1;
         for (unsigned i = 0; i < 8; ++i, nine = static_cast<unsigned char>(nine + 8)) {
             if (MH_CALL(Battle_ActorIsOut)(i + 3) != 0) continue;
@@ -250,7 +250,7 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
             tt->x = te->x;
             tt->z = te->z;
             rv::Store(tt->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(te->height) + 0x800000u));
-            rv::Store<unsigned>(tt->height_whole, tt->height_whole + Mem(kEnemyLift + e[0xF0] * kEnemyLiftStride)[0]);
+            rv::Store<unsigned>(tt->height_whole, tt->height_whole + Mem(::bof3::Img(kEnemyLift.v) + e[0xF0] * kEnemyLiftStride)[0]);
             Bump(sc[0xB], 1);
         }
     } else {
@@ -273,17 +273,17 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
         }
     }
     for (std::uint32_t a = kClutRow + 2; a < kClutRow + 0x20; a += 2) SetWord(Mem(a), Word(Mem(a - 0x7400)) | 0x8000u);
-    SetWord(Mem(Gfx_ClutStrip_addr + 0x3400), Word(Mem(Gfx_ClutStrip_addr + 0x3400 - 0x7400)));
+    SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3400), Word(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3400 - 0x7400)));
     Gfx_ClutStripDirty = 1;
     Bump(Sprite_Current[1], 1);
 }
 
 // original 0x4C3700: the child (kind 1, parameter 0x27): a jmp through
 // 0x65B4E8 by +1 (one entry, Magic087_ChildPhase; the index unchecked).
-S20_EXPORT void __cdecl Magic087_Child(void) { Entry(kM087ChildTypes, Sprite_Current[1])(); }
+S20_EXPORT void __cdecl Magic087_Child(void) { Entry(::bof3::Img(kM087ChildTypes.v), Sprite_Current[1])(); }
 
 // original 0x4C3720: a jmp through 0x65B4EC by +2 (five phases, unchecked).
-S20_EXPORT void __cdecl Magic087_ChildPhase(void) { Entry(kM087ChildPhases, Sprite_Current[2])(); }
+S20_EXPORT void __cdecl Magic087_ChildPhase(void) { Entry(::bof3::Img(kM087ChildPhases.v), Sprite_Current[2])(); }
 
 // original 0x4C3740: phase 0. +0xB 0; eight pool-A motes, each owned by the
 // child (Sprite_Current read after each alloc) and counted in its +0xB: four
@@ -449,13 +449,13 @@ S20_EXPORT void __cdecl Magic087_DrawColumn(int offset) {
 // original 0x4C3CC0: a pool-A mote: a jmp through 0x65B500 by +1 (four
 // entries - types 0 and 1 Magic087_OrbitRun, 2 and 3 Magic087_RiseRun -
 // unchecked).
-S20_EXPORT void __cdecl Magic087_MoteRun(void) { Entry(kM087MoteTypes, Sprite_Current[1])(); }
+S20_EXPORT void __cdecl Magic087_MoteRun(void) { Entry(::bof3::Img(kM087MoteTypes.v), Sprite_Current[1])(); }
 
 // original 0x4C3CE0: an orbiting mote. Its phase +2 through 0x65B510 (four,
 // unchecked); then while it lives, in phases 1 and 2, its triangle under its
 // own matrix.
 S20_EXPORT void __cdecl Magic087_OrbitRun(void) {
-    Entry(kM087OrbitPhases, Sprite_Current[2])();
+    Entry(::bof3::Img(kM087OrbitPhases.v), Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0) return;
     const unsigned char phase = sc[2];
@@ -530,7 +530,7 @@ S20_EXPORT void __cdecl Magic087_OrbitFade(void) {
 // original 0x4C3F20: a rising mote. Its phase +2 through 0x65B520 (two,
 // unchecked); then while it lives, past phase 0, its triangle.
 S20_EXPORT void __cdecl Magic087_RiseRun(void) {
-    Entry(kM087RisePhases, Sprite_Current[2])();
+    Entry(::bof3::Img(kM087RisePhases.v), Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(Magic087_PushMatrix)();
@@ -636,7 +636,7 @@ S20_EXPORT void __cdecl Magic087_DrawTriangle(void) {
                                reinterpret_cast<float*>(p + 0x28), &depth);
     MH_CALL(Gte_PrimDepths3_10C)(p);
     sc = Sprite_Current;
-    SetLong(Scr(8), static_cast<std::int32_t>(Mem(kM087Shades)[sc[4]] * static_cast<unsigned>(sc[0xA])));
+    SetLong(Scr(8), static_cast<std::int32_t>(Mem(::bof3::Img(kM087Shades.v))[sc[4]] * static_cast<unsigned>(sc[0xA])));
     TriangleShade(p);
     LinkAtCurrent(0x34);
     p = Gfx_PacketNext;
@@ -693,7 +693,7 @@ S20_EXPORT void __cdecl Magic088_Task(void) {
 // Then CLUT strip rows 26 and 27 copied from 0x4000 below; dirty; sound
 // 0x100. BattleTask_Create's index is not tested.
 S20_EXPORT void __cdecl Magic088_Start(void) {
-    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+    const unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     CopyPosition(Sprite_Current, src);
     const unsigned char variant = MH_CALL(Magic088_Variant)();
     Sprite_Current[4] = variant;
@@ -720,8 +720,8 @@ S20_EXPORT void __cdecl Magic088_Start(void) {
     CopyPosition(t, sc);
     Bump(sc[0xB], 1);
     for (std::uint32_t k = 0; k < 0x20; k += 2) {
-        SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + k), Word(Mem(Gfx_ClutStrip_addr + 0x3400 + k - 0x4000)));
-        SetWord(Mem(Gfx_ClutStrip_addr + 0x3420 + k), Word(Mem(Gfx_ClutStrip_addr + 0x3420 + k - 0x4000)));
+        SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3400 + k), Word(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3400 + k - 0x4000)));
+        SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3420 + k), Word(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3420 + k - 0x4000)));
     }
     Gfx_ClutStripDirty = 1;
     MH_CALL(Sound_PlayById)(0x100);
@@ -731,7 +731,7 @@ S20_EXPORT void __cdecl Magic088_Start(void) {
 // marked +0x5C = 1, its tints released and a new one set (0, 0, 0, 1), whose
 // index goes to +0xA; +9 8; on.
 S20_EXPORT void __cdecl Magic088_TintOn(void) {
-    unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+    unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     Bump(Sprite_Current[9], -1);
     if (Sprite_Current[9] != 0) return;
     src[0x5C] = 1;
@@ -757,13 +757,13 @@ S20_EXPORT void __cdecl Magic088_Darken(void) {
 // flashed (BattleActor_Flash), on.
 S20_EXPORT void __cdecl Magic088_Lighten(void) {
     unsigned char* const sc = Sprite_Current;
-    unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+    unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     Bump(Tint(sc[0xA])[2], 1);
     Bump(Tint(sc[0xA])[3], 1);
     if (Tint(sc[0xA])[2] != 0) return;
     src[0x5C] = 0;
     MH_CALL(Sprite_ReleaseTint)(src);
-    MH_CALL(BattleActor_Flash)(Mem(at::kTarget)[0]);
+    MH_CALL(BattleActor_Flash)(Mem(::bof3::Img(at::kTarget))[0]);
     Bump(Sprite_Current[1], 1);
 }
 
@@ -773,8 +773,8 @@ S20_EXPORT void __cdecl Magic088_Lighten(void) {
 // non-zero, else 8; +9 1, +0xA 0; the count up; on. The index untested.
 S20_EXPORT void __cdecl Magic088_Apply(void) {
     if (Sprite_Current[0xB] != 0) return;
-    const unsigned char target = Mem(at::kTarget)[0];
-    const unsigned char stat = Mem(MagicFx_BuffStats_addr)[Sprite_Current[4]];
+    const unsigned char target = Mem(::bof3::Img(at::kTarget))[0];
+    const unsigned char stat = Mem(::bof3::Img(MagicFx_BuffStats_addr))[Sprite_Current[4]];
     const bool took = MH_CALL(MagicFx_ApplyBuff)(stat, target) != 0;
     const unsigned index = MH_CALL(BattleTask_Create)(1, 0x48) & 0xFFu;
     unsigned char* const sc = Sprite_Current;
@@ -794,8 +794,8 @@ S20_EXPORT void __cdecl Magic088_Apply(void) {
 // any other id is 3. On the other side: id 0x112 becomes 0x5A and answers 0,
 // any other 3. Only al is defined.
 S20_EXPORT unsigned char __cdecl Magic088_Variant(void) {
-    unsigned char* const id = Mem(kAbility);
-    if (Mem(kSide)[0] == 4) {
+    unsigned char* const id = Mem(::bof3::Img(kAbility.v));
+    if (Mem(::bof3::Img(kSide.v))[0] == 4) {
         const unsigned k = Word(id) - 0x1Eu;
         if (k > 0xA2) return 3;
         const unsigned variant = VariantCase(k);
@@ -814,13 +814,13 @@ S20_EXPORT unsigned char __cdecl Magic088_Variant(void) {
 
 // original 0x4C4930: the child (kind 1, parameter 0x20): a jmp through
 // 0x65B574 by +1 (two entries, the fan and the wave, unchecked).
-S20_EXPORT void __cdecl Magic088_Child(void) { Entry(kM088ChildTypes, Sprite_Current[1])(); }
+S20_EXPORT void __cdecl Magic088_Child(void) { Entry(::bof3::Img(kM088ChildTypes.v), Sprite_Current[1])(); }
 
 // original 0x4C4950: the fan. Its phase +2 through 0x65B57C (three - other
 // overlays' 0x4C2D10, 0x4EF840, 0x4B1740 - unchecked); then while it lives
 // the fan under the actor's matrix.
 S20_EXPORT void __cdecl Magic088_FanRun(void) {
-    Entry(kM088FanPhases, Sprite_Current[2])();
+    Entry(::bof3::Img(kM088FanPhases.v), Sprite_Current[2])();
     if (Sprite_Current[0] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
     MH_CALL(Magic088_DrawFan)();
@@ -876,7 +876,7 @@ S20_EXPORT void __cdecl Magic088_DrawFan(void) {
 // while it lives, past phase 0, the bands stepped and drawn under the
 // actor's matrix.
 S20_EXPORT void __cdecl Magic088_WaveRun(void) {
-    Entry(kM088WavePhases, Sprite_Current[2])();
+    Entry(::bof3::Img(kM088WavePhases.v), Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -910,7 +910,7 @@ S20_EXPORT void __cdecl Magic088_WaveFade(void) {
 // up by one, the odd ones down.
 S20_EXPORT void __cdecl Magic088_WaveStep(void) {
     for (unsigned i = 0; i < 6; ++i) {
-        unsigned char* const d = Mem(kM088WaveBands + 4 * i);
+        unsigned char* const d = Mem(::bof3::Img(kM088WaveBands.v) + 4 * i);
         SetLong(d, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(d)) + ((i & 1) ? 0xFFFFFFFFu : 1u)));
     }
 }
@@ -934,15 +934,15 @@ S20_EXPORT void __cdecl Magic088_DrawWave(void) {
     LinkAtCurrent(0xC);
     SetWord(Scr(8), Sprite_Current[9]);
     for (unsigned b = 0; b < 6; ++b) {
-        const unsigned char* const phase = Mem(kM088WaveBands + 4 * b);
+        const unsigned char* const phase = Mem(::bof3::Img(kM088WaveBands.v) + 4 * b);
         const unsigned char* const sc = Sprite_Current;
         SetWord(Scr(2), (b + 1) << 5);
         SetWord(Scr(0), b << 5);
         const unsigned row = (b + sc[4] * 6u) * 3u;
         const unsigned half = sc[9] >> 1;
-        SetWord(Scr(0xA), Mem(kM088Colours)[row] * half);
-        SetWord(Scr(0xC), Mem(kM088Colours + 1)[row] * (sc[9] >> 1));
-        SetWord(Scr(0xE), Mem(kM088Colours + 2)[row] * (sc[9] >> 1));
+        SetWord(Scr(0xA), Mem(::bof3::Img(kM088Colours.v))[row] * half);
+        SetWord(Scr(0xC), Mem(::bof3::Img(kM088Colours.v) + 1)[row] * (sc[9] >> 1));
+        SetWord(Scr(0xE), Mem(::bof3::Img(kM088Colours.v) + 2)[row] * (sc[9] >> 1));
         SetWord(Scr(6), (phase[0] & 0xFu) << 8);
         int v = MH_CALL(Math_Cos)(0);
         SetWord(Vtx(8), static_cast<unsigned>(MulSar(v, S16(Scr(2)), 12)));
@@ -1006,16 +1006,16 @@ S20_EXPORT void __cdecl Magic092_Task(void) {
     if (phase >= 2) bof3::Fatal("Magic092_Task: phase %u, past the two-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
     unsigned char* const sc = Sprite_Current;
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < kPoolBCount; ++i) {
         unsigned char* const m = PoolB(i);
         records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         if ((m[0] & 1) == 0) continue;
         const std::int32_t its = static_cast<std::int32_t>(tm->owner);
         Sprite_Current = m;
-        SetLong(Mem(BattleE2_Owner_addr), its);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), its);
         MH_CALL(Magic092_MoteRun)();
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
         Sprite_Current = sc;
     }
 }
@@ -1036,7 +1036,7 @@ S20_EXPORT void __cdecl Magic092_Start(void) {
     }
     Sprite_Current[0xB] = 0;
     unsigned made = 0;
-    const bool enemies = (Mem(at::kTarget)[0] & 0x40) != 0;
+    const bool enemies = (Mem(::bof3::Img(at::kTarget))[0] & 0x40) != 0;
     const unsigned count = enemies ? 8 : 3;
     for (unsigned i = 0; i < count; ++i) {
         if (MH_CALL(Battle_ActorIsOut)(enemies ? i + 3 : i) != 0) continue;
@@ -1052,7 +1052,7 @@ S20_EXPORT void __cdecl Magic092_Start(void) {
         ++made;
         Bump(sc[0xB], 1);
     }
-    SetWord(Mem(Gfx_ClutStrip_addr + 0x3400), 0);
+    SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3400), 0);
     for (std::uint32_t a = kClutRow + 2; a < kClutRow + 0x20; a += 2) SetWord(Mem(a), Word(Mem(a - 0x4000)) | 0x8000u);
     Gfx_ClutStripDirty = 1;
     Bump(Sprite_Current[1], 1);
@@ -1060,14 +1060,14 @@ S20_EXPORT void __cdecl Magic092_Start(void) {
 
 // original 0x4C58A0: the child (kind 1, parameter 0x28): a jmp through
 // 0x65B5C8 by +1 (one entry, Magic092_ChildRun; unchecked).
-S20_EXPORT void __cdecl Magic092_Child(void) { Entry(kM092ChildTypes, Sprite_Current[1])(); }
+S20_EXPORT void __cdecl Magic092_Child(void) { Entry(::bof3::Img(kM092ChildTypes.v), Sprite_Current[1])(); }
 
 // original 0x4C58C0: its phase +2 through 0x65B5CC (four - _ChildSpawn,
 // _ChildTint, 0x4E93C0 (MAGIC144's: on at +0xB bit 7), _ChildEnd -
 // unchecked); then while it lives, past phase 0, 0x4E9420 (MAGIC144's draw)
 // under the actor's matrix.
 S20_EXPORT void __cdecl Magic092_ChildRun(void) {
-    Entry(kM092ChildPhases, Sprite_Current[2])();
+    Entry(::bof3::Img(kM092ChildPhases.v), Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -1108,7 +1108,7 @@ S20_EXPORT void __cdecl Magic092_ChildTint(void) {
     Bump(Sprite_Current[9], 2);
     const unsigned char* sc = Sprite_Current;
     if (sc[9] != 0x10) return;
-    const bool enemy = (Mem(at::kTarget)[0] & 0x40) != 0;
+    const bool enemy = (Mem(::bof3::Img(at::kTarget))[0] & 0x40) != 0;
     unsigned char* const rec = enemy ? Enemy(sc[3]) : Member(sc[3]);
     MH_CALL(Sprite_ReleaseTint)(rec);
     MH_CALL(Sprite_SetTint)(rec, 0xF8, 0xF8, 0xF8, 1);
@@ -1127,7 +1127,7 @@ S20_EXPORT void __cdecl Magic092_ChildEnd(void) {
         sc = Sprite_Current;
     }
     if (sc[0xB] != 0x80) return;
-    if (Mem(at::kTarget)[0] & 0x40) {
+    if (Mem(::bof3::Img(at::kTarget))[0] & 0x40) {
         MH_CALL(Sprite_ReleaseTint)(Enemy(sc[3]));
         MH_CALL(BattleActor_Flash)(static_cast<unsigned char>(Sprite_Current[3] + 3));
         MH_CALL(Battle_SetTargetFlag40)(static_cast<unsigned char>(Sprite_Current[3] + 3));
@@ -1142,13 +1142,13 @@ S20_EXPORT void __cdecl Magic092_ChildEnd(void) {
 
 // original 0x4C5B10: a pool-B mote: a jmp through 0x65B5DC by +1 (two: the
 // flame, the spark; unchecked).
-S20_EXPORT void __cdecl Magic092_MoteRun(void) { Entry(kM092MoteTypes, Sprite_Current[1])(); }
+S20_EXPORT void __cdecl Magic092_MoteRun(void) { Entry(::bof3::Img(kM092MoteTypes.v), Sprite_Current[1])(); }
 
 // original 0x4C5B30: the flame. Its phase +2 through 0x65B5E4 (four - MAGIC144's
 // 0x4E9630 and 0x4E9690, _FlameGrow, MAGIC144's 0x4E96B0 - unchecked); then
 // while it lives, past phase 0, the screen point and the flame (a tail jmp).
 S20_EXPORT void __cdecl Magic092_FlameRun(void) {
-    Entry(kM092FlamePhases, Sprite_Current[2])();
+    Entry(::bof3::Img(kM092FlamePhases.v), Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -1305,7 +1305,7 @@ S20_EXPORT void __cdecl Magic092_DrawFlame(void) {
 // point moved 16 left (type +0xB 1) or right and 12 up, and 0x4E9850
 // (MAGIC144's draw; a tail jmp).
 S20_EXPORT void __cdecl Magic092_SparkRun(void) {
-    Entry(kM092SparkPhases, Sprite_Current[2])();
+    Entry(::bof3::Img(kM092SparkPhases.v), Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(BattleActor_UpdateScreenXY)();

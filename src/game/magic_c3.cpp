@@ -47,8 +47,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 
 // `imul` (the 32-bit product wraps) then an arithmetic shift.
@@ -69,8 +69,8 @@ void PutFloatBits(unsigned char* at, float f) { std::memcpy(at, &f, sizeof f); }
 
 // The scratch words MAGIC111's wash keeps its angles in: SharedScratch
 // 0x903850 and 0x903852, read back after every Math_Sin as the original does.
-constexpr std::uint32_t kAngleA = SharedScratch_addr;
-constexpr std::uint32_t kAngleB = 0x903852;
+constexpr ::bof3::image::Va kAngleA{SharedScratch_addr};
+constexpr ::bof3::image::Va kAngleB{0x903852};
 
 // Capcom's, unnamed, in no group: fild the argument, fsqrt, tail jmp to the
 // CRT's _ftol (0x5B9550) - an integer square root, truncated.
@@ -144,12 +144,12 @@ C3_EXPORT void __cdecl Magic002_Start(void) {
     const unsigned slot = MH_CALL(BattleTask_Create)(3, 1) & 0xFFu;
     unsigned char* const ball = TaskSlot(slot);
     records::BattleTask* const tball = rv::As<records::BattleTask>(ball);
-    const int x0 = static_cast<short>(Word(Mem(ObjTrio_addr + 0x2E)));
-    const int y0 = static_cast<short>(Word(Mem(ObjTrio_addr + 0x30)));
+    const int x0 = static_cast<short>(Word(Mem(::bof3::Img(ObjTrio_addr) + 0x2E)));
+    const int y0 = static_cast<short>(Word(Mem(::bof3::Img(ObjTrio_addr) + 0x30)));
     ball[1] = 0;
     tball->step_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(x0) << 16);
     tball->step_z = static_cast<std::int32_t>(static_cast<std::uint32_t>(y0) << 16);
-    const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
+    const unsigned char* const source = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     rv::Store(tball->step_y, 0);
     tball->work_18 = 0x28;
     ball[9] = 0;
@@ -159,14 +159,14 @@ C3_EXPORT void __cdecl Magic002_Start(void) {
     rv::Store(tball->work_20, static_cast<std::int32_t>(static_cast<std::uint32_t>(dy) << 16) / 10);
     SetLong(ball + 0x60, 0x100);
     rv::Store<unsigned>(tball->script_pos, 0x100);
-    rv::Store<std::int32_t>(rv::As<records::BattleTask>(Pointer(BattleFlow_TaskCurrent_addr))->owner, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(ball)));
+    rv::Store<std::int32_t>(rv::As<records::BattleTask>(Pointer(::bof3::Img(BattleFlow_TaskCurrent_addr)))->owner, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(ball)));
     Inc(Sc()[1]);
 }
 
 // original 0x499E90: +1 on once the ball's +9 (through the current slot's
 // +0x80) reaches 0x28.
 C3_EXPORT void __cdecl Magic002_Wait(void) {
-    const unsigned char* const slot = Pointer(BattleFlow_TaskCurrent_addr);
+    const unsigned char* const slot = Pointer(::bof3::Img(BattleFlow_TaskCurrent_addr));
     const auto* const ball = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::BattleTask>(slot)->owner));
     if (ball[9] < 0x28) return;
     Inc(Sc()[1]);
@@ -373,9 +373,9 @@ C3_EXPORT void __cdecl Magic111_Start(void) {
     Sc()[9] = 0;
     Inc(Sc()[1]);
     unsigned slot = MH_CALL(BattleTask_Create)(1, 0x57) & 0xFFu;
-    const unsigned actor = Mem(at::kActor)[0];
+    const unsigned actor = Mem(::bof3::Img(at::kActor))[0];
     const unsigned char* const record =
-        actor <= 2 ? Mem(ObjTrio_addr + actor * at::kPartyStride) : Mem(Battle_Enemies_addr + (actor - 3) * at::kEnemyStride);
+        actor <= 2 ? Mem(::bof3::Img(ObjTrio_addr) + actor * at::kPartyStride) : Mem(::bof3::Img(Battle_Enemies_addr) + (actor - 3) * at::kEnemyStride);
     unsigned char* child = TaskSlot(slot);
     std::memmove(child, record, 0x80);
     unsigned char* self = Sc();
@@ -404,7 +404,7 @@ C3_EXPORT void __cdecl Magic111_Wait(void) {
     if (Sc()[0xB] != 0) return;
     MH_CALL(BattleActor_SetAnimation)(4, 0);
     Owner()[0] &= 0xBF;
-    MH_CALL(Battle_SetTargetFlag40)(Mem(at::kTarget)[0]);
+    MH_CALL(Battle_SetTargetFlag40)(Mem(::bof3::Img(at::kTarget))[0]);
     Inc(Sc()[1]);
 }
 
@@ -522,38 +522,38 @@ C3_EXPORT void __cdecl Magic111Wash_Draw(void) {
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     FullScreen(p, 0x18, 0x1C, 0x28, 0x2C, 0x38, 0x3C);
 
-    unsigned a = SetAngle(kAngleA, Sc()[0xC], 0);
-    SetAngle(kAngleB, Sc()[0x10], 0);
+    unsigned a = SetAngle(::bof3::Img(kAngleA.v), Sc()[0xC], 0);
+    SetAngle(::bof3::Img(kAngleB.v), Sc()[0x10], 0);
     unsigned char c0 = Pulse(static_cast<short>(a));
-    unsigned char c1 = Pulse(AngleWord(kAngleB));
-    unsigned char c2 = Pulse(AngleWord(kAngleB));
+    unsigned char c1 = Pulse(AngleWord(::bof3::Img(kAngleB.v)));
+    unsigned char c2 = Pulse(AngleWord(::bof3::Img(kAngleB.v)));
     p[4] = c0;
     p[5] = c1;
     p[6] = c2;
 
-    SetAngle(kAngleA, Sc()[0xC], 0xF);
-    unsigned b = SetAngle(kAngleB, Sc()[0x10], 0xF);
+    SetAngle(::bof3::Img(kAngleA.v), Sc()[0xC], 0xF);
+    unsigned b = SetAngle(::bof3::Img(kAngleB.v), Sc()[0x10], 0xF);
     c0 = Pulse(static_cast<short>(b));
-    c1 = Pulse(AngleWord(kAngleA));
-    c2 = Pulse(AngleWord(kAngleB));
+    c1 = Pulse(AngleWord(::bof3::Img(kAngleA.v)));
+    c2 = Pulse(AngleWord(::bof3::Img(kAngleB.v)));
     p[0x14] = c0;
     p[0x15] = c1;
     p[0x16] = c2;
 
-    SetAngle(kAngleA, Sc()[0xC], 0x1F);
-    b = SetAngle(kAngleB, Sc()[0x10], 0x1F);
+    SetAngle(::bof3::Img(kAngleA.v), Sc()[0xC], 0x1F);
+    b = SetAngle(::bof3::Img(kAngleB.v), Sc()[0x10], 0x1F);
     c0 = Pulse(static_cast<short>(b));
-    c1 = Pulse(AngleWord(kAngleB));
-    c2 = Pulse(AngleWord(kAngleA));
+    c1 = Pulse(AngleWord(::bof3::Img(kAngleB.v)));
+    c2 = Pulse(AngleWord(::bof3::Img(kAngleA.v)));
     p[0x24] = c0;
     p[0x25] = c1;
     p[0x26] = c2;
 
-    a = SetAngle(kAngleA, Sc()[0xC], 0x100 - 0x11);
-    SetAngle(kAngleB, Sc()[0x10], 0x100 - 0x11);
+    a = SetAngle(::bof3::Img(kAngleA.v), Sc()[0xC], 0x100 - 0x11);
+    SetAngle(::bof3::Img(kAngleB.v), Sc()[0x10], 0x100 - 0x11);
     c0 = Pulse(static_cast<short>(a));
-    c1 = Pulse(AngleWord(kAngleA));
-    c2 = Pulse(AngleWord(kAngleB));
+    c1 = Pulse(AngleWord(::bof3::Img(kAngleA.v)));
+    c2 = Pulse(AngleWord(::bof3::Img(kAngleB.v)));
     p[0x34] = c0;
     p[0x35] = c1;
     p[0x36] = c2;

@@ -60,20 +60,26 @@ using move_script::Word;
 // position come from.
 // kTargetSprite: now BattleOdds_ActorObject (symbols.toml).
 // A bit per enemy kind (the enemy record's byte +0x8C): set once identified.
-constexpr std::uint32_t kSeenBits = 0x9040A8;
+constexpr ::bof3::image::Va kSeenBits{0x9040A8};
 // The panel's texts: two in the engine's .data the originals centre, a label
 // beside the second number, and MAGIC060's own: a label beside the first
 // number, one mark, a row of marks, the number format.
-constexpr std::uint32_t kText1 = 0x66A3E0, kText2 = 0x66A3E8, kLabel2 = 0x66A31C;
-constexpr std::uint32_t kLabel1 = 0x65AAB0, kMark = 0x65AAC4, kMarks = 0x65AAC8, kNumberFormat = 0x65AB08;
+constexpr ::bof3::image::Va kText1{0x66A3E0};
+constexpr ::bof3::image::Va kText2{0x66A3E8};
+constexpr ::bof3::image::Va kLabel2{0x66A31C};
+constexpr ::bof3::image::Va kLabel1{0x65AAB0};
+constexpr ::bof3::image::Va kMark{0x65AAC4};
+constexpr ::bof3::image::Va kMarks{0x65AAC8};
+constexpr ::bof3::image::Va kNumberFormat{0x65AB08};
 // Six pointers to the elements' two-byte glyph codes.
-constexpr std::uint32_t kElementGlyphs = 0x66A398;
+constexpr ::bof3::image::Va kElementGlyphs{0x66A398};
 // Celerity_End's byte, and Celerity_ApplyStat's cells: the result record
 // pointer, the ability word and the step byte of its NameTable_Abilities
 // record (+3, records of 0x18).
 // kEndByte: now ModeFlow_CountdownA (symbols.toml).
 // kResultRecord: now BattleDamage_Result (symbols.toml).
-constexpr std::uint32_t kAbility = 0x904B80, kAbilityStep = 0x65C4DB;
+constexpr ::bof3::image::Va kAbility{0x904B80};
+constexpr ::bof3::image::Va kAbilityStep{0x65C4DB};
 // Capcom's, unnamed, in no group: a stat change for the target
 // (MagicFx_ApplyBuff's 0x44F650 calls it the same way).
 constexpr std::uint32_t kStatChanged = bof3::addr::Battle_RecalcStats;   // rebound 2026-09-29 (round twelve, BE6): the value is unchanged, the fuzz keys on it
@@ -82,9 +88,9 @@ constexpr std::uint32_t kStatChanged = bof3::addr::Battle_RecalcStats;   // rebo
 // kClutTo: now Gfx_ClutStrip[0x1a00] (symbols.toml).
 
 unsigned char* SC() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
-unsigned char* Slot(unsigned k) { return Mem(BattleTask_Slots_addr + (k & 0xFFu) * at::kTaskStride); }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
+unsigned char* Slot(unsigned k) { return Mem(::bof3::Img(BattleTask_Slots_addr) + (k & 0xFFu) * at::kTaskStride); }
 std::int32_t Ptr(const void* p) { return static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 std::uint32_t U32(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -95,21 +101,21 @@ short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 // The records as the originals index them, unchecked: a member by its index
 // (stride 0x14C), an enemy by its index (stride 0x128) - the battle index
 // less 3, which a party index sends below the enemy records.
-unsigned char* PartyRec(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* EnemyRec(int i) { return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(i) * at::kEnemyStride); }
+unsigned char* PartyRec(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
+unsigned char* EnemyRec(int i) { return Mem(::bof3::Img(Battle_Enemies_addr) + static_cast<std::uint32_t>(i) * at::kEnemyStride); }
 
 // The scratch words SharedScratch + k and the vertex scratch
 // Prim_VertexScratch + k (SVECTORs at +0, +8, +0x10, +0x18).
-constexpr std::uint32_t kDs = SharedScratch_addr;
+constexpr ::bof3::image::Va kDs{SharedScratch_addr};
 // kVx: now Prim_VertexScratch (symbols.toml).
-short Ds(unsigned k) { return static_cast<short>(Word(Mem(kDs + k))); }
-void SetDs(unsigned k, unsigned v) { SetWord(Mem(kDs + k), v); }
-std::int32_t Dd(unsigned k) { return Long(Mem(kDs + k)); }
-void SetDd(unsigned k, std::uint32_t v) { SetLong(Mem(kDs + k), static_cast<std::int32_t>(v)); }
-unsigned char DsByte(unsigned k) { return Mem(kDs + k)[0]; }
-short Vx(unsigned k) { return static_cast<short>(Word(Mem(Prim_VertexScratch_addr + k))); }
-void SetVx(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v); }
-const short* VxP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+short Ds(unsigned k) { return static_cast<short>(Word(Mem(::bof3::Img(kDs.v) + k))); }
+void SetDs(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kDs.v) + k), v); }
+std::int32_t Dd(unsigned k) { return Long(Mem(::bof3::Img(kDs.v) + k)); }
+void SetDd(unsigned k, std::uint32_t v) { SetLong(Mem(::bof3::Img(kDs.v) + k), static_cast<std::int32_t>(v)); }
+unsigned char DsByte(unsigned k) { return Mem(::bof3::Img(kDs.v) + k)[0]; }
+short Vx(unsigned k) { return static_cast<short>(Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k))); }
+void SetVx(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v); }
+const short* VxP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 // `imul` (a 32-bit product that wraps) then `sar n`; `shl l` then `sar r`.
 int MulSar(int a, int b, int n) {
@@ -257,7 +263,7 @@ void DrawExpLabel() {
         DrawAt(0xB0, 0x64, 0xFF, Labels_Slot(15, 5));
         return;
     }
-    DrawAt(0xB0, 0x64, 3, Text(kLabel1));
+    DrawAt(0xB0, 0x64, 3, Text(::bof3::Img(kLabel1.v)));
 }
 
 }  // namespace
@@ -342,7 +348,7 @@ MS12_EXPORT void __cdecl Identify_ShowUntilInput(void) {
 // effect-done bit and the task freed.
 MS12_EXPORT void __cdecl Identify_End(void) {
     if (SC()[0xB] != 0x80) return;
-    Mem(at::kFlags)[0] |= 4;
+    Mem(::bof3::Img(at::kFlags))[0] |= 4;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -353,7 +359,7 @@ MS12_EXPORT void __cdecl Identify_End(void) {
 // +0x8F is not 0 (the target read again) marks the kind and shows; else +4 0.
 MS12_EXPORT void __cdecl Identify_Roll(void) {
     const int enemy = static_cast<int>(rv::As<records::BattleEnemy>(EnemyRec(static_cast<int>(TargetByte()) - 3))->level);
-    const int actor = PartyRec(Mem(at::kActor)[0])[0x8A];
+    const int actor = PartyRec(Mem(::bof3::Img(at::kActor))[0])[0x8A];
     const int d = actor - enemy;
     int chance = 0x10;
     if (d < 15) chance = 0xE;
@@ -379,14 +385,14 @@ MS12_EXPORT void __cdecl Identify_Roll(void) {
 // original 0x4B0FF0: the target enemy's kind (+0x8C) as a bit of 0x9040A8.
 MS12_EXPORT void __cdecl Identify_MarkSeen(void) {
     const unsigned kind = EnemyRec(static_cast<int>(TargetByte()) - 3)[0x8C];
-    unsigned char* const word = Mem(kSeenBits + 4 * (kind >> 5));
+    unsigned char* const word = Mem(::bof3::Img(kSeenBits.v) + 4 * (kind >> 5));
     SetLong(word, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(word)) | (1u << (kind & 31))));
 }
 
 // original 0x4B1040: that bit, 1 when set.
 MS12_EXPORT unsigned char __cdecl Identify_WasSeen(void) {
     const unsigned kind = EnemyRec(static_cast<int>(TargetByte()) - 3)[0x8C];
-    return (static_cast<std::uint32_t>(Long(Mem(kSeenBits + 4 * (kind >> 5)))) & (1u << (kind & 31))) != 0 ? 1 : 0;
+    return (static_cast<std::uint32_t>(Long(Mem(::bof3::Img(kSeenBits.v) + 4 * (kind >> 5)))) & (1u << (kind & 31))) != 0 ? 1 : 0;
 }
 
 // original 0x4B1090: the panel for a party target. The member's name with
@@ -401,15 +407,15 @@ MS12_EXPORT void __cdecl Identify_DrawMember(void) {
         DrawCentred(rec + 0x80, 0x30, NameCount());
         PartyRec(TargetByte())[0x89] = kept;
     }
-    DrawHeading(0, kText1, 0x44);
-    DrawAt(0x70, 0x50, 8, Text(kMarks));
-    DrawAt(0x9C, 0x64, 1, Text(kMark));
+    DrawHeading(0, ::bof3::Img(kText1.v), 0x44);
+    DrawAt(0x70, 0x50, 8, Text(::bof3::Img(kMarks.v)));
+    DrawAt(0x9C, 0x64, 1, Text(::bof3::Img(kMark.v)));
     DrawExpLabel();
-    DrawAt(0x9C, 0x78, 1, Text(kMark));
-    DrawAt(0xB0, 0x78, 1, Text(kLabel2));
-    DrawHeading(1, kText2, 0x8A);
-    DrawAt(0x70, 0x98, 8, Text(kMarks));
-    DrawAt(0x70, 0xAC, 8, Text(kMarks));
+    DrawAt(0x9C, 0x78, 1, Text(::bof3::Img(kMark.v)));
+    DrawAt(0xB0, 0x78, 1, Text(::bof3::Img(kLabel2.v)));
+    DrawHeading(1, ::bof3::Img(kText2.v), 0x8A);
+    DrawAt(0x70, 0x98, 8, Text(::bof3::Img(kMarks.v)));
+    DrawAt(0x70, 0xAC, 8, Text(::bof3::Img(kMarks.v)));
 }
 
 // original 0x4B11F0: the panel for an enemy target (its record by the
@@ -421,30 +427,30 @@ MS12_EXPORT void __cdecl Identify_DrawMember(void) {
 // the category.
 MS12_EXPORT void __cdecl Identify_DrawEnemy(void) {
     const unsigned char index = static_cast<unsigned char>(TargetByte() - 3);
-    const unsigned text1 = CharCount(Text(kText1)) & 0xFFu;   // counted here, before the record is read, as the original
+    const unsigned text1 = CharCount(Text(::bof3::Img(kText1.v))) & 0xFFu;   // counted here, before the record is read, as the original
     unsigned char* const rec = EnemyRec(index);
     records::BattleEnemy* const trec = rv::As<records::BattleEnemy>(rec);
     if (rec[0x8F] != 0) {
         DrawCentred(rec + 0x80, 0x30, NameCount());
-        DrawHeadingCounted(0, kText1, 0x44, text1);
+        DrawHeadingCounted(0, ::bof3::Img(kText1.v), 0x44, text1);
         MH_AT(FnXY, bof3::addr::Identify_DrawElements)(0x66, 0x54);
         char number[12];
-        MH_CALL(Crt_sprintf)(number, reinterpret_cast<const char*>(Text(kNumberFormat)), static_cast<unsigned>(trec->exp));
+        MH_CALL(Crt_sprintf)(number, reinterpret_cast<const char*>(Text(::bof3::Img(kNumberFormat.v))), static_cast<unsigned>(trec->exp));
         DrawAt(0x70, 0x64, 5, reinterpret_cast<const unsigned char*>(number));
         DrawExpLabel();
-        MH_CALL(Crt_sprintf)(number, reinterpret_cast<const char*>(Text(kNumberFormat)), static_cast<unsigned>(trec->zenny));
+        MH_CALL(Crt_sprintf)(number, reinterpret_cast<const char*>(Text(::bof3::Img(kNumberFormat.v))), static_cast<unsigned>(trec->zenny));
         DrawAt(0x70, 0x78, 5, reinterpret_cast<const unsigned char*>(number));
-        DrawAt(0xB0, 0x78, 1, Text(kLabel2));
+        DrawAt(0xB0, 0x78, 1, Text(::bof3::Img(kLabel2.v)));
     } else {
         DrawCentred(rec + 0x80, 0x30, NameCount());
-        DrawHeadingCounted(0, kText1, 0x44, text1);
-        DrawAt(0x70, 0x50, 8, Text(kMarks));
-        DrawAt(0x9C, 0x64, 1, Text(kMark));
+        DrawHeadingCounted(0, ::bof3::Img(kText1.v), 0x44, text1);
+        DrawAt(0x70, 0x50, 8, Text(::bof3::Img(kMarks.v)));
+        DrawAt(0x9C, 0x64, 1, Text(::bof3::Img(kMark.v)));
         DrawExpLabel();
-        DrawAt(0x9C, 0x78, 1, Text(kMark));
-        DrawAt(0xB0, 0x78, 1, Text(kLabel2));
+        DrawAt(0x9C, 0x78, 1, Text(::bof3::Img(kMark.v)));
+        DrawAt(0xB0, 0x78, 1, Text(::bof3::Img(kLabel2.v)));
     }
-    const unsigned char* last = DrawHeading(1, kText2, 0x8A);
+    const unsigned char* last = DrawHeading(1, ::bof3::Img(kText2.v), 0x8A);
     unsigned item = (U32(last) & 0xFFFF0000u) | Word(rec + 0xA8);
     last = MH_AT(ItemFn, bof3::addr::Identify_DrawItem)(item, (item >> 8) & 0xFFu, 0x98);
     item = (U32(last) & 0xFFFF0000u) | Word(rec + 0xAC);
@@ -458,14 +464,14 @@ MS12_EXPORT void __cdecl Identify_DrawEnemy(void) {
 // al over the argument's slot and passes the dword). Question marks when +4
 // (the roll) is 0. Answers what Text_DrawAt answers.
 MS12_EXPORT const unsigned char* __cdecl Identify_DrawItem(unsigned item, unsigned category, int y) {
-    if (SC()[4] == 0) return DrawAt(0x70, y, 8, Text(kMarks));
+    if (SC()[4] == 0) return DrawAt(0x70, y, 8, Text(::bof3::Img(kMarks.v)));
     const unsigned i = item & 0xFFu;
     const unsigned char* name;
     switch (category & 0xFFu) {
-    case 1: name = Mem(bof3::addr::NameTable_Weapons + 28 * i); break;
-    case 2: name = Mem(bof3::addr::NameTable_Armour + 26 * i); break;
-    case 3: name = Mem(bof3::addr::NameTable_Accessories + 24 * i); break;
-    default: name = Mem(bof3::addr::NameTable_Consumables + 22 * i); break;
+    case 1: name = Mem(::bof3::Img(bof3::addr::NameTable_Weapons) + 28 * i); break;
+    case 2: name = Mem(::bof3::Img(bof3::addr::NameTable_Armour) + 26 * i); break;
+    case 3: name = Mem(::bof3::Img(bof3::addr::NameTable_Accessories) + 24 * i); break;
+    default: name = Mem(::bof3::Img(bof3::addr::NameTable_Consumables) + 22 * i); break;
     }
     const unsigned n = CharCount(name) & 0xFFu;
     return DrawAt(0xA0 - 6 * static_cast<int>(n), y, static_cast<int>((item & 0xFFFFFF00u) | n), name);
@@ -548,7 +554,7 @@ MS12_EXPORT void __cdecl Identify_DrawElements(int x, int y) {
         p[4] = static_cast<unsigned char>(shade);
         p[5] = DsByte(4);
         p[6] = DsByte(4);
-        const unsigned char* const glyph = Pointer(kElementGlyphs + 4 * i);
+        const unsigned char* const glyph = Pointer(::bof3::Img(kElementGlyphs.v) + 4 * i);
         rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->glyph, (static_cast<unsigned>(glyph[0] & 0x7F) << 8) + glyph[1]);
         rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E0));
         p[0xC] = 0;
@@ -692,8 +698,8 @@ MS12_EXPORT void __cdecl IdentifyTint_Task(void) { CallCell(IdentifyTint_Steps, 
 // original 0x4B1B60: the target's sprite's tint released and a black one
 // taken (Sprite_SetTint(.., 0, 0, 0, 1), its record into +0xB); +9 0, on.
 MS12_EXPORT void __cdecl IdentifyTint_Start(void) {
-    MH_CALL(Sprite_ReleaseTint)(Pointer(BattleOdds_ActorObject_addr));
-    const unsigned char record = MH_CALL(Sprite_SetTint)(Pointer(BattleOdds_ActorObject_addr), 0, 0, 0, 1);
+    MH_CALL(Sprite_ReleaseTint)(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)));
+    const unsigned char record = MH_CALL(Sprite_SetTint)(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)), 0, 0, 0, 1);
     SC()[0xB] = record;
     SC()[9] = 0;
     Bump(SC()[2]);
@@ -725,7 +731,7 @@ MS12_EXPORT void __cdecl IdentifyTint_Dim(void) {
     }
     if (tints[sc[0xB] * 12u + 2] == 0) sc[2] = 1;
     if ((Owner()[0xB] & 0x80) == 0) return;
-    MH_CALL(Sprite_ReleaseTint)(Pointer(BattleOdds_ActorObject_addr));
+    MH_CALL(Sprite_ReleaseTint)(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)));
     MH_CALL(BattleActor_Flash)(TargetByte());
     Drop(Owner()[0xB]);
     MH_CALL(BattleTask_FreeCurrent)();
@@ -752,7 +758,7 @@ MS12_EXPORT void __cdecl Celerity_Task(void) {
 // task's +9). The CLUT strip 0x80E980 (16 + 16 words) to 0x812980,
 // Gfx_ClutStripDirty 1, Sound_PlayById(0x100).
 MS12_EXPORT void __cdecl Celerity_Start(void) {
-    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+    const unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     SC()[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
     rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
@@ -788,8 +794,8 @@ MS12_EXPORT void __cdecl Celerity_Start(void) {
         ++spark;
     }
     for (unsigned i = 0; i < 0x20; i += 2) {
-        SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + i)));
-        SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + 0x20 + i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + 0x20 + i)));
+        SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3400 + i), Word(Mem(::bof3::Img(Gfx_ClutStripSource_addr) + 0x3400 + i)));
+        SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3400 + 0x20 + i), Word(Mem(::bof3::Img(Gfx_ClutStripSource_addr) + 0x3400 + 0x20 + i)));
     }
     Gfx_ClutStripDirty = 1;
     MH_CALL(Sound_PlayById)(0x100);
@@ -808,7 +814,7 @@ MS12_EXPORT void __cdecl Celerity_Apply(void) {
     Drop(tints[sc[0xA] * 12u + 4]);
     Drop(sc[9]);
     if (SC()[9] != 0) return;
-    MH_CALL(Sprite_ReleaseTint)(Pointer(BattleOdds_ActorObject_addr));
+    MH_CALL(Sprite_ReleaseTint)(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)));
     MH_CALL(BattleActor_Flash)(TargetByte());
     for (unsigned i = 0; i < 4; ++i) {
         MH_AT(FnU, bof3::addr::Celerity_ApplyStat)(MagicFx_BuffStats[i]);
@@ -828,8 +834,8 @@ MS12_EXPORT void __cdecl Celerity_Apply(void) {
 // bit, the byte 0x90465C 5, the task freed.
 MS12_EXPORT void __cdecl Celerity_End(void) {
     if (SC()[0xB] != 0) return;
-    Mem(at::kFlags)[0] |= 4;
-    Mem(ModeFlow_CountdownA_addr)[0] = 5;
+    Mem(::bof3::Img(at::kFlags))[0] |= 4;
+    Mem(::bof3::Img(ModeFlow_CountdownA_addr))[0] = 5;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -842,12 +848,12 @@ MS12_EXPORT void __cdecl Celerity_End(void) {
 MS12_EXPORT void __cdecl Celerity_ApplyStat(unsigned stat) {
     const unsigned char target = TargetByte();
     unsigned char* const rec = target < 3 ? PartyRec(target) + 0x124 : EnemyRec(static_cast<int>(target) - 3) + 0x104;
-    SetLong(Mem(BattleDamage_Result_addr), Ptr(rec));
-    SetWord(Pointer(BattleDamage_Result_addr) + 4, 0);
-    SetWord(Pointer(BattleDamage_Result_addr) + 6, 0);
-    Pointer(BattleDamage_Result_addr)[8] = 0;
-    const signed char step = static_cast<signed char>(Mem(kAbilityStep + 0x18u * Word(Mem(kAbility)))[0]);
-    unsigned char* const cell = Pointer(BattleDamage_Result_addr) + 0x14 + (stat & 0xFFu);
+    SetLong(Mem(::bof3::Img(BattleDamage_Result_addr)), Ptr(rec));
+    SetWord(Pointer(::bof3::Img(BattleDamage_Result_addr)) + 4, 0);
+    SetWord(Pointer(::bof3::Img(BattleDamage_Result_addr)) + 6, 0);
+    Pointer(::bof3::Img(BattleDamage_Result_addr))[8] = 0;
+    const signed char step = static_cast<signed char>(Mem(::bof3::Img(kAbilityStep.v) + 0x18u * Word(Mem(::bof3::Img(kAbility.v))))[0]);
+    unsigned char* const cell = Pointer(::bof3::Img(BattleDamage_Result_addr)) + 0x14 + (stat & 0xFFu);
     const int value = static_cast<signed char>(cell[0]) + step;
     if (value > 100) {
         cell[0] = 100;

@@ -66,7 +66,7 @@ using PlayCueFn = void (__cdecl*)(unsigned);
 // A bit per actor with a reaction to show (docs/battle_actions.md).
 // kPending: now BattleActions_Pending (symbols.toml).
 // The task slots' owner cells: slot i's +0x80.
-constexpr std::uint32_t kSlotOwners = BattleTask_Slots_addr + 0x80;
+constexpr ::bof3::image::Va kSlotOwners{BattleTask_Slots_addr + 0x80};
 
 // The state byte +1 of an actor: 6 is the reaction state
 // BattleAction_EffectWait sets on every actor flagged 0x40.
@@ -76,10 +76,10 @@ constexpr unsigned char kReacting = 6;
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 
 // The effect-done bit: `or byte [0x904AA8], 4`.
-void SetDone() { Mem(at::kFlags)[0] = static_cast<unsigned char>(Mem(at::kFlags)[0] | 4); }
+void SetDone() { Mem(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(at::kFlags))[0] | 4); }
 
 // The task slot's owner (0x93B8C4's +0x80), read at the point of the call.
-unsigned char* SlotOwner() { return Pointer(static_cast<std::uint32_t>(Long(Mem(BattleFlow_TaskCurrent_addr))) + 0x80); }
+unsigned char* SlotOwner() { return Pointer(static_cast<std::uint32_t>(Long(Mem(::bof3::Img(BattleFlow_TaskCurrent_addr)))) + 0x80); }
 
 // A stack-table dispatcher: the phase byte through the table the original
 // builds on its stack, unchecked there; past the table ours aborts.
@@ -120,7 +120,7 @@ MENGINE_EXPORT void __cdecl MagicHold_Countdown(void) {
         sc[9] = static_cast<unsigned char>(left - 1);
         return;
     }
-    MH_CALL(Battle_SetTargetFlag40)(Mem(at::kTarget)[0]);
+    MH_CALL(Battle_SetTargetFlag40)(Mem(::bof3::Img(at::kTarget))[0]);
     SetDone();
     MH_CALL(BattleTask_FreeCurrent)();
 }
@@ -143,7 +143,7 @@ MENGINE_EXPORT void __cdecl RestoreForm_Task(void) {
 // As the original has it: the actor indexes the party records (0x802D40 +
 // 0x14C actor), unchecked - an enemy actor writes past the three members.
 MENGINE_EXPORT void __cdecl RestoreForm_Start(void) {
-    unsigned char* const member = PartyOf(Mem(at::kActor)[0]);
+    unsigned char* const member = PartyOf(Mem(::bof3::Img(at::kActor))[0]);
     member[1] = kReacting;
     member[2] = 4;
     member[3] = 4;
@@ -154,7 +154,7 @@ MENGINE_EXPORT void __cdecl RestoreForm_Start(void) {
 // original 0x452660: nothing while any actor is pending (the word 0x904B82);
 // then the effect-done bit and the slot freed (a tail jmp).
 MENGINE_EXPORT void __cdecl RestoreForm_Wait(void) {
-    if (Word(Mem(BattleActions_Pending_addr)) != 0) return;
+    if (Word(Mem(::bof3::Img(BattleActions_Pending_addr))) != 0) return;
     SetDone();
     MH_CALL(BattleTask_FreeCurrent)();
 }
@@ -195,7 +195,7 @@ MENGINE_EXPORT void __cdecl Paralyzer_Task(void) {
 MENGINE_EXPORT void __cdecl Paralyzer_Start(void) {
     unsigned char* const slot = Sprite_Current;
     unsigned char* const owner = SlotOwner();
-    const unsigned char* const enemy = Pointer(BattleE3_CurrentEnemy_addr);
+    const unsigned char* const enemy = Pointer(::bof3::Img(BattleE3_CurrentEnemy_addr));
     Sprite_Current = owner;
     const unsigned char* const cues =
         enemy != nullptr ? Pointer(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(enemy)) + kEnemyCues) : nullptr;
@@ -226,7 +226,7 @@ MENGINE_EXPORT void __cdecl MagicFx_WaitOwnerAnim(void) {
 // twelve overlays' tasks): flag 0x40 on the target, the effect-done bit, the
 // slot freed (a tail jmp).
 MENGINE_EXPORT void __cdecl MagicFx_FlagTargetEnd(void) {
-    MH_CALL(Battle_SetTargetFlag40)(Mem(at::kTarget)[0]);
+    MH_CALL(Battle_SetTargetFlag40)(Mem(::bof3::Img(at::kTarget))[0]);
     SetDone();
     MH_CALL(BattleTask_FreeCurrent)();
 }
@@ -307,7 +307,7 @@ MENGINE_EXPORT void __cdecl HeadCracker_WaitCaster(void) {
 MENGINE_EXPORT void __cdecl HeadCracker_Drop(void) {
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x5D);
     unsigned char* const self = Sprite_Current;
-    magic_harness::SetPointer(kSlotOwners + (slot & 0xFF) * at::kTaskStride, self);
+    magic_harness::SetPointer(::bof3::Img(kSlotOwners.v) + (slot & 0xFF) * at::kTaskStride, self);
     Bump(self[0xA]);
     Bump(Sprite_Current[1]);
 }
@@ -323,11 +323,11 @@ MENGINE_EXPORT void __cdecl HeadCracker_Drop(void) {
 // target's own reaction moves its +1 off 6 (docs/magic_engine.md section 6).
 MENGINE_EXPORT void __cdecl HeadCracker_WaitTarget(void) {
     if (Sprite_Current[0xA] != 0) return;
-    if (MH_CALL(Battle_ActorIsOut)(Mem(at::kTarget)[0]) != 0) {
+    if (MH_CALL(Battle_ActorIsOut)(Mem(::bof3::Img(at::kTarget))[0]) != 0) {
         Sprite_Current[1] = 9;
         return;
     }
-    const unsigned char target = Mem(at::kTarget)[0];
+    const unsigned char target = Mem(::bof3::Img(at::kTarget))[0];
     const unsigned char* const actor = target < 3 ? PartyOf(target) : EnemyOf(target);
     if (actor[kState] == kReacting) return;
     Bump(Sprite_Current[1]);
@@ -372,15 +372,15 @@ MENGINE_EXPORT void __cdecl HeadCrackerRock_Run(void) {
 // (Sprite_Current read again).
 MENGINE_EXPORT void __cdecl HeadCrackerRock_Start(void) {
     MH_CALL(Sprite_SetAnimationBank)(0x1D3);
-    const unsigned char t = Mem(at::kTarget)[0];
+    const unsigned char t = Mem(::bof3::Img(at::kTarget))[0];
     unsigned char* const sc = Sprite_Current;
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     if (t <= 2) {
         tsc->x = Long(PartyOf(t) + 0x34);
-        tsc->z = Long(PartyOf(Mem(at::kTarget)[0]) + 0x38);
+        tsc->z = Long(PartyOf(Mem(::bof3::Img(at::kTarget))[0]) + 0x38);
     } else {
         tsc->x = Long(EnemyOf(t) + 0x34);
-        tsc->z = Long(EnemyOf(Mem(at::kTarget)[0]) + 0x38);
+        tsc->z = Long(EnemyOf(Mem(::bof3::Img(at::kTarget))[0]) + 0x38);
     }
     rv::Store<unsigned>(tsc->height_whole, tsc->height_whole + 0x800);
     rv::Store(tsc->step_y, 0);
@@ -416,8 +416,8 @@ MENGINE_EXPORT void __cdecl HeadCrackerRock_Fall(void) {
 // after the call: the Head Cracker task) children count +0xA down one; the
 // slot freed (a tail jmp).
 MENGINE_EXPORT void __cdecl HeadCrackerRock_Land(void) {
-    MH_CALL(Battle_SetTargetFlag40)(Mem(at::kTarget)[0]);
-    unsigned char* const owner = Pointer(BattleE2_Owner_addr);
+    MH_CALL(Battle_SetTargetFlag40)(Mem(::bof3::Img(at::kTarget))[0]);
+    unsigned char* const owner = Pointer(::bof3::Img(BattleE2_Owner_addr));
     owner[0xA] = static_cast<unsigned char>(owner[0xA] - 1);
     MH_CALL(BattleTask_FreeCurrent)();
 }

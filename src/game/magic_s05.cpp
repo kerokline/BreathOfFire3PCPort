@@ -51,9 +51,9 @@ using move_script::Long;
 using move_script::SetLong;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char ActorByte() { return Mem(at::kActor)[0]; }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char ActorByte() { return Mem(::bof3::Img(at::kActor))[0]; }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 void AddB(unsigned char& b, unsigned v) { b = static_cast<unsigned char>(b + v); }
@@ -62,13 +62,13 @@ void AddLong(unsigned char* at, std::int32_t v) {
     SetLong(at, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(at)) + static_cast<std::uint32_t>(v)));
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
 // The acting actor's record as the originals index it: a member (0x802D40,
 // stride 0x14C) at 0..2, else the enemy by index - 3 (0x93B960, stride
 // 0x128), unchecked.
 unsigned char* ActorRecord(unsigned char actor) {
-    if (actor <= 2) return Mem(ObjTrio_addr + actor * at::kPartyStride);
-    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
+    if (actor <= 2) return Mem(::bof3::Img(ObjTrio_addr) + actor * at::kPartyStride);
+    return Mem(::bof3::Img(Battle_Enemies_addr) + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
 }
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
@@ -222,7 +222,7 @@ S05_EXPORT void __cdecl Magic017_Wait(void) {
 // task freed (a tail jmp).
 S05_EXPORT void __cdecl Magic017_End(void) {
     MH_CALL(SpriteClut_RestoreFxRow)();
-    Mem(at::kFlags)[0] |= 4;
+    Mem(::bof3::Img(at::kFlags))[0] |= 4;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -301,11 +301,11 @@ S05_EXPORT void __cdecl Magic017Image_Leap(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->x) +
+        ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)))->x) +
                                                     static_cast<std::uint32_t>(ts->step_x));
-        ts->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->z) +
+        ts->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)))->z) +
                                                     static_cast<std::uint32_t>(ts->step_z));
-        rv::Store(ts->height, rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->height);
+        rv::Store(ts->height, rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)))->height);
         ts->step_x = 0;
         ts->step_z = (s[0xB] & 1) ? 0x1000 : static_cast<std::int32_t>(0xFFFFF000u);
         Turn(s);
@@ -466,7 +466,7 @@ S05_EXPORT void __cdecl Magic019_End(void) {
     if (Sc()[0xB] != 0xFF) return;
     MH_CALL(SpriteClut_RestoreFxRow)();
     MH_CALL(BattleActor_SetAnimation)(4, 0);
-    Mem(at::kFlags)[0] |= 4;
+    Mem(::bof3::Img(at::kFlags))[0] |= 4;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 

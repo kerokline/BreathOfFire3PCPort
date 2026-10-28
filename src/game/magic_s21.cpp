@@ -68,10 +68,10 @@ constexpr unsigned kPoolSlots = 32;
 
 // The PC's copy of the PSX scratchpad (SharedScratch) and Prim_VertexScratch:
 // four SVECTORs 8 bytes apart, A0 / A8 / B0 / B8.
-constexpr std::uint32_t kScratch = SharedScratch_addr;
+constexpr ::bof3::image::Va kScratch{SharedScratch_addr};
 // kVertex: now Prim_VertexScratch (symbols.toml).
-unsigned char* Scr(unsigned off) { return Mem(kScratch + off); }
-unsigned char* Vtx(unsigned off) { return Mem(Prim_VertexScratch_addr + off); }
+unsigned char* Scr(unsigned off) { return Mem(::bof3::Img(kScratch.v) + off); }
+unsigned char* Vtx(unsigned off) { return Mem(::bof3::Img(Prim_VertexScratch_addr) + off); }
 const short* VtxP(unsigned off) { return reinterpret_cast<const short*>(Vtx(off)); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 std::int32_t L(std::uint32_t address) { return Long(Mem(address)); }
@@ -102,13 +102,13 @@ std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpre
 
 // An actor's record as the originals index them: 0..2 the party (stride
 // 0x14C), else an enemy (index - 3, stride 0x128), none of it checked.
-unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* EnemyRecord(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
+unsigned char* EnemyRecord(unsigned i) { return Mem(::bof3::Img(Battle_Enemies_addr) + i * at::kEnemyStride); }
 // The target's record by its byte: the original reads the byte, then the
 // dword at 0x904B44 again and indexes by its low byte.
 unsigned char* TargetRecord() {
-    const unsigned char t = Mem(at::kTarget)[0];
-    const unsigned low = static_cast<std::uint32_t>(L(at::kTarget)) & 0xFF;
+    const unsigned char t = Mem(::bof3::Img(at::kTarget))[0];
+    const unsigned low = static_cast<std::uint32_t>(L(::bof3::Img(at::kTarget))) & 0xFF;
     return t < 3 ? PartyRecord(low) : EnemyRecord(low - 3);
 }
 
@@ -158,15 +158,15 @@ MS21_EXPORT void __cdecl Inferno_Task(void) {
     if (phase >= 2) bof3::Fatal("Inferno_Task: phase %u, past the two-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
     unsigned char* const task = Sprite_Current;
-    const std::int32_t owner = L(BattleE2_Owner_addr);
+    const std::int32_t owner = L(::bof3::Img(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolSlots; ++i) {
-        unsigned char* const slot = Mem(FlamePool_addr + i * at::kTaskStride);
+        unsigned char* const slot = Mem(::bof3::Img(FlamePool_addr) + i * at::kTaskStride);
         if ((slot[0] & 1) == 0) continue;
         const std::int32_t its = Long(slot + 0x80);
         Sprite_Current = slot;
-        SetLong(Mem(BattleE2_Owner_addr), its);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), its);
         MH_CALL(FlamePool_Dispatch)();
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
         Sprite_Current = task;
     }
 }
@@ -191,12 +191,12 @@ MS21_EXPORT void __cdecl Inferno_Start(void) {
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0;
     Bump(Sprite_Current[1]);
-    const bool enemies = (Mem(at::kTarget)[0] & 0x40) != 0;
+    const bool enemies = (Mem(::bof3::Img(at::kTarget))[0] & 0x40) != 0;
     const unsigned count = enemies ? 8 : 3;
     for (unsigned i = 0; i < count; ++i) {
         if (MH_CALL(Battle_ActorIsOut)(enemies ? i + 3 : i) != 0) continue;
         const unsigned k = MH_CALL(BattleTask_Create)(1, 0x4D);
-        unsigned char* const child = Mem(BattleTask_Slots_addr + k * at::kTaskStride);
+        unsigned char* const child = Mem(::bof3::Img(BattleTask_Slots_addr) + k * at::kTaskStride);
         unsigned char* const sc = Sprite_Current;
         SetLong(child + 0x80, static_cast<std::int32_t>(Addr(sc)));
         child[1] = 0;
@@ -206,7 +206,7 @@ MS21_EXPORT void __cdecl Inferno_Start(void) {
     }
     for (unsigned i = 0; i < 8; ++i) {
         const unsigned k = MH_CALL(FlamePool_Alloc)();
-        unsigned char* const slot = Mem(FlamePool_addr + k * at::kTaskStride);
+        unsigned char* const slot = Mem(::bof3::Img(FlamePool_addr) + k * at::kTaskStride);
         unsigned char* const sc = Sprite_Current;
         SetLong(slot + 0x80, static_cast<std::int32_t>(Addr(sc)));
         slot[1] = 0;
@@ -215,7 +215,7 @@ MS21_EXPORT void __cdecl Inferno_Start(void) {
     }
     for (unsigned i = 0; i < 16; ++i) {
         const unsigned k = MH_CALL(FlamePool_Alloc)();
-        unsigned char* const slot = Mem(FlamePool_addr + k * at::kTaskStride);
+        unsigned char* const slot = Mem(::bof3::Img(FlamePool_addr) + k * at::kTaskStride);
         unsigned char* const sc = Sprite_Current;
         SetLong(slot + 0x80, static_cast<std::int32_t>(Addr(sc)));
         slot[1] = 1;
@@ -224,7 +224,7 @@ MS21_EXPORT void __cdecl Inferno_Start(void) {
         Bump(sc[0xB]);
     }
     for (std::uint32_t p = kClut; p < kClutEnd; p += 2) SetWord(Mem(p), Word(Mem(p - 0x4000)) | 0x8000u);
-    Mem(Gfx_ClutStripDirty_addr)[0] = 1;
+    Mem(::bof3::Img(Gfx_ClutStripDirty_addr))[0] = 1;
     MH_CALL(Sound_PlayById)(0x100);
 }
 
@@ -233,7 +233,7 @@ MS21_EXPORT void __cdecl Inferno_Start(void) {
 MS21_EXPORT void __cdecl Inferno_End(void) {
     const unsigned char* const sc = Sprite_Current;
     if (sc[0xB] != 0 || sc[9] != 0) return;
-    Mem(at::kFlags)[0] = static_cast<unsigned char>(Mem(at::kFlags)[0] | 4);
+    Mem(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(at::kFlags))[0] | 4);
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -243,7 +243,7 @@ MS21_EXPORT void __cdecl Inferno_End(void) {
 MS21_EXPORT unsigned char __cdecl FlamePool_Alloc(void) {
     unsigned char i = 0;
     do {
-        unsigned char* const s = Mem(FlamePool_addr + i * at::kTaskStride);
+        unsigned char* const s = Mem(::bof3::Img(FlamePool_addr) + i * at::kTaskStride);
         if ((s[0] & 1) == 0) {
             s[0] = static_cast<unsigned char>(s[0] | 1);
             return i;
@@ -261,7 +261,7 @@ MS21_EXPORT unsigned char __cdecl FlamePool_Alloc(void) {
 // aborts with a Fatal.
 MS21_EXPORT void __cdecl Inferno_TargetCentre(void) {
     int n = 0, x = 0, z = 0, y = 0;
-    const bool enemies = (Mem(at::kTarget)[0] & 0x40) != 0;
+    const bool enemies = (Mem(::bof3::Img(at::kTarget))[0] & 0x40) != 0;
     const unsigned count = enemies ? 8 : 3;
     for (unsigned i = 0; i < count; ++i) {
         if (MH_CALL(Battle_ActorIsOut)(enemies ? i + 3 : i) != 0) continue;
@@ -280,10 +280,10 @@ MS21_EXPORT void __cdecl Inferno_TargetCentre(void) {
 // --- the scorch child (kind 1, parameter 0x4D) ---------------------------------
 
 // original 0x4C6560: jmp [0x65B604 + 4 * +1] - one entry, FxScorch_Run.
-MS21_EXPORT void __cdecl FxScorch_Dispatch(void) { CallCell(FxScorch_Phases_addr, Sprite_Current[1]); }
+MS21_EXPORT void __cdecl FxScorch_Dispatch(void) { CallCell(::bof3::Img(FxScorch_Phases_addr), Sprite_Current[1]); }
 
 // original 0x4C6580: jmp [0x65B608 + 4 * +2] - Delay, Hit, Free.
-MS21_EXPORT void __cdecl FxScorch_Run(void) { CallCell(FxScorch_Steps_addr, Sprite_Current[2]); }
+MS21_EXPORT void __cdecl FxScorch_Run(void) { CallCell(::bof3::Img(FxScorch_Steps_addr), Sprite_Current[2]); }
 
 // original 0x4C65A0: +9 down; at 0 the record of its actor (+3: an enemy's
 // index with the target byte's bit 0x40, else a party member's) has its tint
@@ -292,7 +292,7 @@ MS21_EXPORT void __cdecl FxScorch_Delay(void) {
     Bump(Sprite_Current[9], -1);
     unsigned char* const sc = Sprite_Current;
     if (sc[9] != 0) return;
-    if (Mem(at::kTarget)[0] & 0x40) {
+    if (Mem(::bof3::Img(at::kTarget))[0] & 0x40) {
         unsigned char* const r = EnemyRecord(sc[3]);
         MH_CALL(Sprite_ReleaseTint)(r);
         MH_CALL(Sprite_SetTint)(r, 0xF8, 0xF8, 0xF8, 1);
@@ -309,8 +309,8 @@ MS21_EXPORT void __cdecl FxScorch_Delay(void) {
 // original 0x4C6650: held while the owner's +0xB (its flames) is 8 or more;
 // then the actor's flag 0x40, its tint released, it flashed; the step on.
 MS21_EXPORT void __cdecl FxScorch_Hit(void) {
-    if (Pointer(BattleE2_Owner_addr)[0xB] >= 8) return;
-    const bool enemies = (Mem(at::kTarget)[0] & 0x40) != 0;
+    if (Pointer(::bof3::Img(BattleE2_Owner_addr))[0xB] >= 8) return;
+    const bool enemies = (Mem(::bof3::Img(at::kTarget))[0] & 0x40) != 0;
     const unsigned char i = Sprite_Current[3];
     if (enemies) {
         MH_CALL(Battle_SetTargetFlag40)(static_cast<unsigned char>(i + 3));
@@ -326,7 +326,7 @@ MS21_EXPORT void __cdecl FxScorch_Hit(void) {
 
 // original 0x4C66F0: the owner's +9 (its scorches) down; free.
 MS21_EXPORT void __cdecl FxScorch_Free(void) {
-    Bump(Pointer(BattleE2_Owner_addr)[9], -1);
+    Bump(Pointer(::bof3::Img(BattleE2_Owner_addr))[9], -1);
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -334,13 +334,13 @@ MS21_EXPORT void __cdecl FxScorch_Free(void) {
 
 // original 0x4C6700: jmp [0x65B614 + 4 * +1] - FlameColumn_Task,
 // FlameSpark_Task.
-MS21_EXPORT void __cdecl FlamePool_Dispatch(void) { CallCell(FlamePool_Types_addr, Sprite_Current[1]); }
+MS21_EXPORT void __cdecl FlamePool_Dispatch(void) { CallCell(::bof3::Img(FlamePool_Types_addr), Sprite_Current[1]); }
 
 // original 0x4C6720: the column's step through [0x65B61C + 4 * +2], its +0xB
 // (the flicker) up; while it lives past its first step, the disc and the
 // band under the actor's matrix.
 MS21_EXPORT void __cdecl FlameColumn_Task(void) {
-    CallCell(FlameColumn_Phases_addr, Sprite_Current[2]);
+    CallCell(::bof3::Img(FlameColumn_Phases_addr), Sprite_Current[2]);
     Bump(Sprite_Current[0xB]);
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
@@ -356,9 +356,9 @@ static void ColumnPlace() {
     const unsigned char* sc = Sprite_Current;
     SetWord(Scr(0xA), static_cast<unsigned>((sc[4] & 7) << 9));
     const int s = MH_CALL(Math_Sin)(S16(Scr(0xA)));
-    rv::Store(rv::Current<records::BattleTask>()->x, (Mul(s, S16(Scr(0))) >> 3) + rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->x);
+    rv::Store(rv::Current<records::BattleTask>()->x, (Mul(s, S16(Scr(0))) >> 3) + rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->x);
     const int c = MH_CALL(Math_Cos)(S16(Scr(0xA)));
-    rv::Store(rv::Current<records::BattleTask>()->z, (Mul(c, S16(Scr(0))) >> 3) + rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->z);
+    rv::Store(rv::Current<records::BattleTask>()->z, (Mul(c, S16(Scr(0))) >> 3) + rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->z);
 }
 
 // original 0x4C6770: +0xA = (Rand & 3) << 4; the radius 0xC0 - +0xA; placed
@@ -369,7 +369,7 @@ MS21_EXPORT void __cdecl FlameColumn_Start(void) {
     Sprite_Current[0xA] = U8((r & 3) << 4);
     SetWord(Scr(0), 0xC0u - Sprite_Current[0xA]);
     ColumnPlace();
-    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->height);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->height);
     const int r2 = MH_CALL(Rand)();
     Sprite_Current[0xB] = U8(r2);
     Sprite_Current[9] = 0;
@@ -389,14 +389,14 @@ MS21_EXPORT void __cdecl FlameColumn_Grow(void) {
 
 // original 0x4C68F0: held until the owner's +0xB (its flames) is 8.
 MS21_EXPORT void __cdecl FlameColumn_Hold(void) {
-    if (Pointer(BattleE2_Owner_addr)[0xB] == 8) Bump(Sprite_Current[2]);
+    if (Pointer(::bof3::Img(BattleE2_Owner_addr))[0xB] == 8) Bump(Sprite_Current[2]);
 }
 
 // original 0x4C6910: +9 down; at 0 the owner's +0xB down and the slot freed.
 MS21_EXPORT void __cdecl FlameColumn_Fade(void) {
     Bump(Sprite_Current[9], -1);
     if (Sprite_Current[9] != 0) return;
-    Bump(Pointer(BattleE2_Owner_addr)[0xB], -1);
+    Bump(Pointer(::bof3::Img(BattleE2_Owner_addr))[0xB], -1);
     MH_AT(VoidFn, bof3::addr::MagicFx_FreeCurrentRecord)();
 }
 
@@ -501,7 +501,7 @@ MS21_EXPORT void __cdecl FlameColumn_DrawBand(void) {
 // original 0x4C6D80: the spark's step through [0x65B62C + 4 * +2]; while it
 // lives past its first step, its screen point and its quads.
 MS21_EXPORT void __cdecl FlameSpark_Task(void) {
-    CallCell(FlameSpark_Phases_addr, Sprite_Current[2]);
+    CallCell(::bof3::Img(FlameSpark_Phases_addr), Sprite_Current[2]);
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -517,9 +517,9 @@ MS21_EXPORT void __cdecl FlameSpark_Start(void) {
     unsigned char* const sc = Sprite_Current;
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     if (sc[9] != 0) return;
-    tsc->x = rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->x;
-    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->z);
-    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->height);
+    tsc->x = rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->x;
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->height);
     SetWord(Scr(0), 0x100);
     const int r = MH_CALL(Rand)();
     unsigned char* const x = Sprite_Current + 0x34;
@@ -563,7 +563,7 @@ MS21_EXPORT void __cdecl FlameSpark_Fade(void) {
     Bump(Sprite_Current[0xA], -1);
     Bump(Sprite_Current[0xB], -1);
     if (Sprite_Current[0xB] != 0) return;
-    Bump(Pointer(BattleE2_Owner_addr)[0xB], -1);
+    Bump(Pointer(::bof3::Img(BattleE2_Owner_addr))[0xB], -1);
     MH_AT(VoidFn, bof3::addr::MagicFx_FreeCurrentRecord)();
 }
 
@@ -653,14 +653,14 @@ MS21_EXPORT void __cdecl Frost_Task(void) {
 // it with the source's actor byte and position; +0xB 0; the phase on; sound
 // 0x100.
 MS21_EXPORT void __cdecl Frost_Start(void) {
-    unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+    unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
     rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(src)->screen_x));
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(src + 0x30) - 0x10u);
     const unsigned k = MH_CALL(BattleTask_Create)(1, 0x15);
-    unsigned char* const child = Mem(BattleTask_Slots_addr + k * at::kTaskStride);
+    unsigned char* const child = Mem(::bof3::Img(BattleTask_Slots_addr) + k * at::kTaskStride);
     unsigned char* const sc = Sprite_Current;
     SetLong(child + 0x80, static_cast<std::int32_t>(Addr(sc)));
     child[8] = src[8];
@@ -676,14 +676,14 @@ MS21_EXPORT void __cdecl Frost_Start(void) {
 // has set +0xB to 0xFF, the target's tint released, it flashed, its flag
 // 0x40, the done flag, free.
 MS21_EXPORT void __cdecl Frost_Wait(void) {
-    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+    const unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(src)->screen_x));
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(src + 0x30) - 0x10u);
     if (Sprite_Current[0xB] != 0xFF) return;
     MH_CALL(Sprite_ReleaseTint)(TargetRecord());
-    MH_CALL(BattleActor_Flash)(Mem(at::kTarget)[0]);
-    MH_CALL(Battle_SetTargetFlag40)(Mem(at::kTarget)[0]);
-    Mem(at::kFlags)[0] = static_cast<unsigned char>(Mem(at::kFlags)[0] | 4);
+    MH_CALL(BattleActor_Flash)(Mem(::bof3::Img(at::kTarget))[0]);
+    MH_CALL(Battle_SetTargetFlag40)(Mem(::bof3::Img(at::kTarget))[0]);
+    Mem(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(at::kFlags))[0] | 4);
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -693,8 +693,8 @@ MS21_EXPORT void __cdecl Frost_Wait(void) {
 // owner's +0xB is 0xFF, the shards and the disc under its own matrix; then
 // always a draw mode (0x15) committed to slot 3.
 MS21_EXPORT void __cdecl FrostRing_Task(void) {
-    CallCell(FrostRing_Phases_addr, Sprite_Current[1]);
-    if (Pointer(BattleE2_Owner_addr)[0xB] != 0xFF) {
+    CallCell(::bof3::Img(FrostRing_Phases_addr), Sprite_Current[1]);
+    if (Pointer(::bof3::Img(BattleE2_Owner_addr))[0xB] != 0xFF) {
         MH_CALL(FrostRing_PushMatrix)();
         MH_CALL(FrostRing_DrawShards)();
         MH_CALL(FrostRing_DrawDisc)();
@@ -706,7 +706,7 @@ MS21_EXPORT void __cdecl FrostRing_Task(void) {
 
 // original 0x4C7610: the target's flags 0x20; +9, +0xA 0; the phase on.
 MS21_EXPORT void __cdecl FrostRing_Mark(void) {
-    MH_CALL(Battle_SetTargetFlags)(Mem(at::kTarget)[0], 0x20);
+    MH_CALL(Battle_SetTargetFlags)(Mem(::bof3::Img(at::kTarget))[0], 0x20);
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 0;
     Bump(Sprite_Current[1]);
@@ -745,7 +745,7 @@ MS21_EXPORT void __cdecl FrostRing_Spin(void) {
 MS21_EXPORT void __cdecl FrostRing_Fade(void) {
     Bump(Sprite_Current[9]);
     if (Sprite_Current[9] != 0x20) return;
-    Pointer(BattleE2_Owner_addr)[0xB] = 0xFF;
+    Pointer(::bof3::Img(BattleE2_Owner_addr))[0xB] = 0xFF;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -778,27 +778,27 @@ MS21_EXPORT void __cdecl FrostRing_DrawShards(void) {
             SetLong(Scr(4), Mul(sc[9], n) << 2);
             SetLong(Scr(8), -5 * Mul(j + 1, sc[9]));
         }
-        SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(0), L(kScratch)) >> 12));
-        SetWord(Vtx(0x12), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), L(kScratch)) >> 12));
+        SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(0), L(::bof3::Img(kScratch.v))) >> 12));
+        SetWord(Vtx(0x12), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), L(::bof3::Img(kScratch.v))) >> 12));
         SetWord(Vtx(0x14), 0);
         int a1 = 0x100;
         for (int a2 = 0x200; a2 < 0x1200; a2 += 0x200, a1 += 0x200) {
-            SetWord(Vtx(0), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a1), L(kScratch + 4)) >> 12));
+            SetWord(Vtx(0), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a1), L(::bof3::Img(kScratch.v) + 4)) >> 12));
             const int s1 = MH_CALL(Math_Sin)(a1);
             const std::uint16_t h = Word(Scr(8)), px = Word(Vtx(0x10));
-            SetWord(Vtx(2), static_cast<unsigned>(Mul(s1, L(kScratch + 4)) >> 12));
+            SetWord(Vtx(2), static_cast<unsigned>(Mul(s1, L(::bof3::Img(kScratch.v) + 4)) >> 12));
             const std::uint16_t pz = Word(Vtx(0x12));
             SetWord(Vtx(4), h);
             SetWord(Vtx(8), px);
             SetWord(Vtx(0xA), pz);
             SetWord(Vtx(0xC), 0);
-            SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a2), L(kScratch)) >> 12));
+            SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a2), L(::bof3::Img(kScratch.v))) >> 12));
             const int s2 = MH_CALL(Math_Sin)(a2);
             const int ox = S16(Vtx(0x10));
             const unsigned char* const s = Sprite_Current;
             const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             SetWord(Vtx(0x14), 0);
-            const std::int32_t oz = Mul(s2, L(kScratch)) >> 12;
+            const std::int32_t oz = Mul(s2, L(::bof3::Img(kScratch.v))) >> 12;
             SetWord(Vtx(0x12), static_cast<unsigned>(oz));
             const unsigned long x = static_cast<unsigned long>((static_cast<std::uint32_t>(ox) << 9) +
                                                                static_cast<std::uint32_t>(ts->x));
@@ -813,7 +813,7 @@ MS21_EXPORT void __cdecl FrostRing_DrawShards(void) {
             if (s3[1] == 3) {
                 SetLong(Scr(0xC), r16);
                 const int less = -(r16 / 16) * (s3[9] >> 1);
-                const std::int32_t v = L(kScratch + 0xC) + less;
+                const std::int32_t v = L(::bof3::Img(kScratch.v) + 0xC) + less;
                 SetLong(Scr(0xC), v);
                 if (v < 0) SetLong(Scr(0xC), 1);
                 p[4] = 1;
@@ -898,17 +898,17 @@ MS21_EXPORT void __cdecl FrostRing_DrawDisc(void) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        PutF(p, 8, S16(Pointer(BattleE2_Owner_addr) + 0x2E));
-        PutF(p, 0xC, S16(Pointer(BattleE2_Owner_addr) + 0x30));
+        PutF(p, 8, S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x2E));
+        PutF(p, 0xC, S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x30));
         int v = MH_CALL(Math_Sin)(a);
-        PutF(p, 0x18, (Mul(v, L(kScratch)) >> 12) + S16(Pointer(BattleE2_Owner_addr) + 0x2E));
+        PutF(p, 0x18, (Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x2E));
         v = MH_CALL(Math_Cos)(a);
         a += 0x80;
-        PutF(p, 0x1C, (Mul(v, L(kScratch)) >> 12) + S16(Pointer(BattleE2_Owner_addr) + 0x30));
+        PutF(p, 0x1C, (Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x30));
         v = MH_CALL(Math_Sin)(a);
-        PutF(p, 0x28, (Mul(v, L(kScratch)) >> 12) + S16(Pointer(BattleE2_Owner_addr) + 0x2E));
+        PutF(p, 0x28, (Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x2E));
         v = MH_CALL(Math_Cos)(a);
-        const std::int32_t y2 = (Mul(v, L(kScratch)) >> 12) + S16(Pointer(BattleE2_Owner_addr) + 0x30);
+        const std::int32_t y2 = (Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + S16(Pointer(::bof3::Img(BattleE2_Owner_addr)) + 0x30);
         p[4] = 0x20;
         p[5] = 0x20;
         p[6] = 0xC0;
@@ -942,7 +942,7 @@ MS21_EXPORT void __cdecl Iceblast_Task(void) {
 // owned by it with the source's actor byte and the task's position, +9
 // 0x30 - 4 i (the delay), +0xA 0, +0xB i; sound 0x100; +9, +0xA 0; on.
 MS21_EXPORT void __cdecl Iceblast_Start(void) {
-    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+    const unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(src)->screen_x));
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(src)->screen_y));
     rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
@@ -954,11 +954,11 @@ MS21_EXPORT void __cdecl Iceblast_Start(void) {
             v = U8(-(MH_CALL(Rand)() & 0xF));
         else
             v = U8(MH_CALL(Rand)() & 0xF);
-        Mem(Iceblast_Jitter_addr + i)[0] = v;
+        Mem(::bof3::Img(Iceblast_Jitter_addr) + i)[0] = v;
     }
     for (unsigned i = 0; i < 12; ++i) {
         const unsigned k = MH_CALL(BattleTask_Create)(1, 0x17);
-        unsigned char* const child = Mem(BattleTask_Slots_addr + k * at::kTaskStride);
+        unsigned char* const child = Mem(::bof3::Img(BattleTask_Slots_addr) + k * at::kTaskStride);
         const unsigned char* const sc = Sprite_Current;
         const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
         SetLong(child + 0x80, static_cast<std::int32_t>(Addr(sc)));
@@ -986,7 +986,7 @@ MS21_EXPORT void __cdecl Iceblast_Chill(void) {
         unsigned char* const r = TargetRecord();
         MH_CALL(Sprite_ReleaseTint)(r);
         MH_CALL(Sprite_SetTint)(r, 6, 4, 8, 0);
-        MH_CALL(Battle_SetTargetFlags)(Mem(at::kTarget)[0], 0x200);
+        MH_CALL(Battle_SetTargetFlags)(Mem(::bof3::Img(at::kTarget))[0], 0x200);
         sc = Sprite_Current;
     }
     Bump(sc[0xA]);
@@ -1025,9 +1025,9 @@ MS21_EXPORT void __cdecl Iceblast_End(void) {
     Bump(Sprite_Current[0xA], -1);
     if (Sprite_Current[0xA] != 0) return;
     MH_CALL(Sprite_ReleaseTint)(TargetRecord());
-    MH_CALL(BattleActor_Flash)(Mem(at::kTarget)[0]);
-    MH_CALL(Battle_SetTargetFlag40)(Mem(at::kTarget)[0]);
-    Mem(at::kFlags)[0] = static_cast<unsigned char>(Mem(at::kFlags)[0] | 4);
+    MH_CALL(BattleActor_Flash)(Mem(::bof3::Img(at::kTarget))[0]);
+    MH_CALL(Battle_SetTargetFlag40)(Mem(::bof3::Img(at::kTarget))[0]);
+    Mem(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(at::kFlags))[0] | 4);
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -1045,16 +1045,16 @@ static Spire SpireRow(int i) {
 }
 static void SpireColumn(int i, const Spire& s, int a, unsigned idx) {
     SetLong(Scr(4), s.base0);
-    SetLong(Scr(0), static_cast<signed char>(Mem(Iceblast_Jitter_addr + idx)[0]) + s.base0);
-    SetWord(Vtx(0), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(kScratch)) >> 12));
-    SetWord(Vtx(2), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a), L(kScratch)) >> 12));
-    SetWord(Vtx(4), static_cast<unsigned>(s.h0 - static_cast<signed char>(Mem(Iceblast_Jitter_addr + idx)[0])));
+    SetLong(Scr(0), static_cast<signed char>(Mem(::bof3::Img(Iceblast_Jitter_addr) + idx)[0]) + s.base0);
+    SetWord(Vtx(0), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(::bof3::Img(kScratch.v))) >> 12));
+    SetWord(Vtx(2), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(a), L(::bof3::Img(kScratch.v))) >> 12));
+    SetWord(Vtx(4), static_cast<unsigned>(s.h0 - static_cast<signed char>(Mem(::bof3::Img(Iceblast_Jitter_addr) + idx)[0])));
     SetLong(Scr(4), s.base1);
-    SetLong(Scr(0), static_cast<signed char>(Mem(Iceblast_Jitter_addr + idx + 8)[0]) + s.base1);
-    SetWord(Vtx(8), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(kScratch)) >> 12));
+    SetLong(Scr(0), static_cast<signed char>(Mem(::bof3::Img(Iceblast_Jitter_addr) + idx + 8)[0]) + s.base1);
+    SetWord(Vtx(8), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(::bof3::Img(kScratch.v))) >> 12));
     const int c = MH_CALL(Math_Cos)(a);
-    const signed char j1 = static_cast<signed char>(Mem(Iceblast_Jitter_addr + idx + 8)[0]);
-    SetWord(Vtx(0xA), static_cast<unsigned>(Mul(c, L(kScratch)) >> 12));
+    const signed char j1 = static_cast<signed char>(Mem(::bof3::Img(Iceblast_Jitter_addr) + idx + 8)[0]);
+    SetWord(Vtx(0xA), static_cast<unsigned>(Mul(c, L(::bof3::Img(kScratch.v))) >> 12));
     SetWord(Vtx(0xC), static_cast<unsigned>(s.h1 - j1));
     if (i == 5) {
         SetWord(Vtx(0xA), 0);
@@ -1224,8 +1224,8 @@ MS21_EXPORT void __cdecl Iceblast_DrawSpiresInner(void) {
 // 1); each linked at the task's position.
 MS21_EXPORT void __cdecl Iceblast_DrawDisc(void) {
     SetLong(Scr(0), 0x1C0);
-    SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), L(kScratch)) >> 12));
-    SetWord(Vtx(0x12), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(0), L(kScratch)) >> 12));
+    SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(0), L(::bof3::Img(kScratch.v))) >> 12));
+    SetWord(Vtx(0x12), static_cast<unsigned>(Mul(MH_CALL(Math_Cos)(0), L(::bof3::Img(kScratch.v))) >> 12));
     for (int a = 0x100; a < 0x1100; a += 0x100) {
         const std::uint16_t y = Word(Vtx(0x12)), x = Word(Vtx(0x10));
         SetWord(Vtx(0), 0);
@@ -1234,10 +1234,10 @@ MS21_EXPORT void __cdecl Iceblast_DrawDisc(void) {
         SetWord(Vtx(8), x);
         SetWord(Vtx(0xA), y);
         SetWord(Vtx(0xC), 0);
-        SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(kScratch)) >> 12));
+        SetWord(Vtx(0x10), static_cast<unsigned>(Mul(MH_CALL(Math_Sin)(a), L(::bof3::Img(kScratch.v))) >> 12));
         const int c = MH_CALL(Math_Cos)(a);
         unsigned char* const mode = Gfx_PacketNext;
-        SetWord(Vtx(0x12), static_cast<unsigned>(Mul(c, L(kScratch)) >> 12));
+        SetWord(Vtx(0x12), static_cast<unsigned>(Mul(c, L(::bof3::Img(kScratch.v))) >> 12));
         SetWord(Vtx(0x14), 0);
         MH_CALL(Gpu_SetDrawMode)(mode, 0, 1, 0x35, 0);
         LinkAtTask(2, 0xC);
@@ -1263,14 +1263,14 @@ MS21_EXPORT void __cdecl Iceblast_DrawDisc(void) {
 // + 4 * +1] - IceShard_Wait, IceShard_Run.
 MS21_EXPORT void __cdecl IceShard_Task(void) {
     MH_CALL(MagicFx_PushActorMatrix)();
-    CallCell(IceShard_Phases_addr, Sprite_Current[1]);
+    CallCell(::bof3::Img(IceShard_Phases_addr), Sprite_Current[1]);
     MH_CALL(Gte_PopMatrix)();
 }
 
 // original 0x4C8990: held until the owner's phase is 3 (Iceblast_Sink); then
 // +9 (its delay) down, at 0 the phase on.
 MS21_EXPORT void __cdecl IceShard_Wait(void) {
-    if (Pointer(BattleE2_Owner_addr)[1] != 3) return;
+    if (Pointer(::bof3::Img(BattleE2_Owner_addr))[1] != 3) return;
     Bump(Sprite_Current[9], -1);
     unsigned char* const sc = Sprite_Current;
     if (sc[9] == 0) Bump(sc[1]);
@@ -1301,7 +1301,7 @@ MS21_EXPORT void __cdecl IceShard_Draw(void) {
         sc = Sprite_Current;
         SetLong(Scr(4), base);
         const int col = (k / 8) & 7;
-        const unsigned char* const jit = Mem(Iceblast_Jitter_addr + static_cast<std::uint32_t>(col + h * 8));
+        const unsigned char* const jit = Mem(::bof3::Img(Iceblast_Jitter_addr) + static_cast<std::uint32_t>(col + h * 8));
         std::int32_t radius = static_cast<signed char>(jit[0]) + base;
         SetLong(Scr(0), radius);
         if (sc[0xA] != 0)
@@ -1309,14 +1309,14 @@ MS21_EXPORT void __cdecl IceShard_Draw(void) {
         else
             SetLong(Scr(0), radius + sc[9] * 4);
         const int s = MH_CALL(Math_Sin)(a);
-        std::uint16_t px = static_cast<std::uint16_t>(Mul(s, L(kScratch)) >> 12);
+        std::uint16_t px = static_cast<std::uint16_t>(Mul(s, L(::bof3::Img(kScratch.v))) >> 12);
         const int c = MH_CALL(Math_Cos)(a);
-        std::uint16_t pz = static_cast<std::uint16_t>(Mul(c, L(kScratch)) >> 12);
+        std::uint16_t pz = static_cast<std::uint16_t>(Mul(c, L(::bof3::Img(kScratch.v))) >> 12);
         std::uint16_t py = static_cast<std::uint16_t>(lift - static_cast<signed char>(jit[0]));
         const unsigned char* const s2 = Sprite_Current;
         const records::BattleTask* const ts2 = rv::AsConst<records::BattleTask>(s2);
         if (s2[0xB] & 1) py = static_cast<std::uint16_t>(py - 0x24);
-        const std::uint16_t j = static_cast<std::uint16_t>(static_cast<signed char>(Mem(Iceblast_Jitter_addr + static_cast<std::uint32_t>(h + k))[0]));
+        const std::uint16_t j = static_cast<std::uint16_t>(static_cast<signed char>(Mem(::bof3::Img(Iceblast_Jitter_addr) + static_cast<std::uint32_t>(h + k))[0]));
         py = static_cast<std::uint16_t>(py + j);
         px = static_cast<std::uint16_t>(px + j);
         pz = static_cast<std::uint16_t>(pz + j);
@@ -1331,18 +1331,18 @@ MS21_EXPORT void __cdecl IceShard_Draw(void) {
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
         SetLong(Scr(0), 0x21 - Sprite_Current[9]);
         int v = MH_CALL(Math_Sin)(((Sprite_Current[9] + 0x10) & 0x3F) << 6);
-        SetWord(Vtx(0), static_cast<unsigned>((Mul(v, L(kScratch)) >> 12) + px));
+        SetWord(Vtx(0), static_cast<unsigned>((Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + px));
         v = MH_CALL(Math_Cos)(((Sprite_Current[9] + 0x10) & 0x3F) << 6);
-        SetWord(Vtx(2), static_cast<unsigned>((Mul(v, L(kScratch)) >> 12) + pz));
+        SetWord(Vtx(2), static_cast<unsigned>((Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + pz));
         v = MH_CALL(Math_Sin)(((Sprite_Current[9] - 0x18) & 0x3F) << 6);
-        SetWord(Vtx(8), static_cast<unsigned>((Mul(v, L(kScratch)) >> 12) + px));
+        SetWord(Vtx(8), static_cast<unsigned>((Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + px));
         v = MH_CALL(Math_Cos)(((Sprite_Current[9] - 0x18) & 0x3F) << 6);
-        SetWord(Vtx(0xA), static_cast<unsigned>((Mul(v, L(kScratch)) >> 12) + pz));
+        SetWord(Vtx(0xA), static_cast<unsigned>((Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + pz));
         v = MH_CALL(Math_Sin)(((Sprite_Current[9] - 0xF) & 0x3F) << 6);
-        SetWord(Vtx(0x10), static_cast<unsigned>((Mul(v, L(kScratch)) >> 12) + px));
+        SetWord(Vtx(0x10), static_cast<unsigned>((Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + px));
         v = MH_CALL(Math_Cos)(((Sprite_Current[9] - 0xF) & 0x3F) << 6);
         unsigned char* const s3 = Sprite_Current;
-        SetWord(Vtx(0x12), static_cast<unsigned>((Mul(v, L(kScratch)) >> 12) + pz));
+        SetWord(Vtx(0x12), static_cast<unsigned>((Mul(v, L(::bof3::Img(kScratch.v))) >> 12) + pz));
         const std::uint16_t y = static_cast<std::uint16_t>(py + s3[9] * 4u);
         SetWord(Vtx(0x14), y);
         SetWord(Vtx(0xC), y);

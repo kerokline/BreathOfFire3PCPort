@@ -61,7 +61,7 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F, words) and the four SVECTORs of
 // Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again after every
 // call, as the originals read them.
-constexpr std::uint32_t kS = SharedScratch_addr;
+constexpr ::bof3::image::Va kS{SharedScratch_addr};
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The three pools. MAGIC158's and MAGIC166's hold 64 task-like records of
@@ -85,16 +85,16 @@ constexpr unsigned kTransferStride = 0x2C;
 // kMonopolizeColours: now Monopolize_Colours (symbols.toml). 8 x (r, g, b)
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* Cur() { return Pointer(TransferMote_Current_addr); }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char* Cur() { return Pointer(::bof3::Img(TransferMote_Current_addr)); }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
 
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -116,12 +116,12 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
 // The originals index the records by the battle index, unchecked: the party
 // member's by index, the enemy's by index - 3.
-unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
-    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
+    return Mem(::bof3::Img(Battle_Enemies_addr) + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
@@ -185,16 +185,16 @@ unsigned char* MoteRecord(std::uint32_t pool, unsigned index) { return Mem(pool 
 // are read once, after the phase call that precedes the walk.
 void WalkMotes(std::uint32_t pool, std::uint32_t task) {
     unsigned char* const self = Sprite_Current;
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < kMotePools; ++i) {
         unsigned char* const rec = MoteRecord(pool, i);
         records::BattleTask* const trec = rv::As<records::BattleTask>(rec);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t rec_owner = static_cast<std::int32_t>(trec->owner);
         Sprite_Current = rec;
-        SetLong(Mem(BattleE2_Owner_addr), rec_owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), rec_owner);
         Call0(task);
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
         Sprite_Current = self;
     }
 }
@@ -211,7 +211,7 @@ void StartMotes(std::uint32_t pool, unsigned motes, std::uint32_t alloc) {
         rec[2] = 0;
     }
     {
-        const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+        const unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         s[8] = src[8];
@@ -339,10 +339,10 @@ void Shade(unsigned char* p, unsigned k, unsigned char r, unsigned char g) {
 
 // --- MAGIC162 -------------------------------------------------------------------
 
-unsigned char* TransferRecord(unsigned index) { return Mem(Transfer_Pool_addr + index * kTransferStride); }
-short OffsetX(unsigned k) { return static_cast<short>(Word(Mem(TransferMote_Offsets_addr + 4 * (k & 0x1F)))); }
-std::uint16_t OffsetXW(unsigned k) { return Word(Mem(TransferMote_Offsets_addr + 4 * (k & 0x1F))); }
-std::uint16_t OffsetYW(unsigned k) { return Word(Mem(TransferMote_Offsets_addr + 4 * (k & 0x1F) + 2)); }
+unsigned char* TransferRecord(unsigned index) { return Mem(::bof3::Img(Transfer_Pool_addr) + index * kTransferStride); }
+short OffsetX(unsigned k) { return static_cast<short>(Word(Mem(::bof3::Img(TransferMote_Offsets_addr) + 4 * (k & 0x1F)))); }
+std::uint16_t OffsetXW(unsigned k) { return Word(Mem(::bof3::Img(TransferMote_Offsets_addr) + 4 * (k & 0x1F))); }
+std::uint16_t OffsetYW(unsigned k) { return Word(Mem(::bof3::Img(TransferMote_Offsets_addr) + 4 * (k & 0x1F) + 2)); }
 
 // The current record's +0xC up, its x +0x20 its base +8 plus the sine of
 // (+0xC & 0x3F) << 6 x 24 >> 12, its y +0x22 on by +0xA.
@@ -387,12 +387,12 @@ void LinesHead() {
 S34_EXPORT void __cdecl Charm_Task(void) {
     static constexpr std::uint32_t kPhases[2] = {addr::Charm_Start, addr::BattleFx_Finish};
     Dispatch(kPhases, 2, Sc()[1], "Charm_Task");
-    WalkMotes(Charm_Pool_addr, addr::CharmMote_Task);
+    WalkMotes(::bof3::Img(Charm_Pool_addr), addr::CharmMote_Task);
 }
 
 // original 0x4ED6F0: the pool cleared, the task at the source sprite, sixteen
 // motes (StartMotes), sound 0x100.
-S34_EXPORT void __cdecl Charm_Start(void) { StartMotes(Charm_Pool_addr, 16, addr::Charm_PoolAlloc); }
+S34_EXPORT void __cdecl Charm_Start(void) { StartMotes(::bof3::Img(Charm_Pool_addr), 16, addr::Charm_PoolAlloc); }
 
 // original 0x4ED7D0: a mote's task, a jmp through CharmMote_TaskTable (one
 // entry) by +1, unchecked.
@@ -410,7 +410,7 @@ S34_EXPORT void __cdecl CharmMote_Run(void) {
 
 // original 0x4ED830: +9 down; at 0 round the owner, 0x480 units above it, a
 // colour from Charm_Colours; +0x14 0x80, +0x20 -16, +9 8, +0xA 2, +2 on.
-S34_EXPORT void __cdecl CharmMote_Launch(void) { LaunchMote(Charm_Colours_addr, 0x4800000, 0xFFFFFFF0u, 8, 2); }
+S34_EXPORT void __cdecl CharmMote_Launch(void) { LaunchMote(::bof3::Img(Charm_Colours_addr), 0x4800000, 0xFFFFFFF0u, 8, 2); }
 
 // original 0x4ED940: the height word +0x3E down by 0x60; +9 up to 0x10, +0xA
 // up by 2 to 0x10; +2 on once the height is the owner's.
@@ -514,7 +514,7 @@ S34_EXPORT void __cdecl CharmMote_Draw(void) {
 
 // original 0x4EDD70: the first of Charm_Pool's 64 records without bit 0 of
 // +0 gets it; its index in al, 0xFF when all are taken.
-S34_EXPORT unsigned char __cdecl Charm_PoolAlloc(void) { return PoolAlloc(Charm_Pool_addr, kMotePools, 0x84); }
+S34_EXPORT unsigned char __cdecl Charm_PoolAlloc(void) { return PoolAlloc(::bof3::Img(Charm_Pool_addr), kMotePools, 0x84); }
 
 // ===========================================================================
 // MAGIC159 (row 120, no label one id down)
@@ -532,7 +532,7 @@ S34_EXPORT void __cdecl Magic159_Task(void) {
 // sound 0x100.
 S34_EXPORT void __cdecl Magic159_Start(void) {
     {
-        const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+        const unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->x = rv::As<records::SpriteHead>(src)->x;
@@ -550,7 +550,7 @@ S34_EXPORT void __cdecl Magic159_Start(void) {
     child[9] = 8;
     Inc(self[0xB]);
     for (unsigned k = 0x1A00; k < 0x1B00; ++k) Gfx_ClutStrip[k] = static_cast<unsigned short>(Gfx_ClutStripSource[k] | 0x8000);
-    const unsigned char target = Mem(at::kTarget)[0];
+    const unsigned char target = Mem(::bof3::Img(at::kTarget))[0];
     Gfx_ClutStripDirty = 1;
     MH_CALL(Battle_SetTargetFlags)(target, 0x10);
     MH_CALL(Sound_PlayById)(0x100);
@@ -690,7 +690,7 @@ S34_EXPORT void __cdecl TimedBlow_Start(void) {
     }
     MH_CALL(BattleActor_SetAnimation)(0xC, 2);
     const unsigned slot = NewTask(0x54);
-    const unsigned actor = Mem(at::kActor)[0];
+    const unsigned actor = Mem(::bof3::Img(at::kActor))[0];
     const unsigned char* const rec = actor <= 2 ? PartyRecord(actor) : EnemyRecord(actor);
     unsigned char* const child = TaskSlot(slot);
     records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
@@ -745,7 +745,7 @@ S34_EXPORT void __cdecl TimedBlowCopy_Strike(void) {
     Dec(s[9]);
     if (s[9] != 0) return;
     MH_CALL(BattleActor_PlaySound)(2, 4);
-    MH_CALL(Battle_SetTargetFlag40)(Mem(at::kTarget)[0]);
+    MH_CALL(Battle_SetTargetFlag40)(Mem(::bof3::Img(at::kTarget))[0]);
     Inc(Sc()[2]);
 }
 
@@ -836,15 +836,15 @@ S34_EXPORT void __cdecl Transfer_Task(void) {
     static constexpr std::uint32_t kPhases[6] = {addr::Transfer_Start,    addr::BattleFx_TintActor, addr::BattleFx_Brighten,
                                                  addr::BattleFx_WaitStep4, addr::Sparkle_End,        addr::BattleFx_Finish};
     Dispatch(kPhases, 6, Sc()[1], "Transfer_Task");
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < kTransferRecords; ++i) {
         unsigned char* const rec = TransferRecord(i);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t rec_owner = Long(rec + 0x28);
-        SetLong(Mem(TransferMote_Current_addr), static_cast<std::int32_t>(Key(rec)));
-        SetLong(Mem(BattleE2_Owner_addr), rec_owner);
+        SetLong(Mem(::bof3::Img(TransferMote_Current_addr)), static_cast<std::int32_t>(Key(rec)));
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), rec_owner);
         Call0(addr::TransferMote_Task);
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
     }
 }
 
@@ -864,7 +864,7 @@ S34_EXPORT void __cdecl Transfer_Start(void) {
     }
     Sc()[4] = 4;
     {
-        const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+        const unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         s[8] = src[8];
@@ -881,7 +881,7 @@ S34_EXPORT void __cdecl Transfer_Start(void) {
         Inc(s[1]);
     }
     MH_CALL(Sound_PlayById)(0x100);
-    if (Mem(Transfer_Counts_addr + Sc()[4])[0] == 0) return;
+    if (Mem(::bof3::Img(Transfer_Counts_addr) + Sc()[4])[0] == 0) return;
     unsigned char i = 0;
     do {
         const unsigned index = MH_AT(ByteFn, addr::Transfer_PoolAlloc)() & 0xFFu;
@@ -895,12 +895,12 @@ S34_EXPORT void __cdecl Transfer_Start(void) {
             rec[3] = static_cast<unsigned char>(r & 3);
             rec[4] = self[4];
             rec[7] = i;
-            const unsigned char step = Mem(Transfer_Delays_addr + self[4])[0];
+            const unsigned char step = Mem(::bof3::Img(Transfer_Delays_addr) + self[4])[0];
             rec[5] = static_cast<unsigned char>(static_cast<unsigned>(i >> 2) * step + 1);
             Inc(self[0xB]);
         }
         ++i;
-    } while (i < Mem(Transfer_Counts_addr + Sc()[4])[0]);
+    } while (i < Mem(::bof3::Img(Transfer_Counts_addr) + Sc()[4])[0]);
 }
 
 // original 0x4EE8C0: a record's task, a jmp through TransferMote_TaskTable
@@ -970,7 +970,7 @@ S34_EXPORT void __cdecl TransferMote_Start(void) {
     }
     const std::uint32_t r = RandCall();
     unsigned char* const rec = Cur();
-    rec[7] = static_cast<unsigned char>((r & 6) + Mem(Transfer_Rise_addr + rec[4])[0]);
+    rec[7] = static_cast<unsigned char>((r & 6) + Mem(::bof3::Img(Transfer_Rise_addr) + rec[4])[0]);
     rec[5] = 0x10;
     rec[6] = 0;
     Inc(rec[2]);
@@ -1080,7 +1080,7 @@ S34_EXPORT void __cdecl TransferMote_DrawStar(void) {
         SetSW(0, Word(r + 0x20));
         SetSW(2, Word(r + 0x22));
         const unsigned index = r[3] + r[4] * 4u;
-        const unsigned char* const c = Mem(TransferMote_Colours_addr + index * 3u);
+        const unsigned char* const c = Mem(::bof3::Img(TransferMote_Colours_addr) + index * 3u);
         SetSW(8, c[0] * static_cast<unsigned>(r[5]));
         SetSW(0xA, c[1] * static_cast<unsigned>(r[5]));
         SetSW(0xC, c[2] * static_cast<unsigned>(r[5]));
@@ -1112,7 +1112,7 @@ S34_EXPORT void __cdecl TransferMote_DrawStar(void) {
 // original 0x4EF190: the first of Transfer_Pool's 128 records without bit 0
 // of +0 gets it; its index in al, 0xFF when all are taken.
 S34_EXPORT unsigned char __cdecl Transfer_PoolAlloc(void) {
-    return PoolAlloc(Transfer_Pool_addr, kTransferRecords, kTransferStride);
+    return PoolAlloc(::bof3::Img(Transfer_Pool_addr), kTransferRecords, kTransferStride);
 }
 
 // original 0x4EF1E0: the current record's +0..+4 cleared.
@@ -1134,12 +1134,12 @@ S34_EXPORT void __cdecl TransferMote_Free(void) {
 S34_EXPORT void __cdecl Monopolize_Task(void) {
     static constexpr std::uint32_t kPhases[2] = {addr::Monopolize_Start, addr::BattleFx_Finish};
     Dispatch(kPhases, 2, Sc()[1], "Monopolize_Task");
-    WalkMotes(Monopolize_Pool_addr, addr::MonopolizeMote_Task);
+    WalkMotes(::bof3::Img(Monopolize_Pool_addr), addr::MonopolizeMote_Task);
 }
 
 // original 0x4EF290: the pool cleared, the task at the source sprite, 32
 // motes (StartMotes), sound 0x100.
-S34_EXPORT void __cdecl Monopolize_Start(void) { StartMotes(Monopolize_Pool_addr, 32, addr::Monopolize_PoolAlloc); }
+S34_EXPORT void __cdecl Monopolize_Start(void) { StartMotes(::bof3::Img(Monopolize_Pool_addr), 32, addr::Monopolize_PoolAlloc); }
 
 // original 0x4EF370: a mote's task, a jmp through MonopolizeMote_TaskTable
 // (one entry) by +1, unchecked.
@@ -1157,7 +1157,7 @@ S34_EXPORT void __cdecl MonopolizeMote_Run(void) {
 
 // original 0x4EF3D0: +9 down; at 0 round the owner at its height, a colour
 // from Monopolize_Colours; +0x14 0x80, +0x20 -8, +9 1, +0xA 0x10, +2 on.
-S34_EXPORT void __cdecl MonopolizeMote_Launch(void) { LaunchMote(Monopolize_Colours_addr, 0, 0xFFFFFFF8u, 1, 0x10); }
+S34_EXPORT void __cdecl MonopolizeMote_Launch(void) { LaunchMote(::bof3::Img(Monopolize_Colours_addr), 0, 0xFFFFFFF8u, 1, 0x10); }
 
 // original 0x4EF4E0: the spiral at (+0xB & 0x1F) << 7; +9 up to 0x10; once
 // there +0xA down, at 0 the mote freed.
@@ -1175,7 +1175,7 @@ S34_EXPORT void __cdecl MonopolizeMote_Fall(void) {
 
 // original 0x4EF5C0: the first of Monopolize_Pool's 64 records without bit 0
 // of +0 gets it; its index in al, 0xFF when all are taken.
-S34_EXPORT unsigned char __cdecl Monopolize_PoolAlloc(void) { return PoolAlloc(Monopolize_Pool_addr, kMotePools, 0x84); }
+S34_EXPORT unsigned char __cdecl Monopolize_PoolAlloc(void) { return PoolAlloc(::bof3::Img(Monopolize_Pool_addr), kMotePools, 0x84); }
 
 void MagicS34_Inject() {
     if (bof3::WantsShadow("magic_s34")) magic_s34::SelfTest();

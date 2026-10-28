@@ -54,7 +54,7 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F, Scratch_Swap at +0xC) and the four
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
-constexpr std::uint32_t kS = SharedScratch_addr;
+constexpr ::bof3::image::Va kS{SharedScratch_addr};
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
@@ -64,37 +64,37 @@ constexpr std::uint32_t kS = SharedScratch_addr;
 // kPartySet: now AreaW0b_PartySet (symbols.toml). u8: the loaded party set (field_event_callees.h)
 // kPalette: now BattleE6_FormGroup (symbols.toml). u8: the palette index Sprite_LoadPalette is given
 // kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
-constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
-constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
-constexpr std::uint32_t kBannerText = 0x904EA0;    // char[]: the banner's text
-constexpr std::uint32_t kBannerIds = 0x64ECB0;     // u8 by 0x904B89: the system message id
-constexpr std::uint32_t kFormFiles = 0x64E9BC;     // two u16 * by 0x904B89 (stride 8): the DAT ids by party set
+constexpr ::bof3::image::Va kFrameSetBattle{0x8B3580};
+constexpr ::bof3::image::Va kFrameSetEffect{0x8E3580};
+constexpr ::bof3::image::Va kBannerText{0x904EA0};    // char[]: the banner's text
+constexpr ::bof3::image::Va kBannerIds{0x64ECB0};     // u8 by 0x904B89: the system message id
+constexpr ::bof3::image::Va kFormFiles{0x64E9BC};     // two u16 * by 0x904B89 (stride 8): the DAT ids by party set
 // kPalettes: now Gfx_ClutStripSource[0xf00] (symbols.toml). Gfx_ClutStripSource row 0x1B4: 64 bytes a sprite slot
 // kSetMembers: now MoveScript_EffectArg[0xc] (symbols.toml). u8[3] by party set: the members
 // kMemberOffsets: now BattleWin_MemberTargetOffsets (symbols.toml). BattleWin_MemberTargetOffsets: s8 pairs by (column + 4 row)
-constexpr std::uint32_t kSideOffsets = 0x64E2BC;   // s8 by (0x904AAC ^ 2) >> 1 (stride 2)
+constexpr ::bof3::image::Va kSideOffsets{0x64E2BC};   // s8 by (0x904AAC ^ 2) >> 1 (stride 2)
 // kSparkAngles: now AccessionSpark_Angles (symbols.toml). u8 pairs by the spark's +4: its two angles
 // Per member, stride 0x14C, beside the party records.
-constexpr std::uint32_t kMemberClut = 0x939B07;    // u8: the member's +0x27 kept
-constexpr std::uint32_t kMemberB05 = 0x939C05;     // u8
-constexpr std::uint32_t kMemberC10 = 0x939C10;     // u32
-constexpr std::uint32_t kWindowRows = 0x803337;    // the battle windows 0xD.. (Window_Alloc's records +3, stride 0x24)
+constexpr ::bof3::image::Va kMemberClut{0x939B07};    // u8: the member's +0x27 kept
+constexpr ::bof3::image::Va kMemberB05{0x939C05};     // u8
+constexpr ::bof3::image::Va kMemberC10{0x939C10};     // u32
+constexpr ::bof3::image::Va kWindowRows{0x803337};    // the battle windows 0xD.. (Window_Alloc's records +3, stride 0x24)
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
-unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
+unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(::bof3::Img(at::kActor)))) & 0xFF; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
 void AddVW(unsigned k, unsigned v) { SetVW(k, VW(k) + v); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
@@ -110,12 +110,12 @@ std::uint32_t Shl(int v, unsigned n) { return static_cast<std::uint32_t>(v) << n
 // A signed byte widened (movsx).
 int SignedByte(unsigned char b) { return static_cast<signed char>(b); }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
 // The originals index the records by the battle index, unchecked: the party's
 // by the index, the enemy's by index - 3.
-unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
-    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
+    return Mem(::bof3::Img(Battle_Enemies_addr) + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
@@ -172,8 +172,8 @@ void LinkAtSprite(unsigned size) {
 }
 void LoadPaletteOfCurrent() {
     const unsigned char* const c = Sprite_Current;
-    const unsigned char index = Mem(BattleE6_FormGroup_addr)[0];
-    MH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(Mem(Gfx_ClutStripSource_addr + 0x1e00 + (static_cast<unsigned>(c[5]) << 6))),
+    const unsigned char index = Mem(::bof3::Img(BattleE6_FormGroup_addr))[0];
+    MH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(Mem(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (static_cast<unsigned>(c[5]) << 6))),
                                 index);
 }
 
@@ -200,8 +200,8 @@ unsigned char* Child44(unsigned char phase) {
 // its first pointer for an owner facing 0 or 1, else its second.
 const unsigned char* FormTable() {
     const unsigned facing = Owner()[8];
-    const unsigned kind = Mem(BattlePhases_B89_addr)[0];
-    const std::uint32_t cell = kFormFiles + kind * 8u + (facing == 0 || facing == 1 ? 0u : 4u);
+    const unsigned kind = Mem(::bof3::Img(BattlePhases_B89_addr))[0];
+    const std::uint32_t cell = ::bof3::Img(kFormFiles.v) + kind * 8u + (facing == 0 || facing == 1 ? 0u : 4u);
     return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(U(Long(Mem(cell)))));
 }
 
@@ -228,13 +228,13 @@ S33_EXPORT void __cdecl Accession_Task(void) {
 // target's party +0x89 is 0, else 0x1E; +1 on.
 S33_EXPORT void __cdecl Accession_Start(void) {
     MH_AT(Fn0, kResetActor)();
-    const unsigned kind = Mem(BattlePhases_B89_addr)[0];
-    Mem(0x8031F3)[0] = 1;
-    const unsigned id = Mem(kBannerIds + kind)[0];
+    const unsigned kind = Mem(::bof3::Img(BattlePhases_B89_addr))[0];
+    Mem(::bof3::Img(0x8031F3))[0] = 1;
+    const unsigned id = Mem(::bof3::Img(kBannerIds.v) + kind)[0];
     const unsigned char* const text = MH_CALL(Msg_SystemPtr)(id);
-    MH_CALL(Str_CopyN)(reinterpret_cast<char*>(Mem(kBannerText)), reinterpret_cast<const char*>(text), 8);
-    MH_CALL(BattleBanner_Add)(1, 1, 0, 0x3C, reinterpret_cast<const char*>(Mem(kBannerText)));
-    const unsigned again = Mem(BattlePhases_B89_addr)[0];
+    MH_CALL(Str_CopyN)(reinterpret_cast<char*>(Mem(::bof3::Img(kBannerText.v))), reinterpret_cast<const char*>(text), 8);
+    MH_CALL(BattleBanner_Add)(1, 1, 0, 0x3C, reinterpret_cast<const char*>(Mem(::bof3::Img(kBannerText.v))));
+    const unsigned again = Mem(::bof3::Img(BattlePhases_B89_addr))[0];
     if (again == 3 || again == 0xB || again == 0xD) Inc(Sc()[2]);
     Sc()[9] = PartyRecord(TargetByte())[0x89] == 0 ? 3 : 0x1E;
     Inc(Sc()[1]);
@@ -297,7 +297,7 @@ S33_EXPORT void __cdecl Accession_ActorScript(void) {
 S33_EXPORT void __cdecl Accession_LoadFormA(void) {
     if (Sc()[0xB] != 1) return;
     const unsigned char* const table = FormTable();
-    const unsigned set = static_cast<unsigned>(Long(Mem(AreaW0b_PartySet_addr))) & 0xFF;
+    const unsigned set = static_cast<unsigned>(Long(Mem(::bof3::Img(AreaW0b_PartySet_addr)))) & 0xFF;
     MH_CALL(LoadDatFile)(static_cast<int>(Word(table + set * 2u)));
     Inc(Sc()[3]);
 }
@@ -309,18 +309,18 @@ S33_EXPORT void __cdecl Accession_LoadFormA(void) {
 // STP bits, animation +8 + 4 ensured; Sprite_Current back, +3 on.
 S33_EXPORT void __cdecl Accession_ApplyA(void) {
     if (MH_CALL(File_LoadDone)() == 0) return;
-    if ((U(Long(Mem(at::kFlags))) & 0x4000) != 0 && Mem(BattleFlow_ActorAt_addr)[0] == Mem(at::kActor)[0])
-        SetWord(Mem(at::kFlags), Word(Mem(at::kFlags)) & 0xBFFFu);
+    if ((U(Long(Mem(::bof3::Img(at::kFlags)))) & 0x4000) != 0 && Mem(::bof3::Img(BattleFlow_ActorAt_addr))[0] == Mem(::bof3::Img(at::kActor))[0])
+        SetWord(Mem(::bof3::Img(at::kFlags)), Word(Mem(::bof3::Img(at::kFlags))) & 0xBFFFu);
     unsigned char* const saved = Sc();
     unsigned char* const rec = PartyRecord(ActorIndex());
     Sprite_Current = rec;
     MH_CALL(Sprite_ReleaseTint)(rec);
     {
         const unsigned a = ActorIndex();
-        const unsigned char index = Mem(BattleE6_FormGroup_addr)[0];
-        Mem(kMemberClut + a * at::kPartyStride)[0] = PartyRecord(a)[0x27];
+        const unsigned char index = Mem(::bof3::Img(BattleE6_FormGroup_addr))[0];
+        Mem(::bof3::Img(kMemberClut.v) + a * at::kPartyStride)[0] = PartyRecord(a)[0x27];
         const unsigned char* const c = Sprite_Current;
-        MH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(Mem(Gfx_ClutStripSource_addr + 0x1e00 + (static_cast<unsigned>(c[5]) << 6))),
+        MH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(Mem(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (static_cast<unsigned>(c[5]) << 6))),
                                     index);
     }
     MH_CALL(Battle_StatusTint)(rv::As<records::PartyMember>(PartyRecord(ActorIndex()))->status);
@@ -381,78 +381,78 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
         unsigned char* const m = PartyRecord(i);
         if ((m[0] & 1) == 0) continue;
         MH_CALL(Sprite_ReleaseTint)(m);
-        Mem(kMemberClut + i * at::kPartyStride)[0] = m[0x27];
-        Mem(kMemberB05 + i * at::kPartyStride)[0] = 0;
-        SetLong(Mem(kMemberC10 + i * at::kPartyStride), 0);
+        Mem(::bof3::Img(kMemberClut.v) + i * at::kPartyStride)[0] = m[0x27];
+        Mem(::bof3::Img(kMemberB05.v) + i * at::kPartyStride)[0] = 0;
+        SetLong(Mem(::bof3::Img(kMemberC10.v) + i * at::kPartyStride), 0);
         MH_CALL(Battle_ReturnQueuedItem)(i);
         MH_CALL(Battle_RemoveFromTurnOrder)(i);
     }
-    MH_CALL(Battle_ClearActorBit)(Mem(at::kActor)[0]);
+    MH_CALL(Battle_ClearActorBit)(Mem(::bof3::Img(at::kActor))[0]);
     {
         unsigned char* const first = PartyRecord(0);
         records::PartyMember* const tfirst = rv::As<records::PartyMember>(first);
         const unsigned char* const from = PartyRecord(ActorIndex());
-        const std::int32_t x = Long(Mem(BossSi_CentreX_addr));
+        const std::int32_t x = Long(Mem(::bof3::Img(BossSi_CentreX_addr)));
         // rep movsd: 0x53 dwords, forward, one at a time
         for (unsigned k = 0; k < 0x14C; k += 4) SetLong(first + k, Long(from + k));
-        const std::int32_t z = Long(Mem(BossSi_CentreZ_addr));
+        const std::int32_t z = Long(Mem(::bof3::Img(BossSi_CentreZ_addr)));
         first[5] = 0;
         tfirst->x = x;
         tfirst->z = z;
         const long ground = MH_CALL(AreaMap_Elevation)(x, z);
         const std::int32_t z0 = tfirst->z;
-        const std::int32_t cz = Long(Mem(BossSi_CentreZ_addr));
+        const std::int32_t cz = Long(Mem(::bof3::Img(BossSi_CentreZ_addr)));
         rv::Store<unsigned>(tfirst->height_whole, U(ground) & 0xFFFF);
-        SetLong(Mem(BattleTask_Slots_addr + 0x34), Long(Mem(BossSi_CentreX_addr)));
+        SetLong(Mem(::bof3::Img(BattleTask_Slots_addr) + 0x34), Long(Mem(::bof3::Img(BossSi_CentreX_addr))));
         const std::int32_t x0 = tfirst->x;
-        SetLong(Mem(BattleTask_Slots_addr + 0x38), cz);
+        SetLong(Mem(::bof3::Img(BattleTask_Slots_addr) + 0x38), cz);
         const long ground0 = MH_CALL(AreaMap_Elevation)(x0, z0);
-        const unsigned char was = Mem(0x904AB0)[0];
-        Mem(0x904AA9)[0] |= 0x80;
-        SetLong(Mem(BattleTask_Slots_addr + 0x3C), static_cast<std::int32_t>(Shl(static_cast<short>(ground0), 16)));
+        const unsigned char was = Mem(::bof3::Img(0x904AB0))[0];
+        Mem(::bof3::Img(0x904AA9))[0] |= 0x80;
+        SetLong(Mem(::bof3::Img(BattleTask_Slots_addr) + 0x3C), static_cast<std::int32_t>(Shl(static_cast<short>(ground0), 16)));
         PartyRecord(1)[0] = 0;
         PartyRecord(2)[0] = 0;
-        Mem(at::kActor)[0] = 0;
-        Mem(BattleE2_SavedCount_addr)[0] = was;
-        Mem(0x904AB0)[0] = 1;
-        Mem(Battle_PartyStanding_addr)[0] = 1;
+        Mem(::bof3::Img(at::kActor))[0] = 0;
+        Mem(::bof3::Img(BattleE2_SavedCount_addr))[0] = was;
+        Mem(::bof3::Img(0x904AB0))[0] = 1;
+        Mem(::bof3::Img(Battle_PartyStanding_addr))[0] = 1;
     }
     for (unsigned i = 0; i < 3; ++i) {
         const unsigned char* const m = PartyRecord(i);
         const records::PartyMember* const tm = rv::AsConst<records::PartyMember>(m);
-        unsigned char* const w = Mem(WindowRecords_addr + 0x1d7 + i * 0x24u);
+        unsigned char* const w = Mem(::bof3::Img(WindowRecords_addr) + 0x1d7 + i * 0x24u);
         if ((m[0] & 1) == 0) continue;
         MH_CALL(Window_Alloc)(i + 0xD, 3);
         const unsigned column = m[8], row = m[0x89];
         w[-1] = 5;
         w[0] = 0;
         const unsigned k = (column + row * 4u) * 2u;
-        const unsigned side = ((U(Long(Mem(0x904AAC))) & 0xFF) ^ 2u) >> 1;
-        const unsigned dx = static_cast<unsigned>(SignedByte(Mem(kSideOffsets + side * 2u)[0]) +
-                                                  SignedByte(Mem(BattleWin_MemberTargetOffsets_addr + k)[0])) +
+        const unsigned side = ((U(Long(Mem(::bof3::Img(0x904AAC)))) & 0xFF) ^ 2u) >> 1;
+        const unsigned dx = static_cast<unsigned>(SignedByte(Mem(::bof3::Img(kSideOffsets.v) + side * 2u)[0]) +
+                                                  SignedByte(Mem(::bof3::Img(BattleWin_MemberTargetOffsets_addr) + k)[0])) +
                             static_cast<std::uint16_t>(tm->screen_x);
         SetWord(w + 1, dx & 0xFFFF);
         const unsigned dy =
-            static_cast<unsigned>(SignedByte(Mem(BattleWin_MemberTargetOffsets_addr + k + 1)[0])) + static_cast<std::uint16_t>(tm->screen_y) +
+            static_cast<unsigned>(SignedByte(Mem(::bof3::Img(BattleWin_MemberTargetOffsets_addr) + k + 1)[0])) + static_cast<std::uint16_t>(tm->screen_y) +
             0xCu;
         SetWord(w + 3, dy & 0xFFFF);
         w[7] = static_cast<unsigned char>(i);
         w[5] = 0;
         w[6] = 0;
     }
-    const unsigned char was = Mem(0x904AB0)[0];
+    const unsigned char was = Mem(::bof3::Img(0x904AB0))[0];
     unsigned char* const saved = Sc();
-    Mem(Window1_ParamA_addr)[0] = was;
+    Mem(::bof3::Img(Window1_ParamA_addr))[0] = was;
     const unsigned a = ActorIndex();
-    SetWord(Mem(at::kFlags), Word(Mem(at::kFlags)) & 0xBFFFu);
-    SetWord(Mem(0x803188), 0x70);
+    SetWord(Mem(::bof3::Img(at::kFlags)), Word(Mem(::bof3::Img(at::kFlags))) & 0xBFFFu);
+    SetWord(Mem(::bof3::Img(0x803188)), 0x70);
     unsigned char* const rec = PartyRecord(a);
     Sprite_Current = rec;
     MH_CALL(Battle_SetActorBit)(rec[5]);
     Sprite_Current[0] &= 0xBF;
     {
-        const unsigned set = static_cast<unsigned>(Long(Mem(AreaW0b_PartySet_addr))) & 0xFF;
-        MH_CALL(Field_MemberSprite)(Mem(MoveScript_EffectArg_addr + 0xc + set * 3u)[0], 0);
+        const unsigned set = static_cast<unsigned>(Long(Mem(::bof3::Img(AreaW0b_PartySet_addr)))) & 0xFF;
+        MH_CALL(Field_MemberSprite)(Mem(::bof3::Img(MoveScript_EffectArg_addr) + 0xc + set * 3u)[0], 0);
     }
     LoadPaletteOfCurrent();
     MH_CALL(Battle_StatusTint)(rv::As<records::PartyMember>(PartyRecord(ActorIndex()))->status);
@@ -468,7 +468,7 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
 S33_EXPORT void __cdecl Accession_End(void) {
     if (Sc()[0xB] != 2) return;
     const unsigned a = ActorIndex();
-    Mem(at::kFlags)[0] |= 4;
+    Mem(::bof3::Img(at::kFlags))[0] |= 4;
     unsigned char* const flags = PartyRecord(a) + 0x134;
     SetLong(flags, static_cast<std::int32_t>((U(Long(flags)) & ~4u) | 0x20u));
     MH_CALL(BattleTask_FreeCurrent)();
@@ -501,9 +501,9 @@ S33_EXPORT void __cdecl AccessionCtl_Run(void) {
 // ground; +0xB 0, +9 4, +2 on; a bolt child (+1 2, +9 1) counted in +0xB;
 // sound 0x102.
 S33_EXPORT void __cdecl AccessionCtl_Start(void) {
-    Sc()[8] = Pointer(BattleOdds_ActorObject_addr)[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Mem(BossSi_CentreX_addr)));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Mem(BossSi_CentreZ_addr)));
+    Sc()[8] = Pointer(::bof3::Img(BattleOdds_ActorObject_addr))[8];
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Mem(::bof3::Img(BossSi_CentreX_addr))));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Mem(::bof3::Img(BossSi_CentreZ_addr))));
     {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
@@ -838,7 +838,7 @@ S33_EXPORT void __cdecl AccessionSpark_Run(void) {
     AddB(Sc()[9], 2);
     {
         const unsigned char* const s = Sc();
-        const unsigned char* const pair = Mem(AccessionSpark_Angles_addr + static_cast<unsigned>(s[4]) * 2u);
+        const unsigned char* const pair = Mem(::bof3::Img(AccessionSpark_Angles_addr) + static_cast<unsigned>(s[4]) * 2u);
         Call2(bof3::addr::AccessionSpark_Draw, static_cast<unsigned char>(pair[0] + s[9]), pair[1]);
     }
     MH_CALL(Gte_PopMatrix)();
@@ -1279,7 +1279,7 @@ S33_EXPORT void __cdecl MightyChop_Task(void) {
 S33_EXPORT void __cdecl MightyChop_Start(void) {
     MH_CALL(BattleActor_SetAnimation)(0xC, 2);
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x52) & 0xFFu;
-    const unsigned actor = Mem(at::kActor)[0];
+    const unsigned actor = Mem(::bof3::Img(at::kActor))[0];
     const unsigned char* const record = actor < 3 ? PartyRecord(actor) : EnemyRecord(actor);
     unsigned char* const s = Sc();
     unsigned char* const child = TaskSlot(slot);
@@ -1305,7 +1305,7 @@ S33_EXPORT void __cdecl MightyChop_Start(void) {
 // counted in +0xB; +1 on.
 S33_EXPORT void __cdecl MightyChop_Throw(void) {
     if (Sc()[0xB] != 0) return;
-    const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
+    const unsigned char* const source = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     Sc()[8] = source[8];
     rv::Current<records::BattleTask>()->step_x = 0;
     rv::Store(rv::Current<records::BattleTask>()->step_z, static_cast<std::int32_t>(0xFFFE8000u));
@@ -1357,7 +1357,7 @@ S33_EXPORT void __cdecl MightyChopBlade_Run(void) {
                                                 bof3::addr::MightyChopBlade_Shrink, bof3::addr::MightyChopBlade_Sink};
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
     MH_CALL(Gfx_CommitPrim)(3, 0xC);
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect.v)));
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("MightyChopBlade_Run", phase, 4);
     magic_harness::Phase(kSteps[phase])();
@@ -1365,7 +1365,7 @@ S33_EXPORT void __cdecl MightyChopBlade_Run(void) {
         const unsigned char* const s = Sc();
         if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_UpdateScreen)();
     }
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x4ED390: +9 down; at 0 the blade starts: the owner's direction;

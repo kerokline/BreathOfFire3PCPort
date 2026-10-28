@@ -51,16 +51,16 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F, Scratch_Swap at +0xC; words or dwords by
 // function) and the four SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF).
 // Both are read again after every call, as the originals read them.
-constexpr std::uint32_t kS = SharedScratch_addr;
+constexpr ::bof3::image::Va kS{SharedScratch_addr};
 // kV: now Prim_VertexScratch (symbols.toml).
 
-constexpr std::uint32_t kPartyCount = 0x904AB0;    // u8: the party's size
+constexpr ::bof3::image::Va kPartyCount{0x904AB0};    // u8: the party's size
 
 // MAGIC168's pool: 128 motes of 0x2C bytes, the one being run at 0x6AFF10.
 // kCurePool: now CureMote_Pool (symbols.toml).
 constexpr std::uint32_t kCureStride = 0x2C;
 constexpr unsigned kCureCount = 0x80;
-constexpr std::uint32_t kCureCurrent = 0x6AFF10;
+constexpr ::bof3::image::Va kCureCurrent{0x6AFF10};
 // MAGIC169's pool: 80 motes of 0x84 bytes, run as tasks (+0x80 the owner).
 // kBlessPool: now BenedictionMote_Pool (symbols.toml).
 constexpr std::uint32_t kBlessStride = 0x84;
@@ -76,21 +76,21 @@ constexpr unsigned kBlessCount = 0x50;
 // kCureLifetimes: now CureMote_Lifetimes (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* Cur() { return Pointer(CureMote_Current_addr); }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char* Cur() { return Pointer(::bof3::Img(CureMote_Current_addr)); }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
-void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
+std::int32_t SD(unsigned k) { return Long(Mem(::bof3::Img(kS.v) + k)); }
+void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(::bof3::Img(kS.v) + k), static_cast<std::int32_t>(v)); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -122,11 +122,11 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
 // The originals index the party records by a byte, unchecked.
-unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* CureRecord(unsigned n) { return Mem(CureMote_Pool_addr + n * kCureStride); }
-unsigned char* BlessRecord(unsigned n) { return Mem(BenedictionMote_Pool_addr + n * kBlessStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
+unsigned char* CureRecord(unsigned n) { return Mem(::bof3::Img(CureMote_Pool_addr) + n * kCureStride); }
+unsigned char* BlessRecord(unsigned n) { return Mem(::bof3::Img(BenedictionMote_Pool_addr) + n * kBlessStride); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }
@@ -225,7 +225,7 @@ S35_EXPORT void __cdecl LastResort_Task(void) {
 // 1, +0xB (i & 3) << 3, +9 (i >> 2) x 0x28 + 0x11) at its +0x34..+0x3C, each
 // counted in +0xB; sound 0x100.
 S35_EXPORT void __cdecl LastResort_Start(void) {
-    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+    const unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     Sc()[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
     rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
@@ -729,15 +729,15 @@ S35_EXPORT void __cdecl Cure_Task(void) {
     const unsigned phase = Sc()[1];
     if (phase >= 6) PastTable("Cure_Task", phase, 6);
     magic_harness::Phase(kPhases[phase])();
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned n = 0; n < kCureCount; ++n) {
         unsigned char* const r = CureRecord(n);
         if ((r[0] & 1) == 0) continue;
         const std::int32_t mote_owner = Long(r + 0x28);
-        magic_harness::SetPointer(kCureCurrent, r);
-        SetLong(Mem(BattleE2_Owner_addr), mote_owner);
+        magic_harness::SetPointer(::bof3::Img(kCureCurrent.v), r);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), mote_owner);
         Call0(bof3::addr::CureMote_Task);
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
     }
 }
 
@@ -756,7 +756,7 @@ S35_EXPORT void __cdecl Cure_Start(void) {
     }
     Sc()[4] = 3;
     {
-        const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+        const unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
         Sc()[8] = src[8];
         rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
         rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
@@ -768,7 +768,7 @@ S35_EXPORT void __cdecl Cure_Start(void) {
     Sc()[0xA] = 0;
     Inc(Sc()[1]);
     MH_CALL(Sound_PlayById)(0x100);
-    if (Mem(Cure_MoteCounts_addr)[Sc()[4]] == 0) return;
+    if (Mem(::bof3::Img(Cure_MoteCounts_addr))[Sc()[4]] == 0) return;
     unsigned char n = 0;
     do {
         const unsigned slot = Alloc(bof3::addr::CureMote_Alloc);
@@ -782,11 +782,11 @@ S35_EXPORT void __cdecl Cure_Start(void) {
             r[3] = static_cast<unsigned char>(rnd & 3);
             r[4] = s[4];
             r[7] = n;
-            r[5] = static_cast<unsigned char>(Mem(Cure_MoteDelays_addr)[s[4]] * (n >> 2) + 1);
+            r[5] = static_cast<unsigned char>(Mem(::bof3::Img(Cure_MoteDelays_addr))[s[4]] * (n >> 2) + 1);
             Inc(s[0xB]);
         }
         ++n;
-    } while (n < Mem(Cure_MoteCounts_addr)[Sc()[4]]);
+    } while (n < Mem(::bof3::Img(Cure_MoteCounts_addr))[Sc()[4]]);
 }
 
 // original 0x4F0850: a mote's task, a jmp through CureMote_TaskTable (one
@@ -835,21 +835,21 @@ S35_EXPORT void __cdecl CureMote_Wait(void) {
     SetWord(Cur() + 0x22, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_y));
     {
         unsigned char* const x = Cur() + 0x20;
-        const short dx = static_cast<short>(Word(Mem(CureMote_Offsets_addr + (Cur()[7] & 0x1Fu) * 4)));
+        const short dx = static_cast<short>(Word(Mem(::bof3::Img(CureMote_Offsets_addr) + (Cur()[7] & 0x1Fu) * 4)));
         if (dx < 0) {
             const std::uint32_t rnd = RandCall() & 7;
-            const std::uint16_t d = Word(Mem(CureMote_Offsets_addr + (Cur()[7] & 0x1Fu) * 4));
+            const std::uint16_t d = Word(Mem(::bof3::Img(CureMote_Offsets_addr) + (Cur()[7] & 0x1Fu) * 4));
             SetWord(x, Word(x) + static_cast<std::uint16_t>(d - rnd));
         } else {
             const std::uint32_t rnd = RandCall() & 7;
-            const std::uint16_t d = Word(Mem(CureMote_Offsets_addr + (Cur()[7] & 0x1Fu) * 4));
+            const std::uint16_t d = Word(Mem(::bof3::Img(CureMote_Offsets_addr) + (Cur()[7] & 0x1Fu) * 4));
             SetWord(x, Word(x) + static_cast<std::uint16_t>(rnd + d));
         }
     }
     {
         unsigned char* const y = Cur() + 0x22;
         const std::uint32_t rnd = RandCall() & 7;
-        const std::uint16_t d = Word(Mem(CureMote_Offsets_addr + (Cur()[7] & 0x1Fu) * 4 + 2));
+        const std::uint16_t d = Word(Mem(::bof3::Img(CureMote_Offsets_addr) + (Cur()[7] & 0x1Fu) * 4 + 2));
         SetWord(y, Word(y) - static_cast<std::uint16_t>(rnd + d));
     }
     SetWord(Cur() + 8, Word(Cur() + 0x20));
@@ -864,7 +864,7 @@ S35_EXPORT void __cdecl CureMote_Wait(void) {
     {
         const std::uint32_t rnd = RandCall();
         unsigned char* const r = Cur();
-        r[7] = static_cast<unsigned char>((rnd & 6) + Mem(CureMote_Lifetimes_addr)[r[4]]);
+        r[7] = static_cast<unsigned char>((rnd & 6) + Mem(::bof3::Img(CureMote_Lifetimes_addr))[r[4]]);
     }
     Cur()[5] = 0x10;
     Cur()[6] = 0;
@@ -1020,7 +1020,7 @@ S35_EXPORT void __cdecl CureMote_DrawStar(void) {
         SetSW(4, (rnd & 3) + r[6]);
         SetSW(0, Word(r + 0x20));
         SetSW(2, Word(r + 0x22));
-        const std::uint32_t colour = CureMote_Colours_addr + (r[3] + r[4] * 4u) * 3u;
+        const std::uint32_t colour = ::bof3::Img(CureMote_Colours_addr) + (r[3] + r[4] * 4u) * 3u;
         SetSW(8, Mem(colour)[0] * static_cast<unsigned>(r[5]));
         SetSW(0xA, Mem(colour + 1)[0] * static_cast<unsigned>(r[5]));
         SetSW(0xC, Mem(colour + 2)[0] * static_cast<unsigned>(r[5]));
@@ -1100,16 +1100,16 @@ S35_EXPORT void __cdecl Benediction_Task(void) {
         Call0(bof3::addr::Benediction_DrawHalo);
         task = Sc();
     }
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned n = 0; n < kBlessCount; ++n) {
         unsigned char* const r = BlessRecord(n);
         records::BattleTask* const tr = rv::As<records::BattleTask>(r);
         if ((r[0] & 1) == 0) continue;
         const std::int32_t mote_owner = static_cast<std::int32_t>(tr->owner);
         Sprite_Current = r;
-        SetLong(Mem(BattleE2_Owner_addr), mote_owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), mote_owner);
         Call0(bof3::addr::BenedictionMote_Task);
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
         Sprite_Current = task;
     }
 }
@@ -1144,7 +1144,7 @@ S35_EXPORT void __cdecl Benediction_Start(void) {
 S35_EXPORT void __cdecl Benediction_Spawn(void) {
     Inc(Sc()[9]);
     if (Sc()[9] != 0x10) return;
-    if ((TargetByte() & 0x80) != 0 && Mem(kPartyCount)[0] != 0) {
+    if ((TargetByte() & 0x80) != 0 && Mem(::bof3::Img(kPartyCount.v))[0] != 0) {
         unsigned char delay = 1;
         unsigned char n = 0;
         do {
@@ -1158,7 +1158,7 @@ S35_EXPORT void __cdecl Benediction_Spawn(void) {
             Inc(s[0xB]);
             AddB(delay, 0x28);
             ++n;
-        } while (n < Mem(kPartyCount)[0]);
+        } while (n < Mem(::bof3::Img(kPartyCount.v))[0]);
     }
     Inc(Sc()[1]);
 }

@@ -50,16 +50,16 @@ using move_script::Word;
 
 // --- the addresses ours reads and writes -----------------------------------
 
-constexpr std::uint32_t kScratchA = SharedScratch_addr; // SharedScratch (the PSX scratchpad): radius, angle words
-constexpr std::uint32_t kScratchB = 0x903854;
-constexpr std::uint32_t kShade = 0x903856;          // u16: a shade the draws copy to their primitives
-constexpr std::uint32_t kRgb = 0x903858;            // three u16 at +0 / +2 / +4
+constexpr ::bof3::image::Va kScratchA{SharedScratch_addr}; // SharedScratch (the PSX scratchpad): radius, angle words
+constexpr ::bof3::image::Va kScratchB{0x903854};
+constexpr ::bof3::image::Va kShade{0x903856};          // u16: a shade the draws copy to their primitives
+constexpr ::bof3::image::Va kRgb{0x903858};            // three u16 at +0 / +2 / +4
 // kVertex: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch: four SVECTORs, 8 bytes apart
-constexpr std::uint32_t kFrameSet = 0x9039D8;       // the sprite frame-offset table pointer (sprite_pose.h)
-constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
-constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
-constexpr std::uint32_t kActingKind = 0x904B35;     // u8: 4 an ability
-constexpr std::uint32_t kAbility = 0x904B80;        // u16: the ability id
+constexpr ::bof3::image::Va kFrameSet{0x9039D8};       // the sprite frame-offset table pointer (sprite_pose.h)
+constexpr ::bof3::image::Va kFrameSetBattle{0x8B3580};
+constexpr ::bof3::image::Va kFrameSetEffect{0x8E3580};
+constexpr ::bof3::image::Va kActingKind{0x904B35};     // u8: 4 an ability
+constexpr ::bof3::image::Va kAbility{0x904B80};        // u16: the ability id
 // kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords: 12 bytes each, +2..+4 r g b
 // kClutRow26: now Gfx_ClutStrip[0x1a00] (symbols.toml). Gfx_ClutStrip row 26 (VRAM row 506)
 // kClutRow26Source: now Gfx_ClutStripSource[0x1a00] (symbols.toml).
@@ -92,15 +92,15 @@ using SortFn = void (__cdecl*)(std::uint32_t, std::uint32_t, long*, unsigned cha
 
 void Bump(unsigned char& b, int by = 1) { b = static_cast<unsigned char>(b + by); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
-unsigned char* Task(unsigned slot) { return Mem(BattleTask_Slots_addr + (slot & 0xFF) * at::kTaskStride); }
-unsigned char* Mote(unsigned i) { return Mem(ReviveMote_Pool_addr + (i & 0xFF) * kMoteStride); }
-unsigned char* Tint(unsigned i) { return Mem(MoveScript_TintRecords_addr + (i & 0xFF) * 12u); }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
+unsigned char* Task(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + (slot & 0xFF) * at::kTaskStride); }
+unsigned char* Mote(unsigned i) { return Mem(::bof3::Img(ReviveMote_Pool_addr) + (i & 0xFF) * kMoteStride); }
+unsigned char* Tint(unsigned i) { return Mem(::bof3::Img(MoveScript_TintRecords_addr) + (i & 0xFF) * 12u); }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char* Source() { return Pointer(::bof3::Img(BattleOdds_ActorObject_addr)); }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 std::int32_t Table(std::uint32_t at) { return Long(Mem(at)); }
-short* V(unsigned k) { return reinterpret_cast<short*>(Mem(Prim_VertexScratch_addr + k)); }
-unsigned char* VB(unsigned k) { return Mem(Prim_VertexScratch_addr + k); }
+short* V(unsigned k) { return reinterpret_cast<short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
+unsigned char* VB(unsigned k) { return Mem(::bof3::Img(Prim_VertexScratch_addr) + k); }
 float* F(unsigned char* p) { return reinterpret_cast<float*>(p); }
 
 // A .data table's entry, read in place, the index unchecked (as the
@@ -121,8 +121,8 @@ void PutFloat(unsigned char* at, int v) {
 
 int Sin(int a) { return MH_CALL(Math_Sin)(a); }
 int Cos(int a) { return MH_CALL(Math_Cos)(a); }
-std::int32_t R() { return Long(Mem(kScratchA)); }
-std::int32_t H() { return Long(Mem(kScratchB)); }
+std::int32_t R() { return Long(Mem(::bof3::Img(kScratchA.v))); }
+std::int32_t H() { return Long(Mem(::bof3::Img(kScratchB.v))); }
 
 // Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, tpage, 0) and its commit.
 void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0); }
@@ -140,24 +140,24 @@ void ModeCommit4() {
 // The target's done flag, 0x904AA8 bit 2, and the task freed: every end of
 // an effect here.
 void TargetDone() {
-    MH_CALL(Battle_SetTargetFlag40)(Mem(at::kTarget)[0]);
-    Mem(at::kFlags)[0] = static_cast<unsigned char>(Mem(at::kFlags)[0] | 4);
+    MH_CALL(Battle_SetTargetFlag40)(Mem(::bof3::Img(at::kTarget))[0]);
+    Mem(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(at::kFlags))[0] | 4);
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
 // A mote's position round the owner: +0x34 / +0x38 = the owner's plus
 // sin / cos of the angle (word 0x903854) times the radius +0xC, each 32-bit.
 void Orbit() {
-    const int s = Sin(S16(Mem(kScratchB)));
+    const int s = Sin(S16(Mem(::bof3::Img(kScratchB.v))));
     unsigned char* sc = Sprite_Current;
     rv::Store(rv::As<records::BattleTask>(sc)->x, Wrap(static_cast<std::uint32_t>(s) * static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->step_x) +
                             static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x)));
-    const int c = Cos(S16(Mem(kScratchB)));
+    const int c = Cos(S16(Mem(::bof3::Img(kScratchB.v))));
     sc = Sprite_Current;
     rv::Store(rv::As<records::BattleTask>(sc)->z, Wrap(static_cast<std::uint32_t>(c) * static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->step_x) +
                             static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z)));
 }
-void MoteAngle() { SetWord(Mem(kScratchB), static_cast<unsigned>((Sprite_Current[0xB] & 0xF) << 8)); }
+void MoteAngle() { SetWord(Mem(::bof3::Img(kScratchB.v)), static_cast<unsigned>((Sprite_Current[0xB] & 0xF) << 8)); }
 
 }  // namespace
 
@@ -203,7 +203,7 @@ MS17_EXPORT void __cdecl Purify_Start(void) {
     MH_CALL(Sprite_ReleaseTint)(src);
     const unsigned char tint = MH_CALL(Sprite_SetTint)(src, 0, 0, 0, 1);
     Sprite_Current[0xA] = tint;
-    for (unsigned i = 0; i < 0x10; ++i) SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + 2 * i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + 2 * i)));
+    for (unsigned i = 0; i < 0x10; ++i) SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3400 + 2 * i), Word(Mem(::bof3::Img(Gfx_ClutStripSource_addr) + 0x3400 + 2 * i)));
     Gfx_ClutStripDirty = 1;
     MH_CALL(Sound_PlayById)(0x100);
 }
@@ -233,18 +233,18 @@ MS17_EXPORT void __cdecl Purify_Fade(void) {
 
 // original 0x4BCDF0: the mote (kind 1, parameter 0x25): a jmp through
 // PurifyMote_Types 0x65B1B4 by +1, read in place (one entry).
-MS17_EXPORT void __cdecl PurifyMote_Dispatch(void) { Entry(PurifyMote_Types_addr, Sprite_Current[1])(); }
+MS17_EXPORT void __cdecl PurifyMote_Dispatch(void) { Entry(::bof3::Img(PurifyMote_Types_addr), Sprite_Current[1])(); }
 
 // original 0x4BCE10: with the frame-offset table 0x9039D8 the effects'
 // (0x8E3580), a call through PurifyMote_Phases 0x65B1B8 by +2, read in place
 // (two entries); then while it lives and is placed (+0, +2 not 0) its
 // sprite's screen update; the battle's table (0x8B3580) back.
 MS17_EXPORT void __cdecl PurifyMote_Task(void) {
-    SetLong(Mem(BattleE2_AnimSet_addr), kFrameSetEffect);
-    Entry(PurifyMote_Phases_addr, Sprite_Current[2])();
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), ::bof3::Img(kFrameSetEffect.v));
+    Entry(::bof3::Img(PurifyMote_Phases_addr), Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] != 0 && sc[2] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(BattleE2_AnimSet_addr), kFrameSetBattle);
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), ::bof3::Img(kFrameSetBattle.v));
 }
 
 // original 0x4BCE50: +9 down; at 0 the mote placed round its owner - angle
@@ -257,11 +257,11 @@ MS17_EXPORT void __cdecl PurifyMote_Place(void) {
     unsigned char* sc = Sprite_Current;
     if (sc[9] != 0) return;
     const int angle = (sc[0xB] & 7) << 9;
-    SetLong(Mem(kScratchA), angle);
+    SetLong(Mem(::bof3::Img(kScratchA.v)), angle);
     const int s = Sin(angle);
     const int dx = static_cast<int>((static_cast<std::uint32_t>(s) * 5u) << 13) >> 12;
     rv::Store(rv::Current<records::BattleTask>()->x, Wrap(static_cast<std::uint32_t>(dx) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x)));
-    const int c = Cos(Long(Mem(kScratchA)));
+    const int c = Cos(Long(Mem(::bof3::Img(kScratchA.v))));
     const int dz = static_cast<int>((static_cast<std::uint32_t>(c) * 5u) << 13) >> 12;
     rv::Store(rv::Current<records::BattleTask>()->z, Wrap(static_cast<std::uint32_t>(dz) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z)));
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole + 0x180u);
@@ -309,16 +309,16 @@ MS17_EXPORT void __cdecl Revive_Task(void) {
     if (phase >= 6) bof3::Fatal("Revive_Task: phase %u, past the six-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
     unsigned char* const saved = Sprite_Current;
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < kMotes; ++i) {
         unsigned char* const m = Mote(i);
         records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         if ((m[0] & 1) == 0) continue;
         const std::int32_t its = static_cast<std::int32_t>(tm->owner);
         Sprite_Current = m;
-        SetLong(Mem(BattleE2_Owner_addr), its);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), its);
         MH_CALL(ReviveMote_Dispatch)();
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
         Sprite_Current = saved;
     }
 }
@@ -356,10 +356,10 @@ MS17_EXPORT void __cdecl Revive_Start(void) {
     t[9] = 1;
     Bump(sc[0xB]);
     MH_CALL(Sound_PlayById)(0x100);
-    for (unsigned i = 0; i < 0x100; ++i) SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + 2 * i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + 2 * i)) | 0x8000u);
-    for (unsigned i = 0; i < 0x10; ++i) SetWord(Mem(Gfx_ClutStrip_addr + 0x400 + 2 * i), Word(Mem(Gfx_ClutStripSource_addr + 0x400 + 2 * i)) | 0x8000u);
-    SetWord(Mem(Gfx_ClutStrip_addr + 0x3400), Word(Mem(Gfx_ClutStripSource_addr + 0x3400)));
-    SetWord(Mem(Gfx_ClutStrip_addr + 0x400), Word(Mem(Gfx_ClutStripSource_addr + 0x400)));
+    for (unsigned i = 0; i < 0x100; ++i) SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3400 + 2 * i), Word(Mem(::bof3::Img(Gfx_ClutStripSource_addr) + 0x3400 + 2 * i)) | 0x8000u);
+    for (unsigned i = 0; i < 0x10; ++i) SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x400 + 2 * i), Word(Mem(::bof3::Img(Gfx_ClutStripSource_addr) + 0x400 + 2 * i)) | 0x8000u);
+    SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x3400), Word(Mem(::bof3::Img(Gfx_ClutStripSource_addr) + 0x3400)));
+    SetWord(Mem(::bof3::Img(Gfx_ClutStrip_addr) + 0x400), Word(Mem(::bof3::Img(Gfx_ClutStripSource_addr) + 0x400)));
     Gfx_ClutStripDirty = 1;
 }
 
@@ -400,21 +400,21 @@ MS17_EXPORT void __cdecl Revive_Fade(void) {
 // original 0x4BD280: 1 when the acting kind 0x904B35 is 4 (an ability) and
 // the ability 0x904B80 (u16) is neither 0x4C nor 0xB4; else 0. In al.
 MS17_EXPORT unsigned char __cdecl Revive_IsStrong(void) {
-    if (Mem(kActingKind)[0] != 4) return 0;
-    const unsigned id = Word(Mem(kAbility));
+    if (Mem(::bof3::Img(kActingKind.v))[0] != 4) return 0;
+    const unsigned id = Word(Mem(::bof3::Img(kAbility.v)));
     return id == 0x4C || id == 0xB4 ? 0 : 1;
 }
 
 // original 0x4BD2B0: the halo (kind 1, parameter 0x62): a jmp through
 // ReviveHalo_Types 0x65B1C0 by +1, read in place (one entry).
-MS17_EXPORT void __cdecl ReviveHalo_Dispatch(void) { Entry(ReviveHalo_Types_addr, Sprite_Current[1])(); }
+MS17_EXPORT void __cdecl ReviveHalo_Dispatch(void) { Entry(::bof3::Img(ReviveHalo_Types_addr), Sprite_Current[1])(); }
 
 // original 0x4BD2D0: a call through ReviveHalo_Phases 0x65B1C4 by +2, read in
 // place (four entries: ReviveHalo_Wait, ReviveHalo_Spawn, MagicFx_WaitA,
 // MAGIC060's 0x4B1740); then while it lives and has started (+0, +2 not 0)
 // its screen point and its draw (a tail jmp).
 MS17_EXPORT void __cdecl ReviveHalo_Task(void) {
-    Entry(ReviveHalo_Phases_addr, Sprite_Current[2])();
+    Entry(::bof3::Img(ReviveHalo_Phases_addr), Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -445,13 +445,13 @@ MS17_EXPORT void __cdecl ReviveHalo_Spawn(void) {
     Bump(Sprite_Current[9]);
     if (Sprite_Current[9] != 0x10) return;
     unsigned char number = 0;
-    if (Mem(ReviveHalo_MoteCounts_addr + Sprite_Current[4])[0] != 0) {
+    if (Mem(::bof3::Img(ReviveHalo_MoteCounts_addr) + Sprite_Current[4])[0] != 0) {
         do {
             const unsigned char index = MH_CALL(ReviveMote_Alloc)();
             if (index != 0xFF) {
                 unsigned char* const m = Mote(index);
                 records::BattleTask* const tm = rv::As<records::BattleTask>(m);
-                tm->owner = Long(Mem(BattleE2_Owner_addr));
+                tm->owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
                 m[1] = 0;
                 m[0xB] = number;
                 const int r = MH_CALL(Rand)();
@@ -459,7 +459,7 @@ MS17_EXPORT void __cdecl ReviveHalo_Spawn(void) {
                 Bump(Owner()[0xB]);
             }
             ++number;
-        } while (number < Mem(ReviveHalo_MoteCounts_addr + Sprite_Current[4])[0]);
+        } while (number < Mem(::bof3::Img(ReviveHalo_MoteCounts_addr) + Sprite_Current[4])[0]);
     }
     Bump(Sprite_Current[2]);
 }
@@ -481,7 +481,7 @@ MS17_EXPORT void __cdecl ReviveHalo_Draw(void) {
         height = 0x40;
         half = 0x18;
     }
-    SetWord(Mem(kShade), static_cast<unsigned>(sc[9]) << 3);
+    SetWord(Mem(::bof3::Img(kShade.v)), static_cast<unsigned>(sc[9]) << 3);
     unsigned char* const p = Gfx_PacketNext;
     const int x = S16(sc + 0x2E);
     const int y = S16(sc + 0x30);
@@ -516,15 +516,15 @@ MS17_EXPORT void __cdecl ReviveHalo_Draw(void) {
         p[0x44] = 0xA8;
         p[0x45] = 0x48;
     }
-    p[4] = Mem(kShade)[0];
-    p[5] = Mem(kShade)[0];
-    p[6] = Mem(kShade)[0];
+    p[4] = Mem(::bof3::Img(kShade.v))[0];
+    p[5] = Mem(::bof3::Img(kShade.v))[0];
+    p[6] = Mem(::bof3::Img(kShade.v))[0];
     LinkAtActor(1, 0x48);
 }
 
 // original 0x4BD5C0: a mote: a jmp through ReviveMote_Types 0x65B1D8 by +1,
 // read in place (one entry).
-MS17_EXPORT void __cdecl ReviveMote_Dispatch(void) { Entry(ReviveMote_Types_addr, Sprite_Current[1])(); }
+MS17_EXPORT void __cdecl ReviveMote_Dispatch(void) { Entry(::bof3::Img(ReviveMote_Types_addr), Sprite_Current[1])(); }
 
 // original 0x4BD5E0: its phase +2 through a three-entry table on its stack -
 // ReviveMote_Launch, MAGIC169's 0x4F1A40, ReviveMote_Rise; 3..255 would call
@@ -609,11 +609,11 @@ MS17_EXPORT void __cdecl ReviveMote_Draw(void) {
     const unsigned char* const sc = Sprite_Current;
     const int x = S16(sc + 0x2E);
     const int y = S16(sc + 0x30);
-    SetWord(Mem(kScratchA), 8);
-    SetWord(Mem(kShade), sc[9] * 12u);
-    SetWord(Mem(kRgb), static_cast<unsigned>(static_cast<signed char>(sc[0x5D]) * sc[9]));
-    SetWord(Mem(kRgb + 2), static_cast<unsigned>(static_cast<signed char>(sc[0x5E]) * sc[9]));
-    SetWord(Mem(kRgb + 4), static_cast<unsigned>(static_cast<signed char>(sc[0x5F]) * sc[9]));
+    SetWord(Mem(::bof3::Img(kScratchA.v)), 8);
+    SetWord(Mem(::bof3::Img(kShade.v)), sc[9] * 12u);
+    SetWord(Mem(::bof3::Img(kRgb.v)), static_cast<unsigned>(static_cast<signed char>(sc[0x5D]) * sc[9]));
+    SetWord(Mem(::bof3::Img(kRgb.v) + 2), static_cast<unsigned>(static_cast<signed char>(sc[0x5E]) * sc[9]));
+    SetWord(Mem(::bof3::Img(kRgb.v) + 4), static_cast<unsigned>(static_cast<signed char>(sc[0x5F]) * sc[9]));
     unsigned char centre[8];
     PutFloat(centre, x);
     PutFloat(centre + 4, y);
@@ -624,23 +624,23 @@ MS17_EXPORT void __cdecl ReviveMote_Draw(void) {
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
         std::memcpy(p + 8, centre, 8);
         int v = Sin(a);
-        PutFloat(p + 0x18, M(v, S16(Mem(kScratchA))) + x);
+        PutFloat(p + 0x18, M(v, S16(Mem(::bof3::Img(kScratchA.v)))) + x);
         v = Cos(a);
-        PutFloat(p + 0x1C, M(v, S16(Mem(kScratchA))) + y);
+        PutFloat(p + 0x1C, M(v, S16(Mem(::bof3::Img(kScratchA.v)))) + y);
         a += 0x200;
         v = Sin(a);
-        PutFloat(p + 0x28, M(v, S16(Mem(kScratchA))) + x);
+        PutFloat(p + 0x28, M(v, S16(Mem(::bof3::Img(kScratchA.v)))) + x);
         v = Cos(a);
-        PutFloat(p + 0x2C, M(v, S16(Mem(kScratchA))) + y);
-        p[4] = Mem(kShade)[0];
-        p[5] = Mem(kShade)[0];
-        p[6] = Mem(kShade)[0];
-        p[0x14] = Mem(kRgb)[0];
-        p[0x15] = Mem(kRgb + 2)[0];
-        p[0x16] = Mem(kRgb + 4)[0];
-        p[0x24] = Mem(kRgb)[0];
-        p[0x25] = Mem(kRgb + 2)[0];
-        p[0x26] = Mem(kRgb + 4)[0];
+        PutFloat(p + 0x2C, M(v, S16(Mem(::bof3::Img(kScratchA.v)))) + y);
+        p[4] = Mem(::bof3::Img(kShade.v))[0];
+        p[5] = Mem(::bof3::Img(kShade.v))[0];
+        p[6] = Mem(::bof3::Img(kShade.v))[0];
+        p[0x14] = Mem(::bof3::Img(kRgb.v))[0];
+        p[0x15] = Mem(::bof3::Img(kRgb.v) + 2)[0];
+        p[0x16] = Mem(::bof3::Img(kRgb.v) + 4)[0];
+        p[0x24] = Mem(::bof3::Img(kRgb.v))[0];
+        p[0x25] = Mem(::bof3::Img(kRgb.v) + 2)[0];
+        p[0x26] = Mem(::bof3::Img(kRgb.v) + 4)[0];
         LinkAtActor(2, 0x34);
     }
 }
@@ -716,7 +716,7 @@ MS17_EXPORT void __cdecl Leech_WaitOrbs(void) {
 // original 0x4BDC40: a child (kind 1, parameter 0xD): a jmp through
 // LeechOrb_Types 0x65B1DC by +1, read in place (LeechShell_Task,
 // LeechOrb_Task).
-MS17_EXPORT void __cdecl LeechOrb_Dispatch(void) { Entry(LeechOrb_Types_addr, Sprite_Current[1])(); }
+MS17_EXPORT void __cdecl LeechOrb_Dispatch(void) { Entry(::bof3::Img(LeechOrb_Types_addr), Sprite_Current[1])(); }
 
 // original 0x4BDC60: the shell. Between two draw modes (tpage 0x35, slot 4):
 // before phase 3 its spin +0xC from the frame counter ((low byte & 0x3F) <<
@@ -731,7 +731,7 @@ MS17_EXPORT void __cdecl LeechShell_Task(void) {
         rv::Store(rv::As<records::BattleTask>(sc)->step_x, (frame & 0xFF) == 0x40 ? 0x1000 : static_cast<std::int32_t>((frame & 0x3F) << 6));
         sc = Sprite_Current;
     }
-    Entry(LeechShell_Phases_addr, sc[2])();
+    Entry(::bof3::Img(LeechShell_Phases_addr), sc[2])();
     if (Owner()[0xB] != 0xFF) {
         MH_CALL(LeechShell_PushMatrix)();
         MH_CALL(LeechShell_Draw)();
@@ -846,8 +846,8 @@ MS17_EXPORT void __cdecl LeechShell_Draw(void) {
     DrawMode(0xB5);
     LinkAtActor(2, 0xC);
     const unsigned char* sc = Sprite_Current;
-    SetLong(Mem(kScratchA), sc[9] * 10);
-    SetLong(Mem(kScratchB), sc[9] * 7);
+    SetLong(Mem(::bof3::Img(kScratchA.v)), sc[9] * 10);
+    SetLong(Mem(::bof3::Img(kScratchB.v)), sc[9] * 7);
     unsigned char* const first = Gfx_PacketNext;
     unsigned char* const line_base = first + 0x380;
     unsigned char* lines = line_base;
@@ -1002,7 +1002,7 @@ MS17_EXPORT void __cdecl LeechOrb_Task(void) {
         MH_CALL(LeechOrb_DrawRings)();
         MH_CALL(Gte_PopMatrix)();
     }
-    Entry(LeechOrb_Phases_addr, Sprite_Current[2])();
+    Entry(::bof3::Img(LeechOrb_Phases_addr), Sprite_Current[2])();
     ModeCommit4();
 }
 
@@ -1070,7 +1070,7 @@ MS17_EXPORT void __cdecl LeechOrb_End(void) {
 // and the quad, both sorted at the orb moved by its far edge's x / y << 9;
 // red (0x80, 0x10, 0x10), from phase 5 fading by +0xA.
 MS17_EXPORT void __cdecl LeechOrb_DrawRings(void) {
-    SetLong(Mem(kScratchA), Sprite_Current[9] << 2);
+    SetLong(Mem(::bof3::Img(kScratchA.v)), Sprite_Current[9] << 2);
     int lat = 0x400;
     for (;;) {
         int c = Cos(lat);
