@@ -882,6 +882,10 @@ def scan(toml='symbols.toml', layout='src/hook/exe_layout.h'):
             # asm
             op = inside(asm_ops, s)
             if op:
+                if tk == 'literal' and ctx == 'base_helper':
+                    # an operand `"i"(::bof3::Img(0x66C854))`: the converted spelling
+                    add(s, e, 'base_offset', '-', text, v, kind, ctx)
+                    continue
                 add(s, e, 'asm_operand', op[2], text, v, kind, ctx, how)
                 continue
             if inside(asm_spans, s):

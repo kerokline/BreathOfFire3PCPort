@@ -121,7 +121,7 @@ static_assert(sizeof(Matrix) == 0x20, "a MATRIX is 0x20 bytes");
 // member +0xB's screen words +0x2E / +0x30 (the member byte unchecked, as the
 // original: a data read, not a table index).
 void DrawNumber(const unsigned char* s) {
-    const records::PartyMember* const o = rv::AsConst<records::PartyMember>(At(ObjTrio_addr + s[0xB] * at::kMemberStride));
+    const records::PartyMember* const o = rv::AsConst<records::PartyMember>(At(::bof3::Img(ObjTrio_addr) + s[0xB] * at::kMemberStride));
     SH_AT(void (__cdecl*)(unsigned, unsigned, unsigned, unsigned), at::kDrawNumber)(
         static_cast<std::uint16_t>(o->screen_x), static_cast<std::uint16_t>(static_cast<std::uint16_t>(o->screen_y) + rv::As<records::EffectObject>(s)->z_whole), s[6], s[0x27]);
 }
@@ -152,9 +152,9 @@ extern "C" void __cdecl EffectKind30_Push(void) {
             records::EffectObject* s = rv::As<records::EffectObject>(S());
             rv::Bytes(s)[8] = ObjTrio[0].direction;
             s = rv::As<records::EffectObject>(S());
-            s->step_x = UL(At(MoveCmd_F9Steps_addr + 8u * rv::Bytes(s)[8])) << 1;
+            s->step_x = UL(At(::bof3::Img(MoveCmd_F9Steps_addr) + 8u * rv::Bytes(s)[8])) << 1;
             s = rv::As<records::EffectObject>(S());
-            s->step_z = UL(At(MoveCmd_F9Steps_addr + 4 + 8u * rv::Bytes(s)[8])) << 1;
+            s->step_z = UL(At(::bof3::Img(MoveCmd_F9Steps_addr) + 4 + 8u * rv::Bytes(s)[8])) << 1;
             rv::As<records::EffectObject>(S())->timer = 0x10;
             s = rv::As<records::EffectObject>(S());
             const U n = s->timer;
@@ -169,13 +169,13 @@ extern "C" void __cdecl EffectKind30_Push(void) {
             }
             s = rv::As<records::EffectObject>(S());
             const int bytes = static_cast<signed char>(At(s->frames)[0]) * 40;
-            unsigned char* dst = At(at::kModelCopy);
+            unsigned char* dst = At(::bof3::Img(at::kModelCopy));
             for (int i = bytes; i > 0; --i) {
                 s = rv::As<records::EffectObject>(S());
                 *dst++ = *At(s->script);
                 s->script = s->script + 1;
             }
-            rv::Store<U>(rv::As<records::EffectObject>(S())->script, at::kModelCopy);
+            rv::Store<U>(rv::As<records::EffectObject>(S())->script, ::bof3::Img(at::kModelCopy));
             SH_CALL(EffectKind30_ShardsInit)();
             SH_CALL(EffectKind30_SparksInit)();
             SH_CALL(Sound_PlayEffect)(0x10E);
@@ -201,9 +201,9 @@ extern "C" void __cdecl EffectKind30_Slide(void) {
     if (s->timer == 0) {
         if (Game_AreaNumber == 0x54) {
             if (static_cast<U>(s->x) == 0x118000 && static_cast<U>(s->z) == 0x4A8000)
-                SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x36);
+                SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x36);
             else
-                SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), 0x36);
+                SH_CALL(Flags_Clear)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x36);
         }
         SH_CALL(EffectKind30_ClaimCells)();
         S()[0xB] = 0;
@@ -225,7 +225,7 @@ extern "C" void __cdecl EffectKind30_Shatter(void) {
         SH_CALL(Sprite_UpdateScreenA)();
         return;
     }
-    if (Game_AreaNumber == 0x92) SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x44);
+    if (Game_AreaNumber == 0x92) SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x44);
     SH_CALL(Effect_Release)();
 }
 
@@ -357,7 +357,7 @@ extern "C" void __cdecl EffectKind30_FreeCells(void) {
 extern "C" void __cdecl EffectKind30_ShardsInit(void) {
     const unsigned char* face = At(rv::As<records::EffectObject>(S())->script);
     for (unsigned i = 0; i < at::kShardCount; ++i, face += at::kFaceStride) {
-        unsigned char* const r = At(EffectKind30_Shards_addr + i * at::kShardStride);
+        unsigned char* const r = At(::bof3::Img(EffectKind30_Shards_addr) + i * at::kShardStride);
         SetWord(r + 0, static_cast<U>((SW(face + 8) + SW(face + 0x14) + SW(face + 0xE) + SW(face + 2)) >> 2));
         SetWord(r + 2, static_cast<U>((SW(face + 4) + SW(face + 0x16) + SW(face + 0xA) + SW(face + 0x10)) >> 2));
         SetWord(r + 4, static_cast<U>((SW(face + 0x18) + SW(face + 6) + SW(face + 0x12) + SW(face + 0xC)) >> 2));
@@ -387,7 +387,7 @@ extern "C" void __cdecl EffectKind30_ShardsInit(void) {
 extern "C" void __cdecl EffectKind30_ShardsStep(void) {
     unsigned char* face = At(rv::As<records::EffectObject>(S())->script);
     for (unsigned i = 0; i < at::kShardCount; ++i, face += at::kFaceStride) {
-        unsigned char* const r = At(EffectKind30_Shards_addr + i * at::kShardStride);
+        unsigned char* const r = At(::bof3::Img(EffectKind30_Shards_addr) + i * at::kShardStride);
         const unsigned vx = Word(r + 8);
         SetWord(r + 0xC, Word(r + 0xC) + 2u);
         SetWord(r + 0, Word(r + 0) + vx);
@@ -433,9 +433,9 @@ extern "C" void __cdecl EffectKind30_ShardTumble(unsigned char* shard, unsigned 
 // EffectKind30_Push's and the engine's 0x46D710. No PSX twin paired.
 extern "C" void __cdecl EffectKind30_SparksInit(void) {
     EffectKind30_Sparks[0] = 0x40;
-    SetWord(At(at::kSparkSize), 0);
+    SetWord(At(::bof3::Img(at::kSparkSize)), 0);
     for (unsigned i = 0; i < at::kSparkCount; ++i) {
-        unsigned char* const p = At(EffectKind30_Sparks_addr + 0x4 + i * at::kSparkStride);
+        unsigned char* const p = At(::bof3::Img(EffectKind30_Sparks_addr) + 0x4 + i * at::kSparkStride);
         const records::EffectObject* const s = rv::As<records::EffectObject>(S());
         SetUL(p + 0, static_cast<U>(s->x));
         SetUL(p + 4, static_cast<U>(s->z));
@@ -458,8 +458,8 @@ extern "C" void __cdecl EffectKind30_SparksDraw(void) {
     SH_AT(void (__cdecl*)(void), at::kCameraMatrices)();
     const unsigned char* s = nullptr;
     for (unsigned i = 0; i < at::kSparkCount; ++i) {
-        unsigned char* const p = At(EffectKind30_Sparks_addr + 0x4 + i * at::kSparkStride);
-        SH_CALL(EffectKind30_SparkQuad)(reinterpret_cast<const long*>(p), Word(At(at::kSparkSize)), EffectKind30_Sparks[0]);
+        unsigned char* const p = At(::bof3::Img(EffectKind30_Sparks_addr) + 0x4 + i * at::kSparkStride);
+        SH_CALL(EffectKind30_SparkQuad)(reinterpret_cast<const long*>(p), Word(At(::bof3::Img(at::kSparkSize))), EffectKind30_Sparks[0]);
         s = S();
         const unsigned shift = s[9] >= 0xC ? 1 : 0;
         SetUL(p + 0, UL(p + 0) + (UL(p + 0x10) << shift));
@@ -467,7 +467,7 @@ extern "C" void __cdecl EffectKind30_SparksDraw(void) {
         SetUL(p + 8, UL(p + 8) + (UL(p + 0x18) << shift));
     }
     if (s[9] >= 0xC)
-        SetWord(At(at::kSparkSize), Word(At(at::kSparkSize)) + 0x80u);
+        SetWord(At(::bof3::Img(at::kSparkSize)), Word(At(::bof3::Img(at::kSparkSize))) + 0x80u);
     else
         EffectKind30_Sparks[0] = static_cast<unsigned char>(EffectKind30_Sparks[0] + 0xFB);
 }
@@ -902,9 +902,9 @@ extern "C" void __cdecl EffectKind3A_Start(void) {
     s->z = UL(At(AddressOf(Field_DirectionSteps) + 4 + 8u * rv::Bytes(s)[8])) + static_cast<std::uint32_t>(ObjTrio[0].z);
     rv::Store<unsigned>(rv::As<records::EffectObject>(S())->height_whole, ObjTrio[0].height_whole + 0xC0u);
     s = rv::As<records::EffectObject>(S());
-    s->step_x = UL(At(MoveCmd_F9Steps_addr + 8u * rv::Bytes(s)[8])) << 4;
+    s->step_x = UL(At(::bof3::Img(MoveCmd_F9Steps_addr) + 8u * rv::Bytes(s)[8])) << 4;
     s = rv::As<records::EffectObject>(S());
-    s->step_z = UL(At(MoveCmd_F9Steps_addr + 4 + 8u * rv::Bytes(s)[8])) << 4;
+    s->step_z = UL(At(::bof3::Img(MoveCmd_F9Steps_addr) + 4 + 8u * rv::Bytes(s)[8])) << 4;
     s = rv::As<records::EffectObject>(S());
     rv::Bytes(s)[0xA] = 0xE;
     rv::Bytes(s)[0xB] = 0;
@@ -926,7 +926,7 @@ extern "C" void __cdecl EffectKind3A_Fly(void) {
     s = rv::As<records::EffectObject>(S());
     const U width = UL(AreaMap_Header) & 0xFFu;
     const U cell = static_cast<U>(static_cast<std::int32_t>(static_cast<short>(s->z_whole))) * width +
-                   static_cast<U>(static_cast<std::int32_t>(static_cast<short>(s->x_whole))) + Word(At(AreaMap_Header_addr + 0x2)) * 2u;
+                   static_cast<U>(static_cast<std::int32_t>(static_cast<short>(s->x_whole))) + Word(At(::bof3::Img(AreaMap_Header_addr) + 0x2)) * 2u;
     if (Word(At(AddressOf(AreaMap_Header) + cell * 2u)) == 0) {
         SH_CALL(Effect_Release)();
         return;

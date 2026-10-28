@@ -80,7 +80,7 @@ const Callees kOriginals = {
 Callees g = kOriginals;
 
 // Task 0's state word, +0 of its record: 0 while no task 0 runs.
-std::uint16_t TaskZeroState() { return Word(At(bof3::addr::Task_Records)); }
+std::uint16_t TaskZeroState() { return Word(At(::bof3::Img(bof3::addr::Task_Records))); }
 
 }  // namespace
 
@@ -295,9 +295,9 @@ extern "C" void __cdecl GameMode_Field(void) {
     case 3: {   // battle
         const std::int32_t count = static_cast<std::int32_t>(Game_BattleCount);
         Game_Mode = 5;
-        At(kBattleBytes)[0] = 0;
-        At(kBattleBytes)[1] = 0;
-        At(kBattleBytes)[2] = 0;
+        At(::bof3::Img(kBattleBytes))[0] = 0;
+        At(::bof3::Img(kBattleBytes))[1] = 0;
+        At(::bof3::Img(kBattleBytes))[2] = 0;
         rv::Bytes(ObjTrio)[0xb] = 0;
         rv::Bytes(&ObjTrio[1])[0xb] = 0;
         rv::Bytes(&ObjTrio[2])[0xb] = 0;
@@ -310,7 +310,7 @@ extern "C" void __cdecl GameMode_Field(void) {
         return;
     case 5: {   // the area change
         unsigned char track = Music_Track;
-        At(Field_ScriptFlags2_addr)[0] |= 0x40;
+        At(::bof3::Img(Field_ScriptFlags2_addr))[0] |= 0x40;
         if (track != 0xFF && AreaW1f_MusicCurrent != track) {
             g.music_fade(0x10);
             track = Music_Track;
@@ -327,10 +327,10 @@ extern "C" void __cdecl GameMode_Field(void) {
     }
     case 6:
         BattleE1_Mode = 6;
-        At(BattleE1_Mode_addr)[1] = 0;
-        At(BattleE1_Mode_addr)[2] = 0;
+        At(::bof3::Img(BattleE1_Mode_addr))[1] = 0;
+        At(::bof3::Img(BattleE1_Mode_addr))[2] = 0;
         Game_Step = 0;
-        At(BattleE1_Mode_addr)[0xC] = 0xFF;
+        At(::bof3::Img(BattleE1_Mode_addr))[0xC] = 0xFF;
         Game_Mode = 7;
         return;
     case 7:
@@ -338,15 +338,15 @@ extern "C" void __cdecl GameMode_Field(void) {
         Game_Mode = Field_Request == 7 ? 9 : 0xA;
         Game_Step = 0;
         BattleE1_Mode = 0;
-        At(BattleE1_Mode_addr)[1] = 0;
-        At(BattleE1_Mode_addr)[2] = 0;
+        At(::bof3::Img(BattleE1_Mode_addr))[1] = 0;
+        At(::bof3::Img(BattleE1_Mode_addr))[2] = 0;
         return;
     case 9:
         FieldEvent_Object905DA0 = 1;
-        At(kMode11Bytes)[1] = 0;
-        At(kMode11Bytes)[2] = 0;
-        At(kMode11Bytes)[3] = 0;
-        At(kMode11Bytes)[4] = 0;
+        At(::bof3::Img(kMode11Bytes))[1] = 0;
+        At(::bof3::Img(kMode11Bytes))[2] = 0;
+        At(::bof3::Img(kMode11Bytes))[3] = 0;
+        At(::bof3::Img(kMode11Bytes))[4] = 0;
         Game_Mode = 0xB;
         return;
     default:
@@ -566,19 +566,19 @@ constexpr move_script::Table kFieldTable = {0x22, 0x198, 9};
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {bof3::addr::Task_Records, 0x48},   // task 0's state, Field_Request, Game_Mode / Game_Step,
+    {::bof3::Img(bof3::addr::Task_Records), 0x48},   // task 0's state, Field_Request, Game_Mode / Game_Step,
                                         // task 1's words, Transition_Busy
     {static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&Input_Pressed)), 2},
-    {Music_Track_addr - 1, 8},          // the track and the battle count
-    {kBattleBytes, 4},
-    {kMemberByte0, 1},
-    {kMemberByte1, 1},
-    {kMemberByte2, 1},
-    {AreaW1f_MusicCurrent_addr, 1},
-    {ModeFlow_AreaTransition_addr, 1},
-    {Field_ScriptFlags2_addr, 1},
-    {BattleE1_Mode_addr, 0x10},
-    {kMode11Bytes, 8},
+    {::bof3::Img(Music_Track_addr) - 1, 8},          // the track and the battle count
+    {::bof3::Img(kBattleBytes), 4},
+    {::bof3::Img(kMemberByte0), 1},
+    {::bof3::Img(kMemberByte1), 1},
+    {::bof3::Img(kMemberByte2), 1},
+    {::bof3::Img(AreaW1f_MusicCurrent_addr), 1},
+    {::bof3::Img(ModeFlow_AreaTransition_addr), 1},
+    {::bof3::Img(Field_ScriptFlags2_addr), 1},
+    {::bof3::Img(BattleE1_Mode_addr), 0x10},
+    {::bof3::Img(kMode11Bytes), 8},
 };
 constexpr unsigned kRegionBytes = 0x48 + 2 + 8 + 4 + 1 + 1 + 1 + 1 + 1 + 1 + 0x10 + 8;
 
@@ -638,7 +638,7 @@ void Seed(unsigned k) {
         else Title_StartArmed = 0;
         if (Often()) Input_Pressed = static_cast<std::uint16_t>(Input_Pressed | 0x800);
         if (Often()) Transition_Busy = 0;
-        if (Often()) SetWord(At(bof3::addr::Task_Records), 0);
+        if (Often()) SetWord(At(::bof3::Img(bof3::addr::Task_Records)), 0);
         Title_State = static_cast<std::uint16_t>(Next() % 3 ? Next() % 8 : Next());
         if (Often()) Title_Fade = 0;
         if (Often()) Title_LogoState = 2;

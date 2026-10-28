@@ -71,8 +71,8 @@ VoidFn Entry(std::uint32_t table, int index) {
 }
 
 unsigned char& Step() { return MoveScript_PartyRecords[0x65]; }
-std::uint16_t Timer() { return Word(At(MoveScript_PartyRecords_addr + 0x66)); }
-void SetTimer(unsigned v) { SetWord(At(MoveScript_PartyRecords_addr + 0x66), v); }
+std::uint16_t Timer() { return Word(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66)); }
+void SetTimer(unsigned v) { SetWord(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), v); }
 unsigned char* FlagBits() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 // The three camera angles, Camera_Angles[0..2].
 unsigned char* AngleAt(unsigned i) { return reinterpret_cast<unsigned char*>(Camera_Angles) + 2 * i; }
@@ -81,7 +81,7 @@ short Angle(unsigned i) { return static_cast<short>(Word(AngleAt(i))); }
 // A text line of the script pool: entry `id`'s u16 offset from the pool's
 // base, drawn at (x, y) in colour 0, whole (count 0xFF).
 void Line(int x, int y, unsigned id) {
-    const std::uint32_t text = bof3::addr::MessagePools + Word(At(bof3::addr::MessagePools + 2 * id));
+    const std::uint32_t text = ::bof3::Img(bof3::addr::MessagePools) + Word(At(::bof3::Img(bof3::addr::MessagePools) + 2 * id));
     g.text(x, y, 0, 0xFF, reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(text)));
 }
 
@@ -112,7 +112,7 @@ void PlaceEffect(int (*x)(), unsigned char mode) {
 // As the original has it: the chapter Cond_ByteFA is signed and unchecked;
 // the table is read afresh; the tail is a jump, here a call.
 extern "C" void __cdecl Field_ModeDispatch(void) {
-    const auto vtable = static_cast<std::uint32_t>(Long(At(Scenario_Hooks_addr + 4u * static_cast<std::uint32_t>(static_cast<int>(Cond_ByteFA)))));
+    const auto vtable = static_cast<std::uint32_t>(Long(At(::bof3::Img(Scenario_Hooks_addr) + 4u * static_cast<std::uint32_t>(static_cast<int>(Cond_ByteFA)))));
     Entry(vtable, 0)();
     g.mode_tail();
 }
@@ -120,11 +120,11 @@ extern "C" void __cdecl Field_ModeDispatch(void) {
 // original 0x56D8B0: a tail jump through the two-entry table 0x662CD0 on the
 // s8 at 0x9039F2 (PSX 0x801A8BF8 on 0x801448E6): 0 is the set-up 0x56D8C0,
 // which sets it to 1; 1 is Field_ModeTailRun. Unchecked.
-extern "C" void __cdecl Field_ModeTail(void) { Entry(kTailTable, SaveMenu_NewGameByte)(); }
+extern "C" void __cdecl Field_ModeTail(void) { Entry(::bof3::Img(kTailTable), SaveMenu_NewGameByte)(); }
 
 // original 0x56D920: a tail jump through 0x662CE8 on the s8 at 0x9039F3 (PSX
 // 0x801A8CB4 on 0x801448E7); entry 0 is a bare ret. Unchecked.
-extern "C" void __cdecl Field_ModeTailRun(void) { Entry(Field_ModeTailKinds_addr, AreaW0a_TailKind)(); }
+extern "C" void __cdecl Field_ModeTailRun(void) { Entry(::bof3::Img(Field_ModeTailKinds_addr), AreaW0a_TailKind)(); }
 
 // original 0x5341A0 (PSX 0x801C2DE8): entry (n & 0xFF) of the current chapter's call table
 // (0x660B84[chapter], PSX Scenario_CallA 0x801C2DE8 through 0x801CDC4C).
@@ -134,18 +134,20 @@ extern "C" void __cdecl Field_ModeTailRun(void) { Entry(Field_ModeTailKinds_addr
 // of the 153 reads eax after the call (capstone, to the first branch or
 // write of eax); the jump passes the entry's through regardless.
 extern "C" __attribute__((naked)) void __cdecl Scenario_CallA(unsigned) {
-    asm("movsbl 0x8034E0, %eax\n\t"          // Cond_ByteFA, the chapter
-        "movl 4(%esp), %ecx\n\t"
-        "movl 0x660B84(,%eax,4), %edx\n\t"   // field_modes::kCallATables
-        "andl $0xFF, %ecx\n\t"
-        "jmp *(%edx,%ecx,4)");
+    asm("movsbl %c0, %%eax\n\t"            // Cond_ByteFA, the chapter
+        "movl 4(%%esp), %%ecx\n\t"
+        "movl %c1(,%%eax,4), %%edx\n\t"    // field_modes::kCallATables
+        "andl $0xFF, %%ecx\n\t"
+        "jmp *(%%edx,%%ecx,4)"
+        :
+        : "i"(::bof3::Img(0x8034E0)), "i"(::bof3::Img(0x660B84)));
 }
 
 // original 0x56B2A0: scenario 16's vtable slot 0 (PSX 0x801F6C90): a tail
 // jump through 0x6619FC on its state, the s8 0x8034E2 - 0 Scena16_Start,
 // 1 Scena16_EnterArea, 2 Scena16_Run. Unchecked; entries 3.. of the same
 // words are Scena16_Run's table.
-extern "C" void __cdecl Scena16_Frame(void) { Entry(kStateTable, static_cast<signed char>(MoveScript_PartyRecords[0x62]))(); }
+extern "C" void __cdecl Scena16_Frame(void) { Entry(::bof3::Img(kStateTable), static_cast<signed char>(MoveScript_PartyRecords[0x62]))(); }
 
 // original 0x56B2B0: the demo's first frame (PSX 0x801F6CCC): the chapter's
 // call-table entry 0, the pass flags 0x1F, the area change to area 4 at
@@ -160,12 +162,12 @@ extern "C" void __cdecl Scena16_Start(void) {
     g.change_area(4, 0x1A0000, 0x88000, 5);
     Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags | 0x240);
     FieldModes_Pending = 4;
-    SetLong(At(FieldModes_Pending_addr + 4), 0x1A0000);
-    SetLong(At(FieldModes_Pending_addr + 8), 0x88000);
-    At(FieldModes_Pending_addr + 3)[0] = 5;
+    SetLong(At(::bof3::Img(FieldModes_Pending_addr) + 4), 0x1A0000);
+    SetLong(At(::bof3::Img(FieldModes_Pending_addr) + 8), 0x88000);
+    At(::bof3::Img(FieldModes_Pending_addr) + 3)[0] = 5;
     g.start_music(6);
     while (g.load_done() == 0) g.sleep(1);
-    SetLong(At(kCounters), 0);
+    SetLong(At(::bof3::Img(kCounters)), 0);
     MoveScript_PartyRecords[0x62] = 1;
 }
 
@@ -239,7 +241,7 @@ extern "C" void __cdecl Scena16_Area04(void) {
 // taken, less 0xAA; the flag pointer is read afresh for each call.
 extern "C" void __cdecl Scena16_Area02(void) {
     if (g.flags_test(FlagBits(), 2) == 0) {
-        SetLong(At(kCounters), 0);
+        SetLong(At(::bof3::Img(kCounters)), 0);
         g.set_elevation(0x300);
         g.kind2_place(0);
         SetWord(AngleAt(0), static_cast<unsigned>(Word(AngleAt(0))) + 0xAA);
@@ -260,7 +262,7 @@ extern "C" void __cdecl Scena16_Area02(void) {
 // original 0x56B560: scenario 16's state 2 (PSX 0x801F7144): a tail jump
 // through 0x661A08 on MoveScript_Var7 (s8, unchecked) - 0 a bare ret,
 // 1 Scena16_End, 2..4 the three scenes, 5 0x43C9F0.
-extern "C" void __cdecl Scena16_Run(void) { Entry(kRunTable, MoveScript_Var7)(); }
+extern "C" void __cdecl Scena16_Run(void) { Entry(::bof3::Img(kRunTable), MoveScript_Var7)(); }
 
 // original 0x56B570: the demo's end, run 1 (PSX 0x801F7188). Once the wait
 // word is 0: the badge and the pass flags off, the CLUT strip restored, sound
@@ -298,7 +300,7 @@ extern "C" void __cdecl Scena16_Scene2(void) {
         if (Transition_Busy != 0) return;
         g.transition(1);
         g.music_play(6, 8);
-        At(0x9039A2)[0] |= 0x80;   // Field_ScriptFlags' low byte
+        At(::bof3::Img(0x9039A2))[0] |= 0x80;   // Field_ScriptFlags' low byte
         ++Step();
         return;
     case 1:
@@ -325,11 +327,11 @@ extern "C" void __cdecl Scena16_Scene2(void) {
         g.obj_trio();
         g.transition(1);
         ++Step();
-        At(kCounters + 3)[0] = 1;
+        At(::bof3::Img(kCounters) + 3)[0] = 1;
         SetTimer(0);
         return;
     case 4:
-        if (At(kCounters + 3)[0] != 0x54) return;
+        if (At(::bof3::Img(kCounters) + 3)[0] != 0x54) return;
         g.transition(0);
         ++Step();
         return;
@@ -366,16 +368,16 @@ extern "C" void __cdecl Scena16_Scene2(void) {
         ++Step();
         return;
     case 10:
-        if (At(kCounters + 2)[0] != 0x23) return;
+        if (At(::bof3::Img(kCounters) + 2)[0] != 0x23) return;
         PlaceEffect([] { return Angle(0) + 0x180; }, 0x60);
         ++Step();
         return;
     case 11:
-        if (At(kCounters + 3)[0] != 0x60) return;
+        if (At(::bof3::Img(kCounters) + 3)[0] != 0x60) return;
         g.change_area(0x1F, 0x70000, 0x140000, 0);
         Area_EnterTransition = 0xFF;
         g.music_stop(0x40);
-        At(kCounters + 2)[0] = 0;
+        At(::bof3::Img(kCounters) + 2)[0] = 0;
         MoveScript_Var7 = 3;
         Step() = 0;
         return;
@@ -442,7 +444,7 @@ extern "C" void __cdecl Scena16_Scene3(void) {
             break;
         }
         g.transition(1);
-        At(kCounters + 2)[0] = 0x30;
+        At(::bof3::Img(kCounters) + 2)[0] = 0x30;
         Draw_PassFlags = 0x1F;
         PlaceEffect([] { return Angle(0) + 0x1C0; }, 0xFF);
         ++Step();
@@ -542,13 +544,13 @@ extern "C" void __cdecl Scena16_Scene4(void) {
         ++Step();
         return;
     case 2:
-        if (At(kCounters)[0] != 3) return;
+        if (At(::bof3::Img(kCounters))[0] != 3) return;
         g.open_script(2);
         ++Step();
         Field_Request = 2;
         return;
     case 3:
-        if (At(kCounters)[0] != 4) return;
+        if (At(::bof3::Img(kCounters))[0] != 4) return;
         SetTimer(0x130);
         ++Step();
         return;
@@ -570,12 +572,12 @@ extern "C" void __cdecl Scena16_Scene4(void) {
         return;
     }
     case 5:
-        if (At(kCounters)[0] != 5) return;
+        if (At(::bof3::Img(kCounters))[0] != 5) return;
         PlaceEffect([] { return -0x34A; }, 0x60);
         ++Step();
         return;
     case 6:
-        if (At(kCounters)[0] != 8) return;
+        if (At(::bof3::Img(kCounters))[0] != 8) return;
         PlaceEffect([] { return -0x2AC; }, 0x20);
         ++Step();
         SetTimer(0x200);
@@ -584,7 +586,7 @@ extern "C" void __cdecl Scena16_Scene4(void) {
         DistanceFromTimer([](std::uint16_t t) { return (static_cast<std::uint32_t>(t) * 13u << 14) >> 16; });
         return;
     case 8:
-        if (At(kCounters)[0] != 0xB) return;
+        if (At(::bof3::Img(kCounters))[0] != 0xB) return;
         g.transition(0);
         ++Step();
         SetTimer(0);

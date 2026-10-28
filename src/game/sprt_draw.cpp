@@ -177,11 +177,11 @@ inline float X87IntAddMul(std::int32_t i, float b, float c) {
 }
 
 // D3d_Device, read afresh before the COM call as the original does.
-void** Device() { return *reinterpret_cast<void** volatile*>(At(D3d_Device_addr)); }
+void** Device() { return *reinterpret_cast<void** volatile*>(At(::bof3::Img(D3d_Device_addr))); }
 void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
 
-unsigned char* Vertex(U i) { return At(D3d_Vertices_addr + i * 0x20); }
+unsigned char* Vertex(U i) { return At(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
 
 // The body all three share. `size_at` is 0 for SPRT - the size is the
 // primitive's u16 w +0x18 and h +0x1A, pushed through fild - or the address of
@@ -204,13 +204,13 @@ unsigned char* Vertex(U i) { return At(D3d_Vertices_addr + i * 0x20); }
 // bare rets - kept, since a callee could change either.
 long DrawSprite(const unsigned char* prim, U size_at, U extent) {
     unsigned long diffuse, specular;
-    g.prim_color(prim[4], prim[5], prim[6], prim[7], Long(At(Gfx_DrawTpage_addr)) & 0xFFFF, &diffuse, &specular);
+    g.prim_color(prim[4], prim[5], prim[6], prim[7], Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF, &diffuse, &specular);
 
     const float x = Float(prim + 8), y = Float(prim + 0xC), z = Float(prim + 0x10);
     const U u = prim[0x14], v = prim[0x15];
     const float left = X87Mul(D3d_ScaleX, x);
     const float top = X87Mul(D3d_ScaleY, y);
-    const float near_u = X87Pass(FloatAt(kTexCoords + u * 4)), near_v = X87Pass(FloatAt(kTexCoords + v * 4));
+    const float near_u = X87Pass(FloatAt(::bof3::Img(kTexCoords) + u * 4)), near_v = X87Pass(FloatAt(::bof3::Img(kTexCoords) + v * 4));
     float right, bottom;
     U far_j_u, far_j_v;
     if (size_at == 0) {
@@ -250,15 +250,15 @@ long DrawSprite(const unsigned char* prim, U size_at, U extent) {
         PutFloat(out + 0x1C, vs[i]);
     }
 
-    g.bind_texture(Long(At(Gfx_DrawTpage_addr)) & 0xFFFF, Word(prim + 0x16));
+    g.bind_texture(Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF, Word(prim + 0x16));
     g.ret_only(1);
     g.ret_only(1);
-    g.set_blend(prim[7], Long(At(Gfx_DrawTpage_addr)) & 0xFFFF);
+    g.set_blend(prim[7], Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF);
     g.set_shade(1);   // flat
     // DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_TLVERTEX, D3d_Vertices, 4, 0);
     // its result is the handler's (the draw 0x59EE50 does not read it).
     void** device = Device();
-    return reinterpret_cast<Com6>(Method(device, 0x70))(device, 5, 0x1C4, D3d_Vertices_addr, 4, 0);
+    return reinterpret_cast<Com6>(Method(device, 0x70))(device, 5, 0x1C4, ::bof3::Img(D3d_Vertices_addr), 4, 0);
     // Not kept: the original lets the colour helper write the diffuse into
     // the caller's pushed `prim` slot, which the caller pops unread, and uses
     // a local as fild's operand.

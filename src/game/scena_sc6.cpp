@@ -61,8 +61,8 @@ std::int32_t Get32(const unsigned char* p) {
 void Put32(unsigned char* p, std::int32_t v) { std::memcpy(p, &v, 4); }
 
 unsigned Area() { return Game_AreaNumber; }
-unsigned char Counter(unsigned k) { return B(at::kCounters + k); }
-void SetCounter(unsigned k, unsigned char v) { B(at::kCounters + k) = v; }
+unsigned char Counter(unsigned k) { return B(::bof3::Img(at::kCounters) + k); }
+void SetCounter(unsigned k, unsigned char v) { B(::bof3::Img(at::kCounters) + k) = v; }
 unsigned char Step() { return MoveScript_PartyRecords[0x65]; }
 void SetStep(unsigned char v) { MoveScript_PartyRecords[0x65] = v; }
 void SetRun(unsigned char v) { MoveScript_Var7 = v; }
@@ -73,7 +73,7 @@ void SetRequest(unsigned char v) { Field_Request = v; }
 bool Waiting() { return Transition_Busy != 0; }
 bool Busy() { return Request() == 2; }   // a message still open
 void SetMusicByte(unsigned char v) { AreaW1f_MusicCurrent = v; }
-void ScriptOr8() { B(at::kScriptFlags) = static_cast<unsigned char>(B(at::kScriptFlags) | 8); }       // or byte
+void ScriptOr8() { B(::bof3::Img(at::kScriptFlags)) = static_cast<unsigned char>(B(::bof3::Img(at::kScriptFlags)) | 8); }       // or byte
 void ScriptXor8() { Field_ScriptFlags = static_cast<std::uint16_t>(Field_ScriptFlags ^ 8); }         // xor word
 void StatusOr1() { Field_StatusBits = static_cast<unsigned char>(Field_StatusBits | 1); }
 void StatusXor1() { Field_StatusBits = static_cast<unsigned char>(Field_StatusBits ^ 1); }
@@ -142,11 +142,11 @@ void EndRunAll() {
 
 // The character record of Character_IndexById[k] (the member's), its +0xB.
 unsigned char& RecordB(unsigned k) {
-    const unsigned member = B(at::kEffectState + k);
-    return B(at::kCharRecords + at::kCharStride * member + 0xB);
+    const unsigned member = B(::bof3::Img(at::kEffectState) + k);
+    return B(::bof3::Img(at::kCharRecords) + at::kCharStride * member + 0xB);
 }
 
-unsigned char* Effect(unsigned slot) { return &B(at::kEffects + (slot & 0xFFu) * at::kEffectStride); }
+unsigned char* Effect(unsigned slot) { return &B(::bof3::Img(at::kEffects) + (slot & 0xFFu) * at::kEffectStride); }
 
 // The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
 // views a
@@ -188,11 +188,11 @@ void Spawn(unsigned char kind) {
 void MemberLines(unsigned char a, unsigned short ma, unsigned char b, unsigned short mb, unsigned char c,
                  unsigned short mc) {
     for (unsigned i = 0; i < 3; ++i)
-        if (B(at::kPartyBytes + i) == a) Msg(ma);
+        if (B(::bof3::Img(at::kPartyBytes) + i) == a) Msg(ma);
     for (unsigned i = 0; i < 3; ++i)
-        if (B(at::kPartyBytes + i) == b) Msg(mb);
+        if (B(::bof3::Img(at::kPartyBytes) + i) == b) Msg(mb);
     for (unsigned i = 0; i < 3; ++i)
-        if (B(at::kPartyBytes + i) == c) Msg(mc);
+        if (B(::bof3::Img(at::kPartyBytes) + i) == c) Msg(mc);
 }
 
 // An effect of kind 6 for a party member's field object: Sprite_Current set to
@@ -201,7 +201,7 @@ void MemberLines(unsigned char a, unsigned short ma, unsigned char b, unsigned s
 // `six`, +0xC 0, +0x10 the s8 Scena06_MemberBytes[the byte `member`, read
 // after the call], +0x2E / +0x30 the object's words.
 void MemberEffect(std::uint32_t object, unsigned char six, std::uint32_t member) {
-    D(at::kSpriteCurrent) = object;
+    D(::bof3::Img(at::kSpriteCurrent)) = object;
     const unsigned char slot = SH_CALL(Effect_FindFree)();
     unsigned char* const s = Sprite_Current;
     s[0xB] = slot;
@@ -210,7 +210,7 @@ void MemberEffect(std::uint32_t object, unsigned char six, std::uint32_t member)
     Effect(s[0xB])[5] = 6;
     Effect(s[0xB])[6] = six;
     Put32(Effect(s[0xB]) + 0xC, 0);
-    Put32(Effect(s[0xB]) + 0x10, static_cast<signed char>(B(at::kMemberBytes + B(member))));
+    Put32(Effect(s[0xB]) + 0x10, static_cast<signed char>(B(::bof3::Img(at::kMemberBytes) + B(member))));
     rv::As<records::EffectObject>(Effect(s[0xB]))->screen_x = rv::As<records::SpriteObject>(s)->screen_x;
     rv::As<records::EffectObject>(Effect(s[0xB]))->screen_y = rv::As<records::SpriteObject>(s)->screen_y;
 }
@@ -238,7 +238,7 @@ unsigned char* Sprite() { return Sprite_Current; }
 // 1 Scena06_EnterArea, 2 Scena06_Run.
 SC6_EXPORT void __cdecl Scena06_Frame(void) {
     const int state = static_cast<signed char>(MoveScript_PartyRecords[0x62]);
-    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(Scena06_States_addr, state, at::kStateCount, "Scena06_Frame")))();
+    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena06_States_addr), state, at::kStateCount, "Scena06_Frame")))();
 }
 
 // original 0x54A920: state 0 - Scena06_GuestRecord, then state 1.
@@ -255,7 +255,7 @@ SC6_EXPORT void __cdecl Scena06_Start(void) {
 // docs/char-stats.md section 2's).
 SC6_EXPORT void __cdecl Scena06_GuestRecord(void) {
     const unsigned char* const t = &Scena06_GuestStats[0];
-    unsigned char* const r = &B(at::kRecord7);
+    unsigned char* const r = &B(::bof3::Img(at::kRecord7));
     auto* const c = rv::As<records::CharRecord>(r);   // character record 7, CharacterRecords 0x903A70 + 7 * 0xA4
     c->hp = t[0];
     r[0x12] = t[6];
@@ -432,7 +432,7 @@ SC6_EXPORT void __cdecl Scena06_EnterArea(void) {
 // MoveScript_Var7: 0 a bare ret (0x437CC0), 1..17 Scena06_Run01..17.
 SC6_EXPORT void __cdecl Scena06_Run(void) {
     const int run = MoveScript_Var7;
-    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(Scena06_Runs_addr, run, at::kRunCount, "Scena06_Run")))();
+    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena06_Runs_addr), run, at::kRunCount, "Scena06_Run")))();
 }
 
 // ===========================================================================
@@ -465,14 +465,14 @@ SC6_EXPORT void __cdecl Scena06_Run01(void) {
         if (Counter(0) != 0x11) return;
         SetCounter(0, 0);
         SetStep(4);
-        W(at::kTimer) = 0xB4;
+        W(::bof3::Img(at::kTimer)) = 0xB4;
         SetPass(0);
         ChangeArea(0x27, 0x598000, 0x100000, 0x82);
         return;
     case 4: {
         // the timer counted down every frame (to 0xFFFF past 0); at 0 on entry
-        const std::uint16_t t = W(at::kTimer);
-        W(at::kTimer) = static_cast<std::uint16_t>(t - 1);
+        const std::uint16_t t = W(::bof3::Img(at::kTimer));
+        W(::bof3::Img(at::kTimer)) = static_cast<std::uint16_t>(t - 1);
         if (t != 0) return;
         Transition(5);
         SetPass(0x1F);
@@ -617,7 +617,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
         if (Counter(0) != 0xA) return;
         if (!TakeSlot()) return;
         SetStep(7);
-        Place(0x13, -0x3B5, Camera_Angles[1], Angle(at::kAngle2), 0x1E);
+        Place(0x13, -0x3B5, Camera_Angles[1], Angle(::bof3::Img(at::kAngle2)), 0x1E);
         return;
     case 7:
         MusicStop(0xA);
@@ -635,7 +635,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
         if (Counter(0) != 0xD) return;
         if (!TakeSlot()) return;
         SetStep(0xA);
-        Place(0x13, -0x2AA, Camera_Angles[1], Angle(at::kAngle2), 0x1E);
+        Place(0x13, -0x2AA, Camera_Angles[1], Angle(::bof3::Img(at::kAngle2)), 0x1E);
         return;
     case 10: {
         if (Counter(0) != 0xE) return;
@@ -650,13 +650,13 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
         Kind2(0);
         if (!TakeSlot()) return;
         SetStep(0xC);
-        Place(0x13, 0, Camera_Angles[1], Angle(at::kAngle2), 2);
+        Place(0x13, 0, Camera_Angles[1], Angle(::bof3::Img(at::kAngle2)), 2);
         return;
     case 12:
         if (Counter(0) != 1) return;
         if (!TakeSlot()) return;
         SetStep(0xD);
-        Place(0x13, -0x2AA, Camera_Angles[1], Angle(at::kAngle2), 0x78);
+        Place(0x13, -0x2AA, Camera_Angles[1], Angle(::bof3::Img(at::kAngle2)), 0x78);
         return;
     case 13:
         if (Counter(0) != 2) return;
@@ -670,7 +670,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
         const unsigned member6 = Character_IndexById[6];
         ScriptXor8();
         SetStep(0xF);
-        B(at::kCharRecords + at::kCharStride * member6 + 0xB) |= 1;
+        B(::bof3::Img(at::kCharRecords) + at::kCharStride * member6 + 0xB) |= 1;
         RecordB(2) |= 1;
         ChangeArea(0x2D, 0x220000, 0x2A0000, 3);
         return;
@@ -960,7 +960,7 @@ void Run07Leave() {
 }
 // Character record 7's two equipment bytes both set: `yes`, else `no`.
 unsigned char GuestEquipped(unsigned char yes, unsigned char no) {
-    const auto* const c = rv::AsConst<records::CharRecord>(&B(at::kRecord7));   // character record 7
+    const auto* const c = rv::AsConst<records::CharRecord>(&B(::bof3::Img(at::kRecord7)));   // character record 7
     return c->weapon != 0 && c->armour[2] != 0 ? yes : no;
 }
 // The request 7 with the byte 0x904C9F `v`, the pass flags 0, a step.
@@ -1155,7 +1155,7 @@ void SortParty() {
         }
     }
     const unsigned char count = Field_MemberCount;
-    for (unsigned i = 0; i < count; ++i) B(at::kTempList + i) = B(at::kPartyList2 + i);
+    for (unsigned i = 0; i < count; ++i) B(::bof3::Img(at::kTempList) + i) = B(::bof3::Img(at::kPartyList2) + i);
     Cond_Flags[0xd5] = 0;
     Cond_Flags[0xd6] = 0xFF;
     Cond_Flags[0xd7] = 0xFF;
@@ -1474,7 +1474,7 @@ SC6_EXPORT void __cdecl Scena06_Run11(void) {
 // 0x70, +0x10 Scena06_MemberBytes[the first party byte 0x904062]
 // (MemberEffect above). Runs 12 and 14 pass 0x91 and 0x93 (+6 = 1 and 3).
 SC6_EXPORT void __cdecl Scena06_LeaderEffect(unsigned arg) {
-    MemberEffect(ObjTrio_addr, static_cast<unsigned char>(arg + 0x70), at::kPartyBytes);
+    MemberEffect(::bof3::Img(ObjTrio_addr), static_cast<unsigned char>(arg + 0x70), ::bof3::Img(at::kPartyBytes));
 }
 
 // original 0x54CF00: run 12, steps 0..8, 0xA..0x13.
@@ -1525,7 +1525,7 @@ SC6_EXPORT void __cdecl Scena06_Run12(void) {
         SetStep(8);
         return;
     case 0x08:
-        if ((B(at::kBank7DEE44) & 2) == 0) return;
+        if ((B(::bof3::Img(at::kBank7DEE44)) & 2) == 0) return;
         SH_CALL(Party_AddToLists)(2);
         SetRequest(6);
         AreaW3c_Load0F = 0;
@@ -1724,7 +1724,7 @@ SC6_EXPORT void __cdecl Scena06_Run14(void) {
     case 0x02:
         if (Busy()) return;
         for (unsigned k = 0; k < 3; ++k)
-            if (B(at::kPartyBytes + k) == 0) MemberEffect(ObjTrio_addr + at::kObjStride * k, 3, at::kPartyBytes + k);
+            if (B(::bof3::Img(at::kPartyBytes) + k) == 0) MemberEffect(::bof3::Img(ObjTrio_addr) + at::kObjStride * k, 3, ::bof3::Img(at::kPartyBytes) + k);
         SetStep(5);
         SetCounter(0, 5);
         return;
@@ -1836,14 +1836,14 @@ SC6_EXPORT void __cdecl Scena06_Run15(void) {
         if (!TakeSlot()) return;
         SetCounter(3, at::kEffectSlot);
         SetStep(0xD);
-        Place(0x13, -0x32E, Camera_Angles[1], Angle(at::kAngle2), 0x50);
+        Place(0x13, -0x32E, Camera_Angles[1], Angle(::bof3::Img(at::kAngle2)), 0x50);
         return;
     case 0x0D:
         if (Effect(Counter(3))[0] != 0) return;
         if (!TakeSlot()) return;
         SetCounter(3, at::kEffectSlot);
         SetStep(0xE);
-        Place(0x13, -0x2AA, Camera_Angles[1], Angle(at::kAngle2), 0x28);
+        Place(0x13, -0x2AA, Camera_Angles[1], Angle(::bof3::Img(at::kAngle2)), 0x28);
         return;
     case 0x0E:
         if (Effect(Counter(3))[0] != 0) return;
@@ -1939,7 +1939,7 @@ SC6_EXPORT void __cdecl Scena06_Run16(void) {
         return;
     case 0x01:
         if (Counter(0) != 0x1F) return;
-        Gift(1, CharacterRecords_addr + 0x47c + 0x12, 0x20, at::kTextRecords, 0x94, 0x22);
+        Gift(1, ::bof3::Img(CharacterRecords_addr) + 0x47c + 0x12, 0x20, ::bof3::Img(at::kTextRecords), 0x94, 0x22);
         return;
     case 0x0A:
         if (Busy()) return;
@@ -1948,7 +1948,7 @@ SC6_EXPORT void __cdecl Scena06_Run16(void) {
         return;
     case 0x0C:
         if (Counter(0) != 0x24) return;
-        Gift(2, CharacterRecords_addr + 0x47c + 0x15, 0x25, at::kTextRecords + 0x20, 0x95, 0x23);
+        Gift(2, ::bof3::Img(CharacterRecords_addr) + 0x47c + 0x15, 0x25, ::bof3::Img(at::kTextRecords) + 0x20, 0x95, 0x23);
         return;
     case 0x14:
         SH_CALL(Msg_OpenSystem)(1);
@@ -2035,7 +2035,7 @@ SC6_EXPORT void __cdecl Scena06_ObjectTrigger(unsigned char* object) {
     const std::uint32_t bits = Chapter_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
-        Entry(Scena06_Objects_addr, static_cast<int>(index), at::kObjectCount, "Scena06_ObjectTrigger")))(object, bits);
+        Entry(::bof3::Img(Scena06_Objects_addr), static_cast<int>(index), at::kObjectCount, "Scena06_ObjectTrigger")))(object, bits);
 }
 
 namespace {
@@ -2112,7 +2112,7 @@ SC6_EXPORT unsigned char __cdecl Scena06_Leap(unsigned char* object, unsigned dx
                                               unsigned gravity, unsigned animation, unsigned flag) {
     const unsigned phase = Sprite()[4];
     return reinterpret_cast<LeapEntry>(static_cast<std::uintptr_t>(
-        Entry(Scena06_LeapPhases_addr, static_cast<int>(phase), at::kLeapPhaseCount, "Scena06_Leap")))(
+        Entry(::bof3::Img(Scena06_LeapPhases_addr), static_cast<int>(phase), at::kLeapPhaseCount, "Scena06_Leap")))(
         object, dx, dz, lift, gravity, animation, flag);
 }
 
@@ -2125,7 +2125,7 @@ SC6_EXPORT unsigned char __cdecl Scena06_Leap(unsigned char* object, unsigned dx
 // fault; ours aborts (docs/scena_sc6.md section 6).
 SC6_EXPORT unsigned char __cdecl Scena06_LeapStart(unsigned char* object, unsigned dx, unsigned dz, unsigned lift,
                                                    unsigned, unsigned, unsigned) {
-    const unsigned char speed = B(at::kMoveSpeeds + object[4]);
+    const unsigned char speed = B(::bof3::Img(at::kMoveSpeeds) + object[4]);
     if (speed == 0) return 0;
     unsigned char* const s = Sprite();
     const int x = static_cast<signed char>(dx);
@@ -2188,7 +2188,7 @@ SC6_EXPORT unsigned char __cdecl Scena06_LeapAir(unsigned char* object, unsigned
     }
     if (s[0xA] != 0) return 1;
     if (s[0xB] != 0) {
-        const unsigned char speed = B(at::kMoveSpeeds + object[4]);
+        const unsigned char speed = B(::bof3::Img(at::kMoveSpeeds) + object[4]);
         if (speed == 0)
             bof3::Fatal("Scena06_LeapAir: speed 0 (Field_MoveSpeeds[%u]): the original divides by 0", (unsigned)object[4]);
         s[0xA] = static_cast<unsigned char>(16 / static_cast<int>(speed));
@@ -2290,10 +2290,10 @@ SC6_EXPORT unsigned char __cdecl Scena06_StepHook(int x, int z) {
 // Scena06_CellHandlers with (x, z), whose al is the answer. Entry 1 is the
 // bare ret 0x437CC0: its al is what 0x56D800 left in eax, the index found.
 SC6_EXPORT unsigned char __cdecl Scena06_CellHook(int x, int z) {
-    const unsigned char found = SH_AT(CellFindFn, at::kCellFind)(reinterpret_cast<const void*>(Scena06_Cells_addr), 4, x, z);
+    const unsigned char found = SH_AT(CellFindFn, at::kCellFind)(reinterpret_cast<const void*>(::bof3::Img(Scena06_Cells_addr)), 4, x, z);
     const int index = static_cast<signed char>(found);
     if (index < 0) return 0xFF;
-    const std::uint32_t entry = Entry(Scena06_CellHandlers_addr, index, at::kCellHandlerCount, "Scena06_CellHook");
+    const std::uint32_t entry = Entry(::bof3::Img(Scena06_CellHandlers_addr), index, at::kCellHandlerCount, "Scena06_CellHook");
     if (entry == at::kBareRet) return found;
     return reinterpret_cast<CellEntry>(static_cast<std::uintptr_t>(entry))(x, z);
 }

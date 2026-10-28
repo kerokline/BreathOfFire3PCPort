@@ -69,8 +69,8 @@ namespace {
 // stores them 0x90393F, 3E, 3D, 0x9038AF, AE, AD with nothing in between.
 void SetFadeHold(unsigned char v) {
     for (unsigned i = 0; i < 3; ++i) {
-        At(ModeFlow_FadeHoldA_addr)[i] = v;
-        At(ModeFlow_FadeHoldB_addr)[i] = v;
+        At(::bof3::Img(ModeFlow_FadeHoldA_addr))[i] = v;
+        At(::bof3::Img(ModeFlow_FadeHoldB_addr))[i] = v;
     }
 }
 
@@ -196,8 +196,8 @@ namespace {
 void SwingOut(int step) {
     std::int32_t level = 0;
     while (g.draw_tile(reinterpret_cast<short*>(&level), step, 1, 0, 2) == 0) {
-        AddWord(kCameraYaw, 0xB);
-        AddWord(kCameraAngle, 0xB);
+        AddWord(::bof3::Img(kCameraYaw), 0xB);
+        AddWord(::bof3::Img(kCameraAngle), 0xB);
         Camera_Distance = static_cast<short>(Camera_Distance - 0x32);
         MapView_Redraw = 2;
         g.sleep(1);
@@ -218,7 +218,7 @@ void SwingOut(int step) {
 void SwingIn() {
     std::int32_t level = 0x7FFF;
     Camera_Angles[0] = 0xFEAB;
-    SetWord(At(Cond_AngleFB_addr), 0x355);
+    SetWord(At(::bof3::Img(Cond_AngleFB_addr)), 0x355);
     MapView_Redraw = 2;
     for (int i = 0; i < 5; ++i) {
         g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
@@ -227,8 +227,8 @@ void SwingIn() {
     unsigned char done = g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
     for (;;) {
         const auto distance = static_cast<std::uint16_t>(Camera_Distance + 0x32);
-        AddWord(kCameraYaw, -0xB);
-        AddWord(kCameraAngle, -0xB);
+        AddWord(::bof3::Img(kCameraYaw), -0xB);
+        AddWord(::bof3::Img(kCameraAngle), -0xB);
         Camera_Distance = static_cast<short>(distance);
         MapView_Redraw = 2;
         if (distance == 0x5DC) break;
@@ -236,7 +236,7 @@ void SwingIn() {
         if (done == 0) done = g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
     }
     Camera_Angles[0] = 0xFD56;
-    SetWord(At(Cond_AngleFB_addr), 0x200);
+    SetWord(At(::bof3::Img(Cond_AngleFB_addr)), 0x200);
     MapView_Redraw = 2;
     g.task_exit();
 }
@@ -282,7 +282,7 @@ extern "C" void __cdecl Transition_Kind19(void) { g.fade_sub(0x100, 1, 0); }    
 extern "C" void __cdecl Transition_Kind20(void) {
     std::int32_t level = 0;
     while (g.draw_tile(reinterpret_cast<short*>(&level), 0x800, 1, 0, 2) == 0) {
-        SetWord(At(Cond_AngleFB_addr), (Cond_AngleFB + 0x20u) & 0xFFFu);
+        SetWord(At(::bof3::Img(Cond_AngleFB_addr)), (Cond_AngleFB + 0x20u) & 0xFFFu);
         g.sleep(1);
     }
     SetFadeHold(0);
@@ -329,12 +329,12 @@ extern "C" void __cdecl GameMode_Start(void) {
     Draw_PassFlags = 0x1F;
     Draw_OtSlot = 6;
     g.party_load(0);
-    const unsigned char flags = At(FieldModes_Pending_addr)[3];
-    const std::int32_t z = Long(At(FieldModes_Pending_addr + 8));
-    const std::int32_t x = Long(At(FieldModes_Pending_addr + 4));
+    const unsigned char flags = At(::bof3::Img(FieldModes_Pending_addr))[3];
+    const std::int32_t z = Long(At(::bof3::Img(FieldModes_Pending_addr) + 8));
+    const std::int32_t x = Long(At(::bof3::Img(FieldModes_Pending_addr) + 4));
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 | 0x4040);
     const std::uint16_t area = FieldModes_Pending;
-    At(0x905B82)[0] = 0;   // Field_StepCount + 2
+    At(::bof3::Img(0x905B82))[0] = 0;   // Field_StepCount + 2
     Sprite_Kind2.state = 0;                                 // Sprite_Kind2 + 1..3
     Sprite_Kind2.step = 0;
     Sprite_Kind2.state3 = 0;
@@ -344,7 +344,7 @@ extern "C" void __cdecl GameMode_Start(void) {
     Area189_EventsInRow = 0;
     Game_AreaNumber = 0xFFFF;
     g.change_area(area, x, z, flags);
-    const unsigned char* const clock = At(at::kClock);
+    const unsigned char* const clock = At(::bof3::Img(at::kClock));
     if (clock[3] != 0 || clock[2] != 0 || clock[1] != 0 || clock[0] != 0) {
         // DIV-0092: a loaded game plays the track the save holds; a save with no
         // track (0xFF - the port's F12 save, written while the music was off)
@@ -388,7 +388,7 @@ extern "C" void __cdecl GameMode_Enter(void) {
     } else if (kind != 0xFF) {
         g.transition(kind);
         g.wait_transition(1);
-        if (Field_InputFlags & 1) g.entry_point(Word(At(at::kKind2XHigh)), Word(At(at::kKind2ZHigh)));
+        if (Field_InputFlags & 1) g.entry_point(Word(At(::bof3::Img(at::kKind2XHigh))), Word(At(::bof3::Img(at::kKind2ZHigh))));
     }
     const bool bit0 = (Field_InputFlags & 1) != 0;
     const std::uint16_t area = Game_AreaNumber;
@@ -463,7 +463,7 @@ void CountDown(std::uint32_t address) {
 }  // namespace
 extern "C" void __cdecl Game_ClockTick(void) {
     if (Field_Request == 9) return;
-    unsigned char* const c = At(at::kClock);
+    unsigned char* const c = At(::bof3::Img(at::kClock));
     const unsigned char hours = c[0], minutes = c[1], seconds = c[2];
     if (!(hours == 0x63 && minutes == 0x3B && seconds == minutes)) {
         const auto frames = static_cast<unsigned char>(c[3] + 1);
@@ -488,8 +488,8 @@ extern "C" void __cdecl Game_ClockTick(void) {
             }
         }
     }
-    CountDown(ModeFlow_CountdownA_addr);
-    CountDown(Rest3c_Byte660_addr);
+    CountDown(::bof3::Img(ModeFlow_CountdownA_addr));
+    CountDown(::bof3::Img(Rest3c_Byte660_addr));
 }
 
 // original 0x594E60: entering an area, once per area change from
@@ -516,8 +516,8 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
     const long kind2_x = Field_Kind2X, kind2_z = Field_Kind2Z;
     AreaW2c_LastArea = previous;
     AreaW1a_EntryZone = zone;
-    SetLong(At(MoveScript_TintRecords_addr + 0x220), kind2_z);
-    SetLong(At(MoveScript_TintRecords_addr + 0x21c), kind2_x);
+    SetLong(At(::bof3::Img(MoveScript_TintRecords_addr) + 0x220), kind2_z);
+    SetLong(At(::bof3::Img(MoveScript_TintRecords_addr) + 0x21c), kind2_x);
     const unsigned char track = AreaW1f_MusicCurrent;
     if (track != 0xFF) g.music_play(track, 8);
     else Music_Track = 0xFF;
@@ -531,19 +531,19 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
         Gfx_ClutStripDirty = 1;
     }
     g.party_set_up(x, z, flags);
-    Cond_ByteFD = g.zone_id(Word(At(at::kKind2XHigh)), Word(At(at::kKind2ZHigh)));
+    Cond_ByteFD = g.zone_id(Word(At(::bof3::Img(at::kKind2XHigh))), Word(At(::bof3::Img(at::kKind2ZHigh))));
     g.view_reset();
     const auto colour = static_cast<std::uint32_t>(Long(Area_Descriptors[Game_AreaNumber] + 0x38));
     if (colour != 0) {
         g.colour_matrix(Fn<const unsigned long*>(colour));
         const unsigned char* const own = Fn<const unsigned char*>(
             static_cast<std::uint32_t>(Long(Area_Descriptors[Game_AreaNumber] + 0x38)));
-        SetLong(At(0x903598), Long(own + 0x20));   // Light_Angles
-        SetLong(At(0x90359C), Long(own + 0x24));
+        SetLong(At(::bof3::Img(0x903598)), Long(own + 0x20));   // Light_Angles
+        SetLong(At(::bof3::Img(0x90359C)), Long(own + 0x24));
     } else {
-        g.colour_matrix(Fn<const unsigned long*>(at::kDefaultColour));
-        SetLong(At(0x903598), static_cast<std::int32_t>(ModeFlow_DefaultLight));
-        SetLong(At(0x90359C), Long(At(ModeFlow_DefaultLight_addr + 4)));
+        g.colour_matrix(Fn<const unsigned long*>(::bof3::Img(at::kDefaultColour)));
+        SetLong(At(::bof3::Img(0x903598)), static_cast<std::int32_t>(ModeFlow_DefaultLight));
+        SetLong(At(::bof3::Img(0x90359C)), Long(At(::bof3::Img(ModeFlow_DefaultLight_addr) + 4)));
     }
     if (Field_StatusBits & 0x80) {
         auto chapter = static_cast<unsigned char>(Cond_ByteFA + 1);
@@ -557,8 +557,8 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
     g.run_placement(Fn<const unsigned char*>(static_cast<std::uint32_t>(Long(Area_Descriptors[Game_AreaNumber]))));
     const auto hook = static_cast<std::uint32_t>(Long(Area_Descriptors[Game_AreaNumber] + 0x40));
     if (hook != 0) Fn<Handler>(hook)();
-    g.flags_clear(At(Cond_Flags_addr + 0xa0), 0x1C);
-    At(0x8034E2)[0] = 1;   // Field_StatusBits + 1
+    g.flags_clear(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C);
+    At(::bof3::Img(0x8034E2))[0] = 1;   // Field_StatusBits + 1
     g.mode_dispatch();
     g.first_frame();
 
@@ -578,7 +578,7 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
         else if (Field_MemberCount > 1) {
             g.entry_walk(0, x, z);
             if (!(Field_ScriptFlags & 0x800) && !(Field_ScriptFlags2 & 0x8000))
-                g.test_fb(static_cast<short>(Word(At(at::kKind2XHigh))), static_cast<short>(Word(At(at::kKind2ZHigh))));
+                g.test_fb(static_cast<short>(Word(At(::bof3::Img(at::kKind2XHigh)))), static_cast<short>(Word(At(::bof3::Img(at::kKind2ZHigh)))));
         } else {
             walked = false;
         }
@@ -609,13 +609,13 @@ extern "C" void __cdecl Area_EntryWalk(unsigned direction, int x, int z) {
     EventLeader_PendingX = x;
     const unsigned members = Field_MemberCount;
     EventLeader_PendingFlag = 1;
-    At(EventLeader_PendingFlag_addr)[1] = dir;
-    At(EventLeader_PendingFlag_addr)[2] = 0;
+    At(::bof3::Img(EventLeader_PendingFlag_addr))[1] = dir;
+    At(::bof3::Img(EventLeader_PendingFlag_addr))[2] = 0;
     EventLeader_PendingZ = z;
     if (members == 0) return;
-    const unsigned char pose = At(at::kWalkPoses)[dir];
+    const unsigned char pose = At(::bof3::Img(at::kWalkPoses))[dir];
     for (unsigned i = 0; i < members; ++i) {
-        unsigned char* const m = At(ObjTrio_addr + 0x137 + i * 0x14C);
+        unsigned char* const m = At(::bof3::Img(ObjTrio_addr) + 0x137 + i * 0x14C);
         m[0] = pose;
         m[1] = static_cast<unsigned char>(m[1] | 2);
     }
@@ -640,7 +640,7 @@ static std::uint8_t g_reset_full = 0;
 
 extern "C" void __cdecl Window_ResetAll(void) {
     for (unsigned i = 0; i < 22; ++i) {
-        unsigned char* const r = At(WindowRecords_addr + i * 0x24);
+        unsigned char* const r = At(::bof3::Img(WindowRecords_addr) + i * 0x24);
         if (g_reset_full) {
             std::memset(r, 0, 0x20);
             continue;
@@ -682,8 +682,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Boot_Task(void) {
     g.dropped(0);
     g.load_dat(0x225);
     while (g.load_done() == 0) g.sleep(1);
-    std::memset(At(at::kBootClear), 0, at::kBootClearBytes);
-    std::memcpy(At(Gfx_UnpackScratch_addr + 0x1f000), At(ModeFlow_ButtonDefaults_addr), 0x12);
+    std::memset(At(::bof3::Img(at::kBootClear)), 0, at::kBootClearBytes);
+    std::memcpy(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000), At(::bof3::Img(ModeFlow_ButtonDefaults_addr)), 0x12);
     // DIV-0133 and DIV-0134 (docs/button-sigma.md): the release's starting
     // words by source, then words 7 / 8 as Speak's and Action's and the
     // table - nothing until sigma::Arm, after every module's self-test.
@@ -691,7 +691,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Boot_Task(void) {
     AreaW0b_PartySet = 0xFF;
     Field_ScriptFlags = 0;
     Field_ScriptFlags2 = 0;
-    unsigned char* const config = At(ModeFlow_ConfigBytes_addr);
+    unsigned char* const config = At(::bof3::Img(ModeFlow_ConfigBytes_addr));
     config[0] = 1;
     for (unsigned i = 1; i < 7; ++i) config[i] = 0;
     g.window_reset();
@@ -700,7 +700,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Boot_Task(void) {
     Draw_PassFlags = 0x1F;
     Draw_OtSlot = 6;
     BattleE2_AnimSet = 0x8B3580;
-    SetLong(At(MoveScript_TintRecords_addr + 0x180), 0x8C3584);
+    SetLong(At(::bof3::Img(MoveScript_TintRecords_addr) + 0x180), 0x8C3584);
     g.clut_restore();
     Gfx_ClutStripDirty = static_cast<unsigned char>(Gfx_ClutStripDirty + 1);
     g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(kTitleLoadEntry)));
@@ -726,7 +726,7 @@ extern "C" int __cdecl File_LoadDone(void) { return 1; }
 // rows 28..31 come out zero too. The PSX zeroes the same four rows first.
 // Gfx_ClutStripDirty is not touched.
 extern "C" void __cdecl Gfx_ClutStripRestore(void) {
-    std::memset(At(Gfx_ClutStripSource_addr + 0x3800), 0, 0x800);
+    std::memset(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x3800), 0, 0x800);
     std::memcpy(Gfx_ClutStrip, Gfx_ClutStripSource, 0x4000);
 }
 
@@ -734,7 +734,7 @@ extern "C" void __cdecl Gfx_ClutStripRestore(void) {
 // zeroed, then 16 dwords from 0x7E06A0 set to -1.
 extern "C" void __cdecl MoveScript_TintReset(void) {
     for (unsigned i = 0; i < 32; ++i) MoveScript_TintRecords[i * 12] = 0;
-    for (unsigned i = 0; i < 16; ++i) SetLong(At(at::kTintMarks + i * 4), -1);
+    for (unsigned i = 0; i < 16; ++i) SetLong(At(::bof3::Img(at::kTintMarks) + i * 4), -1);
 }
 
 // original 0x454A50 (PSX 0x8014E378): the Field_Slots record `slot` (its low

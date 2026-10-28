@@ -58,7 +58,7 @@ using scenario_harness::Handler;
 unsigned Step() { return MoveScript_PartyRecords[0x65]; }
 void SetStep(unsigned v) { MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(v); }
 void SetRun(unsigned v) { MoveScript_Var7 = static_cast<signed char>(v); }
-unsigned char& Counter(unsigned i) { return At(at::kCounters + i)[0]; }
+unsigned char& Counter(unsigned i) { return At(::bof3::Img(at::kCounters) + i)[0]; }
 void SetAreaByte(unsigned v) { AreaW1f_MusicCurrent = static_cast<unsigned char>(v); }
 unsigned Area() { return Game_AreaNumber; }
 unsigned LeadMember() { return Cond_Flags[0xd2]; }
@@ -68,7 +68,7 @@ void OpenMessage(unsigned id) {
     Field_Request = 2;
 }
 bool Waiting() { return Transition_Busy != 0; }
-bool Chosen() { return (At(at::kChoiceBits)[0] & 2) != 0; }
+bool Chosen() { return (At(::bof3::Img(at::kChoiceBits))[0] & 2) != 0; }
 // Field_ScriptFlags: the original ors its low byte (`or byte ptr`) and xors
 // the word; on a u16 both are these.
 void ScriptOr(unsigned bits) { Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags | bits); }
@@ -141,7 +141,7 @@ void OpenShop(unsigned step) {
     ModeStates_ShopObject = 0xFE;
     BattleE1_Mode = 0;
     ScenaSc1_ShopByteB = 0;
-    At(at::kShopByteC)[0] = 1;
+    At(::bof3::Img(at::kShopByteC))[0] = 1;
     Game_Mode = 7;
     SetStep(step);
 }
@@ -206,7 +206,7 @@ extern "C" void __cdecl Scena02_Frame(void) {
     const int state = static_cast<signed char>(MoveScript_PartyRecords[0x62]);
     if (state < 0 || state >= static_cast<int>(at::kStateCount))
         bof3::Fatal("Scena02_Frame: state %d past Scena02_States (%u entries)", state, at::kStateCount);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(Scena02_States_addr, static_cast<unsigned>(state))))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena02_States_addr), static_cast<unsigned>(state))))();
 }
 
 // original 0x53DDB0: chapter 2's state 0 (Scena02_States entry 0): state 1,
@@ -214,8 +214,8 @@ extern "C" void __cdecl Scena02_Frame(void) {
 // cleared.
 extern "C" void __cdecl Scena02_Start(void) {
     MoveScript_PartyRecords[0x62] = 1;
-    SetLong(At(Cond_Flags_addr + 0x10), 0);
-    SetLong(At(at::kCounters), 0);
+    SetLong(At(::bof3::Img(Cond_Flags_addr) + 0x10), 0);
+    SetLong(At(::bof3::Img(at::kCounters)), 0);
 }
 
 namespace {
@@ -324,7 +324,7 @@ void EnterAreaBody() {
         Counter(3) = 0;
         SetStep(0);
         SetRun(0);
-        SetWord(At(MoveScript_PartyRecords_addr + 0x66), 0);
+        SetWord(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), 0);
     }
     if (area == 0x1A) {
         switch (Counter(2)) {
@@ -414,7 +414,7 @@ void EnterAreaBody() {
         Counter(3) = 0;
         SetStep(0);
         SetRun(0);
-        SetWord(At(MoveScript_PartyRecords_addr + 0x66), 0);
+        SetWord(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), 0);
         if ((status & 1) != 0 && AreaW2c_LastArea == 0x5A) {
             ClearFlag(2);
             MusicStop(0xA);
@@ -449,7 +449,7 @@ extern "C" void __cdecl Scena02_Run(void) {
     const int run = MoveScript_Var7;
     if (run < 0 || run >= static_cast<int>(at::kRunCount))
         bof3::Fatal("Scena02_Run: run %d past Scena02_Runs (%u entries)", run, at::kRunCount);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(Scena02_Runs_addr, static_cast<unsigned>(run))))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena02_Runs_addr), static_cast<unsigned>(run))))();
 }
 
 // original 0x53E3E0: run 0, while no scene runs. Only in area 0x1A without
@@ -2285,7 +2285,7 @@ void PlaceEffect(unsigned char kind, unsigned char sub) {
     rec()[5] = kind;
     rec()[6] = sub;
     rv::As<records::EffectObject>(rec())->step_x = 0;
-    SetLong(rec() + 0x10, static_cast<signed char>(At(Scena02_EffectX_addr + LeadMember())[0]));
+    SetLong(rec() + 0x10, static_cast<signed char>(At(::bof3::Img(Scena02_EffectX_addr) + LeadMember())[0]));
     SetWord(rec() + 0x2E, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->screen_x));
     SetWord(rec() + 0x30, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->screen_y));
 }
@@ -2312,7 +2312,7 @@ extern "C" void __cdecl Scena02_ObjectHook(unsigned char* object) {
     if (k >= at::kObjectCount)
         bof3::Fatal("Scena02_ObjectHook: object +0x86 %u past Scena02_ObjectHandlers (%u entries)", k, at::kObjectCount);
     using ObjectFn = void (__cdecl*)(unsigned char*, unsigned char*);
-    reinterpret_cast<ObjectFn>(static_cast<std::uintptr_t>(Entry(Scena02_ObjectHandlers_addr, k)))(object, At(Cond_Flags_addr + 0x10));
+    reinterpret_cast<ObjectFn>(static_cast<std::uintptr_t>(Entry(::bof3::Img(Scena02_ObjectHandlers_addr), k)))(object, At(::bof3::Img(Cond_Flags_addr) + 0x10));
 }
 
 // original 0x541D30..0x542060: the object handlers (object, row), neither
@@ -2462,7 +2462,7 @@ extern "C" void __cdecl Scena02_Object1A(unsigned char*, unsigned char*) {
 // 0x590C90(byte, 0, 1, 0) and then cleared. Called by Scena02_EnterArea with
 // 3 and 4; n is unchecked (section 6).
 extern "C" void __cdecl Scena02_StripMember(unsigned char member) {
-    unsigned char* p = At(CharacterRecords_addr + at::kMemberStride * member + at::kMemberItems);
+    unsigned char* p = At(::bof3::Img(CharacterRecords_addr) + at::kMemberStride * member + at::kMemberItems);
     for (unsigned i = 0; i < 10; ++i, ++p) {
         const unsigned char item = p[0];
         if (item == 0) continue;
