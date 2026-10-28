@@ -633,7 +633,7 @@ const Region kRegions[] = {
     {CharacterRecords_addr, 10 * at::kCharStride}, // the records (and two past the eight)
     {0x904030, 0x40},                              // the gold, the party lists
     {0x904150, 0x490},                             // the inventory's ids and counts
-    {at::kPrintBuf, 0x40},                         // the sprintf buffer
+    {at::kPrintBuf.v, 0x40},                         // the sprintf buffer
     {0x905B80, 0x30},                              // the current record pointer, 0x905BA2
     {0x929F00, 0x10},                              // the menu state, 0x929F06, 0x929F0B
     {0x937F90, 8},                                 // Frame_Counter

@@ -46,10 +46,9 @@ using ObjectFn = void (__cdecl*)(unsigned char*);
 using SlotFn = unsigned (__cdecl*)(unsigned char*, const unsigned char*);
 
 unsigned char& B(U address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 void AddWord(unsigned char* p, unsigned v) { SetWord(p, Word(p) + v); }
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 // The movement script back (or on) by `delta` words: the running script
 // object's u16 +0xA, the pointer read at the store.
 void ScriptStep(unsigned delta) { AddWord(MoveScript_Object + 0xA, delta); }
@@ -255,28 +254,28 @@ extern "C" void __cdecl Area173_Tail38(void) {
         B(::bof3::Img(AreaW0c_TailState_addr)) = 1;
         return;
     case 1:
-        if (B(at::kCounter3) != 0x18) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0x18) return;
         AH_CALL(Field_ChangeArea)(0xBA, 0x48000, Cond_ByteFD == 2 ? 0xA0000 : 0x640000, 0x80);
         AH_CALL(Flags_Set)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x58);
         B(::bof3::Img(AreaW0a_TailKind_addr)) = 0;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0;
         return;
     case 10:
-        if (B(at::kCounter3) != 0x20) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0x20) return;
         Cond_ByteFE = 1;
-        SetWord(Mem(at::kTailTimer), 0x1E);
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0x1E);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0xB;
         return;
     case 11: {
-        const unsigned timer = (Word(Mem(at::kTailTimer)) - 1u) & 0xFFFF;
-        SetWord(Mem(at::kTailTimer), timer);
+        const unsigned timer = (Word(Mem(::bof3::Img(at::kTailTimer.v))) - 1u) & 0xFFFF;
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), timer);
         if (timer != 0) return;
-        B(at::kCounter3) = 0x24;
+        B(::bof3::Img(at::kCounter3.v)) = 0x24;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0xC;
         return;
     }
     case 12:
-        if (B(at::kCounter3) != 0) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0) return;
         AH_CALL(Flags_Clear)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x58);
         B(::bof3::Img(AreaW0a_TailKind_addr)) = 0;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0;
@@ -443,7 +442,7 @@ extern "C" void __cdecl Area174_StepByScript(void) {
     const unsigned offset = rv::As<records::ScriptContext>(MoveScript_Object)->position;
     const unsigned char* const script =
         reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(static_cast<std::int32_t>(rv::As<records::MemberFieldTail>(Field_State + 0x124)->script))));
-    const unsigned char limit = B(at::kStepLimit);
+    const unsigned char limit = B(::bof3::Img(at::kStepLimit.v));
     const unsigned char b = script[offset + 2];
     unsigned char* const cur = Sprite_Current;
     auto* const tCur = rv::As<records::SpriteObject>(cur);

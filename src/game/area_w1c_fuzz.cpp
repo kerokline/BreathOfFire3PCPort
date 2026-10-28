@@ -162,7 +162,6 @@ enum : unsigned {
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char& B(std::uint32_t address) { return *ah::Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 
 // Two dwords the clone of Area52_BlockCell writes through (its arguments
 // point here; the region compares them).
@@ -233,7 +232,7 @@ std::uint32_t BlockCellEffect(const std::uint32_t* a, std::uint32_t answer) {
                : static_cast<std::int32_t>(ah::Noise());
     if (n & 4) {
         static const unsigned char kCounters[] = {0xA, 0x14, 0, 0xB};
-        B(at::kCounter3) = kCounters[(n >> 8) % 4];
+        B(::bof3::Img(at::kCounter3.v)) = kCounters[(n >> 8) % 4];
     }
     return answer;
 }
@@ -315,13 +314,13 @@ void Disturb(std::uint32_t h) {
     case 1: B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(v % 4); break;
     case 2: {
         static const unsigned char kCounters[] = {0xA, 0x14, 0x1E, 0x28, 0};
-        B(at::kCounter3) = h & 0x100 ? kCounters[v % 5] : v;
+        B(::bof3::Img(at::kCounter3.v)) = h & 0x100 ? kCounters[v % 5] : v;
         break;
     }
     case 3: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
     case 4: ah::SetPointer(MoveScript_Object_addr, ScriptRecord(h >> 16)); break;
     case 5: B(AreaW1c_Count48_addr) = static_cast<unsigned char>(v % 10); break;
-    case 6: move_script::SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? v % 6 : v); break;
+    case 6: move_script::SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), h & 0x100 ? v % 6 : v); break;
     default: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 4); break;
     }
 }
@@ -573,13 +572,13 @@ void Seed52(unsigned k) {
         }
         break;
     case k52MoveA: case k52MoveB:
-        if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(0xA, 0x14, 0xA, 0x14, 0, 9, 0xB, 0x13, 0x15));
+        if (ah::Often()) B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(AH_PICK(0xA, 0x14, 0xA, 0x14, 0, 9, 0xB, 0x13, 0x15));
         if (ah::Half())
             rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, k == k52MoveA ? AH_PICK(0x688000, 0x688001, 0x858000) : AH_PICK(0x668000, 0x668001, 0x858000));
         break;
     case k52Cell:
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(5, 0, 2, 4));
-        if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(0, 1, 0xA, 0x80));
+        if (ah::Often()) B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(AH_PICK(0, 1, 0xA, 0x80));
         break;
     case k52InRect: {
         // the tail state 0 or not (the rectangle), each member on or beside an edge
@@ -607,14 +606,14 @@ void Seed52(unsigned k) {
         const bool on = ah::Often();
         switch (state) {
         case 1: case 0x15: case 0x29:   // the timer less 1 below 4
-            move_script::SetWord(ah::Mem(at::kTailTimer), on ? AH_PICK(1, 2, 3, 4, 0) : AH_PICK(5, 6, 0x10, 0xFFFF));
+            move_script::SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), on ? AH_PICK(1, 2, 3, 4, 0) : AH_PICK(5, 6, 0x10, 0xFFFF));
             break;
         case 2: case 0x16: case 0x2A:   // the timer less 1 at 0
-            move_script::SetWord(ah::Mem(at::kTailTimer), on ? 1 : AH_PICK(0, 2, 0x101, 0xFFFF));
+            move_script::SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), on ? 1 : AH_PICK(0, 2, 0x101, 0xFFFF));
             break;
         case 0xB: Field_Request = static_cast<unsigned char>(on ? AH_PICK(0, 1, 5, 3) : 2); break;
-        case 0x2E: B(at::kCounter3) = static_cast<unsigned char>(on ? 0x1E : AH_PICK(0x1D, 0x1F, 0x9E, 0)); break;
-        case 0x2F: B(at::kCounter3) = static_cast<unsigned char>(on ? 0x28 : AH_PICK(0x27, 0x29, 0xA8, 0)); break;
+        case 0x2E: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(on ? 0x1E : AH_PICK(0x1D, 0x1F, 0x9E, 0)); break;
+        case 0x2F: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(on ? 0x28 : AH_PICK(0x27, 0x29, 0xA8, 0)); break;
         default: break;
         }
         break;

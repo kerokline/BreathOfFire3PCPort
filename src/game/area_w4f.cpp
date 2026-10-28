@@ -46,18 +46,16 @@ using move_script::Word;
 using U = std::uint32_t;
 
 unsigned char& B(U address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
-unsigned char* Ptr(::bof3::image::Va va) { return Ptr(::bof3::Img(va)); }
 // Effect_Objects record `slot` (0x80 bytes; the slot is not checked, as the
 // originals' `shl 7`).
 unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 // Sprite_Objects record `k` (a byte index, unchecked as the originals').
 unsigned char* ObjectAt(unsigned k) { return Mem(::bof3::Img(Sprite_Objects_addr) + k * at::kObjectStride); }
 
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 // The answer as the originals' movsx reads it.
 int AnswerS8() { return static_cast<signed char>(B(::bof3::Img(AreaW0c_ChoiceAnswer_addr))); }
 unsigned char* StoryFlags() { return Mem(::bof3::Img(Cond_Flags_addr) + 0xa0); }
@@ -389,7 +387,7 @@ extern "C" void __cdecl Area192_Init(void) {
     }
     for (unsigned k = 0; k < at::kPlaceOpCount; ++k) {
         const unsigned char slot = AH_CALL(Sprite_FindFree)();
-        SetWord(Mem(at::kObjectIndex), slot);
+        SetWord(Mem(::bof3::Img(at::kObjectIndex.v)), slot);
         if (slot == 0xFF) continue;
         const U ops = static_cast<U>(Long(Mem(::bof3::Img(Area192_PlaceOps_addr) + set * 4u)));
         AH_CALL(EventOp_0x)(Mem(ops + k * at::kPlaceOpStride));
@@ -414,7 +412,7 @@ extern "C" void __cdecl Area192_RestoreCharacters(void) {
     for (int i = 0; i < count; ++i) {
         const unsigned char id = B(::bof3::Img(Cond_Flags_addr) + 0xd2 + static_cast<U>(i));
         const unsigned char record = B(::bof3::Img(Character_IndexById_addr) + id);
-        unsigned char* const to = Mem(at::kParty80 + static_cast<U>(i) * at::kPartyStride);
+        unsigned char* const to = Mem(::bof3::Img(at::kParty80.v) + static_cast<U>(i) * at::kPartyStride);
         const unsigned char* const from = Mem(::bof3::Img(CharacterRecords_addr) + record * at::kCharStride);
         for (unsigned d = 0; d < at::kCharStride; d += 4) std::memcpy(to + d, from + d, 4);
     }
@@ -558,7 +556,7 @@ extern "C" void __cdecl Area193_Tail57(void) {
         return;
     case 0x16:
         if (AH_CALL(Sound_StreamDone)() == 0) return;
-        B(at::kCounter0) = 1;
+        B(::bof3::Img(at::kCounter0.v)) = 1;
         AH_CALL(Music_Play)(0x95, 0x10);
         AH_CALL(Transition_Start)(1);
         Draw_PassFlags = 0x1F;
@@ -681,7 +679,7 @@ extern "C" void __cdecl Area197_Tail51(void) {
         B(::bof3::Img(AreaW0c_TailState_addr)) = 1;
         return;
     }
-    if (state != 1 || B(at::kCounter3) != 0x24) return;
+    if (state != 1 || B(::bof3::Img(at::kCounter3.v)) != 0x24) return;
     AH_CALL(Flags_Set)(StoryFlags(), 0x55);
     AH_CALL(Field_ChangeArea)(0xAA, 0x60000, 0x3F0000, 0x82);
     B(::bof3::Img(AreaW0c_TailState_addr)) = 0x1E;
@@ -760,7 +758,7 @@ extern "C" void __cdecl Area198_SinkFade(void) {
             c = Sprite_Current;
         }
     }
-    if (static_cast<std::uint16_t>(rv::As<records::SpriteObject>(c)->height_whole) == 0xF600) B(at::kCounter0) = static_cast<unsigned char>(B(at::kCounter0) + 1);
+    if (static_cast<std::uint16_t>(rv::As<records::SpriteObject>(c)->height_whole) == 0xF600) B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter0.v)) + 1);
     if (static_cast<std::int16_t>(rv::As<records::SpriteObject>(c)->height_whole) > static_cast<std::int16_t>(0xF380)) {
         ScriptStep(-2);
         return;
@@ -801,14 +799,14 @@ extern "C" void __cdecl Area198_Shake(void) {
     }
     Sprite_Current[0xA] = static_cast<unsigned char>(Sprite_Current[0xA] - 1);
     ScriptStep(-2);
-    if (B(at::kCounter1) != 0) {
+    if (B(::bof3::Img(at::kCounter1.v)) != 0) {
         const unsigned char slot = AH_CALL(Effect_FindFree)();
         if (slot != 0xFF) {
             EffectAt(slot)[0] = 1;
             EffectAt(slot)[5] = 0xAC;
         }
         unsigned char* const c = Sprite_Current;
-        B(at::kCounter1) = 0;
+        B(::bof3::Img(at::kCounter1.v)) = 0;
         c[0x5F] = 0xC0;
         Sprite_Current[0x5E] = 0xC0;
         Sprite_Current[0x5D] = 0xC0;
@@ -854,10 +852,10 @@ extern "C" void __cdecl Area198_ReleaseOnRequest5(void) {
 // b); Area198_SpawnDrop, and again with counter 0 (read again) above 3. The
 // script position - 2 every time.
 extern "C" void __cdecl Area198_SpawnDrops(void) {
-    if ((Frame_Counter & 7) == 0 && B(at::kCounter0) > 2) {
+    if ((Frame_Counter & 7) == 0 && B(::bof3::Img(at::kCounter0.v)) > 2) {
         if ((Sprite_Current[0xB] & 7) == 0) AH_CALL(Sound_PlayEffect)(0);
         AH_CALL(Area198_SpawnDrop)();
-        if (B(at::kCounter0) > 3) AH_CALL(Area198_SpawnDrop)();
+        if (B(::bof3::Img(at::kCounter0.v)) > 3) AH_CALL(Area198_SpawnDrop)();
     }
     ScriptStep(-2);
 }
@@ -873,7 +871,7 @@ extern "C" void __cdecl Area198_SpawnDrops(void) {
 extern "C" void __cdecl Area198_SpawnDrop(void) {
     unsigned char* const self = Sprite_Current;
     const unsigned char slot = AH_CALL(Sprite_FindFree)();
-    SetWord(Mem(at::kObjectIndex), slot);
+    SetWord(Mem(::bof3::Img(at::kObjectIndex.v)), slot);
     if (slot != 0xFF) {
         AH_CALL(EventOp_0x)(Mem(::bof3::Img(Area198_DropOp_addr)));
         rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, 0);

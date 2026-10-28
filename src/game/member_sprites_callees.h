@@ -11,6 +11,8 @@
 #pragma once
 
 #include <cstdint>
+
+#include "common/image_base.h"
 #include "bof3/symbols.gen.h"
 
 namespace member_sprites {
@@ -21,13 +23,13 @@ using Handler = void (__cdecl*)();
 // (docs/member-sprites.md, section 2).
 namespace at {
 // kMemberStates: now Member_States (symbols.toml). 9 handlers, by Sprite_Current +1
-constexpr std::uint32_t kControlStates = 0x65F99C;   // 2 handlers, by Sprite_Current +2
-constexpr std::uint32_t kCells = SharedScratch_addr; // bytes: 0 the object-ahead flag, 1..5 the cell kinds, 8..10 the classes
+constexpr ::bof3::image::Va kControlStates{0x65F99C};   // 2 handlers, by Sprite_Current +2
+constexpr ::bof3::image::Va kCells{SharedScratch_addr}; // bytes: 0 the object-ahead flag, 1..5 the cell kinds, 8..10 the classes
 inline auto& kAimX = SharedScratch.d_08;            // long: where a member's step would end (Member_StepAhead)
-constexpr std::uint32_t kAimX_addr = SharedScratch_addr + 0x8; // kAimX's address, for the raw accessors that take one
+constexpr ::bof3::image::Va kAimX_addr{SharedScratch_addr + 0x8}; // kAimX's address, for the raw accessors that take one
 // kAimZ: now Scratch_Swap (symbols.toml). long: the same, z (Scratch_Swap's address)
 // kDirUnits: now MoveCmd_F9Steps (symbols.toml). two longs a direction, a step's unit
-constexpr std::uint32_t kCellOffsets = 0x66971C;     // two signed bytes a direction, the cell ahead
+constexpr ::bof3::image::Va kCellOffsets{0x66971C};     // two signed bytes a direction, the cell ahead
 // kDirSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps, read past its 8 rows unchecked
 // kMoveSpeeds: now Field_MoveSpeeds (symbols.toml). Field_MoveSpeeds, read past its 6 entries unchecked
 // kObject905DA0: now FieldEvent_Object905DA0 (symbols.toml). the object Field_CellKind singles out

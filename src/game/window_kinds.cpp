@@ -39,7 +39,7 @@ template <typename T> T As(std::uint32_t address) { return reinterpret_cast<T>(s
 // cache it either: the fuzz's stand-ins repoint it between calls.
 unsigned char* Rec() {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
-        *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))));
+        *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))));
 }
 
 // rv::As<records::WindowRecord>(p) views a window record
@@ -219,8 +219,8 @@ extern "C" void __cdecl BattleWin_BannerRun(void) {
     g.message_box(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y);
     w = Rec();
     const std::uint32_t e = static_cast<std::uint32_t>(w[0xA]) * 0xC;
-    const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(Long(At(at::kBannerText + e))));
-    const std::uint32_t colour = (e & ~0xFFu) | At(at::kBannerColour + e)[0];
+    const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kBannerText.v) + e))));
+    const std::uint32_t colour = (e & ~0xFFu) | At(::bof3::Img(at::kBannerColour.v) + e)[0];
     g.text_draw_at(static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->x + 4), static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->y + 3),
                    static_cast<int>(colour), 0xFF, text);
 }
@@ -306,11 +306,11 @@ extern "C" void __cdecl BattleWin_MessageSlideIn(void) {
 extern "C" void __cdecl BattleWin_MessageShow(void) {
     g.draw_message();
     unsigned i = BattleWindows_MsgHead;
-    if ((At(at::kMsgRing + 8 * i)[0] & 1) != 0 && Input_Pressed != 0) {
+    if ((At(::bof3::Img(at::kMsgRing.v) + 8 * i)[0] & 1) != 0 && Input_Pressed != 0) {
         if (g.msg_advance() != 0) Rec()[3] = 3;
     }
     i = BattleWindows_MsgHead;
-    unsigned char* const entry = At(at::kMsgRing + 8 * i);
+    unsigned char* const entry = At(::bof3::Img(at::kMsgRing.v) + 8 * i);
     if ((entry[0] & 2) == 0) return;
     unsigned char timer = entry[1];
     if (timer == 0xFF) return;
@@ -337,7 +337,7 @@ extern "C" void __cdecl BattleWin_MessageSlideOut(void) {
     const unsigned char* r = Rec();
     g.message_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y);
     const unsigned i = (BattleWindows_MsgHead - 1u) & 0xFu;
-    const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(Long(At(at::kMsgRing + 4 + 8 * i))));
+    const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kMsgRing.v) + 4 + 8 * i))));
     r = Rec();
     g.text_draw_at(static_cast<std::uint16_t>(rv::As<records::WindowRecord>(r)->x + 4), static_cast<std::uint16_t>(rv::As<records::WindowRecord>(r)->y + 3), 0, 0xFF,
                    text);

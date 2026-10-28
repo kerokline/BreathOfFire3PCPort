@@ -43,11 +43,10 @@ using move_script::Word;
 using U = std::uint32_t;
 
 unsigned char& B(U address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 U D(U address) { return static_cast<U>(Long(Mem(address))); }
 void SetD(U address, U v) { SetLong(Mem(address), static_cast<std::int32_t>(v)); }
 void AddWord(unsigned char* p, unsigned v) { SetWord(p, Word(p) + v); }
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // The movement script back (or on) by `delta` words: the running script
 // object's u16 +0xA, the pointer read at the store.
@@ -158,8 +157,8 @@ extern "C" void __cdecl Area135_ChoiceCount(void) {
     const auto count = static_cast<unsigned char>(B(::bof3::Img(AreaW0c_ChoiceAnswer_addr)) + 1);
     SetMessage(0x84);
     B(::bof3::Img(AreaW0c_TailSub_addr)) = count;
-    AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(Mem(at::kTextRecords)),
-                         reinterpret_cast<const char*>(Mem(at::kMessageFormat)), static_cast<unsigned>(count));
+    AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(Mem(::bof3::Img(at::kTextRecords.v))),
+                         reinterpret_cast<const char*>(Mem(::bof3::Img(at::kMessageFormat.v))), static_cast<unsigned>(count));
     B(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x26f) = static_cast<unsigned char>(B(::bof3::Img(AreaW0c_ChoiceAnswer_addr)) + 4);
 }
 
@@ -243,7 +242,7 @@ extern "C" void __cdecl Area135_MarkerRoute(void) {
         if (r[3] == 0xFF || r[5] == 0xFF) {
             ScriptStep(0xFFFC);
             last = Sprite_Current;
-            if (last == rv::Bytes(ObjTrio)) B(at::kCounter3) = 8;
+            if (last == rv::Bytes(ObjTrio)) B(::bof3::Img(at::kCounter3.v)) = 8;
             continue;
         }
         const U x = (r[2] ? 0x8000u : 0u) | static_cast<U>(r[3]) << 16;
@@ -486,7 +485,7 @@ extern "C" void __cdecl Area135_SpawnRun(void) {
 extern "C" void __cdecl Area135_SpawnCopy(void) {
     ScriptStep(0xFFFE);
     const unsigned char slot = AH_CALL(Sprite_FindFree)();
-    SetWord(Mem(at::kScratch), slot);
+    SetWord(Mem(::bof3::Img(at::kScratch.v)), slot);
     if (slot == 0xFF) return;
     AH_CALL(Area135_RestoreCells)();
     unsigned char* const self = Sprite_Current;
@@ -602,20 +601,20 @@ extern "C" void __cdecl Area135_Tail18(void) {
         }
         AH_CALL(Flags_Toggle)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x2A);
         AH_CALL(Sound_PlayEffect)(0x203);
-        SetWord(Mem(at::kTailTimer), 0xA);
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0xA);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 6;
         return;
     case 6:   // the wait
-        if (Word(Mem(at::kTailTimer)) == 0) {
+        if (Word(Mem(::bof3::Img(at::kTailTimer.v))) == 0) {
             Disarm();
             return;
         }
-        SetWord(Mem(at::kTailTimer), Word(Mem(at::kTailTimer)) - 1u);
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), Word(Mem(::bof3::Img(at::kTailTimer.v))) - 1u);
         return;
     case 0xA:   // flag 0xC: the count printed, message 0x84; else message 0x83 and flag 0xC set
         if (AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0xC) != 0) {
-            AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(Mem(at::kTextRecords)),
-                                 reinterpret_cast<const char*>(Mem(at::kMessageFormat)),
+            AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(Mem(::bof3::Img(at::kTextRecords.v))),
+                                 reinterpret_cast<const char*>(Mem(::bof3::Img(at::kMessageFormat.v))),
                                  static_cast<unsigned>(B(::bof3::Img(AreaW0c_TailSub_addr))));
             AH_CALL(Msg_OpenScript)(0x84);
         } else {
@@ -650,12 +649,12 @@ extern "C" void __cdecl Area135_Tail18(void) {
         AH_CALL(Area135_OpenMessage)(0x8C);
         EffectAt(kWho, B(::bof3::Img(AreaW3d_EffectSlot_addr)))[1] = 3;
         AH_CALL(Sound_PlayEffect)(0x209);
-        B(at::kCounter3) = 0xA;
+        B(::bof3::Img(at::kCounter3.v)) = 0xA;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x17;
         return;
     case 0x17:   // counter 3 at 0xB: message 0x8D, the effect's state 2
         AH_CALL(Area135_Kind2ToObject0)(0);
-        if (B(at::kCounter3) != 0xB) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0xB) return;
         AH_CALL(Area135_OpenMessage)(0x8D);
         {
             const unsigned slot = B(::bof3::Img(AreaW3d_EffectSlot_addr));
@@ -671,18 +670,18 @@ extern "C" void __cdecl Area135_Tail18(void) {
         AH_CALL(Area135_OpenMessage)(0x8E);
         EffectAt(kWho, B(::bof3::Img(AreaW3d_EffectSlot_addr)))[1] = 3;
         AH_CALL(Sound_PlayEffect)(0x209);
-        B(at::kCounter3) = 0xC;
+        B(::bof3::Img(at::kCounter3.v)) = 0xC;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x1A;
         return;
     case 0x1A:   // counter 3 at 0xD: the effect's state 4
         AH_CALL(Area135_Kind2ToObject0)(0);
-        if (B(at::kCounter3) != 0xD) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0xD) return;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x1B;
         EffectAt(kWho, B(::bof3::Img(AreaW3d_EffectSlot_addr)))[1] = 4;
         return;
     case 0x1B: {   // counter 3 at 0x10: the object in the sub byte set going (none: message 0x8F)
         AH_CALL(Area135_Kind2ToObject0)(0);
-        if (B(at::kCounter3) != 0x10) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0x10) return;
         const unsigned char sub = B(::bof3::Img(AreaW0c_TailSub_addr));
         if (sub == 0xFF) {
             AH_CALL(Area135_OpenMessage)(0x8F);
@@ -699,13 +698,13 @@ extern "C" void __cdecl Area135_Tail18(void) {
         return;
     }
     case 0x1C:   // counter 3 at 0x11: the map flags' bit 4 set
-        if (B(at::kCounter3) != 0x11) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0x11) return;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x1D;
         B(::bof3::Img(AreaW3d_Area135MapFlags_addr)) = static_cast<unsigned char>(B(::bof3::Img(AreaW3d_Area135MapFlags_addr)) | 0x10);
         return;
     case 0x1D: {   // counter 3 at 0x12: the object stopped, the map flags' bit 4 cleared, message 0x8F
         AH_CALL(Area135_Kind2ToObject0)(0);
-        if (B(at::kCounter3) != 0x12) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0x12) return;
         const unsigned char flags = B(::bof3::Img(AreaW3d_Area135MapFlags_addr));
         unsigned char* const o = ObjectAt(kWho, B(::bof3::Img(AreaW0c_TailSub_addr)));
         o[1] = 4;
@@ -718,7 +717,7 @@ extern "C" void __cdecl Area135_Tail18(void) {
     }
     case 0x1E: {   // counter 3 at 0x15: the camera to the leader, the effect's state 5
         AH_CALL(Area135_Kind2ToObject0)(0);
-        if (B(at::kCounter3) != 0x15) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0x15) return;
         const U x = D(::bof3::Img(ObjTrio_addr) + 0x34);
         const U z = D(::bof3::Img(ObjTrio_addr) + 0x38);
         const unsigned divisor = Speed8();
@@ -733,7 +732,7 @@ extern "C" void __cdecl Area135_Tail18(void) {
     case 0x1F:   // the glide done: disarmed, counter 3 and the sub byte 0
         if (B(::bof3::Img(Field_Kind2Hold_addr)) != 0) return;
         AH_CALL(ScriptFlags_Clear40)();
-        B(at::kCounter3) = 0;
+        B(::bof3::Img(at::kCounter3.v)) = 0;
         B(::bof3::Img(AreaW0a_TailKind_addr)) = 0;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0;
         B(::bof3::Img(AreaW0c_TailSub_addr)) = 0;
@@ -796,7 +795,7 @@ extern "C" void __cdecl Area135_Init(void) {
         rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->work_18, 0);
         rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->work_1c, 6);
     }
-    B(at::kCounter3) = 0;
+    B(::bof3::Img(at::kCounter3.v)) = 0;
 }
 
 // ===========================================================================

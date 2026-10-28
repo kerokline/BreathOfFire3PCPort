@@ -35,7 +35,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(std::uint32_t address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 std::uint16_t High(std::int32_t v) { return static_cast<std::uint16_t>(static_cast<std::uint32_t>(v) >> 16); }
 // A dword shifted right as the originals' `sar`.
@@ -49,7 +48,7 @@ unsigned char* FlagRow() {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(::bof3::Img(Chapter_FlagRow_addr))))));
 }
 
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 
 // The four callees nobody owns, by their raw addresses (area_w1c_callees.h).
 void FlagsToggle(unsigned char* bits, unsigned index) {
@@ -191,7 +190,7 @@ void RestoreColumn(unsigned x, unsigned z, unsigned shift) {
 void MoveBlock(std::int32_t stop) {
     long x, z;
     if (!AH_CALL(Area52_BlockCell)(&x, &z)) return;
-    const unsigned char counter = B(at::kCounter3);
+    const unsigned char counter = B(::bof3::Img(at::kCounter3.v));
     if (counter == 0xA) {
         if (rv::Current<records::SpriteObject>()->x == stop) return;
         AH_CALL(Area52_DropColumn)(x, z);
@@ -226,21 +225,21 @@ void SpawnEffect48(std::int32_t x, std::int32_t z, unsigned char b) {
 
 // Area 52's tail: a word timer 0x9039F6 counted down, below 4 the next state.
 bool CountDownBelow4() {
-    const auto left = static_cast<std::uint16_t>(Word(Mem(at::kTailTimer)) - 1);
-    SetWord(Mem(at::kTailTimer), left);
+    const auto left = static_cast<std::uint16_t>(Word(Mem(::bof3::Img(at::kTailTimer.v))) - 1);
+    SetWord(Mem(::bof3::Img(at::kTailTimer.v)), left);
     return left < 4;
 }
 bool CountDownToZero() {
-    const auto left = static_cast<std::uint16_t>(Word(Mem(at::kTailTimer)) - 1);
-    SetWord(Mem(at::kTailTimer), left);
+    const auto left = static_cast<std::uint16_t>(Word(Mem(::bof3::Img(at::kTailTimer.v))) - 1);
+    SetWord(Mem(::bof3::Img(at::kTailTimer.v)), left);
     return left == 0;
 }
 // A timed scene begun: counter 3 = `counter`, extra object 0 shown (its
 // byte +1 = 0), the timer 0x10, state `next`.
 void BeginTimed(unsigned char counter, unsigned char next) {
-    B(at::kCounter3) = counter;
+    B(::bof3::Img(at::kCounter3.v)) = counter;
     B(::bof3::Img(Area52_ExtraObjects_addr) + 1) = 0;
-    SetWord(Mem(at::kTailTimer), 0x10);
+    SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0x10);
     B(::bof3::Img(AreaW0c_TailState_addr)) = next;
 }
 // The tail disarmed: ScriptFlags_Clear40, kind and state 0.
@@ -271,11 +270,11 @@ extern "C" void __cdecl Area48_ChoiceCounterBOr1(void) {
     const unsigned char answer = B(::bof3::Img(AreaW0c_ChoiceAnswer_addr));
     SetMessage(0xFFFF);
     if ((answer & 1) == 0) {
-        B(at::kCounter0) = 0xB;
+        B(::bof3::Img(at::kCounter0.v)) = 0xB;
         AH_CALL(Sound_PlayEffect)(0x205);
         return;
     }
-    B(at::kCounter0) = 1;
+    B(::bof3::Img(at::kCounter0.v)) = 1;
     AH_CALL(ScriptFlags_Clear40)();
     MoveScript_Var7 = 0;
     B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65) = 0;
@@ -482,7 +481,7 @@ extern "C" void __cdecl Area49_EffectFrame(void) {
                     AH_CALL(Field_LeaderStepTick)();
                     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
                     AH_CALL(Sprite_ScriptTick)();
-                    B(at::kScriptFlagsHigh) = static_cast<unsigned char>(B(at::kScriptFlagsHigh) | 0x20);
+                    B(::bof3::Img(at::kScriptFlagsHigh.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kScriptFlagsHigh.v)) | 0x20);
                 }
             }
             ++m;
@@ -550,13 +549,13 @@ extern "C" void __cdecl Area49_SetCells(void) {
 // original 0x409920 (Area49_Handlers[3]; PSX 0x801F33A0): with the second
 // party list's first byte 0x904063 at 4, counter 1 = 1.
 extern "C" void __cdecl Area49_Counter1If4(void) {
-    if (B(::bof3::Img(Cond_Flags_addr) + 0xd2 + 1) == 4) B(at::kCounter1) = 1;
+    if (B(::bof3::Img(Cond_Flags_addr) + 0xd2 + 1) == 4) B(::bof3::Img(at::kCounter1.v)) = 1;
 }
 
 // original 0x409940 (Area49_Handlers[4]; PSX 0x801F33C4): with 0x904064 at 4,
 // counter 2 = 1.
 extern "C" void __cdecl Area49_Counter2If4(void) {
-    if (B(::bof3::Img(Cond_Flags_addr) + 0xd2 + 2) == 4) B(at::kCounter2) = 1;
+    if (B(::bof3::Img(Cond_Flags_addr) + 0xd2 + 2) == 4) B(::bof3::Img(at::kCounter2.v)) = 1;
 }
 
 // original 0x409960 (Area49_Handlers[5]; shared by areas 8, 15, 26, 49, 77,
@@ -609,7 +608,7 @@ extern "C" void __cdecl Area49_SpawnEffect6C(void) {
     Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
     SetByte(0xB, 0x55, 0xC0);
     SetByte(0xC, 0x55, 0xC0);
-    B(at::kCounter0) = 0;
+    B(::bof3::Img(at::kCounter0.v)) = 0;
     MoveScript_Var7 = 4;
     B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65) = 0x1E;
 }
@@ -817,7 +816,7 @@ extern "C" unsigned char __cdecl Area52_BlockCell(long* x, long* z) {
     const auto zv = static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->z) - 0x8000u);
     *z = zv;
     if (Field_Request == 5) AH_CALL(Area52_RestoreBlock)(*x, zv);
-    if (B(at::kCounter3) != 0) return 1;
+    if (B(::bof3::Img(at::kCounter3.v)) != 0) return 1;
     AddWord(MoveScript_Object + 0xA, -2);
     return 0;
 }
@@ -933,7 +932,7 @@ extern "C" void __cdecl Area52_TailBlock(void) {
     case 0: BeginTimed(1, 1); return;
     case 1:
         if (!CountDownBelow4()) return;
-        B(at::kCounter3) = 0;
+        B(::bof3::Img(at::kCounter3.v)) = 0;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 2;
         return;
     case 2:
@@ -951,7 +950,7 @@ extern "C" void __cdecl Area52_TailBlock(void) {
     case 0x14: BeginTimed(0xA, 0x15); return;
     case 0x15:
         if (!CountDownBelow4()) return;
-        B(at::kCounter3) = 0;
+        B(::bof3::Img(at::kCounter3.v)) = 0;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x16;
         return;
     case 0x16:
@@ -960,23 +959,23 @@ extern "C" void __cdecl Area52_TailBlock(void) {
     case 0x28: BeginTimed(0x14, 0x29); return;
     case 0x29:
         if (!CountDownBelow4()) return;
-        B(at::kCounter3) = 0;
+        B(::bof3::Img(at::kCounter3.v)) = 0;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x2A;
         return;
     case 0x2A:
         if (CountDownToZero()) EndTimed(0x25);
         return;
     case 0x2D:
-        B(at::kCounter3) = 0;
+        B(::bof3::Img(at::kCounter3.v)) = 0;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x2E;
         return;
     case 0x2E:
-        if (B(at::kCounter3) != 0x1E) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0x1E) return;
         AH_CALL(Area52_SpawnEffect48BJump)();
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x2F;
         return;
     case 0x2F:
-        if (B(at::kCounter3) != 0x28) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0x28) return;
         SetLayer(0x86, 0x11, 0);
         SetByte(0x86, 0x11, 0);
         SetLayer(0x86, 0x12, 0);
@@ -985,7 +984,7 @@ extern "C" void __cdecl Area52_TailBlock(void) {
         SetByte(0x87, 0x11, 0x10);
         SetLayer(0x87, 0x12, 0);
         SetByte(0x87, 0x12, 0x10);
-        SetWord(Mem(at::kTailTimer), 0xA);
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0xA);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x29;
         return;
     default: return;   // 3..9, 0xC..0x13, 0x17..0x27, 0x2B, 0x2C: the table's return; above 0x2F or negative: `ja` to it

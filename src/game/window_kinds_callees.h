@@ -13,6 +13,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 // Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
 // every constant here whose target has a name in symbols.toml reads
@@ -23,7 +25,7 @@ namespace window_kinds {
 namespace at {
 
 // kRecords: now WindowRecords (symbols.toml). 22 window records of 0x24 bytes (WindowRecords)
-constexpr std::uint32_t kRecordsEnd = 0x803478;
+constexpr ::bof3::image::Va kRecordsEnd{0x803478};
 // kCurrent: now BattleWinStates_Current (symbols.toml). dword: the record the window layer is running
 
 // The battle message ring (docs/battle_windows.md section 2): 16 entries of
@@ -32,19 +34,19 @@ constexpr std::uint32_t kRecordsEnd = 0x803478;
 // 0x93C2A1.
 // kMsgHead: now BattleWindows_MsgHead (symbols.toml).
 // kMsgTail: now BattleActorCopies_QueueWrite (symbols.toml).
-constexpr std::uint32_t kMsgRing = 0x93C2C0;
+constexpr ::bof3::image::Va kMsgRing{0x93C2C0};
 // kMsgOpen: now BattleE1_MessageUp (symbols.toml). u8: 1 while the message window is out (7 readers in the battle code)
 
 // The banner pool (docs/battle_misc.md section 1.1): 8 entries of 0xC bytes,
 // +1 the kind, +4 the text, +0xA the byte the banner window draws it in.
-constexpr std::uint32_t kBannerPool = 0x93B8E0;
-constexpr std::uint32_t kBannerText = 0x93B8E4;    // kBannerPool + 4
-constexpr std::uint32_t kBannerColour = 0x93B8EA;  // kBannerPool + 0xA
+constexpr ::bof3::image::Va kBannerPool{0x93B8E0};
+constexpr ::bof3::image::Va kBannerText{0x93B8E4};    // kBannerPool + 4
+constexpr ::bof3::image::Va kBannerColour{0x93B8EA};  // kBannerPool + 0xA
 // kBannerCurrent: now BattleMisc_BannerCurrent (symbols.toml). dword: the entry BattleBanner_Dispatch last visited
-constexpr std::uint32_t kBannerMask = 0x904AE9;    // u8: the kinds BattleBanner_Dispatch has seen this frame
+constexpr ::bof3::image::Va kBannerMask{0x904AE9};    // u8: the kinds BattleBanner_Dispatch has seen this frame
 
 inline auto& kScratch = SharedScratch.b_00;  // SharedScratch's byte 0; the gauge keeps a value there
-constexpr std::uint32_t kScratch_addr = SharedScratch_addr; // kScratch's address, for the raw accessors that take one
+constexpr ::bof3::image::Va kScratch_addr{SharedScratch_addr}; // kScratch's address, for the raw accessors that take one
 
 }  // namespace at
 

@@ -39,7 +39,6 @@ using move_script::Word;
 using Handler = void (__cdecl*)();
 
 unsigned char& B(std::uint32_t address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 std::int16_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 void AddLong(unsigned char* p, std::int32_t v) { SetLong(p, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(p)) + static_cast<std::uint32_t>(v))); }
@@ -58,7 +57,7 @@ Handler StateEntry(const char* who, std::uint32_t table, unsigned count, unsigne
 // Choice handlers read the message box's answer; most set the message word
 // to 0xFFFF (no new message) first.
 signed char Answer() { return static_cast<signed char>(B(::bof3::Img(AreaW0c_ChoiceAnswer_addr))); }
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 
 // Effect_FindFree's slot to the running object's +0xB, then (0xFF: none) a
 // new effect record of `kind` at that slot: +0 = 1 and +5 = the kind, the
@@ -125,23 +124,23 @@ void RunDropInTail(const DropInTail& t) {
         B(::bof3::Img(AreaW0c_TailState_addr)) = 2;
         return;
     case 2:
-        if (B(at::kCounter3) != t.wait) return;
-        SetWord(Mem(at::kTailTimer), 0x10);
+        if (B(::bof3::Img(at::kCounter3.v)) != t.wait) return;
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0x10);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 3;
         return;
     case 3: {
-        const auto left = static_cast<std::uint16_t>(Word(Mem(at::kTailTimer)) - 1);
-        SetWord(Mem(at::kTailTimer), left);
+        const auto left = static_cast<std::uint16_t>(Word(Mem(::bof3::Img(at::kTailTimer.v))) - 1);
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), left);
         if (left != 0) return;
         AH_CALL(Field_ChangeArea)(0x1B, t.x, 0x380000, t.flags);
-        const auto counter = static_cast<unsigned char>(B(at::kCounter3) + 1);
+        const auto counter = static_cast<unsigned char>(B(::bof3::Img(at::kCounter3.v)) + 1);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 4;
-        B(at::kCounter3) = counter;
+        B(::bof3::Img(at::kCounter3.v)) = counter;
         return;
     }
     case 4:
-        if (B(at::kCounter3) != 0x31) return;
-        B(at::kCounter3) = 0;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0x31) return;
+        B(::bof3::Img(at::kCounter3.v)) = 0;
         AH_CALL(ScriptFlags_Clear40)();
         AH_CALL(Flags_Clear)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), t.flag);
         B(::bof3::Img(AreaW0a_TailKind_addr)) = 0;
@@ -158,10 +157,10 @@ void SetCounters(unsigned char n) {
     unsigned char* const member = Field_ActiveMember;
     member[0x80] &= 0xFE;
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kCounter0) = n;
-    B(at::kCounter1) = 0;
-    B(at::kCounter2) = 0;
-    B(at::kCounter3) = 0;
+    B(::bof3::Img(at::kCounter0.v)) = n;
+    B(::bof3::Img(at::kCounter1.v)) = 0;
+    B(::bof3::Img(at::kCounter2.v)) = 0;
+    B(::bof3::Img(at::kCounter3.v)) = 0;
     MoveScript_Var7 = 4;
     B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65) = 0x14;
 }
@@ -226,24 +225,24 @@ extern "C" void __cdecl Area27_ChoiceTail2(void) {
 extern "C" void __cdecl Area27_ChoiceCounter5or6(void) {
     const signed char answer = Answer();
     SetMessage(0xFFFF);
-    if (answer == 0) B(at::kCounter0) = 5;
-    else if (answer == 1) B(at::kCounter0) = 6;
+    if (answer == 0) B(::bof3::Img(at::kCounter0.v)) = 5;
+    else if (answer == 1) B(::bof3::Img(at::kCounter0.v)) = 6;
 }
 
 // original 0x403490 (Area27_Choices[3]; PSX 0x801F3690): answer 0: 0x5B, 1: 0x5A.
 extern "C" void __cdecl Area27_ChoiceCounter5Bor5A(void) {
     const signed char answer = Answer();
     SetMessage(0xFFFF);
-    if (answer == 0) B(at::kCounter0) = 0x5B;
-    else if (answer == 1) B(at::kCounter0) = 0x5A;
+    if (answer == 0) B(::bof3::Img(at::kCounter0.v)) = 0x5B;
+    else if (answer == 1) B(::bof3::Img(at::kCounter0.v)) = 0x5A;
 }
 
 // original 0x4034C0 (Area27_Choices[4]): answer 0: 0x5C, 1: 0x5D.
 extern "C" void __cdecl Area27_ChoiceCounter5Cor5D(void) {
     const signed char answer = Answer();
     SetMessage(0xFFFF);
-    if (answer == 0) B(at::kCounter0) = 0x5C;
-    else if (answer == 1) B(at::kCounter0) = 0x5D;
+    if (answer == 0) B(::bof3::Img(at::kCounter0.v)) = 0x5C;
+    else if (answer == 1) B(::bof3::Img(at::kCounter0.v)) = 0x5D;
 }
 
 // original 0x4034F0 (Area27_Choices[5] = Area27_Handlers[0]; PSX
@@ -605,7 +604,7 @@ extern "C" int __cdecl Area36_StepHook(long x, long z) {
     if (static_cast<std::uint16_t>((static_cast<std::uint32_t>(z) >> 16) - 0x23) >= 3) return 0;
     const unsigned char pose = B(::bof3::Img(ObjTrio_addr) + 0x8);
     if (pose != 0 && pose != 7 && pose != 6) return 0;
-    B(at::kCounter0) = 0;
+    B(::bof3::Img(at::kCounter0.v)) = 0;
     AH_CALL(Party_DropIn)(0);
     return 1;
 }
@@ -648,12 +647,12 @@ extern "C" void __cdecl Area37_ChoiceConfirm9C(void) { ChoiceConfirm(0x9C); }
 extern "C" void __cdecl Area37_ChoiceDropIn(void) {
     if (B(::bof3::Img(AreaW0c_ChoiceAnswer_addr)) == 0) {
         SetMessage(0xFFFF);
-        B(at::kCounter3) = 0x64;
+        B(::bof3::Img(at::kCounter3.v)) = 0x64;
         AH_CALL(Party_DropIn)(3);
         return;
     }
     SetMessage(0xBD);
-    B(at::kCounter3) = 0;
+    B(::bof3::Img(at::kCounter3.v)) = 0;
 }
 
 // original 0x4051F0 (Area37_Choices[21]): answer 0: ScriptFlags_Set40 and
@@ -668,10 +667,10 @@ extern "C" void __cdecl Area37_ChoiceTail2E(void) {
         SetMessage(0xFFFF);
     } else if (answer == 1) {
         SetMessage(0xFFFF);
-        B(at::kCounter3) = 0x64;
+        B(::bof3::Img(at::kCounter3.v)) = 0x64;
     } else if (answer == 2) {
         SetMessage(0xFFFF);
-        B(at::kCounter3) = 0x5F;
+        B(::bof3::Img(at::kCounter3.v)) = 0x5F;
     }
 }
 
@@ -715,7 +714,7 @@ extern "C" void __cdecl Area37_TailLeave(void) {
         AH_CALL(ScriptFlags_Clear40)();
         B(::bof3::Img(AreaW0a_TailKind_addr)) = 0;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0;
-        B(at::kCounter3) = 0;
+        B(::bof3::Img(at::kCounter3.v)) = 0;
         return;
     default: return;   // above 3 or negative: `ja` to the ret
     }

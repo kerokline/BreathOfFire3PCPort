@@ -41,7 +41,6 @@ using at::WorldMapTables;
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char& B(U address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 #define AH_N(a) static_cast<int>(sizeof a / sizeof a[0])
 #define AH_COUNT(a) static_cast<unsigned>(sizeof a / sizeof a[0])
@@ -385,7 +384,7 @@ const ah::DataTable kTablesWm[] = {{0x61BB7C, 5}, {0x61BB90, 2}, {0x61BB98, 4}, 
 enum : unsigned { kRegPackets = 3 };
 ah::Region g_regions_wm[] = {
     {AreaW0b_MapMode_addr, 1}, {0x7E0918, 1}, {0x7E0670, 4}, {0, kPacketBytes}, {0x9037A0, 0x20}, {0x66C7E8, 2},
-    {(Gfx_UnpackScratch_addr + 0x1f000), 0x10}, {::bof3::Img(at::kAreaText), 4}, {Area104_PlateAnims_addr, 8},
+    {(Gfx_UnpackScratch_addr + 0x1f000), 0x10}, {at::kAreaText.v, 4}, {Area104_PlateAnims_addr, 8},
 };
 unsigned char g_saved_anims[8];
 
@@ -399,7 +398,7 @@ void DisturbWm(U h) {
     case 4: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(v % 3); break;
     case 5: Game_Mode = static_cast<unsigned short>(Game_Mode ^ 1); break;
     case 6: SetWord(Mem(AreaW0b_Place_addr), v & 1 ? 0x65 : v); break;
-    case 7: B(at::kLeaderCellX + (v & 1) * 2) = static_cast<unsigned char>(v); break;
+    case 7: B(::bof3::Img(at::kLeaderCellX.v) + (v & 1) * 2) = static_cast<unsigned char>(v); break;
     case 8: B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(v & 1 ? 0xC : v); break;
     default: break;
     }
@@ -557,7 +556,7 @@ const ah::DataTable kTables104[] = {{0x61BC28, 2}, {0x61BC30, 5}};   // the fuzz
 const ah::Region kRegions104[] = {
     {Effect_Objects_addr, at::kEffectCount * at::kEffectStride},
     {Gfx_UnpackScratch_addr, at::kUnpackBytes},
-    {::bof3::Img(at::kUploadCount), 8},   // with Field_ActiveMember 0x9035A4 after it
+    {at::kUploadCount.v, 8},   // with Field_ActiveMember 0x9035A4 after it
     {Gfx_UploadQueueX_addr, 0x50},
     {Gfx_UploadQueueRecord_addr, at::kUploadSlots * 4},
     {(Gfx_ClutStrip_addr + 0x1ec0), 8},

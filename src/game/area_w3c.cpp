@@ -38,12 +38,10 @@ using move_script::Word;
 using U = std::uint32_t;
 
 unsigned char& B(U address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 void AddWord(unsigned char* p, unsigned v) { SetWord(p, Word(p) + v); }
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 // The dword at `cell` as a pointer.
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
-unsigned char* Ptr(::bof3::image::Va va) { return Ptr(::bof3::Img(va)); }
 unsigned char* StoryFlags() { return Mem(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 unsigned char* Focus() { return Ptr(::bof3::Img(AreaW1a_FocusObject_addr)); }
 // Field object `index` (Sprite_Objects, 0xA4 bytes); effect record `slot`
@@ -211,7 +209,7 @@ extern "C" void __cdecl Area128_ChoiceStep3(void) {
         return;
     }
     SetWord(Focus() + 0x8A, 0xB);
-    B(at::kCounter0) = 0xF;
+    B(::bof3::Img(at::kCounter0.v)) = 0xF;
     B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65) = 3;
 }
 
@@ -305,14 +303,14 @@ extern "C" void __cdecl Area130_ChoiceRunStep(void) {
     const int answer = Answer();
     SetMessage(Word(Mem(::bof3::Img(Area130_ChoiceMessages_addr) + static_cast<U>(answer) * 2u)));
     if (answer == 0) {
-        B(at::kCounter0) = 0;
-        B(at::kCounter1) = 0;
-        B(at::kCounter2) = 0;
-        B(at::kCounter3) = 0;
+        B(::bof3::Img(at::kCounter0.v)) = 0;
+        B(::bof3::Img(at::kCounter1.v)) = 0;
+        B(::bof3::Img(at::kCounter2.v)) = 0;
+        B(::bof3::Img(at::kCounter3.v)) = 0;
         B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65) = 0xA;
         B(::bof3::Img(MoveScript_Var7_addr)) = 6;
     } else if (answer == 1) {
-        B(at::kCounter0) = 0;
+        B(::bof3::Img(at::kCounter0.v)) = 0;
     }
 }
 
@@ -383,10 +381,10 @@ extern "C" void __cdecl Area130_TailGiveItem(void) {
             const unsigned category = kItems[pick][0], item = kItems[pick][1];
             unsigned char* const name = AH_CALL(Item_NamePtr)(category, item);
             AH_CALL(Crt_strncpy)(
-                reinterpret_cast<char*>(Mem(at::kTextRecords)), reinterpret_cast<const char*>(name), 0x10);
+                reinterpret_cast<char*>(Mem(::bof3::Img(at::kTextRecords.v))), reinterpret_cast<const char*>(name), 0x10);
             AH_CALL(Inventory_Add)(category, item, 1);
         }
-        B(at::kTextRecords2F) = 0;
+        B(::bof3::Img(at::kTextRecords2F.v)) = 0;
         AH_CALL(Msg_OpenScript)(0x49);
         Field_Request = 2;
         B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65) = 1;
@@ -417,7 +415,7 @@ extern "C" void __cdecl Area130_ChoiceTailState2(void) {
 // store after the first), with counter 0 = 0, MoveScript_Var7 7 and the step.
 void FocusScene(unsigned char step, unsigned char b83) {
     unsigned char* const first = Focus();
-    B(at::kCounter0) = 0;
+    B(::bof3::Img(at::kCounter0.v)) = 0;
     B(::bof3::Img(MoveScript_Var7_addr)) = 7;
     B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65) = step;
     first[1] = 4;

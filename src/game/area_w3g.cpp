@@ -60,7 +60,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
-inline unsigned char* At(::bof3::image::Va va) { return move_script::At(::bof3::Img(va)); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char* Bank() { return At(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 unsigned char* Bank904000() { return At(::bof3::Img(Cond_Flags_addr) + 0x70); }
@@ -68,17 +67,16 @@ unsigned char* PartyRecord(U index) { return At(::bof3::Img(ObjTrio_addr) + inde
 unsigned char* EffectAt(U slot) { return At(::bof3::Img(Effect_Objects_addr) + slot * at::kEffectStride); }
 // The high word of a 16.16 position, as the hooks read it (a word at +2).
 std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
-void SetMessage(unsigned id) { SetWord(At(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(At(::bof3::Img(at::kMessage.v)), id); }
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 void Disarm() {
     AreaW0a_TailKind = 0;
     AreaW0c_TailState = 0;
 }
 // The tails' u16 frame counter less one: true when it reached 0.
 bool TimerDone() {
-    const auto t = static_cast<std::uint16_t>(Word(At(at::kTailTimer)) - 1u);
-    SetWord(At(at::kTailTimer), t);
+    const auto t = static_cast<std::uint16_t>(Word(At(::bof3::Img(at::kTailTimer.v))) - 1u);
+    SetWord(At(::bof3::Img(at::kTailTimer.v)), t);
     return t == 0;
 }
 
@@ -165,7 +163,7 @@ void MessageByMember(U ids, U messages) {
     for (U i = 0; i < 4; ++i) {
         const unsigned char id = B(ids + i);
         for (U j = 0; j < count; ++j) {
-            if (B(at::kMemberId + j * at::kPartyStride) != id) continue;
+            if (B(::bof3::Img(at::kMemberId.v) + j * at::kPartyStride) != id) continue;
             AH_CALL(Msg_OpenScript)(Word(At(messages + i * 2)));
             Field_Request = 2;
             return;
@@ -263,7 +261,7 @@ extern "C" void __cdecl Area148_Tail31(void) {
         AreaW0c_TailState = 1;
         return;
     case 1:
-        if (B(at::kScriptVar) != 0x18) return;
+        if (B(::bof3::Img(at::kScriptVar.v)) != 0x18) return;
         Disarm();
         AH_CALL(Flags_Set)(Bank(), 0x46);
         AH_CALL(Field_ChangeArea)(0x95, 0x1C0000, 0xC0000, 0x80);
@@ -282,9 +280,9 @@ extern "C" void __cdecl Area148_Tail31(void) {
         AreaW0c_TailState = 0xC;
         return;
     case 0xC:
-        if (B(at::kScriptVar) != 0x20) return;
+        if (B(::bof3::Img(at::kScriptVar.v)) != 0x20) return;
         AH_CALL(Flags_Set)(Bank(), 0x5A);
-        SetWord(At(at::kTailTimer), 0x20);
+        SetWord(At(::bof3::Img(at::kTailTimer.v)), 0x20);
         AreaW0c_TailState = 0xD;
         return;
     case 0xD: {
@@ -297,7 +295,7 @@ extern "C" void __cdecl Area148_Tail31(void) {
         return;
     }
     case 0xE:
-        if (B(at::kScriptVar) != 0) return;
+        if (B(::bof3::Img(at::kScriptVar.v)) != 0) return;
         AH_CALL(ScriptFlags_Clear40)();
         Disarm();
         return;
@@ -307,7 +305,7 @@ extern "C" void __cdecl Area148_Tail31(void) {
         if (AH_CALL(Flags_Test)(Bank(), 0x6A) != 0) AH_CALL(Gfx_ClutAdjust)(0, 0x380, -6, -4, -4);
         else AH_CALL(Gfx_ClutAdjust)(0, 0x180, 0, 0, 0);
         Draw_PassFlags = 0;
-        SetWord(At(at::kTailTimer), 0xF);
+        SetWord(At(::bof3::Img(at::kTailTimer.v)), 0xF);
         AreaW0c_TailState = 0x15;
         return;
     case 0x15:
@@ -350,12 +348,12 @@ extern "C" unsigned char __cdecl Area148_SwitchHook(long x, long z) {
     const unsigned char facing = ObjTrio[0].direction;
     const auto bx = static_cast<unsigned char>(x), bz = static_cast<unsigned char>(z);
     U found = 0;
-    for (U rec = ::bof3::Img(Area148_Switch_addr); rec < ::bof3::Img(at::kA148SwitchEnd); rec += 4, ++found) {
+    for (U rec = ::bof3::Img(Area148_Switch_addr); rec < ::bof3::Img(at::kA148SwitchEnd.v); rec += 4, ++found) {
         if (B(rec) == bx && B(rec + 1) == bz && (B(rec + 2) & 0xF) == facing) break;
     }
     if (found == 1) return 0;
     AH_CALL(ScriptFlags_Set40)();
-    AreaW0c_TailState = B(at::kA148Switch + found * 4 + 3);
+    AreaW0c_TailState = B(::bof3::Img(at::kA148Switch.v) + found * 4 + 3);
     AreaW0a_TailKind = 0x1F;
     return 1;
 }
@@ -460,8 +458,8 @@ extern "C" void __cdecl Area148_BeamTurnMembers(void) {
     rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->height, rv::As<records::SpriteHead>(o)->work_20);
     for (U k = 0; k < 2; ++k) {
         const std::int32_t index = (static_cast<std::int32_t>(static_cast<signed char>(B(::bof3::Img(Area148_TurnSteps_addr) + s * 2 + k))) + static_cast<std::int32_t>(q)) * 2;
-        const std::int32_t dx = static_cast<signed char>(B(at::kA148TurnCells + static_cast<U>(index)));
-        const std::int32_t dz = static_cast<signed char>(B(at::kA148TurnCells + 1 + static_cast<U>(index)));
+        const std::int32_t dx = static_cast<signed char>(B(::bof3::Img(at::kA148TurnCells.v) + static_cast<U>(index)));
+        const std::int32_t dz = static_cast<signed char>(B(::bof3::Img(at::kA148TurnCells.v) + 1 + static_cast<U>(index)));
         unsigned char* const c = Cur();
         const U z = (static_cast<U>(dz) << 16) + static_cast<U>(rv::As<records::SpriteHead>(c)->z);
         const U x = (static_cast<U>(dx) << 16) + static_cast<U>(rv::As<records::SpriteHead>(c)->x);
@@ -662,7 +660,7 @@ extern "C" void __cdecl Area149_DustRun(void) {
 extern "C" void __cdecl Area149_DustNear880(void) {
     if (Camera_Distance < 0x880) {
         Sprite_ObjectsExtra[0].speed = 1;
-        B(at::kCounter0) = 0xA;
+        B(::bof3::Img(at::kCounter0.v)) = 0xA;
         AH_CALL(Sound_PlayEffect)(1);
         Cur()[4] = static_cast<unsigned char>(Cur()[4] + 1);
     }
@@ -674,7 +672,7 @@ extern "C" void __cdecl Area149_DustNear880(void) {
 // cells: its +0x84 = 3; the dust at -3 and the op again.
 extern "C" void __cdecl Area149_DustNear680(void) {
     if (Camera_Distance < 0x680) {
-        B(at::kCounter0) = 0xF;
+        B(::bof3::Img(at::kCounter0.v)) = 0xF;
         AH_CALL(Sound_PlayEffect)(0);
         Cur()[4] = static_cast<unsigned char>(Cur()[4] + 1);
     }
@@ -686,7 +684,7 @@ extern "C" void __cdecl Area149_DustNear680(void) {
 // Sound_PlayEffect(1), +4 + 1. Then as state 1, the dust at -2.
 extern "C" void __cdecl Area149_DustAtZero(void) {
     if (Camera_Distance == 0) {
-        B(at::kCounter0) = 0x14;
+        B(::bof3::Img(at::kCounter0.v)) = 0x14;
         AH_CALL(Sound_PlayEffect)(1);
         Cur()[4] = static_cast<unsigned char>(Cur()[4] + 1);
     }
@@ -750,7 +748,7 @@ extern "C" void __cdecl Area149_Tail33(void) {
         if (TimerDone()) AreaW0c_TailState = 2;
         return;
     case 2:
-        B(at::kScriptVar) = 0x20;
+        B(::bof3::Img(at::kScriptVar.v)) = 0x20;
         Disarm();
         AH_CALL(Field_ChangeArea)(0xA7, 0x280000, 0x630000, 0x81);
         return;
@@ -759,7 +757,7 @@ extern "C" void __cdecl Area149_Tail33(void) {
         if (TimerDone()) AreaW0c_TailState = 0xC;
         return;
     case 0xC:
-        B(at::kScriptVar) = 0x20;
+        B(::bof3::Img(at::kScriptVar.v)) = 0x20;
         Disarm();
         AH_CALL(Field_ChangeArea)(0x94, 0xA0000, 0x190000, 0x81);
         return;
@@ -787,7 +785,7 @@ extern "C" void __cdecl Area149_Init(void) {
         if (AH_CALL(Flags_Test)(Bank904000(), 0x11) != 0) {
             AreaW0a_TailKind = 0x21;
             AreaW0c_TailState = 0;
-            SetWord(At(at::kTailTimer), 0x5A);
+            SetWord(At(::bof3::Img(at::kTailTimer.v)), 0x5A);
         }
     }
     if (AreaW2c_LastArea == 0xA7) {
@@ -796,7 +794,7 @@ extern "C" void __cdecl Area149_Init(void) {
         Cond_ByteFE = 2;
         AreaW0a_TailKind = 0x21;
         AreaW0c_TailState = 0xA;
-        SetWord(At(at::kTailTimer), 0x5A);
+        SetWord(At(::bof3::Img(at::kTailTimer.v)), 0x5A);
     }
 }
 
@@ -893,7 +891,7 @@ extern "C" void __cdecl Area150_Tail58(void) {
         return;
     case 0x16:
         if (AH_CALL(Sound_StreamDone)() == 0) return;
-        B(at::kCounter0) = 1;
+        B(::bof3::Img(at::kCounter0.v)) = 1;
         AH_CALL(Music_Play)(0x95, 0x10);
         AH_CALL(Transition_Start)(1);
         Draw_PassFlags = 0x1F;
@@ -973,11 +971,11 @@ void PlaceMessage151(const WorldMapTables& t) {
         AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(At(t.place_messages + static_cast<U>(index * 2)))));
     } else {
         const unsigned char* items = At(t.name_items);
-        for (U row = ::bof3::Img(at::kTextRecords); row < t.text_rows_end; row += 0x20, ++items) {
+        for (U row = ::bof3::Img(at::kTextRecords.v); row < t.text_rows_end; row += 0x20, ++items) {
             const unsigned item = items[0];
             if (item == 0xFF) break;
             unsigned char* const out = At(row);
-            if (At(at::kItemsHeld + item)[0] == 0) {
+            if (At(::bof3::Img(at::kItemsHeld.v) + item)[0] == 0) {
                 SetLong(out, 0x3F3F3F3F);
                 SetLong(out + 4, 0x3F3F3F3F);
                 out[8] = 0;
@@ -1212,8 +1210,8 @@ void DrawFrame(const WorldMapTables& t, int x, int y) {
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x9C, 0);
     AH_CALL(Gfx_CommitPrim)(1, 0xC);
     sprite(x, y, 0);
-    const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(at::kLeaderCellX))),
-                                                       static_cast<short>(Word(At(at::kLeaderCellZ))));
+    const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
+                                                       static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v)))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
     if (!withheld1) sprite(x + 0x30, y, 1);
     world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000))), x + 0x38, y + 8,
@@ -1222,8 +1220,8 @@ void DrawFrame(const WorldMapTables& t, int x, int y) {
     if (!withheld2) sprite(x + 0x30, y + 0x10, 2);
     world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c))), x + 0x38, y + 0x10,
                           withheld2);
-    bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(at::kLeaderCellX))),
-                                            static_cast<short>(Word(At(at::kLeaderCellZ)))) != 0;
+    bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
+                                            static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v))))) != 0;
     if (!third) third = (Field_ScriptFlags2 & 0x1000) != 0;
     if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
     if (!third) third = (Field_ScriptFlags & 0x4000) != 0;
@@ -1267,7 +1265,7 @@ void DrawHud(const WorldMapTables& t, int x, int y) {
     if ((Draw_PassFlags & 0x1B) == 0) return;
     AH_AT(DrawSpriteAt, t.fn_draw_sprite)(x, y, 4);
     AH_AT(DrawSpriteAt, t.fn_draw_sprite)(x + 0x80, y, 5);
-    const unsigned char* const text = At(at::kAreaText + (static_cast<U>(Long(At(t.label_offset))) & 0xFFFF));
+    const unsigned char* const text = At(::bof3::Img(at::kAreaText.v) + (static_cast<U>(Long(At(t.label_offset))) & 0xFFFF));
     AH_CALL(Text_DrawAt)(x + 4, y + 4, 0, 0xFF, text);
 }
 
@@ -1373,10 +1371,10 @@ void DrawDrift(const WorldMapTables& t) {
         rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->z_whole, 0xFFF8);
         o = Cur();
     }
-    std::int32_t dx = S16(At(at::kLeaderCellX)) - S16(o + 0x36);
+    std::int32_t dx = S16(At(::bof3::Img(at::kLeaderCellX.v))) - S16(o + 0x36);
     if (dx < 0) dx = -dx;
     if (dx > 0x19) {
-        std::int32_t dz = S16(At(at::kLeaderCellZ)) - S16(o + 0x3A);
+        std::int32_t dz = S16(At(::bof3::Img(at::kLeaderCellZ.v))) - S16(o + 0x3A);
         if (dz < 0) dz = -dz;
         if (dz > 0x19) return;
     }

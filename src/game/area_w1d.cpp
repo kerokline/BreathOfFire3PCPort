@@ -39,7 +39,6 @@ using move_script::Word;
 using Handler = void (__cdecl*)();
 
 unsigned char& B(std::uint32_t address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 
@@ -54,7 +53,7 @@ Handler StateEntry(const char* who, std::uint32_t table, unsigned count, unsigne
 
 // The message box's answer, and the message word a choice leaves.
 unsigned char Answer() { return B(::bof3::Img(AreaW0c_ChoiceAnswer_addr)); }
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 // A message and the mark 0x9398CF = 6 beside it (areas 55, 59, 61).
 void MessageMarked(unsigned id) {
     SetMessage(id);
@@ -422,7 +421,7 @@ extern "C" int __cdecl Area59_StepHook(long x, long z) {
     if (static_cast<std::uint16_t>((static_cast<std::uint32_t>(z) >> 16) - 0x29) >= 3) return 0;
     const unsigned char pose = B(::bof3::Img(ObjTrio_addr) + 0x8);
     if (pose != 0 && pose != 7 && pose != 6) return 0;
-    B(at::kCounter0) = 0;
+    B(::bof3::Img(at::kCounter0.v)) = 0;
     AH_CALL(Party_DropIn)(0);
     return 1;
 }
@@ -440,7 +439,7 @@ extern "C" unsigned char __cdecl Area59_Trigger24(unsigned char*, unsigned char*
     const auto offset = static_cast<std::int32_t>(Key(Focus()) - Sprite_Objects_addr);
     B(::bof3::Img(AreaW0a_TailKind_addr)) = 4;
     B(::bof3::Img(AreaW0c_TailSub_addr)) = 5;
-    B(at::kCounter3) = static_cast<unsigned char>(offset / static_cast<std::int32_t>(at::kObjectStride));
+    B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(offset / static_cast<std::int32_t>(at::kObjectStride));
     return 0;
 }
 
@@ -480,7 +479,7 @@ extern "C" void __cdecl Area59_EffectStep(void) {
 // original 0x40B550 (Area60 +0x40 init; PSX 0x801F3310): Field_ScriptFlags
 // bit 0x2000 set (its high byte or'ed with 0x20).
 extern "C" void __cdecl Area60_InitScriptFlag2000(void) {
-    B(at::kScriptFlagsHigh) = static_cast<unsigned char>(B(at::kScriptFlagsHigh) | 0x20);
+    B(::bof3::Img(at::kScriptFlagsHigh.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kScriptFlagsHigh.v)) | 0x20);
 }
 
 // ===========================================================================
@@ -545,14 +544,14 @@ extern "C" void __cdecl Area62_ArmTailGiveItem(void) {
 extern "C" void __cdecl Area62_TailGiveItem59(void) {
     switch (static_cast<signed char>(B(::bof3::Img(AreaW0c_TailState_addr)))) {
     case 0:
-        B(at::kCounter0) = 0xA;
+        B(::bof3::Img(at::kCounter0.v)) = 0xA;
         AH_CALL(Sound_PlayEffect)(0x10D);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 1;
         return;
     case 1: {
-        if (B(at::kCounter0) != 0xB) return;
+        if (B(::bof3::Img(at::kCounter0.v)) != 0xB) return;
         const unsigned char* const name = AH_CALL(Item_NamePtr)(0, 0x59);
-        for (unsigned i = 0; i < 16; i += 4) SetLong(Mem(at::kTextRecords + i), Long(name + i));
+        for (unsigned i = 0; i < 16; i += 4) SetLong(Mem(::bof3::Img(at::kTextRecords.v) + i), Long(name + i));
         if (AH_CALL(Inventory_Add)(0, 0x59, 1) != 0) {
             AH_CALL(Sound_PlayEffect)(0x106);
             AH_CALL(Msg_OpenSystem)(2);
@@ -567,7 +566,7 @@ extern "C" void __cdecl Area62_TailGiveItem59(void) {
     case 2:
         if (Field_Request == 2) return;
         AH_CALL(ScriptFlags_Clear40)();
-        B(at::kCounter0) = 0;
+        B(::bof3::Img(at::kCounter0.v)) = 0;
         B(::bof3::Img(AreaW0a_TailKind_addr)) = 0;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0;
         return;

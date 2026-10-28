@@ -60,15 +60,13 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
-inline unsigned char* At(::bof3::image::Va va) { return move_script::At(::bof3::Img(va)); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 unsigned char* Bank() { return At(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 bool Test(unsigned index) { return AH_CALL(Flags_Test)(Bank(), index) != 0; }
 void Set(unsigned index) { AH_CALL(Flags_Set)(Bank(), index); }
 void Clear(unsigned index) { AH_CALL(Flags_Clear)(Bank(), index); }
-void SetMessage(unsigned v) { SetWord(At(at::kMessage), v); }
+void SetMessage(unsigned v) { SetWord(At(::bof3::Img(at::kMessage.v)), v); }
 std::int32_t Answer() { return AreaW0c_ChoiceAnswer; }
 unsigned char* Focus() { return reinterpret_cast<unsigned char*>(AreaW1a_FocusObject); }
 // MoveScript_Object's script word +0xA, moved by n (the op's position).
@@ -389,8 +387,8 @@ void DrawFrame(const WorldMapTables& t, int x, int y) {
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x9C, 0);
     AH_CALL(Gfx_CommitPrim)(1, 0xC);
     sprite(x, y, 0);
-    const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(at::kLeaderCellX))),
-                                                       static_cast<short>(Word(At(at::kLeaderCellZ))));
+    const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
+                                                       static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v)))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
     if (!withheld1) sprite(x + 0x30, y, 1);
     world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000))), x + 0x38, y + 8,
@@ -399,8 +397,8 @@ void DrawFrame(const WorldMapTables& t, int x, int y) {
     if (!withheld2) sprite(x + 0x30, y + 0x10, 2);
     world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c))), x + 0x38, y + 0x10,
                           withheld2);
-    bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(at::kLeaderCellX))),
-                                            static_cast<short>(Word(At(at::kLeaderCellZ)))) != 0;
+    bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
+                                            static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v))))) != 0;
     if (!third) third = (Field_ScriptFlags2 & 0x1000) != 0;
     if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
     if (!third) third = (Field_ScriptFlags & 0x4000) != 0;
@@ -444,7 +442,7 @@ void DrawHud(const WorldMapTables& t, int x, int y) {
     if ((Draw_PassFlags & 0x1B) == 0) return;
     AH_AT(DrawSpriteAt, t.fn_draw_sprite)(x, y, 4);
     AH_AT(DrawSpriteAt, t.fn_draw_sprite)(x + 0x80, y, 5);
-    const unsigned char* const text = At(at::kAreaText + (static_cast<U>(Long(At(t.label_offset))) & 0xFFFF));
+    const unsigned char* const text = At(::bof3::Img(at::kAreaText.v) + (static_cast<U>(Long(At(t.label_offset))) & 0xFFFF));
     AH_CALL(Text_DrawAt)(x + 4, y + 4, 0, 0xFF, text);
 }
 
@@ -550,10 +548,10 @@ void DrawDrift(const WorldMapTables& t) {
         rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->z_whole, 0xFFF8);
         o = Cur();
     }
-    std::int32_t dx = S16(At(at::kLeaderCellX)) - S16(o + 0x36);
+    std::int32_t dx = S16(At(::bof3::Img(at::kLeaderCellX.v))) - S16(o + 0x36);
     if (dx < 0) dx = -dx;
     if (dx > 0x19) {
-        std::int32_t dz = S16(At(at::kLeaderCellZ)) - S16(o + 0x3A);
+        std::int32_t dz = S16(At(::bof3::Img(at::kLeaderCellZ.v))) - S16(o + 0x3A);
         if (dz < 0) dz = -dz;
         if (dz > 0x19) return;
     }
@@ -782,7 +780,7 @@ extern "C" void __cdecl Area154_ChoiceFocusPair(void) { FocusPair(::bof3::Img(Ar
 extern "C" void __cdecl Area155_ChoiceGiveItem4D(void) {
     if (static_cast<unsigned char>(AreaW0c_ChoiceAnswer) == 2) {
         const unsigned char* const name = AH_CALL(Item_NamePtr)(1, 0x4D);
-        unsigned char* const row = At(at::kTextRecords);
+        unsigned char* const row = At(::bof3::Img(at::kTextRecords.v));
         for (U k = 0; k < 16; k += 4) SetLong(row + k, Long(name + k));
         if (AH_CALL(Inventory_Add)(1, 0x4D, 1) != 0) {
             AH_CALL(Sound_PlayEffect)(0x106);
@@ -824,9 +822,9 @@ extern "C" void __cdecl Area166_ChoiceFocusPair(void) {
     }
     const std::int32_t a = Answer();
     unsigned char* focus = Focus();
-    SetLong(focus + 0x18, B(at::kA166Pairs + static_cast<U>(a) * 2u));
+    SetLong(focus + 0x18, B(::bof3::Img(at::kA166Pairs.v) + static_cast<U>(a) * 2u));
     focus = Focus();
-    SetLong(focus + 0x1C, B(at::kA166Pairs + static_cast<U>(Answer()) * 2u + 1));
+    SetLong(focus + 0x1C, B(::bof3::Img(at::kA166Pairs.v) + static_cast<U>(Answer()) * 2u + 1));
 }
 
 // ===========================================================================
@@ -842,9 +840,9 @@ extern "C" void __cdecl Area167_ChoiceTail32At15(void) {
     const unsigned char answer = static_cast<unsigned char>(AreaW0c_ChoiceAnswer);
     SetMessage(0xFFFF);
     if (answer == 2) return;
-    B(at::kScriptVar5) = static_cast<unsigned char>((answer != 0 ? 1 : 0) + 1);
+    B(::bof3::Img(at::kScriptVar5.v)) = static_cast<unsigned char>((answer != 0 ? 1 : 0) + 1);
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kScriptVar6) = 0x40;
+    B(::bof3::Img(at::kScriptVar6.v)) = 0x40;
     ArmTail(0x20, 0x15);
 }
 
@@ -854,9 +852,9 @@ extern "C" void __cdecl Area167_ChoiceTail32At14Even(void) {
     const unsigned char answer = static_cast<unsigned char>(AreaW0c_ChoiceAnswer);
     SetMessage(0xFFFF);
     if (answer == 2) return;
-    B(at::kScriptVar5) = static_cast<unsigned char>(answer != 0 ? 2 : 0);
+    B(::bof3::Img(at::kScriptVar5.v)) = static_cast<unsigned char>(answer != 0 ? 2 : 0);
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kScriptVar6) = 0x40;
+    B(::bof3::Img(at::kScriptVar6.v)) = 0x40;
     ArmTail(0x20, 0x14);
 }
 
@@ -866,9 +864,9 @@ extern "C" void __cdecl Area167_ChoiceTail32At14(void) {
     const unsigned char answer = static_cast<unsigned char>(AreaW0c_ChoiceAnswer);
     SetMessage(0xFFFF);
     if (answer == 2) return;
-    B(at::kScriptVar5) = static_cast<unsigned char>(answer != 0 ? 1 : 0);
+    B(::bof3::Img(at::kScriptVar5.v)) = static_cast<unsigned char>(answer != 0 ? 1 : 0);
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kScriptVar6) = 0x40;
+    B(::bof3::Img(at::kScriptVar6.v)) = 0x40;
     ArmTail(0x20, 0x14);
 }
 
@@ -879,7 +877,7 @@ extern "C" void __cdecl Area167_ChoiceTail32AtA(void) {
     SetMessage(0xFFFF);
     if (answer != 0) return;
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kScriptVar6) = 0x60;
+    B(::bof3::Img(at::kScriptVar6.v)) = 0x60;
     ArmTail(0x20, 0xA);
 }
 
@@ -1009,7 +1007,7 @@ extern "C" void __cdecl Area167_Flags48By49(void) {
 // Cond_ByteFD 1: the script word + 3.
 extern "C" void __cdecl Area167_Skip3ByChapter(void) {
     if (Cond_ByteFD == 2) {
-        if (B(at::kScriptVar5) != 0) return;
+        if (B(::bof3::Img(at::kScriptVar5.v)) != 0) return;
         ScriptSkip(3);
     }
     if (Cond_ByteFD == 1) ScriptSkip(3);
@@ -1086,7 +1084,7 @@ extern "C" void __cdecl Area167_Tail32(void) {
         AreaW0c_TailState = 1;
         return;
     case 1:
-        if (B(at::kScriptVar6) != 0x18) return;
+        if (B(::bof3::Img(at::kScriptVar6.v)) != 0x18) return;
         ArmTail(0, 0);
         Set(0x46);
         AH_CALL(Field_ChangeArea)(0x95, 0x80000, 0xC0000, 0x81);
@@ -1094,21 +1092,21 @@ extern "C" void __cdecl Area167_Tail32(void) {
     case 2:
         AH_CALL(Sound_PlayEffect)(0x204);
         AreaW0c_TailState = 6;
-        SetWord(At(at::kTailTimer), 0xA);
+        SetWord(At(::bof3::Img(at::kTailTimer.v)), 0xA);
         return;
     case 3:
-        SetWord(At(at::kTailTimer), Word(At(at::kTailTimer)) - 1u);
-        if (Word(At(at::kTailTimer)) != 0) return;
+        SetWord(At(::bof3::Img(at::kTailTimer.v)), Word(At(::bof3::Img(at::kTailTimer.v))) - 1u);
+        if (Word(At(::bof3::Img(at::kTailTimer.v))) != 0) return;
         AH_CALL(ScriptFlags_Clear40)();
         ArmTail(0, 0);
         return;
     case 4:
-        if (B(at::kScriptVar6) != 0x64) return;
+        if (B(::bof3::Img(at::kScriptVar6.v)) != 0x64) return;
         AH_CALL(Party_DropIn)(5);
         AreaW0c_TailState = 0xB;
         return;
     case 5:
-        if (B(at::kScriptVar6) != 0x74) return;
+        if (B(::bof3::Img(at::kScriptVar6.v)) != 0x74) return;
         if (Cond_ByteFD == 2) AH_CALL(Field_ChangeArea)(0xA7, 0x130000, 0x9A0000, 0x87);
         else AH_CALL(Field_ChangeArea)(0xA7, 0xA0000, 0x1E0000, 0x86);
         AH_CALL(Flags_Toggle)(Bank(), 0x4B);
@@ -1116,13 +1114,13 @@ extern "C" void __cdecl Area167_Tail32(void) {
         AreaW0c_TailState = 0xC;
         return;
     case 6:
-        if (B(at::kScriptVar6) != 0) return;
+        if (B(::bof3::Img(at::kScriptVar6.v)) != 0) return;
         if (Cond_ByteFD == 0) AH_CALL(Sound_PlayEffect)(0x206);
-        B(at::kScriptVar5) = 0;
+        B(::bof3::Img(at::kScriptVar5.v)) = 0;
         ArmTail(0, 0);
         return;
     case 7:
-        if (B(at::kScriptVar6) != 0x44) return;
+        if (B(::bof3::Img(at::kScriptVar6.v)) != 0x44) return;
         AH_CALL(Party_DropIn)(2);
         AreaW0c_TailState = 0x18;
         return;
@@ -1131,10 +1129,10 @@ extern "C" void __cdecl Area167_Tail32(void) {
         AreaW0c_TailState = 0x18;
         return;
     case 9: {
-        if (B(at::kScriptVar6) != 0x54) return;
-        const unsigned char way = B(at::kScriptVar5);
+        if (B(::bof3::Img(at::kScriptVar6.v)) != 0x54) return;
+        const unsigned char way = B(::bof3::Img(at::kScriptVar5.v));
         if (way == 0) {
-            B(at::kScriptVar6) = 0;
+            B(::bof3::Img(at::kScriptVar6.v)) = 0;
             AH_CALL(ScriptFlags_Clear40)();
             AH_CALL(Field_ChangeArea)(0xA7, 0x1A8000, 0x560000, 5);
             Clear(0x48);
@@ -1159,12 +1157,12 @@ extern "C" void __cdecl Area167_Tail32(void) {
     case 11:
         if (Transition_Busy != 0) return;
         Cond_ByteFE = 0x20;
-        SetWord(At(at::kTailTimer), 0x1E);
+        SetWord(At(::bof3::Img(at::kTailTimer.v)), 0x1E);
         AreaW0c_TailState = 0x20;
         return;
     case 12:
-        SetWord(At(at::kTailTimer), Word(At(at::kTailTimer)) - 1u);
-        if (Word(At(at::kTailTimer)) != 0) return;
+        SetWord(At(::bof3::Img(at::kTailTimer.v)), Word(At(::bof3::Img(at::kTailTimer.v))) - 1u);
+        if (Word(At(::bof3::Img(at::kTailTimer.v))) != 0) return;
         AH_CALL(ScriptFlags_Clear40)();
         Set(0x90);
         AH_CALL(Field_ChangeArea)(0xA8, 0x150000, 0x40000, 7);
@@ -1199,12 +1197,12 @@ extern "C" unsigned char __cdecl Area167_CellHook(unsigned x, unsigned z) {
     const auto bx = static_cast<unsigned char>(x);
     const auto bz = static_cast<unsigned char>(z);
     U found = 0;
-    for (U a = ::bof3::Img(Area167_Switch_addr); a < ::bof3::Img(at::kA167SwitchEnd); a += 4, ++found) {
+    for (U a = ::bof3::Img(Area167_Switch_addr); a < ::bof3::Img(at::kA167SwitchEnd.v); a += 4, ++found) {
         const unsigned char* const r = At(a);
         if (r[0] == bx && r[1] == bz && (r[2] & 0xF) == facing) break;
     }
     if (found == 1) return 0;
-    AH_CALL(Flags_Toggle)(Bank(), B(at::kA167Switch + 3 + found * 4));
+    AH_CALL(Flags_Toggle)(Bank(), B(::bof3::Img(at::kA167Switch.v) + 3 + found * 4));
     AH_CALL(ScriptFlags_Set40)();
     ArmTail(0x20, 5);
     return 1;

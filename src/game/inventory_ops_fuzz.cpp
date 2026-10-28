@@ -84,7 +84,7 @@ unsigned char* ActorRecord(unsigned i) { return At(CharacterRecords_addr + at::k
 
 // Where Sprite_Current may point: the five objects or the placement's
 // scratch sprite. Field_State: the five objects.
-unsigned char* AnySprite(u32 h) { return h % 6 == 5 ? At(at::kScratchSprite) : Obj(h % 6); }
+unsigned char* AnySprite(u32 h) { return h % 6 == 5 ? At(::bof3::Img(at::kScratchSprite.v)) : Obj(h % 6); }
 
 // Every cell below is one some function reads again after a call. The
 // invariants Tidy keeps are kept: pointers into the regions, at most five
@@ -97,9 +97,9 @@ void Disturb() {
     switch ((h >> 2) % 20) {
     case 0: SetLong(At(BossSi_CentreX_addr), static_cast<std::int32_t>(v)); break;
     case 1: SetLong(At(BossSi_CentreZ_addr), static_cast<std::int32_t>(v)); break;
-    case 2: SetLong(At(at::kMemberPos + 8 * (w % 4) + 4 * ((w >> 4) & 1)), static_cast<std::int32_t>(v)); break;
-    case 3: At(at::kMembers + 4 * (w % 4) + ((w >> 4) & 1))[0] = static_cast<unsigned char>(v & 1); break;
-    case 4: At(at::kOrder + w % 3)[0] = static_cast<unsigned char>(v % 4); break;
+    case 2: SetLong(At(::bof3::Img(at::kMemberPos.v) + 8 * (w % 4) + 4 * ((w >> 4) & 1)), static_cast<std::int32_t>(v)); break;
+    case 3: At(::bof3::Img(at::kMembers.v) + 4 * (w % 4) + ((w >> 4) & 1))[0] = static_cast<unsigned char>(v & 1); break;
+    case 4: At(::bof3::Img(at::kOrder.v) + w % 3)[0] = static_cast<unsigned char>(v % 4); break;
     case 5: At(FieldHidden_Facing_addr)[0] = static_cast<unsigned char>(v % 8); break;
     case 6: At(FieldHidden_Placed_addr)[0] = static_cast<unsigned char>(v % 9); break;
     case 7: At(FieldHidden_EnemyCount_addr)[0] = static_cast<unsigned char>(v % 9); break;
@@ -116,7 +116,7 @@ void Disturb() {
     case 10: Sprite_Current = AnySprite(v); break;
     case 11: Field_State = Obj(v % kObjects); break;
     case 12: Field_MemberCount = static_cast<unsigned char>(v % 6); break;
-    case 13: At(at::kBattleFacing)[0] = static_cast<unsigned char>(v % 5); break;
+    case 13: At(::bof3::Img(at::kBattleFacing.v))[0] = static_cast<unsigned char>(v % 5); break;
     case 14: {
         unsigned char* const o = Obj(w % kObjects);
         switch ((w >> 4) % 8) {
@@ -522,8 +522,8 @@ unsigned char g_sxy[8];   // Encounter_Project's destination
 
 struct Region { u32 at, size; };
 constexpr Region kRegionList[] = {
-    {at::kScratchSprite, 0x4A0},   // the scratch sprite and the placement's state 0x6BE070..0x6BE48F
-    {at::kMemberPos, 0x800},       // 256 members' spots (a member index is a byte)
+    {at::kScratchSprite.v, 0x4A0},   // the scratch sprite and the placement's state 0x6BE070..0x6BE48F
+    {at::kMemberPos.v, 0x800},       // 256 members' spots (a member index is a byte)
     {ModeRest_ElevationBase_addr, 0x12A0}, // the height sum and 256 enemy slots (a count is a byte)
     {BossSi_CentreX_addr, 0x10},
     {Cond_Flags_addr + 0xd0, 0x10}, // the formation and both party lists
@@ -539,7 +539,7 @@ constexpr Region kRegionList[] = {
     {0x905E60, 8},                 // Field_Kind2Z / X
     {0x903800, 0x44},              // Camera_ShiftX / ShiftY .. Camera_Distance
     {0x92BF18, 4},                 // Draw_OtSlot
-    {at::kKinds, 0x8C0},           // the enemy kinds 0..15
+    {at::kKinds.v, 0x8C0},           // the enemy kinds 0..15
     {0x8CB580, 4},                 // AreaMap_Header's width and depth
     {0, sizeof g_sxy},             // g_sxy (its address filled in at start)
 };
@@ -585,7 +585,7 @@ void Tidy() {
     Field_MemberCount = static_cast<unsigned char>(Next() % 6);
     Sprite_Current = AnySprite(Next());
     Field_State = Obj(Next() % kObjects);
-    At(at::kScratchSprite)[5] = static_cast<unsigned char>(At(at::kScratchSprite)[5] % 32);
+    At(::bof3::Img(at::kScratchSprite.v))[5] = static_cast<unsigned char>(At(::bof3::Img(at::kScratchSprite.v))[5] % 32);
     for (unsigned i = 0; i < kObjects; ++i) {
         unsigned char* const o = Obj(i);
         o[5] = static_cast<unsigned char>(o[5] % 32);
@@ -595,7 +595,7 @@ void Tidy() {
     }
     for (unsigned i = 0; i < 6; ++i)
         if (Next() % 8) At(Cond_Flags_addr + 0xd2 + i)[0] = static_cast<unsigned char>(Next() % 12);
-    if (Often()) At(at::kBattleFacing)[0] = static_cast<unsigned char>(Next() % 4);
+    if (Often()) At(::bof3::Img(at::kBattleFacing.v))[0] = static_cast<unsigned char>(Next() % 4);
     if (Often()) At(FieldHidden_Facing_addr)[0] = static_cast<unsigned char>(Next() % 4);
     if (Often()) At(FieldHidden_EnemyCount_addr)[0] = static_cast<unsigned char>(Next() % 9);
     for (unsigned k = 0; k < 8; ++k) {
@@ -604,9 +604,9 @@ void Tidy() {
         if (Often()) e[1] = static_cast<unsigned char>(Next() % 16);
     }
     for (unsigned m = 0; m < 4; ++m)
-        if (Often()) At(at::kMembers + 4 * m)[1] = static_cast<unsigned char>(Next() % 2);
+        if (Often()) At(::bof3::Img(at::kMembers.v) + 4 * m)[1] = static_cast<unsigned char>(Next() % 2);
     for (unsigned k = 0; k < 16; ++k)
-        if (Often()) At(at::kKinds + at::kKindStride * k)[0x86] = static_cast<unsigned char>(Next() % 4);
+        if (Often()) At(::bof3::Img(at::kKinds.v) + at::kKindStride * k)[0x86] = static_cast<unsigned char>(Next() % 4);
     g_bias = Next() % 5;
     g_hint = Next() % 16;
     g_margin = Next() & 0xFF;
@@ -637,7 +637,7 @@ Args Seed(unsigned k) {
     case kMemberClearK:
     case kMemberStandsK:
         x.a[0] = Byte(Often() ? Next() % 4 : Next());
-        for (unsigned m = 0; m < 3; ++m) At(at::kMembers + 4 * m)[0] = static_cast<unsigned char>(Next() % 2);
+        for (unsigned m = 0; m < 3; ++m) At(::bof3::Img(at::kMembers.v) + 4 * m)[0] = static_cast<unsigned char>(Next() % 2);
         break;
     case kPlaceEnemiesK:
         At(FieldHidden_Placed_addr)[0] = static_cast<unsigned char>(Next() % 9);
@@ -649,7 +649,7 @@ Args Seed(unsigned k) {
         x.a[3] = Byte(Often() ? Next() % 4 : Next());
         break;
     case kNibbleK: {
-        for (u32 i = 0; i < kMapBytes; i += 4) SetLong(At(at::kCellMap + i), static_cast<std::int32_t>(Next()));
+        for (u32 i = 0; i < kMapBytes; i += 4) SetLong(At(::bof3::Img(at::kCellMap.v) + i), static_cast<std::int32_t>(Next()));
         const u32 w = Pick({0, 1, 2, 3, 16, 64, 200, 255, Next() & 0xFF});
         const u32 d = Pick({0, 1, 2, 3, 16, 64, 200, 255, Next() & 0xFF});
         AreaMap_Header[0] = static_cast<unsigned char>(w);
@@ -726,7 +726,7 @@ Args Seed(unsigned k) {
         for (unsigned i = 0; i < kObjects; ++i) {
             unsigned char* const o = Obj(i);
             o[0xB] = static_cast<unsigned char>(Pick({0, 0, 1, 0xFF, 7}));
-            if (Half()) o[8] = At(at::kFaceTable)[At(at::kBattleFacing)[0]];
+            if (Half()) o[8] = At(::bof3::Img(at::kFaceTable.v))[At(::bof3::Img(at::kBattleFacing.v))[0]];
         }
         for (unsigned i = 0; i < 9; ++i) SetWord(ActorRecord(i) + 0x10, Half() ? 0x4000 : Next() & ~0x4000u);
         At(EventBattle_Flags_addr)[0] = static_cast<unsigned char>(Half() ? 4 : Next() & ~4u);
@@ -855,7 +855,7 @@ void SelfTest() {
     // Save what the fuzz overwrites, and stand the recorders in.
     static State saved, input, their_out, our_out;
     Capture(saved);
-    std::memcpy(g_saved_map, At(at::kCellMap), kMapBytes);
+    std::memcpy(g_saved_map, At(::bof3::Img(at::kCellMap.v)), kMapBytes);
     const unsigned short cw_saved = ControlWord();
     g = Stubs();
 
@@ -905,7 +905,7 @@ void SelfTest() {
     }
     g = kOriginals;
     Apply(saved);
-    std::memcpy(At(at::kCellMap), g_saved_map, kMapBytes);
+    std::memcpy(At(::bof3::Img(at::kCellMap.v)), g_saved_map, kMapBytes);
 
     bof3::Log("shadow      inventory_ops self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, "
               "%u MISMATCHES; the placement's state, the members' spots, the enemy slots, the party objects, the effects, "

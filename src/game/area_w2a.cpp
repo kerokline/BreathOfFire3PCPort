@@ -38,7 +38,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(std::uint32_t address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 // Effect_Objects record `slot` (0x80 bytes).
 unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
@@ -51,7 +50,7 @@ unsigned char* FlagRow() {
 
 // The choice answer, as every choice of the band reads it: a signed byte.
 signed char Answer() { return static_cast<signed char>(B(::bof3::Img(AreaW0c_ChoiceAnswer_addr))); }
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 // A message word from a choice's table by the signed answer (unchecked: a
 // negative answer reads before the table, a large one past it - in .data).
 unsigned MessageAt(std::uint32_t table, signed char answer) {
@@ -61,8 +60,8 @@ unsigned MessageAt(std::uint32_t table, signed char answer) {
 // The band's commonest choice: no new message; answer 0 sets counter 0 to
 // `on0`, answer 1 to `on1`, any other nothing.
 void CountersByAnswer(signed char answer, unsigned char on0, unsigned char on1) {
-    if (answer == 0) B(at::kCounter0) = on0;
-    else if (answer == 1) B(at::kCounter0) = on1;
+    if (answer == 0) B(::bof3::Img(at::kCounter0.v)) = on0;
+    else if (answer == 1) B(::bof3::Img(at::kCounter0.v)) = on1;
 }
 void ChoiceCounter0(unsigned char on0, unsigned char on1) {
     const signed char answer = Answer();
@@ -290,7 +289,7 @@ extern "C" void __cdecl Area78_ChoiceRowFlag16or17(void) {
     SetMessage(0xFFFF);
     if (answer != 0 && answer != 1) return;
     unsigned char* const row = FlagRow();
-    B(at::kCounter0) = 0x1E;
+    B(::bof3::Img(at::kCounter0.v)) = 0x1E;
     AH_CALL(Flags_Set)(row, answer == 0 ? 0x16 : 0x17);
 }
 
@@ -311,15 +310,15 @@ extern "C" void __cdecl Area78_ChoiceResetScene(void) {
     SetMessage(MessageAt(::bof3::Img(Area78_ChoiceMessages_addr), answer));
     if (answer == 0) {
         AH_CALL(ScriptFlags_Set40)();
-        B(at::kCounter0) = 0;
-        B(at::kCounter1) = 0;
-        B(at::kCounter2) = 0;
-        B(at::kCounter3) = 0;
+        B(::bof3::Img(at::kCounter0.v)) = 0;
+        B(::bof3::Img(at::kCounter1.v)) = 0;
+        B(::bof3::Img(at::kCounter2.v)) = 0;
+        B(::bof3::Img(at::kCounter3.v)) = 0;
         B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65) = 0;
         SetWord(Mem(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), 0);
         MoveScript_Var7 = 0xE;
     } else if (answer == 1) {
-        B(at::kCounter0) = 0;
+        B(::bof3::Img(at::kCounter0.v)) = 0;
     }
 }
 
@@ -343,7 +342,7 @@ extern "C" void __cdecl Area79_ChoiceCounter1or14(void) { ChoiceCounter0(1, 0x14
 extern "C" void __cdecl Area79_ChoiceCounter3(void) {
     const int answer = Answer();
     if (static_cast<unsigned>(answer) > 5) return;
-    B(at::kCounter3) = static_cast<unsigned char>(answer + 1);
+    B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(answer + 1);
 }
 
 // original 0x40F340 (Area79_Choices[3]): the message word from
@@ -353,7 +352,7 @@ extern "C" void __cdecl Area79_ChoiceMessageCounter3(void) {
     const signed char answer = Answer();
     SetMessage(MessageAt(::bof3::Img(Area79_ChoiceMessages_addr), answer));
     if (static_cast<unsigned>(static_cast<int>(answer)) > 5) return;
-    B(at::kCounter3) = static_cast<unsigned char>(0xB + answer);
+    B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(0xB + answer);
 }
 
 // original 0x40F3B0 (Area79_Choices[4]): counter 0 8 for answer 0, 9 for 1.

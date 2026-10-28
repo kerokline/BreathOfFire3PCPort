@@ -190,7 +190,6 @@ const ah::DataTable kTables112[] = {{Area112_EffectStates_addr, at::kArea112Effe
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char& B(U address) { return *ah::Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 unsigned char* EffectRecord(unsigned slot) { return ah::Mem(Effect_Objects_addr + slot % at::kEffectCount * at::kEffectStride); }
 unsigned char* ExtraRecord(unsigned k) { return ah::Mem(Sprite_ObjectsExtra_addr + k % at::kExtraCount * at::kExtraStride); }
 unsigned char* Grid() { return ah::Mem(Area111_Grid_addr); }
@@ -250,7 +249,7 @@ U MovesScriptObject(const U*, U answer) {
 U MovesTail(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(n >> 8);
-    if (n & 2) B(at::kCounter3) = static_cast<unsigned char>(n >> 16);
+    if (n & 2) B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(n >> 16);
     return answer;
 }
 U MovesAnswer(const U*, U answer) {
@@ -337,7 +336,7 @@ ah::Region g_regions[] = {
     {Area110_Weights_addr, 8},
     {Area111_Grid_addr, 0x20},
     {Area111_GridStart_addr, at::kArea111GridBytes},
-    {::bof3::Img(at::kArea111CellBytes), 49},
+    {at::kArea111CellBytes.v, 49},
 };
 constexpr unsigned kPointRegion = 9;
 
@@ -360,11 +359,11 @@ void Disturb(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 8) {
     case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 0x19 : v); break;
-    case 1: B(at::kCounter3) = static_cast<unsigned char>(h & 0x100 ? v % 5 : v); break;
+    case 1: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(h & 0x100 ? v % 5 : v); break;
     case 2: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
     case 3: ah::SetPointer(MoveScript_Object_addr, ScriptRecord(h >> 16)); break;
     case 4: ah::SetPointer(AreaW1a_FocusObject_addr, ah::Object(h >> 16)); break;
-    case 5: SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? v % 3 : v); break;
+    case 5: SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), h & 0x100 ? v % 3 : v); break;
     case 6: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 6); break;
     default: B(Field_Kind2Hold_addr) = static_cast<unsigned char>(h & 0x100 ? 0 : v); break;
     }
@@ -449,9 +448,9 @@ void Seed108(unsigned k) {
         break;
     case k108Tail: {
         B(AreaW0c_TailState_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 4, 5, 6, 9, 0, 1, 2, 3, 4, 5, 9, 0xA, 0xFF, 0x80, 7));
-        if (ah::Often()) SetWord(ah::Mem(at::kTailTimer), AH_PICK(1, 1, 2, 0, 0x101));
+        if (ah::Often()) SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), AH_PICK(1, 1, 2, 0, 0x101));
         if (ah::Often()) B(Field_Kind2Hold_addr) = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next());
-        if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(2, 4, 1, 3, 5, 0x82));
+        if (ah::Often()) B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(AH_PICK(2, 4, 1, 3, 5, 0x82));
         if (ah::Often()) ExtraRecord(1)[0x83] = static_cast<unsigned char>(AH_PICK(9, 8, 0xA, 1, 0x89));
         if (ah::Often()) B(Area108_Model_addr) = static_cast<unsigned char>(AH_PICK(0x21, 0, 1, 2, 5, 0x7F, 0x80, 0xFF));
         break;
@@ -547,7 +546,7 @@ void Seed111(unsigned k) {
     case k111WaitBit: {
         const unsigned idx = ah::Next() % 4;
         if (ah::Often()) ah::SetPointer(Field_ActiveMember_addr, ExtraRecord(idx));
-        if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(ah::Often() ? 0x10u << idx : AH_PICK(0x10, 0x20, 0x40, 0x80, 0, 8, 1));
+        if (ah::Often()) B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(ah::Often() ? 0x10u << idx : AH_PICK(0x10, 0x20, 0x40, 0x80, 0, 8, 1));
         break;
     }
     case k111PlaceMember:
@@ -581,7 +580,7 @@ void Seed111(unsigned k) {
     case k111Tail:
         B(AreaW0c_TailState_addr) = static_cast<unsigned char>(
             AH_PICK(1, 3, 5, 7, 0xA, 0x14, 0x15, 0x16, 0x17, 0x18, 0xA, 0x15, 0x16, 0x17, 0x18, 0x16, 0, 2, 0x19, 0xFF, 0x80));
-        if (ah::Often()) SetWord(ah::Mem(at::kTailTimer), AH_PICK(1, 1, 2, 0, 0x101));
+        if (ah::Often()) SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), AH_PICK(1, 1, 2, 0, 0x101));
         if (ah::Often()) B(Field_Kind2Hold_addr) = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next());
         break;
     case k111Arrive:

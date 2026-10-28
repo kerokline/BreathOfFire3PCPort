@@ -33,8 +33,8 @@ constexpr int kRecordBytes = 0x20;
 using EmitFn = void (__cdecl*)(int, int, int, int, int, int, int);
 EmitFn g_emit = Text_EmitGlyph;
 
-const std::uint8_t* ClipPairs() { return reinterpret_cast<const std::uint8_t*>(bof3::addr::Text_ClipPairs); }
-const std::uint8_t* Records() { return reinterpret_cast<const std::uint8_t*>(bof3::addr::Text_Records); }
+const std::uint8_t* ClipPairs() { return reinterpret_cast<const std::uint8_t*>(::bof3::Img(bof3::addr::Text_ClipPairs)); }
+const std::uint8_t* Records() { return reinterpret_cast<const std::uint8_t*>(::bof3::Img(bof3::addr::Text_Records)); }
 
 // The original's answer to a glyph index above 0xA00: `mov dx, 0x1000` /
 // `in al, dx` (0x516C9B), a privileged instruction, which in user mode is a
@@ -64,7 +64,7 @@ constexpr std::uint32_t kPool = 0x803580, kPoolRoom = 0x8000;
 constexpr unsigned short kButtonAreas[] = {8, 30, 68, 75, 89, 111, 121, 129, 135};
 // 0x461C00's six strings, circle, cross, triangle, square, L1, R1: the
 // Config cell's stand-ins, the set the colour cue's swap draws from.
-constexpr std::uint32_t kStandIns = 0x66A2FC;
+constexpr ::bof3::image::Va kStandIns{0x66A2FC};
 
 bool InPool(const std::uint8_t* p) {
     const auto a = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p));
@@ -489,7 +489,7 @@ unsigned GlyphIndex(const std::uint8_t* g) {
 // MsgBox_Step (every glyph), from the tail of the area text block, the
 // switch as given. Returns the glyphs drawn.
 unsigned DrawBoth(const std::uint8_t* msg, std::size_t len, bool on, Draw* ds, Draw* mb) {
-    std::uint8_t* const at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(kPool + kPoolRoom - 0x40));
+    std::uint8_t* const at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(::bof3::Img(kPool + kPoolRoom - 0x40)));
     std::memcpy(at, msg, len);
     g_button_text = on ? 1 : 0;
     Text_PenX = 0x10;
@@ -523,7 +523,7 @@ void ButtonTextSelfTest() {
     unsigned char* const saved_packet = Gfx_PacketNext;
     const unsigned short saved_area = Game_AreaNumber;
     static std::uint8_t saved_pool[0x40], prim[0x40];
-    std::uint8_t* const tail = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(kPool + kPoolRoom - 0x40));
+    std::uint8_t* const tail = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(::bof3::Img(kPool + kPoolRoom - 0x40)));
     std::memcpy(saved_pool, tail, sizeof saved_pool);
     Gfx_PacketNext = prim;
     g_emit = &RecordEmit;
@@ -688,7 +688,7 @@ void ButtonText_Arm() {
     // and that draws the blank cell docs/button-dialogue.md 4 accepts.
     bool port = true;
     for (int i = 0; i < 6 && port; ++i) {
-        const auto p = reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(kStandIns))[i];
+        const auto p = reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(kStandIns.v)))[i];
         const auto* s = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(p));
         port = p >= 0x400000u && p < 0x700000u && button_text::IsPortStandIn(s[0]) && s[1] == 0;
         if (!port && g_bt.layer == button_text::Layer::kNone)
@@ -697,7 +697,7 @@ void ButtonText_Arm() {
                         i, (unsigned)p);
     }
     for (int i = 0; i < 6; ++i)
-        g_bt.port[i] = port ? reinterpret_cast<const std::uint8_t* const*>(static_cast<std::uintptr_t>(kStandIns))[i][0]
+        g_bt.port[i] = port ? reinterpret_cast<const std::uint8_t* const*>(static_cast<std::uintptr_t>(::bof3::Img(kStandIns.v)))[i][0]
                             : 0;
     if (!port) bof3::Log("ButtonText  this image holds no port stand-ins at 0x66A2FC (a disc-built image): a layer's "
                          "codes only");

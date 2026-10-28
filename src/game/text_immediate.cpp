@@ -76,13 +76,13 @@ void SelfTest(void* clone) {
     // with strings, restored.
     struct Region { std::uint32_t address, size; std::uint8_t saved[0x400]; };
     static Region regions[] = {
-        {bof3::addr::Text_CurrentName, 16, {}},
-        {CharacterRecords_addr, 4 * kCharacterRecord, {}},
-        {bof3::addr::Text_Records, 4 * kTextRecord, {}},
-        {bof3::addr::MessagePools, 0x400, {}},
+        {::bof3::Img(bof3::addr::Text_CurrentName), 16, {}},
+        {::bof3::Img(CharacterRecords_addr), 4 * kCharacterRecord, {}},
+        {::bof3::Img(bof3::addr::Text_Records), 4 * kTextRecord, {}},
+        {::bof3::Img(bof3::addr::MessagePools), 0x400, {}},
     };
     for (Region& r : regions) std::memcpy(r.saved, At(r.address), r.size);
-    auto* const script = const_cast<std::uint8_t*>(At(bof3::addr::MessagePools));
+    auto* const script = const_cast<std::uint8_t*>(At(::bof3::Img(bof3::addr::MessagePools)));
 
     std::uint32_t rng = 0x165667B1u;
     auto next = [&rng] { rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5; return rng; };
@@ -112,10 +112,10 @@ void SelfTest(void* clone) {
         // Names and records of every length around their counts (9, 9, 0x20,
         // 0x10), so that both ways out of a substitution are taken: the NUL
         // and the count.
-        fill(const_cast<std::uint8_t*>(At(bof3::addr::Text_CurrentName)), 16, static_cast<int>(next() % 14));
+        fill(const_cast<std::uint8_t*>(At(::bof3::Img(bof3::addr::Text_CurrentName))), 16, static_cast<int>(next() % 14));
         for (int i = 0; i < 4; ++i) {
-            fill(const_cast<std::uint8_t*>(At(CharacterRecords_addr)) + i * kCharacterRecord, 16, static_cast<int>(next() % 14));
-            fill(const_cast<std::uint8_t*>(At(bof3::addr::Text_Records)) + i * kTextRecord, kTextRecord, static_cast<int>(next() % 40));
+            fill(const_cast<std::uint8_t*>(At(::bof3::Img(CharacterRecords_addr))) + i * kCharacterRecord, 16, static_cast<int>(next() % 14));
+            fill(const_cast<std::uint8_t*>(At(::bof3::Img(bof3::addr::Text_Records))) + i * kTextRecord, kTextRecord, static_cast<int>(next() % 40));
         }
         const std::uint32_t table = 0x10 + (next() % 8) * 2;
         std::memcpy(script + 4, &table, sizeof table);
@@ -224,10 +224,10 @@ extern "C" const unsigned char* __cdecl Text_DrawImmediate(int x_arg, int y, con
             ++text;
             continue;
         case 0x03:
-            substitute(text, At(bof3::addr::Text_CurrentName), 9);
+            substitute(text, At(::bof3::Img(bof3::addr::Text_CurrentName)), 9);
             continue;
         case 0x04:
-            substitute(text + 1, At(CharacterRecords_addr) + text[1] * kCharacterRecord, 9);
+            substitute(text + 1, At(::bof3::Img(CharacterRecords_addr)) + text[1] * kCharacterRecord, 9);
             continue;
         case 0x05:
             colour = text[1];
@@ -238,12 +238,12 @@ extern "C" const unsigned char* __cdecl Text_DrawImmediate(int x_arg, int y, con
             ++text;
             continue;
         case 0x07:
-            substitute(text + 1, At(bof3::addr::Text_Records) + text[1] * kTextRecord, 0x20);
+            substitute(text + 1, At(::bof3::Img(bof3::addr::Text_Records)) + text[1] * kTextRecord, 0x20);
             continue;
         case 0x08: {
             std::uint32_t table_at;
-            std::memcpy(&table_at, At(bof3::addr::MessagePools) + 4, sizeof table_at);
-            const std::uint8_t* table = At(bof3::addr::MessagePools) + table_at;
+            std::memcpy(&table_at, At(::bof3::Img(bof3::addr::MessagePools)) + 4, sizeof table_at);
+            const std::uint8_t* table = At(::bof3::Img(bof3::addr::MessagePools)) + table_at;
             std::uint16_t off;
             std::memcpy(&off, table + 2 * text[1], sizeof off);
             substitute(text + 1, table + off + 1, 0x10);  // from its SECOND byte: see above

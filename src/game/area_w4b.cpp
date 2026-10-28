@@ -40,10 +40,8 @@ using move_script::Word;
 using U = std::uint32_t;
 
 unsigned char& B(U address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
-unsigned char* Ptr(::bof3::image::Va va) { return Ptr(::bof3::Img(va)); }
 void SetFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 // Effect_Objects record `slot` (0x80 bytes; the slot is not checked, as the
 // originals' `shl 7`).
@@ -55,7 +53,7 @@ std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v)
 // A word in [lo, lo + 3), compared as the originals' `sub; cmp r16, 3; jb`.
 bool In3(std::uint16_t v, unsigned lo) { return static_cast<std::uint16_t>(v - lo) < 3; }
 
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 unsigned char* Story() { return Mem(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 unsigned char Answer() { return B(::bof3::Img(AreaW0c_ChoiceAnswer_addr)); }
 
@@ -268,7 +266,7 @@ void SpawnEffect92(unsigned short y, unsigned char slot29) {
 // Area 170's tail: on counter 3 at `count`, story flag `flag` and
 // Field_ChangeArea(0xAA, x, z, flags), state 30.
 void ChangeIfCounter3(unsigned char count, unsigned flag, int x, int z, unsigned flags) {
-    if (B(at::kCounter3) != count) return;
+    if (B(::bof3::Img(at::kCounter3.v)) != count) return;
     AH_CALL(Flags_Set)(Story(), flag);
     AH_CALL(Field_ChangeArea)(0xAA, x, z, flags);
     B(::bof3::Img(AreaW0c_TailState_addr)) = 0x1E;
@@ -283,10 +281,10 @@ void DropIn(unsigned entry, unsigned char next) {
 // yaw, sign-extended, read after the search), +0x6C, and +9.
 void SpawnEffect13(std::int32_t a, std::int32_t c, unsigned char nine) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    B(at::kScratch) = slot;
+    B(::bof3::Img(at::kScratch.v)) = slot;
     if (slot == 0xFF) return;
     const std::int32_t yaw = static_cast<std::int16_t>(Word(Mem(::bof3::Img(Camera_Angles_addr) + 0x2)));
-    unsigned char* const e = EffectAt(B(at::kScratch));
+    unsigned char* const e = EffectAt(B(::bof3::Img(at::kScratch.v)));
     e[0] = 1;
     e[5] = 0x13;
     rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[0], a);
@@ -375,15 +373,15 @@ extern "C" void __cdecl Area168_Tail59(void) {
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0xB;
         return;
     case 11:
-        if (B(at::kCounter0) != 1) return;
+        if (B(::bof3::Img(at::kCounter0.v)) != 1) return;
         AH_CALL(Sound_PlayEffect)(0x204);
         AH_CALL(Flags_Set)(Story(), 0x91);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0xC;
         return;
     case 12:
-        if (B(at::kCounter0) != 2) return;
+        if (B(::bof3::Img(at::kCounter0.v)) != 2) return;
         AH_CALL(ScriptFlags_Clear40)();
-        B(at::kCounter0) = 0;
+        B(::bof3::Img(at::kCounter0.v)) = 0;
         EndTail();
         return;
     default: return;
@@ -492,13 +490,13 @@ extern "C" void __cdecl Area170_Tail37(void) {
     case 25: DropIn(9, 0x1A); return;
     case 26: ChangeIfCounter3(0x64, 0x57, 0x110000, 0x930000, 0x8B); return;
     case 29:
-        if (B(at::kCounter3) != 0) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0) return;
         Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags | 0x1010);
         AH_CALL(Flags_Clear)(Story(), 0x57);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x35;
         return;
     case 30:
-        if (B(at::kCounter3) != 0) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0) return;
         AH_CALL(Flags_Clear)(Story(), 0x55);
         AH_CALL(Flags_Clear)(Story(), 0x56);
         AH_CALL(Flags_Clear)(Story(), 0x57);
@@ -509,7 +507,7 @@ extern "C" void __cdecl Area170_Tail37(void) {
         // word's low byte - 0xB (read after the search); the timer 0
         const unsigned char slot = AH_CALL(Effect_FindFree)();
         if (slot != 0xFF) {
-            const auto six = static_cast<unsigned char>(B(at::kMessage) - 0xB);
+            const auto six = static_cast<unsigned char>(B(::bof3::Img(at::kMessage.v)) - 0xB);
             unsigned char* const e = EffectAt(slot);
             auto* const tE = rv::As<records::EffectObject>(e);
             e[0] = 1;
@@ -518,7 +516,7 @@ extern "C" void __cdecl Area170_Tail37(void) {
             tE->screen_y = 0x64;
             e[6] = six;
         }
-        SetWord(Mem(at::kTailTimer), 0);
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x29;
         return;
     }
@@ -526,29 +524,29 @@ extern "C" void __cdecl Area170_Tail37(void) {
         // the timer 1: the glide divisor from speed 2, Field_Kind2X / Z a fixed
         // point, an effect of kind 0x13, state 42; then (either way) the timer
         // 0xFF: state 45
-        if (Word(Mem(at::kTailTimer)) == 1) {
+        if (Word(Mem(::bof3::Img(at::kTailTimer.v))) == 1) {
             SetDivisor(::bof3::Img(Field_MoveSpeeds_addr) + 0x2);
             SetLong(Mem(::bof3::Img(Field_Kind2X_addr)), 0x1A0000);
             SetLong(Mem(::bof3::Img(Field_Kind2Z_addr)), 0x910000);
             SpawnEffect13(0, 0, 0x70);
             B(::bof3::Img(AreaW0c_TailState_addr)) = 0x2A;
         }
-        if (Word(Mem(at::kTailTimer)) == 0xFF) B(::bof3::Img(AreaW0c_TailState_addr)) = 0x2D;
+        if (Word(Mem(::bof3::Img(at::kTailTimer.v))) == 0xFF) B(::bof3::Img(AreaW0c_TailState_addr)) = 0x2D;
         return;
     case 42:
         if (Field_Kind2Hold != 0) return;
-        SetWord(Mem(at::kTailTimer), 0x1E);
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0x1E);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x2B;
         return;
     case 43:
-        AddWord(Mem(at::kTailTimer), -1);
-        if (Word(Mem(at::kTailTimer)) != 0) return;
-        SetWord(Mem(at::kTailTimer), 0x1E);
+        AddWord(Mem(::bof3::Img(at::kTailTimer.v)), -1);
+        if (Word(Mem(::bof3::Img(at::kTailTimer.v))) != 0) return;
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0x1E);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x2C;
         return;
     case 44: {
-        AddWord(Mem(at::kTailTimer), -1);
-        if (Word(Mem(at::kTailTimer)) != 0) return;
+        AddWord(Mem(::bof3::Img(at::kTailTimer.v)), -1);
+        if (Word(Mem(::bof3::Img(at::kTailTimer.v))) != 0) return;
         // the glide divisor from speed 3, Field_Kind2X / Z the leader's
         // position, an effect of kind 0x13, state 45
         const unsigned speed = B(::bof3::Img(Field_MoveSpeeds_addr) + 0x3);
@@ -580,7 +578,7 @@ extern "C" void __cdecl Area170_Tail37(void) {
         // its top nibble swapped through Area170_InputSwap
         if (Field_Request != 0) return;
         const std::uint16_t held = Word(Mem(::bof3::Img(Input_Held_addr)));
-        SetWord(Mem(at::kScratch), held);
+        SetWord(Mem(::bof3::Img(at::kScratch.v)), held);
         const unsigned swapped = static_cast<unsigned>(B(::bof3::Img(Area170_InputSwap_addr) + (held >> 12))) << 12;
         SetWord(Mem(::bof3::Img(Input_Held_addr)), (swapped | (held & 0xFFFu)) & 0xFFFFu);
         return;
@@ -794,16 +792,16 @@ extern "C" unsigned char __cdecl Area171_StepHook(long x, long z) {
     if (Cond_ByteFD != 2) return 0;
     const unsigned char flag = AH_CALL(Flags_Test)(Story(), 0x73);
     if (flag != 0) return 0;
-    B(at::kScratch) = flag;
+    B(::bof3::Img(at::kScratch.v)) = flag;
     const auto cx = static_cast<short>(High(x));
     const auto cz = static_cast<short>(High(z));
-    if (AH_CALL(AreaMap_ByteAt)(cx, cz) == 0x89) ++B(at::kScratch);
+    if (AH_CALL(AreaMap_ByteAt)(cx, cz) == 0x89) ++B(::bof3::Img(at::kScratch.v));
     const bool fx = (static_cast<U>(x) & 0xFFFF) != 0;
-    if (fx && AH_CALL(AreaMap_ByteAt)(static_cast<short>(cx + 1), cz) == 0x89) ++B(at::kScratch);
+    if (fx && AH_CALL(AreaMap_ByteAt)(static_cast<short>(cx + 1), cz) == 0x89) ++B(::bof3::Img(at::kScratch.v));
     const bool fz = (static_cast<U>(z) & 0xFFFF) != 0;
-    if (fz && AH_CALL(AreaMap_ByteAt)(cx, static_cast<short>(cz + 1)) == 0x89) ++B(at::kScratch);
-    if (fx && fz && AH_CALL(AreaMap_ByteAt)(static_cast<short>(cx + 1), static_cast<short>(cz + 1)) == 0x89) ++B(at::kScratch);
-    if (B(at::kScratch) != 0) ArmTail(0x30, 0x14);
+    if (fz && AH_CALL(AreaMap_ByteAt)(cx, static_cast<short>(cz + 1)) == 0x89) ++B(::bof3::Img(at::kScratch.v));
+    if (fx && fz && AH_CALL(AreaMap_ByteAt)(static_cast<short>(cx + 1), static_cast<short>(cz + 1)) == 0x89) ++B(::bof3::Img(at::kScratch.v));
+    if (B(::bof3::Img(at::kScratch.v)) != 0) ArmTail(0x30, 0x14);
     return 0;
 }
 
@@ -979,7 +977,7 @@ extern "C" void __cdecl Area172_SlideStep(void) {
 extern "C" void __cdecl Area172_Drift(void) {
     unsigned char* const o = Sprite_Current;
     auto* const tO = rv::As<records::SpriteObject>(o);
-    if (B(at::kCounter0) < 7) {
+    if (B(::bof3::Img(at::kCounter0.v)) < 7) {
         U step = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(::bof3::Img(Area172_DriftSteps_addr) + (o[0xA] & 0xF)))));
         tO->x = static_cast<std::int32_t>(static_cast<U>(tO->x) + (step << 11));
         step = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(::bof3::Img(Area172_DriftSteps_addr) + (o[0xA] & 0xF)))));
@@ -1048,7 +1046,7 @@ extern "C" void __cdecl Area172_Tail35(void) {
         B(::bof3::Img(AreaW0c_TailState_addr)) = 1;
         return;
     case 1:
-        if (B(at::kCounter3) != 0x14) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0x14) return;
         AH_CALL(Flags_Set)(Story(), 0x4E);
         AH_CALL(Field_ChangeArea)(0xAC, 0xA0000, 0x50000, 0x83);
         EndTail();
@@ -1058,7 +1056,7 @@ extern "C" void __cdecl Area172_Tail35(void) {
         B(::bof3::Img(AreaW0c_TailState_addr)) = 6;
         return;
     case 6:
-        if (B(at::kCounter3) != 0x14) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0x14) return;
         AH_CALL(Flags_Set)(Story(), 0x4E);
         AH_CALL(Field_ChangeArea)(0xAC, 0x260000, 0x360000, 0x82);
         EndTail();

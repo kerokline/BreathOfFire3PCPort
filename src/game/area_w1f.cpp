@@ -43,9 +43,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(std::uint32_t address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 void AddWord(unsigned char* p, unsigned v) { SetWord(p, Word(p) + v); }
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 // Field object `index` (Sprite_Objects, 0xA4 bytes); effect record `slot`
 // (Effect_Objects, 0x80 bytes); party record `member` (ObjTrio, 0x14C bytes).
 unsigned char* ObjectAt(unsigned index) { return rv::Bytes(Sprite_Objects) + index * at::kObjectStride; }
@@ -159,7 +158,7 @@ void PlaceRandomObject(std::uint32_t cells, std::uint32_t weights) {
 // phase 2, the move 0, the rhythm row 0; object A made Sprite_Current, its
 // animation 2 ensured, its +0x2A = 1.
 void OpenMoveA() {
-    const unsigned index = B(at::kObjectA);
+    const unsigned index = B(::bof3::Img(at::kObjectA.v));
     B(::bof3::Img(AreaW1f_Phase_addr)) = 2;
     B(::bof3::Img(AreaW1f_Move_addr)) = 0;
     B(::bof3::Img(AreaW1f_Row_addr)) = 0;
@@ -202,9 +201,9 @@ extern "C" void __cdecl Area68_ChoiceMessageA(void) {
     const auto answer = static_cast<signed char>(B(::bof3::Img(AreaW0c_ChoiceAnswer_addr)));
     SetMessage(Word(Mem(static_cast<std::uint32_t>(static_cast<std::int32_t>(::bof3::Img(Area68_ChoiceMessages_addr)) + answer * 2))));
     if (answer == 0)
-        B(at::kCounter0) = 0x14;
+        B(::bof3::Img(at::kCounter0.v)) = 0x14;
     else if (answer == 1)
-        B(at::kCounter0) = 3;
+        B(::bof3::Img(at::kCounter0.v)) = 3;
 }
 
 // original 0x40CF20 (Area68_Choices[1]): the same from the table's second
@@ -213,9 +212,9 @@ extern "C" void __cdecl Area68_ChoiceMessageB(void) {
     const auto answer = static_cast<signed char>(B(::bof3::Img(AreaW0c_ChoiceAnswer_addr)));
     SetMessage(Word(Mem(static_cast<std::uint32_t>(static_cast<std::int32_t>(::bof3::Img(Area68_ChoiceMessages_addr) + 4) + answer * 2))));
     if (answer == 0)
-        B(at::kCounter0) = 0;
+        B(::bof3::Img(at::kCounter0.v)) = 0;
     else if (answer == 1)
-        B(at::kCounter0) = 0xFF;
+        B(::bof3::Img(at::kCounter0.v)) = 0xFF;
 }
 
 // original 0x40CF50 (Area68_Choices[2]): answer not 0: message 0x84 and the
@@ -293,7 +292,7 @@ extern "C" unsigned char __cdecl Area68_Trigger25(unsigned char*, unsigned char*
     const unsigned char index = ObjectIndex(area_harness::Pointer(::bof3::Img(AreaW1a_FocusObject_addr)));
     B(::bof3::Img(AreaW0a_TailKind_addr)) = 4;
     B(::bof3::Img(AreaW0c_TailSub_addr)) = 3;
-    B(at::kCounter3) = index;
+    B(::bof3::Img(at::kCounter3.v)) = index;
     return 0;
 }
 
@@ -322,10 +321,10 @@ extern "C" void __cdecl Area69_GlideStep(void) { GlideStep(::bof3::Img(Area69_Gl
 // Sound_PlayEffect(0x207).
 extern "C" void __cdecl Area71_SpawnEffect3C(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    B(at::kScratch) = slot;
+    B(::bof3::Img(at::kScratch.v)) = slot;
     if (slot == 0xFF) return;
     const unsigned char member = ObjectIndex(Field_ActiveMember);
-    unsigned char* const e = EffectAt(B(at::kScratch));
+    unsigned char* const e = EffectAt(B(::bof3::Img(at::kScratch.v)));
     e[0] = 1;
     e[5] = 0x3C;
     e[0xB] = member;
@@ -336,9 +335,9 @@ extern "C" void __cdecl Area71_SpawnEffect3C(void) {
 // +0 = 1 and kind 0x25, no member, no sound.
 extern "C" void __cdecl Area71_SpawnEffect25(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    B(at::kScratch) = slot;
+    B(::bof3::Img(at::kScratch.v)) = slot;
     if (slot == 0xFF) return;
-    unsigned char* const e = EffectAt(B(at::kScratch));
+    unsigned char* const e = EffectAt(B(::bof3::Img(at::kScratch.v)));
     e[0] = 1;
     e[5] = 0x25;
 }
@@ -455,12 +454,12 @@ extern "C" void __cdecl Area75_ArmTail30(void) {
 extern "C" void __cdecl Area75_MarkObjectB(void) { B(::bof3::Img(AreaW1f_ObjectB_addr)) = ObjectIndex(Field_ActiveMember); }
 
 // original 0x40D820 (choice 5 = handler 3): object A's index, the same way.
-extern "C" void __cdecl Area75_MarkObjectA(void) { B(at::kObjectA) = ObjectIndex(Field_ActiveMember); }
+extern "C" void __cdecl Area75_MarkObjectA(void) { B(::bof3::Img(at::kObjectA.v)) = ObjectIndex(Field_ActiveMember); }
 
 // original 0x40D850 (choice 6 = handler 4): the two effect records' +1 = 2
 // (the other's first).
 extern "C" void __cdecl Area75_ShowEffects(void) {
-    const unsigned other = B(at::kOtherEffect);
+    const unsigned other = B(::bof3::Img(at::kOtherEffect.v));
     const unsigned player = B(::bof3::Img(AreaW1f_PlayerEffect_addr));
     EffectAt(other)[1] = 2;
     EffectAt(player)[1] = 2;
@@ -489,7 +488,7 @@ extern "C" void __cdecl Area75_SpawnFive(void) {
     std::uint32_t op = ::bof3::Img(Area75_SpawnOps_addr);
     for (unsigned char i = 0; i < 5; ++i, op += at::kArea75SpawnOpStride) {
         const unsigned char slot = AH_CALL(Sprite_FindFree)();
-        SetWord(Mem(at::kScratch), slot);
+        SetWord(Mem(::bof3::Img(at::kScratch.v)), slot);
         if (slot == 0xFF) continue;
         AH_CALL(EventOp_0x)(Mem(op));
         const std::int32_t x = tSelf->x;
@@ -545,11 +544,11 @@ extern "C" void __cdecl Area75_FlyStep(void) {
 // script position back by 2.
 extern "C" void __cdecl Area75_DrainEffects(void) {
     const unsigned bit = (Frame_Counter & 3) == 0 ? 1u : 0u;
-    unsigned char* e = EffectAt(B(at::kOtherEffect));
+    unsigned char* e = EffectAt(B(::bof3::Img(at::kOtherEffect.v)));
     rv::Store<std::int32_t>(rv::As<records::EffectWork>(e)->work_0c, static_cast<std::int32_t>(rv::As<records::EffectWork>(e)->work_0c - bit));
     e = EffectAt(B(::bof3::Img(AreaW1f_PlayerEffect_addr)));
     rv::Store<std::int32_t>(rv::As<records::EffectWork>(e)->work_0c, static_cast<std::int32_t>(rv::As<records::EffectWork>(e)->work_0c - bit));
-    if (B(at::kCounter0) < 0x20) AddWord(MoveScript_Object + 0xA, 0xFFFE);
+    if (B(::bof3::Img(at::kCounter0.v)) < 0x20) AddWord(MoveScript_Object + 0xA, 0xFFFE);
 }
 
 // original 0x40DA60 (choice 13 = handler 11): jmp through Area75_FollowStates
@@ -597,7 +596,7 @@ extern "C" void __cdecl Area75_ChoiceStart14(void) {
     }
     SetMessage(0x19);
     B(::bof3::Img(AreaW0c_TailState_addr)) = 0x14;
-    B(at::kCounter0) = 0x15;
+    B(::bof3::Img(at::kCounter0.v)) = 0x15;
 }
 
 // original 0x40DB50 (Area75_Choices[1]): answer 0: message 0xFFFF, the tail
@@ -609,8 +608,8 @@ extern "C" void __cdecl Area75_ChoiceStartF(void) {
     }
     SetMessage(0xFFFF);
     B(::bof3::Img(AreaW0c_TailState_addr)) = 0xF;
-    SetWord(Mem(at::kTailTimer), 0x1E);
-    B(at::kCounter0) = 0x14;
+    SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0x1E);
+    B(::bof3::Img(at::kCounter0.v)) = 0x14;
 }
 
 // original 0x40DB90 (Field_ModeTailKinds[30], armed by Area75_ArmTail30): by
@@ -643,7 +642,7 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         const unsigned char set = AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0x50), 1);
         cl = 3;
         B(::bof3::Img(AreaW0c_TailState_addr)) = cl;
-        B(at::kCounter0) = set != 0 ? 0x13 : 0;
+        B(::bof3::Img(at::kCounter0.v)) = set != 0 ? 0x13 : 0;
         break;
     }
     case 3:
@@ -656,13 +655,13 @@ extern "C" void __cdecl Area75_TailPresses(void) {
     case 4:
         if (Transition_Busy != 0) break;
         cl = 5;
-        B(at::kCounter0) = 1;
+        B(::bof3::Img(at::kCounter0.v)) = 1;
         B(::bof3::Img(AreaW0c_TailState_addr)) = cl;
         break;
     case 5: {
-        if (B(at::kCounter0) != 3) break;
+        if (B(::bof3::Img(at::kCounter0.v)) != 3) break;
         AH_CALL(Area75_ResetPresses)();
-        const unsigned index = B(at::kObjectA);
+        const unsigned index = B(::bof3::Img(at::kObjectA.v));
         B(::bof3::Img(AreaW1f_PressFlags_addr)) = static_cast<unsigned char>(B(::bof3::Img(AreaW1f_PressFlags_addr)) | 8);
         B(::bof3::Img(AreaW1f_Phase_addr)) = 2;
         B(::bof3::Img(AreaW1f_Move_addr)) = 0;
@@ -678,11 +677,11 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         if (Word(Mem(::bof3::Img(AreaW1f_OtherCounter_addr))) > 0x578) break;
         cl = 7;
         B(::bof3::Img(AreaW1f_Phase_addr)) = 0;
-        B(at::kCounter0) = static_cast<unsigned char>(B(at::kCounter0) + 1);
+        B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter0.v)) + 1);
         B(::bof3::Img(AreaW0c_TailState_addr)) = cl;
         break;
     case 7:
-        if (B(at::kCounter0) != 6) break;
+        if (B(::bof3::Img(at::kCounter0.v)) != 6) break;
         cl = 8;
         B(::bof3::Img(AreaW1f_Phase_addr)) = 2;
         B(::bof3::Img(AreaW1f_Move_addr)) = 1;
@@ -692,11 +691,11 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         if (Word(Mem(::bof3::Img(AreaW1f_PlayerCounter_addr))) > 0x578) break;
         cl = 9;
         B(::bof3::Img(AreaW1f_Phase_addr)) = 0;
-        B(at::kCounter0) = static_cast<unsigned char>(B(at::kCounter0) + 1);
+        B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter0.v)) + 1);
         B(::bof3::Img(AreaW0c_TailState_addr)) = cl;
         break;
     case 9: {
-        if (B(at::kCounter0) != 9) break;
+        if (B(::bof3::Img(at::kCounter0.v)) != 9) break;
         AH_CALL(Msg_OpenScript)(0x17);
         const auto flags = static_cast<unsigned char>(B(::bof3::Img(AreaW1f_PressFlags_addr)) | 4);
         cl = 0xA;
@@ -715,24 +714,24 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         if (CounterGap() <= 0x96) break;
         cl = 0xC;
         B(::bof3::Img(AreaW0c_TailState_addr)) = cl;
-        B(at::kCounter0) = static_cast<unsigned char>(B(at::kCounter0) + 1);
+        B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter0.v)) + 1);
         break;
     case 0xC:
         if (Word(Mem(::bof3::Img(AreaW1f_OtherCounter_addr))) > 0x47E) break;
         cl = 0xD;
         B(::bof3::Img(AreaW1f_Phase_addr)) = 0;
-        B(at::kCounter0) = static_cast<unsigned char>(B(at::kCounter0) + 1);
+        B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter0.v)) + 1);
         B(::bof3::Img(AreaW0c_TailState_addr)) = cl;
         break;
     case 0xD:
-        if (B(at::kCounter0) != 0xC) break;
+        if (B(::bof3::Img(at::kCounter0.v)) != 0xC) break;
         AH_CALL(Area75_ResetPresses)();
         cl = 0xE;
         B(::bof3::Img(AreaW0c_TailState_addr)) = cl;
         break;
     case 0xF: {
-        const auto timer = static_cast<std::uint16_t>(Word(Mem(at::kTailTimer)) - 1);
-        SetWord(Mem(at::kTailTimer), timer);
+        const auto timer = static_cast<std::uint16_t>(Word(Mem(::bof3::Img(at::kTailTimer.v))) - 1);
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), timer);
         if (timer != 0) break;
         cl = 4;
         B(::bof3::Img(AreaW0c_TailState_addr)) = cl;
@@ -741,7 +740,7 @@ extern "C" void __cdecl Area75_TailPresses(void) {
     case 0x14: {
         if (Field_Request == 2) break;
         AH_CALL(Area75_ResetPresses)();
-        const unsigned a = B(at::kObjectA);
+        const unsigned a = B(::bof3::Img(at::kObjectA.v));
         B(::bof3::Img(AreaW1f_Phase_addr)) = 2;
         B(::bof3::Img(AreaW1f_Move_addr)) = 0;
         SetWord(Mem(::bof3::Img(AreaW1f_MoveFrames_addr)), 0x78);
@@ -762,7 +761,7 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         cl = B(::bof3::Img(AreaW0c_TailState_addr));
         break;
     case 0x1E: {
-        const unsigned a = B(at::kObjectA);
+        const unsigned a = B(::bof3::Img(at::kObjectA.v));
         cl = 0x1F;
         B(::bof3::Img(AreaW0c_TailState_addr)) = cl;
         AddWord(ObjectAt(a) + 0x8A, 1);
@@ -770,7 +769,7 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         break;
     }
     case 0x1F:
-        if (B(at::kCounter0) != 0x1A) break;
+        if (B(::bof3::Img(at::kCounter0.v)) != 0x1A) break;
         AH_CALL(Transition_Start)(0);
         AH_CALL(Music_FadeOut)(0x20);
         cl = 0x20;
@@ -805,7 +804,7 @@ extern "C" void __cdecl Area75_TailPresses(void) {
         if (Transition_Busy != 0) break;
         Draw_PassFlags = 0x1F;
         AH_CALL(Transition_Start)(1);
-        B(at::kCounter0) = 1;
+        B(::bof3::Img(at::kCounter0.v)) = 1;
         AH_CALL(ScriptFlags_Clear40)();
         cl = 0;
         B(::bof3::Img(AreaW0a_TailKind_addr)) = 0;
@@ -825,7 +824,7 @@ extern "C" int __cdecl Area75_StepHook(long x, long z) {
     if (x > 0x1B0000) return 0;
     if (static_cast<std::uint16_t>((static_cast<std::uint32_t>(z) >> 16) - 0x38) >= 4) return 0;
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kCounter3) = 0xA;
+    B(::bof3::Img(at::kCounter3.v)) = 0xA;
     return 1;
 }
 
@@ -971,7 +970,7 @@ extern "C" void __cdecl Area75_PhaseReached(void) {
     if (Cond_ByteFA != 0xA) return;
     AH_CALL(Flags_Set)(Mem(::bof3::Img(Cond_Flags_addr) + 0x50), 0);
     const unsigned b = B(::bof3::Img(AreaW1f_ObjectB_addr));
-    const unsigned a = B(at::kObjectA);
+    const unsigned a = B(::bof3::Img(at::kObjectA.v));
     B(::bof3::Img(AreaW0a_TailKind_addr)) = 0;
     B(::bof3::Img(AreaW0c_TailState_addr)) = 0;
     B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65) = 0;
@@ -985,7 +984,7 @@ extern "C" void __cdecl Area75_PhaseReached(void) {
     object_a[0x83] = 5;
     tObject_a->script_position = 0;
     AH_CALL(Party_DropIn)(5);
-    B(at::kCounter0) = 0x1E;
+    B(::bof3::Img(at::kCounter0.v)) = 0x1E;
 }
 
 // original 0x40E480 (called by Area75_PhasePlay for moves 0 and 2): the
@@ -1000,8 +999,8 @@ extern "C" void __cdecl Area75_OtherPress(void) {
     AH_CALL(Sound_PlayEffect)(0x202);
     const int r = RandHalf();
     DropCounter(::bof3::Img(AreaW1f_OtherCounter_addr), r);
-    DrainEffect(B(at::kOtherEffect));
-    Sprite_Current = ObjectAt(B(at::kObjectA));
+    DrainEffect(B(::bof3::Img(at::kOtherEffect.v)));
+    Sprite_Current = ObjectAt(B(::bof3::Img(at::kObjectA.v)));
     Sprite_Current[0x4A] = 1;
     AH_CALL(Sprite_ScriptTick)();
 }
@@ -1056,7 +1055,7 @@ extern "C" void __cdecl Area75_DrawCounters(void) {
     const unsigned first = Word(Mem(::bof3::Img(AreaW1f_PlayerCounter_addr)));
     const unsigned color = CounterGap() <= 0x96 ? 0u : 2u;
     if (B(::bof3::Img(AreaW1f_PressFlags_addr)) & 1) return;
-    unsigned char* const text = Mem(at::kTextBuffer);
+    unsigned char* const text = Mem(::bof3::Img(at::kTextBuffer.v));
     const char* const format = reinterpret_cast<const char*>(Mem(::bof3::Img(Area75_CounterFormat_addr)));
     AH_CALL(Area75_DrawWindow)(0x18, 0x20, 0x54, 0x11, 0);
     AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(text), format, static_cast<unsigned char>(first / 100),

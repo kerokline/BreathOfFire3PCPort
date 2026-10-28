@@ -9,6 +9,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 namespace inventory_ops {
@@ -16,46 +18,46 @@ namespace inventory_ops {
 namespace at {
 
 // --- The placement's state (PSX 0x801CE04C..0x801CE0E0) -------------------
-constexpr std::uint32_t kFacing = 0x6BE070;       // u8: the formation's facing 0..3 (0x591F30 sets it)
+constexpr ::bof3::image::Va kFacing{0x6BE070};       // u8: the formation's facing 0..3 (0x591F30 sets it)
 // kPlaced: now FieldHidden_Placed (symbols.toml). u8: enemies placed / reachable, counted in memory
-constexpr std::uint32_t kOrder = 0x6BE074;        // u8 x 3: the members in placing order
-constexpr std::uint32_t kMembers = 0x6BE078;      // 4 bytes per member: +0 placed, +1 wide (its record is 2 or 6)
+constexpr ::bof3::image::Va kOrder{0x6BE074};        // u8 x 3: the members in placing order
+constexpr ::bof3::image::Va kMembers{0x6BE078};      // 4 bytes per member: +0 placed, +1 wide (its record is 2 or 6)
 // kEnemyCount: now FieldHidden_EnemyCount (symbols.toml). u8: the enemies 0x5925A0 chose
-constexpr std::uint32_t kScratchSprite = 0x6BDFF0;   // the sprite 0x591F30 makes Sprite_Current (+0x3C written)
+constexpr ::bof3::image::Va kScratchSprite{0x6BDFF0};   // the sprite 0x591F30 makes Sprite_Current (+0x3C written)
 // kCentreX: now BossSi_CentreX (symbols.toml). i32 16.16: the fight's centre (PSX 0x80143F24)
 // kCentreZ: now BossSi_CentreZ (symbols.toml).
-constexpr std::uint32_t kMemberPos = 0x7E06E0;    // i32 x, z per member (PSX 0x80143F2C)
+constexpr ::bof3::image::Va kMemberPos{0x7E06E0};    // i32 x, z per member (PSX 0x80143F2C)
 // kHeightAvg: now ModeRest_ElevationBase (symbols.toml). i32: the mean ground height, low 5 bits cleared
-constexpr std::uint32_t kEnemies = 0x939F00;      // 12 bytes x 8 (PSX 0x801463D8): +0 active, +1 kind, +4 x, +8 z
+constexpr ::bof3::image::Va kEnemies{0x939F00};      // 12 bytes x 8 (PSX 0x801463D8): +0 active, +1 kind, +4 x, +8 z
 constexpr unsigned kEnemyStride = 12;
-constexpr std::uint32_t kKinds = 0x8C55C8;        // 0x8C bytes per enemy kind: +0x86 its size, +0x87 its margin
+constexpr ::bof3::image::Va kKinds{0x8C55C8};        // 0x8C bytes per enemy kind: +0x86 its size, +0x87 its margin
 constexpr unsigned kKindStride = 0x8C;
-constexpr std::uint32_t kCellMap = 0x8C3D80;      // a nibble per cell, AreaMap_Header's bytes 0 / 1 the extent
+constexpr ::bof3::image::Va kCellMap{0x8C3D80};      // a nibble per cell, AreaMap_Header's bytes 0 / 1 the extent
 
 // --- Read-only tables of the placement (.data) ------------------------------
-constexpr std::uint32_t kPartyOffsets = 0x6698B0;   // i32 x, z; by ((last^2 + formation) * 3 + member)
-constexpr std::uint32_t kEnemyOffsets = 0x669B60;   // i32 x, z; by the enemy count's triangle + placed
-constexpr std::uint32_t kJitter = 0x669AF8;         // s8 x, z pairs, 49 of them, in half cells
-constexpr std::uint32_t kRecentre = 0x669C80;       // i32 x, z, 6 of them: the centre's retries
-constexpr std::uint32_t kCameraOffsets = 0x669CB8;  // s16 x, z per facing
+constexpr ::bof3::image::Va kPartyOffsets{0x6698B0};   // i32 x, z; by ((last^2 + formation) * 3 + member)
+constexpr ::bof3::image::Va kEnemyOffsets{0x669B60};   // i32 x, z; by the enemy count's triangle + placed
+constexpr ::bof3::image::Va kJitter{0x669AF8};         // s8 x, z pairs, 49 of them, in half cells
+constexpr ::bof3::image::Va kRecentre{0x669C80};       // i32 x, z, 6 of them: the centre's retries
+constexpr ::bof3::image::Va kCameraOffsets{0x669CB8};  // s16 x, z per facing
 
 // --- The party and the battle intro -----------------------------------------
-constexpr std::uint32_t kFormation = 0x904060;    // u8: the party's formation (Encounter_PlaceParty's first argument)
+constexpr ::bof3::image::Va kFormation{0x904060};    // u8: the party's formation (Encounter_PlaceParty's first argument)
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml). u8 x 3: the party (event_ops' list)
 // kPartyList2: now Cond_Flags[0xd5] (symbols.toml). u8 x 3: the second list the placement reads
 // kMemberRecord: now Character_IndexById (symbols.toml). u8 per member id: its actor record (symbols.toml's Character_IndexById)
 // kRecords: now CharacterRecords (symbols.toml). the actor records, 0xA4 each (Field_ActorStates is +0x10)
 constexpr unsigned kRecordSize = 0xA4;
-constexpr std::uint32_t kBattleFacing = 0x904AAC; // u8: kFacing, copied by 0x591F30
+constexpr ::bof3::image::Va kBattleFacing{0x904AAC}; // u8: kFacing, copied by 0x591F30
 // kInitiative: now BattlePhases_Initiative (symbols.toml). u8: Encounter_RollInitiative's 0 / 1 / 2
 // kBattleFlags: now EventBattle_Flags (symbols.toml). u8: bit 2 skips the shade steps, bit 4 the script step
-constexpr std::uint32_t kFaceTable = 0x660B3C;    // u8 per facing: the direction the party turns to
-constexpr std::uint32_t kSideSteps = 0x660B1C;    // s8 x, z per facing, in cells
-constexpr std::uint32_t kAlertOffsets = 0x660B24; // u8 x, y per member id: the alert effect's offset
+constexpr ::bof3::image::Va kFaceTable{0x660B3C};    // u8 per facing: the direction the party turns to
+constexpr ::bof3::image::Va kSideSteps{0x660B1C};    // s8 x, z per facing, in cells
+constexpr ::bof3::image::Va kAlertOffsets{0x660B24}; // u8 x, y per member id: the alert effect's offset
 // kShadeSource: now Gfx_ClutStripSource[0xf00] (symbols.toml). Gfx_ClutStripSource row 15: 64 bytes per sprite +5
 // kShadeSaved: now Gfx_ClutStripSource[0xf60] (symbols.toml). the copy three CLUTs on, restored after the fade
 // kShadeClut: now Gfx_ClutStrip[0xf00] (symbols.toml). Gfx_ClutStrip row 15 (event_objs' kShadeClut)
-constexpr std::uint32_t kAnimBuffer = 0x8C5D80;   // the buffer 0x5891C0 is given, 0xA00 bytes
+constexpr ::bof3::image::Va kAnimBuffer{0x8C5D80};   // the buffer 0x5891C0 is given, 0xA00 bytes
 constexpr unsigned kObjStride = 0x14C;            // ObjTrio's stride
 
 }  // namespace at

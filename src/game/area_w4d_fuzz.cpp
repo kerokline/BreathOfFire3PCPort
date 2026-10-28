@@ -156,7 +156,6 @@ const ah::DataTable kTables175[] = {{Area175_GlideStates_addr, at::kArea175Glide
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char& B(U address) { return *ah::Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 unsigned char* EffectRecord(unsigned slot) { return ah::Mem(Effect_Objects_addr + slot % at::kEffectCount * at::kEffectStride); }
 
 // ---- the fuzz's own memory (its region placed at SelfTest) ----
@@ -254,7 +253,7 @@ U FieldResetEffect(const U*, U answer) {
 // MapView_FillCells: tail kind 39 counts its timer down after it.
 U FillCellsEffect(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) move_script::SetWord(ah::Mem(at::kTailTimer), n & 2 ? 1 : n >> 16);
+    if (n & 1) move_script::SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), n & 2 ? 1 : n >> 16);
     return answer;
 }
 // The draw's stand-ins. The link logs the primitive at Gfx_PacketNext (every
@@ -394,8 +393,8 @@ void Disturb(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 11) {
     case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 3 : v); break;
-    case 1: move_script::SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? v % 3 : v); break;
-    case 2: B(at::kCounter0) = v; break;
+    case 1: move_script::SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), h & 0x100 ? v % 3 : v); break;
+    case 2: B(::bof3::Img(at::kCounter0.v)) = v; break;
     case 3: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
     case 4: ah::SetPointer(MoveScript_Object_addr, ScriptRecord(h >> 16)); break;
     case 5: ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(h >> 16)); break;
@@ -537,7 +536,7 @@ void Seed186(unsigned k) {
         static const U kStates[] = {0, 1, 0xA, 0xB, 0, 1, 0xA, 0xB, 2, 5, 9, 0xC, 0xFF, 0x80, 0x7F};
         B(AreaW0c_TailState_addr) = static_cast<unsigned char>(ah::Pick(kStates, sizeof kStates / sizeof kStates[0]));
         if (ah::Often()) move_script::SetLong(ah::Mem(MapView_FocusZ_addr), static_cast<std::int32_t>(AH_PICK(0x4400, 0x6C00, 0x4400, 0x6C00, 0x4401, 0x6BFF, 0x10004400, 0x6200)));
-        if (ah::Often()) move_script::SetWord(ah::Mem(at::kTailTimer), AH_PICK(1, 1, 2, 0, 0x101, 0xFFFF));
+        if (ah::Often()) move_script::SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), AH_PICK(1, 1, 2, 0, 0x101, 0xFFFF));
         break;
     }
     case k186Init:

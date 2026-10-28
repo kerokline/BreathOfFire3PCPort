@@ -46,14 +46,12 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
-inline unsigned char* At(::bof3::image::Va va) { return move_script::At(::bof3::Img(va)); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char* Pointer(U cell) { return At(static_cast<U>(Long(At(cell)))); }
-unsigned char* Pointer(::bof3::image::Va va) { return Pointer(::bof3::Img(va)); }
 // A handler read from a .data table in place, as the originals' `call` /
 // `jmp [index * 4 + table]`: the index is not checked.
 Handler Entry(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(address))))); }
-void SetMessage(unsigned id) { SetWord(At(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(At(::bof3::Img(at::kMessage.v)), id); }
 signed char Choice() { return AreaW0c_ChoiceAnswer; }
 
 // Area 16's own functions another of them calls directly, by their original
@@ -114,7 +112,7 @@ extern "C" void __cdecl Area16_PlaceMessage(void) {
     if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA1) {
         const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
-        for (U a = ::bof3::Img(Area16_PlaceMessages_addr); a < ::bof3::Img(at::kA16PlaceMessagesEnd); a += 0x20, ++row)
+        for (U a = ::bof3::Img(Area16_PlaceMessages_addr); a < ::bof3::Img(at::kA16PlaceMessagesEnd.v); a += 0x20, ++row)
             if (Word(At(a)) == place) break;
         const std::int32_t index = (row << 4) + Cond_ByteFA;
         AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(At(::bof3::Img(Area16_PlaceMessages_addr) + static_cast<U>(index * 2)))));
@@ -125,14 +123,14 @@ extern "C" void __cdecl Area16_PlaceMessage(void) {
         while (!(At(cell)[0] == cx && At(cell)[1] == cz)) cell += 4;
         const unsigned id = At(cell)[3];
         U set = 0;
-        for (U a = ::bof3::Img(Area16_NameSets_addr); a < ::bof3::Img(at::kA16NameSetsEnd); a += 5, ++set)
+        for (U a = ::bof3::Img(Area16_NameSets_addr); a < ::bof3::Img(at::kA16NameSetsEnd.v); a += 5, ++set)
             if (At(a)[0] == id) break;
         const unsigned char* items = At(::bof3::Img(Area16_NameSets_addr) + 1 + set * 5);
-        for (U row = ::bof3::Img(at::kTextRecords); row < ::bof3::Img(at::kTextRecordsEnd); row += 0x20, ++items) {
+        for (U row = ::bof3::Img(at::kTextRecords.v); row < ::bof3::Img(at::kTextRecordsEnd.v); row += 0x20, ++items) {
             const unsigned item = items[0];
             if (item == 0xFF) break;
             unsigned char* const out = At(row);
-            if (At(at::kItemsHeld + item)[0] == 0) {
+            if (At(::bof3::Img(at::kItemsHeld.v) + item)[0] == 0) {
                 SetLong(out, 0x3F3F3F3F);
                 SetLong(out + 4, 0x3F3F3F3F);
                 out[8] = 0;
@@ -416,8 +414,8 @@ extern "C" void __cdecl Area16_DrawFrame(int x, int y) {
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x9C, 0);
     AH_CALL(Gfx_CommitPrim)(1, 0xC);
     AH_AT(DrawSpriteAt, kDrawSprite16)(x, y, 0);
-    const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(at::kLeaderCellX))),
-                                                       static_cast<short>(Word(At(at::kLeaderCellZ))));
+    const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
+                                                       static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v)))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
     if (!withheld1) AH_AT(DrawSpriteAt, kDrawSprite16)(x + 0x30, y, 1);
     world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite16), ::bof3::Img(Area16_Buttons_addr), 6, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000))), x + 0x38, y + 8,
@@ -426,8 +424,8 @@ extern "C" void __cdecl Area16_DrawFrame(int x, int y) {
     if (!withheld2) AH_AT(DrawSpriteAt, kDrawSprite16)(x + 0x30, y + 0x10, 2);
     world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite16), ::bof3::Img(Area16_Buttons_addr), 8, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c))), x + 0x38, y + 0x10,
                           withheld2);
-    bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(at::kLeaderCellX))),
-                                            static_cast<short>(Word(At(at::kLeaderCellZ)))) != 0;
+    bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
+                                            static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v))))) != 0;
     if (!third) third = (Field_ScriptFlags2 & 0x1000) != 0;
     if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
     if (!third) third = (Field_ScriptFlags & 0x4000) != 0;
@@ -470,7 +468,7 @@ extern "C" void __cdecl Area16_DrawHud(int x, int y) {
     if ((Draw_PassFlags & 0x1B) == 0) return;
     AH_AT(DrawSpriteAt, kDrawSprite16)(x, y, 4);
     AH_AT(DrawSpriteAt, kDrawSprite16)(x + 0x80, y, 5);
-    const unsigned char* const text = At(at::kAreaText + (static_cast<U>(Long(At(at::kAreaTextOffset))) & 0xFFFF));
+    const unsigned char* const text = At(::bof3::Img(at::kAreaText.v) + (static_cast<U>(Long(At(::bof3::Img(at::kAreaTextOffset.v)))) & 0xFFFF));
     AH_CALL(Text_DrawAt)(x + 4, y + 4, 0, 0xFF, text);
 }
 
@@ -594,10 +592,10 @@ extern "C" void __cdecl Area16_DrawDrift(void) {
         rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->z_whole, 0xFFF8);
         o = Cur();
     }
-    std::int32_t dx = S16(At(at::kLeaderCellX)) - S16(o + 0x36);
+    std::int32_t dx = S16(At(::bof3::Img(at::kLeaderCellX.v))) - S16(o + 0x36);
     if (dx < 0) dx = -dx;
     if (dx > 0x19) {
-        std::int32_t dz = S16(At(at::kLeaderCellZ)) - S16(o + 0x3A);
+        std::int32_t dz = S16(At(::bof3::Img(at::kLeaderCellZ.v))) - S16(o + 0x3A);
         if (dz < 0) dz = -dz;
         if (dz > 0x19) return;
     }
@@ -684,7 +682,7 @@ extern "C" void __cdecl Area16_DrawDrift(void) {
 // is 0 when Cond_ByteFA is 8, else 2.
 extern "C" void __cdecl Area18_SetRecordByte(void) {
     const unsigned value = Cond_ByteFA == 8 ? 0u : 2u;
-    Pointer(at::kAreaRecords + Game_AreaNumber * 4u)[4] = static_cast<unsigned char>(value);
+    Pointer(::bof3::Img(at::kAreaRecords.v) + Game_AreaNumber * 4u)[4] = static_cast<unsigned char>(value);
 }
 
 // original 0x402CE0 (area 18's handler 0, Area18_Handlers 0x5E6680; PSX
@@ -798,10 +796,10 @@ extern "C" void __cdecl Area21_ChoiceMessage(void) { SetMessage(Word(At(::bof3::
 // points at, 0x12).
 extern "C" void __cdecl Area21_ChoiceTrade(void) {
     if (static_cast<unsigned char>(AreaW0c_ChoiceAnswer) != 0) {
-        const auto count = static_cast<unsigned char>(At(at::kCounter)[0] + 1);
-        At(at::kCounter)[0] = count;
+        const auto count = static_cast<unsigned char>(At(::bof3::Img(at::kCounter.v))[0] + 1);
+        At(::bof3::Img(at::kCounter.v))[0] = count;
         if (count == 8) {
-            At(at::kCounter)[0] = 0;
+            At(::bof3::Img(at::kCounter.v))[0] = 0;
             SetMessage(0x34);
         } else {
             SetMessage(0x31);
@@ -812,13 +810,13 @@ extern "C" void __cdecl Area21_ChoiceTrade(void) {
         SetMessage(0x32);
         return;
     }
-    const unsigned counter = At(at::kCounter)[0];
+    const unsigned counter = At(::bof3::Img(at::kCounter.v))[0];
     const unsigned n = counter != 0 ? (counter + 1) * 10 : 10;
-    AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextRow1)), reinterpret_cast<const char*>(At(at::kFormat)), n);
+    AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kTextRow1.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kFormat.v))), n);
     SetMessage(0x30);
     AH_AT(unsigned char (__cdecl*)(unsigned, unsigned), area_w0b::kMoneyGive)(n, 0);
     AH_AT(unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned), area_w0b::kInventoryTake)(0, 3, 1, 0);
-    AH_CALL(Flags_Set)(Pointer(at::kFlagBase), 0x12);
+    AH_CALL(Flags_Set)(Pointer(::bof3::Img(at::kFlagBase.v)), 0x12);
 }
 
 // ===========================================================================
@@ -831,8 +829,8 @@ namespace {
 void ChoiceSetVar(unsigned char yes, unsigned char no) {
     const signed char choice = Choice();
     SetMessage(0xFFFF);
-    if (choice == 0) At(at::kScriptVar)[0] = yes;
-    else if (choice == 1) At(at::kScriptVar)[0] = no;
+    if (choice == 0) At(::bof3::Img(at::kScriptVar.v))[0] = yes;
+    else if (choice == 1) At(::bof3::Img(at::kScriptVar.v))[0] = no;
 }
 }  // namespace
 
@@ -918,7 +916,7 @@ extern "C" void __cdecl Area25_SpawnEffect(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     at::kFoundSlot = slot;
     if (slot == 0xFF) return;
-    const unsigned count = At(at::kEffectCount)[0];
+    const unsigned count = At(::bof3::Img(at::kEffectCount.v))[0];
     unsigned char* const record = rv::Bytes(Effect_Objects) + static_cast<std::uint32_t>(at::kFoundSlot) * 0x80u;
     record[0] = 1;
     record[5] = 0xB;
@@ -936,15 +934,15 @@ extern "C" void __cdecl Area25_SpawnEffect(void) {
 extern "C" void __cdecl Area26_ChoiceMessage(void) {
     const signed char choice = Choice();
     SetMessage(Word(At(::bof3::Img(Area26_Messages_addr) + static_cast<U>(choice * 2))));
-    if (choice == 0) At(at::kScriptVar)[0] = 0xBE;
-    else if (choice == 1) At(at::kScriptVar)[0] = 0xBF;
+    if (choice == 0) At(::bof3::Img(at::kScriptVar.v))[0] = 0xBE;
+    else if (choice == 1) At(::bof3::Img(at::kScriptVar.v))[0] = 0xBF;
 }
 
 // original 0x4031B0 (area 26's choice 1; PSX 0x801F305C): no message; the variable 8 or 0xF.
 extern "C" void __cdecl Area26_ChoiceSetVar(void) { ChoiceSetVar(8, 0xF); }
 
 namespace {
-unsigned char* FlagRow() { return Pointer(at::kFlagBase); }
+unsigned char* FlagRow() { return Pointer(::bof3::Img(at::kFlagBase.v)); }
 }  // namespace
 
 // original 0x4031E0 (area 26's choice 2 and handler 0; PSX 0x801F309C):

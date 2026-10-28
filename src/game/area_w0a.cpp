@@ -39,7 +39,7 @@ std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret
 // The cursor row as a table index (movsx) and as a test (a byte).
 int CursorRow() { return static_cast<signed char>(Mem(::bof3::Img(AreaW0c_ChoiceAnswer_addr))[0]); }
 unsigned char CursorByte() { return Mem(::bof3::Img(AreaW0c_ChoiceAnswer_addr))[0]; }
-void SetMessage(unsigned v) { SetWord(Mem(at::kMessage), v); }
+void SetMessage(unsigned v) { SetWord(Mem(::bof3::Img(at::kMessage.v)), v); }
 // A u16 of an area's message table by the s8 cursor row, unchecked as the
 // original's (a row outside the table reads its neighbours in the image).
 unsigned MessageAt(std::uint32_t table, int row) {
@@ -108,11 +108,11 @@ extern "C" void __cdecl Area00_ChoiceVars3And6(void) {
     const int row = CursorRow();
     SetMessage(0xFFFF);
     if (row == 0) {
-        Mem(at::kVar3)[0] = 0x14;
-        Mem(at::kVar6)[0] = 0x14;
+        Mem(::bof3::Img(at::kVar3.v))[0] = 0x14;
+        Mem(::bof3::Img(at::kVar6.v))[0] = 0x14;
     } else if (row == 1) {
-        Mem(at::kVar3)[0] = 0x19;
-        Mem(at::kVar6)[0] = 0x19;
+        Mem(::bof3::Img(at::kVar3.v))[0] = 0x19;
+        Mem(::bof3::Img(at::kVar6.v))[0] = 0x19;
     }
 }
 
@@ -121,8 +121,8 @@ extern "C" void __cdecl Area00_ChoiceVars3And6(void) {
 extern "C" void __cdecl Area00_ChoiceVar3(void) {
     const int row = CursorRow();
     SetMessage(0xFFFF);
-    if (row == 0) Mem(at::kVar3)[0] = 0x14;
-    else if (row == 1) Mem(at::kVar3)[0] = 0x19;
+    if (row == 0) Mem(::bof3::Img(at::kVar3.v))[0] = 0x14;
+    else if (row == 1) Mem(::bof3::Img(at::kVar3.v))[0] = 0x19;
 }
 
 // original 0x401070 (area 0's handler 0 and choice 2; PSX 0x801F2C8C):
@@ -146,7 +146,7 @@ extern "C" void __cdecl Area00_MoveFacing(void) {
 // original 0x4010D0 (area 1's handler 0 and choice 2; PSX 0x801F2C88):
 // variable 6 = the index of Field_ActiveMember from Sprite_Objects.
 extern "C" void __cdecl Area01_ActiveMemberToVar6(void) {
-    Mem(at::kVar6)[0] = ObjectIndex(Field_ActiveMember);
+    Mem(::bof3::Img(at::kVar6.v))[0] = ObjectIndex(Field_ActiveMember);
 }
 
 // original 0x401100 (area 1's handler 1 and choice 3; PSX 0x801F2CD4): with
@@ -154,12 +154,12 @@ extern "C" void __cdecl Area01_ActiveMemberToVar6(void) {
 // effect record of kind 0xB: +0 1, +5 0xB, the dword +0x1C 5, +7 3. The slot
 // is kept at 0x903850 and read back from it.
 extern "C" void __cdecl Area01_SpawnEffectB(void) {
-    if (Mem(at::kVar5)[0] <= 6) return;
+    if (Mem(::bof3::Img(at::kVar5.v))[0] <= 6) return;
     if ((Frame_Counter & 7u) != 0) return;
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    Mem(at::kEffectSlot)[0] = slot;
+    Mem(::bof3::Img(at::kEffectSlot.v))[0] = slot;
     if (slot == 0xFF) return;
-    unsigned char* const e = Effect(static_cast<std::uint32_t>(Long(Mem(at::kEffectSlot))));
+    unsigned char* const e = Effect(static_cast<std::uint32_t>(Long(Mem(::bof3::Img(at::kEffectSlot.v)))));
     e[0] = 1;
     e[5] = 0xB;
     rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->work_1c, 5);
@@ -255,8 +255,8 @@ extern "C" void __cdecl Area05_ChoiceMessageB(void) { SetMessage(MessageAt(::bof
 extern "C" void __cdecl Area05_ChoiceVar3At64(void) {
     const int row = CursorRow();
     SetMessage(0xFFFF);
-    if (row == 0) Mem(at::kVar3)[0] = 0x64;
-    else if (row == 1) Mem(at::kVar3)[0] = 0x65;
+    if (row == 0) Mem(::bof3::Img(at::kVar3.v))[0] = 0x64;
+    else if (row == 1) Mem(::bof3::Img(at::kVar3.v))[0] = 0x65;
 }
 
 // original 0x4016A0 (area 5's choice 1, area 10's choice 1): no new message;
@@ -264,8 +264,8 @@ extern "C" void __cdecl Area05_ChoiceVar3At64(void) {
 extern "C" void __cdecl Area05_ChoiceVar3AtC8(void) {
     const int row = CursorRow();
     SetMessage(0xFFFF);
-    if (row == 0) Mem(at::kVar3)[0] = 0xC8;
-    else if (row == 1) Mem(at::kVar3)[0] = 0xC9;
+    if (row == 0) Mem(::bof3::Img(at::kVar3.v))[0] = 0xC8;
+    else if (row == 1) Mem(::bof3::Img(at::kVar3.v))[0] = 0xC9;
 }
 
 // ---- area 7 (descriptor 0x5E0378) --------------------------------------------
@@ -313,8 +313,8 @@ extern "C" void __cdecl Area07_CameraShiftYMore(void) {
 extern "C" void __cdecl Area08_ChoiceMessageVar3(void) {
     const int row = CursorRow();
     SetMessage(MessageAt(::bof3::Img(Area08_ChoiceMessages_addr), row));
-    if (row == 0) Mem(at::kVar3)[0] = 1;
-    else if (row == 1) Mem(at::kVar3)[0] = 0;
+    if (row == 0) Mem(::bof3::Img(at::kVar3.v))[0] = 1;
+    else if (row == 1) Mem(::bof3::Img(at::kVar3.v))[0] = 0;
 }
 
 // original 0x401510 (area 8's handler 0 and choice 1; PSX 0x801F434C): three
@@ -329,14 +329,14 @@ extern "C" void __cdecl Area08_SetCells(void) {
 // Area08_MessageFormat, variable 6 & 0x7F), then Msg_OpenScript 0x54 / 0x56
 // and Field_Request 2; the second then Music_Play(0xA, 8).
 extern "C" void __cdecl Area08_OpenMessage54(void) {
-    AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(Mem(at::kTextRecords)),
-                         reinterpret_cast<const char*>(Mem(at::kArea08MessageFormat)), Mem(at::kVar6)[0] & 0x7F);
+    AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(Mem(::bof3::Img(at::kTextRecords.v))),
+                         reinterpret_cast<const char*>(Mem(::bof3::Img(at::kArea08MessageFormat.v))), Mem(::bof3::Img(at::kVar6.v))[0] & 0x7F);
     AH_CALL(Msg_OpenScript)(0x54);
     Field_Request = 2;
 }
 extern "C" void __cdecl Area08_OpenMessage56(void) {
-    AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(Mem(at::kTextRecords)),
-                         reinterpret_cast<const char*>(Mem(at::kArea08MessageFormat)), Mem(at::kVar6)[0] & 0x7F);
+    AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(Mem(::bof3::Img(at::kTextRecords.v))),
+                         reinterpret_cast<const char*>(Mem(::bof3::Img(at::kArea08MessageFormat.v))), Mem(::bof3::Img(at::kVar6.v))[0] & 0x7F);
     AH_CALL(Msg_OpenScript)(0x56);
     Field_Request = 2;
     AH_CALL(Music_Play)(0xA, 8);
@@ -348,10 +348,10 @@ extern "C" void __cdecl Area08_OpenMessage56(void) {
 // kept at 0x903850 and read back from it.
 extern "C" void __cdecl Area08_SpawnEffect54(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
-    Mem(at::kEffectSlot)[0] = slot;
+    Mem(::bof3::Img(at::kEffectSlot.v))[0] = slot;
     if (slot == 0xFF) return;
     const unsigned char member = ObjectIndex(Field_ActiveMember);
-    unsigned char* const e = Effect(static_cast<std::uint32_t>(Long(Mem(at::kEffectSlot))));
+    unsigned char* const e = Effect(static_cast<std::uint32_t>(Long(Mem(::bof3::Img(at::kEffectSlot.v)))));
     e[0] = 1;
     e[5] = 0x54;
     e[0xB] = member;
@@ -421,8 +421,8 @@ extern "C" void __cdecl Area12_WaitFlagE(void) {
 extern "C" void __cdecl Area13_ChoiceMessageVar3(void) {
     const int row = CursorRow();
     SetMessage(MessageAt(::bof3::Img(Area13_ChoiceMessages_addr), row));
-    if (row == 0) Mem(at::kVar3)[0] = 0xA;
-    else if (row == 1) Mem(at::kVar3)[0] = 0x14;
+    if (row == 0) Mem(::bof3::Img(at::kVar3.v))[0] = 0xA;
+    else if (row == 1) Mem(::bof3::Img(at::kVar3.v))[0] = 0x14;
 }
 
 // original 0x401890 (area 13's handler 0 and choice 1; PSX 0x801F2C54): four

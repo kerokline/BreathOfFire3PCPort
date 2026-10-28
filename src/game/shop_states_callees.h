@@ -10,6 +10,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 namespace shop_states {
@@ -19,18 +21,18 @@ using U = std::uint32_t;
 namespace at {
 
 // The menu state block 0x929F00 (docs/menu-screens.md), as the shop mode uses it.
-constexpr U kState = 0x929F00;         // u8: the mode's state, ShopMode_States' index
-constexpr U kStep = 0x929F01;          // u8: the inn's step, Inn_Steps' index
-constexpr U kSub = 0x929F02;           // u8: the step's state (the three state tables' index)
-constexpr U kCount = 0x929F04;         // u8: the menus' frame counter
+constexpr ::bof3::image::Va kState{0x929F00};         // u8: the mode's state, ShopMode_States' index
+constexpr ::bof3::image::Va kStep{0x929F01};          // u8: the inn's step, Inn_Steps' index
+constexpr ::bof3::image::Va kSub{0x929F02};           // u8: the step's state (the three state tables' index)
+constexpr ::bof3::image::Va kCount{0x929F04};         // u8: the menus' frame counter
 // kClear0A: now ShopStates_Clear0A (symbols.toml). u8: cleared by ShopMode_Begin (its reader not read)
 // kAnswer: now FieldS_Answer (symbols.toml). u8: Menu_YesNo's answer, 1 yes
-constexpr U kObject = 0x929F0C;        // s8: the object touched (Sprite_Objects index); 0xFE a save point, 0xFF none
+constexpr ::bof3::image::Va kObject{0x929F0C};        // s8: the object touched (Sprite_Objects index); 0xFE a save point, 0xFF none
 // kSavedObject: now AreaW3c_Load0F (symbols.toml). u8: kObject kept while a forced save point runs
-constexpr U kShopKind = 0x929EC2;      // u8: the state - 2 when no object is touched
-constexpr U kShopNumber = 0x929EC3;    // u8: the object's +0x1C; the inn's night costs ten times it
+constexpr ::bof3::image::Va kShopKind{0x929EC2};      // u8: the state - 2 when no object is touched
+constexpr ::bof3::image::Va kShopNumber{0x929EC3};    // u8: the object's +0x1C; the inn's night costs ten times it
 // kShopRecord: now ShopStates2_ShopList (symbols.toml). u32: 0x658930 + 23 * kShopNumber
-constexpr U kShopRecords = 0x658930;   // 23-byte records, one per shop number
+constexpr ::bof3::image::Va kShopRecords{0x658930};   // 23-byte records, one per shop number
 constexpr U kShopRecordBytes = 23;
 
 // The eight character records (0xA4 bytes from 0x903A70; docs/field-event.md):
@@ -44,27 +46,27 @@ constexpr U kActors = 8;
 // kSpriteObjects: now Sprite_Objects (symbols.toml). Sprite_Objects, 0xA4 bytes each
 constexpr U kSpriteStride = 0xA4;
 constexpr U kSpriteCount = 30;         // to 0x7E01B8
-constexpr U kSpriteCurrent = 0x937F88; // Sprite_Current
+constexpr ::bof3::image::Va kSpriteCurrent{0x937F88}; // Sprite_Current
 // kScriptFlags: now Field_ScriptFlags (symbols.toml). Field_ScriptFlags, u16, bit 8 cleared on the way out
 // kGameStep: now Game_Step (symbols.toml). Game_Step, u16
 // kInputFlags: now Field_InputFlags (symbols.toml). Field_InputFlags, u8, 0x40 forces the save point
 // kArea: now Game_AreaNumber (symbols.toml). Game_AreaNumber, u16
-constexpr U kPressed = 0x7E1BEC;       // Input_Pressed, u16 (the inn's chooser reads it as a dword)
+constexpr ::bof3::image::Va kPressed{0x7E1BEC};       // Input_Pressed, u16 (the inn's chooser reads it as a dword)
 // kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons, u16
 // kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons, u16
 
 // kColour: now Config_WindowColour (symbols.toml). s8: the window colour (Config), a CLUT row
-constexpr U kMsgFlags = 0x7DEE44;      // the text layer's flag word; bit 1 read as "the system message is done"
-constexpr U kText = 0x904BA0;          // the shared print buffer
-constexpr U kFormatD = 0x5E10C0;       // "%d"
+constexpr ::bof3::image::Va kMsgFlags{0x7DEE44};      // the text layer's flag word; bit 1 read as "the system message is done"
+constexpr ::bof3::image::Va kText{0x904BA0};          // the shared print buffer
+constexpr ::bof3::image::Va kFormatD{0x5E10C0};       // "%d"
 // kZenny: now Party_Zenny (symbols.toml). u32: the party's zenny
 // kFade: now Transition_Busy (symbols.toml). Transition_Busy, u16: non-zero while a transition runs
-constexpr U kRepeatLatch = 0x7E01B8;   // u16: Input_AutoRepeat's latch
+constexpr ::bof3::image::Va kRepeatLatch{0x7E01B8};   // u16: Input_AutoRepeat's latch
 // kRepeatTimer: now ItemUse_RepeatTimer (symbols.toml). u16: Input_AutoRepeat's timer
-constexpr U kSlot = 0x9036D4;          // u32: the save cursor, 0..15
-constexpr U kSlotTop = 0x8034D0;       // u32: the first of the three slots shown
+constexpr ::bof3::image::Va kSlot{0x9036D4};          // u32: the save cursor, 0..15
+constexpr ::bof3::image::Va kSlotTop{0x8034D0};       // u32: the first of the three slots shown
 // kInnFlag: now ShopStates_InnFlag (symbols.toml). u8: with kSaveBack clear, FieldSave_End opens message 0xD0 (unread)
-constexpr U kSaveBack = 0x6BC880;      // u8: set by the save menu's state 5 (0x5800D0, R2C's FieldSave_Written)
+constexpr ::bof3::image::Va kSaveBack{0x6BC880};      // u8: set by the save menu's state 5 (0x5800D0, R2C's FieldSave_Written)
 // kChoice: now ShopStates_Choice (symbols.toml). u8: the inn's three-way cursor (the save menu's too)
 // kCancelled: now ShopStates_Cancelled (symbols.toml). u8: the inn's prompt was cancelled
 
@@ -74,7 +76,7 @@ constexpr U kSaveBack = 0x6BC880;      // u8: set by the save menu's state 5 (0x
 // kPromptStates: now InnPrompt_States (symbols.toml). InnPrompt_States, 6, by kSub
 // kNightStates: now InnNight_States (symbols.toml). InnNight_States, 7, by kSub
 // kSaveStates: now FieldSave_States (symbols.toml). FieldSave_States, 9, by kSub
-constexpr U kTablesEnd = 0x663FB8;     // the next table (0x580300's) starts here
+constexpr ::bof3::image::Va kTablesEnd{0x663FB8};     // the next table (0x580300's) starts here
 
 }  // namespace at
 

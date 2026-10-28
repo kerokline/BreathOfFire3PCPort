@@ -39,13 +39,11 @@ using move_script::Word;
 using U = std::uint32_t;
 
 unsigned char& B(U address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
-unsigned char* Ptr(::bof3::image::Va va) { return Ptr(::bof3::Img(va)); }
 unsigned char* Cur() { return Sprite_Current; }
 
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 unsigned char Answer() { return B(::bof3::Img(AreaW0c_ChoiceAnswer_addr)); }
 unsigned char* StoryFlags() { return Mem(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 unsigned char* Row14() { return Mem(::bof3::Img(Cond_Flags_addr) + 0x70); }
@@ -121,7 +119,7 @@ short HeightAt(U x, U z) { return AH_AT(HeightFn, at::kHeightAt)(static_cast<lon
 // Area 189: the pending area change of its walk and exit button:
 // Field_ChangeArea(the area word, x, z, the flags byte) from the four cells.
 void ChangeToPending() {
-    AH_CALL(Field_ChangeArea)(Word(Mem(::bof3::Img(AreaW0b_Place_addr))), Long(Mem(at::kPendingX)), Long(Mem(::bof3::Img(AreaEntry_PendingZ_addr))), B(::bof3::Img(AreaEntry_PendingFlags_addr)));
+    AH_CALL(Field_ChangeArea)(Word(Mem(::bof3::Img(AreaW0b_Place_addr))), Long(Mem(::bof3::Img(at::kPendingX.v))), Long(Mem(::bof3::Img(AreaEntry_PendingZ_addr))), B(::bof3::Img(AreaEntry_PendingFlags_addr)));
 }
 // The walk's facing for the next area: Area189_FacingJitter[Rand() & 3] +
 // the leader's +8, the low nibble (Sprite_Current read after Rand).
@@ -177,11 +175,11 @@ extern "C" void __cdecl Area188_ChoiceByChapter(void) {
     switch (static_cast<signed char>(Answer())) {
     case 0:
         AH_CALL(ScriptFlags_Set40)();
-        B(at::kCounter0) = 0xA;
+        B(::bof3::Img(at::kCounter0.v)) = 0xA;
         return;
     case 1:
         AH_CALL(ScriptFlags_Set40)();
-        B(at::kCounter0) = 5;
+        B(::bof3::Img(at::kCounter0.v)) = 5;
         return;
     default: return;
     }
@@ -313,13 +311,13 @@ extern "C" void __cdecl Area188_Tail43(void) {
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0xC;
         return;
     case 0xC:
-        if (B(at::kCounter3) != 0x28) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0x28) return;
         if (B(::bof3::Img(AreaW0c_TailSub_addr)) == 0) AH_CALL(Field_ChangeArea)(0xBC, 0x330000, 0x470000, 0x87);
         else AH_CALL(Field_ChangeArea)(0xBC, 0x80000, 0x220000, 0x88);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0xD;
         return;
     case 0xD:
-        if (B(at::kCounter3) != 0) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 0) return;
         AH_CALL(ScriptFlags_Clear40)();
         ClearTail3();
         return;
@@ -614,11 +612,11 @@ extern "C" void __cdecl Area189_StepArrive(void) {
         const unsigned char reserve = B(::bof3::Img(Cond_Flags_addr) + 0xcf);
         if (reserve != 0) B(::bof3::Img(Cond_Flags_addr) + 0xcf) = static_cast<unsigned char>(reserve + 8);
         const unsigned char bits = Field_StatusBits;
-        const unsigned char count = B(at::kWalkCount);
+        const unsigned char count = B(::bof3::Img(at::kWalkCount.v));
         Field_StatusBits = static_cast<unsigned char>(bits | 1);
         Cond_ByteFF = 1;
         SetWord(Mem(::bof3::Img(Cond_Flags_addr) + 0xcc), 0);
-        B(at::kWalkCount) = static_cast<unsigned char>(count + 1);
+        B(::bof3::Img(at::kWalkCount.v)) = static_cast<unsigned char>(count + 1);
         AH_CALL(Msg_OpenScript)(6);
         Field_Request = 2;
     }
@@ -708,7 +706,7 @@ extern "C" void __cdecl Area189_StepArrive(void) {
             cur = Cur();
         }
         SetWord(Mem(::bof3::Img(AreaW0b_Place_addr)), 0x7D);
-        SetLong(Mem(at::kPendingX), 0x190000);
+        SetLong(Mem(::bof3::Img(at::kPendingX.v)), 0x190000);
         SetLong(Mem(::bof3::Img(AreaEntry_PendingZ_addr)), 0x190000);
         B(::bof3::Img(AreaEntry_PendingFlags_addr)) = 4;
         JitterFacing();
@@ -748,14 +746,14 @@ extern "C" unsigned char __cdecl Area189_ExitButton(void) {
     B(::bof3::Img(AreaEntry_PendingFlags_addr)) = 4;
     const U place = ::bof3::Img(Area189_ExitPlaces_addr) + e * 3;
     SetWord(Mem(::bof3::Img(AreaW0b_Place_addr)), B(place));
-    SetLong(Mem(at::kPendingX), static_cast<std::int32_t>(static_cast<U>(B(place + 1)) << 16));
+    SetLong(Mem(::bof3::Img(at::kPendingX.v)), static_cast<std::int32_t>(static_cast<U>(B(place + 1)) << 16));
     SetLong(Mem(::bof3::Img(AreaEntry_PendingZ_addr)), static_cast<std::int32_t>(static_cast<U>(B(place + 2)) << 16));
     const unsigned char* const cur = Cur();
     SetLong(Mem(::bof3::Img(AreaW2d_ReturnPoint_addr)), rv::As<records::SpriteHead>(cur)->x);
     SetLong(Mem(::bof3::Img(AreaW4d_ReturnZ_addr)), rv::As<records::SpriteHead>(cur)->z);
-    const unsigned char saved = B(at::kSavedCount);
+    const unsigned char saved = B(::bof3::Img(at::kSavedCount.v));
     SetWord(Mem(::bof3::Img(AreaW4d_ReturnArea_addr)), Game_AreaNumber);
-    B(at::kSavedCount) = static_cast<unsigned char>(saved + 1);
+    B(::bof3::Img(at::kSavedCount.v)) = static_cast<unsigned char>(saved + 1);
     JitterFacing();
     ChangeToPending();
     return 1;
@@ -965,12 +963,12 @@ extern "C" void __cdecl Area191_Tail53(void) {
     case 4: {
         if (AH_CALL(Sound_StreamDone)() == 0) return;
         AH_CALL(Flags_Set)(StoryFlags(), 0x82);
-        const unsigned char count = B(at::kWalkCount);
+        const unsigned char count = B(::bof3::Img(at::kWalkCount.v));
         const unsigned char bits = Field_StatusBits;
         SetWord(Mem(::bof3::Img(Cond_Flags_addr) + 0xcc), 0);
         B(::bof3::Img(Area189_StepsSinceEvent_addr)) = 0;
         B(::bof3::Img(Area189_EventsInRow_addr)) = 0;
-        B(at::kWalkCount) = static_cast<unsigned char>(count + 1);
+        B(::bof3::Img(at::kWalkCount.v)) = static_cast<unsigned char>(count + 1);
         Field_StatusBits = static_cast<unsigned char>(bits | 1);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0xA;
         return;
@@ -980,7 +978,7 @@ extern "C" void __cdecl Area191_Tail53(void) {
         AH_CALL(ScriptFlags_Clear40)();
         AH_CALL(Field_ChangeArea)(Word(Mem(::bof3::Img(AreaW4d_ReturnArea_addr))), Long(Mem(::bof3::Img(AreaW2d_ReturnPoint_addr))), Long(Mem(::bof3::Img(AreaW4d_ReturnZ_addr))), 4);
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 | 0x40);
-        B(at::kSavedCount) = 0;
+        B(::bof3::Img(at::kSavedCount.v)) = 0;
         AH_CALL(Flags_Clear)(StoryFlags(), 0x77);
         B(::bof3::Img(AreaW0a_TailKind_addr)) = 0;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0;
@@ -996,7 +994,7 @@ extern "C" void __cdecl Area191_Tail53(void) {
         AH_CALL(ScriptFlags_Clear40)();
         AH_CALL(Field_ChangeArea)(0x96, 0x180000, 0x300000, 1);
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 | 0x40);
-        B(at::kSavedCount) = 0;
+        B(::bof3::Img(at::kSavedCount.v)) = 0;
         AH_CALL(Flags_Clear)(StoryFlags(), 0x77);
         const unsigned char bits = Field_StatusBits;
         B(::bof3::Img(AreaW0a_TailKind_addr)) = 0;
@@ -1045,7 +1043,7 @@ extern "C" unsigned short __cdecl Area191_TalkMessage(unsigned who) {
         if (i >= 5) break;
     }
     auto a = static_cast<unsigned char>(i * 9);
-    unsigned char b = B(at::kWalkCount);
+    unsigned char b = B(::bof3::Img(at::kWalkCount.v));
     if (b > 8) b = 8;
     const unsigned char c = B(::bof3::Img(Field_ActorStates_addr) + 0xe + Character_IndexById[key] * at::kCharStride);
     if (Test(Row14(), 0xA)) return AH_CALL(Area191_TalkMessageB)(a, who, b, c);
@@ -1082,13 +1080,13 @@ extern "C" void __cdecl Area191_Init(void) {
     if (Test(StoryFlags(), 0x77)) return;
     unsigned char k;
     if (!Test(Row14(), 0xA)) {
-        k = level >= 9 ? 2 : level >= 5 ? 1 : static_cast<unsigned char>(B(at::kWalkCount) >= 5);
+        k = level >= 9 ? 2 : level >= 5 ? 1 : static_cast<unsigned char>(B(::bof3::Img(at::kWalkCount.v)) >= 5);
     } else {
-        k = level >= 5 ? 2 : static_cast<unsigned char>(B(at::kWalkCount) >= 5);
+        k = level >= 5 ? 2 : static_cast<unsigned char>(B(::bof3::Img(at::kWalkCount.v)) >= 5);
     }
     for (unsigned n = 0; n < 6; ++n) {
         const unsigned char slot = AH_CALL(Sprite_FindFree)();
-        SetWord(Mem(at::kDamageScratch), slot);
+        SetWord(Mem(::bof3::Img(at::kDamageScratch.v)), slot);
         if (slot == 0xFF) continue;
         const U list = static_cast<U>(Long(Mem(::bof3::Img(Area191_ObjectLists_addr) + k * 4u)));
         AH_CALL(EventOp_0x)(Mem(list + n * at::kEventOpRecord));
@@ -1100,12 +1098,12 @@ extern "C" void __cdecl Area191_Init(void) {
 // Field_StatusBits bit 0; a tail jump to Effect_Release.
 extern "C" void __cdecl Area191_Kind18Flag77(void) {
     if (!Test(StoryFlags(), 0x77)) return;
-    const unsigned char count = B(at::kWalkCount);
+    const unsigned char count = B(::bof3::Img(at::kWalkCount.v));
     SetWord(Mem(::bof3::Img(Cond_Flags_addr) + 0xcc), 0);
     B(::bof3::Img(Area189_StepsSinceEvent_addr)) = 0;
     B(::bof3::Img(Area189_EventsInRow_addr)) = 0;
     const unsigned char bits = Field_StatusBits;
-    B(at::kWalkCount) = static_cast<unsigned char>(count + 1);
+    B(::bof3::Img(at::kWalkCount.v)) = static_cast<unsigned char>(count + 1);
     Field_StatusBits = static_cast<unsigned char>(bits | 1);
     AH_CALL(Effect_Release)();
 }

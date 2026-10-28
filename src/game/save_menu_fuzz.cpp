@@ -116,7 +116,7 @@ void DefineRegions() {
     g_regions[rChoice] = {0x6BC880, 0x40};
     g_regions[rMusicBuf] = {0x7DE3C0, 0xC};
     g_regions[rDatNames] = {Dat_FileNames_addr, 0x40};
-    g_regions[rStreamTables] = {at::kStreamTables, 0x50};
+    g_regions[rStreamTables] = {at::kStreamTables.v, 0x50};
     g_regions[rPacketNext] = {Gfx_PacketNext_addr, 4};
     g_regions[rPrim] = {Addr(g_prim), kPrimBytes};
     g_regions[rHeap] = {Addr(g_heap), kHeapBytes};
@@ -166,7 +166,7 @@ void DisturbFlow() {
     case 0: PutByte(SaveMenu_FlowState_addr, h >> 8); break;
     case 1: PutByte(FieldS_Answer_addr, (h >> 8) & 1); break;
     case 2: PutLong(Rest2c_Slot_addr, (h >> 8) % 20); break;
-    default: PutLong(at::kSlotTop, (h >> 8) % 20); break;
+    default: PutLong(::bof3::Img(at::kSlotTop.v), (h >> 8) % 20); break;
     }
 }
 // Gfx_PacketNext moved within g_prim, as a commit moves it.
@@ -180,7 +180,7 @@ int __cdecl StubFileOpen(const char* path, int a, int b) {
     // The name is compared by its first bytes, which the sprintf stand-in wrote.
     U head = 0;
     std::memcpy(&head, path, 4);
-    Record(0x01, head, static_cast<U>(a), static_cast<U>(b), Addr(path) == at::kPath);
+    Record(0x01, head, static_cast<U>(a), static_cast<U>(b), Addr(path) == ::bof3::Img(at::kPath.v));
     const U h = Hash(0x0E1);
     return (h % 5 == 0) ? -1 : static_cast<int>(h % 16);
 }
@@ -213,7 +213,7 @@ int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
     va_start(ap, fmt);
     const U arg = va_arg(ap, U);
     va_end(ap);
-    Record(0x08, Addr(dst) == at::kPath ? 1 : 0, Addr(fmt), arg);
+    Record(0x08, Addr(dst) == ::bof3::Img(at::kPath.v) ? 1 : 0, Addr(fmt), arg);
     // Something short and deterministic for File_Open to see.
     const U h = Hash(0x5F1) ^ arg;
     for (int i = 0; i < 8; ++i) dst[i] = static_cast<char>('A' + ((h >> (i * 3)) & 15));
@@ -437,9 +437,9 @@ void __cdecl StubDrawFrame() {
 void __cdecl StubDrawRows(unsigned glow) {
     Record(0x3D, glow);
     const U h = Hash(0x3DA);
-    if (h % 4 == 0) PutByte(at::kCounter, h >> 8);
+    if (h % 4 == 0) PutByte(::bof3::Img(at::kCounter.v), h >> 8);
     if (h % 4 == 1) PutByte(SaveMenu_Cursor_addr, h >> 8);
-    if (h % 4 == 2) PutByte(at::kRowBright + (h >> 8) % 3, h >> 16);
+    if (h % 4 == 2) PutByte(::bof3::Img(at::kRowBright.v) + (h >> 8) % 3, h >> 16);
 }
 void __cdecl StubDrawRow(int y, unsigned row, unsigned glow) { Record(0x3E, static_cast<U>(y), row, glow); }
 void __cdecl StubDrawPiece(int x, int y, unsigned index, unsigned slot) {
@@ -853,7 +853,7 @@ void Sane() {
     PutWord(Transition_Busy_addr, Next() % 2 ? 0 : Next());
     PutLong(Rest2c_Slot_addr, Next() % 4 ? Next() % 17 : Next() % 0x100);
     // The first slot shown: its upper bytes reach 0x576960's slot argument.
-    PutLong(at::kSlotTop, Next() % 4 ? Next() % 17 : Next() % 2 ? Next() % 0x1000 : 0u - Next() % 16);
+    PutLong(::bof3::Img(at::kSlotTop.v), Next() % 4 ? Next() % 17 : Next() % 2 ? Next() % 0x1000 : 0u - Next() % 16);
 }
 
 Args Generate(unsigned k) {
@@ -890,7 +890,7 @@ Args Generate(unsigned k) {
         break;
     }
     case kReadFile:
-        x.a[0] = at::kPath;
+        x.a[0] = ::bof3::Img(at::kPath.v);
         break;
     case kListFiles:
         break;
@@ -963,7 +963,7 @@ Args Generate(unsigned k) {
     case kSummaries:
     case kLChoose: {
         // Summaries present or not, directory names with hex digits and their neighbours at byte 7.
-        for (U i = 0; i < 20; ++i) PutByte(at::kSummaries + i * at::kSummaryBytes + 0x15, Next() % 2 ? 0xFF : Next());
+        for (U i = 0; i < 20; ++i) PutByte(::bof3::Img(at::kSummaries.v) + i * at::kSummaryBytes + 0x15, Next() % 2 ? 0xFF : Next());
         for (U i = 0; i < 16; ++i)
             PutByte(Save_Directory_addr + i * at::kDirectoryBytes + 7,
                     Pick({'0', '9', 'A', 'F', 'a', 'f', '/', ':', '@', 'G', '`', 'g', Next(), '0' + Next() % 10,
@@ -971,7 +971,7 @@ Args Generate(unsigned k) {
         x.a[2] = Pick({0, 1, Next()});
         if (k == kLChoose) {
             PutLong(Rest2c_Slot_addr, Pick({0, 1, 2, 14, 15, 16, Next() % 17, 0x100, 0xFFFFFFFF}));
-            PutLong(at::kSlotTop, Pick({0, 1, 13, 14, Next() % 17, Long(Rest2c_Slot_addr), Long(Rest2c_Slot_addr) - 2}));
+            PutLong(::bof3::Img(at::kSlotTop.v), Pick({0, 1, 13, 14, Next() % 17, Long(Rest2c_Slot_addr), Long(Rest2c_Slot_addr) - 2}));
             const U pad = Next() & 0xFFFF;
             PutWord(Input_Pressed_addr, pad);
             PutWord(Field_ConfirmButtons_addr, Next() % 3 ? (pad & 0x20) | 0x20 : Next());
@@ -983,7 +983,7 @@ Args Generate(unsigned k) {
         // Kinds up to 19: ids above 0xFFFF, as 0x446E8B can push.
         const U kind = Next() % 3 ? Next() % 4 : Next() % 20;
         x.a[0] = (kind << 12) | (Next() % 0x100);
-        for (U i = 0; i < 20; ++i) PutLong(at::kStreamTables + i * 4, Addr(g_names));
+        for (U i = 0; i < 20; ++i) PutLong(::bof3::Img(at::kStreamTables.v) + i * 4, Addr(g_names));
         PutLong(SaveMenu_StreamData_addr, Next() % 3 == 0 ? 0 : Next());
         PutLong(Music_FadeCount_addr, Next() % 2 ? 0 : Next());
         break;
@@ -1001,17 +1001,17 @@ Args Generate(unsigned k) {
         PutLong(Field_State_addr, ObjTrio_addr);
         break;
     case kOpenWait:
-        PutByte(at::kCounter, Pick({0, 1, 2, Next()}));
+        PutByte(::bof3::Img(at::kCounter.v), Pick({0, 1, 2, Next()}));
         break;
     case kFadeIn:
-        PutByte(at::kCounter, Pick({0xF0, 0xE0, 0, Next()}));
-        for (U i = 0; i < 3; ++i) PutByte(at::kRowBright + i, Pick({0x37, 0x38, 0x39, 0x40, 0xF8, 0xFF, Next()}));
+        PutByte(::bof3::Img(at::kCounter.v), Pick({0xF0, 0xE0, 0, Next()}));
+        for (U i = 0; i < 3; ++i) PutByte(::bof3::Img(at::kRowBright.v) + i, Pick({0x37, 0x38, 0x39, 0x40, 0xF8, 0xFF, Next()}));
         PutByte(SaveMenu_Cursor_addr, Pick({0, 1, 2, 3, 0xFF, Next()}));
         break;
     case kChoose: {
         for (U i = 0; i < 3; ++i)
-            PutByte(at::kRowBright + i, Pick({0x40, 0x47, 0x48, 0x49, 0x78, 0x79, 0x80, 0x81, 0xF8, 0x05, Next()}));
-        PutByte(at::kMenuFlags, Next() % 4 ? Next() | 2 : Next());
+            PutByte(::bof3::Img(at::kRowBright.v) + i, Pick({0x40, 0x47, 0x48, 0x49, 0x78, 0x79, 0x80, 0x81, 0xF8, 0x05, Next()}));
+        PutByte(::bof3::Img(at::kMenuFlags.v), Next() % 4 ? Next() | 2 : Next());
         U pad = Next() % 3 ? Pick({0x1000, 0x4000, 0x5000, 0x800, 0x20, 0x1020, 0}) : Next();
         pad |= Next() & 0xFFFF0000u;
         PutLong(Input_Pressed_addr, pad);
@@ -1082,8 +1082,8 @@ void SelfTest() {
     static State saved, input, theirs, ours;
     Capture(saved, all);
     U tables[kTableEntries];
-    std::memcpy(tables, At(at::kStepTable), sizeof tables);
-    for (unsigned i = 0; i < kTableEntries; ++i) PutLong(at::kStepTable + i * 4, Addr(reinterpret_cast<const void*>(TargetTable()[i])));
+    std::memcpy(tables, At(::bof3::Img(at::kStepTable.v)), sizeof tables);
+    for (unsigned i = 0; i < kTableEntries; ++i) PutLong(::bof3::Img(at::kStepTable.v) + i * 4, Addr(reinterpret_cast<const void*>(TargetTable()[i])));
 
     const unsigned short cw_saved = ControlWord();
     const Callees g_saved = g;
@@ -1130,7 +1130,7 @@ void SelfTest() {
         }
     }
     g = g_saved;
-    std::memcpy(At(at::kStepTable), tables, sizeof tables);
+    std::memcpy(At(::bof3::Img(at::kStepTable.v)), tables, sizeof tables);
     Apply(saved, all);
     SetControlWord(cw_saved);
     bof3::Log("shadow      save_menu self-test: %u rounds (%u per kind, %u kinds), %u MISMATCHES; calls: file open %u, "

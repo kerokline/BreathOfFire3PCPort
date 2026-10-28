@@ -239,7 +239,7 @@ void Seed(unsigned k) {
         break;
     case 0x401100: {
         // variable 5 around its bound 6, Frame_Counter's low three bits
-        if (ah::Often()) ah::Mem(at::kVar5)[0] = static_cast<unsigned char>(AH_PICK(5, 6, 7, 0, 0xFF, 0x80, 0x7F));
+        if (ah::Often()) ah::Mem(::bof3::Img(at::kVar5.v))[0] = static_cast<unsigned char>(AH_PICK(5, 6, 7, 0, 0xFF, 0x80, 0x7F));
         if (ah::Half()) Frame_Counter &= ~7u;
         else if (ah::Half()) Frame_Counter = (Frame_Counter & ~7u) | static_cast<unsigned>(AH_PICK(1, 2, 4));
         break;
@@ -290,7 +290,7 @@ void Disturb(std::uint32_t h) {
     case 1: ah::SetPointer(MoveScript_Object_addr, Record(v)); break;
     case 2: ah::Mem(AreaW0a_TailKind_addr)[0] = static_cast<unsigned char>(v); break;
     case 3: ah::Mem(AreaW0c_TailSub_addr)[0] = static_cast<unsigned char>(v); break;
-    case 4: ah::Mem(at::kEffectSlot)[0] = static_cast<unsigned char>(v); break;
+    case 4: ah::Mem(::bof3::Img(at::kEffectSlot.v))[0] = static_cast<unsigned char>(v); break;
     case 5: SetWord(ah::Mem(MoveScript_PartyRecords_addr + 0x66), v & 1 ? 0 : v >> 4); break;
     case 6: ah::Mem(Effect_Objects_addr + (v >> 4) % (at::kEffectCount * at::kEffectStride))[0] = static_cast<unsigned char>(v); break;
     case 7: ah::Mem(g_zones15 + (v >> 4) % 0x18)[0] = static_cast<unsigned char>(v); break;

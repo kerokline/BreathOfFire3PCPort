@@ -40,18 +40,16 @@ using move_script::Word;
 using U = std::uint32_t;
 
 unsigned char& B(U address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 void AddLong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(static_cast<U>(Long(p)) + v)); }
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
-unsigned char* Ptr(::bof3::image::Va va) { return Ptr(::bof3::Img(va)); }
 // Effect_Objects record `slot` (0x80 bytes; the slot is not checked, as the
 // originals' `shl 7`).
 unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 // The high word of a 16.16 position, as the hooks read it (a word at +2).
 std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 unsigned char* StoryFlags() { return Mem(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
 unsigned char* FlagRow() { return Ptr(::bof3::Img(Chapter_FlagRow_addr)); }
@@ -289,9 +287,9 @@ extern "C" void __cdecl Area97_TailWaitCounter3(void) {
         B(::bof3::Img(AreaW0c_TailState_addr)) = 1;
         return;
     }
-    if (state != 1 || B(at::kCounter3) != 2) return;
+    if (state != 1 || B(::bof3::Img(at::kCounter3.v)) != 2) return;
     AH_CALL(ScriptFlags_Clear40)();
-    B(at::kCounter3) = 0;
+    B(::bof3::Img(at::kCounter3.v)) = 0;
     B(::bof3::Img(AreaW0a_TailKind_addr)) = 0;
     B(::bof3::Img(AreaW0c_TailState_addr)) = 0;
 }
@@ -307,7 +305,7 @@ extern "C" unsigned char __cdecl Area97_StepHook(long x, long z) {
     if (pose != 0 && pose != 1 && pose != 2) return 0;
     if (AH_CALL(KeyItem_Has)(5) != 0) return 0;
     B(::bof3::Img(AreaW0c_TailState_addr)) = 0;
-    B(at::kCounter3) = 1;
+    B(::bof3::Img(at::kCounter3.v)) = 1;
     B(::bof3::Img(AreaW0a_TailKind_addr)) = 0xD;
     return 1;
 }
@@ -331,13 +329,13 @@ extern "C" unsigned char __cdecl Area97_FlagIfKeyItem5(void) {
 // counter 1 = 0; else the chapter row's flag 0x1A and counter 1 = 1.
 extern "C" void __cdecl Area98_ChoiceFlag9(void) {
     SetMessage(0xFFFF);
-    AH_CALL(Flags_Set)(Mem(at::kFlags904654), 9);
+    AH_CALL(Flags_Set)(Mem(::bof3::Img(at::kFlags904654.v)), 9);
     if (B(::bof3::Img(AreaW0c_ChoiceAnswer_addr)) == 0) {
-        B(at::kCounter1) = 0;
+        B(::bof3::Img(at::kCounter1.v)) = 0;
         return;
     }
     AH_CALL(Flags_Set)(FlagRow(), 0x1A);
-    B(at::kCounter1) = 1;
+    B(::bof3::Img(at::kCounter1.v)) = 1;
 }
 
 // original 0x413A50 (area 98 +0x34[3], [4] = +0x3C[4], [5]; PSX 0x801F5AC8,
@@ -416,7 +414,7 @@ extern "C" unsigned char __cdecl Area98_Trigger44(unsigned char*, unsigned char*
     const auto offset = static_cast<std::int32_t>(static_cast<U>(Long(Mem(::bof3::Img(AreaW1a_FocusObject_addr)))) - Sprite_Objects_addr);
     B(::bof3::Img(AreaW0a_TailKind_addr)) = 4;
     B(::bof3::Img(AreaW0c_TailSub_addr)) = 9;
-    B(at::kCounter3) = static_cast<unsigned char>(offset / 0xA4);
+    B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(offset / 0xA4);
     return 0;
 }
 
@@ -673,22 +671,22 @@ extern "C" void __cdecl Area100_TailEffect9B(void) {
         B(::bof3::Img(AreaW0c_TailState_addr)) = 1;
         return;
     case 1:
-        if (B(at::kCounter0) != 1) return;
+        if (B(::bof3::Img(at::kCounter0.v)) != 1) return;
         SpawnAt46(0x9B);
-        SetWord(Mem(at::kTailTimer), 0x1E);
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0x1E);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 2;
         return;
     case 2: {
-        const auto left = static_cast<std::uint16_t>(Word(Mem(at::kTailTimer)) - 1);
-        SetWord(Mem(at::kTailTimer), left);
+        const auto left = static_cast<std::uint16_t>(Word(Mem(::bof3::Img(at::kTailTimer.v))) - 1);
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), left);
         if (left != 0) return;
-        const unsigned char count = B(at::kCounter0);
+        const unsigned char count = B(::bof3::Img(at::kCounter0.v));
         B(::bof3::Img(AreaW0c_TailState_addr)) = 3;
-        B(at::kCounter0) = static_cast<unsigned char>(count + 1);
+        B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(count + 1);
         return;
     }
     case 3:
-        if (B(at::kCounter0) != 0) return;
+        if (B(::bof3::Img(at::kCounter0.v)) != 0) return;
         AH_CALL(Msg_OpenScript)(3);
         Field_Request = 2;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 4;
@@ -712,7 +710,7 @@ extern "C" unsigned char __cdecl Area100_StepHook(long x, long z) {
     if (static_cast<std::uint16_t>(High(z) - 0x33) >= 3) return 0;
     const unsigned char pose = B(::bof3::Img(ObjTrio_addr) + 0x8);
     if (pose != 0 && pose != 7 && pose != 6) return 0;
-    B(at::kCounter0) = 0;
+    B(::bof3::Img(at::kCounter0.v)) = 0;
     AH_CALL(Party_DropIn)(0);
     return 1;
 }
@@ -813,7 +811,7 @@ extern "C" void __cdecl Area103_SkipIfLeader89(void) {
 // original 0x4145D0 (area 103 +0x3C[2]; PSX 0x801F5778): Field_State +0x89
 // 0: counter 0 + 1.
 extern "C" void __cdecl Area103_CountIfLeader89Zero(void) {
-    if (Field_State[0x89] == 0) B(at::kCounter0) = static_cast<unsigned char>(B(at::kCounter0) + 1);
+    if (Field_State[0x89] == 0) B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter0.v)) + 1);
 }
 
 // original 0x4145F0 (area 103 +0x3C[3]; PSX 0x801F57B4): MapView_Redraw 2,

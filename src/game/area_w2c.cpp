@@ -39,10 +39,8 @@ using move_script::Word;
 using U = std::uint32_t;
 
 unsigned char& B(U address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 // The dword at `cell` as a pointer.
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
-unsigned char* Ptr(::bof3::image::Va va) { return Ptr(::bof3::Img(va)); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
 unsigned char* FlagRow() { return Ptr(::bof3::Img(Chapter_FlagRow_addr)); }
 unsigned char* StoryFlags() { return Mem(::bof3::Img(Cond_Flags_addr) + 0xa0); }
@@ -52,17 +50,17 @@ unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot])
 int Answer() { return static_cast<signed char>(B(::bof3::Img(AreaW0c_ChoiceAnswer_addr))); }
 // A message word of a table indexed by the signed answer (unchecked).
 unsigned MessageAt(U table, int answer) { return Word(Mem(table + static_cast<U>(answer) * 2u)); }
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 
 // The scene start the choices share: ScriptFlags_Set40, then the movement
 // script's four counters 0, the run step byte after MoveScript_Var7 and
 // MoveScript_Var7 itself.
 void RunStep(unsigned char var7, unsigned char step) {
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kCounter0) = 0;
-    B(at::kCounter1) = 0;
-    B(at::kCounter2) = 0;
-    B(at::kCounter3) = 0;
+    B(::bof3::Img(at::kCounter0.v)) = 0;
+    B(::bof3::Img(at::kCounter1.v)) = 0;
+    B(::bof3::Img(at::kCounter2.v)) = 0;
+    B(::bof3::Img(at::kCounter3.v)) = 0;
     B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65) = step;
     B(::bof3::Img(MoveScript_Var7_addr)) = var7;
 }
@@ -368,7 +366,7 @@ extern "C" void __cdecl Area91_State5Shrink(void) {
     --Sprite_Current[0xA];
     unsigned char* object = Sprite_Current;
     if (object[0xA] == 0) {
-        B(at::kCounter3) = 1;
+        B(::bof3::Img(at::kCounter3.v)) = 1;
         object[4] = 0;
         Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
         unsigned char* const member = Field_ActiveMember;
@@ -662,7 +660,7 @@ extern "C" void __cdecl Area94_SpawnKind1AtMember2(void) {
 
 // original 0x4133E0 (+0x3C[7], PSX 0x801F3218; also area 131 +0x3C[8] and area
 // 133 +0x3C[3]): counter 1 = the leader's byte +8.
-extern "C" void __cdecl Area94_Counter1FromLeaderPose(void) { B(at::kCounter1) = B(::bof3::Img(ObjTrio_addr) + 0x8); }
+extern "C" void __cdecl Area94_Counter1FromLeaderPose(void) { B(::bof3::Img(at::kCounter1.v)) = B(::bof3::Img(ObjTrio_addr) + 0x8); }
 
 // original 0x4133F0 (+0x3C[8], PSX 0x801F3230): kind 3 at record 0, args D.
 extern "C" void __cdecl Area94_SpawnKind3AtMember0(void) { SpawnAt(::bof3::Img(ObjTrio_addr), 3, ::bof3::Img(Area94_EffectArgsD_addr), ::bof3::Img(Cond_Flags_addr) + 0xd2); }

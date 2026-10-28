@@ -43,10 +43,8 @@ using move_script::Word;
 using U = std::uint32_t;
 
 unsigned char& B(U address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
-unsigned char* Ptr(::bof3::image::Va va) { return Ptr(::bof3::Img(va)); }
 U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // Effect_Objects record `slot` (0x80 bytes; the slot is not checked, as the
 // originals' `shl 7`).
@@ -58,15 +56,15 @@ unsigned char* Record(unsigned m) { return Mem(::bof3::Img(ObjTrio_addr) + m * a
 // Field object k (Sprite_Objects, 0xA4 bytes).
 unsigned char* ObjectAt(unsigned k) { return rv::Bytes(Sprite_Objects) + k * 0xA4; }
 
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 unsigned char* StoryFlags() { return Mem(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 bool Test(unsigned index) { return AH_CALL(Flags_Test)(StoryFlags(), index) != 0; }
 void Set(unsigned index) { AH_CALL(Flags_Set)(StoryFlags(), index); }
 void Clear(unsigned index) { AH_CALL(Flags_Clear)(StoryFlags(), index); }
 // The tail's word timer counted down (a 16-bit dec): the new value.
 unsigned DecTimer() {
-    const unsigned v = (Word(Mem(at::kTailTimer)) - 1u) & 0xFFFFu;
-    SetWord(Mem(at::kTailTimer), v);
+    const unsigned v = (Word(Mem(::bof3::Img(at::kTailTimer.v))) - 1u) & 0xFFFFu;
+    SetWord(Mem(::bof3::Img(at::kTailTimer.v)), v);
     return v;
 }
 // The movement script's position (MoveScript_Object's word +0xA) moved by v.
@@ -235,13 +233,13 @@ extern "C" void __cdecl Area108_ChoiceArmTailA(void) {
 
 // original 0x416960 (area 108 +0x3C[0] = +0x34[3]; PSX 0x801F43A4): counter 1
 // bits 0 and 1 cleared.
-extern "C" void __cdecl Area108_ClearCounter1Bits0(void) { B(at::kCounter1) = static_cast<unsigned char>(B(at::kCounter1) & 0xFC); }
+extern "C" void __cdecl Area108_ClearCounter1Bits0(void) { B(::bof3::Img(at::kCounter1.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter1.v)) & 0xFC); }
 // original 0x416970 (area 108 +0x3C[1]; PSX 0x801F43C0): bits 2 and 3.
-extern "C" void __cdecl Area108_ClearCounter1Bits2(void) { B(at::kCounter1) = static_cast<unsigned char>(B(at::kCounter1) & 0xF3); }
+extern "C" void __cdecl Area108_ClearCounter1Bits2(void) { B(::bof3::Img(at::kCounter1.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter1.v)) & 0xF3); }
 // original 0x416980 (area 108 +0x3C[2]; PSX 0x801F43DC): bits 4 and 5.
-extern "C" void __cdecl Area108_ClearCounter1Bits4(void) { B(at::kCounter1) = static_cast<unsigned char>(B(at::kCounter1) & 0xCF); }
+extern "C" void __cdecl Area108_ClearCounter1Bits4(void) { B(::bof3::Img(at::kCounter1.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter1.v)) & 0xCF); }
 // original 0x416990 (area 108 +0x3C[3]; PSX 0x801F43F8): bits 6 and 7.
-extern "C" void __cdecl Area108_ClearCounter1Bits6(void) { B(at::kCounter1) = static_cast<unsigned char>(B(at::kCounter1) & 0x3F); }
+extern "C" void __cdecl Area108_ClearCounter1Bits6(void) { B(::bof3::Img(at::kCounter1.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter1.v)) & 0x3F); }
 
 // original 0x4169A0 (area 108 +0x3C[4]; PSX 0x801F4414): the active member's
 // +0x80 bit 0 cleared; unless the leader's member id (+0x89) is 2, nothing
@@ -301,7 +299,7 @@ extern "C" void __cdecl Area108_PlaceScene(void) {
     AH_CALL(ScriptFlags_Set40)();
     B(::bof3::Img(AreaW0a_TailKind_addr)) = 0xC;
     B(::bof3::Img(AreaW0c_TailState_addr)) = 0;
-    SetWord(Mem(at::kTailTimer), 0xF);
+    SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0xF);
 }
 
 // original 0x416D60 (area 108 +0x3C[5]; PSX 0x801F4918): PlaceAtCell over
@@ -489,13 +487,13 @@ extern "C" void __cdecl Area108_TailPlace(void) {
         if (Field_Kind2Hold != 0) return;
         AH_CALL(Kind2_Place)(static_cast<unsigned char>(Extra(1)[0x83] - 1));
         Sprite_Kind2.speed = 4;
-        B(at::kCounter3) = 1;
+        B(::bof3::Img(at::kCounter3.v)) = 1;
         B(::bof3::Img(AreaW0c_TailState_addr)) = static_cast<unsigned char>(B(::bof3::Img(AreaW0c_TailState_addr)) + 1);
         return;
     case 2: {
-        if (B(at::kCounter3) != 2) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 2) return;
         const unsigned char script = Extra(1)[0x83];
-        B(at::kCounter3) = 0;
+        B(::bof3::Img(at::kCounter3.v)) = 0;
         if (script == 9) {
             B(::bof3::Img(AreaW0c_TailState_addr)) = 4;
             return;
@@ -514,7 +512,7 @@ extern "C" void __cdecl Area108_TailPlace(void) {
         AH_CALL(ScriptFlags_Clear40)();
         return;
     case 4: {
-        if (B(at::kCounter3) != 4) return;
+        if (B(::bof3::Img(at::kCounter3.v)) != 4) return;
         const unsigned char slot = AH_CALL(Effect_FindFree)();
         if (slot != 0xFF) {
             unsigned char* const e = EffectAt(slot);
@@ -527,7 +525,7 @@ extern "C" void __cdecl Area108_TailPlace(void) {
             tE->height = static_cast<std::int16_t>(ground);
         }
         B(::bof3::Img(Area108_Model_addr) + 0x3) = static_cast<unsigned char>((B(::bof3::Img(Area108_Model_addr) + 0x3) & 0xF1) | 0x41);
-        SetWord(Mem(at::kTailTimer), 0x1E);
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0x1E);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 5;
         return;
     }
@@ -537,7 +535,7 @@ extern "C" void __cdecl Area108_TailPlace(void) {
             AH_CALL(MoveCmd_TestFB)(0x20, 0x2F);
             B(::bof3::Img(AreaW0c_TailState_addr)) = 9;
             Extra(0)[0] = 0;
-            SetWord(Mem(at::kTailTimer), 0x1E);
+            SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0x1E);
             return;
         }
         if (static_cast<signed char>(B(::bof3::Img(Area108_Model_addr))) > 0) {
@@ -635,9 +633,9 @@ extern "C" void __cdecl Area111_SlideMark(void) {
     AH_CALL(Area111_MarkCells)(x, z, 0x10);
     const unsigned d = (Sprite_Current[8] & 7u) * 2;
     for (;;) {
-        x += static_cast<signed char>(B(at::kCellDelta + d));
+        x += static_cast<signed char>(B(::bof3::Img(at::kCellDelta.v) + d));
         if (static_cast<std::int16_t>(x) < 0 || static_cast<std::int16_t>(x) > 6) break;
-        z += static_cast<signed char>(B(at::kCellDelta + d + 1));
+        z += static_cast<signed char>(B(::bof3::Img(at::kCellDelta.v) + d + 1));
         if (static_cast<std::int16_t>(z) < 0 || static_cast<std::int16_t>(z) > 6) break;
         if (Nibble(static_cast<unsigned>(static_cast<std::int16_t>(x)), static_cast<unsigned>(static_cast<std::int16_t>(z))) != 0) break;
         count = static_cast<unsigned char>(count + 4);
@@ -672,7 +670,7 @@ extern "C" void __cdecl Area111_AttachAtLeaderCell(void) {
 // bits).
 extern "C" void __cdecl Area111_Counter3Bit(void) {
     const unsigned shift = static_cast<U>(rv::Current<records::SpriteObject>()->work_18) & 31;
-    B(at::kCounter3) = static_cast<unsigned char>(0x10u << shift);
+    B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(0x10u << shift);
 }
 
 // original 0x4178B0 (area 111 +0x3C[4]; PSX 0x801F3790): unless counter 3 is
@@ -680,7 +678,7 @@ extern "C" void __cdecl Area111_Counter3Bit(void) {
 // the count masked to 5 bits), the script position - 2.
 extern "C" void __cdecl Area111_WaitMemberBit(void) {
     const unsigned shift = static_cast<U>(ActiveMemberExtra()) & 31;
-    if (static_cast<U>(B(at::kCounter3)) != (0x10u << shift)) ScriptStep(-2);
+    if (static_cast<U>(B(::bof3::Img(at::kCounter3.v))) != (0x10u << shift)) ScriptStep(-2);
 }
 
 // original 0x4178F0 (area 111 +0x3C[5]; PSX 0x801F3808): the key = the active
@@ -726,8 +724,8 @@ extern "C" void __cdecl Area111_AttachAhead(void) {
     const unsigned char k = cur[0x18];
     const unsigned d = (cur[8] & 7u) * 2;
     const unsigned char* const extra = Extra(k);
-    const auto col = static_cast<unsigned char>(Half(S16(extra + 0x36) - 0xB) + B(at::kCellDelta + d));
-    const auto row = static_cast<unsigned char>(Half(S16(extra + 0x3A) - 0xB1) + B(at::kCellDelta + d + 1));
+    const auto col = static_cast<unsigned char>(Half(S16(extra + 0x36) - 0xB) + B(::bof3::Img(at::kCellDelta.v) + d));
+    const auto row = static_cast<unsigned char>(Half(S16(extra + 0x3A) - 0xB1) + B(::bof3::Img(at::kCellDelta.v) + d + 1));
     if (col >= 7 || row >= 7) return;
     const auto block = static_cast<unsigned char>(Nibble(col, row) - 1);
     if (block >= 4) return;
@@ -752,12 +750,12 @@ extern "C" void __cdecl Area111_SlideAhead(void) {
     auto col = static_cast<unsigned char>(static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->x_whole - 0xB) >> 1);
     auto row = static_cast<unsigned char>(static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->z_whole - 0xB1) >> 1);
     const unsigned d = (cur[8] & 7u) * 2;
-    const unsigned char step = B(at::kCellDelta + d);
+    const unsigned char step = B(::bof3::Img(at::kCellDelta.v) + d);
     unsigned char count = 0;
     for (;;) {
         col = static_cast<unsigned char>(col + step);
         if (static_cast<signed char>(col) < 0 || static_cast<signed char>(col) > 6) break;
-        row = static_cast<unsigned char>(row + B(at::kCellDelta + d + 1));
+        row = static_cast<unsigned char>(row + B(::bof3::Img(at::kCellDelta.v) + d + 1));
         if (static_cast<signed char>(row) < 0 || static_cast<signed char>(row) > 6) break;
         if (Nibble(col, row) == 0xF) break;
         count = static_cast<unsigned char>(count + 4);
@@ -789,8 +787,8 @@ extern "C" void __cdecl Area111_StepToExtra(void) {
     U x = static_cast<U>(rv::As<records::SpriteObject>(extra)->x);
     U z = static_cast<U>(rv::As<records::SpriteObject>(extra)->z);
     const unsigned d = (cur[8] & 7u) * 2;
-    const auto sx = static_cast<std::uint16_t>(static_cast<signed char>(B(at::kCellDelta + d)) * 2);
-    const auto sz = static_cast<std::uint16_t>(static_cast<signed char>(B(at::kCellDelta + d + 1)) * 2);
+    const auto sx = static_cast<std::uint16_t>(static_cast<signed char>(B(::bof3::Img(at::kCellDelta.v) + d)) * 2);
+    const auto sz = static_cast<std::uint16_t>(static_cast<signed char>(B(::bof3::Img(at::kCellDelta.v) + d + 1)) * 2);
     x = (x & 0xFFFFu) | static_cast<U>(static_cast<std::uint16_t>((x >> 16) + sx)) << 16;
     z = (z & 0xFFFFu) | static_cast<U>(static_cast<std::uint16_t>((z >> 16) + sz)) << 16;
     const auto dx = static_cast<std::int32_t>(x - static_cast<U>(rv::As<records::SpriteHead>(cur)->x));
@@ -825,7 +823,7 @@ extern "C" void __cdecl Area111_TailGate(void) {
     switch (state) {
     case 1: case 3: case 5: case 7:
         AH_CALL(Party_DropIn)(0);
-        SetWord(Mem(at::kTailTimer), 0xA);
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0xA);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0xA;
         return;
     case 0xA:
@@ -837,7 +835,7 @@ extern "C" void __cdecl Area111_TailGate(void) {
         return;
     case 0x14:
         AH_CALL(MoveCmd_TestFB)(0x11, 0xB7);
-        SetWord(Mem(at::kTailTimer), 0x1E);
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0x1E);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x15;
         return;
     case 0x15:
@@ -857,7 +855,7 @@ extern "C" void __cdecl Area111_TailGate(void) {
         SetByte(0x12, 0xAE, 0xC0);
         AH_CALL(Sound_PlayEffect)(0x205);
         Set(0x28);
-        SetWord(Mem(at::kTailTimer), 0x1E);
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0x1E);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x17;
         return;
     case 0x17:
@@ -870,7 +868,7 @@ extern "C" void __cdecl Area111_TailGate(void) {
         return;
     case 0x18:
         if (Field_Kind2Hold != 0) return;
-        SetWord(Mem(at::kTailTimer), 1);
+        SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 1);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0xA;
         return;
     default: return;
@@ -886,7 +884,7 @@ bool Edge(std::int16_t a, int at, std::int16_t b, unsigned lo, unsigned span, un
     if (a != at) return false;
     if (static_cast<std::uint16_t>(b - lo) >= span) return false;
     const unsigned d = (cur[8] & 7u) * 2 + step_offset;
-    return at - static_cast<signed char>(B(at::kCellDelta + d)) == from;
+    return at - static_cast<signed char>(B(::bof3::Img(at::kCellDelta.v) + d)) == from;
 }
 }  // namespace
 
@@ -1109,7 +1107,7 @@ extern "C" unsigned char __cdecl Area112_StepHook(long x, long z) {
     if (static_cast<std::uint16_t>((static_cast<U>(z) >> 16) - 0x57) >= 3) return 0;
     const unsigned char pose = B(::bof3::Img(ObjTrio_addr) + 0x8);
     if (pose != 0 && pose != 7 && pose != 6) return 0;
-    B(at::kCounter0) = 0;
+    B(::bof3::Img(at::kCounter0.v)) = 0;
     AH_CALL(Party_DropIn)(0);
     return 1;
 }

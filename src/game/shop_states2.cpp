@@ -92,12 +92,12 @@ int S8(U v) { return static_cast<signed char>(static_cast<unsigned char>(v)); }
 // The shop's list (count, then category / item pairs), read afresh.
 unsigned char* List() { return At(ShopStates2_ShopList); }
 // The inventory list of a category: ids (0x656B00) or counts (0x656B14).
-unsigned char* Ids(U kind) { return At(Long(at::kIdLists + kind * 4)); }
-unsigned char* Counts(U kind) { return At(Long(at::kCountLists + kind * 4)); }
+unsigned char* Ids(U kind) { return At(Long(::bof3::Img(at::kIdLists.v) + kind * 4)); }
+unsigned char* Counts(U kind) { return At(Long(::bof3::Img(at::kCountLists.v) + kind * 4)); }
 // The window record of party member i.
-unsigned char* Panel(int i) { return At(WindowRecords_addr + 0x6c + static_cast<U>(i) * at::kMemberStride); }
+unsigned char* Panel(int i) { return At(::bof3::Img(WindowRecords_addr) + 0x6c + static_cast<U>(i) * at::kMemberStride); }
 // Member m's record index: 0x66972C[0x904062[m]], m signed.
-U RecordOf(int member) { return Byte(at::kRecordOf + Byte(at::kPartyList + static_cast<U>(member))); }
+U RecordOf(int member) { return Byte(::bof3::Img(at::kRecordOf.v) + Byte(::bof3::Img(at::kPartyList.v) + static_cast<U>(member))); }
 U PartyCount() { return static_cast<U>(g.party_count(0)) & 0xFF; }
 
 bool Confirmed(U pressed) { return (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed & 0xFFFF) != 0; }
@@ -115,8 +115,8 @@ void SetItemName() { g.text_set(0, 0x10, g.name_ptr(static_cast<std::uint32_t>(S
 // pressed dword flip the answer with sound 0x100. Returns the pressed
 // dword, read again after that sound.
 U YesNoFrame(U help) {
-    auto* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * sizeof(records::WindowRecord));
-    auto* const w0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
+    auto* const win21 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 21 * sizeof(records::WindowRecord));
+    auto* const w0 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 0 * sizeof(records::WindowRecord));
     SetItemName();
     const int answer = FieldS_Answer;
     const U y = static_cast<U>(w0->y);
@@ -124,14 +124,14 @@ U YesNoFrame(U help) {
     if (g_shop_yes_no_hand)   // DIV-0027, amended 2026-10-03: over the line ShopWin_TitleRun draws at x + 7
         rv::Store<U>(win21->x, static_cast<U>(YesNoLayout_ShopHandX(static_cast<short>(static_cast<U>(w0->x)) + 7, answer)));
     else
-        rv::Store<U>(win21->x, Long(0x803164) - static_cast<U>(answer * 36) + 0xE8);
-    U pressed = Long(at::kPressed);
+        rv::Store<U>(win21->x, Long(::bof3::Img(0x803164)) - static_cast<U>(answer * 36) + 0xE8);
+    U pressed = Long(::bof3::Img(at::kPressed.v));
     WindowRecords[21].in_use = 1;
     WindowRecords[21].y = y + 5;
     if ((pressed & 0xA000) != 0) {
         g.sound(0x100);
         FieldS_Answer = static_cast<std::uint32_t>(static_cast<unsigned char>(FieldS_Answer)) ^ 1;
-        pressed = Long(at::kPressed);
+        pressed = Long(::bof3::Img(at::kPressed.v));
     }
     return pressed;
 }
@@ -157,7 +157,7 @@ void StepCount(U repeat, unsigned short sound) {
         c = 1;
         ShopStates2_Count = c;
     }
-    U most = Byte(at::kMaxCount);
+    U most = Byte(::bof3::Img(at::kMaxCount.v));
     if (c > most) {
         c = most;
         ShopStates2_Count = c;
@@ -165,7 +165,7 @@ void StepCount(U repeat, unsigned short sound) {
     if (start != c) {
         g.sound(sound);
         c = ShopStates2_Count;
-        most = Byte(at::kMaxCount);
+        most = Byte(::bof3::Img(at::kMaxCount.v));
     }
     if ((repeat & 0x4000) != 0) {
         c = (c - 10) & 0xFF;
@@ -221,32 +221,32 @@ Handler Entry(U table, U index, const char* who) {
 // the shop proper - ShopTrade_States by 0x929F01: 0 open, 1 buy or sell,
 // 2 buy, 3 sell, 4 close.
 extern "C" void __cdecl ShopTrade_Step(void) {
-    const Handler h = Entry(ShopTrade_States_addr, static_cast<std::uint32_t>(FieldS_State), "ShopTrade_Step");
+    const Handler h = Entry(::bof3::Img(ShopTrade_States_addr), static_cast<std::uint32_t>(FieldS_State), "ShopTrade_Step");
     [[clang::musttail]] return h();
 }
 
 // original 0x5818C0: state 0's two steps by 0x929F02 (0x66412C).
 extern "C" void __cdecl ShopTrade_OpenStep(void) {
-    const Handler h = Entry(ShopTrade_OpenSteps_addr, static_cast<std::uint32_t>(FieldS_Step), "ShopTrade_OpenStep");
+    const Handler h = Entry(::bof3::Img(ShopTrade_OpenSteps_addr), static_cast<std::uint32_t>(FieldS_Step), "ShopTrade_OpenStep");
     [[clang::musttail]] return h();
 }
 
 // original 0x5819B0: state 1's one step by 0x929F02 (0x664134).
 extern "C" void __cdecl ShopTrade_ChoiceStep(void) {
-    const Handler h = Entry(ShopTrade_ChoiceSteps_addr, static_cast<std::uint32_t>(FieldS_Step), "ShopTrade_ChoiceStep");
+    const Handler h = Entry(::bof3::Img(ShopTrade_ChoiceSteps_addr), static_cast<std::uint32_t>(FieldS_Step), "ShopTrade_ChoiceStep");
     [[clang::musttail]] return h();
 }
 
 // original 0x581AE0: state 2's eight steps by 0x929F02 (0x664138).
 extern "C" void __cdecl ShopTrade_BuyStep(void) {
-    const Handler h = Entry(ShopTrade_BuySteps_addr, static_cast<std::uint32_t>(FieldS_Step), "ShopTrade_BuyStep");
+    const Handler h = Entry(::bof3::Img(ShopTrade_BuySteps_addr), static_cast<std::uint32_t>(FieldS_Step), "ShopTrade_BuyStep");
     [[clang::musttail]] return h();
 }
 
 // original 0x582770: state 3's five steps by 0x929F02 (0x664158; 0x66417C
 // holds the same five for the menu kind 0x582EB0 dispatches).
 extern "C" void __cdecl ShopTrade_SellStep(void) {
-    const Handler h = Entry(ShopTrade_SellSteps_addr, static_cast<std::uint32_t>(FieldS_Step), "ShopTrade_SellStep");
+    const Handler h = Entry(::bof3::Img(ShopTrade_SellSteps_addr), static_cast<std::uint32_t>(FieldS_Step), "ShopTrade_SellStep");
     [[clang::musttail]] return h();
 }
 
@@ -268,7 +268,7 @@ extern "C" void __cdecl ShopTrade_SellStep(void) {
 extern "C" void __cdecl ShopTrade_Open(void) {
     g.init_windows();
     const U sub = FieldS_Step;
-    PutByte(at::kCounter, 6);
+    PutByte(::bof3::Img(at::kCounter.v), 6);
     Rest2c_SellFlag = 0;
     FieldS_Step = sub + 1;
     unsigned char* list = List();
@@ -287,21 +287,21 @@ extern "C" void __cdecl ShopTrade_Open(void) {
             if (i >= list[0]) break;
         }
     }
-    g.price_rate(reinterpret_cast<unsigned short*>(At(at::kRate)));
+    g.price_rate(reinterpret_cast<unsigned short*>(At(::bof3::Img(at::kRate.v))));
 }
 
 // original 0x581970: the counter down; at 0 the bytes 0x6BC8AA, 0x6BC8A8,
 // 0x6BC8AB, the counter and 0x929F05 cleared, the state on (read before),
 // the step 0.
 extern "C" void __cdecl ShopTrade_OpenWait(void) {
-    const U c = (Byte(at::kCounter) - 1) & 0xFF;
-    PutByte(at::kCounter, c);
+    const U c = (Byte(::bof3::Img(at::kCounter.v)) - 1) & 0xFF;
+    PutByte(::bof3::Img(at::kCounter.v), c);
     if (c != 0) return;
     const U state = FieldS_State;
     ShopStates2_SellFlag = 0;
     ShopStates2_ByteA8 = 0;
     ShopStates2_Choice = 0;
-    PutByte(at::kCounter, 0);
+    PutByte(::bof3::Img(at::kCounter.v), 0);
     MenuLists_Cursor = 0;
     FieldS_State = state + 1;
     FieldS_Step = 0;
@@ -319,15 +319,15 @@ extern "C" void __cdecl ShopTrade_OpenWait(void) {
 // sound 0x106, the hands off, the three window bytes 0x803163, 0x8031AB,
 // 0x803187 to 1, the counter 5, the state + 3 (close).
 extern "C" void __cdecl ShopTrade_Choice(void) {
-    auto* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * sizeof(records::WindowRecord));
-    auto* const w0 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 0 * sizeof(records::WindowRecord));
-    auto* const w1 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 1 * sizeof(records::WindowRecord));
-    auto* const w2 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 2 * sizeof(records::WindowRecord));
-    auto* const w20 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 20 * sizeof(records::WindowRecord));
+    auto* const win21 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 21 * sizeof(records::WindowRecord));
+    auto* const w0 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 0 * sizeof(records::WindowRecord));
+    auto* const w1 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 1 * sizeof(records::WindowRecord));
+    auto* const w2 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 2 * sizeof(records::WindowRecord));
+    auto* const w20 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 20 * sizeof(records::WindowRecord));
     const int choice = ShopStates2_Choice;
     Window0_Arrows = static_cast<U>(choice + 0x46);
     WindowRecords[21].in_use = 1;
-    const U x = static_cast<U>(choice * 48) + Long(0x8031AC) + 4;
+    const U x = static_cast<U>(choice * 48) + Long(::bof3::Img(0x8031AC)) + 4;
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xA000;
     const U y = static_cast<U>(w2->y) + 4;
     rv::Store<U>(win21->x, x);
@@ -342,7 +342,7 @@ extern "C" void __cdecl ShopTrade_Choice(void) {
         g.sound(0x102);
         const U sell = static_cast<unsigned char>(ShopStates2_Choice);
         const U state = FieldS_State;
-        PutByte(at::kCounter, 5);
+        PutByte(::bof3::Img(at::kCounter.v), 5);
         FieldS_Step = 0;
         FieldS_State = state + (sell == 0 ? 1 : 2);
         return;
@@ -355,7 +355,7 @@ extern "C" void __cdecl ShopTrade_Choice(void) {
         rv::Store<U>(w0->state, 1);
         rv::Store<U>(w2->state, 1);
         rv::Store<U>(w1->state, 1);
-        PutByte(at::kCounter, 5);
+        PutByte(::bof3::Img(at::kCounter.v), 5);
         FieldS_State = state + 3;
     }
 }
@@ -371,15 +371,15 @@ extern "C" void __cdecl ShopTrade_Choice(void) {
 // +3 2 with equipment and 3 without, +0..+2 1 7 7, +0xA 0, +0xB the rate's
 // low byte, +0x20 the list pointer; the cursor 0, the step on.
 extern "C" void __cdecl ShopTrade_BuySetup(void) {
-    auto* const w8 = rv::As<records::ItemListWindow>(At(WindowRecords_addr) + 8 * sizeof(records::WindowRecord));
+    auto* const w8 = rv::As<records::ItemListWindow>(At(::bof3::Img(WindowRecords_addr)) + 8 * sizeof(records::WindowRecord));
     if (Rest2c_SellFlag != 0) {
         U i = 0;
         if (PartyCount() != 0) {
             for (;;) {
                 unsigned char* const w = Panel(static_cast<int>(i));
                 w[0xA] = static_cast<unsigned char>(i);
-                PutWord(0x8031CC + i * at::kMemberStride + 4, 0xFF6A);
-                PutWord(0x8031CC + i * at::kMemberStride + 6, i * 54 + 0x3E);
+                PutWord(::bof3::Img(0x8031CC) + i * at::kMemberStride + 4, 0xFF6A);
+                PutWord(::bof3::Img(0x8031CC) + i * at::kMemberStride + 6, i * 54 + 0x3E);
                 w[0] = 1;
                 w[1] = 7;
                 w[2] = 5;
@@ -392,7 +392,7 @@ extern "C" void __cdecl ShopTrade_BuySetup(void) {
         }
     }
     const U sells = Rest2c_SellFlag;
-    const U rate = Byte(at::kRate);
+    const U rate = Byte(::bof3::Img(at::kRate.v));
     const U list = ShopStates2_ShopList;
     rv::Store<U>(w8->x, 0x140);
     rv::Store<U>(w8->y, 0x3E);
@@ -401,8 +401,8 @@ extern "C" void __cdecl ShopTrade_BuySetup(void) {
     rv::Store<U>(w8->in_use, 1);
     rv::Store<U>(w8->handler, 7);
     rv::Store<U>(w8->kind, 7);
-    PutByte(0x80328A, 0);
-    PutByte(0x80328B, rate);
+    PutByte(::bof3::Img(0x80328A), 0);
+    PutByte(::bof3::Img(0x80328B), rate);
     rv::Store<U>(w8->shop_list, list);
     ShopStates2_Row = 0;
     FieldS_Step = sub + 1;
@@ -432,14 +432,14 @@ extern "C" void __cdecl ShopTrade_BuySetup(void) {
 // As the original has it: Shop_ScalePrice never answers 0, so its divide
 // never faults; ours aborts where the original would fault.
 extern "C" void __cdecl ShopTrade_BuyList(void) {
-    auto* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * sizeof(records::WindowRecord));
-    auto* const w8 = rv::As<records::ItemListWindow>(At(WindowRecords_addr) + 8 * sizeof(records::WindowRecord));
-    auto* const w9 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 9 * sizeof(records::WindowRecord));
+    auto* const win21 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 21 * sizeof(records::WindowRecord));
+    auto* const w8 = rv::As<records::ItemListWindow>(At(::bof3::Img(WindowRecords_addr)) + 8 * sizeof(records::WindowRecord));
+    auto* const w9 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 9 * sizeof(records::WindowRecord));
     const int row = ShopStates2_Row;
     unsigned char* list = List();
     ShopStates2_Kind = list[row * 2 + 1];
     ShopStates2_Item = list[row * 2 + 2];
-    PutByte(0x80328A, 0);
+    PutByte(::bof3::Img(0x80328A), 0);
     U i = 0;
     if (PartyCount() != 0) {
         for (;;) {
@@ -457,10 +457,10 @@ extern "C" void __cdecl ShopTrade_BuyList(void) {
     rv::Store<U>(w9->in_use, 0);
     if (open == 0) {
         const int r = ShopStates2_Row;
-        const U x = Long(0x803284) + 4;
+        const U x = Long(::bof3::Img(0x803284)) + 4;
         WindowRecords[21].in_use = 1;
         rv::Store<U>(win21->x, x);
-        PutLong(0x803474, ShopStates2_ShopList);
+        PutLong(::bof3::Img(0x803474), ShopStates2_ShopList);
         WindowRecords[21].y = static_cast<U>(r * 13) + static_cast<U>(w8->y) + 0xA;
     }
     const U repeat = g.auto_repeat(static_cast<std::uint32_t>(Input_Pressed) & 0x5000);
@@ -488,13 +488,13 @@ extern "C" void __cdecl ShopTrade_BuyList(void) {
         cur = static_cast<unsigned char>(ShopStates2_Row);
     }
     const U p = Input_Pressed;
-    PutByte(0x80328C, cur);
+    PutByte(::bof3::Img(0x80328C), cur);
     if (Confirmed(p)) {
         const int r = S8(cur);
         const U kind = list[r * 2 + 1];
         ShopStates2_Kind = kind;
         const U item = list[r * 2 + 2];
-        const U rate = Word(at::kRate);
+        const U rate = Word(::bof3::Img(at::kRate.v));
         ShopStates2_Item = item;
         ShopStates2_Count = 1;
         const U base = g.base_price(kind, item) & 0xFFFF;
@@ -502,17 +502,17 @@ extern "C" void __cdecl ShopTrade_BuyList(void) {
         const U money = Party_Zenny;
         ShopStates2_UnitPrice = price;
         if (price == 0) bof3::Fatal("ShopTrade_BuyList: Shop_ScalePrice answered 0 - the original divides by it");
-        PutLong(at::kMaxCount, money / price);
+        PutLong(::bof3::Img(at::kMaxCount.v), money / price);
         const U n1 = g.inv_count(static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item), 1);
         const U n2 = g.inv_count(static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item), 0);
         const U held = (n1 + n2) & 0xFF;
         if (held > 0x63) {
             ShopStates2_Count = 0;
-            PutLong(at::kMaxCount, 0);
+            PutLong(::bof3::Img(at::kMaxCount.v), 0);
         } else {
             const U room = (0x63 - held) & 0xFF;
-            if (Long(at::kMaxCount) > room) {
-                PutLong(at::kMaxCount, room);
+            if (Long(::bof3::Img(at::kMaxCount.v)) > room) {
+                PutLong(::bof3::Img(at::kMaxCount.v), room);
                 ShopStates2_Count = room != 0 ? 1 : 0;
             }
         }
@@ -549,25 +549,25 @@ extern "C" void __cdecl ShopTrade_BuyList(void) {
 // confirm: a count not 0 - sound 0x103, the answer 1, the step on; 0 - sound
 // 0x107. Cancel: sound 0x106, the step back.
 extern "C" void __cdecl ShopTrade_BuyCount(void) {
-    auto* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * sizeof(records::WindowRecord));
-    auto* const w8 = rv::As<records::ItemListWindow>(At(WindowRecords_addr) + 8 * sizeof(records::WindowRecord));
-    auto* const w9 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 9 * sizeof(records::WindowRecord));
+    auto* const win21 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 21 * sizeof(records::WindowRecord));
+    auto* const w8 = rv::As<records::ItemListWindow>(At(::bof3::Img(WindowRecords_addr)) + 8 * sizeof(records::WindowRecord));
+    auto* const w9 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 9 * sizeof(records::WindowRecord));
     const U y = static_cast<U>(w8->y);
     rv::Store<U>(w9->x, static_cast<U>(w8->x));
-    const U rate = Byte(at::kRate);
+    const U rate = Byte(::bof3::Img(at::kRate.v));
     rv::Store<U>(w9->y, y + 0x2D);
-    PutByte(0x8032AF, static_cast<std::uint32_t>(static_cast<unsigned char>(ShopStates2_Row)));
-    PutLong(0x8032C4, ShopStates2_ShopList);
-    PutByte(0x8032AE, rate);
+    PutByte(::bof3::Img(0x8032AF), static_cast<std::uint32_t>(static_cast<unsigned char>(ShopStates2_Row)));
+    PutLong(::bof3::Img(0x8032C4), ShopStates2_ShopList);
+    PutByte(::bof3::Img(0x8032AE), rate);
     const U count = ShopStates2_Count;
-    PutByte(0x8032B0, count);
-    const U x = Long(0x803284) + 4;
+    PutByte(::bof3::Img(0x8032B0), count);
+    const U x = Long(::bof3::Img(0x803284)) + 4;
     rv::Store<U>(w9->in_use, 1);
     rv::Store<U>(w9->handler, 7);
     Window0_Arrows = count != 0 ? 0x48 : 0x4E;
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xF000;
     rv::Store<U>(w9->kind, 8);
-    PutByte(0x80328A, 1);
+    PutByte(::bof3::Img(0x80328A), 1);
     rv::Store<U>(win21->x, x);
     WindowRecords[21].y = y + 0x33;
     StepCount(g.auto_repeat(pressed), 0x100);
@@ -601,7 +601,7 @@ extern "C" void __cdecl ShopTrade_BuyConfirm(void) {
     if (Confirmed(p)) {
         if (static_cast<unsigned char>(FieldS_Answer) != 0) {
             g.sound(0x104);
-            const U count = Long(at::kCount);
+            const U count = Long(::bof3::Img(at::kCount.v));
             Party_Zenny = Party_Zenny - (count & 0xFF) * ShopStates2_UnitPrice;
             g.inv_add(static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item), count);
             const U icon = g.icon_kind(static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item)) & 0xFF;
@@ -656,15 +656,15 @@ extern "C" void __cdecl ShopTrade_BuyAskEquip(void) {
 // As the original has it: the panels are marked while the index, as a
 // signed byte, is below Party_Count's low byte.
 extern "C" void __cdecl ShopTrade_BuyMember(void) {
-    auto* const w6 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 6 * sizeof(records::WindowRecord));
-    auto* const w20 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 20 * sizeof(records::WindowRecord));
+    auto* const w6 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 6 * sizeof(records::WindowRecord));
+    auto* const w20 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 20 * sizeof(records::WindowRecord));
     SetItemName();
     const int member = BattleActorCopies_ItemActor;
     Window0_Arrows = 0x4B;
     WindowRecords[21].in_use = 0;
     rv::Store<U>(w20->in_use, 1);
-    rv::Store<U>(w20->x, Word(0x8031D0 + static_cast<U>(member * 36)));
-    rv::Store<U>(w20->y, Word(0x8031D2 + static_cast<U>(member * 36)));
+    rv::Store<U>(w20->x, Word(::bof3::Img(0x8031D0) + static_cast<U>(member * 36)));
+    rv::Store<U>(w20->y, Word(::bof3::Img(0x8031D2) + static_cast<U>(member * 36)));
     const U n = PartyCount();
     const U repeat = g.auto_repeat(static_cast<std::uint32_t>(Input_Pressed) & 0x5000);
     U cur = static_cast<unsigned char>(BattleActorCopies_ItemActor);
@@ -674,7 +674,7 @@ extern "C" void __cdecl ShopTrade_BuyMember(void) {
         BattleActorCopies_ItemActor = cur;
         if ((cur & 0x80) != 0) {
             cur = (n - 1) & 0xFF;
-            PutByte(at::kMember, cur);
+            PutByte(::bof3::Img(at::kMember.v), cur);
         }
     } else if ((repeat & 0x4000) != 0) {
         cur = (cur + 1) & 0xFF;
@@ -708,12 +708,12 @@ extern "C" void __cdecl ShopTrade_BuyMember(void) {
         rv::Store<U>(w6->state, 2);
         rv::Store<U>(w6->x, 0xFF6A);
         rv::Store<U>(w6->y, 0x74);
-        PutByte(0x803242, m);
+        PutByte(::bof3::Img(0x803242), m);
         g.sound(0x103);
         const U sub = FieldS_Step;
         rv::Store<U>(w20->in_use, 0);
         ShopStates2_SlotCursor = 0;
-        PutByte(at::kCounter, 5);
+        PutByte(::bof3::Img(at::kCounter.v), 5);
         FieldS_Step = sub + 1;
         return;
     }
@@ -734,10 +734,10 @@ extern "C" void __cdecl ShopTrade_BuyMember(void) {
 // re-read); the step on. Cancel: sound 0x106, the panels' +3 4 for the
 // member and 2 for the others, the slot box +3 1, the step back.
 extern "C" void __cdecl ShopTrade_BuySlot(void) {
-    auto* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * sizeof(records::WindowRecord));
-    auto* const w6 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 6 * sizeof(records::WindowRecord));
+    auto* const win21 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 21 * sizeof(records::WindowRecord));
+    auto* const w6 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 6 * sizeof(records::WindowRecord));
     const U kind = g.icon_kind(static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item)) & 0xFF;
-    const U x = Long(0x80323C) + 6;
+    const U x = Long(::bof3::Img(0x80323C)) + 6;
     const U slot = ShopStates2_SlotCursor;
     rv::Store<U>(win21->x, x);
     WindowRecords[21].in_use = 1;
@@ -760,7 +760,7 @@ extern "C" void __cdecl ShopTrade_BuySlot(void) {
         const U item = ShopStates2_Item;
         const U to = (static_cast<std::uint32_t>(ShopStates2_SlotCursor) + kind - 1) & 0xFF;
         g.equip(RecordOf(BattleActorCopies_ItemActor), to, item);
-        g.recalc(At(CharacterRecords_addr + RecordOf(BattleActorCopies_ItemActor) * at::kCharStride));
+        g.recalc(At(::bof3::Img(CharacterRecords_addr) + RecordOf(BattleActorCopies_ItemActor) * at::kCharStride));
         StepBy(1);
         return;
     }
@@ -779,7 +779,7 @@ extern "C" void __cdecl ShopTrade_BuySlot(void) {
 // the item is still held (Inventory_Count(category, item, 0)'s word) the
 // step back two (another member), else back six (the list).
 extern "C" void __cdecl ShopTrade_BuyEquipped(void) {
-    auto* const w6 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 6 * sizeof(records::WindowRecord));
+    auto* const w6 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 6 * sizeof(records::WindowRecord));
     SetItemName();
     const U pressed = Input_Pressed;
     Window0_Arrows = 0x4D;
@@ -801,7 +801,7 @@ extern "C" void __cdecl ShopTrade_BuyEquipped(void) {
 // tab, top, row and +9 0, the two scroll words 0, +0..+3 1 7 9 2, +0xD 0xFF,
 // +8 3 (Item_CanUse's mode); the step on.
 extern "C" void __cdecl ShopTrade_SellSetup(void) {
-    auto* const w7 = rv::As<records::ItemListWindow>(At(WindowRecords_addr) + 7 * sizeof(records::WindowRecord));
+    auto* const w7 = rv::As<records::ItemListWindow>(At(::bof3::Img(WindowRecords_addr)) + 7 * sizeof(records::WindowRecord));
     rv::Store<U>(w7->x, 0x140);
     rv::Store<U>(w7->category, 0);
     rv::Store<U>(w7->top, 0);
@@ -838,9 +838,9 @@ extern "C" void __cdecl ShopTrade_SellSetup(void) {
 // 0x6BC8AA), the step on. Cancel: sound 0x106, the window +3 1, the counter
 // 7, the step on three (to the close).
 extern "C" void __cdecl ShopTrade_SellList(void) {
-    auto* const win21 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 21 * sizeof(records::WindowRecord));
-    auto* const w7 = rv::As<records::ItemListWindow>(At(WindowRecords_addr) + 7 * sizeof(records::WindowRecord));
-    auto* const w10 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 10 * sizeof(records::WindowRecord));
+    auto* const win21 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 21 * sizeof(records::WindowRecord));
+    auto* const w7 = rv::As<records::ItemListWindow>(At(::bof3::Img(WindowRecords_addr)) + 7 * sizeof(records::WindowRecord));
+    auto* const w10 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 10 * sizeof(records::WindowRecord));
     const U tab = static_cast<U>(w7->category);
     const U row = static_cast<U>(w7->marked);
     const U item = Ids(tab)[row];
@@ -852,7 +852,7 @@ extern "C" void __cdecl ShopTrade_SellList(void) {
     if (closed == 0) {
         const U top = static_cast<U>(w7->top);
         const U r = static_cast<U>(w7->marked);
-        const U x = Long(0x803260) + 7;
+        const U x = Long(::bof3::Img(0x803260)) + 7;
         WindowRecords[21].in_use = 1;
         rv::Store<U>(win21->x, x);
         rv::Store<U>(w10->in_use, 0);
@@ -863,7 +863,7 @@ extern "C" void __cdecl ShopTrade_SellList(void) {
         g.sound(0x101);
         // The tab read raw: typed, the arrows' store is scheduled after the
         // decrement (codegen_same).
-        const U t = (Byte(0x803266) - 1) & 0xFF;
+        const U t = (Byte(::bof3::Img(0x803266)) - 1) & 0xFF;
         rv::Store<U>(w7->arrows, 0x32);
         rv::Store<U>(w7->category, t);
         if ((t & 0x80) != 0) rv::Store<U>(w7->category, 3);
@@ -938,7 +938,7 @@ extern "C" void __cdecl ShopTrade_SellList(void) {
         const U row_now = static_cast<U>(w7->marked);
         const U chosen = Ids(t)[row_now];
         ShopStates2_Kind = t;
-        const U x = Long(0x803260) + 7;
+        const U x = Long(::bof3::Img(0x803260)) + 7;
         ShopStates2_Item = chosen;
         rv::Store<U>(win21->x, x);
         WindowRecords[21].y = (r - top) * 13 + static_cast<U>(w7->y) + 0x1B;
@@ -955,7 +955,7 @@ extern "C" void __cdecl ShopTrade_SellList(void) {
         const U have = Counts(kind)[S8(sold_row)];
         const U flag = ShopStates2_SellFlag;
         const U it = ShopStates2_Item;
-        PutLong(at::kMaxCount, have);
+        PutLong(::bof3::Img(at::kMaxCount.v), have);
         const U k = ShopStates2_Kind;
         ShopStates2_Count = 1;
         ShopStates2_UnitPrice = g.sell_price(k, it, flag);
@@ -966,7 +966,7 @@ extern "C" void __cdecl ShopTrade_SellList(void) {
         g.sound(0x106);
         const U sub = FieldS_Step;
         rv::Store<U>(w7->state, 1);
-        PutByte(at::kCounter, 7);
+        PutByte(::bof3::Img(at::kCounter.v), 7);
         FieldS_Step = sub + 3;
     }
 }
@@ -978,26 +978,26 @@ extern "C" void __cdecl ShopTrade_SellList(void) {
 // sound 0x103, the answer 1, the step on. Cancel: sound 0x106, the step
 // back.
 extern "C" void __cdecl ShopTrade_SellCount(void) {
-    auto* const w7 = rv::As<records::ItemListWindow>(At(WindowRecords_addr) + 7 * sizeof(records::WindowRecord));
-    auto* const w10 = rv::As<records::WindowRecord>(At(WindowRecords_addr) + 10 * sizeof(records::WindowRecord));
+    auto* const w7 = rv::As<records::ItemListWindow>(At(::bof3::Img(WindowRecords_addr)) + 7 * sizeof(records::WindowRecord));
+    auto* const w10 = rv::As<records::WindowRecord>(At(::bof3::Img(WindowRecords_addr)) + 10 * sizeof(records::WindowRecord));
     rv::Store<U>(w10->x, static_cast<U>(w7->x));
     const U top = static_cast<U>(w7->top);
     const int row = ShopStates2_Row;
-    PutByte(0x8032D2, static_cast<std::uint32_t>(ShopStates2_Kind));
+    PutByte(::bof3::Img(0x8032D2), static_cast<std::uint32_t>(ShopStates2_Kind));
     const U flag = ShopStates2_SellFlag;
     Window0_Arrows = 0x51;
     rv::Store<U>(w7->greyed, 1);
     rv::Store<U>(w10->in_use, 1);
     const U item = ShopStates2_Item;
     const U y = static_cast<U>((row - static_cast<int>(top)) * 13) + static_cast<U>(w7->y) + 0x14;
-    PutByte(0x8032D3, item);
+    PutByte(::bof3::Img(0x8032D3), item);
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xF000;
     rv::Store<U>(w10->handler, 7);
     rv::Store<U>(w10->y, y);
     const U count = ShopStates2_Count;
     rv::Store<U>(w10->kind, 0xA);
-    PutByte(0x8032D4, count);
-    PutByte(0x8032D5, flag);
+    PutByte(::bof3::Img(0x8032D4), count);
+    PutByte(::bof3::Img(0x8032D5), flag);
     StepCount(g.auto_repeat(pressed), 0x101);
     const U p = Input_Pressed;
     if (Confirmed(p)) {
@@ -1023,7 +1023,7 @@ extern "C" void __cdecl ShopTrade_SellConfirm(void) {
     if (Confirmed(p)) {
         if (static_cast<unsigned char>(FieldS_Answer) != 0) {
             g.sound(0x104);
-            const U count = Long(at::kCount) & 0xFF;
+            const U count = Long(::bof3::Img(at::kCount.v)) & 0xFF;
             const U money = Party_Zenny + count * ShopStates2_UnitPrice;
             Party_Zenny = money;
             if (money > at::kMoneyMax) Party_Zenny = at::kMoneyMax;
@@ -1046,9 +1046,9 @@ extern "C" void __cdecl ShopTrade_SellConfirm(void) {
 // original 0x582E80: the cursor hand off; the counter down, and at 0 state
 // 1 (buy or sell again) step 0.
 extern "C" void __cdecl ShopTrade_SellClose(void) {
-    const U c = (Byte(at::kCounter) - 1) & 0xFF;
+    const U c = (Byte(::bof3::Img(at::kCounter.v)) - 1) & 0xFF;
     WindowRecords[21].in_use = 0;
-    PutByte(at::kCounter, c);
+    PutByte(::bof3::Img(at::kCounter.v), c);
     if (c != 0) return;
     FieldS_State = 1;
     FieldS_Step = 0;
@@ -1062,8 +1062,8 @@ extern "C" void __cdecl ShopTrade_SellClose(void) {
 // Window_ResetAll and the menu ended (0x929F00 = 1). Also entry 4 of
 // 0x664264 (group DF's, or no group's: the menu kind 0x584120's states).
 extern "C" void __cdecl ShopTrade_Close(void) {
-    const U c = (Byte(at::kCounter) - 1) & 0xFF;
-    PutByte(at::kCounter, c);
+    const U c = (Byte(::bof3::Img(at::kCounter.v)) - 1) & 0xFF;
+    PutByte(::bof3::Img(at::kCounter.v), c);
     if (c != 0) return;
     g.window_reset();
     BattleE1_Mode = 1;
@@ -1087,7 +1087,7 @@ extern "C" void __cdecl TitleTask_Run(void) {
     g.window_reset();
     for (;;) {
         g.task_sleep(1);
-        Entry(TitleTask_Modes_addr, Long(at::kGameMode) & 0xFFFF, "TitleTask_Run")();
+        Entry(::bof3::Img(TitleTask_Modes_addr), Long(::bof3::Img(at::kGameMode.v)) & 0xFFFF, "TitleTask_Run")();
         g.run_task_records();
     }
 }

@@ -252,8 +252,8 @@ ah::Region g_regions65[] = {
     {(Gfx_UnpackScratch_addr + 0x1f000), 0x10}, // the button map's words 0..7
     {0, 4 * kItemBytes},          // g_items
     {0, sizeof g_names},          // g_names
-    {::bof3::Img(at::kTextRecords), 0xA0},     // Text_Records' first five rows
-    {::bof3::Img(at::kAreaTextOffset), 4},
+    {at::kTextRecords.v, 0xA0},     // Text_Records' first five rows
+    {at::kAreaTextOffset.v, 4},
     {CharacterRecords_addr + 0x9, 1},
     {Area65_PlateAnims_addr, kA65Tables1Bytes}, // area 65's plate and cell tables
     {Area65_PlaceMessages_addr, kA65Tables2Bytes}, // its place messages and name sets
@@ -270,7 +270,7 @@ void PlantCell(bool random_place) {
     unsigned char* const cz = Mem(ObjTrio_addr + 0x3a);
     cx[1] = 0;
     cz[1] = 0;
-    unsigned char* const last = Mem(at::kA65CellsEnd - 4);
+    unsigned char* const last = Mem(::bof3::Img(at::kA65CellsEnd.v) - 4);
     last[0] = cx[0];
     last[1] = cz[0];
     // the sentinel's id follows the words, so a search with stale words (or
@@ -295,7 +295,7 @@ void Disturb65(U h) {
     case 5: Game_Mode = static_cast<unsigned short>(Game_Mode ^ 1); break;
     case 6: Cond_ByteFA = static_cast<signed char>(v % 16); break;
     case 7: SetWord(Mem(AreaW0b_Place_addr), v); break;
-    case 8: Mem(at::kLeaderCellX + (v & 1) * 2)[0] = static_cast<unsigned char>(v); break;
+    case 8: Mem(::bof3::Img(at::kLeaderCellX.v) + (v & 1) * 2)[0] = static_cast<unsigned char>(v); break;
     case 9: Mem(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(v & 1 ? 0xC : v); break;
     case 10: case 11: Mem(v & 1 ? (ObjTrio_addr + 0x36) : (ObjTrio_addr + 0x3a))[0] = static_cast<unsigned char>(h >> 24); break; // the settle re-plants its record
     default: break;
@@ -338,7 +338,7 @@ void Seed65(unsigned k) {
         if (ah::Often()) cell[3] = Mem(Area65_NameSets_addr + (ah::Next() % kNameSets65) * at::kA65NameSetStride)[0];
         // items held or not, now and then a list ended early (any of its five)
         for (unsigned i = 0; i < 0x74; ++i)
-            if (ah::Half()) Mem(at::kItemsHeld + i)[0] = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next() | 1);
+            if (ah::Half()) Mem(::bof3::Img(at::kItemsHeld.v) + i)[0] = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next() | 1);
         if (ah::Half())
             Mem(Area65_NameSets_addr + 1 + (ah::Next() % kNameSets65) * at::kA65NameSetStride + ah::Next() % 5)[0] =
                 static_cast<unsigned char>(AH_PICK(0xFF, 0x16, 0x5E));
@@ -439,8 +439,8 @@ void Seed65(unsigned k) {
         const auto near = [](unsigned char* cell, unsigned centre) {
             SetWord(cell, centre + AH_PICK(0, 25, 26, static_cast<U>(-25), static_cast<U>(-26), 1, 100));
         };
-        if (ah::Often()) near(Mem(at::kLeaderCellX), rv::As<records::SpriteHead>(o)->x_whole);
-        if (ah::Often()) near(Mem(at::kLeaderCellZ), rv::As<records::SpriteHead>(o)->z_whole);
+        if (ah::Often()) near(Mem(::bof3::Img(at::kLeaderCellX.v)), rv::As<records::SpriteHead>(o)->x_whole);
+        if (ah::Often()) near(Mem(::bof3::Img(at::kLeaderCellZ.v)), rv::As<records::SpriteHead>(o)->z_whole);
         if (ah::Half()) Frame_Counter = AH_PICK(0, 15, 16, 31, 0x2F, 0xFFFFFFFFu);
         break;
     }

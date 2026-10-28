@@ -72,8 +72,8 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 // moved across a call shows. Once in 23 the current record itself is
 // repointed - the thing these functions re-read after every call out.
 const std::uint32_t kWatch[] = {
-    BattleWindows_MsgHead_addr, BattleActorCopies_QueueWrite_addr, BattleE1_MessageUp_addr, at::kBannerMask, 0x7E1BEC /* Input_Pressed */,
-    at::kMsgRing, at::kMsgRing + 1, at::kMsgRing + 8, at::kMsgRing + 9, at::kScratch_addr,
+    BattleWindows_MsgHead_addr, BattleActorCopies_QueueWrite_addr, BattleE1_MessageUp_addr, at::kBannerMask.v, 0x7E1BEC /* Input_Pressed */,
+    ::bof3::Img(at::kMsgRing.v), ::bof3::Img(at::kMsgRing.v + 1), ::bof3::Img(at::kMsgRing.v + 8), ::bof3::Img(at::kMsgRing.v + 9), ::bof3::Img(at::kScratch_addr.v),
 };
 void Disturb() {
     const std::uint32_t h = Hash();
@@ -237,13 +237,13 @@ const Region kRegions[] = {
     {WindowRecords_addr, 0x318}, // the 22 window records
     {BattleWinStates_Current_addr, 4}, // the record running (a pointer: Fix sets it)
     {BattleWindows_MsgHead_addr, 2}, // the ring's read and write indices
-    {at::kMsgRing, 0x80},        // the ring's 16 entries
+    {at::kMsgRing.v, 0x80},        // the ring's 16 entries
     {BattleE1_MessageUp_addr, 1},
     {BattleMisc_BannerCurrent_addr, 4}, // a pointer: Fix sets it inside the pool
-    {at::kBannerPool, 0x60},     // the banner pool's 8 entries
-    {at::kBannerMask, 1},
+    {at::kBannerPool.v, 0x60},     // the banner pool's 8 entries
+    {at::kBannerMask.v, 1},
     {0x7E1BEC, 2},               // Input_Pressed
-    {at::kScratch_addr, 1},
+    {at::kScratch_addr.v, 1},
 };
 constexpr unsigned kRegionBytes = 0x318 + 4 + 2 + 0x80 + 1 + 4 + 0x60 + 1 + 2 + 1;
 
@@ -283,7 +283,7 @@ void Fix() {
     SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(WindowRecords_addr + (Next() % 22u) * 0x24u));
     At(BattleWindows_MsgHead_addr)[0] = static_cast<unsigned char>(Next() & 0xF);
     At(BattleActorCopies_QueueWrite_addr)[0] = static_cast<unsigned char>(Half() ? At(BattleWindows_MsgHead_addr)[0] : Next() & 0xF);
-    SetLong(At(BattleMisc_BannerCurrent_addr), static_cast<std::int32_t>(at::kBannerPool + (Next() % 8u) * 0xCu));
+    SetLong(At(BattleMisc_BannerCurrent_addr), static_cast<std::int32_t>(::bof3::Img(at::kBannerPool.v) + (Next() % 8u) * 0xCu));
 }
 
 // A y the slides compare, at and around both of their ends.
@@ -367,7 +367,7 @@ void Seed(unsigned k) {
         const unsigned head = At(BattleWindows_MsgHead_addr)[0];
         static const unsigned char kTimer[] = {0xFF, 1, 0, 2, 0xFE};
         for (unsigned i = 0; i < 2; ++i) {
-            unsigned char* const e = At(at::kMsgRing + 8 * ((head + i) & 0xF));
+            unsigned char* const e = At(::bof3::Img(at::kMsgRing.v) + 8 * ((head + i) & 0xF));
             e[0] = static_cast<unsigned char>((e[0] & ~3u) | (Next() & 3));
             e[1] = Often() ? kTimer[Next() % 5] : static_cast<unsigned char>(Next());
         }

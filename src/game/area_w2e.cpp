@@ -69,11 +69,9 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
-inline unsigned char* At(::bof3::image::Va va) { return move_script::At(::bof3::Img(va)); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char* Bank() { return At(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 unsigned char& B(U address) { return *At(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 
 // A state handler read from a .data table in place, as the originals' `call /
 // jmp [index * 4 + table]`: the index is not checked there. Ours aborts past
@@ -400,8 +398,8 @@ void DrawFrame(const WorldMapTables& t, int x, int y) {
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x9C, 0);
     AH_CALL(Gfx_CommitPrim)(1, 0xC);
     sprite(x, y, 0);
-    const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(at::kLeaderCellX))),
-                                                       static_cast<short>(Word(At(at::kLeaderCellZ))));
+    const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
+                                                       static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v)))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
     if (!withheld1) sprite(x + 0x30, y, 1);
     world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000))), x + 0x38, y + 8,
@@ -410,8 +408,8 @@ void DrawFrame(const WorldMapTables& t, int x, int y) {
     if (!withheld2) sprite(x + 0x30, y + 0x10, 2);
     world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c))), x + 0x38, y + 0x10,
                           withheld2);
-    bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(at::kLeaderCellX))),
-                                            static_cast<short>(Word(At(at::kLeaderCellZ)))) != 0;
+    bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
+                                            static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v))))) != 0;
     if (!third) third = (Field_ScriptFlags2 & 0x1000) != 0;
     if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
     if (!third) third = (Field_ScriptFlags & 0x4000) != 0;
@@ -455,7 +453,7 @@ void DrawHud(const WorldMapTables& t, int x, int y) {
     if ((Draw_PassFlags & 0x1B) == 0) return;
     AH_AT(DrawSpriteAt, t.fn_draw_sprite)(x, y, 4);
     AH_AT(DrawSpriteAt, t.fn_draw_sprite)(x + 0x80, y, 5);
-    const unsigned char* const text = At(at::kAreaText + (static_cast<U>(Long(At(t.label_offset))) & 0xFFFF));
+    const unsigned char* const text = At(::bof3::Img(at::kAreaText.v) + (static_cast<U>(Long(At(t.label_offset))) & 0xFFFF));
     AH_CALL(Text_DrawAt)(x + 4, y + 4, 0, 0xFF, text);
 }
 
@@ -557,13 +555,13 @@ extern "C" void __cdecl Area104_LeaderRun(void) {
 extern "C" void __cdecl Area104_LeaderIdle(void) {
     if (AH_AT(AnswerFn, kStartOnObject121)() != 0) return;
     if ((Field_ScriptFlags & 0x100) != 0) return;
-    if ((B(at::kScriptFlags2) & 0x40) != 0) return;
+    if ((B(::bof3::Img(at::kScriptFlags2.v)) & 0x40) != 0) return;
     if (Field_Request != 0) return;
     if (Cur()[0xA] != 0) return;
     if (Field_InputHeld != 0) {
         unsigned char* const state = Field_State;
         const U actor = state[0x148];
-        if ((B(at::kActorStates + actor * at::kActorStride) & 0x20) == 0) state[0x136] = 0;
+        if ((B(::bof3::Img(at::kActorStates.v) + actor * at::kActorStride) & 0x20) == 0) state[0x136] = 0;
     }
     if (AH_CALL(Field_LeaderCellEvent)() != 0) return;
     if (AH_AT(AnswerFn, area_w2e::kMenuButton121)() != 0) return;
@@ -758,7 +756,7 @@ extern "C" void __cdecl Area104_LeaderStep(void) {
         return;
     }
     AH_CALL(Field_Bit80Tick)();
-    if ((Field_ScriptFlags & 0x100) == 0 && (B(at::kScriptFlags2) & 0x40) == 0) {
+    if ((Field_ScriptFlags & 0x100) == 0 && (B(::bof3::Img(at::kScriptFlags2.v)) & 0x40) == 0) {
         const U keys = (Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f002)) | Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000)) | 0xF000u) & 0xFFFF;
         if ((Field_InputHeld & keys) != 0) {
             area_harness::Phase(kLeaderIdle)();
@@ -1150,10 +1148,10 @@ extern "C" void __cdecl Area104_Kind6ACountdown(void) {
     digit = static_cast<signed char>(digit + static_cast<signed char>((frames % 3) * 3));
     if (digit < 0) digit = 0;
     else if (digit > 9) digit = 9;
-    AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kCountdownText)), reinterpret_cast<const char*>(At(at::kCountdownFormat)),
+    AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kCountdownText.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kCountdownFormat.v))),
                          static_cast<U>(c[9]), frames / 3, static_cast<std::int32_t>(digit));
     const bool blink = Cur()[9] < 10 && (Frame_Counter & 4) != 0;
-    AH_CALL(Text_DrawFont12)(0x84, 0x30, blink ? 2 : 0, At(at::kCountdownText));
+    AH_CALL(Text_DrawFont12)(0x84, 0x30, blink ? 2 : 0, At(::bof3::Img(at::kCountdownText.v)));
     area_harness::Phase(kDrawPanel)();
 
     // the ring
@@ -1231,7 +1229,7 @@ extern "C" void __cdecl Area104_DrawPanel(void) {
     quad[4] = quad[5] = quad[6] = 0x80;
     AH_CALL(Gfx_CommitPrim)(2, 0x48);
     const auto f3 = AH_AT(PrimFn, area_w2e::kSetPolyF3);
-    for (U row = ::bof3::Img(Area104_PanelTris_addr); row < ::bof3::Img(at::kPanelTrisEnd); row += 0xC) {
+    for (U row = ::bof3::Img(Area104_PanelTris_addr); row < ::bof3::Img(at::kPanelTrisEnd.v); row += 0xC) {
         unsigned char* const prim = Gfx_PacketNext;
         f3(prim);
         AH_CALL(Gpu_SetSemiTrans)(prim, 1);
@@ -1372,7 +1370,7 @@ extern "C" void __cdecl Area105_Init(void) {
 extern "C" void __cdecl Area106_Handler0(void) {
     unsigned char* const member = Field_ActiveMember;
     member[0x80] = static_cast<unsigned char>(member[0x80] & 0xFE);
-    if (B(at::kEffectStates + ObjTrio[0].char_id) != 0) return;
+    if (B(::bof3::Img(at::kEffectStates.v) + ObjTrio[0].char_id) != 0) return;
     unsigned char* const c = Cur();
     Cond_ByteFE = 1;
     c[0] = 0;

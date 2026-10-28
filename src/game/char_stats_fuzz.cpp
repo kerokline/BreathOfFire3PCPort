@@ -82,7 +82,7 @@ void Disturb() {
     case 3: if (g_cur) g_cur[at::kMaxHp + (w & 1)] = v; break;
     case 4: if (g_cur) g_cur[at::kHp + (w & 1)] = v; break;
     case 5: if (g_cur) g_cur[at::kPercent + w % 5] = static_cast<unsigned char>(v & 1 ? 0 : v); break;
-    case 6: At(at::kRosterBonus + w % 40)[0] = v; break;
+    case 6: At(::bof3::Img(at::kRosterBonus.v) + w % 40)[0] = v; break;
     case 7: if (g_cur) g_cur[at::kWeapon + w % 6] = v; break;
     case 8: At(CharacterRecords_addr + (w % 8) * at::kCharStride + at::kAtk + (v % 8))[0] = static_cast<unsigned char>(w); break;
     default: if (g_cur) g_cur[at::kAtk + w % 8] = v; break;
@@ -284,9 +284,9 @@ Region g_regions[kRegionCount];
 constexpr unsigned kRegionBytes = 0x950 + 0x600 + 0x2000 + 4 + sizeof g_packets + sizeof g_out;
 
 void MakeRegions() {
-    g_regions[0] = {at::kRosterBonus, 0x950};    // the roster bonus, SharedScratch, the eight records
+    g_regions[0] = {at::kRosterBonus.v, 0x950};    // the roster bonus, SharedScratch, the eight records
     g_regions[1] = {0x904000, 0x600};            // the extras 0x90412E..0x904130, the inventory lists, key items
-    g_regions[2] = {at::kTextRecords, 0x2000};   // Text_Records, 256 entries
+    g_regions[2] = {at::kTextRecords.v, 0x2000};   // Text_Records, 256 entries
     g_regions[3] = {Address(&Gfx_PacketNext), 4};
     g_regions[4] = {Address(g_packets), sizeof g_packets};
     g_regions[5] = {Address(g_out), sizeof g_out};
@@ -323,7 +323,7 @@ void RandomTraits() {
     g_traits[sizeof g_traits - 2] = 0xE;
     for (unsigned t = 0; t < 0xFF; ++t) {
         const std::uint32_t p = Next() % 8 == 0 ? 0 : Address(g_traits) + 2 * (Next() % (sizeof g_traits / 2));
-        SetLong(At(at::kTraitLists + 4 * t), static_cast<std::int32_t>(p));
+        SetLong(At(::bof3::Img(at::kTraitLists.v) + 4 * t), static_cast<std::int32_t>(p));
     }
 }
 
@@ -334,7 +334,7 @@ unsigned char* Rec(unsigned i) { return At(CharacterRecords_addr + (i % 8) * at:
 
 // A record for the passes and the recompute: one of the eight, or a stretch of
 // the first region below them that no persistent record starts at.
-unsigned char* AnyRecord() { return Often() ? Rec(Next()) : At(at::kRosterBonus + 0x40 + Next() % 0x300); }
+unsigned char* AnyRecord() { return Often() ? Rec(Next()) : At(::bof3::Img(at::kRosterBonus.v) + 0x40 + Next() % 0x300); }
 
 constexpr unsigned char kWeaponIds[] = {0x0C, 0x0D, 0x0E, 0x15, 0x1A, 0x20, 0x25, 0x27, 0x28, 0x34, 0x41,
                                         0x43, 0x44, 0x4C, 0x4D, 0x4E, 0x00, 0xFF};
@@ -414,8 +414,8 @@ Args Seed(unsigned k) {
     case kAddK: {
         const unsigned cat = Next() % 5;
         x.a[0] = Byte(cat);
-        unsigned char* const ids = At(static_cast<std::uint32_t>(Long(At(at::kInvIds + 4 * cat))));
-        unsigned char* const counts = cat == 4 ? nullptr : At(static_cast<std::uint32_t>(Long(At(at::kInvCounts + 4 * cat))));
+        unsigned char* const ids = At(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kInvIds.v) + 4 * cat))));
+        unsigned char* const counts = cat == 4 ? nullptr : At(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kInvCounts.v) + 4 * cat))));
         const unsigned slot = Next() % 0x80;
         static const unsigned char kCounts[] = {0, 1, 2, 0x62, 0x63, 0x64, 0x7F, 0x80, 0xFF};
         const unsigned how = Next() % 4;
@@ -467,13 +467,13 @@ Args Seed(unsigned k) {
         x.a[0] = Byte(Often() ? Next() % 7 : Next());
         break;
     case kKeyHasK:
-        if (Often()) x.a[0] = Byte(At(at::kKeyItems)[Next() % 0x20]);
+        if (Often()) x.a[0] = Byte(At(::bof3::Img(at::kKeyItems.v))[Next() % 0x20]);
         break;
     case kTextK: {
         static const unsigned char kLengths[] = {0, 1, 2, 0x1E, 0x1F, 0x20, 0x21, 0xFF};
         x.a[0] = Byte(Next());
         x.a[1] = Byte(Often() ? kLengths[Next() % 8] : Next());
-        const std::uint32_t dest = at::kTextRecords + (x.a[0] & 0xFF) * 0x20;
+        const std::uint32_t dest = ::bof3::Img(at::kTextRecords.v) + (x.a[0] & 0xFF) * 0x20;
         switch (Next() % 4) {
         case 0: x.a[2] = dest - 1 - Next() % 3; break;           // overlapping below: the byte loop repeats
         case 1: x.a[2] = dest + 1 + Next() % 3; break;           // overlapping above
@@ -488,7 +488,7 @@ Args Seed(unsigned k) {
         x.a[0] = Byte(cat);
         switch (Next() % 4) {
         case 0:
-            if (stock) x.a[1] = Byte(At(static_cast<std::uint32_t>(Long(At(at::kInvIds + 4 * cat))))[Next() % 0x80]);
+            if (stock) x.a[1] = Byte(At(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kInvIds.v) + 4 * cat))))[Next() % 0x80]);
             else {
                 // a worn item: its wearer counted, the category its slot's
                 unsigned char* const r = Rec(Next());
@@ -499,7 +499,7 @@ Args Seed(unsigned k) {
             }
             break;
         case 1:
-            x.a[1] = Byte(Half() ? At(at::kExtraAccessory)[0] : At(CharStats_ExtraItem_addr)[0]);
+            x.a[1] = Byte(Half() ? At(::bof3::Img(at::kExtraAccessory.v))[0] : At(CharStats_ExtraItem_addr)[0]);
             break;
         default: break;
         }
@@ -509,7 +509,7 @@ Args Seed(unsigned k) {
         x.a[0] = Byte(Next() % 9);
         if (Half()) {
             // a list with its ids set, so the count reaches its length
-            unsigned char* const ids = At(static_cast<std::uint32_t>(Long(At(at::kInvIds + 4 * (x.a[0] & 0xFF)))));
+            unsigned char* const ids = At(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kInvIds.v) + 4 * (x.a[0] & 0xFF)))));
             for (unsigned i = 0; i < 0x80; ++i) ids[i] = static_cast<unsigned char>(Half() ? 0 : 1 + Next() % 0xFF);
         }
         break;
@@ -578,7 +578,7 @@ void SelfTest() {
     // Save what the fuzz overwrites outside the regions, and swap the tables.
     static State saved, input, their_out, our_out;
     Capture(saved);
-    for (unsigned t = 0; t < 0xFF; ++t) g_saved_traits[t] = reinterpret_cast<void*>(Long(At(at::kTraitLists + 4 * t)));
+    for (unsigned t = 0; t < 0xFF; ++t) g_saved_traits[t] = reinterpret_cast<void*>(Long(At(::bof3::Img(at::kTraitLists.v) + 4 * t)));
     unsigned char* const saved_packet = Gfx_PacketNext;
     const unsigned short cw_saved = ControlWord();
     g = kStubs;
@@ -629,7 +629,7 @@ void SelfTest() {
         }
     }
     g = kOriginals;
-    for (unsigned t = 0; t < 0xFF; ++t) SetLong(At(at::kTraitLists + 4 * t), static_cast<std::int32_t>(Address(g_saved_traits[t])));
+    for (unsigned t = 0; t < 0xFF; ++t) SetLong(At(::bof3::Img(at::kTraitLists.v) + 4 * t), static_cast<std::int32_t>(Address(g_saved_traits[t])));
     Apply(saved);
     Gfx_PacketNext = saved_packet;
 

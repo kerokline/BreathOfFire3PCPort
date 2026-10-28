@@ -165,7 +165,6 @@ const ah::DataTable kTables191[] = {{Area191_ScaleStates_addr, at::kArea191Scale
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char& B(U address) { return *ah::Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 
 // Which area and function the round is running (set by the seeds).
 int g_area = 0;
@@ -250,7 +249,7 @@ U FlagsSetEffect(const U*, U answer) {
             rv::Store<unsigned>(rv::Current<records::SpriteHead>()->z_whole, kMarks[m][1] | ((n >> 24) & 0xFF));
         }
     }
-    if (n & 2) B(at::kWalkCount) = static_cast<unsigned char>(n >> 16);
+    if (n & 2) B(::bof3::Img(at::kWalkCount.v)) = static_cast<unsigned char>(n >> 16);
     if (n & 4) Field_StatusBits = static_cast<unsigned char>(n >> 24);
     return answer;
 }
@@ -452,7 +451,7 @@ void Disturb(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 9) {
     case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 0x20 : v); break;
-    case 1: B(at::kCounter3) = static_cast<unsigned char>(h & 0x100 ? (v & 1 ? 0 : 0x28) : v); break;
+    case 1: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(h & 0x100 ? (v & 1 ? 0 : 0x28) : v); break;
     case 2: SetWord(ah::Mem(Cond_Flags_addr + 0xcc), h & 0x100 ? (v & 1 ? 0x1DFu : 0x3BFu) : h >> 16); break;
     case 3: B(Cond_Flags_addr + 0xcf) = static_cast<unsigned char>(h & 0x100 ? v % 4 : v); break;
     case 4: B(Area189_StepsSinceEvent_addr) = v; break;
@@ -511,7 +510,7 @@ void Seed188(unsigned k) {
     case k188Tail43: {
         B(AreaW0c_TailState_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0xA, 0xB, 0xC, 0xD, 0, 1, 2, 0xA, 0xB, 0xC, 0xD, 3, 9, 0xE, 0x80, 0xFF, 0x8A));
         SeedRequest();
-        if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(0x28, 0, 0x28, 0, 0x27, 0x29, 1, 0xA8));
+        if (ah::Often()) B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(AH_PICK(0x28, 0, 0x28, 0, 0x27, 0x29, 1, 0xA8));
         if (ah::Often()) B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 0, 1, 2, 0x80));
         break;
     }
@@ -667,14 +666,14 @@ void Seed191(unsigned k) {
         if (ah::Often()) Transition_Busy = static_cast<unsigned short>(AH_PICK(0, 0, 1, 0x100));
         break;
     case k191Talk:
-        if (ah::Often()) B(at::kWalkCount) = static_cast<unsigned char>(ah::Next() % 11);
+        if (ah::Often()) B(::bof3::Img(at::kWalkCount.v)) = static_cast<unsigned char>(ah::Next() % 11);
         for (unsigned r = 0; r < 8; ++r)
             if (ah::Often()) B(Field_ActorStates_addr + 0xe + r * at::kCharStride) = static_cast<unsigned char>(AH_PICK(4, 5, 7, 8, 9, 0, 0xFF));
         break;
     case k191Init:
         if (ah::Half()) Cond_ByteFA = static_cast<signed char>(AH_PICK(0xE, 0xE, 0xD, 0xF, 0x8E));
         if (ah::Often()) B(Field_ActorStates_addr + 0xe) = static_cast<unsigned char>(AH_PICK(4, 5, 8, 9, 10, 0, 0xFF));
-        if (ah::Often()) B(at::kWalkCount) = static_cast<unsigned char>(AH_PICK(4, 5, 6, 0, 0xFF));
+        if (ah::Often()) B(::bof3::Img(at::kWalkCount.v)) = static_cast<unsigned char>(AH_PICK(4, 5, 6, 0, 0xFF));
         break;
     default: break;
     }

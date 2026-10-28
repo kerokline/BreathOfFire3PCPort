@@ -46,18 +46,16 @@ using move_script::Word;
 using U = std::uint32_t;
 
 unsigned char& B(U address) { return *Mem(address); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 void AddLong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(static_cast<U>(Long(p)) + v)); }
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
-unsigned char* Ptr(::bof3::image::Va va) { return Ptr(::bof3::Img(va)); }
 // Effect_Objects record `slot` (0x80 bytes; the slot is not checked, as the
 // originals' `shl 7`).
 unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot]); }
 // The high word of a 16.16 position, as the step hook reads it (a word at +2).
 std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 unsigned char Answer() { return B(::bof3::Img(AreaW0c_ChoiceAnswer_addr)); }
 unsigned char* StoryFlags() { return Mem(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 // The focus object's trigger id cleared (0xFF): the focus read before the
@@ -130,17 +128,17 @@ void Area186Shift(std::int32_t focus, U dz, int dy, std::int32_t to, unsigned ch
         SetLong(Mem(::bof3::Img(MapView_FocusZ_addr)), to);
         AH_CALL(MapView_FillCells)();
     }
-    AddWord(Mem(at::kTailTimer), -1);
-    if (Word(Mem(at::kTailTimer)) != 0) return;
-    B(at::kCounter3) = 0x1C;
-    SetWord(Mem(at::kTailTimer), 0xF);
+    AddWord(Mem(::bof3::Img(at::kTailTimer.v)), -1);
+    if (Word(Mem(::bof3::Img(at::kTailTimer.v))) != 0) return;
+    B(::bof3::Img(at::kCounter3.v)) = 0x1C;
+    SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0xF);
     B(::bof3::Img(AreaW0c_TailState_addr)) = next;
 }
 // Tail kind 39's states 1 and 0xB: the timer down, and at 0 area 0xAD at
 // (x, z) with `flags`, the tail kind and state 0.
 void Area186Leave(std::int32_t x, std::int32_t z, unsigned flags) {
-    AddWord(Mem(at::kTailTimer), -1);
-    if (Word(Mem(at::kTailTimer)) != 0) return;
+    AddWord(Mem(::bof3::Img(at::kTailTimer.v)), -1);
+    if (Word(Mem(::bof3::Img(at::kTailTimer.v))) != 0) return;
     AH_CALL(Field_ChangeArea)(0xAD, x, z, flags);
     B(::bof3::Img(AreaW0a_TailKind_addr)) = 0;
     B(::bof3::Img(AreaW0c_TailState_addr)) = 0;
@@ -279,10 +277,10 @@ extern "C" void __cdecl Area181_ChoiceCounter0(void) {
     const unsigned char answer = Answer();
     SetMessage(0xFFFF);
     if (answer == 0) {
-        B(at::kCounter0) = 0x28;
+        B(::bof3::Img(at::kCounter0.v)) = 0x28;
         B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65) = 0x15;
     } else {
-        B(at::kCounter0) = 0x32;
+        B(::bof3::Img(at::kCounter0.v)) = 0x32;
         B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65) = 0x19;
     }
 }
@@ -595,7 +593,7 @@ extern "C" unsigned char __cdecl Area175_Trigger64(unsigned char* object, unsign
     rv::Store<unsigned>(rv::As<records::SpriteObject>(object)->script_position, 0);
     AH_CALL(Flags_Set)(StoryFlags(), 0x95);
     AH_CALL(Party_DropIn)(4);
-    B(at::kCounter0) = 0;
+    B(::bof3::Img(at::kCounter0.v)) = 0;
     return 0;
 }
 
@@ -652,7 +650,7 @@ extern "C" void __cdecl Area186_Start(unsigned char state) {
         AH_CALL(Kind2_Place)(1);
     }
     B(::bof3::Img(AreaW0c_TailState_addr)) = state;
-    SetWord(Mem(at::kTailTimer), 0x96);
+    SetWord(Mem(::bof3::Img(at::kTailTimer.v)), 0x96);
     B(::bof3::Img(AreaW0a_TailKind_addr)) = 0x27;
 }
 
