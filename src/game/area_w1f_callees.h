@@ -6,6 +6,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "game/rdata_consts.h"
 
 namespace area_w1f {
@@ -17,7 +19,7 @@ namespace at {
 // byte by the table choices, as a byte by the others) and the message word a
 // choice handler leaves (0xFFFF: no new message).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // A byte some choices set to 6 beside the message they open (areas 3, 37, 41
 // and 50's choices do the same); no reader read this round.
 // kAnswerMark: now AreaW0c_AnswerMark (symbols.toml).
@@ -26,17 +28,17 @@ constexpr std::uint32_t kMessage = 0x7DEE48;
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
 // kTailState: now AreaW0c_TailState (symbols.toml).
 // kTailSub: now AreaW0c_TailSub (symbols.toml).
-constexpr std::uint32_t kTailTimer = 0x9039F6;
+constexpr ::bof3::image::Va kTailTimer{0x9039F6};
 // The movement script's counters 0 and 3 (MoveScript_CounterOps, ops A0..AF).
-constexpr std::uint32_t kCounter0 = 0x903848;
-constexpr std::uint32_t kCounter3 = 0x90384B;
+constexpr ::bof3::image::Va kCounter0{0x903848};
+constexpr ::bof3::image::Va kCounter3{0x90384B};
 // The scratch word 0x903850: an effect or sprite slot a handler keeps there.
-constexpr std::uint32_t kScratch = SharedScratch_addr;
+constexpr ::bof3::image::Va kScratch{SharedScratch_addr};
 // The object pointer after Camera_ShiftY (area_w1a_callees.h's kFocusObject):
 // area 68's object trigger 25 reads the object through it.
-constexpr std::uint32_t kFocusObject = 0x903804;
+constexpr ::bof3::image::Va kFocusObject{0x903804};
 // MoveScript_Var7 and the byte after it (the run step).
-constexpr std::uint32_t kVar7 = 0x8034E4;
+constexpr ::bof3::image::Va kVar7{0x8034E4};
 // kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
 // The story flags (Flags_Set's bank) and the Cond_Flags row 10 (0x903F90 +
 // 8 * 10) area 75 sets, clears and tests.
@@ -52,7 +54,7 @@ constexpr std::uint32_t kVar7 = 0x8034E4;
 // kPartyList0: now Cond_Flags[0xd2] (symbols.toml).
 // The current music track (a byte Music_Play returns at once on; the
 // chapters' kMusicCurrent / kAreaTrack).
-constexpr std::uint32_t kMusicCurrent = 0x904CD0;
+constexpr ::bof3::image::Va kMusicCurrent{0x904CD0};
 // The leader's record (ObjTrio): byte +8 (its direction), +0x2C (a dword the
 // push toggle plays a sound by), +0x4A, +0x89, the zone counter +0x134 (areas
 // 72 / 73 set Field_StepCount to it less 5), the word +0x12E.
@@ -61,7 +63,7 @@ constexpr std::uint32_t kMusicCurrent = 0x904CD0;
 // kLeaderSound: now ObjTrio[0].column (symbols.toml).
 // kLeader4A: now ObjTrio[0].script_hold (symbols.toml).
 // kLeaderByte89: now ObjTrio[0].char_id (symbols.toml).
-constexpr std::uint32_t kLeaderZone = 0x802E74;
+constexpr ::bof3::image::Va kLeaderZone{0x802E74};
 // kLeaderWord12E: now ObjTrio_addr + 0x12e (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // Field objects (Sprite_Objects, 30 of 0xA4 bytes) and effect records
@@ -77,13 +79,13 @@ constexpr std::uint32_t kEffectStride = 0x80;
 // kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object
 // kWaitWord: now Transition_Busy (symbols.toml). Transition_Busy
 // kPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags
-constexpr std::uint32_t kKind2Z = 0x905E60;            // Field_Kind2Z
+constexpr ::bof3::image::Va kKind2Z{0x905E60};            // Field_Kind2Z
 // kInputPressed: now Input_Pressed (symbols.toml). Input_Pressed
 // kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
-constexpr std::uint32_t kCondByteFA = 0x8034E0;        // Cond_ByteFA
+constexpr ::bof3::image::Va kCondByteFA{0x8034E0};        // Cond_ByteFA
 // The text buffer area 75's counters are printed into (area 42's timer
 // prints into the same, docs/area_w1b.md).
-constexpr std::uint32_t kTextBuffer = 0x904BA0;
+constexpr ::bof3::image::Va kTextBuffer{0x904BA0};
 
 // --- area 68's tables (symbols.toml [[data]]) ---
 
@@ -146,7 +148,7 @@ constexpr unsigned kArea75ListCount = 3;
 // out of turn and frames without a press (the player's), the rhythm row, the
 // two effect slots (the other's, the player's), the two object indexes (A the
 // other's; B the one animated by the move), the list and its position.
-constexpr std::uint32_t kPhase = 0x93C340;
+constexpr ::bof3::image::Va kPhase{0x93C340};
 // kMove: now AreaW1f_Move (symbols.toml).
 // kMoveFrames: now AreaW1f_MoveFrames (symbols.toml). u16
 // kPressFlags: now AreaW1f_PressFlags (symbols.toml).
@@ -155,9 +157,9 @@ constexpr std::uint32_t kPhase = 0x93C340;
 // kRow: now AreaW1f_Row (symbols.toml).
 // kPlayerCounter: now AreaW1f_PlayerCounter (symbols.toml). u16
 // kOtherCounter: now AreaW1f_OtherCounter (symbols.toml). u16
-constexpr std::uint32_t kOtherEffect = 0x93C34E;
-constexpr std::uint32_t kPlayerEffect = 0x93C34F;
-constexpr std::uint32_t kObjectA = 0x93C350;
+constexpr ::bof3::image::Va kOtherEffect{0x93C34E};
+constexpr ::bof3::image::Va kPlayerEffect{0x93C34F};
+constexpr ::bof3::image::Va kObjectA{0x93C350};
 // kObjectB: now AreaW1f_ObjectB (symbols.toml).
 // kList: now AreaW1f_List (symbols.toml).
 // kListPos: now AreaW1f_ListPos (symbols.toml).

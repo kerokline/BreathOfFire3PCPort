@@ -8,6 +8,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 namespace area_w0a {
 namespace at {
 
@@ -17,15 +19,15 @@ namespace at {
 // u8 where it only tests it for 0), and the message word a choice handler
 // leaves (0xFFFF: no new message; docs/item-use.md section 5).
 // kCursor: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // The movement script's variables 3 and 6 (MoveScript_Variable's cases 3..6
 // are the bytes 0x903848..0x90384B); variable 5 is the counter 0x90384A.
-constexpr std::uint32_t kVar3 = 0x903848;
-constexpr std::uint32_t kVar5 = 0x90384A;
-constexpr std::uint32_t kVar6 = 0x90384B;
+constexpr ::bof3::image::Va kVar3{0x903848};
+constexpr ::bof3::image::Va kVar5{0x90384A};
+constexpr ::bof3::image::Va kVar6{0x90384B};
 // A byte the effect handlers keep their Effect_FindFree slot in (read back
 // as a dword and masked).
-constexpr std::uint32_t kEffectSlot = SharedScratch_addr;
+constexpr ::bof3::image::Va kEffectSlot{SharedScratch_addr};
 // The field mode's tail kind (Field_ModeTailKinds 0x662CE8 by this s8) and
 // the byte beside it the tail phases read.
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
@@ -42,7 +44,7 @@ constexpr std::uint32_t kEffectSlot = SharedScratch_addr;
 // kObject6X: now Sprite_Objects[6].x (symbols.toml).
 // Text_Records, where Crt_sprintf writes the message's parameter, and the
 // format area 8's handlers 1 and 2 give it (Area08_MessageFormat).
-constexpr std::uint32_t kTextRecords = 0x904CE0;
+constexpr ::bof3::image::Va kTextRecords{0x904CE0};
 // The per-area zone record lists (8-byte records, the zone byte at +4;
 // Area_ZoneAt 0x52FFD0's table, docs/field-event.md): a pointer per area.
 // kZoneLists: now Area_StateRecords (symbols.toml).
@@ -56,7 +58,7 @@ constexpr unsigned kEffectCount = 20;
 // kArea05MessagesA: now Area05_MessagesA (symbols.toml). u16 x 4, by the s8 cursor
 // kArea05MessagesB: now Area05_MessagesB (symbols.toml). u16 x 4
 // kArea08ChoiceMessages: now Area08_ChoiceMessages (symbols.toml). u16 x 2
-constexpr std::uint32_t kArea08MessageFormat = 0x5E10C0;    // a format string, passed by address
+constexpr ::bof3::image::Va kArea08MessageFormat{0x5E10C0};    // a format string, passed by address
 // kArea10MessagesA: now Area10_MessagesA (symbols.toml). u16 x 4
 // kArea10MessagesB: now Area10_MessagesB (symbols.toml). u16 x 4
 // kArea13ChoiceMessages: now Area13_ChoiceMessages (symbols.toml). u16 x 2

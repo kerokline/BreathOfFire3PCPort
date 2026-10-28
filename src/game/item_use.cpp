@@ -64,7 +64,7 @@ namespace {
 // working copy, the id's low byte indexes it, unchecked.
 unsigned char* CharRecord(unsigned id, unsigned battle) {
     const unsigned i = id & 0xFF;
-    return (battle & 0xFF) == 0 ? At(CharacterRecords_addr + i * at::kCharStride) : At(at::kWorkRecords + i * at::kWorkStride);
+    return (battle & 0xFF) == 0 ? At(::bof3::Img(CharacterRecords_addr) + i * at::kCharStride) : At(::bof3::Img(at::kWorkRecords.v) + i * at::kWorkStride);
 }
 
 // Either answer is a records::CharRecord: the persistent record 0x903A70 + i
@@ -116,7 +116,7 @@ unsigned char UsedOr4(unsigned char first, unsigned char second) { return (first
 // this function, for the call trace).
 extern "C" __attribute__((disable_tail_calls)) unsigned char __cdecl ItemUse_Dispatch(unsigned id, unsigned item, unsigned battle) {
     const unsigned it = item & 0xFF;
-    if (At(at::kItemFlags)[it * at::kItemStride] == 0) return 2;
+    if (At(::bof3::Img(at::kItemFlags.v))[it * at::kItemStride] == 0) return 2;
     const auto handler = reinterpret_cast<Handler>(ItemUse_Handlers[ItemUse_HandlerIndex[it]]);
     const unsigned char answer = handler(id, battle);
     return answer;
@@ -267,14 +267,14 @@ extern "C" unsigned char __cdecl ItemUse_FaerieTiara(unsigned, unsigned) {
     FieldS_State = 0xA;
     ModeRest_AreaAsked = 0xB9;
     for (int flag = 0xFF;;) {
-        if (g.flags_test(At(Cond_Flags_addr + 0xa0), static_cast<unsigned>(flag)) != 0) break;
+        if (g.flags_test(At(::bof3::Img(Cond_Flags_addr) + 0xa0), static_cast<unsigned>(flag)) != 0) break;
         const auto count = static_cast<unsigned char>(ModeRest_AreaAsked - 1);
         --flag;
         ModeRest_AreaAsked = count;
         if (flag < 0xF6) break;
     }
-    std::memcpy(At(AreaW2d_ReturnPoint_addr), At(ObjTrio_addr + 0x34), 8);
-    SetWord(At(AreaW2d_ReturnPoint_addr + 8), Game_AreaNumber);
+    std::memcpy(At(::bof3::Img(AreaW2d_ReturnPoint_addr)), At(::bof3::Img(ObjTrio_addr) + 0x34), 8);
+    SetWord(At(::bof3::Img(AreaW2d_ReturnPoint_addr) + 8), Game_AreaNumber);
     return 0;
 }
 
@@ -395,7 +395,7 @@ void CommitChoice() {
 // window 0's state 1 and the next sub-state, else sub-state 7.
 extern "C" void __cdecl MsgBox_ChoiceCommit(void) {
     CommitChoice();
-    const bool more = Word(At(at::kMessage)) != 0xFFFF;
+    const bool more = Word(At(::bof3::Img(at::kMessage.v))) != 0xFFFF;
     WindowRecords[1].state = 3;
     if (more) {
         const unsigned char sub = ItemUse_SubState;
@@ -426,13 +426,13 @@ namespace {
 // pair or the one before, as the original does. Returns the cursor.
 int SysMessage(unsigned k) {
     const int cursor = AreaW0c_ChoiceAnswer;
-    SetWord(At(at::kMessage), Word(At(at::kSysMessages + 4 * k + 2 * cursor)));
+    SetWord(At(::bof3::Img(at::kMessage.v)), Word(At(::bof3::Img(at::kSysMessages.v) + 4 * k + 2 * cursor)));
     return cursor;
 }
 void SysCounter(unsigned k, unsigned char if0, unsigned char if1) {
     const int cursor = SysMessage(k);
-    if (cursor == 0) At(at::kSysCounter)[0] = if0;
-    else if (cursor == 1) At(at::kSysCounter)[0] = if1;
+    if (cursor == 0) At(::bof3::Img(at::kSysCounter.v))[0] = if0;
+    else if (cursor == 1) At(::bof3::Img(at::kSysCounter.v))[0] = if1;
 }
 }  // namespace
 
@@ -473,15 +473,15 @@ extern "C" unsigned __cdecl Input_AutoRepeat(unsigned pressed) {
     const std::uint32_t held = static_cast<std::uint32_t>(move_script::Long(reinterpret_cast<unsigned char*>(&Input_Held)));
     if (static_cast<std::uint16_t>(pressed) != 0) {
         ItemUse_RepeatTimer = 0xC;
-        SetWord(At(at::kRepeatLatch), held);
+        SetWord(At(::bof3::Img(at::kRepeatLatch.v)), held);
         return held;
     }
-    if ((Word(At(at::kRepeatLatch)) & held & 0xFFFF) != 0) {
+    if ((Word(At(::bof3::Img(at::kRepeatLatch.v))) & held & 0xFFFF) != 0) {
         const auto timer = static_cast<std::uint16_t>(ItemUse_RepeatTimer - 1);
         ItemUse_RepeatTimer = timer;
         if (timer == 0) {
             ItemUse_RepeatTimer = 3;
-            SetWord(At(at::kRepeatLatch), held);
+            SetWord(At(::bof3::Img(at::kRepeatLatch.v)), held);
             return held;
         }
     }

@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
@@ -22,17 +24,17 @@ namespace at {
 // reads it signed) and the message word a choice handler leaves (0xFFFF: no
 // new message).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
 // (Field_ModeTailKinds 0x662CE8), its state, a sub-kind, and a word timer.
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
 // kTailState: now AreaW0c_TailState (symbols.toml).
 // kTailSub: now AreaW0c_TailSub (symbols.toml).
-constexpr std::uint32_t kTailTimer = 0x9039F6;
+constexpr ::bof3::image::Va kTailTimer{0x9039F6};
 // The movement script's four counters (MoveScript_CounterOps, ops A0..AF).
-constexpr std::uint32_t kCounter0 = 0x903848;
-constexpr std::uint32_t kCounter1 = 0x903849;
-constexpr std::uint32_t kCounter3 = 0x90384B;
+constexpr ::bof3::image::Va kCounter0{0x903848};
+constexpr ::bof3::image::Va kCounter1{0x903849};
+constexpr ::bof3::image::Va kCounter3{0x90384B};
 // The story flags (Flags_Set / Flags_Test's bank), the Cond_Flags row the
 // area 99 init tests (row 3: 0x903F90 + 8 * 3), the row pointer the chapters'
 // flag calls take (Cond_Flags + 8 * chapter; docs/field-modes.md), and a
@@ -41,16 +43,16 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kCondRow3: now Cond_Flags[0x18] (symbols.toml).
 // kFlagRow: now Chapter_FlagRow (symbols.toml).
-constexpr std::uint32_t kFlags904654 = 0x904654;
+constexpr ::bof3::image::Va kFlags904654{0x904654};
 // The return point Field_ChangeArea's callers keep (x, z dwords, the area
 // word at +8; event_ops_callees.h's kReturnPoint).
-constexpr std::uint32_t kReturnPoint = 0x904148;
+constexpr ::bof3::image::Va kReturnPoint{0x904148};
 // A byte area 98's choice sets to 6 beside the message it opens (areas 37
 // and 50 do the same); no reader read this round.
 // kAnswerMark: now AreaW0c_AnswerMark (symbols.toml).
 // The focus object: the object whose talk ran last (MoveScript_SetTurnTarget
 // stores Field_ActiveMember there; area_w1a_callees.h's kFocusObject).
-constexpr std::uint32_t kFocusObject = 0x903804;
+constexpr ::bof3::image::Va kFocusObject{0x903804};
 // The leader's record (ObjTrio): x +0x34, z +0x38, byte +8 (the pose the
 // hooks compare), byte +0x137 (area 95's handler 0 tests it;
 // field_hidden_callees.h's kLeader137).
@@ -58,10 +60,10 @@ constexpr std::uint32_t kFocusObject = 0x903804;
 // kLeaderX: now ObjTrio[0].x (symbols.toml).
 // kLeaderZ: now ObjTrio[0].z (symbols.toml).
 // kLeaderPose: now ObjTrio[0].direction (symbols.toml).
-constexpr std::uint32_t kLeader137 = 0x802E77;
+constexpr ::bof3::image::Va kLeader137{0x802E77};
 constexpr std::uint32_t kPartyStride = 0x14C;
 // Field_MoveSpeeds + 3 (a byte): area 99's leap divides 16 by it.
-constexpr std::uint32_t kMoveSpeed3 = 0x6697F3;
+constexpr ::bof3::image::Va kMoveSpeed3{0x6697F3};
 // MoveScript_PartyRecords record 0 (16 bytes): area 95's arc writes its
 // count +1 and its word +4.
 // kPartyRecord0: now MoveScript_PartyRecords (symbols.toml).

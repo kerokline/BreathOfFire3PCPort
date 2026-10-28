@@ -59,13 +59,13 @@ constexpr std::uint32_t kCtrl = 6;
 // The record table at 0x6536F8: 16 bytes each, [0] count, [1] signed x,
 // [2..] the string. Read 2026-09-20; the row -> first record and row -> count
 // tables at 0x653808 / 0x653810 are byte-identical to the PlayStation's.
-constexpr std::uint32_t kRecordBase = 0x6536F8;
+constexpr ::bof3::image::Va kRecordBase{0x6536F8};
 constexpr std::uint32_t kRecordStride = 16;
 constexpr std::uint32_t kRecordRoom = kRecordStride - 2;   // string + its NUL
 
 // The controller panel's six names. The pointer table at 0x66A368 is data, so
 // unlike the labels these are re-aimed by writing the table itself.
-constexpr std::uint32_t kCtrlPointers = 0x66A368;
+constexpr ::bof3::image::Va kCtrlPointers{0x66A368};
 constexpr std::uint32_t kCtrlExpected[kCtrl] = {
     0x66A338, 0x66A340, 0x66A348, 0x66A350, 0x66A358, 0x66A360,
 };
@@ -222,12 +222,12 @@ extern "C" void __cdecl Config_DrawControllerCell(int x, int y, unsigned int wor
         {0x20, 2, 0x65382C, 3}, {0x40, 1, 0x653828, 3}, {0x10, 6, 0x653824, 3},
         {0x80, 5, 0x653820, 3}, {0x04, 0, 0x65381C, 4}, {0x08, 0, 0x653818, 3},
     };
-    constexpr std::uint32_t kGlyphPointers = 0x66A2FC;   // the six one-byte glyph strings 0x66A2E0..
+    constexpr ::bof3::image::Va kGlyphPointers{0x66A2FC};   // the six one-byte glyph strings 0x66A2E0..
     for (unsigned i = 0; i < sizeof kCells / sizeof kCells[0]; ++i) {
         const Cell& c = kCells[i];
         if (!(word & c.bit)) continue;
         const auto* glyph = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(
-            *reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(kGlyphPointers + 4 * i))));
+            *reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(kGlyphPointers.v) + 4 * i))));
         // DIV-0051's 2026-10-21 amendment: under ja-JP the stand-in behind
         // 0x66A2FC is empty (no Japanese layer writes it); the Japan disc's
         // own icon, in the same colour at the same place.
@@ -322,7 +322,7 @@ void ConfigText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint3
             bof3::Fatal("config chunk: option %u is %u bytes, the record holds %u", (unsigned)i,
                         (unsigned)std::strlen(s) + 1, (unsigned)kRecordRoom);
         auto* rec = reinterpret_cast<std::uint8_t*>(
-            static_cast<std::uintptr_t>(kRecordBase + i * kRecordStride));
+            static_cast<std::uintptr_t>(::bof3::Img(kRecordBase.v) + i * kRecordStride));
         rec[0] = count;
         rec[1] = x;
         std::memset(rec + 2, 0, kRecordRoom);
@@ -339,7 +339,7 @@ void ConfigText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint3
                         (unsigned)std::strlen(s) + 1, (unsigned)kCtrlRoom);
         std::memcpy(g_ctrl[i], s, std::strlen(s) + 1);
         auto* entry = reinterpret_cast<std::uint32_t*>(
-            static_cast<std::uintptr_t>(kCtrlPointers + i * sizeof(std::uint32_t)));
+            static_cast<std::uintptr_t>(::bof3::Img(kCtrlPointers.v) + i * sizeof(std::uint32_t)));
         if (*entry != kCtrlExpected[i])
             bof3::Fatal("config: controller pointer %u holds 0x%08X, expected 0x%08X", (unsigned)i,
                         (unsigned)*entry, (unsigned)kCtrlExpected[i]);

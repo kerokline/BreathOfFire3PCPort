@@ -233,8 +233,8 @@ ah::Region g_regions16[] = {
     {(Gfx_UnpackScratch_addr + 0x1f000), 0x10}, // the button map's words 0..7
     {0, 4 * kItemBytes},          // g_items
     {0, sizeof g_names},          // g_names
-    {at::kTextRecords, 0x80},     // Text_Records' first four rows
-    {at::kAreaTextOffset, 4},
+    {at::kTextRecords.v, 0x80},     // Text_Records' first four rows
+    {at::kAreaTextOffset.v, 4},
     {CharacterRecords_addr + 0x9, 1},
     {Area16_PlateAnims_addr, 0x37C}, // area 16's plate, cell, message and name tables
     {Area16_Directions_addr, 0x18}, // Area16_Directions, Area16_Record8Anims
@@ -250,8 +250,8 @@ void PlantCell(bool random_place) {
     unsigned char* const cz = Mem(ObjTrio_addr + 0x3a);
     cx[1] = 0;
     cz[1] = 0;
-    const U n = (at::kA16CellsEnd - Area16_Cells_addr) / 4;
-    unsigned char* const last = Mem(at::kA16CellsEnd - 4);
+    const U n = (at::kA16CellsEnd.v - Area16_Cells_addr) / 4;
+    unsigned char* const last = Mem(::bof3::Img(at::kA16CellsEnd.v) - 4);
     last[0] = cx[0];
     last[1] = cz[0];
     // the sentinel's id follows the words, so a search with stale words (or
@@ -276,7 +276,7 @@ void Disturb16(U h) {
     case 5: Game_Mode = static_cast<unsigned short>(Game_Mode ^ 1); break;
     case 6: Cond_ByteFA = static_cast<signed char>(v % 16); break;
     case 7: SetWord(Mem(AreaW0b_Place_addr), v); break;
-    case 8: Mem(at::kLeaderCellX + (v & 1) * 2)[0] = static_cast<unsigned char>(v); break;
+    case 8: Mem(::bof3::Img(at::kLeaderCellX.v) + (v & 1) * 2)[0] = static_cast<unsigned char>(v); break;
     case 9: Mem(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(v & 1 ? 0xC : v); break;
     case 10: case 11: Mem(v & 1 ? (ObjTrio_addr + 0x36) : (ObjTrio_addr + 0x3a))[0] = static_cast<unsigned char>(h >> 24); break; // the settle re-plants its record
     default: break;
@@ -318,7 +318,7 @@ void Seed16(unsigned k) {
         if (ah::Often()) cell[3] = Mem(Area16_NameSets_addr + (ah::Next() % 3) * 5)[0];
         // items held or not, now and then a list ended early
         for (unsigned i = 0; i < 0x74; ++i)
-            if (ah::Half()) Mem(at::kItemsHeld + i)[0] = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next() | 1);
+            if (ah::Half()) Mem(::bof3::Img(at::kItemsHeld.v) + i)[0] = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next() | 1);
         if (ah::Half()) Mem(Area16_NameSets_addr + 1 + (ah::Next() % 3) * 5 + ah::Next() % 4)[0] = static_cast<unsigned char>(AH_PICK(0xFF, 0x16, 0x5E));
         break;
     }
@@ -410,8 +410,8 @@ void Seed16(unsigned k) {
         const auto near = [](unsigned char* cell, unsigned centre) {
             SetWord(cell, centre + AH_PICK(0, 25, 26, static_cast<U>(-25), static_cast<U>(-26), 1, 100));
         };
-        if (ah::Often()) near(Mem(at::kLeaderCellX), rv::As<records::SpriteHead>(o)->x_whole);
-        if (ah::Often()) near(Mem(at::kLeaderCellZ), rv::As<records::SpriteHead>(o)->z_whole);
+        if (ah::Often()) near(Mem(::bof3::Img(at::kLeaderCellX.v)), rv::As<records::SpriteHead>(o)->x_whole);
+        if (ah::Often()) near(Mem(::bof3::Img(at::kLeaderCellZ.v)), rv::As<records::SpriteHead>(o)->z_whole);
         if (ah::Half()) Frame_Counter = AH_PICK(0, 15, 16, 31, 0x2F, 0xFFFFFFFFu);
         break;
     }
@@ -500,7 +500,7 @@ const ah::Callee kCallees21[] = {
     {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {"Inventory_Count", bof3::addr::Inventory_Count, KeyOf(&::Inventory_Count), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &CountEffect, nullptr},
 };
-const ah::Region kRegions21[] = {{at::kTextRecords, 0x80}, {Chapter_FlagRow_addr, 4}};
+const ah::Region kRegions21[] = {{at::kTextRecords.v, 0x80}, {Chapter_FlagRow_addr, 4}};
 // Areas 21 and 26: the flag row's pointer moved (never followed: the
 // recorders log it), so a pointer not read again shows.
 void DisturbFlagRow(U h) {
@@ -509,7 +509,7 @@ void DisturbFlagRow(U h) {
 void Seed21(unsigned k) {
     Mem(AreaW0c_ChoiceAnswer_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 1, 2, 0xFF, 0x80) : ah::Next());
     if (k == 0 && ah::Often()) SetLong(Mem(Party_Zenny_addr), static_cast<std::int32_t>(AH_PICK(0x13, 0x14, 0x15, 0, 0x98967F, 0x80000000u)));
-    if (k == 2 && ah::Often()) Mem(at::kCounter)[0] = static_cast<unsigned char>(AH_PICK(0, 1, 6, 7, 8, 0xFF, 0x19));
+    if (k == 2 && ah::Often()) Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>(AH_PICK(0, 1, 6, 7, 8, 0xFF, 0x19));
 }
 
 // --- area 22 ---
@@ -556,7 +556,7 @@ const ah::Callee kCallees25[] = {kFindFree};
 const ah::Region kRegionsEffects[] = {{0x7E11E0, 8 * 0x80}, {0x903802, 2}, {Chapter_FlagRow_addr, 4}}; // Effect_Objects' first eight
 void Seed25(unsigned) {
     if (ah::Often()) Frame_Counter &= ~3u;
-    if (ah::Often()) Mem(at::kEffectCount)[0] = static_cast<unsigned char>(AH_PICK(0x13, 0x14, 0, 0xFF, 0x15));
+    if (ah::Often()) Mem(::bof3::Img(at::kEffectCount.v))[0] = static_cast<unsigned char>(AH_PICK(0x13, 0x14, 0, 0xFF, 0x15));
 }
 
 // --- area 26 ---

@@ -13,6 +13,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 namespace window_task {
@@ -21,39 +23,39 @@ namespace at {
 
 // The window records and the one the layer is running.
 // kRecords: now WindowRecords (symbols.toml). 22 records of 0x24 bytes (symbols.toml block WindowRecords)
-constexpr std::uint32_t kRecordsEnd = 0x803478;     // one past the last
+constexpr ::bof3::image::Va kRecordsEnd{0x803478};     // one past the last
 // kCurrent: now BattleWinStates_Current (symbols.toml). dword: the record Field_RunTaskRecords set
 // kPass: now BossSa_WindowPass (symbols.toml). u8: the pass Field_RunTaskRecords starts from
 
 // MsgBoxState (PC 0x7DEE40 = PSX 0x8014909C, symbols.toml block MsgBoxState).
-constexpr std::uint32_t kListText = 0x7DEE50;       // +0x10, a dword the list draws from
-constexpr std::uint32_t kListSet = 0x7DEE65;        // +0x25, u8: the list's geometry set
-constexpr std::uint32_t kListCount = 0x7DEE66;      // +0x26, s8: the last item's index
-constexpr std::uint32_t kListCursor = 0x7DEE67;     // +0x27, s8: the item the cursor is on
-constexpr std::uint32_t kPlacement = 0x7DEE6E;      // +0x2E, u8: the 0x0C control code's argument (PSX 0x801490CA)
-constexpr std::uint32_t kListRows = 0x7DEE6F;       // +0x2F, a byte per list item
+constexpr ::bof3::image::Va kListText{0x7DEE50};       // +0x10, a dword the list draws from
+constexpr ::bof3::image::Va kListSet{0x7DEE65};        // +0x25, u8: the list's geometry set
+constexpr ::bof3::image::Va kListCount{0x7DEE66};      // +0x26, s8: the last item's index
+constexpr ::bof3::image::Va kListCursor{0x7DEE67};     // +0x27, s8: the item the cursor is on
+constexpr ::bof3::image::Va kPlacement{0x7DEE6E};      // +0x2E, u8: the 0x0C control code's argument (PSX 0x801490CA)
+constexpr ::bof3::image::Va kListRows{0x7DEE6F};       // +0x2F, a byte per list item
 
 // The placement tables, all indexed by kPlacement.
-constexpr std::uint32_t kBoxXY = 0x66ADD8;          // 8 x (u8 x, u8 y), the wide box
-constexpr std::uint32_t kBoxAltXY = 0x66ADE8;       // 8 x (u8 x, u8 y), the narrow box (bit 0x40)
-constexpr std::uint32_t kSetXY = 0x66ADFC;          // 8-byte stride, u16 x at +0, u16 y at +2, by kListSet
-constexpr std::uint32_t kPlaceXY = 0x66AE10;        // MsgBox_PlacementTable, 4-byte stride, u16 x, u16 y
+constexpr ::bof3::image::Va kBoxXY{0x66ADD8};          // 8 x (u8 x, u8 y), the wide box
+constexpr ::bof3::image::Va kBoxAltXY{0x66ADE8};       // 8 x (u8 x, u8 y), the narrow box (bit 0x40)
+constexpr ::bof3::image::Va kSetXY{0x66ADFC};          // 8-byte stride, u16 x at +0, u16 y at +2, by kListSet
+constexpr ::bof3::image::Va kPlaceXY{0x66AE10};        // MsgBox_PlacementTable, 4-byte stride, u16 x, u16 y
 
 // Field_ChangeArea's cells. The PSX keeps all of these in one block at
 // 0x80143F10..1F; the port scattered them (docs/window-task.md section 2).
 // kPendingArea: now AreaW0b_Place (symbols.toml). u16 (PSX 0x80143F10)
 inline auto& kPendingX = SharedScratch.d_10;       // s32, 16.16 (PSX 0x80143F14)
-constexpr std::uint32_t kPendingX_addr = SharedScratch_addr + 0x10; // kPendingX's address, for the raw accessors that take one
+constexpr ::bof3::image::Va kPendingX_addr{SharedScratch_addr + 0x10}; // kPendingX's address, for the raw accessors that take one
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml). s32, 16.16 (PSX 0x80143F18)
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml). u8 (PSX 0x80143F1C) - Gfx_BufferIndex is the byte after it
 // kPendingKind: now Area_EnterTransition (symbols.toml). u8 (PSX 0x80143F1D, docs/field-modes.md section 4)
 // kAreaTrack: now AreaW1f_MusicCurrent (symbols.toml). u8: the track the next area wants (PSX 0x80143F1F)
 // kMusicTrack: now Music_Track (symbols.toml). u8: the track Music_Play last started, 0xFF none
 
-constexpr std::uint32_t kAreaKinds = 0x66ADC0;      // 11 u16 area numbers Area_ClassifyPending answers 0xB for
-constexpr std::uint32_t kAreaKindsEnd = 0x66ADD6;
+constexpr ::bof3::image::Va kAreaKinds{0x66ADC0};      // 11 u16 area numbers Area_ClassifyPending answers 0xB for
+constexpr ::bof3::image::Va kAreaKindsEnd{0x66ADD6};
 // kZoneLists: now Area_StateRecords (symbols.toml). an 8-byte zone record list per area (field_event_callees.h)
-constexpr std::uint32_t kMusicSets = 0x669A48;      // 8-byte records: const u8 *list at +0, u8 count at +4
+constexpr ::bof3::image::Va kMusicSets{0x669A48};      // 8-byte records: const u8 *list at +0, u8 count at +4
 // kClutRow: now Config_WindowColour (symbols.toml). s8: the window colour Window_DrawFrame builds a CLUT id from
 
 }  // namespace at

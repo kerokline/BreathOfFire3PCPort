@@ -9,6 +9,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 namespace char_stats {
 
 namespace at {
@@ -33,23 +35,28 @@ constexpr unsigned kResist = 0x2F;       // nine bytes 0..6 (7 set by a step of 
 constexpr unsigned kPercent = 0x38;      // five bytes 0..100, Stat_AddCap100
 constexpr unsigned kBase = 0x40;         // the base block, 0x20 bytes
 
-constexpr std::uint32_t kRosterBonus = 0x903640;   // 5 bytes per persistent record (PSX 0x80148668)
-constexpr std::uint32_t kTraitLists = 0x667548;    // pointer per trait byte to (kind, amount) pairs, 0xE ends
-constexpr std::uint32_t kInvIds = 0x656B00;        // id list pointer per category (0x904154 + 0x80 * cat;
+constexpr ::bof3::image::Va kRosterBonus{0x903640};   // 5 bytes per persistent record (PSX 0x80148668)
+constexpr ::bof3::image::Va kTraitLists{0x667548};    // pointer per trait byte to (kind, amount) pairs, 0xE ends
+constexpr ::bof3::image::Va kInvIds{0x656B00};        // id list pointer per category (0x904154 + 0x80 * cat;
                                                    // category 4 the key items 0x904554)
-constexpr std::uint32_t kInvCounts = 0x656B14;     // count list pointer per category (the fifth is 0)
-constexpr std::uint32_t kKeyItems = 0x904554;      // 32 id bytes (the PSX 0x80145448)
-constexpr std::uint32_t kExtraAccessory = 0x904130;   // u8: Inventory_Count's category-3 extras
+constexpr ::bof3::image::Va kInvCounts{0x656B14};     // count list pointer per category (the fifth is 0)
+constexpr ::bof3::image::Va kKeyItems{0x904554};      // 32 id bytes (the PSX 0x80145448)
+constexpr ::bof3::image::Va kExtraAccessory{0x904130};   // u8: Inventory_Count's category-3 extras
 // kExtraItem: now CharStats_ExtraItem (symbols.toml). u8, with its count at 0x90412F
 // kExtraCount: now CharStats_ExtraCount (symbols.toml).
-constexpr std::uint32_t kTextRecords = 0x904CE0;   // Text_Records, 32 bytes each
+constexpr ::bof3::image::Va kTextRecords{0x904CE0};   // Text_Records, 32 bytes each
 // The item tables (symbols.toml's NameTable_*), their strides and the fields
 // read here.
-constexpr std::uint32_t kConsumables = 0x656B28, kConsumableStride = 0x16;
-constexpr std::uint32_t kKeyItemTable = 0x657310, kKeyItemStride = 0x14;
-constexpr std::uint32_t kWeapons = 0x657450, kWeaponStride = 0x1C;
-constexpr std::uint32_t kArmourTable = 0x657D68, kArmourStride = 0x1A;
-constexpr std::uint32_t kAccessories = 0x658450, kAccessoryStride = 0x18;
+constexpr ::bof3::image::Va kConsumables{0x656B28};
+constexpr std::uint32_t kConsumableStride = 0x16;
+constexpr ::bof3::image::Va kKeyItemTable{0x657310};
+constexpr std::uint32_t kKeyItemStride = 0x14;
+constexpr ::bof3::image::Va kWeapons{0x657450};
+constexpr std::uint32_t kWeaponStride = 0x1C;
+constexpr ::bof3::image::Va kArmourTable{0x657D68};
+constexpr std::uint32_t kArmourStride = 0x1A;
+constexpr ::bof3::image::Va kAccessories{0x658450};
+constexpr std::uint32_t kAccessoryStride = 0x18;
 
 }  // namespace at
 

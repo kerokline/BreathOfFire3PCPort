@@ -74,7 +74,7 @@ std::uint32_t Id(const void* p) {
     if (at >= pool && at < pool + sizeof g_prim) return 0x10000u + (at - pool);
     if (at >= zones && at < zones + sizeof g_zones) return 0x20000u + (at - zones);
     if (at >= lists && at < lists + sizeof g_lists) return 0x30000u + (at - lists);
-    if (at >= WindowRecords_addr && at < window_task::at::kRecordsEnd)
+    if (at >= WindowRecords_addr && at < window_task::at::kRecordsEnd.v)
         return 0x40000u + (at - WindowRecords_addr);
     return at;
 }
@@ -416,7 +416,7 @@ const Region kRegions[] = {
     {0x7DEE40, 0x40},                       // MsgBoxState: the list dword, set, count, cursor, placement and rows
     {AreaW0b_Place_addr, 2},
     {Area_EnterTransition_addr, 1},
-    {window_task::at::kPendingX_addr, 4},
+    {window_task::at::kPendingX_addr.v, 4},
     {AreaEntry_PendingZ_addr, 4},
     {AreaEntry_PendingFlags_addr, 1},       // Gfx_BufferIndex is the byte after it: one byte, exactly
     {AreaW1f_MusicCurrent_addr, 1},
@@ -470,7 +470,7 @@ bool Half() { return (Next() & 1) != 0; }
 // and give the zone lists a record that matches everything so that the
 // lookup's endless loop always ends.
 void Fix() {
-    for (std::uint32_t a = WindowRecords_addr; a < window_task::at::kRecordsEnd; a += 0x24) {
+    for (std::uint32_t a = WindowRecords_addr; a < window_task::at::kRecordsEnd.v; a += 0x24) {
         unsigned char* const r = At(a);
         r[0] = static_cast<unsigned char>(Often() ? 1 + Next() % 3 : 0);
         r[1] = static_cast<unsigned char>(Next() % 9);
@@ -499,8 +499,8 @@ void Fix() {
     for (unsigned s = 0; s < kSets; ++s) {
         for (unsigned b = 0; b < sizeof g_lists[s]; ++b) g_lists[s][b] = static_cast<unsigned char>(Next());
         const unsigned count = Next() % 5;
-        SetLong(At(window_task::at::kMusicSets + s * 8u), static_cast<std::int32_t>(Address(g_lists[s])));
-        At(window_task::at::kMusicSets + s * 8u)[4] = static_cast<unsigned char>(count);
+        SetLong(At(::bof3::Img(window_task::at::kMusicSets.v) + s * 8u), static_cast<std::int32_t>(Address(g_lists[s])));
+        At(::bof3::Img(window_task::at::kMusicSets.v) + s * 8u)[4] = static_cast<unsigned char>(count);
     }
 }
 
@@ -714,7 +714,7 @@ void SelfTest() {
     for (unsigned a = 0; a < kAreas; ++a)
         saved_zone[a] = static_cast<std::uint32_t>(Long(At(Area_StateRecords_addr + a * 4u)));
     for (unsigned s = 0; s < kSets * 2; ++s)
-        saved_sets[s] = static_cast<std::uint32_t>(Long(At(window_task::at::kMusicSets + s * 4u)));
+        saved_sets[s] = static_cast<std::uint32_t>(Long(At(::bof3::Img(window_task::at::kMusicSets.v) + s * 4u)));
     Gfx_PacketNext = g_prim;
     Capture(saved);
     g = kStubs;
@@ -766,7 +766,7 @@ void SelfTest() {
     for (unsigned a = 0; a < kAreas; ++a)
         SetLong(At(Area_StateRecords_addr + a * 4u), static_cast<std::int32_t>(saved_zone[a]));
     for (unsigned s = 0; s < kSets * 2; ++s)
-        SetLong(At(window_task::at::kMusicSets + s * 4u), static_cast<std::int32_t>(saved_sets[s]));
+        SetLong(At(::bof3::Img(window_task::at::kMusicSets.v) + s * 4u), static_cast<std::int32_t>(saved_sets[s]));
 
     bof3::Log("shadow      window_task self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, "
               "%u MISMATCHES; the 22 window records, the current record, the pass byte, MsgBoxState, the pending area "

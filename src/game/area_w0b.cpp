@@ -51,7 +51,7 @@ unsigned char* Pointer(U cell) { return At(static_cast<U>(Long(At(cell)))); }
 // A handler read from a .data table in place, as the originals' `call` /
 // `jmp [index * 4 + table]`: the index is not checked.
 Handler Entry(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(address))))); }
-void SetMessage(unsigned id) { SetWord(At(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(At(::bof3::Img(at::kMessage.v)), id); }
 signed char Choice() { return AreaW0c_ChoiceAnswer; }
 
 // Area 16's own functions another of them calls directly, by their original
@@ -112,31 +112,31 @@ extern "C" void __cdecl Area16_PlaceMessage(void) {
     if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA1) {
         const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
-        for (U a = Area16_PlaceMessages_addr; a < at::kA16PlaceMessagesEnd; a += 0x20, ++row)
+        for (U a = ::bof3::Img(Area16_PlaceMessages_addr); a < ::bof3::Img(at::kA16PlaceMessagesEnd.v); a += 0x20, ++row)
             if (Word(At(a)) == place) break;
         const std::int32_t index = (row << 4) + Cond_ByteFA;
-        AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(At(Area16_PlaceMessages_addr + static_cast<U>(index * 2)))));
+        AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(At(::bof3::Img(Area16_PlaceMessages_addr) + static_cast<U>(index * 2)))));
     } else {
         const unsigned cx = ObjTrio[0].x_whole;
         const unsigned cz = ObjTrio[0].z_whole;
-        U cell = Area16_Cells_addr;
+        U cell = ::bof3::Img(Area16_Cells_addr);
         while (!(At(cell)[0] == cx && At(cell)[1] == cz)) cell += 4;
         const unsigned id = At(cell)[3];
         U set = 0;
-        for (U a = Area16_NameSets_addr; a < at::kA16NameSetsEnd; a += 5, ++set)
+        for (U a = ::bof3::Img(Area16_NameSets_addr); a < ::bof3::Img(at::kA16NameSetsEnd.v); a += 5, ++set)
             if (At(a)[0] == id) break;
-        const unsigned char* items = At(Area16_NameSets_addr + 1 + set * 5);
-        for (U row = at::kTextRecords; row < at::kTextRecordsEnd; row += 0x20, ++items) {
+        const unsigned char* items = At(::bof3::Img(Area16_NameSets_addr) + 1 + set * 5);
+        for (U row = ::bof3::Img(at::kTextRecords.v); row < ::bof3::Img(at::kTextRecordsEnd.v); row += 0x20, ++items) {
             const unsigned item = items[0];
             if (item == 0xFF) break;
             unsigned char* const out = At(row);
-            if (At(at::kItemsHeld + item)[0] == 0) {
+            if (At(::bof3::Img(at::kItemsHeld.v) + item)[0] == 0) {
                 SetLong(out, 0x3F3F3F3F);
                 SetLong(out + 4, 0x3F3F3F3F);
                 out[8] = 0;
             } else {
                 const unsigned char* const name =
-                    item == 0x16 ? At(AreaW0b_ItemNameKey_addr) : AH_CALL(Item_NamePtr)(0, (item + 0x38) & 0xFF);
+                    item == 0x16 ? At(::bof3::Img(AreaW0b_ItemNameKey_addr)) : AH_CALL(Item_NamePtr)(0, (item + 0x38) & 0xFF);
                 std::memcpy(out, name, 16);
             }
         }
@@ -172,7 +172,7 @@ extern "C" void __cdecl Area16_PlateRun(void) {
     else if ((Field_ScriptFlags2 & 0x1000) != 0) kind = 4;
     else kind = 0;
     Cur()[0xB] = kind;
-    Entry(Area16_PlateStates_addr + Cur()[1] * 4u)();
+    Entry(::bof3::Img(Area16_PlateStates_addr) + Cur()[1] * 4u)();
 }
 
 // original 0x401DE0 (Area16_PlateStates 0 and WorldMap33_PlateStates 0: one
@@ -201,7 +201,7 @@ extern "C" void __cdecl Area16_PlateShow(void) {
     unsigned animation;
     if (kind == 1) {
         const unsigned place = AreaW0b_Place;
-        U entry = Area16_PlateAnims_addr;
+        U entry = ::bof3::Img(Area16_PlateAnims_addr);
         while (Word(At(entry)) != place) entry += 4;
         rv::Store<std::int32_t>(rv::Current<records::EffectObject>()->work_18, static_cast<std::int32_t>(place));
         animation = At(entry + 2)[0];
@@ -285,7 +285,7 @@ extern "C" void __cdecl Area16_PlateShrink(void) {
 
 // original 0x402080 (record 0 +0xC; area 33's 0x404130): Area16_HudStates
 // 0x5E5F70 by +1 - WorldMapHud_Start (shared), Area16_HudFrame.
-extern "C" void __cdecl Area16_HudRun(void) { Entry(Area16_HudStates_addr + Cur()[1] * 4u)(); }
+extern "C" void __cdecl Area16_HudRun(void) { Entry(::bof3::Img(Area16_HudStates_addr) + Cur()[1] * 4u)(); }
 
 // original 0x4020A0 (Area16_HudStates 1; area 33's 0x404150): `call
 // 0x4020B0; jmp 0x402180` - the frame's slide, then the region box's.
@@ -297,7 +297,7 @@ extern "C" void __cdecl Area16_HudFrame(void) {
 // original 0x4020B0 (area 33's WorldMap_FrameStep's dispatch): Area16_FrameStates
 // 0x5E5F78 by +2 - WorldMap_FrameWait (shared), _FrameSlideIn, _FrameHold,
 // _FrameSlideOut. A tail jump; the index unchecked.
-extern "C" void __cdecl Area16_FrameStep(void) { Entry(Area16_FrameStates_addr + Cur()[2] * 4u)(); }
+extern "C" void __cdecl Area16_FrameStep(void) { Entry(::bof3::Img(Area16_FrameStates_addr) + Cur()[2] * 4u)(); }
 
 // original 0x4020D0 (Area16_FrameStates 1): the word +0x2E += 0x10; at 0x10
 // and above (s16) +2 + 1; then a tail jump to Area16_FrameHold.
@@ -336,7 +336,7 @@ extern "C" void __cdecl Area16_FrameSlideOut(void) {
 // original 0x402180 (area 33's WorldMapHud_BoxStep 0x404230): Area16_BoxStates
 // 0x5E5F88 by +3 - WorldMapHud_BoxWait (shared), _BoxSlideIn, _BoxHold,
 // _BoxSlideOut.
-extern "C" void __cdecl Area16_BoxStep(void) { Entry(Area16_BoxStates_addr + Cur()[3] * 4u)(); }
+extern "C" void __cdecl Area16_BoxStep(void) { Entry(::bof3::Img(Area16_BoxStates_addr) + Cur()[3] * 4u)(); }
 
 // original 0x4021A0 (Area16_BoxStates 1; area 33's 0x404250): y +0x30 -= 10;
 // at 0xC8 and below (s16) +3 + 1; when the box leaves +3 = 3;
@@ -414,18 +414,18 @@ extern "C" void __cdecl Area16_DrawFrame(int x, int y) {
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x9C, 0);
     AH_CALL(Gfx_CommitPrim)(1, 0xC);
     AH_AT(DrawSpriteAt, kDrawSprite16)(x, y, 0);
-    const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(at::kLeaderCellX))),
-                                                       static_cast<short>(Word(At(at::kLeaderCellZ))));
+    const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
+                                                       static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v)))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
     if (!withheld1) AH_AT(DrawSpriteAt, kDrawSprite16)(x + 0x30, y, 1);
-    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite16), Area16_Buttons_addr, 6, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f000))), x + 0x38, y + 8,
+    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite16), ::bof3::Img(Area16_Buttons_addr), 6, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000))), x + 0x38, y + 8,
                           withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) AH_AT(DrawSpriteAt, kDrawSprite16)(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite16), Area16_Buttons_addr, 8, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f00c))), x + 0x38, y + 0x10,
+    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite16), ::bof3::Img(Area16_Buttons_addr), 8, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c))), x + 0x38, y + 0x10,
                           withheld2);
-    bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(at::kLeaderCellX))),
-                                            static_cast<short>(Word(At(at::kLeaderCellZ)))) != 0;
+    bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
+                                            static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v))))) != 0;
     if (!third) third = (Field_ScriptFlags2 & 0x1000) != 0;
     if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
     if (!third) third = (Field_ScriptFlags & 0x4000) != 0;
@@ -452,7 +452,7 @@ extern "C" void __cdecl Area16_DrawSprite(int x, int y, unsigned index) {
     prim[4] = prim[5] = prim[6] = 0x80;
     std::memcpy(prim + 0xC, &fy, 4);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(prim)->clut, 0x7B80);
-    const unsigned char* const entry = At(Area16_Sprites_addr + (index & 0xFF) * 4u);
+    const unsigned char* const entry = At(::bof3::Img(Area16_Sprites_addr) + (index & 0xFF) * 4u);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(prim)->w, entry[0]);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(prim)->h, entry[1]);
     prim[0x14] = entry[2];
@@ -468,7 +468,7 @@ extern "C" void __cdecl Area16_DrawHud(int x, int y) {
     if ((Draw_PassFlags & 0x1B) == 0) return;
     AH_AT(DrawSpriteAt, kDrawSprite16)(x, y, 4);
     AH_AT(DrawSpriteAt, kDrawSprite16)(x + 0x80, y, 5);
-    const unsigned char* const text = At(at::kAreaText + (static_cast<U>(Long(At(at::kAreaTextOffset))) & 0xFFFF));
+    const unsigned char* const text = At(::bof3::Img(at::kAreaText.v) + (static_cast<U>(Long(At(::bof3::Img(at::kAreaTextOffset.v)))) & 0xFFFF));
     AH_CALL(Text_DrawAt)(x + 4, y + 4, 0, 0xFF, text);
 }
 
@@ -479,7 +479,7 @@ extern "C" void __cdecl Area16_DrawHud(int x, int y) {
 // original 0x4025D0 (record 0 +8): Area16_Record8States 0x5E6008 by +1 -
 // 0x4253C0 and 0x40C490 (the world-map copies' shared states, not this
 // group's) around Area16_Record8Place.
-extern "C" void __cdecl Area16_Record8Run(void) { Entry(Area16_Record8States_addr + Cur()[1] * 4u)(); }
+extern "C" void __cdecl Area16_Record8Run(void) { Entry(::bof3::Img(Area16_Record8States_addr) + Cur()[1] * 4u)(); }
 
 // original 0x4025F0 (Area16_Record8States 1; area 33's copy 0x4046A0):
 // Sprite_SetAnimationBank(0x46); +0x48 = +0x24 = 0, +0x29 = 5; the direction
@@ -491,7 +491,7 @@ extern "C" void __cdecl Area16_Record8Run(void) { Entry(Area16_Record8States_add
 // Sprite_SetAnimation(Area16_Record8Anims[d] byte 0), +0x2A = its byte 1 (d
 // read again after the call); a tail jump to Sprite_UpdateScreen.
 extern "C" void __cdecl Area16_Record8Place(void) {
-    const auto dir = [](const unsigned char* o, U half) { return static_cast<std::int16_t>(Word(At(Area16_Directions_addr + half + o[8] * 4u))); };
+    const auto dir = [](const unsigned char* o, U half) { return static_cast<std::int16_t>(Word(At(::bof3::Img(Area16_Directions_addr) + half + o[8] * 4u))); };
     AH_CALL(Sprite_SetAnimationBank)(0x46);
     Cur()[0x48] = 0;
     Cur()[0x24] = 0;
@@ -522,17 +522,17 @@ extern "C" void __cdecl Area16_Record8Place(void) {
     rv::Store<unsigned>(rv::As<records::EffectObject>(o)->z_whole, rv::As<records::EffectObject>(o)->z_whole - static_cast<unsigned>(dir(o, 2) >> 9));
     Cur()[0xB] = 0;
     Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);
-    AH_CALL(Sprite_SetAnimation)(At(Area16_Record8Anims_addr + Cur()[8] * 2u)[0]);
+    AH_CALL(Sprite_SetAnimation)(At(::bof3::Img(Area16_Record8Anims_addr) + Cur()[8] * 2u)[0]);
     o = Cur();
     tO = rv::As<records::EffectObject>(o);
-    o[0x2A] = At(Area16_Record8Anims_addr + 1 + o[8] * 2u)[0];
+    o[0x2A] = At(::bof3::Img(Area16_Record8Anims_addr) + 1 + o[8] * 2u)[0];
     AH_CALL(Sprite_UpdateScreen)();
 }
 
 // original 0x402750 (record 0 +4): Area16_Record4States 0x5E602C by +1 -
 // Area16_Record4MarkCell, then 0x408990 (the copies' shared state, not this
 // group's).
-extern "C" void __cdecl Area16_Record4Run(void) { Entry(Area16_Record4States_addr + Cur()[1] * 4u)(); }
+extern "C" void __cdecl Area16_Record4Run(void) { Entry(::bof3::Img(Area16_Record4States_addr) + Cur()[1] * 4u)(); }
 
 // original 0x402770 (Area16_Record4States 0; area 33's copy 0x404820): with
 // the byte 0x903A79 9 or Field_StatusBits bit 0, a tail jump to
@@ -555,7 +555,7 @@ extern "C" void __cdecl Area16_Record4MarkCell(void) {
     Cur()[0x5E] = 0;
     Cur()[0x5F] = 0;
     const U width = AreaMap_Header[0];
-    const U record = Area16_Cells_addr + Cur()[0xB] * 4u;
+    const U record = ::bof3::Img(Area16_Cells_addr) + Cur()[0xB] * 4u;
     const U z = At(record + 1)[0];
     const U x = At(record)[0];
     const_cast<unsigned char*>(AreaMap_Bytes)[z * width + x] = 0xA0;
@@ -592,10 +592,10 @@ extern "C" void __cdecl Area16_DrawDrift(void) {
         rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->z_whole, 0xFFF8);
         o = Cur();
     }
-    std::int32_t dx = S16(At(at::kLeaderCellX)) - S16(o + 0x36);
+    std::int32_t dx = S16(At(::bof3::Img(at::kLeaderCellX.v))) - S16(o + 0x36);
     if (dx < 0) dx = -dx;
     if (dx > 0x19) {
-        std::int32_t dz = S16(At(at::kLeaderCellZ)) - S16(o + 0x3A);
+        std::int32_t dz = S16(At(::bof3::Img(at::kLeaderCellZ.v))) - S16(o + 0x3A);
         if (dz < 0) dz = -dz;
         if (dz > 0x19) return;
     }
@@ -652,9 +652,9 @@ extern "C" void __cdecl Area16_DrawDrift(void) {
             rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(q)->clut, 0x78CB);
             rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(q)->tpage, 0x5B);
             q[4] = q[5] = q[6] = 0x28;
-            const U m = At(Area16_DriftUV_addr + 0x8 + static_cast<U>(e))[0];
-            const U ubase = At(Area16_DriftUV_addr + static_cast<U>(e))[0];
-            const U vbase = At(Area16_DriftUV_addr + 0x4 + static_cast<U>(e))[0];
+            const U m = At(::bof3::Img(Area16_DriftUV_addr) + 0x8 + static_cast<U>(e))[0];
+            const U ubase = At(::bof3::Img(Area16_DriftUV_addr) + static_cast<U>(e))[0];
+            const U vbase = At(::bof3::Img(Area16_DriftUV_addr) + 0x4 + static_cast<U>(e))[0];
             const U scroll = (rv::Current<records::SpriteHead>()->z_frac * m) >> 16;
             const U ui = static_cast<U>(i), uj = static_cast<U>(j);
             q[0x14] = static_cast<unsigned char>(ui * m + ubase);
@@ -682,7 +682,7 @@ extern "C" void __cdecl Area16_DrawDrift(void) {
 // is 0 when Cond_ByteFA is 8, else 2.
 extern "C" void __cdecl Area18_SetRecordByte(void) {
     const unsigned value = Cond_ByteFA == 8 ? 0u : 2u;
-    Pointer(at::kAreaRecords + Game_AreaNumber * 4u)[4] = static_cast<unsigned char>(value);
+    Pointer(::bof3::Img(at::kAreaRecords.v) + Game_AreaNumber * 4u)[4] = static_cast<unsigned char>(value);
 }
 
 // original 0x402CE0 (area 18's handler 0, Area18_Handlers 0x5E6680; PSX
@@ -743,7 +743,7 @@ extern "C" void __cdecl Area20_PickFieldObject(void) {
     unsigned roll = static_cast<unsigned>(AH_CALL(Rand)()) & 0x3F;
     unsigned keep = 0;
     for (; keep < 8; ++keep) {
-        const unsigned chance = At(Area20_Weights_addr + keep)[0];
+        const unsigned chance = At(::bof3::Img(Area20_Weights_addr) + keep)[0];
         if (roll < chance) break;
         roll = (roll - chance) & 0xFF;
     }
@@ -753,14 +753,14 @@ extern "C" void __cdecl Area20_PickFieldObject(void) {
         const unsigned cell = static_cast<unsigned>(AH_CALL(Rand)()) & 7;
         unsigned char* const o = rv::Bytes(Sprite_Objects) + keep * 0xA4;
         auto* const tO = rv::As<records::SpriteObject>(o);
-        const U x = static_cast<U>(At(Area20_Cells_addr + cell * 2)[0]) << 16;
-        const U z = static_cast<U>(At(Area20_Cells_addr + cell * 2 + 1)[0]) << 16;
+        const U x = static_cast<U>(At(::bof3::Img(Area20_Cells_addr) + cell * 2)[0]) << 16;
+        const U z = static_cast<U>(At(::bof3::Img(Area20_Cells_addr) + cell * 2 + 1)[0]) << 16;
         tO->x = static_cast<std::int32_t>(x);
         tO->z = static_cast<std::int32_t>(z);
         const long height = AH_CALL(AreaMap_Elevation)(tO->x, static_cast<long>(z));
         rv::Store<unsigned>(rv::As<records::SpriteObject>(o)->height_whole, static_cast<unsigned>(height));
     }
-    Field_StepCount = static_cast<unsigned short>(Long(At(ObjTrio_addr + 0x134)) - 5);
+    Field_StepCount = static_cast<unsigned short>(Long(At(::bof3::Img(ObjTrio_addr) + 0x134)) - 5);
 }
 
 // ===========================================================================
@@ -785,7 +785,7 @@ extern "C" void __cdecl Area21_ChoicePay(void) {
 
 // original 0x402EC0 (area 21's choice 2): message = Area21_Messages 0x5E72C4
 // by the s8 choice (unchecked).
-extern "C" void __cdecl Area21_ChoiceMessage(void) { SetMessage(Word(At(Area21_Messages_addr + static_cast<U>(Choice() * 2)))); }
+extern "C" void __cdecl Area21_ChoiceMessage(void) { SetMessage(Word(At(::bof3::Img(Area21_Messages_addr) + static_cast<U>(Choice() * 2)))); }
 
 // original 0x402EE0 (area 21's choices 3 and 4). Choice not 0: the counter
 // 0x90384B + 1, and at 8 back to 0 with message 0x34, else message 0x31.
@@ -796,10 +796,10 @@ extern "C" void __cdecl Area21_ChoiceMessage(void) { SetMessage(Word(At(Area21_M
 // points at, 0x12).
 extern "C" void __cdecl Area21_ChoiceTrade(void) {
     if (static_cast<unsigned char>(AreaW0c_ChoiceAnswer) != 0) {
-        const auto count = static_cast<unsigned char>(At(at::kCounter)[0] + 1);
-        At(at::kCounter)[0] = count;
+        const auto count = static_cast<unsigned char>(At(::bof3::Img(at::kCounter.v))[0] + 1);
+        At(::bof3::Img(at::kCounter.v))[0] = count;
         if (count == 8) {
-            At(at::kCounter)[0] = 0;
+            At(::bof3::Img(at::kCounter.v))[0] = 0;
             SetMessage(0x34);
         } else {
             SetMessage(0x31);
@@ -810,13 +810,13 @@ extern "C" void __cdecl Area21_ChoiceTrade(void) {
         SetMessage(0x32);
         return;
     }
-    const unsigned counter = At(at::kCounter)[0];
+    const unsigned counter = At(::bof3::Img(at::kCounter.v))[0];
     const unsigned n = counter != 0 ? (counter + 1) * 10 : 10;
-    AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextRow1)), reinterpret_cast<const char*>(At(at::kFormat)), n);
+    AH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kTextRow1.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kFormat.v))), n);
     SetMessage(0x30);
     AH_AT(unsigned char (__cdecl*)(unsigned, unsigned), area_w0b::kMoneyGive)(n, 0);
     AH_AT(unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned), area_w0b::kInventoryTake)(0, 3, 1, 0);
-    AH_CALL(Flags_Set)(Pointer(at::kFlagBase), 0x12);
+    AH_CALL(Flags_Set)(Pointer(::bof3::Img(at::kFlagBase.v)), 0x12);
 }
 
 // ===========================================================================
@@ -829,8 +829,8 @@ namespace {
 void ChoiceSetVar(unsigned char yes, unsigned char no) {
     const signed char choice = Choice();
     SetMessage(0xFFFF);
-    if (choice == 0) At(at::kScriptVar)[0] = yes;
-    else if (choice == 1) At(at::kScriptVar)[0] = no;
+    if (choice == 0) At(::bof3::Img(at::kScriptVar.v))[0] = yes;
+    else if (choice == 1) At(::bof3::Img(at::kScriptVar.v))[0] = no;
 }
 }  // namespace
 
@@ -916,7 +916,7 @@ extern "C" void __cdecl Area25_SpawnEffect(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     at::kFoundSlot = slot;
     if (slot == 0xFF) return;
-    const unsigned count = At(at::kEffectCount)[0];
+    const unsigned count = At(::bof3::Img(at::kEffectCount.v))[0];
     unsigned char* const record = rv::Bytes(Effect_Objects) + static_cast<std::uint32_t>(at::kFoundSlot) * 0x80u;
     record[0] = 1;
     record[5] = 0xB;
@@ -933,16 +933,16 @@ extern "C" void __cdecl Area25_SpawnEffect(void) {
 // variable 0xBE (choice 0) or 0xBF (1).
 extern "C" void __cdecl Area26_ChoiceMessage(void) {
     const signed char choice = Choice();
-    SetMessage(Word(At(Area26_Messages_addr + static_cast<U>(choice * 2))));
-    if (choice == 0) At(at::kScriptVar)[0] = 0xBE;
-    else if (choice == 1) At(at::kScriptVar)[0] = 0xBF;
+    SetMessage(Word(At(::bof3::Img(Area26_Messages_addr) + static_cast<U>(choice * 2))));
+    if (choice == 0) At(::bof3::Img(at::kScriptVar.v))[0] = 0xBE;
+    else if (choice == 1) At(::bof3::Img(at::kScriptVar.v))[0] = 0xBF;
 }
 
 // original 0x4031B0 (area 26's choice 1; PSX 0x801F305C): no message; the variable 8 or 0xF.
 extern "C" void __cdecl Area26_ChoiceSetVar(void) { ChoiceSetVar(8, 0xF); }
 
 namespace {
-unsigned char* FlagRow() { return Pointer(at::kFlagBase); }
+unsigned char* FlagRow() { return Pointer(::bof3::Img(at::kFlagBase.v)); }
 }  // namespace
 
 // original 0x4031E0 (area 26's choice 2 and handler 0; PSX 0x801F309C):
@@ -994,8 +994,8 @@ extern "C" void __cdecl Area26_SpawnEffect(void) {
     const auto z = ObjTrio[0].screen_y;
     const auto x = ObjTrio[0].screen_x;
     const unsigned member = Cond_Flags[0xd2];
-    Sprite_Current = At(ObjTrio_addr);
-    const unsigned char kind = At(Area26_EffectKinds_addr + member)[0];
+    Sprite_Current = At(::bof3::Img(ObjTrio_addr));
+    const unsigned char kind = At(::bof3::Img(Area26_EffectKinds_addr) + member)[0];
     const unsigned char slot = AH_CALL(Effect_Spawn)(1, 0, static_cast<signed char>(kind), x, z);
     if (slot != 0xFF) Sprite_Current[0xB] = slot;
 }

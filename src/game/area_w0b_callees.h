@@ -16,6 +16,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
 // every constant here whose target is ours reads bof3::addr::<Name>. The values
@@ -42,49 +44,49 @@ using U = std::uint32_t;
 // kMsgState: now AreaW0c_TailState (symbols.toml). s8: the field hook's state
 // kMsgArg: now AreaW0c_TailSub (symbols.toml).
 // kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
-constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z
-constexpr U kLeaderCellZ = 0x905E62;
+constexpr ::bof3::image::Va kLeaderCellX{0x905E66};      // the high words of Field_Kind2X / Z
+constexpr ::bof3::image::Va kLeaderCellZ{0x905E62};
 // kMapHeight: now AreaMap_Header[1] (symbols.toml). AreaMap_Header's second byte: the map's height in cells
 // kButtonMap0: now Gfx_UnpackScratch[0x1f000] (symbols.toml). the field's button map: word 0, the first legend's button
 // kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). word 6, the second's
 // kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
-constexpr U kAreaText = 0x803580;         // the area's text section: the region label at +[0x803588] & 0xFFFF
-constexpr U kAreaTextOffset = 0x803588;
-constexpr U kItemsHeld = 0x9040EC;        // a byte per item id: 0 not yet seen (the hook's list shows "????????")
+constexpr ::bof3::image::Va kAreaText{0x803580};         // the area's text section: the region label at +[0x803588] & 0xFFFF
+constexpr ::bof3::image::Va kAreaTextOffset{0x803588};
+constexpr ::bof3::image::Va kItemsHeld{0x9040EC};        // a byte per item id: 0 not yet seen (the hook's list shows "????????")
 // kItemNameKey: now AreaW0b_ItemNameKey (symbols.toml). the 16-byte name the hook copies for item 0x16 (no Item_NamePtr call)
 // kMoney: now Party_Zenny (symbols.toml). dword
 // kChoice: now AreaW0c_ChoiceAnswer (symbols.toml). s8: the choice the message box committed
-constexpr U kMessage = 0x7DEE48;          // u16: the message a choice handler opens, 0xFFFF none
-constexpr U kCounter = 0x90384B;          // area 21's trade counter, 0..7
-constexpr U kScriptVar = 0x903848;        // a movement-script variable byte (the choices set it)
-constexpr U kEffectCount = 0x90384A;      // area 25: its effects' count byte (below 0x14: variant 1)
+constexpr ::bof3::image::Va kMessage{0x7DEE48};          // u16: the message a choice handler opens, 0xFFFF none
+constexpr ::bof3::image::Va kCounter{0x90384B};          // area 21's trade counter, 0..7
+constexpr ::bof3::image::Va kScriptVar{0x903848};        // a movement-script variable byte (the choices set it)
+constexpr ::bof3::image::Va kEffectCount{0x90384A};      // area 25: its effects' count byte (below 0x14: variant 1)
 inline auto& kFoundSlot = SharedScratch.b_00;  // area 25: the slot Effect_FindFree answered
-constexpr U kFlagBase = 0x929ED0;         // the pointer Flags_Set / Flags_Clear are handed (a flag row)
-constexpr U kTextRecords = 0x904CE0;      // Text_Records: area 16's hook fills its first four rows of 0x20
-constexpr U kTextRecordsEnd = 0x904D60;
-constexpr U kTextRow1 = 0x904D00;         // Text_Records + 0x20: area 21's number, by Crt_sprintf
-constexpr U kFormat = 0x5E10C0;           // the "%d"-shaped format it uses (read-only)
-constexpr U kFlag3A79 = 0x903A79;         // area 16's record +4 state: 9 releases the effect
+constexpr ::bof3::image::Va kFlagBase{0x929ED0};         // the pointer Flags_Set / Flags_Clear are handed (a flag row)
+constexpr ::bof3::image::Va kTextRecords{0x904CE0};      // Text_Records: area 16's hook fills its first four rows of 0x20
+constexpr ::bof3::image::Va kTextRecordsEnd{0x904D60};
+constexpr ::bof3::image::Va kTextRow1{0x904D00};         // Text_Records + 0x20: area 21's number, by Crt_sprintf
+constexpr ::bof3::image::Va kFormat{0x5E10C0};           // the "%d"-shaped format it uses (read-only)
+constexpr ::bof3::image::Va kFlag3A79{0x903A79};         // area 16's record +4 state: 9 releases the effect
 // kPartyFirst: now Cond_Flags[0xd2] (symbols.toml). the first party list's first member id
-constexpr U kAreaRecords = 0x668D80;      // a pointer per area; area 18's init writes the byte +4 of its own
+constexpr ::bof3::image::Va kAreaRecords{0x668D80};      // a pointer per area; area 18's init writes the byte +4 of its own
 
 // --- area 16's tables (the world-map copy's, in its data block after area
 // 17's descriptor; tools/area_rows.py moves them to area 16) -----------------
 // kA16PlateAnims: now Area16_PlateAnims (symbols.toml). (u16 place, u8 animation, u8) x 9, searched with NO bound
 // kA16Cells: now Area16_Cells (symbols.toml). (u8 x, u8 z, u8, u8 id) x 138, searched with NO bound
-constexpr U kA16CellsEnd = 0x5E5E2C;
+constexpr ::bof3::image::Va kA16CellsEnd{0x5E5E2C};
 // kA16PlaceMessages: now Area16_PlaceMessages (symbols.toml). 9 rows of 0x20: u16 place, fifteen u16 messages
-constexpr U kA16PlaceMessagesEnd = 0x5E5F4C;
+constexpr ::bof3::image::Va kA16PlaceMessagesEnd{0x5E5F4C};
 // kA16NameSets: now Area16_NameSets (symbols.toml). 3 records of (u8 id, u8 item x 4)
-constexpr U kA16NameSetsEnd = 0x5E5F5B;
+constexpr ::bof3::image::Va kA16NameSetsEnd{0x5E5F5B};
 // kA16PlateStates: now Area16_PlateStates (symbols.toml). 5 handlers
 // kA16HudStates: now Area16_HudStates (symbols.toml). 2
 // kA16FrameStates: now Area16_FrameStates (symbols.toml). 4
 // kA16BoxStates: now Area16_BoxStates (symbols.toml). 4
 // kA16Sprites: now Area16_Sprites (symbols.toml). (w, h, u, v) x 22, by index & 0xFF unchecked
 // kA16Buttons: now Area16_Buttons (symbols.toml). (u16 mask, u8 sprite, u8) x 6; the second legend reads EIGHT
-constexpr U kA16Buttons6End = 0x5E6008;
-constexpr U kA16Buttons8End = 0x5E6010;
+constexpr ::bof3::image::Va kA16Buttons6End{0x5E6008};
+constexpr ::bof3::image::Va kA16Buttons8End{0x5E6010};
 // kA16Record8States: now Area16_Record8States (symbols.toml). 3 (0x4253C0 and 0x40C490 other areas' shared ones)
 // kA16Directions: now Area16_Directions (symbols.toml). (s16 dx, s16 dz) x 4 by +8, unchecked
 // kA16Record8Anims: now Area16_Record8Anims (symbols.toml). (u8 animation, u8 +0x2A) x 4 by +8, unchecked

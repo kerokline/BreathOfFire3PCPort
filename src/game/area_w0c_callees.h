@@ -8,6 +8,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
@@ -23,18 +25,18 @@ namespace at {
 // byte by some handlers and as a byte by others (docs/item-use.md section 5).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
 // The message word a choice handler leaves (0xFFFF: no new message).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
 // (Field_ModeTailKinds 0x662CE8), its state, a sub-kind, and a word timer.
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
 // kTailState: now AreaW0c_TailState (symbols.toml).
 // kTailSub: now AreaW0c_TailSub (symbols.toml).
-constexpr std::uint32_t kTailTimer = 0x9039F6;
+constexpr ::bof3::image::Va kTailTimer{0x9039F6};
 // The movement script's four counters (MoveScript_CounterOps, ops A0..AF).
-constexpr std::uint32_t kCounter0 = 0x903848;
-constexpr std::uint32_t kCounter1 = 0x903849;
-constexpr std::uint32_t kCounter2 = 0x90384A;
-constexpr std::uint32_t kCounter3 = 0x90384B;
+constexpr ::bof3::image::Va kCounter0{0x903848};
+constexpr ::bof3::image::Va kCounter1{0x903849};
+constexpr ::bof3::image::Va kCounter2{0x90384A};
+constexpr ::bof3::image::Va kCounter3{0x90384B};
 // The byte after MoveScript_Var7 (the run step the scenes set beside it).
 // kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
 // The story flags (Flags_Set / Flags_Test's bank) and the row pointer the
@@ -44,15 +46,15 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // The pending area kind (docs/mode-flow.md: 0xFE only Draw_PassFlags 0).
 // kPendingKind: now Area_EnterTransition (symbols.toml).
 // The pending place word the world map keeps (docs/worldmap_area.md).
-constexpr std::uint32_t kPlace = 0x937F82;
+constexpr ::bof3::image::Va kPlace{0x937F82};
 // A byte area 37's choices set to 6 beside the message they open; no reader
 // read this round.
 // kAnswerMark: now AreaW0c_AnswerMark (symbols.toml).
 // CharacterRecords (0x903A70) record 0, byte +9: 0x404820 compares it with 9.
-constexpr std::uint32_t kRecord0Byte9 = 0x903A79;
+constexpr ::bof3::image::Va kRecord0Byte9{0x903A79};
 // The leader's record (ObjTrio): byte +8, the step words +0x34 / +0x38, the
 // dword +0x134.
-constexpr std::uint32_t kLeader = 0x802D40;
+constexpr ::bof3::image::Va kLeader{0x802D40};
 // kLeaderByte8: now ObjTrio[0].direction (symbols.toml).
 // kLeaderX: now ObjTrio[0].x (symbols.toml).
 // kLeaderZ: now ObjTrio[0].z (symbols.toml).

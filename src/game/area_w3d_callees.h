@@ -5,6 +5,8 @@
 #pragma once
 
 #include <cstdint>
+
+#include "common/image_base.h"
 #include "bof3/symbols.gen.h"  // round fourteen's rebinding (R3E, docs/rest_3e.md section 8): the targets that are ours read bof3::addr::<Name>, the values unchanged, so the fuzz keys stand
 
 namespace area_w3d {
@@ -24,27 +26,27 @@ namespace at {
 // The message box's answer to a choice (a byte; read signed by choice 2) and
 // the message word a choice handler leaves (0xFFFF: no new message).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
 // (Field_ModeTailKinds 0x662CE8), its state, a sub byte (area 135 keeps a
 // count, then an object index in it), and a word timer.
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
 // kTailState: now AreaW0c_TailState (symbols.toml).
 // kTailSub: now AreaW0c_TailSub (symbols.toml).
-constexpr std::uint32_t kTailTimer = 0x9039F6;
+constexpr ::bof3::image::Va kTailTimer{0x9039F6};
 // The movement script's counter 3 (MoveScript_CounterOps) and the scratch
 // word 0x903850 (a sprite slot the spawn state keeps there).
-constexpr std::uint32_t kCounter3 = 0x90384B;
-constexpr std::uint32_t kScratch = SharedScratch_addr;
+constexpr ::bof3::image::Va kCounter3{0x90384B};
+constexpr ::bof3::image::Va kScratch{SharedScratch_addr};
 // The story flags (Flags_Set's bank); party list 1's first byte.
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kPartyList1: now Cond_Flags[0xd3] (symbols.toml).
 // The zone the field was entered from (Cond_ByteFD's value on entry,
 // docs/mode-flow.md; area_w1a_callees.h's kEntryZone).
-constexpr std::uint32_t kEntryZone = 0x905E68;
+constexpr ::bof3::image::Va kEntryZone{0x905E68};
 // Field_MoveSpeeds + 3 (area_w2d_callees.h's kMoveSpeed3): the tail's glide
 // divisor is this byte << 3.
-constexpr std::uint32_t kMoveSpeed3 = 0x6697F3;
+constexpr ::bof3::image::Va kMoveSpeed3{0x6697F3};
 // A byte the init sets bit 0 of in zone 4 (no reader read this round).
 // kInitBit: now MoveScript_PartyRecords[0x30] (symbols.toml).
 // The effect slot area 135's choice 2 keeps (Effect_FindFree's answer, 0xFF
@@ -84,7 +86,7 @@ constexpr std::uint32_t kPartyStride = 0x14C;
 // kMarker83: now Sprite_ObjectsExtra[3].area_script (symbols.toml).
 // The window pool words the message helper resets (MessagePools 0x803160's
 // +4 / +6), and the cell it points 0x905B84 at.
-constexpr std::uint32_t kPoolWords = 0x803164;
+constexpr ::bof3::image::Va kPoolWords{0x803164};
 // kWindowPoolPtr: now BattleWinStates_Current (symbols.toml).
 // Named cells, by address for the fuzz's regions (symbols.gen.h spells each
 // name as a macro of its value):
@@ -94,7 +96,7 @@ constexpr unsigned kEffectCount = 20;
 // kSpriteObjects: now Sprite_Objects (symbols.toml). Sprite_Objects, 30 of 0xA4
 constexpr unsigned kObjectStride = 0xA4;
 constexpr unsigned kObjectCount = 30;
-constexpr std::uint32_t kSpriteObjectsExtra = 0x802000;   // Sprite_ObjectsExtra
+constexpr ::bof3::image::Va kSpriteObjectsExtra{0x802000};   // Sprite_ObjectsExtra
 // kSpriteKind2: now Sprite_Kind2 (symbols.toml). Sprite_Kind2 (a record of 0xA4)
 // kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object
 // kInputHeld: now Input_Held (symbols.toml). Input_Held
@@ -107,8 +109,8 @@ constexpr std::uint32_t kSpriteObjectsExtra = 0x802000;   // Sprite_ObjectsExtra
 // kFAWord: now MoveScript_FAWord (symbols.toml). MoveScript_FAWord
 // kElevation: now MapView_Elevation (symbols.toml). MapView_Elevation
 // kRedraw: now MapView_Redraw (symbols.toml). MapView_Redraw
-constexpr std::uint32_t kTextRecords = 0x904CE0;     // Text_Records
-constexpr std::uint32_t kMessageFormat = 0x5E10C0;   // Area08_MessageFormat (area 8's, shared)
+constexpr ::bof3::image::Va kTextRecords{0x904CE0};     // Text_Records
+constexpr ::bof3::image::Va kMessageFormat{0x5E10C0};   // Area08_MessageFormat (area 8's, shared)
 // kMessagePools: now WindowRecords (symbols.toml). MessagePools
 
 // --- area 135's .data (descriptor 0x62D940; symbols.toml [[data]]) ---
@@ -152,7 +154,7 @@ constexpr unsigned kArea135SpawnOpStride = 13;
 // The cell hook's two 4-byte entries: x, z, a direction (low nibble), the
 // tail state it arms.
 // kArea135CellEntries: now Area135_CellEntries (symbols.toml). Area135_CellEntries, 2 x 4
-constexpr std::uint32_t kArea135CellEntriesEnd = 0x62DA8D;
+constexpr ::bof3::image::Va kArea135CellEntriesEnd{0x62DA8D};
 // The init's EventOp_Bx record (zone 4, entered from zone 1).
 // kArea135InitOp: now Area135_InitOp (symbols.toml). Area135_InitOp
 // Handler 19's effect kinds by party list 1's byte (a table before the

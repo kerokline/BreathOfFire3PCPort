@@ -68,11 +68,11 @@ using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
-unsigned char* Bank() { return At(Cond_Flags_addr + 0xa0); }
-unsigned char* PartyRecord(U index) { return At(ObjTrio_addr + index * at::kPartyStride); }
+unsigned char* Bank() { return At(::bof3::Img(Cond_Flags_addr) + 0xa0); }
+unsigned char* PartyRecord(U index) { return At(::bof3::Img(ObjTrio_addr) + index * at::kPartyStride); }
 // The high word of a 16.16 position, as the hooks read it (a word at +2).
 std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
-void SetMessage(unsigned id) { SetWord(At(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(At(::bof3::Img(at::kMessage.v)), id); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
 unsigned char* FlagRow() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
 
@@ -159,17 +159,17 @@ void PlaceMessage(const WorldMapTables& t) {
         for (U a = t.name_sets; a < t.name_sets_end; a += t.set_stride, ++set)
             if (At(a)[0] == id) break;
         const unsigned char* items = At(t.name_sets + 1 + set * t.set_stride);
-        for (U row = at::kTextRecords; row < t.text_rows_end; row += 0x20, ++items) {
+        for (U row = ::bof3::Img(at::kTextRecords.v); row < t.text_rows_end; row += 0x20, ++items) {
             const unsigned item = items[0];
             if (item == 0xFF) break;
             unsigned char* const out = At(row);
-            if (At(at::kItemsHeld + item)[0] == 0) {
+            if (At(::bof3::Img(at::kItemsHeld.v) + item)[0] == 0) {
                 SetLong(out, 0x3F3F3F3F);
                 SetLong(out + 4, 0x3F3F3F3F);
                 out[8] = 0;
             } else {
                 const unsigned char* const name =
-                    item == 0x16 ? At(AreaW0b_ItemNameKey_addr) : AH_CALL(Item_NamePtr)(0, (item + 0x38) & 0xFF);
+                    item == 0x16 ? At(::bof3::Img(AreaW0b_ItemNameKey_addr)) : AH_CALL(Item_NamePtr)(0, (item + 0x38) & 0xFF);
                 std::memcpy(out, name, 16);
             }
         }
@@ -412,18 +412,18 @@ void DrawFrame(const WorldMapTables& t, int x, int y) {
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x9C, 0);
     AH_CALL(Gfx_CommitPrim)(1, 0xC);
     sprite(x, y, 0);
-    const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(at::kLeaderCellX))),
-                                                       static_cast<short>(Word(At(at::kLeaderCellZ))));
+    const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
+                                                       static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v)))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
     if (!withheld1) sprite(x + 0x30, y, 1);
-    world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f000))), x + 0x38, y + 8,
+    world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000))), x + 0x38, y + 8,
                           withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) sprite(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f00c))), x + 0x38, y + 0x10,
+    world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c))), x + 0x38, y + 0x10,
                           withheld2);
-    bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(at::kLeaderCellX))),
-                                            static_cast<short>(Word(At(at::kLeaderCellZ)))) != 0;
+    bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
+                                            static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v))))) != 0;
     if (!third) third = (Field_ScriptFlags2 & 0x1000) != 0;
     if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
     if (!third) third = (Field_ScriptFlags & 0x4000) != 0;
@@ -467,7 +467,7 @@ void DrawHud(const WorldMapTables& t, int x, int y) {
     if ((Draw_PassFlags & 0x1B) == 0) return;
     AH_AT(DrawSpriteAt, t.fn_draw_sprite)(x, y, 4);
     AH_AT(DrawSpriteAt, t.fn_draw_sprite)(x + 0x80, y, 5);
-    const unsigned char* const text = At(at::kAreaText + (static_cast<U>(Long(At(t.label_offset))) & 0xFFFF));
+    const unsigned char* const text = At(::bof3::Img(at::kAreaText.v) + (static_cast<U>(Long(At(t.label_offset))) & 0xFFFF));
     AH_CALL(Text_DrawAt)(x + 4, y + 4, 0, 0xFF, text);
 }
 
@@ -573,10 +573,10 @@ void DrawDrift(const WorldMapTables& t) {
         rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->z_whole, 0xFFF8);
         o = Cur();
     }
-    std::int32_t dx = S16(At(at::kLeaderCellX)) - S16(o + 0x36);
+    std::int32_t dx = S16(At(::bof3::Img(at::kLeaderCellX.v))) - S16(o + 0x36);
     if (dx < 0) dx = -dx;
     if (dx > 0x19) {
-        std::int32_t dz = S16(At(at::kLeaderCellZ)) - S16(o + 0x3A);
+        std::int32_t dz = S16(At(::bof3::Img(at::kLeaderCellZ.v))) - S16(o + 0x3A);
         if (dz < 0) dz = -dz;
         if (dz > 0x19) return;
     }
@@ -751,7 +751,7 @@ extern "C" unsigned char __cdecl Area116_StepHook(long x, long z) {
     if (static_cast<std::uint16_t>(High(z) - 0x33) >= 3) return 0;
     const unsigned char pose = ObjTrio[0].direction;
     if (pose != 0 && pose != 7 && pose != 6) return 0;
-    At(at::kCounter0)[0] = 0;
+    At(::bof3::Img(at::kCounter0.v))[0] = 0;
     AH_CALL(Party_DropIn)(0);
     return 1;
 }
@@ -770,7 +770,7 @@ extern "C" unsigned char __cdecl Area116_Trigger26(unsigned char*, unsigned char
 // tool): Area116_EffectStates by Sprite_Current[1] (the running effect
 // record).
 extern "C" void __cdecl Area116_EffectB8Run(void) {
-    StateEntry("Area116", "EffectB8Run", Area116_EffectStates_addr, at::kA116EffectStateCount, Cur()[1])();
+    StateEntry("Area116", "EffectB8Run", ::bof3::Img(Area116_EffectStates_addr), at::kA116EffectStateCount, Cur()[1])();
 }
 
 // original 0x419E40 (Area116_EffectStates[1]; Area100_EffectB7Ring 0x4144B0
@@ -804,7 +804,7 @@ void SpawnAtMember(U member, U table, unsigned char kind) {
     const auto* const tRec = rv::AsConst<records::PartyMember>(rec);
     const auto z = static_cast<short>(static_cast<std::uint16_t>(tRec->screen_y));
     const auto x = static_cast<short>(static_cast<std::uint16_t>(tRec->screen_x));
-    const unsigned id = At(Cond_Flags_addr + 0xd2 + member)[0];
+    const unsigned id = At(::bof3::Img(Cond_Flags_addr) + 0xd2 + member)[0];
     Sprite_Current = PartyRecord(member);
     const unsigned char slot = AH_CALL(Effect_Spawn)(kind, 0, static_cast<signed char>(At(table + id)[0]), x, z);
     if (slot != 0xFF) Sprite_Current[0xB] = slot;
@@ -815,22 +815,22 @@ void SpawnAtMember(U member, U table, unsigned char kind) {
 // original 0x419E70 / 0x419EC0 / 0x419F10 / 0x419F60 (area 117's handlers 0..3,
 // Area117_Handlers 0x621588; PSX 0x801F3D70 / 0x801F3DF0 / 0x801F3E70 /
 // 0x801F3EF0): party member 2, kinds 3, 4, 5, 2.
-extern "C" void __cdecl Area117_Spawn3AtMember2(void) { SpawnAtMember(2, Area117_SpawnKinds3_addr, 3); }
-extern "C" void __cdecl Area117_Spawn4AtMember2(void) { SpawnAtMember(2, Area117_SpawnKinds45_addr, 4); }
-extern "C" void __cdecl Area117_Spawn5AtMember2(void) { SpawnAtMember(2, Area117_SpawnKinds45_addr, 5); }
-extern "C" void __cdecl Area117_Spawn2AtMember2(void) { SpawnAtMember(2, Area117_SpawnKinds2_addr, 2); }
+extern "C" void __cdecl Area117_Spawn3AtMember2(void) { SpawnAtMember(2, ::bof3::Img(Area117_SpawnKinds3_addr), 3); }
+extern "C" void __cdecl Area117_Spawn4AtMember2(void) { SpawnAtMember(2, ::bof3::Img(Area117_SpawnKinds45_addr), 4); }
+extern "C" void __cdecl Area117_Spawn5AtMember2(void) { SpawnAtMember(2, ::bof3::Img(Area117_SpawnKinds45_addr), 5); }
+extern "C" void __cdecl Area117_Spawn2AtMember2(void) { SpawnAtMember(2, ::bof3::Img(Area117_SpawnKinds2_addr), 2); }
 // original 0x41A3C0 (area 118's handler 0, 0x621DE0; PSX 0x801F4B88): the leader, kind 1.
-extern "C" void __cdecl Area118_Spawn1AtLeader(void) { SpawnAtMember(0, Area118_SpawnKinds_addr, 1); }
+extern "C" void __cdecl Area118_Spawn1AtLeader(void) { SpawnAtMember(0, ::bof3::Img(Area118_SpawnKinds_addr), 1); }
 // original 0x41A730 .. 0x41A910 (area 119's handlers 0, 4..9 = choices 1, 5..10,
 // Area119_Handlers 0x622AE8; PSX 0x801F4138, 0x801F4224, 0x801F42A4,
 // 0x801F4324, 0x801F43A4, 0x801F4424, 0x801F44A4).
-extern "C" void __cdecl Area119_Spawn1AtLeader(void) { SpawnAtMember(0, Area119_SpawnKindsA_addr, 1); }
-extern "C" void __cdecl Area119_Spawn4AtLeader(void) { SpawnAtMember(0, Area119_SpawnKindsA_addr, 4); }
-extern "C" void __cdecl Area119_Spawn1AtLeaderB(void) { SpawnAtMember(0, Area119_SpawnKindsB_addr, 1); }
-extern "C" void __cdecl Area119_Spawn1AtMember1(void) { SpawnAtMember(1, Area119_SpawnKindsB_addr, 1); }
-extern "C" void __cdecl Area119_Spawn1AtMember2(void) { SpawnAtMember(2, Area119_SpawnKindsB_addr, 1); }
-extern "C" void __cdecl Area119_Spawn3AtMember2(void) { SpawnAtMember(2, Area119_SpawnKindsB_addr, 3); }
-extern "C" void __cdecl Area119_Spawn4AtMember2(void) { SpawnAtMember(2, Area119_SpawnKindsA_addr, 4); }
+extern "C" void __cdecl Area119_Spawn1AtLeader(void) { SpawnAtMember(0, ::bof3::Img(Area119_SpawnKindsA_addr), 1); }
+extern "C" void __cdecl Area119_Spawn4AtLeader(void) { SpawnAtMember(0, ::bof3::Img(Area119_SpawnKindsA_addr), 4); }
+extern "C" void __cdecl Area119_Spawn1AtLeaderB(void) { SpawnAtMember(0, ::bof3::Img(Area119_SpawnKindsB_addr), 1); }
+extern "C" void __cdecl Area119_Spawn1AtMember1(void) { SpawnAtMember(1, ::bof3::Img(Area119_SpawnKindsB_addr), 1); }
+extern "C" void __cdecl Area119_Spawn1AtMember2(void) { SpawnAtMember(2, ::bof3::Img(Area119_SpawnKindsB_addr), 1); }
+extern "C" void __cdecl Area119_Spawn3AtMember2(void) { SpawnAtMember(2, ::bof3::Img(Area119_SpawnKindsB_addr), 3); }
+extern "C" void __cdecl Area119_Spawn4AtMember2(void) { SpawnAtMember(2, ::bof3::Img(Area119_SpawnKindsA_addr), 4); }
 
 // ===========================================================================
 // Area 117 (descriptor 0x6215B0): its trigger and choices; areas 117 and 118's
@@ -864,9 +864,9 @@ extern "C" void __cdecl Area117_ChoiceArmTailA(void) {
 // the table]; a cursor 0..4: counter 0 = 0xA and Sound_PlayEffect(0x205).
 extern "C" void __cdecl Area117_ChoiceMessage1(void) {
     const auto cursor = AreaW0c_ChoiceAnswer;
-    SetMessage(Word(At(Area117_Messages1_addr + static_cast<U>(cursor * 2))));
+    SetMessage(Word(At(::bof3::Img(Area117_Messages1_addr) + static_cast<U>(cursor * 2))));
     if (cursor < 0 || cursor > 4) return;
-    At(at::kCounter0)[0] = 0xA;
+    At(::bof3::Img(at::kCounter0.v))[0] = 0xA;
     AH_CALL(Sound_PlayEffect)(0x205);
 }
 
@@ -876,13 +876,13 @@ extern "C" void __cdecl Area117_ChoiceMessage1(void) {
 // counter 0 = 0x14; 0, 1, 3, 4 counter 0 = 0xA and Sound_PlayEffect(0x205).
 extern "C" void __cdecl Area117_ChoiceMessage2(void) {
     const int cursor = AreaW0c_ChoiceAnswer;
-    SetMessage(Word(At(Area117_Messages2_addr + static_cast<U>(cursor * 2))));
+    SetMessage(Word(At(::bof3::Img(Area117_Messages2_addr) + static_cast<U>(cursor * 2))));
     if (static_cast<U>(cursor) > 4) return;
     if (cursor == 2) {
-        At(at::kCounter0)[0] = 0x14;
+        At(::bof3::Img(at::kCounter0.v))[0] = 0x14;
         return;
     }
-    At(at::kCounter0)[0] = 0xA;
+    At(::bof3::Img(at::kCounter0.v))[0] = 0xA;
     AH_CALL(Sound_PlayEffect)(0x205);
 }
 
@@ -1054,8 +1054,8 @@ extern "C" void __cdecl Area119_ClearRowFlag3C(void) {
 extern "C" void __cdecl Area119_ChoiceCounter0(void) {
     const auto cursor = AreaW0c_ChoiceAnswer;
     SetMessage(0xFFFF);
-    if (cursor == 0) At(at::kCounter0)[0] = 0xA;
-    else if (cursor == 1) At(at::kCounter0)[0] = 0x14;
+    if (cursor == 0) At(::bof3::Img(at::kCounter0.v))[0] = 0xA;
+    else if (cursor == 1) At(::bof3::Img(at::kCounter0.v))[0] = 0x14;
 }
 
 void AreaW3a_Inject() {

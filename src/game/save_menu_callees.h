@@ -13,6 +13,8 @@
 #pragma once
 
 #include <cstdint>
+
+#include "common/image_base.h"
 #include "bof3/symbols.gen.h"   // bof3::addr:: for the constants rebound to ours (round twelve)
 
 namespace save_menu {
@@ -22,38 +24,38 @@ using U = std::uint32_t;
 // --- Data, all Capcom's addresses (docs/save-menu.md section 2) -------------
 namespace at {
 // The title and load flow, task 0's mode 1 (0x588E88 calls it through 0x667294).
-constexpr U kGameStep = 0x66C7EA;       // Game_Step, u16: the step 0x587DB0 dispatches on
-constexpr U kStepTable = 0x6671F4;      // six code pointers, indexed by Game_Step unchecked
-constexpr U kMenuTable = 0x66720C;      // fifteen, indexed by kFlowState unchecked (title menu)
-constexpr U kLoadTable = 0x667228;      // = kMenuTable + 7 entries: the load menu's eight
-constexpr U kFlowState = 0x6BDF86;      // u8: both menus' state
+constexpr ::bof3::image::Va kGameStep{0x66C7EA};       // Game_Step, u16: the step 0x587DB0 dispatches on
+constexpr ::bof3::image::Va kStepTable{0x6671F4};      // six code pointers, indexed by Game_Step unchecked
+constexpr ::bof3::image::Va kMenuTable{0x66720C};      // fifteen, indexed by kFlowState unchecked (title menu)
+constexpr ::bof3::image::Va kLoadTable{0x667228};      // = kMenuTable + 7 entries: the load menu's eight
+constexpr ::bof3::image::Va kFlowState{0x6BDF86};      // u8: both menus' state
 // kCursor: now SaveMenu_Cursor (symbols.toml). s8: the title menu's row
 // kAnySave: now SaveMenu_AnySave (symbols.toml). u8: Save_ListFiles found something (three rows, not two)
-constexpr U kRowBright = 0x6BDF90;      // u8[3]: each row's brightness
+constexpr ::bof3::image::Va kRowBright{0x6BDF90};      // u8[3]: each row's brightness
 // kErrorText: now SaveMenu_ErrorText (symbols.toml). u8: the load error's message, 0x11 or 0x12 (+0xA6)
 // kApplyDelay: now SaveMenu_ApplyDelay (symbols.toml). u8: frames before the loaded game is applied
 // kDefaultPad: now SaveMenu_DefaultPad (symbols.toml). u8: Start held during the load - the default buttons
 // kErrorKind: now SaveMenu_ErrorKind (symbols.toml). u32: 1 no save found, 2 a read or checksum failure
-constexpr U kCounter = 0x929F04;        // u8: the menus' frame counter
-constexpr U kMenuFlags = 0x7DEE44;      // u8: bit 1 set once the title frame is up
+constexpr ::bof3::image::Va kCounter{0x929F04};        // u8: the menus' frame counter
+constexpr ::bof3::image::Va kMenuFlags{0x7DEE44};      // u8: bit 1 set once the title frame is up
 // kWaitWord: now Transition_Busy (symbols.toml). Transition_Busy, u16: a transition is running
-constexpr U kPressed = 0x7E1BEC;        // Input_Pressed (read as a dword by 0x587FA0)
-constexpr U kHeld = 0x7E1BE8;           // Input_Held (read as a dword)
-constexpr U kButtons = 0x903580;        // the pad map, 0x12 bytes: menu +4, confirm +0xE, cancel +0x10
-constexpr U kConfirm = 0x90358E;        // Field_ConfirmButtons, u16
+constexpr ::bof3::image::Va kPressed{0x7E1BEC};        // Input_Pressed (read as a dword by 0x587FA0)
+constexpr ::bof3::image::Va kHeld{0x7E1BE8};           // Input_Held (read as a dword)
+constexpr ::bof3::image::Va kButtons{0x903580};        // the pad map, 0x12 bytes: menu +4, confirm +0xE, cancel +0x10
+constexpr ::bof3::image::Va kConfirm{0x90358E};        // Field_ConfirmButtons, u16
 // kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons, u16
-constexpr U kSavedButtons = 0x90469C;   // the pad map in the game block (block +0xCBC)
-constexpr U kSlot = 0x9036D4;           // u32: the load / save cursor, 0..15
-constexpr U kSlotTop = 0x8034D0;        // u32: the first of the three slots shown
+constexpr ::bof3::image::Va kSavedButtons{0x90469C};   // the pad map in the game block (block +0xCBC)
+constexpr ::bof3::image::Va kSlot{0x9036D4};           // u32: the load / save cursor, 0..15
+constexpr ::bof3::image::Va kSlotTop{0x8034D0};        // u32: the first of the three slots shown
 // kAnswer: now FieldS_Answer (symbols.toml). u8: Menu_YesNo's answer
 // kWindowStyle: now Config_Background (symbols.toml). u8, 0x575690's argument (block +0x7B)
 // kWindowColor: now Config_WindowColour (symbols.toml). u8, the window frames' last argument (block +0x7A)
-constexpr U kPath = 0x904BA0;           // char[]: the save file name built with 0x664068
-constexpr U kSaveName = 0x664068;       // "BISLPS%02X.DAT"
-constexpr U kGameBlock = 0x9039E0;      // the live game block, 0x10B0 bytes (save-interchange.md)
+constexpr ::bof3::image::Va kPath{0x904BA0};           // char[]: the save file name built with 0x664068
+constexpr ::bof3::image::Va kSaveName{0x664068};       // "BISLPS%02X.DAT"
+constexpr ::bof3::image::Va kGameBlock{0x9039E0};      // the live game block, 0x10B0 bytes (save-interchange.md)
 constexpr U kBlockBytes = 0x10B0;
-constexpr U kStaging = 0x92A0E0;        // Save_Staging
-constexpr U kChecksum = 0x92A150;       // Save_Staging + 0x70, u16
+constexpr ::bof3::image::Va kStaging{0x92A0E0};        // Save_Staging
+constexpr ::bof3::image::Va kChecksum{0x92A150};       // Save_Staging + 0x70, u16
 constexpr U kFileBytes = 0x12B0;
 constexpr U kClearBytes = 0x1C00;       // what 0x5883C0 zeroes from Save_Staging
 // kScriptFlags: now Field_ScriptFlags (symbols.toml). Field_ScriptFlags, u16
@@ -61,46 +63,46 @@ constexpr U kClearBytes = 0x1C00;       // what 0x5883C0 zeroes from Save_Stagin
 // 0x587DC0's field set-up.
 // kScriptFlags2: now Field_ScriptFlags2 (symbols.toml). Field_ScriptFlags2
 // kPartySet: now AreaW0b_PartySet (symbols.toml). u8, PartySet_Select's current set
-constexpr U kFieldState = 0x905D98;     // Field_State
-constexpr U kSpriteCurrent = 0x937F88;  // Sprite_Current
+constexpr ::bof3::image::Va kFieldState{0x905D98};     // Field_State
+constexpr ::bof3::image::Va kSpriteCurrent{0x937F88};  // Sprite_Current
 // kObjTrio: now ObjTrio (symbols.toml). ObjTrio
 // kFlow9039D6: now SaveMenu_Flow9039D6 (symbols.toml). u8, cleared
 // 0x5880E0, the new game.
 // kNewGameByte: now SaveMenu_NewGameByte (symbols.toml). u8, cleared
 // kAreaNumber: now Game_AreaNumber (symbols.toml). Game_AreaNumber, u16
 // kCondFlags: now Cond_Flags (symbols.toml). Cond_Flags: its first dword of every 8 bytes cleared
-constexpr U kCondFlagsEnd = 0x904030;
+constexpr ::bof3::image::Va kCondFlagsEnd{0x904030};
 // 0x5885D0, the loaded game applied.
 // kMemberCount: now Field_MemberCount (symbols.toml). Field_MemberCount, u8
 // kCondPointer: now Chapter_FlagRow (symbols.toml). u32
-constexpr U kCounters = 0x903848;       // four MoveScript counters, u8
-constexpr U kPosition = 0x8034E0;       // four dwords from the block's first 16 bytes
+constexpr ::bof3::image::Va kCounters{0x903848};       // four MoveScript counters, u8
+constexpr ::bof3::image::Va kPosition{0x8034E0};       // four dwords from the block's first 16 bytes
 // 0x588800 and the growth rolls.
 // kCharRecords: now CharacterRecords (symbols.toml). stride 0xA4
 constexpr U kCharStride = 0xA4;
-constexpr U kGrowthTable = 0x667248;    // 8 x {lo, hi, n}
-constexpr U kGrowthValues = 0x667260;   // u8 per roll sum
-constexpr U kGrowth = 0x903640;         // 8 x 5 bytes, written then cleared
+constexpr ::bof3::image::Va kGrowthTable{0x667248};    // 8 x {lo, hi, n}
+constexpr ::bof3::image::Va kGrowthValues{0x667260};   // u8 per roll sum
+constexpr ::bof3::image::Va kGrowth{0x903640};         // 8 x 5 bytes, written then cleared
 constexpr U kGameTask = bof3::addr::Field_Task;       // task 0's body for a game
-constexpr U kMenuStates = 0x929F02;     // 0x929F02, 0x929F03, 0x929F05 cleared
+constexpr ::bof3::image::Va kMenuStates{0x929F02};     // 0x929F02, 0x929F03, 0x929F05 cleared
 // The title menu's pieces.
 // kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
-constexpr U kPieces = 0x66726C;         // 10-byte records: u16 u, v, w, h, clut
+constexpr ::bof3::image::Va kPieces{0x66726C};         // 10-byte records: u16 u, v, w, h, clut
 constexpr U kRowWidths[3] = {0x5888E8, 0x5888ED, 0x5888F2};   // the imm8 of 0x5888D0's three movs (DIV-0014)
 // The save menu's slots.
-constexpr U kSummaries = 0x905BC0;      // 16 x 0x1C: the slot summaries; +0x15 the directory index or 0xFF
+constexpr ::bof3::image::Va kSummaries{0x905BC0};      // 16 x 0x1C: the slot summaries; +0x15 the directory index or 0xFF
 constexpr U kSummaryBytes = 0x1C;
 // kDirectory: now Save_Directory (symbols.toml). Save_Directory, 16 x 0x18: name, size at +0x14
 constexpr U kDirectoryBytes = 0x18;
-constexpr U kListPattern = 0x65289C;    // "BISLPS??.DAT"
+constexpr ::bof3::image::Va kListPattern{0x65289C};    // "BISLPS??.DAT"
 constexpr U kSummaryAt = 0xCA0;         // the summary's offset in a save file
 // The sound banks and the stream.
-constexpr U kDatNames = 0x64F368;       // Dat_FileNames
-constexpr U kDatFormat = 0x652894;      // "DAT\%s"
-constexpr U kStreamKind = 0x6BDE40;     // u32: id >> 12 of the last stream
+constexpr ::bof3::image::Va kDatNames{0x64F368};       // Dat_FileNames
+constexpr ::bof3::image::Va kDatFormat{0x652894};      // "DAT\%s"
+constexpr ::bof3::image::Va kStreamKind{0x6BDE40};     // u32: id >> 12 of the last stream
 // kStreamData: now SaveMenu_StreamData (symbols.toml). void *: the last stream's file
-constexpr U kStreamTables = 0x6653B0;   // name tables per kind
-constexpr U kStreamFormat = 0x666F9C;   // "SND\%s.DAT"
+constexpr ::bof3::image::Va kStreamTables{0x6653B0};   // name tables per kind
+constexpr ::bof3::image::Va kStreamFormat{0x666F9C};   // "SND\%s.DAT"
 // kFadeCount: now Music_FadeCount (symbols.toml). Music_FadeCount
 // kMusicTrack: now Music_Track (symbols.toml). Music_Track, u8
 // kMusicBuffer: now Music_Buffer (symbols.toml). Music_Buffer, an IDirectSoundBuffer *
@@ -110,11 +112,12 @@ constexpr float kStreamVolume = 127.0f; // 0x42FE0000, pushed by 0x5879E0
 // kClutSource: now Gfx_ClutStripSource (symbols.toml). Gfx_ClutStrip - 0x4000
 // kClutDirty: now Gfx_ClutStripDirty (symbols.toml). Gfx_ClutStripDirty
 // The inn.
-constexpr U kFlagsA = 0x904654, kFlagsB = 0x904657;   // Flags_Test bit arrays
+constexpr ::bof3::image::Va kFlagsA{0x904654};   // Flags_Test bit arrays
+constexpr ::bof3::image::Va kFlagsB{0x904657};
 // kInnByte: now AreaW1c_Byte9045FB (symbols.toml). u8, cleared below 0x1E
 // The shop.
 // kShopWindowByte: now ScenaSc1_ShopByteB (symbols.toml). u8 (the high byte of the word 0x929EC2)
-constexpr U kMembers = 0x802E88;        // Field_Members: +0xC8 of each 0x14C working record
+constexpr ::bof3::image::Va kMembers{0x802E88};        // Field_Members: +0xC8 of each 0x14C working record
 constexpr U kMemberStride = 0x14C;
 constexpr U kDiscountItem = 0x1B;
 // kChoiceCursor: now ShopStates_Choice (symbols.toml). u8: the save menu's three-way cursor

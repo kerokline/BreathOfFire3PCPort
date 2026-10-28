@@ -19,6 +19,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"   // bof3::addr: the constants below naming group BE6's functions (docs/battle_e6.md section 5)
 
 namespace area_w4f {
@@ -29,7 +31,7 @@ namespace at {
 // The message box's answer to a choice (the cursor's row, s8) and the message
 // word a choice handler leaves (0xFFFF: no new message).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
 // (Field_ModeTailKinds 0x662CE8) and its state (s8).
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
@@ -38,26 +40,26 @@ constexpr std::uint32_t kMessage = 0x7DEE48;
 // and 3; the byte after MoveScript_Var7 (the run's step, as the chapters use
 // it); the scratch word the event ops keep the new object's index in
 // (Sprite_FindFree's answer, zero-extended).
-constexpr std::uint32_t kCounter0 = 0x903848;
-constexpr std::uint32_t kCounter1 = 0x903849;
-constexpr std::uint32_t kCounter3 = 0x90384B;
+constexpr ::bof3::image::Va kCounter0{0x903848};
+constexpr ::bof3::image::Va kCounter1{0x903849};
+constexpr ::bof3::image::Va kCounter3{0x90384B};
 // kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
-constexpr std::uint32_t kObjectIndex = SharedScratch_addr;
+constexpr ::bof3::image::Va kObjectIndex{SharedScratch_addr};
 // The focus object: the object whose talk ran last (MoveScript_SetTurnTarget
 // stores Field_ActiveMember there; area_w1a_callees.h's kFocusObject). Area
 // 192's and 193's pair choices write its dwords +0x18 / +0x1C.
-constexpr std::uint32_t kFocusObject = 0x903804;
+constexpr ::bof3::image::Va kFocusObject{0x903804};
 // The story flags (Flags_Set / Flags_Test's bank, Cond_Flags row 20) and
 // Cond_Flags row 14, whose flags 3 and 0xA areas 192 and 193 test.
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kCondRow14: now Cond_Flags[0x70] (symbols.toml).
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
-constexpr std::uint32_t kFlagRow = 0x929ED0;
+constexpr ::bof3::image::Va kFlagRow{0x929ED0};
 // The party records (ObjTrio, 0x14C each): the leader's +0x89 (0x802DC9;
 // the record k's is k * 0x14C on), and the +0x80 block (0xA4 bytes from
 // 0x802DC0) area 192's pass copies each member's character record into.
 // kLeader89: now ObjTrio[0].char_id (symbols.toml).
-constexpr std::uint32_t kParty80 = 0x802DC0;
+constexpr ::bof3::image::Va kParty80{0x802DC0};
 constexpr std::uint32_t kPartyStride = 0x14C;
 // The party list (a member id a byte, Field_MemberCount of them) and
 // Character_IndexById 0x66972C, which by this use maps a member id to its
@@ -84,13 +86,13 @@ constexpr unsigned kCharCount = 8;
 // The return point (event_ops_callees.h's kReturnPoint): x and z dwords, the
 // area word at +8; the byte +0xA cleared on the way back, the byte +0xB area
 // 193's tail sets to 2 (menu_lists_callees.h calls +0xA kCampFlag).
-constexpr std::uint32_t kReturnPoint = 0x904148;
+constexpr ::bof3::image::Va kReturnPoint{0x904148};
 // kReturnArea: now AreaW4d_ReturnArea (symbols.toml).
 // kReturnByteA: now AreaW3c_CampFlag (symbols.toml).
 // kReturnByteB: now AreaW3g_HealByte (symbols.toml).
 // The pending-area byte (scena_sc3_callees.h's kPendingKind): area 193's init
 // sets it to 1.
-constexpr std::uint32_t kPendingKind = 0x937F98;
+constexpr ::bof3::image::Va kPendingKind{0x937F98};
 // Effect_Objects' stride and count (records of 0x80 bytes, 20 of them).
 constexpr std::uint32_t kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
@@ -99,12 +101,12 @@ constexpr unsigned kEffectCount = 20;
 // kEffectObjects: now Effect_Objects (symbols.toml). Effect_Objects
 // kSpriteObjects: now Sprite_Objects (symbols.toml). Sprite_Objects (30 of 0xA4)
 constexpr std::uint32_t kObjectStride = 0xA4;
-constexpr std::uint32_t kActiveMember = 0x9035A4;      // Field_ActiveMember
-constexpr std::uint32_t kScriptObject = 0x929E80;      // MoveScript_Object
+constexpr ::bof3::image::Va kActiveMember{0x9035A4};      // Field_ActiveMember
+constexpr ::bof3::image::Va kScriptObject{0x929E80};      // MoveScript_Object
 // kCondByteFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
 // kDrawPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags
-constexpr std::uint32_t kWaitWordDA = 0x66C810;        // Transition_Busy
-constexpr std::uint32_t kStatusBits = 0x8034E1;        // Field_StatusBits
+constexpr ::bof3::image::Va kWaitWordDA{0x66C810};        // Transition_Busy
+constexpr ::bof3::image::Va kStatusBits{0x8034E1};        // Field_StatusBits
 // kScriptFlags2: now Field_ScriptFlags2 (symbols.toml). Field_ScriptFlags2
 
 // --- the areas' tables (symbols.toml [[data]]) ---

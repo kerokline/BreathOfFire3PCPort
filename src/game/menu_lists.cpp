@@ -107,7 +107,7 @@ Step Entry(std::uint32_t table, unsigned index) {
 // fuzz's stand-ins repoint it between calls.
 unsigned char* Rec() {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
-        *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))));
+        *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))));
 }
 
 // rv::As<records::WindowRecord>(p) views a window record
@@ -135,7 +135,7 @@ unsigned Members() { return static_cast<unsigned>(g.party_count(0)) & 0xFF; }
 // 7 Config 0x5902E0, 8 0x5902D0 (docs/menu-screens.md section 1). A jump, as
 // the original's: the state's function returns to 0x5172F0.
 extern "C" void __cdecl FieldMenu_Run(void) {
-    const Step step = Entry(FieldMenu_States_addr, BattleE1_Mode);
+    const Step step = Entry(::bof3::Img(FieldMenu_States_addr), BattleE1_Mode);
     [[clang::musttail]] return step();
 }
 
@@ -172,8 +172,8 @@ extern "C" void __cdecl FieldMenu_Open(void) {
     if (count != 0) {
         signed char i = 0;
         do {
-            const unsigned member = At(Cond_Flags_addr + 0xd2 + static_cast<std::int32_t>(i))[0];
-            g.recalc_stats(At(CharacterRecords_addr + Character_IndexById[member] * at::kCharRecordSize));
+            const unsigned member = At(::bof3::Img(Cond_Flags_addr) + 0xd2 + static_cast<std::int32_t>(i))[0];
+            g.recalc_stats(At(::bof3::Img(CharacterRecords_addr) + Character_IndexById[member] * at::kCharRecordSize));
             i = static_cast<signed char>(i + 1);
         } while (static_cast<int>(i) < Field_MemberCount);
     }
@@ -183,21 +183,21 @@ extern "C" void __cdecl FieldMenu_Open(void) {
         do {
             const unsigned char member = Cond_Flags[0xd2 + k];
             const unsigned char reserve = Cond_Flags[0xd5 + k];
-            At(at::kSavedParty)[k] = member;
+            At(::bof3::Img(at::kSavedParty.v))[k] = member;
             n = static_cast<signed char>(n + 1);
-            At(at::kSavedReserve)[k] = reserve;
+            At(::bof3::Img(at::kSavedReserve.v))[k] = reserve;
             k = n;
         } while (k < static_cast<int>(Members()));
     }
     if (n < 3) {
         for (int k = n; k < 3; ++k) {
-            At(at::kSavedParty)[k] = 0xFF;
-            At(at::kSavedReserve)[k] = 0xFF;
+            At(::bof3::Img(at::kSavedParty.v))[k] = 0xFF;
+            At(::bof3::Img(at::kSavedReserve.v))[k] = 0xFF;
         }
     }
     MenuLists_PartyChanged = 0;
     for (unsigned i = 0; i < 8; ++i) {
-        unsigned char* const r = At(CharacterRecords_addr + 0x10 + i * at::kCharRecordSize);
+        unsigned char* const r = At(::bof3::Img(CharacterRecords_addr) + 0x10 + i * at::kCharRecordSize);
         // r is the character record's +0x10, its status word (records::CharRecord, CharacterRecords 0x903A70)
         auto* const c = rv::As<records::CharRecord>(r - 0x10);
         if (static_cast<unsigned>(c->stats.max_hp >> 2) > c->hp) r[1] = static_cast<unsigned char>(r[1] | 0x20);
@@ -228,7 +228,7 @@ extern "C" void __cdecl FieldMenu_Open(void) {
 // group), 2 FieldMenu_BackdropStep. The byte unchecked; a jump, as the
 // original's.
 extern "C" void __cdecl FieldMenu_TopBar(void) {
-    const Step step = Entry(FieldMenu_TopBarSteps_addr, FieldS_State);
+    const Step step = Entry(::bof3::Img(FieldMenu_TopBarSteps_addr), FieldS_State);
     [[clang::musttail]] return step();
 }
 
@@ -258,31 +258,31 @@ extern "C" void __cdecl FieldMenu_TopBarInput(void) {
     g.backdrop(Config_Background);
     const unsigned char cursor = static_cast<unsigned char>(MenuLists_Cursor);
     unsigned char* const saved = Sprite_Current;
-    Byte(at::kIconWindow + 0xA) = cursor;
+    Byte(::bof3::Img(at::kIconWindow.v) + 0xA) = cursor;
     const unsigned char camp = AreaW3c_CampFlag;
-    SetWord(At(Window10_addr + 0x10), At(FieldMenu_TitleIds_addr + static_cast<std::int32_t>(static_cast<signed char>(cursor)))[0]);
-    Sprite_Current = At(ObjTrio_addr);
+    SetWord(At(::bof3::Img(Window10_addr) + 0x10), At(::bof3::Img(FieldMenu_TitleIds_addr) + static_cast<std::int32_t>(static_cast<signed char>(cursor)))[0]);
+    Sprite_Current = At(::bof3::Img(ObjTrio_addr));
     bool open;
     if (camp != 0) open = g.camp_cell() != 0;
     else if ((Field_InputFlags & 1) == 0 && Game_AreaNumber != 0xBD) open = false;
     else if (g.exit_gateway() != 0) open = true;
     else if (AreaW3c_CampFlag == 0) open = false;
     else open = g.camp_cell() != 0;
-    Byte(at::kIconWindow + 0xC) = open ? 0 : 1;
+    Byte(::bof3::Img(at::kIconWindow.v) + 0xC) = open ? 0 : 1;
     const unsigned pressed = Input_Pressed & 0xA000u;
     Sprite_Current = saved;
     const unsigned held = g.auto_repeat(pressed);
     if (held & 0x8000) {
         g.sound(0x101);
         const auto c = static_cast<unsigned char>(static_cast<unsigned char>(MenuLists_Cursor) - 1);
-        Byte(at::kCountdown) = 0;
+        Byte(::bof3::Img(at::kCountdown.v)) = 0;
         MenuLists_Cursor = c;
         if (static_cast<signed char>(c) < 0) MenuLists_Cursor = 6;
     }
     if (held & 0x2000) {
         g.sound(0x101);
         const auto c = static_cast<unsigned char>(static_cast<unsigned char>(MenuLists_Cursor) + 1);
-        Byte(at::kCountdown) = 0;
+        Byte(::bof3::Img(at::kCountdown.v)) = 0;
         MenuLists_Cursor = c;
         if (static_cast<signed char>(c) > 6) MenuLists_Cursor = 0;
     }
@@ -296,7 +296,7 @@ extern "C" void __cdecl FieldMenu_TopBarInput(void) {
     }
     if ((Field_ConfirmButtons & in) == 0) return;
     if (static_cast<unsigned char>(MenuLists_Cursor) == 6) {
-        if (Byte(at::kIconWindow + 0xC) == 0) {
+        if (Byte(::bof3::Img(at::kIconWindow.v) + 0xC) == 0) {
             g.reconcile();
             const unsigned char step = FieldS_State;
             Game_Step = Game_Step + 1;
@@ -309,16 +309,16 @@ extern "C" void __cdecl FieldMenu_TopBarInput(void) {
     }
     g.sound(0x104);
     const unsigned char chosen = static_cast<unsigned char>(MenuLists_Cursor);
-    Byte(at::kCountdown) = 5;
-    Byte(at::kMoneyWindow + 3) = 1;
-    Byte(at::kTimeWindow + 3) = 1;
-    Byte(at::kIconWindow + 3) = 1;
-    Byte(at::kTitleWindow + 3) = 1;
+    Byte(::bof3::Img(at::kCountdown.v)) = 5;
+    Byte(::bof3::Img(at::kMoneyWindow.v) + 3) = 1;
+    Byte(::bof3::Img(at::kTimeWindow.v) + 3) = 1;
+    Byte(::bof3::Img(at::kIconWindow.v) + 3) = 1;
+    Byte(::bof3::Img(at::kTitleWindow.v) + 3) = 1;
     const unsigned char state = chosen == 0 ? 1 : chosen == 5 ? 7 : 2;
     std::uint16_t i = 0;
     if (Members() != 0) {
         do {
-            At(WindowRecords_addr + 0x90 + 3 + static_cast<std::uint32_t>(i) * at::kRecordSize)[0] = state;
+            At(::bof3::Img(WindowRecords_addr) + 0x90 + 3 + static_cast<std::uint32_t>(i) * at::kRecordSize)[0] = state;
             ++i;
         } while (i < static_cast<std::uint16_t>(Members()));
     }
@@ -346,7 +346,7 @@ extern "C" void __cdecl FieldMenu_PlaceWindows(void) {
     unsigned char i = 0;
     if (Members() != 0) {
         do {
-            unsigned char* const r = At(WindowRecords_addr + 0x90 + i * at::kRecordSize);
+            unsigned char* const r = At(::bof3::Img(WindowRecords_addr) + 0x90 + i * at::kRecordSize);
             r[0xA] = i;
             r[1] = 6;
             r[2] = 0;
@@ -360,10 +360,10 @@ extern "C" void __cdecl FieldMenu_PlaceWindows(void) {
         } while (i < Members());
     }
     struct Place { std::uint32_t at; unsigned char kind; std::uint16_t x, y; };
-    static constexpr Place kPlaces[] = {{Window7_addr, 1, 0xC8, 0x10},
-                                        {Window8_addr, 2, 0x10, 0x10},
-                                        {Window9_addr, 3, 0x68, 0x2A},
-                                        {Window10_addr, 4, 0x73, 0x10}};
+    static constexpr Place kPlaces[] = {{::bof3::Img(Window7_addr), 1, 0xC8, 0x10},
+                                        {::bof3::Img(Window8_addr), 2, 0x10, 0x10},
+                                        {::bof3::Img(Window9_addr), 3, 0x68, 0x2A},
+                                        {::bof3::Img(Window10_addr), 4, 0x73, 0x10}};
     for (const Place& p : kPlaces) {
         unsigned char* const r = At(p.at);
         r[1] = 6;
@@ -373,11 +373,11 @@ extern "C" void __cdecl FieldMenu_PlaceWindows(void) {
         rv::As<records::WindowRecord>(r)->x = p.x;
         rv::As<records::WindowRecord>(r)->y = p.y;
     }
-    Byte(at::kIconWindow + 0xA) = 0;
-    Byte(at::kIconWindow + 0xB) = 0;
-    Byte(at::kIconWindow + 0xC) = 0;
-    SetWord(At(Window9_addr + 0x10), 0);
-    SetWord(At(Window10_addr + 0x10), 0);
+    Byte(::bof3::Img(at::kIconWindow.v) + 0xA) = 0;
+    Byte(::bof3::Img(at::kIconWindow.v) + 0xB) = 0;
+    Byte(::bof3::Img(at::kIconWindow.v) + 0xC) = 0;
+    SetWord(At(::bof3::Img(Window9_addr) + 0x10), 0);
+    SetWord(At(::bof3::Img(Window10_addr) + 0x10), 0);
 }
 
 // original 0x589FE0: the party check as the menu closes (the top bar's
@@ -394,7 +394,7 @@ extern "C" void __cdecl FieldMenu_PlaceWindows(void) {
 extern "C" void __cdecl FieldMenu_ReconcileParty(void) {
     unsigned char missing = 0;
     for (unsigned k = 0; k < 3; ++k) {
-        const unsigned char m = At(at::kSavedParty)[k];
+        const unsigned char m = At(::bof3::Img(at::kSavedParty.v))[k];
         if (m == 0xFF) continue;
         unsigned char add = 1;
         for (unsigned j = 0; j < 3; ++j) {
@@ -408,14 +408,14 @@ extern "C" void __cdecl FieldMenu_ReconcileParty(void) {
     }
     if (missing != 0) MenuLists_PartyChanged = 1;
     unsigned char before[9];
-    for (unsigned b = 0; b < 9; ++b) before[b] = At(at::kReserveData)[b];
+    for (unsigned b = 0; b < 9; ++b) before[b] = At(::bof3::Img(at::kReserveData.v))[b];
     for (unsigned k = 0; k < 3; ++k) {
         const unsigned char m = Cond_Flags[0xd5 + k];
         if (m == 0xFF) continue;
-        unsigned char* const out = At(at::kReserveData + 3 * k);
+        unsigned char* const out = At(::bof3::Img(at::kReserveData.v) + 3 * k);
         unsigned j = 0;
         for (; j < 3; ++j) {
-            const unsigned char s = At(at::kSavedReserve)[j];
+            const unsigned char s = At(::bof3::Img(at::kSavedReserve.v))[j];
             if (s != 0xFF && m == s) break;
         }
         if (j < 3) {
@@ -440,14 +440,14 @@ extern "C" void __cdecl FieldMenu_ReconcileParty(void) {
 // MenuList_TitleBox, and sixteen more kinds of other screens (5..20). The
 // kind unchecked; a jump, as the original's.
 extern "C" void __cdecl MenuList_Run(void) {
-    const Step step = Entry(MenuList_Kinds_addr, Rec()[2]);
+    const Step step = Entry(::bof3::Img(MenuList_Kinds_addr), Rec()[2]);
     [[clang::musttail]] return step();
 }
 
 // original 0x599B70, kind 0: the record's state from 0x66AFE8 (+3,
 // unchecked), then MenuList_DrawMemberPanel of the record (re-read).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuList_MemberPanel(void) {
-    Entry(MenuList_PanelStates_addr, Rec()[3])();
+    Entry(::bof3::Img(MenuList_PanelStates_addr), Rec()[3])();
     g.draw_member(Rec());
 }
 
@@ -460,8 +460,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuList_MemberPanel
 // As the original has it: the record is the argument, not 0x905B84; its
 // fields are read again after the calls; Gfx_PacketNext after the panel.
 extern "C" void __cdecl MenuList_DrawMemberPanel(unsigned char* rec) {
-    const unsigned member = At(Cond_Flags_addr + 0xd2 + rec[0xB] * 3u + rec[0xA])[0];
-    const unsigned record = At(Character_IndexById_addr + member)[0];
+    const unsigned member = At(::bof3::Img(Cond_Flags_addr) + 0xd2 + rec[0xB] * 3u + rec[0xA])[0];
+    const unsigned record = At(::bof3::Img(Character_IndexById_addr) + member)[0];
     g.member_body(rv::As<records::WindowRecord>(rec)->x, rv::As<records::WindowRecord>(rec)->y, record, rec[0xC], 0);
     g.draw_mode(Gfx_PacketNext, 0, 0, 0xF, 0);
     g.commit(1, 0xC);
@@ -472,7 +472,7 @@ extern "C" void __cdecl MenuList_DrawMemberPanel(unsigned char* rec) {
 // original 0x599D50, kind 1: the state from 0x66B014, then Menu_DrawMoneyBox
 // at the record's (+4, +6) with the money 0x904058.
 extern "C" void __cdecl MenuList_MoneyBox(void) {
-    Entry(MenuList_MoneyStates_addr, Rec()[3])();
+    Entry(::bof3::Img(MenuList_MoneyStates_addr), Rec()[3])();
     const unsigned char* const r = Rec();
     g.money_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, 0, Party_Zenny);
 }
@@ -480,7 +480,7 @@ extern "C" void __cdecl MenuList_MoneyBox(void) {
 // original 0x599DC0, kind 2: the state from 0x66B020, then the play-time box
 // 0x5746C0 at the record's (+4, +6).
 extern "C" void __cdecl MenuList_TimeBox(void) {
-    Entry(MenuList_TimeStates_addr, Rec()[3])();
+    Entry(::bof3::Img(MenuList_TimeStates_addr), Rec()[3])();
     const unsigned char* const r = Rec();
     g.time_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y);
 }
@@ -497,7 +497,7 @@ extern "C" void __cdecl MenuList_TimeBox(void) {
 // store; the count is compared as a signed word; the size is the count's low
 // byte plus 8, doubled, as a byte.
 extern "C" void __cdecl MenuList_TopBarIcons(void) {
-    Entry(MenuList_IconStates_addr, Rec()[3])();
+    Entry(::bof3::Img(MenuList_IconStates_addr), Rec()[3])();
     unsigned char* r = Rec();
     if (r[0xB] != r[0xA]) {
         SetWord(r + 0x10, 0);
@@ -513,7 +513,7 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
         const unsigned shade = i == 6 && r[0xC] != 0 ? 0x40 : 0x80;
         const unsigned y = rv::As<records::WindowRecord>(r)->y;
         const unsigned x = ((i << 4) + rv::As<records::WindowRecord>(r)->x) & 0xFFFF;
-        g.icon(At(FieldMenu_IconIds_addr + i)[0], x, y, 0x10, 0x10, shade);
+        g.icon(At(::bof3::Img(FieldMenu_IconIds_addr) + i)[0], x, y, 0x10, 0x10, shade);
         r = Rec();
     }
     const unsigned sel = r[0xA];
@@ -522,7 +522,7 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
     const unsigned size = static_cast<unsigned char>((r[0x10] + 8) << 1);
     const unsigned y = (rv::As<records::WindowRecord>(r)->y - grow) & 0xFFFF;
     const unsigned x = ((((sel << 4) + rv::As<records::WindowRecord>(r)->x) & 0xFFFF) - grow) & 0xFFFF;
-    g.icon(At(FieldMenu_IconIds_addr + sel)[0], x, y, size, size, shade);
+    g.icon(At(::bof3::Img(FieldMenu_IconIds_addr) + sel)[0], x, y, size, size, shade);
     r = Rec();
     r[0xB] = r[0xA];
 }
@@ -548,7 +548,7 @@ unsigned char g_title_centre = 0;
 // every read and call and changes only the x: x + 0x25 - width / 2, the
 // width in pixels - the same number as the original's for 12-unit glyphs.
 extern "C" void __cdecl MenuList_TitleBox(void) {
-    Entry(MenuList_TitleStates_addr, Rec()[3])();
+    Entry(::bof3::Img(MenuList_TitleStates_addr), Rec()[3])();
     const unsigned char colour = static_cast<unsigned char>(Config_WindowColour);
     const unsigned char* r = Rec();
     g.title_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, 0x48, 0x13, colour);

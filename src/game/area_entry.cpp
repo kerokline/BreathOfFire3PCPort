@@ -139,7 +139,7 @@ extern "C" unsigned __cdecl Party_DropIn(unsigned entry_arg) {
     ++list;
     if ((header & 0xC0) == 0) {
         if (Field_MemberCount != n) return (table & 0xFFFFFF00u) | 1u;
-        for (unsigned i = 0; i < n; ++i) At(kPickFree)[i] = Cond_Flags[0xd2 + i];
+        for (unsigned i = 0; i < n; ++i) At(::bof3::Img(kPickFree.v))[i] = Cond_Flags[0xd2 + i];
         for (unsigned i = 0; i < n; ++i) {
             const unsigned char wanted = list[i];
             const unsigned members = Field_MemberCount;
@@ -148,21 +148,21 @@ extern "C" unsigned __cdecl Party_DropIn(unsigned entry_arg) {
                 while (j < members && Record(j)[kRecMember] != wanted) ++j;
                 if (j == members) return 1;
             } else {
-                while (j < members && At(kPickFree)[j] == 0xFF) ++j;
+                while (j < members && At(::bof3::Img(kPickFree.v))[j] == 0xFF) ++j;
                 if (j == members) continue;
             }
-            At(kPickColumn)[i] = Record(j)[kRecColumn];
-            At(kPickSlot)[i] = static_cast<unsigned char>(j);
-            At(kPickFree)[j] = 0xFF;
+            At(::bof3::Img(kPickColumn.v))[i] = Record(j)[kRecColumn];
+            At(::bof3::Img(kPickSlot.v))[i] = static_cast<unsigned char>(j);
+            At(::bof3::Img(kPickFree.v))[j] = 0xFF;
         }
-        for (unsigned i = 0; i < n; ++i) Cond_Flags[0xd2 + i] = Record(At(kPickSlot)[i])[kRecMember];
+        for (unsigned i = 0; i < n; ++i) Cond_Flags[0xd2 + i] = Record(At(::bof3::Img(kPickSlot.v))[i])[kRecMember];
         for (unsigned s = 0; static_cast<int>(s) < static_cast<int>(n) - 1; ++s) {
-            const unsigned char there = At(kPickSlot)[s];
+            const unsigned char there = At(::bof3::Img(kPickSlot.v))[s];
             if (s == there) continue;
             g.swap_members(s, there, 0);
             for (unsigned t = s; t < n; ++t) {
-                if (At(kPickSlot)[t] == s) {
-                    At(kPickSlot)[t] = At(kPickSlot)[s];
+                if (At(::bof3::Img(kPickSlot.v))[t] == s) {
+                    At(::bof3::Img(kPickSlot.v))[t] = At(::bof3::Img(kPickSlot.v))[s];
                     break;
                 }
             }
@@ -210,7 +210,7 @@ extern "C" void __cdecl Party_SetUpMembers(unsigned count_arg, const unsigned ch
         Sprite_Current[9] = 0;
         SetLong(record + kRecScript, Long(Ptr(Descriptor() + 0x18) + list[i] * 4u));
         g.context_reset(record + kRecContext);
-        g.load_palette(reinterpret_cast<unsigned short*>(At(kPalettes + Sprite_Current[kRecPalette] * 64u)), 0);
+        g.load_palette(reinterpret_cast<unsigned short*>(At(::bof3::Img(kPalettes.v) + Sprite_Current[kRecPalette] * 64u)), 0);
     }
     Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFFF8);
 }
@@ -237,7 +237,7 @@ extern "C" void __cdecl Party_SwapMembers(unsigned a, unsigned b, unsigned keep)
         g.member_sprite(record[kRecMember], slot);
         unsigned char* state = Field_State;
         const unsigned char character = Character_IndexById[state[kRecMember]];
-        const unsigned char* const from = At(CharacterRecords_addr + character * kCharacterBytes);
+        const unsigned char* const from = At(::bof3::Img(CharacterRecords_addr) + character * kCharacterBytes);
         for (unsigned k = 0; k < kCharacterBytes; k += 4) SetLong(state + kRecCharacter + k, Long(from + k));
         state = Field_State;
         state[kRecCharacterIndex] = Character_IndexById[state[kRecMember]];

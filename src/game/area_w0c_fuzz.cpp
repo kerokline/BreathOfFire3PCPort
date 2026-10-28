@@ -161,7 +161,7 @@ constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 // cell about one call in 24).
 std::uint32_t MovesCounter3(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = ah::Noise();
-    if (n & 1) *ah::Mem(at::kCounter3) = static_cast<unsigned char>(n >> 8);
+    if (n & 1) *ah::Mem(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(n >> 8);
     return answer;
 }
 std::uint32_t MovesAnswer(const std::uint32_t*, std::uint32_t answer) {
@@ -239,11 +239,11 @@ void Disturb(std::uint32_t h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 6) {
     case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(v % 7 - 1); break;
-    case 1: B(at::kCounter3) = static_cast<unsigned char>(h & 0x100 ? v : (h & 0x200 ? 0x31 : 0x20)); break;
+    case 1: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(h & 0x100 ? v : (h & 0x200 ? 0x31 : 0x20)); break;
     case 2: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 4); break;
     case 3: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
     case 4: B(Chapter_FlagRow_addr + (h >> 16) % 4) = v; break;
-    default: move_script::SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? 1 : v); break;
+    default: move_script::SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), h & 0x100 ? 1 : v); break;
     }
 }
 
@@ -266,8 +266,8 @@ void Seed27(unsigned k) {
     case k27DropIn1: case k27DropIn2:
         SeedTailState(4);
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(2, 0, 1, 3));
-        if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(0x20, 0x1F, 0x21, 0x10, 0x0F, 0x11, 0x31, 0x30, 0x32));
-        if (ah::Often()) move_script::SetWord(ah::Mem(at::kTailTimer), AH_PICK(1, 1, 1, 2, 0, 0x10, 0xFFFF));
+        if (ah::Often()) B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(AH_PICK(0x20, 0x1F, 0x21, 0x10, 0x0F, 0x11, 0x31, 0x30, 0x32));
+        if (ah::Often()) move_script::SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), AH_PICK(1, 1, 1, 2, 0, 0x10, 0xFFFF));
         break;
     default: break;
     }

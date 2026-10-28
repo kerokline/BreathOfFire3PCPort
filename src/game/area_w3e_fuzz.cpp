@@ -230,7 +230,7 @@ std::uint32_t FlagsTestEffect(const std::uint32_t*, std::uint32_t answer) {
 // The event ops take their object from the word 0x903850 (scena_se.cpp):
 // the value each call sees is part of what it does.
 std::uint32_t NotesObjectWord(const std::uint32_t*, std::uint32_t answer) {
-    ah::Note(Word(ah::Mem(at::kScratch850)));
+    ah::Note(Word(ah::Mem(::bof3::Img(at::kScratch850.v))));
     return answer;
 }
 
@@ -286,7 +286,7 @@ const ah::Region kRegions[] = {
     {Camera_ShiftY_addr, 2},
     {Input_Held_addr, 8},
     {Gfx_UnpackScratch_addr + 0x1f00c, 2},
-    {at::kTile, 2},
+    {at::kTile.v, 2},
     {Field_Kind2Hold_addr, 1},
     {Cond_ByteFE_addr, 1},
     {Sprite_Kind2_addr, at::kObjectStride},
@@ -319,11 +319,11 @@ void Disturb(std::uint32_t h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 9) {
     case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 14 : v); break;
-    case 1: B(at::kCounter0) = static_cast<unsigned char>(h & 0x100 ? v % 3 : v); break;
-    case 2: B(at::kCounter3) = static_cast<unsigned char>(h & 0x100 ? (v & 1 ? 0x28 : 0) : v); break;
+    case 1: B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(h & 0x100 ? v % 3 : v); break;
+    case 2: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(h & 0x100 ? (v & 1 ? 0x28 : 0) : v); break;
     case 3: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
     case 4: ah::SetPointer(MoveScript_Object_addr, ScriptRecord(h >> 16)); break;
-    case 5: SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? v % 3 : v); break;
+    case 5: SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), h & 0x100 ? v % 3 : v); break;
     case 6: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 3); break;
     case 7: B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(v & 1); break;
     default: SetWord(ah::Mem(Input_Held_addr + 4), h & 0x100 ? 0 : v); break;
@@ -393,12 +393,12 @@ void Seed136(unsigned k) {
         if (ah::Often()) B(Cond_Flags_addr + 0xd4) = static_cast<unsigned char>(ah::Next() % 12);
         break;
     case k136Tile:
-        if (ah::Often()) SetWord(ah::Mem(at::kTile), (ah::Next() & 0xFF00u) | AH_PICK(0x61, 0x62, 0x64, 0x66, 0x67, 0xE2));
+        if (ah::Often()) SetWord(ah::Mem(::bof3::Img(at::kTile.v)), (ah::Next() & 0xFF00u) | AH_PICK(0x61, 0x62, 0x64, 0x66, 0x67, 0xE2));
         break;
     case k136Tail19:
         if (ah::Often()) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 10, 11, 12, 13, 0, 1, 2, 10, 11, 12, 13, 3, 9, 14, 0xFF, 0x80, 0x8A));
         SeedRequest();
-        if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(0x28, 0x28, 0, 0, 0x27, 0x29, 1, 0xA8));
+        if (ah::Often()) B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(AH_PICK(0x28, 0x28, 0, 0, 0x27, 0x29, 1, 0xA8));
         if (ah::Often()) B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 0, 1, 0x80, 2));
         break;
     case k136Init:
@@ -432,7 +432,7 @@ void SeedFollow() {
     unsigned char* const cur = Sprite_Current;
     const unsigned char pose = static_cast<unsigned char>(ah::Often() ? ah::Next() % 8 : ah::Next());
     B(ObjTrio_addr + 0x8) = pose;
-    const unsigned char* const delta = ah::Mem(at::kCellDelta + pose * 2u);
+    const unsigned char* const delta = ah::Mem(::bof3::Img(at::kCellDelta.v) + pose * 2u);
     if (ah::Often()) {
         const unsigned x = AH_PICK(0x43, 0x44, 0x4A, 0x50, 0x51, 0x44, 0x50);
         const unsigned z = AH_PICK(5, 6, 0xA, 0x10, 0x11, 6, 0x10);
@@ -549,9 +549,9 @@ void Seed141(unsigned k) {
                                                 1, 9, 0x11, 0x15, 0x20, 0x31, 0x34, 0xFF, 0x80};
         B(AreaW0c_TailState_addr) = static_cast<unsigned char>(ah::Pick(kStates, sizeof kStates / sizeof kStates[0]));
         SeedRequest();
-        if (ah::Often()) SetWord(ah::Mem(at::kTailTimer), AH_PICK(1, 1, 0, 2, 0x1C1, 0x1C0, 0x1C2, 0xFFFF, 0x3C));
+        if (ah::Often()) SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), AH_PICK(1, 1, 0, 2, 0x1C1, 0x1C0, 0x1C2, 0xFFFF, 0x3C));
         if (ah::Often()) SetWord(ah::Mem(Input_Held_addr + 4), ah::Half() ? 0 : 1u << (ah::Next() % 16));
-        if (ah::Often()) B(at::kCounter0) = static_cast<unsigned char>(AH_PICK(1, 1, 0, 2, 0x81));
+        if (ah::Often()) B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(AH_PICK(1, 1, 0, 2, 0x81));
         if (ah::Often()) B(Field_Kind2Hold_addr) = static_cast<unsigned char>(AH_PICK(0, 0, 1, 2, 0x80));
         break;
     }
@@ -590,7 +590,7 @@ void Seed142(unsigned k) {
     switch (k) {
     case k142Run: Sprite_Current[4] = static_cast<unsigned char>(ah::Next() % at::kArea142StateCount); break;
     case k142Wait3: case k142End:
-        if (ah::Often()) B(at::kCounter0) = static_cast<unsigned char>(AH_PICK(1, 0, 2, 0x81));
+        if (ah::Often()) B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(AH_PICK(1, 0, 2, 0x81));
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(3, 3, 2, 4, 0x83));
         break;
     default: break;

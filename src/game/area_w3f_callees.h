@@ -8,6 +8,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"   // EffectGte_* (round thirteen group EGT)
 
 namespace area_w3f {
@@ -18,7 +20,7 @@ namespace at {
 // The message box's answer to a choice (the cursor's row) and the message
 // word a choice handler leaves (0xFFFF: no new message).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // A byte a choice sets to 6 beside the message it opens (areas 3, 37, 50,
 // 98 do the same), and a second byte two further on the shared yes-handlers
 // set to 3 or 5; no reader of either read this round.
@@ -29,16 +31,16 @@ constexpr std::uint32_t kMessage = 0x7DEE48;
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
 // kTailState: now AreaW0c_TailState (symbols.toml).
 // kTailSub: now AreaW0c_TailSub (symbols.toml).
-constexpr std::uint32_t kTailTimer = 0x9039F6;
+constexpr ::bof3::image::Va kTailTimer{0x9039F6};
 // The movement script's counters (MoveScript_CounterOps, ops A0..AF): 0 and
 // 3; the byte after MoveScript_Var7 (the run's step, as the chapters use it).
-constexpr std::uint32_t kCounter0 = 0x903848;
-constexpr std::uint32_t kCounter3 = 0x90384B;
+constexpr ::bof3::image::Va kCounter0{0x903848};
+constexpr ::bof3::image::Va kCounter3{0x90384B};
 // kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
 // The slot byte area 145's effect spawns keep at SharedScratch (0x903850)
 // and the byte after it, where area 145's handler 0 keeps a record index.
-constexpr std::uint32_t kSlotScratch = SharedScratch_addr;
-constexpr std::uint32_t kRecordIndex = 0x903851;
+constexpr ::bof3::image::Va kSlotScratch{SharedScratch_addr};
+constexpr ::bof3::image::Va kRecordIndex{0x903851};
 // The story flags (Flags_Set / Flags_Test's bank), Cond_Flags row 13 (the
 // row area 145's cell hook tests: 0x903F90 + 8 * 13), the row pointer the
 // chapters' flag calls take (Cond_Flags + 8 * chapter), and a dword of the
@@ -50,7 +52,7 @@ constexpr std::uint32_t kRecordIndex = 0x903851;
 // kFlags904650: now Gene_Bits (symbols.toml).
 // The focus object: the object whose talk ran last (MoveScript_SetTurnTarget
 // stores Field_ActiveMember there; area_w1a_callees.h's kFocusObject).
-constexpr std::uint32_t kFocusObject = 0x903804;
+constexpr ::bof3::image::Va kFocusObject{0x903804};
 // The party records (ObjTrio): the leader's byte +8 (the pose the hooks
 // compare), its word x high +0x36, the byte +0x89 of the leader and of the
 // third record.
@@ -84,7 +86,7 @@ constexpr unsigned kEffectCount = 20;
 // The CLUT rows area 143's shift reads (Gfx_ClutStripSource + 0x600, eleven
 // rows of 0x200 bytes) and writes (0x4000 further: Gfx_ClutStrip + 0x600).
 // kClutSourceRows: now Gfx_ClutStripSource[0x300] (symbols.toml).
-constexpr std::uint32_t kClutSourceEnd = 0x80D180;
+constexpr ::bof3::image::Va kClutSourceEnd{0x80D180};
 constexpr std::uint32_t kClutToLive = 0x4000;
 // Named cells, by address for the fuzz's regions (symbols.gen.h spells each
 // name as a macro of its value):
@@ -95,9 +97,9 @@ constexpr std::uint32_t kClutToLive = 0x4000;
 // kCondByteFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
 // kKind2Hold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
 // kOtSlot: now Draw_OtSlot (symbols.toml). Draw_OtSlot
-constexpr std::uint32_t kTextRecords = 0x904CE0;       // Text_Records
+constexpr ::bof3::image::Va kTextRecords{0x904CE0};       // Text_Records
 // kPartyRecords: now MoveScript_PartyRecords (symbols.toml). MoveScript_PartyRecords (records of 16 bytes)
-constexpr std::uint32_t kClutDirty = 0x937F90;         // Gfx_ClutStripDirty
+constexpr ::bof3::image::Va kClutDirty{0x937F90};         // Gfx_ClutStripDirty
 
 // --- the areas' tables (symbols.toml [[data]]) ---
 
@@ -113,11 +115,11 @@ constexpr std::uint32_t kClutDirty = 0x937F90;         // Gfx_ClutStripDirty
 // first leg's four and the second and third legs' two banks each.
 // kArea145DropStates: now Area145_DropStates (symbols.toml). Area145_DropStates, 2
 // kArea145MemberKeys1: now Area145_MemberKeys1 (symbols.toml). Area145_MemberKeys1, 4 bytes
-constexpr std::uint32_t kArea145MemberMessages1 = 0x6336F0;
+constexpr ::bof3::image::Va kArea145MemberMessages1{0x6336F0};
 // kArea145MemberKeys5: now Area145_MemberKeys5 (symbols.toml).
-constexpr std::uint32_t kArea145MemberMessages5 = 0x6336FC;
+constexpr ::bof3::image::Va kArea145MemberMessages5{0x6336FC};
 // kArea145MemberKeysB: now Area145_MemberKeysB (symbols.toml).
-constexpr std::uint32_t kArea145MemberMessagesB = 0x633708;
+constexpr ::bof3::image::Va kArea145MemberMessagesB{0x633708};
 // kArea145CellRecords: now Area145_CellRecords (symbols.toml). Area145_CellRecords, 7 of 4 bytes
 constexpr unsigned kArea145CellRecordCount = 7;
 // kArea145Legs0: now Area145_TrailLegs0 (symbols.toml). Area145_TrailLegs0, 4 of 4 bytes
@@ -130,7 +132,7 @@ constexpr unsigned kArea145CellRecordCount = 7;
 constexpr unsigned kStateCount = 2;
 // Field_CellDeltas-style table: two signed bytes (x, z) a direction
 // (event_ops_callees.h's kCellDelta).
-constexpr std::uint32_t kCellDelta = 0x66971C;
+constexpr ::bof3::image::Va kCellDelta{0x66971C};
 
 // --- the callees nobody owns (raw addresses) ---
 

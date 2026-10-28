@@ -316,7 +316,7 @@ constexpr U kFzPlateAnimsEnd = 0x6236A0;
 enum : unsigned { kRegWmPackets = 3 };
 ah::Region g_regionsWm[] = {
     {AreaW0b_MapMode_addr, 1}, {Draw_PassFlags_addr, 1}, {Gfx_PacketNext_addr, 4}, {0, kPacketBytes}, {Prim_VertexScratch_addr, 0x20}, {Game_Mode_addr, 2},
-    {Gfx_UnpackScratch_addr + 0x1f000, 0x10}, {at::kAreaText, 4}, {CharacterRecords_addr + 0x9, 1},
+    {Gfx_UnpackScratch_addr + 0x1f000, 0x10}, {at::kAreaText.v, 4}, {CharacterRecords_addr + 0x9, 1},
     {Area121_Places_addr, kFzPlacesEnd - Area121_Places_addr}, {Area121_PlateAnims_addr, kFzPlateAnimsEnd - Area121_PlateAnims_addr}, {Area121_Cells_addr, 8},
     {Area121_Directions_addr, 0x18},
 };
@@ -345,7 +345,7 @@ void DisturbWm(U h) {
     case 4: Mem(AreaW0c_TailState_addr)[0] = static_cast<unsigned char>(v % 3); break;
     case 5: Game_Mode = static_cast<unsigned short>(Game_Mode ^ 1); break;
     case 6: SetWord(Mem(AreaW0b_Place_addr), Word(Mem(Area121_Places_addr + (v % 4) * 2))); break;
-    case 7: Mem(at::kLeaderCellX + (v & 1) * 2)[0] = static_cast<unsigned char>(v); break;
+    case 7: Mem(::bof3::Img(at::kLeaderCellX.v) + (v & 1) * 2)[0] = static_cast<unsigned char>(v); break;
     case 8: Mem(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(v & 1 ? 0xC : v); break;
     default: break;
     }
@@ -469,8 +469,8 @@ void SeedWm(unsigned k) {
         const auto near = [](unsigned char* cell, unsigned centre) {
             SetWord(cell, centre + AH_PICK(0, 25, 26, static_cast<U>(-25), static_cast<U>(-26), 1, 100));
         };
-        if (ah::Often()) near(Mem(at::kLeaderCellX), rv::As<records::SpriteHead>(o)->x_whole);
-        if (ah::Often()) near(Mem(at::kLeaderCellZ), rv::As<records::SpriteHead>(o)->z_whole);
+        if (ah::Often()) near(Mem(::bof3::Img(at::kLeaderCellX.v)), rv::As<records::SpriteHead>(o)->x_whole);
+        if (ah::Often()) near(Mem(::bof3::Img(at::kLeaderCellZ.v)), rv::As<records::SpriteHead>(o)->z_whole);
         if (ah::Half()) Frame_Counter = AH_PICK(0, 15, 16, 31, 0x2F, 0xFFFFFFFFu);
         break;
     }

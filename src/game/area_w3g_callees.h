@@ -21,6 +21,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
@@ -38,17 +40,17 @@ using U = std::uint32_t;
 // kTailKind: now AreaW0a_TailKind (symbols.toml). Field_ModeTailKinds' index (s8)
 // kTailState: now AreaW0c_TailState (symbols.toml). s8: the armed tail kind's (or the place hook's) state
 // kTailArg: now AreaW0c_TailSub (symbols.toml). the tail's byte: area 148 keeps an effect slot in it
-constexpr U kTailTimer = 0x9039F6;        // u16: the tails' frame counter
+constexpr ::bof3::image::Va kTailTimer{0x9039F6};        // u16: the tails' frame counter
 // kLeader: now ObjTrio (symbols.toml). ObjTrio + 0, the leader's record
 // kLeaderDir: now ObjTrio[0].direction (symbols.toml). the leader's +8, its facing
 // kLeaderX: now ObjTrio[0].x (symbols.toml). the leader's +0x34 / +0x38, 16.16
 // kLeaderZ: now ObjTrio[0].z (symbols.toml).
 constexpr U kPartyStride = 0x14C;
-constexpr U kMemberId = 0x802DC9;         // party record 0's +0x89: the member's id
+constexpr ::bof3::image::Va kMemberId{0x802DC9};         // party record 0's +0x89: the member's id
 // kCursor: now AreaW0c_ChoiceAnswer (symbols.toml). the message box's cursor (s8): a choice's answer
-constexpr U kMessage = 0x7DEE48;          // u16: the message a choice opened, 0xFFFF none
-constexpr U kCounter0 = 0x903848;         // MoveScript counter 0 (flow ops A0..AC)
-constexpr U kScriptVar = 0x90384B;        // the movement script's byte the tails wait on
+constexpr ::bof3::image::Va kMessage{0x7DEE48};          // u16: the message a choice opened, 0xFFFF none
+constexpr ::bof3::image::Va kCounter0{0x903848};         // MoveScript counter 0 (flow ops A0..AC)
+constexpr ::bof3::image::Va kScriptVar{0x90384B};        // the movement script's byte the tails wait on
 // kCameraAngle1: now Camera_Angles[1] (symbols.toml). s16 Camera_Angles[1]
 // kCameFrom: now AreaW2c_LastArea (symbols.toml). u16: the area the party came from (docs/mode-flow.md)
 // kEffects: now Effect_Objects (symbols.toml). Effect_Objects: records of 0x80
@@ -74,12 +76,12 @@ constexpr unsigned kEffectCount = 20;
 // kA148MessagesA: now Area148_MessagesA (symbols.toml).
 // kA148MemberIdsB: now Area148_MemberIdsB (symbols.toml). the same for handler 5
 // kA148MessagesB: now Area148_MessagesB (symbols.toml).
-constexpr U kA148Switch = 0x6353F0;       // one (x, z, facing, tail state) record: the cell hook's
-constexpr U kA148SwitchEnd = 0x6353F4;
+constexpr ::bof3::image::Va kA148Switch{0x6353F0};       // one (x, z, facing, tail state) record: the cell hook's
+constexpr ::bof3::image::Va kA148SwitchEnd{0x6353F4};
 // kA148BeamStates: now Area148_BeamStates (symbols.toml). effect kind 0x7E's three states
 constexpr unsigned kA148BeamStateCount = 3;
 // kA148TurnSteps: now Area148_TurnSteps (symbols.toml). 10 pairs of s8 indexes by +9 >> 3
-constexpr U kA148TurnCells = 0x635414;    // (dx, dz) s8 pairs
+constexpr ::bof3::image::Va kA148TurnCells{0x635414};    // (dx, dz) s8 pairs
 
 // --- area 149 (descriptor 0x6361B8) -----------------------------------------
 // kA149DustStates: now Area149_DustStates (symbols.toml). handler 1's four states by Sprite_Current[4]
@@ -97,17 +99,17 @@ constexpr unsigned kA149DustStateCount = 4;
 // kLeaderCellWordZ: now ObjTrio[0].z_whole (symbols.toml). the high word of +0x38
 // kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
 // kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
-constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z
-constexpr U kLeaderCellZ = 0x905E62;
+constexpr ::bof3::image::Va kLeaderCellX{0x905E66};      // the high words of Field_Kind2X / Z
+constexpr ::bof3::image::Va kLeaderCellZ{0x905E62};
 // kMapHeight: now AreaMap_Header[1] (symbols.toml). AreaMap_Header's second byte
 // kButtonMap0: now Gfx_UnpackScratch[0x1f000] (symbols.toml). the field's button map: word 0, the first legend's button
 // kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). word 6, the second's
 // kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
-constexpr U kAreaText = 0x803580;         // the area's text section; area 151 reads its label offset from its first dword
-constexpr U kItemsHeld = 0x9040EC;        // a byte per item id: 0 not yet seen
+constexpr ::bof3::image::Va kAreaText{0x803580};         // the area's text section; area 151 reads its label offset from its first dword
+constexpr ::bof3::image::Va kItemsHeld{0x9040EC};        // a byte per item id: 0 not yet seen
 // kItemNameKey: now AreaW0b_ItemNameKey (symbols.toml). the 16-byte name the hook copies for item 0x16
-constexpr U kTextRecords = 0x904CE0;      // Text_Records: the place hook fills rows of 0x20 from here
-constexpr U kFlag3A79 = 0x903A79;         // the record +4 state: 9 releases the effect
+constexpr ::bof3::image::Va kTextRecords{0x904CE0};      // Text_Records: the place hook fills rows of 0x20 from here
+constexpr ::bof3::image::Va kFlag3A79{0x903A79};         // the record +4 state: 9 releases the effect
 // kMsgMode: now AreaW0a_TailKind (symbols.toml).
 // kMsgState: now AreaW0c_TailState (symbols.toml).
 // kMsgArg: now AreaW0c_TailSub (symbols.toml).
@@ -138,15 +140,15 @@ struct WorldMapTables {
 // linker's fold, in group AR4A's band.
 constexpr WorldMapTables kWm151 = {
     "Area151",
-    0x636A68,             // 7 plate animations (then the cell record)
-    0x636A84,             // 1 cell record (then the descriptor's +0x20 data)
-    0x6370BC, 0x63719C,   // 7 place rows
-    0x63719D, 0x904D80,   // the name set (id 0x10) at 0x63719C: five items; five text rows
-    0x6371A4, 0x6371B8, 0x6371C0, 0x6371D0,
-    0x6371E0, 0x637238,
-    0x637250, 0x63725C, 0x63726C, 0x637274,
-    0x63727C, 0x637280, 0x637284,
-    0x803580,
+    ::bof3::Img(0x636A68),             // 7 plate animations (then the cell record)
+    ::bof3::Img(0x636A84),             // 1 cell record (then the descriptor's +0x20 data)
+    ::bof3::Img(0x6370BC), ::bof3::Img(0x63719C),   // 7 place rows
+    ::bof3::Img(0x63719D), ::bof3::Img(0x904D80),   // the name set (id 0x10) at 0x63719C: five items; five text rows
+    ::bof3::Img(0x6371A4), ::bof3::Img(0x6371B8), ::bof3::Img(0x6371C0), ::bof3::Img(0x6371D0),
+    ::bof3::Img(0x6371E0), ::bof3::Img(0x637238),
+    ::bof3::Img(0x637250), ::bof3::Img(0x63725C), ::bof3::Img(0x63726C), ::bof3::Img(0x637274),
+    ::bof3::Img(0x63727C), ::bof3::Img(0x637280), ::bof3::Img(0x637284),
+    ::bof3::Img(0x803580),
     bof3::addr::Area151_FrameStep, bof3::addr::Area151_FrameHold, bof3::addr::Area151_BoxStep,
     bof3::addr::Area151_DrawFrame, bof3::addr::Area151_DrawSprite, bof3::addr::Area151_DrawHud,
 };

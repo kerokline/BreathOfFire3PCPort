@@ -393,7 +393,7 @@ const ah::Callee kCallees130[] = {
 const ah::Region kRegions130[] = {
     kEffectRegion,
     {AreaW3c_ItemPick_addr, 1},
-    {at::kTextRecords, 0x30},
+    {at::kTextRecords.v, 0x30},
 };
 void Seed130(unsigned k) {
     switch (k) {

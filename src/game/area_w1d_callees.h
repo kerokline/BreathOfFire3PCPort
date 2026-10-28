@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
@@ -23,7 +25,7 @@ namespace at {
 // (docs/item-use.md section 5), and the message word a choice handler leaves
 // (0xFFFF: no new message).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // A byte several areas' choices set to 6 beside the message they open (areas
 // 37 and 50 do the same, docs/area_w0c.md, docs/area_w1c.md); no reader read.
 // kAnswerMark: now AreaW0c_AnswerMark (symbols.toml).
@@ -33,15 +35,15 @@ constexpr std::uint32_t kMessage = 0x7DEE48;
 // kTailState: now AreaW0c_TailState (symbols.toml).
 // kTailSub: now AreaW0c_TailSub (symbols.toml).
 // The movement script's counters 0 and 3 (MoveScript_CounterOps, ops A0..AF).
-constexpr std::uint32_t kCounter0 = 0x903848;
-constexpr std::uint32_t kCounter3 = 0x90384B;
+constexpr ::bof3::image::Va kCounter0{0x903848};
+constexpr ::bof3::image::Va kCounter3{0x90384B};
 // A pointer to a field object (area_w1a's "focus object", object_kinds.cpp's
 // "talker": the active member of the last talk); area 53's choice writes two
 // dwords through it, area 59's trigger 24 three fields and divides it into
 // an object index.
 // kFocusObject: now AreaW1a_FocusObject (symbols.toml).
 // The high byte of Field_ScriptFlags (0x9039A2): area 60's init ors 0x20 in.
-constexpr std::uint32_t kScriptFlagsHigh = 0x9039A3;
+constexpr ::bof3::image::Va kScriptFlagsHigh{0x9039A3};
 // The story flags (Flags_Set / Flags_Test's bank) and Cond_Flags row 3
 // (0x903F90 + 8 * 3), whose flags 8..0xE area 56's choices set.
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
@@ -53,7 +55,7 @@ constexpr std::uint32_t kScriptFlagsHigh = 0x9039A3;
 // kZenny: now Party_Zenny (symbols.toml).
 // Text_Records (typeless in symbols.toml): area 62's tail copies an item's
 // 16-byte name record into its first 16 bytes.
-constexpr std::uint32_t kTextRecords = 0x904CE0;
+constexpr ::bof3::image::Va kTextRecords{0x904CE0};
 // The leader's record (ObjTrio record 0) and the fields the areas read or
 // write in it directly: +1..+3 (the state bytes area 56 sets before
 // MoveCmd_TestFB), +8 (the pose the step hook compares), +0x2E / +0x30 (the

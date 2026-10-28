@@ -65,7 +65,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 
 unsigned char* RecordOf(unsigned id, unsigned battle) {
     const unsigned i = id & 0xFF;
-    return (battle & 0xFF) == 0 ? At(CharacterRecords_addr + i * at::kCharStride) : At(at::kWorkRecords + i * at::kWorkStride);
+    return (battle & 0xFF) == 0 ? At(CharacterRecords_addr + i * at::kCharStride) : At(::bof3::Img(at::kWorkRecords.v) + i * at::kWorkStride);
 }
 
 // Every cell below is one some function reads again, or stores, after a call.
@@ -74,18 +74,18 @@ void Disturb() {
     if (h % 4 == 0) return;
     const unsigned v = (h >> 12) & 0xFF;
     switch ((h >> 4) % 14) {
-    case 0: SetWord(At(at::kMessage), v % 3 == 0 ? 0xFFFF : h >> 16); break;
+    case 0: SetWord(At(::bof3::Img(at::kMessage.v)), v % 3 == 0 ? 0xFFFF : h >> 16); break;
     case 1: At(ItemUse_SubState_addr)[0] = static_cast<unsigned char>(v); break;
     case 2: At(Window1_State_addr)[0] = static_cast<unsigned char>(v); break;
     case 3: At(WindowRecords_addr + 0x3)[0] = static_cast<unsigned char>(v); break;
     case 4: At(ItemUse_ColorHigh_addr)[0] = static_cast<unsigned char>(v); break;
     case 5: Game_Step = static_cast<unsigned short>(h >> 16); break;
-    case 6: At(at::kTiaraCount)[0] = static_cast<unsigned char>(v); break;
+    case 6: At(::bof3::Img(at::kTiaraCount.v))[0] = static_cast<unsigned char>(v); break;
     case 7: At(FieldS_State_addr)[0] = static_cast<unsigned char>(v); break;
     case 8: At(ObjTrio_addr + 0x34 + v % 8)[0] = static_cast<unsigned char>(h >> 20); break;
     case 9: Game_AreaNumber = static_cast<unsigned short>(v % 4); break;
     case 10: At(Cond_Flags_addr + 0xd2 + v % 4)[0] = static_cast<unsigned char>((h >> 20) % 0x18); break;
-    case 11: At(at::kSysCounter)[0] = static_cast<unsigned char>(v); break;
+    case 11: At(::bof3::Img(at::kSysCounter.v))[0] = static_cast<unsigned char>(v); break;
     default: {
         // a record's status, HP or max: any of the 16 records
         unsigned char* const r = RecordOf(v % 8, (h >> 20) & 1);
@@ -347,7 +347,7 @@ const Region kRegions[] = {
     {0x905B60, 2},                              // 0x905B61
     {0x66C7E8, 4},                              // Game_Step
     {0x7E1BE0, 0x10},                           // the repeat countdown, Input_Held / Previous / Pressed
-    {at::kRepeatLatch, 2},
+    {at::kRepeatLatch.v, 2},
 };
 constexpr unsigned kRegionBytes = 8 * at::kCharStride + 0xAB0 + 0x30 + 0x10 + 0x10 + 0x40 + 0x10 + 2 + 2 + 4 + 0x10 + 2;
 
@@ -381,7 +381,7 @@ Choice g_area_table[128];
 
 void RandomTables() {
     for (unsigned i = 0; i < 256; ++i) {
-        At(at::kItemFlags + i * at::kItemStride)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
+        At(::bof3::Img(at::kItemFlags.v) + i * at::kItemStride)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         ItemUse_HandlerIndex[i] = static_cast<unsigned char>(Next() % 34);
     }
 }
@@ -495,14 +495,14 @@ Args Seed(unsigned k) {
     case kMenuK:
         At(ItemUse_ChoiceId_addr)[0] = static_cast<unsigned char>(Half() ? Next() % 0x80 : 0x80 | Next());
         if (Half()) At(ItemUse_ChoiceId_addr)[0] = static_cast<unsigned char>(Half() ? 0x7F : 0x80);
-        if (Half()) SetWord(At(at::kMessage), 0xFFFF);
+        if (Half()) SetWord(At(::bof3::Img(at::kMessage.v)), 0xFFFF);
         break;
     case kRepeatK: {
         static const std::uint32_t kPressed[] = {0, 0x1000, 0x4000, 0x5000, 0x10000, 0xFFFF0000u, 0x10};
         args.a[0] = Often() ? kPressed[Next() % 7] : Next();
         static const std::uint16_t kTimer[] = {0, 1, 2, 3, 0xC, 0xFFFF};
         if (Often()) SetWord(At(ItemUse_RepeatTimer_addr), kTimer[Next() % 6]);
-        if (Half()) SetWord(At(at::kRepeatLatch), Word(reinterpret_cast<unsigned char*>(&Input_Held)) & (Half() ? 0x1000 : 0));
+        if (Half()) SetWord(At(::bof3::Img(at::kRepeatLatch.v)), Word(reinterpret_cast<unsigned char*>(&Input_Held)) & (Half() ? 0x1000 : 0));
         break;
     }
     default:
@@ -578,7 +578,7 @@ void SelfTest() {
     static State saved, input, their_out, our_out;
     Capture(saved);
     for (unsigned i = 0; i < 256; ++i) {
-        g_saved_flags[i] = At(at::kItemFlags + i * at::kItemStride)[0];
+        g_saved_flags[i] = At(::bof3::Img(at::kItemFlags.v) + i * at::kItemStride)[0];
         g_saved_index[i] = ItemUse_HandlerIndex[i];
     }
     std::memcpy(g_saved_handlers, ItemUse_Handlers, sizeof g_saved_handlers);
@@ -644,7 +644,7 @@ void SelfTest() {
     std::memcpy(ItemUse_Handlers, g_saved_handlers, sizeof g_saved_handlers);
     for (unsigned a = 0; a < 4; ++a) Area_Descriptors[a] = g_saved_desc[a];
     for (unsigned i = 0; i < 256; ++i) {
-        At(at::kItemFlags + i * at::kItemStride)[0] = g_saved_flags[i];
+        At(::bof3::Img(at::kItemFlags.v) + i * at::kItemStride)[0] = g_saved_flags[i];
         ItemUse_HandlerIndex[i] = g_saved_index[i];
     }
     Apply(saved);
