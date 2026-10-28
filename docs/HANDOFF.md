@@ -47,19 +47,32 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      `C:\Users\kerok\bof3x-runs\lf1027`, merged one at a time; unpushed, **PR at the owner's word**;
      [`ledger-fields-round.md`](ledger-fields-round.md), the "as run" sections of 2, 3 and 4; the reports
      `lf1027\<group>\REPORT.md`). Every entry carries the six fields `Switch:` / `Default:` / `Player:` / `Toward:` /
-     `Languages:` / `State:`, `ledger_check.py` is strict, and the counts are in [`STATUS.md`](STATUS.md). **Next: stage D** (section 5),
-     to brief once the owner has read section 4's "as run": `BOF3X_OFF` (ini `off=`) read beside
-     `BOF3X_ORIGINAL` for the 67 `cheap` names, a generated registry from the fields, the four presets in the
-     launcher's Configure page, and the proof (the state hash of the exe host under `BOF3X_OFF=<name>` against
-     the hosted build under `BOF3X_ORIGINAL=<name>`, one batched run). Traps paid for: an empty `ini:opt=`
-     means the key set to empty, not unset (DIV-0110..0113); an entry whose `Languages:` is not `any` (every
-     `Switch: lang` entry among them) is governed by the language pick - on under those languages, inert under
-     the others - so a preset skips it when the chosen language is not listed and never turns one on or off
-     against the pick; the `Reversible?` prose of DIV-0141,
-     0145, 0147 and 0148 still says "not a switch" and is reworded when the switch exists. **The owner's calls of 2026-10-28** (round doc section 6): the `env:` form and the dropped "starts Yes" note
-     accepted, D395 fixed in stage D, the 28 `costly` left and listed. **For the owner:** the ten `Toward: none` entries that want a twin read (section 3's "as run").
-     The worktrees under `lf1027` are removable once the PR is in. Also on the branch: the regenerated
-     `analysis/data_census.tsv` the owner found loose on `main` (line numbers only).
+     `Languages:` / `State:`, `ledger_check.py` is strict, and the counts are in [`STATUS.md`](STATUS.md). The round
+     merged as PR #162 (2026-10-28 morning). **Stage D done the same day on `ledger-fields/stage-d`** (section 5's
+     four "as run" subsections; three Opus agents, worktrees under `C:\Users\kerok\bof3x-runs\lfd1028`, reports
+     `lfd1028\d<n>\REPORT.md`; unpushed, **PR at the owner's word**): `BOF3X_OFF` (ini `off=`) read by both hosts
+     for code names only, with a known-but-inactive name logged and an unknown one a Fatal (`src/hook/code_names.h`,
+     generated); `cheap` retired, the 67 entries `Player: yes`; `tools/ledger_registry.py` writes
+     `src/launcher/ledger_registry.h` (CI gate) and `presets` is the Python reference; the launcher's `preset=`
+     (`recommended` / `shipped` / `repaired` / `playstation`) applied at launch on top of the ini, a Preset sub-tab
+     under Settings that lists what it changes, `BOF3X_PRESET` logged by the game; D395 fixed (`scale=` named is
+     sent, empty follows the display; DIV-0036 amended). The proof: ten routes, the exe host under `BOF3X_OFF=<66
+     names>` against the hosted build under `BOF3X_ORIGINAL=<the same>`, every page identical but the DirectSound
+     page `0x7DE000`, shown to be run-to-run noise under the list (a repeat of one side differs from itself; the
+     injection state is the same under both variables). **The owner's calls of 2026-10-28:** `Toward: none` is
+     related to no release, so the PlayStation preset leaves it alone and turns off only `psp`-only entries (one
+     today, DIV-0123). **New: D396**, the hosted fuzz's rows assume their switch on (DIV-0075's), so a fuzz run
+     keeps every code name on. **Owed the owner's eye:** the Preset page (screenshots `lfd1028\d2\shots`) and at
+     200 % scale; an ini written before this stage holds an auto-written `scale=2`, which now fixes k = 2 on a
+     scaled desktop until the line is emptied (it matters only until `bof3x.window` exists). **Left:** the fixture
+     TSVs under `tools/launcher_host/` are not checked in CI (Windows only); the `BOF3X_OFF=` log line is cut at
+     about 1 KB; the PSP preset (I32); which sound name makes `0x7DE000` vary. Traps paid for: an empty `ini:opt=`
+     means the key set to empty, not unset (DIV-0110..0113); a preset never turns an entry on (an `ini:` / `env:`
+     switch holds only the off value), it lists a `Default: off` entry it would want as "also available"; a
+     `Languages:` other than `any` is the language pick's, skipped by a preset when the chosen language is not
+     listed. **For the owner:** the ten `Toward: none` entries that want a twin read (section 3's "as run").
+     The worktrees under `lf1027` and `lfd1028` are removable once the PRs are in. Also on `main` since PR #162: the
+     regenerated `analysis/data_census.tsv` (line numbers only).
    - **The relocatable-image round, not launched** ([`relocatable-image-round.md`](relocatable-image-round.md),
      I44 stage 3; briefs under `C:\Users\kerok\bof3x-runs\ri1027`). Stage A (census, address-independent state
      hash, loader design) needs no call; stage B rewrites the 17,259 global sites as `base + offset` with a

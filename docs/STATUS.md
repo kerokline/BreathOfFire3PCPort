@@ -8,6 +8,26 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**Stage D of the ledger-fields round, 2026-10-28, on `ledger-fields/stage-d`** (off `main` `de7aeb3d`, the PR #162
+merge; three Opus agents D0, D1, D2 one worktree each under `C:\Users\kerok\bof3x-runs\lfd1028`, merged one at a
+time, the proof by the coordinator; unpushed, PR at the owner's word; [`ledger-fields-round.md`](ledger-fields-round.md)
+section 5's four "as run" subsections). **The player's switch exists:** `BOF3X_OFF=<names>` (ini `off=`, the
+`BOF3X_ORIGINAL` list syntax) is read by both hosts for the code names - a `PatchBytes` or `RetargetCall` name,
+whose original path is in our code - so the 67 former `cheap` entries are `Player: yes` (126 `yes`, 28 `costly`,
+30 `never`; `cheap` retired, the checker refuses it). A known name the start did not ask for (a language layout
+under another language) is logged; an unknown name or a detour's stops the game (`src/hook/code_names.h`,
+generated and gated). **The registry:** `tools/ledger_registry.py` writes `src/launcher/ledger_registry.h` from
+the six fields (CI refuses a stale header) and `presets` is the reference the launcher must match. **The
+presets:** `preset=recommended|shipped|repaired|playstation` in `bof3x.ini`, a Preset sub-tab under Settings that
+lists what the chosen one changes for the chosen language and install, applied at launch on top of the ini (code
+names into `BOF3X_OFF`, `env:` switches set, `ini:` values sent in place of the player's and the controls greyed);
+a preset only turns entries off; the PlayStation preset leaves `Toward: none` alone (the owner, 2026-10-28) and
+turns off the `psp`-only entries, one today. **D395 fixed** (`scale=` named is always sent, empty follows the
+display; DIV-0036 amended). **The proof:** ten routes, the exe host under `BOF3X_OFF` against the hosted build
+under `BOF3X_ORIGINAL` with the same 66 names, identical on every page but the DirectSound page, which a repeat
+of either side shows to be run-to-run noise under the list. **New: D396** (the hosted fuzz's rows assume their
+switch on). Owed the owner's eye: the Preset page.
+
 **The ledger-fields round, 2026-10-28, on `ledger-fields/round`** (off `main` `ac1682fe`, the PR #161 merge;
 LF0, four groups, an audit and a fix agent, Opus, one worktree each under `C:\Users\kerok\bof3x-runs\lf1027`,
 merged one at a time; unpushed, PR at the owner's word; [`ledger-fields-round.md`](ledger-fields-round.md), the
@@ -21,8 +41,7 @@ today, 67 `cheap`** (the original path is in our code; stage D's `BOF3X_OFF` mak
 acts under (`any` for 137, a list for 47) so that the launcher's language pick, not a preset, decides where a
 language entry is on. No behaviour changed. Four `Reversible?` lines were corrected from the code (DIV-0006,
 0012, 0087, 0150), DIV-0037 is counted withdrawn, and one defect came of it: **D395**, `scale=2` in `bof3x.ini`
-cannot pin a window at k = 2 on a scaled desktop (the launcher's, open). Stage D - the player's switch and the
-four presets - is the next launch (HANDOFF item 2).
+cannot pin a window at k = 2 on a scaled desktop (the launcher's; fixed by stage D, above). Merged as PR #162.
 
 **The away day, 2026-10-27, on `away1027/integration`** (off `main` `e84aaf6d`, the PR #156 merge; four Opus
 agents and a coordinator while the owner was away; merged as PR #158 the same evening). The evidence is in each

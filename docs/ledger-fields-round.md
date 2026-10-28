@@ -891,6 +891,96 @@ with `off=-SunderLoop` 54 off (the player's exclusion kept); `preset=recommended
 with `BOF3X_PRESET=repaired` gives repaired's plan; `BOF3X_PRESET=asshipped`
 stops the launcher, exit 1, with its message.
 
+### D3 as run: the proof (2026-10-28, the coordinator, at `f493bafb` + D2)
+
+The switch's proof, one batched run by the coordinator, game runs
+serialised, from an ini-less copy of the stage build at `f493bafb` (D0 and
+D1 merged; D2 changes no engine behaviour but a log line) in
+`C:\Users\kerok\bof3x-runs\lfd1028\L`; scripts, run logs and diffs under
+`lfd1028\sh`; hashes `analysis/statehash/cn_<route>_d*.sh`. The conditions
+of the `orig4` references (`BOF3X_OPT=none`, `BOF3X_LAYERING=0`,
+`tools/statehash_skip.txt`, `--no-front`).
+
+**The pair, per route:** the exe host under `BOF3X_OFF=<names>` (`dOff`)
+against the hosted build under `BOF3X_ORIGINAL=<the same names>` (`dOrig`),
+`statehash.py diff`, page for page. The names are the 67 `Switch:` names of
+the former `cheap` entries less `Game_Clock` (66): with DIV-0022 off Capcom's
+clock is the wall clock and the play-time digits drift with the run's pace,
+the reason the references are recorded with `"*,-Game_Clock"` (section 6 of
+[`state-hash.md`](state-hash.md)). `*` was not used: 16 of the 83 code names
+belong to `costly` entries whose switch is a detour, and the hosted side's
+list must match the exe host's.
+
+| Route | Ticks | Result |
+|---|---|---|
+| worldMapAndAreaTransition | 2,113 | identical on every tick |
+| dragonTransform | 4,289 | identical on every tick |
+| cutsceneAndNue | 7,425 | identical on every tick |
+| combat | 2,561 | `0x7DE000` 890 ticks; VRAM-shadow pages and `0x937000` at ticks 2..5; `0x7C9000` at tick 2,503, one tick |
+| shop | 3,137 | `0x7DE000` 427 ticks; the first-ticks class |
+| field_menu | 1,409 | `0x7DE000` 146 ticks |
+| menu_screens | 1,729 | `0x7DE000` and the first-ticks class, tick 3 only |
+| caughFish | 3,841 | the same, tick 3 only |
+| masterAndManillo | 5,505 | `0x7DE000` 4 ticks; the first-ticks class |
+| whelpBoss | 13,185 | `0x7DE000` 4 ticks; VRAM-shadow ticks; `0x937000` 3 ticks |
+
+Two classes, both known: the VRAM shadow and `0x937000` (`Gfx_CurrentEnv`,
+`Sprite_Current`) at the first ticks of a run (noise, section 6 of
+`state-hash.md`), and `0x7DE000` (`Snd_BufferDesc`, `Snd_WaveFormat`,
+`Music_Events`, `Snd_Device`: the DirectSound page).
+
+**The controls, on combat, shop and whelpBoss** (`control.sh`, `sound.sh`,
+`env.sh`), to settle `0x7DE000`:
+
+- *No list at all*, exe host against hosted (`dCtlOff` / `dCtlOrig`): combat
+  identical on all 2,561 ticks; whelpBoss `0x7DE000` on 17 ticks; shop
+  `0x7DE000` on 33 ticks plus the runner's known end-of-run pages
+  (ticks 2,715..2,758, the slot-0 restore).
+- *Same host, the two variables*: the hosted build under `BOF3X_OFF=<names>`
+  (`dOffH`) against `dOrig`: combat, shop and whelpBoss differ on `0x7DE000`
+  alone (780, 297, 71 ticks) and the first-ticks class.
+- *Injection state*: the hosted self-test (`BOF3X_SELFTEST_ONLY=1
+  --host bof3`) under each variable with the same list logs the same 54
+  names off, the same 74 OFF lines, and `inject: 0 left original`
+  (`sh/st_orig.off`, `sh/st_off.off`: the only diff is the counting line
+  that names the variable). So the DLL's state is the same under both.
+- *Is `0x7DE000` the variable's?* No: a repeat of `dOrig` (`dOrigR`, the
+  same list, the same host) differs from it on `0x7DE000` for 779 ticks; a
+  repeat of `dOffH` was identical once (`dOffH2`), and the same run with one
+  more environment variable (`BOF3X_PAD=xxxxx`, `dOffPad`) differs from
+  `dOffH` on `0x7DE000` for 575 ticks. Leaving `MusicFadePerFrame` out of
+  the list as well (`dOff2` / `dOrig2`) changes nothing (706 ticks).
+
+So `0x7DE000` is run-to-run noise that the list makes frequent: with the
+sound entries at Capcom's behaviour the page varies with the run (its heap
+pointers with the environment's size, its counters with the pace), whatever
+variable turned them off. It is the class `state-hash.md` section 6 names
+as a skip-list candidate (`Snd_Device` / `Music_Events`, DirectSound heap
+pointers) and stays open there; which of the sound names makes it vary was
+not bisected. **Every other page is identical between `BOF3X_OFF` and
+`BOF3X_ORIGINAL` on all ten routes**, and the DLL's injection state is the
+same under both: the player's switch gives the hosted A/B's result for the
+66 names, as section 5 asked.
+
+**Not proved here:** `Game_Clock` (left out, above; its off path is the
+same code in both hosts, `src/game/game_clock.cpp`), the 20 language-gated
+names under a Latin language (the routes run without a layer; the hosted
+self-test under `BOF3X_LANG=en-US` shows them asked for and off, D0's
+proof), and a preset's `ini:` / `env:` switches, which are the launcher's
+keys as before this stage.
+
+**The hosted fuzz and a list:** D396 ([`known-defects.md`](known-defects.md)):
+a fuzz row that assumes its own switch is on (DIV-0075's) fails under a list
+that turns it off, so no run above combined `BOF3X_SHADOW` with a list.
+
+**Left after the stage** (the coordinator): D2's open items (the Configure
+page at 200 % scale by the owner's eye; the fixture TSVs unchecked in CI,
+since `launcher_host` needs Windows; `InjectReport`'s `BOF3X_OFF=` log line
+cut at about 1 KB with 67 names; inis written before this stage hold an
+auto-written `scale=2`, which now fixes k = 2 on a scaled desktop until the
+line is emptied - it matters only until the game has saved its own
+placement, `bof3x.window`); the PSP preset (I32); the sound page's bisect.
+
 ## 6. For the owner
 
 1. **The field set** of section 1: the five names and their values. Is
