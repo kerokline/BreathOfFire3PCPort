@@ -24,16 +24,16 @@ namespace at {
 // kCurrent: now BattleWinStates_Current (symbols.toml). the window record Field_RunTaskRecords is running
 // kLabelGate: now BattleWinStates_LabelGate (symbols.toml). u8: the command label is drawn only while 0
 // kChoosing: now BattleE4_Picking (symbols.toml). u8: non-zero while a target is being chosen
-constexpr std::uint32_t kCrossSel = 0x904AB4;      // u8: the command cross's selection
-constexpr std::uint32_t kCrossGrow = 0x904ABC;     // u8 x 7: each arm's growth (five arms, two extras)
+constexpr ::bof3::image::Va kCrossSel{0x904AB4};      // u8: the command cross's selection
+constexpr ::bof3::image::Va kCrossGrow{0x904ABC};     // u8 x 7: each arm's growth (five arms, two extras)
 // kTarget: now BattleActorCopies_Command (symbols.toml). pointer to the target byte: a slot, 0x40 all enemies, 0x80 all members
-constexpr std::uint32_t kCrossArms = 0x64E2AC;     // (x, y) bytes per arm, 7 of them
-constexpr std::uint32_t kSideDx = 0x64E2BC;        // s8: the target banner's x offset for sides 0 and 3
+constexpr ::bof3::image::Va kCrossArms{0x64E2AC};     // (x, y) bytes per arm, 7 of them
+constexpr ::bof3::image::Va kSideDx{0x64E2BC};        // s8: the target banner's x offset for sides 0 and 3
 // kOtherDx: now BattleWinStates_OtherDx (symbols.toml). s8: the same for every other side byte
 // kMemberOffsets: now BattleWin_MemberTargetOffsets (symbols.toml). BattleWin_MemberTargetOffsets: (dx, dy) s8, 4 per character row
-constexpr std::uint32_t kBanners = 0x93B8E0;       // the banner pool: 12 bytes a record, +2 wide, +4 text, +0xA colour
+constexpr ::bof3::image::Va kBanners{0x93B8E0};       // the banner pool: 12 bytes a record, +2 wide, +4 text, +0xA colour
 constexpr std::uint32_t kBannerStride = 0xC;
-constexpr std::uint32_t kEnemies = 0x93B9E0;       // EnemyWorkingRecords, stride 0x128: slot t is enemy t - 3
+constexpr ::bof3::image::Va kEnemies{0x93B9E0};       // EnemyWorkingRecords, stride 0x128: slot t is enemy t - 3
 constexpr std::uint32_t kEnemyStride = 0x128;
 // kMembers: now ObjTrio (symbols.toml). ObjTrio: the battle's party objects, stride 0x14C
 constexpr std::uint32_t kMemberStride = 0x14C;

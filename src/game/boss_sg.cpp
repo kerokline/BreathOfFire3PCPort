@@ -149,7 +149,7 @@ void ActorZero(unsigned animation) {
 
 // An enemy object by a battle index (3..10 an enemy), as the originals index
 // it: 0x93B960 + (index - 3) * 0x128, wrapping - unchecked.
-unsigned char* EnemyByIndex(unsigned index) { return At(Battle_Enemies_addr + (index - 3u) * at::kEnemyStride); }
+unsigned char* EnemyByIndex(unsigned index) { return At(::bof3::Img(Battle_Enemies_addr) + (index - 3u) * at::kEnemyStride); }
 
 }  // namespace
 
@@ -344,14 +344,14 @@ extern "C" void __cdecl Boss32_End(void) {
         return;
     }
     for (unsigned m = 0; m < 3; ++m) {
-        unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
+        unsigned char* const p = At(::bof3::Img(ObjTrio_addr) + m * at::kPartyStride);
         auto* const member_rec = rv::As<records::PartyMember>(p);
         if ((member_rec->flags & 1) == 0) continue;
         BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->actor);
         const U flags = L(p + 0x90);
         Sprite_Current = p;
         const unsigned pose = static_cast<unsigned char>(member_rec->direction + ((flags & 0x4000) != 0 ? 0x1C : 4));
-        BH_CALL(Sprite_PoseFromSet)(pose, At(at::kPoseSet), 0x1800);
+        BH_CALL(Sprite_PoseFromSet)(pose, At(::bof3::Img(at::kPoseSet.v)), 0x1800);
     }
     const unsigned char end = Battle_EndFlags;
     Music_Track = 0x6B;
@@ -440,19 +440,19 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Rise(void) {
         return BH_CALL(Sprite_ScriptTickOnce)();
     }
     U f;
-    if (B(at::kTarget) >= 3) {
-        f = L(At(at::kFacing)) & 0xFF;
-        cur_task->x = S(static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(at::kFacingOffsets + 2 * f)))) +
+    if (B(::bof3::Img(at::kTarget.v)) >= 3) {
+        f = L(At(::bof3::Img(at::kFacing.v))) & 0xFF;
+        cur_task->x = S(static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(::bof3::Img(at::kFacingOffsets.v) + 2 * f)))) +
                             static_cast<U>(Field_Kind2X));
-        f = L(At(at::kFacing)) & 0xFF;
+        f = L(At(::bof3::Img(at::kFacing.v))) & 0xFF;
     } else {
         s[8] ^= 2;
-        f = (L(At(at::kFacing)) & 0xFF) ^ 2;
-        cur_task->x = S(static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(at::kFacingOffsets + 2 * f)))) +
+        f = (L(At(::bof3::Img(at::kFacing.v))) & 0xFF) ^ 2;
+        cur_task->x = S(static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(::bof3::Img(at::kFacingOffsets.v) + 2 * f)))) +
                             static_cast<U>(Field_Kind2X));
-        f = (L(At(at::kFacing)) & 0xFF) ^ 2;
+        f = (L(At(::bof3::Img(at::kFacing.v))) & 0xFF) ^ 2;
     }
-    rv::Store<std::int32_t>(cur_task->z, S(static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(at::kFacingOffsets + 2 * f + 1)))) +
+    rv::Store<std::int32_t>(cur_task->z, S(static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(::bof3::Img(at::kFacingOffsets.v) + 2 * f + 1)))) +
                         static_cast<U>(Field_Kind2Z)));
     BH_CALL(Sprite_SetAnimation)(4);
     Sprite_Current[2] = static_cast<unsigned char>(Sprite_Current[2] + 1);
@@ -473,7 +473,7 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Strike(void) {
     const unsigned n = BH_CALL(BattleTask_Create)(3, 6) & 0xFF;
     if (n != 0xFF) {
         unsigned char* const s = Sprite_Current;
-        unsigned char* const t = At(BattleTask_Slots_addr + n * at::kTaskStride);
+        unsigned char* const t = At(::bof3::Img(BattleTask_Slots_addr) + n * at::kTaskStride);
         auto* const cur_task = rv::As<records::BattleTask>(t);
         std::memmove(t, s, 0x80);
         cur_task->flags &= 0xBF;
@@ -487,18 +487,18 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Strike(void) {
         t[0xB] = s[0xB];
         if (s[0xB] != 0) s[0xB] = static_cast<unsigned char>(s[0xB] - 1);
     }
-    const unsigned target = B(at::kTarget);
+    const unsigned target = B(::bof3::Img(at::kTarget.v));
     bool near;
     if (target <= 2) {
-        BH_CALL(MagicFx_StepToward)(At(ObjTrio_addr + target * at::kPartyStride), 0x50);
-        near = BH_CALL(MagicFx_NearSprite3D)(At(ObjTrio_addr + B(at::kTarget) * at::kPartyStride), 0x10000) != 0;
+        BH_CALL(MagicFx_StepToward)(At(::bof3::Img(ObjTrio_addr) + target * at::kPartyStride), 0x50);
+        near = BH_CALL(MagicFx_NearSprite3D)(At(::bof3::Img(ObjTrio_addr) + B(::bof3::Img(at::kTarget.v)) * at::kPartyStride), 0x10000) != 0;
     } else {
         BH_CALL(MagicFx_StepToward)(EnemyByIndex(target), 0x50);
-        near = BH_CALL(MagicFx_NearSprite3D)(EnemyByIndex(B(at::kTarget)), 0x10000) != 0;
+        near = BH_CALL(MagicFx_NearSprite3D)(EnemyByIndex(B(::bof3::Img(at::kTarget.v))), 0x10000) != 0;
     }
     if (near) {
         BH_CALL(Sprite_SetAnimation)(5);
-        BH_CALL(Battle_SetTargetFlag40)(B(at::kTarget));
+        BH_CALL(Battle_SetTargetFlag40)(B(::bof3::Img(at::kTarget.v)));
         Sprite_Current[2] = static_cast<unsigned char>(Sprite_Current[2] + 1);
     }
     return BH_CALL(Sprite_ScriptTickOnce)();
@@ -517,15 +517,15 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Leap(void) {
     auto sixteenth = [](U to, U from) { return S(static_cast<U>(S(to - from) / 16)); };
     unsigned char* s = Sprite_Current;
     records::BattleTask* cur_task = rv::As<records::BattleTask>(s);
-    rv::Store<std::int32_t>(cur_task->step_x, sixteenth(static_cast<U>(rv::As<records::BattleEnemy>(EnemyByIndex(B(at::kActor)))->x), static_cast<U>(cur_task->x)));
+    rv::Store<std::int32_t>(cur_task->step_x, sixteenth(static_cast<U>(rv::As<records::BattleEnemy>(EnemyByIndex(B(::bof3::Img(at::kActor.v))))->x), static_cast<U>(cur_task->x)));
     s = Sprite_Current;
     cur_task = rv::As<records::BattleTask>(s);
-    rv::Store<std::int32_t>(cur_task->step_z, sixteenth(static_cast<U>(rv::As<records::BattleEnemy>(EnemyByIndex(B(at::kActor)))->z), static_cast<U>(cur_task->z)));
+    rv::Store<std::int32_t>(cur_task->step_z, sixteenth(static_cast<U>(rv::As<records::BattleEnemy>(EnemyByIndex(B(::bof3::Img(at::kActor.v))))->z), static_cast<U>(cur_task->z)));
     rv::Store<std::int32_t>(rv::Current<records::BattleTask>()->step_y, 0x40);
     rv::Store<std::int32_t>(rv::Current<records::BattleTask>()->work_20, -8);
     s = Sprite_Current;
     cur_task = rv::As<records::BattleTask>(s);
-    rv::Store<std::int32_t>(cur_task->work_18, sixteenth(static_cast<U>(rv::As<records::BattleEnemy>(EnemyByIndex(B(at::kActor)))->height), static_cast<U>(cur_task->height)));
+    rv::Store<std::int32_t>(cur_task->work_18, sixteenth(static_cast<U>(rv::As<records::BattleEnemy>(EnemyByIndex(B(::bof3::Img(at::kActor.v))))->height), static_cast<U>(cur_task->height)));
     Sprite_Current[2] = static_cast<unsigned char>(Sprite_Current[2] + 1);
     return BH_CALL(Sprite_ScriptTickOnce)();
 }
@@ -551,7 +551,7 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Fly(void) {
 // back to the task (the one held before); BattleTask_FreeCurrent.
 extern "C" void __cdecl BossWeretigrFx_Finish(void) {
     unsigned char* const task = Sprite_Current;
-    EnemyByIndex(B(at::kActor))[0] &= 0xBF;
+    EnemyByIndex(B(::bof3::Img(at::kActor.v)))[0] &= 0xBF;
     Sprite_Current = At(BattleE2_Owner);
     BH_CALL(Sprite_SetAnimation)(0);
     Sprite_Current = task;

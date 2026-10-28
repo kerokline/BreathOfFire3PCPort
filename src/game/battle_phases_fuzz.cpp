@@ -76,14 +76,14 @@ void Disturb() {
     case 0: B(EventBattle_Id_addr) = static_cast<unsigned char>(v % 2 ? 0 : v % 3 ? 0x25 : v); break;
     case 1: {
         static const unsigned char kBits[] = {2, 8, 0x10};
-        B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) ^ kBits[v % 3]);
+        B(::bof3::Img(at::kRoundFlags.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kRoundFlags.v)) ^ kBits[v % 3]);
         break;
     }
-    case 2: B(at::kActorCount) = static_cast<unsigned char>(v % 6); break;
+    case 2: B(::bof3::Img(at::kActorCount.v)) = static_cast<unsigned char>(v % 6); break;
     case 3: B(BattlePhases_Initiative_addr) = static_cast<unsigned char>(v % 4); break;
-    case 4: B(at::kPhase + w % 3) = static_cast<unsigned char>(v % 8); break;
+    case 4: B(::bof3::Img(at::kPhase.v) + w % 3) = static_cast<unsigned char>(v % 8); break;
     case 5: B(BattleActorCopies_EntryCount_addr) = static_cast<unsigned char>(1 + v % 3); break;
-    case 6: B(at::kCommand) = static_cast<unsigned char>(v % 8); break;
+    case 6: B(::bof3::Img(at::kCommand.v)) = static_cast<unsigned char>(v % 8); break;
     case 7: B(BossSb_Countdown_addr) = static_cast<unsigned char>(v % 3 == 0 ? 0 : v % 9); B(BattleE5_GeneRow_addr) = static_cast<unsigned char>(w % 8); break;
     case 8: SetPtr(BattleE4_MenuActor_addr, Member(v % 3)); break;
     case 9: SetPtr(BattleActorCopies_Command_addr, Member(v % 3) + 0x124); break;
@@ -105,7 +105,7 @@ void Disturb() {
     case 15: B(BattleE5_EnemyMessageCount_addr) = static_cast<unsigned char>(v % 9); break;
     case 16: SetWord(At(BattleResult_TickStep_addr), v % 3); break;
     case 17: Sprite_Current = v % 2 ? Member(w % 3) : EnemyObj(w % 8); break;
-    case 18: B(at::kFacing) = static_cast<unsigned char>(v); break;
+    case 18: B(::bof3::Img(at::kFacing.v)) = static_cast<unsigned char>(v); break;
     case 19: B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(B(BattleMisc_BannerKinds_addr) ^ 2); B(WindowRecords_addr) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 20: B(Battle_PartyStanding_addr) = static_cast<unsigned char>(v); break;
     default: {
@@ -149,7 +149,7 @@ template <unsigned N> void __cdecl StubV() {
         } else if ((h >> 2) % 2) {
             FlipEvent(h);
         } else {
-            B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) ^ 0x10);
+            B(::bof3::Img(at::kRoundFlags.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kRoundFlags.v)) ^ 0x10);
         }
     }
     Disturb();
@@ -165,7 +165,7 @@ unsigned char __cdecl StubActorIsOut(unsigned a) {
         unsigned char* const m = Member((h2 >> 8) % 3);
         auto* const member_rec = rv::As<records::PartyMember>(m);
         switch ((h2 >> 2) % 5) {
-        case 0: B(at::kActorCount) = static_cast<unsigned char>((h2 >> 12) % 6); break;
+        case 0: B(::bof3::Img(at::kActorCount.v)) = static_cast<unsigned char>((h2 >> 12) % 6); break;
         case 1: member_rec->flags = static_cast<unsigned char>(member_rec->flags ^ 1); break;
         case 2: FlipEvent(h2); break;
         case 3: m[0x125] = static_cast<unsigned char>(m[0x125] == 5 ? h2 >> 16 : 5); break;
@@ -184,7 +184,7 @@ void __cdecl StubLoadDat(int file) {
     const std::uint32_t h = H2();
     if (Nudging(h)) {
         if ((h >> 2) % 2) FlipEvent(h);
-        else B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) ^ 0x10);
+        else B(::bof3::Img(at::kRoundFlags.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kRoundFlags.v)) ^ 0x10);
     }
     Disturb();
 }
@@ -210,7 +210,7 @@ unsigned __cdecl StubWindowAlloc(unsigned slot, unsigned kind) {
         case 1: member_rec->direction = static_cast<unsigned char>(h2 >> 12); break;
         case 2: member_rec->screen_x = h2 >> 16; break;
         case 3: member_rec->screen_y = h2 >> 16; break;
-        case 4: B(at::kFacing) = static_cast<unsigned char>(h2 >> 12); break;
+        case 4: B(::bof3::Img(at::kFacing.v)) = static_cast<unsigned char>(h2 >> 12); break;
         default: B(BattlePhases_Initiative_addr) = static_cast<unsigned char>((h2 >> 12) % 4); break;
         }
     }
@@ -255,7 +255,7 @@ int __cdecl StubLoadDone() {
         switch ((h2 >> 2) % 4) {
         case 0: B(BattlePhases_Initiative_addr) = static_cast<unsigned char>((h2 >> 8) % 4); break;
         case 1: B(BattleActorCopies_EntryCount_addr) = static_cast<unsigned char>((h2 >> 8) % 4); break;
-        case 2: B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) ^ 0x10); break;
+        case 2: B(::bof3::Img(at::kRoundFlags.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kRoundFlags.v)) ^ 0x10); break;
         default: SetWord(At(BattleResult_TickStep_addr), (h2 >> 8) % 3); break;
         }
     }
@@ -264,7 +264,7 @@ int __cdecl StubLoadDone() {
     return h % 3 == 0 ? 0 : h % 7 == 0 ? 0x100 : static_cast<int>(h | 1);
 }
 void __cdecl StubOpenSub2(unsigned s) { Record(38, s); Disturb(); }
-void __cdecl StubOpenSub3(unsigned s) { Record(39, s); if (Nudging(H2())) B(at::kPhase) = static_cast<unsigned char>(H2() >> 8); Disturb(); }
+void __cdecl StubOpenSub3(unsigned s) { Record(39, s); if (Nudging(H2())) B(::bof3::Img(at::kPhase.v)) = static_cast<unsigned char>(H2() >> 8); Disturb(); }
 unsigned long __cdecl StubSpawnCopies() { Record(43); if (Nudging(H2())) B(BattleActions_Step_addr) = static_cast<unsigned char>(H2() >> 8); Disturb(); return Hash(); }
 unsigned long __cdecl StubShowName(const unsigned char* actor) {
     Record(44, Address(actor));
@@ -283,7 +283,7 @@ void __cdecl StubSound(unsigned short id) {
         switch ((h >> 2) % 8) {
         case 0: B(BattleActorCopies_EntryCount_addr) = static_cast<unsigned char>(1 + v % 3); break;
         case 1: B(BattleActions_Step_addr) = static_cast<unsigned char>(v); break;
-        case 2: B(at::kCommand) = static_cast<unsigned char>(v % 8); break;
+        case 2: B(::bof3::Img(at::kCommand.v)) = static_cast<unsigned char>(v % 8); break;
         case 3: B(BossSb_Countdown_addr) = static_cast<unsigned char>(v % 3 == 0 ? 0 : v % 9); B(BattleE5_GeneRow_addr) = static_cast<unsigned char>((h >> 16) % 8); break;
         case 4: SetWord(Window(2) + 4 + 2 * (v % 2), h >> 16); break;
         case 5: SetWord(At(Input_Pressed_addr), (h >> 16) & 0xF10C); break;
@@ -313,7 +313,7 @@ void NudgeSelect() {
     const std::uint32_t h = H2();
     if (!Nudging(h)) return;
     switch ((h >> 2) % 3) {
-    case 0: B(at::kCommand) = static_cast<unsigned char>((h >> 8) % 8); break;
+    case 0: B(::bof3::Img(at::kCommand.v)) = static_cast<unsigned char>((h >> 8) % 8); break;
     case 1: SetWord(Window(1) + 4 + 2 * ((h >> 8) % 2), h >> 16); break;
     default: B(BattleActions_Step_addr) = static_cast<unsigned char>(h >> 8); break;
     }
@@ -489,7 +489,7 @@ const Region kRegions[] = {
     {Game_AreaNumber_addr, 4},                                  // 0x904EFC, 0x904EFE
     {0x937F88, 4},                                              // Sprite_Current
     {0x939EC0, 0x500},                                          // 0x939EC4, 0x939F60, 0x939FA0, the message records
-    {at::kB8E0, 0x9D0},                                         // 0x93B8E0, the eight enemy objects, 0x93C2A0..A2
+    {at::kB8E0.v, 0x9D0},                                         // 0x93B8E0, the eight enemy objects, 0x93C2A0..A2
     {BattleWin_MemberTargetOffsets_addr, 0xA00},                // constant, random here and put back: 0x64DF70, 0x64E2BC
 };
 constexpr unsigned kRegionBytes = 0x3E4 + 0x240 + 8 + 0x20 + 0x20 + 8 + 4 + 0x300 + 4 + 4 + 0x500 + 0x9D0 + 0xA00;
@@ -533,13 +533,13 @@ void Fix() {
     SetPtr(BattleE4_MenuActor_addr, Member(actor));
     SetPtr(BattleActorCopies_Command_addr, Member(Half() ? actor : Next() % 3) + 0x124);
     Sprite_Current = Half() ? Member(Next() % 3) : EnemyObj(Next() % 8);
-    for (unsigned i = 0; i < 3; ++i) B(at::kEntryOrder + i) = static_cast<unsigned char>(Next() % 3);
+    for (unsigned i = 0; i < 3; ++i) B(::bof3::Img(at::kEntryOrder.v) + i) = static_cast<unsigned char>(Next() % 3);
     B(BattleActorCopies_EntryCount_addr) = static_cast<unsigned char>(Next() % 4);
     B(BattleE5_EnemyMessageCount_addr) = static_cast<unsigned char>(Next() % 9);
-    for (unsigned n = 0; n <= 8; ++n) B(at::kMessages + 4 * n) = static_cast<unsigned char>(Next() % 8);
+    for (unsigned n = 0; n <= 8; ++n) B(::bof3::Img(at::kMessages.v) + 4 * n) = static_cast<unsigned char>(Next() % 8);
     SetPtr(BattleHook_Event_addr, reinterpret_cast<const void*>(&StubEventHook));
     if (Half()) B(EventBattle_Id_addr) = 0;
-    if (Half()) B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) & ~0x12u);
+    if (Half()) B(::bof3::Img(at::kRoundFlags.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kRoundFlags.v)) & ~0x12u);
 }
 
 // Each branch's boundaries, on top of the random bytes.
@@ -548,13 +548,13 @@ void Seed(unsigned k) {
     case kFrame:
         if (Half()) B(WindowRecords_addr) = 0;
         if (Half()) B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(B(BattleMisc_BannerKinds_addr) & ~2u);
-        if (Half()) B(at::kPhase) = 5;
+        if (Half()) B(::bof3::Img(at::kPhase.v)) = 5;
         break;
     case kStart:
         B(BattleActions_Step_addr) = static_cast<unsigned char>(Next() % 2);
         break;
     case kInit: {
-        B(at::kActorCount) = static_cast<unsigned char>(Often() ? Next() % 5 : Next() % 16);
+        B(::bof3::Img(at::kActorCount.v)) = static_cast<unsigned char>(Often() ? Next() % 5 : Next() % 16);
         for (unsigned i = 0; i < 3; ++i) {
             auto* const member_rec = rv::As<records::PartyMember>(Member(i));
             if (Often()) member_rec->flags = static_cast<unsigned char>(member_rec->flags | 1);
@@ -585,11 +585,11 @@ void Seed(unsigned k) {
         B(BattleActions_Step_addr) = static_cast<unsigned char>(Next() % at::kInputStepCount);
         break;
     case kRoundStart:
-        if (Half()) B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) | 0x10);
+        if (Half()) B(::bof3::Img(at::kRoundFlags.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kRoundFlags.v)) | 0x10);
         break;
     case kNextMember:
         for (unsigned i = 0; i < 3; ++i) {
-            if (Next() % 4 == 0) B(at::kEntryOrder + i) = 0xFF;
+            if (Next() % 4 == 0) B(::bof3::Img(at::kEntryOrder.v) + i) = 0xFF;
             unsigned char* const p = Member(i);
             auto* const member_rec = rv::As<records::PartyMember>(p);
             p[0x90] = static_cast<unsigned char>(Next() % 4 == 0 ? p[0x90] | 0x20 : p[0x90] & ~0x20u);
@@ -604,7 +604,7 @@ void Seed(unsigned k) {
         static const unsigned char kTimer[] = {0, 0, 1, 2, 8};
         B(BossSb_Countdown_addr) = kTimer[Next() % 5];
         B(BattleE5_GeneRow_addr) = static_cast<unsigned char>(Next() % 8);
-        B(at::kCommand) = static_cast<unsigned char>(Next() % 8);
+        B(::bof3::Img(at::kCommand.v)) = static_cast<unsigned char>(Next() % 8);
         static const std::uint16_t kShape[] = {0x10, 0x20, 0x40, 0x80, 0x43, 0x30};
         const unsigned cancel = kShape[Next() % 6], confirm = kShape[Next() % 6];
         SetWord(At(Field_CancelButtons_addr), cancel);
@@ -647,7 +647,7 @@ void Seed(unsigned k) {
         B(BattleActions_Step_addr) = static_cast<unsigned char>(Next() % at::kCommitStepCount);
         break;
     case kCommitRound:
-        if (Half()) B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) | 0x10);
+        if (Half()) B(::bof3::Img(at::kRoundFlags.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kRoundFlags.v)) | 0x10);
         for (unsigned i = 0; i < 3; ++i) {
             unsigned char* const p = Member(i);
             auto* const member_rec = rv::As<records::PartyMember>(p);
@@ -661,7 +661,7 @@ void Seed(unsigned k) {
         if (Next() % 4 == 0) B(BattleE5_EnemyMessageCount_addr) = 0;
         break;
     case kWaitLoad: {
-        if (Half()) B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) | 0x10);
+        if (Half()) B(::bof3::Img(at::kRoundFlags.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kRoundFlags.v)) | 0x10);
         static const std::uint16_t kWait[] = {0, 0, 1, 2, 0xFFFF, 0x8000};
         SetWord(At(BattleResult_TickStep_addr), Often() ? kWait[Next() % 6] : Next());
         break;
@@ -713,7 +713,7 @@ void Cover(unsigned k, const State& in, const State& out) {
         break;
     case kNextMember:
         if (Count(out, 44)) ++g_cover.member_found;
-        else if (Byte(out, at::kPhase) != Byte(in, at::kPhase)) ++g_cover.none_left;
+        else if (Byte(out, at::kPhase.v) != Byte(in, at::kPhase.v)) ++g_cover.none_left;
         break;
     case kCommandSelect:
         if (Byte(out, BattleE5_GeneRow_addr) == 0 && Byte(in, BattleE5_GeneRow_addr) != 0 && Byte(out, BattleActions_Step_addr) != (Byte(in, BattleActions_Step_addr) + 2) % 256)
@@ -721,13 +721,13 @@ void Cover(unsigned k, const State& in, const State& out) {
         if (Byte(out, BattleActions_Step_addr) == (Byte(in, BattleActions_Step_addr) + 2) % 256 && Byte(out, BossSb_Countdown_addr) == 0 && Count(out, 45) && out.log[0].a == 0x101)
             ++g_cover.chose_by_tap;
         if (Byte(out, BossSb_Countdown_addr) == 8) ++g_cover.tap_started;
-        if (Byte(in, at::kCommand) != 0 && Byte(out, at::kCommand) == 0 && out.log_n == 0) ++g_cover.cleared_command;
+        if (Byte(in, at::kCommand.v) != 0 && Byte(out, at::kCommand.v) == 0 && out.log_n == 0) ++g_cover.cleared_command;
         break;
     case kQueueMessages:
         if (Count(out, 32)) ++g_cover.message_queued;
         break;
     case kWaitLoad:
-        if (Byte(out, at::kPhase) != Byte(in, at::kPhase)) ++g_cover.advanced;
+        if (Byte(out, at::kPhase.v) != Byte(in, at::kPhase.v)) ++g_cover.advanced;
         else if (Count(out, 37)) ++g_cover.waited;
         break;
     default:
