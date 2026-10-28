@@ -580,6 +580,10 @@ bool g_watch_shots = false;
 
 bool Readable(std::uint32_t a, std::uint32_t n);
 
+// A range the watch cannot read (no page, or none committed) reads as 0xEE
+// bytes. Callers hold BOF3X_GAPWATCH's guards off around their reads
+// (GapWatch_Pause / GapWatch_Tick, as DeviceLatch does for the state hash):
+// a watch is no reader of the game's, and a guarded page is not Readable.
 void WatchRead(std::uint32_t addr, unsigned len, unsigned char* out) {
     if (!Readable(addr, len)) { std::memset(out, 0xEE, len); return; }
     std::memcpy(out, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(addr)), len);
@@ -601,7 +605,9 @@ void WatchStep(const Step& s) {
     }
     if (g_watches.size() >= 64) Fatal("BOF3X_INPUT line %d: more than 64 watches", s.line);
     Watch w{s.addr, s.n, s.value != 0, s.text, {}};
+    GapWatch_Pause();
     WatchRead(w.addr, w.len, w.last);
+    GapWatch_Tick();
     Log("input       watch %s 0x%08X len %u%s = %s; recipe frame %u", w.name.c_str(), (unsigned)w.addr, w.len,
         w.shot ? " shot" : "", WatchHex(w.last, w.len).c_str(), g_frame);
     g_watch_shots = g_watch_shots || w.shot;
@@ -611,6 +617,7 @@ void WatchStep(const Step& s) {
 void WatchTick() {
     if (g_watches.empty()) return;
     bool shoot = false;
+    GapWatch_Pause();
     for (Watch& w : g_watches) {
         unsigned char now[64];
         WatchRead(w.addr, w.len, now);
@@ -620,6 +627,7 @@ void WatchTick() {
         std::memcpy(w.last, now, w.len);
         shoot = shoot || w.shot;
     }
+    GapWatch_Tick();
     if (!shoot || g_shot_dir.empty()) return;
     char name[16];
     std::snprintf(name, sizeof name, "w%06u", g_frame);
