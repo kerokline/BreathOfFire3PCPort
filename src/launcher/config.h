@@ -123,6 +123,14 @@ struct Config {
     // data suite's two code members change it only when the suite's choice is
     // changed (SuitesPspEdit).
     std::string psp;
+    // The player's switch (docs/launcher-settings.md, "off="): BOF3X_OFF's
+    // list of code names - the ledger's `Switch:` names that a PatchBytes or a
+    // RetargetCall reads (python tools/ledger_switches.py) - in
+    // BOF3X_ORIGINAL's list syntax: `*` every code name, `-name` takes one
+    // back out. Empty (the default): none off. Kept as written; the game
+    // refuses a name it does not read (detour.cpp InjectReport). Not a
+    // hosted-only switch: both hosts read it.
+    std::string off;
     // DIV-0087: the importer's cache root (BOF3X_CACHE), whose base\bgm songs
     // play through the sequencer, and the music source (BOF3X_MUSIC; DIV-0150:
     // "psx", "psp" or "pc", the source played first - ConfigMusicSource; the

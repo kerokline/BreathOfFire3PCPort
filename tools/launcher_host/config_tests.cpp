@@ -626,7 +626,7 @@ std::string Env(const char* name) {
 
 void ClearEnv() {
     for (const char* v : {"BOF3X_OPT", "BOF3X_CACHE", "BOF3X_CACHE_DATA", "BOF3X_LANG", "BOF3X_PSP", "BOF3X_MUSIC",
-                          "BOF3X_RUBY_KEY"})
+                          "BOF3X_RUBY_KEY", "BOF3X_OFF"})
         SetEnvironmentVariableA(v, nullptr);
 }
 
@@ -695,6 +695,48 @@ void TestHostedOpt() {
     Check(bof3x::ConfigOptHosted("psp-music,psp-snd,psp-ryu-forms,psp-chord-one-tone", cache, dropped) ==
                   "psp-music,psp-snd,psp-ryu-forms,psp-chord-one-tone" && dropped.empty(),
           "ConfigOptHosted: the bgm, snd and dat layers kept (the hosted build takes them)");
+}
+
+// The player's switch (docs/launcher-settings.md, "off="): off= kept as
+// written and written back as read, sent as BOF3X_OFF to either host when the
+// environment has none; an environment's BOF3X_OFF wins; empty sends nothing.
+// The names are the game's to check (detour.cpp InjectReport), not the ini's.
+void TestOff() {
+    const std::wstring game = Temp(L"bof3x_rf_game");
+    MakeDirs(game + L"\\DAT");
+    const std::wstring a = Temp(L"bof3x_config_tests_off_a.ini"), b = Temp(L"bof3x_config_tests_off_b.ini");
+    WriteAll(a, "[bof3x]\r\noff=*, -SunderLoop,NoSuchName\r\n");
+    bof3x::Config c1;
+    std::string err;
+    Check(bof3x::ConfigLoad(a, c1, err) && err.empty() && c1.off == "*, -SunderLoop,NoSuchName",
+          "off= kept as written, an unknown name too", c1.off);
+    Check(bof3x::ConfigSave(b, c1), "off: save");
+    const std::string first = ReadAll(b);
+    Check(first.find("\r\noff=*, -SunderLoop,NoSuchName\r\n") != std::string::npos, "the off= line written as read");
+    bof3x::Config c2;
+    Check(bof3x::ConfigLoad(b, c2, err) && c2.off == c1.off, "off= survives a second load", c2.off);
+    Check(bof3x::ConfigSave(b, c2) && ReadAll(b) == first, "off: a second save is byte-identical");
+    bof3x::Config none;
+    Check(bof3x::ConfigSave(b, none) && ReadAll(b).find("\r\noff=\r\n") != std::string::npos,
+          "the default writes an empty off=");
+
+    bof3x::Config cfg;
+    cfg.off = "SunderLoop,Paralyzer_Start";
+    for (bool hosted : {false, true}) {
+        ClearEnv();
+        bof3x::ConfigApplyEnvironment(game, cfg, hosted);
+        Check(Env("BOF3X_OFF") == "SunderLoop,Paralyzer_Start",
+              hosted ? "off= sent as BOF3X_OFF to the hosted build" : "off= sent as BOF3X_OFF to bof3x.exe",
+              Env("BOF3X_OFF"));
+    }
+    ClearEnv();
+    SetEnvironmentVariableA("BOF3X_OFF", "Game_Clock");
+    bof3x::ConfigApplyEnvironment(game, cfg, false);
+    Check(Env("BOF3X_OFF") == "Game_Clock", "an environment's BOF3X_OFF wins over off=", Env("BOF3X_OFF"));
+    ClearEnv();
+    bof3x::ConfigApplyEnvironment(game, none, false);
+    Check(GetEnvironmentVariableA("BOF3X_OFF", nullptr, 0) == 0, "an empty off= sends no BOF3X_OFF");
+    ClearEnv();
 }
 
 // Finding 2: a layer tree the manifest does not list (a build that stopped
@@ -1104,6 +1146,8 @@ int main() {
     TestInstalled();
     std::printf("ini round trip\n");
     TestRoundTrip();
+    std::printf("off= (BOF3X_OFF, the player's switch)\n");
+    TestOff();
     std::printf("wide= (DIV-0041: off, 16:9, 21:9)\n");
     TestWide();
     std::printf("cache path code page\n");
