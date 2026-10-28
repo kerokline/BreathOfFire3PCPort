@@ -89,20 +89,22 @@ ledger stays trustworthy.
 - **Default:** on | off
 - **Player:** yes | cheap | costly | never
 - **Toward:** psx, psp, pc (a list) | none
+- **Languages:** any | en-US, en-150, fr-FR, de-DE, ja-JP, original (a list)
 - **State:** active | withdrawn | superseded by DIV-NNNN
 ```
 
 ### The switch fields
 
-The last five lines are for a tool, not a reader: a preset ("As shipped",
+The last six lines are for a tool, not a reader: a preset ("As shipped",
 "Repaired", "Recommended", "PlayStation") is built from them, and
 `tools/ledger_check.py` checks them. `Reversible?` stays the prose it is and
 says the same thing for a person. Each field is **one line**, its value
 first; an optional " - <clause>" after the value says why where the value is
 not obvious, as on the Tier line. Added by the ledger-fields round
 ([`ledger-fields-round.md`](ledger-fields-round.md) sections 1 and 6, the
-owner's calls of 2026-10-27); since its stage C (2026-10-28) the checker
-refuses a missing field as it refuses a malformed one.
+owner's calls of 2026-10-27; `Languages:`, the owner's call of 2026-10-28);
+since its stage C (2026-10-28) the checker refuses a missing field as it
+refuses a malformed one.
 
 **`Switch:`** the names that, set together, turn this entry off and nothing
 more than they must: a comma list, or `none` alone. A wider switch that also
@@ -139,7 +141,9 @@ is read with the player's own choices and the install's contents as they
 are - the language, the wide picture, the cache: an entry that acts only
 under an overlay (or a wide mode, or a cache) is `on` when it acts there
 without a further change (DIV-0005); `off` is for what waits for its own
-switch to be asked for.
+switch to be asked for. An entry whose `Languages:` is not `any` reads
+`on - under its languages` when it is on: the language pick, not a preset,
+decides where.
 
 **`Player:`** whether the player's build (`bof3x.exe`) can turn the entry
 off. `tools/ledger_switches.py` measures it from the source, one class per
@@ -169,6 +173,36 @@ version?" line and rationale; `psp` only a PSP twin read, a PSP round's
 entry, or a capture of the PSP drawing the entry's own case (DIV-0160,
 DIV-0184). The list never claims more than was measured. The "PlayStation"
 preset turns on every entry that lists `psx`.
+
+**`Languages:`** the languages under which the entry's new behaviour acts,
+so that the launcher's language pick selects the entries that belong to it
+(the owner's call, 2026-10-28: explicit tags, no class names). The value is
+`any` alone - the entry does not depend on the language the player chose,
+as most do - or a comma list of distinct tags from the engine's list
+(`tools/language_tags.py` `TAGS`: `en-US`, `en-150`, `fr-FR`, `de-DE`,
+`ja-JP`) and `original` (the port's own text: `BOF3X_LANG` unset, the
+launcher's `original`). The code decides, not the prose: an entry gated by
+`Lang_Latin` lists `en-US, en-150, fr-FR, de-DE` (DIV-0058); one that acts
+under every language layer lists the five tags (DIV-0005); one carried by
+a chunk that only some layers have lists those layers' tags (DIV-0141, the
+PSP-EU layer: `en-150`; DIV-0148, the US and PAL rolls); one that acts only
+on the port's own text lists `original` (DIV-0102). A layer built from a
+disc the install may lack is still listed: the field says where the entry
+acts, not what the install holds. The rules, one each:
+
+- The checker takes the tags from `tools/language_tags.py`, so the ledger
+  cannot name a tag the engine does not know; `any` stands alone and no tag
+  repeats.
+- `Switch: lang` requires a `Languages:` other than `any`, and a
+  `Languages:` other than `any` means the language pick governs the entry:
+  it is on under those languages and inert under the others, whatever a
+  preset says.
+- Such an entry's `Default: on` reads `on - under its languages` (the
+  checker refuses another clause); `Default: off` stays for one that waits
+  for its own switch under its languages too (DIV-0155, the reading row).
+- A preset skips an entry whose `Languages:` excludes the language chosen,
+  and counts a `Switch: lang` entry as part of the language, never turning
+  it on or off against the player's pick.
 
 **`State:`** `active`; `withdrawn` (the entry stays as the record, nothing
 is left to switch: DIV-0067); or `superseded by DIV-NNNN`, an entry that
