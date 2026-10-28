@@ -54,7 +54,7 @@ END
 // section 3 (docs/images/ only, an asset of the launcher's own pages).
 IDR_BACKGROUND RCDATA "../../docs/images/launcherBackground.png"
 
-IDD_PAGE_SETTINGS DIALOGEX 0, 0, 300, 190
+IDD_PAGE_SETTINGS DIALOGEX 0, 0, 300, 176
 STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 9, "Segoe UI", 400, 0, 0x1
@@ -92,6 +92,29 @@ BEGIN
     AUTOCHECKBOX    "&Show this window at start", IDC_SHOW, 7, 133, 200, 10
     LTEXT           "Off: the game starts immediately.\nTo show this window again, start bof3x-launcher --config.",
                     -1, 19, 144, 272, 16
+
+    // Shown when the preset (the Preset sub-page) sets a setting of this page,
+    // which is then grey (config_dialog.cpp PresetRefresh).
+    LTEXT           "", IDC_PRESETGREY, 0, 165, 296, 9
+END
+
+// The preset (launcher/config.h, docs/launcher-settings.md "preset="): the
+// Settings tab's second sub-page. The box, the preset's sentence, and a
+// read-only list of what the preset changes for the language selected on this
+// install: the changes it turns off, those this build cannot, those it cannot
+// on this install, and those to turn on yourself.
+IDD_PAGE_PRESET DIALOGEX 0, 0, 350, 168
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Preset", -1, 0, 0, 346, 166
+    LTEXT           "&Preset:", -1, 9, 17, 48, 9
+    COMBOBOX        IDC_PRESET, 59, 15, 236, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "", IDC_PRESETNOTE, 9, 32, 330, 18
+    LTEXT           "What the preset changes when the game starts. Your settings in bof3x.ini do not change.",
+                    -1, 9, 52, 330, 9
+    EDITTEXT        IDC_PRESETLIST, 7, 63, 332, 98, ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL | WS_TABSTOP
 END
 
 // DIV-0050 (docs/controls.md section 4.2): the physical bindings, on two

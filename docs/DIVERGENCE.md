@@ -2354,7 +2354,17 @@ designed in rather than bolted on.
   `scale=2` in `bof3x.ini` gives the display's k of the 2026-10-11 amendment:
   on a scaled desktop k = 3 at 150 %, 4 at 200 % (D395). Only
   `BOF3X_SCALE=2` in the environment fixes a window at 2, hence the
-  `Switch:` below.
+  `Switch:` it had then (`env:BOF3X_SCALE=2`).
+  **Amended 2026-10-28, later (the ledger-fields round's stage D, D395
+  fixed):** the launcher sends `BOF3X_SCALE` whenever `bof3x.ini` names
+  `scale=` with a value 2..8, 2 included (`Config::scale_named`,
+  `src/launcher/config.cpp` `ConfigApplyEnvironment`), and writes the key
+  back empty when the ini named none; an empty `scale=` follows the display,
+  as an unset `BOF3X_SCALE` does. So `scale=2` fixes a window at k = 2 on any
+  desktop, and the `Switch:` is the ini key. The default does not move: a
+  player who names no `scale=` gets the display's k, as before. An ini
+  written by an earlier launcher holds the `scale=2` it wrote for every
+  player, which now fixes k = 2 on a scaled desktop.
 - **Rationale:** the owner's rule, 2026-09-23: "windowed options should be
   the available fixed k values, fullscreen uses largest k that will fit", k
   picked at start-up only. Polygon edges and 3D geometry are then drawn at
@@ -2367,12 +2377,14 @@ designed in rather than bolted on.
   borderless window at k = 6 and a window at k = 3 (sprite edges, glyphs -
   still 640-res textures, point-scaled - and the full-screen tiles).
 - **Reversible?** A window with the size at 640 x 480 (the default) is the
-  original's picture; `BOF3X_SCALE=2` in the environment fixes a window at 2.
+  original's picture; `display=windowed` with `scale=2` in `bof3x.ini` fixes
+  a window at 2 on any desktop since D395's fix (2026-10-28), and so does
+  `BOF3X_SCALE=2` in the environment. An empty `scale=` follows the display.
   A borderless window always fits its monitor. `BOF3X_ORIGINAL=Display_Setup`
   is Capcom's set-up, at 640 x 480.
-- **Switch:** ini:display=windowed, env:BOF3X_SCALE=2
+- **Switch:** ini:display=windowed, ini:scale=2
 - **Default:** on
-- **Player:** yes - a window at k = 2 is the 640 x 480 picture; the launcher sets `BOF3X_SCALE` only for a `scale=` other than 2 (`src/launcher/config.cpp`), so the variable, not the key
+- **Player:** yes - a window at k = 2 is the 640 x 480 picture; the launcher sends `BOF3X_SCALE` for every `scale=` the ini names, 2 included (D395, fixed 2026-10-28)
 - **Toward:** none - the PlayStation draws 320 x 240 (above)
 - **Languages:** any
 - **State:** active

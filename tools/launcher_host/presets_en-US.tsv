@@ -1,0 +1,322 @@
+# tools/ledger_registry.py presets - what each preset does with each entry it concerns.
+# Generated from docs/DIVERGENCE.md; no game data. action: off | skipped-language | lang-governed | cannot | also-available | never | already-off | inactive
+language	preset	action	id	switch	title	reason
+en-US	as-shipped	never	DIV-0001	none	Re-encode `capcom.avi` from Indeo 5 to Cinepak	Player never: Forced or one-way
+en-US	as-shipped	cannot	DIV-0002	Save_WriteFile	Refresh the save directory after writing a save	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	cannot	DIV-0003	File_OpenWrite	Report a failed save-file open instead of crashing	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	cannot	DIV-0004	Gfx_BeginFrame	Drain queued image uploads on frames that are not rendered	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	lang-governed	DIV-0005	lang	Walk a language overlay after each `DAT` file	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	lang-governed	DIV-0006	lang	Advance the dialogue pen by the glyph's width	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	lang-governed	DIV-0007	lang	Move the system message pool out of the area script's way	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	lang-governed	DIV-0008	lang	Item and ability names, and the system pool, from a language overlay	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	lang-governed	DIV-0009	lang	Tighten the apostrophe and the comma in the English font	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	off	DIV-0010	SpriteFarEdge	Give a sprite's last texel row and column their share of the screen	Player yes
+en-US	as-shipped	off	DIV-0011	Menu_DrawFrame	Draw the Config panel's frame, which the PC build compiled to nothing	Player yes
+en-US	as-shipped	already-off	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: already off
+en-US	as-shipped	lang-governed	DIV-0013	lang	White text in the disc's shades when the text is the disc's	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	lang-governed	DIV-0014	lang	The title menu in the overlay's language, its third row cut from the disc's letters	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	lang-governed	DIV-0015	lang	The in-game Config screen in the overlay's language	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	lang-governed	DIV-0016	lang	The donor's 8 x 8 UI font, and a glyph guard that follows the table	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	off	DIV-0017	ConfigText	The Config screen's selected row, in the dialogue font at its own advance	Player yes
+en-US	as-shipped	lang-governed	DIV-0018	lang	The menu's short verbs - the buttons above a panel - in the overlay's language	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	lang-governed	DIV-0019	lang	The battle's command labels in the overlay's language	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	lang-governed	DIV-0020	lang	The characters' default names in the overlay's language	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	never	DIV-0021	Gte_MulMatrix0	Zeros in the matrix product's padding bytes	Player never: Forced or one-way
+en-US	as-shipped	off	DIV-0022	Game_Clock	The game's clock starts with the game	Player yes
+en-US	as-shipped	never	DIV-0023	MapCell_DrawQuads, Sprite_ProjectA, MapCell_DrawFrames, MapCell_DrawShaded, MapCell_DrawSpinning, Mode11_ObjectDraw	Zeros in a map cell's vertex padding	Player never: Forced or one-way
+en-US	as-shipped	never	DIV-0024	Field_ObjectFadeOut, Field_ObjectFadeIn	A field fade past its jump table stops instead of jumping	Player never: Forced or one-way
+en-US	as-shipped	off	DIV-0025	GlyphTexelCentres	Glyphs sample texel centres	Player yes
+en-US	as-shipped	off	DIV-0026	ConfigController	The Config screen's controller panel: names at their own width, in the dialogue font, inside a wider frame	Player yes
+en-US	as-shipped	off	DIV-0027	YesNoLayout	The Yes / No chooser laid out for Latin text	Player yes
+en-US	as-shipped	off	DIV-0028	MusicFadePerFrame	Music fades step once per logic frame	Player yes
+en-US	as-shipped	off	DIV-0029	SaveNameInset	The save / load slot's name two units further in	Player yes
+en-US	as-shipped	never	DIV-0030	Menu_DrawBackdrop	The menu backdrop past Config's four draws nothing	Player never: Forced or one-way
+en-US	as-shipped	cannot	DIV-0031	Display_Setup	Draw through Direct3D 11 behind DirectX 6's objects, with no exclusive display mode	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	cannot	DIV-0032	Game_WinMain, Game_WndProc, Cursor_Sync, Display_WindowMoved, Display_DeviceName	Window modes: a resizable window, or a borderless window the size of the monitor	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	off	DIV-0033	ini:background=0	The game keeps running while its window is not in front	Player yes
+en-US	as-shipped	cannot	DIV-0034	Game_WinMain	Frame debt is dropped, not replayed	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	cannot	DIV-0035	Fmv_Play	The FMVs play into the window, at an integer scale, with no mode-set	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	off	DIV-0036	ini:display=windowed, ini:scale=2	The picture is drawn at an integer multiple of 320 x 240 chosen for the window	Player yes
+en-US	as-shipped	inactive	DIV-0037	none	An optional CRT look: scanlines and halation	State withdrawn: no preset switches it
+en-US	as-shipped	off	DIV-0038	PauseText	F9's pause lines in the overlay's language	Player yes
+en-US	as-shipped	cannot	DIV-0039	Game_WinMain	The window's title and the missing-disc box in English	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	cannot	DIV-0040	Game_WndProc	F7 and F11 do nothing	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	already-off	DIV-0041	ini:wide=0	A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side	Default off: already off
+en-US	as-shipped	cannot	DIV-0042	Game_WndProc	The window resizes freely; the picture snaps to whole multiples or fills the height	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	already-off	DIV-0043	ini:screen=clean	An optional second CRT look: SatPixie, with its parameters in the launcher	Default off: already off
+en-US	as-shipped	cannot	DIV-0044	Display_Setup	A primitive's corner at depth 0 is drawn at the nearest depth: the world map's compass needle	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	already-off	DIV-0045	ini:cheat.exp=1, ini:cheat.zenny=1	The EXP and zenny won in battle, times a launcher slider	Default off: already off
+en-US	as-shipped	already-off	DIV-0046	ini:cheat.steal=0	Pilfer and Steal take the item whenever the enemy has one	Default off: already off
+en-US	as-shipped	off	DIV-0047	env:BOF3X_FRAME_MS=33.334	The frame period is the PlayStation's 29.97, and the deadline is a double	Player yes
+en-US	as-shipped	cannot	DIV-0048	Game_WndProc	F1 toggles double speed	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	cannot	DIV-0049	Fmv_WndProc	The logo videos keep playing when the window is not in front	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	cannot	DIV-0050	DInput_Init, Pad_Read, DInput_Shutdown	The pad through SDL3; the keyboard as the original; the DirectInput joystick dropped	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	cannot	DIV-0051	ConfigController, Config_DrawControllerCell, ConfigJapaneseIcons	The Config screen's controller panel: the PlayStation's one icon column	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	lang-governed	DIV-0052	lang	The battle banner's words and its EX suffix	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	lang-governed	DIV-0053	lang	Enemy names in the overlay's language	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	skipped-language	DIV-0054	lang	French and German overlays, with the discs' accented glyphs	acts only under fr-FR, de-DE
+en-US	as-shipped	lang-governed	DIV-0055	lang	The world map's place plates from the donor disc	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	skipped-language	DIV-0056	lang	A Japanese overlay, and the layout switch for languages	acts only under ja-JP
+en-US	as-shipped	skipped-language	DIV-0057	lang	Two kana in one glyph code: pair codes for Japanese names	acts only under ja-JP
+en-US	as-shipped	off	DIV-0058	MenuTitleCentre	The field menu's screen title centred on its real width	Player yes
+en-US	as-shipped	off	DIV-0059	BattleListTitleCentre	The item and skill lists' title centred on its real width	Player yes
+en-US	as-shipped	off	DIV-0060	BattleResultExpLayout	The battle result's EXP line in the US layout	Player yes
+en-US	as-shipped	off	DIV-0061	BattleBannerCentre	The battle's action banners centred on their real width	Player yes
+en-US	as-shipped	off	DIV-0062	DrawPool	The draw-item pool doubled: cells the wide view keeps ran it dry	Player yes
+en-US	as-shipped	never	DIV-0063	DragonForm_PartyRecipe	The party's dragon form with a partner missing: no form, where the original read its stack	Player never: Forced or one-way
+en-US	as-shipped	lang-governed	DIV-0064	lang	The short labels from a language overlay: status words, stats, item and skill types	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	off	DIV-0065	BattleEquipLabelsRow	The battle equip window's stat labels beside their own values	Player yes
+en-US	as-shipped	cannot	DIV-0066	Fmv_Play	A pad press skips an FMV as a key does	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	inactive	DIV-0067	none	Withdrawn: the rising squares' random numbers from a generator of their own	State withdrawn: no preset switches it
+en-US	as-shipped	never	DIV-0068	EffectKind64_DrawGlow	Kind 0x64's glow: the rim vertices' depth the centre's	Player never: Forced or one-way
+en-US	as-shipped	lang-governed	DIV-0069	lang	The fishing minigame's text in the overlay's language, laid out for Latin letters	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	off	DIV-0070	MsgBoxEffectSpaceSkips	A space in a growing shout draws nothing	Player yes
+en-US	as-shipped	off	DIV-0071	env:BOF3X_LAYERING=0	Walkable floor does not cover a sprite's feet	Player yes
+en-US	as-shipped	never	DIV-0072	EffectKind18Sub4B_Run	A panel's far corners from the quad's own x, where the original reads a stack word it never wrote	Player never: Forced or one-way
+en-US	as-shipped	never	DIV-0073	Shisu_DrawModel	The masters' model's light matrix zeroed past its first row, where the original copies stale stack	Player never: Forced or one-way
+en-US	as-shipped	never	DIV-0074	Battle_RandomLiveEnemy	A random enemy from the bytes the function wrote, where the original's four-byte list overflows into stale stack	Player never: Forced or one-way
+en-US	as-shipped	off	DIV-0075	CommuNameEntryAbandons	The community's name entry ends unanswered, where the original never leaves its step	Player yes
+en-US	as-shipped	off	DIV-0076	SaveSummaryRecord0	The save slot's summary names the character whose level it shows	Player yes
+en-US	as-shipped	off	DIV-0077	env:BOF3X_TILE1=0	A TILE_1 covers the PlayStation pixel's footprint, not one screen pixel	Player yes
+en-US	as-shipped	off	DIV-0078	CfgOwnKeyTable	BOF3.CFG's key lines cannot run off the end of Cfg_Load's frame	Player yes
+en-US	as-shipped	off	DIV-0079	env:BOF3X_LINES=0	LINE primitives are the PlayStation pixel's width, not one screen pixel	Player yes
+en-US	as-shipped	off	DIV-0080	ini:opt=none	Dauna Mine's minecart map is walled as every later release walled it, from the player's Western disc	Player yes
+en-US	as-shipped	off	DIV-0081	env:BOF3X_MUSIC_LOOPS=0	The music loops inside its file, at the points the disc's sequence loops	Player yes
+en-US	as-shipped	cannot	DIV-0082	Battle_CopyEnemyData	The enemy AI rows' done bits cleared at spawn (the Volt's EXP bonus)	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	off	DIV-0083	MasterPupilLabel	The master list's pupils box without the port's label	Player yes
+en-US	as-shipped	off	DIV-0084	FormationNameCentre	The formation screen's names centred in their boxes	Player yes
+en-US	as-shipped	off	DIV-0085	env:BOF3X_SIDE_DUP=0	A side face gained at run time drawn with the cell's one side word (the sea bridge's "waterfall")	Player yes
+en-US	as-shipped	already-off	DIV-0086	ini:opt=	Optional layers from the player's PSP disc, walked after the language overlay	Default off: already off
+en-US	as-shipped	off	DIV-0087	ini:music=pc	The cache's songs synthesised from the disc's sequence, the MP3 the fallback	Player yes
+en-US	as-shipped	lang-governed	DIV-0088	lang	The faerie village's board buttons from the disc's own paint	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	off	DIV-0089	env:BOF3X_CACHE_DATA=0	The importer's cache read before the install's DAT\ and SND\	Player yes
+en-US	as-shipped	never	DIV-0090	none	A language layer built from the disc alone keeps nothing of the port's	Player never: Forced or one-way
+en-US	as-shipped	cannot	DIV-0091	env:BOF3X_MP3=original	The MP3 decoder is minimp3, not the library Capcom linked	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	off	DIV-0092	AreaTrackFallback	The field's music after a battle, and after a load of a save without a track, is the area's own	Player yes
+en-US	as-shipped	cannot	DIV-0093	env:BOF3X_MP3=original	The MP3 decoder's end-of-stream count is zero, not the last frame's	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	never	DIV-0094	none	The game runs as our own executable	Player never: Forced or one-way
+en-US	as-shipped	never	DIV-0095	none	The executable's icon, drawn from the game's own data on the player's machine	Player never: Forced or one-way
+en-US	as-shipped	never	DIV-0096	none	A disc-only cache's party animation scripts are the disc's own	Player never: Forced or one-way
+en-US	as-shipped	never	DIV-0097	none	A disc-only layer stands in the disc's own images where the port's art showed	Player never: Forced or one-way
+en-US	as-shipped	skipped-language	DIV-0098	none	French AREA004's first seven message slots, disc-only	acts only under fr-FR
+en-US	as-shipped	never	DIV-0099	none	A disc-only install shows the disc's Capcom logo movie, converted at import	Player never: Forced or one-way
+en-US	as-shipped	never	DIV-0100	none	A disc-only install starts without the movie the disc probe looks for	Player never: Forced or one-way
+en-US	as-shipped	off	DIV-0101	env:BOF3X_EXEIMAGE_STRICT=1	A disc-built image runs with the game values no disc carries as zero (provisional)	Player yes
+en-US	as-shipped	skipped-language	DIV-0102	none	A disc-only install refuses the port's Chinese text instead of playing without text	acts only under original
+en-US	as-shipped	never	DIV-0103	none	A PSP-only install's base is the PSP's own sections	Player never: Forced or one-way
+en-US	as-shipped	never	DIV-0104	none	A PSP-built image of `.data` carries the PSP's level table and consumable 87	Player never: Forced or one-way
+en-US	as-shipped	never	DIV-0105	none	A PSP-only install plays the PSP's music: its sequences and its banks	Player never: Forced or one-way
+en-US	as-shipped	never	DIV-0106	none	A PSP-only install has the PSP's effects, voices, jingles and logo movie	Player never: Forced or one-way
+en-US	as-shipped	never	DIV-0107	none	The launcher offers three suites, the PSP's or the PlayStation's, in place of the PSP extras	Player never: Forced or one-way
+en-US	as-shipped	already-off	DIV-0108	ini:psp=none	The PSP's two battle rules, behind a switch	Default off: already off
+en-US	as-shipped	already-off	DIV-0109	ini:music=psx	The PSP's music as a layer beside a PlayStation disc's	Default off: already off
+en-US	as-shipped	already-off	DIV-0110	ini:opt=	The PSP's effects, voices and jingles as a layer	Default off: already off
+en-US	as-shipped	already-off	DIV-0111	ini:opt=	The PSP's level table and consumable 87 laid over .data	Default off: already off
+en-US	as-shipped	already-off	DIV-0112	ini:opt=	Ryu's forms (P8) as a layer	Default off: already off
+en-US	as-shipped	already-off	DIV-0113	ini:opt=	The battle chord as the PSP plays it, and a layer's banks in Snd_LoadBankFile	Default off: already off
+en-US	as-shipped	never	DIV-0114	none	A disc-only install draws the disc's title page, not the PC port's	Player never: Forced or one-way
+en-US	as-shipped	never	DIV-0115	none	Prefer the Japanese PlayStation disc's data over a port change the owner has decided; the 27A arenas' held loop first	Player never: Forced or one-way
+en-US	as-shipped	off	DIV-0116	EncounterOnScreenLowerBounds	An encounter refuses a combatant left of or above the screen, as the PlayStation does	Player yes
+en-US	as-shipped	lang-governed	DIV-0117	lang	The Identify panel's small words: WEAK POINT on the weakness row, the disc's own item word and EXP label	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	cannot	DIV-0118	BattleExtra_EquipOpen	Beyd's name from the disc when the battle extra opens its equipment screen	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	cannot	DIV-0119	Boss26Fx_DrawCount	Fight 26's turn counter in the disc's words and layout	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	cannot	DIV-0120	CommuHiLo_DrawChoice	The hi-lo game's three choices from the disc, centred in their boxes	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	off	DIV-0121	EdgeNoArea	A map edge that leads to no area holds, instead of crashing	Player yes
+en-US	as-shipped	off	DIV-0122	env:BOF3X_WIDE_STAGING=0	The wide modes re-stage the scenes' edge actors	Player yes
+en-US	as-shipped	off	DIV-0123	env:BOF3X_WIDE_STAGING=0	Case zero takes the PSP's staging in the wide modes	Player yes
+en-US	as-shipped	off	DIV-0124	env:BOF3X_WIDE_HIDE=0	At 21:9, a field object past the 16:9 view is not drawn in a scene	Player yes
+en-US	as-shipped	off	DIV-0125	env:BOF3X_FBGRAB=0	A `DR_MOVE` out of the display buffer textures what follows: the frame-buffer grab	Player yes
+en-US	as-shipped	off	DIV-0126	DiagonalIdentity	The debris matrix is the GTE's identity: the lighthouse's rays come back	Player yes
+en-US	as-shipped	cannot	DIV-0127	EffectKind18Sub61_DrawOverlay, Scena17_DrawLetterbox	The ending's backdrop: the seam gone, the pictures and the letterbox into the wide bands	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	cannot	DIV-0128	Identify_DrawElements	The Identify panel's element row as the game's own element icons	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	cannot	DIV-0129	Sound_StreamDone	A missing sound stream ends its wait; a PSX-only install has the 11 jingles	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	never	DIV-0130	none	A disc's world-map legend shows only the live button icon	Player never: Forced or one-way
+en-US	as-shipped	never	DIV-0131	none	A PSP-only install's title logo is cut from the PSP's pages where the PSP's art lies	Player never: Forced or one-way
+en-US	as-shipped	off	DIV-0132	FishPanelDuck	The fishing panel ducks the music as the PlayStation does	Player yes
+en-US	as-shipped	off	DIV-0133	ButtonSigma	The Config's six lines as one permutation; menus confirm on Speak's button and cancel on Action's	Player yes
+en-US	as-shipped	off	DIV-0134	StartConfigBySource	An install starts with the Config of the release it was built from	Player yes
+en-US	as-shipped	off	DIV-0135	WorldMapLegend	The world map's legend shows the buttons the Config holds, as glyphs, no key names	Player yes
+en-US	as-shipped	off	DIV-0136	FishingLabelSigma	The fishing banner's labels name the button the line's test is on now	Player yes
+en-US	as-shipped	off	DIV-0137	DockLegend	The dock's parts-menu legend shows the buttons the Config has its tests on	Player yes
+en-US	as-shipped	off	DIV-0138	ShoulderGlyphs	The item lists' L1 / R1 corner shows the buttons the Config pages on	Player yes
+en-US	as-shipped	off	DIV-0139	ButtonSigma	The hard-coded button tests ask the Config	Player yes
+en-US	as-shipped	off	DIV-0140	ButtonText	The dialogue names buttons by code, drawn as the button the Config has put the role on	Player yes
+en-US	as-shipped	skipped-language	DIV-0141	lang	A PSP-EU layer's Config screen: the PSP's words, and four of ours	acts only under en-150
+en-US	as-shipped	off	DIV-0142	SpriteCapture	A sprite with `+0x24` bit 3 is drawn into VRAM, as on the PlayStation: Amalgam's melt comes back	Player yes
+en-US	as-shipped	off	DIV-0143	AreaKeepStoppingNone	An area change that keeps the track while it fades to a stop keeps none: Ryu's dream is silent, as on the PlayStation	Player yes
+en-US	as-shipped	off	DIV-0144	FishingEmptyLine, FishingLowGlyph	The fishing banner draws no glyph for an empty line, nor for a one-byte code below 0x26	Player yes
+en-US	as-shipped	cannot	DIV-0145	Game_WndProc	F6 saves the whole game state to a quicksave and F7 restores it to the frame	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	off	DIV-0146	SaveLists	The save list is BISLPS0?.DAT and bounded at sixteen; the quicksaves list apart	Player yes
+en-US	as-shipped	cannot	DIV-0147	Game_WndProc	F5 opens a quick menu drawn as the title's load menu, to load any of the sixteen quicksaves	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	lang-governed	DIV-0148	lang	The staff roll follows the language: a US or PAL layer rolls its release's credits	Switch: lang - part of the language pick, which no preset changes
+en-US	as-shipped	off	DIV-0149	EventBattleKeepsMusic	An event battle with no music of its own leaves the scene's song playing	Player yes
+en-US	as-shipped	off	DIV-0150	env:BOF3X_MUSIC=seq	The music comes from a chosen source first: the PlayStation's, the PSP's or the PC's	Player yes
+en-US	as-shipped	off	DIV-0151	env:BOF3X_LAYERING=0	The table faerie in the faerie village is drawn over its table	Player yes
+en-US	as-shipped	off	DIV-0152	PadReset	Start + Select held a second returns to the title, as on the Western discs	Player yes
+en-US	as-shipped	off	DIV-0153	MantleCap	The Holy Mantle's doubled encounter threshold stops at 255 instead of wrapping	Player yes
+en-US	as-shipped	off	DIV-0154	ExtraRoundClear	The round's end clears the faster-side mark from every member and enemy	Player yes
+en-US	as-shipped	skipped-language	DIV-0155	ini:ruby=	A reading row over the dialogue box's text: furigana from the player's Japanese layer	acts only under ja-JP
+en-US	as-shipped	already-off	DIV-0156	ini:ruby=	A second language in the reading row	Default off: already off
+en-US	as-shipped	skipped-language	DIV-0157	ini:ruby=	Mods: a player's zip built into an optional layer, chosen as the row above the text	acts only under ja-JP
+en-US	as-shipped	already-off	DIV-0158	ini:text_speed=0	The faster text: Msg Speed's Med. at Fast's pace, Fast a page at once	Default off: already off
+en-US	as-shipped	off	DIV-0159	DirectOpaque	A direct-colour page's texels are opaque but for 0: Amalgam's melt draws	Player yes
+en-US	as-shipped	off	DIV-0160	StpTexels	Semi-transparent primitives blend only the texels with bit 15 (the bit-15 round)	Player yes
+en-US	as-shipped	off	DIV-0161	BattleDrawSigned	Two battle draws take their coordinates signed: a box or cell partly off the left or top edge clips	Player yes
+en-US	as-shipped	off	DIV-0162	StoreAskWord	The dragon store prompt's hand reads its answer as the word every writer stores	Player yes
+en-US	as-shipped	off	DIV-0163	BattleInitPickClear	A battle's start clears the target-pick flag, as the US disc	Player yes
+en-US	as-shipped	off	DIV-0164	SpriteReachWord	The two sprite reach stores write the whole dword `+0x70`, as the PlayStation does	Player yes
+en-US	as-shipped	off	DIV-0165	MenuSignedXY	The menu box and the 8 x 8 icon take x and y as signed words	Player yes
+en-US	as-shipped	off	DIV-0166	GeneNameNul	Message 0xFA's gene name is terminated after its 8-byte copy	Player yes
+en-US	as-shipped	off	DIV-0167	EffectKeyOff	A battle action's effect stops the sound-effect loops the last one left, as the PlayStation's key-off does	Player yes
+en-US	as-shipped	off	DIV-0168	MusicPlayRefusesNone	Music_Play refuses track 0xFF, as the PlayStation's twins do	Player yes
+en-US	as-shipped	off	DIV-0169	InnNightPause	The inn's night halts the area's song as the fade starts and resumes it where it stopped, as the PlayStation does	Player yes
+en-US	as-shipped	off	DIV-0170	MoveB8Restart	The movement script's op B8 restarts the song from its top at the script's level	Player yes
+en-US	as-shipped	off	DIV-0171	SpriteVoicePosition	Sound_PlayById's voices follow their sprite: volume and pan by its place	Player yes
+en-US	as-shipped	off	DIV-0172	SoundLevelGate	The field's level cues play at their level, and the distance-gated ones only near their object	Player yes
+en-US	as-shipped	off	DIV-0173	StopCuts	A music stop cuts the song, as the PlayStation's SsSepStop does, instead of fading it out	Player yes
+en-US	as-shipped	off	DIV-0174	OneShotKeyOff	A battle action's effect also stops the one-shot sound effects the last one left sounding, as the PlayStation's key-off does	Player yes
+en-US	as-shipped	off	DIV-0175	WindowResetFull	The window reset clears every field of a window record but the last four bytes, as the US disc	Player yes
+en-US	as-shipped	off	DIV-0176	SunderLoop	Sunder's animation at Mt. Myrneg's entry loops until the scene reaches him	Player yes
+en-US	as-shipped	off	DIV-0177	JingleResume	The area's song comes back after a jingle	Player yes
+en-US	as-shipped	off	DIV-0178	ApplyMatrixLVExact	`Gte_ApplyMatrixLV`'s products are exact: the console flash rises instead of folding over	Player yes
+en-US	as-shipped	already-off	DIV-0179	ini:unlearned_blue=0	The name of an enemy's skill the party can still learn shows in blue	Default off: already off
+en-US	as-shipped	off	DIV-0180	Area135MarkerPlaced	Area 135's marker is placed before it is shown: a save loaded there no longer crashes	Player yes
+en-US	as-shipped	off	DIV-0181	CellTextureVram	A cell texture is rebuilt after an upload over its cells: a sprite no longer keeps the previous image's composition	Player yes
+en-US	as-shipped	off	DIV-0182	AreaDataReload	An area's own `.data` is put back when its DAT is loaded, as the PlayStation's overlay reload did	Player yes
+en-US	as-shipped	cannot	DIV-0183	Paralyzer_Start	Paralyzer plays no cue when the current enemy has no cue table, instead of reading address 0	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	off	DIV-0184	DialTranslucent	The world map's dial is drawn semi-transparent, so its glass shows the map as on the PlayStation	Player yes
+en-US	repaired	lang-governed	DIV-0005	lang	Walk a language overlay after each `DAT` file	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	lang-governed	DIV-0006	lang	Advance the dialogue pen by the glyph's width	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	lang-governed	DIV-0007	lang	Move the system message pool out of the area script's way	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	lang-governed	DIV-0008	lang	Item and ability names, and the system pool, from a language overlay	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	lang-governed	DIV-0009	lang	Tighten the apostrophe and the comma in the English font	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	already-off	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: already off
+en-US	repaired	lang-governed	DIV-0013	lang	White text in the disc's shades when the text is the disc's	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	lang-governed	DIV-0014	lang	The title menu in the overlay's language, its third row cut from the disc's letters	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	lang-governed	DIV-0015	lang	The in-game Config screen in the overlay's language	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	lang-governed	DIV-0016	lang	The donor's 8 x 8 UI font, and a glyph guard that follows the table	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	off	DIV-0017	ConfigText	The Config screen's selected row, in the dialogue font at its own advance	Player yes
+en-US	repaired	lang-governed	DIV-0018	lang	The menu's short verbs - the buttons above a panel - in the overlay's language	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	lang-governed	DIV-0019	lang	The battle's command labels in the overlay's language	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	lang-governed	DIV-0020	lang	The characters' default names in the overlay's language	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	off	DIV-0026	ConfigController	The Config screen's controller panel: names at their own width, in the dialogue font, inside a wider frame	Player yes
+en-US	repaired	off	DIV-0027	YesNoLayout	The Yes / No chooser laid out for Latin text	Player yes
+en-US	repaired	off	DIV-0029	SaveNameInset	The save / load slot's name two units further in	Player yes
+en-US	repaired	cannot	DIV-0031	Display_Setup	Draw through Direct3D 11 behind DirectX 6's objects, with no exclusive display mode	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	cannot	DIV-0032	Game_WinMain, Game_WndProc, Cursor_Sync, Display_WindowMoved, Display_DeviceName	Window modes: a resizable window, or a borderless window the size of the monitor	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	off	DIV-0033	ini:background=0	The game keeps running while its window is not in front	Player yes
+en-US	repaired	cannot	DIV-0035	Fmv_Play	The FMVs play into the window, at an integer scale, with no mode-set	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	off	DIV-0036	ini:display=windowed, ini:scale=2	The picture is drawn at an integer multiple of 320 x 240 chosen for the window	Player yes
+en-US	repaired	inactive	DIV-0037	none	An optional CRT look: scanlines and halation	State withdrawn: no preset switches it
+en-US	repaired	off	DIV-0038	PauseText	F9's pause lines in the overlay's language	Player yes
+en-US	repaired	cannot	DIV-0039	Game_WinMain	The window's title and the missing-disc box in English	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	cannot	DIV-0040	Game_WndProc	F7 and F11 do nothing	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	already-off	DIV-0041	ini:wide=0	A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side	Default off: already off
+en-US	repaired	cannot	DIV-0042	Game_WndProc	The window resizes freely; the picture snaps to whole multiples or fills the height	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	already-off	DIV-0043	ini:screen=clean	An optional second CRT look: SatPixie, with its parameters in the launcher	Default off: already off
+en-US	repaired	already-off	DIV-0045	ini:cheat.exp=1, ini:cheat.zenny=1	The EXP and zenny won in battle, times a launcher slider	Default off: already off
+en-US	repaired	already-off	DIV-0046	ini:cheat.steal=0	Pilfer and Steal take the item whenever the enemy has one	Default off: already off
+en-US	repaired	cannot	DIV-0048	Game_WndProc	F1 toggles double speed	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	cannot	DIV-0049	Fmv_WndProc	The logo videos keep playing when the window is not in front	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	cannot	DIV-0050	DInput_Init, Pad_Read, DInput_Shutdown	The pad through SDL3; the keyboard as the original; the DirectInput joystick dropped	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	cannot	DIV-0051	ConfigController, Config_DrawControllerCell, ConfigJapaneseIcons	The Config screen's controller panel: the PlayStation's one icon column	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	lang-governed	DIV-0052	lang	The battle banner's words and its EX suffix	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	lang-governed	DIV-0053	lang	Enemy names in the overlay's language	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	skipped-language	DIV-0054	lang	French and German overlays, with the discs' accented glyphs	acts only under fr-FR, de-DE
+en-US	repaired	lang-governed	DIV-0055	lang	The world map's place plates from the donor disc	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	skipped-language	DIV-0056	lang	A Japanese overlay, and the layout switch for languages	acts only under ja-JP
+en-US	repaired	skipped-language	DIV-0057	lang	Two kana in one glyph code: pair codes for Japanese names	acts only under ja-JP
+en-US	repaired	off	DIV-0058	MenuTitleCentre	The field menu's screen title centred on its real width	Player yes
+en-US	repaired	off	DIV-0059	BattleListTitleCentre	The item and skill lists' title centred on its real width	Player yes
+en-US	repaired	off	DIV-0060	BattleResultExpLayout	The battle result's EXP line in the US layout	Player yes
+en-US	repaired	off	DIV-0061	BattleBannerCentre	The battle's action banners centred on their real width	Player yes
+en-US	repaired	off	DIV-0062	DrawPool	The draw-item pool doubled: cells the wide view keeps ran it dry	Player yes
+en-US	repaired	lang-governed	DIV-0064	lang	The short labels from a language overlay: status words, stats, item and skill types	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	off	DIV-0065	BattleEquipLabelsRow	The battle equip window's stat labels beside their own values	Player yes
+en-US	repaired	cannot	DIV-0066	Fmv_Play	A pad press skips an FMV as a key does	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	inactive	DIV-0067	none	Withdrawn: the rising squares' random numbers from a generator of their own	State withdrawn: no preset switches it
+en-US	repaired	lang-governed	DIV-0069	lang	The fishing minigame's text in the overlay's language, laid out for Latin letters	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	off	DIV-0078	CfgOwnKeyTable	BOF3.CFG's key lines cannot run off the end of Cfg_Load's frame	Player yes
+en-US	repaired	off	DIV-0083	MasterPupilLabel	The master list's pupils box without the port's label	Player yes
+en-US	repaired	off	DIV-0084	FormationNameCentre	The formation screen's names centred in their boxes	Player yes
+en-US	repaired	already-off	DIV-0086	ini:opt=	Optional layers from the player's PSP disc, walked after the language overlay	Default off: already off
+en-US	repaired	off	DIV-0087	ini:music=pc	The cache's songs synthesised from the disc's sequence, the MP3 the fallback	Player yes
+en-US	repaired	lang-governed	DIV-0088	lang	The faerie village's board buttons from the disc's own paint	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	off	DIV-0089	env:BOF3X_CACHE_DATA=0	The importer's cache read before the install's DAT\ and SND\	Player yes
+en-US	repaired	never	DIV-0090	none	A language layer built from the disc alone keeps nothing of the port's	Player never: Forced or one-way
+en-US	repaired	cannot	DIV-0091	env:BOF3X_MP3=original	The MP3 decoder is minimp3, not the library Capcom linked	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	off	DIV-0092	AreaTrackFallback	The field's music after a battle, and after a load of a save without a track, is the area's own	Player yes
+en-US	repaired	cannot	DIV-0093	env:BOF3X_MP3=original	The MP3 decoder's end-of-stream count is zero, not the last frame's	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	never	DIV-0094	none	The game runs as our own executable	Player never: Forced or one-way
+en-US	repaired	never	DIV-0095	none	The executable's icon, drawn from the game's own data on the player's machine	Player never: Forced or one-way
+en-US	repaired	never	DIV-0096	none	A disc-only cache's party animation scripts are the disc's own	Player never: Forced or one-way
+en-US	repaired	never	DIV-0097	none	A disc-only layer stands in the disc's own images where the port's art showed	Player never: Forced or one-way
+en-US	repaired	skipped-language	DIV-0098	none	French AREA004's first seven message slots, disc-only	acts only under fr-FR
+en-US	repaired	never	DIV-0099	none	A disc-only install shows the disc's Capcom logo movie, converted at import	Player never: Forced or one-way
+en-US	repaired	never	DIV-0100	none	A disc-only install starts without the movie the disc probe looks for	Player never: Forced or one-way
+en-US	repaired	off	DIV-0101	env:BOF3X_EXEIMAGE_STRICT=1	A disc-built image runs with the game values no disc carries as zero (provisional)	Player yes
+en-US	repaired	skipped-language	DIV-0102	none	A disc-only install refuses the port's Chinese text instead of playing without text	acts only under original
+en-US	repaired	never	DIV-0103	none	A PSP-only install's base is the PSP's own sections	Player never: Forced or one-way
+en-US	repaired	never	DIV-0104	none	A PSP-built image of `.data` carries the PSP's level table and consumable 87	Player never: Forced or one-way
+en-US	repaired	never	DIV-0105	none	A PSP-only install plays the PSP's music: its sequences and its banks	Player never: Forced or one-way
+en-US	repaired	never	DIV-0106	none	A PSP-only install has the PSP's effects, voices, jingles and logo movie	Player never: Forced or one-way
+en-US	repaired	never	DIV-0107	none	The launcher offers three suites, the PSP's or the PlayStation's, in place of the PSP extras	Player never: Forced or one-way
+en-US	repaired	already-off	DIV-0108	ini:psp=none	The PSP's two battle rules, behind a switch	Default off: already off
+en-US	repaired	already-off	DIV-0109	ini:music=psx	The PSP's music as a layer beside a PlayStation disc's	Default off: already off
+en-US	repaired	already-off	DIV-0110	ini:opt=	The PSP's effects, voices and jingles as a layer	Default off: already off
+en-US	repaired	already-off	DIV-0111	ini:opt=	The PSP's level table and consumable 87 laid over .data	Default off: already off
+en-US	repaired	already-off	DIV-0112	ini:opt=	Ryu's forms (P8) as a layer	Default off: already off
+en-US	repaired	already-off	DIV-0113	ini:opt=	The battle chord as the PSP plays it, and a layer's banks in Snd_LoadBankFile	Default off: already off
+en-US	repaired	never	DIV-0114	none	A disc-only install draws the disc's title page, not the PC port's	Player never: Forced or one-way
+en-US	repaired	never	DIV-0115	none	Prefer the Japanese PlayStation disc's data over a port change the owner has decided; the 27A arenas' held loop first	Player never: Forced or one-way
+en-US	repaired	lang-governed	DIV-0117	lang	The Identify panel's small words: WEAK POINT on the weakness row, the disc's own item word and EXP label	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	cannot	DIV-0118	BattleExtra_EquipOpen	Beyd's name from the disc when the battle extra opens its equipment screen	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	cannot	DIV-0119	Boss26Fx_DrawCount	Fight 26's turn counter in the disc's words and layout	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	cannot	DIV-0120	CommuHiLo_DrawChoice	The hi-lo game's three choices from the disc, centred in their boxes	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	off	DIV-0121	EdgeNoArea	A map edge that leads to no area holds, instead of crashing	Player yes
+en-US	repaired	off	DIV-0122	env:BOF3X_WIDE_STAGING=0	The wide modes re-stage the scenes' edge actors	Player yes
+en-US	repaired	off	DIV-0123	env:BOF3X_WIDE_STAGING=0	Case zero takes the PSP's staging in the wide modes	Player yes
+en-US	repaired	off	DIV-0124	env:BOF3X_WIDE_HIDE=0	At 21:9, a field object past the 16:9 view is not drawn in a scene	Player yes
+en-US	repaired	never	DIV-0131	none	A PSP-only install's title logo is cut from the PSP's pages where the PSP's art lies	Player never: Forced or one-way
+en-US	repaired	skipped-language	DIV-0141	lang	A PSP-EU layer's Config screen: the PSP's words, and four of ours	acts only under en-150
+en-US	repaired	off	DIV-0143	AreaKeepStoppingNone	An area change that keeps the track while it fades to a stop keeps none: Ryu's dream is silent, as on the PlayStation	Player yes
+en-US	repaired	off	DIV-0144	FishingEmptyLine, FishingLowGlyph	The fishing banner draws no glyph for an empty line, nor for a one-byte code below 0x26	Player yes
+en-US	repaired	cannot	DIV-0145	Game_WndProc	F6 saves the whole game state to a quicksave and F7 restores it to the frame	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	off	DIV-0146	SaveLists	The save list is BISLPS0?.DAT and bounded at sixteen; the quicksaves list apart	Player yes
+en-US	repaired	cannot	DIV-0147	Game_WndProc	F5 opens a quick menu drawn as the title's load menu, to load any of the sixteen quicksaves	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	lang-governed	DIV-0148	lang	The staff roll follows the language: a US or PAL layer rolls its release's credits	Switch: lang - part of the language pick, which no preset changes
+en-US	repaired	skipped-language	DIV-0155	ini:ruby=	A reading row over the dialogue box's text: furigana from the player's Japanese layer	acts only under ja-JP
+en-US	repaired	already-off	DIV-0156	ini:ruby=	A second language in the reading row	Default off: already off
+en-US	repaired	skipped-language	DIV-0157	ini:ruby=	Mods: a player's zip built into an optional layer, chosen as the row above the text	acts only under ja-JP
+en-US	repaired	already-off	DIV-0158	ini:text_speed=0	The faster text: Msg Speed's Med. at Fast's pace, Fast a page at once	Default off: already off
+en-US	repaired	off	DIV-0161	BattleDrawSigned	Two battle draws take their coordinates signed: a box or cell partly off the left or top edge clips	Player yes
+en-US	repaired	off	DIV-0162	StoreAskWord	The dragon store prompt's hand reads its answer as the word every writer stores	Player yes
+en-US	repaired	off	DIV-0163	BattleInitPickClear	A battle's start clears the target-pick flag, as the US disc	Player yes
+en-US	repaired	off	DIV-0164	SpriteReachWord	The two sprite reach stores write the whole dword `+0x70`, as the PlayStation does	Player yes
+en-US	repaired	off	DIV-0165	MenuSignedXY	The menu box and the 8 x 8 icon take x and y as signed words	Player yes
+en-US	repaired	off	DIV-0166	GeneNameNul	Message 0xFA's gene name is terminated after its 8-byte copy	Player yes
+en-US	repaired	off	DIV-0167	EffectKeyOff	A battle action's effect stops the sound-effect loops the last one left, as the PlayStation's key-off does	Player yes
+en-US	repaired	off	DIV-0168	MusicPlayRefusesNone	Music_Play refuses track 0xFF, as the PlayStation's twins do	Player yes
+en-US	repaired	off	DIV-0169	InnNightPause	The inn's night halts the area's song as the fade starts and resumes it where it stopped, as the PlayStation does	Player yes
+en-US	repaired	off	DIV-0170	MoveB8Restart	The movement script's op B8 restarts the song from its top at the script's level	Player yes
+en-US	repaired	off	DIV-0171	SpriteVoicePosition	Sound_PlayById's voices follow their sprite: volume and pan by its place	Player yes
+en-US	repaired	off	DIV-0172	SoundLevelGate	The field's level cues play at their level, and the distance-gated ones only near their object	Player yes
+en-US	repaired	off	DIV-0173	StopCuts	A music stop cuts the song, as the PlayStation's SsSepStop does, instead of fading it out	Player yes
+en-US	repaired	off	DIV-0174	OneShotKeyOff	A battle action's effect also stops the one-shot sound effects the last one left sounding, as the PlayStation's key-off does	Player yes
+en-US	repaired	off	DIV-0175	WindowResetFull	The window reset clears every field of a window record but the last four bytes, as the US disc	Player yes
+en-US	repaired	off	DIV-0176	SunderLoop	Sunder's animation at Mt. Myrneg's entry loops until the scene reaches him	Player yes
+en-US	repaired	already-off	DIV-0179	ini:unlearned_blue=0	The name of an enemy's skill the party can still learn shows in blue	Default off: already off
+en-US	playstation	also-available	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: the preset keeps it on, so switch it on yourself
+en-US	playstation	already-off	DIV-0041	ini:wide=0	A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side	Default off: already off
+en-US	playstation	already-off	DIV-0086	ini:opt=	Optional layers from the player's PSP disc, walked after the language overlay	Default off: already off
+en-US	playstation	never	DIV-0103	none	A PSP-only install's base is the PSP's own sections	Player never: Forced or one-way
+en-US	playstation	never	DIV-0104	none	A PSP-built image of `.data` carries the PSP's level table and consumable 87	Player never: Forced or one-way
+en-US	playstation	never	DIV-0105	none	A PSP-only install plays the PSP's music: its sequences and its banks	Player never: Forced or one-way
+en-US	playstation	never	DIV-0106	none	A PSP-only install has the PSP's effects, voices, jingles and logo movie	Player never: Forced or one-way
+en-US	playstation	already-off	DIV-0108	ini:psp=none	The PSP's two battle rules, behind a switch	Default off: already off
+en-US	playstation	already-off	DIV-0109	ini:music=psx	The PSP's music as a layer beside a PlayStation disc's	Default off: already off
+en-US	playstation	already-off	DIV-0110	ini:opt=	The PSP's effects, voices and jingles as a layer	Default off: already off
+en-US	playstation	already-off	DIV-0111	ini:opt=	The PSP's level table and consumable 87 laid over .data	Default off: already off
+en-US	playstation	already-off	DIV-0112	ini:opt=	Ryu's forms (P8) as a layer	Default off: already off
+en-US	playstation	already-off	DIV-0113	ini:opt=	The battle chord as the PSP plays it, and a layer's banks in Snd_LoadBankFile	Default off: already off
+en-US	playstation	off	DIV-0123	env:BOF3X_WIDE_STAGING=0	Case zero takes the PSP's staging in the wide modes	Player yes

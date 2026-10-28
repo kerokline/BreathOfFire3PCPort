@@ -118,7 +118,7 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Game_WinMain", 0, 12},   // DIV-0034
     {SwitchForm::Name, "Fmv_Play", 0, 8},   // DIV-0035
     {SwitchForm::Ini, "ini:display=windowed", 4, 7},   // DIV-0036
-    {SwitchForm::Env, "env:BOF3X_SCALE=2", 4, 11},   // DIV-0036
+    {SwitchForm::Ini, "ini:scale=2", 4, 5},   // DIV-0036
     {SwitchForm::Name, "PauseText", 0, 9},   // DIV-0038
     {SwitchForm::Name, "Game_WinMain", 0, 12},   // DIV-0039
     {SwitchForm::Name, "Game_WndProc", 0, 12},   // DIV-0040
