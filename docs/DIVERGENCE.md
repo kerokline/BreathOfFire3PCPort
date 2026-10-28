@@ -11726,7 +11726,7 @@ designed in rather than bolted on.
   `'*'` self-test from an ini-less launcher copy (the fuzz sees the port's operand), and the
   `worldMapAndAreaTransition` route's frames on and off - the dial's glass blended over the
   map with it on, the rim, markings, labels, key glyphs and region plate identical on both.
-  The owner's eye on the pair.
+  The owner, on the pair the same evening: "Looks great".
 - **Reversible?** `BOF3X_ORIGINAL=DialTranslucent` keeps the port's operand (the dial opaque).
   With `BOF3X_ORIGINAL=StpBlend` as well, the whole dial would blend at half - the third
   picture D42 refused - so this entry is meant to be on only with DIV-0160.

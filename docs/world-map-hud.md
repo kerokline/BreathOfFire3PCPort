@@ -399,7 +399,7 @@ glass. The flip is **DIV-0184**: `WorldMap_DrawSprite` passes 1 for every
 sprite, armed after the fuzz beside DIV-0135 (`BOF3X_ORIGINAL=DialTranslucent`
 keeps the port's operand). The on/off pair of the `worldMapAndAreaTransition`
 route is under `C:\Users\kerok\bof3x-runs\away1027\d42\`; D42 is marked
-fixed, the owner's eye on the pair owed.
+fixed; the owner, on the pair: "Looks great".
 
 ### 5.2 Where the place plates' rectangles live
 

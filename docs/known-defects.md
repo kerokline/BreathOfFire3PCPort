@@ -1237,8 +1237,8 @@ after which `SetSemiTrans(prim, 1)` here is a one-line divergence. **That path
 was built as DIV-0160 (2026-10-23), and the flip is DIV-0184 (2026-10-27):**
 the dial's glass blends over the map, the rim and markings stay solid, and the
 legend and region plate draw opaque as the PlayStation's do (the owner's PSP
-capture of Eastern Wyndia beside the port's frame). Owed: the owner's eye on
-the on/off pair.
+capture of Eastern Wyndia beside the port's frame). The owner, on the on/off
+pair the same evening: "Looks great".
 ## D43 — The battle skill list's cursor row and its raised row disagree once scrolled (candidate, latent)
 
 **Found:** reading `BattleMenu_DrawSkillList` `0x59D200` for group BJ of the

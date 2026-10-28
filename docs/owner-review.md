@@ -783,7 +783,7 @@ checkout's `analysis/` (never in the tree).
   dated 2026-10-13 against the tag's 2026-10-18; 7.11's follow-on). Rebuilding the language fixes it; the
   tooling install's was rebuilt the same evening. Your `game\` overlay (2026-10-25) differs from it in
   `FIRST.DAT` alone; the launcher's upgrade brings it current.
-- **The world map's dial, translucent (DIV-0184, the evening of 2026-10-27):** you matched the census
+- ~~**The world map's dial, translucent (DIV-0184, the evening of 2026-10-27)**~~ **seen, "Looks great":** you matched the census
   pair against a PSP capture of Eastern Wyndia - the region plate black, the map through the dial's glass -
   and asked for D42's repair. Built: the on/off pair of `worldMapAndAreaTransition` is under
   `C:\Users\kerok\bof3x-runs\away1027\d42\`. The plate's black is DIV-0160's rule (its amendment of the
