@@ -214,6 +214,7 @@ close box after the same change left the ini byte for byte.
 | Cheats... (2026-09-24): EXP and zenny sliders, steal switch | `BOF3X_EXP` / `BOF3X_ZENNY` when not 1, `BOF3X_STEAL=1` when on | ours — DIV-0045, DIV-0046; [`cheats.md`](cheats.md) |
 | (Window size, removed 2026-09-23 evening) | `BOF3X_SCALE`, from `scale=` in the ini, when not 2 | the first window's size only, until the game saves `bof3x.window` (DIV-0042) |
 | Keep running unfocused (2026-09-23) | `BOF3X_BACKGROUND=0` when off | ours — DIV-0033 |
+| The player's switch (2026-10-28; the ini only, no control yet): the changes to turn off, by their code names | `off=` in the ini, **empty by default** (none off), kept as written and written back as read; handed over as `BOF3X_OFF` to either host unless the environment sets it | ours - the ledger-fields round's stage D; section 3.2 below |
 | Controls... (2026-09-24): fourteen rows, two key cells and two pad cells each - click a cell and press the key or pad input, Escape cancels, Clear empties - the face-button layout | `key.NAME=action` and `pad.NAME=action` lines in the ini; `BOF3X_KEYS` / `BOF3X_PAD` when they differ from the default | ours — DIV-0050; [`controls.md`](controls.md) §4.2. Unset, the DLL leaves the game's own key table (`BOF3.CFG` lines 3+ or its default) and uses the default pad map |
 
 | Music and Cache folder (2026-10-10, §3.1): the source played first - the PlayStation's, the PSP's or the PC's MP3s (DIV-0150, 2026-10-21); the importer's cache, typed or Browse... | `BOF3X_MUSIC` always, `BOF3X_CACHE` when not empty; `music=` / `cache=` in the ini | ours - DIV-0087, DIV-0150, [`music-seq-engine.md`](music-seq-engine.md) 2 |
@@ -338,6 +339,63 @@ Rules the writer follows:
   `opt=` is written back as it was read (there is no dialog box for it), so a
   save never turns an empty one into a list that pins the default off. A
   harness that must not get the layer sets `BOF3X_OPT=none`.
+
+### 3.2 The player's switch: `off=` and `BOF3X_OFF` (2026-10-28)
+
+**What it is.** One switch, read by both hosts (`bof3x.exe` and the hosted
+build), that turns off a change of this project whose original behaviour is
+in our code already: a ledger entry whose `Switch:` is a *code name* - the
+first argument of a `PatchBytes` or a `RetargetCall` in `src/`
+([`DIVERGENCE.md`](DIVERGENCE.md) "Entry format", "The switch fields"). Such
+an entry is `Player: yes - BOF3X_OFF=<name> (ini off=)`; on 2026-10-28 there
+are 67 of them, and 83 code names in `src/`. The owner named it (the
+ledger-fields round, [`ledger-fields-round.md`](ledger-fields-round.md)
+section 6, call 3). It is not a hosted-only switch: the player's launcher
+starts `bof3x.exe` with it and does not hand over to the developer's.
+
+For example (one line at a time; the ini takes no comment after a value):
+`off=SunderLoop,Game_Clock` turns those two changes off and leaves the
+others as they are; `off=*` turns every code name off; `off=*,-SaveLists`
+every code name but `SaveLists`.
+
+**The list syntax** is `BOF3X_ORIGINAL`'s (`src/hook/detour.cpp`
+`NameListed`): names separated by commas or spaces; `*` is every code name;
+`-name` takes that name back out of `*`, wherever it stands. The ini's
+`off=` goes to the game as `BOF3X_OFF` (`ConfigApplyEnvironment`), only when
+the environment has no `BOF3X_OFF` of its own - the environment wins, as for
+every key. An empty `off=` sends nothing.
+
+**Which names.** The ledger's `Switch:` lines name them;
+`python tools/ledger_switches.py` lists every name `src/` reads with its
+class, and the ones `BOF3X_OFF` takes are class `code` (in
+`analysis/ledger_switches.tsv`, `switch` rows whose class is `code`). A
+`Switch:` that is a detour (class `detour`, `Player: costly`) is not
+reachable this way: its original behaviour is Capcom's function, which
+`bof3x.exe` does not have.
+
+**A name the game does not use stops the game with a message** (CLAUDE.md
+rule 4: refuse loudly, never silently), in a message box and the log's
+`FATAL:` line, exit code 3:
+
+- a **detour's** name, bare or as `-name`, stops the game at once and says
+  that the original function is the hosted build's `BOF3X_ORIGINAL=<name>`
+  (`bof3x-launcher --host bof3`). `*` does not reach detours.
+- a name that **no `PatchBytes` or `RetargetCall` asked for** by the end of
+  injection (`InjectReport`) stops the game and names it: a misspelt name,
+  an instrument hook's (`InputScript`, `StateHash`: no name turns those off),
+  or a code name whose change is not in force with these settings. Some code
+  names are asked for only under a setting: 23 of the 83 are not asked for in
+  a plain start (no language, no wide mode, the linear filter, no cheat) -
+  the language layouts (`YesNoLayout`, `ConfigText`, ...), `Widescreen`,
+  `Gfx_FilterPoint`, `Cheat_StealAlways` - so `off=YesNoLayout` stops a
+  start with the original text.
+
+**What the log says.** Each name turned off logs its `OFF` line with the
+variable that turned it off - `patch   OFF  SunderLoop ... left alone
+(BOF3X_OFF)` - and after injection `code names: N asked for, N off by
+BOF3X_ORIGINAL, N off by BOF3X_OFF` and the list as given. In the hosted
+build a code name in both `BOF3X_ORIGINAL` and `BOF3X_OFF` is logged as
+`BOF3X_ORIGINAL`'s; the hosted A/B meaning of `BOF3X_ORIGINAL` is unchanged.
 
 ### The pad in the launcher (2026-09-24)
 
