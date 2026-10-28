@@ -14982,40 +14982,40 @@ site	src/game/magic_c3_fuzz.cpp	161	raw	SetPointer	0x7E0670	0x7e0670	-	exact	Gfx
 site	src/game/magic_c3_fuzz.cpp	164	global	Mem	mh::at::kActor	0x904b34	-	none	-	-	1
 site	src/game/magic_c3_fuzz.cpp	177	global	Pointer	BattleFlow_TaskCurrent_addr	0x93b8c4	-	exact	BattleFlow_TaskCurrent	records::BattleTask *	1
 site	src/game/magic_c3_fuzz.cpp	177	record	Long	mh::Pointer(BattleFlow_TaskCurrent_addr) + 0x80	-	via=Pointer	-	-	-	1
-site	src/game/magic_engine.cpp	75	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
-site	src/game/magic_engine.cpp	75	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
-site	src/game/magic_engine.cpp	78	global	Mem	BattleFlow_TaskCurrent_addr	0x93b8c4	-	exact	BattleFlow_TaskCurrent	records::BattleTask *	0
-site	src/game/magic_engine.cpp	119	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/magic_engine.cpp	142	global	Mem	at::kActor	0x904b34	-	none	-	-	0
-site	src/game/magic_engine.cpp	153	global	Mem	BattleActions_Pending_addr	0x904b82	-	exact	BattleActions_Pending	unsigned short	0
-site	src/game/magic_engine.cpp	184	global	Pointer	BattleE3_CurrentEnemy_addr	0x939ad8	-	exact	BattleE3_CurrentEnemy	records::BattleEnemy *	0
-site	src/game/magic_engine.cpp	210	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/magic_engine.cpp	251	record	SetLong	Sprite_Current + 0xC	-	base=Sprite_Current	-	-	-	0
-site	src/game/magic_engine.cpp	251	record	Long	Sprite_Current + 0xC	-	base=Sprite_Current	-	-	-	0
-site	src/game/magic_engine.cpp	252	record	Long	Sprite_Current + 0xC	-	base=Sprite_Current	-	-	-	0
-site	src/game/magic_engine.cpp	291	global	SetPointer	kSlotOwners	0x93a080	-	inside	BattleTask_Slots+0x80	records::BattleTask	0
-site	src/game/magic_engine.cpp	307	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/magic_engine.cpp	311	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/magic_engine.cpp	356	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/magic_engine.cpp	360	record	Long	PartyOf(t) + 0x34	-	via=PartyOf	-	-	-	0
-site	src/game/magic_engine.cpp	361	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/magic_engine.cpp	361	record	Long	PartyOf(Mem(at::kTarget)[0]) + 0x38	-	via=PartyOf	-	-	-	0
-site	src/game/magic_engine.cpp	363	record	Long	EnemyOf(t) + 0x34	-	via=EnemyOf	-	-	-	0
-site	src/game/magic_engine.cpp	364	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/magic_engine.cpp	364	record	Long	EnemyOf(Mem(at::kTarget)[0]) + 0x38	-	via=EnemyOf	-	-	-	0
-site	src/game/magic_engine.cpp	388	record	Word	sc + 0x14	-	base=Sprite_Current	-	-	-	0
-site	src/game/magic_engine.cpp	400	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
-site	src/game/magic_engine.cpp	401	global	Pointer	BattleE2_Owner_addr	0x93b940	-	exact	BattleE2_Owner	unsigned long	0
+site	src/game/magic_engine.cpp	79	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
+site	src/game/magic_engine.cpp	79	global	Mem	at::kFlags	0x904aa8	-	none	-	-	0
+site	src/game/magic_engine.cpp	82	global	Mem	BattleFlow_TaskCurrent_addr	0x93b8c4	-	exact	BattleFlow_TaskCurrent	records::BattleTask *	0
+site	src/game/magic_engine.cpp	123	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
+site	src/game/magic_engine.cpp	146	global	Mem	at::kActor	0x904b34	-	none	-	-	0
+site	src/game/magic_engine.cpp	157	global	Mem	BattleActions_Pending_addr	0x904b82	-	exact	BattleActions_Pending	unsigned short	0
+site	src/game/magic_engine.cpp	198	global	Pointer	BattleE3_CurrentEnemy_addr	0x939ad8	-	exact	BattleE3_CurrentEnemy	records::BattleEnemy *	0
+site	src/game/magic_engine.cpp	229	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
+site	src/game/magic_engine.cpp	270	record	SetLong	Sprite_Current + 0xC	-	base=Sprite_Current	-	-	-	0
+site	src/game/magic_engine.cpp	270	record	Long	Sprite_Current + 0xC	-	base=Sprite_Current	-	-	-	0
+site	src/game/magic_engine.cpp	271	record	Long	Sprite_Current + 0xC	-	base=Sprite_Current	-	-	-	0
+site	src/game/magic_engine.cpp	310	global	SetPointer	kSlotOwners	0x93a080	-	inside	BattleTask_Slots+0x80	records::BattleTask	0
+site	src/game/magic_engine.cpp	326	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
+site	src/game/magic_engine.cpp	330	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
+site	src/game/magic_engine.cpp	375	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
+site	src/game/magic_engine.cpp	379	record	Long	PartyOf(t) + 0x34	-	via=PartyOf	-	-	-	0
+site	src/game/magic_engine.cpp	380	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
+site	src/game/magic_engine.cpp	380	record	Long	PartyOf(Mem(at::kTarget)[0]) + 0x38	-	via=PartyOf	-	-	-	0
+site	src/game/magic_engine.cpp	382	record	Long	EnemyOf(t) + 0x34	-	via=EnemyOf	-	-	-	0
+site	src/game/magic_engine.cpp	383	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
+site	src/game/magic_engine.cpp	383	record	Long	EnemyOf(Mem(at::kTarget)[0]) + 0x38	-	via=EnemyOf	-	-	-	0
+site	src/game/magic_engine.cpp	407	record	Word	sc + 0x14	-	base=Sprite_Current	-	-	-	0
+site	src/game/magic_engine.cpp	419	global	Mem	at::kTarget	0x904b44	-	none	-	-	0
+site	src/game/magic_engine.cpp	420	global	Pointer	BattleE2_Owner_addr	0x93b940	-	exact	BattleE2_Owner	unsigned long	0
 site	src/game/magic_engine_fuzz.cpp	173	record	Word	Sprite_Current + 0x3E	-	base=Sprite_Current	-	-	-	1
 site	src/game/magic_engine_fuzz.cpp	186	global	Mem	at::kTarget	0x904b44	-	none	-	-	1
-site	src/game/magic_engine_fuzz.cpp	222	global	SetPointer	BattleE3_CurrentEnemy_addr	0x939ad8	-	exact	BattleE3_CurrentEnemy	records::BattleEnemy *	1
-site	src/game/magic_engine_fuzz.cpp	233	global	Mem	BattleActions_Pending_addr	0x904b82	-	exact	BattleActions_Pending	unsigned short	1
-site	src/game/magic_engine_fuzz.cpp	234	global	Mem	BattleActions_Pending_addr	0x904b82	-	exact	BattleActions_Pending	unsigned short	1
-site	src/game/magic_engine_fuzz.cpp	242	record	SetWord	g_cues + 2 * i	-	-	-	-	-	1
-site	src/game/magic_engine_fuzz.cpp	249	record	SetLong	sc + 0xC	-	base=Sprite_Current	-	-	-	1
-site	src/game/magic_engine_fuzz.cpp	270	global	Mem	at::kTarget	0x904b44	-	none	-	-	1
-site	src/game/magic_engine_fuzz.cpp	274	record	SetWord	sc + 0x3E	-	base=Sprite_Current	-	-	-	1
-site	src/game/magic_engine_fuzz.cpp	275	record	SetLong	sc + 0x20	-	base=Sprite_Current	-	-	-	1
+site	src/game/magic_engine_fuzz.cpp	225	global	SetPointer	BattleE3_CurrentEnemy_addr	0x939ad8	-	exact	BattleE3_CurrentEnemy	records::BattleEnemy *	1
+site	src/game/magic_engine_fuzz.cpp	236	global	Mem	BattleActions_Pending_addr	0x904b82	-	exact	BattleActions_Pending	unsigned short	1
+site	src/game/magic_engine_fuzz.cpp	237	global	Mem	BattleActions_Pending_addr	0x904b82	-	exact	BattleActions_Pending	unsigned short	1
+site	src/game/magic_engine_fuzz.cpp	245	record	SetWord	g_cues + 2 * i	-	-	-	-	-	1
+site	src/game/magic_engine_fuzz.cpp	252	record	SetLong	sc + 0xC	-	base=Sprite_Current	-	-	-	1
+site	src/game/magic_engine_fuzz.cpp	273	global	Mem	at::kTarget	0x904b44	-	none	-	-	1
+site	src/game/magic_engine_fuzz.cpp	277	record	SetWord	sc + 0x3E	-	base=Sprite_Current	-	-	-	1
+site	src/game/magic_engine_fuzz.cpp	278	record	SetLong	sc + 0x20	-	base=Sprite_Current	-	-	-	1
 site	src/game/magic_fx_reached.cpp	106	global	At	BattleTask_Slots_addr + index * at::kTaskStride	0x93a000	-	exact	BattleTask_Slots	records::BattleTask	0
 site	src/game/magic_fx_reached.cpp	111	global	At	Battle_Enemies_addr + static_cast<std::uint32_t>((static_cas	0x93b960	-	exact	Battle_Enemies	records::BattleEnemy	0
 site	src/game/magic_fx_reached.cpp	113	global	At	ObjTrio_addr + index * at::kPartyStride	0x802d40	-	exact	ObjTrio	records::PartyMember	0
@@ -23578,122 +23578,122 @@ site	src/game/rest_4a_fuzz.cpp	596	global	Mem	BattlePhases_B8B_addr	0x904b8b	-	e
 site	src/game/rest_4a_fuzz.cpp	597	global	Mem	Battle_PartyStanding_addr	0x904ab1	-	exact	Battle_PartyStanding	unsigned char	1
 site	src/game/rest_4a_fuzz.cpp	599	global	Mem	at::kResidentCounts	0x675f58	-	none	-	-	1
 site	src/game/rest_4a_fuzz.cpp	600	global	Mem	at::kOfferWords	0x675f60	-	none	-	-	1
-site	src/game/rest_4b.cpp	66	record	L	table + 4 * static_cast<U>(index)	-	-	-	-	-	0
-site	src/game/rest_4b.cpp	80	global	-	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	85	global	-	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	86	global	-	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	95	global	B	at::kFrame	0x937f94	-	exact	Frame_Counter	unsigned int	0
-site	src/game/rest_4b.cpp	106	global	PutL	at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
-site	src/game/rest_4b.cpp	107	global	PutL	at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
-site	src/game/rest_4b.cpp	107	record	Long	name + 4	-	-	-	-	-	0
-site	src/game/rest_4b.cpp	108	global	PutL	at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
-site	src/game/rest_4b.cpp	108	record	Long	name + 8	-	-	-	-	-	0
-site	src/game/rest_4b.cpp	109	global	PutL	at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
-site	src/game/rest_4b.cpp	109	record	Long	name + 0xC	-	-	-	-	-	0
-site	src/game/rest_4b.cpp	135	global	W	at::kMessageIndex	0x7dee48	-	none	-	-	0
-site	src/game/rest_4b.cpp	157	global	B	at::kBoardTrack	0x939a3d	-	exact	Rest4d_Again	unsigned char	0
-site	src/game/rest_4b.cpp	158	global	B	at::kBoardTrack	0x939a3d	-	exact	Rest4d_Again	unsigned char	0
-site	src/game/rest_4b.cpp	159	global	B	at::kBoardTrack	0x939a3d	-	exact	Rest4d_Again	unsigned char	0
-site	src/game/rest_4b.cpp	160	global	B	at::kBoardTrack	0x939a3d	-	exact	Rest4d_Again	unsigned char	0
-site	src/game/rest_4b.cpp	192	global	PutL	at::kSpriteCurrent	0x937f88	-	exact	Sprite_Current	unsigned char *	0
-site	src/game/rest_4b.cpp	221	global	L	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	283	global	B	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	288	record	B	Member(AreaW0c_TailSub, " ") + 2	-	via=Member	-	-	-	0
-site	src/game/rest_4b.cpp	293	global	B	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	294	record	B	Slot(slot) + 1	-	via=Slot	-	-	-	0
-site	src/game/rest_4b.cpp	308	global	-	at::kGiftItems	0x652a10	-	none	-	-	0
-site	src/game/rest_4b.cpp	309	record	B	pair + 1	-	table=0x652a10	-	-	-	0
-site	src/game/rest_4b.cpp	319	record	B	Member(AreaW0c_TailSub, " ") + 2	-	via=Member	-	-	-	0
-site	src/game/rest_4b.cpp	337	global	B	at::kScriptFlags2	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	0
-site	src/game/rest_4b.cpp	367	global	B	at::kScriptFlags2	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	0
-site	src/game/rest_4b.cpp	387	global	B	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	389	global	-	at::kGiftLines	0x652ac4	-	none	-	-	0
-site	src/game/rest_4b.cpp	391	record	W	row + 4	-	table=0x652ac4	-	-	-	0
-site	src/game/rest_4b.cpp	400	global	B	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	403	global	B	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
+site	src/game/rest_4b.cpp	83	record	L	table + 4 * static_cast<U>(index)	-	-	-	-	-	0
+site	src/game/rest_4b.cpp	97	global	-	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	0
+site	src/game/rest_4b.cpp	102	global	-	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	0
+site	src/game/rest_4b.cpp	103	global	-	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	0
+site	src/game/rest_4b.cpp	112	global	B	at::kFrame	0x937f94	-	exact	Frame_Counter	unsigned int	0
+site	src/game/rest_4b.cpp	123	global	PutL	at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
+site	src/game/rest_4b.cpp	124	global	PutL	at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
+site	src/game/rest_4b.cpp	124	record	Long	name + 4	-	-	-	-	-	0
+site	src/game/rest_4b.cpp	125	global	PutL	at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
+site	src/game/rest_4b.cpp	125	record	Long	name + 8	-	-	-	-	-	0
+site	src/game/rest_4b.cpp	126	global	PutL	at::kTextRecords	0x904ce0	-	exact	Text_Records	-	0
+site	src/game/rest_4b.cpp	126	record	Long	name + 0xC	-	-	-	-	-	0
+site	src/game/rest_4b.cpp	152	global	W	at::kMessageIndex	0x7dee48	-	none	-	-	0
+site	src/game/rest_4b.cpp	174	global	B	at::kBoardTrack	0x939a3d	-	exact	Rest4d_Again	unsigned char	0
+site	src/game/rest_4b.cpp	175	global	B	at::kBoardTrack	0x939a3d	-	exact	Rest4d_Again	unsigned char	0
+site	src/game/rest_4b.cpp	176	global	B	at::kBoardTrack	0x939a3d	-	exact	Rest4d_Again	unsigned char	0
+site	src/game/rest_4b.cpp	177	global	B	at::kBoardTrack	0x939a3d	-	exact	Rest4d_Again	unsigned char	0
+site	src/game/rest_4b.cpp	209	global	PutL	at::kSpriteCurrent	0x937f88	-	exact	Sprite_Current	unsigned char *	0
+site	src/game/rest_4b.cpp	238	global	L	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
+site	src/game/rest_4b.cpp	300	global	B	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
+site	src/game/rest_4b.cpp	305	record	B	Member(AreaW0c_TailSub, " ") + 2	-	via=Member	-	-	-	0
+site	src/game/rest_4b.cpp	310	global	B	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
+site	src/game/rest_4b.cpp	311	record	B	Slot(slot) + 1	-	via=Slot	-	-	-	0
+site	src/game/rest_4b.cpp	325	global	-	at::kGiftItems	0x652a10	-	none	-	-	0
+site	src/game/rest_4b.cpp	326	record	B	pair + 1	-	table=0x652a10	-	-	-	0
+site	src/game/rest_4b.cpp	336	record	B	Member(AreaW0c_TailSub, " ") + 2	-	via=Member	-	-	-	0
+site	src/game/rest_4b.cpp	354	global	B	at::kScriptFlags2	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	0
+site	src/game/rest_4b.cpp	384	global	B	at::kScriptFlags2	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	0
 site	src/game/rest_4b.cpp	404	global	B	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	405	record	B	row + 4	-	table=0x652ac4	-	-	-	0
-site	src/game/rest_4b.cpp	408	record	B	Member(AreaW0c_TailSub, " ") + 2	-	via=Member	-	-	-	0
-site	src/game/rest_4b.cpp	409	record	B	Member(AreaW0c_TailSub, " ") + 3	-	via=Member	-	-	-	0
-site	src/game/rest_4b.cpp	411	record	W	row + 2	-	table=0x652ac4	-	-	-	0
-site	src/game/rest_4b.cpp	423	global	B	at::kScriptFlags2	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	0
-site	src/game/rest_4b.cpp	442	global	B	at::kScriptFlags2	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	0
-site	src/game/rest_4b.cpp	536	global	B	at::kAreaLimits	0x653601	-	none	-	-	0
-site	src/game/rest_4b.cpp	546	global	At	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
-site	src/game/rest_4b.cpp	663	global	At	Rest4b_Pick_addr	0x675f7f	-	exact	Rest4b_Pick	signed char	0
-site	src/game/rest_4b.cpp	664	global	At	Rest4b_Pick_addr	0x675f7f	-	exact	Rest4b_Pick	signed char	0
-site	src/game/rest_4b.cpp	668	global	B	at::kPick	0x675f7f	-	exact	Rest4b_Pick	signed char	0
-site	src/game/rest_4b.cpp	750	global	At	Rest4b_Pick_addr	0x675f7f	-	exact	Rest4b_Pick	signed char	0
-site	src/game/rest_4b.cpp	751	global	At	Rest4b_Pick_addr	0x675f7f	-	exact	Rest4b_Pick	signed char	0
-site	src/game/rest_4b.cpp	755	global	B	at::kPick	0x675f7f	-	exact	Rest4b_Pick	signed char	0
-site	src/game/rest_4b.cpp	800	global	B	at::kPickNext	0x652b44	-	none	-	-	0
-site	src/game/rest_4b.cpp	805	record	B	slot + 1	-	base=AreaW0c_TailSub	-	-	-	0
-site	src/game/rest_4b.cpp	809	global	W	at::kPickNextHelp	0x652b50	-	none	-	-	0
-site	src/game/rest_4b.cpp	834	global	W	at::kPickHelpB	0x652af8	-	none	-	-	0
-site	src/game/rest_4b.cpp	861	global	B	at::kPickPairs	0x652b58	-	none	-	-	0
-site	src/game/rest_4b.cpp	866	record	B	slot + 2	-	base=AreaW0c_TailSub	-	-	-	0
-site	src/game/rest_4b.cpp	880	global	B	at::kPickPairs	0x652b58	-	none	-	-	0
-site	src/game/rest_4b.cpp	886	global	B	at::kPickPairs	0x652b58	-	none	-	-	0
-site	src/game/rest_4b.cpp	965	record	B	slot + 1	-	via=Slot	-	-	-	0
-site	src/game/rest_4b.cpp	966	record	B	slot + 2	-	via=Slot	-	-	-	0
-site	src/game/rest_4b.cpp	968	global	-	at::kMembersEnd	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
-site	src/game/rest_4b.cpp	969	record	B	r + 1	-	stride=0x8	-	-	-	0
-site	src/game/rest_4b.cpp	971	record	B	r + 2	-	stride=0x8	-	-	-	0
-site	src/game/rest_4b.cpp	972	record	B	r + 3	-	stride=0x8	-	-	-	0
-site	src/game/rest_4b.cpp	975	record	B	SlotToWrite(arg, " ") + 3	-	via=SlotToWrite	-	-	-	0
-site	src/game/rest_4b.cpp	980	record	B	SlotToWrite(AreaW0c_TailSub, " ") + 1	-	via=SlotToWrite	-	-	-	0
-site	src/game/rest_4b.cpp	983	record	B	SlotToWrite(AreaW0c_TailSub, " ") + 2	-	via=SlotToWrite	-	-	-	0
-site	src/game/rest_4b.cpp	1049	global	At	at::kNames	0x9048f0	-	none	-	-	0
-site	src/game/rest_4b.cpp	1060	global	-	at::kBars	0x653210	-	none	-	-	0
-site	src/game/rest_4b.cpp	1064	record	B	bars + 1	-	table=0x653210	-	-	-	0
-site	src/game/rest_4b.cpp	1065	record	B	bars + 2	-	table=0x653210	-	-	-	0
-site	src/game/rest_4b.cpp	1066	record	B	bars + 3	-	table=0x653210	-	-	-	0
-site	src/game/rest_4b.cpp	1076	global	B	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	1077	global	-	at::kBarHighlight	0x652b60	-	none	-	-	0
-site	src/game/rest_4b.cpp	1079	record	B	bars + 1	-	table=0x653210	-	-	-	0
-site	src/game/rest_4b.cpp	1080	record	B	bars + 2	-	table=0x653210	-	-	-	0
-site	src/game/rest_4b.cpp	1081	record	B	bars + 3	-	table=0x653210	-	-	-	0
-site	src/game/rest_4b.cpp	1195	global	At	at::kMessagePools	0x803580	-	none	-	-	0
-site	src/game/rest_4b.cpp	1195	global	W	at::kMessagePools	0x803580	-	none	-	-	0
-site	src/game/rest_4b.cpp	1229	global	-	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	0
-site	src/game/rest_4b.cpp	1234	global	B	at::kAreaLimits	0x653601	-	none	-	-	0
-site	src/game/rest_4b.cpp	1241	global	B	at::kSlotIcons	0x652b6c	-	none	-	-	0
-site	src/game/rest_4b.cpp	1241	record	B	slot + 1	-	table=0x9048a8;stride=0x8	-	-	-	0
-site	src/game/rest_4b.cpp	1242	global	B	at::kSlotIcons	0x652b6c	-	none	-	-	0
-site	src/game/rest_4b.cpp	1254	global	At	at::kTextBuffer	0x904ba0	-	none	-	-	0
-site	src/game/rest_4b.cpp	1255	global	At	Boss26Fx_CountFormat_addr	0x64d3ec	-	exact	Boss26Fx_CountFormat	char	0
-site	src/game/rest_4b.cpp	1256	global	At	at::kTextBuffer	0x904ba0	-	none	-	-	0
-site	src/game/rest_4b.cpp	1262	global	At	at::kPanelLabel	0x669e10	-	none	-	-	0
-site	src/game/rest_4b.cpp	1263	global	At	at::kNumberFormat	0x5e10c0	-	exact	Area08_MessageFormat	-	0
-site	src/game/rest_4b.cpp	1264	global	At	at::kTextBuffer	0x904ba0	-	none	-	-	0
-site	src/game/rest_4b.cpp	1299	global	-	at::kSlotLines	0x652b7c	-	none	-	-	0
-site	src/game/rest_4b.cpp	1300	global	B	at::kAreaLimits	0x653601	-	none	-	-	0
-site	src/game/rest_4b.cpp	1330	global	-	at::kMembersEnd	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
-site	src/game/rest_4b.cpp	1331	record	B	r + 1	-	stride=0x8	-	-	-	0
-site	src/game/rest_4b.cpp	1342	record	B	r + 1	-	-	-	-	-	0
-site	src/game/rest_4b.cpp	1497	global	B	at::kDigitCells	0x652c0c	-	none	-	-	0
-site	src/game/rest_4b.cpp	1512	global	-	at::kSprites	0x652c18	-	none	-	-	0
-site	src/game/rest_4b.cpp	1514	record	B	e + 1	-	table=0x652c18	-	-	-	0
-site	src/game/rest_4b.cpp	1515	record	B	e + 2	-	table=0x652c18	-	-	-	0
-site	src/game/rest_4b.cpp	1516	record	B	e + 3	-	table=0x652c18	-	-	-	0
-site	src/game/rest_4b.cpp	1517	record	B	e + 4	-	table=0x652c18	-	-	-	0
-site	src/game/rest_4b.cpp	1517	record	B	e + 5	-	table=0x652c18	-	-	-	0
-site	src/game/rest_4b.cpp	1549	global	L	at::kListTextA	0x669e68	-	none	-	-	0
-site	src/game/rest_4b.cpp	1593	global	-	at::kLists	0x652c6c	-	none	-	-	0
-site	src/game/rest_4b.cpp	1594	record	B	row + 1	-	table=0x652c6c	-	-	-	0
-site	src/game/rest_4b.cpp	1600	record	B	row + 1	-	table=0x652c6c	-	-	-	0
-site	src/game/rest_4b.cpp	1602	record	B	row + 1	-	table=0x652c6c	-	-	-	0
-site	src/game/rest_4b.cpp	1603	global	L	at::kListTexts	0x669ee0	-	none	-	-	0
-site	src/game/rest_4b.cpp	1627	global	-	at::kSlotOffsets	0x652c74	-	none	-	-	0
-site	src/game/rest_4b.cpp	1629	record	W	e + 2	-	table=0x652c74	-	-	-	0
-site	src/game/rest_4b.cpp	1658	global	B	at::kAreaLimits	0x653601	-	none	-	-	0
-site	src/game/rest_4b.cpp	1675	record	B	r + 1	-	via=Member	-	-	-	0
-site	src/game/rest_4b.cpp	1678	record	B	r + 2	-	via=Member	-	-	-	0
-site	src/game/rest_4b.cpp	1679	record	B	r + 3	-	via=Member	-	-	-	0
-site	src/game/rest_4b.cpp	1709	record	B	slot + 1	-	via=Slot	-	-	-	0
-site	src/game/rest_4b.cpp	1734	global	W	at::kSlotHelp	0x652c72	-	none	-	-	0
-site	src/game/rest_4b.cpp	1737	global	B	at::kAreaLimits	0x653601	-	none	-	-	0
-site	src/game/rest_4b.cpp	1742	global	W	at::kPickHelp	0x652af0	-	inside	CommuTail26_States+0xc	unsigned long	0
+site	src/game/rest_4b.cpp	406	global	-	at::kGiftLines	0x652ac4	-	none	-	-	0
+site	src/game/rest_4b.cpp	408	record	W	row + 4	-	table=0x652ac4	-	-	-	0
+site	src/game/rest_4b.cpp	417	global	B	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
+site	src/game/rest_4b.cpp	420	global	B	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
+site	src/game/rest_4b.cpp	421	global	B	at::kMembers	0x9046d0	-	exact	Community_Records	records::CommunityRecord	0
+site	src/game/rest_4b.cpp	422	record	B	row + 4	-	table=0x652ac4	-	-	-	0
+site	src/game/rest_4b.cpp	425	record	B	Member(AreaW0c_TailSub, " ") + 2	-	via=Member	-	-	-	0
+site	src/game/rest_4b.cpp	426	record	B	Member(AreaW0c_TailSub, " ") + 3	-	via=Member	-	-	-	0
+site	src/game/rest_4b.cpp	428	record	W	row + 2	-	table=0x652ac4	-	-	-	0
+site	src/game/rest_4b.cpp	440	global	B	at::kScriptFlags2	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	0
+site	src/game/rest_4b.cpp	459	global	B	at::kScriptFlags2	0x905ba4	-	exact	Field_ScriptFlags2	unsigned short	0
+site	src/game/rest_4b.cpp	553	global	B	at::kAreaLimits	0x653601	-	none	-	-	0
+site	src/game/rest_4b.cpp	563	global	At	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	0
+site	src/game/rest_4b.cpp	680	global	At	Rest4b_Pick_addr	0x675f7f	-	exact	Rest4b_Pick	signed char	0
+site	src/game/rest_4b.cpp	681	global	At	Rest4b_Pick_addr	0x675f7f	-	exact	Rest4b_Pick	signed char	0
+site	src/game/rest_4b.cpp	685	global	B	at::kPick	0x675f7f	-	exact	Rest4b_Pick	signed char	0
+site	src/game/rest_4b.cpp	767	global	At	Rest4b_Pick_addr	0x675f7f	-	exact	Rest4b_Pick	signed char	0
+site	src/game/rest_4b.cpp	768	global	At	Rest4b_Pick_addr	0x675f7f	-	exact	Rest4b_Pick	signed char	0
+site	src/game/rest_4b.cpp	772	global	B	at::kPick	0x675f7f	-	exact	Rest4b_Pick	signed char	0
+site	src/game/rest_4b.cpp	817	global	B	at::kPickNext	0x652b44	-	none	-	-	0
+site	src/game/rest_4b.cpp	822	record	B	slot + 1	-	base=AreaW0c_TailSub	-	-	-	0
+site	src/game/rest_4b.cpp	826	global	W	at::kPickNextHelp	0x652b50	-	none	-	-	0
+site	src/game/rest_4b.cpp	851	global	W	at::kPickHelpB	0x652af8	-	none	-	-	0
+site	src/game/rest_4b.cpp	878	global	B	at::kPickPairs	0x652b58	-	none	-	-	0
+site	src/game/rest_4b.cpp	883	record	B	slot + 2	-	base=AreaW0c_TailSub	-	-	-	0
+site	src/game/rest_4b.cpp	897	global	B	at::kPickPairs	0x652b58	-	none	-	-	0
+site	src/game/rest_4b.cpp	903	global	B	at::kPickPairs	0x652b58	-	none	-	-	0
+site	src/game/rest_4b.cpp	982	record	B	slot + 1	-	via=Slot	-	-	-	0
+site	src/game/rest_4b.cpp	983	record	B	slot + 2	-	via=Slot	-	-	-	0
+site	src/game/rest_4b.cpp	985	global	-	at::kMembersEnd	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
+site	src/game/rest_4b.cpp	986	record	B	r + 1	-	stride=0x8	-	-	-	0
+site	src/game/rest_4b.cpp	988	record	B	r + 2	-	stride=0x8	-	-	-	0
+site	src/game/rest_4b.cpp	989	record	B	r + 3	-	stride=0x8	-	-	-	0
+site	src/game/rest_4b.cpp	992	record	B	SlotToWrite(arg, " ") + 3	-	via=SlotToWrite	-	-	-	0
+site	src/game/rest_4b.cpp	997	record	B	SlotToWrite(AreaW0c_TailSub, " ") + 1	-	via=SlotToWrite	-	-	-	0
+site	src/game/rest_4b.cpp	1000	record	B	SlotToWrite(AreaW0c_TailSub, " ") + 2	-	via=SlotToWrite	-	-	-	0
+site	src/game/rest_4b.cpp	1066	global	At	at::kNames	0x9048f0	-	none	-	-	0
+site	src/game/rest_4b.cpp	1077	global	-	at::kBars	0x653210	-	none	-	-	0
+site	src/game/rest_4b.cpp	1081	record	B	bars + 1	-	table=0x653210	-	-	-	0
+site	src/game/rest_4b.cpp	1082	record	B	bars + 2	-	table=0x653210	-	-	-	0
+site	src/game/rest_4b.cpp	1083	record	B	bars + 3	-	table=0x653210	-	-	-	0
+site	src/game/rest_4b.cpp	1093	global	B	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	0
+site	src/game/rest_4b.cpp	1094	global	-	at::kBarHighlight	0x652b60	-	none	-	-	0
+site	src/game/rest_4b.cpp	1096	record	B	bars + 1	-	table=0x653210	-	-	-	0
+site	src/game/rest_4b.cpp	1097	record	B	bars + 2	-	table=0x653210	-	-	-	0
+site	src/game/rest_4b.cpp	1098	record	B	bars + 3	-	table=0x653210	-	-	-	0
+site	src/game/rest_4b.cpp	1212	global	At	at::kMessagePools	0x803580	-	none	-	-	0
+site	src/game/rest_4b.cpp	1212	global	W	at::kMessagePools	0x803580	-	none	-	-	0
+site	src/game/rest_4b.cpp	1250	global	-	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	0
+site	src/game/rest_4b.cpp	1255	global	B	at::kAreaLimits	0x653601	-	none	-	-	0
+site	src/game/rest_4b.cpp	1262	global	B	at::kSlotIcons	0x652b6c	-	none	-	-	0
+site	src/game/rest_4b.cpp	1262	record	B	slot + 1	-	table=0x9048a8;stride=0x8	-	-	-	0
+site	src/game/rest_4b.cpp	1263	global	B	at::kSlotIcons	0x652b6c	-	none	-	-	0
+site	src/game/rest_4b.cpp	1275	global	At	at::kTextBuffer	0x904ba0	-	none	-	-	0
+site	src/game/rest_4b.cpp	1276	global	At	Boss26Fx_CountFormat_addr	0x64d3ec	-	exact	Boss26Fx_CountFormat	char	0
+site	src/game/rest_4b.cpp	1277	global	At	at::kTextBuffer	0x904ba0	-	none	-	-	0
+site	src/game/rest_4b.cpp	1283	global	At	at::kPanelLabel	0x669e10	-	none	-	-	0
+site	src/game/rest_4b.cpp	1284	global	At	at::kNumberFormat	0x5e10c0	-	exact	Area08_MessageFormat	-	0
+site	src/game/rest_4b.cpp	1285	global	At	at::kTextBuffer	0x904ba0	-	none	-	-	0
+site	src/game/rest_4b.cpp	1320	global	-	at::kSlotLines	0x652b7c	-	none	-	-	0
+site	src/game/rest_4b.cpp	1321	global	B	at::kAreaLimits	0x653601	-	none	-	-	0
+site	src/game/rest_4b.cpp	1351	global	-	at::kMembersEnd	0x9048b0	-	exact	Community_Buildings	records::CommunityBuilding	0
+site	src/game/rest_4b.cpp	1352	record	B	r + 1	-	stride=0x8	-	-	-	0
+site	src/game/rest_4b.cpp	1363	record	B	r + 1	-	-	-	-	-	0
+site	src/game/rest_4b.cpp	1518	global	B	at::kDigitCells	0x652c0c	-	none	-	-	0
+site	src/game/rest_4b.cpp	1533	global	-	at::kSprites	0x652c18	-	none	-	-	0
+site	src/game/rest_4b.cpp	1535	record	B	e + 1	-	table=0x652c18	-	-	-	0
+site	src/game/rest_4b.cpp	1536	record	B	e + 2	-	table=0x652c18	-	-	-	0
+site	src/game/rest_4b.cpp	1537	record	B	e + 3	-	table=0x652c18	-	-	-	0
+site	src/game/rest_4b.cpp	1538	record	B	e + 4	-	table=0x652c18	-	-	-	0
+site	src/game/rest_4b.cpp	1538	record	B	e + 5	-	table=0x652c18	-	-	-	0
+site	src/game/rest_4b.cpp	1570	global	L	at::kListTextA	0x669e68	-	none	-	-	0
+site	src/game/rest_4b.cpp	1614	global	-	at::kLists	0x652c6c	-	none	-	-	0
+site	src/game/rest_4b.cpp	1615	record	B	row + 1	-	table=0x652c6c	-	-	-	0
+site	src/game/rest_4b.cpp	1621	record	B	row + 1	-	table=0x652c6c	-	-	-	0
+site	src/game/rest_4b.cpp	1623	record	B	row + 1	-	table=0x652c6c	-	-	-	0
+site	src/game/rest_4b.cpp	1624	global	L	at::kListTexts	0x669ee0	-	none	-	-	0
+site	src/game/rest_4b.cpp	1648	global	-	at::kSlotOffsets	0x652c74	-	none	-	-	0
+site	src/game/rest_4b.cpp	1650	record	W	e + 2	-	table=0x652c74	-	-	-	0
+site	src/game/rest_4b.cpp	1679	global	B	at::kAreaLimits	0x653601	-	none	-	-	0
+site	src/game/rest_4b.cpp	1696	record	B	r + 1	-	via=Member	-	-	-	0
+site	src/game/rest_4b.cpp	1699	record	B	r + 2	-	via=Member	-	-	-	0
+site	src/game/rest_4b.cpp	1700	record	B	r + 3	-	via=Member	-	-	-	0
+site	src/game/rest_4b.cpp	1730	record	B	slot + 1	-	via=Slot	-	-	-	0
+site	src/game/rest_4b.cpp	1755	global	W	at::kSlotHelp	0x652c72	-	none	-	-	0
+site	src/game/rest_4b.cpp	1758	global	B	at::kAreaLimits	0x653601	-	none	-	-	0
+site	src/game/rest_4b.cpp	1763	global	W	at::kPickHelp	0x652af0	-	inside	CommuTail26_States+0xc	unsigned long	0
 site	src/game/rest_4b_fuzz.cpp	48	global	-	at::kSlots	0x9048a8	-	inside	Community_Records+0x1d8	records::CommunityRecord	1
 site	src/game/rest_4b_fuzz.cpp	240	global	B	AreaW0c_TailState_addr	0x9039f4	-	exact	AreaW0c_TailState	signed char	1
 site	src/game/rest_4b_fuzz.cpp	241	global	B	AreaW0c_TailSub_addr	0x9039f5	-	exact	AreaW0c_TailSub	unsigned char	1
@@ -28863,7 +28863,7 @@ const	kRecordTraits	0x653200	data	1	src/game/rest_4a_callees.h:85(rest_4a::at)	-
 const	kSlotDefaults	0x653200	data	1	src/game/rest_4d_callees.h:38(rest_4d::at)	-	-	none	-	at
 const	kBars	0x653210	data	1	src/game/rest_4b_callees.h:109(rest_4b::at)	-	-	none	-	at
 const	kBars	0x653210	data	1	src/game/rest_4e.cpp:117((anon))	-	-	none	-	module
-const	kFaeries	0x653210	data	1	src/game/labels.cpp:207((anon))	-	-	none	-	module
+const	kFaeries	0x653210	data	1	src/game/labels.cpp:217((anon))	-	-	none	-	module
 const	kAreaLimits	0x653601	data	1	src/game/rest_4b_callees.h:110(rest_4b::at)	-	-	none	-	at
 const	kPadRowsByCursor	0x6536e8	data	1	src/game/rest_4f_callees.h:45(rest_4f::at)	-	-	none	-	at
 const	kPadRows	0x6536f0	data	1	src/game/rest_4f_callees.h:44(rest_4f::at)	-	-	none	-	at
@@ -29350,7 +29350,7 @@ const	kSlotPieces	0x663584	data	1	src/game/field_o_callees.h:63(field_o::at)	-	-
 const	kEquipLabel	0x663668	data	1	src/game/menu_windows_callees.h:79(menu_windows::at)	-	-	none	-	at
 const	kExpLabel	0x663670	data	1	src/game/field_o_callees.h:35(field_o::at)	-	-	none	-	at
 const	kIconRects	0x66367c	data	1	src/game/menu_windows_callees.h:61(menu_windows::at)	-	-	none	-	at
-const	kFormations	0x6636b0	data	1	src/game/labels.cpp:206((anon))	-	-	none	-	module
+const	kFormations	0x6636b0	data	1	src/game/labels.cpp:216((anon))	-	-	none	-	module
 const	kWheelNames	0x6636b0	data	1	src/game/field_o_callees.h:36(field_o::at)	-	-	none	-	at
 const	kWheelIcons	0x6636c0	data	1	src/game/field_o_callees.h:37(field_o::at)	-	-	none	-	at
 const	kWheelTriangle	0x6637c8	data	1	src/game/field_o_callees.h:38(field_o::at)	-	-	none	-	at
@@ -30845,7 +30845,7 @@ const	kAttackerInt	0x939fea	data	1	src/game/battle_damage_callees.h:67(battle_da
 const	kTasks	0x93a000	data	7	src/game/area_harness.h:71(area_harness::at);src/game/battle_e2_callees.h:78(battle_e2::at);src/game/battle_e6_callees.h:69(battle_e6::at);src/game/battle_flow_callees.h:36(battle_flow::at);src/game/boss_harness.h:58(boss_harness::at);src/game/magic_harness.h:37(magic_harness::at);src/game/scenario_harness.h:138(scenario_harness::at)	BattleTask_Slots	data	exact	records::BattleTask	at
 const	kActorTaskByte	0x93a009	data	1	src/game/rest_3d_callees.h:45(rest_3d::at)	-	-	inside	records::BattleTask	at
 const	kSavedPos	0x93a034	data	1	src/game/battle_setup_callees.h:73(battle_setup::at)	-	-	inside	records::BattleTask	at
-const	kSlotOwners	0x93a080	data	1	src/game/magic_engine.cpp:65((anon))	-	-	inside	records::BattleTask	module
+const	kSlotOwners	0x93a080	data	1	src/game/magic_engine.cpp:69((anon))	-	-	inside	records::BattleTask	module
 const	kTaskOwners	0x93a080	data	1	src/game/boss_si_callees.h:43(boss_si::at)	-	-	inside	records::BattleTask	at
 const	kBannerCurrent	0x93b8c0	data	2	src/game/battle_misc_callees.h:64(battle_misc);src/game/battle_odds_callees.h:20(battle_odds)	BattleMisc_BannerCurrent	data	exact	unsigned long	module
 const	kCurrentSlot	0x93b8c4	data	4	src/game/area_harness.h:74(area_harness::at);src/game/boss_harness.h:61(boss_harness::at);src/game/magic_harness.h:40(magic_harness::at);src/game/scenario_harness.h:141(scenario_harness::at)	BattleFlow_TaskCurrent	data	exact	records::BattleTask *	at
