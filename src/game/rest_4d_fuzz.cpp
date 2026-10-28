@@ -41,10 +41,6 @@ template <typename... T> U PickOf(T... v) {
 }
 unsigned char& B(U a) { return *sh::Mem(a); }
 void SetW(U a, U v) { SetWord(sh::Mem(a), v); }
-// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
-// the VA is placed here, through ::bof3::Img.
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
-void SetW(::bof3::image::Va va, U v) { SetW(::bof3::Img(va), v); }
 
 // --- the clone table (band_rows.py --group R4D --clones --harness scenario, 2026-10-05) ---
 constexpr sh::CallSite kCalls45C400[] = {{0x1B, 0x57CF60}, {0x22, 0x45C700}, {0x59, 0x5B9380}, {0x7A, 0x516F60}, {0x89, 0x5B9380},
@@ -234,12 +230,12 @@ void Move(U h) {
     case 5: B(Rest4d_Count_addr) = static_cast<unsigned char>(v & 0x10 ? v : v % 6); break;
     case 6: SetW(Rest4d_Header_addr, v % 4 == 0 ? 0xFFFFu : v % 4 == 1 ? 0xF1u : v % 4 == 2 ? 0xF0u : (h >> 16) & 0x1FF); break;
     case 7: B(Rest4d_EntryDone_addr) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
-    case 8: B(at::kPicked + (h >> 16) % 4) = static_cast<unsigned char>(v % 10); break;
-    case 9: B(at::kName + ((h >> 16) & 1 ? 0 : (h >> 17) % 0x28)) = static_cast<unsigned char>(v % 4); break;
+    case 8: B(::bof3::Img(at::kPicked.v) + (h >> 16) % 4) = static_cast<unsigned char>(v % 10); break;
+    case 9: B(::bof3::Img(at::kName.v) + ((h >> 16) & 1 ? 0 : (h >> 17) % 0x28)) = static_cast<unsigned char>(v % 4); break;
     case 10: SetW(Input_Pressed_addr, h >> 16); break;
     case 11: B(Rest4d_EntryColumn_addr) = static_cast<unsigned char>(v); break;
     case 12: B(Rest4d_KeptTrack_addr) = static_cast<unsigned char>(v); break;
-    case 13: B(at::kSlotNames + ((h >> 16) & 1 ? (h >> 17) % 20 : (h >> 17) % 300)) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
+    case 13: B(::bof3::Img(at::kSlotNames.v) + ((h >> 16) & 1 ? (h >> 17) % 20 : (h >> 17) % 300)) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
     case 14: B(CharacterRecords_addr + at::kRecordStride * ((h >> 16) % 7) + (v & 1 ? 0xB : (h >> 20) % 5)) ^= static_cast<unsigned char>(v | 1); break;
     default: break;
     }
@@ -253,8 +249,8 @@ void Disturb(U h) { Move(h); }
 // two, three or five words, so the standard row's third word is the caller's
 // stack in two of them.
 U Sprintf(const U* a, U) {
-    if (a[1] == ::bof3::Img(at::kBoardFmt3)) sh::Note(a[2], a[3], a[4]);
-    else if (a[1] == ::bof3::Img(at::kNumberFmt)) sh::Note(a[2]);
+    if (a[1] == ::bof3::Img(at::kBoardFmt3.v)) sh::Note(a[2], a[3], a[4]);
+    else if (a[1] == ::bof3::Img(at::kNumberFmt.v)) sh::Note(a[2]);
     auto* const dst = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
     if (!sh::InRegions(dst, 8)) return 0;
     const unsigned n = sh::Noise() % 8;
@@ -265,7 +261,7 @@ U Sprintf(const U* a, U) {
 // R4E's 0x45ED70: clears and writes the 0x20 bytes at 0x675F98 and answers the
 // name's length + 1 (the caller copies that many with rep movs): 0..0x24.
 U RandomNameAnswer(const U*, U) {
-    sh::FillBytes(sh::Mem(::bof3::Img(at::kName)), 0x20);
+    sh::FillBytes(sh::Mem(::bof3::Img(at::kName.v)), 0x20);
     return sh::Noise() % 0x25;
 }
 // CommuName_NthSlot's stand-in: a slot 0..3 three times in four, so that two
@@ -276,7 +272,7 @@ U RandomNameAnswer(const U*, U) {
 U NthSlotAnswer(const U*, U answer) {
     const U n = sh::Noise();
     const U slot = n % 4 == 0 ? answer & 0xFF : (n >> 8) % 4;
-    if ((n >> 4) % 4 == 0 && slot < 60) B(at::kSlotNames + 5 * slot + (n >> 12) % 5) = static_cast<unsigned char>(n >> 16);
+    if ((n >> 4) % 4 == 0 && slot < 60) B(::bof3::Img(at::kSlotNames.v) + 5 * slot + (n >> 12) % 5) = static_cast<unsigned char>(n >> 16);
     return (answer & 0xFFFFFF00u) | slot;
 }
 // CommuDraw_RandBelow's stand-in: 0, the limit less two or less one, so that a
@@ -305,7 +301,7 @@ U HeaderMove(const U*, U answer) {
 // (0 half the time; the entry's last step reads it again after the draws: N48).
 U BareRetMove(const U*, U answer) {
     const U n = sh::Noise();
-    if (n % 4 == 0) B(at::kName) = static_cast<unsigned char>((n >> 8) & 1 ? 0 : n >> 16);
+    if (n % 4 == 0) B(::bof3::Img(at::kName.v)) = static_cast<unsigned char>((n >> 8) & 1 ? 0 : n >> 16);
     return answer;
 }
 // R4E's 0x45F020: a record 0..6 (eax), or 0xFF (none) - never 0xFF while
@@ -440,11 +436,11 @@ void SeedCommu() {
     B(Rest4d_Count_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 0xC5, 0xC7, 0xC8, 0xFF, sh::Next()));
     SetW(Rest4d_Header_addr, PickOf(0xF0, 0xF1, 0xF1, 0xFFFF, 0xFFFF, sh::Next() % 0x200));
     B(Rest4d_EntryDone_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
-    B(at::kName) = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
+    B(::bof3::Img(at::kName.v)) = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
     B(Rest4d_TitleB_addr) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, sh::Next()));
     // the draw's picks: small values, so that a category's picks can all be equal
-    for (unsigned i = 1; i < 0x28; ++i) B(at::kName + i) = static_cast<unsigned char>(sh::Often() ? sh::Next() % 3 : sh::Next());
-    for (unsigned c = 0; c < 4; ++c) B(at::kPicked + c) = static_cast<unsigned char>(sh::Next() % 10);
+    for (unsigned i = 1; i < 0x28; ++i) B(::bof3::Img(at::kName.v) + i) = static_cast<unsigned char>(sh::Often() ? sh::Next() % 3 : sh::Next());
+    for (unsigned c = 0; c < 4; ++c) B(::bof3::Img(at::kPicked.v) + c) = static_cast<unsigned char>(sh::Next() % 10);
     Field_Request = static_cast<unsigned char>(PickOf(2, 2, 0, 1, sh::Next()));
     Transition_Busy = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
     // the record pointer: one of the scratch's, its +5 a slot mostly
@@ -463,7 +459,7 @@ void SeedSlots() {
         flags = static_cast<unsigned char>(sh::Half() ? flags | 1 : flags & ~1u);
     }
     for (unsigned i = 0; i < 5 * 60; ++i)
-        if (sh::Next() % 6 == 0) B(at::kSlotNames + i) = 0;
+        if (sh::Next() % 6 == 0) B(::bof3::Img(at::kSlotNames.v) + i) = 0;
     for (unsigned r = 0; r < 7; ++r)
         if (sh::Half()) B(CharacterRecords_addr + at::kRecordStride * r + sh::Next() % 5) = 0;
 }
@@ -471,9 +467,9 @@ void SeedSlots() {
 // MessagePools: the draw's 256 offsets and the header's first 0x100 pointing
 // into the seeded text 0x803980..0x803D7F, which has zeros in it and ends in two.
 void SeedMessages() {
-    for (U i = 0; i < 0x100; ++i) SetW(at::kDrawWords + 2 * i, 0x400 + sh::Next() % 0x3F0);
+    for (U i = 0; i < 0x100; ++i) SetW(::bof3::Img(at::kDrawWords.v) + 2 * i, 0x400 + sh::Next() % 0x3F0);
     for (U i = 0; i < 0x100; ++i)
-        if (sh::Often()) SetW(at::kPoolWords + 2 * i, 0x400 + sh::Next() % 0x3F0);
+        if (sh::Often()) SetW(::bof3::Img(at::kPoolWords.v) + 2 * i, 0x400 + sh::Next() % 0x3F0);
     for (U a = 0x803980; a < 0x803D7E; ++a)
         if (sh::Next() % 7 == 0) B(a) = sh::Half() ? 0 : static_cast<unsigned char>(sh::Next() | 0x80);
     B(0x803D7E) = 0;

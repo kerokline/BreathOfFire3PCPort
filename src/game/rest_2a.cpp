@@ -39,9 +39,6 @@ using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
-// A VA held as a ::bof3::image::Va (common/image_base.h), placed here through
-// ::bof3::Img.
-unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
 using scenario_harness::Phase;
 
 // A typed data symbol's address (symbols.gen.h makes the name a macro).
@@ -147,7 +144,7 @@ void RollBody(const Roll& r) {
     unsigned char* const s = Sprite_Current;
     if (!(s[7] & 8)) FaceAwayFromLeader();
     unsigned char* const member = Field_ActiveMember;
-    At(at::kScriptFlagsHi)[0] |= 1;
+    At(::bof3::Img(at::kScriptFlagsHi.v))[0] |= 1;
     const unsigned char mark = member[0xA0];
     if (mark & 0x80) {
         SH_CALL(LinkedObject_SpawnEffect19)(roll > 7 ? 1 : r.other);
@@ -210,7 +207,7 @@ extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
             SH_CALL(Sprite_UpdateScreenA)();
             continue;
         }
-        const unsigned count = At(at::kBankCount)[0];
+        const unsigned count = At(::bof3::Img(at::kBankCount.v))[0];
         const unsigned char* const records = reinterpret_cast<const unsigned char*>(
             static_cast<std::uintptr_t>(static_cast<U>(Long(At(::bof3::Img(MoveScript_TintRecords_addr) + 0x180)))));
         const unsigned bank_byte = rv::As<records::SpriteObject>(s)->column;
@@ -346,7 +343,7 @@ extern "C" void __cdecl LinkedObjectB_Roll(void) {
     if (!(s[7] & 8)) FaceAwayFromLeader();
     SH_CALL(LinkedObject_SpawnEffect19)(roll > 6 ? 2 : 3);
     unsigned char* const c = Sprite_Current;
-    At(at::kScriptFlagsHi)[0] |= 1;
+    At(::bof3::Img(at::kScriptFlagsHi.v))[0] |= 1;
     c[4] = 1;
 }
 

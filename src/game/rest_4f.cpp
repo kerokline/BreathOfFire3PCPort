@@ -67,13 +67,6 @@ std::int32_t SL(const unsigned char* p) { return Long(p); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 U W(U a) { return Word(At(a)); }
 void SetW(U a, U v) { SetWord(At(a), v); }
-// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
-// the VA is placed here, through ::bof3::Img.
-unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
-U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
-U W(::bof3::image::Va va) { return W(::bof3::Img(va)); }
-void SetW(::bof3::image::Va va, U v) { SetW(::bof3::Img(va), v); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // Config_DrawControllerPanel's frame rows: the imm8 of its `push 0xF`
@@ -105,7 +98,7 @@ void Dispatch(const char* who, U table, unsigned entries, unsigned index, const 
         bof3::Fatal("%s: %s is %u, past the %u handlers of 0x%X - the original jumps through the dword after "
                     "(docs/rest_4f.md section 7)",
                     who, byte, index, entries, (unsigned)table);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(::bof3::image::Va{table + 4 * index})))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
 }
 
 // ===========================================================================
@@ -129,7 +122,7 @@ U Repeat() { return SH_CALL(Input_AutoRepeat)(Input_Pressed & 0xF000u); }
 // The cursor's row state for the panel's row draws: the counter byte on the
 // row under the cursor (cursor - 2), 0 on the others; 0x929F04 read as a dword.
 U RowState(unsigned row) {
-    const U d = L(at::kCounter);
+    const U d = L(::bof3::Img(at::kCounter.v));
     const int cursor = static_cast<signed char>(static_cast<unsigned char>(d >> 8)) - 2;
     return cursor == static_cast<int>(row) ? (d & 0xFF) : 0;
 }
@@ -141,12 +134,12 @@ void SetDefaults() {
     BattleWinStates_LabelGate = 0;
     FieldE2_RunDefault = 0;
     ModeFlow_ConfigBytes = 1;
-    SetW(at::kButtons, 0x23);
-    SetW(at::kButtons + 2, 0x80);
-    SetW(at::kButtons + 0xC, 0x40);
-    SetW(at::kButtons + 4, 0x10);
-    SetW(at::kButtons + 6, 8);
-    SetW(at::kButtons + 8, 4);
+    SetW(::bof3::Img(at::kButtons.v), 0x23);
+    SetW(::bof3::Img(at::kButtons.v) + 2, 0x80);
+    SetW(::bof3::Img(at::kButtons.v) + 0xC, 0x40);
+    SetW(::bof3::Img(at::kButtons.v) + 4, 0x10);
+    SetW(::bof3::Img(at::kButtons.v) + 6, 8);
+    SetW(::bof3::Img(at::kButtons.v) + 8, 4);
 }
 
 }  // namespace
@@ -155,14 +148,14 @@ void SetDefaults() {
 // [ConfigScreen_States + 0x929F02 * 4] - 0 the opening, 1 the top bar, 2 the
 // rows, 3 the controller panel, 4 the closing. Unbounded: ours aborts past 5.
 extern "C" void __cdecl ConfigScreen_Run(void) {
-    Dispatch("ConfigScreen_Run", ConfigScreen_States_addr, at::kConfigStateCount, FieldS_Step, "the state byte 0x929F02");
+    Dispatch("ConfigScreen_Run", ::bof3::Img(ConfigScreen_States_addr), at::kConfigStateCount, FieldS_Step, "the state byte 0x929F02");
 }
 
 // original 0x460CC0 (ConfigScreen_States[0]): jmp [ConfigScreen_OpenStates +
 // 0x929F03 * 4] - 0 a fade started, 1 its wait, 2 the slide in
 // (ConfigMenu_Open sets 2). Unbounded: ours aborts past 3.
 extern "C" void __cdecl ConfigScreen_OpenRun(void) {
-    Dispatch("ConfigScreen_OpenRun", ConfigScreen_OpenStates_addr, at::kConfigOpenCount, Rest2d_MenuSub,
+    Dispatch("ConfigScreen_OpenRun", ::bof3::Img(ConfigScreen_OpenStates_addr), at::kConfigOpenCount, Rest2d_MenuSub,
              "the opening byte 0x929F03");
 }
 
@@ -186,7 +179,7 @@ extern "C" void __cdecl ConfigScreen_OpenWait(void) {
     SH_CALL(ConfigScreen_DrawButtons)(0xFF, 0x70, 0x26);
     if (Transition_Busy != 0) return;
     const unsigned char st = FieldS_Step;
-    B(at::kCounter) = 0;
+    B(::bof3::Img(at::kCounter.v)) = 0;
     Rest2d_MenuSub = 0;
     FieldS_Step = static_cast<unsigned char>(st + 1);
 }
@@ -196,18 +189,18 @@ extern "C" void __cdecl ConfigScreen_OpenWait(void) {
 // each draw): the banner box at y 0x10 - 16c, the panel at x 0x1C + 64c, the top
 // bar at y 0x26 - 16c; the counter down one, at 0 the state on (0x929F03 0).
 extern "C" void __cdecl ConfigScreen_SlideIn(void) {
-    const unsigned char c0 = B(at::kCounter);
+    const unsigned char c0 = B(::bof3::Img(at::kCounter.v));
     MenuLists_Cursor = 0;
     if (c0 == 5) Sound(0x102);
     Backdrop();
-    TitleBox(0x10 - static_cast<int>(B(at::kCounter)) * 16);
-    SH_CALL(Config_DrawPanel)(static_cast<int>(B(at::kCounter)) * 64 + 0x1C, 0x40);
-    SH_CALL(ConfigScreen_DrawButtons)(0xFF, 0x70, 0x26 - static_cast<int>(B(at::kCounter)) * 16);
-    const unsigned char n = static_cast<unsigned char>(B(at::kCounter) - 1);
-    B(at::kCounter) = n;
+    TitleBox(0x10 - static_cast<int>(B(::bof3::Img(at::kCounter.v))) * 16);
+    SH_CALL(Config_DrawPanel)(static_cast<int>(B(::bof3::Img(at::kCounter.v))) * 64 + 0x1C, 0x40);
+    SH_CALL(ConfigScreen_DrawButtons)(0xFF, 0x70, 0x26 - static_cast<int>(B(::bof3::Img(at::kCounter.v))) * 16);
+    const unsigned char n = static_cast<unsigned char>(B(::bof3::Img(at::kCounter.v)) - 1);
+    B(::bof3::Img(at::kCounter.v)) = n;
     if (n != 0) return;
     const unsigned char st = FieldS_Step;
-    B(at::kCounter) = 0;
+    B(::bof3::Img(at::kCounter.v)) = 0;
     Rest2d_MenuSub = 0;
     FieldS_Step = static_cast<unsigned char>(st + 1);
 }
@@ -225,7 +218,7 @@ extern "C" void __cdecl ConfigScreen_SlideIn(void) {
 // two sounds.
 extern "C" void __cdecl ConfigScreen_TopBar(void) {
     const unsigned char bd = Config_Background;
-    B(at::kCounter) = 0;
+    B(::bof3::Img(at::kCounter.v)) = 0;
     SH_CALL(Menu_DrawBackdrop)(bd);
     TitleBox(0x10);
     TitleText(CursorId());
@@ -251,7 +244,7 @@ extern "C" void __cdecl ConfigScreen_TopBar(void) {
         FieldS_Step = static_cast<unsigned char>(st + 1);
         return;
     }
-    const U pressed = L(at::kPressedDword);
+    const U pressed = L(::bof3::Img(at::kPressedDword.v));
     if (Field_ConfirmButtons & pressed & 0xFFFFu) {
         if (static_cast<unsigned char>(MenuLists_Cursor) == 0) {
             if (Game_Step != 4) {
@@ -260,7 +253,7 @@ extern "C" void __cdecl ConfigScreen_TopBar(void) {
             }
             const unsigned char st = FieldS_Step;
             Rest2d_MenuSub = 0;
-            B(at::kCounter) = 0;
+            B(::bof3::Img(at::kCounter.v)) = 0;
             FieldS_Step = static_cast<unsigned char>(st + 3);
             return;
         }
@@ -278,7 +271,7 @@ extern "C" void __cdecl ConfigScreen_TopBar(void) {
         Sound(0x102);
     }
     const unsigned char st = FieldS_Step;
-    B(at::kCounter) = 0;
+    B(::bof3::Img(at::kCounter.v)) = 0;
     Rest2d_MenuSub = 0;
     FieldS_Step = static_cast<unsigned char>(st + 3);
 }
@@ -289,7 +282,7 @@ namespace {
 // (signed compares, as the original's jle / jns); `down_first` tests 0x8000
 // first (row 2's order).
 void StepSetting(U cell, int top, bool down_first) {
-    const U p = L(at::kPressedDword);
+    const U p = L(::bof3::Img(at::kPressedDword.v));
     const auto up = [&] {
         Sound(0x101);
         const unsigned char v = static_cast<unsigned char>(B(cell) + 1);
@@ -331,7 +324,7 @@ extern "C" void __cdecl ConfigScreen_Rows(void) {
     SH_CALL(ConfigScreen_DrawButtons)(static_cast<unsigned char>(MenuLists_Cursor), 0x70, 0x26);
     const U row = static_cast<U>(CursorS() - 2);
     if (row <= 5) {
-        const U held = L(at::kPressedDword);
+        const U held = L(::bof3::Img(at::kPressedDword.v));
         switch (row) {
         case 0: StepSetting(::bof3::Img(ModeFlow_ConfigBytes_addr), 2, false); break;
         case 1: StepSetting(::bof3::Img(Config_WindowColour_addr), 3, false); break;
@@ -371,7 +364,7 @@ extern "C" void __cdecl ConfigScreen_Rows(void) {
             MenuLists_Cursor = 0;
             FieldS_Step = static_cast<unsigned char>(st - 1);
         }
-        B(at::kCounter) = 1;
+        B(::bof3::Img(at::kCounter.v)) = 1;
         return;
     }
     if (rep & 0x4000) {
@@ -383,7 +376,7 @@ extern "C" void __cdecl ConfigScreen_Rows(void) {
             MenuLists_Cursor = 0;
             FieldS_Step = static_cast<unsigned char>(st - 1);
         }
-        B(at::kCounter) = 1;
+        B(::bof3::Img(at::kCounter.v)) = 1;
         return;
     }
     const U cancel = Field_CancelButtons | 0x800u;
@@ -393,8 +386,8 @@ extern "C" void __cdecl ConfigScreen_Rows(void) {
         MenuLists_Cursor = 0;
         FieldS_Step = static_cast<unsigned char>(st - 1);
     }
-    const unsigned char n = B(at::kCounter);
-    if (n < 3) B(at::kCounter) = static_cast<unsigned char>(n + 1);
+    const unsigned char n = B(::bof3::Img(at::kCounter.v));
+    if (n < 3) B(::bof3::Img(at::kCounter.v)) = static_cast<unsigned char>(n + 1);
 }
 
 // original 0x4613B0 (ConfigScreen_States[3]; in no list of the cut, inside the
@@ -422,7 +415,7 @@ extern "C" void __cdecl ConfigScreen_Controller(void) {
     U bits = Input_Pressed & 0xFCu;
     if (bits != 0) {
         Sound(0x103);
-        SetW(at::kButtons, W(at::kButtons) & 0xFFFC);
+        SetW(::bof3::Img(at::kButtons.v), W(::bof3::Img(at::kButtons.v)) & 0xFFFC);
         Field_ConfirmButtons = static_cast<unsigned short>(Field_ConfirmButtons & 0xFFFC);
         unsigned i = 0;
         for (; i < 16; ++i)
@@ -431,16 +424,16 @@ extern "C" void __cdecl ConfigScreen_Controller(void) {
             for (++i; i < 16; ++i) bits &= ~(1u << i);
         unsigned r = 0;
         for (; r < at::kPadRowCount; ++r)
-            if (W(at::kButtons + 2u * B(at::kPadRows + r)) & bits) break;
+            if (W(::bof3::Img(at::kButtons.v) + 2u * B(::bof3::Img(at::kPadRows.v) + r)) & bits) break;
         const unsigned char c = static_cast<unsigned char>(MenuLists_Cursor);
-        const U by_cursor = ::bof3::Img(at::kPadRowsByCursor) + static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(c)));
+        const U by_cursor = ::bof3::Img(at::kPadRowsByCursor.v) + static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(c)));
         if (r != at::kPadRowCount) {
             const U from = ::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000 + 2u * B(by_cursor);
-            const U to = ::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000 + 2u * B(at::kPadRows + r);
+            const U to = ::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000 + 2u * B(::bof3::Img(at::kPadRows.v) + r);
             SetW(to, W(from));
         }
-        SetW(at::kButtons + 2u * B(by_cursor), bits);
-        SetW(at::kButtons, W(at::kButtons) | 3);
+        SetW(::bof3::Img(at::kButtons.v) + 2u * B(by_cursor), bits);
+        SetW(::bof3::Img(at::kButtons.v), W(::bof3::Img(at::kButtons.v)) | 3);
         Field_ConfirmButtons = static_cast<unsigned short>(Field_ConfirmButtons | 3);
         // DIV-0133 (docs/button-sigma.md): words 7 / 8 as Speak's and
         // Action's and the table - nothing until sigma::Arm, after every
@@ -466,7 +459,7 @@ extern "C" void __cdecl ConfigScreen_Controller(void) {
         MenuLists_Cursor = 8;
         return;
     }
-    const U p = L(at::kPressedDword);
+    const U p = L(::bof3::Img(at::kPressedDword.v));
     if (p & 0xA000) {
         Sound(0x101);
         const unsigned char st = FieldS_Step;
@@ -497,11 +490,11 @@ extern "C" void __cdecl ConfigScreen_SlideOut(void) {
         Game_Step = 5;
         return;
     }
-    TitleBox(0x10 - static_cast<int>(B(at::kCounter)) * 16);
-    SH_CALL(Config_DrawPanel)(static_cast<int>(B(at::kCounter)) * 64 + 0x1C, 0x40);
-    SH_CALL(ConfigScreen_DrawButtons)(0, 0x70, 0x26 - static_cast<int>(B(at::kCounter)) * 16);
-    const unsigned char n = static_cast<unsigned char>(B(at::kCounter) + 1);
-    B(at::kCounter) = n;
+    TitleBox(0x10 - static_cast<int>(B(::bof3::Img(at::kCounter.v))) * 16);
+    SH_CALL(Config_DrawPanel)(static_cast<int>(B(::bof3::Img(at::kCounter.v))) * 64 + 0x1C, 0x40);
+    SH_CALL(ConfigScreen_DrawButtons)(0, 0x70, 0x26 - static_cast<int>(B(::bof3::Img(at::kCounter.v))) * 16);
+    const unsigned char n = static_cast<unsigned char>(B(::bof3::Img(at::kCounter.v)) + 1);
+    B(::bof3::Img(at::kCounter.v)) = n;
     if (n == 5) FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
 }
 
@@ -579,7 +572,7 @@ extern "C" void __cdecl Config_DrawControllerPanel(int x, int y) {
     for (unsigned row = 0; row < 6; ++row) {
         const int ry = y + static_cast<int>(row) * 18 + 6;
         SH_CALL(Config_DrawControllerRow)(x + 5, ry, static_cast<int>((hi & 0xFFFFFF00u) | row));
-        const U word = W(at::kButtons + 2u * kWords[row]);
+        const U word = W(::bof3::Img(at::kButtons.v) + 2u * kWords[row]);
         SH_CALL(Config_DrawControllerCell)(x + 0x58, ry, (hi & 0xFFFF0000u) | word);
     }
 }
@@ -602,7 +595,7 @@ extern "C" void __cdecl Config_DrawControllerRow(int x, int y, int row) {
         bof3::Fatal("Config_DrawControllerRow: row %u, past the six names of 0x%X - the original reads the dword after "
                     "as a string (docs/rest_4f.md section 7)",
                     (unsigned)r, (unsigned)at::kPadNames.v);
-    const auto* const name = At(L(at::kPadNames + 4 * r));
+    const auto* const name = At(L(::bof3::Img(at::kPadNames.v) + 4 * r));
     const U len = static_cast<U>(std::strlen(reinterpret_cast<const char*>(name)));
     const U k = ops.name_x4 ? 4 : 6;   // DIV-0026's lea [ecx+ecx], or the original's [ecx+ecx*2]
     const int edge = ops.name_edge;
@@ -645,7 +638,7 @@ extern "C" const unsigned char* __cdecl WorldMap_ExitRecords(void) {
         bof3::Fatal("WorldMap_ExitRecords: WorldMap_RecordIndex answered %u, past the twelve rows (docs/rest_4f.md "
                     "section 7)",
                     (unsigned)index);
-    return At(L(at::kExitRecords + index * at::kRecordSize));
+    return At(L(::bof3::Img(at::kExitRecords.v) + index * at::kRecordSize));
 }
 
 // ===========================================================================
@@ -811,7 +804,7 @@ extern "C" void __cdecl EffectKind08_TraceLine(void) {
     const unsigned char* const o = TraceObject("EffectKind08_TraceLine");
     Trace t{static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height)};
     Run(t, SL(o + 0x38), static_cast<std::uint32_t>(rv::As<records::SpriteObject>(o)->height), +1, false, 0xC0C0C0);
-    if (B(at::kChapterByte4A) == 0x32) S()[1] = 2;
+    if (B(::bof3::Img(at::kChapterByte4A.v)) == 0x32) S()[1] = 2;
 }
 
 // original 0x4631B0 (EffectKind08_States[2]): the grey line as state 1, then a
@@ -831,7 +824,7 @@ extern "C" void __cdecl EffectKind08_TraceTwo(void) {
     const long e = SH_CALL(AreaMap_Elevation)(0xB0000, 0x138000);
     t.h = (t.h & 0xFFFFu) | (static_cast<U>(e) << 16);
     Run(t, target, oh, -1, true, 0x303030);
-    if (B(at::kChapterByte4A) == 0x34) S()[1] = 3;
+    if (B(::bof3::Img(at::kChapterByte4A.v)) == 0x34) S()[1] = 3;
 }
 
 // ===========================================================================
@@ -961,7 +954,7 @@ extern "C" void __cdecl EffectKind09_Open8(void) {
     if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20) == 0x10) Sound(0x20E);
     if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20) != 0x60) return;
     Sound(0x203);
-    B(at::kChapterCount) = static_cast<unsigned char>(B(at::kChapterCount) + 1);
+    B(::bof3::Img(at::kChapterCount.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kChapterCount.v)) + 1);
     S()[1] = 9;
 }
 
@@ -1092,7 +1085,7 @@ extern "C" void __cdecl EffectKind0B_Start(void) {
     unsigned char* s = S();
     StF(s + 0x74, I(static_cast<U>(Rest4f_Kind0BOffset +
                                    Sprite_ObjectsExtra[0].screen_x)));
-    StF(s + 0x78, I(static_cast<U>(static_cast<signed char>(B(at::kKind0BOffset + 1)) +
+    StF(s + 0x78, I(static_cast<U>(static_cast<signed char>(B(::bof3::Img(at::kKind0BOffset.v) + 1)) +
                                    Sprite_ObjectsExtra[0].screen_y)));
     rv::As<records::EffectObject>(s)->depth_f = 0x3C23D70Au;
     s[9] = 0;
@@ -1126,7 +1119,7 @@ bool Fade0B(unsigned step, unsigned mask) {
 extern "C" void __cdecl EffectKind0B_Rise(void) {
     unsigned char* const s = S();
     StF(s + 0x74, F(s + 0x74) - F(At(at::kKind0BStepX)));
-    const auto rise = static_cast<U>(static_cast<signed char>(B(at::kKind0BRise + (s[9] >> 2))));
+    const auto rise = static_cast<U>(static_cast<signed char>(B(::bof3::Img(at::kKind0BRise.v) + (s[9] >> 2))));
     StF(s + 0x78, I(rise) + F(s + 0x78));
     if (s[0x5D] == 0) {
         SH_CALL(Effect_Release)();
@@ -1251,7 +1244,7 @@ U Hi(const void* p) { return Key(p) & 0xFFFF0000u; }
 // 15 set, entries 0 and 31 zero; Gfx_ClutStripDirty is set by the callers.
 void TintPalette() {
     const U from = ::bof3::Img(Gfx_ClutStrip_addr) + 2 + static_cast<std::uint32_t>(ObjTrio[0].clut) * at::kClutBytes;
-    for (U i = 0; i < 30; ++i) SetW(at::kClut7B + 2 + 2 * i, W(from + 2 * i) | 0x8000);
+    for (U i = 0; i < 30; ++i) SetW(::bof3::Img(at::kClut7B.v) + 2 + 2 * i, W(from + 2 * i) | 0x8000);
     Gfx_ClutStrip[0xf60] = 0;
     Gfx_ClutStrip[0xf7f] = 0;
 }
@@ -1267,7 +1260,7 @@ void DropTint(unsigned char* s) {
     s[0] = static_cast<unsigned char>(s[0] & 0xDF);
     s[0x27] = s[0xB];
 }
-bool Above38() { return static_cast<std::int16_t>(W(at::kKind02Word)) > 0x38; }
+bool Above38() { return static_cast<std::int16_t>(W(::bof3::Img(at::kKind02Word.v))) > 0x38; }
 
 }  // namespace
 
@@ -1304,7 +1297,7 @@ extern "C" void __cdecl EffectKind02_SlideIn(void) {
 // original 0x464780 (EffectKind02_States[3]): call [EffectKind02_Modes + +2 * 4]
 // (unbounded: ours aborts past 4), then the panel at y +0x10.
 extern "C" void __cdecl EffectKind02_Body(void) {
-    Dispatch("EffectKind02_Body", EffectKind02_Modes_addr, at::kKind02ModeCount, S()[2], "the sub-state +2");
+    Dispatch("EffectKind02_Body", ::bof3::Img(EffectKind02_Modes_addr), at::kKind02ModeCount, S()[2], "the sub-state +2");
     Panel(0);
 }
 
@@ -1324,13 +1317,13 @@ extern "C" void __cdecl EffectKind02_SlideOut(void) {
 // original 0x464810 (EffectKind02_Modes[1]): jmp [EffectKind02_Mode1Steps + +3 *
 // 4] (unbounded: ours aborts past 2).
 extern "C" void __cdecl EffectKind02_RunMode1(void) {
-    Dispatch("EffectKind02_RunMode1", EffectKind02_Mode1Steps_addr, at::kKind02Mode1Count, S()[3], "the step +3");
+    Dispatch("EffectKind02_RunMode1", ::bof3::Img(EffectKind02_Mode1Steps_addr), at::kKind02Mode1Count, S()[3], "the step +3");
 }
 
 // original 0x464A20 (EffectKind02_Modes[3]): jmp [EffectKind02_Mode3Steps + +3 *
 // 4] (unbounded: ours aborts past 3).
 extern "C" void __cdecl EffectKind02_RunMode3(void) {
-    Dispatch("EffectKind02_RunMode3", EffectKind02_Mode3Steps_addr, at::kKind02Mode3Count, S()[3], "the step +3");
+    Dispatch("EffectKind02_RunMode3", ::bof3::Img(EffectKind02_Mode3Steps_addr), at::kKind02Mode3Count, S()[3], "the step +3");
 }
 
 // original 0x464830 (EffectKind02_Mode1Steps[0]): palette 0x7B tinted from the
@@ -1429,7 +1422,7 @@ extern "C" void __cdecl EffectKind02_Mode3Wait(void) {
         s[3] = 0;
         return;
     }
-    if (static_cast<std::int16_t>(W(at::kKind02Word)) >= 0x38) return;
+    if (static_cast<std::int16_t>(W(::bof3::Img(at::kKind02Word.v))) >= 0x38) return;
     s[2] = 1;
     s[3] = 0;
 }

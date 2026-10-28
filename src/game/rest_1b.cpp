@@ -34,9 +34,6 @@ using U = std::uint32_t;
 using move_script::At;
 using move_script::Long;
 using move_script::Word;
-// A VA held as a ::bof3::image::Va (common/image_base.h), placed here through
-// ::bof3::Img.
-unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
 
 constexpr unsigned kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
@@ -244,7 +241,7 @@ void Form1Begin(const char* who) {
         FormSound(s);
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(S()[8] + 8));
         Field_State[0x128] = 2;
-        At(kScriptFlagsHigh)[0] |= 0x10;
+        At(::bof3::Img(kScriptFlagsHigh.v))[0] |= 0x10;
         SH_CALL(Field_JumpStart)();
         --S()[9];
         SH_CALL(Field_LeaderStepTick)();

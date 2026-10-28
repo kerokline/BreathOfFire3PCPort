@@ -118,14 +118,6 @@ U W(U address) { return Word(At(address)); }
 void SetW(U address, U v) { SetWord(At(address), v); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
-// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
-// the VA is placed here, through ::bof3::Img.
-unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
-U W(::bof3::image::Va va) { return W(::bof3::Img(va)); }
-void SetW(::bof3::image::Va va, U v) { SetW(::bof3::Img(va), v); }
-U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
-void SetL(::bof3::image::Va va, U v) { SetL(::bof3::Img(va), v); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <class T> T Get(const unsigned char* p, unsigned offset) {
     T v;
@@ -171,7 +163,7 @@ unsigned char Max(unsigned char a, unsigned char b) { return a > b ? a : b; }
 extern "C" unsigned char __cdecl Field_TriggerCounterF0(unsigned char* object, unsigned char* flags) {
     (void)object;
     (void)flags;
-    B(kTriggerCounter) = 0xF0;
+    B(::bof3::Img(kTriggerCounter.v)) = 0xF0;
     return 0;
 }
 
@@ -305,7 +297,7 @@ extern "C" void __cdecl Shisu_Begin(void) {
     Rest2b_Side = 0;
     Rest2b_Cursor = 0;
     Rest2b_Rounds = 0;
-    for (unsigned i = 0; i < 4; ++i) B(kGiven + i) = 0;
+    for (unsigned i = 0; i < 4; ++i) B(::bof3::Img(kGiven.v) + i) = 0;
     const unsigned char level = SH_CALL(Shisu_ScaleIndex)();
     Rest2c_FigureScaleIndex = level;
     SH_CALL(Shisu_InitModels)();
@@ -336,7 +328,7 @@ extern "C" void __cdecl Shisu_OpenWait(void) {
     if (Transition_Busy != 0) return;
     const unsigned char mode = BattleE1_Mode;
     FieldS_State = 0;
-    SetW(kMessage, 0x2B);
+    SetW(::bof3::Img(kMessage.v), 0x2B);
     BattleE1_Mode = static_cast<unsigned char>(mode + 1);
 }
 
@@ -382,14 +374,14 @@ extern "C" void __cdecl Shisu_Result(void) {
         MoveScript_PartyRecords[0x65] = 5;
     } else {
         static const unsigned char kItems[4] = {0x4D, 0x23, 0x24, 0x56};
-        for (unsigned i = 0; i < 4; ++i) SH_CALL(Inventory_Remove)(0, kItems[i], B(kGiven + i));
+        for (unsigned i = 0; i < 4; ++i) SH_CALL(Inventory_Remove)(0, kItems[i], B(::bof3::Img(kGiven.v) + i));
         MoveScript_PartyRecords[0x65] = 0x14;
         SH_CALL(Shisu_Score)();
         const auto score = static_cast<std::int32_t>(Rest2b_Score);
         if (score <= 0x32) {
-            B(kCounterB) = 1;
+            B(::bof3::Img(kCounterB.v)) = 1;
         } else {
-            B(kCounterB) = 2;
+            B(::bof3::Img(kCounterB.v)) = 2;
             unsigned char rank;
             if (score < 0x5A) rank = 0;
             else if (score < 0x78) rank = 1;
@@ -427,17 +419,17 @@ extern "C" void __cdecl Shisu_PickSide(void) {
         Sound(0x101);
         const auto side = static_cast<unsigned char>(Rest2b_Side ^ 1);
         Rest2b_Side = side;
-        SetW(kMessage, side + 0x2Bu);
+        SetW(::bof3::Img(kMessage.v), side + 0x2Bu);
     } else if (hi & 0x10) {
         Sound(0x100);
         const unsigned char state = FieldS_State;
-        SetW(kMessage, 0x2A);
+        SetW(::bof3::Img(kMessage.v), 0x2A);
         FieldS_State = static_cast<unsigned char>(state + 1);
         Rest2b_Cursor = 3;
     } else if (hi & 0x40) {
         Sound(0x100);
         const unsigned char state = FieldS_State;
-        SetW(kMessage, 0x2A);
+        SetW(::bof3::Img(kMessage.v), 0x2A);
         FieldS_State = static_cast<unsigned char>(state + 1);
         Rest2b_Cursor = 0;
     } else {
@@ -456,7 +448,7 @@ extern "C" void __cdecl Shisu_PickSide(void) {
                 FieldS_State = static_cast<unsigned char>(FieldS_State + 2);
             } else {
                 Sound(0x107);
-                SetW(kMessage, 0x31);
+                SetW(::bof3::Img(kMessage.v), 0x31);
             }
         } else if (confirm != 0 || (Field_CancelButtons & pressed) != 0) {
             Sound(0x103);
@@ -467,9 +459,9 @@ extern "C" void __cdecl Shisu_PickSide(void) {
     }
     const unsigned side = Rest2b_Side;
     WindowRecords[0].in_use = 1;
-    const U base = L(kWin2 + 4);
+    const U base = L(::bof3::Img(kWin2.v) + 4);
     WindowRecords[0].x = side * 0x30u + base;
-    WindowRecords[0].y = W(kWin2 + 6) + 4u;
+    WindowRecords[0].y = W(::bof3::Img(kWin2.v) + 6) + 4u;
     StackModels();
     Models();
 }
@@ -487,16 +479,16 @@ extern "C" void __cdecl Shisu_PickSide(void) {
 extern "C" void __cdecl Shisu_PickCounts(void) {
     const U repeat = SH_CALL(Input_AutoRepeat)(static_cast<unsigned>(Input_Pressed) & 0x5000u);
     const unsigned pressed = Input_Pressed;
-    if (pressed != 0) SetW(kMessage, 0x2A);
+    if (pressed != 0) SetW(::bof3::Img(kMessage.v), 0x2A);
     const unsigned hi = (repeat >> 8) & 0xFF;
     auto back = [] {
-        SetW(kMessage, Rest2b_Side + 0x2Bu);
+        SetW(::bof3::Img(kMessage.v), Rest2b_Side + 0x2Bu);
         const unsigned char state = FieldS_State;
         Rest2b_Cursor = 0xFF;
         FieldS_State = static_cast<unsigned char>(state - 1);
     };
     auto refuse = [](unsigned message) {
-        SetW(kMessage, message);
+        SetW(::bof3::Img(kMessage.v), message);
         Sound(0x107);
     };
     if (hi & 0x10) {
@@ -558,12 +550,12 @@ extern "C" void __cdecl Shisu_PickCounts(void) {
         default: break;   // the original's `cmp eax, 3; ja`: nothing
         }
     }
-    const U base = L(kWin3 + 4);
+    const U base = L(::bof3::Img(kWin3.v) + 4);
     const unsigned char c = Rest2b_Cursor;
     WindowRecords[0].in_use = 1;
     WindowRecords[0].x = base + 7u;
-    B(kWin0 + 0xA) = c;
-    B(kWin3 + 0xA) = c;
+    B(::bof3::Img(kWin0.v) + 0xA) = c;
+    B(::bof3::Img(kWin3.v) + 0xA) = c;
     WindowRecords[0].y = (c + 2u) * 13u + static_cast<std::uint32_t>(WindowRecords[3].y);
     StackModels();
     Models();
@@ -599,49 +591,49 @@ extern "C" void __cdecl Shisu_ShowDrop(void) {
 // up one.
 extern "C" void __cdecl Shisu_ShowLanded(void) {
     if (Rest2c_FigureDone == 0 || Rest2b_ModelBDone == 0) return;
-    const unsigned char a1 = B(kAColour + 1), a2 = B(kAColour + 2);
+    const unsigned char a1 = B(::bof3::Img(kAColour.v) + 1), a2 = B(::bof3::Img(kAColour.v) + 2);
     Rest2b_ModelAState = 4;
     Rest2b_ModelBState = 4;
-    B(kSavedA) = Rest2c_FigureRgb;
-    B(kSavedB) = Rest2b_ModelBRgb[0];
+    B(::bof3::Img(kSavedA.v)) = Rest2c_FigureRgb;
+    B(::bof3::Img(kSavedB.v)) = Rest2b_ModelBRgb[0];
     const unsigned char step = FieldS_Step;
-    B(kSavedA + 1) = a1;
+    B(::bof3::Img(kSavedA.v) + 1) = a1;
     const unsigned char b1 = Rest2b_ModelBRgb[1];
-    B(kSavedA + 2) = a2;
+    B(::bof3::Img(kSavedA.v) + 2) = a2;
     const unsigned char b2 = Rest2b_ModelBRgb[2];
-    B(kSavedB + 1) = b1;
-    B(kSavedB + 2) = b2;
-    B(kTimer) = 0;
+    B(::bof3::Img(kSavedB.v) + 1) = b1;
+    B(::bof3::Img(kSavedB.v) + 2) = b2;
+    B(::bof3::Img(kTimer.v)) = 0;
     FieldS_Step = static_cast<unsigned char>(step + 1);
 }
 
 // The six colour bytes: each kept one or the timer, the larger.
 static void Brighten(unsigned char t) {
-    const unsigned char a0 = B(kSavedA), a1 = B(kSavedA + 1);
+    const unsigned char a0 = B(::bof3::Img(kSavedA.v)), a1 = B(::bof3::Img(kSavedA.v) + 1);
     Rest2c_FigureRgb = Max(a0, t);
-    B(kAColour + 1) = Max(a1, t);
-    B(kAColour + 2) = Max(B(kSavedA + 2), t);
-    const unsigned char b0 = B(kSavedB), b1 = B(kSavedB + 1);
+    B(::bof3::Img(kAColour.v) + 1) = Max(a1, t);
+    B(::bof3::Img(kAColour.v) + 2) = Max(B(::bof3::Img(kSavedA.v) + 2), t);
+    const unsigned char b0 = B(::bof3::Img(kSavedB.v)), b1 = B(::bof3::Img(kSavedB.v) + 1);
     Rest2b_ModelBRgb[0] = Max(b0, t);
     Rest2b_ModelBRgb[1] = Max(b1, t);
-    Rest2b_ModelBRgb[2] = Max(B(kSavedB + 2), t);
+    Rest2b_ModelBRgb[2] = Max(B(::bof3::Img(kSavedB.v) + 2), t);
 }
 
 // original 0x57E810: Shisu_ShowSteps[3] - every colour byte at least the
 // timer; at 0x80 sound 0x200 (the timer read again after it); the timer up 8,
 // and when it wraps to 0, 0xF8 and the step up one.
 extern "C" void __cdecl Shisu_ShowFlash(void) {
-    unsigned char t = B(kTimer);
+    unsigned char t = B(::bof3::Img(kTimer.v));
     Brighten(t);
     if (t == 0x80) {
         Sound(0x200);
-        t = B(kTimer);
+        t = B(::bof3::Img(kTimer.v));
     }
     t = static_cast<unsigned char>(t + 8);
-    B(kTimer) = t;
+    B(::bof3::Img(kTimer.v)) = t;
     if (t == 0) {
         const unsigned char step = FieldS_Step;
-        B(kTimer) = 0xF8;
+        B(::bof3::Img(kTimer.v)) = 0xF8;
         FieldS_Step = static_cast<unsigned char>(step + 1);
     }
 }
@@ -650,26 +642,26 @@ extern "C" void __cdecl Shisu_ShowFlash(void) {
 // at 0 the kept colours back, model A to state 5 and B to 1 (turning), the
 // rounds up one, the state down two (to the pick) and the step 0.
 extern "C" void __cdecl Shisu_ShowFade(void) {
-    const unsigned char t = B(kTimer);
-    const unsigned char a0 = B(kSavedA), a1 = B(kSavedA + 1);
+    const unsigned char t = B(::bof3::Img(kTimer.v));
+    const unsigned char a0 = B(::bof3::Img(kSavedA.v)), a1 = B(::bof3::Img(kSavedA.v) + 1);
     Rest2c_FigureRgb = Max(a0, t);
-    B(kAColour + 1) = Max(a1, t);
-    B(kAColour + 2) = Max(B(kSavedA + 2), t);
-    const unsigned char b0 = B(kSavedB), b1 = B(kSavedB + 1);
+    B(::bof3::Img(kAColour.v) + 1) = Max(a1, t);
+    B(::bof3::Img(kAColour.v) + 2) = Max(B(::bof3::Img(kSavedA.v) + 2), t);
+    const unsigned char b0 = B(::bof3::Img(kSavedB.v)), b1 = B(::bof3::Img(kSavedB.v) + 1);
     Rest2b_ModelBRgb[0] = Max(b0, t);
     Rest2b_ModelBRgb[1] = Max(b1, t);
-    const unsigned char b2 = B(kSavedB + 2);
+    const unsigned char b2 = B(::bof3::Img(kSavedB.v) + 2);
     Rest2b_ModelBRgb[2] = Max(b2, t);
     const auto now = static_cast<unsigned char>(t - 8);
-    B(kTimer) = now;
+    B(::bof3::Img(kTimer.v)) = now;
     if (now != 0) return;
-    const unsigned char a2 = B(kSavedA + 2);
+    const unsigned char a2 = B(::bof3::Img(kSavedA.v) + 2);
     Rest2b_ModelBRgb[0] = b0;
     const unsigned char rounds = Rest2b_Rounds;
-    B(kAColour + 2) = a2;
+    B(::bof3::Img(kAColour.v) + 2) = a2;
     const unsigned char state = FieldS_State;
     Rest2c_FigureRgb = a0;
-    B(kAColour + 1) = a1;
+    B(::bof3::Img(kAColour.v) + 1) = a1;
     Rest2b_ModelBRgb[1] = b1;
     Rest2b_ModelBRgb[2] = b2;
     Rest2b_ModelAState = 5;
@@ -685,7 +677,7 @@ extern "C" void __cdecl Shisu_CountItems(void) {
     static const unsigned char kItems[4] = {0x4D, 0x23, 0x24, 0x56};
     for (unsigned i = 0; i < 4; ++i) {
         const unsigned short n = SH_CALL(Inventory_Count)(0, kItems[i], 0);
-        B(kOwned + i) = static_cast<unsigned char>(n);
+        B(::bof3::Img(kOwned.v) + i) = static_cast<unsigned char>(n);
     }
 }
 
@@ -696,37 +688,37 @@ extern "C" void __cdecl Shisu_SetupWindows(void) {
     WindowRecords[0].kind = 0;
     WindowRecords[0].x = 0;
     WindowRecords[0].y = 0;
-    SetW(kWin1 + 6, 0xFF9C);
-    SetW(kWin2 + 6, 0xFF9C);
+    SetW(::bof3::Img(kWin1.v) + 6, 0xFF9C);
+    SetW(::bof3::Img(kWin2.v) + 6, 0xFF9C);
     WindowRecords[0].handler = 1;
     WindowRecords[0].state = 2;
     WindowRecords[1].in_use = 1;
-    B(kWin1 + 1) = 1;
-    B(kWin1 + 2) = 1;
-    B(kWin1 + 3) = 2;
-    SetW(kWin1 + 4, 0x14);
+    B(::bof3::Img(kWin1.v) + 1) = 1;
+    B(::bof3::Img(kWin1.v) + 2) = 1;
+    B(::bof3::Img(kWin1.v) + 3) = 2;
+    SetW(::bof3::Img(kWin1.v) + 4, 0x14);
     WindowRecords[2].in_use = 1;
-    B(kWin2 + 1) = 1;
-    B(kWin2 + 2) = 2;
-    B(kWin2 + 3) = 2;
-    SetW(kWin2 + 4, 0x70);
-    B(kWin2 + 0xA) = 8;
-    B(kWin2 + 0xB) = 0xFF;
+    B(::bof3::Img(kWin2.v) + 1) = 1;
+    B(::bof3::Img(kWin2.v) + 2) = 2;
+    B(::bof3::Img(kWin2.v) + 3) = 2;
+    SetW(::bof3::Img(kWin2.v) + 4, 0x70);
+    B(::bof3::Img(kWin2.v) + 0xA) = 8;
+    B(::bof3::Img(kWin2.v) + 0xB) = 0xFF;
     WindowRecords[3].in_use = 1;
     WindowRecords[3].handler = 1;
     WindowRecords[3].kind = 3;
     WindowRecords[3].state = 2;
     WindowRecords[3].x = 0xFF88;
     WindowRecords[3].y = 0x3F;
-    B(kWin3 + 0xA) = 0xFF;
-    SetL(kWin3 + 0x20, ::bof3::Img(Rest2b_Owned_addr));
+    B(::bof3::Img(kWin3.v) + 0xA) = 0xFF;
+    SetL(::bof3::Img(kWin3.v) + 0x20, ::bof3::Img(Rest2b_Owned_addr));
 }
 
 // original 0x57EAC0: window 0's first byte 0, windows 1..3's +3 = 1.
 extern "C" void __cdecl Shisu_CloseWindows(void) {
     WindowRecords[0].in_use = 0;
-    B(kWin1 + 3) = 1;
-    B(kWin2 + 3) = 1;
+    B(::bof3::Img(kWin1.v) + 3) = 1;
+    B(::bof3::Img(kWin2.v) + 3) = 1;
     WindowRecords[3].state = 1;
 }
 
@@ -794,38 +786,38 @@ extern "C" void __cdecl Shisu_Score(void) {
 extern "C" void __cdecl Shisu_InitModels(void) {
     const U file = Rest2b_ModelFile;
     const long kz = Field_Kind2Z;
-    SetL(kModelB + 0x54, file);
-    SetL(kModelB + 0x50, L(file + 4));
+    SetL(::bof3::Img(kModelB.v) + 0x54, file);
+    SetL(::bof3::Img(kModelB.v) + 0x50, L(file + 4));
     const long kx = Field_Kind2X;
     Rest2b_ModelBState = 0;
-    B(kModelB + 0x48) = 0;
+    B(::bof3::Img(kModelB.v) + 0x48) = 0;
     Rest2c_FigureLift = 0x1000;
-    SetL(kModelB + 0x64, 0);
-    SetL(kModelB + 0x68, 0);
+    SetL(::bof3::Img(kModelB.v) + 0x64, 0);
+    SetL(::bof3::Img(kModelB.v) + 0x68, 0);
     Rest2b_ModelBAngle = 0;
     Rest2b_ModelBRgb[0] = 0x80;
     Rest2b_ModelBRgb[1] = 0x80;
     Rest2b_ModelBRgb[2] = 0x80;
-    SetL(kModelB + 0x34, static_cast<U>(kx));
-    SetL(kModelB + 0x38, static_cast<U>(kz));
+    SetL(::bof3::Img(kModelB.v) + 0x34, static_cast<U>(kx));
+    SetL(::bof3::Img(kModelB.v) + 0x38, static_cast<U>(kz));
     const long hb = SH_CALL(AreaMap_Elevation)(kx, kz);
     const U file2 = Rest2b_ModelFile;
     Rest2b_ModelBY = (static_cast<U>(static_cast<std::int32_t>(static_cast<short>(hb))) - 0x200u) << 16;
     const long kz2 = Field_Kind2Z;
-    SetL(kModelA + 0x54, file2 + 8);
-    SetL(kModelA + 0x50, L(file2 + 8 + 4));
+    SetL(::bof3::Img(kModelA.v) + 0x54, file2 + 8);
+    SetL(::bof3::Img(kModelA.v) + 0x50, L(file2 + 8 + 4));
     const long kx2 = Field_Kind2X;
     Rest2b_ModelAState = 0;
-    B(kModelA + 0x48) = 0;
-    SetL(kModelA + 0x40, 0x1000);
-    SetL(kModelA + 0x64, 0);
-    SetL(kModelA + 0x68, 0);
+    B(::bof3::Img(kModelA.v) + 0x48) = 0;
+    SetL(::bof3::Img(kModelA.v) + 0x40, 0x1000);
+    SetL(::bof3::Img(kModelA.v) + 0x64, 0);
+    SetL(::bof3::Img(kModelA.v) + 0x68, 0);
     Rest2c_FigureAngle = 0;
     Rest2c_FigureRgb = 0x80;
-    B(kAColour + 1) = 0x80;
-    B(kAColour + 2) = 0x80;
-    SetL(kModelA + 0x34, static_cast<U>(kx2));
-    SetL(kModelA + 0x38, static_cast<U>(kz2));
+    B(::bof3::Img(kAColour.v) + 1) = 0x80;
+    B(::bof3::Img(kAColour.v) + 2) = 0x80;
+    SetL(::bof3::Img(kModelA.v) + 0x34, static_cast<U>(kx2));
+    SetL(::bof3::Img(kModelA.v) + 0x38, static_cast<U>(kz2));
     const long ha = SH_CALL(AreaMap_Elevation)(kx2, kz2);
     Rest2c_FigureY = (static_cast<U>(static_cast<std::int32_t>(static_cast<short>(ha))) + 0x200u) << 16;
 }
@@ -873,7 +865,7 @@ extern "C" void __cdecl Shisu_ModelBDraw(void) {
     const unsigned char bl = Rest2b_ModelBRgb[2];
     if (bl > three) Rest2b_ModelBRgb[2] = static_cast<unsigned char>(bl - up);
     else Rest2b_ModelBRgb[2] = 0;
-    SH_CALL(Shisu_DrawModel)(At(kModelB));
+    SH_CALL(Shisu_DrawModel)(At(::bof3::Img(kModelB.v)));
     Rest2b_ModelBRgb[0] = kept_r;
     Rest2b_ModelBRgb[1] = kept_g;
     Rest2b_ModelBRgb[2] = kept_b;

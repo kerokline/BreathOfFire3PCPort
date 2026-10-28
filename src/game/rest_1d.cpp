@@ -38,9 +38,6 @@ using U = std::uint32_t;
 using move_script::At;
 using move_script::Long;
 using move_script::Word;
-// A VA held as a ::bof3::image::Va (common/image_base.h), placed here through
-// ::bof3::Img.
-unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
 
 constexpr unsigned kSpriteStride = 0xA4;
 constexpr unsigned kEffectStride = 0x80;
@@ -57,7 +54,7 @@ void Jump(U table, unsigned count, unsigned index, const char* who) {
     if (index >= count)
         bof3::Fatal("%s: state %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index, count,
                     static_cast<unsigned>(table), static_cast<unsigned>(table + 4 * index));
-    const auto entry = static_cast<U>(Long(At(::bof3::image::Va{table + 4 * index})));
+    const auto entry = static_cast<U>(Long(At(table + 4 * index)));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(entry))();
 }
 
@@ -267,7 +264,7 @@ void Kind30Begin(const char* who) {
         SH_CALL(Sound_PlayEffect)(SoundOfForm());
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 8));
         Field_State[0x128] = 2;
-        At(at::kScriptFlagsHi)[0] |= 0x10;
+        At(::bof3::Img(at::kScriptFlagsHi.v))[0] |= 0x10;
         SH_CALL(Field_JumpStart)();
         --Sprite_Current[9];
         SH_CALL(Field_LeaderStepTick)();
@@ -294,56 +291,56 @@ void Kind30Begin(const char* who) {
 
 // Field_ActionBySet's and Field_FormActions' entries for sets 9..12: by the u16
 // form word +0x2C.
-extern "C" void __cdecl PartyAction9_ByForm(void) { Jump(PartyAction9_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyAction9_ByForm (0x521340)"); }
+extern "C" void __cdecl PartyAction9_ByForm(void) { Jump(::bof3::Img(PartyAction9_Forms_addr), 3, rv::Current<records::PartyMember>()->column, "PartyAction9_ByForm (0x521340)"); }
 extern "C" void __cdecl PartyFormAction9_ByForm(void) {
-    Jump(PartyFormAction9_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyFormAction9_ByForm (0x521320)");
+    Jump(::bof3::Img(PartyFormAction9_Forms_addr), 3, rv::Current<records::PartyMember>()->column, "PartyFormAction9_ByForm (0x521320)");
 }
 extern "C" void __cdecl PartyAction10_ByForm(void) {
-    Jump(PartyAction10_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyAction10_ByForm (0x521A70)");
+    Jump(::bof3::Img(PartyAction10_Forms_addr), 3, rv::Current<records::PartyMember>()->column, "PartyAction10_ByForm (0x521A70)");
 }
 extern "C" void __cdecl PartyFormAction10_ByForm(void) {
-    Jump(PartyFormAction10_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyFormAction10_ByForm (0x521A50)");
+    Jump(::bof3::Img(PartyFormAction10_Forms_addr), 3, rv::Current<records::PartyMember>()->column, "PartyFormAction10_ByForm (0x521A50)");
 }
 extern "C" void __cdecl PartyAction11_ByForm(void) {
-    Jump(PartyAction11_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyAction11_ByForm (0x5220C0)");
+    Jump(::bof3::Img(PartyAction11_Forms_addr), 3, rv::Current<records::PartyMember>()->column, "PartyAction11_ByForm (0x5220C0)");
 }
 extern "C" void __cdecl PartyFormAction11_ByForm(void) {
-    Jump(PartyFormAction11_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyFormAction11_ByForm (0x5220A0)");
+    Jump(::bof3::Img(PartyFormAction11_Forms_addr), 3, rv::Current<records::PartyMember>()->column, "PartyFormAction11_ByForm (0x5220A0)");
 }
 extern "C" void __cdecl PartyAction12_ByForm(void) {
-    Jump(PartyAction12_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyAction12_ByForm (0x522690)");
+    Jump(::bof3::Img(PartyAction12_Forms_addr), 3, rv::Current<records::PartyMember>()->column, "PartyAction12_ByForm (0x522690)");
 }
 extern "C" void __cdecl PartyFormAction12_ByForm(void) {
-    Jump(PartyFormAction12_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyFormAction12_ByForm (0x522670)");
+    Jump(::bof3::Img(PartyFormAction12_Forms_addr), 3, rv::Current<records::PartyMember>()->column, "PartyFormAction12_ByForm (0x522670)");
 }
 
 // The forms: by the state byte +2.
-extern "C" void __cdecl PartyFormAction9_Form2(void) { Jump(PartyFormAction9_Form2States_addr, 3, Sprite_Current[2], "PartyFormAction9_Form2 (0x520E70)"); }
-extern "C" void __cdecl PartyAction9_Form2(void) { Jump(PartyAction9_Form2States_addr, 3, Sprite_Current[2], "PartyAction9_Form2 (0x520F20)"); }
-extern "C" void __cdecl PartyFormAction10_Form0(void) { Jump(PartyFormAction10_Form0States_addr, 3, Sprite_Current[2], "PartyFormAction10_Form0 (0x521360)"); }
-extern "C" void __cdecl PartyAction10_Form0(void) { Jump(PartyAction10_Form0States_addr, 2, Sprite_Current[2], "PartyAction10_Form0 (0x521380)"); }
-extern "C" void __cdecl PartyFormAction10_Form1(void) { Jump(PartyFormAction10_Form1States_addr, 3, Sprite_Current[2], "PartyFormAction10_Form1 (0x5215C0)"); }
-extern "C" void __cdecl PartyAction10_Form1(void) { Jump(PartyAction10_Form1States_addr, 3, Sprite_Current[2], "PartyAction10_Form1 (0x5215E0)"); }
-extern "C" void __cdecl PartyFormAction10_Form2(void) { Jump(PartyFormAction10_Form2States_addr, 3, Sprite_Current[2], "PartyFormAction10_Form2 (0x5219E0)"); }
-extern "C" void __cdecl PartyAction10_Form2(void) { Jump(PartyAction10_Form2States_addr, 2, Sprite_Current[2], "PartyAction10_Form2 (0x521A00)"); }
-extern "C" void __cdecl PartyFormAction11_Form0(void) { Jump(PartyFormAction11_Form0States_addr, 3, Sprite_Current[2], "PartyFormAction11_Form0 (0x521A90)"); }
-extern "C" void __cdecl PartyAction11_Form0(void) { Jump(PartyAction11_Form0States_addr, 2, Sprite_Current[2], "PartyAction11_Form0 (0x521AB0)"); }
-extern "C" void __cdecl PartyFormAction11_Form1(void) { Jump(PartyFormAction11_Form1States_addr, 3, Sprite_Current[2], "PartyFormAction11_Form1 (0x521C80)"); }
-extern "C" void __cdecl PartyAction11_Form1(void) { Jump(PartyAction11_Form1States_addr, 3, Sprite_Current[2], "PartyAction11_Form1 (0x521CA0)"); }
-extern "C" void __cdecl PartyFormAction12_Form0(void) { Jump(PartyFormAction12_Form0States_addr, 3, Sprite_Current[2], "PartyFormAction12_Form0 (0x5220E0)"); }
-extern "C" void __cdecl PartyAction12_Form0(void) { Jump(PartyAction12_Form0States_addr, 2, Sprite_Current[2], "PartyAction12_Form0 (0x522100)"); }
-extern "C" void __cdecl PartyFormAction12_Form1(void) { Jump(PartyFormAction12_Form1States_addr, 3, Sprite_Current[2], "PartyFormAction12_Form1 (0x522650)"); }
-extern "C" void __cdecl PartyFormAction13_Form0(void) { Jump(PartyFormAction13_Form0States_addr, 3, Sprite_Current[2], "PartyFormAction13_Form0 (0x5226B0)"); }
+extern "C" void __cdecl PartyFormAction9_Form2(void) { Jump(::bof3::Img(PartyFormAction9_Form2States_addr), 3, Sprite_Current[2], "PartyFormAction9_Form2 (0x520E70)"); }
+extern "C" void __cdecl PartyAction9_Form2(void) { Jump(::bof3::Img(PartyAction9_Form2States_addr), 3, Sprite_Current[2], "PartyAction9_Form2 (0x520F20)"); }
+extern "C" void __cdecl PartyFormAction10_Form0(void) { Jump(::bof3::Img(PartyFormAction10_Form0States_addr), 3, Sprite_Current[2], "PartyFormAction10_Form0 (0x521360)"); }
+extern "C" void __cdecl PartyAction10_Form0(void) { Jump(::bof3::Img(PartyAction10_Form0States_addr), 2, Sprite_Current[2], "PartyAction10_Form0 (0x521380)"); }
+extern "C" void __cdecl PartyFormAction10_Form1(void) { Jump(::bof3::Img(PartyFormAction10_Form1States_addr), 3, Sprite_Current[2], "PartyFormAction10_Form1 (0x5215C0)"); }
+extern "C" void __cdecl PartyAction10_Form1(void) { Jump(::bof3::Img(PartyAction10_Form1States_addr), 3, Sprite_Current[2], "PartyAction10_Form1 (0x5215E0)"); }
+extern "C" void __cdecl PartyFormAction10_Form2(void) { Jump(::bof3::Img(PartyFormAction10_Form2States_addr), 3, Sprite_Current[2], "PartyFormAction10_Form2 (0x5219E0)"); }
+extern "C" void __cdecl PartyAction10_Form2(void) { Jump(::bof3::Img(PartyAction10_Form2States_addr), 2, Sprite_Current[2], "PartyAction10_Form2 (0x521A00)"); }
+extern "C" void __cdecl PartyFormAction11_Form0(void) { Jump(::bof3::Img(PartyFormAction11_Form0States_addr), 3, Sprite_Current[2], "PartyFormAction11_Form0 (0x521A90)"); }
+extern "C" void __cdecl PartyAction11_Form0(void) { Jump(::bof3::Img(PartyAction11_Form0States_addr), 2, Sprite_Current[2], "PartyAction11_Form0 (0x521AB0)"); }
+extern "C" void __cdecl PartyFormAction11_Form1(void) { Jump(::bof3::Img(PartyFormAction11_Form1States_addr), 3, Sprite_Current[2], "PartyFormAction11_Form1 (0x521C80)"); }
+extern "C" void __cdecl PartyAction11_Form1(void) { Jump(::bof3::Img(PartyAction11_Form1States_addr), 3, Sprite_Current[2], "PartyAction11_Form1 (0x521CA0)"); }
+extern "C" void __cdecl PartyFormAction12_Form0(void) { Jump(::bof3::Img(PartyFormAction12_Form0States_addr), 3, Sprite_Current[2], "PartyFormAction12_Form0 (0x5220E0)"); }
+extern "C" void __cdecl PartyAction12_Form0(void) { Jump(::bof3::Img(PartyAction12_Form0States_addr), 2, Sprite_Current[2], "PartyAction12_Form0 (0x522100)"); }
+extern "C" void __cdecl PartyFormAction12_Form1(void) { Jump(::bof3::Img(PartyFormAction12_Form1States_addr), 3, Sprite_Current[2], "PartyFormAction12_Form1 (0x522650)"); }
+extern "C" void __cdecl PartyFormAction13_Form0(void) { Jump(::bof3::Img(PartyFormAction13_Form0States_addr), 3, Sprite_Current[2], "PartyFormAction13_Form0 (0x5226B0)"); }
 
 // The states with steps: by the byte +3.
 extern "C" void __cdecl PartyAction9_Form1State1(void) {
-    Jump(PartyAction9_Form1State1Steps_addr, 3, Sprite_Current[3], "PartyAction9_Form1State1 (0x520E10)");
+    Jump(::bof3::Img(PartyAction9_Form1State1Steps_addr), 3, Sprite_Current[3], "PartyAction9_Form1State1 (0x520E10)");
 }
 extern "C" void __cdecl PartyAction12_Form0State0(void) {
-    Jump(PartyAction12_Form0State0Steps_addr, 5, Sprite_Current[3], "PartyAction12_Form0State0 (0x522120)");
+    Jump(::bof3::Img(PartyAction12_Form0State0Steps_addr), 5, Sprite_Current[3], "PartyAction12_Form0State0 (0x522120)");
 }
 extern "C" void __cdecl PartyAction12_Form0State1(void) {
-    Jump(PartyAction12_Form0State1Steps_addr, 3, Sprite_Current[3], "PartyAction12_Form0State1 (0x5224B0)");
+    Jump(::bof3::Img(PartyAction12_Form0State1Steps_addr), 3, Sprite_Current[3], "PartyAction12_Form0State1 (0x5224B0)");
 }
 
 // ===========================================================================

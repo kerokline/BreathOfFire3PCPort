@@ -20624,6 +20624,7 @@ src/game/rest_1c_fuzz.cpp	Disturb	record	SetLong	s + (v & 1 ? 0x34 : 0x38)	0	-	b
 src/game/rest_1c_fuzz.cpp	Disturb	record	SetWord	s + 0x3E	0	-	base=Sprite_Current	seam	harness file: the harness stands Sprite_Current on a Sprite_Objects record (scenario_harness.cpp:1304, :188) where the module under test reads a party record; the seed's family is the harness's, not the game's	b1-rest
 src/game/rest_1c_fuzz.cpp	Disturb	global	Mem	SharedScratch_addr	0	0x903850	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (SharedScratch_addr - -)	c4-tc
 src/game/rest_1c_fuzz.cpp	Disturb	record	SetLong	Steps() + 4 * (v % 16)	0	-	via=Steps	computed	via=Steps (SetLong(Steps() + 4 * (v % 16)))	b1-rest
+src/game/rest_1d.cpp	void	record	At	table + 4 * index	0	-	-	computed	- (At(table + 4 * index))	b1-rest
 src/game/rest_1d.cpp	StepX	global	At	Field_DirectionSteps_addr + d * 8	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
 src/game/rest_1d.cpp	StepX	global	At	Field_DirectionSteps_addr + d * 8 + 4	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
 src/game/rest_1d.cpp	SoundOfForm	record	Word	Sprite_Current + 0x2C	0	-	base=Sprite_Current	gate	compiled differently when typed (bisected per site)	b1-rest
@@ -20678,9 +20679,9 @@ src/game/rest_1e_fuzz.cpp	Disturb	record	SetWord	s + 0x3E	0	-	base=Sprite_Curren
 src/game/rest_1e_fuzz.cpp	Disturb	record	SetWord	s + 0x2C	0	-	base=Sprite_Current	seam	harness file: the harness stands Sprite_Current on a Sprite_Objects record (scenario_harness.cpp:1304, :188) where the module under test reads a party record; the seed's family is the harness's, not the game's	b1-rest
 src/game/rest_1e_fuzz.cpp	Disturb	global	Mem	SharedScratch_addr	0	0x903850	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (SharedScratch_addr - -)	c4-tc
 src/game/rest_1e_fuzz.cpp	Disturb	record	SetLong	Steps() + 4 * (v % 16)	0	-	via=Steps	computed	via=Steps (SetLong(Steps() + 4 * (v % 16)))	b1-rest
-src/game/rest_1f.cpp	At	global	At	kCells	0	0x903850	-	no-entry	kCells 0x903850 -	b0
-src/game/rest_1f.cpp	At	global	At	Field_DirectionSteps_addr + d * 8	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
-src/game/rest_1f.cpp	At	global	At	Field_DirectionSteps_addr + d * 8 + 4	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
+src/game/rest_1f.cpp	void	global	At	kCells	0	0x903850	-	no-entry	kCells 0x903850 -	b0
+src/game/rest_1f.cpp	void	global	At	Field_DirectionSteps_addr + d * 8	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
+src/game/rest_1f.cpp	void	global	At	Field_DirectionSteps_addr + d * 8 + 4	0	0x6697b0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Field_DirectionSteps_addr - -)	c4-tc
 src/game/rest_1f.cpp	CopyName	record	At	bof3::addr::Text_Records + k	0	-	base=Text_Records	computed	base=Text_Records (At(bof3::addr::Text_Records + k))	b1-rest
 src/game/rest_1f.cpp	CopyName	record	Long	name + k	0	-	param	computed	param (Long(name + k))	b1-rest
 src/game/rest_1f.cpp	BeginShape	record	Word	Sc() + 0x3E	0	-	via=Sc	width	PartyMember +0x3e w2 (Word(Sc() + 0x3E))	b1-rest
@@ -20886,7 +20887,7 @@ src/game/rest_1g_fuzz.cpp	Disturb	global	Mem	Effect1e_PressNow_addr	0	0x6bc717	-
 src/game/rest_1g_fuzz.cpp	Disturb	global	Mem	Effect_Objects_addr + 0x290	0	0x7e1470	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Effect_Objects_addr - -)	c4-tc
 src/game/rest_1g_fuzz.cpp	Disturb	global	Mem	Effect_Objects_addr + 0x201	0	0x7e13e1	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Effect_Objects_addr - -)	c4-tc
 src/game/rest_1g_fuzz.cpp	Disturb	global	Mem	Effect_Objects_addr + 0x2b0	0	0x7e1490	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Effect_Objects_addr - -)	c4-tc
-src/game/rest_2a.cpp	At	global	At	Gfx_PacketPools_addr + 0x7560	0	0x7e9160	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Gfx_PacketPools_addr - -)	c4-tc
+src/game/rest_2a.cpp	Addr	global	At	Gfx_PacketPools_addr + 0x7560	0	0x7e9160	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Gfx_PacketPools_addr - -)	c4-tc
 src/game/rest_2a.cpp	RollBody	global	At	at::kScriptFlagsHi	0	0x9039a3	-	name	at::kScriptFlagsHi 0x9039a3 Field_ScriptFlags+0x1	b0
 src/game/rest_2a.cpp	Record	global	At	CharacterRecords_addr + n * at::kRecordStride	0	0x903a70	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (CharacterRecords_addr - -)	c4-tc
 src/game/rest_2a.cpp	Mode11_ListedSpriteScreens	global	At	at::kBankCount	0	0x8c3580	-	no-entry	at::kBankCount 0x8c3580 -	b0
@@ -21045,6 +21046,7 @@ src/game/rest_2b_fuzz.cpp	Disturb	global	B	Rest2b_Given_addr + (b & 3)	0	0x9399e
 src/game/rest_2b_fuzz.cpp	Disturb	global	Mem	Rest2b_ModelBY_addr	0	0x93999c	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest2b_ModelBY_addr - -)	c4-tc
 src/game/rest_2b_fuzz.cpp	Disturb	global	SetPointer	Rest2b_ModelFile_addr	0	0x628c88	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Rest2b_ModelFile_addr - -)	c4-tc
 src/game/rest_2b_fuzz.cpp	Disturb	global	Mem	Rest2b_ModelBAngle_addr	0	0x9399cc	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest2b_ModelBAngle_addr - -)	c4-tc
+src/game/rest_2c.cpp	Key	record	L	table + 4 * index	0	-	-	no-struct	L(table + 4 * index): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2c.cpp	SummaryOf	global	-	at::kSummaries	0	0x905bc0	-	no-entry	at::kSummaries 0x905bc0 -	b0
 src/game/rest_2c.cpp	SummaryOf	global	-	at::kSummaries	1	0x905bc0	-	no-entry	at::kSummaries 0x905bc0 -	b0
 src/game/rest_2c.cpp	CopySummary	global	L	at::kSummary	0	0x904680	-	no-entry	at::kSummary 0x904680 -	b0
@@ -21241,6 +21243,7 @@ src/game/rest_2c_fuzz.cpp	Seed	global	B	Cond_Flags_addr + 0xd2	0	0x904062	-	seam
 src/game/rest_2c_fuzz.cpp	Seed	global	B	Cond_Flags_addr + 0xd2 + 1	0	0x904063	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Cond_Flags_addr - -)	c4-tc
 src/game/rest_2c_fuzz.cpp	Seed	global	B	Cond_Flags_addr + 0xd2 + 2	0	0x904064	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Cond_Flags_addr - -)	c4-tc
 src/game/rest_2c_fuzz.cpp	Seed	record	B	d->by	0	-	via=DispatchOf	no-struct	B(d->by): via=DispatchOf, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
+src/game/rest_2d.cpp	B	record	At	table + 4 * index	0	-	-	computed	- (At(table + 4 * index))	b1-rest
 src/game/rest_2d.cpp	MemberLabel	global	At	at::kMasterMessages	0	0x6644e8	-	no-entry	at::kMasterMessages 0x6644e8 -	b0
 src/game/rest_2d.cpp	MessageText	global	At	at::kMessagePools	0	0x803580	-	no-entry	at::kMessagePools 0x803580 -	b0
 src/game/rest_2d.cpp	MessageText	global	At	at::kMessagePools	1	0x803580	-	no-entry	at::kMessagePools 0x803580 -	b0
@@ -22290,6 +22293,7 @@ src/game/rest_2f_fuzz.cpp	Disturb	global	B	Cond_Flags_addr + 0xd2 + b % 6	0	0x90
 src/game/rest_2f_fuzz.cpp	Disturb	global	B	b & 1 ? BattleE1_ModeByte9_addr : FieldS_PickRow_addr	0	0x929f09	-	expr	the address is part of a larger expression typed_convert does not rewrite (BattleE1_ModeByte9_addr - -)	c4-tc
 src/game/rest_2f_fuzz.cpp	SelfTest	record	Mem	kTitleCall + 1	0	-	-	no-struct	Mem(kTitleCall + 1): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2g.cpp	void	global	At	*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(B	0	0x905b84	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
+src/game/rest_2g.cpp	State	record	At	table + 4 * s	0	-	param	computed	param (At(table + 4 * s))	b1-rest
 src/game/rest_2g.cpp	PartyRecord	global	B	at::kMemberRecord	0	0x66972c	-	gate	at::kMemberRecord 0x66972c Character_IndexById	b0
 src/game/rest_2g.cpp	PartyRecord	global	B	at::kParty	0	0x904062	-	gate	at::kParty 0x904062 Cond_Flags+0xd2	b0
 src/game/rest_2g.cpp	PartyRecord	record	SetWord	moved + off	0	-	via=Rec	computed	via=Rec (SetWord(moved + off))	b1-rest
@@ -22339,6 +22343,7 @@ src/game/rest_2g_fuzz.cpp	Seed	global	Mem	ObjTrio_addr + 0x89 + at::kObjStride *
 src/game/rest_2g_fuzz.cpp	Seed	global	Mem	CharacterRecords_addr + at::kCharStride * i	0	0x903a70	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (CharacterRecords_addr - -)	c4-tc
 src/game/rest_2g_fuzz.cpp	Seed	record	SetWord	r + s.off	0	-	via=Rec	computed	via=Rec (SetWord(r + s.off))	b1-rest
 src/game/rest_2h.cpp	void	global	At	*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(B	0	0x905b84	-	no-entry	no typed symbols.toml entry covers the address with this width	c4-rule
+src/game/rest_2h.cpp	void	record	L	table + 4 * index	0	-	-	no-struct	L(table + 4 * index): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2h.cpp	Slide	record	SetWord	w + at_word	0	-	via=Rec	computed	via=Rec (SetWord(w + at_word))	b1-rest
 src/game/rest_2h.cpp	Slide	record	Word	w + at_word	0	-	via=Rec	computed	via=Rec (Word(w + at_word))	b1-rest
 src/game/rest_2h.cpp	Slide	record	Word	w + at_word	1	-	via=Rec	computed	via=Rec (Word(w + at_word))	b1-rest
@@ -22459,6 +22464,7 @@ src/game/rest_2h_fuzz.cpp	SelfTest	record	SetLong	g_com + 0x10	0	-	-	no-struct	S
 src/game/rest_2h_fuzz.cpp	SelfTest	record	SetLong	g_com + 0x18	0	-	-	no-struct	SetLong(g_com + 0x18): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2h_fuzz.cpp	SelfTest	global	Mem	Character_IndexById_addr + id	0	0x66972c	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Character_IndexById_addr - -)	c4-tc
 src/game/rest_3a.cpp	B	global	PtrAt	at::kTaskOwner	0	0x93b940	-	pointer-in-integer	at::kTaskOwner 0x93b940 BattleE2_Owner	b0
+src/game/rest_3a.cpp	B	record	L	table + 4 * index	0	-	-	no-struct	L(table + 4 * index): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_3a.cpp	MemberForWrite	global	At	ObjTrio_addr + index * at::kMemberSize	0	0x802d40	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (ObjTrio_addr - -)	c4-tc
 src/game/rest_3a.cpp	WorldMap33_FrameSlideIn	record	SetWord	s + 0x2E	0	-	via=Sc	family	WorldMap33_FrameStates' Sprite_Current: the frame object's family is not established (rest_3a.md 1.1)	b1-rest
 src/game/rest_3a.cpp	WorldMap33_FrameSlideIn	record	Word	s + 0x2E	0	-	via=Sc	family	WorldMap33_FrameStates' Sprite_Current: the frame object's family is not established (rest_3a.md 1.1)	b1-rest
@@ -22585,6 +22591,7 @@ src/game/rest_3b.cpp	B	global	At	ObjTrio_addr + (n & 0xFF) * at::kPartyStride	0	
 src/game/rest_3b.cpp	B	global	At	Battle_Enemies_addr + static_cast<U>(static_cast<S32>(n & 0x	0	0x93b960	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Battle_Enemies_addr - -)	c4-tc
 src/game/rest_3b.cpp	B	global	At	CharacterRecords_addr + (roster & 0xFF) * at::kCharStride	0	0x903a70	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (CharacterRecords_addr - -)	c4-tc
 src/game/rest_3b.cpp	B	global	At	at::kAbilityRows	0	0x65c4d8	-	untyped-entry	at::kAbilityRows 0x65c4d8 NameTable_Abilities	b0
+src/game/rest_3b.cpp	B	record	L	table + 4 * state	0	-	-	no-struct	L(table + 4 * state): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_3b.cpp	ActorWord	record	Word	Enemy(actor) + enemy_at	0	-	via=Enemy	computed	via=Enemy (Word(Enemy(actor) + enemy_at))	b1-rest
 src/game/rest_3b.cpp	ActorWord	record	Word	Party(actor) + party_at	0	-	via=Party	computed	via=Party (Word(Party(actor) + party_at))	b1-rest
 src/game/rest_3b.cpp	Hit	global	B	at::kTarget	0	0x904b54	-	no-entry	at::kTarget 0x904b54 -	b0
@@ -23571,6 +23578,7 @@ src/game/rest_4a_fuzz.cpp	Disturb	global	Mem	BattlePhases_B8B_addr	0	0x904b8b	-	
 src/game/rest_4a_fuzz.cpp	Disturb	global	Mem	Battle_PartyStanding_addr	0	0x904ab1	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Battle_PartyStanding_addr - -)	c4-tc
 src/game/rest_4a_fuzz.cpp	Disturb	global	Mem	at::kResidentCounts	0	0x675f58	-	no-entry	at::kResidentCounts 0x675f58 -	b0
 src/game/rest_4a_fuzz.cpp	Disturb	global	Mem	at::kOfferWords	0	0x675f60	-	no-entry	at::kOfferWords 0x675f60 -	b0
+src/game/rest_4b.cpp	B	record	L	table + 4 * static_cast<U>(index)	0	-	-	no-struct	L(table + 4 * static_cast<U>(index)): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4b.cpp	Slot	global	-	at::kSlots	0	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
 src/game/rest_4b.cpp	Slot	global	-	at::kSlots	1	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
 src/game/rest_4b.cpp	Slot	global	-	at::kSlots	2	0x9048a8	-	base-form	Community_Buildings by a 1-based slot: at::kSlots (0x9048A8) = Community_Buildings - 8, + 8 * slot (rest_4b_callees.h kSlots); the base lies in Community_Records' last record, so a Community_Records spelling reads as the wrong table (C4 audit B F1)	c4-fix
@@ -23909,6 +23917,7 @@ src/game/rest_4c_fuzz.cpp	MoveCell	global	B	at::kCards	0	0x675f98	-	no-entry	at:
 src/game/rest_4c_fuzz.cpp	MoveCell	global	B	at::kDigits_addr	0	0x903850	-	expr	the address is part of a larger expression typed_convert does not rewrite (at::kDigits_addr - -)	c4-tc
 src/game/rest_4c_fuzz.cpp	MoveCell	global	B	(b & 1) ? Rest4c_Lost_addr : Rest4c_Again_addr	0	0x675f8f	-	expr	the address is part of a larger expression typed_convert does not rewrite (Rest4c_Lost_addr - -)	c4-tc
 src/game/rest_4c_fuzz.cpp	MoveCell	global	B	AreaW0c_TailState_addr	0	0x9039f4	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (AreaW0c_TailState_addr - -)	c4-tc
+src/game/rest_4d.cpp	B	record	L	table + 4 * index	0	-	-	no-struct	L(table + 4 * index): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4d.cpp	Scratch	global	At	at::kTextScratch	0	0x904ba0	-	no-entry	at::kTextScratch 0x904ba0 -	b0
 src/game/rest_4d.cpp	Scratch	global	Text	at::kPoolWords	0	0x803580	-	no-entry	at::kPoolWords 0x803580 -	b0
 src/game/rest_4d.cpp	Scratch	record	At	words + 2u * static_cast<U>(index)	0	-	param	computed	param (At(words + 2u * static_cast<U>(index)))	b1-rest
@@ -24241,6 +24250,7 @@ src/game/rest_4e_fuzz.cpp	Disturb	global	B	Community_Records_addr + 8 * B(AreaW0
 src/game/rest_4e_fuzz.cpp	Disturb	global	B	CommuList_Page_addr	0	0x675fdb	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (CommuList_Page_addr - -)	c4-tc
 src/game/rest_4e_fuzz.cpp	Disturb	global	B	CommuMusic_SavedTrack_addr	0	0x675fd0	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (CommuMusic_SavedTrack_addr - -)	c4-tc
 src/game/rest_4e_fuzz.cpp	Disturb	global	B	Rest4c_Count_addr	0	0x675f8c	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4c_Count_addr - -)	c4-tc
+src/game/rest_4f.cpp	Dispatch	record	L	table + 4 * index	0	-	param	no-struct	L(table + 4 * index): param, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_4f.cpp	CursorId	global	L	at::kCounter	0	0x929f04	-	no-entry	at::kCounter 0x929f04 -	b0
 src/game/rest_4f.cpp	SetDefaults	global	SetW	at::kButtons	0	0x903580	-	width	at::kButtons 0x903580 Gfx_UnpackScratch+0x1f000	b0
 src/game/rest_4f.cpp	SetDefaults	global	SetW	at::kButtons	1	0x903580	-	width	at::kButtons 0x903580 Gfx_UnpackScratch+0x1f000	b0

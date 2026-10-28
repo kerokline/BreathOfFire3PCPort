@@ -43,13 +43,9 @@ template <typename... T> U PickOf(T... v) {
 }
 unsigned char& B(U a) { return *sh::Mem(a); }
 void SetW(U a, U v) { SetWord(sh::Mem(a), v); }
-// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
-// the VA is placed here, through ::bof3::Img.
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
-void SetW(::bof3::image::Va va, U v) { SetW(::bof3::Img(va), v); }
 void SetL(U a, U v) { SetLong(sh::Mem(a), static_cast<std::int32_t>(v)); }
 U Rec(unsigned k) { return Community_Records_addr + 8 * k; }
-U SlotAt(unsigned s) { return ::bof3::Img(at::kSlots) + 8 * s; }   // s 1..8
+U SlotAt(unsigned s) { return ::bof3::Img(at::kSlots.v) + 8 * s; }   // s 1..8
 
 // --- the clone table (band_rows.py --group R4B --clones --harness scenario, 2026-10-05) ---
 constexpr sh::CallSite kCalls456D60[] = {{0x20, 0x4976D0}};
@@ -252,7 +248,7 @@ void Move(U h) {
     case 8: SetW(Rest4b_Help_addr, v & 1 ? 0x3D : (v & 2 ? 0xFFFF : w & 0x1FF)); break;
     case 9: B(SlotAt(w % 8 + 1) + (v % 3)) = static_cast<unsigned char>(v % 3 == 1 ? (w >> 3) % 3 : (v & 4 ? 0 : 4 + (w >> 3) % 10)); break;
     case 10: B(Rec(w % 60) + 1 + v % 3) = static_cast<unsigned char>(v % 3 == 0 ? (w >> 6) % 8 + 1 : w >> 6); break;
-    case 11: B(at::kListCount) = static_cast<unsigned char>(v % 7); break;
+    case 11: B(::bof3::Img(at::kListCount.v)) = static_cast<unsigned char>(v % 7); break;
     case 12: SetL(Game_BattleCount_addr, h * 0x9E3779B1u); break;
     case 13: B(Rest4b_Toggle_addr + (w % 2 ? 1 : 0)) = static_cast<unsigned char>(v & 1); break; // the toggle or 0x675F7D
     case 14: B(Rest4b_CursorMode_addr + w % 3) = static_cast<unsigned char>(v % 5); break;
@@ -404,7 +400,7 @@ const sh::Region kRegions[] = {
     {0x904700, 0x394},         // the records to 0x9048B0, the slots, the names, 0x904A90
     {0x937F80, 8},             // 0x937F80
     {0x7DEE40, 0x10},          // MsgBoxState's message index 0x7DEE48
-    {::bof3::Img(at::kTextRecords), 0x10},  // Text_Records' first 16 bytes
+    {at::kTextRecords.v, 0x10},  // Text_Records' first 16 bytes
 };
 
 // --- the seed ----------------------------------------------------------------------------
@@ -469,11 +465,11 @@ void SeedBoard() {
     B(Rest4b_SavedA_addr) = static_cast<unsigned char>(sh::Next());
     B(Rest4b_SavedMode_addr) = static_cast<unsigned char>(sh::Next() % 11);
     B(Rest4b_CountA_addr) = static_cast<unsigned char>(sh::Next());
-    B(at::kListCount) = static_cast<unsigned char>(PickOf(0, 1, 4, 5, 6, sh::Next() % 9));
+    B(::bof3::Img(at::kListCount.v)) = static_cast<unsigned char>(PickOf(0, 1, 4, 5, 6, sh::Next() % 9));
     B(Rest4a_LevelLit_addr) = static_cast<unsigned char>(sh::Next());
     SetW(Game_AreaNumber_addr, PickOf(0xAF, 0xB0, 0xB4, 0xB9, sh::Next() % 0x100, sh::Next()));
     B(Field_Request_addr) = static_cast<unsigned char>(PickOf(0, 2, 2, 1, sh::Next()));
-    SetW(at::kMessageIndex, PickOf(0xF9, 0xF8, sh::Next()));
+    SetW(::bof3::Img(at::kMessageIndex.v), PickOf(0xF9, 0xF8, sh::Next()));
     B(Rest4a_RemovedCount_addr) = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
     B(Rest4b_BusyA_addr) = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
     B(Rest4b_BusyB_addr) = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
@@ -585,7 +581,7 @@ void Args(unsigned k, U* a) {
     case 0x459A80: {   // DrawListBoxB(x, y, list, steady): y half the time at the move's bound for the list's height
         a[0] = coordinate(a[0]);
         a[2] = byte(a[2], PickOf(0, 1, 2, 3, 4, 5, sh::Next() & 0xFF));
-        const U h = 16u * B(at::kLists + 2 * (a[2] & 0xFF) + 1);
+        const U h = 16u * B(::bof3::Img(at::kLists.v) + 2 * (a[2] & 0xFF) + 1);
         a[1] = sh::Half() ? coordinate(a[1]) : (a[1] & 0xFFFF0000u) | ((PickOf(0xD5, 0xD4, 0xD6) - h) & 0xFFFF);
         a[3] = byte(a[3], PickOf(0, 1, sh::Next() & 0xFF));
         break;

@@ -43,9 +43,6 @@ using U = std::uint32_t;
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
-// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
-// the VA is placed here, through ::bof3::Img.
-unsigned char* Mem(::bof3::image::Va va) { return Mem(::bof3::Img(va)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -335,14 +332,14 @@ const std::uint8_t kKinds[] = {0x17, 0x1B, 0x1D, 0x21, 0x24, 0x30, 0x37, 0x41, 0
 const sh::Region kRegions[] = {
     {0x6761C4, 0x10},
     {EffectKind30_Shards_addr + sh::at::kShardsSize, at::kDust.v + at::kDustCount * at::kDustStride - (EffectKind30_Shards_addr + sh::at::kShardsSize)},
-    {::bof3::Img(at::kModelCopy), 24 * at::kModelFace},
+    {at::kModelCopy.v, 24 * at::kModelFace},
 };
 
 // --- the seed ------------------------------------------------------------------------
 
 unsigned g_k = 0;
 unsigned char* Spark(unsigned i) { return EffectKind30_Shards + (i % at::kSparks) * at::kSparkStride; }
-unsigned char* DustAt(unsigned i) { return Mem(at::kDust + (i % at::kDustCount) * at::kDustStride); }
+unsigned char* DustAt(unsigned i) { return Mem(::bof3::Img(at::kDust.v) + (i % at::kDustCount) * at::kDustStride); }
 constexpr U kTrail = 0x92C060;
 constexpr U kSpiral = 0x92C4A4;
 
@@ -419,7 +416,7 @@ void SeedInput() {
 // The counts at 0x903A10: 0..5 and about 100.
 void SeedCounts() {
     for (unsigned i = 0; i < at::kItems; ++i)
-        Mem(at::kCounts + i)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 99, 100, 0xFF, sh::Next()));
+        Mem(::bof3::Img(at::kCounts.v) + i)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 99, 100, 0xFF, sh::Next()));
 }
 
 void Seed(unsigned k) {

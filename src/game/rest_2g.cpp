@@ -56,10 +56,6 @@ using Handler = void (__cdecl*)();
 
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char B(U address) { return At(address)[0]; }
-// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
-// the VA is placed here, through ::bof3::Img.
-unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
-unsigned char B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 short S(const unsigned char* p) { return static_cast<short>(Word(p)); }
 std::int32_t Sx(const unsigned char* p) { return static_cast<std::int32_t>(S(p)); }
 
@@ -80,7 +76,7 @@ void State(const char* who, U table, unsigned entries) {
         bof3::Fatal("%s: the window record's +3 is %u, past the %u states of 0x%X - the original calls through the dword "
                     "after (docs/rest_2g.md section 7)",
                     who, s, entries, (unsigned)table);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(::bof3::image::Va{table + 4 * s})))))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * s)))))();
 }
 
 // `call [esp + 4 * byte]` over a stack table of `n` immediates: a Fatal past
@@ -96,7 +92,7 @@ void StackState(const char* who, const U* table, unsigned n, unsigned index, con
 
 // The character record (CharacterRecords index) of the party slot `slot`:
 // 0x66972C[0x904062[slot]], both bytes read in place.
-unsigned PartyRecord(unsigned slot) { return B(at::kMemberRecord + B(at::kParty + slot)); }
+unsigned PartyRecord(unsigned slot) { return B(::bof3::Img(at::kMemberRecord.v) + B(::bof3::Img(at::kParty.v) + slot)); }
 
 // A slide: the record's word at `off` (+4 x, +6 y) moves by `step`, and when
 // it is then past `bound` - signed, by `past` - it is held there and +3 goes
@@ -157,13 +153,13 @@ extern "C" void __cdecl BattleResultWin_LevelUpStates(void) {
 // compare is unsigned, and the answer the whole eax.
 extern "C" unsigned __cdecl BattleResultWin_ExpToNext(unsigned slot) {
     const U s = slot & 0xFF;
-    const unsigned id = B(at::kObjTrio + 0x89 + at::kObjStride * s);
+    const unsigned id = B(::bof3::Img(at::kObjTrio.v) + 0x89 + at::kObjStride * s);
     const U arg = ((s * 5) & 0xFFFFFF00u) | id;
     const unsigned r = SH_AT(unsigned (__cdecl*)(unsigned), rest_2g::kRosterIndex)(arg) & 0xFF;
     const unsigned char* const rec = At(::bof3::Img(CharacterRecords_addr) + at::kCharStride * r);
     const unsigned rows = rec[0xA] + 1u;
     U sum = 0;
-    for (unsigned k = 0; k < rows; ++k) sum += Word(At(at::kExpTable + 0x318 * r + 8 * k));
+    for (unsigned k = 0; k < rows; ++k) sum += Word(At(::bof3::Img(at::kExpTable.v) + 0x318 * r + 8 * k));
     const U exp = static_cast<U>(rv::As<records::CharRecord>(rec)->exp);
     return sum >= exp ? sum - exp : 0;
 }
@@ -203,9 +199,9 @@ extern "C" void __cdecl GeneWin_GridStates(void) {
 extern "C" void __cdecl GeneWin_GridOpen(void) {
     Rec()[8] = 0x18;
     Rec()[9] = 0x11;
-    for (unsigned i = 0; i < 0x12; ++i) At(at::kGridWords + 2 * i)[0] = 0;
+    for (unsigned i = 0; i < 0x12; ++i) At(::bof3::Img(at::kGridWords.v) + 2 * i)[0] = 0;
     for (unsigned i = 0; i < 0x12; ++i) {
-        if (B(at::kGridCells + i) == 0) continue;
+        if (B(::bof3::Img(at::kGridCells.v) + i) == 0) continue;
         const unsigned slot = SH_CALL(BattleTask_Create)(0, 9) & 0xFFu;
         if (slot >= at::kTaskCount)
             bof3::Fatal("GeneWin_GridOpen: BattleTask_Create answered slot %u, past the %u of the pool - the original "
@@ -275,7 +271,7 @@ extern "C" void __cdecl GeneWin_GridSlideOut(void) {
 // Menu_DrawStatsPanel at the record's (+4, +6) for the character record of
 // party slot +0xA.
 extern "C" void __cdecl MenuList_StatsPanel(void) {
-    State("MenuList_StatsPanel", MenuList_StatsStates_addr, 7);
+    State("MenuList_StatsPanel", ::bof3::Img(MenuList_StatsStates_addr), 7);
     const unsigned char* const r = Rec();
     SH_CALL(Menu_DrawStatsPanel)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, PartyRecord(r[0xA]));
 }
@@ -283,7 +279,7 @@ extern "C" void __cdecl MenuList_StatsPanel(void) {
 // original 0x59A190, kind 6: the state from MenuList_EquipStates, then
 // Menu_DrawEquipPanel likewise.
 extern "C" void __cdecl MenuList_EquipPanel(void) {
-    State("MenuList_EquipPanel", MenuList_EquipStates_addr, 3);
+    State("MenuList_EquipPanel", ::bof3::Img(MenuList_EquipStates_addr), 3);
     const unsigned char* const r = Rec();
     SH_CALL(Menu_DrawEquipPanel)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, PartyRecord(r[0xA]));
 }
@@ -291,7 +287,7 @@ extern "C" void __cdecl MenuList_EquipPanel(void) {
 // original 0x59A200, kind 7: the state from MenuList_ExpStates, then
 // Menu_DrawExpPanel likewise with `next` 0 (the record's EXP).
 extern "C" void __cdecl MenuList_ExpPanel(void) {
-    State("MenuList_ExpPanel", MenuList_ExpStates_addr, 3);
+    State("MenuList_ExpPanel", ::bof3::Img(MenuList_ExpStates_addr), 3);
     const unsigned char* const r = Rec();
     SH_CALL(Menu_DrawExpPanel)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, PartyRecord(r[0xA]), 0);
 }
@@ -299,7 +295,7 @@ extern "C" void __cdecl MenuList_ExpPanel(void) {
 // original 0x59A270, kind 8: the state from MenuList_NextLevelStates, then
 // Menu_DrawExpPanel with `next` 1 (the EXP of the next level).
 extern "C" void __cdecl MenuList_NextLevelPanel(void) {
-    State("MenuList_NextLevelPanel", MenuList_NextLevelStates_addr, 3);
+    State("MenuList_NextLevelPanel", ::bof3::Img(MenuList_NextLevelStates_addr), 3);
     const unsigned char* const r = Rec();
     SH_CALL(Menu_DrawExpPanel)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, PartyRecord(r[0xA]), 1);
 }
@@ -310,7 +306,7 @@ extern "C" void __cdecl MenuList_NextLevelPanel(void) {
 // colour 0, and for +0x10 0x1A or 0x31 system text 0xF over it at the same
 // place. The record re-read after each call, as the original.
 extern "C" void __cdecl MenuList_WideTitleBox(void) {
-    State("MenuList_WideTitleBox", MenuList_WideTitleStates_addr, 3);
+    State("MenuList_WideTitleBox", ::bof3::Img(MenuList_WideTitleStates_addr), 3);
     const unsigned colour = static_cast<unsigned char>(Config_WindowColour);
     const unsigned char* r = Rec();
     SH_CALL(Menu_DrawTitleBox)(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y, 0x118, 0x13, static_cast<int>(colour));
@@ -348,7 +344,7 @@ extern "C" void __cdecl MenuList_CursorBox(void) {
 // above them (the register it was loaded into); the record re-read after the
 // wheel and after the step.
 extern "C" void __cdecl MenuList_IconWheel(void) {
-    State("MenuList_IconWheel", MenuList_IconWheelStates_addr, 3);
+    State("MenuList_IconWheel", ::bof3::Img(MenuList_IconWheelStates_addr), 3);
     const unsigned char* r = Rec();
     const std::int32_t angle = Sx(r + 0x10);
     const U above = static_cast<U>(angle);
@@ -364,7 +360,7 @@ extern "C" void __cdecl MenuList_IconWheel(void) {
 // original 0x59A560, kind 12: the state from MenuList_ItemListStates, then
 // Menu_DrawItemList of the record (re-read).
 extern "C" void __cdecl MenuList_ItemList(void) {
-    State("MenuList_ItemList", MenuList_ItemListStates_addr, 5);
+    State("MenuList_ItemList", ::bof3::Img(MenuList_ItemListStates_addr), 5);
     SH_CALL(Menu_DrawItemList)(Rec());
 }
 
@@ -373,7 +369,7 @@ extern "C" void __cdecl MenuList_ItemList(void) {
 // it: x carries the record pointer's upper half (it is loaded into the
 // register that held the pointer).
 extern "C" void __cdecl MenuList_ButtonRow(void) {
-    State("MenuList_ButtonRow", MenuList_ButtonRowStates_addr, 3);
+    State("MenuList_ButtonRow", ::bof3::Img(MenuList_ButtonRowStates_addr), 3);
     const unsigned char* const r = Rec();
     SH_CALL(Menu_DrawButtonRow)(static_cast<int>((Key(r) & 0xFFFF0000u) | rv::As<records::WindowRecord>(r)->x), rv::As<records::WindowRecord>(r)->y, r[0xA], r[0xB], 0);
 }
@@ -398,17 +394,17 @@ extern "C" void __cdecl MenuList_LabelList(void) { SH_CALL(MenuList_DrawLabelLis
 extern "C" void __cdecl MenuList_DrawLabelList(unsigned char* rec) {
     auto x = [rec](unsigned d) { return static_cast<int>((rv::As<records::WindowRecord>(rec)->x + d) & 0xFFFF); };
     auto y = [rec](unsigned d) { return static_cast<int>((rv::As<records::WindowRecord>(rec)->y + d) & 0xFFFF); };
-    auto text = [](unsigned index) { return At(static_cast<U>(Long(At(at::kLabelTexts + 4 * index)))); };
+    auto text = [](unsigned index) { return At(static_cast<U>(Long(At(::bof3::Img(at::kLabelTexts.v) + 4 * index)))); };
     const unsigned colour = static_cast<unsigned char>(Config_WindowColour);
-    const unsigned count = B(at::kLabelRows + 6u * rec[0xA]);
+    const unsigned count = B(::bof3::Img(at::kLabelRows.v) + 6u * rec[0xA]);
     SH_CALL(Menu_DrawBox)(x(3), y(3), 0x65, static_cast<int>((count << 4) + 0x19), 0, static_cast<int>(colour));
     SH_CALL(Text_DrawAt)(x(0x2A), y(7), 0, 0xFF, text(0));
-    SH_CALL(Menu_DrawPieces)(x(0), y(0), At(at::kLabelPieces), 1);
+    SH_CALL(Menu_DrawPieces)(x(0), y(0), At(::bof3::Img(at::kLabelPieces.v)), 1);
     unsigned row = 0;
     unsigned line = 6u * rec[0xA];
-    if (B(at::kLabelRows + line) != 0) {
+    if (B(::bof3::Img(at::kLabelRows.v) + line) != 0) {
         do {
-            const unsigned char* const t = text(B(at::kLabelRows + 1 + line + row));
+            const unsigned char* const t = text(B(::bof3::Img(at::kLabelRows.v) + 1 + line + row));
             const unsigned dy = row << 4;
             if (row == rec[0xC]) {
                 SH_CALL(Text_DrawAt)(x(7), y(dy + 0x1A), 7, 0xFF, t);
@@ -419,13 +415,13 @@ extern "C" void __cdecl MenuList_DrawLabelList(unsigned char* rec) {
             } else {
                 SH_CALL(Text_DrawAt)(x(7), y(dy + 0x1A), 0, 0xFF, t);
             }
-            SH_CALL(Menu_DrawPieces)(x(0), y(dy + 0x18), At(at::kLabelRowPieces), 1);
-            SH_CALL(Menu_DrawPieces)(x(0), y(dy + 0x20), At(at::kLabelRowPieces), 1);
+            SH_CALL(Menu_DrawPieces)(x(0), y(dy + 0x18), At(::bof3::Img(at::kLabelRowPieces.v)), 1);
+            SH_CALL(Menu_DrawPieces)(x(0), y(dy + 0x20), At(::bof3::Img(at::kLabelRowPieces.v)), 1);
             row = (row + 1) & 0xFF;
             line = 6u * rec[0xA];
-        } while (row < B(at::kLabelRows + line));
+        } while (row < B(::bof3::Img(at::kLabelRows.v) + line));
     }
-    SH_CALL(Menu_DrawPieces)(x(0), y((row << 4) + 0x18), At(at::kLabelEndPieces), 1);
+    SH_CALL(Menu_DrawPieces)(x(0), y((row << 4) + 0x18), At(::bof3::Img(at::kLabelEndPieces.v)), 1);
 }
 
 // original 0x59A8E0, kind 16: the state from MenuList_EquipCompareStates, then
@@ -435,7 +431,7 @@ extern "C" void __cdecl MenuList_DrawLabelList(unsigned char* rec) {
 // As the original has it: x carries the upper half of +0x20 (loaded into the
 // register that held it), and the record index x's upper three bytes.
 extern "C" void __cdecl MenuList_EquipCompare(void) {
-    State("MenuList_EquipCompare", MenuList_EquipCompareStates_addr, 5);
+    State("MenuList_EquipCompare", ::bof3::Img(MenuList_EquipCompareStates_addr), 5);
     unsigned char* const r = Rec();
     const U set = static_cast<U>(Long(r + 0x20));
     const U x = (set & 0xFFFF0000u) | rv::As<records::WindowRecord>(r)->x;
@@ -446,21 +442,21 @@ extern "C" void __cdecl MenuList_EquipCompare(void) {
 // original 0x59A9C0, kind 17: the state from MenuList_AbilityStates, then
 // Menu_DrawAbilityPanel of the record (re-read).
 extern "C" void __cdecl MenuList_AbilityPanel(void) {
-    State("MenuList_AbilityPanel", MenuList_AbilityStates_addr, 5);
+    State("MenuList_AbilityPanel", ::bof3::Img(MenuList_AbilityStates_addr), 5);
     SH_CALL(Menu_DrawAbilityPanel)(Rec());
 }
 
 // original 0x59AA10, kind 18: the state from MenuList_ItemPanelStates, then
 // Menu_DrawItemPanel of the record.
 extern "C" void __cdecl MenuList_ItemPanel(void) {
-    State("MenuList_ItemPanel", MenuList_ItemPanelStates_addr, 5);
+    State("MenuList_ItemPanel", ::bof3::Img(MenuList_ItemPanelStates_addr), 5);
     SH_CALL(Menu_DrawItemPanel)(Rec());
 }
 
 // original 0x59AA30, kind 19: the state from MenuList_ReserveStates, then
 // 0x59AA80 (R2H's: the reserve list, menu_frame.cpp) of the record.
 extern "C" void __cdecl MenuList_ReservePanel(void) {
-    State("MenuList_ReservePanel", MenuList_ReserveStates_addr, 3);
+    State("MenuList_ReservePanel", ::bof3::Img(MenuList_ReserveStates_addr), 3);
     SH_AT(void (__cdecl*)(unsigned char*), rest_2g::kReserveList)(Rec());
 }
 

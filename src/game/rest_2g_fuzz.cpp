@@ -41,9 +41,6 @@ using U = std::uint32_t;
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U address) { return sh::Mem(address); }
-// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
-// the VA is placed here, through ::bof3::Img.
-unsigned char* Mem(::bof3::image::Va va) { return Mem(::bof3::Img(va)); }
 unsigned char* Rec(unsigned k) { return Mem(WindowRecords_addr + at::kWindowStride * (k % at::kWindowCount)); }
 unsigned char* Current() { return sh::Pointer(BattleWinStates_Current_addr); }
 U PickOf(std::initializer_list<U> v) { return *(v.begin() + sh::Next() % v.size()); }
@@ -214,8 +211,8 @@ const sh::DataTable kTables[] = {
 const sh::Region kRegions[] = {
     {WindowRecords_addr, at::kWindowCount * at::kWindowStride}, // WindowRecords 0x803160..0x803477
     {0x903A94, 0x903F90 - 0x903A94},                         // CharacterRecords past the style region
-    {::bof3::Img(at::kGridWords), 0x24},                                  // the eighteen words GeneWin_GridOpen clears
-    {::bof3::Img(at::kGridCells), 0x14},                                  // the eighteen grid cells
+    {at::kGridWords.v, 0x24},                                  // the eighteen words GeneWin_GridOpen clears
+    {at::kGridCells.v, 0x14},                                  // the eighteen grid cells
     {BattleTask_Slots_addr, at::kTaskCount * at::kTaskStride}, // the battle task pool
 };
 
@@ -244,7 +241,7 @@ void Move(U h) {
     case 9: if (in) SetLong(r + 0x20, static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
     case 10: Mem(Cond_Flags_addr + 0xd2 + b % 6)[0] = static_cast<unsigned char>(v % 9); break;
     case 11: Mem(Config_WindowColour_addr)[0] = b; break;
-    case 12: Mem(at::kGridCells + b % 0x12)[0] ^= static_cast<unsigned char>(v | 1); break;
+    case 12: Mem(::bof3::Img(at::kGridCells.v) + b % 0x12)[0] ^= static_cast<unsigned char>(v | 1); break;
     case 13: if (in) r[3] = b; break;
     default: break;
     }
@@ -268,7 +265,7 @@ U TextAnswer(const U* a, U answer) {
 U TaskMoving(const U* a, U answer) {
     Moving(a, answer);
     const U n = sh::Noise();
-    Mem(at::kGridCells + n % 0x12)[0] = static_cast<unsigned char>(n & 0x100 ? 0 : n >> 9);
+    Mem(::bof3::Img(at::kGridCells.v) + n % 0x12)[0] = static_cast<unsigned char>(n & 0x100 ? 0 : n >> 9);
     return answer;
 }
 // 0x4469D0: the record its answer names gets another level and EXP (the
@@ -375,7 +372,7 @@ void Seed(unsigned k) {
     // the party, the grid cells, the battle party's ids
     for (unsigned i = 0; i < 6; ++i)
         Mem(Cond_Flags_addr + 0xd2 + i)[0] = static_cast<unsigned char>(sh::Next() % 5 ? sh::Next() % 9 : sh::Next());
-    for (unsigned i = 0; i < 0x12; ++i) Mem(at::kGridCells + i)[0] = static_cast<unsigned char>(sh::Next() % 3 ? 0 : sh::Next() | 1);
+    for (unsigned i = 0; i < 0x12; ++i) Mem(::bof3::Img(at::kGridCells.v) + i)[0] = static_cast<unsigned char>(sh::Next() % 3 ? 0 : sh::Next() | 1);
     for (unsigned i = 0; i < 3; ++i)
         Mem(ObjTrio_addr + 0x89 + at::kObjStride * i)[0] = static_cast<unsigned char>(sh::Next() % 4 ? sh::Next() % 9 : sh::Next());
     // the levels and the EXP the next level is compared with

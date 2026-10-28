@@ -61,14 +61,6 @@ unsigned W(U address) { return Word(At(address)); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 void PutW(U address, unsigned v) { SetWord(At(address), v); }
 void PutL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
-// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
-// the VA is placed here, through ::bof3::Img.
-unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
-unsigned W(::bof3::image::Va va) { return W(::bof3::Img(va)); }
-U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
-void PutW(::bof3::image::Va va, unsigned v) { PutW(::bof3::Img(va), v); }
-void PutL(::bof3::image::Va va, U v) { PutL(::bof3::Img(va), v); }
 short S16(U address) { return static_cast<short>(Word(At(address))); }
 void PutF(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 void PutFBits(unsigned char* p, U bits) { std::memcpy(p, &bits, sizeof bits); }
@@ -88,7 +80,7 @@ void Jump(U table, unsigned count, int index, const char* who) {
     if (index < 0 || static_cast<unsigned>(index) >= count)
         bof3::Fatal("%s: state %d is outside its table's %u entries at 0x%X; the original jumps through 0x%X", who, index, count,
                     static_cast<unsigned>(table), static_cast<unsigned>(table + 4 * static_cast<U>(index)));
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(::bof3::image::Va{table + 4 * static_cast<U>(index)})))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * static_cast<U>(index))))();
 }
 
 // The community record k (0x9046D0 + 8k): ours writes only the 60; past them
@@ -102,13 +94,13 @@ U Member(unsigned k, const char* who) {
 
 // A slot's bytes (0x9048A8 + 8 * slot, the slots 1..8 at 0x9048B0): read in
 // place for any slot byte, as the original reads them.
-U Slot(unsigned slot) { return ::bof3::Img(at::kSlots) + 8 * slot; }
+U Slot(unsigned slot) { return ::bof3::Img(at::kSlots.v) + 8 * slot; }
 // ... and written only for the eight (section 5).
 U SlotToWrite(unsigned slot, const char* who) {
     if (slot - 1 >= 8)
         bof3::Fatal("%s: slot %u is outside the eight at 0x9048B0; the original writes at 0x%X", who, slot,
                     static_cast<unsigned>((at::kSlots + 8 * slot).v));
-    return ::bof3::Img(at::kSlots) + 8 * slot;
+    return ::bof3::Img(at::kSlots.v) + 8 * slot;
 }
 
 // The field tail's state byte, moved by one as the original's inc / dec do.
@@ -117,7 +109,7 @@ void StateBy(int d) { AreaW0c_TailState = static_cast<unsigned char>(static_cast
 // The flashing intensity three draws share: from Frame_Counter's bits 1..2,
 // counted up while bit 3 is set and down while it is clear, +0x3F.
 unsigned char Flash() {
-    unsigned char f = B(at::kFrame);
+    unsigned char f = B(::bof3::Img(at::kFrame.v));
     if (!(f & 8)) f = static_cast<unsigned char>(~f);
     return static_cast<unsigned char>(((f & 6) << 5) + 0x3F);
 }
@@ -128,10 +120,10 @@ int Column(unsigned char slot) { return ((static_cast<int>(slot) - 1) % 4) * 52;
 
 // The 16 bytes of an item's record copied into Text_Records' first four dwords.
 void CopyName(const unsigned char* name) {
-    PutL(at::kTextRecords, static_cast<U>(Long(name)));
-    PutL(at::kTextRecords + 4, static_cast<U>(Long(name + 4)));
-    PutL(at::kTextRecords + 8, static_cast<U>(Long(name + 8)));
-    PutL(at::kTextRecords + 0xC, static_cast<U>(Long(name + 0xC)));
+    PutL(::bof3::Img(at::kTextRecords.v), static_cast<U>(Long(name)));
+    PutL(::bof3::Img(at::kTextRecords.v) + 4, static_cast<U>(Long(name + 4)));
+    PutL(::bof3::Img(at::kTextRecords.v) + 8, static_cast<U>(Long(name + 8)));
+    PutL(::bof3::Img(at::kTextRecords.v) + 0xC, static_cast<U>(Long(name + 0xC)));
 }
 
 void R4EHand(int x, int y, unsigned flash) {
@@ -149,7 +141,7 @@ void R4EHand(int x, int y, unsigned flash) {
 // original 0x456D50: Field_ModeTailKinds[14]: jmp [CommuTail14_States + 4 *
 // the s8 0x9039F4], unchecked (ours aborts outside 11).
 extern "C" void __cdecl CommuTail14_Dispatch(void) {
-    Jump(CommuTail14_States_addr, 11, AreaW0c_TailState, "CommuTail14_Dispatch");
+    Jump(::bof3::Img(CommuTail14_States_addr), 11, AreaW0c_TailState, "CommuTail14_Dispatch");
 }
 
 // original 0x456D60: CommuTail14_States[0]: while a message is open
@@ -157,7 +149,7 @@ extern "C" void __cdecl CommuTail14_Dispatch(void) {
 // state; else message 0xF8 opened and Field_Request 2.
 extern "C" void __cdecl CommuTail14_OpenF8(void) {
     if (Field_Request == 2) return;
-    if (W(at::kMessageIndex) == 0xF9) {
+    if (W(::bof3::Img(at::kMessageIndex.v)) == 0xF9) {
         StateBy(1);
         return;
     }
@@ -179,10 +171,10 @@ extern "C" void __cdecl CommuTail_WaitLoad(void) {
     if (SH_CALL(File_LoadDone)() == 0) return;
     SH_CALL(Gfx_ClutStripRestore)();
     Gfx_ClutStripDirty = 1;
-    B(at::kBoardTrack + 1) = 0;   // 0x939A3E, CommuBoard_States' index
-    B(at::kBoardTrack + 3) = 0;   // 0x939A40
-    B(at::kBoardTrack + 2) = 0;   // 0x939A3F
-    B(at::kBoardTrack + 4) = 0;   // 0x939A41
+    B(::bof3::Img(at::kBoardTrack.v) + 1) = 0;   // 0x939A3E, CommuBoard_States' index
+    B(::bof3::Img(at::kBoardTrack.v) + 3) = 0;   // 0x939A40
+    B(::bof3::Img(at::kBoardTrack.v) + 2) = 0;   // 0x939A3F
+    B(::bof3::Img(at::kBoardTrack.v) + 4) = 0;   // 0x939A41
     Rest4b_BoardFlag = 0;         // 0x939A3C
     Rest4d_Again = 0;             // 0x939A3D
     StateBy(1);
@@ -214,7 +206,7 @@ extern "C" void __cdecl CommuTail14_End(void) {
 // facing) = its +0x85, and Sprite_FaceDirection(+8 read back).
 extern "C" void __cdecl CommuTail_RestoreFacing(void) {
     const U object = Rest4d_Pointer;
-    PutL(at::kSpriteCurrent, object);
+    PutL(::bof3::Img(at::kSpriteCurrent.v), object);
     unsigned char* const o = At(object);
     o[8] = o[0x85];
     const unsigned char facing = Sprite_Current[8];
@@ -224,7 +216,7 @@ extern "C" void __cdecl CommuTail_RestoreFacing(void) {
 // original 0x456E70: Field_ModeTailKinds[21]: jmp [CommuTail21_States + 4 *
 // the s8 0x9039F4], unchecked (ours aborts outside 5).
 extern "C" void __cdecl CommuTail21_Dispatch(void) {
-    Jump(CommuTail21_States_addr, 5, AreaW0c_TailState, "CommuTail21_Dispatch");
+    Jump(::bof3::Img(CommuTail21_States_addr), 5, AreaW0c_TailState, "CommuTail21_Dispatch");
 }
 
 // original 0x456E80: CommuTail14_States[6], CommuTail21_States[0]: the time
@@ -243,7 +235,7 @@ extern "C" void __cdecl CommuTail_TimedGift(void) {
         {0x4E, 0x1D, 0}, {0x51, 0x1E, 0}, {0x5B, 8, 0},    {0xC9, 0x19, 3}, {0x1F4, 0x1A, 3},
     };
     const unsigned arg = AreaW0c_TailSub;
-    const U elapsed = Game_BattleCount - L(at::kMembers + 4 + 8 * arg);
+    const U elapsed = Game_BattleCount - L(::bof3::Img(at::kMembers.v) + 4 + 8 * arg);
     int k = 0;
     while (k < 20 && elapsed >= kRows[k].bound) ++k;
     --k;
@@ -288,7 +280,7 @@ extern "C" void __cdecl CommuTail_Open97(void) {
 // original 0x457110: Field_ModeTailKinds[22]: jmp [CommuTail22_States + 4 *
 // the s8 0x9039F4], unchecked (ours aborts outside 2).
 extern "C" void __cdecl CommuTail22_Dispatch(void) {
-    Jump(CommuTail22_States_addr, 2, AreaW0c_TailState, "CommuTail22_Dispatch");
+    Jump(::bof3::Img(CommuTail22_States_addr), 2, AreaW0c_TailState, "CommuTail22_Dispatch");
 }
 
 // original 0x457120 (PSX 0x801F1BB8): CommuTail14_States[9], CommuTail22_States[0]: by the
@@ -305,7 +297,7 @@ extern "C" void __cdecl CommuTail22_Dispatch(void) {
 extern "C" void __cdecl CommuTail_RandomGift(void) {
     static const unsigned char kTiers[3][4] = {{0x41, 0x1E, 5, 0x64}, {0x37, 0x19, 0x14, 0x64}, {0x19, 0x1E, 0x1E, 0xF}};
     const unsigned arg = AreaW0c_TailSub;
-    const unsigned char mark = B(at::kMembers + 2 + 8 * arg);
+    const unsigned char mark = B(::bof3::Img(at::kMembers.v) + 2 + 8 * arg);
     if (mark == 3) {
         SH_CALL(Msg_OpenScript)(0x52);
         const unsigned a = AreaW0c_TailSub;
@@ -315,7 +307,7 @@ extern "C" void __cdecl CommuTail_RandomGift(void) {
     } else if (mark == 2) {
         unsigned char r = static_cast<unsigned char>(SH_CALL(Rand)() & 0x7F);
         if (r > 0x64) r = 0x64;
-        const unsigned char slot = B(at::kMembers + 1 + 8 * AreaW0c_TailSub);
+        const unsigned char slot = B(::bof3::Img(at::kMembers.v) + 1 + 8 * AreaW0c_TailSub);
         const unsigned level = B(Slot(slot) + 1);
         if (level >= 3)
             bof3::Fatal("CommuTail_RandomGift: slot %u's level %u is past the three rows of its stack table; the original "
@@ -330,7 +322,7 @@ extern "C" void __cdecl CommuTail_RandomGift(void) {
             ++tier;
         }
         const unsigned pick = static_cast<unsigned>(SH_CALL(Rand)() & 0xF);
-        const U pair = ::bof3::Img(at::kGiftItems) + 2 * (pick + static_cast<U>(tier - 1) * 16);
+        const U pair = ::bof3::Img(at::kGiftItems.v) + 2 * (pick + static_cast<U>(tier - 1) * 16);
         const unsigned char item = B(pair), category = B(pair + 1);
         const unsigned char added = SH_CALL(Inventory_Add)(category, item, 1);
         if (added == 0) {
@@ -352,14 +344,14 @@ extern "C" void __cdecl CommuTail_RandomGift(void) {
 // original 0x4572F0: Field_ModeTailKinds[23]: jmp [CommuTail23_States + 4 *
 // the s8 0x9039F4], unchecked (ours aborts outside 21).
 extern "C" void __cdecl CommuTail23_Dispatch(void) {
-    Jump(CommuTail23_States_addr, 21, AreaW0c_TailState, "CommuTail23_Dispatch");
+    Jump(::bof3::Img(CommuTail23_States_addr), 21, AreaW0c_TailState, "CommuTail23_Dispatch");
 }
 
 // original 0x457300: CommuTail23_States[0]: Field_ScriptFlags2's low byte |= 7,
 // LoadDatFile(0x12D when 0x9039F5 is 3, else 0x12C), the next state.
 extern "C" void __cdecl CommuTail23_LoadDat(void) {
     const unsigned char arg = AreaW0c_TailSub;
-    B(at::kScriptFlags2) |= 7;
+    B(::bof3::Img(at::kScriptFlags2.v)) |= 7;
     SH_CALL(LoadDatFile)(arg == 3 ? 0x12D : 0x12C);
     StateBy(1);
 }
@@ -367,7 +359,7 @@ extern "C" void __cdecl CommuTail23_LoadDat(void) {
 // original 0x457340: CommuTail23_States[2]: jmp [CommuTail_GameStates + 4 * the
 // u8 0x9039F5], unchecked (ours aborts past 16).
 extern "C" void __cdecl CommuTail_GameDispatch(void) {
-    Jump(CommuTail_GameStates_addr, 16, AreaW0c_TailSub, "CommuTail_GameDispatch");
+    Jump(::bof3::Img(CommuTail_GameStates_addr), 16, AreaW0c_TailSub, "CommuTail_GameDispatch");
 }
 
 // original 0x457350: CommuTail23_States[4], [13], [20]: once File_LoadDone
@@ -383,13 +375,13 @@ extern "C" void __cdecl CommuTail_EndAfterLoad(void) {
 // original 0x457370: Field_ModeTailKinds[24]: jmp [CommuTail24_States + 4 *
 // the s8 0x9039F4], unchecked (ours aborts outside 12).
 extern "C" void __cdecl CommuTail24_Dispatch(void) {
-    Jump(CommuTail24_States_addr, 12, AreaW0c_TailState, "CommuTail24_Dispatch");
+    Jump(::bof3::Img(CommuTail24_States_addr), 12, AreaW0c_TailState, "CommuTail24_Dispatch");
 }
 
 // original 0x457380: CommuTail23_States[9]: Field_ScriptFlags2 |= 7,
 // LoadDatFile(0x12E), the next state.
 extern "C" void __cdecl CommuTail24_LoadDat(void) {
-    B(at::kScriptFlags2) |= 7;
+    B(::bof3::Img(at::kScriptFlags2.v)) |= 7;
     SH_CALL(LoadDatFile)(0x12E);
     StateBy(1);
 }
@@ -397,7 +389,7 @@ extern "C" void __cdecl CommuTail24_LoadDat(void) {
 // original 0x4573B0: Field_ModeTailKinds[25]: jmp [CommuTail25_States + 4 *
 // the s8 0x9039F4], unchecked (ours aborts outside 7).
 extern "C" void __cdecl CommuTail25_Dispatch(void) {
-    Jump(CommuTail25_States_addr, 7, AreaW0c_TailState, "CommuTail25_Dispatch");
+    Jump(::bof3::Img(CommuTail25_States_addr), 7, AreaW0c_TailState, "CommuTail25_Dispatch");
 }
 
 // original 0x4573C0: CommuTail23_States[14]: the record 0x9039F5's +3 (high
@@ -409,9 +401,9 @@ extern "C" void __cdecl CommuTail25_Dispatch(void) {
 // message, else its second; the next state. Field_Request 2.
 extern "C" void __cdecl CommuTail_NibbleGift(void) {
     const unsigned arg = AreaW0c_TailSub;
-    const unsigned char bits = B(at::kMembers + 3 + 8 * arg);
+    const unsigned char bits = B(::bof3::Img(at::kMembers.v) + 3 + 8 * arg);
     const unsigned n = bits >> 4;
-    const U row = ::bof3::Img(at::kGiftLines) + 6 * n;
+    const U row = ::bof3::Img(at::kGiftLines.v) + 6 * n;
     unsigned message;
     if (W(row + 4) == 0) {
         message = W(row);
@@ -422,11 +414,11 @@ extern "C" void __cdecl CommuTail_NibbleGift(void) {
             return;
         }
     } else {
-        const unsigned char* const name = SH_CALL(Item_NamePtr)(bits & 0xFu, B(at::kMembers + 2 + 8 * arg));
+        const unsigned char* const name = SH_CALL(Item_NamePtr)(bits & 0xFu, B(::bof3::Img(at::kMembers.v) + 2 + 8 * arg));
         CopyName(name);
         const unsigned a = AreaW0c_TailSub;
-        const unsigned char item = B(at::kMembers + 2 + 8 * a);
-        const unsigned char category = static_cast<unsigned char>(B(at::kMembers + 3 + 8 * a) & 0xF);
+        const unsigned char item = B(::bof3::Img(at::kMembers.v) + 2 + 8 * a);
+        const unsigned char category = static_cast<unsigned char>(B(::bof3::Img(at::kMembers.v) + 3 + 8 * a) & 0xF);
         const unsigned char added = SH_CALL(Inventory_Add)(category, item, B(row + 4));
         if (added != 0) {
             message = W(row);
@@ -445,7 +437,7 @@ extern "C" void __cdecl CommuTail_NibbleGift(void) {
 // else Field_ScriptFlags2 |= 7, LoadDatFile(0x12F), the next state.
 extern "C" void __cdecl CommuTail25_LoadDat(void) {
     if (Field_Request == 2) return;
-    B(at::kScriptFlags2) |= 7;
+    B(::bof3::Img(at::kScriptFlags2.v)) |= 7;
     SH_CALL(LoadDatFile)(0x12F);
     StateBy(1);
 }
@@ -453,7 +445,7 @@ extern "C" void __cdecl CommuTail25_LoadDat(void) {
 // original 0x457510: Field_ModeTailKinds[26]: jmp [CommuTail26_States + 4 *
 // the s8 0x9039F4], unchecked (ours aborts outside 5).
 extern "C" void __cdecl CommuTail26_Dispatch(void) {
-    Jump(CommuTail26_States_addr, 5, AreaW0c_TailState, "CommuTail26_Dispatch");
+    Jump(::bof3::Img(CommuTail26_States_addr), 5, AreaW0c_TailState, "CommuTail26_Dispatch");
 }
 
 // original 0x457520: CommuTail26_States[0]: with Field_ScriptFlags, 0x904A90
@@ -464,7 +456,7 @@ extern "C" void __cdecl CommuTail26_LoadDat(void) {
         AreaW0a_TailKind = 6;
         return;
     }
-    B(at::kScriptFlags2) |= 7;
+    B(::bof3::Img(at::kScriptFlags2.v)) |= 7;
     SH_CALL(LoadDatFile)(0x130);
     StateBy(1);
 }
@@ -518,7 +510,7 @@ extern "C" void __cdecl CommuTail60_Stream(void) {
 // original 0x457640: CommuTail14_States[3]: jmp [CommuBoard_States + 4 * the u8
 // 0x939A3E], unchecked (ours aborts past 14).
 extern "C" void __cdecl CommuBoard_Dispatch(void) {
-    Jump(CommuBoard_States_addr, 14, Rest4b_BoardState, "CommuBoard_Dispatch");
+    Jump(::bof3::Img(CommuBoard_States_addr), 14, Rest4b_BoardState, "CommuBoard_Dispatch");
 }
 
 // original 0x457650: CommuBoard_States[0]: the grid cursor at mode 0 with its
@@ -558,7 +550,7 @@ extern "C" void __cdecl CommuBoard_Grid(void) {
             allowed = count != 0;
         } else if (mode == 1) {
             const unsigned char arg = AreaW0c_TailSub;
-            allowed = arg <= B(at::kAreaLimits + static_cast<std::uint32_t>(Game_AreaNumber));
+            allowed = arg <= B(::bof3::Img(at::kAreaLimits.v) + static_cast<std::uint32_t>(Game_AreaNumber));
         }
         if (allowed == 1) {
             SH_CALL(Sound_PlayEffect)(0x104);
@@ -577,19 +569,19 @@ extern "C" void __cdecl CommuBoard_Grid(void) {
 // original 0x457780: CommuBoard_States[2]: jmp [CommuBoard_ModeStates + 4 * the
 // u8 0x675F86] (the kept cursor mode), unchecked (ours aborts past 11).
 extern "C" void __cdecl CommuBoard_ModeDispatch(void) {
-    Jump(CommuBoard_ModeStates_addr, 11, Rest4b_SavedMode, "CommuBoard_ModeDispatch");
+    Jump(::bof3::Img(CommuBoard_ModeStates_addr), 11, Rest4b_SavedMode, "CommuBoard_ModeDispatch");
 }
 
 // original 0x457790: CommuBoard_States[3], [5] (ModeStates[0], [2]): jmp
 // [CommuBoard_Steps + 4 * the u8 0x939A40], unchecked (ours aborts past 8).
 extern "C" void __cdecl CommuBoard_StepDispatch(void) {
-    Jump(CommuBoard_Steps_addr, 8, Rest4b_BoardStep, "CommuBoard_StepDispatch");
+    Jump(::bof3::Img(CommuBoard_Steps_addr), 8, Rest4b_BoardStep, "CommuBoard_StepDispatch");
 }
 
 // original 0x457AD0: CommuBoard_States[4] (ModeStates[1]): jmp
 // [CommuBoard_StepsB + 4 * the u8 0x939A40], unchecked (ours aborts past 6).
 extern "C" void __cdecl CommuBoard_StepDispatchB(void) {
-    Jump(CommuBoard_StepsB_addr, 6, Rest4b_BoardStep, "CommuBoard_StepDispatchB");
+    Jump(::bof3::Img(CommuBoard_StepsB_addr), 6, Rest4b_BoardStep, "CommuBoard_StepDispatchB");
 }
 
 namespace {
@@ -690,7 +682,7 @@ extern "C" void __cdecl CommuBoard_MoveRecord(void) {
     }
     SH_CALL(CommuBoard_DrawPanel)();
     SH_CALL(CommuBoard_DrawSlotLines)(AreaW0c_TailSub, 1);
-    SH_CALL(CommuBoard_DrawSlotLines)(B(at::kPick), 0);
+    SH_CALL(CommuBoard_DrawSlotLines)(B(::bof3::Img(at::kPick.v)), 0);
     if (placed) return;
     CursorAndCard(AreaW0c_TailSub, 1);
 }
@@ -777,7 +769,7 @@ extern "C" void __cdecl CommuBoard_MoveRecordB(void) {
     }
     SH_CALL(CommuBoard_DrawPanel)();
     SH_CALL(CommuBoard_DrawSlotLines)(AreaW0c_TailSub, 1);
-    SH_CALL(CommuBoard_DrawSlotLines)(B(at::kPick), 0);
+    SH_CALL(CommuBoard_DrawSlotLines)(B(::bof3::Img(at::kPick.v)), 0);
     if (placed) return;
     short x = 0, y = 0;
     {
@@ -822,7 +814,7 @@ extern "C" void __cdecl CommuBoard_PickList(void) {
         Rest4b_BoardStep = 0;
     } else if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
         const int row = Rest4b_Pick;
-        const unsigned char next = B(at::kPickNext + static_cast<U>(row));
+        const unsigned char next = B(::bof3::Img(at::kPickNext.v) + static_cast<U>(row));
         if (next == 0xFF) {
             SH_AT(void (__cdecl*)(), at::kR4CAsk)();
         } else {
@@ -831,7 +823,7 @@ extern "C" void __cdecl CommuBoard_PickList(void) {
             Rest4b_PickD = next;
             SH_CALL(Sound_PlayEffect)(0x103);
             Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep + 1);
-            Rest4b_Help = W(at::kPickNextHelp + 2 * Rest4b_PickD);
+            Rest4b_Help = W(::bof3::Img(at::kPickNextHelp.v) + 2 * Rest4b_PickD);
         }
     } else {
         const unsigned keys = SH_CALL(Input_AutoRepeat)(pressed & 0x5000);
@@ -856,7 +848,7 @@ extern "C" void __cdecl CommuBoard_PickList(void) {
             SH_CALL(Sound_PlayEffect)(0x100);
             c = static_cast<unsigned char>(Rest4b_Pick);
         }
-        Rest4b_Help = W(at::kPickHelpB + 2 * static_cast<U>(static_cast<signed char>(c)));
+        Rest4b_Help = W(::bof3::Img(at::kPickHelpB.v) + 2 * static_cast<U>(static_cast<signed char>(c)));
     }
     SH_CALL(CommuBoard_DrawPanel)();
     SH_CALL(CommuBoard_DrawSlotLines)(AreaW0c_TailSub, 1);
@@ -883,7 +875,7 @@ extern "C" void __cdecl CommuBoard_PickListB(void) {
         Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep - 1);
         Rest4b_PickD = 0xFF;
     } else if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
-        const unsigned char next = B(at::kPickPairs + 1 + 2 * Rest4b_PickD);
+        const unsigned char next = B(::bof3::Img(at::kPickPairs.v) + 1 + 2 * Rest4b_PickD);
         if (next == 0xFF) {
             SH_AT(void (__cdecl*)(), at::kR4CAsk)();
         } else {
@@ -902,13 +894,13 @@ extern "C" void __cdecl CommuBoard_PickListB(void) {
             --c;
             Rest4b_PickB = c;
             if (static_cast<signed char>(c) < 0) {
-                c = static_cast<unsigned char>(B(at::kPickPairs + 2 * Rest4b_PickD) - 1);
+                c = static_cast<unsigned char>(B(::bof3::Img(at::kPickPairs.v) + 2 * Rest4b_PickD) - 1);
                 Rest4b_PickB = c;
             }
         } else if (keys & 0x4000) {
             ++c;
             Rest4b_PickB = c;
-            if (static_cast<signed char>(c) >= static_cast<int>(B(at::kPickPairs + 2 * Rest4b_PickD))) {
+            if (static_cast<signed char>(c) >= static_cast<int>(B(::bof3::Img(at::kPickPairs.v) + 2 * Rest4b_PickD))) {
                 c = 0;
                 Rest4b_PickB = c;
             }
@@ -1071,7 +1063,7 @@ extern "C" void __cdecl CommuBoard_DrawRecordCard(int x, int y, unsigned record,
     SH_CALL(Menu_DrawBox)(x, y, 0x48, 0x26, 0x80, static_cast<unsigned char>(Config_WindowColour));
     SH_CALL(CommuBoard_DrawCardFrame)(x, y);
     const unsigned r = record & 0xFF;
-    SH_CALL(Text_DrawAt)(x + 6, y + 4, 0, 5, At(at::kNames + 5 * r));
+    SH_CALL(Text_DrawAt)(x + 6, y + 4, 0, 5, At(::bof3::Img(at::kNames.v) + 5 * r));
     unsigned char* const p = Packet();
     SH_CALL(Gpu_SetTile)(p);
     PutF(p + 8, static_cast<float>(static_cast<short>(x) + 6));
@@ -1082,7 +1074,7 @@ extern "C" void __cdecl CommuBoard_DrawRecordCard(int x, int y, unsigned record,
     p[6] = 0;
     PutF(p + 0xC, static_cast<float>(static_cast<short>(y) + 0x12));
     SH_CALL(Gfx_CommitPrim)(1, 0x1C);
-    const U bars = ::bof3::Img(at::kBars) + 20 * r;
+    const U bars = ::bof3::Img(at::kBars.v) + 20 * r;
     const int bx = x + 6;
     if ((highlight & 0xFF) == 0) {
         SH_CALL(CommuBoard_DrawBar)(bx, y + 0x12, B(bars) * 12, 0, 0);
@@ -1098,8 +1090,8 @@ extern "C" void __cdecl CommuBoard_DrawRecordCard(int x, int y, unsigned record,
     else if (pick >= 9)
         k = static_cast<unsigned char>(pick - 8);
     else
-        k = B(at::kSlots + 8 * static_cast<U>(static_cast<int>(pick)));
-    const U lit = ::bof3::Img(at::kBarHighlight) + k;
+        k = B(::bof3::Img(at::kSlots.v) + 8 * static_cast<U>(static_cast<int>(pick)));
+    const U lit = ::bof3::Img(at::kBarHighlight.v) + k;
     SH_CALL(CommuBoard_DrawBar)(bx, y + 0x12, B(bars) * 12, 0, B(lit) == 0 ? 1 : 0);
     SH_CALL(CommuBoard_DrawBar)(bx, y + 0x16, B(bars + 1) * 12, 1, B(lit) == 1 ? 1 : 0);
     SH_CALL(CommuBoard_DrawBar)(bx, y + 0x1A, B(bars + 2) * 12, 2, B(lit) == 2 ? 1 : 0);
@@ -1523,7 +1515,7 @@ extern "C" void __cdecl CommuBoard_DrawDigits(int x, int y, unsigned number) {
     q[4] = 0x80;
     q[5] = 0x80;
     q[6] = 0x80;
-    PutW(q + 0x16, 0x7840u | (B(at::kDigitCells + n) >> 4));
+    PutW(q + 0x16, 0x7840u | (B(::bof3::Img(at::kDigitCells.v) + n) >> 4));
     SH_CALL(Gfx_CommitPrim)(1, 0x18);
 }
 
@@ -1538,7 +1530,7 @@ extern "C" void __cdecl CommuBoard_DrawSprite(int x, int y, unsigned id) {
     SH_CALL(Gpu_SetSprt)(q);
     PutF(q + 8, static_cast<float>(static_cast<short>(x)));
     PutF(q + 0xC, static_cast<float>(static_cast<short>(y)));
-    const U e = ::bof3::Img(at::kSprites) + 6 * (id & 0xFF);
+    const U e = ::bof3::Img(at::kSprites.v) + 6 * (id & 0xFF);
     q[0x14] = B(e);
     q[0x15] = B(e + 1);
     PutW(q + 0x18, B(e + 2));
@@ -1575,7 +1567,7 @@ extern "C" void __cdecl CommuBoard_DrawListBox(int x, int y, unsigned steady) {
     if (FieldE2_LevelA == 0) return;
     const unsigned char colour = static_cast<unsigned char>(flag * 7);
     for (unsigned i = 0; i < FieldE2_LevelA; ++i) {
-        const unsigned char* const line = At(L(at::kListTextA + 4 * i));
+        const unsigned char* const line = At(L(::bof3::Img(at::kListTextA.v) + 4 * i));
         SH_CALL(Text_DrawAt)(x + 6, static_cast<int>(i * 16) + y + 2, colour, Labels_Written(13) ? 0xFF : 3, line);   // DIV-0064 group 13
     }
 }
@@ -1619,7 +1611,7 @@ extern "C" int __cdecl CommuBoard_ListY(void) {
 // and its lines (the pointers 0x669EE0[first + i]) at (x + 6, y + 2 + 16 * i),
 // colour 7 * steady. Answers the y it drew at (ax).
 extern "C" unsigned short __cdecl CommuBoard_DrawListBoxB(int x, int y, unsigned list, unsigned steady) {
-    const U row = ::bof3::Img(at::kLists) + 2 * (list & 0xFF);
+    const U row = ::bof3::Img(at::kLists.v) + 2 * (list & 0xFF);
     const int h = B(row + 1) * 16;
     if (h + static_cast<short>(y) + 4 > 0xD8) y = 0xD4 - h;
     const unsigned char flag = static_cast<unsigned char>(steady);
@@ -1629,7 +1621,7 @@ extern "C" unsigned short __cdecl CommuBoard_DrawListBoxB(int x, int y, unsigned
     if (B(row + 1) != 0) {
         const unsigned char colour = static_cast<unsigned char>(flag * 7);
         for (unsigned i = 0; i < B(row + 1); ++i) {
-            const unsigned char* const line = At(L(at::kListTexts + 4 * (B(row) + i)));
+            const unsigned char* const line = At(L(::bof3::Img(at::kListTexts.v) + 4 * (B(row) + i)));
             SH_CALL(Text_DrawAt)(x + 6, static_cast<int>(i * 16) + y + 2, colour, Labels_Written(13) ? 0xFF : 3, line);   // DIV-0064 group 13
         }
     }
@@ -1653,7 +1645,7 @@ extern "C" void __cdecl CommuBoard_SlotRecordXY(short* x, short* y, unsigned slo
         *y = static_cast<short>(cy);
         return;
     }
-    const U e = ::bof3::Img(at::kSlotOffsets) + 4 * (t + static_cast<unsigned char>(kk - 1));
+    const U e = ::bof3::Img(at::kSlotOffsets.v) + 4 * (t + static_cast<unsigned char>(kk - 1));
     *x = static_cast<short>(W(e) + static_cast<unsigned>(cx));
     *y = static_cast<short>(W(e + 2) + static_cast<unsigned>(cy));
 }
@@ -1684,7 +1676,7 @@ extern "C" unsigned char __cdecl CommuBoard_PlaceRecord(unsigned back) {
         refused = false;
     } else if (mode == 1) {
         const unsigned char n = SH_CALL(Commu_CountInSlot)(static_cast<unsigned char>(Rest4b_Pick));
-        refused = n == 3 || Rest4b_Pick > static_cast<int>(B(at::kAreaLimits + static_cast<std::uint32_t>(Game_AreaNumber)));
+        refused = n == 3 || Rest4b_Pick > static_cast<int>(B(::bof3::Img(at::kAreaLimits.v) + static_cast<std::uint32_t>(Game_AreaNumber)));
     } else {
         refused = true;
     }
@@ -1760,15 +1752,15 @@ extern "C" void __cdecl CommuBoard_PickHelp(unsigned char* cell) {
         return;
     }
     if (v >= 9) {
-        Rest4b_Help = W(at::kSlotHelp + 2 * v);
+        Rest4b_Help = W(::bof3::Img(at::kSlotHelp.v) + 2 * v);
         return;
     }
-    if (v > B(at::kAreaLimits + static_cast<std::uint32_t>(Game_AreaNumber))) {
+    if (v > B(::bof3::Img(at::kAreaLimits.v) + static_cast<std::uint32_t>(Game_AreaNumber))) {
         Rest4b_Help = 0x44;
         return;
     }
     const unsigned char kind = B(Slot(v));
-    Rest4b_Help = kind == 0 ? 0x69 : W(at::kPickHelp + 2 * kind);
+    Rest4b_Help = kind == 0 ? 0x69 : W(::bof3::Img(at::kPickHelp.v) + 2 * kind);
 }
 
 #pragma clang attribute pop

@@ -63,12 +63,6 @@ void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned W(U a) { return Word(At(a)); }
 unsigned char& B(U a) { return At(a)[0]; }
-// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
-// the VA is placed here, through ::bof3::Img.
-unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
-U UL(::bof3::image::Va va) { return UL(::bof3::Img(va)); }
-unsigned W(::bof3::image::Va va) { return W(::bof3::Img(va)); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
@@ -157,13 +151,13 @@ extern "C" void __cdecl EffectKind1B_Run(void) { Dispatch("EffectKind1B_Run", Ef
 // index is a byte: past 255 it wraps to the text's start (already rewritten),
 // so the loop stops only at a NUL.
 extern "C" void __cdecl EffectKind41_DrawNumber(int x, int y, int /*unused*/, unsigned clut) {
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kText)), reinterpret_cast<const char*>(At(at::kNumberFormat)),
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kText.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kNumberFormat.v))),
                          static_cast<unsigned>(S()[6]));
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xF, 0);
     SH_CALL(Gfx_CommitPrim)(S()[0x29], 0xC);
     U px = static_cast<U>(x);
     unsigned char i = 0;
-    unsigned char* c = At(at::kText);
+    unsigned char* c = At(::bof3::Img(at::kText.v));
     do {
         if (*c != 0x20) {
             unsigned char* const p = Gfx_PacketNext;
@@ -184,7 +178,7 @@ extern "C" void __cdecl EffectKind41_DrawNumber(int x, int y, int /*unused*/, un
         }
         px += 8;
         ++i;
-        c = At(at::kText + i);
+        c = At(::bof3::Img(at::kText.v) + i);
     } while (*c != 0);
 }
 
@@ -197,13 +191,13 @@ extern "C" void __cdecl EffectShards_LoadModel(void) {
     unsigned char* s = S();
     std::int32_t n = static_cast<std::int8_t>(reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::EffectObject>(s)->frames))[0]) *
                      static_cast<std::int32_t>(at::kModelFace);
-    unsigned char* to = At(at::kModelCopy);
+    unsigned char* to = At(::bof3::Img(at::kModelCopy.v));
     for (; n > 0; --n) {
         *to++ = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::EffectObject>(s)->script))[0];
         rv::As<records::EffectObject>(s)->script = rv::As<records::EffectObject>(s)->script + 1;
         s = S();
     }
-    rv::As<records::EffectObject>(s)->script = ::bof3::Img(at::kModelCopy);
+    rv::As<records::EffectObject>(s)->script = ::bof3::Img(at::kModelCopy.v);
     SH_CALL(EffectKind30_ShardsInit)();
     SH_CALL(EffectKind30_SparksInit)();
     S()[9] = 0x10;
@@ -737,7 +731,7 @@ extern "C" void __cdecl EffectRing_Draw(const unsigned char* ring) {
 // Kind 0x49's variant 3 (E2D) uses them.
 // ===========================================================================
 
-unsigned char* Dust(unsigned i) { return At(at::kDust + i * at::kDustStride); }
+unsigned char* Dust(unsigned i) { return At(::bof3::Img(at::kDust.v) + i * at::kDustStride); }
 
 // original 0x47A110: +0 of each of the 64 = 0.
 extern "C" void __cdecl EffectDust_Clear(void) {
@@ -964,19 +958,19 @@ extern "C" void __cdecl EffectKind5D_Show(void) {
     }
     if ((S()[7] & 1) == 0) {
         rv::As<records::EffectObject>(S())->screen_x = Rest3e_SpriteDx + Rest3e_Windows;
-        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->screen_y, Rest3e_SpriteDy + W(at::kWindows + 2));
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->screen_y, Rest3e_SpriteDy + W(::bof3::Img(at::kWindows.v) + 2));
         SH_CALL(Sprite_ScriptTick)();
         SH_CALL(Sprite_QueueOverlay)();
     }
     if ((S()[7] & 2) == 0) {
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, S()[6]);
-        SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kText)), reinterpret_cast<const char*>(At(at::kStringFormat)), name);
-        SH_CALL(Text_DrawAt)(static_cast<int>(UL(at::kWindows + 8) + 4), static_cast<int>((W(at::kWindows + 0xA) + 2) & 0xFFFFu), 0, 8, At(at::kText));
+        SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kText.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kStringFormat.v))), name);
+        SH_CALL(Text_DrawAt)(static_cast<int>(UL(::bof3::Img(at::kWindows.v) + 8) + 4), static_cast<int>((W(::bof3::Img(at::kWindows.v) + 0xA) + 2) & 0xFFFFu), 0, 8, At(::bof3::Img(at::kText.v)));
         const unsigned count = SH_CALL(Inventory_Count)(0, S()[6], 0);
-        SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kText)), reinterpret_cast<const char*>(At(at::kCountFormat)), count & 0xFFFFu);
-        SH_CALL(Text_DrawAt)(static_cast<int>(UL(at::kWindows + 8) + 0x48), static_cast<int>((W(at::kWindows + 0xA) + 2) & 0xFFFFu), 0, 2, At(at::kText));
+        SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kText.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kCountFormat.v))), count & 0xFFFFu);
+        SH_CALL(Text_DrawAt)(static_cast<int>(UL(::bof3::Img(at::kWindows.v) + 8) + 0x48), static_cast<int>((W(::bof3::Img(at::kWindows.v) + 0xA) + 2) & 0xFFFFu), 0, 2, At(::bof3::Img(at::kText.v)));
     }
-    SH_CALL(EffectKind5D_DrawBoard)(static_cast<int>(UL(at::kBoard) + 1), static_cast<int>((W(at::kBoard + 2) + 1) & 0xFFFFu), 0x80, 0x68);
+    SH_CALL(EffectKind5D_DrawBoard)(static_cast<int>(UL(::bof3::Img(at::kBoard.v)) + 1), static_cast<int>((W(::bof3::Img(at::kBoard.v) + 2) + 1) & 0xFFFFu), 0x80, 0x68);
     unsigned char* const s = S();
     if (s[0xA] != 0) {
         s[0xA] = static_cast<unsigned char>(s[0xA] - 1);
@@ -1038,7 +1032,7 @@ extern "C" void __cdecl EffectKind5E_Pick(void) {
         return;
     }
     const unsigned char* const s = S();
-    unsigned char& count = B(at::kCounts + s[2]);
+    unsigned char& count = B(::bof3::Img(at::kCounts.v) + s[2]);
     if (count < 100) count = static_cast<unsigned char>(count + 1);
     SH_CALL(Inventory_Remove)(0, s[6], 1);
     SH_CALL(Sound_PlayEffect)(0x20A);
@@ -1049,8 +1043,8 @@ extern "C" void __cdecl EffectKind5E_Pick(void) {
 // + 1, 0x80 x 0x68); +0xA down when not 0; at 0, any pressed button: sound
 // 0x20C, +1 = 1.
 extern "C" void __cdecl EffectKind5E_Wait(void) {
-    SH_CALL(Window_DrawFrame)(W(at::kBoard), W(at::kBoard + 2), B(at::kBoard + 4), B(at::kBoard + 6));
-    SH_CALL(EffectKind5D_DrawBoard)(static_cast<int>(UL(at::kBoard) + 1), static_cast<int>((W(at::kBoard + 2) + 1) & 0xFFFFu), 0x80, 0x68);
+    SH_CALL(Window_DrawFrame)(W(::bof3::Img(at::kBoard.v)), W(::bof3::Img(at::kBoard.v) + 2), B(::bof3::Img(at::kBoard.v) + 4), B(::bof3::Img(at::kBoard.v) + 6));
+    SH_CALL(EffectKind5D_DrawBoard)(static_cast<int>(UL(::bof3::Img(at::kBoard.v)) + 1), static_cast<int>((W(::bof3::Img(at::kBoard.v) + 2) + 1) & 0xFFFFu), 0x80, 0x68);
     unsigned char* const s = S();
     if (s[0xA] != 0) {
         s[0xA] = static_cast<unsigned char>(s[0xA] - 1);
@@ -1105,17 +1099,17 @@ extern "C" void __cdecl EffectKind5D_DrawBoard(int x, int y, int w, int h) {
     p[0x45] = 0xFF;
     SH_CALL(Gfx_CommitPrim)(1, 0x48);
     for (unsigned i = 0; i < at::kItems; ++i) {
-        unsigned n = B(at::kCounts + i);
+        unsigned n = B(::bof3::Img(at::kCounts.v) + i);
         if (n > 3) n = 3;
         for (unsigned k = 0; k < n; ++k) {
-            const unsigned m = B(at::kRows + 3 * i + k);
+            const unsigned m = B(::bof3::Img(at::kRows.v) + 3 * i + k);
             if (m == 0xA) continue;
             if (m >= at::kMarkCount)
                 bof3::Fatal("EffectKind5D_DrawBoard: mark %u of row %u is past the %u the table 0x6548D4 has room for - the "
                             "original reads what follows (docs/rest_3e.md section 7)",
                             m, i, at::kMarkCount);
-            SH_CALL(EffectKind5D_DrawMark)(static_cast<int>((W(at::kMarks + 4 * m) + static_cast<U>(x)) & 0xFFFFu),
-                                           static_cast<int>((W(at::kMarks + 4 * m + 2) + static_cast<U>(y)) & 0xFFFFu));
+            SH_CALL(EffectKind5D_DrawMark)(static_cast<int>((W(::bof3::Img(at::kMarks.v) + 4 * m) + static_cast<U>(x)) & 0xFFFFu),
+                                           static_cast<int>((W(::bof3::Img(at::kMarks.v) + 4 * m + 2) + static_cast<U>(y)) & 0xFFFFu));
         }
     }
 }
@@ -1153,18 +1147,18 @@ extern "C" void __cdecl EffectKind5D_DrawMark(int x, int y) {
 // seventeen letters past the original's count of 15), it is drawn whole, to
 // its NUL (Labels_Written's rule).
 extern "C" void __cdecl EffectKind5E_DrawMenu(void) {
-    SH_CALL(Menu_DrawBox)(W(at::kMenuBox), W(at::kMenuBox + 2), W(at::kMenuBox + 4), W(at::kMenuBox + 6), 2, static_cast<unsigned char>(Config_WindowColour));
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kText)), reinterpret_cast<const char*>(At(at::kStringFormat)), At(at::kTitle));
+    SH_CALL(Menu_DrawBox)(W(::bof3::Img(at::kMenuBox.v)), W(::bof3::Img(at::kMenuBox.v) + 2), W(::bof3::Img(at::kMenuBox.v) + 4), W(::bof3::Img(at::kMenuBox.v) + 6), 2, static_cast<unsigned char>(Config_WindowColour));
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kText.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kStringFormat.v))), At(::bof3::Img(at::kTitle.v)));
     const int count = Labels_Written(20) ? 0xFF : 0xF;
-    SH_CALL(Text_DrawAt)(static_cast<int>(UL(at::kMenuBox) + 4), static_cast<int>((W(at::kMenuBox + 2) + 2) & 0xFFFFu), 0, count, At(at::kText));
+    SH_CALL(Text_DrawAt)(static_cast<int>(UL(::bof3::Img(at::kMenuBox.v)) + 4), static_cast<int>((W(::bof3::Img(at::kMenuBox.v) + 2) + 2) & 0xFFFFu), 0, count, At(::bof3::Img(at::kText.v)));
     SH_CALL(EffectKind5E_DrawList)();
     const unsigned pick = S()[2] & 7u;
     const unsigned hand = Rest3e_Hand;
     SH_CALL(Menu_DrawHand)(static_cast<int>(hand & 0xFFu), static_cast<int>(15 * pick + (hand >> 8)), 0);
     SH_CALL(EffectKind5E_DrawPanel)();
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->screen_x, Rest3e_SpriteDx + UL(at::kPanel));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->screen_y, Rest3e_SpriteDy + W(at::kPanel + 2));
-    SH_CALL(Window_DrawFrame)(W(at::kPanel), W(at::kPanel + 2), B(at::kPanel + 4), B(at::kPanel + 6));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->screen_x, Rest3e_SpriteDx + UL(::bof3::Img(at::kPanel.v)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->screen_y, Rest3e_SpriteDy + W(::bof3::Img(at::kPanel.v) + 2));
+    SH_CALL(Window_DrawFrame)(W(::bof3::Img(at::kPanel.v)), W(::bof3::Img(at::kPanel.v) + 2), B(::bof3::Img(at::kPanel.v) + 4), B(::bof3::Img(at::kPanel.v) + 6));
     SH_CALL(Sprite_ScriptTick)();
     SH_CALL(Sprite_QueueOverlay)();
 }
@@ -1176,17 +1170,17 @@ extern "C" void __cdecl EffectKind5E_DrawMenu(void) {
 // through the format 0x653EC0 at (x + 8 + 0x5A, the line + 3) in the same
 // colour (Text_DrawFont8).
 extern "C" void __cdecl EffectKind5E_DrawList(void) {
-    SH_CALL(Menu_DrawBox)(W(at::kListBox), W(at::kListBox + 2), W(at::kListBox + 4), W(at::kListBox + 6), 0, static_cast<unsigned char>(Config_WindowColour));
-    const U x = UL(at::kListBox) + 8;
-    U line = W(at::kListBox + 2) + 0x14;
+    SH_CALL(Menu_DrawBox)(W(::bof3::Img(at::kListBox.v)), W(::bof3::Img(at::kListBox.v) + 2), W(::bof3::Img(at::kListBox.v) + 4), W(::bof3::Img(at::kListBox.v) + 6), 0, static_cast<unsigned char>(Config_WindowColour));
+    const U x = UL(::bof3::Img(at::kListBox.v)) + 8;
+    U line = W(::bof3::Img(at::kListBox.v) + 2) + 0x14;
     for (unsigned item = at::kFirstItem; item < at::kFirstItem + at::kItems; ++item, line += 0xF) {
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, item);
         const auto count = static_cast<unsigned char>(SH_CALL(Inventory_Count)(0, item, 0));
         const unsigned colour = count != 0 ? 0u : 7u;
         const unsigned length = SH_CALL(Text_CharCount)(name);
         SH_CALL(Text_DrawAt)(static_cast<int>(x), static_cast<int>(line), static_cast<int>(colour), static_cast<int>(length), name);
-        SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kText)), reinterpret_cast<const char*>(At(at::kListFormat)), static_cast<unsigned>(count));
-        SH_CALL(Text_DrawFont8)(static_cast<int>(x + 0x5A), static_cast<int>(line + 3), static_cast<int>(colour), At(at::kText));
+        SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kText.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kListFormat.v))), static_cast<unsigned>(count));
+        SH_CALL(Text_DrawFont8)(static_cast<int>(x + 0x5A), static_cast<int>(line + 3), static_cast<int>(colour), At(::bof3::Img(at::kText.v)));
     }
 }
 
@@ -1382,7 +1376,7 @@ void Glyph(int x, int y, Shape s) {
         SH_CALL(Text_DrawAt)(x, y, kShapeColour[s], 3, code);
         return;
     }
-    const auto* text = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(UL(kStandIns + 4 * s)));
+    const auto* text = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(UL(::bof3::Img(kStandIns.v) + 4 * s)));
     SH_CALL(Text_DrawAt)(x, y, kShapeColour[s], 3, text);
 }
 
@@ -1552,11 +1546,11 @@ void SelfTest() {
 // page's icon, the quad in pieces and that row's icon drawn (the section
 // above); else exactly the original's.
 extern "C" void __cdecl EffectKind5E_DrawPanel(void) {
-    SH_CALL(Menu_DrawBox)(static_cast<std::uint32_t>(Rest3e_PanelBox), W(at::kPanelBox + 2), W(at::kPanelBox + 4), W(at::kPanelBox + 6), 0, static_cast<unsigned char>(Config_WindowColour));
+    SH_CALL(Menu_DrawBox)(static_cast<std::uint32_t>(Rest3e_PanelBox), W(::bof3::Img(at::kPanelBox.v) + 2), W(::bof3::Img(at::kPanelBox.v) + 4), W(::bof3::Img(at::kPanelBox.v) + 6), 0, static_cast<unsigned char>(Config_WindowColour));
     if (dock::g_on) {
-        if (W(at::kPanelBox + 4) != dock::kBoxW || W(at::kPanelBox + 6) != dock::kBoxH)
-            bof3::Fatal("DockLegend: the panel box 0x654888 is 0x%X x 0x%X, not the 0x40 x 0x28 its rows were read for", W(at::kPanelBox + 4),
-                        W(at::kPanelBox + 6));
+        if (W(::bof3::Img(at::kPanelBox.v) + 4) != dock::kBoxW || W(::bof3::Img(at::kPanelBox.v) + 6) != dock::kBoxH)
+            bof3::Fatal("DockLegend: the panel box 0x654888 is 0x%X x 0x%X, not the 0x40 x 0x28 its rows were read for", W(::bof3::Img(at::kPanelBox.v) + 4),
+                        W(::bof3::Img(at::kPanelBox.v) + 6));
         dock::Shape baked[dock::kRows];
         std::uint16_t wanted[dock::kRows];
         for (unsigned r = 0; r < dock::kRows; ++r) {
@@ -1570,7 +1564,7 @@ extern "C" void __cdecl EffectKind5E_DrawPanel(void) {
         for (unsigned r = 0; readable && r < dock::kRows; ++r) changed = changed || rows[r].how != dock::kKeep;
         if (changed) {
             const std::int32_t x0 = Rest3e_PanelBox;
-            const std::int32_t y0 = static_cast<std::int32_t>(W(at::kPanelBox + 2));
+            const std::int32_t y0 = static_cast<std::int32_t>(W(::bof3::Img(at::kPanelBox.v) + 2));
             const unsigned u1 = dock::kU0 + dock::kBoxW - 1;   // 0xFF, as w - 0x41
             // Whole-width runs of texel rows, 1:1 in v as the original's quad;
             // a changed row's cell left out of its band (u 4..14 not drawn).
@@ -1613,16 +1607,16 @@ extern "C" void __cdecl EffectKind5E_DrawPanel(void) {
     unsigned char* const p = Quad(0x20);
     p[4] = p[5] = p[6] = 0x80;
     const std::int32_t x0 = Rest3e_PanelBox;
-    const std::int32_t y0 = static_cast<std::int32_t>(W(at::kPanelBox + 2));
-    Corners(p, x0, y0, x0 + static_cast<std::int32_t>(W(at::kPanelBox + 4)), y0 + static_cast<std::int32_t>(W(at::kPanelBox + 6)));
+    const std::int32_t y0 = static_cast<std::int32_t>(W(::bof3::Img(at::kPanelBox.v) + 2));
+    Corners(p, x0, y0, x0 + static_cast<std::int32_t>(W(::bof3::Img(at::kPanelBox.v) + 4)), y0 + static_cast<std::int32_t>(W(::bof3::Img(at::kPanelBox.v) + 6)));
     p[0x14] = 0xC0;
     p[0x15] = 0x50;
     p[0x25] = 0x50;
     p[0x34] = 0xC0;
-    p[0x24] = static_cast<unsigned char>(B(at::kPanelBox + 4) - 0x41);
-    p[0x35] = static_cast<unsigned char>(B(at::kPanelBox + 6) + 0x50);
-    p[0x44] = static_cast<unsigned char>(B(at::kPanelBox + 4) - 0x41);
-    p[0x45] = static_cast<unsigned char>(B(at::kPanelBox + 6) + 0x50);
+    p[0x24] = static_cast<unsigned char>(B(::bof3::Img(at::kPanelBox.v) + 4) - 0x41);
+    p[0x35] = static_cast<unsigned char>(B(::bof3::Img(at::kPanelBox.v) + 6) + 0x50);
+    p[0x44] = static_cast<unsigned char>(B(::bof3::Img(at::kPanelBox.v) + 4) - 0x41);
+    p[0x45] = static_cast<unsigned char>(B(::bof3::Img(at::kPanelBox.v) + 6) + 0x50);
     SH_CALL(Gfx_CommitPrim)(1, 0x48);
 }
 

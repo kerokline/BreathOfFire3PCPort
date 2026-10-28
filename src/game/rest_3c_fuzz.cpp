@@ -32,9 +32,6 @@ namespace {
 namespace bh = boss_harness;
 using U = std::uint32_t;
 using bh::Mem;
-// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
-// the VA is placed here, through ::bof3::Img.
-unsigned char* Mem(::bof3::image::Va va) { return Mem(::bof3::Img(va)); }
 using move_script::SetWord;
 using move_script::Word;
 using S = bh::Shape;
@@ -301,13 +298,13 @@ unsigned char TargetFor(U base, U v) {
 void Seed(unsigned k) {
     g_base = g_cur[k].base;
     // the actor and the target (their dwords' upper bytes the fill's), the kind, the ability
-    Mem(at::kActor)[0] = static_cast<unsigned char>(bh::Next() % 11);
-    Mem(at::kTarget)[0] = TargetFor(g_base, bh::Next());
-    Mem(at::kActingKind)[0] = Byte8({4, 4, 1, 0});
-    SetWord(Mem(at::kAbility), bh::Often() ? (bh::Half() ? 0x9A : bh::Next() % 256) : bh::Next());
+    Mem(::bof3::Img(at::kActor.v))[0] = static_cast<unsigned char>(bh::Next() % 11);
+    Mem(::bof3::Img(at::kTarget.v))[0] = TargetFor(g_base, bh::Next());
+    Mem(::bof3::Img(at::kActingKind.v))[0] = Byte8({4, 4, 1, 0});
+    SetWord(Mem(::bof3::Img(at::kAbility.v)), bh::Often() ? (bh::Half() ? 0x9A : bh::Next() % 256) : bh::Next());
     // the party: its count, the characters (CharacterRecords' first ten), HP, the flag and status bits,
     // the stat words and the counts the slots test
-    Mem(at::kPartyCount)[0] = static_cast<unsigned char>(bh::Next() % 4);
+    Mem(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(bh::Next() % 4);
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = Member(m);
         p[0x148] = static_cast<unsigned char>(bh::Next() % 10);
@@ -325,7 +322,7 @@ void Seed(unsigned k) {
         e[0xF0] = static_cast<unsigned char>(bh::Next() % 8);
         rv::As<records::BattleEnemy>(e)->hp = Word16({0, 1, 2, 0x7FFF, 0x8000, 0xFFFF, 100});
         rv::As<records::BattleEnemy>(e)->max_hp = bh::Next() % 4 == 0 ? 0xFFFF : Word16({0, 1, 9, 10, 11, 100, 1000});
-        SetWord(Mem(at::kEnemyData + e[0xF0] * at::kEnemyDataStride + 0x24), Word16({0, 9, 10, 99, 100, 1000, 0xFFFF}));
+        SetWord(Mem(::bof3::Img(at::kEnemyData.v) + e[0xF0] * at::kEnemyDataStride + 0x24), Word16({0, 9, 10, 99, 100, 1000, 0xFFFF}));
         e[0xAA] = static_cast<unsigned char>(bh::Next() % 10);
         e[0xAE] = static_cast<unsigned char>(bh::Next() % 10);
         e[0xAB] = static_cast<unsigned char>(bh::Half() ? e[0xAB] | 1 : e[0xAB] & 0xFE);
@@ -341,7 +338,7 @@ void Seed(unsigned k) {
     Mem(BossSe_RoundSlot_addr)[0] = static_cast<unsigned char>(bh::Next() % 13);
     Mem(BattleDamage_TurnCount_addr)[0] = static_cast<unsigned char>(bh::Next() % 12);
     for (unsigned i = 0; i < 12; ++i)
-        Mem(at::kTurnOrder + i)[0] = static_cast<unsigned char>(bh::Half() ? 0xFF : bh::Next() % 11);
+        Mem(::bof3::Img(at::kTurnOrder.v) + i)[0] = static_cast<unsigned char>(bh::Half() ? 0xFF : bh::Next() % 11);
 }
 
 // What the slots read again after a call: the target and the actor (each
@@ -351,11 +348,11 @@ void Seed(unsigned k) {
 void Disturb(U h) {
     const U v = h >> 16;
     switch ((h >> 8) % 10) {
-    case 0: Mem(at::kTarget)[0] = TargetFor(g_base, v); break;
-    case 1: Mem(at::kActor)[0] = static_cast<unsigned char>(v % 11); break;
-    case 2: Mem(at::kPartyCount)[0] = static_cast<unsigned char>(v % 4); break;
+    case 0: Mem(::bof3::Img(at::kTarget.v))[0] = TargetFor(g_base, v); break;
+    case 1: Mem(::bof3::Img(at::kActor.v))[0] = static_cast<unsigned char>(v % 11); break;
+    case 2: Mem(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(v % 4); break;
     case 3: Mem(BattleDamage_TurnCount_addr)[0] = static_cast<unsigned char>(v % 12); break;
-    case 4: Mem(at::kTurnOrder + v % 12)[0] = static_cast<unsigned char>(v & 0x100 ? 0xFF : (v >> 4) % 11); break;
+    case 4: Mem(::bof3::Img(at::kTurnOrder.v) + v % 12)[0] = static_cast<unsigned char>(v & 0x100 ? 0xFF : (v >> 4) % 11); break;
     case 5: Mem(Rest3c_Hits_addr)[0] = static_cast<unsigned char>(v % 10); break;
     case 6: rv::Store<std::uint32_t>(rv::As<records::PartyMember>(Member(v))->hp, v >> 2); break;
     case 7: rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(EnemyObj(v))->hp, v >> 3); break;
@@ -364,7 +361,7 @@ void Disturb(U h) {
         s[0] = static_cast<unsigned char>(s[0] ^ 8);
         break;
     }
-    default: SetWord(Mem(at::kAttackerAtk), v); break;
+    default: SetWord(Mem(::bof3::Img(at::kAttackerAtk.v)), v); break;
     }
 }
 

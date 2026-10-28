@@ -47,13 +47,6 @@ U L(U address) { return static_cast<U>(Long(At(address))); }
 void PutL(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutF(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 const unsigned char* Text(U address) { return At(address); }
-// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
-// the VA is placed here, through ::bof3::Img.
-unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
-int S8(::bof3::image::Va va) { return S8(::bof3::Img(va)); }
-U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
-const unsigned char* Text(::bof3::image::Va va) { return Text(::bof3::Img(va)); }
 
 // A state table's handler, jumped to as the original's `jmp [table + 4 *
 // index]` does: the index must lie inside the table's own count (the states
@@ -67,7 +60,7 @@ void Jump(U table, unsigned count, unsigned index, const char* who) {
     if (index >= count)
         bof3::Fatal("%s: state %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index, count,
                     static_cast<unsigned>(table), static_cast<unsigned>(table + 4 * index));
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(::bof3::image::Va{table + 4 * index})))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
 }
 
 // --- the callees of other groups of this wave, by address ---------------------------
@@ -107,11 +100,11 @@ unsigned char DroppedZero() {
     return SH_CALL(reinterpret_cast<F>(reinterpret_cast<void*>(&::BareRetZero)))();
 }
 
-char* Scratch() { return reinterpret_cast<char*>(At(at::kTextScratch)); }
+char* Scratch() { return reinterpret_cast<char*>(At(::bof3::Img(at::kTextScratch.v))); }
 
 // A message's text: MessagePools' word at `words + 2 * index` from 0x803580.
-const unsigned char* PoolText(::bof3::image::Va words, int index) {
-    return Text(at::kPoolWords + Word(At(words + 2u * static_cast<U>(index))));
+const unsigned char* PoolText(U words, int index) {
+    return Text(::bof3::Img(at::kPoolWords.v) + Word(At(words + 2u * static_cast<U>(index))));
 }
 
 // The panel's slide (0x675F95) as the offsets the states build.
@@ -157,7 +150,7 @@ U RecordName(unsigned index) {
         bof3::Fatal("CommuName_MemberEntryOut: record %u is past CommuName_RecordNames' %u at 0x%X; the original reads a pointer at 0x%X",
                     index, at::kRecordNameCount, static_cast<unsigned>(CommuName_RecordNames_addr),
                     static_cast<unsigned>(CommuName_RecordNames_addr + 4 * index));
-    return L(at::kRecordNames + 4 * index);
+    return L(::bof3::Img(at::kRecordNames.v) + 4 * index);
 }
 
 }  // namespace
@@ -187,30 +180,30 @@ extern "C" void __cdecl CommuBoard_DrawRows(int x, int y, unsigned shown) {
         const int cursor = Rest4c_Count;
         int colour = 0;
         if (row == cursor && (shown & 0xFF) == 0) {
-            SH_CALL(Crt_sprintf)(buf, reinterpret_cast<const char*>(At(at::kBoardBlankB)));
+            SH_CALL(Crt_sprintf)(buf, reinterpret_cast<const char*>(At(::bof3::Img(at::kBoardBlankB.v))));
             SH_CALL(Text_DrawFont12)(x + 6, ry + 7, 0, text);
-            SH_CALL(Crt_sprintf)(buf, reinterpret_cast<const char*>(At(at::kBoardBlankA)));
+            SH_CALL(Crt_sprintf)(buf, reinterpret_cast<const char*>(At(::bof3::Img(at::kBoardBlankA.v))));
             SH_CALL(Text_DrawFont12)(x + 0x2F, ry + 7, 2, text);
             SH_CALL(Text_DrawFont12)(x + 0x43, ry + 7, 1, text);
         } else if (row <= cursor) {
-            const unsigned a = B(at::kName + k), b = B(at::kName + k + 1), c = B(at::kName + k + 2);
-            SH_CALL(Crt_sprintf)(buf, reinterpret_cast<const char*>(At(at::kBoardFmt3)), a, b, c);
+            const unsigned a = B(::bof3::Img(at::kName.v) + k), b = B(::bof3::Img(at::kName.v) + k + 1), c = B(::bof3::Img(at::kName.v) + k + 2);
+            SH_CALL(Crt_sprintf)(buf, reinterpret_cast<const char*>(At(::bof3::Img(at::kBoardFmt3.v))), a, b, c);
             SH_CALL(Text_DrawFont12)(x + 6, ry + 7, 0, text);
-            const unsigned d = B(at::kName + k + 3);
-            SH_CALL(Crt_sprintf)(buf, reinterpret_cast<const char*>(At(at::kNumberFmt)), d);
+            const unsigned d = B(::bof3::Img(at::kName.v) + k + 3);
+            SH_CALL(Crt_sprintf)(buf, reinterpret_cast<const char*>(At(::bof3::Img(at::kNumberFmt.v))), d);
             SH_CALL(Text_DrawFont12)(x + 0x2F, ry + 7, 2, text);
-            const unsigned e = B(at::kName + k + 4);
-            SH_CALL(Crt_sprintf)(buf, reinterpret_cast<const char*>(At(at::kNumberFmt)), e);
+            const unsigned e = B(::bof3::Img(at::kName.v) + k + 4);
+            SH_CALL(Crt_sprintf)(buf, reinterpret_cast<const char*>(At(::bof3::Img(at::kNumberFmt.v))), e);
             SH_CALL(Text_DrawFont12)(x + 0x43, ry + 7, 1, text);
         } else {
             colour = 7;
-            SH_CALL(Crt_sprintf)(buf, reinterpret_cast<const char*>(At(at::kBoardBlankB)));
+            SH_CALL(Crt_sprintf)(buf, reinterpret_cast<const char*>(At(::bof3::Img(at::kBoardBlankB.v))));
             SH_CALL(Text_DrawFont12)(x + 6, ry + 7, 7, text);
-            SH_CALL(Crt_sprintf)(buf, reinterpret_cast<const char*>(At(at::kBoardBlankA)));
+            SH_CALL(Crt_sprintf)(buf, reinterpret_cast<const char*>(At(::bof3::Img(at::kBoardBlankA.v))));
             SH_CALL(Text_DrawFont12)(x + 0x2F, ry + 7, 7, text);
             SH_CALL(Text_DrawFont12)(x + 0x43, ry + 7, 7, text);
         }
-        SH_CALL(Text_DrawFont8)(x + 0x3B, ry + 9, colour, Text(at::kBoardText));
+        SH_CALL(Text_DrawFont8)(x + 0x3B, ry + 9, colour, Text(::bof3::Img(at::kBoardText.v)));
     }
 }
 
@@ -243,7 +236,7 @@ extern "C" void __cdecl CommuBoard_DrawRowCells(int x, int y, unsigned row, unsi
     const unsigned k = static_cast<unsigned char>(row * 5 + 3);
     for (int i = 0; i < 3; ++i) {
         const bool up = Rest4c_Cursor == i && (lift & 0xFF) != 0;
-        BoardCell(x + i * 32, up ? y - 8 : y, B(at::kName + k + static_cast<U>(i)));
+        BoardCell(x + i * 32, up ? y - 8 : y, B(::bof3::Img(at::kName.v) + k + static_cast<U>(i)));
     }
 }
 
@@ -251,7 +244,7 @@ extern "C" void __cdecl CommuBoard_DrawRowCells(int x, int y, unsigned row, unsi
 // `shown`'s byte is not 0, else three blank cells (0xFF).
 extern "C" void __cdecl CommuBoard_DrawCells(int x, int y, unsigned shown) {
     if ((shown & 0xFF) != 0) {
-        for (int i = 0; i < 3; ++i) BoardCell(x + i * 32, y, B(at::kName + static_cast<U>(i)));
+        for (int i = 0; i < 3; ++i) BoardCell(x + i * 32, y, B(::bof3::Img(at::kName.v) + static_cast<U>(i)));
     } else {
         for (int i = 0; i < 3; ++i) BoardCell(x + i * 32, y, 0xFF);
     }
@@ -262,10 +255,10 @@ extern "C" void __cdecl CommuBoard_DrawCells(int x, int y, unsigned shown) {
 // ===========================================================================
 
 // original 0x45C8C0: CommuDraw_States[0x939A3E].
-extern "C" void __cdecl CommuDraw_Dispatch(void) { Jump(CommuDraw_States_addr, 3, Rest4b_BoardState, "CommuDraw_Dispatch"); }
+extern "C" void __cdecl CommuDraw_Dispatch(void) { Jump(::bof3::Img(CommuDraw_States_addr), 3, Rest4b_BoardState, "CommuDraw_Dispatch"); }
 
 // original 0x45C8D0, state 0: CommuDraw_OpenSteps[0x939A40].
-extern "C" void __cdecl CommuDraw_OpenStep(void) { Jump(CommuDraw_OpenSteps_addr, 2, Rest4b_BoardStep, "CommuDraw_OpenStep"); }
+extern "C" void __cdecl CommuDraw_OpenStep(void) { Jump(::bof3::Img(CommuDraw_OpenSteps_addr), 2, Rest4b_BoardStep, "CommuDraw_OpenStep"); }
 
 // original 0x45C8E0, state 0 step 0: Transition_Start(0), the step on.
 extern "C" void __cdecl CommuDraw_FadeOut(void) {
@@ -289,7 +282,7 @@ extern "C" void __cdecl CommuDraw_MusicIn(void) {
 }
 
 // original 0x45C950, state 1: CommuDraw_ShowSteps[0x939A40].
-extern "C" void __cdecl CommuDraw_ShowStep(void) { Jump(CommuDraw_ShowSteps_addr, 5, Rest4b_BoardStep, "CommuDraw_ShowStep"); }
+extern "C" void __cdecl CommuDraw_ShowStep(void) { Jump(::bof3::Img(CommuDraw_ShowSteps_addr), 5, Rest4b_BoardStep, "CommuDraw_ShowStep"); }
 
 namespace {
 
@@ -298,11 +291,11 @@ namespace {
 // moves on only while every earlier pick equals `a` - docs/rest_4d.md section 5,
 // L1); else `a` + 1, wrapping to 0 at the category's count.
 unsigned char Unpicked(unsigned category, unsigned char a, unsigned count) {
-    const unsigned char limit = B(at::kDrawPools + 2 * category + 1);
+    const unsigned char limit = B(::bof3::Img(at::kDrawPools.v) + 2 * category + 1);
     for (;;) {
         unsigned i = 0;
         if (static_cast<int>(count) > 0) {
-            while (i < count && B(at::kName + 10 * category + i) == a) ++i;
+            while (i < count && B(::bof3::Img(at::kName.v) + 10 * category + i) == a) ++i;
             if (i < count) return a;
         }
         if (static_cast<unsigned char>(count) == 0) return a;
@@ -316,11 +309,11 @@ unsigned char Unpicked(unsigned category, unsigned char a, unsigned count) {
 // after each Rand).
 unsigned PickOfCategory(U row) {
     unsigned i = 0;
-    if (static_cast<int>(B(at::kPicked + B(row))) - 1 > 0) {
+    if (static_cast<int>(B(::bof3::Img(at::kPicked.v) + B(row))) - 1 > 0) {
         for (;;) {
             if ((static_cast<unsigned>(SH_CALL(Rand)()) & 1) != 0) break;
             ++i;
-            if (!(static_cast<int>(i) < static_cast<int>(B(at::kPicked + B(row))) - 1)) break;
+            if (!(static_cast<int>(i) < static_cast<int>(B(::bof3::Img(at::kPicked.v) + B(row))) - 1)) break;
         }
     }
     return i;
@@ -344,24 +337,24 @@ unsigned PickOfCategory(U row) {
 // The step on, 0x675F95 0.
 extern "C" void __cdecl CommuDraw_Pick(void) {
     const unsigned char row0 = static_cast<unsigned char>(SH_CALL(Rand)()) & 7;
-    B(at::kPicked) = 0;
+    B(::bof3::Img(at::kPicked.v)) = 0;
     Rest4c_Count = row0;
-    B(at::kPicked + 1) = 0;
-    B(at::kPicked + 2) = 0;
-    B(at::kPicked + 3) = 0;
+    B(::bof3::Img(at::kPicked.v) + 1) = 0;
+    B(::bof3::Img(at::kPicked.v) + 2) = 0;
+    B(::bof3::Img(at::kPicked.v) + 3) = 0;
     int row = static_cast<signed char>(row0);
-    U record = ::bof3::Img(at::kTextRecords);
+    U record = ::bof3::Img(at::kTextRecords.v);
     for (unsigned i = 0;; ++i) {
-        const unsigned category = B(at::kDrawRows + static_cast<U>(row * 9 + static_cast<int>(i)));
+        const unsigned category = B(::bof3::Img(at::kDrawRows.v) + static_cast<U>(row * 9 + static_cast<int>(i)));
         if (category == 9) break;
-        const unsigned char first = SH_CALL(CommuDraw_RandBelow)(B(at::kDrawPools + 2 * category + 1));
-        const unsigned count = B(at::kPicked + category);
+        const unsigned char first = SH_CALL(CommuDraw_RandBelow)(B(::bof3::Img(at::kDrawPools.v) + 2 * category + 1));
+        const unsigned count = B(::bof3::Img(at::kPicked.v) + category);
         const unsigned char a = Unpicked(category, first, count);
-        B(at::kName + 10 * category + count) = a;
-        const unsigned char counted = static_cast<unsigned char>(B(at::kPicked + category) + 1);
-        const unsigned message = B(at::kDrawPools + 2 * category) + a;
-        B(at::kPicked + category) = counted;
-        const unsigned char* p = PoolText(at::kDrawWords, static_cast<int>(message));
+        B(::bof3::Img(at::kName.v) + 10 * category + count) = a;
+        const unsigned char counted = static_cast<unsigned char>(B(::bof3::Img(at::kPicked.v) + category) + 1);
+        const unsigned message = B(::bof3::Img(at::kDrawPools.v) + 2 * category) + a;
+        B(::bof3::Img(at::kPicked.v) + category) = counted;
+        const unsigned char* p = PoolText(::bof3::Img(at::kDrawWords.v), static_cast<int>(message));
         for (unsigned n = 0;;) {
             B(record + n) = *p;
             if (*p == 0 && (p[-1] & 0x80) == 0) break;
@@ -369,37 +362,37 @@ extern "C" void __cdecl CommuDraw_Pick(void) {
             if (++n >= 0x20) break;
         }
         record += 0x20;
-        if (record >= ::bof3::Img(at::kTextRecordsEnd)) break;
+        if (record >= ::bof3::Img(at::kTextRecordsEnd.v)) break;
         row = Rest4c_Count;
     }
 
     const unsigned char roll = static_cast<unsigned char>(SH_CALL(Rand)()) & 7;
     unsigned j = 0;
-    while (j < 3 && roll < B(at::kDrawPicks + 3 * j)) ++j;
+    while (j < 3 && roll < B(::bof3::Img(at::kDrawPicks.v) + 3 * j)) ++j;
     const unsigned char cursor = static_cast<unsigned char>(Rest4c_Count);
     if (cursor == 6) {
         if (j == 2) j = 3;
     } else if (cursor == 7) {
         if (j == 3) j = 2;
     }
-    const U pick = ::bof3::Img(at::kDrawPicks) + 3 * j;
+    const U pick = ::bof3::Img(at::kDrawPicks.v) + 3 * j;
     if ((static_cast<unsigned>(SH_CALL(Rand)()) & 1) != 0) {
         const unsigned i = PickOfCategory(pick + 1);
         const unsigned category = B(pick + 1);
-        Rest4d_TitleA = static_cast<unsigned char>(B(at::kName + 10 * category + i) + B(at::kDrawPools + 2 * category));
+        Rest4d_TitleA = static_cast<unsigned char>(B(::bof3::Img(at::kName.v) + 10 * category + i) + B(::bof3::Img(at::kDrawPools.v) + 2 * category));
     } else {
-        const unsigned char a = SH_CALL(CommuDraw_RandBelow)(B(at::kDrawPools + 2 * B(pick + 1) + 1));
-        Rest4d_TitleA = static_cast<unsigned char>(a + B(at::kDrawPools + 2 * B(pick + 1)));
+        const unsigned char a = SH_CALL(CommuDraw_RandBelow)(B(::bof3::Img(at::kDrawPools.v) + 2 * B(pick + 1) + 1));
+        Rest4d_TitleA = static_cast<unsigned char>(a + B(::bof3::Img(at::kDrawPools.v) + 2 * B(pick + 1)));
     }
     if (B(pick + 2) == 0xFF) {
         Rest4d_TitleB = 0xFF;
     } else if ((static_cast<unsigned>(SH_CALL(Rand)()) & 1) != 0) {
         const unsigned i = PickOfCategory(pick + 2);
         const unsigned category = B(pick + 2);
-        Rest4d_TitleB = static_cast<unsigned char>(B(at::kName + 10 * category + i) + B(at::kDrawPools + 2 * category));
+        Rest4d_TitleB = static_cast<unsigned char>(B(::bof3::Img(at::kName.v) + 10 * category + i) + B(::bof3::Img(at::kDrawPools.v) + 2 * category));
     } else {
-        const unsigned char a = SH_CALL(CommuDraw_RandBelow)(B(at::kDrawPools + 2 * B(pick + 2) + 1));
-        Rest4d_TitleB = static_cast<unsigned char>(a + B(at::kDrawPools + 2 * B(pick + 2)));
+        const unsigned char a = SH_CALL(CommuDraw_RandBelow)(B(::bof3::Img(at::kDrawPools.v) + 2 * B(pick + 2) + 1));
+        Rest4d_TitleB = static_cast<unsigned char>(a + B(::bof3::Img(at::kDrawPools.v) + 2 * B(pick + 2)));
     }
     const auto step = static_cast<unsigned char>(Rest4b_BoardStep + 1);
     Rest4d_Count = 0;
@@ -538,19 +531,19 @@ unsigned char AppendMessage(unsigned char k, const unsigned char* p) {
 extern "C" void __cdecl CommuDraw_DrawTitle(void) {
     char* const buf = Scratch();
     buf[0] = 0x2A;
-    unsigned char k = AppendMessage(1, PoolText(at::kDrawWords, Rest4d_TitleA));
-    if (Rest4d_TitleB != 0xFF) k = AppendMessage(k, PoolText(at::kDrawWords, Rest4d_TitleB));
+    unsigned char k = AppendMessage(1, PoolText(::bof3::Img(at::kDrawWords.v), Rest4d_TitleA));
+    if (Rest4d_TitleB != 0xFF) k = AppendMessage(k, PoolText(::bof3::Img(at::kDrawWords.v), Rest4d_TitleB));
     const unsigned char* const record = reinterpret_cast<const unsigned char*>(Rest4d_Pointer);
     buf[k] = 0x2B;
     buf[static_cast<unsigned char>(k + 1)] = 0x20;
     k = static_cast<unsigned char>(k + 2);
     for (unsigned i = 0; i < 5; ++i) {
-        buf[k] = static_cast<char>(B(at::kSlotNames + 5u * record[5] + i));
+        buf[k] = static_cast<char>(B(::bof3::Img(at::kSlotNames.v) + 5u * record[5] + i));
         k = static_cast<unsigned char>(k + 1);
     }
     buf[k] = 0;
     SH_CALL(Text_DrawAt)(0x32, 0x1E, 0, 0xFF, reinterpret_cast<const unsigned char*>(buf));
-    SH_CALL(Text_DrawAt)(0x32, 0x42, 0, 0xFF, PoolText(at::kTitleWords, Rest4c_Count));
+    SH_CALL(Text_DrawAt)(0x32, 0x42, 0, 0xFF, PoolText(::bof3::Img(at::kTitleWords.v), Rest4c_Count));
 }
 
 // ===========================================================================
@@ -558,7 +551,7 @@ extern "C" void __cdecl CommuDraw_DrawTitle(void) {
 // ===========================================================================
 
 // original 0x45D040: CommuName_States[0x939A3E].
-extern "C" void __cdecl CommuName_Dispatch(void) { Jump(CommuName_States_addr, 5, Rest4b_BoardState, "CommuName_Dispatch"); }
+extern "C" void __cdecl CommuName_Dispatch(void) { Jump(::bof3::Img(CommuName_States_addr), 5, Rest4b_BoardState, "CommuName_Dispatch"); }
 
 // original 0x45D050, state 0: unless a message is open, message 0xEE,
 // Field_Request 2, state 1.
@@ -571,7 +564,7 @@ extern "C" void __cdecl CommuName_Begin(void) {
 }
 
 // original 0x45D080, state 1: CommuName_SlotSteps[0x939A40].
-extern "C" void __cdecl CommuName_SlotStep(void) { Jump(CommuName_SlotSteps_addr, 9, Rest4b_BoardStep, "CommuName_SlotStep"); }
+extern "C" void __cdecl CommuName_SlotStep(void) { Jump(::bof3::Img(CommuName_SlotSteps_addr), 9, Rest4b_BoardStep, "CommuName_SlotStep"); }
 
 // original 0x45D090, step 0 of states 1 and 2: unless a message is open, sound
 // 0x102, the cursor 0, the slide 4, the header message 0xF0, the step on.
@@ -721,7 +714,7 @@ extern "C" void __cdecl CommuName_SlotHow(void) {
 
 // original 0x45D4D0, state 1 step 6: CommuName_SlotRandomSteps[0x939A3F].
 extern "C" void __cdecl CommuName_SlotRandomStep(void) {
-    Jump(CommuName_SlotRandomSteps_addr, 3, Rest4c_Step, "CommuName_SlotRandomStep");
+    Jump(::bof3::Img(CommuName_SlotRandomSteps_addr), 3, Rest4c_Step, "CommuName_SlotRandomStep");
 }
 
 namespace {
@@ -731,7 +724,7 @@ namespace {
 // step on, Field_Request 2.
 void RandomNameAsk() {
     const U n = RandomName();
-    std::memmove(At(at::kTextRecords), At(at::kName), n);
+    std::memmove(At(::bof3::Img(at::kTextRecords.v)), At(::bof3::Img(at::kName.v)), n);
     SH_CALL(Msg_OpenScript)(0xF3);
     const auto step = static_cast<unsigned char>(Rest4c_Step + 1);
     Field_Request = 2;
@@ -791,7 +784,7 @@ extern "C" void __cdecl CommuName_SlotRandomOut(void) {
 
 // original 0x45D600, state 1 step 7: CommuName_SlotEntrySteps[0x939A3F].
 extern "C" void __cdecl CommuName_SlotEntryStep(void) {
-    Jump(CommuName_SlotEntrySteps_addr, 5, Rest4c_Step, "CommuName_SlotEntryStep");
+    Jump(::bof3::Img(CommuName_SlotEntrySteps_addr), 5, Rest4c_Step, "CommuName_SlotEntryStep");
 }
 
 // original 0x45D610, step 7.0: the cursor slot's panel at 0x44; the entry's
@@ -806,11 +799,11 @@ extern "C" void __cdecl CommuName_SlotEntryIn(void) {
     if (slide != 0) return;
     for (unsigned i = 0; i < 5; ++i) {
         const unsigned slot = SH_CALL(CommuName_NthSlot)(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
-        if (B(at::kSlotNames + 5 * slot + i) == 0) {
-            B(at::kName + i) = 0x20;
+        if (B(::bof3::Img(at::kSlotNames.v) + 5 * slot + i) == 0) {
+            B(::bof3::Img(at::kName.v) + i) = 0x20;
         } else {
             const unsigned again = SH_CALL(CommuName_NthSlot)(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
-            B(at::kName + i) = B(at::kSlotNames + 5 * again + i);
+            B(::bof3::Img(at::kName.v) + i) = B(::bof3::Img(at::kSlotNames.v) + 5 * again + i);
         }
     }
     const auto step = static_cast<unsigned char>(Rest4c_Step + 1);
@@ -853,10 +846,10 @@ extern "C" void __cdecl CommuName_SlotEntryOut(void) {
     EntryDraws(30);
     if (Rest4d_Count != 4) return;
     if (Rest4d_EntryDone != 0) {
-        if (B(at::kName) == 0) {
+        if (B(::bof3::Img(at::kName.v)) == 0) {
             for (unsigned i = 0; i < 5; ++i) {
                 const unsigned slot = SH_CALL(CommuName_NthSlot)(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
-                B(at::kName + i) = B(at::kSlotDefaults + 20 * slot + i);
+                B(::bof3::Img(at::kName.v) + i) = B(::bof3::Img(at::kSlotDefaults.v) + 20 * slot + i);
             }
         }
         SH_CALL(Msg_OpenScript)(0xF4);
@@ -901,7 +894,7 @@ extern "C" void __cdecl CommuName_SlotClose(void) {
 }
 
 // original 0x45DAA0, state 2: CommuName_MemberSteps[0x939A40].
-extern "C" void __cdecl CommuName_MemberStep(void) { Jump(CommuName_MemberSteps_addr, 9, Rest4b_BoardStep, "CommuName_MemberStep"); }
+extern "C" void __cdecl CommuName_MemberStep(void) { Jump(::bof3::Img(CommuName_MemberSteps_addr), 9, Rest4b_BoardStep, "CommuName_MemberStep"); }
 
 namespace {
 
@@ -966,13 +959,13 @@ extern "C" void __cdecl CommuName_MemberChoose(void) {
         } else if ((keys & 0x1000) != 0) {
             const auto cursor = static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Count) + 0xFE);
             Rest4c_Count = cursor;
-            if ((cursor & 0x80) != 0) B(at::kCursor) = static_cast<unsigned char>((cursor | 0xFE) & last);
+            if ((cursor & 0x80) != 0) B(::bof3::Img(at::kCursor.v)) = static_cast<unsigned char>((cursor | 0xFE) & last);
         } else if ((keys & 0x4000) != 0) {
             const auto cursor = static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Count) + 2);
             Rest4c_Count = cursor;
             const int now = static_cast<signed char>(cursor);
             const int bound = static_cast<unsigned char>(cursor | 0xFE) & last;
-            if (now > bound) Rest4c_Count = static_cast<unsigned char>(B(at::kCursor) & 1);
+            if (now > bound) Rest4c_Count = static_cast<unsigned char>(B(::bof3::Img(at::kCursor.v)) & 1);
         }
     }
     MemberCursorHand(1);
@@ -999,7 +992,7 @@ extern "C" void __cdecl CommuName_MemberPanelOut(void) {
     unsigned record = 0;
     for (U flags = CharacterRecords_addr + 0xb; flags < at::kRecordFlagsEnd; flags += at::kRecordStride, ++record) {
         if ((B(flags) & 1) == 0) continue;
-        if (static_cast<int>(n) != S8(at::kCursor)) {
+        if (static_cast<int>(n) != S8(::bof3::Img(at::kCursor.v))) {
             const int y = 0x2B + 56 * (n >> 1);
             const int x = (n & 1) == 0 ? 0x20 - 40 * Slide() : 0xA8 + 40 * Slide();
             MemberPanel(x, y, record, 0);
@@ -1034,7 +1027,7 @@ extern "C" void __cdecl CommuName_MemberHow(void) {
 
 // original 0x45E050, state 2 step 6: CommuName_MemberRandomSteps[0x939A3F].
 extern "C" void __cdecl CommuName_MemberRandomStep(void) {
-    Jump(CommuName_MemberRandomSteps_addr, 3, Rest4c_Step, "CommuName_MemberRandomStep");
+    Jump(::bof3::Img(CommuName_MemberRandomSteps_addr), 3, Rest4c_Step, "CommuName_MemberRandomStep");
 }
 
 // original 0x45E060, step 6.0: the random name and its message; the cursor
@@ -1062,7 +1055,7 @@ extern "C" void __cdecl CommuName_MemberRandomOut(void) {
 
 // original 0x45E180, state 2 step 7: CommuName_MemberEntrySteps[0x939A3F].
 extern "C" void __cdecl CommuName_MemberEntryStep(void) {
-    Jump(CommuName_MemberEntrySteps_addr, 5, Rest4c_Step, "CommuName_MemberEntryStep");
+    Jump(::bof3::Img(CommuName_MemberEntrySteps_addr), 5, Rest4c_Step, "CommuName_MemberEntryStep");
 }
 
 // original 0x45E190, step 7.0: the slide one less; the cursor member's panel
@@ -1077,10 +1070,10 @@ extern "C" void __cdecl CommuName_MemberEntryIn(void) {
     for (unsigned i = 0; i < 5; ++i) {
         const unsigned record = NthMember(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
         if (B(::bof3::Img(CharacterRecords_addr) + at::kRecordStride * record + i) == 0) {
-            B(at::kName + i) = 0x20;
+            B(::bof3::Img(at::kName.v) + i) = 0x20;
         } else {
             const unsigned again = NthMember(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
-            B(at::kName + i) = B(::bof3::Img(CharacterRecords_addr) + at::kRecordStride * again + i);
+            B(::bof3::Img(at::kName.v) + i) = B(::bof3::Img(CharacterRecords_addr) + at::kRecordStride * again + i);
         }
     }
     const auto step = static_cast<unsigned char>(Rest4c_Step + 1);
@@ -1117,11 +1110,11 @@ extern "C" void __cdecl CommuName_MemberEntryOut(void) {
     EntryDraws(30);
     if (Rest4d_Count != 4) return;
     if (Rest4d_EntryDone != 0) {
-        if (B(at::kName) == 0) {
+        if (B(::bof3::Img(at::kName.v)) == 0) {
             for (unsigned i = 0; i < 5; ++i) {
                 const unsigned record = NthMember(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
                 const U name = RecordName(record);
-                B(at::kName + i) = *At(name + i);
+                B(::bof3::Img(at::kName.v) + i) = *At(name + i);
             }
         }
         SH_CALL(Msg_OpenScript)(0xF4);
@@ -1247,7 +1240,7 @@ extern "C" void __cdecl CommuName_DrawHeader(void) {
     SH_CALL(Menu_DrawPanelBox)(0x14, 0x10, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour));
     const unsigned id = Rest4d_Header;
     if (id == 0xFFFF) return;
-    SH_CALL(Text_DrawAt)(0x1B, 0x13, 0, 0xFF, PoolText(at::kPoolWords, static_cast<int>(id)));
+    SH_CALL(Text_DrawAt)(0x1B, 0x13, 0, 0xFF, PoolText(::bof3::Img(at::kPoolWords.v), static_cast<int>(id)));
 }
 
 #pragma clang attribute pop

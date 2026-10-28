@@ -74,10 +74,6 @@ std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
-// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
-// the VA is placed here, through ::bof3::Img.
-unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
-unsigned char* P(::bof3::image::Va va) { return P(::bof3::Img(va)); }
 // Twelve bytes moved as the original moves them (three dword movs).
 void Copy12(unsigned char* to, const unsigned char* from) {
     for (unsigned i = 0; i < 12; i += 4) SetUL(to + i, UL(from + i));
@@ -134,9 +130,9 @@ U PixRecord(const char* who) {
         bof3::Fatal("%s: the capture record 0x%X is %u, past the %u of 0x%X - the original reads EffectKindA1_States' "
                     "code pointers as a rectangle (docs/rest_3f.md section 7)",
                     who, (unsigned)Rest3f_PixIndex_addr, k, at::kPixRecords, (unsigned)at::kPixTable.v);
-    return ::bof3::Img(at::kPixTable) + 8 * k;
+    return ::bof3::Img(at::kPixTable.v) + 8 * k;
 }
-unsigned char* Particle(unsigned i) { return P(at::kParticles + i * at::kPartStride); }
+unsigned char* Particle(unsigned i) { return P(::bof3::Img(at::kParticles.v) + i * at::kPartStride); }
 constexpr unsigned kEffectRecords = 20;   // Effect_Objects, 20 of 0x80
 
 // State 0 of kinds 0xA1 (0x490A80) and 0xA3 (0x491310, once the count is
@@ -207,7 +203,7 @@ void ReadBack(const char* who) {
     SH_AT(void (__cdecl*)(const short*, unsigned char*), at::kStoreImage)(rect, EffectKind30_Shards);
     unsigned char* const s = S();
     Rest3f_PixCursor = static_cast<U>(reinterpret_cast<std::uintptr_t>(EffectKind30_Shards));
-    Rest3f_PartCursor = ::bof3::Img(at::kParticles);
+    Rest3f_PartCursor = ::bof3::Img(at::kParticles.v);
     Rest3f_PartCount = 0;
     s[9] = 0;
     NextState();
@@ -760,7 +756,7 @@ extern "C" void __cdecl EffectKind9E_Hold(void) {
         SH_CALL(EffectKind9E_DrawWall)(Point(s + 0x34), reinterpret_cast<const long*>(At(::bof3::Img(Rest3f_9EWall_addr))));
     }
     unsigned char* const s = S();
-    if (At(at::kCounter)[0] == s[7]) s[1] = static_cast<unsigned char>(s[1] + 1);
+    if (At(::bof3::Img(at::kCounter.v))[0] == s[7]) s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
 // original 0x48F300 (state 4; in no list - the cut's 0x48F240 runs over it):
@@ -865,7 +861,7 @@ extern "C" void __cdecl EffectKindA1_MovePixels(void) {
 // nothing until the chapter's count is 0x29; then CaptureSprite in kind
 // 0xA3's form (the page always, Sprite_SetAnimation(7)).
 extern "C" void __cdecl EffectKindA3_CaptureSprite(void) {
-    if (At(at::kCounter)[0] != 0x29) return;
+    if (At(::bof3::Img(at::kCounter.v))[0] != 0x29) return;
     CaptureSprite("EffectKindA3_CaptureSprite", true);
 }
 
@@ -919,7 +915,7 @@ extern "C" void __cdecl EffectKindA3_MovePixels(void) {
         part[0] = static_cast<unsigned char>(part[0] ^ 1);
     }
     if (CountDown()) {
-        At(at::kCounter)[0] = 0x2B;
+        At(::bof3::Img(at::kCounter.v))[0] = 0x2B;
         NextState();
     }
 }
@@ -1294,7 +1290,7 @@ extern "C" void __cdecl EffectKindA8_Bars(void) {
     }
     s[9] = next;
     SH_CALL(EffectKindA8_StepBars)(0xF0);
-    if (At(at::kCounter)[0] == 0xE) NextState();
+    if (At(::bof3::Img(at::kCounter.v))[0] == 0xE) NextState();
 }
 
 // original 0x491C40 (state 2, hidden in 0x4918B0): the bars stepped (0xF0);
@@ -1386,7 +1382,7 @@ extern "C" void __cdecl EffectKindA9_Grow(void) {
 // original 0x491D10 (state 2, hidden in 0x4918B0): once the chapter's count is
 // 9, +9 = 0x1E and +1 up.
 extern "C" void __cdecl EffectKindA9_Wait(void) {
-    if (At(at::kCounter)[0] != 9) return;
+    if (At(::bof3::Img(at::kCounter.v))[0] != 9) return;
     S()[9] = 0x1E;
     NextState();
 }

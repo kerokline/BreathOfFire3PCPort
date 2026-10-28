@@ -60,12 +60,6 @@ UC& B(U address) { return *At(address); }
 U W(U address) { return move_script::Word(At(address)); }
 void SetW(U address, U v) { move_script::SetWord(At(address), v); }
 U L(U address) { return static_cast<U>(move_script::Long(At(address))); }
-// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
-// the VA is placed here, through ::bof3::Img.
-unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
-UC& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
-U W(::bof3::image::Va va) { return W(::bof3::Img(va)); }
-U L(::bof3::image::Va va) { return L(::bof3::Img(va)); }
 int S8(U v) { return static_cast<signed char>(static_cast<UC>(v)); }
 // A .data table symbols.gen.h declares as a pointer: its address.
 U AddrOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -123,7 +117,7 @@ bool Confirmed(U pressed) { return (static_cast<std::uint32_t>(Field_ConfirmButt
 bool Cancelled(U pressed) { return (static_cast<std::uint32_t>(Field_CancelButtons) & pressed & 0xFFFF) != 0; }
 // A party member's record index: Character_IndexById[the member's id].
 UC RecordOf(U id) { return Character_IndexById[id & 0xFF]; }
-UC PartyRecord(int member) { return RecordOf(B(kParty + member)); }
+UC PartyRecord(int member) { return RecordOf(B(::bof3::Img(kParty.v) + member)); }
 unsigned char* Record(U index) { return At(::bof3::Img(CharacterRecords_addr) + (index & 0xFF) * kRecordStride); }
 // The low byte of 1 << n as the originals compute it (an 8-bit shl, or the low
 // byte of a 32-bit one): the count is n's low five bits.
@@ -137,12 +131,12 @@ UC Bit8(U n) {
 // as pointers; category 4's count list is a null pointer it writes through.
 unsigned char* IdList(U category, const char* who) {
     if (category > 4) bof3::Fatal("%s: category %u reads past Inventory_IdLists (the original reads on)", who, (unsigned)category);
-    return At(L(kIdLists + 4 * category));
+    return At(L(::bof3::Img(kIdLists.v) + 4 * category));
 }
 // The count list's address as the original reads it (0 for category 4).
 U CountListAt(U category, const char* who) {
     if (category > 4) bof3::Fatal("%s: category %u reads past Inventory_CountLists (the original reads on)", who, (unsigned)category);
-    return L(kCountLists + 4 * category);
+    return L(::bof3::Img(kCountLists.v) + 4 * category);
 }
 // Entry `index` of a count list at its access: category 4's null list aborts
 // here, where the original faults - not where the list is taken.
@@ -369,7 +363,7 @@ extern "C" void __cdecl FieldItems_ArrangeCategory(void) {
         category = c;
         turned = true;
     }
-    if (turned) B(::bof3::Img(0x80333F)) = B(kItemTops + category);
+    if (turned) B(::bof3::Img(0x80333F)) = B(::bof3::Img(kItemTops.v) + category);
     const U p = Input_Pressed;
     if (Confirmed(p)) {
         Sound(0x103);
@@ -426,7 +420,7 @@ extern "C" void __cdecl FieldItems_ArrangeHow(void) {
             return;
         }
         B(::bof3::Img(0x803341)) = 0xFF;
-        const UC cursor = B(kItemCursors + B(::bof3::Img(0x80333E)));
+        const UC cursor = B(::bof3::Img(kItemCursors.v) + B(::bof3::Img(0x80333E)));
         const auto step = static_cast<UC>(FieldS_Step + 1);
         B(::bof3::Img(0x803340)) = cursor;
         FieldS_Step = step;
@@ -459,8 +453,8 @@ extern "C" void __cdecl FieldItems_ArrangeMove(void) {
     UC cl, al;
     Scroll(repeat, kItemScroll, cl, al);
     const U now = B(::bof3::Img(0x80333E));
-    B(kItemCursors + now) = cl;
-    B(kItemTops + now) = al;
+    B(::bof3::Img(kItemCursors.v) + now) = cl;
+    B(::bof3::Img(kItemTops.v) + now) = al;
     if (was != cl) Sound(0x100);
     if (W(::bof3::Img(0x803346)) != 0) return;
     const U p = Input_Pressed;
@@ -507,7 +501,7 @@ extern "C" void __cdecl FieldItems_DiscardConfirm(void) {
     const int answer = FieldS_Answer;
     const U x = L(::bof3::Img(0x8032F0)) - static_cast<U>(36 * answer) + 0xE8;
     const U y = W(::bof3::Img(0x8032F2)) + 5;
-    U pressed = L(kPressed);
+    U pressed = L(::bof3::Img(kPressed.v));
     SetW(::bof3::Img(0x8032FC), 0x1A);
     WindowRecords[21].in_use = 1;
     SetW(::bof3::Img(0x803458), x);
@@ -515,7 +509,7 @@ extern "C" void __cdecl FieldItems_DiscardConfirm(void) {
     if (pressed & 0xA000) {
         Sound(0x101);
         FieldS_Answer = static_cast<UC>(static_cast<unsigned char>(FieldS_Answer) ^ 1);
-        pressed = L(kPressed);
+        pressed = L(::bof3::Img(kPressed.v));
     }
     if (Confirmed(pressed)) {
         if (static_cast<unsigned char>(FieldS_Answer) != 0) {
@@ -543,7 +537,7 @@ extern "C" void __cdecl FieldItems_UseOnMember(void) {
     const U index = B(::bof3::Img(0x803340));
     unsigned char* const id = IdList(category, "FieldItems_UseOnMember") + index;
     const U counts = CountListAt(category, "FieldItems_UseOnMember");
-    SH_CALL(TextRecord_Set)(0, 0x10, At(kConsumables + 22u * *id));
+    SH_CALL(TextRecord_Set)(0, 0x10, At(::bof3::Img(kConsumables.v) + 22u * *id));
     const int member = BattleActorCopies_ItemActor;
     SetW(::bof3::Img(0x8032FC), 0x19);
     WindowRecords[19].in_use = 1;
@@ -602,14 +596,14 @@ extern "C" void __cdecl FieldItems_ViewList32(void) {
     UC cl, al;
     Scroll(repeat, kShortScroll, cl, al);
     const U now = B(::bof3::Img(0x80333E));
-    B(kItemCursors + now) = cl;
-    B(kItemTops + now) = al;
+    B(::bof3::Img(kItemCursors.v) + now) = cl;
+    B(::bof3::Img(kItemTops.v) + now) = al;
     if (was != cl) Sound(0x100);
     if (W(::bof3::Img(0x803346)) != 0) return;
     if (!Cancelled(static_cast<std::uint32_t>(Input_Pressed))) return;
     Sound(0x106);
     const auto state = static_cast<UC>(FieldS_State - 7);
-    const UC t = B(kItemTops);
+    const UC t = B(::bof3::Img(kItemTops.v));
     FieldS_State = state;
     B(::bof3::Img(0x80333E)) = 0;
     B(::bof3::Img(0x80333F)) = t;
@@ -622,7 +616,7 @@ extern "C" void __cdecl FieldItems_InitWindows(void) {
     B(::bof3::Img(0x8032EF)) = 2;
     B(::bof3::Img(0x803313)) = 2;
     B(::bof3::Img(0x803337)) = 2;
-    B(::bof3::Img(0x80333F)) = B(kItemTops);
+    B(::bof3::Img(0x80333F)) = B(::bof3::Img(kItemTops.v));
     B(::bof3::Img(0x803340)) = 0xFF;
     B(::bof3::Img(0x803341)) = 0xFF;
     B(::bof3::Img(0x8032ED)) = 6;
@@ -679,7 +673,7 @@ extern "C" void __cdecl FieldItemSort_Compact(void) {
     for (U bound = 0x7F; bound != 0; --bound) {
         const U category = B(::bof3::Img(0x80333E));
         unsigned char* const ids = IdList(category, "FieldItemSort_Compact");
-        const U counts = L(kCountLists + 4 * category);
+        const U counts = L(::bof3::Img(kCountLists.v) + 4 * category);
         for (U i = 0; i < bound; ++i) {
             if (ids[i] != 0 || ids[i + 1] == 0) continue;
             Swap(ids + i, ids + i + 1);
@@ -715,29 +709,29 @@ constexpr ::bof3::image::Va kArmourIds{0x904254};       // [2]
 // original 0x58BE00: FieldItems_Sorts[1] - consumables with flag bit 0 first.
 extern "C" void __cdecl FieldItemSort_ConsumableFlag1(void) {
     SH_CALL(FieldItemSort_Compact)();
-    BubbleFixed(::bof3::Img(kConsumableIds), [](UC x, UC y) {
-        return (B(kConsumableFlags + 22u * x) & 1) == 0 && (B(kConsumableFlags + 22u * y) & 1) != 0;
+    BubbleFixed(::bof3::Img(kConsumableIds.v), [](UC x, UC y) {
+        return (B(::bof3::Img(kConsumableFlags.v) + 22u * x) & 1) == 0 && (B(::bof3::Img(kConsumableFlags.v) + 22u * y) & 1) != 0;
     });
 }
 
 // original 0x58BEB0: FieldItems_Sorts[2] - consumables with flag bit 1 first.
 extern "C" void __cdecl FieldItemSort_ConsumableFlag2(void) {
     SH_CALL(FieldItemSort_Compact)();
-    BubbleFixed(::bof3::Img(kConsumableIds), [](UC x, UC y) {
-        return (B(kConsumableFlags + 22u * x) & 2) == 0 && (B(kConsumableFlags + 22u * y) & 2) != 0;
+    BubbleFixed(::bof3::Img(kConsumableIds.v), [](UC x, UC y) {
+        return (B(::bof3::Img(kConsumableFlags.v) + 22u * x) & 2) == 0 && (B(::bof3::Img(kConsumableFlags.v) + 22u * y) & 2) != 0;
     });
 }
 
 // original 0x58BF60: FieldItems_Sorts[3] - weapons by +0x16, the highest first.
 extern "C" void __cdecl FieldItemSort_WeaponsByPower(void) {
     SH_CALL(FieldItemSort_Compact)();
-    BubbleFixed(::bof3::Img(kWeaponIds), [](UC x, UC y) { return B(kWeaponB + 28u * x) < B(kWeaponB + 28u * y); });
+    BubbleFixed(::bof3::Img(kWeaponIds.v), [](UC x, UC y) { return B(::bof3::Img(kWeaponB.v) + 28u * x) < B(::bof3::Img(kWeaponB.v) + 28u * y); });
 }
 
 // original 0x58C010: FieldItems_Sorts[4] - armour by +0x14, the highest first.
 extern "C" void __cdecl FieldItemSort_ArmourByPower(void) {
     SH_CALL(FieldItemSort_Compact)();
-    BubbleFixed(::bof3::Img(kArmourIds), [](UC x, UC y) { return B(kArmourB + 26u * x) < B(kArmourB + 26u * y); });
+    BubbleFixed(::bof3::Img(kArmourIds.v), [](UC x, UC y) { return B(::bof3::Img(kArmourB.v) + 26u * x) < B(::bof3::Img(kArmourB.v) + 26u * y); });
 }
 
 // original 0x58C0B0: FieldItems_Sorts[5] - the category's list by Item_IconKind.
@@ -810,15 +804,15 @@ extern "C" void __cdecl FieldEquip_Open(void) {
     Sound(0x102);
     const auto state = static_cast<UC>(FieldS_State + 1);
     Rest2e_EquipCursor = 0;
-    B(kTimer) = 5;
+    B(::bof3::Img(kTimer.v)) = 5;
     FieldS_State = state;
 }
 
 // original 0x58C310: FieldEquip_States[1] and [4], FieldAbility_States[1].
 extern "C" void __cdecl FieldMenu_CountdownState(void) {
     Backdrop();
-    const auto t = static_cast<UC>(B(kTimer) - 1);
-    B(kTimer) = t;
+    const auto t = static_cast<UC>(B(::bof3::Img(kTimer.v)) - 1);
+    B(::bof3::Img(kTimer.v)) = t;
     if (t == 0) FieldS_State = static_cast<UC>(FieldS_State + 1);
 }
 
@@ -859,7 +853,7 @@ extern "C" void __cdecl FieldEquip_TopMenu(void) {
     WindowRecords[19].in_use = 0;
     WindowRecords[21].in_use = 0;
     FieldS_State = state;
-    B(kTimer) = 0;
+    B(::bof3::Img(kTimer.v)) = 0;
 }
 
 // original 0x58C4A0: FieldEquip_States[3] - the member.
@@ -911,7 +905,7 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
             B(::bof3::Img(0x80333E)) = 0;
             B(::bof3::Img(0x80333F)) = 0xFF;
             B(::bof3::Img(0x803359)) = 6;
-            B(::bof3::Img(0x803362)) = B(kEquipTops + 6u * m);
+            B(::bof3::Img(0x803362)) = B(::bof3::Img(kEquipTops.v) + 6u * m);
             const auto state = static_cast<UC>(FieldS_State + 1);
             B(::bof3::Img(0x80335A)) = 0x12;
             B(::bof3::Img(0x80335B)) = 4;
@@ -925,7 +919,7 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
             B(::bof3::Img(0x803361)) = 0;
             SetW(::bof3::Img(0x803368), 0);
             BattleActorCopies_ItemActor = m;
-            B(kTimer) = 5;
+            B(::bof3::Img(kTimer.v)) = 5;
             FieldS_State = state;
             return;
         }
@@ -946,15 +940,15 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
     const UC m = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     WindowRecords[19].in_use = 0;
     B(::bof3::Img(0x937F8E)) = m;
-    B(kTimer) = 0;
+    B(::bof3::Img(kTimer.v)) = 0;
     FieldS_State = state;
 }
 
 // original 0x58CD40: FieldEquip_States[7] - the screen closed after 4 frames.
 extern "C" void __cdecl FieldEquip_Close(void) {
     Backdrop();
-    const auto t = static_cast<UC>(B(kTimer) + 1);
-    B(kTimer) = t;
+    const auto t = static_cast<UC>(B(::bof3::Img(kTimer.v)) + 1);
+    B(::bof3::Img(kTimer.v)) = t;
     if (t != 4) return;
     SH_CALL(FieldEquip_CloseWindows)();
     U k = 0;
@@ -970,7 +964,7 @@ extern "C" void __cdecl FieldEquip_Close(void) {
     B(::bof3::Img(0x8032A7)) = 2;
     B(::bof3::Img(0x8032CB)) = 2;
     B(::bof3::Img(0x937F8E)) = m;
-    B(kTimer) = 0;
+    B(::bof3::Img(kTimer.v)) = 0;
     BattleE1_Mode = 1;
     FieldS_State = 0;
 }
@@ -1028,7 +1022,7 @@ extern "C" void __cdecl FieldEquip_RemoveSlot(void) {
     B(::bof3::Img(0x803417)) = 1;
     WindowRecords[21].in_use = 0;
     B(::bof3::Img(0x80333E)) = 0xFF;
-    B(kTimer) = 0;
+    B(::bof3::Img(kTimer.v)) = 0;
     FieldS_State = state;
 }
 
@@ -1059,7 +1053,7 @@ extern "C" void __cdecl FieldEquip_InitWindows(void) {
     B(::bof3::Img(0x80333E)) = 0xFF;
     B(::bof3::Img(0x80333F)) = 0xFF;
     B(::bof3::Img(0x803341)) = 1;
-    move_script::SetLong(At(::bof3::Img(0x803354)), static_cast<std::int32_t>(::bof3::Img(kPreview)));
+    move_script::SetLong(At(::bof3::Img(0x803354)), static_cast<std::int32_t>(::bof3::Img(kPreview.v)));
     B(::bof3::Img(0x80340D)) = 6;
     B(::bof3::Img(0x80340E)) = 0xA;
     WindowRecords[19].in_use = 0;
@@ -1077,37 +1071,37 @@ extern "C" void __cdecl FieldEquip_BestByPower(unsigned member) {
     const UC index = PartyRecord(static_cast<int>(member & 0xFF));
     const UC bit = Bit8(index);
     unsigned char* const record = Record(index);
-    B(kPreview) = record[0x12];
-    U best = B(kWeaponB + 28u * B(kPreview));
+    B(::bof3::Img(kPreview.v)) = record[0x12];
+    U best = B(::bof3::Img(kWeaponB.v) + 28u * B(::bof3::Img(kPreview.v)));
     for (U k = 0; k < 0x80; ++k) {
-        const UC id = At(L(kIdLists + 4))[k];
-        const UC power = B(kWeaponB + 28u * id);
+        const UC id = At(L(::bof3::Img(kIdLists.v) + 4))[k];
+        const UC power = B(::bof3::Img(kWeaponB.v) + 28u * id);
         const U mask = SH_CALL(Item_EquipMask)(1, id);
         if ((bit & mask) == 0) continue;
-        if (best < power || (best == power && B(kPreview) > id)) {
-            best = B(kWeaponB + 28u * id);
-            B(kPreview) = id;
+        if (best < power || (best == power && B(::bof3::Img(kPreview.v)) > id)) {
+            best = B(::bof3::Img(kWeaponB.v) + 28u * id);
+            B(::bof3::Img(kPreview.v)) = id;
         }
     }
     for (U j = 0; j < 3; ++j) {
-        const U slot = ::bof3::Img(kPreview) + 1 + j;
+        const U slot = ::bof3::Img(kPreview.v) + 1 + j;
         B(slot) = record[0x13 + j];
-        best = B(kArmourB + 26u * B(slot));
+        best = B(::bof3::Img(kArmourB.v) + 26u * B(slot));
         for (U k = 0; k < 0x80; ++k) {
-            const UC id = At(L(kIdLists + 8))[k];
-            const UC type = B(kArmourType + 26u * id);
-            const UC power = B(kArmourB + 26u * id);
+            const UC id = At(L(::bof3::Img(kIdLists.v) + 8))[k];
+            const UC type = B(::bof3::Img(kArmourType.v) + 26u * id);
+            const UC power = B(::bof3::Img(kArmourB.v) + 26u * id);
             if (type != 2 + j) continue;
             const U mask = SH_CALL(Item_EquipMask)(2, id);
             if ((bit & mask) == 0) continue;
             if (best < power || (best == power && B(slot) > id)) {
-                best = B(kArmourB + 26u * id);
+                best = B(::bof3::Img(kArmourB.v) + 26u * id);
                 B(slot) = id;
             }
         }
     }
-    B(kPreview + 4) = record[0x16];
-    B(kPreview + 5) = record[0x17];
+    B(::bof3::Img(kPreview.v) + 4) = record[0x16];
+    B(::bof3::Img(kPreview.v) + 5) = record[0x17];
 }
 
 // original 0x58D2E0: the preview by the lowest +0x14 / +0x13 first, then the
@@ -1116,17 +1110,17 @@ extern "C" void __cdecl FieldEquip_BestByOrder(unsigned member) {
     const UC index = PartyRecord(static_cast<int>(member & 0xFF));
     const UC bit = Bit8(index);
     unsigned char* const record = Record(index);
-    B(kPreview) = record[0x12];
-    const UC current = B(kPreview);
-    U best_b = B(kWeaponB + 28u * current);
-    UC best_a = B(kWeaponA + 28u * current);
+    B(::bof3::Img(kPreview.v)) = record[0x12];
+    const UC current = B(::bof3::Img(kPreview.v));
+    U best_b = B(::bof3::Img(kWeaponB.v) + 28u * current);
+    UC best_a = B(::bof3::Img(kWeaponA.v) + 28u * current);
     for (U k = 0; k < 0x80; ++k) {
-        const UC id = At(L(kIdLists + 4))[k];
-        const UC a = B(kWeaponA + 28u * id);
-        const UC b = B(kWeaponB + 28u * id);
+        const UC id = At(L(::bof3::Img(kIdLists.v) + 4))[k];
+        const UC a = B(::bof3::Img(kWeaponA.v) + 28u * id);
+        const UC b = B(::bof3::Img(kWeaponB.v) + 28u * id);
         const U mask = SH_CALL(Item_EquipMask)(1, id);
         if ((bit & mask) == 0) continue;
-        const UC chosen = B(kPreview);
+        const UC chosen = B(::bof3::Img(kPreview.v));
         bool take;
         if (chosen == 0)
             take = true;
@@ -1141,21 +1135,21 @@ extern "C" void __cdecl FieldEquip_BestByOrder(unsigned member) {
         else
             take = chosen > id;
         if (!take) continue;
-        best_b = B(kWeaponB + 28u * id);
-        B(kPreview) = id;
-        best_a = B(kWeaponA + 28u * id);
+        best_b = B(::bof3::Img(kWeaponB.v) + 28u * id);
+        B(::bof3::Img(kPreview.v)) = id;
+        best_a = B(::bof3::Img(kWeaponA.v) + 28u * id);
     }
     for (U j = 0; j < 3; ++j) {
-        const U slot = ::bof3::Img(kPreview) + 1 + j;
+        const U slot = ::bof3::Img(kPreview.v) + 1 + j;
         B(slot) = record[0x13 + j];
         const UC now = B(slot);
-        best_b = B(kArmourB + 26u * now);
-        best_a = B(kArmourA + 26u * now);
+        best_b = B(::bof3::Img(kArmourB.v) + 26u * now);
+        best_a = B(::bof3::Img(kArmourA.v) + 26u * now);
         for (U k = 0; k < 0x80; ++k) {
-            const UC id = At(L(kIdLists + 8))[k];
-            const UC a = B(kArmourA + 26u * id);
-            const UC type = B(kArmourType + 26u * id);
-            const UC b = B(kArmourB + 26u * id);
+            const UC id = At(L(::bof3::Img(kIdLists.v) + 8))[k];
+            const UC a = B(::bof3::Img(kArmourA.v) + 26u * id);
+            const UC type = B(::bof3::Img(kArmourType.v) + 26u * id);
+            const UC b = B(::bof3::Img(kArmourB.v) + 26u * id);
             if (static_cast<int>(type) - 2 != static_cast<int>(j)) continue;
             const U mask = SH_CALL(Item_EquipMask)(2, id);
             if ((bit & mask) == 0) continue;
@@ -1171,16 +1165,16 @@ extern "C" void __cdecl FieldEquip_BestByOrder(unsigned member) {
             else if (best_b != b)
                 take = false;
             else
-                take = B(kPreview) > id;   // the weapon's byte, not this slot's (Capcom's)
+                take = B(::bof3::Img(kPreview.v)) > id;   // the weapon's byte, not this slot's (Capcom's)
             if (!take) continue;
-            const UC kept = B(kArmourA + 26u * id);
+            const UC kept = B(::bof3::Img(kArmourA.v) + 26u * id);
             B(slot) = id;
             best_a = kept;
             best_b = kept;   // +0x13, not +0x14 (Capcom's)
         }
     }
-    B(kPreview + 4) = record[0x16];
-    B(kPreview + 5) = record[0x17];
+    B(::bof3::Img(kPreview.v) + 4) = record[0x16];
+    B(::bof3::Img(kPreview.v) + 5) = record[0x17];
 }
 
 // original 0x58D570: the preview swapped into the member's six slots through
@@ -1188,7 +1182,7 @@ extern "C" void __cdecl FieldEquip_BestByOrder(unsigned member) {
 extern "C" void __cdecl FieldEquip_ApplyPreview(void) {
     unsigned char* const record = Record(PartyRecord(B(::bof3::Img(0x803340))));
     for (U i = 0; i < 6; ++i) {
-        const UC item = B(kPreview + i);
+        const UC item = B(::bof3::Img(kPreview.v) + i);
         if (item == 0) continue;
         unsigned char* const cell = record + 0x12 + i;
         if (item == *cell) continue;
@@ -1197,7 +1191,7 @@ extern "C" void __cdecl FieldEquip_ApplyPreview(void) {
         const UC old = *cell;
         const UC again = B(AddrOf(FieldEquip_SlotCategories) + i);
         SH_CALL(Inventory_Add)(again, old, 1);
-        *cell = B(kPreview + i);
+        *cell = B(::bof3::Img(kPreview.v) + i);
     }
     SH_CALL(Char_RecalcStats)(record);
 }
@@ -1210,29 +1204,29 @@ extern "C" void __cdecl FieldEquip_PreviewItem(void) {
     const U mask = SH_CALL(Item_EquipMask)(category, item);
     B(::bof3::Img(0x803341)) = (Bit8(index) & mask) == 0 ? 1 : 0;
     const unsigned char* const record = Record(index);
-    B(kPreview + 1) = record[0x13];
-    B(kPreview) = record[0x12];
-    B(kPreview + 3) = record[0x15];
-    B(kPreview + 2) = record[0x14];
-    B(kPreview + 4) = record[0x16];
+    B(::bof3::Img(kPreview.v) + 1) = record[0x13];
+    B(::bof3::Img(kPreview.v)) = record[0x12];
+    B(::bof3::Img(kPreview.v) + 3) = record[0x15];
+    B(::bof3::Img(kPreview.v) + 2) = record[0x14];
+    B(::bof3::Img(kPreview.v) + 4) = record[0x16];
     const U slot = B(::bof3::Img(0x80333E));
-    B(kPreview + 5) = record[0x17];
-    B(kPreview + slot) = item;
+    B(::bof3::Img(kPreview.v) + 5) = record[0x17];
+    B(::bof3::Img(kPreview.v) + slot) = item;
 }
 
 // original 0x58D700: the preview with the slot's item taken off; al 1 when
 // there was one.
 extern "C" unsigned char __cdecl FieldEquip_PreviewRemove(void) {
     const unsigned char* const record = Record(PartyRecord(B(::bof3::Img(0x803340))));
-    B(kPreview) = record[0x12];
-    B(kPreview + 1) = record[0x13];
-    B(kPreview + 2) = record[0x14];
-    B(kPreview + 3) = record[0x15];
-    B(kPreview + 5) = record[0x17];
+    B(::bof3::Img(kPreview.v)) = record[0x12];
+    B(::bof3::Img(kPreview.v) + 1) = record[0x13];
+    B(::bof3::Img(kPreview.v) + 2) = record[0x14];
+    B(::bof3::Img(kPreview.v) + 3) = record[0x15];
+    B(::bof3::Img(kPreview.v) + 5) = record[0x17];
     const U slot = B(::bof3::Img(0x80333E));
-    B(kPreview + 4) = record[0x16];
-    if (B(kPreview + slot) != 0) {
-        B(kPreview + slot) = 0;
+    B(::bof3::Img(kPreview.v) + 4) = record[0x16];
+    if (B(::bof3::Img(kPreview.v) + slot) != 0) {
+        B(::bof3::Img(kPreview.v) + slot) = 0;
         B(::bof3::Img(0x803341)) = 0;
         return 1;
     }
@@ -1263,7 +1257,7 @@ extern "C" void __cdecl FieldAbility_Open(void) {
     Sound(0x102);
     const auto state = static_cast<UC>(FieldS_State + 1);
     const UC member = B(::bof3::Img(0x905BA1));
-    B(kTimer) = 5;
+    B(::bof3::Img(kTimer.v)) = 5;
     BattleActorCopies_ItemActor = member;
     Rest2e_AbilityCursor = 0;
     FieldS_State = state;
@@ -1304,7 +1298,7 @@ extern "C" void __cdecl FieldAbility_TopMenu(void) {
         if (chosen == 3) {
             const auto state = static_cast<UC>(FieldS_State + 7);
             WindowRecords[16].state = 1;
-            B(kTimer) = 7;
+            B(::bof3::Img(kTimer.v)) = 7;
             FieldS_State = state;
             FieldS_Step = 0;
             return;
@@ -1322,7 +1316,7 @@ extern "C" void __cdecl FieldAbility_TopMenu(void) {
     WindowRecords[16].state = 1;
     WindowRecords[21].in_use = 0;
     FieldS_State = state;
-    B(kTimer) = 5;
+    B(::bof3::Img(kTimer.v)) = 5;
 }
 
 // original 0x58D9C0: FieldAbility_States[3] - the member and the list type.
@@ -1366,7 +1360,7 @@ extern "C" void __cdecl FieldAbility_PickMember(void) {
         Sound(0x104);
         const int m = BattleActorCopies_ItemActor;
         const U type = Window16_Page;
-        const UC kept = B(kAbilityCursors + type + 4 * m);
+        const UC kept = B(::bof3::Img(kAbilityCursors.v) + type + 4 * m);
         const auto state = static_cast<UC>(FieldS_State + 1);
         B(::bof3::Img(0x8033AC)) = kept;
         FieldS_State = state;
@@ -1396,7 +1390,7 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
     const UC type0 = Window16_Page;
     const unsigned char* const list = AbilityList(member, type0);
     const UC id = list[B(::bof3::Img(0x8033AC))];
-    const U help = W(kAbilityHelp + 24u * id);
+    const U help = W(::bof3::Img(kAbilityHelp.v) + 24u * id);
     const UC busy = WindowRecords[16].state;
     SetW(::bof3::Img(0x8032FC), help);
     if (busy == 0) {
@@ -1414,7 +1408,7 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
     if (Rest2e_AbilityCursor != 2) turned = TurnType(repeat, cl);
     if (turned) {
         const int m = BattleActorCopies_ItemActor;
-        al = B(kAbilityCursors + cl + 4 * m);
+        al = B(::bof3::Img(kAbilityCursors.v) + cl + 4 * m);
         B(::bof3::Img(0x8033AC)) = al;
     } else {
         al = B(::bof3::Img(0x8033AC));
@@ -1439,7 +1433,7 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
     }
     {
         const int m = BattleActorCopies_ItemActor;
-        B(kAbilityCursors + cl + 4 * m) = al;
+        B(::bof3::Img(kAbilityCursors.v) + cl + 4 * m) = al;
     }
     const U p = Input_Pressed;
     if (Confirmed(p)) {
@@ -1473,7 +1467,7 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
                 return;
             }
         }
-        if ((B(kAbilityFlags + 24u * ability) & 0x10) != 0) {
+        if ((B(::bof3::Img(kAbilityFlags.v) + 24u * ability) & 0x10) != 0) {
             const unsigned char* const again = AbilityList(Window16_Owner, Window16_Page);
             const UC used = again[B(::bof3::Img(0x8033AC))];
             const UC user = PartyRecord(Window16_Owner);
@@ -1541,7 +1535,7 @@ extern "C" void __cdecl FieldAbility_PickTarget(void) {
     if (was != cl) Sound(0x101);
     const unsigned char* const list = AbilityList(Window16_Owner, Window16_Page);
     const UC ability = list[B(::bof3::Img(0x8033AC))];
-    SH_CALL(TextRecord_Set)(0, 0x10, At(kAbilityRecords + 24u * ability));
+    SH_CALL(TextRecord_Set)(0, 0x10, At(::bof3::Img(kAbilityRecords.v) + 24u * ability));
     const U p = Input_Pressed;
     SetW(::bof3::Img(0x8032FC), 0x30);
     if (Confirmed(p)) {
@@ -1580,14 +1574,14 @@ extern "C" void __cdecl FieldAbility_ShareConfirm(void) {
     const int answer = FieldS_Answer;
     const U x = L(::bof3::Img(0x8032F0)) - static_cast<U>(36 * answer) + 0xE8;
     WindowRecords[21].y = W(::bof3::Img(0x8032F2)) + 5;
-    U pressed = L(kPressed);
+    U pressed = L(::bof3::Img(kPressed.v));
     WindowRecords[21].in_use = 1;
     SetW(::bof3::Img(0x803458), x);
     SetW(::bof3::Img(0x8032FC), 0x31);
     if (pressed & 0xA000) {
         Sound(0x101);
         FieldS_Answer = static_cast<UC>(static_cast<unsigned char>(FieldS_Answer) ^ 1);
-        pressed = L(kPressed);
+        pressed = L(::bof3::Img(kPressed.v));
     }
     if (Confirmed(pressed)) {
         if (static_cast<unsigned char>(FieldS_Answer) != 0) {
@@ -1704,7 +1698,7 @@ extern "C" void __cdecl FieldAbility_ArrangeHow(void) {
         const int m = BattleActorCopies_ItemActor;
         B(::bof3::Img(0x8033AD)) = 0xFF;
         const U type = Window16_Page;
-        const UC kept = B(kAbilityCursors + type + 4 * m);
+        const UC kept = B(::bof3::Img(kAbilityCursors.v) + type + 4 * m);
         const auto step = static_cast<UC>(FieldS_Step + 1);
         B(::bof3::Img(0x8033AC)) = kept;
         FieldS_Step = step;
@@ -1732,7 +1726,7 @@ extern "C" void __cdecl FieldAbility_ArrangeMove(void) {
     const unsigned char* const list = AbilityList(member, type);
     const UC ability = list[B(::bof3::Img(0x8033AC))];
     const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0x500C);
-    SetW(::bof3::Img(0x8032FC), W(kAbilityHelp + 24u * ability));
+    SetW(::bof3::Img(0x8032FC), W(::bof3::Img(kAbilityHelp.v) + 24u * ability));
     const U repeat = AutoRepeat(pressed);
     UC cl = B(::bof3::Img(0x8033AC));
     const UC was = cl;
@@ -1750,7 +1744,7 @@ extern "C" void __cdecl FieldAbility_ArrangeMove(void) {
     {
         const int m = BattleActorCopies_ItemActor;
         const U t = Window16_Page;
-        B(kAbilityCursors + t + 4 * m) = cl;
+        B(::bof3::Img(kAbilityCursors.v) + t + 4 * m) = cl;
     }
     if (was != cl) Sound(0x100);
     const U p = Input_Pressed;
@@ -1790,8 +1784,8 @@ extern "C" void __cdecl FieldAbility_ArrangeMove(void) {
 // original 0x58E9D0: FieldAbility_States[8] - the screen closed.
 extern "C" void __cdecl FieldAbility_Close(void) {
     Backdrop();
-    const auto t = static_cast<UC>(B(kTimer) - 1);
-    B(kTimer) = t;
+    const auto t = static_cast<UC>(B(::bof3::Img(kTimer.v)) - 1);
+    B(::bof3::Img(kTimer.v)) = t;
     if (t != 0) return;
     SH_AT(Handler, at::kAbilityCloseWindows)();
     U k = 0;
@@ -1807,7 +1801,7 @@ extern "C" void __cdecl FieldAbility_Close(void) {
     B(::bof3::Img(0x8032A7)) = 2;
     B(::bof3::Img(0x8032CB)) = 2;
     B(::bof3::Img(0x905BA1)) = m;
-    B(kTimer) = 0;
+    B(::bof3::Img(kTimer.v)) = 0;
     BattleE1_Mode = 1;
     FieldS_State = 0;
 }
@@ -1822,8 +1816,8 @@ extern "C" void __cdecl FieldAbility_ViewRun(void) {
 // original 0x58EA70: FieldAbility_ViewSteps[0].
 extern "C" void __cdecl FieldAbility_ViewOpen(void) {
     Backdrop();
-    const auto t = static_cast<UC>(B(kTimer) - 1);
-    B(kTimer) = t;
+    const auto t = static_cast<UC>(B(::bof3::Img(kTimer.v)) - 1);
+    B(::bof3::Img(kTimer.v)) = t;
     if (t != 0) return;
     SH_AT(Handler, at::kAbilityViewWindow)();
     const UC cursor = Rest2e_AbilityViewCursor;
@@ -1832,15 +1826,15 @@ extern "C" void __cdecl FieldAbility_ViewOpen(void) {
     B(::bof3::Img(0x8033CE)) = top;
     Sound(0x102);
     const auto step = static_cast<UC>(FieldS_Step + 1);
-    B(kTimer) = 7;
+    B(::bof3::Img(kTimer.v)) = 7;
     FieldS_Step = step;
 }
 
 // original 0x58EAD0: FieldAbility_ViewSteps[1].
 extern "C" void __cdecl FieldAbility_ViewWait(void) {
     Backdrop();
-    const auto t = static_cast<UC>(B(kTimer) - 1);
-    B(kTimer) = t;
+    const auto t = static_cast<UC>(B(::bof3::Img(kTimer.v)) - 1);
+    B(::bof3::Img(kTimer.v)) = t;
     if (t == 0) FieldS_Step = static_cast<UC>(FieldS_Step + 1);
 }
 
@@ -1868,28 +1862,28 @@ extern "C" void __cdecl FieldAbility_ViewBrowse(void) {
     const auto step = static_cast<UC>(FieldS_Step + 1);
     WindowRecords[21].in_use = 0;
     B(::bof3::Img(0x8033C7)) = 1;
-    B(kTimer) = 7;
+    B(::bof3::Img(kTimer.v)) = 7;
     FieldS_Step = step;
 }
 
 // original 0x58ECC0: FieldAbility_ViewSteps[3].
 extern "C" void __cdecl FieldAbility_ViewLeave(void) {
     Backdrop();
-    const auto t = static_cast<UC>(B(kTimer) - 1);
-    B(kTimer) = t;
+    const auto t = static_cast<UC>(B(::bof3::Img(kTimer.v)) - 1);
+    B(::bof3::Img(kTimer.v)) = t;
     if (t != 0) return;
     WindowRecords[16].state = 2;
     Sound(0x102);
     const auto step = static_cast<UC>(FieldS_Step + 1);
-    B(kTimer) = 7;
+    B(::bof3::Img(kTimer.v)) = 7;
     FieldS_Step = step;
 }
 
 // original 0x58ED10: FieldAbility_ViewSteps[4].
 extern "C" void __cdecl FieldAbility_ViewEnd(void) {
     Backdrop();
-    const auto t = static_cast<UC>(B(kTimer) - 1);
-    B(kTimer) = t;
+    const auto t = static_cast<UC>(B(::bof3::Img(kTimer.v)) - 1);
+    B(::bof3::Img(kTimer.v)) = t;
     if (t != 0) return;
     const UC state = FieldS_State;
     FieldS_Step = 0;

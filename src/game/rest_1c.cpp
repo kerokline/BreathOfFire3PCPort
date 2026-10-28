@@ -48,9 +48,6 @@ using move_script::At;
 using move_script::Long;
 using move_script::SetLong;
 using move_script::Word;
-// A VA held as a ::bof3::image::Va (common/image_base.h), placed here through
-// ::bof3::Img.
-unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
 using Handler = void (__cdecl*)();
 using CellFn = unsigned char (__cdecl*)(unsigned, unsigned);
 
@@ -430,7 +427,7 @@ void Kind30Begin(const char* who) {
         SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(Word(s + 0x2C) + 0x100));
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 8));
         Field_State[0x128] = 2;
-        At(kScriptFlagsHigh)[0] |= 0x10;
+        At(::bof3::Img(kScriptFlagsHigh.v))[0] |= 0x10;
         SH_CALL(Field_JumpStart)();
         --Sprite_Current[9];
         SH_CALL(Field_LeaderStepTick)();

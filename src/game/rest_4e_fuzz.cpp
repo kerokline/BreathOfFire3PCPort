@@ -170,10 +170,6 @@ template <typename... T> U PickOf(T... v) {
 }
 unsigned char* Mem(U a) { return sh::Mem(a); }
 unsigned char& B(U a) { return Mem(a)[0]; }
-// The same accessors for a VA held as a ::bof3::image::Va (common/image_base.h):
-// the VA is placed here, through ::bof3::Img.
-unsigned char* Mem(::bof3::image::Va va) { return Mem(::bof3::Img(va)); }
-unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 
 // The cells (rest_4e.cpp's).
 // kMode: now Rest4b_BoardState (symbols.toml).
