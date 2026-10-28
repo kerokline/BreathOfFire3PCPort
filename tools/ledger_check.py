@@ -309,7 +309,7 @@ def check_switch_fields(r, fielded, defined, inv, whole=True):
                     built = 'is' if inv.player_switch_built else 'is not yet'
                     r.error(f'{where}: {did} Player {pv}: {why} - they give {sw_player} '
                             f'(tools/ledger_switches.py; {ledger_switches.PLAYER_SWITCH} {built} read by src/)')
-                if vals.get('Default') == 'off' and pv != 'yes':
+                if vals.get('Default') == 'off' and pv != 'yes' and vals.get('State') == 'active':
                     r.note(f'{did}: Default off and Player {pv}: a player who cannot switch it on never gets it')
 
         # Toward: none alone, or a list of distinct releases; no cascade.
@@ -318,10 +318,6 @@ def check_switch_fields(r, fielded, defined, inv, whole=True):
             if toks != ['none'] and (not set(toks) <= set(TOWARD_VALUES) or len(set(toks)) != len(toks)):
                 r.error(f'{where}: {did} Toward {vals["Toward"]!r}: none alone, or a list of distinct '
                         f'{", ".join(TOWARD_VALUES)}')
-            m = re.search(r'^- \*\*Also in the PSX version\?\*\*\s*(\w+)', chunk, re.M)
-            if 'psx' in toks and m and m.group(1).lower() == 'yes':
-                r.note(f'{did}: Toward lists psx, and "Also in the PSX version?" starts Yes (the original '
-                       "behaviour is the PlayStation's too) - check")
 
         # State: active, withdrawn, or superseded by an entry that exists.
         if 'State' in vals:

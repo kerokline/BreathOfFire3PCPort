@@ -81,7 +81,9 @@ ledger stays trustworthy.
   design choice.
 - **Also in the PSX version?** yes / no / unknown — whether the archival sibling
   shows the same behaviour. This is what distinguishes a *port* bug from an
-  *original* one, and it changes how confident the fix should be.
+  *original* one, and it changes how confident the fix should be. The answer
+  is for the *original* behaviour (is the port's way the PlayStation's too?);
+  where the new behaviour is the PlayStation's, say so after the answer.
 - **Reversible?** whether it sits behind a config toggle, and the key if so.
 - **Switch:** SunderLoop | ini:<key>=<value> | env:<BOF3X_NAME>=<value> | lang | none
 - **Default:** on | off
@@ -107,13 +109,20 @@ more than they must: a comma list, or `none` alone. A wider switch that also
 turns it off (a whole function's detour beside a one-byte patch of ours, the
 language beside one of its layouts) stays in `Reversible?` only, so that a
 preset which sets every listed name changes this entry and not its
-neighbours. A name is one of:
+neighbours. The rule: the narrowest runtime name that turns the whole entry
+off, and among equally narrow names the best class (`yes` before `cheap`
+before `costly`). `lang` is a runtime name like any other: when no narrower
+name turns the whole entry off, the entry is `Switch: lang`, `Player: yes`.
+A build-time handle (a `loc_build.py` or importer option, a rebuilt layer)
+is never a switch, and does not make an entry `none` while the language
+turns it off; `none` is for an entry no runtime name turns off. A name is
+one of:
 
 | Form | What it is | Example |
 |---|---|---|
 | a bare name | a `BOF3X_ORIGINAL` name: the first argument of a `PatchBytes`, `RetargetCall` or `Inject` in `src/` | `SunderLoop` (DIV-0176) |
 | `ini:<key>=<value>` | a `bof3x.ini` key the launcher reads, at the value that turns the entry off | `ini:wide=0` (DIV-0041) |
-| `env:<BOF3X_NAME>=<value>` | an environment name `src/` reads and the launcher has no key for; an empty value means unset | `env:BOF3X_LAYERING=0` (DIV-0071) |
+| `env:<BOF3X_NAME>=<value>` | an environment name `src/` reads and the launcher has no key for, or whose launcher key cannot ask for that value (DIV-0036's `BOF3X_SCALE=2`, DIV-0150's `BOF3X_MUSIC=seq`); an empty value means unset | `env:BOF3X_LAYERING=0` (DIV-0071) |
 | `lang` | the language is the switch: `BOF3X_LANG`, the launcher's language box | DIV-0008 |
 | `none` | nothing turns it off | DIV-0067 (withdrawn) |
 
@@ -125,7 +134,12 @@ which takes these names, as `BOF3X_ORIGINAL` does, `*` and `-name` included).
 
 **`Default:`** `on` when a player who changes nothing gets the new
 behaviour (most entries; DIV-0176), `off` when it waits to be asked for (a
-cheat, an opt-in look: DIV-0045's multipliers, DIV-0012's point filter).
+cheat, an opt-in look: DIV-0045's multipliers, DIV-0012's point filter). It
+is read with the player's own choices and the install's contents as they
+are - the language, the wide picture, the cache: an entry that acts only
+under an overlay (or a wide mode, or a cache) is `on` when it acts there
+without a further change (DIV-0005); `off` is for what waits for its own
+switch to be asked for.
 
 **`Player:`** whether the player's build (`bof3x.exe`) can turn the entry
 off. `tools/ledger_switches.py` measures it from the source, one class per
@@ -151,8 +165,9 @@ read, or the PSP changed it; `psp` alone for one of the PSP's own changes
 (DIV-0108's battle rules); `pc` where the consoles differ and the port's way
 is kept or chosen; `none` for behaviour no release had (DIV-0176, Sunder's
 unused loop) or not measured. `psx` cites the entry's "Also in the PSX
-version?" line and rationale; `psp` only a PSP twin read or a PSP round's
-entry. The list never claims more than was measured. The "PlayStation"
+version?" line and rationale; `psp` only a PSP twin read, a PSP round's
+entry, or a capture of the PSP drawing the entry's own case (DIV-0160,
+DIV-0184). The list never claims more than was measured. The "PlayStation"
 preset turns on every entry that lists `psx`.
 
 **`State:`** `active`; `withdrawn` (the entry stays as the record, nothing
