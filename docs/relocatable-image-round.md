@@ -28,7 +28,7 @@ On `main` `e84aaf6d`:
 | Code pointers bound by the entry-stub page | 9,142 words, 6,346 targets, 6,211 of them function starts | [`exe-import.md`](exe-import.md) 5, [`state3-design.md`](state3-design.md) 2 |
 | `at::` constants that are code addresses | 388 (331 distinct) | `data_census.py --counts` (`at_constants_code`, `distinct_code_addresses`) |
 | Inline-asm memory operands (`"m"`) in `src/game` | 171, in a set of 126 files that hold asm | `grep` |
-| Run-time raw calls through an address | 61 | [`round-13-cleanup.md`](round-13-cleanup.md) 1.3, as I44 cites it (not re-measured) |
+| Run-time raw calls through an address | 61 as I44 cites [`round-13-cleanup.md`](round-13-cleanup.md) 1.3; **1,340 by RA1's census** (`abs_call`, game and platform: 1,284 through the call-through helpers, 28 function-pointer casts, 18 `orig::F()`, 10 to functions still Capcom's) | RA1 as run, below |
 | The executable | `bof3x.exe` based at `0x400000`, spanning `0x400000..0x93F000`, its own sections holding Capcom's range | [`state3-design.md`](state3-design.md) 1.1 |
 
 Two consequences of that table:
@@ -38,8 +38,12 @@ Two consequences of that table:
   code-address constants and the asm operands are what name the base.
 - **The 8,917 fuzz sites stay where they are.** The shadow fuzz clones
   Capcom's code and runs in the hosted build only, where `BOF3.exe` is at
-  its fixed base by construction. The hosted build keeps the base `0x400000`
-  for ever; only the player's executable moves.
+  its fixed base by construction. `BOF3.exe` stays at `0x400000` for ever;
+  only the player's executable moves. **Amended by RA1 and RA3 (2026-10-28):**
+  the fuzz is compiled into the same `bof3x.dll` the exe host loads, so there
+  is no hosted-only compile in which the base could stay `constexpr`; the base
+  is one run-time value, `ImageBase()`, that reads `0x400000` hosted
+  ([`relocatable-image-design.md`](relocatable-image-design.md) 1).
 
 ## 1. The method: change the spelling first, the address second
 
@@ -52,9 +56,8 @@ proof, not a test. This round keeps that gate for as long as it can:
    is byte-identical; `codegen_same.py` says `0 differ`. Every one of the
    17,259 sites can be converted this way, in parallel by file group,
    exactly as stage B of the typed-data round was.
-2. **Stage C makes the base a run-time value** in the exe host (a constant
-   in the hosted build, so the hosted build's code may still fold it), and
-   moves the image. Here the machine code changes everywhere at once, by one
+2. **Stage C makes the base a run-time value** in both hosts (one DLL serves
+   both, RA3 section 1; it reads `0x400000` hosted), and moves the image. Here the machine code changes everywhere at once, by one
    decision in one header, and the proof becomes a run: the state hash of
    the image at `0x400000` against the image at another base, equal on every
    route once pointer words are compared as offsets.
@@ -87,7 +90,37 @@ still compare identical, pair for pair, and a synthetic page with every
 slot moved by a constant hashes the same. One game run per reference, by
 the coordinator.
 
+**RA2 as run (2026-10-28, `relocatable-image/ra2` `174c1f97`; [`state-hash.md`](state-hash.md) 8).**
+The rule is wider than the paragraph above: **every aligned word** of a page
+whose value lies in a folded range `[F, F+0x53F000)` is hashed as
+`0x400000 + (value - F)`, not only the pointer slots, because 895..3,144
+run-time pointers sit outside the start-up slots (a slot-only rule would have
+failed stage C's proof). Both sides of a comparison fold the same range (the
+image's own base when moved, and `BOF3X_STATEHASH_FOLD=<addr>` for the side
+at `0x400000`), because no 64 KiB-aligned window of `0x53F000` bytes below
+`0x80000000` is free of game data in 219 dumps; the tool refuses pairs whose
+folds differ. With nothing folded the hash is `BOF3SH3`'s bit for bit, so the
+`cn_<route>_orig4` / `_orig4b` references (not `orig3`, stale above) stand
+unchanged; the header is `BOF3SH4`; `StateHash_SetImageBase()` waits for
+stage C's loader. The proof is one Capcom-side run per reference with the
+new build checked against its pair (`ri1027\ra2\rehash.sh`), run by the
+coordinator in a quiet window. **For stage C2:** a code word bound to our
+function hashes as the bare tag where Capcom's references hold his address
+(123 pages), so the binder must give the hash the our-function to Capcom-
+address map. Report: `C:\Users\kerok\bof3x-runs\ri1027\ra2\REPORT.md`.
+
 ### RA3: the loader's design
+**As run (2026-10-28, `relocatable-image/ra3` `23d2baac`):**
+[`relocatable-image-design.md`](relocatable-image-design.md), DRAFT, every
+bullet below answered or its missing measurement named (its section 13).
+The decisions: the image stays in `bof3x.exe`'s own sections at the PE
+header's `ImageBase`, read at run time in both hosts; the image below 16 MB;
+`at::` constants stay addresses behind `Img(va)` / `Code(va)` (RB0 follows);
+the 18,831 pointer words rebased after the data copy; 8,673 code words bound
+by name, 111 unbound into the trap, the stub page `PAGE_NOACCESS`; 14 import
+slots; quicksaves across bases refused; the proof base `0xA00000`. Report:
+`C:\Users\kerok\bof3x-runs\ri1027\ra3\REPORT.md`.
+
 A design doc in the shape of `state3-design.md`, answering with measurements:
 - where the image goes (a `VirtualAlloc` block, or a section of ours without
   a fixed base), and what `GetModuleHandle(nullptr)` still has to be;
@@ -109,6 +142,80 @@ A design doc in the shape of `state3-design.md`, answering with measurements:
   I46: a snapshot taken at one base and loaded at another must rebase or
   refuse), the crash reporter's addresses, and `tools/` that name Capcom's
   addresses in the exe host.
+
+### RA1 as run (2026-10-28)
+
+`tools/reloc_census.py` on the round tip `15518394`, its output
+`analysis/reloc_census.tsv` (the method, every class and the scope rules are
+in its docstring; it reuses `data_census.py`'s reader). A site is one token
+of our C++ naming an address in `0x400000..0x93F000` (or our draw pool); 40
+seconds, deterministic (two runs byte-identical).
+
+| Class | game | platform | hosted | fuzz | launcher | all |
+|---|--:|--:|--:|--:|--:|--:|
+| `accessor` (a generated typed name) | 22,356 | 169 | 0 | 3,425 | 2 | 25,952 |
+| `accessor_addr` (`Name_addr`, `bof3::addr::Name`) | 5,461 | 16 | 0 | 7,281 | 0 | 12,758 |
+| `inject` (`BOF3_INJECT`, `Inject(...)`) | 10,071 | 0 | 0 | 18 | 0 | 10,089 |
+| `image_meta` (`bof3::image::kBase`, `kTextVa`) | 1 | 6 | 0 | 0 | 0 | 7 |
+| `at_global` | 5,182 | 1 | 0 | 1,614 | 0 | 6,797 |
+| `module_const` | 2,159 | 53 | 0 | 1,103 | 0 | 3,315 |
+| `code_const` (a code address by name) | 2,386 | 19 | 82 | 5,395 | 0 | 7,882 |
+| `raw_literal` | 1,837 | 125 | 0 | 2,143 | 0 | 4,105 |
+| `code_literal` | 862 | 66 | 10 | 44,183 | 0 | 45,121 |
+| `asm_operand` | 14 | 0 | 0 | 0 | 0 | 14 |
+| `asm_text` (a literal in a naked function's template) | 29 | 0 | 0 | 1 | 0 | 30 |
+| `abs_call` (a code address called) | 1,330 | 10 | 26 | 14 | 0 | 1,380 |
+| `range_cmp` | 138 | 19 | 0 | 114 | 0 | 271 |
+| `addr_eq` (`==`, `!=`, `case`) | 67 | 17 | 172 | 1,865 | 0 | 2,121 |
+| `ptr_sub` | 47 | 20 | 0 | 74 | 0 | 141 |
+| `const_def` (3,281 spell a literal, 1,018 derived) | 3,934 | 23 | 0 | 342 | 0 | 4,299 |
+| **all** | 55,874 | 544 | 290 | 67,572 | 2 | 124,282 |
+
+**Scope rules.** `fuzz`: `data_census.py`'s file rule (`_fuzz.`,
+`_harness`, `fuzz_`). `hosted`: a site in another file that only the hosted
+build executes - inside `CloneOriginal(...)`, inside a `StubFor` / `StubAt`
+body (a clone's callee table), or a code address inside `PatchBytes(...)` /
+`RetargetCall(...)`. `launcher`: another process, reads `BOF3.exe` as a file.
+`platform`: `src/hook`, `render`, `audio`, `input`, `common`.
+
+**What a stage B group edits** is every game and platform site but the
+generated names (`accessor`, `accessor_addr`, `inject`, `image_meta`: RB0's,
+through `gen_symbols.py`) and the readings (`range_cmp`, `addr_eq`: the
+coordinator's): **18,097 sites in 511 files**. Of the literal sites, 2,992
+are constant definitions that spell an image literal - with the
+`base + offset` spelling these are the edit points, and the 7,341 game
+references to `at::` and module constants follow them without an edit while
+the base is `constexpr`.
+
+**Proposed stage B groups** (`--groups 6`, families whole; the file list per
+group is written by `--groups 6 --groups-tsv FILE`):
+
+| Group | Families | Files | Sites |
+|---|---|--:|--:|
+| 1 | magic | 50 | 3,205 |
+| 2 | battle | 78 | 3,005 |
+| 3 | rest | 51 | 2,769 |
+| 4 | effect, engine, platform | 131 | 2,748 |
+| 5 | field, scenario | 98 | 3,181 |
+| 6 | area, ui | 103 | 3,189 |
+
+**The readings** (`--ranges`): 157 range comparisons and 84 equality tests
+in the game and platform scopes, plus the calls of the range helpers
+the census finds (seven in the game, of `InData`, `InImage` and `InPool`;
+eight in the fuzz). Read by kind in the
+RA1 report: table-walk loop bounds (both ends image constants - they move
+together), membership tests on a run-time pointer, eight "is this handler
+word inside Capcom's `.text`" checks that a code word bound to our function
+will fail, world coordinates that only look like addresses (never to be
+converted), and the platform's own layout checks.
+
+**`--check`** fails when a gated count rises in the game or platform scope
+(the literal, call and reading classes: `asm_operand` 14, `asm_text` 29,
+`abs_call` 1,340, `range_cmp` 157, `addr_eq` 84, `ptr_sub` 67, literal
+`const_def` 2,992, `raw_literal` 1,962, `code_literal` 928). The counts are
+stable run to run, so the check can join `checks.yml` beside
+`data_census.py --check`; stage B lowers every gate, and each group commits
+the regenerated file.
 
 ## 3. Stage B: the spelling (file groups, in parallel, after RA1 and RA3 merge)
 
@@ -133,8 +240,11 @@ goes to the coordinator with its reading.
 
 ## 4. Stage C: the move (one agent, then the coordinator's runs)
 
-- The base a run-time value in the exe host, set by the loader of RA3's
-  design; the hosted build keeps it `constexpr`.
+- The base a run-time value in both hosts, `ImageBase()`, set by the loader
+  of RA3's design (`0x400000` hosted); the image below 16 MB because the
+  ordering-table links are 24-bit (RA3 section 1, `draw_pool.cpp:250`); stage
+  C in two steps, C1 the move with the stub page intact, C2 the code words
+  bound and the page a no-access trap (the owner's call 2).
 - `bof3x.exe` linked without `/FIXED` at `0x400000`; the image placed by
   the loader; pointer words rebased; code words bound; the stub page as
   RA3 decided.
