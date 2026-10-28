@@ -70,9 +70,9 @@ constexpr ::bof3::image::Va kBannerText{0x904EA0};       // B07's banner text bu
 constexpr ::bof3::image::Va kBannerSource{0x65D008};     // the .data text copied there (not read here)
 
 // --- the callees nobody owns -------------------------------------------------
-constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
-constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () the end phase, step 2
-constexpr U kEndThird = bof3::addr::BattleEnd_EnterStep3;         // () the end phase, step 3
+constexpr ::bof3::image::CodeVa kEndWin{bof3::addr::BattleEnd_EnterStep1};           // () the end phase, step 1
+constexpr ::bof3::image::CodeVa kEndOther{bof3::addr::BattleEnd_EnterStep2};         // () the end phase, step 2
+constexpr ::bof3::image::CodeVa kEndThird{bof3::addr::BattleEnd_EnterStep3};         // () the end phase, step 3
 
 }  // namespace at
 }  // namespace boss_sb

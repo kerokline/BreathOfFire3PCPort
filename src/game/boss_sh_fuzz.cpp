@@ -92,7 +92,7 @@ std::uint32_t SlotEffect(const std::uint32_t*, std::uint32_t answer) {
 }
 
 const bh::Callee kCallees[] = {
-    {"0x446DE0", at::kEndWin, at::kEndWin, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &bh::EndWinEffect},
+    {"0x446DE0", at::kEndWin.v, at::kEndWin.v, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &bh::EndWinEffect},
     {"AbilityList_Add", ::bof3::addr::AbilityList_Add, KeyOf(&::AbilityList_Add), 4, {kAll, kAll, kAll, kAll}, bh::Answer::kFlag, 0, 0,
      {}, &PickedEffect},
     {"BattleEnemy_ScriptTick", ::bof3::addr::BattleEnemy_ScriptTick, KeyOf(&::BattleEnemy_ScriptTick), 0, {}, bh::Answer::kFlag, 0, 0,
@@ -103,10 +103,10 @@ const bh::Callee kCallees[] = {
      bh::Answer::kGarbage, 0, 0, {}, &bh::TurnOrderEffect},
     {"Sprite_PoseFromSet", ::bof3::addr::Sprite_PoseFromSet, KeyOf(&::Sprite_PoseFromSet), 3, {kU8, kAll, kAll},
      bh::Answer::kGarbage, 0, 0, {}, &bh::TurnOrderEffect},
-    {"0x446700", at::kOrderFront, at::kOrderFront, 1, {kU8}, bh::Answer::kGarbage, 0, 0},
-    {"0x437450", at::kEnemySound, at::kEnemySound, 1, {kU16}, bh::Answer::kGarbage, 0, 0, {}, &SpriteEffect},
-    {"0x4376A0", at::kEnemyActEnd, at::kEnemyActEnd, 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"0x4376F0", at::kEnemyActChance, at::kEnemyActChance, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &SpriteEffect},
+    {"0x446700", at::kOrderFront.v, at::kOrderFront.v, 1, {kU8}, bh::Answer::kGarbage, 0, 0},
+    {"0x437450", at::kEnemySound.v, at::kEnemySound.v, 1, {kU16}, bh::Answer::kGarbage, 0, 0, {}, &SpriteEffect},
+    {"0x4376A0", at::kEnemyActEnd.v, at::kEnemyActEnd.v, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x4376F0", at::kEnemyActChance.v, at::kEnemyActChance.v, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &SpriteEffect},
 };
 
 // The cells beyond the harness's battle frame the 46 read or write.

@@ -593,7 +593,7 @@ void SpiralPoint(unsigned char* spiral, unsigned i, unsigned char dark, unsigned
     if (static_cast<std::int32_t>(dot) <= 0) {
         *shade = dark;
     } else {
-        std::int32_t root = static_cast<std::int32_t>(SH_AT(long (__cdecl*)(long), at::kSqrt)(static_cast<long>(dot)));
+        std::int32_t root = static_cast<std::int32_t>(SH_AT(long (__cdecl*)(long), at::kSqrt.v)(static_cast<long>(dot)));
         if (root > 0xFFF) root = 0xFFF;
         *shade = static_cast<unsigned char>(((static_cast<U>(root) >> 5) & 0x78u) + 7u);
     }
@@ -1629,7 +1629,7 @@ namespace {
 // The moving states' draw: R3F's 0x480300(the point, 0x20 unread, the wobble 8,
 // the dy `last`).
 void Ring(U last) {
-    SH_AT(void (__cdecl*)(const long*, unsigned, unsigned, unsigned), at::kR3FRing)(Point(S() + 0x34), 0x20, 8, last);
+    SH_AT(void (__cdecl*)(const long*, unsigned, unsigned, unsigned), at::kR3FRing.v)(Point(S() + 0x34), 0x20, 8, last);
 }
 void Add(U offset, U by) { SetUL(S() + offset, UL(S() + offset) + by); }
 void Placed(U x, U z, U y) {

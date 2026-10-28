@@ -145,7 +145,7 @@ extern "C" void __cdecl EffectKindAC_FadeIn(void) {
     {
         const unsigned char* const s = S();
         const U product = static_cast<U>(S8(s[9]) * -0x20) & 0xFFFFu;
-        SH_AT(void(__cdecl*)(U), at::kFadeDraw)((AddressOf(s) & 0xFFFF0000u) | product);
+        SH_AT(void(__cdecl*)(U), at::kFadeDraw.v)((AddressOf(s) & 0xFFFF0000u) | product);
     }
     S()[9] = static_cast<unsigned char>(S()[9] - 1);
     if (S()[9] != 0) return;
@@ -161,7 +161,7 @@ extern "C" void __cdecl EffectKindAC_FadeOut(void) {
         const unsigned char* const s = S();
         const unsigned char n = s[9];
         const U shade = n == 8 ? 0xFFu : (AddressOf(s) & 0xFFFFFF00u) | static_cast<unsigned char>(n << 5);
-        SH_AT(void(__cdecl*)(U), at::kFadeDraw)(shade);
+        SH_AT(void(__cdecl*)(U), at::kFadeDraw.v)(shade);
     }
     S()[9] = static_cast<unsigned char>(S()[9] - 1);
     if (S()[9] == 0) SH_CALL(Effect_Release)();
@@ -800,8 +800,8 @@ constexpr U kWideYFloat = 0x5C4244, kNarrowYFloat = 0x5C4238;
 // The float an `fcomp dword ptr [mem]` operand names: the two above, or
 // DIV-0041's four as widescreen.cpp holds them.
 float Bound(U operand_at) {
-    if (operand_at == at::kWideYAt) return AreaMapBD_WideYBound;
-    if (operand_at == at::kNarrowYAt) return AreaMapBD_NarrowYBound;
+    if (operand_at == at::kWideYAt.v) return AreaMapBD_WideYBound;
+    if (operand_at == at::kNarrowYAt.v) return AreaMapBD_NarrowYBound;
     return Fl(Widescreen_RangeOperand(operand_at));
 }
 }  // namespace
@@ -875,10 +875,10 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
             // x87 fcomp against the operands' floats: an unordered compare sets
             // C0 and C3 both.
             const float sx = Fl(AddressOf(MapView_ScreenXY)), sy = Fl(AddressOf(MapView_ScreenXY) + 4);
-            bool keep = sy > Bound(at::kWideYAt) && sx > Bound(at::kWideLoAt) && sx < Bound(at::kWideHiAt);
+            bool keep = sy > Bound(at::kWideYAt.v) && sx > Bound(at::kWideLoAt.v) && sx < Bound(at::kWideHiAt.v);
             if (!keep) {
-                const bool y_ok = !(sy >= Bound(at::kNarrowYAt));
-                keep = y_ok && sx > Bound(at::kNarrowLoAt) && !(sx >= Bound(at::kNarrowHiAt));
+                const bool y_ok = !(sy >= Bound(at::kNarrowYAt.v));
+                keep = y_ok && sx > Bound(at::kNarrowLoAt.v) && !(sx >= Bound(at::kNarrowHiAt.v));
             }
             if (!keep) continue;
 
@@ -976,8 +976,8 @@ extern "C" int __cdecl EffectKind0F_CharCount(const unsigned char* text) {
 }
 
 void Rest3G_Inject() {
-    bof3::OperandExpect("AreaMapBD_BuildView y bound", at::kWideYAt, &kWideYFloat, 4);
-    bof3::OperandExpect("AreaMapBD_BuildView y bound", at::kNarrowYAt, &kNarrowYFloat, 4);
+    bof3::OperandExpect("AreaMapBD_BuildView y bound", at::kWideYAt.v, &kWideYFloat, 4);
+    bof3::OperandExpect("AreaMapBD_BuildView y bound", at::kNarrowYAt.v, &kNarrowYFloat, 4);
     if (bof3::WantsShadow("rest_3g")) rest_3g::SelfTest();
     BOF3_INJECT(EffectKindAC_Start);
     BOF3_INJECT(EffectKindAC_FadeIn);

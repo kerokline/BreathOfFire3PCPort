@@ -299,7 +299,7 @@ const sh::Callee kCallees[] = {
     {"0x479970 EffectAngle_Mean", 0x479970, 0x479970, 2, {0xFFFu, 0xFFFu}, kG, 0, 0, {}, nullptr, nullptr, true},
     // R3F's, ours, keyed by address: (point, size, dy, last), the point
     // the record's +0x34 (the same address on both sides) and its 12 bytes
-    {"0x480300 (R3F)", at::kR3FRing, at::kR3FRing, 4, {kW, kW, kW, kW}, kG, 0, 0, {12, 0, 0, 0}, nullptr, nullptr, true},
+    {"0x480300 (R3F)", at::kR3FRing.v, at::kR3FRing.v, 4, {kW, kW, kW, kW}, kG, 0, 0, {12, 0, 0, 0}, nullptr, nullptr, true},
     // the arm's matrix calls (EffectKind21_ArmPoints): the matrix and the
     // vectors are stack locals - hashed, never logged by value
     {R3E_OURS(EffectGte_SetDiagonalOne), 1, {0}, kG, 0, 0, {}, &FxDiagonal, nullptr, true},

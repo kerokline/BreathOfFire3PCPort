@@ -296,12 +296,12 @@ const void* StubFor(std::uint32_t target) {
     case 0x444310: return f(kStubs.open_window);      // Battle_OpenMsgWindow
     case 0x44AA00: return f(kStubs.opening_message);  // Battle_OpeningMessage
     case 0x454810: return f(kStubs.load_done);        // File_LoadDone
-    case kWriteBackMember: return f(kStubs.write_back_member);
+    case kWriteBackMember.v: return f(kStubs.write_back_member);
     case 0x59E330: return f(kStubs.window_reset);     // Window_ResetAll
-    case kClearEnemies: return f(kStubs.clear_enemies);
+    case kClearEnemies.v: return f(kStubs.clear_enemies);
     case 0x435260: return f(kStubs.task_clear_all);   // BattleTask_ClearAll
     case 0x590660: return f(kStubs.recalc_stats);     // Char_RecalcStats
-    case kReloadParty: return f(kStubs.reload_party);
+    case kReloadParty.v: return f(kStubs.reload_party);
     default: bof3::Fatal("battle_turn_steps: no stand-in for a call to 0x%X", static_cast<unsigned>(target)); return nullptr;
     }
 }

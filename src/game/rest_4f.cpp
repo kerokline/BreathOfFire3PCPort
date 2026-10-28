@@ -1430,7 +1430,7 @@ extern "C" void __cdecl EffectKind02_Mode3Wait(void) {
 void Rest4F_Inject() {
     {
         const std::uint8_t rows = kPadFrameRows;
-        bof3::OperandExpect("Config_DrawControllerPanel frame rows", at::kPadFrameH, &rows, 1);
+        bof3::OperandExpect("Config_DrawControllerPanel frame rows", at::kPadFrameH.v, &rows, 1);
     }
     if (bof3::WantsShadow("rest_4f")) rest_4f::SelfTest();
     BOF3_INJECT(ConfigScreen_Run);

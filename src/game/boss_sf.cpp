@@ -133,7 +133,7 @@ unsigned char AbilityByte(U base, unsigned id) { return At(base + id * at::kAbil
 
 // An enemy state's sound: 0x437450 with the first word of the current
 // enemy's +0xF8 table.
-void EnemySound() { BH_AT(void (__cdecl*)(unsigned), at::kEnemySound)(Word(At(static_cast<U>(static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy())->cue_table))))); }
+void EnemySound() { BH_AT(void (__cdecl*)(unsigned), at::kEnemySound.v)(Word(At(static_cast<U>(static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy())->cue_table))))); }
 
 // The Gazer effect's move: +0x3E (a word) up by the word +0x14, then the
 // dword +0x14 up by +0x20 - Sprite_Current read for each - then the ground
@@ -156,7 +156,7 @@ std::int32_t Height() { return static_cast<std::int16_t>(Word(Sprite_Current + 0
 
 // original 0x43C480: Boss_SetupTable[27]. The hooks: end Boss27_End, exit
 // Boss27_Exit, event Boss27_Event.
-extern "C" void __cdecl Boss27_Setup(void) { StoreHooks(bof3::addr::Boss27_End, bof3::addr::Boss27_Exit, bof3::addr::Boss27_Event); }
+extern "C" void __cdecl Boss27_Setup(void) { StoreHooks(::bof3::Code(bof3::addr::Boss27_End), ::bof3::Code(bof3::addr::Boss27_Exit), ::bof3::Code(bof3::addr::Boss27_Event)); }
 
 // original 0x43C4A0: the event hook, by the code's low byte; al 0 on every
 // path.
@@ -233,7 +233,7 @@ extern "C" void __cdecl Boss27_End(void) {
     if (script & 1) MoveScript_PartyRecords[0x65] = 0xF;
     if (script & 2) MoveScript_PartyRecords[0x65] = 7;
     if (script & 4) MoveScript_PartyRecords[0x65] = 0x14;
-    BH_AT(Handler, at::kEndThird)();
+    BH_AT(Handler, at::kEndThird.v)();
 }
 
 // original 0x43C6F0: the exit hook. With 0x904AAD bit 0,
@@ -321,7 +321,7 @@ extern "C" unsigned __cdecl BossGazer_Dispatch(unsigned passed) {
 // answer.
 extern "C" unsigned char __cdecl BossGazer_Enter(void) {
     SetCell(Enemy() + 0xFC, AddressOf(BossGazer_Anims));
-    SetCell(Enemy() + 0xF4, bof3::addr::BossGazer_Hook);
+    SetCell(Enemy() + 0xF4, ::bof3::Code(bof3::addr::BossGazer_Hook));
     SetCell(Enemy() + 0xF8, AddressOf(BossGazer_Sounds));
     rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
@@ -380,8 +380,8 @@ extern "C" void __cdecl BossGazer_State5Start(void) {
 extern "C" void __cdecl BossGazer_State5Close(void) {
     if (BH_CALL(BattleEnemy_ScriptTick)() == 0) return;
     B(::bof3::Img(at::kRoundFlags.v)) |= 4;
-    BH_AT(Handler, at::kEnemyActChance)();
-    BH_AT(Handler, at::kEnemyActEnd)();
+    BH_AT(Handler, at::kEnemyActChance.v)();
+    BH_AT(Handler, at::kEnemyActEnd.v)();
 }
 
 // original 0x43C9C0: the +0xF4 hook: by the word's low byte through
@@ -395,7 +395,7 @@ extern "C" unsigned __cdecl BossGazer_Hook(unsigned word) { return HookDispatch(
 // original 0x43C9D0: Boss_SetupTable[28]. The hooks: end Boss28_End, exit
 // BossHook_ExitClearActor0, event BareRetZero (BH's).
 extern "C" void __cdecl Boss28_Setup(void) {
-    StoreHooks(bof3::addr::Boss28_End, bof3::addr::BossHook_ExitClearActor0, bof3::addr::BareRetZero);
+    StoreHooks(::bof3::Code(bof3::addr::Boss28_End), ::bof3::Code(bof3::addr::BossHook_ExitClearActor0), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43CA00: the end hook. The win (0x904AE8 bit 1): movement-script
@@ -403,10 +403,10 @@ extern "C" void __cdecl Boss28_Setup(void) {
 extern "C" void __cdecl Boss28_End(void) {
     if (Battle_EndFlags & 2) {
         B(::bof3::Img(at::kScriptVar3.v)) = 0x1E;
-        BH_AT(Handler, at::kEndWin)();
+        BH_AT(Handler, at::kEndWin.v)();
         return;
     }
-    BH_AT(Handler, at::kEndOther)();
+    BH_AT(Handler, at::kEndOther.v)();
 }
 
 // ===========================================================================
@@ -562,7 +562,7 @@ extern "C" unsigned char __cdecl BossMyria_Enter(void) {
     unsigned char* const e = Enemy();
     BossSa_EndCount = 0;
     SetCell(e + 0xFC, AddressOf(BossMyria_Anims));
-    SetCell(Enemy() + 0xF4, bof3::addr::BossMyria_Hook);
+    SetCell(Enemy() + 0xF4, ::bof3::Code(bof3::addr::BossMyria_Hook));
     SetCell(Enemy() + 0xF8, AddressOf(BossMyria_Sounds));
     unsigned char* const f = Enemy();
     auto* const enemy_f = rv::As<records::BattleEnemy>(f);
@@ -572,7 +572,7 @@ extern "C" unsigned char __cdecl BossMyria_Enter(void) {
     BH_CALL(BossMyria_SpawnFx)(0, 6);
     BH_CALL(BossMyria_SpawnFx)(1, 6);
     BH_CALL(BossMyria_SpawnFx)(2, 6);
-    BH_AT(void (__cdecl*)(unsigned char*, U), at::kSlotStart)(Sprite_Current, ::bof3::Img(at::kMyriaSlotScript.v));
+    BH_AT(void (__cdecl*)(unsigned char*, U), at::kSlotStart.v)(Sprite_Current, ::bof3::Img(at::kMyriaSlotScript.v));
     rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -658,7 +658,7 @@ extern "C" void __cdecl BossMyria_ActPick(void) {
 extern "C" void __cdecl BossMyria_Death(void) {
     BH_CALL(Sprite_ScriptTickOnce)();
     BH_CALL(Battle_EnemyDefeated)();
-    BH_AT(void (__cdecl*)(unsigned char*), at::kSlotsReleaseFor)(Sprite_Current);
+    BH_AT(void (__cdecl*)(unsigned char*), at::kSlotsReleaseFor.v)(Sprite_Current);
     unsigned char* const e = Enemy();
     auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
     SetCell(e + 0x110, static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_110)) | 0x1000);
@@ -802,7 +802,7 @@ extern "C" void __cdecl BossMyria_State8Clear(void) { Sprite_Current[0xB] = 0; }
 // original 0x4405C0: state 8 step 4 - 0x4376A0 (the action's end), then +1 =
 // 2 and +2 = 0 (Sprite_Current read for each).
 extern "C" void __cdecl BossMyria_State8Close(void) {
-    BH_AT(Handler, at::kEnemyActEnd)();
+    BH_AT(Handler, at::kEnemyActEnd.v)();
     rv::Current<records::BattleEnemy>()->state = 2;
     rv::Current<records::BattleEnemy>()->step = 0;
 }
@@ -813,7 +813,7 @@ extern "C" void __cdecl BossMyria_State8Close(void) {
 extern "C" void __cdecl BossMyria_State8Check(void) {
     if ((B(::bof3::Img(at::kRoundFlags.v)) & 4) == 0) return;
     if (Word(At(::bof3::Img(at::kAbility.v))) != 0x81) {
-        BH_AT(Handler, at::kEnemyActEnd)();
+        BH_AT(Handler, at::kEnemyActEnd.v)();
         return;
     }
     Sprite_Current[0xB] = 1;

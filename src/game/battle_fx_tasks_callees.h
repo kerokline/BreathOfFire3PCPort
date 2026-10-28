@@ -63,7 +63,7 @@ constexpr unsigned kMagicRowCount = 151;
 }  // namespace at
 
 // Callees with no name in symbols.gen.h, called by address.
-constexpr std::uint32_t kAfterAreaScript = bof3::addr::BattleEnd_EnterStep3;  // not in round 8's queue; tail-jumped to by 0x437720 (unread)
+constexpr ::bof3::image::CodeVa kAfterAreaScript{bof3::addr::BattleEnd_EnterStep3};  // not in round 8's queue; tail-jumped to by 0x437720 (unread)
 
 using Handler = void (__cdecl*)();
 

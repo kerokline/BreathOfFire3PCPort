@@ -287,11 +287,11 @@ const sh::Callee kCallees[] = {
     {G_OURS(Commu_RandDigit), 1, {0xFF}, sh::Answer::kByte, 1, 9},
     {G_OURS(CommuHiLo_Quit), 0, {}, kG, 0, 0},
     // R4D's (wave four), by address (rest_4c_callees.h)
-    {"0x45C400", at::kGuessPanel, at::kGuessPanel, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0, {}, &DrawEffect},
-    {"0x45C7D0", at::kGuessRow, at::kGuessRow, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0, {}, &DrawEffect},
-    {"0x45C850", at::kSecret, at::kSecret, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0, {}, &DrawEffect},
+    {"0x45C400", at::kGuessPanel.v, at::kGuessPanel.v, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0, {}, &DrawEffect},
+    {"0x45C7D0", at::kGuessRow.v, at::kGuessRow.v, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0, {}, &DrawEffect},
+    {"0x45C850", at::kSecret.v, at::kSecret.v, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0, {}, &DrawEffect},
     // Capcom's library POLY_F3 set-up, by address
-    {"0x5A7570", at::kSetPolyF3, at::kSetPolyF3, 1, {kAll}, kG, 0, 0, {}, &PolyF3Effect, nullptr, true},
+    {"0x5A7570", at::kSetPolyF3.v, at::kSetPolyF3.v, 1, {kAll}, kG, 0, 0, {}, &PolyF3Effect, nullptr, true},
     // ours, re-listed with what this group needs
     {G_OURS(Input_AutoRepeat), 1, {kAll}, kG, 0, 0, {}, &RepeatEffect},
     {G_OURS(Sound_PlayEffect), 1, {0xFFFF}, kG, 0, 0, {}, &DrawEffect},   // louder: the stake and the money are read after sounds

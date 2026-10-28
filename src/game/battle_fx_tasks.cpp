@@ -37,7 +37,7 @@ using move_script::Word;
 
 namespace {
 template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-Handler H(std::uint32_t address) { return Fn<Handler>(address); }
+Handler H(std::uint32_t address) { return Fn<Handler>(::bof3::CodePlace(address)); }
 }  // namespace
 
 const Callees kOriginals = {
@@ -71,7 +71,7 @@ const Callees kOriginals = {
     {H(bof3::addr::BattleFx_FollowOwner)},
     BattleFx_RollingDigits, Battle_DrawNumber, Battle_DrawLabel, BattleTask_FreeCurrent, Battle_ActorIsOut,
     Sprite_SetAnimation, Sprite_QueueOverlay, Sprite_ScriptTick, Sprite_UpdateScreen, ScriptFlags_Set40,
-    Fn<void (__cdecl*)()>(kAfterAreaScript), Transition_Start,
+    Fn<void (__cdecl*)()>(::bof3::Code(kAfterAreaScript.v)), Transition_Start,
 };
 Callees g = kOriginals;
 

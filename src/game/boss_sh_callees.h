@@ -55,7 +55,7 @@ constexpr ::bof3::image::Va kWord80{0x904B80};           // u16: set to 0x40 bes
 // kHookEnd: now BattleHook_End (symbols.toml). BattleHook_End
 // kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
 // kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
-constexpr U kExitTransition4 = bof3::addr::BossHook_ExitTransition4;  // BossHook_ExitTransition4 (BSE's): set-up 35's exit hook
+constexpr ::bof3::image::CodeVa kExitTransition4{bof3::addr::BossHook_ExitTransition4};  // BossHook_ExitTransition4 (BSE's): set-up 35's exit hook
 
 // --- set-up 34's member pick ------------------------------------------------------
 // kPickId: now Character_IndexById[4] (symbols.toml). u8: the byte a member's +0x148 is compared with (written by scenario code)
@@ -89,12 +89,12 @@ constexpr ::bof3::image::Va kTorchAnims{0x675F0C};       // kind 42's +0xFC: 12 
 // kTorchSounds: now BossTorch_Sounds (symbols.toml). kind 42's +0xF8: 0xFFFF words (no sound)
 
 // --- the callees nobody owns ----------------------------------------------------------
-constexpr U kOrderFront = bof3::addr::Battle_OrderPushFront;       // (actor)
-constexpr U kEnemySound = bof3::addr::Sound_PlayEffectUnlessNone;       // (sound) (BE3's since round twelve: the same value)
-constexpr U kEnemyActEnd = bof3::addr::EnemyOp_EndAction;      // () (BE3's since round twelve: the same value)
-constexpr U kEnemyActChance = bof3::addr::EnemyOp_RollBit80Task;   // () (BE3's since round twelve: the same value)
-constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
-constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () step 2
+constexpr ::bof3::image::CodeVa kOrderFront{bof3::addr::Battle_OrderPushFront};       // (actor)
+constexpr ::bof3::image::CodeVa kEnemySound{bof3::addr::Sound_PlayEffectUnlessNone};       // (sound) (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kEnemyActEnd{bof3::addr::EnemyOp_EndAction};      // () (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kEnemyActChance{bof3::addr::EnemyOp_RollBit80Task};   // () (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kEndWin{bof3::addr::BattleEnd_EnterStep1};           // () the end phase, step 1
+constexpr ::bof3::image::CodeVa kEndOther{bof3::addr::BattleEnd_EnterStep2};         // () step 2
 
 }  // namespace at
 }  // namespace boss_sh

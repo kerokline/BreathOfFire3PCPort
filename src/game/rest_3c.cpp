@@ -101,8 +101,8 @@ using A1 = U (__cdecl*)(U);
 using A2 = U (__cdecl*)(U, U);
 using V0 = void (__cdecl*)();
 
-U MissTail() { return BH_AT(A0, at::kMissTail)(); }
-U Resisted() { return BH_AT(A2, at::kResisted)(B(::bof3::Img(at::kActor.v)), B(::bof3::Img(at::kTarget.v))); }
+U MissTail() { return BH_AT(A0, at::kMissTail.v)(); }
+U Resisted() { return BH_AT(A2, at::kResisted.v)(B(::bof3::Img(at::kActor.v)), B(::bof3::Img(at::kTarget.v))); }
 
 // Slots 50..61, 83: the acting kind 4 and an ability, then a tail jump to
 // R3B's kind-4 damage (0x44C040), heal (0x44C120) or flag (0x44CF60).
@@ -146,47 +146,47 @@ void RecalcParty(const char* who) {
 // ===========================================================================
 
 // original 0x44D000 (Effect_Handlers slot 50): kind 4, ability 0x60, jmp 0x44C040.
-extern "C" unsigned __cdecl Effect_AsAbility60(void) { return AsAbility(0x60, at::kSkillByAbility); }
+extern "C" unsigned __cdecl Effect_AsAbility60(void) { return AsAbility(0x60, at::kSkillByAbility.v); }
 // original 0x44D020 (slot 51): kind 4, ability 0x68, jmp 0x44C040.
-extern "C" unsigned __cdecl Effect_AsAbility68(void) { return AsAbility(0x68, at::kSkillByAbility); }
+extern "C" unsigned __cdecl Effect_AsAbility68(void) { return AsAbility(0x68, at::kSkillByAbility.v); }
 // original 0x44D040 (slot 52): kind 4, ability 0x5B, jmp 0x44C040.
-extern "C" unsigned __cdecl Effect_AsAbility5B(void) { return AsAbility(0x5B, at::kSkillByAbility); }
+extern "C" unsigned __cdecl Effect_AsAbility5B(void) { return AsAbility(0x5B, at::kSkillByAbility.v); }
 
 // original 0x44D060 (slot 53): kind 4, ability 0x52, then 0x44FBB0(1) - the
 // target's stat byte 1 raised by the ability's power unless it resists; al.
 extern "C" unsigned __cdecl Effect_AsAbility52RaiseStat1(void) {
     B(::bof3::Img(at::kActingKind.v)) = 4;
     SetW(::bof3::Img(at::kAbility.v), 0x52);
-    return BH_AT(A1, at::kRaiseByAbility)(1);
+    return BH_AT(A1, at::kRaiseByAbility.v)(1);
 }
 // original 0x44D080 (slot 54): kind 4, ability 0x5A, then 0x44FBB0(1); al.
 extern "C" unsigned __cdecl Effect_AsAbility5ARaiseStat1(void) {
     B(::bof3::Img(at::kActingKind.v)) = 4;
     SetW(::bof3::Img(at::kAbility.v), 0x5A);
-    return BH_AT(A1, at::kRaiseByAbility)(1);
+    return BH_AT(A1, at::kRaiseByAbility.v)(1);
 }
 
 // original 0x44D0A0 (slot 55): kind 4, ability 0x5C, jmp 0x44C040.
-extern "C" unsigned __cdecl Effect_AsAbility5C(void) { return AsAbility(0x5C, at::kSkillByAbility); }
+extern "C" unsigned __cdecl Effect_AsAbility5C(void) { return AsAbility(0x5C, at::kSkillByAbility.v); }
 // original 0x44D0C0 (slot 56): kind 4, ability 0x64, jmp 0x44C040.
-extern "C" unsigned __cdecl Effect_AsAbility64(void) { return AsAbility(0x64, at::kSkillByAbility); }
+extern "C" unsigned __cdecl Effect_AsAbility64(void) { return AsAbility(0x64, at::kSkillByAbility.v); }
 
 // original 0x44D0E0 (slot 57): kind 4, ability 0x57, then 0x44FC60(0x10) -
 // status 0x10 on the target unless it resists; al.
 extern "C" unsigned __cdecl Effect_AsAbility57Inflict10(void) {
     B(::bof3::Img(at::kActingKind.v)) = 4;
     SetW(::bof3::Img(at::kAbility.v), 0x57);
-    return BH_AT(A1, at::kMissInflict)(0x10);
+    return BH_AT(A1, at::kMissInflict.v)(0x10);
 }
 
 // original 0x44D100 (slot 58): kind 4, ability 0x61, jmp 0x44C040.
-extern "C" unsigned __cdecl Effect_AsAbility61(void) { return AsAbility(0x61, at::kSkillByAbility); }
+extern "C" unsigned __cdecl Effect_AsAbility61(void) { return AsAbility(0x61, at::kSkillByAbility.v); }
 // original 0x44D120 (slot 59): kind 4, ability 0x46, jmp 0x44C120 (the heal).
-extern "C" unsigned __cdecl Effect_AsAbility46(void) { return AsAbility(0x46, at::kHealByAbility); }
+extern "C" unsigned __cdecl Effect_AsAbility46(void) { return AsAbility(0x46, at::kHealByAbility.v); }
 // original 0x44D140 (slot 60): kind 4, ability 0x67, jmp 0x44C040.
-extern "C" unsigned __cdecl Effect_AsAbility67(void) { return AsAbility(0x67, at::kSkillByAbility); }
+extern "C" unsigned __cdecl Effect_AsAbility67(void) { return AsAbility(0x67, at::kSkillByAbility.v); }
 // original 0x44D160 (slot 61): kind 4, ability 0x56, jmp 0x44CF60 (flag 0x200).
-extern "C" unsigned __cdecl Effect_AsAbility56(void) { return AsAbility(0x56, at::kFlag200); }
+extern "C" unsigned __cdecl Effect_AsAbility56(void) { return AsAbility(0x56, at::kFlag200.v); }
 
 // ===========================================================================
 // Slots 62..76: damage forms, the status helpers, small heals
@@ -219,26 +219,26 @@ extern "C" void __cdecl Effect_QuarterDamage(void) {
 // original 0x44D220 / 0x44D240 / 0x44D260 (slots 64, 65, 66): the HP delta
 // 0x44FCE0(3 / 1 / 2) - the actor's HP over the divisor, varied; its eax.
 extern "C" unsigned __cdecl Effect_ActorHpDamage3(void) {
-    const U delta = BH_AT(A1, at::kHpDamage)(3);
+    const U delta = BH_AT(A1, at::kHpDamage.v)(3);
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, delta);
     return delta;
 }
 extern "C" unsigned __cdecl Effect_ActorHpDamage1(void) {
-    const U delta = BH_AT(A1, at::kHpDamage)(1);
+    const U delta = BH_AT(A1, at::kHpDamage.v)(1);
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, delta);
     return delta;
 }
 extern "C" unsigned __cdecl Effect_ActorHpDamage2(void) {
-    const U delta = BH_AT(A1, at::kHpDamage)(2);
+    const U delta = BH_AT(A1, at::kHpDamage.v)(2);
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, delta);
     return delta;
 }
 
 // original 0x44D280 / 0x44D330 / 0x44D340 (slots 67, 69, 70): 0x44FC60(4 /
 // 8 / 0x80) - the common tail, then the status unless resisted; al.
-extern "C" unsigned __cdecl Effect_InflictStatus4(void) { return BH_AT(A1, at::kMissInflict)(4); }
-extern "C" unsigned __cdecl Effect_InflictStatus8(void) { return BH_AT(A1, at::kMissInflict)(8); }
-extern "C" unsigned __cdecl Effect_InflictStatus80(void) { return BH_AT(A1, at::kMissInflict)(0x80); }
+extern "C" unsigned __cdecl Effect_InflictStatus4(void) { return BH_AT(A1, at::kMissInflict.v)(4); }
+extern "C" unsigned __cdecl Effect_InflictStatus8(void) { return BH_AT(A1, at::kMissInflict.v)(8); }
+extern "C" unsigned __cdecl Effect_InflictStatus80(void) { return BH_AT(A1, at::kMissInflict.v)(0x80); }
 
 // original 0x44D290 (slot 68): the target's HP and status word (a member's
 // +0x98 / +0x90, an enemy's +0xA4 / +0x92) read first; the HP delta
@@ -260,13 +260,13 @@ extern "C" void __cdecl Effect_DamageInflict40(void) {
     const short damage = BH_CALL(Battle_CalcDamage)(B(::bof3::Img(at::kActor.v)), target, 2);
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(damage));
     const std::uint16_t delta = static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change);
-    if (S16(delta) < static_cast<S32>(hp) && (status & 0x40) == 0 && delta != 0) BH_AT(A1, at::kInflictUnlessResisted)(0x40);
+    if (S16(delta) < static_cast<S32>(hp) && (status & 0x40) == 0 && delta != 0) BH_AT(A1, at::kInflictUnlessResisted.v)(0x40);
 }
 
 // original 0x44D350 (slot 71): 0x44FB30, then 0x44FCA0(0x20); al.
 extern "C" unsigned __cdecl Effect_InflictStatus20(void) {
     MissTail();
-    return BH_AT(A1, at::kInflictUnlessResisted)(0x20);
+    return BH_AT(A1, at::kInflictUnlessResisted.v)(0x20);
 }
 
 // original 0x44D360 (slot 72): the result's flags |= 2, the HP delta -5, the AP delta -1.
@@ -315,7 +315,7 @@ extern "C" void __cdecl Effect_TargetRecalcParty(void) {
 // original 0x44D580 (slot 76): 0x44F1D0(target, 0x40); the result's flags
 // |= 2, the HP delta -20, the AP delta -4.
 extern "C" void __cdecl Effect_Inflict40Heal20Ap4(void) {
-    BH_AT(A2, at::kInflictStatus)(B(::bof3::Img(at::kTarget.v)), 0x40);
+    BH_AT(A2, at::kInflictStatus.v)(B(::bof3::Img(at::kTarget.v)), 0x40);
     Result()[8] = static_cast<unsigned char>(Result()[8] | 2);
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 0xFFEC);
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->ap_change, 0xFFFC);
@@ -363,13 +363,13 @@ extern "C" void __cdecl Effect_AsAbility66Half(void) {
 }
 
 // original 0x44D680 (slot 83): kind 4, ability 0x63, jmp 0x44C040.
-extern "C" unsigned __cdecl Effect_AsAbility63(void) { return AsAbility(0x63, at::kSkillByAbility); }
+extern "C" unsigned __cdecl Effect_AsAbility63(void) { return AsAbility(0x63, at::kSkillByAbility.v); }
 
 // original 0x44D6A0 (slot 84): Battle_ClearStatus(target, 0xBFC), jmp 0x44C170
 // (the HP delta the target's whole maximum, a heal).
 extern "C" unsigned __cdecl Effect_CureBFCHealMax(void) {
     BH_CALL(Battle_ClearStatus)(B(::bof3::Img(at::kTarget.v)), 0xBFC);
-    return BH_AT(A0, at::kHealMaxHp)();
+    return BH_AT(A0, at::kHealMaxHp.v)();
 }
 
 // original 0x44D6D0 (slot 87): 0x44FB30; the enemy (target - 3) & 0xFF: its
@@ -426,7 +426,7 @@ extern "C" void __cdecl Effect_Inflict800Unguarded(void) {
         return;
     }
     if (t <= 2) Party(t)[0x143] = 0;
-    if (BH_AT(A1, at::kInflictUnlessResisted)(0x800) & 0xFF) {
+    if (BH_AT(A1, at::kInflictUnlessResisted.v)(0x800) & 0xFF) {
         Result()[8] = 1;
         return;
     }
@@ -571,7 +571,7 @@ extern "C" void __cdecl Effect_FlushTurnOrder(void) {
 // record's byte +0x18 up by 10, held to -25..50; Battle_RecalcStats(target).
 extern "C" void __cdecl Effect_RaiseStat4By10(void) {
     MissTail();
-    BH_AT(A2, at::kRaiseStat)(0xA, 4);
+    BH_AT(A2, at::kRaiseStat.v)(0xA, 4);
     BH_CALL(Battle_RecalcStats)(B(::bof3::Img(at::kTarget.v)));
 }
 
@@ -660,7 +660,7 @@ extern "C" void __cdecl Effect_HalfDamageInflict20(void) {
     const unsigned actor = B(::bof3::Img(at::kActor.v));
     const short damage = BH_CALL(Battle_CalcDamage)(actor, target, 0xFFFF);
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<unsigned>(S32(damage) / 2));
-    if (static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change) != 0) BH_AT(A1, at::kInflictUnlessResisted)(0x20);
+    if (static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change) != 0) BH_AT(A1, at::kInflictUnlessResisted.v)(0x20);
 }
 
 // original 0x44DFD0 (slot 106): by the actor's side -
@@ -701,7 +701,7 @@ extern "C" void __cdecl Effect_ActorStepThenHpToOne(void) {
         }
     }
     const U actor = L(::bof3::Img(at::kActor.v));
-    if (BH_AT(A2, at::kResisted)(actor, B(::bof3::Img(at::kTarget.v))) & 0xFF) return;
+    if (BH_AT(A2, at::kResisted.v)(actor, B(::bof3::Img(at::kTarget.v))) & 0xFF) return;
     const unsigned t = B(::bof3::Img(at::kTarget.v));
     rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, SideWord(t, 0x98, 0xA4) - 1u);
 }

@@ -32,15 +32,15 @@ namespace at {
 using U = std::uint32_t;
 
 // --- raw callees of other groups (docs/battle_e3.md section 7) ---
-constexpr U kTurnVelocityC = bof3::addr::Battle_TurnVectorC;    // (sprite) BE4
-constexpr U kTurnVelocity18 = bof3::addr::Battle_TurnVector18;   // (sprite) BE4
-constexpr U kRollB9 = bof3::addr::Battle_MemberReactRoll;           // () -> al, BE4
-constexpr U kNameToText = bof3::addr::Battle_MemberNameToText;       // (member) BE4
-constexpr U kBannerByPair = bof3::addr::BattleBanner_AddLine;     // (byte, byte) BE4
-constexpr U kPass44FDE0 = bof3::addr::BattleForm_ApplyStats;       // () BE5
-constexpr U kPass453300 = bof3::addr::Battle_RecalcStats;       // (actor) BE6
-constexpr U kSecondPopup = bof3::addr::Battle_SetApPopup;      // (word, actor) BE6
-constexpr U kItemClass = bof3::addr::Item_UseFlags;        // (byte, byte) -> al; group TWO's (2026-10-06), the value unchanged
+constexpr ::bof3::image::CodeVa kTurnVelocityC{bof3::addr::Battle_TurnVectorC};    // (sprite) BE4
+constexpr ::bof3::image::CodeVa kTurnVelocity18{bof3::addr::Battle_TurnVector18};   // (sprite) BE4
+constexpr ::bof3::image::CodeVa kRollB9{bof3::addr::Battle_MemberReactRoll};           // () -> al, BE4
+constexpr ::bof3::image::CodeVa kNameToText{bof3::addr::Battle_MemberNameToText};       // (member) BE4
+constexpr ::bof3::image::CodeVa kBannerByPair{bof3::addr::BattleBanner_AddLine};     // (byte, byte) BE4
+constexpr ::bof3::image::CodeVa kPass44FDE0{bof3::addr::BattleForm_ApplyStats};       // () BE5
+constexpr ::bof3::image::CodeVa kPass453300{bof3::addr::Battle_RecalcStats};       // (actor) BE6
+constexpr ::bof3::image::CodeVa kSecondPopup{bof3::addr::Battle_SetApPopup};      // (word, actor) BE6
+constexpr ::bof3::image::CodeVa kItemClass{bof3::addr::Item_UseFlags};        // (byte, byte) -> al; group TWO's (2026-10-06), the value unchanged
 
 // --- the battle bytes (0x904AA0..0x904BA0, the harness's battle frame) ---
 constexpr ::bof3::image::Va kRoundFlags{0x904AA8};       // u16: bit 2 an action's end, 6, 7 (a roll), 11 (a cast's end), 13, 14

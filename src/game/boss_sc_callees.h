@@ -68,11 +68,11 @@ constexpr U kEnemyStatus = 0x92;          // u32 from +0x92: bit 0x2000 (+0x93 b
 constexpr U kEnemyExp = 0x96;             // u16
 
 // --- the callees nobody owns ------------------------------------------------
-constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
-constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () step 2
-constexpr U kEndThird = bof3::addr::BattleEnd_EnterStep3;         // () step 3
-constexpr U kSlotsReleaseFor = bof3::addr::Field_SlotsReleaseOwner;  // 0x454A80 (object; BE6, 2026-09-29)
-constexpr U kSlotStart = bof3::addr::Field_SlotStart;               // 0x455290 (object, script; BE6, 2026-09-29)
+constexpr ::bof3::image::CodeVa kEndWin{bof3::addr::BattleEnd_EnterStep1};           // () the end phase, step 1
+constexpr ::bof3::image::CodeVa kEndOther{bof3::addr::BattleEnd_EnterStep2};         // () step 2
+constexpr ::bof3::image::CodeVa kEndThird{bof3::addr::BattleEnd_EnterStep3};         // () step 3
+constexpr ::bof3::image::CodeVa kSlotsReleaseFor{bof3::addr::Field_SlotsReleaseOwner};  // 0x454A80 (object; BE6, 2026-09-29)
+constexpr ::bof3::image::CodeVa kSlotStart{bof3::addr::Field_SlotStart};               // 0x455290 (object, script; BE6, 2026-09-29)
 
 }  // namespace at
 }  // namespace boss_sc

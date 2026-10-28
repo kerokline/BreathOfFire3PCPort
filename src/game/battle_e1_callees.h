@@ -139,15 +139,15 @@ constexpr U kCharSize = 0xA4;
 // kLossSteps: now BattleLoss_Steps (symbols.toml). by 0x904AA3: 5 (0x432440 .. 0x432750)
 
 // --- the callees nobody owns yet ---
-constexpr U kEquipOpenHelper = bof3::addr::BattleExtra_EquipSetupWindows;   // 0x42E0E0, R3A's (round 14)
-constexpr U kEquipConfirmHelper = bof3::addr::BattleExtra_EquipCommit;   // 0x42E250, R3A's
-constexpr U kEquipFrameHelper = bof3::addr::BattleExtra_EquipRefresh;   // 0x42E2F0, R3A's
-constexpr U kEnemiesClear = bof3::addr::BattleEnemy_ClearStates;
-constexpr U kSideTargetA = bof3::addr::Battle_RandomLiveMember;   // R4A's (round 14)
-constexpr U kSideTargetB = bof3::addr::Battle_RandomLiveEnemy;    // R4A's (round 14)
-constexpr U kBe4Draw444660 = bof3::addr::BattleWin_DimScreen;   // BE4's
-constexpr U kBe4ReturnItem = bof3::addr::Battle_ReturnItem;   // BE4's
-constexpr U kBe4MemberName = bof3::addr::Battle_MemberNameToText;   // BE4's
+constexpr ::bof3::image::CodeVa kEquipOpenHelper{bof3::addr::BattleExtra_EquipSetupWindows};   // 0x42E0E0, R3A's (round 14)
+constexpr ::bof3::image::CodeVa kEquipConfirmHelper{bof3::addr::BattleExtra_EquipCommit};   // 0x42E250, R3A's
+constexpr ::bof3::image::CodeVa kEquipFrameHelper{bof3::addr::BattleExtra_EquipRefresh};   // 0x42E2F0, R3A's
+constexpr ::bof3::image::CodeVa kEnemiesClear{bof3::addr::BattleEnemy_ClearStates};
+constexpr ::bof3::image::CodeVa kSideTargetA{bof3::addr::Battle_RandomLiveMember};   // R4A's (round 14)
+constexpr ::bof3::image::CodeVa kSideTargetB{bof3::addr::Battle_RandomLiveEnemy};    // R4A's (round 14)
+constexpr ::bof3::image::CodeVa kBe4Draw444660{bof3::addr::BattleWin_DimScreen};   // BE4's
+constexpr ::bof3::image::CodeVa kBe4ReturnItem{bof3::addr::Battle_ReturnItem};   // BE4's
+constexpr ::bof3::image::CodeVa kBe4MemberName{bof3::addr::Battle_MemberNameToText};   // BE4's
 
 }  // namespace at
 }  // namespace battle_e1

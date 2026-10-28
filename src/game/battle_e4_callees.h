@@ -119,10 +119,10 @@ constexpr ::bof3::image::Va kListReset{0x929F04};        // u8: zeroed as the ca
 constexpr ::bof3::image::Va kTextRecord0{0x904CE0};      // Text_Records[0]
 
 // --- callees nobody owns yet ----------------------------------------------------
-constexpr U kAfterEquip = bof3::addr::BattleForm_ApplyStats;       // () BE5's
-constexpr U kMemberRefresh = bof3::addr::Battle_RecalcStats;    // (actor) BE6's
-constexpr U kItemFlags = bof3::addr::Item_UseFlags;        // (category, item) -> al; group TWO's (2026-10-06), the value unchanged
-constexpr U kEnemiesClear = bof3::addr::BattleEnemy_ClearStates;     // ()
+constexpr ::bof3::image::CodeVa kAfterEquip{bof3::addr::BattleForm_ApplyStats};       // () BE5's
+constexpr ::bof3::image::CodeVa kMemberRefresh{bof3::addr::Battle_RecalcStats};    // (actor) BE6's
+constexpr ::bof3::image::CodeVa kItemFlags{bof3::addr::Item_UseFlags};        // (category, item) -> al; group TWO's (2026-10-06), the value unchanged
+constexpr ::bof3::image::CodeVa kEnemiesClear{bof3::addr::BattleEnemy_ClearStates};     // ()
 
 }  // namespace at
 }  // namespace battle_e4

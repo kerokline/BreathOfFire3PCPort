@@ -155,7 +155,7 @@ extern "C" unsigned __cdecl BattleResultWin_ExpToNext(unsigned slot) {
     const U s = slot & 0xFF;
     const unsigned id = B(::bof3::Img(at::kObjTrio.v) + 0x89 + at::kObjStride * s);
     const U arg = ((s * 5) & 0xFFFFFF00u) | id;
-    const unsigned r = SH_AT(unsigned (__cdecl*)(unsigned), rest_2g::kRosterIndex)(arg) & 0xFF;
+    const unsigned r = SH_AT(unsigned (__cdecl*)(unsigned), rest_2g::kRosterIndex.v)(arg) & 0xFF;
     const unsigned char* const rec = At(::bof3::Img(CharacterRecords_addr) + at::kCharStride * r);
     const unsigned rows = rec[0xA] + 1u;
     U sum = 0;
@@ -242,21 +242,21 @@ extern "C" void __cdecl GeneWin_GridSlideOut(void) {
     {
         unsigned char* const w = Rec();
         const bool right = w[0xA] == 0;
-        Widescreen_SlideDraw(w, Imm16Bound(right ? at::kGridOutRight : at::kGridOutLeft), right ? 0x20 : -0x20);
+        Widescreen_SlideDraw(w, Imm16Bound(right ? at::kGridOutRight.v : at::kGridOutLeft.v), right ? 0x20 : -0x20);
     }
     SH_CALL(GeneWin_DrawGrid)();
     Widescreen_SlideUndraw(Rec());
     unsigned char* const r = Rec();
     const short x = S(r + 4);
     if (r[0xA] == 0) {
-        if (x >= Imm16Bound(at::kGridOutRight)) {
+        if (x >= Imm16Bound(at::kGridOutRight.v)) {
             SH_CALL(Window_FreeCurrent)();
             return;
         }
         rv::As<records::WindowRecord>(r)->x = static_cast<unsigned>(x + 0x20);
         return;
     }
-    if (x <= Imm16Bound(at::kGridOutLeft)) {
+    if (x <= Imm16Bound(at::kGridOutLeft.v)) {
         SH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -457,7 +457,7 @@ extern "C" void __cdecl MenuList_ItemPanel(void) {
 // 0x59AA80 (R2H's: the reserve list, menu_frame.cpp) of the record.
 extern "C" void __cdecl MenuList_ReservePanel(void) {
     State("MenuList_ReservePanel", ::bof3::Img(MenuList_ReserveStates_addr), 3);
-    SH_AT(void (__cdecl*)(unsigned char*), rest_2g::kReserveList)(Rec());
+    SH_AT(void (__cdecl*)(unsigned char*), rest_2g::kReserveList.v)(Rec());
 }
 
 // ===========================================================================
@@ -477,7 +477,7 @@ extern "C" void __cdecl MenuList_SlideLeftTo92(void) { Slide(4, -0x20, 0x5C, Pas
 extern "C" void __cdecl MenuList_SlideRightTo92(void) { Slide(4, 0x20, 0x5C, Past::kAbove); }
 // original 0x599CC0 (MenuList_PanelStates[7]): left to x -300 or less (off
 // the left); the bound the operand of DIV-0041's faster slide.
-extern "C" void __cdecl MenuList_SlideLeftOff300(void) { SlideOff(-0x20, at::kLeftOff300Bound, Past::kAtOrBelow); }
+extern "C" void __cdecl MenuList_SlideLeftOff300(void) { SlideOff(-0x20, at::kLeftOff300Bound.v, Past::kAtOrBelow); }
 // original 0x599CF0 (MenuList_PanelStates[8]): right to x 0x11 or more.
 extern "C" void __cdecl MenuList_SlideRightTo17Ge(void) { Slide(4, 0x20, 0x11, Past::kAtOrAbove); }
 // original 0x599D20 (MenuList_PanelStates[10]): left to x 0xB6.
@@ -486,7 +486,7 @@ extern "C" void __cdecl MenuList_SlideLeftTo182(void) { Slide(4, -0x20, 0xB6, Pa
 extern "C" void __cdecl MenuList_SlideLeftTo200(void) { Slide(4, -0x20, 0xC8, Past::kBelow); }
 // original 0x599DF0 (MenuList_TimeStates[1]): left to x -100 (off the left);
 // DIV-0041's faster slide.
-extern "C" void __cdecl MenuList_SlideLeftOff100(void) { SlideOff(-0x20, at::kLeftOff100Bound, Past::kBelow); }
+extern "C" void __cdecl MenuList_SlideLeftOff100(void) { SlideOff(-0x20, at::kLeftOff100Bound.v, Past::kBelow); }
 // original 0x599E20 (MenuList_TimeStates[2]): right to x 0x10.
 extern "C" void __cdecl MenuList_SlideRightTo16(void) { Slide(4, 0x20, 0x10, Past::kAbove); }
 // original 0x599F70 (MenuList_IconStates[2]): down to y 0x2A.
@@ -528,7 +528,7 @@ extern "C" void __cdecl MenuList_SlideDownToPanelRow(void) {
 
 // original 0x59A130 (MenuList_StatsStates[5]): left to x -180 or less;
 // DIV-0041's faster slide.
-extern "C" void __cdecl MenuList_SlideLeftOff180(void) { SlideOff(-0x20, at::kLeftOff180Bound, Past::kAtOrBelow); }
+extern "C" void __cdecl MenuList_SlideLeftOff180(void) { SlideOff(-0x20, at::kLeftOff180Bound.v, Past::kAtOrBelow); }
 // original 0x59A160 (MenuList_StatsStates[6]): right to x 0x89 or more.
 extern "C" void __cdecl MenuList_SlideRightTo137Ge(void) { Slide(4, 0x20, 0x89, Past::kAtOrAbove); }
 // original 0x59A1D0 (MenuList_EquipStates[2]): left to x 0xA6.
@@ -538,7 +538,7 @@ extern "C" void __cdecl MenuList_SlideLeftTo166(void) { Slide(4, -0x20, 0xA6, Pa
 extern "C" void __cdecl MenuList_SlideRightTo45(void) { Slide(4, 0x20, 0x2D, Past::kAbove); }
 // original 0x59A2B0 (MenuList_ExpStates[1], MenuList_NextLevelStates[1]): left
 // to x -110; DIV-0041's faster slide.
-extern "C" void __cdecl MenuList_SlideLeftOff110(void) { SlideOff(-0x20, at::kLeftOff110Bound, Past::kBelow); }
+extern "C" void __cdecl MenuList_SlideLeftOff110(void) { SlideOff(-0x20, at::kLeftOff110Bound.v, Past::kBelow); }
 
 // original 0x59A4B0 (MenuList_IconWheelStates[1]): right by 0x20 until x is
 // past 0x140 + 75 (+0xB & 1) - off the right, one column further for an odd

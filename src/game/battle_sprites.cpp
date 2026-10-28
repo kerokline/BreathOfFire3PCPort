@@ -56,36 +56,36 @@ using move_script::Word;
 template <class F> F Raw(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
 
 const Callees kOriginals = {
-    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_ActorIsOut),
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_ActorIsOut)),
     Rand,
-    Raw<void (__cdecl*)(unsigned)>(bof3::addr::Battle_SetActorBit),
-    Raw<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(bof3::addr::AbilityList_Add),
-    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(bof3::addr::Item_UseFlags),   // group TWO's (2026-10-06): by address, the value unchanged
-    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(bof3::addr::BattleTask_Create),
+    Raw<void (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_SetActorBit)),
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(bof3::addr::AbilityList_Add)),
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Item_UseFlags)),   // group TWO's (2026-10-06): by address, the value unchanged
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::BattleTask_Create)),
     Stat_AddClamped,
     Stat_AddCap100,
-    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(bof3::addr::Window_Alloc),
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::Window_Alloc)),
     Sound_PlayEffect,
     AreaMap_Elevation,
     Sprite_SetAnimationBank,
     Sprite_UpdateScreen,
     // rebound 2026-09-29 (round twelve, BE6): the values unchanged, the fuzz keys on them
-    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_MemberRollByAction),
-    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_ActionBitSet),
-    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_MemberListFull),
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_MemberRollByAction)),
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_ActionBitSet)),
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_MemberListFull)),
     Battle_MemberCoinFlip,
-    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_AutoTargetCheck),   // R4A's (round 14): by address, the value unchanged
-    Raw<void (__cdecl*)(unsigned)>(bof3::addr::Battle_MemberAutoFixed),            // R4A's
-    Raw<void (__cdecl*)()>(bof3::addr::Battle_PickEnemyTarget),
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_AutoTargetCheck)),   // R4A's (round 14): by address, the value unchanged
+    Raw<void (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_MemberAutoFixed)),            // R4A's
+    Raw<void (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_PickEnemyTarget)),
     Battle_MemberOutAction,
-    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_MemberActionIs0E),   // R4A's
-    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_RandomOtherMember),  // R4A's
-    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_RandomEnemy),
-    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_DefaultTarget),
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_MemberActionIs0E)),   // R4A's
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_RandomOtherMember)),  // R4A's
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_RandomEnemy)),
+    Raw<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Battle_DefaultTarget)),
     ClutMap_Mark,
     ClutMap_FindFree,
     ClutMap_FindOwner,
-    Raw<void (__cdecl*)()>(bof3::addr::Battle_PlaceBossActors),   // R3G's: by address, as the other groups' above
+    Raw<void (__cdecl*)()>(::bof3::Code(bof3::addr::Battle_PlaceBossActors)),   // R3G's: by address, as the other groups' above
     Battle_InitBossEncounter,
     Battle_InitEnemies,
     Battle_SetupEnemy,

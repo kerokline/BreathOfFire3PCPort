@@ -192,11 +192,11 @@ const sh::Callee kCallees[] = {
     {R2E_OURS(FieldEquip_ApplyPreview), 0, {}, kG, 0, 0},
     {R2E_OURS(FieldEquip_PreviewRemove), 0, {}, sh::Answer::kFlag, 0, 0},
     // other groups' of this wave, by address (rest_2e_callees.h)
-    {"0x58A3C0 (R2D)", at::kAbilityUse, at::kAbilityUse, 4, {0xFF, 0xFF, 0xFF, kAll32}, sh::Answer::kByte, 0, 6},
-    {"0x58ED40 (R2F)", at::kAbilityWindows, at::kAbilityWindows, 0, {}, kG, 0, 0},
-    {"0x58EE40 (R2F)", at::kAbilitySort, at::kAbilitySort, 1, {0xFF}, kG, 0, 0},
-    {"0x58F000 (R2F)", at::kAbilityViewWindow, at::kAbilityViewWindow, 0, {}, kG, 0, 0},
-    {"0x58F050 (R2F)", at::kAbilityCloseWindows, at::kAbilityCloseWindows, 0, {}, kG, 0, 0},
+    {"0x58A3C0 (R2D)", at::kAbilityUse.v, at::kAbilityUse.v, 4, {0xFF, 0xFF, 0xFF, kAll32}, sh::Answer::kByte, 0, 6},
+    {"0x58ED40 (R2F)", at::kAbilityWindows.v, at::kAbilityWindows.v, 0, {}, kG, 0, 0},
+    {"0x58EE40 (R2F)", at::kAbilitySort.v, at::kAbilitySort.v, 1, {0xFF}, kG, 0, 0},
+    {"0x58F000 (R2F)", at::kAbilityViewWindow.v, at::kAbilityViewWindow.v, 0, {}, kG, 0, 0},
+    {"0x58F050 (R2F)", at::kAbilityCloseWindows.v, at::kAbilityCloseWindows.v, 0, {}, kG, 0, 0},
     // ours the standard set lacks, or lists with masks wider than what the
     // callee reads where Capcom pushes a register over a leftover (docs/rest_2e.md
     // section 3)

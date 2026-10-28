@@ -75,7 +75,7 @@ unsigned char FirstOf(U building) {
     return j;
 }
 
-unsigned char CommuCount() { return SH_AT(unsigned char (__cdecl*)(), at::kCommuCount)(); }
+unsigned char CommuCount() { return SH_AT(unsigned char (__cdecl*)(), at::kCommuCount.v)(); }
 
 // Rand's answer reduced as the community's pickers do: & 0x7F, above 100
 // less 100 (a byte).

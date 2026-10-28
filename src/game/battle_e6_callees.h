@@ -123,10 +123,10 @@ constexpr rdata::Const kSpriteXLo{0x5C4210};
 // kOtSlot: now Draw_OtSlot (symbols.toml). Draw_OtSlot
 
 // --- the callees nobody owns -----------------------------------------------
-constexpr U kPercent999 = bof3::addr::Stat_PercentCap999;   // 0x446F20, R3B's (round fourteen; the same value): (value, percent)
-constexpr U kPercent9999 = bof3::addr::Stat_PercentCap9999;   // 0x446F50, R3B's (round fourteen; the same value): (value, percent)
-constexpr U kPercent100 = bof3::addr::Stat_PercentCap100;   // 0x446F80, R3B's (round fourteen; the same value): (value, percent)
-constexpr U kCellHeight = bof3::addr::Quake_VertexLift;       // (x, z): ax
+constexpr ::bof3::image::CodeVa kPercent999{bof3::addr::Stat_PercentCap999};   // 0x446F20, R3B's (round fourteen; the same value): (value, percent)
+constexpr ::bof3::image::CodeVa kPercent9999{bof3::addr::Stat_PercentCap9999};   // 0x446F50, R3B's (round fourteen; the same value): (value, percent)
+constexpr ::bof3::image::CodeVa kPercent100{bof3::addr::Stat_PercentCap100};   // 0x446F80, R3B's (round fourteen; the same value): (value, percent)
+constexpr ::bof3::image::CodeVa kCellHeight{bof3::addr::Quake_VertexLift};       // (x, z): ax
 
 }  // namespace at
 }  // namespace battle_e6

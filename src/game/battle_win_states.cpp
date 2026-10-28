@@ -99,7 +99,7 @@ unsigned char* Member(unsigned m) { return At(::bof3::Img(ObjTrio_addr) + at::kM
 // its typed view, starts 0x80 before.
 
 using Handler = void (__cdecl*)();
-void Run(std::uint32_t handler) { reinterpret_cast<Handler>(static_cast<std::uintptr_t>(handler))(); }
+void Run(std::uint32_t handler) { reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(handler)))(); }
 
 // A state or kind byte past its stack table: the original calls through the
 // words above the table on its own stack - its return address first - which

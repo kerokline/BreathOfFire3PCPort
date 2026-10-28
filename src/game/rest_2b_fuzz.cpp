@@ -283,8 +283,8 @@ const sh::Callee kCallees[] = {
     {G_OURS(Shisu_ModelBDraw), 0, {}, kG, 0, 0},
     {G_OURS(Shisu_DrawModel), 1, {kAll}, kG, 0, 0, {0x80}},           // the record hashed: Shisu_ModelBDraw's scale and tint live only during the call
     // other groups', ours, keyed by address: R2C's model A draw, R3G's winding (rest_2b_callees.h)
-    {"0x57F340", at::kModelADraw, at::kModelADraw, 0, {}, kG, 0, 0},
-    {"0x4941B0", at::kWinding, at::kWinding, 3, {kAll, kAll, kAll}, kG, 0, 0, {8, 8, 8}, &WindingEffect, nullptr, true},
+    {"0x57F340", at::kModelADraw.v, at::kModelADraw.v, 0, {}, kG, 0, 0},
+    {"0x4941B0", at::kWinding.v, at::kWinding.v, 3, {kAll, kAll, kAll}, kG, 0, 0, {8, 8, 8}, &WindingEffect, nullptr, true},
     // ours, with the width each reads
     {G_OURS(Sound_PlayEffect), 1, {0xFFFF}, kG, 0, 0},
     {G_OURS(Input_AutoRepeat), 1, {kAll}, kG, 0, 0, {}, &RepeatEffect},

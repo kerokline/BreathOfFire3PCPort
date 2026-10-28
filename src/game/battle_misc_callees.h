@@ -63,9 +63,9 @@ constexpr ::bof3::image::Va kPartyPages{0x904605};          // 3 bytes: page, a 
 constexpr ::bof3::image::Va kBanners{0x93B8E0};
 constexpr ::bof3::image::Va kBannerCurrent{0x93B8C0};
 constexpr ::bof3::image::Va kBannerKinds{0x904AE9};
-constexpr U kRetOnly = bof3::addr::BareRet;             // a bare ret: kinds 0, 3 and 4
-constexpr U kBannerKind1 = bof3::addr::BattleBanner_TickKind1;         // kind 1's tick (timer, then NoneOfKind(1))
-constexpr U kBannerKind2 = bof3::addr::BattleBanner_TickKind2;         // kind 2's tick (timer, then NoneOfKind(4))
+constexpr ::bof3::image::CodeVa kRetOnly{bof3::addr::BareRet};             // a bare ret: kinds 0, 3 and 4
+constexpr ::bof3::image::CodeVa kBannerKind1{bof3::addr::BattleBanner_TickKind1};         // kind 1's tick (timer, then NoneOfKind(1))
+constexpr ::bof3::image::CodeVa kBannerKind2{bof3::addr::BattleBanner_TickKind2};         // kind 2's tick (timer, then NoneOfKind(4))
 // The message queue: 16 entries of 8 (+0, +1 bytes, +4 a dword), its write
 // and read indices (PSX 0x801EB520, 0x801EC298 / 0x801EBE74).
 constexpr ::bof3::image::Va kQueue{0x93C2C0};

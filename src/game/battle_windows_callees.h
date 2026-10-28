@@ -56,18 +56,18 @@ constexpr std::uint32_t kKindHandlers[3] = {bof3::addr::Window_HpGaugeTrack, bof
 }  // namespace at
 
 // Other groups' functions, by address (the round's rule).
-constexpr std::uint32_t kDrawValue = bof3::addr::BattleWin_DrawNumber;     // (x, y, colour, u16 value): "%4d", or ":" (its glyph 10) for 0xFFFF, BD
-constexpr std::uint32_t kDrawEdge = bof3::addr::BattleWin_DrawQuadF4;      // (x, y, piece, semi): a flat POLY_F4 of the piece table 0x64E148, BD
-constexpr std::uint32_t kDrawTile = bof3::addr::BattleWin_DrawTile;      // (x, y, size, semi): a TILE in the window colour, BD
-constexpr std::uint32_t kDrawTileRgb = bof3::addr::BattleWin_DrawTileRgb;   // (x, y, size, colour15, semi): a TILE, BD
-constexpr std::uint32_t kDrawBar = bof3::addr::BattleWin_DrawBar;       // (x, y, width, fill, flag): a gauge, BD
-constexpr std::uint32_t kDrawDigit = bof3::addr::BattleWin_DrawCell16;     // (x, y, n): a 16 x 8 SPRT, u = n << 4, BD
-constexpr std::uint32_t kLinePlain = bof3::addr::BattleWin_DrawLine;     // (x0, y0, x1, y1, r, g, b): a LINE_F2, BD
-constexpr std::uint32_t kLineSemi0 = bof3::addr::BattleWin_DrawLineHalf;     // the same under abr 0, BD
-constexpr std::uint32_t kLineSemi1 = bof3::addr::BattleWin_DrawLineAdd;     // the same under abr 1, BD
-constexpr std::uint32_t kEnemyNameShown = bof3::addr::BattleWin_FirstOfKind;// (enemy) -> al: 0 when a later battle slot holds an enemy with its +0xC byte, BD
-constexpr std::uint32_t kTinyFont = bof3::addr::Text_DrawSmall;      // (x, y, colour, count, text) -> text end: the 8 px UI font
-constexpr std::uint32_t kPoseFrom = bof3::addr::Sprite_PoseFromSet;      // (pose, set, size): a pose from a set
+constexpr ::bof3::image::CodeVa kDrawValue{bof3::addr::BattleWin_DrawNumber};     // (x, y, colour, u16 value): "%4d", or ":" (its glyph 10) for 0xFFFF, BD
+constexpr ::bof3::image::CodeVa kDrawEdge{bof3::addr::BattleWin_DrawQuadF4};      // (x, y, piece, semi): a flat POLY_F4 of the piece table 0x64E148, BD
+constexpr ::bof3::image::CodeVa kDrawTile{bof3::addr::BattleWin_DrawTile};      // (x, y, size, semi): a TILE in the window colour, BD
+constexpr ::bof3::image::CodeVa kDrawTileRgb{bof3::addr::BattleWin_DrawTileRgb};   // (x, y, size, colour15, semi): a TILE, BD
+constexpr ::bof3::image::CodeVa kDrawBar{bof3::addr::BattleWin_DrawBar};       // (x, y, width, fill, flag): a gauge, BD
+constexpr ::bof3::image::CodeVa kDrawDigit{bof3::addr::BattleWin_DrawCell16};     // (x, y, n): a 16 x 8 SPRT, u = n << 4, BD
+constexpr ::bof3::image::CodeVa kLinePlain{bof3::addr::BattleWin_DrawLine};     // (x0, y0, x1, y1, r, g, b): a LINE_F2, BD
+constexpr ::bof3::image::CodeVa kLineSemi0{bof3::addr::BattleWin_DrawLineHalf};     // the same under abr 0, BD
+constexpr ::bof3::image::CodeVa kLineSemi1{bof3::addr::BattleWin_DrawLineAdd};     // the same under abr 1, BD
+constexpr ::bof3::image::CodeVa kEnemyNameShown{bof3::addr::BattleWin_FirstOfKind};// (enemy) -> al: 0 when a later battle slot holds an enemy with its +0xC byte, BD
+constexpr ::bof3::image::CodeVa kTinyFont{bof3::addr::Text_DrawSmall};      // (x, y, colour, count, text) -> text end: the 8 px UI font
+constexpr ::bof3::image::CodeVa kPoseFrom{bof3::addr::Sprite_PoseFromSet};      // (pose, set, size): a pose from a set
 
 struct Callees {
     // ours already, and Capcom's by name

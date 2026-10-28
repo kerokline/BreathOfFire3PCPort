@@ -69,8 +69,8 @@ constexpr ::bof3::image::Va kPupilLabel{0x66A1F8};    // the portrait box's labe
 constexpr ::bof3::image::Va kPortraitCells{0x66B470}; // 4 bytes a portrait: u, v, the CLUT's x, y (unbounded)
 // MasterWin_SlideOut's bound: the imm32 of its `mov ecx, imm32` (0xB9 at
 // 0x59C135), which Widescreen_Inject (DIV-0041) moves out by its columns.
-constexpr std::uint32_t kMasterBoundMov = 0x59C135;
-constexpr std::uint32_t kMasterBound = 0x59C136;
+constexpr ::bof3::image::CodeVa kMasterBoundMov{0x59C135};
+constexpr ::bof3::image::CodeVa kMasterBound{0x59C136};
 
 // --- the battle equipment item list (handler 8 kind 4) ----------------------------------
 constexpr ::bof3::image::Va kIdLists{0x656B00};       // Inventory_IdLists, by category
@@ -99,16 +99,16 @@ constexpr ::bof3::image::Va kStatusB{0x66A0F0};
 // --- the re-aimed call sites ------------------------------------------------------------
 // DIV-0011: MenuList_ReserveWinDraw's first call (E8 rel32), re-aimed by
 // menu_frame.cpp at Menu_DrawFrame; the original's callee is the empty 0x4DF820.
-constexpr std::uint32_t kFrameSite = 0x59AA98;
+constexpr ::bof3::image::CodeVa kFrameSite{0x59AA98};
 // DIV-0059: BattleEquipWin_DrawItems' title draw (E8 rel32), re-aimed by
 // battle_draw.cpp at ListTitle_DrawAt under a Latin overlay; else Text_DrawAt.
-constexpr std::uint32_t kTitleSite = 0x59DEFA;
+constexpr ::bof3::image::CodeVa kTitleSite{0x59DEFA};
 
 // --- the joystick enumeration (DInput_EnumJoystick) --------------------------------------
 constexpr rdata::Const kJoystickIid{0x5C4718};   // the interface QueryInterface asks for
 constexpr ::bof3::image::Va kProductName{0x66C7B0};   // the product name compared, case-blind
 // The C runtime's _stricmp (catalogue part 0, nobody's): (a, b) -> 0 when equal.
-constexpr std::uint32_t kStricmp = 0x5C2B40;
+constexpr ::bof3::image::CodeVa kStricmp{0x5C2B40};
 
 }  // namespace at
 }  // namespace rest_2h

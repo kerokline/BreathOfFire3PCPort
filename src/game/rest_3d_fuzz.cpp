@@ -229,7 +229,7 @@ const bh::Callee kCallees[] = {
     {"BattleForm_ApplyStats", bof3::addr::BattleForm_ApplyStats, KeyOf(&::BattleForm_ApplyStats), 0, {}, bh::Answer::kGarbage, 0, 0},
     {"Effect_DrainAp", bof3::addr::Effect_DrainAp, KeyOf(&::Effect_DrainAp), 0, {}, bh::Answer::kGarbage, 0, 0},
     // this wave's R3C (ours; the row keyed by address)
-    {"0x44D8B0", at::kAbility6AHelper, at::kAbility6AHelper, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x44D8B0", at::kAbility6AHelper.v, at::kAbility6AHelper.v, 0, {}, bh::Answer::kGarbage, 0, 0},
 };
 
 const bh::DataTable kTables[] = {

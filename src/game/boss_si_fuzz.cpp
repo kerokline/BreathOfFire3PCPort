@@ -96,8 +96,8 @@ const bh::Callee kCallees[] = {
      bh::Answer::kGarbage, 0, 0},
     {"MagicFx_CenterOnSide", ::bof3::addr::MagicFx_CenterOnSide, KeyOf(&::MagicFx_CenterOnSide), 0, {},
      bh::Answer::kGarbage, 0, 0, {}, &CenterEffect},
-    {"0x4376F0", at::kTurnChance, at::kTurnChance, 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"0x4376A0", at::kTurnClose, at::kTurnClose, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x4376F0", at::kTurnChance.v, at::kTurnChance.v, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x4376A0", at::kTurnClose.v, at::kTurnClose.v, 0, {}, bh::Answer::kGarbage, 0, 0},
 };
 
 // The cells beyond the harness's battle frame the 50 read or write.

@@ -57,16 +57,16 @@ constexpr ::bof3::image::Va kScriptVar3{0x903848};       // the movement script'
 // kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter's step
 
 // --- the callees nobody owns -------------------------------------------------
-constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
-constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () the end phase, step 2
-constexpr U kTurnClose = bof3::addr::EnemyOp_EndAction;        // () the turn closed (BE3's since round twelve: the same value)
-constexpr U kTurnChance = bof3::addr::EnemyOp_RollBit80Task;       // () a chance of 0x904AA8 bit 7 and a task (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kEndWin{bof3::addr::BattleEnd_EnterStep1};           // () the end phase, step 1
+constexpr ::bof3::image::CodeVa kEndOther{bof3::addr::BattleEnd_EnterStep2};         // () the end phase, step 2
+constexpr ::bof3::image::CodeVa kTurnClose{bof3::addr::EnemyOp_EndAction};        // () the turn closed (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kTurnChance{bof3::addr::EnemyOp_RollBit80Task};       // () a chance of 0x904AA8 bit 7 and a task (BE3's since round twelve: the same value)
 
 // --- the Arwan task's stack table (BossArwanFx_Dispatch) ---------------------
-constexpr U kFxStart = bof3::addr::BossArwanFx_Start;          // BossArwanFx_Start
-constexpr U kFxCount = bof3::addr::BossArwanFx_Count;          // BossArwanFx_Count
-constexpr U kFxFinish = bof3::addr::BossArwanFx_Finish;         // BossArwanFx_Finish
-constexpr U kFxDone = bof3::addr::MagicFx_DoneAndFree;           // MagicFx_DoneAndFree (round nine's, ours)
+constexpr ::bof3::image::CodeVa kFxStart{bof3::addr::BossArwanFx_Start};          // BossArwanFx_Start
+constexpr ::bof3::image::CodeVa kFxCount{bof3::addr::BossArwanFx_Count};          // BossArwanFx_Count
+constexpr ::bof3::image::CodeVa kFxFinish{bof3::addr::BossArwanFx_Finish};         // BossArwanFx_Finish
+constexpr ::bof3::image::CodeVa kFxDone{bof3::addr::MagicFx_DoneAndFree};           // MagicFx_DoneAndFree (round nine's, ours)
 
 }  // namespace at
 }  // namespace boss_si

@@ -55,7 +55,7 @@ constexpr ::bof3::image::Va kResistRates20{0x64E98C};    // Battle_StatusResistR
 constexpr ::bof3::image::Va kHpVariance{0x64E9AC};       // Effect_HpDamageVariance: 8, by Rand & 7
 
 // --- the callee of R3C, ours ---
-constexpr U kAbility6AHelper = bof3::addr::Effect_DamageAllHp;  // R3C's
+constexpr ::bof3::image::CodeVa kAbility6AHelper{bof3::addr::Effect_DamageAllHp};  // R3C's
 
 }  // namespace at
 }  // namespace rest_3d

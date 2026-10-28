@@ -371,20 +371,20 @@ const sh::Callee kCallees[] = {
     {R4D_OURS(CommuName_DrawSlotFrame), 2, {0xFFFF, 0xFFFF}, kG, 0, 0},
     {R4D_OURS(CommuName_DrawHeader), 0, {}, kG, 0, 0, {}, &HeaderMove},
     // other groups' of this wave, by address (docs/rest_4d.md section 6), with what each reads
-    {"0x45B2C0", at::kBoardCell, at::kBoardCell, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0, {}, &ColumnMove},     // R4C: movsx words, mov al
-    {"0x45B400", at::kBoardPiece, at::kBoardPiece, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},   // R4C: movsx words, and 0xFF
-    {"0x45E870", at::kSlotPanel, at::kSlotPanel, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},   // R4E: words to Menu_DrawBox / movsx; and 0xFF; al
-    {"0x45EC00", at::kListPiece, at::kListPiece, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},     // R4E: movsx words, and 0xFF
-    {"0x45ECC0", at::kSlotHand, at::kSlotHand, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},       // R4E: movsx words, mov al
-    {"0x45ED70", at::kRandomName, at::kRandomName, 0, {}, kG, 0, 0, {}, &RandomNameAnswer},
-    {"0x45EE10", at::kMemberPanel, at::kMemberPanel, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0, {}, &MemberPanelMove},   // R4E: as 0x45E870
-    {"0x45EF90", at::kMemberPanels, at::kMemberPanels, 0, {}, kG, 0, 0},
-    {"0x45F000", at::kMemberCount, at::kMemberCount, 0, {}, kG, 0, 0, {}, &NearCursor},
-    {"0x45F020", at::kNthMember, at::kNthMember, 1, {0xFF}, kG, 0, 0, {}, &NthMemberAnswer},   // R4E: mov bl, [esp + 8]
-    {"0x45F050", at::kMemberHand, at::kMemberHand, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},  // R4E: and 0xFFFF; al; and 0xFF
-    {"0x45F1A0", at::kEntryBox, at::kEntryBox, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0, {}, &EntryDoneMove},     // R4E: movsx bp / word; movzx byte
-    {"0x45F5A0", at::kMemberRename, at::kMemberRename, 0, {}, kG, 0, 0},
-    {"0x45F650", at::kSlotRename, at::kSlotRename, 0, {}, kG, 0, 0},
+    {"0x45B2C0", at::kBoardCell.v, at::kBoardCell.v, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0, {}, &ColumnMove},     // R4C: movsx words, mov al
+    {"0x45B400", at::kBoardPiece.v, at::kBoardPiece.v, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},   // R4C: movsx words, and 0xFF
+    {"0x45E870", at::kSlotPanel.v, at::kSlotPanel.v, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},   // R4E: words to Menu_DrawBox / movsx; and 0xFF; al
+    {"0x45EC00", at::kListPiece.v, at::kListPiece.v, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},     // R4E: movsx words, and 0xFF
+    {"0x45ECC0", at::kSlotHand.v, at::kSlotHand.v, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},       // R4E: movsx words, mov al
+    {"0x45ED70", at::kRandomName.v, at::kRandomName.v, 0, {}, kG, 0, 0, {}, &RandomNameAnswer},
+    {"0x45EE10", at::kMemberPanel.v, at::kMemberPanel.v, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0, {}, &MemberPanelMove},   // R4E: as 0x45E870
+    {"0x45EF90", at::kMemberPanels.v, at::kMemberPanels.v, 0, {}, kG, 0, 0},
+    {"0x45F000", at::kMemberCount.v, at::kMemberCount.v, 0, {}, kG, 0, 0, {}, &NearCursor},
+    {"0x45F020", at::kNthMember.v, at::kNthMember.v, 1, {0xFF}, kG, 0, 0, {}, &NthMemberAnswer},   // R4E: mov bl, [esp + 8]
+    {"0x45F050", at::kMemberHand.v, at::kMemberHand.v, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},  // R4E: and 0xFFFF; al; and 0xFF
+    {"0x45F1A0", at::kEntryBox.v, at::kEntryBox.v, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0, {}, &EntryDoneMove},     // R4E: movsx bp / word; movzx byte
+    {"0x45F5A0", at::kMemberRename.v, at::kMemberRename.v, 0, {}, kG, 0, 0},
+    {"0x45F650", at::kSlotRename.v, at::kSlotRename.v, 0, {}, kG, 0, 0},
     // ours, outside the standard set or typed otherwise, with what each reads
     {R4D_OURS(Menu_DrawPanelBox), 5, {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},   // as R2C lists it
     {R4D_OURS(Menu_DrawGreyHLine), 4, {0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},           // rest_2b.cpp: shorts, a word, a byte

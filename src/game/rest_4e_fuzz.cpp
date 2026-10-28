@@ -260,8 +260,8 @@ const sh::Callee kCallees[] = {
     {G_OURS(CommuRank_DrawIcon), 3, {kW, kW, kB}, kG, 0, 0},
     {G_OURS(CommuRank_DrawTile), 5, {kW, kW, kB, kB, kB}, kG, 0, 0},
     // by address: R4D's entry search (ours), the library's POLY_F3 header (rest_4e_callees.h)
-    {"0x45E6D0", at::kEntryNth, at::kEntryNth, 1, {kB}, kG, 0, 0, {}, &EntryNthEffect},
-    {"0x5A7570", at::kSetPolyF3, at::kSetPolyF3, 1, {kAll}, kG, 0, 0, {}, &PolyF3Effect, nullptr, true},
+    {"0x45E6D0", at::kEntryNth.v, at::kEntryNth.v, 1, {kB}, kG, 0, 0, {}, &EntryNthEffect},
+    {"0x5A7570", at::kSetPolyF3.v, at::kSetPolyF3.v, 1, {kAll}, kG, 0, 0, {}, &PolyF3Effect, nullptr, true},
     // ours, with the width each reads: the draw mode's texture window is a
     // RECT on the caller's stack (logged by its 8 bytes, not its address)
     {G_OURS(Gpu_SetDrawMode), 5, {kAll, kAll, kAll, kAll, 0}, kG, 0, 0, {16, 0, 0, 0, 8}, nullptr, nullptr, true},

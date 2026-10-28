@@ -37,19 +37,19 @@ constexpr ::bof3::image::Va kEnemies{0x93B9E0};       // EnemyWorkingRecords, st
 constexpr std::uint32_t kEnemyStride = 0x128;
 // kMembers: now ObjTrio (symbols.toml). ObjTrio: the battle's party objects, stride 0x14C
 constexpr std::uint32_t kMemberStride = 0x14C;
-constexpr std::uint32_t kBareRet = bof3::addr::BareRet;       // a bare `ret`: the idle states' handler
+constexpr ::bof3::image::CodeVa kBareRet{bof3::addr::BareRet};       // a bare `ret`: the idle states' handler
 
 // The stack tables, as the originals build them (each `mov [esp + 4 i], imm32`).
 constexpr std::uint32_t kKinds[8] = {bof3::addr::BattleWin_PartyRowStates,   bof3::addr::BattleWin_CrossStates,
                                      bof3::addr::BattleWin_LabelStates,      bof3::addr::BattleWin_BannerStates,
                                      bof3::addr::BattleWin_EnemyGaugeStates, bof3::addr::BattleWin_MemberGaugeStates,
                                      bof3::addr::BattleWin_BannerRun,        bof3::addr::BattleWin_MessageRun};
-constexpr std::uint32_t kPartyStates[3] = {bof3::addr::BattleWin_PartyRowSlideIn, bof3::addr::BattleWin_PartyRowDraw, kBareRet};
-constexpr std::uint32_t kCrossStates[3] = {bof3::addr::BattleWin_CrossGrow, bof3::addr::BattleWin_CrossFrame, kBareRet};
-constexpr std::uint32_t kLabelStates[3] = {kBareRet, bof3::addr::BattleWin_LabelFrame, kBareRet};
-constexpr std::uint32_t kBannerStates[3] = {kBareRet, bof3::addr::BattleWin_BannerFrame, kBareRet};
+constexpr std::uint32_t kPartyStates[3] = {bof3::addr::BattleWin_PartyRowSlideIn, bof3::addr::BattleWin_PartyRowDraw, kBareRet.v};
+constexpr std::uint32_t kCrossStates[3] = {bof3::addr::BattleWin_CrossGrow, bof3::addr::BattleWin_CrossFrame, kBareRet.v};
+constexpr std::uint32_t kLabelStates[3] = {kBareRet.v, bof3::addr::BattleWin_LabelFrame, kBareRet.v};
+constexpr std::uint32_t kBannerStates[3] = {kBareRet.v, bof3::addr::BattleWin_BannerFrame, kBareRet.v};
 constexpr std::uint32_t kEnemyStates[4] = {bof3::addr::BattleWin_EnemyGaugeOpen, bof3::addr::BattleWin_EnemyGaugeFrame,
-                                           bof3::addr::BattleWin_EnemyTargetFrame, kBareRet};
+                                           bof3::addr::BattleWin_EnemyTargetFrame, kBareRet.v};
 constexpr std::uint32_t kMemberStates[3] = {bof3::addr::BattleWin_MemberGaugeOpen, bof3::addr::BattleWin_MemberGaugeWait,
                                             bof3::addr::BattleWin_MemberTargetFrame};
 

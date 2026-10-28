@@ -65,7 +65,7 @@ using F3 = U (__cdecl*)(U, U, U);
 const Callees kOriginals = {
     As<F2>(BattleBanner_SetMessage),
     As<F1>(Battle_DefaultTarget),
-    Fn<F1>(kPrevTarget),
+    Fn<F1>(::bof3::Code(kPrevTarget.v)),
     As<F3>(Battle_WrapIndex),
     As<F1>(Input_AutoRepeat),
     As<F1>(Sound_PlayEffect),

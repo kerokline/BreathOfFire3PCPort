@@ -102,10 +102,10 @@ constexpr std::uint32_t kRecordStride = 0xA4;
 }  // namespace at
 
 // Raw addresses of callees no group of this round owns (the rule above).
-constexpr std::uint32_t kWriteBackMember = bof3::addr::Battle_WriteBackMember;  // (actor): member's HP / AP / status into its CharacterRecord
+constexpr ::bof3::image::CodeVa kWriteBackMember{bof3::addr::Battle_WriteBackMember};  // (actor): member's HP / AP / status into its CharacterRecord
                                                       // (PSX Battle_WriteBackMember, called by 0x801D71B0)
-constexpr std::uint32_t kClearEnemies = bof3::addr::BattleEnemy_ClearStates;     // (): bytes +0..+4 of the eight enemy objects zeroed
-constexpr std::uint32_t kReloadParty = bof3::addr::Battle_ReloadPartyRecords;      // (): each member's +0x80 re-copied from its CharacterRecord
+constexpr ::bof3::image::CodeVa kClearEnemies{bof3::addr::BattleEnemy_ClearStates};     // (): bytes +0..+4 of the eight enemy objects zeroed
+constexpr ::bof3::image::CodeVa kReloadParty{bof3::addr::Battle_ReloadPartyRecords};      // (): each member's +0x80 re-copied from its CharacterRecord
 
 using Step = void (__cdecl*)();
 

@@ -98,7 +98,7 @@ constexpr sh::CallSite kCalls59DBF0[] = {{0x70, 0x57D9A0}, {0x87, 0x591720}, {0x
 constexpr move_script::Table kTable59DBF0 = {0x19, 0x554, 5};
 // 0x59E160 (catalogued as the renderer's; read 2026-10-04)
 constexpr sh::CallSite kCalls59E160[] = {{0x1A, 0x57CF60}, {0x48, 0x516B30}, {0x63, 0x57D910}, {0x7A, 0x57CF60}, {0xA2, 0x516B30}, {0xBE, 0x57D910}};
-constexpr sh::CallSite kCalls5A9620[] = {{0x48, at::kStricmp}};
+constexpr sh::CallSite kCalls5A9620[] = {{0x48, at::kStricmp.v}};
 
 // --- this file's copies ------------------------------------------------------------------
 // Every site re-aimed at a trampoline into the recorder that stands in for its
@@ -541,9 +541,9 @@ void Disturb(U h) {
 void SelfTest() {
     // the four copies of this file
     g_r2h_reserve_copy = Copy("MenuList_ReserveWinDraw", 0x59AA80, 0x35D, kCalls59AA80,
-                              static_cast<int>(sizeof kCalls59AA80 / sizeof kCalls59AA80[0]), at::kFrameSite);
+                              static_cast<int>(sizeof kCalls59AA80 / sizeof kCalls59AA80[0]), at::kFrameSite.v);
     g_r2h_items_copy = Copy("BattleEquipWin_DrawItems", 0x59DBF0, 0x568, kCalls59DBF0,
-                            static_cast<int>(sizeof kCalls59DBF0 / sizeof kCalls59DBF0[0]), at::kTitleSite);
+                            static_cast<int>(sizeof kCalls59DBF0 / sizeof kCalls59DBF0[0]), at::kTitleSite.v);
     move_script::Relocate(g_r2h_items_copy, 0x59DBF0, 0x568, kTable59DBF0);
     g_r2h_slide_copy = bof3::CloneOriginal("MasterWin_SlideOut", 0x59C130, 0x28);
     g_r2h_enum_copy = Copy("DInput_EnumJoystick", 0x5A9620, 0x64, kCalls5A9620,
@@ -553,19 +553,19 @@ void SelfTest() {
     g_clones[kMasterOut].base = Wrapper(&R2hSlideTheirs, 0x25);
     g_clones[kEnum].base = Wrapper(&R2hEnumTheirs, 0x74);
     // the divergences' sites: rows of their own when they reach ours
-    const U frame = SiteTarget(at::kFrameSite);
+    const U frame = SiteTarget(at::kFrameSite.v);
     if (frame != bof3::addr::Port_DroppedCall) {
         sh::Callee& row = g_callees[kFrameRow];
         row.name = "Menu_DrawFrame (DIV-0011)";
-        row.address = at::kFrameSite;
+        row.address = at::kFrameSite.v;
         row.key = frame;
         for (unsigned i = 0; i < 4; ++i) row.masks[i] = i < 2 ? kU16 : kU8;
     }
-    const U title = SiteTarget(at::kTitleSite);
+    const U title = SiteTarget(at::kTitleSite.v);
     if (title != bof3::addr::Text_DrawAt) {
         sh::Callee& row = g_callees[kTitleRow];
         row.name = "ListTitle_DrawAt (DIV-0059)";
-        row.address = at::kTitleSite;
+        row.address = at::kTitleSite.v;
         row.key = title;
     }
     // the fakes and the regions of this file's own

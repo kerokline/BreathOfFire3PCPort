@@ -230,7 +230,7 @@ const sh::Callee kCallees[] = {
     {R3G_OURS(AreaMapBD_BuildView), 0, {}, kPh, 0, 0},
     {R3G_OURS(AreaMapBD_CellTexture), 2, {0x0F0000FFu, kAll}, kG, 0, 0},   // bits 24..27 and the low byte; the quad
     // R3F's EffectKindAA_DrawFill, ours, by address (rest_3g_callees.h)
-    {"0x492400 (R3F)", at::kFadeDraw, at::kFadeDraw, 1, {0xFF}, kG, 0, 0},
+    {"0x492400 (R3F)", at::kFadeDraw.v, at::kFadeDraw.v, 1, {0xFF}, kG, 0, 0},
     // ours, no standard set lists them (or not as these callers need)
     {R3G_OURS(EffectKindAD_DrawArc), 4, {kAll, kAll, 0xFF, 0xFF}, kG, 0, 0, {12, 12}},
     {R3G_OURS(EffectKindBA_DrawLine), 3, {kAll, kAll, 0xFF}, kG, 0, 0, {12, 12}},

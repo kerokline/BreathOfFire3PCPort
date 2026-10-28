@@ -947,7 +947,7 @@ extern "C" void __cdecl Shisu_DrawModel(unsigned char* record) {
             Put<std::uint16_t>(p, 0x16, static_cast<std::uint16_t>(clut));
             SH_CALL(Gpu_SetSemiTrans)(p, semi);
             using Winding = int (__cdecl*)(const float*, const float*, const float*);
-            const int wound = SH_AT(Winding, rest_2b::at::kWinding)(
+            const int wound = SH_AT(Winding, rest_2b::at::kWinding.v)(
                 reinterpret_cast<const float*>(p + 8), reinterpret_cast<const float*>(p + 0x18),
                 reinterpret_cast<const float*>(p + 0x28));
             if (static_cast<short>(wound) > 0) SH_CALL(Gfx_CommitPrim)(1, 0x48);
@@ -1007,7 +1007,7 @@ extern "C" void __cdecl Shisu_ModelADispatch(void) {
 // then its draw (a tail jmp to R2C's 0x57F340).
 extern "C" void __cdecl Shisu_ModelATurn(void) {
     Rest2c_FigureAngle = Rest2c_FigureAngle - 0x20u;
-    SH_AT(Handler, rest_2b::at::kModelADraw)();
+    SH_AT(Handler, rest_2b::at::kModelADraw.v)();
 }
 
 void Rest2B_Inject() {

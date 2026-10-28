@@ -287,9 +287,9 @@ const sh::Callee kCallees[] = {
     {R2C_OURS(MasterPanel_DrawExpBar), 5, {0xFFFF, 0xFFFF, 0xFF, 0xFF, kW}, kG, 0, 0},
     {R2C_OURS(MasterPanel_ExpForLevel), 2, {0xFF, 0xFF}, kG, 0, 0, {}, &ExpAnswer},
     // other groups' of this wave, by address (docs/rest_2c.md section 6)
-    {"0x57EEF0", at::kFigureDraw, at::kFigureDraw, 1, {kW}, kG, 0, 0, {}, &FigureDraw},                     // R2B
-    {"0x5869A0", at::kPickAsk, at::kPickAsk, 2, {0xFFFF, 0xFF}, kG, 0, 0, {}, &Stir},                 // R2D: and ecx, 0xFFFF; dl
-    {"0x59DB70", at::kGlyph, at::kGlyph, 6, {0xFFFF, 0xFFFF, 0xFF, 0xFF, 0xFFFF, 0xFF}, kG, 0, 0},    // R2H
+    {"0x57EEF0", at::kFigureDraw.v, at::kFigureDraw.v, 1, {kW}, kG, 0, 0, {}, &FigureDraw},                     // R2B
+    {"0x5869A0", at::kPickAsk.v, at::kPickAsk.v, 2, {0xFFFF, 0xFF}, kG, 0, 0, {}, &Stir},                 // R2D: and ecx, 0xFFFF; dl
+    {"0x59DB70", at::kGlyph.v, at::kGlyph.v, 6, {0xFFFF, 0xFFFF, 0xFF, 0xFF, 0xFFFF, 0xFF}, kG, 0, 0},    // R2H
     // the C runtime's strncpy: both sides call it for real
     {R2C_OURS(Crt_strncpy), 3, {kW, kW, kW}, sh::Answer::kThrough, 0, 0},
     // ours, outside the standard set or typed otherwise, with what each reads

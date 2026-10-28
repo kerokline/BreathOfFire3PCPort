@@ -193,10 +193,10 @@ const bh::Callee kCallees[] = {
      &bh::MoveCounterEffect},
     {"Battle_OpenMsgWindow", bof3::addr::Battle_OpenMsgWindow, KeyOf(&::Battle_OpenMsgWindow), 0, {}, bh::Answer::kGarbage, 0, 0, {},
      &bh::BannerCharEffect},
-    {"0x446DE0", at::kEndWin, at::kEndWin, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &bh::MoveCounterEffect},
+    {"0x446DE0", at::kEndWin.v, at::kEndWin.v, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &bh::MoveCounterEffect},
     // engine code nobody owns (boss_sc_callees.h)
-    {"0x455290", at::kSlotStart, at::kSlotStart, 2, {kAll, kAll}, bh::Answer::kGarbage, 0, 0},
-    {"0x454A80", at::kSlotsReleaseFor, at::kSlotsReleaseFor, 1, {kAll}, bh::Answer::kGarbage, 0, 0},
+    {"0x455290", at::kSlotStart.v, at::kSlotStart.v, 2, {kAll, kAll}, bh::Answer::kGarbage, 0, 0},
+    {"0x454A80", at::kSlotsReleaseFor.v, at::kSlotsReleaseFor.v, 1, {kAll}, bh::Answer::kGarbage, 0, 0},
     // the group's own, called directly (they read the argument's low byte)
     {"BossAmalgam_DrawSprite", 0x439930, KeyOf(&::BossAmalgam_DrawSprite), 1, {kU8}, bh::Answer::kGarbage, 0, 0},
     {"BossAmalgam_DrawStreak", 0x4399E0, KeyOf(&::BossAmalgam_DrawStreak), 1, {kU8}, bh::Answer::kGarbage, 0, 0},

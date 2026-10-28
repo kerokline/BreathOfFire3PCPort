@@ -44,8 +44,8 @@ const Callees kOriginals = {
     BattleEnemy_SetAnimation, BattleEnemy_ScriptTick, BattleEnemy_ScriptTickOnce, BattleEnemy_Chance70,
     Battle_EnemyDefeated,
     Sprite_ScriptTickOnce, Battle_StatusTint, Sprite_SetTint, Tint_Release, Sprite_ReleaseTint, Battle_ApplyDamage,
-    Effect_ApplyResult, Fn<unsigned (__cdecl*)(unsigned, unsigned)>(kItemClass), Battle_SetDamagePopup,
-    Fn<void (__cdecl*)(unsigned, unsigned)>(kApPopup), EnemyAI_TurnCheck, Fn<void (__cdecl*)(unsigned)>(kPlayCue),
+    Effect_ApplyResult, Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kItemClass.v)), Battle_SetDamagePopup,
+    Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kApPopup.v)), EnemyAI_TurnCheck, Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kPlayCue.v)),
     Sound_PlayEffect, Battle_PlayHitSound, Battle_SetHitPopup, Battle_ClearActorBit,
 };
 Callees g = kOriginals;
@@ -132,8 +132,8 @@ extern "C" void __cdecl EnemyOp_DeathDispatch(void) { Entry(::bof3::Img(EnemyOp_
 // upper half of whatever edx held; Battle_StatusTint reads bit 7 alone.
 extern "C" void __cdecl EnemyOp_Begin(void) {
     rv::As<records::BattleEnemy>(Enemy())->anim_table = ::bof3::Img(at::kAnimTable.v);
-    BattleHook_End = at::kHookAValue;
-    BattleHook_Exit = at::kHookBValue;
+    BattleHook_End = ::bof3::Code(at::kHookAValue.v);
+    BattleHook_Exit = ::bof3::Code(at::kHookBValue.v);
     g.set_animation(0);
     rv::As<records::BattleEnemy>(Sc())->flags = static_cast<unsigned char>(rv::As<records::BattleEnemy>(Sc())->flags | 0x40);
     g.status_tint(rv::As<records::BattleEnemy>(Enemy())->status);

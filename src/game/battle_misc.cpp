@@ -54,25 +54,25 @@ using F0 = U __cdecl();
 }  // namespace
 
 const Callees kOriginals = {
-    Fn<U __cdecl(U, U)>(bof3::addr::BattleTask_Create),
-    Fn<U __cdecl(U)>(bof3::addr::Battle_ActorIsOut),
-    Fn<U __cdecl(U, U, U, U, U)>(bof3::addr::Sprite_SetTint),
+    Fn<U __cdecl(U, U)>(::bof3::Code(bof3::addr::BattleTask_Create)),
+    Fn<U __cdecl(U)>(::bof3::Code(bof3::addr::Battle_ActorIsOut)),
+    Fn<U __cdecl(U, U, U, U, U)>(::bof3::Code(bof3::addr::Sprite_SetTint)),
     As<U (__cdecl*)(U)>(Sound_PlayEffect),
     As<U (__cdecl*)(U)>(Sound_LoadStream),
-    Fn<U __cdecl(U, U, U)>(bof3::addr::Char_AbilityList),
-    Fn<U __cdecl(U, U, U)>(bof3::addr::Skill_CanUse),
+    Fn<U __cdecl(U, U, U)>(::bof3::Code(bof3::addr::Char_AbilityList)),
+    Fn<U __cdecl(U, U, U)>(::bof3::Code(bof3::addr::Skill_CanUse)),
     As<U (__cdecl*)()>(Window_FreeCurrent),
-    Fn<U __cdecl(U)>(bof3::addr::EnemyAI_CondElement),
-    Fn<U __cdecl(U, U)>(bof3::addr::EnemyAI_RowDone),
-    Fn<U __cdecl(U, U)>(bof3::addr::EnemyAI_ApplyAction),
-    Fn<U __cdecl(U, U, U)>(bof3::addr::EnemyAI_SetRowDone),
-    Fn<F0>(bof3::addr::EnemyAI_DedupMessages),
+    Fn<U __cdecl(U)>(::bof3::Code(bof3::addr::EnemyAI_CondElement)),
+    Fn<U __cdecl(U, U)>(::bof3::Code(bof3::addr::EnemyAI_RowDone)),
+    Fn<U __cdecl(U, U)>(::bof3::Code(bof3::addr::EnemyAI_ApplyAction)),
+    Fn<U __cdecl(U, U, U)>(::bof3::Code(bof3::addr::EnemyAI_SetRowDone)),
+    Fn<F0>(::bof3::Code(bof3::addr::EnemyAI_DedupMessages)),
     As<U (__cdecl*)()>(Sprite_UpdateScreenA),
-    Fn<F0>(bof3::addr::Sprite_UpdateScreenSlot),
+    Fn<F0>(::bof3::Code(bof3::addr::Sprite_UpdateScreenSlot)),
     As<U (__cdecl*)()>(Battle_InitActorContext),
     As<U (__cdecl*)(U, U, U)>(Str_CopyN),
     As<U (__cdecl*)(U, U, U, U, U, U)>(BattleBanner_Set),
-    {Fn<F0>(kRetOnly), Fn<F0>(kBannerKind1), Fn<F0>(kBannerKind2), Fn<F0>(kRetOnly), Fn<F0>(kRetOnly)},
+    {Fn<F0>(::bof3::Code(kRetOnly.v)), Fn<F0>(::bof3::Code(kBannerKind1.v)), Fn<F0>(::bof3::Code(kBannerKind2.v)), Fn<F0>(::bof3::Code(kRetOnly.v)), Fn<F0>(::bof3::Code(kRetOnly.v))},
 };
 Callees g = kOriginals;
 

@@ -186,9 +186,9 @@ const bh::Callee kCallees[] = {
     {"BattleLoss_DrawCaption", 0x4329A0, KeyOf(&::BattleLoss_DrawCaption), 1, {kU8}, bh::Answer::kGarbage, 0, 0},
     {"BattleLoss_DrawBar", 0x432A30, KeyOf(&::BattleLoss_DrawBar), 1, {kU16}, bh::Answer::kGarbage, 0, 0},
     // BE4's (analysis/round12_cut.tsv), called raw until it merges
-    {"0x444660", at::kBe4Draw444660, at::kBe4Draw444660, 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"0x446D90", at::kBe4ReturnItem, at::kBe4ReturnItem, 2, {kU8, kU16}, bh::Answer::kFlag, 0, 0},
-    {"0x44A910", at::kBe4MemberName, at::kBe4MemberName, 1, {kU8}, bh::Answer::kGarbage, 0, 0},
+    {"0x444660", at::kBe4Draw444660.v, at::kBe4Draw444660.v, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x446D90", at::kBe4ReturnItem.v, at::kBe4ReturnItem.v, 2, {kU8, kU16}, bh::Answer::kFlag, 0, 0},
+    {"0x44A910", at::kBe4MemberName.v, at::kBe4MemberName.v, 1, {kU8}, bh::Answer::kGarbage, 0, 0},
     // what the callee reads of a word pushed with a left-over upper half
     {"Menu_DrawBackdrop", bof3::addr::Menu_DrawBackdrop, KeyOf(&::Menu_DrawBackdrop), 1, {kU8}, bh::Answer::kGarbage, 0, 0},
     {"Stat_AddClamped", bof3::addr::Stat_AddClamped, KeyOf(&::Stat_AddClamped), 2, {kAll, kU16}, bh::Answer::kGarbage, 0, 0},

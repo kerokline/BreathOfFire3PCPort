@@ -89,14 +89,14 @@ constexpr ::bof3::image::Va kTextRow1{0x904D00};         // Text_Records[1] (bat
 constexpr ::bof3::image::Va kMyriaSlotScript{0x64DD04};  // .data: the script Myria's entrance hands 0x455290 (not read)
 
 // --- the callees nobody owns ------------------------------------------------
-constexpr U kEnemySound = bof3::addr::Sound_PlayEffectUnlessNone;       // (sound) (BE3's since round twelve: the same value)
-constexpr U kEnemyActEnd = bof3::addr::EnemyOp_EndAction;      // () (BE3's since round twelve: the same value)
-constexpr U kEnemyActChance = bof3::addr::EnemyOp_RollBit80Task;   // () (BE3's since round twelve: the same value)
-constexpr U kSlotsReleaseFor = bof3::addr::Field_SlotsReleaseOwner;  // 0x454A80 (object; BE6, 2026-09-29)
-constexpr U kSlotStart = bof3::addr::Field_SlotStart;               // 0x455290 (object, script; BE6, 2026-09-29)
-constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
-constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () step 2
-constexpr U kEndThird = bof3::addr::BattleEnd_EnterStep3;         // () step 3
+constexpr ::bof3::image::CodeVa kEnemySound{bof3::addr::Sound_PlayEffectUnlessNone};       // (sound) (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kEnemyActEnd{bof3::addr::EnemyOp_EndAction};      // () (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kEnemyActChance{bof3::addr::EnemyOp_RollBit80Task};   // () (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kSlotsReleaseFor{bof3::addr::Field_SlotsReleaseOwner};  // 0x454A80 (object; BE6, 2026-09-29)
+constexpr ::bof3::image::CodeVa kSlotStart{bof3::addr::Field_SlotStart};               // 0x455290 (object, script; BE6, 2026-09-29)
+constexpr ::bof3::image::CodeVa kEndWin{bof3::addr::BattleEnd_EnterStep1};           // () the end phase, step 1
+constexpr ::bof3::image::CodeVa kEndOther{bof3::addr::BattleEnd_EnterStep2};         // () step 2
+constexpr ::bof3::image::CodeVa kEndThird{bof3::addr::BattleEnd_EnterStep3};         // () step 3
 
 }  // namespace at
 }  // namespace boss_sf

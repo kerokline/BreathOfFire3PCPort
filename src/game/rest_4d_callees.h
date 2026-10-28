@@ -81,20 +81,20 @@ constexpr ::bof3::image::Va kTextRecords{0x904CE0};  // Text_Records, 0x20 each
 constexpr ::bof3::image::Va kTextRecordsEnd{0x904E00};   // nine
 
 // --- callees of other groups of this wave, by address ------------------------------------
-constexpr std::uint32_t kBoardCell = bof3::addr::Commu_DrawCard;    // R4C: a cell (x, y, value; 0xFF blank)
-constexpr std::uint32_t kBoardPiece = bof3::addr::Commu_DrawPiece;   // R4C: a frame piece (x, y, piece)
-constexpr std::uint32_t kSlotPanel = bof3::addr::CommuEntry_DrawPanel;    // R4E: a slot's panel (x, y, slot, flag)
-constexpr std::uint32_t kListPiece = bof3::addr::Commu_DrawPiece6;    // R4E: a frame piece (x, y, piece)
-constexpr std::uint32_t kSlotHand = bof3::addr::CommuCursor_DrawArrow;     // R4E: the list's hand (x, y, flag)
-constexpr std::uint32_t kRandomName = bof3::addr::CommuName_MakeRandom;   // R4E: a name drawn at 0x675F98; answers its length + 1
-constexpr std::uint32_t kMemberPanel = bof3::addr::CommuMember_DrawPanel;  // R4E: a member's panel (x, y, record, flag)
-constexpr std::uint32_t kMemberPanels = bof3::addr::CommuMember_DrawAll; // R4E: the members' panels
-constexpr std::uint32_t kMemberCount = bof3::addr::CommuMember_Count;  // R4E: the records in the list (al)
-constexpr std::uint32_t kNthMember = bof3::addr::CommuMember_Nth;    // R4E: the n-th such record (eax, 0xFF none)
-constexpr std::uint32_t kMemberHand = bof3::addr::CommuMember_DrawFrame;   // R4E: the members' hand (x, y, flag, 6)
-constexpr std::uint32_t kEntryBox = bof3::addr::Commu_DrawTiledFrame;     // R4E: the entry's box (0x12, y, 0x24, 0x11)
-constexpr std::uint32_t kMemberRename = bof3::addr::CommuName_CommitMember; // R4E: the member's new name written (a tail jump)
-constexpr std::uint32_t kSlotRename = bof3::addr::CommuName_CommitEntry;   // R4E: the slot's new name written (a tail jump)
+constexpr ::bof3::image::CodeVa kBoardCell{bof3::addr::Commu_DrawCard};    // R4C: a cell (x, y, value; 0xFF blank)
+constexpr ::bof3::image::CodeVa kBoardPiece{bof3::addr::Commu_DrawPiece};   // R4C: a frame piece (x, y, piece)
+constexpr ::bof3::image::CodeVa kSlotPanel{bof3::addr::CommuEntry_DrawPanel};    // R4E: a slot's panel (x, y, slot, flag)
+constexpr ::bof3::image::CodeVa kListPiece{bof3::addr::Commu_DrawPiece6};    // R4E: a frame piece (x, y, piece)
+constexpr ::bof3::image::CodeVa kSlotHand{bof3::addr::CommuCursor_DrawArrow};     // R4E: the list's hand (x, y, flag)
+constexpr ::bof3::image::CodeVa kRandomName{bof3::addr::CommuName_MakeRandom};   // R4E: a name drawn at 0x675F98; answers its length + 1
+constexpr ::bof3::image::CodeVa kMemberPanel{bof3::addr::CommuMember_DrawPanel};  // R4E: a member's panel (x, y, record, flag)
+constexpr ::bof3::image::CodeVa kMemberPanels{bof3::addr::CommuMember_DrawAll}; // R4E: the members' panels
+constexpr ::bof3::image::CodeVa kMemberCount{bof3::addr::CommuMember_Count};  // R4E: the records in the list (al)
+constexpr ::bof3::image::CodeVa kNthMember{bof3::addr::CommuMember_Nth};    // R4E: the n-th such record (eax, 0xFF none)
+constexpr ::bof3::image::CodeVa kMemberHand{bof3::addr::CommuMember_DrawFrame};   // R4E: the members' hand (x, y, flag, 6)
+constexpr ::bof3::image::CodeVa kEntryBox{bof3::addr::Commu_DrawTiledFrame};     // R4E: the entry's box (0x12, y, 0x24, 0x11)
+constexpr ::bof3::image::CodeVa kMemberRename{bof3::addr::CommuName_CommitMember}; // R4E: the member's new name written (a tail jump)
+constexpr ::bof3::image::CodeVa kSlotRename{bof3::addr::CommuName_CommitEntry};   // R4E: the slot's new name written (a tail jump)
 
 }  // namespace at
 }  // namespace rest_4d

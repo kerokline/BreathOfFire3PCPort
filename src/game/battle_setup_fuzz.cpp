@@ -208,18 +208,18 @@ const Callees kStubs = {
 const void* StubFor(std::uint32_t target) {
     const auto f = [](auto p) { return reinterpret_cast<const void*>(p); };
     switch (target) {
-    case kActorAbsent: return f(&StubAbsent);
-    case kActorCanAct: return f(&StubCanAct);
-    case kSetPending: return f(&StubSetPending);
-    case kMessage: return f(&StubMessage);
-    case kMessageAt: return f(&StubMessageAt);
-    case kStatusTint: return f(&StubStatusTint);
-    case kPartyName: return f(&StubPartyName);
-    case kEnemyName: return f(&StubEnemyName);
-    case kWakeRoll: return f(&StubWakeRoll);
-    case kSetHpChange: return f(&StubSetHpChange);
-    case kEnemyOutpaces: return f(&StubEnemyOutpaces);
-    case kReturnItem: return f(&StubReturnItem);
+    case kActorAbsent.v: return f(&StubAbsent);
+    case kActorCanAct.v: return f(&StubCanAct);
+    case kSetPending.v: return f(&StubSetPending);
+    case kMessage.v: return f(&StubMessage);
+    case kMessageAt.v: return f(&StubMessageAt);
+    case kStatusTint.v: return f(&StubStatusTint);
+    case kPartyName.v: return f(&StubPartyName);
+    case kEnemyName.v: return f(&StubEnemyName);
+    case kWakeRoll.v: return f(&StubWakeRoll);
+    case kSetHpChange.v: return f(&StubSetHpChange);
+    case kEnemyOutpaces.v: return f(&StubEnemyOutpaces);
+    case kReturnItem.v: return f(&StubReturnItem);
     case 0x454DC0: return f(&StubReleaseTint);    // Sprite_ReleaseTint
     case 0x497740: return f(&StubMsg);            // Msg_SystemPtr
     case 0x59E2D0: return f(&StubWindowAlloc);    // Window_Alloc

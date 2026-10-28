@@ -115,10 +115,10 @@ constexpr ::bof3::image::Va kListTexts{0x669EE0};      // pointers: the lists' l
 constexpr ::bof3::image::Va kNumberFormat{0x5E10C0};   // Area08_MessageFormat
 
 // --- other groups' functions of this wave, by address --------------------------------
-constexpr std::uint32_t kR4ACountSlots = bof3::addr::CommuSim_SumKindsAB;  // R4A: void(void)
-constexpr std::uint32_t kR4ASettle = bof3::addr::CommuSim_TickKind5;      // R4A: void(void)
-constexpr std::uint32_t kR4CAsk = bof3::addr::Commu_PushSubscreen;         // R4C: void(void) - the yes / no row armed
-constexpr std::uint32_t kR4EHand = bof3::addr::CommuCursor_DrawArrow;        // R4E: void(short x, short y, byte flash) - a cursor tile
+constexpr ::bof3::image::CodeVa kR4ACountSlots{bof3::addr::CommuSim_SumKindsAB};  // R4A: void(void)
+constexpr ::bof3::image::CodeVa kR4ASettle{bof3::addr::CommuSim_TickKind5};      // R4A: void(void)
+constexpr ::bof3::image::CodeVa kR4CAsk{bof3::addr::Commu_PushSubscreen};         // R4C: void(void) - the yes / no row armed
+constexpr ::bof3::image::CodeVa kR4EHand{bof3::addr::CommuCursor_DrawArrow};        // R4E: void(short x, short y, byte flash) - a cursor tile
 
 }  // namespace at
 }  // namespace rest_4b

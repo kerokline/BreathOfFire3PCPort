@@ -12,14 +12,14 @@
 namespace rest_2e::at {
 
 // R2D's (0x5869A0..0x58B1C0).
-constexpr std::uint32_t kAbilityUse = bof3::addr::FieldAbility_Use;       // (user, target, ability, battle) -> al: a field ability used from
+constexpr ::bof3::image::CodeVa kAbilityUse{bof3::addr::FieldAbility_Use};       // (user, target, ability, battle) -> al: a field ability used from
                                                       // the menu - Skill_ApCost against the user's AP, a handler of
                                                       // 0x6672EC by the ability; 1 or 5 when it took effect
 // R2F's (0x58ED40..0x596A90).
-constexpr std::uint32_t kAbilityWindows = bof3::addr::AbilityMenu_InitRecords;   // (): the Ability screen's window records set up
-constexpr std::uint32_t kAbilitySort = bof3::addr::AbilityList_SortBy;      // (how): jmp through 0x667444 by how's low byte (the ability
+constexpr ::bof3::image::CodeVa kAbilityWindows{bof3::addr::AbilityMenu_InitRecords};   // (): the Ability screen's window records set up
+constexpr ::bof3::image::CodeVa kAbilitySort{bof3::addr::AbilityList_SortBy};      // (how): jmp through 0x667444 by how's low byte (the ability
                                                       // lists' sorts)
-constexpr std::uint32_t kAbilityViewWindow = bof3::addr::AbilityMenu_InitRecord17;  // (): window record 0x8033C4 (the view's list) set up
-constexpr std::uint32_t kAbilityCloseWindows = bof3::addr::FieldMenu_FreeRecords13To18;  // (): six window records cleared
+constexpr ::bof3::image::CodeVa kAbilityViewWindow{bof3::addr::AbilityMenu_InitRecord17};  // (): window record 0x8033C4 (the view's list) set up
+constexpr ::bof3::image::CodeVa kAbilityCloseWindows{bof3::addr::FieldMenu_FreeRecords13To18};  // (): six window records cleared
 
 }  // namespace rest_2e::at

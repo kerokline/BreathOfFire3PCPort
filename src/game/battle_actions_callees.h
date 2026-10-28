@@ -94,8 +94,8 @@ constexpr ::bof3::image::Va kAbilityRows{0x64C1D0};   // u8 by action id
 }  // namespace at
 
 // Raw addresses of the callees no group owns (the rule above).
-constexpr std::uint32_t kEnemyPickAction = bof3::addr::BattleEnemy_PickAction;   // 0x435AB0 (enemy): Rand, then 0x904B35 = a 2-bit kind from 0x65563C
-constexpr std::uint32_t kPickTarget = bof3::addr::BattleAction_PickRandomAbility;   // 0x42F9D0, () -> al: the random action of 0x24 / 0x25 / 0x8C and its target
+constexpr ::bof3::image::CodeVa kEnemyPickAction{bof3::addr::BattleEnemy_PickAction};   // 0x435AB0 (enemy): Rand, then 0x904B35 = a 2-bit kind from 0x65563C
+constexpr ::bof3::image::CodeVa kPickTarget{bof3::addr::BattleAction_PickRandomAbility};   // 0x42F9D0, () -> al: the random action of 0x24 / 0x25 / 0x8C and its target
 
 // Every callee that answers in al is typed unsigned char, as symbols.gen.h has
 // the named ones: the originals test only al.

@@ -34,13 +34,13 @@ namespace at {
 using U = std::uint32_t;
 
 // --- raw callees (above) ------------------------------------------------------
-constexpr U kMemberRecalc = bof3::addr::BattleParty_RecalcStats;     // BE3
-constexpr U kMemberStatusSet = bof3::addr::Battle_RecalcStats;  // BE6
-constexpr U kTurnVelocity = bof3::addr::Battle_TurnVectorC;     // BE4
-constexpr U kPlayCue = bof3::addr::Sound_PlayEffectUnlessNone;          // BE3
-constexpr U kEnemyTaskChance = bof3::addr::EnemyOp_RollBit80Task;  // BE3
-constexpr U kEnemyOpEnd = bof3::addr::EnemyOp_EndAction;       // BE3
-constexpr U kActorMayAct = bof3::addr::Battle_AutoTargetCheck;      // R4A's (round 14), ours
+constexpr ::bof3::image::CodeVa kMemberRecalc{bof3::addr::BattleParty_RecalcStats};     // BE3
+constexpr ::bof3::image::CodeVa kMemberStatusSet{bof3::addr::Battle_RecalcStats};  // BE6
+constexpr ::bof3::image::CodeVa kTurnVelocity{bof3::addr::Battle_TurnVectorC};     // BE4
+constexpr ::bof3::image::CodeVa kPlayCue{bof3::addr::Sound_PlayEffectUnlessNone};          // BE3
+constexpr ::bof3::image::CodeVa kEnemyTaskChance{bof3::addr::EnemyOp_RollBit80Task};  // BE3
+constexpr ::bof3::image::CodeVa kEnemyOpEnd{bof3::addr::EnemyOp_EndAction};       // BE3
+constexpr ::bof3::image::CodeVa kActorMayAct{bof3::addr::Battle_AutoTargetCheck};      // R4A's (round 14), ours
 
 // --- the battle bytes (the harness's 0x904AA0..0x904BA0) ----------------------
 constexpr ::bof3::image::Va kRoundFlags{0x904AA8};       // u16 / u32: the round flags (0x400, 0x4000, 0x8000 read here)

@@ -290,15 +290,15 @@ void __cdecl StubDrawMediumBox(int x, int y) {
 const void* StubFor(std::uint32_t target) {
     const auto f = [](auto p) { return reinterpret_cast<const void*>(p); };
     switch (target) {
-    case kCountMembers: return f(&StubCountMembers);
-    case kZennyBonus: return f(&StubZennyBonus);
-    case kAddExp: return f(&StubAddExp);
-    case kRosterIndex: return f(&StubRosterIndex);
-    case kLevelUpPending: return f(&StubLevelUpPending);
-    case kLevelUp: return f(&StubLevelUp);
-    case kAddZenny: return f(&StubAddZenny);
-    case kDrawFrame: return f(&StubDrawFrame);
-    case kExpToNext: return f(&StubExpToNext);
+    case kCountMembers.v: return f(&StubCountMembers);
+    case kZennyBonus.v: return f(&StubZennyBonus);
+    case kAddExp.v: return f(&StubAddExp);
+    case kRosterIndex.v: return f(&StubRosterIndex);
+    case kLevelUpPending.v: return f(&StubLevelUpPending);
+    case kLevelUp.v: return f(&StubLevelUp);
+    case kAddZenny.v: return f(&StubAddZenny);
+    case kDrawFrame.v: return f(&StubDrawFrame);
+    case kExpToNext.v: return f(&StubExpToNext);
     case 0x5B9380: return f(&StubSprintf);
     case 0x497740: return f(&StubMsgSystem);
     case 0x536AC0: return f(&StubPartySet);
@@ -340,18 +340,18 @@ struct Clone {
     int n_calls;
 };
 
-constexpr Call kSplitCalls[] = {{0xA, kCountMembers}, {0x42, 0x5B9380}, {0x49, 0x497740}, {0x5F, 0x536AC0}};
+constexpr Call kSplitCalls[] = {{0xA, kCountMembers.v}, {0x42, 0x5B9380}, {0x49, 0x497740}, {0x5F, 0x536AC0}};
 constexpr Call kOpenCalls[] = {{0x4, 0x59E2D0}};
-constexpr Call kExpTickCalls[] = {{0xA, 0x454810}, {0x34, kAddExp}, {0x56, kAddExp}};
+constexpr Call kExpTickCalls[] = {{0xA, 0x454810}, {0x34, kAddExp.v}, {0x56, kAddExp.v}};
 constexpr Call kExpDoneCalls[] = {{0x0, 0x454810}};
-constexpr Call kFindCalls[] = {{0x26, kRosterIndex}, {0x41, kLevelUpPending}};
-constexpr Call kSetupCalls[] = {{0x55, kRosterIndex}, {0x5E, kLevelUpPending}, {0x73, kRosterIndex}, {0x79, kLevelUp},
-                                {0x90, kZennyBonus},  {0xB4, 0x59E2D0},        {0xD7, 0x5B9380},     {0xDE, 0x497740},
+constexpr Call kFindCalls[] = {{0x26, kRosterIndex.v}, {0x41, kLevelUpPending.v}};
+constexpr Call kSetupCalls[] = {{0x55, kRosterIndex.v}, {0x5E, kLevelUpPending.v}, {0x73, kRosterIndex.v}, {0x79, kLevelUp.v},
+                                {0x90, kZennyBonus.v},  {0xB4, 0x59E2D0},        {0xD7, 0x5B9380},     {0xDE, 0x497740},
                                 {0x123, 0x59E2D0},    {0x251, 0x454770}};
-constexpr Call kZennyTickCalls[] = {{0xA, 0x454810}, {0x38, kAddZenny}, {0x5A, kAddZenny}};
+constexpr Call kZennyTickCalls[] = {{0xA, 0x454810}, {0x38, kAddZenny.v}, {0x5A, kAddZenny.v}};
 constexpr Call kAwardCalls[] = {{0x1, 0x454810}, {0x3E, 0x590BB0}};
-constexpr Call kDrawExpCalls[] = {{0x18, kDrawFrame}, {0x5E, 0x516B30}, {0x81, 0x5B9380}, {0x93, 0x516F60},
-                                  {0x99, kExpToNext}, {0xA9, 0x5B9380}, {0xBB, 0x516F60}, {0xC2, 0x497740},
+constexpr Call kDrawExpCalls[] = {{0x18, kDrawFrame.v}, {0x5E, 0x516B30}, {0x81, 0x5B9380}, {0x93, 0x516F60},
+                                  {0x99, kExpToNext.v}, {0xA9, 0x5B9380}, {0xBB, 0x516F60}, {0xC2, 0x497740},
                                   {0xD5, 0x516B30}, {0xE1, 0x497740}, {0xF1, 0x516B30}};
 constexpr Call kDrawZennyCalls[] = {{0x4, 0x443870}, {0x19, 0x5B9380}, {0x29, 0x516F60}, {0x41, 0x516B30}};
 

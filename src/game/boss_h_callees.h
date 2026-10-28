@@ -58,8 +58,8 @@ constexpr ::bof3::image::Va kEnemy0Z{0x93B998};
 // kLeaderPick: now BossH_LeaderPick (symbols.toml).
 
 // --- the callees nobody owns ------------------------------------------------
-constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
-constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () the end phase, step 2
+constexpr ::bof3::image::CodeVa kEndWin{bof3::addr::BattleEnd_EnterStep1};           // () the end phase, step 1
+constexpr ::bof3::image::CodeVa kEndOther{bof3::addr::BattleEnd_EnterStep2};         // () the end phase, step 2
 
 }  // namespace at
 }  // namespace boss_h

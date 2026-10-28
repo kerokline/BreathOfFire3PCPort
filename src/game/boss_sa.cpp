@@ -149,13 +149,13 @@ bool PickSpent() {
 // the music track, and step 1 (0x446DE0).
 template <typename F> void EndByBits(F with, unsigned counter, unsigned track) {
     if ((Battle_EndFlags & 6) == 0) {
-        BH_AT(Handler, at::kEndOther)();
+        BH_AT(Handler, at::kEndOther.v)();
         return;
     }
     with();
     B(::bof3::Img(at::kMoveVar3.v)) = static_cast<unsigned char>(counter);
     Music_Track = static_cast<unsigned char>(track);
-    BH_AT(Handler, at::kEndWin)();
+    BH_AT(Handler, at::kEndWin.v)();
 }
 
 void SetHooks(U end, U exit, U event) {
@@ -176,7 +176,7 @@ extern "C" U __cdecl BossGary_Dispatch(void) { return Dispatch("BossGary_Dispatc
 // original 0x437A30: BossGary_Steps 0 - +0xFC BossGary_Anims, +0xF4
 // BossGary_Hook, +0xF8 BossGary_Cues, +1 = 2, Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossGary_Enter(void) {
-    Install(AddressOf(BossGary_Anims), at::kGaryHook, AddressOf(BossGary_Cues));
+    Install(AddressOf(BossGary_Anims), ::bof3::Code(at::kGaryHook.v), AddressOf(BossGary_Cues));
     return EnterTick();
 }
 
@@ -223,7 +223,7 @@ extern "C" U __cdecl BossMogu_Dispatch(void) { return Dispatch("BossMogu_Dispatc
 // original 0x437B90: BossMogu_Steps 0 - +0xFC BossMogu_Anims, +0xF4
 // BossMogu_Hook, +0xF8 BossMogu_Cues, +1 = 2, Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossMogu_Enter(void) {
-    Install(AddressOf(BossMogu_Anims), at::kMoguHook, AddressOf(BossMogu_Cues));
+    Install(AddressOf(BossMogu_Anims), ::bof3::Code(at::kMoguHook.v), AddressOf(BossMogu_Cues));
     return EnterTick();
 }
 
@@ -265,7 +265,7 @@ extern "C" U __cdecl BossMogu_Hook(unsigned word) { return HookDispatch("BossMog
 
 // original 0x437CD0: Boss_SetupTable[1] - BattleHook_End Boss01_End,
 // BattleHook_Exit Boss01_Exit, BattleHook_Event Boss01_Event.
-extern "C" void __cdecl Boss01_Setup(void) { SetHooks(at::kBoss01End, at::kBoss01Exit, at::kBoss01Event); }
+extern "C" void __cdecl Boss01_Setup(void) { SetHooks(::bof3::Code(at::kBoss01End.v), ::bof3::Code(at::kBoss01Exit.v), ::bof3::Code(at::kBoss01Event.v)); }
 
 // original 0x437CF0: fight 1's event hook, by the phase code's low byte (a
 // jump table of 7 inside the function); al 0 on every path.
@@ -320,7 +320,7 @@ extern "C" void __cdecl Boss01_End(void) {
     } else {
         MoveScript_PartyRecords[0x65] += 1;
     }
-    BH_AT(Handler, at::kEndThird)();
+    BH_AT(Handler, at::kEndThird.v)();
 }
 
 // original 0x437E10: fight 1's exit hook. For the field actors tagged 6 and 7
@@ -354,7 +354,7 @@ extern "C" U __cdecl BossNue_Dispatch(void) { return Dispatch("BossNue_Dispatch"
 // original 0x437F00: BossNue_Steps 0 - +0xFC BossNue_Anims, +0xF4
 // BossNue_Hook, +0xF8 BossNue_Cues, +1 = 2, Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossNue_Enter(void) {
-    Install(AddressOf(BossNue_Anims), at::kNueHook, AddressOf(BossNue_Cues));
+    Install(AddressOf(BossNue_Anims), ::bof3::Code(at::kNueHook.v), AddressOf(BossNue_Cues));
     return EnterTick();
 }
 
@@ -413,7 +413,7 @@ extern "C" U __cdecl BossNue2_Dispatch(void) { return Dispatch("BossNue2_Dispatc
 // BossNue2_Hook, +0xF8 BossNue_Cues (kind 1's two tables), +1 = 2,
 // Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossNue2_Enter(void) {
-    Install(AddressOf(BossNue_Anims), at::kNue2Hook, AddressOf(BossNue_Cues));
+    Install(AddressOf(BossNue_Anims), ::bof3::Code(at::kNue2Hook.v), AddressOf(BossNue_Cues));
     return EnterTick();
 }
 
@@ -437,7 +437,7 @@ extern "C" U __cdecl BossSample1_Dispatch(void) {
 // BossSample1_Hook, +0xF8 BossSample1_Cues, then 0x939AD8's +0x114 |= 8,
 // +1 = 2, Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossSample1_Enter(void) {
-    Install(AddressOf(BossNue_Anims), at::kSample1Hook, AddressOf(BossSample1_Cues));
+    Install(AddressOf(BossNue_Anims), ::bof3::Code(at::kSample1Hook.v), AddressOf(BossSample1_Cues));
     auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     enemy_rec->flags_114 = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_114)) | 8u);
     return EnterTick();
@@ -455,7 +455,7 @@ extern "C" U __cdecl BossSample1_Hook(unsigned word) {
 
 // original 0x438190: Boss_SetupTable[2] - BattleHook_End Boss02_End,
 // BattleHook_Exit BareRet, BattleHook_Event Boss02_Event.
-extern "C" void __cdecl Boss02_Setup(void) { SetHooks(at::kBoss02End, at::kBareRet, at::kBoss02Event); }
+extern "C" void __cdecl Boss02_Setup(void) { SetHooks(::bof3::Code(at::kBoss02End.v), ::bof3::Code(at::kBareRet.v), ::bof3::Code(at::kBoss02Event.v)); }
 
 // original 0x4381B0: fight 2's event hook: at phase code 0 (its low byte)
 // with 0x904AE8 bit 1 (the win), the window records' pass 0x802D20 = 2 and
@@ -476,7 +476,7 @@ extern "C" void __cdecl Boss02_End(void) {
 
 // original 0x438210: Boss_SetupTable[3] - BattleHook_End Boss03_End,
 // BattleHook_Exit BossHook_ExitActor0Bit40, BattleHook_Event BareRetZero.
-extern "C" void __cdecl Boss03_Setup(void) { SetHooks(at::kBoss03End, at::kExitActor0Bit40, at::kBareRetZero); }
+extern "C" void __cdecl Boss03_Setup(void) { SetHooks(::bof3::Code(at::kBoss03End.v), ::bof3::Code(at::kExitActor0Bit40.v), ::bof3::Code(at::kBareRetZero.v)); }
 
 // original 0x438230: fight 3's end hook: with 0x904AE8 bit 1 or 2,
 // BossActor_CopyFrom(0, enemy 0's object, 0) (its pose), counter 0x6D, track
@@ -487,7 +487,7 @@ extern "C" void __cdecl Boss03_End(void) {
 
 // original 0x438270: Boss_SetupTable[39] - BattleHook_End
 // BossHook_EndPickWay, BattleHook_Exit BareRet, BattleHook_Event BareRetZero.
-extern "C" void __cdecl Boss39_Setup(void) { SetHooks(at::kEndPickWay, at::kBareRet, at::kBareRetZero); }
+extern "C" void __cdecl Boss39_Setup(void) { SetHooks(::bof3::Code(at::kEndPickWay.v), ::bof3::Code(at::kBareRet.v), ::bof3::Code(at::kBareRetZero.v)); }
 
 // ============================================================================
 // Kind 39 (Weretigr, area 35; fight 33)
@@ -501,7 +501,7 @@ extern "C" U __cdecl BossWeretigr_Dispatch(void) {
 // original 0x43D3F0: BossWeretigr_Steps 0 - +0xFC BossWeretigr_Anims, +0xF4
 // BossWeretigr_Hook, +0xF8 BossWeretigr_Cues, +1 = 2, Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossWeretigr_Enter(void) {
-    Install(AddressOf(BossWeretigr_Anims), at::kWeretigrHook, AddressOf(BossWeretigr_Cues));
+    Install(AddressOf(BossWeretigr_Anims), ::bof3::Code(at::kWeretigrHook.v), AddressOf(BossWeretigr_Cues));
     return EnterTick();
 }
 
@@ -549,8 +549,8 @@ extern "C" void __cdecl BossWeretigr_State4Cue(void) {
     Sprite_Current[0xA] -= 1;
     if (Sprite_Current[0xA] != 0) return;
     using Cue = void (__cdecl*)(unsigned);
-    BH_AT(Cue, at::kPlayCue)(Word(At(static_cast<U>(static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy())->cue_table)))));
-    BH_AT(Cue, at::kPlayCue)((Word(At(static_cast<U>(static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy())->cue_table)))) + 4u) & 0xFFFF);
+    BH_AT(Cue, at::kPlayCue.v)(Word(At(static_cast<U>(static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy())->cue_table)))));
+    BH_AT(Cue, at::kPlayCue.v)((Word(At(static_cast<U>(static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy())->cue_table)))) + 4u) & 0xFFFF);
     rv::Current<records::BattleEnemy>()->step += 1;
 }
 
@@ -561,8 +561,8 @@ extern "C" void __cdecl BossWeretigr_State4Cue(void) {
 extern "C" void __cdecl BossWeretigr_State4End(void) {
     if (rv::Current<records::BattleEnemy>()->flags & 0x40) return;
     B(::bof3::Img(at::kRoundFlags.v)) |= 4;
-    BH_AT(Handler, at::kTurnChance)();
-    BH_AT(Handler, at::kTurnClose)();
+    BH_AT(Handler, at::kTurnChance.v)();
+    BH_AT(Handler, at::kTurnClose.v)();
 }
 
 // original 0x43D580: BossWeretigr_State4Steps 3 - Sprite_SetAnimation(0),
