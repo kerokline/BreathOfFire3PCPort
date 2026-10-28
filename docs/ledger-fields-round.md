@@ -248,6 +248,74 @@ merges are disjoint. No game runs; no source change. A group that finds a
 real defect (a switch that does nothing, a default that is wrong) describes
 it in its report; the coordinator numbers it (D-numbers collide otherwise).
 
+### Stage B as run (2026-10-28, off the round branch at `7a6bb918`)
+
+Four Opus agents, one worktree each under `C:\Users\kerok\bof3x-runs\lf1027`,
+launched together after LF0 merged and merged one at a time (LF3, LF4, LF2,
+LF1) with `ledger_check.py` after each; every merge was clean, each group's
+diff additive field lines in its own hunks plus the `Reversible?` corrections
+below. LF4 also took DIV-0184, added since the table above. Reports:
+`lf1027\LF<n>\REPORT.md`. No game ran, no source changed.
+
+**The 184 entries, by field** (counted over the merged ledger; the audit of
+section 4 may move some):
+
+| Field | Values |
+|---|---|
+| `Switch:` | a bare name 94, `ini:`/`env:` 35, `lang` 20, `none` 27, more than one name 9 |
+| `Default:` | on 155, off 29 |
+| `Player:` | yes 55, cheap 67, costly 26, never 36 |
+| `Toward:` | `psx` 87, `psp` 13, `psx, psp` 3, `none` 81, `pc` 0 (90 list `psx`, 16 list `psp`) |
+| `State:` | active 182, withdrawn 2 (DIV-0037, DIV-0067) |
+
+Against LF0's by-best-switch count (74 / 52 / 35 / 5 / 18 by hand): the
+groups' narrowest-switch rule moved entries both ways - a `PatchBytes` flag
+found beside a detour made eleven cheap (LF2: DIV-0058..0061, 0065, 0070,
+0075, 0076, 0078, 0083, 0084), and the rule that a wider switch stays in
+prose made the language-only, build-time and file-decided entries `never`
+(LF3's 17 are the install's sources, DIV-0096..0106, 0114, 0115, 0130,
+0131, plus our own exe, the icon and the suites page).
+
+**`Reversible?` lines corrected** (the code showed the prose wrong; one
+line each, the case in the group's report): DIV-0006 (`MsgBox_DrawChar`
+no longer turns it off: our stepper calls it itself, `src/game/msgbox.cpp`),
+DIV-0012 (`Gfx_FilterPoint` patches Capcom's set-up only; the switch is
+`filter=`), DIV-0087 (an empty `cache=` is the home's own cache,
+`src/launcher/config.cpp` `ConfigApplyEnvironment`), DIV-0150 (the ini's
+`music=seq` is mapped to a source by `ConfigMusicSource`; only the
+variable set before the launcher gives the old order). DIV-0169's older
+`- **State:**` line (the DLL state it keeps) is now `Kept state:` and the
+checker's exception for it is gone; the Status line counts DIV-0037
+withdrawn beside DIV-0067.
+
+**Rules the groups applied differently** (handed to the audit, section 4):
+`Default:` for `lang`-only entries (LF1 `off`, LF2 `on`); the switch for an
+entry that acts only under a language overlay (LF3 the detour, `costly`;
+LF1 `lang`, `yes`; LF4 `none`, `never`); a code or detour name narrower
+than a launcher box that also turns off a neighbour (DIV-0049, 0133/0139,
+0071/0151, 0155..0157, 0160). The checker's note "Toward lists psx and the
+PSX line starts Yes" fires on 28 entries where "Yes" means the new
+behaviour is the PlayStation's; the audit says whether the test or the
+lines change.
+
+**`Toward: none` for want of a read** (the twin settles them later, the
+owner's rule of 2026-10-05): DIV-0004, 0027 (LF1); 0058, 0059, 0063, 0071
+(LF2); 0121, 0127 (LF3); 0144, 0180 (LF4). `psp` is left off every `psx`
+entry without a PSP read; the ones the groups name as worth one: DIV-0064,
+0080.
+
+**For the owner, from the groups** (no number assigned): DIV-0036's switch
+is `ini:display=windowed, env:BOF3X_SCALE=2` because the launcher sets
+`BOF3X_SCALE` only when `scale=` is not 2 (`src/launcher/config.cpp:529`),
+so `scale=2` alone does not fix the factor on a scaled desktop (the audit
+verifies); DIV-0021 writes `0000` where the PlayStation stores the sign
+extension of m[2][2], so it matches the console only for a non-negative
+element - a behaviour change if taken, not this round's; DIV-0003's
+original path is a crash, so `never - one-way` may fit it better than
+`costly`. The `costly` entries with their sizes are in each report (LF1's
+0031 and 0032, the renderer and the window, are the ones that cannot be
+grown in practice).
+
 ## 4. Stage C: the audit, then the strict rule
 
 **LF-audit** (one agent, read-only, after the four merge): every
