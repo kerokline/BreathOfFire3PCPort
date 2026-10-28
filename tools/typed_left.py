@@ -77,7 +77,7 @@ def measure():
     """Today's census sites, each with its key: [(key tuple, line, site)]."""
     os.chdir(ROOT)
     syms = dc.Symbols('symbols.toml')
-    files = dc.load_sources()
+    files = dc.load_sources(see_through=True)
     by_rel = {f.rel: f for f in files}
     sites, _consts, _files, _unres = dc.scan(files, syms)
     out = []
