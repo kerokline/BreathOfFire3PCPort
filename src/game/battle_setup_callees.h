@@ -25,8 +25,10 @@ namespace at {
 // actors 3..10 the enemies, 0x93B960 stride 0x128 indexed by the actor less 3
 // (the enemy's name record, EnemyWorkingRecords 0x93B9E0, is its +0x80). The
 // PSX's are 0x80145E8C stride 0x140 and 0x801EB540 stride 0x118.
-constexpr std::uint32_t kParty = 0x802D40, kPartyStride = 0x14C;
-constexpr std::uint32_t kEnemy = 0x93B960, kEnemyStride = 0x128;
+constexpr ::bof3::image::Va kParty{0x802D40};
+constexpr std::uint32_t kPartyStride = 0x14C;
+constexpr ::bof3::image::Va kEnemy{0x93B960};
+constexpr std::uint32_t kEnemyStride = 0x128;
 // Both kinds: +0 bit 0 present; +1..+4 the actor's state bytes (6, 5, 0, 0 at
 // an effect, 6, 4, 4 when the AP ran out).
 constexpr unsigned kPresent = 0x00, kState1 = 0x01, kState2 = 0x02, kState3 = 0x03, kState4 = 0x04;
@@ -60,21 +62,22 @@ constexpr unsigned kEFlags = 0x114;      // u32
 constexpr unsigned kECount4000 = 0x122, kECount40 = 0x124, kECount80 = 0x125;   // u8
 
 // kHpDriftMode: now Cond_Flags[0xd0] (symbols.toml). u8: at 5 every member's HP change starts at -1 (BattleStep_HpDrift)
-constexpr std::uint32_t kItemQueue = 0x904ACC;    // u8 per slot: the acting actors, 0x904AE2 - 1 .. 0x904AE3
+constexpr ::bof3::image::Va kItemQueue{0x904ACC};    // u8 per slot: the acting actors, 0x904AE2 - 1 .. 0x904AE3
 // kQueueFrom: now BossSe_RoundSlot (symbols.toml).
 // kQueueTo: now BattleDamage_TurnCount (symbols.toml).
-constexpr std::uint32_t kActing = 0x904B34;       // u32: the acting actor in its low byte, the command kind above
+constexpr ::bof3::image::Va kActing{0x904B34};       // u32: the acting actor in its low byte, the command kind above
 // kApCost: now BattleActions_ApCost (symbols.toml). u32, its low byte the AP cost doubled
-constexpr std::uint32_t kAbility = 0x904B80;      // u16
-constexpr std::uint32_t kPending = 0x904B82;      // u16: a bit per actor with an effect to show (0x446FB0 sets it)
+constexpr ::bof3::image::Va kAbility{0x904B80};      // u16
+constexpr ::bof3::image::Va kPending{0x904B82};      // u16: a bit per actor with an effect to show (0x446FB0 sets it)
 // kField12: now BattlePhases_B89 (symbols.toml). u8, 0x12 with character id 0 / 7
 // kTimer: now BattleFlow_AnimGate (symbols.toml). u8: counts down a turn at a time; flag 0x10 matters while it runs
-constexpr std::uint32_t kOpening = 0x904B90;      // u32: picks Battle_OpeningMessage's lines
-constexpr std::uint32_t kSavedPos = 0x93A034, kSavedPosStride = 0x84;   // 12 bytes per actor
-constexpr std::uint32_t kMsgWindow = 0x803162;    // the message window's four fields Battle_OpenMsgWindow sets
+constexpr ::bof3::image::Va kOpening{0x904B90};      // u32: picks Battle_OpeningMessage's lines
+constexpr ::bof3::image::Va kSavedPos{0x93A034};
+constexpr std::uint32_t kSavedPosStride = 0x84;   // 12 bytes per actor
+constexpr ::bof3::image::Va kMsgWindow{0x803162};    // the message window's four fields Battle_OpenMsgWindow sets
 
-inline std::uint32_t Party(unsigned actor) { return kParty + (actor & 0xFF) * kPartyStride; }
-inline std::uint32_t Enemy(unsigned actor) { return kEnemy + (((actor & 0xFF) - 3u) & 0xFFFFFFFFu) * kEnemyStride; }
+inline std::uint32_t Party(unsigned actor) { return ::bof3::Img(kParty.v) + (actor & 0xFF) * kPartyStride; }
+inline std::uint32_t Enemy(unsigned actor) { return ::bof3::Img(kEnemy.v) + (((actor & 0xFF) - 3u) & 0xFFFFFFFFu) * kEnemyStride; }
 
 }  // namespace at
 
