@@ -129,7 +129,10 @@ on `main`'s build and on 2026-10-27's (before ledger stage D) both show the
 three save-list pages from the same ticks (190 / 243) as RA2's build does, so
 the pages are the owner's saves alone - not RA2's hash and not stage D's
 launcher; everything else in those controls is render and sound noise under
-the compile load. The `orig4` pairs want
+the compile load. cutsceneAndNue on 2026-10-27's build under the same load
+shows the same two field pages (`0x903000` from tick 874, `0x92B000` from
+2523) RA2's runs showed, so those are the load's too, not RA2's. The chain
+ended 16:57; the quiet re-run remains the proof. The `orig4` pairs want
 re-recording with the current saves before stage C's `orig5f` pairs, or the
 save-list pages a skip entry (the coordinator's call).
 
