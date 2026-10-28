@@ -104,6 +104,9 @@ jobs:
       - name: Every raw data site in src/game is listed with a reason (no game data)
         run: python tools/data_census.py --strict
 
+      - name: The relocation census's gated site counts may not rise (no game data)
+        run: python tools/reloc_census.py --check
+
   music-host:
     # The SPU model and libsnd's sequencer (src/audio/) built with the system
     # compiler and unit-tested on synthetic samples and songs - no game data
