@@ -1,7 +1,7 @@
 # The ledger-fields round: staging (IDEAS I33, early decision 1)
 
-**Status:** STAGED (2026-10-27; not launched. The owner's four calls in
-section 6 are answered; LF0 can start.)
+**Status:** STAGES A..C DONE (2026-10-28, on `ledger-fields/round`, unpushed;
+stage D not briefed. The "as run" sections of 2, 3 and 4 say what landed.)
 
 The owner's word, 2026-10-27: stage "the ledger kinds work" as a round. The
 source is [`IDEAS.md`](IDEAS.md) I33's first early decision - *tag the
@@ -262,7 +262,7 @@ section 4 may move some):
 
 | Field | Values |
 |---|---|
-| `Switch:` | a bare name 94, `ini:`/`env:` 35, `lang` 20, `none` 27, more than one name 9 |
+| `Switch:` | a bare name 93, `ini:` 19, `env:` 16, `lang` 20, `none` 27, more than one name 9 |
 | `Default:` | on 155, off 29 |
 | `Player:` | yes 55, cheap 67, costly 26, never 36 |
 | `Toward:` | `psx` 87, `psp` 13, `psx, psp` 3, `none` 81, `pc` 0 (90 list `psx`, 16 list `psp`) |
@@ -325,6 +325,96 @@ group checked line by line. Findings to the coordinator, fixes on one
 branch. Then the checker turns strict (a missing or malformed field is an
 error), and the counts go into this doc and `STATUS.md`: how many entries a
 player can switch today, how many cheaply, how many at cost.
+
+### Stage C as run (2026-10-28, off the round branch at `c011e323`)
+
+**The audit** (one Opus agent, read-only; `lf1027\LFaudit\REPORT.md`, 434
+lines): every `never` and `costly` (62 entries) re-derived from the code
+before the group reports were opened, every `Toward: psx` (90) against its
+entry's evidence, 43 `cheap` and 42 `yes` line by line, every `ini:` /
+`env:` `Default:` against a table of the launcher's defaults built from
+`ConfigLoad` and `ConfigApplyEnvironment`. Twelve entries disagreed, no
+`Toward:` value did, and no `Default:` contradicted the launcher. The four
+rules the groups had applied differently, as the audit recommended and the
+coordinator took them (each now a sentence in the Entry format):
+
+- **A, `Default:` for `lang`-only entries is `on`:** the field reads the
+  player's choices and the install's contents as they are, so an entry that
+  acts only under an overlay, a wide mode or a cache is `on` (LF2's
+  reading; LF1's ten went `off` to `on`). Read the other way, "Recommended"
+  would change the player's language, which a disc-only install cannot set
+  to `original` (`src/launcher/config.h:67`, `config.cpp:940`).
+- **B, `Switch:` is the narrowest runtime name that turns the whole entry
+  off**, `lang` counted as a runtime name, the best class winning a tie, a
+  build-time handle never a switch. DIV-0009, 0013, 0141, 0148 went `none`
+  / `never` to `lang` / `yes`; the five overlay entries whose own detour is
+  narrower than the language (DIV-0051, 0118..0120, 0128) stay `costly`;
+  DIV-0090 stays `none`.
+- **C, the same rule against a launcher box:** DIV-0049's `Fmv_WndProc` and
+  the shared names (`ButtonSigma`, `BOF3X_LAYERING`, `ruby=`, `DirectOpaque`)
+  stand. DIV-0145 and 0147 were wrong: F5, F6 and F7 are read only in our
+  `Game_WndProc` (`src/game/win_main.cpp:443, 483, 487`), its own `Inject`
+  (`:919`), so they are `Game_WndProc` / `costly` like DIV-0040 and 0042;
+  DIV-0048 takes the same name (F1, `:505`; its "one detour" clause was
+  wrong, `:918..919`). DIV-0086 takes `ini:opt=` as DIV-0110..0113 do.
+- **D, the "starts Yes" note is dropped:** all 22 fired falsely, `Toward:
+  psx` right in each. The "Also in the PSX version?" line answers for the
+  original behaviour; the Entry format now says so, and the 22 lines are
+  not reworded. The "Default off and Player never" note fires only for
+  `State: active`.
+
+Judgement calls confirmed as written: DIV-0041 `psp`, DIV-0150 `psx`,
+DIV-0160 `psx, psp` (a PSP capture of the entry's own case now counts as
+`psp` evidence, since DIV-0184, the format's example, rests on the same
+capture), DIV-0107, 0094 and 0105 `never`; DIV-0003 stays `costly`, its
+original path a crash like DIV-0183's. DIV-0040's prose gained an
+amendment (F7 quick-loads since DIV-0145, F11 writes a frame).
+
+**One defect, numbered D395** ([`known-defects.md`](known-defects.md); ours,
+the launcher's, open, not fixed in this round): `scale=2` in `bof3x.ini` on
+a scaled desktop gives k = 3 at 150 % and 4 at 200 %, because the launcher
+sends `BOF3X_SCALE` only when the value is not 2 (`src/launcher/config.cpp:529`),
+unset the game takes k from the DPI (`src/game/display_setup.cpp:346..368`),
+and `ConfigSave` always writes `scale=` back (`config.cpp:342`), so the ini
+can neither pin k = 2 nor say "follow the display". DIV-0036 is amended to
+say so; its switch `ini:display=windowed, env:BOF3X_SCALE=2` is right for
+the code as it is.
+
+**The fix branch** (`lf1027\LFfix\REPORT.md`): the audit's 28 entry lines
+and 7 tool and format lines applied, every citation checked against the
+source (the DIV-0108 clause cites `psp_code.cpp:150`, the audit's `:147..149`
+corrected), the TSV regenerated (14 probe rows' line numbers). Then
+**`STRICT_FIELDS = True`**: a missing or malformed field is an error; the
+self-test grew a field-removal form (39 cases). `ledger_check.py` on the
+round's tip: 184 entries, 0 errors, 4 notes (all five fields on 184 of 184;
+the self-test's case count; the 29 data-only and tooling entries not cited
+in `src/`, as before; the impl count).
+
+**The ledger after the round** (184 entries, the counts `STATUS.md` carries):
+
+| Field | Values |
+|---|---|
+| `Switch:` | a bare name 95, `ini:` 19, `env:` 16, `lang` 24, `none` 21, more than one name 9 |
+| `Default:` | on 165, off 19 |
+| `Player:` | **yes 59, cheap 67, costly 28, never 30** |
+| `Toward:` | `psx` 87, `psp` 13, `psx, psp` 3, `none` 81 (90 list `psx`, 16 list `psp`, none `pc`) |
+| `State:` | active 182, withdrawn 2 (DIV-0037, DIV-0067) |
+
+So: 59 entries a player can switch today, 67 that stage D's `BOF3X_OFF`
+makes a player's at no cost beyond the switch, 28 whose original path is
+Capcom's alone (the owner's call 4: left, listed in the group reports with
+their sizes), 30 that no preset turns off. The "PlayStation" preset would
+turn on 90 entries; no entry lists `pc`, so that preset turns nothing off
+by the field alone. Ten `Toward: none` rest on a read not done (the stage
+B list above) and want the twin.
+
+**Left for stage D** (section 5, not briefed): `BOF3X_OFF` read beside
+`BOF3X_ORIGINAL` for the 67 `cheap` names; the `Reversible?` prose of
+DIV-0141, 0145, 0147 and 0148, which still says "not a switch" against
+their new `Switch:` values, to be reworded when the switch exists; an empty
+`ini:opt=` means "the key set to empty", not unset (DIV-0110..0113's
+switch); the lang-only entries, which a preset must not turn off without
+saying it changes the language.
 
 ## 5. Stage D: the player's switch and the presets (after the owner's calls)
 

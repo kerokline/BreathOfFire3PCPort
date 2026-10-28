@@ -1,7 +1,7 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-27: the away day merged locally on `away1027/integration`, unpushed, item 1; the
-two rounds staged by PR #157, item 2; everything through PR #157 is on `main`)
+**Status:** IN PROGRESS (2026-10-28: the ledger-fields round done through stage C on `ledger-fields/round`,
+unpushed, item 2; everything through PR #161 is on `main`)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -15,53 +15,57 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
-**`origin/main` is `0ba0f276`** (PR #157, 2026-10-27): since the reading-row round (PR #106) it took the faster
+**`origin/main` is `ac1682fe`** (PR #161, 2026-10-28): since the reading-row round (PR #106) it took the faster
 text, the bit-15 round, the PlayStation verdict pass and twin-diff, fix wave 1023, the sound-layer round, the
 issue fixes of 2026-10-24..26, build-difference prevention (the data diff and the every-door sweep), the spell
-sweep and its fix wave, and the two staged rounds ([`STATUS.md`](STATUS.md) lists them with their PRs). Every
-branch the earlier versions of this file called unpushed is merged; the open work is below. **Today's away day
-is the one unpushed branch meant for a PR** (item 1), and `away1027/twins` is still running. Owed throughout:
+sweep and its fix wave, the two staged rounds, the away day (PR #158), D42's dial (PR #159) and the boss sweep (PR #161) ([`STATUS.md`](STATUS.md) lists them with their PRs). Every
+branch the earlier versions of this file called unpushed is merged; the open work is below. **The ledger-fields round is
+the one unpushed branch meant for a PR** (item 2). Owed throughout:
 the owner's play, eye and ear ([`owner-review.md`](owner-review.md), item 13). Layers built before DIV-0148 carry
 no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fishing tag 3: rebuild a language
 (`importer.py build`, or `loc_build.py all --discs` for an install's `DAT\<tag>.*.DAT`) before comparing one.
 
 ## Pick up here
 
-1. **The away day of 2026-10-27 is merged locally on `away1027/integration`** (off `main` `e84aaf6d`, the PR #156
-   merge; four Opus agents, one worktree each under `C:\Users\kerok\bof3x-runs\away1027`, merged one at a time by
-   the coordinator; unpushed, **PR at the owner's word**). [`STATUS.md`](STATUS.md) has a line an agent; the
-   evidence is in [`install-gap-labels.md`](install-gap-labels.md) 9 and 9.1 (`lang`),
-   [`exe-import-engine.md`](exe-import-engine.md) 7.11 (`desc`), [`stp-census.md`](stp-census.md) 6 (`stp`) and
-   [`spell-sweep.md`](spell-sweep.md) 10 and 11 (`sweep`); the agents' reports are `away1027\<agent>\REPORT.md`, the
-   coordinator's notes `away1027\coordinator_log.md`. The batched validation: the integration's final commit
-   message. **Merged with it:** `away1027/twins`, the `exe_twins.py` map tie-break that places the faerie village
-   operand ([`install-gap-labels.md`](install-gap-labels.md) 9.2: `placed_differ` +7 per Western PSX build,
-   nothing else moving, `exe_maps/` carrying only the rule's effect - a full survey re-run brings a pass-2
-   drift of the maps made on 2026-10-08 that wants its own read before anyone regenerates them in full), and
-   `away1027/docs`, this file's and `STATUS.md`'s rewrite. **Done the same evening:** the tooling install's
-   `bof3\DAT\en-US.*.DAT` overlay rebuilt with `loc_build.py` (it was 2026-10-13's, older than DIV-0069's fishing
-   tag 3; its 247 files were hard links into old harness roots, unlinked first); the `game\` folder's overlay is
-   2026-10-25's and differs from the rebuilt one in `FIRST.DAT` alone. **Owed, no owner:** the census routes
-   still not reached ([`stp-census.md`](stp-census.md) 6.5: the minigames other than fishing want the owner's
-   recordings). **For the owner** ([`owner-review.md`](owner-review.md), the 2026-10-27 lines): the faerie
+1. **The away day of 2026-10-27 is merged as PR #158** (with `away1027/twins` and `away1027/docs`; four Opus
+   agents, [`STATUS.md`](STATUS.md) has a line each; the evidence in [`install-gap-labels.md`](install-gap-labels.md)
+   9..9.2, [`exe-import-engine.md`](exe-import-engine.md) 7.11, [`stp-census.md`](stp-census.md) 6 and
+   [`spell-sweep.md`](spell-sweep.md) 10 and 11; the reports `C:\Users\kerok\bof3x-runs\away1027\<agent>\REPORT.md`).
+   After it: D42's dial as PR #159 (DIV-0184) and the boss sweep as PR #161 (item 3). **Trap kept:** a full
+   `exe_twins.py` survey re-run brings a pass-2 drift of the maps made on 2026-10-08 that wants its own read
+   before anyone regenerates `exe_maps/` in full (9.2). The tooling install's `en-US` overlay was rebuilt that
+   evening; the `game\` folder's is 2026-10-25's and differs in `FIRST.DAT` alone. **Owed, no owner:** the census
+   routes still not reached ([`stp-census.md`](stp-census.md) 6.5: the minigames other than fishing want the
+   owner's recordings). **For the owner** ([`owner-review.md`](owner-review.md), the 2026-10-27 lines): the faerie
    operand under a Western layer on the PC install, area 9 on a PSP-built install, the fishing spots' crafted-save
-   evidence, the stp pairs and `kind_sheet.png`, the seven boss-only skills' routes.
+   evidence, the stp pairs and `kind_sheet.png`, the seven boss-only skills' routes. The worktrees under
+   `away1027` are removable.
 
-2. **Two rounds staged, not launched** (PR #157, merged 2026-10-27, docs only; briefs under
-   `C:\Users\kerok\bof3x-runs\lf1027` and `ri1027`):
-   - **The ledger-fields round** ([`ledger-fields-round.md`](ledger-fields-round.md), I33 early decision 1). The
-     tier is already the kind; what presets lack is a machine-readable switch, and the player's build refuses
-     `BOF3X_ORIGINAL` (`exe_host.cpp` `RefuseHostedSwitches`), so 118 entries are reversible on the developer's
-     machine only. LF0 the schema and `tools/ledger_switches.py`, LF1..LF4 by DIV range, an audit, the strict
-     rule; stage D the player's switch (`BOF3X_OFF`) and the presets. **The owner's four calls are
-     answered** (section 6: the four presets, `Toward:` a list with no cascade, costly entries left); LF0 can
-     start.
-   - **The relocatable-image round** ([`relocatable-image-round.md`](relocatable-image-round.md), I44 stage 3).
-     Stage A (census, address-independent state hash, loader design) needs no call; stage B rewrites the
-     17,259 global sites as `base + offset` with a `constexpr` base so `codegen_same.py` stays the gate; stage C
-     moves the image, proved by the state hash at two bases. **The owner's three calls, section 7.**
-   Launch: worktrees off the round branch's tip at the time, `ROUND_TIP` filled into the briefs; game runs by
-   the coordinator only, one at a time. The staging worktree `C:\Users\kerok\bof3x-runs\stg1027\wt` is removable.
+2. **The two rounds staged by PR #157**, one run, one not:
+   - **The ledger-fields round is done through stage C on `ledger-fields/round`** (off `main` `ac1682fe`, the
+     PR #161 merge; LF0, four groups, an audit and a fix agent, one worktree each under
+     `C:\Users\kerok\bof3x-runs\lf1027`, merged one at a time; unpushed, **PR at the owner's word**;
+     [`ledger-fields-round.md`](ledger-fields-round.md), the "as run" sections of 2, 3 and 4; the reports
+     `lf1027\<group>\REPORT.md`). Every entry carries `Switch:` / `Default:` / `Player:` / `Toward:` / `State:`,
+     `ledger_check.py` is strict, and the counts are in [`STATUS.md`](STATUS.md). **Next: stage D** (section 5),
+     to brief once the owner has read section 4's "as run": `BOF3X_OFF` (ini `off=`) read beside
+     `BOF3X_ORIGINAL` for the 67 `cheap` names, a generated registry from the fields, the four presets in the
+     launcher's Configure page, and the proof (the state hash of the exe host under `BOF3X_OFF=<name>` against
+     the hosted build under `BOF3X_ORIGINAL=<name>`, one batched run). Traps paid for: an empty `ini:opt=`
+     means the key set to empty, not unset (DIV-0110..0113); the `lang`-only entries' `Default:` is `on`, so no
+     preset may turn one off without saying it changes the language; the `Reversible?` prose of DIV-0141, 0145,
+     0147 and 0148 still says "not a switch" and is reworded when the switch exists. **For the owner:** the
+     `env:` form LF0 added to `Switch:` (accept or drop); D395 (`scale=2` cannot pin k = 2 on a scaled desktop;
+     a launcher fix, its own PR); the ten `Toward: none` entries that want a twin read (section 3's "as run").
+     The worktrees under `lf1027` are removable once the PR is in. Also on the branch: the regenerated
+     `analysis/data_census.tsv` the owner found loose on `main` (line numbers only).
+   - **The relocatable-image round, not launched** ([`relocatable-image-round.md`](relocatable-image-round.md),
+     I44 stage 3; briefs under `C:\Users\kerok\bof3x-runs\ri1027`). Stage A (census, address-independent state
+     hash, loader design) needs no call; stage B rewrites the 17,259 global sites as `base + offset` with a
+     `constexpr` base so `codegen_same.py` stays the gate; stage C moves the image, proved by the state hash at
+     two bases. **The owner's three calls, section 7.** Launch: worktrees off the round branch's tip at the
+     time, `ROUND_TIP` filled into the briefs; game runs by the coordinator only, one at a time. The staging
+     worktree `C:\Users\kerok\bof3x-runs\stg1027\wt` is removable.
 
 3. **The spell sweep** ([`spell-sweep.md`](spell-sweep.md); the tool PR #155, its fix wave PR #156, the enemy and
    item sides on the disc-only installs and the sweep by enemy kind on item 1's branch). What is left of it:
