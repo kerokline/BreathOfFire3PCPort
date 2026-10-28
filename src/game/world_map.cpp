@@ -3,10 +3,11 @@
 // for the map's five, against the PlayStation's world-map overlay - the JP
 // disc's WORLD00/AREA016.EMI section at 0x801F2C00, read with capstone MIPS
 // through the sibling's tools - and for the two helpers against the boot exe.
-// Faithful (the dial's opacity is a port change, kept: D42), but for the
-// legend's keys: the button round's DIV-0135, world_map_legend below
-// and world_map.h (docs/world-map-hud.md section 9). The start-up fuzz is
-// world_map_fuzz.cpp.
+// Faithful but for two divergences: the dial's translucency, DIV-0184 (D42:
+// the port's one-operand change undone now that DIV-0160 blends by texel;
+// g_dial_semi below), and the legend's keys, the button round's DIV-0135
+// (world_map_legend below and world_map.h, docs/world-map-hud.md section 9).
+// The start-up fuzz is world_map_fuzz.cpp; both flags are 0 while it runs.
 //
 //   WorldMap_FrameStep    0x404160..0x404220 (0xC1: the dispatcher and states 1..3)  PSX 0x801F4178's family
 //   WorldMap_DrawFrame    0x404390..0x404554 (0x1C5)                                PSX 0x801F3B00
@@ -230,17 +231,25 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawFrame(i
 // then at Gfx_PacketNext - read again after that commit - a SPRT
 // (Gpu_SetSprt), semi-transparent when the index's low byte is not 0 - THE
 // PORT'S CHANGE: the PSX passes 1 for every sprite, so its dial is
-// translucent and the port's opaque (docs/world-map.md section 7.2, D42);
-// kept - colour 0x80 x 3, x and y as floats of the arguments' low words,
+// translucent and the port's opaque (docs/world-map.md section 7.2, D42).
+// DIV-0184 passes the PSX's 1 once g_dial_semi is armed (after the fuzz;
+// BOF3X_ORIGINAL=DialTranslucent keeps the port's operand): under DIV-0160
+// only the glass's bit-15 texels blend, the rim and markings stay opaque -
+// colour 0x80 x 3, x and y as floats of the arguments' low words,
 // CLUT 0x7B80, and (w, h, u, v) from the table 0x5EF618 by index & 0xFF;
 // Gfx_CommitPrim(1, 0x1C). Neither the link nor the code byte beyond the
 // setters' is written.
+namespace world_map_dial {
+// DIV-0184: 1 after every module's self-test (PatchBytes "DialTranslucent").
+unsigned char g_dial_semi = 0;
+}  // namespace world_map_dial
+
 extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawSprite(int x, int y, unsigned index) {
     g.set_draw_mode(PacketNext(), 0, 0, 0x9C, 0);
     g.commit_prim(1, 0xC);
     unsigned char* const prim = PacketNext();
     g.set_sprt(prim);
-    g.set_semi_trans(prim, (index & 0xFF) != 0 ? 1u : 0u);
+    g.set_semi_trans(prim, (world_map_dial::g_dial_semi != 0 || (index & 0xFF) != 0) ? 1u : 0u);
     PutFloat(prim + 8, static_cast<float>(static_cast<short>(x)));
     PutFloat(prim + 0xC, static_cast<float>(static_cast<short>(y)));
     prim[4] = prim[5] = prim[6] = 0x80;
@@ -684,6 +693,14 @@ void Arm() {
     bof3::Log("WorldMapLegend the world map's legend: the port's key names painted over and its stand-ins drawn on "
               "the port's own page: %s",
               g_legend_on ? "on" : "OFF (BOF3X_ORIGINAL=WorldMapLegend)");
+    // DIV-0184: the dial's semi-transparency bit, the PlayStation's operand; armed
+    // here, after world_map_fuzz compared WorldMap_DrawSprite with the port's.
+    static const std::uint8_t dial_was = 0, dial_is = 1;
+    bof3::PatchBytes("DialTranslucent", static_cast<U>(reinterpret_cast<std::uintptr_t>(&world_map_dial::g_dial_semi)),
+                     &dial_was, &dial_is, 1);
+    bof3::Log("DIV-0184    the world map's dial drawn semi-transparent as on the PlayStation (its glass blends by "
+              "texel under DIV-0160): %s",
+              world_map_dial::g_dial_semi ? "on" : "OFF (BOF3X_ORIGINAL=DialTranslucent)");
 }
 
 }  // namespace world_map_legend
