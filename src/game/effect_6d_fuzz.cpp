@@ -179,7 +179,6 @@ static_assert(kCount == sizeof kAll / sizeof kAll[0], "one enum entry a clone, i
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
-[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -231,8 +230,8 @@ const std::uint8_t kKinds[] = {0x18};
 
 // The cells the group reads that the effect mode's standard regions lack.
 const sh::Region kRegions[] = {
-    {::bof3::Img(at::kTrackRing), at::kTrackEntries * at::kTrackStride + 4},   // the tracks' ring and the two heads
-    {::bof3::Img(at::kBattleWord), 4},                                         // the battle dword sub-kind 0x64 scales
+    {at::kTrackRing.v, at::kTrackEntries * at::kTrackStride + 4},   // the tracks' ring and the two heads
+    {at::kBattleWord.v, 4},                                         // the battle dword sub-kind 0x64 scales
     {Battle_Enemies_addr + 0x128, at::kEnemyStride * 2},          // the two enemy records +0xC may point at
     {Gfx_ClutStripSource_addr + 0x800, 2 * at::kClutWords},       // CLUT rows 4 and 5 as loaded
     {Gfx_ClutStrip_addr + 0x800, 2 * at::kClutWords},             // ... and live
@@ -291,15 +290,15 @@ void Seed(unsigned k) {
     case k5CPlace: {
         const U v = sh::Next() % at::kSub5CVariants;
         SetWord(s + 0x36, v);
-        cx = Mem(at::kSub5CCells + 2 * v)[0];
-        cz = Mem(at::kSub5CCells + 2 * v + 1)[0];
+        cx = Mem(::bof3::Img(at::kSub5CCells.v) + 2 * v)[0];
+        cz = Mem(::bof3::Img(at::kSub5CCells.v) + 2 * v + 1)[0];
         break;
     }
     case k5DPlace: {
         const U v = sh::Next() % at::kSub5DVariants;
         SetWord(s + 0x36, v);
-        cx = Mem(at::kSub5DCells + 2 * v)[0];
-        cz = Mem(at::kSub5DCells + 2 * v + 1)[0];
+        cx = Mem(::bof3::Img(at::kSub5DCells.v) + 2 * v)[0];
+        cz = Mem(::bof3::Img(at::kSub5DCells.v) + 2 * v + 1)[0];
         break;
     }
     case k64Place: SetWord(s + 0x36, sh::Next() % at::kSub64Variants); break;
@@ -321,12 +320,12 @@ void Seed(unsigned k) {
     // the tracks: the heads inside the ring, the marks' cells about the
     // followers' x cells
     for (unsigned r = 0; r < at::kFollowerCount; ++r) {
-        Mem(at::kTrackHeads)[r] = static_cast<unsigned char>(sh::Next() % at::kTrackEntries);
+        Mem(::bof3::Img(at::kTrackHeads.v))[r] = static_cast<unsigned char>(sh::Next() % at::kTrackEntries);
         unsigned char* const f = Mem(Sprite_Objects_addr + 0xd8 + at::kFollowerStride * r);
         const U fx = Long(f);
         const std::int32_t cell = static_cast<std::int32_t>(fx + 0x4000u) >> 16;
-        const unsigned h = Mem(at::kTrackHeads)[r];
-        unsigned char* const last = Mem(at::kTrackRing + at::kTrackStride * h + 3 * r);
+        const unsigned h = Mem(::bof3::Img(at::kTrackHeads.v))[r];
+        unsigned char* const last = Mem(::bof3::Img(at::kTrackRing.v) + at::kTrackStride * h + 3 * r);
         if (sh::Often()) last[0] = static_cast<unsigned char>(cell + PickOf(0, 1, 0xFFFFFFFFu, 2));
         if (sh::Half()) SetLong(f, static_cast<std::int32_t>((fx & 0x00FFFFFFu) | (sh::Half() ? 0 : 0xFF000000u)));
     }
@@ -336,8 +335,8 @@ void Seed(unsigned k) {
             PickOf(0, 1, 4, 0x3F, 0x40, 0x41, 0x7F, 0x80, 0x81, 0xBF, 0xC0, 0xC1, 0xFC, sh::Next()));
     // sub-kind 0x62: Field_Kind2's cells about the map (header below 0x20)
     if (k == k62Ripple) {
-        SetWord(Mem(at::kKind2ZCell), PickOf(0, 0x10, 0x14, 0x20, 0x30, 0x34, 0x40, sh::Next() % 0x40, sh::Next()));
-        SetWord(Mem(at::kKind2XCell), PickOf(0, 0x10, 0x14, 0x20, 0x30, 0x34, 0x40, sh::Next() % 0x40, sh::Next()));
+        SetWord(Mem(::bof3::Img(at::kKind2ZCell.v)), PickOf(0, 0x10, 0x14, 0x20, 0x30, 0x34, 0x40, sh::Next() % 0x40, sh::Next()));
+        SetWord(Mem(::bof3::Img(at::kKind2XCell.v)), PickOf(0, 0x10, 0x14, 0x20, 0x30, 0x34, 0x40, sh::Next() % 0x40, sh::Next()));
     }
     // sub-kind 0x64: battle mode 5 and the watched record's state pairs
     if (sh::Half()) Game_Mode = 5;
@@ -352,7 +351,7 @@ void Seed(unsigned k) {
         }
     }
     // sub-kind 0x65's wait
-    if (sh::Half()) Mem(at::kCounter48)[0] = 0xD;
+    if (sh::Half()) Mem(::bof3::Img(at::kCounter48.v))[0] = 0xD;
 }
 
 // The draws' arguments: the 5C panel's side inside its table (0, 1) and dy

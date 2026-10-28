@@ -192,7 +192,6 @@ static_assert(kCount == sizeof kAll / sizeof kAll[0], "one enum entry a clone, i
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
-[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -284,7 +283,7 @@ const sh::Region kRegions[] = {
     {Sprite_DrawList_addr, 4 * at::kDrawListRoom},
     {DrawLayers_addr + 0x894, 0x10},
     {0x905E80, 0x40 * at::kDrawItemStride},
-    {::bof3::Img(at::kShades59), at::kShades59Size},
+    {at::kShades59.v, at::kShades59Size},
 };
 const std::uint8_t kKinds[] = {0x18};
 
@@ -329,7 +328,7 @@ U CornerAxis(U cell) {
 void CornerPoint(U* a) {
     for (unsigned tries = 0; tries < 64; ++tries) {
         const U xi = sh::Next() & 0xFF, zi = sh::Next() & 0xFF;
-        const U block = Mem(at::kBlockMap)[((xi >> 4) & 0xF) | (zi & 0xF0)];
+        const U block = Mem(::bof3::Img(at::kBlockMap.v))[((xi >> 4) & 0xF) | (zi & 0xF0)];
         if ((block & 0xF0) == 0 || ((block & 0xF0) == 0x10 && (zi & 0xF) <= 4)) {
             a[0] = CornerAxis(xi);
             a[1] = CornerAxis(zi);
@@ -365,7 +364,7 @@ void Seed(unsigned k) {
     // the camera's cell about the glows' points (inside and past their reach),
     // the stars' clamps, sub-kind 0x53's record (within and past 20), or anywhere
     {
-        U x = Word(Mem(at::kKind2XHigh)), z = Word(Mem(at::kKind2ZHigh));
+        U x = Word(Mem(::bof3::Img(at::kKind2XHigh.v))), z = Word(Mem(::bof3::Img(at::kKind2ZHigh.v)));
         switch (sh::Next() % 7) {
         case 0: x = 0x1780 + sh::Next() % 0x301 - 0x180; z = 0x1380 + sh::Next() % 0x301 - 0x180; break;
         case 1: x = 0x1780 + sh::Next() % 0x401 - 0x200; z = 0xE00 + sh::Next() % 0x401 - 0x200; break;
@@ -375,8 +374,8 @@ void Seed(unsigned k) {
         case 5: z = 85 * PickOf(0, 1, 90, 91, 92) + sh::Next() % 85; break;   // the second star's y at 0 / 90
         default: break;
         }
-        SetWord(Mem(at::kKind2XHigh), x);
-        SetWord(Mem(at::kKind2ZHigh), z);
+        SetWord(Mem(::bof3::Img(at::kKind2XHigh.v)), x);
+        SetWord(Mem(::bof3::Img(at::kKind2ZHigh.v)), z);
     }
     // never the one distance the glow divides by zero at (ours aborts there)
     if (static_cast<std::int16_t>(Camera_Distance) == -0x1194) Camera_Distance = -0x1193;
@@ -395,7 +394,7 @@ void Seed(unsigned k) {
     case k59Ring:
     case k59Start: case k59Wait: case k59Rise: case k59Hold: case k59Close: {
         // the shade bytes at the cascade's steps: 0, 2, 0x60, 0x62 and others
-        unsigned char* const shades = Mem(at::kShades59);
+        unsigned char* const shades = Mem(::bof3::Img(at::kShades59.v));
         const unsigned first = sh::Next() % 10;
         for (unsigned i = 0; i < at::kShades59Size; ++i)
             shades[i] = static_cast<unsigned char>(i < first ? 0 : PickOf(0, 2, 0x60, 0x61, 0x62, 0x64, 0x80, sh::Next()));
@@ -420,7 +419,7 @@ void Seed(unsigned k) {
             // a multiple of 98304 (where the divide's rounding shows)
             g_pin_z = sh::Half() ? 85 * PickOf(90, 91, 92) + sh::Next() % 85
                                  : (0x1400u + (sh::Half() ? 1u : 0u - 1u) * PickOf(3723, 4703, 5075, 5661, 5687, 6494)) & 0xFFFF;
-            SetWord(Mem(at::kKind2ZHigh), g_pin_z);
+            SetWord(Mem(::bof3::Img(at::kKind2ZHigh.v)), g_pin_z);
         }
         break;
     case k44Commit:
@@ -491,9 +490,9 @@ void Disturb(U h) {
     case 4:
         // a camera cell word: any, or z where the second star's y is 89..91
         if ((v & 6) == 6)
-            SetWord(Mem(at::kKind2ZHigh), 85 * (90 + (v >> 3) % 3) + (v >> 5) % 85);
+            SetWord(Mem(::bof3::Img(at::kKind2ZHigh.v)), 85 * (90 + (v >> 3) % 3) + (v >> 5) % 85);
         else
-            SetWord(Mem((v & 1) ? at::kKind2XHigh : at::kKind2ZHigh), v >> 1);
+            SetWord(Mem((v & 1) ? ::bof3::Img(at::kKind2XHigh.v) : ::bof3::Img(at::kKind2ZHigh.v)), v >> 1);
         break;
     case 5: SetWord(Mem(Cond_Flags_addr + 0xcc), v % 0x3C0); break;
     case 6: Camera_Distance = static_cast<short>((v & 0xFFFF) == 0xEE6C ? 0xEE6D : v); break;
@@ -501,7 +500,7 @@ void Disturb(U h) {
     }
 }
 void Settle() {
-    if (g_pin_z != 0) SetWord(Mem(at::kKind2ZHigh), g_pin_z);
+    if (g_pin_z != 0) SetWord(Mem(::bof3::Img(at::kKind2ZHigh.v)), g_pin_z);
 }
 
 }  // namespace

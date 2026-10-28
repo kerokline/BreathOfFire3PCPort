@@ -40,14 +40,12 @@ namespace {
 
 namespace at = effect_1g::at;
 using move_script::At;
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetWord;
 using move_script::Word;
 using U = std::uint32_t;
 
 unsigned char& B(U a) { return *At(a); }
-[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 U L(U a) { return static_cast<U>(Long(At(a))); }
 std::uint16_t W(U a) { return Word(At(a)); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -72,13 +70,12 @@ U CodeAt(U table, U index, const char* who) {
 // again before each use). Unchecked, as the originals: an entry past its row's
 // 0xFF, or a row past the table, reads further into .data (docs/effect_1g.md
 // section 6).
-U Record(U k) { return ::bof3::Img(at::kTradeRecords + 8u * B(at::kTradeIndex + k + 10u * AreaEntry_PendingFlags)); }
+U Record(U k) { return ::bof3::Img(at::kTradeRecords.v) + 8u * B(::bof3::Img(at::kTradeIndex.v) + k + 10u * AreaEntry_PendingFlags); }
 
 // A prompt: MessagePools + the u16 at `word`.
 const unsigned char* Pool(U word) { return At(::bof3::Img(bof3::addr::MessagePools) + W(word)); }
-[[gnu::always_inline]] inline const unsigned char* Pool(::bof3::image::Va word) { return Pool(::bof3::Img(word)); }
-char* NumberText() { return reinterpret_cast<char*>(At(at::kNumberText)); }
-const char* NumberFormat() { return reinterpret_cast<const char*>(At(at::kNumberFormat)); }
+char* NumberText() { return reinterpret_cast<char*>(At(::bof3::Img(at::kNumberText.v))); }
+const char* NumberFormat() { return reinterpret_cast<const char*>(At(::bof3::Img(at::kNumberFormat.v))); }
 
 // E1B's frame of the trade screen, as every state draws it.
 void TradeBox() { SH_AT(void (__cdecl*)(int, int, int, int, int), at::kTradeBox)(0x14, 0x12, 0x118, 0x13, 0); }
@@ -104,11 +101,11 @@ namespace {
 void LeavePrompt() {
     TradeBox();
     if (g_trade_leave_layout) {
-        const YesNoTail t = YesNoLayout_Tail(Pool(at::kPoolWordAsk), 0x18, "Manillo's prompt");
+        const YesNoTail t = YesNoLayout_Tail(Pool(::bof3::Img(at::kPoolWordAsk.v)), 0x18, "Manillo's prompt");
         SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, t.line);
         SH_CALL(Menu_DrawHand)(t.stop[0] + Effect1g_TradeAnswer * (t.stop[1] - t.stop[0]), 0x16, 0);
     } else {
-        SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, Pool(at::kPoolWordAsk));
+        SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, Pool(::bof3::Img(at::kPoolWordAsk.v)));
         SH_CALL(Menu_DrawHand)(static_cast<int>(36u * Effect1g_TradeAnswer + 0xE0u), 0x16, 0);
     }
     SH_CALL(ItemTrade_DrawList)(0);
@@ -182,7 +179,7 @@ extern "C" void __cdecl ItemTrade_FullMessage(void) {
         SH_CALL(ItemTrade_DrawList)(0);
         return;
     }
-    SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, Pool(at::kPoolWordFull));
+    SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, Pool(::bof3::Img(at::kPoolWordFull.v)));
     SH_CALL(ItemTrade_DrawList)(1);
     SH_CALL(ItemTrade_DrawCount)();
 }
@@ -332,7 +329,7 @@ extern "C" void __cdecl ItemTrade_DrawBackground(void) {
 extern "C" void __cdecl ItemTrade_DrawList(unsigned flag) {
     SH_CALL(ItemTrade_DrawListFrame)(0x14, 0x38, flag);
     const auto on = static_cast<unsigned char>(flag);
-    SH_CALL(Text_DrawAt)(0x36, 0x3E, static_cast<unsigned char>(on * 7u), 0xFF, Pool(at::kPoolWordList));
+    SH_CALL(Text_DrawAt)(0x36, 0x3E, static_cast<unsigned char>(on * 7u), 0xFF, Pool(::bof3::Img(at::kPoolWordList.v)));
     for (U i = 0; i < Effect1g_TradeRowCount; ++i) {
         U record = Record(i);
         const unsigned char* const name = SH_CALL(Item_NamePtr)(B(record + 1), B(record));
@@ -406,7 +403,7 @@ extern "C" unsigned char __cdecl ItemTrade_Lacks(unsigned entry, unsigned quanti
 // original 0x594790 (PSX twin 0x800F66EC): the entries in the screen's row -
 // its bytes from the first up to the first 0xFF, ten at most.
 extern "C" unsigned char __cdecl ItemTrade_RowCount(void) {
-    const U row = ::bof3::Img(at::kTradeIndex + 10u * AreaEntry_PendingFlags);
+    const U row = ::bof3::Img(at::kTradeIndex.v) + 10u * AreaEntry_PendingFlags;
     unsigned char n = 0;
     while (B(row + n) != 0xFF) {
         ++n;
@@ -429,9 +426,9 @@ extern "C" unsigned char __cdecl ItemTrade_RowCount(void) {
 extern "C" void __cdecl ItemTrade_DrawNeeds(void) {
     const U k = static_cast<unsigned char>(Effect1g_TradePick) & 0xFu;
     SH_CALL(ItemTrade_DrawNeedsFrame)(0xA8, 0x40);
-    SH_CALL(Text_DrawAt)(0xDA, 0x47, 0, 0xFF, Pool(at::kPoolWordNeeds));
+    SH_CALL(Text_DrawAt)(0xDA, 0x47, 0, 0xFF, Pool(::bof3::Img(at::kPoolWordNeeds.v)));
     SH_CALL(ItemTrade_DrawNeedsFrame)(0xA8, 0x8C);
-    SH_CALL(Text_DrawAt)(0xDA, 0x93, 0, 0xFF, Pool(at::kPoolWordHeld));
+    SH_CALL(Text_DrawAt)(0xDA, 0x93, 0, 0xFF, Pool(::bof3::Img(at::kPoolWordHeld.v)));
     if (static_cast<unsigned char>(Effect1g_TradePick) & 0x80) return;
     for (U i = 0; i < 3; ++i) {
         const unsigned char ingredient = B(Record(k) + 2 + i);
@@ -491,12 +488,12 @@ extern "C" void __cdecl ItemTrade_DrawCount(void) {
     SH_CALL(Text_DrawFont8)(0x84, 0x6C, 0, reinterpret_cast<const unsigned char*>(NumberText()));
     record = Record(k);
     SH_CALL(Item_DrawIcon)(0x18, 0x6C, B(record), B(record + 1), 0);
-    SH_CALL(Text_DrawAt)(0x21, 0x7C, 0, 0xFF, Pool(at::kPoolWordBag));
+    SH_CALL(Text_DrawAt)(0x21, 0x7C, 0, 0xFF, Pool(::bof3::Img(at::kPoolWordBag.v)));
     record = Record(k);
     U held = SH_CALL(Inventory_Count)(B(record + 1), B(record), 0) & 0xFFFFu;
     SH_CALL(Crt_sprintf)(NumberText(), NumberFormat(), static_cast<int>(held));
     SH_CALL(Text_DrawFont8)(0x84, 0x80, 0, reinterpret_cast<const unsigned char*>(NumberText()));
-    SH_CALL(Text_DrawAt)(0x21, 0x88, 0, 0xFF, Pool(at::kPoolWordWorn));
+    SH_CALL(Text_DrawAt)(0x21, 0x88, 0, 0xFF, Pool(::bof3::Img(at::kPoolWordWorn.v)));
     record = Record(k);
     held = SH_CALL(Inventory_Count)(B(record + 1), B(record), 1) & 0xFFFFu;
     SH_CALL(Crt_sprintf)(NumberText(), NumberFormat(), static_cast<int>(held));

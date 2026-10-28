@@ -53,7 +53,6 @@ Callees g = kOriginals;
 namespace {
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va address) { return At(::bof3::Img(address)); }
 U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U Word(const unsigned char* p) {
     std::uint16_t v;
@@ -76,7 +75,6 @@ float Float(const unsigned char* p) {
     return v;
 }
 float FloatAt(U address) { return Float(At(address)); }
-[[gnu::always_inline]] inline float FloatAt(::bof3::image::Va address) { return FloatAt(::bof3::Img(address)); }
 void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 
@@ -204,8 +202,8 @@ void PutPosition(unsigned char* out, const unsigned char* xyz) {
 }
 // tu, tv = D3d_TexCoords[u], [v], through fld / fstp.
 void PutTexel(unsigned char* out, const unsigned char* uv) {
-    PutFloat(out + 0x18, X87Pass(FloatAt(kTexCoords + uv[0] * 4u)));
-    PutFloat(out + 0x1C, X87Pass(FloatAt(kTexCoords + uv[1] * 4u)));
+    PutFloat(out + 0x18, X87Pass(FloatAt(::bof3::Img(kTexCoords.v) + uv[0] * 4u)));
+    PutFloat(out + 0x1C, X87Pass(FloatAt(::bof3::Img(kTexCoords.v) + uv[1] * 4u)));
 }
 
 }  // namespace
@@ -490,13 +488,13 @@ void D3d_AfterDraw() {
         D3dRest_CaptureW = 0x140;
         D3dRest_CaptureH = 0xF0;
         if (!g.create_plain(0x140, 0x140, reinterpret_cast<void**>(At(::bof3::Img(D3d_CaptureSurface_addr))), 2)) return;
-        g.fit_size(Long(At(::bof3::Img(D3dRest_CaptureW_addr))) & 0xFFFF, static_cast<std::uint32_t>(D3dRest_CaptureH), reinterpret_cast<unsigned*>(At(kCaptureTexW)),
-                   reinterpret_cast<unsigned*>(At(kCaptureTexH)));
-        if (!g.create_texture(Long(At(kCaptureTexW)) & 0xFFFF, Word(At(kCaptureTexH)),
+        g.fit_size(Long(At(::bof3::Img(D3dRest_CaptureW_addr))) & 0xFFFF, static_cast<std::uint32_t>(D3dRest_CaptureH), reinterpret_cast<unsigned*>(At(::bof3::Img(kCaptureTexW.v))),
+                   reinterpret_cast<unsigned*>(At(::bof3::Img(kCaptureTexH.v))));
+        if (!g.create_texture(Long(At(::bof3::Img(kCaptureTexW.v))) & 0xFFFF, Word(At(::bof3::Img(kCaptureTexH.v))),
                               reinterpret_cast<void**>(At(::bof3::Img(D3d_CaptureTexSurface_addr))),
                               reinterpret_cast<void**>(At(::bof3::Img(D3d_CaptureTexture_addr))), 2))
             return;
-        const U width = Word(At(kCaptureTexW));
+        const U width = Word(At(::bof3::Img(kCaptureTexW.v)));
         if (width < 0x140) {
             const U height = D3dRest_CaptureH;
             D3dRest_CaptureW = width;

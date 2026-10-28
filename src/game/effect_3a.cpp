@@ -56,7 +56,6 @@ namespace at = effect_3a::at;
 using U = std::uint32_t;
 using LD = long double;
 using move_script::At;
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -68,7 +67,6 @@ void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 std::int32_t SW(U a) { return SW(At(a)); }
 unsigned char& B(U a) { return At(a)[0]; }
-[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
@@ -169,7 +167,7 @@ unsigned char* NewRecord(const char* who, unsigned index) {
 unsigned char* Ray(unsigned i) { return EffectKind30_Shards + i * at::kRayStride; }
 unsigned char* Spark(unsigned i) { return EffectKind30_Shards + i * at::kSparkStride; }
 unsigned char* Mote(unsigned i) { return EffectKind30_Shards + i * at::kMoteStride; }
-unsigned char* Particle(U i) { return At(at::kParticles + i * at::kParticleStride); }
+unsigned char* Particle(U i) { return At(::bof3::Img(at::kParticles.v) + i * at::kParticleStride); }
 
 // The shade a wall gets from kind 0x68's frame word (`lea eax, [eax * 4 -
 // 0x168]` on the whole register, compared as a word): the low byte below 0x100
@@ -457,7 +455,7 @@ extern "C" void __cdecl EffectKind62_Rays(void) {
     }
     SH_CALL(EffectKind62_StepRays)();
     if (Field_Request == 2) return;
-    if (Word(At(at::kMessageWord)) != 0x12) return;
+    if (Word(At(::bof3::Img(at::kMessageWord.v))) != 0x12) return;
     if (MoveScript_PartyRecords[0x65] != 0xC) return;
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0xA000);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0xB000);
@@ -799,7 +797,7 @@ extern "C" void __cdecl EffectKind64_FlyWait(void) {
     SH_CALL(EffectKind64_DrawShards)();
     unsigned char* const s = S();
     SH_CALL(EffectKind64_DrawTrail)(Point(s + 0x18), Point(s + 0x34), 0x40);
-    if (B(at::kCounter) != 0x18) return;
+    if (B(::bof3::Img(at::kCounter.v)) != 0x18) return;
     S()[3] = 0x80;
     S()[9] = 8;
     NextState();

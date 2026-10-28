@@ -32,7 +32,6 @@ namespace {
 constexpr ::bof3::image::Va kKeyboardFormat{0x5C4948};   // DInput_KeyboardFormat, Capcom's c_dfDIKeyboard
 
 unsigned char* At(std::uint32_t va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va va) { return At(::bof3::Img(va)); }
 
 // `n` bytes of BOF3.exe at `va`: the mapped image hosted, the file in the exe host.
 void Theirs(std::uint32_t va, void* to, std::uint32_t n) {
@@ -100,7 +99,7 @@ void Map() {
     if (!bof3::IsExeHost()) bof3::Fatal("rdata::Map in the hosted build: Capcom's .rdata is the loader's there");
     const auto* ours = reinterpret_cast<const unsigned char*>(kCopies.data());
     for (const Entry& e : kEntries) std::memcpy(At(e.pc), ours + (e.pc - kLo), e.size);
-    std::memcpy(At(kKeyboardFormat), &c_dfDIKeyboard, sizeof c_dfDIKeyboard);
+    std::memcpy(At(::bof3::Img(kKeyboardFormat.v)), &c_dfDIKeyboard, sizeof c_dfDIKeyboard);
     bof3::Log("rdata: .rdata the engine's - %u constants at their addresses and c_dfDIKeyboard's header at 0x%06X (its "
               "objects the SDK's, at %p); the rest zero", (unsigned)(sizeof kEntries / sizeof kEntries[0]),
               kKeyboardFormat.v, static_cast<const void*>(c_dfDIKeyboard.rgodf));

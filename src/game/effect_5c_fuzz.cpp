@@ -198,7 +198,6 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
-[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 unsigned char* Rec(unsigned r) { return sh::EffectRecord(r); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
@@ -359,7 +358,7 @@ void Seed(unsigned k) {
     // the shared cells at their compares
     Cond_ByteFE = static_cast<unsigned char>(PickOf(0, 0, 1, 0x23, sh::Next()));
     Field_Request = static_cast<unsigned char>(PickOf(0, 0, 2, 1, sh::Next()));
-    Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(0xC, 0xF, 0xD, 0xB, 0, sh::Next()));
+    Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>(PickOf(0xC, 0xF, 0xD, 0xB, 0, sh::Next()));
     if (sh::Half()) Frame_Counter = 5 * (sh::Next() & 0x3FFFFFF) + PickOf(0, 0, 1, 4);
     if (sh::Half()) {
         Game_Mode = 5;
@@ -380,7 +379,7 @@ void Seed(unsigned k) {
     Draw_PassFlags = static_cast<unsigned char>(sh::Half() ? (Draw_PassFlags | 4) : (Draw_PassFlags & ~4));
     // sub-kind 0x15's corner rows inside the area block's 8 KiB (a row of at
     // most 0x1F cells: rows 17..0x33 keep row - 17 .. row + 13 inside it)
-    SetWord(Mem(at::kKind2ZCell), 17 + sh::Next() % 35);
+    SetWord(Mem(::bof3::Img(at::kKind2ZCell.v)), 17 + sh::Next() % 35);
     // the buffer byte 0 or 1 (it indexes the two last pointers); the pointers
     // into the scratch buffer (Gpu_LinkPrim's stand-in writes through them)
     Gfx_BufferIndex = static_cast<unsigned char>(sh::Next() % 2);
@@ -443,7 +442,7 @@ void Disturb(U h) {
     case 3: SetWord(s + 0x32, (v & 1) ? 0x80u : v >> 1); break;
     case 4: SetLong(s + 0x3C, static_cast<std::int32_t>((v & 1) ? 0xFFFFFF40u : v >> 1)); break;
     case 5: Cond_ByteFE = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;
-    case 6: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? ((v & 2) ? 0xCu : 0xFu) : v >> 2); break;
+    case 6: Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>((v & 1) ? ((v & 2) ? 0xCu : 0xFu) : v >> 2); break;
     case 7: Field_Request = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;
     default: break;
     }

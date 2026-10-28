@@ -144,7 +144,6 @@ constexpr sh::Answer kF = sh::Answer::kFlag;
 constexpr U kAll = 0xFFFFFFFFu;
 
 unsigned char* Mem(U a) { return sh::Mem(a); }
-[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 unsigned char* Sc() { return Sprite_Current; }
 
 template <typename... T> U PickOf(T... v) {
@@ -256,7 +255,7 @@ const sh::DataTable kTables[] = {
 const sh::Region kRegions[] = {
     {0x939A00, 0x30},
     {0x6BC700, 0x20},
-    {::bof3::Img(at::kPools), 0xE8},
+    {at::kPools.v, 0xE8},
     {0x66C7E8, 4},
     {0x903584, 0x10},
 };
@@ -307,7 +306,7 @@ void Seed(unsigned k) {
     unsigned char* const p = rv::Bytes(&Sprite_Objects[pick]);
     p[6] = static_cast<unsigned char>(PickOf(0x16, 0x16, sh::Next() % 0x16, sh::Next() % 0x16, sh::Next() % 0x74));
     SetWord(p + 0x9C, PickOf(s[9], s[9] + 1u, s[9] - 1u, sh::Next() & 0xFF, sh::Next()));
-    Mem(at::kBestCounts + p[6])[0] = static_cast<unsigned char>(PickOf(p[0x9C], p[0x9C] - 1u, p[0x9C] + 1u, 0, sh::Next()));
+    Mem(::bof3::Img(at::kBestCounts.v) + p[6])[0] = static_cast<unsigned char>(PickOf(p[0x9C], p[0x9C] - 1u, p[0x9C] + 1u, 0, sh::Next()));
     // the record pointers into the scratch buffers
     sh::SetPointer(Effect1a_PanelScript_addr, sh::Scratch(0) + sh::Next() % 0x30);
     sh::SetPointer(Effect1a_PanelSet_addr, sh::Scratch(1) + sh::Next() % 0x28);

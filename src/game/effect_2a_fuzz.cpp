@@ -457,7 +457,7 @@ void Seed(unsigned k) {
     SeedPool();
     SeedRadius();
     if (sh::Next() % 3 == 0)
-        sh::Mem(::bof3::Img(at::kCounter0))[0] = static_cast<unsigned char>(PickOf(3, 0x29, 0x28, 2, 4, 0x2A));
+        sh::Mem(::bof3::Img(at::kCounter0.v))[0] = static_cast<unsigned char>(PickOf(3, 0x29, 0x28, 2, 4, 0x2A));
     // the colour index +6 inside its three entries mostly (past them the
     // original reads the bytes after the table: image data)
     if (sh::Often()) s[6] = static_cast<unsigned char>(sh::Next() % 3);

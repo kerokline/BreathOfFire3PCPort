@@ -58,7 +58,6 @@ namespace {
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-[[gnu::always_inline]] inline const char* Str(::bof3::image::Va address) { return Str(::bof3::Img(address)); }
 unsigned long* Longs(U address) { return reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(address)); }
 U Addr(const volatile void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U Long(U address) {
@@ -66,7 +65,6 @@ U Long(U address) {
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
-[[gnu::always_inline]] inline U Long(::bof3::image::Va address) { return Long(::bof3::Img(address)); }
 
 }  // namespace
 }  // namespace shell
@@ -96,7 +94,7 @@ using namespace shell;
 unsigned char g_cfg_own_table = 0;
 alignas(4) unsigned char g_cfg_table[0x80 + 8];
 extern "C" void __cdecl Shell_CfgLoadFrame(unsigned char* frame) {
-    void* const file = g.open(Str(kCfgName), Str(kModeRt));
+    void* const file = g.open(Str(::bof3::Img(kCfgName.v)), Str(::bof3::Img(kModeRt.v)));
     if (file == nullptr) {
         Cfg_Fullscreen = 1;
         Cfg_RenderMode = 1;
@@ -113,9 +111,9 @@ extern "C" void __cdecl Shell_CfgLoadFrame(unsigned char* frame) {
         else if (n == 1)
             Cfg_RenderMode = g.to_int(line);
         else if (!own)
-            g.scan_pair(line, Str(kPairFormat), frame + kCfgPairs + 2 * n, frame + kCfgPairs + 1 + 2 * n);
+            g.scan_pair(line, Str(::bof3::Img(kPairFormat.v)), frame + kCfgPairs + 2 * n, frame + kCfgPairs + 1 + 2 * n);
         else if (n - 2 < 0x40)   // DIV-0078: entry (n - 2) / 2 of 32; later lines ignored
-            g.scan_pair(line, Str(kPairFormat), g_cfg_table + 2 * (n - 2), g_cfg_table + 1 + 2 * (n - 2));
+            g.scan_pair(line, Str(::bof3::Img(kPairFormat.v)), g_cfg_table + 2 * (n - 2), g_cfg_table + 1 + 2 * (n - 2));
         ++n;
     }
     g.close(file);
@@ -206,7 +204,7 @@ extern "C" void __cdecl Input_Latch(void) {
 // left naming the drive. None: 0, the root left at L. The path is built in a
 // 0x50-byte buffer as the original's; WinMain's two names fit it.
 extern "C" int __cdecl Disc_Probe(const char* local_file, const char* disc_file) {
-    void* const local = g.open(local_file, Str(kModeRb));
+    void* const local = g.open(local_file, Str(::bof3::Img(kModeRb.v)));
     if (local != nullptr) {
         g.close(local);
         File_CdRootBuf[0] = 0;
@@ -218,8 +216,8 @@ extern "C" int __cdecl Disc_Probe(const char* local_file, const char* disc_file)
     for (U i = 0; i < 10; ++i) {
         File_CdRootBuf[0] = static_cast<unsigned char>('C' + i);
         if (drive_type(Str(::bof3::Img(File_CdRootBuf_addr))) != kDriveCdrom) continue;
-        g.format(path, Str(kRootFormat), Str(::bof3::Img(File_CdRootBuf_addr)), disc_file);
-        void* const disc = g.open(path, Str(kModeRb));
+        g.format(path, Str(::bof3::Img(kRootFormat.v)), Str(::bof3::Img(File_CdRootBuf_addr)), disc_file);
+        void* const disc = g.open(path, Str(::bof3::Img(kModeRb.v)));
         if (disc != nullptr) {
             g.close(disc);
             return 1;
@@ -282,7 +280,7 @@ extern "C" void __cdecl Gfx_InitBufferBlock(unsigned char* block) {
 // read afresh each pass, after the call before.
 extern "C" void __cdecl Gfx_LinkOTags(void) {
     for (U i = 0; i < kOtSlots; ++i) {
-        const U link = Long(kGfxOtPointers + 4 * i);
+        const U link = Long(::bof3::Img(kGfxOtPointers.v) + 4 * i);
         const U buffer = Gfx_BufferIndex;
         const U block = Addr(Gfx_CurrentEnv);
         g.add_prim(Longs(block + kBlockOt + 4 * i), Longs(::bof3::Img(Gfx_OtHeads_addr) + (i + buffer * 8) * 4), Longs(link));

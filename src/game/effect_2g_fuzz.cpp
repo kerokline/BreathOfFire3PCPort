@@ -167,7 +167,6 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
-[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -226,7 +225,7 @@ U FxOnCurrent(const U*, U answer) {
 // format is kind 0x55's clock (two numbers; the other caller passes three
 // words).
 U FxSprintf(const U* a, U) {
-    if (a[1] == ::bof3::Img(at::kKind55TimeFormat)) sh::Note(a[3]);
+    if (a[1] == ::bof3::Img(at::kKind55TimeFormat.v)) sh::Note(a[3]);
     unsigned char* const dst = P(a[0]);
     if (!sh::InRegions(dst, 8)) return 0;
     const unsigned n = sh::Noise() % 8;
@@ -304,9 +303,9 @@ void Seed(unsigned k) {
     unsigned char* const s = Sprite_Current;
     // the shared cells: the end bit (a third of the time), the cue, the hit,
     // the timer word's mark, the wait
-    Mem(at::kScore)[0] = static_cast<unsigned char>(sh::Next() % 3 == 0 ? (sh::Next() | 0x80) : PickOf(0xF, 0x10, 0x11, 0, 0x7F, sh::Next() & 0x7F));
-    Mem(at::kCue)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 5, 0x81, sh::Next()));
-    Mem(at::kHit)[0] = static_cast<unsigned char>(PickOf(1, 1, 0, 2, sh::Next()));
+    Mem(::bof3::Img(at::kScore.v))[0] = static_cast<unsigned char>(sh::Next() % 3 == 0 ? (sh::Next() | 0x80) : PickOf(0xF, 0x10, 0x11, 0, 0x7F, sh::Next() & 0x7F));
+    Mem(::bof3::Img(at::kCue.v))[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 5, 0x81, sh::Next()));
+    Mem(::bof3::Img(at::kHit.v))[0] = static_cast<unsigned char>(PickOf(1, 1, 0, 2, sh::Next()));
     if (sh::Half()) SetWord(Mem(MoveScript_PartyRecords_addr + 0x66), PickOf(0xFF, 0xFF, 0x1FF, 0xFE));
     Mem(EffectKind51_Angles_addr + 0x80)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, sh::Next()));
     // ObjTrio record 1's animation word and flag
@@ -322,7 +321,7 @@ void Seed(unsigned k) {
     case k66Close:
     case k66Message:
         s[6] = static_cast<unsigned char>(sh::Half() ? 0 : PickOf(1, 0x80, sh::Next()));
-        if (sh::Next() % 3 == 0) SetWord(Mem(at::kMessageWord), 0xFFFF);
+        if (sh::Next() % 3 == 0) SetWord(Mem(::bof3::Img(at::kMessageWord.v)), 0xFFFF);
         Mem(bof3::addr::MsgBoxState)[0] = static_cast<unsigned char>(PickOf(2, 7, 2, 7, 0, 6, sh::Next()));
         break;
     case k20Lower:
@@ -353,10 +352,10 @@ void Seed(unsigned k) {
         if (sh::Half()) {
             SetWord(Mem(ObjTrio_addr + 0x1a4), k == k15Pose4 ? 4 : 8);
             Mem(ObjTrio_addr + 0x196)[0] = 1;
-            Mem(at::kHit)[0] = 0;
+            Mem(::bof3::Img(at::kHit.v))[0] = 0;
         }
         break;
-    case k15Countdown: Mem(at::kHit)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, sh::Next())); break;
+    case k15Countdown: Mem(::bof3::Img(at::kHit.v))[0] = static_cast<unsigned char>(PickOf(0, 1, 2, sh::Next())); break;
     case k57Show: Game_AreaNumber = static_cast<unsigned short>(PickOf(2, 2, 3, 0x102, sh::Next())); break;
     case k5BFade: s[0x5D] = static_cast<unsigned char>(PickOf(2, 1, 0x22, 0x21, 0x20, 0x42, 0, sh::Next())); break;
     default: break;

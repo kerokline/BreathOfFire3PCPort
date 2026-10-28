@@ -198,7 +198,6 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
-[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -318,7 +317,7 @@ const std::uint8_t kKinds[] = {0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x9D, 0x9F, 0
 // 0x87's point rows in the image's .data (rows 8..13 written), Draw_OtSlot.
 const sh::Region kRegions[] = {
     {Effect4b_SoundIndex_addr, at::kKind8CCellsSize},
-    {::bof3::Img(at::kKind87Points), at::kKind87PointCount * at::kKind87PointStride},
+    {at::kKind87Points.v, at::kKind87PointCount * at::kKind87PointStride},
     {0x92BF19, 1},   // Draw_OtSlot
 };
 
@@ -403,7 +402,7 @@ void Seed(unsigned k) {
             SetWord(rv::Bytes(&Sprite_Objects[i])+ 0x2C, sh::Next());
         break;
     case k8BWait:
-        Mem(at::kCounter2)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, sh::Next()));
+        Mem(::bof3::Img(at::kCounter2.v))[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, sh::Next()));
         break;
     case k8BPose:
         if (sh::Often()) SetWord(rv::Bytes(ObjTrio) + 0x58, 0xC);
@@ -486,7 +485,7 @@ void Disturb(U h) {
         if (sh::InRegions(s, 0x80)) s[0xB] = static_cast<unsigned char>((v >> 1) % at::kSpriteCount);
         break;
     case 3: Field_MemberCount = static_cast<unsigned char>(v % 4); break;
-    case 4: Mem(at::kCounter2)[0] = static_cast<unsigned char>(v >> 1); break;
+    case 4: Mem(::bof3::Img(at::kCounter2.v))[0] = static_cast<unsigned char>(v >> 1); break;
     case 5: Mem((v & 1) ? Effect4b_TimerA_addr : Effect4b_TimerB_addr)[0] = static_cast<unsigned char>((v >> 1) % 3); break;
     case 6: {
         static const unsigned short kPads[] = {0x40, 0x20, 0x1000, 0x4000, 0x2000, 0x8000, 0x3000, 0x6000, 0x9000, 0xC000, 0};

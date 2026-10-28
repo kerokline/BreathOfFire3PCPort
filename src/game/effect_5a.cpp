@@ -54,7 +54,6 @@ namespace {
 namespace at = effect_5a::at;
 using U = std::uint32_t;
 using move_script::At;
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -64,9 +63,7 @@ unsigned char* S() { return Sprite_Current; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char T(U a) { return *At(a); }
-[[gnu::always_inline]] inline unsigned char T(::bof3::image::Va a) { return T(::bof3::Img(a)); }
 std::int32_t TS(U a) { return static_cast<signed char>(*At(a)); }
-[[gnu::always_inline]] inline std::int32_t TS(::bof3::image::Va a) { return TS(::bof3::Img(a)); }
 U TL(U a) { return static_cast<U>(Long(At(a))); }
 std::int32_t Sar(U v, unsigned n) { return static_cast<std::int32_t>(v) >> n; }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -95,8 +92,6 @@ std::int32_t Index(const char* who, std::int32_t i, unsigned n, U table) {
                     who, (int)i, (unsigned)table, n);
     return i;
 }
-// The table only names itself in the message: its VA, not a place.
-[[gnu::always_inline]] inline std::int32_t Index(const char* who, std::int32_t i, unsigned n, ::bof3::image::Va table) { return Index(who, i, n, table.v); }
 
 // Prim_VertexScratch's four SVECTORs (x, y, z words at +0, +2, +4; the pads
 // +6 left as they are).
@@ -163,12 +158,12 @@ bool On(const unsigned char* s) {
     const std::int32_t f = Long(At(::bof3::Img(Cond_Flags_addr) + 0xa0));
     return ((((v >> 4) & (f >> 4)) ^ v) & 0xF) == 0;
 }
-unsigned RowA(const char* who, const unsigned char* s) { return T(at::kRowsA + Index(who, SW(s + 0x36), at::kRows, at::kRowsA)); }
-unsigned RowB(const char* who, const unsigned char* s) { return T(at::kRowsB + Index(who, SW(s + 0x36), at::kRows, at::kRowsB)); }
+unsigned RowA(const char* who, const unsigned char* s) { return T(::bof3::Img(at::kRowsA.v) + Index(who, SW(s + 0x36), at::kRows, at::kRowsA.v)); }
+unsigned RowB(const char* who, const unsigned char* s) { return T(::bof3::Img(at::kRowsB.v) + Index(who, SW(s + 0x36), at::kRows, at::kRowsB.v)); }
 void Copy(U a, U b, U c, U d) { SH_CALL(Gfx_ClutStripCopy16)(a, b, c, d); }
 
 // --- sub-kind 7 / 8's door ------------------------------------------------------------
-unsigned Door(const char* who, const unsigned char* s) { return static_cast<unsigned>(Index(who, s[0xB], at::kDoors7, at::kRows7)); }
+unsigned Door(const char* who, const unsigned char* s) { return static_cast<unsigned>(Index(who, s[0xB], at::kDoors7, at::kRows7.v)); }
 bool DoorFlag(unsigned k) {
     return SH_CALL(Flags_Test)(At(::bof3::Img(0x903F90) + 8u * T(::bof3::Img(at::kFlagRows7.v) + k)), T(::bof3::Img(at::kFlagBits7.v) + k)) != 0;
 }
@@ -575,9 +570,9 @@ extern "C" void __cdecl EffectKind18_06_Run(void) {
 extern "C" void __cdecl EffectKind18_06_Start(void) {
     static const char kWho[] = "EffectKind18_06_Start";
     unsigned char* s = S();
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_frac, T(at::kFlags6 + Index(kWho, static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->x_whole)), at::kSets6, at::kFlags6)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_frac, T(::bof3::Img(at::kFlags6.v) + Index(kWho, static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->x_whole)), at::kSets6, at::kFlags6.v)));
     s = S();
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, Word(At(at::kHeights6 + 2 * Index(kWho, static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->z_whole)), at::kHeightCount6, at::kHeights6))));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, Word(At(::bof3::Img(at::kHeights6.v) + 2 * Index(kWho, static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->z_whole)), at::kHeightCount6, at::kHeights6.v))));
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
     SH_CALL(EffectKind18_06_SetMap)();
     SH_CALL(EffectKind18_06_Draw)();
@@ -600,7 +595,7 @@ extern "C" void __cdecl EffectKind18_06_Wait(void) {
 extern "C" void __cdecl EffectKind18_06_Turn(void) {
     static const char kWho[] = "EffectKind18_06_Turn";
     unsigned char* s = S();
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, rv::As<records::EffectObject>(s)->height_whole + static_cast<U>(TS(at::kSteps6 + Index(kWho, static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->z_whole)), at::kHeightCount6, at::kSteps6))));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, rv::As<records::EffectObject>(s)->height_whole + static_cast<U>(TS(::bof3::Img(at::kSteps6.v) + Index(kWho, static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->z_whole)), at::kHeightCount6, at::kSteps6.v))));
     S()[9] = static_cast<unsigned char>(S()[9] + 1);
     s = S();
     if (s[9] >= 0x10) {
@@ -618,11 +613,11 @@ extern "C" void __cdecl EffectKind18_06_Turn(void) {
 extern "C" void __cdecl EffectKind18_06_SetMap(void) {
     static const char kWho[] = "EffectKind18_06_SetMap";
     const auto rect = [](const unsigned char* s) {
-        return at::kRects + 4u * static_cast<U>(Index(kWho, SW(s + 0x36), at::kSets6, at::kRects));
+        return ::bof3::Img(at::kRects.v) + 4u * static_cast<U>(Index(kWho, SW(s + 0x36), at::kSets6, at::kRects.v));
     };
     unsigned char* s = S();
     const unsigned char value = static_cast<std::uint16_t>(rv::As<records::EffectObject>(s)->height_whole) != at::kLowered ? 0x21 : 0;
-    ::bof3::image::Va r = rect(s);
+    U r = rect(s);
     for (U x = T(r); x < T(r + 2); ++x) {
         for (U z = T(r + 1); z < T(r + 3);) {
             const U w = AreaMap_Header[0];
@@ -658,7 +653,7 @@ extern "C" void __cdecl EffectKind18_06_SetMap(void) {
 extern "C" void __cdecl EffectKind18_06_Draw(void) {
     static const char kWho[] = "EffectKind18_06_Draw";
     const auto run = [](const unsigned char* s) {
-        return at::kRuns6 + 2u * static_cast<U>(Index(kWho, SW(s + 0x36), at::kSets6, at::kRuns6));
+        return ::bof3::Img(at::kRuns6.v) + 2u * static_cast<U>(Index(kWho, SW(s + 0x36), at::kSets6, at::kRuns6.v));
     };
     for (U i = T(run(S())); i < T(run(S()) + 1); ++i) {
         const U part = ::bof3::Img(at::kParts6.v) + 8 * i;
@@ -832,7 +827,7 @@ extern "C" void __cdecl EffectKind18_08_WaitPush(void) {
 // original 0x4FE8A0 (state 4): the panels tilted by 0x65DDF0[+9] << 4; +9 up;
 // past 0x28: the sound 0x205, +9 0, +0x3E -0x88, +2 up one.
 extern "C" void __cdecl EffectKind18_08_Topple(void) {
-    const unsigned n = static_cast<unsigned>(Index("EffectKind18_08_Topple", S()[9], at::kTopple8Count, at::kTopple8));
+    const unsigned n = static_cast<unsigned>(Index("EffectKind18_08_Topple", S()[9], at::kTopple8Count, at::kTopple8.v));
     SH_CALL(EffectKind18_08_DrawTilted)(Div256(T(::bof3::Img(at::kTopple8.v) + n)));
     S()[9] = static_cast<unsigned char>(S()[9] + 1);
     if (S()[9] <= 0x28) return;
@@ -846,7 +841,7 @@ extern "C" void __cdecl EffectKind18_08_Topple(void) {
 // tiles); seven puffs spread by +9 about the record's point, each a POLY_FT4
 // of +9 either side of its projected point; +9 up; past 0xD: +2 up one.
 extern "C" void __cdecl EffectKind18_08_Crash(void) {
-    const unsigned n0 = static_cast<unsigned>(Index("EffectKind18_08_Crash", S()[9], at::kCrash8Count, at::kCrash8));
+    const unsigned n0 = static_cast<unsigned>(Index("EffectKind18_08_Crash", S()[9], at::kCrash8Count, at::kCrash8.v));
     const unsigned tilt = T(::bof3::Img(at::kCrash8.v) + n0);
     if (tilt != 0)
         SH_CALL(EffectKind18_08_DrawTilted)(Div256(tilt));
@@ -938,7 +933,7 @@ extern "C" void __cdecl EffectKind18_09_Pattern(void) {
         const U again = SH_AT(Fn, at::kPattern)();
         S()[2] = static_cast<unsigned char>(again);
         unsigned char* const s = S();
-        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, Word(At(at::kHeights9 + 2 * static_cast<U>(Index(kWho, s[2], at::kPatterns, at::kHeights9)))));
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, Word(At(::bof3::Img(at::kHeights9.v) + 2 * static_cast<U>(Index(kWho, s[2], at::kPatterns, at::kHeights9.v)))));
         const unsigned char value = static_cast<std::uint16_t>(rv::As<records::EffectObject>(S())->height_whole) != 0xFF80 ? 0x10 : 0;
         for (U z = 3; z < 7; ++z)
             for (U x = 0x42; x < 0x45; ++x) {
@@ -947,7 +942,7 @@ extern "C" void __cdecl EffectKind18_09_Pattern(void) {
                 bytes[w * z + x] = value;
             }
     }
-    Cond_ByteFE = T(at::kFe9 + static_cast<U>(Index(kWho, S()[2], at::kPatterns, at::kFe9)));
+    Cond_ByteFE = T(::bof3::Img(at::kFe9.v) + static_cast<U>(Index(kWho, S()[2], at::kPatterns, at::kFe9.v)));
 }
 
 // ===========================================================================

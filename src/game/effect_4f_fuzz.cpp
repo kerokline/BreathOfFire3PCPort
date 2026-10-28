@@ -159,7 +159,6 @@ static_assert(kCount == sizeof kAll / sizeof kAll[0], "one enum entry a clone, i
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
-[[gnu::always_inline]] inline unsigned char* P(::bof3::image::Va a) { return P(::bof3::Img(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -261,8 +260,8 @@ const sh::Region kRegions[] = {
 
 unsigned char* Rec(unsigned r) { return sh::EffectRecord(r); }
 unsigned char* DropAt(U i) { return P(EffectKind30_Shards_addr + i * at::kDropStride); }
-unsigned char* SourceAt(U i) { return P(at::kSources + i * at::kSourceStride); }
-unsigned char* BarAt(U i) { return P(at::kBars + i * at::kBarStride); }
+unsigned char* SourceAt(U i) { return P(::bof3::Img(at::kSources.v) + i * at::kSourceStride); }
+unsigned char* BarAt(U i) { return P(::bof3::Img(at::kBars.v) + i * at::kBarStride); }
 unsigned char* SparkAt(U i) { return P(EffectKind30_Shards_addr + i * at::kSparkStride); }
 unsigned char* ShardAt(U i) { return P(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride); }
 
@@ -309,7 +308,7 @@ void Seed(unsigned k) {
     s[9] = static_cast<unsigned char>(PickOf(1, 1, 0, 2, 0x10, 0x11, 0xF0, 0xFF, sh::Next()));
     s[6] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, sh::Next()));
     Draw_PassFlags = static_cast<unsigned char>(PickOf(0, 0, 1, 2, sh::Next()));
-    sh::Mem(::bof3::Img(at::kCounter))[0] = static_cast<unsigned char>(PickOf(3, 3, 2, 4, sh::Next()));
+    sh::Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>(PickOf(3, 3, 2, 4, sh::Next()));
     switch (k) {
     case kABMove:
     case kABDrawDrop: SeedDrops(); break;
@@ -388,7 +387,7 @@ void Disturb(U h) {
         if (sh::InRegions(s, 0x80)) s[6] = static_cast<unsigned char>(v);
         break;
     case 2: Draw_PassFlags = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;
-    case 3: sh::Mem(::bof3::Img(at::kCounter))[0] = static_cast<unsigned char>((v & 1) ? 3u : v >> 1); break;
+    case 3: sh::Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>((v & 1) ? 3u : v >> 1); break;
     case 4: SetWord(sh::Mem(Camera_Angles_addr + 0x2), (v & 1) ? 0xF1u : v >> 1); break;
     case 5:
         if (sh::InRegions(s, 0x80)) s[3] = static_cast<unsigned char>(v);

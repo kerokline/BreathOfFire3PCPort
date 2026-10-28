@@ -38,14 +38,12 @@ U Long(U address) {
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
-[[gnu::always_inline]] inline U Long(::bof3::image::Va address) { return Long(::bof3::Img(address)); }
 void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
 U Word(U address) {
     std::uint16_t v;
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
-[[gnu::always_inline]] inline U Word(::bof3::image::Va address) { return Word(::bof3::Img(address)); }
 void PutWord(U address, U v) {
     const std::uint16_t w = static_cast<std::uint16_t>(v);
     std::memcpy(At(address), &w, sizeof w);
@@ -95,7 +93,7 @@ using namespace display_env;
 // the double buffer's two environments differ in nothing else (0x4FD110).
 // The eax the original leaves is not read by its caller.
 void Gpu_PutDispEnv(const unsigned char* env) {
-    if (Word(kDispEnv + 2) != Word(Addr(env) + 2)) g.present();
+    if (Word(::bof3::Img(kDispEnv.v) + 2) != Word(Addr(env) + 2)) g.present();
     CopyDwords(::bof3::Img(Gpu_DispEnv_addr), Addr(env), 5);
 }
 
@@ -162,7 +160,7 @@ unsigned char* Gpu_SetDefDrawEnv(unsigned char* env, int x, int y, int w, int h)
 // (Gpu_DrawEnv +0x18, read after the present) is set, Gfx_ClearPresent(1)
 // clears the back buffer for the next frame. Nothing else is checked.
 void Gfx_Present(void) {
-    const U flags = Long(kRenderFlags);
+    const U flags = Long(::bof3::Img(kRenderFlags.v));
     void* const primary = DDraw_Primary;
     long result;
     if (flags & 0x200)
@@ -186,7 +184,7 @@ void Gfx_ClearPresent(unsigned flags) {
     const unsigned char f = static_cast<unsigned char>(flags);
     if (f & 1) ClearBack();
     if (!(f & 2)) return;
-    const U render = Long(kRenderFlags);
+    const U render = Long(::bof3::Img(kRenderFlags.v));
     void* const primary = DDraw_Primary;
     if (render & 0x200) {
         Method<ComBlt>(primary, kBlt)(primary, At(::bof3::Img(Gfx_WindowRect_addr)), DDraw_BackBuffer, At(::bof3::Img(Gfx_ScreenRect_addr)), kBltWait, nullptr);
@@ -209,7 +207,7 @@ void Gfx_ClearPresent(unsigned flags) {
 void D3d_SetBackColor(unsigned r, unsigned g, unsigned b) {
     void* const material = D3d_BackMaterial;
     if (material == nullptr) return;
-    if (Long(kViewport) == 0) return;
+    if (Long(::bof3::Img(kViewport.v)) == 0) return;
     const double k = Float(kInverse255At);
     const float c[3] = {static_cast<float>((r & 0xFF) * k), static_cast<float>((g & 0xFF) * k),
                         static_cast<float>((b & 0xFF) * k)};

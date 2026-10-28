@@ -45,7 +45,6 @@ U Long(U address) {
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
-[[gnu::always_inline]] inline U Long(::bof3::image::Va address) { return Long(::bof3::Img(address)); }
 U Long(const unsigned char* p) {
     U v;
     std::memcpy(&v, p, sizeof v);
@@ -277,16 +276,16 @@ void D3d_FitTextureSize(unsigned w, unsigned h, unsigned* out_w, unsigned* out_h
     const U caps = D3d_DeviceDesc[0x84];
     U tw = w, th = h;
     if (caps & 2) {
-        tw = Long(kMinTexWidth);
+        tw = Long(::bof3::Img(kMinTexWidth.v));
         if (tw == 0) tw = 1;
         while (static_cast<std::int32_t>(tw) < static_cast<std::int32_t>(w)) tw <<= 1;
-        th = Long(kMinTexHeight);
+        th = Long(::bof3::Img(kMinTexHeight.v));
         if (th == 0) th = 1;
         while (static_cast<std::int32_t>(th) < static_cast<std::int32_t>(h)) th <<= 1;
     }
-    const U max_w = Long(kMaxTexWidth);
+    const U max_w = Long(::bof3::Img(kMaxTexWidth.v));
     if (tw > max_w) tw = max_w;
-    const U max_h = Long(kMaxTexHeight);
+    const U max_h = Long(::bof3::Img(kMaxTexHeight.v));
     if (th > max_h) th = max_h;
     if ((caps & 0x20) && tw != th) {
         const U side = static_cast<std::int32_t>(tw) > static_cast<std::int32_t>(th) ? tw : th;
@@ -340,7 +339,7 @@ void D3d_FreeCellTexture(int slot) {
 // Dd_StageSurface at each use, as the original's are.
 void Font_BuildGlyphTexture(int slot, unsigned glyph, unsigned clut) {
     const void* palette = g.clut_pixels(clut);
-    const U src = Long(kGlyphData) + glyph * 0x120u;
+    const U src = Long(::bof3::Img(kGlyphData.v)) + glyph * 0x120u;
     Desc desc;
     Dd_InitSurfaceDesc(desc.b);
     const U entry = ::bof3::Img(Font_TexCache_addr) + static_cast<U>(slot) * kFontEntryBytes;
@@ -364,17 +363,17 @@ void Font_BuildGlyphTexture(int slot, unsigned glyph, unsigned clut) {
                 Com(Long(surface_slot), kSetColorKey, kSrcBltKey, key);
             }
         }
-        if (Com(Long(kStage), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return;
+        if (Com(Long(::bof3::Img(kStage.v)), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return;
         g.unpack_glyph(Ptr(desc.Surface()), Ptr(src), palette, static_cast<int>(desc.Pitch()));
-        Com(Long(kStage), kUnlock, 0u);
+        Com(Long(::bof3::Img(kStage.v)), kUnlock, 0u);
         Rect rect = {0, 0, 0x18, 0x18};
         const U surface = Long(surface_slot);
-        const U stage = Long(kStage);
+        const U stage = Long(::bof3::Img(kStage.v));
         Com(surface, kBlt, &rect, stage, &rect, kBltWait, 0u);
     }
     PutWord(entry, glyph);
     PutWord(entry + 2, clut);
-    PutLong(entry + 4, Long(kClutRows + static_cast<U>(static_cast<std::int32_t>(clut) >> 6) * 8));
+    PutLong(entry + 4, Long(::bof3::Img(kClutRows.v) + static_cast<U>(static_cast<std::int32_t>(clut) >> 6) * 8));
 }
 
 // 0x5A32B0. Composes the `count` SpriteCell records from `first` into
@@ -409,20 +408,20 @@ void Font_BuildGlyphTexture(int slot, unsigned glyph, unsigned clut) {
 void D3d_BuildCellTexture(int slot, unsigned first, unsigned count, unsigned clut, unsigned backdrop) {
     const U flags = Gfx_RenderFlags;
     U from_surface = 0;
-    if (!(flags & 1) && backdrop != 0 && (from_surface = Long(kBackdrop)) != 0) {
+    if (!(flags & 1) && backdrop != 0 && (from_surface = Long(::bof3::Img(kBackdrop.v))) != 0) {
         Rect to = {0, 8, 0x140, 0xF8};
         Rect from = {0, 0, 0x140, 0xF0};
-        Com(Long(kStage), kBlt, &to, from_surface, &from, kBltWait, 0u);
+        Com(Long(::bof3::Img(kStage.v)), kBlt, &to, from_surface, &from, kBltWait, 0u);
     } else {
         Dd_ClearSurface(Dd_StageSurface);
     }
     Extent extent = {0, 0, 0, 0, 0};
     Desc desc;
     Dd_InitSurfaceDesc(desc.b);
-    if (Com(Long(kStage), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return;
+    if (Com(Long(::bof3::Img(kStage.v)), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return;
     const void* palette = g.clut_pixels(clut);
     DrawCells(first, count, palette, desc, &extent);
-    Com(Long(kStage), kUnlock, 0u);
+    Com(Long(::bof3::Img(kStage.v)), kUnlock, 0u);
     D3d_FreeCellTexture(slot);
 
     const U entry = ::bof3::Img(D3d_CellTexCache_addr) + static_cast<U>(slot) * kCellEntryBytes;
@@ -435,7 +434,7 @@ void D3d_BuildCellTexture(int slot, unsigned first, unsigned count, unsigned clu
     PutWord(entry + 0x12, count);
     PutWord(entry + 0x10, clut);
     PutLong(entry + 0x18, extent.checksum);
-    PutLong(entry + 0x1C, Long(kClutRows + (clut >> 6) * 8));
+    PutLong(entry + 0x1C, Long(::bof3::Img(kClutRows.v) + (clut >> 6) * 8));
     Rect from = {extent.left + 0xA0, extent.top + 0x80, extent.right + 0xA0, extent.bottom + 0x80};
     const U flags_now = Gfx_RenderFlags;
     Rect to = {0, 0, static_cast<std::int32_t>(Word(entry + 0)), static_cast<std::int32_t>(Word(entry + 2))};
@@ -444,13 +443,13 @@ void D3d_BuildCellTexture(int slot, unsigned first, unsigned count, unsigned clu
                                    reinterpret_cast<void**>(At(entry + 0x20)), 0))
             return;
         const U surface = Long(entry + 0x20);
-        const U stage = Long(kStage);
+        const U stage = Long(::bof3::Img(kStage.v));
         Com(surface, kBlt, &to, stage, &from, kBltWait, 0u);
         PutWord(entry + 4, (Word(entry + 0) + 3) & 0xFFFC);
         PutWord(entry + 6, (Word(entry + 2) + 3) & 0xFFFC);
         return;
     }
-    Com(Long(kDevice), kEndScene);
+    Com(Long(::bof3::Img(kDevice.v)), kEndScene);
     unsigned texture_w, texture_h;
     D3d_FitTextureSize(Word(entry + 0), Word(entry + 2), &texture_w, &texture_h);
     if (!Dd_CreateTextureSurface(texture_w, texture_h, reinterpret_cast<void**>(At(entry + 0x20)),
@@ -466,11 +465,11 @@ void D3d_BuildCellTexture(int slot, unsigned first, unsigned count, unsigned clu
         to.b = static_cast<std::int32_t>(Word(entry + 2));
     }
     const U surface = Long(entry + 0x20);
-    const U stage = Long(kStage);
+    const U stage = Long(::bof3::Img(kStage.v));
     Com(surface, kBlt, &to, stage, &from, kBltWait, 0u);
     PutWord(entry + 4, texture_w);
     PutWord(entry + 6, texture_h);
-    Com(Long(kDevice), kBeginScene);
+    Com(Long(::bof3::Img(kDevice.v)), kBeginScene);
 }
 
 // 0x5A37D0. Re-draws D3d_CellTexCache entry `slot`'s cells for a changed
@@ -487,27 +486,27 @@ void D3d_RefreshCellTexture(int slot, unsigned first, unsigned count, unsigned c
     Dd_ClearSurface(Dd_StageSurface);
     Desc desc;
     Dd_InitSurfaceDesc(desc.b);
-    if (Com(Long(kStage), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return;
+    if (Com(Long(::bof3::Img(kStage.v)), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return;
     const void* palette = g.clut_pixels(clut);
     DrawCells(first, count, palette, desc, nullptr);
-    Com(Long(kStage), kUnlock, 0u);
+    Com(Long(::bof3::Img(kStage.v)), kUnlock, 0u);
     const U entry = ::bof3::Img(D3d_CellTexCache_addr) + static_cast<U>(slot) * kCellEntryBytes;
-    PutLong(entry + 0x1C, Long(kClutRows + (clut >> 6) * 8));
+    PutLong(entry + 0x1C, Long(::bof3::Img(kClutRows.v) + (clut >> 6) * 8));
     Rect from = {Short(entry + 8) + 0xA0, Short(entry + 0xC) + 0x80, Short(entry + 0xA) + 0xA0,
                  Short(entry + 0xE) + 0x80};
     const U flags = Gfx_RenderFlags;
     Rect to = {0, 0, static_cast<std::int32_t>(Word(entry + 0)), static_cast<std::int32_t>(Word(entry + 2))};
     if (flags & 1) {
         const U surface = Long(entry + 0x20);
-        const U stage = Long(kStage);
+        const U stage = Long(::bof3::Img(kStage.v));
         Com(surface, kBlt, &to, stage, &from, kBltWait, 0u);
         return;
     }
-    Com(Long(kDevice), kEndScene);
+    Com(Long(::bof3::Img(kDevice.v)), kEndScene);
     const U surface = Long(entry + 0x20);
-    const U stage = Long(kStage);
+    const U stage = Long(::bof3::Img(kStage.v));
     Com(surface, kBlt, &to, stage, &from, kBltWait, 0u);
-    Com(Long(kDevice), kBeginScene);
+    Com(Long(::bof3::Img(kDevice.v)), kBeginScene);
 }
 
 void TexCells_Inject() {

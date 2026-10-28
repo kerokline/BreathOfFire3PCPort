@@ -184,9 +184,6 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
-// A VA held as a ::bof3::image::Va (common/image_base.h), placed through ::bof3::Img.
-[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
-[[gnu::always_inline]] inline unsigned char* P(::bof3::image::Va a) { return P(::bof3::Img(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -315,7 +312,7 @@ sh::Region g_regions[sizeof kRegions / sizeof kRegions[0]];
 // --- the seed ------------------------------------------------------------------------
 
 unsigned char* Rec(unsigned r) { return sh::EffectRecord(r); }
-bool LineOk(unsigned text) { return P(at::kKind0FTexts + text * 8)[4] != 0xFF; }
+bool LineOk(unsigned text) { return P(::bof3::Img(at::kKind0FTexts.v) + text * 8)[4] != 0xFF; }
 
 // Every one of the 20 records the disturbance may move Sprite_Current among:
 // what function k's code indexes kept inside its table.
@@ -337,7 +334,7 @@ void Records(unsigned k) {
         if ((k == k0FLineNext || k == k0FLineFade) && !LineOk(text)) text = 0;
         s[0x4B] = static_cast<unsigned char>(text);
         unsigned column = sh::Next() % 3;
-        if (k == k0FLineStart && P(at::kKind0FRows + s[6] * 4u + column)[0] >= at::kKind0FTextCount) column = 0;
+        if (k == k0FLineStart && P(::bof3::Img(at::kKind0FRows.v) + s[6] * 4u + column)[0] >= at::kKind0FTextCount) column = 0;
         s[0x4A] = static_cast<unsigned char>(column);
         SetLong(s + 0x50, static_cast<std::int32_t>(Key(g_chars + sh::Next() % 0x40)));
         SetLong(s + 0x54, static_cast<std::int32_t>(Key(g_chars + sh::Next() % 0x40)));
@@ -370,8 +367,8 @@ void Seed(unsigned k) {
     // walk's wrap at 0x20)
     const U counts = PickOf(0, 1, 2, 2, 3);
     for (unsigned i = 0; i < 0x20; ++i)
-        Mem(at::kKindCounts + i)[0] = static_cast<unsigned char>(counts == 0 || counts == 3 ? 0 : counts == 1 ? (sh::Half() ? 0 : sh::Next()) : sh::Next() | 1);
-    if (counts == 3) Mem(at::kKindCounts + (sh::Half() ? 0x1F : sh::Next() % 0x20))[0] = static_cast<unsigned char>(sh::Next() | 1);
+        Mem(::bof3::Img(at::kKindCounts.v) + i)[0] = static_cast<unsigned char>(counts == 0 || counts == 3 ? 0 : counts == 1 ? (sh::Half() ? 0 : sh::Next()) : sh::Next() | 1);
+    if (counts == 3) Mem(::bof3::Img(at::kKindCounts.v) + (sh::Half() ? 0x1F : sh::Next() % 0x20))[0] = static_cast<unsigned char>(sh::Next() | 1);
     // the small counters the states step and compare
     s[9] = static_cast<unsigned char>(PickOf(0, 1, 2, 4, 5, 6, 0xF, 0xE, sh::Next()));
     s[0xA] = static_cast<unsigned char>(PickOf(0, 1, 2, sh::Next()));
@@ -390,7 +387,7 @@ void Seed(unsigned k) {
         break;
     case k05Rise:
         if (sh::Half()) SetLong(s + 0x38, Long(s + 0x10));
-        else if (sh::Half()) SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(s + 0x10)) + static_cast<U>(Long(P(at::kKind05Bounce + s[6] * 8)))));
+        else if (sh::Half()) SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(s + 0x10)) + static_cast<U>(Long(P(::bof3::Img(at::kKind05Bounce.v) + s[6] * 8)))));
         if (sh::Half()) SetLong(s + 0x38, 0x3C4000);
         SetLong(s + 0x14, static_cast<std::int32_t>(PickOf(0, 1, 0xFFFFFFFFu, sh::Next())));
         break;

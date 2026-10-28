@@ -425,8 +425,8 @@ void Seed(unsigned k) {
     s[9] = static_cast<unsigned char>(FrameCount());
     SetWord(s + 0x5A, Timer());
     SeedScreen(s);
-    if (sh::Half()) sh::Mem(::bof3::Img(at::kCounter0))[0] = 0xB;
-    sh::Mem(::bof3::Img(at::kCounter3))[0] = static_cast<unsigned char>(PickOf(0xA, 0xE, 0xB, sh::Next()));
+    if (sh::Half()) sh::Mem(::bof3::Img(at::kCounter0.v))[0] = 0xB;
+    sh::Mem(::bof3::Img(at::kCounter3.v))[0] = static_cast<unsigned char>(PickOf(0xA, 0xE, 0xB, sh::Next()));
     switch (k) {
     case k4FStart:
         // every record's sprite indices +3 / +4 inside the thirty: the
@@ -510,8 +510,8 @@ void Disturb(U h) {
     case 0: s[9] = static_cast<unsigned char>((v & 1) ? 1u : v >> 1); break;
     case 1: SetWord(s + 0x5A, (v & 1) ? 1u + ((v >> 1) & 3) : v >> 1); break;
     case 2: SetWord(s + 0x32, (v >> 1) % 0x21); break;
-    case 3: sh::Mem(::bof3::Img(at::kCounter0))[0] = static_cast<unsigned char>((v & 1) ? 0xB : v >> 1); break;
-    case 4: sh::Mem(::bof3::Img(at::kCounter3))[0] = static_cast<unsigned char>((v & 1) ? 0xA + 4 * ((v >> 1) & 1) : v >> 2); break;
+    case 3: sh::Mem(::bof3::Img(at::kCounter0.v))[0] = static_cast<unsigned char>((v & 1) ? 0xB : v >> 1); break;
+    case 4: sh::Mem(::bof3::Img(at::kCounter3.v))[0] = static_cast<unsigned char>((v & 1) ? 0xA + 4 * ((v >> 1) & 1) : v >> 2); break;
     case 5: {
         const float f = static_cast<float>(static_cast<int>(v % 0x300) - 0x80);
         std::memcpy(s + 0x74 + 4 * ((v >> 10) % 3), &f, 4);

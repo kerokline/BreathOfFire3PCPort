@@ -32,24 +32,19 @@ namespace psx_rest {
 namespace {
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va address) { return At(::bof3::Img(address)); }
 U Long(U address) {
     U v;
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
-[[gnu::always_inline]] inline U Long(::bof3::image::Va address) { return Long(::bof3::Img(address)); }
 void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
-[[gnu::always_inline]] inline void PutLong(::bof3::image::Va address, U v) { PutLong(::bof3::Img(address), v); }
 void PutWord(U address, std::uint16_t v) { std::memcpy(At(address), &v, sizeof v); }
 void* Ptr(U address) { return At(Long(address)); }
-[[gnu::always_inline]] inline void* Ptr(::bof3::image::Va address) { return Ptr(::bof3::Img(address)); }
 
 // `rep stosd` of zeros: n dwords from address, first to last.
 void ZeroDwords(U address, U n) {
     for (U i = 0; i < n; ++i) PutLong(address + i * 4, 0);
 }
-[[gnu::always_inline]] inline void ZeroDwords(::bof3::image::Va address, U n) { ZeroDwords(::bof3::Img(address), n); }
 
 // One COM pointer released through its vtable's +8 if it is not null. The
 // caller says whether the slot is zeroed after (inside the test, as the
@@ -227,7 +222,7 @@ extern "C" void __cdecl Display_ReleaseBackdrop() {
         ReleaseIf(at, false);
     }
     ReleaseIf(::bof3::Img(Dd_CellBackdrop_addr), false);
-    ZeroDwords(kBackdropBlock, 7);
+    ZeroDwords(::bof3::Img(kBackdropBlock.v), 7);
     PsxRest_BackdropMagic = kMagic;
 }
 
@@ -274,14 +269,14 @@ extern "C" void __cdecl Display_Teardown(void* hwnd) {
     ReleaseIf(::bof3::Img(DDraw_Primary_addr), true);
     void* dd = Dd_DirectDraw;
     if (!dd) return;
-    if (Long(kRenderFlags) & 0x100) {
+    if (Long(::bof3::Img(kRenderFlags.v)) & 0x100) {
         Method<ComCoop>(dd, kSetCooperativeLevel)(dd, hwnd, kDdsclNormal);
         dd = Dd_DirectDraw;
         Method<ComCall>(dd, kRestoreDisplayMode)(dd);
         dd = Dd_DirectDraw;
     }
     Method<ComCall>(dd, kRelease)(dd);
-    PutLong(kDirectDraw, 0);
+    PutLong(::bof3::Img(kDirectDraw.v), 0);
 }
 
 // original 0x5A66B0. GDI text on the back buffer: GetDC on DDraw_BackBuffer as
@@ -307,9 +302,9 @@ extern "C" void __cdecl Display_TextOut(int x, int y, const char* text) {
 // after the first table's twenty. Nothing checks the code; nothing reads the
 // box's answer.
 extern "C" void __cdecl Display_ErrorBox(int code) {
-    const ::bof3::image::Va base = code < 100 ? kErrorText : kErrorTextHigh;
+    const U base = code < 100 ? ::bof3::Img(kErrorText.v) : ::bof3::Img(kErrorTextHigh.v);
     const char* const text = reinterpret_cast<const char*>(Ptr(base + static_cast<U>(code) * 4));
-    g.message_box(nullptr, text, reinterpret_cast<const char*>(At(kErrorCaption)), kIconHand);
+    g.message_box(nullptr, text, reinterpret_cast<const char*>(At(::bof3::Img(kErrorCaption.v))), kIconHand);
 }
 
 // original 0x5A6980. SndStream_Stop, Music_Release, then the primary sound

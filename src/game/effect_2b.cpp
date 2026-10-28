@@ -543,7 +543,7 @@ extern "C" void __cdecl EffectKind35_ShardFade(void) {
 extern "C" void __cdecl EffectKind35_SplitModel(void) {
     U src = Sprite_ObjectsExtra[1].script;
     for (U i = 0; i < at::kPiece35Count; ++i) {
-        unsigned char* const d = At(::bof3::Img(at::kCopies35) + 0x28 * i);
+        unsigned char* const d = At(::bof3::Img(at::kCopies35.v) + 0x28 * i);
         unsigned char* const r = At(::bof3::Img(EffectKind30_Shards_addr) + 0x280 + 0x18 * i);
         for (U j = 0; j < 0x28; j += 4) SetUL(d + j, UL(At(src + j)));
         SetWord(r + 0, static_cast<U>((SW(d + 8) + SW(d + 0x14) + SW(d + 0xE) + SW(d + 2)) >> 2));
@@ -577,7 +577,7 @@ extern "C" void __cdecl EffectKind35_StepPieces(void) {
         const U vz = Word(r + 0xC), vy = Word(r + 0xA);
         SetWord(r + 4, Word(r + 4) + vz);
         SetWord(r + 2, Word(r + 2) + vy);
-        SH_CALL(EffectKind35_TurnPiece)(At(::bof3::Img(at::kCopies35) + 0x28 * i), At(model + 0x28 * i), r);
+        SH_CALL(EffectKind35_TurnPiece)(At(::bof3::Img(at::kCopies35.v) + 0x28 * i), At(model + 0x28 * i), r);
     }
 }
 

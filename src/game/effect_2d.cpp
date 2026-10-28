@@ -52,7 +52,6 @@ namespace {
 namespace at = effect_2d::at;
 using U = std::uint32_t;
 using move_script::At;
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -513,7 +512,7 @@ extern "C" void __cdecl EffectKind46_Count(void) {
     s[2] = static_cast<unsigned char>(s[2] + 1);
     s = S();
     if (s[2] == 5) {
-        At(at::kCounter0)[0] = static_cast<unsigned char>(At(at::kCounter0)[0] + 1);
+        At(::bof3::Img(at::kCounter0.v))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kCounter0.v))[0] + 1);
         s[1] = 4;
     } else {
         s[1] = static_cast<unsigned char>((s[2] & 1) + 1);
@@ -605,13 +604,13 @@ extern "C" void __cdecl EffectKind47_Start(void) {
     unsigned char model = ObjTrio[0].animation;
     if (self[0xB] == 0) model = Sprite_Objects[2].animation;
     unsigned k = 0;
-    while (k < 5 && model != At(at::kTwinAnims + 3 * k)[0]) ++k;
-    const unsigned char* const triple = At(at::kTwinAnims + 3 * k);
+    while (k < 5 && model != At(::bof3::Img(at::kTwinAnims.v) + 3 * k)[0]) ++k;
+    const unsigned char* const triple = At(::bof3::Img(at::kTwinAnims.v) + 3 * k);
     SharedScratch.w_00 = self[3];
-    SH_CALL(EventOp_0x)(At(at::kTwinOps + 0x11u * self[0xB]));
+    SH_CALL(EventOp_0x)(At(::bof3::Img(at::kTwinOps.v) + 0x11u * self[0xB]));
     SH_CALL(Sprite_SetAnimationAt)(triple[1], triple[2]);
     SharedScratch.w_00 = self[4];
-    SH_CALL(EventOp_0x)(At(at::kTwinOps + 0x11u * self[0xB]));
+    SH_CALL(EventOp_0x)(At(::bof3::Img(at::kTwinOps.v) + 0x11u * self[0xB]));
     SH_CALL(Sprite_SetAnimationAt)(triple[1], triple[2]);
     Sprite_Current = self;
     unsigned char* a = SpriteRec(who, self[3]);
@@ -1000,19 +999,19 @@ extern "C" void __cdecl EffectKind49_V3Start(void) {
 extern "C" void __cdecl EffectKind49_V3Burst(void) {
     unsigned char* s = S();
     const unsigned step = s[9];
-    if ((s[0xC] & At(at::kBurstMask)[step]) == 0) {
-        const unsigned char add = At(at::kBurstCount)[step];
+    if ((s[0xC] & At(::bof3::Img(at::kBurstMask.v))[step]) == 0) {
+        const unsigned char add = At(::bof3::Img(at::kBurstCount.v))[step];
         unsigned char* const anchor = *reinterpret_cast<unsigned char**>(At(::bof3::Img(Effect2d_DustAnchor_addr)));
         SetWord(anchor + 0x10, Word(anchor + 0x10) + add);
         s = S();
-        if (At(at::kBurstCount)[s[9]] != 0) {
+        if (At(::bof3::Img(at::kBurstCount.v))[s[9]] != 0) {
             unsigned char n = 0;
             do {
                 unsigned char* const dust = SH_AT(unsigned char* (__cdecl*)(), at::kDustFindFree)();
                 if (dust != nullptr) SH_AT(void (__cdecl*)(unsigned char*), at::kDustStart)(dust);
                 s = S();
                 n = static_cast<unsigned char>(n + 1);
-            } while (n < At(at::kBurstCount)[s[9]]);
+            } while (n < At(::bof3::Img(at::kBurstCount.v))[s[9]]);
         }
     }
     if ((s[0xC] & 0xF) == 0) s[9] = static_cast<unsigned char>(s[9] + 1);

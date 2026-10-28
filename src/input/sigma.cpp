@@ -87,7 +87,7 @@ Table g_table;
 // cleared when a save's words are loaded (RecipeToPad, sigma.h).
 bool g_release_words = false;
 
-std::uint16_t* Words() { return reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(::bof3::Img(kWords))); }
+std::uint16_t* Words() { return reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(::bof3::Img(kWords.v))); }
 
 // Words 7 and 8 the Speak line's and the Action line's, then the table; a
 // Config that is not a permutation of the six bits a Fatal naming the writer.
@@ -180,7 +180,7 @@ void SelfTest() {
     //    Boot_Task copies (exe_own.cpp, equal to BOF3.exe's .data).
     std::uint16_t jp[9];
     DefaultWords(Release::kJapan, false, jp);
-    Check(std::memcmp(jp, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(kBootDefaults))), sizeof jp) == 0,
+    Check(std::memcmp(jp, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(kBootDefaults.v))), sizeof jp) == 0,
           "Japan's words differ from 0x656AEC's", jp[0]);
     // The two other releases as button-roles-by-release.md 2 read them from
     // the boot executables (Speak, Move, Menu, Action; confirm = Speak, cancel

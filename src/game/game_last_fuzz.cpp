@@ -55,7 +55,7 @@ const sh::DataTable kTables[] = {
 // reaches (random every round, so a wrong record, stride or byte shows), and
 // the trade bytes 0x93985C..0x93985F.
 const sh::Region kRegions[] = {
-    {::bof3::Img(at::kConsumableFlags), at::kFlagsReachEnd - at::kConsumableFlags},
+    {at::kConsumableFlags.v, at::kFlagsReachEnd.v - at::kConsumableFlags.v},
     {Effect1g_TradeState_addr, 4},
 };
 

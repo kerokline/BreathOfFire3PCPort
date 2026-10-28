@@ -80,7 +80,6 @@ float Float(const unsigned char* p) {
     return v;
 }
 float FloatAt(U address) { return Float(At(address)); }
-[[gnu::always_inline]] inline float FloatAt(::bof3::image::Va address) { return FloatAt(::bof3::Img(address)); }
 void PutWord(unsigned char* p, U v) {
     const std::uint16_t w = static_cast<std::uint16_t>(v);
     std::memcpy(p, &w, sizeof w);
@@ -182,8 +181,8 @@ void PutPosition(unsigned char* out, const unsigned char* xyz) {
 }
 // tu, tv = D3d_TexCoords[u], [v], through fld / fstp.
 void PutTexel(unsigned char* out, const unsigned char* uv) {
-    PutFloat(out + 0x18, X87Pass(FloatAt(kTexCoords + uv[0] * 4u)));
-    PutFloat(out + 0x1C, X87Pass(FloatAt(kTexCoords + uv[1] * 4u)));
+    PutFloat(out + 0x18, X87Pass(FloatAt(::bof3::Img(kTexCoords.v) + uv[0] * 4u)));
+    PutFloat(out + 0x1C, X87Pass(FloatAt(::bof3::Img(kTexCoords.v) + uv[1] * 4u)));
 }
 
 }  // namespace

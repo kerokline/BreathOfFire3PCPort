@@ -170,7 +170,6 @@ static_assert(kCount == 50, "the cut's 48 and the two added");
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
-[[gnu::always_inline]] inline unsigned char* P(::bof3::image::Va a) { return P(::bof3::Img(a)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
@@ -349,8 +348,8 @@ void Leader(const unsigned char* s, bool start) {
     U x = static_cast<U>(static_cast<std::int16_t>(Word(s + 0x36)));
     U z = static_cast<U>(static_cast<std::int16_t>(Word(s + 0x3A)));
     if (start && x < at::kGateCount) {
-        z = P(at::kGateCells + 1 + 2 * x)[0];
-        x = P(at::kGateCells + 2 * x)[0];
+        z = P(::bof3::Img(at::kGateCells.v) + 1 + 2 * x)[0];
+        x = P(::bof3::Img(at::kGateCells.v) + 2 * x)[0];
     }
     const U off[] = {0, 0x8000, 0x8001, 0xFFFF8000u, 0xFFFF7FFFu, 0x10000, 0x10001, 0x20000, 0x20001,
                      0xFFFE0000u, 0xFFFDFFFFu, 0x30000, 0x30001, 0x18000, 0x18001, 0xFFFE8000u, 0xFFFE7FFFu,

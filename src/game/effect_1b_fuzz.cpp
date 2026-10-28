@@ -40,7 +40,6 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 unsigned char& B(U a) { return sh::Mem(a)[0]; }
-[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 unsigned char* Rec(unsigned k) { return sh::EffectRecord(k); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
@@ -227,8 +226,8 @@ const sh::Callee kCallees[] = {
 
 // Beyond effect mode's standard regions.
 const sh::Region kRegions[] = {
-    {::bof3::Img(at::kItemIds), 0x80},        // the accessories' ids (seeded below 52)
-    {::bof3::Img(at::kItemCounts), 0x80},     // their counts
+    {at::kItemIds.v, 0x80},        // the accessories' ids (seeded below 52)
+    {at::kItemCounts.v, 0x80},     // their counts
     {0x803668, 0x318},           // MessagePools past the standard 0xE8, to 0x803980 (the offsets the ids reach)
     {Gfx_ClutStripSource_addr + 0x228, 0x400}, // the colour words of styles 0..15 (the seed keeps the style byte there)
 };
@@ -240,15 +239,15 @@ void Disturb(U h) {
     unsigned char* const s = Sprite_Current;
     switch ((h >> 16) % 9) {
     case 0: B(ObjTrio_addr + 0x4) = static_cast<unsigned char>(v & 1 ? 2 : v); break;
-    case 1: B(at::kItemIds + (h >> 24) % 0x80) = static_cast<unsigned char>(v % at::kAccessoryCount); break;
-    case 2: B(at::kItemCounts + (h >> 24) % 0x80) = static_cast<unsigned char>(v % 4); break;
+    case 1: B(::bof3::Img(at::kItemIds.v) + (h >> 24) % 0x80) = static_cast<unsigned char>(v % at::kAccessoryCount); break;
+    case 2: B(::bof3::Img(at::kItemCounts.v) + (h >> 24) % 0x80) = static_cast<unsigned char>(v % 4); break;
     case 3: B(Config_WindowColour_addr) = static_cast<unsigned char>(v % 16); break;
     case 4: if (sh::InRegions(s, 0x80)) s[7] = static_cast<unsigned char>(s[7] ^ (1u << (v & 7))); break;
     case 5: if (sh::InRegions(s, 0x80)) SetLong(s + 0xC + 4 * (v & 1), static_cast<std::int32_t>(v % 12)); break;
     case 6:   // record 6's +1 is an index of kind 0x14's clone's table: for EffectKind0F_Child only
         if (g_k == kChild) B(v & 1 ? (Effect_Objects_addr + 0x301) : (Effect_Objects_addr + 0x308)) = static_cast<unsigned char>(v & 2 ? (v & 1 ? 0xE : 0) : v); break;
     case 7: if (sh::InRegions(s, 0x80)) s[6] = static_cast<unsigned char>(v); break;
-    case 8: B(at::kEquipA + 2 * (v & 1)) = static_cast<unsigned char>(v); break;
+    case 8: B(::bof3::Img(at::kEquipA.v) + 2 * (v & 1)) = static_cast<unsigned char>(v); break;
     default: break;
     }
 }
@@ -265,8 +264,8 @@ void Seed(unsigned k) {
     g_unchecked = k == kListOpen || k == kChild2Gauge || k == kMessageList;
     unsigned char* const s = Sprite_Current;
     for (unsigned i = 0; i < 0x80; ++i) {
-        B(at::kItemIds + i) = static_cast<unsigned char>(sh::Next() % at::kAccessoryCount);
-        if (sh::Next() % 3 == 0) B(at::kItemCounts + i) = static_cast<unsigned char>(sh::Next() % 3);
+        B(::bof3::Img(at::kItemIds.v) + i) = static_cast<unsigned char>(sh::Next() % at::kAccessoryCount);
+        if (sh::Next() % 3 == 0) B(::bof3::Img(at::kItemCounts.v) + i) = static_cast<unsigned char>(sh::Next() % 3);
     }
     B(Config_WindowColour_addr) = static_cast<unsigned char>(sh::Next() % 16);
     B(ObjTrio_addr + 0x3) = static_cast<unsigned char>(PickOf(2, 3, 4, sh::Next()));

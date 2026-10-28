@@ -148,7 +148,6 @@ static_assert(kCount == sizeof kAll / sizeof kAll[0], "one enum entry a clone, i
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
-[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
@@ -337,7 +336,7 @@ void Seed(unsigned k) {
     unsigned char* const s = Sprite_Current;
     // what every kind may read: the model and its count, the shard cursor, the counter byte
     SetLong(Mem(Sprite_ObjectsExtra_addr + 0x50), static_cast<std::int32_t>(Key(g_model)));
-    SetLong(Mem(at::kModelCount), static_cast<std::int32_t>(Key(g_count + sh::Next() % 4)));
+    SetLong(Mem(::bof3::Img(at::kModelCount.v)), static_cast<std::int32_t>(Key(g_count + sh::Next() % 4)));
     for (unsigned i = 0; i < 4; ++i) g_count[i] = static_cast<unsigned char>(PickOf(0, 1, 2, 27, sh::Next() % 28));
     move_script::SetLong(Mem(EffectKind1E_ShardCursor_addr), static_cast<std::int32_t>(Key(Shard28(sh::Next()))));
     Mem(0x903848)[0] = static_cast<unsigned char>(PickOf(0x1F, 0x1F, 0x1E, 0x20, sh::Next()));
@@ -387,7 +386,7 @@ void Args(unsigned k, U* a) {
         a[1] = Key(g_model) + 0x28 * (i % at::kPieceCount);
         a[2] = EffectKind30_Shards_addr + 0x140 + 0x18 * (i % at::kPieceCount);
         break;
-    case k1EDebrisOne: a[0] = ::bof3::Img(at::kDebris + 0x2C * (i % 16)); break;
+    case k1EDebrisOne: a[0] = ::bof3::Img(at::kDebris.v) + 0x2C * (i % 16); break;
     default: break;
     }
 }

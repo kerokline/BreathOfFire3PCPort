@@ -48,7 +48,6 @@ namespace {
 namespace at = effect_2e::at;
 using U = std::uint32_t;
 using move_script::At;
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -77,7 +76,6 @@ void StoreSum(unsigned char* out, U whole, const unsigned char* f) {
 void Copy12(unsigned char* to, const void* from) { std::memcpy(to, from, 12); }
 // The pointer a .data cell holds.
 unsigned char* Cell(U cell) { return At(UL(At(cell))); }
-[[gnu::always_inline]] inline unsigned char* Cell(::bof3::image::Va cell) { return Cell(::bof3::Img(cell)); }
 
 // mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + byte]; jmp [table +
 // eax * 4]: the table's `entries` handlers read in place (the fuzz swaps the
@@ -154,9 +152,9 @@ void SpiralStart(unsigned turn) {
 // while +0xC is above 8 (signed) its turn word +0xD10 up `turn`; +0xC down, at 0
 // a tail jmp to Effect_Release.
 void SpiralTurn(unsigned turn) {
-    SH_AT(void (__cdecl*)(unsigned char*), at::kSpiralDraw)(Cell(at::kSpiralPtr));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kSpiralDraw)(Cell(::bof3::Img(at::kSpiralPtr.v)));
     const unsigned char* s = S();
-    if (SL(s + 0xC) > 8) AddWord(Cell(at::kSpiralPtr) + 0xD10, turn);
+    if (SL(s + 0xC) > 8) AddWord(Cell(::bof3::Img(at::kSpiralPtr.v)) + 0xD10, turn);
     unsigned char* t;
     if (!CountDownC(&t)) return;
     SH_CALL(Effect_Release)();
@@ -216,9 +214,9 @@ extern "C" void __cdecl EffectKind48_State7_Start(void) {
 extern "C" void __cdecl EffectKind48_State7_Swell(void) {
     unsigned char* s = S();
     const unsigned index = s[9];
-    if ((s[0xC] & At(at::kState7Steps)[index]) == 0) AddWord(Cell(at::kRingPtr) + 0x10, At(at::kState7Adds)[index]);
+    if ((s[0xC] & At(::bof3::Img(at::kState7Steps.v))[index]) == 0) AddWord(Cell(::bof3::Img(at::kRingPtr.v)) + 0x10, At(::bof3::Img(at::kState7Adds.v))[index]);
     if ((s[0xC] & 0xF) == 0) s[9] = static_cast<unsigned char>(s[9] + 1);
-    SH_AT(void (__cdecl*)(unsigned char*), at::kRing)(Cell(at::kRingPtr));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kRing)(Cell(::bof3::Img(at::kRingPtr.v)));
     if (!CountDownC(&s)) return;
     SetUL(s + 0xC, 0x10);
     NextStep();
@@ -227,8 +225,8 @@ extern "C" void __cdecl EffectKind48_State7_Swell(void) {
 // original 0x478AB0 (step 2): the ring's word +0x10 up 4; the ring drawn; +0xC
 // down, at 0 +2 up.
 extern "C" void __cdecl EffectKind48_State7_Widen(void) {
-    AddWord(Cell(at::kRingPtr) + 0x10, 4);
-    SH_AT(void (__cdecl*)(unsigned char*), at::kRing)(Cell(at::kRingPtr));
+    AddWord(Cell(::bof3::Img(at::kRingPtr.v)) + 0x10, 4);
+    SH_AT(void (__cdecl*)(unsigned char*), at::kRing)(Cell(::bof3::Img(at::kRingPtr.v)));
     unsigned char* s;
     if (!CountDownC(&s)) return;
     s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -238,9 +236,9 @@ extern "C" void __cdecl EffectKind48_State7_Widen(void) {
 // drawn; once its height is 0x10000000 or more (signed), a tail jmp to
 // Effect_Release.
 extern "C" void __cdecl EffectKind48_State7_Lift(void) {
-    AddLong(Cell(at::kRingPtr) + 8, 0x1000000u);
-    SH_AT(void (__cdecl*)(unsigned char*), at::kRing)(Cell(at::kRingPtr));
-    if (SL(Cell(at::kRingPtr) + 8) < 0x10000000) return;
+    AddLong(Cell(::bof3::Img(at::kRingPtr.v)) + 8, 0x1000000u);
+    SH_AT(void (__cdecl*)(unsigned char*), at::kRing)(Cell(::bof3::Img(at::kRingPtr.v)));
+    if (SL(Cell(::bof3::Img(at::kRingPtr.v)) + 8) < 0x10000000) return;
     SH_CALL(Effect_Release)();
 }
 
@@ -289,7 +287,7 @@ extern "C" void __cdecl EffectKind48_State9_Start(void) {
 // +0xC's low two bits are 0 and one was found, set (0x479160); the sparks run
 // (0x479260); +0xC down, at 0 +2 up.
 extern "C" void __cdecl EffectKind48_State9_Emit(void) {
-    SH_AT(void (__cdecl*)(unsigned char*), at::kSpiralDraw)(Cell(at::kSpiralPtr));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kSpiralDraw)(Cell(::bof3::Img(at::kSpiralPtr.v)));
     if (SL(S() + 0xC) > 8) {
         unsigned char* const spark = SH_AT(unsigned char* (__cdecl*)(), at::kSparkFree)();
         if ((S()[0xC] & 3) == 0 && spark != nullptr) SH_AT(void (__cdecl*)(unsigned char*), at::kSparkSet)(spark);
@@ -368,7 +366,7 @@ extern "C" void __cdecl EffectKind48_State12_Run(void) {
 // original 0x478F10 (step 0): the burst's size word 0x92C49E = 0xC0; the burst
 // stepped 32 times (0x4794D0); when +6 is set Sound_PlayEffect(0x203); +2 up.
 extern "C" void __cdecl EffectKind48_State12_Start(void) {
-    SetWord(At(at::kBurstSize), 0xC0);
+    SetWord(At(::bof3::Img(at::kBurstSize.v)), 0xC0);
     for (int i = 0; i < 0x20; ++i) SH_AT(void (__cdecl*)(unsigned char*), at::kBurstStep)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
     if (S()[6] != 0) SH_CALL(Sound_PlayEffect)(0x203);
     NextStep();
@@ -408,7 +406,7 @@ extern "C" void __cdecl EffectKind48_State12_Hold(void) {
 // at 0 +9 = 0x20 and +2 up.
 extern "C" void __cdecl EffectKind48_State12_Grow(void) {
     BurstFrame();
-    AddWord(At(at::kBurstSize), 6);
+    AddWord(At(::bof3::Img(at::kBurstSize.v)), 6);
     unsigned char* s;
     if (!CountDown9(&s)) return;
     s[9] = 0x20;
@@ -419,7 +417,7 @@ extern "C" void __cdecl EffectKind48_State12_Grow(void) {
 // down, at 0 +2 up (to WeretigerFx_Next).
 extern "C" void __cdecl EffectKind48_State12_Shrink(void) {
     BurstFrame();
-    AddWord(At(at::kBurstSize), 0xFFF4u);
+    AddWord(At(::bof3::Img(at::kBurstSize.v)), 0xFFF4u);
     unsigned char* s;
     if (!CountDown9(&s)) return;
     s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -477,7 +475,7 @@ extern "C" unsigned char __cdecl EffectSphere_Build(void) {
     SetWord(v + 4, 0xF000);
     SetWord(v, 0);
     SetWord(v + 2, 0);
-    unsigned char* q = At(at::kSphereQuads);
+    unsigned char* q = At(::bof3::Img(at::kSphereQuads.v));
     auto quad = [&q](U a, U b, U c, U d) {
         SetWord(q, a);
         SetWord(q + 2, b);
@@ -501,7 +499,7 @@ extern "C" unsigned char __cdecl EffectSphere_Build(void) {
     SetUL(light + 8, 0x1000);
     SH_CALL(Gte_VectorNormal)(reinterpret_cast<const long*>(light), reinterpret_cast<long*>(light));
     const unsigned char* vert = At(::bof3::Img(Effect2e_SphereVerts_addr));
-    unsigned char* shade = At(at::kSphereShades);
+    unsigned char* shade = At(::bof3::Img(at::kSphereShades.v));
     for (unsigned i = 0; i < at::kSphereVertCount; ++i, vert += 8, ++shade) {
         const U dot = SW(vert + 4) * UL(light + 8) + SW(vert) * UL(light) + SW(vert + 2) * UL(light + 4);
         if (static_cast<std::int32_t>(dot) <= 0) {
@@ -543,18 +541,18 @@ extern "C" unsigned char __cdecl EffectSphere_Draw(void) {
         point[0] = static_cast<long>((SW(v) << 5) + UL(s + 0x34));
         point[1] = static_cast<long>((SW(v + 2) << 5) + UL(s + 0x38));
         point[2] = static_cast<long>(((SW(v + 4) + 0x1000u) << 13) + UL(s + 0x3C));
-        SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(At(at::kSphereScreen + 0xC * i)));
+        SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(At(::bof3::Img(at::kSphereScreen.v) + 0xC * i)));
     }
     DrawMode(0x3C0, 0, 1);
-    const unsigned char* q = At(at::kSphereQuads);
-    const unsigned char* const shades = At(at::kSphereShades);
+    const unsigned char* q = At(::bof3::Img(at::kSphereQuads.v));
+    const unsigned char* const shades = At(::bof3::Img(at::kSphereShades.v));
     for (unsigned n = 0; n < at::kSphereQuadCount; ++n, q += 8) {
         unsigned char* const prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyG4)(prim);
         SH_CALL(Gpu_SetSemiTrans)(prim, 1);
         unsigned vertex[4];
         for (unsigned c = 0; c < 4; ++c) vertex[c] = SphereVertex(Word(q + 2 * c));
-        for (unsigned c = 0; c < 4; ++c) Copy12(prim + 8 + 0x10 * c, At(at::kSphereScreen + 0xC * vertex[c]));
+        for (unsigned c = 0; c < 4; ++c) Copy12(prim + 8 + 0x10 * c, At(::bof3::Img(at::kSphereScreen.v) + 0xC * vertex[c]));
         for (unsigned c = 0; c < 4; ++c) prim[4 + 0x10 * c] = prim[5 + 0x10 * c] = prim[6 + 0x10 * c] = shades[vertex[c]];
         SH_CALL(Gfx_CommitPrim)(1, 0x44);
     }
@@ -761,7 +759,7 @@ extern "C" void __cdecl EffectKind4B_Start(void) {
     rv::Current<records::EffectObject>()->z = 0xB8000;
     Ground(0x80);
     SH_CALL(Gte_PushMatrix)();
-    for (unsigned i = 0; i < at::kDebrisCount; ++i) SH_CALL(EffectKind4B_DebrisInit)(At(at::kDebris + at::kDebrisStride * i));
+    for (unsigned i = 0; i < at::kDebrisCount; ++i) SH_CALL(EffectKind4B_DebrisInit)(At(::bof3::Img(at::kDebris.v) + at::kDebrisStride * i));
     SH_CALL(Gte_PopMatrix)();
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     NextState();
@@ -778,7 +776,7 @@ extern "C" void __cdecl EffectKind4B_Scatter(void) {
     SH_CALL(Gte_PushMatrix)();
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned i = 0; i < at::kDebrisCount; ++i) {
-        unsigned char* const d = At(at::kDebris + at::kDebrisStride * i);
+        unsigned char* const d = At(::bof3::Img(at::kDebris.v) + at::kDebrisStride * i);
         SH_AT(void (__cdecl*)(unsigned char*), at::kDebrisDraw)(d);
         const unsigned char* const s = S();
         AddWord(d + 0x24, 0x10);

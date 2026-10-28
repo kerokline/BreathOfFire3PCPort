@@ -70,7 +70,6 @@ namespace {
 namespace at = effect_4b::at;
 using U = std::uint32_t;
 using move_script::At;
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -88,7 +87,6 @@ U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n
 // imul of two whole registers: the low 32 bits.
 U Mul(U a, std::int32_t b) { return a * static_cast<U>(b); }
 unsigned char& Byte(U cell) { return At(cell)[0]; }
-[[gnu::always_inline]] inline unsigned char& Byte(::bof3::image::Va cell) { return Byte(::bof3::Img(cell)); }
 
 // --- x87 as the original has it (the game's control word); every value goes
 // through the FPU as Capcom's does.
@@ -286,7 +284,7 @@ extern "C" unsigned char __cdecl EffectKind87_StepPanes(void) {
     unsigned char any = 0;
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned i = 0; i < at::kKind87PointCount; ++i)
-        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(at::kKind87Points + at::kKind87PointStride * i)),
+        SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(::bof3::Img(at::kKind87Points.v) + at::kKind87PointStride * i)),
                                         reinterpret_cast<float*>(At(PanePoint(i))));
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned i = 0; i < at::kPaneCount; ++i) {
@@ -305,7 +303,7 @@ extern "C" unsigned char __cdecl EffectKind87_StepPanes(void) {
                     bof3::Fatal("EffectKind87_StepPanes: the sound index 0x%X is %u, past kind 0x87's three sounds at 0x%X "
                                 "- the original reads the word after (docs/effect_4b.md section 6)",
                                 (unsigned)Effect4b_SoundIndex_addr, k, at::kKind87Sounds.v);
-                SH_CALL(Sound_PlayEffect)(Word(At(at::kKind87Sounds + 2 * k)));
+                SH_CALL(Sound_PlayEffect)(Word(At(::bof3::Img(at::kKind87Sounds.v) + 2 * k)));
             }
             {
                 const unsigned char n = static_cast<unsigned char>(Effect4b_SoundIndex + 1);
@@ -385,9 +383,9 @@ extern "C" void __cdecl EffectKind87_Midpoint(unsigned a, unsigned b, unsigned c
         bof3::Fatal("EffectKind87_Midpoint: rows %u, %u, %u, past kKind87Points' fourteen at 0x%X - the original reads "
                     "and writes the .data after (docs/effect_4b.md section 6)",
                     ra, rb, rc, at::kKind87Points.v);
-    unsigned char* const pa = At(at::kKind87Points + at::kKind87PointStride * ra);
-    unsigned char* const pb = At(at::kKind87Points + at::kKind87PointStride * rb);
-    unsigned char* const pc = At(at::kKind87Points + at::kKind87PointStride * rc);
+    unsigned char* const pa = At(::bof3::Img(at::kKind87Points.v) + at::kKind87PointStride * ra);
+    unsigned char* const pb = At(::bof3::Img(at::kKind87Points.v) + at::kKind87PointStride * rb);
+    unsigned char* const pc = At(::bof3::Img(at::kKind87Points.v) + at::kKind87PointStride * rc);
     for (unsigned w = 0; w < 12; w += 4) SetUL(pc + w, Sar(UL(pb + w) + UL(pa + w), 1));
 }
 
@@ -907,7 +905,7 @@ extern "C" void __cdecl EffectKind9F_Brighten(void) {
         S()[0x5E] = static_cast<unsigned char>(S()[0x5E] + 4);
         S()[0x5F] = static_cast<unsigned char>(S()[0x5F] + 4);
     } else {
-        Byte(at::kCounter) = static_cast<unsigned char>(Byte(at::kCounter) + 1);
+        Byte(::bof3::Img(at::kCounter.v)) = static_cast<unsigned char>(Byte(::bof3::Img(at::kCounter.v)) + 1);
         s[1] = 2;
     }
     SH_CALL(EffectKind89_DrawTint)();
@@ -1031,7 +1029,7 @@ extern "C" void __cdecl EffectKind8A_Run(void) {
 // original 0x48A610 (state 0): the six cells of kKind8ACells at x 0x10 given
 // map byte 0x89 (AreaMap_SetByte); +1 = 1.
 extern "C" void __cdecl EffectKind8A_Block(void) {
-    for (unsigned i = 0; i < at::kKind8ACellCount; ++i) SH_CALL(AreaMap_SetByte)(0x10, At(at::kKind8ACells + i)[0], 0x89);
+    for (unsigned i = 0; i < at::kKind8ACellCount; ++i) SH_CALL(AreaMap_SetByte)(0x10, At(::bof3::Img(at::kKind8ACells.v) + i)[0], 0x89);
     S()[1] = 1;
 }
 
@@ -1045,7 +1043,7 @@ extern "C" void __cdecl EffectKind8A_Lines(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x100000);
     rv::Current<records::EffectObject>()->height = 0;
     for (unsigned i = 0; i < at::kKind8ALineCount; ++i) {
-        const U pair = ::bof3::Img(at::kKind8ALines + 8 * i);
+        const U pair = ::bof3::Img(at::kKind8ALines.v) + 8 * i;
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, UL(At(pair)));
         rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_1c, UL(At(pair + 4)));
         unsigned char* s = S();
@@ -1060,7 +1058,7 @@ extern "C" void __cdecl EffectKind8A_Lines(void) {
 
 // original 0x48A700 (state 2): the six cells given map byte 0; Effect_Release.
 extern "C" void __cdecl EffectKind8A_Unblock(void) {
-    for (unsigned i = 0; i < at::kKind8ACellCount; ++i) SH_CALL(AreaMap_SetByte)(0x10, At(at::kKind8ACells + i)[0], 0);
+    for (unsigned i = 0; i < at::kKind8ACellCount; ++i) SH_CALL(AreaMap_SetByte)(0x10, At(::bof3::Img(at::kKind8ACells.v) + i)[0], 0);
     SH_CALL(Effect_Release)();
 }
 
@@ -1073,7 +1071,7 @@ unsigned char Kind8AColour(unsigned byte, const char* who) {
         bof3::Fatal("%s: +6 is %u, past kind 0x8A's one colour row at 0x%X - the original reads the map cells after "
                     "as a colour (docs/effect_4b.md section 6)",
                     who, k, at::kKind8AColour.v);
-    return At(at::kKind8AColour + 3 * k + byte)[0];
+    return At(::bof3::Img(at::kKind8AColour.v) + 3 * k + byte)[0];
 }
 }  // namespace
 
@@ -1197,7 +1195,7 @@ extern "C" void __cdecl EffectKind8B_Start(void) {
 // (ObjTrio, made Field_State and Sprite_Current) its +0x124 bit 6 set and
 // animation 0x6F, its +7 kept to bits 0x11; Sprite_Current put back; +1 = 2.
 extern "C" void __cdecl EffectKind8B_Wait(void) {
-    const unsigned char n = Byte(at::kCounter2);
+    const unsigned char n = Byte(::bof3::Img(at::kCounter2.v));
     unsigned char* const saved = Sprite_Current;
     if (n < 1) return;
     Field_State = rv::Bytes(ObjTrio);
@@ -1230,7 +1228,7 @@ extern "C" void __cdecl EffectKind8B_Pose(void) {
 // original 0x48AC10 (state 3): the counter 0x903849 0; +1 = 1.
 extern "C" void __cdecl EffectKind8B_Again(void) {
     unsigned char* const s = S();
-    Byte(at::kCounter2) = 0;
+    Byte(::bof3::Img(at::kCounter2.v)) = 0;
     s[1] = 1;
 }
 
@@ -1263,7 +1261,7 @@ extern "C" void __cdecl EffectKind8C_Run(void) {
 extern "C" void __cdecl EffectKind8C_Start(void) {
     const unsigned r = static_cast<unsigned>(SH_CALL(Rand)()) & 0xFu;
     unsigned char* const s = S();
-    const unsigned char v = At(at::kKind8CCounts + r)[0];
+    const unsigned char v = At(::bof3::Img(at::kKind8CCounts.v) + r)[0];
     Effect4b_TimerA = v;
     Effect4b_TimerB = v;
     Effect4b_Presses = 0;
@@ -1416,7 +1414,7 @@ extern "C" void __cdecl EffectKind8C_CountA(void) {
         CountUp();
         Effect4b_Presses = 0;
         s[1] = 0x11;
-        Byte(at::kCounter2) = static_cast<unsigned char>(Byte(at::kCounter2) + 1);
+        Byte(::bof3::Img(at::kCounter2.v)) = static_cast<unsigned char>(Byte(::bof3::Img(at::kCounter2.v)) + 1);
         return;
     }
     const unsigned char n = static_cast<unsigned char>(Effect4b_Presses + 1);
@@ -1466,7 +1464,7 @@ extern "C" void __cdecl EffectKind8C_Judge(void) {
 // original 0x48B1D0 (state 0x15): the counter 0x903848 0, the chapter's step
 // byte 0xF; Effect_Release (a tail jump).
 extern "C" void __cdecl EffectKind8C_Pass(void) {
-    Byte(at::kCounter) = 0;
+    Byte(::bof3::Img(at::kCounter.v)) = 0;
     MoveScript_PartyRecords[0x65] = 0xF;
     SH_CALL(Effect_Release)();
 }

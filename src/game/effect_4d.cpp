@@ -62,7 +62,6 @@ namespace {
 namespace at = effect_4d::at;
 using U = std::uint32_t;
 using move_script::At;
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -516,7 +515,7 @@ extern "C" void __cdecl EffectKind97_Grow(void) {
 // +6 0, +0x5D (the debris' shade) 8, +9 = 0x78, +1 up.
 extern "C" void __cdecl EffectKind97_WaitCue(void) {
     Kind97Ring();
-    if (At(at::kCounter)[0] != at::kKind97Cue) return;
+    if (At(::bof3::Img(at::kCounter.v))[0] != at::kKind97Cue) return;
     SH_CALL(EffectKind64_ClearSparks)();
     SH_CALL(Gte_PushMatrix)();
     for (unsigned i = 0; i < at::kDebrisCount; ++i) SH_CALL(EffectKind97_DebrisInit)(Debris(i));
@@ -1024,7 +1023,7 @@ extern "C" void __cdecl EffectKind9A_BackX(void) { Kind9ANudge(0x34, 0xFFFFFC00u
 // original 0x48DF70 (state 7): at the counter 0x903848 = 0x28 a tail jump to
 // Effect_Release; else +1 = 0 (another nudge).
 extern "C" void __cdecl EffectKind9A_Repeat(void) {
-    if (At(at::kCounter)[0] == at::kKind9AEnd) {
+    if (At(::bof3::Img(at::kCounter.v))[0] == at::kKind9AEnd) {
         SH_CALL(Effect_Release)();
         return;
     }

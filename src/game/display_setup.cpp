@@ -38,19 +38,14 @@ namespace {
 using U = std::uint32_t;
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va address) { return At(::bof3::Img(address)); }
 void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
-[[gnu::always_inline]] inline void PutLong(::bof3::image::Va address, U v) { PutLong(::bof3::Img(address), v); }
 void PutWord(U address, U v) {
     const std::uint16_t w = static_cast<std::uint16_t>(v);
     std::memcpy(At(address), &w, sizeof w);
 }
-[[gnu::always_inline]] inline void PutWord(::bof3::image::Va address, U v) { PutWord(::bof3::Img(address), v); }
 void PutFloat(U address, float v) { std::memcpy(At(address), &v, sizeof v); }
 void PutPtr(U address, const void* p) { PutLong(address, static_cast<U>(reinterpret_cast<std::uintptr_t>(p))); }
-[[gnu::always_inline]] inline void PutPtr(::bof3::image::Va address, const void* p) { PutPtr(::bof3::Img(address), p); }
 void Zero(U address, U bytes) { std::memset(At(address), 0, bytes); }
-[[gnu::always_inline]] inline void Zero(::bof3::image::Va address, U bytes) { Zero(::bof3::Img(address), bytes); }
 
 // --- the globals (display-setup.md section 3) -------------------------------------
 // kDesktopH: now PsxRest_TexCacheEnd (symbols.toml).
@@ -239,12 +234,12 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     Zero(::bof3::Img(Gfx_TexCache_addr), kTexCacheBytes);
     Zero(::bof3::Img(Gfx_ClutRows_addr), kClutRowsBytes);
     Zero(::bof3::Img(Font_TexCache_addr), kFontCacheBytes);
-    for (U i = 0; i < kFontCacheBytes / kFontEntry; ++i) PutWord(kFontCache + i * kFontEntry, 0xFFFF);
-    Zero(kBackdropBlock, kBackdropBytes);
+    for (U i = 0; i < kFontCacheBytes / kFontEntry; ++i) PutWord(::bof3::Img(kFontCache.v) + i * kFontEntry, 0xFFFF);
+    Zero(::bof3::Img(kBackdropBlock.v), kBackdropBytes);
     Zero(::bof3::Img(D3d_CaptureReady_addr), kAfterDrawBytes);
     Zero(::bof3::Img(D3d_CellTexCache_addr), kCellCacheBytes);
     Zero(::bof3::Img(Gfx_PixelFormat_addr), 3 * kPixelFormatRecord);
-    PutLong(kRenderFlags, 0);
+    PutLong(::bof3::Img(kRenderFlags.v), 0);
     Display_ZeroedUnread = 0;
     D3d_ShadeModeCache = 0;
 
@@ -254,21 +249,21 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     // 2.4 the device records: 0 the original's synthetic software renderer (kept
     // so that F7's name overlay reads it), 1 this backend. No enumeration.
     if (static_cast<std::int32_t>(Display_DeviceCountLess1) < 1) {
-        Zero(kDeviceRecords, 2 * kDeviceRecord);
-        Zero(kModeLists, kModeListsBytes);
-        PutLong(kDeviceRecords + 0, 1);
-        PutLong(kDeviceRecords + 4, 1);
-        std::memcpy(At(kDeviceRecords + 0x18), "Software Render", 16);
-        PutLong(kDeviceRecords + kDeviceRecord + 0, 1);
-        PutLong(kDeviceRecords + kDeviceRecord + 4, 1);
-        std::memcpy(At(kDeviceRecords + kDeviceRecord + 0x18), "Direct3D 11 (bof3x)", 20);
+        Zero(::bof3::Img(kDeviceRecords.v), 2 * kDeviceRecord);
+        Zero(::bof3::Img(kModeLists.v), kModeListsBytes);
+        PutLong(::bof3::Img(kDeviceRecords.v) + 0, 1);
+        PutLong(::bof3::Img(kDeviceRecords.v) + 4, 1);
+        std::memcpy(At(::bof3::Img(kDeviceRecords.v) + 0x18), "Software Render", 16);
+        PutLong(::bof3::Img(kDeviceRecords.v) + kDeviceRecord + 0, 1);
+        PutLong(::bof3::Img(kDeviceRecords.v) + kDeviceRecord + 4, 1);
+        std::memcpy(At(::bof3::Img(kDeviceRecords.v) + kDeviceRecord + 0x18), "Direct3D 11 (bof3x)", 20);
         Display_DeviceCountLess1 = 1;
     }
     // 2.5 which device: the original wraps an index past the last record to 0
     // and takes record 0 as the software renderer. Here every index is the
     // hardware path (DIV-0031); the wrap is kept for F7's cycling.
     if (*device < 0 || *device > 1) *device = 0;
-    PutLong(kRenderFlags, 2);   // bit 1: the device allows windowed
+    PutLong(::bof3::Img(kRenderFlags.v), 2);   // bit 1: the device allows windowed
 
     // 2.6 the mode and the scale: the logical picture is the target's size
     const render::Options options = ReadOptions(hwnd, *fullscreen != 0);
@@ -289,16 +284,16 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     PutFloat(::bof3::Img(D3d_ScaleY_addr), static_cast<float>(g_scale));
     SprtDraw_SetScale(g_scale);   // DIV-0010's far edge follows the scale (display-overhaul.md 4b)
     Zero(::bof3::Img(D3d_DeviceDesc_addr), kDeviceDescBytes);
-    PutLong(kDeviceDesc + kDescTextureCaps, kTextureCaps);
-    PutLong(kDeviceDesc + kDescMinW, kMinTexture);
-    PutLong(kDeviceDesc + kDescMinH, kMinTexture);
-    PutLong(kDeviceDesc + kDescMaxW, kMaxTexture);
-    PutLong(kDeviceDesc + kDescMaxH, kMaxTexture);
+    PutLong(::bof3::Img(kDeviceDesc.v) + kDescTextureCaps, kTextureCaps);
+    PutLong(::bof3::Img(kDeviceDesc.v) + kDescMinW, kMinTexture);
+    PutLong(::bof3::Img(kDeviceDesc.v) + kDescMinH, kMinTexture);
+    PutLong(::bof3::Img(kDeviceDesc.v) + kDescMaxW, kMaxTexture);
+    PutLong(::bof3::Img(kDeviceDesc.v) + kDescMaxH, kMaxTexture);
 
     // 2.7 the windowed path, always: DirectDraw, primary, back buffer, no
     // clipper, Gfx_RenderFlags bit 0x200. The window rect stays 0x5A5130's.
     Dd_DirectDraw = render::DirectDrawObject();
-    PutPtr(kDirect3D, render::DirectDrawObject());   // released by the teardown, read by nothing else
+    PutPtr(::bof3::Img(kDirect3D.v), render::DirectDrawObject());   // released by the teardown, read by nothing else
     render::Surface* primary = render::MakeSurface(width, height, 32, 0x200, 0, true, false);
     render::Surface* back = render::MakeSurface(width, height, 32, 0x2040, 0, false, true);
     if (!primary || !back) bof3::Fatal("Display_Setup: out of memory for the primary and back surfaces");

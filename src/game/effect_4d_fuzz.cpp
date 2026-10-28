@@ -163,7 +163,6 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
-[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -300,7 +299,7 @@ void Seed(unsigned k) {
     Field_MemberCount = static_cast<unsigned char>(sh::Next() % 4);
     // kind 0x96's index inside its table's eight (ours aborts past)
     Mem(Effect4d_Kind96Index_addr)[0] = static_cast<unsigned char>(PickOf(0, 6, 7, sh::Next() % 8));
-    if (sh::Half()) Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(at::kKind97Cue, at::kKind9AEnd));
+    if (sh::Half()) Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>(PickOf(at::kKind97Cue, at::kKind9AEnd));
     if (sh::Half()) Transition_Busy = 0;
     switch (k) {
     case k91Wait:
@@ -374,7 +373,7 @@ void Disturb(U h) {
     case 0: s[9] = static_cast<unsigned char>((v & 1) ? 1u : v >> 1); break;
     case 1: s[6] = static_cast<unsigned char>(v); break;
     case 2: s[0x5D] = static_cast<unsigned char>((v & 1) ? 0x3Fu + ((v >> 1) & 1) : v >> 1); break;
-    case 3: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? ((v & 2) ? at::kKind97Cue : at::kKind9AEnd) : v >> 2); break;
+    case 3: Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>((v & 1) ? ((v & 2) ? at::kKind97Cue : at::kKind9AEnd) : v >> 2); break;
     case 4: Mem(Effect4d_Kind96Index_addr)[0] = static_cast<unsigned char>(v % 8); break;
     case 5: SetWord(Mem(Effect4d_Kind95Clock_addr), v); break;
     case 6: SetLong(s + 0x74 + 4 * (v % 3), static_cast<std::int32_t>(v >> 2)); break;

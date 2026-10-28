@@ -154,7 +154,6 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
-[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -362,12 +361,12 @@ void Seed(unsigned k) {
     case k63Shrink:
         SetLong(s + 0x18, static_cast<std::int32_t>(PickOf(0, 1, 9, 10, 11, 0xFFFFFFFFu, 0x8000000Au, sh::Next())));
         break;
-    case k63WaitCue: Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(0x2B, 0x2B, 0x2A, 0x2C, sh::Next())); break;
+    case k63WaitCue: Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>(PickOf(0x2B, 0x2B, 0x2A, 0x2C, sh::Next())); break;
     case k65WaitRequest:
     case k65Check:
     case k65Close:
         Field_Request = static_cast<unsigned char>(PickOf(3, 2, 3, 2, 0, sh::Next()));
-        SetLong(Mem(at::kKind65Count), static_cast<std::int32_t>(sh::Half() ? 5u * (sh::Next() % 0x33333333u) : sh::Next()));
+        SetLong(Mem(::bof3::Img(at::kKind65Count.v)), static_cast<std::int32_t>(sh::Half() ? 5u * (sh::Next() % 0x33333333u) : sh::Next()));
         break;
     case k65WaitInput: Input_Held = static_cast<unsigned short>(sh::Half() ? 0 : PickOf(1, 0x100, 0x8000, sh::Next())); break;
     case k69Spawn:
@@ -447,7 +446,7 @@ void Disturb(U h) {
     case 7: SetLong(Mem(EffectKind69_Parent_addr), static_cast<std::int32_t>(Key(Rec(v)))); break;
     case 8: SetLong(Mem(Effect3c_ShardCursor_addr), static_cast<std::int32_t>(SparkAt(v % at::kSparkCount))); break;
     case 9: Field_MemberCount = static_cast<unsigned char>(v % 4); break;
-    case 10: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? at::kCounterCue : v >> 1); break;
+    case 10: Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>((v & 1) ? at::kCounterCue : v >> 1); break;
     case 11: if (here) SetLong(s + 0x18, static_cast<std::int32_t>(v)); break;
     case 12: SetWord(Mem(Prim_VertexScratch_addr + 2 * (v % 16)), v >> 4); break;
     case 13: if (here) s[0x5C + (v % 4)] = static_cast<unsigned char>(v >> 2); break;

@@ -105,8 +105,6 @@ U Variant(const char* who, const unsigned char* s, U table, unsigned room) {
                     who, (int)v, room, (unsigned)table);
     return static_cast<U>(v);
 }
-// The table only names itself in the message: its VA, not a place.
-[[gnu::always_inline]] inline U Variant(const char* who, const unsigned char* s, ::bof3::image::Va table, unsigned room) { return Variant(who, s, table.v, room); }
 
 // cdq; xor eax, edx; sub eax, edx; cmp eax, n; jg: |d| as the original
 // computes it - 0x80000000 stays itself, negative, and so counts as near.
@@ -299,7 +297,7 @@ extern "C" void __cdecl EffectKind18Sub37_Run(void) {
 // +2 up. Nothing drawn.
 extern "C" void __cdecl EffectKind18Sub37_Place(void) {
     unsigned char* const s = S();
-    const U v = Variant("EffectKind18Sub37_Place", s, at::kSub37Cells, at::kRoom2);
+    const U v = Variant("EffectKind18Sub37_Place", s, at::kSub37Cells.v, at::kRoom2);
     s[8] = Word(s + 0x3A) == 0 ? 1 : 0;
     SetWord(S() + 0x36, At(::bof3::Img(at::kSub37Cells.v) + 2 * v)[0]);
     SetWord(S() + 0x3A, At(::bof3::Img(at::kSub37Cells.v) + 2 * v + 1)[0]);
@@ -430,7 +428,7 @@ extern "C" void __cdecl EffectKind18Sub38_Run(void) {
 // otherwise the slide 0 and +2 = 3 (the draw held). Nothing drawn.
 extern "C" void __cdecl EffectKind18Sub38_Place(void) {
     unsigned char* s = S();
-    const U v = Variant("EffectKind18Sub38_Place", s, at::kSub38Cells, at::kRoom4);
+    const U v = Variant("EffectKind18Sub38_Place", s, at::kSub38Cells.v, at::kRoom4);
     s[8] = Word(s + 0x3A) == 0 ? 1 : 0;
     SetWord(S() + 0x36, At(::bof3::Img(at::kSub38Cells.v) + 2 * v)[0]);
     SetWord(S() + 0x3A, At(::bof3::Img(at::kSub38Cells.v) + 2 * v + 1)[0]);

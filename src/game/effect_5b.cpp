@@ -48,7 +48,6 @@ namespace at = effect_5b::at;
 using U = std::uint32_t;
 using I = std::int32_t;
 using move_script::At;
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -60,7 +59,6 @@ void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<I>(v)); }
 // movsx word
 I SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char& B(U a) { return *At(a); }
-[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 
 using Handler = scenario_harness::Handler;
@@ -108,7 +106,6 @@ unsigned Byte(const char* who, U array, unsigned extent, U index) {
                     who, static_cast<int>(index), extent, (unsigned)array);
     return B(array + index);
 }
-[[gnu::always_inline]] inline unsigned Byte(const char* who, ::bof3::image::Va array, unsigned extent, U index) { return Byte(who, ::bof3::Img(array), extent, index); }
 
 // --- the CRT's _ftol 0x5B9550 on st(0) (truncation set in a copy of the control
 // word for one fistp to 64 bits, the word put back), the low dword -------------
@@ -331,7 +328,7 @@ extern "C" void __cdecl EffectKind18Sub0D_Wait(void) {
 // 4: +9 0 and +2 up; the glow.
 extern "C" void __cdecl EffectKind18Sub0D_Open(void) {
     unsigned char* const s = S();
-    const unsigned frame = Byte("EffectKind18Sub0D_Open", at::kSub0DOpenFrames, at::kSub0DArray, s[9] >> 1);
+    const unsigned frame = Byte("EffectKind18Sub0D_Open", ::bof3::Img(at::kSub0DOpenFrames.v), at::kSub0DArray, s[9] >> 1);
     SH_CALL(EffectKind18Sub0D_MoveFrame)(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->x_whole)), frame);
     Step(4, true, -1);
     SH_CALL(EffectKind18Sub0D_DrawGlow)(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(S())->x_whole)));
@@ -367,7 +364,7 @@ extern "C" void __cdecl EffectKind18Sub0D_Idle(void) {
 // 3: +2 1. No glow.
 extern "C" void __cdecl EffectKind18Sub0D_Shut(void) {
     unsigned char* const s = S();
-    const unsigned frame = Byte("EffectKind18Sub0D_Shut", at::kSub0DShutFrames, at::kSub0DArray, s[9] / 3u);
+    const unsigned frame = Byte("EffectKind18Sub0D_Shut", ::bof3::Img(at::kSub0DShutFrames.v), at::kSub0DArray, s[9] / 3u);
     SH_CALL(EffectKind18Sub0D_MoveFrame)(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->x_whole)), frame);
     Step(3, false, 1);
 }
@@ -376,7 +373,7 @@ extern "C" void __cdecl EffectKind18Sub0D_Shut(void) {
 // past 6: +9 0 and +2 3; the glow.
 extern "C" void __cdecl EffectKind18Sub0D_Flash(void) {
     unsigned char* const s = S();
-    const unsigned frame = Byte("EffectKind18Sub0D_Flash", at::kSub0DFlashFrames, at::kSub0DArray, s[9] >> 1);
+    const unsigned frame = Byte("EffectKind18Sub0D_Flash", ::bof3::Img(at::kSub0DFlashFrames.v), at::kSub0DArray, s[9] >> 1);
     SH_CALL(EffectKind18Sub0D_MoveFrame)(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->x_whole)), frame);
     Step(6, true, 3);
     SH_CALL(EffectKind18Sub0D_DrawGlow)(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(S())->x_whole)));
@@ -405,9 +402,9 @@ extern "C" void __cdecl EffectKind18Sub0D_MoveFrame(int column, unsigned frame) 
 extern "C" void __cdecl EffectKind18Sub0D_DrawGlow(int column) {
     const char* const who = "EffectKind18Sub0D_DrawGlow";
     const U i = static_cast<U>(column);
-    const unsigned gx = Byte(who, at::kSub0DGlowX, at::kSub0DArray, i);
-    const unsigned gz = B(at::kSub0DGlowZ + i);
-    const unsigned gy = B(at::kSub0DGlowY + i);
+    const unsigned gx = Byte(who, ::bof3::Img(at::kSub0DGlowX.v), at::kSub0DArray, i);
+    const unsigned gz = B(::bof3::Img(at::kSub0DGlowZ.v) + i);
+    const unsigned gy = B(::bof3::Img(at::kSub0DGlowY.v) + i);
     SetV(0, 0, (gx - 0x80u) << 7);
     SetV(0, 1, (gz - 0x80u) << 7);
     SetV(0, 2, (0u - gy) << 3);
@@ -429,7 +426,7 @@ extern "C" void __cdecl EffectKind18Sub0D_DrawGlow(int column) {
     SetV(2, 0, cx);
     SetV(0, 0, cx);
     const I d = static_cast<I>(depth);
-    const I across = static_cast<I>(B(at::kSub0DGlowSize + i) * 1125u) / d;
+    const I across = static_cast<I>(B(::bof3::Img(at::kSub0DGlowSize.v) + i) * 1125u) / d;
     SetV(1, 0, FiAddFtol(across, sx));
     SetV(3, 0, FldFiSubFtol(sx, across));
     const U cy = FldFtol(sy);
@@ -437,7 +434,7 @@ extern "C" void __cdecl EffectKind18Sub0D_DrawGlow(int column) {
     SetV(1, 1, cy);
     {
         const I angle = Camera_Angles[0];
-        const U size = B(at::kSub0DGlowSize + i);
+        const U size = B(::bof3::Img(at::kSub0DGlowSize.v) + i);
         const I sine = SH_CALL(Math_Sin)(angle);
         const U reach = static_cast<U>(Abs(static_cast<I>(static_cast<U>(sine) * size) >> 13)) + size;
         const I down = static_cast<I>(reach * 1125u) / d;
@@ -445,7 +442,7 @@ extern "C" void __cdecl EffectKind18Sub0D_DrawGlow(int column) {
     }
     {
         const I angle = Camera_Angles[0];
-        const U size = B(at::kSub0DGlowSize + i);
+        const U size = B(::bof3::Img(at::kSub0DGlowSize.v) + i);
         const I sine = SH_CALL(Math_Sin)(angle);
         const U reach = static_cast<U>(Abs(static_cast<I>(static_cast<U>(sine) * size) >> 13)) + size;
         const I up = static_cast<I>(reach * 1125u) / d;
@@ -567,7 +564,7 @@ extern "C" void __cdecl EffectKind18Sub0B_DrawTiles(int height, unsigned long co
 
 namespace {
 unsigned Sub0CFlag(const char* who) {
-    return Byte(who, at::kSub0CFlags, at::kSub0CFlagCount, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(S())->x_whole))));
+    return Byte(who, ::bof3::Img(at::kSub0CFlags.v), at::kSub0CFlagCount, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(S())->x_whole))));
 }
 }  // namespace
 
@@ -602,7 +599,7 @@ extern "C" void __cdecl EffectKind18Sub0C_Wait(void) {
 // +9 0 and +2 up.
 extern "C" void __cdecl EffectKind18Sub0C_Open(void) {
     SH_CALL(EffectKind18Sub0C_MoveFrame)(
-        Byte("EffectKind18Sub0C_Open", at::kSub0COpenFrames, at::kSub0DArray, S()[9] >> 1));
+        Byte("EffectKind18Sub0C_Open", ::bof3::Img(at::kSub0COpenFrames.v), at::kSub0DArray, S()[9] >> 1));
     Step(4, true, -1);
 }
 
@@ -623,7 +620,7 @@ extern "C" void __cdecl EffectKind18Sub0C_Idle(void) {
 // original 0x4FFD30 (state 4): the frame _ShutFrames[+9 / 3]; +9 up, past 3: +2 1.
 extern "C" void __cdecl EffectKind18Sub0C_Shut(void) {
     SH_CALL(EffectKind18Sub0C_MoveFrame)(
-        Byte("EffectKind18Sub0C_Shut", at::kSub0CShutFrames, at::kSub0DArray, S()[9] / 3u));
+        Byte("EffectKind18Sub0C_Shut", ::bof3::Img(at::kSub0CShutFrames.v), at::kSub0DArray, S()[9] / 3u));
     Step(3, false, 1);
 }
 
@@ -631,7 +628,7 @@ extern "C" void __cdecl EffectKind18Sub0C_Shut(void) {
 // +9 0 and +2 3.
 extern "C" void __cdecl EffectKind18Sub0C_Flash(void) {
     SH_CALL(EffectKind18Sub0C_MoveFrame)(
-        Byte("EffectKind18Sub0C_Flash", at::kSub0CFlashFrames, at::kSub0DArray, S()[9] >> 1));
+        Byte("EffectKind18Sub0C_Flash", ::bof3::Img(at::kSub0CFlashFrames.v), at::kSub0DArray, S()[9] >> 1));
     Step(6, true, 3);
 }
 
@@ -639,7 +636,7 @@ extern "C" void __cdecl EffectKind18Sub0C_Flash(void) {
 // 0x160, 8, 0x78) onto (_Columns[+0x36] + 0x1C0, 0x160), committed to slot 6.
 extern "C" void __cdecl EffectKind18Sub0C_MoveFrame(unsigned frame) {
     const U offset = static_cast<U>(Halve(static_cast<I>((frame + 1) << 4)));
-    const U to = Byte("EffectKind18Sub0C_MoveFrame", at::kSub0CColumns, at::kSub0CColumnCount,
+    const U to = Byte("EffectKind18Sub0C_MoveFrame", ::bof3::Img(at::kSub0CColumns.v), at::kSub0CColumnCount,
                       static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(S())->x_whole)))) + 0x1C0u;
     MoveColumn(offset + 0x1C0, to);
 }
@@ -780,7 +777,6 @@ extern "C" void __cdecl EffectKind18Sub0E_DrawGate(void) {
 
 namespace {
 unsigned Sub13(const char* who, U array) { return Byte(who, array, at::kSub13Count, S()[0xB]); }
-[[gnu::always_inline]] inline unsigned Sub13(const char* who, ::bof3::image::Va array) { return Sub13(who, ::bof3::Img(array)); }
 }  // namespace
 
 // original 0x500300 (EffectKind18_States[19], hidden in 0x500160): jmp
@@ -797,10 +793,10 @@ extern "C" void __cdecl EffectKind18Sub13_Start(void) {
     unsigned char* s = S();
     s[0xB] = s[0x36];
     s = S();
-    rv::As<records::EffectObject>(s)->x = static_cast<U>(Byte(who, at::kSub13Cells, 2 * at::kSub13Count, 2u * s[0xB])) << 16;
+    rv::As<records::EffectObject>(s)->x = static_cast<U>(Byte(who, ::bof3::Img(at::kSub13Cells.v), 2 * at::kSub13Count, 2u * s[0xB])) << 16;
     s = S();
-    rv::As<records::EffectObject>(s)->z = static_cast<U>(B(at::kSub13Cells + 1 + 2u * s[0xB])) << 16;
-    if (SH_CALL(Flags_Test)(Row9(), Sub13(who, at::kSub13Flags))) {
+    rv::As<records::EffectObject>(s)->z = static_cast<U>(B(::bof3::Img(at::kSub13Cells.v) + 1 + 2u * s[0xB])) << 16;
+    if (SH_CALL(Flags_Test)(Row9(), Sub13(who, ::bof3::Img(at::kSub13Flags.v)))) {
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
         SH_CALL(EffectKind18Sub13_Shown)();
         return;
@@ -814,11 +810,11 @@ extern "C" void __cdecl EffectKind18Sub13_Start(void) {
 // height 0x40, and a tail jump to the line.
 extern "C" void __cdecl EffectKind18Sub13_Shown(void) {
     const char* const who = "EffectKind18Sub13_Shown";
-    if (!SH_CALL(Flags_Test)(Row9(), Sub13(who, at::kSub13Flags))) {
+    if (!SH_CALL(Flags_Test)(Row9(), Sub13(who, ::bof3::Img(at::kSub13Flags.v)))) {
         S()[9] = 9;
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
     }
-    const U face = SH_CALL(Flags_Test)(Row9(), Sub13(who, at::kSub13Faces)) & 0xFFu;
+    const U face = SH_CALL(Flags_Test)(Row9(), Sub13(who, ::bof3::Img(at::kSub13Faces.v))) & 0xFFu;
     SH_CALL(EffectKind18Sub13_DrawPanel)(S()[0xB] + face * 4 + 1, 0x40);
     SH_CALL(EffectKind18Sub13_DrawLine)();
 }
@@ -832,7 +828,7 @@ extern "C" void __cdecl EffectKind18Sub13_Fall(void) {
     if (S()[9] == 0) S()[2] = static_cast<unsigned char>(S()[2] + 1);
     SH_CALL(EffectKind18Sub13_DrawPanel)(0, 0x40);
     const int height = static_cast<int>(static_cast<unsigned>(S()[9]) << 3);
-    const U face = SH_CALL(Flags_Test)(Row9(), Sub13(who, at::kSub13Faces)) & 0xFFu;
+    const U face = SH_CALL(Flags_Test)(Row9(), Sub13(who, ::bof3::Img(at::kSub13Faces.v))) & 0xFFu;
     SH_CALL(EffectKind18Sub13_DrawPanel)(S()[0xB] + face * 4 + 1, height);
     SH_CALL(EffectKind18Sub13_DrawLine)();
 }
@@ -840,7 +836,7 @@ extern "C" void __cdecl EffectKind18Sub13_Fall(void) {
 // original 0x5004A0 (state 3; 0x500320 jumps here): the variant's flag set: +9 9
 // and +2 up. The bare panel (face 0, 0x40).
 extern "C" void __cdecl EffectKind18Sub13_Hidden(void) {
-    if (SH_CALL(Flags_Test)(Row9(), Sub13("EffectKind18Sub13_Hidden", at::kSub13Flags))) {
+    if (SH_CALL(Flags_Test)(Row9(), Sub13("EffectKind18Sub13_Hidden", ::bof3::Img(at::kSub13Flags.v)))) {
         S()[9] = 9;
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
     }
@@ -858,7 +854,7 @@ extern "C" void __cdecl EffectKind18Sub13_Rise(void) {
     SH_CALL(Gpu_SetDrawMode)(Prim(), 0, 0, 0xB5, 0);
     s = S();
     SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 1, 0xC);
-    const U face = SH_CALL(Flags_Test)(Row9(), Sub13("EffectKind18Sub13_Rise", at::kSub13Faces)) & 0xFFu;
+    const U face = SH_CALL(Flags_Test)(Row9(), Sub13("EffectKind18Sub13_Rise", ::bof3::Img(at::kSub13Faces.v))) & 0xFFu;
     SH_CALL(EffectKind18Sub13_DrawPanel)(S()[0xB] + face * 4 + 1, 0x40);
     unsigned char* const prim = Prim();
     SH_CALL(Gpu_SetPolyF4)(prim);
@@ -973,17 +969,17 @@ void Gate0FPrepare(const char* who, bool sub4F) {
     if (sub4F) s[0xA] = static_cast<unsigned char>(8 - static_cast<unsigned char>(v));
     else s[0xA] = static_cast<unsigned char>(s[0x3A] + 1);
     s = S();
-    s[0xB] = static_cast<unsigned char>(Byte(who, at::kGateFlags, at::kGateFlagCount, static_cast<U>(SW(s + 0x3A))));
-    const unsigned cell_x = Byte(who, at::kGateCells, 2 * at::kGateCount, 2u * static_cast<U>(v));
+    s[0xB] = static_cast<unsigned char>(Byte(who, ::bof3::Img(at::kGateFlags.v), at::kGateFlagCount, static_cast<U>(SW(s + 0x3A))));
+    const unsigned cell_x = Byte(who, ::bof3::Img(at::kGateCells.v), 2 * at::kGateCount, 2u * static_cast<U>(v));
     SetWord(S() + 0x36, cell_x);
-    SetWord(S() + 0x3A, B(at::kGateCells + 1 + 2u * static_cast<U>(v)));
+    SetWord(S() + 0x3A, B(::bof3::Img(at::kGateCells.v) + 1 + 2u * static_cast<U>(v)));
     S()[8] = v == 0 ? 1 : 0;
     s = S();
     const long e = SH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
-    const U height = Word(At(at::kGateHeights + 2u * static_cast<U>(v)));
+    const U height = Word(At(::bof3::Img(at::kGateHeights.v) + 2u * static_cast<U>(v)));
     SetWord(S() + 0x3E, (0u - height) - static_cast<U>(Half(e)));
     SetWord(S() + 0x32, height);
-    SetWord(S() + 0x2E, Word(At(at::kGateTextures + 2u * static_cast<U>(v))));
+    SetWord(S() + 0x2E, Word(At(::bof3::Img(at::kGateTextures.v) + 2u * static_cast<U>(v))));
     SetWord(S() + 0x30, 0);
 }
 

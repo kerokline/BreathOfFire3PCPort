@@ -47,7 +47,6 @@ namespace {
 namespace at = effect_1d::at;
 using U = std::uint32_t;
 using move_script::At;
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -242,7 +241,7 @@ extern "C" void __cdecl EffectKind22_WaitArms(void) {
     const unsigned char* const s = S();
     for (unsigned i = 0; i < 5; ++i)
         if (At(UL(s + 0xC + 4 * i))[6] == 0) return;
-    unsigned char* const counter = At(at::kCounter0);
+    unsigned char* const counter = At(::bof3::Img(at::kCounter0.v));
     counter[0] = static_cast<unsigned char>(counter[0] + 1);
     SH_CALL(Effect_Release)();
 }

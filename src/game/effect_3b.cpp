@@ -63,10 +63,8 @@ U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 void SetUL(U a, U v) { SetUL(At(a), v); }
-[[gnu::always_inline]] inline void SetUL(::bof3::image::Va a, U v) { SetUL(::bof3::Img(a), v); }
 U W(U a) { return Word(At(a)); }
 unsigned char& B(U a) { return *At(a); }
-[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 U S16(U v) { return static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(v & 0xFFFFu))); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
@@ -74,7 +72,6 @@ U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n
 // imul (32 bits kept)
 U Mul(int a, U b) { return static_cast<U>(a) * b; }
 void AddWord(U a, U d) { SetWord(At(a), W(a) + d); }
-[[gnu::always_inline]] inline void AddWord(::bof3::image::Va a, U d) { AddWord(::bof3::Img(a), d); }
 
 // --- x87 as the original has it (the game's control word: round to nearest, 53
 // bits); every value goes through the FPU as Capcom's does.
@@ -322,14 +319,14 @@ extern "C" void __cdecl EffectKind63_Shrink(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18) - 10);
     s[0x5C] = static_cast<unsigned char>(s[0x5C] - 2);
     if (static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18)) > 0) return;
-    B(at::kCounter) = static_cast<unsigned char>(B(at::kCounter) + 1);
+    B(::bof3::Img(at::kCounter.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter.v)) + 1);
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
 // original 0x4825D0 (state 4): with the counter 0x903848 at 0x2B, +9 = 0x10 and
 // +1 = 5; then the tint and (a tail jump) the sprites refreshed.
 extern "C" void __cdecl EffectKind63_WaitCue(void) {
-    if (B(at::kCounter) == at::kCounterCue) {
+    if (B(::bof3::Img(at::kCounter.v)) == at::kCounterCue) {
         S()[9] = 0x10;
         S()[1] = 5;
     }
@@ -497,7 +494,7 @@ extern "C" void __cdecl EffectKind65_Shake(void) {
         return;
     }
     MapView_Redraw = 2;
-    const U step = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(at::kShakeSteps + (left & 3)))));
+    const U step = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(::bof3::Img(at::kShakeSteps.v) + (left & 3)))));
     Camera_ShiftY = static_cast<short>(static_cast<U>(static_cast<unsigned short>(Camera_ShiftY)) + (step << 2));
 }
 
@@ -565,7 +562,7 @@ extern "C" void __cdecl EffectKind69_Run(void) {
 // four with +2 = 2 and +4 = 0..3; its own +0xB = 0, +1 up;
 // Sound_PlayEffect(0x203).
 extern "C" void __cdecl EffectKind69_Spawn(void) {
-    SetUL(at::kParent, AddressOf(Sprite_Current));
+    SetUL(::bof3::Img(at::kParent.v), AddressOf(Sprite_Current));
     unsigned char* e = Spawned("EffectKind69_Spawn", SH_CALL(Effect_FindFree)());
     e[0] = 1;
     e[5] = 0x69;
@@ -758,10 +755,10 @@ extern "C" void __cdecl EffectKind69_DrawColumn(unsigned width, unsigned base, u
         SH_CALL(Gte_PrimDepths4_10B)(p);
     };
     const auto shift = [](U delta) {
-        AddWord(at::kV0 + 2, delta);
-        AddWord(at::kV1 + 2, delta);
-        AddWord(at::kV2 + 2, delta);
-        AddWord(at::kV3 + 2, delta);
+        AddWord(::bof3::Img(at::kV0.v) + 2, delta);
+        AddWord(::bof3::Img(at::kV1.v) + 2, delta);
+        AddWord(::bof3::Img(at::kV2.v) + 2, delta);
+        AddWord(::bof3::Img(at::kV3.v) + 2, delta);
     };
     for (U i = 1; i < 0x12; ++i) {
         const U angle = ((static_cast<U>(S()[0xB]) + i) & 0xF) << 8;
@@ -891,7 +888,7 @@ extern "C" void __cdecl EffectKind69_DrawColumn(unsigned width, unsigned base, u
         p[0x36] = 1;
         quad(p);
         SH_CALL(Gfx_CommitPrim)(2, 0x44);
-        AddWord(at::kV0 + 2, 0u - d2);
+        AddWord(::bof3::Img(at::kV0.v) + 2, 0u - d2);
     }
 }
 

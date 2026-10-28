@@ -172,7 +172,6 @@ static_assert(kCount == sizeof kAll / sizeof kAll[0], "one enum entry a clone, i
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
-[[gnu::always_inline]] inline unsigned char* Mem(::bof3::image::Va a) { return Mem(::bof3::Img(a)); }
 template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
@@ -273,7 +272,7 @@ void Seed(unsigned k) {
         bool along = s[8] != 0;
         U x = Word(s + 0x36), z = Word(s + 0x3A);
         if (k == k25Start || k == k26Start) {
-            const U cells = ::bof3::Img(k == k25Start ? at::kSub25Cells : at::kSub26Cells);
+            const U cells = k == k25Start ? ::bof3::Img(at::kSub25Cells.v) : ::bof3::Img(at::kSub26Cells.v);
             along = Word(s + 0x3A) == 0;
             x = move_script::At(cells + 2 * Word(s + 0x36))[0];
             z = move_script::At(cells + 2 * Word(s + 0x36) + 1)[0];
@@ -284,7 +283,7 @@ void Seed(unsigned k) {
         SetLong(Mem(along ? (ObjTrio_addr + 0x38) : (ObjTrio_addr + 0x34)), static_cast<std::int32_t>(a));
         SetLong(Mem(along ? (ObjTrio_addr + 0x34) : (ObjTrio_addr + 0x38)), static_cast<std::int32_t>(b));
     }
-    Mem(at::kCounter)[0] = static_cast<unsigned char>(Cue());
+    Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>(Cue());
     Field_Request = static_cast<unsigned char>(PickOf(0, 0, 1, 2, sh::Next()));
     if (k == k3FShadeClut)
         for (U i = 0; i < 2 * at::kClutRowWords; i += 4) SetLong(Mem(Gfx_ClutStripSource_addr + 0x800 + i), static_cast<std::int32_t>(sh::Next()));
@@ -332,7 +331,7 @@ void Disturb(U h) {
     }
     case 1: SetWord(s + 0x30, (v & 1) ? ((v & 2) ? 0x40u : 0x80u) + ((v >> 2) & 3) - 1 : v >> 1); break;
     case 2: SetLong(s + 0x14, static_cast<std::int32_t>((v & 1) ? 0xF9060u + ((v >> 1) & 1) : v)); break;
-    case 3: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 0x26u + ((v >> 1) % 0x16) : v >> 1); break;
+    case 3: Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>((v & 1) ? 0x26u + ((v >> 1) % 0x16) : v >> 1); break;
     case 4: s[0xB] = static_cast<unsigned char>(v % 3); break;
     case 5: SetWord(s + 0x32, LidDraw(g_k) ? v % 3 : v); break;
     case 6: SetWord(s + 0x2E, Word(s + 0x2E) ^ 0x800u); break;

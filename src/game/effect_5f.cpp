@@ -101,8 +101,6 @@ U Place(const char* who, U table, unsigned count) {
                     who, (int)i, count, (unsigned)table);
     return static_cast<U>(i);
 }
-// The table only names itself in the message: its VA, not a place.
-[[gnu::always_inline]] inline U Place(const char* who, ::bof3::image::Va table, unsigned count) { return Place(who, table.v, count); }
 
 // The leader against the record's cell (+0x36 x, +0x3A z, s16 cells; the
 // leader's point 16.16). Along the axis +8 picks (z when set), the leader's
@@ -274,7 +272,7 @@ extern "C" void __cdecl EffectKind18Sub27_Draw(void) {
 extern "C" void __cdecl EffectKind18Sub27_Start(void) {
     unsigned char* const s = S();
     s[8] = rv::As<records::EffectObject>(s)->z_whole == 0 ? 1 : 0;
-    const U i = Place("EffectKind18Sub27_Start", at::kSub27Cell, at::kSub27Places);
+    const U i = Place("EffectKind18Sub27_Start", at::kSub27Cell.v, at::kSub27Places);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, B(::bof3::Img(at::kSub27Cell.v) + 2 * i));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, B(::bof3::Img(at::kSub27Cell.v) + 2 * i + 1));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, W(::bof3::Img(at::kSub27Height.v) + 2 * i));
@@ -495,7 +493,7 @@ extern "C" unsigned char __cdecl EffectKind18Sub42_MemberNear(long x, long z) {
 // the flag); set: +0x3E 0x80, +2 = 4 (raised). The draw.
 extern "C" void __cdecl EffectKind18Sub42_Start(void) {
     unsigned char* const s = S();
-    const U i = Place("EffectKind18Sub42_Start", at::kSub42Places, at::kSub42PlaceCount);
+    const U i = Place("EffectKind18Sub42_Start", at::kSub42Places.v, at::kSub42PlaceCount);
     const U place = ::bof3::Img(at::kSub42Places.v) + 4 * i;
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, B(place));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, B(place + 1));
@@ -679,7 +677,7 @@ namespace {
 void Start29(const char* who) {
     unsigned char* s = S();
     s[8] = rv::As<records::EffectObject>(s)->z_whole == 0 ? 1 : 0;
-    const U i = Place(who, at::kSub29Cell, at::kSub29Places);
+    const U i = Place(who, at::kSub29Cell.v, at::kSub29Places);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, B(::bof3::Img(at::kSub29Cell.v) + 2 * i));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, B(::bof3::Img(at::kSub29Cell.v) + 2 * i + 1));
     s = S();
@@ -909,7 +907,7 @@ extern "C" void __cdecl EffectKind18Sub2A_Draw(void) {
 extern "C" void __cdecl EffectKind18Sub2A_Start(void) {
     unsigned char* s = S();
     s[8] = rv::As<records::EffectObject>(s)->z_whole == 0 ? 1 : 0;
-    const U i = Place("EffectKind18Sub2A_Start", at::kSub2ACell, at::kSub2APlaces);
+    const U i = Place("EffectKind18Sub2A_Start", at::kSub2ACell.v, at::kSub2APlaces);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, B(::bof3::Img(at::kSub2ACell.v) + 2 * i));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, B(::bof3::Img(at::kSub2ACell.v) + 2 * i + 1));
     s = S();

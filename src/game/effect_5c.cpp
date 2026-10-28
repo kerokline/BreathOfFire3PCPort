@@ -69,7 +69,6 @@ namespace {
 namespace at = effect_5c::at;
 using U = std::uint32_t;
 using move_script::At;
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -143,7 +142,6 @@ unsigned char Sub50Byte(const char* who, U table, unsigned index) {
                     who, index, at::kSub50FlagCount, (unsigned)table);
     return At(table + index)[0];
 }
-[[gnu::always_inline]] inline unsigned char Sub50Byte(const char* who, ::bof3::image::Va table, unsigned index) { return Sub50Byte(who, ::bof3::Img(table), index); }
 
 // Effect_FindFree's record (answer & 0xFF, as the originals widen it): a Fatal
 // on an answer past the twenty (the callee answers 0xFF or 0..19; the original
@@ -301,7 +299,7 @@ extern "C" void __cdecl EffectKind18Sub50_Shine(void) {
         s[2] = static_cast<unsigned char>(s[2] + 1);
     }
     s = S();
-    const U light = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x48), Sub50Byte(kWho, at::kSub50Lights, s[0xB])) & 0xFFu;
+    const U light = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x48), Sub50Byte(kWho, ::bof3::Img(at::kSub50Lights.v), s[0xB])) & 0xFFu;
     s = S();
     SH_CALL(EffectKind18Sub50_DrawWall)(s[0xB] + light * 4u + 1u, 0x40);
     SH_CALL(EffectKind18Sub50_DrawLine)();
@@ -318,7 +316,7 @@ extern "C" void __cdecl EffectKind18Sub50_Sink(void) {
     SH_CALL(EffectKind18Sub50_DrawWall)(0, 0x40);
     s = S();
     const U height = static_cast<U>(s[9]) << 3;
-    const unsigned char flag = Sub50Byte(kWho, at::kSub50Lights, s[0xB]);
+    const unsigned char flag = Sub50Byte(kWho, ::bof3::Img(at::kSub50Lights.v), s[0xB]);
     const U light = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x48), flag) & 0xFFu;
     s = S();
     SH_CALL(EffectKind18Sub50_DrawWall)(s[0xB] + light * 4u + 1u, height);
@@ -350,7 +348,7 @@ extern "C" void __cdecl EffectKind18Sub50_Flash(void) {
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xB5, 0);
     LinkAtRecord(0xC);
     s = S();
-    const unsigned char flag = Sub50Byte(kWho, at::kSub50Lights, s[0xB]);
+    const unsigned char flag = Sub50Byte(kWho, ::bof3::Img(at::kSub50Lights.v), s[0xB]);
     const U light = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x48), flag) & 0xFFu;
     s = S();
     SH_CALL(EffectKind18Sub50_DrawWall)(s[0xB] + light * 4u + 1u, 0x40);
@@ -1220,18 +1218,18 @@ extern "C" void __cdecl EffectKind18Sub15_Draw(void) {
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xB5, 0);
     SH_CALL(EffectKind18Sub15_LinkLayer)(0xC);
     for (U i = 0; i < 0xA; ++i) {
-        const U flat = static_cast<U>(SW(Word(At(at::kKind2ZCell)))) + 3u;
+        const U flat = static_cast<U>(SW(Word(At(::bof3::Img(at::kKind2ZCell.v))))) + 3u;
         const U lo = static_cast<U>(I(i) / 2) + 0x20u;
         const U hi = static_cast<U>(I(i + 1) / 2) + 0x20u;
         const U slope = lo | (lo << 8) | (hi << 16) | (hi << 24);
-        const U row = static_cast<U>(SW(Word(At(at::kKind2ZCell)))) + i + 4u;
+        const U row = static_cast<U>(SW(Word(At(::bof3::Img(at::kKind2ZCell.v))))) + i + 4u;
         for (U c = 0x2D; c < 0x31; ++c) {
             SetCorner(MapWidth() * flat + c, 0x20202020u);
             SetCorner(MapWidth() * row + c, slope);
         }
     }
     for (U j = 0; j < 0xE; ++j) {
-        const U centre = static_cast<U>(SW(Word(At(at::kKind2ZCell))));
+        const U centre = static_cast<U>(SW(Word(At(::bof3::Img(at::kKind2ZCell.v)))));
         const U flat = centre - 3u;
         const U lo = static_cast<U>(I(j + 1) / 2) + 0x20u;
         const U hi = static_cast<U>(I(j) / 2) + 0x20u;
@@ -1458,7 +1456,7 @@ extern "C" void __cdecl EffectKind18Sub17_Start(void) {
 // sub-kind 0x17, sub-state 0xA - unchecked: on none free (0xFF) the original
 // writes 0x7F80 past the pool, ours aborts. Then the shared tail.
 extern "C" void __cdecl EffectKind18Sub17_WaitCue(void) {
-    if (At(at::kCounter)[0] == 0xC) {
+    if (At(::bof3::Img(at::kCounter.v))[0] == 0xC) {
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
         Cond_ByteFE = 0x23;
         unsigned char* const rec = NewRecord("EffectKind18Sub17_WaitCue", SH_CALL(Effect_FindFree)() & 0xFFu);
@@ -1479,7 +1477,7 @@ extern "C" void __cdecl EffectKind18Sub17_Rise(void) {
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, w + 1u);
     } else {
         s[2] = static_cast<unsigned char>(s[2] + 1);
-        At(at::kCounter)[0] = 0xD;
+        At(::bof3::Img(at::kCounter.v))[0] = 0xD;
     }
     Sub17Tail();
 }
@@ -1589,7 +1587,7 @@ extern "C" void __cdecl EffectKind18Sub17_Start10(void) {
 // up. Else every fifth frame E5D's step (Frame_Counter / 5) & 3, and E5D's
 // quads variant 2.
 extern "C" void __cdecl EffectKind18Sub17_WaitCue11(void) {
-    const unsigned char cue = At(at::kCounter)[0];
+    const unsigned char cue = At(::bof3::Img(at::kCounter.v))[0];
     const U f = Frame_Counter;
     if (cue == 0xF && ((f / 5u) & 3u) == 3) {
         Step(4);

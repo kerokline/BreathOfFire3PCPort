@@ -54,7 +54,6 @@ namespace at = effect_2f::at;
 using U = std::uint32_t;
 using LD = long double;
 using move_script::At;
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -499,7 +498,7 @@ void Kind51Grow(unsigned reload) {
 void Kind51Wait() {
     SH_CALL(EffectKind51_DrawFrame)();
     SwayStep();
-    if (At(at::kCounter0)[0] != 0xB) return;
+    if (At(::bof3::Img(at::kCounter0.v))[0] != 0xB) return;
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->frame_word, 0x20);
     NextState();
 }
@@ -972,7 +971,7 @@ extern "C" void __cdecl EffectKind52_Trail(void) {
 // width (its last word, 0x92C49E) = 0xC0; the record put at (0x6B, 0x46) on the
 // ground.
 extern "C" void __cdecl EffectKind52_TrailStart(void) {
-    SetWord(At(at::kTrailSize), 0xC0);
+    SetWord(At(::bof3::Img(at::kTrailSize.v)), 0xC0);
     TrailPlace(0x6B0000, 0x460000);
 }
 
@@ -1010,7 +1009,7 @@ extern "C" void __cdecl EffectKind52_TrailHold(void) { SubCountDown(8); }
 // width down 0x18; +9 down, at 0 a tail jmp to Effect_Release.
 extern "C" void __cdecl EffectKind52_TrailFade(void) {
     unsigned char* const s = S();
-    unsigned char* const size = At(at::kTrailSize);
+    unsigned char* const size = At(::bof3::Img(at::kTrailSize.v));
     SetWord(size, Word(size) - 0x18u);
     s[9] = static_cast<unsigned char>(s[9] - 1);
     if (s[9] == 0) SH_CALL(Effect_Release)();
@@ -1400,7 +1399,7 @@ extern "C" void __cdecl EffectKind56_Start(void) {
 
 // original 0x47D950 (state 1): once the counter byte 0x90384B is 0xA, +1 = 2.
 extern "C" void __cdecl EffectKind56_Wait(void) {
-    if (At(at::kCounter3)[0] == 0xA) S()[1] = 2;
+    if (At(::bof3::Img(at::kCounter3.v))[0] == 0xA) S()[1] = 2;
 }
 
 // original 0x47D970 (state 2): +1 = 3.
@@ -1435,7 +1434,7 @@ extern "C" void __cdecl EffectKind56_Markers(void) {
     s[0x5D] = 0xFF;
     s = S();
     SH_CALL(EffectKind56_DrawCross)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z, rv::As<records::EffectObject>(s)->step_y, 0);
-    if (At(at::kCounter3)[0] == 0xE) S()[1] = 1;
+    if (At(::bof3::Img(at::kCounter3.v))[0] == 0xE) S()[1] = 1;
 }
 
 // original 0x47DA60: the record's point = Sprite_ObjectsExtra[0]'s (+0x34,

@@ -56,7 +56,6 @@ namespace at = effect_4e::at;
 using U = std::uint32_t;
 using LD = long double;
 using move_script::At;
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -845,7 +844,7 @@ extern "C" void __cdecl EffectKindA0_Sparkle(void) {
     if (Tick()) SH_CALL(EffectKindA0_SpawnSpark)();
     SH_CALL(EffectKindA0_DrawShards)();
     SH_CALL(EffectKindA0_StepSparks)();
-    if (At(at::kCounter)[0] != 0x14) return;
+    if (At(::bof3::Img(at::kCounter.v))[0] != 0x14) return;
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_18, rv::As<records::EffectObject>(S())->angle[0]);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_1c, rv::As<records::EffectObject>(S())->angle[1]);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, rv::As<records::EffectObject>(S())->angle[2]);
@@ -925,7 +924,7 @@ extern "C" void __cdecl EffectKindA0_FlyWait(void) {
     SH_CALL(EffectKindA0_StepSparks)();
     SH_CALL(EffectKindA0_DrawShards)();
     TrailA0(0x40);
-    if (At(at::kCounter)[0] != 0x17) return;
+    if (At(::bof3::Img(at::kCounter.v))[0] != 0x17) return;
     S()[3] = 0x80;
     S()[9] = 8;
     NextState();

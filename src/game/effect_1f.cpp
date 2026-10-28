@@ -46,7 +46,6 @@ using bof3x::input::sigma::Sigma;
 unsigned char* At(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char& B(U a) { return *At(a); }
-[[gnu::always_inline]] inline unsigned char& B(::bof3::image::Va a) { return B(::bof3::Img(a)); }
 std::uint16_t Word(U a) {
     std::uint16_t v;
     std::memcpy(&v, At(a), 2);
@@ -64,7 +63,7 @@ U Long(U a) {
 void SetLong(U a, U v) { std::memcpy(At(a), &v, 4); }
 
 // Effect record 6's cells, the menu's state.
-unsigned char& R6(unsigned offset) { return B(at::kRecord6 + offset); }
+unsigned char& R6(unsigned offset) { return B(::bof3::Img(at::kRecord6.v) + offset); }
 U R6Address(unsigned offset) { return ::bof3::Img(Effect_Objects_addr) + 0x300 + offset; }
 
 // jmp [table + 4 * index], unchecked in the original: the table's words read in
@@ -85,15 +84,14 @@ void Hand(int x, int y) { SH_CALL(Menu_DrawHand)(x, y, 0); }
 void Label(U cell) {
     SH_CALL(Text_DrawAt)(0x1D, 0x14, 0, 0xFF, At(::bof3::Img(bof3::addr::MessagePools) + Word(cell)));
 }
-[[gnu::always_inline]] inline void Label(::bof3::image::Va cell) { Label(::bof3::Img(cell)); }
 // The id at the s16 index of the category-3 list, and its record's kind byte
 // (24-byte NameTable_Accessories records, +0x12): both read in place, unchecked
 // as in the original.
 unsigned char IdAt(U index_cell) {
     const S index = static_cast<short>(Word(index_cell));
-    return B(at::kAccessoryIds + static_cast<U>(index));
+    return B(::bof3::Img(at::kAccessoryIds.v) + static_cast<U>(index));
 }
-unsigned char KindOf(unsigned char id) { return B(at::kAccessoryKind + 24u * id); }
+unsigned char KindOf(unsigned char id) { return B(::bof3::Img(at::kAccessoryKind.v) + 24u * id); }
 
 // The shared exit of ExtraSlots_PickItem's cancel and confirm: record 6 +7 bit
 // 1 cleared, Sprite_Current +4 down (the original's 0x52A922, after the sound).
@@ -131,7 +129,7 @@ extern "C" void __cdecl ExtraSlots_Enter(void) {
         unsigned char* const s = Sprite_Current;
         s[4] = static_cast<unsigned char>(s[4] + 1);
     }
-    Label((R6(7) & 1) ? at::kLabelB : at::kLabelA);
+    Label((R6(7) & 1) ? ::bof3::Img(at::kLabelB.v) : ::bof3::Img(at::kLabelA.v));
 }
 
 // original 0x52A780: the repeat of Input_Pressed's bits 12 and 14
@@ -171,10 +169,10 @@ extern "C" void __cdecl ExtraSlots_PickSlot(void) {
         R6(1) = state;
         s[4] = static_cast<unsigned char>(s[4] - 1);
     }
-    Label((R6(7) & 1) ? at::kLabelB : at::kLabelA);
+    Label((R6(7) & 1) ? ::bof3::Img(at::kLabelB.v) : ::bof3::Img(at::kLabelA.v));
     const unsigned char b = R6(7);
     if (!(b & 0x80)) {
-        const unsigned char held = (b & 1) ? CharStats_ExtraItem : B(at::kExtraAccessory);
+        const unsigned char held = (b & 1) ? CharStats_ExtraItem : B(::bof3::Img(at::kExtraAccessory.v));
         SetWord(R6Address(0x2C), held ? held + 4u : 0xFFFFu);
     }
     Hand(0x1C, static_cast<int>(((b & 1u) << 4) + 0x58));
@@ -211,14 +209,14 @@ extern "C" void __cdecl ExtraSlots_PickItem(void) {
         return;
     }
     if (!(R6(7) & 1)) {
-        Label(at::kListLabelA);
+        Label(::bof3::Img(at::kListLabelA.v));
         if (Input_Pressed & Field_ConfirmButtons) {
             const unsigned char id = IdAt(R6Address(0x36));
             if (KindOf(id) == 0xB) {
                 SH_CALL(Inventory_Remove)(3, id, 1);
-                const unsigned char old = B(at::kExtraAccessory);
+                const unsigned char old = B(::bof3::Img(at::kExtraAccessory.v));
                 if (old) SH_CALL(Inventory_Add)(3, old, 1);
-                B(at::kExtraAccessory) = id;
+                B(::bof3::Img(at::kExtraAccessory.v)) = id;
             }
             Sound(0x103);
             PickItemBack();
@@ -241,7 +239,7 @@ extern "C" void __cdecl ExtraSlots_PickItem(void) {
         Hand(0xA8, static_cast<int>(Long(R6Address(0xC)) * 13u + 0x5A));
         return;
     }
-    Label(at::kListLabelB);
+    Label(::bof3::Img(at::kListLabelB.v));
     if (R6(0xA) == 0) {
         const unsigned short pressed = Input_Pressed;
         if (Field_ConfirmButtons & pressed) {
@@ -254,7 +252,7 @@ extern "C" void __cdecl ExtraSlots_PickItem(void) {
                 CharStats_ExtraCount = 1;
                 S count = 0;
                 for (U i = 0; i < 0x80; ++i)
-                    if (KindOf(B(at::kAccessoryIds + i)) == 0xA) ++count;
+                    if (KindOf(B(::bof3::Img(at::kAccessoryIds.v) + i)) == 0xA) ++count;
                 if (static_cast<S>(Long(R6Address(0x1C))) >= count && Word(R6Address(0x38)) != 0) {
                     const S scroll = static_cast<S>(Long(R6Address(0x38)) & 0xFFFF);
                     if (scroll > count - 9) SetWord(R6Address(0x38), Word(R6Address(0x38)) - 1u);
@@ -430,7 +428,7 @@ extern "C" unsigned long __cdecl FieldPanel_KindPoints(unsigned kind, unsigned c
 extern "C" unsigned short __cdecl FieldPanel_KindTotal(void) {
     U sum = 0;
     for (U i = 0; i < 0x20; ++i) {
-        const unsigned char count = B(at::kKindCounts + i);
+        const unsigned char count = B(::bof3::Img(at::kKindCounts.v) + i);
         if (count) sum += SH_CALL(FieldPanel_KindPoints)(i, count);
     }
     return static_cast<unsigned short>(sum);

@@ -372,7 +372,7 @@ void Args(unsigned k, U* a) {
     case k35Quad: a[0] = Key(Shard(i)); break;
     case k35Turn: {
         const U n = i % at::kPiece35Count;
-        a[0] = ::bof3::Img(at::kCopies35 + 0x28 * n);
+        a[0] = ::bof3::Img(at::kCopies35.v) + 0x28 * n;
         a[1] = Key(g_model) + 0x28 * n;
         a[2] = EffectKind30_Shards_addr + 0x280 + 0x18 * n;
         break;

@@ -49,7 +49,6 @@ namespace {
 
 namespace at = effect_1c::at;
 using move_script::At;
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va a) { return move_script::At(::bof3::Img(a)); }
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -769,7 +768,7 @@ extern "C" void __cdecl EffectKind1E_TurnPiece(const unsigned char* copy, unsign
 // original 0x46EA60: the sixteen debris records of 0x2C at 0x92C780 set up
 // (EffectKind1E_DebrisInitOne).
 extern "C" void __cdecl EffectKind1E_DebrisInit(void) {
-    for (U i = 0; i < 16; ++i) SH_CALL(EffectKind1E_DebrisInitOne)(At(at::kDebris + 0x2C * i));
+    for (U i = 0; i < 16; ++i) SH_CALL(EffectKind1E_DebrisInitOne)(At(::bof3::Img(at::kDebris.v) + 0x2C * i));
 }
 
 // original 0x46EA80 (PSX twin 0x801F3BE4 by callers): a debris record: its
@@ -825,14 +824,13 @@ unsigned char* DebrisLoop(U base, unsigned count) {
     }
     return s;
 }
-[[gnu::always_inline]] inline unsigned char* DebrisLoop(::bof3::image::Va base, unsigned count) { return DebrisLoop(::bof3::Img(base), count); }
 
 // original 0x46EBA0: a draw mode (DebrisMode, dtd 0) committed;
 // EffectGte_LoadMapCamera; the sixteen debris drawn (DebrisLoop).
 extern "C" void __cdecl EffectKind1E_DebrisDraw(void) {
     DebrisMode(0);
     SH_CALL(EffectGte_LoadMapCamera)();
-    DebrisLoop(at::kDebris, 16);
+    DebrisLoop(::bof3::Img(at::kDebris.v), 16);
 }
 
 // original 0x46EC20: the model's lines. Sprite_Current kept, set to

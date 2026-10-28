@@ -43,14 +43,12 @@ std::uint32_t g_direct_opaque = 0;   // DIV-0159; 1 through PatchBytes("DirectOp
 namespace {
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-[[gnu::always_inline]] inline unsigned char* At(::bof3::image::Va address) { return At(::bof3::Img(address)); }
 U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U Long(U address) {
     U v;
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
-[[gnu::always_inline]] inline U Long(::bof3::image::Va address) { return Long(::bof3::Img(address)); }
 U Long(const unsigned char* p) {
     U v;
     std::memcpy(&v, p, sizeof v);
@@ -66,7 +64,6 @@ std::int32_t Short(U address) {
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
-[[gnu::always_inline]] inline std::int32_t Short(::bof3::image::Va address) { return Short(::bof3::Img(address)); }
 void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
 void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutWord(unsigned char* p, U v) {
@@ -269,8 +266,8 @@ int Dd_CreatePlainSurface(unsigned width, unsigned height, void** surface, unsig
     PutLong(desc.b + 0x68, caps);
     PutLong(desc.b + 4, 0x1007);
     PutLong(desc.b + 0x6C, 0);
-    std::memcpy(desc.b + 0x48, At(kFormats + (format << 6)), 0x20);
-    const U dd = Long(kDirectDraw);
+    std::memcpy(desc.b + 0x48, At(::bof3::Img(kFormats.v) + (format << 6)), 0x20);
+    const U dd = Long(::bof3::Img(kDirectDraw.v));
     return Com(dd, kCreateSurface, desc.b, surface, 0u) == 0 ? 1 : 0;
 }
 
@@ -288,8 +285,8 @@ int Dd_CreateTextureSurface(unsigned width, unsigned height, void** surface, voi
     PutLong(desc.b + 0x6C, 0x10);
     PutLong(desc.b + 0x78, 0);
     PutLong(desc.b + 8, height);
-    std::memcpy(desc.b + 0x48, At(kFormats + (format << 6)), 0x20);
-    const U dd = Long(kDirectDraw);
+    std::memcpy(desc.b + 0x48, At(::bof3::Img(kFormats.v) + (format << 6)), 0x20);
+    const U dd = Long(::bof3::Img(kDirectDraw.v));
     if (Com(dd, kCreateSurface, desc.b, surface, 0u) != 0) return 0;
     Com(Addr(*surface), kQueryInterface, At(kTexture2Iid), texture);
     return 1;
@@ -315,7 +312,6 @@ U Source(U page, U mode, std::int32_t key_x, std::int32_t key_y) {
 }
 
 U Generation(U row_address) { return Long(row_address); }
-[[gnu::always_inline]] inline U Generation(::bof3::image::Va row_address) { return Generation(::bof3::Img(row_address)); }
 
 }  // namespace
 }  // namespace tex_page
@@ -361,16 +357,16 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
         if (slot == 0x20 && full_logged < 64) {
             ++full_logged;
             bof3::Log("tex_page: page %u FULL (32 entries) at frame %u: clut 0x%X mode %u key %d,%d %dx%d", (unsigned)p,
-                      (unsigned)Frame_Counter, (unsigned)clut, (unsigned)m, (int)Short(kTexKey), (int)Short(kTexKey + 2),
-                      (int)Short(kTexKey + 4), (int)Short(kTexKey + 6));
+                      (unsigned)Frame_Counter, (unsigned)clut, (unsigned)m, (int)Short(::bof3::Img(kTexKey.v)), (int)Short(::bof3::Img(kTexKey.v) + 2),
+                      (int)Short(::bof3::Img(kTexKey.v) + 4), (int)Short(::bof3::Img(kTexKey.v) + 6));
         } else if (want && slot != 0x20) {
             bof3::Log("tex_page: build page %u slot %u frame %u clut 0x%X mode %u key %d,%d %dx%d", (unsigned)p, (unsigned)slot,
-                      (unsigned)Frame_Counter, (unsigned)clut, (unsigned)m, (int)Short(kTexKey), (int)Short(kTexKey + 2),
-                      (int)Short(kTexKey + 4), (int)Short(kTexKey + 6));
+                      (unsigned)Frame_Counter, (unsigned)clut, (unsigned)m, (int)Short(::bof3::Img(kTexKey.v)), (int)Short(::bof3::Img(kTexKey.v) + 2),
+                      (int)Short(::bof3::Img(kTexKey.v) + 4), (int)Short(::bof3::Img(kTexKey.v) + 6));
         }
     }
     if (slot == 0x20) return 0;
-    const U src = Source(p, m, Short(kTexKey), Short(kTexKey + 2));
+    const U src = Source(p, m, Short(::bof3::Img(kTexKey.v)), Short(::bof3::Img(kTexKey.v) + 2));
     Desc desc;
     Dd_InitSurfaceDesc(desc.b);
     const U entry = ::bof3::Img(Gfx_TexCache_addr) + ((p << 5) + slot) * kEntryBytes;
@@ -381,13 +377,13 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
         const void* table = nullptr;
         if (!(m & 2)) table = g.clut_pixels(static_cast<unsigned>(clut));
         if (Com(Long(surface_slot), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return 0;
-        if (m & 2) g.convert16(desc.Surface(), At(src), Short(kTexKey + 4), Short(kTexKey + 6), static_cast<int>(desc.Pitch()));
-        else if (m != 0) g.convert8(desc.Surface(), At(src), table, Short(kTexKey + 4), Short(kTexKey + 6), static_cast<int>(desc.Pitch()));
-        else g.convert4(desc.Surface(), At(src), table, Short(kTexKey + 4), Short(kTexKey + 6), static_cast<int>(desc.Pitch()));
+        if (m & 2) g.convert16(desc.Surface(), At(src), Short(::bof3::Img(kTexKey.v) + 4), Short(::bof3::Img(kTexKey.v) + 6), static_cast<int>(desc.Pitch()));
+        else if (m != 0) g.convert8(desc.Surface(), At(src), table, Short(::bof3::Img(kTexKey.v) + 4), Short(::bof3::Img(kTexKey.v) + 6), static_cast<int>(desc.Pitch()));
+        else g.convert4(desc.Surface(), At(src), table, Short(::bof3::Img(kTexKey.v) + 4), Short(::bof3::Img(kTexKey.v) + 6), static_cast<int>(desc.Pitch()));
         Com(Long(surface_slot), kUnlock, 0u);
         if (!(m & 2)) {
             PutWord(At(entry + 2), static_cast<U>(clut));
-            PutLong(entry + 4, Generation(kClutRows + static_cast<U>(clut >> 6) * 8));
+            PutLong(entry + 4, Generation(::bof3::Img(kClutRows.v) + static_cast<U>(clut >> 6) * 8));
         }
         PutLong(entry + 0x14, 0);
         result = slot;
@@ -401,17 +397,17 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
         }
         const void* table = nullptr;
         if (!(m & 2)) table = g.clut_pixels(static_cast<unsigned>(clut));
-        if (Com(Long(kStage), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return 0;
-        if (m & 2) g.convert16(desc.Surface(), At(src), Short(kTexKey + 4), Short(kTexKey + 6), static_cast<int>(desc.Pitch()));
-        else if (m != 0) g.convert8(desc.Surface(), At(src), table, Short(kTexKey + 4), Short(kTexKey + 6), static_cast<int>(desc.Pitch()));
-        else g.convert4(desc.Surface(), At(src), table, Short(kTexKey + 4), Short(kTexKey + 6), static_cast<int>(desc.Pitch()));
-        Com(Long(kStage), kUnlock, 0u);
+        if (Com(Long(::bof3::Img(kStage.v)), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return 0;
+        if (m & 2) g.convert16(desc.Surface(), At(src), Short(::bof3::Img(kTexKey.v) + 4), Short(::bof3::Img(kTexKey.v) + 6), static_cast<int>(desc.Pitch()));
+        else if (m != 0) g.convert8(desc.Surface(), At(src), table, Short(::bof3::Img(kTexKey.v) + 4), Short(::bof3::Img(kTexKey.v) + 6), static_cast<int>(desc.Pitch()));
+        else g.convert4(desc.Surface(), At(src), table, Short(::bof3::Img(kTexKey.v) + 4), Short(::bof3::Img(kTexKey.v) + 6), static_cast<int>(desc.Pitch()));
+        Com(Long(::bof3::Img(kStage.v)), kUnlock, 0u);
         if (!(m & 2)) {
             PutWord(At(entry + 2), static_cast<U>(clut));
-            PutLong(entry + 4, Generation(kClutRows + static_cast<U>(clut >> 6) * 8));
+            PutLong(entry + 4, Generation(::bof3::Img(kClutRows.v) + static_cast<U>(clut >> 6) * 8));
         }
         Rect rect = {0, 0, 0x100, 0x100};
-        Com(Long(surface_slot), kBlt, &rect, Long(kStage), &rect, kBltWait, 0u);
+        Com(Long(surface_slot), kBlt, &rect, Long(::bof3::Img(kStage.v)), &rect, kBltWait, 0u);
         result = Long(entry + 0x14);
     }
     At(entry)[0] = 1;
@@ -449,10 +445,10 @@ void D3d_RefreshPageTexture(int page, int slot) {
             Com(Long(entry + 0x10), kUnlock, 0u);
             return;
         }
-        if (Com(Long(kStage), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return;
+        if (Com(Long(::bof3::Img(kStage.v)), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return;
         g.convert16(desc.Surface(), At(src), Short(entry + 0xC), Short(entry + 0xE), static_cast<int>(desc.Pitch()));
-        Com(Long(kStage), kUnlock, 0u);
-        Com(Long(entry + 0x10), kBlt, &rect, Long(kStage), &rect, kBltWait, 0u);
+        Com(Long(::bof3::Img(kStage.v)), kUnlock, 0u);
+        Com(Long(entry + 0x10), kBlt, &rect, Long(::bof3::Img(kStage.v)), &rect, kBltWait, 0u);
         return;
     }
     const void* table = g.clut_pixels(Word(At(entry + 2)));
@@ -465,8 +461,8 @@ void D3d_RefreshPageTexture(int page, int slot) {
     else
         g.convert4(desc.Surface(), At(src), table, Short(entry + 0xC), Short(entry + 0xE), static_cast<int>(desc.Pitch()));
     Com(Long(locked), kUnlock, 0u);
-    if (!software) Com(Long(entry + 0x10), kBlt, &rect, Long(kStage), &rect, kBltWait, 0u);
-    PutLong(entry + 4, Generation(kClutRows + (Word(At(entry + 2)) >> 6) * 8));
+    if (!software) Com(Long(entry + 0x10), kBlt, &rect, Long(::bof3::Img(kStage.v)), &rect, kBltWait, 0u);
+    PutLong(entry + 4, Generation(::bof3::Img(kClutRows.v) + (Word(At(entry + 2)) >> 6) * 8));
 }
 
 void TexPage_Inject() {
