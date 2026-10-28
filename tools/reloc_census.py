@@ -124,7 +124,11 @@ PLATFORM_DIRS = ('src/hook/', 'src/render/', 'src/audio/', 'src/input/', 'src/co
 # Names of the base and of a helper that adds it. A literal right of `+` on a
 # name whose value is the image base is the converted spelling already; RB0
 # adds its helper's name here if RA3's choice keeps addresses behind one.
-BASE_HELPERS = frozenset()
+# RB0: RA3 kept addresses behind two helpers (src/common/image_base.h), Img
+# for data and Code for code. ImageBase() takes no address, so it is not one.
+# Two other functions are spelled Code - code_bytes.cpp's reader and
+# boss_sh_fuzz.cpp's draw - and neither is given an image literal.
+BASE_HELPERS = frozenset({'Img', 'Code'})
 # gen_symbols.py's `namespace bof3::image` names that are addresses
 IMAGE_META = ('kBase', 'kTextVa')
 

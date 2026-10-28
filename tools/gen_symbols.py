@@ -66,6 +66,16 @@ keeps its own literal: one inside .text, one that starts inside an earlier
 member (two views of the same bytes: Area00_Choices and Area00_Handlers),
 and a field entry (`field_of`, a field of its block's records).
 
+Names and places (the relocatable-image round's RB0,
+docs/relocatable-image-design.md 2). Every address this emits is a VA, a
+name in the frame BOF3.exe was linked in: `bof3::addr::Name`, `<Name>_addr`
+and `kGameDataVa` stay VAs. What reaches memory places its VA through one
+helper of src/common/image_base.h: a data macro and `BOF3_GAME` through
+`::bof3::Img(va)`, a callable original and `orig::Name` through
+`::bof3::Code(va)`. While `ImageBase()` is 0x400000 both are the identity,
+consteval so the front end folds them, and the machine code is unchanged
+(tools/codegen_same.py).
+
 The output contains addresses and names only — our work product, not game data.
 It is still generated into the build tree rather than committed, so it cannot
 drift from symbols.toml.
@@ -255,13 +265,13 @@ def main():
     w('#include "common/image_base.h"')
     w('')
     w('namespace bof3::image {')
-    w(f'inline constexpr std::uint32_t kBase = {meta["image_base"]:#x};')
     w(f'inline constexpr std::uint32_t kTimestamp = {meta["pe_timestamp"]:#x};')
     w(f'inline constexpr std::uint32_t kSizeOfImage = {meta["size_of_image"]:#x};')
     w(f'inline constexpr std::uint32_t kTextVa = {meta["text_va"]:#x};')
     w(f'inline constexpr std::uint32_t kTextSize = {meta["text_size"]:#x};')
     w(f'inline constexpr char kSha256[] = "{meta["sha256"]}";')
-    w('static_assert(kBase == kLinkedBase, "the image_base of symbols.toml is the linked frame (common/image_base.h)");')
+    w("// kBase, the linked frame, is common/image_base.h's; symbols.toml agrees.")
+    w(f'static_assert(kBase == {meta["image_base"]:#x}, "the image_base of symbols.toml is the linked frame (common/image_base.h)");')
     w('}  // namespace bof3::image')
     w('')
 

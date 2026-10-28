@@ -33,18 +33,22 @@ namespace bof3 {
 
 namespace image {
 // The base BOF3.exe was linked at: the frame every VA is written in, for
-// ever. Not the base the image runs at - that is ImageBase(). The generated
-// header's image::kBase (from symbols.toml's meta) is checked equal to it.
-inline constexpr std::uint32_t kLinkedBase = 0x400000;
+// ever. Not the base the image runs at - that is ImageBase(). The design
+// (docs/relocatable-image-design.md 2.2) calls it kLinkedBase; it keeps the
+// name it already had, so the source has one name for it (RA1's census
+// found two already: this and exe_layout::kImageBase, the executable's
+// header value). The generated header checks symbols.toml's image_base
+// against it.
+inline constexpr std::uint32_t kBase = 0x400000;
 }  // namespace image
 
 // Where the image is. A function rather than a constant so the name survives
 // stage C, where it is read once at run time (design 2.2). The literal is
-// image::kLinkedBase's value: in stage B the image runs where it was linked.
+// image::kBase's value: in stage B the image runs where it was linked.
 consteval std::uint32_t ImageBase() { return 0x400000; }
 
 // A VA in the image's data, as a place.
-consteval std::uint32_t Img(std::uint32_t va) { return ImageBase() + (va - image::kLinkedBase); }
+consteval std::uint32_t Img(std::uint32_t va) { return ImageBase() + (va - image::kBase); }
 
 // A VA in the image's code, as a place to call. The identity in stage B.
 consteval std::uint32_t Code(std::uint32_t va) { return va; }
@@ -75,6 +79,6 @@ constexpr bool operator==(Va a, Va b) { return a.v == b.v; }
 
 // A Va as a place. constexpr, not consteval: a Va may be computed at run time
 // (a table's VA plus a scaled index).
-constexpr std::uint32_t Img(image::Va va) { return ImageBase() + (va.v - image::kLinkedBase); }
+constexpr std::uint32_t Img(image::Va va) { return ImageBase() + (va.v - image::kBase); }
 
 }  // namespace bof3
