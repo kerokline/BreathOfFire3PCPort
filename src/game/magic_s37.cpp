@@ -37,6 +37,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
+#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -62,14 +63,14 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F, words or dwords by function) and the four
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
-constexpr std::uint32_t kS = SharedScratch_addr;
+constexpr ::bof3::image::Va kS{SharedScratch_addr};
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
 // kActorRecord: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting actor's sprite record
 // kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
-constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
-constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
+constexpr ::bof3::image::Va kFrameSetBattle{0x8B3580};
+constexpr ::bof3::image::Va kFrameSetEffect{0x8E3580};
 
 // The two pools of task-like records (0x84 bytes, like the task slots) the
 // overlays walk from their kind-2 tasks, and MAGIC219's spawn delays (24
@@ -81,8 +82,8 @@ constexpr unsigned kGeoRecords = 64;
 // kMagmaDelays: now MagmaBreath_SpawnDelays (symbols.toml). MagmaBreath_SpawnDelays
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
@@ -91,9 +92,9 @@ void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
 void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -116,9 +117,9 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
-unsigned char* MagmaRecord(unsigned index) { return Mem(MagmaBreath_Pool_addr + index * 0x84u); }
-unsigned char* GeoRecord(unsigned index) { return Mem(GeoBreath_Pool_addr + index * 0x84u); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
+unsigned char* MagmaRecord(unsigned index) { return Mem(::bof3::Img(MagmaBreath_Pool_addr) + index * 0x84u); }
+unsigned char* GeoRecord(unsigned index) { return Mem(::bof3::Img(GeoBreath_Pool_addr) + index * 0x84u); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }
@@ -156,15 +157,15 @@ void Dispatch(const std::uint32_t* table, unsigned entries, unsigned phase, cons
 // task's own two cells, read once after the phase, put back after each.
 void WalkPool(std::uint32_t pool, unsigned records, std::uint32_t task) {
     unsigned char* const self = Sprite_Current;
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < records; ++i) {
         unsigned char* const rec = Mem(pool + i * 0x84u);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t rec_owner = Long(rec + 0x80);
         Sprite_Current = rec;
-        SetLong(Mem(BattleE2_Owner_addr), rec_owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), rec_owner);
         Call0(task);
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
         Sprite_Current = self;
     }
 }
@@ -382,14 +383,14 @@ S37_EXPORT void __cdecl MagmaBreath_Task(void) {
     static constexpr std::uint32_t kPhases[4] = {addr::MagmaBreath_Start, addr::MagmaBreath_Spawn,
                                                  addr::MagmaBreath_Strike, addr::BattleFx_Finish};
     Dispatch(kPhases, 4, Sc()[1], "MagmaBreath_Task");
-    WalkPool(MagmaBreath_Pool_addr, kMagmaRecords, addr::MagmaBreathRecord_Task);
+    WalkPool(::bof3::Img(MagmaBreath_Pool_addr), kMagmaRecords, addr::MagmaBreathRecord_Task);
 }
 
 // original 0x4F5A60: the pool's +0..+2 cleared; the task at the side's
 // centre; +0xB 0, +1 on; CLUT rows 2 and 26 back whole with their STP bits,
 // the first word of each without; sound 0x100.
 S37_EXPORT void __cdecl MagmaBreath_Start(void) {
-    ClearPool(MagmaBreath_Pool_addr, kMagmaRecords);
+    ClearPool(::bof3::Img(MagmaBreath_Pool_addr), kMagmaRecords);
     MH_CALL(MagicFx_CenterOnSide)();
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
@@ -419,7 +420,7 @@ S37_EXPORT void __cdecl MagmaBreath_Spawn(void) {
         rec[1] = 0;
         rec[0xB] = static_cast<unsigned char>(i);
         const std::uint32_t r = RandCall();
-        rec[9] = static_cast<unsigned char>((r & 1) + Mem(MagmaBreath_SpawnDelays_addr)[i] + 1);
+        rec[9] = static_cast<unsigned char>((r & 1) + Mem(::bof3::Img(MagmaBreath_SpawnDelays_addr))[i] + 1);
         Inc(Sc()[0xB]);
     }
     Sc()[9] = 8;
@@ -450,7 +451,7 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Task(void) {
 S37_EXPORT void __cdecl MagmaBreathRecord_Run(void) {
     static constexpr std::uint32_t kSteps[4] = {addr::MagmaBreathRecord_Launch, addr::MagmaBreathRecord_Fly,
                                                 addr::MagmaBreathRecord_Land, addr::MagmaBreathRecord_Burn};
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
     Dispatch(kSteps, 4, Sc()[2], "MagmaBreathRecord_Run");
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) {
@@ -459,7 +460,7 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Run(void) {
         Call0(addr::MagmaBreathRecord_DrawGlow);
         MH_CALL(Gte_PopMatrix)();
     }
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
 }
 
 // original 0x4F5C30: +9 down; at 0 the record starts: the acting actor's
@@ -472,7 +473,7 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Run(void) {
 S37_EXPORT void __cdecl MagmaBreathRecord_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    const unsigned char* const actor = Pointer(MagicS23_ActorSprite_addr);
+    const unsigned char* const actor = Pointer(::bof3::Img(MagicS23_ActorSprite_addr));
     Sc()[8] = actor[8];
     rv::Current<records::BattleTask>()->step_x = 0x20000;
     rv::Current<records::BattleTask>()->step_z = 0;
@@ -680,7 +681,7 @@ S37_EXPORT void __cdecl MagmaBreathRecord_DrawGlow(void) {
 
 // original 0x4F6230: the first of MagmaBreath_Pool's 32 records without bit 0
 // of +0 gets it; its index in al, 0xFF when all are taken.
-S37_EXPORT unsigned char __cdecl MagmaBreath_PoolAlloc(void) { return PoolAlloc(MagmaBreath_Pool_addr, kMagmaRecords); }
+S37_EXPORT unsigned char __cdecl MagmaBreath_PoolAlloc(void) { return PoolAlloc(::bof3::Img(MagmaBreath_Pool_addr), kMagmaRecords); }
 
 // original 0x4F6290: bytes +0..+4 of Sprite_Current cleared (Sprite_Current
 // read again for each) - a pool record's free, bit 0 of +0 its "in use". The
@@ -701,7 +702,7 @@ S37_EXPORT void __cdecl GeoBreath_Task(void) {
     static constexpr std::uint32_t kPhases[3] = {addr::GeoBreath_Start, addr::MagicFx_CountDownFlag10,
                                                  addr::BattleFx_Finish};
     Dispatch(kPhases, 3, Sc()[1], "GeoBreath_Task");
-    WalkPool(GeoBreath_Pool_addr, kGeoRecords, addr::GeoBreathRecord_Task);
+    WalkPool(::bof3::Img(GeoBreath_Pool_addr), kGeoRecords, addr::GeoBreathRecord_Task);
 }
 
 // original 0x4F6340: the pool's +0..+2 cleared; the task at the side's
@@ -710,7 +711,7 @@ S37_EXPORT void __cdecl GeoBreath_Task(void) {
 // counted in +0xB; CLUT row 26 back whole and the first 16 words of row 2
 // with their STP bits, the first word of each without.
 S37_EXPORT void __cdecl GeoBreath_Start(void) {
-    ClearPool(GeoBreath_Pool_addr, kGeoRecords);
+    ClearPool(::bof3::Img(GeoBreath_Pool_addr), kGeoRecords);
     MH_CALL(MagicFx_CenterOnSide)();
     {
         unsigned char* const s = Sc();
@@ -750,7 +751,7 @@ S37_EXPORT void __cdecl GeoBreathChild_Run(void) {
     static constexpr std::uint32_t kSteps[8] = {
         addr::GeoBreathChild_Start, addr::GeoBreathChild_Swirl,  addr::GeoBreathChild_Burst, addr::GeoBreathChild_Shake,
         addr::GeoBreathChild_Quake, addr::GeoBreathChild_Settle, addr::BuffRing_Wait,         addr::GeoBreathChild_End};
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
     Dispatch(kSteps, 8, Sc()[2], "GeoBreathChild_Run");
     const unsigned char* const s = Sc();
     if ((s[0] & 1) != 0 && s[2] != 0) {
@@ -760,7 +761,7 @@ S37_EXPORT void __cdecl GeoBreathChild_Run(void) {
         Call0(addr::GeoBreathChild_DrawRing);
         MH_CALL(Gte_PopMatrix)();
     }
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
 }
 
 // original 0x4F64C0: the child at its owner's point, 0x1600000 above it; its
@@ -1044,7 +1045,7 @@ S37_EXPORT void __cdecl GeoBreathRecord_Draw(void) { DrawTexturedQuad(6); }
 
 // original 0x4F7190: the first of GeoBreath_Pool's 64 records without bit 0
 // of +0 gets it; its index in al, 0xFF when all are taken.
-S37_EXPORT unsigned char __cdecl GeoBreath_PoolAlloc(void) { return PoolAlloc(GeoBreath_Pool_addr, kGeoRecords); }
+S37_EXPORT unsigned char __cdecl GeoBreath_PoolAlloc(void) { return PoolAlloc(::bof3::Img(GeoBreath_Pool_addr), kGeoRecords); }
 
 // ===========================================================================
 // MAGIC222 (row 133, Combustion read one id down)
@@ -1105,14 +1106,14 @@ S37_EXPORT void __cdecl CombustionSprite_Run(void) {
     static constexpr std::uint32_t kSteps[6] = {addr::CombustionSprite_Start, addr::CombustionSprite_Fall,
                                                 addr::CombustionSprite_Shake, addr::CombustionSprite_Flash,
                                                 addr::MeteorStrikeRock_Hide,  addr::CombustionSprite_Fade};
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
     Dispatch(kSteps, 6, Sc()[2], "CombustionSprite_Run");
     const unsigned char* const s = Sc();
     if ((s[0] & 1) != 0 && s[2] != 0) {
         MH_CALL(BattleActor_UpdateScreenXY)();
         MH_CALL(Sprite_UpdateScreen)();
     }
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
 }
 
 // original 0x4F73F0: +9 down; at 0 the sprite starts 0x7800000 over its

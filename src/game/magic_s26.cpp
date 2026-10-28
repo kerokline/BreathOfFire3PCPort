@@ -24,6 +24,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
+#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -48,23 +49,23 @@ using move_script::Word;
 // SharedScratch's first dword (0x903850; a word at +0 and +2 in the beams)
 // and Prim_VertexScratch's four SVECTORs (0x9037A0..0x9037BF): read again
 // after every call, as the originals read them.
-constexpr std::uint32_t kS = SharedScratch_addr;
+constexpr ::bof3::image::Va kS{SharedScratch_addr};
 // kV: now Prim_VertexScratch (symbols.toml).
 // The sprite frame-offset table pointer (sprite_pose.h): the effects' bank
 // 0x8E3580 around a sprite child's phase, the engine's 0x8B3580 after.
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char* Source() { return Pointer(::bof3::Img(BattleOdds_ActorObject_addr)); }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
 unsigned char* TintRecord(unsigned i) { return MoveScript_TintRecords + 12 * i; }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
@@ -262,7 +263,7 @@ S26_EXPORT void __cdecl Magic114_End(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     MH_CALL(Battle_SetTargetFlag40)(TargetByte());
-    Mem(at::kFlags)[0] = static_cast<unsigned char>(Mem(at::kFlags)[0] | 4);
+    Mem(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(at::kFlags))[0] | 4);
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -828,11 +829,11 @@ S26_EXPORT void __cdecl Magic114_DrawBeamGlow(void) {
 // a call through Magic114_SpritePhases (two entries) by +2, unchecked.
 S26_EXPORT void __cdecl Magic114_SpriteRun(void) {
     static constexpr std::uint32_t kPhases[2] = {addr::Magic114_SpriteStart, addr::Magic114_SpriteTick};
-    SetL(Mem(BattleE2_AnimSet_addr), 0x8E3580);
+    SetL(Mem(::bof3::Img(BattleE2_AnimSet_addr)), ::bof3::Img(0x8E3580));
     const unsigned phase = Sc()[2];
     if (phase >= 2) PastTable("Magic114_SpriteRun", phase, 2);
     magic_harness::Phase(kPhases[phase])();
-    SetL(Mem(BattleE2_AnimSet_addr), 0x8B3580);
+    SetL(Mem(::bof3::Img(BattleE2_AnimSet_addr)), ::bof3::Img(0x8B3580));
 }
 
 // original 0x4D9100: the sprite set up (texture slot 0x1D, CLUT row 0x1A,
@@ -1016,13 +1017,13 @@ S26_EXPORT void __cdecl Magic115_ChildTask(void) {
 S26_EXPORT void __cdecl Magic115_OrbitRun(void) {
     static constexpr std::uint32_t kPhases[4] = {addr::Magic115_OrbitStart, addr::Magic115_Orbit,
                                                  addr::Magic115_OrbitFade, addr::MagicFx_UncountAndFree};
-    SetL(Mem(BattleE2_AnimSet_addr), 0x8E3580);
+    SetL(Mem(::bof3::Img(BattleE2_AnimSet_addr)), ::bof3::Img(0x8E3580));
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("Magic115_OrbitRun", phase, 4);
     magic_harness::Phase(kPhases[phase])();
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetL(Mem(BattleE2_AnimSet_addr), 0x8B3580);
+    SetL(Mem(::bof3::Img(BattleE2_AnimSet_addr)), ::bof3::Img(0x8B3580));
 }
 
 // The sprite set-up both MAGIC115 children share (texture slot 0x1D, CLUT row
@@ -1130,13 +1131,13 @@ S26_EXPORT void __cdecl Magic115_OrbitFade(void) {
 S26_EXPORT void __cdecl Magic115_MoteRun(void) {
     static constexpr std::uint32_t kPhases[4] = {addr::Magic115_MoteStart, addr::Magic115_MoteTick,
                                                  addr::Magic115_MoteFade, addr::MagicFx_UncountAndFree};
-    SetL(Mem(BattleE2_AnimSet_addr), 0x8E3580);
+    SetL(Mem(::bof3::Img(BattleE2_AnimSet_addr)), ::bof3::Img(0x8E3580));
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("Magic115_MoteRun", phase, 4);
     magic_harness::Phase(kPhases[phase])();
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetL(Mem(BattleE2_AnimSet_addr), 0x8B3580);
+    SetL(Mem(::bof3::Img(BattleE2_AnimSet_addr)), ::bof3::Img(0x8B3580));
 }
 
 // original 0x4D99D0: the sprite set up, animation 1, +2 on.

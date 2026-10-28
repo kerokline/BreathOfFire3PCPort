@@ -34,6 +34,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
+#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -57,13 +58,13 @@ using move_script::Word;
 
 // The cells the overlays read beyond the harness's names.
 // kActorRecord: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting actor's sprite record
-constexpr std::uint32_t kAbility = 0x904B80;       // u16: the ability being used
+constexpr ::bof3::image::Va kAbility{0x904B80};       // u16: the ability being used
 // kComboHits: now Rest3c_Hits (symbols.toml). u8: MAGIC003's hit count, for the damage
-constexpr std::uint32_t kFxBits = 0x904AA9;        // u8: bit 0x20 set by ElemStrike_Start
+constexpr ::bof3::image::Va kFxBits{0x904AA9};        // u8: bit 0x20 set by ElemStrike_Start
 // kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
-constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
-constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
-constexpr std::uint32_t kFrameSetHit = 0x8C5D80;
+constexpr ::bof3::image::Va kFrameSetBattle{0x8B3580};
+constexpr ::bof3::image::Va kFrameSetEffect{0x8E3580};
+constexpr ::bof3::image::Va kFrameSetHit{0x8C5D80};
 
 // SuperComboHit_Pool: 32 task-like entries of 0x84 bytes (.bss).
 // kPool: now SuperComboHit_Pool (symbols.toml).
@@ -71,17 +72,17 @@ constexpr unsigned kPoolCount = 32;
 constexpr std::uint32_t kPoolStride = 0x84;
 
 // The overlays' .data, read in place (as the originals read it, unchecked).
-constexpr std::uint32_t kImageTints = 0x65A4F8;    // MAGIC003: 3 signed bytes an after-image
-constexpr std::uint32_t kButtonTimes = 0x65A504;   // bytes: the time allowed, by the count
-constexpr std::uint32_t kButtons = 0x65A518;       // bytes: the Input_Pressed bit asked for
-constexpr std::uint32_t kTextLengths = 0x65A51C;   // bytes: a text's length, to centre it
-constexpr std::uint32_t kButtonCluts = 0x65A520;   // bytes: a button glyph's clut x
-constexpr std::uint32_t kHitAnims = 0x65A550;      // bytes: a hit sprite's +0x27 + 0x50
-constexpr std::uint32_t kBoxes = 0x65A55C;         // words x, y, w, h: a prompt box
-constexpr std::uint32_t kTexts = 0x66A0D8;         // pointers to the prompt texts (0-ended, 0xFF a space)
-constexpr std::uint32_t kStrikeTints = 0x65A584;   // MAGIC004: 3 bytes a kind
-constexpr std::uint32_t kFxDelays = 0x65A5A8;      // bytes: the effect's sound delay, by kind
-constexpr std::uint32_t kStrikeSounds = 0x65A5B4;  // words: the hit sound, by kind (0 none)
+constexpr ::bof3::image::Va kImageTints{0x65A4F8};    // MAGIC003: 3 signed bytes an after-image
+constexpr ::bof3::image::Va kButtonTimes{0x65A504};   // bytes: the time allowed, by the count
+constexpr ::bof3::image::Va kButtons{0x65A518};       // bytes: the Input_Pressed bit asked for
+constexpr ::bof3::image::Va kTextLengths{0x65A51C};   // bytes: a text's length, to centre it
+constexpr ::bof3::image::Va kButtonCluts{0x65A520};   // bytes: a button glyph's clut x
+constexpr ::bof3::image::Va kHitAnims{0x65A550};      // bytes: a hit sprite's +0x27 + 0x50
+constexpr ::bof3::image::Va kBoxes{0x65A55C};         // words x, y, w, h: a prompt box
+constexpr ::bof3::image::Va kTexts{0x66A0D8};         // pointers to the prompt texts (0-ended, 0xFF a space)
+constexpr ::bof3::image::Va kStrikeTints{0x65A584};   // MAGIC004: 3 bytes a kind
+constexpr ::bof3::image::Va kFxDelays{0x65A5A8};      // bytes: the effect's sound delay, by kind
+constexpr ::bof3::image::Va kStrikeSounds{0x65A5B4};  // words: the hit sound, by kind (0 none)
 constexpr std::uint32_t kKindIndex = 0x49C0CC;     // .text: ElemStrike_Kind's byte table, 0x99 entries
 
 // ElemStrike_Kind's case by the ability word less 4: the switch the compiler
@@ -106,9 +107,9 @@ unsigned KindCase(std::uint32_t index) {
 }
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
-unsigned ActorByte() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
+unsigned ActorByte() { return static_cast<unsigned>(Long(Mem(::bof3::Img(at::kActor)))) & 0xFF; }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -125,14 +126,14 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
-unsigned char* PoolEntry(unsigned i) { return Mem(SuperComboHit_Pool_addr + i * kPoolStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
+unsigned char* PoolEntry(unsigned i) { return Mem(::bof3::Img(SuperComboHit_Pool_addr) + i * kPoolStride); }
 // The originals index the records by the battle index, unchecked: a party
 // member below 3 (the target) or at most 2 (the actor), else the enemy by
 // index - 3.
-unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
-    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
+    return Mem(::bof3::Img(Battle_Enemies_addr) + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
 unsigned char* TargetRecord(unsigned t) { return t < 3 ? PartyRecord(t) : EnemyRecord(t); }
 unsigned char* ActorRecord(unsigned a) { return a <= 2 ? PartyRecord(a) : EnemyRecord(a); }
@@ -281,16 +282,16 @@ S02_EXPORT void __cdecl SuperCombo_Task(void) {
     if (phase >= 10) PastTable("SuperCombo_Task", phase, 10);
     magic_harness::Phase(kPhases[phase])();
     unsigned char* const current = Sc();
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < kPoolCount; ++i) {
         unsigned char* const e = PoolEntry(i);
         records::BattleTask* const te = rv::As<records::BattleTask>(e);
         if ((e[0] & 1) == 0) continue;
         const std::int32_t entry_owner = static_cast<std::int32_t>(te->owner);
         Sprite_Current = e;
-        SetLong(Mem(BattleE2_Owner_addr), entry_owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), entry_owner);
         Call0(bof3::addr::SuperComboHit_Task);
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
         Sprite_Current = current;
     }
 }
@@ -415,7 +416,7 @@ S02_EXPORT void __cdecl SuperCombo_Strike(void) {
 // sprite's +0 bit 0x40 cleared, the caster's animation 4, +1 on.
 S02_EXPORT void __cdecl SuperCombo_WaitChildren(void) {
     if (Sc()[0xB] != 0) return;
-    Pointer(MagicS23_ActorSprite_addr)[0] &= 0xBF;
+    Pointer(::bof3::Img(MagicS23_ActorSprite_addr))[0] &= 0xBF;
     MH_CALL(BattleActor_SetAnimation)(4, 0);
     Inc(Sc()[1]);
 }
@@ -426,9 +427,9 @@ S02_EXPORT void __cdecl SuperCombo_End(void) {
     MH_CALL(Sound_PlayById)(0x102);
     const unsigned char count = Sc()[0xA];
     const unsigned char target = TargetByte();
-    Mem(Rest3c_Hits_addr)[0] = count;
+    Mem(::bof3::Img(Rest3c_Hits_addr))[0] = count;
     MH_CALL(Battle_SetTargetFlag40)(target);
-    Mem(at::kFlags)[0] |= 4;
+    Mem(::bof3::Img(at::kFlags))[0] |= 4;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -580,13 +581,13 @@ S02_EXPORT void __cdecl SuperComboHit_Task(void) {
 // queued; the battle's table (0x8B3580) back.
 S02_EXPORT void __cdecl SuperComboHit_Run(void) {
     static constexpr std::uint32_t kSteps[2] = {bof3::addr::SuperComboHit_Start, bof3::addr::SuperComboHit_Play};
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetHit));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetHit)));
     const unsigned phase = Sc()[2];
     if (phase >= 2) PastTable("SuperComboHit_Run", phase, 2);
     magic_harness::Phase(kSteps[phase])();
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_QueueOverlay)();
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
 }
 
 // original 0x49B0F0: +9 down; at 0 the entry placed at the source sprite
@@ -594,7 +595,7 @@ S02_EXPORT void __cdecl SuperComboHit_Run(void) {
 // 0x65A550 by +0xB, +0x2A bit 0 of +4), animation +0xB; +2 on.
 S02_EXPORT void __cdecl SuperComboHit_Start(void) {
     if (!CountDown(9)) return;
-    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+    const unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     Sc()[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
     rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
@@ -867,7 +868,7 @@ S02_EXPORT void __cdecl ElemStrike_Start(void) {
 // sound 0x100, and 0x101 for an ability 0x85..0x88; +1 on.
 S02_EXPORT void __cdecl ElemStrike_Tint(void) {
     if (Sc()[0xB] > 1) return;
-    unsigned char* const record = TargetRecord(static_cast<unsigned>(Long(Mem(at::kTarget))) & 0xFF);
+    unsigned char* const record = TargetRecord(static_cast<unsigned>(Long(Mem(::bof3::Img(at::kTarget)))) & 0xFF);
     for (unsigned c = 0; c < 3; ++c) {
         unsigned char* const s = Sc();
         s[0x5D + c] = Mem(kStrikeTints + 3u * s[4] + c)[0];
@@ -910,7 +911,7 @@ S02_EXPORT void __cdecl ElemStrike_Fade(void) {
         if (s[c] != 0) s[c] = static_cast<unsigned char>(s[c] - 2);
     for (unsigned c = 0; c < 3; ++c) MoveScript_TintRecords[s[0xA] * 12u + 2 + c] = s[0x5D + c];
     if (s[0x5D] != 0 || s[0x5E] != 0 || s[0x5F] != 0) return;
-    MH_CALL(Sprite_ReleaseTint)(TargetRecord(static_cast<unsigned>(Long(Mem(at::kTarget))) & 0xFF));
+    MH_CALL(Sprite_ReleaseTint)(TargetRecord(static_cast<unsigned>(Long(Mem(::bof3::Img(at::kTarget)))) & 0xFF));
     MH_CALL(BattleActor_Flash)(TargetByte());
     Inc(Sc()[1]);
 }
@@ -919,9 +920,9 @@ S02_EXPORT void __cdecl ElemStrike_Fade(void) {
 // bit, the task freed) unless the target is not out and its state +1 is 6.
 S02_EXPORT void __cdecl ElemStrike_End(void) {
     const unsigned char target = TargetByte();
-    const unsigned char* const record = TargetRecord(static_cast<unsigned>(Long(Mem(at::kTarget))) & 0xFF);
+    const unsigned char* const record = TargetRecord(static_cast<unsigned>(Long(Mem(::bof3::Img(at::kTarget)))) & 0xFF);
     if (MH_CALL(Battle_ActorIsOut)(target) == 0 && record[1] == 6) return;
-    Mem(at::kFlags)[0] |= 4;
+    Mem(::bof3::Img(at::kFlags))[0] |= 4;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -976,10 +977,10 @@ S02_EXPORT void __cdecl ElemStrikeFx_Run(void) {
                                                 bof3::addr::ElemStrikeFx_Play};
     DrawModeCommit(0x15, 3);
     const unsigned phase = Sc()[2];
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
     if (phase >= 3) PastTable("ElemStrikeFx_Run", phase, 3);
     magic_harness::Phase(kSteps[phase])();
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
 }
 
 // original 0x49C280: at the source sprite, 0x800000 higher; the sprite bytes
@@ -987,9 +988,9 @@ S02_EXPORT void __cdecl ElemStrikeFx_Run(void) {
 // 0x1D, +0x26 0, +0x5C..+0x5F 0, +0x2A 0, +0x29 4, +0x2C 0, +0x2B 1);
 // animation 0; +9 the kind's delay (0x65A5A8 + +4); +2 on.
 S02_EXPORT void __cdecl ElemStrikeFx_Start(void) {
-    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->x);
-    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->z);
-    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->height) + 0x800000u));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)))->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)))->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)))->height) + 0x800000u));
     unsigned char* const s = Sc();
     s[0x25] = 0x1D;
     s[0x26] = 0;

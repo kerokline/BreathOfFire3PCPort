@@ -40,6 +40,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
+#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -64,16 +65,16 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F, words or dwords by function) and the
 // four SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read
 // again after every call, as the originals read them.
-constexpr std::uint32_t kS = SharedScratch_addr;
+constexpr ::bof3::image::Va kS{SharedScratch_addr};
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
 // kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
-constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
-constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
+constexpr ::bof3::image::Va kFrameSetBattle{0x8B3580};
+constexpr ::bof3::image::Va kFrameSetEffect{0x8E3580};
 // kEventBattle: now EventBattle_Id (symbols.toml). u8: not 0 in an event battle
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). unsigned char *: the enemy the per-frame loops set last
-constexpr std::uint32_t kAbilityId = 0x904B80;        // u16: the ability id (0x32 Pollen, 0x33 Venom Breath)
+constexpr ::bof3::image::Va kAbilityId{0x904B80};        // u16: the ability id (0x32 Pollen, 0x33 Venom Breath)
 
 // This group's .data (symbols.toml [[data]]).
 // kMotePool: now ElemBreath_Motes (symbols.toml). ElemBreath_Motes: 48 records of 0x84 bytes
@@ -89,8 +90,8 @@ constexpr unsigned kMoteRecords = 48;
 constexpr std::uint32_t kScriptUntilDone = bof3::addr::BattleFx_ScriptUntilDone;  // engine: the script ticked, the sprite queued, +2 on at the done flag
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
@@ -99,9 +100,9 @@ void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
 void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -126,13 +127,13 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
-unsigned char* PoolRecord(unsigned index) { return Mem(ElemBreath_Motes_addr + index * 0x84u); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
+unsigned char* PoolRecord(unsigned index) { return Mem(::bof3::Img(ElemBreath_Motes_addr) + index * 0x84u); }
 // The originals index the records by the battle index, unchecked: the enemy's
 // by index - 3.
-unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
-    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
+    return Mem(::bof3::Img(Battle_Enemies_addr) + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
@@ -248,11 +249,11 @@ S09_EXPORT void __cdecl BoneDart_Task(void) {
 // (two children), +1 on.
 S09_EXPORT void __cdecl BoneDart_Start(void) {
     const unsigned char target = TargetByte();
-    const unsigned char actor = Mem(at::kActor)[0];
+    const unsigned char actor = Mem(::bof3::Img(at::kActor))[0];
     const bool same_side = (target < 3 && actor < 3) || (target > 2 && actor > 2);
     if (same_side) {
         MH_CALL(Battle_SetTargetFlag40)(target);
-        Mem(at::kFlags)[0] |= 4;
+        Mem(::bof3::Img(at::kFlags))[0] |= 4;
         MH_CALL(BattleTask_FreeCurrent)();
         return;
     }
@@ -289,11 +290,11 @@ S09_EXPORT void __cdecl BoneDartChild_Task(void) {
 // call through `steps` (four entries) by +2; the screen update while +0 and
 // +2 are set.
 static void BoneDartChildRun(const std::uint32_t* steps, const char* who) {
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect)));
     Dispatch(steps, 4, Sc()[2], who);
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle)));
 }
 
 // original 0x4A99C0: the dart, through BoneDartShaft_Steps (the last
@@ -349,15 +350,15 @@ S09_EXPORT void __cdecl BoneDartShaft_Start(void) {
 S09_EXPORT void __cdecl BoneDartShaft_Fly(void) {
     MH_CALL(Sprite_ScriptTick)();
     {
-        const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+        const unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
         const std::int32_t x = (rv::As<records::SpriteHead>(src)->x >> 9) - 0x4000;
         const std::int32_t z = (rv::As<records::SpriteHead>(src)->z >> 9) - 0x4000;
         const std::int32_t y = (S16(src + 0x3E) + 0xC0) >> 1;
         MH_CALL(MagicFx_StepTowardPoint)(U(x), U(z), U(y), 0, 0x30);
     }
-    if (MH_CALL(MagicFx_NearSprite)(Pointer(BattleOdds_ActorObject_addr), 0x8000) == 0) return;
+    if (MH_CALL(MagicFx_NearSprite)(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)), 0x8000) == 0) return;
     const unsigned char target = TargetByte();
-    Mem(at::kFlags + 1)[0] |= 0x20;
+    Mem(::bof3::Img(at::kFlags) + 1)[0] |= 0x20;
     MH_CALL(Battle_SetTargetFlag40)(target);
     MH_CALL(Sound_PlayById)(0x203);
     {
@@ -504,16 +505,16 @@ S09_EXPORT void __cdecl ElemBreath_Task(void) {
     static constexpr std::uint32_t kPhases[2] = {bof3::addr::ElemBreath_Start, bof3::addr::BattleFx_Finish};
     Dispatch(kPhases, 2, Sc()[1], "ElemBreath_Task");
     unsigned char* const self = Sprite_Current;
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < kMoteRecords; ++i) {
         unsigned char* const rec = PoolRecord(i);
         records::BattleTask* const trec = rv::As<records::BattleTask>(rec);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t rec_owner = static_cast<std::int32_t>(trec->owner);
         Sprite_Current = rec;
-        SetLong(Mem(BattleE2_Owner_addr), rec_owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), rec_owner);
         Call0(bof3::addr::ElemBreathMote_Run);
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
         Sprite_Current = self;
     }
 }
@@ -538,7 +539,7 @@ S09_EXPORT void __cdecl ElemBreath_Start(void) {
         tchild->owner = static_cast<std::int32_t>(Key(Sc()));
         child[1] = 0;
     }
-    if (Mem(EventBattle_Id_addr)[0] != 0 && Pointer(BattleE3_CurrentEnemy_addr)[0x100] == 0x29) {
+    if (Mem(::bof3::Img(EventBattle_Id_addr))[0] != 0 && Pointer(::bof3::Img(BattleE3_CurrentEnemy_addr))[0x100] == 0x29) {
         const unsigned slot = NewTask(0x32);
         unsigned char* const child = TaskSlot(slot);
         records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
@@ -649,7 +650,7 @@ S09_EXPORT void __cdecl ElemBreathMote_Start(void) {
     }
     Sc()[8] = Owner()[8];
     {
-        const unsigned kind = EnemyRecord(Mem(at::kActor)[0])[0x8C];
+        const unsigned kind = EnemyRecord(Mem(::bof3::Img(at::kActor))[0])[0x8C];
         std::int32_t reach, lift;
         if (kind == 0x10) {
             reach = 0x10000;
@@ -1072,7 +1073,7 @@ S09_EXPORT void __cdecl DreamBreath_TargetHeight(void) {
     if (target & 0x40) {
         for (unsigned i = 0; i < 8; ++i) {
             if ((MH_CALL(Battle_ActorIsOut)(i + 3) & 0xFF) != 0) continue;
-            SetSD(0, U(SD(0)) + U(S16(Mem(Battle_Enemies_addr + i * at::kEnemyStride + 0x3E))));
+            SetSD(0, U(SD(0)) + U(S16(Mem(::bof3::Img(Battle_Enemies_addr) + i * at::kEnemyStride + 0x3E))));
             SetSD(4, U(SD(4)) + 1);
         }
     } else {
@@ -1116,7 +1117,7 @@ S09_EXPORT void __cdecl Pollen_Start(void) {
     Inc(Sc()[1]);
     for (unsigned i = 0; i < 10; ++i) {
         const unsigned slot = NewTask(4);
-        const unsigned char delay = Mem(Pollen_Delays_addr + i)[0];
+        const unsigned char delay = Mem(::bof3::Img(Pollen_Delays_addr) + i)[0];
         unsigned char* const child = TaskSlot(slot);
         records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         unsigned char* const s = Sc();
@@ -1173,8 +1174,8 @@ S09_EXPORT void __cdecl PollenMote_Run(void) {
 S09_EXPORT void __cdecl PollenMote_Start(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    rv::Store(rv::Current<records::BattleTask>()->step_x, Long(Mem(PollenMote_Offsets_addr + 8u * Sc()[0xB])));
-    rv::Store(rv::Current<records::BattleTask>()->step_z, Long(Mem(PollenMote_Offsets_addr + 4 + 8u * Sc()[0xB])));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, Long(Mem(::bof3::Img(PollenMote_Offsets_addr) + 8u * Sc()[0xB])));
+    rv::Store(rv::Current<records::BattleTask>()->step_z, Long(Mem(::bof3::Img(PollenMote_Offsets_addr) + 4 + 8u * Sc()[0xB])));
     Turn(Sc());
     {
         unsigned char* const s = Sc();

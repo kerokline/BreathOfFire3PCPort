@@ -30,6 +30,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
+#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -54,7 +55,7 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F, words or dwords by function) and the
 // SVECTORs of Prim_VertexScratch (0x9037A0..). Both are read again after every
 // call, as the originals read them.
-constexpr std::uint32_t kS = SharedScratch_addr;
+constexpr ::bof3::image::Va kS{SharedScratch_addr};
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The overlays' own .data the functions read in place (symbols.toml [[data]]).
@@ -66,10 +67,10 @@ constexpr unsigned kCloudOffsetCount = 3;
 constexpr unsigned kRow26 = 0x1A00;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* Src() { return Pointer(BattleOdds_ActorObject_addr); }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
-unsigned ActorByte() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char* Src() { return Pointer(::bof3::Img(BattleOdds_ActorObject_addr)); }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
+unsigned ActorByte() { return static_cast<unsigned>(Long(Mem(::bof3::Img(at::kActor)))) & 0xFF; }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
@@ -78,9 +79,9 @@ void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
 void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -104,15 +105,15 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
 // The originals index the records unchecked: the party's by the index, the
 // enemies' by the battle index - 3 (the acting actor) or by an enemy index
 // (Blitz's bolts).
-unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
 unsigned char* EnemyByBattleIndex(unsigned battle_index) {
-    return Mem(Battle_Enemies_addr + (battle_index - 3u) * at::kEnemyStride);
+    return Mem(::bof3::Img(Battle_Enemies_addr) + (battle_index - 3u) * at::kEnemyStride);
 }
-unsigned char* EnemyRecord(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
+unsigned char* EnemyRecord(unsigned i) { return Mem(::bof3::Img(Battle_Enemies_addr) + i * at::kEnemyStride); }
 unsigned char* ActorRecord(unsigned a) { return a < 3 ? PartyRecord(a) : EnemyByBattleIndex(a); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
@@ -459,7 +460,7 @@ S03_EXPORT void __cdecl MindSwordBlade_DrawLead(void) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        SetSW(6, Word(Mem(MindSword_BladeRadii_addr + (i / 2) * 2)));
+        SetSW(6, Word(Mem(::bof3::Img(MindSword_BladeRadii_addr) + (i / 2) * 2)));
         AngleVertex(p, 8, BladeAngle((i + 1) << 9), 6);
         AngleVertex(p, 0x18, BladeAngle(i << 9), 4);
         AngleVertex(p, 0x28, BladeAngle((i + 2) << 9), 4);
@@ -716,7 +717,7 @@ S03_EXPORT void __cdecl Chlorine_WaitChildren(void) {
 // 0x40; the task freed.
 S03_EXPORT void __cdecl Chlorine_End(void) {
     const unsigned char target = TargetByte();
-    SetWord(Mem(at::kFlags), Word(Mem(at::kFlags)) | 0x2004u);
+    SetWord(Mem(::bof3::Img(at::kFlags)), Word(Mem(::bof3::Img(at::kFlags))) | 0x2004u);
     MH_CALL(Battle_SetTargetFlag40)(target);
     MH_CALL(BattleTask_FreeCurrent)();
 }
@@ -754,7 +755,7 @@ S03_EXPORT void __cdecl ChlorineCloud_Start(void) {
     auto offset = [](unsigned field) {
         const unsigned i = Sc()[0xB];
         if (i >= kCloudOffsetCount) bof3::Fatal("ChlorineCloud_Start: offset %u, past the %u-entry table", i, kCloudOffsetCount);
-        return Long(Mem(ChlorineCloud_Offsets_addr + 12 * i + field));
+        return Long(Mem(::bof3::Img(ChlorineCloud_Offsets_addr) + 12 * i + field));
     };
     rv::Store(rv::Current<records::BattleTask>()->step_x, offset(0));
     rv::Store(rv::Current<records::BattleTask>()->step_z, offset(4));
@@ -916,7 +917,7 @@ S03_EXPORT void __cdecl Blitz_End(void) {
     unsigned char* const word = a < 3 ? PartyRecord(a) + 0x98 : EnemyByBattleIndex(a) + 0xA4;
     SetWord(word, Word(word) >> 1);
     if (Word(word) == 0) SetWord(word, 1);
-    Mem(at::kFlags)[0] |= 4;
+    Mem(::bof3::Img(at::kFlags))[0] |= 4;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -973,7 +974,7 @@ S03_EXPORT void __cdecl BlitzBolt_Seek(void) {
     // the fourth word is the original's uninitialised stack; the callee reads none of it
     MH_CALL(MagicFx_StepTowardPoint)(static_cast<unsigned>(x), static_cast<unsigned>(z), static_cast<unsigned>(y), 0, 0x40);
     if (MH_CALL(MagicFx_NearSprite)(record, 0x8000) != 0) {
-        Mem(0x904AA9)[0] |= 0x20;
+        Mem(::bof3::Img(0x904AA9))[0] |= 0x20;
         MH_CALL(Battle_SetTargetFlag40)(Sc()[3]);
         MH_CALL(Sound_PlayById)(0x203);
         const unsigned char* const owner = Owner();

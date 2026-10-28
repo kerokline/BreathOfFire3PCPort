@@ -25,6 +25,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
+#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -45,7 +46,7 @@ using move_script::Word;
 // (0x903850..0x90385F) and the three SVECTORs of Prim_VertexScratch
 // (0x9037A0..0x9037B7). Both are read again after every call, as the
 // originals read them.
-constexpr std::uint32_t kS = 0x903850;
+constexpr ::bof3::image::Va kS{0x903850};
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The mote pool: 96 records of 0x20 bytes (SuddenDeath_Motes) and the cell
@@ -54,7 +55,7 @@ constexpr unsigned kMotes = 0x60;
 constexpr unsigned kMoteStride = 0x20;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char* M() { return SuddenDeath_CurrentMote; }
 unsigned char* MoteAt(unsigned i) { return SuddenDeath_Motes + i * kMoteStride; }
 
@@ -62,8 +63,8 @@ std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
 unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -75,12 +76,12 @@ std::uint32_t U(std::int32_t v) { return static_cast<std::uint32_t>(v); }
 // `imul` then `sar 0xC`: the 32-bit product wraps, the shift is arithmetic.
 int Mul12(int a, int b) { return static_cast<int>(static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b)) >> 12; }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
 // The originals index the records by the battle index, unchecked: the enemy's
 // by index - 3.
 unsigned char* ActorRecord(unsigned a) {
-    if (a < 3) return Mem(ObjTrio_addr + a * at::kPartyStride);
-    return Mem(Battle_Enemies_addr + (a - 3) * at::kEnemyStride);
+    if (a < 3) return Mem(::bof3::Img(ObjTrio_addr) + a * at::kPartyStride);
+    return Mem(::bof3::Img(Battle_Enemies_addr) + (a - 3) * at::kEnemyStride);
 }
 
 unsigned RandByte() { return static_cast<unsigned>(MH_CALL(Rand)()) & 0xFFu; }
@@ -204,14 +205,14 @@ static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
 S13_EXPORT void __cdecl SuddenDeath_Task(void) {
     static constexpr std::uint32_t kPhases[2] = {bof3::addr::SuddenDeath_Spawn, bof3::addr::MagicFx_EndWhenChildrenDone};
     StackCall(kPhases, 2, Sc()[1], "SuddenDeath_Task");
-    const std::int32_t saved = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t saved = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < kMotes; ++i) {
         unsigned char* const m = MoteAt(i);
         if ((m[0] & 1) == 0) continue;
         SuddenDeath_CurrentMote = m;
-        SetLong(Mem(BattleE2_Owner_addr), Long(m + 0x1C));
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), Long(m + 0x1C));
         Call0(bof3::addr::SuddenDeathMote_Task);
-        SetLong(Mem(BattleE2_Owner_addr), saved);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), saved);
     }
 }
 
@@ -230,12 +231,12 @@ S13_EXPORT void __cdecl SuddenDeath_Spawn(void) {
     Inc(Sc()[1]);
     for (unsigned a = 3; a < 11; ++a) {
         if (MH_CALL(Battle_ActorIsOut)(a) != 0) continue;
-        if ((U(Long(Mem(at::kActor))) & 0xFFu) == a) continue;
+        if ((U(Long(Mem(::bof3::Img(at::kActor)))) & 0xFFu) == a) continue;
         SpawnChild(a);
     }
     for (unsigned a = 0; a < 3; ++a) {
         if (MH_CALL(Battle_ActorIsOut)(a) != 0) continue;
-        if (Mem(at::kActor)[0] == a) continue;
+        if (Mem(::bof3::Img(at::kActor))[0] == a) continue;
         SpawnChild(a);
     }
     MH_CALL(Sound_PlayById)(0x100);

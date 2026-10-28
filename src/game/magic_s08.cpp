@@ -35,6 +35,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
+#include "game/magic_va.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -59,34 +60,34 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F, Scratch_Swap at +0xC) and the four
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
-constexpr std::uint32_t kS = SharedScratch_addr;
+constexpr ::bof3::image::Va kS{SharedScratch_addr};
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
-constexpr std::uint32_t kAbility = 0x904B80;       // u16: the ability being cast
+constexpr ::bof3::image::Va kAbility{0x904B80};       // u16: the ability being cast
 // kFormIndex: now BattlePhases_B89 (symbols.toml). u8: indexes CounterMark_FormIndex
 // kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords, 12 bytes a record
 // kWardPool: now WardMote_Pool (symbols.toml). WardMote_Pool: 64 records of 0x84
 // kTrails: now EvilEyeBeam_Trails (symbols.toml). EvilEyeBeam_Trails: 32 points of 4 bytes a beam
 // kMemberOffsets: now CounterMark_MemberOffsets (symbols.toml). CounterMark_MemberOffsets
 // kFormOffsets: now CounterMark_FormOffsets (symbols.toml). CounterMark_FormOffsets
-constexpr std::uint32_t kFormBytes = 0x65A8E8;     // CounterMark_FormIndex
+constexpr ::bof3::image::Va kFormBytes{0x65A8E8};     // CounterMark_FormIndex
 // kWardTilts: now WardMote_Tilts (symbols.toml). WardMote_Tilts
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char* Source() { return Pointer(::bof3::Img(BattleOdds_ActorObject_addr)); }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
 unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -111,13 +112,13 @@ void PutFloat(unsigned char* p, int v) {
     std::memcpy(p, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
-unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
 // The enemy records by battle index - 3, unchecked, as the originals index them.
 unsigned char* EnemyRecord(unsigned battle_index) {
-    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
+    return Mem(::bof3::Img(Battle_Enemies_addr) + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
-unsigned char* TintRecord(unsigned index) { return Mem(MoveScript_TintRecords_addr + index * 12u); }
+unsigned char* TintRecord(unsigned index) { return Mem(::bof3::Img(MoveScript_TintRecords_addr) + index * 12u); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }
@@ -204,22 +205,22 @@ void ClearPool(std::uint32_t pool) {
 // owner, then the task and owner as they were after the phase call.
 void WalkPool(std::uint32_t pool, std::uint32_t run) {
     unsigned char* const self = Sprite_Current;
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < 64; ++i) {
         unsigned char* const rec = Mem(pool + i * 0x84u);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t rec_owner = Long(rec + 0x80);
         Sprite_Current = rec;
-        SetLong(Mem(BattleE2_Owner_addr), rec_owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), rec_owner);
         Call0(run);
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
         Sprite_Current = self;
     }
 }
 
 // EvilEyeBeam_Trails: point j of beam `beam` (+4 of the task), x then y.
 unsigned char* Trail(unsigned beam, int j) {
-    return Mem(EvilEyeBeam_Trails_addr + static_cast<std::uint32_t>((static_cast<int>(beam) * 32 + j) * 4));
+    return Mem(::bof3::Img(EvilEyeBeam_Trails_addr) + static_cast<std::uint32_t>((static_cast<int>(beam) * 32 + j) * 4));
 }
 
 }  // namespace
@@ -311,7 +312,7 @@ S08_EXPORT void __cdecl Berserk_Fade(void) {
 
 // original 0x4A66E0: the children's kind-1 task, a jmp through
 // BerserkChild_Kinds (two entries: the ring, the glow) by +1.
-S08_EXPORT void __cdecl BerserkChild_Task(void) { CellCall(0x65A82C, 2, Sc()[1], "BerserkChild_Task"); }
+S08_EXPORT void __cdecl BerserkChild_Task(void) { CellCall(::bof3::Img(0x65A82C), 2, Sc()[1], "BerserkChild_Task"); }
 
 // original 0x4A6700: a ring. A three-entry stack table by +2 (_Start, _Grow,
 // _Fade); then while +0 bit 0 and +2: the actor matrix, the ring, the pop.
@@ -532,7 +533,7 @@ S08_EXPORT void __cdecl Counter_Start(void) {
 
 // original 0x4A6EC0: the mark's kind-1 task, a jmp through CounterChild_Kinds
 // (one entry) by +1.
-S08_EXPORT void __cdecl CounterChild_Task(void) { CellCall(0x65A834, 1, Sc()[1], "CounterChild_Task"); }
+S08_EXPORT void __cdecl CounterChild_Task(void) { CellCall(::bof3::Img(0x65A834), 1, Sc()[1], "CounterChild_Task"); }
 
 // original 0x4A6EE0: a five-entry stack table by +2 (_Start, _Open, _Grow,
 // _Swell, _Fade); then while +0 bit 0 and +2: the disc, the spokes (0, +9)
@@ -606,16 +607,16 @@ S08_EXPORT void __cdecl CounterMark_Fade(void) {
 // direction of 0 or 3 and taken away otherwise; the y added.
 S08_EXPORT void __cdecl CounterMark_Place(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
-    const unsigned target = static_cast<std::uint32_t>(Long(Mem(at::kTarget))) & 0xFFu;
+    const unsigned target = static_cast<std::uint32_t>(Long(Mem(::bof3::Img(at::kTarget)))) & 0xFFu;
     if (target >= 3) return;
     const unsigned char* const member = PartyRecord(target);
     std::uint32_t table;
     unsigned row;
     if (member[0x134] & 2) {
-        table = CounterMark_FormOffsets_addr;
-        row = Mem(kFormBytes + Mem(BattlePhases_B89_addr)[0])[0];
+        table = ::bof3::Img(CounterMark_FormOffsets_addr);
+        row = Mem(kFormBytes + Mem(::bof3::Img(BattlePhases_B89_addr))[0])[0];
     } else {
-        table = CounterMark_MemberOffsets_addr;
+        table = ::bof3::Img(CounterMark_MemberOffsets_addr);
         row = member[0x89];
     }
     unsigned char* const s = Sc();
@@ -775,7 +776,7 @@ S08_EXPORT void __cdecl Ward_Task(void) {
     static constexpr std::uint32_t kPhases[5] = {bof3::addr::Ward_Start, bof3::addr::Ward_Tint, bof3::addr::Ward_Brighten,
                                                  bof3::addr::Ward_Fade, bof3::addr::BattleFx_Finish};
     StackCall(kPhases, 5, Sc()[1], "Ward_Task");
-    WalkPool(WardMote_Pool_addr, bof3::addr::WardMote_Task);
+    WalkPool(::bof3::Img(WardMote_Pool_addr), bof3::addr::WardMote_Task);
 }
 
 // original 0x4A78C0: the pool cleared; the source sprite's direction and
@@ -784,7 +785,7 @@ S08_EXPORT void __cdecl Ward_Task(void) {
 // delay 1, 9, .., 0x39, counted in +0xB; row 26's first 32 CLUT entries from
 // their source as they are; Gfx_ClutStripDirty; sound 0x100.
 S08_EXPORT void __cdecl Ward_Start(void) {
-    ClearPool(WardMote_Pool_addr);
+    ClearPool(::bof3::Img(WardMote_Pool_addr));
     const unsigned char* const src = Source();
     Sc()[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
@@ -798,7 +799,7 @@ S08_EXPORT void __cdecl Ward_Start(void) {
         const unsigned char got = MH_AT(Alloc, bof3::addr::WardMote_Alloc)();
         if (got != 0xFF) {
             unsigned char* const self = Sc();
-            unsigned char* const rec = Mem(WardMote_Pool_addr + got * 0x84u);
+            unsigned char* const rec = Mem(::bof3::Img(WardMote_Pool_addr) + got * 0x84u);
             SetLong(rec + 0x80, static_cast<std::int32_t>(Key(self)));
             rec[0xB] = index;
             rec[9] = static_cast<unsigned char>(delay);
@@ -870,12 +871,12 @@ S08_EXPORT void __cdecl Ward_Fade(void) {
 
 // original 0x4A7BE0: a mote's task, a jmp through WardMote_TaskTable (one
 // entry) by +1.
-S08_EXPORT void __cdecl WardMote_Task(void) { CellCall(0x65A904, 1, Sc()[1], "WardMote_Task"); }
+S08_EXPORT void __cdecl WardMote_Task(void) { CellCall(::bof3::Img(0x65A904), 1, Sc()[1], "WardMote_Task"); }
 
 // original 0x4A7C00: a call through WardMote_Steps (four entries) by +2; then
 // while +0 and +2 are set: its matrix, its band, the pop.
 S08_EXPORT void __cdecl WardMote_Run(void) {
-    CellCall(0x65A908, 4, Sc()[2], "WardMote_Run");
+    CellCall(::bof3::Img(0x65A908), 4, Sc()[2], "WardMote_Run");
     const unsigned char* const s = Sc();
     if (s[0] == 0 || s[2] == 0) return;
     Call0(bof3::addr::WardMote_PushMatrix);
@@ -968,7 +969,7 @@ S08_EXPORT void __cdecl WardMote_PushMatrix(void) {
     MH_CALL(Gte_PushMatrix)();
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    const short rot[4] = {0x400, static_cast<short>(Word(Mem(WardMote_Tilts_addr + s[8] * 2u))), 0, 0};
+    const short rot[4] = {0x400, static_cast<short>(Word(Mem(::bof3::Img(WardMote_Tilts_addr) + s[8] * 2u))), 0, 0};
     short v[4];
     v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
     v[1] = static_cast<short>((ts->z >> 9) - 0x4000);
@@ -1065,7 +1066,7 @@ S08_EXPORT void __cdecl WardMote_Draw(void) {
 // +0 clear gets it, its index in al; 0xFF when all are taken.
 S08_EXPORT unsigned char __cdecl WardMote_Alloc(void) {
     for (unsigned i = 0; i < 64; ++i) {
-        unsigned char* const rec = Mem(WardMote_Pool_addr + i * 0x84u);
+        unsigned char* const rec = Mem(::bof3::Img(WardMote_Pool_addr) + i * 0x84u);
         if (rec[0] & 1) continue;
         rec[0] = static_cast<unsigned char>(rec[0] | 1);
         return static_cast<unsigned char>(i);
@@ -1110,13 +1111,13 @@ S08_EXPORT void __cdecl EvilEye_Start(void) {
 
 // original 0x4A8360: the children's kind-1 task, a jmp through
 // EvilEyeChild_Kinds (two entries: the beam, the spark) by +1.
-S08_EXPORT void __cdecl EvilEyeChild_Task(void) { CellCall(0x65A924, 2, Sc()[1], "EvilEyeChild_Task"); }
+S08_EXPORT void __cdecl EvilEyeChild_Task(void) { CellCall(::bof3::Img(0x65A924), 2, Sc()[1], "EvilEyeChild_Task"); }
 
 // original 0x4A8380: a call through EvilEyeBeam_Steps (four entries) by +2;
 // then while +0 and +2 are set, the trail drawn: thin for beam 1 (+4 not 0),
 // wide for beam 0.
 S08_EXPORT void __cdecl EvilEyeBeam_Run(void) {
-    CellCall(0x65A92C, 4, Sc()[2], "EvilEyeBeam_Run");
+    CellCall(::bof3::Img(0x65A92C), 4, Sc()[2], "EvilEyeBeam_Run");
     const unsigned char* const s = Sc();
     const bool thin = s[4] != 0;
     if (s[0] == 0 || s[2] == 0) return;
@@ -1133,7 +1134,7 @@ S08_EXPORT void __cdecl EvilEyeBeam_Run(void) {
 S08_EXPORT void __cdecl EvilEyeBeam_Start(void) {
     const unsigned char* const src = Source();
     Sc()[8] = Owner()[8];
-    const unsigned actor = static_cast<std::uint32_t>(Long(Mem(at::kActor))) & 0xFFu;
+    const unsigned actor = static_cast<std::uint32_t>(Long(Mem(::bof3::Img(at::kActor)))) & 0xFFu;
     std::uint32_t dx, height;
     if (actor < 3) {
         dx = 0x4000;
@@ -1461,7 +1462,7 @@ S08_EXPORT void __cdecl EvilEyeBeam_Erase(void) {
 // original 0x4A9470: a spark. A call through EvilEyeSpark_Steps (three
 // entries) by +2; then while +0 and +2 are set, the spark drawn.
 S08_EXPORT void __cdecl EvilEyeSpark_Run(void) {
-    CellCall(0x65A93C, 3, Sc()[2], "EvilEyeSpark_Run");
+    CellCall(::bof3::Img(0x65A93C), 3, Sc()[2], "EvilEyeSpark_Run");
     const unsigned char* const s = Sc();
     if (s[0] == 0 || s[2] == 0) return;
     Call0(bof3::addr::EvilEyeSpark_Draw);

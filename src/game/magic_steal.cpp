@@ -95,10 +95,10 @@ MSTEAL_EXPORT void __cdecl SkillSteal_Task(void) {
 // +0x34 / +0x38 / +0x3C to the task, the owner and Sprite_Current read again
 // for each; +0xB 0; the phase on.
 MSTEAL_EXPORT void __cdecl SkillSteal_Start(void) {
-    Sprite_Current[8] = Pointer(BattleE2_Owner_addr)[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->x);
-    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->z);
-    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->height);
+    Sprite_Current[8] = Pointer(::bof3::Img(BattleE2_Owner_addr))[8];
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->height);
     Sprite_Current[0xB] = 0;
     Bump(Sprite_Current[1]);
 }
@@ -121,14 +121,14 @@ MSTEAL_EXPORT void __cdecl SkillSteal_Start(void) {
 // DIV-0046 (BOF3X_STEAL=1), read back from the patched original's byte
 // (Cheats_StealRollMask).
 MSTEAL_EXPORT void __cdecl SkillSteal_Roll(void) {
-    const unsigned char* const enemy = EnemyOf(Mem(at::kTarget)[0]);
-    const int diff = static_cast<int>(Word(PartyOf(Mem(at::kActor)[0]) + kThiefSpeed)) -
+    const unsigned char* const enemy = EnemyOf(Mem(::bof3::Img(at::kTarget))[0]);
+    const int diff = static_cast<int>(Word(PartyOf(Mem(::bof3::Img(at::kActor))[0]) + kThiefSpeed)) -
                      static_cast<int>(Word(enemy + kEnemySpeed));
     const int tier = Tier(diff);
     const int rate = static_cast<signed char>(SkillSteal_RateTable[enemy[kEnemyRate]]);
     const std::uint32_t r = static_cast<std::uint32_t>(MH_CALL(Rand)());
     const std::uint32_t chance = static_cast<std::uint32_t>(rate) * static_cast<std::uint32_t>(tier);
-    unsigned char* const target = EnemyOf(Mem(at::kTarget)[0]);
+    unsigned char* const target = EnemyOf(Mem(::bof3::Img(at::kTarget))[0]);
     if (static_cast<int>(r & Cheats_StealRollMask()) >= static_cast<int>(chance)) {
         Report(target[kEnemyRate] != 0 ? 0x39 : 0x3A);
         return;
@@ -146,7 +146,7 @@ MSTEAL_EXPORT void __cdecl SkillSteal_Roll(void) {
     MH_AT(ItemNameFn, bof3::addr::Item_CopyName)(item, category);
     const unsigned char* const text = MH_CALL(Msg_SystemPtr)(0x38);
     MH_CALL(BattleQueue_Push)(1, 0xFF, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(text)));
-    unsigned char* const after = EnemyOf(Mem(at::kTarget)[0]);
+    unsigned char* const after = EnemyOf(Mem(::bof3::Img(at::kTarget))[0]);
     after[kEnemyRate] = 0;
     SetWord(after + kEnemyItem, 0);
     Bump(Sprite_Current[1]);
