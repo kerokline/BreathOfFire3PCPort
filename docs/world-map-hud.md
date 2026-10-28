@@ -388,6 +388,19 @@ texture path's owner: STP into the palette's alpha (index 0 stays 0) and the
 sprite handlers' blend keyed on texel alpha - then `SetSemiTrans(prim, 1)`
 here becomes a one-line DIV with the PlayStation's picture behind it.
 
+**Addendum, 2026-10-27: built.** The texture path came as DIV-0160 (the
+bit-15 round, 2026-10-23: bit 15 into the texture's plane, the blend keyed on
+it per texel), and with it the legend labels and the region box already drew
+opaque, as the texel count above says the PlayStation draws them - the owner
+saw the region plate turn from the port's half-transparent grey to black in
+the census pairs (`stp-census.md` 6) and matched it against a PSP capture of
+Eastern Wyndia, where the plate is black and the map shows through the dial's
+glass. The flip is **DIV-0184**: `WorldMap_DrawSprite` passes 1 for every
+sprite, armed after the fuzz beside DIV-0135 (`BOF3X_ORIGINAL=DialTranslucent`
+keeps the port's operand). The on/off pair of the `worldMapAndAreaTransition`
+route is under `C:\Users\kerok\bof3x-runs\away1027\d42\`; D42 is marked
+fixed; the owner, on the pair: "Looks great".
+
 ### 5.2 Where the place plates' rectangles live
 
 **Not in this group's code.** `WorldMap_DrawSprite`'s table (1.3) holds the

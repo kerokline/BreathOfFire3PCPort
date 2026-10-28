@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 183 entries, DIV-0001..0183, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 184 entries, DIV-0001..0184, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -10525,6 +10525,17 @@ designed in rather than bolted on.
   and only under our backend (`InitShim` has run): under `BOF3X_ORIGINAL=Display_Setup`, Capcom's DirectX 6
   objects would read alpha clear as transparent, so the converters keep Capcom's rule there.
   `BOF3X_STPVIEW=1` (diagnostic) draws the texels the plane marks in magenta.
+- **Amended 2026-10-27 (the away day's census, [`stp-census.md`](stp-census.md) 6, and the owner's
+  eye):** the world map's region box (`WorldMap_DrawHud`'s sprites 4 and 5, the "Yraall Region" plate) and
+  the legend's labels and key glyphs are drawn through the dial page's CLUT `0x7B80`, whose entries have
+  no bit 15 but the glass's (world-map-hud.md 5.1: 2026-09-23's count off the JP disc), so under this entry
+  they draw **opaque** - a black plate with white text, where the port's whole-primitive blend showed a
+  half-transparent grey box over the map. That is the PlayStation's plate: the owner's PSP capture of
+  2026-10-27 (Eastern Wyndia) shows it black, and the dial's glass translucent (DIV-0184). The census
+  agent's report folded the plate into the legend family without naming it; the owner saw it in
+  `caught_f00600_off_on_diff.png` the same evening, and judged the pairs: "the texel changes look
+  excellent". No further change: the plate is this entry's rule applied to a draw the port had marked
+  semi-transparent.
 
 ### Two battle draws take their coordinates signed: a box or cell partly off the left or top edge clips
 
@@ -11681,3 +11692,41 @@ designed in rather than bolted on.
   the caster's animation. Run root `C:/Users/kerok/bof3x-runs/ss1026/par`.
 - **Reversible?** `BOF3X_ORIGINAL=Paralyzer_Start` leaves Capcom's
   function, its read with it.
+
+### The world map's dial is drawn semi-transparent, so its glass shows the map as on the PlayStation
+
+- **ID:** DIV-0184
+- **Date:** 2026-10-27
+- **Subsystem:** the world map's sprite draw `WorldMap_DrawSprite` `0x404560` (ours,
+  `src/game/world_map.cpp`; the PSX twin `0x801F39D8` in the map overlay `0x801F2C00`).
+  D42 ([`known-defects.md`](known-defects.md)); [`world-map-hud.md`](world-map-hud.md) 5.1,
+  [`world-map.md`](world-map.md) 7.2. Needs DIV-0160.
+- **Tier:** Intent - a restoration; the owner, 2026-10-27, with a PSP capture beside the
+  port's frame: "lets finish repairing D42".
+- **Original behaviour:** the PlayStation calls `SetSemiTrans(prim, 1)` for every sprite of
+  the dial page; the port calls `Gpu_SetSemiTrans(prim, index != 0)`, so the dial - index 0 -
+  is the one sprite drawn with the bit clear, and the port's dial is opaque over the map.
+  One operand, and a deliberate one: under the port's whole-primitive blend the PlayStation's
+  operand would have drawn the rim and the markings at half brightness with the glass
+  (D42, 2026-09-24). The JP dial's 5,376 texels are 983 transparent, 1,054 with bit 15 (the
+  glass) and 3,339 opaque (the rim, the markings).
+- **New behaviour:** the sprite draw passes 1 for every sprite, as the PlayStation does. With
+  DIV-0160 only the texels with bit 15 blend, so the glass shows the map through it while the
+  rim and markings stay solid; the labels, key glyphs and region box, which have no bit-15
+  texel, draw as before (opaque, DIV-0160's amendment above). The flag `g_dial_semi` is armed
+  after every module's self-test, beside DIV-0135's, so `world_map_fuzz` compares the port's
+  operand. One log line, `DIV-0184`, says on or OFF.
+- **Rationale:** D42's own closing line: once bit 15 reaches the palette and the blend is
+  keyed on it per texel, "`SetSemiTrans(prim, 1)` here is a one-line divergence". DIV-0160 is
+  that path. The owner's PSP capture (2026-10-27, Eastern Wyndia) shows the map through the
+  dial's glass and the region plate black; the port's own choice was the lesser of two wrong
+  pictures under its blend, and that blend is gone.
+- **Also in the PSX version?** No: this restores the PlayStation's operand.
+- **Verification:** 2026-10-27, [`world-map-hud.md`](world-map-hud.md) 5.1's addendum: the
+  `'*'` self-test from an ini-less launcher copy (the fuzz sees the port's operand), and the
+  `worldMapAndAreaTransition` route's frames on and off - the dial's glass blended over the
+  map with it on, the rim, markings, labels, key glyphs and region plate identical on both.
+  The owner, on the pair the same evening: "Looks great".
+- **Reversible?** `BOF3X_ORIGINAL=DialTranslucent` keeps the port's operand (the dial opaque).
+  With `BOF3X_ORIGINAL=StpBlend` as well, the whole dial would blend at half - the third
+  picture D42 refused - so this entry is meant to be on only with DIV-0160.
