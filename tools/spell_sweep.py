@@ -798,7 +798,8 @@ def fight_head(a):
         L += [f'view 0x{a.camera[0]:X} 0x{a.camera[1]:X}', 'wait 2']
     if a.place:
         L += [f'place 0x{a.place[0]:X} 0x{a.place[1]:X} {a.fight}', 'wait 1']
-    L += [f'mark fight {a.fight} staged', f'battle {a.fight}',
+    # --scene: the route's own scene has called the fight by --cut (no op): the head only waits for it
+    L += [f'mark fight {a.fight} staged'] + ([] if a.scene else [f'battle {a.fight}']) + [
           f'until 0x{FIELD_MODE:X} u16 == 5 timeout 600', 'mark in battle', 'wait 20']
     if not a.mortal:
         L += party_pokes(a.members)
@@ -1107,7 +1108,7 @@ def selftest():
     a = argparse.Namespace(route=route, cut=12, field_cut=0, goto=(), settle=150, place=(0x1C0000, 0x5B0000),
                            camera=(0x190000, 0x5B0000), pre_poke=['0x7DF3A0 u8 1'], fight=12, enemies=2, members=3,
                            play=2, kill=True, kill_hp=1, kill_enemies='0', kill_rounds=1, every=3, after=300,
-                           round_presses=60, return_presses=250, mortal=False, to_end=False, after_confirm=False, confirm='circle', ids='', sections=set(), shots=6,
+                           round_presses=60, return_presses=250, mortal=False, to_end=False, after_confirm=False, scene=False, confirm='circle', ids='', sections=set(), shots=6,
                            spacing=30, enemy_flags=0, enemy_odds=1, poke=[], peek=[], members_dead=())
     L = fight_head(a) + fight_body(a, {})
     idx = [next(i for i, l in enumerate(L) if l.startswith(w)) for w in
@@ -1212,6 +1213,8 @@ def main():
         p.add_argument('--round-presses', type=int, default=60,
                        help='--fight: confirms pressed (every 12 frames) for a round to come back to the cross')
         p.add_argument('--kill', action='store_true', help='--fight: then the kill - HP poked low, every cross Attacks')
+        p.add_argument('--scene', action='store_true',
+                       help="--fight: no `battle` op - the route's scene calls the fight itself before --cut (a crafted pre-fight save)")
         p.add_argument('--mortal', action='store_true', help='--fight: no HP / DEF pokes on the party (a fight the game ends by a loss)')
         p.add_argument('--to-end', action='store_true', help='--fight: after the rounds, confirm until the field is back, no kill')
         p.add_argument('--kill-hp', type=int, default=1, help='--kill: the HP poked into each --kill-enemies record at the cross')
