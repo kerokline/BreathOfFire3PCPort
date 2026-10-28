@@ -11,13 +11,15 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 **The ledger-fields round, 2026-10-28, on `ledger-fields/round`** (off `main` `ac1682fe`, the PR #161 merge;
 LF0, four groups, an audit and a fix agent, Opus, one worktree each under `C:\Users\kerok\bof3x-runs\lf1027`,
 merged one at a time; unpushed, PR at the owner's word; [`ledger-fields-round.md`](ledger-fields-round.md), the
-three "as run" sections). **Every ledger entry now carries five machine-read fields** - `Switch:`, `Default:`,
-`Player:`, `Toward:`, `State:` - and `tools/ledger_check.py` refuses an entry without them, a switch name
+three "as run" sections). **Every ledger entry now carries six machine-read fields** - `Switch:`, `Default:`,
+`Player:`, `Toward:`, `Languages:`, `State:` - and `tools/ledger_check.py` refuses an entry without them, a switch name
 nothing in `src/` or the launcher reads, or a `Player:` the names do not give; `tools/ledger_switches.py`
 measures every switch name's class from the source (in CI). Over the 184 entries: **59 a player can switch
 today, 67 `cheap`** (the original path is in our code; stage D's `BOF3X_OFF` makes them a player's), **28
 `costly`** (the original is Capcom's function alone; left, the owner's call 4), **30 `never`**; 90 list `psx`,
-16 `psp`, none `pc`. No behaviour changed. Four `Reversible?` lines were corrected from the code (DIV-0006,
+16 `psp`, none `pc`. The sixth, `Languages:` (the owner's call, 2026-10-28), names the engine's tags an entry
+acts under (`any` for 137, a list for 47) so that the launcher's language pick, not a preset, decides where a
+language entry is on. No behaviour changed. Four `Reversible?` lines were corrected from the code (DIV-0006,
 0012, 0087, 0150), DIV-0037 is counted withdrawn, and one defect came of it: **D395**, `scale=2` in `bof3x.ini`
 cannot pin a window at k = 2 on a scaled desktop (the launcher's, open). Stage D - the player's switch and the
 four presets - is the next launch (HANDOFF item 2).
