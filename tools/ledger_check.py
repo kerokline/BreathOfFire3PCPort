@@ -67,10 +67,7 @@ TOWARD_VALUES = ('psx', 'psp', 'pc')
 # (DIV id, field) -> why: an entry whose line of that name predates the switch
 # fields and means something else. Its line is not read as the field; the
 # check fails once the line is renamed, so the list cannot go stale.
-FIELD_CLASH = {
-    ('DIV-0169', 'State'): 'a "State:" line on the DLL state the entry keeps (2026-10-23), older than the '
-                           'switch fields; its stage-B group renames it',
-}
+FIELD_CLASH = {}  # DIV-0169's old "State:" line was renamed "Kept state:" by LF4 (2026-10-28)
 
 # (DIV id, missing field) -> why it is accepted. Content only the author can
 # write; the check will not invent it.
