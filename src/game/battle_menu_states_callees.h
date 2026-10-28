@@ -84,8 +84,8 @@ constexpr ::bof3::image::Va kQueue{0x93C2C0};
 }  // namespace at
 
 // Callees with no name in symbols.gen.h, called by address.
-constexpr std::uint32_t kPrevTarget = bof3::addr::Battle_PrevTarget;  // Battle_DefaultTarget's downward twin: the first actor not out from the byte down; 0xFF if none
-constexpr std::uint32_t kItemFlags = bof3::addr::Item_UseFlags;   // group TWO's (2026-10-06), the value unchanged: (category, item) -> the item's flag byte (0x656B38 / 0x657461 / 0x657D79 / 0x658461 tables)
+constexpr ::bof3::image::CodeVa kPrevTarget{bof3::addr::Battle_PrevTarget};  // Battle_DefaultTarget's downward twin: the first actor not out from the byte down; 0xFF if none
+constexpr ::bof3::image::CodeVa kItemFlags{bof3::addr::Item_UseFlags};   // group TWO's (2026-10-06), the value unchanged: (category, item) -> the item's flag byte (0x656B38 / 0x657461 / 0x657D79 / 0x658461 tables)
 
 struct Callees {
     unsigned char (__cdecl* default_target)(unsigned);

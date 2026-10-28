@@ -232,17 +232,17 @@ const bh::Callee kCallees[] = {
      &ActorInEffect},
     // the standard lists it whole; every caller here pushes a register whose
     // upper bytes are its own (0x452DD0 reads the low byte, its disassembly)
-    {"0x452DD0", at::kActorMayAct, at::kActorMayAct, 1, {kU8}, A::kFlag, 0, 0},
+    {"0x452DD0", at::kActorMayAct.v, at::kActorMayAct.v, 1, {kU8}, A::kFlag, 0, 0},
     // the actor word likewise: al loaded over a pointer's upper bytes
     {"Battle_SetDamagePopup", bof3::addr::Battle_SetDamagePopup, KeyOf(&::Battle_SetDamagePopup), 2, {kU16, kU8},
      A::kGarbage, 0, 0},
     // other groups' (battle_e2_callees.h), raw until they merge
-    {"0x442310", at::kMemberRecalc, at::kMemberRecalc, 0, {0x905D98}, A::kPhase, 0, 0},   // logs Field_State
-    {"0x453300", at::kMemberStatusSet, at::kMemberStatusSet, 1, {kU8}, A::kGarbage, 0, 0},
-    {"0x446770", at::kTurnVelocity, at::kTurnVelocity, 1, {kAll}, A::kGarbage, 0, 0, {}, &TurnEffect},
-    {"0x437450", at::kPlayCue, at::kPlayCue, 1, {kU16}, A::kGarbage, 0, 0},
-    {"0x4376F0", at::kEnemyTaskChance, at::kEnemyTaskChance, 0, {}, A::kPhase, 0, 0},
-    {"0x4376A0", at::kEnemyOpEnd, at::kEnemyOpEnd, 0, {}, A::kPhase, 0, 0},
+    {"0x442310", at::kMemberRecalc.v, at::kMemberRecalc.v, 0, {0x905D98}, A::kPhase, 0, 0},   // logs Field_State
+    {"0x453300", at::kMemberStatusSet.v, at::kMemberStatusSet.v, 1, {kU8}, A::kGarbage, 0, 0},
+    {"0x446770", at::kTurnVelocity.v, at::kTurnVelocity.v, 1, {kAll}, A::kGarbage, 0, 0, {}, &TurnEffect},
+    {"0x437450", at::kPlayCue.v, at::kPlayCue.v, 1, {kU16}, A::kGarbage, 0, 0},
+    {"0x4376F0", at::kEnemyTaskChance.v, at::kEnemyTaskChance.v, 0, {}, A::kPhase, 0, 0},
+    {"0x4376A0", at::kEnemyOpEnd.v, at::kEnemyOpEnd.v, 0, {}, A::kPhase, 0, 0},
     // the group's own, called directly
     {"BattleFx_NextStatusIcon", 0x434870, KeyOf(&::BattleFx_NextStatusIcon), 0, {}, A::kByte, 0xFF, 0x0F},
     {"BattleFx_PlaceOverOwner", 0x434730, KeyOf(&::BattleFx_PlaceOverOwner), 0, {}, A::kPhase, 0, 0},

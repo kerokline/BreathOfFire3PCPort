@@ -200,7 +200,7 @@ void ReadBack(const char* who) {
     const U rec = PixRecord(who);
     alignas(4) short rect[4] = {static_cast<short>(at::kCaptureX), static_cast<short>(at::kCaptureY),
                                 static_cast<short>(Word(P(rec + 4))), static_cast<short>(Word(P(rec + 6)))};
-    SH_AT(void (__cdecl*)(const short*, unsigned char*), at::kStoreImage)(rect, EffectKind30_Shards);
+    SH_AT(void (__cdecl*)(const short*, unsigned char*), at::kStoreImage.v)(rect, EffectKind30_Shards);
     unsigned char* const s = S();
     Rest3f_PixCursor = static_cast<U>(reinterpret_cast<std::uintptr_t>(EffectKind30_Shards));
     Rest3f_PartCursor = ::bof3::Img(at::kParticles.v);
@@ -401,7 +401,7 @@ extern "C" void __cdecl EffectKind5F_DrawLineDisc(const long* point, unsigned un
     do {
         const std::int32_t row = static_cast<std::int16_t>(i);
         const std::int32_t rr = static_cast<std::int16_t>(radius);
-        const int s = SH_AT(int (__cdecl*)(int), at::kSqrt)(rr * rr - row * row);
+        const int s = SH_AT(int (__cdecl*)(int), at::kSqrt.v)(rr * rr - row * row);
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetLineF2)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);

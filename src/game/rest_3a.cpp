@@ -768,7 +768,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleBossFx_Dispatc
                     "section 7)",
                     index);
     using Eight = void (__cdecl*)(U, U, U, U, U, U, U, U);
-    BH_WORD(Eight, kTable[index])(kTable[0], kTable[1], kTable[2], kTable[3], kTable[4], kTable[5], kTable[6], kTable[7]);
+    BH_WORD(Eight, kTable[index])(::bof3::CodePlace(kTable[0]), ::bof3::CodePlace(kTable[1]), ::bof3::CodePlace(kTable[2]),
+                                  ::bof3::CodePlace(kTable[3]), ::bof3::CodePlace(kTable[4]), ::bof3::CodePlace(kTable[5]),
+                                  ::bof3::CodePlace(kTable[6]), ::bof3::CodePlace(kTable[7]));
 }
 
 // ============================================================================

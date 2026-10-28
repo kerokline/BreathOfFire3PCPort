@@ -257,11 +257,11 @@ const sh::Callee kCallees[] = {
     {R2D_OURS(FieldMenuStatus_ListWindows), 0, {}, kG, 0, 0},
     {R2D_OURS(FieldMenuStatus_ClearWindows), 0, {}, kG, 0, 0},
     // R2C's and R2E's, ours, keyed by address (docs/rest_2d.md section 6)
-    {"0x585DC0", at::kMemberPanel, at::kMemberPanel, 4, {kW, kW, kU8, kW}, kG, 0, 0},   // `and eax, 0xFF` on the member
-    {"0x585BE0", at::kMemberLabel, at::kMemberLabel, 3, {kW, kW, kU8}, kG, 0, 0},
-    {"0x586160", at::kPromptBox, at::kPromptBox, 5, {kW, kW, kW, kW, kU8}, kG, 0, 0},     // the style byte under garbage
-    {"0x58BC30", at::kItemsWindows, at::kItemsWindows, 0, {}, kG, 0, 0},
-    {"0x58C2A0", at::kItemsReset, at::kItemsReset, 0, {}, kG, 0, 0},
+    {"0x585DC0", at::kMemberPanel.v, at::kMemberPanel.v, 4, {kW, kW, kU8, kW}, kG, 0, 0},   // `and eax, 0xFF` on the member
+    {"0x585BE0", at::kMemberLabel.v, at::kMemberLabel.v, 3, {kW, kW, kU8}, kG, 0, 0},
+    {"0x586160", at::kPromptBox.v, at::kPromptBox.v, 5, {kW, kW, kW, kW, kU8}, kG, 0, 0},     // the style byte under garbage
+    {"0x58BC30", at::kItemsWindows.v, at::kItemsWindows.v, 0, {}, kG, 0, 0},
+    {"0x58C2A0", at::kItemsReset.v, at::kItemsReset.v, 0, {}, kG, 0, 0},
     // FieldAbility_Effects' entries: the typed stand-ins' log slots, keyed on each
     // handler's address (no clone calls one by E8; the table holds the stand-in)
 #define R2D_EFFECT(i, name) {"FieldAbility_Effects[" #i "] " #name, kEffectAddress[i], kEffectAddress[i], 3, {kW, kW, kW}, kG, 0, 0, \

@@ -197,7 +197,7 @@ extern "C" void __cdecl EnemyAI_ApplyAction(unsigned char* enemy, const unsigned
         const U status = enemy[0x92];
         const unsigned char* const current = Sprite_Current;
         const U word = (cleared & 0xFFFF0000u) | status | row[2];
-        BH_AT(U2, at::kInflictStatus)((word & 0xFFFFFF00u) | current[5], word);
+        BH_AT(U2, at::kInflictStatus.v)((word & 0xFFFFFF00u) | current[5], word);
         Sprite_Current = saved;
         break;
     }
@@ -230,7 +230,7 @@ extern "C" void __cdecl EnemyAI_ApplyAction(unsigned char* enemy, const unsigned
     enemy_rec->odds_index = row[4];
     for (unsigned i = 0; i < 8; ++i) enemy[0x9C + i] = row[8 + i];
     const U tail = static_cast<U>(reinterpret_cast<std::uintptr_t>(row + 16));
-    BH_AT(U1, at::kStatusPick)((tail & 0xFFFFFF00u) | enemy_rec->actor);
+    BH_AT(U1, at::kStatusPick.v)((tail & 0xFFFFFF00u) | enemy_rec->actor);
     if (enemy_rec->hp != 0 && Word(row + 6) != 0) {
         const unsigned n = BattleE5_EnemyMessageCount;
         if (n < 8) {
@@ -326,8 +326,8 @@ void DrainActor(const Drain& d) {
     if (static_cast<S32>(Word(stat)) + S16(Word(Result() + d.at)) > static_cast<S32>(W(max_at)))
         Ptr(::bof3::Img(at::kActingSprite2.v))[8] = static_cast<unsigned char>(Ptr(::bof3::Img(at::kActingSprite2.v))[8] | d.flag);
     const U result = BattleDamage_Result;
-    const U change = BH_AT(U3, at::kStatAdd)(Key(stat), (result & 0xFFFF0000u) | W(max_at), Word(At(result) + d.at));
-    if (d.ap) BH_AT(U2, at::kApPopup)(0u - change, B(::bof3::Img(at::kActor.v)));
+    const U change = BH_AT(U3, at::kStatAdd.v)(Key(stat), (result & 0xFFFF0000u) | W(max_at), Word(At(result) + d.at));
+    if (d.ap) BH_AT(U2, at::kApPopup.v)(0u - change, B(::bof3::Img(at::kActor.v)));
     else BH_CALL(Battle_SetDamagePopup)(0u - change, B(::bof3::Img(at::kActor.v)));
     Ptr(::bof3::Img(at::kActingSprite2.v))[8] = 0;
 }
@@ -342,7 +342,7 @@ constexpr Drain kDrainAp = {6, 0x9A, 0xA2, 0xA6, 0xB2, 8, 2, true};
 // / 5 as the HP delta, the acting sprite's +8 = 1, and the actor's HP raised
 // by it (Drain above).
 extern "C" void __cdecl Effect_DrainHp(void) {
-    if (BH_AT(U2, at::kResisted)(B(::bof3::Img(at::kActor.v)), B(::bof3::Img(at::kTarget.v))) & 0xFF) {
+    if (BH_AT(U2, at::kResisted.v)(B(::bof3::Img(at::kActor.v)), B(::bof3::Img(at::kTarget.v))) & 0xFF) {
         Result()[8] = 1;
         return;
     }
@@ -355,7 +355,7 @@ extern "C" void __cdecl Effect_DrainHp(void) {
 // acting kind 4 and the ability 0x4E and jumps here): the AP drain, as the
 // HP drain on AP, with the result's +8 = 2 as well and the pop-up 0x453EB0.
 extern "C" void __cdecl Effect_DrainAp(void) {
-    if (BH_AT(U2, at::kResisted)(B(::bof3::Img(at::kActor.v)), B(::bof3::Img(at::kTarget.v))) & 0xFF) {
+    if (BH_AT(U2, at::kResisted.v)(B(::bof3::Img(at::kActor.v)), B(::bof3::Img(at::kTarget.v))) & 0xFF) {
         Result()[8] = 2;
         return;
     }
@@ -380,7 +380,7 @@ extern "C" void __cdecl Effect_QuarterAttack(void) {
     }
     Result()[8] = 1;
     BH_CALL(Battle_SetDamagePopup)(0, B(::bof3::Img(at::kTarget.v)));
-    BH_AT(Void0, at::kMissTail)();
+    BH_AT(Void0, at::kMissTail.v)();
 }
 
 // ===========================================================================
@@ -632,7 +632,7 @@ extern "C" void __cdecl DragonCmd_Open(void) {
     SetW(::bof3::Img(at::kAsk.v), 0);
     BattleE5_GeneCount = 0;
     BattleActions_ApCost = 0;
-    BH_AT(Void0, at::kDragonTask)();
+    BH_AT(Void0, at::kDragonTask.v)();
     const unsigned char part = static_cast<unsigned char>(BattleE4_Step3 + 1);
     BattleE4_Step4 = 0;
     BattleE4_Step3 = part;
@@ -705,7 +705,7 @@ extern "C" void __cdecl DragonCmd_MenuClose(void) {
 // window 4's +3 = 1, LoadDatFile(0xCF), the next step.
 extern "C" void __cdecl DragonCmd_MenuCancel(void) {
     if (WindowRecords[21].in_use & 1) return;
-    BH_AT(Void0, at::kTargetPrompt)();
+    BH_AT(Void0, at::kTargetPrompt.v)();
     WindowRecords[17].in_use = 0;
     WindowRecords[21].in_use = 0;
     BH_CALL(BattleBanner_ShowName)(Member());
@@ -804,7 +804,7 @@ extern "C" void __cdecl DragonCmd_SlotsBack(void) { BackToMenu(::bof3::Img(Windo
 // 0x4525B0, window 18's +3 = 2, the member's +0x134 |= 4, the next step.
 extern "C" void __cdecl DragonCmd_SlotsConfirm(void) {
     TakeSlot(SlotOf(::bof3::Img(at::kSlots.v), ::bof3::Img(Window18_addr)));
-    BH_AT(Void0, at::kDragonTask)();
+    BH_AT(Void0, at::kDragonTask.v)();
     auto* const member_rec = rv::As<records::PartyMember>(Member());
     B(::bof3::Img(at::kWin18.v) + 3) = 2;
     member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
@@ -816,7 +816,7 @@ extern "C" void __cdecl DragonCmd_SlotsConfirm(void) {
 // gene grid's close and commit).
 extern "C" void __cdecl DragonCmd_SlotsClose(void) {
     if (WindowRecords[18].in_use & 1) return;
-    BH_AT(Void0, at::kTargetPrompt)();
+    BH_AT(Void0, at::kTargetPrompt.v)();
     WindowRecords[17].in_use = 0;
     WindowRecords[18].in_use = 0;
     WindowRecords[16].in_use = 0;
@@ -879,7 +879,7 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
             const unsigned char last = static_cast<unsigned char>(n - 1);
             BattleE5_GeneCount = last;
             B(::bof3::Img(at::kGeneFlags.v) + B(::bof3::Img(at::kGenes.v) + last)) = 1;
-            BH_AT(Void0, at::kDragonTask)();
+            BH_AT(Void0, at::kDragonTask.v)();
             Sound(0x106);
             return;
         }
@@ -914,7 +914,7 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
                 *flag = 0;
                 B(::bof3::Img(at::kGenes.v) + n) = static_cast<unsigned char>(row * 6 + col);
                 BattleE5_GeneCount = static_cast<unsigned char>(BattleE5_GeneCount + 1);
-                BH_AT(Void0, at::kDragonTask)();
+                BH_AT(Void0, at::kDragonTask.v)();
                 Sound(0x103);
                 if (BattleE5_GeneCount == 3) {
                     BattleE5_GeneRow = 0xFF;
@@ -969,7 +969,7 @@ extern "C" void __cdecl DragonCmd_GenesConfirm(void) {
 // 16, 19's +0 zeroed, LoadDatFile(0xCF), the next step.
 extern "C" void __cdecl DragonCmd_GenesClose(void) {
     if (WindowRecords[21].in_use & 1) return;
-    BH_AT(Void0, at::kTargetPrompt)();
+    BH_AT(Void0, at::kTargetPrompt.v)();
     WindowRecords[17].in_use = 0;
     WindowRecords[21].in_use = 0;
     WindowRecords[16].in_use = 0;
@@ -1066,7 +1066,7 @@ extern "C" void __cdecl DragonCmd_Slots2Back(void) { BackToMenu(::bof3::Img(Wind
 // next step.
 extern "C" void __cdecl DragonCmd_Slots2Confirm(void) {
     TakeSlot(SlotOf(::bof3::Img(at::kSlots2.v), ::bof3::Img(Window19_addr)));
-    BH_AT(Void0, at::kDragonTask)();
+    BH_AT(Void0, at::kDragonTask.v)();
     Sound(0x104);
     auto* const member_rec = rv::As<records::PartyMember>(Member());
     B(::bof3::Img(at::kWin19.v) + 3) = 2;
@@ -1079,7 +1079,7 @@ extern "C" void __cdecl DragonCmd_Slots2Confirm(void) {
 // LoadDatFile(0xCF), part 4's step 3.
 extern "C" void __cdecl DragonCmd_Slots2Close(void) {
     if (WindowRecords[18].in_use & 1) return;
-    BH_AT(Void0, at::kTargetPrompt)();
+    BH_AT(Void0, at::kTargetPrompt.v)();
     WindowRecords[17].in_use = 0;
     WindowRecords[16].in_use = 0;
     WindowRecords[19].in_use = 0;

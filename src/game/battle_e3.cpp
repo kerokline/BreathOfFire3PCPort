@@ -270,7 +270,7 @@ extern "C" unsigned __cdecl EnemyOp_LeaveDispatch(unsigned passed) {
 extern "C" void __cdecl EnemyOp_LeaveStart(void) {
     SetULong(S() + 0x18, 0xFFFFF000u);
     SetULong(S() + 0x1C, 0);
-    BH_AT(void (__cdecl*)(unsigned char*), at::kTurnVelocity18)(S());
+    BH_AT(void (__cdecl*)(unsigned char*), at::kTurnVelocity18.v)(S());
     rv::As<records::BattleEnemy>(S())->layout ^= 2;
     SetULong(S() + 0xC, 0);
     SetULong(S() + 0x10, 0);
@@ -477,7 +477,7 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
                 member_f = rv::As<records::PartyMember>(f);
             }
         } else if (kind == 5) {
-            const unsigned char cls = BH_AT(unsigned char (__cdecl*)(unsigned, unsigned), at::kItemClass)(B(::bof3::Img(at::kItemCategory.v)),
+            const unsigned char cls = BH_AT(unsigned char (__cdecl*)(unsigned, unsigned), at::kItemClass.v)(B(::bof3::Img(at::kItemCategory.v)),
                                                                                                         B(::bof3::Img(at::kAbility.v)));
             if ((cls & 4) == 0) BH_CALL(BattleObj_HitPose)();
             f = F();
@@ -490,7 +490,7 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
         member_f = rv::As<records::PartyMember>(f);
     }
     if (f[0x12C] & 2) {
-        BH_AT(void (__cdecl*)(unsigned, unsigned), at::kSecondPopup)(static_cast<std::uint16_t>(member_f->ap_change), rv::As<records::PartyMember>(S())->actor);
+        BH_AT(void (__cdecl*)(unsigned, unsigned), at::kSecondPopup.v)(static_cast<std::uint16_t>(member_f->ap_change), rv::As<records::PartyMember>(S())->actor);
         f = F();
         member_f = rv::As<records::PartyMember>(f);
     }
@@ -563,9 +563,9 @@ extern "C" void __cdecl BattleObj_HitEnd(void) {
     if (B(::bof3::Img(at::kRoundFlags.v)) & 0x40) {
         SetWord(At(::bof3::Img(at::kRoundFlags.v)), (Word(At(::bof3::Img(at::kRoundFlags.v))) & 0xFFBF) | 0x1000);
     } else if ((B(::bof3::Img(at::kTarget.v)) & 0xC0) == 0) {
-        if (B(::bof3::Img(at::kActKind.v)) == 1 && BH_AT(unsigned char (__cdecl*)(), at::kRollB9)() != 0) B(::bof3::Img(at::kRoundFlags.v)) |= 0x40;
+        if (B(::bof3::Img(at::kActKind.v)) == 1 && BH_AT(unsigned char (__cdecl*)(), at::kRollB9.v)() != 0) B(::bof3::Img(at::kRoundFlags.v)) |= 0x40;
         if (B(::bof3::Img(at::kActKind.v)) == 4 && (AbilityByte(::bof3::Img(at::kAbilityFlags5.v)) & 8) != 0 &&
-            BH_AT(unsigned char (__cdecl*)(), at::kRollB9)() != 0 && (AbilityByte(::bof3::Img(at::kAbilityFlags0.v)) & 0x10) == 0)
+            BH_AT(unsigned char (__cdecl*)(), at::kRollB9.v)() != 0 && (AbilityByte(::bof3::Img(at::kAbilityFlags0.v)) & 0x10) == 0)
             B(::bof3::Img(at::kRoundFlags.v)) |= 0x40;
     }
     BH_CALL(Battle_ClearActorBit)(rv::As<records::PartyMember>(S())->actor);
@@ -597,7 +597,7 @@ extern "C" void __cdecl BattleObj_HitStepStart(void) {
     rv::Store<unsigned>(rv::As<records::PartyMember>(f)->hp_change, 0);
     SetULong(S() + 0xC, 0);
     SetULong(S() + 0x10, 0xFFFFE000u);
-    BH_AT(void (__cdecl*)(unsigned char*), at::kTurnVelocityC)(S());
+    BH_AT(void (__cdecl*)(unsigned char*), at::kTurnVelocityC.v)(S());
     S()[0xA] = 4;
     BH_CALL(BattleObj_ScriptTickOnce)();
     BH_CALL(Sound_PlayById)(0x205);
@@ -717,7 +717,7 @@ extern "C" void __cdecl BattleObj_Fall(void) {
     rv::As<records::PartyMember>(F())->count_800 = 0;
     rv::As<records::PartyMember>(F())->count_40 = 0;
     rv::As<records::PartyMember>(F())->count_80 = 0;
-    BH_AT(void (__cdecl*)(unsigned), at::kPass453300)(rv::As<records::PartyMember>(S())->actor);
+    BH_AT(void (__cdecl*)(unsigned), at::kPass453300.v)(rv::As<records::PartyMember>(S())->actor);
     if (BH_CALL(BattleParty_AllDown)() != 0 || Battle_PartyStanding == 0) Battle_EndFlags |= 1;
     ClearFormFlag();
     auto* const member_s = rv::As<records::PartyMember>(S());
@@ -754,11 +754,11 @@ extern "C" void __cdecl BattleParty_RecalcStats(void) {
     BH_CALL(Formation_ApplyStatMods)();
     n = PartyCount("BattleParty_RecalcStats");
     for (unsigned i = 0; i < n; ++i) std::memmove(Member(i) + 0xA0, Member(i) + 0xC0, 32);
-    BH_AT(void (__cdecl*)(), at::kPass44FDE0)();
+    BH_AT(void (__cdecl*)(), at::kPass44FDE0.v)();
     if (B(::bof3::Img(at::kPartyCount.v)) == 0) return;
     unsigned member = 0;
     do {
-        BH_AT(void (__cdecl*)(unsigned), at::kPass453300)(member);
+        BH_AT(void (__cdecl*)(unsigned), at::kPass453300.v)(member);
         member = static_cast<unsigned char>(member + 1);
     } while (member < B(::bof3::Img(at::kPartyCount.v)));
 }
@@ -806,8 +806,8 @@ extern "C" void __cdecl BattleObj_Revive(void) {
     BH_CALL(Sound_PlayById)(0x206);
     if (BattleMisc_BannerKinds == 0) {
         BH_CALL(Battle_OpenMsgWindow)();
-        BH_AT(void (__cdecl*)(unsigned), at::kNameToText)(rv::As<records::PartyMember>(S())->actor);
-        BH_AT(void (__cdecl*)(unsigned, unsigned), at::kBannerByPair)(0, rv::As<records::PartyMember>(F())->char_id);
+        BH_AT(void (__cdecl*)(unsigned), at::kNameToText.v)(rv::As<records::PartyMember>(S())->actor);
+        BH_AT(void (__cdecl*)(unsigned, unsigned), at::kBannerByPair.v)(0, rv::As<records::PartyMember>(F())->char_id);
     }
     rv::As<records::PartyMember>(S())->state3 = 2;
     BH_CALL(BattleObj_ScriptTick)();
@@ -948,7 +948,7 @@ extern "C" void __cdecl BattleObj_HpApply(void) {
         f = F();
         member_f = rv::As<records::PartyMember>(f);
     }
-    if (f[0x12C] & 2) BH_AT(void (__cdecl*)(unsigned, unsigned), at::kSecondPopup)(static_cast<std::uint16_t>(member_f->ap_change), rv::As<records::PartyMember>(S())->actor);
+    if (f[0x12C] & 2) BH_AT(void (__cdecl*)(unsigned, unsigned), at::kSecondPopup.v)(static_cast<std::uint16_t>(member_f->ap_change), rv::As<records::PartyMember>(S())->actor);
     BH_CALL(BattleObj_ScriptTick)();
     rv::As<records::PartyMember>(S())->state3 += 1;
 }

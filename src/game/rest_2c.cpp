@@ -147,7 +147,7 @@ extern "C" void __cdecl MasterFigure_DrawFaded(void) {
                                 : 0xFF;
     B(::bof3::Img(at::kFigureRgb.v) + 2) = static_cast<int>(B(::bof3::Img(at::kFigureRgb.v) + 2)) > t ? static_cast<unsigned char>(B(::bof3::Img(at::kFigureRgb.v) + 2) + down)
                                                                          : 0;
-    SH_AT(void (__cdecl*)(U), at::kFigureDraw)(::bof3::Img(at::kFigure.v));
+    SH_AT(void (__cdecl*)(U), at::kFigureDraw.v)(::bof3::Img(at::kFigure.v));
     Rest2c_FigureRgb = r;
     B(::bof3::Img(at::kFigureRgb.v) + 1) = g;
     B(::bof3::Img(at::kFigureRgb.v) + 2) = b;
@@ -881,7 +881,7 @@ extern "C" void __cdecl MasterTalk_PanelsOut(void) {
 // original 0x586980, pick step 2: R2D's 0x5869A0 (the pick) with the master's
 // message + 0xF and 0.
 extern "C" void __cdecl MasterTalk_PickAsk(void) {
-    SH_AT(void (__cdecl*)(unsigned, unsigned), at::kPickAsk)(MasterMessage(AreaW0c_TailSub, 0xF), 0);
+    SH_AT(void (__cdecl*)(unsigned, unsigned), at::kPickAsk.v)(MasterMessage(AreaW0c_TailSub, 0xF), 0);
 }
 
 // ===========================================================================
@@ -978,7 +978,7 @@ extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, un
     SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(::bof3::Img(Gfx_PacketNext_addr))), 0, 0, 0xF, 0);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
     const unsigned clut = SH_CALL(Gpu_GetClut)(0x10, 0x1E0);
-    SH_AT(void (__cdecl*)(int, int, unsigned, unsigned, unsigned, unsigned), at::kGlyph)(
+    SH_AT(void (__cdecl*)(int, int, unsigned, unsigned, unsigned, unsigned), at::kGlyph.v)(
         x + 9, y + 5, static_cast<unsigned char>(slot + 3), 0x1E, clut, 0x80);
 }
 

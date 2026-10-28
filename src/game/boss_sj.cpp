@@ -163,7 +163,7 @@ unsigned char Pose(const char* who, const unsigned char (&poses)[10]) {
     return poses[i];
 }
 
-constexpr U kFollow = bof3::addr::BossMyriaFx_Follow;   // BossMyriaFx_Follow, called directly by the states
+constexpr ::bof3::image::CodeVa kFollow{bof3::addr::BossMyriaFx_Follow};   // BossMyriaFx_Follow, called directly by the states
 
 // Myria's effect, steps 0 of states 0..2: Sprite_SetAnimationBank(bank); the
 // Sprite_Current of after the call +0x48 = 0, +0x24 = 0, the dword +0x3C = 0;
@@ -184,7 +184,7 @@ void FxLoop(const char* who, const unsigned char (&poses)[10]) {
     if (Owner()[0xB] != 0) BH_CALL(Sprite_SetAnimation)(Pose(who, poses));
     BH_CALL(BattleEnemy_ScriptTick)();
     BH_CALL(Sprite_QueueOverlay)();
-    Phase(kFollow)();
+    Phase(kFollow.v)();
 }
 
 // Steps 0 of states 3..6: bank; +0x48, +0x24, +0x3C = 0; Sprite_SetAnimation
@@ -201,14 +201,14 @@ void FxEnterPosed(const char* who, unsigned bank, const unsigned char (&poses)[1
     else
         BH_CALL(BattleEnemy_ScriptTick)();
     BH_CALL(Sprite_QueueOverlay)();
-    Phase(kFollow)();
+    Phase(kFollow.v)();
     ++Sprite_Current[2];
 }
 
 // Sprite_QueueOverlay, then a tail jump to BossMyriaFx_Follow.
 void QueueAndFollow() {
     BH_CALL(Sprite_QueueOverlay)();
-    Phase(kFollow)();
+    Phase(kFollow.v)();
 }
 
 // One axis of BossMyriaFx_Follow: the s16 at BossMyriaFx_Drift[2 * +1 + axis]
@@ -228,9 +228,9 @@ void Drift(bool scaled, unsigned axis, unsigned scale_at, unsigned word_at) {
     U answer;
     if (scaled) {
         const U scale = static_cast<U>(Long(s + scale_at));
-        answer = BH_AT(RoundHighFn, at::kRoundHigh)(d * scale, scale);
+        answer = BH_AT(RoundHighFn, at::kRoundHigh.v)(d * scale, scale);
     } else {
-        answer = BH_AT(RoundHighFn, at::kRoundHigh)(d << 16, 0x10000);
+        answer = BH_AT(RoundHighFn, at::kRoundHigh.v)(d << 16, 0x10000);
     }
     SetWord(w, static_cast<unsigned>(Word(w) + answer) & 0xFFFF);
 }
@@ -251,7 +251,7 @@ extern "C" unsigned long __cdecl BossDLord_Dispatch(unsigned long through) {
 // original 0x43F7C0: state 0 (BossDLord_Anims, _Hook, _Sounds; +0x114 |= 8;
 // +1 = 2; tail Sprite_ScriptTick).
 extern "C" unsigned char __cdecl BossDLord_Enter(void) {
-    return Enter(AddressOf(BossDLord_Anims), bof3::addr::BossDLord_Hook, AddressOf(BossDLord_Sounds));
+    return Enter(AddressOf(BossDLord_Anims), ::bof3::Code(bof3::addr::BossDLord_Hook), AddressOf(BossDLord_Sounds));
 }
 
 // original 0x43F820: state 6: jmp [BossDLord_ActSubs + 4 * +2] (6: the
@@ -311,7 +311,7 @@ extern "C" void __cdecl BossDLord_HookFx(unsigned) {
 // original 0x43F950: Boss_SetupTable[52]. The hooks: end Boss52_End, exit
 // Boss52_Exit, event BareRetZero.
 extern "C" void __cdecl Boss52_Setup(void) {
-    StoreHooks(bof3::addr::Boss52_End, bof3::addr::Boss52_Exit, bof3::addr::BareRetZero);
+    StoreHooks(::bof3::Code(bof3::addr::Boss52_End), ::bof3::Code(bof3::addr::Boss52_Exit), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43F970: the end hook. Not won (0x904AE8 bit 1 clear): a tail jump
@@ -319,12 +319,12 @@ extern "C" void __cdecl Boss52_Setup(void) {
 // chapter step 0x8034E5 = 0x1A, a tail jump to 0x446DE0 (step 1).
 extern "C" void __cdecl Boss52_End(void) {
     if ((Battle_EndFlags & 2) == 0) {
-        BH_AT(Handler, at::kEndOther)();
+        BH_AT(Handler, at::kEndOther.v)();
         return;
     }
     PoseParty();
     MoveScript_PartyRecords[0x65] = 0x1A;
-    BH_AT(Handler, at::kEndWin)();
+    BH_AT(Handler, at::kEndWin.v)();
 }
 
 // original 0x43FA90: the exit hook. BossActor_ClearBit40(0); BossActor_Find(0)
@@ -399,7 +399,7 @@ extern "C" unsigned long __cdecl BossShroom_Dispatch(unsigned long through) {
 // original 0x43FBD0: state 0 (BossShroom_Anims, _Hook, _Sounds; +0x114 |= 8;
 // +1 = 2; tail Sprite_ScriptTick).
 extern "C" unsigned char __cdecl BossShroom_Enter(void) {
-    return Enter(AddressOf(BossShroom_Anims), bof3::addr::BossShroom_Hook, AddressOf(BossShroom_Sounds));
+    return Enter(AddressOf(BossShroom_Anims), ::bof3::Code(bof3::addr::BossShroom_Hook), AddressOf(BossShroom_Sounds));
 }
 
 // original 0x43FC30: the +0xF4 hook: BossShroom_Hooks (3, BareRet each).
@@ -408,7 +408,7 @@ extern "C" void __cdecl BossShroom_Hook(unsigned word) { DispatchHook("BossShroo
 // original 0x43FC40: Boss_SetupTable[54]. The hooks: end Boss54_End, exit
 // BareRet, event BareRetZero.
 extern "C" void __cdecl Boss54_Setup(void) {
-    StoreHooks(bof3::addr::Boss54_End, bof3::addr::BareRet, bof3::addr::BareRetZero);
+    StoreHooks(::bof3::Code(bof3::addr::Boss54_End), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43FC60: the end hook. Won: movement-script variable 3 (0x903848)
@@ -416,9 +416,9 @@ extern "C" void __cdecl Boss54_Setup(void) {
 extern "C" void __cdecl Boss54_End(void) {
     if (Battle_EndFlags & 2) {
         B(::bof3::Img(at::kScriptVar3.v)) = 0x32;
-        BH_AT(Handler, at::kEndWin)();
+        BH_AT(Handler, at::kEndWin.v)();
     } else {
-        BH_AT(Handler, at::kEndOther)();
+        BH_AT(Handler, at::kEndOther.v)();
     }
 }
 
@@ -429,7 +429,7 @@ extern "C" void __cdecl Boss54_End(void) {
 // original 0x4406E0: Boss_SetupTable[55]. The hooks: end Boss55_End, exit
 // BossHook_ExitActor0Bit40, event BareRetZero.
 extern "C" void __cdecl Boss55_Setup(void) {
-    StoreHooks(bof3::addr::Boss55_End, bof3::addr::BossHook_ExitActor0Bit40, bof3::addr::BareRetZero);
+    StoreHooks(::bof3::Code(bof3::addr::Boss55_End), ::bof3::Code(bof3::addr::BossHook_ExitActor0Bit40), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x440700: the end hook. Not won: a tail jump to 0x446E00. Won: the
@@ -437,12 +437,12 @@ extern "C" void __cdecl Boss55_Setup(void) {
 // (the end phase's step 3), then Music_Track = 0xFF.
 extern "C" void __cdecl Boss55_End(void) {
     if ((Battle_EndFlags & 2) == 0) {
-        BH_AT(Handler, at::kEndOther)();
+        BH_AT(Handler, at::kEndOther.v)();
         return;
     }
     PoseParty();
     MoveScript_PartyRecords[0x65] = 0xF;
-    BH_AT(Handler, at::kEndThird)();
+    BH_AT(Handler, at::kEndThird.v)();
     Music_Track = 0xFF;
 }
 

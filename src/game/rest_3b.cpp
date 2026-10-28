@@ -75,10 +75,10 @@ using U1 = U (__cdecl*)(U);
 using U2 = U (__cdecl*)(U, U);
 using Handler = void (__cdecl*)();
 
-void MissTail() { BH_AT(Void0, at::kMissTail)(); }
-void StatMod(U which) { BH_AT(U1, at::kStatMod)(which); }
-void InflictMiss(U status) { BH_AT(U1, at::kInflictMiss)(status); }
-void Inflict(U status) { BH_AT(U1, at::kRollInflict)(status); }
+void MissTail() { BH_AT(Void0, at::kMissTail.v)(); }
+void StatMod(U which) { BH_AT(U1, at::kStatMod.v)(which); }
+void InflictMiss(U status) { BH_AT(U1, at::kInflictMiss.v)(status); }
+void Inflict(U status) { BH_AT(U1, at::kRollInflict.v)(status); }
 
 // jmp [table + 4 * byte]: the byte below `entries`, else a Fatal where the
 // original jumps through the dword after its table.
@@ -461,7 +461,7 @@ extern "C" void __cdecl EffectSlot06_HpThirdHit(void) {
         MissTail();
         rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, 9999);
     } else {
-        const U share = BH_AT(U1, at::kHpShare)(3);
+        const U share = BH_AT(U1, at::kHpShare.v)(3);
         const unsigned t = B(::bof3::Img(at::kTarget.v));
         rv::Store<std::uint32_t>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(share - Word(Enemy(t) + 0xB6)));
     }
@@ -634,7 +634,7 @@ extern "C" void __cdecl EffectSlot33_HitDropTurn(void) {
     if (static_cast<std::uint16_t>(rv::As<records::ActionRecord>(Result())->hp_change) == 0) return;
     const unsigned t2 = B(::bof3::Img(at::kTarget.v));
     const unsigned a2 = B(::bof3::Img(at::kActor.v));
-    if (BH_AT(U2, at::kResisted)(a2, t2) & 0xFF) return;
+    if (BH_AT(U2, at::kResisted.v)(a2, t2) & 0xFF) return;
     BH_CALL(Battle_ReturnQueuedItem)(B(::bof3::Img(at::kTarget.v)));
     BH_CALL(Battle_RemoveFromTurnOrder)(B(::bof3::Img(at::kTarget.v)));
 }

@@ -84,9 +84,9 @@ constexpr std::uint32_t kMemberSize = 0x14C;
 
 // Callees with no name in symbols.gen.h: other groups' functions this round,
 // called by address (the round's cross-group rule).
-constexpr std::uint32_t kRemoveFromTurnOrder = bof3::addr::Battle_RemoveFromTurnOrder;  // group BE's; PSX Battle_RemoveFromTurnOrder 0x801DD114
-constexpr std::uint32_t kSetFlagBit = bof3::addr::Battle_SetEnemyKindFlag;           // group BG's; ORs bit (n & 0x1F) into dword 0x904068 + (n >> 5) * 4
-constexpr std::uint32_t kClearTurnBit = bof3::addr::Battle_ClearActorBit;         // group BF's; word 0x904B82 &= ~(1 << n)
+constexpr ::bof3::image::CodeVa kRemoveFromTurnOrder{bof3::addr::Battle_RemoveFromTurnOrder};  // group BE's; PSX Battle_RemoveFromTurnOrder 0x801DD114
+constexpr ::bof3::image::CodeVa kSetFlagBit{bof3::addr::Battle_SetEnemyKindFlag};           // group BG's; ORs bit (n & 0x1F) into dword 0x904068 + (n >> 5) * 4
+constexpr ::bof3::image::CodeVa kClearTurnBit{bof3::addr::Battle_ClearActorBit};         // group BF's; word 0x904B82 &= ~(1 << n)
 
 using Handler = void (__cdecl*)();
 

@@ -102,10 +102,10 @@ extern "C" unsigned char __cdecl BareRetZero(unsigned) { return 0; }
 extern "C" void __cdecl BossHook_EndPickWay(void) {
     if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = 5;
-        BH_AT(Handler, at::kEndWin)();
+        BH_AT(Handler, at::kEndWin.v)();
         return;
     }
-    BH_AT(Handler, at::kEndOther)();
+    BH_AT(Handler, at::kEndOther.v)();
 }
 
 // original 0x43A4A0: the exit hook (0x904B68) of set-ups 14, 28, 29:

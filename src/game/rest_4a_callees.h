@@ -21,7 +21,7 @@ namespace rest_4a::at {
 using U = std::uint32_t;
 
 // --- callees ours, by address (through the harness) ----------------------------
-constexpr U kCommuCount = bof3::addr::CommuName_CountSlots;      // R4D's: unsigned char(void), the records in use
+constexpr ::bof3::image::CodeVa kCommuCount{bof3::addr::CommuName_CountSlots};      // R4D's: unsigned char(void), the records in use
 
 // --- the battle (Battle_* of this group) ----------------------------------------
 constexpr ::bof3::image::Va kBattleFlags{0x904AA8};       // dword: bit 14 the auto-target check's switch

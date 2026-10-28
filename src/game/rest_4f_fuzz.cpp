@@ -607,22 +607,22 @@ void SelfTest() {
         bof3::Log("rest_4f: Config_DrawControllerCell left out - DIV-0051's icons (a Latin overlay) have no Capcom twin");
     }
     // the divergences' sites: rows of their own when they reach ours
-    const U frame = SiteTarget(at::kPanelFrameSite);
-    if (SiteTarget(at::kPadFrameSite) != frame)
-        bof3::Fatal("rest_4f: the two frame sites reach 0x%X and 0x%X", (unsigned)frame, (unsigned)SiteTarget(at::kPadFrameSite));
+    const U frame = SiteTarget(at::kPanelFrameSite.v);
+    if (SiteTarget(at::kPadFrameSite.v) != frame)
+        bof3::Fatal("rest_4f: the two frame sites reach 0x%X and 0x%X", (unsigned)frame, (unsigned)SiteTarget(at::kPadFrameSite.v));
     if (frame != bof3::addr::Port_DroppedCall) {
         sh::Callee& row = g_callees[kFrameRow];
         row.name = "Menu_DrawFrame (DIV-0011)";
-        row.address = at::kPanelFrameSite;
+        row.address = at::kPanelFrameSite.v;
         row.key = frame;
     }
-    const U selected = SiteTarget(at::kOptionBigSite);
-    if (SiteTarget(at::kPadNameSite) != selected)
-        bof3::Fatal("rest_4f: the two text sites reach 0x%X and 0x%X", (unsigned)selected, (unsigned)SiteTarget(at::kPadNameSite));
+    const U selected = SiteTarget(at::kOptionBigSite.v);
+    if (SiteTarget(at::kPadNameSite.v) != selected)
+        bof3::Fatal("rest_4f: the two text sites reach 0x%X and 0x%X", (unsigned)selected, (unsigned)SiteTarget(at::kPadNameSite.v));
     if (selected != bof3::addr::Text_DrawAt) {
         sh::Callee& row = g_callees[kSelectedRow];
         row.name = "ConfigText_DrawSelected (DIV-0017 / DIV-0026)";
-        row.address = at::kOptionBigSite;
+        row.address = at::kOptionBigSite.v;
         row.key = selected;
     }
 

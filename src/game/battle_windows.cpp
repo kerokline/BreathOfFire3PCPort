@@ -56,18 +56,18 @@ const Callees kOriginals = {
     reinterpret_cast<unsigned (__cdecl*)()>(reinterpret_cast<void*>(&Sprite_ScriptTick)),
     reinterpret_cast<unsigned (__cdecl*)()>(reinterpret_cast<void*>(&Sprite_ScriptTickOnce)),
     reinterpret_cast<unsigned (__cdecl*)(unsigned)>(reinterpret_cast<void*>(&Sprite_EnsureAnimation)),
-    Fn<unsigned (__cdecl*)(unsigned, std::uint32_t, unsigned)>(kPoseFrom),
-    Fn<void (__cdecl*)(int, int, unsigned, unsigned)>(kDrawValue),
-    Fn<void (__cdecl*)(int, int, unsigned, unsigned)>(kDrawEdge),
-    Fn<void (__cdecl*)(int, int, unsigned, unsigned)>(kDrawTile),
-    Fn<void (__cdecl*)(int, int, unsigned, unsigned, unsigned)>(kDrawTileRgb),
-    Fn<void (__cdecl*)(int, int, unsigned, unsigned, unsigned)>(kDrawBar),
-    Fn<void (__cdecl*)(int, int, unsigned)>(kDrawDigit),
-    Fn<void (__cdecl*)(int, int, int, int, unsigned, unsigned, unsigned)>(kLinePlain),
-    Fn<void (__cdecl*)(int, int, int, int, unsigned, unsigned, unsigned)>(kLineSemi0),
-    Fn<void (__cdecl*)(int, int, int, int, unsigned, unsigned, unsigned)>(kLineSemi1),
-    Fn<unsigned (__cdecl*)(unsigned)>(kEnemyNameShown),
-    Fn<const unsigned char* (__cdecl*)(int, int, unsigned, unsigned, const unsigned char*)>(kTinyFont),
+    Fn<unsigned (__cdecl*)(unsigned, std::uint32_t, unsigned)>(::bof3::Code(kPoseFrom.v)),
+    Fn<void (__cdecl*)(int, int, unsigned, unsigned)>(::bof3::Code(kDrawValue.v)),
+    Fn<void (__cdecl*)(int, int, unsigned, unsigned)>(::bof3::Code(kDrawEdge.v)),
+    Fn<void (__cdecl*)(int, int, unsigned, unsigned)>(::bof3::Code(kDrawTile.v)),
+    Fn<void (__cdecl*)(int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kDrawTileRgb.v)),
+    Fn<void (__cdecl*)(int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kDrawBar.v)),
+    Fn<void (__cdecl*)(int, int, unsigned)>(::bof3::Code(kDrawDigit.v)),
+    Fn<void (__cdecl*)(int, int, int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kLinePlain.v)),
+    Fn<void (__cdecl*)(int, int, int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kLineSemi0.v)),
+    Fn<void (__cdecl*)(int, int, int, int, unsigned, unsigned, unsigned)>(::bof3::Code(kLineSemi1.v)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kEnemyNameShown.v)),
+    Fn<const unsigned char* (__cdecl*)(int, int, unsigned, unsigned, const unsigned char*)>(::bof3::Code(kTinyFont.v)),
     reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleObj_StateTable_addr))),
     {at::kKindHandlers[0], at::kKindHandlers[1], at::kKindHandlers[2]},
     BattleObj_RunState,
@@ -628,7 +628,7 @@ extern "C" __attribute__((disable_tail_calls, noinline)) unsigned __cdecl Window
     }
     using Handler = unsigned (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
                                         std::uint32_t, std::uint32_t, std::uint32_t);
-    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(handler))(a0, a1, a2, a3, a4, a5, a6, a7);
+    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(handler)))(a0, a1, a2, a3, a4, a5, a6, a7);
 }
 
 // original 0x597ED0: the battle message - the current window's box

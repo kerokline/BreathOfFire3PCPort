@@ -68,18 +68,18 @@ constexpr ::bof3::image::Va kLabelRows{0x66B158};
 // DIV-0041's slide bounds inside this group's bodies (widescreen.cpp g_slides):
 // the imm32 of `mov ecx, imm32` or the imm16 of `cmp cx, imm16`, read back on
 // every call.
-constexpr std::uint32_t kLeftOff300Bound = 0x599CC6;  // -300 in MenuList_SlideLeftOff300
-constexpr std::uint32_t kLeftOff100Bound = 0x599DF6;  // -100 in MenuList_SlideLeftOff100
-constexpr std::uint32_t kLeftOff180Bound = 0x59A136;  // -180 in MenuList_SlideLeftOff180
-constexpr std::uint32_t kLeftOff110Bound = 0x59A2B6;  // -110 in MenuList_SlideLeftOff110
-constexpr std::uint32_t kGridOutRight = 0x598A08;     // 0x142 in GeneWin_GridSlideOut
-constexpr std::uint32_t kGridOutLeft = 0x598A1C;      // -0xBE in GeneWin_GridSlideOut
+constexpr ::bof3::image::CodeVa kLeftOff300Bound{0x599CC6};  // -300 in MenuList_SlideLeftOff300
+constexpr ::bof3::image::CodeVa kLeftOff100Bound{0x599DF6};  // -100 in MenuList_SlideLeftOff100
+constexpr ::bof3::image::CodeVa kLeftOff180Bound{0x59A136};  // -180 in MenuList_SlideLeftOff180
+constexpr ::bof3::image::CodeVa kLeftOff110Bound{0x59A2B6};  // -110 in MenuList_SlideLeftOff110
+constexpr ::bof3::image::CodeVa kGridOutRight{0x598A08};     // 0x142 in GeneWin_GridSlideOut
+constexpr ::bof3::image::CodeVa kGridOutLeft{0x598A1C};      // -0xBE in GeneWin_GridSlideOut
 
 }  // namespace at
 
 // Callees of other groups, by address: ours since their owners merged, named by
 // symbol, the values unchanged (round fourteen's rebinding, docs/round-14-cleanup.md).
-constexpr std::uint32_t kRosterIndex = bof3::addr::CharId_ToRosterIndex;      // 0x4469D0, R3B's (the same value): CharId_ToRosterIndex (battle_result_callees.h), the byte at 0x66972C + id, 7 is 0
-constexpr std::uint32_t kReserveList = bof3::addr::MenuList_ReserveWinDraw;      // R2H's: a panel's reserve list (menu_frame.cpp, DIV-0011's site 0x59AA98)
+constexpr ::bof3::image::CodeVa kRosterIndex{bof3::addr::CharId_ToRosterIndex};      // 0x4469D0, R3B's (the same value): CharId_ToRosterIndex (battle_result_callees.h), the byte at 0x66972C + id, 7 is 0
+constexpr ::bof3::image::CodeVa kReserveList{bof3::addr::MenuList_ReserveWinDraw};      // R2H's: a panel's reserve list (menu_frame.cpp, DIV-0011's site 0x59AA98)
 
 }  // namespace rest_2g

@@ -16,23 +16,23 @@ namespace rest_4c::at {
 // 0x7A, the style colour), R4D's frame 0x45C700, then what R4D's doc says of
 // the rows; (int x, int y, unsigned flag), the flag's low byte read (0x45C447).
 // void.
-constexpr std::uint32_t kGuessPanel = bof3::addr::CommuBoard_DrawRows;
+constexpr ::bof3::image::CodeVa kGuessPanel{bof3::addr::CommuBoard_DrawRows};
 // R4D: one guess record's three digits (0x675F9B + 5 row + i) as cards at
 // (x + 32 i, y), the one at the cursor 0x675F8D raised 8 when the flag's byte
 // is set; (int x, int y, unsigned row, unsigned flag), the row's and the
 // flag's low bytes read (0x45C7D0, 0x45C7FB). void.
-constexpr std::uint32_t kGuessRow = bof3::addr::CommuBoard_DrawRowCells;
+constexpr ::bof3::image::CodeVa kGuessRow{bof3::addr::CommuBoard_DrawRowCells};
 // R4D: the three secret digits 0x675F98.. as cards at (x + 32 i, y), or three
 // backs (0xFF) when the flag's byte is 0; (int x, int y, unsigned show), the
 // third argument's low byte read (0x45C850). void.
-constexpr std::uint32_t kSecret = bof3::addr::CommuBoard_DrawCells;
+constexpr ::bof3::image::CodeVa kSecret{bof3::addr::CommuBoard_DrawCells};
 
 // --- a library callee nobody owns (Capcom's, raw) ------------------------------
 //
 // 0x5A7570: a POLY_F3's set-up - code byte +7 = 0x20 and the three vertices'
 // z floats (+0x10, +0x1C, +0x28) set; (unsigned char *prim). The effect
 // standard set lists it (FxPrim0_44); this group lists it itself (field mode).
-constexpr std::uint32_t kSetPolyF3 = bof3::addr::Gpu_SetPolyF3;
+constexpr ::bof3::image::CodeVa kSetPolyF3{bof3::addr::Gpu_SetPolyF3};
 
 // --- the cells -------------------------------------------------------------------
 //

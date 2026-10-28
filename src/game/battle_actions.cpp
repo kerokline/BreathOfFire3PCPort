@@ -45,7 +45,7 @@ template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(s
 
 const Callees kOriginals = {
     Battle_MemberAutoTarget,
-    Fn<void (__cdecl*)(unsigned)>(kEnemyPickAction),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kEnemyPickAction.v)),
     Battle_ClearActingFlags,
     Battle_OpenMsgWindow,
     Msg_SystemPtr,
@@ -56,7 +56,7 @@ const Callees kOriginals = {
     Str_CopyN,
     Skill_ApCost,
     Battle_PickFlag8Member,
-    Fn<unsigned char (__cdecl*)()>(kPickTarget),
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(kPickTarget.v)),
     Magic_LoadForAbility,
     File_LoadDone,
     Battle_StartAbilityMagic,

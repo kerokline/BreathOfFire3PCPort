@@ -426,11 +426,11 @@ const void* StubFor(U target) {
     case 0x57D910: return As<const void*>(&StubPieces);
     case 0x57D860: return As<const void*>(&StubPiece);
     case 0x57DD10: return As<const void*>(&StubScrollBar);
-    case kSkillUsable: return As<const void*>(&StubSkillUsable);
-    case kSkillRow: return As<const void*>(&StubSkillRow);
-    case kSkillIcon: return As<const void*>(&StubSkillIcon);
-    case kSkillCost: return As<const void*>(&StubSkillCost);
-    case kSkillList: return As<const void*>(&StubSkillList);
+    case kSkillUsable.v: return As<const void*>(&StubSkillUsable);
+    case kSkillRow.v: return As<const void*>(&StubSkillRow);
+    case kSkillIcon.v: return As<const void*>(&StubSkillIcon);
+    case kSkillCost.v: return As<const void*>(&StubSkillCost);
+    case kSkillList.v: return As<const void*>(&StubSkillList);
     case 0x5718F0: return As<const void*>(&StubClutAdjust);
     case 0x5717B0: return As<const void*>(&StubClutCycle);
     default: bof3::Fatal("battle_draw: no stand-in for a call to 0x%X", (unsigned)target);

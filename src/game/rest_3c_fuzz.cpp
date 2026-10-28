@@ -240,19 +240,19 @@ const bh::Callee kCallees[] = {
     {"Formation_ApplyStatMods", bof3::addr::Formation_ApplyStatMods, KeyOf(&::Formation_ApplyStatMods), 0, {}, bh::Answer::kGarbage,
      0, 0, {}, &StatModsEffect},
     // R3B's (ours; rows keyed by address): tail jumps, nothing pushed; their eax forwarded
-    {"0x44C040", at::kSkillByAbility, at::kSkillByAbility, 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"0x44C120", at::kHealByAbility, at::kHealByAbility, 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"0x44C170", at::kHealMaxHp, at::kHealMaxHp, 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"0x44CF60", at::kFlag200, at::kFlag200, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x44C040", at::kSkillByAbility.v, at::kSkillByAbility.v, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x44C120", at::kHealByAbility.v, at::kHealByAbility.v, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x44C170", at::kHealMaxHp.v, at::kHealMaxHp.v, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x44CF60", at::kFlag200.v, at::kFlag200.v, 0, {}, bh::Answer::kGarbage, 0, 0},
     // R3D's (ours; rows keyed by address)
     // 0x44F1D0 (target, status): cmp bl, 2 and and esi, 0xFF on the target, handed on whole to callees that read
     // its byte; Effect_Inflict40Heal20Ap4 pushes eax with the caller's upper bytes
-    {"0x44F1D0", at::kInflictStatus, at::kInflictStatus, 2, {kU8, kAll}, bh::Answer::kGarbage, 0, 0},
-    {"0x44F650", at::kRaiseStat, at::kRaiseStat, 2, {kAll, kAll}, bh::Answer::kGarbage, 0, 0},
-    {"0x44FBB0", at::kRaiseByAbility, at::kRaiseByAbility, 1, {kAll}, bh::Answer::kFlag, 0, 0},
-    {"0x44FC60", at::kMissInflict, at::kMissInflict, 1, {kAll}, bh::Answer::kFlag, 0, 0},
-    {"0x44FCA0", at::kInflictUnlessResisted, at::kInflictUnlessResisted, 1, {kAll}, bh::Answer::kFlag, 0, 0},
-    {"0x44FCE0", at::kHpDamage, at::kHpDamage, 1, {kAll}, bh::Answer::kGarbage, 0, 0},
+    {"0x44F1D0", at::kInflictStatus.v, at::kInflictStatus.v, 2, {kU8, kAll}, bh::Answer::kGarbage, 0, 0},
+    {"0x44F650", at::kRaiseStat.v, at::kRaiseStat.v, 2, {kAll, kAll}, bh::Answer::kGarbage, 0, 0},
+    {"0x44FBB0", at::kRaiseByAbility.v, at::kRaiseByAbility.v, 1, {kAll}, bh::Answer::kFlag, 0, 0},
+    {"0x44FC60", at::kMissInflict.v, at::kMissInflict.v, 1, {kAll}, bh::Answer::kFlag, 0, 0},
+    {"0x44FCA0", at::kInflictUnlessResisted.v, at::kInflictUnlessResisted.v, 1, {kAll}, bh::Answer::kFlag, 0, 0},
+    {"0x44FCE0", at::kHpDamage.v, at::kHpDamage.v, 1, {kAll}, bh::Answer::kGarbage, 0, 0},
 };
 
 // The cells beyond the engine frame the group reads or writes.

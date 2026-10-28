@@ -51,9 +51,9 @@ const Callees kOriginals = {
     Battle_InitActorContexts, Formation_ApplyStatMods, Gfx_ClutStripCopyRow, Sprite_SetClutStp, LoadDatFile,
     Window_Alloc, Msg_SystemPtr, BattleQueue_Push, BattleWin_OpenStatus, Battle_OpenEnemyNames,
     BattleWin_OpenSub1, BattleQueue_Pending, File_LoadDone, BattleWin_OpenSub2, BattleWin_OpenSub3,
-    Battle_ClearCommands, Battle_BuildEntryOrder, Fn<void (__cdecl*)()>(kAutoFillCommands),
+    Battle_ClearCommands, Battle_BuildEntryOrder, Fn<void (__cdecl*)()>(::bof3::Code(kAutoFillCommands.v)),
     Battle_SpawnActorCopies, BattleBanner_ShowName, Sound_PlayEffect,
-    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(kReturnItem), BattleWin_DrawCommandCross,
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kReturnItem.v)), BattleWin_DrawCommandCross,
     BattleWin_DrawCommandLabel, BattleWin_DrawPartyStatus, Battle_PulseStep,
     Battle_BuildTurnOrder, EnemyAI_ChooseActions,
 };

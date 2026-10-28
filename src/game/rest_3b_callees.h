@@ -89,12 +89,12 @@ constexpr U kAbilityStride = 0x18;
 // kEscapeStates: now Escape_States (symbols.toml). 3: Escape_States (BE4's name)
 
 // --- the callees of R3D, ours ---
-constexpr U kMissTail = bof3::addr::Effect_NoHitReaction;
-constexpr U kStatMod = bof3::addr::Effect_RollStatStepQuiet;
-constexpr U kInflictMiss = bof3::addr::Effect_RollInflictQuiet;
-constexpr U kRollInflict = bof3::addr::Effect_RollInflict;
-constexpr U kHpShare = bof3::addr::Effect_HpBasedDamage;
-constexpr U kResisted = bof3::addr::Battle_StatusResisted;
+constexpr ::bof3::image::CodeVa kMissTail{bof3::addr::Effect_NoHitReaction};
+constexpr ::bof3::image::CodeVa kStatMod{bof3::addr::Effect_RollStatStepQuiet};
+constexpr ::bof3::image::CodeVa kInflictMiss{bof3::addr::Effect_RollInflictQuiet};
+constexpr ::bof3::image::CodeVa kRollInflict{bof3::addr::Effect_RollInflict};
+constexpr ::bof3::image::CodeVa kHpShare{bof3::addr::Effect_HpBasedDamage};
+constexpr ::bof3::image::CodeVa kResisted{bof3::addr::Battle_StatusResisted};
 
 }  // namespace at
 }  // namespace rest_3b

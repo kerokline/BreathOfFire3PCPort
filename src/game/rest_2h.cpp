@@ -54,7 +54,7 @@
 #include "hook/log.h"
 
 namespace rest_2h {
-std::uint32_t g_master_bound = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Widescreen_SlideOperand(at::kMasterBound)));
+std::uint32_t g_master_bound = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Widescreen_SlideOperand(at::kMasterBound.v)));
 // DIVERGENCE DIV-0059: the master list's title centred on the width its pen
 // covers, under a Latin overlay (ListTitle_Centring). Set by Rest2H_Inject
 // after the fuzz, which compares with the original's 6 * count arithmetic.
@@ -875,7 +875,7 @@ extern "C" void __cdecl Cfg_SetKeyTable(const void* table) {
 
 void Rest2H_Inject() {
     bof3::Log("rest_2h: MasterWin_SlideOut's bound %d (0x59C136; Capcom's -120 at every width since DIV-0041's faster slide)",
-              static_cast<int>(Widescreen_SlideBound(at::kMasterBound)));
+              static_cast<int>(Widescreen_SlideBound(at::kMasterBound.v)));
     if (bof3::WantsShadow("rest_2h")) rest_2h::SelfTest();
     rest_2h::g_master_title_live = true;   // DIV-0059, from here on
     // DIVERGENCE DIV-0083: a Latin language overlay only, as DIV-0059's switch.

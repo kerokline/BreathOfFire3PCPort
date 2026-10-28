@@ -30,7 +30,7 @@ using U = std::uint32_t;
 // kDrawTpage: now Gfx_DrawTpage (symbols.toml). Gfx_DrawTpage, the low word read
 constexpr rdata::Const kRhwNumerator{0x5C4610};  // float 0.1: rhw = 0.1 / z
 // kDevice: now D3d_Device (symbols.toml). D3d_Device, an IDirect3DDevice3 *
-constexpr U kRetOnly = bof3::addr::BareRet;       // a bare ret
+constexpr ::bof3::image::CodeVa kRetOnly{bof3::addr::BareRet};       // a bare ret
 
 // --- the battle menu's lists ---------------------------------------------------
 // kColour: now Config_WindowColour (symbols.toml). s8: the window colour (Config), a CLUT row
@@ -57,11 +57,11 @@ constexpr ::bof3::image::Va kTitleBit0On{0x66B4D4};   // by bit 0
 // kStatusBits: now Field_StatusBits (symbols.toml). Field_StatusBits: bit 0 holds the tint off
 
 // Group BD's (round 7), by address: never bound here.
-constexpr U kSkillUsable = bof3::addr::Skill_CanUse;   // (mode, member, id) -> al: whether the row is usable
-constexpr U kSkillRow = bof3::addr::Menu_DrawSkillRow;      // (x, y, colour, icon, record, cost, dim): one row
-constexpr U kSkillIcon = bof3::addr::Skill_FlagIndex;     // (id) -> al: the row's icon kind (0x663D70[al])
-constexpr U kSkillCost = bof3::addr::Skill_ApCost;     // (member, id, 1) -> al: the number drawn at x + 0x6D
-constexpr U kSkillList = bof3::addr::Char_AbilityList;     // (member, kind, battle) -> a 10-byte list of skill ids
+constexpr ::bof3::image::CodeVa kSkillUsable{bof3::addr::Skill_CanUse};   // (mode, member, id) -> al: whether the row is usable
+constexpr ::bof3::image::CodeVa kSkillRow{bof3::addr::Menu_DrawSkillRow};      // (x, y, colour, icon, record, cost, dim): one row
+constexpr ::bof3::image::CodeVa kSkillIcon{bof3::addr::Skill_FlagIndex};     // (id) -> al: the row's icon kind (0x663D70[al])
+constexpr ::bof3::image::CodeVa kSkillCost{bof3::addr::Skill_ApCost};     // (member, id, 1) -> al: the number drawn at x + 0x6D
+constexpr ::bof3::image::CodeVa kSkillList{bof3::addr::Char_AbilityList};     // (member, kind, battle) -> a 10-byte list of skill ids
 
 struct Callees {
     // the Direct3D helpers (ours, d3d_draw.cpp) and the bare ret

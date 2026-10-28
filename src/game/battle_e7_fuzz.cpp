@@ -180,8 +180,8 @@ const bh::Callee kCallees[] = {
     {"GeneWin_DrawFormIcon", 0x599910, KeyOf(&::GeneWin_DrawFormIcon), 3, {kU16, kU16, kU8}, bh::Answer::kGarbage, 0, 0},
     {"GeneWin_DrawCursorBox", 0x599A00, KeyOf(&::GeneWin_DrawCursorBox), 6, {kU16, kU16, kU16, kU16, kU8, kU8}, bh::Answer::kGarbage, 0, 0},
     // --- another group's (BE1's 0x432170) and nobody's (0x59DB70), by address
-    {"0x432170", at::kStatGain, at::kStatGain, 2, {kU8, kU8}, bh::Answer::kFlag, 0, 0},
-    {"0x59DB70", at::kDrawBar, at::kDrawBar, 6, {kU16, kU16, kU8, kU8, kU16, kU8}, bh::Answer::kGarbage, 0, 0},   // reads x, y and the clut as words (0x59DB70's and / cx)
+    {"0x432170", at::kStatGain.v, at::kStatGain.v, 2, {kU8, kU8}, bh::Answer::kFlag, 0, 0},
+    {"0x59DB70", at::kDrawBar.v, at::kDrawBar.v, 6, {kU16, kU16, kU8, kU8, kU16, kU8}, bh::Answer::kGarbage, 0, 0},   // reads x, y and the clut as words (0x59DB70's and / cx)
     // --- the draws, narrowed to what ours reads (see the header)
     {"Menu_DrawBox", bof3::addr::Menu_DrawBox, KeyOf(&::Menu_DrawBox), 6, {kU16, kU16, kU16, kU16, kU8, kU8}, bh::Answer::kGarbage, 0, 0},   // menu_windows.cpp: U16 x/y/w/h, bytes
     {"Menu_DrawPiece", bof3::addr::Menu_DrawPiece, KeyOf(&::Menu_DrawPiece), 4, {kU16, kU16, kU8, kU8}, bh::Answer::kGarbage, 0, 0},   // S16 x/y, Menu_PieceRect's id & 0xFF, the flag byte
@@ -293,14 +293,14 @@ void Seed(unsigned k) {
     // the slide-outs' bounds as the code holds them: DIV-0041 widens them
     // before this runs when the view is wide (battle_e7.cpp reads them there)
     case 0x599020: case 0x599050: case 0x599080: case 0x5990B0: {
-        const unsigned out = Word16(at::kListOutBound);
+        const unsigned out = Word16(at::kListOutBound.v);
         Slide(4, {0x5B, 0x3B, 0x11, out, out + 0x20, 0x31});
         Rows(::bof3::Img(at::kGeneList.v), 6, 3);
         break;
     }
     case 0x5990E0: Rows(::bof3::Img(at::kGeneList.v), 6, 3); break;
     case 0x599410: case 0x599440: case 0x599510: case 0x599540: {
-        const unsigned out2 = Word16(at::kList2OutBound), out3 = Word16(at::kList3OutBound);
+        const unsigned out2 = Word16(at::kList2OutBound.v), out3 = Word16(at::kList3OutBound.v);
         Slide(4, {0x5B, 0x7B, out2, out2 - 0x20, 0xA3, 0xC3, out3, out3 - 0x20});
         Rows(::bof3::Img(at::kGeneList2.v), 12, 9);
         break;

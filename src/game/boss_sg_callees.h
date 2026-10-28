@@ -64,8 +64,8 @@ constexpr ::bof3::image::Va kPoseSet{0x8C5D80};          // the frame set set-up
 constexpr ::bof3::image::Va kFacingOffsets{0x64E4F4};
 
 // --- the callees nobody owns ------------------------------------------------
-constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
-constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () step 2
+constexpr ::bof3::image::CodeVa kEndWin{bof3::addr::BattleEnd_EnterStep1};           // () the end phase, step 1
+constexpr ::bof3::image::CodeVa kEndOther{bof3::addr::BattleEnd_EnterStep2};         // () step 2
 
 }  // namespace at
 }  // namespace boss_sg

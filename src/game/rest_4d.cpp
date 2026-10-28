@@ -64,26 +64,26 @@ void Jump(U table, unsigned count, unsigned index, const char* who) {
 }
 
 // --- the callees of other groups of this wave, by address ---------------------------
-void BoardCell(int x, int y, unsigned value) { SH_AT(void (__cdecl*)(int, int, unsigned), at::kBoardCell)(x, y, value); }
-void BoardPiece(int x, int y, unsigned piece) { SH_AT(void (__cdecl*)(int, int, unsigned), at::kBoardPiece)(x, y, piece); }
+void BoardCell(int x, int y, unsigned value) { SH_AT(void (__cdecl*)(int, int, unsigned), at::kBoardCell.v)(x, y, value); }
+void BoardPiece(int x, int y, unsigned piece) { SH_AT(void (__cdecl*)(int, int, unsigned), at::kBoardPiece.v)(x, y, piece); }
 void SlotPanel(int x, int y, unsigned slot, unsigned flag) {
-    SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kSlotPanel)(x, y, slot, flag);
+    SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kSlotPanel.v)(x, y, slot, flag);
 }
-void ListPiece(int x, int y, unsigned piece) { SH_AT(void (__cdecl*)(int, int, unsigned), at::kListPiece)(x, y, piece); }
-void SlotHand(int x, int y, unsigned flag) { SH_AT(void (__cdecl*)(int, int, unsigned), at::kSlotHand)(x, y, flag); }
-U RandomName() { return SH_AT(U (__cdecl*)(), at::kRandomName)(); }
+void ListPiece(int x, int y, unsigned piece) { SH_AT(void (__cdecl*)(int, int, unsigned), at::kListPiece.v)(x, y, piece); }
+void SlotHand(int x, int y, unsigned flag) { SH_AT(void (__cdecl*)(int, int, unsigned), at::kSlotHand.v)(x, y, flag); }
+U RandomName() { return SH_AT(U (__cdecl*)(), at::kRandomName.v)(); }
 void MemberPanel(int x, int y, unsigned record, unsigned flag) {
-    SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kMemberPanel)(x, y, record, flag);
+    SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kMemberPanel.v)(x, y, record, flag);
 }
-void MemberPanels() { SH_AT(void (__cdecl*)(), at::kMemberPanels)(); }
-unsigned char MemberCount() { return SH_AT(unsigned char (__cdecl*)(), at::kMemberCount)(); }
-U NthMember(unsigned n) { return SH_AT(U (__cdecl*)(unsigned), at::kNthMember)(n); }
+void MemberPanels() { SH_AT(void (__cdecl*)(), at::kMemberPanels.v)(); }
+unsigned char MemberCount() { return SH_AT(unsigned char (__cdecl*)(), at::kMemberCount.v)(); }
+U NthMember(unsigned n) { return SH_AT(U (__cdecl*)(unsigned), at::kNthMember.v)(n); }
 void MemberHand(int x, int y, unsigned flag, unsigned six) {
-    SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kMemberHand)(x, y, flag, six);
+    SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kMemberHand.v)(x, y, flag, six);
 }
-void EntryBox(int a, int y, unsigned c, unsigned d) { SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kEntryBox)(a, y, c, d); }
-void MemberRename() { SH_AT(void (__cdecl*)(), at::kMemberRename)(); }
-void SlotRename() { SH_AT(void (__cdecl*)(), at::kSlotRename)(); }
+void EntryBox(int a, int y, unsigned c, unsigned d) { SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kEntryBox.v)(a, y, c, d); }
+void MemberRename() { SH_AT(void (__cdecl*)(), at::kMemberRename.v)(); }
+void SlotRename() { SH_AT(void (__cdecl*)(), at::kSlotRename.v)(); }
 
 // DIV-0075, set by Rest4D_Inject after the self-test: the two entry steps move
 // the step's step on, where the original's never does.

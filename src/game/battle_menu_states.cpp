@@ -42,7 +42,7 @@ template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(s
 
 const Callees kOriginals = {
     Battle_DefaultTarget,
-    Fn<unsigned char (__cdecl*)(unsigned)>(kPrevTarget),
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(kPrevTarget.v)),
     Battle_WrapIndex,
     BattleBanner_SetMessage,
     Input_AutoRepeat,
@@ -53,7 +53,7 @@ const Callees kOriginals = {
     ItemMenu_FreeWindows,
     Item_HelpMessage,
     Item_CanUse,
-    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(kItemFlags),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kItemFlags.v)),
     Battle_ReturnTrue,
 };
 Callees g = kOriginals;

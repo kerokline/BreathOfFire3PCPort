@@ -77,13 +77,13 @@ constexpr U kEnemyStride = 0x128;
 // kLeaderGround: now ObjTrio[0].height_whole (symbols.toml). +0x3E
 
 // --- the literals the set-ups store (their own functions and BH's) ----------------
-constexpr U kBareRetZero = bof3::addr::BareRetZero;      // BareRetZero (BH)
-constexpr U kExitActor0Bit40 = bof3::addr::BossHook_ExitActor0Bit40;  // BossHook_ExitActor0Bit40 (BH)
+constexpr ::bof3::image::CodeVa kBareRetZero{bof3::addr::BareRetZero};      // BareRetZero (BH)
+constexpr ::bof3::image::CodeVa kExitActor0Bit40{bof3::addr::BossHook_ExitActor0Bit40};  // BossHook_ExitActor0Bit40 (BH)
 
 // --- the callees nobody owns -------------------------------------------------------
-constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
-constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () the end phase, step 2
-constexpr U kEndThird = bof3::addr::BattleEnd_EnterStep3;         // () the end phase, step 3
+constexpr ::bof3::image::CodeVa kEndWin{bof3::addr::BattleEnd_EnterStep1};           // () the end phase, step 1
+constexpr ::bof3::image::CodeVa kEndOther{bof3::addr::BattleEnd_EnterStep2};         // () the end phase, step 2
+constexpr ::bof3::image::CodeVa kEndThird{bof3::addr::BattleEnd_EnterStep3};         // () the end phase, step 3
 
 }  // namespace at
 }  // namespace boss_sd

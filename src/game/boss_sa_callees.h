@@ -70,30 +70,30 @@ constexpr U kObjectStride = 0xA4;
 // The hooks the set-ups store (BattleHook_End / _Exit / _Event), and the
 // enemies' +0xF4 hooks the kinds' state 0 stores: the originals' addresses,
 // which in the game are Capcom's function or the jmp Inject put there to ours.
-constexpr U kBoss01End = bof3::addr::Boss01_End;
-constexpr U kBoss01Exit = bof3::addr::Boss01_Exit;
-constexpr U kBoss01Event = bof3::addr::Boss01_Event;
-constexpr U kBoss02End = bof3::addr::Boss02_End;
-constexpr U kBoss02Event = bof3::addr::Boss02_Event;
-constexpr U kBoss03End = bof3::addr::Boss03_End;
-constexpr U kBareRet = bof3::addr::BareRet;          // BareRet (BH's)
-constexpr U kBareRetZero = bof3::addr::BareRetZero;      // BareRetZero (BH's)
-constexpr U kEndPickWay = bof3::addr::BossHook_EndPickWay;       // BossHook_EndPickWay (BH's)
-constexpr U kExitActor0Bit40 = bof3::addr::BossHook_ExitActor0Bit40;  // BossHook_ExitActor0Bit40 (BH's)
-constexpr U kGaryHook = bof3::addr::BossGary_Hook;
-constexpr U kMoguHook = bof3::addr::BossMogu_Hook;
-constexpr U kNueHook = bof3::addr::BossNue_Hook;
-constexpr U kNue2Hook = bof3::addr::BossNue2_Hook;
-constexpr U kSample1Hook = bof3::addr::BossSample1_Hook;
-constexpr U kWeretigrHook = bof3::addr::BossWeretigr_Hook;
+constexpr ::bof3::image::CodeVa kBoss01End{bof3::addr::Boss01_End};
+constexpr ::bof3::image::CodeVa kBoss01Exit{bof3::addr::Boss01_Exit};
+constexpr ::bof3::image::CodeVa kBoss01Event{bof3::addr::Boss01_Event};
+constexpr ::bof3::image::CodeVa kBoss02End{bof3::addr::Boss02_End};
+constexpr ::bof3::image::CodeVa kBoss02Event{bof3::addr::Boss02_Event};
+constexpr ::bof3::image::CodeVa kBoss03End{bof3::addr::Boss03_End};
+constexpr ::bof3::image::CodeVa kBareRet{bof3::addr::BareRet};          // BareRet (BH's)
+constexpr ::bof3::image::CodeVa kBareRetZero{bof3::addr::BareRetZero};      // BareRetZero (BH's)
+constexpr ::bof3::image::CodeVa kEndPickWay{bof3::addr::BossHook_EndPickWay};       // BossHook_EndPickWay (BH's)
+constexpr ::bof3::image::CodeVa kExitActor0Bit40{bof3::addr::BossHook_ExitActor0Bit40};  // BossHook_ExitActor0Bit40 (BH's)
+constexpr ::bof3::image::CodeVa kGaryHook{bof3::addr::BossGary_Hook};
+constexpr ::bof3::image::CodeVa kMoguHook{bof3::addr::BossMogu_Hook};
+constexpr ::bof3::image::CodeVa kNueHook{bof3::addr::BossNue_Hook};
+constexpr ::bof3::image::CodeVa kNue2Hook{bof3::addr::BossNue2_Hook};
+constexpr ::bof3::image::CodeVa kSample1Hook{bof3::addr::BossSample1_Hook};
+constexpr ::bof3::image::CodeVa kWeretigrHook{bof3::addr::BossWeretigr_Hook};
 
 // --- the callees nobody owns ------------------------------------------------
-constexpr U kPlayCue = bof3::addr::Sound_PlayEffectUnlessNone;          // (unsigned id) Sound_PlayEffect unless 0xFFFF (BE3's since round twelve: the same value)
-constexpr U kTurnClose = bof3::addr::EnemyOp_EndAction;        // () the enemy's turn closed (BE3's since round twelve: the same value)
-constexpr U kTurnChance = bof3::addr::EnemyOp_RollBit80Task;       // () 0x904AA8 bit 7 and a task on a chance (BE3's since round twelve: the same value)
-constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
-constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () the end phase, step 2
-constexpr U kEndThird = bof3::addr::BattleEnd_EnterStep3;         // () the end phase, step 3
+constexpr ::bof3::image::CodeVa kPlayCue{bof3::addr::Sound_PlayEffectUnlessNone};          // (unsigned id) Sound_PlayEffect unless 0xFFFF (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kTurnClose{bof3::addr::EnemyOp_EndAction};        // () the enemy's turn closed (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kTurnChance{bof3::addr::EnemyOp_RollBit80Task};       // () 0x904AA8 bit 7 and a task on a chance (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kEndWin{bof3::addr::BattleEnd_EnterStep1};           // () the end phase, step 1
+constexpr ::bof3::image::CodeVa kEndOther{bof3::addr::BattleEnd_EnterStep2};         // () the end phase, step 2
+constexpr ::bof3::image::CodeVa kEndThird{bof3::addr::BattleEnd_EnterStep3};         // () the end phase, step 3
 
 }  // namespace at
 }  // namespace boss_sa

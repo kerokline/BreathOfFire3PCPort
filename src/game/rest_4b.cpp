@@ -127,7 +127,7 @@ void CopyName(const unsigned char* name) {
 }
 
 void R4EHand(int x, int y, unsigned flash) {
-    SH_AT(void (__cdecl*)(int, int, unsigned), at::kR4EHand)(x, y, flash);
+    SH_AT(void (__cdecl*)(int, int, unsigned), at::kR4EHand.v)(x, y, flash);
 }
 
 }  // namespace
@@ -198,8 +198,8 @@ extern "C" void __cdecl CommuTail14_End(void) {
     if (SH_CALL(File_LoadDone)() == 0) return;
     SH_CALL(Area131_DisarmTail)();
     SH_CALL(CommuTail_RestoreFacing)();
-    SH_AT(void (__cdecl*)(), at::kR4ACountSlots)();
-    SH_AT(void (__cdecl*)(), at::kR4ASettle)();
+    SH_AT(void (__cdecl*)(), at::kR4ACountSlots.v)();
+    SH_AT(void (__cdecl*)(), at::kR4ASettle.v)();
 }
 
 // original 0x456E40: Sprite_Current = the object 0x939A38 holds; its +8 (the
@@ -816,7 +816,7 @@ extern "C" void __cdecl CommuBoard_PickList(void) {
         const int row = Rest4b_Pick;
         const unsigned char next = B(::bof3::Img(at::kPickNext.v) + static_cast<U>(row));
         if (next == 0xFF) {
-            SH_AT(void (__cdecl*)(), at::kR4CAsk)();
+            SH_AT(void (__cdecl*)(), at::kR4CAsk.v)();
         } else {
             const U slot = Slot(AreaW0c_TailSub);
             Rest4b_PickB = row == static_cast<int>(B(slot)) - 4 ? B(slot + 1) : 0;
@@ -877,7 +877,7 @@ extern "C" void __cdecl CommuBoard_PickListB(void) {
     } else if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
         const unsigned char next = B(::bof3::Img(at::kPickPairs.v) + 1 + 2 * Rest4b_PickD);
         if (next == 0xFF) {
-            SH_AT(void (__cdecl*)(), at::kR4CAsk)();
+            SH_AT(void (__cdecl*)(), at::kR4CAsk.v)();
         } else {
             const U slot = Slot(AreaW0c_TailSub);
             Rest4b_PickC = Rest4b_Pick == static_cast<int>(B(slot)) - 4 ? B(slot + 2) : 0;
@@ -933,7 +933,7 @@ extern "C" void __cdecl CommuBoard_PickListC(void) {
         Rest4b_Help = 0x45;
         Rest4b_PickE = 0xFF;
     } else if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
-        SH_AT(void (__cdecl*)(), at::kR4CAsk)();
+        SH_AT(void (__cdecl*)(), at::kR4CAsk.v)();
     } else {
         const unsigned keys = SH_CALL(Input_AutoRepeat)(pressed & 0x5000);
         if (keys & 0x5000) {

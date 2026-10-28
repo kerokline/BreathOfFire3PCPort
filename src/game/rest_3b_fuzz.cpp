@@ -286,10 +286,10 @@ const bh::Callee kCallees[] = {
     {"Char_AbilityList", bof3::addr::Char_AbilityList, KeyOf(&::Char_AbilityList), 3, {kU8, kU8, kAll}, bh::Answer::kGarbage, 0, 0,
      {}, &AbilityListEffect},
     // R3D's (this wave, ours; rows keyed by address): each takes one pushed immediate
-    {"0x44FBB0", at::kStatMod, at::kStatMod, 1, {kAll}, bh::Answer::kFlag, 0, 0},
-    {"0x44FC60", at::kInflictMiss, at::kInflictMiss, 1, {kAll}, bh::Answer::kFlag, 0, 0},
-    {"0x44FCA0", at::kRollInflict, at::kRollInflict, 1, {kAll}, bh::Answer::kFlag, 0, 0},
-    {"0x44FCE0", at::kHpShare, at::kHpShare, 1, {kAll}, bh::Answer::kGarbage, 0, 0, {}, &ShareAtStatEffect},
+    {"0x44FBB0", at::kStatMod.v, at::kStatMod.v, 1, {kAll}, bh::Answer::kFlag, 0, 0},
+    {"0x44FC60", at::kInflictMiss.v, at::kInflictMiss.v, 1, {kAll}, bh::Answer::kFlag, 0, 0},
+    {"0x44FCA0", at::kRollInflict.v, at::kRollInflict.v, 1, {kAll}, bh::Answer::kFlag, 0, 0},
+    {"0x44FCE0", at::kHpShare.v, at::kHpShare.v, 1, {kAll}, bh::Answer::kGarbage, 0, 0, {}, &ShareAtStatEffect},
     // the engine set's rows, louder (the same masks): the answers at the
     // slots' boundaries, the target moved by Rand, the counters noted
     {"Battle_CalcDamage", bof3::addr::Battle_CalcDamage, KeyOf(&::Battle_CalcDamage), 3, {kU8, kU8, kU16}, bh::Answer::kGarbage, 0, 0,

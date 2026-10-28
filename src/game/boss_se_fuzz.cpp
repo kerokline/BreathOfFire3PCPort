@@ -74,8 +74,8 @@ const bh::Callee kCallees[] = {
     {"Sprite_PoseFromSet", ::bof3::addr::Sprite_PoseFromSet, KeyOf(&::Sprite_PoseFromSet), 3, {kU8, kAll, kAll}, bh::Answer::kGarbage, 0, 0},
     {"Battle_RemoveFromTurnOrder", ::bof3::addr::Battle_RemoveFromTurnOrder, KeyOf(&::Battle_RemoveFromTurnOrder), 1, {kU8},
      bh::Answer::kGarbage, 0, 0, {}, &bh::TurnOrderEffect},
-    {"0x437450", at::kEnemySound, at::kEnemySound, 1, {kU16}, bh::Answer::kGarbage, 0, 0},
-    {"0x4376A0", at::kEnemyActEnd, at::kEnemyActEnd, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x437450", at::kEnemySound.v, at::kEnemySound.v, 1, {kU16}, bh::Answer::kGarbage, 0, 0},
+    {"0x4376A0", at::kEnemyActEnd.v, at::kEnemyActEnd.v, 0, {}, bh::Answer::kGarbage, 0, 0},
 };
 
 // The cells beyond the harness's battle frame the 52 read or write.

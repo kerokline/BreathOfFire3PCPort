@@ -221,12 +221,12 @@ const bh::Callee kCallees[] = {
     // Battle_CalcDamage reads both actors' bytes (attacker & 0xFF, target & 0xFF): Effect_QuarterAttack pushes ecx
     {"Battle_CalcDamage", bof3::addr::Battle_CalcDamage, KeyOf(&::Battle_CalcDamage), 3, {kU8, kU8, kU16}, bh::Answer::kGarbage, 0, 0},
     // 0x44F6A0 hands its second word to 0x44F770, which reads its byte (cmp cl, 2; and eax, 0xFF)
-    {"0x44F6A0", at::kResisted, at::kResisted, 2, {0, kU8}, bh::Answer::kFlag, 0, 0},
+    {"0x44F6A0", at::kResisted.v, at::kResisted.v, 2, {0, kU8}, bh::Answer::kFlag, 0, 0},
     // this wave's other groups' (raw until they merge)
-    {"0x447F40", at::kTargetPrompt, at::kTargetPrompt, 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"0x4525B0", at::kDragonTask, at::kDragonTask, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &DragonTaskEffect},
-    {"0x453300", at::kStatusPick, at::kStatusPick, 1, {kAll}, bh::Answer::kGarbage, 0, 0},
-    {"0x453EB0", at::kApPopup, at::kApPopup, 2, {kU16, kU8}, bh::Answer::kGarbage, 0, 0, {}, &PopupEffect},
+    {"0x447F40", at::kTargetPrompt.v, at::kTargetPrompt.v, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x4525B0", at::kDragonTask.v, at::kDragonTask.v, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &DragonTaskEffect},
+    {"0x453300", at::kStatusPick.v, at::kStatusPick.v, 1, {kAll}, bh::Answer::kGarbage, 0, 0},
+    {"0x453EB0", at::kApPopup.v, at::kApPopup.v, 2, {kU16, kU8}, bh::Answer::kGarbage, 0, 0, {}, &PopupEffect},
     // the standard Sound_PlayEffect (a short), louder (SoundEffect)
     {"Sound_PlayEffect", bof3::addr::Sound_PlayEffect, KeyOf(&::Sound_PlayEffect), 1, {kU16}, bh::Answer::kGarbage, 0, 0, {},
      &SoundEffect},

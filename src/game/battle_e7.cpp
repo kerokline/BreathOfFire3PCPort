@@ -87,7 +87,7 @@ void OpenPage(unsigned abr, int x, int y) {
 }
 
 using StatGainFn = unsigned (__cdecl*)(unsigned, unsigned);
-unsigned StatGain(unsigned member, unsigned stat) { return BH_AT(StatGainFn, at::kStatGain)(member, stat) & 0xFFFF; }
+unsigned StatGain(unsigned member, unsigned stat) { return BH_AT(StatGainFn, at::kStatGain.v)(member, stat) & 0xFFFF; }
 
 // A task slot BattleTask_Create answered, as an index into the pool: the
 // original writes +9 / +0xA of slot 0xFF (none) past the 48 slots.
@@ -648,7 +648,7 @@ extern "C" void __cdecl GeneWin_ListSlideIn(void) {
 // and the free test Capcom's x again (Widescreen_SlideDraw / _SlideUndraw,
 // docs/ultrawide-slides.md). The same in the two below.
 extern "C" void __cdecl GeneWin_ListSlideOut(void) {
-    const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kListOutBound));
+    const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kListOutBound.v));
     Widescreen_SlideDraw(Win(), bound, -0x20);
     BH_CALL(GeneWin_DrawList)();
     Widescreen_SlideUndraw(Win());
@@ -717,7 +717,7 @@ extern "C" void __cdecl GeneWin_List2SlideIn(void) {
 // original 0x599440 (PSX 0x800AE42C): after the draw, right by 0x20; at +4 >= 0x15B the
 // window is freed instead (DIV-0041's operand; the faster slide as above).
 extern "C" void __cdecl GeneWin_List2SlideOut(void) {
-    const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kList2OutBound));
+    const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kList2OutBound.v));
     Widescreen_SlideDraw(Win(), bound, 0x20);
     BH_CALL(GeneWin_DrawList2)();
     Widescreen_SlideUndraw(Win());
@@ -761,7 +761,7 @@ extern "C" void __cdecl GeneWin_List3SlideIn(void) {
 // original 0x599540 (PSX 0x800AE5F8): after the draw, right by 0x20; at +4 >= 0x143 the
 // window is freed instead (DIV-0041's operand; the faster slide as above).
 extern "C" void __cdecl GeneWin_List3SlideOut(void) {
-    const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kList3OutBound));
+    const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kList3OutBound.v));
     Widescreen_SlideDraw(Win(), bound, 0x20);
     BH_CALL(GeneWin_DrawList2)();
     Widescreen_SlideUndraw(Win());
@@ -843,7 +843,7 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
             const int by = yi + 13 * static_cast<int>(k) + 0x1C;
             const unsigned clut = BH_CALL(Gpu_GetClut)(0, 0x1E0);
             using BarFn = void (__cdecl*)(U, U, U, U, U, U);
-            BH_AT(BarFn, at::kDrawBar)(x + 0x51, static_cast<U>(by), colour, 0x1C, clut, 0x80);
+            BH_AT(BarFn, at::kDrawBar.v)(x + 0x51, static_cast<U>(by), colour, 0x1C, clut, 0x80);
             BH_CALL(Crt_sprintf)(Buf(::bof3::Img(at::kPrintBuf.v)), Str(::bof3::Img(at::kFmtStat.v)), static_cast<unsigned>(values[k]));
             BH_CALL(Text_DrawFont8)(xi + 0x59, by, static_cast<int>(marks[k]), Text(::bof3::Img(at::kPrintBuf.v)));
         }

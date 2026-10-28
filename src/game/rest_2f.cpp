@@ -162,7 +162,7 @@ void Backdrop() { SH_CALL(Menu_DrawBackdrop)(Config_Background); }
 void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
 unsigned char PartyCount() { return static_cast<unsigned char>(SH_CALL(Party_Count)(0)); }
 U Repeat(U pressed) { return SH_CALL(Input_AutoRepeat)(pressed); }
-void Swap(unsigned char* a, unsigned char* b) { SH_AT(void (__cdecl*)(unsigned char*, unsigned char*), kSwapBytes)(a, b); }
+void Swap(unsigned char* a, unsigned char* b) { SH_AT(void (__cdecl*)(unsigned char*, unsigned char*), kSwapBytes.v)(a, b); }
 using TitleFn = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
 void Piece(int x, int y, unsigned id) { SH_CALL(Menu_DrawPiece)(x, y, id, 1); }
 void Row(int x, U y, unsigned colour, unsigned category, unsigned id, unsigned count, unsigned dim) {
@@ -1023,7 +1023,7 @@ extern "C" void __cdecl ConfigMenu_Open(void) {
 // original 0x590340: ConfigMenu_Steps[1] - a tail jump to the Config screen's
 // own machine 0x460CB0 (R4F's; docs/menu-screens.md section 1).
 extern "C" void __cdecl ConfigMenu_Body(void) {
-    SH_AT(Handler, kConfigMachine)();
+    SH_AT(Handler, kConfigMachine.v)();
 }
 
 // original 0x590350: ConfigMenu_Steps[2] - the backdrop; the party's records
@@ -1341,7 +1341,7 @@ extern "C" void __cdecl Win2_ItemList(void) {
 // 2026-10-13, the faster slide): decided by that bound at every width, the box
 // drawn to the wide one (Widescreen_SlideHeld, docs/ultrawide-slides.md).
 extern "C" void __cdecl MenuSlide_LeftOff170(void) {
-    const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(kLeftOff170Bound));
+    const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(kLeftOff170Bound.v));
     unsigned char* const moved = Cur();
     const short x_read = static_cast<short>(rv::As<records::WindowRecord>(moved)->x);
     rv::As<records::WindowRecord>(moved)->x = rv::As<records::WindowRecord>(moved)->x + 0xFFE0u;
@@ -1475,7 +1475,7 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
         const int x = static_cast<int>((6u * (13u - n) + rv::As<records::WindowRecord>(rec)->x) & 0xFFFF);
         const U site = g_title_call;
         if (site == 0 || site == bof3::addr::Text_DrawAt) SH_CALL(Text_DrawAt)(x, y7, static_cast<int>(grey), 0x10, title);
-        else reinterpret_cast<TitleFn>(static_cast<std::uintptr_t>(site))(x, y7, static_cast<int>(grey), 0x10, title);
+        else reinterpret_cast<TitleFn>(static_cast<std::uintptr_t>(::bof3::CodePlace(site)))(x, y7, static_cast<int>(grey), 0x10, title);
     }
     {
         const unsigned char cat = rec[0xA];
@@ -1517,7 +1517,7 @@ void Rest2F_Inject() {
     // DIV-0059 survives the takeover: ours calls what the site calls, as
     // battle_draw.cpp holds it (BattleDraw_Inject ran first; operand-store.md)
     g_title_call = ListTitle_SiteDraw();
-    bof3::Log("rest_2f     Win2_DrawItemList's title call (0x%X) reaches 0x%X%s", kTitleCall, g_title_call,
+    bof3::Log("rest_2f     Win2_DrawItemList's title call (0x%X) reaches 0x%X%s", kTitleCall.v, g_title_call,
               g_title_call == bof3::addr::Text_DrawAt ? " (Text_DrawAt)" : " (DIV-0059's ListTitle_DrawAt)");
     BOF3_INJECT(AbilityMenu_InitRecords);
     BOF3_INJECT(AbilityList_SortBy);

@@ -80,7 +80,7 @@ constexpr ::bof3::image::Va kQueueText{0x93C2C4};
 
 // Callees with no name in symbols.gen.h: unnamed Capcom functions, called by
 // address (the round's cross-group rule).
-constexpr U kPrevTarget = bof3::addr::Battle_PrevTarget;  // unnamed, in no round-8 group: Battle_DefaultTarget's downward twin
+constexpr ::bof3::image::CodeVa kPrevTarget{bof3::addr::Battle_PrevTarget};  // unnamed, in no round-8 group: Battle_DefaultTarget's downward twin
 
 // Every callee returns eax whole (U), so that a use of more than the original
 // reads shows in the fuzz; ours keep the byte where the original keeps al.

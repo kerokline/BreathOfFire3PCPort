@@ -16,12 +16,12 @@ namespace at {
 
 // --- callees of another group of this wave (by address) ----------------------------------
 // R2C's (0x57F340..0x586980): the masters' screen's draws.
-constexpr std::uint32_t kMemberPanel = bof3::addr::MasterPanel_DrawMember;   // (x, y, member, row): a member's stat panel
-constexpr std::uint32_t kMemberLabel = bof3::addr::MasterPanel_DrawStats;   // (x, y, member): the panel's label box
-constexpr std::uint32_t kPromptBox = bof3::addr::Menu_DrawPanelBox;     // (x, y, w, h, style byte): the prompt's box
+constexpr ::bof3::image::CodeVa kMemberPanel{bof3::addr::MasterPanel_DrawMember};   // (x, y, member, row): a member's stat panel
+constexpr ::bof3::image::CodeVa kMemberLabel{bof3::addr::MasterPanel_DrawStats};   // (x, y, member): the panel's label box
+constexpr ::bof3::image::CodeVa kPromptBox{bof3::addr::Menu_DrawPanelBox};     // (x, y, w, h, style byte): the prompt's box
 // R2E's (0x58B1D0..0x58ED10): the Items screen's window set-ups.
-constexpr std::uint32_t kItemsWindows = bof3::addr::FieldItems_InitWindows;  // (): the Items screen's windows placed
-constexpr std::uint32_t kItemsReset = bof3::addr::FieldItems_CloseWindows;    // (): the Items screen's windows taken down
+constexpr ::bof3::image::CodeVa kItemsWindows{bof3::addr::FieldItems_InitWindows};  // (): the Items screen's windows placed
+constexpr ::bof3::image::CodeVa kItemsReset{bof3::addr::FieldItems_CloseWindows};    // (): the Items screen's windows taken down
 
 // --- the state tables (symbols.toml [[data]], counts by their readers) --------------------
 // kAbilityEffects: now FieldAbility_Effects (symbols.toml). FieldAbility_Effects, 10: FieldAbility_Use's 0..9

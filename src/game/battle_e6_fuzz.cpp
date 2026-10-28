@@ -243,7 +243,7 @@ std::uint32_t SmallHeight(const std::uint32_t*, std::uint32_t answer) {
 
 const bh::Callee kCellCallees[] = {
     {BE6_OURS(Area_TestCondition), 1, {kU16}, A::kFlag, 0, 0},
-    {"0x4CF4B0", at::kCellHeight, at::kCellHeight, 2, {kAll, kAll}, A::kGarbage, 0, 0, {}, &SmallHeight},
+    {"0x4CF4B0", at::kCellHeight.v, at::kCellHeight.v, 2, {kAll, kAll}, A::kGarbage, 0, 0, {}, &SmallHeight},
     {BE6_OURS(AreaMap_Elevation), 2, {kAll, kAll}, A::kGarbage, 0, 0, {}, &SmallHeight},
     {BE6_OURS(Gte_PushMatrix), 0, {}, A::kThrough, 0, 0},
     {BE6_OURS(Gte_PopMatrix), 0, {}, A::kThrough, 0, 0},

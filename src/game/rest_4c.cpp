@@ -88,12 +88,12 @@ void Row(unsigned count, unsigned shown, unsigned picks) { SH_CALL(CommuHiLo_Dra
 void Choice(int x, int y, unsigned label, unsigned mode) { SH_CALL(CommuHiLo_DrawChoice)(x, y, label, mode); }
 void Choices(int x, int y, unsigned selected) { SH_CALL(CommuHiLo_DrawChoices)(x, y, selected); }
 void GuessPanel(int x, int y, unsigned flag) {
-    SH_AT(void (__cdecl*)(int, int, unsigned), at::kGuessPanel)(x, y, flag);
+    SH_AT(void (__cdecl*)(int, int, unsigned), at::kGuessPanel.v)(x, y, flag);
 }
 void GuessRow(int x, int y, unsigned row, unsigned flag) {
-    SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kGuessRow)(x, y, row, flag);
+    SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kGuessRow.v)(x, y, row, flag);
 }
-void Secret(int x, int y, unsigned show) { SH_AT(void (__cdecl*)(int, int, unsigned), at::kSecret)(x, y, show); }
+void Secret(int x, int y, unsigned show) { SH_AT(void (__cdecl*)(int, int, unsigned), at::kSecret.v)(x, y, show); }
 unsigned Rnd() { return static_cast<unsigned>(SH_CALL(Rand)()); }
 int Request() { return Field_Request; }
 const unsigned char* Text(U address) { return At(address); }
@@ -318,7 +318,7 @@ extern "C" void __cdecl CommuHiLo_DrawMarker(int x, int y) {
     if ((frame & 8) == 0) frame = static_cast<unsigned char>(~frame);
     const auto green = static_cast<unsigned char>(((frame & 6) << 5) + 0x3F);
     unsigned char* const p = Gfx_PacketNext;
-    SH_AT(void (__cdecl*)(unsigned char*), at::kSetPolyF3)(p);
+    SH_AT(void (__cdecl*)(unsigned char*), at::kSetPolyF3.v)(p);
     const int x0 = S16(static_cast<U>(x)), y0 = S16(static_cast<U>(y));
     PutFloat(p, 8, x0);
     p[5] = green;

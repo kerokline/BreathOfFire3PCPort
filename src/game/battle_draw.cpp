@@ -50,7 +50,7 @@ template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<s
 
 const Callees kOriginals = {
     D3d_PrimColor,
-    Fn<void (__cdecl*)(unsigned)>(kRetOnly),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kRetOnly.v)),
     D3d_SetBlend,
     D3d_SetShadeMode,
     Menu_DrawBox,
@@ -65,11 +65,11 @@ const Callees kOriginals = {
     Menu_DrawPieces,
     Menu_DrawPiece,
     Menu_DrawScrollBar,
-    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(kSkillUsable),
-    Fn<void (__cdecl*)(int, int, int, unsigned, const unsigned char*, unsigned, int)>(kSkillRow),
-    Fn<unsigned (__cdecl*)(unsigned)>(kSkillIcon),
-    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(kSkillCost),
-    Fn<const unsigned char* (__cdecl*)(unsigned, unsigned, unsigned)>(kSkillList),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kSkillUsable.v)),
+    Fn<void (__cdecl*)(int, int, int, unsigned, const unsigned char*, unsigned, int)>(::bof3::Code(kSkillRow.v)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kSkillIcon.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kSkillCost.v)),
+    Fn<const unsigned char* (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kSkillList.v)),
     Gfx_ClutAdjust,
     AreaMap_ClutCycleStart,
 };
@@ -257,11 +257,11 @@ int ListTitleX(const unsigned char* label, int n) {
     return 78 - static_cast<int>(TextAdvance_Width(label) / 2);
 }
 
-constexpr U kTextDrawAt = 0x516B30;    // Text_DrawAt: the sites' target in Capcom's bytes, a patch fact (raw)
+constexpr ::bof3::image::CodeVa kTextDrawAt{0x516B30};    // Text_DrawAt: the sites' target in Capcom's bytes, a patch fact (raw)
 // The title draws of the two list windows that are still Capcom's: the
 // Text_DrawAt call after `6 * (13 - Text_CharCount) + x` in each.
-constexpr U kTitleCallA = 0x596D13;    // titles 0x66AF10
-constexpr U kTitleCallB = 0x59DEFA;    // titles 0x66B5C4
+constexpr ::bof3::image::CodeVa kTitleCallA{0x596D13};    // titles 0x66AF10
+constexpr ::bof3::image::CodeVa kTitleCallB{0x59DEFA};    // titles 0x66B5C4
 
 // What those two calls reach under DIV-0059: the x they reckoned, 6 * (13 -
 // n) + the window's, moved to the centre less half the real width.
@@ -272,10 +272,11 @@ extern "C" const unsigned char* __cdecl ListTitle_DrawAt(int x, int y, int colou
 }
 }  // namespace
 
-// What kTitleCallA and kTitleCallB call now (ListTitle_SiteDraw).
-U g_title_site_draw = kTextDrawAt;
-
 int ListTitle_X(const unsigned char* label, int n) { return ListTitleX(label, n); }
+
+// What kTitleCallA and kTitleCallB call now (ListTitle_SiteDraw): a place, the
+// game calls through it once OperandCall has re-aimed their calls.
+U g_title_site_draw = ::bof3::Code(kTextDrawAt.v);
 std::uint32_t ListTitle_SiteDraw() { return g_title_site_draw; }
 bool ListTitle_Centring() { return g_list_title_centre != 0; }
 
@@ -459,8 +460,8 @@ extern "C" void __cdecl AreaMap_TintClut(int level) {
 }
 
 void BattleDraw_Inject() {
-    bof3::OperandCall("DIV-0059 list title draw", kTitleCallA, &g_title_site_draw);
-    bof3::OperandCall("DIV-0059 list title draw", kTitleCallB, &g_title_site_draw);
+    bof3::OperandCall("DIV-0059 list title draw", kTitleCallA.v, &g_title_site_draw);
+    bof3::OperandCall("DIV-0059 list title draw", kTitleCallB.v, &g_title_site_draw);
     if (bof3::WantsShadow("battle_draw")) battle_draw::SelfTest();
     // DIVERGENCE DIV-0059: a Latin language overlay only, as MenuLists_Inject
     // tests it for DIV-0058.
@@ -471,9 +472,9 @@ void BattleDraw_Inject() {
                              static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_list_title_centre)),
                              &was, &is, 1);
             bof3::Log("DIV-0059    list titles centred on their width: %s", g_list_title_centre ? "on" : "off");
-            const bool a = bof3::RetargetCall("BattleListTitleCentre", kTitleCallA, kTextDrawAt,
+            const bool a = bof3::RetargetCall("BattleListTitleCentre", kTitleCallA.v, kTextDrawAt.v,
                                               reinterpret_cast<void*>(&ListTitle_DrawAt));
-            const bool b = bof3::RetargetCall("BattleListTitleCentre", kTitleCallB, kTextDrawAt,
+            const bool b = bof3::RetargetCall("BattleListTitleCentre", kTitleCallB.v, kTextDrawAt.v,
                                               reinterpret_cast<void*>(&ListTitle_DrawAt));
             if (a != b) bof3::Fatal("DIV-0059: one title call re-aimed and not the other");   // one name: both or neither
             if (a) g_title_site_draw = static_cast<U>(reinterpret_cast<std::uintptr_t>(&ListTitle_DrawAt));

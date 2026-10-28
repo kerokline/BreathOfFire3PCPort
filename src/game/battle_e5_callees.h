@@ -111,14 +111,14 @@ constexpr ::bof3::image::Va kPartTable{0x64ECCC};        // 7: the seven parts (
 // kStoreSteps: now DragonCmd_StoreSteps (symbols.toml). 7 (the last BE6's 0x451480)
 
 // --- the callees nobody owns yet ---
-constexpr U kTargetPrompt = bof3::addr::ItemMenu_SetupForMember;     // BE4's
-constexpr U kDragonTask = bof3::addr::DragonGenes_SumCost;       // BE6's
-constexpr U kStatusPick = bof3::addr::Battle_RecalcStats;       // BE6's
-constexpr U kApPopup = bof3::addr::Battle_SetApPopup;          // BE6's
-constexpr U kInflictStatus = bof3::addr::Battle_InflictStatus;          // R3D's (round fourteen)
-constexpr U kResisted = bof3::addr::Battle_StatusResisted;         // R3D's (round fourteen)
-constexpr U kMissTail = bof3::addr::Effect_NoHitReaction;         // R3D's (round fourteen)
-constexpr U kStatAdd = bof3::addr::Stat_AddClampedTo;          // R2F's (round fourteen)
+constexpr ::bof3::image::CodeVa kTargetPrompt{bof3::addr::ItemMenu_SetupForMember};     // BE4's
+constexpr ::bof3::image::CodeVa kDragonTask{bof3::addr::DragonGenes_SumCost};       // BE6's
+constexpr ::bof3::image::CodeVa kStatusPick{bof3::addr::Battle_RecalcStats};       // BE6's
+constexpr ::bof3::image::CodeVa kApPopup{bof3::addr::Battle_SetApPopup};          // BE6's
+constexpr ::bof3::image::CodeVa kInflictStatus{bof3::addr::Battle_InflictStatus};          // R3D's (round fourteen)
+constexpr ::bof3::image::CodeVa kResisted{bof3::addr::Battle_StatusResisted};         // R3D's (round fourteen)
+constexpr ::bof3::image::CodeVa kMissTail{bof3::addr::Effect_NoHitReaction};         // R3D's (round fourteen)
+constexpr ::bof3::image::CodeVa kStatAdd{bof3::addr::Stat_AddClampedTo};          // R2F's (round fourteen)
 
 }  // namespace at
 }  // namespace battle_e5

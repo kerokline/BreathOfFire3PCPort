@@ -352,9 +352,9 @@ void RestoreBody(const char* who, unsigned char* o, bool keep8) {
         rv::Store<U>(rv::As<records::PartyMember>(rec())->flags_130, BattleE2_KeptFlags);
         rv::Store<U>(rv::As<records::PartyMember>(rec())->flags_134, BattleE2_KeptFlags2);
         for (unsigned k = 1; k <= 8; ++k) rec()[0x137 + k] = 0;
-        BH_AT(void (__cdecl*)(), at::kMemberRecalc)();
+        BH_AT(void (__cdecl*)(), at::kMemberRecalc.v)();
     }
-    BH_AT(void (__cdecl*)(unsigned), at::kMemberStatusSet)(rv::Current<records::PartyMember>()->actor);
+    BH_AT(void (__cdecl*)(unsigned), at::kMemberStatusSet.v)(rv::Current<records::PartyMember>()->actor);
     unsigned char* const s = Sprite_Current;
     auto* const cur_member = rv::As<records::PartyMember>(s);
     {
@@ -920,7 +920,7 @@ extern "C" void __cdecl BattleEnemy_PickAction(unsigned enemy) {
         B(::bof3::Img(at::kActKind.v)) = 1;
         break;
     }
-    const auto may_act = BH_AT(unsigned char (__cdecl*)(unsigned), at::kActorMayAct);
+    const auto may_act = BH_AT(unsigned char (__cdecl*)(unsigned), at::kActorMayAct.v);
     const unsigned actor = (enemy + 3) & 0xFF;
     if ((e[0x92] & 0x20) != 0 || (static_cast<U>(enemy_rec->flags_114) & 0x4000) != 0) {
         B(::bof3::Img(at::kActKind.v)) = 1;
@@ -965,7 +965,7 @@ extern "C" unsigned long __cdecl EnemyOp_SlideDispatch(unsigned long word) {
 extern "C" void __cdecl EnemyOp_SlideStart(void) {
     rv::Current<records::BattleEnemy>()->flags = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->flags & 0xBF);
     BH_CALL(BattleEnemy_SetAnimation)(0);
-    const auto turn = BH_AT(void (__cdecl*)(unsigned char*), at::kTurnVelocity);
+    const auto turn = BH_AT(void (__cdecl*)(unsigned char*), at::kTurnVelocity.v);
     rv::Store<U>(rv::Current<records::BattleEnemy>()->work_18, static_cast<U>(rv::Current<records::BattleEnemy>()->x));
     rv::Store<U>(rv::Current<records::BattleEnemy>()->work_1c, static_cast<U>(rv::Current<records::BattleEnemy>()->z));
     rv::Store<U>(rv::Current<records::BattleEnemy>()->step_x, 0x80000);
@@ -1029,7 +1029,7 @@ extern "C" void __cdecl EnemyOp_PlayCreatureCue(void) {
     const unsigned char* const e = Enemy();
     auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(e);
     if (fight != 0) {
-        BH_AT(void (__cdecl*)(unsigned), at::kPlayCue)(Word(PtrIn(e + 0xF8)));
+        BH_AT(void (__cdecl*)(unsigned), at::kPlayCue.v)(Word(PtrIn(e + 0xF8)));
     } else {
         BH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(0x600 + 2 * enemy_rec->data_id));
     }
@@ -1044,9 +1044,9 @@ extern "C" unsigned long __cdecl EnemyOp_CueEnd(void) {
     const auto done = BH_CALL(BattleEnemy_ScriptTick)();
     if (done == 0) return done;
     BH_CALL(Battle_SetTargetFlag40)(B(::bof3::Img(at::kTarget.v)));
-    BH_AT(void (__cdecl*)(), at::kEnemyTaskChance)();
+    BH_AT(void (__cdecl*)(), at::kEnemyTaskChance.v)();
     B(::bof3::Img(at::kRoundFlags.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kRoundFlags.v)) | 4);
-    return BH_AT(unsigned long (__cdecl*)(), at::kEnemyOpEnd)();
+    return BH_AT(unsigned long (__cdecl*)(), at::kEnemyOpEnd.v)();
 }
 
 // original 0x436BC0 (PSX 0x801E43E8, table-anchored; hidden in 0x436B50's
@@ -1064,7 +1064,7 @@ extern "C" void __cdecl EnemyOp_KnockStart(void) {
     rv::As<records::BattleEnemy>(Enemy())->hp_change = 0;
     rv::Store<U>(rv::Current<records::BattleEnemy>()->step_x, 0xFFFFE000u);
     rv::Store<U>(rv::Current<records::BattleEnemy>()->step_z, 0);
-    BH_AT(void (__cdecl*)(unsigned char*), at::kTurnVelocity)(Sprite_Current);
+    BH_AT(void (__cdecl*)(unsigned char*), at::kTurnVelocity.v)(Sprite_Current);
     Sprite_Current[0xA] = 4;
     BH_CALL(BattleEnemy_ScriptTick)();
     BH_CALL(Sound_PlayEffect)(0x205);

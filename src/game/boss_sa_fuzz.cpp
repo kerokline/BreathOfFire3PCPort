@@ -64,9 +64,9 @@ const bh::Callee kCallees[] = {
     // argument - logged with no arguments here, as a table entry
     {"Port_DroppedCall (a table entry)", 0x4DF820, KeyOf(&::Port_DroppedCall), 0, {}, bh::Answer::kGarbage, 0, 0},
     // the engine's unnamed three (boss_sa_callees.h): 0x437450 reads the word
-    {"0x437450", at::kPlayCue, at::kPlayCue, 1, {0xFFFFu}, bh::Answer::kGarbage, 0, 0},
-    {"0x4376A0", at::kTurnClose, at::kTurnClose, 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"0x4376F0", at::kTurnChance, at::kTurnChance, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x437450", at::kPlayCue.v, at::kPlayCue.v, 1, {0xFFFFu}, bh::Answer::kGarbage, 0, 0},
+    {"0x4376A0", at::kTurnClose.v, at::kTurnClose.v, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x4376F0", at::kTurnChance.v, at::kTurnChance.v, 0, {}, bh::Answer::kGarbage, 0, 0},
 };
 
 // The cells the set-ups' hooks write beyond the standard regions: MoveScript

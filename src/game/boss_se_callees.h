@@ -53,7 +53,7 @@ constexpr ::bof3::image::Va kTurn{0x904B90};             // u32: the turn counte
 // kHookEnd: now BattleHook_End (symbols.toml). BattleHook_End
 // kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
 // kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
-constexpr U kEnd21 = bof3::addr::Boss21_End;            // set-up 21 / 23's end hook (BSD's)
+constexpr ::bof3::image::CodeVa kEnd21{bof3::addr::Boss21_End};            // set-up 21 / 23's end hook (BSD's)
 
 // --- the enemies' objects (0x93B960 + n * 0x128), the offsets used ------------
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running
@@ -111,11 +111,11 @@ constexpr ::bof3::image::Va kScriptVar3{0x903848};       // u8: movement-script 
 constexpr ::bof3::image::Va kPoseSet{0x8C5D80};          // the frame set set-up 26's end hook poses the party from
 
 // --- the callees nobody owns ------------------------------------------------
-constexpr U kEnemySound = bof3::addr::Sound_PlayEffectUnlessNone;       // (sound) (BE3's since round twelve: the same value)
-constexpr U kEnemyActEnd = bof3::addr::EnemyOp_EndAction;      // () (BE3's since round twelve: the same value)
-constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
-constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () step 2
-constexpr U kEndThird = bof3::addr::BattleEnd_EnterStep3;         // () step 3
+constexpr ::bof3::image::CodeVa kEnemySound{bof3::addr::Sound_PlayEffectUnlessNone};       // (sound) (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kEnemyActEnd{bof3::addr::EnemyOp_EndAction};      // () (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kEndWin{bof3::addr::BattleEnd_EnterStep1};           // () the end phase, step 1
+constexpr ::bof3::image::CodeVa kEndOther{bof3::addr::BattleEnd_EnterStep2};         // () step 2
+constexpr ::bof3::image::CodeVa kEndThird{bof3::addr::BattleEnd_EnterStep3};         // () step 3
 
 }  // namespace at
 }  // namespace boss_se

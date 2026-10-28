@@ -142,7 +142,7 @@ void Message(unsigned id) {
 // original 0x43B5B0: Boss_SetupTable[22]. The hooks: end Boss22_End, exit
 // Boss22_Exit, event BareRetZero.
 extern "C" void __cdecl Boss22_Setup(void) {
-    StoreHooks(bof3::addr::Boss22_End, bof3::addr::Boss22_Exit, bof3::addr::BareRetZero);
+    StoreHooks(::bof3::Code(bof3::addr::Boss22_End), ::bof3::Code(bof3::addr::Boss22_Exit), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43B5D0: the end hook. 0x904AE8 and 0x904AE5 read; movement-script
@@ -157,7 +157,7 @@ extern "C" void __cdecl Boss22_End(void) {
     EventBattle_Flags = static_cast<unsigned char>(music & 0xBF);
     Music_Track = 0x6A;
     BossH_LeaderPick = 3;
-    BH_AT(Handler, at::kEndThird)();
+    BH_AT(Handler, at::kEndThird.v)();
 }
 
 // original 0x43B610: the exit hook. BossActor_ClearBit40(0); Sprite_Current =
@@ -192,7 +192,7 @@ extern "C" unsigned char __cdecl BossBully_Enter(void) {
                      : slot == 4 ? AddressOf(BossBully_SoundsB)
                                  : AddressOf(BossBully_SoundsC);
     rv::As<records::BattleEnemy>(Enemy())->cue_table = S(sounds);
-    rv::As<records::BattleEnemy>(Enemy())->event_hook = S(bof3::addr::BossBully_Hook);
+    rv::As<records::BattleEnemy>(Enemy())->event_hook = S(::bof3::Code(bof3::addr::BossBully_Hook));
     rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -204,7 +204,7 @@ extern "C" void __cdecl BossBully_Hook(unsigned word) { DispatchHook("BossBully_
 // original 0x43B710: Boss_SetupTable[23]. The hooks: end 0x43B730 (set-up 21's
 // too, group BSD's), exit BossHook_ExitClearActors012, event BareRetZero.
 extern "C" void __cdecl Boss23_Setup(void) {
-    StoreHooks(at::kEnd21, bof3::addr::BossHook_ExitClearActors012, bof3::addr::BareRetZero);
+    StoreHooks(::bof3::Code(at::kEnd21.v), ::bof3::Code(bof3::addr::BossHook_ExitClearActors012), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43B750: the exit hook of set-ups 23 and 30: BossActor_Clear(0),
@@ -222,7 +222,7 @@ extern "C" void __cdecl BossHook_ExitClearActors012(void) {
 // original 0x43CF80: Boss_SetupTable[30]. The hooks: end Boss30_End, exit
 // BossHook_ExitClearActors012, event BareRetZero.
 extern "C" void __cdecl Boss30_Setup(void) {
-    StoreHooks(bof3::addr::Boss30_End, bof3::addr::BossHook_ExitClearActors012, bof3::addr::BareRetZero);
+    StoreHooks(::bof3::Code(bof3::addr::Boss30_End), ::bof3::Code(bof3::addr::BossHook_ExitClearActors012), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43CFA0: the end hook. Won (0x904AE8 bit 1): variable 3 read, the
@@ -231,13 +231,13 @@ extern "C" void __cdecl Boss30_Setup(void) {
 // jump to 0x446E00 (step 2).
 extern "C" void __cdecl Boss30_End(void) {
     if ((Battle_EndFlags & 2) == 0) {
-        BH_AT(Handler, at::kEndOther)();
+        BH_AT(Handler, at::kEndOther.v)();
         return;
     }
     const unsigned char var = B(::bof3::Img(at::kScriptVar3.v));
     MoveScript_PartyRecords[0x65] = 0xC;
     B(::bof3::Img(at::kScriptVar3.v)) = static_cast<unsigned char>(var + 1);
-    BH_AT(Handler, at::kEndWin)();
+    BH_AT(Handler, at::kEndWin.v)();
     Music_Track = 0x5A;
 }
 
@@ -255,7 +255,7 @@ extern "C" void __cdecl BossStallion_Dispatch(void) {
 // BossStallion_Hook, +0xF8 = BossStallion_Sounds; Sprite_Current +1 = 2; a
 // tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossStallion_Enter(void) {
-    StoreKind(AddressOf(BossStallion_Anims), bof3::addr::BossStallion_Hook, AddressOf(BossStallion_Sounds));
+    StoreKind(AddressOf(BossStallion_Anims), ::bof3::Code(bof3::addr::BossStallion_Hook), AddressOf(BossStallion_Sounds));
     rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -274,7 +274,7 @@ extern "C" void __cdecl BossSample10_Dispatch(void) {
 // tables and its own hook, and 0x939AD8's +0x114 |= 8 before +1 = 2 and the
 // tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossSample10_Enter(void) {
-    StoreKind(AddressOf(BossStallion_Anims), bof3::addr::BossSample10_Hook, AddressOf(BossStallion_Sounds));
+    StoreKind(AddressOf(BossStallion_Anims), ::bof3::Code(bof3::addr::BossSample10_Hook), AddressOf(BossStallion_Sounds));
     auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     enemy_rec->flags_114 = S(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_114)) | 8);
     rv::Current<records::BattleEnemy>()->state = 2;
@@ -289,7 +289,7 @@ extern "C" void __cdecl BossSample10_Hook(unsigned word) {
 // original 0x43B870: Boss_SetupTable[24]. The hooks: end Boss24_End, exit
 // Boss24_Exit, event BareRetZero.
 extern "C" void __cdecl Boss24_Setup(void) {
-    StoreHooks(bof3::addr::Boss24_End, bof3::addr::Boss24_Exit, bof3::addr::BareRetZero);
+    StoreHooks(::bof3::Code(bof3::addr::Boss24_End), ::bof3::Code(bof3::addr::Boss24_Exit), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43B890: the end hook. 0x904AE8 read; won (bit 1): variable 3 =
@@ -298,13 +298,13 @@ extern "C" void __cdecl Boss24_Setup(void) {
 extern "C" void __cdecl Boss24_End(void) {
     const unsigned char end = Battle_EndFlags;
     if ((end & 2) == 0) {
-        BH_AT(Handler, at::kEndOther)();
+        BH_AT(Handler, at::kEndOther.v)();
         return;
     }
     B(::bof3::Img(at::kScriptVar3.v)) = 5;
     Battle_EndFlags = static_cast<unsigned char>(end | 8);
     Music_Track = 0x44;
-    BH_AT(Handler, at::kEndWin)();
+    BH_AT(Handler, at::kEndWin.v)();
 }
 
 // original 0x43B8C0: the exit hook: BossActor_Clear(3).
@@ -313,7 +313,7 @@ extern "C" void __cdecl Boss24_Exit(void) { BH_CALL(BossActor_Clear)(3); }
 // original 0x43B8D0: Boss_SetupTable[48]. The hooks: end BossHook_EndPickWay,
 // exit BareRet, event BareRetZero.
 extern "C" void __cdecl Boss48_Setup(void) {
-    StoreHooks(bof3::addr::BossHook_EndPickWay, bof3::addr::BareRet, bof3::addr::BareRetZero);
+    StoreHooks(::bof3::Code(bof3::addr::BossHook_EndPickWay), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // ===========================================================================
@@ -329,7 +329,7 @@ extern "C" void __cdecl BossBeyd_Dispatch(void) { Dispatch("BossBeyd_Dispatch", 
 // 0x1A (26) only: Battle_CopyEnemyData(0, EnemyData_FindByTag(0x59)), then
 // 0x939AD8's +0x8F = 1, its kind +0x100 = 0x1E (30) and CarryStats.
 extern "C" void __cdecl BossBeyd_Enter(void) {
-    StoreKind(AddressOf(BossBeyd_Anims), bof3::addr::BossBeyd_Hook, AddressOf(BossBeyd_Sounds));
+    StoreKind(AddressOf(BossBeyd_Anims), ::bof3::Code(bof3::addr::BossBeyd_Hook), AddressOf(BossBeyd_Sounds));
     rv::Current<records::BattleEnemy>()->state = 2;
     BH_CALL(Sprite_ScriptTick)();
     if (EventBattle_Id != 0x1A) return;
@@ -388,7 +388,7 @@ extern "C" void __cdecl BossBeyd2_Dispatch(void) { Dispatch("BossBeyd2_Dispatch"
 // Sprite_Current of after the call +8 = 1; 0x939AD8's +0x8F = 1 and
 // CarryStats - in every fight.
 extern "C" void __cdecl BossBeyd2_Enter(void) {
-    StoreKind(AddressOf(BossBeyd_Anims), bof3::addr::BossBeyd2_Hook, AddressOf(BossBeyd_Sounds));
+    StoreKind(AddressOf(BossBeyd_Anims), ::bof3::Code(bof3::addr::BossBeyd2_Hook), AddressOf(BossBeyd_Sounds));
     rv::Current<records::BattleEnemy>()->state = 2;
     BH_CALL(Sprite_ScriptTick)();
     rv::Current<records::BattleEnemy>()->layout = 1;
@@ -418,7 +418,7 @@ extern "C" void __cdecl BossZig_Dispatch(void) { Dispatch("BossZig_Dispatch", Ad
 // BossZig_Hook, +0xF8 = BossZig_Sounds; Sprite_Current +8 = 3 and +1 = 2; a
 // tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossZig_Enter(void) {
-    StoreKind(AddressOf(BossZig_Anims), bof3::addr::BossZig_Hook, AddressOf(BossZig_Sounds));
+    StoreKind(AddressOf(BossZig_Anims), ::bof3::Code(bof3::addr::BossZig_Hook), AddressOf(BossZig_Sounds));
     rv::Current<records::BattleEnemy>()->layout = 3;
     rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
@@ -455,7 +455,7 @@ extern "C" void __cdecl BossZig_Step5Count(void) {
     s[9] = static_cast<unsigned char>(s[9] - 1);
     if (Sprite_Current[9] != 0) return;
     const unsigned char* const sounds = At(static_cast<U>(static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy())->cue_table)));
-    BH_AT(SoundFn, at::kEnemySound)(Word(sounds));
+    BH_AT(SoundFn, at::kEnemySound.v)(Word(sounds));
     rv::Current<records::BattleEnemy>()->step = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->step + 1);
 }
 
@@ -474,7 +474,7 @@ extern "C" void __cdecl BossZig_Step5Fire(void) {
         BH_CALL(BattleTask_Create)(0, 2);
     }
     B(::bof3::Img(at::kFlags.v)) |= 4;
-    BH_AT(Handler, at::kEnemyActEnd)();
+    BH_AT(Handler, at::kEnemyActEnd.v)();
 }
 
 // original 0x43BDF0: state 6: jmp [BossZig_ActSubs + 4 * +2] (6).
@@ -512,7 +512,7 @@ extern "C" void __cdecl Boss25_Setup(void) {
     const unsigned char ap = rv::Bytes(ObjTrio)[0x9a];
     BossSe_SavedHp = hp;
     const unsigned max_ap = ObjTrio[0].max_ap;
-    StoreHooks(bof3::addr::Boss25_End, bof3::addr::Boss25_Exit, bof3::addr::Boss25_Event);
+    StoreHooks(::bof3::Code(bof3::addr::Boss25_End), ::bof3::Code(bof3::addr::Boss25_Exit), ::bof3::Code(bof3::addr::Boss25_Event));
     BattlePhases_Initiative = 3;
     ObjTrio[0].hp = max_hp;
     BossSe_SavedAp = ap;
@@ -638,7 +638,7 @@ extern "C" void __cdecl Boss25_End(void) {
     ObjTrio[0].hp = hp;
     ObjTrio[0].ap = ap;
     MoveScript_PartyRecords[0x65] = 4;
-    BH_AT(Handler, at::kEndThird)();
+    BH_AT(Handler, at::kEndThird.v)();
 }
 
 // original 0x43C1B0: the exit hook. Round-flag bit 1 set; Transition_Start(4);
@@ -657,7 +657,7 @@ extern "C" void __cdecl Boss25_Exit(void) {
 // BossHook_ExitTransition4, event Boss26_Event; then the two sums 0x939A08 and
 // 0x939A04 and the count 0x939A0C = 0.
 extern "C" void __cdecl Boss26_Setup(void) {
-    StoreHooks(bof3::addr::Boss26_End, bof3::addr::BossHook_ExitTransition4, bof3::addr::Boss26_Event);
+    StoreHooks(::bof3::Code(bof3::addr::Boss26_End), ::bof3::Code(bof3::addr::BossHook_ExitTransition4), ::bof3::Code(bof3::addr::Boss26_Event));
     BattleE1_SumB = 0;
     BattleE1_SumA = 0;
     BattleE1_Count = 0;
@@ -737,7 +737,7 @@ extern "C" void __cdecl Boss26_End(void) {
         BH_CALL(Sprite_PoseFromSet)(pose, At(::bof3::Img(at::kPoseSet.v)), 0x1800);
     }
     B(::bof3::Img(at::kScriptVar3.v)) = 4;
-    BH_AT(Handler, at::kEndThird)();
+    BH_AT(Handler, at::kEndThird.v)();
 }
 
 // original 0x43E790: the exit hook of set-ups 26 and 35 (35 is group BSH's):

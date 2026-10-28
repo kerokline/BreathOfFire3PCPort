@@ -81,18 +81,18 @@ constexpr U kAbilityStride = 0x18;        // NameTable_Abilities: +3 the power b
 constexpr ::bof3::image::Va kHitScale{0x64E944};         // .data s8[7], Capcom's: slot 103's per-hit factor in tenths (3 past the seventh)
 
 // --- the callees of R3B and R3D, ours ---
-constexpr U kSkillByAbility = bof3::addr::EffectSlot04_SkillPower;   // R3B's
-constexpr U kHealByAbility = bof3::addr::EffectSlot07_Heal;    // R3B's
-constexpr U kHealMaxHp = bof3::addr::EffectSlot11_HealFull;        // R3B's
-constexpr U kFlag200 = bof3::addr::EffectSlot47_MissMark200;          // R3B's
-constexpr U kInflictStatus = bof3::addr::Battle_InflictStatus;          // R3D's
-constexpr U kRaiseStat = bof3::addr::Effect_StepStatByte;        // R3D's
-constexpr U kResisted = bof3::addr::Battle_StatusResisted;         // R3D's
-constexpr U kMissTail = bof3::addr::Effect_NoHitReaction;         // R3D's
-constexpr U kRaiseByAbility = bof3::addr::Effect_RollStatStepQuiet;   // R3D's
-constexpr U kMissInflict = bof3::addr::Effect_RollInflictQuiet;      // R3D's
-constexpr U kInflictUnlessResisted = bof3::addr::Effect_RollInflict;   // R3D's
-constexpr U kHpDamage = bof3::addr::Effect_HpBasedDamage;         // R3D's
+constexpr ::bof3::image::CodeVa kSkillByAbility{bof3::addr::EffectSlot04_SkillPower};   // R3B's
+constexpr ::bof3::image::CodeVa kHealByAbility{bof3::addr::EffectSlot07_Heal};    // R3B's
+constexpr ::bof3::image::CodeVa kHealMaxHp{bof3::addr::EffectSlot11_HealFull};        // R3B's
+constexpr ::bof3::image::CodeVa kFlag200{bof3::addr::EffectSlot47_MissMark200};          // R3B's
+constexpr ::bof3::image::CodeVa kInflictStatus{bof3::addr::Battle_InflictStatus};          // R3D's
+constexpr ::bof3::image::CodeVa kRaiseStat{bof3::addr::Effect_StepStatByte};        // R3D's
+constexpr ::bof3::image::CodeVa kResisted{bof3::addr::Battle_StatusResisted};         // R3D's
+constexpr ::bof3::image::CodeVa kMissTail{bof3::addr::Effect_NoHitReaction};         // R3D's
+constexpr ::bof3::image::CodeVa kRaiseByAbility{bof3::addr::Effect_RollStatStepQuiet};   // R3D's
+constexpr ::bof3::image::CodeVa kMissInflict{bof3::addr::Effect_RollInflictQuiet};      // R3D's
+constexpr ::bof3::image::CodeVa kInflictUnlessResisted{bof3::addr::Effect_RollInflict};   // R3D's
+constexpr ::bof3::image::CodeVa kHpDamage{bof3::addr::Effect_HpBasedDamage};         // R3D's
 
 }  // namespace at
 }  // namespace rest_3c

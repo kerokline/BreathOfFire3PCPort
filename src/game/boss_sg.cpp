@@ -166,7 +166,7 @@ extern "C" U __cdecl BossDolphin_Dispatch(unsigned passed) {
 // BossDolphin_Hook, +0xF8 = BossDolphin_Sounds; Sprite_Current +1 = 2; a tail
 // jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossDolphin_Enter(void) {
-    StoreKind(AddressOf(BossDolphin_Anims), bof3::addr::BossDolphin_Hook, AddressOf(BossDolphin_Sounds));
+    StoreKind(AddressOf(BossDolphin_Anims), ::bof3::Code(bof3::addr::BossDolphin_Hook), AddressOf(BossDolphin_Sounds));
     return Idle();
 }
 
@@ -176,7 +176,7 @@ extern "C" U __cdecl BossDolphin_Hook(unsigned word) { return HookTable("BossDol
 // original 0x43CE50: Boss_SetupTable[29]. The hooks: end Boss29_End, exit
 // BossHook_ExitClearActor0, event BareRetZero.
 extern "C" void __cdecl Boss29_Setup(void) {
-    StoreHooks(bof3::addr::Boss29_End, bof3::addr::BossHook_ExitClearActor0, bof3::addr::BareRetZero);
+    StoreHooks(::bof3::Code(bof3::addr::Boss29_End), ::bof3::Code(bof3::addr::BossHook_ExitClearActor0), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43CE70: the end hook. Won (0x904AE8 bit 1): the chapter's step
@@ -184,11 +184,11 @@ extern "C" void __cdecl Boss29_Setup(void) {
 // 0x62. Otherwise a tail jump to 0x446E00 (step 2).
 extern "C" void __cdecl Boss29_End(void) {
     if ((Battle_EndFlags & 2) == 0) {
-        BH_AT(Handler, at::kEndOther)();
+        BH_AT(Handler, at::kEndOther.v)();
         return;
     }
     MoveScript_PartyRecords[0x65] = 0x1C;
-    BH_AT(Handler, at::kEndWin)();
+    BH_AT(Handler, at::kEndWin.v)();
     Music_Track = 0x62;
 }
 
@@ -204,7 +204,7 @@ extern "C" U __cdecl BossGisshan_Dispatch(unsigned passed) {
 // original 0x43CEC0: state 0: BossGisshan_Anims, BossGisshan_Hook,
 // BossGisshan_Sounds; +1 = 2; tail Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossGisshan_Enter(void) {
-    StoreKind(AddressOf(BossGisshan_Anims), bof3::addr::BossGisshan_Hook, AddressOf(BossGisshan_Sounds));
+    StoreKind(AddressOf(BossGisshan_Anims), ::bof3::Code(bof3::addr::BossGisshan_Hook), AddressOf(BossGisshan_Sounds));
     return Idle();
 }
 
@@ -220,7 +220,7 @@ extern "C" U __cdecl BossScylla_Dispatch(unsigned passed) {
 // BossScylla_Sounds (the two byte tables lie in kind 35's header); +1 = 2;
 // tail Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossScylla_Enter(void) {
-    StoreKind(AddressOf(BossScylla_Anims), bof3::addr::BossScylla_Hook, AddressOf(BossScylla_Sounds));
+    StoreKind(AddressOf(BossScylla_Anims), ::bof3::Code(bof3::addr::BossScylla_Hook), AddressOf(BossScylla_Sounds));
     return Idle();
 }
 
@@ -239,7 +239,7 @@ extern "C" U __cdecl BossGarr2_Dispatch(unsigned passed) {
 // original 0x43CFF0: state 0: BossGarr2_Anims, BossGarr2_Hook,
 // BossGarr2_Sounds; +1 = 2; tail Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossGarr2_Enter(void) {
-    StoreKind(AddressOf(BossGarr2_Anims), bof3::addr::BossGarr2_Hook, AddressOf(BossGarr2_Sounds));
+    StoreKind(AddressOf(BossGarr2_Anims), ::bof3::Code(bof3::addr::BossGarr2_Hook), AddressOf(BossGarr2_Sounds));
     return Idle();
 }
 
@@ -266,7 +266,7 @@ extern "C" U __cdecl BossGarr2_Hook(unsigned word) { return HookTable("BossGarr2
 // original 0x43D0C0: Boss_SetupTable[31]. The hooks: end Boss31_End, exit
 // Boss31_Exit, event BareRetZero.
 extern "C" void __cdecl Boss31_Setup(void) {
-    StoreHooks(bof3::addr::Boss31_End, bof3::addr::Boss31_Exit, bof3::addr::BareRetZero);
+    StoreHooks(::bof3::Code(bof3::addr::Boss31_End), ::bof3::Code(bof3::addr::Boss31_Exit), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43D0E0: the end hook. Won (0x904AE8 bit 1): the chapter's step =
@@ -275,11 +275,11 @@ extern "C" void __cdecl Boss31_Setup(void) {
 extern "C" void __cdecl Boss31_End(void) {
     if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = 0x14;
-        BH_AT(Handler, at::kEndWin)();
+        BH_AT(Handler, at::kEndWin.v)();
         return;
     }
     EventBattle_Flags &= 0xBF;
-    BH_AT(Handler, at::kEndOther)();
+    BH_AT(Handler, at::kEndOther.v)();
 }
 
 // original 0x43D110: the exit hook: ActorZero(1), then the Sprite_Current of
@@ -302,7 +302,7 @@ extern "C" U __cdecl BossDZombie_Dispatch(unsigned passed) {
 // BossDZombie_Sounds, then 0x939AD8's +0x114 |= 8; +1 = 2; tail
 // Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossDZombie_Enter(void) {
-    StoreKind(AddressOf(BossDZombie_Anims), bof3::addr::BossDZombie_Hook, AddressOf(BossDZombie_Sounds));
+    StoreKind(AddressOf(BossDZombie_Anims), ::bof3::Code(bof3::addr::BossDZombie_Hook), AddressOf(BossDZombie_Sounds));
     auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     enemy_rec->flags_114 = S(static_cast<U>(enemy_rec->flags_114) | 8u);
     return Idle();
@@ -328,7 +328,7 @@ extern "C" U __cdecl BossDZombie_Hook(unsigned word) { return HookTable("BossDZo
 // original 0x43D250: Boss_SetupTable[32]. The hooks: end Boss32_End, exit
 // Boss32_Exit, event BareRetZero.
 extern "C" void __cdecl Boss32_Setup(void) {
-    StoreHooks(bof3::addr::Boss32_End, bof3::addr::Boss32_Exit, bof3::addr::BareRetZero);
+    StoreHooks(::bof3::Code(bof3::addr::Boss32_End), ::bof3::Code(bof3::addr::Boss32_Exit), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43D270: the end hook. Won (0x904AE8 bit 1): for each party member
@@ -340,7 +340,7 @@ extern "C" void __cdecl Boss32_Setup(void) {
 // 0x446E00 (step 2).
 extern "C" void __cdecl Boss32_End(void) {
     if ((Battle_EndFlags & 2) == 0) {
-        BH_AT(Handler, at::kEndOther)();
+        BH_AT(Handler, at::kEndOther.v)();
         return;
     }
     for (unsigned m = 0; m < 3; ++m) {
@@ -357,7 +357,7 @@ extern "C" void __cdecl Boss32_End(void) {
     Music_Track = 0x6B;
     MoveScript_PartyRecords[0x65] = 0xE;
     Battle_EndFlags = static_cast<unsigned char>(end | 8);
-    BH_AT(Handler, at::kEndWin)();
+    BH_AT(Handler, at::kEndWin.v)();
 }
 
 // original 0x43D3A0: the exit hook: ActorZero(0).
@@ -369,7 +369,7 @@ extern "C" void __cdecl Boss32_Exit(void) { ActorZero(0); }
 
 // original 0x43D670: Boss_SetupTable[33]. The hooks: end Boss33_End, exit
 // BareRet, event BareRetZero.
-extern "C" void __cdecl Boss33_Setup(void) { StoreHooks(bof3::addr::Boss33_End, bof3::addr::BareRet, bof3::addr::BareRetZero); }
+extern "C" void __cdecl Boss33_Setup(void) { StoreHooks(::bof3::Code(bof3::addr::Boss33_End), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero)); }
 
 // original 0x43D690: the end hook. With neither 0x904AE8 bit 1 nor bit 2: a
 // tail jump to 0x446E00 (step 2). Otherwise BossActor_Clear(0); after it,
@@ -377,7 +377,7 @@ extern "C" void __cdecl Boss33_Setup(void) { StoreHooks(bof3::addr::Boss33_End, 
 // dwords); the chapter's step = 8; a tail jump to 0x446DE0 (step 1).
 extern "C" void __cdecl Boss33_End(void) {
     if ((Battle_EndFlags & 6) == 0) {
-        BH_AT(Handler, at::kEndOther)();
+        BH_AT(Handler, at::kEndOther.v)();
         return;
     }
     BH_CALL(BossActor_Clear)(0);
@@ -386,7 +386,7 @@ extern "C" void __cdecl Boss33_End(void) {
     Field_Kind2X = x;
     Field_Kind2Z = z;
     MoveScript_PartyRecords[0x65] = 8;
-    BH_AT(Handler, at::kEndWin)();
+    BH_AT(Handler, at::kEndWin.v)();
 }
 
 // ===========================================================================
@@ -605,7 +605,7 @@ extern "C" U __cdecl BossMikba_Dispatch(unsigned passed) {
 // original 0x43DC10: state 0: BossMikba_Anims, BossMikba_Hook,
 // BossMikba_Sounds; +1 = 2; tail Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossMikba_Enter(void) {
-    StoreKind(AddressOf(BossMikba_Anims), bof3::addr::BossMikba_Hook, AddressOf(BossMikba_Sounds));
+    StoreKind(AddressOf(BossMikba_Anims), ::bof3::Code(bof3::addr::BossMikba_Hook), AddressOf(BossMikba_Sounds));
     return Idle();
 }
 

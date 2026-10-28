@@ -130,9 +130,9 @@ constexpr ::bof3::image::Va kScaleTable{0x663D7C};  // the scales the index read
 constexpr std::uint32_t kWindowStride = 0x24;
 
 // --- callees another group of this wave owns, and the C runtime's ------------------
-constexpr std::uint32_t kFigureDraw = bof3::addr::Shisu_DrawModel;   // R2B: the figure record drawn (one word: the record)
-constexpr std::uint32_t kPickAsk = bof3::addr::MasterScreen_PickMember;      // R2D: the master's pick, (message u16, a byte)
-constexpr std::uint32_t kGlyph = bof3::addr::BattleEquipWin_DrawBar;        // R2H: an 8 x 8 cell (x, y, u / 8, v / 8, clut, shade)
+constexpr ::bof3::image::CodeVa kFigureDraw{bof3::addr::Shisu_DrawModel};   // R2B: the figure record drawn (one word: the record)
+constexpr ::bof3::image::CodeVa kPickAsk{bof3::addr::MasterScreen_PickMember};      // R2D: the master's pick, (message u16, a byte)
+constexpr ::bof3::image::CodeVa kGlyph{bof3::addr::BattleEquipWin_DrawBar};        // R2H: an 8 x 8 cell (x, y, u / 8, v / 8, clut, shade)
 
 }  // namespace at
 }  // namespace rest_2c

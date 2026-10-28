@@ -284,11 +284,11 @@ const sh::Callee kCallees[] = {
     // Capcom's, re-listed: the room (the fourth word) logged
     {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 4, {kAll, kAll, kAll, kAll}, kG, 0, 0, {0, 16, 0, 0}, &SprintfEffect},
     // the field-standard row's swap, louder: the members rows moved too (SwapEffect)
-    {"0x58BD50", kSwapBytes, kSwapBytes, 2, {kAll, kAll}, kG, 0, 0, {}, &SwapEffect, nullptr, true},
+    {"0x58BD50", kSwapBytes.v, kSwapBytes.v, 2, {kAll, kAll}, kG, 0, 0, {}, &SwapEffect, nullptr, true},
     // the standard row, louder while TacticsMembers_Pick runs (SoundEffect)
     {G_OURS(Sound_PlayEffect), 1, {0xFFFF}, kG, 0, 0, {}, &SoundEffect},
     // nobody's yet (R4F): the Config screen's machine
-    {"0x460CB0", kConfigMachine, kConfigMachine, 0, {}, kG, 0, 0},
+    {"0x460CB0", kConfigMachine.v, kConfigMachine.v, 0, {}, kG, 0, 0},
 };
 #undef G_OURS
 
@@ -532,12 +532,12 @@ void SelfTest() {
     // DIV-0059: under a Latin overlay BattleDraw_Inject has re-aimed
     // Win2_DrawItemList's title call already, and its copy cannot be made (the
     // site no longer reaches Text_DrawAt); it is left out, and said so.
-    const U title = kTitleCall + 5u + static_cast<U>(Long(Mem(kTitleCall + 1)));
-    const bool title_plain = Mem(kTitleCall)[0] == 0xE8 && title == bof3::addr::Text_DrawAt;
+    const U title = kTitleCall.v + 5u + static_cast<U>(Long(Mem(kTitleCall.v + 1)));
+    const bool title_plain = Mem(kTitleCall.v)[0] == 0xE8 && title == bof3::addr::Text_DrawAt;
     if (!title_plain)
         bof3::Log("shadow      rest_2f: Win2_DrawItemList left out - its title call 0x%X reaches 0x%X (DIV-0059), not "
                   "Text_DrawAt; run without BOF3X_LANG",
-                  kTitleCall, title);
+                  kTitleCall.v, title);
     unsigned n = 0;
     for (unsigned k = 0; k < kCount; ++k) {
         if (k == kDrawItemList && !title_plain) continue;

@@ -350,10 +350,10 @@ const sh::Callee kCallees[] = {
     {R4B_OURS(CommuBoard_SlotHelp), 0, {}, kG, 0, 0, {}, &Stir},
     {R4B_OURS(CommuBoard_PickHelp), 1, {kW}, kG, 0, 0, {}, &Stir},
     // other groups' of this wave, by address (docs/rest_4b.md section 6)
-    {"0x456080", at::kR4ACountSlots, at::kR4ACountSlots, 0, {}, kG, 0, 0, {}, &Stir},   // R4A
-    {"0x455950", at::kR4ASettle, at::kR4ASettle, 0, {}, kG, 0, 0, {}, &Stir},           // R4A
-    {"0x459EE0", at::kR4CAsk, at::kR4CAsk, 0, {}, kG, 0, 0, {}, &Stir},                 // R4C
-    {"0x45ECC0", at::kR4EHand, at::kR4EHand, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},       // R4E: movsx words, a byte
+    {"0x456080", at::kR4ACountSlots.v, at::kR4ACountSlots.v, 0, {}, kG, 0, 0, {}, &Stir},   // R4A
+    {"0x455950", at::kR4ASettle.v, at::kR4ASettle.v, 0, {}, kG, 0, 0, {}, &Stir},           // R4A
+    {"0x459EE0", at::kR4CAsk.v, at::kR4CAsk.v, 0, {}, kG, 0, 0, {}, &Stir},                 // R4C
+    {"0x45ECC0", at::kR4EHand.v, at::kR4EHand.v, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},       // R4E: movsx words, a byte
     // ours, outside the standard set or typed otherwise, with what each reads
     {R4B_OURS(Item_NamePtr), 2, {0xFF, 0xFF}, kG, 0, 0, {}, &TextAnswer},
     {R4B_OURS(Inventory_Add), 3, {0xFF, 0xFF, 0xFF}, sh::Answer::kFlag, 0, 0, {}, &Stir},

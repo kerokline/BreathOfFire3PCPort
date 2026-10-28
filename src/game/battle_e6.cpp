@@ -72,11 +72,11 @@ unsigned char* Owner() { return At(BattleE2_Owner); }
 
 // The three pure percent helpers nobody owns: (value * percent) / 100 clamped.
 using Percent = U (__cdecl*)(U value, std::int32_t percent);
-U Percent999(U value, std::int32_t percent) { return BH_AT(Percent, at::kPercent999)(value, percent); }
-U Percent9999(U value, std::int32_t percent) { return BH_AT(Percent, at::kPercent9999)(value, percent); }
-U Percent100(U value, std::int32_t percent) { return BH_AT(Percent, at::kPercent100)(value, percent); }
+U Percent999(U value, std::int32_t percent) { return BH_AT(Percent, at::kPercent999.v)(value, percent); }
+U Percent9999(U value, std::int32_t percent) { return BH_AT(Percent, at::kPercent9999.v)(value, percent); }
+U Percent100(U value, std::int32_t percent) { return BH_AT(Percent, at::kPercent100.v)(value, percent); }
 // A BMAGIC vertex's height (Quake_VertexLift 0x4CF4B0, R3G's): ax is read.
-U CellHeight(std::int32_t x, std::int32_t z) { return BH_AT(U (__cdecl*)(std::int32_t, std::int32_t), at::kCellHeight)(x, z); }
+U CellHeight(std::int32_t x, std::int32_t z) { return BH_AT(U (__cdecl*)(std::int32_t, std::int32_t), at::kCellHeight.v)(x, z); }
 
 // The party records copied to 0x939AE0 before a transformation changes them:
 // 0x904AB0 records of 0x14C bytes, a dword at a time.

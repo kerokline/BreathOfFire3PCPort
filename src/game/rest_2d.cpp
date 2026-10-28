@@ -77,10 +77,10 @@ U Window(unsigned index, const char* who) {
 
 // --- callees by address (R2C's and R2E's, ours; named in rest_2d_callees.h) ----------------
 void MemberPanel(U x, U y, U member, U row) {
-    SH_AT(void (__cdecl*)(U, U, U, U), at::kMemberPanel)(x, y, member, row);
+    SH_AT(void (__cdecl*)(U, U, U, U), at::kMemberPanel.v)(x, y, member, row);
 }
-void MemberLabel(U x, U y, U member) { SH_AT(void (__cdecl*)(U, U, U), at::kMemberLabel)(x, y, member); }
-void PromptBox(U x, U y, U w, U h, U style) { SH_AT(void (__cdecl*)(U, U, U, U, U), at::kPromptBox)(x, y, w, h, style); }
+void MemberLabel(U x, U y, U member) { SH_AT(void (__cdecl*)(U, U, U), at::kMemberLabel.v)(x, y, member); }
+void PromptBox(U x, U y, U w, U h, U style) { SH_AT(void (__cdecl*)(U, U, U, U, U), at::kPromptBox.v)(x, y, w, h, style); }
 
 // The master's message: word [0x6644E8 + 2 * master] + k (the master byte
 // unbounded: the table is read in place).
@@ -131,7 +131,7 @@ const unsigned char* AskLine(U message) {
     const U target = YesNoLayout_MasterLineDraw();
     using Fn = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
     if (target == bof3::addr::Text_DrawAt) return SH_CALL(Text_DrawAt)(0x1B, 0x13, 0, 0xFF, MessageText(message));
-    return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(target))(0x1B, 0x13, 0, 0xFF, MessageText(message));
+    return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(::bof3::CodePlace(target)))(0x1B, 0x13, 0, 0xFF, MessageText(message));
 }
 void AskHand(U x) {
     const U target = YesNoLayout_MasterHandDraw();
@@ -140,7 +140,7 @@ void AskHand(U x) {
         SH_CALL(Menu_DrawHand)(static_cast<int>(x), 0x15, 0);
         return;
     }
-    reinterpret_cast<Fn>(static_cast<std::uintptr_t>(target))(static_cast<int>(x), 0x15, 0);
+    reinterpret_cast<Fn>(static_cast<std::uintptr_t>(::bof3::CodePlace(target)))(static_cast<int>(x), 0x15, 0);
 }
 
 // The state handlers' wait-then-message shape: once no message is open
@@ -907,7 +907,7 @@ extern "C" void __cdecl FieldMenuItems_ByState(void) {
 // the timer 5.
 extern "C" void __cdecl FieldMenuItems_Open(void) {
     SH_CALL(Menu_DrawBackdrop)(Config_Background);
-    SH_AT(void (__cdecl*)(), at::kItemsWindows)();
+    SH_AT(void (__cdecl*)(), at::kItemsWindows.v)();
     SH_CALL(Sound_PlayEffect)(0x102);
     const unsigned char state = FieldS_State;
     Rest2d_ItemsCategory = 0;
@@ -1221,7 +1221,7 @@ extern "C" void __cdecl FieldMenuItems_Close(void) {
     const auto t = static_cast<unsigned char>(B(::bof3::Img(at::kMenuTimer.v)) - 1);
     B(::bof3::Img(at::kMenuTimer.v)) = t;
     if (t != 0) return;
-    SH_AT(void (__cdecl*)(), at::kItemsReset)();
+    SH_AT(void (__cdecl*)(), at::kItemsReset.v)();
     for (unsigned char i = 0; i < static_cast<unsigned char>(SH_CALL(Party_Count)(0));) {
         const unsigned char k = i;
         ++i;

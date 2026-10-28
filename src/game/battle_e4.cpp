@@ -85,7 +85,7 @@ using VoidFn = void (__cdecl*)();
 using ActorFn = void (__cdecl*)(unsigned);
 
 // The item's flag byte (0x591810, Item_UseFlags - ours since group TWO, 2026-10-06).
-unsigned char ItemFlags(unsigned category, unsigned item) { return BH_AT(ItemFlagsFn, at::kItemFlags)(category, item); }
+unsigned char ItemFlags(unsigned category, unsigned item) { return BH_AT(ItemFlagsFn, at::kItemFlags.v)(category, item); }
 
 // jmp [table + 4 * (dword 0x904AA4 & 0xFF)]: the table's `entries`
 // handlers, a Fatal past them (the original jumps through the dword after).
@@ -132,11 +132,11 @@ void RefreshMembers() {
         auto* const member_rec = rv::As<records::PartyMember>(p);
         if (member_rec->flags & 1) std::memcpy(p + 0xA0, p + 0xC0, 0x20);
     }
-    BH_AT(VoidFn, at::kAfterEquip)();
+    BH_AT(VoidFn, at::kAfterEquip.v)();
     unsigned char n2 = B(::bof3::Img(at::kPartyCount.v));
     if (n2 == 0) return;
     for (unsigned char m = 0;;) {
-        BH_AT(ActorFn, at::kMemberRefresh)(m);
+        BH_AT(ActorFn, at::kMemberRefresh.v)(m);
         n2 = B(::bof3::Img(at::kPartyCount.v));
         ++m;
         if (m >= n2) break;
@@ -1476,7 +1476,7 @@ extern "C" void __cdecl Escape_Leave(void) {
     const long e = BH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
     BH_CALL(MapView_SetElevation)(static_cast<int>(e));
     for (unsigned k = 0; k < 8; ++k) BH_CALL(Sprite_ReleaseTint)(At(::bof3::Img(Battle_Enemies_addr) + k * at::kEnemyStride));
-    BH_AT(VoidFn, at::kEnemiesClear)();
+    BH_AT(VoidFn, at::kEnemiesClear.v)();
     BH_CALL(Battle_OpenMsgWindow)();
     const auto* const line = reinterpret_cast<const char*>(BH_CALL(Msg_SystemPtr)(0x10));
     BH_CALL(BattleBanner_Add)(2, 0, 0, 0x2D, line);

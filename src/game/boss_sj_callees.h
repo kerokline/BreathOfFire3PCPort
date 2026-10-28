@@ -59,10 +59,10 @@ constexpr ::bof3::image::Va kScriptVar3{0x903848};       // u8: movement-script 
 constexpr ::bof3::image::Va kPoseSet{0x8C5D80};          // the frame set the end hooks pose the party from
 
 // --- the callees nobody owns ------------------------------------------------
-constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
-constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () step 2
-constexpr U kEndThird = bof3::addr::BattleEnd_EnterStep3;         // () step 3
-constexpr U kRoundHigh = bof3::addr::Fixed_HighRoundUp;        // (value, sign) -> ax (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kEndWin{bof3::addr::BattleEnd_EnterStep1};           // () the end phase, step 1
+constexpr ::bof3::image::CodeVa kEndOther{bof3::addr::BattleEnd_EnterStep2};         // () step 2
+constexpr ::bof3::image::CodeVa kEndThird{bof3::addr::BattleEnd_EnterStep3};         // () step 3
+constexpr ::bof3::image::CodeVa kRoundHigh{bof3::addr::Fixed_HighRoundUp};        // (value, sign) -> ax (BE3's since round twelve: the same value)
 
 }  // namespace at
 }  // namespace boss_sj

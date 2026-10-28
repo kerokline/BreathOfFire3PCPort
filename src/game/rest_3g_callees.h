@@ -21,7 +21,7 @@ namespace rest_3g::at {
 using U = std::uint32_t;
 
 // --- callees ours, by address (through the harness) -------------------------------
-constexpr U kFadeDraw = bof3::addr::EffectKindAA_DrawFill;        // R3F's EffectKindAA_DrawFill: void(unsigned shade) - reads the argument's low byte
+constexpr ::bof3::image::CodeVa kFadeDraw{bof3::addr::EffectKindAA_DrawFill};        // R3F's EffectKindAA_DrawFill: void(unsigned shade) - reads the argument's low byte
 
 // --- kinds 0xAC, 0xAD, 0xBA ------------------------------------------------------
 constexpr ::bof3::image::Va kMember2X{0x80300C};          // ObjTrio record 2 +0x34: the third member's x, 16.16
@@ -87,13 +87,13 @@ constexpr unsigned kMapWidth = 0x60;       // cells a row of AreaMap_Corners in 
 constexpr ::bof3::image::Va kLayerLast{0x802CF4};         // DrawLayers + 0xA54: layer 0x37's list 0, buffer 0, its last link
 // The operands Widescreen_Inject (DIV-0041) and DrawPool_Grow (DIV-0062) patch
 // inside 0x510780: read back, so ours follows whichever is in place.
-constexpr U kTopBoundAt = 0x51087F;        // u16 of `cmp word [DrawItemPool_Top], 0x400`
-constexpr U kItemsAt = 0x5109FC;           // u32 of `add esi, 0x905E80` (the draw-item array)
-constexpr U kWideYAt = 0x510968;           // the operand of `fcomp [0x5C4244]` (120.0), not patched
-constexpr U kWideLoAt = 0x51097E;          // `fcomp [0x5C4240]` (-200.0)
-constexpr U kWideHiAt = 0x510991;          // `fcomp [0x5C423C]` (520.0)
-constexpr U kNarrowYAt = 0x5109A4;         // `fcomp [0x5C4238]` (121.0), not patched
-constexpr U kNarrowLoAt = 0x5109BB;        // `fcomp [0x5C4234]` (-50.0)
-constexpr U kNarrowHiAt = 0x5109D2;        // `fcomp [0x5C4230]` (370.0)
+constexpr ::bof3::image::CodeVa kTopBoundAt{0x51087F};        // u16 of `cmp word [DrawItemPool_Top], 0x400`
+constexpr ::bof3::image::CodeVa kItemsAt{0x5109FC};           // u32 of `add esi, 0x905E80` (the draw-item array)
+constexpr ::bof3::image::CodeVa kWideYAt{0x510968};           // the operand of `fcomp [0x5C4244]` (120.0), not patched
+constexpr ::bof3::image::CodeVa kWideLoAt{0x51097E};          // `fcomp [0x5C4240]` (-200.0)
+constexpr ::bof3::image::CodeVa kWideHiAt{0x510991};          // `fcomp [0x5C423C]` (520.0)
+constexpr ::bof3::image::CodeVa kNarrowYAt{0x5109A4};         // `fcomp [0x5C4238]` (121.0), not patched
+constexpr ::bof3::image::CodeVa kNarrowLoAt{0x5109BB};        // `fcomp [0x5C4234]` (-50.0)
+constexpr ::bof3::image::CodeVa kNarrowHiAt{0x5109D2};        // `fcomp [0x5C4230]` (370.0)
 
 }  // namespace rest_3g::at

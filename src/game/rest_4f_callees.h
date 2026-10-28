@@ -55,17 +55,17 @@ constexpr ::bof3::image::Va kPadNames{0x66A368};
 constexpr unsigned kPadNameCount = 6;
 // The sites and operands the divergences rewrite, read in place at every call
 // (menu_frame.cpp DIV-0011; config_text.cpp DIV-0017, DIV-0026, DIV-0051).
-constexpr std::uint32_t kPanelFrameSite = 0x461778;   // in Config_DrawPanel: E8 rel32 (Port_DroppedCall, or Menu_DrawFrame)
-constexpr std::uint32_t kPadFrameSite = 0x461A84;     // in Config_DrawControllerPanel: the same
-constexpr std::uint32_t kPadFrameW = 0x461A62;        // imm8 of its `push 0xC` (DIV-0026 / DIV-0051: 0xD)
-constexpr std::uint32_t kPadFrameH = 0x461A60;        // imm8 of its `push 0xF`
-constexpr std::uint32_t kOptionWidth = 0x4619E1;      // 3 bytes: lea eax,[eax+eax*2] (x 12 with the shl 2), or DIV-0017's shl eax,1 / nop (x 8)
-constexpr std::uint32_t kOptionBigSite = 0x4619F9;    // E8 rel32: Text_DrawAt, or DIV-0017's ConfigText_DrawSelected
-constexpr std::uint32_t kPadBoxWidth = 0x461B07;      // imm8 of `push 0x68` (DIV-0051: 0x58)
-constexpr std::uint32_t kPadNameWidth = 0x461B36;     // 3 bytes: lea eax,[ecx+ecx*2] (x 6 with the shl 1), or DIV-0026's [ecx+ecx] (x 4)
-constexpr std::uint32_t kPadNameEdge = 0x461B41;      // imm8 of `add ecx, 0x20` (DIV-0026: 0x36)
-constexpr std::uint32_t kPadNameSite = 0x461B43;      // E8 rel32: Text_DrawAt, or DIV-0026's ConfigText_DrawSelected
-constexpr std::uint32_t kPadSecondCell = 0x461BAC;    // 6 bytes: mov esi,[Gfx_PacketNext], or DIV-0051's jmp over the second cell
+constexpr ::bof3::image::CodeVa kPanelFrameSite{0x461778};   // in Config_DrawPanel: E8 rel32 (Port_DroppedCall, or Menu_DrawFrame)
+constexpr ::bof3::image::CodeVa kPadFrameSite{0x461A84};     // in Config_DrawControllerPanel: the same
+constexpr ::bof3::image::CodeVa kPadFrameW{0x461A62};        // imm8 of its `push 0xC` (DIV-0026 / DIV-0051: 0xD)
+constexpr ::bof3::image::CodeVa kPadFrameH{0x461A60};        // imm8 of its `push 0xF`
+constexpr ::bof3::image::CodeVa kOptionWidth{0x4619E1};      // 3 bytes: lea eax,[eax+eax*2] (x 12 with the shl 2), or DIV-0017's shl eax,1 / nop (x 8)
+constexpr ::bof3::image::CodeVa kOptionBigSite{0x4619F9};    // E8 rel32: Text_DrawAt, or DIV-0017's ConfigText_DrawSelected
+constexpr ::bof3::image::CodeVa kPadBoxWidth{0x461B07};      // imm8 of `push 0x68` (DIV-0051: 0x58)
+constexpr ::bof3::image::CodeVa kPadNameWidth{0x461B36};     // 3 bytes: lea eax,[ecx+ecx*2] (x 6 with the shl 1), or DIV-0026's [ecx+ecx] (x 4)
+constexpr ::bof3::image::CodeVa kPadNameEdge{0x461B41};      // imm8 of `add ecx, 0x20` (DIV-0026: 0x36)
+constexpr ::bof3::image::CodeVa kPadNameSite{0x461B43};      // E8 rel32: Text_DrawAt, or DIV-0026's ConfigText_DrawSelected
+constexpr ::bof3::image::CodeVa kPadSecondCell{0x461BAC};    // 6 bytes: mov esi,[Gfx_PacketNext], or DIV-0051's jmp over the second cell
 
 // --- the world map's exit records (Field_ExitFromCell's list) ---------------------------
 constexpr ::bof3::image::Va kExitRecords{0x653924};      // WorldMap_Records' +0x14, a data pointer

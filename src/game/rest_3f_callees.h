@@ -13,8 +13,8 @@
 namespace rest_3f::at {
 
 // --- Capcom's callees, not ours -----------------------------------------------------
-constexpr std::uint32_t kSqrt = bof3::addr::Gte_SquareRoot0;           // int (int v): fild; fsqrt; _ftol (library layer)
-constexpr std::uint32_t kStoreImage = bof3::addr::Gfx_StoreImage; // ours since group PH, the value unchanged; (const short *rect, unsigned short *to): Gfx_VramShadow's
+constexpr ::bof3::image::CodeVa kSqrt{bof3::addr::Gte_SquareRoot0};           // int (int v): fild; fsqrt; _ftol (library layer)
+constexpr ::bof3::image::CodeVa kStoreImage{bof3::addr::Gfx_StoreImage}; // ours since group PH, the value unchanged; (const short *rect, unsigned short *to): Gfx_VramShadow's
                                                     // rect copied out (renderer)
 
 // --- read-only floats of .rdata -----------------------------------------------------

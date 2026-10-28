@@ -79,7 +79,7 @@ const bh::Callee kCallees[] = {
     {"Sprite_PoseFromSet", ::bof3::addr::Sprite_PoseFromSet, KeyOf(&::Sprite_PoseFromSet), 3, {kU8, kAll, kAll}, bh::Answer::kGarbage, 0, 0},
     {"Battle_RemoveFromTurnOrder", ::bof3::addr::Battle_RemoveFromTurnOrder, KeyOf(&::Battle_RemoveFromTurnOrder), 1, {kU8},
      bh::Answer::kGarbage, 0, 0, {}, &bh::TurnOrderEffect},
-    {"0x441090", at::kRoundHigh, at::kRoundHigh, 2, {kAll, kAll}, bh::Answer::kGarbage, 0, 0},
+    {"0x441090", at::kRoundHigh.v, at::kRoundHigh.v, 2, {kAll, kAll}, bh::Answer::kGarbage, 0, 0},
     {"BossMyriaFx_Follow", 0x440EF0, 0x440EF0, 0, {}, bh::Answer::kPhase, 0, 0},
 };
 

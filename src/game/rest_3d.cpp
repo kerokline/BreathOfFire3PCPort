@@ -574,7 +574,7 @@ extern "C" void __cdecl Effect122_InflictThree(void) {
 extern "C" void __cdecl Effect123_Ability6A(void) {
     B(::bof3::Img(at::kActingKind.v)) = 4;
     SetWord(At(::bof3::Img(at::kAbility.v)), 0x6A);
-    BH_AT(Void0, at::kAbility6AHelper)();
+    BH_AT(Void0, at::kAbility6AHelper.v)();
 }
 
 // original 0x44EA90 (slot 124): HpLessDefence(2).

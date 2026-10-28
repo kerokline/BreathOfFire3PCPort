@@ -50,19 +50,19 @@ template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(s
 }  // namespace
 
 const Callees kOriginals = {
-    {Fn<Handler>(bof3::addr::BattleResultWin_NextStep), Fn<Handler>(bof3::addr::BattleResultWin_DrawExp)},
-    {Fn<Handler>(bof3::addr::BattleResultWin_NextStep), Fn<Handler>(bof3::addr::BattleResultWin_DrawZenny)},
-    Fn<unsigned char (__cdecl*)()>(kCountMembers),
-    Fn<unsigned char (__cdecl*)()>(kZennyBonus),
-    Fn<void (__cdecl*)(unsigned)>(kAddExp),
-    Fn<unsigned char (__cdecl*)(unsigned)>(kRosterIndex),
-    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(kLevelUpPending),
-    Fn<void (__cdecl*)(unsigned)>(kLevelUp),
-    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(kAddZenny),
-    Fn<void (__cdecl*)(int, int, int, int)>(kDrawFrame),
-    Fn<unsigned (__cdecl*)(unsigned)>(kExpToNext),
+    {Fn<Handler>(::bof3::Code(bof3::addr::BattleResultWin_NextStep)), Fn<Handler>(::bof3::Code(bof3::addr::BattleResultWin_DrawExp))},
+    {Fn<Handler>(::bof3::Code(bof3::addr::BattleResultWin_NextStep)), Fn<Handler>(::bof3::Code(bof3::addr::BattleResultWin_DrawZenny))},
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(kCountMembers.v)),
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(kZennyBonus.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kAddExp.v)),
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(kRosterIndex.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kLevelUpPending.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kLevelUp.v)),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kAddZenny.v)),
+    Fn<void (__cdecl*)(int, int, int, int)>(::bof3::Code(kDrawFrame.v)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kExpToNext.v)),
     Crt_sprintf, Msg_SystemPtr, PartySet_Select, Window_Alloc, File_LoadDone, Snd_LoadBankFile,
-    Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(bof3::addr::Inventory_Add),   // Inventory_Add, ours
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(::bof3::Code(bof3::addr::Inventory_Add)),   // Inventory_Add, ours
     Text_DrawAt, Text_DrawFont12, BattleWin_DrawMediumBox,
 };
 Callees g = kOriginals;

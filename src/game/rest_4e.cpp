@@ -319,7 +319,7 @@ extern "C" void __cdecl Commu_DrawPiece6(int x, int y, unsigned piece) {
 extern "C" void __cdecl CommuCursor_DrawArrow(int x, int y, unsigned steady) {
     const unsigned char green = (steady & 0xFF) != 0 ? 0xFF : Pulse();
     unsigned char* const p = Gfx_PacketNext;
-    SH_AT(void (__cdecl*)(unsigned char*), rest_4e::at::kSetPolyF3)(p);
+    SH_AT(void (__cdecl*)(unsigned char*), rest_4e::at::kSetPolyF3.v)(p);
     const int sx = S16(x), sy = S16(y);
     Put<float>(p, 8, F(sx));
     Put<float>(p, 0xC, F(sy));
@@ -584,7 +584,7 @@ extern "C" void __cdecl CommuName_CommitMember(void) {
 // original writes 5 x 255 past the names; ours aborts.
 extern "C" void __cdecl CommuName_CommitEntry(void) {
     auto name = []() -> unsigned char* {
-        const unsigned i = SH_AT(unsigned char (__cdecl*)(unsigned), rest_4e::at::kEntryNth)(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
+        const unsigned i = SH_AT(unsigned char (__cdecl*)(unsigned), rest_4e::at::kEntryNth.v)(static_cast<unsigned char>(Rest4c_Count)) & 0xFF;
         if (i >= kEntryCount)
             bof3::Fatal("CommuName_CommitEntry (0x45F650): 0x45E6D0 answered %u, past the 60 entries - the "
                         "original writes past their names (docs/rest_4e.md section 7)",

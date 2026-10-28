@@ -1070,10 +1070,10 @@ void SelfTest() {
     const void* free_windows = Clone("ItemMenu_FreeWindows", 0x449FE0, 0x20, kFreeSites);
     void* dispatch = Clone("BattleBanner_Dispatch", 0x44A5C0, 0x88, nullptr, 0);
     // Its table is built from immediates: eax (entries 0 and 3), then entries 1, 2 and 4.
-    Reaim(dispatch, 0x4, kRetOnly, As<const void*>(&StubBannerRet03));
-    Reaim(dispatch, 0x14, kBannerKind1, As<const void*>(&StubBannerKind1));
-    Reaim(dispatch, 0x1C, kBannerKind2, As<const void*>(&StubBannerKind2));
-    Reaim(dispatch, 0x28, kRetOnly, As<const void*>(&StubBannerRet4));
+    Reaim(dispatch, 0x4, kRetOnly.v, As<const void*>(&StubBannerRet03));
+    Reaim(dispatch, 0x14, kBannerKind1.v, As<const void*>(&StubBannerKind1));
+    Reaim(dispatch, 0x1C, kBannerKind2.v, As<const void*>(&StubBannerKind2));
+    Reaim(dispatch, 0x28, kRetOnly.v, As<const void*>(&StubBannerRet4));
     const void* add = Clone("BattleBanner_Add", 0x44A650, 0x89, nullptr, 0);
     const void* set = Clone("BattleBanner_Set", 0x44A6E0, 0x5B, nullptr, 0);
     const void* clear_all = Clone("BattleBanner_ClearAll", 0x44A810, 0x1B, nullptr, 0);

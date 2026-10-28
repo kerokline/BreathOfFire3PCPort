@@ -43,22 +43,22 @@ template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(s
 // name would bind to our implementation, past BOF3X_ORIGINAL).
 #pragma push_macro("BattleBossFx_Dispatch")
 #undef BattleBossFx_Dispatch
-constexpr std::uint32_t kBossFxDispatch = bof3::addr::BattleBossFx_Dispatch;
+constexpr ::bof3::image::CodeVa kBossFxDispatch{bof3::addr::BattleBossFx_Dispatch};
 #pragma pop_macro("BattleBossFx_Dispatch")
 }  // namespace
 
 const Callees kOriginals = {
     // Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2): the
     // same values by name, every entry through bof3::addr (kBossFxDispatch above).
-    {Fn<Handler>(bof3::addr::BattleStart_Dispatch), Fn<Handler>(bof3::addr::BattleInput_Dispatch),
-     Fn<Handler>(bof3::addr::BattleCommit_Dispatch), Fn<Handler>(bof3::addr::Battle_ActionPhase),
-     Fn<Handler>(bof3::addr::BattleRoundEnd_Step), Fn<Handler>(bof3::addr::BattleEnd_Step)},
-    {Fn<Handler>(bof3::addr::BattleFx_Dispatch), Fn<Handler>(bof3::addr::BattleMagicFx_Dispatch),
-     Fn<Handler>(bof3::addr::BattleMagicRow_Run), Fn<Handler>(kBossFxDispatch)},
+    {Fn<Handler>(::bof3::Code(bof3::addr::BattleStart_Dispatch)), Fn<Handler>(::bof3::Code(bof3::addr::BattleInput_Dispatch)),
+     Fn<Handler>(::bof3::Code(bof3::addr::BattleCommit_Dispatch)), Fn<Handler>(::bof3::Code(bof3::addr::Battle_ActionPhase)),
+     Fn<Handler>(::bof3::Code(bof3::addr::BattleRoundEnd_Step)), Fn<Handler>(::bof3::Code(bof3::addr::BattleEnd_Step))},
+    {Fn<Handler>(::bof3::Code(bof3::addr::BattleFx_Dispatch)), Fn<Handler>(::bof3::Code(bof3::addr::BattleMagicFx_Dispatch)),
+     Fn<Handler>(::bof3::Code(bof3::addr::BattleMagicRow_Run)), Fn<Handler>(::bof3::Code(kBossFxDispatch.v))},
     BattleTask_Create, Battle_RollDrops, Battle_DrawNumber,
     Sprite_UpdateScreen, Sprite_EnsureAnimation, Sprite_ScriptTick, Sprite_ScriptTickOnce, Rand,
-    Fn<void (__cdecl*)(unsigned)>(kRemoveFromTurnOrder), Fn<void (__cdecl*)(unsigned)>(kSetFlagBit),
-    Sprite_ReleaseTint, Fn<void (__cdecl*)(unsigned)>(kClearTurnBit), LoadDatFile, Crt_sprintf,
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kRemoveFromTurnOrder.v)), Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kSetFlagBit.v)),
+    Sprite_ReleaseTint, Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kClearTurnBit.v)), LoadDatFile, Crt_sprintf,
     Gpu_GetTPage, Gpu_SetDrawMode, Gfx_CommitPrim, Gpu_GetClut, Gpu_SetSprt,
 };
 Callees g = kOriginals;

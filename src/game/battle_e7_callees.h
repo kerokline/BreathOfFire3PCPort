@@ -14,19 +14,19 @@ namespace at {
 // --- functions of another group of this wave, or of no group ---------------
 // 0x432170 (BE1's, not merged): (member, stat 1..6) - a level's gain of one
 // stat, answered in ax (0 none). 0x597FC0 calls it twice per stat.
-constexpr std::uint32_t kStatGain = bof3::addr::Char_LevelUpGain;
+constexpr ::bof3::image::CodeVa kStatGain{bof3::addr::Char_LevelUpGain};
 // 0x59DB70 (in no group: catalogue part 7): (x, y, colour, width, clut,
 // shade) - a SPRT8 strip, 0x59D640's preview bars. Read as words and bytes.
-constexpr std::uint32_t kDrawBar = bof3::addr::BattleEquipWin_DrawBar;   // 0x59DB70, ours since round fourteen R2H
+constexpr ::bof3::image::CodeVa kDrawBar{bof3::addr::BattleEquipWin_DrawBar};   // 0x59DB70, ours since round fourteen R2H
 
 // --- the slide-out bounds of DIV-0041's faster slide ------------------------
 // The imm16 of each list's `cmp ax, imm16` (66 3D before it) in the
 // original's code: ours reads each as widescreen.cpp holds it (g_slides,
 // Capcom's at every width); the wide one is only where the list is drawn
 // (docs/ultrawide-slides.md).
-constexpr std::uint32_t kListOutBound = 0x599061;    // -0xA5 in GeneWin_ListSlideOut 0x599050
-constexpr std::uint32_t kList2OutBound = 0x599451;   // 0x15B in GeneWin_List2SlideOut 0x599440
-constexpr std::uint32_t kList3OutBound = 0x599551;   // 0x143 in GeneWin_List3SlideOut 0x599540
+constexpr ::bof3::image::CodeVa kListOutBound{0x599061};    // -0xA5 in GeneWin_ListSlideOut 0x599050
+constexpr ::bof3::image::CodeVa kList2OutBound{0x599451};   // 0x15B in GeneWin_List2SlideOut 0x599440
+constexpr ::bof3::image::CodeVa kList3OutBound{0x599551};   // 0x143 in GeneWin_List3SlideOut 0x599540
 
 // --- the cells (every one an address in BOF3.exe) ---------------------------
 // kWindowCurrent: now BattleWinStates_Current (symbols.toml). the window record a handler runs for

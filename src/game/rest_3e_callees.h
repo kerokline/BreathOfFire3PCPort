@@ -18,10 +18,10 @@ namespace rest_3e::at {
 // linked at the point, then a disc of lines round it; kind 0x5F's moving states.
 // Ours since R3F merged, the value unchanged (round fourteen's rebinding,
 // docs/round-14-cleanup.md).
-constexpr std::uint32_t kR3FRing = bof3::addr::EffectKind5F_DrawLineDisc;
+constexpr ::bof3::image::CodeVa kR3FRing{bof3::addr::EffectKind5F_DrawLineDisc};
 // The library layer's integer square root (eax read, through _ftol): the spiral's
 // shade (an FX_RAW row of scenario_harness.cpp's kEffectStd).
-constexpr std::uint32_t kSqrt = bof3::addr::Gte_SquareRoot0;
+constexpr ::bof3::image::CodeVa kSqrt{bof3::addr::Gte_SquareRoot0};
 
 // --- the leader (ObjTrio record 0) ---------------------------------------------------
 constexpr ::bof3::image::Va kLeaderX{0x802D74};        // ObjTrio +0x34, 16.16

@@ -252,11 +252,11 @@ const void* StubFor(std::uint32_t target) {
     case 0x454DC0: return f(&StubReleaseTint);
     case 0x445A30: return f(&StubApplyDamage);
     case 0x44B9F0: return f(&StubEffectApply);
-    case kItemClass: return f(&StubItemClass);
+    case kItemClass.v: return f(&StubItemClass);
     case 0x453DA0: return f(&StubDamagePopup);
-    case kApPopup: return f(&StubApPopup);
+    case kApPopup.v: return f(&StubApPopup);
     case 0x44AAD0: return f(&StubTurnCheck);
-    case kPlayCue: return f(&StubPlayCue);
+    case kPlayCue.v: return f(&StubPlayCue);
     case 0x587740: return f(&StubPlayEffect);
     case 0x454380: return f(&StubHitSound);
     case 0x454410: return f(&StubHitPopup);
@@ -289,12 +289,12 @@ constexpr Call kWaitCalls[] = {{0x121, 0x436090}};
 constexpr Call kHighOnCalls[] = {{0x2A, 0x454CC0}};
 constexpr Call kPulseCalls[] = {{0x5A, 0x454D60}};
 constexpr Call kReceiveCalls[] = {
-    {0x79, 0x44B9F0}, {0x8D, 0x445A30}, {0xF2, 0x4358D0}, {0x117, kItemClass}, {0x125, 0x4358D0}, {0x156, 0x4358D0},
-    {0x17E, 0x453DA0}, {0x1A6, kApPopup}, {0x1C8, 0x44AAD0}, {0x203, 0x454CC0}, {0x22F, kPlayCue}, {0x253, 0x587740},
+    {0x79, 0x44B9F0}, {0x8D, 0x445A30}, {0xF2, 0x4358D0}, {0x117, kItemClass.v}, {0x125, 0x4358D0}, {0x156, 0x4358D0},
+    {0x17E, 0x453DA0}, {0x1A6, kApPopup.v}, {0x1C8, 0x44AAD0}, {0x203, 0x454CC0}, {0x22F, kPlayCue.v}, {0x253, 0x587740},
     {0x26E, 0x454380}, {0x273, 0x454410}, {0x298, 0x454380}, {0x29D, 0x454410}, {0x2AB, 0x436090}};
 constexpr Call kWaitOnceCalls[] = {{0, 0x4360C0}};
 constexpr Call kHitEndCalls[] = {{0, 0x589410}, {0x1A, 0x454DC0}, {0x7C, 0x436B50}, {0xAC, 0x436B50}, {0xDD, 0x446FD0}};
-constexpr Call kFlashCalls[] = {{5, 0x587740}, {0x26, kPlayCue}, {0x34, 0x454DC0}, {0x51, 0x454CC0}};
+constexpr Call kFlashCalls[] = {{5, 0x587740}, {0x26, kPlayCue.v}, {0x34, 0x454DC0}, {0x51, 0x454CC0}};
 constexpr Call kSquashCalls[] = {{0x2C, 0x437470}};
 constexpr Call kPoseCalls[] = {{2, 0x4358D0}, {0x19, 0x436090}, {0x22, 0x4360C0}};
 
