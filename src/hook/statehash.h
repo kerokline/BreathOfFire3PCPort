@@ -13,12 +13,24 @@
 
 namespace bof3 {
 
+// Where the game's image lies, for a host that places it somewhere other than
+// BOF3.exe's own base 0x400000 (IDEAS I44 stage 3, the relocatable image):
+// the loader calls this before StateHash_BeforeInjects. Every host today maps
+// the image at 0x400000 and does not call it. From then on .data is read at
+// its place in the moved image, and every word whose value lies in the moved
+// image is hashed as at 0x400000 (docs/state-hash.md section 8). The base is
+// a multiple of 64 KiB and the image ends at or below 0x80000000; anything
+// else, or a call after the census, aborts.
+void StateHash_SetImageBase(unsigned long base);
+
 // Called by DllMain before InjectAll, with our module: reads our image's
 // extent from its PE headers and records which aligned words of .data hold a
 // pointer into BOF3.exe's image as the loader mapped it - Capcom's pointer
 // slots, the only words the hash normalises (docs/state-hash.md section 7).
 // Logs the census: the words of .data whose value already lies in our image.
-// Does nothing unless BOF3X_STATEHASH is set.
+// Does nothing unless BOF3X_STATEHASH is set - but under BOF3X_SELFTEST_ONLY
+// it first runs the hash's own self-test on synthetic pages (a page moved by a
+// constant hashes the same), whatever BOF3X_STATEHASH says.
 void StateHash_BeforeInjects(void* dll_module);
 
 // Called by DllMain after InjectAll: the same census again, the words our
