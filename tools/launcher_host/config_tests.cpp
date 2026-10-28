@@ -626,7 +626,7 @@ std::string Env(const char* name) {
 
 void ClearEnv() {
     for (const char* v : {"BOF3X_OPT", "BOF3X_CACHE", "BOF3X_CACHE_DATA", "BOF3X_LANG", "BOF3X_PSP", "BOF3X_MUSIC",
-                          "BOF3X_RUBY_KEY", "BOF3X_OFF"})
+                          "BOF3X_RUBY_KEY", "BOF3X_OFF", "BOF3X_SCALE"})
         SetEnvironmentVariableA(v, nullptr);
 }
 
@@ -736,6 +736,58 @@ void TestOff() {
     ClearEnv();
     bof3x::ConfigApplyEnvironment(game, none, false);
     Check(GetEnvironmentVariableA("BOF3X_OFF", nullptr, 0) == 0, "an empty off= sends no BOF3X_OFF");
+    ClearEnv();
+}
+
+// D395 (docs/known-defects.md): scale= 2..8 is named and goes to the game as
+// BOF3X_SCALE, 2 included; an empty or missing scale= sends nothing (the game
+// follows the display's scale) and is written back empty, so the ini can say
+// both "k = 2" and "follow the display".
+void TestScale() {
+    const std::wstring game = Temp(L"bof3x_rf_game");
+    MakeDirs(game + L"\\DAT");
+    const std::wstring a = Temp(L"bof3x_config_tests_scale_a.ini"), b = Temp(L"bof3x_config_tests_scale_b.ini");
+    struct Case {
+        const char* line;   // the ini's scale= line, or null for none
+        bool named;
+        int scale;
+        const char* sent;   // BOF3X_SCALE, or null for unset
+        const char* saved;  // the line ConfigSave writes
+    } cases[] = {
+        {"scale=2", true, 2, "2", "\r\nscale=2\r\n"},
+        {"scale=5", true, 5, "5", "\r\nscale=5\r\n"},
+        {"scale=8", true, 8, "8", "\r\nscale=8\r\n"},
+        {"scale=", false, 2, nullptr, "\r\nscale=\r\n"},
+        {nullptr, false, 2, nullptr, "\r\nscale=\r\n"},
+        {"scale=9", false, 2, nullptr, "\r\nscale=\r\n"},     // outside 2..8: dropped, as before
+        {"scale=1", false, 2, nullptr, "\r\nscale=\r\n"},
+        {"scale=two", false, 2, nullptr, "\r\nscale=\r\n"},
+    };
+    for (const Case& c : cases) {
+        const std::string what = c.line ? c.line : "no scale= line";
+        WriteAll(a, std::string("[bof3x]\r\n") + (c.line ? c.line : "") + "\r\n");
+        bof3x::Config cfg;
+        std::string err;
+        Check(bof3x::ConfigLoad(a, cfg, err) && err.empty(), (what + ": loads").c_str());
+        Check(cfg.scale_named == c.named && cfg.scale == c.scale, (what + ": named and k as read").c_str(),
+              std::to_string(cfg.scale_named) + " " + std::to_string(cfg.scale));
+        ClearEnv();
+        bof3x::ConfigApplyEnvironment(game, cfg, false);
+        Check(c.sent ? Env("BOF3X_SCALE") == c.sent : GetEnvironmentVariableA("BOF3X_SCALE", nullptr, 0) == 0,
+              (what + ": BOF3X_SCALE sent as named").c_str(), Env("BOF3X_SCALE"));
+        Check(bof3x::ConfigSave(b, cfg) && ReadAll(b).find(c.saved) != std::string::npos,
+              (what + ": written back").c_str());
+        bof3x::Config again;
+        Check(bof3x::ConfigLoad(b, again, err) && again.scale_named == cfg.scale_named && again.scale == cfg.scale,
+              (what + ": survives a save and a load").c_str());
+    }
+    bof3x::Config cfg;
+    cfg.scale = 4;
+    cfg.scale_named = true;
+    ClearEnv();
+    SetEnvironmentVariableA("BOF3X_SCALE", "3");
+    bof3x::ConfigApplyEnvironment(game, cfg, false);
+    Check(Env("BOF3X_SCALE") == "3", "an environment's BOF3X_SCALE wins over scale=", Env("BOF3X_SCALE"));
     ClearEnv();
 }
 
@@ -1148,6 +1200,8 @@ int main() {
     TestRoundTrip();
     std::printf("off= (BOF3X_OFF, the player's switch)\n");
     TestOff();
+    std::printf("scale= (D395)\n");
+    TestScale();
     std::printf("wide= (DIV-0041: off, 16:9, 21:9)\n");
     TestWide();
     std::printf("cache path code page\n");

@@ -277,7 +277,14 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
             pad_seen = true;
             input::ParsePad(key.substr(4) + "=" + value, ',', cfg.bindings.pad, cfg.bindings.layout);
         } else if (key == "scale") {
-            if (value.size() == 1 && value[0] >= '2' && value[0] <= '8') cfg.scale = value[0] - '0';
+            // D395: 2..8 is named (BOF3X_SCALE sent, 2 too); empty follows the display
+            if (value.size() == 1 && value[0] >= '2' && value[0] <= '8') {
+                cfg.scale = value[0] - '0';
+                cfg.scale_named = true;
+            } else if (value.empty()) {
+                cfg.scale = 2;
+                cfg.scale_named = false;
+            }
         }
         // An unknown key is left alone rather than rejected: a newer build's
         // file must not stop an older launcher.
@@ -344,8 +351,9 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
            "\r\n";
     out += "# 1 the picture at whole multiples of its size (DIV-0042) | 0 stretched to the window's height\r\n";
     out += std::string("snap=") + (cfg.snap ? "1" : "0") + "\r\n";
-    out += "# 2..8: the first window's size, 320 x 240 times this, until the game saves its own (bof3x.window)\r\n";
-    out += "scale=" + std::to_string(cfg.scale) + "\r\n";
+    out += "# 2..8: the first window's size, 320 x 240 times this, until the game saves its own (bof3x.window).\r\n";
+    out += "# Empty: the size follows the display's scale (2 at 100 %, 3 at 150 %, 4 at 200 %)\r\n";
+    out += "scale=" + (cfg.scale_named ? std::to_string(cfg.scale) : std::string()) + "\r\n";
     out += "# 1 the 16:9 picture, 426 x 240 | 2 the 21:9 picture, 560 x 240 (DIV-0041) | 0 the original's 320 x 240\r\n";
     out += "wide=" + std::to_string(cfg.wide) + "\r\n";
     out += "# 1 keeps the game running while its window is not in front (DIV-0033) | 0 the original's freeze\r\n";
@@ -538,7 +546,8 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
     if (GetEnvironmentVariableW(L"BOF3X_WIDE", existing, 64) == 0 && (cfg.wide == 1 || cfg.wide == 2))
         SetEnvironmentVariableW(L"BOF3X_WIDE", cfg.wide == 2 ? L"2" : L"1");
 
-    if (GetEnvironmentVariableW(L"BOF3X_SCALE", existing, 64) == 0 && cfg.scale != 2) {
+    // D395: whenever the ini named scale=, 2 included; unnamed, the game follows the display
+    if (GetEnvironmentVariableW(L"BOF3X_SCALE", existing, 64) == 0 && cfg.scale_named) {
         const wchar_t k[2] = {static_cast<wchar_t>(L'0' + cfg.scale), 0};
         SetEnvironmentVariableW(L"BOF3X_SCALE", k);
     }

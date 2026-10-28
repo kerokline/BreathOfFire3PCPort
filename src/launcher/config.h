@@ -160,8 +160,15 @@ struct Config {
     // DIV-0036 / DIV-0042: the first window's size, 320 x 240 times this,
     // 2..8 (BOF3X_SCALE), used only until the game has saved a placement of
     // its own (bof3x.window beside the dll). Not in the dialog since
-    // 2026-09-23: the window is resized instead.
+    // 2026-09-23: the window is resized instead. scale_named: the ini had a
+    // scale= line with a value 2..8, which goes to the game as BOF3X_SCALE,
+    // 2 included; an empty or missing scale= sends nothing, and the game then
+    // takes k from the display's scale (DIV-0036's 2026-10-11 amendment). Until
+    // 2026-10-28 scale=2 sent nothing and ConfigSave wrote scale=2 back for a
+    // player who named none, so the ini could neither fix k = 2 nor say
+    // "follow the display" (D395).
     int scale = 2;
+    bool scale_named = false;
     // DIV-0043: the SatPixie look (BOF3X_PRESENT=satpixie), the Look box's
     // third entry, over the point filter, with its parameters
     // (BOF3X_SATPIXIE). (Our own CRT look, DIV-0037, sat between Sharp and
