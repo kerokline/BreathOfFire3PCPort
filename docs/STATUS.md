@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-27)
+**Status:** IN PROGRESS (2026-10-28)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -8,8 +8,24 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The ledger-fields round, 2026-10-28, on `ledger-fields/round`** (off `main` `ac1682fe`, the PR #161 merge;
+LF0, four groups, an audit and a fix agent, Opus, one worktree each under `C:\Users\kerok\bof3x-runs\lf1027`,
+merged one at a time; unpushed, PR at the owner's word; [`ledger-fields-round.md`](ledger-fields-round.md), the
+three "as run" sections). **Every ledger entry now carries six machine-read fields** - `Switch:`, `Default:`,
+`Player:`, `Toward:`, `Languages:`, `State:` - and `tools/ledger_check.py` refuses an entry without them, a switch name
+nothing in `src/` or the launcher reads, or a `Player:` the names do not give; `tools/ledger_switches.py`
+measures every switch name's class from the source (in CI). Over the 184 entries: **59 a player can switch
+today, 67 `cheap`** (the original path is in our code; stage D's `BOF3X_OFF` makes them a player's), **28
+`costly`** (the original is Capcom's function alone; left, the owner's call 4), **30 `never`**; 90 list `psx`,
+16 `psp`, none `pc`. The sixth, `Languages:` (the owner's call, 2026-10-28), names the engine's tags an entry
+acts under (`any` for 137, a list for 47) so that the launcher's language pick, not a preset, decides where a
+language entry is on. No behaviour changed. Four `Reversible?` lines were corrected from the code (DIV-0006,
+0012, 0087, 0150), DIV-0037 is counted withdrawn, and one defect came of it: **D395**, `scale=2` in `bof3x.ini`
+cannot pin a window at k = 2 on a scaled desktop (the launcher's, open). Stage D - the player's switch and the
+four presets - is the next launch (HANDOFF item 2).
+
 **The away day, 2026-10-27, on `away1027/integration`** (off `main` `e84aaf6d`, the PR #156 merge; four Opus
-agents and a coordinator while the owner was away; unpushed, PR at the owner's word). The evidence is in each
+agents and a coordinator while the owner was away; merged as PR #158 the same evening). The evidence is in each
 agent's doc; one line each:
 
 - **`lang`:** `exe_own.py`'s `language` name rule now covers only its symbol's own bytes. Area 9's entry script
@@ -36,7 +52,7 @@ agent's doc; one line each:
 No DIV or D number came of it. The owner's calls and looks are in [`owner-review.md`](owner-review.md) (the
 2026-10-27 lines).
 
-**Merged since the reading-row round, everything through PR #157** (`origin/main` `0ba0f276`):
+**Merged since the reading-row round, everything through PR #161** (`origin/main` `ac1682fe`):
 
 - **The spell sweep** (PR #155, [`spell-sweep.md`](spell-sweep.md)): `tools/spell_sweep.py` casts every ability,
   enemy-only skill and consumable in the `combat` route's fight made endless, six shots a cast, with the gap watch on
@@ -47,7 +63,12 @@ No DIV or D number came of it. The owner's calls and looks are in [`owner-review
   member, and the PSP-only install's revive halo (D394) and Simoon's dusts (D245).
 - **The ledger-fields and relocatable-image rounds staged** (PR #157, docs only;
   [`ledger-fields-round.md`](ledger-fields-round.md), [`relocatable-image-round.md`](relocatable-image-round.md)):
-  not launched.
+  the ledger-fields round run through stage C on 2026-10-28 (above, unpushed); the relocatable-image round not
+  launched.
+- **After PR #157:** the away day (PR #158, above); D42, the world map's opaque dial, drawn semi-transparent as on
+  the PlayStation (PR #159, DIV-0184); the boss sweep (PR #161, [`boss-sweep.md`](boss-sweep.md)): the `battle ID` op,
+  crafted pre-fight saves and `spell_sweep.py run --fight`, fifteen fights played to the death on PC, US-disc and
+  PSP, six of the seven boss-only skills cast by their own boss.
 - **Build-difference prevention** (PR #147, `main` `95ef451a`): the static data diff
   ([`data-diff.md`](data-diff.md); `data_diff.py check` in CI, so a recipe regeneration needs a `data_diff.py run`
   over the seven discs), the every-door sweep ([`door-sweep.md`](door-sweep.md): 1,520 doors driven, the PC and the

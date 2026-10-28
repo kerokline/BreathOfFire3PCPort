@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 184 entries, DIV-0001..0184, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 184 entries, DIV-0001..0184, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -81,9 +81,132 @@ ledger stays trustworthy.
   design choice.
 - **Also in the PSX version?** yes / no / unknown — whether the archival sibling
   shows the same behaviour. This is what distinguishes a *port* bug from an
-  *original* one, and it changes how confident the fix should be.
+  *original* one, and it changes how confident the fix should be. The answer
+  is for the *original* behaviour (is the port's way the PlayStation's too?);
+  where the new behaviour is the PlayStation's, say so after the answer.
 - **Reversible?** whether it sits behind a config toggle, and the key if so.
+- **Switch:** SunderLoop | ini:<key>=<value> | env:<BOF3X_NAME>=<value> | lang | none
+- **Default:** on | off
+- **Player:** yes | cheap | costly | never
+- **Toward:** psx, psp, pc (a list) | none
+- **Languages:** any | en-US, en-150, fr-FR, de-DE, ja-JP, original (a list)
+- **State:** active | withdrawn | superseded by DIV-NNNN
 ```
+
+### The switch fields
+
+The last six lines are for a tool, not a reader: a preset ("As shipped",
+"Repaired", "Recommended", "PlayStation") is built from them, and
+`tools/ledger_check.py` checks them. `Reversible?` stays the prose it is and
+says the same thing for a person. Each field is **one line**, its value
+first; an optional " - <clause>" after the value says why where the value is
+not obvious, as on the Tier line. Added by the ledger-fields round
+([`ledger-fields-round.md`](ledger-fields-round.md) sections 1 and 6, the
+owner's calls of 2026-10-27; `Languages:`, the owner's call of 2026-10-28);
+since its stage C (2026-10-28) the checker refuses a missing field as it
+refuses a malformed one.
+
+**`Switch:`** the names that, set together, turn this entry off and nothing
+more than they must: a comma list, or `none` alone. A wider switch that also
+turns it off (a whole function's detour beside a one-byte patch of ours, the
+language beside one of its layouts) stays in `Reversible?` only, so that a
+preset which sets every listed name changes this entry and not its
+neighbours. The rule: the narrowest runtime name that turns the whole entry
+off, and among equally narrow names the best class (`yes` before `cheap`
+before `costly`). `lang` is a runtime name like any other: when no narrower
+name turns the whole entry off, the entry is `Switch: lang`, `Player: yes`.
+A build-time handle (a `loc_build.py` or importer option, a rebuilt layer)
+is never a switch, and does not make an entry `none` while the language
+turns it off; `none` is for an entry no runtime name turns off. A name is
+one of:
+
+| Form | What it is | Example |
+|---|---|---|
+| a bare name | a `BOF3X_ORIGINAL` name: the first argument of a `PatchBytes`, `RetargetCall` or `Inject` in `src/` | `SunderLoop` (DIV-0176) |
+| `ini:<key>=<value>` | a `bof3x.ini` key the launcher reads, at the value that turns the entry off | `ini:wide=0` (DIV-0041) |
+| `env:<BOF3X_NAME>=<value>` | an environment name `src/` reads and the launcher has no key for, or whose launcher key cannot ask for that value (DIV-0036's `BOF3X_SCALE=2`, DIV-0150's `BOF3X_MUSIC=seq`); an empty value means unset | `env:BOF3X_LAYERING=0` (DIV-0071) |
+| `lang` | the language is the switch: `BOF3X_LANG`, the launcher's language box | DIV-0008 |
+| `none` | nothing turns it off | DIV-0067 (withdrawn) |
+
+The checker refuses a name nothing in `src/` or the launcher reads, a probe
+(an `instrument` hook, which no name switches off), the tooling switches
+(`BOF3X_SHADOW`, `BOF3X_CALLTRACE`; a `BOF3X_ORIGINAL` name is written bare),
+and the player's switch itself (`BOF3X_OFF`, ini `off=`: stage D's switch,
+which takes these names, as `BOF3X_ORIGINAL` does, `*` and `-name` included).
+
+**`Default:`** `on` when a player who changes nothing gets the new
+behaviour (most entries; DIV-0176), `off` when it waits to be asked for (a
+cheat, an opt-in look: DIV-0045's multipliers, DIV-0012's point filter). It
+is read with the player's own choices and the install's contents as they
+are - the language, the wide picture, the cache: an entry that acts only
+under an overlay (or a wide mode, or a cache) is `on` when it acts there
+without a further change (DIV-0005); `off` is for what waits for its own
+switch to be asked for. An entry whose `Languages:` is not `any` reads
+`on - under its languages` when it is on: the language pick, not a preset,
+decides where.
+
+**`Player:`** whether the player's build (`bof3x.exe`) can turn the entry
+off. `tools/ledger_switches.py` measures it from the source, one class per
+name; the checker refuses a value the `Switch:` names do not give.
+
+| Value | Meaning | From the names' classes | Example |
+|---|---|---|---|
+| `yes` | a player can switch it today | every name a launcher key, an environment name both hosts read, or `lang` | DIV-0008 (`lang`) |
+| `cheap` | the original behaviour is in our code already; only the player's switch is missing | a `PatchBytes` or `RetargetCall` name (class `code`), none worse | DIV-0176 (`SunderLoop`) |
+| `costly` | the original is only Capcom's function, which `bof3x.exe` does not map; ours must grow the old path | a name only `Inject` takes (class `detour`), or a switch `bof3x.exe` refuses (`hosted-only`: `RefuseHostedSwitches`) | DIV-0183 (`Paralyzer_Start`) |
+| `never` | no preset turns it off: Forced (the tier says why), or one-way (the clause says why) | any; the only value for a Forced entry and for `Switch: none` | DIV-0021 (Forced), DIV-0067 |
+
+With more than one name the worst class decides. Once `src/` reads
+`BOF3X_OFF` (stage D) a `code` name is a player's switch, and `cheap` becomes
+`yes`; the checker says so.
+
+**`Toward:`** the releases whose behaviour the new behaviour matches: a
+list of `psx`, `psp`, `pc`, or `none` alone. No value implies another - the
+PSP release changed some of the PlayStation's behaviour, so `psx` does not
+imply `psp`. `psx, psp` restores what both consoles do (DIV-0184's dial,
+where the PSP was seen too); `psx` alone where only the PlayStation was
+read, or the PSP changed it; `psp` alone for one of the PSP's own changes
+(DIV-0108's battle rules); `pc` where the consoles differ and the port's way
+is kept or chosen; `none` for behaviour no release had (DIV-0176, Sunder's
+unused loop) or not measured. `psx` cites the entry's "Also in the PSX
+version?" line and rationale; `psp` only a PSP twin read, a PSP round's
+entry, or a capture of the PSP drawing the entry's own case (DIV-0160,
+DIV-0184). The list never claims more than was measured. The "PlayStation"
+preset turns on every entry that lists `psx`.
+
+**`Languages:`** the languages under which the entry's new behaviour acts,
+so that the launcher's language pick selects the entries that belong to it
+(the owner's call, 2026-10-28: explicit tags, no class names). The value is
+`any` alone - the entry does not depend on the language the player chose,
+as most do - or a comma list of distinct tags from the engine's list
+(`tools/language_tags.py` `TAGS`: `en-US`, `en-150`, `fr-FR`, `de-DE`,
+`ja-JP`) and `original` (the port's own text: `BOF3X_LANG` unset, the
+launcher's `original`). The code decides, not the prose: an entry gated by
+`Lang_Latin` lists `en-US, en-150, fr-FR, de-DE` (DIV-0058); one that acts
+under every language layer lists the five tags (DIV-0005); one carried by
+a chunk that only some layers have lists those layers' tags (DIV-0141, the
+PSP-EU layer: `en-150`; DIV-0148, the US and PAL rolls); one that acts only
+on the port's own text lists `original` (DIV-0102). A layer built from a
+disc the install may lack is still listed: the field says where the entry
+acts, not what the install holds. The rules, one each:
+
+- The checker takes the tags from `tools/language_tags.py`, so the ledger
+  cannot name a tag the engine does not know; `any` stands alone and no tag
+  repeats.
+- `Switch: lang` requires a `Languages:` other than `any`, and a
+  `Languages:` other than `any` means the language pick governs the entry:
+  it is on under those languages and inert under the others, whatever a
+  preset says.
+- Such an entry's `Default: on` reads `on - under its languages` (the
+  checker refuses another clause); `Default: off` stays for one that waits
+  for its own switch under its languages too (DIV-0155, the reading row).
+- A preset skips an entry whose `Languages:` excludes the language chosen,
+  and counts a `Switch: lang` entry as part of the language, never turning
+  it on or off against the player's pick.
+
+**`State:`** `active`; `withdrawn` (the entry stays as the record, nothing
+is left to switch: DIV-0067); or `superseded by DIV-NNNN`, an entry that
+exists. A preset never switches an entry that is not active.
 
 ### Tiers
 
@@ -202,6 +325,12 @@ designed in rather than bolted on.
 
   The output hash is tied to that encoder version; a different ffmpeg may
   produce a different — and equally valid — file.
+- **Switch:** none
+- **Default:** on
+- **Player:** never - a file the installer writes (`tools/player_sources.py`), no name the game reads; the shipped file is a broken video on every current Windows
+- **Toward:** none - the PlayStation has no AVI: not applicable (above)
+- **Languages:** any
+- **State:** active
 
 ### Refresh the save directory after writing a save
 
@@ -255,6 +384,12 @@ designed in rather than bolted on.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Save_WriteFile` runs Capcom's function
   instead ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). No config toggle; there is
   no config system yet.
+- **Switch:** Save_WriteFile
+- **Default:** on
+- **Player:** costly - an `Inject` name only (`src/game/save_io.cpp`)
+- **Toward:** psx - the PlayStation puts a new save in its slot table at once (above)
+- **Languages:** any
+- **State:** active
 
 ### Report a failed save-file open instead of crashing
 
@@ -296,6 +431,12 @@ designed in rather than bolted on.
   saves to a memory card through the BIOS.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=File_OpenWrite`
   ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). No config toggle.
+- **Switch:** File_OpenWrite
+- **Default:** on
+- **Player:** costly - an `Inject` name only (`src/game/file_io.cpp`)
+- **Toward:** none - the PlayStation saves through the BIOS: no counterpart (above)
+- **Languages:** any
+- **State:** active
 
 ### Drain queued image uploads on frames that are not rendered
 
@@ -347,6 +488,12 @@ designed in rather than bolted on.
   has the same unbounded queue is a sibling-side question.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Gfx_BeginFrame`
   ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). No config toggle.
+- **Switch:** Gfx_BeginFrame
+- **Default:** on
+- **Player:** costly - an `Inject` name only (`src/game/gfx_frame.cpp`)
+- **Toward:** none - whether the PlayStation's queue is unbounded too is not read (above)
+- **Languages:** any
+- **State:** active
 
 ### Walk a language overlay after each `DAT` file
 
@@ -410,6 +557,12 @@ designed in rather than bolted on.
   nine button areas a layer's text carries a button code before each button
   mention, and the dialogue draws the button the Config has put that role on.
 - **Reversible?** Yes: unset `BOF3X_LANG`, or `BOF3X_ORIGINAL=LoadDatFile`.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes - `BOF3X_ORIGINAL=LoadDatFile` is wider: our loader also walks DIV-0086's layers and DIV-0089's cache
+- **Toward:** none - each PlayStation language is its own build (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - every layer is walked, whichever tag is set (`src/game/dat_load.cpp:249`)
+- **State:** active
 
 ### Advance the dialogue pen by the glyph's width
 
@@ -493,7 +646,18 @@ designed in rather than bolted on.
   narration and the menus seen and "looks great" (2026-09-20); the choice
   lists at 8 px are owed a second look.
 - **Also in the PSX version?** The Western builds, yes, as a constant.
-- **Reversible?** Yes: `BOF3X_ORIGINAL=MsgBox_DrawChar`, or load no kind-4 chunk.
+- **Reversible?** Yes: load no kind-4 chunk (play without `BOF3X_LANG`).
+  `BOF3X_ORIGINAL=MsgBox_DrawChar` leaves only the call at `0x497A22` alone,
+  which Capcom's `MsgBox_Step` makes (with `BOF3X_ORIGINAL=MsgBox_Step`): our
+  stepper calls `MsgBox_DrawChar` itself (`src/game/msgbox.cpp`), and
+  `Text_DrawString` and `Text_DrawImmediate` take the table whatever the
+  switch says (corrected 2026-10-28, the ledger-fields round).
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes - `BOF3X_ORIGINAL=MsgBox_DrawChar` alone no longer turns it off (Reversible? above)
+- **Toward:** psx - the Western builds advance by their cell's width, 8, as a constant; the table gives 8 but for DIV-0009's two glyphs
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - every layer's font carries kind 4, the Japanese one too (`tools/loc_build.py` `build_font`)
+- **State:** active
 
 ### Move the system message pool out of the area script's way
 
@@ -537,6 +701,12 @@ designed in rather than bolted on.
 - **Reversible?** Yes: unset `BOF3X_LANG`; `BOF3X_ORIGINAL=Msg_SystemPtr`
   alone is NOT safe with it set (the original would read an arena the pool
   was never copied to).
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes - `BOF3X_ORIGINAL=Msg_SystemPtr` alone is not safe with an overlay (above)
+- **Toward:** psx - the US release moved the pool out of the script's way too, to `0x8001A000` (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - the pool moves whenever a language is set (`src/game/dat_load.cpp:847`)
+- **State:** active
 
 ### Item and ability names, and the system pool, from a language overlay
 
@@ -587,6 +757,12 @@ designed in rather than bolted on.
 - **Also in the PSX version?** Each language is its own build with its own
   tables.
 - **Reversible?** Yes: unset `BOF3X_LANG`. The write is to process memory.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes
+- **Toward:** psx - the US release's own names and pools, verbatim (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - every layer carries the names, a Japanese disc's too (`tools/loc_build.py` `build_all`, `convert_names`)
+- **State:** active
 - **Amended 2026-10-08 (DIV-0086):** `NameTables_Apply` accepts a run of
   records too (a kind-5 chunk whose tag is any record's name field and whose
   size is a whole number of records), for the `opt/` name layers; whole-table
@@ -625,6 +801,12 @@ designed in rather than bolted on.
 - **Also in the PSX version?** no - the US release, this entry's original,
   advances every character by 8 (above).
 - **Reversible?** Yes: build the overlays with `--mono`.
+- **Switch:** lang - the overlay's font; `loc_build.py --mono` is a build-time choice, not a switch
+- **Default:** on - under its languages; `tools/loc_build.py` builds the overlays tightened unless `--mono`
+- **Player:** yes - the language box
+- **Toward:** none - the US release advances every character by 8 (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE - the Latin table's rule (`tools/loc_build.py` `build_table`); the Japanese font keeps its own advances
+- **State:** active
 
 ### Give a sprite's last texel row and column their share of the screen
 
@@ -679,6 +861,12 @@ designed in rather than bolted on.
   else). With both, the handlers are Capcom's. Either gives exactly
   Capcom's texture coordinates: `BOF3X_SHADOW=sprt_draw` checks ours with
   `SpriteFarEdge` off byte for byte against copies of Capcom's bytes.
+- **Switch:** SpriteFarEdge
+- **Default:** on
+- **Player:** cheap - `PatchBytes("SpriteFarEdge")` in our handlers (`src/game/sprt_draw.cpp`)
+- **Toward:** psx - the PlayStation's GPU copies a sprite texel for texel, the last as wide as the first (above)
+- **Languages:** any
+- **State:** active
 - **Checked:** attract run, no crash, oracle unaffected (render only);
   screenshots original against ours in `analysis/d1/`: no seams, sprites
   drawn at a true 2x where the original stretched w - 1 texels over w pixels
@@ -722,6 +910,12 @@ designed in rather than bolted on.
   places one piece a tile where the PlayStation placed one sprite a strip.
 - **Also in the PSX version?** no - the PlayStation draws the frame.
 - **Reversible?** `BOF3X_ORIGINAL=Menu_DrawFrame`.
+- **Switch:** Menu_DrawFrame
+- **Default:** on
+- **Player:** cheap - `RetargetCall("Menu_DrawFrame")` at the four frame calls (`src/game/menu_frame.cpp`)
+- **Toward:** psx - the PlayStation draws the frame (above)
+- **Languages:** any
+- **State:** active
 - **Checked:** start-up validates both call sites (`retarget ON` lines), and
   an attract run is unaffected. **Not yet seen in game** - the attract
   sequence opens no menu; owner to look at Config, and at the controller
@@ -756,7 +950,19 @@ designed in rather than bolted on.
   exact 2x.
 - **Also in the PSX version?** the PlayStation does not filter: point
   sampling is its look.
-- **Reversible?** opt-in; and `BOF3X_ORIGINAL=Gfx_FilterPoint`.
+- **Reversible?** opt-in: `filter=point` in `bof3x.ini` (`BOF3X_FILTER=point`);
+  `filter=linear`, the default, is the original's. `BOF3X_ORIGINAL=Gfx_FilterPoint`
+  skips only the patch of Capcom's set-up, which serves
+  `BOF3X_ORIGINAL=Display_Setup`; under our Direct3D 11 back end (DIV-0031) the
+  filter is our `Display_Setup`'s own reading of `BOF3X_FILTER`
+  (`src/game/display_setup.cpp`), and the name changes nothing (corrected
+  2026-10-28, the ledger-fields round).
+- **Switch:** ini:filter=linear
+- **Default:** off - opt-in: `filter=point`
+- **Player:** yes
+- **Toward:** psx - the PlayStation does not filter: point sampling is its look (above)
+- **Languages:** any
+- **State:** active
 - **Checked:** the owner played a session launched this way, 2026-09-20
   (`analysis/d1/point/`): menu, numerals, portraits and the reserve list's
   frame all crisp, nothing missing.
@@ -786,6 +992,12 @@ designed in rather than bolted on.
   `BOF3X_LANG=en` (names not yet converted) are drawn with the darker ramp.
 - **Also in the PSX version?** this restores the PSX values.
 - **Reversible?** rebuild with `--pc-white`, or play without `BOF3X_LANG`.
+- **Switch:** lang - the overlay's shades; `--pc-white` is a build-time choice, not a switch
+- **Default:** on - under its languages; `tools/loc_build.py` writes the disc's shades unless `--pc-white`
+- **Player:** yes - the language box
+- **Toward:** psx - the disc's own shades (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - every disc's white row, the US and the JP alike (`tools/loc_build.py` `build_white_clut`)
+- **State:** active
 - **Checked:** live VRAM row 0 reads the disc's values in an attract run;
   dialogue before and after in `analysis/d1/cmp_white.png` - dark shadow.
 
@@ -829,6 +1041,12 @@ designed in rather than bolted on.
 - **Reversible?** play without `BOF3X_LANG`, or delete `en.START.DAT`;
   `BOF3X_ORIGINAL=TitleMenu_Widths` keeps the original widths (the English
   rows are then cut off - for A/B only).
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes - `BOF3X_ORIGINAL=TitleMenu_Widths` keeps the widths only (for A/B)
+- **Toward:** psx - the first two rows are the PlayStation's lettering; the third row is ours (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - a Japanese layer carries the page too: its sheet is the US one
+- **State:** active
 - **Checked:** an offline composition through CLUT 0 at the draw's positions,
   seen by the owner ("perfect"). **In game, 2026-09-21**: captured by input
   recipe ([`input-script.md`](input-script.md) §5; the cursor starts on LOAD
@@ -918,6 +1136,12 @@ designed in rather than bolted on.
   label pointers and the seven layout numbers - so the labels stay Chinese and
   the layout is the original's, while the options and controller names, which
   are data writes rather than patches, are English. For A/B only.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes - `BOF3X_ORIGINAL=ConfigText` leaves the options and the controller names in the overlay's language (for A/B)
+- **Toward:** psx - the PlayStation's own text, its quirks included (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE - kind 7 is not built for a Japanese disc (`tools/loc_build.py` `build_all`); PSP-EU's is DIV-0141's
+- **State:** active
 - **Checked:** the extractor reproduces the owner's screenshot of the
   PlayStation screen string for string (2026-09-20), and a read-only
   `ReadProcessMemory` sample of the running game decodes all twenty-nine
@@ -984,6 +1208,12 @@ designed in rather than bolted on.
   the size it draws them. The guard has no PSX counterpart in evidence.
 - **Reversible?** play without `BOF3X_LANG`: the table is the shipped one, the
   count is `0x993` and the bound is the original's `0xA00`.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes
+- **Toward:** psx - the 8 x 8 cells are the PlayStation's own; the guard has no PSX counterpart in evidence (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - the 8 x 8 cells are a Latin layer's; the guard follows every layer's table
+- **State:** active
 - **Checked:** the table builds at 2,661 glyphs (`0xA65`, the last a blank
   for the space), the advance chunk follows it, and the game loaded the
   doubled build of both with no trap and no crash
@@ -1027,6 +1257,12 @@ designed in rather than bolted on.
   began off the panel's edge, under the cursor.
 - **Also in the PSX version?** Yes - this is the PlayStation's behaviour.
 - **Reversible?** play without `BOF3X_LANG`, or `BOF3X_ORIGINAL=ConfigText`.
+- **Switch:** ConfigText
+- **Default:** on - under its languages
+- **Player:** cheap - `PatchBytes` and `RetargetCall` under "ConfigText" (`src/game/config_text.cpp`), which also take DIV-0015's label pointers
+- **Toward:** psx - the PlayStation's behaviour (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/config_text.cpp:403`)
+- **State:** active
 - **Checked:** builds and links; the two call sites and both byte patches are
   validated against the original bytes at start-up. **Seen in game by the
   owner, 2026-09-21: "looks perfect"** - the lowercase `g` is what shows the
@@ -1072,6 +1308,12 @@ designed in rather than bolted on.
   US verbs are abbreviated to fit its buttons.
 - **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=MenuVerbs` keeps
   the original centring (for A/B only - the English labels then sit left).
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes - `BOF3X_ORIGINAL=MenuVerbs` keeps the centring only (for A/B)
+- **Toward:** psx - the PlayStation's strings (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE - kind 8 is not built for a Japanese disc; the centring is under `Lang_Latin` (`src/game/menu_verbs.cpp:140`)
+- **State:** active
 - **Checked:** the chunk's 22 slots are validated against the pointer table
   before any write; captured by input recipe 2026-09-21 on the Config screen
   (`Quit`, `Init`) and on Items, Ability, Equipment and Tactics
@@ -1107,6 +1349,12 @@ designed in rather than bolted on.
   disc's wording over authored English.
 - **Also in the PSX version?** Yes - the PlayStation's strings.
 - **Reversible?** play without `BOF3X_LANG`.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes
+- **Toward:** psx - the PlayStation's strings (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE - kind 9 is not built for a Japanese disc (`tools/loc_build.py` `build_all`)
+- **State:** active
 - **Checked:** captured by `tools/recipes/battle_commands.txt`, 2026-09-21:
   all seven, each in its box, Chg on L1 and Esc on R1. Still Chinese in the
   same fight: the target-select banner (`攻 击`, seen when L2 confirmed
@@ -1140,6 +1388,12 @@ designed in rather than bolted on.
   PlayStation also asks for Ryu's, which the port does not
   ([`save-interchange.md`](save-interchange.md) §2).
 - **Reversible?** play without `BOF3X_LANG`.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes
+- **Toward:** psx - the PlayStation's default names; it also asks for Ryu's, which the port does not (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE - kind 10 is not built for a Japanese disc (`tools/loc_build.py` `build_all`)
+- **State:** active
 - **Checked:** captured 2026-09-21 in the new game's battle: "Whelp" in the
   turn banner and the status bar. **Not changed: saves.** A loaded save
   carries its own names, so a game begun without the overlay keeps its
@@ -1205,6 +1459,12 @@ designed in rather than bolted on.
   frames, all identical to the original (`ab17_*`).
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Gte_MulMatrix0`. That puts back the
   original product, and every caller of ours reaches it. No config toggle.
+- **Switch:** Gte_MulMatrix0
+- **Default:** on
+- **Player:** never - Forced: the original's bytes 18..19 are stale stack
+- **Toward:** none - the PlayStation stores m[2][2]'s sign extension there; ours agrees only when it is not negative (above)
+- **Languages:** any
+- **State:** active
 
 
 ### The game's clock starts with the game
@@ -1267,6 +1527,12 @@ designed in rather than bolted on.
   game's speed is recovered.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Game_Clock` leaves the slot on
   Windows' clock. No config toggle.
+- **Switch:** Game_Clock
+- **Default:** on
+- **Player:** cheap - `PatchBytes("Game_Clock")` on the exe's import slot (`src/game/game_clock.cpp`)
+- **Toward:** none - the PlayStation paces by vertical blank: not applicable (above)
+- **Languages:** any
+- **State:** active
 
 
 ### Zeros in a map cell's vertex padding
@@ -1308,6 +1574,12 @@ designed in rather than bolted on.
   pad word differing 16,095 times; then the batch check of 2026-09-21 -
   oracle, memory dump and frame hash identical (`ab18_*`).
 - **Reversible?** Yes: `BOF3X_ORIGINAL=MapCell_DrawQuads`. No config toggle.
+- **Switch:** MapCell_DrawQuads, Sprite_ProjectA, MapCell_DrawFrames, MapCell_DrawShaded, MapCell_DrawSpinning, Mode11_ObjectDraw
+- **Default:** on
+- **Player:** never - Forced: the original's pad is stale stack
+- **Toward:** none - the PlayStation leaves the pad unwritten too, and its GTE drops it (above)
+- **Languages:** any
+- **State:** active
 - **Also, 2026-09-22: `Sprite_ProjectA` `0x57B860`** (the party objects'
   screen update, [`field-frame.md`](field-frame.md) section 4) builds one
   vertex the same way and never writes its fourth word; `Gte_LoadVertex`
@@ -1359,6 +1631,12 @@ designed in rather than bolted on.
 - **Verification:** the start-up fuzz, `BOF3X_SHADOW=object_kinds`, seeds
   sub-states 0..3 only; controls in object-kinds.md.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Field_ObjectFadeOut,Field_ObjectFadeIn`.
+- **Switch:** Field_ObjectFadeOut, Field_ObjectFadeIn
+- **Default:** on
+- **Player:** never - Forced: the original jumps into another function's body
+- **Toward:** none - the PlayStation reaches a data word past its tables, not a stop (above)
+- **Languages:** any
+- **State:** active
 
 ### Glyphs sample texel centres
 
@@ -1425,6 +1703,12 @@ designed in rather than bolted on.
   evening, at scale 4: "the lettering looks perfect so far".**
 - **Reversible?** Yes: `BOF3X_ORIGINAL=GlyphTexelCentres` (our function,
   Capcom's arithmetic) or `BOF3X_ORIGINAL=D3d_DrawGlyph` (Capcom's function).
+- **Switch:** GlyphTexelCentres
+- **Default:** on
+- **Player:** cheap - `PatchBytes("GlyphTexelCentres")` in our glyph handler (`src/game/glyph_draw.cpp`)
+- **Toward:** psx - the PlayStation's GPU samples whole texels and has no such edge (above)
+- **Languages:** any
+- **State:** active
 
 ### The Config screen's controller panel: names at their own width, in the dialogue font, inside a wider frame
 
@@ -1459,6 +1743,12 @@ designed in rather than bolted on.
   now", the frame "Perfect!".
 - **Reversible?** Yes: `BOF3X_ORIGINAL=ConfigController`. Only under a
   language overlay, not with `BOF3X_LANG=original`.
+- **Switch:** ConfigController
+- **Default:** on - under its languages
+- **Player:** cheap - `PatchBytes` and `RetargetCall` under "ConfigController" (`src/game/config_text.cpp`), which also take DIV-0051's panel widths
+- **Toward:** none - not applicable: the text is the overlay's (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/config_text.cpp:403`)
+- **State:** active
 
 ### The Yes / No chooser laid out for Latin text
 
@@ -1508,6 +1798,12 @@ designed in rather than bolted on.
   most, they think, which would come close but should fit.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=YesNoLayout`. Only under a language
   overlay, not with `BOF3X_LANG=original`.
+- **Switch:** YesNoLayout
+- **Default:** on - under its languages
+- **Player:** cheap - `PatchBytes` under "YesNoLayout" (`src/game/yes_no_layout.cpp`)
+- **Toward:** none - the US disc moved the stops too, by numbers its unread code holds (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/yes_no_layout.cpp:346`)
+- **State:** active
 - **Amended 2026-10-03 (fix wave, group YN; [`yes-no-prompts.md`](yes-no-prompts.md)):**
   the owner's captures of 2026-09-30 and 2026-10-03 found the same fault on
   choosers `Menu_YesNo` does not reach: the hand a word short of `Yes`, and
@@ -1652,6 +1948,12 @@ designed in rather than bolted on.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=MusicFadePerFrame` (our function,
   Capcom's per-spin steps) or `BOF3X_ORIGINAL=Sound_Tick` (Capcom's
   function).
+- **Switch:** MusicFadePerFrame
+- **Default:** on
+- **Player:** cheap - `PatchBytes("MusicFadePerFrame")` sets our flag (`src/game/sound.cpp`)
+- **Toward:** psx - the PlayStation counts its fades in frames (above)
+- **Languages:** any
+- **State:** active
 
 ### The save / load slot's name two units further in
 
@@ -1684,6 +1986,12 @@ designed in rather than bolted on.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=SaveNameInset`. Only under a
   language overlay, not with `BOF3X_LANG=original` (it rides in
   `YesNoLayout_Inject`, `src/game/yes_no_layout.cpp`).
+- **Switch:** SaveNameInset
+- **Default:** on - under its languages
+- **Player:** cheap - `PatchBytes("SaveNameInset")` (`src/game/yes_no_layout.cpp`)
+- **Toward:** none - no cut to fix there: the PlayStation draws its own font (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin`: it rides in `YesNoLayout_Inject` (`src/game/yes_no_layout.cpp:346`)
+- **State:** active
 - **Since round twelve (2026-09-29):** the panel is ours
   (`Menu_DrawSaveSlot`, `src/game/field_o.cpp`, [`field_o.md`](field_o.md)
   section 2). It reads the disp8 at `0x576A48` back - `0x13` or this entry's
@@ -1745,6 +2053,12 @@ designed in rather than bolted on.
   identical, 5 not (the speckle above).
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Menu_DrawBackdrop` (Capcom's function,
   stack read and all).
+- **Switch:** Menu_DrawBackdrop
+- **Default:** on
+- **Player:** never - Forced: the original reads its own stack past a four-entry array
+- **Toward:** none - the PlayStation reads its stack frame there too (above)
+- **Languages:** any
+- **State:** active
 
 ### Draw through Direct3D 11 behind DirectX 6's objects, with no exclusive display mode
 
@@ -1801,6 +2115,12 @@ designed in rather than bolted on.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Display_Setup` runs Capcom's set-up,
   and with it Capcom's DirectDraw, Direct3D 3 and every path above,
   untouched (`gfx_filter.cpp`'s patch of its filter bytes serves that path).
+- **Switch:** Display_Setup
+- **Default:** on
+- **Player:** costly - an `Inject` name only (`src/game/display_setup.cpp`)
+- **Toward:** none - the PlayStation's GPU: not applicable (above)
+- **Languages:** any
+- **State:** active
 
 ### Window modes: a resizable window, or a borderless window the size of the monitor
 
@@ -1849,6 +2169,12 @@ designed in rather than bolted on.
   runs Capcom's window and loop (the FMV player is DIV-0035's switch). Not
   with the backend in fullscreen: Capcom's WinMain would make its
   captioned desktop-sized window again, which is the report above.
+- **Switch:** Game_WinMain, Game_WndProc, Cursor_Sync, Display_WindowMoved, Display_DeviceName
+- **Default:** on
+- **Player:** costly - `Inject` names only (`src/game/win_main.cpp`)
+- **Toward:** none - a console has no window (above)
+- **Languages:** any
+- **State:** active
 
 ### The game keeps running while its window is not in front
 
@@ -1887,6 +2213,12 @@ designed in rather than bolted on.
 - **Reversible?** Yes, `BOF3X_BACKGROUND=0` / the launcher box, without
   switching the loop back to Capcom's; `BOF3X_ORIGINAL=Game_WndProc` also
   restores it, along with the rest of WndProc.
+- **Switch:** ini:background=0
+- **Default:** on
+- **Player:** yes
+- **Toward:** none - a console has no other window (above)
+- **Languages:** any
+- **State:** active
 
 ### Frame debt is dropped, not replayed
 
@@ -1914,6 +2246,12 @@ designed in rather than bolted on.
 - **Verification:** [`window-modes.md`](window-modes.md) §4.
 - **Reversible?** With the loop: `BOF3X_ORIGINAL=Game_WinMain`. No switch
   of its own.
+- **Switch:** Game_WinMain
+- **Default:** on
+- **Player:** costly - no switch of its own: the loop's `Inject` (`src/game/win_main.cpp`)
+- **Toward:** none - the PlayStation's loop is VSync-driven (above)
+- **Languages:** any
+- **State:** active
 
 ### The FMVs play into the window, at an integer scale, with no mode-set
 
@@ -1953,6 +2291,12 @@ designed in rather than bolted on.
   window procedure through Capcom's addresses since the review of
   2026-09-23, so each name's switch holds on its own; before, it called
   ours directly and the switch did nothing under our WinMain.)
+- **Switch:** Fmv_Play
+- **Default:** on
+- **Player:** costly - an `Inject` name only (`src/game/fmv_play.cpp`)
+- **Toward:** none - the PlayStation streams its movies through the CD subsystem (above)
+- **Languages:** any
+- **State:** active
 
 ### The picture is drawn at an integer multiple of 320 x 240 chosen for the window
 
@@ -1986,6 +2330,14 @@ designed in rather than bolted on.
   so the window opens the same apparent size as before and the player
   resizes from there (the owner's rule, 2026-10-11). The hosted build is
   told 96 dpi and keeps k = 2. `DisplaySetup_WindowedScale`.
+  **Amended 2026-10-28 (the ledger-fields round):** the "Window size" box
+  above left the dialog on 2026-09-23 (`src/launcher/config.h:152..155`), and
+  `scale=2` is no longer "unset" in effect: the launcher sets `BOF3X_SCALE`
+  only for a `scale=` other than 2 (`src/launcher/config.cpp:529`), so a
+  `scale=2` in `bof3x.ini` gives the display's k of the 2026-10-11 amendment:
+  on a scaled desktop k = 3 at 150 %, 4 at 200 % (D395). Only
+  `BOF3X_SCALE=2` in the environment fixes a window at 2, hence the
+  `Switch:` below.
 - **Rationale:** the owner's rule, 2026-09-23: "windowed options should be
   the available fixed k values, fullscreen uses largest k that will fit", k
   picked at start-up only. Polygon edges and 3D geometry are then drawn at
@@ -2001,6 +2353,12 @@ designed in rather than bolted on.
   original's picture; `BOF3X_SCALE=2` in the environment fixes a window at 2.
   A borderless window always fits its monitor. `BOF3X_ORIGINAL=Display_Setup`
   is Capcom's set-up, at 640 x 480.
+- **Switch:** ini:display=windowed, env:BOF3X_SCALE=2
+- **Default:** on
+- **Player:** yes - a window at k = 2 is the 640 x 480 picture; the launcher sets `BOF3X_SCALE` only for a `scale=` other than 2 (`src/launcher/config.cpp`), so the variable, not the key
+- **Toward:** none - the PlayStation draws 320 x 240 (above)
+- **Languages:** any
+- **State:** active
 
 ### An optional CRT look: scanlines and halation
 
@@ -2038,6 +2396,12 @@ designed in rather than bolted on.
   player who had the look on keeps *a* CRT rather than none. The entry
   stays as the record of what was built (`git log -- src/render/crt.cpp`,
   [`crt-look.md`](crt-look.md) §1-4); DIV-0043 is the CRT look now.
+- **Switch:** none
+- **Default:** off - it was opt-in
+- **Player:** never - withdrawn 2026-09-27: nothing is left to switch (`screen=crt` now means SatPixie, DIV-0043)
+- **Toward:** none
+- **Languages:** any
+- **State:** withdrawn
 
 ### F9's pause lines in the overlay's language
 
@@ -2091,6 +2455,12 @@ designed in rather than bolted on.
   unchanged against the installed ones; the in-game check for fr, de and ja
   is owed ([`new-code-audit.md`](new-code-audit.md) A2).
 - **Reversible?** `BOF3X_ORIGINAL=PauseText`, or no `BOF3X_LANG`.
+- **Switch:** PauseText
+- **Default:** on - under its languages, in a layer that carries the lines (kind 14)
+- **Player:** cheap - `PatchBytes("PauseText")` (`src/game/pause_text.cpp`)
+- **Toward:** none - the console has no F9 (above)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - kind 14 in every layer (`tools/loc_build.py` `PAUSE_LINES`: en, fr, de, ja)
+- **State:** active
 
 ### The window's title and the missing-disc box in English
 
@@ -2114,6 +2484,12 @@ designed in rather than bolted on.
 - **Verification:** built; the title is seen at the next run.
 - **Reversible?** `BOF3X_ORIGINAL=Game_WinMain` (Capcom's window, with the
   rest of DIV-0032..0036).
+- **Switch:** Game_WinMain
+- **Default:** on
+- **Player:** costly - no switch of its own: the loop's `Inject` (`src/game/win_main.cpp`)
+- **Toward:** none - no window, no probe on a console (above)
+- **Languages:** any
+- **State:** active
 
 ### F7 and F11 do nothing
 
@@ -2127,6 +2503,11 @@ designed in rather than bolted on.
   cycled a name and both readouts went to the log.
 - **New behaviour:** neither key does anything, beyond ending a pause as
   every non-F9 key does. F8, F9 and F12 are unchanged.
+  **Amended 2026-10-28 (the ledger-fields round):** neither key is idle any
+  more - F7 quick-loads since the quicksave round (DIV-0145,
+  `src/game/win_main.cpp:486..489`) and F11 writes the frame to a file
+  (tooling, `:499..502`). What this entry removed, the renderer cycle and the
+  frame-rate readout, stays gone.
 - **Rationale:** the owner, 2026-09-23: "those aren't really necessary as
   function keys". With the backend there is one device.
 - **Also in the PSX version?** No.
@@ -2137,6 +2518,12 @@ designed in rather than bolted on.
   is not an entry of its own; F7 still does nothing.
 - **Reversible?** `BOF3X_ORIGINAL=Game_WndProc` (Capcom's window procedure,
   which also brings back the unfocused freeze).
+- **Switch:** Game_WndProc
+- **Default:** on
+- **Player:** costly - no switch of its own: the window procedure's `Inject` (`src/game/win_main.cpp`)
+- **Toward:** none - not on a console (above)
+- **Languages:** any
+- **State:** active
 
 ### A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side
 
@@ -2850,6 +3237,12 @@ designed in rather than bolted on.
   90); captures of 31, 90 and 198 framed and 149, 154 and 186 unframed at
   16:9 and 21:9 (PX). **Owed:** the owner's play of the three framed areas
   (the three-area build not yet seen). **Reversible:** `BOF3X_PILLARBOX=0`.
+- **Switch:** ini:wide=0
+- **Default:** off - `wide=0` is the launcher's default (`src/launcher/config.h`)
+- **Player:** yes
+- **Toward:** psp - the PSP widens the view too, by 32 columns into a cropped 384 x 216; the amendment of 2026-10-12 takes its per-element choices (above)
+- **Languages:** any
+- **State:** active
 
 ### The window resizes freely; the picture snaps to whole multiples or fills the height
 
@@ -2908,6 +3301,12 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_SNAP` unset and the window left at 2x is
   DIV-0036's picture; `BOF3X_ORIGINAL=Game_WndProc` is Capcom's window
   procedure (no `WM_SIZING`, no rescale).
+- **Switch:** Game_WndProc
+- **Default:** on
+- **Player:** costly - `snap=` chooses between this entry's two rules and turns neither off; the window procedure's `Inject` (`src/game/win_main.cpp`)
+- **Toward:** none - not on a console (above)
+- **Languages:** any
+- **State:** active
 
 ### An optional second CRT look: SatPixie, with its parameters in the launcher
 
@@ -2944,6 +3343,12 @@ designed in rather than bolted on.
   mural. Owed: the owner's tuning; the dialog's sliders by hand (only
   tried by code).
 - **Reversible?** The Look box's other entries; `BOF3X_PRESENT` unset.
+- **Switch:** ini:screen=clean
+- **Default:** off - the Look box's default is the clean picture
+- **Player:** yes
+- **Toward:** none
+- **Languages:** any
+- **State:** active
 
 ### A primitive's corner at depth 0 is drawn at the nearest depth: the world map's compass needle
 
@@ -2988,6 +3393,12 @@ designed in rather than bolted on.
   owner's eye in game, turning the map.
 - **Reversible?** No switch of its own; `BOF3X_ORIGINAL=Display_Setup`
   returns to Capcom's DirectDraw device, where the needle vanishes again.
+- **Switch:** Display_Setup
+- **Default:** on
+- **Player:** costly - no switch of its own: the Direct3D 11 back end's (`src/render/render_shim.cpp`), under the set-up's `Inject`
+- **Toward:** psx - the needle the PlayStation draws (above)
+- **Languages:** any
+- **State:** active
 
 ### The EXP and zenny won in battle, times a launcher slider
 
@@ -3019,6 +3430,12 @@ designed in rather than bolted on.
   watched by the owner: "30xp scaling correctly from 3". Owed: the zenny
   line read off the results screen.
 - **Reversible?** Yes: the sliders at 1, or the variables unset.
+- **Switch:** ini:cheat.exp=1, ini:cheat.zenny=1
+- **Default:** off - the sliders start at 1
+- **Player:** yes
+- **Toward:** none
+- **Languages:** any
+- **State:** active
 - **Amended 2026-10-03 (fix wave, group CH): the cap is 10, and two boss
   hooks are scaled too.** (1) The owner, 2026-10-02: 50 is humorously large
   for this game - the multipliers stop at 10 (launcher sliders 0..10, the
@@ -3097,6 +3514,12 @@ designed in rather than bolted on.
   cheat behaves the same with either side in place.
 - **Reversible?** Yes: the switch off, `BOF3X_STEAL` unset, or
   `BOF3X_ORIGINAL=Cheat_StealAlways`.
+- **Switch:** ini:cheat.steal=0
+- **Default:** off - the box starts off
+- **Player:** yes
+- **Toward:** none
+- **Languages:** any
+- **State:** active
 
 ### The frame period is the PlayStation's 29.97, and the deadline is a double
 
@@ -3148,6 +3571,12 @@ designed in rather than bolted on.
   the owner's eye over a long session (the bands began at 35 minutes).
 - **Reversible?** With the loop: `BOF3X_ORIGINAL=Game_WinMain` (the float and
   33.334 again); `BOF3X_FRAME_MS=33.334` keeps the double at the port's rate.
+- **Switch:** env:BOF3X_FRAME_MS=33.334 - the port's period on the double deadline (`src/game/win_main.cpp` `Game_WinMain`); `Game_WinMain` also restores the float but takes DIV-0048 with it
+- **Default:** on
+- **Player:** yes
+- **Toward:** psx - the rate is the PlayStation's ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### F1 toggles double speed
 
@@ -3220,6 +3649,12 @@ designed in rather than bolted on.
   after any stall inside DIV-0034's 500 ms that spans an area change. Not a
   divergence - a defect of ours.
 - **Reversible?** F1 again; with the loop, `BOF3X_ORIGINAL=Game_WinMain`.
+- **Switch:** Game_WndProc - F1 is read in the window procedure (`src/game/win_main.cpp:505`), its own `Inject` (`:919`); `Game_WinMain`, a separate `Inject` (`:918`), turns it off too, with DIV-0032, 0034, 0039, 0047
+- **Default:** on
+- **Player:** costly - a detour name only (`src/game/win_main.cpp:919`)
+- **Toward:** none - no release has it
+- **Languages:** any
+- **State:** active
 
 ### The logo videos keep playing when the window is not in front
 
@@ -3254,6 +3689,12 @@ designed in rather than bolted on.
   `BOF3X_ORIGINAL=Fmv_WndProc`, the loop at about 23.7 s: the 8 s of
   deactivation spent paused (`analysis/attract/fmv_ours.tsv`, `fmv_capcom.tsv`).
 - **Reversible?** `BOF3X_BACKGROUND=0`, or `BOF3X_ORIGINAL=Fmv_WndProc`.
+- **Switch:** Fmv_WndProc - the narrowest name; the launcher's `background=0` also turns it off, with DIV-0033 (`src/game/fmv_play.cpp` reads `WinMain_Background()`)
+- **Default:** on
+- **Player:** costly - a detour name only
+- **Toward:** none - not applicable on the PlayStation
+- **Languages:** any
+- **State:** active
 
 ### The pad through SDL3; the keyboard as the original; the DirectInput joystick dropped
 
@@ -3324,6 +3765,12 @@ designed in rather than bolted on.
   with the Xbox Series X pad: "game feels good with the controller"."
 - **Reversible?** `BOF3X_ORIGINAL=DInput_Init,Pad_Read,DInput_Shutdown`
   restores the DirectInput joystick; the SDL build stays linked.
+- **Switch:** DInput_Init, Pad_Read, DInput_Shutdown
+- **Default:** on
+- **Player:** costly - detour names only: the DirectInput joystick is Capcom's path, which `bof3x.exe` does not map
+- **Toward:** none - not applicable on the PlayStation
+- **Languages:** any
+- **State:** active
 
 ### The Config screen's controller panel: the PlayStation's one icon column
 
@@ -3414,6 +3861,12 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_LANG=original`, or `BOF3X_ORIGINAL=ConfigController`
   (the patches) and `Config_DrawControllerCell`; the Japanese panel's icons
   `BOF3X_ORIGINAL=ConfigJapaneseIcons`.
+- **Switch:** ConfigController, Config_DrawControllerCell, ConfigJapaneseIcons - the patches, the cell's draw and the Japanese icons; `ConfigController` also carries DIV-0015 and DIV-0026's operands of the panel (`src/game/config_text.cpp` `ConfigText_Inject`), so no narrower set exists
+- **Default:** on - under its languages
+- **Player:** costly - `Config_DrawControllerCell` is a detour name only
+- **Toward:** psx - the PlayStation's one icon column ("Also in the PSX version?" above)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - the icon column under `Lang_Latin` (`src/game/config_text.cpp:403`), the Japanese icons under `ja-JP` (`:371`)
+- **State:** active
 
 ### The battle banner's words and its EX suffix
 
@@ -3466,6 +3919,12 @@ designed in rather than bolted on.
   with the disc's EX: "the EX looks good now".** **Owed:** a message banner
   (Attack, Critical, ...) seen in game.
 - **Reversible?** play without `BOF3X_LANG`.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes
+- **Toward:** psx - the PlayStation's strings and copy length
+- **Languages:** en-US, en-150, fr-FR, de-DE - kind 12 is not built for a Japanese disc (`tools/loc_build.py` `build_all`)
+- **State:** active
 
 ### Enemy names in the overlay's language
 
@@ -3502,6 +3961,12 @@ designed in rather than bolted on.
   owner in game, 2026-09-24**: "Mage Goo" and "Eye Goo" in the enemy status
   banners ("the names look good").
 - **Reversible?** play without `BOF3X_LANG`.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes
+- **Toward:** psx - the PlayStation's names
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - every layer's enemy names, a Japanese one's paired (DIV-0057)
+- **State:** active
 
 ### French and German overlays, with the discs' accented glyphs
 
@@ -3563,6 +4028,12 @@ designed in rather than bolted on.
   - **Launcher.** The launcher's settings file knows only `en` and
     `original`. French and German need `BOF3X_LANG` set in the environment.
 - **Reversible?** play without `BOF3X_LANG`, or with `en`.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes
+- **Toward:** psx - the French and German PlayStation releases' text and glyphs
+- **Languages:** fr-FR, de-DE - the accented cells only those discs carry (`tools/loc_build.py` `latin_extension`)
+- **State:** active
 
 ### The world map's place plates from the donor disc
 
@@ -3611,6 +4082,12 @@ designed in rather than bolted on.
   carries all of it, and is right unless the exe's world-map code
   addresses those blocks directly.
 - **Reversible?** play without `BOF3X_LANG`.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes
+- **Toward:** psx - those releases' pages
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - every disc carries its own plates
+- **State:** active
 
 ### A Japanese overlay, and the layout switch for languages
 
@@ -3687,6 +4164,12 @@ designed in rather than bolted on.
   - The grow / shrink draw `0x4987E0` (ours since 2026-10-03,
     `MsgBox_EffectDraw`, DIV-0070; no pair handling), which Japanese shouts use.
 - **Reversible?** play without `BOF3X_LANG`.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes
+- **Toward:** psx - the Japanese release's text and glyphs; the layout is the port's own
+- **Languages:** ja-JP - the Japanese layer, and the Latin layouts withheld under it (`Lang_FullWidth`)
+- **State:** active
 
 ### Two kana in one glyph code: pair codes for Japanese names
 
@@ -3748,6 +4231,12 @@ designed in rather than bolted on.
     rounds, `battle_windows` 66,000 rounds, all 0 mismatches.
   - **English is unchanged:** 245 of 245 files.
 - **Reversible?** play without `BOF3X_LANG`, or in any other language.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes
+- **Toward:** psx - the names as the JP release shows them; the pair encoding is ours
+- **Languages:** ja-JP - kind 13, built for a Japanese disc alone (`tools/loc_build.py` `ja_pair_chunks`)
+- **State:** active
 
 ### The field menu's screen title centred on its real width
 
@@ -3791,6 +4280,12 @@ designed in rather than bolted on.
   evening: "that looks good".**
 - **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=MenuTitleCentre`
   keeps the overlay and the original's x.
+- **Switch:** MenuTitleCentre
+- **Default:** on - under its languages
+- **Player:** cheap
+- **Toward:** none - the US disc's centring was not checked ("Also in the PSX version?" above)
+- **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/menu_lists.cpp:633`)
+- **State:** active
 
 ### The item and skill lists' title centred on its real width
 
@@ -3846,6 +4341,12 @@ designed in rather than bolted on.
   case owed their eye.
 - **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=BattleListTitleCentre`
   keeps the overlay and the original's x.
+- **Switch:** BattleListTitleCentre
+- **Default:** on - under its languages
+- **Player:** cheap
+- **Toward:** none - the US disc's centring was not checked ("Also in the PSX version?" above)
+- **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/battle_draw.cpp:468`)
+- **State:** active
 
 ### The battle result's EXP line in the US layout
 
@@ -3885,6 +4386,12 @@ designed in rather than bolted on.
   the US photograph's arrangement. The owner's capture is the record.
 - **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=BattleResultExpLayout`
   keeps the overlay and the original's x.
+- **Switch:** BattleResultExpLayout
+- **Default:** on - under its languages
+- **Player:** cheap
+- **Toward:** psx - the US version's layout, read by eye off the owner's photograph
+- **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/battle_result.cpp:487`)
+- **State:** active
 
 ### The battle's action banners centred on their real width
 
@@ -3933,6 +4440,12 @@ designed in rather than bolted on.
   or an Instant Kill seen in game.
 - **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=BattleBannerCentre`
   keeps the overlay, the original's x and its character cap.
+- **Switch:** BattleBannerCentre
+- **Default:** on - under its languages
+- **Player:** cheap
+- **Toward:** psx - the US draw centres on the letters' width; the small box stays the port's (the amendment)
+- **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/battle_win_states.cpp:541`)
+- **State:** active
 
 ### The draw-item pool doubled: cells the wide view keeps ran it dry
 
@@ -4010,6 +4523,12 @@ designed in rather than bolted on.
   we do not own, and one original body on the old arrays beside ours on the
   new would hand one item to two cells. Logged, 2026-09-29 (the capture
   review of rounds 10..12).
+- **Switch:** DrawPool
+- **Default:** on
+- **Player:** cheap
+- **Toward:** none - the pool is the port's; the PlayStation drew its cells from the ordering table
+- **Languages:** any
+- **State:** active
 
 ### The party's dragon form with a partner missing: no form, where the original read its stack
 
@@ -4055,6 +4574,12 @@ designed in rather than bolted on.
   has the gene and a full party - a partner down, and each failing pair.
 - **Reversible?** `BOF3X_ORIGINAL=DragonForm_PartyRecipe` leaves Capcom's
   function, its read with it.
+- **Switch:** DragonForm_PartyRecipe
+- **Default:** on
+- **Player:** never - Forced: the original reads its stack
+- **Toward:** none - the PlayStation's twin was not read ("Not measured" above)
+- **Languages:** any
+- **State:** active
 
 ### The short labels from a language overlay: status words, stats, item and skill types
 
@@ -4426,6 +4951,12 @@ designed in rather than bolted on.
   disc's. *Verification:* `loc_build.py selftest` (the reader on synthetic code: the US chain found, a stride-6 chain refused); the reader over the seven discs (`combo prompts 4` on each: the US words on six, the French first text on `psx-fr`); `importer.py check` and `exe_tables.py check` 0 errors; the US + PSP-EU disc-built install rebuilt from this branch (root `C:\Users\kerok\bof3x-runs\ss1026\sc`) and a PC install copy with an `en-US` layer from it, the sweep's ability 3 alone on each, the install's log `DIV-0064: 4 of 4 combo prompts` on both: the disc install's `a003_1.png` reads READY, `a003_2.png` GO!! and `a003_5.png` O HIT COMBO!! where the before-image's box was empty; the PC copy under `en-US` draws the same frames to the pixel, and under `original` its own bytes (the full-width spaces, text 0 wider). The gap watch (`gap,unread,language`, 900 latches) still lists `0x66A096..0x66A0D8` read 720 times "before a write" with writes 0 - the parked-page blind spot of [`install-gap-reads.md`](install-gap-reads.md) 9.3 (page `0x66A000` is parked on most latches, so the layer's load-time writes are not seen; the row is written by the log line and the shot). Not captured: the French first text under `fr-FR`.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes
+- **Toward:** psx - the US disc's own strings in its own slots
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - the Latin layers' groups; a Japanese layer carries groups 15 and 24 (`tools/loc_build.py` `build_all`)
+- **State:** active
 
 ### The battle equip window's stat labels beside their own values
 
@@ -4467,6 +4998,12 @@ designed in rather than bolted on.
   box. The owner, in game the same day: correct.
 - **Reversible?** `BOF3X_ORIGINAL=BattleEquipWin_Draw` leaves Capcom's
   function and its rows.
+- **Switch:** BattleEquipLabelsRow - `PatchBytes`, `src/game/battle_e7.cpp` `BattleE7_Inject`; `BattleEquipWin_Draw` (the prose's) leaves the whole window to Capcom
+- **Default:** on
+- **Player:** cheap
+- **Toward:** psx - ours does what the PlayStation's equip window does ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### A pad press skips an FMV as a key does
 
@@ -4504,6 +5041,12 @@ designed in rather than bolted on.
   works now" (after the pad's start moved ahead of them). Not yet tried:
   a pad input held from before the video (no skip until released).
 - **Reversible?** `BOF3X_ORIGINAL=Fmv_Play` runs Capcom's player.
+- **Switch:** Fmv_Play
+- **Default:** on
+- **Player:** costly - the pad's skip is inside our `Fmv_Play`, a detour name only
+- **Toward:** psx - the PlayStation's movies are skipped by the pad
+- **Languages:** any
+- **State:** active
 
 ### Withdrawn: the rising squares' random numbers from a generator of their own
 
@@ -4524,6 +5067,12 @@ designed in rather than bolted on.
 - **Also in the PSX version?** Moot: no divergence stands.
 - **Reversible?** Nothing to reverse; the switch, its launcher key and its
   code were removed with the withdrawal.
+- **Switch:** none
+- **Default:** off - withdrawn the day it was made; nothing of it is in the build
+- **Player:** never - withdrawn
+- **Toward:** none
+- **Languages:** any
+- **State:** withdrawn
 - **What it was:** an opt-in switch (`BOF3X_DRAW_RAND=1`, the launcher's
   `draw_rand`) giving `MapCell_DrawRising` `0x570660` a private generator in
   place of Capcom's `Rand`, on the belief that draw code consumed the
@@ -4582,6 +5131,12 @@ designed in rather than bolted on.
   live: no recorded route reaches kind 0x64.
 - **Reversible?** `BOF3X_ORIGINAL=EffectKind64_DrawGlow` runs Capcom's
   function, its stale depth included.
+- **Switch:** EffectKind64_DrawGlow
+- **Default:** on
+- **Player:** never - Forced: the original reads an unwritten stack word
+- **Toward:** psx - the PlayStation writes every word of its glow; no stale depth exists there
+- **Languages:** any
+- **State:** active
 - **The owner's word, 2026-10-03:** kept as written; the owner will say if
   the glow looks wrong in game.
 
@@ -4771,6 +5326,12 @@ designed in rather than bolted on.
   chunk, and the layout is never armed. `BOF3X_ORIGINAL` on any of the
   draws named above leaves Capcom's, which reads the re-aimed pointers
   with the original's layout.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes
+- **Toward:** psx - the PlayStation's strings and its 8-unit layout constants
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - kind 16 in every layer since D279; the Latin layout under `Lang_Latin` (`src/game/fishing_text.cpp:484`)
+- **State:** active
 
 ### A space in a growing shout draws nothing
 
@@ -4824,6 +5385,12 @@ designed in rather than bolted on.
   owner's call, [`msgbox.md`](msgbox.md) §3).
 - **Reversible?** `BOF3X_ORIGINAL=MsgBox_EffectDraw` runs Capcom's draw,
   stale quad and all.
+- **Switch:** MsgBoxEffectSpaceSkips - `PatchBytes`, `src/game/msgbox.cpp` `MsgBox_Inject`; `MsgBox_EffectDraw` (the prose's) leaves the whole draw to Capcom
+- **Default:** on
+- **Player:** cheap
+- **Toward:** none - the same slip is in the PlayStation's twin ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### Walkable floor does not cover a sprite's feet
 
@@ -5049,6 +5616,12 @@ designed in rather than bolted on.
   (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
   `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each
   sprite's verdict and what stopped it.
+- **Switch:** env:BOF3X_LAYERING=0 - no ini key: `ConfigLoad` has no `layering=` (`src/launcher/config.cpp`); read by `src/game/layering.cpp` `Arm`
+- **Default:** on
+- **Player:** yes
+- **Toward:** none - the PlayStation's order is the same code; why its pictures look less cut is not established ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### A panel's far corners from the quad's own x, where the original reads a stack word it never wrote
 
@@ -5083,6 +5656,12 @@ designed in rather than bolted on.
   recorded route reaches sub-kinds 0x4B / 0x4C.
 - **Reversible?** `BOF3X_ORIGINAL=EffectKind18Sub4B_Run` runs Capcom's
   function, its stale word included.
+- **Switch:** EffectKind18Sub4B_Run
+- **Default:** on
+- **Player:** never - Forced: the original reads a stack word it never wrote
+- **Toward:** psx - the PlayStation's twin keeps x0 in a written local, as ours now does
+- **Languages:** any
+- **State:** active
 - **The owner's word, 2026-10-03:** kept as written (entered by the
   coordinator from E5F's report).
 
@@ -5122,6 +5701,12 @@ designed in rather than bolted on.
   the field's own draws load the whole matrix there and are compared.
 - **Reversible?** `BOF3X_ORIGINAL=Shisu_DrawModel` runs Capcom's function,
   its stale bytes included.
+- **Switch:** Shisu_DrawModel
+- **Default:** on
+- **Player:** never - Forced: the original copies stale stack
+- **Toward:** none - the PlayStation's twin copies stale rows too ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 - **The owner's word, 2026-10-04:** kept as written, zeros in the unused
   bytes as the other stale-byte entries have it - after a look at the
   sibling for anything it knew of the function: `../BreathOfFire3Recomp`
@@ -5173,6 +5758,12 @@ designed in rather than bolted on.
   known.
 - **Reversible?** `BOF3X_ORIGINAL=Battle_RandomLiveEnemy` runs Capcom's
   function, its stale bytes included.
+- **Switch:** Battle_RandomLiveEnemy
+- **Default:** on
+- **Player:** never - Forced: the original's list overflows into stale stack
+- **Toward:** psx - the PlayStation's eight-byte list never overflows
+- **Languages:** any
+- **State:** active
 - **The owner's word, 2026-10-05:** fine as written.
 
 ### The community's name entry ends unanswered, where the original never leaves its step
@@ -5215,6 +5806,12 @@ designed in rather than bolted on.
   established.
 - **Reversible?** `BOF3X_ORIGINAL=CommuName_SlotEntry,CommuName_MemberEntry`
   runs Capcom's steps, which do not return from the entry.
+- **Switch:** CommuNameEntryAbandons - `PatchBytes`, `src/game/rest_4d.cpp` `Rest4D_Inject`; the prose's detours leave both steps to Capcom
+- **Default:** on
+- **Player:** cheap
+- **Toward:** none - the PlayStation has the name entry, which the port removed; ending the step unanswered is ours
+- **Languages:** any
+- **State:** active
 
 ### The save slot's summary names the character whose level it shows
 
@@ -5248,6 +5845,12 @@ designed in rather than bolted on.
   2026-10-06:** a save with another member leading loads showing Ryu's level
   and name together.
 - **Reversible?** `BOF3X_ORIGINAL=Save_BuildBlock` runs Capcom's.
+- **Switch:** SaveSummaryRecord0 - `PatchBytes`, `src/game/rest_2c.cpp` `Rest2C_Inject`; `Save_BuildBlock` (the prose's) leaves the whole builder to Capcom
+- **Default:** on
+- **Player:** cheap
+- **Toward:** psx - the PlayStation's builder names and levels record 0 ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### A TILE_1 covers the PlayStation pixel's footprint, not one screen pixel
 
@@ -5283,6 +5886,12 @@ designed in rather than bolted on.
   11880, ours against `BOF3X_TILE1=0`.
 - **Reversible?** `BOF3X_TILE1=0` leaves the switch off (the point);
   `BOF3X_ORIGINAL=D3d_DrawTile1` runs Capcom's.
+- **Switch:** env:BOF3X_TILE1=0 - read by `src/game/d3d_rest.cpp` `D3dRest_Inject`, which then leaves `Tile1Quad` unpatched
+- **Default:** on
+- **Player:** yes
+- **Toward:** psx - the PlayStation's GPU drew a TILE_1 as one of its own pixels
+- **Languages:** any
+- **State:** active
 
 ### BOF3.CFG's key lines cannot run off the end of Cfg_Load's frame
 
@@ -5321,6 +5930,12 @@ designed in rather than bolted on.
   before), 0 mismatches. The switch-on path is not compared against the
   original (it exists to differ); not yet seen live.
 - **Reversible?** `BOF3X_ORIGINAL=Cfg_Load` runs Capcom's.
+- **Switch:** CfgOwnKeyTable - `PatchBytes`, `src/game/shell.cpp` `Shell_Inject`; `Cfg_Load` (the prose's) leaves the whole reader to Capcom
+- **Default:** on
+- **Player:** cheap
+- **Toward:** none - the PlayStation has no `BOF3.CFG`
+- **Languages:** any
+- **State:** active
 
 ### LINE primitives are the PlayStation pixel's width, not one screen pixel
 
@@ -5365,6 +5980,12 @@ designed in rather than bolted on.
   banner's outline - the only lines on the frame; nothing else moved.
 - **Reversible?** `BOF3X_LINES=0` leaves the switch off (the strip);
   `BOF3X_ORIGINAL=D3d_DrawLineF2,...` runs Capcom's handler.
+- **Switch:** env:BOF3X_LINES=0 - read by `src/game/d3d_lines.cpp` `Arm`, which then leaves `LinesWide` unpatched
+- **Default:** on
+- **Player:** yes
+- **Toward:** psx - the PlayStation's GPU drew lines in its own pixels
+- **Languages:** any
+- **State:** active
 
 ### Dauna Mine's minecart map is walled as every later release walled it, from the player's Western disc
 
@@ -5481,6 +6102,12 @@ designed in rather than bolted on.
   holds that disc's own `AREA004` rows, walls and the 30-cell re-texture with
   them, and the open map cannot be had from such a cache. A by-source
   difference until the owner says otherwise (the owner's call 4 there).
+- **Switch:** ini:opt=none - with the launcher's default list, `area4-walls` alone (`src/launcher/config.h` `kOptDefault`), this takes off this layer and nothing else
+- **Default:** on - wherever the player's Western disc built the layer
+- **Player:** yes
+- **Toward:** psx - the Western PlayStation discs' walls and placement cells; the PSP took the walls but not the placement half
+- **Languages:** any
+- **State:** active
 
 ### The music loops inside its file, at the points the disc's sequence loops
 
@@ -5614,6 +6241,12 @@ designed in rather than bolted on.
   whether replaying the intro's frames at each loop causes a hitch in play
   is unmeasured.
 - **Reversible?** `BOF3X_MUSIC_LOOPS=0` rewinds every track as the original.
+- **Switch:** env:BOF3X_MUSIC_LOOPS=0
+- **Default:** on
+- **Player:** yes
+- **Toward:** psx - the disc's sequence loops at these points
+- **Languages:** any
+- **State:** active
 - **The owner's stance (2026-10-08):** the disc's music by default wherever
   a disc is a source ([`unified-data-plan.md`](unified-data-plan.md)
   section 6); this entry is what a PC-only install gets.
@@ -5668,6 +6301,12 @@ designed in rather than bolted on.
 - **Reversible?** No switch of its own: a static byte the PlayStation never
   carried over. `BOF3X_ORIGINAL=Battle_CopyEnemyData` runs Capcom's function,
   which leaves the byte as it was.
+- **Switch:** Battle_CopyEnemyData - no switch of its own: the clear is inside our `Battle_CopyEnemyData` (`src/game/battle_sprites.cpp`)
+- **Default:** on
+- **Player:** costly - a detour name only
+- **Toward:** psx - the PlayStation's reload resets the byte ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### The master list's pupils box without the port's label
 
@@ -5703,6 +6342,12 @@ designed in rather than bolted on.
   portraits - the owner's US capture beside it, the same.
 - **Reversible?** play without `BOF3X_LANG`, or
   `BOF3X_ORIGINAL=MasterPupilLabel` keeps the overlay and the box.
+- **Switch:** MasterPupilLabel
+- **Default:** on - under its languages
+- **Player:** cheap
+- **Toward:** psx - the PlayStation's layout brought back
+- **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/rest_2h.cpp:882`)
+- **State:** active
 
 ### The formation screen's names centred in their boxes
 
@@ -5733,6 +6378,12 @@ designed in rather than bolted on.
 - **Reversible?** play without `BOF3X_LANG`, or
   `BOF3X_ORIGINAL=FormationNameCentre` keeps the overlay's words at the
   port's x.
+- **Switch:** FormationNameCentre
+- **Default:** on - under its languages
+- **Player:** cheap
+- **Toward:** psx - the PlayStation's own placement brought back
+- **Languages:** en-US, en-150, fr-FR, de-DE - `Lang_Latin` (`src/game/field_o.cpp:1319`)
+- **State:** active
 
 ### A side face gained at run time drawn with the cell's one side word (the sea bridge's "waterfall")
 
@@ -5799,6 +6450,12 @@ designed in rather than bolted on.
   `BOF3X_SIDE_ZERO=1` (an experiment from the investigation, 2026-10-07;
   off unless set, `0` or `1`), leaves undrawn a side face whose texture
   word is 0; off, side faces are the original's (and this entry's).
+- **Switch:** env:BOF3X_SIDE_DUP=0
+- **Default:** on
+- **Player:** yes
+- **Toward:** none - the defect is in the PlayStation's code and data too ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### Optional layers from the player's PSP disc, walked after the language overlay
 
@@ -5881,6 +6538,12 @@ designed in rather than bolted on.
   `dat\` (DIV-0109..0111), read from the cache only (`install --opt` refuses
   them), and a layer's banks reach `Snd_LoadBankFile` too (DIV-0113). The
   limit of "more than 8" layers is 16 (`kOptMax`; `ConfigOptValid` follows).
+- **Switch:** ini:opt= - the default list (`kOptDefault`, `src/launcher/config.h:304`) holds no PSP layer; `opt=none` also takes off DIV-0080's
+- **Default:** off - the PSP layers wait to be named (the suites, DIV-0107)
+- **Player:** yes
+- **Toward:** psp - the PSP releases' palettes, textures, texture coordinates and names
+- **Languages:** any
+- **State:** active
 
 ### The cache's songs synthesised from the disc's sequence, the MP3 the fallback
 
@@ -6026,12 +6689,19 @@ designed in rather than bolted on.
 - **Also in the PSX version?** Yes in substance: this *is* the PSX's player
   on the PSX's data, at the PC's fade level and timing.
 - **Reversible?** `BOF3X_MUSIC=mp3` (or `music=mp3`); unset `BOF3X_CACHE`
-  (or empty `cache=`); no cache, no change.
+  (an empty `cache=` is the home's own cache when the Sources page built one:
+  `ConfigApplyEnvironment`, `src/launcher/config.cpp`); no cache, no change.
 
   **Amended 2026-10-12 (the PSP-only round, DIV-0109):** a layer named in
   `BOF3X_OPT` with a `bgm` part is looked in before `base\bgm` (the last
   named first), and a song's bank is held by its file path, not its name.
   A PSP-only cache's `base\bgm` is the PSP's own music (DIV-0105).
+- **Switch:** ini:music=pc - `music=mp3` is read as `pc` (`src/launcher/config.cpp` `ConfigMusicSource`); an empty `music=` is `psx`
+- **Default:** on - wherever the player has a cache
+- **Player:** yes
+- **Toward:** psx - the PlayStation's player on the PlayStation's data
+- **Languages:** any
+- **State:** active
 
 ### The faerie village's board buttons from the disc's own paint
 
@@ -6069,6 +6739,12 @@ designed in rather than bolted on.
   beside their icons, the frame pieces as before. **Owed the owner's eye:**
   the French and German sheets.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes
+- **Toward:** psx - each PlayStation disc's own paint
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - `build_village_sheet` runs on every disc; a disc-only layer's sheet is the disc's own (DIV-0097)
+- **State:** active
 
 ### The importer's cache read before the install's DAT\ and SND\
 
@@ -6166,6 +6842,12 @@ designed in rather than bolted on.
   `Sound_LoadStream` takes a named layer's `snd\` file before `base\snd`'s,
   and `Snd_LoadBankFile` a named layer's banks after the shipped file's,
   when a named layer carries one.
+- **Switch:** env:BOF3X_CACHE_DATA=0 - the cache for the music only (`src/game/dat_cache.cpp`)
+- **Default:** on - wherever the player has a cache
+- **Player:** yes
+- **Toward:** none - the PlayStation reads its disc
+- **Languages:** any
+- **State:** active
 
 ### A language layer built from the disc alone keeps nothing of the port's
 
@@ -6245,6 +6927,12 @@ designed in rather than bolted on.
   install (D247, D265); the culture label seen in `fairyVillage`, the other
   three on no route yet. The Config screen's text (D246)
   is still not built.
+- **Switch:** none - the layer is built, not switched: rebuild it with the PC install among the sources (`Reversible?` above)
+- **Default:** on - under its languages, in a disc-only install's layer
+- **Player:** never - a build-time choice of sources, no runtime switch
+- **Toward:** none - the glyphs and the sheet are the port's ("Also in the PSX version?" above)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - a disc-only layer of any tag; `original` is refused there (DIV-0102)
+- **State:** active
 
 ### The MP3 decoder is minimp3, not the library Capcom linked
 
@@ -6294,6 +6982,12 @@ designed in rather than bolted on.
   for Capcom's decoder; and the switch dies at state 3's cutover, which maps
   none of Capcom's code, so a box would outlive its use by a session). The
   decoder's code is untouched in the image until then.
+- **Switch:** env:BOF3X_MP3=original
+- **Default:** on
+- **Player:** costly - `bof3x.exe` refuses `BOF3X_MP3=original` (`src/hook/exe_host.cpp` `RefuseHostedSwitches`): Capcom's decoder is not in its image
+- **Toward:** none - the PlayStation has no MP3
+- **Languages:** any
+- **State:** active
 
 ### The field's music after a battle, and after a load of a save without a track, is the area's own
 
@@ -6454,6 +7148,12 @@ designed in rather than bolted on.
   `BOF3X_ORIGINAL=GameMode5_Leave,GameMode_Start`. There is no runtime
   switch for the resume alone (the restart from the top under the fallback
   would be a code change: no `Arm` in `GameMode5_Leave`).
+- **Switch:** AreaTrackFallback
+- **Default:** on
+- **Player:** cheap
+- **Toward:** psx - the PlayStation resumes the area's song after a battle; after an event battle it starts it from the top, which ours does not ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### The MP3 decoder's end-of-stream count is zero, not the last frame's
 
@@ -6504,6 +7204,12 @@ designed in rather than bolted on.
   end (the 26 ms were not reported by ear before either).
 - **Reversible?** `BOF3X_MP3=original` (Capcom's decoder, its count with it)
   until the cutover; after it the constant.
+- **Switch:** env:BOF3X_MP3=original
+- **Default:** on
+- **Player:** costly - the hosted build's switch (Capcom's decoder), which bof3x.exe refuses (`RefuseHostedSwitches`)
+- **Toward:** none - the PlayStation has no MP3 decoder ("Not applicable" above)
+- **Languages:** any
+- **State:** active
 
 ### The game runs as our own executable
 
@@ -6586,6 +7292,12 @@ designed in rather than bolted on.
   `BOF3X_MP3=original` is set, which `bof3x.exe` refuses. The hosted build
   stays the shadow fuzz's and the reference pairs' home until a later state
   retires it.
+- **Switch:** none
+- **Default:** on
+- **Player:** never - the player's build is this entry; `--host bof3` is the developer launcher's, not a player's switch
+- **Toward:** none - no game behaviour is meant to change ("Not applicable" above)
+- **Languages:** any
+- **State:** active
 
 ### The executable's icon, drawn from the game's own data on the player's machine
 
@@ -6634,6 +7346,12 @@ designed in rather than bolted on.
 - **Reversible?** No switch. The hosted build (`--host bof3`) keeps
   Capcom's icon from his `.rsrc`; deleting `bof3x.icon` and putting the
   built `bof3x.exe` back restores the placeholder until the next load screen.
+- **Switch:** none
+- **Default:** on
+- **Player:** never - no switch: the window icon is drawn whenever the load screen is reached
+- **Toward:** none - the PlayStation has no window icon ("Not applicable" above)
+- **Languages:** any
+- **State:** active
 - **Amended 2026-10-15 (the owner): the file icon is ours, the whelp the
   window's only.** Windows Defender quarantined the launcher
   (`Behavior:Win32/DefenseEvasion.A!ml`) when started from Explorer, and a
@@ -6690,6 +7408,12 @@ designed in rather than bolted on.
   sprite may differ from the PC's by a part in those animations - the
   owner's eye ([`owner-review.md`](owner-review.md)).
 - **Reversible?** Build with the PC's `DAT/` as a source.
+- **Switch:** none
+- **Default:** on
+- **Player:** never - the install's sources decide, not a runtime switch: a cache built with the PC's `DAT/` keeps the port's edit
+- **Toward:** psx - the disc's own scripts, as the PlayStation runs them
+- **Languages:** any
+- **State:** active
 
 ### A disc-only layer stands in the disc's own images where the port's art showed
 
@@ -6738,6 +7462,13 @@ designed in rather than bolted on.
   source row, which the laid strip then carries (242 pixels against the PSX
   layer), and, on PSP-JP, one kanji-sheet glyph outside the rule. Not seen.
 
+- **Switch:** none
+- **Default:** on - under its languages
+- **Player:** never - the install's sources decide, not a runtime switch: a cache built with the PC's `DAT/` keeps the port's art
+- **Toward:** none - the disc's paint in the port's layout, which no release draws
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - a disc-only layer of any tag
+- **State:** active
+
 ### French AREA004's first seven message slots, disc-only
 
 - **ID:** DIV-0098
@@ -6761,6 +7492,12 @@ designed in rather than bolted on.
   identical to the PC-built layer; not played - which of slots 0..6 the event
   script names is not read.
 - **Reversible?** Build with the PC's `DAT/` as a source.
+- **Switch:** none
+- **Default:** on - under its languages
+- **Player:** never - the install's sources decide, not a runtime switch: a cache built with the PC's `DAT/` keeps the port's messages
+- **Toward:** none - the French PlayStation reads past the block; this is the German table's choice
+- **Languages:** fr-FR - the French disc's block
+- **State:** active
 
 ### A disc-only install shows the disc's Capcom logo movie, converted at import
 
@@ -6807,6 +7544,12 @@ designed in rather than bolted on.
   PC's own movie has the same limit).
 - **Reversible?** A `capcom.avi` in the game directory is never replaced;
   delete the converted one to go without.
+- **Switch:** none
+- **Default:** on
+- **Player:** never - a file: the converted movie is used only where the game directory has no `CAPCOM.AVI` of its own
+- **Toward:** psx - the PlayStation's own logo movie, converted
+- **Languages:** any
+- **State:** active
 
 ### A disc-only install starts without the movie the disc probe looks for
 
@@ -6839,6 +7582,12 @@ designed in rather than bolted on.
   the same scenes as the PC-plus-US run (`disc-only-install.md` section 5).
 - **Reversible?** Put a `BOF3.exe` or a `CAPCOM.AVI` in the game directory
   and the original probe decides.
+- **Switch:** none
+- **Default:** on
+- **Player:** never - a file: a `BOF3.exe` or `CAPCOM.AVI` in the game directory lets the original probe decide
+- **Toward:** none - the PlayStation has no probe ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### A disc-built image runs with the game values no disc carries as zero (provisional)
 
@@ -7381,6 +8130,13 @@ designed in rather than bolted on.
   Verified by the sweep's Simoon on the rebuilt PSP-only install against the
   PSX-only install's dense shots.
 
+- **Switch:** env:BOF3X_EXEIMAGE_STRICT=1
+- **Default:** on
+- **Player:** yes - `BOF3X_EXEIMAGE_STRICT` (`src/hook/exe_image.cpp`) refuses a disc-built image with a gap; the default runs it
+- **Toward:** none - the PlayStation's executable carries its own tables ("Not applicable" above)
+- **Languages:** any
+- **State:** active
+
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
 - **ID:** DIV-0102
@@ -7420,6 +8176,12 @@ designed in rather than bolted on.
   `original`, so a run against a disc-only install must pass `--lang`.
 - **Reversible?** A PC install, or a cache built with the PC's `DAT\` among
   its sources, holds the Chinese layer and `original` plays as before.
+- **Switch:** none
+- **Default:** on - under its languages
+- **Player:** never - one-way: the port's Chinese text is the PC's alone, so an install without it cannot play `original`
+- **Toward:** none - each disc carries its own text
+- **Languages:** original - the port's own text, refused on a disc-only install
+- **State:** active
 
 ### A PSP-only install's base is the PSP's own sections
 
@@ -7531,6 +8293,13 @@ designed in rather than bolted on.
   exits 0 (10,088 and 10,087 ours). Not rendered. *Reversible:* drop the two
   `margins` rows from `recipes/exe-psp.tsv`.
 
+- **Switch:** none
+- **Default:** on
+- **Player:** never - the install's sources decide, not a runtime switch: a PSX disc or the PC's `DAT/` among them gives `base_policy = "psx"`
+- **Toward:** psp - the PSP's own sections (the PSP-only round)
+- **Languages:** any
+- **State:** active
+
 ### A PSP-built image of `.data` carries the PSP's level table and consumable 87
 
 - **ID:** DIV-0104
@@ -7559,6 +8328,12 @@ designed in rather than bolted on.
   running on either ([`psp-code-diff.md`](psp-code-diff.md) 6). Not played:
   a level-up of roster index 6 is the check.
 - **Reversible?** A PSX disc among the sources, or the PC's exe.
+- **Switch:** none
+- **Default:** on
+- **Player:** never - the install's sources decide, not a runtime switch: a PSX disc or the PC's exe among them keeps the PlayStation's tables
+- **Toward:** psp - the PSP's level table and consumable 87 (the PSP-only round, group IM)
+- **Languages:** any
+- **State:** active
 
 ### A PSP-only install plays the PSP's music: its sequences and its banks
 
@@ -7610,6 +8385,12 @@ designed in rather than bolted on.
 - **Reversible?** A PSX disc among the sources builds the PSX's songs and
   banks; `BOF3X_MUSIC=mp3` has no MP3s to play on a PSP-only install. Beside
   a PlayStation base the PSP's music is an option (DIV-0109).
+- **Switch:** none
+- **Default:** on
+- **Player:** never - the install's sources decide, not a runtime switch: a PSX disc among them builds the PSX's songs; a PSP-only install has no MP3s
+- **Toward:** psp - the PSP's own sequences and banks (the PSP-only round)
+- **Languages:** any
+- **State:** active
 
 ### A PSP-only install has the PSP's effects, voices, jingles and logo movie
 
@@ -7659,6 +8440,12 @@ designed in rather than bolted on.
 - **Reversible?** A PSX disc among the sources gives the PSX's exact files
   instead; a PC install's own files are never replaced. Beside a PlayStation
   base the PSP's effects and jingles are an option (DIV-0110).
+- **Switch:** none
+- **Default:** on
+- **Player:** never - the install's sources decide, not a runtime switch: a PSX disc among them gives the PSX's files
+- **Toward:** psp - the PSP's own effects, voices, jingles and logo movie, re-encoded (the PSP-only round)
+- **Languages:** any
+- **State:** active
 
 ### The launcher offers three suites, the PSP's or the PlayStation's, in place of the PSP extras
 
@@ -7707,6 +8494,12 @@ designed in rather than bolted on.
 - **Reversible?** Each suite's PlayStation side, or `opt=none` / an `opt=`
   list and `psp=none` in `bof3x.ini`; a PSP base has no PlayStation side to
   choose until a PSX disc is added.
+- **Switch:** none
+- **Default:** on
+- **Player:** never - the launcher's page itself; what it moves is DIV-0108..0113's, each with its own switch
+- **Toward:** none - the PlayStation has no launcher
+- **Languages:** any
+- **State:** active
 
 ### The PSP's two battle rules, behind a switch
 
@@ -7776,6 +8569,13 @@ designed in rather than bolted on.
   only the category to an accessory, "Ivory Charm" ([`psp-battle-changes.md`](psp-battle-changes.md)
   1; IDEAS I32 P17). The owner: keep it a toggle (`myria-item`), as built.
 
+- **Switch:** ini:psp=none
+- **Default:** off - unset, on where the cache's `base_policy` is psp (`src/game/psp_code.cpp:150`)
+- **Player:** yes - `psp=` / `BOF3X_PSP` (`src/game/psp_code.cpp`); unset, on only where the cache's `base_policy` is psp (a PSP-only install)
+- **Toward:** psp - the PSP's own two rules, read from `BOOT.BIN` (the PSP-only round, group PB)
+- **Languages:** any
+- **State:** active
+
 ### The PSP's music as a layer beside a PlayStation disc's
 
 - **ID:** DIV-0109
@@ -7808,6 +8608,12 @@ designed in rather than bolted on.
   heard.**
 - **Reversible?** The audio suite's PlayStation side, or `opt=` without the
   layer.
+- **Switch:** ini:music=psx
+- **Default:** off
+- **Player:** yes - the launcher always sets `BOF3X_MUSIC` (`ConfigMusicSource`, `src/launcher/config.cpp`); `music=` empty and an `opt=` without `psp-music` is psx too
+- **Toward:** psp - the PSP's own sequences (the PSP-only round)
+- **Languages:** any
+- **State:** active
 - **Amended 2026-10-21 (DIV-0150):** the layer is no longer the audio suite's:
   the launcher's Music box chooses the music source, and under a chosen source
   (`BOF3X_MUSIC` psx, psp or pc) the engine reads `opt\psp-music\bgm` by that
@@ -7838,6 +8644,12 @@ designed in rather than bolted on.
   layer's refused); the exe host with the layer, exit 0. **Not heard.**
 - **Reversible?** The audio suite's PlayStation side, or `opt=` without the
   layer.
+- **Switch:** ini:opt=
+- **Default:** off
+- **Player:** yes - `opt=` empty is the default layers (`kOptDefault`, `src/launcher/config.h`), with no PSP layer; so is any `opt=` without `psp-snd`
+- **Toward:** psp - the PSP's own effects, voices and jingles (the PSP-only round)
+- **Languages:** any
+- **State:** active
 
 ### The PSP's level table and consumable 87 laid over .data
 
@@ -7873,6 +8685,12 @@ designed in rather than bolted on.
   index 6.
 - **Reversible?** The data suite's PlayStation side, or `opt=` without the
   layer.
+- **Switch:** ini:opt=
+- **Default:** off
+- **Player:** yes - `opt=` empty is the default layers (`kOptDefault`), without `psp-tables`
+- **Toward:** psp - the PSP's level table and consumable 87 (the PSP-only round)
+- **Languages:** any
+- **State:** active
 
 ### Ryu's forms (P8) as a layer
 
@@ -7898,6 +8716,12 @@ designed in rather than bolted on.
   battle.
 - **Reversible?** The data suite's PlayStation side, or `opt=` without the
   layer.
+- **Switch:** ini:opt=
+- **Default:** off
+- **Player:** yes - `opt=` empty is the default layers (`kOptDefault`), without `psp-ryu-forms`
+- **Toward:** psp - the PSP's form data (the PSP-only round)
+- **Languages:** any
+- **State:** active
 
 ### The battle chord as the PSP plays it, and a layer's banks in Snd_LoadBankFile
 
@@ -7936,6 +8760,12 @@ designed in rather than bolted on.
   the merge). **Not heard;** the Jukebox does not play it (an effect, not a
   song).
 - **Reversible?** The box, or `opt=` without the layer.
+- **Switch:** ini:opt=
+- **Default:** off
+- **Player:** yes - `opt=` empty is the default layers (`kOptDefault`), without `psp-chord-one-tone`; with no layer bank `Snd_LoadBankFile` is the original's
+- **Toward:** psp - the chord as the PSP plays it, one tone (the PSP-only round)
+- **Languages:** any
+- **State:** active
 
 ### A disc-only install draws the disc's title page, not the PC port's
 
@@ -7989,6 +8819,12 @@ designed in rather than bolted on.
   rule; not ledgered before. The PSP title's framing in our 4:3 frame is
   open (D256).
 - **Reversible?** Build with the PC's `DAT/` as a source.
+- **Switch:** none
+- **Default:** on
+- **Player:** never - the install's sources decide, not a runtime switch: a cache built with the PC's `DAT/` keeps the PC's title
+- **Toward:** psx - each disc's own title, as that PlayStation release draws it
+- **Languages:** any
+- **State:** active
 
 ### Prefer the Japanese PlayStation disc's data over a port change the owner has decided; the 27A arenas' held loop first
 
@@ -8049,6 +8885,12 @@ designed in rather than bolted on.
   not rendered: the loop has not been seen at either speed.
 - **Reversible?** Build the cache without the JP disc among its sources, or
   with `importer.py build --prefer <a file with no rows>`.
+- **Switch:** none
+- **Default:** on
+- **Player:** never - the install's sources decide, not a runtime switch: a cache without the JP disc, or `importer.py build --prefer` with no rows, keeps the port's chunk
+- **Toward:** psx - every PSX disc's loop
+- **Languages:** any
+- **State:** active
 
 ### An encounter refuses a combatant left of or above the screen, as the PlayStation does
 
@@ -8111,6 +8953,12 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=EncounterOnScreenLowerBounds` keeps ours with
   the port's bounds; `BOF3X_ORIGINAL=Encounter_OnScreen` runs Capcom's
   function.
+- **Switch:** EncounterOnScreenLowerBounds
+- **Default:** on
+- **Player:** cheap - `PatchBytes("EncounterOnScreenLowerBounds")` (`src/game/inventory_ops.cpp`) arms the flag; the port's bounds are in ours
+- **Toward:** psx - the PlayStation's unsigned bounds test
+- **Languages:** any
+- **State:** active
 
 ### The Identify panel's small words: WEAK POINT on the weakness row, the disc's own item word and EXP label
 
@@ -8172,6 +9020,12 @@ designed in rather than bolted on.
   words and log (`labels-1013.md` 6.2); an overlay built before this entry
   taken and logged (6.1); the self-tests in `labels-1013.md` 6.3.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
+- **Switch:** lang
+- **Default:** on - under its languages
+- **Player:** yes - under a PlayStation overlay; the language is the only switch
+- **Toward:** psx - the disc's own words and places; both panels draw `WEAK POINT`, as the Japanese disc does
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - group 15 in every layer, a Japanese one's too
+- **State:** active
 
 ### Beyd's name from the disc when the battle extra opens its equipment screen
 
@@ -8207,6 +9061,12 @@ designed in rather than bolted on.
   screen ([`labels-1013.md`](labels-1013.md) 4).
 - **Reversible?** play without `BOF3X_LANG`, or
   `BOF3X_ORIGINAL=BattleExtra_EquipOpen` (Capcom's copy reads `0x669CE8`).
+- **Switch:** BattleExtra_EquipOpen
+- **Default:** on - under its languages
+- **Player:** costly - a detour name only; narrower than the language, which stays in Reversible?
+- **Toward:** psx - the same copy, the name the disc's
+- **Languages:** en-US, en-150, fr-FR, de-DE - group 17 (`src/game/battle_e1.cpp:326`), not built for a Japanese disc
+- **State:** active
 
 ### Fight 26's turn counter in the disc's words and layout
 
@@ -8254,6 +9114,12 @@ designed in rather than bolted on.
   (`labels-1013.md` 4).
 - **Reversible?** play without `BOF3X_LANG`, or
   `BOF3X_ORIGINAL=Boss26Fx_DrawCount`.
+- **Switch:** Boss26Fx_DrawCount
+- **Default:** on - under its languages
+- **Player:** costly - a detour name only; narrower than the language, which stays in Reversible?
+- **Toward:** psx - the disc's words, places and test
+- **Languages:** en-US, en-150, fr-FR, de-DE - group 18 (`src/game/boss_sf.cpp:288`), not built for a Japanese disc
+- **State:** active
 
 ### The hi-lo game's three choices from the disc, centred in their boxes
 
@@ -8288,6 +9154,12 @@ designed in rather than bolted on.
   hi-lo game (`labels-1013.md` 4).
 - **Reversible?** play without `BOF3X_LANG`, or
   `BOF3X_ORIGINAL=CommuHiLo_DrawChoice`.
+- **Switch:** CommuHiLo_DrawChoice
+- **Default:** on - under its languages
+- **Player:** costly - a detour name only; narrower than the language, which stays in Reversible?
+- **Toward:** psx - the disc's words and places; every word drawn whole ("Also in the PSX version?" above)
+- **Languages:** en-US, en-150, fr-FR, de-DE - group 19 (`src/game/rest_4c.cpp:400`), not built for a Japanese disc
+- **State:** active
 
 ### A map edge that leads to no area holds, instead of crashing
 
@@ -8338,6 +9210,12 @@ designed in rather than bolted on.
   fuzz runs Capcom's rule (the switch `g_edge_no_area` is armed after it).
   **Not seen by the owner.**
 - **Reversible?** `BOF3X_ORIGINAL=EdgeNoArea`.
+- **Switch:** EdgeNoArea
+- **Default:** on
+- **Player:** cheap - `PatchBytes("EdgeNoArea")` (`src/game/event_leader.cpp`) arms `g_edge_no_area`; Capcom's rule is in ours
+- **Toward:** none - the PlayStation has the same unbounded lookup; the hold is no release's
+- **Languages:** any
+- **State:** active
 
 ### The wide modes re-stage the scenes' edge actors
 
@@ -8387,6 +9265,12 @@ designed in rather than bolted on.
   ([`ultrawide-census-4.md`](ultrawide-census-4.md) 1). 20 of the 24 armed
   rows are not reached by any route. **Not played by the owner.**
 - **Reversible?** `BOF3X_WIDE_STAGING=0`, or narrow.
+- **Switch:** env:BOF3X_WIDE_STAGING=0
+- **Default:** on
+- **Player:** yes - read by `src/game/wide_staging.cpp` in both hosts; acts only in the wide modes (`wide=`, narrow by default)
+- **Toward:** none - our rule in the columns, not the PSP's script bytes; the PlayStation is 320 wide
+- **Languages:** any
+- **State:** active
 
 ### Case zero takes the PSP's staging in the wide modes
 
@@ -8434,6 +9318,12 @@ designed in rather than bolted on.
   pixel-identical to narrow's (no sliver on the top row). **The owner has
   seen the walk and approved it (2026-10-14).**
 - **Reversible?** `BOF3X_WIDE_STAGING=0`, or narrow.
+- **Switch:** env:BOF3X_WIDE_STAGING=0
+- **Default:** on
+- **Player:** yes - read by `src/game/wide_staging.cpp` in both hosts; acts only in the wide modes (`wide=`, narrow by default)
+- **Toward:** psp - the PSP's staging (JP and EU), with the original's frame count kept
+- **Languages:** any
+- **State:** active
 
 ### At 21:9, a field object past the 16:9 view is not drawn in a scene
 
@@ -8468,6 +9358,12 @@ designed in rather than bolted on.
   ([`ultrawide-census-4.md`](ultrawide-census-4.md) 3). The hash differs from
   the run without it in draw pages only. **Not played by the owner.**
 - **Reversible?** `BOF3X_WIDE_HIDE=0`, or 16:9.
+- **Switch:** env:BOF3X_WIDE_HIDE=0
+- **Default:** on
+- **Player:** yes - read by `src/game/wide_staging.cpp` in both hosts; acts only at 21:9 (`wide=2`)
+- **Toward:** none - no release has a 21:9 picture
+- **Languages:** any
+- **State:** active
 
 ### A `DR_MOVE` out of the display buffer textures what follows: the frame-buffer grab
 
@@ -8508,6 +9404,12 @@ designed in rather than bolted on.
   ending's frame copy are unseen (no recipe reaches them).
 - **Reversible?** `BOF3X_FBGRAB=0`. Also `BOF3X_ORIGINAL=Gfx_DrawOTag` (no grab
   recorded) or `D3d_BindTexture` (no draw tagged).
+- **Switch:** env:BOF3X_FBGRAB=0
+- **Default:** on
+- **Player:** yes - read by `src/render/fb_grab.cpp` in both hosts
+- **Toward:** psx - what the PlayStation's GPU draws
+- **Languages:** any
+- **State:** active
 - **Amended 2026-10-25 (issue #142, the owner's `minecartToZombieDragon` recipe):** a
   draw samples up to **two** grabs of its page, the two most recent that meet it
   (`fb_grab::Registry::FindAll`, `kDrawGrabs`; `PipeState` `grab_slot2`, the shader's
@@ -8569,6 +9471,12 @@ designed in rather than bolted on.
   play (no recorded route reaches them).
 - **Reversible?** `BOF3X_ORIGINAL=DiagonalIdentity` (ours writes Capcom's 1s);
   `BOF3X_ORIGINAL=EffectGte_SetDiagonalOne` (Capcom's function).
+- **Switch:** DiagonalIdentity
+- **Default:** on
+- **Player:** cheap - `PatchBytes("DiagonalIdentity")` (`src/game/effect_gte.cpp`) arms the word; Capcom's 1s are in ours
+- **Toward:** psx - the PlayStation twin stores 0x1000
+- **Languages:** any
+- **State:** active
 
 ### The ending's backdrop: the seam gone, the pictures and the letterbox into the wide bands
 
@@ -8634,6 +9542,12 @@ designed in rather than bolted on.
   draw: the seam and the 320-wide pictures), `BOF3X_ORIGINAL=Scena17_DrawLetterbox`
   (the 320-wide bands). Narrow play without the wide picture loses only the
   seam.
+- **Switch:** EffectKind18Sub61_DrawOverlay, Scena17_DrawLetterbox
+- **Default:** on
+- **Player:** costly - two detour names only
+- **Toward:** none - the seam is the port's by the reading, not measured on the disc; the bands are no release's
+- **Languages:** any
+- **State:** active
 
 ### The Identify panel's element row as the game's own element icons
 
@@ -8671,6 +9585,12 @@ designed in rather than bolted on.
   (the weakness), the rest dim. `magic_s12`'s self-test 88,000 rounds, 0
   mismatches under `en-US` and `original`.
 - **Reversible?** `BOF3X_LANG=original`, or `BOF3X_ORIGINAL=Identify_DrawElements`.
+- **Switch:** Identify_DrawElements
+- **Default:** on - under its languages
+- **Player:** costly - a detour name only; narrower than the language (`original`), which stays in Reversible?
+- **Toward:** none - the Japanese disc draws its own glyphs, the Western discs no row
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - `Lang_Latin() || Lang_Japanese()` (`src/game/magic_s12.cpp:481`)
+- **State:** active
 
 ### A missing sound stream ends its wait; a PSX-only install has the 11 jingles
 
@@ -8728,6 +9648,12 @@ designed in rather than bolted on.
 - **Reversible?** (1) `BOF3X_ORIGINAL=Sound_StreamDone` (the original's
   answer; the flag is then read by nothing). (2) a build with a PC install
   among the sources, or the 11 deleted from `base/snd/` and `SND\`.
+- **Switch:** Sound_StreamDone
+- **Default:** on
+- **Player:** costly - a detour name only, for the engine half; the jingles are the install's sources
+- **Toward:** psx - the disc's own XA jingles; a missing clip's wait ending at once is the engine half's
+- **Languages:** any
+- **State:** active
 - **Amended 2026-10-21 (DIV-0150):** the 11 are made whenever a PSX disc and
   ffmpeg are both there. With a PC install among the sources they go in
   `base/psx-jingles/` (the manifest's `[snd_jingles] dir`), not `base/snd/`, so
@@ -8785,6 +9711,12 @@ designed in rather than bolted on.
 - **Reversible?** Not a runtime switch: only by building the cache with an
   importer from before this entry (the stand-in's recipe hash is the disc's,
   checked before the repaint; the manifest records the repainted body's).
+- **Switch:** none
+- **Default:** on
+- **Player:** never - the importer's repaint: only a cache built by an importer from before this entry
+- **Toward:** none - the PlayStation shows the baked icon under a swapped live one
+- **Languages:** any
+- **State:** active
 
 ### A PSP-only install's title logo is cut from the PSP's pages where the PSP's art lies
 
@@ -8827,6 +9759,12 @@ designed in rather than bolted on.
   `title_states` runs before the switch is read, so it compares Capcom's
   layout.
 - **Reversible?** A PSX-based install; the switch is the cache's policy.
+- **Switch:** none
+- **Default:** on
+- **Player:** never - the cache's `base_policy`: a PSX-based install draws as before
+- **Toward:** none - no release draws the PSP's art through these rectangles
+- **Languages:** any
+- **State:** active
 
 ### The fishing panel ducks the music as the PlayStation does
 
@@ -8881,6 +9819,12 @@ designed in rather than bolted on.
   sound 46,000; sound_rest 27,000). **Not yet heard by the owner.**
 - **Reversible?** `BOF3X_ORIGINAL=FishPanelDuck` (the patch's name): the
   fade to nothing and back.
+- **Switch:** FishPanelDuck
+- **Default:** on
+- **Player:** cheap - `PatchBytes("FishPanelDuck")` (`src/game/effect_1e.cpp`) arms the flag; the original fades are in ours
+- **Toward:** psx - the PlayStation ducks
+- **Languages:** any
+- **State:** active
 
 ### The Config's six lines as one permutation; menus confirm on Speak's button and cancel on Action's
 
@@ -8928,6 +9872,12 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=ButtonSigma` (`σ` the identity; it also
   turns off DIV-0139). A save written under it keeps its words 7 / 8 as saved;
   holding Start while it loads writes the defaults.
+- **Switch:** ButtonSigma
+- **Default:** on
+- **Player:** cheap - `PatchBytes("ButtonSigma")` (`src/input/sigma.cpp`); it also turns off DIV-0139, and no narrower name exists
+- **Toward:** none - the PlayStation has the same third flow ("Yes" above)
+- **Languages:** any
+- **State:** active
 
 ### An install starts with the Config of the release it was built from
 
@@ -8971,6 +9921,12 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=StartConfigBySource`. For the other
   reading of answer 2 (a layer's release counts as a source),
   `kPcIsJapanSource` in `sigma.cpp` is a one-line change.
+- **Switch:** StartConfigBySource
+- **Default:** on
+- **Player:** cheap - `PatchBytes("StartConfigBySource")` (`src/input/sigma.cpp`)
+- **Toward:** psx, psp - each release's own defaults, the PlayStation West's and PSP-EU's among them
+- **Languages:** any
+- **State:** active
 
 ### The world map's legend shows the buttons the Config holds, as glyphs, no key names
 
@@ -9028,6 +9984,12 @@ designed in rather than bolted on.
   importer's half: a cache built without a PSX disc, or by an importer from
   before this change (the engine then repaints the page itself, unless
   switched off).
+- **Switch:** WorldMapLegend
+- **Default:** on
+- **Player:** cheap - `PatchBytes("WorldMapLegend")` (`src/game/world_map.cpp`), the engine's half; the importer's half is the install's sources
+- **Toward:** psx - the PlayStation draws the glyph of the button the save holds
+- **Languages:** any
+- **State:** active
 
 ### The fishing banner's labels name the button the line's test is on now
 
@@ -9081,6 +10043,12 @@ designed in rather than bolted on.
   own defaults). The round's validation ([`button-routes.md`](button-routes.md)
   9, 9.1): swapped, the reel label trades on all four installs.
 - **Reversible?** `BOF3X_ORIGINAL=FishingLabelSigma`.
+- **Switch:** FishingLabelSigma
+- **Default:** on
+- **Player:** cheap - `PatchBytes("FishingLabelSigma")` (`src/game/fishing_text.cpp`)
+- **Toward:** none - the PlayStation's labels are fixed ("Yes" above)
+- **Languages:** any
+- **State:** active
 
 ### The dock's parts-menu legend shows the buttons the Config has its tests on
 
@@ -9124,6 +10092,12 @@ designed in rather than bolted on.
   placed save `dock128` is the owner's to record).
 - **Reversible?** `BOF3X_ORIGINAL=DockLegend` (the page as it is), or
   `BOF3X_ORIGINAL=EffectKind5E_DrawPanel`.
+- **Switch:** DockLegend
+- **Default:** on
+- **Player:** cheap - `PatchBytes("DockLegend")` (`src/game/rest_3e.cpp`); narrower than the detour `EffectKind5E_DrawPanel`
+- **Toward:** none - the PlayStation's legend is baked art ("Yes" above)
+- **Languages:** any
+- **State:** active
 
 ### The item lists' L1 / R1 corner shows the buttons the Config pages on
 
@@ -9215,6 +10189,12 @@ designed in rather than bolted on.
     mismatches; ButtonText 180 mentions, 0 mismatches. Not yet run on a
     Japanese install.
 - **Reversible?** `BOF3X_ORIGINAL=ShoulderGlyphs`.
+- **Switch:** ShoulderGlyphs
+- **Default:** on
+- **Player:** cheap - `PatchBytes("ShoulderGlyphs")` (`src/game/shoulder_glyphs.cpp`)
+- **Toward:** none - the PlayStation's labels are baked ("Yes" above)
+- **Languages:** any
+- **State:** active
 
 ### The hard-coded button tests ask the Config
 
@@ -9293,6 +10273,12 @@ designed in rather than bolted on.
   `Sigma` is the identity and every test is the original's. There is no
   separate switch: a swapped Config with DIV-0133 off but this on would
   split the flow, so the two are kept together.
+- **Switch:** ButtonSigma - DIV-0133's switch too: the two are kept together (Reversible? above)
+- **Default:** on
+- **Player:** cheap - `PatchBytes("ButtonSigma")`, `src/input/sigma.cpp:492`
+- **Toward:** none - every release hard-codes these tests in its own terms ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### The dialogue names buttons by code, drawn as the button the Config has put the role on
 
@@ -9360,6 +10346,12 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=ButtonText`: both readers draw every
   mention as its text has it (`=MsgBox_Step` and `=Text_DrawString` too).
   The codes alone change nothing drawn.
+- **Switch:** ButtonText
+- **Default:** on
+- **Player:** cheap - `PatchBytes("ButtonText")`, `src/game/text_draw.cpp:707`; both readers (`msgbox.cpp`, `text_draw.cpp`) ask its flag
+- **Toward:** none - no release draws a mention as the button the Config has put the role on
+- **Languages:** any
+- **State:** active
 
 ### A PSP-EU layer's Config screen: the PSP's words, and four of ours
 
@@ -9397,6 +10389,12 @@ designed in rather than bolted on.
   owner.
 - **Reversible?** No toggle; a layer built from a PSX disc, or from the PC
   install, is unchanged.
+- **Switch:** lang - a chunk of the PSP-EU layer (`loc_build.py`); no narrower runtime name
+- **Default:** on - under its languages
+- **Player:** yes - the language box; a layer built without the chunk is the build-time way
+- **Toward:** psx - the chunk is byte-identical to the PSX-EU layer's (New behaviour above)
+- **Languages:** en-150 - a chunk of the PSP-EU layer alone
+- **State:** active
 
 ### A sprite with `+0x24` bit 3 is drawn into VRAM, as on the PlayStation: Amalgam's melt comes back
 
@@ -9464,6 +10462,12 @@ designed in rather than bolted on.
     the melt plays.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteCapture` (Capcom's draw), or
   `BOF3X_ORIGINAL=Sprite_Draw`.
+- **Switch:** SpriteCapture
+- **Default:** on
+- **Player:** cheap - `PatchBytes("SpriteCapture")`, `src/game/sprite_draw.cpp:842`
+- **Toward:** psx - "Also in the PSX version?" says this is what the PlayStation does
+- **Languages:** any
+- **State:** active
 
 ### An area change that keeps the track while it fades to a stop keeps none: Ryu's dream is silent, as on the PlayStation
 
@@ -9520,6 +10524,12 @@ designed in rather than bolted on.
   - Not heard yet.
 - **Reversible?** `BOF3X_ORIGINAL=AreaKeepStoppingNone` (Capcom's keep),
   or `BOF3X_ORIGINAL=Area_PickMusic`.
+- **Switch:** AreaKeepStoppingNone
+- **Default:** on
+- **Player:** cheap - `src/game/window_task.cpp:810`
+- **Toward:** psx - "Also in the PSX version?" says this is what the PlayStation does
+- **Languages:** any
+- **State:** active
 
 ### The fishing banner draws no glyph for an empty line, nor for a one-byte code below 0x26
 
@@ -9586,6 +10596,12 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=FishingEmptyLine` and / or
   `BOF3X_ORIGINAL=FishingLowGlyph` (the original's draws; on a Japanese
   disc-only install with a layer built before the fix the crash comes back).
+- **Switch:** FishingEmptyLine, FishingLowGlyph
+- **Default:** on
+- **Player:** cheap - both `PatchBytes`, `src/game/effect_1a.cpp:2148` and `:2150`
+- **Toward:** none - no release shows the case: the PlayStation's strings are never empty ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### F6 saves the whole game state to a quicksave and F7 restores it to the frame
 
@@ -9655,6 +10671,12 @@ designed in rather than bolted on.
   host under the original and under en-US, both passing.
 - **Reversible?** The keys are ours; without them nothing of the game
   changes. Not a switch.
+- **Switch:** Game_WndProc - F6 / F7 are read only in our window procedure (`src/game/win_main.cpp:483`, `:487`), its own `Inject` (`:919`), which also carries DIV-0033's freeze, 0040, 0042
+- **Default:** on
+- **Player:** costly - a detour name only (`src/game/win_main.cpp:919`)
+- **Toward:** none - no release has save states
+- **Languages:** any
+- **State:** active
 
 ### The save list is BISLPS0?.DAT and bounded at sixteen; the quicksaves list apart
 
@@ -9687,6 +10709,12 @@ designed in rather than bolted on.
   mismatches after the split ([`quicksave.md`](quicksave.md) QM.3).
 - **Reversible?** `BOF3X_ORIGINAL=SaveLists` (the original's pattern and its
   unbounded table, quicksaves included in the list).
+- **Switch:** SaveLists
+- **Default:** on
+- **Player:** cheap - `src/game/save_menu.cpp:352`
+- **Toward:** none - the save list is the PC port's own; a memory card has none
+- **Languages:** any
+- **State:** active
 
 ### F5 opens a quick menu drawn as the title's load menu, to load any of the sixteen quicksaves
 
@@ -9720,6 +10748,12 @@ designed in rather than bolted on.
   `quick_menu.txt` in the proof batch.
 - **Reversible?** Not a switch: F5 is ours (nothing of Capcom's is
   replaced; without the key nothing changes).
+- **Switch:** Game_WndProc - F5 is read only in our window procedure (`src/game/win_main.cpp:443`, then `src/game/quick_menu.cpp:420`), its own `Inject` (`:919`)
+- **Default:** on
+- **Player:** costly - a detour name only (`src/game/win_main.cpp:919`)
+- **Toward:** none - no release has quicksaves
+- **Languages:** any
+- **State:** active
 
 ### The staff roll follows the language: a US or PAL layer rolls its release's credits
 
@@ -9777,6 +10811,12 @@ designed in rather than bolted on.
 - **Reversible?** Rebuild the language without the chunk, or play the
   original text: the roll then reads `.data`'s table (on a Western disc-only
   install, D323's patchwork). Not a runtime switch.
+- **Switch:** lang - a chunk of the language layer (kind 17), as DIV-0064's labels are; no narrower runtime name
+- **Default:** on - under its languages
+- **Player:** yes - the language box; a layer rebuilt without the chunk is the build-time way
+- **Toward:** psx - each release's own roll from the player's disc; a PSP layer carries none
+- **Languages:** en-US, en-150, fr-FR, de-DE - a US or PAL disc's layer; a Japanese or PSP layer carries none (`tools/loc_build.py` `build_all`)
+- **State:** active
 
 ### An event battle with no music of its own leaves the scene's song playing
 
@@ -9809,6 +10849,12 @@ designed in rather than bolted on.
   switch is armed): 52,000 rounds, 0 mismatches; the switch logs ON. Not yet
   heard in the PC build.
 - **Reversible?** `BOF3X_ORIGINAL=EventBattleKeepsMusic`.
+- **Switch:** EventBattleKeepsMusic
+- **Default:** on
+- **Player:** cheap - `src/game/mode_rest.cpp:473`
+- **Toward:** psx - the PlayStation's behaviour brought back ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### The music comes from a chosen source first: the PlayStation's, the PSP's or the PC's
 
@@ -9880,9 +10926,17 @@ designed in rather than bolted on.
   from `opt\psp-music\bgm` first. On a PSX-US disc-only install the roll
   played `PURE` from `base\snd` and was heard. **Not yet played with the
   launcher's box.**
-- **Reversible?** `music=seq` in `bof3x.ini` (or `BOF3X_MUSIC=seq`) for the
-  order before this entry; the streams beside a PC install are then the
-  PC's again.
+- **Reversible?** `BOF3X_MUSIC=seq`, set before the launcher (which keeps a
+  set variable), for the order before this entry; the streams beside a PC
+  install are then the PC's again. The ini's `music=seq` does not ask for it:
+  the launcher hands the game a source for it, as for an empty `music=`
+  (`ConfigMusicSource`, `src/launcher/config.cpp:781`).
+- **Switch:** env:BOF3X_MUSIC=seq - set before the launcher, which keeps it; no ini value asks for it (`ConfigMusicSource` maps `music=seq` to a source, `src/launcher/config.cpp:781`)
+- **Default:** on
+- **Player:** yes - a variable the launcher sets and the game reads (`src/game/music_seq.cpp:438`)
+- **Toward:** psx - at the launcher's default source the PlayStation's recordings play first, where the PC port played its own
+- **Languages:** any
+- **State:** active
 
 ### The table faerie in the faerie village is drawn over its table
 
@@ -9938,6 +10992,12 @@ designed in rather than bolted on.
   **Not seen in play.**
 - **Reversible?** `BOF3X_LAYERING=0` (with DIV-0071); Capcom's order under
   `BOF3X_ORIGINAL` (the pass is Capcom's).
+- **Switch:** env:BOF3X_LAYERING=0 - DIV-0071's switch too: the rule is armed inside its pass (`src/game/layering.cpp:581`)
+- **Default:** on
+- **Player:** yes - the launcher has no key for it; both hosts read the variable
+- **Toward:** none - the PlayStation draws the same cut ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### Start + Select held a second returns to the title, as on the Western discs
 
@@ -9983,6 +11043,12 @@ designed in rather than bolted on.
   folder with no game, and the rerun is held while another session's test
   chain uses the game.
 - **Reversible?** `BOF3X_ORIGINAL=PadReset`.
+- **Switch:** PadReset
+- **Default:** on
+- **Player:** cheap - `src/game/win_main.cpp:915`
+- **Toward:** psx - the Western discs' pad reset; the Japanese disc has none
+- **Languages:** any
+- **State:** active
 
 ### The Holy Mantle's doubled encounter threshold stops at 255 instead of wrapping
 
@@ -10020,6 +11086,12 @@ designed in rather than bolted on.
 - **Verification:** builds clean. The cap is armed after the `field_event`
   self-test, which still compares Capcom's roll. Not yet run live.
 - **Reversible?** `BOF3X_ORIGINAL=MantleCap`.
+- **Switch:** MantleCap
+- **Default:** on
+- **Player:** cheap - `src/game/field_event.cpp:880`
+- **Toward:** none - the wrap is Capcom's on every release
+- **Languages:** any
+- **State:** active
 
 ### The round's end clears the faster-side mark from every member and enemy
 
@@ -10047,6 +11119,12 @@ designed in rather than bolted on.
   self-test, whose F7 / F8 controls still plant the full loops against
   Capcom's and are refused. Not yet played; D63's live outline applies.
 - **Reversible?** `BOF3X_ORIGINAL=ExtraRoundClear`.
+- **Switch:** ExtraRoundClear
+- **Default:** on
+- **Player:** cheap - `src/game/battle_turn_steps.cpp:522`
+- **Toward:** none - the JP disc keeps the mark, as the PC did
+- **Languages:** any
+- **State:** active
 
 ### A reading row over the dialogue box's text: furigana from the player's Japanese layer
 
@@ -10167,6 +11245,12 @@ designed in rather than bolted on.
   launcher's *Row above the text: None*); F4 hides the readings in play;
   `BOF3X_ORIGINAL=MsgBox_Step` (or `MsgBox_StatePrint`) disarms the repoint
   and plays every block's own message.
+- **Switch:** ini:ruby= - the launcher's Row above the text: None; nothing else adds the layer to `BOF3X_OPT` (`src/launcher/config.cpp:420`)
+- **Default:** off
+- **Player:** yes - a launcher key
+- **Toward:** none - no release has readings
+- **Languages:** ja-JP - the furigana layer is built over `ja-JP` text alone
+- **State:** active
 
 ### A second language in the reading row
 
@@ -10300,6 +11384,12 @@ designed in rather than bolted on.
   `C:\Users\kerok\bof3x-runs\rr_nr\sheets\`).
 - **Reversible?** Off by default (*Row above the text: None*); F4 and
   `BOF3X_ORIGINAL=MsgBox_Step` as DIV-0155.
+- **Switch:** ini:ruby= - the launcher's Row above the text: None, as DIV-0155
+- **Default:** off
+- **Player:** yes - a launcher key
+- **Toward:** none - no release has a second language over its text
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - every ordered pair of the five, under the main language played
+- **State:** active
 
 ### Mods: a player's zip built into an optional layer, chosen as the row above the text
 
@@ -10354,6 +11444,12 @@ designed in rather than bolted on.
 - **Reversible?** Nothing changes without a mod and a choice: *Row above the
   text: None* (`ruby=` empty); Remove on the Mods tab takes the folder, the
   row and the layer.
+- **Switch:** ini:ruby= - no mod chosen as the Row above the text
+- **Default:** off
+- **Player:** yes - a launcher key
+- **Toward:** none - no release takes mods
+- **Languages:** ja-JP - the reading-row builder reads `ja-JP` text only (`tools/mods.py:89`)
+- **State:** active
 
 ### The faster text: Msg Speed's Med. at Fast's pace, Fast a page at once
 
@@ -10398,6 +11494,12 @@ designed in rather than bolted on.
   mismatches, and the whole `BOF3X_SHADOW='*'` run exits 0. Played by the owner
   2026-10-22: "This is brilliant".
 - **Reversible?** Off by default; the Extras box or `text_speed=0`.
+- **Switch:** ini:text_speed=0
+- **Default:** off
+- **Player:** yes - a launcher key (`src/launcher/config.cpp:244`)
+- **Toward:** none - no release has an instant mode
+- **Languages:** any
+- **State:** active
 - **Amended 2026-10-24 - the pacing floor (issue #121,
   [`known-defects.md`](known-defects.md) D357,
   [`issue-121-lift-stall.md`](issue-121-lift-stall.md)):** an instant page
@@ -10486,6 +11588,12 @@ designed in rather than bolted on.
     what that page holds; the owner's look when a route gets there.
 - **Reversible?** `BOF3X_ORIGINAL=DirectOpaque`, or
   `BOF3X_ORIGINAL=Tex_Convert16`.
+- **Switch:** DirectOpaque - also disarms DIV-0160, which needs it
+- **Default:** on
+- **Player:** cheap - `src/game/tex_page.cpp:473`
+- **Toward:** psx - the PlayStation draws every non-zero direct-colour texel
+- **Languages:** any
+- **State:** active
 
 ### Semi-transparent primitives blend only the texels with bit 15 (the bit-15 round)
 
@@ -10525,6 +11633,12 @@ designed in rather than bolted on.
   and only under our backend (`InitShim` has run): under `BOF3X_ORIGINAL=Display_Setup`, Capcom's DirectX 6
   objects would read alpha clear as transparent, so the converters keep Capcom's rule there.
   `BOF3X_STPVIEW=1` (diagnostic) draws the texels the plane marks in magenta.
+- **Switch:** StpTexels - turns both steps off (`StpBlend` is armed only with it, `src/game/tex_page.cpp:481..486`, `src/render/render_shim.cpp:1082`); `StpBlend` alone leaves step 2
+- **Default:** on
+- **Player:** cheap - `PatchBytes("StpTexels")`, `src/game/tex_page.cpp:481`
+- **Toward:** psx, psp - the PlayStation draws by bit 15; the owner's PSP capture of 2026-10-27 shows the plate opaque and the glass blended (the amendment below)
+- **Languages:** any
+- **State:** active
 - **Amended 2026-10-27 (the away day's census, [`stp-census.md`](stp-census.md) 6, and the owner's
   eye):** the world map's region box (`WorldMap_DrawHud`'s sprites 4 and 5, the "Yraall Region" plate) and
   the legend's labels and key glyphs are drawn through the dial page's CLUT `0x7B80`, whose entries have
@@ -10576,6 +11690,12 @@ designed in rather than bolted on.
   play.
 - **Reversible?** `BOF3X_ORIGINAL=BattleDrawSigned` (both functions; one
   switch byte in each module).
+- **Switch:** BattleDrawSigned
+- **Default:** on
+- **Player:** cheap - one switch byte in each module, `src/game/battle_e7.cpp:923`, `src/game/battle_window_draw.cpp:580`
+- **Toward:** psx - the PlayStation draws them clipped
+- **Languages:** any
+- **State:** active
 
 ### The dragon store prompt's hand reads its answer as the word every writer stores
 
@@ -10603,6 +11723,12 @@ designed in rather than bolted on.
   `battle_e5` fuzz runs before the switch is armed, so it still compares
   Capcom's dword read).
 - **Reversible?** `BOF3X_ORIGINAL=StoreAskWord`.
+- **Switch:** StoreAskWord
+- **Default:** on
+- **Player:** cheap - `src/game/battle_e5.cpp:1234`
+- **Toward:** psx - the PlayStation reads the halfword
+- **Languages:** any
+- **State:** active
 
 ### A battle's start clears the target-pick flag, as the US disc
 
@@ -10639,6 +11765,12 @@ designed in rather than bolted on.
   `battle_phases` fuzz runs before the switch is armed, so it still compares
   Capcom's resets).
 - **Reversible?** `BOF3X_ORIGINAL=BattleInitPickClear`.
+- **Switch:** BattleInitPickClear
+- **Default:** on
+- **Player:** cheap - `src/game/battle_phases.cpp:186`
+- **Toward:** psx - the US disc clears it; the JP disc is as the PC
+- **Languages:** any
+- **State:** active
 ### The two sprite reach stores write the whole dword `+0x70`, as the PlayStation does
 
 - **ID:** DIV-0164
@@ -10668,6 +11800,12 @@ designed in rather than bolted on.
   with the switch off, and `BOF3X_SHADOW='*'` exits 0 with it armed after them. The repaired branch is not
   exercised by a fuzz: it differs from Capcom's copy only in the three upper bytes.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteReachWord` (both stores).
+- **Switch:** SpriteReachWord
+- **Default:** on
+- **Player:** cheap - both stores, `src/game/event_script.cpp:589`, `src/game/sprite_pose.cpp:329`
+- **Toward:** psx - the PlayStation stores the whole word
+- **Languages:** any
+- **State:** active
 
 ### The menu box and the 8 x 8 icon take x and y as signed words
 
@@ -10693,6 +11831,12 @@ designed in rather than bolted on.
   recorded routes keep their frames. The owner looked at the shops in play, 2026-10-23: "Shops look great". A
   gene choice sliding in or out has not been looked at.
 - **Reversible?** `BOF3X_ORIGINAL=MenuSignedXY`.
+- **Switch:** MenuSignedXY
+- **Default:** on
+- **Player:** cheap - `src/game/menu_windows.cpp:1675`
+- **Toward:** psx - the PlayStation draws the fill to the edge
+- **Languages:** any
+- **State:** active
 
 ### Message 0xFA's gene name is terminated after its 8-byte copy
 
@@ -10715,6 +11859,12 @@ designed in rather than bolted on.
 - **Verification:** builds; the `field_e2` fuzz compares Capcom's unterminated copy before the switch is
   armed, and `BOF3X_SHADOW='*'` exits 0. Not seen in play: no recorded route finds a gene.
 - **Reversible?** `BOF3X_ORIGINAL=GeneNameNul`.
+- **Switch:** GeneNameNul
+- **Default:** on
+- **Player:** cheap - `src/game/field_e2.cpp:1922`
+- **Toward:** psx - the US disc terminates; the JP disc does not
+- **Languages:** any
+- **State:** active
 ### A battle action's effect stops the sound-effect loops the last one left, as the PlayStation's key-off does
 
 - **ID:** DIV-0167
@@ -10748,6 +11898,12 @@ designed in rather than bolted on.
   hash sees it: `Sound_Channels` is in `.data`, so a battle where a loop was remembered at an action's start
   differs from the reference there.
 - **Reversible?** `BOF3X_ORIGINAL=EffectKeyOff`.
+- **Switch:** EffectKeyOff
+- **Default:** on
+- **Player:** cheap - `src/game/battle_actions.cpp:715`
+- **Toward:** psx - the PlayStation's key-off ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### Music_Play refuses track 0xFF, as the PlayStation's twins do
 
@@ -10775,6 +11931,12 @@ designed in rather than bolted on.
   every compared byte unchanged, no call out, eax the selection; 0 mismatches. `BOF3X_SELFTEST_ONLY=1
   BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not seen on a route.
 - **Reversible?** `BOF3X_ORIGINAL=MusicPlayRefusesNone`.
+- **Switch:** MusicPlayRefusesNone
+- **Default:** on
+- **Player:** cheap - `src/game/sound.cpp:2004`
+- **Toward:** psx - the PlayStation's twins refuse it
+- **Languages:** any
+- **State:** active
 
 ### The inn's night halts the area's song as the fade starts and resumes it where it stopped, as the PlayStation does
 
@@ -10851,13 +12013,19 @@ designed in rather than bolted on.
   - `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0: 1,092 `MISMATCHES`
     counts, all 0, `inject: 10087 ours`.
   - Not heard by the owner.
-- **State:** DLL state only (`sound_in.cpp`'s taken song, `music_resume`'s pending sample); nothing new in
+- **Kept state:** DLL state only (`sound_in.cpp`'s taken song, `music_resume`'s pending sample); nothing new in
   game memory. The morning's `Music_Start`, which the original does not make, writes the music globals it
   always writes: `Music_Data`, `Music_Decoder`, `Music_Buffer`, `Music_Notify`, `Music_Events`, `Music_Loops`
   (1 where the jingle left 0) and `Music_Finished` (0 where the jingle's end left 1). It also writes the
   decoder's staging and heap. A quicksave taken between nightfall and morning does not carry the taken
   song, so a load into that span ends the night as the PC did.
 - **Reversible?** `BOF3X_ORIGINAL=InnNightPause`.
+- **Switch:** InnNightPause
+- **Default:** on
+- **Player:** cheap - `src/game/sound_in.cpp:404`
+- **Toward:** psx - the PlayStation halts and resumes the song ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### The movement script's op B8 restarts the song from its top at the script's level
 
@@ -10902,6 +12070,12 @@ designed in rather than bolted on.
   `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not heard; not run on a route.
   The state hash sees it where a route reaches a B8: `Music_Track`, `Music_Volume`, the fade and the stream.
 - **Reversible?** `BOF3X_ORIGINAL=MoveB8Restart`.
+- **Switch:** MoveB8Restart
+- **Default:** on
+- **Player:** cheap - `src/game/sound_sp.cpp:670`
+- **Toward:** psx - the PlayStation's step ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### Sound_PlayById's voices follow their sprite: volume and pan by its place
 
@@ -10957,6 +12131,12 @@ designed in rather than bolted on.
   branches. `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less launcher copy exits 0. Not heard. No game
   memory is written: the state hash cannot see it.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteVoicePosition`.
+- **Switch:** SpriteVoicePosition
+- **Default:** on
+- **Player:** cheap - `src/game/sound_sp.cpp:672`
+- **Toward:** psx - the PlayStation's positional sound ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### The field's level cues play at their level, and the distance-gated ones only near their object
 
@@ -11006,6 +12186,12 @@ designed in rather than bolted on.
   known to reach areas 3, 8 or 9 or that scenario step. The state hash sees it only where a `BD` / `D1` is gated
   out: the cue is not played, so `Sound_Channels` keeps what the cue would have stopped or started.
 - **Reversible?** `BOF3X_ORIGINAL=SoundLevelGate`.
+- **Switch:** SoundLevelGate
+- **Default:** on
+- **Player:** cheap - `src/game/sound_sp.cpp:675`
+- **Toward:** psx - the PlayStation's step ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### A music stop cuts the song, as the PlayStation's SsSepStop does, instead of fading it out
 
@@ -11098,6 +12284,12 @@ designed in rather than bolted on.
   (with DIV-0174 beside it). Not heard; not run on a route (headless group). The end batch's WAV dump of `whelpBoss.txt`
   should show the bedroom's song ending at f10821 and nothing after it until track 7.
 - **Reversible?** `BOF3X_ORIGINAL=StopCuts` (DIV-0028's fade), or `BOF3X_ORIGINAL=Music_FadeOutStop`.
+- **Switch:** StopCuts
+- **Default:** on
+- **Player:** cheap - `src/game/sound_st.cpp:52`
+- **Toward:** psx - the PlayStation's `SsSepStop` ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### A battle action's effect also stops the one-shot sound effects the last one left sounding, as the PlayStation's key-off does
 
@@ -11149,6 +12341,12 @@ designed in rather than bolted on.
   - Nothing is written to game memory, so the state hash sees nothing.
   - Not heard; not run on a route.
 - **Reversible?** `BOF3X_ORIGINAL=OneShotKeyOff`, independently of `BOF3X_ORIGINAL=EffectKeyOff` (DIV-0167).
+- **Switch:** OneShotKeyOff - independent of DIV-0167's `EffectKeyOff`
+- **Default:** on
+- **Player:** cheap - `src/game/sound_st.cpp:98`
+- **Toward:** psx - the PlayStation's key-off ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### The window reset clears every field of a window record but the last four bytes, as the US disc
 
@@ -11188,6 +12386,12 @@ designed in rather than bolted on.
   freed records' bytes in `WindowRecords`, so the state hash shows `0x803000` on six of the ten routes and the
   attract with the switch on - the signature of this entry.
 - **Reversible?** `BOF3X_ORIGINAL=WindowResetFull`.
+- **Switch:** WindowResetFull
+- **Default:** on
+- **Player:** cheap - `src/game/mode_flow.cpp:770`
+- **Toward:** psx - the US disc clears the whole record; the JP disc is as the PC
+- **Languages:** any
+- **State:** active
 
 ### Sunder's animation at Mt. Myrneg's entry loops until the scene reaches him
 
@@ -11235,6 +12439,12 @@ designed in rather than bolted on.
   that page from its first tick - the signature of this entry; the `combat` run against the `orig4` pair:
   two pages over 2,561 ticks, `0x5FD000` on every tick (this entry) and `0x803000` on 653 (DIV-0175's window records, already on `main`), nothing else; the references disagree on 7 pages of noise (`C:/Users/kerok/bof3x-runs/sunder1024/sh/check_combat.txt`).
 - **Reversible?** `BOF3X_ORIGINAL=SunderLoop`.
+- **Switch:** SunderLoop
+- **Default:** on
+- **Player:** cheap - `PatchBytes("SunderLoop")` writes a `.data` byte in both hosts; only the player's switch is missing
+- **Toward:** none - the loop is no release's: the PlayStation's script asks for the once-cut too ("Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### The area's song comes back after a jingle
 
@@ -11295,6 +12505,12 @@ designed in rather than bolted on.
   silent to the end; a 2-second quiet stretch before the jingle in the x2 dump is not attributed. Not heard
   by the owner; the playing case (no bracket) is covered by the self-test only.
 - **Reversible?** `BOF3X_ORIGINAL=JingleResume`.
+- **Switch:** JingleResume
+- **Default:** on
+- **Player:** cheap - `src/game/sound_in.cpp:410`
+- **Toward:** psx - the PlayStation's song plays on under its jingles
+- **Languages:** any
+- **State:** active
 
 ### `Gte_ApplyMatrixLV`'s products are exact: the console flash rises instead of folding over
 
@@ -11352,6 +12568,12 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=ApplyMatrixLVExact` keeps the port's
   wrapping products with ours running; `BOF3X_ORIGINAL=Gte_ApplyMatrixLV`
   runs Capcom's.
+- **Switch:** ApplyMatrixLVExact
+- **Default:** on
+- **Player:** cheap - `src/game/psx_gte.cpp:286`
+- **Toward:** psx - the PlayStation's GTE computes the product exactly
+- **Languages:** any
+- **State:** active
 
 ### The name of an enemy's skill the party can still learn shows in blue
 
@@ -11405,6 +12627,12 @@ designed in rather than bolted on.
   `C:\Users\kerok\bof3x-runs\blue1024\shots`. Seen by the owner
   2026-10-24: "That looked great to me".
 - **Reversible?** Off by default; the Extras box or `unlearned_blue=0`.
+- **Switch:** ini:unlearned_blue=0
+- **Default:** off
+- **Player:** yes - a launcher key (`src/launcher/config.cpp:247`)
+- **Toward:** none - an option of this project
+- **Languages:** any
+- **State:** active
 
 ### Area 135's marker is placed before it is shown: a save loaded there no longer crashes
 
@@ -11470,6 +12698,12 @@ designed in rather than bolted on.
   `C:\Users\kerok\bof3x-runs\door135`.
 - **Reversible?** `BOF3X_ORIGINAL=Area135MarkerPlaced` (the original's
   init, crash included); `BOF3X_ORIGINAL=Area135_Init` runs Capcom's.
+- **Switch:** Area135MarkerPlaced
+- **Default:** on
+- **Player:** cheap - `src/game/area_w3d.cpp:974`
+- **Toward:** none - the PlayStation would draw the marker from whatever RAM holds (reasoned, not measured: "Also in the PSX version?" above)
+- **Languages:** any
+- **State:** active
 
 ### A cell texture is rebuilt after an upload over its cells: a sprite no longer keeps the previous image's composition
 
@@ -11543,6 +12777,12 @@ designed in rather than bolted on.
   render-only change, nothing of the game's state is touched).
 - **Reversible?** `BOF3X_ORIGINAL=CellTextureVram` keeps the port's cache
   (the stale compositions included).
+- **Switch:** CellTextureVram
+- **Default:** on
+- **Player:** cheap - `src/game/d3d_draw.cpp:603`
+- **Toward:** psx - the PlayStation's GPU samples VRAM at every draw
+- **Languages:** any
+- **State:** active
 
 ### An area's own `.data` is put back when its DAT is loaded, as the PlayStation's overlay reload did
 
@@ -11621,6 +12861,12 @@ designed in rather than bolted on.
   same code path).
 - **Reversible?** `BOF3X_ORIGINAL=AreaDataReload` keeps the port's
   (the bytes stay until the exe restarts).
+- **Switch:** AreaDataReload
+- **Default:** on
+- **Player:** cheap - `src/game/area_data_reload.cpp:103`
+- **Toward:** psx - the PlayStation's overlay reload put the bytes back
+- **Languages:** any
+- **State:** active
 
 ### Paralyzer plays no cue when the current enemy has no cue table, instead of reading address 0
 
@@ -11692,6 +12938,12 @@ designed in rather than bolted on.
   the caster's animation. Run root `C:/Users/kerok/bof3x-runs/ss1026/par`.
 - **Reversible?** `BOF3X_ORIGINAL=Paralyzer_Start` leaves Capcom's
   function, its read with it.
+- **Switch:** Paralyzer_Start
+- **Default:** on
+- **Player:** costly - the original path is Capcom's function (a detour name only); ours would have to grow its null read, a crash
+- **Toward:** none - the null case is not reachable on the PlayStation, so no release shows the skill without its cue
+- **Languages:** any
+- **State:** active
 
 ### The world map's dial is drawn semi-transparent, so its glass shows the map as on the PlayStation
 
@@ -11730,3 +12982,9 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=DialTranslucent` keeps the port's operand (the dial opaque).
   With `BOF3X_ORIGINAL=StpBlend` as well, the whole dial would blend at half - the third
   picture D42 refused - so this entry is meant to be on only with DIV-0160.
+- **Switch:** DialTranslucent
+- **Default:** on
+- **Player:** cheap - `src/game/world_map.cpp:699`
+- **Toward:** psx, psp - the PlayStation's operand; the owner's PSP capture of 2026-10-27 shows the glass the same
+- **Languages:** any
+- **State:** active
