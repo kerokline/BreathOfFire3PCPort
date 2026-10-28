@@ -20,8 +20,10 @@ namespace area_entry {
 namespace {
 
 using namespace move_script;
+using move_script::At;
 
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+inline unsigned char* At(::bof3::image::Va va) { return move_script::At(::bof3::Img(va)); }
 unsigned char* Rec(unsigned slot) { return rv::Bytes(ObjTrio) + slot * kRecord; }
 
 // --- The fuzz's own area data ------------------------------------------------

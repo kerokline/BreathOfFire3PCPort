@@ -37,8 +37,8 @@ using move_script::Word;
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
 // The cursor row as a table index (movsx) and as a test (a byte).
-int CursorRow() { return static_cast<signed char>(Mem(AreaW0c_ChoiceAnswer_addr)[0]); }
-unsigned char CursorByte() { return Mem(AreaW0c_ChoiceAnswer_addr)[0]; }
+int CursorRow() { return static_cast<signed char>(Mem(::bof3::Img(AreaW0c_ChoiceAnswer_addr))[0]); }
+unsigned char CursorByte() { return Mem(::bof3::Img(AreaW0c_ChoiceAnswer_addr))[0]; }
 void SetMessage(unsigned v) { SetWord(Mem(at::kMessage), v); }
 // A u16 of an area's message table by the s8 cursor row, unchecked as the
 // original's (a row outside the table reads its neighbours in the image).
@@ -54,7 +54,7 @@ unsigned char ObjectIndex(const unsigned char* object) {
     return static_cast<unsigned char>(d / 0xA4);
 }
 
-unsigned char* Effect(std::uint32_t slot_dword) { return Mem(Effect_Objects_addr + (slot_dword & 0xFFu) * at::kEffectStride); }
+unsigned char* Effect(std::uint32_t slot_dword) { return Mem(::bof3::Img(Effect_Objects_addr) + (slot_dword & 0xFFu) * at::kEffectStride); }
 
 // The script position of MoveScript_Object (u16 +0xA), moved as the
 // original's 16-bit add.
@@ -174,11 +174,11 @@ extern "C" void __cdecl Area01_SpawnEffectB(void) {
 extern "C" void __cdecl Area02_ChoiceArmTail(void) {
     const int row = CursorRow();
     SetMessage(0xFFFF);
-    if (row == 0) Mem(AreaW0c_TailSub_addr)[0] = 5;
-    else if (row == 1) Mem(AreaW0c_TailSub_addr)[0] = 4;
+    if (row == 0) Mem(::bof3::Img(AreaW0c_TailSub_addr))[0] = 5;
+    else if (row == 1) Mem(::bof3::Img(AreaW0c_TailSub_addr))[0] = 4;
     else return;
-    Mem(AreaW0a_TailKind_addr)[0] = 5;
-    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x1E);
+    Mem(::bof3::Img(AreaW0a_TailKind_addr))[0] = 5;
+    AH_CALL(Flags_Set)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1E);
 }
 
 // ---- area 3 (descriptor 0x5DDB40) --------------------------------------------
@@ -191,7 +191,7 @@ extern "C" void __cdecl Area03_ChoiceMessage42(void) {
         return;
     }
     SetMessage(0x44);
-    Mem(AreaW0c_AnswerMark_addr)[0] = 6;
+    Mem(::bof3::Img(AreaW0c_AnswerMark_addr))[0] = 6;
 }
 
 // original 0x4011C0 (area 3's choices 3 and 4, handlers 5 and 6; PSX
@@ -200,7 +200,7 @@ extern "C" void __cdecl Area03_ChoiceMessage42(void) {
 extern "C" void __cdecl Area03_ChoiceMessage44(void) {
     if (CursorByte() != 0) {
         SetMessage(0x44);
-        Mem(AreaW0c_AnswerMark_addr)[0] = 6;
+        Mem(::bof3::Img(AreaW0c_AnswerMark_addr))[0] = 6;
         return;
     }
     SetMessage(0xFFFF);
@@ -221,8 +221,8 @@ extern "C" unsigned char __cdecl Area03_Trigger22(unsigned char* object, unsigne
     static_cast<void>(object);
     static_cast<void>(flags);
     AH_CALL(ScriptFlags_Set40)();
-    Mem(AreaW0a_TailKind_addr)[0] = 4;
-    Mem(AreaW0c_TailSub_addr)[0] = 0;
+    Mem(::bof3::Img(AreaW0a_TailKind_addr))[0] = 4;
+    Mem(::bof3::Img(AreaW0c_TailSub_addr))[0] = 0;
     return 0;
 }
 
@@ -234,20 +234,20 @@ extern "C" unsigned char __cdecl Area03_Trigger22(unsigned char* object, unsigne
 extern "C" void __cdecl Area04_ChoiceArmTail(void) {
     const int row = CursorRow();
     SetMessage(0xFFFF);
-    if (row == 0) Mem(AreaW0c_TailSub_addr)[0] = 0;
-    else if (row == 1) Mem(AreaW0c_TailSub_addr)[0] = 1;
+    if (row == 0) Mem(::bof3::Img(AreaW0c_TailSub_addr))[0] = 0;
+    else if (row == 1) Mem(::bof3::Img(AreaW0c_TailSub_addr))[0] = 1;
     else return;
-    Mem(AreaW0a_TailKind_addr)[0] = 5;
-    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x1F);
+    Mem(::bof3::Img(AreaW0a_TailKind_addr))[0] = 5;
+    AH_CALL(Flags_Set)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1F);
 }
 
 // ---- area 5 (descriptor 0x5DF6A0) --------------------------------------------
 
 // original 0x401290 (area 5's choice 2): the message Area05_MessagesA[row].
-extern "C" void __cdecl Area05_ChoiceMessageA(void) { SetMessage(MessageAt(Area05_MessagesA_addr, CursorRow())); }
+extern "C" void __cdecl Area05_ChoiceMessageA(void) { SetMessage(MessageAt(::bof3::Img(Area05_MessagesA_addr), CursorRow())); }
 
 // original 0x4012B0 (area 5's choice 3): the message Area05_MessagesB[row].
-extern "C" void __cdecl Area05_ChoiceMessageB(void) { SetMessage(MessageAt(Area05_MessagesB_addr, CursorRow())); }
+extern "C" void __cdecl Area05_ChoiceMessageB(void) { SetMessage(MessageAt(::bof3::Img(Area05_MessagesB_addr), CursorRow())); }
 
 // original 0x401670 (area 5's choice 0, area 10's choice 0, area 15's choice
 // 0 and handler 6; PSX 0x801F2CB8 as area 15's handler 6): no new message;
@@ -312,7 +312,7 @@ extern "C" void __cdecl Area07_CameraShiftYMore(void) {
 // Area08_ChoiceMessages[row]; row 0 sets variable 3 to 1, row 1 to 0.
 extern "C" void __cdecl Area08_ChoiceMessageVar3(void) {
     const int row = CursorRow();
-    SetMessage(MessageAt(Area08_ChoiceMessages_addr, row));
+    SetMessage(MessageAt(::bof3::Img(Area08_ChoiceMessages_addr), row));
     if (row == 0) Mem(at::kVar3)[0] = 1;
     else if (row == 1) Mem(at::kVar3)[0] = 0;
 }
@@ -371,8 +371,8 @@ extern "C" void __cdecl Area08_CameraShiftXLess(void) {
 // original 0x401620 / 0x401630 (area 8's handlers 10 / 11; PSX 0x801F45FC /
 // 0x801F4618): field object 6's x (the dword Sprite_Objects + 6 * 0xA4 +
 // 0x34) 0x800 more / less.
-extern "C" void __cdecl Area08_Object6XMore(void) { SetLong(Mem(Sprite_Objects_addr + 0x40c), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem(Sprite_Objects_addr + 0x40c))) + 0x800u)); }
-extern "C" void __cdecl Area08_Object6XLess(void) { SetLong(Mem(Sprite_Objects_addr + 0x40c), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem(Sprite_Objects_addr + 0x40c))) - 0x800u)); }
+extern "C" void __cdecl Area08_Object6XMore(void) { SetLong(Mem(::bof3::Img(Sprite_Objects_addr) + 0x40c), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem(::bof3::Img(Sprite_Objects_addr) + 0x40c))) + 0x800u)); }
+extern "C" void __cdecl Area08_Object6XLess(void) { SetLong(Mem(::bof3::Img(Sprite_Objects_addr) + 0x40c), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem(::bof3::Img(Sprite_Objects_addr) + 0x40c))) - 0x800u)); }
 
 // original 0x401640 (PSX 0x801F4634; area 8's handler 12 and choice 13, area 3's handler 0;
 // PSX 0x801F4634 as area 8's, 0x801F2D30 as area 3's): the four cells
@@ -386,8 +386,8 @@ extern "C" void __cdecl Area08_ClearCells(void) {
 
 // original 0x4016D0 / 0x4016F0 (area 10's choices 2 / 3): the message
 // Area10_MessagesA / B[row].
-extern "C" void __cdecl Area10_ChoiceMessageA(void) { SetMessage(MessageAt(Area10_MessagesA_addr, CursorRow())); }
-extern "C" void __cdecl Area10_ChoiceMessageB(void) { SetMessage(MessageAt(Area10_MessagesB_addr, CursorRow())); }
+extern "C" void __cdecl Area10_ChoiceMessageA(void) { SetMessage(MessageAt(::bof3::Img(Area10_MessagesA_addr), CursorRow())); }
+extern "C" void __cdecl Area10_ChoiceMessageB(void) { SetMessage(MessageAt(::bof3::Img(Area10_MessagesB_addr), CursorRow())); }
 
 // original 0x401710 (area 10's handler 0 and choice 4; PSX 0x801F2CDC): a
 // free effect record of kind 0x1C (+0 1, +5 0x1C) at Sprite_Current's x and
@@ -409,7 +409,7 @@ extern "C" void __cdecl Area10_SpawnEffect1C(void) {
 // the bank at [0x929ED0] is set, the script position 2 back (the op runs
 // again), MoveScript_Object read after the call.
 extern "C" void __cdecl Area12_WaitFlagE(void) {
-    const auto bank = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(Chapter_FlagRow_addr)))));
+    const auto bank = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(::bof3::Img(Chapter_FlagRow_addr))))));
     if (AH_CALL(Flags_Test)(bank, 0xE)) return;
     MoveScriptPos(0xFFFE);
 }
@@ -420,7 +420,7 @@ extern "C" void __cdecl Area12_WaitFlagE(void) {
 // Area13_ChoiceMessages[row]; row 0 sets variable 3 to 0xA, row 1 to 0x14.
 extern "C" void __cdecl Area13_ChoiceMessageVar3(void) {
     const int row = CursorRow();
-    SetMessage(MessageAt(Area13_ChoiceMessages_addr, row));
+    SetMessage(MessageAt(::bof3::Img(Area13_ChoiceMessages_addr), row));
     if (row == 0) Mem(at::kVar3)[0] = 0xA;
     else if (row == 1) Mem(at::kVar3)[0] = 0x14;
 }
@@ -483,7 +483,7 @@ extern "C" void __cdecl Area13_TurnDirection(void) {
 extern "C" void __cdecl Area15_SetZones(void) {
     const unsigned char zone = (Field_StatusBits & 1) ? 2 : 0;
     auto list = [] {
-        return Mem(static_cast<std::uint32_t>(Long(Mem(Area_StateRecords_addr + static_cast<std::uint32_t>(Game_AreaNumber) * 4u))));
+        return Mem(static_cast<std::uint32_t>(Long(Mem(::bof3::Img(Area_StateRecords_addr) + static_cast<std::uint32_t>(Game_AreaNumber) * 4u))));
     };
     list()[0xC] = zone;
     list()[0x14] = zone;
@@ -494,15 +494,15 @@ extern "C" void __cdecl Area15_PassFlags1F(void) { Draw_PassFlags = 0x1F; }
 
 // original 0x401A10 / 0x401AF0 (area 15's handlers 4 / 5; PSX 0x801F2D78 /
 // 0x801F2EE8): jmp [Area15_StatesA / B + Sprite_Current[4] * 4].
-extern "C" void __cdecl Area15_RunStatesA(void) { RunState(Area15_StatesA_addr, "Area15_RunStatesA"); }
-extern "C" void __cdecl Area15_RunStatesB(void) { RunState(Area15_StatesB_addr, "Area15_RunStatesB"); }
+extern "C" void __cdecl Area15_RunStatesA(void) { RunState(::bof3::Img(Area15_StatesA_addr), "Area15_RunStatesA"); }
+extern "C" void __cdecl Area15_RunStatesB(void) { RunState(::bof3::Img(Area15_StatesB_addr), "Area15_RunStatesB"); }
 
 // original 0x401A30 / 0x401B10 (Area15_StatesA / B entry 0): the pose of
 // Area15_PosesA / B by bit 1 of Frame_Counter (read before Rand), a
 // countdown Sprite_Current[0xA] = Rand & 7, state 1, the script position 2
 // back. Sprite_Current read after each call, MoveScript_Object at the end.
-extern "C" void __cdecl Area15_StateA0(void) { Area15Pose(Area15_PosesA_addr); }
-extern "C" void __cdecl Area15_StateB0(void) { Area15Pose(Area15_PosesB_addr); }
+extern "C" void __cdecl Area15_StateA0(void) { Area15Pose(::bof3::Img(Area15_PosesA_addr)); }
+extern "C" void __cdecl Area15_StateB0(void) { Area15Pose(::bof3::Img(Area15_PosesB_addr)); }
 
 // original 0x401AA0 (entry 1 of both state tables): the countdown
 // Sprite_Current[0xA] one less; at 0 before it, state 0. Then with the
@@ -512,7 +512,7 @@ extern "C" void __cdecl Area15_StateCount(void) {
     const unsigned char count = Sprite_Current[0xA];
     Sprite_Current[0xA] = static_cast<unsigned char>(count - 1);
     if (count == 0) Sprite_Current[4] = 0;
-    if (Word(Mem(MoveScript_PartyRecords_addr + 0x66)) == 0) {
+    if (Word(Mem(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66)) == 0) {
         Sprite_Current[4] = 0;
         Sprite_Current[0xA] = 0;
         return;

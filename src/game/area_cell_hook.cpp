@@ -17,9 +17,9 @@ namespace at {
 // 0x662F28: pairs of (area, handler) dwords. The loop runs while its cursor
 // is below 0x663008 (MapCell_Handlers), so the table is 28 pairs - not the
 // 100 docs/takeover-queue-areas.md counted from the bytes that follow.
-constexpr std::uint32_t kPairs = 0x662F28;
+constexpr ::bof3::image::Va kPairs{0x662F28};
 constexpr std::uint32_t kPairStride = 8;
-constexpr unsigned kPairCount = (0x663008 - kPairs) / kPairStride;
+constexpr unsigned kPairCount = (0x663008 - kPairs.v) / kPairStride;
 
 }  // namespace at
 }  // namespace area_cell_hook
@@ -34,10 +34,10 @@ extern "C" int __cdecl Area_CellHook(unsigned x, unsigned z) {
     namespace at = area_cell_hook::at;
     const unsigned area = Game_AreaNumber;
     unsigned i = 0;
-    while (i < at::kPairCount && area_harness::Mem(Area_CellHooks_addr + at::kPairStride * i)[0] != area) ++i;
+    while (i < at::kPairCount && area_harness::Mem(::bof3::Img(Area_CellHooks_addr) + at::kPairStride * i)[0] != area) ++i;
     if (i == at::kPairCount) return 0;
     const auto handler = reinterpret_cast<area_harness::Hook>(static_cast<std::uintptr_t>(
-        static_cast<std::uint32_t>(move_script::Long(area_harness::Mem(Area_CellHooks_addr + at::kPairStride * i + 4)))));
+        static_cast<std::uint32_t>(move_script::Long(area_harness::Mem(::bof3::Img(Area_CellHooks_addr) + at::kPairStride * i + 4)))));
     return static_cast<signed char>(handler(x, z));
 }
 

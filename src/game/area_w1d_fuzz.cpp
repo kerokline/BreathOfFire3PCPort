@@ -151,6 +151,7 @@ const ah::Clone kClones64[] = {
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char& B(std::uint32_t address) { return *ah::Mem(address); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 
 // A record the active member pointer may name: one of the four party objects
 // (Sprite_ObjectsExtra), a field object, a party record, or the running
@@ -283,7 +284,7 @@ const ah::Region kRegions[] = {
     {AreaW1a_FocusObject_addr, 4},
     {Field_ActiveMember_addr, 4},
     {AreaW0c_AnswerMark_addr, 1},
-    {at::kTextRecords, 16},
+    {::bof3::Img(at::kTextRecords), 16},
     {Area63_Weights_addr, 8},
     {Area64_Weights_addr, 8},
 };

@@ -8,6 +8,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
@@ -23,17 +25,17 @@ namespace at {
 // choices) and the message word a choice handler leaves (0xFFFF: no new
 // message).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
 // (Field_ModeTailKinds 0x662CE8), its state, a sub-kind, and a word timer.
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
 // kTailState: now AreaW0c_TailState (symbols.toml).
 // kTailSub: now AreaW0c_TailSub (symbols.toml).
-constexpr std::uint32_t kTailTimer = 0x9039F6;
+constexpr ::bof3::image::Va kTailTimer{0x9039F6};
 // The movement script's four counters (MoveScript_CounterOps, ops A0..AF).
-constexpr std::uint32_t kCounter0 = 0x903848;
-constexpr std::uint32_t kCounter1 = 0x903849;
-constexpr std::uint32_t kCounter3 = 0x90384B;
+constexpr ::bof3::image::Va kCounter0{0x903848};
+constexpr ::bof3::image::Va kCounter1{0x903849};
+constexpr ::bof3::image::Va kCounter3{0x90384B};
 // The byte after MoveScript_Var7: the step of a scene run (field_modes.cpp).
 // kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
 // The story flags (Flags_Set / Flags_Test's bank) and Cond_Flags row 13
@@ -48,11 +50,11 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // kAnswerMark: now AreaW0c_AnswerMark (symbols.toml).
 // The focus object: the object whose talk ran last (area_w1a_callees.h's
 // kFocusObject); area 113's tail writes its word +0x88.
-constexpr std::uint32_t kFocusObject = 0x903804;
+constexpr ::bof3::image::Va kFocusObject{0x903804};
 // MoveScript_PartyRecords record 1's first byte: area 108's place scene sets
 // its bit 0 (area_w1c_callees.h's kByte803490).
 // kPartyRecords: now MoveScript_PartyRecords (symbols.toml).
-constexpr std::uint32_t kByte803490 = 0x803490;
+constexpr ::bof3::image::Va kByte803490{0x803490};
 // The leader's record (ObjTrio record 0): its pose byte +8, the member id
 // +0x89, x +0x34 (high word +0x36), z +0x38 (high word +0x3A).
 // kLeader: now ObjTrio (symbols.toml).
@@ -65,7 +67,7 @@ constexpr std::uint32_t kByte803490 = 0x803490;
 constexpr std::uint32_t kPartyStride = 0x14C;
 // The leader's zone counter (record 0 +0x134; area_w1f_callees.h's
 // kLeaderZone): area 110's init sets Field_StepCount from it.
-constexpr std::uint32_t kLeaderZone = 0x802E74;
+constexpr ::bof3::image::Va kLeaderZone{0x802E74};
 // Sprite_ObjectsExtra's records (0xA4 bytes, four of them).
 constexpr std::uint32_t kExtraStride = 0xA4;
 constexpr unsigned kExtraCount = 4;
@@ -74,14 +76,14 @@ constexpr unsigned kExtraCount = 4;
 // kMoveSpeed4: now Field_MoveSpeeds[4] (symbols.toml).
 // Signed cell steps (x, z) per direction, two bytes apart
 // (event_ops_callees.h's kCellDelta).
-constexpr std::uint32_t kCellDelta = 0x66971C;
+constexpr ::bof3::image::Va kCellDelta{0x66971C};
 // Effect_Objects' stride and count (records of 0x80 bytes, 20 of them).
 constexpr std::uint32_t kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
 // Named cells, by address for the fuzz's regions (symbols.gen.h spells each
 // name as a macro of its value):
 // kEffectObjects: now Effect_Objects (symbols.toml). Effect_Objects
-constexpr std::uint32_t kSpriteObjects = 0x7DEE80;       // Sprite_Objects
+constexpr ::bof3::image::Va kSpriteObjects{0x7DEE80};       // Sprite_Objects
 // kSpriteObjectsExtra: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra
 // kSpriteKind2: now Sprite_Kind2 (symbols.toml). Sprite_Kind2 (0xA4 bytes)
 // kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember
@@ -124,7 +126,7 @@ constexpr unsigned kArea108SetCellCount = 4;
 constexpr unsigned kArea111GridBytes = 0x1C;
 constexpr unsigned kArea111GridSide = 7;
 // kArea111GridStart: now Area111_GridStart (symbols.toml). Area111_GridStart, 28 bytes
-constexpr std::uint32_t kArea111CellBytes = 0x61FB7C;   // Area111_CellBytes, 49
+constexpr ::bof3::image::Va kArea111CellBytes{0x61FB7C};   // Area111_CellBytes, 49
 // Area 112: the four member ids its handler 2 looks for and the four message
 // words by them, the four cells its cell hook tests (x, z, flag bits, flag),
 // the four flags those bits set or clear, the four boxes its helper tests

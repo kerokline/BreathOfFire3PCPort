@@ -190,6 +190,7 @@ const ah::DataTable kTables112[] = {{Area112_EffectStates_addr, at::kArea112Effe
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char& B(U address) { return *ah::Mem(address); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 unsigned char* EffectRecord(unsigned slot) { return ah::Mem(Effect_Objects_addr + slot % at::kEffectCount * at::kEffectStride); }
 unsigned char* ExtraRecord(unsigned k) { return ah::Mem(Sprite_ObjectsExtra_addr + k % at::kExtraCount * at::kExtraStride); }
 unsigned char* Grid() { return ah::Mem(Area111_Grid_addr); }
@@ -336,7 +337,7 @@ ah::Region g_regions[] = {
     {Area110_Weights_addr, 8},
     {Area111_Grid_addr, 0x20},
     {Area111_GridStart_addr, at::kArea111GridBytes},
-    {at::kArea111CellBytes, 49},
+    {::bof3::Img(at::kArea111CellBytes), 49},
 };
 constexpr unsigned kPointRegion = 9;
 

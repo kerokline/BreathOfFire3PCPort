@@ -214,6 +214,7 @@ const ah::Region kRegions[] = {
 };
 
 unsigned char& B(std::uint32_t address) { return *ah::Mem(address); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 
 // A record the active member pointer may name: one of the four party objects
 // (Sprite_ObjectsExtra, what ops D4..D6 divide it into), a field object, a

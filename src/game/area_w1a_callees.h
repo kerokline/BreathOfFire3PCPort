@@ -8,6 +8,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
@@ -22,7 +24,7 @@ namespace at {
 // The message box's answer to a choice (docs/item-use.md section 5) and the
 // message word a choice handler leaves (0xFFFF: no new message).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // A byte some choices set to 6 beside the message they open (area 37's too).
 // kAnswerMark: now AreaW0c_AnswerMark (symbols.toml).
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
@@ -31,15 +33,15 @@ constexpr std::uint32_t kMessage = 0x7DEE48;
 // kTailState: now AreaW0c_TailState (symbols.toml).
 // kTailSub: now AreaW0c_TailSub (symbols.toml).
 // Field_ScriptFlags' high byte (the original ors 0x10 into it as a byte).
-constexpr std::uint32_t kScriptFlagsHigh = 0x9039A3;
+constexpr ::bof3::image::Va kScriptFlagsHigh{0x9039A3};
 // The movement script's counters 0 and 1 (MoveScript_CounterOps).
-constexpr std::uint32_t kCounter0 = 0x903848;
-constexpr std::uint32_t kCounter1 = 0x903849;
+constexpr ::bof3::image::Va kCounter0{0x903848};
+constexpr ::bof3::image::Va kCounter1{0x903849};
 // The scratch word the field's event ops take an object index from
 // (docs/event-ops.md); area 40 stores a free index and a button word there.
-constexpr std::uint32_t kScratchWord = SharedScratch_addr;
+constexpr ::bof3::image::Va kScratchWord{SharedScratch_addr};
 // The byte after MoveScript_Var7 (area 40's choice 0 sets it).
-constexpr std::uint32_t kVar7Step = 0x8034E5;
+constexpr ::bof3::image::Va kVar7Step{0x8034E5};
 // The story flags (Flags_Set / Flags_Test's bank), the lever flags' row
 // (Cond_Flags + 0x20, flags 8..0xB are the low nibble of 0x903FB1), and the
 // row pointer the chapters' flag tests take (docs/field-modes.md).
@@ -52,21 +54,21 @@ constexpr std::uint32_t kVar7Step = 0x8034E5;
 // kPartyList1: now Cond_Flags[0xd3] (symbols.toml).
 // kPartyList2: now Cond_Flags[0xd4] (symbols.toml).
 // The 32 key-item bytes (the key-item list, docs/char-stats.md).
-constexpr std::uint32_t kKeyItems = 0x904554;
+constexpr ::bof3::image::Va kKeyItems{0x904554};
 constexpr unsigned kKeyItemCount = 0x20;
 // A sprite pointer after Camera_ShiftY (scena_sc7_callees.h's kFocusObject).
-constexpr std::uint32_t kFocusObject = 0x903804;
+constexpr ::bof3::image::Va kFocusObject{0x903804};
 // Cond_ByteFD's value on entry (mode_flow_callees.h's kLastZone).
-constexpr std::uint32_t kEntryZone = 0x905E68;
+constexpr ::bof3::image::Va kEntryZone{0x905E68};
 // The leader's record (ObjTrio): its +8 (direction), +0x89; records 1, 2.
-constexpr std::uint32_t kLeader = 0x802D40;
+constexpr ::bof3::image::Va kLeader{0x802D40};
 // kLeaderByte8: now ObjTrio[0].direction (symbols.toml).
 // kLeaderByte89: now ObjTrio[0].char_id (symbols.toml).
 // kPartyRecord1: now ObjTrio (symbols.toml). record 1 (ObjTrio_addr + 0x14C; Field_Members[4] until stage C4).
 // kPartyRecord2: now ObjTrio[2] (symbols.toml).
 // The cell step per direction: two signed bytes (x, z), 2 bytes apart
 // (event_ops_callees.h's kCellDelta).
-constexpr std::uint32_t kCellDelta = 0x66971C;
+constexpr ::bof3::image::Va kCellDelta{0x66971C};
 // Effect_Objects' stride (records of 0x80 bytes); DrawItems' half (0x48).
 constexpr std::uint32_t kEffectStride = 0x80;
 constexpr std::uint32_t kDrawItemStride = 0x48;
@@ -99,7 +101,7 @@ constexpr unsigned kArea39StateCount = 2;
 // kArea41GiveMessages: now Area41_GiveMessages (symbols.toml). Area41_GiveMessages: 2 words by the s8 answer
 // kArea41States: now Area41_States (symbols.toml). Area41_States, 4
 constexpr unsigned kArea41StateCount = 4;
-constexpr std::uint32_t kArea41TriggerBase = 0x5F5F2D;  // + object +0x86: Area41_TriggerFlags 0x5F5F68 at ids 59, 60
+constexpr ::bof3::image::Va kArea41TriggerBase{0x5F5F2D};  // + object +0x86: Area41_TriggerFlags 0x5F5F68 at ids 59, 60
 
 // Area 40's grid: cells x 0x94..0x97 by z 0x20..0x23; its gate x 0x41..0x44
 // by z 3..9.

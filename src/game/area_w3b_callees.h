@@ -22,6 +22,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
@@ -34,14 +36,14 @@ namespace at {
 using U = std::uint32_t;
 
 // --- the field frame's cells --------------------------------------------------
-constexpr U kStoryFlags = 0x904030;
+constexpr ::bof3::image::Va kStoryFlags{0x904030};
 // kTailKind: now AreaW0a_TailKind (symbols.toml). Field_ModeTailKinds' index (s8)
 // kTailState: now AreaW0c_TailState (symbols.toml). s8: the armed tail kind's (or the field hook's) state
 // kTailArg: now AreaW0c_TailSub (symbols.toml).
 // kMsgMode: now AreaW0a_TailKind (symbols.toml).
 // kMsgState: now AreaW0c_TailState (symbols.toml).
 // kMsgArg: now AreaW0c_TailSub (symbols.toml).
-constexpr U kLeader = 0x802D40;           // ObjTrio + 0, the leader's record
+constexpr ::bof3::image::Va kLeader{0x802D40};           // ObjTrio + 0, the leader's record
 // kLeaderDir: now ObjTrio[0].direction (symbols.toml). the leader's +8, its facing
 // kLeaderSteps: now ObjTrio[0].step_frames (symbols.toml). +9
 // kLeaderA: now ObjTrio_addr + 0xa (symbols.toml). +0xA: effect kind 0x5C's gauge draws the blink while it is not 0
@@ -51,16 +53,16 @@ constexpr U kLeader = 0x802D40;           // ObjTrio + 0, the leader's record
 // kLeaderX: now ObjTrio[0].x (symbols.toml). +0x34 / +0x38 / +0x3C, 16.16
 // kLeaderZ: now ObjTrio[0].z (symbols.toml).
 // kLeaderY: now ObjTrio[0].height (symbols.toml).
-constexpr U kLeaderCellWordX = 0x802D76;  // the high word of +0x34
-constexpr U kLeaderCellWordZ = 0x802D7A;
+constexpr ::bof3::image::Va kLeaderCellWordX{0x802D76};  // the high word of +0x34
+constexpr ::bof3::image::Va kLeaderCellWordZ{0x802D7A};
 // kLeaderHeight: now ObjTrio[0].height_whole (symbols.toml). the word +0x3E
 constexpr U kPartyStride = 0x14C;
 constexpr U kObjectStride = 0xA4;         // Sprite_Objects / Sprite_ObjectsExtra / Field_ActorStates records
 constexpr U kEffectStride = 0x80;
-constexpr U kScriptVar3 = 0x903848;       // MoveScript variables 3..6 (docs/area_w0a.md)
-constexpr U kScriptVar4 = 0x903849;
-constexpr U kScriptVar5 = 0x90384A;
-constexpr U kScriptVar6 = 0x90384B;
+constexpr ::bof3::image::Va kScriptVar3{0x903848};       // MoveScript variables 3..6 (docs/area_w0a.md)
+constexpr ::bof3::image::Va kScriptVar4{0x903849};
+constexpr ::bof3::image::Va kScriptVar5{0x90384A};
+constexpr ::bof3::image::Va kScriptVar6{0x90384B};
 // kScriptVar7: now MoveScript_Var7 (symbols.toml). MoveScript_Var7 (s8): the running scene's run
 // kScriptStep: now MoveScript_PartyRecords[0x65] (symbols.toml). the run's step
 // kChoice: now AreaW0c_ChoiceAnswer (symbols.toml). the choice box's answer (s8)
@@ -69,26 +71,26 @@ constexpr U kScriptVar6 = 0x90384B;
 // kButtonMap1: now Gfx_UnpackScratch[0x1f002] (symbols.toml). word 1: the push / charge button
 // kButtonMap3: now Gfx_UnpackScratch[0x1f006] (symbols.toml). word 3: Field_Request 4's button
 // kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). word 6 (the dial's second legend)
-constexpr U kPlace = 0x937F82;            // u16: the place the party stands on (world map)
+constexpr ::bof3::image::Va kPlace{0x937F82};            // u16: the place the party stands on (world map)
 // kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
-constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z
-constexpr U kLeaderCellZ = 0x905E62;
+constexpr ::bof3::image::Va kLeaderCellX{0x905E66};      // the high words of Field_Kind2X / Z
+constexpr ::bof3::image::Va kLeaderCellZ{0x905E62};
 // kMapHeight: now AreaMap_Header[1] (symbols.toml). AreaMap_Header's second byte
 // kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the dial's third legend)
-constexpr U kAreaText = 0x803580;         // the area's text section; the label's offset is its first dword's low word
-constexpr U kFlag3A79 = 0x903A79;         // the record +4 state: 9 releases the effect
+constexpr ::bof3::image::Va kAreaText{0x803580};         // the area's text section; the label's offset is its first dword's low word
+constexpr ::bof3::image::Va kFlag3A79{0x903A79};         // the record +4 state: 9 releases the effect
 // kChangeFlags: now AreaEntry_PendingFlags (symbols.toml). byte: Field_ChangeArea's fourth argument on a 0xAF cell
 inline auto& kPendingX = SharedScratch.d_10;         // dword: Field_ChangeArea's x (the pending area cells, docs/area_harness.md)
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml). dword: its z
 // k904EE0: now ModeFlow_AreaTransition (symbols.toml). byte zeroed on the 0xAF cell's change of area
 // k937F98: now Area_EnterTransition (symbols.toml). byte set to 0xC on it
-constexpr U kFieldStateNow = 0x905D98;    // Field_State
+constexpr ::bof3::image::Va kFieldStateNow{0x905D98};    // Field_State
 
 // --- area 120's (its descriptor 0x623648: only a choice table) ------------------
-constexpr U kA120Choices = 0x62363C;      // 3: its descriptor's +0x34
+constexpr ::bof3::image::Va kA120Choices{0x62363C};      // 3: its descriptor's +0x34
 
 // --- area 121's own (its descriptor 0x6245D8) ------------------------------------
-constexpr U kA121Handlers = 0x6245C8;     // 3: its descriptor's +0x3C
+constexpr ::bof3::image::Va kA121Handlers{0x6245C8};     // 3: its descriptor's +0x3C
 // kA121CameraStates: now Area121_CameraStates (symbols.toml). 2: handler 0's by Sprite_Current +4
 // kLeaderStates: now Area121_LeaderStates (symbols.toml). 2: leader state 12's (Area121_LeaderRun) by Sprite_Current +2
 // kKind5CStates: now Area121_Kind5CStates (symbols.toml). 5: effect kind 0x5C's (Area121_Kind5CRun) by Sprite_Current +1
@@ -114,13 +116,13 @@ struct WorldMapTables {
 // (0x662E10); the tables in its data block after area 120's descriptor.
 constexpr WorldMapTables kWm121 = {
     "Area121",
-    0x624624, 0x62462C,   // 4 places
-    0x623690,             // 4 plate animations
-    0x6236A0,             // 1 cell record (then zeros)
-    0x62462C, 0x624640, 0x624648, 0x624658,
-    0x624668, 0x6246C0,
-    0x6246D8, 0x6246E4, 0x6246F4, 0x6246FC,
-    0x803580, 0x158,
+    ::bof3::Img(0x624624), ::bof3::Img(0x62462C),   // 4 places
+    ::bof3::Img(0x623690),             // 4 plate animations
+    ::bof3::Img(0x6236A0),             // 1 cell record (then zeros)
+    ::bof3::Img(0x62462C), ::bof3::Img(0x624640), ::bof3::Img(0x624648), ::bof3::Img(0x624658),
+    ::bof3::Img(0x624668), ::bof3::Img(0x6246C0),
+    ::bof3::Img(0x6246D8), ::bof3::Img(0x6246E4), ::bof3::Img(0x6246F4), ::bof3::Img(0x6246FC),
+    ::bof3::Img(0x803580), 0x158,
     bof3::addr::Area121_FrameStep, bof3::addr::Area121_FrameHold, bof3::addr::Area121_BoxStep,
     bof3::addr::Area121_DrawFrame, bof3::addr::Area121_DrawSprite, bof3::addr::Area121_DrawHud,
 };

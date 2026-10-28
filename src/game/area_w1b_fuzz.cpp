@@ -121,7 +121,7 @@ static_assert(k42Init + 1 == AH_COUNT(kClones42), "area 42's seeding indices");
 // Flags_Test of the bank 0x9040CC moves Area42_Rank (a stand-in louder than
 // the callee), so Area42_CheckAll's re-read of the rank after a miss shows.
 U RankEffect(const U* a, U answer) {
-    if (a[0] == at::kFlagsCC) Mem(Area42_Rank_addr)[0] = static_cast<unsigned char>(ah::Noise() % 3);
+    if (a[0] == ::bof3::Img(at::kFlagsCC)) Mem(Area42_Rank_addr)[0] = static_cast<unsigned char>(ah::Noise() % 3);
     return answer;
 }
 const ah::Callee kCallees42[] = {
@@ -301,7 +301,7 @@ const ah::Callee kCallees44[] = {
 // Area 44's gate and switch tables (0x5F7074..0x5F7095), randomised as a
 // region and put back to the exe's bytes two rounds in three.
 // kA44Tables: now Area44_Gate0 (symbols.toml).
-constexpr U kA44TablesBytes = at::kA44SwitchesEnd - Area44_Gate0_addr;
+constexpr U kA44TablesBytes = at::kA44SwitchesEnd.v - Area44_Gate0_addr;
 unsigned char g_a44_tables[kA44TablesBytes];
 const ah::Region kRegions44[] = {{Area44_Gate0_addr, kA44TablesBytes}};
 unsigned g_switch44 = 0;   // the switch record this round's hook arguments aim at
@@ -550,8 +550,8 @@ ah::Region g_regions45[] = {
     {(Gfx_UnpackScratch_addr + 0x1f000), 0x10}, // the button map's words 0..7
     {0, 4 * kItemBytes},          // g_items
     {0, sizeof g_names},          // g_names
-    {at::kTextRecords, 0x80},     // Text_Records' first four rows
-    {at::kAreaTextOffset45, 4},
+    {::bof3::Img(at::kTextRecords), 0x80},     // Text_Records' first four rows
+    {::bof3::Img(at::kAreaTextOffset45), 4},
     {CharacterRecords_addr + 0x9, 1},
     {Area45_PlateAnims_addr, 0x5BC}, // area 45's plate, cell, message and name tables
     {Area45_Directions_addr, 0x18}, // Area45_Directions, Area45_Record8Anims
@@ -567,7 +567,7 @@ void PlantCell(bool random_place) {
     unsigned char* const cz = Mem(ObjTrio_addr + 0x3a);
     cx[1] = 0;
     cz[1] = 0;
-    const U n = (at::kA45CellsEnd - Area45_Cells_addr) / 4;
+    const U n = (at::kA45CellsEnd.v - Area45_Cells_addr) / 4;
     unsigned char* const last = Mem(at::kA45CellsEnd - 4);
     last[0] = cx[0];
     last[1] = cz[0];

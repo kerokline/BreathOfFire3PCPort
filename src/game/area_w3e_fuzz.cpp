@@ -172,6 +172,7 @@ const ah::DataTable kTables142[] = {{Area142_States_addr, at::kArea142StateCount
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char& B(std::uint32_t address) { return *ah::Mem(address); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 unsigned char* EffectRecord(unsigned slot) { return ah::Mem(Effect_Objects_addr + slot % at::kEffectCount * at::kEffectStride); }
 
 // A record the active member pointer may name: one of the four party objects
@@ -286,7 +287,7 @@ const ah::Region kRegions[] = {
     {Camera_ShiftY_addr, 2},
     {Input_Held_addr, 8},
     {Gfx_UnpackScratch_addr + 0x1f00c, 2},
-    {at::kTile, 2},
+    {::bof3::Img(at::kTile), 2},
     {Field_Kind2Hold_addr, 1},
     {Cond_ByteFE_addr, 1},
     {Sprite_Kind2_addr, at::kObjectStride},
@@ -576,7 +577,7 @@ void Args141(unsigned k, std::uint32_t* a) {
     case k141Cell: ArgsCell(Area141_CellEntries_addr, 4, a); break;
     case k141Trig57: ArgsTrigger(a, g_pick); break;
     case k141Paint:
-        a[0] = g_pick < 9 ? at::Run(g_pick) : Key(g_run);
+        a[0] = g_pick < 9 ? ::bof3::Img(at::Run(g_pick)) : Key(g_run);
         // `on` a byte: 0, 1, a high byte over 0 (read as 0), anything
         a[1] = AH_PICK(0, 1, 0, 1, 0x100, 0x80, 0xFFFFFF00u, 2);
         break;

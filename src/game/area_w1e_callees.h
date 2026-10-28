@@ -8,6 +8,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 namespace area_w1e {
 namespace at {
 
@@ -15,19 +17,19 @@ using U = std::uint32_t;
 
 // --- the field frame's cells ------------------------------------------------
 // kChoice: now AreaW0c_ChoiceAnswer (symbols.toml). s8: the choice the message box committed
-constexpr U kMessage = 0x7DEE48;          // u16: the message a choice handler opens, 0xFFFF none
+constexpr ::bof3::image::Va kMessage{0x7DEE48};          // u16: the message a choice handler opens, 0xFFFF none
 // kTailKind: now AreaW0a_TailKind (symbols.toml). Field_ModeTailKinds' index (s8)
 // kTailState: now AreaW0c_TailState (symbols.toml). s8: the armed tail kind's state
 // kTailArg: now AreaW0c_TailSub (symbols.toml). the tail's argument byte
 // kLeader: now ObjTrio (symbols.toml). ObjTrio + 0, the leader's record
-constexpr U kMember1 = 0x802E8C;          // ObjTrio + 0x14C
-constexpr U kMember2 = 0x802FD8;          // ObjTrio + 0x298
+constexpr ::bof3::image::Va kMember1{0x802E8C};          // ObjTrio + 0x14C
+constexpr ::bof3::image::Va kMember2{0x802FD8};          // ObjTrio + 0x298
 constexpr U kPartyStride = 0x14C;
 // kLeaderX: now ObjTrio[0].x (symbols.toml). the leader's +0x34 / +0x38, 16.16
 // kLeaderZ: now ObjTrio[0].z (symbols.toml).
 // kLeaderEffect: now ObjTrio[0].char_id (symbols.toml). the leader's +0x89: Character_IndexById's index
-constexpr U kPartyList = 0x904062;        // three bytes: the members' character ids, in order
-constexpr U kScratch48 = 0x903848;        // u8 scratch cells 0x903848..0x90384B (the script's)
+constexpr ::bof3::image::Va kPartyList{0x904062};        // three bytes: the members' character ids, in order
+constexpr ::bof3::image::Va kScratch48{0x903848};        // u8 scratch cells 0x903848..0x90384B (the script's)
 // kVar7: now MoveScript_Var7 (symbols.toml). MoveScript_Var7
 // kVar8: now MoveScript_PartyRecords[0x65] (symbols.toml). the byte after it
 // kObject0X: now Sprite_Objects[0].x (symbols.toml). Sprite_Objects[0] +0x34
@@ -38,12 +40,12 @@ constexpr U kEffectStride = 0x80;
 // 0x6043C8..0x604963 around its descriptor; read only by area 65's code) ------
 // kA65PlateAnims: now Area65_PlateAnims (symbols.toml). (u16 place, u8 animation, u8) x 11, searched with NO bound
 // kA65Cells: now Area65_Cells (symbols.toml). (u8 x, u8 z, u8, u8 id) x 182, searched with NO bound
-constexpr U kA65CellsEnd = 0x6046CC;      // then area 65's choice table (1) and its descriptor 0x6046D0..0x604713
-constexpr U kA65Descriptor = 0x6046D0;
+constexpr ::bof3::image::Va kA65CellsEnd{0x6046CC};      // then area 65's choice table (1) and its descriptor 0x6046D0..0x604713
+constexpr ::bof3::image::Va kA65Descriptor{0x6046D0};
 // kA65PlaceMessages: now Area65_PlaceMessages (symbols.toml). 11 rows of 0x20: u16 place, fifteen u16 messages
-constexpr U kA65PlaceMessagesEnd = 0x604874;
+constexpr ::bof3::image::Va kA65PlaceMessagesEnd{0x604874};
 // kA65NameSets: now Area65_NameSets (symbols.toml). 2 records of (u8 id, u8 item x 5) - area 45's are 3 of (id, 4 items)
-constexpr U kA65NameSetsEnd = 0x604880;
+constexpr ::bof3::image::Va kA65NameSetsEnd{0x604880};
 constexpr U kA65NameSetStride = 6;
 // kA65PlateStates: now Area65_PlateStates (symbols.toml). 5
 // kA65HudStates: now Area65_HudStates (symbols.toml). 2
@@ -67,19 +69,19 @@ constexpr U kA65NameSetStride = 6;
 // kLeaderCellWordZ: now ObjTrio[0].z_whole (symbols.toml). the high word of +0x38
 // kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
 // kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
-constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z
-constexpr U kLeaderCellZ = 0x905E62;
+constexpr ::bof3::image::Va kLeaderCellX{0x905E66};      // the high words of Field_Kind2X / Z
+constexpr ::bof3::image::Va kLeaderCellZ{0x905E62};
 // kMapHeight: now AreaMap_Header[1] (symbols.toml). AreaMap_Header's second byte
 // kButtonMap0: now Gfx_UnpackScratch[0x1f000] (symbols.toml). the field's button map: word 0, the first legend's button
 // kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). word 6, the second's
 // kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
-constexpr U kAreaText = 0x803580;         // the area's text section
-constexpr U kAreaTextOffset = 0x803584;   // the region label at +[this] & 0xFFFF (area 45's cell; area 16's is 0x803588)
-constexpr U kItemsHeld = 0x9040EC;        // a byte per item id: 0 not yet seen
+constexpr ::bof3::image::Va kAreaText{0x803580};         // the area's text section
+constexpr ::bof3::image::Va kAreaTextOffset{0x803584};   // the region label at +[this] & 0xFFFF (area 45's cell; area 16's is 0x803588)
+constexpr ::bof3::image::Va kItemsHeld{0x9040EC};        // a byte per item id: 0 not yet seen
 // kItemNameKey: now AreaW0b_ItemNameKey (symbols.toml). the 16-byte name the hook copies for item 0x16
-constexpr U kTextRecords = 0x904CE0;      // Text_Records: area 65's hook fills its first FIVE rows of 0x20
-constexpr U kTextRecordsEnd = 0x904D80;
-constexpr U kFlag3A79 = 0x903A79;         // the record +4 state: 9 releases the effect
+constexpr ::bof3::image::Va kTextRecords{0x904CE0};      // Text_Records: area 65's hook fills its first FIVE rows of 0x20
+constexpr ::bof3::image::Va kTextRecordsEnd{0x904D80};
+constexpr ::bof3::image::Va kFlag3A79{0x903A79};         // the record +4 state: 9 releases the effect
 // The place hook's names for the tail bytes (area 16's code, copied): the
 // kind, the hook's state, its argument.
 // kMsgMode: now AreaW0a_TailKind (symbols.toml).
@@ -87,15 +89,15 @@ constexpr U kFlag3A79 = 0x903A79;         // the record +4 state: 9 releases the
 // kMsgArg: now AreaW0c_TailSub (symbols.toml).
 
 // --- area 67's tables (after its descriptor 0x607000's arrays) ----------------
-constexpr U kA67Handlers = 0x606F20;      // 19: its +0x3C array (then its movement scripts)
-constexpr U kA67Choices = 0x606FF4;       // 3: its +0x34 array
+constexpr ::bof3::image::Va kA67Handlers{0x606F20};      // 19: its +0x3C array (then its movement scripts)
+constexpr ::bof3::image::Va kA67Choices{0x606FF4};       // 3: its +0x34 array
 // kA67MessagesA: now Area67_MessagesA (symbols.toml). u16 by the s8 choice, unchecked (choice 0)
 // kA67MessagesB: now Area67_MessagesB (symbols.toml). ... (choice 1)
 // kA67MessagesC: now Area67_MessagesC (symbols.toml). ... (choice 2)
 // Three byte tables by a member's character id (unchecked), in area 66's data
 // block after its descriptor 0x604B70 (read only by area 67's handlers): the
 // effect argument each character's effect spawns with.
-constexpr U kA67SpawnAtArg = 0x604BB8;    // handlers 3..8 (kind 3)
+constexpr ::bof3::image::Va kA67SpawnAtArg{0x604BB8};    // handlers 3..8 (kind 3)
 // kA67SpawnArgB: now Area67_SpawnArgB (symbols.toml). handlers 9..11 (kind 1)
 // kA67SpawnArgC: now Area67_SpawnArgC (symbols.toml). handler 16 (kind 4)
 

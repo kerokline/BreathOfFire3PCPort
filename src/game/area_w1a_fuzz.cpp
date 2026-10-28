@@ -36,6 +36,7 @@ constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 #define AH_COUNT(a) static_cast<unsigned>(sizeof a / sizeof a[0])
 
 unsigned char& B(U address) { return *Mem(address); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 
 // --- the fuzz's own memory: a packet buffer for area 40's quads ----------------
 
@@ -232,7 +233,7 @@ ah::Region g_regions[] = {
     {Chapter_FlagRow_addr, 4},
     {AreaW1a_FocusObject_addr, 4},
     {AreaW0c_AnswerMark_addr, 1},
-    {at::kKeyItems, at::kKeyItemCount},
+    {::bof3::Img(at::kKeyItems), at::kKeyItemCount},
     {Input_Held_addr, 4},
     {Gfx_PacketNext_addr, 4},
     {0, kPacketBytes},            // g_packets (set at start-up)

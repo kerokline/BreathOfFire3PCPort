@@ -26,6 +26,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
@@ -42,14 +44,14 @@ using U = std::uint32_t;
 // kTailKind: now AreaW0a_TailKind (symbols.toml). Field_ModeTailKinds' index (s8)
 // kTailState: now AreaW0c_TailState (symbols.toml). s8: the armed tail kind's (or a place hook's) state
 // kTailArg: now AreaW0c_TailSub (symbols.toml).
-constexpr U kScriptFlags = 0x9039A2;       // Field_ScriptFlags (u16; read as a dword where tested)
-constexpr U kScriptFlags2 = 0x905BA4;      // Field_ScriptFlags2's low byte
+constexpr ::bof3::image::Va kScriptFlags{0x9039A2};       // Field_ScriptFlags (u16; read as a dword where tested)
+constexpr ::bof3::image::Va kScriptFlags2{0x905BA4};      // Field_ScriptFlags2's low byte
 // kInputHeld: now Input_Held (symbols.toml). Input_Held (the code reads its low 16 bits)
 // kFieldInputHeld: now Field_InputHeld (symbols.toml). Field_InputHeld (u16)
 // kFieldInputFlags: now Field_InputFlags (symbols.toml). Field_InputFlags
 // kButtonMap0: now Gfx_UnpackScratch[0x1f000] (symbols.toml). the field's button words: 0, 1 (the charge button) ..
 // kButtonCharge: now Gfx_UnpackScratch[0x1f002] (symbols.toml).
-constexpr U kActorStates = 0x903A80;       // Field_ActorStates: records of 0xA4
+constexpr ::bof3::image::Va kActorStates{0x903A80};       // Field_ActorStates: records of 0xA4
 constexpr U kActorStride = 0xA4;
 // kEdgeBits: now Field_StepCount (symbols.toml). Field_StepCount (u16)
 // kF3Divisor: now MoveScript_F3Divisor (symbols.toml). MoveScript_F3Divisor (u16)
@@ -67,7 +69,7 @@ inline auto& kFoundX = SharedScratch.b_00;  // the scratch word the step hook of
 // kCondFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
 // kCondFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
 // kPrevArea: now AreaW2c_LastArea (symbols.toml). u16: the area the party came from
-constexpr U kLeader = 0x802D40;            // ObjTrio + 0, the leader's record
+constexpr ::bof3::image::Va kLeader{0x802D40};            // ObjTrio + 0, the leader's record
 // kLeaderState: now ObjTrio[0].state (symbols.toml). its +1 (leader state 12: area 104's controller)
 // kLeaderDir: now ObjTrio[0].direction (symbols.toml). its +8, the facing
 // kLeaderA: now ObjTrio_addr + 0xa (symbols.toml). its +0xA (the charge's hold)
@@ -87,21 +89,21 @@ constexpr unsigned kEffectCount = 20;
 constexpr U kObjectStride = 0xA4;
 // kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember (a pointer)
 // kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object (a pointer)
-constexpr U kEffectStates = 0x66972C;      // Character_IndexById: a byte per +0x89 value
+constexpr ::bof3::image::Va kEffectStates{0x66972C};      // Character_IndexById: a byte per +0x89 value
 // kDescriptors: now Area_Descriptors (symbols.toml). Area_Descriptors
-constexpr U kPacketNext = 0x7E0670;        // Gfx_PacketNext
-constexpr U kPassFlags = 0x7E0918;         // Draw_PassFlags
-constexpr U kFrameCounter = 0x937F94;      // Frame_Counter
-constexpr U kClutDirty = 0x937F90;         // Gfx_ClutStripDirty
+constexpr ::bof3::image::Va kPacketNext{0x7E0670};        // Gfx_PacketNext
+constexpr ::bof3::image::Va kPassFlags{0x7E0918};         // Draw_PassFlags
+constexpr ::bof3::image::Va kFrameCounter{0x937F94};      // Frame_Counter
+constexpr ::bof3::image::Va kClutDirty{0x937F90};         // Gfx_ClutStripDirty
 // kMenuColour: now Config_WindowColour (symbols.toml). the byte area 104's countdown hands Menu_DrawBox
-constexpr U kCountdownText = 0x904BA0;     // the countdown's text buffer (Crt_sprintf's)
-constexpr U kCountdownFormat = 0x61BC74;   // its format (data, read in place)
+constexpr ::bof3::image::Va kCountdownText{0x904BA0};     // the countdown's text buffer (Crt_sprintf's)
+constexpr ::bof3::image::Va kCountdownFormat{0x61BC74};   // its format (data, read in place)
 // kPanelTris: now Area104_PanelTris (symbols.toml). four (x0, x1, x2, y0, y1, y2) s16 rows: the panel's triangles
-constexpr U kPanelTrisEnd = 0x61BC74;
+constexpr ::bof3::image::Va kPanelTrisEnd{0x61BC74};
 // The minimap's image, its upload and its CLUT row (area 104's init).
 // kUnpack: now Gfx_UnpackScratch (symbols.toml). Gfx_UnpackScratch: two words (0x14, 0x44), then 69 rows of 40 bytes
 constexpr U kUnpackBytes = 4 + 0x45 * 0x28;
-constexpr U kUploadCount = 0x9035A0;       // Gfx_UploadQueueCount
+constexpr ::bof3::image::Va kUploadCount{0x9035A0};       // Gfx_UploadQueueCount
 // kUploadX: now Gfx_UploadQueueX (symbols.toml). Gfx_UploadQueueX: twenty words
 // kUploadY: now Gfx_UploadQueueY (symbols.toml). Gfx_UploadQueueY: twenty words
 // kUploadRecord: now Gfx_UploadQueueRecord (symbols.toml). Gfx_UploadQueueRecord: twenty pointers
@@ -115,7 +117,7 @@ constexpr unsigned kA104LeaderStateCount = 2;
 constexpr unsigned kA104Kind5CStateCount = 5;
 constexpr U kA104EntryPlus8 = 8;           // Sprite_InitFromEntry(descriptor[+8] + 8)
 // kA106Cells: now Area106_Cells (symbols.toml). four (x, z) byte pairs: area 106's handler 2
-constexpr U kA106CellsEnd = 0x61C6BC;
+constexpr ::bof3::image::Va kA106CellsEnd{0x61C6BC};
 
 // The world-map copy's tables (area 45's layout, docs/area_w1b.md section 5):
 // the place hook and plate start are not the copies' (area 104's hook is its
@@ -129,11 +131,11 @@ struct WorldMapTables {
     U label_offset;                        // the dword whose low word is the region label's offset in kAreaText
     U fn_frame_step, fn_frame_hold, fn_box_step, fn_draw_frame, fn_draw_sprite, fn_draw_hud;
 };
-constexpr U kAreaText = 0x803580;
+constexpr ::bof3::image::Va kAreaText{0x803580};
 // kPlace: now AreaW0b_Place (symbols.toml). the place the party stands on (world map)
 // kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
-constexpr U kLeaderCellX = 0x905E66;       // the high words of Field_Kind2X / Z
-constexpr U kLeaderCellZ = 0x905E62;
+constexpr ::bof3::image::Va kLeaderCellX{0x905E66};       // the high words of Field_Kind2X / Z
+constexpr ::bof3::image::Va kLeaderCellZ{0x905E62};
 // kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). the field's button word 6
 // kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
 // kLeaderSteps: now ObjTrio[0].step_frames (symbols.toml). the leader's +9
@@ -144,10 +146,10 @@ constexpr U kLeaderCellZ = 0x905E62;
 // +0x10 0x41B730 - AR3B's), WorldMap_FieldHooks entry 6 (0x662E08).
 constexpr WorldMapTables kWm104 = {
     "Area104",
-    0x61B4F0,                              // one plate animation (place 0x65), then a zero record
-    0x61BB7C, 0x61BB90, 0x61BB98, 0x61BBA8,
-    0x61BBB8, 0x61BC10,
-    0x803580,
+    ::bof3::Img(0x61B4F0),                              // one plate animation (place 0x65), then a zero record
+    ::bof3::Img(0x61BB7C), ::bof3::Img(0x61BB90), ::bof3::Img(0x61BB98), ::bof3::Img(0x61BBA8),
+    ::bof3::Img(0x61BBB8), ::bof3::Img(0x61BC10),
+    ::bof3::Img(0x803580),
     bof3::addr::Area104_FrameStep, bof3::addr::Area104_FrameHold, bof3::addr::Area104_BoxStep,
     bof3::addr::Area104_DrawFrame, bof3::addr::Area104_DrawSprite, bof3::addr::Area104_DrawHud,
 };

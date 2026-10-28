@@ -13,6 +13,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
@@ -36,8 +38,8 @@ using U = std::uint32_t;
 constexpr U kPartyStride = 0x14C;
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml). the first party list: the members' ids, a byte each
 // kCursor: now AreaW0c_ChoiceAnswer (symbols.toml). the message box's cursor (s8): a choice's answer
-constexpr U kMessage = 0x7DEE48;          // u16: the message a choice opened, 0xFFFF none
-constexpr U kCounter0 = 0x903848;         // MoveScript counter 0 (flow ops A0..AC)
+constexpr ::bof3::image::Va kMessage{0x7DEE48};          // u16: the message a choice opened, 0xFFFF none
+constexpr ::bof3::image::Va kCounter0{0x903848};         // MoveScript counter 0 (flow ops A0..AC)
 // kByte9398CF: now AreaW0c_AnswerMark (symbols.toml). set to 6 by the choices that refuse (area_w0a's kByte9398CF)
 // kZenny: now Party_Zenny (symbols.toml). Party_Zenny: u32
 // kFlagRow: now Chapter_FlagRow (symbols.toml). the chapter's Cond_Flags row (a pointer, Scenario_Enter)
@@ -50,18 +52,18 @@ constexpr U kFieldStateMember = 0x128;    // the record byte the member frames s
 // kLeaderCellWordX: now ObjTrio[0].x_whole (symbols.toml). the high word of +0x34
 // kLeaderCellWordZ: now ObjTrio[0].z_whole (symbols.toml). the high word of +0x38
 // kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
-constexpr U kMapMode = 0x9045FA;          // the world map's mode byte
-constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z
-constexpr U kLeaderCellZ = 0x905E62;
+constexpr ::bof3::image::Va kMapMode{0x9045FA};          // the world map's mode byte
+constexpr ::bof3::image::Va kLeaderCellX{0x905E66};      // the high words of Field_Kind2X / Z
+constexpr ::bof3::image::Va kLeaderCellZ{0x905E62};
 // kMapHeight: now AreaMap_Header[1] (symbols.toml). AreaMap_Header's second byte
-constexpr U kButtonMap0 = 0x903580;       // the field's button map: word 0, the first legend's button
+constexpr ::bof3::image::Va kButtonMap0{0x903580};       // the field's button map: word 0, the first legend's button
 // kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). word 6, the second's
 // kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
-constexpr U kAreaText = 0x803580;         // the area's text section; area 115 reads its label offset from its first dword
-constexpr U kItemsHeld = 0x9040EC;        // a byte per item id: 0 not yet seen
+constexpr ::bof3::image::Va kAreaText{0x803580};         // the area's text section; area 115 reads its label offset from its first dword
+constexpr ::bof3::image::Va kItemsHeld{0x9040EC};        // a byte per item id: 0 not yet seen
 // kItemNameKey: now AreaW0b_ItemNameKey (symbols.toml). the 16-byte name the hook copies for item 0x16
-constexpr U kTextRecords = 0x904CE0;      // Text_Records: the place hook fills rows of 0x20 from here
-constexpr U kFlag3A79 = 0x903A79;         // the record +4 state: 9 releases the effect
+constexpr ::bof3::image::Va kTextRecords{0x904CE0};      // Text_Records: the place hook fills rows of 0x20 from here
+constexpr ::bof3::image::Va kFlag3A79{0x903A79};         // the record +4 state: 9 releases the effect
 // kMsgMode: now AreaW0a_TailKind (symbols.toml).
 // kMsgState: now AreaW0c_TailState (symbols.toml).
 // kMsgArg: now AreaW0c_TailSub (symbols.toml).
@@ -91,15 +93,15 @@ struct WorldMapTables {
 // entry is 0x41D270 - group AR3C's band - and no init, as area 88's).
 constexpr WorldMapTables kWm115 = {
     "Area115",
-    0x620148, 0x62015C,   // 5 plate animations
-    0x62015C, 0x620164,   // 2 cell records (then a zero record, then the descriptor's data)
-    0x620264, 0x620304,   // 5 place rows
-    0x620304, 0x620310, 6, 0x904D80,   // 2 name sets of (id, 5 items); 5 text rows
-    0x620310, 0x620324, 0x62032C, 0x62033C,
-    0x62034C, 0x6203A4,
-    0x6203BC, 0x6203C8, 0x6203D8, 0x6203E0,
-    0x6203E8, 0x6203EC, 0x6203F0,
-    0x803580, 0x1C7,
+    ::bof3::Img(0x620148), ::bof3::Img(0x62015C),   // 5 plate animations
+    ::bof3::Img(0x62015C), ::bof3::Img(0x620164),   // 2 cell records (then a zero record, then the descriptor's data)
+    ::bof3::Img(0x620264), ::bof3::Img(0x620304),   // 5 place rows
+    ::bof3::Img(0x620304), ::bof3::Img(0x620310), 6, ::bof3::Img(0x904D80),   // 2 name sets of (id, 5 items); 5 text rows
+    ::bof3::Img(0x620310), ::bof3::Img(0x620324), ::bof3::Img(0x62032C), ::bof3::Img(0x62033C),
+    ::bof3::Img(0x62034C), ::bof3::Img(0x6203A4),
+    ::bof3::Img(0x6203BC), ::bof3::Img(0x6203C8), ::bof3::Img(0x6203D8), ::bof3::Img(0x6203E0),
+    ::bof3::Img(0x6203E8), ::bof3::Img(0x6203EC), ::bof3::Img(0x6203F0),
+    ::bof3::Img(0x803580), 0x1C7,
     bof3::addr::Area115_FrameStep, bof3::addr::Area115_FrameHold, bof3::addr::Area115_BoxStep,
     bof3::addr::Area115_DrawFrame, bof3::addr::Area115_DrawSprite, bof3::addr::Area115_DrawHud,
 };
@@ -117,9 +119,9 @@ struct TwinTables {
     U fn_member_rect;                 // the copy's MemberRect, called by its MembersFrame
 };
 // Area 117: its descriptor 0x6215B0; the rectangle 0x6215A8, the switch 0x62160C.
-constexpr TwinTables kTw117 = {"Area117", 0x6215A8, 0x6215AE, 0x62160C, 0x621610, 1, bof3::addr::Area117_MemberRect};
+constexpr TwinTables kTw117 = {"Area117", ::bof3::Img(0x6215A8), ::bof3::Img(0x6215AE), ::bof3::Img(0x62160C), ::bof3::Img(0x621610), 1, bof3::addr::Area117_MemberRect};
 // Area 118: its descriptor 0x621DF8; the rectangle 0x621DF0, the switch 0x621E3C.
-constexpr TwinTables kTw118 = {"Area118", 0x621DF0, 0x621DF6, 0x621E3C, 0x621E40, 1, bof3::addr::Area118_MemberRect};
+constexpr TwinTables kTw118 = {"Area118", ::bof3::Img(0x621DF0), ::bof3::Img(0x621DF6), ::bof3::Img(0x621E3C), ::bof3::Img(0x621E40), 1, bof3::addr::Area118_MemberRect};
 
 // --- the member-spawn handlers' tables (12 bytes each, by a member's id) -------
 // kSpawnTable117A: now Area117_SpawnKinds3 (symbols.toml). area 117's handler 0

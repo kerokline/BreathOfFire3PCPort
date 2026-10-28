@@ -8,6 +8,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 namespace area_w3c {
 namespace at {
 
@@ -17,25 +19,25 @@ namespace at {
 // read it signed) and the message word a choice handler leaves (0xFFFF: no
 // new message).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // The focus object: the object whose talk ran last (MoveScript_SetTurnTarget
 // stores Field_ActiveMember there; area_w1a_callees.h's kFocusObject).
-constexpr std::uint32_t kFocusObject = 0x903804;
+constexpr ::bof3::image::Va kFocusObject{0x903804};
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
 // (Field_ModeTailKinds 0x662CE8), its state and a sub-kind.
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
 // kTailState: now AreaW0c_TailState (symbols.toml).
 // kTailSub: now AreaW0c_TailSub (symbols.toml).
 // The movement script's four counters (MoveScript_CounterOps, ops A0..AF).
-constexpr std::uint32_t kCounter0 = 0x903848;
-constexpr std::uint32_t kCounter1 = 0x903849;
-constexpr std::uint32_t kCounter2 = 0x90384A;
-constexpr std::uint32_t kCounter3 = 0x90384B;
+constexpr ::bof3::image::Va kCounter0{0x903848};
+constexpr ::bof3::image::Va kCounter1{0x903849};
+constexpr ::bof3::image::Va kCounter2{0x90384A};
+constexpr ::bof3::image::Va kCounter3{0x90384B};
 // MoveScript_Var7 and the byte after it: the scene the choices start and its
 // step (area_w2c_callees.h's kVar7 / kVar7Step); tail kind 63 keeps its state
 // in the step byte.
-constexpr std::uint32_t kVar7 = 0x8034E4;
-constexpr std::uint32_t kVar7Step = 0x8034E5;
+constexpr ::bof3::image::Va kVar7{0x8034E4};
+constexpr ::bof3::image::Va kVar7Step{0x8034E5};
 // The story flags (Flags_Set / Flags_Test's bank).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // The party lists' first bytes (a member's character id; the spawns index
@@ -46,20 +48,20 @@ constexpr std::uint32_t kVar7Step = 0x8034E5;
 // The party's records (ObjTrio: three of 0x14C); the leader's byte +0x89
 // (Character_IndexById's index, area_w2d's reading) and its dword +0x134
 // (Field_StepCount is set from it less 5, area_w1f's kLeaderZone).
-constexpr std::uint32_t kParty = 0x802D40;
+constexpr ::bof3::image::Va kParty{0x802D40};
 constexpr std::uint32_t kPartyStride = 0x14C;
 // kLeader89: now ObjTrio[0].char_id (symbols.toml).
-constexpr std::uint32_t kLeaderZone = 0x802E74;
+constexpr ::bof3::image::Va kLeaderZone{0x802E74};
 // The previous area (u16): the inits test it (area_w2c_callees.h's kLastArea).
-constexpr std::uint32_t kLastArea = 0x802290;
+constexpr ::bof3::image::Va kLastArea{0x802290};
 // A byte before Cond_Flags tail kind 63 picks one of six items by (no reader
 // of it is named in this repo).
 // kItemPick: now AreaW3c_ItemPick (symbols.toml).
 // Text_Records + 0x2F: tail kind 63 zeroes it before its message.
-constexpr std::uint32_t kTextRecords2F = 0x904D0F;
+constexpr ::bof3::image::Va kTextRecords2F{0x904D0F};
 // A byte area 131's tail kind 34 zeroes before it changes area
 // (menu_lists_callees.h's kCampFlag, a hypothesis there).
-constexpr std::uint32_t kCampFlag = 0x904152;
+constexpr ::bof3::image::Va kCampFlag{0x904152};
 // A byte area 133's choice zeroes (scena_sc6 / sc12 / shop_states read it as
 // a load or save wait byte).
 // kLoad0F: now AreaW3c_Load0F (symbols.toml).
@@ -69,19 +71,19 @@ constexpr unsigned kEffectCount = 20;
 // Named cells, by address for the fuzz's regions (symbols.gen.h spells each
 // name as a macro of its value):
 // kEffectObjects: now Effect_Objects (symbols.toml). Effect_Objects
-constexpr std::uint32_t kSpriteObjects = 0x7DEE80;     // Sprite_Objects
+constexpr ::bof3::image::Va kSpriteObjects{0x7DEE80};     // Sprite_Objects
 // kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember
 // kCameraShiftX: now Camera_ShiftX (symbols.toml). Camera_ShiftX, then Camera_ShiftY 0x903802
-constexpr std::uint32_t kCameraShiftY = 0x903802;      // Camera_ShiftY
+constexpr ::bof3::image::Va kCameraShiftY{0x903802};      // Camera_ShiftY
 // kCondByteFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
 // kPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags
 // kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
-constexpr std::uint32_t kTextRecords = 0x904CE0;       // Text_Records
-constexpr std::uint32_t kMusicTrack = 0x904131;        // Music_Track
+constexpr ::bof3::image::Va kTextRecords{0x904CE0};       // Text_Records
+constexpr ::bof3::image::Va kMusicTrack{0x904131};        // Music_Track
 // kPatchBase: now AreaMap_PatchBase (symbols.toml). AreaMap_PatchBase
 // kMapHeader: now AreaMap_Header (symbols.toml). AreaMap_Header
-constexpr std::uint32_t kScriptFlags = 0x9039A2;       // Field_ScriptFlags (u16)
-constexpr std::uint32_t kEdgeBits = 0x905B80;          // Field_StepCount (u16)
+constexpr ::bof3::image::Va kScriptFlags{0x9039A2};       // Field_ScriptFlags (u16)
+constexpr ::bof3::image::Va kEdgeBits{0x905B80};          // Field_StepCount (u16)
 
 // --- the areas' tables (symbols.toml [[data]]) ---
 

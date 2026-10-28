@@ -141,6 +141,7 @@ const ah::Clone kClones84[] = {
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char& B(std::uint32_t address) { return *ah::Mem(address); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 
 // A record the active member pointer may name: one of the four party objects
 // (Sprite_ObjectsExtra), a field object, a party record, or the running

@@ -8,6 +8,8 @@
 #pragma once
 
 #include <cstdint>
+
+#include "common/image_base.h"
 #include "bof3/symbols.gen.h"
 
 namespace area_entry {
@@ -17,7 +19,7 @@ namespace area_entry {
 // window_task_callees.h has the same four).
 // kPendingArea: now AreaW0b_Place (symbols.toml). u16
 inline auto& kPendingX = SharedScratch.d_10;       // s32, 16.16
-constexpr std::uint32_t kPendingX_addr = SharedScratch_addr + 0x10; // kPendingX's address, for the raw accessors that take one
+constexpr ::bof3::image::Va kPendingX_addr{SharedScratch_addr + 0x10}; // kPendingX's address, for the raw accessors that take one
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml). s32, 16.16
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml). u8
 // Bits 4-6 of a link's flags byte: the PSX scratchpad's 0x1F800001, which
@@ -28,9 +30,9 @@ inline auto& kLinkHigh = SharedScratch.b_01;
 // position the record slot found, per record a copy of the party list that
 // is struck out (0xFF) as records are taken. Four bytes apart, so a list of
 // more than four overruns the next, as on the PSX.
-constexpr std::uint32_t kPickColumn = SharedScratch_addr;
-constexpr std::uint32_t kPickSlot = 0x903854;
-constexpr std::uint32_t kPickFree = 0x903858;
+constexpr ::bof3::image::Va kPickColumn{SharedScratch_addr};
+constexpr ::bof3::image::Va kPickSlot{0x903854};
+constexpr ::bof3::image::Va kPickFree{0x903858};
 // The 3-byte party list (Party_Join's, move_cmds_callees.h kPartyLists).
 // kPartyList: now Cond_Flags[0xd2] (symbols.toml).
 // The eight 0xA4-byte character records Character_IndexById indexes by
@@ -39,7 +41,7 @@ constexpr std::uint32_t kPickFree = 0x903858;
 // kCharacterRecords: now CharacterRecords (symbols.toml).
 // The palettes Sprite_LoadPalette fills: 64 bytes per record's +5 byte
 // (PSX 0x8002D600).
-constexpr std::uint32_t kPalettes = 0x80D380;
+constexpr ::bof3::image::Va kPalettes{0x80D380};
 
 // ObjTrio's records (the party members' sprites) and the fields read here.
 constexpr unsigned kRecord = 0x14C;

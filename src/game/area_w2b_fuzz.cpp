@@ -506,9 +506,9 @@ constexpr Fz kFz88 = {0x612700, 0x61271C, 0x61271C, 0x612E94, 0x612F74, 0x612F74
 
 enum : unsigned { kRegPackets = 3, kRegItems = 7, kRegNames = 8 };
 #define W2B_WM_REGIONS(nn, text_bytes, cell_records)                                                     \
-    {at::kMapMode, 1}, {0x7E0918, 1}, {0x7E0670, 4}, {0, kPacketBytes}, {0x9037A0, 0x20}, {0x66C7E8, 2}, \
-    {at::kButtonMap0, 0x10}, {0, 4 * kItemBytes}, {0, sizeof g_names}, {at::kTextRecords, text_bytes},  \
-    {at::kAreaText, 4}, {at::kFlag3A79, 1},                                                              \
+    {::bof3::Img(at::kMapMode), 1}, {0x7E0918, 1}, {0x7E0670, 4}, {0, kPacketBytes}, {0x9037A0, 0x20}, {0x66C7E8, 2}, \
+    {::bof3::Img(at::kButtonMap0), 0x10}, {0, 4 * kItemBytes}, {0, sizeof g_names}, {::bof3::Img(at::kTextRecords), text_bytes},  \
+    {::bof3::Img(at::kAreaText), 4}, {::bof3::Img(at::kFlag3A79), 1},                                                              \
     {kFz##nn.plate_anims, kFz##nn.plate_anims_end - kFz##nn.plate_anims},                   \
     {kFz##nn.cells, 4 * (cell_records)},                                                             \
     {kFz##nn.place_messages, kFz##nn.place_messages_end - kFz##nn.place_messages},          \

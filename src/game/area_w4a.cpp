@@ -60,9 +60,11 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
+inline unsigned char* At(::bof3::image::Va va) { return move_script::At(::bof3::Img(va)); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Bank() { return At(Cond_Flags_addr + 0xa0); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
+unsigned char* Bank() { return At(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 bool Test(unsigned index) { return AH_CALL(Flags_Test)(Bank(), index) != 0; }
 void Set(unsigned index) { AH_CALL(Flags_Set)(Bank(), index); }
 void Clear(unsigned index) { AH_CALL(Flags_Clear)(Bank(), index); }
@@ -391,11 +393,11 @@ void DrawFrame(const WorldMapTables& t, int x, int y) {
                                                        static_cast<short>(Word(At(at::kLeaderCellZ))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
     if (!withheld1) sprite(x + 0x30, y, 1);
-    world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f000))), x + 0x38, y + 8,
+    world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000))), x + 0x38, y + 8,
                           withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) sprite(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f00c))), x + 0x38, y + 0x10,
+    world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c))), x + 0x38, y + 0x10,
                           withheld2);
     bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(at::kLeaderCellX))),
                                             static_cast<short>(Word(At(at::kLeaderCellZ)))) != 0;
@@ -717,7 +719,7 @@ extern "C" void __cdecl Area152_Record8Spawn(void) {
         if (slot == 0xFF) return;
         if (slot >= at::kEffectCount)
             bof3::Fatal("Area152_Record8Spawn: Effect_FindFree's slot %u is past Effect_Objects' %u", slot, at::kEffectCount);
-        unsigned char* const e = At(Effect_Objects_addr + slot * at::kEffectStride);
+        unsigned char* const e = At(::bof3::Img(Effect_Objects_addr) + slot * at::kEffectStride);
         const long z = ObjTrio[0].z;
         const long x = ObjTrio[0].x;
         e[0] = 1;
@@ -763,10 +765,10 @@ void FocusPair(U pairs) {
 
 // original 0x425B20 (area 153 +0x34[0], a choice): FocusPair over
 // Area153_ChoicePairs 0x63841C (Area90_ChoiceFocusPair's shape).
-extern "C" void __cdecl Area153_ChoiceFocusPair(void) { FocusPair(Area153_ChoicePairs_addr); }
+extern "C" void __cdecl Area153_ChoiceFocusPair(void) { FocusPair(::bof3::Img(Area153_ChoicePairs_addr)); }
 // original 0x425B60 (area 154 +0x34[0]): FocusPair over Area154_ChoicePairs
 // 0x638994.
-extern "C" void __cdecl Area154_ChoiceFocusPair(void) { FocusPair(Area154_ChoicePairs_addr); }
+extern "C" void __cdecl Area154_ChoiceFocusPair(void) { FocusPair(::bof3::Img(Area154_ChoicePairs_addr)); }
 
 // ===========================================================================
 // Area 155 (descriptor 0x638C80: a choice table only)
@@ -785,12 +787,12 @@ extern "C" void __cdecl Area155_ChoiceGiveItem4D(void) {
         if (AH_CALL(Inventory_Add)(1, 0x4D, 1) != 0) {
             AH_CALL(Sound_PlayEffect)(0x106);
             SetMessage(0xB);
-            AH_CALL(Flags_Set)(At(Cond_Flags_addr + 0x68), 1);
+            AH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0x68), 1);
             return;
         }
     }
     SetMessage(0xA);
-    AH_CALL(Flags_Set)(At(Cond_Flags_addr + 0x68), 1);
+    AH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0x68), 1);
 }
 
 // original 0x425C30 (area 155's block; the choice of seven areas: area 1
@@ -1166,7 +1168,7 @@ extern "C" void __cdecl Area167_Tail32(void) {
         AH_CALL(ScriptFlags_Clear40)();
         Set(0x90);
         AH_CALL(Field_ChangeArea)(0xA8, 0x150000, 0x40000, 7);
-        B(Field_ScriptFlags2_addr) = static_cast<unsigned char>(B(Field_ScriptFlags2_addr) | 0x40);   // Field_ScriptFlags2's low byte
+        B(::bof3::Img(Field_ScriptFlags2_addr)) = static_cast<unsigned char>(B(::bof3::Img(Field_ScriptFlags2_addr)) | 0x40);   // Field_ScriptFlags2's low byte
         ArmTail(0, 0);
         return;
     case 13:
@@ -1197,7 +1199,7 @@ extern "C" unsigned char __cdecl Area167_CellHook(unsigned x, unsigned z) {
     const auto bx = static_cast<unsigned char>(x);
     const auto bz = static_cast<unsigned char>(z);
     U found = 0;
-    for (U a = Area167_Switch_addr; a < at::kA167SwitchEnd; a += 4, ++found) {
+    for (U a = ::bof3::Img(Area167_Switch_addr); a < ::bof3::Img(at::kA167SwitchEnd); a += 4, ++found) {
         const unsigned char* const r = At(a);
         if (r[0] == bx && r[1] == bz && (r[2] & 0xF) == facing) break;
     }

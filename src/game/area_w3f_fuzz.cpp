@@ -166,6 +166,7 @@ const ah::DataTable kTables146[] = {{Area146_EffectStates_addr, at::kStateCount}
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char& B(U address) { return *ah::Mem(address); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 unsigned char* EffectRecord(unsigned slot) { return ah::Mem(Effect_Objects_addr + slot % at::kEffectCount * at::kEffectStride); }
 
 // ---- the fuzz's own memory (regions filled in at SelfTest) ----
@@ -348,8 +349,8 @@ ah::Region g_regions143[] = {
     {Gfx_PacketNext_addr, 4},
     {0, kPacketBytes},      // g_packets
     {0, sizeof g_point},    // g_point
-    {Gfx_ClutStripSource_addr + 0x600, at::kClutSourceEnd - (Gfx_ClutStripSource_addr + 0x600)},
-    {Gfx_ClutStripSource_addr + 0x600 + at::kClutToLive, at::kClutSourceEnd - (Gfx_ClutStripSource_addr + 0x600)},
+    {Gfx_ClutStripSource_addr + 0x600, at::kClutSourceEnd.v - (Gfx_ClutStripSource_addr + 0x600)},
+    {Gfx_ClutStripSource_addr + 0x600 + at::kClutToLive, at::kClutSourceEnd.v - (Gfx_ClutStripSource_addr + 0x600)},
 };
 const ah::Region kRegions144[] = {
     {Effect_Objects_addr, at::kEffectCount * at::kEffectStride},
@@ -363,7 +364,7 @@ ah::Region g_regions145[] = {
     {Field_ActiveMember_addr, 4},
     {MoveScript_Object_addr, 4},
     {MoveScript_PartyRecords_addr, 0x60},
-    {at::kTextRecords, 16},
+    {::bof3::Img(at::kTextRecords), 16},
     {Field_Kind2Hold_addr, 1},
     {Camera_Angles_addr + 0x2 - 2, 6}, // Camera_Angles
     {Transition_Busy_addr, 2},

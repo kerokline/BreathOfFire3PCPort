@@ -27,8 +27,10 @@ namespace {
 
 using namespace move_script;
 using namespace area_entry;
+using move_script::At;
 
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+inline unsigned char* At(::bof3::image::Va va) { return move_script::At(::bof3::Img(va)); }
 unsigned char* Ptr(const unsigned char* at) { return At(static_cast<std::uint32_t>(Long(at))); }
 unsigned char* Descriptor() { return Area_Descriptors[Game_AreaNumber]; }
 unsigned char* Record(unsigned slot) { return rv::Bytes(ObjTrio) + slot * kRecord; }
@@ -210,7 +212,7 @@ extern "C" void __cdecl Party_SetUpMembers(unsigned count_arg, const unsigned ch
         Sprite_Current[9] = 0;
         SetLong(record + kRecScript, Long(Ptr(Descriptor() + 0x18) + list[i] * 4u));
         g.context_reset(record + kRecContext);
-        g.load_palette(reinterpret_cast<unsigned short*>(At(kPalettes + Sprite_Current[kRecPalette] * 64u)), 0);
+        g.load_palette(reinterpret_cast<unsigned short*>(At(::bof3::Img(kPalettes.v) + Sprite_Current[kRecPalette] * 64u)), 0);
     }
     Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFFF8);
 }
@@ -237,7 +239,7 @@ extern "C" void __cdecl Party_SwapMembers(unsigned a, unsigned b, unsigned keep)
         g.member_sprite(record[kRecMember], slot);
         unsigned char* state = Field_State;
         const unsigned char character = Character_IndexById[state[kRecMember]];
-        const unsigned char* const from = At(CharacterRecords_addr + character * kCharacterBytes);
+        const unsigned char* const from = At(::bof3::Img(CharacterRecords_addr) + character * kCharacterBytes);
         for (unsigned k = 0; k < kCharacterBytes; k += 4) SetLong(state + kRecCharacter + k, Long(from + k));
         state = Field_State;
         state[kRecCharacterIndex] = Character_IndexById[state[kRecMember]];

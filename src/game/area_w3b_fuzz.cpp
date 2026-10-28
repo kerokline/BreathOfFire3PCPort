@@ -316,7 +316,7 @@ constexpr U kFzPlateAnimsEnd = 0x6236A0;
 enum : unsigned { kRegWmPackets = 3 };
 ah::Region g_regionsWm[] = {
     {AreaW0b_MapMode_addr, 1}, {Draw_PassFlags_addr, 1}, {Gfx_PacketNext_addr, 4}, {0, kPacketBytes}, {Prim_VertexScratch_addr, 0x20}, {Game_Mode_addr, 2},
-    {Gfx_UnpackScratch_addr + 0x1f000, 0x10}, {at::kAreaText, 4}, {CharacterRecords_addr + 0x9, 1},
+    {Gfx_UnpackScratch_addr + 0x1f000, 0x10}, {::bof3::Img(at::kAreaText), 4}, {CharacterRecords_addr + 0x9, 1},
     {Area121_Places_addr, kFzPlacesEnd - Area121_Places_addr}, {Area121_PlateAnims_addr, kFzPlateAnimsEnd - Area121_PlateAnims_addr}, {Area121_Cells_addr, 8},
     {Area121_Directions_addr, 0x18},
 };

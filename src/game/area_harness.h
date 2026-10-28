@@ -268,6 +268,9 @@ std::uint32_t Pick(const std::uint32_t* values, unsigned n);
 #define AH_PICK(...) [] { static const std::uint32_t kV[] = {__VA_ARGS__}; return ::area_harness::Pick(kV, sizeof kV / sizeof kV[0]); }()
 
 unsigned char* Mem(std::uint32_t address);
+// A VA held as an image::Va (common/image_base.h), placed here through
+// ::bof3::Img: the area families' at:: data constants.
+inline unsigned char* Mem(::bof3::image::Va va) { return Mem(::bof3::Img(va)); }
 unsigned char* Object(unsigned k);        // field object k % 30 (Sprite_Objects)
 unsigned char* TaskAt(unsigned k);        // one of the first four field objects (magic_harness's slot)
 unsigned char* SpriteRecord(unsigned k);  // one of the harness's two records of 0x140 bytes

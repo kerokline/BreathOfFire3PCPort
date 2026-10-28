@@ -6,6 +6,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 namespace area_w2c {
 namespace at {
 
@@ -15,26 +17,26 @@ namespace at {
 // byte by some choices and as a byte by others (docs/item-use.md section 5),
 // and the message word a choice leaves (0xFFFF: no new message).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // A byte two of area 91's choices set to 6 beside the message they open (as
 // areas 37 and 50 do; docs/area_w1c.md); no reader read this round.
 // kAnswerMark: now AreaW0c_AnswerMark (symbols.toml).
 // The object whose talk opened the message box: Field_ObjectTalk (0x517E90)
 // stores Field_ActiveMember here (other groups' kFocusObject).
-constexpr std::uint32_t kFocusObject = 0x903804;
+constexpr ::bof3::image::Va kFocusObject{0x903804};
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
 // (Field_ModeTailKinds 0x662CE8), its state and its sub-kind.
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
 // kTailState: now AreaW0c_TailState (symbols.toml).
 // kTailSub: now AreaW0c_TailSub (symbols.toml).
 // The movement script's four counters (MoveScript_CounterOps, ops A0..AF).
-constexpr std::uint32_t kCounter0 = 0x903848;
-constexpr std::uint32_t kCounter1 = 0x903849;
-constexpr std::uint32_t kCounter2 = 0x90384A;
-constexpr std::uint32_t kCounter3 = 0x90384B;
+constexpr ::bof3::image::Va kCounter0{0x903848};
+constexpr ::bof3::image::Va kCounter1{0x903849};
+constexpr ::bof3::image::Va kCounter2{0x90384A};
+constexpr ::bof3::image::Va kCounter3{0x90384B};
 // MoveScript_Var7 and the byte after it (the run step the scenes set beside it).
-constexpr std::uint32_t kVar7 = 0x8034E4;
-constexpr std::uint32_t kVar7Step = 0x8034E5;
+constexpr ::bof3::image::Va kVar7{0x8034E4};
+constexpr ::bof3::image::Va kVar7Step{0x8034E5};
 // The story flags (Flags_Set / Flags_Test's bank) and the pointer to the
 // chapter's flag row the chapters' flag calls take (docs/field-modes.md).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
@@ -52,7 +54,7 @@ constexpr std::uint32_t kPartyStride = 0x14C;
 // kLeader137: now ObjTrio_addr + 0x137 (symbols.toml).
 // The previous area (u16; mode_flow_callees.h's kLastArea): area 94's init
 // compares it with 0x79.
-constexpr std::uint32_t kLastArea = 0x802290;
+constexpr ::bof3::image::Va kLastArea{0x802290};
 // Effect_Objects' stride (records of 0x80 bytes).
 constexpr std::uint32_t kEffectStride = 0x80;
 // The glow and the rings build their primitives from MapView_ScreenXY's two
@@ -60,8 +62,8 @@ constexpr std::uint32_t kEffectStride = 0x80;
 // kScreenX: now MapView_ScreenXY (symbols.toml).
 // kScreenY: now MapView_ScreenXY[1] (symbols.toml).
 // kVertex0: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch
-constexpr std::uint32_t kVertex1 = 0x9037A8;
-constexpr std::uint32_t kVertex2 = 0x9037B0;
+constexpr ::bof3::image::Va kVertex1{0x9037A8};
+constexpr ::bof3::image::Va kVertex2{0x9037B0};
 // The CLUT strips area 91's state 3 clears and state 4 restores: a row of
 // 0x20 words per object (its byte +0x27), Gfx_ClutStripSource the copy the
 // strip is restored from; Gfx_ClutStripDirty counts the writes.
@@ -73,8 +75,8 @@ constexpr std::uint32_t kVertex2 = 0x9037B0;
 // kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember
 // kCondByteFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
 // kKind2Hold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
-constexpr std::uint32_t kKind2Z = 0x905E60;            // Field_Kind2Z
-constexpr std::uint32_t kKind2X = 0x905E64;            // Field_Kind2X
+constexpr ::bof3::image::Va kKind2Z{0x905E60};            // Field_Kind2Z
+constexpr ::bof3::image::Va kKind2X{0x905E64};            // Field_Kind2X
 // kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
 // kCameraMatrix: now Camera_Matrix (symbols.toml). Camera_Matrix
 // kGteMatrix: now Gte_Matrix (symbols.toml). Gte_Matrix

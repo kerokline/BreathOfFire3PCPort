@@ -165,6 +165,7 @@ const ah::DataTable kTables191[] = {{Area191_ScaleStates_addr, at::kArea191Scale
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char& B(U address) { return *ah::Mem(address); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 
 // Which area and function the round is running (set by the seeds).
 int g_area = 0;

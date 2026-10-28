@@ -233,8 +233,8 @@ ah::Region g_regions16[] = {
     {(Gfx_UnpackScratch_addr + 0x1f000), 0x10}, // the button map's words 0..7
     {0, 4 * kItemBytes},          // g_items
     {0, sizeof g_names},          // g_names
-    {at::kTextRecords, 0x80},     // Text_Records' first four rows
-    {at::kAreaTextOffset, 4},
+    {::bof3::Img(at::kTextRecords), 0x80},     // Text_Records' first four rows
+    {::bof3::Img(at::kAreaTextOffset), 4},
     {CharacterRecords_addr + 0x9, 1},
     {Area16_PlateAnims_addr, 0x37C}, // area 16's plate, cell, message and name tables
     {Area16_Directions_addr, 0x18}, // Area16_Directions, Area16_Record8Anims
@@ -250,7 +250,7 @@ void PlantCell(bool random_place) {
     unsigned char* const cz = Mem(ObjTrio_addr + 0x3a);
     cx[1] = 0;
     cz[1] = 0;
-    const U n = (at::kA16CellsEnd - Area16_Cells_addr) / 4;
+    const U n = (at::kA16CellsEnd.v - Area16_Cells_addr) / 4;
     unsigned char* const last = Mem(at::kA16CellsEnd - 4);
     last[0] = cx[0];
     last[1] = cz[0];
@@ -500,7 +500,7 @@ const ah::Callee kCallees21[] = {
     {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {"Inventory_Count", bof3::addr::Inventory_Count, KeyOf(&::Inventory_Count), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &CountEffect, nullptr},
 };
-const ah::Region kRegions21[] = {{at::kTextRecords, 0x80}, {Chapter_FlagRow_addr, 4}};
+const ah::Region kRegions21[] = {{::bof3::Img(at::kTextRecords), 0x80}, {Chapter_FlagRow_addr, 4}};
 // Areas 21 and 26: the flag row's pointer moved (never followed: the
 // recorders log it), so a pointer not read again shows.
 void DisturbFlagRow(U h) {

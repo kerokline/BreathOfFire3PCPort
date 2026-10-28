@@ -160,6 +160,7 @@ const ah::DataTable kTables198[] = {{Area198_EffectA6States_addr, at::kStateCoun
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char& B(U address) { return *ah::Mem(address); }
+unsigned char& B(::bof3::image::Va va) { return B(::bof3::Img(va)); }
 unsigned char* EffectRecord(unsigned slot) { return ah::Mem(Effect_Objects_addr + slot % at::kEffectCount * at::kEffectStride); }
 
 // ---- pointers the areas follow ----
@@ -299,7 +300,7 @@ const ah::Callee kCallees[] = {
 // Every area's list opens with the five pointer and word cells the seeds, the
 // louder stand-ins and the disturbance write (the harness puts back only its
 // regions after the run), then the area's own.
-#define W4F_BASE_REGIONS {at::kFocusObject, 4}, {at::kFlagRow, 4}, {at::kActiveMember, 4}, {at::kScriptObject, 4}, {at::kWaitWordDA, 2}
+#define W4F_BASE_REGIONS {::bof3::Img(at::kFocusObject), 4}, {::bof3::Img(at::kFlagRow), 4}, {::bof3::Img(at::kActiveMember), 4}, {::bof3::Img(at::kScriptObject), 4}, {::bof3::Img(at::kWaitWordDA), 2}
 const ah::Region kRegions192[] = {
     W4F_BASE_REGIONS,
     {CharacterRecords_addr, at::kCharCount * at::kCharStride},

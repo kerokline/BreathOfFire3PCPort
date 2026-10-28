@@ -62,9 +62,10 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
+inline unsigned char* At(::bof3::image::Va va) { return move_script::At(::bof3::Img(va)); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
-unsigned char* Bank() { return At(Cond_Flags_addr + 0xa0); }
-unsigned char* PartyRecord(U index) { return At(ObjTrio_addr + index * at::kPartyStride); }
+unsigned char* Bank() { return At(::bof3::Img(Cond_Flags_addr) + 0xa0); }
+unsigned char* PartyRecord(U index) { return At(::bof3::Img(ObjTrio_addr) + index * at::kPartyStride); }
 
 // A state handler read from an area's .data table in place, as the
 // originals' `jmp [index * 4 + table]`: the index is not checked there. Ours
@@ -232,11 +233,11 @@ extern "C" void __cdecl Area85_ClutShift(int delta) {
         return v > 0x1F ? 0x1Fu : static_cast<U>(v);
     };
     for (U n = 0; n < 0x100; ++n) {
-        const U word = Word(At(Gfx_ClutStripSource_addr + 0xc00 + n * 2));
+        const U word = Word(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0xc00 + n * 2));
         const U r = channel(word & 0x1F);
         const U g = channel((word >> 5) & 0x1F);
         const U b = channel((word >> 10) & 0x1F);
-        SetWord(At(Gfx_ClutStrip_addr + 0xc00 + n * 2), (((b << 5) | g) << 5) | (word & 0x8000) | r);
+        SetWord(At(::bof3::Img(Gfx_ClutStrip_addr) + 0xc00 + n * 2), (((b << 5) | g) << 5) | (word & 0x8000) | r);
     }
     Gfx_ClutStripDirty = 1;
 }
@@ -256,11 +257,11 @@ extern "C" void __cdecl Area85_ClutShift(int delta) {
 // 0x469FE0(0xF) (an effect of kind 4, which sets flag 0x1C), al 1.
 extern "C" unsigned char __cdecl Area86_SwitchHook(unsigned x, unsigned z) {
     U k = 0;
-    for (U a = Area86_Switches_addr + 1; a < at::kA86SwitchesEnd + 1; a += 4, ++k) {
+    for (U a = ::bof3::Img(Area86_Switches_addr) + 1; a < ::bof3::Img(at::kA86SwitchesEnd) + 1; a += 4, ++k) {
         if (At(a - 1)[0] == (x & 0xFF) && At(a)[0] == (z & 0xFF) && At(a + 1)[0] == ObjTrio[0].direction) break;
     }
     if (k == 3) return 0;
-    const unsigned char* const rect = At(Area86_Rects_addr + k * 4);
+    const unsigned char* const rect = At(::bof3::Img(Area86_Rects_addr) + k * 4);
     for (std::int32_t cx = rect[0]; cx < rect[2]; ++cx) {
         for (std::int32_t cz = rect[1]; cz < rect[3]; ++cz) {
             const auto near = static_cast<signed char>(AH_AT(NearFn, kMemberNear86)(static_cast<unsigned>(cx), static_cast<unsigned>(cz)));
@@ -268,7 +269,7 @@ extern "C" unsigned char __cdecl Area86_SwitchHook(unsigned x, unsigned z) {
         }
     }
     if (AH_CALL(Flags_Test)(Bank(), 0x1C) != 0) return 0;
-    AH_AT(BitsFn, area_w2b::kFlagsToggle)(Bank(), At(Area86_Switches_addr + 3 + k * 4)[0]);
+    AH_AT(BitsFn, area_w2b::kFlagsToggle)(Bank(), At(::bof3::Img(Area86_Switches_addr) + 3 + k * 4)[0]);
     AH_CALL(Sound_PlayEffect)(0x200);
     AH_AT(ValueFn, area_w2b::kSpawnKind4)(0xF);
     return 1;
@@ -380,7 +381,7 @@ void PlaceMessage(const WorldMapTables& t) {
         for (U a = t.name_sets; a < t.name_sets_end; a += t.set_stride, ++set)
             if (At(a)[0] == id) break;
         const unsigned char* items = At(t.name_sets + 1 + set * t.set_stride);
-        for (U row = at::kTextRecords; row < t.text_rows_end; row += 0x20, ++items) {
+        for (U row = ::bof3::Img(at::kTextRecords); row < t.text_rows_end; row += 0x20, ++items) {
             const unsigned item = items[0];
             if (item == 0xFF) break;
             unsigned char* const out = At(row);
@@ -390,7 +391,7 @@ void PlaceMessage(const WorldMapTables& t) {
                 out[8] = 0;
             } else {
                 const unsigned char* const name =
-                    item == 0x16 ? At(AreaW0b_ItemNameKey_addr) : AH_CALL(Item_NamePtr)(0, (item + 0x38) & 0xFF);
+                    item == 0x16 ? At(::bof3::Img(AreaW0b_ItemNameKey_addr)) : AH_CALL(Item_NamePtr)(0, (item + 0x38) & 0xFF);
                 std::memcpy(out, name, 16);
             }
         }
@@ -637,11 +638,11 @@ void DrawFrame(const WorldMapTables& t, int x, int y) {
                                                        static_cast<short>(Word(At(at::kLeaderCellZ))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
     if (!withheld1) sprite(x + 0x30, y, 1);
-    world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f000))), x + 0x38, y + 8,
+    world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000))), x + 0x38, y + 8,
                           withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) sprite(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f00c))), x + 0x38, y + 0x10,
+    world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c))), x + 0x38, y + 0x10,
                           withheld2);
     bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(at::kLeaderCellX))),
                                             static_cast<short>(Word(At(at::kLeaderCellZ)))) != 0;

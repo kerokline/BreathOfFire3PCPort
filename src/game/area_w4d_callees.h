@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"   // kFieldReset names its function since round 14 (R4A)
 
 namespace area_w4d {
@@ -18,16 +20,16 @@ namespace at {
 // index by it read it signed) and the message word a choice handler leaves
 // (0xFFFF: no new message).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
 // (Field_ModeTailKinds 0x662CE8), its state (s8), a sub-kind, a word timer.
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
 // kTailState: now AreaW0c_TailState (symbols.toml).
 // kTailSub: now AreaW0c_TailSub (symbols.toml).
-constexpr std::uint32_t kTailTimer = 0x9039F6;
+constexpr ::bof3::image::Va kTailTimer{0x9039F6};
 // The movement script's counters 0 and 3 (MoveScript_CounterOps).
-constexpr std::uint32_t kCounter0 = 0x903848;
-constexpr std::uint32_t kCounter3 = 0x90384B;
+constexpr ::bof3::image::Va kCounter0{0x903848};
+constexpr ::bof3::image::Va kCounter3{0x90384B};
 // MoveScript_Var7's neighbour byte (0x8034E5), which three choices set.
 // kVar8: now MoveScript_PartyRecords[0x65] (symbols.toml).
 // The story flags (Flags_Set / Flags_Test's bank).
@@ -35,14 +37,14 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // The return point Field_ChangeArea's callers keep (x, z dwords, the area
 // word at +8; event_ops_callees.h's kReturnPoint), and the byte after it
 // (0x904152) area 187's tail clears.
-constexpr std::uint32_t kReturnPoint = 0x904148;
+constexpr ::bof3::image::Va kReturnPoint{0x904148};
 // kReturnX: now AreaW2d_ReturnPoint (symbols.toml).
 // kReturnZ: now AreaW4d_ReturnZ (symbols.toml).
 // kReturnArea: now AreaW4d_ReturnArea (symbols.toml).
 // kReturnByte: now AreaW3c_CampFlag (symbols.toml).
 // The focus object: the object whose talk ran last (area_w1a_callees.h's
 // kFocusObject); byte +0x86 is its trigger id.
-constexpr std::uint32_t kFocusObject = 0x903804;
+constexpr ::bof3::image::Va kFocusObject{0x903804};
 // Party_Zenny (a dword; two choices compare it with 500).
 // kZenny: now Party_Zenny (symbols.toml).
 // The leader's pose byte (ObjTrio +8), the cell hook's third test.
@@ -79,7 +81,7 @@ constexpr unsigned kEffectCount = 20;
 // kScreenXY: now MapView_ScreenXY (symbols.toml). MapView_ScreenXY (two floats)
 // kVertex: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch (three words)
 // kFocusZ: now MapView_FocusZ (symbols.toml). MapView_FocusZ
-constexpr std::uint32_t kKind2X = 0x905E64;         // Field_Kind2X
+constexpr ::bof3::image::Va kKind2X{0x905E64};         // Field_Kind2X
 // kKind2ZField: now Field_Kind2Z (symbols.toml). Field_Kind2Z
 // kKind2Mode: now AreaW1a_EntryZone (symbols.toml). the byte after Field_Kind2X
 // kDescriptors: now Area_Descriptors (symbols.toml). Area_Descriptors

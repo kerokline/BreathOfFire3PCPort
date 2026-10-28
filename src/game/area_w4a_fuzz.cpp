@@ -257,7 +257,7 @@ enum : unsigned { kRegPackets = 3, kRegItems = 7, kRegNames = 8 };
 ah::Region g_regions152[] = {
     {AreaW0b_MapMode_addr, 1}, {0x7E0918, 1}, {0x7E0670, 4}, {0, kPacketBytes}, {0x9037A0, 0x20}, {0x66C7E8, 2},
     {Gfx_UnpackScratch_addr + 0x1f000, 0x10}, {0, 4 * kItemBytes}, {0, sizeof g_names},
-    {at::kAreaText, 4}, {CharacterRecords_addr + 0x9, 1},
+    {::bof3::Img(at::kAreaText), 4}, {CharacterRecords_addr + 0x9, 1},
     {Area152_PlateAnims_addr, kFzAnimsEnd - Area152_PlateAnims_addr},
     {Area152_Cells_addr, 4 * kFzCellRecords},
     {Area152_PlaceRows_addr, kFzRowsEnd - Area152_PlaceRows_addr},
@@ -502,7 +502,7 @@ const ah::Callee kCalleesChoice[] = {
 // kFzPairs154: now Area154_ChoicePairs (symbols.toml).
 // kFzPairs166: now Area166_ChoicePairs (symbols.toml).
 ah::Region g_regionsChoice[] = {
-    {AreaW1a_FocusObject_addr, 4}, {at::kTextRecords, 0x10}, {0, sizeof g_names},
+    {AreaW1a_FocusObject_addr, 4}, {::bof3::Img(at::kTextRecords), 0x10}, {0, sizeof g_names},
     {Area153_ChoicePairs_addr, 8}, {Area154_ChoicePairs_addr, 8}, {Area166_ChoicePairs_addr, 8},
 };
 

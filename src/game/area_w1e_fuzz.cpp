@@ -69,15 +69,15 @@ alignas(16) unsigned char g_names[4][16];
 // The plate and cell tables stop at area 65's choice table and descriptor
 // (0x6046CC..0x604713), which stay the image's.
 // kA65Tables1: now Area65_PlateAnims (symbols.toml).
-constexpr U kA65Tables1Bytes = at::kA65CellsEnd - Area65_PlateAnims_addr;
+constexpr U kA65Tables1Bytes = at::kA65CellsEnd.v - Area65_PlateAnims_addr;
 // kA65Tables2: now Area65_PlaceMessages (symbols.toml).
-constexpr U kA65Tables2Bytes = at::kA65NameSetsEnd - Area65_PlaceMessages_addr;
+constexpr U kA65Tables2Bytes = at::kA65NameSetsEnd.v - Area65_PlaceMessages_addr;
 unsigned char g_a65_tables1[kA65Tables1Bytes];   // 0x6043C8..0x6046CB
 unsigned char g_a65_tables2[kA65Tables2Bytes];   // 0x604714..0x60487F
 unsigned char g_a65_dirs[0x18];                  // 0x604938..0x60494F
 unsigned char g_a65_drift[0xC];                  // 0x604958..0x604963
-constexpr unsigned kCells65 = (at::kA65CellsEnd - Area65_Cells_addr) / 4;   // 182
-constexpr unsigned kNameSets65 = (at::kA65NameSetsEnd - Area65_NameSets_addr) / at::kA65NameSetStride;   // 2
+constexpr unsigned kCells65 = (at::kA65CellsEnd.v - Area65_Cells_addr) / 4;   // 182
+constexpr unsigned kNameSets65 = (at::kA65NameSetsEnd.v - Area65_NameSets_addr) / at::kA65NameSetStride;   // 2
 
 bool InPackets(U p, unsigned n) { return p >= Key(g_packets) && p + n <= Key(g_packets) + kPacketBytes; }
 
@@ -252,8 +252,8 @@ ah::Region g_regions65[] = {
     {(Gfx_UnpackScratch_addr + 0x1f000), 0x10}, // the button map's words 0..7
     {0, 4 * kItemBytes},          // g_items
     {0, sizeof g_names},          // g_names
-    {at::kTextRecords, 0xA0},     // Text_Records' first five rows
-    {at::kAreaTextOffset, 4},
+    {::bof3::Img(at::kTextRecords), 0xA0},     // Text_Records' first five rows
+    {::bof3::Img(at::kAreaTextOffset), 4},
     {CharacterRecords_addr + 0x9, 1},
     {Area65_PlateAnims_addr, kA65Tables1Bytes}, // area 65's plate and cell tables
     {Area65_PlaceMessages_addr, kA65Tables2Bytes}, // its place messages and name sets
