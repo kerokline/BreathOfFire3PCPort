@@ -124,7 +124,7 @@ one of:
 |---|---|---|
 | a bare name | a `BOF3X_ORIGINAL` name: the first argument of a `PatchBytes`, `RetargetCall` or `Inject` in `src/` | `SunderLoop` (DIV-0176) |
 | `ini:<key>=<value>` | a `bof3x.ini` key the launcher reads, at the value that turns the entry off | `ini:wide=0` (DIV-0041) |
-| `env:<BOF3X_NAME>=<value>` | an environment name `src/` reads and the launcher has no key for, or whose launcher key cannot ask for that value (DIV-0036's `BOF3X_SCALE=2`, DIV-0150's `BOF3X_MUSIC=seq`); an empty value means unset | `env:BOF3X_LAYERING=0` (DIV-0071) |
+| `env:<BOF3X_NAME>=<value>` | an environment name `src/` reads and the launcher has no key for, or whose launcher key cannot ask for that value (DIV-0150's `BOF3X_MUSIC=seq`; DIV-0036's `BOF3X_SCALE=2` was one until stage D gave `scale=` that value, D395); an empty value means unset | `env:BOF3X_LAYERING=0` (DIV-0071) |
 | `lang` | the language is the switch: `BOF3X_LANG`, the launcher's language box | DIV-0008 |
 | `none` | nothing turns it off | DIV-0067 (withdrawn) |
 
