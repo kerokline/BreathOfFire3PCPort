@@ -108,7 +108,7 @@ unsigned char* Extra(const char* who, U index) {
         bof3::Fatal("%s: extra sprite index %u, past the four Sprite_ObjectsExtra records - the original reads what "
                     "follows (docs/effect_1a.md section 6)",
                     who, (unsigned)index);
-    return At(Sprite_ObjectsExtra_addr + index * at::kObjectStride);
+    return At(::bof3::Img(Sprite_ObjectsExtra_addr) + index * at::kObjectStride);
 }
 // Sprite_Objects record `index` (the byte 0x939A1C): thirty of them.
 unsigned char* Object(const char* who, U index) {
@@ -116,7 +116,7 @@ unsigned char* Object(const char* who, U index) {
         bof3::Fatal("%s: object index %u (0x939A1C), past the thirty Sprite_Objects records - the original reads what "
                     "follows (docs/effect_1a.md section 6)",
                     who, (unsigned)index);
-    return At(Sprite_Objects_addr + index * at::kObjectStride);
+    return At(::bof3::Img(Sprite_Objects_addr) + index * at::kObjectStride);
 }
 // Effect_FindFree's record: a Fatal on an answer past the twenty (the callee
 // answers 0xFF or 0..19; the original would write past the pool). `index` is
@@ -126,14 +126,14 @@ unsigned char* Spawned(const char* who, std::int32_t index) {
         bof3::Fatal("%s: Effect_FindFree answered %d, past the 20 records - the original writes past the pool "
                     "(docs/effect_1a.md section 6)",
                     who, (int)index);
-    return At(Effect_Objects_addr + static_cast<U>(index) * at::kEffectStride);
+    return At(::bof3::Img(Effect_Objects_addr) + static_cast<U>(index) * at::kEffectStride);
 }
 // Kind 0xF's text record `index` (+0x4B): thirteen of 8 bytes.
 U Text(const char* who, unsigned index) {
     if (index >= at::kKind0FTextCount)
         bof3::Fatal("%s: text index +0x4B is %u, past the thirteen records of 0x653B98 (docs/effect_1a.md section 6)",
                     who, index);
-    return at::kKind0FTexts + index * 8u;
+    return ::bof3::Img(at::kKind0FTexts.v) + index * 8u;
 }
 // A text's line byte (+4 of its record) as an index of the label tables
 // 0x653C00 / 0x66A2FC: three lines (0xFF, none, is tested by some callers).
@@ -159,14 +159,14 @@ LabelDraw Label(const char* who, unsigned index) {
     // DIV-0069 (D279): a Japanese layer's own label, the disc's module's, where
     // its tag 4 gave one; else 0x66A2FC's string, the original's read.
     if (const unsigned char* disc = FishingText_DiscLabel(l.entry)) return {l.pen, Key(disc)};
-    return {l.pen, L(at::kLabelTexts + 4 * l.entry)};
+    return {l.pen, L(::bof3::Img(at::kLabelTexts.v) + 4 * l.entry)};
 }
 // Kind 0xF's row table 0x653C04: nine rows of four bytes, by +6 and a column.
 U RowByte(const char* who, unsigned row, unsigned column) {
     const U offset = row * 4u + column;
     if (offset >= at::kKind0FRowBytes)
         bof3::Fatal("%s: row %u column %u, past the table 0x653C04 (docs/effect_1a.md section 6)", who, row, column);
-    return at::kKind0FRows + offset;
+    return ::bof3::Img(at::kKind0FRows.v) + offset;
 }
 
 // The raw callees (effect_1a_callees.h): E1F's two draw helpers answer eax
@@ -320,29 +320,29 @@ extern "C" void __cdecl EffectKind5C_Run(void) {
 }
 
 // original 0x462BA0 (Effect_KindHandlers 1): EffectKind01_States by +1.
-extern "C" void __cdecl EffectKind01_Run(void) { Run("EffectKind01_Run", EffectKind01_States_addr, 2, S()[1]); }
+extern "C" void __cdecl EffectKind01_Run(void) { Run("EffectKind01_Run", ::bof3::Img(EffectKind01_States_addr), 2, S()[1]); }
 // original 0x462E50 (Effect_KindHandlers 7): EffectKind07_States by +1.
-extern "C" void __cdecl EffectKind07_Run(void) { Run("EffectKind07_Run", EffectKind07_States_addr, 5, S()[1]); }
+extern "C" void __cdecl EffectKind07_Run(void) { Run("EffectKind07_Run", ::bof3::Img(EffectKind07_States_addr), 5, S()[1]); }
 // original 0x463040 (Effect_KindHandlers 8): EffectKind08_States by +1.
-extern "C" void __cdecl EffectKind08_Run(void) { Run("EffectKind08_Run", EffectKind08_States_addr, 4, S()[1]); }
+extern "C" void __cdecl EffectKind08_Run(void) { Run("EffectKind08_Run", ::bof3::Img(EffectKind08_States_addr), 4, S()[1]); }
 // original 0x463440 (Effect_KindHandlers 9): EffectKind09_States by +1.
-extern "C" void __cdecl EffectKind09_Run(void) { Run("EffectKind09_Run", EffectKind09_States_addr, 10, S()[1]); }
+extern "C" void __cdecl EffectKind09_Run(void) { Run("EffectKind09_Run", ::bof3::Img(EffectKind09_States_addr), 10, S()[1]); }
 // original 0x463EE0 (Effect_KindHandlers 0xB): EffectKind0B_States by +1.
-extern "C" void __cdecl EffectKind0B_Run(void) { Run("EffectKind0B_Run", EffectKind0B_States_addr, 5, S()[1]); }
+extern "C" void __cdecl EffectKind0B_Run(void) { Run("EffectKind0B_Run", ::bof3::Img(EffectKind0B_States_addr), 5, S()[1]); }
 // original 0x464660 (Effect_KindHandlers 2): EffectKind02_States by +1.
-extern "C" void __cdecl EffectKind02_Run(void) { Run("EffectKind02_Run", EffectKind02_States_addr, 5, S()[1]); }
+extern "C" void __cdecl EffectKind02_Run(void) { Run("EffectKind02_Run", ::bof3::Img(EffectKind02_States_addr), 5, S()[1]); }
 // original 0x464F20 (Effect_KindHandlers 3): EffectKind03_States by +1.
-extern "C" void __cdecl EffectKind03_Run(void) { Run("EffectKind03_Run", EffectKind03_States_addr, 4, S()[1]); }
+extern "C" void __cdecl EffectKind03_Run(void) { Run("EffectKind03_Run", ::bof3::Img(EffectKind03_States_addr), 4, S()[1]); }
 // original 0x465310 (Effect_KindHandlers 5): EffectKind05_States by +1.
-extern "C" void __cdecl EffectKind05_Run(void) { Run("EffectKind05_Run", EffectKind05_States_addr, 6, S()[1]); }
+extern "C" void __cdecl EffectKind05_Run(void) { Run("EffectKind05_Run", ::bof3::Img(EffectKind05_States_addr), 6, S()[1]); }
 // original 0x4658C0 (Effect_KindHandlers 0xA): EffectKind0A_States by +1.
-extern "C" void __cdecl EffectKind0A_Run(void) { Run("EffectKind0A_Run", EffectKind0A_States_addr, 2, S()[1]); }
+extern "C" void __cdecl EffectKind0A_Run(void) { Run("EffectKind0A_Run", ::bof3::Img(EffectKind0A_States_addr), 2, S()[1]); }
 // original 0x465A60 (Effect_KindHandlers 0xC): EffectKind0C_States by +1.
-extern "C" void __cdecl EffectKind0C_Run(void) { Run("EffectKind0C_Run", EffectKind0C_States_addr, 3, S()[1]); }
+extern "C" void __cdecl EffectKind0C_Run(void) { Run("EffectKind0C_Run", ::bof3::Img(EffectKind0C_States_addr), 3, S()[1]); }
 // original 0x465F10 (Effect_KindHandlers 0xD): EffectKind0D_States by +1.
-extern "C" void __cdecl EffectKind0D_Run(void) { Run("EffectKind0D_Run", EffectKind0D_States_addr, 5, S()[1]); }
+extern "C" void __cdecl EffectKind0D_Run(void) { Run("EffectKind0D_Run", ::bof3::Img(EffectKind0D_States_addr), 5, S()[1]); }
 // original 0x4667A0 (Effect_KindHandlers 0x1A): EffectKind1A_States by +1.
-extern "C" void __cdecl EffectKind1A_Run(void) { Run("EffectKind1A_Run", EffectKind1A_States_addr, 17, S()[1]); }
+extern "C" void __cdecl EffectKind1A_Run(void) { Run("EffectKind1A_Run", ::bof3::Img(EffectKind1A_States_addr), 17, S()[1]); }
 
 // original 0x466080 (Effect_KindHandlers 0xF): unless the record is record 3
 // (0x7E1360) or record 3's +1 is above 3, Effect_Release (a tail jump); else
@@ -353,7 +353,7 @@ extern "C" void __cdecl EffectKind0F_Run(void) {
         SH_CALL(Effect_Release)();
         return;
     }
-    Run("EffectKind0F_Run", EffectKind0F_States_addr, 13, s[1]);
+    Run("EffectKind0F_Run", ::bof3::Img(EffectKind0F_States_addr), 13, s[1]);
 }
 
 // ===========================================================================
@@ -510,7 +510,7 @@ extern "C" void __cdecl EffectKind07_FadeIn(void) {
     S()[0x5F] = static_cast<unsigned char>(S()[0x5F] + 2);
     unsigned char* const s = S();
     if (s[0x5D] != 0x80) return;
-    At(at::kCounterByte)[0] = 0x14;
+    At(::bof3::Img(at::kCounterByte.v))[0] = 0x14;
     s[1] = 2;
     S()[9] = 0xFF;
 }
@@ -540,10 +540,10 @@ extern "C" void __cdecl EffectHud_Draw(int x, int y) {
         count = static_cast<signed char>(0x3E - rv::Bytes(Effect_Objects)[0x3a]);
         if (count < 0) count = 0;
     }
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextBuffer)), reinterpret_cast<const char*>(At(Boss26Fx_CountFormat_addr)),
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kTextBuffer.v))), reinterpret_cast<const char*>(At(::bof3::Img(Boss26Fx_CountFormat_addr))),
                          static_cast<int>(count));
     const int colour = (count >= 0x32 && ObjTrio[0].step == 4 && (Frame_Counter & 4) != 0) ? 2 : 0;
-    SH_CALL(Text_DrawFont12)(x + 0xEE, y + 0x1A, colour, At(at::kTextBuffer));
+    SH_CALL(Text_DrawFont12)(x + 0xEE, y + 0x1A, colour, At(::bof3::Img(at::kTextBuffer.v)));
     SH_CALL(EffectHud_DrawGauge)(x, y);
 }
 
@@ -635,7 +635,7 @@ extern "C" void __cdecl EffectHud_Marker(int x, int y, unsigned slot) {
     Fild(static_cast<std::int16_t>(x), p + 8);
     Fild(static_cast<std::int16_t>(y), p + 0xC);
     p[0x15] = 0x48;
-    p[0x14] = B(at::kMarkerShades + ((Frame_Counter >> 3) & 3));
+    p[0x14] = B(::bof3::Img(at::kMarkerShades.v) + ((Frame_Counter >> 3) & 3));
     SH_CALL(Gfx_CommitPrim)(slot, 0x18);
 }
 
@@ -774,7 +774,7 @@ extern "C" void __cdecl EffectHud_DrawMark(int x, int y, unsigned width, unsigne
 // parameters 0x939A20 points at (the fade's step), +0xC, +0x10, +0x1C = 0, +1
 // up. PSX 0x801D1B54 (table-anchored).
 extern "C" void __cdecl EffectKind03_Start(void) {
-    const unsigned char* const script = PtrAt(at::kPanelScript);
+    const unsigned char* const script = PtrAt(::bof3::Img(at::kPanelScript.v));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_18, script[0]);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0);
@@ -794,7 +794,7 @@ extern "C" void __cdecl EffectKind03_Fade(void) {
     unsigned char* a = S();
     const U step = static_cast<std::uint32_t>(rv::As<records::EffectObject>(a)->work_18);
     if (step != 0) {
-        const unsigned mode = PtrAt(at::kPanelScript)[1];
+        const unsigned mode = PtrAt(::bof3::Img(at::kPanelScript.v))[1];
         if (mode == 2) {
             const U speed = rv::As<records::EffectWork>(a)->work_10;
             rv::Store<std::uint32_t>(rv::As<records::EffectWork>(a)->work_10, speed + step);
@@ -859,10 +859,10 @@ extern "C" void __cdecl EffectKind03_Fade(void) {
 // - drawn by EffectHud_DrawCount at (record 0's word +0x2E + 0xA, its dword
 // +0x30 - 0x18), slot 2. PSX 0x801D1F38 (table-anchored).
 extern "C" void __cdecl EffectKind03_ShowName(void) {
-    const U name = (Frame_Counter & 0x40) != 0 ? at::kAccessoryNames + (L(at::kAccessoryA) & 0xFF) * 0x18u
+    const U name = (Frame_Counter & 0x40) != 0 ? at::kAccessoryNames + (L(::bof3::Img(at::kAccessoryA.v)) & 0xFF) * 0x18u
                                                : at::kAccessoryNames + CharStats_ExtraItem * 0x18u;
     DrawText(0x8A, 0xC8, 0, FishingText_NameCount(), name);   // DIV-0069: 12 under a Latin overlay, else 8
-    const unsigned char* const set = PtrAt(at::kPanelSet);
+    const unsigned char* const set = PtrAt(::bof3::Img(at::kPanelSet.v));
     const auto left = static_cast<signed char>(rv::Bytes(Effect_Objects)[0x7] - set[0xF]);
     if (left < 0) return;
     unsigned n;
@@ -872,8 +872,8 @@ extern "C" void __cdecl EffectKind03_ShowName(void) {
         if (left == 0) return;
         n = static_cast<unsigned>(left);
     }
-    const U x = Hi(Key(set)) | ((W(at::kRecord0 + 0x2E) + 0xA) & 0xFFFF);
-    SH_CALL(EffectHud_DrawCount)(static_cast<int>(x), static_cast<int>(L(at::kRecord0 + 0x30) - 0x18), 2, n);
+    const U x = Hi(Key(set)) | ((W(::bof3::Img(at::kRecord0.v) + 0x2E) + 0xA) & 0xFFFF);
+    SH_CALL(EffectHud_DrawCount)(static_cast<int>(x), static_cast<int>(L(::bof3::Img(at::kRecord0.v) + 0x30) - 0x18), 2, n);
 }
 
 // ===========================================================================
@@ -911,8 +911,8 @@ extern "C" void __cdecl EffectKind05_Start(void) {
     unsigned char* s = S();
     const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, static_cast<U>(h) + 0x100);
-    const unsigned char* const script = PtrAt(at::kPanelScript);
-    const auto product = static_cast<std::int32_t>(script[2] * L(at::kRecord2 + 0xC));
+    const unsigned char* const script = PtrAt(::bof3::Img(at::kPanelScript.v));
+    const auto product = static_cast<std::int32_t>(script[2] * L(::bof3::Img(at::kRecord2.v) + 0xC));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, static_cast<U>(product / 255 + 8));
     s = S();
     s[6] = static_cast<unsigned char>(SL(s + 0x10) / 15);
@@ -926,8 +926,8 @@ extern "C" void __cdecl EffectKind05_Start(void) {
     Kind2ZClamp(SL(s + 0x10));
     MoveScript_F3Divisor = 0;
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, 0);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, L(at::kKind05Rise + S()[6] * 8u));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, L(at::kKind05Rise + 4 + S()[6] * 8u));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, L(::bof3::Img(at::kKind05Rise.v) + S()[6] * 8u));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, L(::bof3::Img(at::kKind05Rise.v) + 4 + S()[6] * 8u));
     S()[0x24] = 0;
     S()[0x29] = 5;
     S()[0x48] = 1;
@@ -942,7 +942,7 @@ extern "C" void __cdecl EffectKind05_Start(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[2], 0);
     S()[0x2A] = 0;
     S()[0x48] = 1;
-    SH_CALL(Sprite_SetAnimationBank)(static_cast<unsigned short>(W(PtrAt(at::kPanelSet) + 0xC)));
+    SH_CALL(Sprite_SetAnimationBank)(static_cast<unsigned short>(W(PtrAt(::bof3::Img(at::kPanelSet.v)) + 0xC)));
     SH_CALL(Sprite_SetAnimation)(1);
     const unsigned char spawned = SH_CALL(Effect_FindFree)();
     if (spawned != 0xFF) {
@@ -950,7 +950,7 @@ extern "C" void __cdecl EffectKind05_Start(void) {
         e[0] = 1;
         e[5] = 0xA;
     }
-    S()[7] = PtrAt(at::kPanelSet)[0xF];
+    S()[7] = PtrAt(::bof3::Img(at::kPanelSet.v))[0xF];
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 
@@ -986,14 +986,14 @@ extern "C" void __cdecl EffectKind05_Rise(void) {
         return;
     }
     const U row = Row05("EffectKind05_Rise", a[6]);
-    if (z == L(at::kKind05Bounce + row) + target) {
-        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(a)->work_20, L(at::kKind05Bounce + 4 + row));
+    if (z == L(::bof3::Img(at::kKind05Bounce.v) + row) + target) {
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(a)->work_20, L(::bof3::Img(at::kKind05Bounce.v) + 4 + row));
         a = S();
     }
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(a)->step_y, static_cast<std::uint32_t>(rv::As<records::EffectObject>(a)->step_y) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(a)->work_20));
     a = S();
     const U row2 = Row05("EffectKind05_Rise", a[6]);
-    if (rv::As<records::EffectObject>(a)->z > static_cast<std::int32_t>(L(at::kKind05Bounce + row2) + rv::As<records::EffectWork>(a)->work_10) && SL(a + 0x14) < 0) {
+    if (rv::As<records::EffectObject>(a)->z > static_cast<std::int32_t>(L(::bof3::Img(at::kKind05Bounce.v) + row2) + rv::As<records::EffectWork>(a)->work_10) && SL(a + 0x14) < 0) {
         rv::Store<std::uint32_t>(rv::As<records::EffectObject>(a)->step_y, 0);
         a = S();
         rv::Store<std::uint32_t>(rv::As<records::EffectObject>(a)->work_20, 0);
@@ -1036,7 +1036,7 @@ extern "C" void __cdecl EffectKind05_Bounce(void) {
         a[0xA] = static_cast<unsigned char>(a[0xA] - 1);
         a = S();
         if (a[0xA] == 0) {
-            const unsigned char* const set = PtrAt(at::kPanelSet);
+            const unsigned char* const set = PtrAt(::bof3::Img(at::kPanelSet.v));
             if (static_cast<std::int32_t>(a[7]) > static_cast<signed char>(set[0xF])) {
                 a[0xA] = set[0x10];
                 a = S();
@@ -1103,7 +1103,7 @@ extern "C" void __cdecl EffectKind05_Bounce(void) {
 // Sprite_Objects record the byte 0x939A1C names; Sprite_ScriptTick; 0x52CD50
 // (a tail jump). PSX 0x801D28D8.
 extern "C" void __cdecl EffectKind05_Follow(void) {
-    SH_CALL(Sprite_EnsureAnimation)(SL(At(Effect_Objects_addr + 0x280 + 0x10)) >= 0 ? 3 : 2);
+    SH_CALL(Sprite_EnsureAnimation)(SL(At(::bof3::Img(Effect_Objects_addr) + 0x280 + 0x10)) >= 0 ? 3 : 2);
     rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Object("EffectKind05_Follow", Effect1a_PanelObject))->x));
     rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Object("EffectKind05_Follow", Effect1a_PanelObject))->z));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Object("EffectKind05_Follow", Effect1a_PanelObject))->height_whole));
@@ -1119,7 +1119,7 @@ extern "C" void __cdecl EffectKind05_Follow(void) {
 // copied; +0x29 = 5; the height +0x3C 0; +0x48, +0x5C 0; +0x5D..+0x5F 0x9C;
 // +0x60..+0x6C 0; EffectKind0A_Follow; +1 up.
 extern "C" void __cdecl EffectKind0A_Start(void) {
-    for (U i = 0x24; i <= 0x28; ++i) S()[i] = B(at::kRecord0 + i);
+    for (U i = 0x24; i <= 0x28; ++i) S()[i] = B(::bof3::Img(at::kRecord0.v) + i);
     S()[0x29] = 5;
     rv::Current<records::EffectObject>()->height = 0;
     S()[0x48] = 0;
@@ -1191,7 +1191,7 @@ extern "C" void __cdecl EffectKind0C_Aim(void) {
     unsigned char* a = S();
     bool settled = true;
     if (rv::As<records::EffectWork>(a)->work_10 == 0) {
-        const unsigned margin = PtrAt(at::kPanelScript)[3] * 4u + 0xC;
+        const unsigned margin = PtrAt(::bof3::Img(at::kPanelScript.v))[3] * 4u + 0xC;
         const std::int16_t pos = static_cast<std::int16_t>(static_cast<std::uint32_t>(rv::As<records::EffectWork>(a)->work_30));
         const signed char aim = static_cast<signed char>(Object(kWho, Effect1a_PanelObject)[0xA]);
         const std::int32_t near_hi = pos + static_cast<std::int32_t>(margin);
@@ -1215,7 +1215,7 @@ extern "C" void __cdecl EffectKind0C_Aim(void) {
         a = S();
     }
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(a)->work_30, static_cast<std::uint32_t>(rv::As<records::EffectWork>(a)->work_30) + W(a + 0x10));
-    const unsigned b3 = PtrAt(at::kPanelScript)[3];
+    const unsigned b3 = PtrAt(::bof3::Img(at::kPanelScript.v))[3];
     a = S();
     const std::int32_t pos = SW(a + 0x30);
     const std::int32_t lo = static_cast<std::int32_t>(b3 * 4) - 0x24;
@@ -1237,7 +1237,7 @@ extern "C" void __cdecl EffectKind0C_Aim(void) {
     p[5] = 0x80;
     p[6] = 0x80;
     SH_CALL(Gfx_CommitPrim)(2, 0x20);
-    const unsigned b3b = PtrAt(at::kPanelScript)[3];
+    const unsigned b3b = PtrAt(::bof3::Img(at::kPanelScript.v))[3];
     const auto width = static_cast<unsigned char>((b3b + 3) << 3);
     a = S();
     const auto left = static_cast<std::uint16_t>(W(a + 0x30) - 4 * b3b + 0xAD);
@@ -1295,7 +1295,7 @@ extern "C" void __cdecl EffectKind0D_Start(void) {
     const unsigned v = a[6];
     if (v >= at::kKind0DSoundCount)
         bof3::Fatal("EffectKind0D_Start: +6 is %u, past the six words of 0x653B8C (docs/effect_1a.md section 6)", v);
-    const U id = W(at::kKind0DSounds + 2 * v);
+    const U id = W(::bof3::Img(at::kKind0DSounds.v) + 2 * v);
     if (id != 0xFFFF) {
         SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id));
         S()[1] = static_cast<unsigned char>(S()[1] + 1);
@@ -1519,7 +1519,7 @@ extern "C" void __cdecl EffectKind0F_LineType(void) {
     }
     const unsigned char typed = c[0x49];
     if (typed == 0) return;
-    DrawText(static_cast<std::uint32_t>(rv::As<records::EffectWork>(c)->work_2e), L(at::kRecord3 + 0x30) + 2, 0, (eax & 0xFFFFFF00u) | typed, L(Text(kWho, c[0x4B])));
+    DrawText(static_cast<std::uint32_t>(rv::As<records::EffectWork>(c)->work_2e), L(::bof3::Img(at::kRecord3.v) + 0x30) + 2, 0, (eax & 0xFFFFFF00u) | typed, L(Text(kWho, c[0x4B])));
 }
 
 // original 0x466460 (EffectKind0F_States[10]): +0x2E -= 2. While the line wait
@@ -1573,16 +1573,16 @@ extern "C" void __cdecl EffectKind0F_LineNext(void) {
             if (FishingText_On()) {
                 // DIV-0069: after the line's real pen width, not 12 a character.
                 const U width = FishingText_Width(TextAt(L(Text(kWho, a[0x4B]))), a[0x49]);
-                DrawText(static_cast<std::uint16_t>(width + static_cast<std::uint32_t>(rv::As<records::EffectWork>(a)->work_2e)), L(at::kRecord3 + 0x30) + 2, label.pen, 1,
+                DrawText(static_cast<std::uint16_t>(width + static_cast<std::uint32_t>(rv::As<records::EffectWork>(a)->work_2e)), L(::bof3::Img(at::kRecord3.v) + 0x30) + 2, label.pen, 1,
                          label.text);
             } else {
-                DrawText(static_cast<std::uint16_t>(a[0x49] * 12u + static_cast<std::uint32_t>(rv::As<records::EffectWork>(a)->work_2e)), L(at::kRecord3 + 0x30) + 2,
+                DrawText(static_cast<std::uint16_t>(a[0x49] * 12u + static_cast<std::uint32_t>(rv::As<records::EffectWork>(a)->work_2e)), L(::bof3::Img(at::kRecord3.v) + 0x30) + 2,
                          label.pen, 1, label.text);
             }
         }
     }
     unsigned char* const a = S();
-    DrawText(static_cast<std::uint32_t>(rv::As<records::EffectWork>(a)->work_2e), L(at::kRecord3 + 0x30) + 2, 0, a[0x49], rv::As<records::EffectObject>(a)->script);
+    DrawText(static_cast<std::uint32_t>(rv::As<records::EffectWork>(a)->work_2e), L(::bof3::Img(at::kRecord3.v) + 0x30) + 2, 0, a[0x49], rv::As<records::EffectObject>(a)->script);
 }
 
 // original 0x4665E0 (EffectKind0F_States[11]): +0x2E -= 2; left of 0x1D (s16)
@@ -1630,17 +1630,17 @@ extern "C" void __cdecl EffectKind0F_LineScroll(void) {
     }
     const unsigned char typed = a[0x49];
     if (typed != 0) {
-        DrawText(static_cast<std::uint32_t>(rv::As<records::EffectWork>(a)->work_2e), L(at::kRecord3 + 0x30) + 2, 0, typed, rv::As<records::EffectObject>(a)->script);
+        DrawText(static_cast<std::uint32_t>(rv::As<records::EffectWork>(a)->work_2e), L(::bof3::Img(at::kRecord3.v) + 0x30) + 2, 0, typed, rv::As<records::EffectObject>(a)->script);
         unsigned char* const c = S();
         if (B(Text(kWho, c[0x4B]) + 4) == 0xFF) return;
         const LabelDraw label = Label(kWho, c[0x4B]);   // DIV-0069 / DIV-0136
         if (FishingText_On()) {
             // DIV-0069: after the typed characters' real width.
             const U width = FishingText_Width(TextAt(rv::As<records::EffectObject>(c)->script), c[0x49]);
-            DrawText(static_cast<std::uint16_t>(width + static_cast<std::uint32_t>(rv::As<records::EffectWork>(c)->work_2e)), L(at::kRecord3 + 0x30) + 2, label.pen, 1,
+            DrawText(static_cast<std::uint16_t>(width + static_cast<std::uint32_t>(rv::As<records::EffectWork>(c)->work_2e)), L(::bof3::Img(at::kRecord3.v) + 0x30) + 2, label.pen, 1,
                      label.text);
         } else {
-            DrawText(static_cast<std::uint16_t>(c[0x49] * 12u + static_cast<std::uint32_t>(rv::As<records::EffectWork>(c)->work_2e)), L(at::kRecord3 + 0x30) + 2, label.pen,
+            DrawText(static_cast<std::uint16_t>(c[0x49] * 12u + static_cast<std::uint32_t>(rv::As<records::EffectWork>(c)->work_2e)), L(::bof3::Img(at::kRecord3.v) + 0x30) + 2, label.pen,
                      1, label.text);
         }
         return;
@@ -1650,7 +1650,7 @@ extern "C" void __cdecl EffectKind0F_LineScroll(void) {
         return;
     }
     const LabelDraw label = Label(kWho, a[0x4B]);   // DIV-0069 / DIV-0136
-    DrawText(static_cast<std::uint32_t>(rv::As<records::EffectWork>(a)->work_2e), L(at::kRecord3 + 0x30) + 2, label.pen, 1, label.text);
+    DrawText(static_cast<std::uint32_t>(rv::As<records::EffectWork>(a)->work_2e), L(::bof3::Img(at::kRecord3.v) + 0x30) + 2, label.pen, 1, label.text);
     a = S();
     if (static_cast<std::uint32_t>(rv::As<records::EffectWork>(a)->work_2e) != 0x1D) return;
     a[9] = 6;
@@ -1714,12 +1714,12 @@ void WindowAndLists() {
 // drawn.
 void PanelKind() {
     unsigned char* a = S();
-    const unsigned char count = B(at::kKindCounts + static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(a)->height_whole))));
+    const unsigned char count = B(::bof3::Img(at::kKindCounts.v) + static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(a)->height_whole))));
     const U icon_x = a[9] * 48u + 0x80;
     if (count != 0) {
         SH_CALL(FieldPanel_DrawKindIcon)(static_cast<int>(icon_x), 0x5B, a[0x3E]);
         a = S();
-        SH_CALL(FieldPanel_DrawKindRow)(a[0x3E], B(at::kKindCounts + static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(a)->height_whole)))), a[9]);
+        SH_CALL(FieldPanel_DrawKindRow)(a[0x3E], B(::bof3::Img(at::kKindCounts.v) + static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(a)->height_whole)))), a[9]);
     } else {
         SH_CALL(FieldPanel_DrawKindIcon)(static_cast<int>(icon_x), 0x5B, 0xFF);
         SH_CALL(FieldPanel_DrawKindRow)(0xFF, 0, S()[9]);
@@ -1731,7 +1731,7 @@ void PanelKind() {
 bool PanelRow() {
     SH_CALL(FieldPanel_DrawHeader)(0, 0x4E);
     unsigned char* const a = S();
-    const unsigned char count = B(at::kKindCounts + static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(a)->height_whole))));
+    const unsigned char count = B(::bof3::Img(at::kKindCounts.v) + static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(a)->height_whole))));
     if (count != 0)
         SH_CALL(FieldPanel_DrawKindRow)(a[0x3E], count, 0);
     else
@@ -1834,7 +1834,7 @@ extern "C" void __cdecl EffectKind1A_FindKind(void) {
     unsigned char* a = S();
     for (;;) {
         const U kind = static_cast<std::uint32_t>(static_cast<std::uint16_t>(rv::As<records::EffectObject>(a)->height_whole));
-        if (B(at::kKindCounts + static_cast<U>(static_cast<std::int16_t>(kind))) != 0) break;
+        if (B(::bof3::Img(at::kKindCounts.v) + static_cast<U>(static_cast<std::int16_t>(kind))) != 0) break;
         rv::Store<std::uint32_t>(rv::As<records::EffectObject>(a)->height_whole, kind + 1);
         a = S();
         if (static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(a)->height_whole)) >= 0x20) {
@@ -1899,7 +1899,7 @@ void PanelSlide(int delta, bool minus_when_eight_clear) {
     const bool minus = (a[8] == 0) == minus_when_eight_clear;
     const U slide = a[9] * 48u;
     const U x = minus ? 0x80u - slide : slide + 0x80u;
-    if (B(at::kKindCounts + static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(a)->height_whole)))) != 0)
+    if (B(::bof3::Img(at::kKindCounts.v) + static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(a)->height_whole)))) != 0)
         SH_CALL(FieldPanel_DrawKindIcon)(static_cast<int>(x), 0x5B, a[0x3E]);
     else
         SH_CALL(FieldPanel_DrawKindIcon)(static_cast<int>(x), 0x5B, 0xFF);
@@ -2060,10 +2060,10 @@ namespace {
 // original's read (the line byte's 0x66A2FC entry), not an icon or a disc's.
 void FishingEmptySelfTest() {
     constexpr unsigned kText = 1;   // not the cast's text 0, whose label reads word 7
-    unsigned char* const record = At(at::kKind0FTexts + 8 * kText);
+    unsigned char* const record = At(::bof3::Img(at::kKind0FTexts.v) + 8 * kText);
     unsigned char saved_record[8], saved_labels[24];
     std::memcpy(saved_record, record, sizeof saved_record);
-    std::memcpy(saved_labels, At(at::kLabelTexts), sizeof saved_labels);
+    std::memcpy(saved_labels, At(::bof3::Img(at::kLabelTexts.v)), sizeof saved_labels);
     unsigned char* const saved_current = Sprite_Current;
     unsigned char* const saved_packet = Gfx_PacketNext;
     const std::uint8_t saved_line = g_empty_line_none, saved_glyph = g_low_glyph_none;
@@ -2072,7 +2072,7 @@ void FishingEmptySelfTest() {
     SetL(record, Key(kEmpty));
     record[4] = 0;   // line byte 0: the label is entry 0
     record[5] = 1;   // its pause
-    for (unsigned e = 0; e < 6; ++e) SetL(At(at::kLabelTexts + 4 * e), Key(kEmpty));
+    for (unsigned e = 0; e < 6; ++e) SetL(At(::bof3::Img(at::kLabelTexts.v) + 4 * e), Key(kEmpty));
     unsigned char object[0x80];
     unsigned bad = 0, cases = 0;
     auto check = [&](bool ok, const char* what, unsigned got, unsigned want) {
@@ -2129,7 +2129,7 @@ void FishingEmptySelfTest() {
     check(EffectKind0F_GlyphCalls() - before == 2, "DrawGlyph of a NUL and a space: calls",
           EffectKind0F_GlyphCalls() - before, 2);
     std::memcpy(record, saved_record, sizeof saved_record);
-    std::memcpy(At(at::kLabelTexts), saved_labels, sizeof saved_labels);
+    std::memcpy(At(::bof3::Img(at::kLabelTexts.v)), saved_labels, sizeof saved_labels);
     Sprite_Current = saved_current;
     g_empty_line_none = saved_line;
     g_low_glyph_none = saved_glyph;

@@ -377,7 +377,7 @@ void Seed(unsigned k) {
     case k11Draw:
         // the quads' vertex numbers below the 0x1E2 (a number past them reads past the table; ours aborts)
         for (unsigned i = 0; i < 4 * at::kSphereQuadCount; ++i)
-            SetWord(P(at::kSphereQuads + 2 * i), sh::Next() % 8 == 0 ? PickOf(0, 0x1E1) : sh::Next() % at::kSphereVertCount);
+            SetWord(P(::bof3::Img(at::kSphereQuads.v) + 2 * i), sh::Next() % 8 == 0 ? PickOf(0, 0x1E1) : sh::Next() % at::kSphereVertCount);
         break;
     case k4DRise:
     case k4DFade:
@@ -402,7 +402,7 @@ void Args(unsigned k, U* a) {
         break;
     }
     case k4AGlow: a[0] = EffectKind30_Shards_addr + at::kTrailStride * (i % at::kTrailCount); break;
-    case k4BDebris: a[0] = at::kDebris + at::kDebrisStride * (i % at::kDebrisCount); break;
+    case k4BDebris: a[0] = ::bof3::Img(at::kDebris.v) + at::kDebrisStride * (i % at::kDebrisCount); break;
     default: break;
     }
 }
@@ -426,7 +426,7 @@ void Disturb(U h) {
     }
     case 2: s[6] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 3: P(Effect2e_TrailSpin_addr)[0] = static_cast<unsigned char>(v & 1); break;
-    case 4: SetWord(P(at::kBurstSize), v); break;
+    case 4: SetWord(P(::bof3::Img(at::kBurstSize.v)), v); break;
     case 5: {
         unsigned char* const ring = P(static_cast<U>(Long(P(Effect2d_DustAnchor_addr))));
         if (sh::InRegions(ring + 8, 4)) SetLong(ring + 8, static_cast<std::int32_t>((v & 1) ? 0xF000000u : v));

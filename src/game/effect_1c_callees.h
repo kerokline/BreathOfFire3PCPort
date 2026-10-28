@@ -34,13 +34,13 @@ constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV; // librar
                                                   // the 3 x 3 (18 bytes read), 6 bytes written; in and out may be one
 
 // Data.
-constexpr std::uint32_t kKind1CStates = 0x654210;   // EffectKind1C_States, 5 code pointers (then kind 0x1D's)
-constexpr std::uint32_t kKind1DStates = 0x654224;   // EffectKind1D_States, 5
-constexpr std::uint32_t kKind1EStates = 0x654238;   // EffectKind1E_States, 5 (the last Effect_StateRelease)
-constexpr std::uint32_t kKind1EShardStates = 0x65424C;   // EffectKind1E_ShardStates, 4, by a shard's +1
-constexpr std::uint32_t kKind1FStates = 0x65425C;   // EffectKind1F_States, 3 (the last Effect_StateRelease)
-constexpr std::uint32_t kKind20States = 0x654268;   // EffectKind20_States, 7 (then kind 0x21's, E1D's)
-constexpr std::uint32_t kKind36Frames = 0x653F88;   // EffectKind36_Frames: four (s16 x, s16 y) VRAM origins
+constexpr ::bof3::image::Va kKind1CStates{0x654210};   // EffectKind1C_States, 5 code pointers (then kind 0x1D's)
+constexpr ::bof3::image::Va kKind1DStates{0x654224};   // EffectKind1D_States, 5
+constexpr ::bof3::image::Va kKind1EStates{0x654238};   // EffectKind1E_States, 5 (the last Effect_StateRelease)
+constexpr ::bof3::image::Va kKind1EShardStates{0x65424C};   // EffectKind1E_ShardStates, 4, by a shard's +1
+constexpr ::bof3::image::Va kKind1FStates{0x65425C};   // EffectKind1F_States, 3 (the last Effect_StateRelease)
+constexpr ::bof3::image::Va kKind20States{0x654268};   // EffectKind20_States, 7 (then kind 0x21's, E1D's)
+constexpr ::bof3::image::Va kKind36Frames{0x653F88};   // EffectKind36_Frames: four (s16 x, s16 y) VRAM origins
 // kShards: now EffectKind30_Shards (symbols.toml). EffectKind30_Shards: 0x80 records of 0x14 (kinds 0x1C / 0x1D), or
                                                     // 8 of 0x28 (kind 0x1E's shards), or 32 of 0x2C (kind 0x1F's debris)
 constexpr std::uint32_t kShardCount = 0x80;
@@ -49,10 +49,10 @@ constexpr std::uint32_t kShardStride = 0x14;
                                                     // the velocity), then at 0x92C348 27 face copies of 0x28
 // kPieceCopies: now EffectKind30_Shards[0x3c8] (symbols.toml).
 constexpr std::uint32_t kPieceCount = 27;
-constexpr std::uint32_t kDebris = 0x92C780;         // kind 0x1E: 16 debris records of 0x2C, to 0x92CA40
+constexpr ::bof3::image::Va kDebris{0x92C780};         // kind 0x1E: 16 debris records of 0x2C, to 0x92CA40
 // kShardCursor: now EffectKind1E_ShardCursor (symbols.toml). EffectKind1E_ShardCursor: the shard kind 0x1E's shard
                                                     // states step (a pointer)
 // kModelFaces: now Sprite_ObjectsExtra[0].script (symbols.toml). Sprite_ObjectsExtra[0] +0x50: the model's faces (0x28 bytes each)
-constexpr std::uint32_t kModelCount = 0x802054;     // Sprite_ObjectsExtra[0] +0x54: points at the face count (a byte)
+constexpr ::bof3::image::Va kModelCount{0x802054};     // Sprite_ObjectsExtra[0] +0x54: points at the face count (a byte)
 
 }  // namespace effect_1c::at

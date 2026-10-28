@@ -21,15 +21,15 @@ constexpr std::uint32_t kBarDraw = bof3::addr::EffectKindA8_DrawBar;       // (u
 // kDrops: now EffectKind30_Shards (symbols.toml). 256 drops of 0x18 (EffectKind81's pool, over EffectKind30_Shards)
 constexpr unsigned kDropCount = 256;
 constexpr std::uint32_t kDropStride = 0x18;
-constexpr std::uint32_t kSources = 0x92D780;       // 8 sources of 0x14, after the drops (kind 0x81 has 16 there)
+constexpr ::bof3::image::Va kSources{0x92D780};       // 8 sources of 0x14, after the drops (kind 0x81 has 16 there)
 constexpr unsigned kSourceCount = 8;
 constexpr std::uint32_t kSourceStride = 0x14;
-constexpr std::uint32_t kSourceCells = 0x6552AC;   // EffectKindAB_SourceCells: 8 pairs of s8, a source's cell (x, z)
+constexpr ::bof3::image::Va kSourceCells{0x6552AC};   // EffectKindAB_SourceCells: 8 pairs of s8, a source's cell (x, z)
 constexpr rdata::Const kOne{0x5C41B8};           // float 1.0 (effect_3d_callees.h kOne; effect_3a's kHalf)
 // kLeaderPoint: now ObjTrio[0].x (symbols.toml). ObjTrio + 0x34: the leader's x, z, height (three dwords)
 
 // --- kind 0xB0: sixteen bars of 6 after kind 0xAB's sources --------------------
-constexpr std::uint32_t kBars = 0x92D820;          // +0 in use, +1 / +3 4, +2 the bar's state, +4 a word
+constexpr ::bof3::image::Va kBars{0x92D820};          // +0 in use, +1 / +3 4, +2 the bar's state, +4 a word
 constexpr unsigned kBarCount = 16;
 constexpr std::uint32_t kBarStride = 6;
 
@@ -40,12 +40,12 @@ constexpr std::uint32_t kSparkStride = 0x18;
 // kShards: now EffectKind30_Shards[0xc0] (symbols.toml). 16 shards of 0x2C
 constexpr unsigned kShardCount = 0x10;
 constexpr std::uint32_t kShardStride = 0x2C;
-constexpr std::uint32_t kCounter = 0x903848;       // u8: the chapter's count (scenario_harness at::kCounter)
+constexpr ::bof3::image::Va kCounter{0x903848};       // u8: the chapter's count (scenario_harness at::kCounter)
 
 // --- kind 0xB1: the camera's angles (Camera_Angles + 2, the tilt) ---------------
 // kTilt: now Camera_Angles[1] (symbols.toml). s16: Camera_Angles[1]
 
 // --- the pools' end (the fuzz's region) ------------------------------------------
-constexpr std::uint32_t kPoolsEnd = kBars + kBarCount * kBarStride;   // 0x92D880
+constexpr ::bof3::image::Va kPoolsEnd = kBars + kBarCount * kBarStride;   // 0x92D880
 
 }  // namespace effect_4f::at

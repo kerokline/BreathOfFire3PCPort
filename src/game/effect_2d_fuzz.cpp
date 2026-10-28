@@ -213,7 +213,7 @@ U FindFirstFree(U base, U stride, unsigned n) {
     return 0;
 }
 U FxPuffFind(const U*, U) { return FindFirstFree(Key(EffectKind30_Shards), 0x1C, 8); }
-U FxDustFind(const U*, U) { return FindFirstFree(at::kDust, 0x20, 64); }
+U FxDustFind(const U*, U) { return FindFirstFree(::bof3::Img(at::kDust.v), 0x20, 64); }
 // EffectKind45_DrawLine / _FillRect read the colour bytes 0x6761C4..C6 at the
 // call: noted, so a colour set wrong and overwritten before the end shows.
 U FxColour(const U*, U answer) {
@@ -357,7 +357,7 @@ void Seed(unsigned k) {
         s[0xB] = static_cast<unsigned char>(PickOf(0, 1, 0, 1, sh::Next()));
         s[9] = static_cast<unsigned char>(PickOf(0, 1, 2, 4, sh::Next()));
         if (sh::Often()) {   // the model's animation byte one of the five keys (or not)
-            const unsigned char key = move_script::At(at::kTwinAnims + 3 * (sh::Next() % 5))[0];
+            const unsigned char key = move_script::At(::bof3::Img(at::kTwinAnims.v) + 3 * (sh::Next() % 5))[0];
             ObjTrio[0].animation = key;
             move_script::At(Sprite_Objects_addr + 0x148)[0x4B] = sh::Half() ? key : static_cast<unsigned char>(sh::Next());
         }

@@ -300,9 +300,9 @@ const std::uint8_t kKinds[] = {0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0
 // the sources after them.
 const sh::Region kRegions[] = {
     {0x676278, 8},
-    {at::kDials, 4},
+    {at::kDials.v, 4},
     {0x9039F4, 4},
-    {0x92C5C4, at::kSources + at::kSourceCount * at::kSourceStride - 0x92C5C4},
+    {0x92C5C4, (at::kSources + at::kSourceCount * at::kSourceStride).v - 0x92C5C4},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -316,7 +316,7 @@ void Records() {
     for (unsigned r = 0; r < 20; ++r) {
         unsigned char* const e = Rec(r);
         e[6] = static_cast<unsigned char>(sh::Next() % at::kDialCount);
-        SetLong(e + 0x4C, static_cast<std::int32_t>(at::kDials + (sh::Half() ? e[6] : sh::Next() % at::kDialCount)));
+        SetLong(e + 0x4C, static_cast<std::int32_t>(::bof3::Img(at::kDials.v) + (sh::Half() ? e[6] : sh::Next() % at::kDialCount)));
     }
 }
 
@@ -330,7 +330,7 @@ void SeedAreaHeader() {
     for (U row = 0; row < at::kGridRows; ++row)
         for (U column = 0; column < at::kGridColumns; ++column) {
             const U i = h[0] * (row + at::kMapRow0) + column + 2u * Word(h + 2);
-            SetWord(Mem(at::kAreaWords + 2 * i), sh::Next() % 0x300);
+            SetWord(Mem(::bof3::Img(at::kAreaWords.v) + 2 * i), sh::Next() % 0x300);
         }
 }
 
@@ -338,18 +338,18 @@ void Seed(unsigned k) {
     Records();
     unsigned char* const s = Sprite_Current;
     // the dials 0..8 (past 8 ours aborts where the original reads the next rows)
-    for (U i = 0; i < at::kDialCount; ++i) Mem(at::kDials + i)[0] = static_cast<unsigned char>(sh::Next() % 9);
+    for (U i = 0; i < at::kDialCount; ++i) Mem(::bof3::Img(at::kDials.v) + i)[0] = static_cast<unsigned char>(sh::Next() % 9);
     // the pulse's index 0 or 1 (only these functions write it)
     Mem(Effect3d_PulseIndex_addr)[0] = static_cast<unsigned char>(sh::Next() % 2);
     // the counter the kinds end on, and the frame counts
-    Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(1, 4, 0xC, 0, 2, sh::Next()));
+    Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>(PickOf(1, 4, 0xC, 0, 2, sh::Next()));
     s[9] = static_cast<unsigned char>(PickOf(0, 1, 2, 0xF, 0x10, 0x11, 0xFF, sh::Next()));
     switch (k) {
     case k77Tick:
     case k77Begin: {
         const U count = PickOf(0xC7, 0xC8, 0xC6, 0, 0xFF, sh::Next() & 0xFF);
         const U frames = PickOf(0x1C, 0x1D, 0x1E, 0x26, 0x27, 0x28, 0x7F, sh::Next() & 0x7F);
-        SetWord(Mem(at::kTally), (sh::Half() ? 0x8000u : 0u) | (frames << 8) | count);
+        SetWord(Mem(::bof3::Img(at::kTally.v)), (sh::Half() ? 0x8000u : 0u) | (frames << 8) | count);
         break;
     }
     case k77End:
@@ -393,7 +393,7 @@ void Seed(unsigned k) {
         break;
     case k81Emit:
         for (U i = 0; i < at::kSourceCount; ++i) {
-            unsigned char* const src = Mem(at::kSources + at::kSourceStride * i);
+            unsigned char* const src = Mem(::bof3::Img(at::kSources.v) + at::kSourceStride * i);
             src[0] = static_cast<unsigned char>(sh::Next() % 3 == 0 ? 0 : 1);
             src[3] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
         }
@@ -406,8 +406,8 @@ void Seed(unsigned k) {
         const U leader = sh::Next();
         SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>(leader));
         SetLong(Mem(Sprite_Objects_addr + 0x34), static_cast<std::int32_t>(leader + PickOf(0, 1, 0xFFFFFFFFu, 0x10000, 0xFFFF0000u, sh::Next())));
-        Mem(at::kCounterB)[0] = static_cast<unsigned char>(PickOf(3, 4, 5, 0xFF, 6, 2, 7, 0xFE, sh::Next()));
-        Mem(at::kCounterC)[0] = static_cast<unsigned char>(PickOf(0x80, 0, 0x81, sh::Next()));
+        Mem(::bof3::Img(at::kCounterB.v))[0] = static_cast<unsigned char>(PickOf(3, 4, 5, 0xFF, 6, 2, 7, 0xFE, sh::Next()));
+        Mem(::bof3::Img(at::kCounterC.v))[0] = static_cast<unsigned char>(PickOf(0x80, 0, 0x81, sh::Next()));
         break;
     }
     default: break;
@@ -420,7 +420,7 @@ void Seed(unsigned k) {
 void Args(unsigned k, U* a) {
     switch (k) {
     case k7DDial:
-        a[2] = at::kDialGrids + at::kGridSize * (sh::Next() % at::kDialCount);
+        a[2] = ::bof3::Img(at::kDialGrids.v) + at::kGridSize * (sh::Next() % at::kDialCount);
         a[3] = (sh::Next() & 0xFFFFFF00u) | (sh::Next() % at::kGridColumns);
         break;
     case k7DMark: a[2] = (sh::Next() & 0xFFFFFF00u) | PickOf(1, 0xFF, 0, 2, 0xFE, sh::Next() & 0xFF); break;
@@ -444,8 +444,8 @@ void Disturb(U h) {
     switch (sh::DisturbCase(h, 9)) {
     case 0: s[9] = static_cast<unsigned char>((v & 1) ? 1u : v >> 1); break;
     case 1: SetWord(s + 0x2E + 2 * (v & 1), v >> 1); break;
-    case 2: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 0xCu : v >> 1); break;
-    case 3: SetWord(Mem(at::kTally), v); break;
+    case 2: Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>((v & 1) ? 0xCu : v >> 1); break;
+    case 3: SetWord(Mem(::bof3::Img(at::kTally.v)), v); break;
     case 4: SetWord(Mem(Input_Pressed_addr), v); break;
     case 5: SetWord(Mem(EffectKind30_Shards_addr + 0x1C + at::kTrailStride * (v % at::kTrailPoints)), v >> 5); break;
     case 6: Mem(EffectKind30_Shards_addr + 2 + at::kDropStride * (v % at::kDropCount))[0] = static_cast<unsigned char>(v >> 8); break;

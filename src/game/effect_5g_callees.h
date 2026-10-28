@@ -18,30 +18,30 @@ constexpr unsigned kTrioCount = 3;
 // --- sub-kind 0x2B's variants, indexed by the spawn's x cell (+0x36) ---------------
 // Three tables back to back with room for four entries each (the fourth all
 // zero); ours aborts on an index past the room.
-constexpr std::uint32_t kSub2BHeights = 0x65EA00;   // s16 each: the height +0x32 and the lift into +0x3E
-constexpr std::uint32_t kSub2BTextures = 0x65EA08;  // byte each: the texture's top byte (+0xC = it << 24)
-constexpr std::uint32_t kSub2BCells = 0x65EA0C;     // two bytes each: the cell x, z put into +0x36, +0x3A
+constexpr ::bof3::image::Va kSub2BHeights{0x65EA00};   // s16 each: the height +0x32 and the lift into +0x3E
+constexpr ::bof3::image::Va kSub2BTextures{0x65EA08};  // byte each: the texture's top byte (+0xC = it << 24)
+constexpr ::bof3::image::Va kSub2BCells{0x65EA0C};     // two bytes each: the cell x, z put into +0x36, +0x3A
 constexpr unsigned kSub2BVariants = 4;
-constexpr std::uint32_t kSub2BSides = 0x65EA14;     // two s8: the two panels' slide signs (the draw's loop)
+constexpr ::bof3::image::Va kSub2BSides{0x65EA14};     // two s8: the two panels' slide signs (the draw's loop)
 
 // --- sub-kind 0x36's shade steps --------------------------------------------------
-constexpr std::uint32_t kSub36Blues = 0x65EA18;     // four bytes: the fill's blue (<< 3), indexed by +2
+constexpr ::bof3::image::Va kSub36Blues{0x65EA18};     // four bytes: the fill's blue (<< 3), indexed by +2
 constexpr unsigned kSub36Steps = 4;
 
 // --- sub-kinds 0x2C's and 0x4A's variants, indexed by the spawn's x cell -----------
 // Room for six heights, five textures, six cells (the sixth zero); five
 // variants in all (the textures' room).
-constexpr std::uint32_t kSub2CHeights = 0x65EA1C;   // s16 each: the lift into +0x3E
-constexpr std::uint32_t kSub2CTextures = 0x65EA28;  // dword each: +0x20, the texture word
-constexpr std::uint32_t kSub2CCells = 0x65EA3C;     // two bytes each: the cell x, z
+constexpr ::bof3::image::Va kSub2CHeights{0x65EA1C};   // s16 each: the lift into +0x3E
+constexpr ::bof3::image::Va kSub2CTextures{0x65EA28};  // dword each: +0x20, the texture word
+constexpr ::bof3::image::Va kSub2CCells{0x65EA3C};     // two bytes each: the cell x, z
 constexpr unsigned kSub2CVariants = 5;
-constexpr std::uint32_t kSub2CSides = 0x65EA5C;     // two s8: the two panels' slide signs (room four, before
+constexpr ::bof3::image::Va kSub2CSides{0x65EA5C};     // two s8: the two panels' slide signs (room four, before
                                                     // EffectKind18Sub3A_States)
-constexpr std::uint32_t kSub3ASides = 0x65EA74;     // s8 by the panel argument (room four, before
+constexpr ::bof3::image::Va kSub3ASides{0x65EA74};     // s8 by the panel argument (room four, before
                                                     // EffectKind18Sub4A_States)
 constexpr unsigned kSidesRoom = 4;
-constexpr std::uint32_t kSub4ASubKinds = 0x65EA88;  // a byte every four: +0xB by the variant (five)
-constexpr std::uint32_t kSub4AMarks = 0x65EA9C;     // a byte every four: the map byte AreaMap_SetByte writes (five)
+constexpr ::bof3::image::Va kSub4ASubKinds{0x65EA88};  // a byte every four: +0xB by the variant (five)
+constexpr ::bof3::image::Va kSub4AMarks{0x65EA9C};     // a byte every four: the map byte AreaMap_SetByte writes (five)
 
 // --- sound ids ------------------------------------------------------------------------
 constexpr unsigned kSoundOpen = 0x200;              // sub-kinds 0x2B / 0x2C: the leader comes near

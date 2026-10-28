@@ -13,20 +13,20 @@ namespace effect_4b::at {
 // --- cells ------------------------------------------------------------------------
 // kStep: now MoveScript_PartyRecords[0x65] (symbols.toml). the chapter's step byte (scenario_harness::at::kStep): kinds
                                                     // 0x89, 0xA4 and 0x8C move it
-constexpr std::uint32_t kCounter = 0x903848;        // the chapters' counter byte (scenario_harness::at::kCounter):
+constexpr ::bof3::image::Va kCounter{0x903848};        // the chapters' counter byte (scenario_harness::at::kCounter):
                                                     // kinds 0x9F and 0x8C
-constexpr std::uint32_t kCounter2 = 0x903849;       // the byte after it: kind 0x8B waits on it, kind 0x8C counts it
+constexpr ::bof3::image::Va kCounter2{0x903849};       // the byte after it: kind 0x8B waits on it, kind 0x8C counts it
 // kFlagRow: now Chapter_FlagRow (symbols.toml). unsigned char *: the chapter's flag row (Flags_Test's bank)
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags' story row
 // kExtraX: now Sprite_ObjectsExtra[0].x (symbols.toml). Sprite_ObjectsExtra record 0's +0x34 (x): kind 0x88's goal
-constexpr std::uint32_t kSoundIndex = 0x676280;     // kind 0x87: the byte 0..2 that picks kKind87Sounds' next word
+constexpr ::bof3::image::Va kSoundIndex{0x676280};     // kind 0x87: the byte 0..2 that picks kKind87Sounds' next word
 // kind 0x8C's cells, 0x676284..0x67628E (only this band's code reads or writes them)
 // kPresses: now Effect4b_Presses (symbols.toml). a frame count, 0..0x1C
 // kDirection: now Effect4b_Direction (symbols.toml). u16: the pad word state 0xB took
 // kTimerB: now Effect4b_TimerB (symbols.toml). the second count-down (states 0x10, 0x12)
 // kSteps: now Effect4b_Steps (symbols.toml). state 0xD's step count, 0..8
 // kTarget: now Effect4b_Target (symbols.toml). u16: the count kept when the first count-down ran out
-constexpr std::uint32_t kCount = 0x67628C;          // u16: the presses counted
+constexpr ::bof3::image::Va kCount{0x67628C};          // u16: the presses counted
 // kTimerA: now Effect4b_TimerA (symbols.toml). the first count-down (states 1, 4)
 // kKind8CCells: now Effect4b_SoundIndex (symbols.toml). the run of kind 0x87's and 0x8C's cells, 0x10 bytes
 constexpr std::uint32_t kKind8CCellsSize = 0x10;
@@ -43,18 +43,18 @@ constexpr unsigned kParticleCount = 32;             // +8 / +0xA the size, +0xC.
 constexpr std::uint32_t kParticleStride = 0x2C;
 
 // --- the image's tables, read in place ---------------------------------------------
-constexpr std::uint32_t kKind87Points = 0x654DA0;   // kind 0x87: fourteen rows of 0x10 (three s32 and a pad); rows 8..13
+constexpr ::bof3::image::Va kKind87Points{0x654DA0};   // kind 0x87: fourteen rows of 0x10 (three s32 and a pad); rows 8..13
 constexpr unsigned kKind87PointCount = 14;          // are written by EffectKind87_Midpoint - the image's .data
 constexpr std::uint32_t kKind87PointStride = 0x10;
-constexpr std::uint32_t kKind87Sounds = 0x654E80;   // kind 0x87: three u16 sound ids by kSoundIndex
+constexpr ::bof3::image::Va kKind87Sounds{0x654E80};   // kind 0x87: three u16 sound ids by kSoundIndex
 constexpr unsigned kKind87SoundCount = 3;
-constexpr std::uint32_t kKind8AColour = 0x654EF8;   // kind 0x8A: one row of three colour bytes by +6 * 3; the next
+constexpr ::bof3::image::Va kKind8AColour{0x654EF8};   // kind 0x8A: one row of three colour bytes by +6 * 3; the next
 constexpr unsigned kKind8AColourCount = 1;          // row would run into kKind8ACells
-constexpr std::uint32_t kKind8ACells = 0x654EFC;    // kind 0x8A: six z cells (bytes) along x 0x10
+constexpr ::bof3::image::Va kKind8ACells{0x654EFC};    // kind 0x8A: six z cells (bytes) along x 0x10
 constexpr unsigned kKind8ACellCount = 6;
-constexpr std::uint32_t kKind8ALines = 0x654F10;    // kind 0x8A: three pairs of s32, the z of a line's two ends
+constexpr ::bof3::image::Va kKind8ALines{0x654F10};    // kind 0x8A: three pairs of s32, the z of a line's two ends
 constexpr unsigned kKind8ALineCount = 3;
-constexpr std::uint32_t kKind8CCounts = 0x654F28;   // kind 0x8C: sixteen bytes, the count-downs' start, by Rand & 0xF
+constexpr ::bof3::image::Va kKind8CCounts{0x654F28};   // kind 0x8C: sixteen bytes, the count-downs' start, by Rand & 0xF
 constexpr rdata::Const kQuadH{0x5C41EC};          // float constants (.rdata) kind 0x9D's quads add to y,
 constexpr rdata::Const kQuadW{0x5C41F0};          // to x,
 constexpr rdata::Const kCentreY{0x5C41F4};        // and its projection takes from y,

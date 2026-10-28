@@ -17,7 +17,7 @@ constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV;   // (mat
 // --- cells ------------------------------------------------------------------------
 // kStep: now MoveScript_PartyRecords[0x65] (symbols.toml). the chapter's step byte (scenario_harness kStep): kind 0x91
                                                     // raises it, kinds 0x95 and 0x97 set it
-constexpr std::uint32_t kCounter = 0x903848;        // the chapter counter byte kinds 0x97 and 0x9A wait on
+constexpr ::bof3::image::Va kCounter{0x903848};        // the chapter counter byte kinds 0x97 and 0x9A wait on
 constexpr unsigned kKind97Cue = 0xA;                // kind 0x97's state 2 waits for it
 constexpr unsigned kKind9AEnd = 0x28;               // kind 0x9A ends at it
 // kTrio0Mode: now ObjTrio_addr + 0x137 (symbols.toml). ObjTrio record 0's +0x137 (kind 0x95's finish waits while 2)

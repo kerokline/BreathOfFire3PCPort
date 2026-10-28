@@ -217,13 +217,13 @@ U Cell() { return sh::Often() ? sh::Next() % 0x80 : sh::Next() & 0xFFFF; }
 struct Cells { U at; unsigned room; };
 Cells PlaceOf(unsigned k) {
     switch (k) {
-    case k2DPlace: return {at::kSub2DCells, at::kSub2DVariants};
-    case k3EPlace: return {at::kSub3ECells, at::kSub3EVariants};
-    case k2EPlace: return {at::kSub2ECells, at::kSub2EVariants};
-    case k2FPlace: return {at::kSub2FCells, at::kSmallVariants};
-    case k30Place: return {at::kSub30Cells, at::kSmallVariants};
-    case k31Place: return {at::kSub31Cells, at::kSmallVariants};
-    case k32Place: return {at::kSub32Cells, at::kSmallVariants};
+    case k2DPlace: return {::bof3::Img(at::kSub2DCells.v), at::kSub2DVariants};
+    case k3EPlace: return {::bof3::Img(at::kSub3ECells.v), at::kSub3EVariants};
+    case k2EPlace: return {::bof3::Img(at::kSub2ECells.v), at::kSub2EVariants};
+    case k2FPlace: return {::bof3::Img(at::kSub2FCells.v), at::kSmallVariants};
+    case k30Place: return {::bof3::Img(at::kSub30Cells.v), at::kSmallVariants};
+    case k31Place: return {::bof3::Img(at::kSub31Cells.v), at::kSmallVariants};
+    case k32Place: return {::bof3::Img(at::kSub32Cells.v), at::kSmallVariants};
     default: return {0, 0};
     }
 }

@@ -398,21 +398,21 @@ void Seed(unsigned k) {
     if (k == k19Run || k == k22SetMap || k == k22Draw) s[2] = static_cast<unsigned char>(PickOf(0, 2, 1, 3, 4, sh::Next()));
     Draw_PassFlags = static_cast<unsigned char>(sh::Half() ? (Draw_PassFlags | 4) : (Draw_PassFlags & ~4u));
     Field_Request = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
-    Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(0xE, 0x1C, 0xD, 0xF, 0x1B, sh::Next()));
+    Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>(PickOf(0xE, 0x1C, 0xD, 0xF, 0x1B, sh::Next()));
     // the camera's cell near each place half the time (sub-kinds 0x19, 0x68, 0x52)
     if (sh::Half()) {
         std::int32_t cx = 0, cz = 0;
         switch (k) {
         case k19Run:
-            cx = Mem(at::kSub19X)[s[0xB] % at::kSub19Count] - 6;
-            cz = Mem(at::kSub19Z)[s[0xB] % at::kSub19Count] - 6;
+            cx = Mem(::bof3::Img(at::kSub19X.v))[s[0xB] % at::kSub19Count] - 6;
+            cz = Mem(::bof3::Img(at::kSub19Z.v))[s[0xB] % at::kSub19Count] - 6;
             break;
         case k68Draw: cx = 0x2D; cz = 0x23; break;
         default: cx = static_cast<std::int16_t>(Word(s + 0x36)); cz = static_cast<std::int16_t>(Word(s + 0x3A)); break;
         }
         const std::int32_t off[] = {0, 10, -10, 11, -11, 5, -3, 20, -20, 21};
-        SetWord(Mem(at::kCameraX), static_cast<U>(cx + off[sh::Next() % 10]));
-        SetWord(Mem(at::kCameraZ), static_cast<U>(cz + off[sh::Next() % 10]));
+        SetWord(Mem(::bof3::Img(at::kCameraX.v)), static_cast<U>(cx + off[sh::Next() % 10]));
+        SetWord(Mem(::bof3::Img(at::kCameraZ.v)), static_cast<U>(cz + off[sh::Next() % 10]));
     }
     // the party members' actor bytes (Field_ActorStates' index, read unchecked)
     for (unsigned m = 0; m < at::kMemberCount; ++m)
@@ -488,7 +488,7 @@ void Disturb(U h) {
     switch (sh::DisturbCase(h, 6)) {
     case 0: s[9] = SafeCount((v & 1) ? 7u : v >> 1); break;
     case 1: Field_Request = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;
-    case 2: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 0xEu : v >> 1); break;
+    case 2: Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>((v & 1) ? 0xEu : v >> 1); break;
     case 3: SetWord(s + 0x3E, v); break;
     case 4: SetWord(s + 0x3A, (v & 1) ? 8u : v >> 1); break;
     case 5: Draw_PassFlags = static_cast<unsigned char>(Draw_PassFlags ^ 4); break;

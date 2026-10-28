@@ -56,18 +56,18 @@ struct Kept {
     const char* name;
 };
 constexpr Kept kKept[] = {
-    {0x66B710, 12, "Gfx_ScreenRect's right and bottom, the device count less one"},
-    {0x6BEA00, 0x14, "Dd_CellBackdrop and the backdrop pairs"},
-    {0x6C3A40, 4, "D3d_BackMaterialHandle"},
-    {0x6C3A48, 0x4F8, "0x6C3A48, Gfx_RenderFlags, the device records"},
-    {0x6C9F40, 4, "the desktop's height"},
-    {0x7C9F44, 12, "the desktop's width, D3d_ScaleY, D3d_ScaleX"},
-    {0x7CADF8, 12, "D3d_AfterDraw's three surfaces"},
-    {0x7CAE20, 0x18, "Display_ReleaseOrphans' six objects"},
-    {0x7CC338, 12, "DDraw_Primary, DDraw_BackBuffer, the Z-buffer"},
-    {0x7CC348, 8, "the clipper, the IDirect3D"},
-    {0x7CC354, 8, "D3d_Viewport, D3d_BackMaterial"},
-    {0x7DED5C, 0xC4, "the back buffer's pitch, Gfx_PixelFormat's three records"},
+    {::bof3::Img(0x66B710), 12, "Gfx_ScreenRect's right and bottom, the device count less one"},
+    {::bof3::Img(0x6BEA00), 0x14, "Dd_CellBackdrop and the backdrop pairs"},
+    {::bof3::Img(0x6C3A40), 4, "D3d_BackMaterialHandle"},
+    {::bof3::Img(0x6C3A48), 0x4F8, "0x6C3A48, Gfx_RenderFlags, the device records"},
+    {::bof3::Img(0x6C9F40), 4, "the desktop's height"},
+    {::bof3::Img(0x7C9F44), 12, "the desktop's width, D3d_ScaleY, D3d_ScaleX"},
+    {::bof3::Img(0x7CADF8), 12, "D3d_AfterDraw's three surfaces"},
+    {::bof3::Img(0x7CAE20), 0x18, "Display_ReleaseOrphans' six objects"},
+    {::bof3::Img(0x7CC338), 12, "DDraw_Primary, DDraw_BackBuffer, the Z-buffer"},
+    {::bof3::Img(0x7CC348), 8, "the clipper, the IDirect3D"},
+    {::bof3::Img(0x7CC354), 8, "D3d_Viewport, D3d_BackMaterial"},
+    {::bof3::Img(0x7DED5C), 0xC4, "the back buffer's pitch, Gfx_PixelFormat's three records"},
 };
 constexpr std::size_t kKeptCount = sizeof kKept / sizeof kKept[0];
 
@@ -434,9 +434,9 @@ void GfxSnapshot_Inject() {
         U at, symbol;
     };
     const Named named[] = {
-        {0x66B710, Va(Gfx_ScreenRect) + 8}, {0x6BEA00, Va(&Dd_CellBackdrop)},      {0x6C3A40, Va(&D3d_BackMaterialHandle)},
-        {0x6C3A48, Va(&Gfx_RenderFlags) - 4}, {0x7C9F44, Va(&D3d_ScaleY) - 4},      {0x7CADF8, Va(&D3d_CaptureSurface)},
-        {0x7CC338, Va(&DDraw_Primary)},       {0x7CC354, Va(&D3d_Viewport)},        {0x7DED5C, Va(Gfx_PixelFormat) - 4},
+        {::bof3::Img(0x66B710), Va(Gfx_ScreenRect) + 8}, {::bof3::Img(0x6BEA00), Va(&Dd_CellBackdrop)},      {::bof3::Img(0x6C3A40), Va(&D3d_BackMaterialHandle)},
+        {::bof3::Img(0x6C3A48), Va(&Gfx_RenderFlags) - 4}, {::bof3::Img(0x7C9F44), Va(&D3d_ScaleY) - 4},      {::bof3::Img(0x7CADF8), Va(&D3d_CaptureSurface)},
+        {::bof3::Img(0x7CC338), Va(&DDraw_Primary)},       {::bof3::Img(0x7CC354), Va(&D3d_Viewport)},        {::bof3::Img(0x7DED5C), Va(Gfx_PixelFormat) - 4},
     };
     for (const Named& n : named) {
         std::size_t i = 0;

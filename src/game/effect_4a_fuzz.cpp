@@ -201,9 +201,9 @@ void Seed(unsigned) {
     Records();
     unsigned char* const s = Sprite_Current;
     // the counters against their compares
-    Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(0x35, 0x34, 0x36, 0, sh::Next()));
-    Mem(at::kCounterB)[0] = static_cast<unsigned char>(PickOf(3, 4, 5, 0xFF, 0xFE, 0, 6, 2, sh::Next()));
-    Mem(at::kCounterC)[0] = static_cast<unsigned char>(PickOf(0x80, 0, 0x10, 0xF, 0x11, 0x81, sh::Next()));
+    Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>(PickOf(0x35, 0x34, 0x36, 0, sh::Next()));
+    Mem(::bof3::Img(at::kCounterB.v))[0] = static_cast<unsigned char>(PickOf(3, 4, 5, 0xFF, 0xFE, 0, 6, 2, sh::Next()));
+    Mem(::bof3::Img(at::kCounterC.v))[0] = static_cast<unsigned char>(PickOf(0x80, 0, 0x10, 0xF, 0x11, 0x81, sh::Next()));
     // the frame count, the sub-count, the message
     s[9] = static_cast<unsigned char>(PickOf(0, 1, 2, 8, 0x1E, 0xFF, sh::Next()));
     s[2] = static_cast<unsigned char>(PickOf(0xE, 0xF, 0x10, 0, 0xFF, sh::Next()));
@@ -231,11 +231,11 @@ void Disturb(U h) {
     switch (sh::DisturbCase(h, 9)) {
     case 0: s[9] = static_cast<unsigned char>((v & 1) ? 1u : v >> 1); break;
     case 1: s[3 + (v & 1)] = static_cast<unsigned char>((v >> 1) % at::kSpriteCount); break;
-    case 2: Mem(at::kCounterB)[0] = static_cast<unsigned char>((v & 3) == 0 ? 0xFEu : (v & 3) == 1 ? 0u : v >> 2); break;
+    case 2: Mem(::bof3::Img(at::kCounterB.v))[0] = static_cast<unsigned char>((v & 3) == 0 ? 0xFEu : (v & 3) == 1 ? 0u : v >> 2); break;
     case 3: SetLong(Mem(ObjTrio_addr + 0x2cc), static_cast<std::int32_t>((v & 1) ? 0x340000u - 1 + ((v >> 1) & 1) : v)); break;
     case 4: s[0xB] = static_cast<unsigned char>((v & 1) ? 0x37u : v >> 1); break;
     case 5: SetWord(Mem(Input_Held_addr), (v & 1) ? 0x3000u : v >> 1); break;
-    case 6: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 0x35u : v >> 1); break;
+    case 6: Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>((v & 1) ? 0x35u : v >> 1); break;
     case 7: Field_Request = static_cast<unsigned char>((v & 1) ? 2u : v >> 1); break;
     case 8: s[6] = static_cast<unsigned char>(v % at::kSpriteCount); break;
     default: break;

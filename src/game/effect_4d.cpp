@@ -77,7 +77,7 @@ U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // imul of two whole registers: the low 32 bits.
 U Mul(U a, std::int32_t b) { return a * static_cast<U>(b); }
-unsigned char* Debris(unsigned i) { return At(EffectKind30_Shards_addr + 0xc0 + at::kDebrisStride * i); }
+unsigned char* Debris(unsigned i) { return At(::bof3::Img(EffectKind30_Shards_addr) + 0xc0 + at::kDebrisStride * i); }
 unsigned char* Spark(unsigned i) { return EffectKind30_Shards + at::kSparkStride * i; }
 
 // --- x87 as the original has it (the game's control word: round to nearest, 53
@@ -373,7 +373,7 @@ extern "C" void __cdecl EffectKind95_Start(void) {
 // clock's frame count (the high byte's bits 0..6) up 1; at 30 (40 when bit 7 is
 // set) it is 0 and the ticks (the low byte) up 1. At 15 ticks: +1 up.
 extern "C" void __cdecl EffectKind95_Clock(void) {
-    if (Kind95Held(ObjTrio_addr + 0x3cf)) return;
+    if (Kind95Held(::bof3::Img(ObjTrio_addr) + 0x3cf)) return;
     const unsigned w = Effect4d_Kind95Clock;
     auto ticks = static_cast<unsigned char>(w);
     const unsigned mode = (w >> 15) & 1u;
@@ -391,7 +391,7 @@ extern "C" void __cdecl EffectKind95_Clock(void) {
 // 0x802E77): ScriptFlags_Set40; the chapter's step 0x8034E5 = 5 and run
 // MoveScript_Var7 = 7; a tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind95_Finish(void) {
-    if (Kind95Held(ObjTrio_addr + 0x137)) return;
+    if (Kind95Held(::bof3::Img(ObjTrio_addr) + 0x137)) return;
     SH_CALL(ScriptFlags_Set40)();
     MoveScript_PartyRecords[0x65] = 5;
     MoveScript_Var7 = 7;
@@ -515,7 +515,7 @@ extern "C" void __cdecl EffectKind97_Grow(void) {
 // +6 0, +0x5D (the debris' shade) 8, +9 = 0x78, +1 up.
 extern "C" void __cdecl EffectKind97_WaitCue(void) {
     Kind97Ring();
-    if (At(at::kCounter)[0] != at::kKind97Cue) return;
+    if (At(::bof3::Img(at::kCounter.v))[0] != at::kKind97Cue) return;
     SH_CALL(EffectKind64_ClearSparks)();
     SH_CALL(Gte_PushMatrix)();
     for (unsigned i = 0; i < at::kDebrisCount; ++i) SH_CALL(EffectKind97_DebrisInit)(Debris(i));
@@ -985,7 +985,7 @@ extern "C" void __cdecl EffectKind9A_Start(void) {
 // read again, the kept record's +1 and +9 set, Sprite_Current put back.
 void Kind9ANudge(unsigned offset, U step, unsigned char state, unsigned char count) {
     unsigned char* const kept = Sprite_Current;
-    Sprite_Current = At(Sprite_Objects_addr + 0xa4);
+    Sprite_Current = At(::bof3::Img(Sprite_Objects_addr) + 0xa4);
     for (unsigned n = 4; n != 0; --n) {
         unsigned char* const o = Sprite_Current;
         SetUL(o + offset, UL(o + offset) + step);
@@ -1023,7 +1023,7 @@ extern "C" void __cdecl EffectKind9A_BackX(void) { Kind9ANudge(0x34, 0xFFFFFC00u
 // original 0x48DF70 (state 7): at the counter 0x903848 = 0x28 a tail jump to
 // Effect_Release; else +1 = 0 (another nudge).
 extern "C" void __cdecl EffectKind9A_Repeat(void) {
-    if (At(at::kCounter)[0] == at::kKind9AEnd) {
+    if (At(::bof3::Img(at::kCounter.v))[0] == at::kKind9AEnd) {
         SH_CALL(Effect_Release)();
         return;
     }

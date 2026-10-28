@@ -44,22 +44,22 @@ constexpr unsigned kChildrenCount = 6, kChild0Count = 5, kChild1Count = 2, kChil
 constexpr unsigned kKind14Count = 3;                // pointer macro in symbols.gen.h, so the address is spelled here)
 // The animation scripts the steps walk (byte records; the count is the bytes
 // to the next table, a marker record inside it loops).
-constexpr std::uint32_t kChild0Script = 0x653CCC;   // 11 records of 2: (animation, frames); animation 0xFF: go to frames
+constexpr ::bof3::image::Va kChild0Script{0x653CCC};   // 11 records of 2: (animation, frames); animation 0xFF: go to frames
 constexpr unsigned kChild0ScriptBytes = 22;
-constexpr std::uint32_t kChild1Script = 0x653CEC;   // 4 records of 3: (animation, frames, mode); 0xFF: go to frames
+constexpr ::bof3::image::Va kChild1Script{0x653CEC};   // 4 records of 3: (animation, frames, mode); 0xFF: go to frames
 constexpr unsigned kChild1ScriptBytes = 12;
-constexpr std::uint32_t kChild2Script = 0x653D08;   // 12 records of 3: (animation, frames, step); animation 0: go to frames
+constexpr ::bof3::image::Va kChild2Script{0x653D08};   // 12 records of 3: (animation, frames, step); animation 0: go to frames
 constexpr unsigned kChild2ScriptBytes = 36;
-constexpr std::uint32_t kChild3Grid = 0x653D34;     // 4 rows of 8 bytes, each row to an 0xFF
+constexpr ::bof3::image::Va kChild3Grid{0x653D34};     // 4 rows of 8 bytes, each row to an 0xFF
 constexpr unsigned kChild3GridBytes = 32;
-constexpr std::uint32_t kChild4Script = 0x653D5C;   // 18 records of 4: (animation | 0x80 no tick, frames, dx, dy)
-constexpr std::uint32_t kChild5Script = 0x653DAC;   // 18 records of 4, the same shape
+constexpr ::bof3::image::Va kChild4Script{0x653D5C};   // 18 records of 4: (animation | 0x80 no tick, frames, dx, dy)
+constexpr ::bof3::image::Va kChild5Script{0x653DAC};   // 18 records of 4, the same shape
 constexpr unsigned kMoveScriptBytes = 72;
 // kTitleIds: now EffectKind0F_RuleTitleIds (symbols.toml). 6 u16: a message id by Sprite_Current word +0x3C
 constexpr unsigned kTitleCount = 6;
 // kLineIds: now EffectKind0F_RuleLineIds (symbols.toml). 0x36 u16: a message id per line, 0xFFFF none
 constexpr unsigned kLineCount = 0x36;
-constexpr std::uint32_t kEdgeQuads = 0x653E6C;      // 5 records of 10: u byte, v byte, w word, h byte, a CLUT word at +8
+constexpr ::bof3::image::Va kEdgeQuads{0x653E6C};      // 5 records of 10: u byte, v byte, w word, h byte, a CLUT word at +8
 constexpr unsigned kEdgeQuadCount = 5;
 // kItemsBLabel: now EffectKind0F_PanelTitles (symbols.toml). the strings the item panels print (image text, not copied here)
 // kItemsALabel: now EffectKind0F_PanelTitles[4] (symbols.toml).
@@ -67,9 +67,9 @@ constexpr unsigned kEdgeQuadCount = 5;
 // kEquipLabel2: now EffectKind0F_PanelTitles[0xd] (symbols.toml).
 // kPageFormat: now EffectKind0F_PageFormat (symbols.toml). a printf format of two numbers' shape, one used
 // kCountLabel: now EffectKind0F_CountLabel (symbols.toml).
-constexpr std::uint32_t kCountFormat = 0x653EC0;    // the item count's format
+constexpr ::bof3::image::Va kCountFormat{0x653EC0};    // the item count's format
 // kToggleText: now Effect1b_ToggleText (symbols.toml). 3 pointers to two-byte-glyph strings
-constexpr std::uint32_t kGridText = 0x66A32C;       // 3 pointers to strings (index * 4, and * 8 on the lit cell)
+constexpr ::bof3::image::Va kGridText{0x66A32C};       // 3 pointers to strings (index * 4, and * 8 on the lit cell)
 // kStyleColours: now Gfx_ClutStripSource[0x114] (symbols.toml). the window styles' colour words, 0x40 bytes a style
 
 // --- cells ---
@@ -79,13 +79,13 @@ constexpr std::uint32_t kGridText = 0x66A32C;       // 3 pointers to strings (in
 // kRecord6State: now Effect_Objects[6].state (symbols.toml). Effect_Objects record 6: +1
 // kRecord6Hold: now Effect_Objects_addr + 0x308 (symbols.toml). record 6: +8
 // kRecord3Y: now Effect_Objects_addr + 0x1b0 (symbols.toml). record 3: dword +0x30 (the glyph row's y)
-constexpr std::uint32_t kItemIds = 0x9042D4;        // the accessories' inventory ids, 0x80 bytes (docs/menu-windows.md)
-constexpr std::uint32_t kItemCounts = 0x9044D4;     // their counts, 0x80 bytes
-constexpr std::uint32_t kEquipA = 0x904130;         // two accessory ids the equipped panel prints
+constexpr ::bof3::image::Va kItemIds{0x9042D4};        // the accessories' inventory ids, 0x80 bytes (docs/menu-windows.md)
+constexpr ::bof3::image::Va kItemCounts{0x9044D4};     // their counts, 0x80 bytes
+constexpr ::bof3::image::Va kEquipA{0x904130};         // two accessory ids the equipped panel prints
 // kEquipB: now CharStats_ExtraItem (symbols.toml).
-constexpr std::uint32_t kPrint = 0x904BA0;          // the print buffer
-constexpr std::uint32_t kPools = 0x803580;          // MessagePools: u16 offsets from its own start
-constexpr std::uint32_t kAccessoryCategory = 0x658462;   // NameTable_Accessories + 0x12, 24 bytes a record
+constexpr ::bof3::image::Va kPrint{0x904BA0};          // the print buffer
+constexpr ::bof3::image::Va kPools{0x803580};          // MessagePools: u16 offsets from its own start
+constexpr ::bof3::image::Va kAccessoryCategory{0x658462};   // NameTable_Accessories + 0x12, 24 bytes a record
 constexpr unsigned kAccessoryStride = 24, kAccessoryCount = 52;
 constexpr unsigned kEffectStride = 0x80, kEffectCount = 20;
 constexpr unsigned kSpriteStride = 0xA4, kSpriteCount = 30;

@@ -305,7 +305,7 @@ const std::uint8_t kKinds[] = {0x6D, 0x6E, 0x6F, 0x72, 0x73, 0x74, 0x75};
 const sh::Region kRegions[] = {
     {Effect3c_ShardCursor_addr, 4},
     {Effect3c_SparkCursor_addr, 4},
-    {at::kParticles, 2 * at::kParticleBlock},
+    {at::kParticles.v, 2 * at::kParticleBlock},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -348,11 +348,11 @@ void Seed(unsigned k) {
         break;
     case k6DClear:
     case k6DMoveParticles:
-        for (unsigned b = 0; b < 2; ++b) Pool(at::kParticles + b * at::kParticleBlock, at::kParticleStride, at::kParticleCount);
+        for (unsigned b = 0; b < 2; ++b) Pool(::bof3::Img(at::kParticles.v) + b * at::kParticleBlock, at::kParticleStride, at::kParticleCount);
         break;
     case k6DDrawParticle:
         for (unsigned i = 0; i < 2 * at::kParticleCount; ++i)
-            P(at::kParticles + i * at::kParticleStride)[4] = static_cast<unsigned char>(sh::Next() % at::kParticleShapeCount);
+            P(::bof3::Img(at::kParticles.v) + i * at::kParticleStride)[4] = static_cast<unsigned char>(sh::Next() % at::kParticleShapeCount);
         break;
     case k6FStart:
     case k6FWatch:
@@ -418,7 +418,7 @@ void Seed(unsigned k) {
 void Args(unsigned k, U* a) {
     switch (k) {
     case k6EShardInit: a[0] = Shards() + at::kShardStride * (sh::Next() % at::kShardCount); break;
-    case k6DDrawParticle: a[0] = at::kParticles + at::kParticleStride * (sh::Next() % (2 * at::kParticleCount)); break;
+    case k6DDrawParticle: a[0] = ::bof3::Img(at::kParticles.v) + at::kParticleStride * (sh::Next() % (2 * at::kParticleCount)); break;
     case k6FPushParty: a[0] = (sh::Next() & 0xFFFFFF00u) | PickOf(0, 1, 0, 1, 2, sh::Next()); break;
     case k6FDrawSegment:
         a[0] = Key(Sprite_Current + 0xC);

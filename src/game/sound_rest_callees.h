@@ -19,7 +19,7 @@ constexpr std::uint32_t kDirectSoundCreate = 0x5ACBBC;
 // Sound_LoadStream's kind of the last stream (id >> 12), the dword
 // save_menu_callees.h calls kStreamKind: non-zero, the SND stream's buffer
 // SndStream_Buffer holds a voice Sound_PauseAll stops.
-constexpr std::uint32_t kStreamKind = 0x6BDE40;
+constexpr ::bof3::image::Va kStreamKind{0x6BDE40};
 // The end of Sound_Channels' 23 dwords, Sound_PauseAll's bound.
 constexpr std::uint32_t kChannelsEnd = 0x6BC924;
 

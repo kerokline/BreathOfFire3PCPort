@@ -26,11 +26,11 @@ constexpr U kFontEntryBytes = 0x14;
 // kAfterDrawTexSurface: now D3d_CaptureTexSurface (symbols.toml).
 // kAfterDrawTexture: now D3d_CaptureTexture (symbols.toml).
 // kOrphans: now PsxRest_Orphans (symbols.toml). six COM pointers only the teardown names (section 2)
-constexpr U kBackdropBlock = 0x6BE9F8;                        // 7 dwords; Dd_CellBackdrop 0x6BEA00 is its third
+constexpr ::bof3::image::Va kBackdropBlock{0x6BE9F8};                        // 7 dwords; Dd_CellBackdrop 0x6BEA00 is its third
 // kBackdropMagic: now PsxRest_BackdropMagic (symbols.toml). set to 0x12345678 after the block is zeroed
 // kBackdrop: now Dd_CellBackdrop (symbols.toml). Dd_CellBackdrop
 constexpr U kBackdropPairs = 0x6BEA04;                        // two pairs (+0, +8), released, not zeroed by name
-constexpr U kRenderFlags = 0x6C3A4C;                          // Gfx_RenderFlags: bit 0x100 (a dword test) fullscreen
+constexpr ::bof3::image::Va kRenderFlags{0x6C3A4C};                          // Gfx_RenderFlags: bit 0x100 (a dword test) fullscreen
 // The teardown's ten slots, in the order it releases them.
 // kBackMaterial: now D3d_BackMaterial (symbols.toml).
 // kViewport: now D3d_Viewport (symbols.toml).
@@ -41,12 +41,12 @@ constexpr U kRenderFlags = 0x6C3A4C;                          // Gfx_RenderFlags
 // kStage: now Dd_StageSurface (symbols.toml).
 // kBackBuffer: now DDraw_BackBuffer (symbols.toml).
 // kPrimary: now DDraw_Primary (symbols.toml).
-constexpr U kDirectDraw = 0x7CC334;
+constexpr ::bof3::image::Va kDirectDraw{0x7CC334};
 // kSndDevice: now Snd_Device (symbols.toml).
 // kSndPrimary: now Snd_Primary (symbols.toml). Snd_Device, Snd_Primary
-constexpr U kErrorText = 0x66B6A8;                            // Display_ErrorBox's table: codes below 100
-constexpr U kErrorTextHigh = 0x66B568;                        // ... and 100 on, indexed by the code itself
-constexpr U kErrorCaption = 0x66BC1C;                         // the box's caption, a string in the image
+constexpr ::bof3::image::Va kErrorText{0x66B6A8};                            // Display_ErrorBox's table: codes below 100
+constexpr ::bof3::image::Va kErrorTextHigh{0x66B568};                        // ... and 100 on, indexed by the code itself
+constexpr ::bof3::image::Va kErrorCaption{0x66BC1C};                         // the box's caption, a string in the image
 constexpr U kCellSlots = 0x80;                                // D3d_CellTexCache's 128 entries
 
 // The float the setters store per vertex, 0.01 (docs/psx-library-layer.md

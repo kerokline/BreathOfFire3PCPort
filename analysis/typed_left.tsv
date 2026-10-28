@@ -11218,7 +11218,6 @@ src/game/effect_4f.cpp	ShardCorner	record	SW	shard + e + 4	0	-	param	computed	SW
 src/game/effect_4f.cpp	ShardCorner	record	SetUL	v + 8	0	-	param	no-struct	SetUL(v + 0x8): parameter v of ShardCorner (a GPU packet, vertex or particle pool: no records.h struct)	b1-effect
 src/game/effect_4f.cpp	ShardCorner	record	SetUL	v + 4	0	-	param	no-struct	SetUL(v + 0x4): parameter v of ShardCorner (a GPU packet, vertex or particle pool: no records.h struct)	b1-effect
 src/game/effect_4f_fuzz.cpp	FxFindFreeDrop	global	Mem	EffectKind30_Shards_addr + at::kDropStride * i	0	0x92bf80	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (EffectKind30_Shards_addr - -)	c4-tc
-src/game/effect_4f_fuzz.cpp	-	global	-	at::kPoolsEnd	0	0x92d880	-	no-entry	at::kPoolsEnd 0x92d880 -	b0
 src/game/effect_4f_fuzz.cpp	Rec	global	P	at::kSources	0	0x92d780	-	no-entry	at::kSources 0x92d780 -	b0
 src/game/effect_4f_fuzz.cpp	Rec	global	P	at::kBars	0	0x92d820	-	no-entry	at::kBars 0x92d820 -	b0
 src/game/effect_4f_fuzz.cpp	SeedBars	record	SetWord	b + 4	0	-	via=BarAt	harness	SetWord(b + 0x4): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
@@ -11710,12 +11709,12 @@ src/game/effect_5e.cpp	StartLid	record	At	t.pages + 2 * i	0	-	param	base-form	At
 src/game/effect_5e.cpp	StartLid	record	B	t.lids + i	0	-	param	base-form	B(t.lids + -): t.lids	b1-effect
 src/game/effect_5e.cpp	-	global	-	at::kSub25Cells	0	0x65e784	-	no-entry	at::kSub25Cells 0x65e784 -	b0
 src/game/effect_5e.cpp	-	global	-	at::kSub25Heights	0	0x65e764	-	no-entry	at::kSub25Heights 0x65e764 -	b0
-src/game/effect_5e.cpp	-	global	-	at::kSub25Pages	0	0x65e774	-	no-entry	at::kSub25Pages 0x65e774 -	b0
 src/game/effect_5e.cpp	-	global	-	at::kSub25Lids	0	0x65e794	-	no-entry	at::kSub25Lids 0x65e794 -	b0
+src/game/effect_5e.cpp	-	global	-	at::kSub25Pages	0	0x65e774	-	no-entry	at::kSub25Pages 0x65e774 -	b0
 src/game/effect_5e.cpp	-	global	-	at::kSub26Cells	0	0x65e7f0	-	no-entry	at::kSub26Cells 0x65e7f0 -	b0
 src/game/effect_5e.cpp	-	global	-	at::kSub26Heights	0	0x65e7c4	-	no-entry	at::kSub26Heights 0x65e7c4 -	b0
-src/game/effect_5e.cpp	-	global	-	at::kSub26Lifts	0	0x65e7d0	-	no-entry	at::kSub26Lifts 0x65e7d0 -	b0
 src/game/effect_5e.cpp	-	global	-	at::kSub26Lids	0	0x65e7fc	-	no-entry	at::kSub26Lids 0x65e7fc -	b0
+src/game/effect_5e.cpp	-	global	-	at::kSub26Lifts	0	0x65e7d0	-	no-entry	at::kSub26Lifts 0x65e7d0 -	b0
 src/game/effect_5e.cpp	-	global	-	at::kSub26Pages	0	0x65e7dc	-	no-entry	at::kSub26Pages 0x65e7dc -	b0
 src/game/effect_5e.cpp	LidTexture	record	UL	table + 4 * static_cast<U>(index)	0	-	param	computed	UL(table + -): the offset is not a constant	b1-effect
 src/game/effect_5e.cpp	Leaf	record	SB	signs + i	0	-	param	computed	SB(signs + -): the offset is not a constant	b1-effect

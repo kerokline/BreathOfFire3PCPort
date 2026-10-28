@@ -44,16 +44,16 @@ constexpr std::uint32_t kDiscDraw = bof3::addr::EffectKind4E_DrawDisc;     // E2
                                                   // as an s16 (movsx), the rim as a byte
 
 // Data.
-constexpr std::uint32_t kState7Steps = 0x65460C;  // two byte tables after kind 0x48's state-7 table (0x6545FC): the
-constexpr std::uint32_t kState7Adds = 0x654614;   // mask and the add EffectKind48_State7_Swell indexes by +9
-constexpr std::uint32_t kSpiral = 0x92C4A4;       // the 0xD20-byte record kind 0x48's states 8 and 10 use
+constexpr ::bof3::image::Va kState7Steps{0x65460C};  // two byte tables after kind 0x48's state-7 table (0x6545FC): the
+constexpr ::bof3::image::Va kState7Adds{0x654614};   // mask and the add EffectKind48_State7_Swell indexes by +9
+constexpr ::bof3::image::Va kSpiral{0x92C4A4};       // the 0xD20-byte record kind 0x48's states 8 and 10 use
 // kSpiralTurn: now Effect2e_SpiralTurn (symbols.toml). its turn word (+0xD10)
-constexpr std::uint32_t kSpiralPtr = 0x6761CC;    // unsigned char *: points at kSpiral
-constexpr std::uint32_t kRingRecord = 0x92D1C8;   // the ring record of state 7: +0..+8 its point, +0x10 a word
-constexpr std::uint32_t kRingPtr = 0x6761D0;      // unsigned char *: points at kRingRecord
+constexpr ::bof3::image::Va kSpiralPtr{0x6761CC};    // unsigned char *: points at kSpiral
+constexpr ::bof3::image::Va kRingRecord{0x92D1C8};   // the ring record of state 7: +0..+8 its point, +0x10 a word
+constexpr ::bof3::image::Va kRingPtr{0x6761D0};      // unsigned char *: points at kRingRecord
 // kSoundSwitch: now Effect2e_SoundSwitch (symbols.toml). a byte: kind 0x4D's sound 0x209 when set, else 0x208
 // kBurst: now EffectKind30_Shards[0xe0] (symbols.toml). state 12's record (0x440 bytes)
-constexpr std::uint32_t kBurstSize = 0x92C49E;    // a word inside it: state 12's size
+constexpr ::bof3::image::Va kBurstSize{0x92C49E};    // a word inside it: state 12's size
 // kSparks: now EffectKind30_Shards (symbols.toml). 8 records of 0x1C (state 9's sparks), or kind 0x4A's trail
 // kTrail: now EffectKind30_Shards (symbols.toml). kind 0x4A: 64 records of 0x34 (a point +0..+8, its two edge points
                                                   // +0x10 / +0x20, an angle word +0x30), to 0x92CC80
@@ -61,13 +61,13 @@ constexpr std::uint32_t kTrailStride = 0x34;
 constexpr unsigned kTrailCount = 64;
 // kTrailTurn: now Effect2e_TrailTurn (symbols.toml). kind 0x4A: the angle word the newest point takes
 // kTrailSpin: now Effect2e_TrailSpin (symbols.toml). kind 0x4A: a byte, set: the angle word turns 0x40 a frame
-constexpr std::uint32_t kDebris = 0x92CC84;       // kind 0x4B: 32 debris records of 0x2C, to 0x92D204
+constexpr ::bof3::image::Va kDebris{0x92CC84};       // kind 0x4B: 32 debris records of 0x2C, to 0x92D204
 constexpr std::uint32_t kDebrisStride = 0x2C;
 constexpr unsigned kDebrisCount = 32;
 // kSphereVerts: now Effect2e_SphereVerts (symbols.toml). the sphere: 0x1E2 vertices of 8 bytes (x, y, z, pad) ...
-constexpr std::uint32_t kSphereScreen = 0x92E8EC; // ... projected, 0x1E2 of 12 bytes (x, y, depth) ...
-constexpr std::uint32_t kSphereQuads = 0x92FF84;  // ... 0x200 quads of four u16 vertex numbers ...
-constexpr std::uint32_t kSphereShades = 0x930F84; // ... a shade byte a vertex ...
+constexpr ::bof3::image::Va kSphereScreen{0x92E8EC}; // ... projected, 0x1E2 of 12 bytes (x, y, depth) ...
+constexpr ::bof3::image::Va kSphereQuads{0x92FF84};  // ... 0x200 quads of four u16 vertex numbers ...
+constexpr ::bof3::image::Va kSphereShades{0x930F84}; // ... a shade byte a vertex ...
 // kSphereLight: now Effect2e_SphereLight (symbols.toml). ... and the light, three longs, to 0x931174
 constexpr unsigned kSphereVertCount = 0x1E2;
 constexpr unsigned kSphereQuadCount = 0x200;

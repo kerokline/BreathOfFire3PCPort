@@ -25,7 +25,7 @@ constexpr std::uint32_t kShardDraw = bof3::addr::EffectKindB9_DrawShard;     // 
 // --- the shared buffer at 0x92BF80 (EffectKind30_Shards and after) -----------
 // kShards: now EffectKind30_Shards (symbols.toml). EffectKind30_Shards: the pools below all start here
 // kind 0x61: the read-back pixels (w x h u16) here, the particles after them
-constexpr std::uint32_t kParticles = 0x92DF80;     // kind 0x61's particles, 0x14 each, w x h at most (no bound)
+constexpr ::bof3::image::Va kParticles{0x92DF80};     // kind 0x61's particles, 0x14 each, w x h at most (no bound)
 constexpr std::uint32_t kParticleStride = 0x14;
 // kind 0x62: 24 rays of 0x38
 constexpr unsigned kRays = 0x18;
@@ -55,10 +55,10 @@ constexpr unsigned kFrameCount = 2;
 constexpr std::uint32_t kObjTrioStride = 0x14C;    // ObjTrio's three records
 constexpr unsigned kObjTrioCount = 3;
 constexpr std::uint32_t kMemberFlag = 0x148;       // ObjTrio record +0x148 (PartyMember::char_index)
-constexpr std::uint32_t kLeaderPoint = 0x802D74;   // ObjTrio + 0x34: the leader's x, z, height (three dwords)
-constexpr std::uint32_t kMessageWord = 0x7DEE48;   // u16: the message on screen (effect_2g_callees.h kMessageWord)
+constexpr ::bof3::image::Va kLeaderPoint{0x802D74};   // ObjTrio + 0x34: the leader's x, z, height (three dwords)
+constexpr ::bof3::image::Va kMessageWord{0x7DEE48};   // u16: the message on screen (effect_2g_callees.h kMessageWord)
 // kStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter's step (scenario_harness at::kStep)
-constexpr std::uint32_t kCounter = 0x903848;       // u8: the chapter's count (scenario_harness at::kCounter)
+constexpr ::bof3::image::Va kCounter{0x903848};       // u8: the chapter's count (scenario_harness at::kCounter)
 
 // --- .rdata -----------------------------------------------------------------------
 constexpr rdata::Const kHalf{0x5C41B8};          // float: kind 0x64's trail half-width (the fifteen groups' float)

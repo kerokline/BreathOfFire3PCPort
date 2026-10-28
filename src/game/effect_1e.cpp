@@ -115,7 +115,7 @@ unsigned char* RecordA() { return reinterpret_cast<unsigned char*>(Effect1a_Pane
 unsigned char* RecordB() { return reinterpret_cast<unsigned char*>(Effect1a_PanelSet); }
 
 // A message of the script pools: MessagePools + the u16 at `cell`.
-const unsigned char* Pool(U cell) { return At(at::kPools + Word(At(cell))); }
+const unsigned char* Pool(U cell) { return At(::bof3::Img(at::kPools.v) + Word(At(cell))); }
 
 // --- the callees ------------------------------------------------------------------------
 void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
@@ -179,7 +179,7 @@ extern "C" void __cdecl LeaderPanel_S1Choose(void) {
     Hand(0x70, 0x82u - (static_cast<U>(S()[6]) << 4));
     Shade();
     BoxPrims(0x12);
-    Text(0x1D, 0x15, Pool(at::kPoolWord00));
+    Text(0x1D, 0x15, Pool(::bof3::Img(at::kPoolWord00.v)));
 }
 
 // original 0x528DA0: LeaderPanel_Stage1Steps[6] - +9 up, box 3 slid left by
@@ -206,7 +206,7 @@ extern "C" void __cdecl LeaderPanel_S1Out(void) {
     const unsigned count = S()[9];
     if (count == 0) return;
     BoxPrims(0x12u - (count << 3));
-    Text(0x1D, static_cast<int>(0x15u - (static_cast<U>(S()[9]) << 3)), Pool(at::kPoolWord00));
+    Text(0x1D, static_cast<int>(0x15u - (static_cast<U>(S()[9]) << 3)), Pool(::bof3::Img(at::kPoolWord00.v)));
 }
 
 // original 0x528E70: LeaderPanel_Stage1Steps[8] - +9 down, box 2 at 0x44 +
@@ -318,8 +318,8 @@ extern "C" void __cdecl LeaderPanel_S2Steer(void) {
         return;
     }
     if (Effect_Objects[0].step_y == 0 && (Input_Pressed & Sigma(0x20))) {
-        const std::int32_t y = L(at::kEff0StepY);
-        if (y > 0x110000) SetL(at::kEff0StepY, static_cast<U>(y) - 0x4000u);
+        const std::int32_t y = L(::bof3::Img(at::kEff0StepY.v));
+        if (y > 0x110000) SetL(::bof3::Img(at::kEff0StepY.v), static_cast<U>(y) - 0x4000u);
     }
     unsigned char* const s = S();
     if (s[0xB] == 0) {
@@ -328,13 +328,13 @@ extern "C" void __cdecl LeaderPanel_S2Steer(void) {
             if (held & 0xA000) {
                 SetL(Key(s + 0xC), held & 0xA000u);
                 unsigned char* const t = S();
-                SetL(at::kEff0StepX, static_cast<U>(L(Key(t + 0xC))) != 0x8000u ? 0x800u : 0xFFFFF800u);
+                SetL(::bof3::Img(at::kEff0StepX.v), static_cast<U>(L(Key(t + 0xC))) != 0x8000u ? 0x800u : 0xFFFFF800u);
                 t[7] = 1;
             }
         } else {
-            const std::int32_t x = L(at::kEff0X);
+            const std::int32_t x = L(::bof3::Img(at::kEff0X.v));
             if ((Input_Held & static_cast<U>(L(Key(s + 0xC)))) == 0 || x <= 0x60000 || x >= 0x150000) {
-                SetL(at::kEff0StepX, 0);
+                SetL(::bof3::Img(at::kEff0StepX.v), 0);
                 s[0xB] = 1;
             }
         }
@@ -362,7 +362,7 @@ extern "C" void __cdecl LeaderPanel_S3Begin(void) {
     Effect_Objects[4].param = 1;
     s[6] = 1;
     unsigned char* const t = S();
-    SetL(at::kCounter, 0);
+    SetL(::bof3::Img(at::kCounter.v), 0);
     t[7] = 0;
     S()[0xB] = 0;
     Animate(3);
@@ -411,8 +411,8 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
         if (static_cast<signed char>(RecordB()[0x11]) > static_cast<signed char>(r) && (Frame_Counter & 0xF) == 0) {
             const std::int32_t z2 = Effect_Objects[0].z;
             const std::int32_t camera = Field_Kind2Z;
-            SetL(at::kEff0StepX, 0);
-            SetL(at::kEff0StepY, 0);
+            SetL(::bof3::Img(at::kEff0StepX.v), 0);
+            SetL(::bof3::Img(at::kEff0StepY.v), 0);
             rv::Store<std::uint32_t>(Effect_Objects[0].step_y, 0);
             if (camera < z2) Field_Kind2Z = z2;
             unsigned char* const t = S();
@@ -434,51 +434,51 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
         if (held & 0x8000) {
             unsigned char* const r = RecordB();
             Effect1e_Pose = 1;
-            SetL(at::kEff0StepX, 0xFFFFF000u);
-            SetL(at::kEff0StepY, 0x1000);
+            SetL(::bof3::Img(at::kEff0StepX.v), 0xFFFFF000u);
+            SetL(::bof3::Img(at::kEff0StepY.v), 0x1000);
             rv::Store<std::uint32_t>(Effect_Objects[0].step_y, static_cast<U>(Long(r + 8)));
             animation = 6;
         } else if (held & 0x2000) {
             Effect1e_Pose = 1;
-            SetL(at::kEff0StepX, 0x1000);
-            SetL(at::kEff0StepY, 0x1000);
+            SetL(::bof3::Img(at::kEff0StepX.v), 0x1000);
+            SetL(::bof3::Img(at::kEff0StepY.v), 0x1000);
             rv::Store<std::uint32_t>(Effect_Objects[0].step_y, static_cast<U>(Long(RecordB() + 8)));
             animation = 5;
         } else if (held & Sigma(0x20)) {
-            const unsigned char sloped = B(0x903850);
-            SetL(at::kEff0StepX, 0);
+            const unsigned char sloped = B(::bof3::Img(0x903850));
+            SetL(::bof3::Img(at::kEff0StepX.v), 0);
             if (sloped != 0) {
                 unsigned char* const r = RecordB();
                 Effect1e_Pose = 2;
-                SetL(at::kEff0StepY, 0x2000);
+                SetL(::bof3::Img(at::kEff0StepY.v), 0x2000);
                 rv::Store<std::uint32_t>(Effect_Objects[0].step_y, static_cast<U>(Long(r + 8)));
                 animation = 4;
             } else {
                 unsigned char* const r = RecordB();
                 Effect1e_Pose = 1;
-                SetL(at::kEff0StepY, 0x1000);
+                SetL(::bof3::Img(at::kEff0StepY.v), 0x1000);
                 rv::Store<std::uint32_t>(Effect_Objects[0].step_y, static_cast<U>(Long(r + 4)));
                 animation = 3;
             }
-        } else if (B(0x903850) != 0) {
+        } else if (B(::bof3::Img(0x903850)) != 0) {
             unsigned char* const r = RecordB();
             Effect1e_Pose = 2;
-            SetL(at::kEff0StepX, 0);
-            SetL(at::kEff0StepY, 0x1000);
+            SetL(::bof3::Img(at::kEff0StepX.v), 0);
+            SetL(::bof3::Img(at::kEff0StepY.v), 0x1000);
             rv::Store<std::uint32_t>(Effect_Objects[0].step_y, static_cast<U>(Long(r + 8)));
             animation = 4;
         } else {
             unsigned char* const r = RecordB();
             Effect1e_Pose = 0;
-            SetL(at::kEff0StepX, 0);
-            SetL(at::kEff0StepY, 0);
+            SetL(::bof3::Img(at::kEff0StepX.v), 0);
+            SetL(::bof3::Img(at::kEff0StepY.v), 0);
             rv::Store<std::uint32_t>(Effect_Objects[0].step_y, static_cast<U>(Long(r)));
             animation = 3;
         }
         Animate(animation);
     }
     PoseSound();
-    const std::int32_t step = L(at::kEff0StepY);
+    const std::int32_t step = L(::bof3::Img(at::kEff0StepY.v));
     const std::int32_t z3 = Effect_Objects[0].z;
     Field_Kind2Z = z3;
     MoveScript_F3Divisor = static_cast<short>(step != 0 ? step >> 8 : 0x10);
@@ -487,8 +487,8 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
     else if (z3 > 0x3C0000)
         Field_Kind2Z = 0x3C0000;
     const std::int32_t x = Effect_Objects[0].x;
-    const std::int32_t dx = L(at::kEff0StepX);
-    if ((x <= 0x80000 && dx < 0) || (x >= 0x120000 && dx > 0)) SetL(at::kEff0StepX, 0);
+    const std::int32_t dx = L(::bof3::Img(at::kEff0StepX.v));
+    if ((x <= 0x80000 && dx < 0) || (x >= 0x120000 && dx > 0)) SetL(::bof3::Img(at::kEff0StepX.v), 0);
     if (step > 0) Tick();
 }
 
@@ -570,11 +570,11 @@ extern "C" void __cdecl LeaderPanel_S4Pose(void) {
     if (S()[9] != 0) {
         unsigned char* const a = RecordA();
         Effect1e_Pose = 2;
-        SetL(at::kEff5Frame, static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[7]))));
+        SetL(::bof3::Img(at::kEff5Frame.v), static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[7]))));
     } else {
         unsigned char* const a = RecordA();
         Effect1e_Pose = 1;
-        SetL(at::kEff5Frame, static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[4]))));
+        SetL(::bof3::Img(at::kEff5Frame.v), static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[4]))));
     }
 }
 
@@ -617,7 +617,7 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
             unsigned char* const s = S();
             Effect1e_Pose = 2;
             s[9] = 8;
-            SetL(at::kEff5Frame, static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(RecordA()[5]))));
+            SetL(::bof3::Img(at::kEff5Frame.v), static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(RecordA()[5]))));
             Animate(8);
             rv::Bytes(&Effect_Objects[5])[0xa] = static_cast<unsigned char>(rv::Bytes(&Effect_Objects[5])[0xa] + 1);
         } else {
@@ -627,7 +627,7 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
                 Tick();
                 rv::Bytes(&Effect_Objects[5])[0xa] = static_cast<unsigned char>(rv::Bytes(&Effect_Objects[5])[0xa] + 1);
             } else {
-                SetL(at::kEff5Frame, 0);
+                SetL(::bof3::Img(at::kEff5Frame.v), 0);
                 Effect1e_Pose = 0;
                 Animate(7);
             }
@@ -652,7 +652,7 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
     if (held & 0x3000) {
         unsigned char* const a = RecordA();
         Effect1e_Pose = 0;
-        SetL(at::kEff5Frame, static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[6]))));
+        SetL(::bof3::Img(at::kEff5Frame.v), static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[6]))));
         Picked("LeaderPanel_S4Run")[0x1C] = 0;
         Animate(0);
         rv::Bytes(&Effect_Objects[5])[0xa] = static_cast<unsigned char>(rv::Bytes(&Effect_Objects[5])[0xa] - 1);
@@ -665,7 +665,7 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
         else
             SH_CALL(LeaderPanel_S4Blink)();
         Effect1e_Pose = 1;
-        SetL(at::kEff5Frame, static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(RecordA()[4]))));
+        SetL(::bof3::Img(at::kEff5Frame.v), static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(RecordA()[4]))));
         Animate(7);
         Tick();
         rv::Bytes(&Effect_Objects[5])[0xa] = static_cast<unsigned char>(rv::Bytes(&Effect_Objects[5])[0xa] + 1);
@@ -674,7 +674,7 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
     }
     unsigned char* const p = Picked("LeaderPanel_S4Run");
     Effect1e_Pose = 0;
-    SetL(at::kEff5Frame, 0);
+    SetL(::bof3::Img(at::kEff5Frame.v), 0);
     p[0x1C] = 0;
     Animate(7);
     PoseSound();
@@ -688,7 +688,7 @@ extern "C" void __cdecl LeaderPanel_S4Best(void) {
     if (Effect_Objects[4].state == 4) {
         unsigned char* const p = Picked("LeaderPanel_S4Best");
         auto* const po = rv::As<records::SpriteObject>(p);
-        unsigned char& best = B(at::kBestCounts + p[6]);
+        unsigned char& best = B(::bof3::Img(at::kBestCounts.v) + p[6]);
         if (po->counter > best) {
             Effect1e_Blink = 1;
             best = p[0x9C];
@@ -711,7 +711,7 @@ extern "C" void __cdecl LeaderPanel_S4HeaderIn(void) {
     Header(0u - 40u * (PtrHi(s) | s[9]));
     if (S()[9] == 0) {
         const unsigned kind = PickedKind("LeaderPanel_S4HeaderIn");
-        Sound(B(at::kKindSounds + 36u * kind) >= 2 ? 0x20C : 0x20B);
+        Sound(B(::bof3::Img(at::kKindSounds.v) + 36u * kind) >= 2 ? 0x20C : 0x20B);
         S()[9] = 4;
         unsigned char* const t = S();
         t[3] = static_cast<unsigned char>(t[3] + 1);
@@ -939,7 +939,7 @@ extern "C" void __cdecl LeaderPanel_S4Again(void) {
         t[3] = static_cast<unsigned char>(t[3] + 1);
     }
     if (g_shop_ask_row) {
-        const U row = FirstAnswerRow(At(at::kPools + Word(At(at::kPools + 0x44u * 2u))), 0x44);
+        const U row = FirstAnswerRow(At(::bof3::Img(at::kPools.v) + Word(At(::bof3::Img(at::kPools.v) + 0x44u * 2u))), 0x44);
         Hand(0x20, 12u * S()[6] + 0xAAu + 12u * (row - 1u));
     } else {
         Hand(0x20, 12u * S()[6] + 0xAAu);
@@ -1193,9 +1193,9 @@ extern "C" void __cdecl LeaderPanel_S9Menu(void) {
     }
     if (S()[3] != 2) return;
     switch (Effect_Objects[6].param & 3) {
-    case 0: Text(0x1D, 0x14, At(at::kPools + Word(At(at::kPoolWord20)))); break;
-    case 1: Text(0x1D, 0x14, At(at::kPools + Word(At(at::kPoolWord40)))); break;
-    case 2: Text(0x1D, 0x14, At(at::kPools + Word(At(at::kPoolWord5E)))); break;
+    case 0: Text(0x1D, 0x14, At(::bof3::Img(at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord20.v))))); break;
+    case 1: Text(0x1D, 0x14, At(::bof3::Img(at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord40.v))))); break;
+    case 2: Text(0x1D, 0x14, At(::bof3::Img(at::kPools.v) + Word(At(::bof3::Img(at::kPoolWord5E.v))))); break;
     default: break;
     }
     Hand(48u * Effect_Objects[6].param + 0x58u, 0x2E);

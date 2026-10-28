@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "common/cache_manifest.h"
+#include "common/image_base.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/bindings.h"
@@ -28,8 +29,8 @@ const char* const kLineName[kLines] = {"Speak", "Move", "Action", "Menu", "View"
 
 namespace {
 
-constexpr std::uint32_t kWords = 0x903580;   // the nine pad words (word 7 Field_ConfirmButtons, 8 Field_CancelButtons)
-constexpr std::uint32_t kBootDefaults = 0x656AEC;   // Boot_Task's source, the engine's rule (exe_own.cpp)
+constexpr ::bof3::image::Va kWords{0x903580};   // the nine pad words (word 7 Field_ConfirmButtons, 8 Field_CancelButtons)
+constexpr ::bof3::image::Va kBootDefaults{0x656AEC};   // Boot_Task's source, the engine's rule (exe_own.cpp)
 
 // Japan's button for each line, in kLineWord's order (Init 0x460FDE, the rule
 // FieldButtonDefaults in exe_own.cpp, SLPS_009.90's Boot_Init copy).
@@ -86,7 +87,7 @@ Table g_table;
 // cleared when a save's words are loaded (RecipeToPad, sigma.h).
 bool g_release_words = false;
 
-std::uint16_t* Words() { return reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(kWords)); }
+std::uint16_t* Words() { return reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(::bof3::Img(kWords.v))); }
 
 // Words 7 and 8 the Speak line's and the Action line's, then the table; a
 // Config that is not a permutation of the six bits a Fatal naming the writer.
@@ -179,7 +180,7 @@ void SelfTest() {
     //    Boot_Task copies (exe_own.cpp, equal to BOF3.exe's .data).
     std::uint16_t jp[9];
     DefaultWords(Release::kJapan, false, jp);
-    Check(std::memcmp(jp, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(kBootDefaults)), sizeof jp) == 0,
+    Check(std::memcmp(jp, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(kBootDefaults.v))), sizeof jp) == 0,
           "Japan's words differ from 0x656AEC's", jp[0]);
     // The two other releases as button-roles-by-release.md 2 read them from
     // the boot executables (Speak, Move, Menu, Action; confirm = Speak, cancel

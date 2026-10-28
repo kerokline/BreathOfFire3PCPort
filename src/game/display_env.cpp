@@ -76,7 +76,7 @@ void ClearBack() {
         Method<ComBlt>(back, kBlt)(back, nullptr, nullptr, nullptr, kBltWait | kBltColorFill, fx);
     } else {
         void* const viewport = D3d_Viewport;
-        Method<ComClear>(viewport, kClear)(viewport, 1, At(Gfx_ScreenRect_addr), kClearTarget);
+        Method<ComClear>(viewport, kClear)(viewport, 1, At(::bof3::Img(Gfx_ScreenRect_addr)), kClearTarget);
     }
 }
 
@@ -93,8 +93,8 @@ using namespace display_env;
 // the double buffer's two environments differ in nothing else (0x4FD110).
 // The eax the original leaves is not read by its caller.
 void Gpu_PutDispEnv(const unsigned char* env) {
-    if (Word(kDispEnv + 2) != Word(Addr(env) + 2)) g.present();
-    CopyDwords(Gpu_DispEnv_addr, Addr(env), 5);
+    if (Word(::bof3::Img(kDispEnv.v) + 2) != Word(Addr(env) + 2)) g.present();
+    CopyDwords(::bof3::Img(Gpu_DispEnv_addr), Addr(env), 5);
 }
 
 // 0x5A7890, PutDrawEnv by shape; once a rendered frame from WinMain
@@ -113,7 +113,7 @@ void Gpu_PutDrawEnv(const unsigned char* env) {
     if (Gpu_DrawEnv[0x19] != r || Gpu_DrawEnv[0x1a] != At(e + 0x1A)[0] ||
         Gpu_DrawEnv[0x1b] != At(e + 0x1B)[0])
         g.set_back_color(r, At(e + 0x1A)[0], At(e + 0x1B)[0]);
-    CopyDwords(Gpu_DrawEnv_addr, e, 0x17);
+    CopyDwords(::bof3::Img(Gpu_DrawEnv_addr), e, 0x17);
 }
 
 // 0x5A78E0, SetDefDispEnv by shape; twice from the set-up 0x4FD110. The
@@ -160,11 +160,11 @@ unsigned char* Gpu_SetDefDrawEnv(unsigned char* env, int x, int y, int w, int h)
 // (Gpu_DrawEnv +0x18, read after the present) is set, Gfx_ClearPresent(1)
 // clears the back buffer for the next frame. Nothing else is checked.
 void Gfx_Present(void) {
-    const U flags = Long(kRenderFlags);
+    const U flags = Long(::bof3::Img(kRenderFlags.v));
     void* const primary = DDraw_Primary;
     long result;
     if (flags & 0x200)
-        result = Method<ComBlt>(primary, kBlt)(primary, At(Gfx_WindowRect_addr), DDraw_BackBuffer, At(Gfx_ScreenRect_addr), kBltWait,
+        result = Method<ComBlt>(primary, kBlt)(primary, At(::bof3::Img(Gfx_WindowRect_addr)), DDraw_BackBuffer, At(::bof3::Img(Gfx_ScreenRect_addr)), kBltWait,
                                                nullptr);
     else
         result = Method<ComFlip>(primary, kFlip)(primary, DDraw_BackBuffer, kFlipWait);
@@ -184,10 +184,10 @@ void Gfx_ClearPresent(unsigned flags) {
     const unsigned char f = static_cast<unsigned char>(flags);
     if (f & 1) ClearBack();
     if (!(f & 2)) return;
-    const U render = Long(kRenderFlags);
+    const U render = Long(::bof3::Img(kRenderFlags.v));
     void* const primary = DDraw_Primary;
     if (render & 0x200) {
-        Method<ComBlt>(primary, kBlt)(primary, At(Gfx_WindowRect_addr), DDraw_BackBuffer, At(Gfx_ScreenRect_addr), kBltWait, nullptr);
+        Method<ComBlt>(primary, kBlt)(primary, At(::bof3::Img(Gfx_WindowRect_addr)), DDraw_BackBuffer, At(::bof3::Img(Gfx_ScreenRect_addr)), kBltWait, nullptr);
         return;
     }
     Method<ComFlip>(primary, kFlip)(primary, DDraw_BackBuffer, kFlipWait);
@@ -207,7 +207,7 @@ void Gfx_ClearPresent(unsigned flags) {
 void D3d_SetBackColor(unsigned r, unsigned g, unsigned b) {
     void* const material = D3d_BackMaterial;
     if (material == nullptr) return;
-    if (Long(kViewport) == 0) return;
+    if (Long(::bof3::Img(kViewport.v)) == 0) return;
     const double k = Float(kInverse255At);
     const float c[3] = {static_cast<float>((r & 0xFF) * k), static_cast<float>((g & 0xFF) * k),
                         static_cast<float>((b & 0xFF) * k)};
@@ -240,7 +240,7 @@ void D3d_SetBackColor(unsigned r, unsigned g, unsigned b) {
 // from the record each time) and its buffer SndBuf_FromWave of that. An
 // entry whose offset is 0 keeps the buffer dword the payload's head carried.
 void Snd_LoadBank(unsigned bank, const void* payload, unsigned size) {
-    const U record = Sound_Banks_addr + (static_cast<U>(bank) - 1u) * kBankBytes;
+    const U record = ::bof3::Img(Sound_Banks_addr) + (static_cast<U>(bank) - 1u) * kBankBytes;
     const U old = Long(record + kBankHeader);
     if (old != 0) {
         g.free(At(old));

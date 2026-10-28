@@ -241,7 +241,7 @@ extern "C" void __cdecl EffectKind22_WaitArms(void) {
     const unsigned char* const s = S();
     for (unsigned i = 0; i < 5; ++i)
         if (At(UL(s + 0xC + 4 * i))[6] == 0) return;
-    unsigned char* const counter = At(at::kCounter0);
+    unsigned char* const counter = At(::bof3::Img(at::kCounter0.v));
     counter[0] = static_cast<unsigned char>(counter[0] + 1);
     SH_CALL(Effect_Release)();
 }

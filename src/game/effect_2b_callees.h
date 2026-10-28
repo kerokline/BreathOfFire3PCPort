@@ -28,8 +28,8 @@ constexpr std::uint32_t kTrailCount = 3;           // points of three floats fro
 constexpr std::uint32_t kShard35Count = 16;
 // kPieces35: now EffectKind30_Shards[0x280] (symbols.toml). kind 0x35: 55 piece records of 0x18 (the centre, its direction,
 constexpr std::uint32_t kPiece35Count = 55;        // the velocity), after the shards
-constexpr std::uint32_t kCopies35 = 0x92C728;      // kind 0x35: 55 face copies of 0x28, after the pieces, to 0x92CFC0
-constexpr std::uint32_t kPool35End = 0x92CFC0;
+constexpr ::bof3::image::Va kCopies35{0x92C728};      // kind 0x35: 55 face copies of 0x28, after the pieces, to 0x92CFC0
+constexpr ::bof3::image::Va kPool35End{0x92CFC0};
 // kSpirals: now EffectKind30_Shards (symbols.toml). kind 0x3B: three spiral records of 0x4BC (+0 x, +4 z, +8 height,
 constexpr std::uint32_t kSpiralStride = 0x4BC;     // +0x10 angle, +0x12 radius, +0x14 shade - words), to 0x92CDB4
 constexpr std::uint32_t kSpiralCount = 3;
@@ -45,8 +45,8 @@ constexpr std::uint32_t kRingCount = 16;           // state, +0x16 count, +0x17 
 // The state tables (named in symbols.toml; the fuzz lists them by address).
 // kKind2FStates: now EffectKind2F_States (symbols.toml). EffectKind2F_States, 2 (then kind 0x33's)
 // kKind33States: now EffectKind33_States (symbols.toml). EffectKind33_States, 4 (then EffectKind33_SignX)
-constexpr std::uint32_t kKind33SignX = 0x6543F0;    // EffectKind33_SignX: four longs, 1 / -1
-constexpr std::uint32_t kKind33SignZ = 0x654400;    // EffectKind33_SignZ: four longs, 1 / -1
+constexpr ::bof3::image::Va kKind33SignX{0x6543F0};    // EffectKind33_SignX: four longs, 1 / -1
+constexpr ::bof3::image::Va kKind33SignZ{0x654400};    // EffectKind33_SignZ: four longs, 1 / -1
 // kKind35States: now EffectKind35_States (symbols.toml). EffectKind35_States, 3 (then the shard states)
 // kKind35ShardStates: now EffectKind35_ShardStates (symbols.toml). EffectKind35_ShardStates, 2, by a shard's +1
 // kKind38States: now EffectKind38_States (symbols.toml). EffectKind38_States, 5

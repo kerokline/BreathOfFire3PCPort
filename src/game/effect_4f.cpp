@@ -155,11 +155,11 @@ bool CountDown() {
     return s[9] == 0;
 }
 
-unsigned char* Drop(U i) { return At(EffectKind30_Shards_addr + i * at::kDropStride); }
-unsigned char* Source(U i) { return At(at::kSources + i * at::kSourceStride); }
-unsigned char* Bar(U i) { return At(at::kBars + i * at::kBarStride); }
-unsigned char* Spark(U i) { return At(EffectKind30_Shards_addr + i * at::kSparkStride); }
-unsigned char* Shard(U i) { return At(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride); }
+unsigned char* Drop(U i) { return At(::bof3::Img(EffectKind30_Shards_addr) + i * at::kDropStride); }
+unsigned char* Source(U i) { return At(::bof3::Img(at::kSources.v) + i * at::kSourceStride); }
+unsigned char* Bar(U i) { return At(::bof3::Img(at::kBars.v) + i * at::kBarStride); }
+unsigned char* Spark(U i) { return At(::bof3::Img(EffectKind30_Shards_addr) + i * at::kSparkStride); }
+unsigned char* Shard(U i) { return At(::bof3::Img(EffectKind30_Shards_addr) + 0xc0 + i * at::kShardStride); }
 
 // kind 0xB9's glow: group E4E's 0x4901D0 (point, size word, colour byte), raw
 // until it merges.
@@ -308,9 +308,9 @@ extern "C" void __cdecl EffectKindAB_PlaceSources(void) {
         src[1] = 0;
         src[2] = static_cast<unsigned char>((static_cast<U>(SH_CALL(Rand)()) & 0xFu) - 0x10u);
         const U r = static_cast<U>(SH_CALL(Rand)());
-        const U z = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(at::kSourceCells + 2 * i + 1)))) << 16;
+        const U z = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(::bof3::Img(at::kSourceCells.v) + 2 * i + 1)))) << 16;
         src[3] = static_cast<unsigned char>(r & 0x1Fu);
-        const U x = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(at::kSourceCells + 2 * i)))) << 16;
+        const U x = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(::bof3::Img(at::kSourceCells.v) + 2 * i)))) << 16;
         SetUL(src + 4, x);
         SetUL(src + 8, z);
         const long ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z));
@@ -909,7 +909,7 @@ extern "C" void __cdecl EffectKindB9_FlyWait(void) {
     SH_CALL(EffectKindB9_DrawShards)();
     unsigned char* const s = S();
     SH_CALL(EffectKindB9_DrawTrail)(Point(s + 0x18), Point(s + 0x34), 0x40);
-    if (B(at::kCounter) != 3) return;
+    if (B(::bof3::Img(at::kCounter.v)) != 3) return;
     if (S()[9] == 0x10) SH_CALL(Sound_PlayEffect)(0x216);
     if (!CountDown()) return;
     S()[3] = 0x80;

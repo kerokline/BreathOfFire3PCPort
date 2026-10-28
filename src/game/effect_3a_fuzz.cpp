@@ -285,7 +285,7 @@ constexpr unsigned kParticlesSeeded = 0x100;
 const sh::Region kRegions[] = {
     {Effect3a_MoteFlagB_addr, at::kCellsSize},
     {EffectKind61_Frames_addr, 8 * at::kFrameCount},
-    {at::kParticles, kParticlesSeeded * at::kParticleStride},
+    {at::kParticles.v, kParticlesSeeded * at::kParticleStride},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -295,7 +295,7 @@ unsigned char* RayAt(unsigned i) { return P(EffectKind30_Shards_addr + i * at::k
 unsigned char* SparkAt(unsigned i) { return P(EffectKind30_Shards_addr + i * at::kSparkStride); }
 unsigned char* MoteAt(unsigned i) { return P(EffectKind30_Shards_addr + i * at::kMoteStride); }
 unsigned char* ShardAt(unsigned i) { return P(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride64); }
-unsigned char* ParticleAt(unsigned i) { return P(at::kParticles + i * at::kParticleStride); }
+unsigned char* ParticleAt(unsigned i) { return P(::bof3::Img(at::kParticles.v) + i * at::kParticleStride); }
 
 // A float in [lo, hi) with a fraction, or (one in sixteen) a whole number.
 void SeedFloat(unsigned char* p, float lo, float hi) {
@@ -391,7 +391,7 @@ void Seed(unsigned k) {
         s[0xA] = sh::Half() ? s[6] : static_cast<unsigned char>(PickOf(0, 1, s[6] - 1, sh::Next()));
         if (sh::Half()) {
             Field_Request = static_cast<unsigned char>(PickOf(0, 1, 3, 2, sh::Next()));
-            SetWord(sh::Mem(at::kMessageWord), PickOf(0x12, 0x12, 0x13, 0x112, sh::Next()));
+            SetWord(sh::Mem(::bof3::Img(at::kMessageWord.v)), PickOf(0x12, 0x12, 0x13, 0x112, sh::Next()));
             sh::Mem(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(PickOf(0xC, 0xC, 0xB, 0xD, sh::Next()));
         }
         SeedRays();
@@ -410,7 +410,7 @@ void Seed(unsigned k) {
     case k64Grow:
     case k64Hold:
     case k64Fade: SetWord(s + 0x2E, PickOf(0, 0x10, 6, 0xFFFF, 0x20, sh::Next())); break;
-    case k64FlyWait: sh::Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(0x18, 0x18, 0x17, 0x19, sh::Next())); break;
+    case k64FlyWait: sh::Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>(PickOf(0x18, 0x18, 0x17, 0x19, sh::Next())); break;
     case k64Trail:
         // from (+0x18) behind to (+0x34) on x by 0..9 steps of 0x10000, half the time
         if (sh::Half()) SetLong(s + 0x34, Long(s + 0x18) + static_cast<std::int32_t>(sh::Next() % 0xA0000));
@@ -501,7 +501,7 @@ void Disturb(U h) {
         if (sh::InRegions(s, 0x80)) s[3] = static_cast<unsigned char>(v);
         break;
     case 6: SetWord(sh::Mem(Effect3a_ParticleCount_addr), v % (kParticlesSeeded + 1)); break;
-    case 7: sh::Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 0x18u : v >> 1); break;
+    case 7: sh::Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>((v & 1) ? 0x18u : v >> 1); break;
     default: break;
     }
 }

@@ -411,7 +411,7 @@ extern "C" void __cdecl EffectKind1D_Hold(void) {
     SH_CALL(EffectKind1D_DrawRing)(0xFF);
     if (Frame_Counter & 1) SH_AT(unsigned char (__cdecl*)(void), at::kShardSpawn)();
     SH_CALL(EffectKind1D_MoveShards)();
-    if (At(0x903848)[0] == 0x1F) {
+    if (At(::bof3::Img(0x903848))[0] == 0x1F) {
         Cur()[9] = 0xFC;
         unsigned char* const s = Cur();
         s[1] = static_cast<unsigned char>(s[1] + 1);
@@ -699,8 +699,8 @@ extern "C" void __cdecl EffectKind1E_ShardNext3(void) {
 extern "C" void __cdecl EffectKind1E_SplitModel(void) {
     U src = Sprite_ObjectsExtra[0].script;
     for (U i = 0; i < at::kPieceCount; ++i) {
-        unsigned char* const d = At(EffectKind30_Shards_addr + 0x3c8 + 0x28 * i);
-        unsigned char* const r = At(EffectKind30_Shards_addr + 0x140 + 0x18 * i);
+        unsigned char* const d = At(::bof3::Img(EffectKind30_Shards_addr) + 0x3c8 + 0x28 * i);
+        unsigned char* const r = At(::bof3::Img(EffectKind30_Shards_addr) + 0x140 + 0x18 * i);
         for (U j = 0; j < 0x28; j += 4) SetUL(d + j, UL(At(src + j)));
         SetWord(r + 0, static_cast<U>((SW(d + 0x14) + SW(d + 2) + SW(d + 8) + SW(d + 0xE)) >> 2));
         SetWord(r + 2, static_cast<U>((SW(d + 0xA) + SW(d + 0x10) + SW(d + 4) + SW(d + 0x16)) >> 2));
@@ -727,12 +727,12 @@ extern "C" void __cdecl EffectKind1E_StepPieces(void) {
     const U model = Sprite_ObjectsExtra[0].script;
     for (U i = 0; i < at::kPieceCount; ++i) {
         const U odd = Frame_Counter & 1;
-        unsigned char* const r = At(EffectKind30_Shards_addr + 0x140 + 0x18 * i);
+        unsigned char* const r = At(::bof3::Img(EffectKind30_Shards_addr) + 0x140 + 0x18 * i);
         SetWord(r + 0, Word(r + 0) + Word(r + 8));
         SetWord(r + 2, Word(r + 2) + Word(r + 0xA));
         SetWord(r + 0xC, Word(r + 0xC) + odd);
         SetWord(r + 4, Word(r + 4) + Word(r + 0xC));
-        SH_CALL(EffectKind1E_TurnPiece)(At(EffectKind30_Shards_addr + 0x3c8 + 0x28 * i), At(model + 0x28 * i), r);
+        SH_CALL(EffectKind1E_TurnPiece)(At(::bof3::Img(EffectKind30_Shards_addr) + 0x3c8 + 0x28 * i), At(model + 0x28 * i), r);
     }
 }
 
@@ -768,7 +768,7 @@ extern "C" void __cdecl EffectKind1E_TurnPiece(const unsigned char* copy, unsign
 // original 0x46EA60: the sixteen debris records of 0x2C at 0x92C780 set up
 // (EffectKind1E_DebrisInitOne).
 extern "C" void __cdecl EffectKind1E_DebrisInit(void) {
-    for (U i = 0; i < 16; ++i) SH_CALL(EffectKind1E_DebrisInitOne)(At(at::kDebris + 0x2C * i));
+    for (U i = 0; i < 16; ++i) SH_CALL(EffectKind1E_DebrisInitOne)(At(::bof3::Img(at::kDebris.v) + 0x2C * i));
 }
 
 // original 0x46EA80 (PSX twin 0x801F3BE4 by callers): a debris record: its
@@ -830,7 +830,7 @@ unsigned char* DebrisLoop(U base, unsigned count) {
 extern "C" void __cdecl EffectKind1E_DebrisDraw(void) {
     DebrisMode(0);
     SH_CALL(EffectGte_LoadMapCamera)();
-    DebrisLoop(at::kDebris, 16);
+    DebrisLoop(::bof3::Img(at::kDebris.v), 16);
 }
 
 // original 0x46EC20: the model's lines. Sprite_Current kept, set to

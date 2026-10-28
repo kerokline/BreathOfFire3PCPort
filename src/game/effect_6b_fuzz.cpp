@@ -249,12 +249,12 @@ U Cell() { return sh::Often() ? sh::Next() % 0x80 : sh::Next() & 0xFFFF; }
 struct Placing { U cells; unsigned room; };
 Placing PlaceOf(unsigned k) {
     switch (k) {
-    case k33Place: return {at::kSub33Cells, at::kRoom2};
-    case k34Place: return {at::kSub34Cells, at::kRoom2};
-    case k37Place: return {at::kSub37Cells, at::kRoom2};
-    case k35Place: return {at::kSub35Cells, at::kRoom4};
-    case k38Place: return {at::kSub38Cells, at::kRoom4};
-    case k3BPlace: return {at::kSub3BCells, at::kRoom2};
+    case k33Place: return {::bof3::Img(at::kSub33Cells.v), at::kRoom2};
+    case k34Place: return {::bof3::Img(at::kSub34Cells.v), at::kRoom2};
+    case k37Place: return {::bof3::Img(at::kSub37Cells.v), at::kRoom2};
+    case k35Place: return {::bof3::Img(at::kSub35Cells.v), at::kRoom4};
+    case k38Place: return {::bof3::Img(at::kSub38Cells.v), at::kRoom4};
+    case k3BPlace: return {::bof3::Img(at::kSub3BCells.v), at::kRoom2};
     default: return {0, 0};
     }
 }
@@ -309,8 +309,8 @@ void Seed(unsigned k) {
         unsigned char* const header = Mem(AreaMap_Header_addr);
         header[0] = static_cast<unsigned char>(1 + sh::Next() % 0x1F);
         header[1] = static_cast<unsigned char>(1 + sh::Next() % 0x1F);
-        SetWord(Mem(at::kLeaderCellX), PickOf(0, 0x14, 0x20, 0x30, 0x40, 0xFFF0, sh::Next() % 0x40));
-        SetWord(Mem(at::kLeaderCellZ), PickOf(0, 0x14, 0x20, 0x30, 0x40, 0xFFF0, sh::Next() % 0x40));
+        SetWord(Mem(::bof3::Img(at::kLeaderCellX.v)), PickOf(0, 0x14, 0x20, 0x30, 0x40, 0xFFF0, sh::Next() % 0x40));
+        SetWord(Mem(::bof3::Img(at::kLeaderCellZ.v)), PickOf(0, 0x14, 0x20, 0x30, 0x40, 0xFFF0, sh::Next() % 0x40));
         if (sh::Often()) Cond_ByteFE = static_cast<unsigned char>(1 + sh::Next() % 0xFF);
         break;
     }

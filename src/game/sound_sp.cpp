@@ -71,10 +71,10 @@ struct Places {
     std::uint32_t fade_stops;  // Music_FadeStops
 };
 const Places kPlaces = {
-    Sound_Banks_addr,   Sprite_Current_addr, Field_ScriptFlags2_addr, Rest4f_Setting3_addr, Rest4f_Setting5C_addr,
-    Field_Kind2X_addr,  Field_Kind2Z_addr,   Sprite_Objects_addr,     ObjTrio_addr,         Music_Track_addr,
-    Music_LoadedTrack_addr, Music_File_addr, Music_FileSize_addr,     Music_FileLoops_addr, Music_Volume_addr,
-    Music_FadeCount_addr, Music_FadeStops_addr,
+    ::bof3::Img(Sound_Banks_addr),   ::bof3::Img(Sprite_Current_addr), ::bof3::Img(Field_ScriptFlags2_addr), ::bof3::Img(Rest4f_Setting3_addr), ::bof3::Img(Rest4f_Setting5C_addr),
+    ::bof3::Img(Field_Kind2X_addr),  ::bof3::Img(Field_Kind2Z_addr),   ::bof3::Img(Sprite_Objects_addr),     ::bof3::Img(ObjTrio_addr),         ::bof3::Img(Music_Track_addr),
+    ::bof3::Img(Music_LoadedTrack_addr), ::bof3::Img(Music_File_addr), ::bof3::Img(Music_FileSize_addr),     ::bof3::Img(Music_FileLoops_addr), ::bof3::Img(Music_Volume_addr),
+    ::bof3::Img(Music_FadeCount_addr), ::bof3::Img(Music_FadeStops_addr),
 };
 Places p = kPlaces;
 

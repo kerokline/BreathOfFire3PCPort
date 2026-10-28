@@ -319,14 +319,14 @@ extern "C" void __cdecl EffectKind63_Shrink(void) {
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18) - 10);
     s[0x5C] = static_cast<unsigned char>(s[0x5C] - 2);
     if (static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18)) > 0) return;
-    B(at::kCounter) = static_cast<unsigned char>(B(at::kCounter) + 1);
+    B(::bof3::Img(at::kCounter.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter.v)) + 1);
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
 // original 0x4825D0 (state 4): with the counter 0x903848 at 0x2B, +9 = 0x10 and
 // +1 = 5; then the tint and (a tail jump) the sprites refreshed.
 extern "C" void __cdecl EffectKind63_WaitCue(void) {
-    if (B(at::kCounter) == at::kCounterCue) {
+    if (B(::bof3::Img(at::kCounter.v)) == at::kCounterCue) {
         S()[9] = 0x10;
         S()[1] = 5;
     }
@@ -475,7 +475,7 @@ extern "C" void __cdecl EffectKind65_Check(void) {
 extern "C" void __cdecl EffectKind65_WaitInput(void) {
     if (Input_Held == 0) return;
     SH_CALL(Sound_PlayEffect)(0x202);
-    SH_CALL(Flags_Toggle)(At(Cond_Flags_addr + 0xa0), at::kKind65Flag);
+    SH_CALL(Flags_Toggle)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), at::kKind65Flag);
     S()[9] = 0x3C;
     S()[1] = 3;
 }
@@ -494,7 +494,7 @@ extern "C" void __cdecl EffectKind65_Shake(void) {
         return;
     }
     MapView_Redraw = 2;
-    const U step = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(at::kShakeSteps + (left & 3)))));
+    const U step = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(::bof3::Img(at::kShakeSteps.v) + (left & 3)))));
     Camera_ShiftY = static_cast<short>(static_cast<U>(static_cast<unsigned short>(Camera_ShiftY)) + (step << 2));
 }
 
@@ -562,7 +562,7 @@ extern "C" void __cdecl EffectKind69_Run(void) {
 // four with +2 = 2 and +4 = 0..3; its own +0xB = 0, +1 up;
 // Sound_PlayEffect(0x203).
 extern "C" void __cdecl EffectKind69_Spawn(void) {
-    SetUL(at::kParent, AddressOf(Sprite_Current));
+    SetUL(::bof3::Img(at::kParent.v), AddressOf(Sprite_Current));
     unsigned char* e = Spawned("EffectKind69_Spawn", SH_CALL(Effect_FindFree)());
     e[0] = 1;
     e[5] = 0x69;
@@ -748,17 +748,17 @@ extern "C" void __cdecl EffectKind69_DrawColumn(unsigned width, unsigned base, u
     const auto shade = [] { return SharedScratch.b_08; };
     const auto quad = [](unsigned char* p) {
         long depth;
-        SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(At(Prim_VertexScratch_addr)), reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 0x8)),
-                                   reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 0x10)), reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 0x18)),
+        SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr))), reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 0x8)),
+                                   reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 0x10)), reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 0x18)),
                                    reinterpret_cast<float*>(p + 8), reinterpret_cast<float*>(p + 0x18),
                                    reinterpret_cast<float*>(p + 0x28), reinterpret_cast<float*>(p + 0x38), &depth);
         SH_CALL(Gte_PrimDepths4_10B)(p);
     };
     const auto shift = [](U delta) {
-        AddWord(at::kV0 + 2, delta);
-        AddWord(at::kV1 + 2, delta);
-        AddWord(at::kV2 + 2, delta);
-        AddWord(at::kV3 + 2, delta);
+        AddWord(::bof3::Img(at::kV0.v) + 2, delta);
+        AddWord(::bof3::Img(at::kV1.v) + 2, delta);
+        AddWord(::bof3::Img(at::kV2.v) + 2, delta);
+        AddWord(::bof3::Img(at::kV3.v) + 2, delta);
     };
     for (U i = 1; i < 0x12; ++i) {
         const U angle = ((static_cast<U>(S()[0xB]) + i) & 0xF) << 8;
@@ -888,7 +888,7 @@ extern "C" void __cdecl EffectKind69_DrawColumn(unsigned width, unsigned base, u
         p[0x36] = 1;
         quad(p);
         SH_CALL(Gfx_CommitPrim)(2, 0x44);
-        AddWord(at::kV0 + 2, 0u - d2);
+        AddWord(::bof3::Img(at::kV0.v) + 2, 0u - d2);
     }
 }
 
@@ -1024,7 +1024,7 @@ extern "C" void __cdecl EffectKind6C_Live(void) {
 // distance sar 7; +0 = 1, +1 = 0, the word +0x24 = 0, +3 = 0x40, +0x26 = 7, +2 =
 // 4.
 extern "C" void __cdecl EffectKind6C_ScatterSparks(void) {
-    Effect3c_ShardCursor = EffectKind30_Shards_addr;
+    Effect3c_ShardCursor = ::bof3::Img(EffectKind30_Shards_addr);
     for (unsigned left = at::kSparkCount; left != 0; --left) {
         SetUL(Spark() + 4, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
         SetUL(Spark() + 8, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
@@ -1060,7 +1060,7 @@ extern "C" unsigned char __cdecl EffectKind6C_DrawSparks(void) {
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, tpage, 0);
     SH_CALL(Gfx_CommitPrim)(2, 0xC);
     unsigned char any = 0;
-    U c = EffectKind30_Shards_addr;
+    U c = ::bof3::Img(EffectKind30_Shards_addr);
     Effect3c_ShardCursor = c;
     for (unsigned n = at::kSparkCount; n != 0; --n) {
         if (At(c)[0] != 0) {

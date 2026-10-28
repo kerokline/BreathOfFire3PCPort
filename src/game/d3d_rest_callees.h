@@ -22,7 +22,7 @@ constexpr U kRetOnly = bof3::addr::BareRet;
 // kScaleX: now D3d_ScaleX (symbols.toml). D3d_ScaleX, float
 // kScaleY: now D3d_ScaleY (symbols.toml). D3d_ScaleY, float
 // kVertices: now D3d_Vertices (symbols.toml). D3d_Vertices, 4 x D3DTLVERTEX
-constexpr U kTexCoords = 0x7CA9E0;     // D3d_TexCoords, 256 floats
+constexpr ::bof3::image::Va kTexCoords{0x7CA9E0};     // D3d_TexCoords, 256 floats
 // kDrawTpage: now Gfx_DrawTpage (symbols.toml). Gfx_DrawTpage, u16 (read as a dword, masked)
 // kDevice: now D3d_Device (symbols.toml). D3d_Device, an IDirect3DDevice3 *
 constexpr rdata::Const kRhwNumerator{0x5C4610};  // float 0.1: rhw = 0.1 / z
@@ -38,11 +38,11 @@ constexpr rdata::Const kModulate{0x5C4614};      // float 1/128: the PSX's textu
 // kAlphaOpCache: now D3d_AlphaOpCache (symbols.toml). D3d_AlphaOpCache, dword: 1 when ALPHAOP is MODULATE
 
 // D3d_AfterDraw: the capture block (Display_Setup zeroes 0x7CADE8..0x7CAE03).
-constexpr U kCaptureReady = 0x7CADE8;  // u16: set to 1 after each capture
+constexpr ::bof3::image::Va kCaptureReady{0x7CADE8};  // u16: set to 1 after each capture
 // kCaptureW: now D3dRest_CaptureW (symbols.toml). u16: the texture's used width (0x140, or the texture's width below it)
 // kCaptureH: now D3dRest_CaptureH (symbols.toml). u16: its used height
-constexpr U kCaptureTexW = 0x7CADF0;   // dword: the texture's width (D3d_FitTextureSize's out_w)
-constexpr U kCaptureTexH = 0x7CADF2;   // dword: its height (out_h - overlapping the dword above)
+constexpr ::bof3::image::Va kCaptureTexW{0x7CADF0};   // dword: the texture's width (D3d_FitTextureSize's out_w)
+constexpr ::bof3::image::Va kCaptureTexH{0x7CADF2};   // dword: its height (out_h - overlapping the dword above)
 // kCaptureScale: now D3dRest_CaptureScale (symbols.toml). float: used width / 320
 // kCaptureSurface: now D3d_CaptureSurface (symbols.toml). IDirectDrawSurface4 *: the 320-wide plain surface
 // kCaptureTexSurface: now D3d_CaptureTexSurface (symbols.toml). IDirectDrawSurface4 *: the texture's surface

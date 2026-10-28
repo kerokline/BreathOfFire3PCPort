@@ -218,7 +218,7 @@ extern "C" void __cdecl EffectKind18Sub17_DrawPatch(U variant) {
     const std::int32_t x0 = (rv::As<records::EffectObject>(s)->x >> 9) - 0x4000;
     StoreFloat(reinterpret_cast<unsigned char*>(MapView_ScreenXY), static_cast<long double>(x0));
     const std::int32_t z0 = (rv::As<records::EffectObject>(s)->z >> 9) - 0x4000;
-    StoreFloat(At(MapView_ScreenXY_addr + 0x4), static_cast<long double>(z0));
+    StoreFloat(At(::bof3::Img(MapView_ScreenXY_addr) + 0x4), static_cast<long double>(z0));
     if (variant >= at::kPatchVariants)
         bof3::Fatal("EffectKind18Sub17_DrawPatch: variant %u, past the three bytes of each 0x65E1E8 record - the original "
                     "reads the next record's (docs/effect_5d.md section 7)",
@@ -226,7 +226,7 @@ extern "C" void __cdecl EffectKind18Sub17_DrawPatch(U variant) {
     const U page = variant == 0 ? 0x21800000u : 0x25800000u;
     const long double half = Fl(at::kHalfCell);
     for (U i = 0; i < at::kPatchCount; ++i) {
-        const U rec = at::kPatch + at::kPatchStride * i;
+        const U rec = ::bof3::Img(at::kPatch.v) + at::kPatchStride * i;
         SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, 0);
         const U row = i >> 2;
         const U dy = ((i & 3) + row - 1) & 0xFF;
@@ -276,9 +276,9 @@ extern "C" void __cdecl EffectKind18Sub17_CopyFrame(U frame) {
     unsigned char rect[8];
     SetWord(rect + 4, 0x20);
     SetWord(rect + 6, 0x40);
-    const U f = Index("EffectKind18Sub17_CopyFrame", I(frame), at::kFrameCount, at::kFrames);
-    SetWord(rect, B(at::kFrames + 2 * f) + 0x240u);
-    SetWord(rect + 2, B(at::kFrames + 2 * f + 1) + 0x100u);
+    const U f = Index("EffectKind18Sub17_CopyFrame", I(frame), at::kFrameCount, at::kFrames.v);
+    SetWord(rect, B(::bof3::Img(at::kFrames.v) + 2 * f) + 0x240u);
+    SetWord(rect + 2, B(::bof3::Img(at::kFrames.v) + 2 * f + 1) + 0x100u);
     const U to_x = (S()[0xB] + 0xCu) * 0x30u;
     SH_CALL(Gpu_SetDrawMove)(Gfx_PacketNext, rect, to_x, 0x100);
     SH_CALL(Gfx_CommitPrim)(6, 0x18);
@@ -547,22 +547,22 @@ extern "C" void __cdecl EffectKind18Sub19_Run(void) {
     if (s[2] == 0) {
         s[0xB] = s[0x36];
         s = S();
-        U k = Index(kWho, s[0xB], at::kSub19Count, at::kSub19X);
-        rv::As<records::EffectObject>(s)->x = (static_cast<U>(B(at::kSub19X + k)) << 7) - 0x3FC8u;
+        U k = Index(kWho, s[0xB], at::kSub19Count, at::kSub19X.v);
+        rv::As<records::EffectObject>(s)->x = (static_cast<U>(B(::bof3::Img(at::kSub19X.v) + k)) << 7) - 0x3FC8u;
         s = S();
-        k = Index(kWho, s[0xB], at::kSub19Count, at::kSub19Z);
-        rv::As<records::EffectObject>(s)->z = (static_cast<U>(B(at::kSub19Z + k)) - 0x80u) << 7;
+        k = Index(kWho, s[0xB], at::kSub19Count, at::kSub19Z.v);
+        rv::As<records::EffectObject>(s)->z = (static_cast<U>(B(::bof3::Img(at::kSub19Z.v) + k)) - 0x80u) << 7;
         s = S();
-        k = Index(kWho, s[0xB], at::kSub19Count, at::kSub19Height);
-        rv::As<records::EffectObject>(s)->height = static_cast<U>(S16(W(at::kSub19Height + 2 * k)));
+        k = Index(kWho, s[0xB], at::kSub19Count, at::kSub19Height.v);
+        rv::As<records::EffectObject>(s)->height = static_cast<U>(S16(W(::bof3::Img(at::kSub19Height.v) + 2 * k)));
         s = S();
         s[2] = static_cast<unsigned char>(s[2] + 1);
         s = S();
     }
     if ((Draw_PassFlags & 4) == 0) return;
-    const U k = Index(kWho, s[0xB], at::kSub19Count, at::kSub19X);
-    if (Abs(S16(W(at::kCameraX)) - static_cast<std::int32_t>(B(at::kSub19X + k)) + 6) > 10) return;
-    if (Abs(S16(W(at::kCameraZ)) - static_cast<std::int32_t>(B(at::kSub19Z + k)) + 6) > 10) return;
+    const U k = Index(kWho, s[0xB], at::kSub19Count, at::kSub19X.v);
+    if (Abs(S16(W(::bof3::Img(at::kCameraX.v))) - static_cast<std::int32_t>(B(::bof3::Img(at::kSub19X.v) + k)) + 6) > 10) return;
+    if (Abs(S16(W(::bof3::Img(at::kCameraZ.v))) - static_cast<std::int32_t>(B(::bof3::Img(at::kSub19Z.v) + k)) + 6) > 10) return;
     Sub19Draw();
 }
 
@@ -580,10 +580,10 @@ extern "C" void __cdecl EffectKind18Sub19_Run(void) {
 // linked on the record's row (dy 1); a draw mode (0xB5) before every fourth arc.
 extern "C" void __cdecl EffectKind18Sub68_Draw(void) {
     if ((Draw_PassFlags & 4) == 0) return;
-    if (Abs(S16(W(at::kCameraX)) - 0x2D) > 10) return;
-    if (Abs(S16(W(at::kCameraZ)) - 0x23) > 10) return;
+    if (Abs(S16(W(::bof3::Img(at::kCameraX.v))) - 0x2D) > 10) return;
+    if (Abs(S16(W(::bof3::Img(at::kCameraZ.v))) - 0x23) > 10) return;
     SetUL(reinterpret_cast<unsigned char*>(MapView_ScreenXY), 0xC6260000u);
-    SetUL(At(MapView_ScreenXY_addr + 0x4), 0xC63A0000u);
+    SetUL(At(::bof3::Img(MapView_ScreenXY_addr) + 0x4), 0xC63A0000u);
     U arc = 0;
     for (U a = 0; a < 0x8000; a += 0x1000, ++arc) {
         const U first = (arc & 0xFFFFFFF8u) == 0 ? 1 : 0;
@@ -645,7 +645,7 @@ extern "C" void __cdecl EffectKind18Sub1B_Run(void) {
         s = S();
     }
     if (s[9] == 0xF) {
-        SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), 0x1C);
+        SH_CALL(Flags_Clear)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C);
         SH_CALL(Effect_Release)();
     }
 }
@@ -664,7 +664,7 @@ extern "C" void __cdecl EffectKind18Sub43_Run(void) {
 // original 0x504F90 (sub-state 1): while the counter 0x903848 is 0xE, the quad
 // at (+9, +9); +9 up one; past 0x6C, Cond_ByteFE 1, the counter 0xF and +2 up.
 extern "C" void __cdecl EffectKind18Sub43_Glow(void) {
-    if (B(at::kCounter) != 0xE) return;
+    if (B(::bof3::Img(at::kCounter.v)) != 0xE) return;
     const unsigned char n = S()[9];
     SH_CALL(EffectKind18Sub43_DrawQuad)(n, n);
     unsigned char* s = S();
@@ -672,7 +672,7 @@ extern "C" void __cdecl EffectKind18Sub43_Glow(void) {
     s = S();
     if (s[9] > 0x6C) {
         Cond_ByteFE = 1;
-        B(at::kCounter) = 0xF;
+        B(::bof3::Img(at::kCounter.v)) = 0xF;
         s[2] = static_cast<unsigned char>(s[2] + 1);
     }
 }
@@ -680,7 +680,7 @@ extern "C" void __cdecl EffectKind18Sub43_Glow(void) {
 // original 0x504FE0 (sub-state 3): the counter at 0x1C: Cond_ByteFE 0 and a tail
 // jump to Effect_Release.
 extern "C" void __cdecl EffectKind18Sub43_End(void) {
-    if (B(at::kCounter) != 0x1C) return;
+    if (B(::bof3::Img(at::kCounter.v)) != 0x1C) return;
     Cond_ByteFE = 0;
     SH_CALL(Effect_Release)();
 }
@@ -734,7 +734,7 @@ extern "C" void __cdecl EffectKind18Sub1C_Start(void) {
     const U e = static_cast<U>(SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, e);
     s = S();
-    s[0xA] = B(at::kSub1CWaits + (((s[0x3A] & 1u) << 1) | (s[0x36] & 1u)));
+    s[0xA] = B(::bof3::Img(at::kSub1CWaits.v) + (((s[0x3A] & 1u) << 1) | (s[0x36] & 1u)));
     const U r = static_cast<U>(SH_CALL(Rand)());
     s = S();
     s[9] = static_cast<unsigned char>((r & 0x2F) + s[0xA]);
@@ -888,7 +888,7 @@ extern "C" U __cdecl EffectKind18Sub1C_OnScreen(void) {
     long depth[2];
     SH_CALL(Gte_RotTransPers)(Vx(0), ScreenXY(), depth);
     const float low = Fl(at::kScreenLow), high = Fl(at::kScreenHigh);
-    const float sx = Fl(AddressOf(MapView_ScreenXY)), sy = Fl(at::kScreenY);
+    const float sx = Fl(AddressOf(MapView_ScreenXY)), sy = Fl(::bof3::Img(at::kScreenY.v));
     if (!(sx >= low)) return 0;
     if (sx > high) return 0;
     if (!(sy >= low)) return 0;
@@ -909,7 +909,7 @@ extern "C" void __cdecl EffectKind18Sub1D_Run(void) {
 // (1, 0); +2 up.
 extern "C" void __cdecl EffectKind18Sub1D_Start(void) {
     unsigned char* s = S();
-    s[0xA] = B(at::kSub1DWaits + (((s[0x3A] & 1u) << 1) | (s[0x36] & 1u)));
+    s[0xA] = B(::bof3::Img(at::kSub1DWaits.v) + (((s[0x3A] & 1u) << 1) | (s[0x36] & 1u)));
     s = S();
     s[9] = s[0xA];
     s = S();
@@ -1024,7 +1024,7 @@ extern "C" void __cdecl EffectKind18Sub14_Run(void) {
 // original 0x5059C0 (sub-state 0): area flag 0x3E (0x903FD8) set: the strip at
 // half (0x40) and Effect_Release; +2 up either way.
 extern "C" void __cdecl EffectKind18Sub14_Start(void) {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), 0x3E)) {
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x48), 0x3E)) {
         SH_CALL(EffectKind18Sub14_ScaleClut)(0x40);
         SH_CALL(Effect_Release)();
     }
@@ -1034,7 +1034,7 @@ extern "C" void __cdecl EffectKind18Sub14_Start(void) {
 // original 0x5059F0 (sub-state 1): once area flag 0x3E is set: +9 up one, the
 // strip at 0x80 - (+9 >> 1); at 0x80 or past, a tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind18Sub14_Dim(void) {
-    if (!SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), 0x3E)) return;
+    if (!SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x48), 0x3E)) return;
     unsigned char* s = S();
     s[9] = static_cast<unsigned char>(s[9] + 1);
     SH_CALL(EffectKind18Sub14_ScaleClut)(0x80u - (S()[9] >> 1));
@@ -1046,10 +1046,10 @@ extern "C" void __cdecl EffectKind18Sub14_Dim(void) {
 // Gfx_ClutStripDirty set.
 extern "C" void __cdecl EffectKind18Sub14_ScaleClut(U scale) {
     for (U k = 0; k < at::kClutStripWords; ++k) {
-        const U w = W(at::kClutStrip + 2 * k);
+        const U w = W(::bof3::Img(at::kClutStrip.v) + 2 * k);
         const U blue = static_cast<U>(I(((w >> 10) & 0x1F) * scale) / 128);
         const U red = static_cast<U>(I((w & 0x1F) * scale) / 128);
-        SetWord(At(Gfx_ClutStrip_addr + 0x740 + 2 * k), (blue << 10) | red | (w & 0x83E0));
+        SetWord(At(::bof3::Img(Gfx_ClutStrip_addr) + 0x740 + 2 * k), (blue << 10) | red | (w & 0x83E0));
     }
     Gfx_ClutStripDirty = 1;
 }
@@ -1068,8 +1068,8 @@ extern "C" void __cdecl EffectKind18Sub1E_Run(void) {
 // way.
 extern "C" void __cdecl EffectKind18Sub14_WaitFlag(void) {
     static const char kWho[] = "EffectKind18Sub14_WaitFlag";
-    const U place = Place(kWho, at::kSub14Count, at::kSub14Flags);
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), B(at::kSub14Flags + place))) {
+    const U place = Place(kWho, at::kSub14Count, at::kSub14Flags.v);
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x48), B(::bof3::Img(at::kSub14Flags.v) + place))) {
         SH_CALL(Sound_PlayEffect)(0x20A);
         const U first = SH_CALL(Effect_FindFree)() & 0xFFu;
         if (first != 0xFF) {
@@ -1077,10 +1077,10 @@ extern "C" void __cdecl EffectKind18Sub14_WaitFlag(void) {
             unsigned char* const e = Record(kWho, first);
             e[0] = 1;
             e[5] = 0x6E;
-            U k = Index(kWho, S16(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole)), at::kSub14Count, at::kSub14Spawn);
-            SetUL(e + 0x34, UL(at::kSub14Spawn + 8 * k));
-            k = Index(kWho, S16(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole)), at::kSub14Count, at::kSub14Spawn);
-            SetUL(e + 0x38, UL(at::kSub14Spawn + 4 + 8 * k));
+            U k = Index(kWho, S16(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole)), at::kSub14Count, at::kSub14Spawn.v);
+            SetUL(e + 0x34, UL(::bof3::Img(at::kSub14Spawn.v) + 8 * k));
+            k = Index(kWho, S16(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole)), at::kSub14Count, at::kSub14Spawn.v);
+            SetUL(e + 0x38, UL(::bof3::Img(at::kSub14Spawn.v) + 4 + 8 * k));
             SetUL(e + 0x3C, 0x7800000);
         }
         const U second = SH_CALL(Effect_FindFree)() & 0xFFu;
@@ -1115,12 +1115,12 @@ extern "C" void __cdecl EffectKind18Sub14_Fade(void) {
 extern "C" void __cdecl EffectKind18Sub14_DrawTiles(U shade, U unused) {
     (void)unused;
     static const char kWho[] = "EffectKind18Sub14_DrawTiles";
-    U place = Place(kWho, at::kSub14Count, at::kSub14Rect);
-    U row = B(at::kSub14Rect + 4 * place + 1);
-    if (row >= B(at::kSub14Rect + 4 * place + 3)) return;
+    U place = Place(kWho, at::kSub14Count, at::kSub14Rect.v);
+    U row = B(::bof3::Img(at::kSub14Rect.v) + 4 * place + 1);
+    if (row >= B(::bof3::Img(at::kSub14Rect.v) + 4 * place + 3)) return;
     do {
-        U column = B(at::kSub14Rect + 4 * place);
-        if (column < B(at::kSub14Rect + 4 * place + 2)) {
+        U column = B(::bof3::Img(at::kSub14Rect.v) + 4 * place);
+        if (column < B(::bof3::Img(at::kSub14Rect.v) + 4 * place + 2)) {
             U parity = column + row;
             do {
                 if (parity & 1) {
@@ -1165,12 +1165,12 @@ extern "C" void __cdecl EffectKind18Sub14_DrawTiles(U shade, U unused) {
                 }
                 ++parity;
                 ++column;
-                place = Place(kWho, at::kSub14Count, at::kSub14Rect);
-            } while (column < B(at::kSub14Rect + 4 * place + 2));
+                place = Place(kWho, at::kSub14Count, at::kSub14Rect.v);
+            } while (column < B(::bof3::Img(at::kSub14Rect.v) + 4 * place + 2));
         }
-        place = Place(kWho, at::kSub14Count, at::kSub14Rect);
+        place = Place(kWho, at::kSub14Count, at::kSub14Rect.v);
         ++row;
-    } while (row < B(at::kSub14Rect + 4 * place + 3));
+    } while (row < B(::bof3::Img(at::kSub14Rect.v) + 4 * place + 3));
 }
 
 // ===========================================================================
@@ -1311,7 +1311,7 @@ extern "C" void __cdecl EffectKind18Sub21_DrawSpiral(U n) {
 // projected (Gte_RotTransPers to the dot) and linked (dy 1); a draw mode after.
 extern "C" void __cdecl EffectKind18Sub52_Draw(void) {
     unsigned char* s = S();
-    const U near = Abs(S16(W(at::kCameraZ)) - S16(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole))) + Abs(S16(W(at::kCameraX)) - S16(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole)));
+    const U near = Abs(S16(W(::bof3::Img(at::kCameraZ.v))) - S16(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole))) + Abs(S16(W(::bof3::Img(at::kCameraX.v))) - S16(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole)));
     if (I(near) > 0x14) return;
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);
     s = S();
@@ -1321,7 +1321,7 @@ extern "C" void __cdecl EffectKind18Sub52_Draw(void) {
     for (U ring = 0; ring < 0x10; ++ring) {
         s = S();
         const U grey = 0xFFu - ((s[9] - ring * 0x10) & 0xFF);
-        const std::int32_t sign = S8(B(at::kSub52Signs + (ring & 1)));
+        const std::int32_t sign = S8(B(::bof3::Img(at::kSub52Signs.v) + (ring & 1)));
         for (U turn = 0; turn < 0x1000; turn += 0x100) {
             unsigned char* p = Gfx_PacketNext;
             SH_CALL(Gpu_SetTile1)(p);
@@ -1365,11 +1365,11 @@ namespace {
 
 constexpr char kSub22[] = "EffectKind18Sub22";
 
-U Sub22Place() { return Place(kSub22, at::kSub22Count, at::kSub22Rect); }
-U Rect(U place, unsigned k) { return B(at::kSub22Rect + 4 * place + k); }
+U Sub22Place() { return Place(kSub22, at::kSub22Count, at::kSub22Rect.v); }
+U Rect(U place, unsigned k) { return B(::bof3::Img(at::kSub22Rect.v) + 4 * place + k); }
 
 // The record's story flag (+0x34's low byte, which sub-state 0 sets) tested.
-bool Sub22Flag() { return SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), S()[0x34]) != 0; }
+bool Sub22Flag() { return SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), S()[0x34]) != 0; }
 
 // Sub-states 2 and 4's turn: +9 0, +2 `next` (or up one), +0x3A the step;
 // the map written; sounds 0x202 and 0x201.
@@ -1386,16 +1386,16 @@ void Sub22Turn() {
 // +2 2; clear: +0x3E the height and +2 4. The map written, then the draw (a
 // tail jump).
 extern "C" void __cdecl EffectKind18Sub22_Start(void) {
-    U place = Place(kSub22, at::kSub22Count, at::kSub22Flags);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->x_frac, B(at::kSub22Flags + place));
+    U place = Place(kSub22, at::kSub22Count, at::kSub22Flags.v);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->x_frac, B(::bof3::Img(at::kSub22Flags.v) + place));
     const bool set = Sub22Flag();
     unsigned char* const s = S();
-    place = Place(kSub22, at::kSub22Count, at::kSub22Heights);
+    place = Place(kSub22, at::kSub22Count, at::kSub22Heights.v);
     if (set) {
-        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, W(at::kSub22Heights + 2 * place) - 0x80);
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, W(::bof3::Img(at::kSub22Heights.v) + 2 * place) - 0x80);
         S()[2] = 2;
     } else {
-        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, W(at::kSub22Heights + 2 * place));
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, W(::bof3::Img(at::kSub22Heights.v) + 2 * place));
         S()[2] = 4;
     }
     SH_CALL(EffectKind18Sub22_SetMap)();
@@ -1450,15 +1450,15 @@ extern "C" void __cdecl EffectKind18Sub22_WaitClear(void) {
 // (-ground - 2 +0x3E) / 32. Indexes into the area block unchecked, as the
 // original's: the rectangles are the area's own cells.
 extern "C" void __cdecl EffectKind18Sub22_SetMap(void) {
-    const U flag = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), S()[0x34]) & 0xFFu;
+    const U flag = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), S()[0x34]) & 0xFFu;
     U count = 0;
     if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x_whole) == 0) {
         U off = 0;
-        U x = B(at::kSub22Rect);
-        if (x < B(at::kSub22Rect + 2)) {
+        U x = B(::bof3::Img(at::kSub22Rect.v));
+        if (x < B(::bof3::Img(at::kSub22Rect.v) + 2)) {
             do {
-                U z = B(at::kSub22Rect + 1 + off);
-                if (z < B(at::kSub22Rect + 3 + off)) {
+                U z = B(::bof3::Img(at::kSub22Rect.v) + 1 + off);
+                if (z < B(::bof3::Img(at::kSub22Rect.v) + 3 + off)) {
                     do {
                         const unsigned char value = S()[2] != 2 ? 0x11 : 0;
                         const U width = AreaMap_Header[0];
@@ -1468,7 +1468,7 @@ extern "C" void __cdecl EffectKind18Sub22_SetMap(void) {
                 }
                 off = 4 * Sub22Place();
                 ++x;
-            } while (x < B(at::kSub22Rect + 2 + off));
+            } while (x < B(::bof3::Img(at::kSub22Rect.v) + 2 + off));
         }
     } else {
         U place = Sub22Place();
@@ -1477,7 +1477,7 @@ extern "C" void __cdecl EffectKind18Sub22_SetMap(void) {
             do {
                 U z = Rect(place, 1);
                 if (z < Rect(place, 3)) {
-                    const U row = at::kSub22Corners + at::kSub22CornerRow * flag;
+                    const U row = ::bof3::Img(at::kSub22Corners.v) + at::kSub22CornerRow * flag;
                     do {
                         if (count >= at::kSub22CornerRow || flag > 1)
                             bof3::Fatal("EffectKind18Sub22_SetMap: corner byte %u of row %u, past the two rows of eleven at "
@@ -1526,18 +1526,18 @@ extern "C" void __cdecl EffectKind18Sub22_SetMap(void) {
 // or, negative, committed to slot 3.
 extern "C" void __cdecl EffectKind18Sub22_Draw(void) {
     static const char kWho[] = "EffectKind18Sub22_Draw";
-    U place = Place(kWho, at::kSub22Count, at::kSub22Pieces);
-    U k = B(at::kSub22Pieces + 2 * place);
-    if (k >= B(at::kSub22Pieces + 2 * place + 1)) return;
+    U place = Place(kWho, at::kSub22Count, at::kSub22Pieces.v);
+    U k = B(::bof3::Img(at::kSub22Pieces.v) + 2 * place);
+    if (k >= B(::bof3::Img(at::kSub22Pieces.v) + 2 * place + 1)) return;
     do {
-        const U piece = at::kSub22Piece + 8 * Index(kWho, I(k), at::kSub22PieceCount, at::kSub22Piece);
+        const U piece = ::bof3::Img(at::kSub22Piece.v) + 8 * Index(kWho, I(k), at::kSub22PieceCount, at::kSub22Piece.v);
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
         U d = UL(piece);
         const U x = ((d >> 24) << 7) - 0x3FC0;
         const U z = (((d >> 16) & 0xFF) << 7) - 0x3FC0;
-        const U shape = at::kSub22Shapes + 12 * Index(kWho, (d >> 8) & 0xFF, at::kSub22ShapeCount, at::kSub22Shapes);
+        const U shape = ::bof3::Img(at::kSub22Shapes.v) + 12 * Index(kWho, (d >> 8) & 0xFF, at::kSub22ShapeCount, at::kSub22Shapes.v);
         for (unsigned v = 0; v < 4; ++v) {
             const U o = shape + 3 * v;
             SetV(8 * v, x - (static_cast<U>(S8(B(o))) << 7));
@@ -1550,16 +1550,16 @@ extern "C" void __cdecl EffectKind18Sub22_Draw(void) {
         SH_CALL(Prim_SetTexture)(UL(piece + 4), p, 1);
         d = UL(piece);
         unsigned char* s = S();
-        const U kind = Index(kWho, d & 0xFF, at::kSub22RowKinds, at::kSub22Rows);
-        const std::int32_t row = S8(B(at::kSub22Rows + (s[2] == 2 ? 1 : 0) + 2 * kind));
+        const U kind = Index(kWho, d & 0xFF, at::kSub22RowKinds, at::kSub22Rows.v);
+        const std::int32_t row = S8(B(::bof3::Img(at::kSub22Rows.v) + (s[2] == 2 ? 1 : 0) + 2 * kind));
         if (row < 0)
             SH_CALL(Gfx_CommitPrim)(3, 0x48);
         else
             SH_CALL(MapView_LinkPrimAt)((d >> 8) & 0xFF0000, d & 0xFF0000, row, 0x48);
         s = S();
         ++k;
-        place = Place(kWho, at::kSub22Count, at::kSub22Pieces);
-    } while (k < B(at::kSub22Pieces + 2 * place + 1));
+        place = Place(kWho, at::kSub22Count, at::kSub22Pieces.v);
+    } while (k < B(::bof3::Img(at::kSub22Pieces.v) + 2 * place + 1));
 }
 
 void Effect5D_Inject() {

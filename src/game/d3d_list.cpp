@@ -63,7 +63,7 @@ void PutWord(U address, U v) {
 }
 
 void Scene(U offset) {   // 0x24 BeginScene, 0x28 EndScene; the device re-read each time
-    void** device = *reinterpret_cast<void** volatile*>(At(D3d_Device_addr));
+    void** device = *reinterpret_cast<void** volatile*>(At(::bof3::Img(D3d_Device_addr)));
     reinterpret_cast<long(__stdcall*)(void*)>((*reinterpret_cast<void***>(device))[offset / 4])(device);
 }
 
@@ -73,7 +73,7 @@ void Scene(U offset) {   // 0x24 BeginScene, 0x28 EndScene; the device re-read e
 // Gfx_TexCacheKey.
 void DrawMode(U p) {
     Gfx_DrawEnable = At(p + 6)[0] & 1;
-    At(Gfx_DrawEnable_addr - 1)[0] = (At(p + 6)[0] >> 1) & 1;
+    At(::bof3::Img(Gfx_DrawEnable_addr) - 1)[0] = (At(p + 6)[0] >> 1) & 1;
     Gfx_DrawTpage = Word(p + 4);
     const U key = Long(p + 8);
     if (key != 0) {

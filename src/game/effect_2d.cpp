@@ -67,8 +67,8 @@ void StoreFloat(unsigned char* p, float f) { std::memcpy(p, &f, sizeof f); }
 // The x87 at the game's 53-bit precision: a float plus or less a whole number
 // rounded once to 53 bits, then to a float at the store.
 void StoreSum(unsigned char* p, float a, int b) { StoreFloat(p, static_cast<float>(static_cast<double>(a) + static_cast<double>(b))); }
-unsigned char* Row() { return *reinterpret_cast<unsigned char**>(At(Chapter_FlagRow_addr)); }
-unsigned char* Colour() { return At(Effect2d_PanelColour_addr); } // [0] 0x6761C4, [1] 0x6761C5, [2] 0x6761C6
+unsigned char* Row() { return *reinterpret_cast<unsigned char**>(At(::bof3::Img(Chapter_FlagRow_addr))); }
+unsigned char* Colour() { return At(::bof3::Img(Effect2d_PanelColour_addr)); } // [0] 0x6761C4, [1] 0x6761C5, [2] 0x6761C6
 
 // mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + which]; jmp [table +
 // eax * 4]: the table's `entries` handlers read in place (the fuzz swaps the
@@ -512,7 +512,7 @@ extern "C" void __cdecl EffectKind46_Count(void) {
     s[2] = static_cast<unsigned char>(s[2] + 1);
     s = S();
     if (s[2] == 5) {
-        At(at::kCounter0)[0] = static_cast<unsigned char>(At(at::kCounter0)[0] + 1);
+        At(::bof3::Img(at::kCounter0.v))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kCounter0.v))[0] + 1);
         s[1] = 4;
     } else {
         s[1] = static_cast<unsigned char>((s[2] & 1) + 1);
@@ -604,13 +604,13 @@ extern "C" void __cdecl EffectKind47_Start(void) {
     unsigned char model = ObjTrio[0].animation;
     if (self[0xB] == 0) model = Sprite_Objects[2].animation;
     unsigned k = 0;
-    while (k < 5 && model != At(at::kTwinAnims + 3 * k)[0]) ++k;
-    const unsigned char* const triple = At(at::kTwinAnims + 3 * k);
+    while (k < 5 && model != At(::bof3::Img(at::kTwinAnims.v) + 3 * k)[0]) ++k;
+    const unsigned char* const triple = At(::bof3::Img(at::kTwinAnims.v) + 3 * k);
     SharedScratch.w_00 = self[3];
-    SH_CALL(EventOp_0x)(At(at::kTwinOps + 0x11u * self[0xB]));
+    SH_CALL(EventOp_0x)(At(::bof3::Img(at::kTwinOps.v) + 0x11u * self[0xB]));
     SH_CALL(Sprite_SetAnimationAt)(triple[1], triple[2]);
     SharedScratch.w_00 = self[4];
-    SH_CALL(EventOp_0x)(At(at::kTwinOps + 0x11u * self[0xB]));
+    SH_CALL(EventOp_0x)(At(::bof3::Img(at::kTwinOps.v) + 0x11u * self[0xB]));
     SH_CALL(Sprite_SetAnimationAt)(triple[1], triple[2]);
     Sprite_Current = self;
     unsigned char* a = SpriteRec(who, self[3]);
@@ -639,7 +639,7 @@ extern "C" void __cdecl EffectKind47_Start(void) {
 // +0 = 0 and +1 = 2.
 extern "C" void __cdecl EffectKind47_Blink(void) {
     unsigned char* const s = S();
-    unsigned char* const model = s[0xB] != 0 ? rv::Bytes(ObjTrio) : At(Sprite_Objects_addr + 0x148);
+    unsigned char* const model = s[0xB] != 0 ? rv::Bytes(ObjTrio) : At(::bof3::Img(Sprite_Objects_addr) + 0x148);
     if (s[9] != 0) {
         model[0] = static_cast<unsigned char>(model[0] | 0x40);
         s[9] = static_cast<unsigned char>(s[9] - 1);
@@ -898,7 +898,7 @@ extern "C" void __cdecl EffectKind49_V2Run(void) {
 // 0x10000, the height +0x3C up +0x14 - the glow lifted along its arc at once;
 // Sound_PlayEffect(0x202); +0x14 negated; +2 up.
 extern "C" void __cdecl EffectKind49_V2Launch(void) {
-    SetWord(At(EffectKind30_Shards_addr + 0x51e), 0xC0);
+    SetWord(At(::bof3::Img(EffectKind30_Shards_addr) + 0x51e), 0xC0);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, 0);
     for (unsigned i = 0; i < 16; ++i) {
         rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y) + 0x800000u);
@@ -913,8 +913,8 @@ extern "C" void __cdecl EffectKind49_V2Launch(void) {
 namespace {
 // Variant 2's glow record 0x92C060 stepped (0x4794D0) and drawn (0x4796B0).
 void Glow() {
-    SH_AT(void (__cdecl*)(unsigned char*), at::kGlowStep)(At(EffectKind30_Shards_addr + 0xe0));
-    SH_AT(void (__cdecl*)(unsigned char*), at::kGlowDraw)(At(EffectKind30_Shards_addr + 0xe0));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kGlowStep)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kGlowDraw)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0));
 }
 }  // namespace
 
@@ -952,7 +952,7 @@ extern "C" void __cdecl EffectKind49_V2Wait(void) {
 extern "C" void __cdecl EffectKind49_V2Rise(void) {
     Glow();
     unsigned char* const s = S();
-    SetWord(At(EffectKind30_Shards_addr + 0x51e), Word(At(EffectKind30_Shards_addr + 0x51e)) + 6u);
+    SetWord(At(::bof3::Img(EffectKind30_Shards_addr) + 0x51e), Word(At(::bof3::Img(EffectKind30_Shards_addr) + 0x51e)) + 6u);
     s[9] = static_cast<unsigned char>(s[9] - 1);
     if (s[9] != 0) return;
     s[9] = 0x20;
@@ -964,7 +964,7 @@ extern "C" void __cdecl EffectKind49_V2Rise(void) {
 extern "C" void __cdecl EffectKind49_V2Sink(void) {
     Glow();
     unsigned char* const s = S();
-    SetWord(At(EffectKind30_Shards_addr + 0x51e), Word(At(EffectKind30_Shards_addr + 0x51e)) + 0xFFF4u);
+    SetWord(At(::bof3::Img(EffectKind30_Shards_addr) + 0x51e), Word(At(::bof3::Img(EffectKind30_Shards_addr) + 0x51e)) + 0xFFF4u);
     s[9] = static_cast<unsigned char>(s[9] - 1);
     if (s[9] == 0) s[2] = static_cast<unsigned char>(s[2] + 1);
 }
@@ -999,19 +999,19 @@ extern "C" void __cdecl EffectKind49_V3Start(void) {
 extern "C" void __cdecl EffectKind49_V3Burst(void) {
     unsigned char* s = S();
     const unsigned step = s[9];
-    if ((s[0xC] & At(at::kBurstMask)[step]) == 0) {
-        const unsigned char add = At(at::kBurstCount)[step];
-        unsigned char* const anchor = *reinterpret_cast<unsigned char**>(At(Effect2d_DustAnchor_addr));
+    if ((s[0xC] & At(::bof3::Img(at::kBurstMask.v))[step]) == 0) {
+        const unsigned char add = At(::bof3::Img(at::kBurstCount.v))[step];
+        unsigned char* const anchor = *reinterpret_cast<unsigned char**>(At(::bof3::Img(Effect2d_DustAnchor_addr)));
         SetWord(anchor + 0x10, Word(anchor + 0x10) + add);
         s = S();
-        if (At(at::kBurstCount)[s[9]] != 0) {
+        if (At(::bof3::Img(at::kBurstCount.v))[s[9]] != 0) {
             unsigned char n = 0;
             do {
                 unsigned char* const dust = SH_AT(unsigned char* (__cdecl*)(), at::kDustFindFree)();
                 if (dust != nullptr) SH_AT(void (__cdecl*)(unsigned char*), at::kDustStart)(dust);
                 s = S();
                 n = static_cast<unsigned char>(n + 1);
-            } while (n < At(at::kBurstCount)[s[9]]);
+            } while (n < At(::bof3::Img(at::kBurstCount.v))[s[9]]);
         }
     }
     if ((s[0xC] & 0xF) == 0) s[9] = static_cast<unsigned char>(s[9] + 1);
