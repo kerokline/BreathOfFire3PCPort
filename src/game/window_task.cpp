@@ -286,7 +286,7 @@ extern "C" void __cdecl Field_RunTaskRecords(void) {
             const unsigned handler = record[1];
             if (handler >= 9)
                 bof3::Fatal("window record %u names handler %u; the original's stack table holds nine",
-                            static_cast<unsigned>((a - WindowRecords_addr) / 0x24), handler);
+                            static_cast<unsigned>((a - ::bof3::Img(WindowRecords_addr)) / 0x24), handler);
             Widescreen_SlideBefore(record);
             g.records[handler]();
             Widescreen_SlideAfter(record);

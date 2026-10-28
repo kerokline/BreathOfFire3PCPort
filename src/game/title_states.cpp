@@ -807,7 +807,7 @@ struct Coverage {
     unsigned state_advanced[8];   // rounds in which a state handler moved Title_State on by one
     unsigned demo_over, demo_start, badge_off, badge_drawn, blink, music_stopped, loops;
 } g_cover;
-unsigned Byte(const State& s, std::uint32_t address) { return s.memory[address - bof3::addr::Task_Records]; }
+unsigned Byte(const State& s, std::uint32_t address) { return s.memory[address - ::bof3::Img(bof3::addr::Task_Records)]; }
 unsigned Half(const State& s, std::uint32_t address) { return Byte(s, address) | Byte(s, address + 1) << 8; }
 bool Logged(const State& s, std::uint32_t what) {
     for (unsigned i = 0; i < s.log_n && i < kLog; ++i) if (s.log[i].what == what) return true;
