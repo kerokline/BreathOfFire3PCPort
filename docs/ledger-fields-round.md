@@ -584,6 +584,75 @@ so the ini can neither pin k = 2 nor say "follow the display"
 ([`known-defects.md`](known-defects.md)); the presets' launcher work takes
 the fix with it, DIV-0036's switch and prose updated to match.
 
+### D0 as run (2026-10-28, off `ledger-fields/stage-d` at `de7aeb3d`)
+
+One Opus agent, worktree `C:\Users\kerok\bof3x-runs\lfd1028\wt_d0`,
+branch `ledger-fields/d0`; report `lfd1028\d0\REPORT.md`. The player's
+switch, the launcher's key, the tools and the ledger; not the Configure
+page, the registry or the presets (D1, D2).
+
+**The coordinator's decisions, as built:**
+
+1. **Both hosts read `BOF3X_OFF`** (`src/hook/detour.cpp`): `PatchBytes`
+   and a non-instrument `RetargetCall` ask `CodeOff(name)`, which answers
+   `BOF3X_ORIGINAL` (unchanged, `WantsOriginal`), else `BOF3X_OFF`
+   (`WantsOff`, the same `NameListed`), else on; the `OFF` log line names
+   the variable. A name in both is `BOF3X_ORIGINAL`'s. `Inject` stops on a
+   non-instrument detour named in `BOF3X_OFF` (bare or `-name`; `*` does
+   not reach it) with a `Fatal` that names it and says the original
+   function is the hosted build's `BOF3X_ORIGINAL`. `InjectReport` counts
+   the code names asked for and refuses every name in `BOF3X_OFF` (bare or
+   after `-`) that no `PatchBytes` / `RetargetCall` of the start-up asked
+   for. `RefuseHostedSwitches` is unchanged. *My choices:* a separate
+   `WantsOff` beside `WantsOriginal` (the class is fixed by the call, so an
+   argument bought nothing); `BOF3X_OFF` read once into a static buffer
+   (injection is single-threaded); a `-name` must be a code name too, since
+   an exclusion that matches nothing is as silent as a misspelt name; an
+   instrument hook's name is refused by the end-of-injection check (the
+   input recorder's and the state hash's `RetargetCall`s run after
+   `InjectReport`, in `InputScript_Start`, so they are never "asked for").
+2. **The launcher's `off=`** (`src/launcher/config.cpp`): kept as written,
+   written back as read with a three-line ASD-STE100 comment, sent as
+   `BOF3X_OFF` to either host when the environment has none. Not added to
+   `HostedOnlyAsked`. `tools/launcher_host/config_tests.cpp` `TestOff`: the
+   round trip, both hosts, the environment winning, the empty default (332
+   checks, 0 failures).
+3. **The ledger.** `ledger_switches.py`: `code` gives `yes`; `--check`
+   fails if `src/` stops reading `BOF3X_OFF` or the launcher `off=`.
+   `ledger_check.py`: `cheap` refused with "was retired by stage D
+   (2026-10-28) ... write yes"; DIV-0176 is a `yes` fixture now, the cases
+   that used it as `cheap` rewritten (52 cases, 49 before).
+   `DIVERGENCE.md`: the Entry format's `Player:` line and table (the
+   `cheap` row folded into `yes`, with the retirement note), the 67 entries
+   `Player: yes - BOF3X_OFF=<names> (ini off=)` and a last `Reversible?`
+   line "A player turns it off with `BOF3X_OFF=<names>` (the ini's
+   `off=`)." (`lfd1028\d0\edit_ledger.py`; DIV-0022's "No config toggle."
+   dropped, the sentence made it false); DIV-0141 and 0148 say the
+   language is the switch, DIV-0145 and 0147 the hosted build's
+   `BOF3X_ORIGINAL=Game_WndProc`. **`Player:` now yes 126, costly 28,
+   never 30.** `analysis/ledger_switches.tsv` regenerated.
+4. **`launcher-settings.md`** section 3's table row and section 3.2.
+
+**Finding (for the coordinator; not numbered):** 23 of the 83 code names
+are asked for only under a setting, so the end-of-injection check refuses
+them in a start without it. A plain exe-host self-test (`--no-config`)
+asks for 60 code names, 58 under `BOF3X_OFF=*` (two are asked for only
+when an earlier one is on). Not asked in a plain start: the language
+layouts (`BattleBannerCentre`, `BattleListTitleCentre`,
+`BattleResultExpLayout`, `BoardYesNoLayout`, `ConfigController`,
+`ConfigJapaneseIcons`, `ConfigText`, `FormationNameCentre`,
+`MasterAskLayout`, `MasterPupilLabel`, `MenuTitleCentre`, `MenuVerbs`,
+`PauseText`, `SaveNameInset`, `ShopAskRow`, `ShopYesNoLayout`,
+`TitleMenu_Widths`, `TradeConfirmLayout`, `TradeLeaveLayout`,
+`YesNoLayout`), `Widescreen`, `Gfx_FilterPoint`, `Cheat_StealAlways`. So
+an `off=YesNoLayout` written under a Latin language stops the game once
+the player picks the original text. The presets (D1/D2) should send a
+name only where its entry's `Languages:` (and wide or filter setting)
+holds, or the check should know every code name at build time (a table
+of the 83 checked against `src/` by `ledger_switches.py --check`) and
+only log a known name that is not in force. The brief's rule is built as
+written; the choice is the coordinator's.
+
 ## 6. For the owner
 
 1. **The field set** of section 1: the five names and their values. Is
