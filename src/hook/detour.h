@@ -35,6 +35,10 @@ void VerifyImage();
 // `instrument`: a probe that wraps Capcom's function and changes nothing it
 // does (the Rand counter) is not game code, and neither the name nor `*`
 // switches it off - as RetargetCall's flag below.
+//
+// BOF3X_OFF (the player's switch, below PatchBytes) does not reach a detour:
+// a non-instrument detour whose name stands in it, bare or as `-NAME`, is a
+// Fatal that points at the hosted build's BOF3X_ORIGINAL.
 void Inject(const char* name, std::uint32_t original, void* ours, bool instrument = false);
 
 // Re-aims ONE relative call inside an original function at ours, leaving the
@@ -60,6 +64,16 @@ bool RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, 
 // check); outside it the write is the same in both hosts.
 bool PatchBytes(const char* name, std::uint32_t at, const std::uint8_t* expected,
                 const std::uint8_t* replacement, std::uint32_t count);
+
+// BOF3X_OFF, the player's switch (docs/launcher-settings.md, "off="; the ini
+// key off= sends it): the names of PatchBytes and RetargetCall - the code
+// names, whose original behaviour our code holds already - in BOF3X_ORIGINAL's
+// list syntax (`*` for every code name, `-NAME` to take one back out). Both
+// hosts read it. A code name in either variable is off; the OFF log line says
+// which variable turned it off, and BOF3X_ORIGINAL's hosted A/B meaning is
+// unchanged. A RetargetCall with `instrument` ignores it, as it ignores
+// BOF3X_ORIGINAL. InjectReport refuses a name in BOF3X_OFF that no PatchBytes
+// or RetargetCall of this start-up asked for (CLAUDE.md rule 4).
 
 // A runnable byte-copy of an original function, for shadow-checking our
 // replacement against it in the same process (BOF3X_SHADOW). Not a trampoline:
@@ -110,7 +124,9 @@ bool IsEnabled(std::uint32_t original);
 int OwnedCount();
 std::uint32_t OwnedAddress(int i);
 
-// Summary line for the log once every module has registered.
+// Summary lines for the log once every module has registered; then the check
+// of BOF3X_OFF's names against the code names asked for (a Fatal on one that
+// none asked for).
 void InjectReport();
 
 }  // namespace bof3

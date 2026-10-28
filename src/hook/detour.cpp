@@ -49,6 +49,64 @@ bool WantsOriginal(const char* name) {
     return NameListed(list, name);
 }
 
+// BOF3X_OFF, the player's switch (docs/launcher-settings.md, "off="): the same
+// list syntax as BOF3X_ORIGINAL, read by both hosts, for code names only - the
+// first argument of a PatchBytes or a RetargetCall, whose original behaviour
+// is in our code already. Read once: injection runs on one thread, and the
+// environment does not change under it. Empty when unset.
+const char* OffList() {
+    static char list[8192];
+    static bool read = false;
+    if (!read) {
+        DWORD n = GetEnvironmentVariableA("BOF3X_OFF", list, sizeof list);
+        if (n >= sizeof list) Fatal("BOF3X_OFF is longer than %u bytes", (unsigned)sizeof list - 1);
+        if (n == 0) list[0] = '\0';
+        read = true;
+    }
+    return list;
+}
+
+bool WantsOff(const char* name) { return NameListed(OffList(), name); }
+
+// True if `name` itself stands in the list, bare or as `-name` - not only
+// through `*`. For the names BOF3X_OFF must not take (a detour's).
+bool NameNamed(const char* list, const char* name) {
+    size_t len = std::strlen(name);
+    for (const char* p = list; *p;) {
+        while (*p == ',' || *p == ' ') ++p;
+        const char* end = p;
+        while (*end && *end != ',' && *end != ' ') ++end;
+        size_t n = static_cast<size_t>(end - p);
+        if (n > 0 && *p == '-') ++p, --n;
+        if (n == len && std::memcmp(p, name, len) == 0) return true;
+        p = end;
+    }
+    return false;
+}
+
+// Every code name a PatchBytes or a (not instrument) RetargetCall asked for,
+// once each, with the variable that turned it off (null: on). InjectReport
+// checks BOF3X_OFF's names against this. 83 names in src/ on 2026-10-28.
+struct CodeName {
+    const char* name;
+    const char* off;
+};
+constexpr int kMaxCodeNames = 512;
+CodeName g_code[kMaxCodeNames];
+int g_code_count = 0;
+
+// The variable that turns the code name `name` off - "BOF3X_ORIGINAL" (the
+// hosted A/B switch, unchanged), "BOF3X_OFF" (the player's), or null for on.
+// A name listed in both is BOF3X_ORIGINAL's, as before BOF3X_OFF existed.
+const char* CodeOff(const char* name) {
+    const char* off = WantsOriginal(name) ? "BOF3X_ORIGINAL" : WantsOff(name) ? "BOF3X_OFF" : nullptr;
+    for (int i = 0; i < g_code_count; ++i)
+        if (std::strcmp(g_code[i].name, name) == 0) return off;
+    if (g_code_count == kMaxCodeNames) Fatal("%s: more than %d code names", name, kMaxCodeNames);
+    g_code[g_code_count++] = {name, off};
+    return off;
+}
+
 // `jmp to` (E9 rel32) over the first five bytes at `at`, protection restored.
 void WriteJmp(const char* name, std::uint8_t* at, const std::uint8_t* to) {
     DWORD old = 0;
@@ -90,6 +148,14 @@ void Inject(const char* name, std::uint32_t original, void* ours, bool instrumen
     // writes that page takes (exe_host.cpp's CheckStub).
     if (!InCode(original)) Fatal("%s: Inject at 0x%08X, outside Capcom's code range", name, (unsigned)original);
     if (g_enabled + g_disabled == kMaxOwned) Fatal("%s: more than %d injected functions", name, kMaxOwned);
+    // BOF3X_OFF takes code names only: a detour's original behaviour is
+    // Capcom's function, which the player's build does not have. `*` does not
+    // reach a detour; a detour named in the list stops the game here.
+    if (!instrument && NameNamed(OffList(), name))
+        Fatal("BOF3X_OFF names %s, which is a detour. BOF3X_OFF turns off code names only. "
+              "To run Capcom's original function, use BOF3X_ORIGINAL=%s in the hosted build "
+              "(bof3x-launcher --host bof3).",
+              name, name);
     g_owned[g_enabled + g_disabled] = original;
     g_owned_on[g_enabled + g_disabled] = instrument || !WantsOriginal(name);
     if (!g_owned_on[g_enabled + g_disabled]) {
@@ -119,8 +185,8 @@ bool RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, 
         if (at[0] != 0xE8 || site + kJmpLen + static_cast<std::uint32_t>(rel) != expected)
             Fatal("%s: 0x%08X is not a call to 0x%08X", name, (unsigned)site, (unsigned)expected);
     }
-    if (!instrument && WantsOriginal(name)) {
-        Log("retarget OFF %-24s call at 0x%08X left on 0x%08X", name, (unsigned)site, (unsigned)expected);
+    if (const char* off = instrument ? nullptr : CodeOff(name)) {
+        Log("retarget OFF %-24s call at 0x%08X left on 0x%08X (%s)", name, (unsigned)site, (unsigned)expected, off);
         return false;
     }
     if (exe) {
@@ -154,8 +220,8 @@ bool PatchBytes(const char* name, std::uint32_t address, const std::uint8_t* exp
     auto* at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(address));
     if (!exe && std::memcmp(at, expected, count) != 0)
         Fatal("%s: the %u bytes at 0x%08X are not the ones expected", name, (unsigned)count, (unsigned)address);
-    if (WantsOriginal(name)) {
-        Log("patch   OFF  %-24s %u bytes at 0x%08X left alone", name, (unsigned)count, (unsigned)address);
+    if (const char* off = CodeOff(name)) {
+        Log("patch   OFF  %-24s %u bytes at 0x%08X left alone (%s)", name, (unsigned)count, (unsigned)address, off);
         return false;
     }
     if (exe) {
@@ -261,6 +327,38 @@ bool IsEnabled(std::uint32_t original) {
 
 void InjectReport() {
     Log("inject: %d ours, %d left original by BOF3X_ORIGINAL", g_enabled, g_disabled);
+    int by_original = 0, by_off = 0;
+    for (int i = 0; i < g_code_count; ++i) {
+        if (!g_code[i].off) continue;
+        if (std::strcmp(g_code[i].off, "BOF3X_ORIGINAL") == 0) ++by_original; else ++by_off;
+    }
+    Log("code names: %d asked for, %d off by BOF3X_ORIGINAL, %d off by BOF3X_OFF", g_code_count, by_original, by_off);
+    // Every name BOF3X_OFF gives (bare or after `-`) must be a code name that
+    // this start-up asked for: a misspelt name, an instrument hook, or a code
+    // name whose divergence is not in force under these settings would
+    // otherwise do nothing and say nothing (CLAUDE.md rule 4).
+    const char* list = OffList();
+    if (*list) Log("BOF3X_OFF=%s", list);
+    for (const char* p = list; *p;) {
+        while (*p == ',' || *p == ' ') ++p;
+        const char* end = p;
+        while (*end && *end != ',' && *end != ' ') ++end;
+        const char* q = p;
+        if (q < end && *q == '-') ++q;
+        const size_t n = static_cast<size_t>(end - q);
+        if (end > p && !(end - p == 1 && *p == '*')) {
+            bool known = false;
+            for (int i = 0; i < g_code_count && !known; ++i)
+                known = std::strlen(g_code[i].name) == n && std::memcmp(g_code[i].name, q, n) == 0;
+            if (!known)
+                Fatal("BOF3X_OFF names \"%.*s\", but no code of this start-up uses that name. "
+                      "Use a code name from the ledger's Switch: lines (python tools/ledger_switches.py). "
+                      "A code name is not used when its change is not active with these settings "
+                      "(the language, the wide mode, the filter or a cheat).",
+                      (int)(end - p), p);
+        }
+        p = end;
+    }
     Operands_Check("after InjectAll");
 }
 
