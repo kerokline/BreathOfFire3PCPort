@@ -1,6 +1,8 @@
 # The state hash's fold and `.pool`: staging the fix (PR #168 review, left open)
 
-**Status:** BUILT (2026-10-29, branch `statehash/pool-fold` off `main`
+**Status:** DONE (merged as PR #170, 2026-10-29 evening, `main` `db017c74`; the
+lifted-mask pair and the ten routes measured the same evening, section 7
+"The coordinator's runs". Built on branch `statehash/pool-fold` off `main`
 `e839eaf7`: the fold to `0x587000`, header `BOF3SH5` with the extent - the
 owner's answer (a) to section 5 - both self-tests extended and passing in
 both hosts; section 7, "as run". Owed, the coordinator's: section 2.2's pair
@@ -227,8 +229,39 @@ number (section 4).
   new `addr_eq` / `ptr_sub` sites; they were rewritten rather than the
   census regenerated.)
 
-**Owed (the coordinator's).** Section 2.2's pair (`cutsceneAndNue`, moved
-and at `0x400000` with the same fold, under the skip list without lines
-175-183) - the measurement of the fold without the mask, and the answer to
-section 6's item 3 on one route; then the ten routes of section 2.3,
-re-recorded under `BOF3SH5` (`pf1029\proof_pf.sh`).
+**The coordinator's runs** (2026-10-29 18:12..19:50, `pf1029\proof_pf2.sh`,
+the branch's build in `pf1029\Lp` - the code PR #170 merged, `main` differing
+by docs alone - hashes, checks and diffs in `pf1029\sh`; the machine idle,
+nobody at it).
+
+- **Section 2.2, the fold without the mask.** `cutsceneAndNue` moved
+  (`BOF3X_IMAGEBASE=0xA00000`) against ours at `0x400000` folding
+  `0xA00000`, under `statehash_skip_nopool.txt` (the skip list without lines
+  175-183): **identical on all 7,425 ticks** (`diff_cutsceneAndNue_lo_m_np.txt`).
+  The fold is correct where the mask used to hide it, and section 6's item 3
+  is answered on that route: the run-time `.pool` words fold alike at both
+  bases.
+- **Section 2.3, the ten routes under `BOF3SH5`.** Per route three runs:
+  ours at `0x400000` unfolded, `check`ed against the `orig4` pair
+  (`check_<route>_a2.txt`; the script's own `check` step pointed at the
+  worktree, which holds no `analysis/statehash`, and was re-run from the
+  main checkout's tools and references); ours at `0x400000` folding
+  `0xA00000`; ours moved; `diff` of the last two under the full skip list.
+  **Unfolded against the references:** every route's page table is the
+  stage C2 proof's (`ri1027\c2\sh\check_<route>_c2a.txt`) line for line -
+  the same pages, first and last ticks and tick counts, on nine routes;
+  whelpBoss lacks the one three-tick sound span (`0x7DE000`, ticks
+  2497..2563) the C2 run had. So the `BOF3SH5` hash where nothing is folded
+  is `BOF3SH4`'s in play as in the self-test, and the references stand.
+  **Moved against linked, same fold:** identical on combat (2,561 ticks),
+  cutsceneAndNue (7,425), field_menu (1,409), menu_screens (1,729) and shop
+  (3,137); the other five differ on the proof's noise class alone -
+  `Gfx_VramShadow` windows, the `Snd_BufferDesc` page, `Rest4b_BusyB`'s
+  page and the `Display_DesktopWidth` page from tick 3 or a stream start
+  (caughFish 9 pages, dragonTransform 28, whelpBoss 7), the D3D
+  handle-cache page `0x6C3000` alone (masterAndManillo, the world map).
+  No page outside that class on any route at either base.
+
+Nothing is owed. The two sub-word reads and the 729 not read (the round's
+question 3) and the exit trace's stack scan (question 2) stay with
+[`relocatable-image-round.md`](relocatable-image-round.md) section 5.

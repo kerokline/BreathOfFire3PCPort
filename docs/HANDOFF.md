@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-29: the relocatable-image round merged as PR #168 and the enemy-information cheat as PR #169; `v0.1.0-alpha.6` cut from `main`, item 2)
+**Status:** IN PROGRESS (2026-10-29: the relocatable-image round merged as PR #168, the enemy-information cheat as PR #169 and the state hash's pool fold as PR #170; `v0.1.0-alpha.6` cut from `main`, item 2)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -14,7 +14,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
-**`origin/main` is `e839eaf7`** (PR #168, 2026-10-29) plus the alpha.6 notes: since the reading-row round (PR #106) it took the faster
+**`origin/main` is `db017c74`** (PR #170, 2026-10-29) plus the alpha.6 notes: since the reading-row round (PR #106) it took the faster
 text, the bit-15 round, the PlayStation verdict pass and twin-diff, fix wave 1023, the sound-layer round, the
 issue fixes of 2026-10-24..26, build-difference prevention (the data diff and the every-door sweep), the spell
 sweep and its fix wave, the two staged rounds, the away day (PR #158), D42's dial (PR #159), the boss sweep (PR #161), the ledger-fields round (PRs #162, #164), D397 and issue #163
@@ -82,12 +82,11 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      PR #168, 2026-10-29**). The image is movable and the stub page gone ([`STATUS.md`](STATUS.md)); nothing a player sees
      changed. The PR's day found what the stage D gate had skipped: the hosted `BOF3X_SHADOW='*'` suite, which
      faulted in `field_misc`'s fuzz on a static-initialisation order the move created (`draw_pool`'s pointers,
-     fixed `41372e3c`, section 5 "Before the PR"). **Next**, for whoever picks the round's ends up (none needs the owner): the
-     state hash's fold widened to cover `.pool` (`statehash.cpp` and `statehash.py` together, the folded
-     references re-recorded); the two sub-word reads not proven and the 729 not read (section 5, question 3);
+     fixed `41372e3c`, section 5 "Before the PR"). **Next**, for whoever picks the round's ends up (none needs the owner): the two sub-word reads not proven and the 729 not read (section 5, question 3);
      the exit trace's stack scan in `bof3x.exe`. **Done since:** the run-time base's cost on the attract's pace,
-     measured the evening of 2026-10-29 (section 5 "Left": the cap at both bases, no effect); the fold's width
-     is the pool-fold agent's ([`statehash-pool-fold.md`](statehash-pool-fold.md), `BOF3SH5` the owner's call).
+     measured the evening of 2026-10-29 (section 5 "Left": the cap at both bases, no effect); the fold's width,
+     `BOF3SH5` to `.pool`'s end, merged as PR #170 the same evening and proven on the ten routes at both
+     bases plus the lifted-mask pair ([`statehash-pool-fold.md`](statehash-pool-fold.md) 7).
      **Developer switch:** `BOF3X_IMAGEBASE=0xA00000` takes `bof3x-A00000.exe` through
      `bof3x-launcher-dev.exe`. **Traps paid for:** `Code(Code(x))` compiles; a word read from game memory is
      already a place (`CodePlace` passes it, `Img` must not be applied); `tools/reloc_bare.py --check` lists a new
