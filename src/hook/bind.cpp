@@ -124,7 +124,14 @@ void BuildTable() {
         const std::uint32_t to = i < kRows ? Key(kBind[i].ours) : Key(reinterpret_cast<const void*>(&DirectSoundThunk));
         const std::uint32_t from = top | va;
         auto* e = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(from));
-        if (e[0] != 0xCC) Fatal("bind: the place of 0x%08X overlaps another's jump", (unsigned)va);
+        // All five bytes: rows are written in VA order, and a VA within four
+        // bytes of the last row's would land in its rel32 - whose byte may
+        // happen to read 0xCC. The table's nearest rows are 11 bytes apart
+        // and the thunk's VA 0x3000 from any (review of PR #168).
+        for (unsigned k = 0; k < 5; ++k)
+            if (e[k] != 0xCC)
+                Fatal("bind: the place of 0x%08X overlaps another's jump at byte %u (a row within five bytes of it)",
+                      (unsigned)va, k);
         const std::int32_t rel = static_cast<std::int32_t>(to - (from + 5));
         e[0] = 0xE9;
         std::memcpy(e + 1, &rel, 4);
@@ -292,9 +299,12 @@ void Bind_Check(const char* name, std::uint32_t va, const void* ours) {
 }
 
 std::uint32_t Bind_Word(std::uint32_t va, bool* bound) {
-    const bind_gen::Row* r = Find(va);
-    *bound = r != nullptr;
-    return r ? PlaceOf(va) : Img(va);
+    // PlaceOf, not Find alone: the DirectSoundCreate thunk's VA has a place
+    // in the table and no row, and a .data word holding it must reach the
+    // thunk, not the trap (review of PR #168).
+    const std::uint32_t place = PlaceOf(va);
+    *bound = place != 0;
+    return place ? place : Img(va);
 }
 
 void Bind_Report() {

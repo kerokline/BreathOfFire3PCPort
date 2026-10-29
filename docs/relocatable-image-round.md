@@ -655,6 +655,31 @@ suite too, so the fault was the round's alone. **The gate's lesson:** a
 round's self-test line is `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, hosted,
 beside the exe-host and moved runs - HANDOFF's "How to run things" says so.
 
+**The PR's code review** (seven findings on PR #168, each read against the
+code): five fixed in one commit, two left as the round's open items.
+1. `BuildTable` checked one byte before writing a five-byte jump; a row
+   within four bytes of the last would have landed in its rel32. All five
+   bytes are checked now (the table's nearest rows are 11 bytes apart, the
+   thunk's VA 0x3000 from any, so the stronger check passes today).
+2. `Bind_Word` sent the DirectSoundCreate thunk's VA to the trap (`Find` has
+   no row for it); it goes through `PlaceOf` now, as `Code` does.
+3. The fold's width (`.pool` not folded at a moved base): the round's open
+   item, left - it changes every folded reference.
+4. `PatchBytes`' linked test relied on no module lying in the span, which the
+   engine's `Fence` only checked for the code range; `Fence` is a `Fatal` on
+   any module mapped in the span now.
+5. The developer launcher fenced a hard-coded `0x400000..0x98F000`; it reads
+   `SizeOfImage` from the child's own header now, as the engine's `LinkedEnd`
+   does, so a section `make_exe.py` grows is fenced too. The state hash's
+   `kExeHi` (Capcom's image, the fold) and `kOwnVa` (where our code starts)
+   stay what they are: different things.
+6. `BOF3X_IMAGEBASE=0x400000` with a hosted-only switch was refused by the
+   launcher though `DetectHost` accepts it; only a base other than `0x400000`
+   is refused hosted now.
+7. `Code()` is a binary search per call where stage B resolved at compile
+   time: the cost is the round's open measurement (the attract's pace at both
+   bases); a bitmap over the code range would make it O(1) if it shows.
+
 ## 6. Ownership, merge order, numbering
 
 | File or area | Owner |

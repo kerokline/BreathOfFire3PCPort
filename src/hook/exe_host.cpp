@@ -206,11 +206,17 @@ void Fence() {
             Log("fence: 0x%08X..0x%08X not free, left: state 0x%lX type 0x%lX protect 0x%lX allocation %p%s%s",
                 (unsigned)a, (unsigned)r_hi, m.State, m.Type, m.Protect, m.AllocationBase, *path ? ", " : "", path);
             other += r_hi - a;
-            if (m.Type == MEM_IMAGE && a < image::kCodeHi && r_hi > image::kCodeLo)
-                Fatal("fence: the module %s lies at 0x%08X..0x%08X, in the linked code range 0x%X..0x%X, where a code "
-                      "word is read as a VA (CodePlace); start bof3x.exe at another base",
-                      *path ? path : "(unnamed)", (unsigned)a, (unsigned)r_hi, (unsigned)image::kCodeLo,
-                      (unsigned)image::kCodeHi);
+            // Any module in the span, not the code range alone: PatchBytes
+            // reads a value in 0x400000..kOwnVa as a VA of the image and
+            // CodePlace a value in the code range as a code VA (detour.cpp,
+            // image_base.h), so a byte of a module there would be placed
+            // elsewhere. The developer launcher's reservation keeps the span
+            // free (measured: 0x0 bytes held by something else); this is the
+            // check that it did.
+            if (m.Type == MEM_IMAGE)
+                Fatal("fence: the module %s lies at 0x%08X..0x%08X, in the linked span 0x%X..0x%X, where a word is "
+                      "read as a VA of the image (PatchBytes, CodePlace); start bof3x.exe at another base",
+                      *path ? path : "(unnamed)", (unsigned)a, (unsigned)r_hi, (unsigned)lo, (unsigned)hi);
         }
         a = r_hi;
     }

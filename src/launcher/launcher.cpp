@@ -134,12 +134,22 @@ void RemoveOldIconFiles() {
 // BOF3X_IMAGEBASE (docs/relocatable-image-design.md 1.5): the moved
 // executable's fence, laid while the child is suspended - its image, ntdll
 // and its first thread's stack mapped, nothing of its heaps or mapped files
-// yet. Every free 64 KB-aligned part of the linked span 0x400000..0x98F000
-// (the span bof3x.exe holds at its own base, exe_layout.h) is reserved
-// no-access for the life of the process; the engine's own fence (exe_host.cpp
-// Fence) counts these and takes what is still free at Engine_Main.
-void FenceLinkedSpan(HANDLE process) {
-    constexpr std::uint32_t kLo = 0x400000, kHi = 0x98F000;
+// yet. Every free 64 KB-aligned part of the linked span 0x400000..SizeOfImage
+// (the span bof3x.exe holds at its own base, read from the child's own header
+// at `base`, as the engine's Fence reads it - exe_host.cpp LinkedEnd - so a
+// section make_exe.py grows is fenced too) is reserved no-access for the life
+// of the process; the engine's own fence counts these and takes what is still
+// free at Engine_Main.
+void FenceLinkedSpan(HANDLE process, std::uint32_t base) {
+    IMAGE_DOS_HEADER dos{};
+    IMAGE_NT_HEADERS32 nt{};
+    if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
+        dos.e_magic != IMAGE_DOS_SIGNATURE ||
+        !ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base + dos.e_lfanew)), &nt, sizeof nt,
+                           nullptr) ||
+        nt.Signature != IMAGE_NT_SIGNATURE)
+        Die(L"BOF3X_IMAGEBASE: no PE header at 0x%08X in the game process (%lu)", base, GetLastError());
+    const std::uint32_t kLo = 0x400000, kHi = kLo + nt.OptionalHeader.SizeOfImage;
     std::uint32_t fenced = 0, taken = 0;
     for (std::uint32_t a = kLo; a < kHi;) {
         MEMORY_BASIC_INFORMATION m{};
@@ -369,15 +379,20 @@ int wmain(int argc, wchar_t** argv) {
     // launcher writes nothing into another process, so it hands the switch on.
     std::wstring ours = OwnDirectory() + L"\\bof3x.exe";
     bool moved = false;
+    [[maybe_unused]] std::uint32_t moved_base = 0;   // the developer launcher's fence (BOF3X_HOSTED)
     if (wchar_t base_text[32]; GetEnvironmentVariableW(L"BOF3X_IMAGEBASE", base_text, 32) > 0) {
         wchar_t* end = nullptr;
         const unsigned long base = std::wcstoul(base_text, &end, 0);
         if (!end || *end || end == base_text) Die(L"BOF3X_IMAGEBASE=%ls is not a number", base_text);
-        if (hosted) Die(L"BOF3X_IMAGEBASE=%ls: BOF3.exe is fixed at 0x400000; only bof3x.exe moves (--host exe)", base_text);
+        // Hosted, 0x400000 is where BOF3.exe is (DetectHost accepts it): an
+        // A/B harness may set it on both sides and then ask a hosted-only switch.
+        if (hosted && base != 0x400000)
+            Die(L"BOF3X_IMAGEBASE=%ls: BOF3.exe is fixed at 0x400000; only bof3x.exe moves (--host exe)", base_text);
 #if !BOF3X_HOSTED
         if (base != 0x400000) ForwardToDevLauncher(argc, argv);
 #endif
         moved = base != 0x400000;
+        moved_base = base;
         if (base != 0x400000) {
             wchar_t name[32];
             std::swprintf(name, 32, L"\\bof3x-%lX.exe", base);
@@ -623,7 +638,7 @@ int wmain(int argc, wchar_t** argv) {
 #if BOF3X_HOSTED
         if (moved) {
             g_child = pi.hProcess;
-            FenceLinkedSpan(pi.hProcess);
+            FenceLinkedSpan(pi.hProcess, moved_base);
             if (ResumeThread(pi.hThread) == static_cast<DWORD>(-1)) Die(L"ResumeThread failed (%lu)", GetLastError());
             g_child = nullptr;
         }

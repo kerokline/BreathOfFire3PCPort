@@ -258,7 +258,9 @@ bool PatchBytes(const char* name, std::uint32_t address, const std::uint8_t* exp
     // exe host moves with the image: its place is Img(address) - or a switch
     // of ours, a byte of our DLL, which is its own place. Told apart by the
     // linked span 0x400000..kOwnVa, which nothing of ours lies in (the
-    // executable holds it at 0x400000; the fence, at another base).
+    // executable holds it at 0x400000; at another base the developer
+    // launcher's reservation, and exe_host.cpp's Fence is a Fatal on any
+    // module mapped in the span).
     const bool linked = address >= image::kBase && address < exe_layout::kOwnVa;
     auto* at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(linked ? Img(address) : address));
     if (!exe && std::memcmp(at, expected, count) != 0)
