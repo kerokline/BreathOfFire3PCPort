@@ -636,7 +636,18 @@ each run, sampled every 10 s: 346 and 357 s linked, 363 and 377 s moved - a
 full core at both bases, because the pace loop spins, so the sample cannot
 resolve `Code()`'s share; the moved runs' 2 to 6 % more lies within the
 spin's run-to-run spread and the sampler's 10 s grain. **No base effect on
-the pace**; the bitmap of review item 7 is not wanted on this evidence.
+the pace**. **The logic's own cost, the owner's second test** (`pace2.sh`,
+the `fast_*.log`): the same four runs three minutes each with the period at
+its minimum, `BOF3X_FRAME_MS=1`, and `BOF3X_FPS_LOG=1`, which logs each
+second's logic frames and the time inside the logic per frame - the number
+`Code()`'s search would show in, clear of the cap and of the music. Each run
+cycled the attract's three areas (4, 31, 2) about seventeen times. Over the
+132 s after the logo videos, every run: **1,016 logic frames a second**
+(the 1 ms period's cap, so the logic is not the bound even at 34 times
+the game's pace), and **0.030 ms inside the logic per frame, median, at
+both bases** (means 0.031, 0.032, 0.031, 0.031 ms for linked, moved,
+linked, moved). The run-time base costs nothing the logic can show; the
+bitmap of review item 7 is not wanted on this evidence.
 
 ### Before the PR (2026-10-29, the coordinator)
 
