@@ -114,7 +114,7 @@ struct WorldMapTables {
 
 // Area 121: WorldMap_Records record 8 (0x6539F0), WorldMap_FieldHooks entry 8
 // (0x662E10); the tables in its data block after area 120's descriptor.
-constexpr WorldMapTables kWm121 = {
+const WorldMapTables kWm121 = {
     "Area121",
     ::bof3::Img(0x624624), ::bof3::Img(0x62462C),   // 4 places
     ::bof3::Img(0x623690),             // 4 plate animations

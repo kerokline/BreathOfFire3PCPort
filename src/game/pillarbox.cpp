@@ -76,7 +76,7 @@ unsigned WidestNow(unsigned area) {
 
 void UpdateTrust() {
     const unsigned area = Game_AreaNumber;
-    if (*reinterpret_cast<const volatile std::uint16_t*>(static_cast<std::uintptr_t>(kTaskSlot0State)) == 0) {
+    if (*reinterpret_cast<const volatile std::uint16_t*>(static_cast<std::uintptr_t>(::bof3::Img(kTaskSlot0State))) == 0) {
         g_trusted = false;
         g_epoch_area = area;
     } else if (!g_trusted && area != g_epoch_area) {

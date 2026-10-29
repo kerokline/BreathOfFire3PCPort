@@ -138,7 +138,7 @@ struct WorldMapTables {
 // is Area130_ChoiceTailState2, and no init). Its plate state 0 is 0x424BA0,
 // the plate start with bank 0x1D1 that area 152's table names too - the
 // linker's fold, in group AR4A's band.
-constexpr WorldMapTables kWm151 = {
+const WorldMapTables kWm151 = {
     "Area151",
     ::bof3::Img(0x636A68),             // 7 plate animations (then the cell record)
     ::bof3::Img(0x636A84),             // 1 cell record (then the descriptor's +0x20 data)

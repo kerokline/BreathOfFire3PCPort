@@ -72,6 +72,10 @@ class Run:
         # (0x93C2C4's ring, 0x93B8E4) normalised with them; a run without it
         # hashes those words raw and differs there under an overlay
         self.runtime_slots = bool(flags & 2)
+        # bit 2 (2026-10-29, the relocatable-image round's stage C2): a word
+        # holding the start of a function of ours that the bind table binds to
+        # a VA of Capcom's is hashed as that VA (docs/state-hash.md section 8)
+        self.bound_code = bool(flags & 4)
         # BOF3SH4 (2026-10-28) adds where the image lay and the fold address;
         # an older file is a run at 0x400000 that folded nothing
         self.image, self.fold = struct.unpack_from('<2I', d, 32) if self.version >= 4 else (IMAGE, 0)
@@ -323,6 +327,12 @@ def notes(runs):
         print(f'note: {raw} hashed our pointers raw (BOF3SH2, or BOF3X_STATEHASH_RAW=1) and the others by what they '
               'name: identical without a language overlay; under one the overlay\'s tables differ from tick 1 '
               '(docs/state-hash.md section 7) - record the reference again rather than read those pages')
+    bc = [r.bound_code for r in runs]
+    if all(norm) and any(bc) and not all(bc):
+        old = ', '.join(r.path for r in runs if not r.bound_code)
+        print(f'note: {old} hashed a word holding a function of ours raw and the others as the code VA it is bound to '
+              '(stage C2): identical where no such word is stored - hosted, a word our code wrote as our function\'s '
+              'address; in bof3x.exe every code word (docs/state-hash.md section 8)')
     rt = [r.runtime_slots for r in runs]
     if all(norm) and any(rt) and not all(rt):
         old = ', '.join(r.path for r in runs if not r.runtime_slots)
@@ -340,6 +350,7 @@ def cmd_info(a):
                               'raw (BOF3X_STATEHASH_RAW=1)' if r.version >= 3 else f'raw (BOF3SH{r.version})')
     if r.normalised:
         h += ', the battle message words ' + ('with them' if r.runtime_slots else 'raw (before 2026-10-11)')
+        h += ', bound code words ' + ('as their VAs' if r.bound_code else 'raw (before 2026-10-29)')
     h += ', folded ' + fold_text(r) + ('' if r.version >= 4 else f' (BOF3SH{r.version})')
     print(f'{a.run}: {len(r.recs)} records, ticks {r.keys[0]}..{r.keys[-1]}, Frame_Counter {r.fc[0]}..{r.fc[-1]}, '
           f'{r.pages} pages of 0x{r.page:X} from 0x{r.base:X}, {r.skips} skip ranges, {h}')
@@ -397,8 +408,10 @@ def cmd_check(a):
 
 def fold_dump(d, fold):
     """A raw dump with every aligned word whose value lies in the image placed
-    at `fold` read as at 0x400000 (statehash.cpp's Fold); the dump keeps the
-    raw bytes, the hash does this."""
+    at `fold` read as at 0x400000 (statehash.cpp's Fold); and, failing that, a
+    word whose low 24 bits do - an ordering-table link into the moved image,
+    its length byte on top - with those 24 bits folded and the top byte kept
+    (Fold24). The dump keeps the raw bytes, the hash does this."""
     w = array.array('I', d)
     if sys.byteorder != 'little':
         w.byteswap()
@@ -406,6 +419,9 @@ def fold_dump(d, fold):
     for i, v in enumerate(w):
         if lo <= v < hi:
             w[i] = v - fold + IMAGE
+            n += 1
+        elif v >> 24 and lo <= (v & 0xFFFFFF) < hi and (v & 0xFFFFFF) - fold + IMAGE <= 0xFFFFFF:
+            w[i] = (v & 0xFF000000) | ((v & 0xFFFFFF) - fold + IMAGE)
             n += 1
     if sys.byteorder != 'little':
         w.byteswap()
@@ -505,6 +521,24 @@ def cmd_selftest(a):
     expect('the moved dump against the unmoved, raw: differs', raw, 1)
     expect('the same pair, both folded at the moved base: equal', folded, 0)
     expect('a byte changed in the moved dump, folded: differs', changed, 1)
+
+    # ordering-table links (a length byte over a 24-bit address) into an image below 16 MB
+    F24 = 0xA00000
+    l0 = array.array('I', bytes(END - BASE))
+    lf = array.array('I', bytes(END - BASE))
+    for i in range(0, n, 5):
+        off = rnd.randrange(IMAGE_SIZE) & ~3
+        top = rnd.randrange(1, 16) << 24
+        l0[i], lf[i] = top | (IMAGE + off), top | (F24 + off)
+    if sys.byteorder != 'little':
+        l0.byteswap(); lf.byteswap()
+    with contextlib.redirect_stdout(io.StringIO()):
+        links_raw = compare_dumps(l0.tobytes(), lf.tobytes(), q)
+        g0, _ = fold_dump(l0.tobytes(), F24)
+        gf, _ = fold_dump(lf.tobytes(), F24)
+        links_folded = compare_dumps(g0, gf, q)
+    expect('ordering-table links into the moved image, raw: differ', links_raw, 1)
+    expect('the same links folded at 0xA00000 (24 bits, the length byte kept): equal', links_folded, 0)
 
     def sh(path, version, image=IMAGE, fold=0):
         with open(path, 'wb') as f:

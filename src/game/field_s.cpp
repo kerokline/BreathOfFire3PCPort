@@ -105,13 +105,14 @@ void DrawFont8(int x, int y, int colour) {
 // A .data table's word read in place (the fuzz swaps its entries for
 // recorders). Outside the fuzz a word that is not code is past the table:
 // the original jumps there; ours aborts (docs/field_s.md section 6).
-constexpr U kTextLo = 0x401000, kTextHi = 0x5C3000;
 U CodeAt(U table, U index, const char* who) {
     const U cell = table + 4 * index;
     const U entry = L(cell);
-    if (!scenario_harness::g_active && (entry < kTextLo || entry >= kTextHi))
-        bof3::Fatal("%s: index %u reads 0x%X at 0x%X, not code - past its table (the original jumps there)", who,
-                    (unsigned)index, (unsigned)entry, (unsigned)cell);
+    // A code word: hosted a VA in BOF3.exe's .text, in bof3x.exe a function of ours
+    // the bind table names (common/image_base.h IsCodeWord); not the trap, not data.
+    if (!scenario_harness::g_active && !::bof3::IsCodeWord(entry))
+        bof3::Fatal("%s: index %u reads 0x%X at 0x%X (VA 0x%X), not code - past its table (the original jumps there)", who,
+                    (unsigned)index, (unsigned)entry, (unsigned)cell, (unsigned)::bof3::VaOf(cell));
     return entry;
 }
 using Handler = void (__cdecl*)();
@@ -357,11 +358,11 @@ extern "C" void __cdecl PartyForm_Setup(void) {
         edx = n;
     }
     if (n == 0 || edx < 3) {
-        U p = at::kReserveFlags + 2 * edx;
+        U p = ::bof3::Img(at::kReserveFlags) + 2 * edx;
         do {
             B(p) = 0;
             p += 2;
-        } while (p < at::kReserveFlags + 6);
+        } while (p < ::bof3::Img(at::kReserveFlags) + 6);
     }
     for (U k = 0; k < count; ++k) B(::bof3::Img(at::kReserveFlags) + 1 + 2 * k) = 1;
     const auto step = static_cast<unsigned char>(FieldS_Step + 1);

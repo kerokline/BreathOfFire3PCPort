@@ -837,8 +837,8 @@ void LogStack(const char* what, const void* frame) {
     int found = 0;
     for (int i = 0; i < 4096 && found < 12; ++i) {
         const U v = p[i];
-        if (v >= 0x401000 && v < 0x5C4000) {
-            n += std::snprintf(line + n, sizeof line - static_cast<size_t>(n), " 0x%06X", v);
+        if (v >= ::bof3::Img(0x401000) && v < ::bof3::Img(0x5C4000)) {   // a return into the stub page: printed as its VA
+            n += std::snprintf(line + n, sizeof line - static_cast<size_t>(n), " 0x%06X", ::bof3::VaOf(v));
             ++found;
         }
     }
@@ -893,7 +893,7 @@ void PatchImport(U slot, F& real, F ours) {
     void* at = reinterpret_cast<void*>(static_cast<std::uintptr_t>(slot));
     std::memcpy(&real, at, 4);
     DWORD old = 0;
-    if (!VirtualProtect(at, 4, PAGE_READWRITE, &old)) bof3::Fatal("exittrace: VirtualProtect of the import slot 0x%08X failed", slot);
+    if (!VirtualProtect(at, 4, PAGE_READWRITE, &old)) bof3::Fatal("exittrace: VirtualProtect of the import slot 0x%08X failed", ::bof3::VaOf(slot));
     std::memcpy(at, &ours, 4);
     VirtualProtect(at, 4, old, &old);
 }

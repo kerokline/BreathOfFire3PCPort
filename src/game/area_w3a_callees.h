@@ -91,7 +91,7 @@ struct WorldMapTables {
 // Area 115: WorldMap_Records record 7 (0x6539D4), WorldMap_FieldHooks entry 7;
 // its descriptor 0x620220 (only a choice table, +0x34 -> 0x620218, whose one
 // entry is 0x41D270 - group AR3C's band - and no init, as area 88's).
-constexpr WorldMapTables kWm115 = {
+const WorldMapTables kWm115 = {
     "Area115",
     ::bof3::Img(0x620148), ::bof3::Img(0x62015C),   // 5 plate animations
     ::bof3::Img(0x62015C), ::bof3::Img(0x620164),   // 2 cell records (then a zero record, then the descriptor's data)
@@ -119,9 +119,9 @@ struct TwinTables {
     U fn_member_rect;                 // the copy's MemberRect, called by its MembersFrame
 };
 // Area 117: its descriptor 0x6215B0; the rectangle 0x6215A8, the switch 0x62160C.
-constexpr TwinTables kTw117 = {"Area117", ::bof3::Img(0x6215A8), ::bof3::Img(0x6215AE), ::bof3::Img(0x62160C), ::bof3::Img(0x621610), 1, bof3::addr::Area117_MemberRect};
+const TwinTables kTw117 = {"Area117", ::bof3::Img(0x6215A8), ::bof3::Img(0x6215AE), ::bof3::Img(0x62160C), ::bof3::Img(0x621610), 1, bof3::addr::Area117_MemberRect};
 // Area 118: its descriptor 0x621DF8; the rectangle 0x621DF0, the switch 0x621E3C.
-constexpr TwinTables kTw118 = {"Area118", ::bof3::Img(0x621DF0), ::bof3::Img(0x621DF6), ::bof3::Img(0x621E3C), ::bof3::Img(0x621E40), 1, bof3::addr::Area118_MemberRect};
+const TwinTables kTw118 = {"Area118", ::bof3::Img(0x621DF0), ::bof3::Img(0x621DF6), ::bof3::Img(0x621E3C), ::bof3::Img(0x621E40), 1, bof3::addr::Area118_MemberRect};
 
 // --- the member-spawn handlers' tables (12 bytes each, by a member's id) -------
 // kSpawnTable117A: now Area117_SpawnKinds3 (symbols.toml). area 117's handler 0

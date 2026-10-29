@@ -91,9 +91,11 @@ std::int32_t Idiv(std::int32_t dividend, std::int32_t divisor, const char* who) 
 U CodeAt(U table, unsigned index, const char* who) {
     const U cell = table + 4u * index;
     const U entry = static_cast<U>(Long(At(cell)));
-    if (!scenario_harness::g_active && (entry < at::kTextLo || entry >= at::kTextHi))
-        bof3::Fatal("%s: index %u reads 0x%X at 0x%X, not code - past its table (the original jumps there)", who, index,
-                    (unsigned)entry, (unsigned)cell);
+    // A code word: hosted a VA in BOF3.exe's .text, in bof3x.exe a function of ours
+    // the bind table names (common/image_base.h IsCodeWord); not the trap, not data.
+    if (!scenario_harness::g_active && !::bof3::IsCodeWord(entry))
+        bof3::Fatal("%s: index %u reads 0x%X at 0x%X (VA 0x%X), not code - past its table (the original jumps there)", who,
+                    index, (unsigned)entry, (unsigned)cell, (unsigned)::bof3::VaOf(cell));
     return entry;
 }
 

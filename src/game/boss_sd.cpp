@@ -243,7 +243,7 @@ extern "C" void __cdecl BossMutant_Dispatch(unsigned passed) {
 // 0x64CE74, +0xF4 = BossMutant_Hook, +0xF8 = 0x64CE98; Sprite_Current +1 = 2;
 // jmp Sprite_ScriptTick (its al the answer).
 extern "C" unsigned char __cdecl BossMutant_Enter(void) {
-    PointEnemy(0x64CE74, ::bof3::Code(bof3::addr::BossMutant_Hook), 0x64CE98);
+    PointEnemy(::bof3::Img(0x64CE74), ::bof3::Code(bof3::addr::BossMutant_Hook), ::bof3::Img(0x64CE98));
     rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -278,7 +278,7 @@ extern "C" void __cdecl BossClaw_Dispatch(unsigned passed) {
 // 0x35 set. Then +0xFC = 0x64CF04, +0xF4 = BossClaw_Hook, +0xF8 = 0x64CF58,
 // Sprite_Current +1 = 1, Sprite_EnsureAnimation(2), jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossClaw_Enter(void) {
-    RestoreOrMark(0x35, 0x64CF04, ::bof3::Code(bof3::addr::BossClaw_Hook), 0x64CF58);
+    RestoreOrMark(0x35, ::bof3::Img(0x64CF04), ::bof3::Code(bof3::addr::BossClaw_Hook), ::bof3::Img(0x64CF58));
     rv::Current<records::BattleEnemy>()->state = 1;
     BH_CALL(Sprite_EnsureAnimation)(2);
     return BH_CALL(Sprite_ScriptTick)();
@@ -295,7 +295,7 @@ extern "C" void __cdecl BossCawer_Dispatch(unsigned passed) {
 // original 0x43A790: BossCawer_Steps 0: BossClaw_Enter's body with flag 0x36,
 // +0xFC = 0x64CF10, +0xF4 = BossCawer_Hook, +0xF8 = 0x64CF60.
 extern "C" unsigned char __cdecl BossCawer_Enter(void) {
-    RestoreOrMark(0x36, 0x64CF10, ::bof3::Code(bof3::addr::BossCawer_Hook), 0x64CF60);
+    RestoreOrMark(0x36, ::bof3::Img(0x64CF10), ::bof3::Code(bof3::addr::BossCawer_Hook), ::bof3::Img(0x64CF60));
     rv::Current<records::BattleEnemy>()->state = 1;
     BH_CALL(Sprite_EnsureAnimation)(2);
     return BH_CALL(Sprite_ScriptTick)();
@@ -313,7 +313,7 @@ extern "C" void __cdecl BossPatrio_Dispatch(unsigned passed) {
 // BossPatrio_Hook, +0xF8 = 0x64CF68; Sprite_Current +1 = 2 (no animation),
 // jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossPatrio_Enter(void) {
-    RestoreOrMark(0x37, 0x64CF1C, ::bof3::Code(bof3::addr::BossPatrio_Hook), 0x64CF68);
+    RestoreOrMark(0x37, ::bof3::Img(0x64CF1C), ::bof3::Code(bof3::addr::BossPatrio_Hook), ::bof3::Img(0x64CF68));
     rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -330,10 +330,10 @@ extern "C" void __cdecl BossPatrio_Hook(unsigned code) { HookTable("BossPatrio_H
 extern "C" void __cdecl BossDodai_Dispatch(unsigned passed) {
     if (rv::Current<records::BattleEnemy>()->actor == 4) {
         const bool f = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x34) & 0xFF;
-        SetCell(Enemy() + 0xFC, f ? 0x64CF34 : 0x64CF28);
+        SetCell(Enemy() + 0xFC, ::bof3::Img(f ? 0x64CF34 : 0x64CF28));
     } else {
         const bool f = BH_CALL(Flags_Test)(At(Chapter_FlagRow), 0x33) & 0xFF;
-        SetCell(Enemy() + 0xFC, f ? 0x64CF4C : 0x64CF40);
+        SetCell(Enemy() + 0xFC, ::bof3::Img(f ? 0x64CF4C : 0x64CF40));
     }
     Dispatch("BossDodai_Dispatch", AddressOf(BossDodai_Steps), 12, 1, passed);
 }
@@ -353,12 +353,12 @@ extern "C" unsigned char __cdecl BossDodai_Enter(void) {
     auto* const cur_enemy = rv::Current<records::BattleEnemy>();
     if (cur_enemy->actor == 5) {
         cur_enemy->layout |= 2;
-        SetCell(Enemy() + 0xFC, 0x64CF40);
+        SetCell(Enemy() + 0xFC, ::bof3::Img(0x64CF40));
     } else {
-        SetCell(Enemy() + 0xFC, 0x64CF28);
+        SetCell(Enemy() + 0xFC, ::bof3::Img(0x64CF28));
     }
     SetCell(Enemy() + 0xF4, ::bof3::Code(bof3::addr::BossDodai_Hook));
-    SetCell(Enemy() + 0xF8, 0x64CF70);
+    SetCell(Enemy() + 0xF8, ::bof3::Img(0x64CF70));
     rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -463,7 +463,7 @@ extern "C" void __cdecl BossEmitai_Dispatch(unsigned passed) {
 // original 0x43B2A0: BossEmitai_Steps 0: +0xFC = 0x64D0A0, +0xF4 =
 // BossEmitai_Hook, +0xF8 = 0x64D0B8; Sprite_Current +1 = 2; jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossEmitai_Enter(void) {
-    PointEnemy(0x64D0A0, ::bof3::Code(bof3::addr::BossEmitai_Hook), 0x64D0B8);
+    PointEnemy(::bof3::Img(0x64D0A0), ::bof3::Code(bof3::addr::BossEmitai_Hook), ::bof3::Img(0x64D0B8));
     rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -498,7 +498,7 @@ extern "C" void __cdecl BossGolem_Dispatch(unsigned passed) {
 // original 0x43B390: BossGolem_Steps 0: +0xFC = 0x64D0AC, +0xF4 =
 // BossGolem_Hook, +0xF8 = 0x64D0C0; Sprite_Current +1 = 2; jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossGolem_Enter(void) {
-    PointEnemy(0x64D0AC, ::bof3::Code(bof3::addr::BossGolem_Hook), 0x64D0C0);
+    PointEnemy(::bof3::Img(0x64D0AC), ::bof3::Code(bof3::addr::BossGolem_Hook), ::bof3::Img(0x64D0C0));
     rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -562,7 +562,7 @@ extern "C" void __cdecl BossGarr_Dispatch(unsigned passed) {
 // Sprite_SetAnimationBank(0x153); Sprite_Current (read after) +0x2A = 0;
 // Sprite_SetAnimation(0). Its eax is the last call's (no caller reads it).
 extern "C" void __cdecl BossGarr_Enter(void) {
-    PointEnemy(0x64D158, ::bof3::Code(bof3::addr::BossGarr_Hook), 0x64D164);
+    PointEnemy(::bof3::Img(0x64D158), ::bof3::Code(bof3::addr::BossGarr_Hook), ::bof3::Img(0x64D164));
     rv::Current<records::BattleEnemy>()->state = 1;
     BH_CALL(Sprite_SetAnimationBank)(0x153);
     rv::Current<records::BattleEnemy>()->flip = 0;

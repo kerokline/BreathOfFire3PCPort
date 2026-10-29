@@ -171,8 +171,6 @@ constexpr uint32_t kGlyphWidths = 0x66208C; // Scena17_GlyphWidths: 0x40 bytes
 constexpr ::bof3::image::CodeVa kBootTask{bof3::addr::Boot_Task};    // Boot_Task's address, as the original pushes it
 constexpr ::bof3::image::CodeVa kEndTask{bof3::addr::Scena17_EndTask};     // Scena17_EndTask's, likewise
 
-constexpr uint32_t kTextLo = 0x401000, kTextHi = 0x5C3000;
-
 // A handler out of one of the chapters' .data tables, read in place and
 // unchecked as the original reads it; where the original would jump to what
 // is not code (an index past its table), ours aborts. During the fuzz the
@@ -180,9 +178,11 @@ constexpr uint32_t kTextLo = 0x401000, kTextHi = 0x5C3000;
 uint32_t CodeAt(uint32_t table, int index, const char* who) {
     const uint32_t at = table + 4u * static_cast<uint32_t>(index);
     const uint32_t entry = L(at);
-    if (!scenario_harness::g_active && (entry < kTextLo || entry >= kTextHi))
-        bof3::Fatal("%s: index %d reads 0x%X at 0x%X, not code - past its table (the original jumps there)", who, index,
-                    (unsigned)entry, (unsigned)at);
+    // A code word: hosted a VA in BOF3.exe's .text, in bof3x.exe a function of ours
+    // the bind table names (common/image_base.h IsCodeWord); not the trap, not data.
+    if (!scenario_harness::g_active && !::bof3::IsCodeWord(entry))
+        bof3::Fatal("%s: index %d reads 0x%X at 0x%X (VA 0x%X), not code - past its table (the original jumps there)", who,
+                    index, (unsigned)entry, (unsigned)at, (unsigned)::bof3::VaOf(at));
     return entry;
 }
 VoidFn Handler(uint32_t table, int index, const char* who) {

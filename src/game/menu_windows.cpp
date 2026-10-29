@@ -876,7 +876,7 @@ extern "C" void __cdecl Menu_DrawTitleBox(int x, int y, int w, int h, int colour
 // ((b3 + 0x1E0) << 6) | (b2 >> 4) - after a draw mode of page 0x1E with dtd;
 // shade 0x80 for 0, 0x30 for 1, else (0x40, 0x40, 0x80).
 extern "C" void __cdecl Menu_DrawBigIcon(int x, int y, int icon, int shade) {
-    const unsigned char* const r = At(at::kIconRects + (static_cast<unsigned>(icon) & 0xFF) * 4);
+    const unsigned char* const r = At(::bof3::Img(at::kIconRects) + (static_cast<unsigned>(icon) & 0xFF) * 4);
     g.draw_mode(Next(), 0, 1, 0x1E, 0);
     g.commit(1, 0xC);
     unsigned char* const p = Next();
@@ -980,7 +980,7 @@ extern "C" void __cdecl Menu_DrawButtonRow(int x, int y, int set, int sel, int) 
         const unsigned char* const text = Ptr(::bof3::Img(at::kVerbPointers.v) + verb * 4u);
         const unsigned n = g.char_count(text);
         g.verb_label(x + 0x16 + 6 * (8 * i - static_cast<int>(n)), y + 3, colour, 0x10, text);
-        g.pieces(bx, y, At(i == selected ? 0x663440 : 0x663428), 0);
+        g.pieces(bx, y, At(::bof3::Img(i == selected ? 0x663440 : 0x663428)), 0);
         ++i;
     } while (i < sets[s5]);
 }
@@ -1015,10 +1015,10 @@ extern "C" unsigned char __cdecl Text_CharCount(const unsigned char* text) {
 extern "C" unsigned __cdecl Item_BasePrice(unsigned category, unsigned id) {
     const unsigned i = id & 0xFF;
     switch (category & 0xFF) {
-    case 1: return Word(At(0x65746A + i * 28));
-    case 2: return Word(At(0x657D80 + i * 26));
-    case 3: return Word(At(0x658466 + i * 24));
-    default: return Word(At(0x656B3C + i * 22));
+    case 1: return Word(At(::bof3::Img(0x65746A) + i * 28));
+    case 2: return Word(At(::bof3::Img(0x657D80) + i * 26));
+    case 3: return Word(At(::bof3::Img(0x658466) + i * 24));
+    default: return Word(At(::bof3::Img(0x656B3C) + i * 22));
     }
 }
 
@@ -1228,7 +1228,7 @@ extern "C" void __cdecl Menu_DrawMoneyBox(int x, int y, int, unsigned value) {
     g.sprintf_(PrintBuf(), Format(::bof3::Img(at::kFmt7d.v)), value);
     g.font12(x + 4, y + 4, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
     g.text_draw_at(x + 0x58, y + 4, 0, 0xFF, At(::bof3::Img(at::kMoneyLabel.v)));
-    g.pieces(x, y, At(0x6633A8), 0);
+    g.pieces(x, y, At(::bof3::Img(0x6633A8)), 0);
     for (unsigned i = 0; i < 11; ++i) g.pieces(x + static_cast<int>(i * 8), y, At(::bof3::Img(Menu_PlayTimePieces_addr)), 0);
     g.pieces(x, y, At(::bof3::Img(Menu_PlayTimePieces_addr) + 0xc), 0);
 }
@@ -1274,10 +1274,10 @@ extern "C" void __cdecl Shop_DrawMemberStats(int x, int y, unsigned member, unsi
         }
     }
     g.item_icon(x + 0x46, y + 2, record[9], cannot);
-    g.text_draw_at(x + 5, y + 6, colour, 0xFF, At(at::kStatLabels[0]));
-    g.text_draw_at(x + 5, y + 0x15, colour, 0xFF, At(at::kStatLabels[1]));
-    g.text_draw_at(x + 5, y + 0x24, colour, 0xFF, At(at::kStatLabels[2]));
-    g.pieces(x, y, At(0x663528), 0);
+    g.text_draw_at(x + 5, y + 6, colour, 0xFF, At(::bof3::Img(at::kStatLabels[0])));
+    g.text_draw_at(x + 5, y + 0x15, colour, 0xFF, At(::bof3::Img(at::kStatLabels[1])));
+    g.text_draw_at(x + 5, y + 0x24, colour, 0xFF, At(::bof3::Img(at::kStatLabels[2])));
+    g.pieces(x, y, At(::bof3::Img(0x663528)), 0);
 }
 
 // original 0x575690 (PSX 0x801DBCBC): the menu backdrop (docs/menu-screens.md
@@ -1413,8 +1413,8 @@ extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
         const unsigned char grey = w[9] ? 7 : 0;
         g.font8(rv::As<records::WindowRecord>(w)->x + 0x55, rv::As<records::WindowRecord>(w)->y + 0x92, grey, reinterpret_cast<const unsigned char*>(PrintBuf()));
     }
-    g.pieces(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, At((w[0x10] & 2) ? 0x66349C : 0x663484), 1);
-    g.pieces(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, At((w[0x10] & 1) ? 0x6634A8 : 0x663490), 1);
+    g.pieces(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, At(::bof3::Img((w[0x10] & 2) ? 0x66349C : 0x663484)), 1);
+    g.pieces(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, At(::bof3::Img((w[0x10] & 1) ? 0x6634A8 : 0x663490)), 1);
     {
         const unsigned t = static_cast<std::uint16_t>(rv::As<records::ItemListWindow>(w)->arrows);
         rv::Store<unsigned>(rv::As<records::ItemListWindow>(w)->arrows, (t & 0xF0) ? t - 0x10 : 0);

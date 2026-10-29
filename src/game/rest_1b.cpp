@@ -57,7 +57,7 @@ Handler CodeAt(U table, unsigned count, unsigned index, const char* who) {
     const U cell = table + 4u * index;
     if (index >= count)
         bof3::Fatal("%s: index %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index,
-                    count, static_cast<unsigned>(table), static_cast<unsigned>(cell));
+                    count, static_cast<unsigned>(::bof3::VaOf(table)), static_cast<unsigned>(::bof3::VaOf(cell)));
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(cell)))));
 }
 void ByForm(U table, unsigned count, const char* who) { CodeAt(table, count, rv::As<records::PartyMember>(S())->column, who)(); }

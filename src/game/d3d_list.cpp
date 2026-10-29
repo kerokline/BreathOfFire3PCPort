@@ -211,7 +211,7 @@ void Gfx_DrawOTag(unsigned long* ot) {
         node = p;
     }
     if (!software) Scene(0x28);
-    for (U a = kFontInUse; a < kFontInUseEnd; a += 0x14) PutWord(a, 0);
-    for (U a = kCellInUse; a < kCellInUseEnd; a += 0x28) PutWord(a, 0);
+    for (U a = ::bof3::Img(kFontInUse); a < ::bof3::Img(kFontInUseEnd); a += 0x14) PutWord(a, 0);
+    for (U a = ::bof3::Img(kCellInUse); a < ::bof3::Img(kCellInUseEnd); a += 0x28) PutWord(a, 0);
     if (D3d_AfterDrawRequest != 0) g.after_draw();
 }

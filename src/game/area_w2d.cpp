@@ -411,7 +411,7 @@ extern "C" unsigned char __cdecl Area98_Trigger44(unsigned char*, unsigned char*
     Ptr(::bof3::Img(AreaW1a_FocusObject_addr))[1] = 4;
     Ptr(::bof3::Img(AreaW1a_FocusObject_addr))[0x83] = 0;
     SetWord(Ptr(::bof3::Img(AreaW1a_FocusObject_addr)) + 0x8A, 0);
-    const auto offset = static_cast<std::int32_t>(static_cast<U>(Long(Mem(::bof3::Img(AreaW1a_FocusObject_addr)))) - Sprite_Objects_addr);
+    const auto offset = static_cast<std::int32_t>(static_cast<U>(Long(Mem(::bof3::Img(AreaW1a_FocusObject_addr)))) - ::bof3::Img(Sprite_Objects_addr));
     B(::bof3::Img(AreaW0a_TailKind_addr)) = 4;
     B(::bof3::Img(AreaW0c_TailSub_addr)) = 9;
     B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(offset / 0xA4);

@@ -67,10 +67,26 @@ int __cdecl CountingOriginal() {
 // (rule 4).
 constexpr unsigned kMaxWidth = 8;
 
-[[noreturn]] void RefuseFormat(const char* fmt, const char* spec, std::size_t len) {
-    bof3::Fatal("Crt_sprintf: \"%s\" has the conversion \"%.*s\", which no format of the game uses and ours does not "
-                "take (docs/crt-rest.md section 2.2)",
-                fmt, static_cast<int>(len), spec);
+// Crt_sprintf's caller, for the refusal: a return into the image as its VA
+// (symbols.toml's frame), else into our DLL as bof3x.dll+offset (__ImageBase,
+// the DLL's own base).
+extern "C" char __ImageBase;
+const char* CallerText(const void* ret, char* out, std::size_t cap) {
+    const auto at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(ret));
+    const auto dll = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&__ImageBase));
+    if (at - ::bof3::ImageBase() < 0x58F000u)
+        std::snprintf(out, cap, "VA 0x%08X", static_cast<unsigned>(::bof3::VaOf(at)));
+    else
+        std::snprintf(out, cap, "bof3x.dll+0x%X", static_cast<unsigned>(at - dll));
+    return out;
+}
+
+[[noreturn]] void RefuseFormat(const char* fmt, const char* spec, std::size_t len, const void* caller) {
+    char from[40];
+    bof3::Fatal("Crt_sprintf: \"%s\" (at 0x%08X) has the conversion \"%.*s\", which no format of the game uses and "
+                "ours does not take (docs/crt-rest.md section 2.2); called from %s",
+                fmt, static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(fmt)), static_cast<int>(len), spec,
+                CallerText(caller, from, sizeof from));
 }
 
 char* PutPadded(char* out, const char* prefix, const char* text, std::size_t len, unsigned width, bool zero) {
@@ -134,6 +150,7 @@ extern "C" int __cdecl Rand(void) {
 // original 0x5B9380: sprintf over MSVC 6's _output, for the conversions above.
 // Returns the characters written, the NUL not counted.
 extern "C" int __cdecl Crt_sprintf(char* dst, const char* fmt, ...) {
+    const void* const caller = __builtin_return_address(0);   // named by a refusal
     va_list ap;
     va_start(ap, fmt);
     char* out = dst;
@@ -150,10 +167,10 @@ extern "C" int __cdecl Crt_sprintf(char* dst, const char* fmt, ...) {
         while (*p >= '0' && *p <= '9') {
             width = width * 10 + static_cast<unsigned>(*p++ - '0');
             has_width = true;
-            if (width > kMaxWidth) RefuseFormat(fmt, spec, static_cast<std::size_t>(p - spec));
+            if (width > kMaxWidth) RefuseFormat(fmt, spec, static_cast<std::size_t>(p - spec), caller);
         }
         const char conv = *p;
-        if (conv == '\0') RefuseFormat(fmt, spec, static_cast<std::size_t>(p - spec));
+        if (conv == '\0') RefuseFormat(fmt, spec, static_cast<std::size_t>(p - spec), caller);
         ++p;
         const std::size_t speclen = static_cast<std::size_t>(p - spec);
         char digits[12];
@@ -178,7 +195,7 @@ extern "C" int __cdecl Crt_sprintf(char* dst, const char* fmt, ...) {
             if (!s) s = "(null)";
             while (*s) *out++ = *s++;
         } else {
-            RefuseFormat(fmt, spec, speclen);
+            RefuseFormat(fmt, spec, speclen, caller);
         }
     }
     *out = '\0';

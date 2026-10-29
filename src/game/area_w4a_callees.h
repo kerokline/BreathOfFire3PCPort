@@ -87,7 +87,7 @@ struct WorldMapTables {
 // choice table, +0x34 -> Area130_ChoiceTailState2, and the init 0x4249D0).
 // The plate animations and the cell records sit before the descriptor, the
 // rest after it.
-constexpr WorldMapTables kWm152 = {
+const WorldMapTables kWm152 = {
     "Area152",
     ::bof3::Img(0x637344), ::bof3::Img(0x6373A4),   // 3 place rows (then the plate state table)
     ::bof3::Img(0x637288),             // 3 plate animations

@@ -121,9 +121,11 @@ using Handler = void (__cdecl*)();
 Handler CodeAt(std::uint32_t table, unsigned index, const char* who) {
     const std::uint32_t cell = table + 4u * index;
     const auto entry = static_cast<std::uint32_t>(L(cell));
-    if (!scenario_harness::g_active && (entry < 0x401000 || entry >= 0x5C3000))
-        bof3::Fatal("%s: index %u reads 0x%X at 0x%X, not code - past its table (the original jumps there)", who, index,
-                    (unsigned)entry, (unsigned)cell);
+    // A code word: hosted a VA in BOF3.exe's .text, in bof3x.exe a function of ours
+    // the bind table names (common/image_base.h IsCodeWord); not the trap, not data.
+    if (!scenario_harness::g_active && !::bof3::IsCodeWord(entry))
+        bof3::Fatal("%s: index %u reads 0x%X at 0x%X (VA 0x%X), not code - past its table (the original jumps there)", who,
+                    index, (unsigned)entry, (unsigned)cell, (unsigned)::bof3::VaOf(cell));
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(entry));
 }
 
@@ -779,7 +781,7 @@ extern "C" unsigned char __cdecl Field_GatewayExit(void) {
     if (SH_CALL(Field_CellHasEvent)(ObjTrio[0].x_whole, ObjTrio[0].z_whole)) return 0;
     if (Field_ScriptFlags2 & 0x1000) return 0;
     const std::uint16_t area = Game_AreaNumber;
-    for (std::uint32_t r = at::kGatewayExits; r < at::kGatewayExitsEnd; r += 8) {
+    for (std::uint32_t r = ::bof3::Img(at::kGatewayExits); r < ::bof3::Img(at::kGatewayExitsEnd); r += 8) {
         if (W(r) != area) continue;
         AreaW0b_Place = W(r + 2);
         AreaEntry_PendingFlags = 4;

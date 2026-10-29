@@ -134,13 +134,17 @@ extern "C" void __cdecl Field_ModeTailRun(void) { Entry(::bof3::Img(Field_ModeTa
 // of the 153 reads eax after the call (capstone, to the first branch or
 // write of eax); the jump passes the entry's through regardless.
 extern "C" __attribute__((naked)) void __cdecl Scenario_CallA(unsigned) {
-    asm("movsbl %c0, %%eax\n\t"            // Cond_ByteFA, the chapter
+    // edx holds the image's move first (Bof3_ImageMove, src/hook/host.cpp;
+    // task_sched.cpp says why the VAs are displacements); eax, ecx and edx are
+    // the three the original writes.
+    asm("movl _Bof3_ImageMove, %%edx\n\t"
+        "movsbl %c0(%%edx), %%eax\n\t"     // Cond_ByteFA, the chapter
         "movl 4(%%esp), %%ecx\n\t"
-        "movl %c1(,%%eax,4), %%edx\n\t"    // field_modes::kCallATables
+        "movl %c1(%%edx,%%eax,4), %%edx\n\t"   // field_modes::kCallATables
         "andl $0xFF, %%ecx\n\t"
         "jmp *(%%edx,%%ecx,4)"
         :
-        : "i"(::bof3::Img(0x8034E0)), "i"(::bof3::Img(0x660B84)));
+        : "i"(0x8034E0), "i"(0x660B84));
 }
 
 // original 0x56B2A0: scenario 16's vtable slot 0 (PSX 0x801F6C90): a tail

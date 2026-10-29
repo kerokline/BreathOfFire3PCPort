@@ -172,7 +172,7 @@ MFX_EXPORT void __cdecl FxDiscFan_Start(void) {
         t[9] = static_cast<unsigned char>(i * 6 + 1);
         Bump(sc[0xB], 1);
     }
-    for (std::uint32_t a = Gfx_ClutStrip_addr + 0x3400 + 2; a < (Gfx_ClutStrip_addr + 0x3400) + 0x20; a += 2)
+    for (std::uint32_t a = ::bof3::Img(Gfx_ClutStrip_addr) + 0x3400 + 2; a < (::bof3::Img(Gfx_ClutStrip_addr) + 0x3400) + 0x20; a += 2)
         SetWord(At(a), Word(At(a - 0x4000)) | 0x8000u);
     const unsigned char target = Byte(::bof3::Img(at::kTarget));
     Gfx_ClutStrip[0x1a00] = 0;

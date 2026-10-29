@@ -716,8 +716,8 @@ extern "C" void __cdecl BattleAction_AbilityNotice(void) {
             ++slot;
             BossSb_Countdown = slot;
             const U id = rv::As<records::ActionRecord>(record)->action_id;  // 0x904B40: the acting block's action record
-            const bool learns = (Word(At(0x65C4DC + 24 * id)) & 0x200) != 0;
-            unsigned char* const flags = At(0x802D24 + slot * at::kMemberSize);
+            const bool learns = (Word(At(::bof3::Img(0x65C4DC) + 24 * id)) & 0x200) != 0;
+            unsigned char* const flags = At(::bof3::Img(0x802D24) + slot * at::kMemberSize);
             if (!(flags[0] & 8)) continue;
             SetLong(flags, static_cast<std::int32_t>(static_cast<U>(Long(flags)) & ~8u));
             if (!learns) {
@@ -1006,7 +1006,7 @@ extern "C" void __cdecl BattleLoss_Restart(void) {
     BattleMisc_BannerKinds = 0;
     EventBattle_Flags = 0;
     EventBattle_Id = 0;
-    B(0x904AA0) = 0;
+    B(::bof3::Img(0x904AA0)) = 0;
     BattleActions_Step = 0;
     BattleE4_Step2 = 0;
     BattleE4_Step3 = 0;

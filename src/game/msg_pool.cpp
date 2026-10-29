@@ -19,7 +19,7 @@ constexpr std::uint32_t kPoolRoom = 0x4000;       // in the arena, to the CLUT s
 constexpr std::uint32_t kMovedRoom = 0x8000;
 
 std::uint8_t* ArenaPool() {
-    return reinterpret_cast<std::uint8_t*>(bof3::addr::MessagePools) + kPoolTag;
+    return reinterpret_cast<std::uint8_t*>(::bof3::Img(bof3::addr::MessagePools)) + kPoolTag;
 }
 
 // Where Msg_SystemPtr reads. The arena until MsgPool_Relocate is called.

@@ -27,6 +27,7 @@
 
 #include <cstring>
 
+#include "common/image_base.h"
 #include "game/text_advance.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -79,7 +80,8 @@ void PauseText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32
     for (U i = 0; i < 4; ++i) {
         const U ours = static_cast<U>(reinterpret_cast<std::uintptr_t>(g_text[i]));
         std::uint8_t was[4], is[4];
-        std::memcpy(was, &kLines[i].original, 4);
+        const U was_place = ::bof3::Img(kLines[i].original);   // the pointer word holds the place
+        std::memcpy(was, &was_place, 4);
         std::memcpy(is, &ours, 4);
         bof3::PatchBytes("PauseText", kLines[i].slot, was, is, 4);
     }

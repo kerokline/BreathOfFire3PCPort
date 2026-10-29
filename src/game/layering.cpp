@@ -680,7 +680,7 @@ void AfterSprite(const unsigned char* sprite) {
     // the draw-item record's half for this buffer. Not at all when the
     // packet pool has no room for every one (Gfx_CommitPrim's own limit,
     // tested once for the whole set).
-    const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + kPoolLimit;
+    const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
     if (limit <= Address(Gfx_PacketNext) + 0xCu + g_faerie_sides_n * 0x48u) {
         if (g_log) bof3::Log("D300 fix    frame %u: no room in the packet pool for the table's sides", static_cast<unsigned>(Frame_Counter));
         g_faerie = nullptr;

@@ -50,7 +50,7 @@ unsigned MessageAt(std::uint32_t table, int row) {
 // multiply computes it: a signed 32-bit difference divided by 0xA4,
 // truncated toward 0.
 unsigned char ObjectIndex(const unsigned char* object) {
-    const auto d = static_cast<std::int32_t>(Key(object) - Sprite_Objects_addr);
+    const auto d = static_cast<std::int32_t>(Key(object) - ::bof3::Img(Sprite_Objects_addr));
     return static_cast<unsigned char>(d / 0xA4);
 }
 

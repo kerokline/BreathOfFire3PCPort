@@ -266,7 +266,7 @@ extern "C" void __cdecl AreaMap_SlotZones(const unsigned char* entry) {
                 object[kTrioSlot] = Draw_OtSlot;
             }
         }
-        unsigned char* const fourth = At(FieldEvent_Object905DA0_addr);
+        unsigned char* const fourth = At(::bof3::Img(FieldEvent_Object905DA0_addr));
         if (!inside(fourth + kTrioPosition)) continue;
         if (zone[0] & 1) fourth[kFourthFlags] |= 1;
         else fourth[kFourthFlags] &= 0xFE;

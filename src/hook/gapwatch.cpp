@@ -38,6 +38,13 @@ constexpr int kSlots = 2;   // words: each takes two of the four registers
 
 // Everything the handler touches is static: it runs on whatever stack took
 // the fault, and game logic runs on 16 KB task stacks (calltrace.cpp).
+//
+// Ranges, pages and debug-register words are PLACES: the fault and trap
+// addresses the handler compares them with are. data.toml's ranges are VAs,
+// placed with Img when they are read in (GapWatch_Start), and the file and
+// the log print VAs again (ToVa), so tools/gapwatch.py reads the same columns
+// whatever the image's base (docs/relocatable-image-design.md 9). The
+// self-test's scratch pages are places of their own and are never printed.
 struct WRange {
     std::uint32_t lo, hi;
     const char* how;
@@ -116,6 +123,8 @@ LARGE_INTEGER g_t0{}, g_freq{};
 
 std::uint32_t Va(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 void* Ptr(std::uint32_t va) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(va)); }
+// A place in the image as its VA, for the file and the log.
+std::uint32_t ToVa(std::uint32_t place) { return place - ImageBase() + image::kBase; }
 
 int FindPage(std::uint32_t base) {
     int lo = 0, hi = g_pages;
@@ -349,7 +358,7 @@ void BuildPages() {
             if (g_pages == kMaxPages) Fatal("gapwatch: more than %d pages to guard", kMaxPages);
             MEMORY_BASIC_INFORMATION m{};
             if (!VirtualQuery(Ptr(b), &m, sizeof m) || m.State != MEM_COMMIT || (m.Protect & (PAGE_GUARD | PAGE_NOACCESS)))
-                Fatal("gapwatch: the page 0x%08X is not committed and accessible (state 0x%lX, protect 0x%lX)", (unsigned)b,
+                Fatal("gapwatch: the page at 0x%08X is not committed and accessible (state 0x%lX, protect 0x%lX)", (unsigned)b,
                       m.State, m.Protect);
             WPage& pg = g_page[g_pages++];
             std::memset(&pg, 0, sizeof pg);
@@ -440,7 +449,7 @@ void Rearm() {
     }
 }
 
-// An address as the file writes it: the exe's own by value (the stub page is
+// An address as the file writes it: the exe's own as its VA (the stub page is
 // Capcom's address space), a module's as name+offset (our DLL is ASLR'd;
 // tools/gapwatch.py symbolises bof3x.dll+offset).
 void Name(std::uint32_t v, char* out, size_t cap) {
@@ -455,7 +464,7 @@ void Name(std::uint32_t v, char* out, size_t cap) {
         m && GetModuleFileNameA(m, path, sizeof path)) {
         const char* base = std::strrchr(path, '\\');
         base = base ? base + 1 : path;
-        if (Va(m) == exe_layout::kImageBase) std::snprintf(out, cap, "0x%08X", (unsigned)v);
+        if (Va(m) == ImageBase()) std::snprintf(out, cap, "0x%08X", (unsigned)ToVa(v));
         else std::snprintf(out, cap, "%s+0x%X", base, (unsigned)(v - Va(m)));
     } else {
         std::snprintf(out, cap, "0x%08X", (unsigned)v);
@@ -494,14 +503,14 @@ void Write() {
         else std::snprintf(wf, sizeof wf, "-");
         if (!r.ready) {
             put("range\t0x%06X\t0x%06X\t%s\t%s\tno\t-\t-\t-\t-\t-\t-\t-\t%ld\t%ld\t%ld\t%s\t%s\t%ld\t%s\t%ld\t%ld\r\n",
-                (unsigned)r.lo, (unsigned)r.hi, r.how, r.from, (long)r.reads, (long)r.rbw, (long)r.writes, wf, w,
+                (unsigned)ToVa(r.lo), (unsigned)ToVa(r.hi), r.how, r.from, (long)r.reads, (long)r.rbw, (long)r.writes, wf, w,
                 (long)r.edge, e, (long)r.dr_hits, (long)r.dr_latches);
             continue;
         }
         Name(r.eip, a, sizeof a);
         for (int k = 0; k < kCallers; ++k) Name(r.callers[k], c[k], sizeof c[k]);
         put("range\t0x%06X\t0x%06X\t%s\t%s\tyes\t%u\t%u\t0x%04X\t%s\t%u\t%s\t%s,%s,%s,%s\t%ld\t%ld\t%ld\t%s\t%s\t%ld\t%s\t%ld\t%ld\r\n",
-            (unsigned)r.lo, (unsigned)r.hi, r.how, r.from, (unsigned)r.frame, (unsigned)r.rframe, (unsigned)r.area,
+            (unsigned)ToVa(r.lo), (unsigned)ToVa(r.hi), r.how, r.from, (unsigned)r.frame, (unsigned)r.rframe, (unsigned)r.area,
             r.kind == 2 ? "dr" : "page", (unsigned)r.thread, a, c[0], c[1], c[2], c[3], (long)r.reads, (long)r.rbw,
             (long)r.writes, wf, w, (long)r.edge, e, (long)r.dr_hits, (long)r.dr_latches);
     }
@@ -511,7 +520,7 @@ void Write() {
         int nr = 0;
         for (int k = 0; k < g_ranges; ++k)
             if (g_range[k].lo < pg.base + kPage && g_range[k].hi > pg.base) ++nr;
-        put("page\t0x%06X\t%d\t%ld\t%ld\t%ld\t", (unsigned)pg.base, nr, (long)pg.faults, (long)pg.range_faults,
+        put("page\t0x%06X\t%d\t%ld\t%ld\t%ld\t", (unsigned)ToVa(pg.base), nr, (long)pg.faults, (long)pg.range_faults,
             (long)pg.parks);
         int order[kTop], n_top = 0;
         for (int k = 0; k < kTop && pg.top_eip[k]; ++k) order[n_top++] = k;
@@ -590,7 +599,7 @@ void GapWatch_SelfTest() {
     unsigned data_pages = 0;
     if (off) {
         for (std::uint32_t b = exe_layout::kDataVa; b < exe_layout::kDataVa + exe_layout::kDataBytes; b += kPage, ++data_pages)
-            Check(!Guarded(b), "BOF3X_GAPWATCH unset, yet a page of .data is guarded");
+            Check(!Guarded(Img(b)), "BOF3X_GAPWATCH unset, yet a page of .data is guarded");
     }
 
     // Three scratch pages: two watched, the third never guarded.
@@ -785,11 +794,11 @@ void GapWatch_Start(void* dll_module) {
         if (!ClassWanted(r.how)) continue;
         if (g_ranges == kMaxRanges) Fatal("gapwatch: more than %d ranges to watch", kMaxRanges);
         WRange& w = g_range[g_ranges++];
-        w.lo = r.lo;
-        w.hi = r.hi;
+        w.lo = Img(r.lo);   // data.toml's VAs, placed
+        w.hi = Img(r.hi);
         w.how = r.how;
         w.from = r.from;
-        if (g_ranges > 1 && w.lo < g_range[g_ranges - 2].hi) Fatal("gapwatch: data.toml's ranges are not in order at 0x%06X", (unsigned)w.lo);
+        if (g_ranges > 1 && w.lo < g_range[g_ranges - 2].hi) Fatal("gapwatch: data.toml's ranges are not in order at 0x%06X", (unsigned)r.lo);
     }
     if (g_ranges == 0) Fatal("gapwatch: the image (%s) has no range of the classes %s", g_build, g_classes);
     BuildPages();
@@ -801,20 +810,20 @@ void GapWatch_Start(void* dll_module) {
     {
         char v[16];
         if (GetEnvironmentVariableA("BOF3X_GAPWATCH_PIN", v, sizeof v)) {
-            const auto at = static_cast<std::uint32_t>(std::strtoul(v, nullptr, 16));
+            const auto at = Img(static_cast<std::uint32_t>(std::strtoul(v, nullptr, 16)));   // a VA, placed
             const int ri = FirstAbove(at);
             if (ri >= g_ranges || g_range[ri].lo > at)
                 Fatal("BOF3X_GAPWATCH_PIN=%s: no watched range holds that address", v);
             if (((g_range[ri].hi + 3) & ~3u) - (g_range[ri].lo & ~3u) > 4u * kSlots)
-                Fatal("BOF3X_GAPWATCH_PIN=%s: 0x%06X..0x%06X is more than %d words", v, (unsigned)g_range[ri].lo,
-                      (unsigned)g_range[ri].hi, kSlots);
+                Fatal("BOF3X_GAPWATCH_PIN=%s: 0x%06X..0x%06X is more than %d words", v, (unsigned)ToVa(g_range[ri].lo),
+                      (unsigned)ToVa(g_range[ri].hi), kSlots);
             if (!g_dr_on) Fatal("BOF3X_GAPWATCH_PIN wants the debug registers, which BOF3X_GAPWATCH_DR=0 turns off");
             g_pin_range = ri;
         }
     }
     // What the handler reads must never be on a guarded page.
     for (std::uint32_t at : {Va(&Frame_Counter), Va(&Game_AreaNumber)})
-        if (FindPage(at & ~(kPage - 1)) >= 0) Fatal("gapwatch: 0x%08X, which the handler reads, is on a watched page", (unsigned)at);
+        if (FindPage(at & ~(kPage - 1)) >= 0) Fatal("gapwatch: 0x%08X, which the handler reads, is on a watched page", (unsigned)ToVa(at));
 
     // The file: a directory gets one named for the build and the route.
     std::wstring out(path, n);

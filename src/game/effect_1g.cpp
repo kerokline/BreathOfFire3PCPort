@@ -59,9 +59,11 @@ using Handler = void (__cdecl*)();
 U CodeAt(U table, U index, const char* who) {
     const U cell = table + 4u * index;
     const U entry = L(cell);
-    if (!scenario_harness::g_active && (entry < at::kTextLo || entry >= at::kTextHi))
-        bof3::Fatal("%s: index %u reads 0x%X at 0x%X, not code - past its table (the original jumps there)", who,
-                    (unsigned)index, (unsigned)entry, (unsigned)cell);
+    // A code word: hosted a VA in BOF3.exe's .text, in bof3x.exe a function of ours
+    // the bind table names (common/image_base.h IsCodeWord); not the trap, not data.
+    if (!scenario_harness::g_active && !::bof3::IsCodeWord(entry))
+        bof3::Fatal("%s: index %u reads 0x%X at 0x%X (VA 0x%X), not code - past its table (the original jumps there)", who,
+                    (unsigned)index, (unsigned)entry, (unsigned)cell, (unsigned)::bof3::VaOf(cell));
     return entry;
 }
 

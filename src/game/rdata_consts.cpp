@@ -98,7 +98,7 @@ void Verify() {
 void Map() {
     if (!bof3::IsExeHost()) bof3::Fatal("rdata::Map in the hosted build: Capcom's .rdata is the loader's there");
     const auto* ours = reinterpret_cast<const unsigned char*>(kCopies.data());
-    for (const Entry& e : kEntries) std::memcpy(At(e.pc), ours + (e.pc - kLo), e.size);
+    for (const Entry& e : kEntries) std::memcpy(At(::bof3::Img(e.pc)), ours + (e.pc - kLo), e.size);   // VA placed
     std::memcpy(At(::bof3::Img(kKeyboardFormat.v)), &c_dfDIKeyboard, sizeof c_dfDIKeyboard);
     bof3::Log("rdata: .rdata the engine's - %u constants at their addresses and c_dfDIKeyboard's header at 0x%06X (its "
               "objects the SDK's, at %p); the rest zero", (unsigned)(sizeof kEntries / sizeof kEntries[0]),

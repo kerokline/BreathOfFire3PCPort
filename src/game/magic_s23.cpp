@@ -164,7 +164,7 @@ unsigned char Facing() {
 // dword's byte +2; `map` switches the top byte (the polygon code) of each.
 // A run whose steps do not land on its end is not checked, as the original.
 void Walk(void (*map)(unsigned char*)) {
-    for (std::uint32_t cell = MapView_Cells_addr; cell < at::kMapCellsEnd; cell += 2) {
+    for (std::uint32_t cell = ::bof3::Img(MapView_Cells_addr); cell < ::bof3::Img(at::kMapCellsEnd); cell += 2) {
         const unsigned c = Word(Mem(cell));
         if (c == 0) continue;
         const std::uint32_t index = c + (static_cast<std::uint32_t>(Long(Mem(::bof3::Img(AreaMap_CellBase_addr)))) & 0xFFFF);
@@ -1100,7 +1100,7 @@ S23_EXPORT void __cdecl Simoon_Start(void) {
         t[1] = 0;
         Bump(sc[0xB]);
     }
-    for (std::uint32_t a = Gfx_ClutStrip_addr + 0x3400 + 2; a < (Gfx_ClutStrip_addr + 0x3400) + 0x20; a += 2) {
+    for (std::uint32_t a = ::bof3::Img(Gfx_ClutStrip_addr) + 0x3400 + 2; a < (::bof3::Img(Gfx_ClutStrip_addr) + 0x3400) + 0x20; a += 2) {
         SetWord(Mem(a), Word(Mem(a - 0x4000)) | 0x8000u);
         SetWord(Mem(a + 0x20), Word(Mem(a + 0x20 - 0x4000)) | 0x8000u);
     }

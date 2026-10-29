@@ -160,15 +160,15 @@ extern "C" void __cdecl FieldMenu_Run(void) {
 // past the three pairs, the reserve's bytes over the party's. The state is
 // re-read after the placement.
 extern "C" void __cdecl FieldMenu_Open(void) {
-    Byte(0x7E0675) = 0;
-    Byte(0x7E0674) = 0;
-    Byte(0x7E0676) = 0;
+    Byte(::bof3::Img(0x7E0675)) = 0;
+    Byte(::bof3::Img(0x7E0674)) = 0;
+    Byte(::bof3::Img(0x7E0676)) = 0;
     const unsigned char count = Field_MemberCount;
     MenuLists_Cursor = 0;
-    Byte(0x937F8F) = 0;
-    Byte(0x937F8E) = 0;
-    Byte(0x905D90) = 0;
-    Byte(0x905BA1) = 0;
+    Byte(::bof3::Img(0x937F8F)) = 0;
+    Byte(::bof3::Img(0x937F8E)) = 0;
+    Byte(::bof3::Img(0x905D90)) = 0;
+    Byte(::bof3::Img(0x905BA1)) = 0;
     if (count != 0) {
         signed char i = 0;
         do {
@@ -205,11 +205,11 @@ extern "C" void __cdecl FieldMenu_Open(void) {
     }
     static constexpr std::uint32_t kDwords[] = {0x9398B8, 0x939898, 0x9398A0, 0x9398A4, 0x9398A8, 0x939880, 0x9398AC,
                                                 0x939884, 0x9398C0, 0x939888, 0x9398C4, 0x93988C, 0x9398C8};
-    for (const std::uint32_t a : kDwords) move_script::SetLong(At(a), 0);
-    SetWord(At(0x9398B0), 0);
-    SetWord(At(0x939890), 0);
-    Byte(0x9398BC) = 0;
-    Byte(0x93989C) = 0;
+    for (const std::uint32_t a : kDwords) move_script::SetLong(At(::bof3::Img(a)), 0);
+    SetWord(At(::bof3::Img(0x9398B0)), 0);
+    SetWord(At(::bof3::Img(0x939890)), 0);
+    Byte(::bof3::Img(0x9398BC)) = 0;
+    Byte(::bof3::Img(0x93989C)) = 0;
     Rest2e_AbilityViewCursor = 0;
     Rest2e_AbilityViewTop = 0;
     if (ScenaSc6_Load10 == 1) {
@@ -360,7 +360,7 @@ extern "C" void __cdecl FieldMenu_PlaceWindows(void) {
         } while (i < Members());
     }
     struct Place { std::uint32_t at; unsigned char kind; std::uint16_t x, y; };
-    static constexpr Place kPlaces[] = {{::bof3::Img(Window7_addr), 1, 0xC8, 0x10},
+    static const Place kPlaces[] = {{::bof3::Img(Window7_addr), 1, 0xC8, 0x10},
                                         {::bof3::Img(Window8_addr), 2, 0x10, 0x10},
                                         {::bof3::Img(Window9_addr), 3, 0x68, 0x2A},
                                         {::bof3::Img(Window10_addr), 4, 0x73, 0x10}};

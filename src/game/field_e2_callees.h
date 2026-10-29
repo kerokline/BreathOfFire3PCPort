@@ -138,6 +138,4 @@ constexpr std::uint32_t kScenarioHooks = 0x662C80;   // Scenario_Hooks
 // kMapRow: now MapView_Row (symbols.toml). MapView_Row (s16)
 // kMapColumn: now MapView_Column (symbols.toml). MapView_Column (s16)
 
-constexpr std::uint32_t kTextLo = 0x401000, kTextHi = 0x5C3000;   // .text
-
 }  // namespace field_e2::at

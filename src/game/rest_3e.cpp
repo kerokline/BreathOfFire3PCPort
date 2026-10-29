@@ -108,7 +108,7 @@ void Dispatch(const char* who, const void* table, unsigned entries) {
     if (state >= entries)
         bof3::Fatal("%s: state byte +1 is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_3e.md section 7)",
-                    who, state, entries, (unsigned)AddressOf(table));
+                    who, state, entries, (unsigned)::bof3::VaOf(AddressOf(table)));
     reinterpret_cast<scenario_harness::Handler>(static_cast<std::uintptr_t>(UL(static_cast<const unsigned char*>(table) + 4 * state)))();
 }
 

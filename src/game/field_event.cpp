@@ -40,11 +40,11 @@ const Callees kOriginals = {
     Sprite_RestoreClut, Field_CopyInput, reinterpret_cast<const std::uint32_t*>(::bof3::Img(Field_LeaderStates_addr)),
     Sprite_ClearSteps, MapView_GroundAt, Field_LeaderAnimation,
     reinterpret_cast<const std::uint32_t*>(::bof3::Img(Field_LeaderControlSteps_addr)), Sprite_ScriptTick,
-    Fn<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Field_Tile89), Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Field_Tile8A)),
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Field_Tile89)), Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Field_Tile8A)),
     Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderIdleTest)),
-    {Fn<unsigned char (__cdecl*)()>(bof3::addr::Field_LeaderCellEvent), Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderTalkTest)),
-     Fn<unsigned char (__cdecl*)()>(bof3::addr::Field_LeaderSwapTest), Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderMenuTest)),
-     Fn<unsigned char (__cdecl*)()>(bof3::addr::Field_LeaderCheckTest), Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderRequest4Test)),
+    {Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderCellEvent)), Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderTalkTest)),
+     Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderSwapTest)), Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderMenuTest)),
+     Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderCheckTest)), Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderRequest4Test)),
      Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderRequest9Test))},
     Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderDirection)),
     Area_ZoneAt, Rand, Party_Count, Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(bof3::addr::Actor_EquipCount)),
@@ -325,7 +325,7 @@ extern "C" void __cdecl Sprite_LoadPalette(unsigned short* dst, unsigned index) 
     std::memcpy(&bank, Sprite_Current + 0x4C, sizeof bank);
     const unsigned char* const offsets = bank + Long(bank + 4);
     const std::uint32_t d = Address(dst);
-    const auto half = static_cast<std::int32_t>(d - Gfx_ClutStripSource_addr) >> 1;
+    const auto half = static_cast<std::int32_t>(d - ::bof3::Img(Gfx_ClutStripSource_addr)) >> 1;
     unsigned char* twin = At(::bof3::Img(Gfx_ClutStrip_addr) + static_cast<std::uint32_t>(half) * 2u);
     const unsigned char* from = offsets + Long(offsets + (index & 0xFF) * 4u);
     auto* to = reinterpret_cast<unsigned char*>(dst);

@@ -76,7 +76,7 @@ void Dispatch(const char* who, const char* by, const unsigned long* table, unsig
     if (index >= count)
         bof3::Fatal("%s: %s is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_1f.md section 7)",
-                    who, by, index, count, static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(table)));
+                    who, by, index, count, static_cast<unsigned>(::bof3::VaOf(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(table)))));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
 }
 void ByState(const char* who, const unsigned long* table, unsigned count) {

@@ -230,9 +230,9 @@ void Scroll(U repeat, const ListScroll& s, UC& cl, UC& al) {
         }
     }
 }
-constexpr ListScroll kItemScroll = {::bof3::Img(0x803340), ::bof3::Img(0x80333F), ::bof3::Img(0x803346), 0x7F, 0x77, false};
-constexpr ListScroll kShortScroll = {::bof3::Img(0x803340), ::bof3::Img(0x80333F), ::bof3::Img(0x803346), 0x1F, 0x17, false};
-constexpr ListScroll kViewScroll = {::bof3::Img(0x8033CF), ::bof3::Img(0x8033CE), ::bof3::Img(0x8033CC), 0x11, 9, true};
+const ListScroll kItemScroll = {::bof3::Img(0x803340), ::bof3::Img(0x80333F), ::bof3::Img(0x803346), 0x7F, 0x77, false};
+const ListScroll kShortScroll = {::bof3::Img(0x803340), ::bof3::Img(0x80333F), ::bof3::Img(0x803346), 0x1F, 0x17, false};
+const ListScroll kViewScroll = {::bof3::Img(0x8033CF), ::bof3::Img(0x8033CE), ::bof3::Img(0x8033CC), 0x11, 9, true};
 
 // A party member's cursor moved by 0x1000 / 0x4000 over `count` entries, s8,
 // wrapping (FieldItems_UseOnMember, FieldAbility_PickTarget): the byte as cl.

@@ -69,13 +69,14 @@ std::int32_t Abs32(U v) { return static_cast<std::int32_t>(S32(v) < 0 ? 0u - v :
 
 // A state table's entry, read in place (the fuzz swaps the entries for
 // recorders); past the table's code the original jumps to what is not code.
-constexpr U kTextLo = 0x401000, kTextHi = 0x5C3000;
 Handler Entry(U table, unsigned index, const char* who) {
     const U cell = table + 4u * index;
     const U entry = L(At(cell));
-    if (!scenario_harness::g_active && (entry < kTextLo || entry >= kTextHi))
-        bof3::Fatal("%s: index %u reads 0x%X at 0x%X, not code - past its table (the original jumps there)", who, index,
-                    (unsigned)entry, (unsigned)cell);
+    // A code word: hosted a VA in BOF3.exe's .text, in bof3x.exe a function of ours
+    // the bind table names (common/image_base.h IsCodeWord); not the trap, not data.
+    if (!scenario_harness::g_active && !::bof3::IsCodeWord(entry))
+        bof3::Fatal("%s: index %u reads 0x%X at 0x%X (VA 0x%X), not code - past its table (the original jumps there)", who,
+                    index, (unsigned)entry, (unsigned)cell, (unsigned)::bof3::VaOf(cell));
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(entry));
 }
 

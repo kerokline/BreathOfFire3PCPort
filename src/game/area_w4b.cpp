@@ -252,7 +252,7 @@ void HealStates(signed char state) {
 void SpawnEffect92(unsigned short y, unsigned char slot29) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
-    const auto distance = static_cast<std::int32_t>(static_cast<U>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember)) - Sprite_Objects_addr);
+    const auto distance = static_cast<std::int32_t>(static_cast<U>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember)) - ::bof3::Img(Sprite_Objects_addr));
     unsigned char* const e = EffectAt(slot);
     auto* const tE = rv::As<records::EffectObject>(e);
     e[0] = 1;

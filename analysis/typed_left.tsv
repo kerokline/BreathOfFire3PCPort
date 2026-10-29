@@ -27371,20 +27371,17 @@ src/game/worldmap_area_fuzz.cpp	Seed	record	Word	o + 0x3A	0	-	base=Sprite_Curren
 src/game/worldmap_area_fuzz.cpp	SelfTest	global	At	Area29_Cells_addr	0	0x5ee258	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Area29_Cells_addr - -)	c4-tc
 src/game/worldmap_area_fuzz.cpp	SelfTest	global	At	WorldMap33_PlateAnims_addr	0	0x5ef320	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (WorldMap33_PlateAnims_addr - -)	c4-tc
 src/game/worldmap_area_fuzz.cpp	SelfTest	raw	At	0x5EF6B0	0	0x5ef6b0	-	harness	a fuzz seed writes the raw address on purpose (stage B convention)	c2-field
-src/hook/exe_host.cpp	CheckSection	global	At	kImageBase	0	0x400000	-	no-entry	kImageBase 0x400000 -	b0
-src/hook/exe_host.cpp	CopyData	global	At	kGameVa	0	0x5c4000	-	no-entry	kGameVa 0x5c4000 -	b0
-src/hook/exe_host.cpp	CopyData	global	At	kDataVa	0	0x5da000	-	no-entry	kDataVa 0x5da000 -	b0
-src/hook/exe_host.cpp	CopyData	global	At	kDataVa	1	0x5da000	-	no-entry	kDataVa 0x5da000 -	b0
-src/hook/exe_host.cpp	CopyData	global	At	kDataVa	2	0x5da000	-	no-entry	kDataVa 0x5da000 -	b0
 src/hook/exe_icon.cpp	ReadRecord	global	-	menu_windows::at::kIconRects	0	0x66367c	-	no-entry	menu_windows::at::kIconRects 0x66367c -	b0
 src/hook/gapwatch.cpp	InDll	record	Ptr	v - 6	0	-	param	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (param)	b1-scen_ui
 src/hook/gapwatch.cpp	OnException	record	Ptr	ctx->Esp	0	-	-	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (-)	b1-scen_ui
 src/hook/snapshot.cpp	ArenaCommitted	record	At	lo - 1	0	-	-	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
 src/hook/snapshot.cpp	Take	record	At	arena_top - arena	0	-	-	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
+src/hook/snapshot.cpp	Restore	record	At	Img(kKept[i].at) + kKept[i].bytes	0	-	via=Img	-	-	-
 src/hook/snapshot.cpp	Restore	record	At	h.arena_top - h.arena_bytes	0	-	-	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
 src/hook/snapshot.cpp	Same	record	At	top - kArenaBytes	0	-	via=Va	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
 src/hook/snapshot.cpp	Same	record	At	top - kArenaBytes	1	-	via=Va	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
 src/hook/snapshot.cpp	Same	record	At	top - kArenaBytes	2	-	via=Va	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
+src/hook/snapshot.cpp	Same	record	At	at + kKept[i].bytes	0	-	via=Img	-	-	-
 src/hook/snapshot.cpp	Same	record	At	top - kArenaBytes	3	-	via=Va	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
 src/hook/stackwatch.cpp	StackWatch_Start	record	Long	g_teb + 0x04	0	-	via=TebOf	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (via=TebOf)	b1-scen_ui
 src/hook/stackwatch.cpp	StackWatch_Start	record	Long	g_teb + 0x08	0	-	via=TebOf	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (via=TebOf)	b1-scen_ui

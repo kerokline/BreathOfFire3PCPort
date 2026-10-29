@@ -795,7 +795,7 @@ extern "C" void __cdecl Field_ActionState(void) {
 // Called only by Field_LeaderWalk.
 extern "C" void __cdecl Field_EncounterArea(void) {
     const unsigned short area = Game_AreaNumber;
-    for (std::uint32_t p = Field_EncounterAreas_addr; p < at::kEncounterAreasEnd; p += 4) {
+    for (std::uint32_t p = ::bof3::Img(Field_EncounterAreas_addr); p < ::bof3::Img(at::kEncounterAreasEnd); p += 4) {
         if (Word(At(p)) == area) {
             AreaW0b_Place = Word(At(p + 2));
             return;

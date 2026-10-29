@@ -5,8 +5,10 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "hook/bind.h"
 #include "hook/code_bytes.h"
 #include "hook/code_names.h"
+#include "hook/exe_layout.h"
 #include "hook/host.h"
 #include "hook/log.h"
 
@@ -164,10 +166,14 @@ void VerifyImage() {
 }
 
 void Inject(const char* name, std::uint32_t original, void* ours, bool instrument) {
-    auto* orig = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(original));
+    // `original` is a VA, a name. Hosted the jmp goes at it, in BOF3.exe's
+    // code. In the exe host there is no code to write: .stub is the no-access
+    // trap, and every place of the VA - a code word of .data, a Code() of
+    // ours - is already its place in the bind table, a jmp to the function that must
+    // be this one (bind.cpp; docs/relocatable-image-design.md 4.1). The pair
+    // is recorded, as hosted, for IsOwned and IsEnabled.
+    auto* orig = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(Img(original)));
     auto* mine = static_cast<std::uint8_t*>(ours);
-    // In the exe host the jmp is written on the int3 page (.stub), the only
-    // writes that page takes (exe_host.cpp's CheckStub).
     if (!InCode(original)) Fatal("%s: Inject at 0x%08X, outside Capcom's code range", name, (unsigned)original);
     if (g_enabled + g_disabled == kMaxOwned) Fatal("%s: more than %d injected functions", name, kMaxOwned);
     // BOF3X_OFF takes code names only: a detour's original behaviour is
@@ -180,6 +186,15 @@ void Inject(const char* name, std::uint32_t original, void* ours, bool instrumen
               name, name);
     g_owned[g_enabled + g_disabled] = original;
     g_owned_on[g_enabled + g_disabled] = instrument || !WantsOriginal(name);
+    if (IsExeHost()) {
+        // BOF3X_ORIGINAL is refused in this host (exe_host.cpp), so every
+        // Inject is on; an instrument wraps Capcom's code, which is not here.
+        if (instrument) Fatal("%s: an instrument Inject at 0x%08X in bof3x.exe, which maps no code of Capcom's", name, (unsigned)original);
+        Bind_Check(name, original, ours);
+        ++g_enabled;
+        Log("inject  ON   %-24s original 0x%08X = ours %p (bound)", name, (unsigned)original, ours);
+        return;
+    }
     if (!g_owned_on[g_enabled + g_disabled]) {
         WriteJmp(name, mine, orig);
         ++g_disabled;
@@ -199,7 +214,7 @@ bool RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, 
     // (docs/operand-store.md); hosted, Operands_Check compares it with the call.
     const bool exe = IsExeHost();
     if (exe && !InCode(site)) Fatal("%s: RetargetCall at 0x%08X, outside Capcom's code", name, (unsigned)site);
-    auto* at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(site));
+    auto* at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(Img(site)));   // hosted only: the identity
     std::int32_t rel = 0;
     if (!exe) {
         std::memcpy(&rel, at + 1, sizeof rel);
@@ -233,13 +248,19 @@ bool PatchBytes(const char* name, std::uint32_t address, const std::uint8_t* exp
     // An operand inside Capcom's code, in the exe host: nothing to write. The
     // divergence keeps the value it writes as its own from this answer, and
     // our readers read that (docs/operand-store.md); .stub itself is never
-    // written but by Inject (exe_host.cpp's CheckStub). Outside the code range
+    // written (the no-access trap, exe_host.cpp TrapStub). Outside the code range
     // (a .data byte, a switch of ours) the write is the same in both hosts.
     const bool code = InCode(address) || InCode(address + count - 1);
     const bool exe = IsExeHost() && code;
     if (exe && !(InCode(address) && InCode(address + count - 1)))
         Fatal("%s: %u bytes at 0x%08X straddle the end of Capcom's code", name, (unsigned)count, (unsigned)address);
-    auto* at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(address));
+    // `address` is a VA of the image - code, or a .data byte, which in the
+    // exe host moves with the image: its place is Img(address) - or a switch
+    // of ours, a byte of our DLL, which is its own place. Told apart by the
+    // linked span 0x400000..kOwnVa, which nothing of ours lies in (the
+    // executable holds it at 0x400000; the fence, at another base).
+    const bool linked = address >= image::kBase && address < exe_layout::kOwnVa;
+    auto* at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(linked ? Img(address) : address));
     if (!exe && std::memcmp(at, expected, count) != 0)
         Fatal("%s: the %u bytes at 0x%08X are not the ones expected", name, (unsigned)count, (unsigned)address);
     if (const char* off = CodeOff(name)) {
@@ -386,6 +407,7 @@ void InjectReport() {
         p = end;
     }
     Operands_Check("after InjectAll");
+    Bind_Report();
 }
 
 }  // namespace bof3

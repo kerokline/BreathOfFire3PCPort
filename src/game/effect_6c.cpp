@@ -227,7 +227,7 @@ extern "C" void __cdecl EffectKind18Sub44_Commit(unsigned size) {
     unsigned char* const next = Gfx_PacketNext;
     const unsigned buffer = Gfx_BufferIndex;
     const U bytes = size & 0xFFu;
-    const U limit = (static_cast<U>(buffer) << 16) + at::kPoolLimit;
+    const U limit = (static_cast<U>(buffer) << 16) + ::bof3::Img(at::kPoolLimit);
     if (limit <= AddressOf(next) + bytes) return;
     SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(::bof3::Img(at::kLayerTails.v) + 8 * buffer))),
                           AddressOf(next));

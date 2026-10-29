@@ -373,7 +373,7 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
         // byte's sign flipped, so the lowest s8 is the smallest byte). Each
         // new minimum passes through SharedScratch's byte, as the original
         // keeps it there.
-        auto* const scratch = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(SharedScratch_addr));
+        auto* const scratch = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(SharedScratch_addr)));
         const unsigned char* const c = MapView_CornerPtr;
         *scratch = static_cast<unsigned char>(c[0] ^ 0x80);
         for (unsigned k = 1; k < 4; ++k) {

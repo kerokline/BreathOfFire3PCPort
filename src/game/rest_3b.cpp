@@ -87,7 +87,7 @@ void Dispatch(const char* who, U cell, U table, unsigned entries) {
     if (state >= entries)
         bof3::Fatal("%s: the state byte 0x%X is %u, past the %u entries of 0x%X - the original jumps through the dword "
                     "after (docs/rest_3b.md section 5)",
-                    who, (unsigned)cell, state, entries, (unsigned)table);
+                    who, (unsigned)::bof3::VaOf(cell), state, entries, (unsigned)::bof3::VaOf(table));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * state)))();
 }
 

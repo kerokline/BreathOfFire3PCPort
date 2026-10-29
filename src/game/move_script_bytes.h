@@ -41,7 +41,7 @@ inline unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsign
 
 // The PSX scratchpad's first words (0x1F800000), where the PC keeps them; the
 // A ops' counters sit in the 8 bytes below.
-inline unsigned char* Scratch() { return At(SharedScratch_addr); }
+inline unsigned char* Scratch() { return At(::bof3::Img(SharedScratch_addr)); }
 
 // A clone's jump table holds absolute addresses into the original: move the
 // entries and the `jmp [reg*4 + table]` operand into the copy.

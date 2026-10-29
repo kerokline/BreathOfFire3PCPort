@@ -15,6 +15,7 @@
 #include "game/game_clock.h"
 #include "game/win_main.h"
 #include "hook/detour.h"
+#include "hook/exe_layout.h"
 #include "hook/gapwatch.h"
 #include "hook/log.h"
 #include "hook/statehash.h"
@@ -261,23 +262,39 @@ unsigned Width(int line, const std::string& tok) {
 
 // Every address a recipe reads is checked once, here: committed and readable
 // for the whole width. The exe's image and data never move or unmap, so a
-// check at start-up holds for the run.
+// check at start-up holds for the run. A recipe's ADDR is a VA, symbols.toml's
+// frame (docs/relocatable-image-design.md 9): it is read and written at its
+// place, Img(ADDR), and the log prints the VA, so no recipe or tool changes
+// with the image's base.
 std::uint32_t Address(int line, const std::string& tok, unsigned width) {
     const std::uint32_t a = Number(line, tok);
     MEMORY_BASIC_INFORMATION mi{};
-    const void* p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a));
+    const void* p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(a)));
     if (!VirtualQuery(p, &mi, sizeof mi) || mi.State != MEM_COMMIT ||
         (mi.Protect & (PAGE_NOACCESS | PAGE_GUARD)) ||
-        a + width > reinterpret_cast<std::uintptr_t>(mi.BaseAddress) + mi.RegionSize)
+        ::bof3::Img(a) + width > reinterpret_cast<std::uintptr_t>(mi.BaseAddress) + mi.RegionSize)
         ParseError(line, "address not readable", tok);
     return a;
 }
 
+// A place: a pointer the game holds, or Img of a VA.
 std::uint32_t Read(std::uint32_t addr, unsigned width) {
     const void* p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(addr));
     if (width == 1) return *static_cast<const volatile std::uint8_t*>(p);
     if (width == 2) return *static_cast<const volatile std::uint16_t*>(p);
     return *static_cast<const volatile std::uint32_t*>(p);
+}
+
+// A VA: a recipe's ADDR, a symbols.toml address.
+std::uint32_t ReadVa(std::uint32_t va, unsigned width) { return Read(::bof3::Img(va), width); }
+
+// A pointer the game holds, as the VA the logs print: moved back by the
+// image's move when it lies in the image, else as it is.
+std::uint32_t AsVa(std::uint32_t place) {
+    using namespace bof3::exe_layout;
+    const std::uint32_t base = ::bof3::ImageBase();
+    const bool in_image = place >= base && place - base < kPoolVa + kPoolSize - kImageBase;
+    return in_image ? place - base + ::bof3::image::kBase : place;
 }
 
 void SetButtons(Step& st, const std::string& tok) {
@@ -390,7 +407,7 @@ void Load(const char* path) {
             st.addr = Address(line, t[1], st.width);
             st.value = Number(line, t[3]);
             MEMORY_BASIC_INFORMATION mi{};
-            VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(st.addr)), &mi, sizeof mi);
+            VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(st.addr))), &mi, sizeof mi);
             if (!(mi.Protect & (PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)))
                 ParseError(line, "address not writable", t[1]);
         } else if (w == "music") {
@@ -487,7 +504,7 @@ void Load(const char* path) {
 }
 
 bool Holds(const Step& s) {
-    const std::uint32_t v = Read(s.addr, s.width);
+    const std::uint32_t v = ReadVa(s.addr, s.width);
     switch (s.op) {
     case Op::Eq: return v == s.value;
     case Op::Ne: return v != s.value;
@@ -612,7 +629,7 @@ void WatchStep(const Step& s) {
     if (g_watches.size() >= 64) Fatal("BOF3X_INPUT line %d: more than 64 watches", s.line);
     Watch w{s.addr, s.n, s.value != 0, s.text, {}};
     GapWatch_Pause();
-    WatchRead(w.addr, w.len, w.last);
+    WatchRead(::bof3::Img(w.addr), w.len, w.last);
     GapWatch_Tick();
     Log("input       watch %s 0x%08X len %u%s = %s; recipe frame %u", w.name.c_str(), (unsigned)w.addr, w.len,
         w.shot ? " shot" : "", WatchHex(w.last, w.len).c_str(), g_frame);
@@ -626,7 +643,7 @@ void WatchTick() {
     GapWatch_Pause();
     for (Watch& w : g_watches) {
         unsigned char now[64];
-        WatchRead(w.addr, w.len, now);
+        WatchRead(::bof3::Img(w.addr), w.len, now);
         if (std::memcmp(now, w.last, w.len) == 0) continue;
         Log("input       watch %s %s -> %s recipe frame %u", w.name.c_str(), WatchHex(w.last, w.len).c_str(),
             WatchHex(now, w.len).c_str(), g_frame);
@@ -665,9 +682,9 @@ bool Readable(std::uint32_t a, std::uint32_t n) {
 void LogLinks() {
     unsigned areas = 0, total = 0;
     for (unsigned area = 0; area < 200; ++area) {
-        const std::uint32_t d = Read(Area_Descriptors_addr + area * 4, 4);
+        const std::uint32_t d = ReadVa(Area_Descriptors_addr + area * 4, 4);   // a pointer word: a place
         if (!Readable(d, 0x44)) {
-            Log("input       links area %u: no descriptor (0x%08X)", area, (unsigned)d);
+            Log("input       links area %u: no descriptor (0x%08X)", area, (unsigned)AsVa(d));
             continue;
         }
         const std::uint32_t list = Read(d + 0x20, 4);
@@ -677,7 +694,7 @@ void LogLinks() {
             continue;
         }
         if (!Readable(list, (last + 1) * 12)) {
-            Log("input       links area %u: list 0x%08X not readable (last %u)", area, (unsigned)list, last);
+            Log("input       links area %u: list 0x%08X not readable (last %u)", area, (unsigned)AsVa(list), last);
             continue;
         }
         ++areas;
@@ -698,7 +715,7 @@ void LogLinks() {
             const std::uint32_t ptrs = Read(d + 0x24, 4), counts = Read(d + 0x28, 4);
             if (!Readable(ptrs, (index + 1) * 4) || !Readable(counts, index + 1)) {
                 Log("input       link %u.%u cells %u,%u %c%u -> list %u: tables not readable (0x%08X, 0x%08X)", area, i, x,
-                    z, along_z ? 'z' : 'x', cells, index, (unsigned)ptrs, (unsigned)counts);
+                    z, along_z ? 'z' : 'x', cells, index, (unsigned)AsVa(ptrs), (unsigned)AsVa(counts));
                 continue;
             }
             const unsigned count = Read(counts + index, 1);
@@ -706,7 +723,7 @@ void LogLinks() {
             Log("input       link %u.%u cells %u,%u %c%u -> list %u, %u alternatives and the default", area, i, x, z,
                 along_z ? 'z' : 'x', cells, index, count);
             if (!Readable(alts, (count + 1) * 10)) {
-                Log("input       alt %u.%u: list 0x%08X not readable", area, i, (unsigned)alts);
+                Log("input       alt %u.%u: list 0x%08X not readable", area, i, (unsigned)AsVa(alts));
                 continue;
             }
             for (unsigned k = 0; k <= count; ++k) {
@@ -732,7 +749,7 @@ unsigned short StepButtons(const Step& s) {
     if (g_t == 0) {
         // A literal button is the PC's (Japan's Config); @ADDR is already the
         // live Config's. Section 2a of docs/input-script.md.
-        g_step_buttons = s.buttons_at ? static_cast<unsigned short>(Read(s.buttons_at, 2))
+        g_step_buttons = s.buttons_at ? static_cast<unsigned short>(ReadVa(s.buttons_at, 2))
                                       : bof3x::input::sigma::RecipeToPad(s.buttons);
         if (s.buttons_at)
             Log("input       line %d: @0x%08X holds buttons 0x%04X", s.line, (unsigned)s.buttons_at, g_step_buttons);
@@ -773,13 +790,13 @@ unsigned short NextWord() {
         case Kind::Until:
             if (Holds(s)) {
                 Log("input       line %d: until met after %u frames (value 0x%X), recipe frame %u", s.line, g_t,
-                    (unsigned)Read(s.addr, s.width), g_frame);
+                    (unsigned)ReadVa(s.addr, s.width), g_frame);
                 Advance();
                 continue;
             }
             if (g_t >= s.n) {
                 Log("input       line %d: until 0x%08X timed out after %u frames, value 0x%X", s.line,
-                    (unsigned)s.addr, s.n, (unsigned)Read(s.addr, s.width));
+                    (unsigned)s.addr, s.n, (unsigned)ReadVa(s.addr, s.width));
                 Finish("FAILED");
                 return 0;
             }
@@ -793,13 +810,13 @@ unsigned short NextWord() {
             if (phase == 0) {
                 if (Holds(s)) {
                     Log("input       line %d: seek met after %u presses (value 0x%X), recipe frame %u", s.line,
-                        g_t / per, (unsigned)Read(s.addr, s.width), g_frame);
+                        g_t / per, (unsigned)ReadVa(s.addr, s.width), g_frame);
                     Advance();
                     continue;
                 }
                 if (g_t / per >= s.n) {
                     Log("input       line %d: seek 0x%08X gave up after %u presses, value 0x%X", s.line,
-                        (unsigned)s.addr, s.n, (unsigned)Read(s.addr, s.width));
+                        (unsigned)s.addr, s.n, (unsigned)ReadVa(s.addr, s.width));
                     Finish("FAILED");
                     return 0;
                 }
@@ -820,12 +837,12 @@ unsigned short NextWord() {
             Advance();
             continue;
         case Kind::Peek:
-            Log("input       peek %s = 0x%X (%u) recipe frame %u", s.text.c_str(), (unsigned)Read(s.addr, s.width),
-                (unsigned)Read(s.addr, s.width), g_frame);
+            Log("input       peek %s = 0x%X (%u) recipe frame %u", s.text.c_str(), (unsigned)ReadVa(s.addr, s.width),
+                (unsigned)ReadVa(s.addr, s.width), g_frame);
             Advance();
             continue;
         case Kind::Poke: {
-            void* const p = reinterpret_cast<void*>(static_cast<std::uintptr_t>(s.addr));
+            void* const p = reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Img(s.addr)));
             if (s.width == 1) *static_cast<volatile std::uint8_t*>(p) = static_cast<std::uint8_t>(s.value);
             else if (s.width == 2) *static_cast<volatile std::uint16_t*>(p) = static_cast<std::uint16_t>(s.value);
             else *static_cast<volatile std::uint32_t*>(p) = s.value;
@@ -861,8 +878,8 @@ unsigned short NextWord() {
                 Field_Request = 5;
                 Log("input       door %u,%u in area %u: to area %u x 0x%X z 0x%X flags 0x%02X track %u; recipe frame %u",
                     (unsigned)s.arg[0], (unsigned)s.arg[1], area, (unsigned)AreaW0b_Place,
-                    (unsigned)Read(kPendingXAddr, 4), (unsigned)Read(AreaEntry_PendingZ_addr, 4),
-                    (unsigned)Read(AreaEntry_PendingFlags_addr, 1), (unsigned)Read(AreaW1f_MusicCurrent_addr, 1), g_frame);
+                    (unsigned)ReadVa(kPendingXAddr, 4), (unsigned)ReadVa(AreaEntry_PendingZ_addr, 4),
+                    (unsigned)ReadVa(AreaEntry_PendingFlags_addr, 1), (unsigned)ReadVa(AreaW1f_MusicCurrent_addr, 1), g_frame);
             }
             LogFlush();
             Advance();
@@ -872,7 +889,7 @@ unsigned short NextWord() {
             Log("input       goto area %u x 0x%X z 0x%X flags 0x%02X from area %u; recipe frame %u", (unsigned)s.arg[0],
                 (unsigned)s.arg[1], (unsigned)s.arg[2], (unsigned)s.arg[3], (unsigned)Game_AreaNumber, g_frame);
             bof3::orig::Field_ChangeArea(s.arg[0], static_cast<int>(s.arg[1]), static_cast<int>(s.arg[2]), s.arg[3]);
-            Log("input       goto: track %u; recipe frame %u", (unsigned)Read(AreaW1f_MusicCurrent_addr, 1), g_frame);
+            Log("input       goto: track %u; recipe frame %u", (unsigned)ReadVa(AreaW1f_MusicCurrent_addr, 1), g_frame);
             LogFlush();
             Advance();
             continue;
@@ -883,9 +900,9 @@ unsigned short NextWord() {
             std::string tags;
             for (unsigned i = 0; i < kSpriteObjects; ++i) {
                 const std::uint32_t r = Sprite_Objects_addr + i * kSpriteObjectStride;
-                if (Read(r + 6, 1) != 7) continue;
+                if (ReadVa(r + 6, 1) != 7) continue;
                 char b[32];
-                std::snprintf(b, sizeof b, " %u:slot%u", i, (unsigned)Read(r + 0x9E, 1));
+                std::snprintf(b, sizeof b, " %u:slot%u", i, (unsigned)ReadVa(r + 0x9E, 1));
                 tags += b;
             }
             if (tags.empty() && s.arg[1] == 0) {
@@ -1063,7 +1080,7 @@ void Record(unsigned short word) {
     // the game's DirectInput keyboard keeps the key from it.
     // kKeyState: now Key_State (symbols.toml).
     constexpr std::uint32_t kDikF12 = 0x58;
-    const bool f12 = (Read(Key_State_addr + kDikF12, 1) & 0x80) != 0;
+    const bool f12 = (ReadVa(Key_State_addr + kDikF12, 1) & 0x80) != 0;
     const bool shot = f12 && !g_f12;
     g_f12 = f12;
     if (shot) {

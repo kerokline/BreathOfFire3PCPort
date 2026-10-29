@@ -317,7 +317,7 @@ extern "C" void __cdecl Battle_PlaceBossActors(void) {
                     event, row, at::kEncounterRows);
     unsigned char count = 0;
     for (unsigned slot = 0; slot < 8; ++slot) {
-        const unsigned kind = At(Encounter_Rows_addr + 9 * row + slot)[0];
+        const unsigned kind = At(::bof3::Img(Encounter_Rows_addr) + 9 * row + slot)[0];
         if (kind == 0xFF) continue;
         SH_CALL(Battle_PlaceBossActor)(slot, count, kind);
         count = static_cast<unsigned char>(count + 1);

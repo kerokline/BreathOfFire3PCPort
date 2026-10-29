@@ -75,7 +75,7 @@ void State(const char* who, U table, unsigned entries) {
     if (s >= entries)
         bof3::Fatal("%s: the window record's +3 is %u, past the %u states of 0x%X - the original calls through the dword "
                     "after (docs/rest_2g.md section 7)",
-                    who, s, entries, (unsigned)table);
+                    who, s, entries, (unsigned)::bof3::VaOf(table));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * s)))))();
 }
 

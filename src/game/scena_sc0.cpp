@@ -43,8 +43,6 @@ void SetL(unsigned char* p, uint32_t v) { move_script::SetLong(p, static_cast<in
 // The chapter's flag row, as the original reads it: the pointer afresh.
 unsigned char* Row() { return At(Chapter_FlagRow); }
 
-constexpr uint32_t kTextLo = 0x401000, kTextHi = 0x5C3000;
-
 // A handler out of one of the chapter's .data tables, read in place and
 // unchecked as the original reads it. The tables run on into other data (the
 // state table into the run table, whose entries are code too; the run and
@@ -54,9 +52,11 @@ uint32_t CodeAt(uint32_t table, int index, const char* who) {
     const uint32_t at = table + 4u * static_cast<uint32_t>(index);
     const uint32_t entry = L(at);
     const bool swapped = scenario_harness::g_active;   // the fuzz's recorders live outside .text
-    if (!swapped && (entry < kTextLo || entry >= kTextHi))
-        bof3::Fatal("%s: index %d reads 0x%X at 0x%X, not code - past its table (the original jumps there)", who, index,
-                    (unsigned)entry, (unsigned)at);
+    // A code word: hosted a VA in BOF3.exe's .text, in bof3x.exe a function of ours
+    // the bind table names (common/image_base.h IsCodeWord); not the trap, not data.
+    if (!swapped && !::bof3::IsCodeWord(entry))
+        bof3::Fatal("%s: index %d reads 0x%X at 0x%X (VA 0x%X), not code - past its table (the original jumps there)", who,
+                    index, (unsigned)entry, (unsigned)at, (unsigned)::bof3::VaOf(at));
     return entry;
 }
 
@@ -135,7 +135,7 @@ extern "C" void __cdecl Scena00_Start(void) {
     SetL(::bof3::Img(kPending) + 4, 0x630000);
     SetL(::bof3::Img(kPending) + 8, 0xC0000);
     B(::bof3::Img(kPending) + 3) = 3;
-    for (uint32_t a = 0x904608; a < 0x904650; a += 4) SetL(a, 0xFFFFFFFFu);
+    for (uint32_t a = ::bof3::Img(0x904608); a < ::bof3::Img(0x904650); a += 4) SetL(a, 0xFFFFFFFFu);
     Run(5);
     Step(0);
     WaitLoad();

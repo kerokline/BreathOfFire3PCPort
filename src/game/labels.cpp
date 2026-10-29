@@ -169,6 +169,7 @@
 
 #include <cstring>
 
+#include "common/image_base.h"
 #include "game/text_advance.h"
 #include "hook/log.h"
 #include "hook/code_bytes.h"
@@ -179,7 +180,10 @@ namespace {
 // A slot, and a place in the image that must hold its address: an entry of a
 // pointer table, or the operand of a push. Every address here was read, not
 // guessed; a chunk may only write the slots and the tables listed in this
-// file.
+// file. The tables hold VAs, names: a slot, a table entry or a witness word
+// in .data is read and written at its place, Img(va), and a pointer word read
+// there holds a place (the loader moved it with the image); an operand in
+// Capcom's code is compared hosted, where it holds the VA.
 struct Slot {
     std::uint32_t va, room, named_at;
     std::uint32_t expect;   // what named_at holds: the slot (0), or a table base the slot is read from
@@ -397,19 +401,21 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
         // A push operand in Capcom's code is registered for the hosted check
         // (code_bytes.h; nothing of ours re-aims one) - in the exe host there
         // is no code to read; a table in .data is read, in either host.
-        const auto ours = t->buffers ? static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(t->buffers[i])) : slot.va;
-        const std::uint32_t expect = slot.expect ? slot.expect : slot.va;
+        const auto ours = t->buffers ? static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(t->buffers[i]))
+                                     : ::bof3::Img(slot.va);
+        const std::uint32_t expect = slot.expect ? slot.expect : slot.va;   // a VA
         if (bof3::InCode(slot.named_at)) {
             bof3::OperandExpect(t->what, slot.named_at, &expect, sizeof expect);
         } else {
             std::uint32_t named;
-            std::memcpy(&named, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(slot.named_at)), sizeof named);
-            if (named != expect && named != ours)
-                bof3::Fatal("%s: 0x%08X holds 0x%08X, expected 0x%08X", t->what, (unsigned)slot.named_at,
-                            (unsigned)named, (unsigned)expect);
+            std::memcpy(&named, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(slot.named_at))),
+                        sizeof named);
+            if (named != ::bof3::Img(expect) && named != ours)
+                bof3::Fatal("%s: 0x%08X holds 0x%08X, expected 0x%08X (VA 0x%08X)", t->what, (unsigned)slot.named_at,
+                            (unsigned)named, (unsigned)::bof3::Img(expect), (unsigned)expect);
         }
         if (len == 0) continue;   // the overlay's builder had no string that fits: as shipped
-        auto* dest = t->buffers ? t->buffers[i] : reinterpret_cast<char*>(static_cast<std::uintptr_t>(slot.va));
+        auto* dest = t->buffers ? t->buffers[i] : reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(slot.va)));
         std::memset(dest, 0, room);
         std::memcpy(dest, s, len);
         ++written;
@@ -424,11 +430,12 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
             for (std::uint32_t k = 0; k < table.count; ++k) {
                 const std::uint32_t i = table.first + k;
                 if (i >= count) continue;   // an older chunk's: not sent, so not re-aimed
-                auto* entry = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(table.at + 4 * k));
+                auto* entry = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(table.at) + 4 * k));
                 const auto ours = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(t->buffers[i]));
-                if (*entry != t->slots[i].va && *entry != ours)
-                    bof3::Fatal("%s: table 0x%08X entry %u holds 0x%08X, expected 0x%08X", t->what,
-                                (unsigned)table.at, (unsigned)k, (unsigned)*entry, (unsigned)t->slots[i].va);
+                if (*entry != ::bof3::Img(t->slots[i].va) && *entry != ours)
+                    bof3::Fatal("%s: table 0x%08X entry %u holds 0x%08X, expected 0x%08X (VA 0x%08X)", t->what,
+                                (unsigned)table.at, (unsigned)k, (unsigned)*entry, (unsigned)::bof3::Img(t->slots[i].va),
+                                (unsigned)t->slots[i].va);
                 if (t->buffers[i][0]) *entry = ours;
             }
         }
@@ -445,7 +452,7 @@ unsigned Labels_SmallGlyph(const unsigned char* text) {
         if (!t.small || !g_small_written[t.tag]) continue;
         for (std::uint32_t i = 0; i < t.count; ++i) {
             const Slot& s = t.slots[i];
-            if (at < s.va || at >= s.va + s.room) continue;
+            if (at < ::bof3::Img(s.va) || at >= ::bof3::Img(s.va) + s.room) continue;
             const unsigned c = text[0];
             const bool plain = (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
             return plain ? kSmallSet + c - 0x30 : 0;
@@ -467,7 +474,7 @@ const unsigned char* Labels_Slot(std::uint32_t tag, std::uint32_t i) {
         if (t.tag != tag) continue;
         if (i >= t.count) bof3::Fatal("Labels_Slot: %s has no slot %u", t.what, (unsigned)i);
         if (t.buffers && t.buffers[i][0]) return reinterpret_cast<const unsigned char*>(t.buffers[i]);
-        return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(t.slots[i].va));
+        return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(t.slots[i].va)));
     }
     bof3::Fatal("Labels_Slot: no group %u", (unsigned)tag);
 }
@@ -478,7 +485,7 @@ unsigned Labels_MaxWidth(std::uint32_t tag) {
         if (t.tag != tag) continue;
         for (std::uint32_t i = 0; i < t.count; ++i) {
             const auto* text = t.buffers ? reinterpret_cast<const unsigned char*>(t.buffers[i])
-                                         : reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(t.slots[i].va));
+                                         : reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(t.slots[i].va)));
             if (!text[0]) continue;
             const unsigned w = TextAdvance_Width(text);
             if (w > widest) widest = w;

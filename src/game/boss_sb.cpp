@@ -116,7 +116,7 @@ void Setup(U end, U exit, U event) {
 // The event hooks' shared cases (the same code in B04, B05, B06 and B07).
 // Phase 0: with round-flag bit 0x40 and the target 0, 0x904AAD bit 0.
 void EventRoundFlag() {
-    if ((B(0x904AA8) & 0x40) && B(::bof3::Img(at::kTarget.v)) == 0) BossSe_Script |= 1;
+    if ((B(::bof3::Img(0x904AA8)) & 0x40) && B(::bof3::Img(at::kTarget.v)) == 0) BossSe_Script |= 1;
 }
 // The action phase's test: actor 0, command kind 4, command id 0x78.
 bool LeaderCommand78() {

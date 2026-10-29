@@ -55,7 +55,7 @@ struct Kept {
     U at, bytes;
     const char* name;
 };
-constexpr Kept kKept[] = {
+const Kept kKept[] = {
     {::bof3::Img(0x66B710), 12, "Gfx_ScreenRect's right and bottom, the device count less one"},
     {::bof3::Img(0x6BEA00), 0x14, "Dd_CellBackdrop and the backdrop pairs"},
     {::bof3::Img(0x6C3A40), 4, "D3d_BackMaterialHandle"},
@@ -443,7 +443,7 @@ void GfxSnapshot_Inject() {
         while (i < kKeptCount && kKept[i].at != n.at) ++i;
         if (i == kKeptCount || n.at != n.symbol) Fatal("gfx_snapshot: kept range 0x%08X, symbols.toml says 0x%08X", n.at, n.symbol);
     }
-    if (Va(&D3d_ShadeModeCache) != 0x6C3A44) Fatal("gfx_snapshot: D3d_ShadeModeCache moved");
+    if (Va(&D3d_ShadeModeCache) != ::bof3::Img(0x6C3A44)) Fatal("gfx_snapshot: D3d_ShadeModeCache moved");
     if (bof3::IsExeHost() ? GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : bof3::WantsShadow("gfx_snapshot"))
         SelfTest();
     bof3::Snapshot_Register("GFX", &Save, &Restore, &Before);

@@ -69,7 +69,7 @@ using Handler = void (__cdecl*)();
 void Jump(U table, unsigned count, unsigned index, const char* who) {
     if (index >= count)
         bof3::Fatal("%s: state %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index, count,
-                    static_cast<unsigned>(table), static_cast<unsigned>(table + 4 * index));
+                    static_cast<unsigned>(::bof3::VaOf(table)), static_cast<unsigned>(::bof3::VaOf(table + 4 * index)));
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
 }
 

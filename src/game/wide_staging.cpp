@@ -40,6 +40,9 @@ using move_script::SetWord;
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 const unsigned char* Pointer(std::uint32_t a) { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a)); }
+// A table's script or placement op: a VA (tools/wide_staging_check.py reads the
+// table as VAs), at its place in the image.
+const unsigned char* AtVa(std::uint32_t va) { return Pointer(::bof3::Img(va)); }
 
 // --- D: the site table -----------------------------------------------------
 //
@@ -379,7 +382,7 @@ bool PlanFor(const Live* l, const unsigned char* context, const unsigned char* s
     for (unsigned i = 0; i < kSiteCount; ++i) {
         if (!g_site_on[i]) continue;
         const Site& s = kSites[i];
-        if (s.area != area || Pointer(s.script) != script) continue;
+        if (s.area != area || AtVa(s.script) != script) continue;
         const unsigned at = s.shape == kOutBefore ? s.before : s.move;
         if (at != pos) continue;
         if (s.shape == kIn && !(l && l->marked && l->site == static_cast<int>(i))) continue;
@@ -416,7 +419,7 @@ bool PlanFor(const Live* l, const unsigned char* context, const unsigned char* s
             if (c.at != pos) continue;
             const unsigned char* own = nullptr;
             for (const CaseZeroScript& cs : kCaseZeroScripts)
-                if (cs.index == c.index) own = Pointer(cs.script);
+                if (cs.index == c.index) own = AtVa(cs.script);
             if (own != script) continue;
             unsigned dir, steps, length;
             if (!MoveAt(p, dir, steps, length)) return false;
@@ -547,7 +550,7 @@ void Placed0DSite(unsigned char* context, const unsigned char* script, unsigned 
     for (unsigned i = 0; i < kSiteCount; ++i) {
         if (!g_site_on[i]) continue;
         const Site& s = kSites[i];
-        if (s.shape != kIn || s.at0d != at || s.area != area || Pointer(s.script) != script) continue;
+        if (s.shape != kIn || s.at0d != at || s.area != area || AtVa(s.script) != script) continue;
         unsigned dir, steps, length;
         if (!MoveAt(script + s.move, dir, steps, length)) return;
         std::int32_t dx, dz;
@@ -573,7 +576,7 @@ void PlacedSite(const unsigned char* op) {
     for (unsigned i = 0; i < kSiteCount; ++i) {
         if (!g_site_on[i]) continue;
         const Site& s = kSites[i];
-        if (s.shape != kIn || s.place != a || s.area != area) continue;
+        if (s.shape != kIn || ::bof3::Img(s.place) != a || s.area != area) continue;
         unsigned char* const sprite = Sprite_Current;
         const std::uint32_t at = Address(sprite), objects = Address(rv::Bytes(Sprite_Objects));
         // The handler leaves its object current, its home (+0x8C / +0x90) where it put it.
@@ -771,7 +774,7 @@ void EngineTest() {
     {
         const int row = RowOf(27, 0x10, 2, kOut);
         const Site& s = kSites[row];
-        const unsigned char* const script = Pointer(s.script);
+        const unsigned char* const script = AtVa(s.script);
         const unsigned add = Steps(s);
         Game_AreaNumber = static_cast<unsigned short>(s.area);
         reset(s.move, 2);
@@ -800,7 +803,7 @@ void EngineTest() {
     {
         const int row = RowOf(32, 0x10, 4, kIn);
         const Site& s = kSites[row];
-        const unsigned char* const script = Pointer(s.script);
+        const unsigned char* const script = AtVa(s.script);
         const unsigned add = Steps(s);
         Game_AreaNumber = static_cast<unsigned short>(s.area);
         reset(s.move, 1);
@@ -824,7 +827,7 @@ void EngineTest() {
     {
         const int row = RowOf(43, 0x18, 3, kIn);
         const Site& s = kSites[row];
-        const unsigned char* const script = Pointer(s.script);
+        const unsigned char* const script = AtVa(s.script);
         Game_AreaNumber = static_cast<unsigned short>(s.area);
         reset(s.at0d, 2);
         Placed0DSite(context, script, s.at0d);
@@ -839,7 +842,7 @@ void EngineTest() {
     {
         const int row = RowOf(60, 0x18, 2, kOutBefore);
         const Site& s = kSites[row];
-        const unsigned char* const script = Pointer(s.script);
+        const unsigned char* const script = AtVa(s.script);
         Game_AreaNumber = static_cast<unsigned short>(s.area);
         reset(s.before, 2);
         Check(StepSite(context, script, result) && result == 1 && context[7] == Steps(s) && Pos(context) == s.before,
@@ -854,7 +857,7 @@ void EngineTest() {
     // walk's south steps are the north walk's; the speed is the actor's again before its next op.
     {
         Game_AreaNumber = kCaseZeroArea;
-        const unsigned char* const script = Pointer(kCaseZeroScripts[0].script);
+        const unsigned char* const script = AtVa(kCaseZeroScripts[0].script);
         auto SetY = [&](float v) { std::memcpy(sprite + 0x78, &v, sizeof v); };
         auto GetY = [&]() { float v; std::memcpy(&v, sprite + 0x78, sizeof v); return v; };
         struct Run { unsigned frames, north, south, east, west; bool fast_seen; };
@@ -922,9 +925,9 @@ void EngineTest() {
         const Site& s = kSites[row];
         Game_AreaNumber = static_cast<unsigned short>(s.area);
         reset(s.move, 2);
-        StepSite(context, Pointer(s.script), result);
+        StepSite(context, AtVa(s.script), result);
         SetPos(context, 0x002);
-        Check(!StepSite(context, Pointer(s.script), result) && Find(context) == nullptr, "a stale plan is dropped");
+        Check(!StepSite(context, AtVa(s.script), result) && Find(context) == nullptr, "a stale plan is dropped");
     }
     for (Live& l : g_live) l = Live{};
     for (bool& on : g_site_on) on = false;
@@ -975,9 +978,9 @@ void SelfTest() {
         g_staging = g_hide = false;
         unsigned char context[16] = {};
         unsigned char result = 0x5A;
-        Check(!Step(context, Pointer(kSites[0].script), result) && result == 0x5A, "narrow: Step does nothing");
-        Placed0D(context, Pointer(kSites[0].script), kSites[2].at0d);
-        Placed(Pointer(kSites[0].place));
+        Check(!Step(context, AtVa(kSites[0].script), result) && result == 0x5A, "narrow: Step does nothing");
+        Placed0D(context, AtVa(kSites[0].script), kSites[2].at0d);
+        Placed(AtVa(kSites[0].place));
         unsigned char zero[16] = {};
         Check(std::memcmp(context, zero, sizeof context) == 0, "narrow: the hooks write nothing");
         Check(!Hide(rv::Bytes(Sprite_Objects)), "narrow: nothing hidden");
@@ -1114,9 +1117,9 @@ void Arm() {
             const Site& s = kSites[i];
             const unsigned char* const script = ScriptOf(s.area, s.field, s.index);
             std::uint32_t h = Fnv(script, s.span);
-            if (s.place) h = Fnv(Pointer(s.place), EventScript_OpLengths[Pointer(s.place)[0] >> 4], h);
+            if (s.place) h = Fnv(AtVa(s.place), EventScript_OpLengths[AtVa(s.place)[0] >> 4], h);
             unsigned dir, steps, length;
-            const bool ok = Address(script) == s.script && h == s.hash && MoveAt(script + s.move, dir, steps, length) &&
+            const bool ok = Address(script) == ::bof3::Img(s.script) && h == s.hash && MoveAt(script + s.move, dir, steps, length) &&
                             steps != 0 && (dir & ~7u) == 0 && steps + Steps(s) <= 0xFF &&
                             (s.at0d == kNone || script[s.at0d] == 0x0D) &&
                             (s.before == kNone || script[s.before] == 0xEB || script[s.before] == 0xE6);

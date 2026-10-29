@@ -146,8 +146,9 @@ struct Kept {
     U bytes;
     const char* name;
 };
-// symbols.toml's addresses; the names are macros of symbols.gen.h, so the
-// literals are written here and checked against them by Snapshot_Inject.
+// symbols.toml's addresses, as VAs (names; a range's place is Img(at)); the
+// names are macros of symbols.gen.h, so the literals are written here and
+// checked against them by Snapshot_Inject.
 constexpr Kept kKept[] = {
     {0x66C854, 4, "Task_SchedulerEsp"},
     {0x6BC620, 4, "Game_Hwnd"},
@@ -188,7 +189,7 @@ std::string Printf(const char* fmt, ...) {
 // it whole (constants, the bound import slots, one pointer into our DLL) and
 // no game code is known to write it after (docs/quicksave-census.md 5); a
 // take records its hash and a load logs whether it still matches.
-constexpr Range kRdata{exe_layout::kRdataVa, exe_layout::kDataVa - exe_layout::kRdataVa};
+Range Rdata() { return {Img(exe_layout::kRdataVa), exe_layout::kDataVa - exe_layout::kRdataVa}; }
 
 U Fnv(const Range& r) {
     U h = 0x811C9DC5u;
@@ -197,12 +198,15 @@ U Fnv(const Range& r) {
 }
 
 Span CurrentSpan() {
-    // The exe host: .data and .bss to .game's end, then .pool, one run.
-    if (IsExeHost()) return {{exe_layout::kDataVa, exe_layout::kOwnVa - exe_layout::kDataVa}, {}};
+    // The exe host: .data and .bss to .game's end, then .pool, one run - at
+    // the image's place, so a quicksave taken with the image at one base is
+    // refused at another ("another span": its run-time pointers are the
+    // take's, docs/relocatable-image-design.md 7).
+    if (IsExeHost()) return {{Img(exe_layout::kDataVa), exe_layout::kOwnVa - exe_layout::kDataVa}, {}};
     // Hosted: BOF3.exe's .data to its last page (.rsrc follows at 0x93E000,
     // constant), and the draw pool where DrawPool_Reserve put it.
     const U end = (exe_layout::kBssEnd + kPage - 1) & ~(kPage - 1);
-    const Range image{exe_layout::kDataVa, end - exe_layout::kDataVa};
+    const Range image{Img(exe_layout::kDataVa), end - exe_layout::kDataVa};
     const U items = Va(draw_pool::Items());
     if (items >= image.base && items < image.base + image.bytes) return {image, {}};   // DIV-0062 off: Capcom's array
     return {image, {items, draw_pool_room::kBytes}};
@@ -390,7 +394,7 @@ std::vector<unsigned char> Take(const Registry& registry, const Span& span, U ar
     h->pool_bytes = span.pool.bytes;
     h->arena_top = arena_top;
     h->arena_bytes = arena;
-    h->rdata_fnv = Fnv(kRdata);
+    h->rdata_fnv = Fnv(Rdata());
     h->participants = static_cast<U>(registry.size());
     return file;
 }
@@ -514,10 +518,11 @@ void Restore(const Parsed& p, const Registry& registry) {
     for (const Parsed::Rec& r : p.records)   // the live process's resources let go while its words still name them
         if (registry[r.participant].discard) registry[r.participant].discard();
     std::vector<std::vector<unsigned char>> live(kKeptCount);
-    for (std::size_t i = 0; i < kKeptCount; ++i) live[i].assign(At(kKept[i].at), At(kKept[i].at + kKept[i].bytes));
+    for (std::size_t i = 0; i < kKeptCount; ++i)
+        live[i].assign(At(Img(kKept[i].at)), At(Img(kKept[i].at) + kKept[i].bytes));
     WriteRange(h.span_base, p.image, h.span_bytes);
     if (h.pool_bytes) WriteRange(h.pool_base, p.pool, h.pool_bytes);
-    for (std::size_t i = 0; i < kKeptCount; ++i) WriteRange(kKept[i].at, live[i].data(), kKept[i].bytes);
+    for (std::size_t i = 0; i < kKeptCount; ++i) WriteRange(Img(kKept[i].at), live[i].data(), kKept[i].bytes);
     for (const Parsed::Rec& r : p.records) {
         const Participant& who = registry[r.participant];
         SnapshotReader reader(who.tag.c_str(), r.data, r.bytes);
@@ -744,7 +749,7 @@ void DoLoad(unsigned slot) {
         Show("Quickload refused: the task stacks");
         return;
     }
-    const U rdata = Fnv(kRdata);
+    const U rdata = Fnv(Rdata());
     if (rdata != p.header.rdata_fnv)
         Log("quicksave   F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
             "premise for leaving it out does not hold)",
@@ -936,10 +941,11 @@ void SelfTestSpan(const std::wstring& dir) {
     std::vector<std::vector<unsigned char>> kept_now(kKeptCount);
     std::vector<bool> kept_byte(span.image.bytes, false);
     for (std::size_t i = 0; i < kKeptCount; ++i) {
-        kept_now[i].assign(At(kKept[i].at), At(kKept[i].at + kKept[i].bytes));
+        const U at = Img(kKept[i].at);
+        kept_now[i].assign(At(at), At(at + kKept[i].bytes));
         for (U b = 0; b < kKept[i].bytes; ++b)
-            if (kKept[i].at + b >= span.image.base && kKept[i].at + b < span.image.base + span.image.bytes)
-                kept_byte[kKept[i].at + b - span.image.base] = true;
+            if (at + b >= span.image.base && at + b < span.image.base + span.image.bytes)
+                kept_byte[at + b - span.image.base] = true;
     }
     // The scribbled span's Task_StackTop is noise; the restore is checked
     // against the stand-in top, as the game's would be against the live one.
@@ -961,7 +967,7 @@ void SelfTestSpan(const std::wstring& dir) {
         Check(wrong == 0, "the span equals the take's but the keep list");
         bool kept_ok = true;
         for (std::size_t i = 0; i < kKeptCount; ++i)
-            if (std::memcmp(At(kKept[i].at), kept_now[i].data(), kKept[i].bytes) != 0) kept_ok = false;
+            if (std::memcmp(At(Img(kKept[i].at)), kept_now[i].data(), kKept[i].bytes) != 0) kept_ok = false;
         Check(kept_ok, "the keep list's bytes keep their live values (Task_SchedulerEsp, the handles, the settings, the objects)");
         Check(Same(span.pool, pool0), "the pool equals the take's");
         Check(std::memcmp(At(top - kArenaBytes), arena0.data(), kArenaBytes) == 0, "the task arena equals the take's");
@@ -1166,8 +1172,9 @@ void Snapshot_Inject() {
                        Va(&D3d_Device)};
     static_assert(sizeof names / sizeof names[0] == kKeptCount, "a symbol for every kept range");
     for (std::size_t i = 0; i < kKeptCount; ++i)
-        if (names[i] != kKept[i].at)
-            Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's 0x%08X", kKept[i].name, kKept[i].at, names[i]);
+        if (names[i] != Img(kKept[i].at))
+            Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's at 0x%08X (VA 0x%08X)", kKept[i].name, kKept[i].at,
+                  names[i], names[i] - Img(kKept[i].at) + kKept[i].at);
     // Hosted, with the other self-tests (BOF3X_SHADOW=snapshot or '*'). The
     // exe host refuses BOF3X_SHADOW (it compares Capcom's code, which that
     // host does not map); this test compares nothing of Capcom's and the exe

@@ -16,11 +16,10 @@ namespace sound_rest {
 // DSOUND.dll ordinal 1 by the import directory, 2026-10-05). It sits among
 // the MP3 decoder's starts by address only: it is the linker's thunk.
 // Called as a place: ::bof3::Code(kDirectSoundCreate.v) (sound_rest.cpp's
-// kOriginals). Stage C: not a [[func]] (symbols.toml names it only in
-// evidence), so the bind table has no row for it by name. Mode B binds it to
-// what the import slot 0x5C4014 resolves, DirectSoundCreate, as one extra
-// row; mode S writes the thunk with its operand at Img(0x5C4014) (design
-// 4.4; today the bytes are fixed, exe_host.cpp). Not solved here.
+// kOriginals). Not a [[func]] (symbols.toml names it only in evidence), so
+// the bind table has no row for it by name: in bof3x.exe Code() binds it to a
+// thunk of ours that calls through the import slot 0x5C4014 as it reads at the
+// call (src/hook/bind.cpp DirectSoundThunk); hosted it is Capcom's thunk.
 constexpr ::bof3::image::CodeVa kDirectSoundCreate{0x5ACBBC};
 // Sound_LoadStream's kind of the last stream (id >> 12), the dword
 // save_menu_callees.h calls kStreamKind: non-zero, the SND stream's buffer

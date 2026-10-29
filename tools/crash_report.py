@@ -11,12 +11,20 @@ ones Windows Error Reporting leaves in %LOCALAPPDATA%/CrashDumps. Addresses in
 BOF3.exe are named from symbols.toml, else given as the nearest function entry
 of analysis/pc_funcs.json plus an offset.
 
+The image may lie elsewhere than 0x400000 (a developer's bof3x.exe written at
+another base, docs/relocatable-image-design.md 8): the dump's module list
+gives the main module's base, an address inside it is shown with its VA and
+named by the VA, and --read / --u32 take VAs, as every other tool does
+(tools/proc_image.py).
+
 A dump is game-derived: it holds the game's code and data. Keep it local
 (CLAUDE.md rule 1).
 """
 import argparse, bisect, glob, json, os, struct, sys, tomllib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from proc_image import LINKED_BASE, place, va  # noqa: E402
 CODES = {0xC0000005: 'access violation', 0xC0000006: 'in-page error',
          0xC000001D: 'illegal instruction', 0xC0000096: 'privileged instruction',
          0xC00000FD: 'stack overflow', 0xC0000094: 'integer divide by zero',
@@ -57,6 +65,10 @@ class Dump:
                 _, ctx = struct.unpack_from('<II', d, r + 8 + 152)
                 regs = dict(zip(REGS, struct.unpack_from('<11I', d, ctx + 0x9C)))
                 self.exc = dict(thread=tid, code=code, addr=addr, params=params, regs=regs)
+        # The game's image: the executable among the modules (BOF3.exe or
+        # bof3x*.exe), and its move from 0x400000.
+        exe = [b for b, _, n in self.modules if n.lower().endswith('.exe') and n.lower().startswith(('bof3.', 'bof3x'))]
+        self.move = (exe[0] - LINKED_BASE) if exe else 0
 
     def read(self, a, n):
         for b, s, o in self.regions:
@@ -119,7 +131,7 @@ def exe_bytes(a, n, _cache={}):
 
 
 def after_call(dump, v):
-    b = dump.read(v - 6, 6) or exe_bytes(v - 6, 6)
+    b = dump.read(v - 6, 6) or exe_bytes(va(v, dump.move) - 6, 6)
     return bool(b) and (b[1] == 0xE8 or b[4] == 0xFF or b[3] == 0xFF or b[0] == 0xFF)
 
 
@@ -139,21 +151,22 @@ def main():
     dump, name = Dump(path), Names()
 
     def where(v):
-        n = name(v)
+        a = va(v, dump.move)   # a place in the moved image, as its VA
+        n = name(a)
         if n:
-            return n
+            return n + (f' (VA 0x{a:08X})' if a != v else '')
         m = dump.module(v)
         return f'{m[0]}+0x{m[1]:X}' if m else ''
 
     if a.read:
         addr, ln = int(a.read[0], 0), int(a.read[1], 0)
         for off in range(0, ln, 16):
-            m = dump.read(addr + off, min(16, ln - off))
+            m = dump.read(place(addr + off, dump.move), min(16, ln - off))
             print(f'{addr + off:08X}  {m.hex(" ") if m else "(not in dump)"}')
         return
     if a.u32:
         for x in a.u32:
-            m = dump.read(int(x, 0), 4)
+            m = dump.read(place(int(x, 0), dump.move), 4)
             v = struct.unpack('<I', m)[0] if m else None
             print(f'[{int(x, 0):08X}] = ' + (f'0x{v:08X}  {where(v)}' if m else '(not in dump)'))
         return
@@ -166,7 +179,8 @@ def main():
           f'{where(e["addr"])}  thread {e["thread"]}')
     if e['code'] in (0xC0000005, 0xC0000006) and len(e['params']) >= 2:
         kind = {0: 'reading', 1: 'writing', 8: 'executing'}.get(e['params'][0], '?')
-        print(f'  {kind} 0x{e["params"][1]:08X}')
+        at = e['params'][1]
+        print(f'  {kind} 0x{at:08X}' + (f' (VA 0x{va(at, dump.move):08X})' if va(at, dump.move) != at else ''))
     r = e['regs']
     print('  ' + '  '.join(f'{k} {r[k]:08X}' for k in ('eax', 'ebx', 'ecx', 'edx', 'esi', 'edi')))
     print('  ' + '  '.join(f'{k} {r[k]:08X}' for k in ('ebp', 'esp', 'eip', 'efl')))
@@ -177,7 +191,7 @@ def main():
         if not m:
             break
         v, = struct.unpack('<I', m)
-        if (name(v) or (dump.module(v) or ('',))[0].lower() == 'bof3x.dll') and after_call(dump, v):
+        if (name(va(v, dump.move)) or (dump.module(v) or ('',))[0].lower() == 'bof3x.dll') and after_call(dump, v):
             print(f'  esp+0x{off:04X}  0x{v:08X}  {where(v)}')
             shown += 1
     if not shown:

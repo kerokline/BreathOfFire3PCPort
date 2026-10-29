@@ -56,7 +56,7 @@ void NameTables_Apply(std::uint32_t tag, const std::uint8_t* names, std::uint32_
         if (size == 0 || size % kNameBytes || first + n > t.count)
             bof3::Fatal("name chunk for %s from record %u is 0x%X bytes; 0x%X are left", t.what, (unsigned)first,
                         (unsigned)size, (unsigned)((t.count - first) * kNameBytes));
-        auto* field = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(tag));
+        auto* field = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(::bof3::Img(tag)));   // the chunk tag is a VA
         for (std::uint32_t i = 0; i < n; ++i, field += t.stride, names += kNameBytes)
             std::memcpy(field, names, kNameBytes);
         if (n == t.count)

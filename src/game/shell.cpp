@@ -234,8 +234,8 @@ extern "C" void* __cdecl Shell_GameInitBody(void) {
     g.dinput_init(Game_HInstance, Game_Hwnd);
     g.sound_setup(Game_Hwnd);   // read again: DInput_Init may have changed it
     g.dropped_call(0);
-    unsigned char* const block0 = At(kBlocks);
-    unsigned char* const block1 = At(kBlocks + kBlockBytes);
+    unsigned char* const block0 = At(::bof3::Img(kBlocks));
+    unsigned char* const block1 = At(::bof3::Img(kBlocks) + kBlockBytes);
     g.set_def_draw_env(block0 + kBlockDrawEnv, 0, 0, 0x140, 0xF0);
     g.set_def_disp_env(block0, 0, 0xF0, 0x140, 0xF0);
     g.set_def_draw_env(block1 + kBlockDrawEnv, 0, 0xF0, 0x140, 0xF0);

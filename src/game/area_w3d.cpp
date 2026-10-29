@@ -283,7 +283,7 @@ extern "C" void __cdecl Area135_ToMarker(void) {
 // dword, taken as a byte): the running object's +8 = the leader's direction,
 // Sprite_SetAnimation(+8).
 extern "C" void __cdecl Area135_FaceLeaderDir(void) {
-    const auto delta = static_cast<std::int32_t>(Key(Field_State) - ObjTrio_addr);
+    const auto delta = static_cast<std::int32_t>(Key(Field_State) - ::bof3::Img(ObjTrio_addr));
     const auto index = static_cast<unsigned char>(delta / static_cast<std::int32_t>(at::kPartyStride));
     if (index == 0) return;
     Sprite_Current[8] = B(::bof3::Img(ObjTrio_addr) + 0x8);

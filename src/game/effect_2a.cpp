@@ -562,7 +562,7 @@ extern "C" void __cdecl EffectKind29_DrawFace(unsigned i0, unsigned i1, unsigned
 // +0x1C left as they are).
 extern "C" void __cdecl EffectKind29_SetSegments(void) {
     struct Cell { U at, value; };
-    static constexpr Cell kCells[] = {
+    static const Cell kCells[] = {
         {::bof3::Img(0x675FE4), 0x118000},  {::bof3::Img(0x676004), 0x118000},  {::bof3::Img(0x675FE0), 0x568000},  {::bof3::Img(0x676000), 0x568000},
         {::bof3::Img(0x676008), 0x2400000}, {::bof3::Img(0x676018), 0x2400000}, {::bof3::Img(0x676020), 0x568000},  {::bof3::Img(0x676040), 0x568000},
         {::bof3::Img(0x676060), 0x568000},  {::bof3::Img(0x675FE8), 0x3000000}, {::bof3::Img(0x675FF0), 0x5E8000},  {::bof3::Img(0x675FF4), 0xF0000},

@@ -699,8 +699,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Boot_Task(void) {
     g.slots_release();
     Draw_PassFlags = 0x1F;
     Draw_OtSlot = 6;
-    BattleE2_AnimSet = 0x8B3580;
-    SetLong(At(::bof3::Img(MoveScript_TintRecords_addr) + 0x180), 0x8C3584);
+    BattleE2_AnimSet = ::bof3::Img(0x8B3580);
+    SetLong(At(::bof3::Img(MoveScript_TintRecords_addr) + 0x180), ::bof3::Img(0x8C3584));
     g.clut_restore();
     Gfx_ClutStripDirty = static_cast<unsigned char>(Gfx_ClutStripDirty + 1);
     g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kTitleLoadEntry.v))));

@@ -252,7 +252,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_Statu
 // PSP's added test (PSP-JP 0x11F36C), after the hook. Off, the original's.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_NextRound() {
     for (unsigned i = 0x10; i < 0x18; ++i)
-        if (Long(At(0x803500 + i * 4)) != 0) return;
+        if (Long(At(::bof3::Img(0x803500) + i * 4)) != 0) return;
     if (EventBattle_Id != 0) {
         const auto hook = reinterpret_cast<unsigned (__cdecl*)(int)>(
             BattleHook_Event);

@@ -39,6 +39,11 @@ void VerifyImage();
 // BOF3X_OFF (the player's switch, below PatchBytes) does not reach a detour:
 // a non-instrument detour whose name stands in it, bare or as `-NAME`, is a
 // Fatal that points at the hosted build's BOF3X_ORIGINAL.
+//
+// In bof3x.exe (the exe host) nothing is written: no code of Capcom's is
+// mapped, and every place of `original` is already `ours` - the bind table's
+// function for that VA (bind.h; docs/relocatable-image-design.md 4.1). The
+// pair is checked against the table, a difference a Fatal, and recorded.
 void Inject(const char* name, std::uint32_t original, void* ours, bool instrument = false);
 
 // Re-aims ONE relative call inside an original function at ours, leaving the

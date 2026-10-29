@@ -235,7 +235,7 @@ void Repoint(const char* what, const std::uint8_t* payload, std::uint32_t size, 
         // The entry names the shipped string, or our buffer when the title's
         // FIRST.DAT is loaded a second time (after a game over, DIV-0064's
         // lesson of 2026-09-30).
-        if (*entry != shipped[i] && *entry != Addr(buffer))
+        if (*entry != ::bof3::Img(shipped[i]) && *entry != Addr(buffer))   // a pointer word: the place
             bof3::Fatal("fishing %s: 0x%08X holds 0x%08X, expected 0x%08X", what, (unsigned)(at + stride * i),
                         (unsigned)*entry, (unsigned)shipped[i]);
         if (len == 0) continue;   // the builder had nothing for it: as shipped

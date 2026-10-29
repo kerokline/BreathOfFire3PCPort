@@ -55,7 +55,7 @@ unsigned char* PartyAt(unsigned member) { return rv::Bytes(&ObjTrio[member]); }
 // 0x63E7063F, sar 6, the sign added back): C's truncating division.
 unsigned char ObjectIndex(const unsigned char* record) {
     const auto delta = static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(record)) -
-                                                 Sprite_Objects_addr);
+                                                 ::bof3::Img(Sprite_Objects_addr));
     return static_cast<unsigned char>(delta / static_cast<std::int32_t>(at::kObjectStride));
 }
 // A float stored as the originals' fst does.

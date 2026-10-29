@@ -108,7 +108,7 @@ struct WorldMapTables {
 // Area 87: WorldMap_Records record 4 (0x653980), WorldMap_FieldHooks entry 4;
 // its descriptor 0x612488 (only a choice table, +0x34 -> 0x41D270, and the
 // init 0x40FC40, which area 65 shares).
-constexpr WorldMapTables kWm87 = {
+const WorldMapTables kWm87 = {
     "Area87",
     ::bof3::Img(0x611C98), ::bof3::Img(0x611CC0),   // 10 plate animations
     ::bof3::Img(0x611CC0), ::bof3::Img(0x611CCC),   // 3 cell records (then a zero record, then the descriptor's data)
@@ -125,7 +125,7 @@ constexpr WorldMapTables kWm87 = {
 
 // Area 88: record 5 (0x65399C), field hook entry 5; its descriptor 0x612E50
 // (only a choice table, +0x34 -> 0x41D270).
-constexpr WorldMapTables kWm88 = {
+const WorldMapTables kWm88 = {
     "Area88",
     ::bof3::Img(0x612700), ::bof3::Img(0x61271C),   // 7 plate animations
     ::bof3::Img(0x61271C), ::bof3::Img(0x612728),   // 3 cell records (then the descriptor's data)

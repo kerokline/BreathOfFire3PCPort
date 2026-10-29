@@ -199,18 +199,19 @@ template <typename F> inline F Call(F callee) {
 // A named callee, Capcom's or ours alike: BH_CALL(Sprite_ScriptTick)().
 #define BH_CALL(name) ::boss_harness::Call(name)
 // An unnamed one, by its address: BH_AT(void (__cdecl*)(), 0x446E20)().
-#define BH_AT(type, address) ::boss_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(::bof3::Code(address))))
+#define BH_AT(type, address) ::boss_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(::bof3::CodeToCall(address))))
 // One known only at run time - a cell of our own table of VAs, a helper's
-// parameter, or a word the game holds - through ::bof3::CodePlace, which
-// in stage C tells a VA from a word that already is a place
-// (src/common/image_base.h). BH_AT takes a constant only: Code() is
-// consteval, so a run-time value there does not compile.
-#define BH_WORD(type, word) ::boss_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(::bof3::CodePlace(word))))
+// parameter, or a word the game holds - through ::bof3::CodePlaceToCall,
+// which tells a VA from a word that already is a place
+// (src/common/image_base.h). In bof3x.exe a VA with no function of ours
+// behind it is a Fatal naming it, at the call (BH_AT's CodeToCall too).
+#define BH_WORD(type, word) ::boss_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(::bof3::CodePlaceToCall(word))))
 
 // A handler a boss function reaches by an address in its own code (a stack
 // table's immediate, a direct call to a function of its group): called by that
 // address, which in the game is Capcom's function or the jmp Inject put there
-// to ours. A handler read from a .data table (a kind's state table, a hook
+// to ours (hosted), the jmp to ours at its place in the bind table (bof3x.exe). A handler
+// read from a .data table (a kind's state table, a hook
 // table) is called as read - the fuzz swaps the table's cells for recorders
 // (DataTable) - and so is a hook stored in a cell (0x904B64..6C, an enemy's
 // +0xF4): the fuzz keeps recorders there.

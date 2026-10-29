@@ -87,7 +87,7 @@ extern "C" __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) { __asm__
 // leaves - a value no one set either way, read only where DirectSound's
 // GetStatus does not write its out (section 3).
 int Sound_PauseAllEax(void) {
-    for (std::uint32_t p = Address(Sound_Channels); p < kChannelsEnd; p += 4) {
+    for (std::uint32_t p = Address(Sound_Channels); p < ::bof3::Img(kChannelsEnd); p += 4) {
         const std::uint32_t buffer = Dword(p);
         if (buffer != 0) SoundRest_g.sndbuf_stop(At(buffer));
     }

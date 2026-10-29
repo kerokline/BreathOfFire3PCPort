@@ -76,7 +76,7 @@ struct SlotTable {
     std::uint32_t pointers, slots, count, room;
 };
 
-constexpr SlotTable kVerbTable = {"menu verbs", "DIV-0018", ::bof3::Img(Menu_VerbPointers_addr), ::bof3::Img(Menu_Verbs_addr), kVerbs, kSlotRoom};
+const SlotTable kVerbTable = {"menu verbs", "DIV-0018", ::bof3::Img(Menu_VerbPointers_addr), ::bof3::Img(Menu_Verbs_addr), kVerbs, kSlotRoom};
 
 // DIVERGENCE DIV-0019: the battle's command labels - the box beside the
 // command cross, 2026-09-21. Seven 8-byte slots at 0x669D28 behind the
@@ -86,7 +86,7 @@ constexpr SlotTable kVerbTable = {"menu verbs", "DIV-0018", ::bof3::Img(Menu_Ver
 // exactly three of the US disc's 8-unit ones: "Atk", "Abl", "Use", "Exa",
 // "Def", "Chg", "Esc". So the strings go in and nothing about the layout
 // changes.
-constexpr SlotTable kBattleTable = {"battle commands", "DIV-0019", ::bof3::Img(0x669D60), ::bof3::Img(0x669D28), 7, 8};
+const SlotTable kBattleTable = {"battle commands", "DIV-0019", ::bof3::Img(0x669D60), ::bof3::Img(0x669D28), 7, 8};
 
 void ApplySlots(const SlotTable& t, std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
     if (tag != 0) bof3::Fatal("%s chunk tag is 0x%X, expected 0", t.what, (unsigned)tag);

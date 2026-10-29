@@ -139,7 +139,7 @@ unsigned char Sub50Byte(const char* who, U table, unsigned index) {
     if (index >= at::kSub50FlagCount)
         bof3::Fatal("%s: +0xB is %u, past the %u flag bytes of 0x%X - the original reads the bytes after "
                     "(docs/effect_5c.md section 6)",
-                    who, index, at::kSub50FlagCount, (unsigned)table);
+                    who, index, at::kSub50FlagCount, (unsigned)::bof3::VaOf(table));
     return At(table + index)[0];
 }
 
@@ -1192,7 +1192,7 @@ extern "C" void __cdecl EffectKind18Sub15_Draw(void) {
     // EffectKind18Sub15_LinkLayer makes). A refused link above implies the
     // skip: the cursor is then at least 0x44 past Gfx_PacketNext.
     const U bands = 2u * 0x44u;
-    const bool bands_fit = wide && (static_cast<U>(Gfx_BufferIndex) << 16) + at::kPoolLimit > AddressOf(quad) + bands;
+    const bool bands_fit = wide && (static_cast<U>(Gfx_BufferIndex) << 16) + ::bof3::Img(at::kPoolLimit) > AddressOf(quad) + bands;
     if (wide && !bands_fit && draw_order::Tagging())
         bof3::Log("draworder   packet pool full: the sky's wide bands (%u bytes) skipped (EffectKind18Sub15_Draw)", bands);
     for (U k = 0; bands_fit && k < 2; ++k, quad += 0x44) {
@@ -1252,7 +1252,7 @@ extern "C" void __cdecl EffectKind18Sub15_LinkLayer(unsigned size) {
     unsigned char* const next = Gfx_PacketNext;
     const unsigned buffer = Gfx_BufferIndex;
     const U bytes = size & 0xFFu;
-    const U limit = (static_cast<U>(buffer) << 16) + at::kPoolLimit;
+    const U limit = (static_cast<U>(buffer) << 16) + ::bof3::Img(at::kPoolLimit);
     if (limit <= AddressOf(next) + bytes) {
         if (draw_order::Tagging())
             bof3::Log("draworder   packet pool full: the sky's %u-byte primitive skipped (EffectKind18Sub15_LinkLayer)", bytes);
