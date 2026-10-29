@@ -88,7 +88,7 @@ rule ([`README.md`](README.md)) here too.
 | I41 | Read CHD and CSO images as sources (today refused with a sentence; [`install-sources.md`](install-sources.md) 4) | tooling | MEDIUM | open 2026-10-15, from the Sources page work |
 | I42 | Make the install faster: setup rebuilds everything from every source on each add (about 3 to 4 minutes a setup, two of them the movie's conversion; [`install-sources.md`](install-sources.md) 5 and 6) - keep the base (movie, music, its `DAT` files) across setups and build only a new source's layers | tooling | MEDIUM | **partly built** 2026-10-15: every step timed; the movie, PSX sound and language layers reused when unchanged (adding a disc 89 s, not 372); the PSP's conversions left; 2026-10-25: every slow piece reused, the second-language rows in parallel, kept pieces hard-linked - an unchanged upgrade 248 s -> 31 s ([`install-staleness.md`](install-staleness.md) 5) |
 | I43 | Settle every gap of a disc-built exe image: each of the ranges where the PC's `.data` has a value and the image leaves zero (`recipes/exe-gaps.tsv`; for the EU disc 188 ranges, 2,561 bytes on `main` the day it opened) placed from a disc, filled by an engine rule, or shown never read - first by placing a region from the pointers that point into it | tooling / engine | HIGH | **step 1 built** 2026-10-16 (the owner asked), from the forest sprite of a PSX-only install: the importer places a region from the pointers into it (gap ranges EU 185 to 177, the sprite fixed); steps 2..4 open |
-| I44 | The data image as typed source: the next step toward reconstructed source (stages 1..3; I5's file boundaries folded in 2026-10-21) | engine / tooling | HIGH / MEDIUM | stages 1 and 2 **built** in the typed-data round ([`typed-data-round.md`](typed-data-round.md), PRs #94, #100); stage 3 (relocatable) and the source-layout pass open |
+| I44 | The data image as typed source: the next step toward reconstructed source (stages 1..3; I5's file boundaries folded in 2026-10-21) | engine / tooling | HIGH / MEDIUM | stages 1 and 2 **built** in the typed-data round ([`typed-data-round.md`](typed-data-round.md), PRs #94, #100); stage 3 (relocatable) **built** 2026-10-29 ([`relocatable-image-round.md`](relocatable-image-round.md), unpushed); the source-layout pass open |
 | I45 | Shrink the quicksave files (about 4 MB raw) | engine | HIGH | open 2026-10-17 (the owner): nothing measured |
 | I46 | A quicksave is native memory: revisit what loading one trusts | engine | HIGH | open 2026-10-19 (the owner): a note to consider again |
 | I47 | Quick-loading across translations: review the text that carries over | engine | HIGH | open 2026-10-20 (the owner): nothing measured |
@@ -1954,6 +1954,7 @@ machine code identical again (the typed tables, `GameData`, the strict CI
 rule; every raw site left has a reason), its PR after the owner's smoke run.
 **Status (2026-10-21):** stages 1 and 2 DONE (PR #94 2026-10-19, stage C
 PR #100 2026-10-20); stage 3, the relocatable image, open and not staged.
+**Status (2026-10-29):** stage 3 BUILT on `relocatable-image/round` ([`relocatable-image-round.md`](relocatable-image-round.md); stages A..D, unpushed, the PR at the owner's word); the source-layout pass (I5) open.
 **Feasibility:** HIGH for stages 1 and 2 (mechanical, no behaviour change,
 parallel by file group); MEDIUM for stage 3 (a loader change, proved by the
 state hash). **Gated on:** nothing for stage 1; stage 3 on the state hash
@@ -2039,6 +2040,7 @@ boundaries (from the globals' blocks and the `.text` order) as a source-layout
 pass after stage 3 - which of our files should be split or joined to match._
 _(2026-10-27) stage 3 staged at the owner's word:
 [`relocatable-image-round.md`](relocatable-image-round.md)._
+_(2026-10-29) stage 3 built: the relocatable-image round, stages A..D ([`relocatable-image-round.md`](relocatable-image-round.md) 4, 5). The player's `bof3x.exe` is unchanged in what it does - the image still at `0x400000`, its state hash matching the references on all ten routes - but nothing of ours assumes that base any more: every address in the source is a VA placed by `Img` / `Code` at a base read at run time, `.data`'s pointer words are rebased at load, and the code words are bound by name to places of ours (`(top << 24) | VA`, a table of jumps); the entry-stub page is gone and `.stub` is a no-access trap. What stays: the moved image (`BOF3X_IMAGEBASE`, `0x990000..0xA70000`) is a developer's switch, because its fence - the linked span reserved while the game is suspended - is the developer launcher's; the hosted build stays at `0x400000` by construction; `tools/reloc_bare.py --check` refuses a new bare image address in `src/game`, `src/input`, `src/render`. After it the only pin to x86-32 is pointer width inside the records; the source-layout pass is next in this idea._
 
 ## I45 — Shrink the quicksave files
 

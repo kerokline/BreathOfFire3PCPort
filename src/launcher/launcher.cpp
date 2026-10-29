@@ -64,7 +64,7 @@ bool SelfTestOnly() { return GetEnvironmentVariableW(L"BOF3X_SELFTEST_ONLY", nul
 // The switches that need Capcom's code, which only the hosted build maps
 // (src/hook/exe_host.cpp RefuseHostedSwitches).
 bool HostedOnlyAsked() {
-    for (const wchar_t* name : {L"BOF3X_ORIGINAL", L"BOF3X_SHADOW", L"BOF3X_CALLTRACE"})
+    for (const wchar_t* name : {L"BOF3X_ORIGINAL", L"BOF3X_SHADOW", L"BOF3X_CALLTRACE", L"BOF3X_MP3_COMPARE"})
         if (GetEnvironmentVariableW(name, nullptr, 0) > 0) return true;
     wchar_t mp3[16] = {};
     const DWORD n = GetEnvironmentVariableW(L"BOF3X_MP3", mp3, 16);
@@ -236,7 +236,7 @@ void LoadDllInto(HANDLE process, const std::wstring& dll) {
 [[noreturn]] void ForwardToDevLauncher(int argc, wchar_t** argv) {
     const std::wstring dev = OwnDirectory() + L"\\bof3x-launcher-dev.exe";
     if (!FileExists(dev))
-        Die(L"--host bof3, the hosted-only switches (BOF3X_ORIGINAL, BOF3X_SHADOW, BOF3X_CALLTRACE, "
+        Die(L"--host bof3, the hosted-only switches (BOF3X_ORIGINAL, BOF3X_SHADOW, BOF3X_CALLTRACE, BOF3X_MP3_COMPARE, "
             L"BOF3X_MP3=original) and a moved image (BOF3X_IMAGEBASE) are the developer launcher's, bof3x-launcher-dev.exe, which a source build "
             L"writes beside this one; a release does not ship it.");
     std::wstring line = L"\"" + dev + L"\"";
@@ -343,7 +343,7 @@ int wmain(int argc, wchar_t** argv) {
     if (!FileExists(dll)) Die(L"%ls is missing; it belongs next to this launcher.", dll.c_str());
     // Not given: our own executable - unless the environment asks for what
     // only the hosted build has (Capcom's code: the A/B switch, the shadow
-    // fuzz, the call trace, Capcom's MP3 decoder; bof3x.exe refuses each), so
+    // fuzz, the call trace, Capcom's MP3 decoder and its comparison; bof3x.exe refuses each), so
     // the documented self-test and A/B commands keep their meaning.
     const bool hosted = host_asked >= 0 ? host_asked == 1 : HostedOnlyAsked();
 #if !BOF3X_HOSTED
@@ -351,7 +351,7 @@ int wmain(int argc, wchar_t** argv) {
 #endif
     if (host_asked < 0 && hosted)
         std::fwprintf(stderr, L"bof3x-launcher: a hosted-only switch is set (BOF3X_ORIGINAL, BOF3X_SHADOW, "
-                              L"BOF3X_CALLTRACE or BOF3X_MP3=original): starting the hosted build, as --host bof3\n");
+                              L"BOF3X_CALLTRACE, BOF3X_MP3_COMPARE or BOF3X_MP3=original): starting the hosted build, as --host bof3\n");
     // BOF3X_IMAGEBASE (a developer switch, docs/relocatable-image-design.md
     // 1.5; no ini key): our executable written at another base by
     // tools/make_exe.py --image-base, bof3x-<BASE>.exe beside this launcher
@@ -421,7 +421,7 @@ int wmain(int argc, wchar_t** argv) {
         bool no_install = false;
         if (hosted && !exe_present)
             Die(L"no BOF3.exe in %ls.\nThe hosted build (--host bof3, or a hosted-only switch: BOF3X_ORIGINAL, "
-                L"BOF3X_SHADOW, BOF3X_CALLTRACE, BOF3X_MP3=original) runs inside the player's own BOF3.exe; a "
+                L"BOF3X_SHADOW, BOF3X_CALLTRACE, BOF3X_MP3_COMPARE, BOF3X_MP3=original) runs inside the player's own BOF3.exe; a "
                 L"disc-built install has none. Point --game or BOF3_GAME_DIR at an install that has it.",
                 game_dir.c_str());
         if (exe_present) {

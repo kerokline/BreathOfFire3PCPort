@@ -823,7 +823,7 @@ branch; the tooling objects are counted per file in appendix B.
 | `hook/detour.cpp` | `bof3::g_owned` | configuration | - | inject / host tables, fixed at start-up |
 | `hook/detour.cpp` | `bof3::g_owned_on` | configuration | - | inject / host tables, fixed at start-up |
 | `hook/exe_host.cpp` | `Engine_Main::entered` | configuration | - | inject / host tables, fixed at start-up |
-| `hook/exe_host.cpp` | `bof3::CheckStub()::mine` | configuration | - | inject / host tables, fixed at start-up |
+| `hook/exe_host.cpp` | `bof3::CheckStub()::mine` | configuration | - | inject / host tables, fixed at start-up; **gone 2026-10-29**: `CheckStub` deleted with the stub page (the relocatable-image round, stage C2) |
 | `hook/exe_host.cpp` | `bof3::g_data` | configuration | - | inject / host tables, fixed at start-up |
 | `hook/exe_host.cpp` | `bof3::g_exe` | configuration | - | inject / host tables, fixed at start-up |
 | `hook/exe_host.cpp` | `bof3::g_rdata` | configuration | - | inject / host tables, fixed at start-up |

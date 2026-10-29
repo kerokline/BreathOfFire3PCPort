@@ -4782,12 +4782,12 @@ site	src/game/display_setup.cpp	291	module_const	-	kDeviceDesc	0x7cc238	data	gam
 site	src/game/display_setup.cpp	296	module_const	-	kDirect3D	0x7cc34c	data	game	engine	base_helper	PsxRest_Direct3D	file	PutPtr(::bof3::Img(kDirect3D.v), render::DirectDrawObject());
 site	src/game/draw_emit.cpp	18	const_def	literal	kPoolLimit	0x7f1bac	data	game	engine	module	Gfx_PacketPools+0xffac	-	constexpr std::uint32_t kPoolLimit = 0x7F1BAC;
 site	src/game/draw_emit.cpp	155	ptr_sub	runtime_left	AreaMap_Header	0x8cb580	data	game	engine	cast	AreaMap_Header	address	e[1] = static_cast<std::uint32_t>(record - AreaMap_Header);
-site	src/game/draw_emit.cpp	314	module_const	-	kPoolLimit	0x7f1bac	data	game	engine	base_helper	Gfx_PacketPools+0xffac	file	const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
-site	src/game/draw_emit.cpp	521	code_const	gen_func	bof3::addr::Gpu_LinkPrim	0x5a7560	code	hosted	engine	call	Gpu_LinkPrim	-	const void* link = bof3::CloneOriginal(" ", bof3::addr::Gpu_LinkPrim, 0xB);
-site	src/game/draw_emit.cpp	522	code_const	gen_func	bof3::addr::Gpu_SetDrawMode	0x5a77c0	code	hosted	engine	call	Gpu_SetDrawMode	-	const void* mode = bof3::CloneOriginal(" ", bof3::addr::Gpu_SetDrawMode, 0x41);
-site	src/game/draw_emit.cpp	525	code_const	gen_func	bof3::addr::Gfx_CommitPrim	0x461e50	code	hosted	engine	call	Gfx_CommitPrim	-	bof3::CloneOriginal(" ", bof3::addr::Gfx_CommitPrim, 0x5D, commit_calls, 1);
-site	src/game/draw_emit.cpp	527	code_const	gen_func	bof3::addr::DrawLayer_Close	0x56fe80	code	hosted	engine	call	DrawLayer_Close	-	const void* close = bof3::CloneOriginal(" ", bof3::addr::DrawLayer_Close, 0x7C, close_calls, 3);
-site	src/game/draw_emit.cpp	534	abs_call	fnptr	bof3::addr::DrawLayer_Open	0x56fd20	code	hosted	engine	call	DrawLayer_Open	-	bof3::CloneOriginal(" ", bof3::addr::DrawLayer_Open, 0x159, open_calls, 1)));
+site	src/game/draw_emit.cpp	317	module_const	-	kPoolLimit	0x7f1bac	data	game	engine	base_helper	Gfx_PacketPools+0xffac	file	const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
+site	src/game/draw_emit.cpp	524	code_const	gen_func	bof3::addr::Gpu_LinkPrim	0x5a7560	code	hosted	engine	call	Gpu_LinkPrim	-	const void* link = bof3::CloneOriginal(" ", bof3::addr::Gpu_LinkPrim, 0xB);
+site	src/game/draw_emit.cpp	525	code_const	gen_func	bof3::addr::Gpu_SetDrawMode	0x5a77c0	code	hosted	engine	call	Gpu_SetDrawMode	-	const void* mode = bof3::CloneOriginal(" ", bof3::addr::Gpu_SetDrawMode, 0x41);
+site	src/game/draw_emit.cpp	528	code_const	gen_func	bof3::addr::Gfx_CommitPrim	0x461e50	code	hosted	engine	call	Gfx_CommitPrim	-	bof3::CloneOriginal(" ", bof3::addr::Gfx_CommitPrim, 0x5D, commit_calls, 1);
+site	src/game/draw_emit.cpp	530	code_const	gen_func	bof3::addr::DrawLayer_Close	0x56fe80	code	hosted	engine	call	DrawLayer_Close	-	const void* close = bof3::CloneOriginal(" ", bof3::addr::DrawLayer_Close, 0x7C, close_calls, 3);
+site	src/game/draw_emit.cpp	537	abs_call	fnptr	bof3::addr::DrawLayer_Open	0x56fd20	code	hosted	engine	call	DrawLayer_Open	-	bof3::CloneOriginal(" ", bof3::addr::DrawLayer_Open, 0x159, open_calls, 1)));
 site	src/game/draw_layers.cpp	143	abs_call	fnptr	bof3::addr::DrawLayers_Reset	0x56f5b0	code	hosted	engine	call	DrawLayers_Reset	-	bof3::CloneOriginal(" ", bof3::addr::DrawLayers_Reset, 0x32)));
 site	src/game/draw_layers.cpp	145	abs_call	fnptr	bof3::addr::DrawTable_Sort	0x56f5f0	code	hosted	engine	call	DrawTable_Sort	-	bof3::CloneOriginal(" ", bof3::addr::DrawTable_Sort, 0x76)));
 site	src/game/draw_pass.cpp	82	ptr_sub	runtime_left	Sprite_DrawRecords	0x7e01c0	data	game	engine	cast	Sprite_DrawRecords	address	const unsigned index = static_cast<unsigned>(record - Sprite_DrawRecords) / 3u;
@@ -18216,43 +18216,45 @@ site	src/game/yes_no_layout.cpp	370	code_const	module	kMasterHandCall	0x586e97	c
 site	src/game/yes_no_layout.cpp	370	code_const	module	kMenuDrawHand	0x5905d0	code	hosted	ui	call	Menu_DrawHand	file	if (bof3::RetargetCall(" ", kMasterHandCall, kMenuDrawHand.v, reinterpret_cast<void*>(&MasterAsk_Hand)))
 site	src/game/yes_no_layout.cpp	388	code_literal	literal	0x576A46	0x576a46	code	hosted	ui	call	-	-	if (bof3::PatchBytes(" ", 0x576A46, name_was, name_is, 3)) g_name_inset = 0x15;
 site	src/game/yes_no_layout.cpp	397	addr_eq	==	kMsgSystemPtr	0x497740	code	game	ui	-	Msg_SystemPtr	file	return g_line_call == kMsgSystemPtr.v ? nullptr : &YesNo_Line;
-site	src/hook/bind.cpp	31	const_def	literal	kDirectSoundThunk	0x5acbbc	code	platform	hook	module	-	-	constexpr std::uint32_t kDirectSoundThunk = 0x5ACBBC;
-site	src/hook/bind.cpp	32	const_def	literal	kDirectSoundSlot	0x5c4014	data	platform	hook	module	Imp_DirectSoundCreate	-	constexpr std::uint32_t kDirectSoundSlot = 0x5C4014;
-site	src/hook/bind.cpp	38	module_const	-	kDirectSoundSlot	0x5c4014	data	platform	hook	base_helper	Imp_DirectSoundCreate	file	std::memcpy(&fn, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(Img(kDirectSoundSlot))), sizeof fn);
-site	src/hook/bind.cpp	42	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	(unsigned)kDirectSoundThunk, (unsigned)kDirectSoundSlot);
-site	src/hook/bind.cpp	42	module_const	-	kDirectSoundSlot	0x5c4014	data	platform	hook	call	Imp_DirectSoundCreate	file	(unsigned)kDirectSoundThunk, (unsigned)kDirectSoundSlot);
-site	src/hook/bind.cpp	68	const_def	derived	kSpanHi	0x5c4000	data	platform	hook	module	Imp_DirectDrawEnumerateA	-	constexpr std::uint32_t kSpanLo = image::kCodeLo, kSpanHi = image::kCodeHi;
-site	src/hook/bind.cpp	68	const_def	derived	kSpanLo	0x401000	code	platform	hook	module	Area00_ChoiceVars3And6	-	constexpr std::uint32_t kSpanLo = image::kCodeLo, kSpanHi = image::kCodeHi;
-site	src/hook/bind.cpp	79	code_const	module	kSpanLo	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	file	const std::uint32_t lo = (static_cast<std::uint32_t>(b) << 24) | kSpanLo;
-site	src/hook/bind.cpp	93	code_const	module	kSpanLo	0x401000	code	platform	hook	cast	Area00_ChoiceVars3And6	file	auto* const t = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(top | kSpanLo));
-site	src/hook/bind.cpp	96	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	-	-	file	const std::uint32_t va = i < kRows ? kBind[i].va : kDirectSoundThunk;
-site	src/hook/bind.cpp	106	code_const	module	kSpanLo	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	file	if (!VirtualProtect(at, kSpan + (kSpanLo & 0xFFFF), PAGE_EXECUTE_READ, &old))
-site	src/hook/bind.cpp	167	addr_eq	==	kDirectSoundThunk	0x5acbbc	code	platform	hook	-	-	file	if (Find(va) || va == kDirectSoundThunk) return PlaceAt(va);
-site	src/hook/bind.cpp	193	range_cmp	>=	image::kTextVa	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	-	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
-site	src/hook/bind.cpp	193	range_cmp	<	image::kTextVa	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	-	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
-site	src/hook/bind.cpp	216	addr_eq	==	kDirectSoundThunk	0x5acbbc	code	platform	hook	-	-	file	return Find(va) || va == kDirectSoundThunk ? va : 0;
-site	src/hook/bind.cpp	237	code_const	module	kSpanLo	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	file	std::uint32_t Bind_TableLo() { return g_table ? g_table | kSpanLo : 0; }
-site	src/hook/bind.cpp	238	module_const	-	kSpanHi	0x5c4000	data	platform	hook	-	Imp_DirectDrawEnumerateA	file	std::uint32_t Bind_TableHi() { return g_table ? g_table | kSpanHi : 0; }
-site	src/hook/bind.cpp	298	const_def	literal	kHi	0x93e000	data	platform	hook	module	-	-	constexpr std::uint32_t kLo = 0x5DA000, kHi = 0x93E000, kPage = 0x1000;
-site	src/hook/bind.cpp	298	const_def	literal	kLo	0x5da000	data	platform	hook	module	-	-	constexpr std::uint32_t kLo = 0x5DA000, kHi = 0x93E000, kPage = 0x1000;
-site	src/hook/bind.cpp	301	module_const	-	kLo	0x5da000	data	platform	hook	-	-	file	for (std::uint32_t va = kLo; va < kHi; va += 4) {
-site	src/hook/bind.cpp	301	range_cmp	<	kHi	0x93e000	data	platform	hook	-	-	file	for (std::uint32_t va = kLo; va < kHi; va += 4) {
-site	src/hook/bind.cpp	306	ptr_sub	runtime_left	kLo	0x5da000	data	platform	hook	-	-	file	const unsigned page = (va - kLo) / kPage + 1;
-site	src/hook/bind.cpp	308	module_const	-	kLo	0x5da000	data	platform	hook	-	-	file	if (pages < 8) first_pages[pages] = kLo + (page - 1) * kPage;
-site	src/hook/bind.cpp	315	module_const	-	kHi	0x93e000	data	platform	hook	-	-	file	words, pages, (kHi - kLo) / kPage, (unsigned)first_pages[0], (unsigned)first_pages[1],
-site	src/hook/bind.cpp	315	ptr_sub	two_constants	kLo	0x5da000	data	platform	hook	-	-	file	words, pages, (kHi - kLo) / kPage, (unsigned)first_pages[0], (unsigned)first_pages[1],
-site	src/hook/bind.cpp	375	base_offset	-	0x5DA000	0x5da000	data	platform	hook	base_helper	-	-	if (IsCodeWord(Img(0x5DA000)) || IsCodeWord(Img(kBind[0].va + 1)))
-site	src/hook/bind.cpp	378	module_const	-	kDirectSoundSlot	0x5c4014	data	platform	hook	base_helper	Imp_DirectSoundCreate	file	std::memcpy(&slot, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(Img(kDirectSoundSlot))), 4);
-site	src/hook/bind.cpp	379	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	base_helper	-	file	if (Code(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) || CodeToCall(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) ||
-site	src/hook/bind.cpp	379	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	if (Code(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) || CodeToCall(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) ||
-site	src/hook/bind.cpp	379	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	if (Code(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) || CodeToCall(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) ||
-site	src/hook/bind.cpp	379	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	if (Code(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) || CodeToCall(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) ||
-site	src/hook/bind.cpp	380	addr_eq	!=	kDirectSoundThunk	0x5acbbc	code	platform	hook	-	-	file	Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
-site	src/hook/bind.cpp	380	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
-site	src/hook/bind.cpp	380	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
-site	src/hook/bind.cpp	383	module_const	-	kDirectSoundSlot	0x5c4014	data	platform	hook	call	Imp_DirectSoundCreate	file	(unsigned)kDirectSoundSlot);
-site	src/hook/bind.cpp	384	base_offset	-	0x5DA000	0x5da000	data	platform	hook	base_helper	-	-	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
-site	src/hook/bind.cpp	384	image_meta	-	image::kTextVa	0x401000	code	platform	hook	base_helper	Area00_ChoiceVars3And6	-	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
+site	src/hook/bind.cpp	32	const_def	literal	kDirectSoundThunk	0x5acbbc	code	platform	hook	module	-	-	constexpr std::uint32_t kDirectSoundThunk = 0x5ACBBC;
+site	src/hook/bind.cpp	33	const_def	literal	kDirectSoundSlot	0x5c4014	data	platform	hook	module	Imp_DirectSoundCreate	-	constexpr std::uint32_t kDirectSoundSlot = 0x5C4014;
+site	src/hook/bind.cpp	39	module_const	-	kDirectSoundSlot	0x5c4014	data	platform	hook	base_helper	Imp_DirectSoundCreate	file	std::memcpy(&fn, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(Img(kDirectSoundSlot))), sizeof fn);
+site	src/hook/bind.cpp	43	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	(unsigned)kDirectSoundThunk, (unsigned)kDirectSoundSlot);
+site	src/hook/bind.cpp	43	module_const	-	kDirectSoundSlot	0x5c4014	data	platform	hook	call	Imp_DirectSoundCreate	file	(unsigned)kDirectSoundThunk, (unsigned)kDirectSoundSlot);
+site	src/hook/bind.cpp	73	const_def	derived	kSpanHi	0x5c4000	data	platform	hook	module	Imp_DirectDrawEnumerateA	-	constexpr std::uint32_t kSpanLo = image::kCodeLo, kSpanHi = image::kCodeHi;
+site	src/hook/bind.cpp	73	const_def	derived	kSpanLo	0x401000	code	platform	hook	module	Area00_ChoiceVars3And6	-	constexpr std::uint32_t kSpanLo = image::kCodeLo, kSpanHi = image::kCodeHi;
+site	src/hook/bind.cpp	89	code_const	module	kSpanLo	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	file	const std::uint32_t lo = (top | kSpanLo) & ~0xFFFFu;
+site	src/hook/bind.cpp	90	module_const	-	kSpanHi	0x5c4000	data	platform	hook	-	Imp_DirectDrawEnumerateA	file	void* const at = VirtualAlloc(reinterpret_cast<void*>(static_cast<std::uintptr_t>(lo)), (top | kSpanHi) - lo,
+site	src/hook/bind.cpp	119	code_const	module	kSpanLo	0x401000	code	platform	hook	call	Area00_ChoiceVars3And6	file	(unsigned)kSpan, (unsigned)kSpanLo, GetLastError());
+site	src/hook/bind.cpp	120	code_const	module	kSpanLo	0x401000	code	platform	hook	cast	Area00_ChoiceVars3And6	file	auto* const t = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(top | kSpanLo));
+site	src/hook/bind.cpp	123	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	-	-	file	const std::uint32_t va = i < kRows ? kBind[i].va : kDirectSoundThunk;
+site	src/hook/bind.cpp	133	code_const	module	kSpanLo	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	file	if (!VirtualProtect(at, kSpan + (kSpanLo & 0xFFFF), PAGE_EXECUTE_READ, &old))
+site	src/hook/bind.cpp	194	addr_eq	==	kDirectSoundThunk	0x5acbbc	code	platform	hook	-	-	file	if (Find(va) || va == kDirectSoundThunk) return PlaceAt(va);
+site	src/hook/bind.cpp	220	range_cmp	>=	image::kTextVa	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	-	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
+site	src/hook/bind.cpp	220	range_cmp	<	image::kTextVa	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	-	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
+site	src/hook/bind.cpp	243	addr_eq	==	kDirectSoundThunk	0x5acbbc	code	platform	hook	-	-	file	return Find(va) || va == kDirectSoundThunk ? va : 0;
+site	src/hook/bind.cpp	266	code_const	module	kSpanLo	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	file	std::uint32_t Bind_TableLo() { return g_table ? g_table | kSpanLo : 0; }
+site	src/hook/bind.cpp	267	module_const	-	kSpanHi	0x5c4000	data	platform	hook	-	Imp_DirectDrawEnumerateA	file	std::uint32_t Bind_TableHi() { return g_table ? g_table | kSpanHi : 0; }
+site	src/hook/bind.cpp	331	const_def	literal	kHi	0x93e000	data	platform	hook	module	-	-	constexpr std::uint32_t kLo = 0x5DA000, kHi = 0x93E000, kPage = 0x1000;
+site	src/hook/bind.cpp	331	const_def	literal	kLo	0x5da000	data	platform	hook	module	-	-	constexpr std::uint32_t kLo = 0x5DA000, kHi = 0x93E000, kPage = 0x1000;
+site	src/hook/bind.cpp	334	module_const	-	kLo	0x5da000	data	platform	hook	-	-	file	for (std::uint32_t va = kLo; va < kHi; va += 4) {
+site	src/hook/bind.cpp	334	range_cmp	<	kHi	0x93e000	data	platform	hook	-	-	file	for (std::uint32_t va = kLo; va < kHi; va += 4) {
+site	src/hook/bind.cpp	339	ptr_sub	runtime_left	kLo	0x5da000	data	platform	hook	-	-	file	const unsigned page = (va - kLo) / kPage + 1;
+site	src/hook/bind.cpp	341	module_const	-	kLo	0x5da000	data	platform	hook	-	-	file	if (pages < 8) first_pages[pages] = kLo + (page - 1) * kPage;
+site	src/hook/bind.cpp	348	module_const	-	kHi	0x93e000	data	platform	hook	-	-	file	words, pages, (kHi - kLo) / kPage, (unsigned)first_pages[0], (unsigned)first_pages[1],
+site	src/hook/bind.cpp	348	ptr_sub	two_constants	kLo	0x5da000	data	platform	hook	-	-	file	words, pages, (kHi - kLo) / kPage, (unsigned)first_pages[0], (unsigned)first_pages[1],
+site	src/hook/bind.cpp	408	base_offset	-	0x5DA000	0x5da000	data	platform	hook	base_helper	-	-	if (IsCodeWord(Img(0x5DA000)) || IsCodeWord(Img(kBind[0].va + 1)))
+site	src/hook/bind.cpp	411	module_const	-	kDirectSoundSlot	0x5c4014	data	platform	hook	base_helper	Imp_DirectSoundCreate	file	std::memcpy(&slot, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(Img(kDirectSoundSlot))), 4);
+site	src/hook/bind.cpp	412	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	base_helper	-	file	if (Code(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) || CodeToCall(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) ||
+site	src/hook/bind.cpp	412	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	if (Code(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) || CodeToCall(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) ||
+site	src/hook/bind.cpp	412	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	if (Code(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) || CodeToCall(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) ||
+site	src/hook/bind.cpp	412	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	if (Code(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) || CodeToCall(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) ||
+site	src/hook/bind.cpp	413	addr_eq	!=	kDirectSoundThunk	0x5acbbc	code	platform	hook	-	-	file	Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
+site	src/hook/bind.cpp	413	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
+site	src/hook/bind.cpp	413	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
+site	src/hook/bind.cpp	416	module_const	-	kDirectSoundSlot	0x5c4014	data	platform	hook	call	Imp_DirectSoundCreate	file	(unsigned)kDirectSoundSlot);
+site	src/hook/bind.cpp	417	base_offset	-	0x5DA000	0x5da000	data	platform	hook	base_helper	-	-	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
+site	src/hook/bind.cpp	417	image_meta	-	image::kTextVa	0x401000	code	platform	hook	base_helper	Area00_ChoiceVars3And6	-	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
 site	src/hook/calltrace.cpp	344	addr_eq	!=	addr::Task_RunAll	0x5a98a0	code	platform	hook	-	Task_RunAll	-	if (addr != addr::Task_RunAll) {
 site	src/hook/calltrace.cpp	426	code_const	gen_func	addr::Task_RunAll	0x5a98a0	code	platform	hook	-	Task_RunAll	-	const std::uint32_t frame_entry = addr::Task_RunAll;
 site	src/hook/crash.cpp	108	addr_eq	!=	image::kBase	0x400000	base	platform	hook	-	-	-	if (a >= g_image_lo && a < g_image_hi && ImageBase() != image::kBase)
@@ -18264,71 +18266,71 @@ site	src/hook/detour.cpp	164	image_meta	-	image::kBase	0x400000	base	platform	ho
 site	src/hook/detour.cpp	262	range_cmp	>=	image::kBase	0x400000	base	platform	hook	-	-	-	const bool linked = address >= image::kBase && address < exe_layout::kOwnVa;
 site	src/hook/detour.cpp	331	range_cmp	<	image::kBase	0x400000	base	platform	hook	-	-	-	if (callee_va < image::kBase || callee_va >= image::kBase + image::kSizeOfImage)
 site	src/hook/detour.cpp	331	range_cmp	>=	image::kBase	0x400000	base	platform	hook	-	-	-	if (callee_va < image::kBase || callee_va >= image::kBase + image::kSizeOfImage)
-site	src/hook/exe_host.cpp	118	code_const	module	kStubVa	0x401000	code	platform	hook	call	Area00_ChoiceVars3And6	include	CheckSection(" ", kStubVa, kStubSize, true);
-site	src/hook/exe_host.cpp	119	module_const	-	kGameVa	0x5c4000	data	platform	hook	call	Imp_DirectDrawEnumerateA	include	CheckSection(" ", kGameVa, kGameSize, false);
-site	src/hook/exe_host.cpp	120	module_const	-	kPoolVa	0x93f000	end	platform	hook	call	-	include	CheckSection(" ", kPoolVa, kPoolSize, false);
-site	src/hook/exe_host.cpp	123	code_const	module	kStubVa	0x401000	code	platform	hook	call	Area00_ChoiceVars3And6	include	(unsigned)kStubVa, (unsigned)kStubSize, (unsigned)kGameVa, (unsigned)kGameSize, (unsigned)kPoolVa,
-site	src/hook/exe_host.cpp	123	module_const	-	kGameVa	0x5c4000	data	platform	hook	call	Imp_DirectDrawEnumerateA	include	(unsigned)kStubVa, (unsigned)kStubSize, (unsigned)kGameVa, (unsigned)kGameSize, (unsigned)kPoolVa,
-site	src/hook/exe_host.cpp	123	module_const	-	kPoolVa	0x93f000	end	platform	hook	call	-	include	(unsigned)kStubVa, (unsigned)kStubSize, (unsigned)kGameVa, (unsigned)kGameSize, (unsigned)kPoolVa,
-site	src/hook/exe_host.cpp	134	module_const	-	kImageBase	0x400000	base	platform	hook	-	-	include	return kImageBase + nt->OptionalHeader.SizeOfImage;
-site	src/hook/exe_host.cpp	164	module_const	-	kPoolVa	0x93f000	end	platform	hook	-	-	include	(unsigned)best, (unsigned)best_at, (unsigned)(kPoolVa + kPoolSize - kImageBase));
-site	src/hook/exe_host.cpp	164	ptr_sub	runtime_left	kImageBase	0x400000	base	platform	hook	-	-	include	(unsigned)best, (unsigned)best_at, (unsigned)(kPoolVa + kPoolSize - kImageBase));
-site	src/hook/exe_host.cpp	168	module_const	-	kImageBase	0x400000	base	platform	hook	-	-	include	const std::uint32_t lo = kImageBase, hi = LinkedEnd();
-site	src/hook/exe_host.cpp	170	addr_eq	==	kImageBase	0x400000	base	platform	hook	-	-	include	if (ImageBase() == kImageBase) {
-site	src/hook/exe_host.cpp	239	addr_eq	!=	image::kBase	0x400000	base	platform	hook	-	-	-	if (dos.e_magic != IMAGE_DOS_SIGNATURE || nt.Signature != IMAGE_NT_SIGNATURE || nt.OptionalHeader.ImageBase != image::kBase)
-site	src/hook/exe_host.cpp	240	image_meta	-	image::kBase	0x400000	base	platform	hook	call	-	-	Fatal(" ", (unsigned)image::kBase);
-site	src/hook/exe_host.cpp	249	image_meta	-	image::kBase	0x400000	base	platform	hook	init	-	-	return {image::kBase + s.VirtualAddress, s.Misc.VirtualSize, s.PointerToRawData, s.SizeOfRawData};
-site	src/hook/exe_host.cpp	286	addr_eq	!=	kRdataVa	0x5c4000	data	platform	hook	-	Imp_DirectDrawEnumerateA	include	if (g_text.va != kStubVa || g_text.raw_size > kStubSize || g_rdata.va != kRdataVa || g_rdata.raw_size != kRdataBytes ||
-site	src/hook/exe_host.cpp	286	addr_eq	!=	kStubVa	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	include	if (g_text.va != kStubVa || g_text.raw_size > kStubSize || g_rdata.va != kRdataVa || g_rdata.raw_size != kRdataBytes ||
-site	src/hook/exe_host.cpp	287	addr_eq	!=	kBssEnd	0x93d6ec	data	platform	hook	-	-	include	g_data.va != kDataVa || g_data.raw_size != kDataBytes || g_data.va + g_data.vsize != kBssEnd)
-site	src/hook/exe_host.cpp	287	addr_eq	!=	kDataVa	0x5da000	data	platform	hook	-	-	include	g_data.va != kDataVa || g_data.raw_size != kDataBytes || g_data.va + g_data.vsize != kBssEnd)
-site	src/hook/exe_host.cpp	297	module_const	-	kGameVa	0x5c4000	data	platform	hook	call	Imp_DirectDrawEnumerateA	include	const auto* game = static_cast<const std::uint8_t*>(Place(kGameVa));
-site	src/hook/exe_host.cpp	299	module_const	-	kGameVa	0x5c4000	data	platform	hook	-	Imp_DirectDrawEnumerateA	include	if (game[i]) Fatal(" ", (unsigned)(kGameVa + i));
-site	src/hook/exe_host.cpp	304	module_const	-	kBssEnd	0x93d6ec	data	platform	hook	call	-	include	const bool from_cache = ExeImage_Source(Place(kDataVa), kDataVa, kDataBytes, kBssEnd);
-site	src/hook/exe_host.cpp	304	module_const	-	kDataVa	0x5da000	data	platform	hook	call	-	include	const bool from_cache = ExeImage_Source(Place(kDataVa), kDataVa, kDataBytes, kBssEnd);
-site	src/hook/exe_host.cpp	304	module_const	-	kDataVa	0x5da000	data	platform	hook	call	-	include	const bool from_cache = ExeImage_Source(Place(kDataVa), kDataVa, kDataBytes, kBssEnd);
-site	src/hook/exe_host.cpp	305	module_const	-	kDataVa	0x5da000	data	platform	hook	call	-	include	if (!from_cache) ReadAt(g_data.raw, Place(kDataVa), kDataBytes, " ");
-site	src/hook/exe_host.cpp	307	module_const	-	kDataVa	0x5da000	data	platform	hook	call	-	include	ExeImage_LayOptTables(Place(kDataVa), kDataVa, kDataBytes);
-site	src/hook/exe_host.cpp	307	module_const	-	kDataVa	0x5da000	data	platform	hook	call	-	include	ExeImage_LayOptTables(Place(kDataVa), kDataVa, kDataBytes);
-site	src/hook/exe_host.cpp	312	module_const	-	kDataVa	0x5da000	data	platform	hook	-	-	include	for (std::uint32_t a = kDataVa + kDataBytes; a < kGameVa + kGameSize; ++a)
-site	src/hook/exe_host.cpp	312	range_cmp	<	kGameVa	0x5c4000	data	platform	hook	-	Imp_DirectDrawEnumerateA	include	for (std::uint32_t a = kDataVa + kDataBytes; a < kGameVa + kGameSize; ++a)
-site	src/hook/exe_host.cpp	316	module_const	-	kDataVa	0x5da000	data	platform	hook	call	-	include	(unsigned)kRdataVa, (unsigned)kRdataBytes, (unsigned)kDataVa, (unsigned)kDataBytes,
-site	src/hook/exe_host.cpp	316	module_const	-	kRdataVa	0x5c4000	data	platform	hook	call	Imp_DirectDrawEnumerateA	include	(unsigned)kRdataVa, (unsigned)kRdataBytes, (unsigned)kDataVa, (unsigned)kDataBytes,
-site	src/hook/exe_host.cpp	317	module_const	-	kDataVa	0x5da000	data	platform	hook	-	-	include	from_cache ? " " : " ", (unsigned)(kDataVa + kDataBytes),
-site	src/hook/exe_host.cpp	318	module_const	-	kBssEnd	0x93d6ec	data	platform	hook	call	-	include	(unsigned)(kGameVa + kGameSize), (unsigned)kBssEnd);
-site	src/hook/exe_host.cpp	318	module_const	-	kGameVa	0x5c4000	data	platform	hook	-	Imp_DirectDrawEnumerateA	include	(unsigned)(kGameVa + kGameSize), (unsigned)kBssEnd);
-site	src/hook/exe_host.cpp	342	module_const	-	kBssEnd	0x93d6ec	data	platform	hook	init	-	include	{" ", kDataVa, kBssEnd},
-site	src/hook/exe_host.cpp	342	module_const	-	kDataVa	0x5da000	data	platform	hook	init	-	include	{" ", kDataVa, kBssEnd},
-site	src/hook/exe_host.cpp	343	module_const	-	kBssEnd	0x93d6ec	data	platform	hook	init	-	include	{" ", kDataVa, kBssEnd},
-site	src/hook/exe_host.cpp	343	module_const	-	kDataVa	0x5da000	data	platform	hook	init	-	include	{" ", kDataVa, kBssEnd},
-site	src/hook/exe_host.cpp	344	module_const	-	kDataVa	0x5da000	data	platform	hook	init	-	include	{" ", kRdataVa, kDataVa},
-site	src/hook/exe_host.cpp	344	module_const	-	kRdataVa	0x5c4000	data	platform	hook	init	Imp_DirectDrawEnumerateA	include	{" ", kRdataVa, kDataVa},
-site	src/hook/exe_host.cpp	345	code_const	module	kStubVa	0x401000	code	platform	hook	init	Area00_ChoiceVars3And6	include	{" ", kStubVa, kStubVa + kStubSize},
-site	src/hook/exe_host.cpp	345	code_const	module	kStubVa	0x401000	code	platform	hook	init	Area00_ChoiceVars3And6	include	{" ", kStubVa, kStubVa + kStubSize},
-site	src/hook/exe_host.cpp	347	ptr_sub	runtime_left	kImageBase	0x400000	base	platform	hook	-	-	include	const std::uint32_t move = ImageBase() - kImageBase;
-site	src/hook/exe_host.cpp	352	range_cmp	<	kDataVa	0x5da000	data	platform	hook	-	-	include	if (r.pc < kDataVa || r.pc + 4u * r.words > kDataVa + kDataBytes)
-site	src/hook/exe_host.cpp	352	range_cmp	>	kDataVa	0x5da000	data	platform	hook	-	-	include	if (r.pc < kDataVa || r.pc + 4u * r.words > kDataVa + kDataBytes)
-site	src/hook/exe_host.cpp	395	raw_literal	-	0x5C4014	0x5c4014	data	platform	hook	init	Imp_DirectSoundCreate	symbol	{0x5C4014, " ", nullptr, 1},
-site	src/hook/exe_host.cpp	396	raw_literal	-	0x5C4020	0x5c4020	data	platform	hook	init	PsxRest_ImportSetTextColor	symbol	{0x5C4020, " ", " ", 0},
-site	src/hook/exe_host.cpp	397	raw_literal	-	0x5C4024	0x5c4024	data	platform	hook	init	PsxRest_ImportSetBkMode	symbol	{0x5C4024, " ", " ", 0},
-site	src/hook/exe_host.cpp	398	raw_literal	-	0x5C4028	0x5c4028	data	platform	hook	init	PsxRest_ImportTextOutA	symbol	{0x5C4028, " ", " ", 0},
-site	src/hook/exe_host.cpp	399	raw_literal	-	0x5C407C	0x5c407c	data	platform	hook	init	Imp_GetTickCount	symbol	{0x5C407C, " ", " ", 0},
-site	src/hook/exe_host.cpp	400	raw_literal	-	0x5C4080	0x5c4080	data	platform	hook	init	Sound_ImportCreateEvent	symbol	{0x5C4080, " ", " ", 0},
-site	src/hook/exe_host.cpp	401	raw_literal	-	0x5C4084	0x5c4084	data	platform	hook	init	Sound_ImportCloseHandle	symbol	{0x5C4084, " ", " ", 0},
-site	src/hook/exe_host.cpp	402	raw_literal	-	0x5C4088	0x5c4088	data	platform	hook	init	Shell_ImportGetDriveType	symbol	{0x5C4088, " ", " ", 0},
-site	src/hook/exe_host.cpp	403	raw_literal	-	0x5C40B8	0x5c40b8	data	platform	hook	init	Imp_ExitProcess	symbol	{0x5C40B8, " ", " ", 0},
-site	src/hook/exe_host.cpp	404	raw_literal	-	0x5C4114	0x5c4114	data	platform	hook	init	Imp_TerminateProcess	symbol	{0x5C4114, " ", " ", 0},
-site	src/hook/exe_host.cpp	405	raw_literal	-	0x5C4158	0x5c4158	data	platform	hook	init	Imp_PostQuitMessage	symbol	{0x5C4158, " ", " ", 0},
-site	src/hook/exe_host.cpp	406	raw_literal	-	0x5C4164	0x5c4164	data	platform	hook	init	Sound_ImportMsgWait	symbol	{0x5C4164, " ", " ", 0},
-site	src/hook/exe_host.cpp	407	raw_literal	-	0x5C4168	0x5c4168	data	platform	hook	init	-	-	{0x5C4168, " ", " ", 0},
-site	src/hook/exe_host.cpp	408	raw_literal	-	0x5C4174	0x5c4174	data	platform	hook	init	PsxRest_ImportMessageBoxA	symbol	{0x5C4174, " ", " ", 0},
-site	src/hook/exe_host.cpp	469	code_const	module	kStubVa	0x401000	code	platform	hook	call	Area00_ChoiceVars3And6	include	if (!VirtualProtect(Place(kStubVa), kStubSize, PAGE_NOACCESS, &old))
-site	src/hook/exe_host.cpp	471	code_const	module	kStubVa	0x401000	code	platform	hook	base_helper	Area00_ChoiceVars3And6	include	for (std::uint32_t a = Img(kStubVa); a < Img(kStubVa) + kStubSize;) {
-site	src/hook/exe_host.cpp	471	code_const	module	kStubVa	0x401000	code	platform	hook	base_helper	Area00_ChoiceVars3And6	include	for (std::uint32_t a = Img(kStubVa); a < Img(kStubVa) + kStubSize;) {
-site	src/hook/exe_host.cpp	478	code_const	module	kStubVa	0x401000	code	platform	hook	base_helper	Area00_ChoiceVars3And6	include	(unsigned)Img(kStubVa), (unsigned)Img(kStubVa + kStubSize), (unsigned)kStubVa, (unsigned)(kStubVa + kStubSize));
-site	src/hook/exe_host.cpp	478	code_const	module	kStubVa	0x401000	code	platform	hook	base_helper	Area00_ChoiceVars3And6	include	(unsigned)Img(kStubVa), (unsigned)Img(kStubVa + kStubSize), (unsigned)kStubVa, (unsigned)(kStubVa + kStubSize));
-site	src/hook/exe_host.cpp	478	code_const	module	kStubVa	0x401000	code	platform	hook	call	Area00_ChoiceVars3And6	include	(unsigned)Img(kStubVa), (unsigned)Img(kStubVa + kStubSize), (unsigned)kStubVa, (unsigned)(kStubVa + kStubSize));
-site	src/hook/exe_host.cpp	478	code_const	module	kStubVa	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	include	(unsigned)Img(kStubVa), (unsigned)Img(kStubVa + kStubSize), (unsigned)kStubVa, (unsigned)(kStubVa + kStubSize));
+site	src/hook/exe_host.cpp	125	code_const	module	kStubVa	0x401000	code	platform	hook	call	Area00_ChoiceVars3And6	include	CheckSection(" ", kStubVa, kStubSize, true);
+site	src/hook/exe_host.cpp	126	module_const	-	kGameVa	0x5c4000	data	platform	hook	call	Imp_DirectDrawEnumerateA	include	CheckSection(" ", kGameVa, kGameSize, false);
+site	src/hook/exe_host.cpp	127	module_const	-	kPoolVa	0x93f000	end	platform	hook	call	-	include	CheckSection(" ", kPoolVa, kPoolSize, false);
+site	src/hook/exe_host.cpp	130	code_const	module	kStubVa	0x401000	code	platform	hook	call	Area00_ChoiceVars3And6	include	(unsigned)kStubVa, (unsigned)kStubSize, (unsigned)kGameVa, (unsigned)kGameSize, (unsigned)kPoolVa,
+site	src/hook/exe_host.cpp	130	module_const	-	kGameVa	0x5c4000	data	platform	hook	call	Imp_DirectDrawEnumerateA	include	(unsigned)kStubVa, (unsigned)kStubSize, (unsigned)kGameVa, (unsigned)kGameSize, (unsigned)kPoolVa,
+site	src/hook/exe_host.cpp	130	module_const	-	kPoolVa	0x93f000	end	platform	hook	call	-	include	(unsigned)kStubVa, (unsigned)kStubSize, (unsigned)kGameVa, (unsigned)kGameSize, (unsigned)kPoolVa,
+site	src/hook/exe_host.cpp	141	module_const	-	kImageBase	0x400000	base	platform	hook	-	-	include	return kImageBase + nt->OptionalHeader.SizeOfImage;
+site	src/hook/exe_host.cpp	171	module_const	-	kPoolVa	0x93f000	end	platform	hook	-	-	include	(unsigned)best, (unsigned)best_at, (unsigned)(kPoolVa + kPoolSize - kImageBase));
+site	src/hook/exe_host.cpp	171	ptr_sub	runtime_left	kImageBase	0x400000	base	platform	hook	-	-	include	(unsigned)best, (unsigned)best_at, (unsigned)(kPoolVa + kPoolSize - kImageBase));
+site	src/hook/exe_host.cpp	175	module_const	-	kImageBase	0x400000	base	platform	hook	-	-	include	const std::uint32_t lo = kImageBase, hi = LinkedEnd();
+site	src/hook/exe_host.cpp	177	addr_eq	==	kImageBase	0x400000	base	platform	hook	-	-	include	if (ImageBase() == kImageBase) {
+site	src/hook/exe_host.cpp	246	addr_eq	!=	image::kBase	0x400000	base	platform	hook	-	-	-	if (dos.e_magic != IMAGE_DOS_SIGNATURE || nt.Signature != IMAGE_NT_SIGNATURE || nt.OptionalHeader.ImageBase != image::kBase)
+site	src/hook/exe_host.cpp	247	image_meta	-	image::kBase	0x400000	base	platform	hook	call	-	-	Fatal(" ", (unsigned)image::kBase);
+site	src/hook/exe_host.cpp	256	image_meta	-	image::kBase	0x400000	base	platform	hook	init	-	-	return {image::kBase + s.VirtualAddress, s.Misc.VirtualSize, s.PointerToRawData, s.SizeOfRawData};
+site	src/hook/exe_host.cpp	293	addr_eq	!=	kRdataVa	0x5c4000	data	platform	hook	-	Imp_DirectDrawEnumerateA	include	if (g_text.va != kStubVa || g_text.raw_size > kStubSize || g_rdata.va != kRdataVa || g_rdata.raw_size != kRdataBytes ||
+site	src/hook/exe_host.cpp	293	addr_eq	!=	kStubVa	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	include	if (g_text.va != kStubVa || g_text.raw_size > kStubSize || g_rdata.va != kRdataVa || g_rdata.raw_size != kRdataBytes ||
+site	src/hook/exe_host.cpp	294	addr_eq	!=	kBssEnd	0x93d6ec	data	platform	hook	-	-	include	g_data.va != kDataVa || g_data.raw_size != kDataBytes || g_data.va + g_data.vsize != kBssEnd)
+site	src/hook/exe_host.cpp	294	addr_eq	!=	kDataVa	0x5da000	data	platform	hook	-	-	include	g_data.va != kDataVa || g_data.raw_size != kDataBytes || g_data.va + g_data.vsize != kBssEnd)
+site	src/hook/exe_host.cpp	304	module_const	-	kGameVa	0x5c4000	data	platform	hook	call	Imp_DirectDrawEnumerateA	include	const auto* game = static_cast<const std::uint8_t*>(Place(kGameVa));
+site	src/hook/exe_host.cpp	306	module_const	-	kGameVa	0x5c4000	data	platform	hook	-	Imp_DirectDrawEnumerateA	include	if (game[i]) Fatal(" ", (unsigned)(kGameVa + i));
+site	src/hook/exe_host.cpp	311	module_const	-	kBssEnd	0x93d6ec	data	platform	hook	call	-	include	const bool from_cache = ExeImage_Source(Place(kDataVa), kDataVa, kDataBytes, kBssEnd);
+site	src/hook/exe_host.cpp	311	module_const	-	kDataVa	0x5da000	data	platform	hook	call	-	include	const bool from_cache = ExeImage_Source(Place(kDataVa), kDataVa, kDataBytes, kBssEnd);
+site	src/hook/exe_host.cpp	311	module_const	-	kDataVa	0x5da000	data	platform	hook	call	-	include	const bool from_cache = ExeImage_Source(Place(kDataVa), kDataVa, kDataBytes, kBssEnd);
+site	src/hook/exe_host.cpp	312	module_const	-	kDataVa	0x5da000	data	platform	hook	call	-	include	if (!from_cache) ReadAt(g_data.raw, Place(kDataVa), kDataBytes, " ");
+site	src/hook/exe_host.cpp	314	module_const	-	kDataVa	0x5da000	data	platform	hook	call	-	include	ExeImage_LayOptTables(Place(kDataVa), kDataVa, kDataBytes);
+site	src/hook/exe_host.cpp	314	module_const	-	kDataVa	0x5da000	data	platform	hook	call	-	include	ExeImage_LayOptTables(Place(kDataVa), kDataVa, kDataBytes);
+site	src/hook/exe_host.cpp	319	module_const	-	kDataVa	0x5da000	data	platform	hook	-	-	include	for (std::uint32_t a = kDataVa + kDataBytes; a < kGameVa + kGameSize; ++a)
+site	src/hook/exe_host.cpp	319	range_cmp	<	kGameVa	0x5c4000	data	platform	hook	-	Imp_DirectDrawEnumerateA	include	for (std::uint32_t a = kDataVa + kDataBytes; a < kGameVa + kGameSize; ++a)
+site	src/hook/exe_host.cpp	323	module_const	-	kDataVa	0x5da000	data	platform	hook	call	-	include	(unsigned)kRdataVa, (unsigned)kRdataBytes, (unsigned)kDataVa, (unsigned)kDataBytes,
+site	src/hook/exe_host.cpp	323	module_const	-	kRdataVa	0x5c4000	data	platform	hook	call	Imp_DirectDrawEnumerateA	include	(unsigned)kRdataVa, (unsigned)kRdataBytes, (unsigned)kDataVa, (unsigned)kDataBytes,
+site	src/hook/exe_host.cpp	324	module_const	-	kDataVa	0x5da000	data	platform	hook	-	-	include	from_cache ? " " : " ", (unsigned)(kDataVa + kDataBytes),
+site	src/hook/exe_host.cpp	325	module_const	-	kBssEnd	0x93d6ec	data	platform	hook	call	-	include	(unsigned)(kGameVa + kGameSize), (unsigned)kBssEnd);
+site	src/hook/exe_host.cpp	325	module_const	-	kGameVa	0x5c4000	data	platform	hook	-	Imp_DirectDrawEnumerateA	include	(unsigned)(kGameVa + kGameSize), (unsigned)kBssEnd);
+site	src/hook/exe_host.cpp	349	module_const	-	kBssEnd	0x93d6ec	data	platform	hook	init	-	include	{" ", kDataVa, kBssEnd},
+site	src/hook/exe_host.cpp	349	module_const	-	kDataVa	0x5da000	data	platform	hook	init	-	include	{" ", kDataVa, kBssEnd},
+site	src/hook/exe_host.cpp	350	module_const	-	kBssEnd	0x93d6ec	data	platform	hook	init	-	include	{" ", kDataVa, kBssEnd},
+site	src/hook/exe_host.cpp	350	module_const	-	kDataVa	0x5da000	data	platform	hook	init	-	include	{" ", kDataVa, kBssEnd},
+site	src/hook/exe_host.cpp	351	module_const	-	kDataVa	0x5da000	data	platform	hook	init	-	include	{" ", kRdataVa, kDataVa},
+site	src/hook/exe_host.cpp	351	module_const	-	kRdataVa	0x5c4000	data	platform	hook	init	Imp_DirectDrawEnumerateA	include	{" ", kRdataVa, kDataVa},
+site	src/hook/exe_host.cpp	352	code_const	module	kStubVa	0x401000	code	platform	hook	init	Area00_ChoiceVars3And6	include	{" ", kStubVa, kStubVa + kStubSize},
+site	src/hook/exe_host.cpp	352	code_const	module	kStubVa	0x401000	code	platform	hook	init	Area00_ChoiceVars3And6	include	{" ", kStubVa, kStubVa + kStubSize},
+site	src/hook/exe_host.cpp	354	ptr_sub	runtime_left	kImageBase	0x400000	base	platform	hook	-	-	include	const std::uint32_t move = ImageBase() - kImageBase;
+site	src/hook/exe_host.cpp	359	range_cmp	<	kDataVa	0x5da000	data	platform	hook	-	-	include	if (r.pc < kDataVa || r.pc + 4u * r.words > kDataVa + kDataBytes)
+site	src/hook/exe_host.cpp	359	range_cmp	>	kDataVa	0x5da000	data	platform	hook	-	-	include	if (r.pc < kDataVa || r.pc + 4u * r.words > kDataVa + kDataBytes)
+site	src/hook/exe_host.cpp	402	raw_literal	-	0x5C4014	0x5c4014	data	platform	hook	init	Imp_DirectSoundCreate	symbol	{0x5C4014, " ", nullptr, 1},
+site	src/hook/exe_host.cpp	403	raw_literal	-	0x5C4020	0x5c4020	data	platform	hook	init	PsxRest_ImportSetTextColor	symbol	{0x5C4020, " ", " ", 0},
+site	src/hook/exe_host.cpp	404	raw_literal	-	0x5C4024	0x5c4024	data	platform	hook	init	PsxRest_ImportSetBkMode	symbol	{0x5C4024, " ", " ", 0},
+site	src/hook/exe_host.cpp	405	raw_literal	-	0x5C4028	0x5c4028	data	platform	hook	init	PsxRest_ImportTextOutA	symbol	{0x5C4028, " ", " ", 0},
+site	src/hook/exe_host.cpp	406	raw_literal	-	0x5C407C	0x5c407c	data	platform	hook	init	Imp_GetTickCount	symbol	{0x5C407C, " ", " ", 0},
+site	src/hook/exe_host.cpp	407	raw_literal	-	0x5C4080	0x5c4080	data	platform	hook	init	Sound_ImportCreateEvent	symbol	{0x5C4080, " ", " ", 0},
+site	src/hook/exe_host.cpp	408	raw_literal	-	0x5C4084	0x5c4084	data	platform	hook	init	Sound_ImportCloseHandle	symbol	{0x5C4084, " ", " ", 0},
+site	src/hook/exe_host.cpp	409	raw_literal	-	0x5C4088	0x5c4088	data	platform	hook	init	Shell_ImportGetDriveType	symbol	{0x5C4088, " ", " ", 0},
+site	src/hook/exe_host.cpp	410	raw_literal	-	0x5C40B8	0x5c40b8	data	platform	hook	init	Imp_ExitProcess	symbol	{0x5C40B8, " ", " ", 0},
+site	src/hook/exe_host.cpp	411	raw_literal	-	0x5C4114	0x5c4114	data	platform	hook	init	Imp_TerminateProcess	symbol	{0x5C4114, " ", " ", 0},
+site	src/hook/exe_host.cpp	412	raw_literal	-	0x5C4158	0x5c4158	data	platform	hook	init	Imp_PostQuitMessage	symbol	{0x5C4158, " ", " ", 0},
+site	src/hook/exe_host.cpp	413	raw_literal	-	0x5C4164	0x5c4164	data	platform	hook	init	Sound_ImportMsgWait	symbol	{0x5C4164, " ", " ", 0},
+site	src/hook/exe_host.cpp	414	raw_literal	-	0x5C4168	0x5c4168	data	platform	hook	init	-	-	{0x5C4168, " ", " ", 0},
+site	src/hook/exe_host.cpp	415	raw_literal	-	0x5C4174	0x5c4174	data	platform	hook	init	PsxRest_ImportMessageBoxA	symbol	{0x5C4174, " ", " ", 0},
+site	src/hook/exe_host.cpp	476	code_const	module	kStubVa	0x401000	code	platform	hook	call	Area00_ChoiceVars3And6	include	if (!VirtualProtect(Place(kStubVa), kStubSize, PAGE_NOACCESS, &old))
+site	src/hook/exe_host.cpp	478	code_const	module	kStubVa	0x401000	code	platform	hook	base_helper	Area00_ChoiceVars3And6	include	for (std::uint32_t a = Img(kStubVa); a < Img(kStubVa) + kStubSize;) {
+site	src/hook/exe_host.cpp	478	code_const	module	kStubVa	0x401000	code	platform	hook	base_helper	Area00_ChoiceVars3And6	include	for (std::uint32_t a = Img(kStubVa); a < Img(kStubVa) + kStubSize;) {
+site	src/hook/exe_host.cpp	485	code_const	module	kStubVa	0x401000	code	platform	hook	base_helper	Area00_ChoiceVars3And6	include	(unsigned)Img(kStubVa), (unsigned)Img(kStubVa + kStubSize), (unsigned)kStubVa, (unsigned)(kStubVa + kStubSize));
+site	src/hook/exe_host.cpp	485	code_const	module	kStubVa	0x401000	code	platform	hook	base_helper	Area00_ChoiceVars3And6	include	(unsigned)Img(kStubVa), (unsigned)Img(kStubVa + kStubSize), (unsigned)kStubVa, (unsigned)(kStubVa + kStubSize));
+site	src/hook/exe_host.cpp	485	code_const	module	kStubVa	0x401000	code	platform	hook	call	Area00_ChoiceVars3And6	include	(unsigned)Img(kStubVa), (unsigned)Img(kStubVa + kStubSize), (unsigned)kStubVa, (unsigned)(kStubVa + kStubSize));
+site	src/hook/exe_host.cpp	485	code_const	module	kStubVa	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	include	(unsigned)Img(kStubVa), (unsigned)Img(kStubVa + kStubSize), (unsigned)kStubVa, (unsigned)(kStubVa + kStubSize));
 site	src/hook/exe_icon.cpp	61	at_global	-	menu_windows::at::kIconRects	0x66367c	data	platform	hook	base_helper	-	-	static_cast<std::uintptr_t>(::bof3::Img(menu_windows::at::kIconRects) + kIcon * 4));
 site	src/hook/exe_image.cpp	82	raw_literal	-	0x653910	0x653910	data	platform	hook	-	WorldMap_Records	symbol	const std::uint32_t at = 0x653910 + 0x1C * k + 0x18;
 site	src/hook/exe_image.cpp	91	raw_literal	-	0x669868	0x669868	data	platform	hook	-	-	-	out.push_back({0x669868, 0x669883, " ",
@@ -18534,20 +18536,20 @@ site	src/hook/statehash.cpp	641	code_const	module	kImageSize	0x53f000	code	platf
 site	src/hook/statehash.cpp	641	range_cmp	>	kImageSize	0x53f000	code	platform	hook	-	-	file	if (g_nfolds && g_fold_env < g_image + kImageSize && g_fold_env + kImageSize > g_image)
 site	src/hook/statehash.cpp	649	range_cmp	>	kImageSize	0x53f000	code	platform	hook	-	-	file	if (g_folds[i] < g_dll_hi && g_folds[i] + kImageSize > g_dll_lo)
 site	src/hook/statehash.cpp	652	code_const	module	kImageSize	0x53f000	code	platform	hook	-	-	file	(unsigned long)(g_folds[i] + kImageSize), (unsigned long)g_dll_lo, (unsigned long)g_dll_hi);
-site	src/hook/statehash.cpp	655	range_cmp	>	kImageSize	0x53f000	code	platform	hook	-	-	file	if (Bind_TableHi() && g_folds[i] < Bind_TableHi() && g_folds[i] + kImageSize > Bind_TableLo())
-site	src/hook/statehash.cpp	657	code_const	module	kImageSize	0x53f000	code	platform	hook	-	-	file	" ", (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageSize),
-site	src/hook/statehash.cpp	661	code_const	module	kImageSize	0x53f000	code	platform	hook	-	-	file	(unsigned long)g_image, (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageSize));
-site	src/hook/statehash.cpp	668	code_const	module	kImageSize	0x53f000	code	platform	hook	-	-	file	(unsigned long)g_named_hi, (unsigned long)g_image, (unsigned long)(g_image + kImageSize),
-site	src/hook/statehash.cpp	671	ptr_sub	two_constants	kBase	0x5da000	data	platform	hook	-	-	file	for (std::uint32_t off = 0; off < kEnd - kBase; off += 4) {
-site	src/hook/statehash.cpp	671	range_cmp	<	kEnd	0x93e000	data	platform	hook	-	-	file	for (std::uint32_t off = 0; off < kEnd - kBase; off += 4) {
-site	src/hook/statehash.cpp	679	range_cmp	<	kBase	0x5da000	data	platform	hook	-	-	file	if (va < kBase || va + 4 > kEnd || (va & 3))
-site	src/hook/statehash.cpp	679	range_cmp	>	kEnd	0x93e000	data	platform	hook	-	-	file	if (va < kBase || va + 4 > kEnd || (va & 3))
-site	src/hook/statehash.cpp	681	ptr_sub	runtime_left	kBase	0x5da000	data	platform	hook	-	-	file	const std::uint32_t off = va - kBase;
-site	src/hook/statehash.cpp	687	module_const	-	kMsgRing	0x93c2c4	data	platform	hook	call	-	file	for (std::uint32_t e = 0; e < kMsgRingEntries; ++e) add_site(kMsgRing + e * kMsgRingStride);
-site	src/hook/statehash.cpp	688	module_const	-	kMsgCurrent	0x93b8e4	data	platform	hook	call	-	file	add_site(kMsgCurrent);
-site	src/hook/statehash.cpp	737	module_const	-	kBase	0x5da000	data	platform	hook	call	-	file	Put(kBase);
-site	src/hook/statehash.cpp	755	module_const	-	kBase	0x5da000	data	platform	hook	cast	-	file	static_cast<unsigned long>(kPages), static_cast<unsigned long>(kBase), path, (unsigned)g_skips.size(),
-site	src/hook/statehash.cpp	777	module_const	-	kBase	0x5da000	data	platform	hook	-	-	file	const std::uint32_t va = kBase + page_index * kPage + at;
+site	src/hook/statehash.cpp	662	range_cmp	>	kImageSize	0x53f000	code	platform	hook	-	-	file	if (Bind_TableHi() && g_folds[i] < Bind_TableHi() && g_folds[i] + kImageSize > Bind_TableLo())
+site	src/hook/statehash.cpp	664	code_const	module	kImageSize	0x53f000	code	platform	hook	-	-	file	" ", (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageSize),
+site	src/hook/statehash.cpp	668	code_const	module	kImageSize	0x53f000	code	platform	hook	-	-	file	(unsigned long)g_image, (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageSize));
+site	src/hook/statehash.cpp	675	code_const	module	kImageSize	0x53f000	code	platform	hook	-	-	file	(unsigned long)g_named_hi, (unsigned long)g_image, (unsigned long)(g_image + kImageSize),
+site	src/hook/statehash.cpp	678	ptr_sub	two_constants	kBase	0x5da000	data	platform	hook	-	-	file	for (std::uint32_t off = 0; off < kEnd - kBase; off += 4) {
+site	src/hook/statehash.cpp	678	range_cmp	<	kEnd	0x93e000	data	platform	hook	-	-	file	for (std::uint32_t off = 0; off < kEnd - kBase; off += 4) {
+site	src/hook/statehash.cpp	686	range_cmp	<	kBase	0x5da000	data	platform	hook	-	-	file	if (va < kBase || va + 4 > kEnd || (va & 3))
+site	src/hook/statehash.cpp	686	range_cmp	>	kEnd	0x93e000	data	platform	hook	-	-	file	if (va < kBase || va + 4 > kEnd || (va & 3))
+site	src/hook/statehash.cpp	688	ptr_sub	runtime_left	kBase	0x5da000	data	platform	hook	-	-	file	const std::uint32_t off = va - kBase;
+site	src/hook/statehash.cpp	694	module_const	-	kMsgRing	0x93c2c4	data	platform	hook	call	-	file	for (std::uint32_t e = 0; e < kMsgRingEntries; ++e) add_site(kMsgRing + e * kMsgRingStride);
+site	src/hook/statehash.cpp	695	module_const	-	kMsgCurrent	0x93b8e4	data	platform	hook	call	-	file	add_site(kMsgCurrent);
+site	src/hook/statehash.cpp	744	module_const	-	kBase	0x5da000	data	platform	hook	call	-	file	Put(kBase);
+site	src/hook/statehash.cpp	762	module_const	-	kBase	0x5da000	data	platform	hook	cast	-	file	static_cast<unsigned long>(kPages), static_cast<unsigned long>(kBase), path, (unsigned)g_skips.size(),
+site	src/hook/statehash.cpp	784	module_const	-	kBase	0x5da000	data	platform	hook	-	-	file	const std::uint32_t va = kBase + page_index * kPage + at;
 site	src/hook/wav_dump.cpp	623	code_const	gen_func	addr::Game_WinMain	0x4fcb00	code	platform	hook	call	Game_WinMain	-	if (!IsEnabled(addr::Game_WinMain)) {
 site	src/input/button_tests.cpp	33	code_literal	literal	0x528A90	0x528a90	code	platform	input	init	LeaderPanel_S1Buttons	symbol	{" ", 0x528A90, 0x0074},
 site	src/input/button_tests.cpp	34	code_literal	literal	0x528A90	0x528a90	code	platform	input	init	LeaderPanel_S1Buttons	symbol	{" ", 0x528A90, 0x0004},
@@ -20914,27 +20916,27 @@ range	src/game/worldmap_area_fuzz.cpp	322	addr_eq	case	0x461E50	0x461e50	code	fu
 range	src/game/worldmap_area_fuzz.cpp	323	addr_eq	case	0x572F70	0x572f70	code	fuzz	case 0x572F70: return f(kStubs.item_half_at);
 range	src/game/worldmap_area_fuzz.cpp	324	addr_eq	case	0x572FA0	0x572fa0	code	fuzz	case 0x572FA0: return f(kStubs.link_prim_at);
 range	src/game/yes_no_layout.cpp	397	addr_eq	==	kMsgSystemPtr	0x497740	code	game	return g_line_call == kMsgSystemPtr.v ? nullptr : &YesNo_Line;
-range	src/hook/bind.cpp	167	addr_eq	==	kDirectSoundThunk	0x5acbbc	code	platform	if (Find(va) || va == kDirectSoundThunk) return PlaceAt(va);
-range	src/hook/bind.cpp	193	range_cmp	>=	image::kTextVa	0x401000	code	platform	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
-range	src/hook/bind.cpp	193	range_cmp	<	image::kTextVa	0x401000	code	platform	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
-range	src/hook/bind.cpp	216	addr_eq	==	kDirectSoundThunk	0x5acbbc	code	platform	return Find(va) || va == kDirectSoundThunk ? va : 0;
-range	src/hook/bind.cpp	301	range_cmp	<	kHi	0x93e000	data	platform	for (std::uint32_t va = kLo; va < kHi; va += 4) {
-range	src/hook/bind.cpp	380	addr_eq	!=	kDirectSoundThunk	0x5acbbc	code	platform	Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
+range	src/hook/bind.cpp	194	addr_eq	==	kDirectSoundThunk	0x5acbbc	code	platform	if (Find(va) || va == kDirectSoundThunk) return PlaceAt(va);
+range	src/hook/bind.cpp	220	range_cmp	>=	image::kTextVa	0x401000	code	platform	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
+range	src/hook/bind.cpp	220	range_cmp	<	image::kTextVa	0x401000	code	platform	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
+range	src/hook/bind.cpp	243	addr_eq	==	kDirectSoundThunk	0x5acbbc	code	platform	return Find(va) || va == kDirectSoundThunk ? va : 0;
+range	src/hook/bind.cpp	334	range_cmp	<	kHi	0x93e000	data	platform	for (std::uint32_t va = kLo; va < kHi; va += 4) {
+range	src/hook/bind.cpp	413	addr_eq	!=	kDirectSoundThunk	0x5acbbc	code	platform	Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
 range	src/hook/calltrace.cpp	344	addr_eq	!=	addr::Task_RunAll	0x5a98a0	code	platform	if (addr != addr::Task_RunAll) {
 range	src/hook/crash.cpp	108	addr_eq	!=	image::kBase	0x400000	base	platform	if (a >= g_image_lo && a < g_image_hi && ImageBase() != image::kBase)
 range	src/hook/detour.cpp	151	addr_eq	!=	image::kBase	0x400000	base	platform	if (reinterpret_cast<std::uintptr_t>(base) != image::kBase)
 range	src/hook/detour.cpp	262	range_cmp	>=	image::kBase	0x400000	base	platform	const bool linked = address >= image::kBase && address < exe_layout::kOwnVa;
 range	src/hook/detour.cpp	331	range_cmp	<	image::kBase	0x400000	base	platform	if (callee_va < image::kBase || callee_va >= image::kBase + image::kSizeOfImage)
 range	src/hook/detour.cpp	331	range_cmp	>=	image::kBase	0x400000	base	platform	if (callee_va < image::kBase || callee_va >= image::kBase + image::kSizeOfImage)
-range	src/hook/exe_host.cpp	170	addr_eq	==	kImageBase	0x400000	base	platform	if (ImageBase() == kImageBase) {
-range	src/hook/exe_host.cpp	239	addr_eq	!=	image::kBase	0x400000	base	platform	if (dos.e_magic != IMAGE_DOS_SIGNATURE || nt.Signature != IMAGE_NT_SIGNATURE || nt.OptionalHeader.ImageBase != image::kBase)
-range	src/hook/exe_host.cpp	286	addr_eq	!=	kRdataVa	0x5c4000	data	platform	if (g_text.va != kStubVa || g_text.raw_size > kStubSize || g_rdata.va != kRdataVa || g_rdata.raw_size != kRdataBytes ||
-range	src/hook/exe_host.cpp	286	addr_eq	!=	kStubVa	0x401000	code	platform	if (g_text.va != kStubVa || g_text.raw_size > kStubSize || g_rdata.va != kRdataVa || g_rdata.raw_size != kRdataBytes ||
-range	src/hook/exe_host.cpp	287	addr_eq	!=	kBssEnd	0x93d6ec	data	platform	g_data.va != kDataVa || g_data.raw_size != kDataBytes || g_data.va + g_data.vsize != kBssEnd)
-range	src/hook/exe_host.cpp	287	addr_eq	!=	kDataVa	0x5da000	data	platform	g_data.va != kDataVa || g_data.raw_size != kDataBytes || g_data.va + g_data.vsize != kBssEnd)
-range	src/hook/exe_host.cpp	312	range_cmp	<	kGameVa	0x5c4000	data	platform	for (std::uint32_t a = kDataVa + kDataBytes; a < kGameVa + kGameSize; ++a)
-range	src/hook/exe_host.cpp	352	range_cmp	<	kDataVa	0x5da000	data	platform	if (r.pc < kDataVa || r.pc + 4u * r.words > kDataVa + kDataBytes)
-range	src/hook/exe_host.cpp	352	range_cmp	>	kDataVa	0x5da000	data	platform	if (r.pc < kDataVa || r.pc + 4u * r.words > kDataVa + kDataBytes)
+range	src/hook/exe_host.cpp	177	addr_eq	==	kImageBase	0x400000	base	platform	if (ImageBase() == kImageBase) {
+range	src/hook/exe_host.cpp	246	addr_eq	!=	image::kBase	0x400000	base	platform	if (dos.e_magic != IMAGE_DOS_SIGNATURE || nt.Signature != IMAGE_NT_SIGNATURE || nt.OptionalHeader.ImageBase != image::kBase)
+range	src/hook/exe_host.cpp	293	addr_eq	!=	kRdataVa	0x5c4000	data	platform	if (g_text.va != kStubVa || g_text.raw_size > kStubSize || g_rdata.va != kRdataVa || g_rdata.raw_size != kRdataBytes ||
+range	src/hook/exe_host.cpp	293	addr_eq	!=	kStubVa	0x401000	code	platform	if (g_text.va != kStubVa || g_text.raw_size > kStubSize || g_rdata.va != kRdataVa || g_rdata.raw_size != kRdataBytes ||
+range	src/hook/exe_host.cpp	294	addr_eq	!=	kBssEnd	0x93d6ec	data	platform	g_data.va != kDataVa || g_data.raw_size != kDataBytes || g_data.va + g_data.vsize != kBssEnd)
+range	src/hook/exe_host.cpp	294	addr_eq	!=	kDataVa	0x5da000	data	platform	g_data.va != kDataVa || g_data.raw_size != kDataBytes || g_data.va + g_data.vsize != kBssEnd)
+range	src/hook/exe_host.cpp	319	range_cmp	<	kGameVa	0x5c4000	data	platform	for (std::uint32_t a = kDataVa + kDataBytes; a < kGameVa + kGameSize; ++a)
+range	src/hook/exe_host.cpp	359	range_cmp	<	kDataVa	0x5da000	data	platform	if (r.pc < kDataVa || r.pc + 4u * r.words > kDataVa + kDataBytes)
+range	src/hook/exe_host.cpp	359	range_cmp	>	kDataVa	0x5da000	data	platform	if (r.pc < kDataVa || r.pc + 4u * r.words > kDataVa + kDataBytes)
 range	src/hook/exe_layout.h	62	addr_eq	==	kGameVa	0x5c4000	data	platform	static_assert(kStubVa + kStubSize == kGameVa, " ");
 range	src/hook/exe_layout.h	62	addr_eq	==	kStubVa	0x401000	code	platform	static_assert(kStubVa + kStubSize == kGameVa, " ");
 range	src/hook/exe_layout.h	63	addr_eq	==	kGameVa	0x5c4000	data	platform	static_assert(kGameVa + kGameSize == kPoolVa, " ");
@@ -20965,10 +20967,10 @@ range	src/hook/statehash.cpp	639	addr_eq	!=	kExeLo	0x400000	base	platform	if (g_
 range	src/hook/statehash.cpp	640	addr_eq	!=	kExeLo	0x400000	base	platform	if (g_fold_env && g_fold_env != kExeLo && g_fold_env != g_image) {
 range	src/hook/statehash.cpp	641	range_cmp	>	kImageSize	0x53f000	code	platform	if (g_nfolds && g_fold_env < g_image + kImageSize && g_fold_env + kImageSize > g_image)
 range	src/hook/statehash.cpp	649	range_cmp	>	kImageSize	0x53f000	code	platform	if (g_folds[i] < g_dll_hi && g_folds[i] + kImageSize > g_dll_lo)
-range	src/hook/statehash.cpp	655	range_cmp	>	kImageSize	0x53f000	code	platform	if (Bind_TableHi() && g_folds[i] < Bind_TableHi() && g_folds[i] + kImageSize > Bind_TableLo())
-range	src/hook/statehash.cpp	671	range_cmp	<	kEnd	0x93e000	data	platform	for (std::uint32_t off = 0; off < kEnd - kBase; off += 4) {
-range	src/hook/statehash.cpp	679	range_cmp	<	kBase	0x5da000	data	platform	if (va < kBase || va + 4 > kEnd || (va & 3))
-range	src/hook/statehash.cpp	679	range_cmp	>	kEnd	0x93e000	data	platform	if (va < kBase || va + 4 > kEnd || (va & 3))
+range	src/hook/statehash.cpp	662	range_cmp	>	kImageSize	0x53f000	code	platform	if (Bind_TableHi() && g_folds[i] < Bind_TableHi() && g_folds[i] + kImageSize > Bind_TableLo())
+range	src/hook/statehash.cpp	678	range_cmp	<	kEnd	0x93e000	data	platform	for (std::uint32_t off = 0; off < kEnd - kBase; off += 4) {
+range	src/hook/statehash.cpp	686	range_cmp	<	kBase	0x5da000	data	platform	if (va < kBase || va + 4 > kEnd || (va & 3))
+range	src/hook/statehash.cpp	686	range_cmp	>	kEnd	0x93e000	data	platform	if (va < kBase || va + 4 > kEnd || (va & 3))
 range	src/launcher/launcher.cpp	378	addr_eq	!=	0x400000	0x400000	base	launcher	if (base != 0x400000) ForwardToDevLauncher(argc, argv);
 range	src/launcher/launcher.cpp	380	addr_eq	!=	0x400000	0x400000	base	launcher	moved = base != 0x400000;
 range	src/launcher/launcher.cpp	381	addr_eq	!=	0x400000	0x400000	base	launcher	if (base != 0x400000) {
@@ -20981,16 +20983,16 @@ helper	src/game/scenario_harness.cpp	314	Readable	src/game/scenario_harness.cpp:
 helper	src/game/scenario_harness.cpp	316	Readable	src/game/scenario_harness.cpp:151	fuzz	r[i] = s.deref[i] && (!s.guard || Readable(p, s.deref[i])) ? HashBytes(p, s.deref[i]) : a[i] & s.masks[i];
 helper	src/game/scenario_harness.cpp	546	Readable	src/game/scenario_harness.cpp:151	fuzz	if (Readable(t, 12)) NoteBytes(t, 12);
 helper	src/game/scenario_harness.cpp	578	Readable	src/game/scenario_harness.cpp:151	fuzz	return (answer & 0xFFFFFF00u) | (Readable(top, 1) ? *top : answer & 0xFF);
-helper	src/hook/bind.cpp	345	IsCodeWord	src/hook/bind.cpp:193	platform	if (IsCodeWord(expect) != true) Fatal(" ", (unsigned)r.va);
-helper	src/hook/bind.cpp	375	IsCodeWord	src/hook/bind.cpp:193	platform	if (IsCodeWord(Img(0x5DA000)) || IsCodeWord(Img(kBind[0].va + 1)))
-helper	src/hook/bind.cpp	375	IsCodeWord	src/hook/bind.cpp:193	platform	if (IsCodeWord(Img(0x5DA000)) || IsCodeWord(Img(kBind[0].va + 1)))
-helper	src/hook/bind.cpp	380	IsCodeWord	src/hook/bind.cpp:193	platform	Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
-helper	src/hook/bind.cpp	384	IsCodeWord	src/hook/bind.cpp:193	platform	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
-helper	src/hook/bind.cpp	384	IsCodeWord	src/hook/bind.cpp:193	platform	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
+helper	src/hook/bind.cpp	378	IsCodeWord	src/hook/bind.cpp:220	platform	if (IsCodeWord(expect) != true) Fatal(" ", (unsigned)r.va);
+helper	src/hook/bind.cpp	408	IsCodeWord	src/hook/bind.cpp:220	platform	if (IsCodeWord(Img(0x5DA000)) || IsCodeWord(Img(kBind[0].va + 1)))
+helper	src/hook/bind.cpp	408	IsCodeWord	src/hook/bind.cpp:220	platform	if (IsCodeWord(Img(0x5DA000)) || IsCodeWord(Img(kBind[0].va + 1)))
+helper	src/hook/bind.cpp	413	IsCodeWord	src/hook/bind.cpp:220	platform	Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
+helper	src/hook/bind.cpp	417	IsCodeWord	src/hook/bind.cpp:220	platform	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
+helper	src/hook/bind.cpp	417	IsCodeWord	src/hook/bind.cpp:220	platform	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
 helper	src/hook/statehash.cpp	221	Fold	src/hook/statehash.cpp:208	platform	if ((v & 0xFF000000u) == 0 || !Fold(folds, n, v & 0xFFFFFFu, &c) || c > 0xFFFFFFu) return false;
 helper	src/hook/statehash.cpp	232	Fold	src/hook/statehash.cpp:208	platform	return (v >= kExeLo && v < kExeHi) || Fold(g_folds, g_nfolds, v, &c);
 helper	src/hook/statehash.cpp	378	Fold	src/hook/statehash.cpp:208	platform	if (!Fold(folds, nfolds, w, &c) && !Fold24(folds, nfolds, w, &c)) continue;
-helper	src/hook/statehash.cpp	673	InImage	src/hook/statehash.cpp:232	platform	if (InImage(w) || (g_normalise && Bind_VaOf(w))) g_sites.push_back(off);
+helper	src/hook/statehash.cpp	680	InImage	src/hook/statehash.cpp:232	platform	if (InImage(w) || (g_normalise && Bind_VaOf(w))) g_sites.push_back(off);
 #rec	file	scope	family	class	n
 file	src/common/image_base.h	platform	common	const_def_literal	3
 file	src/common/image_base.h	platform	common	image_meta	1
@@ -22951,7 +22953,8 @@ file	src/game/frame_callees.cpp	game	field	ptr_sub	1
 file	src/game/frame_callees.cpp	game	field	range_cmp	1
 file	src/game/frame_callees.cpp	game	field	raw_literal	1
 file	src/game/frame_callees.cpp	hosted	field	addr_eq	4
-file	src/game/game_clock.cpp	game	engine	accessor	2
+file	src/game/game_clock.cpp	game	engine	accessor	1
+file	src/game/game_clock.cpp	game	engine	accessor_addr	1
 file	src/game/game_last.cpp	game	engine	accessor	2
 file	src/game/game_last.cpp	game	engine	at_global	4
 file	src/game/game_last.cpp	game	engine	inject	2
@@ -25168,11 +25171,11 @@ file	src/game/yes_no_layout.cpp	hosted	ui	code_const	6
 file	src/game/yes_no_layout.cpp	hosted	ui	code_literal	4
 file	src/hook/bind.cpp	platform	hook	addr_eq	3
 file	src/hook/bind.cpp	platform	hook	base_offset	2
-file	src/hook/bind.cpp	platform	hook	code_const	12
+file	src/hook/bind.cpp	platform	hook	code_const	13
 file	src/hook/bind.cpp	platform	hook	const_def_derived	2
 file	src/hook/bind.cpp	platform	hook	const_def_literal	4
 file	src/hook/bind.cpp	platform	hook	image_meta	1
-file	src/hook/bind.cpp	platform	hook	module_const	8
+file	src/hook/bind.cpp	platform	hook	module_const	9
 file	src/hook/bind.cpp	platform	hook	ptr_sub	2
 file	src/hook/bind.cpp	platform	hook	range_cmp	3
 file	src/hook/calltrace.cpp	platform	hook	addr_eq	1
@@ -25260,20 +25263,20 @@ file	src/launcher/launcher.cpp	launcher	launcher	module_const	2
 file	src/render/gfx_snapshot.cpp	platform	render	accessor	30
 file	src/render/gfx_snapshot.cpp	platform	render	base_offset	22
 file	src/render/render_shim.cpp	platform	render	accessor	1
-#count sites	123018
+#count sites	123020
 #count sites_game	54558
-#count sites_platform	590
+#count sites_platform	592
 #count sites_hosted	290
 #count sites_fuzz	67572
 #count sites_launcher	8
-#count class_accessor	25951
-#count class_accessor_game	22356
+#count class_accessor	25950
+#count class_accessor_game	22355
 #count class_accessor_platform	169
 #count class_accessor_hosted	0
 #count class_accessor_fuzz	3425
 #count class_accessor_launcher	1
-#count class_accessor_addr	12791
-#count class_accessor_addr_game	5492
+#count class_accessor_addr	12792
+#count class_accessor_addr_game	5493
 #count class_accessor_addr_platform	17
 #count class_accessor_addr_hosted	0
 #count class_accessor_addr_fuzz	7281
@@ -25284,15 +25287,15 @@ file	src/render/render_shim.cpp	platform	render	accessor	1
 #count class_at_global_hosted	0
 #count class_at_global_fuzz	1620
 #count class_at_global_launcher	0
-#count class_module_const	3359
+#count class_module_const	3360
 #count class_module_const_game	2176
-#count class_module_const_platform	77
+#count class_module_const_platform	78
 #count class_module_const_hosted	0
 #count class_module_const_fuzz	1104
 #count class_module_const_launcher	2
-#count class_code_const	7908
+#count class_code_const	7909
 #count class_code_const_game	2392
-#count class_code_const_platform	38
+#count class_code_const_platform	39
 #count class_code_const_hosted	82
 #count class_code_const_fuzz	5396
 #count class_code_const_launcher	0

@@ -217,6 +217,9 @@ void SelfTestOpen(OpenFn theirs) {
     OpenCapture(saved);
     unsigned long saved_handlers[77];
     std::memcpy(saved_handlers, MapCell_Handlers, sizeof saved_handlers);
+    // Our stand-ins' own addresses in the game's handler table, not places
+    // (common/image_base.h): put back before the self-test returns, and the
+    // shadow self-test runs hosted only (exe_host.cpp refuses BOF3X_SHADOW).
     const unsigned long stand_ins[4] = {
         static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(&OpenStandIn0)),
         static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(&OpenStandIn1)),

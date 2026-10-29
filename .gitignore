@@ -71,6 +71,10 @@ layout.bin
 # from src/ and symbols.toml (tools/reloc_census.py, the relocatable-image
 # round); its --check reads the #gate lines.
 !/analysis/reloc_census.tsv
+# ...and the bare-address rule's list: our own source lines, addresses and
+# names from src/ (tools/reloc_bare.py, the relocatable-image round's stage D);
+# its --check refuses a site the list does not hold.
+!/analysis/reloc_bare.tsv
 
 # Symbol/name data IS tracked — it is our own work product, not game data.
 !/names/

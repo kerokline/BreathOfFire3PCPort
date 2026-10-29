@@ -21,6 +21,8 @@ decisions, the stack), [`code-page-audit.md`](code-page-audit.md) section 4,
 
 ## 0. The shape in one paragraph
 
+> **Superseded in part 2026-10-29 by the relocatable-image round** ([`relocatable-image-round.md`](relocatable-image-round.md) 4, [`relocatable-image-design.md`](relocatable-image-design.md) 0): no `jmp` is written and `.stub` is not `int3` - it is a no-access trap, never written; every code word the game holds and every code place of ours is its VA's place, `(top << 24) | VA`, a jump of ours to our function in a table `src/hook/bind.cpp` builds. The image's base is read at run time (`ImageBase()`, from the process environment block): the player's `bof3x.exe` is still at `0x400000`; a developer's may lie at `0x990000..0xA70000` (`BOF3X_IMAGEBASE`). The paragraph below is the state 3 design as it was.
+
 One engine, two hosts. `bof3x.dll` stays the engine and keeps running inside
 the player's `BOF3.exe` as today - that host is where Capcom's bytes exist,
 so it stays the home of the shadow fuzz, the A/B switch and the reference
@@ -42,6 +44,8 @@ re-expressed as a value of our own.
 
 ### 1.1 Why the image must occupy the range itself
 
+> **Amended 2026-10-29 (the relocatable-image round):** the player's `bof3x.exe` is still based at `0x400000` and spans the range, for the reason below. A developer's executable written at another base (`tools/make_exe.py --image-base`, the launcher's `BOF3X_IMAGEBASE`) runs too: the developer launcher reserves the linked span `0x400000..0x98F000` no-access while the process is still suspended, which answers this section's concern for that case - measured in stage C1, by `Engine_Main` only 64 KB of the span is still free ([`relocatable-image-design.md`](relocatable-image-design.md) 1.5). `GetModuleHandle(nullptr)` is the image's base, whatever it is.
+
 The plan's words were "our executable reserves the range and loads `.rdata`
 and `.data` there" ([`platform-layers-plan.md`](platform-layers-plan.md) 3).
 A run-time `VirtualAlloc(MEM_RESERVE)` at our entry point is too late: in a
@@ -61,6 +65,8 @@ placed. It also makes `GetModuleHandle(nullptr)` equal to `0x400000`, the
 module.
 
 ### 1.2 The sections
+
+> **Amended 2026-10-29:** `.stub` is made `PAGE_NOACCESS` right after the layout check and never written (the trap, [`relocatable-image-design.md`](relocatable-image-design.md) 4.5); every VA in this table is the linked frame - the sections lie at `ImageBase()` plus their RVAs.
 
 | Section | VA | Size | Protection | Content at load | Who fills it |
 |---|---|---|---|---|---|
@@ -142,6 +148,8 @@ morning). A disc-built image is refused as today (the code pointers and the
 
 ## 2. The entry-stub page
 
+> **Superseded 2026-10-29 by the relocatable-image round** (stage C2; [`relocatable-image-design.md`](relocatable-image-design.md) 4 and 6, the owner's call 2): the page described here - the `0xCC` fill, a `jmp` at each owned start written by `Inject`, the thunk's six bytes, `CheckStub`'s inventory, the page read-execute - is gone (`FillStub`, `WriteThunk`, `CheckStub` and `ProtectStub` deleted from `exe_host.cpp`). `.stub` is no-access and holds nothing. The rebase binds each `.data` code word to its VA's place in a table of jumps of ours (8,673 words; the 111 with no function of ours to the trap, `Img(va)` on `.stub`), `Code(va)` gives our code the same place, and `Inject` writes nothing in `bof3x.exe` but checks its pair against the bind table. A call through an unbound word faults on `.stub` and the crash reporter names the VA and its `[[func]]`. The section below is the state 3 design as built then.
+
 [`exe-import-engine.md`](exe-import-engine.md) 4.2 chose (b), stubs at
 Capcom's addresses, over rewriting the 9,142 `.data` code pointers; the
 measurements that make it sound are 6,211 of 6,346 targets being function
@@ -213,6 +221,8 @@ instead) stays open and is not this build's.
 it (`exe_image.cpp`'s check, kept) rather than trusting it.
 
 ### 3.2 The thirteen import slots, and the thunk
+
+> **Amended 2026-10-29:** the slots are written at their places, `Img(slot)`; the thunk `0x5ACBBC` is no longer six bytes on the stub page - its place jumps to `DirectSoundThunk` (`src/hook/bind.cpp`), ours, which calls through the slot `0x5C4014` as the slot reads at the call.
 
 `src/` calls through these IAT words today because the loader bound them
 ([`exe-import-engine.md`](exe-import-engine.md) 2's table): `0x5C4020` /
@@ -335,6 +345,8 @@ a `PatchBytes` / `RetargetCall` inventory of zero (section 7).
 
 ### 6.2 The state hash
 
+> **Amended 2026-10-29:** the stub page no longer keeps a code word's value: in `bof3x.exe` a code word holds its place, which the hash maps back to its VA (`Bind_VaOf`, flags bit 2), and a moved image's pointer words are folded ([`state-hash.md`](state-hash.md) 8).
+
 The check is address-independent since `BOF3SH3`
 ([`state-hash.md`](state-hash.md) 7): a pointer of ours in one of Capcom's
 26,189 slots hashes by the text it names, and the stub page keeps every
@@ -380,6 +392,8 @@ build's own section-table verification (1.3) runs there too, so a wrong
 layout never reaches the owner's machine. Nothing in CI runs the game.
 
 ## 7. What of ours assumes Capcom's bytes, measured this morning
+
+> **Amended 2026-10-29:** `.stub` is no-access in `bof3x.exe` and nothing writes it; the `Mp3_*` cells of `sound.cpp`'s `kOriginals` hold the trap, not `int3`, and both switches that would call them (`BOF3X_MP3=original`, `BOF3X_MP3_COMPARE`) are refused in that host.
 
 A session script over `src/game` mapped every `PatchBytes` and
 `RetargetCall` whose target lies in `0x401000..0x5C4000` to the `[[func]]`
@@ -492,6 +506,8 @@ The five calls, with the owner's answers of the same day:
 
 ## 11. What the first build does and does not do
 
+> **Amended 2026-10-29:** the `0xCC` fill, `InjectAll` as the stub writer and the read-execute page below are superseded (section 2's note).
+
 **Does:** `tools/make_exe.py` and its CMake step with the build-time
 verification; `Engine_Main` and the host detection; the data copy from the
 player's file and from `BOF3X_EXEIMAGE`; the fourteen slot bindings and the
@@ -518,6 +534,8 @@ fuzz with something that needs no Capcom bytes; 64 bits or another system
 (`PLAN.md` phase 4, I33).
 
 ## 12. Not verified
+
+> **Amended 2026-10-29:** the `int3` fill is gone (section 2's note), and with it the question of the call tracer's own `int3`s; the tracer stays refused in the exe host.
 
 Everything: this is a design from reads. In particular, the claim that the
 loader places the heap and thread blocks bottom-up into `0x400000..` when the

@@ -382,6 +382,12 @@ void SelfTest() {
     const std::uint32_t saved_seed = g_seed;
     const map_cells::RandFn saved_rand = map_cells::SwapRand(RecordingRand);
 
+    // Our own functions' addresses stored into the game's handler table, not
+    // places (common/image_base.h): the table is put back below before any
+    // frame runs, the shadow self-test runs hosted only (exe_host.cpp refuses
+    // BOF3X_SHADOW), and hosted nothing is renamed by the state hash - so these
+    // two functions with no VA need no place of their own (the relocatable-image
+    // round's stage D; draw_emit.cpp SelfTestOpen is the same shape).
     for (unsigned i = 0; i < 77; ++i)
         MapCell_Handlers[i] = static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(&OtherStandIn));
     MapCell_Handlers[kRising] = static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(&RisingStandIn));

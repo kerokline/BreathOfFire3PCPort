@@ -138,7 +138,7 @@ file, -58 at the worst. **Heard 2026-10-11** - the owner, on six songs as WAV pa
 - `BOF3X_MP3` - unset or `minimp3`: ours; `original`: Capcom's; anything
   else fatal. Logged as `DIV-0091`. No launcher box yet (the `music=` box's
   neighbour, with `cache=`'s - HANDOFF).
-- `BOF3X_MP3_COMPARE`, `BOF3X_MP3_DUMP`, `BOF3X_MP3_DUMP_FILES`: section 2.
+- `BOF3X_MP3_COMPARE`, `BOF3X_MP3_DUMP`, `BOF3X_MP3_DUMP_FILES`: section 2. `BOF3X_MP3_COMPARE` runs Capcom's decoder, so it is hosted only: `bof3x.exe` refuses it and the launcher takes the hosted build for it (2026-10-29, the relocatable-image round's stage D).
 - The state hash is unaffected: `Music_Staging` is in its skip list and the
   frame's logic sees only `Music_Finished` and the fades.
 

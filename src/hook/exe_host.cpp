@@ -4,7 +4,7 @@
 // hosts apart (dllmain.cpp).
 //
 //  1. host detection (DllMain) - and the switches that need Capcom's code
-//     refused: BOF3X_ORIGINAL, BOF3X_SHADOW, BOF3X_MP3=original,
+//     refused: BOF3X_ORIGINAL, BOF3X_SHADOW, BOF3X_MP3=original, BOF3X_MP3_COMPARE,
 //     BOF3X_CALLTRACE
 //  2. the fence: when the image lies elsewhere than 0x400000 (a developer's
 //     bof3x.exe written by make_exe.py --image-base,
@@ -89,9 +89,16 @@ void RefuseHostedSwitches() {
     if (GetEnvironmentVariableA("BOF3X_MP3", mp3, sizeof mp3) && std::strcmp(mp3, "original") == 0)
         Fatal("BOF3X_MP3=original: Capcom's MP3 decoder is not mapped in bof3x.exe (DIV-0091). "
               "Start the hosted build (bof3x-launcher --host bof3) for it.");
+    // The comparison decodes every track through Capcom's decoder as well as
+    // ours (audio/mp3.cpp CompareCorpus, sound::kOriginals' Mp3_* cells): in
+    // bof3x.exe those cells hold the trap (bind.cpp), and the first call would
+    // fault on .stub.
+    if (EnvSet("BOF3X_MP3_COMPARE"))
+        Fatal("BOF3X_MP3_COMPARE is set: the comparison runs Capcom's MP3 decoder, which bof3x.exe does not map "
+              "(DIV-0091). Start the hosted build (bof3x-launcher --host bof3) for it.");
     if (EnvSet("BOF3X_CALLTRACE"))
-        Fatal("BOF3X_CALLTRACE is set: the call trace counts calls into Capcom's code, and in bof3x.exe "
-              "every entry it would arm is int3 or a jmp of ours. Start the hosted build (bof3x-launcher --host bof3).");
+        Fatal("BOF3X_CALLTRACE is set: the call trace counts calls into Capcom's code, and bof3x.exe maps none "
+              "(.stub is the no-access trap). Start the hosted build (bof3x-launcher --host bof3).");
 }
 
 // --- 2. The layout ---------------------------------------------------------

@@ -55,6 +55,8 @@ owning thread grows a stack through its guard page).
 
 ## 3. What is copied
 
+> **Amended 2026-10-29 (the relocatable-image round):** the addresses below are VAs. In the exe host the span is read and written at its place, `Img(0x5DA000)`, so a quicksave taken with the image at one base is refused at another as "another span" - measured both ways in the stage C2 proof - and one taken and loaded at the same moved base restores.
+
 | Region | Exe host | Hosted (`BOF3.exe` + `bof3x.dll`) |
 |---|---|---|
 | the span | `.data`, `.bss`, the end of `.game` and `.pool`: `0x5DA000..0x987000`, `0x3AD000` bytes (`exe_layout.h`: `kDataVa`..`kOwnVa`) | `.data` and `.bss`: `0x5DA000..0x93E000` |
