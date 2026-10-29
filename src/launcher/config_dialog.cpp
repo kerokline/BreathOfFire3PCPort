@@ -976,6 +976,7 @@ void CheatsPopulate(HWND dlg, const Config::Cheats& ch) {
         SetDlgItemInt(dlg, s.label, static_cast<UINT>(v), FALSE);
     }
     CheckDlgButton(dlg, IDC_CH_STEAL, ch.steal ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(dlg, IDC_CH_INFO, ch.enemy_info ? BST_CHECKED : BST_UNCHECKED);
 }
 
 void CheatsReadBack(HWND dlg, Config::Cheats& ch) {
@@ -984,6 +985,7 @@ void CheatsReadBack(HWND dlg, Config::Cheats& ch) {
         ch.*s.value = pos < 0 ? 0 : pos > kCheatMultiplierMax ? kCheatMultiplierMax : pos;
     }
     ch.steal = IsDlgButtonChecked(dlg, IDC_CH_STEAL) == BST_CHECKED;
+    ch.enemy_info = IsDlgButtonChecked(dlg, IDC_CH_INFO) == BST_CHECKED;
 }
 
 // A slider on the page moved: show its value. False when it is not one of these.
@@ -1667,6 +1669,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             SatpixieOptions(dlg, state->cfg->sp);
             return TRUE;
         case IDC_CH_STEAL:
+        case IDC_CH_INFO:
             if (HIWORD(wp) == BN_CLICKED) state->cheats_touched = true;
             return TRUE;
         case IDC_CH_DEFAULTS:

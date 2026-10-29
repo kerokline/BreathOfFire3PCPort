@@ -9,8 +9,9 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
-// Cheats, the same three the archival sibling offers as mods (its
-// docs/EXP_BOOST.md and docs/STEAL.md), as launcher settings here.
+// Cheats: the same three the archival sibling offers as mods (its
+// docs/EXP_BOOST.md and docs/STEAL.md) as launcher settings here, and a
+// fourth of our own, every enemy's information shown (DIV-0187).
 //
 // DIV-0045: BOF3X_EXP=n / BOF3X_ZENNY=n, 0..10 (more is clamped to 10, with
 // a log line, so that an older bof3x.ini's 50 still starts the game).
@@ -48,6 +49,16 @@
 // too (SkillSteal_Roll in src/game/magic_steal.cpp) and reads its mask the
 // same way, from 0x4F51EF (Cheats_StealRollMask).
 //
+// DIV-0187: BOF3X_ENEMY_INFO=1. An enemy's HP gauge and Identify's stats
+// panel read the enemy record's byte +0x8F, which Battle_SetupEnemy
+// (0x494320, ours) copies from the save's per-kind bit set at 0x904068
+// (Battle_EnemyKindFlag 0x494EA0; the bit is set by Battle_EnemyDefeated
+// 0x437470, so it reads "a kind the party has beaten before") and which
+// Battle_PlaceBossActor (0x494570, ours) clears for a boss. With the cheat
+// on, both write 1 instead, so every enemy shows its gauge and its stats
+// from the first meeting, bosses included. The bit set, and so the save, is
+// left as it was: the cheat off, the game is where it would have been.
+//
 // Every harness run leaves these unset: with the variables unset nothing
 // here changes a byte or a number, and the battle_flow fuzz compares ours
 // against the original with the multipliers at 1.
@@ -55,6 +66,7 @@
 namespace {
 
 std::uint32_t g_exp = 1, g_zenny = 1;
+bool g_enemy_info = false;
 // The roll masks: the imm32 at kPilferMaskImm / kStealMaskImm in this build -
 // 0xFF, or 0 once DIV-0046's patch goes in. Values of ours, never read from
 // the code (docs/operand-store.md); hosted, Operands_Check compares them.
@@ -80,6 +92,16 @@ std::uint32_t Multiplier(const char* var) {
     return static_cast<std::uint32_t>(v);
 }
 
+// 0 or 1, false when unset; anything else is a Fatal, as a wrong
+// BOF3X_FILTER is.
+bool Flag(const char* var) {
+    char text[8];
+    const DWORD n = GetEnvironmentVariableA(var, text, sizeof text);
+    if (n == 0) return false;
+    if (n >= sizeof text || (text[0] != '0' && text[0] != '1') || text[1] != '\0') bof3::Fatal("%s must be 0 or 1", var);
+    return text[0] == '1';
+}
+
 // The mask's immediate with the compare after it, so that a wrong address
 // cannot pass for the right one: `25 FF 00 00 00 / 3B C7` (Pilfer, cmp eax,
 // edi) and `25 FF 00 00 00 / 3B C6` (Steal, cmp eax, esi).
@@ -93,13 +115,12 @@ void Cheats_Inject() {
     g_zenny = Multiplier("BOF3X_ZENNY");
     if (g_exp != 1 || g_zenny != 1) bof3::Log("DIV-0045    EXP x%lu, zenny x%lu (BOF3X_EXP, BOF3X_ZENNY)", (unsigned long)g_exp, (unsigned long)g_zenny);
 
+    g_enemy_info = Flag("BOF3X_ENEMY_INFO");
+    if (g_enemy_info) bof3::Log("DIV-0187    every enemy shows its HP gauge and its Identify stats, bosses too (BOF3X_ENEMY_INFO)");
+
     bof3::Operand("DIV-0046 Pilfer roll mask", kPilferMaskImm, &g_pilfer_mask, 4);
     bof3::Operand("DIV-0046 Steal roll mask", kStealMaskImm, &g_steal_mask, 4);
-    char text[8];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_STEAL", text, sizeof text);
-    if (n == 0) return;
-    if (n >= sizeof text || (text[0] != '0' && text[0] != '1') || text[1] != '\0') bof3::Fatal("BOF3X_STEAL must be 0 or 1");
-    if (text[0] == '0') return;
+    if (!Flag("BOF3X_STEAL")) return;
     const std::uint8_t pilfer_was[] = {0xFF, 0x00, 0x00, 0x00, 0x3B, 0xC7}, pilfer_is[] = {0x00, 0x00, 0x00, 0x00, 0x3B, 0xC7};
     const std::uint8_t steal_was[] = {0xFF, 0x00, 0x00, 0x00, 0x3B, 0xC6}, steal_is[] = {0x00, 0x00, 0x00, 0x00, 0x3B, 0xC6};
     if (bof3::PatchBytes("Cheat_StealAlways", kPilferMaskImm, pilfer_was, pilfer_is, 6)) g_pilfer_mask = 0;
@@ -111,3 +132,4 @@ std::uint32_t Cheats_ExpMultiplier() { return g_exp; }
 std::uint32_t Cheats_ZennyMultiplier() { return g_zenny; }
 std::uint32_t Cheats_PilferRollMask() { return g_pilfer_mask; }
 std::uint32_t Cheats_StealRollMask() { return g_steal_mask; }
+bool Cheats_EnemyInfoShown() { return g_enemy_info; }

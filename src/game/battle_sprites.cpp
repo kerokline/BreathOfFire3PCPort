@@ -35,6 +35,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/battle_sprites_callees.h"
+#include "game/cheats.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -794,6 +795,10 @@ extern "C" void __cdecl Battle_InitEnemies(void) {
 // one. Sprite_Current is read again before every store, as the original
 // does. The id indexes the data by 16 bits here, by 8 in
 // Battle_CopyEnemyData.
+//
+// DIV-0187 (src/game/cheats.cpp): under BOF3X_ENEMY_INFO=1 the byte +0x8F
+// is 1 whatever the kind's bit says - the HP gauge and Identify's panel
+// read it - and the bit is still read, as the original reads it.
 extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, long x, long z) {
     const std::uint32_t n = slot & 0xFF;
     unsigned char* const e = Enemy(n);
@@ -838,7 +843,8 @@ extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, long x, lo
     enemy_rec->bank = enemy_data->bank;
     g.copy_enemy(slot, id);
     g.enemy_offset(slot, id);
-    enemy_rec->kind_flag = g.kind_flag(enemy_data->kind);
+    const unsigned char seen = g.kind_flag(enemy_data->kind);
+    enemy_rec->kind_flag = Cheats_EnemyInfoShown() ? 1 : seen;
     Battle_EnemyCount = static_cast<unsigned char>(Battle_EnemyCount + 1);
 }
 
@@ -1008,8 +1014,11 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
     } while (kind(k) != 0xFFFF);
 }
 
-// original 0x494EA0: bit `kind` (16 bits) of the set at 0x904068 - by its use
-// in Battle_SetupEnemy, an enemy kind's flag (a kind seen before, perhaps).
+// original 0x494EA0: bit `kind` (16 bits) of the set at 0x904068 - an enemy
+// kind the party has beaten before: Battle_EnemyDefeated (battle_flow.cpp)
+// sets it, Battle_SetupEnemy copies it to the record's +0x8F, and the HP
+// gauge (battle_windows.cpp EnemyGauge) and Identify's panel (magic_s12.cpp)
+// read that copy. The set lies in the save's flag block (Cond_Flags +0xD8).
 extern "C" unsigned char __cdecl Battle_EnemyKindFlag(unsigned kind) {
     const std::uint32_t k = kind & 0xFFFF;
     return (static_cast<std::uint32_t>(Long(At(::bof3::Img(Cond_Flags_addr) + 0xd8 + (k >> 5) * 4))) & (1u << (k & 31))) ? 1 : 0;
@@ -1097,4 +1106,8 @@ void BattleSprites_Inject() {
     BOF3_INJECT(Battle_SetEnemyOffset);
     BOF3_INJECT(Sprite_UpdateScreenSlot);
     BOF3_INJECT(Sound_PlayById);
+    // DIV-0187 writes the enemy's +0x8F here; Capcom's Battle_SetupEnemy
+    // would write the kind's bit and the cheat would be silently half off.
+    if (Cheats_EnemyInfoShown() && !bof3::IsEnabled(bof3::addr::Battle_SetupEnemy))
+        bof3::Fatal("BOF3X_ENEMY_INFO=1 needs Battle_SetupEnemy ours, and it is disabled");
 }

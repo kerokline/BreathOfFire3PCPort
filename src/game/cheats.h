@@ -1,13 +1,23 @@
-// Cheats (docs/cheats.md): the EXP and zenny multipliers, DIV-0045, and the
-// steal roll that always passes, DIV-0046. Each is a launcher setting carried
-// by an environment variable, off when the variable is unset.
+// Cheats (docs/cheats.md): the EXP and zenny multipliers, DIV-0045, the
+// steal roll that always passes, DIV-0046, and every enemy's information
+// shown, DIV-0187. Each is a launcher setting carried by an environment
+// variable, off when the variable is unset.
 #pragma once
 
 #include <cstdint>
 
-// Reads BOF3X_EXP / BOF3X_ZENNY / BOF3X_STEAL and patches the two steal rolls
-// when asked. Called once from InjectAll.
+// Reads BOF3X_EXP / BOF3X_ZENNY / BOF3X_STEAL / BOF3X_ENEMY_INFO and patches
+// the two steal rolls when asked. Called once from InjectAll.
 void Cheats_Inject();
+
+// DIV-0187: true under BOF3X_ENEMY_INFO=1. Battle_SetupEnemy
+// (src/game/battle_sprites.cpp) and Battle_PlaceBossActor
+// (src/game/rest_3g.cpp) then give every enemy record's byte +0x8F the value
+// 1 - the byte the original takes from the save's "kind defeated before" bit
+// (Battle_EnemyKindFlag), 0 for a boss - so the HP gauge in the target and
+// status banners and Identify's stats panel show for every enemy, bosses
+// too. The bit set itself is not touched. False when unset.
+bool Cheats_EnemyInfoShown();
 
 // 1 unless BOF3X_EXP / BOF3X_ZENNY was set: what Battle_EnemyDefeated
 // multiplies a fallen enemy's yield by before adding it to the battle total

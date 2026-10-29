@@ -89,6 +89,7 @@
 #define IDC_CH_ZENNY_V  1211
 #define IDC_CH_STEAL    1220
 #define IDC_CH_DEFAULTS 1221
+#define IDC_CH_INFO     1222  // Every enemy's HP gauge and stats shown: cheat.enemy_info= (DIV-0187)
 
 // The Controls page (DIV-0050, docs/controls.md section 4.2): fourteen rows,
 // one an action, each with two key boxes and two pad boxes - the ids are
