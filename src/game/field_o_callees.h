@@ -68,8 +68,6 @@ constexpr U kOp87States = 0x663B04;      // 2 handlers (MoveCmd_Op87), then Even
 // kOpE9States: now MoveCmd_OpE9States (symbols.toml). 4 handlers of seven words (MoveCmd_OpE9)
 // kDirectionVelocity: now MoveCmd_F9Steps (symbols.toml). 8 x (x, z) s32 by direction: MoveCmd_OpF9's step per unit of speed
 
-// .text, for the table reads: an entry outside it is not code.
-constexpr U kTextLo = 0x401000, kTextHi = 0x5C3000;
 
 }  // namespace at
 }  // namespace field_o

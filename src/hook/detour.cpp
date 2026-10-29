@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "hook/bind.h"
 #include "hook/code_bytes.h"
 #include "hook/code_names.h"
 #include "hook/exe_layout.h"
@@ -165,12 +166,14 @@ void VerifyImage() {
 }
 
 void Inject(const char* name, std::uint32_t original, void* ours, bool instrument) {
-    // `original` is a VA, a name; the jmp goes at its place in the image
-    // (Img: the identity hosted, the moved stub page in the exe host).
+    // `original` is a VA, a name. Hosted the jmp goes at it, in BOF3.exe's
+    // code. In the exe host there is no code to write: .stub is the no-access
+    // trap, and every place of the VA - a code word of .data, a Code() of
+    // ours - is already the function the bind table names for it, which must
+    // be this one (bind.cpp; docs/relocatable-image-design.md 4.1). The pair
+    // is recorded, as hosted, for IsOwned and IsEnabled.
     auto* orig = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(Img(original)));
     auto* mine = static_cast<std::uint8_t*>(ours);
-    // In the exe host the jmp is written on the int3 page (.stub), the only
-    // writes that page takes (exe_host.cpp's CheckStub).
     if (!InCode(original)) Fatal("%s: Inject at 0x%08X, outside Capcom's code range", name, (unsigned)original);
     if (g_enabled + g_disabled == kMaxOwned) Fatal("%s: more than %d injected functions", name, kMaxOwned);
     // BOF3X_OFF takes code names only: a detour's original behaviour is
@@ -183,6 +186,15 @@ void Inject(const char* name, std::uint32_t original, void* ours, bool instrumen
               name, name);
     g_owned[g_enabled + g_disabled] = original;
     g_owned_on[g_enabled + g_disabled] = instrument || !WantsOriginal(name);
+    if (IsExeHost()) {
+        // BOF3X_ORIGINAL is refused in this host (exe_host.cpp), so every
+        // Inject is on; an instrument wraps Capcom's code, which is not here.
+        if (instrument) Fatal("%s: an instrument Inject at 0x%08X in bof3x.exe, which maps no code of Capcom's", name, (unsigned)original);
+        Bind_Check(name, original, ours);
+        ++g_enabled;
+        Log("inject  ON   %-24s original 0x%08X = ours %p (bound)", name, (unsigned)original, ours);
+        return;
+    }
     if (!g_owned_on[g_enabled + g_disabled]) {
         WriteJmp(name, mine, orig);
         ++g_disabled;
@@ -236,7 +248,7 @@ bool PatchBytes(const char* name, std::uint32_t address, const std::uint8_t* exp
     // An operand inside Capcom's code, in the exe host: nothing to write. The
     // divergence keeps the value it writes as its own from this answer, and
     // our readers read that (docs/operand-store.md); .stub itself is never
-    // written but by Inject (exe_host.cpp's CheckStub). Outside the code range
+    // written (the no-access trap, exe_host.cpp TrapStub). Outside the code range
     // (a .data byte, a switch of ours) the write is the same in both hosts.
     const bool code = InCode(address) || InCode(address + count - 1);
     const bool exe = IsExeHost() && code;
@@ -395,6 +407,7 @@ void InjectReport() {
         p = end;
     }
     Operands_Check("after InjectAll");
+    Bind_Report();
 }
 
 }  // namespace bof3

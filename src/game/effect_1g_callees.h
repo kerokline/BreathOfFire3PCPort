@@ -40,7 +40,6 @@ constexpr ::bof3::image::Va kNumberText{0x904BA0};      // the text scratch it p
 constexpr std::uint32_t kIngredientBase = 0x38;      // an ingredient byte + 0x38 is the consumable's item number
 
 // --- ranges ------------------------------------------------------------------
-constexpr std::uint32_t kTextLo = 0x401000, kTextHi = 0x5C3000;   // .text
 constexpr unsigned kIconKinds = 16;                               // Item_IconByKind's entries (Item_IconKind answers a nibble)
 
 }  // namespace effect_1g::at

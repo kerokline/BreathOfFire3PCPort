@@ -121,8 +121,9 @@ using Handler = void (__cdecl*)();
 Handler CodeAt(std::uint32_t table, unsigned index, const char* who) {
     const std::uint32_t cell = table + 4u * index;
     const auto entry = static_cast<std::uint32_t>(L(cell));
-    // A code word holds a place in the moved stub page (mode S): the code range at the image's base.
-    if (!scenario_harness::g_active && (entry < ::bof3::Img(0x401000) || entry >= ::bof3::Img(0x5C3000)))
+    // A code word: hosted a VA in BOF3.exe's .text, in bof3x.exe a function of ours
+    // the bind table names (common/image_base.h IsCodeWord); not the trap, not data.
+    if (!scenario_harness::g_active && !::bof3::IsCodeWord(entry))
         bof3::Fatal("%s: index %u reads 0x%X at 0x%X (VA 0x%X), not code - past its table (the original jumps there)", who,
                     index, (unsigned)entry, (unsigned)cell, (unsigned)::bof3::VaOf(cell));
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(entry));

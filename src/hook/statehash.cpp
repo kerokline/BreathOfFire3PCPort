@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "bof3/symbols.gen.h"
+#include "hook/bind.h"
 #include "hook/input_script.h"
 #include "hook/log.h"
 
@@ -20,7 +21,8 @@
 //            u32 skip list hash (FNV-1a over each range's address and length
 //            in the list's order; 0 without a list), u32 flags (bit 0: our
 //            pointers normalised, below; 0 under BOF3X_STATEHASH_RAW=1;
-//            bit 1: the run-time slots below are normalised too, 2026-10-11),
+//            bit 1: the run-time slots below are normalised too, 2026-10-11;
+//            bit 2: a bound code word hashed as its VA, below, 2026-10-29),
 //            u32 image base (where the game's image lay: 0x400000 in every
 //            host until the relocatable image), u32 fold base (the
 //            BOF3X_STATEHASH_FOLD address, 0 without one)
@@ -52,6 +54,21 @@
 // frame, measured), so a scan of every word by range would rename game data.
 // A page with no normalised word hashes exactly as BOF3SH2 did. The raw dumps
 // keep the raw bytes.
+//
+// Bound code words (flags bit 2, the relocatable-image round's stage C2,
+// docs/state-hash.md section 8). In bof3x.exe a code word of the game's - a
+// handler in a .data table, a task's entry, a hook - holds the function of
+// ours the bind table names for Capcom's VA (src/hook/bind.h), where BOF3.exe
+// holds the VA. So, before the slots above, every aligned word of a page whose
+// value is exactly the start of a bound function of ours is hashed as that
+// VA, slot or not, with no index mixed in: it hashes as Capcom's raw word, in
+// either host, and a page of such words matches Capcom's run. A value of the
+// game's data equal to one of those ~10,000 starts exactly would be renamed
+// too; none is expected (the starts lie in our DLL's code, the game's data
+// holds numbers and its own places), and both sides of a comparison of ours
+// rename alike. Hosted, a word our code stored as our function's address
+// rather than the VA reads as the VA as well. The census counts a word bound at
+// its time as a slot, as it counted the VA it replaced.
 //
 // The image's own pointers (docs/state-hash.md section 8, 2026-10-28). Once
 // the image can lie elsewhere than 0x400000 (IDEAS I44 stage 3), every
@@ -303,7 +320,8 @@ std::uint32_t HashPage(const unsigned char* p) {
 // aligned word in a folded range as at 0x400000; then the hash, with each
 // named slot's index mixed in after. `sites` are the slots' byte offsets
 // within the page, `scratch` a page of room; `normalised` counts the slots
-// that named ours. Shared by the tick and the self-test.
+// that named ours. With `dll`, a bound code word is hashed as its VA first
+// (the file's comment). Shared by the tick and the self-test.
 std::uint32_t HashNormalised(const unsigned char* page, const std::vector<Skip>& skips, const std::uint32_t* sites,
                              std::uint32_t nsites, bool dll, const std::uint32_t* folds, unsigned nfolds,
                              unsigned char* scratch, std::uint32_t* normalised) {
@@ -319,6 +337,18 @@ std::uint32_t HashNormalised(const unsigned char* page, const std::vector<Skip>&
     std::uint32_t mix = 0;
     std::uint32_t mixes[kPage / 4];
     if (dll) {
+        // Bound code words, as the VA each stands for (bind.h Bind_VaOf).
+        for (std::uint32_t at = 0; at < kPage; at += 4) {
+            std::uint32_t w;
+            std::memcpy(&w, p + at, 4);
+            const std::uint32_t va = Bind_VaOf(w);
+            if (!va) continue;
+            if (p == page) {
+                std::memcpy(scratch, page, kPage);
+                p = scratch;
+            }
+            std::memcpy(scratch + at, &va, 4);
+        }
         for (std::uint32_t k = 0; k < nsites; ++k) {
             const std::uint32_t at = sites[k];
             std::uint32_t w;
@@ -455,6 +485,39 @@ void SelfTest() {
               "0x400000 folding it", (unsigned long)F24);
     if (hash24(at0, 0) == hash24(atf, 0))
         Fatal("statehash self-test: without the fold the moved links hash as the unmoved ones");
+    // Bound code words (flags bit 2): a page holding Capcom's code VAs and the
+    // same page holding the functions of ours bound to them hash alike with
+    // the normalisation and differ without it; a word one past a bound
+    // function's start is not renamed.
+    const unsigned rows = Bind_Rows();
+    for (std::uint32_t at = 0; at < kPage; at += 4) {
+        std::uint32_t wv = next() >> 8, wo = wv;   // data, below the DLL's range
+        if ((next() >> 24) % 4 == 0) {
+            const std::uint32_t va = Bind_RowVa((next() >> 8) % rows);
+            wv = va;
+            wo = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Bind_Ours(va)));
+        }
+        std::memcpy(at0 + at, &wv, 4);
+        std::memcpy(atf + at, &wo, 4);
+    }
+    std::uint32_t nb = 0;
+    auto hashb = [&](const unsigned char* page, bool dll) {
+        return HashNormalised(page, none, nullptr, 0, dll, nullptr, 0, scratch, &nb);
+    };
+    if (hashb(at0, true) != hashb(atf, true))
+        Fatal("statehash self-test: a page of bound code words does not hash as the VAs they stand for");
+    if (hashb(atf, false) == hashb(at0, false))
+        Fatal("statehash self-test: without the normalisation the bound words hash as the VAs");
+    if (hashb(at0, true) != HashPage(at0)) Fatal("statehash self-test: a page of VAs does not hash as its raw bytes");
+    {
+        const std::uint32_t past = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Bind_Ours(Bind_RowVa(0)))) + 1;
+        std::memcpy(raw, atf, kPage);
+        std::memcpy(raw + 0x100, &past, 4);
+        std::memcpy(at0 + 0x100, &past, 4);
+        std::memcpy(atf + 0x100, &past, 4);
+        if (Bind_VaOf(past) != 0 || hashb(raw, true) != hashb(at0, true))
+            Fatal("statehash self-test: a word one past a bound function's start is renamed");
+    }
     if (pointers == 0 || sites.empty() || data_in_fold == 0 || numbers == 0)
         Fatal("statehash self-test: the synthetic page lacks a kind of word (%lu pointers, %lu slots, %lu data, %lu "
               "numbers)", (unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)data_in_fold,
@@ -463,7 +526,8 @@ void SelfTest() {
     Log("statehash   self-test: a page with %lu image pointers (%lu of them slots) moved by 0x%08lX, %lu data words "
         "in the moved range and %lu image-shaped numbers unmoved, hashes the same folding 0x%08lX; differs without "
         "the fold and with a byte changed; with no fold hashes as its raw bytes; ordering-table links into an image "
-        "at 0x00A00000 hash as at 0x400000 folding it (24 bits, the length byte kept)",
+        "at 0x00A00000 hash as at 0x400000 folding it (24 bits, the length byte kept); a page of bound code words "
+        "hashes as the VAs they stand for",
         (unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)delta, (unsigned long)data_in_fold,
         (unsigned long)numbers, (unsigned long)F);
 }
@@ -574,7 +638,7 @@ void StateHash_BeforeInjects(void* dll_module) {
     g_page_sites.assign(kPages + 1, 0);
     for (std::uint32_t off = 0; off < kEnd - kBase; off += 4) {
         const std::uint32_t w = WordAt(g_data + off);
-        if (InImage(w)) g_sites.push_back(off);
+        if (InImage(w) || (g_normalise && Bind_VaOf(w))) g_sites.push_back(off);
     }
     // The run-time slots (above) join the list, kept ascending; one that the
     // scan already listed (a word not zero at the census) is not doubled.
@@ -650,7 +714,7 @@ bool StateHash_Start() {
                 for (int b = 0; b < 4; ++b) skip_hash = (skip_hash ^ ((w >> (8 * b)) & 0xFF)) * 16777619u;
     }
     Put(skip_hash);
-    Put(g_normalise ? 3u : 0u);   // bit 0 the slots, bit 1 the run-time slots with them
+    Put(g_normalise ? 7u : 0u);   // bit 0 the slots, bit 1 the run-time slots with them, bit 2 the bound code words
     Put(g_image);
     Put(g_fold_env);
     g_last.assign(kPages, 0);

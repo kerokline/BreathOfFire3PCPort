@@ -10,20 +10,21 @@
 //     bof3x.exe written by make_exe.py --image-base,
 //     docs/relocatable-image-design.md 1.5), the free parts of the linked
 //     span reserved no-access; then the layout: our sections where
-//     exe_layout.h puts them, relative to the image's base
+//     exe_layout.h puts them, relative to the image's base; then .stub made
+//     the trap - no access, nothing written into it (design 4.5)
 //  3. the data: the player's BOF3.exe by SHA-256 when it is there (optional
 //     with BOF3X_EXEIMAGE set: a disc-built install has none); .rdata the
 //     engine's own (rdata::Map: the 44 constants and the keyboard format;
 //     the slots in 4), nothing of it from the file; .data from
 //     BOF3X_EXEIMAGE's cache when set, else the file's; the default key
 //     table written from the engine's rule; the .bss asserted zero; then
-//     every pointer word checked and moved with the image (design 3)
+//     every pointer word checked, the data words moved with the image and the
+//     code words bound to our functions (design 3, 4.1)
 //  4. the fourteen import slots our code calls through, bound and read back
 //  5. the x87 control word 0x027F, read back; MXCSR logged
-//  6. .stub filled with int3; the state hash's census; InjectAll writes the
-//     jmps (and DrawPool_Reserve takes .pool); DirectSoundCreate's thunk;
-//     the census after; .stub checked to hold nothing but those; then
-//     read-execute
+//  6. the state hash's census; InjectAll, which writes nothing into the image's
+//     code - every Inject is checked against the bind table (bind.cpp), and
+//     DrawPool_Reserve takes .pool; the census after
 //
 // Every address below is a VA, Capcom's frame; its place is Img(va)
 // (common/image_base.h), the identity at the player's base.
@@ -42,6 +43,7 @@
 #include "common/sha256.h"
 #include "game/rdata_consts.h"
 #include "game/shell.h"
+#include "hook/bind.h"
 #include "hook/calltrace.h"
 #include "hook/crash.h"
 #include "hook/detour.h"
@@ -324,10 +326,13 @@ void CopyData() {
 // numbers the recipe holds as pointers, tools/gen_rebase.py) is checked to
 // hold an address in its section's linked range - else a Fatal naming the
 // word: a layer or a cache that wrote a number over a pointer is refused, not
-// moved - and then moved by ImageBase() - 0x400000. Code words move too
-// (mode S, design 6.1): they name places in the moved stub page. At the
-// player's base the move is zero and the check still runs: it is the loader's
-// own test of the table against the data it copied.
+// moved - and then the data words moved by ImageBase() - 0x400000. Code words
+// are bound (mode B, design 4.1): each becomes the function of ours the bind
+// table names for its VA, or the trap Img(va) when the table names none
+// (design 4.2: the C runtime's tables, the blitters' jump table, three words at
+// the head of .data). At the player's base the data move is zero and the check
+// still runs: it is the loader's own test of the table against the data it
+// copied.
 void Rebase() {
     struct Linked {
         const char* name;
@@ -341,6 +346,7 @@ void Rebase() {
     };
     const std::uint32_t move = ImageBase() - kImageBase;
     unsigned words[4] = {};
+    unsigned bound = 0, trapped = 0;
     for (const rebase::Run& r : rebase::kRuns) {
         const Linked& want = linked[r.to];
         if (r.pc < kDataVa || r.pc + 4u * r.words > kDataVa + kDataBytes)
@@ -353,7 +359,13 @@ void Rebase() {
                 Fatal("rebase: the %s pointer word at VA 0x%08X holds 0x%08X, outside 0x%08X..0x%08X: not the pointer "
                       "recipes/exe-pointers.tsv lists (a layer or a cache wrote a number there)",
                       want.name, (unsigned)va, (unsigned)v, (unsigned)want.lo, (unsigned)want.hi);
-            v += move;
+            if (r.to == rebase::kText) {
+                bool b = false;
+                v = Bind_Word(v, &b);
+                ++(b ? bound : trapped);
+            } else {
+                v += move;
+            }
             std::memcpy(Place(va), &v, 4);
         }
         words[r.to] += r.words;
@@ -362,9 +374,10 @@ void Rebase() {
         if (words[c] != rebase::kWords[c])
             Fatal("rebase: %u %s words moved, the table counts %u", words[c], linked[c].name, rebase::kWords[c]);
     Log("rebase: %u runs, words data %u, bss %u, rdata %u, text %u (%u the recipe holds as pointers left alone: strings and numbers) checked in "
-        "their linked ranges and moved by 0x%X (the image at 0x%08X)",
+        "their linked ranges; the data words moved by 0x%X (the image at 0x%08X); the code words bound, %u to a function "
+        "of ours and %u to the trap (no function of ours: design 4.2)",
         rebase::kRunCount, words[rebase::kData], words[rebase::kBss], words[rebase::kRdata], words[rebase::kText],
-        rebase::kNotMoved, (unsigned)move, (unsigned)ImageBase());
+        rebase::kNotMoved, (unsigned)move, (unsigned)ImageBase(), bound, trapped);
 }
 
 // --- 4. The import slots ---------------------------------------------------
@@ -440,79 +453,29 @@ void SetX87() {
         "Capcom's start-up left it); MXCSR 0x%08X, not set", before, after, mxcsr);
 }
 
-// --- 6. The stub page --------------------------------------------------------
+// --- 2b. The trap (docs/relocatable-image-design.md 4.5) ----------------------
 
-// DirectSoundCreate's import thunk, `jmp [0x5C4014]`, which Snd_Init calls
-// as a function (sound_rest_callees.h kDirectSoundCreate): ours now, with
-// the slot BindSlots filled. The operand is the slot's place.
-constexpr std::uint32_t kDirectSoundThunk = 0x5ACBBC;
-constexpr std::uint32_t kDirectSoundSlot = 0x5C4014;
-constexpr unsigned kThunkBytes = 6;
-
-void FillStub() {
+// .stub, the VAs of Capcom's code, holds nothing: every code word and every
+// Code() of ours is a function of ours (bind.cpp), so the page is made
+// no-access before anything runs. A code value that was not bound - one of
+// the 111 words with no function of ours, a VA placed without Code(), a value
+// computed from a code constant - lands on it and faults at
+// base + (VA - 0x400000), and the crash reporter writes the VA and its
+// [[func]] (crash.cpp). Nothing writes it: Inject records its pair, and
+// PatchBytes and RetargetCall write no code in this host
+// (docs/operand-store.md).
+void TrapStub() {
     DWORD old = 0;
-    if (!VirtualProtect(Place(kStubVa), kStubSize, PAGE_EXECUTE_READWRITE, &old))
-        Fatal("stub: VirtualProtect(.stub) failed, error %lu", GetLastError());
-    std::memset(Place(kStubVa), 0xCC, kStubSize);
-    Log("stub: .stub 0x%08X..0x%08X filled with int3 (VA 0x%08X..0x%08X)", (unsigned)Img(kStubVa),
-        (unsigned)Img(kStubVa + kStubSize), (unsigned)kStubVa, (unsigned)(kStubVa + kStubSize));
-}
-
-void WriteThunk() {
-    auto* p = static_cast<std::uint8_t*>(Place(kDirectSoundThunk));
-    for (unsigned i = 0; i < kThunkBytes; ++i)
-        if (p[i] != 0xCC) Fatal("stub: DirectSoundCreate's thunk 0x%08X overlaps a jmp (0x%02X at +%u)", (unsigned)kDirectSoundThunk, p[i], i);
-    const std::uint32_t slot = Img(kDirectSoundSlot);
-    const std::uint8_t thunk[kThunkBytes] = {0xFF, 0x25, static_cast<std::uint8_t>(slot), static_cast<std::uint8_t>(slot >> 8),
-                                             static_cast<std::uint8_t>(slot >> 16), static_cast<std::uint8_t>(slot >> 24)};
-    std::memcpy(p, thunk, kThunkBytes);
-}
-
-// The inventory's self-test (docs/state3-design.md section 7): nothing of
-// ours wrote .stub but Inject's jmps and the thunk. A PatchBytes or a
-// RetargetCall into Capcom's code writes nothing in this host
-// (docs/operand-store.md), so every other byte must still be int3.
-void CheckStub() {
-    const auto* page = static_cast<const std::uint8_t*>(Place(kStubVa));   // indexed by VA - kStubVa
-    static std::uint8_t mine[kStubSize];   // 1: written by a jmp or the thunk
-    unsigned jmps = 0;
-    for (int i = 0; i < OwnedCount(); ++i) {
-        const std::uint32_t a = OwnedAddress(i);
-        if (a < kStubVa || a + 5 > kStubVa + kStubSize) Fatal("stub: an owned start 0x%08X outside .stub", (unsigned)a);
-        if (page[a - kStubVa] != 0xE9) Fatal("stub: the owned start 0x%08X holds 0x%02X, not a jmp", (unsigned)a, page[a - kStubVa]);
-        for (unsigned k = 0; k < 5; ++k) {
-            if (mine[a - kStubVa + k]) Fatal("stub: the jmp at 0x%08X overlaps another at 0x%08X", (unsigned)a, (unsigned)(a + k));
-            mine[a - kStubVa + k] = 1;
-        }
-        ++jmps;
-    }
-    for (unsigned k = 0; k < kThunkBytes; ++k) mine[kDirectSoundThunk - kStubVa + k] = 1;
-    unsigned stray = 0;
-    std::uint32_t first = 0;
-    for (std::uint32_t i = 0; i < kStubSize; ++i) {
-        if (mine[i] || page[i] == 0xCC) continue;
-        if (!stray) first = kStubVa + i;
-        ++stray;
-    }
-    if (stray)
-        Fatal("stub: %u bytes of .stub were written by something other than Inject, the first at 0x%08X (0x%02X): a "
-              "write into Capcom's code that the exe host has no home for", stray, (unsigned)first, page[first - kStubVa]);
-    Log("stub: inventory zero - .stub holds %u jmps of ours and DirectSoundCreate's thunk 0x%08X, every other byte "
-        "int3; no PatchBytes or RetargetCall wrote it", jmps, (unsigned)kDirectSoundThunk);
-}
-
-void ProtectStub() {
-    DWORD old = 0;
-    if (!VirtualProtect(Place(kStubVa), kStubSize, PAGE_EXECUTE_READ, &old))
-        Fatal("stub: VirtualProtect(.stub, read-execute) failed, error %lu", GetLastError());
-    FlushInstructionCache(GetCurrentProcess(), Place(kStubVa), kStubSize);
+    if (!VirtualProtect(Place(kStubVa), kStubSize, PAGE_NOACCESS, &old))
+        Fatal("stub: VirtualProtect(.stub, no access) failed, error %lu", GetLastError());
     for (std::uint32_t a = Img(kStubVa); a < Img(kStubVa) + kStubSize;) {
         MEMORY_BASIC_INFORMATION m{};
-        VirtualQuery(At(a), &m, sizeof m);
-        if (m.Protect != PAGE_EXECUTE_READ) Fatal("stub: 0x%08X is protect 0x%lX after the change", (unsigned)a, m.Protect);
+        if (!VirtualQuery(At(a), &m, sizeof m)) Fatal("stub: VirtualQuery(0x%08X) failed, error %lu", (unsigned)a, GetLastError());
+        if (m.Protect != PAGE_NOACCESS) Fatal("stub: 0x%08X is protect 0x%lX after the change", (unsigned)a, m.Protect);
         a = AsU32(m.BaseAddress) + static_cast<std::uint32_t>(m.RegionSize);
     }
-    Log("stub: .stub is read-execute; a later write faults");
+    Log("stub: .stub 0x%08X..0x%08X (VA 0x%08X..0x%08X) is no-access: the trap for a code value that is not bound",
+        (unsigned)Img(kStubVa), (unsigned)Img(kStubVa + kStubSize), (unsigned)kStubVa, (unsigned)(kStubVa + kStubSize));
 }
 
 // --- 7. The exception nobody handled ----------------------------------------
@@ -597,6 +560,7 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
     RefuseHostedSwitches();
     Fence();
     CheckLayout();
+    TrapStub();
     CopyData();
     Rebase();
     BindSlots();
@@ -610,13 +574,9 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
         CreateEventW(nullptr, TRUE, FALSE, name);
     }
     StateHash_SetImageBase(ImageBase());   // .data read at its place; a moved image's range folded
-    StateHash_BeforeInjects(module);   // .data as the engine copied and moved it
-    FillStub();
+    StateHash_BeforeInjects(module);   // .data as the engine copied, moved and bound it
     InjectAll();
-    WriteThunk();
     StateHash_AfterInjects();
-    CheckStub();
-    ProtectStub();
     StackWatch_Start();
     if (EnvSet("BOF3X_SELFTEST_ONLY")) {
         ExeIcon_SelfTest();   // DIV-0095: only with BOF3X_ICON_VRAM; .data (the icon table) is copied by now

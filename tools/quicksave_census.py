@@ -166,7 +166,7 @@ RULES = [
     (r'render/render_shim\.cpp$', r'::g_state$', CF, 'SP-G', 'platform: the pipe state the device holds; the span D3d_ShadeModeCache / Gfx_RenderFlags / D3d_BackMaterialHandle cache it - SP-G pushes the restored caches to it or marks them unknown'),
     (r'render/render_shim\.cpp$', r'', CF, 'SP-G', 'platform: the DirectDraw/D3D-shaped singletons and pipe state; the span names their addresses (section 5)'),
     (r'hook/exe_icon\.cpp$', r'', CF, '-', 'platform: DIV-0095 icon, made once from the VRAM shadow'),
-    (r'hook/(detour|exe_host|exe_image|exe_own|host)\.cpp$', r'', CF, '-', 'inject / host tables, fixed at start-up'),
+    (r'hook/(bind|detour|exe_host|exe_image|exe_own|host)\.cpp$', r'', CF, '-', 'inject / host tables, fixed at start-up'),
 ]
 
 

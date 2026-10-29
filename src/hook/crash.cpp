@@ -10,6 +10,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "hook/bind.h"
 #include "hook/host.h"
 #include "hook/log.h"
 #include "hook/statehash.h"
@@ -141,6 +142,19 @@ void Report() {
         else
             Log("CRASH %ld: access kind %lu at 0x%08lX", (long)n, (unsigned long)k,
                 (unsigned long)r.ExceptionInformation[1]);
+        // The trap (docs/relocatable-image-design.md 4.5): in bof3x.exe .stub
+        // is no-access, so a code value no function of ours stands for faults
+        // there - named by its VA and the [[func]] it lies in.
+        const auto at = static_cast<std::uint32_t>(r.ExceptionInformation[1]);
+        if (Bind_Active() && at >= g_text_lo && at < g_text_hi) {
+            const std::uint32_t va = at - ImageBase() + image::kBase;
+            std::uint32_t start = 0;
+            const char* fn = Bind_FuncName(va, &start);
+            Log("CRASH %ld: the trap - %s VA 0x%08X, %s+0x%X: a code value no function of ours stands for (the bind "
+                "table, symbols.toml impl)",
+                (long)n, k == 8 ? "a call or jump to" : "an access to", (unsigned)va, fn ? fn : "no [[func]]",
+                (unsigned)(va - start));
+        }
     }
     Log("CRASH %ld: eax %08lX ebx %08lX ecx %08lX edx %08lX esi %08lX edi %08lX", (long)n, c.Eax, c.Ebx,
         c.Ecx, c.Edx, c.Esi, c.Edi);
@@ -265,7 +279,8 @@ void ImageRange(const void* module, std::uint32_t* lo, std::uint32_t* hi) {
 
 void Crash_Start(void* dll_module) {
     // Capcom's code range as this host maps it: BOF3.exe's .text, or the
-    // stub page (host.h) - a return address into it is a jmp of ours or int3.
+    // stub page (host.h) - in bof3x.exe the no-access trap, where no return
+    // address lies and an access is named as the trap (Report).
     // CodeLo and CodeHi are VAs; these are the places.
     g_text_lo = Img(CodeLo());
     g_text_hi = Img(CodeHi());

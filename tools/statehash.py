@@ -72,6 +72,10 @@ class Run:
         # (0x93C2C4's ring, 0x93B8E4) normalised with them; a run without it
         # hashes those words raw and differs there under an overlay
         self.runtime_slots = bool(flags & 2)
+        # bit 2 (2026-10-29, the relocatable-image round's stage C2): a word
+        # holding the start of a function of ours that the bind table binds to
+        # a VA of Capcom's is hashed as that VA (docs/state-hash.md section 8)
+        self.bound_code = bool(flags & 4)
         # BOF3SH4 (2026-10-28) adds where the image lay and the fold address;
         # an older file is a run at 0x400000 that folded nothing
         self.image, self.fold = struct.unpack_from('<2I', d, 32) if self.version >= 4 else (IMAGE, 0)
@@ -323,6 +327,12 @@ def notes(runs):
         print(f'note: {raw} hashed our pointers raw (BOF3SH2, or BOF3X_STATEHASH_RAW=1) and the others by what they '
               'name: identical without a language overlay; under one the overlay\'s tables differ from tick 1 '
               '(docs/state-hash.md section 7) - record the reference again rather than read those pages')
+    bc = [r.bound_code for r in runs]
+    if all(norm) and any(bc) and not all(bc):
+        old = ', '.join(r.path for r in runs if not r.bound_code)
+        print(f'note: {old} hashed a word holding a function of ours raw and the others as the code VA it is bound to '
+              '(stage C2): identical where no such word is stored - hosted, a word our code wrote as our function\'s '
+              'address; in bof3x.exe every code word (docs/state-hash.md section 8)')
     rt = [r.runtime_slots for r in runs]
     if all(norm) and any(rt) and not all(rt):
         old = ', '.join(r.path for r in runs if not r.runtime_slots)
@@ -340,6 +350,7 @@ def cmd_info(a):
                               'raw (BOF3X_STATEHASH_RAW=1)' if r.version >= 3 else f'raw (BOF3SH{r.version})')
     if r.normalised:
         h += ', the battle message words ' + ('with them' if r.runtime_slots else 'raw (before 2026-10-11)')
+        h += ', bound code words ' + ('as their VAs' if r.bound_code else 'raw (before 2026-10-29)')
     h += ', folded ' + fold_text(r) + ('' if r.version >= 4 else f' (BOF3SH{r.version})')
     print(f'{a.run}: {len(r.recs)} records, ticks {r.keys[0]}..{r.keys[-1]}, Frame_Counter {r.fc[0]}..{r.fc[-1]}, '
           f'{r.pages} pages of 0x{r.page:X} from 0x{r.base:X}, {r.skips} skip ranges, {h}')

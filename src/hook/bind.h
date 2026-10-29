@@ -1,0 +1,71 @@
+// The bind table: Capcom's code VAs and the functions of ours that stand for
+// them (docs/relocatable-image-design.md 4, mode B; the relocatable-image
+// round's stage C2).
+//
+// bof3x.exe maps no code of Capcom's. Its .stub section is reserved address
+// space with no access, a trap: every code word the game holds, and every
+// code VA our code places (Code, CodePlace, common/image_base.h), is the
+// function of ours that symbols.toml's `impl` names for that VA - one
+// representation, our function's address, in every table, record and hook
+// cell. The table is generated (tools/gen_symbols.py --bind-out, bind.gen.h)
+// and static: it is there before DllMain, for the namespace-scope tables that
+// place a code VA in the DLL's CRT start-up. Hosted, nothing is bound:
+// BOF3.exe's code is mapped, a code VA is its own place, and Inject writes the
+// jmp at it.
+//
+// A VA the table does not name gives the trap, Img(va): a call there faults
+// on the no-access page, and the crash reporter names the VA and the
+// [[func]] it lies in (Bind_FuncName); a call-through helper's miss is a Fatal
+// before the call (CodeToCall). The one VA bound outside the table is
+// DirectSoundCreate's import thunk 0x5ACBBC, not a [[func]]: bound to a thunk
+// of ours that calls through the import slot 0x5C4014 as it reads at the call
+// (exe_host.cpp BindSlots fills it; wav_dump.cpp may hook it later).
+#pragma once
+
+#include <cstdint>
+
+namespace bof3 {
+
+// True in bof3x.exe: code words are bound and .stub is the trap. Read from
+// the main module's header on first use, so valid before DllMain; Bind_Report
+// checks it against DetectHost's answer.
+bool Bind_Active();
+
+// The function of ours bound to `va`, or null (a VA the table does not name).
+const void* Bind_Ours(std::uint32_t va);
+
+// The reverse map: the VA a function of ours stands for, or 0 when `ours` is
+// not the start of a bound function. Both hosts: the state hash hashes such a
+// word as that VA (statehash.cpp).
+std::uint32_t Bind_VaOf(std::uint32_t ours);
+
+// The table's rows, for the state hash's self-test: how many, and row i's VA.
+unsigned Bind_Rows();
+std::uint32_t Bind_RowVa(unsigned i);
+
+// The [[func]] of symbols.toml that `va` starts or lies in (the last one at
+// or below it, within the code range), with its start; null outside.
+const char* Bind_FuncName(std::uint32_t va, std::uint32_t* start);
+
+// Inject in bof3x.exe: the pair (va, ours) must be the table's row, else a
+// Fatal - the table and the injects come from the same `impl` binding, and a
+// difference is a function bound to one thing and injected as another.
+void Bind_Check(const char* name, std::uint32_t va, const void* ours);
+
+// A code word of .data in bof3x.exe (exe_host.cpp Rebase): its bound function,
+// or the trap Img(va) for a word whose target has no function of ours (the
+// 111 words design 4.2 counts). `bound` says which.
+std::uint32_t Bind_Word(std::uint32_t va, bool* bound);
+
+// One log line after InjectAll in either host: the table's rows, how many an
+// Inject named (bof3x.exe), and every VA a table cell placed that the table
+// does not name - each one's [[func]] - which a call would find trapped.
+void Bind_Report();
+
+// The bind table's own test (BOF3X_SELFTEST_ONLY, both hosts): the rows
+// strictly ascending and every one a start the reverse map returns, the
+// function names ascending, a lookup of each row's VA, a VA between two rows
+// and one past the last missing, the trap's place, and the thunk.
+void Bind_SelfTest();
+
+}  // namespace bof3

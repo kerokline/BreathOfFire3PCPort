@@ -19,8 +19,9 @@
 // helpers are inline functions of it, and a place is no longer a constant
 // expression - a table of places is initialised at run time, and a VA kept
 // for a constant context (a case label, a static_assert, an asm "i" operand)
-// stays a name. Stage C1 moves the stub page with the image (mode S: Code is
-// Img); stage C2 binds code words to our functions (mode B, design 4.4).
+// stays a name. Stage C1 moved the stub page with the image (mode S); stage
+// C2 binds code words to our functions (mode B, design 4.4), and the stub
+// page is a no-access trap: Code is the bind table's lookup in bof3x.exe.
 //
 // Header-only and free of Windows: the generated symbol header includes it,
 // and so does the launcher (src/launcher/exe_image.cpp).
@@ -78,30 +79,62 @@ inline constexpr std::uint32_t kCodeLo = 0x401000;
 inline constexpr std::uint32_t kCodeHi = 0x5C4000;
 }  // namespace image
 
-// A VA in the image's code, as a place to call. Stage C1 (mode S, design 6.1):
-// the stub page moves with the image, so a code VA's place is Img(va) - the
-// jmp Inject wrote there, or int3.
-[[gnu::always_inline]] inline std::uint32_t Code(std::uint32_t va) { return Img(va); }
+// A VA in the image's code, as a place to call or to store where the game
+// calls (docs/relocatable-image-design.md 4.4, mode B). Hosted, the VA itself:
+// BOF3.exe's code is mapped there, and Inject's jmp at the start of each
+// function of ours. In bof3x.exe, which maps no code of Capcom's, the function
+// of ours the bind table names for that VA (src/hook/bind.cpp, generated from
+// symbols.toml's `impl`); a VA it does not name - a function Capcom's alone,
+// a cell that is not a function - gives the trap, Img(va) on the no-access
+// stub page, where a call faults and the crash reporter names the VA and its
+// function. A table holds such cells legitimately (the MP3 decoder's
+// functions, d3d_list's software handlers: never called by default), so this
+// spelling does not stop the game for a miss; the call spellings below do.
+// Valid from before DllMain: the namespace-scope tables built from places
+// call it in the DLL's CRT start-up. Out of line, in src/hook/bind.cpp (the
+// launcher, which includes this header through the generated one, never
+// places an address, so it never needs the definition).
+std::uint32_t Code(std::uint32_t va);
+
+// The same at a call, where a VA with no function of ours behind it is a
+// Fatal naming the VA, before the call (design 4.4): the call-through
+// helpers (the four harnesses' *_AT and *_WORD).
+std::uint32_t CodeToCall(std::uint32_t va);
+
+// Whether a word read from the game's memory is a code word - a handler a
+// .data table holds, checked before it is called (the eight dispatchers that
+// refuse an index past their table, field_e1.cpp CodeAt and its kind). Hosted:
+// a VA in BOF3.exe's .text. In bof3x.exe: one of our functions the bind
+// table names - a bound word; the trap (an unbound cell's Img(va)) and data
+// are not.
+bool IsCodeWord(std::uint32_t word);
 
 // A code word known only at run time, as a place to call (design 4.4: the
 // call-through helpers' fix point). Two kinds of word reach it, and in our
 // source they look alike: a code VA (a cell of one of our own constant tables
 // picked by an index, a helper's parameter, a ternary of two constants), and a
 // word the game holds (a cell of a .data step table, an operand read from the
-// code), which is already a place - rebased by the loader (mode S), or a
-// pointer of ours.
+// code), which is already a place - hosted Capcom's VA, its own place; in
+// bof3x.exe a function of ours, bound by the loader or stored by our code.
 //
 // Told apart by the value: a word in the linked code range
 // image::kCodeLo..kCodeHi is a VA and becomes Code(va); any other word is a
-// place and passes through. That holds while no place of ours lies in the
-// linked code range: at base 0x400000 the range is the image's own stub page
-// (Img is the identity there, so a word read from the game is its own place);
-// a moved image lies wholly off the linked span 0x400000..0x98F000 (host.cpp
-// refuses any other base), the developer launcher and the loader fence the
-// span's free parts (launcher.cpp FenceLinkedSpan, exe_host.cpp Fence), and
-// a module found in the linked code range is a Fatal.
+// place and passes through - in bof3x.exe a bound word, one of our functions
+// in the DLL. That holds while no place of ours lies in the linked code range:
+// at base 0x400000 the range is the image's own stub page, where the only
+// words the game holds are the trap's (an unbound cell's Img(va), which reads
+// as its VA and gives the trap again); a moved image lies wholly off the
+// linked span 0x400000..0x98F000 (host.cpp refuses any other base), the
+// developer launcher and the loader fence the span's free parts (launcher.cpp
+// FenceLinkedSpan, exe_host.cpp Fence), and a module found in the linked code
+// range is a Fatal.
 [[gnu::always_inline]] inline std::uint32_t CodePlace(std::uint32_t word) {
     return word - image::kCodeLo < image::kCodeHi - image::kCodeLo ? Code(word) : word;
+}
+
+// CodePlace at a call: a VA with no function of ours is a Fatal (CodeToCall).
+[[gnu::always_inline]] inline std::uint32_t CodePlaceToCall(std::uint32_t word) {
+    return word - image::kCodeLo < image::kCodeHi - image::kCodeLo ? CodeToCall(word) : word;
 }
 
 // --- A VA as a type, bof3::image::Va (design 2.2; RB0's prototype) ----------
@@ -135,9 +168,10 @@ constexpr bool operator==(Va a, Va b) { return a.v == b.v; }
 // separate type so neither is passed where the other is meant: a Va handed to
 // a code place, or a CodeVa to a data accessor, does not compile (stage C2's
 // reviewer relies on that). There is no Code(CodeVa) and no Img(CodeVa): a
-// code constant is placed as ::bof3::Code(kX.v), consteval, the only spelling
-// that leaves the machine code as it was (wave 1, RB2 and RB4 finding 1), and
-// named as kX.v (a log line, an Inject argument, a VA a test compares).
+// code constant is placed as ::bof3::Code(kX.v) - consteval in stage B, the
+// only spelling that left the machine code as it was (wave 1, RB2 and RB4
+// finding 1), the bind table's lookup since stage C2 - and named as kX.v (a
+// log line, an Inject argument, a VA a test compares).
 namespace image {
 struct CodeVa {
     std::uint32_t v;

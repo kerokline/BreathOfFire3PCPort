@@ -43,8 +43,6 @@ void SetL(unsigned char* p, uint32_t v) { move_script::SetLong(p, static_cast<in
 // The chapter's flag row, as the original reads it: the pointer afresh.
 unsigned char* Row() { return At(Chapter_FlagRow); }
 
-constexpr uint32_t kTextLo = 0x401000, kTextHi = 0x5C3000;
-
 // A handler out of one of the chapter's .data tables, read in place and
 // unchecked as the original reads it. The tables run on into other data (the
 // state table into the run table, whose entries are code too; the run and
@@ -54,8 +52,9 @@ uint32_t CodeAt(uint32_t table, int index, const char* who) {
     const uint32_t at = table + 4u * static_cast<uint32_t>(index);
     const uint32_t entry = L(at);
     const bool swapped = scenario_harness::g_active;   // the fuzz's recorders live outside .text
-    // A code word holds a place in the moved stub page (mode S): the code range at the image's base.
-    if (!swapped && (entry < ::bof3::Img(kTextLo) || entry >= ::bof3::Img(kTextHi)))
+    // A code word: hosted a VA in BOF3.exe's .text, in bof3x.exe a function of ours
+    // the bind table names (common/image_base.h IsCodeWord); not the trap, not data.
+    if (!swapped && !::bof3::IsCodeWord(entry))
         bof3::Fatal("%s: index %d reads 0x%X at 0x%X (VA 0x%X), not code - past its table (the original jumps there)", who,
                     index, (unsigned)entry, (unsigned)at, (unsigned)::bof3::VaOf(at));
     return entry;

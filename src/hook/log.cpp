@@ -171,6 +171,15 @@ void Fatal(const char* fmt, ...) {
     va_start(ap, fmt);
     int n = Format(buf, sizeof buf, fmt, ap);
     va_end(ap);
+    if (g_log == INVALID_HANDLE_VALUE) {
+        // Before DllMain's LogOpen: a namespace-scope table of the DLL's CRT
+        // start-up that placed a code VA (bind.cpp). The log is opened here, as
+        // DllMain would open it, so the message is not lost.
+        HMODULE self = nullptr;
+        if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                               reinterpret_cast<LPCWSTR>(&LogOpen), &self))
+            LogOpen(self);
+    }
     Write("FATAL: ", 7);
     Write(buf, n);
     Write("\r\n", 2);
