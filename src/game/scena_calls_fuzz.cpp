@@ -347,8 +347,8 @@ const sh::Callee kCallees[] = {
     {CALLS_OURS(Party_Join), 1, {0xFF}, sh::Answer::kFlag, 0, 0, {}, &Stir},
     {CALLS_OURS(Field_PartyLoad), 1, {0xFF}, kG, 0, 0, {}, &Stir},
     {CALLS_OURS(Scena08_PartyJoin784), 0, {}, kG, 0, 0, {}, &Stir},
-    {"0x534030", at::kLeave, at::kLeave, 1, {0xFF}, kG, 0, 0, {}, &Stir},
-    {"0x533E00", at::kPalettes, at::kPalettes, 0, {}, kG, 0, 0, {}, &Stir},
+    {"0x534030", at::kLeave.v, at::kLeave.v, 1, {0xFF}, kG, 0, 0, {}, &Stir},
+    {"0x533E00", at::kPalettes.v, at::kPalettes.v, 0, {}, kG, 0, 0, {}, &Stir},
 };
 
 // --- the state -------------------------------------------------------------------

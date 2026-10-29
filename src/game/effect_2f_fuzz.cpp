@@ -313,8 +313,8 @@ const sh::Callee kCallees[] = {
     // nobody's this round, by address: E2E's angle mean reads both words & 0xFFF
     // (0x479970: and eax, 0xFFF; and ecx, 0xFFF); the spark draw 0x4792E0 reads
     // the spark's shade +3 and point +0xC..+0x17
-    {"0x479970", at::kAngleMean, at::kAngleMean, 2, {0xFFFu, 0xFFFu}, kG, 0, 0, {}, nullptr, nullptr, true},
-    {"0x4792E0", at::kSparkDraw, at::kSparkDraw, 1, {kW}, kG, 0, 0, {0x18}, nullptr, nullptr, true},
+    {"0x479970", at::kAngleMean.v, at::kAngleMean.v, 2, {0xFFFu, 0xFFFu}, kG, 0, 0, {}, nullptr, nullptr, true},
+    {"0x4792E0", at::kSparkDraw.v, at::kSparkDraw.v, 1, {kW}, kG, 0, 0, {0x18}, nullptr, nullptr, true},
     // standard rows re-listed: the point and the out are often stack locals
     // (their addresses differ between the copy and ours) - hashed, not logged
     {E2F_OURS(EffectGte_ProjectPoint), 2, {0, 0}, kG, 0, 0, {12, 0}, &FxProjectPoint, nullptr, true},
@@ -425,8 +425,8 @@ void Seed(unsigned k) {
     s[9] = static_cast<unsigned char>(FrameCount());
     SetWord(s + 0x5A, Timer());
     SeedScreen(s);
-    if (sh::Half()) sh::Mem(at::kCounter0)[0] = 0xB;
-    sh::Mem(at::kCounter3)[0] = static_cast<unsigned char>(PickOf(0xA, 0xE, 0xB, sh::Next()));
+    if (sh::Half()) sh::Mem(::bof3::Img(at::kCounter0.v))[0] = 0xB;
+    sh::Mem(::bof3::Img(at::kCounter3.v))[0] = static_cast<unsigned char>(PickOf(0xA, 0xE, 0xB, sh::Next()));
     switch (k) {
     case k4FStart:
         // every record's sprite indices +3 / +4 inside the thirty: the
@@ -510,8 +510,8 @@ void Disturb(U h) {
     case 0: s[9] = static_cast<unsigned char>((v & 1) ? 1u : v >> 1); break;
     case 1: SetWord(s + 0x5A, (v & 1) ? 1u + ((v >> 1) & 3) : v >> 1); break;
     case 2: SetWord(s + 0x32, (v >> 1) % 0x21); break;
-    case 3: sh::Mem(at::kCounter0)[0] = static_cast<unsigned char>((v & 1) ? 0xB : v >> 1); break;
-    case 4: sh::Mem(at::kCounter3)[0] = static_cast<unsigned char>((v & 1) ? 0xA + 4 * ((v >> 1) & 1) : v >> 2); break;
+    case 3: sh::Mem(::bof3::Img(at::kCounter0.v))[0] = static_cast<unsigned char>((v & 1) ? 0xB : v >> 1); break;
+    case 4: sh::Mem(::bof3::Img(at::kCounter3.v))[0] = static_cast<unsigned char>((v & 1) ? 0xA + 4 * ((v >> 1) & 1) : v >> 2); break;
     case 5: {
         const float f = static_cast<float>(static_cast<int>(v % 0x300) - 0x80);
         std::memcpy(s + 0x74 + 4 * ((v >> 10) % 3), &f, 4);

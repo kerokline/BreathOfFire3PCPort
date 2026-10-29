@@ -35,34 +35,36 @@ namespace at {
 // kStep: now BattleActions_Step (symbols.toml).
 // kSub: now BattleE4_Step2 (symbols.toml).
 // kSub2: now BattleE4_Step3 (symbols.toml).
-constexpr std::uint32_t kPhase = 0x904AA0;
+constexpr ::bof3::image::Va kPhase{0x904AA0};
 // kCounter: now BossSb_Countdown (symbols.toml). u8, zeroed as an action starts its effect
-constexpr std::uint32_t kRoundFlags = 0x904AA8;    // u16 (0x904AA9 its high byte)
+constexpr ::bof3::image::Va kRoundFlags{0x904AA8};    // u16 (0x904AA9 its high byte)
 // kEventBattle: now EventBattle_Id (symbols.toml). u8: non-zero, the hook 0x904B6C is called (battle_flow.md)
-constexpr std::uint32_t kQueue = 0x904ACC;         // u8 per slot: the actors in turn order, 0xFF a spent slot
+constexpr ::bof3::image::Va kQueue{0x904ACC};         // u8 per slot: the actors in turn order, 0xFF a spent slot
 // kQueueAt: now BossSe_RoundSlot (symbols.toml).
-constexpr std::uint32_t kQueueEnd = 0x904AE3;  // u8 each
+constexpr ::bof3::image::Va kQueueEnd{0x904AE3};  // u8 each
 // kBattleEnd: now Battle_EndFlags (symbols.toml). u8
 // The acting actor's block and the target's, 0x10 bytes each and the same
 // layout: +0 the actor (0..2 a member, 3..10 an enemy; the target byte may be
 // 0x40 / 0x80 / 0xC0, a side), +1 the command kind (the actor's), +2 / +4 /
 // +6 the screen position words, +8 the actor object, +0xC its action record
 // (a member's +0x124, an enemy's +0x104; its u16 at +2 the action id).
-constexpr std::uint32_t kActor = 0x904B34, kTarget = 0x904B44;
+constexpr ::bof3::image::Va kActor{0x904B34};
+constexpr ::bof3::image::Va kTarget{0x904B44};
 constexpr unsigned kBKind = 1, kBX = 2, kBY = 4, kBZ = 6, kBObject = 8, kBAction = 0xC;
-constexpr std::uint32_t kEventHook = 0x904B6C;     // void (*)(int)
+constexpr ::bof3::image::Va kEventHook{0x904B6C};     // void (*)(int)
 // kApCost: now BattleActions_ApCost (symbols.toml). u8: the AP cost when the action is 0x97
-constexpr std::uint32_t kAbility = 0x904B80;       // u16: the action id of the action in hand
+constexpr ::bof3::image::Va kAbility{0x904B80};       // u16: the action id of the action in hand
 // kPending: now BattleActions_Pending (symbols.toml). u16: a bit per actor with an effect to show
 // kCostShown: now BattleE3_Cost (symbols.toml). u8: the AP cost Skill_ApCost answered
 // kAbilityShown: now BattleE3_SoundSet (symbols.toml). u8: the ability's low byte
-constexpr std::uint32_t kText0 = 0x904CE0, kText1 = 0x904D00;   // Text_Records[0] and [1], 32 bytes each
-constexpr std::uint32_t kNameBuf = 0x904EA0;       // the banner's 16-byte name copy
-constexpr std::uint32_t kBannerShown = 0x8031F3;   // u8, set to 1 with a banner
-constexpr std::uint32_t kStats = 0x939FE0;         // 32 bytes: the actor's effective stat block, copied per action
+constexpr ::bof3::image::Va kText0{0x904CE0};
+constexpr ::bof3::image::Va kText1{0x904D00};   // Text_Records[0] and [1], 32 bytes each
+constexpr ::bof3::image::Va kNameBuf{0x904EA0};       // the banner's 16-byte name copy
+constexpr ::bof3::image::Va kBannerShown{0x8031F3};   // u8, set to 1 with a banner
+constexpr ::bof3::image::Va kStats{0x939FE0};         // 32 bytes: the actor's effective stat block, copied per action
 // kMsgBusy: now BattleE1_MessageUp (symbols.toml). u8: non-zero, the enemy message step waits
 // kMsgCount: now BattleE5_EnemyMessageCount (symbols.toml). u8: messages left in 0x939FBC..
-constexpr std::uint32_t kMsgList = 0x939FBC;       // 4 bytes per message (1-based): +0 the enemy, +2 the u16 message id
+constexpr ::bof3::image::Va kMsgList{0x939FBC};       // 4 bytes per message (1-based): +0 the enemy, +2 the u16 message id
 // kCancelButtons: now Field_CancelButtons (symbols.toml). u16, Field_CancelButtons
 // kInputHeld: now Input_Held (symbols.toml). u16, Input_Held
 // The actor objects: 0..2 ObjTrio 0x802D40 stride 0x14C, 3.. the enemies
@@ -73,9 +75,9 @@ constexpr std::uint32_t kPartyStride = 0x14C;
 constexpr std::uint32_t kEnemyStride = 0x128;
 // Constant tables in .data.
 // kStandOffsets: now BattleWin_MemberTargetOffsets (symbols.toml). s8 x / y pairs by (object +8) + (char id +0x89) * 4
-constexpr std::uint32_t kAbilityRecords = 0x65C4C8;// 24 bytes per action: +0 the name, +0x10 flags, +0x14 u16, +0x15 flags
-constexpr std::uint32_t kItemRows = 0x64B274;      // 4 pointers to u8 tables (battle_flow.md)
-constexpr std::uint32_t kAbilityRows = 0x64C1D0;   // u8 by action id
+constexpr ::bof3::image::Va kAbilityRecords{0x65C4C8};// 24 bytes per action: +0 the name, +0x10 flags, +0x14 u16, +0x15 flags
+constexpr ::bof3::image::Va kItemRows{0x64B274};      // 4 pointers to u8 tables (battle_flow.md)
+constexpr ::bof3::image::Va kAbilityRows{0x64C1D0};   // u8 by action id
 // kMagicFiles: now Magic_Rows (symbols.toml). 8-byte rows, the u16 DAT file first
 // kTextMiss: now BattleActions_TextMiss (symbols.toml).
 // kTextCounter: now BattleActions_TextCounter (symbols.toml). const char* each
@@ -92,8 +94,8 @@ constexpr std::uint32_t kAbilityRows = 0x64C1D0;   // u8 by action id
 }  // namespace at
 
 // Raw addresses of the callees no group owns (the rule above).
-constexpr std::uint32_t kEnemyPickAction = bof3::addr::BattleEnemy_PickAction;   // 0x435AB0 (enemy): Rand, then 0x904B35 = a 2-bit kind from 0x65563C
-constexpr std::uint32_t kPickTarget = bof3::addr::BattleAction_PickRandomAbility;   // 0x42F9D0, () -> al: the random action of 0x24 / 0x25 / 0x8C and its target
+constexpr ::bof3::image::CodeVa kEnemyPickAction{bof3::addr::BattleEnemy_PickAction};   // 0x435AB0 (enemy): Rand, then 0x904B35 = a 2-bit kind from 0x65563C
+constexpr ::bof3::image::CodeVa kPickTarget{bof3::addr::BattleAction_PickRandomAbility};   // 0x42F9D0, () -> al: the random action of 0x24 / 0x25 / 0x8C and its target
 
 // Every callee that answers in al is typed unsigned char, as symbols.gen.h has
 // the named ones: the originals test only al.

@@ -118,8 +118,8 @@ void Disturb() {
     case 13: Sprite_Current = Record_(v % 22); break;
     case 14: At(Cond_Flags_addr + 0xd2)[w % 6] = static_cast<unsigned char>(v % 3 == 0 ? 0xFF : v % 4); break;
     case 15: B(Field_MemberCount_addr) = static_cast<unsigned char>(v % 5); break;
-    case 16: At(at::kSavedParty)[w % 6] = static_cast<unsigned char>(v % 3 == 0 ? 0xFF : v % 4); break;
-    case 17: At(at::kReserveData)[w % 9] = static_cast<unsigned char>(v); break;
+    case 16: At(::bof3::Img(at::kSavedParty.v))[w % 6] = static_cast<unsigned char>(v % 3 == 0 ? 0xFF : v % 4); break;
+    case 17: At(::bof3::Img(at::kReserveData.v))[w % 9] = static_cast<unsigned char>(v); break;
     case 18: B(Config_WindowColour_addr) = static_cast<unsigned char>(v); break;
     case 19: B(Config_Background_addr) = static_cast<unsigned char>(v); break;
     case 20: Gfx_PacketNext = g_prim + v; break;
@@ -388,7 +388,7 @@ const Region kRegions[] = {
     {FieldMenu_TitleIds_addr, 8}, // the title ids
     {Character_IndexById_addr, 0x20}, // the character-to-record bytes
     {0x66C7E8, 4},               // Game_Mode, Game_Step
-    {at::kSavedParty, 0x10},     // the party as the menu opened on it (a Party_Count of 8 copies past the six)
+    {at::kSavedParty.v, 0x10},     // the party as the menu opened on it (a Party_Count of 8 copies past the six)
     {0x7E0670, 8},               // Gfx_PacketNext, 0x7E0674..0x7E0677
     {Input_Pressed_addr, 4},
     {WindowRecords_addr, 0x318}, // the 22 window records
@@ -513,7 +513,7 @@ Args Seed(unsigned k) {
     }
     case kReconcile:
         for (unsigned i = 0; i < 6; ++i) {
-            At(at::kSavedParty)[i] = static_cast<unsigned char>(Next() % 4 == 0 ? 0xFF : Next() % 5);
+            At(::bof3::Img(at::kSavedParty.v))[i] = static_cast<unsigned char>(Next() % 4 == 0 ? 0xFF : Next() % 5);
             At(Cond_Flags_addr + 0xd2)[i] = static_cast<unsigned char>(Next() % 4 == 0 ? 0xFF : Next() % 5);
         }
         break;

@@ -111,7 +111,7 @@ extern "C" void __cdecl GameMode3_Enter(void) {
     SH_CALL(Gfx_ClutStripCopyRow)(2);
     Gfx_ClutStripDirty = 1;
     BattleE1_Mode = 0;
-    At(at::kMenuTimer)[0] = 3;
+    At(::bof3::Img(at::kMenuTimer))[0] = 3;
     SH_CALL(Transition_Start)(3);
     SH_CALL(Menu_WaitTransition)(1);
     if (MusicWordAndSilent()) SH_CALL(Music_FadeOut)(0x10);
@@ -178,13 +178,13 @@ extern "C" void __cdecl GameMode3_Leave(void) {
             AreaW4d_ReturnArea = area;
             const U r = static_cast<U>(SH_CALL(Rand)());
             AreaW3g_HealByte =
-                static_cast<unsigned char>((At(at::kFacingJitter)[r & 3] + ObjTrio[0].direction) & 0xF);
+                static_cast<unsigned char>((At(::bof3::Img(at::kFacingJitter))[r & 3] + ObjTrio[0].direction) & 0xF);
             const unsigned place = AreaW0b_Place;
             const U px = static_cast<std::uint32_t>(at::kPendingX), pz = AreaEntry_PendingZ;
             SH_CALL(Field_ChangeArea)(place, I(px), I(pz), AreaEntry_PendingFlags);
         } else {
             AreaW3c_CampFlag = 0;
-            SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), at::kTripFlag);
+            SH_CALL(Flags_Clear)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), at::kTripFlag);
             const unsigned area = AreaW4d_ReturnArea;
             const U x = AreaW2d_ReturnPoint, z = AreaW4d_ReturnZ;
             SH_CALL(Field_ChangeArea)(area, I(x), I(z), 4);
@@ -208,7 +208,7 @@ extern "C" void __cdecl GameMode3_Leave(void) {
 // cells' 0x7DEE44 bit 1, 0x905B82 = 0x10, Field_Request 0, Game_Mode 2; a tail
 // jump to Field_FrameScripted either way.
 extern "C" void __cdecl GameMode4_Run(void) {
-    if (At(at::kMessageBits)[0] & 2) {
+    if (At(::bof3::Img(at::kMessageBits))[0] & 2) {
         EventOps_BlockByte = 0x10;
         Field_Request = 0;
         Game_Mode = 2;
@@ -252,22 +252,22 @@ extern "C" void __cdecl GameMode5_Turn(void) {
     if (turned == 0) return;
     SH_CALL(Port_DroppedCall)(1);
     const unsigned char flags = EventBattle_Flags;
-    U formation = UL(at::kFormation);
+    U formation = UL(::bof3::Img(at::kFormation));
     if (!(flags & 1)) {
         const U i = (formation & 0xFF) * 2;
         const U elevation = static_cast<U>(MapView_Elevation);
         MoveScript_F3Divisor = 0x40;
-        const unsigned dx = static_cast<std::uint16_t>(static_cast<signed char>(At(at::kApproach)[i]));
-        const unsigned dz = static_cast<std::uint16_t>(static_cast<signed char>(At(at::kApproach)[i + 1]));
-        SetWord(At(at::kKind2ZHigh), Word(At(at::kKind2ZHigh)) + dz);
+        const unsigned dx = static_cast<std::uint16_t>(static_cast<signed char>(At(::bof3::Img(at::kApproach))[i]));
+        const unsigned dz = static_cast<std::uint16_t>(static_cast<signed char>(At(::bof3::Img(at::kApproach))[i + 1]));
+        SetWord(At(::bof3::Img(at::kKind2ZHigh)), Word(At(::bof3::Img(at::kKind2ZHigh))) + dz);
         const U base = ModeRest_ElevationBase;
-        SetWord(At(at::kKind2XHigh), Word(At(at::kKind2XHigh)) + dx);
+        SetWord(At(::bof3::Img(at::kKind2XHigh)), Word(At(::bof3::Img(at::kKind2XHigh))) + dx);
         MoveScript_FAWord = static_cast<unsigned short>(static_cast<U>(I(base - elevation) >> 4));
     }
     if (!(flags & 0x10)) {
         const unsigned set = AreaW0b_PartySet & 0x7Fu;
         SH_CALL(PartySet_Select)(set, (formation & 2) ? 2u : 1u);
-        formation = UL(at::kFormation);
+        formation = UL(::bof3::Img(at::kFormation));
     }
     StepUp();
     Draw_OtSlot = 4;
@@ -307,17 +307,17 @@ extern "C" void __cdecl GameMode5_Load(void) {
     // its top.
     bool keep = false;
     if (g_event_keeps_music && EventBattle_Id != 0) {
-        const unsigned asset = At(at::kEventAsset)[EventBattle_Id * 4u];
-        keep = Word(At(at::kEventTrack + asset * 4u)) == 0xFF;
+        const unsigned asset = At(::bof3::Img(at::kEventAsset))[EventBattle_Id * 4u];
+        keep = Word(At(::bof3::Img(at::kEventTrack) + asset * 4u)) == 0xFF;
     }
     if (!keep && !(EventBattle_Flags & 0x40) && Music_Track != 0xFF) SH_CALL(Music_FadeOutStop)(0xA);
     unsigned track;
     const unsigned char event = EventBattle_Id;
     if (event != 0) {
-        const unsigned asset = At(at::kEventAsset)[event * 4u];
-        SH_CALL(LoadDatFile)(static_cast<int>(Word(At(at::kEventFile + asset * 4u))));
-        const unsigned again = At(at::kEventAsset)[EventBattle_Id * 4u];
-        track = Word(At(at::kEventTrack + again * 4u));
+        const unsigned asset = At(::bof3::Img(at::kEventAsset))[event * 4u];
+        SH_CALL(LoadDatFile)(static_cast<int>(Word(At(::bof3::Img(at::kEventFile) + asset * 4u))));
+        const unsigned again = At(::bof3::Img(at::kEventAsset))[EventBattle_Id * 4u];
+        track = Word(At(::bof3::Img(at::kEventTrack) + again * 4u));
     } else if (Cond_ByteFA < static_cast<int>(at::kChapterSplit)) {
         SH_CALL(LoadDatFile)(static_cast<int>(at::kBattleFileA));
         track = at::kBattleTrackA;
@@ -333,8 +333,8 @@ extern "C" void __cdecl GameMode5_Load(void) {
     SH_CALL(Window_ResetAll)();
     StepUp();
     BattleMisc_BannerKinds = 0;
-    SetWord(At(at::kBattleWord), 0);
-    for (unsigned k = 0; k < 5; ++k) At(at::kBattleBytes)[k] = 0;
+    SetWord(At(::bof3::Img(at::kBattleWord)), 0);
+    for (unsigned k = 0; k < 5; ++k) At(::bof3::Img(at::kBattleBytes))[k] = 0;
 }
 
 // original 0x4960D0 (GameMode5_Steps[4]; PSX 0x80198E54):
@@ -347,10 +347,10 @@ extern "C" void __cdecl GameMode5_Script(void) {
     if (SH_CALL(File_LoadDone)() == 0 || done == 0) return;
     MoveScript_F3Divisor = 0;
     BattleMisc_BannerKinds = 0;
-    for (unsigned k = 0; k < 5; ++k) At(at::kBattleBytes)[k] = 0;
+    for (unsigned k = 0; k < 5; ++k) At(::bof3::Img(at::kBattleBytes))[k] = 0;
     const int count = SH_CALL(Party_Count)(1);
     StepUp();
-    At(at::kMemberCount)[0] = static_cast<unsigned char>(count);
+    At(::bof3::Img(at::kMemberCount))[0] = static_cast<unsigned char>(count);
 }
 
 // original 0x496130 (GameMode5_Steps[6]; PSX 0x80198EFC): Party_PlaceAtSlots,

@@ -11,6 +11,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
@@ -28,22 +30,22 @@ using U = std::uint32_t;
 // kTailKind: now AreaW0a_TailKind (symbols.toml). Field_ModeTailKinds' index (s8)
 // kTailState: now AreaW0c_TailState (symbols.toml). s8: the armed tail kind's (or the field hook's) state
 // kTailArg: now AreaW0c_TailSub (symbols.toml).
-constexpr U kTailTimer = 0x9039F6;        // u16: tail kind 32's countdown
+constexpr ::bof3::image::Va kTailTimer{0x9039F6};        // u16: tail kind 32's countdown
 // kMsgMode: now AreaW0a_TailKind (symbols.toml).
 // kMsgState: now AreaW0c_TailState (symbols.toml).
 // kMsgArg: now AreaW0c_TailSub (symbols.toml).
-constexpr U kMessage = 0x7DEE48;          // the message word a choice handler leaves (0xFFFF: none)
+constexpr ::bof3::image::Va kMessage{0x7DEE48};          // the message word a choice handler leaves (0xFFFF: none)
 // kChoice: now AreaW0c_ChoiceAnswer (symbols.toml). the choice box's answer (s8)
 // kFocusObject: now AreaW1a_FocusObject (symbols.toml). the record whose talk opened the box (docs/area_w2c.md)
-constexpr U kScriptVar5 = 0x90384A;       // MoveScript variables 5 and 6 (docs/area_w0a.md)
-constexpr U kScriptVar6 = 0x90384B;
+constexpr ::bof3::image::Va kScriptVar5{0x90384A};       // MoveScript variables 5 and 6 (docs/area_w0a.md)
+constexpr ::bof3::image::Va kScriptVar6{0x90384B};
 // kCameraDistance: now Camera_Distance (symbols.toml). Camera_Distance (u16)
 // kByte905E68: now AreaW1a_EntryZone (symbols.toml). a byte area 167's handler 5 tests (the 0x905E60 row)
-constexpr U kTextRecords = 0x904CE0;      // Text_Records: area 155's choice copies an item name to row 0
+constexpr ::bof3::image::Va kTextRecords{0x904CE0};      // Text_Records: area 155's choice copies an item name to row 0
 // kEffects: now Effect_Objects (symbols.toml). Effect_Objects: twenty records of 0x80
 constexpr U kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
-constexpr U kLeader = 0x802D40;           // ObjTrio + 0, the leader's record
+constexpr ::bof3::image::Va kLeader{0x802D40};           // ObjTrio + 0, the leader's record
 // kLeaderDir: now ObjTrio[0].direction (symbols.toml). the leader's +8, its facing
 
 // --- the world maps' cells (area 16's, docs/area_w0b.md) ----------------------
@@ -54,14 +56,14 @@ constexpr U kLeader = 0x802D40;           // ObjTrio + 0, the leader's record
 // kLeaderZ: now ObjTrio[0].z (symbols.toml).
 // kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
 // kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
-constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z
-constexpr U kLeaderCellZ = 0x905E62;
+constexpr ::bof3::image::Va kLeaderCellX{0x905E66};      // the high words of Field_Kind2X / Z
+constexpr ::bof3::image::Va kLeaderCellZ{0x905E62};
 // kMapHeight: now AreaMap_Header[1] (symbols.toml). AreaMap_Header's second byte
 // kButtonMap0: now Gfx_UnpackScratch[0x1f000] (symbols.toml). the field's button map: word 0, the first legend's button
 // kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). word 6, the second's
 // kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
-constexpr U kAreaText = 0x803580;         // the area's text section; area 152 reads its label offset from its first dword
-constexpr U kFlag3A79 = 0x903A79;         // the record +4 state: 9 releases the effect
+constexpr ::bof3::image::Va kAreaText{0x803580};         // the area's text section; area 152 reads its label offset from its first dword
+constexpr ::bof3::image::Va kFlag3A79{0x903A79};         // the record +4 state: 9 releases the effect
 
 // --- area 152's world-map tables (area 87's layout, docs/area_w2b.md section 4;
 // its field hook is its own: place rows and a chapter, no cell, no name set) ---
@@ -85,16 +87,16 @@ struct WorldMapTables {
 // choice table, +0x34 -> Area130_ChoiceTailState2, and the init 0x4249D0).
 // The plate animations and the cell records sit before the descriptor, the
 // rest after it.
-constexpr WorldMapTables kWm152 = {
+const WorldMapTables kWm152 = {
     "Area152",
-    0x637344, 0x6373A4,   // 3 place rows (then the plate state table)
-    0x637288,             // 3 plate animations
-    0x637294,             // 2 cell records (then the descriptor's +0x20 data)
-    0x6373A4, 0x6373B8, 0x6373C0, 0x6373D0,
-    0x6373E0, 0x637438,
-    0x637450, 0x63745C, 0x63746C, 0x637474,
-    0x63747C, 0x637480, 0x637484,
-    0x803580, 0x1D1,
+    ::bof3::Img(0x637344), ::bof3::Img(0x6373A4),   // 3 place rows (then the plate state table)
+    ::bof3::Img(0x637288),             // 3 plate animations
+    ::bof3::Img(0x637294),             // 2 cell records (then the descriptor's +0x20 data)
+    ::bof3::Img(0x6373A4), ::bof3::Img(0x6373B8), ::bof3::Img(0x6373C0), ::bof3::Img(0x6373D0),
+    ::bof3::Img(0x6373E0), ::bof3::Img(0x637438),
+    ::bof3::Img(0x637450), ::bof3::Img(0x63745C), ::bof3::Img(0x63746C), ::bof3::Img(0x637474),
+    ::bof3::Img(0x63747C), ::bof3::Img(0x637480), ::bof3::Img(0x637484),
+    ::bof3::Img(0x803580), 0x1D1,
     bof3::addr::Area152_FrameStep, bof3::addr::Area152_FrameHold, bof3::addr::Area152_BoxStep,
     bof3::addr::Area152_DrawFrame, bof3::addr::Area152_DrawSprite, bof3::addr::Area152_DrawHud,
 };
@@ -102,11 +104,11 @@ constexpr WorldMapTables kWm152 = {
 // --- the other areas' own ---------------------------------------------------------
 // kA153Pairs: now Area153_ChoicePairs (symbols.toml). (u8, u8) by the s8 answer: area 153's choice 0
 // kA154Pairs: now Area154_ChoicePairs (symbols.toml). area 154's choice 0
-constexpr U kA166Pairs = 0x63A79C;        // area 166's choice 1
-constexpr U kA167Choices = 0x63C510;      // 16: area 167's +0x34, running on into its handlers (choice 5 = handler 0)
-constexpr U kA167Handlers = 0x63C524;     // 11: its +0x3C
-constexpr U kA167Switch = 0x63C594;       // (x, z, facing in the low nibble, flag) x 1: the cell hook's
-constexpr U kA167SwitchEnd = 0x63C598;
+constexpr ::bof3::image::Va kA166Pairs{0x63A79C};        // area 166's choice 1
+constexpr ::bof3::image::Va kA167Choices{0x63C510};      // 16: area 167's +0x34, running on into its handlers (choice 5 = handler 0)
+constexpr ::bof3::image::Va kA167Handlers{0x63C524};     // 11: its +0x3C
+constexpr ::bof3::image::Va kA167Switch{0x63C594};       // (x, z, facing in the low nibble, flag) x 1: the cell hook's
+constexpr ::bof3::image::Va kA167SwitchEnd{0x63C598};
 constexpr U kTail32Index = 0x426440;      // 33 bytes in the code: tail kind 32's case by state (0..0xD)
 constexpr unsigned kTail32States = 0x21;
 

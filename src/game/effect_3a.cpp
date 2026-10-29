@@ -150,7 +150,7 @@ U Frame(const char* who) {
         bof3::Fatal("%s: the frame byte 0x676266 is %u, past the two frames at 0x654948 - the original reads what "
                     "follows (docs/effect_3a.md section 6)",
                     who, v);
-    return EffectKind61_Frames_addr + 8 * v;
+    return ::bof3::Img(EffectKind61_Frames_addr) + 8 * v;
 }
 
 // Effect_FindFree's record (answer & 0xFF, as the original widens it): a Fatal
@@ -167,7 +167,7 @@ unsigned char* NewRecord(const char* who, unsigned index) {
 unsigned char* Ray(unsigned i) { return EffectKind30_Shards + i * at::kRayStride; }
 unsigned char* Spark(unsigned i) { return EffectKind30_Shards + i * at::kSparkStride; }
 unsigned char* Mote(unsigned i) { return EffectKind30_Shards + i * at::kMoteStride; }
-unsigned char* Particle(U i) { return At(at::kParticles + i * at::kParticleStride); }
+unsigned char* Particle(U i) { return At(::bof3::Img(at::kParticles.v) + i * at::kParticleStride); }
 
 // The shade a wall gets from kind 0x68's frame word (`lea eax, [eax * 4 -
 // 0x168]` on the whole register, compared as a word): the low byte below 0x100
@@ -276,7 +276,7 @@ extern "C" void __cdecl EffectKind61_Store(void) {
     if (!CountDown()) return;
     const U f = Frame("EffectKind61_Store");
     alignas(4) short rect[4] = {0x340, 0x100, static_cast<short>(Word(At(f + 4))), static_cast<short>(Word(At(f + 6)))};
-    SH_AT(void (__cdecl*)(const short*, void*), at::kStoreImage)(rect, At(EffectKind30_Shards_addr));
+    SH_AT(void (__cdecl*)(const short*, void*), at::kStoreImage.v)(rect, At(::bof3::Img(EffectKind30_Shards_addr)));
     NextState();
 }
 
@@ -307,7 +307,7 @@ extern "C" void __cdecl EffectKind61_Scatter(void) {
         bof3::Fatal("EffectKind61_Scatter: the frame is %d x %d - the original's row and column bytes never reach past "
                     "0xFF, it never ends (docs/effect_3a.md section 6)",
                     (int)SW(f + 4), (int)SW(f + 6));
-    U pixel = EffectKind30_Shards_addr;
+    U pixel = ::bof3::Img(EffectKind30_Shards_addr);
     unsigned char row = 0;
     do {
         const std::int32_t width = SW(f + 4);
@@ -455,7 +455,7 @@ extern "C" void __cdecl EffectKind62_Rays(void) {
     }
     SH_CALL(EffectKind62_StepRays)();
     if (Field_Request == 2) return;
-    if (Word(At(at::kMessageWord)) != 0x12) return;
+    if (Word(At(::bof3::Img(at::kMessageWord.v))) != 0x12) return;
     if (MoveScript_PartyRecords[0x65] != 0xC) return;
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0xA000);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0xB000);
@@ -724,7 +724,7 @@ extern "C" void __cdecl EffectKind64_Rise(void) {
     rv::Current<records::EffectObject>()->z = rv::As<records::EffectObject>(S())->angle[1];
     rv::Current<records::EffectObject>()->height = rv::As<records::EffectObject>(S())->angle[2];
     for (unsigned i = 0; i < at::kShardCount64; ++i)
-        SH_CALL(EffectKind64_InitShard)(At(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride64));
+        SH_CALL(EffectKind64_InitShard)(At(::bof3::Img(EffectKind30_Shards_addr) + 0xc0 + i * at::kShardStride64));
     SH_CALL(Sound_PlayEffect)(0x207);
 }
 
@@ -735,7 +735,7 @@ void SparkTick() {
     unsigned char* const s = S();
     const unsigned char frame = s[6];
     s[6] = static_cast<unsigned char>(frame + 1);
-    if ((frame & 3) == 0) SH_AT(void (__cdecl*)(void), at::kSparkSpawn)();
+    if ((frame & 3) == 0) SH_AT(void (__cdecl*)(void), at::kSparkSpawn.v)();
 }
 }  // namespace
 
@@ -797,7 +797,7 @@ extern "C" void __cdecl EffectKind64_FlyWait(void) {
     SH_CALL(EffectKind64_DrawShards)();
     unsigned char* const s = S();
     SH_CALL(EffectKind64_DrawTrail)(Point(s + 0x18), Point(s + 0x34), 0x40);
-    if (B(at::kCounter) != 0x18) return;
+    if (B(::bof3::Img(at::kCounter.v)) != 0x18) return;
     S()[3] = 0x80;
     S()[9] = 8;
     NextState();
@@ -1062,8 +1062,8 @@ extern "C" void __cdecl EffectKind64_InitShard(unsigned char* shard) {
     SH_CALL(Gte_RotMatrixY)(-static_cast<std::int32_t>(static_cast<std::int16_t>(y)), m);
     SH_CALL(Gte_RotMatrixZ)(static_cast<std::int16_t>(z), m);
     using Turn = void (__cdecl*)(const short*, short*, short*);
-    SH_AT(Turn, at::kMatrixVector)(m, reinterpret_cast<short*>(shard + 0x10), reinterpret_cast<short*>(shard + 0x10));
-    SH_AT(Turn, at::kMatrixVector)(m, reinterpret_cast<short*>(shard + 0x18), reinterpret_cast<short*>(shard + 0x18));
+    SH_AT(Turn, at::kMatrixVector.v)(m, reinterpret_cast<short*>(shard + 0x10), reinterpret_cast<short*>(shard + 0x10));
+    SH_AT(Turn, at::kMatrixVector.v)(m, reinterpret_cast<short*>(shard + 0x18), reinterpret_cast<short*>(shard + 0x18));
     const U speed = (static_cast<U>(SH_CALL(Rand)()) & 2u) + 3u;
     rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->shade, 0x20);
     rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->speed, speed);
@@ -1079,8 +1079,8 @@ extern "C" void __cdecl EffectKind64_DrawShards(void) {
     DrawMode(1, 0x380, 0x100, 1, 2);
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned i = 0; i < at::kShardCount64; ++i) {
-        unsigned char* const shard = At(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride64);
-        SH_AT(void (__cdecl*)(unsigned char*), at::kShardDraw)(shard);
+        unsigned char* const shard = At(::bof3::Img(EffectKind30_Shards_addr) + 0xc0 + i * at::kShardStride64);
+        SH_AT(void (__cdecl*)(unsigned char*), at::kShardDraw.v)(shard);
         rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->angle[2], rv::As<records::EffectShard>(shard)->angle[2] + 0x10u);
     }
 }
@@ -1205,7 +1205,7 @@ extern "C" unsigned char __cdecl EffectKind68_StepMotes(void) {
                         "the original calls through the dword after (docs/effect_3a.md section 6)",
                         i, state, EffectKind68_MoteStates_count);
         reinterpret_cast<void (__cdecl*)(unsigned char*)>(
-            static_cast<std::uintptr_t>(UL(reinterpret_cast<const unsigned char*>(EffectKind68_MoteStates) + 4 * state)))(mote);
+            static_cast<std::uintptr_t>(::bof3::CodePlace(UL(reinterpret_cast<const unsigned char*>(EffectKind68_MoteStates) + 4 * state))))(mote);
         SH_CALL(EffectKind68_DrawMote)(mote);
         any = 1;
     }

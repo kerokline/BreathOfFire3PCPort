@@ -32,7 +32,7 @@ namespace battle_items {
 namespace at {
 
 // The sparkle pool: 128 records of 0x2C bytes, and the one being updated.
-constexpr std::uint32_t kSparklePool = 0x684790;
+constexpr ::bof3::image::Va kSparklePool{0x684790};
 constexpr std::uint32_t kSparkleStride = 0x2C;
 constexpr unsigned kSparkles = 0x80;
 // kSparkleCurrent: now BattleItems_SparkleCurrent (symbols.toml). unsigned char *, set by the pool walk 0x4B8D70
@@ -53,26 +53,26 @@ constexpr unsigned kPosX = 0x14;      // three dwords: the actor's +0x34 / +0x38
 constexpr unsigned kX = 0x20;         // s16 screen x
 constexpr unsigned kY = 0x22;         // s16 screen y
 // The constant tables (.data).
-constexpr std::uint32_t kSparkleOffsets = 0x65AD34;   // 32 x (s16 dx, s16 dy)
-constexpr std::uint32_t kSparkleColours = 0x65ADD4;   // rgb rows, row = shade + 4 * kind
-constexpr std::uint32_t kSparkleLife = 0x65AE20;      // u8 per kind
-constexpr std::uint32_t kSparkleTypes = 0x65AE28;     // the dispatch table
+constexpr ::bof3::image::Va kSparkleOffsets{0x65AD34};   // 32 x (s16 dx, s16 dy)
+constexpr ::bof3::image::Va kSparkleColours{0x65ADD4};   // rgb rows, row = shade + 4 * kind
+constexpr ::bof3::image::Va kSparkleLife{0x65AE20};      // u8 per kind
+constexpr ::bof3::image::Va kSparkleTypes{0x65AE28};     // the dispatch table
 
 // The PC's copy of the PSX scratchpad (SharedScratch) and the vertex scratch.
-constexpr std::uint32_t kScratch = SharedScratch_addr; // s16 words at +0 .. +0xE
+constexpr ::bof3::image::Va kScratch{SharedScratch_addr}; // s16 words at +0 .. +0xE
 // kVertex: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch: four SVECTORs, 8 bytes apart
 
 // The battle actor's records.
-constexpr std::uint32_t kActorIndex = 0x904B34;       // u8: 0..2 a party member, 3.. an enemy
+constexpr ::bof3::image::Va kActorIndex{0x904B34};       // u8: 0..2 a party member, 3.. an enemy
 // kPartyRecords: now ObjTrio (symbols.toml). ObjTrio, stride 0x14C
 constexpr std::uint32_t kPartyStride = 0x14C;
 // kEnemyRecords: now Battle_Enemies (symbols.toml). stride 0x128
 constexpr std::uint32_t kEnemyStride = 0x128;
 // kEnemySoundMode: now EventBattle_Id (symbols.toml). u8: non-zero plays the enemy's own cue
-constexpr std::uint32_t kFxSizeSelect = 0x904B89;     // u8
-constexpr std::uint32_t kFxSizeTable = 0x65C3EC;      // u8 by a party record's +0x89
-constexpr std::uint32_t kFxSizeAltTable = 0x65C3F8;   // u8 by 0x904B89, for a member with +0x134 bit 1
-constexpr std::uint32_t kEnemyFxSize = 0x8C5652;      // u8, stride 0x8C by the enemy's type byte
+constexpr ::bof3::image::Va kFxSizeSelect{0x904B89};     // u8
+constexpr ::bof3::image::Va kFxSizeTable{0x65C3EC};      // u8 by a party record's +0x89
+constexpr ::bof3::image::Va kFxSizeAltTable{0x65C3F8};   // u8 by 0x904B89, for a member with +0x134 bit 1
+constexpr ::bof3::image::Va kEnemyFxSize{0x8C5652};      // u8, stride 0x8C by the enemy's type byte
 
 // The SND stream's buffer (an IDirectSoundBuffer *).
 // kStreamBuffer: now SndStream_Buffer (symbols.toml).
@@ -80,13 +80,13 @@ constexpr std::uint32_t kEnemyFxSize = 0x8C5652;      // u8, stride 0x8C by the 
 }  // namespace at
 
 // Raw addresses of callees this group does not own (see the top).
-constexpr std::uint32_t kCommitSorted = bof3::addr::MapView_LinkPrimAt;
-constexpr std::uint32_t kActorIsOut = bof3::addr::Battle_ActorIsOut;
-constexpr std::uint32_t kEnemyAnimation = bof3::addr::BattleEnemy_SetAnimationAs;   // 0x435A20, R3A's (round 14)
-constexpr std::uint32_t kActorSound = bof3::addr::Battle_PlayActorCue;
-constexpr std::uint32_t kEnemySound = bof3::addr::Sound_PlayEffectUnlessNone;  // BE3's since round twelve (battle_e3.cpp): the same value, so the fuzz keys stand
-constexpr std::uint32_t kSetTint = bof3::addr::Sprite_SetTint;
-constexpr std::uint32_t kPlayById = bof3::addr::Sound_PlayById;
+constexpr ::bof3::image::CodeVa kCommitSorted{bof3::addr::MapView_LinkPrimAt};
+constexpr ::bof3::image::CodeVa kActorIsOut{bof3::addr::Battle_ActorIsOut};
+constexpr ::bof3::image::CodeVa kEnemyAnimation{bof3::addr::BattleEnemy_SetAnimationAs};   // 0x435A20, R3A's (round 14)
+constexpr ::bof3::image::CodeVa kActorSound{bof3::addr::Battle_PlayActorCue};
+constexpr ::bof3::image::CodeVa kEnemySound{bof3::addr::Sound_PlayEffectUnlessNone};  // BE3's since round twelve (battle_e3.cpp): the same value, so the fuzz keys stand
+constexpr ::bof3::image::CodeVa kSetTint{bof3::addr::Sprite_SetTint};
+constexpr ::bof3::image::CodeVa kPlayById{bof3::addr::Sound_PlayById};
 
 struct Callees {
     void (__cdecl* set_draw_mode)(unsigned char*, int, int, unsigned, unsigned long);   // Gpu_SetDrawMode (ours)

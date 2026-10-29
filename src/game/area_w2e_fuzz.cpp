@@ -303,14 +303,14 @@ const ah::Callee kCallees[] = {
     {W2E_OURS(Flags_Test), 2, {kAll, kU8}, ah::Answer::kBool, 0, 0, {}, &FlagsAnswer, nullptr},
     {W2E_OURS(Field_LeaderPushObjects), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &HalfNo, nullptr},
     // area 121's (AR3B's band this wave), by raw address
-    {W2E_RAW("0x41BE10", kTurnToward121), 3, {kAll, kAll, kU8}, ah::Answer::kByte, 0, 7, {}, &MovesCurrent, nullptr},
-    {W2E_RAW("0x41C0A0", kMenuButton121), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
-    {W2E_RAW("0x41C0E0", kHoldButton121), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
-    {W2E_RAW("0x41C110", kTurnKeys121), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &TurnKeysEffect, nullptr},
-    {W2E_RAW("0x41C350", kGaugeFrame121), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
-    {W2E_RAW("0x41C5B0", kKind5CState4), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent, nullptr},
+    {W2E_RAW("0x41BE10", kTurnToward121.v), 3, {kAll, kAll, kU8}, ah::Answer::kByte, 0, 7, {}, &MovesCurrent, nullptr},
+    {W2E_RAW("0x41C0A0", kMenuButton121.v), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
+    {W2E_RAW("0x41C0E0", kHoldButton121.v), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
+    {W2E_RAW("0x41C110", kTurnKeys121.v), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &TurnKeysEffect, nullptr},
+    {W2E_RAW("0x41C350", kGaugeFrame121.v), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
+    {W2E_RAW("0x41C5B0", kKind5CState4.v), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent, nullptr},
     // an engine GPU setter nobody owns (POLY_F3)
-    {W2E_RAW("0x5A7570", kSetPolyF3), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &F3Effect, nullptr},
+    {W2E_RAW("0x5A7570", kSetPolyF3.v), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &F3Effect, nullptr},
     // the group's own, called directly
     {W2E_RAW("Area104_BuildMinimap", 0x416020), 0, {}, ah::Answer::kPhase, 0, 0},
     {W2E_RAW("Area104_LeaderIdle", 0x415040), 0, {}, ah::Answer::kPhase, 0, 0},
@@ -384,7 +384,7 @@ const ah::DataTable kTablesWm[] = {{0x61BB7C, 5}, {0x61BB90, 2}, {0x61BB98, 4}, 
 enum : unsigned { kRegPackets = 3 };
 ah::Region g_regions_wm[] = {
     {AreaW0b_MapMode_addr, 1}, {0x7E0918, 1}, {0x7E0670, 4}, {0, kPacketBytes}, {0x9037A0, 0x20}, {0x66C7E8, 2},
-    {(Gfx_UnpackScratch_addr + 0x1f000), 0x10}, {at::kAreaText, 4}, {Area104_PlateAnims_addr, 8},
+    {(Gfx_UnpackScratch_addr + 0x1f000), 0x10}, {at::kAreaText.v, 4}, {Area104_PlateAnims_addr, 8},
 };
 unsigned char g_saved_anims[8];
 
@@ -398,7 +398,7 @@ void DisturbWm(U h) {
     case 4: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(v % 3); break;
     case 5: Game_Mode = static_cast<unsigned short>(Game_Mode ^ 1); break;
     case 6: SetWord(Mem(AreaW0b_Place_addr), v & 1 ? 0x65 : v); break;
-    case 7: B(at::kLeaderCellX + (v & 1) * 2) = static_cast<unsigned char>(v); break;
+    case 7: B(::bof3::Img(at::kLeaderCellX.v) + (v & 1) * 2) = static_cast<unsigned char>(v); break;
     case 8: B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(v & 1 ? 0xC : v); break;
     default: break;
     }
@@ -556,7 +556,7 @@ const ah::DataTable kTables104[] = {{0x61BC28, 2}, {0x61BC30, 5}};   // the fuzz
 const ah::Region kRegions104[] = {
     {Effect_Objects_addr, at::kEffectCount * at::kEffectStride},
     {Gfx_UnpackScratch_addr, at::kUnpackBytes},
-    {at::kUploadCount, 8},   // with Field_ActiveMember 0x9035A4 after it
+    {at::kUploadCount.v, 8},   // with Field_ActiveMember 0x9035A4 after it
     {Gfx_UploadQueueX_addr, 0x50},
     {Gfx_UploadQueueRecord_addr, at::kUploadSlots * 4},
     {(Gfx_ClutStrip_addr + 0x1ec0), 8},

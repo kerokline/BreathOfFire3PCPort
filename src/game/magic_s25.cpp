@@ -70,10 +70,10 @@ using move_script::Word;
 // The vertex scratch (Prim_VertexScratch, four SVECTORs at +0 / +8 / +0x10 /
 // +0x18) and the word scratch at 0x903850 (+0xC is Scratch_Swap).
 // kVertex: now Prim_VertexScratch (symbols.toml).
-constexpr std::uint32_t kScratch = SharedScratch_addr;
-unsigned char* V(unsigned k) { return Mem(Prim_VertexScratch_addr + k); }
+constexpr ::bof3::image::Va kScratch{SharedScratch_addr};
+unsigned char* V(unsigned k) { return Mem(::bof3::Img(Prim_VertexScratch_addr) + k); }
 const short* VP(unsigned k) { return reinterpret_cast<const short*>(V(k)); }
-unsigned char* S(unsigned k) { return Mem(kScratch + k); }
+unsigned char* S(unsigned k) { return Mem(::bof3::Img(kScratch.v) + k); }
 std::int32_t SL(unsigned k) { return Long(S(k)); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 
@@ -83,7 +83,7 @@ int Sar12(int v) { return v >> 12; }
 int Shl(int v, unsigned n) { return static_cast<int>(static_cast<std::uint32_t>(v) << n); }
 
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
-unsigned char* Task(unsigned slot) { return Mem(BattleTask_Slots_addr + (slot & 0xFF) * at::kTaskStride); }
+unsigned char* Task(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + (slot & 0xFF) * at::kTaskStride); }
 void SetPointer(unsigned char* cell, const void* p) {
     SetLong(cell, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)));
 }
@@ -107,19 +107,19 @@ using PrimFn = void (__cdecl*)(unsigned char*);
 
 // libgpu's SetPolyF3 (code 0x20) and SetLineG4 (code 0x5C), unnamed, in no
 // group (psx_gpu's neighbours; docs/magic_s25.md section 7).
-constexpr std::uint32_t kSetPolyF3 = bof3::addr::Gpu_SetPolyF3;
-constexpr std::uint32_t kSetLineG4 = bof3::addr::Gpu_SetLineG4;
+constexpr ::bof3::image::CodeVa kSetPolyF3{bof3::addr::Gpu_SetPolyF3};
+constexpr ::bof3::image::CodeVa kSetLineG4{bof3::addr::Gpu_SetLineG4};
 // The effect library (group L), by name: MagicFx_CenterOnSide (the effect's
 // sprite to the middle of the target side), MagicFx_StepTowardPoint (one step
 // towards a point), MagicFx_NearPoint3D ("is the sprite within a box of the
 // point"). The engine's 0x446770 turns +0xC / +0x10 by the facing +8.
-constexpr std::uint32_t kTurnByFacing = bof3::addr::Battle_TurnVectorC;
+constexpr ::bof3::image::CodeVa kTurnByFacing{bof3::addr::Battle_TurnVectorC};
 // Other units' phases in the stack tables, by name: S17's Leech_WaitOrbs
 // ("free once the owner's +0xB is 0xFF") and the engine's MagicFx_DoneAndFree.
 
 // The battle bytes these read beyond the harness's names.
 // kCasterRecord: now MagicS23_ActorSprite (symbols.toml). a record pointer; its +8 is the facing
-constexpr std::uint32_t kSideCorner = 0x904AAC;     // low byte: a corner of SpellDepress_Corners
+constexpr ::bof3::image::Va kSideCorner{0x904AAC};     // low byte: a corner of SpellDepress_Corners
 
 void Rtp3(unsigned char* p, unsigned a, unsigned b, unsigned c) {
     long depth, flag;
@@ -211,7 +211,7 @@ S25_EXPORT void __cdecl SpellSleep_Task(void) {
 S25_EXPORT void __cdecl SpellSleep_Start(void) {
     MH_CALL(MagicFx_CenterOnSide)();
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x19);
-    const unsigned char* const caster = Pointer(MagicS23_ActorSprite_addr);
+    const unsigned char* const caster = Pointer(::bof3::Img(MagicS23_ActorSprite_addr));
     unsigned char* const sc = Sprite_Current;
     unsigned char* const child = Task(slot);
     records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
@@ -230,7 +230,7 @@ S25_EXPORT void __cdecl SpellSleep_Start(void) {
 // matrices - the sway matrix: stem, dome, fan; the turn matrix: shadow fan,
 // trail, trail lines.
 S25_EXPORT void __cdecl SpellSleep_Child(void) {
-    TableEntry("SpellSleep_Child", bof3::addr::SpellSleep_ChildPhases, 4, Sprite_Current[1])();
+    TableEntry("SpellSleep_Child", ::bof3::Img(bof3::addr::SpellSleep_ChildPhases), 4, Sprite_Current[1])();
     if (Sprite_Current[0] == 0) return;
     MH_CALL(SpellSleep_PushSwayMatrix)();
     MH_CALL(SpellSleep_DrawStem)();
@@ -273,7 +273,7 @@ S25_EXPORT void __cdecl SpellSleep_ChildFade(void) {
     Bump(Sprite_Current[9]);
     Sprite_Current[0xA] = static_cast<unsigned char>(Sprite_Current[0xA] - 1);
     if (Sprite_Current[0xA] != 0) return;
-    Pointer(BattleE2_Owner_addr)[0xB] = 0xFF;
+    Pointer(::bof3::Img(BattleE2_Owner_addr))[0xB] = 0xFF;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -365,7 +365,7 @@ S25_EXPORT void __cdecl SpellSleep_DrawFan(void) {
         SetWord(V(0x12), static_cast<unsigned>(ax));
         if (counter > 0x11 || counter < -0x2F) {
             unsigned char* const p = Gfx_PacketNext;
-            MH_AT(PrimFn, kSetPolyF3)(p);
+            MH_AT(PrimFn, kSetPolyF3.v)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, semi);
             Rtp3(p, 8, 0x14, 0x20);
             MH_CALL(Gte_PrimDepths3_0C)(p);
@@ -625,7 +625,7 @@ S25_EXPORT void __cdecl SpellSleep_DrawTrailLines(void) {
         }
         LinkAtSprite(2, 0xC);
         unsigned char* const p = Gfx_PacketNext;
-        MH_AT(PrimFn, kSetLineG4)(p);
+        MH_AT(PrimFn, kSetLineG4.v)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
         Rtp4(p, 8, 0x18, 0x28, 0x38);
         MH_CALL(Gte_PrimDepths4_10C)(p);
@@ -720,7 +720,7 @@ S25_EXPORT void __cdecl SpellConfuse_Task(void) {
 // task, with the facing +8 and position of the source sprite 0x904B4C (read
 // before the child is made); +0xB 0; on.
 S25_EXPORT void __cdecl SpellConfuse_Start(void) {
-    const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
+    const unsigned char* const source = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x1A);
     unsigned char* const sc = Sprite_Current;
     unsigned char* const child = Task(slot);
@@ -738,7 +738,7 @@ S25_EXPORT void __cdecl SpellConfuse_Start(void) {
 // (0x65B928, six entries); then, while the slot is live, the quads under the
 // spin matrix and the rays under the facing matrix.
 S25_EXPORT void __cdecl SpellConfuse_Child(void) {
-    TableEntry("SpellConfuse_Child", bof3::addr::SpellConfuse_ChildPhases, 6, Sprite_Current[1])();
+    TableEntry("SpellConfuse_Child", ::bof3::Img(bof3::addr::SpellConfuse_ChildPhases), 6, Sprite_Current[1])();
     if (Sprite_Current[0] == 0) return;
     MH_CALL(SpellConfuse_PushSpinMatrix)();
     MH_CALL(SpellConfuse_DrawQuads)();
@@ -756,7 +756,7 @@ S25_EXPORT void __cdecl SpellConfuse_Child(void) {
 S25_EXPORT void __cdecl SpellConfuse_ChildInit(void) {
     rv::Current<records::BattleTask>()->step_x = 0x20000;
     rv::Current<records::BattleTask>()->step_z = 0;
-    MH_AT(void (__cdecl*)(unsigned char*), kTurnByFacing)(Sprite_Current);
+    MH_AT(void (__cdecl*)(unsigned char*), kTurnByFacing.v)(Sprite_Current);
     unsigned char* sc = Sprite_Current;
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     tsc->x = tsc->x + tsc->step_x;
@@ -765,7 +765,7 @@ S25_EXPORT void __cdecl SpellConfuse_ChildInit(void) {
     tsc->work_18 = tsc->x;
     tsc->work_1c = tsc->z;
     rv::Store(tsc->work_20, tsc->height);
-    const unsigned char actor = Mem(at::kActor)[0];
+    const unsigned char actor = Mem(::bof3::Img(at::kActor))[0];
     const unsigned char* const record = actor <= 2 ? PartyOf(actor) : EnemyOf(actor);
     tsc->x = Long(record + 0x34);
     tsc->z = Long(record + 0x38);
@@ -824,7 +824,7 @@ S25_EXPORT void __cdecl SpellConfuse_ChildHold(void) {
 S25_EXPORT void __cdecl SpellConfuse_ChildEnd(void) {
     Bump(Sprite_Current[0xA]);
     if (Sprite_Current[0xA] != 0x80) return;
-    Pointer(BattleE2_Owner_addr)[0xB] = 0xFF;
+    Pointer(::bof3::Img(BattleE2_Owner_addr))[0xB] = 0xFF;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -1012,15 +1012,15 @@ S25_EXPORT void __cdecl SpellDepress_Task(void) {
 // screen point from SpellDepress_Corners by the side corner 0x904AAC (xor 2
 // unless the target is the enemy side); +0x64 0; on.
 S25_EXPORT void __cdecl SpellDepress_Start(void) {
-    if (Mem(at::kTarget)[0] == 0x80) {
-        if (Mem(at::kActor)[0] < 3) Sprite_Current[1] = 1;
+    if (Mem(::bof3::Img(at::kTarget))[0] == 0x80) {
+        if (Mem(::bof3::Img(at::kActor))[0] < 3) Sprite_Current[1] = 1;
     }
-    if (Mem(at::kTarget)[0] == 0x40 && Mem(at::kActor)[0] > 2) Sprite_Current[1] = 1;
+    if (Mem(::bof3::Img(at::kTarget))[0] == 0x40 && Mem(::bof3::Img(at::kActor))[0] > 2) Sprite_Current[1] = 1;
     // (the original's first test skips the second when the caster is an enemy;
     // the target byte cannot be both, so the two are the same)
     if (Sprite_Current[1] != 0) {
-        MH_CALL(Battle_SetTargetFlag40)(Mem(at::kTarget)[0]);
-        Mem(at::kFlags)[0] = static_cast<unsigned char>(Mem(at::kFlags)[0] | 4);
+        MH_CALL(Battle_SetTargetFlag40)(Mem(::bof3::Img(at::kTarget))[0]);
+        Mem(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(at::kFlags))[0] | 4);
         MH_CALL(BattleTask_FreeCurrent)();
         return;
     }
@@ -1034,14 +1034,14 @@ S25_EXPORT void __cdecl SpellDepress_Start(void) {
     rect[3] = static_cast<short>(sc[9] * 2);
     MH_CALL(Gpu_SetDrawMove)(Gfx_PacketNext, reinterpret_cast<const unsigned char*>(rect), 0x340, 0x100);
     MH_CALL(Gfx_CommitPrim)(3, 0x18);
-    const std::uint32_t corners = bof3::addr::SpellDepress_Corners;
+    const std::uint32_t corners = ::bof3::Img(bof3::addr::SpellDepress_Corners);
     unsigned corner;
-    if (Mem(at::kTarget)[0] & 0x40) {
-        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Mem(corners + (Mem(kSideCorner)[0]) * 8)));
-        corner = Mem(kSideCorner)[0];
+    if (Mem(::bof3::Img(at::kTarget))[0] & 0x40) {
+        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Mem(corners + (Mem(::bof3::Img(kSideCorner.v))[0]) * 8)));
+        corner = Mem(::bof3::Img(kSideCorner.v))[0];
     } else {
-        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Mem(corners + (Mem(kSideCorner)[0] ^ 2u) * 8)));
-        corner = Mem(kSideCorner)[0] ^ 2u;
+        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Mem(corners + (Mem(::bof3::Img(kSideCorner.v))[0] ^ 2u) * 8)));
+        corner = Mem(::bof3::Img(kSideCorner.v))[0] ^ 2u;
     }
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(Mem(corners + 4 + corner * 8)));
     rv::Store<std::int32_t>(rv::Current<records::BattleTask>()->angle[0], 0);
@@ -1068,7 +1068,7 @@ S25_EXPORT void __cdecl SpellDepress_Hold(void) {
     const unsigned char was = sc[0xA];
     sc[0xA] = static_cast<unsigned char>(was - 1);
     if (was == 0) {
-        MH_CALL(Battle_SetTargetFlags)(Mem(at::kTarget)[0], 0x10);
+        MH_CALL(Battle_SetTargetFlags)(Mem(::bof3::Img(at::kTarget))[0], 0x10);
         Bump(Sprite_Current[1]);
     }
     MH_CALL(SpellDepress_DrawVortex)(static_cast<std::int32_t>(rv::Current<records::BattleTask>()->angle[0]));
@@ -1082,8 +1082,8 @@ S25_EXPORT void __cdecl SpellDepress_Close(void) {
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 2);
     const unsigned char* const sc = Sprite_Current;
     if (sc[9] == 2) {
-        MH_CALL(Battle_SetTargetFlag40)(Mem(at::kTarget)[0]);
-        Mem(at::kFlags)[0] = static_cast<unsigned char>(Mem(at::kFlags)[0] | 4);
+        MH_CALL(Battle_SetTargetFlag40)(Mem(::bof3::Img(at::kTarget))[0]);
+        Mem(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(at::kFlags))[0] | 4);
         MH_CALL(BattleTask_FreeCurrent)();
         return;
     }
@@ -1120,8 +1120,8 @@ void VortexUV(unsigned char* g, unsigned o, std::uint32_t entry) {
 // - 0x10 a band inside and 0x10 more outside; the winding by the sign of the
 // task's +0x64. Slot 3 throughout.
 S25_EXPORT void __cdecl SpellDepress_DrawVortex(int step) {
-    const std::uint32_t rings = bof3::addr::SpellDepress_Rings, outer = bof3::addr::SpellDepress_Outer,
-                        inner = bof3::addr::SpellDepress_Inner;
+    const std::uint32_t rings = ::bof3::Img(bof3::addr::SpellDepress_Rings), outer = ::bof3::Img(bof3::addr::SpellDepress_Outer),
+                        inner = ::bof3::Img(bof3::addr::SpellDepress_Inner);
     for (int r = 0; r < 9; ++r) {
         int a = 0;
         for (unsigned k = 0; k < 16; ++k) {
@@ -1243,7 +1243,7 @@ S25_EXPORT void __cdecl SpellRagnarok_Task(void) {
 // Gfx_ClutStripDirty; sound 0x100.
 S25_EXPORT void __cdecl SpellRagnarok_Start(void) {
     MH_CALL(MagicFx_CenterOnSide)();
-    Sprite_Current[8] = Pointer(BattleE2_Owner_addr)[8];
+    Sprite_Current[8] = Pointer(::bof3::Img(BattleE2_Owner_addr))[8];
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0x58;
     Bump(Sprite_Current[1]);
@@ -1261,11 +1261,11 @@ S25_EXPORT void __cdecl SpellRagnarok_Start(void) {
     child[9] = 0x28;
     Bump(sc[0xB]);
     Bump(Sprite_Current[0xB]);
-    for (std::uint32_t i = 0; i < 0x100; ++i) SetWord(Mem(0x812980 + 2 * i), Word(Mem(0x80E980 + 2 * i)) | 0x8000u);
-    for (std::uint32_t i = 0; i < 0x10; ++i) SetWord(Mem(0x80F980 + 2 * i), Word(Mem(0x80B980 + 2 * i)) | 0x8000u);
-    const std::uint16_t first = Word(Mem(0x80E980)), first16 = Word(Mem(0x80B980));
-    SetWord(Mem(0x812980), first);
-    SetWord(Mem(0x80F980), first16);
+    for (std::uint32_t i = 0; i < 0x100; ++i) SetWord(Mem(::bof3::Img(0x812980) + 2 * i), Word(Mem(::bof3::Img(0x80E980) + 2 * i)) | 0x8000u);
+    for (std::uint32_t i = 0; i < 0x10; ++i) SetWord(Mem(::bof3::Img(0x80F980) + 2 * i), Word(Mem(::bof3::Img(0x80B980) + 2 * i)) | 0x8000u);
+    const std::uint16_t first = Word(Mem(::bof3::Img(0x80E980))), first16 = Word(Mem(::bof3::Img(0x80B980)));
+    SetWord(Mem(::bof3::Img(0x812980)), first);
+    SetWord(Mem(::bof3::Img(0x80F980)), first16);
     Gfx_ClutStripDirty = 1;
     MH_CALL(Sound_PlayById)(0x100);
 }
@@ -1302,7 +1302,7 @@ S25_EXPORT void __cdecl SpellRagnarok_FadeIn(void) {
 S25_EXPORT void __cdecl SpellRagnarok_Burst(void) {
     MH_CALL(SpellRagnarok_DrawScreenTint)();
     if (Sprite_Current[0xB] != 0) return;
-    MH_CALL(Battle_SetTargetFlags)(Mem(at::kTarget)[0], 0x10);
+    MH_CALL(Battle_SetTargetFlags)(Mem(::bof3::Img(at::kTarget))[0], 0x10);
     for (unsigned char b = 0; b < 6; ++b) {
         const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x10);
         unsigned char* const sc = Sprite_Current;
@@ -1328,7 +1328,7 @@ S25_EXPORT void __cdecl SpellRagnarok_FadeOut(void) {
     }
     sc[9] = static_cast<unsigned char>(sc[9] - 1);
     if (Sprite_Current[9] != 0) return;
-    MH_CALL(Battle_SetTargetFlag40)(Mem(at::kTarget)[0]);
+    MH_CALL(Battle_SetTargetFlag40)(Mem(::bof3::Img(at::kTarget))[0]);
     Bump(Sprite_Current[1]);
 }
 
@@ -1368,7 +1368,7 @@ S25_EXPORT void __cdecl SpellRagnarok_DrawScreenTint(void) {
 // original 0x4D5780 (kind-1 task 0x10): `jmp` through SpellRagnarok_ChildKinds
 // (0x65B960, three entries) by +1 - the sprite, the ring, a spark.
 S25_EXPORT void __cdecl SpellRagnarok_Child(void) {
-    TableEntry("SpellRagnarok_Child", bof3::addr::SpellRagnarok_ChildKinds, 3, Sprite_Current[1])();
+    TableEntry("SpellRagnarok_Child", ::bof3::Img(bof3::addr::SpellRagnarok_ChildKinds), 3, Sprite_Current[1])();
 }
 
 // original 0x4D57A0 (child kind 0, the rising sprite): the sprite bank pointer
@@ -1377,11 +1377,11 @@ S25_EXPORT void __cdecl SpellRagnarok_Child(void) {
 // and, from phase 2 while the slot's bit 0 is set, Sprite_UpdateScreen; then
 // 0x8B3580 again.
 S25_EXPORT void __cdecl SpellRagnarok_SpriteChild(void) {
-    SetLong(Mem(0x9039D8), 0x8E3580);
-    TableEntry("SpellRagnarok_SpriteChild", bof3::addr::SpellRagnarok_SpritePhases, 5, Sprite_Current[2])();
+    SetLong(Mem(::bof3::Img(0x9039D8)), ::bof3::Img(0x8E3580));
+    TableEntry("SpellRagnarok_SpriteChild", ::bof3::Img(bof3::addr::SpellRagnarok_SpritePhases), 5, Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if ((sc[0] & 1) && sc[2] >= 2) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(0x9039D8), 0x8B3580);
+    SetLong(Mem(::bof3::Img(0x9039D8)), ::bof3::Img(0x8B3580));
 }
 
 // original 0x4D57E0 (sprite phase 1): the sprite record's set-up - screen
@@ -1433,7 +1433,7 @@ S25_EXPORT void __cdecl SpellRagnarok_SpriteClimb(void) {
     Jitter();
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y) - 4u);
     if (S16(Sprite_Current + 0x30) >= 0xB2) return;
-    unsigned char* const owner = Pointer(BattleE2_Owner_addr);
+    unsigned char* const owner = Pointer(::bof3::Img(BattleE2_Owner_addr));
     owner[0xB] = static_cast<unsigned char>(owner[0xB] - 1);
     Bump(Sprite_Current[2]);
 }
@@ -1444,7 +1444,7 @@ S25_EXPORT void __cdecl SpellRagnarok_SpriteLeave(void) {
     Jitter();
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y) - 2u);
     if (S16(Sprite_Current + 0x30) >= 0x80) return;
-    unsigned char* const owner = Pointer(BattleE2_Owner_addr);
+    unsigned char* const owner = Pointer(::bof3::Img(BattleE2_Owner_addr));
     owner[0xB] = static_cast<unsigned char>(owner[0xB] - 1);
     MH_CALL(BattleTask_FreeCurrent)();
 }
@@ -1455,7 +1455,7 @@ S25_EXPORT void __cdecl SpellRagnarok_SpriteLeave(void) {
 // +9 down to the end); then, while live and past phase 0, the disc and rim
 // under the actor matrix.
 S25_EXPORT void __cdecl SpellRagnarok_RingChild(void) {
-    TableEntry("SpellRagnarok_RingChild", bof3::addr::SpellRagnarok_RingPhases, 4, Sprite_Current[2])();
+    TableEntry("SpellRagnarok_RingChild", ::bof3::Img(bof3::addr::SpellRagnarok_RingPhases), 4, Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -1471,7 +1471,7 @@ S25_EXPORT void __cdecl SpellRagnarok_RingInit(void) {
     rv::Current<records::BattleTask>()->step_z = 0x60000;
     rv::Store(rv::Current<records::BattleTask>()->x, rv::Current<records::BattleTask>()->step_x + Field_Kind2X);
     rv::Store(rv::Current<records::BattleTask>()->z, rv::Current<records::BattleTask>()->step_z + Field_Kind2Z);
-    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->height);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->height);
     rv::Store(rv::Current<records::BattleTask>()->step_y, 0x100);
     Sprite_Current[9] = 0x10;
     Bump(Sprite_Current[2]);
@@ -1579,7 +1579,7 @@ S25_EXPORT void __cdecl SpellRagnarok_DrawRim(void) {
 // SpellRagnarok_SparkPhases (0x65B990, two entries); then, while live and past
 // phase 0, the spark under the actor matrix.
 S25_EXPORT void __cdecl SpellRagnarok_SparkChild(void) {
-    TableEntry("SpellRagnarok_SparkChild", bof3::addr::SpellRagnarok_SparkPhases, 2, Sprite_Current[2])();
+    TableEntry("SpellRagnarok_SparkChild", ::bof3::Img(bof3::addr::SpellRagnarok_SparkPhases), 2, Sprite_Current[2])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -1591,10 +1591,10 @@ S25_EXPORT void __cdecl SpellRagnarok_SparkChild(void) {
 // plus SpellRagnarok_SparkOffsets[+0xB] (0x65B998, (x, z) dwords; +0xB is not
 // checked), the owner's height; +9 0x60, +0xA 0x40; on.
 S25_EXPORT void __cdecl SpellRagnarok_SparkInit(void) {
-    const std::uint32_t offsets = bof3::addr::SpellRagnarok_SparkOffsets;
+    const std::uint32_t offsets = ::bof3::Img(bof3::addr::SpellRagnarok_SparkOffsets);
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Mem(offsets + Sprite_Current[0xB] * 8u)) + Field_Kind2X);
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Mem(offsets + 4 + Sprite_Current[0xB] * 8u)) + Field_Kind2Z);
-    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->height);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleE2_Owner_addr)))->height);
     Sprite_Current[9] = 0x60;
     Sprite_Current[0xA] = 0x40;
     Bump(Sprite_Current[2]);

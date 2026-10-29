@@ -429,6 +429,8 @@ scripts over `exe-pointers.tsv`, `symbols.toml` and `BOF3.exe`):
 
 ### 4.2 Two ways, and the choice
 
+> **Superseded 2026-10-29:** (b) was built as state 3 and has since been retired by the relocatable-image round ([`relocatable-image-round.md`](relocatable-image-round.md) 4, [`relocatable-image-design.md`](relocatable-image-design.md) 4): the code words are rewritten after all - each `.data` code word bound by name to its VA's place in a table of jumps of ours, not to a stub at Capcom's address - and the stub page is a no-access trap. The pointer-shaped numbers stay untouched: only the recipe's listed words are bound.
+
 **(a) Rewrite the words to our bindings.** At map time each code-pointer word
 `T` becomes `&ours(T)` (`symbols.toml`'s `impl` binding, which
 `gen_symbols.py` already emits). Clean in the end state - no fixed `.text`
@@ -587,6 +589,8 @@ and page `0x903000`), then the field scene's pages from tick 1310 - the data
 the two sources load, not the `.data` image, which the skip list covers.
 
 ## 5. What is left
+
+> **Amended 2026-10-29:** item 3's "the stub page in our own executable" was built (state 3) and then replaced by the bind table and the no-access trap ([`relocatable-image-round.md`](relocatable-image-round.md) 4).
 
 1. ~~**The data pointers that do not rebuild** (JP 2,821 of 9,959): the
    file layer's 1,641 are the engine's own; the 117 pooled zero objects are
@@ -802,6 +806,8 @@ sound-name table's tail 5; `own` - the file layer 8,622, the rest of
 `exe_own.cpp`'s regions 6,277.
 
 ### 7.6 Not done, and for the coordinator
+
+> **Amended 2026-10-29:** the 111 words now hold the trap (`Img(va)` on the no-access `.stub`) in the exe host; the relocatable-image round's stage D read their callers again - the C runtime's tables and the blitters' jump table are read by Capcom's code alone, none of which is mapped there.
 
 - The recipe was generated with the NB group's `tools/exe_own.py` and
   `src/hook/exe_own.cpp` (`disc-only/engine-own`, `b59a7b34`) in the tree,

@@ -151,7 +151,7 @@ void Project(unsigned char* p) {
 }
 
 // E6A's panel draw 0x50E1C0 (void, on Sprite_Current), raw until E6A merges.
-void DrawE6A() { scenario_harness::Phase(at::kE6ADraw)(); }
+void DrawE6A() { scenario_harness::Phase(at::kE6ADraw.v)(); }
 void Draw35() { SH_CALL(EffectKind18Sub35_Draw)(); }
 void Draw3B() { SH_CALL(EffectKind18Sub3B_Draw)(); }
 using Draw = void (*)();
@@ -235,7 +235,7 @@ extern "C" void __cdecl EffectKind18Sub33_Run(void) {
 // original 0x50E420 (sub-state 0): Place, the variant of 0x65EBD4 (room 2),
 // open 0x100.
 extern "C" void __cdecl EffectKind18Sub33_Place(void) {
-    Place("EffectKind18Sub33_Place", at::kSub33Cells, 0, at::kRoom2, 0x100, &DrawE6A);
+    Place("EffectKind18Sub33_Place", ::bof3::Img(at::kSub33Cells.v), 0, at::kRoom2, 0x100, &DrawE6A);
 }
 // original 0x50E540 (sub-state 1).
 extern "C" void __cdecl EffectKind18Sub33_WaitNear(void) { WaitNear(&DrawE6A); }
@@ -266,7 +266,7 @@ extern "C" void __cdecl EffectKind18Sub34_Run(void) {
 // original 0x50E770 (sub-state 0): Place, the variant of 0x65EBEC (room 2),
 // open 0x100.
 extern "C" void __cdecl EffectKind18Sub34_Place(void) {
-    Place("EffectKind18Sub34_Place", at::kSub34Cells, 0, at::kRoom2, 0x100, &DrawE6A);
+    Place("EffectKind18Sub34_Place", ::bof3::Img(at::kSub34Cells.v), 0, at::kRoom2, 0x100, &DrawE6A);
 }
 // original 0x50E890 (sub-state 1).
 extern "C" void __cdecl EffectKind18Sub34_WaitNear(void) { WaitNear(&DrawE6A); }
@@ -297,10 +297,10 @@ extern "C" void __cdecl EffectKind18Sub37_Run(void) {
 // +2 up. Nothing drawn.
 extern "C" void __cdecl EffectKind18Sub37_Place(void) {
     unsigned char* const s = S();
-    const U v = Variant("EffectKind18Sub37_Place", s, at::kSub37Cells, at::kRoom2);
+    const U v = Variant("EffectKind18Sub37_Place", s, at::kSub37Cells.v, at::kRoom2);
     s[8] = Word(s + 0x3A) == 0 ? 1 : 0;
-    SetWord(S() + 0x36, At(at::kSub37Cells + 2 * v)[0]);
-    SetWord(S() + 0x3A, At(at::kSub37Cells + 2 * v + 1)[0]);
+    SetWord(S() + 0x36, At(::bof3::Img(at::kSub37Cells.v) + 2 * v)[0]);
+    SetWord(S() + 0x3A, At(::bof3::Img(at::kSub37Cells.v) + 2 * v + 1)[0]);
     SetWord(S() + 0x3E, 0xFF80);
     SetWord(S() + 0x30, 0x100);
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
@@ -334,7 +334,7 @@ extern "C" void __cdecl EffectKind18Sub35_Run(void) {
 // original 0x50EBA0 (sub-state 0): Place, the variant of 0x65EC1C (room 4),
 // open -0x100.
 extern "C" void __cdecl EffectKind18Sub35_Place(void) {
-    Place("EffectKind18Sub35_Place", at::kSub35Cells, 0, at::kRoom4, 0xFF00, &Draw35);
+    Place("EffectKind18Sub35_Place", ::bof3::Img(at::kSub35Cells.v), 0, at::kRoom4, 0xFF00, &Draw35);
 }
 // original 0x50ECC0 (sub-state 1).
 extern "C" void __cdecl EffectKind18Sub35_WaitNear(void) { WaitNear(&Draw35); }
@@ -428,10 +428,10 @@ extern "C" void __cdecl EffectKind18Sub38_Run(void) {
 // otherwise the slide 0 and +2 = 3 (the draw held). Nothing drawn.
 extern "C" void __cdecl EffectKind18Sub38_Place(void) {
     unsigned char* s = S();
-    const U v = Variant("EffectKind18Sub38_Place", s, at::kSub38Cells, at::kRoom4);
+    const U v = Variant("EffectKind18Sub38_Place", s, at::kSub38Cells.v, at::kRoom4);
     s[8] = Word(s + 0x3A) == 0 ? 1 : 0;
-    SetWord(S() + 0x36, At(at::kSub38Cells + 2 * v)[0]);
-    SetWord(S() + 0x3A, At(at::kSub38Cells + 2 * v + 1)[0]);
+    SetWord(S() + 0x36, At(::bof3::Img(at::kSub38Cells.v) + 2 * v)[0]);
+    SetWord(S() + 0x3A, At(::bof3::Img(at::kSub38Cells.v) + 2 * v + 1)[0]);
     SetWord(S() + 0x3E, 0xFF80);
     s = S();
     if (LeaderAt(s, true, 0x8000, 0x10000)) {
@@ -461,7 +461,7 @@ extern "C" void __cdecl EffectKind18Sub3B_Run(void) {
 // original 0x50F250 (sub-state 0): Place, the variant of 0x65EC58 (room 2) and
 // its lift from 0x65EC54 into +0x3E, open 0xC0.
 extern "C" void __cdecl EffectKind18Sub3B_Place(void) {
-    Place("EffectKind18Sub3B_Place", at::kSub3BCells, at::kSub3BHeights, at::kRoom2, 0xC0, &Draw3B);
+    Place("EffectKind18Sub3B_Place", ::bof3::Img(at::kSub3BCells.v), ::bof3::Img(at::kSub3BHeights.v), at::kRoom2, 0xC0, &Draw3B);
 }
 // original 0x50F380 (sub-state 1).
 extern "C" void __cdecl EffectKind18Sub3B_WaitNear(void) { WaitNear(&Draw3B); }
@@ -518,7 +518,7 @@ extern "C" void __cdecl EffectKind18Sub3B_Draw(void) {
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
         const unsigned char* const s = S();
-        const U sign = SignedByte(At(at::kSub3BSides)[side]);
+        const U sign = SignedByte(At(::bof3::Img(at::kSub3BSides.v))[side]);
         if (s[8] != 0) {
             const U x0 = Word(s + 0x30) * sign + (static_cast<U>(Word(s + 0x36)) << 7) - 0x3F40u;
             SetWord(v + 0x10, x0);
@@ -574,8 +574,8 @@ extern "C" void __cdecl EffectKind18Sub54_Pulse(void) {
     if (step >= at::kSub54Steps)
         bof3::Fatal("EffectKind18Sub54_Pulse: +2 is %u, past the %u steps of 0x%X - the original reads on into "
                     "EffectKind18Sub40_States (docs/effect_6b.md section 7)",
-                    step, at::kSub54Steps, (unsigned)at::kSub54Blues);
-    p[6] = static_cast<unsigned char>(At(at::kSub54Blues)[step] << 3);
+                    step, at::kSub54Steps, at::kSub54Blues.v);
+    p[6] = static_cast<unsigned char>(At(::bof3::Img(at::kSub54Blues.v))[step] << 3);
     SH_CALL(Gfx_CommitPrim)(3, 0x38);
     if ((Frame_Counter & 7) == 0) {
         unsigned char* const s = S();
@@ -600,8 +600,8 @@ extern "C" void __cdecl EffectKind18Sub54_Pulse(void) {
 // not read.
 extern "C" void __cdecl EffectKind18Sub3D_Ripple(void) {
     if (Cond_ByteFE == 0) return;
-    const std::int32_t column = S16(At(at::kLeaderCellX)) - 0x14;
-    std::int32_t row = S16(At(at::kLeaderCellZ)) - 0x14;
+    const std::int32_t column = S16(At(::bof3::Img(at::kLeaderCellX.v))) - 0x14;
+    std::int32_t row = S16(At(::bof3::Img(at::kLeaderCellZ.v))) - 0x14;
     unsigned char* const corners = reinterpret_cast<unsigned char*>(&AreaMap_Corners);
     for (U k = 0; k < 0x69; k += 3, ++row) {
         const std::int32_t s0 = SH_CALL(Math_Sin)(static_cast<int>((((Frame_Counter + k) << 7) - 0x80u) & 0xFFFu)) >> 10;
@@ -700,7 +700,7 @@ extern "C" void __cdecl EffectKind18Sub40_Draw(int step) {
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
         SetWord(p + 0x26, 0x7B);
         SetWord(p + 0x16, 0x78C6);
-        const unsigned char* const t = At(at::kSub40Panes + 4 * i);
+        const unsigned char* const t = At(::bof3::Img(at::kSub40Panes.v) + 4 * i);
         const U x0 = ((static_cast<U>(t[0]) << 5) + f) * 4 - 0x4040u;
         SetWord(v + 0x10, x0);
         SetWord(v, x0);
@@ -756,11 +756,11 @@ U Curve(const char* who, unsigned c) {
     if (c >= at::kSub41CurveRoom)
         bof3::Fatal("%s: +9 is %u, past the %u bytes of 0x%X - the original reads on into EffectKind18Sub41_States "
                     "(docs/effect_6b.md section 7)",
-                    who, c, at::kSub41CurveRoom, (unsigned)at::kSub41Curve);
-    return static_cast<U>(static_cast<std::int32_t>(static_cast<U>(At(at::kSub41Curve)[c]) << 12) / 256);
+                    who, c, at::kSub41CurveRoom, at::kSub41Curve.v);
+    return static_cast<U>(static_cast<std::int32_t>(static_cast<U>(At(::bof3::Img(at::kSub41Curve.v))[c]) << 12) / 256);
 }
 bool FlagSet(unsigned index) {
-    return (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), index) & 0xFFu) != 0;
+    return (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), index) & 0xFFu) != 0;
 }
 }  // namespace
 
@@ -809,18 +809,18 @@ extern "C" void __cdecl EffectKind18Sub41_Hold(void) {
         S()[9] = static_cast<unsigned char>(S()[9] + 1);
     }
     if (S()[9] == 0x17) {
-        SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x50);
+        SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x50);
         SH_CALL(MoveCmd_TestFB)(0x13, 0x25);
         S()[9] = 0;
     }
     if (FlagSet(0x4F)) {
         const unsigned d = S()[0xA];
         if (d < 0x19) {
-            const U first = static_cast<U>(At(at::kSub41MarkA)[d]) << 2;
-            const U second = At(at::kSub41MarkB)[d >> 1];
-            SH_AT(void(__cdecl*)(U, U), at::kWaveMark)(first, second);
+            const U first = static_cast<U>(At(::bof3::Img(at::kSub41MarkA.v))[d]) << 2;
+            const U second = At(::bof3::Img(at::kSub41MarkB.v))[d >> 1];
+            SH_AT(void(__cdecl*)(U, U), at::kWaveMark.v)(first, second);
         }
-        SH_AT(void(__cdecl*)(U), at::kWaveStep)(S()[0xA]);
+        SH_AT(void(__cdecl*)(U), at::kWaveStep.v)(S()[0xA]);
     }
     S()[0xA] = static_cast<unsigned char>(S()[0xA] + 1);
     if (S()[0xA] > 0x30) SH_CALL(Effect_Release)();
@@ -855,25 +855,25 @@ extern "C" void __cdecl EffectKind18Sub41_Draw(unsigned variant, int angle) {
     if (variant >= at::kSub41Variants)
         bof3::Fatal("EffectKind18Sub41_Draw: variant %u, past the %u rows of 0x%X - the original reads on into the "
                     "texture words (docs/effect_6b.md section 7)",
-                    variant, at::kSub41Variants, (unsigned)at::kSub41Order);
+                    variant, at::kSub41Variants, at::kSub41Order.v);
     unsigned char* const v = Vertices();
     for (unsigned i = 0; i < 4; ++i) {
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
-        const unsigned q = At(at::kSub41Order + 4 * variant)[i];
+        const unsigned q = At(::bof3::Img(at::kSub41Order.v) + 4 * variant)[i];
         if (q >= at::kSub41QuadCount)
             bof3::Fatal("EffectKind18Sub41_Draw: quad %u, past the %u of 0x%X (docs/effect_6b.md section 7)", q,
-                        at::kSub41QuadCount, (unsigned)at::kSub41Quads);
-        const unsigned char* const b = At(at::kSub41Quads + 12 * q);
+                        at::kSub41QuadCount, at::kSub41Quads.v);
+        const unsigned char* const b = At(::bof3::Img(at::kSub41Quads.v) + 12 * q);
         for (unsigned j = 0; j < 4; ++j) {
             SetWord(v + 8 * j, static_cast<U>(b[3 * j]) << 7);
             SetWord(v + 8 * j + 2, static_cast<U>(b[3 * j + 1]) << 7);
             SetWord(v + 8 * j + 4, (0u - b[3 * j + 2]) << 7);
         }
         Project(p);
-        const U turn = (SignedByte(At(at::kSub41Turns)[q]) * static_cast<U>(angle)) & 0xFFFFF800u;
-        SH_CALL(Prim_SetTexture)((turn << 8) + UL(At(at::kSub41Textures + 4 * q)), p, 1);
+        const U turn = (SignedByte(At(::bof3::Img(at::kSub41Turns.v))[q]) * static_cast<U>(angle)) & 0xFFFFF800u;
+        SH_CALL(Prim_SetTexture)((turn << 8) + UL(At(::bof3::Img(at::kSub41Textures.v) + 4 * q)), p, 1);
         SH_CALL(Gfx_CommitPrim)(5, 0x48);
     }
     SH_CALL(Gte_PopMatrix)();
@@ -901,8 +901,8 @@ extern "C" void __cdecl EffectKind18Sub44_Start(void) {
 // original 0x510C80 (sub-state 1): E6C's 0x510C90, then a tail jump to E6C's
 // 0x510EB0 (both void, on Sprite_Current; raw until E6C merges).
 extern "C" void __cdecl EffectKind18Sub44_Step(void) {
-    scenario_harness::Phase(at::kE6CStep)();
-    scenario_harness::Phase(at::kE6CTail)();
+    scenario_harness::Phase(at::kE6CStep.v)();
+    scenario_harness::Phase(at::kE6CTail.v)();
 }
 
 void Effect6B_Inject() {

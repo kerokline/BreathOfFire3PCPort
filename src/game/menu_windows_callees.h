@@ -15,6 +15,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 namespace menu_windows {
@@ -24,12 +26,12 @@ namespace at {
 // kColour: now Config_WindowColour (symbols.toml). s8: the window colour (Config), a CLUT row
 // kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords, stride 0xA4
 constexpr std::uint32_t kCharStride = 0xA4;
-constexpr std::uint32_t kPrintBuf = 0x904BA0;     // the sprintf buffer every number goes through
+constexpr ::bof3::image::Va kPrintBuf{0x904BA0};     // the sprintf buffer every number goes through
 // kGold: now Party_Zenny (symbols.toml). u32: the party's money
 // kPartyLists: now Cond_Flags[0xd2] (symbols.toml). the party's 3-byte lists (item_use_callees.h)
 // kMemberRecord: now Character_IndexById (symbols.toml). u8 per party entry: its record (Character_IndexById)
 // kMenuMember: now BattleActorCopies_ItemActor (symbols.toml). s8: the member the field menu is on
-constexpr std::uint32_t kYesNo = 0x929F0B;        // u8: Menu_YesNo's selection, 1 Yes
+constexpr ::bof3::image::Va kYesNo{0x929F0B};        // u8: Menu_YesNo's selection, 1 Yes
 // kLeaderX: now ObjTrio[0].x_whole (symbols.toml). u16: the leader's map x (ObjTrio +0x36)
 // kLeaderZ: now ObjTrio[0].z_whole (symbols.toml). u16: the leader's map z (+0x3A)
 // kClutShadow: now Gfx_ClutStripSource[0x114] (symbols.toml). 64 bytes a CLUT row: entry 0 is the window's line colour
@@ -41,61 +43,61 @@ constexpr std::uint32_t kYesNo = 0x929F0B;        // u8: Menu_YesNo's selection,
 // kInputFlags: now Field_InputFlags (symbols.toml). Field_InputFlags
 // kCondFA: now Cond_ByteFA (symbols.toml). Cond_ByteFA
 // kButtonSets: now Menu_ButtonSets (symbols.toml). Menu_ButtonSets
-constexpr std::uint32_t kVerbPointers = 0x6637E4;   // Menu_VerbPointers
+constexpr ::bof3::image::Va kVerbPointers{0x6637E4};   // Menu_VerbPointers
 
 // MsgBoxState (symbols.toml block MsgBoxState, window_task_callees.h).
-constexpr std::uint32_t kMessage = 0x7DEE48;      // u16: the message index
+constexpr ::bof3::image::Va kMessage{0x7DEE48};      // u16: the message index
 // kBoxText: now Msgbox_Base (symbols.toml). the box string base
-constexpr std::uint32_t kListText = 0x7DEE50;     // the stepper pointer, the list's text
+constexpr ::bof3::image::Va kListText{0x7DEE50};     // the stepper pointer, the list's text
 // kListSet: now MenuWindows_ListSet (symbols.toml). u8: the list's geometry set
 // kListCount: now MenuWindows_ListCount (symbols.toml). s8: the last item's index
-constexpr std::uint32_t kCurrent = 0x905B84;      // the window record Field_RunTaskRecords is running
-constexpr std::uint32_t kSetXY = 0x66AE2C;        // 6-byte records by set: s16 x, s16 y, s16 y stride
+constexpr ::bof3::image::Va kCurrent{0x905B84};      // the window record Field_RunTaskRecords is running
+constexpr ::bof3::image::Va kSetXY{0x66AE2C};        // 6-byte records by set: s16 x, s16 y, s16 y stride
 
 // Tables in .data, read as the originals read them.
-constexpr std::uint32_t kInventory = 0x656B00;    // 5 pointers: each category's item ids
-constexpr std::uint32_t kCounts = 0x656B14;       // 5 pointers: each category's counts
-constexpr std::uint32_t kItemFlags = 0x656B38;    // consumables' flags byte, stride 22
-constexpr std::uint32_t kPieceRects = 0x663B94;   // Menu_DrawPiece's rectangles (u, v, w, h)
-constexpr std::uint32_t kPieceRectsAlt = 0x663C8C;// the same with flag bit 0
+constexpr ::bof3::image::Va kInventory{0x656B00};    // 5 pointers: each category's item ids
+constexpr ::bof3::image::Va kCounts{0x656B14};       // 5 pointers: each category's counts
+constexpr ::bof3::image::Va kItemFlags{0x656B38};    // consumables' flags byte, stride 22
+constexpr ::bof3::image::Va kPieceRects{0x663B94};   // Menu_DrawPiece's rectangles (u, v, w, h)
+constexpr ::bof3::image::Va kPieceRectsAlt{0x663C8C};// the same with flag bit 0
 constexpr std::uint32_t kIconRects = 0x66367C;    // Menu_DrawBigIcon's (u, v, clut x << 4, clut y - 0x1E0)
-constexpr std::uint32_t kExpTable = 0x658F48;     // u16 at stride 8, 99 a member (0x318 bytes)
-constexpr std::uint32_t kBackdropRects = 0x663874;// the backdrop's tile rectangles
-constexpr std::uint32_t kBackdropPattern = 0x663920;
-constexpr std::uint32_t kBackdropStart = 0x66396C;// 4 bytes: each kind's start in the pattern
-constexpr std::uint32_t kCategoryLabels = 0x663970;
-constexpr std::uint32_t kRowIcons = 0x663D60;     // an item kind's 8x8 icon (Menu_DrawItemRow)
-constexpr std::uint32_t kBuyIcons = 0x66B29C;     // the same table, three more times
-constexpr std::uint32_t kBuyDetailIcons = 0x66B2AC;
-constexpr std::uint32_t kSellIcons = 0x66B2C8;
+constexpr ::bof3::image::Va kExpTable{0x658F48};     // u16 at stride 8, 99 a member (0x318 bytes)
+constexpr ::bof3::image::Va kBackdropRects{0x663874};// the backdrop's tile rectangles
+constexpr ::bof3::image::Va kBackdropPattern{0x663920};
+constexpr ::bof3::image::Va kBackdropStart{0x66396C};// 4 bytes: each kind's start in the pattern
+constexpr ::bof3::image::Va kCategoryLabels{0x663970};
+constexpr ::bof3::image::Va kRowIcons{0x663D60};     // an item kind's 8x8 icon (Menu_DrawItemRow)
+constexpr ::bof3::image::Va kBuyIcons{0x66B29C};     // the same table, three more times
+constexpr ::bof3::image::Va kBuyDetailIcons{0x66B2AC};
+constexpr ::bof3::image::Va kSellIcons{0x66B2C8};
 
 // The strings the draws name (all in .rdata, read 2026-09-23).
-constexpr std::uint32_t kFmt7d = 0x64ADDC;        // "%7d"
-constexpr std::uint32_t kFmt3d = 0x64E324;        // "%3d"
-constexpr std::uint32_t kFmt3d3d = 0x6639C8;      // "%3d/%3d"
-constexpr std::uint32_t kFmtCount = 0x653EC0;     // "*%2d"
-constexpr std::uint32_t kFmt6dZ = 0x66B4A0;       // "%6dZ"
-constexpr std::uint32_t kFmt7dZ = 0x66B4A8;       // "%7dZ"
-constexpr std::uint32_t kEquipLabel = 0x663668;   // "EQUIP"
-constexpr std::uint32_t kMoneyLabel = 0x66A31C;
+constexpr ::bof3::image::Va kFmt7d{0x64ADDC};        // "%7d"
+constexpr ::bof3::image::Va kFmt3d{0x64E324};        // "%3d"
+constexpr ::bof3::image::Va kFmt3d3d{0x6639C8};      // "%3d/%3d"
+constexpr ::bof3::image::Va kFmtCount{0x653EC0};     // "*%2d"
+constexpr ::bof3::image::Va kFmt6dZ{0x66B4A0};       // "%6dZ"
+constexpr ::bof3::image::Va kFmt7dZ{0x66B4A8};       // "%7dZ"
+constexpr ::bof3::image::Va kEquipLabel{0x663668};   // "EQUIP"
+constexpr ::bof3::image::Va kMoneyLabel{0x66A31C};
 constexpr std::uint32_t kStatLabels[3] = {0x66A0F8, 0x66A100, 0x66A110};
 
 }  // namespace at
 
 // Other groups' functions, by address (the round's rule).
-constexpr std::uint32_t kStatIcon = bof3::addr::Menu_DrawIcon;      // (kind, x, y, w, h, shade), W
-constexpr std::uint32_t kDrawHand = bof3::addr::Menu_DrawHand;      // Menu_DrawHand (x, y, unused), W
-constexpr std::uint32_t kEquipCompare = bof3::addr::Equip_PreviewSlot;  // (member, slot, item, u8 out[4], u16 out[4]), W
-constexpr std::uint32_t kItemName = bof3::addr::Item_NamePtr;      // (category, id) -> name, W
-constexpr std::uint32_t kItemKind = bof3::addr::Item_IconKind;      // (category, id) -> 0..15, W
-constexpr std::uint32_t kEquipMask = bof3::addr::Item_EquipMask;     // (category, id) -> the members who can equip it, W
-constexpr std::uint32_t kItemFlagsOf = bof3::addr::Item_UseFlags;   // (category, id) -> flags, W (group TWO's, 2026-10-06)
-constexpr std::uint32_t kHasKeyItem = bof3::addr::KeyItem_Has;    // (id) -> 1 when held, W
-constexpr std::uint32_t kCountOwned = bof3::addr::Inventory_Count;    // (category, id, where) -> u16, W
-constexpr std::uint32_t kCountCategory = bof3::addr::Inventory_CountUsed; // (category) -> u8, W
-constexpr std::uint32_t kPriceScale = bof3::addr::Shop_ScalePrice;    // (price, percent) -> price * percent / 100, at least 1, X
-constexpr std::uint32_t kSellPrice = bof3::addr::Shop_SellPrice;     // (category, id, flag) -> the price a shop pays, X
-constexpr std::uint32_t kSetLineF3 = bof3::addr::Gpu_SetLineF3;     // the PSX setter (prim), M
+constexpr ::bof3::image::CodeVa kStatIcon{bof3::addr::Menu_DrawIcon};      // (kind, x, y, w, h, shade), W
+constexpr ::bof3::image::CodeVa kDrawHand{bof3::addr::Menu_DrawHand};      // Menu_DrawHand (x, y, unused), W
+constexpr ::bof3::image::CodeVa kEquipCompare{bof3::addr::Equip_PreviewSlot};  // (member, slot, item, u8 out[4], u16 out[4]), W
+constexpr ::bof3::image::CodeVa kItemName{bof3::addr::Item_NamePtr};      // (category, id) -> name, W
+constexpr ::bof3::image::CodeVa kItemKind{bof3::addr::Item_IconKind};      // (category, id) -> 0..15, W
+constexpr ::bof3::image::CodeVa kEquipMask{bof3::addr::Item_EquipMask};     // (category, id) -> the members who can equip it, W
+constexpr ::bof3::image::CodeVa kItemFlagsOf{bof3::addr::Item_UseFlags};   // (category, id) -> flags, W (group TWO's, 2026-10-06)
+constexpr ::bof3::image::CodeVa kHasKeyItem{bof3::addr::KeyItem_Has};    // (id) -> 1 when held, W
+constexpr ::bof3::image::CodeVa kCountOwned{bof3::addr::Inventory_Count};    // (category, id, where) -> u16, W
+constexpr ::bof3::image::CodeVa kCountCategory{bof3::addr::Inventory_CountUsed}; // (category) -> u8, W
+constexpr ::bof3::image::CodeVa kPriceScale{bof3::addr::Shop_ScalePrice};    // (price, percent) -> price * percent / 100, at least 1, X
+constexpr ::bof3::image::CodeVa kSellPrice{bof3::addr::Shop_SellPrice};     // (category, id, flag) -> the price a shop pays, X
+constexpr ::bof3::image::CodeVa kSetLineF3{bof3::addr::Gpu_SetLineF3};     // the PSX setter (prim), M
 
 struct Callees {
     // other modules' (ours) and Capcom's

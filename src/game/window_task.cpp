@@ -40,7 +40,7 @@ float Flt(int v) { return static_cast<float>(v); }
 // across one). Volatile so that ours cannot cache it either.
 unsigned char* Rec() {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
-        *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))));
+        *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)))));
 }
 
 // rv::As<records::WindowRecord>(p) views a window record
@@ -84,7 +84,7 @@ const Callees kOriginals = {
     Window_DrawLine,
     Window_FreeCurrent,
     Flags_Test,
-    As<unsigned char(__cdecl*)()>(kMsgBoxFrameTask),
+    As<unsigned char(__cdecl*)()>(::bof3::Code(kMsgBoxFrameTask.v)),
     Gpu_SetDrawMode,
     Gfx_CommitPrim,
     Gpu_SetTile,
@@ -94,25 +94,25 @@ const Callees kOriginals = {
     Gpu_SetSemiTrans,
     Gpu_GetTPage,
     Gpu_GetClut,
-    As<Handler>(kListSetUp),
-    As<Handler>(kListDraw),
-    As<Handler>(kListCursorDraw),
-    As<Handler>(kSetDraw),
-    As<Handler>(kSetCursorDraw),
-    {As<Handler>(kRecordHandlers[0]), As<Handler>(kRecordHandlers[1]), As<Handler>(kRecordHandlers[2]),
-     As<Handler>(kRecordHandlers[3]), As<Handler>(kRecordHandlers[4]), As<Handler>(kRecordHandlers[5]),
-     As<Handler>(kRecordHandlers[6]), As<Handler>(kRecordHandlers[7]), As<Handler>(kRecordHandlers[8])},
-    {As<Handler>(bof3::addr::Window_Kind0States), As<Handler>(bof3::addr::Window_Kind1States),
-     As<Handler>(bof3::addr::Window_Kind2States)},
-    {As<Handler>(bof3::addr::Window_Kind0Open), As<Handler>(bof3::addr::Window_Grow),
-     As<Handler>(bof3::addr::Window_Kind0Frame), As<Handler>(bof3::addr::Window_Shrink),
-     As<Handler>(bof3::addr::Window_Kind0Close)},
-    {As<Handler>(bof3::addr::Window_Kind1Open), As<Handler>(bof3::addr::Window_Grow),
-     As<Handler>(bof3::addr::Window_Kind1Frame), As<Handler>(bof3::addr::Window_Shrink),
-     As<Handler>(bof3::addr::Window_FreeState)},
-    {As<Handler>(bof3::addr::Window_Kind2Open), As<Handler>(bof3::addr::Window_Grow),
-     As<Handler>(bof3::addr::Window_Kind2Frame), As<Handler>(bof3::addr::Window_Shrink),
-     As<Handler>(bof3::addr::Window_FreeState)},
+    As<Handler>(::bof3::Code(kListSetUp.v)),
+    As<Handler>(::bof3::Code(kListDraw.v)),
+    As<Handler>(::bof3::Code(kListCursorDraw.v)),
+    As<Handler>(::bof3::Code(kSetDraw.v)),
+    As<Handler>(::bof3::Code(kSetCursorDraw.v)),
+    {As<Handler>(::bof3::Code(kRecordHandlers[0])), As<Handler>(::bof3::Code(kRecordHandlers[1])), As<Handler>(::bof3::Code(kRecordHandlers[2])),
+     As<Handler>(::bof3::Code(kRecordHandlers[3])), As<Handler>(::bof3::Code(kRecordHandlers[4])), As<Handler>(::bof3::Code(kRecordHandlers[5])),
+     As<Handler>(::bof3::Code(kRecordHandlers[6])), As<Handler>(::bof3::Code(kRecordHandlers[7])), As<Handler>(::bof3::Code(kRecordHandlers[8]))},
+    {As<Handler>(::bof3::Code(bof3::addr::Window_Kind0States)), As<Handler>(::bof3::Code(bof3::addr::Window_Kind1States)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_Kind2States))},
+    {As<Handler>(::bof3::Code(bof3::addr::Window_Kind0Open)), As<Handler>(::bof3::Code(bof3::addr::Window_Grow)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_Kind0Frame)), As<Handler>(::bof3::Code(bof3::addr::Window_Shrink)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_Kind0Close))},
+    {As<Handler>(::bof3::Code(bof3::addr::Window_Kind1Open)), As<Handler>(::bof3::Code(bof3::addr::Window_Grow)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_Kind1Frame)), As<Handler>(::bof3::Code(bof3::addr::Window_Shrink)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_FreeState))},
+    {As<Handler>(::bof3::Code(bof3::addr::Window_Kind2Open)), As<Handler>(::bof3::Code(bof3::addr::Window_Grow)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_Kind2Frame)), As<Handler>(::bof3::Code(bof3::addr::Window_Shrink)),
+     As<Handler>(::bof3::Code(bof3::addr::Window_FreeState))},
 };
 Callees g = kOriginals;
 
@@ -157,7 +157,7 @@ extern "C" void __cdecl Field_ChangeArea(unsigned area, int x, int z, unsigned f
 extern "C" void __cdecl Area_ClassifyPending(void) {
     const std::uint16_t pending = AreaW0b_Place;
     unsigned n = 0;
-    for (std::uint32_t p = at::kAreaKinds; p < at::kAreaKindsEnd; p += 2, ++n) {
+    for (std::uint32_t p = ::bof3::Img(at::kAreaKinds.v); p < ::bof3::Img(at::kAreaKindsEnd.v); p += 2, ++n) {
         if (Word(At(p)) == pending) {
             Area_EnterTransition = 0xB;
             return;
@@ -215,7 +215,7 @@ extern "C" void __cdecl Area_PickMusic(unsigned x, unsigned z, unsigned area) {
 
 unsigned char Area_ZoneTrack(const unsigned char* zone) {
     if (zone[7] == 0) return zone[6];
-    const std::uint32_t set = at::kMusicSets + static_cast<std::uint32_t>(zone[6]) * 8u;
+    const std::uint32_t set = ::bof3::Img(at::kMusicSets.v) + static_cast<std::uint32_t>(zone[6]) * 8u;
     const unsigned count = At(set)[4];
     const unsigned char* entry;
     std::memcpy(&entry, At(set), sizeof entry);
@@ -241,7 +241,7 @@ unsigned char Area_ZoneTrack(const unsigned char* zone) {
 extern "C" const unsigned char* __cdecl Area_ZoneAtIn(unsigned x_arg, unsigned z_arg, unsigned area) {
     const unsigned x = x_arg & 0xFFu, z = z_arg & 0xFFu;
     const unsigned char* record;
-    std::memcpy(&record, At(Area_StateRecords_addr) + (area & 0xFFFFu) * 4u, sizeof record);
+    std::memcpy(&record, At(::bof3::Img(Area_StateRecords_addr)) + (area & 0xFFFFu) * 4u, sizeof record);
     for (;; record += 8) {
         if (x < record[0] || z < record[1] || x > record[2] || z > record[3]) continue;
         return record;
@@ -275,7 +275,7 @@ extern "C" void __cdecl Field_RunTaskRecords(void) {
     unsigned pass = BossSa_WindowPass;
     if (pass > 2) return;
     do {
-        for (std::uint32_t a = WindowRecords_addr; a < at::kRecordsEnd; a += 0x24) {
+        for (std::uint32_t a = ::bof3::Img(WindowRecords_addr); a < ::bof3::Img(at::kRecordsEnd.v); a += 0x24) {
             unsigned char* const record = At(a);
             if (record[0] == 0) {
                 Widescreen_SlideIdle(record);
@@ -286,7 +286,7 @@ extern "C" void __cdecl Field_RunTaskRecords(void) {
             const unsigned handler = record[1];
             if (handler >= 9)
                 bof3::Fatal("window record %u names handler %u; the original's stack table holds nine",
-                            static_cast<unsigned>((a - WindowRecords_addr) / 0x24), handler);
+                            static_cast<unsigned>((a - ::bof3::Img(WindowRecords_addr)) / 0x24), handler);
             Widescreen_SlideBefore(record);
             g.records[handler]();
             Widescreen_SlideAfter(record);
@@ -367,13 +367,13 @@ extern "C" void __cdecl Window_Kind0Open(void) {
         Rec()[0xD] |= 2;
         Rec()[0xA] = 0x78;
         Rec()[0xB] = 0x36;
-        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(At(at::kBoxAltXY)[Msgbox_Placement * 2u]) + 0x3Cu) << 4);
-        y = At(at::kBoxAltXY)[Msgbox_Placement * 2u + 1u];
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u]) + 0x3Cu) << 4);
+        y = At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u + 1u];
     } else {
         Rec()[0xA] = 0xC8;
         Rec()[0xB] = 0x36;
-        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(At(at::kBoxXY)[Msgbox_Placement * 2u]) + 0x64u) << 4);
-        y = At(at::kBoxXY)[Msgbox_Placement * 2u + 1u];
+        rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u]) + 0x64u) << 4);
+        y = At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u + 1u];
     }
     rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->y, (y + 0x1Bu) << 4);
     rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->width, 0);
@@ -391,8 +391,8 @@ extern "C" void __cdecl Window_Kind0Open(void) {
 // and 0x66. It touches neither the flag byte +0xD nor the placement code's
 // two high bits.
 extern "C" void __cdecl Window_Kind2Open(void) {
-    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(Word(At(at::kPlaceXY + Msgbox_Placement * 4u))) + 0x23u) << 4);
-    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->y, (Word(At(at::kPlaceXY + Msgbox_Placement * 4u + 2u)) + 0x10u) << 4);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->x, (SideX(Word(At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u))) + 0x23u) << 4);
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->y, (Word(At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u + 2u)) + 0x10u) << 4);
     rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->width, 0);
     rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->height, 0);
     rv::Store<unsigned>(rv::As<records::WindowRecord>(Rec())->width_step, 0xE3);
@@ -417,23 +417,23 @@ namespace {
 unsigned SettledX(const unsigned char* r) {
     switch (r[2]) {
     case 0:
-        return SideX((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[Msgbox_Placement * 2u]
-                                       : At(at::kBoxXY)[Msgbox_Placement * 2u]) << 4;
+        return SideX((r[0xD] & 2) != 0 ? At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u]
+                                       : At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u]) << 4;
     case 1:
         return rv::As<records::WindowRecord>(r)->settled_x << 4;
     default:
-        return SideX(Word(At(at::kPlaceXY + Msgbox_Placement * 4u))) << 4;
+        return SideX(Word(At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u))) << 4;
     }
 }
 unsigned SettledY(const unsigned char* r) {
     switch (r[2]) {
     case 0:
-        return ((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[Msgbox_Placement * 2u + 1u]
-                                  : At(at::kBoxXY)[Msgbox_Placement * 2u + 1u]) << 4;
+        return ((r[0xD] & 2) != 0 ? At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u + 1u]
+                                  : At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u + 1u]) << 4;
     case 1:
         return rv::As<records::WindowRecord>(r)->settled_y << 4;
     default:
-        return Word(At(at::kPlaceXY + Msgbox_Placement * 4u + 2u)) << 4;
+        return Word(At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u + 2u)) << 4;
     }
 }
 
@@ -527,14 +527,14 @@ extern "C" void __cdecl Window_Shrink(void) {
         unsigned place;
         switch (r[2]) {
         case 0:
-            place = SideX((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[Msgbox_Placement * 2u]
-                                            : At(at::kBoxXY)[Msgbox_Placement * 2u]) + half;
+            place = SideX((r[0xD] & 2) != 0 ? At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u]
+                                            : At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u]) + half;
             break;
         case 1:
-            place = Word(At(at::kSetXY + MenuWindows_ListSet * 8u)) + half;
+            place = Word(At(::bof3::Img(at::kSetXY.v) + MenuWindows_ListSet * 8u)) + half;
             break;
         default:
-            place = SideX(Word(At(at::kPlaceXY + Msgbox_Placement * 4u))) + half;
+            place = SideX(Word(At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u))) + half;
             break;
         }
         rv::As<records::WindowRecord>(r)->x = place << 4;
@@ -552,14 +552,14 @@ extern "C" void __cdecl Window_Shrink(void) {
         unsigned place;
         switch (r[2]) {
         case 0:
-            place = ((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[Msgbox_Placement * 2u + 1u]
-                                       : At(at::kBoxXY)[Msgbox_Placement * 2u + 1u]) + half;
+            place = ((r[0xD] & 2) != 0 ? At(::bof3::Img(at::kBoxAltXY.v))[Msgbox_Placement * 2u + 1u]
+                                       : At(::bof3::Img(at::kBoxXY.v))[Msgbox_Placement * 2u + 1u]) + half;
             break;
         case 1:
-            place = Word(At(at::kSetXY + MenuWindows_ListSet * 8u + 2u)) + half;
+            place = Word(At(::bof3::Img(at::kSetXY.v) + MenuWindows_ListSet * 8u + 2u)) + half;
             break;
         default:
-            place = Word(At(at::kPlaceXY + Msgbox_Placement * 4u + 2u)) + half;
+            place = Word(At(::bof3::Img(at::kPlaceXY.v) + Msgbox_Placement * 4u + 2u)) + half;
             break;
         }
         rv::As<records::WindowRecord>(r)->y = place << 4;

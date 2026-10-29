@@ -16,6 +16,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
@@ -29,27 +31,27 @@ using U = std::uint32_t;
 
 // --- the field frame's cells ------------------------------------------------
 // kChoice: now AreaW0c_ChoiceAnswer (symbols.toml). s8: the choice the message box committed
-constexpr U kMessage = 0x7DEE48;          // u16: the message a choice handler opens, 0xFFFF none
+constexpr ::bof3::image::Va kMessage{0x7DEE48};          // u16: the message a choice handler opens, 0xFFFF none
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the flag bank every Flags_* call here is handed
-constexpr U kFlagsCC = 0x9040CC;          // a second bank: area 42 tests its bits 0x5C..0x5E
+constexpr ::bof3::image::Va kFlagsCC{0x9040CC};          // a second bank: area 42 tests its bits 0x5C..0x5E
 // kTailKind: now AreaW0a_TailKind (symbols.toml). Field_ModeTailKinds' index (s8)
 // kTailState: now AreaW0c_TailState (symbols.toml). s8: the armed tail kind's state
 // kTailArg: now AreaW0c_TailSub (symbols.toml). area 42: a frame count, then an effect slot
-constexpr U kTailTimer = 0x9039F6;        // u16: area 42's countdown in frames (0x384 from its handler 0)
+constexpr ::bof3::image::Va kTailTimer{0x9039F6};        // u16: area 42's countdown in frames (0x384 from its handler 0)
 // kLeader: now ObjTrio (symbols.toml). ObjTrio + 0, the leader's record
 // kLeaderX: now ObjTrio[0].x (symbols.toml). the leader's +0x34 / +0x38, 16.16
 // kLeaderZ: now ObjTrio[0].z (symbols.toml).
 // kLeaderEffect: now ObjTrio[0].char_id (symbols.toml). the leader's +0x89: Character_IndexById's index
 // kLeaderDir: now ObjTrio[0].direction (symbols.toml). the leader's +8, its facing
 inline auto& kFoundSlot = SharedScratch.b_00;  // a found slot (word or byte, as each writer stores it)
-constexpr std::uint32_t kFoundSlot_addr = SharedScratch_addr; // kFoundSlot's address, for the raw accessors that take one
+constexpr ::bof3::image::Va kFoundSlot_addr{SharedScratch_addr}; // kFoundSlot's address, for the raw accessors that take one
 // kCameraAngle1: now Camera_Angles[1] (symbols.toml). Camera_Angles[1]
 // kCameraAngle2: now Cond_AngleFB (symbols.toml). Camera_Angles[2] (Cond_AngleFB's low half)
-constexpr U kTextBuffer = 0x904BA0;       // area 42's time string, by Crt_sprintf
-constexpr U kRank = 0x675A00;             // u8: area 42's result, 0..2 (its init and its check write it)
-constexpr U kCells44 = 0x90384B;          // u8: area 44's two gates, bits 0..1 and 4..5
-constexpr U kCount44 = 0x90384A;          // u8: area 44's init zeroes it with kCells44
-constexpr U kDrop46 = 0x903849;           // u8: area 46's party-drop state (1 armed, 2 / 0 done)
+constexpr ::bof3::image::Va kTextBuffer{0x904BA0};       // area 42's time string, by Crt_sprintf
+constexpr ::bof3::image::Va kRank{0x675A00};             // u8: area 42's result, 0..2 (its init and its check write it)
+constexpr ::bof3::image::Va kCells44{0x90384B};          // u8: area 44's two gates, bits 0..1 and 4..5
+constexpr ::bof3::image::Va kCount44{0x90384A};          // u8: area 44's init zeroes it with kCells44
+constexpr ::bof3::image::Va kDrop46{0x903849};           // u8: area 46's party-drop state (1 armed, 2 / 0 done)
 // kExtra0: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra[0]
 // kExtra1: now Sprite_ObjectsExtra[1] (symbols.toml). Sprite_ObjectsExtra[1]
 constexpr U kExtraStride = 0xA4;
@@ -57,30 +59,30 @@ constexpr U kPartyStride = 0x14C;
 constexpr U kEffectStride = 0x80;
 
 // --- area 42's tables (after its descriptor 0x5F6290's handler array) ------
-constexpr U kA42Handlers = 0x5F6274;      // 7: its +0x3C array; +0x34 is its tail (entry 6)
+constexpr ::bof3::image::Va kA42Handlers{0x5F6274};      // 7: its +0x3C array; +0x34 is its tail (entry 6)
 // kA42Messages: now Area42_Messages (symbols.toml). u16 by the s8 choice, unchecked
 // kA42Placements: now Area42_Placements (symbols.toml). 3 records of 13 bytes, EventOp_9x's operand, by kRank
-constexpr U kA42Format = 0x5F6308;        // the time's two-number format (read-only)
+constexpr ::bof3::image::Va kA42Format{0x5F6308};        // the time's two-number format (read-only)
 
 // --- area 43's ----------------------------------------------------------------
-constexpr U kA43Handlers = 0x5F6A18;      // 3
+constexpr ::bof3::image::Va kA43Handlers{0x5F6A18};      // 3
 // kA43States: now Area43_States (symbols.toml). 2: its handler 0's state table, by Sprite_Current[4]
 
 // --- area 44's ----------------------------------------------------------------
 // kA44Gate0: now Area44_Gate0 (symbols.toml). (u8 x, u8 z) x 4 by kCells44 & 3: extra object 0's cell
 // kA44Gate1: now Area44_Gate1 (symbols.toml). (u8 x, u8 z) x 4 by (kCells44 >> 4) & 3: extra object 1's
 // kA44Switches: now Area44_Switches (symbols.toml). (x, z, facing, flag, tail kind) x 4: the cell hook's
-constexpr U kA44SwitchesEnd = 0x5F7096;
+constexpr ::bof3::image::Va kA44SwitchesEnd{0x5F7096};
 
 // --- area 45's (the world-map copy's, in its data block after area 46's
 // descriptor; tools/area_rows.py moves them to area 45) ------------------------
 // kA45PlateAnims: now Area45_PlateAnims (symbols.toml). (u16 place, u8 animation, u8) x 10, searched with NO bound
 // kA45Cells: now Area45_Cells (symbols.toml). (u8 x, u8 z, u8, u8 id) x 265, searched with NO bound
-constexpr U kA45CellsEnd = 0x5F74E4;
+constexpr ::bof3::image::Va kA45CellsEnd{0x5F74E4};
 // kA45PlaceMessages: now Area45_PlaceMessages (symbols.toml). 11 rows of 0x20: u16 place, fifteen u16 messages
-constexpr U kA45PlaceMessagesEnd = 0x5F7644;
+constexpr ::bof3::image::Va kA45PlaceMessagesEnd{0x5F7644};
 // kA45NameSets: now Area45_NameSets (symbols.toml). 3 records of (u8 id, u8 item x 4)
-constexpr U kA45NameSetsEnd = 0x5F7653;
+constexpr ::bof3::image::Va kA45NameSetsEnd{0x5F7653};
 // kA45PlateStates: now Area45_PlateStates (symbols.toml). 5
 // kA45HudStates: now Area45_HudStates (symbols.toml). 2
 // kA45FrameStates: now Area45_FrameStates (symbols.toml). 4
@@ -103,19 +105,19 @@ constexpr U kA45NameSetsEnd = 0x5F7653;
 // kLeaderCellWordZ: now ObjTrio[0].z_whole (symbols.toml). the high word of +0x38
 // kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
 // kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
-constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z
-constexpr U kLeaderCellZ = 0x905E62;
+constexpr ::bof3::image::Va kLeaderCellX{0x905E66};      // the high words of Field_Kind2X / Z
+constexpr ::bof3::image::Va kLeaderCellZ{0x905E62};
 // kMapHeight: now AreaMap_Header[1] (symbols.toml). AreaMap_Header's second byte
 // kButtonMap0: now Gfx_UnpackScratch[0x1f000] (symbols.toml). the field's button map: word 0, the first legend's button
 // kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). word 6, the second's
 // kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
-constexpr U kAreaText = 0x803580;         // the area's text section
-constexpr U kAreaTextOffset45 = 0x803584; // area 45's region label at +[this] & 0xFFFF (area 16's is 0x803588)
-constexpr U kItemsHeld = 0x9040EC;        // a byte per item id: 0 not yet seen
+constexpr ::bof3::image::Va kAreaText{0x803580};         // the area's text section
+constexpr ::bof3::image::Va kAreaTextOffset45{0x803584}; // area 45's region label at +[this] & 0xFFFF (area 16's is 0x803588)
+constexpr ::bof3::image::Va kItemsHeld{0x9040EC};        // a byte per item id: 0 not yet seen
 // kItemNameKey: now AreaW0b_ItemNameKey (symbols.toml). the 16-byte name the hook copies for item 0x16
-constexpr U kTextRecords = 0x904CE0;      // Text_Records: the hook fills its first four rows of 0x20
-constexpr U kTextRecordsEnd = 0x904D60;
-constexpr U kFlag3A79 = 0x903A79;         // the record +4 state: 9 releases the effect
+constexpr ::bof3::image::Va kTextRecords{0x904CE0};      // Text_Records: the hook fills its first four rows of 0x20
+constexpr ::bof3::image::Va kTextRecordsEnd{0x904D60};
+constexpr ::bof3::image::Va kFlag3A79{0x903A79};         // the record +4 state: 9 releases the effect
 // The place hook's names for the tail bytes (area 16's code, copied): the
 // kind, the hook's state, its argument.
 // kMsgMode: now AreaW0a_TailKind (symbols.toml).
@@ -125,8 +127,8 @@ constexpr U kFlag3A79 = 0x903A79;         // the record +4 state: 9 releases the
 }  // namespace at
 
 // The unowned callees (above).
-constexpr std::uint32_t kDrawWindow = bof3::addr::Area75_DrawWindow;
-constexpr std::uint32_t kFreeObject = bof3::addr::Sprite_FindFree;
-constexpr std::uint32_t kFlagsToggle = bof3::addr::Flags_Toggle;
+constexpr ::bof3::image::CodeVa kDrawWindow{bof3::addr::Area75_DrawWindow};
+constexpr ::bof3::image::CodeVa kFreeObject{bof3::addr::Sprite_FindFree};
+constexpr ::bof3::image::CodeVa kFlagsToggle{bof3::addr::Flags_Toggle};
 
 }  // namespace area_w1b

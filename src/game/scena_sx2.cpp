@@ -101,7 +101,7 @@ extern "C" void __cdecl Effect_HoldFlag1C(unsigned frames) {
     e[0] = 1;
     e[5] = 4;
     e[9] = static_cast<unsigned char>(frames);
-    SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x1C);
+    SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C);
 }
 
 // original 0x532FD0: Sprite_Current placed at (x, z) plus the event battle's
@@ -124,18 +124,18 @@ extern "C" void __cdecl Party_PlaceInFormation(int x, int z, unsigned slot) {
         g = static_cast<unsigned char>(lead + 1);
     else if (count == 3)
         g = static_cast<unsigned char>(lead + 4);
-    const unsigned char* const pairs = At(bof3::addr::BattleFormation_Offsets);
-    const unsigned char* const row = At(bof3::addr::Formation_SlotVectors + (g * 3u + (slot & 0xFF)) * 8);
-    const unsigned f = At(at::kFormation)[0];
+    const unsigned char* const pairs = At(::bof3::Img(bof3::addr::BattleFormation_Offsets));
+    const unsigned char* const row = At(::bof3::Img(bof3::addr::Formation_SlotVectors) + (g * 3u + (slot & 0xFF)) * 8);
+    const unsigned f = At(::bof3::Img(at::kFormation))[0];
     const unsigned char a = pairs[f * 2];
     std::uint32_t zd;
     if (a != 0) {
         rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(U(Long(row)) * U(Quarter(a)) + U(x)));
-        const unsigned f2 = At(at::kFormation)[0];
+        const unsigned f2 = At(::bof3::Img(at::kFormation))[0];
         zd = U(Quarter(pairs[f2 * 2])) * U(Long(row + 4));
     } else {
         rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(U(x) - U(Quarter(pairs[f * 2 + 1])) * U(Long(row + 4))));
-        const unsigned f2 = At(at::kFormation)[0];
+        const unsigned f2 = At(::bof3::Img(at::kFormation))[0];
         zd = U(Quarter(pairs[f2 * 2 + 1])) * U(Long(row));
     }
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(zd + U(z)));
@@ -172,7 +172,7 @@ extern "C" void __cdecl Flags_Toggle(unsigned char* bits, unsigned index) {
 // else the word the angle and Light_AnglesCopy[0] = Light_Angles[0] + the
 // angle + 0x2AA, al 0. Camera_TurnToDegrees' one callee. No PSX twin paired.
 extern "C" unsigned char __cdecl Camera_TurnStep(unsigned angle, unsigned step) {
-    return TurnStep(Camera_Angles_addr, Light_Angles_addr, Light_AnglesCopy_addr, 0x2AA, angle, step);
+    return TurnStep(::bof3::Img(Camera_Angles_addr), ::bof3::Img(Light_Angles_addr), ::bof3::Img(Light_AnglesCopy_addr), 0x2AA, angle, step);
 }
 
 // original 0x57C600: Camera_TurnStepFB(the angle (s16 degrees) x 4096 / 360 &
@@ -192,7 +192,7 @@ extern "C" unsigned char __cdecl Camera_TurnFBToDegrees(unsigned angle, unsigned
 // Light_AnglesCopy[2] = Light_Angles[2] (0x90359C) + the angle - 0x200. al
 // 1 while turning. Camera_TurnFBToDegrees' one callee. No PSX twin paired.
 extern "C" unsigned char __cdecl Camera_TurnStepFB(unsigned angle, unsigned step) {
-    return TurnStep(Cond_AngleFB_addr, Light_Angles_addr + 0x4, Light_AnglesCopy_addr + 0x4, -0x200, angle, step);
+    return TurnStep(::bof3::Img(Cond_AngleFB_addr), ::bof3::Img(Light_Angles_addr) + 0x4, ::bof3::Img(Light_AnglesCopy_addr) + 0x4, -0x200, angle, step);
 }
 
 // original 0x57C8A0 (PSX 0x8015CC04): party member m's field object (ObjTrio + m * 0x14C, m
@@ -217,7 +217,7 @@ extern "C" void __cdecl Member_SetState2_8(unsigned member, unsigned value) {
 // before Task_Restart(Boot_Task).
 // PSX 0x8015D8AC (pairs_propagated "call").
 extern "C" void __cdecl Sound_StopChannels(void) {
-    for (std::uint32_t p = Addr(Sound_Channels); p < at::kChannelsEnd; p += 4) {
+    for (std::uint32_t p = Addr(Sound_Channels); p < ::bof3::Img(at::kChannelsEnd); p += 4) {
         const std::uint32_t buffer = U(Long(At(p)));
         if (buffer == 0) continue;
         SH_CALL(SndBuf_Stop)(At(buffer));
@@ -241,7 +241,7 @@ extern "C" void __cdecl Sound_SetCueVolume(unsigned cue, unsigned level) {
         const std::uint32_t voice = U(Long(At(cue_at + 4 * k)));
         if (voice == 0) continue;
         const std::uint32_t buffer = U(Long(At(Addr(Sound_Banks) + at::kBankVoices + bank + (voice & 0xFF) * 8)));
-        SH_AT(void (__cdecl*)(std::uint32_t, std::uint32_t), at::kSndBufVolume)(buffer, level);
+        SH_AT(void (__cdecl*)(std::uint32_t, std::uint32_t), at::kSndBufVolume.v)(buffer, level);
     }
 }
 
@@ -251,7 +251,7 @@ extern "C" void __cdecl Sound_SetCueVolume(unsigned cue, unsigned level) {
 // and answers 1. KeyItem_Add's opposite; chapter 13's Scena13_Run3 takes
 // item 0xB. PSX 0x80166B54 (pairs_propagated "gap9").
 extern "C" unsigned char __cdecl KeyItem_Remove(unsigned item) {
-    unsigned char* const list = At(at::kKeyItems);
+    unsigned char* const list = At(::bof3::Img(at::kKeyItems));
     const auto id = static_cast<unsigned char>(item);
     for (unsigned i = 0; i < 0x20; ++i) {
         if (list[i] != id) continue;
@@ -272,9 +272,9 @@ extern "C" unsigned char __cdecl KeyItem_Remove(unsigned item) {
 extern "C" unsigned char* __cdecl AbilityList_ForType(unsigned member, unsigned id, unsigned working) {
     static const unsigned char kLists[4] = {0x60, 0x6A, 0x74, 0x7E};
     const unsigned m = member & 0xFF;
-    unsigned char* const base = (working & 0xFF) != 0 ? At(at::kWorkingRecords + m * at::kObjStride)
-                                                      : At(CharacterRecords_addr + m * at::kRecordStride);
-    const unsigned type = At(at::kAbilityType)[(id & 0xFF) * 24] & 3;
+    unsigned char* const base = (working & 0xFF) != 0 ? At(::bof3::Img(at::kWorkingRecords) + m * at::kObjStride)
+                                                      : At(::bof3::Img(CharacterRecords_addr) + m * at::kRecordStride);
+    const unsigned type = At(::bof3::Img(at::kAbilityType))[(id & 0xFF) * 24] & 3;
     return base + kLists[type];
 }
 

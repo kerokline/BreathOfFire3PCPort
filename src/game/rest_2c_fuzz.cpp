@@ -203,7 +203,7 @@ void Move(U h) {
     case 17: SetL(CharacterRecords_addr + ((h >> 16) % 8) * at::kRecordStride + 0xC, h * 0x9E3779B1u); break;
     case 0: B(FieldS_State_addr) = static_cast<unsigned char>(v); break;
     case 1: B(FieldS_Step_addr) = static_cast<unsigned char>(v); break;
-    case 2: B(at::kTimer) = static_cast<unsigned char>(v & 1 ? v >> 1 : (v >> 1) % 3); break;
+    case 2: B(::bof3::Img(at::kTimer.v)) = static_cast<unsigned char>(v & 1 ? v >> 1 : (v >> 1) % 3); break;
     case 3: SetL(Rest2c_Slot_addr, v % at::kSlotCount); break;
     case 4: B(Win(1, 0xB)) = static_cast<unsigned char>(v % 0x12); break;
     case 5: B(Win(1, 0xA)) = static_cast<unsigned char>(v % 10); break;
@@ -228,7 +228,7 @@ U Stir(const U*, U answer) {
 // R2B's 0x57EEF0 draws the record it is handed: its bytes (the faded colour,
 // the scale) are logged at the call, as the draw would see them.
 U FigureDraw(const U*, U answer) {
-    sh::NoteBytes(sh::Mem(at::kFigure), 0x110);
+    sh::NoteBytes(sh::Mem(::bof3::Img(at::kFigure.v)), 0x110);
     Move(sh::Noise());
     return answer;
 }
@@ -287,9 +287,9 @@ const sh::Callee kCallees[] = {
     {R2C_OURS(MasterPanel_DrawExpBar), 5, {0xFFFF, 0xFFFF, 0xFF, 0xFF, kW}, kG, 0, 0},
     {R2C_OURS(MasterPanel_ExpForLevel), 2, {0xFF, 0xFF}, kG, 0, 0, {}, &ExpAnswer},
     // other groups' of this wave, by address (docs/rest_2c.md section 6)
-    {"0x57EEF0", at::kFigureDraw, at::kFigureDraw, 1, {kW}, kG, 0, 0, {}, &FigureDraw},                     // R2B
-    {"0x5869A0", at::kPickAsk, at::kPickAsk, 2, {0xFFFF, 0xFF}, kG, 0, 0, {}, &Stir},                 // R2D: and ecx, 0xFFFF; dl
-    {"0x59DB70", at::kGlyph, at::kGlyph, 6, {0xFFFF, 0xFFFF, 0xFF, 0xFF, 0xFFFF, 0xFF}, kG, 0, 0},    // R2H
+    {"0x57EEF0", at::kFigureDraw.v, at::kFigureDraw.v, 1, {kW}, kG, 0, 0, {}, &FigureDraw},                     // R2B
+    {"0x5869A0", at::kPickAsk.v, at::kPickAsk.v, 2, {0xFFFF, 0xFF}, kG, 0, 0, {}, &Stir},                 // R2D: and ecx, 0xFFFF; dl
+    {"0x59DB70", at::kGlyph.v, at::kGlyph.v, 6, {0xFFFF, 0xFFFF, 0xFF, 0xFF, 0xFFFF, 0xFF}, kG, 0, 0},    // R2H
     // the C runtime's strncpy: both sides call it for real
     {R2C_OURS(Crt_strncpy), 3, {kW, kW, kW}, sh::Answer::kThrough, 0, 0},
     // ours, outside the standard set or typed otherwise, with what each reads
@@ -327,12 +327,12 @@ const sh::Region kRegions[] = {
     {WindowRecords_addr, 22 * at::kWindowStride}, // WindowRecords 0x803160..0x803477
     {0x6BC880, 0x48},                             // the save / inn bytes, the sell flags
     {0x903580, 0xC},                              // the buttons' dwords before Field_ConfirmButtons
-    {at::kBlock, 0x24},                           // the save block 0x9039E0..0x903A03 (the master byte 0x9039F5)
+    {at::kBlock.v, 0x24},                           // the save block 0x9039E0..0x903A03 (the master byte 0x9039F5)
     {0x903A94, 0x903F90 - 0x903A94},              // the records past the style region
     {0x904160, 0x400},                            // the save block 0x904160..0x904560
     {0x904700, 0x390},                            // and 0x904700..0x904A90
     {Save_Staging_addr, at::kBlockBytes + at::kStagingClear}, // the staging copy and what it clears
-    {at::kSummaries, at::kSlotCount * at::kSummaryBytes},  // the slots' summaries
+    {at::kSummaries.v, at::kSlotCount * at::kSummaryBytes},  // the slots' summaries
     {Rest2c_Slot_addr, 4},                        // the save cursor
     {0x939880, 0x180},                            // the master's bytes 0x9398CD..0x9398D3, the figure record 0x9398E0..0x9399EC
     {0x7DEE40, 8},                                // the message box's flags 0x7DEE44
@@ -354,10 +354,10 @@ void SeedButtons() {
 }
 
 void SeedMenu() {
-    B(at::kTimer) = static_cast<unsigned char>(PickOf(0, 1, 1, 2, 4, 4, 5, 6, 0x1E, sh::Next()));
+    B(::bof3::Img(at::kTimer.v)) = static_cast<unsigned char>(PickOf(0, 1, 1, 2, 4, 4, 5, 6, 0x1E, sh::Next()));
     B(FieldS_Answer_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     B(ModeStates_ShopObject_addr) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, 0xFE, sh::Next()));
-    B(at::kMsgFlags) = static_cast<unsigned char>(sh::Half() ? sh::Next() | 2 : sh::Next() & ~2u);
+    B(::bof3::Img(at::kMsgFlags.v)) = static_cast<unsigned char>(sh::Half() ? sh::Next() | 2 : sh::Next() & ~2u);
     B(Field_InputFlags_addr) = static_cast<unsigned char>(PickOf(0x40, 0x40, 0, 0x41, sh::Next()));
     SetW(Game_AreaNumber_addr, PickOf(0xBC, 0x85, 0xC1, 0xBB, 0xBD, 0x84, 0x86, 0xC0, 0xC2, sh::Next()));
     SetW(Transition_Busy_addr, PickOf(0, 0, sh::Next()));
@@ -386,7 +386,7 @@ void SeedMaster() {
             static_cast<unsigned char>(all || sh::Half() ? master : PickOf(0xFF, master + 1u, sh::Next()));
     }
     // the introduction flag of the master (Flags_Test is a recorder: its row only logged)
-    if (sh::Half()) B(at::kIntroFlags + master / 8) ^= static_cast<unsigned char>(0x80u >> (master % 8));
+    if (sh::Half()) B(::bof3::Img(at::kIntroFlags.v) + master / 8) ^= static_cast<unsigned char>(0x80u >> (master % 8));
 }
 
 void SeedFigure() {

@@ -64,16 +64,16 @@ Fn Import(U slot) {
     return fn;
 }
 unsigned long __stdcall ImportSetTextColor(void* hdc, unsigned long color) {
-    return Import<unsigned long (__stdcall*)(void*, unsigned long)>(PsxRest_ImportSetTextColor_addr)(hdc, color);
+    return Import<unsigned long (__stdcall*)(void*, unsigned long)>(::bof3::Img(PsxRest_ImportSetTextColor_addr))(hdc, color);
 }
 int __stdcall ImportSetBkMode(void* hdc, int mode) {
-    return Import<int (__stdcall*)(void*, int)>(PsxRest_ImportSetBkMode_addr)(hdc, mode);
+    return Import<int (__stdcall*)(void*, int)>(::bof3::Img(PsxRest_ImportSetBkMode_addr))(hdc, mode);
 }
 int __stdcall ImportTextOutA(void* hdc, int x, int y, const char* text, int n) {
-    return Import<int (__stdcall*)(void*, int, int, const char*, int)>(PsxRest_ImportTextOutA_addr)(hdc, x, y, text, n);
+    return Import<int (__stdcall*)(void*, int, int, const char*, int)>(::bof3::Img(PsxRest_ImportTextOutA_addr))(hdc, x, y, text, n);
 }
 int __stdcall ImportMessageBoxA(void* hwnd, const char* text, const char* caption, unsigned type) {
-    return Import<int (__stdcall*)(void*, const char*, const char*, unsigned)>(PsxRest_ImportMessageBoxA_addr)(hwnd, text, caption,
+    return Import<int (__stdcall*)(void*, const char*, const char*, unsigned)>(::bof3::Img(PsxRest_ImportMessageBoxA_addr))(hwnd, text, caption,
                                                                                                   type);
 }
 
@@ -164,7 +164,7 @@ extern "C" void __cdecl Gte_ApplyMatrixSV(const short* matrix, const short* vect
 // 512 pairs) to Crt_free, and the pair - the generation counter with it -
 // zeroed. A pair whose pointer is null is left as it is.
 extern "C" void __cdecl Gfx_FreeClutRows() {
-    for (U at = Gfx_ClutRows_addr + 4; at < kClutRowsEnd + 4; at += 8) {
+    for (U at = ::bof3::Img(Gfx_ClutRows_addr) + 4; at < ::bof3::Img(kClutRowsEnd) + 4; at += 8) {
         void* const row = Ptr(at);
         if (!row) continue;
         g.free(row);
@@ -177,7 +177,7 @@ extern "C" void __cdecl Gfx_FreeClutRows() {
 // its first entry whose state byte is 0: the texture at +0x14 released, then
 // the surface at +0x10 - read after that Release - and the 0x18 bytes zeroed.
 extern "C" void __cdecl Gfx_ReleaseTexCache() {
-    for (U page = Gfx_TexCache_addr; page < kTexCacheEnd; page += kTexPageBytes) {
+    for (U page = ::bof3::Img(Gfx_TexCache_addr); page < ::bof3::Img(kTexCacheEnd); page += kTexPageBytes) {
         for (U i = 0; i < 0x20; ++i) {
             const U entry = page + i * kTexEntryBytes;
             if (!At(entry)[0]) break;
@@ -192,7 +192,7 @@ extern "C" void __cdecl Gfx_ReleaseTexCache() {
 // the surface +8 (read after), the entry's five dwords zeroed and its glyph
 // word +0 set back to 0xFFFF - the set-up's empty value.
 extern "C" void __cdecl Font_ReleaseTexCache() {
-    for (U entry = Font_TexCache_addr; entry < kFontCacheEnd; entry += kFontEntryBytes) {
+    for (U entry = ::bof3::Img(Font_TexCache_addr); entry < ::bof3::Img(kFontCacheEnd); entry += kFontEntryBytes) {
         ReleaseIf(entry + 0xC, false);
         ReleaseIf(entry + 8, false);
         ZeroDwords(entry, 5);
@@ -204,12 +204,12 @@ extern "C" void __cdecl Font_ReleaseTexCache() {
 // instruction of the image names: +0x10 then +8, +0x14 then +0xC, +4, +0 -
 // each released and zeroed when it is not null (docs/psx-rest.md section 2).
 extern "C" void __cdecl Display_ReleaseOrphans() {
-    for (U at = PsxRest_Orphans_addr + 8; at < PsxRest_Orphans_addr + 0x10; at += 4) {
+    for (U at = ::bof3::Img(PsxRest_Orphans_addr) + 8; at < ::bof3::Img(PsxRest_Orphans_addr) + 0x10; at += 4) {
         ReleaseIf(at + 8, true);
         ReleaseIf(at, true);
     }
-    ReleaseIf(PsxRest_Orphans_addr + 4, true);
-    ReleaseIf(PsxRest_Orphans_addr, true);
+    ReleaseIf(::bof3::Img(PsxRest_Orphans_addr) + 4, true);
+    ReleaseIf(::bof3::Img(PsxRest_Orphans_addr), true);
 }
 
 // original 0x5A65F0. The backdrop block: 0x6BEA0C then 0x6BEA04, 0x6BEA10 then
@@ -217,12 +217,12 @@ extern "C" void __cdecl Display_ReleaseOrphans() {
 // then the seven dwords from 0x6BE9F8 zeroed, and 0x6BE9FC = 0x12345678,
 // which nothing reads.
 extern "C" void __cdecl Display_ReleaseBackdrop() {
-    for (U at = kBackdropPairs; at < kBackdropPairs + 8; at += 4) {
+    for (U at = ::bof3::Img(kBackdropPairs); at < ::bof3::Img(kBackdropPairs) + 8; at += 4) {
         ReleaseIf(at + 8, false);
         ReleaseIf(at, false);
     }
-    ReleaseIf(Dd_CellBackdrop_addr, false);
-    ZeroDwords(kBackdropBlock, 7);
+    ReleaseIf(::bof3::Img(Dd_CellBackdrop_addr), false);
+    ZeroDwords(::bof3::Img(kBackdropBlock.v), 7);
     PsxRest_BackdropMagic = kMagic;
 }
 
@@ -235,10 +235,10 @@ extern "C" void __cdecl D3d_FreeCellTextures() {
 // original 0x5A6650. D3d_AfterDraw's three surfaces - the texture, its
 // surface, the capture surface - released, then its seven dwords zeroed.
 extern "C" void __cdecl D3d_ReleaseAfterDraw() {
-    ReleaseIf(D3d_CaptureTexture_addr, false);
-    ReleaseIf(D3d_CaptureTexSurface_addr, false);
-    ReleaseIf(D3d_CaptureSurface_addr, false);
-    ZeroDwords(D3d_CaptureReady_addr, 7);
+    ReleaseIf(::bof3::Img(D3d_CaptureTexture_addr), false);
+    ReleaseIf(::bof3::Img(D3d_CaptureTexSurface_addr), false);
+    ReleaseIf(::bof3::Img(D3d_CaptureSurface_addr), false);
+    ZeroDwords(::bof3::Img(D3d_CaptureReady_addr), 7);
 }
 
 // --- The teardown, the text, the error box, the sound -------------------------
@@ -258,25 +258,25 @@ extern "C" void __cdecl Display_Teardown(void* hwnd) {
     g.release_backdrop();
     g.free_cell_textures();
     g.release_after_draw();
-    ReleaseIf(D3d_BackMaterial_addr, true);
-    ReleaseIf(D3d_Viewport_addr, true);
-    ReleaseIf(D3d_Device_addr, true);
-    ReleaseIf(PsxRest_Direct3D_addr, true);
-    ReleaseIf(PsxRest_Clipper_addr, true);
-    ReleaseIf(PsxRest_ZBuffer_addr, true);
-    ReleaseIf(Dd_StageSurface_addr, true);
-    ReleaseIf(DDraw_BackBuffer_addr, true);
-    ReleaseIf(DDraw_Primary_addr, true);
+    ReleaseIf(::bof3::Img(D3d_BackMaterial_addr), true);
+    ReleaseIf(::bof3::Img(D3d_Viewport_addr), true);
+    ReleaseIf(::bof3::Img(D3d_Device_addr), true);
+    ReleaseIf(::bof3::Img(PsxRest_Direct3D_addr), true);
+    ReleaseIf(::bof3::Img(PsxRest_Clipper_addr), true);
+    ReleaseIf(::bof3::Img(PsxRest_ZBuffer_addr), true);
+    ReleaseIf(::bof3::Img(Dd_StageSurface_addr), true);
+    ReleaseIf(::bof3::Img(DDraw_BackBuffer_addr), true);
+    ReleaseIf(::bof3::Img(DDraw_Primary_addr), true);
     void* dd = Dd_DirectDraw;
     if (!dd) return;
-    if (Long(kRenderFlags) & 0x100) {
+    if (Long(::bof3::Img(kRenderFlags.v)) & 0x100) {
         Method<ComCoop>(dd, kSetCooperativeLevel)(dd, hwnd, kDdsclNormal);
         dd = Dd_DirectDraw;
         Method<ComCall>(dd, kRestoreDisplayMode)(dd);
         dd = Dd_DirectDraw;
     }
     Method<ComCall>(dd, kRelease)(dd);
-    PutLong(kDirectDraw, 0);
+    PutLong(::bof3::Img(kDirectDraw.v), 0);
 }
 
 // original 0x5A66B0. GDI text on the back buffer: GetDC on DDraw_BackBuffer as
@@ -302,9 +302,9 @@ extern "C" void __cdecl Display_TextOut(int x, int y, const char* text) {
 // after the first table's twenty. Nothing checks the code; nothing reads the
 // box's answer.
 extern "C" void __cdecl Display_ErrorBox(int code) {
-    const U base = code < 100 ? kErrorText : kErrorTextHigh;
+    const U base = code < 100 ? ::bof3::Img(kErrorText.v) : ::bof3::Img(kErrorTextHigh.v);
     const char* const text = reinterpret_cast<const char*>(Ptr(base + static_cast<U>(code) * 4));
-    g.message_box(nullptr, text, reinterpret_cast<const char*>(At(kErrorCaption)), kIconHand);
+    g.message_box(nullptr, text, reinterpret_cast<const char*>(At(::bof3::Img(kErrorCaption.v))), kIconHand);
 }
 
 // original 0x5A6980. SndStream_Stop, Music_Release, then the primary sound
@@ -313,8 +313,8 @@ extern "C" void __cdecl Display_ErrorBox(int code) {
 extern "C" void __cdecl Sound_Shutdown() {
     g.stream_stop();
     g.music_release();
-    ReleaseIf(Snd_Primary_addr, true);
-    ReleaseIf(Snd_Device_addr, true);
+    ReleaseIf(::bof3::Img(Snd_Primary_addr), true);
+    ReleaseIf(::bof3::Img(Snd_Device_addr), true);
 }
 
 void PsxRest_Inject() {

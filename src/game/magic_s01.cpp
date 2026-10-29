@@ -51,21 +51,21 @@ using move_script::Word;
 // The scratch the draw keeps its radius in (SharedScratch's words +0 and +2)
 // and the three SVECTORs of Prim_VertexScratch it projects; both read again
 // after every call, as the original reads them.
-constexpr std::uint32_t kS = SharedScratch_addr;
+constexpr ::bof3::image::Va kS{SharedScratch_addr};
 // kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
-unsigned char ActorByte() { return Mem(at::kActor)[0]; }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char* Source() { return Pointer(::bof3::Img(BattleOdds_ActorObject_addr)); }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
+unsigned char ActorByte() { return Mem(::bof3::Img(at::kActor))[0]; }
 
-short SS(unsigned k) { return static_cast<short>(Word(Mem(kS + k))); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+short SS(unsigned k) { return static_cast<short>(Word(Mem(::bof3::Img(kS.v) + k))); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
+std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 short S16(const unsigned char* a) { return static_cast<short>(Word(a)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -88,9 +88,9 @@ std::uint32_t Twice(int v) { return static_cast<std::uint32_t>(static_cast<int>(
 // The engine's 0x435A70 (in no group, unnamed): BattleEnemy_SetAnimation(anim)
 // on the enemy of battle index `actor` (0x93B960 + 0x128 (actor - 3),
 // unchecked), 0x939AD8 put back after. Row 1 hands it the acting actor.
-constexpr std::uint32_t kEnemyAnimation = bof3::addr::BattleEnemy_SetAnimationOf;   // 0x435A70, R3A's (round 14)
+constexpr ::bof3::image::CodeVa kEnemyAnimation{bof3::addr::BattleEnemy_SetAnimationOf};   // 0x435A70, R3A's (round 14)
 using EnemyAnimationFn = void (__cdecl*)(unsigned, unsigned);
-void EnemyAnimation(unsigned anim) { MH_AT(EnemyAnimationFn, kEnemyAnimation)(ActorByte(), anim); }
+void EnemyAnimation(unsigned anim) { MH_AT(EnemyAnimationFn, kEnemyAnimation.v)(ActorByte(), anim); }
 
 // The phase handlers of other units the children's tables hold
 // (docs/magic_s01.md section 3) are ours now and named in the tables: S04's
@@ -100,7 +100,7 @@ void EnemyAnimation(unsigned anim) { MH_AT(EnemyAnimationFn, kEnemyAnimation)(Ac
 // game the jmp Inject put there (or Capcom's code under BOF3X_ORIGINAL), in
 // the fuzz that address's recorder.
 using Fn0 = void (__cdecl*)();
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Gte_RotTransPers3 as the original pushes it: one pointer more than
 // symbols.toml's prototype carries (a flag word the callee may write).
@@ -119,9 +119,9 @@ void SpawnCopy(unsigned parameter) {
     const unsigned slot = MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu;
     const unsigned actor = ActorByte();
     const unsigned char* const from =
-        actor < 3 ? Mem(ObjTrio_addr + actor * at::kPartyStride)
-                  : Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
-    unsigned char* const task = Mem(BattleTask_Slots_addr + slot * at::kTaskStride);
+        actor < 3 ? Mem(::bof3::Img(ObjTrio_addr) + actor * at::kPartyStride)
+                  : Mem(::bof3::Img(Battle_Enemies_addr) + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
+    unsigned char* const task = Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride);
     unsigned char* const self = Sc();
     for (unsigned k = 0; k < 0x80; k += 4) SetLong(task + k, Long(from + k));
     SetLong(task + 0x80, static_cast<std::int32_t>(Key(self)));

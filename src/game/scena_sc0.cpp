@@ -43,8 +43,6 @@ void SetL(unsigned char* p, uint32_t v) { move_script::SetLong(p, static_cast<in
 // The chapter's flag row, as the original reads it: the pointer afresh.
 unsigned char* Row() { return At(Chapter_FlagRow); }
 
-constexpr uint32_t kTextLo = 0x401000, kTextHi = 0x5C3000;
-
 // A handler out of one of the chapter's .data tables, read in place and
 // unchecked as the original reads it. The tables run on into other data (the
 // state table into the run table, whose entries are code too; the run and
@@ -54,9 +52,11 @@ uint32_t CodeAt(uint32_t table, int index, const char* who) {
     const uint32_t at = table + 4u * static_cast<uint32_t>(index);
     const uint32_t entry = L(at);
     const bool swapped = scenario_harness::g_active;   // the fuzz's recorders live outside .text
-    if (!swapped && (entry < kTextLo || entry >= kTextHi))
-        bof3::Fatal("%s: index %d reads 0x%X at 0x%X, not code - past its table (the original jumps there)", who, index,
-                    (unsigned)entry, (unsigned)at);
+    // A code word: hosted a VA in BOF3.exe's .text, in bof3x.exe a function of ours
+    // the bind table names (common/image_base.h IsCodeWord); not the trap, not data.
+    if (!swapped && !::bof3::IsCodeWord(entry))
+        bof3::Fatal("%s: index %d reads 0x%X at 0x%X (VA 0x%X), not code - past its table (the original jumps there)", who,
+                    index, (unsigned)entry, (unsigned)at, (unsigned)::bof3::VaOf(at));
     return entry;
 }
 
@@ -67,7 +67,7 @@ bool TakeSlot() {
     kSlot = slot;
     return slot != 0xFF;
 }
-unsigned char* SlotRecord() { return At(Effect_Objects_addr + (static_cast<std::uint32_t>(kSlot) << 7)); }
+unsigned char* SlotRecord() { return At(::bof3::Img(Effect_Objects_addr) + (static_cast<std::uint32_t>(kSlot) << 7)); }
 
 // The record views (game/record_views.h): rv::As<records::EffectObject>(p) is
 // given effect objects (Effect_Objects).
@@ -88,7 +88,7 @@ void WaitLoad() {
     while (SH_CALL(File_LoadDone)() == 0) SH_CALL(Task_Sleep)(1);
 }
 
-void Timer(unsigned v) { SetW(kTimer, v); }
+void Timer(unsigned v) { SetW(::bof3::Img(kTimer), v); }
 void Step(unsigned v) { MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(v); }
 void Run(unsigned v) { MoveScript_Var7 = static_cast<unsigned char>(v); }
 
@@ -99,9 +99,9 @@ unsigned char* Corner(const char* who) {
     const unsigned area = Game_AreaNumber;
     if (area >= Area_Descriptors_count)
         bof3::Fatal("%s: Game_AreaNumber 0x%X past Area_Descriptors' %u", who, area, Area_Descriptors_count);
-    const uint32_t desc = L(kDescriptors + 4 * area);
+    const uint32_t desc = L(::bof3::Img(kDescriptors) + 4 * area);
     const uint32_t corner = L(desc + 0xC) + 0x12;
-    SetL(kCorner, corner);
+    SetL(::bof3::Img(kCorner), corner);
     return At(corner);
 }
 
@@ -119,7 +119,7 @@ void EnsureAnimation(uint32_t eax) {
 // 1 Scena00_EnterArea, 2 Scena00_Run; 3..14 are Scena00_Runs' entries (the
 // tables are one run of words), as Scena16_Frame's.
 extern "C" void __cdecl Scena00_Frame(void) {
-    reinterpret_cast<void (__cdecl*)()>(CodeAt(Scena00_States_addr, static_cast<signed char>(MoveScript_PartyRecords[0x62]), "Scena00_Frame"))();
+    reinterpret_cast<void (__cdecl*)()>(CodeAt(::bof3::Img(Scena00_States_addr), static_cast<signed char>(MoveScript_PartyRecords[0x62]), "Scena00_Frame"))();
 }
 
 // original 0x537F30: state 0, the chapter's start: call-table entry 0
@@ -130,16 +130,16 @@ extern "C" void __cdecl Scena00_Frame(void) {
 extern "C" void __cdecl Scena00_Start(void) {
     SH_CALL(Scenario_CallA)(0);
     SH_CALL(Field_ChangeArea)(0x18, 0x630000, 0xC0000, 3);
-    B(kScriptFlags) = static_cast<unsigned char>(B(kScriptFlags) | 0x40);
+    B(::bof3::Img(kScriptFlags)) = static_cast<unsigned char>(B(::bof3::Img(kScriptFlags)) | 0x40);
     FieldModes_Pending = 0x18;
-    SetL(kPending + 4, 0x630000);
-    SetL(kPending + 8, 0xC0000);
-    B(kPending + 3) = 3;
-    for (uint32_t a = 0x904608; a < 0x904650; a += 4) SetL(a, 0xFFFFFFFFu);
+    SetL(::bof3::Img(kPending) + 4, 0x630000);
+    SetL(::bof3::Img(kPending) + 8, 0xC0000);
+    B(::bof3::Img(kPending) + 3) = 3;
+    for (uint32_t a = ::bof3::Img(0x904608); a < ::bof3::Img(0x904650); a += 4) SetL(a, 0xFFFFFFFFu);
     Run(5);
     Step(0);
     WaitLoad();
-    SetL(kCounter, 0);
+    SetL(::bof3::Img(kCounter), 0);
     MoveScript_PartyRecords[0x62] = 1;
 }
 
@@ -160,7 +160,7 @@ extern "C" void __cdecl Scena00_EnterArea(void) {
     auto* const xobj3 = &Sprite_ObjectsExtra[3];
     if (Game_AreaNumber == 1) {
         SH_CALL(Party_DropIn)(0);
-        const unsigned char n = B(kByte4A);
+        const unsigned char n = B(::bof3::Img(kByte4A));
         bool clear;
         if (n == 0) {
             if (TakeSlot()) {
@@ -172,7 +172,7 @@ extern "C" void __cdecl Scena00_EnterArea(void) {
                 rv::As<records::EffectObject>(e)->step_x = 3;
                 rv::As<records::EffectObject>(e)->step_z = 1;
             }
-            const unsigned char again = B(kByte4A);
+            const unsigned char again = B(::bof3::Img(kByte4A));
             Camera_Angles[2] = static_cast<std::uint16_t>(Camera_Angles[2]) + 0xFEABu;
             clear = again != 3;
         } else if (n == 3) {
@@ -185,7 +185,7 @@ extern "C" void __cdecl Scena00_EnterArea(void) {
             clear = true;
         }
         if (clear) {
-            B(kByte4A) = 0;
+            B(::bof3::Img(kByte4A)) = 0;
             Step(0);
         }
         Run(0xA);
@@ -245,7 +245,7 @@ extern "C" void __cdecl Scena00_Area02(void) {
     auto* const member0 = ObjTrio;
     if (Game_AreaNumber != 2) return;
     if (SH_CALL(Flags_Test)(Row(), 2) == 0) {
-        SetL(kCounter, 0);
+        SetL(::bof3::Img(kCounter), 0);
         SH_CALL(MapView_SetElevation)(0x300);
         SH_CALL(Kind2_Place)(0);
         Camera_Angles[0] = static_cast<std::uint16_t>(Camera_Angles[0]) + 0xAAu;
@@ -277,7 +277,7 @@ extern "C" void __cdecl Scena00_Area18(void) {
     switch (Cond_ByteFD) {
     case 0: {
         unsigned char* const row = Row();
-        SetL(kCounter, 0);
+        SetL(::bof3::Img(kCounter), 0);
         if (SH_CALL(Flags_Test)(row, 6) != 0) return;
         Step(0);
         Run(8);
@@ -289,7 +289,7 @@ extern "C" void __cdecl Scena00_Area18(void) {
             WaitLoad();
             unsigned char* const row = Row();
             Draw_PassFlags = 0x1F;
-            SetL(kCounter, 0);
+            SetL(::bof3::Img(kCounter), 0);
             SH_CALL(Flags_Set)(row, 3);
             SH_CALL(MapView_SetElevation)(0x480);
             Camera_Distance = 0x480;
@@ -302,15 +302,15 @@ extern "C" void __cdecl Scena00_Area18(void) {
         }
         // the two 16-word CLUT rows 0x80BC00 and 0x80FC00 each from 0x20 on
         for (uint32_t i = 0; i < 0x20; i += 2) {
-            SetW(0x80BC00 + i, W(0x80BC20 + i));
-            SetW(0x80FC00 + i, W(0x80FC20 + i));
+            SetW(::bof3::Img(0x80BC00) + i, W(::bof3::Img(0x80BC20) + i));
+            SetW(::bof3::Img(0x80FC00) + i, W(::bof3::Img(0x80FC20) + i));
         }
         {
             unsigned char* const row = Row();
             Gfx_ClutStripDirty = 1;
             if (SH_CALL(Flags_Test)(row, 5) == 0) {
                 Draw_PassFlags = 0x1F;
-                SetL(kCounter, 0);
+                SetL(::bof3::Img(kCounter), 0);
                 SH_CALL(Party_DropIn)(1);
                 return;
             }
@@ -327,14 +327,14 @@ extern "C" void __cdecl Scena00_Area18(void) {
         return;
     }
     Run(6);
-    SetL(kCounter, 0);
+    SetL(::bof3::Img(kCounter), 0);
     Step(0);
 }
 
 // original 0x5384F0: state 2, a tail jump through Scena00_Runs on the s8
 // MoveScript_Var7 - 0 and 1 a bare ret (0x437CC0), 2..11 the runs below.
 extern "C" void __cdecl Scena00_Run(void) {
-    reinterpret_cast<void (__cdecl*)()>(CodeAt(Scena00_Runs_addr, MoveScript_Var7, "Scena00_Run"))();
+    reinterpret_cast<void (__cdecl*)()>(CodeAt(::bof3::Img(Scena00_Runs_addr), MoveScript_Var7, "Scena00_Run"))();
 }
 
 // original 0x538500: run 2, steps 0..7 (a jump table; past 7 nothing).
@@ -345,23 +345,23 @@ extern "C" void __cdecl Scena00_Run2(void) {
         SH_CALL(Msg_OpenScript)(0x10);
         Field_Request = 2;
         SH_CALL(Music_Play)(6, 8);
-        B(kScriptFlags) = static_cast<unsigned char>(B(kScriptFlags) | 0x80);
+        B(::bof3::Img(kScriptFlags)) = static_cast<unsigned char>(B(::bof3::Img(kScriptFlags)) | 0x80);
         Timer(0);
         Step(1);
         return;
     case 1:
-        if (W(kTimer) < 0x7C) Timer(W(kTimer) + 1u);
+        if (W(::bof3::Img(kTimer)) < 0x7C) Timer(W(::bof3::Img(kTimer)) + 1u);
         if (Field_Request == 2) return;
         Draw_PassFlags = 0x1F;
         SH_CALL(ScriptFlags_Set40)();
         SH_CALL(ObjTrio_SetBit40)();
         SH_CALL(Transition_Start)(1);
-        B(kByte4B) = 1;
+        B(::bof3::Img(kByte4B)) = 1;
         Timer(0);
         Step(2);
         return;
     case 2:
-        if (B(kByte4B) != 0x54) return;
+        if (B(::bof3::Img(kByte4B)) != 0x54) return;
         SH_CALL(Transition_Start)(0);
         Step(3);
         return;
@@ -383,12 +383,12 @@ extern "C" void __cdecl Scena00_Run2(void) {
         Step(6);
         return;
     case 6:
-        if (B(kByte4A) != 0x23) return;
+        if (B(::bof3::Img(kByte4A)) != 0x23) return;
         if (TakeSlot()) Kind13(Camera_Angles[0] + 0x180, Camera_Angles[1], Camera_Angles[2], 0x60);
         Step(7);
         return;
     case 7:
-        if (B(kByte4B) != 0x60) return;
+        if (B(::bof3::Img(kByte4B)) != 0x60) return;
         SH_CALL(Field_ChangeArea)(0x1F, 0x70000, 0x140000, 0);
         Area_EnterTransition = 0xFF;
         SH_CALL(Music_FadeOutStop)(0x40);
@@ -409,14 +409,14 @@ extern "C" void __cdecl Scena00_Run3(void) {
     auto* const xobj0 = Sprite_ObjectsExtra;
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        if (B(kByte4A) != 0x30) return;
+        if (B(::bof3::Img(kByte4A)) != 0x30) return;
         Draw_PassFlags = 0x1F;
         SH_CALL(Transition_Start)(1);
         if (TakeSlot()) Kind13(Camera_Angles[0] + 0x1C0, Camera_Angles[1], Camera_Angles[2], 0xFF);
         Step(1);
         return;
     case 1: {
-        if (B(kByte4A) == 0x35) {
+        if (B(::bof3::Img(kByte4A)) == 0x35) {
             Step(2);
             return;
         }
@@ -432,11 +432,11 @@ extern "C" void __cdecl Scena00_Run3(void) {
         return;
     }
     case 2:
-        B(kByte4A) = 0x37;
+        B(::bof3::Img(kByte4A)) = 0x37;
         Step(3);
         return;
     case 3:
-        if (B(kByte4A) != 0x38) return;
+        if (B(::bof3::Img(kByte4A)) != 0x38) return;
         SH_CALL(Music_Play)(2, 0x20);
         SH_CALL(Field_ChangeArea)(2, 0x340000, 0x430000, 3);
         Run(4);
@@ -465,20 +465,20 @@ extern "C" void __cdecl Scena00_Run4(void) {
         Step(2);
         return;
     case 2:
-        if (B(kCounter) != 3) return;
+        if (B(::bof3::Img(kCounter)) != 3) return;
         SH_CALL(Msg_OpenScript)(2);
         Field_Request = 2;
         Step(3);
         return;
     case 3:
-        if (B(kCounter) != 4) return;
+        if (B(::bof3::Img(kCounter)) != 4) return;
         SH_CALL(Msg_OpenScript)(3);
         Field_Request = 2;
         Timer(0x130);
         Step(4);
         return;
     case 4: {
-        const std::uint16_t t = W(kTimer);
+        const std::uint16_t t = W(::bof3::Img(kTimer));
         if (t == 0) {
             Step(5);
             return;
@@ -490,18 +490,18 @@ extern "C" void __cdecl Scena00_Run4(void) {
         return;
     }
     case 5:
-        if (B(kCounter) != 5) return;
+        if (B(::bof3::Img(kCounter)) != 5) return;
         if (TakeSlot()) Kind13(static_cast<int32_t>(0xFFFFFCB6u), Camera_Angles[1], Camera_Angles[2], 0x60);
         Step(6);
         return;
     case 6:
-        if (B(kCounter) != 8) return;
+        if (B(::bof3::Img(kCounter)) != 8) return;
         if (TakeSlot()) Kind13(static_cast<int32_t>(0xFFFFFD54u), Camera_Angles[1], Camera_Angles[2], 0x20);
         Timer(0x200);
         Step(7);
         return;
     case 7: {
-        const std::uint16_t t = W(kTimer);
+        const std::uint16_t t = W(::bof3::Img(kTimer));
         if (t == 0) {
             Step(8);
             return;
@@ -512,7 +512,7 @@ extern "C" void __cdecl Scena00_Run4(void) {
         return;
     }
     case 8:
-        if (B(kCounter) != 0xB) return;
+        if (B(::bof3::Img(kCounter)) != 0xB) return;
         SH_CALL(Transition_Start)(0);
         Step(9);
         return;
@@ -550,13 +550,13 @@ extern "C" void __cdecl Scena00_Run5(void) {
         const int r = SH_CALL(Rand)();
         const unsigned count = static_cast<unsigned>(r % 3) & 0x1F;   // cl, as shl masks it
         const unsigned char bit = count < 8 ? static_cast<unsigned char>(1u << count) : 0;
-        B(kByte4B) = bit;
-        if (bit > 1) B(kByte4A) = static_cast<unsigned char>(B(kByte4A) + 0x10);
+        B(::bof3::Img(kByte4B)) = bit;
+        if (bit > 1) B(::bof3::Img(kByte4A)) = static_cast<unsigned char>(B(::bof3::Img(kByte4A)) + 0x10);
         frame = Frame_Counter;
     }
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        B(kScriptFlags) = static_cast<unsigned char>(B(kScriptFlags) | 0x80);
+        B(::bof3::Img(kScriptFlags)) = static_cast<unsigned char>(B(::bof3::Img(kScriptFlags)) | 0x80);
         SH_CALL(Flags_Set)(Row(), 0);
         SH_CALL(Flags_Set)(Row(), 1);
         SH_CALL(Flags_Set)(Row(), 2);
@@ -566,7 +566,7 @@ extern "C" void __cdecl Scena00_Run5(void) {
         return;
     case 1:
     case 2: {
-        const std::uint16_t t = W(kTimer);
+        const std::uint16_t t = W(::bof3::Img(kTimer));
         if (t == 0) {
             Camera_Distance = 0;
             MapView_Redraw = 2;
@@ -578,41 +578,41 @@ extern "C" void __cdecl Scena00_Run5(void) {
         return;
     }
     case 3:
-        if (B(kCounter) != 0xC) return;
+        if (B(::bof3::Img(kCounter)) != 0xC) return;
         Timer(0x3C);
         Step(4);
-        B(kByte4A) = 0;
+        B(::bof3::Img(kByte4A)) = 0;
         return;
     case 4: {
-        if (W(kTimer) != 0) {
-            Timer(W(kTimer) - 1u);
+        if (W(::bof3::Img(kTimer)) != 0) {
+            Timer(W(::bof3::Img(kTimer)) - 1u);
         } else {
-            const unsigned char c = B(kCounter);
+            const unsigned char c = B(::bof3::Img(kCounter));
             Step(5);
-            B(kCounter) = static_cast<unsigned char>(c + 1);
+            B(::bof3::Img(kCounter)) = static_cast<unsigned char>(c + 1);
         }
-        const unsigned char n = B(kByte4A);
+        const unsigned char n = B(::bof3::Img(kByte4A));
         if (n == 0) return;
-        const auto d = static_cast<std::uint16_t>(static_cast<signed char>(B(kShake + (frame & 0xF))) * 4);
+        const auto d = static_cast<std::uint16_t>(static_cast<signed char>(B(::bof3::Img(kShake) + (frame & 0xF))) * 4);
         rv::Store<unsigned>(xobj0->height_whole, static_cast<std::uint16_t>(xobj0->height_whole) + d);
-        B(kByte4A) = static_cast<unsigned char>(n - 1);
+        B(::bof3::Img(kByte4A)) = static_cast<unsigned char>(n - 1);
         return;
     }
     case 5: {
-        if (B(kCounter) == 0x11) {
+        if (B(::bof3::Img(kCounter)) == 0x11) {
             Timer(0x3C);
             Step(6);
         }
-        const unsigned char n = B(kByte4A);
+        const unsigned char n = B(::bof3::Img(kByte4A));
         if (n == 0) return;
-        B(kByte4A) = static_cast<unsigned char>(n - 1);
-        const auto d = static_cast<std::uint16_t>(static_cast<signed char>(B(kShake + (frame & 0xF))) * 4);
+        B(::bof3::Img(kByte4A)) = static_cast<unsigned char>(n - 1);
+        const auto d = static_cast<std::uint16_t>(static_cast<signed char>(B(::bof3::Img(kShake) + (frame & 0xF))) * 4);
         rv::Store<unsigned>(xobj0->height_whole, static_cast<std::uint16_t>(xobj0->height_whole) + d);
         return;
     }
     case 6: {
-        if (W(kTimer) != 0) {
-            Timer(W(kTimer) - 1u);
+        if (W(::bof3::Img(kTimer)) != 0) {
+            Timer(W(::bof3::Img(kTimer)) - 1u);
             return;
         }
         if (TakeSlot()) {
@@ -625,14 +625,14 @@ extern "C" void __cdecl Scena00_Run5(void) {
             rv::As<records::EffectObject>(e)->height = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(y))) << 16;
             e[0x29] = 0;
         }
-        const unsigned char c = B(kCounter);
+        const unsigned char c = B(::bof3::Img(kCounter));
         Timer(0x84);
         Step(7);
-        B(kCounter) = static_cast<unsigned char>(c + 1);
+        B(::bof3::Img(kCounter)) = static_cast<unsigned char>(c + 1);
         return;
     }
     case 7: {
-        const auto t = static_cast<std::uint16_t>(W(kTimer) - 1);
+        const auto t = static_cast<std::uint16_t>(W(::bof3::Img(kTimer)) - 1);
         Timer(t);
         if (t != 0x20) return;
         SH_CALL(Transition_Start)(8);
@@ -640,24 +640,24 @@ extern "C" void __cdecl Scena00_Run5(void) {
         return;
     }
     case 8:
-        if (W(kTimer) != 0) {
-            Timer(W(kTimer) - 1u);
+        if (W(::bof3::Img(kTimer)) != 0) {
+            Timer(W(::bof3::Img(kTimer)) - 1u);
             if (Transition_Busy != 0) return;
             Draw_PassFlags = 0;
             return;
         }
-        B(kCounter) = 0x14;
+        B(::bof3::Img(kCounter)) = 0x14;
         Timer(0x40);
         Step(0xA);
         return;
     case 9:
-        if (B(kCounter) != 0x14) return;
+        if (B(::bof3::Img(kCounter)) != 0x14) return;
         Timer(0x25C);
         Step(0xA);
         return;
     case 0xA:
-        if (W(kTimer) != 0) {
-            Timer(W(kTimer) - 1u);
+        if (W(::bof3::Img(kTimer)) != 0) {
+            Timer(W(::bof3::Img(kTimer)) - 1u);
             return;
         }
         SH_CALL(Flags_Set)(Row(), 4);
@@ -668,36 +668,36 @@ extern "C" void __cdecl Scena00_Run5(void) {
         return;
     case 0xB:
         if (Transition_Busy != 0) return;
-        B(kCounter) = 1;
+        B(::bof3::Img(kCounter)) = 1;
         Step(0xC);
         return;
     case 0xC:
-        if (B(kCounter) != 4) return;
+        if (B(::bof3::Img(kCounter)) != 4) return;
         if (SH_CALL(File_LoadDone)() == 0) return;
         SH_CALL(Music_Play)(3, 8);
         Step(0xD);
         return;
     case 0xD:
-        if (B(kCounter) != 5) return;
+        if (B(::bof3::Img(kCounter)) != 5) return;
         Timer(0x20);
         Step(0xE);
         return;
     case 0xE: {
-        if (W(kTimer) == 0) {
+        if (W(::bof3::Img(kTimer)) == 0) {
             Step(0xF);
             return;
         }
         const uint32_t k = MoveScript_PartyRecords[0x66] & 0xF;
         const uint32_t z = static_cast<uint32_t>(obj2->z);
-        const uint32_t d = static_cast<uint32_t>(static_cast<int32_t>(static_cast<signed char>(B(kShake + k)))) << 11;
+        const uint32_t d = static_cast<uint32_t>(static_cast<int32_t>(static_cast<signed char>(B(::bof3::Img(kShake) + k)))) << 11;
         const uint32_t x = static_cast<uint32_t>(obj2->x) + d;
-        Timer(W(kTimer) - 1u);
+        Timer(W(::bof3::Img(kTimer)) - 1u);
         rv::Store<uint32_t>(obj2->x, x);
         rv::Store<uint32_t>(obj2->z, z - d);
         return;
     }
     case 0xF: {
-        if (B(kCounter) != 7) return;
+        if (B(::bof3::Img(kCounter)) != 7) return;
         const uint32_t z = static_cast<uint32_t>(member0->z), x = static_cast<uint32_t>(member0->x);
         PlaceParty(x, z, 1);
         EventBattle(1);
@@ -706,7 +706,7 @@ extern "C" void __cdecl Scena00_Run5(void) {
         return;
     }
     case 0x11:
-        B(kCounter) = static_cast<unsigned char>(B(kCounter) + 1);
+        B(::bof3::Img(kCounter)) = static_cast<unsigned char>(B(::bof3::Img(kCounter)) + 1);
         SH_CALL(ScriptFlags_Clear40)();
         SH_CALL(Party_DropIn)(6);
         Run(0);
@@ -732,7 +732,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
     if (step > 0x32) return;
     switch (step) {
     case 0:
-        Step(B(Scena00_StartSteps_addr + Cond_ByteFD));
+        Step(B(::bof3::Img(Scena00_StartSteps_addr) + Cond_ByteFD));
         return;
     case 0xA:
         SH_CALL(ScriptFlags_Set40)();
@@ -741,7 +741,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
         Step(0xB);
         return;
     case 0xB: {
-        if (B(kCounter) != 0xB) return;
+        if (B(::bof3::Img(kCounter)) != 0xB) return;
         const uint32_t z = static_cast<uint32_t>(member0->z), x = static_cast<uint32_t>(member0->x);
         PlaceParty(x, z, 4);
         EventBattle(4);
@@ -749,7 +749,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
         return;
     }
     case 0xD:
-        B(kCounter) = static_cast<unsigned char>(B(kCounter) + 1);
+        B(::bof3::Img(kCounter)) = static_cast<unsigned char>(B(::bof3::Img(kCounter)) + 1);
         SH_CALL(ScriptFlags_Clear40)();
         Step(0);
         Run(0);
@@ -762,7 +762,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
         Step(0x15);
         return;
     case 0x15: {
-        if (B(kCounter) != 5) return;
+        if (B(::bof3::Img(kCounter)) != 5) return;
         const uint32_t z = static_cast<uint32_t>(member0->z), x = static_cast<uint32_t>(member0->x);
         PlaceParty(x, z, 5);
         EventBattle(5);
@@ -772,7 +772,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
     case 0x17:
     case 0x21: {
         SH_CALL(ScriptFlags_Clear40)();
-        B(kCounter) = static_cast<unsigned char>(B(kCounter) + 1);
+        B(::bof3::Img(kCounter)) = static_cast<unsigned char>(B(::bof3::Img(kCounter)) + 1);
         Step(0);
         Run(0);
         return;
@@ -785,7 +785,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
         Step(0x1F);
         return;
     case 0x1F: {
-        if (B(kCounter) != 4) return;
+        if (B(::bof3::Img(kCounter)) != 4) return;
         const uint32_t z = static_cast<uint32_t>(member0->z), x = static_cast<uint32_t>(member0->x);
         PlaceParty(x, z, 6);
         EventBattle(6);
@@ -815,13 +815,13 @@ extern "C" void __cdecl Scena00_Run7(void) {
     auto* const member0 = ObjTrio;
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        B(kCounter) = 0xA;
+        B(::bof3::Img(kCounter)) = 0xA;
         SH_CALL(Party_DropIn)(1);
         SH_CALL(Kind2_Place)(1);
         Step(1);
         return;
     case 1: {
-        if (B(kCounter) != 0xD) return;
+        if (B(::bof3::Img(kCounter)) != 0xD) return;
         const uint32_t z = static_cast<uint32_t>(member0->z), x = static_cast<uint32_t>(member0->x);
         PlaceParty(x, z, 7);
         EventBattle(7);
@@ -836,7 +836,7 @@ extern "C" void __cdecl Scena00_Run7(void) {
         return;
     case 4:
         if (Field_Request == 2) return;
-        B(kCounter) = 0x1E;
+        B(::bof3::Img(kCounter)) = 0x1E;
         Draw_PassFlags = 0x1F;
         SH_CALL(Transition_Start)(3);
         rv::Store<uint32_t>(kind2->x, 0x2F0000);
@@ -854,8 +854,8 @@ extern "C" void __cdecl Scena00_Run7(void) {
         return;
     case 5:
         if (Transition_Busy != 0) return;
-        Timer(W(kTimer) - 1u);
-        if (W(kTimer) != 0) return;
+        Timer(W(::bof3::Img(kTimer)) - 1u);
+        if (W(::bof3::Img(kTimer)) != 0) return;
         SH_CALL(Kind2_Place)(2);
         rv::Store<uint32_t>(kind2->height, 0x5800000);
         SH_CALL(MapView_SetElevation)(0x580);
@@ -864,23 +864,23 @@ extern "C" void __cdecl Scena00_Run7(void) {
         Step(6);
         return;
     case 6: {
-        if (W(kTimer) != 0) {
-            Timer(W(kTimer) - 1u);
+        if (W(::bof3::Img(kTimer)) != 0) {
+            Timer(W(::bof3::Img(kTimer)) - 1u);
             Camera_Distance = static_cast<std::uint16_t>(Camera_Distance) - 0x24u;
             return;
         }
-        const unsigned char c = B(kCounter);
+        const unsigned char c = B(::bof3::Img(kCounter));
         Step(7);
-        B(kCounter) = static_cast<unsigned char>(c + 1);
+        B(::bof3::Img(kCounter)) = static_cast<unsigned char>(c + 1);
         return;
     }
     case 7:
-        if (B(kCounter) != 0x24) return;
+        if (B(::bof3::Img(kCounter)) != 0x24) return;
         SH_CALL(Music_Play)(4, 8);
         Step(8);
         return;
     case 8:
-        if (B(kCounter) != 0x25) return;
+        if (B(::bof3::Img(kCounter)) != 0x25) return;
         SH_CALL(Field_ChangeArea)(0x1F, 0x40000, 0x240000, 1);
         Run(0);
         Step(0);
@@ -905,19 +905,19 @@ extern "C" void __cdecl Scena00_Run8(void) {
 extern "C" void __cdecl Scena00_Run9(void) {
     const unsigned step = MoveScript_PartyRecords[0x65];
     if (step == 0) {
-        if (B(kByte4A) != 0x71) return;
+        if (B(::bof3::Img(kByte4A)) != 0x71) return;
         Timer(0x3C);
         Step(2);
         return;
     }
     if (step != 2) return;
-    if (W(kTimer) != 0) {
-        Timer(W(kTimer) - 1u);
+    if (W(::bof3::Img(kTimer)) != 0) {
+        Timer(W(::bof3::Img(kTimer)) - 1u);
         return;
     }
     SH_CALL(Field_ChangeArea)(1, 0xF0000, 0x210000, 1);
     SH_CALL(Sound_PlayEffect)(0x206);
-    SetL(kCounter, 0);
+    SetL(::bof3::Img(kCounter), 0);
     Step(0);
     Run(0xA);
 }
@@ -935,13 +935,13 @@ extern "C" void __cdecl Scena00_Run10(void) {
         Step(1);
         return;
     case 1:
-        if (B(kByte4A) & 1) {
+        if (B(::bof3::Img(kByte4A)) & 1) {
             rv::Store<uint32_t>(xobj3->x, (static_cast<uint32_t>(SH_CALL(Rand)() & 7) + 0x69D) << 10);
             rv::Store<uint32_t>(xobj3->z, (static_cast<uint32_t>(SH_CALL(Rand)() & 7) + 0x55D) << 10);
         }
-        if (B(kByte4A) != 3) return;
-        if (W(kTimer) != 0) {
-            Timer(W(kTimer) - 1u);
+        if (B(::bof3::Img(kByte4A)) != 3) return;
+        if (W(::bof3::Img(kTimer)) != 0) {
+            Timer(W(::bof3::Img(kTimer)) - 1u);
             return;
         }
         SH_CALL(Field_ChangeArea)(1, 0x1A0000, 0x160000, 1);
@@ -950,10 +950,10 @@ extern "C" void __cdecl Scena00_Run10(void) {
     case 2:
         if (TurnCamera(0xF, 0xA) != 0) return;
         Step(3);
-        B(kByte4A) = 4;
+        B(::bof3::Img(kByte4A)) = 4;
         return;
     case 3:
-        if (B(kByte4A) != 9) return;
+        if (B(::bof3::Img(kByte4A)) != 9) return;
         Field_ScriptFlags = Field_ScriptFlags & 0xFF7Fu;
         SH_CALL(Field_ChangeArea)(0x19, 0xB8000, 0x5A0000, 1);
         Run(0xB);
@@ -972,21 +972,21 @@ extern "C" void __cdecl Scena00_Run10(void) {
 extern "C" void __cdecl Scena00_Steer(void) {
     auto* const xobj2 = &Sprite_ObjectsExtra[2];
     move_script::SetWord(Corner("Scena00_Steer"), 0);
-    if (B(kInput + 1) & 0x20) {
-        SetW(L(kCorner), W(L(kCorner)) + 2u);
+    if (B(::bof3::Img(kInput) + 1) & 0x20) {
+        SetW(L(::bof3::Img(kCorner)), W(L(::bof3::Img(kCorner))) + 2u);
         rv::Store<uint32_t>(xobj2->angle[0], static_cast<uint32_t>(xobj2->angle[0]) + 0x40);
     }
-    if (B(kInput + 1) & 0x80) {
-        SetW(L(kCorner), W(L(kCorner)) - 2u);
+    if (B(::bof3::Img(kInput) + 1) & 0x80) {
+        SetW(L(::bof3::Img(kCorner)), W(L(::bof3::Img(kCorner))) - 2u);
         rv::Store<uint32_t>(xobj2->angle[0], static_cast<uint32_t>(xobj2->angle[0]) - 0x40);
     }
-    SetW(L(kCorner) + 2, 0);
-    if (B(kInput + 1) & 0x40) {
-        SetW(L(kCorner) + 2, W(L(kCorner) + 2) + 2u);
+    SetW(L(::bof3::Img(kCorner)) + 2, 0);
+    if (B(::bof3::Img(kInput) + 1) & 0x40) {
+        SetW(L(::bof3::Img(kCorner)) + 2, W(L(::bof3::Img(kCorner)) + 2) + 2u);
         rv::Store<uint32_t>(xobj2->angle[1], static_cast<uint32_t>(xobj2->angle[1]) + 0x40);
     }
-    if (B(kInput + 1) & 0x10) {
-        SetW(L(kCorner) + 2, W(L(kCorner) + 2) - 2u);
+    if (B(::bof3::Img(kInput) + 1) & 0x10) {
+        SetW(L(::bof3::Img(kCorner)) + 2, W(L(::bof3::Img(kCorner)) + 2) - 2u);
         rv::Store<uint32_t>(xobj2->angle[1], static_cast<uint32_t>(xobj2->angle[1]) - 0x40);
     }
     SH_CALL(Sound_PlayEffect)(0x204);
@@ -1006,8 +1006,8 @@ extern "C" void __cdecl Scena00_Run11(void) {
     auto* const xobj0 = Sprite_ObjectsExtra;
     auto* const xobj1 = &Sprite_ObjectsExtra[1];
     auto* const xobj2 = &Sprite_ObjectsExtra[2];
-    if ((B(0x937F94) & 0x1F) == 0) B(kByte4B) = static_cast<unsigned char>(SH_CALL(Rand)() & 7);
-    if (B(kByte4A) < 0x14 && static_cast<std::uint32_t>(MapView_FocusZ) == 0x5000) {
+    if ((B(::bof3::Img(0x937F94)) & 0x1F) == 0) B(::bof3::Img(kByte4B)) = static_cast<unsigned char>(SH_CALL(Rand)() & 7);
+    if (B(::bof3::Img(kByte4A)) < 0x14 && static_cast<std::uint32_t>(MapView_FocusZ) == 0x5000) {
         const uint32_t z = static_cast<std::uint32_t>(Field_Kind2Z), s = static_cast<uint32_t>(xobj0->z);
         MapView_Origin[1] = static_cast<std::uint16_t>(MapView_Origin[1]) + 0x20u;
         Field_Kind2Z = z + 0x200000;
@@ -1021,9 +1021,9 @@ extern "C" void __cdecl Scena00_Run11(void) {
     }
     switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        Timer(W(kTimer) - 1u);
-        if (W(kTimer) != 0) return;
-        B(kByte4A) = 0x10;
+        Timer(W(::bof3::Img(kTimer)) - 1u);
+        if (W(::bof3::Img(kTimer)) != 0) return;
+        B(::bof3::Img(kByte4A)) = 0x10;
         Draw_PassFlags = 0x1F;
         SH_CALL(Transition_Start)(1);
         SH_CALL(Sound_PlayEffect)(0x203);
@@ -1031,21 +1031,21 @@ extern "C" void __cdecl Scena00_Run11(void) {
         Step(3);
         return;
     case 3:
-        if (W(kTimer) != 0) {
-            Timer(W(kTimer) - 1u);
+        if (W(::bof3::Img(kTimer)) != 0) {
+            Timer(W(::bof3::Img(kTimer)) - 1u);
             return;
         }
-        B(kByte4A) = 0x11;
+        B(::bof3::Img(kByte4A)) = 0x11;
         Step(4);
         Timer(0x384);
         return;
     case 4: {
-        const unsigned char pressed = B(kInput + 1);
-        Timer(W(kTimer) - 1u);
-        if ((pressed & 0xF0) == 0 && W(kTimer) != 0) return;
-        B(kCount2) = 0;
-        B(kCounter) = 0;
-        B(kByte4A) = 0x12;
+        const unsigned char pressed = B(::bof3::Img(kInput) + 1);
+        Timer(W(::bof3::Img(kTimer)) - 1u);
+        if ((pressed & 0xF0) == 0 && W(::bof3::Img(kTimer)) != 0) return;
+        B(::bof3::Img(kCount2)) = 0;
+        B(::bof3::Img(kCounter)) = 0;
+        B(::bof3::Img(kByte4A)) = 0x12;
         SH_CALL(Scena00_Steer)();
         Timer(0x384);
         Step(5);
@@ -1057,35 +1057,35 @@ extern "C" void __cdecl Scena00_Run11(void) {
             rv::Store<uint32_t>(xobj2->angle[1], 0);
         }
         bool check = true;
-        if (B(kInput + 1) & 0xF0) {
-            const unsigned char n = B(kCount2);
-            B(kCounter) = 0;
-            B(kCount2) = static_cast<unsigned char>(n + 1);
+        if (B(::bof3::Img(kInput) + 1) & 0xF0) {
+            const unsigned char n = B(::bof3::Img(kCount2));
+            B(::bof3::Img(kCounter)) = 0;
+            B(::bof3::Img(kCount2)) = static_cast<unsigned char>(n + 1);
             SH_CALL(Scena00_Steer)();
             const uint32_t i = (static_cast<std::uint32_t>(Input_Pressed) >> 12) << 1;
-            if (B(kInputAnims + i) != 0) {
-                const unsigned char animation = B(kInputAnims + i + 1);
+            if (B(::bof3::Img(kInputAnims) + i) != 0) {
+                const unsigned char animation = B(::bof3::Img(kInputAnims) + i + 1);
                 Sprite_Current = rv::Bytes(Sprite_Objects);
                 obj0->direction = animation;
                 EnsureAnimation(animation);
             }
         } else {
-            const auto c = static_cast<unsigned char>(B(kCounter) + 1);
-            B(kCounter) = c;
+            const auto c = static_cast<unsigned char>(B(::bof3::Img(kCounter)) + 1);
+            B(::bof3::Img(kCounter)) = c;
             if (c > 0x14) {
-                B(kCount2) = 0;
-                B(kCounter) = 0;
+                B(::bof3::Img(kCount2)) = 0;
+                B(::bof3::Img(kCounter)) = 0;
                 check = false;
             }
         }
-        if (check && B(kCount2) > 0x1E) {
-            B(kByte4A) = 0x13;
+        if (check && B(::bof3::Img(kCount2)) > 0x1E) {
+            B(::bof3::Img(kByte4A)) = 0x13;
             Step(6);
             Timer(0);
         }
-        Timer(W(kTimer) - 1u);
-        if (W(kTimer) != 0) return;
-        B(kByte4A) = 0x13;
+        Timer(W(::bof3::Img(kTimer)) - 1u);
+        if (W(::bof3::Img(kTimer)) != 0) return;
+        B(::bof3::Img(kByte4A)) = 0x13;
         Step(6);
         return;
     }
@@ -1093,30 +1093,30 @@ extern "C" void __cdecl Scena00_Run11(void) {
         Corner("Scena00_Run11");
         {
             const int r = SH_CALL(Rand)();
-            SetW(L(kCorner), static_cast<unsigned>((r & 7) - 3));
+            SetW(L(::bof3::Img(kCorner)), static_cast<unsigned>((r & 7) - 3));
         }
         {
             const int r = SH_CALL(Rand)();
-            SetW(L(kCorner) + 2, static_cast<unsigned>((r & 7) - 3));
+            SetW(L(::bof3::Img(kCorner)) + 2, static_cast<unsigned>((r & 7) - 3));
         }
-        const uint32_t p = L(kCorner);
+        const uint32_t p = L(::bof3::Img(kCorner));
         rv::Store<uint32_t>(xobj2->angle[0], S(p) >= 0 ? 0x40u : 0xFFFFFFC0u);
         rv::Store<uint32_t>(xobj2->angle[1], S(p + 2) >= 0 ? 0x40u : 0xFFFFFFC0u);
-        if ((B(0x937F94) & 3) == 0) {
+        if ((B(::bof3::Img(0x937F94)) & 3) == 0) {
             const auto animation = static_cast<unsigned char>((obj0->direction + 1) & 3);
             Sprite_Current = rv::Bytes(Sprite_Objects);
             obj0->direction = animation;
             EnsureAnimation((p & 0xFFFFFF00u) | animation);
         }
         SH_CALL(Sound_PlayEffect)(0x204);
-        if (B(kByte4A) != 0x15) return;
+        if (B(::bof3::Img(kByte4A)) != 0x15) return;
         rv::Store<uint32_t>(xobj2->angle[0], 0);
         rv::Store<uint32_t>(xobj2->angle[1], 0);
         Step(7);
         return;
     }
     case 7:
-        if (B(kByte4A) != 0x17) return;
+        if (B(::bof3::Img(kByte4A)) != 0x17) return;
         Step(8);
         return;
     case 8:
@@ -1145,7 +1145,7 @@ extern "C" void __cdecl Scena00_Run11(void) {
 extern "C" void __cdecl Scena00_ObjectHook(unsigned char* object) {
     unsigned char* const row = Row();
     const auto fn = reinterpret_cast<void (__cdecl*)(unsigned char*, unsigned char*)>(
-        CodeAt(Scena00_ObjectHooks_addr, object[0x86], "Scena00_ObjectHook"));
+        CodeAt(::bof3::Img(Scena00_ObjectHooks_addr), object[0x86], "Scena00_ObjectHook"));
     fn(object, row);
 }
 

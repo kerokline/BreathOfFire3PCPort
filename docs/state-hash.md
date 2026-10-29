@@ -1,6 +1,6 @@
 # The state hash
 
-**Status:** WORKING (2026-10-05; every reference pair recorded under the 168-range skip list at `main` `2df90d9`, section 6; the shop route's difference was the runner's, section 5; `BOF3SH3`, our pointers in Capcom's slots hashed by what they name, 2026-10-10, section 7 - the cross-build pair under an overlay measured live 2026-10-11, and the 17 run-time slots of the battle's messages added the same morning, flags bit 1)
+**Status:** WORKING (2026-10-05; every reference pair recorded under the 168-range skip list at `main` `2df90d9`, section 6; the shop route's difference was the runner's, section 5; `BOF3SH3`, our pointers in Capcom's slots hashed by what they name, 2026-10-10, section 7 - the cross-build pair under an overlay measured live 2026-10-11, and the 17 run-time slots of the battle's messages added the same morning, flags bit 1; `BOF3SH4`, the image's own pointers hashed as at `0x400000` wherever the image lies, 2026-10-28, section 8 - built and self-tested, the live re-hash of the references owed; code words bound to our functions hashed as their VAs, flags bit 2, 2026-10-29, section 8)
 
 A regression check that compares two runs by **what the game's memory held,
 frame for frame**, whoever's code wrote it. Built before round fourteen
@@ -32,7 +32,8 @@ so a recipe's pad words are the previous frame's on both sides.
 | `BOF3X_OPT` | **leave unset** on a reference run: an `opt/` layer (DIV-0086) changes the arena and VRAM |
 | `BOF3X_STATEHASH_SKIP` | a list of `ADDRESS LENGTH # why` ranges hashed as zero - [`tools/statehash_skip.txt`](../tools/statehash_skip.txt) |
 | `BOF3X_STATEHASH_DUMP` | ticks, comma-separated, at which all of `.data` is also written raw to `<file>.<tick>.bin` (3.5 MB each; game-derived, `analysis/` only) |
-| `BOF3X_STATEHASH_RAW` | `1`: hash our pointers in Capcom's slots raw, as before 2026-10-10 (section 7); unset or `0`, the default, hashes them by what they name |
+| `BOF3X_STATEHASH_RAW` | `1`: hash our pointers in Capcom's slots raw, as before 2026-10-10 (section 7), and a bound code word raw too (section 8); unset or `0`, the default, hashes them by what they name and a bound code word as its VA |
+| `BOF3X_STATEHASH_FOLD` | an address: every word whose value lies in the game's image placed there is hashed as at `0x400000` (section 8); for the run at `0x400000` compared with a run whose image lies there. Unset, the default, nothing is folded |
 
 A **tick** is one logic frame seen by the latch, counted from the first; the
 record also carries `Frame_Counter` and the recipe frame. The file is flushed
@@ -586,3 +587,259 @@ the reports in `analysis/calltrace/platform_1011/statehash_ours*.txt`):**
    skip list, because a changed list invalidates every pair (section 6); the
    next time the list changes for another reason, `0x6BC8C8 92` goes in with it.
    The Chinese pairs stay as they are.
+
+## 8. The image's own pointers: `BOF3SH4` (2026-10-28)
+
+**The problem.** The relocatable-image round ([`relocatable-image-round.md`](relocatable-image-round.md),
+IDEAS I44 stage 3) places the game's image at another base than `0x400000`.
+Then every pointer into the image holds `base + offset`, and a run at the
+new base differs from one at `0x400000` on every page that holds one. Stage
+C's proof is the hash equal between the two bases, route for route, so the
+hash must read such a word as its offset from the base.
+
+**Measured (2026-10-28, offline; `BOF3.exe`'s `.data`, `recipes/exe-pointers.tsv`
+and the 219 raw dumps in `analysis/statehash`, the 173-range skip list
+applied; the scripts in `C:\Users\kerok\bof3x-runs\ri1027\ra2\scratch`):**
+
+1. **The load-time slots hold the table.** All 18,831 words of
+   `exe-pointers.tsv` are among the 26,189 slots of section 7's census; the
+   other 7,358 slots are the words `exe_tables.py` reads as numbers, not
+   pointers.
+2. **The game stores image pointers outside those slots.** In the raw dumps,
+   895 to 3,144 aligned words that are not load-time slots hold a value in
+   `0x400000..0x93F000` (`t4_orig` at ticks 1,300 and 9,000; 2,405 to 2,426
+   in `cn_combat_cu1010d_orig` at 179 and 226): the arena, the records, the
+   lists the game builds as it runs. A rule on the slots alone would leave
+   them raw, and the moved run would differ on their pages.
+3. **No range is free of game data.** No 64 KiB-aligned window of
+   `0x53F000` bytes between `0x01000000` and `0x80000000` is free of
+   values across the 219 dumps (the longest empty stretch is `0xD0000` bytes
+   at `0x47E40000`). At `0x70000000` one dump holds 169 to 295 such words, on
+   89 to 145 pages (`0x60000000`: 159 to 278 words, 66 to 118 pages;
+   `0x30000000`: 358 to 501). A moved run that renamed those values alone
+   would differ on that many pages a frame.
+
+**The design.**
+
+1. **A fold.** A *folded range* is `[F, F + 0x53F000)`. Every aligned word
+   of a page, slot or not, whose value lies in a folded range is hashed as
+   `0x400000 + (value - F)`: the value it would hold with the image at
+   `0x400000`. The skip list applies first, and section 7's rule for our
+   pointers is unchanged (the two cannot meet: our image may not lie in a
+   folded range, and an identity has bit 31 set where a folded range ends
+   at or below `0x80000000`).
+   **The ordering tables' links** (added in stage C1, 2026-10-28, after the
+   first moved proof run differed on page `0x903000` from tick 0): a link is
+   a 24-bit address with a length byte on top (`Gpu_ClearOTagR`; the display
+   blocks at `0x903880`), so a link into a moved image never lies in a
+   folded range as a whole word. A word that is not folded whole but whose
+   low 24 bits lie in a folded range has those bits folded and its top byte
+   kept (`Fold24` in `statehash.cpp`, the same in `statehash.py`'s
+   `fold_dump`). Both sides fold the same ranges, so a colour or a packed
+   number with such low bits is rewritten alike on both; a range at or above
+   16 MB has no such link, and with no fold nothing changes.
+2. **The ranges.** The image's own base when it is not `0x400000`, and the
+   address `BOF3X_STATEHASH_FOLD` names. Point 3 above is why the second
+   exists: **both sides of a comparison fold the same range.** The run at
+   `0x400000` sets `BOF3X_STATEHASH_FOLD` to the other run's base; then a
+   data value in that range is folded alike on both sides, and a pointer
+   reads `0x400000 + offset` on both - one stored as that, one folded to it.
+3. **No index is mixed in for a folded word** (section 7 point 4 mixes one
+   for our pointers). A folded pointer must hash as the same pointer stored
+   at `0x400000` on the other side.
+4. **With no folded range the hash is `BOF3SH3`'s, bit for bit.** That is
+   every host today with `BOF3X_STATEHASH_FOLD` unset: the image lies at
+   `0x400000` and the fold is the identity there, so the code skips it. Every
+   reference recorded so far is already what this hash makes of its run.
+5. **The census** of section 7 lists a word as a slot when its value at
+   start-up lies at `0x400000` or in a folded range, so a run at `0x400000`
+   folding `F` and a run with the image at `F` list the same slots (76 more
+   than the 26,189 with `0x70000000` folded, in a headless run).
+6. **Where the image is.** `StateHash_SetImageBase(base)` (`statehash.h`):
+   the loader of stage C calls it before `StateHash_BeforeInjects`; no host
+   calls it today. `.data` is then read, hashed and dumped at its place in
+   the moved image. Addresses stay as at `0x400000` everywhere else: the
+   skip list, the file's base, the run-time slots of section 7, the tool's
+   symbols.
+7. **The bounds.** A base or a fold address is 64 KiB aligned, its image
+   ends at or below `0x80000000`, and it does not overlap `0x400000..0x93F000`
+   unless it is `0x400000`; a folded range that overlaps our DLL's image is
+   refused (our DLL loaded at `0x10000000` in the headless runs of this
+   day). Each is a `Fatal` at start-up, naming the address.
+
+| Variable | |
+|---|---|
+| `BOF3X_STATEHASH_FOLD` | an address, as `0x70000000`: also hash every word whose value lies in the image placed there as at `0x400000`. Set it on the run at `0x400000` that is compared with a run whose image lies at that address. Unset, nothing is folded at `0x400000` |
+
+**The header.** `BOF3SH4\0` adds two `u32`s after the flags: the image's
+base during the run and the fold address (0 without one). The tool reads all
+four versions; an older file is a run at `0x400000` that folded nothing.
+**Runs whose folded ranges differ are refused**, `diff` and `check` alike
+(point 3 of the measurements: such runs differ wherever game data lies in a
+range one side folded), with a message naming both. Runs that folded the
+same ranges compare whatever their bases. `info` names the base and the
+ranges.
+
+**The tool's other changes.** `bytes --fold ADDR` folds both raw dumps as
+the hash does (a dump keeps the raw bytes), for section 2's loop across two
+bases. The notes `diff` and `check` print for runs hashed by different rules
+(section 7: a `BOF3SH2` file beside a `BOF3SH3`; the battle message words)
+sat after `same_headers`' `return` from 2026-10-11 and were never printed;
+they print again. On the ten routes, `check` of `cn_<route>_b1027` against
+the `orig4` pairs gives the same output and exit code from the tool of this
+change as from `main`'s.
+
+**The tests.**
+
+- **In the DLL** (`statehash.cpp` `SelfTest`, run by every
+  `BOF3X_SELFTEST_ONLY` start in either host, with or without
+  `BOF3X_STATEHASH`): a synthetic page as the image at `0x400000` leaves it,
+  and the same page with the image at `0x70000000` - 260 image pointers moved
+  by `0x6FC00000`, 129 of them listed as slots and the rest not; 129 data
+  words in the moved range and 121 numbers that read as image addresses,
+  unmoved; a skip range over a pointer. Folding `0x70000000` the two hash
+  the same; without the fold they differ; a byte changed is seen through the
+  fold; with no fold the page hashes as its masked bytes. The log line
+  `statehash   self-test: ...` says so. Measured: exit 0 in both hosts; a
+  planted fault (the fold off by 4) exits 3 with the `Fatal` naming both
+  hashes.
+- **In the tool:** `python tools/statehash.py selftest` - a synthetic `.data`
+  with every image pointer moved by a constant compares equal under
+  `bytes --fold` and differs raw and with a byte changed; `BOF3SH3` and
+  `BOF3SH4` files read alike; a moved run against a run at `0x400000` folding
+  its base is compared, against one that folded nothing or another range,
+  refused.
+
+**What it does not do.**
+
+- **An unaligned pointer is not folded.** It shows as a difference between
+  bases on its page - seen, not hidden. None was looked for.
+- **One collision is hidden by design:** a word holding a pointer `F + k` on
+  one side and the number `0x400000 + k` on the other hashes alike. A number
+  of that shape at a moved base is a stale address of the old image, which
+  stage C's proof wants to see, not to hide; it is not expected, and it
+  cannot be told apart in a hash.
+- **The fold cannot tell a heap pointer from an image pointer in its range**
+  (measured on the stage C1 proof, 2026-10-28). A folded range is chosen
+  clear of the moved image's own process's heap, but a process at `0x400000`
+  has its heap where the moved image lies: on `cutsceneAndNue` the music
+  stream's heap pointers (`Music_FileSize`, `SaveMenu_StreamData`,
+  `Music_FileLoops` and their neighbours, on pages `0x904000`, `0x665000`,
+  `0x6BD000`, `0x7DE000`) land in `0xA00000..0xF3F000` in one process and
+  fold, and not in the other, intermittently to the end (859 of 7,220 ticks).
+  Capcom's folded pair and ours at `0x400000` folded alike both differ from
+  the moved run there; ours at `0x400000` against the moved run, `diff`,
+  shows only the transient VRAM, sound and busy pages. So **the proof of a
+  move is ours against ours**: (1) ours at `0x400000`, unfolded, against the
+  `orig4` pair - the route's signature pages, and nothing else; (2) ours moved
+  against ours at `0x400000` with the same fold, by `statehash.py diff` - the
+  noise pages only. Capcom's folded pair is a cross-check, not the gate; its
+  misses on pages of heap pointers are this limit, expected.
+- **The raw dumps stay raw**, at the image's place: `bytes --fold`
+  compares them.
+
+**Code words bound to our functions: flags bit 2** (the relocatable-image
+round's stage C2, 2026-10-29). In `bof3x.exe` the stub page is a no-access
+trap, and every code word of the game's - the 8,673 load-time words of
+`exe-pointers.tsv` whose target has a function of ours, a task's entry, a
+hook the game calls, and every copy the game's logic makes of one - holds
+the VA's **place**: a jump of ours to its function at `(top << 24) | VA`
+(`src/hook/bind.cpp`; the top byte 0x7C, else 0x70, 0x7E, 0x7B, 0x7D), where
+`BOF3.exe` holds Capcom's VA - the same word in all but its top byte. Section 7's rule would hash such a word raw or as the code tag,
+and every page with one would differ from Capcom's references. So, under the
+same normalisation switch (`BOF3X_STATEHASH_RAW` unset):
+
+1. **Every aligned word** of a page, slot or not, whose value is exactly an
+   entry of the table is hashed as that entry's VA, **with no index mixed
+   in**: it hashes as Capcom's raw word would. The test is by value, because
+   the game copies code words from table to record and so no list of
+   locations holds them all; and it is safe by value because no value of the
+   game's data is `(top << 24) | a bound VA` for the top bytes used - measured
+   over the 219 raw dumps of `analysis/statehash` and the round's 8 (227 in
+   all): of the top bytes 0x20..0x7F, 0x7C, 0x70, 0x7E, 0x7B and 0x7D have no
+   such word. A word one byte into a place is not renamed.
+   **Why the VA's low three bytes** (the stage C2 proof's whelpBoss,
+   2026-10-29): Capcom's code reads past its own tables into the code-pointer
+   tables after them, so a byte of a code word is game data too -
+   `EffectKind0B_Rise` reads its s8 rise table `0x653AB0` at `+9 >> 2`, which
+   reaches 16, the low byte of `EffectKind0B_States[0]`: `0x80` in Capcom's
+   word, -128 added to the effect's screen y (`Effect_Objects` +0x7A, the high
+   half of the float, -38.0 against 138.0 with a place at `0x47E9xxxx`). With
+   the VA's low three bytes in the place, such a byte, a low halfword and a
+   24-bit link packed from a code word are Capcom's; only the top byte
+   differs.
+2. **Nothing else is renamed.** The first rule (the C2 build of 2026-10-28)
+   renamed a word holding **our function's own address** - and the game's
+   data holds such values as data: on the combat route the VRAM shadow's
+   `0x7606F8` is `0x10770000` (a texel pair, the start of our
+   `BattleAction_Kind3Wait`), and six area tables hold `0x1000FE40` (the
+   address of the DirectSoundCreate thunk then). Eight pages differed from
+   the `orig4` pair from tick 0 or 1, in both hosts alike (a hosted run of
+   that build hashed them the same wrong way); the CLUT strips and the unpack
+   scratch later. A function of ours serving several VAs is no cause: the
+   area tables' cells that hold `0x403050` (`Area22_ArmTailOnYes`) in three
+   tables, or `BareRet` three times, hold the same VA in Capcom's file.
+3. **Hosted** there is no table and nothing is renamed: a hosted run hashes
+   as before flags bit 2, bit for bit.
+4. **The census** counts a word holding a place at its time as a slot of
+   Capcom's, as it counted the VA that word replaced.
+5. **The header** sets bit 2 of the flags (with bits 0 and 1: 7 when
+   normalising). `statehash.py info` says "bound code words as their VAs",
+   and `diff` / `check` print a note, not a refusal, for runs that differ in
+   the bit.
+6. **The test** (`statehash.cpp` `SelfTest`, both hosts): a page of data
+   holding our functions' addresses as data words hashes as its raw bytes; in
+   `bof3x.exe`, a page of Capcom's code VAs and the same page holding their
+   places - two cells of two VAs among them - hash alike with the
+   normalisation and differ without it, and a word one byte into a place is
+   not renamed. A planted fault (the by-function rule put back) exits 3 with
+   "a page of data holding our functions' addresses does not hash as its raw
+   bytes".
+7. **The watch** (`statehash.cpp` `Watch`, `bof3x.exe` only, no hash changed): on
+   every page whose hash changed, an aligned word holding our function's own
+   address where a bound function starts, or a value inside the table that is
+   not an entry, is logged once (`statehash   watch: tick T, the word at ...`,
+   at most 64 lines a run) - a code word our code stored without
+   `::bof3::Code()`, which hashes raw where Capcom's run holds the VA. A texel
+   pair equal to such an address is logged too; where it lies says which.
+8. **The check against Capcom's references is where the map matters.** A
+   moved run against ours at `0x400000` would not show a missing map - both
+   sides are ours; ours at `0x400000`, unfolded, against the `orig4` pair
+   would differ from tick 0 on every page holding a place. The bind table's
+   log line counts them: 8,673 aligned words on 121 of `.data`'s 868 pages in
+   a headless start of `bof3x.exe` at either base (`bind: ... aligned words of
+   .data hold a code place`).
+
+**Re-hashing the references.** A hash file holds page hashes, not bytes, so
+no file can be re-normalised offline - and none needs to be: with nothing
+folded the new hash is the old one bit for bit (design point 4), so the
+`cn_<route>_orig4` / `_orig4b` pairs are already the references of this
+hash. The live proof is one run of Capcom's side per reference with the
+build of this change, checked against the pair (the conditions of the
+`orig4` pairs, section 6). For each route of the ten, as
+`C:\Users\kerok\bof3x-runs\ri1027\ra2\rehash.sh` writes it, with `$L` a
+clean launcher copy of the build (no ini; `bof3x-launcher.exe`,
+`bof3x-launcher-dev.exe`, `bof3x.dll`, `bof3x.exe`) and `--slot0-hold` on
+`shop` only:
+
+    BOF3X_OPT=none BOF3X_LAYERING=0 BOF3X_STATEHASH_SKIP="$R/tools/statehash_skip.txt" \
+      python tools/input_run.py tools/recipes/<route>.txt --out $OUT/out/<route>_orig4r \
+      --no-front --game "$R/bof3" --launcher $L/bof3x-launcher.exe --slot0-wait 2400 \
+      --minutes 40 --original "*,-Game_Clock" --env BOF3X_STATEHASH="$OUT/cn_<route>_orig4r.sh"
+    python tools/statehash.py check cn_<route>_orig4.sh cn_<route>_orig4b.sh $OUT/cn_<route>_orig4r.sh
+
+and again as `_orig4rb`. The tool of this change reads `BOF3SH4`; `main`'s
+before the merge does not. **Pass:** every `check` exits 0 - each new run
+identical to the pair on every page and tick where the pair agrees, pair
+for pair. A reported page is read by section 2's loop; the save-slot pages
+`0x905000` and `0x92A000` from a route's first save-list read are the
+owner's saves (section 6), confirmed by a run of `main`'s build on the
+same side showing the same.
+
+**The references for stage C's proof** are recorded when its base is known:
+the same command with `--env BOF3X_STATEHASH_FOLD=<the base>` added, on Capcom's
+side (`cn_<route>_orig5f` / `_orig5fb`), and the runs of ours at `0x400000`
+with the same fold; the run at the moved base needs no fold switch, its base
+is folded. Such a pair cannot be checked against the `orig4` pairs (the tool
+refuses it): its pass is the two agreeing as `orig4` and `orig4b` do (`diff`,
+no page but the noise pages section 6 names).

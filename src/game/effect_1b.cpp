@@ -95,7 +95,7 @@ U ScKey() { return static_cast<U>(reinterpret_cast<std::uintptr_t>(Sprite_Curren
 unsigned char& B(U a) { return *At(a); }
 unsigned char Style() { return static_cast<unsigned char>(Config_WindowColour); }
 const unsigned char* Text(U a) { return At(a); }
-char* Print() { return reinterpret_cast<char*>(At(at::kPrint)); }
+char* Print() { return reinterpret_cast<char*>(At(::bof3::Img(at::kPrint.v))); }
 // A float stored as the originals' fild / fstp store it: every value here is a
 // whole number well inside a float's 24 bits, so exact.
 void F(unsigned char* p, int v) {
@@ -110,7 +110,7 @@ using Handler = void (__cdecl*)();
 Handler StepAt(U table, unsigned index, unsigned count, const char* who) {
     if (index >= count)
         bof3::Fatal("%s: index %u past the %u entries of 0x%X (the original jumps through what follows)", who, index,
-                    count, (unsigned)table);
+                    count, (unsigned)::bof3::VaOf(table));
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))));
 }
 // A byte of one of the image's scripts or tables: past its end the original
@@ -122,13 +122,13 @@ Handler StepAt(U table, unsigned index, unsigned count, const char* who) {
 unsigned char ByteOf(U table, unsigned bytes, int index, const char* who) {
     if (index < -4 || (index >= 0 && static_cast<unsigned>(index) >= bytes))
         bof3::Fatal("%s: byte %d of the %u-byte table 0x%X (the original reads past it)", who, index, bytes,
-                    (unsigned)table);
+                    (unsigned)::bof3::VaOf(table));
     return B(static_cast<U>(static_cast<std::int32_t>(table) + index));
 }
 std::uint16_t WordOf(U table, unsigned count, unsigned index, const char* who) {
     if (index >= count)
         bof3::Fatal("%s: word %u of the %u-word table 0x%X (the original reads past it)", who, index, count,
-                    (unsigned)table);
+                    (unsigned)::bof3::VaOf(table));
     return Word(At(table + 2 * index));
 }
 // The record Effect_FindFree answered, written without the original checking
@@ -153,27 +153,27 @@ unsigned char Category(unsigned char id, const char* who) {
     if (id >= at::kAccessoryCount)
         bof3::Fatal("%s: accessory id %u past the %u records (the original reads past NameTable_Accessories)", who,
                     (unsigned)id, at::kAccessoryCount);
-    return B(at::kAccessoryCategory + at::kAccessoryStride * id);
+    return B(::bof3::Img(at::kAccessoryCategory.v) + at::kAccessoryStride * id);
 }
 const unsigned char* AccessoryName(unsigned char id) {
-    return At(bof3::addr::NameTable_Accessories + at::kAccessoryStride * id);
+    return At(::bof3::Img(bof3::addr::NameTable_Accessories) + at::kAccessoryStride * id);
 }
 // The characters a name is drawn to: the original's 8, or 12 under a Latin
 // overlay (DIVERGENCE DIV-0069: the US name field; 8 cut "Wooden Rod" to "Wooden R").
 int NameCount() { return static_cast<int>(FishingText_NameCount()); }
 // A script-pool message: MessagePools + its u16 offset.
-const unsigned char* Pool(unsigned id) { return At(at::kPools + Word(At(at::kPools + 2 * id))); }
+const unsigned char* Pool(unsigned id) { return At(::bof3::Img(at::kPools.v) + Word(At(::bof3::Img(at::kPools.v) + 2 * id))); }
 
 // --- the callees by address (E1F's, E1A's, E1G's) ------------------------------------
-void DrawMode(unsigned id, unsigned slot) { SH_AT(void (__cdecl*)(unsigned, unsigned), at::kDrawMode)(id, slot); }
+void DrawMode(unsigned id, unsigned slot) { SH_AT(void (__cdecl*)(unsigned, unsigned), at::kDrawMode.v)(id, slot); }
 void DrawSprite(unsigned id, unsigned slot, int x, int y) {
-    SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, int, int), at::kDrawSprite)(id, slot, x, y);
+    SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, int, int), at::kDrawSprite.v)(id, slot, x, y);
 }
-void Call3(U address, U a, U b, U c) { SH_AT(void (__cdecl*)(U, U, U), address)(a, b, c); }
-void Call4(U address, U a, U b, U c, U d) { SH_AT(void (__cdecl*)(U, U, U, U), address)(a, b, c, d); }
-void Call5(U address, U a, U b, U c, U d, U e) { SH_AT(void (__cdecl*)(U, U, U, U, U), address)(a, b, c, d, e); }
+void Call3(U address, U a, U b, U c) { SH_WORD(void (__cdecl*)(U, U, U), address)(a, b, c); }
+void Call4(U address, U a, U b, U c, U d) { SH_WORD(void (__cdecl*)(U, U, U, U), address)(a, b, c, d); }
+void Call5(U address, U a, U b, U c, U d, U e) { SH_WORD(void (__cdecl*)(U, U, U, U, U), address)(a, b, c, d, e); }
 void Call6(U address, U a, U b, U c, U d, U e, U f) {
-    SH_AT(void (__cdecl*)(U, U, U, U, U, U), address)(a, b, c, d, e, f);
+    SH_WORD(void (__cdecl*)(U, U, U, U, U, U), address)(a, b, c, d, e, f);
 }
 void DrawAt(int x, int y, int colour, int count, const unsigned char* text) {
     SH_CALL(Text_DrawAt)(x, y, colour, count, text);
@@ -260,7 +260,7 @@ extern "C" void __cdecl EffectKind0F_ListClose() {
 // 0xE, EffectKind0F_Children[+2] (a tail jump); else Effect_Release.
 extern "C" void __cdecl EffectKind0F_Child() {
     if (rv::Bytes(&Effect_Objects[6])[0x8] == 0 && Effect_Objects[6].state == 0xE) {
-        StepAt(EffectKind0F_Children_addr, Sc()[2], at::kChildrenCount, "EffectKind0F_Child")();
+        StepAt(::bof3::Img(EffectKind0F_Children_addr), Sc()[2], at::kChildrenCount, "EffectKind0F_Child")();
         return;
     }
     SH_CALL(Effect_Release)();
@@ -269,22 +269,22 @@ extern "C" void __cdecl EffectKind0F_Child() {
 // originals 0x467520, 0x4677F0, 0x467A60, 0x467D60, 0x468020, 0x468320 (kind 0xF
 // states 30..35, EffectKind0F_Children 0..5): each sub-kind's step table by +3.
 extern "C" void __cdecl EffectKind0F_Child0() {
-    StepAt(EffectKind0F_Child0Steps_addr, Sc()[3], at::kChild0Count, "EffectKind0F_Child0")();
+    StepAt(::bof3::Img(EffectKind0F_Child0Steps_addr), Sc()[3], at::kChild0Count, "EffectKind0F_Child0")();
 }
 extern "C" void __cdecl EffectKind0F_Child1() {
-    StepAt(EffectKind0F_Child1Steps_addr, Sc()[3], at::kChild1Count, "EffectKind0F_Child1")();
+    StepAt(::bof3::Img(EffectKind0F_Child1Steps_addr), Sc()[3], at::kChild1Count, "EffectKind0F_Child1")();
 }
 extern "C" void __cdecl EffectKind0F_Child2() {
-    StepAt(EffectKind0F_Child2Steps_addr, Sc()[3], at::kChild2Count, "EffectKind0F_Child2")();
+    StepAt(::bof3::Img(EffectKind0F_Child2Steps_addr), Sc()[3], at::kChild2Count, "EffectKind0F_Child2")();
 }
 extern "C" void __cdecl EffectKind0F_Child3() {
-    StepAt(EffectKind0F_Child3Steps_addr, Sc()[3], at::kChild3Count, "EffectKind0F_Child3")();
+    StepAt(::bof3::Img(EffectKind0F_Child3Steps_addr), Sc()[3], at::kChild3Count, "EffectKind0F_Child3")();
 }
 extern "C" void __cdecl EffectKind0F_Child4() {
-    StepAt(EffectKind0F_Child4Steps_addr, Sc()[3], at::kChild4Count, "EffectKind0F_Child4")();
+    StepAt(::bof3::Img(EffectKind0F_Child4Steps_addr), Sc()[3], at::kChild4Count, "EffectKind0F_Child4")();
 }
 extern "C" void __cdecl EffectKind0F_Child5() {
-    StepAt(EffectKind0F_Child5Steps_addr, Sc()[3], at::kChild5Count, "EffectKind0F_Child5")();
+    StepAt(::bof3::Img(EffectKind0F_Child5Steps_addr), Sc()[3], at::kChild5Count, "EffectKind0F_Child5")();
 }
 
 // --- sub-kind 0 (EffectKind0F_Child0Steps) --------------------------------------------
@@ -310,7 +310,7 @@ extern "C" void __cdecl EffectKind0F_Child0Start() {
 // frames, +0xA + 1; else +9 - 1 and Sprite_ScriptTick. Then Sprite_QueueOverlay.
 extern "C" void __cdecl EffectKind0F_Child0Animate() {
     static const char kWho[] = "EffectKind0F_Child0Animate";
-    auto at_ = [](int i) { return ByteOf(at::kChild0Script, at::kChild0ScriptBytes, i, kWho); };
+    auto at_ = [](int i) { return ByteOf(::bof3::Img(at::kChild0Script.v), at::kChild0ScriptBytes, i, kWho); };
     unsigned char* s = Sc();
     if (s[9] == 0) {
         if (at_(2 * s[0xA]) == 0xFF) s[0xA] = at_(2 * s[0xA] + 1);
@@ -386,7 +386,7 @@ extern "C" void __cdecl EffectKind0F_Child1Start() {
 // printed at (0xAA, 0x94) and Sprite_QueueOverlay again.
 extern "C" void __cdecl EffectKind0F_Child1Meter() {
     static const char kWho[] = "EffectKind0F_Child1Meter";
-    auto at_ = [](int i) { return ByteOf(at::kChild1Script, at::kChild1ScriptBytes, i, kWho); };
+    auto at_ = [](int i) { return ByteOf(::bof3::Img(at::kChild1Script.v), at::kChild1ScriptBytes, i, kWho); };
     unsigned char* s = Sc();
     if (s[9] == 0) {
         if (at_(3 * s[0xA]) == 0xFF) {
@@ -425,9 +425,9 @@ extern "C" void __cdecl EffectKind0F_Child1Meter() {
     } else if (mode == 1 && (Frame_Counter & 1) == 0) {
         s[6] = static_cast<unsigned char>(s[6] + 1);
     }
-    Call4(at::kE1aBarG4, 0x39, 0x97, Word(Sc() + 0xC), 1);
+    Call4(at::kE1aBarG4.v, 0x39, 0x97, Word(Sc() + 0xC), 1);
     SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Boss26Fx_CountFormat), static_cast<unsigned>(Sc()[6]));
-    SH_CALL(Text_DrawFont12)(0xAA, 0x94, 0, Text(at::kPrint));
+    SH_CALL(Text_DrawFont12)(0xAA, 0x94, 0, Text(::bof3::Img(at::kPrint.v)));
     SH_CALL(Sprite_QueueOverlay)();
 }
 
@@ -453,7 +453,7 @@ extern "C" void __cdecl EffectKind0F_Child2Start() {
 // and with a step the mark at (0xF4, +6 + 0x68 on the pointer's upper half).
 extern "C" void __cdecl EffectKind0F_Child2Gauge() {
     static const char kWho[] = "EffectKind0F_Child2Gauge";
-    auto at_ = [](int i) { return ByteOf(at::kChild2Script, at::kChild2ScriptBytes, i, kWho); };
+    auto at_ = [](int i) { return ByteOf(::bof3::Img(at::kChild2Script.v), at::kChild2ScriptBytes, i, kWho); };
     unsigned char* s = Sc();
     if (s[9] == 0) {
         if (at_(3 * s[0xA]) == 0) {
@@ -485,12 +485,12 @@ extern "C" void __cdecl EffectKind0F_Child2Gauge() {
         const auto v = static_cast<unsigned char>(s[6] + step);
         s[6] = (v & 0x80) != 0 ? 0 : (v > 0x18 ? 0x18 : v);
     }
-    Call3(at::kE1aGaugeA, 0xE4, 0x68, 1);
-    Call3(at::kE1aGaugeB, 0xE4, 0x78, 1);
+    Call3(at::kE1aGaugeA.v, 0xE4, 0x68, 1);
+    Call3(at::kE1aGaugeB.v, 0xE4, 0x78, 1);
     DrawMode(0, 1);
     DrawSprite(0x14, 1, 0xDC, 0x60);
     s = Sc();
-    if (at_(3 * s[0xA] - 1) != 0) Call3(at::kE1aGaugeMark, 0xF4, ((ScKey() & 0xFFFF0000u) | s[6]) + 0x68u, 1);
+    if (at_(3 * s[0xA] - 1) != 0) Call3(at::kE1aGaugeMark.v, 0xF4, ((ScKey() & 0xFFFF0000u) | s[6]) + 0x68u, 1);
 }
 
 // original 0x467CA0 (PSX 0x801D6430): bank 0x2B; +0x24 0x80, +0x29 = +0x2A = 0, +0x48 2, dwords
@@ -549,11 +549,11 @@ extern "C" void __cdecl EffectKind0F_Child3Start() {
 // at 0 +9 = 0 and the next row (after 3, row 0).
 extern "C" void __cdecl EffectKind0F_Child3Grid() {
     static const char kWho[] = "EffectKind0F_Child3Grid";
-    auto grid = [](int i) { return ByteOf(at::kChild3Grid, at::kChild3GridBytes, i, kWho); };
+    auto grid = [](int i) { return ByteOf(::bof3::Img(at::kChild3Grid.v), at::kChild3GridBytes, i, kWho); };
     unsigned char* s = Sc();
     unsigned column;
     if (s[0xA] != 0) {
-        Call4(at::kE1aDigits, 0xD4, 0x8A, 0, (ScKey() & 0xFFFFFF00u) | static_cast<unsigned char>(s[0xB] + 1));
+        Call4(at::kE1aDigits.v, 0xD4, 0x8A, 0, (ScKey() & 0xFFFFFF00u) | static_cast<unsigned char>(s[0xB] + 1));
         s = Sc();
         column = s[9] / 12u;
     } else {
@@ -572,17 +572,17 @@ extern "C" void __cdecl EffectKind0F_Child3Grid() {
             s = Sc();
             if (row == s[0xB]) {
                 if (s[9] % 12u < 10 && col == column) {
-                    const U text = static_cast<U>(Long(At(at::kGridText + 8u * mark)));
+                    const U text = static_cast<U>(Long(At(::bof3::Img(at::kGridText.v) + 8u * mark)));
                     DrawAt(static_cast<int>(12 * col + 0x84), static_cast<int>(13 * row + 0x9B),
                            static_cast<unsigned char>(mark << 1), 1, Text(text));
                 } else {
-                    const U text = static_cast<U>(Long(At(at::kGridText + 4u * mark)));
+                    const U text = static_cast<U>(Long(At(::bof3::Img(at::kGridText.v) + 4u * mark)));
                     const auto colour = static_cast<std::uint16_t>(static_cast<signed char>(mark) * 3);
                     SH_CALL(Text_DrawSmall)(static_cast<int>(12 * col + 0x86), static_cast<int>(13 * row + 0x9E),
                                             (text & 0xFFFF0000u) | colour, 1, Text(text));
                 }
             } else {
-                const U text = static_cast<U>(Long(At(at::kGridText + 4u * mark)));
+                const U text = static_cast<U>(Long(At(::bof3::Img(at::kGridText.v) + 4u * mark)));
                 SH_CALL(Text_DrawSmall)(static_cast<int>(12 * col + 0x86), static_cast<int>(13 * row + 0x9E),
                                         static_cast<unsigned char>(7 - mark), 1, Text(text));
             }
@@ -646,7 +646,7 @@ void MoveCursor(U script, const char* who) {
 // 0x465D90(0x7E, 0x5C, 0, 1) and 0x465E50(0x8F, 0x69, 0x20, 0, 1, 0).
 extern "C" void __cdecl EffectKind0F_Child4Move() {
     static const char kWho[] = "EffectKind0F_Child4Move";
-    auto at_ = [](int i) { return ByteOf(at::kChild4Script, at::kMoveScriptBytes, i, kWho); };
+    auto at_ = [](int i) { return ByteOf(::bof3::Img(at::kChild4Script.v), at::kMoveScriptBytes, i, kWho); };
     unsigned char* s = Sc();
     if (s[9] == 0) {
         if (at_(4 * s[0xA]) == 0xFF) s[0xA] = at_(4 * s[0xA] + 1);
@@ -660,10 +660,10 @@ extern "C" void __cdecl EffectKind0F_Child4Move() {
         s = Sc();
         if ((at_(4 * s[0xA] - 4) & 0x80) == 0) SH_CALL(Sprite_ScriptTick)();
     }
-    MoveCursor(at::kChild4Script, kWho);
-    SH_CALL(EffectKind0F_DrawCursorPanel)(MoveByte(at::kChild4Script, 4 * Sc()[0xA] - 1, kWho) >= 0 ? 1u : 0u);
-    Call4(at::kE1aMarker, 0x7E, 0x5C, 0, 1);
-    Call6(at::kE1aRange, 0x8F, 0x69, 0x20, 0, 1, 0);
+    MoveCursor(::bof3::Img(at::kChild4Script.v), kWho);
+    SH_CALL(EffectKind0F_DrawCursorPanel)(MoveByte(::bof3::Img(at::kChild4Script.v), 4 * Sc()[0xA] - 1, kWho) >= 0 ? 1u : 0u);
+    Call4(at::kE1aMarker.v, 0x7E, 0x5C, 0, 1);
+    Call6(at::kE1aRange.v, 0x8F, 0x69, 0x20, 0, 1, 0);
 }
 
 // original 0x468210 (down, a byte): Sprite_QueueOverlay; the draw mode (0, 1),
@@ -685,8 +685,8 @@ extern "C" void __cdecl EffectKind0F_DrawCursorPanel(unsigned down) {
     s = Sc();
     const std::int32_t cx = static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c), cy = static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10);
     const U outside = (cy >= cx && cy <= cx + 0x20) ? 0u : 1u;
-    Call6(at::kE1aRange, Word(s + 0xC), 0xB3, 0x20, static_cast<unsigned char>((s[6] & 7) << 1), 1, outside);
-    Call4(at::kE1aMarker, Word(Sc() + 0x10), 0xB3, (down & 0xFF) == 0 ? 0u : 1u, 1);
+    Call6(at::kE1aRange.v, Word(s + 0xC), 0xB3, 0x20, static_cast<unsigned char>((s[6] & 7) << 1), 1, outside);
+    Call4(at::kE1aMarker.v, Word(Sc() + 0x10), 0xB3, (down & 0xFF) == 0 ? 0u : 1u, 1);
 }
 
 // original 0x468340 (PSX 0x801D6F50): EffectKind0F_Child4Start, then +0xB = 0x37.
@@ -703,7 +703,7 @@ extern "C" void __cdecl EffectKind0F_Child5Start() {
 // (0xA9, 0xB0) in colour 2 on frames with bit 2, else 0.
 extern "C" void __cdecl EffectKind0F_Child5Move() {
     static const char kWho[] = "EffectKind0F_Child5Move";
-    auto at_ = [](int i) { return ByteOf(at::kChild5Script, at::kMoveScriptBytes, i, kWho); };
+    auto at_ = [](int i) { return ByteOf(::bof3::Img(at::kChild5Script.v), at::kMoveScriptBytes, i, kWho); };
     unsigned char* s = Sc();
     if (s[9] == 0) {
         if (at_(4 * s[0xA]) == 0xFF) {
@@ -733,17 +733,17 @@ extern "C" void __cdecl EffectKind0F_Child5Move() {
         s = Sc();
         if ((at_(4 * s[0xA] - 4) & 0x80) == 0) SH_CALL(Sprite_ScriptTick)();
     }
-    MoveCursor(at::kChild5Script, kWho);
-    SH_CALL(EffectKind0F_DrawCursorPanel)(MoveByte(at::kChild5Script, 4 * Sc()[0xA] - 1, kWho) >= 0 ? 1u : 0u);
+    MoveCursor(::bof3::Img(at::kChild5Script.v), kWho);
+    SH_CALL(EffectKind0F_DrawCursorPanel)(MoveByte(::bof3::Img(at::kChild5Script.v), 4 * Sc()[0xA] - 1, kWho) >= 0 ? 1u : 0u);
     if ((Frame_Counter & 0xF) == 0) {
         s = Sc();
-        if (MoveByte(at::kChild5Script, 4 * s[0xA] - 1, kWho) > 0) {
+        if (MoveByte(::bof3::Img(at::kChild5Script.v), 4 * s[0xA] - 1, kWho) > 0) {
             s[0xB] = static_cast<unsigned char>(s[0xB] + 1);
             if (s[0xB] > 0x3C) s[0xB] = 0x3C;
         }
     }
     SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Boss26Fx_CountFormat), static_cast<unsigned>(Sc()[0xB]));
-    SH_CALL(Text_DrawFont12)(0xA9, 0xB0, (Frame_Counter & 4) != 0 ? 2 : 0, Text(at::kPrint));
+    SH_CALL(Text_DrawFont12)(0xA9, 0xB0, (Frame_Counter & 4) != 0 ? 2 : 0, Text(::bof3::Img(at::kPrint.v)));
 }
 
 // --- the panels ---------------------------------------------------------------------
@@ -823,17 +823,17 @@ extern "C" void __cdecl EffectKind0F_DrawMessageList(int x, int y) {
     }
     auto line = static_cast<unsigned char>(Long(s + 0x14));
     for (unsigned n = 0; n < lines; ++n) {
-        const std::uint16_t id = WordOf(EffectKind0F_RuleLineIds_addr, at::kLineCount, line, kWho);
+        const std::uint16_t id = WordOf(::bof3::Img(EffectKind0F_RuleLineIds_addr), at::kLineCount, line, kWho);
         if (id != 0xFFFF) DrawAt(x + 6, static_cast<int>(top + 13 * n), 0, 0xFF, Pool(id));
         line = static_cast<unsigned char>(line + 1);
         if (line > 0x35) line = 0;
     }
     SH_CALL(Menu_DrawBox)(x, y + 6, 0xF2, 0xE, 0, Style());
     SH_CALL(Menu_DrawBox)(x, y + 0x94, 0xF2, 0xB, 0x30, Style());
-    DrawAt(x + 0x3D, y + 6, 0, 0xFF, Pool(WordOf(EffectKind0F_RuleTitleIds_addr, at::kTitleCount, rv::As<records::EffectObject>(Sc())->height_frac, kWho)));
+    DrawAt(x + 0x3D, y + 6, 0, 0xFF, Pool(WordOf(::bof3::Img(EffectKind0F_RuleTitleIds_addr), at::kTitleCount, rv::As<records::EffectObject>(Sc())->height_frac, kWho)));
     SH_CALL(EffectKind0F_DrawListFrame)(x, y);
-    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(EffectKind0F_PageFormat_addr)), rv::As<records::EffectObject>(Sc())->height_frac + 1u);
-    SH_CALL(Text_DrawFont8)(x + 0xCA, y + 0x92, 0, Text(at::kPrint));
+    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(::bof3::Img(EffectKind0F_PageFormat_addr))), rv::As<records::EffectObject>(Sc())->height_frac + 1u);
+    SH_CALL(Text_DrawFont8)(x + 0xCA, y + 0x92, 0, Text(::bof3::Img(at::kPrint.v)));
 }
 
 // original 0x468840 (x, y; PSX 0x801D77CC): the draw mode (9, 1); the top edge (sprite 0x25, 23
@@ -869,8 +869,8 @@ extern "C" void __cdecl Panel_DrawEdgeQuad(int x, int y, unsigned height, unsign
     const unsigned k = which & 0xFF;
     if (k >= at::kEdgeQuadCount)
         bof3::Fatal("Panel_DrawEdgeQuad: quad %u past the %u records of 0x%X (the original reads past them)", k,
-                    at::kEdgeQuadCount, (unsigned)at::kEdgeQuads);
-    const unsigned char* const r = At(at::kEdgeQuads + 10 * k);
+                    at::kEdgeQuadCount, at::kEdgeQuads.v);
+    const unsigned char* const r = At(::bof3::Img(at::kEdgeQuads.v) + 10 * k);
     rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, 0x7887);
     rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, ((Word(r + 8) & 0x3C0u) | 0x400u) >> 6);
     const int sx = static_cast<short>(x), sy = static_cast<short>(y);
@@ -901,11 +901,11 @@ extern "C" void __cdecl Panel_DrawEdgeQuad(int x, int y, unsigned height, unsign
 extern "C" void __cdecl EffectKind0F_DrawCountHeader() {
     DrawMode(0, 1);
     DrawSprite(0x12, 1, 0xF0, 0x42);
-    SH_CALL(Text_DrawFont12)(0x119, 0x45, 0, Text(EffectKind0F_CountLabel_addr));
+    SH_CALL(Text_DrawFont12)(0x119, 0x45, 0, Text(::bof3::Img(EffectKind0F_CountLabel_addr)));
     SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Boss26Fx_CountFormat),
                          static_cast<int>(static_cast<short>(rv::As<records::EffectObject>(Sc())->height_whole)) + 1);
-    if (B(at::kPrint) == 0x20) B(at::kPrint) = 0x20;
-    DrawAt(0xF7, 0x45, 0, 2, Text(at::kPrint));
+    if (B(::bof3::Img(at::kPrint.v)) == 0x20) B(::bof3::Img(at::kPrint.v)) = 0x20;
+    DrawAt(0xF7, 0x45, 0, 2, Text(::bof3::Img(at::kPrint.v)));
 }
 
 // original 0x468AC0 (x, y, bits): three toggle boxes at x + 0x30 i, each lit by
@@ -922,7 +922,7 @@ extern "C" void __cdecl EffectKind0F_DrawToggles(int x, int y, unsigned bits) {
     }
     static const int kX[3] = {0xA, 0x35, 0x6A}, kCount[3] = {2, 3, 2};
     for (int i = 0; i < 3; ++i) {
-        const auto text = static_cast<U>(Long(At(Effect1b_ToggleText_addr + 4u * i)));
+        const auto text = static_cast<U>(Long(At(::bof3::Img(Effect1b_ToggleText_addr) + 4u * i)));
         const int colour = byte == 0 ? 0 : static_cast<unsigned char>(7 - 7 * lit[i]);
         if (FishingText_On()) {
             // DIVERGENCE DIV-0069: under a Latin overlay the label whole, centred
@@ -977,26 +977,26 @@ extern "C" void __cdecl EffectKind0F_DrawItemsB(int x, int y) {
     SH_CALL(Menu_DrawBox)(x, y + 1, 0x8B, 0x9E, 0xF0, Style());
     unsigned drawn = 0;
     for (unsigned n = 0; n < 0x80; ++n) {
-        if (Category(B(at::kItemIds + n), kWho) != 0xB) continue;
+        if (Category(B(::bof3::Img(at::kItemIds.v) + n), kWho) != 0xB) continue;
         unsigned char* s = Sc();
         if (static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c) == static_cast<std::int32_t>(drawn)) rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, n);
         s = Sc();
         const int row = y + 13 * static_cast<int>(drawn);
         if (ObjTrio[0].state4 == 2 && (s[7] & 1) == 0 && static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c) == static_cast<std::int32_t>(drawn)) {
-            DrawAt(x + 5, row + 0x19, 7, NameCount(), AccessoryName(B(at::kItemIds + n)));
-            DrawAt(x + 5, row + 0x17, 0, NameCount(), AccessoryName(B(at::kItemIds + n)));
-            const unsigned char count = B(at::kItemCounts + n);
+            DrawAt(x + 5, row + 0x19, 7, NameCount(), AccessoryName(B(::bof3::Img(at::kItemIds.v) + n)));
+            DrawAt(x + 5, row + 0x17, 0, NameCount(), AccessoryName(B(::bof3::Img(at::kItemIds.v) + n)));
+            const unsigned char count = B(::bof3::Img(at::kItemCounts.v) + n);
             if (count > 1) {
-                SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(at::kCountFormat)), static_cast<unsigned>(count));
-                SH_CALL(Text_DrawFont8)(x + 0x68, row + 0x1D, 7, Text(at::kPrint));
-                SH_CALL(Text_DrawFont8)(x + 0x68, row + 0x1B, 0, Text(at::kPrint));
+                SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(::bof3::Img(at::kCountFormat.v))), static_cast<unsigned>(count));
+                SH_CALL(Text_DrawFont8)(x + 0x68, row + 0x1D, 7, Text(::bof3::Img(at::kPrint.v)));
+                SH_CALL(Text_DrawFont8)(x + 0x68, row + 0x1B, 0, Text(::bof3::Img(at::kPrint.v)));
             }
         } else {
-            DrawAt(x + 5, row + 0x19, 0, NameCount(), AccessoryName(B(at::kItemIds + n)));
-            const unsigned char count = B(at::kItemCounts + n);
+            DrawAt(x + 5, row + 0x19, 0, NameCount(), AccessoryName(B(::bof3::Img(at::kItemIds.v) + n)));
+            const unsigned char count = B(::bof3::Img(at::kItemCounts.v) + n);
             if (count > 1) {
-                SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(at::kCountFormat)), static_cast<unsigned>(count));
-                SH_CALL(Text_DrawFont8)(x + 0x68, row + 0x1D, 0, Text(at::kPrint));
+                SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(::bof3::Img(at::kCountFormat.v))), static_cast<unsigned>(count));
+                SH_CALL(Text_DrawFont8)(x + 0x68, row + 0x1D, 0, Text(::bof3::Img(at::kPrint.v)));
             }
         }
         ++drawn;
@@ -1007,7 +1007,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsB(int x, int y) {
     if (static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c) >= rv::As<records::EffectObject>(s)->work_18) rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectObject>(s)->work_18 == 0 ? 0 : rv::As<records::EffectObject>(s)->work_18 - 1);
     SH_CALL(EffectKind0F_DrawItemFrame)(x, y);
     SH_CALL(EffectKind0F_DrawScrollMark)(x + 0x80, y + 0x1C, 0x72);
-    DrawHeading(0, x + 0x35, y + 7, 3, EffectKind0F_PanelTitles_addr);
+    DrawHeading(0, x + 0x35, y + 7, 3, ::bof3::Img(EffectKind0F_PanelTitles_addr));
 }
 
 // original 0x468E50 (x, y, height; PSX 0x801D82F4): a POLY_FT4 (the cursor read once, before
@@ -1066,26 +1066,26 @@ extern "C" void __cdecl EffectKind0F_DrawItemsA(int x, int y) {
     unsigned drawn = 0;
     std::int32_t seen = 0;
     for (unsigned n = 0; n < 0x80; ++n) {
-        const unsigned char id = B(at::kItemIds + n);
+        const unsigned char id = B(::bof3::Img(at::kItemIds.v) + n);
         if (Category(id, kWho) != 0xA) continue;
         if (seen >= static_cast<std::int32_t>(top) && drawn < count) {
             s = Sc();
             const int row = y + 13 * static_cast<int>(drawn) + offset;
             if (ObjTrio[0].state4 == 2 && (s[7] & 1) != 0 && static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10) == static_cast<std::int32_t>(drawn)) {
                 DrawAt(x + 5, row, 7, NameCount(), AccessoryName(id));
-                DrawAt(x + 5, row - 2, 0, NameCount(), AccessoryName(B(at::kItemIds + n)));
-                const unsigned char c = B(at::kItemCounts + n);
+                DrawAt(x + 5, row - 2, 0, NameCount(), AccessoryName(B(::bof3::Img(at::kItemIds.v) + n)));
+                const unsigned char c = B(::bof3::Img(at::kItemCounts.v) + n);
                 if (c > 1) {
-                    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(at::kCountFormat)), static_cast<unsigned>(c));
-                    SH_CALL(Text_DrawFont8)(x + 0x68, row + 4, 7, Text(at::kPrint));
-                    SH_CALL(Text_DrawFont8)(x + 0x68, row + 2, 0, Text(at::kPrint));
+                    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(::bof3::Img(at::kCountFormat.v))), static_cast<unsigned>(c));
+                    SH_CALL(Text_DrawFont8)(x + 0x68, row + 4, 7, Text(::bof3::Img(at::kPrint.v)));
+                    SH_CALL(Text_DrawFont8)(x + 0x68, row + 2, 0, Text(::bof3::Img(at::kPrint.v)));
                 }
             } else {
                 DrawAt(x + 5, row, 0, NameCount(), AccessoryName(id));
-                const unsigned char c = B(at::kItemCounts + n);
+                const unsigned char c = B(::bof3::Img(at::kItemCounts.v) + n);
                 if (c > 1) {
-                    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(at::kCountFormat)), static_cast<unsigned>(c));
-                    SH_CALL(Text_DrawFont8)(x + 0x68, row + 4, 0, Text(at::kPrint));
+                    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(::bof3::Img(at::kCountFormat.v))), static_cast<unsigned>(c));
+                    SH_CALL(Text_DrawFont8)(x + 0x68, row + 4, 0, Text(::bof3::Img(at::kPrint.v)));
                 }
             }
             s = Sc();
@@ -1102,7 +1102,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsA(int x, int y) {
     SH_CALL(EffectKind0F_DrawItemFrame)(x, y);
     int total = 0;
     for (unsigned n = 0; n < 0x80; ++n)
-        if (Category(B(at::kItemIds + n), kWho) == 0xA) ++total;
+        if (Category(B(::bof3::Img(at::kItemIds.v) + n), kWho) == 0xA) ++total;
     unsigned char height, mark;
     if (total <= 9) {
         height = 0x72;
@@ -1115,7 +1115,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsA(int x, int y) {
         if (a != 0) mark = static_cast<unsigned char>(mark + (s[8] != 0 ? a * 2 : a * 0xFE));
     }
     SH_CALL(EffectKind0F_DrawScrollMark)(x + 0x80, y + mark, height);
-    DrawHeading(1, x + 0x2F, y + 7, 4, EffectKind0F_PanelTitles_addr + 0x4);
+    DrawHeading(1, x + 0x2F, y + 7, 4, ::bof3::Img(EffectKind0F_PanelTitles_addr) + 0x4);
 }
 
 // original 0x469210 (x, y): the twin frame; the label 0x653EA8 at (x + 0x2A, y
@@ -1127,31 +1127,31 @@ extern "C" void __cdecl EffectKind0F_DrawItemsA(int x, int y) {
 // unless word +0x2C is 0xFFFF, that script-pool message at (0x19, 0x9A).
 extern "C" void __cdecl EffectKind0F_DrawEquipped(int x, int y) {
     SH_CALL(EffectKind0F_DrawTwinFrame)(x, y);
-    DrawHeading(2, x + 0x2A, y + 7, 5, EffectKind0F_PanelTitles_addr + 0x8);
+    DrawHeading(2, x + 0x2A, y + 7, 5, ::bof3::Img(EffectKind0F_PanelTitles_addr) + 0x8);
     const unsigned char bits = Sc()[7];
     const U ix = static_cast<U>(x) + 0x10u;
-    auto icon = [ix](int iy, unsigned char item, U flag) { Call5(at::kE1gItemIcon, ix, static_cast<U>(iy), item, 3, flag); };
+    auto icon = [ix](int iy, unsigned char item, U flag) { Call5(at::kE1gItemIcon.v, ix, static_cast<U>(iy), item, 3, flag); };
     if ((bits & 0x80) != 0) {
-        icon(y + 0x1C, B(at::kEquipA), 0);
-        DrawAt(x + 0x1C, y + 0x1A, 0, NameCount(), AccessoryName(B(at::kEquipA)));
+        icon(y + 0x1C, B(::bof3::Img(at::kEquipA.v)), 0);
+        DrawAt(x + 0x1C, y + 0x1A, 0, NameCount(), AccessoryName(B(::bof3::Img(at::kEquipA.v))));
         icon(y + 0x2C, CharStats_ExtraItem, 0);
         DrawAt(x + 0x1C, y + 0x2A, 0, NameCount(), AccessoryName(CharStats_ExtraItem));
     } else if ((bits & 1) == 0) {
-        icon(y + 0x1C, B(at::kEquipA), 1);
-        DrawAt(x + 0x1C, y + 0x1A, 7, NameCount(), AccessoryName(B(at::kEquipA)));
-        icon(y + 0x1A, B(at::kEquipA), 0);
-        DrawAt(x + 0x1C, y + 0x18, Sc()[7], NameCount(), AccessoryName(B(at::kEquipA)));
+        icon(y + 0x1C, B(::bof3::Img(at::kEquipA.v)), 1);
+        DrawAt(x + 0x1C, y + 0x1A, 7, NameCount(), AccessoryName(B(::bof3::Img(at::kEquipA.v))));
+        icon(y + 0x1A, B(::bof3::Img(at::kEquipA.v)), 0);
+        DrawAt(x + 0x1C, y + 0x18, Sc()[7], NameCount(), AccessoryName(B(::bof3::Img(at::kEquipA.v))));
         icon(y + 0x2C, CharStats_ExtraItem, 0);
         DrawAt(x + 0x1C, y + 0x2A, 0, NameCount(), AccessoryName(CharStats_ExtraItem));
     } else {
-        icon(y + 0x1C, B(at::kEquipA), 0);
-        DrawAt(x + 0x1C, y + 0x1A, 0, NameCount(), AccessoryName(B(at::kEquipA)));
+        icon(y + 0x1C, B(::bof3::Img(at::kEquipA.v)), 0);
+        DrawAt(x + 0x1C, y + 0x1A, 0, NameCount(), AccessoryName(B(::bof3::Img(at::kEquipA.v))));
         icon(y + 0x2C, CharStats_ExtraItem, 1);
         DrawAt(x + 0x1C, y + 0x2A, 7, NameCount(), AccessoryName(CharStats_ExtraItem));
         icon(y + 0x2A, CharStats_ExtraItem, 0);
         DrawAt(x + 0x1C, y + 0x28, Sc()[7] & 2, NameCount(), AccessoryName(CharStats_ExtraItem));
     }
-    DrawHeading(3, x + 0x2A, y + 0x47, 5, EffectKind0F_PanelTitles_addr + 0xd);
+    DrawHeading(3, x + 0x2A, y + 0x47, 5, ::bof3::Img(EffectKind0F_PanelTitles_addr) + 0xd);
     const std::uint16_t message = rv::As<records::EffectObject>(Sc())->column;
     if (message != 0xFFFF) DrawAt(0x19, 0x9A, 0, 0xFF, Pool(message));
 }
@@ -1222,7 +1222,7 @@ namespace {
 // style byte signed), as 5:5:5 (r, g, b) bytes shifted up by 3.
 struct Colour { unsigned char r, g, b; };
 Colour StyleColour() {
-    const std::uint16_t c = Word(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<U>(64 * static_cast<int>(static_cast<signed char>(Style())))));
+    const std::uint16_t c = Word(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x228 + static_cast<U>(64 * static_cast<int>(static_cast<signed char>(Style())))));
     return {static_cast<unsigned char>((c & 0x1F) << 3), static_cast<unsigned char>(((c >> 5) & 0x1F) << 3),
             static_cast<unsigned char>(((c >> 10) & 0x1F) << 3)};
 }
@@ -1364,7 +1364,7 @@ extern "C" void __cdecl EffectKind0F_DrawGlyph(unsigned clut, const unsigned cha
     p[0x15] = 0;
     p[0x1D] = 0xC;
     p[0x25] = 0xC;
-    const U top = static_cast<U>(Long(At(Effect_Objects_addr + 0x1b0))) + 3u;
+    const U top = static_cast<U>(Long(At(::bof3::Img(Effect_Objects_addr) + 0x1b0))) + 3u;
     rv::Store<std::uint32_t>(rv::As<records::GpuGlyph>(p)->y0, top);
     rv::Store<std::uint32_t>(rv::As<records::GpuGlyph>(p)->y1, top);
     rv::Store<std::uint32_t>(rv::As<records::GpuGlyph>(p)->y2, top + 0xC);
@@ -1460,7 +1460,7 @@ extern "C" void __cdecl EffectKind12_DrawGradient() {
 
 // original 0x46A5E0 (Effect_KindHandlers[0x14]): EffectKind14_States[+1], a tail jump.
 extern "C" void __cdecl EffectKind14_Run() {
-    StepAt(EffectKind14_States_addr, Sc()[1], at::kKind14Count, "EffectKind14_Run")();
+    StepAt(::bof3::Img(EffectKind14_States_addr), Sc()[1], at::kKind14Count, "EffectKind14_Run")();
 }
 
 void Effect1B_Inject() {

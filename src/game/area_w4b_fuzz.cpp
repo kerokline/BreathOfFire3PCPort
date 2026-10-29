@@ -265,7 +265,7 @@ U Set40Effect(const U*, U answer) {
 // ScriptFlags_Clear40: the tails end (and area 168's clears counter 0) after it.
 U Clear40Effect(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) B(at::kCounter0) = static_cast<unsigned char>(n >> 8);
+    if (n & 1) B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(n >> 8);
     MoveTail(n);
     return answer;
 }
@@ -293,9 +293,9 @@ U TailEffect(const U*, U answer) {
 U FindFreeEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) SetMember(n >> 4);
-    if (n & 2) SetWord(ah::Mem(at::kMessage), n >> 16);
+    if (n & 2) SetWord(ah::Mem(::bof3::Img(at::kMessage.v)), n >> 16);
     if (n & 4) SetWord(ah::Mem(Camera_Angles_addr + 0x2), n >> 12);
-    if (n & 8) B(at::kScratch) = static_cast<unsigned char>(n >> 20);
+    if (n & 8) B(::bof3::Img(at::kScratch.v)) = static_cast<unsigned char>(n >> 20);
     return answer;
 }
 // Sound_PlayEffect and the engine's 0x486D60: area 170's init reads the
@@ -323,7 +323,7 @@ U SetByteEffect(const U*, U answer) {
 U ByteAtEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) answer = (answer & 0xFFFFFF00u) | 0x89u;
-    if ((n & 0x30) == 0x30) B(at::kScratch) = static_cast<unsigned char>(n >> 20);
+    if ((n & 0x30) == 0x30) B(::bof3::Img(at::kScratch.v)) = static_cast<unsigned char>(n >> 20);
     return answer;
 }
 // The rectangle searches: Field_State (read again when marking) and the
@@ -417,7 +417,7 @@ const ah::Callee kCallees[] = {
     {W4B_OURS(Msg_OpenScript), 1, {kU16}, ah::Answer::kGarbage, 0, 0, {}, &TailEffect},
     {W4B_OURS(Msg_OpenSystem), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &TailEffect},
     {W4B_OURS(Sound_PlayEffect), 1, {kU16}, ah::Answer::kGarbage, 0, 0, {}, &ZoneEffect},
-    {"MapSetUp_486D60", at::kArea170MapSetUp, at::kArea170MapSetUp, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &ZoneEffect},
+    {"MapSetUp_486D60", at::kArea170MapSetUp.v, at::kArea170MapSetUp.v, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &ZoneEffect},
     // slots inside the group's four effect records, or none
     {W4B_OURS(Effect_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x03, {}, &FindFreeEffect},
     {W4B_OURS(Sprite_SetAnimation), 1, {kU8}, ah::Answer::kGarbage, 0, 0, {}, &AnimationEffect},
@@ -493,16 +493,16 @@ void Disturb(U h) {
     static const unsigned char k89[] = {5, 7, 4};
     switch ((h >> 8) % 14) {
     case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 62 : v); break;
-    case 1: B(at::kCounter0) = static_cast<unsigned char>(h & 0x100 ? v % 3 : v); break;
-    case 2: B(at::kCounter3) = h & 0x100 ? kCounts[v % 5] : v; break;
+    case 1: B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(h & 0x100 ? v % 3 : v); break;
+    case 2: B(::bof3::Img(at::kCounter3.v)) = h & 0x100 ? kCounts[v % 5] : v; break;
     case 3: SetMember(h >> 12); break;
     case 4: ah::SetPointer(MoveScript_Object_addr, ScriptRecord(h >> 16)); break;
     case 5: ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(h >> 16)); break;
-    case 6: SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? v % 3 : v); break;
+    case 6: SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), h & 0x100 ? v % 3 : v); break;
     case 7: SetWord(ah::Mem(Transition_Busy_addr), h & 0x100 ? 0 : v); break;
     case 8: B(Field_Kind2Hold_addr) = static_cast<unsigned char>(h & 0x100 ? 0 : v); break;
     case 9: B(AreaW1a_EntryZone_addr) = static_cast<unsigned char>(h & 0x100 ? 2 + v % 2 : v); break;
-    case 10: B(at::kScratch) = static_cast<unsigned char>(h & 0x100 ? v % 2 : v); break;
+    case 10: B(::bof3::Img(at::kScratch.v)) = static_cast<unsigned char>(h & 0x100 ? v % 2 : v); break;
     case 11: B(ObjTrio_addr + 0x89) = h & 0x100 ? k89[v % 3] : v; break;
     case 12: B(AreaW0a_TailKind_addr) = static_cast<unsigned char>(h & 0x100 ? 0x33 : v); break;
     default: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 5); break;
@@ -607,9 +607,9 @@ void Seed168(unsigned k) {
         static const std::uint32_t kStates[] = {0, 1, 10, 11, 12, 0, 1, 10, 11, 12, 2, 9, 13, 0xFF, 0x80, 0x8C};
         const int state = SeedState(kStates, sizeof kStates / sizeof kStates[0]);
         SeedRequest();
-        if (state == 11) B(at::kCounter0) = Waited(1);
-        else if (state == 12) B(at::kCounter0) = Waited(2);
-        else if (ah::Half()) B(at::kCounter0) = static_cast<unsigned char>(AH_PICK(1, 2, 0));
+        if (state == 11) B(::bof3::Img(at::kCounter0.v)) = Waited(1);
+        else if (state == 12) B(::bof3::Img(at::kCounter0.v)) = Waited(2);
+        else if (ah::Half()) B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(AH_PICK(1, 2, 0));
         break;
     }
     default: break;
@@ -655,16 +655,16 @@ void Seed170(unsigned k) {
         // the counter each wait wants: 0x24 for 1 / 6, 0x44 for 11 / 16, 0x64
         // for 21 / 26, 0 for 29 / 30
         switch (state) {
-        case 1: case 6: B(at::kCounter3) = Waited(0x24); break;
-        case 11: case 16: B(at::kCounter3) = Waited(0x44); break;
-        case 21: case 26: B(at::kCounter3) = Waited(0x64); break;
-        case 29: case 30: B(at::kCounter3) = Waited(0); break;
-        default: B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(0x24, 0x44, 0x64, 0, 1)); break;
+        case 1: case 6: B(::bof3::Img(at::kCounter3.v)) = Waited(0x24); break;
+        case 11: case 16: B(::bof3::Img(at::kCounter3.v)) = Waited(0x44); break;
+        case 21: case 26: B(::bof3::Img(at::kCounter3.v)) = Waited(0x64); break;
+        case 29: case 30: B(::bof3::Img(at::kCounter3.v)) = Waited(0); break;
+        default: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(AH_PICK(0x24, 0x44, 0x64, 0, 1)); break;
         }
         // the timer: 1 or 0xFF (state 41), 1 (43 / 44 count down to 0)
-        if (state == 41) SetWord(ah::Mem(at::kTailTimer), ah::Half() ? WaitedWord(1) : WaitedWord(0xFF));
-        else if (state == 43 || state == 44) SetWord(ah::Mem(at::kTailTimer), WaitedWord(1));
-        else SetWord(ah::Mem(at::kTailTimer), AH_PICK(1, 0xFF, 0, 0x1E));
+        if (state == 41) SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), ah::Half() ? WaitedWord(1) : WaitedWord(0xFF));
+        else if (state == 43 || state == 44) SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), WaitedWord(1));
+        else SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), AH_PICK(1, 0xFF, 0, 0x1E));
         B(Field_Kind2Hold_addr) = static_cast<unsigned char>(ah::Often() ? 0 : ah::Next() | 1);
         if (state == 53) Field_Request = static_cast<unsigned char>(ah::Often() ? 0 : AH_PICK(1, 2, 0x80));
         else SeedRequest();
@@ -766,13 +766,13 @@ void Seed172(unsigned k) {
             if (ah::Often()) Sprite_Current[f] = static_cast<unsigned char>(AH_PICK(0xC0, 0xC0, 0xBE, 0xBF, 0xC1, 0x80, 0x7F, 0));
         break;
     case k172Drift:
-        if (ah::Often()) B(at::kCounter0) = static_cast<unsigned char>(AH_PICK(6, 7, 0, 8, 0x80, 0xFF));
+        if (ah::Often()) B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(AH_PICK(6, 7, 0, 8, 0x80, 0xFF));
         break;
     case k172Choice: SeedAnswer(); break;
     case k172Tail: {
         static const std::uint32_t kStates[] = {0, 1, 5, 6, 0, 1, 5, 6, 2, 3, 4, 7, 0xFF, 0x80};
         SeedState(kStates, sizeof kStates / sizeof kStates[0]);
-        B(at::kCounter3) = Waited(0x14);
+        B(::bof3::Img(at::kCounter3.v)) = Waited(0x14);
         break;
     }
     case k172Step:

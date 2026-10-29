@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include "common/image_base.h"
 #include <string>
 
 #include "common/cache_manifest.h"
@@ -129,7 +130,7 @@ Code GlyphCode(std::uint16_t button, bool latin, bool ja) {
     static const std::uint16_t kOrder[6] = {0x20, 0x40, 0x10, 0x80, kL1, kR1};
     static const int kColour[6] = {2, 1, 6, 5, 0, 0};
     constexpr std::uint32_t kIconFirst = 0xA65;           // loc_build.py ICONS_AT; config_text.cpp kIconCircle
-    constexpr std::uint32_t kStandIns = 0x66A2FC;         // the original's eight one-byte glyph strings
+    constexpr ::bof3::image::Va kStandIns{0x66A2FC};         // the original's eight one-byte glyph strings
     for (int k = 0; k < 6; ++k) {
         if (kOrder[k] != button) continue;
         Code c{};
@@ -145,7 +146,7 @@ Code GlyphCode(std::uint16_t button, bool latin, bool ja) {
             c.text[1] = static_cast<unsigned char>(g & 0xFF);
         } else {
             std::uint32_t at;
-            std::memcpy(&at, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(kStandIns + 4u * k)), 4);
+            std::memcpy(&at, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(kStandIns.v) + 4u * k)), 4);
             const unsigned char* const s = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(at));
             if (s[0] == 0 || s[0] >= 0x80 || s[1] != 0)
                 bof3::Fatal("ShoulderGlyphs: 0x66A2FC[%d] is not a one-byte glyph string", k);
@@ -328,7 +329,7 @@ void SelfTest() {
     // The geometry the plans assume, against the live rectangle table.
     unsigned rects = 0;
     for (const Label& l : kLabels) {
-        const unsigned char* r = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(0x663C8Cu + 4u * l.id));
+        const unsigned char* r = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(0x663C8Cu) + 4u * l.id));
         Check(r[2] == kPieceW && r[3] == (l.id == 0x16 ? 16 : 24), "a labelled piece's size", static_cast<int>(l.id), r[2], r[3]);
         ++rects;
     }
@@ -343,7 +344,7 @@ void SelfTest() {
     static const int kColour[6] = {2, 1, 6, 5, 0, 0};
     static const unsigned char kPlanted[6][2] = {{'b', 0}, {'c', 0}, {'d', 0}, {'e', 0}, {'f', 0}, {'g', 0}};
     static const unsigned char kEmpty[2] = {0, 0};
-    auto entry = [](int k) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(0x66A2FCu + 4u * k)); };
+    auto entry = [](int k) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Img(0x66A2FCu) + 4u * k)); };
     auto plant = [&](int k, const unsigned char* s) {
         const auto at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(s));
         std::memcpy(entry(k), &at, 4);

@@ -307,8 +307,8 @@ extern "C" void __cdecl EffectKind18Sub2D_Draw(void) {
         if (side >= at::kSidesRoom)
             bof3::Fatal("EffectKind18Sub2D_Draw: +0xA is %u, past the %u signs of 0x%X - the original reads on into "
                         "EffectKind18Sub3E_States (docs/effect_6a.md section 7)",
-                        side, at::kSidesRoom, (unsigned)at::kSub2DSides);
-        const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(at::kSub2DSides)[side])));
+                        side, at::kSidesRoom, at::kSub2DSides.v);
+        const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(::bof3::Img(at::kSub2DSides.v))[side])));
         const U slide = sign * rv::As<records::EffectWork>(s)->work_30;
         if (s[8] != 0) {
             const U y = (static_cast<U>(rv::As<records::EffectObject>(s)->z_whole) << 7) - 0x3FC0u;
@@ -365,9 +365,9 @@ extern "C" void __cdecl EffectKind18Sub2D_Place(void) {
     const U v = Variant("EffectKind18Sub2D_Place", s, at::kSub2DVariants);
     s[0xA] = static_cast<unsigned char>((static_cast<signed char>(z) >> 1) & 1);
     s[8] = static_cast<unsigned char>(~z & 1);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(at::kSub2DCells + 2 * v)[0]);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(at::kSub2DCells + 2 * v + 1)[0]);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, Word(At(at::kSub2DHeights + 2 * v)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(::bof3::Img(at::kSub2DCells.v) + 2 * v)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(::bof3::Img(at::kSub2DCells.v) + 2 * v + 1)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, Word(At(::bof3::Img(at::kSub2DHeights.v) + 2 * v)));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0);
     s[2] = static_cast<unsigned char>(s[2] + 1);
     if (LeaderAt(s, kFront, 0x8000, 0x10000)) {
@@ -418,7 +418,7 @@ extern "C" void __cdecl EffectKind18Sub3E_Run(void) {
 // original 0x50C700 (sub-state 0): PlaceCells (kSub3ECells), the front's
 // centre at cell - 2; the leader there: the slide 0x100, +2 = 3.
 extern "C" void __cdecl EffectKind18Sub3E_Place(void) {
-    PlaceCells("EffectKind18Sub3E_Place", at::kSub3ECells, at::kSub3EVariants, kFront3E, 0x100);
+    PlaceCells("EffectKind18Sub3E_Place", ::bof3::Img(at::kSub3ECells.v), at::kSub3EVariants, kFront3E, 0x100);
 }
 
 // original 0x50C830 (sub-state 1): the leader at the front (cell - 2): sound
@@ -490,7 +490,7 @@ extern "C" void __cdecl EffectKind18Sub2E_Run(void) {
 // original 0x50CA60 (sub-state 0): PlaceCells (kSub2ECells); the leader at the
 // front: the slide -0x100, +2 = 3. The draw.
 extern "C" void __cdecl EffectKind18Sub2E_Place(void) {
-    PlaceCells("EffectKind18Sub2E_Place", at::kSub2ECells, at::kSub2EVariants, kFront, 0xFF00);
+    PlaceCells("EffectKind18Sub2E_Place", ::bof3::Img(at::kSub2ECells.v), at::kSub2EVariants, kFront, 0xFF00);
     SH_CALL(EffectKind18Sub2E_Draw)();
 }
 // original 0x50CB80 (sub-state 1): WaitNear. The draw.
@@ -524,7 +524,7 @@ extern "C" void __cdecl EffectKind18Sub2F_Run(void) {
 // original 0x50D000 (sub-state 0): PlaceCells (kSub2FCells); the leader at the
 // front: the slide 0x100, +2 = 3. The draw.
 extern "C" void __cdecl EffectKind18Sub2F_Place(void) {
-    PlaceCells("EffectKind18Sub2F_Place", at::kSub2FCells, at::kSmallVariants, kFront, 0x100);
+    PlaceCells("EffectKind18Sub2F_Place", ::bof3::Img(at::kSub2FCells.v), at::kSmallVariants, kFront, 0x100);
     SH_CALL(EffectKind18Sub2F_Draw)();
 }
 // original 0x50D120 (sub-state 1): WaitNear. The draw.
@@ -558,7 +558,7 @@ extern "C" void __cdecl EffectKind18Sub30_Run(void) {
 // original 0x50D350 (sub-state 0): PlaceCells (kSub30Cells); the leader at the
 // front: the slide -0x100, +2 = 3. The draw.
 extern "C" void __cdecl EffectKind18Sub30_Place(void) {
-    PlaceCells("EffectKind18Sub30_Place", at::kSub30Cells, at::kSmallVariants, kFront, 0xFF00);
+    PlaceCells("EffectKind18Sub30_Place", ::bof3::Img(at::kSub30Cells.v), at::kSmallVariants, kFront, 0xFF00);
     SH_CALL(EffectKind18Sub30_Draw)();
 }
 // original 0x50D470 (sub-state 1): WaitNear. The draw.
@@ -592,7 +592,7 @@ extern "C" void __cdecl EffectKind18Sub31_Run(void) {
 // original 0x50D8F0 (sub-state 0): PlaceCells (kSub31Cells); the leader at the
 // front: the slide -0x100, +2 = 3. The draw.
 extern "C" void __cdecl EffectKind18Sub31_Place(void) {
-    PlaceCells("EffectKind18Sub31_Place", at::kSub31Cells, at::kSmallVariants, kFront, 0xFF00);
+    PlaceCells("EffectKind18Sub31_Place", ::bof3::Img(at::kSub31Cells.v), at::kSmallVariants, kFront, 0xFF00);
     SH_CALL(EffectKind18Sub31_Draw)();
 }
 // original 0x50DA10 (sub-state 1): WaitNear. The draw.
@@ -626,7 +626,7 @@ extern "C" void __cdecl EffectKind18Sub32_Run(void) {
 // original 0x50DE90 (sub-state 0): PlaceCells (kSub32Cells); the leader at the
 // front: the slide 0x100, +2 = 3. The draw (0x2F's).
 extern "C" void __cdecl EffectKind18Sub32_Place(void) {
-    PlaceCells("EffectKind18Sub32_Place", at::kSub32Cells, at::kSmallVariants, kFront, 0x100);
+    PlaceCells("EffectKind18Sub32_Place", ::bof3::Img(at::kSub32Cells.v), at::kSmallVariants, kFront, 0x100);
     SH_CALL(EffectKind18Sub2F_Draw)();
 }
 // original 0x50DFB0 (sub-state 1): WaitNear. The draw.

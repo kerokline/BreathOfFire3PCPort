@@ -118,14 +118,14 @@ const bh::Callee kCallees[] = {
     {"BattleObj_HitPose", 0x441510, KeyOf(&::BattleObj_HitPose), 0, {}, bh::Answer::kPhase, 0, 0},
     {"BattleParty_RecalcStats", 0x442310, KeyOf(&::BattleParty_RecalcStats), 0, {}, bh::Answer::kPhase, 0, 0},
     {"BattleParty_AllDown", 0x442420, KeyOf(&::BattleParty_AllDown), 0, {}, bh::Answer::kFlag, 0, 0},
-    {"0x446770", at::kTurnVelocityC, at::kTurnVelocityC, 1, {kAll}, bh::Answer::kGarbage, 0, 0},
-    {"0x4467C0", at::kTurnVelocity18, at::kTurnVelocity18, 1, {kAll}, bh::Answer::kGarbage, 0, 0},
-    {"0x446810", at::kRollB9, at::kRollB9, 0, {}, bh::Answer::kFlag, 0, 0},
-    {"0x44A910", at::kNameToText, at::kNameToText, 1, {kU8}, bh::Answer::kGarbage, 0, 0},
-    {"0x44AA90", at::kBannerByPair, at::kBannerByPair, 2, {kU8, kU8}, bh::Answer::kGarbage, 0, 0},
-    {"0x44FDE0", at::kPass44FDE0, at::kPass44FDE0, 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"0x453300", at::kPass453300, at::kPass453300, 1, {kU8}, bh::Answer::kGarbage, 0, 0},
-    {"0x453EB0", at::kSecondPopup, at::kSecondPopup, 2, {kU16, kU8}, bh::Answer::kGarbage, 0, 0},
+    {"0x446770", at::kTurnVelocityC.v, at::kTurnVelocityC.v, 1, {kAll}, bh::Answer::kGarbage, 0, 0},
+    {"0x4467C0", at::kTurnVelocity18.v, at::kTurnVelocity18.v, 1, {kAll}, bh::Answer::kGarbage, 0, 0},
+    {"0x446810", at::kRollB9.v, at::kRollB9.v, 0, {}, bh::Answer::kFlag, 0, 0},
+    {"0x44A910", at::kNameToText.v, at::kNameToText.v, 1, {kU8}, bh::Answer::kGarbage, 0, 0},
+    {"0x44AA90", at::kBannerByPair.v, at::kBannerByPair.v, 2, {kU8, kU8}, bh::Answer::kGarbage, 0, 0},
+    {"0x44FDE0", at::kPass44FDE0.v, at::kPass44FDE0.v, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x453300", at::kPass453300.v, at::kPass453300.v, 1, {kU8}, bh::Answer::kGarbage, 0, 0},
+    {"0x453EB0", at::kSecondPopup.v, at::kSecondPopup.v, 2, {kU16, kU8}, bh::Answer::kGarbage, 0, 0},
     {"Battle_LoadSoundByKey", ::bof3::addr::Battle_LoadSoundByKey, KeyOf(&::Battle_LoadSoundByKey), 2, {kU8, kU8},
      bh::Answer::kFlag, 0, 0},
     {"Battle_SetDamagePopup", ::bof3::addr::Battle_SetDamagePopup, KeyOf(&::Battle_SetDamagePopup), 2, {kU16, kU8},
@@ -144,13 +144,13 @@ const bh::Callee kCallees[] = {
 // region's first 0xB4 bytes (ten records, by a member's +0x148, which the
 // seeds keep below 10).
 const bh::Region kRegions[] = {
-    {at::kAbilityFlags0, 256 * at::kAbilityStride},
+    {at::kAbilityFlags0.v, 256 * at::kAbilityStride},
     {0x903B24, CharacterRecords_addr + 10 * at::kCharStride - 0x903B24},
 };
 
 // The ability id: below 256 (the records in the region), its flag bits the
 // random fill's.
-void SeedAbility() { SetWord(Mem(at::kAbility), bh::Often() ? bh::Next() % 256 : bh::Next() % 16); }
+void SeedAbility() { SetWord(Mem(::bof3::Img(at::kAbility.v)), bh::Often() ? bh::Next() % 256 : bh::Next() % 16); }
 
 // Which run the shadow name's run is limited to (BOF3X_BE3_RUN).
 bool Wants(const char* unit) {
@@ -219,8 +219,8 @@ void SeedEO(unsigned k) {
     if (bh::Next() % 3 == 0) B(EventBattle_Id_addr) = 0;
     Sprite_Current[9] = Counter();
     Sprite_Current[0xA] = Counter();
-    Bit(Mem(at::kRoundFlags), 4);
-    Bit(Mem(at::kRoundFlags), 0x40);
+    Bit(Mem(::bof3::Img(at::kRoundFlags.v)), 4);
+    Bit(Mem(::bof3::Img(at::kRoundFlags.v)), 0x40);
     if (k == kCastCue && Flip()) Sprite_Current[9] = 0;
     if (k == kLeaveEnd) B(Battle_EnemiesLeft_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 2, 0, 0xFF) : bh::Next());
     if (k == kCastDoneCost) B(BattleE3_Cost_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 0xFF, 0x80) : bh::Next());
@@ -246,13 +246,13 @@ void ArgsEO(unsigned k, U* a) {
 void DisturbEO(U h) {
     const U v = h >> 16;
     switch ((h >> 8) % 7) {
-    case 0: SetWord(Mem(at::kAbility), v % 256); break;
+    case 0: SetWord(Mem(::bof3::Img(at::kAbility.v)), v % 256); break;
     case 1: rv::As<records::BattleEnemy>(Enemy())->command_kind = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
     case 2: Enemy()[0x90] ^= 8; break;
     case 3: B(EventBattle_Id_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 4: B(Battle_EnemiesLeft_addr) = static_cast<unsigned char>(v & 1 ? 1 : v >> 1); break;
     case 5: B(BattleE3_Cost_addr) = static_cast<unsigned char>(v); break;
-    default: B(at::kRoundFlags) ^= static_cast<unsigned char>(v & 1 ? 4 : 0x40); break;
+    default: B(::bof3::Img(at::kRoundFlags.v)) ^= static_cast<unsigned char>(v & 1 ? 4 : 0x40); break;
     }
 }
 // The current enemy's data record index inside the eight after any
@@ -387,7 +387,7 @@ void SeedChange() {
 void SeedOBJ(unsigned k) {
     const bh::Clone& c = g_clones[k];
     for (unsigned i = 0; i < at::kPartyMax; ++i) bh::PartyOf(static_cast<unsigned char>(i))[0x148] = static_cast<unsigned char>(bh::Next() % 10);
-    B(at::kPartyCount) = static_cast<unsigned char>(bh::Often() ? 3 : bh::Next() % 4);
+    B(::bof3::Img(at::kPartyCount.v)) = static_cast<unsigned char>(bh::Often() ? 3 : bh::Next() % 4);
     SeedAbility();
     if (c.states) {
         // the dispatched byte is the harness's; the others inside the state-6 tables
@@ -398,7 +398,7 @@ void SeedOBJ(unsigned k) {
     Sprite_Current[0xA] = Counter();
     switch (k) {
     case kHitReceive:
-        B(at::kActKind) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 4, 4, 5, 5, 0, 2, 3, 6) : bh::Next());
+        B(::bof3::Img(at::kActKind.v)) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 4, 4, 5, 5, 0, 2, 3, 6) : bh::Next());
         MemberBit(0x12C, 1);
         MemberBit(0x12C, 2);
         SeedChange();
@@ -412,7 +412,7 @@ void SeedOBJ(unsigned k) {
         MemberBit(0x131, 2);
         MemberBit(0x91, 8);
         B(BattleE3_EvadeBoost_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0x4A, 0x4B, 0x4C, 0, 0x64, 0xFF) : bh::Next());
-        Bit(Mem(at::kRoundFlags + 1), 0x20);
+        Bit(Mem(::bof3::Img(at::kRoundFlags.v) + 1), 0x20);
         break;
     case kHitWaitPose:
     case kHitStepPose:
@@ -421,9 +421,9 @@ void SeedOBJ(unsigned k) {
     case kHitEnd:
         if (Flip()) Sprite_Current[2] = 3;
         MemberBit(0x91, 0x40);
-        Bit(Mem(at::kRoundFlags), 0x40);
-        B(at::kTarget) = static_cast<unsigned char>(bh::Often() ? bh::Next() % 11 : bh::Next());
-        B(at::kActKind) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 4, 4, 0, 5) : bh::Next());
+        Bit(Mem(::bof3::Img(at::kRoundFlags.v)), 0x40);
+        B(::bof3::Img(at::kTarget.v)) = static_cast<unsigned char>(bh::Often() ? bh::Next() % 11 : bh::Next());
+        B(::bof3::Img(at::kActKind.v)) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 4, 4, 0, 5) : bh::Next());
         break;
     case kHitStepStart:
     case kHpEnd:
@@ -444,7 +444,7 @@ void SeedOBJ(unsigned k) {
         MemberByte(0x95, path == 4 || bh::Next() % 8 == 0 ? 0x43 : 0x42);
         MemberBit(0x134, 1);
         B(Battle_PartyStanding_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 2, 3, 0) : bh::Next());
-        Bit(Mem(at::kRoundFlags + 1), 0x40);
+        Bit(Mem(::bof3::Img(at::kRoundFlags.v) + 1), 0x40);
         if (Flip()) B(BattleFlow_ActorAt_addr) = Sprite_Current[5];
         break;
     }
@@ -519,12 +519,12 @@ void DisturbOBJ(U h) {
     case 3: f[0x134] ^= static_cast<unsigned char>(1u << ((v >> 1) % 3)); break;
     case 4: f[0x128 + (v & 3)] = static_cast<unsigned char>(v >> 2); break;
     case 5: f[0x95 + (v % 3)] = static_cast<unsigned char>(v & 0x10 ? 0x18 : 0x43); break;
-    case 6: B(at::kActKind) = static_cast<unsigned char>(v & 1 ? 1 + (v >> 1) % 5 : v >> 1); break;
-    case 7: B(at::kRoundFlags + (v & 1)) ^= static_cast<unsigned char>(1u << ((v >> 1) % 8)); break;
+    case 6: B(::bof3::Img(at::kActKind.v)) = static_cast<unsigned char>(v & 1 ? 1 + (v >> 1) % 5 : v >> 1); break;
+    case 7: B(::bof3::Img(at::kRoundFlags.v) + (v & 1)) ^= static_cast<unsigned char>(1u << ((v >> 1) % 8)); break;
     case 8: B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 9: B(v & 1 ? Battle_PartyStanding_addr : BattleFlow_ActorAt_addr) = static_cast<unsigned char>(v & 2 ? (v >> 2) % 3 : v >> 2); break;
-    case 10: SetWord(Mem(at::kAbility), v % 256); break;
-    default: B(at::kPartyCount) = static_cast<unsigned char>(v % 4); break;
+    case 10: SetWord(Mem(::bof3::Img(at::kAbility.v)), v % 256); break;
+    default: B(::bof3::Img(at::kPartyCount.v)) = static_cast<unsigned char>(v % 4); break;
     }
 }
 

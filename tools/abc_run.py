@@ -256,7 +256,7 @@ def users_of(folder):
     """The processes running from a launcher folder: a launcher or game exe
     under it, or a game whose bof3x.dll is the folder's. [(pid, path)]."""
     want = os.path.join(os.path.normcase(os.path.abspath(folder)), '')
-    ps = ("Get-Process -Name BOF3,bof3x,bof3x-launcher,bof3x-launcher-dev -ErrorAction SilentlyContinue | ForEach-Object { "
+    ps = ("Get-Process -Name BOF3,bof3x,bof3x-* -ErrorAction SilentlyContinue | ForEach-Object { "
           "$m = $_.Modules | Where-Object { $_.ModuleName -eq 'bof3x.dll' } | Select-Object -First 1; "
           "'{0}|{1}|{2}' -f $_.Id, $_.Path, $m.FileName }")
     out = subprocess.run(['powershell', '-NoProfile', '-Command', ps], capture_output=True, text=True).stdout
@@ -449,7 +449,7 @@ def end_stale(launcher):
     when there was one."""
     import attract_run
     want = os.path.normcase(os.path.dirname(os.path.abspath(launcher)))
-    ps = ("Get-Process -Name BOF3,bof3x -ErrorAction SilentlyContinue | ForEach-Object { "
+    ps = ("Get-Process -Name BOF3,bof3x,bof3x-* -ErrorAction SilentlyContinue | ForEach-Object { "
           "$m = $_.Modules | Where-Object { $_.ModuleName -eq 'bof3x.dll' } | Select-Object -First 1; "
           "if ($m) { '{0}|{1}' -f $_.Id, $m.FileName } }")
     out = subprocess.run(['powershell', '-NoProfile', '-Command', ps], capture_output=True, text=True).stdout

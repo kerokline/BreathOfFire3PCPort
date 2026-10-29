@@ -208,18 +208,18 @@ const Callees kStubs = {
 const void* StubFor(std::uint32_t target) {
     const auto f = [](auto p) { return reinterpret_cast<const void*>(p); };
     switch (target) {
-    case kActorAbsent: return f(&StubAbsent);
-    case kActorCanAct: return f(&StubCanAct);
-    case kSetPending: return f(&StubSetPending);
-    case kMessage: return f(&StubMessage);
-    case kMessageAt: return f(&StubMessageAt);
-    case kStatusTint: return f(&StubStatusTint);
-    case kPartyName: return f(&StubPartyName);
-    case kEnemyName: return f(&StubEnemyName);
-    case kWakeRoll: return f(&StubWakeRoll);
-    case kSetHpChange: return f(&StubSetHpChange);
-    case kEnemyOutpaces: return f(&StubEnemyOutpaces);
-    case kReturnItem: return f(&StubReturnItem);
+    case kActorAbsent.v: return f(&StubAbsent);
+    case kActorCanAct.v: return f(&StubCanAct);
+    case kSetPending.v: return f(&StubSetPending);
+    case kMessage.v: return f(&StubMessage);
+    case kMessageAt.v: return f(&StubMessageAt);
+    case kStatusTint.v: return f(&StubStatusTint);
+    case kPartyName.v: return f(&StubPartyName);
+    case kEnemyName.v: return f(&StubEnemyName);
+    case kWakeRoll.v: return f(&StubWakeRoll);
+    case kSetHpChange.v: return f(&StubSetHpChange);
+    case kEnemyOutpaces.v: return f(&StubEnemyOutpaces);
+    case kReturnItem.v: return f(&StubReturnItem);
     case 0x454DC0: return f(&StubReleaseTint);    // Sprite_ReleaseTint
     case 0x497740: return f(&StubMsg);            // Msg_SystemPtr
     case 0x59E2D0: return f(&StubWindowAlloc);    // Window_Alloc
@@ -375,9 +375,9 @@ Args Seed(unsigned k) {
     case kActingK: {
         const unsigned actor = Next() % 11;
         std::uint32_t acting = Garbage(0xFFFF, actor | (Often() ? 4u << 8 : (Next() & 0xFF) << 8));
-        SetLong(At(at::kActing), static_cast<std::int32_t>(acting));
+        SetLong(At(::bof3::Img(at::kActing.v)), static_cast<std::int32_t>(acting));
         static const unsigned kAbilities[] = {0x27, 0xA3, 0x26, 0x28, 0xA2, 0x127, 0x10A3};
-        if (Often()) SetWord(At(at::kAbility), Pick(kAbilities, 7));
+        if (Often()) SetWord(At(::bof3::Img(at::kAbility.v)), Pick(kAbilities, 7));
         break;
     }
     case kHpDriftK:
@@ -500,10 +500,10 @@ Args Seed(unsigned k) {
             // in the range: at its first, its last, or anywhere in it
             const unsigned r = Next() % 3;
             const unsigned slot = r == 0 ? from : r == 1 ? to - 1 : from + Next() % (to - from);
-            At(at::kItemQueue + slot)[0] = static_cast<unsigned char>(actor);
+            At(::bof3::Img(at::kItemQueue.v) + slot)[0] = static_cast<unsigned char>(actor);
         }
-        if (Half()) At(at::kItemQueue + (to < 0xFF ? to : 0))[0] = static_cast<unsigned char>(actor);   // just past the end
-        if (Half() && from > 0 && from < 0xFF) At(at::kItemQueue + from - 1)[0] = static_cast<unsigned char>(actor);   // before
+        if (Half()) At(::bof3::Img(at::kItemQueue.v) + (to < 0xFF ? to : 0))[0] = static_cast<unsigned char>(actor);   // just past the end
+        if (Half() && from > 0 && from < 0xFF) At(::bof3::Img(at::kItemQueue.v) + from - 1)[0] = static_cast<unsigned char>(actor);   // before
         {
             // an enemy's too, in the party array past the members: a function that took it for a
             // member would read these
@@ -515,7 +515,7 @@ Args Seed(unsigned k) {
     }
     case kOpeningK: {
         static const unsigned kKinds[] = {0, 1, 2, 3, 4, 5, 0xFF, 0x100, 0xFFFFFFFFu, 0x80000001u};
-        SetLong(At(at::kOpening), static_cast<std::int32_t>(Often() ? Pick(kKinds, 10) : Next()));
+        SetLong(At(::bof3::Img(at::kOpening.v)), static_cast<std::int32_t>(Often() ? Pick(kKinds, 10) : Next()));
         break;
     }
     case kClearK: {

@@ -109,7 +109,7 @@ void* CopyReserve() {
         {0x57CF60, KeyOf(&::Menu_DrawBox)},
         {0x573F30, KeyOf(&::Menu_DrawItemIcon)},
         {0x516B30, KeyOf(&::Text_DrawAt)},
-        {at::kDrawTag, at::kDrawTag},
+        {at::kDrawTag.v, at::kDrawTag.v},
         {0x5B9380, KeyOf(Crt_sprintf)},
         {0x517090, KeyOf(&::Text_DrawFont8)},
         {0x516E70, KeyOf(&::Text_DrawSmall)},
@@ -341,9 +341,9 @@ sh::Callee g_callees[] = {
     {FS_OURS(SharedList_Sort), 1, {0xFF}, kG, 0, 0},
     {FS_OURS(SharedList_Compact), 0, {}, kG, 0, 0},
     // nobody's, or another group's this wave (FO's 0x574400), by address
-    {"0x574400", at::kDrawTag, at::kDrawTag, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},
-    {"0x58D640", at::kEquipPreview, at::kEquipPreview, 0, {}, kG, 0, 0},
-    {"0x58D570", at::kEquipApply, at::kEquipApply, 0, {}, kG, 0, 0, {}, &Stir},
+    {"0x574400", at::kDrawTag.v, at::kDrawTag.v, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},
+    {"0x58D640", at::kEquipPreview.v, at::kEquipPreview.v, 0, {}, kG, 0, 0},
+    {"0x58D570", at::kEquipApply.v, at::kEquipApply.v, 0, {}, kG, 0, 0, {}, &Stir},
     // the standard set re-listed where Capcom pushes a register over a callee's
     // leftover, with what each callee reads (docs/field_s.md section 3)
     {FS_OURS(Menu_DrawTitleBox), 5, {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},
@@ -574,7 +574,7 @@ void SelfTest() {
         // an address of its own (the site's), keyed by Menu_DrawFrame
         sh::Callee& frame = g_callees[kFrameRow];
         frame.name = "Menu_DrawFrame (DIV-0011)";
-        frame.address = at::kFrameSite;
+        frame.address = at::kFrameSite.v;
         frame.key = FrameCallTarget();
         for (unsigned i = 0; i < 4; ++i) frame.masks[i] = i < 2 ? 0xFFFF : 0xFF;
     }

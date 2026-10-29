@@ -37,6 +37,7 @@
 #include "game/char_names.h"
 
 #include <cstring>
+#include "common/image_base.h"
 
 #include "hook/log.h"
 #include "hook/code_bytes.h"
@@ -44,10 +45,10 @@
 namespace {
 
 constexpr std::uint32_t kCount = 8;
-constexpr std::uint32_t kRecords = 0x64B390;
+constexpr ::bof3::image::Va kRecords{0x64B390};
 constexpr std::uint32_t kStride = 0xA4;
 constexpr std::uint32_t kNameRoom = 9;
-constexpr std::uint32_t kWhelpSlot = 0x669CE0;
+constexpr ::bof3::image::Va kWhelpSlot{0x669CE0};
 constexpr std::uint32_t kWhelpSlotRoom = 8;
 
 // What New Game's code at `at` must hold (`bytes`), for the hosted check.
@@ -67,7 +68,7 @@ void CharNames_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32
     CodeReads("DIV-0020 New Game's records", 0x437834, kLoop, sizeof kLoop);
     CodeReads("DIV-0020 New Game's whelp record", 0x437891, kWhelp, sizeof kWhelp);
     CodeReads("DIV-0020 the whelp's name reset", 0x42E09D, kReset, sizeof kReset);
-    static_assert(kRecords + 7 * kStride == 0x64B80C, "the whelp's record follows the seven");
+    static_assert(kRecords.v + 7 * kStride == 0x64B80C, "the whelp's record follows the seven");
 
     const std::uint8_t* p = payload;
     const std::uint8_t* const end = payload + size;
@@ -81,14 +82,14 @@ void CharNames_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32
         if (len == 0 || len + 1 > kNameRoom)
             bof3::Fatal("character name %u is %u bytes, the field holds %u", (unsigned)i, (unsigned)len + 1,
                         (unsigned)kNameRoom);
-        auto* field = reinterpret_cast<char*>(static_cast<std::uintptr_t>(kRecords + i * kStride));
+        auto* field = reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(kRecords.v) + i * kStride));
         std::memset(field, 0, kNameRoom);
         std::memcpy(field, s, len);
         if (i == kCount - 1) {
             if (len + 1 > kWhelpSlotRoom)
                 bof3::Fatal("the whelp's name is %u bytes, its reset slot holds %u", (unsigned)len + 1,
                             (unsigned)kWhelpSlotRoom);
-            auto* slot = reinterpret_cast<char*>(static_cast<std::uintptr_t>(kWhelpSlot));
+            auto* slot = reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(kWhelpSlot.v)));
             std::memset(slot, 0, kWhelpSlotRoom);
             std::memcpy(slot, s, len);
         }
@@ -98,7 +99,8 @@ void CharNames_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32
 }
 
 void CharNames_ApplyMerchant(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
-    constexpr std::uint32_t kSlot = 0x669CD8, kRoom = 8;
+    constexpr ::bof3::image::Va kSlot{0x669CD8};
+constexpr std::uint32_t kRoom = 8;
     // mov ecx, dword ptr [0x669CD8] in the battle's copy
     static const std::uint8_t kBattleCopy[] = {0x8B, 0x0D, 0xD8, 0x9C, 0x66, 0x00};
     if (tag != 0) bof3::Fatal("merchant name chunk tag is 0x%X, expected 0", (unsigned)tag);
@@ -106,7 +108,7 @@ void CharNames_ApplyMerchant(std::uint32_t tag, const std::uint8_t* payload, std
     if (size < 2 || size > kRoom || payload[size - 1] != 0 || std::strlen(reinterpret_cast<const char*>(payload)) != size - 1)
         bof3::Fatal("merchant name chunk: %u bytes is not one name of at most %u with its NUL", (unsigned)size,
                     (unsigned)kRoom);
-    auto* slot = reinterpret_cast<char*>(static_cast<std::uintptr_t>(kSlot));
+    auto* slot = reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(kSlot.v)));
     std::memset(slot, 0, kRoom);
     std::memcpy(slot, payload, size - 1);
     bof3::Log("DIV-0020: the merchant's name");

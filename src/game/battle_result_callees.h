@@ -36,28 +36,28 @@ namespace at {
 // kRoster: now BattleE1_Roster (symbols.toml). u8: that slot's roster index (0x4469D0's answer)
 // kMode1: now BattleActions_Step (symbols.toml). u8: the battle's top-level mode bytes, 4 / 0 / 0 / 0 after the award
 // kMode2: now BattleE4_Step2 (symbols.toml).
-constexpr std::uint32_t kPartyCount = 0x904AB0;   // u8: party slots in the fight (PSX 0x801462EC)
-constexpr std::uint32_t kDropCount = 0x904AE7;    // u8 (PSX 0x80146323)
-constexpr std::uint32_t kBattleEnd = 0x904AE8;    // u8: |= 0x20 when a level-up was found
+constexpr ::bof3::image::Va kPartyCount{0x904AB0};   // u8: party slots in the fight (PSX 0x801462EC)
+constexpr ::bof3::image::Va kDropCount{0x904AE7};    // u8 (PSX 0x80146323)
+constexpr ::bof3::image::Va kBattleEnd{0x904AE8};    // u8: |= 0x20 when a level-up was found
 // kExpTotal: now Battle_ExpTotal (symbols.toml). dword (PSX 0x80146328)
 // kZennyTotal: now BattleFlow_ZennyTotal (symbols.toml). dword (PSX 0x8014632C)
-constexpr std::uint32_t kDropItems = 0x904AF4;    // u16 x 16: category << 8 | item (PSX 0x80146330)
-constexpr std::uint32_t kDropCounts = 0x904B14;   // u8 x 16 (PSX 0x80146350)
-constexpr std::uint32_t kTickStep = 0x904B70;     // u16: EXP / zenny counted per frame (PSX 0x801463AC)
+constexpr ::bof3::image::Va kDropItems{0x904AF4};    // u16 x 16: category << 8 | item (PSX 0x80146330)
+constexpr ::bof3::image::Va kDropCounts{0x904B14};   // u8 x 16 (PSX 0x80146350)
+constexpr ::bof3::image::Va kTickStep{0x904B70};     // u16: EXP / zenny counted per frame (PSX 0x801463AC)
 // kBankIndex: now Game_AreaNumber (symbols.toml). u16: Snd_LoadBankFile(this + 3) after the setup
 // kPartySet: now AreaW0b_PartySet (symbols.toml). u8: PartySet_Select's current set (bit 7 its mode-0 mark)
 // kPartyZenny: now Party_Zenny (symbols.toml). dword: the party's zenny (Zenny_Add 0x591BE0 adds into it)
-constexpr std::uint32_t kMsgCurrent = 0x93B8E4;   // const unsigned char*: the battle message Msg_SystemPtr gave
+constexpr ::bof3::image::Va kMsgCurrent{0x93B8E4};   // const unsigned char*: the battle message Msg_SystemPtr gave
 // The text records (Text_Records, 32 bytes each): record 0 the number the
 // messages substitute, record 2 the windows' scratch.
-constexpr std::uint32_t kText0 = 0x904CE0;
-constexpr std::uint32_t kText2 = 0x904D20;
+constexpr ::bof3::image::Va kText0{0x904CE0};
+constexpr ::bof3::image::Va kText2{0x904D20};
 // Input (docs/input-script.md): the held and the newly pressed buttons.
 // kHeld: now Input_Held (symbols.toml). u16 Input_Held
 // kPressed: now Input_Pressed (symbols.toml). u16 Input_Pressed
 // The party's working records (ObjTrio + 0x80, 0x14C each): +0 the name,
 // +9 the character id, +0xA the level.
-constexpr std::uint32_t kMembers = 0x802DC0;
+constexpr ::bof3::image::Va kMembers{0x802DC0};
 constexpr std::uint32_t kMemberSize = 0x14C;
 // The window records (0x803160 + 36 n, Window_Alloc 0x59E2D0): +0 taken,
 // +1 kind, +2 the kind handler's state, +3 its step; +4 / +6 x / y words,
@@ -66,28 +66,28 @@ constexpr std::uint32_t kMemberSize = 0x14C;
 constexpr std::uint32_t kWindowSize = 36;
 // kWindowCurrent: now BattleWinStates_Current (symbols.toml). the record the window task is running
 // Constant data in .data / .rdata.
-constexpr std::uint32_t kFormatD = 0x5E10C0;      // "%d"
+constexpr ::bof3::image::Va kFormatD{0x5E10C0};      // "%d"
 // kFormat2d: now Boss26Fx_CountFormat (symbols.toml). "%2d"
-constexpr std::uint32_t kFormat6d = 0x66AF34;     // "%6d"
-constexpr std::uint32_t kFormat7d = 0x64ADDC;     // "%7d"
-constexpr std::uint32_t kZennyUnit = 0x66A31C;    // the text after the zenny amount
+constexpr ::bof3::image::Va kFormat6d{0x66AF34};     // "%6d"
+constexpr ::bof3::image::Va kFormat7d{0x64ADDC};     // "%7d"
+constexpr ::bof3::image::Va kZennyUnit{0x66A31C};    // the text after the zenny amount
 // The dispatch tables (symbols.toml [[data]]).
-constexpr std::uint32_t kExpSteps = 0x64AFAC;     // 5 entries, by 0x904AA4, under 0x431920 (group CC's stub)
+constexpr ::bof3::image::Va kExpSteps{0x64AFAC};     // 5 entries, by 0x904AA4, under 0x431920 (group CC's stub)
 // kLevelUpSteps: now BattleResult_LevelUpSteps (symbols.toml). 2 entries, by 0x904AA4, BattleResult_LevelUpStep's
 // kRewardSteps: now BattleResult_RewardSteps (symbols.toml). 4 entries, by 0x904AA4, BattleResult_RewardStep's
 
 }  // namespace at
 
 // Callees with no name in symbols.gen.h, called by address.
-constexpr std::uint32_t kCountMembers = bof3::addr::BattleResult_CountExpShares;   // 0x4319B0 (round twelve BE1's; the value unchanged, so the fuzz's keys stand), u8: party slots not out (Battle_ActorIsOut) whose dword ObjTrio +0x134 lacks 0x400
-constexpr std::uint32_t kZennyBonus = bof3::addr::BattleResult_ZennyBonus;       // 0x431FE0 (BE1's), u8: 1 when a slot not out holds 7 in byte +0x16 or +0x17 of its 0x802DC0 record
-constexpr std::uint32_t kAddExp = bof3::addr::BattleResult_AddExp;         // 0x4468B0, group R3B's (round fourteen; the same value): PSX BattleResult_AddExp 0x801DD564 (the sibling's)
-constexpr std::uint32_t kRosterIndex = bof3::addr::CharId_ToRosterIndex;    // 0x4469D0, R3B's (the same value): PSX CharId_ToRosterIndex 0x801DD774 (the sibling's): the byte at 0x66972C + id, 7 is 0
-constexpr std::uint32_t kLevelUpPending = bof3::addr::Char_LevelUpGain;          // 0x432170 (BE1's; what 0), u16: non-zero when the roster index has a level to gain (PSX 0x801EF92C)
-constexpr std::uint32_t kLevelUp = bof3::addr::Char_LevelUp;        // the PSX Char_LevelUp's place in BattleResult_Setup (the sibling's)
-constexpr std::uint32_t kAddZenny = bof3::addr::Zenny_Add;       // Zenny_Add: 0x904058 += n (0x904138 too when the flag is 0), capped 9,999,999
-constexpr std::uint32_t kDrawFrame = bof3::addr::BattleResultWin_DrawFrame;   // 0x5982D0, group BE7's (round twelve; the same value): the result windows' frame (x, y, w, h), each read as a word
-constexpr std::uint32_t kExpToNext = bof3::addr::BattleResultWin_ExpToNext;   // 0x598810, group R2G's (round fourteen; the same value): by its reads, the EXP a party slot still needs for its next level, 0 at none (hypothesis)
+constexpr ::bof3::image::CodeVa kCountMembers{bof3::addr::BattleResult_CountExpShares};   // 0x4319B0 (round twelve BE1's; the value unchanged, so the fuzz's keys stand), u8: party slots not out (Battle_ActorIsOut) whose dword ObjTrio +0x134 lacks 0x400
+constexpr ::bof3::image::CodeVa kZennyBonus{bof3::addr::BattleResult_ZennyBonus};       // 0x431FE0 (BE1's), u8: 1 when a slot not out holds 7 in byte +0x16 or +0x17 of its 0x802DC0 record
+constexpr ::bof3::image::CodeVa kAddExp{bof3::addr::BattleResult_AddExp};         // 0x4468B0, group R3B's (round fourteen; the same value): PSX BattleResult_AddExp 0x801DD564 (the sibling's)
+constexpr ::bof3::image::CodeVa kRosterIndex{bof3::addr::CharId_ToRosterIndex};    // 0x4469D0, R3B's (the same value): PSX CharId_ToRosterIndex 0x801DD774 (the sibling's): the byte at 0x66972C + id, 7 is 0
+constexpr ::bof3::image::CodeVa kLevelUpPending{bof3::addr::Char_LevelUpGain};          // 0x432170 (BE1's; what 0), u16: non-zero when the roster index has a level to gain (PSX 0x801EF92C)
+constexpr ::bof3::image::CodeVa kLevelUp{bof3::addr::Char_LevelUp};        // the PSX Char_LevelUp's place in BattleResult_Setup (the sibling's)
+constexpr ::bof3::image::CodeVa kAddZenny{bof3::addr::Zenny_Add};       // Zenny_Add: 0x904058 += n (0x904138 too when the flag is 0), capped 9,999,999
+constexpr ::bof3::image::CodeVa kDrawFrame{bof3::addr::BattleResultWin_DrawFrame};   // 0x5982D0, group BE7's (round twelve; the same value): the result windows' frame (x, y, w, h), each read as a word
+constexpr ::bof3::image::CodeVa kExpToNext{bof3::addr::BattleResultWin_ExpToNext};   // 0x598810, group R2G's (round fourteen; the same value): by its reads, the EXP a party slot still needs for its next level, 0 at none (hypothesis)
 
 using Handler = void (__cdecl*)();
 

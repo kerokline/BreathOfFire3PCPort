@@ -1,7 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-28: the ledger-fields round done through stage C on `ledger-fields/round`,
-unpushed, item 2; everything through PR #161 is on `main`)
+**Status:** IN PROGRESS (2026-10-29: the relocatable-image round built through stage D on `relocatable-image/round`, unpushed, item 2; the ledger-fields round is on `main` through PR #164)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -41,16 +40,16 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    evidence, the stp pairs and `kind_sheet.png`, the seven boss-only skills' routes. The worktrees under
    `away1027` are removable.
 
-2. **The two rounds staged by PR #157**, one run, one not:
+2. **The two rounds staged by PR #157**, both run:
    - **The ledger-fields round is done through stage C on `ledger-fields/round`** (off `main` `ac1682fe`, the
      PR #161 merge; LF0, four groups, an audit and a fix agent, one worktree each under
-     `C:\Users\kerok\bof3x-runs\lf1027`, merged one at a time; unpushed, **PR at the owner's word**;
+     `C:\Users\kerok\bof3x-runs\lf1027`, merged one at a time;
      [`ledger-fields-round.md`](ledger-fields-round.md), the "as run" sections of 2, 3 and 4; the reports
      `lf1027\<group>\REPORT.md`). Every entry carries the six fields `Switch:` / `Default:` / `Player:` / `Toward:` /
      `Languages:` / `State:`, `ledger_check.py` is strict, and the counts are in [`STATUS.md`](STATUS.md). The round
      merged as PR #162 (2026-10-28 morning). **Stage D done the same day on `ledger-fields/stage-d`** (section 5's
      four "as run" subsections; three Opus agents, worktrees under `C:\Users\kerok\bof3x-runs\lfd1028`, reports
-     `lfd1028\d<n>\REPORT.md`; unpushed, **PR at the owner's word**): `BOF3X_OFF` (ini `off=`) read by both hosts
+     `lfd1028\d<n>\REPORT.md`; **merged as PR #164**, `main` `15518394`): `BOF3X_OFF` (ini `off=`) read by both hosts
      for code names only, with a known-but-inactive name logged and an unknown one a Fatal (`src/hook/code_names.h`,
      generated); `cheap` retired, the 67 entries `Player: yes`; `tools/ledger_registry.py` writes
      `src/launcher/ledger_registry.h` (CI gate) and `presets` is the Python reference; the launcher's `preset=`
@@ -73,13 +72,22 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      listed. **For the owner:** the ten `Toward: none` entries that want a twin read (section 3's "as run").
      The worktrees under `lf1027` and `lfd1028` are removable once the PRs are in. Also on `main` since PR #162: the
      regenerated `analysis/data_census.tsv` (line numbers only).
-   - **The relocatable-image round, not launched** ([`relocatable-image-round.md`](relocatable-image-round.md),
-     I44 stage 3; briefs under `C:\Users\kerok\bof3x-runs\ri1027`). Stage A (census, address-independent state
-     hash, loader design) needs no call; stage B rewrites the 17,259 global sites as `base + offset` with a
-     `constexpr` base so `codegen_same.py` stays the gate; stage C moves the image, proved by the state hash at
-     two bases. **The owner's three calls, section 7.** Launch: worktrees off the round branch's tip at the
-     time, `ROUND_TIP` filled into the briefs; game runs by the coordinator only, one at a time. The staging
-     worktree `C:\Users\kerok\bof3x-runs\stg1027\wt` is removable.
+   - **The relocatable-image round is built through stage D on `relocatable-image/round`** (off `main`
+     `15518394`, `main` merged through PR #169; [`relocatable-image-round.md`](relocatable-image-round.md)
+     sections 2..5 "as run" and "Before the PR", the reports
+     `C:\Users\kerok\bof3x-runs\ri1027\<group>\REPORT.md`, the proofs `c1\PROOF.md` and `c2\PROOF.md`; **its PR
+     open**). The image is movable and the stub page gone ([`STATUS.md`](STATUS.md)); nothing a player sees
+     changed. The PR's day found what the stage D gate had skipped: the hosted `BOF3X_SHADOW='*'` suite, which
+     faulted in `field_misc`'s fuzz on a static-initialisation order the move created (`draw_pool`'s pointers,
+     fixed `41372e3c`, section 5 "Before the PR"). **Next:** the merge; then, for whoever picks the round's ends up (none needs the owner): the
+     state hash's fold widened to cover `.pool` (`statehash.cpp` and `statehash.py` together, the folded
+     references re-recorded); the two sub-word reads not proven and the 729 not read (section 5, question 3);
+     the exit trace's stack scan in `bof3x.exe`; the run-time base's cost on the attract's pace, measured on a
+     quiet machine at both bases. **Developer switch:** `BOF3X_IMAGEBASE=0xA00000` takes `bof3x-A00000.exe` through
+     `bof3x-launcher-dev.exe`. **Traps paid for:** `Code(Code(x))` compiles; a word read from game memory is
+     already a place (`CodePlace` passes it, `Img` must not be applied); `tools/reloc_bare.py --check` lists a new
+     bare address - place it, or regenerate the list if it is a name. The worktrees under `ri1027` are removable
+     once the PR is in.
 
 3. **The spell sweep** ([`spell-sweep.md`](spell-sweep.md); the tool PR #155, its fix wave PR #156, the enemy and
    item sides on the disc-only installs and the sweep by enemy kind on item 1's branch). What is left of it:
@@ -364,7 +372,7 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   copy with its own `bof3x.ini` (or none: self-tests and references want an ini-less copy, Traps). End a run with
   `taskkill //F //IM BOF3.exe` only for a game you started (the runners do exactly that now,
   [`world-map.md`](world-map.md) §6); batches run detached.
-- **Self-tests, headless:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config` (a hosted run: the player's launcher hands it to `bof3x-launcher-dev.exe` beside it since 2026-10-15, [`launcher-settings.md`](launcher-settings.md) 2).
+- **Self-tests, headless:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config` (a hosted run: the player's launcher hands it to `bof3x-launcher-dev.exe` beside it since 2026-10-15, [`launcher-settings.md`](launcher-settings.md) 2). **Keep the `BOF3X_SHADOW='*'`:** without it only the start-up self-tests run, not the shadow fuzz suite - the relocatable-image round's gate dropped it and shipped a fault the suite finds in its first module (2026-10-29, [`relocatable-image-round.md`](relocatable-image-round.md) 5 "Before the PR"). A fault inside a self-test is silent (the crash reporter's thread cannot run under the loader lock; the process exits 0xC0000005 after 20 s): the log's last line names the module, and a `Log` in `crash.cpp`'s handler itself names the fault. Beside it the exe host's: `... --host exe`, and moved: `BOF3X_IMAGEBASE=0xA00000 ... --host exe`.
   **A launcher copy holds four files** - `bof3x-launcher.exe`, `bof3x-launcher-dev.exe`, `bof3x.dll` and `bof3x.exe`
   (the exe host) - and no `bof3x.ini`; without `bof3x.exe` the launcher stops on a modal "bof3x.exe is missing"
   dialog (Traps). `abc_run.py prepare` copies all four; a hand-made copy must too. Unattended runs that pass a

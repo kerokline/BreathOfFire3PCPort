@@ -263,12 +263,12 @@ const sh::Callee kCallees[] = {
     {E1C_OURS(EffectKind1E_Winding), 3, {kW, kW, kW}, kG, 0, 0, {}, &FxWinding},   // the caller tests ax against 0
     {E1C_OURS(EffectKind20_Draw), 0, {}, kPh, 0, 0},
     // other groups' of round thirteen, by address (docs/effect_1c.md section 6)
-    {"0x471D10 (E2A)", at::kShardSpawn, at::kShardSpawn, 0, {}, kG, 0, 0, {}, &FxShardSpawn},
-    {"0x471E20 (E2A)", at::kShardTile, at::kShardTile, 1, {kW}, kG, 0, 0, {0x10}, nullptr, nullptr, true},
-    {"0x485030 (E3C)", at::kDebrisDraw, at::kDebrisDraw, 1, {kW}, kG, 0, 0, {0x2C}, nullptr, nullptr, true},
-    {"0x4851E0 (E3C)", at::kDebrisInit, at::kDebrisInit, 1, {kW}, kG, 0, 0, {}, &FxDebrisInit},
+    {"0x471D10 (E2A)", at::kShardSpawn.v, at::kShardSpawn.v, 0, {}, kG, 0, 0, {}, &FxShardSpawn},
+    {"0x471E20 (E2A)", at::kShardTile.v, at::kShardTile.v, 1, {kW}, kG, 0, 0, {0x10}, nullptr, nullptr, true},
+    {"0x485030 (E3C)", at::kDebrisDraw.v, at::kDebrisDraw.v, 1, {kW}, kG, 0, 0, {0x2C}, nullptr, nullptr, true},
+    {"0x4851E0 (E3C)", at::kDebrisInit.v, at::kDebrisInit.v, 1, {kW}, kG, 0, 0, {}, &FxDebrisInit},
     // the point copied on the stack (12 read), three words, the shade and flag bytes
-    {"0x493090 (E4F)", at::kCone, at::kCone, 6, {0, k16, k16, k16, k8, k8}, kG, 0, 0, {12}, nullptr, nullptr, true},
+    {"0x493090 (E4F)", at::kCone.v, at::kCone.v, 6, {0, k16, k16, k16, k8, k8}, kG, 0, 0, {12}, nullptr, nullptr, true},
     // standard entries re-listed louder: the stack pointers never logged, the
     // outs filled, the SVECTORs' padding (the callers' leftovers) not hashed
     {E1C_OURS(EffectGte_ProjectPoint), 2, {0, 0}, kG, 0, 0, {12, 0}, &FxProjectPoint, nullptr, true},
@@ -296,7 +296,7 @@ const sh::DataTable kTables[] = {
 // specks past the standard 0x644 (with kind 0x1E's pieces 0x92C0C0.. and debris
 // 0x92C780..0x92CA40 after), the shard cursor, the fuzz's model and count.
 const sh::Region kRegions[] = {
-    {EffectKind30_Shards_addr + 0x644, at::kDebris + 16 * 0x2C - (EffectKind30_Shards_addr + 0x644)},
+    {EffectKind30_Shards_addr + 0x644, at::kDebris.v + 16 * 0x2C - (EffectKind30_Shards_addr + 0x644)},
     {EffectKind1E_ShardCursor_addr, 4},
     {0, sizeof g_model},
     {0, sizeof g_count},
@@ -336,7 +336,7 @@ void Seed(unsigned k) {
     unsigned char* const s = Sprite_Current;
     // what every kind may read: the model and its count, the shard cursor, the counter byte
     SetLong(Mem(Sprite_ObjectsExtra_addr + 0x50), static_cast<std::int32_t>(Key(g_model)));
-    SetLong(Mem(at::kModelCount), static_cast<std::int32_t>(Key(g_count + sh::Next() % 4)));
+    SetLong(Mem(::bof3::Img(at::kModelCount.v)), static_cast<std::int32_t>(Key(g_count + sh::Next() % 4)));
     for (unsigned i = 0; i < 4; ++i) g_count[i] = static_cast<unsigned char>(PickOf(0, 1, 2, 27, sh::Next() % 28));
     move_script::SetLong(Mem(EffectKind1E_ShardCursor_addr), static_cast<std::int32_t>(Key(Shard28(sh::Next()))));
     Mem(0x903848)[0] = static_cast<unsigned char>(PickOf(0x1F, 0x1F, 0x1E, 0x20, sh::Next()));
@@ -386,7 +386,7 @@ void Args(unsigned k, U* a) {
         a[1] = Key(g_model) + 0x28 * (i % at::kPieceCount);
         a[2] = EffectKind30_Shards_addr + 0x140 + 0x18 * (i % at::kPieceCount);
         break;
-    case k1EDebrisOne: a[0] = at::kDebris + 0x2C * (i % 16); break;
+    case k1EDebrisOne: a[0] = ::bof3::Img(at::kDebris.v) + 0x2C * (i % 16); break;
     default: break;
     }
 }

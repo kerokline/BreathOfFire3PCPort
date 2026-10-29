@@ -14,6 +14,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 namespace shop_states2 {
 
 using U = std::uint32_t;
@@ -21,11 +23,11 @@ using U = std::uint32_t;
 namespace at {
 // The field menus' state block (docs/menu-screens.md): 0x929F00.. bytes.
 // kMenuDone: now BattleE1_Mode (symbols.toml). u8: 1 ends the menu (ShopTrade_Close)
-constexpr U kState = 0x929F01;        // u8: the shop's state, 0..4 (ShopTrade_States)
-constexpr U kSub = 0x929F02;          // u8: the state's step
-constexpr U kCounter = 0x929F04;      // u8: frames before the next step
+constexpr ::bof3::image::Va kState{0x929F01};        // u8: the shop's state, 0..4 (ShopTrade_States)
+constexpr ::bof3::image::Va kSub{0x929F02};          // u8: the state's step
+constexpr ::bof3::image::Va kCounter{0x929F04};      // u8: frames before the next step
 // kByte05: now MenuLists_Cursor (symbols.toml). u8, cleared by ShopTrade_OpenWait
-constexpr U kMember = 0x929F06;       // s8: the member the equip steps are on
+constexpr ::bof3::image::Va kMember{0x929F06};       // s8: the member the equip steps are on
 // kAnswer: now FieldS_Answer (symbols.toml). u8: the yes / no cursor, 1 yes
 // The shop's own bytes (0x6BC89C..0x6BC8B7).
 // kKind: now ShopStates2_Kind (symbols.toml). u8: the chosen item's category
@@ -35,24 +37,24 @@ constexpr U kMember = 0x929F06;       // s8: the member the equip steps are on
 // kByteA8: now ShopStates2_ByteA8 (symbols.toml). u8, cleared by ShopTrade_OpenWait
 // kRow: now ShopStates2_Row (symbols.toml). s8: the buy list's cursor, then the row sold from
 // kSellFlag: now ShopStates2_SellFlag (symbols.toml). u8: Shop_SellPrice's flag (x50 for 0x2B..0x36)
-constexpr U kChoice = 0x6BC8AB;       // u8: buy (0) or sell (1)
-constexpr U kCount = 0x6BC8AC;        // u8: how many (read once as a dword)
+constexpr ::bof3::image::Va kChoice{0x6BC8AB};       // u8: buy (0) or sell (1)
+constexpr ::bof3::image::Va kCount{0x6BC8AC};        // u8: how many (read once as a dword)
 // kItem: now ShopStates2_Item (symbols.toml). u8: the chosen item
-constexpr U kMaxCount = 0x6BC8B0;     // u32: the most that may be bought or sold
-constexpr U kRate = 0x6BC8B4;         // u16: Shop_PriceRate's percentage
+constexpr ::bof3::image::Va kMaxCount{0x6BC8B0};     // u32: the most that may be bought or sold
+constexpr ::bof3::image::Va kRate{0x6BC8B4};         // u16: Shop_PriceRate's percentage
 // The shop's list: a count byte, then (category, item) byte pairs.
 // kShopList: now ShopStates2_ShopList (symbols.toml). unsigned char *
 // kMoney: now Party_Zenny (symbols.toml). u32: the party's zenny
 constexpr U kMoneyMax = 0x98967F;     // 9,999,999
-constexpr U kPartyList = 0x904062;    // u8 per member: the character
-constexpr U kRecordOf = 0x66972C;     // u8 per character: its record (symbols.toml's Character_IndexById)
+constexpr ::bof3::image::Va kPartyList{0x904062};    // u8 per member: the character
+constexpr ::bof3::image::Va kRecordOf{0x66972C};     // u8 per character: its record (symbols.toml's Character_IndexById)
 // kCharRecords: now CharacterRecords (symbols.toml). stride 0xA4
 constexpr U kCharStride = 0xA4;
 // The inventory's lists, by category 0..4: id bytes and count bytes.
-constexpr U kIdLists = 0x656B00;      // unsigned char *[5]
-constexpr U kCountLists = 0x656B14;   // unsigned char *[5]
+constexpr ::bof3::image::Va kIdLists{0x656B00};      // unsigned char *[5]
+constexpr ::bof3::image::Va kCountLists{0x656B14};   // unsigned char *[5]
 // Input.
-constexpr U kPressed = 0x7E1BEC;      // Input_Pressed (read as a word, twice as a dword)
+constexpr ::bof3::image::Va kPressed{0x7E1BEC};      // Input_Pressed (read as a word, twice as a dword)
 // kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons, u16
 // kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons, u16
 // The window records the states fill (Shop_InitWindows sets them up):
@@ -72,9 +74,9 @@ constexpr U kMemberStride = 36;
 // kChoiceSteps: now ShopTrade_ChoiceSteps (symbols.toml). 1
 // kBuySteps: now ShopTrade_BuySteps (symbols.toml). 8
 // kSellSteps: now ShopTrade_SellSteps (symbols.toml). 5
-constexpr U kTablesEnd = 0x664190;    // Shop_Equip's jump table follows
+constexpr ::bof3::image::Va kTablesEnd{0x664190};    // Shop_Equip's jump table follows
 // Task 0's title loop.
-constexpr U kGameMode = 0x66C7E8;     // Game_Mode, u16 (read as a dword, masked)
+constexpr ::bof3::image::Va kGameMode{0x66C7E8};     // Game_Mode, u16 (read as a dword, masked)
 // kGameStep: now Game_Step (symbols.toml). Game_Step, u16
 // kModes: now TitleTask_Modes (symbols.toml). TitleTask_Modes: 2, by Game_Mode
 // kClutDirty: now Gfx_ClutStripDirty (symbols.toml). Gfx_ClutStripDirty, u8

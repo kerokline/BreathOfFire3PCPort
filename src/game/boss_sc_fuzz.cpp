@@ -193,10 +193,10 @@ const bh::Callee kCallees[] = {
      &bh::MoveCounterEffect},
     {"Battle_OpenMsgWindow", bof3::addr::Battle_OpenMsgWindow, KeyOf(&::Battle_OpenMsgWindow), 0, {}, bh::Answer::kGarbage, 0, 0, {},
      &bh::BannerCharEffect},
-    {"0x446DE0", at::kEndWin, at::kEndWin, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &bh::MoveCounterEffect},
+    {"0x446DE0", at::kEndWin.v, at::kEndWin.v, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &bh::MoveCounterEffect},
     // engine code nobody owns (boss_sc_callees.h)
-    {"0x455290", at::kSlotStart, at::kSlotStart, 2, {kAll, kAll}, bh::Answer::kGarbage, 0, 0},
-    {"0x454A80", at::kSlotsReleaseFor, at::kSlotsReleaseFor, 1, {kAll}, bh::Answer::kGarbage, 0, 0},
+    {"0x455290", at::kSlotStart.v, at::kSlotStart.v, 2, {kAll, kAll}, bh::Answer::kGarbage, 0, 0},
+    {"0x454A80", at::kSlotsReleaseFor.v, at::kSlotsReleaseFor.v, 1, {kAll}, bh::Answer::kGarbage, 0, 0},
     // the group's own, called directly (they read the argument's low byte)
     {"BossAmalgam_DrawSprite", 0x439930, KeyOf(&::BossAmalgam_DrawSprite), 1, {kU8}, bh::Answer::kGarbage, 0, 0},
     {"BossAmalgam_DrawStreak", 0x4399E0, KeyOf(&::BossAmalgam_DrawStreak), 1, {kU8}, bh::Answer::kGarbage, 0, 0},
@@ -212,7 +212,7 @@ const bh::DataTable kTablesK16[] = {{0x64CE38, 12}, {0x64CE68, 3, 4, 1}};
 
 // The cells beyond the battle frame that the group reads or writes.
 const bh::Region kRegions[] = {
-    {at::kMoveCounter, 4},     // the move-script counters (the end hooks' scene byte)
+    {at::kMoveCounter.v, 4},     // the move-script counters (the end hooks' scene byte)
     {Field_ScriptFlags_addr, 2},
     {Music_Track_addr, 1},
     {BossH_LeaderPick_addr, 1},
@@ -256,14 +256,14 @@ void Seed(unsigned k) {
     case 0x43A230:
         Mem(Battle_EndFlags_addr)[0] = Byte({0, 1, 2, 3, 0xFD, 0x82});
         Mem(BossSe_Script_addr)[0] = Byte({0, 1, 0x40, 0x41, 0xBE, 0xFF});
-        Mem(at::kMoveCounter)[0] = Byte({0x14, 0x14, 0x15, 0x13, 0x50, 0x94});
+        Mem(::bof3::Img(at::kMoveCounter.v))[0] = Byte({0x14, 0x14, 0x15, 0x13, 0x50, 0x94});
         break;
     // --- fight 16's event hook
     case 0x43A060:
         Mem(BossSe_Script_addr)[0] = Byte({0, 1, 0x40, 0x41, 8, 0xBE, 0xBF});
         Mem(BossSc_WaitTurns_addr)[0] = bh::Half() ? 0 : Byte({1, 8, 0xA, 0x80});
-        Mem(at::kActor)[0] = Byte({0, 0, 0, 1, 3, 0x80});
-        Mem(at::kTarget)[0] = Byte({0x40, 0x44, 0x4, 0, 0xBF, 0xC0});
+        Mem(::bof3::Img(at::kActor.v))[0] = Byte({0, 0, 0, 1, 3, 0x80});
+        Mem(::bof3::Img(at::kTarget.v))[0] = Byte({0x40, 0x44, 0x4, 0, 0xBF, 0xC0});
         Mem(Battle_Enemies_addr + at::kEnemyStatus + 1)[0] = Byte({0, 0x20, 0xDF, 0x60});
         Mem(Battle_Enemies_addr + 0x128 + at::kEnemyStatus + 1)[0] = Byte({0, 0x20, 0xDF, 0x60});
         break;
@@ -282,7 +282,7 @@ void Seed(unsigned k) {
         break;
     case 0x439DB0:
         Mem(EventBattle_Id_addr)[0] = Byte({0x10, 0x10, 0xD, 0x11, 0x90});
-        Mem(at::kActor)[0] = Byte({8, 8, 7, 9, 0x88});
+        Mem(::bof3::Img(at::kActor.v))[0] = Byte({8, 8, 7, 9, 0x88});
         rv::Store<unsigned>(rv::As<records::BattleEnemy>(E())->hp, Hp());
         rv::Store<unsigned>(rv::As<records::BattleEnemy>(E())->hp_change, Hp());
         break;
@@ -339,7 +339,7 @@ void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 5) {
     case 0: Mem(BossSe_Script_addr)[0] = b; break;
-    case 1: Mem(at::kMoveCounter)[0] = h & 0x1000000 ? 0x14 : b; break;
+    case 1: Mem(::bof3::Img(at::kMoveCounter.v))[0] = h & 0x1000000 ? 0x14 : b; break;
     case 2: Mem(BossSc_WaitTurns_addr)[0] = b; break;
     case 3: Mem(Character_IndexById_addr + 0x1)[0] = b; break;
     default: Mem(ObjTrio_addr + 0x14c)[0] = b; break;

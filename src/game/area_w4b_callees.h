@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
@@ -21,29 +23,29 @@ namespace at {
 // The message box's answer to a choice (the cursor's row) and the message
 // word a choice handler leaves (0xFFFF: no new message).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
 // (Field_ModeTailKinds 0x662CE8), its state, a sub-kind, and a word timer.
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
 // kTailState: now AreaW0c_TailState (symbols.toml).
 // kTailSub: now AreaW0c_TailSub (symbols.toml).
-constexpr std::uint32_t kTailTimer = 0x9039F6;
+constexpr ::bof3::image::Va kTailTimer{0x9039F6};
 // The movement script's counters 0 and 3 (MoveScript_CounterOps, ops
 // A0..AF), and the scratch cell after them (area 170's tail keeps an effect
 // slot and the input word there, area 171's step hook a count).
-constexpr std::uint32_t kCounter0 = 0x903848;
-constexpr std::uint32_t kCounter3 = 0x90384B;
-constexpr std::uint32_t kScratch = SharedScratch_addr;
+constexpr ::bof3::image::Va kCounter0{0x903848};
+constexpr ::bof3::image::Va kCounter3{0x90384B};
+constexpr ::bof3::image::Va kScratch{SharedScratch_addr};
 // The story flags (Flags_Set / Flags_Test's bank), and a second bank area
 // 172's choice 0 tests (Cond_Flags row 14: 0x903F90 + 8 * 14).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kCondRow14: now Cond_Flags[0x70] (symbols.toml).
 // The focus object: the object whose talk ran last (area_w1a_callees.h's
 // kFocusObject). Area 168's choice 1 writes its dwords +0x18 and +0x1C.
-constexpr std::uint32_t kFocusObject = 0x903804;
+constexpr ::bof3::image::Va kFocusObject{0x903804};
 // The zone the field was entered from (area_w1a_callees.h's kEntryZone):
 // area 170's init tests it against 2 and 3.
-constexpr std::uint32_t kEntryZone = 0x905E68;
+constexpr ::bof3::image::Va kEntryZone{0x905E68};
 // A byte area 171's handler 0 compares with 0x4B (a cell of the 0x903Dxx
 // block no other group has read; what it holds is not read here).
 // kGateKey: now AreaW4b_GateKey (symbols.toml).
@@ -57,7 +59,7 @@ constexpr std::uint32_t kEntryZone = 0x905E68;
 // kLeaderX: now ObjTrio[0].x (symbols.toml).
 // kLeaderZ: now ObjTrio[0].z (symbols.toml).
 // kLeader89: now ObjTrio[0].char_id (symbols.toml).
-constexpr std::uint32_t kLeader137 = 0x802E77;
+constexpr ::bof3::image::Va kLeader137{0x802E77};
 // kParty1Word12E: now ObjTrio (symbols.toml). record 1 +0x12E (Field_Members[0x132] until stage C4).
 // kParty2Word12E: now ObjTrio_addr + 0x3c6 (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
@@ -120,8 +122,8 @@ struct Rects {
     std::uint32_t fn_rect; // the copy's own rectangle search (called by address)
 };
 constexpr unsigned kRectStride = 5;
-constexpr Rects kRects169 = {"Area169", 0x63CA3C, 2, bof3::addr::Area169_MemberRect};
-constexpr Rects kRects171 = {"Area171", 0x63D84C, 2, bof3::addr::Area171_MemberRect};
+const Rects kRects169 = {"Area169", ::bof3::Img(0x63CA3C), 2, bof3::addr::Area169_MemberRect};
+const Rects kRects171 = {"Area171", ::bof3::Img(0x63D84C), 2, bof3::addr::Area171_MemberRect};
 // Area 170: the four input directions its tail's state 53 swaps, by the held
 // word's top nibble (16 bytes).
 // kArea170InputSwap: now Area170_InputSwap (symbols.toml).
@@ -142,7 +144,7 @@ constexpr unsigned kArea172EffectCount = 3;
 // (MapView_ItemAt, Prim_SetTexture) over tables of the 0x63CAxx block. Not
 // read further here. Ours since round thirteen: EffectKind7D_SetMap (E3D,
 // docs/effect_3d.md), which kind 0x7D's state 2 calls too.
-constexpr std::uint32_t kArea170MapSetUp = bof3::addr::EffectKind7D_SetMap;
+constexpr ::bof3::image::CodeVa kArea170MapSetUp{bof3::addr::EffectKind7D_SetMap};
 
 }  // namespace at
 }  // namespace area_w4b

@@ -270,9 +270,9 @@ constexpr Fz kFz115 = {0x620148, 0x62015C, 0x62015C, 0x620264, 0x620304, 0x62030
 
 enum : unsigned { kRegPackets = 3, kRegItems = 7, kRegNames = 8 };
 #define W3A_WM_REGIONS(nn, text_bytes, cell_records)                                                     \
-    {at::kMapMode, 1}, {0x7E0918, 1}, {0x7E0670, 4}, {0, kPacketBytes}, {0x9037A0, 0x20}, {0x66C7E8, 2}, \
-    {at::kButtonMap0, 0x10}, {0, 4 * kItemBytes}, {0, sizeof g_names}, {at::kTextRecords, text_bytes},  \
-    {at::kAreaText, 4}, {at::kFlag3A79, 1},                                                              \
+    {at::kMapMode.v, 1}, {0x7E0918, 1}, {0x7E0670, 4}, {0, kPacketBytes}, {0x9037A0, 0x20}, {0x66C7E8, 2}, \
+    {at::kButtonMap0.v, 0x10}, {0, 4 * kItemBytes}, {0, sizeof g_names}, {at::kTextRecords.v, text_bytes},  \
+    {at::kAreaText.v, 4}, {at::kFlag3A79.v, 1},                                                              \
     {kFz##nn.plate_anims, kFz##nn.plate_anims_end - kFz##nn.plate_anims},                   \
     {kFz##nn.cells, 4 * (cell_records)},                                                             \
     {kFz##nn.place_messages, kFz##nn.place_messages_end - kFz##nn.place_messages},          \
@@ -342,7 +342,7 @@ void DisturbWm(U h) {
     case 5: Game_Mode = static_cast<unsigned short>(Game_Mode ^ 1); break;
     case 6: Cond_ByteFA = static_cast<signed char>(v % 16); break;
     case 7: SetWord(Mem(AreaW0b_Place_addr), v); break;
-    case 8: Mem(at::kLeaderCellX + (v & 1) * 2)[0] = static_cast<unsigned char>(v); break;
+    case 8: Mem(::bof3::Img(at::kLeaderCellX.v) + (v & 1) * 2)[0] = static_cast<unsigned char>(v); break;
     case 9: Mem(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(v & 1 ? 0xC : v); break;
     case 10: case 11: Mem(v & 1 ? (ObjTrio_addr + 0x36) : (ObjTrio_addr + 0x3a))[0] = static_cast<unsigned char>(h >> 24); break; // the settle re-plants its record
     default: break;
@@ -417,7 +417,7 @@ void SeedWm(unsigned k) {
         if (ah::Often()) cell[3] = Mem(t.name_sets + (ah::Next() % t.sets) * t.set_stride)[0];
         // items held or not, now and then a list ended early
         for (unsigned i = 0; i < 0x74; ++i)
-            if (ah::Half()) Mem(at::kItemsHeld + i)[0] = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next() | 1);
+            if (ah::Half()) Mem(::bof3::Img(at::kItemsHeld.v) + i)[0] = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next() | 1);
         if (ah::Half())
             Mem(t.name_sets + 1 + (ah::Next() % t.sets) * t.set_stride + ah::Next() % (t.set_stride - 1))[0] = static_cast<unsigned char>(AH_PICK(0xFF, 0x16, 0x5E));
         break;
@@ -510,8 +510,8 @@ void SeedWm(unsigned k) {
         const auto near = [](unsigned char* cell, unsigned centre) {
             SetWord(cell, centre + AH_PICK(0, 25, 26, static_cast<U>(-25), static_cast<U>(-26), 1, 100));
         };
-        if (ah::Often()) near(Mem(at::kLeaderCellX), rv::As<records::SpriteHead>(o)->x_whole);
-        if (ah::Often()) near(Mem(at::kLeaderCellZ), rv::As<records::SpriteHead>(o)->z_whole);
+        if (ah::Often()) near(Mem(::bof3::Img(at::kLeaderCellX.v)), rv::As<records::SpriteHead>(o)->x_whole);
+        if (ah::Often()) near(Mem(::bof3::Img(at::kLeaderCellZ.v)), rv::As<records::SpriteHead>(o)->z_whole);
         if (ah::Half()) Frame_Counter = AH_PICK(0, 15, 16, 31, 0x2F, 0xFFFFFFFFu);
         break;
     }
@@ -567,7 +567,7 @@ static_assert(k116Ring + 1 == AH_COUNT(kClones116), "area 116's seeding indices"
 const ah::Callee kCallees116[] = {
     kSet40,
     // the point's three dwords read through the pointer (docs/area_w2d.md)
-    {"RingAt_4220D0", kRingAt, kRingAt, 1, {0}, ah::Answer::kGarbage, 0, 0, {12}},
+    {"RingAt_4220D0", kRingAt.v, kRingAt.v, 1, {0}, ah::Answer::kGarbage, 0, 0, {12}},
 };
 const ah::DataTable kTables116[] = {{0x620664, 2}};   // Area116_EffectStates
 const ah::Region kRegions116[] = {{AreaW0c_AnswerMark_addr, 1}};

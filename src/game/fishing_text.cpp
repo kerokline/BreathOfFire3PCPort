@@ -68,6 +68,7 @@
 #include <cstring>
 #include <string>
 #include <vector>
+#include "common/image_base.h"
 
 #include "game/lang_layout.h"
 #include "game/text_advance.h"
@@ -78,7 +79,7 @@
 
 namespace {
 
-constexpr std::uint32_t kLineRecords = 0x653B98;   // 13 records of 8: pointer, label byte, pause byte
+constexpr ::bof3::image::Va kLineRecords{0x653B98};   // 13 records of 8: pointer, label byte, pause byte
 constexpr std::uint32_t kLineCount = 13;
 constexpr std::uint32_t kLineRoom = 64;            // tools/loc_build.py FISH_LINE_ROOM
 // The records' shipped pointers (read from the image 2026-10-03; 1 and 12
@@ -86,7 +87,7 @@ constexpr std::uint32_t kLineRoom = 64;            // tools/loc_build.py FISH_LI
 constexpr std::uint32_t kLineShipped[kLineCount] = {0x669FC0, 0x669FC8, 0x669FDC, 0x669FE8, 0x669FF0,
                                                     0x66A004, 0x66A010, 0x66A020, 0x66A030, 0x66A040,
                                                     0x66A058, 0x66A06C, 0x669FC8};
-constexpr std::uint32_t kTabTable = 0x66A088;      // 3 pointers, read by 0x468AC0 only
+constexpr ::bof3::image::Va kTabTable{0x66A088};      // 3 pointers, read by 0x468AC0 only
 constexpr std::uint32_t kTabCount = 3;
 constexpr std::uint32_t kTabRoom = 16;             // tools/loc_build.py FISH_TAB_ROOM
 constexpr std::uint32_t kTabShipped[kTabCount] = {0x66A070, 0x66A078, 0x66A080};
@@ -111,8 +112,8 @@ constexpr unsigned char kLabelCodes[kEntries][3] = {FISH_ICON(0), FISH_ICON(1), 
 // 0x653C00's bytes, which the self-test checks against the image.
 constexpr std::uint16_t kEntryBit[kEntries] = {0x20, 0x40, 0x10, 0x80, 0x04, 0x08};
 constexpr unsigned kEntryPen[kEntries] = {2, 1, 6, 5, 0, 0};
-constexpr std::uint32_t kLinePens = 0x653C00;      // bytes by a line byte: 2, 1, 6
-constexpr std::uint32_t kConfirmWord = 0x90358E;   // Field_ConfirmButtons, word 7, u16
+constexpr ::bof3::image::Va kLinePens{0x653C00};      // bytes by a line byte: 2, 1, 6
+constexpr ::bof3::image::Va kConfirmWord{0x90358E};   // Field_ConfirmButtons, word 7, u16
 // Text 0 is the cast's line: row 0 (0x653C04, the stage-1 row with both items
 // set) column 0, line byte 0. Stage 1's 0x20 (LeaderPanel_S1Buttons 0x528A90)
 // leads to stage 2, whose LeaderPanel_S2Wait 0x528FA0 casts on word 7. Every
@@ -234,7 +235,7 @@ void Repoint(const char* what, const std::uint8_t* payload, std::uint32_t size, 
         // The entry names the shipped string, or our buffer when the title's
         // FIRST.DAT is loaded a second time (after a game over, DIV-0064's
         // lesson of 2026-09-30).
-        if (*entry != shipped[i] && *entry != Addr(buffer))
+        if (*entry != ::bof3::Img(shipped[i]) && *entry != Addr(buffer))   // a pointer word: the place
             bof3::Fatal("fishing %s: 0x%08X holds 0x%08X, expected 0x%08X", what, (unsigned)(at + stride * i),
                         (unsigned)*entry, (unsigned)shipped[i]);
         if (len == 0) continue;   // the builder had nothing for it: as shipped
@@ -275,8 +276,8 @@ void SelfTest() {
                        {"a Western disc's image", sg::Release::kWest, {}, {}},
                        {"PSP-EU's image", sg::Release::kPspEu, {}, {}}};
     for (unsigned i = 0; i < kLineCount; ++i) {
-        const unsigned char line = Byte(kLineRecords + 8 * i + 4);
-        const unsigned char pause = Byte(kLineRecords + 8 * i + 5);
+        const unsigned char line = Byte(::bof3::Img(kLineRecords.v) + 8 * i + 4);
+        const unsigned char pause = Byte(::bof3::Img(kLineRecords.v) + 8 * i + 5);
         for (Image& im : images) im.label[i] = line;
         check(line < 3 || line == 0xFF, "a line byte", i, line);
         // D313: a pause of 0 is what a disc-built image without the records
@@ -285,7 +286,7 @@ void SelfTest() {
         check(pause != 0, "a line's pause byte is not 0 (D313: an image without the disc's records)", i, pause);
     }
     for (unsigned line = 0; line < 3; ++line) {
-        images[0].pens[line] = Byte(kLinePens + line);
+        images[0].pens[line] = Byte(::bof3::Img(kLinePens.v) + line);
         for (unsigned k = 1; k < 4; ++k) images[k].pens[line] = static_cast<std::uint8_t>(OwnPen(images[k].release, line));
         // This image's pens are its release's own buttons' (D313: a disc
         // image without the module's pens held 0, white).
@@ -457,9 +458,9 @@ void ApplyDiscLabels(const std::uint8_t* payload, std::uint32_t size) {
 
 void FishingText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
     if (tag == 1)
-        Repoint("lines", payload, size, kLineCount, &g_lines[0][0], kLineRoom, kLineRecords, 8, kLineShipped);
+        Repoint("lines", payload, size, kLineCount, &g_lines[0][0], kLineRoom, ::bof3::Img(kLineRecords.v), 8, kLineShipped);
     else if (tag == 2)
-        Repoint("tabs", payload, size, kTabCount, &g_tabs[0][0], kTabRoom, kTabTable, 4, kTabShipped);
+        Repoint("tabs", payload, size, kTabCount, &g_tabs[0][0], kTabRoom, ::bof3::Img(kTabTable.v), 4, kTabShipped);
     else if (tag == 3)
         ApplyHeadings(payload, size);
     else if (tag == 4)
@@ -519,10 +520,10 @@ const unsigned char* FishingText_Label(unsigned entry) {
 }
 
 FishingLabel FishingText_LabelOf(unsigned text, unsigned line) {
-    if (g_label_sigma == 0) return {line, Byte(kLinePens + line)};   // the original's reads
-    const std::uint8_t pens[3] = {Byte(kLinePens), Byte(kLinePens + 1), Byte(kLinePens + 2)};
+    if (g_label_sigma == 0) return {line, Byte(::bof3::Img(kLinePens.v) + line)};   // the original's reads
+    const std::uint8_t pens[3] = {Byte(::bof3::Img(kLinePens.v)), Byte(::bof3::Img(kLinePens.v) + 1), Byte(::bof3::Img(kLinePens.v) + 2)};
     const sg::Release r = g_image_release;
-    return Resolve(text, line, r, [r](std::uint16_t b) { return sg::SigmaFrom(r, b); }, Half(kConfirmWord), pens);
+    return Resolve(text, line, r, [r](std::uint16_t b) { return sg::SigmaFrom(r, b); }, Half(::bof3::Img(kConfirmWord.v)), pens);
 }
 
 unsigned FishingText_NameCount() { return g_on ? kNameCountLatin : kNameCount; }

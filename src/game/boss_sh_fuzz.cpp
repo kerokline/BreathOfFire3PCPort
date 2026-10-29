@@ -92,7 +92,7 @@ std::uint32_t SlotEffect(const std::uint32_t*, std::uint32_t answer) {
 }
 
 const bh::Callee kCallees[] = {
-    {"0x446DE0", at::kEndWin, at::kEndWin, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &bh::EndWinEffect},
+    {"0x446DE0", at::kEndWin.v, at::kEndWin.v, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &bh::EndWinEffect},
     {"AbilityList_Add", ::bof3::addr::AbilityList_Add, KeyOf(&::AbilityList_Add), 4, {kAll, kAll, kAll, kAll}, bh::Answer::kFlag, 0, 0,
      {}, &PickedEffect},
     {"BattleEnemy_ScriptTick", ::bof3::addr::BattleEnemy_ScriptTick, KeyOf(&::BattleEnemy_ScriptTick), 0, {}, bh::Answer::kFlag, 0, 0,
@@ -103,10 +103,10 @@ const bh::Callee kCallees[] = {
      bh::Answer::kGarbage, 0, 0, {}, &bh::TurnOrderEffect},
     {"Sprite_PoseFromSet", ::bof3::addr::Sprite_PoseFromSet, KeyOf(&::Sprite_PoseFromSet), 3, {kU8, kAll, kAll},
      bh::Answer::kGarbage, 0, 0, {}, &bh::TurnOrderEffect},
-    {"0x446700", at::kOrderFront, at::kOrderFront, 1, {kU8}, bh::Answer::kGarbage, 0, 0},
-    {"0x437450", at::kEnemySound, at::kEnemySound, 1, {kU16}, bh::Answer::kGarbage, 0, 0, {}, &SpriteEffect},
-    {"0x4376A0", at::kEnemyActEnd, at::kEnemyActEnd, 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"0x4376F0", at::kEnemyActChance, at::kEnemyActChance, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &SpriteEffect},
+    {"0x446700", at::kOrderFront.v, at::kOrderFront.v, 1, {kU8}, bh::Answer::kGarbage, 0, 0},
+    {"0x437450", at::kEnemySound.v, at::kEnemySound.v, 1, {kU16}, bh::Answer::kGarbage, 0, 0, {}, &SpriteEffect},
+    {"0x4376A0", at::kEnemyActEnd.v, at::kEnemyActEnd.v, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x4376F0", at::kEnemyActChance.v, at::kEnemyActChance.v, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &SpriteEffect},
 };
 
 // The cells beyond the harness's battle frame the 46 read or write.
@@ -237,14 +237,14 @@ void SeedB34(unsigned k) {
         g_code = Code(bh::Half() ? 1 : 5);
         SeedPicked();
         const unsigned char picked = B(BossSh_Picked_addr);
-        B(at::kFlags + 1) = static_cast<unsigned char>(bh::Often() ? B(at::kFlags + 1) & 0x7F : B(at::kFlags + 1) | 0x80);
+        B(::bof3::Img(at::kFlags.v) + 1) = static_cast<unsigned char>(bh::Often() ? B(::bof3::Img(at::kFlags.v) + 1) & 0x7F : B(::bof3::Img(at::kFlags.v) + 1) | 0x80);
         const U bits = g_code == 1 ? (bh::Often() ? 1 : bh::Next() & 3) : (bh::Often() ? 0 : bh::Next() & 3);
         B(BossSe_Script_addr) = static_cast<unsigned char>((bh::Next() & 0xFC) | bits);
         for (unsigned m = 0; m < 3; ++m) {
             unsigned char& f = B(ObjTrio_addr + 0x91 + m * at::kPartyStride);
             f = static_cast<unsigned char>(bh::Half() ? f | 0x20 : f & ~0x20u);
         }
-        B(at::kActor) = static_cast<unsigned char>(bh::Often() ? picked : BH_PICK(0, 1, 2, 3, 4));
+        B(::bof3::Img(at::kActor.v)) = static_cast<unsigned char>(bh::Often() ? picked : BH_PICK(0, 1, 2, 3, 4));
         // the action record: one of the harness's records
         bh::SetPointer(BattleSprites_Action_addr, bh::SpriteRecord(bh::Next()));
         break;
@@ -282,8 +282,8 @@ const bh::DataTable kTablesK41[] = {{Key(BossGaist_Hooks), 3, 4, 1}, {Key(BossGa
 void SeedK41(unsigned k) {
     SeedKind(k);
     if (k == 3) {
-        B(at::kFlags) = static_cast<unsigned char>(bh::Half() ? bh::Next() | 2 : bh::Next() & ~2u);
-        B(at::kFlags + 1) = static_cast<unsigned char>(bh::Next());
+        B(::bof3::Img(at::kFlags.v)) = static_cast<unsigned char>(bh::Half() ? bh::Next() | 2 : bh::Next() & ~2u);
+        B(::bof3::Img(at::kFlags.v) + 1) = static_cast<unsigned char>(bh::Next());
         SetWord(Mem(Transition_Busy_addr), bh::Often() ? BH_PICK(0, 0, 1, 0x100, 0x8000) : bh::Next());
     }
 }

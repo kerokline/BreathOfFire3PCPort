@@ -69,7 +69,7 @@ const Callees kOriginals = {
     As<int (__cdecl*)(char*, const char*, unsigned)>(Crt_sprintf),
     As<void (__cdecl*)(int, int, int, const unsigned char*)>(Text_DrawFont8),
     reinterpret_cast<const unsigned char* (__cdecl*)(int, int, unsigned, unsigned, const unsigned char*)>(
-        static_cast<std::uintptr_t>(kTinyFont)),
+        static_cast<std::uintptr_t>(::bof3::Code(kTinyFont.v))),
     As<U (__cdecl*)(int, int, const unsigned char*, int)>(Menu_DrawPieces),
     As<U (__cdecl*)(int, int, unsigned, unsigned, unsigned)>(Menu_DrawExpBar),
     As<void (__cdecl*)(unsigned char*)>(Gpu_SetSprt8),
@@ -120,7 +120,7 @@ float* FloatAt(U address) { return reinterpret_cast<float*>(At(address)); }
 
 unsigned char* PacketNext() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Dword(At(at::PacketNextAt())))); }
 U OtSlot() { return Byte(at::OtSlotAt()); }
-U SpriteCurrent() { return Dword(At(Sprite_Current_addr)); }
+U SpriteCurrent() { return Dword(At(::bof3::Img(Sprite_Current_addr))); }
 unsigned char* Sprite() { return At(SpriteCurrent()); }
 
 // EventOp_8x's object, Sprite(), is a Sprite_Objects record.
@@ -181,8 +181,8 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
     Prim_VertexScratch[2].z = top;
     Prim_VertexScratch[0].z = top;
     long p = 0;
-    g.rtp3(Vertex(Prim_VertexScratch_addr + 0x10), Vertex(Prim_VertexScratch_addr + 0x18), Vertex(Prim_VertexScratch_addr), FloatAt(MapView_ScreenXY_addr), FloatAt(Effect6c_OffsetX_addr),
-           FloatAt(kScreen2), &p);
+    g.rtp3(Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x18), Vertex(::bof3::Img(Prim_VertexScratch_addr)), FloatAt(::bof3::Img(MapView_ScreenXY_addr)), FloatAt(::bof3::Img(Effect6c_OffsetX_addr)),
+           FloatAt(::bof3::Img(kScreen2)), &p);
     float depth0 = 0, depth1 = 0, depth2 = 0;
     g.depth_f3(&depth0, &depth1, &depth2);
     // DIV-0041: the x cull moved outward by the wide picture's columns (0
@@ -191,7 +191,7 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
     const float cull = static_cast<float>(Widescreen_Fill());
     if (!(MapView_ScreenXY[0] >= -80.0f - cull)) return;   // fcomp [0x5C4264]; test ah, 1
     if (MapView_ScreenXY[0] > 400.0f + cull) return;       // fcomp [0x5C4260]; test ah, 0x41
-    if (!(Float(kScreen1 + 4) >= -20.0f)) return;   // fcomp [0x5C422C]; test ah, 1
+    if (!(Float(::bof3::Img(kScreen1) + 4) >= -20.0f)) return;   // fcomp [0x5C422C]; test ah, 1
     if (MapView_ScreenXY[1] > 260.0f) return;       // fcomp [0x5C425C]; test ah, 0x41
     if (Byte(at::UprightCountsAt() + e) == 0) return;
     U d0, d1;
@@ -204,11 +204,11 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
             unsigned char* const prim = packet + j * 0x48u;
             g.set_poly_ft4(prim);
             g.set_shade_tex(prim, 0);
-            SetDword(prim + 0x28, Dword(At(MapView_ScreenXY_addr)));
-            SetDword(prim + 0x2C, Dword(At(MapView_ScreenXY_addr + 4)));
+            SetDword(prim + 0x28, Dword(At(::bof3::Img(MapView_ScreenXY_addr))));
+            SetDword(prim + 0x2C, Dword(At(::bof3::Img(MapView_ScreenXY_addr) + 4)));
             SetDword(prim + 0x30, d0);
-            SetDword(prim + 0x38, Dword(At(Effect6c_OffsetX_addr)));
-            SetDword(prim + 0x3C, Dword(At(Effect6c_OffsetX_addr + 4)));
+            SetDword(prim + 0x38, Dword(At(::bof3::Img(Effect6c_OffsetX_addr))));
+            SetDword(prim + 0x3C, Dword(At(::bof3::Img(Effect6c_OffsetX_addr) + 4)));
             SetDword(prim + 0x40, d1);
             const auto u02 = static_cast<unsigned char>(Byte(at::UprightU02At() + e));
             prim[0x34] = u02;
@@ -231,10 +231,10 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
         const U vy = static_cast<std::uint32_t>(kScratchY);
         for (U v = 0; v < 4; ++v) {
             const U k = ((v >> 1) + base) * 2u;
-            SetWord(At(Prim_VertexScratch_addr + v * 8u), Word(At(at::UprightOffsetsXAt() + k)) + static_cast<std::uint32_t>(kScratchX.d_00));
-            SetWord(At(Prim_VertexScratch_addr + v * 8u + 2), Word(At(at::UprightOffsetsYAt() + k)) + vy);
+            SetWord(At(::bof3::Img(Prim_VertexScratch_addr) + v * 8u), Word(At(at::UprightOffsetsXAt() + k)) + static_cast<std::uint32_t>(kScratchX.d_00));
+            SetWord(At(::bof3::Img(Prim_VertexScratch_addr) + v * 8u + 2), Word(At(at::UprightOffsetsYAt() + k)) + vy);
         }
-        g.rtp4(Vertex(Prim_VertexScratch_addr), Vertex(Prim_VertexScratch_addr + 0x8), Vertex(Prim_VertexScratch_addr + 0x10), Vertex(Prim_VertexScratch_addr + 0x18),
+        g.rtp4(Vertex(::bof3::Img(Prim_VertexScratch_addr)), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Vertex(::bof3::Img(Prim_VertexScratch_addr) + 0x18),
                reinterpret_cast<float*>(packet + 8), reinterpret_cast<float*>(packet + 0x18),
                reinterpret_cast<float*>(packet + 0x50), reinterpret_cast<float*>(packet + 0x60), &p);
         g.depth_f4(reinterpret_cast<float*>(packet + 0x10), reinterpret_cast<float*>(packet + 0x20),
@@ -254,8 +254,8 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
 // written - Gte_RotTransPers4 reads three.
 extern "C" void __cdecl MapCell_DrawDiagonalWall(const unsigned char* record, unsigned b1, unsigned b0) {
     const U slot = HandlerSlot(Dword(record));
-    const U width = Dword(At(AreaMap_Header_addr)) & 0xFFu;
-    const unsigned char* const corner = At(AreaMap_Corners_addr + (width * b0 + b1) * 4u);
+    const U width = Dword(At(::bof3::Img(AreaMap_Header_addr))) & 0xFFu;
+    const unsigned char* const corner = At(::bof3::Img(AreaMap_Corners_addr) + (width * b0 + b1) * 4u);
     const U y = (b0 << 7) - 0x4040u, x = (b1 << 7) - 0x4040u;
     const U z2 = (0u - corner[2]) << 4, z1 = (0u - corner[1]) << 4;
     short v[4][4] = {};
@@ -304,7 +304,7 @@ extern "C" void __cdecl MapCell_DrawFlatFaces(const unsigned char* record, unsig
     auto column = static_cast<std::int32_t>(static_cast<U>(diff / 2) + S16(Word(At(at::ColumnAt()))) + 1u);
     if (column >= 0x1C) column -= 0x1C;
     const U index = static_cast<U>(column) + static_cast<U>(row) * 28u;
-    const U item = Word(At(MapView_CellItems_addr + 0x2 + index * 4u)) & 0xFFFu;
+    const U item = Word(At(::bof3::Img(MapView_CellItems_addr) + 0x2 + index * 4u)) & 0xFFFu;
     if (item == 0) return;
     g.flat_overlay(static_cast<int>((Dword(record) >> 24) - 0x10u), item);
 }
@@ -319,8 +319,8 @@ namespace {
 void PatchThen(unsigned char* record, U kind) {
     const U r = (Dword(record) & 0x00FFFFFFu) | kind;
     SetDword(record, r);
-    const U index = (r & 0xFFFFu) + (Dword(At(AreaMap_PatchBase_addr)) & 0xFFFFu);
-    g.apply_patch(At(AreaMap_Header_addr + index * 4u));
+    const U index = (r & 0xFFFFu) + (Dword(At(::bof3::Img(AreaMap_PatchBase_addr))) & 0xFFFFu);
+    g.apply_patch(At(::bof3::Img(AreaMap_Header_addr) + index * 4u));
 }
 }  // namespace
 extern "C" void __cdecl MapCell_PatchThenStep(unsigned char* record, unsigned, unsigned) { PatchThen(record, 0x25000000u); }
@@ -352,12 +352,12 @@ extern "C" void __cdecl MapCell_DrawAnimated(const unsigned char* record, unsign
     Prim_VertexScratch[0].z = Word(record + 4);
     long depth = 0;
     const auto p = static_cast<std::int32_t>(
-        g.rtp(Vertex(Prim_VertexScratch_addr), reinterpret_cast<unsigned long*>(At(MapView_ScreenXY_addr)), &depth));
+        g.rtp(Vertex(::bof3::Img(Prim_VertexScratch_addr)), reinterpret_cast<unsigned long*>(At(::bof3::Img(MapView_ScreenXY_addr))), &depth));
     const float cull = static_cast<float>(Widescreen_Fill());   // DIV-0041, as MapCell_DrawUprights
     if (!(MapView_ScreenXY[0] >= -60.0f - cull)) return;  // fcomp [0x5C4210]; test ah, 1
     if (MapView_ScreenXY[0] > 380.0f + cull) return;      // fcomp [0x5C420C]; test ah, 0x41
     if (!(MapView_ScreenXY[1] >= -150.0f)) return; // fcomp [0x5C4200]; test ah, 1
-    if (Float(kScreen0 + 4) > 300.0f) return;      // fcomp [0x5C41FC]; test ah, 0x41
+    if (Float(::bof3::Img(kScreen0) + 4) > 300.0f) return;      // fcomp [0x5C41FC]; test ah, 0x41
     if (p == 0) return;
     const U timing = Dword(record + 8);
     const U t = Dword(At(at::FrameCounterAt())) % (timing & 0xFFu);
@@ -415,11 +415,11 @@ extern "C" void __cdecl AreaMap_SetupTint(const unsigned char* entry) {
 // else their low words.
 extern "C" void __cdecl AreaMap_SetupFlatColours(const unsigned char* entry) {
     if (Byte(at::CondByteFFAt()) != 0) {
-        SetWord(At(kFlatColour0), Dword(entry + 4) >> 16);
-        SetWord(At(kFlatColour1), Dword(entry + 8) >> 16);
+        SetWord(At(::bof3::Img(kFlatColour0)), Dword(entry + 4) >> 16);
+        SetWord(At(::bof3::Img(kFlatColour1)), Dword(entry + 8) >> 16);
     } else {
-        SetWord(At(kFlatColour0), Word(entry + 4));
-        SetWord(At(kFlatColour1), Word(entry + 8));
+        SetWord(At(::bof3::Img(kFlatColour0)), Word(entry + 4));
+        SetWord(At(::bof3::Img(kFlatColour1)), Word(entry + 8));
     }
 }
 
@@ -431,13 +431,13 @@ extern "C" void __cdecl AreaMap_SetupFlatColours(const unsigned char* entry) {
 // * 2). All unchecked.
 extern "C" void __cdecl AreaMap_SetupTexture(const unsigned char* entry) {
     const U flag = Byte(at::CondByteFFAt());
-    const U width = Dword(At(AreaMap_Header_addr)) & 0xFFu;
+    const U width = Dword(At(::bof3::Img(AreaMap_Header_addr))) & 0xFFu;
     const U d = Dword(entry);
-    const U offset = Word(At(AreaMap_Header_addr + 0x2));
+    const U offset = Word(At(::bof3::Img(AreaMap_Header_addr) + 0x2));
     const U texture = Dword(entry + 4 + (flag == 0 ? 4 : 0));
-    const U tile = Word(At(AreaMap_Header_addr + ((d & 0xFFu) * width + ((d >> 8) & 0xFFu) + offset * 2u) * 2u));
+    const U tile = Word(At(::bof3::Img(AreaMap_Header_addr) + ((d & 0xFFu) * width + ((d >> 8) & 0xFFu) + offset * 2u) * 2u));
     const auto half = static_cast<std::int32_t>(static_cast<std::uint32_t>(AreaMap_Header[1]) * width + 1u) / 2;
-    SetDword(At(AreaMap_Header_addr + (static_cast<U>(half) + offset + tile) * 4u), texture);
+    SetDword(At(::bof3::Img(AreaMap_Header_addr) + (static_cast<U>(half) + offset + tile) * 4u), texture);
 }
 
 // --- the menu draws -------------------------------------------------------------------------
@@ -469,21 +469,21 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
     const U bl = lit ? 7u : 0u;
     U colour = bl;
     g.draw_box(x + 3, y + 3, 0x7D, 0x30, static_cast<int>(highlight), static_cast<unsigned char>(Config_WindowColour));
-    unsigned char* const record = At(CharacterRecords_addr + (member & 0xFFu) * kCharStride);
+    unsigned char* const record = At(::bof3::Img(CharacterRecords_addr) + (member & 0xFFu) * kCharStride);
     const U shade = lit ? 1u : ((record[0x10] >> 6) & 2u);
     g.item_icon(x + 0x56, y + 2, static_cast<int>(record[9]), static_cast<int>(shade));
     g.text_at(x + 0x14, y + 3, static_cast<int>(colour), 5, record);
-    char* const buffer = reinterpret_cast<char*>(At(kPrintBuf));
+    char* const buffer = reinterpret_cast<char*>(At(::bof3::Img(kPrintBuf)));
     const auto* const text = reinterpret_cast<const unsigned char*>(buffer);
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormat3d)), record[0xA]);
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(::bof3::Img(kFormat3d))), record[0xA]);
     g.font8(x + 0x16, y + 0x17, static_cast<int>(colour), text);
     const U flags = static_cast<U>(rv::As<records::CharRecord>(record)->status);
     U status = 0;
     if (flags & 0x80u) {
-        if (flags & 0x20u) status = (Byte(at::FrameCounterAt()) & 0x20u) ? kStatusText0 : kStatusText1;
-        else status = kStatusText0;
+        if (flags & 0x20u) status = (Byte(at::FrameCounterAt()) & 0x20u) ? ::bof3::Img(kStatusText0) : ::bof3::Img(kStatusText1);
+        else status = ::bof3::Img(kStatusText0);
     } else if (flags & 0x20u) {
-        status = kStatusText1;
+        status = ::bof3::Img(kStatusText1);
     }
     if (status != 0) g.tiny_font(x + 0x2E, y + 0x17, colour != 0 ? colour : 1u, 0x10, At(status));
     const U hp = static_cast<U>(rv::As<records::CharRecord>(record)->hp);
@@ -495,10 +495,10 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
     } else {
         colour = 7;
     }
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatLeft)), hp);
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(::bof3::Img(kFormatLeft))), hp);
     g.font8(x + 0x16, y + 0x1F, static_cast<int>(colour), text);
     colour = lit ? 7u : (record[0x1E] != 0 ? 4u : 0u);
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatRight)), static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_hp));
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(::bof3::Img(kFormatRight))), static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_hp));
     g.font8(x + 0x16, y + 0x1F, static_cast<int>(colour), text);
     colour = bl;
     if (!lit) {
@@ -508,11 +508,11 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
     } else {
         colour = 7;
     }
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatLeft)), static_cast<U>(rv::As<records::CharRecord>(record)->ap));
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(::bof3::Img(kFormatLeft))), static_cast<U>(rv::As<records::CharRecord>(record)->ap));
     g.font8(x + 0x16, y + 0x27, static_cast<int>(colour), text);
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatRight)), static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_ap));
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(::bof3::Img(kFormatRight))), static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_ap));
     g.font8(x + 0x16, y + 0x27, static_cast<int>(bl), text);
-    const U eax = g.pieces(x, y, At(Menu_MemberPieces_addr), 0);
+    const U eax = g.pieces(x, y, At(::bof3::Img(Menu_MemberPieces_addr)), 0);
     const U exp = static_cast<U>(rv::As<records::CharRecord>(record)->exp);
     const U level = (eax & 0xFFFFFF00u) | record[0xA];
     return g.exp_bar(x + 0x14, y + 0x12, member, level, exp);
@@ -551,22 +551,22 @@ extern "C" unsigned long __cdecl Menu_DrawCell8(unsigned x, unsigned y, unsigned
 // not see.
 extern "C" unsigned long __cdecl Menu_DrawPlayTime(int x, int y) {
     g.draw_box(x + 3, y + 3, 0x55, 0x10, 0, static_cast<unsigned char>(Config_WindowColour));
-    char* const buffer = reinterpret_cast<char*>(At(kPrintBuf));
+    char* const buffer = reinterpret_cast<char*>(At(::bof3::Img(kPrintBuf)));
     const auto* const text = reinterpret_cast<const unsigned char*>(buffer);
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormat02d)), Byte(kClockHours));
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(::bof3::Img(kFormat02d))), Byte(::bof3::Img(kClockHours)));
     g.font12(x + 0x1C, y + 4, 0, text);
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormat02d)), static_cast<std::uint32_t>(MapFieldObjects_ClockMinutes));
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(::bof3::Img(kFormat02d))), static_cast<std::uint32_t>(MapFieldObjects_ClockMinutes));
     g.font12(x + 0x3C, y + 4, 0, text);
     if (static_cast<std::uint32_t>(MapFieldObjects_ClockFrames) < 0xF) {
-        g.tiny_font(x + 0x34, y + 5, 0, 0xFF, At(kColonText));
-        g.tiny_font(x + 0x34, y + 9, 0, 0xFF, At(kColonText));
+        g.tiny_font(x + 0x34, y + 5, 0, 0xFF, At(::bof3::Img(kColonText)));
+        g.tiny_font(x + 0x34, y + 9, 0, 0xFF, At(::bof3::Img(kColonText)));
     }
-    U eax = g.pieces(x, y, At(Menu_PlayTimePieces_addr + 0x18), 0);
+    U eax = g.pieces(x, y, At(::bof3::Img(Menu_PlayTimePieces_addr) + 0x18), 0);
     for (U i = 0; i < 6; ++i) {
         const U index = (eax & 0xFFFF0000u) | i;
-        eax = g.pieces(static_cast<int>(static_cast<U>(x) + index * 8u + 0x18u), y, At(Menu_PlayTimePieces_addr), 0);
+        eax = g.pieces(static_cast<int>(static_cast<U>(x) + index * 8u + 0x18u), y, At(::bof3::Img(Menu_PlayTimePieces_addr)), 0);
     }
-    return g.pieces(x - 0x10, y, At(Menu_PlayTimePieces_addr + 0xc), 0);
+    return g.pieces(x - 0x10, y, At(::bof3::Img(Menu_PlayTimePieces_addr) + 0xc), 0);
 }
 
 // --- the event script ------------------------------------------------------------------------
@@ -606,7 +606,7 @@ extern "C" const unsigned char* __cdecl EventScript_SkipSwitch(const unsigned ch
 // value (the width the area block's byte 0). eax on the way out is the row
 // offset with the value in its low byte (imul; mov al), returned whole.
 extern "C" unsigned long __cdecl AreaMap_SetByte(unsigned long x, unsigned long z, unsigned value) {
-    const U row = (Dword(At(AreaMap_Header_addr)) & 0xFFu) * S16(static_cast<U>(z));
+    const U row = (Dword(At(::bof3::Img(AreaMap_Header_addr))) & 0xFFu) * S16(static_cast<U>(z));
     At(S16(static_cast<U>(x)) + Dword(At(at::BytesAt())) + row)[0] = static_cast<unsigned char>(value);
     return (row & 0xFFFFFF00u) | (value & 0xFFu);
 }
@@ -629,21 +629,21 @@ extern "C" unsigned long __cdecl AreaMap_SetByte(unsigned long x, unsigned long 
 extern "C" void __cdecl EventOp_8x(const unsigned char* op) {
     const U first = kScratchX.w_00;
     if (static_cast<std::int16_t>(first) >= 0x1E) return;
-    const U object = Sprite_Objects_addr + S16(first) * kObjectStride;
-    SetDword(At(Sprite_Current_addr), object);
-    SetDword(At(Field_ActiveMember_addr), object);
+    const U object = ::bof3::Img(Sprite_Objects_addr) + S16(first) * kObjectStride;
+    SetDword(At(::bof3::Img(Sprite_Current_addr)), object);
+    SetDword(At(::bof3::Img(Field_ActiveMember_addr)), object);
     kScratchBank = (static_cast<U>(op[1]) << 8) | op[2];
     g.obj_reset();
     g.set_bank(static_cast<std::uint32_t>(kScratchBank));
     rv::As<records::SpriteObject>(Sprite())->flags = 1;
     rv::Store<U>(rv::As<records::SpriteObject>(Sprite())->x, (static_cast<U>(op[5]) << 16) | (op[4] != 0 ? 0x8000u : 0u));
-    SetDword(At(Sprite_Objects_addr + 0x8c + static_cast<std::uint32_t>(static_cast<std::int16_t>(kScratchX.w_00)) * kObjectStride), static_cast<U>(rv::As<records::SpriteObject>(Sprite())->x));
+    SetDword(At(::bof3::Img(Sprite_Objects_addr) + 0x8c + static_cast<std::uint32_t>(static_cast<std::int16_t>(kScratchX.w_00)) * kObjectStride), static_cast<U>(rv::As<records::SpriteObject>(Sprite())->x));
     rv::Store<U>(rv::As<records::SpriteObject>(Sprite())->z, (static_cast<U>(op[7]) << 16) | (op[6] != 0 ? 0x8000u : 0u));
     {
         records::SpriteObject* const s = rv::As<records::SpriteObject>(Sprite());
         const U n = static_cast<std::uint32_t>(static_cast<std::int16_t>(kScratchX.w_00)) * kObjectStride;
-        SetDword(At(Sprite_Objects_addr + 0x90 + n), static_cast<U>(s->z));
-        SetDword(At(Sprite_Objects_addr + 0x94 + n), 0);
+        SetDword(At(::bof3::Img(Sprite_Objects_addr) + 0x90 + n), static_cast<U>(s->z));
+        SetDword(At(::bof3::Img(Sprite_Objects_addr) + 0x94 + n), 0);
         const long elevation = g.elevation(static_cast<long>(static_cast<U>(s->x)), static_cast<long>(static_cast<U>(s->z)));
         rv::Store<U>(rv::As<records::SpriteObject>(Sprite())->height_whole, static_cast<U>(elevation));
     }
@@ -653,9 +653,9 @@ extern "C" void __cdecl EventOp_8x(const unsigned char* op) {
     rv::As<records::SpriteObject>(Sprite())->type = static_cast<unsigned char>(op[0] >> 4);
     {
         const U n = static_cast<std::uint32_t>(static_cast<std::int16_t>(kScratchX.w_00)) * kObjectStride;
-        SetWord(At(Sprite_Objects_addr + 0x88 + n), 0xFFFF);
-        At(Sprite_Objects_addr + 0x84 + n)[0] = op[9];
-        At(Sprite_Objects_addr + 0xa0 + n)[0] = 0x7F;
+        SetWord(At(::bof3::Img(Sprite_Objects_addr) + 0x88 + n), 0xFFFF);
+        At(::bof3::Img(Sprite_Objects_addr) + 0x84 + n)[0] = op[9];
+        At(::bof3::Img(Sprite_Objects_addr) + 0xa0 + n)[0] = 0x7F;
     }
     g.set_flags(op + 0xB);
     if (op[3] & 0x80) rv::As<records::SpriteObject>(Sprite())->flags = static_cast<unsigned char>(rv::As<records::SpriteObject>(Sprite())->flags | 0x20);

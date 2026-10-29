@@ -54,9 +54,9 @@ template <typename T, typename F> T As(F* f) { return reinterpret_cast<T>(reinte
 const Callees kOriginals = {
     {FxDiscFan_Start, FxDiscFan_Grow, FxDiscFan_Fade},
     {Steal_Start, Steal_Wait, Steal_Report, MagicFx_EndWhenIdle},
-    {Fn<Handler>(kCloneSize), StealClone_Run, StealClone_Finish, Fn<Handler>(kCloneFree)},
-    {Sparkle_Spawn, Fn<Handler>(kSparkleTint), Fn<Handler>(kSparkleBrighten), Fn<Handler>(kSparkleThin), Sparkle_End,
-     Fn<Handler>(kSparkleDone)},
+    {Fn<Handler>(::bof3::Code(kCloneSize)), StealClone_Run, StealClone_Finish, Fn<Handler>(::bof3::Code(kCloneFree))},
+    {Sparkle_Spawn, Fn<Handler>(::bof3::Code(kSparkleTint)), Fn<Handler>(::bof3::Code(kSparkleBrighten)), Fn<Handler>(::bof3::Code(kSparkleThin)), Sparkle_End,
+     Fn<Handler>(::bof3::Code(kSparkleDone))},
     {Sparkle_Launch, Sparkle_Rise, Sparkle_Fade},
     BattleActor_UpdateScreenXY,
     MagicFx_DrawDisc,
@@ -73,7 +73,7 @@ const Callees kOriginals = {
     BattleActor_SetAnimation,
     Rand,
     Inventory_Add,
-    Fn<void (__cdecl*)(unsigned, unsigned)>(kItemName),
+    Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kItemName)),
     Msg_SystemPtr,
     BattleQueue_Push,
     Sprite_ScriptTickOnce,
@@ -103,14 +103,14 @@ std::int32_t PtrValue(const unsigned char* p) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)));
 }
 // A task slot by its index, unchecked as the originals index it.
-unsigned char* Task(unsigned index) { return At(BattleTask_Slots_addr + index * at::kTaskStride); }
+unsigned char* Task(unsigned index) { return At(::bof3::Img(BattleTask_Slots_addr) + index * at::kTaskStride); }
 unsigned char Byte(std::uint32_t address) { return At(address)[0]; }
 // An enemy by the battle index (3 and up), as the originals compute it: the
 // index's byte minus 3, times 0x128 - below the records for 0..2.
 unsigned char* Enemy(unsigned char index) {
-    return At(Battle_Enemies_addr + static_cast<std::uint32_t>((static_cast<int>(index) - 3) * static_cast<int>(at::kEnemyStride)));
+    return At(::bof3::Img(Battle_Enemies_addr) + static_cast<std::uint32_t>((static_cast<int>(index) - 3) * static_cast<int>(at::kEnemyStride)));
 }
-unsigned char* Party(unsigned char index) { return At(ObjTrio_addr + index * at::kPartyStride); }
+unsigned char* Party(unsigned char index) { return At(::bof3::Img(ObjTrio_addr) + index * at::kPartyStride); }
 // A .data dispatch table's entry, read as the original reads it.
 Handler Entry(std::uint32_t table, unsigned index) {
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(table + 4 * index)))));
@@ -162,7 +162,7 @@ MFX_EXPORT void __cdecl FxDiscFan_Task(void) {
 // writes past the slots); Sprite_Current is read again after each create;
 // the source pointer is read once.
 MFX_EXPORT void __cdecl FxDiscFan_Start(void) {
-    TakePosition(Ptr(at::kSource));
+    TakePosition(Ptr(::bof3::Img(at::kSource)));
     Sprite_Current[0xB] = 0;
     for (unsigned i = 0; i < 6; ++i) {
         const unsigned index = g.task_create(1, 0x16);
@@ -172,9 +172,9 @@ MFX_EXPORT void __cdecl FxDiscFan_Start(void) {
         t[9] = static_cast<unsigned char>(i * 6 + 1);
         Bump(sc[0xB], 1);
     }
-    for (std::uint32_t a = Gfx_ClutStrip_addr + 0x3400 + 2; a < (Gfx_ClutStrip_addr + 0x3400) + 0x20; a += 2)
+    for (std::uint32_t a = ::bof3::Img(Gfx_ClutStrip_addr) + 0x3400 + 2; a < (::bof3::Img(Gfx_ClutStrip_addr) + 0x3400) + 0x20; a += 2)
         SetWord(At(a), Word(At(a - 0x4000)) | 0x8000u);
-    const unsigned char target = Byte(at::kTarget);
+    const unsigned char target = Byte(::bof3::Img(at::kTarget));
     Gfx_ClutStrip[0x1a00] = 0;
     Gfx_ClutStripDirty = 1;
     g.set_target_flags(target, 0x10);
@@ -208,8 +208,8 @@ MFX_EXPORT void __cdecl FxDiscFan_Fade(void) {
         sc = Sprite_Current;
     }
     if (sc[0xB] != 0 || sc[0xA] != 0) return;
-    g.set_target_flag40(Byte(at::kTarget));
-    At(at::kFlags)[0] = static_cast<unsigned char>(At(at::kFlags)[0] | 4);
+    g.set_target_flag40(Byte(::bof3::Img(at::kTarget)));
+    At(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kFlags))[0] | 4);
     g.free_current();
 }
 
@@ -218,7 +218,7 @@ MFX_EXPORT void __cdecl FxDiscFan_Fade(void) {
 // 0x4AD300 never reached: phase 2 frees the task), then while it lives and
 // is past its wait (+0 and +1 not zero) the ring under the actor's matrix.
 MFX_EXPORT void __cdecl FxRing_Task(void) {
-    Entry(FxRing_Phases_addr, Sprite_Current[1])();
+    Entry(::bof3::Img(FxRing_Phases_addr), Sprite_Current[1])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[1] == 0) return;
     g.push_matrix();
@@ -233,9 +233,9 @@ MFX_EXPORT void __cdecl FxRing_Wait(void) {
     unsigned char* const sc = Sprite_Current;
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     if (sc[9] != 0) return;
-    tsc->x = rv::As<records::SpriteHead>(Ptr(at::kOwner))->x;
-    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Ptr(at::kOwner))->z);
-    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Ptr(at::kOwner))->height);
+    tsc->x = rv::As<records::SpriteHead>(Ptr(::bof3::Img(at::kOwner)))->x;
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Ptr(::bof3::Img(at::kOwner)))->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Ptr(::bof3::Img(at::kOwner)))->height);
     Sprite_Current[9] = 0x40;
     Sprite_Current[0xA] = 0;
     Sprite_Current[0xB] = 0;
@@ -260,7 +260,7 @@ MFX_EXPORT void __cdecl FxRing_Fade(void) {
     Bump(Sprite_Current[0xA], -3);
     Bump(Sprite_Current[9], -2);
     if (Sprite_Current[9] != 0) return;
-    Bump(Ptr(at::kOwner)[0xB], -1);
+    Bump(Ptr(::bof3::Img(at::kOwner))[0xB], -1);
     g.free_current();
 }
 
@@ -315,7 +315,7 @@ int StealMultiplier(int diff) {
 // row is unbounded; the target byte is read again after Rand and after
 // Inventory_Add; Inventory_Add gets a fourth 0 it does not read.
 MFX_EXPORT void __cdecl Steal_Start(void) {
-    TakePosition(Ptr(at::kOwner));
+    TakePosition(Ptr(::bof3::Img(at::kOwner)));
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0x1E;
     Bump(Sprite_Current[1], 1);
@@ -323,7 +323,7 @@ MFX_EXPORT void __cdecl Steal_Start(void) {
     const unsigned index = g.task_create(1, 0x45);
     unsigned char* const sc = Sprite_Current;
     unsigned char* const t = Task(index);
-    const unsigned char actor = Byte(at::kActor);
+    const unsigned char actor = Byte(::bof3::Img(at::kActor));
     SetLong(t + 0x80, PtrValue(sc));
     {
         const unsigned char* const from = Party(actor);
@@ -334,16 +334,16 @@ MFX_EXPORT void __cdecl Steal_Start(void) {
     t[6] = 1;
     t[5] = 0x45;
     Bump(sc[0xB], 1);
-    unsigned char* const owner = Ptr(at::kOwner);
+    unsigned char* const owner = Ptr(::bof3::Img(at::kOwner));
     owner[0] = static_cast<unsigned char>(owner[0] | 0x40);
 
-    const unsigned char* enemy = Enemy(Byte(at::kTarget));
-    const int diff = static_cast<int>(Word(Party(Byte(at::kActor)) + at::kThiefSpeed)) -
+    const unsigned char* enemy = Enemy(Byte(::bof3::Img(at::kTarget)));
+    const int diff = static_cast<int>(Word(Party(Byte(::bof3::Img(at::kActor))) + at::kThiefSpeed)) -
                      static_cast<int>(Word(enemy + at::kEnemySpeed));
     const int multiplier = StealMultiplier(diff);
     const int rate = Steal_RateTable[enemy[at::kStealRate]];
     const int r = g.rand();
-    unsigned char* const e = Enemy(Byte(at::kTarget));
+    unsigned char* const e = Enemy(Byte(::bof3::Img(at::kTarget)));
     // DIV-0046 (BOF3X_STEAL=1): the mask is 0 when the cheat's patch is in
     // the original's `and eax, 0xFF` at 0x4B5690 - the roll then passes
     // whenever the rate times the multiplier is above 0.
@@ -363,7 +363,7 @@ MFX_EXPORT void __cdecl Steal_Start(void) {
     }
     Sprite_Current[0xA] = 0x38;
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, item);
-    unsigned char* const e2 = Enemy(Byte(at::kTarget));
+    unsigned char* const e2 = Enemy(Byte(::bof3::Img(at::kTarget)));
     e2[at::kStealRate] = 0;
     SetWord(e2 + at::kStealItem, 0);
 }
@@ -376,7 +376,7 @@ MFX_EXPORT void __cdecl Steal_Wait(void) {
     if (sc[0xB] != 0) return;
     if (sc[9] == 0x1E) {
         g.set_animation(4, 0);
-        unsigned char* const owner = Ptr(at::kOwner);
+        unsigned char* const owner = Ptr(::bof3::Img(at::kOwner));
         owner[0] = static_cast<unsigned char>(owner[0] & 0xBF);
         sc = Sprite_Current;
     }
@@ -409,14 +409,14 @@ MFX_EXPORT void __cdecl Steal_Report(void) {
 // freed (a tail jmp in the original).
 MFX_EXPORT void __cdecl MagicFx_EndWhenIdle(void) {
     if (BattleE1_MessageUp != 0) return;
-    At(at::kFlags)[0] = static_cast<unsigned char>(At(at::kFlags)[0] | 4);
+    At(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kFlags))[0] | 4);
     g.free_current();
 }
 
 // original 0x4B5810: the thief's double (kind 1, parameter 0x45): a jmp
 // through StealClone_Types 0x65AC28 by +1, read in place, unchecked (two
 // entries; +1 stays 0 - Steal_Start clears it and nothing steps it).
-MFX_EXPORT void __cdecl StealClone_Dispatch(void) { Entry(StealClone_Types_addr, Sprite_Current[1])(); }
+MFX_EXPORT void __cdecl StealClone_Dispatch(void) { Entry(::bof3::Img(StealClone_Types_addr), Sprite_Current[1])(); }
 
 // original 0x4B5830: the double's type 0. Its phase +2 through a four-entry
 // table on the original's stack (0x4ED5C0 its size, StealClone_Run,
@@ -443,8 +443,8 @@ MFX_EXPORT void __cdecl StealClone_Run(void) {
 // flag 0x40, the owner's count +0xB down and the phase +2 on.
 MFX_EXPORT void __cdecl StealClone_Finish(void) {
     if (g.script_tick_once() == 0) return;
-    g.set_target_flag40(Byte(at::kTarget));
-    Bump(Ptr(at::kOwner)[0xB], -1);
+    g.set_target_flag40(Byte(::bof3::Img(at::kTarget)));
+    Bump(Ptr(::bof3::Img(at::kOwner))[0xB], -1);
     Bump(Sprite_Current[2], 1);
 }
 
@@ -464,7 +464,7 @@ MFX_EXPORT void __cdecl Sparkle_Task(void) {
     g.sparkle_task[phase]();
     const std::int32_t saved = static_cast<std::int32_t>(BattleE2_Owner);
     for (unsigned i = 0; i < at::kSparkles; ++i) {
-        unsigned char* const s = At(at::kSparklePool + i * at::kSparkleStride);
+        unsigned char* const s = At(::bof3::Img(at::kSparklePool) + i * at::kSparkleStride);
         if ((s[0] & 1) == 0) continue;
         BattleItems_SparkleCurrent = PtrValue(s);
         BattleE2_Owner = Long(s + 0x28);
@@ -486,13 +486,13 @@ MFX_EXPORT void __cdecl Sparkle_Task(void) {
 // read again after each call; the loop's bound is re-read each round.
 MFX_EXPORT void __cdecl Sparkle_Spawn(void) {
     for (unsigned i = 0; i < at::kSparkles; ++i) {
-        unsigned char* const s = At(at::kSparklePool + i * at::kSparkleStride);
+        unsigned char* const s = At(::bof3::Img(at::kSparklePool) + i * at::kSparkleStride);
         s[0] = 0;
         s[1] = 0;
         s[2] = 0;
     }
     Sprite_Current[4] = 0;
-    TakePosition(Ptr(at::kSource));
+    TakePosition(Ptr(::bof3::Img(at::kSource)));
     g.update_screen_xy();
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 8;
@@ -503,7 +503,7 @@ MFX_EXPORT void __cdecl Sparkle_Spawn(void) {
         do {
             const unsigned char a = g.sparkle_alloc();
             if (a != 0xFF) {
-                unsigned char* const s = At(at::kSparklePool + a * at::kSparkleStride);
+                unsigned char* const s = At(::bof3::Img(at::kSparklePool) + a * at::kSparkleStride);
                 SetLong(s + 0x28, PtrValue(Sprite_Current));
                 s[1] = 0;
                 s[2] = 0;
@@ -528,13 +528,13 @@ MFX_EXPORT void __cdecl Sparkle_Spawn(void) {
 MFX_EXPORT void __cdecl Sparkle_End(void) {
     unsigned char* const sc = Sprite_Current;
     for (unsigned k = 2; k <= 4; ++k) {
-        unsigned char* const tint = At(MoveScript_TintRecords_addr + sc[0xA] * 12u + k);
+        unsigned char* const tint = At(::bof3::Img(MoveScript_TintRecords_addr) + sc[0xA] * 12u + k);
         Bump(*tint, -1);
     }
     Bump(sc[9], -1);
     if (Sprite_Current[9] != 0) return;
-    g.release_tint(Ptr(at::kSource));
-    g.flash(Byte(at::kTarget));
+    g.release_tint(Ptr(::bof3::Img(at::kSource)));
+    g.flash(Byte(::bof3::Img(at::kTarget)));
     Bump(Sprite_Current[1], 1);
 }
 
@@ -553,16 +553,16 @@ MFX_EXPORT void __cdecl Sparkle_End(void) {
 // As the original has it: the rays' arguments are pushed with stale upper
 // halves (their callees read the low words).
 MFX_EXPORT void __cdecl Sparkle_Update(void) {
-    const unsigned phase = Ptr(at::kSparkleCurrent)[2];
+    const unsigned phase = Ptr(::bof3::Img(at::kSparkleCurrent))[2];
     if (phase >= 3) bof3::Fatal("Sparkle_Update: phase %u, past the three-entry table", phase);
     g.sparkle[phase]();
-    const unsigned char* c = Ptr(at::kSparkleCurrent);
+    const unsigned char* c = Ptr(::bof3::Img(at::kSparkleCurrent));
     if ((c[0] & 1) == 0 || c[2] == 0) return;
     g.sparkle_disc();
-    c = Ptr(at::kSparkleCurrent);
+    c = Ptr(::bof3::Img(at::kSparkleCurrent));
     if ((c[0xC] & 3) == 0) return;
     g.rays_g2(Frame_Counter >> 1, c[6]);
-    c = Ptr(at::kSparkleCurrent);
+    c = Ptr(::bof3::Img(at::kSparkleCurrent));
     const unsigned radius = c[6];
     g.rays_g3((Frame_Counter >> 1) + 4, (radius >> 1) + radius);
 }
@@ -573,7 +573,7 @@ MFX_EXPORT void __cdecl Sparkle_Update(void) {
 // original 0x4FAFF0: the dim task (kind 1, parameter 0x43): a jmp through
 // FxDim_Phases 0x65C3A0 by +1, read in place, unchecked (entry 0 is
 // 0x4332E0, group CE's; the fifth word is 0).
-MFX_EXPORT void __cdecl FxDim_Dispatch(void) { Entry(FxDim_Phases_addr, Sprite_Current[1])(); }
+MFX_EXPORT void __cdecl FxDim_Dispatch(void) { Entry(::bof3::Img(FxDim_Phases_addr), Sprite_Current[1])(); }
 
 // original 0x4FB010: +9 down; at -6 the phase on; the map's CLUTs tinted by
 // +9 (signed).
@@ -587,7 +587,7 @@ MFX_EXPORT void __cdecl FxDim_Down(void) {
 // original 0x4FB050: held until 0x904AA8 bit 2 (the effect is done), then
 // the phase on.
 MFX_EXPORT void __cdecl FxDim_Hold(void) {
-    if (At(at::kFlags)[0] & 4) Bump(Sprite_Current[1], 1);
+    if (At(::bof3::Img(at::kFlags))[0] & 4) Bump(Sprite_Current[1], 1);
 }
 
 // original 0x4FB070: +9 up; at 0 the task freed; the CLUTs tinted by +9

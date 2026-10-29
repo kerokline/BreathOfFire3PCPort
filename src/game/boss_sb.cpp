@@ -116,11 +116,11 @@ void Setup(U end, U exit, U event) {
 // The event hooks' shared cases (the same code in B04, B05, B06 and B07).
 // Phase 0: with round-flag bit 0x40 and the target 0, 0x904AAD bit 0.
 void EventRoundFlag() {
-    if ((B(0x904AA8) & 0x40) && B(at::kTarget) == 0) BossSe_Script |= 1;
+    if ((B(::bof3::Img(0x904AA8)) & 0x40) && B(::bof3::Img(at::kTarget.v)) == 0) BossSe_Script |= 1;
 }
 // The action phase's test: actor 0, command kind 4, command id 0x78.
 bool LeaderCommand78() {
-    if (B(at::kActor) != 0 || B(at::kCommandKind) != 4) return false;
+    if (B(::bof3::Img(at::kActor.v)) != 0 || B(::bof3::Img(at::kCommandKind.v)) != 4) return false;
     return Word(At(BattleSprites_Action) + 2) == 0x78;
 }
 // Phase 3: the leader's HP 0 clears its +0x134 bit 1.
@@ -131,11 +131,11 @@ void EventLeaderDown() {
 // target 0x40, and the battle's command kind and target the same.
 void EventLeaderCommand() {
     if (!(BossSe_Script & 1)) return;
-    SetWord(At(ObjTrio_addr + 0x126), 0x78);
+    SetWord(At(::bof3::Img(ObjTrio_addr) + 0x126), 0x78);
     rv::Bytes(ObjTrio)[0x125] = 4;
-    B(at::kCommandKind) = 4;
+    B(::bof3::Img(at::kCommandKind.v)) = 4;
     rv::Bytes(ObjTrio)[0x124] = 0x40;
-    B(at::kTarget) = 0x40;
+    B(::bof3::Img(at::kTarget.v)) = 0x40;
 }
 
 // The event hook of set-ups 4, 5 and 6 (three copies of one body).
@@ -166,12 +166,12 @@ void EndChapter(unsigned char pick) {
     if (Battle_EndFlags & 1) {
         BossH_LeaderPick = pick;
         EventBattle_Flags |= 0x80;
-        BH_AT(Handler, at::kEndThird)();
+        BH_AT(Handler, at::kEndThird.v)();
         MoveScript_PartyRecords[0x65] = 0x32;
         return;
     }
     MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(MoveScript_PartyRecords[0x65] + 1);
-    BH_AT(Handler, at::kEndThird)();
+    BH_AT(Handler, at::kEndThird.v)();
 }
 
 // BossActor_Find(tag) into Sprite_Current. The original writes through the
@@ -210,8 +210,8 @@ void ExitPosePair(unsigned tag0, unsigned char flip) {
         BH_CALL(BossActor_ClearBit40)(tag0 + 1);
         return;
     }
-    PoseActor(tag0, Battle_Enemies_addr, BossSb_Enemy0Pose_addr, flip);
-    PoseActor(tag0 + 1, Battle_Enemies_addr + 0x128, BossSb_Enemy1Pose_addr, flip);
+    PoseActor(tag0, ::bof3::Img(Battle_Enemies_addr), ::bof3::Img(BossSb_Enemy0Pose_addr), flip);
+    PoseActor(tag0 + 1, ::bof3::Img(Battle_Enemies_addr) + 0x128, ::bof3::Img(BossSb_Enemy1Pose_addr), flip);
 }
 
 // The exit hook of set-ups 8, 9, 10: actor `tag` shown, found, bank 0x83,
@@ -230,11 +230,11 @@ void ExitPoseOne(unsigned tag, bool flip) {
 // script's variable 3 = `var`, 0x446DE0; otherwise 0x446E00.
 void EndVar(unsigned char var) {
     if (Battle_EndFlags & 2) {
-        B(at::kScriptVar3) = var;
-        BH_AT(Handler, at::kEndWin)();
+        B(::bof3::Img(at::kScriptVar3.v)) = var;
+        BH_AT(Handler, at::kEndWin.v)();
         return;
     }
-    BH_AT(Handler, at::kEndOther)();
+    BH_AT(Handler, at::kEndOther.v)();
 }
 
 }  // namespace
@@ -252,7 +252,7 @@ extern "C" unsigned long __cdecl BossEngineer_Dispatch(unsigned word) {
 // original 0x4382B0: state 0: +0xFC = BossEngineer_Anims, +0xF4 =
 // BossEngineer_Hook, +0xF8 = BossEngineer_Cues; +1 = 2; Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossEngineer_Enter(void) {
-    return Enter(AddressOf(BossEngineer_Anims), bof3::addr::BossEngineer_Hook, AddressOf(BossEngineer_Cues));
+    return Enter(AddressOf(BossEngineer_Anims), ::bof3::Code(bof3::addr::BossEngineer_Hook), AddressOf(BossEngineer_Cues));
 }
 
 // original 0x4382F0: BossEngineer_Steps 6: by +2 through BossEngineer_ActSubs
@@ -316,7 +316,7 @@ extern "C" unsigned long __cdecl BossEngineer_Hook(unsigned word) {
 
 // original 0x438430: Boss_SetupTable[4]: End Boss04_End, Exit Boss04_Exit,
 // Event Boss04_Event.
-extern "C" void __cdecl Boss04_Setup(void) { Setup(bof3::addr::Boss04_End, bof3::addr::Boss04_Exit, bof3::addr::Boss04_Event); }
+extern "C" void __cdecl Boss04_Setup(void) { Setup(::bof3::Code(bof3::addr::Boss04_End), ::bof3::Code(bof3::addr::Boss04_Exit), ::bof3::Code(bof3::addr::Boss04_Event)); }
 
 // original 0x438450: set-up 4's event hook: by the phase code's low byte, a
 // jump table of 7 (past 6 nothing) - 0: with 0x904AA8 bit 0x40 and the
@@ -339,7 +339,7 @@ extern "C" void __cdecl Boss04_Exit(void) { ExitPosePair(0, 1); }
 extern "C" void __cdecl Boss04_End(void) { EndChapter(7); }
 
 // original 0x438650: Boss_SetupTable[5].
-extern "C" void __cdecl Boss05_Setup(void) { Setup(bof3::addr::Boss05_End, bof3::addr::Boss05_Exit, bof3::addr::Boss05_Event); }
+extern "C" void __cdecl Boss05_Setup(void) { Setup(::bof3::Code(bof3::addr::Boss05_End), ::bof3::Code(bof3::addr::Boss05_Exit), ::bof3::Code(bof3::addr::Boss05_Event)); }
 
 // original 0x438670: set-up 5's event hook, the body of Boss04_Event.
 extern "C" unsigned char __cdecl Boss05_Event(unsigned code) { return Kind3Event(code); }
@@ -351,7 +351,7 @@ extern "C" void __cdecl Boss05_End(void) { EndChapter(8); }
 extern "C" void __cdecl Boss05_Exit(void) { ExitPosePair(2, 0); }
 
 // original 0x4388B0: Boss_SetupTable[6] (its end hook Boss04_End).
-extern "C" void __cdecl Boss06_Setup(void) { Setup(bof3::addr::Boss04_End, bof3::addr::Boss06_Exit, bof3::addr::Boss06_Event); }
+extern "C" void __cdecl Boss06_Setup(void) { Setup(::bof3::Code(bof3::addr::Boss04_End), ::bof3::Code(bof3::addr::Boss06_Exit), ::bof3::Code(bof3::addr::Boss06_Event)); }
 
 // original 0x4388D0: set-up 6's event hook, the body of Boss04_Event.
 extern "C" unsigned char __cdecl Boss06_Event(unsigned code) { return Kind3Event(code); }
@@ -365,8 +365,8 @@ extern "C" void __cdecl Boss06_Exit(void) {
         BH_CALL(BossActor_ClearBit40)(5);
         return;
     }
-    PoseActor(4, Battle_Enemies_addr, BossSb_Enemy0Pose_addr, 1);
-    PoseActor(5, Battle_Enemies_addr + 0x128, BossSb_Enemy1Pose_addr, 1);
+    PoseActor(4, ::bof3::Img(Battle_Enemies_addr), ::bof3::Img(BossSb_Enemy0Pose_addr), 1);
+    PoseActor(5, ::bof3::Img(Battle_Enemies_addr) + 0x128, ::bof3::Img(BossSb_Enemy1Pose_addr), 1);
     SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(BossSb_Enemy1Place));
     SetLong(Sprite_Current + 0x38, Battle_Enemies[1].z);
     SetLong(Sprite_Current + 0x3C, Battle_Enemies[1].height);
@@ -384,7 +384,7 @@ extern "C" unsigned long __cdecl BossWorker_Dispatch(unsigned word) {
 // original 0x438B50: state 0: +0xFC = BossWorker_Anims, +0xF4 =
 // BossWorker_Hook, +0xF8 = BossWorker_Cues; +1 = 2; Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossWorker_Enter(void) {
-    return Enter(AddressOf(BossWorker_Anims), bof3::addr::BossWorker_Hook, AddressOf(BossWorker_Cues));
+    return Enter(AddressOf(BossWorker_Anims), ::bof3::Code(bof3::addr::BossWorker_Hook), AddressOf(BossWorker_Cues));
 }
 
 // original 0x438B90: kind 4's +0xF4 hook through BossWorker_Hooks (3, BareRet).
@@ -401,7 +401,7 @@ extern "C" unsigned long __cdecl BossOperator_Dispatch(unsigned word) {
 // BossOperator_Hook, +0xF8 = BossOperator_Cues; Sprite_Current +8 = 0, +1 =
 // 2; Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossOperator_Enter(void) {
-    StoreTables(AddressOf(BossOperator_Anims), bof3::addr::BossOperator_Hook, AddressOf(BossOperator_Cues));
+    StoreTables(AddressOf(BossOperator_Anims), ::bof3::Code(bof3::addr::BossOperator_Hook), AddressOf(BossOperator_Cues));
     rv::Current<records::BattleEnemy>()->layout = 0;
     rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
@@ -423,7 +423,7 @@ extern "C" void __cdecl BossOperator_HookHit(unsigned) { SetWord(At(BattleSprite
 // ===========================================================================
 
 // original 0x438C30: Boss_SetupTable[7].
-extern "C" void __cdecl Boss07_Setup(void) { Setup(bof3::addr::Boss07_End, bof3::addr::Boss07_Exit, bof3::addr::Boss07_Event); }
+extern "C" void __cdecl Boss07_Setup(void) { Setup(::bof3::Code(bof3::addr::Boss07_End), ::bof3::Code(bof3::addr::Boss07_Exit), ::bof3::Code(bof3::addr::Boss07_Event)); }
 
 // original 0x438C50: set-up 7's event hook, by the phase code's low byte (a
 // jump table of 7; past 6 nothing): 0, 3, 5 and 6 as Boss04_Event's; 1: on
@@ -441,13 +441,13 @@ extern "C" unsigned char __cdecl Boss07_Event(unsigned code) {
         if (LeaderCommand78()) {
             Battle_EndFlags |= 4;
             rv::Bytes(ObjTrio)[0x134] &= 0xFD;
-            char* const text = reinterpret_cast<char*>(At(at::kBannerText));
-            BH_CALL(Str_CopyN)(text, reinterpret_cast<const char*>(At(at::kBannerSource)), 0x10);
+            char* const text = reinterpret_cast<char*>(At(::bof3::Img(at::kBannerText.v)));
+            BH_CALL(Str_CopyN)(text, reinterpret_cast<const char*>(At(::bof3::Img(at::kBannerSource.v))), 0x10);
             BH_CALL(BattleBanner_Add)(1, 1, 0, 0x1E, text);
             WindowRecords[4].state = 1;
-            Sprite_Current = At(ObjTrio_addr);
+            Sprite_Current = At(::bof3::Img(ObjTrio_addr));
             BH_CALL(Sprite_SetAnimation)(0x2C);
-            B(at::kPhase) = 4;
+            B(::bof3::Img(at::kPhase.v)) = 4;
             BossSb_Countdown = 0x3C;
             BattleActions_Step = 2;
         }
@@ -485,7 +485,7 @@ extern "C" void __cdecl Boss07_End(void) {
         Battle_EndFlags = end;
         Music_Track = 4;
     }
-    BH_AT(Handler, at::kEndThird)();
+    BH_AT(Handler, at::kEndThird.v)();
 }
 
 // original 0x438E30: the exit hook of set-ups 7 and 13: bit 0x40 of actors 0
@@ -497,19 +497,19 @@ extern "C" void __cdecl Boss07_Exit(void) {
 
 // original 0x439FE0: Boss_SetupTable[13]: End Boss13_End, Exit Boss07_Exit,
 // Event BareRetZero.
-extern "C" void __cdecl Boss13_Setup(void) { Setup(bof3::addr::Boss13_End, bof3::addr::Boss07_Exit, bof3::addr::BareRetZero); }
+extern "C" void __cdecl Boss13_Setup(void) { Setup(::bof3::Code(bof3::addr::Boss13_End), ::bof3::Code(bof3::addr::Boss07_Exit), ::bof3::Code(bof3::addr::BareRetZero)); }
 
 // original 0x43A000: set-up 13's end hook: the movement script's variable 3
 // = 0x32; the win (0x904AE8 bit 1, read before) - 0x446DE0; otherwise
 // 0x446E20, then 0x92BF18 = 3.
 extern "C" void __cdecl Boss13_End(void) {
     const unsigned char end = Battle_EndFlags;
-    B(at::kScriptVar3) = 0x32;
+    B(::bof3::Img(at::kScriptVar3.v)) = 0x32;
     if (end & 2) {
-        BH_AT(Handler, at::kEndWin)();
+        BH_AT(Handler, at::kEndWin.v)();
         return;
     }
-    BH_AT(Handler, at::kEndThird)();
+    BH_AT(Handler, at::kEndThird.v)();
     BossH_LeaderPick = 3;
 }
 
@@ -525,7 +525,7 @@ extern "C" unsigned long __cdecl BossTorast_Dispatch(unsigned word) {
 // original 0x438E70: kind 8's state 0: +0xFC = BossTorast_Anims, +0xF4 =
 // BossTorast_Hook, +0xF8 = BossTorast_Cues; +1 = 2; Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossTorast_Enter(void) {
-    return Enter(AddressOf(BossTorast_Anims), bof3::addr::BossTorast_Hook, AddressOf(BossTorast_Cues));
+    return Enter(AddressOf(BossTorast_Anims), ::bof3::Code(bof3::addr::BossTorast_Hook), AddressOf(BossTorast_Cues));
 }
 // original 0x4390E0: kind 8's +0xF4 hook through BossTorast_Hooks (3, BareRet).
 extern "C" unsigned long __cdecl BossTorast_Hook(unsigned word) {
@@ -538,7 +538,7 @@ extern "C" unsigned long __cdecl BossKassen_Dispatch(unsigned word) {
 }
 // original 0x439110: kind 9's state 0: kind 8's tables, +0xF4 = BossKassen_Hook.
 extern "C" unsigned char __cdecl BossKassen_Enter(void) {
-    return Enter(AddressOf(BossTorast_Anims), bof3::addr::BossKassen_Hook, AddressOf(BossTorast_Cues));
+    return Enter(AddressOf(BossTorast_Anims), ::bof3::Code(bof3::addr::BossKassen_Hook), AddressOf(BossTorast_Cues));
 }
 // original 0x439150: kind 9's +0xF4 hook through BossKassen_Hooks (3, BareRet).
 extern "C" unsigned long __cdecl BossKassen_Hook(unsigned word) {
@@ -551,7 +551,7 @@ extern "C" unsigned long __cdecl BossGaltel_Dispatch(unsigned word) {
 }
 // original 0x439180: kind 10's state 0: kind 8's tables, +0xF4 = BossGaltel_Hook.
 extern "C" unsigned char __cdecl BossGaltel_Enter(void) {
-    return Enter(AddressOf(BossTorast_Anims), bof3::addr::BossGaltel_Hook, AddressOf(BossTorast_Cues));
+    return Enter(AddressOf(BossTorast_Anims), ::bof3::Code(bof3::addr::BossGaltel_Hook), AddressOf(BossTorast_Cues));
 }
 // original 0x4391C0: kind 10's +0xF4 hook through BossGaltel_Hooks (3, BareRet).
 extern "C" unsigned long __cdecl BossGaltel_Hook(unsigned word) {
@@ -564,7 +564,7 @@ extern "C" unsigned long __cdecl BossDoksen_Dispatch(unsigned word) {
 }
 // original 0x4391F0: kind 11's state 0: kind 8's tables, +0xF4 = BossDoksen_Hook.
 extern "C" unsigned char __cdecl BossDoksen_Enter(void) {
-    return Enter(AddressOf(BossTorast_Anims), bof3::addr::BossDoksen_Hook, AddressOf(BossTorast_Cues));
+    return Enter(AddressOf(BossTorast_Anims), ::bof3::Code(bof3::addr::BossDoksen_Hook), AddressOf(BossTorast_Cues));
 }
 // original 0x439230: kind 11's +0xF4 hook through BossDoksen_Hooks (3, BareRet).
 extern "C" unsigned long __cdecl BossDoksen_Hook(unsigned word) {
@@ -576,7 +576,7 @@ extern "C" unsigned long __cdecl BossDoksen_Hook(unsigned word) {
 // ===========================================================================
 
 // original 0x439240: Boss_SetupTable[8]: Event BareRetZero.
-extern "C" void __cdecl Boss08_Setup(void) { Setup(bof3::addr::Boss08_End, bof3::addr::Boss08_Exit, bof3::addr::BareRetZero); }
+extern "C" void __cdecl Boss08_Setup(void) { Setup(::bof3::Code(bof3::addr::Boss08_End), ::bof3::Code(bof3::addr::Boss08_Exit), ::bof3::Code(bof3::addr::BareRetZero)); }
 // original 0x439260: set-up 8's end hook: the win - variable 3 = 0x11, 0x446DE0;
 // otherwise 0x446E00.
 extern "C" void __cdecl Boss08_End(void) { EndVar(0x11); }
@@ -585,14 +585,14 @@ extern "C" void __cdecl Boss08_End(void) { EndVar(0x11); }
 extern "C" void __cdecl Boss08_Exit(void) { ExitPoseOne(0, false); }
 
 // original 0x4392D0: Boss_SetupTable[9].
-extern "C" void __cdecl Boss09_Setup(void) { Setup(bof3::addr::Boss09_End, bof3::addr::Boss09_Exit, bof3::addr::BareRetZero); }
+extern "C" void __cdecl Boss09_Setup(void) { Setup(::bof3::Code(bof3::addr::Boss09_End), ::bof3::Code(bof3::addr::Boss09_Exit), ::bof3::Code(bof3::addr::BareRetZero)); }
 // original 0x4392F0: set-up 9's end hook: variable 3 = 0x20 on the win.
 extern "C" void __cdecl Boss09_End(void) { EndVar(0x20); }
 // original 0x439310: set-up 9's exit hook: actor 1, the flip 1, enemy 0's words.
 extern "C" void __cdecl Boss09_Exit(void) { ExitPoseOne(1, true); }
 
 // original 0x439370: Boss_SetupTable[10].
-extern "C" void __cdecl Boss10_Setup(void) { Setup(bof3::addr::Boss10_End, bof3::addr::Boss10_Exit, bof3::addr::BareRetZero); }
+extern "C" void __cdecl Boss10_Setup(void) { Setup(::bof3::Code(bof3::addr::Boss10_End), ::bof3::Code(bof3::addr::Boss10_Exit), ::bof3::Code(bof3::addr::BareRetZero)); }
 // original 0x439390: set-up 10's end hook: variable 3 = 0x30 on the win.
 extern "C" void __cdecl Boss10_End(void) { EndVar(0x30); }
 // original 0x4393B0: set-up 10's exit hook: actor 2, the flip 1, enemy 0's words.

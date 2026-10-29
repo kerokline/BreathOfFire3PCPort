@@ -68,17 +68,17 @@ std::uint32_t Hash() {
 
 // The cells a store or a re-read could be moved across a call on.
 const U kWatched[] = {
-    BattleE1_Mode_addr, FieldS_State_addr, FieldS_Step_addr, at::kCount, FieldS_Answer_addr, ModeStates_ShopObject_addr, AreaW3c_Load0F_addr, ShopStates_Clear0A_addr,
-    ScenaSc1_ShopByteB_addr, ShopStates_Choice_addr, ShopStates_Cancelled_addr, Rest2c_SaveBack_addr, ShopStates_InnFlag_addr, Config_WindowColour_addr, at::kMsgFlags,
+    BattleE1_Mode_addr, FieldS_State_addr, FieldS_Step_addr, at::kCount.v, FieldS_Answer_addr, ModeStates_ShopObject_addr, AreaW3c_Load0F_addr, ShopStates_Clear0A_addr,
+    ScenaSc1_ShopByteB_addr, ShopStates_Choice_addr, ShopStates_Cancelled_addr, Rest2c_SaveBack_addr, ShopStates_InnFlag_addr, Config_WindowColour_addr, at::kMsgFlags.v,
     Transition_Busy_addr, Input_Pressed_addr, Input_Pressed_addr + 1, Field_ConfirmButtons_addr, Field_ConfirmButtons_addr + 1, Field_CancelButtons_addr, Field_CancelButtons_addr + 1,
-    Party_Zenny_addr, Party_Zenny_addr + 1, Rest2c_Slot_addr, at::kSlotTop, at::kRepeatLatch, ItemUse_RepeatTimer_addr, Game_Step_addr,
+    Party_Zenny_addr, Party_Zenny_addr + 1, Rest2c_Slot_addr, at::kSlotTop.v, at::kRepeatLatch.v, ItemUse_RepeatTimer_addr, Game_Step_addr,
     Field_ScriptFlags_addr + 1,
 };
 constexpr unsigned kNWatched = sizeof kWatched / sizeof kWatched[0];
 std::uint32_t Watch() {
     std::uint32_t h = 0x811C9DC5u;
     for (U a : kWatched) h = (h ^ B(a)) * 0x01000193u;
-    for (U a : {Sprite_Current_addr, Party_Zenny_addr, Rest2c_Slot_addr, at::kSlotTop}) h = (h ^ Long(a)) * 0x01000193u;
+    for (U a : {Sprite_Current_addr, Party_Zenny_addr, Rest2c_Slot_addr, at::kSlotTop.v}) h = (h ^ Long(a)) * 0x01000193u;
     // the touched object's facing and flags (ShopMode_End's stores around its call)
     const auto object = static_cast<signed char>(B(ModeStates_ShopObject_addr));
     if (object >= 0 && object < static_cast<int>(at::kSpriteCount)) {
@@ -120,7 +120,7 @@ U Low16(int v) { return static_cast<std::uint16_t>(v); }
 
 void __cdecl StubTitleBox(int x, int y, int w, int h, int colour) {
     Record(1, Low16(x) | Low16(y) << 16, static_cast<U>(w), static_cast<U>(h), static_cast<U>(colour) & 0xFF);
-    Nudge(at::kCount, 7);
+    Nudge(::bof3::Img(at::kCount.v), 7);
     Disturb();
 }
 void __cdecl StubMoneyBox(int x, int y, int unused, unsigned value) {
@@ -163,7 +163,7 @@ int __cdecl StubStreamDone() {
 }
 void __cdecl StubSlots(int x, int y, unsigned highlight) {
     Record(9, Low16(x) | Low16(y) << 16, highlight);
-    Nudge(at::kCount, 7);
+    Nudge(::bof3::Img(at::kCount.v), 7);
     Disturb();
 }
 void __cdecl StubReadSummaries() {
@@ -217,7 +217,7 @@ void __cdecl StubTextRecord(unsigned slot, unsigned length, const unsigned char*
 void __cdecl StubChoices(int x, int y) {
     Record(18, Low16(x), Low16(y));
     Nudge(Config_WindowColour_addr, 0x1F);
-    Nudge(at::kCount, 7);
+    Nudge(::bof3::Img(at::kCount.v), 7);
     Disturb();
 }
 void __cdecl StubBlack() {
@@ -250,7 +250,7 @@ template <unsigned... N> struct Targets {
     static constexpr Target kAll[sizeof...(N)] = {&StubTarget<N>...};
 };
 constexpr unsigned kModeEntries = 12;   // the 11 and the zero dword after them
-constexpr unsigned kInnEntries = (at::kTablesEnd - Inn_Steps_addr) / 4;   // 27
+constexpr unsigned kInnEntries = (at::kTablesEnd.v - Inn_Steps_addr) / 4;   // 27
 const Target* TargetTable() {
     return Targets<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
                    27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38>::kAll;
@@ -276,7 +276,7 @@ const void* StubFor(U target) {
     case bof3::addr::Transition_Start:     return f(&StubTransition);
     case bof3::addr::Sprite_FaceDirection: return f(&StubFace);
     case bof3::addr::Window_ResetAll:      return f(&StubResetWindows);
-    case kCrtSprintf:                      return f(&StubSprintf);
+    case kCrtSprintf.v:                      return f(&StubSprintf);
     case bof3::addr::TextRecord_Set:       return f(&StubTextRecord);
     case bof3::addr::SaveMenu_DrawChoices: return f(&StubChoices);
     case bof3::addr::Menu_DrawBlackScreen: return f(&StubBlack);
@@ -296,7 +296,7 @@ struct Clone {
 namespace a = bof3::addr;
 constexpr Call kEnd[] = {{0x39, a::Sprite_FaceDirection}, {0x68, a::Window_ResetAll}};
 constexpr Call kTitleIn[] = {{0x25, a::Menu_DrawTitleBox}, {0x5E, a::Msg_OpenSystem}};
-constexpr Call kGreeting[] = {{0x11, a::Menu_DrawTitleBox}, {0x39, kCrtSprintf}, {0x47, a::TextRecord_Set},
+constexpr Call kGreeting[] = {{0x11, a::Menu_DrawTitleBox}, {0x39, kCrtSprintf.v}, {0x47, a::TextRecord_Set},
                               {0x51, a::Msg_SystemPtr},     {0x62, a::Text_DrawAt}, {0x74, a::Menu_DrawMoneyBox},
                               {0x9F, a::Sound_PlayEffect}};
 constexpr Call kChoicesIn[] = {{0x18, a::SaveMenu_DrawChoices}, {0x2F, a::Menu_DrawTitleBox}, {0x45, a::Msg_SystemPtr},
@@ -377,17 +377,17 @@ const Region kRegions[] = {
     {Field_InputFlags_addr, 1},
     {Game_AreaNumber_addr, 2},
     {Config_WindowColour_addr, 1},
-    {at::kMsgFlags, 4},
-    {at::kText, 0x20},
+    {at::kMsgFlags.v, 4},
+    {at::kText.v, 0x20},
     {Party_Zenny_addr, 4},
     {Rest2c_SaveBack_addr, 4},                         // 0x6BC880..3: the save flag, the cursor, cancelled
     {Input_Pressed_addr, 4},
     {Field_ConfirmButtons_addr, 4},                    // the confirm and cancel maps
     {Transition_Busy_addr, 2},
-    {at::kRepeatLatch, 2},
+    {at::kRepeatLatch.v, 2},
     {ItemUse_RepeatTimer_addr, 2},
     {Rest2c_Slot_addr, 4},
-    {at::kSlotTop, 4},
+    {at::kSlotTop.v, 4},
     {ShopStates_InnFlag_addr, 1},
 };
 constexpr unsigned kRegionBytes = 0x50 + 4 + 8 * 0xA4 + 30 * 0xA4 + 4 + 2 + 2 + 1 + 2 + 1 + 4 + 0x20 + 4 + 4 + 4 + 4 +
@@ -420,7 +420,7 @@ void SeedObject() {
 }
 void SeedCount(unsigned low, unsigned high) {
     static const unsigned char kEdges[] = {0, 1, 2, 0xFF, 0x80};
-    B(at::kCount) = Often() ? static_cast<unsigned char>(low + Next() % (high - low + 1)) : kEdges[Next() % 5];
+    B(::bof3::Img(at::kCount.v)) = Often() ? static_cast<unsigned char>(low + Next() % (high - low + 1)) : kEdges[Next() % 5];
 }
 // A pad word with up, down or neither, and the confirm and cancel maps
 // sometimes met.
@@ -464,7 +464,7 @@ void Seed(unsigned k) {
         B(BattleE1_Mode_addr) = static_cast<unsigned char>(Next() % 11);
         B(FieldS_State_addr) = static_cast<unsigned char>(Next() % 5);
         B(FieldS_Step_addr) = static_cast<unsigned char>(Next() % 6);
-        B(at::kCount) = static_cast<unsigned char>(Next() % 7);
+        B(::bof3::Img(at::kCount.v)) = static_cast<unsigned char>(Next() % 7);
         if (k != kDispatch) break;
         B(BattleE1_Mode_addr) = static_cast<unsigned char>(Next() % 11);
         break;
@@ -526,7 +526,7 @@ void Seed(unsigned k) {
     case kGreeting2:
     case kAskSave2:
         SeedObject();
-        B(at::kMsgFlags) = static_cast<unsigned char>(Half() ? (Next() | 2) : (Next() & ~2u));
+        B(::bof3::Img(at::kMsgFlags.v)) = static_cast<unsigned char>(Half() ? (Next() | 2) : (Next() & ~2u));
         break;
     case kChoose2: {
         SeedObject();
@@ -557,7 +557,7 @@ void Seed(unsigned k) {
         const U slot = Often() ? Next() % 16 : kSlots[Next() % 10];
         PutLong(Rest2c_Slot_addr, slot);
         static const int kTops[] = {0, -1, -2, -3, 1};
-        PutLong(at::kSlotTop, Often() ? slot + static_cast<U>(kTops[Next() % 5]) : Next());
+        PutLong(::bof3::Img(at::kSlotTop.v), Often() ? slot + static_cast<U>(kTops[Next() % 5]) : Next());
         break;
     }
     case kSaveEnd2:

@@ -27,7 +27,7 @@ namespace glyph_draw {
 const Callees kOriginals = {
     D3d_PrimColor,
     Font_GlyphTexture,
-    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(kRetOnly)),
+    reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
     D3d_SetBlend,
     D3d_SetShadeMode,
     Font_BuildGlyphTexture,
@@ -75,7 +75,7 @@ void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 
 // The device, read afresh before every COM call as the original does.
-void** Device() { return *reinterpret_cast<void** volatile*>(At(D3d_Device_addr)); }
+void** Device() { return *reinterpret_cast<void** volatile*>(At(::bof3::Img(D3d_Device_addr))); }
 void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 
 using Com1 = long(__stdcall*)(void*);
@@ -106,7 +106,7 @@ long D3d_DrawGlyph(const unsigned char* prim) {
     // half-pixel offset; sz 0.99 and rhw 0.1 as immediates; the colour pair.
     // Each product is exact before it is rounded to float (a 16-bit integer
     // times a float), so x87 and SSE agree whatever the precision control.
-    unsigned char* v = At(D3d_Vertices_addr);
+    unsigned char* v = At(::bof3::Img(D3d_Vertices_addr));
     for (U i = 0; i < 4; ++i) {
         unsigned char* out = v + i * 0x20;
         const unsigned char* in = prim + i * 8;
@@ -149,7 +149,7 @@ long D3d_DrawGlyph(const unsigned char* prim) {
     device = Device();
     // DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_TLVERTEX, vertices, 4, 0); its
     // result is the handler's (the caller 0x59F1B4 does not read it).
-    return reinterpret_cast<Com6>(Method(device, 0x70))(device, 5, 0x1C4, D3d_Vertices_addr, 4, 0);
+    return reinterpret_cast<Com6>(Method(device, 0x70))(device, 5, 0x1C4, ::bof3::Img(D3d_Vertices_addr), 4, 0);
     // Not kept: the original computes every fild's operand in its own
     // argument slot, so the caller's pushed `prim` comes back as 2 * the last
     // v. The caller pops it unread (`add esp, 4` at 0x59F1B9).
@@ -167,8 +167,8 @@ int Font_GlyphTexture(unsigned glyph, unsigned clut) {
     int free_slot = -1;
     U i;
     for (i = 0; i < kEntries; ++i) {
-        const unsigned char* e = At(Font_TexCache_addr + i * kEntry);
-        if (Word(e) == glyph && Word(e + 2) == clut && Long(e + 4) == Long(At(Gfx_ClutRows_addr + (clut >> 6) * 8))) break;
+        const unsigned char* e = At(::bof3::Img(Font_TexCache_addr) + i * kEntry);
+        if (Word(e) == glyph && Word(e + 2) == clut && Long(e + 4) == Long(At(::bof3::Img(Gfx_ClutRows_addr) + (clut >> 6) * 8))) break;
         if (free_slot == -1 && Word(e + 0x10) == 0) free_slot = static_cast<int>(i);
     }
     if (i == kEntries && free_slot != -1) {
@@ -191,10 +191,10 @@ int Font_GlyphTexture(unsigned glyph, unsigned clut) {
     // vertex 0's sz (0x7CA960). The addresses below reach exactly those bytes.
     if (!(Gfx_RenderFlags & 1)) {
         void** device = Device();
-        reinterpret_cast<Com3>(Method(device, 0x98))(device, 0, Long(At(Font_TexCache_addr + i * kEntry + 0xC))); // SetTexture(0, tex)
+        reinterpret_cast<Com3>(Method(device, 0x98))(device, 0, Long(At(::bof3::Img(Font_TexCache_addr) + i * kEntry + 0xC))); // SetTexture(0, tex)
     }
-    At(Font_TexCache_addr + i * kEntry + 0x10)[0] = 1;
-    At(Font_TexCache_addr + i * kEntry + 0x11)[0] = 0;
+    At(::bof3::Img(Font_TexCache_addr) + i * kEntry + 0x10)[0] = 1;
+    At(::bof3::Img(Font_TexCache_addr) + i * kEntry + 0x11)[0] = 0;
     return static_cast<int>(i);
 }
 

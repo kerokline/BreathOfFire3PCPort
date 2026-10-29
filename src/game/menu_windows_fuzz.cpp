@@ -479,18 +479,18 @@ const void* StubFor(std::uint32_t target, std::uint32_t caller, std::uint32_t of
     case 0x5A7740: return f(&StubTile);
     case 0x536700: return f(&StubAreaByte);
     case 0x5B9380: return f(&StubSprintf);
-    case kStatIcon: return f(&StubStatIcon);
-    case kDrawHand: return f(&StubHand);
-    case kEquipCompare: return f(&StubCompare);
-    case kItemName: return f(&StubItemName);
-    case kItemKind: return f(&StubItemKind);
-    case kEquipMask: return f(&StubEquipMask);
-    case kItemFlagsOf: return f(&StubItemFlags);
-    case kHasKeyItem: return f(&StubHasKeyItem);
-    case kCountOwned: return f(&StubCountOwned);
-    case kCountCategory: return f(&StubCountCategory);
-    case kPriceScale: return f(&StubPriceScale);
-    case kSellPrice: return f(&StubSellPrice);
+    case kStatIcon.v: return f(&StubStatIcon);
+    case kDrawHand.v: return f(&StubHand);
+    case kEquipCompare.v: return f(&StubCompare);
+    case kItemName.v: return f(&StubItemName);
+    case kItemKind.v: return f(&StubItemKind);
+    case kEquipMask.v: return f(&StubEquipMask);
+    case kItemFlagsOf.v: return f(&StubItemFlags);
+    case kHasKeyItem.v: return f(&StubHasKeyItem);
+    case kCountOwned.v: return f(&StubCountOwned);
+    case kCountCategory.v: return f(&StubCountCategory);
+    case kPriceScale.v: return f(&StubPriceScale);
+    case kSellPrice.v: return f(&StubSellPrice);
     case 0x516F60: return f(&StubFont12);
     case 0x517090: return f(&StubFont8);
     case 0x575830: return f(&StubPanel);
@@ -633,7 +633,7 @@ const Region kRegions[] = {
     {CharacterRecords_addr, 10 * at::kCharStride}, // the records (and two past the eight)
     {0x904030, 0x40},                              // the gold, the party lists
     {0x904150, 0x490},                             // the inventory's ids and counts
-    {at::kPrintBuf, 0x40},                         // the sprintf buffer
+    {at::kPrintBuf.v, 0x40},                         // the sprintf buffer
     {0x905B80, 0x30},                              // the current record pointer, 0x905BA2
     {0x929F00, 0x10},                              // the menu state, 0x929F06, 0x929F0B
     {0x937F90, 8},                                 // Frame_Counter

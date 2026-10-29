@@ -59,12 +59,12 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F, Scratch_Swap at +0xC; words by function)
 // and the four SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are
 // read again after every call, as the originals read them.
-constexpr std::uint32_t kS = SharedScratch_addr;
+constexpr ::bof3::image::Va kS{SharedScratch_addr};
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
 // kActorRecord: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting actor's sprite record
-constexpr std::uint32_t kFlagsB = 0x904AA9;        // u8: the battle flags' second byte (Tornado sets bit 1)
+constexpr ::bof3::image::Va kFlagsB{0x904AA9};        // u8: the battle flags' second byte (Tornado sets bit 1)
 // kFacingPhase: now Tornado_FacingPhase (symbols.toml). Tornado_FacingPhase: a u8 in each of four dwords, by +8
 
 // MAGIC058's mote pool (36 of 0x84 bytes, +0 bit 0 in use) and its reached
@@ -87,25 +87,25 @@ constexpr std::uint32_t kPoolStride = 0x84;
 
 // Callees other groups own: the engine's by address; S36's AuraBreath_InReach
 // and S37's MagicFx_FreeCurrentRecord, ours now, by name.
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;   // engine, unnamed: a task's +0xC / +0x10 turned by its +8
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};   // engine, unnamed: a task's +0xC / +0x10 turned by its +8
 using Fn0 = void (__cdecl*)();
 using NearFn = int (__cdecl*)(unsigned char*);
 using TaskFn = void (__cdecl*)(unsigned char*);
 using BandFn = void (__cdecl*)(unsigned, unsigned);
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -126,13 +126,13 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + (slot & 0xFF) * at::kTaskStride); }
-unsigned char* SMote(unsigned i) { return Mem(SanctuaryMote_Pool_addr + (i & 0xFF) * kPoolStride); }
-unsigned char* TMote(unsigned i) { return Mem(TornadoMote_Pool_addr + (i & 0xFF) * kPoolStride); }
-unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + (slot & 0xFF) * at::kTaskStride); }
+unsigned char* SMote(unsigned i) { return Mem(::bof3::Img(SanctuaryMote_Pool_addr) + (i & 0xFF) * kPoolStride); }
+unsigned char* TMote(unsigned i) { return Mem(::bof3::Img(TornadoMote_Pool_addr) + (i & 0xFF) * kPoolStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
 // The originals index the enemies by the battle index - 3.
 unsigned char* EnemyRecord(unsigned battle_index) {
-    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
+    return Mem(::bof3::Img(Battle_Enemies_addr) + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
 
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }
@@ -142,7 +142,7 @@ int Cos(int a) { return MH_CALL(Math_Cos)(a); }
 // This group's functions called by address, as the originals call them: in
 // the game the jmp Inject put there (or Capcom's code under
 // BOF3X_ORIGINAL), in the fuzz that address's recorder.
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // A .data table's entry, read in place, the index unchecked (as the
 // originals' `jmp / call [eax*4 + table]`).
@@ -174,7 +174,7 @@ void Rtp4(unsigned char* prim) {
 // The target's done flag, 0x904AA8 bit 2, and the task freed.
 void MarkDoneAndFree() {
     MH_CALL(Battle_SetTargetFlag40)(TargetByte());
-    Mem(at::kFlags)[0] = static_cast<unsigned char>(Mem(at::kFlags)[0] | 4);
+    Mem(::bof3::Img(at::kFlags))[0] = static_cast<unsigned char>(Mem(::bof3::Img(at::kFlags))[0] | 4);
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -183,15 +183,15 @@ void MarkDoneAndFree() {
 // both put back to what they were before the loop after each.
 void RunPool(std::uint32_t pool, unsigned count, std::uint32_t dispatch) {
     unsigned char* const saved = Sc();
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < count; ++i) {
         unsigned char* const r = Mem(pool + i * kPoolStride);
         if ((r[0] & 1) == 0) continue;
         const std::int32_t its = Long(r + 0x80);
         Sprite_Current = r;
-        SetLong(Mem(BattleE2_Owner_addr), its);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), its);
         Call0(dispatch);
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
         Sprite_Current = saved;
     }
 }
@@ -228,7 +228,7 @@ S11_EXPORT void __cdecl Sanctuary_Task(void) {
     const unsigned phase = Sc()[1];
     if (phase >= 3) bof3::Fatal("Sanctuary_Task: phase %u, past the three-entry table", phase);
     magic_harness::Phase(kSteps[phase])();
-    RunPool(SanctuaryMote_Pool_addr, kSanctuaryMotes, bof3::addr::SanctuaryMote_Dispatch);
+    RunPool(::bof3::Img(SanctuaryMote_Pool_addr), kSanctuaryMotes, bof3::addr::SanctuaryMote_Dispatch);
 }
 
 // original 0x4AF0C0: the pool emptied (+0..+2 of all 36) and the eleven
@@ -242,10 +242,10 @@ S11_EXPORT void __cdecl Sanctuary_Start(void) {
         m[1] = 0;
         m[2] = 0;
     }
-    SetLong(Mem(Sanctuary_Reached_addr), 0);
-    SetLong(Mem(Sanctuary_Reached_addr + 4), 0);
-    SetWord(Mem(Sanctuary_Reached_addr + 8), 0);
-    Mem(Sanctuary_Reached_addr + 10)[0] = 0;
+    SetLong(Mem(::bof3::Img(Sanctuary_Reached_addr)), 0);
+    SetLong(Mem(::bof3::Img(Sanctuary_Reached_addr) + 4), 0);
+    SetWord(Mem(::bof3::Img(Sanctuary_Reached_addr) + 8), 0);
+    Mem(::bof3::Img(Sanctuary_Reached_addr) + 10)[0] = 0;
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
     rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
@@ -275,13 +275,13 @@ S11_EXPORT void __cdecl Sanctuary_Message(void) {
 // original 0x4AF1C0: once the message window is down (0x939F60 0), the
 // target's flag 0x40, the done flag, the task freed.
 S11_EXPORT void __cdecl Sanctuary_End(void) {
-    if (Mem(BattleE1_MessageUp_addr)[0] != 0) return;
+    if (Mem(::bof3::Img(BattleE1_MessageUp_addr))[0] != 0) return;
     MarkDoneAndFree();
 }
 
 // original 0x4AF1F0: the ring (kind 1, parameter 0x3F): a jmp through
 // SanctuaryRing_Types 0x65AA68 by +1, read in place (one entry).
-S11_EXPORT void __cdecl SanctuaryRing_Dispatch(void) { Entry(SanctuaryRing_Types_addr, Sc()[1])(); }
+S11_EXPORT void __cdecl SanctuaryRing_Dispatch(void) { Entry(::bof3::Img(SanctuaryRing_Types_addr), Sc()[1])(); }
 
 // original 0x4AF210: its phase +2 through a three-entry table on its stack -
 // SanctuaryRing_Start, SanctuaryRing_Spread, MagicFx_UncountAndFree; 3..255
@@ -319,7 +319,7 @@ namespace {
 void SendMotes(unsigned char actor) {
     for (unsigned delay = 1; delay < 0x19; delay += 0xC) {
         const unsigned index = MH_CALL(SanctuaryMote_Alloc)() & 0xFFu;
-        const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+        const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
         unsigned char* const m = SMote(index);
         records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         tm->owner = owner;
@@ -344,21 +344,21 @@ S11_EXPORT void __cdecl SanctuaryRing_Spread(void) {
     SetSW(0, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_x));
     for (unsigned i = 0; i < 8; ++i) {
         const auto actor = static_cast<unsigned char>(3 + i);
-        unsigned char* const reached = Mem(Sanctuary_Reached_addr + actor);
+        unsigned char* const reached = Mem(::bof3::Img(Sanctuary_Reached_addr) + actor);
         if (reached[0] != 0) continue;
         if ((MH_CALL(Battle_ActorIsOut)(actor) & 0xFF) != 0) continue;
         if (MH_AT(NearFn, bof3::addr::AuraBreath_InReach)(EnemyRecord(actor)) == 0) continue;
-        if ((static_cast<std::uint32_t>(Long(Mem(at::kActor))) & 0xFF) == actor) continue;
+        if ((static_cast<std::uint32_t>(Long(Mem(::bof3::Img(at::kActor)))) & 0xFF) == actor) continue;
         reached[0] = 0xFF;
         SendMotes(actor);
     }
     for (unsigned i = 0; i < 3; ++i) {
         const auto actor = static_cast<unsigned char>(i);
-        unsigned char* const reached = Mem(Sanctuary_Reached_addr + actor);
+        unsigned char* const reached = Mem(::bof3::Img(Sanctuary_Reached_addr) + actor);
         if (reached[0] != 0) continue;
         if ((MH_CALL(Battle_ActorIsOut)(actor) & 0xFF) != 0) continue;
         if (MH_AT(NearFn, bof3::addr::AuraBreath_InReach)(PartyRecord(i)) == 0) continue;
-        if (Mem(at::kActor)[0] == actor) continue;
+        if (Mem(::bof3::Img(at::kActor))[0] == actor) continue;
         reached[0] = 0xFF;
         SendMotes(actor);
     }
@@ -375,7 +375,7 @@ S11_EXPORT void __cdecl MagicFx_UncountAndFree(void) {
 
 // original 0x4AF4A0: a mote: a jmp through SanctuaryMote_Types 0x65AA6C by
 // +1, read in place (one entry).
-S11_EXPORT void __cdecl SanctuaryMote_Dispatch(void) { Entry(SanctuaryMote_Types_addr, Sc()[1])(); }
+S11_EXPORT void __cdecl SanctuaryMote_Dispatch(void) { Entry(::bof3::Img(SanctuaryMote_Types_addr), Sc()[1])(); }
 
 // original 0x4AF4C0: its phase +2 through a three-entry table on its stack -
 // SanctuaryMote_Wait, SanctuaryMote_Slow, SanctuaryMote_Fade; 3..255 would
@@ -545,7 +545,7 @@ S11_EXPORT void __cdecl SanctuaryMote_Draw(void) {
 // original 0x4AFB20: the first free mote of the pool 0x680780 marked in use;
 // its index in al, or 0xFF when all 36 are (the upper bytes of eax garbage;
 // its one caller keeps al, unchecked).
-S11_EXPORT unsigned char __cdecl SanctuaryMote_Alloc(void) { return PoolAlloc(SanctuaryMote_Pool_addr, kSanctuaryMotes); }
+S11_EXPORT unsigned char __cdecl SanctuaryMote_Alloc(void) { return PoolAlloc(::bof3::Img(SanctuaryMote_Pool_addr), kSanctuaryMotes); }
 
 // ===========================================================================
 // MAGIC059 (row 83, Tornado read one id down)
@@ -560,7 +560,7 @@ S11_EXPORT void __cdecl Tornado_Task(void) {
     if (phase >= 2) bof3::Fatal("Tornado_Task: phase %u, past the two-entry table", phase);
     magic_harness::Phase(kSteps[phase])();
     MH_CALL(BattleActor_UpdateScreenXY)();
-    RunPool(TornadoMote_Pool_addr, kTornadoMotes, bof3::addr::TornadoMote_Dispatch);
+    RunPool(::bof3::Img(TornadoMote_Pool_addr), kTornadoMotes, bof3::addr::TornadoMote_Dispatch);
 }
 
 namespace {
@@ -619,12 +619,12 @@ S11_EXPORT void __cdecl Tornado_Start(void) {
     SpawnRing(4, 1, 0x100, 0);
     for (unsigned k = 0; k < 16; ++k) Gfx_ClutStrip[0x1A00 + k] = static_cast<unsigned short>(Gfx_ClutStripSource[0x1A00 + k] | 0x8000);
     Gfx_ClutStrip[0x1A00] = Gfx_ClutStripSource[0x1A00];
-    Mem(kFlagsB)[0] = static_cast<unsigned char>(Mem(kFlagsB)[0] | 2);
+    Mem(::bof3::Img(kFlagsB.v))[0] = static_cast<unsigned char>(Mem(::bof3::Img(kFlagsB.v))[0] | 2);
     Gfx_ClutStripDirty = 1;
-    Sc()[8] = Pointer(MagicS23_ActorSprite_addr)[8];
+    Sc()[8] = Pointer(::bof3::Img(MagicS23_ActorSprite_addr))[8];
     rv::Current<records::BattleTask>()->step_x = 0x40000;
     rv::Current<records::BattleTask>()->step_z = 0;
-    MH_AT(TaskFn, kTurnOffset)(Sc());
+    MH_AT(TaskFn, kTurnOffset.v)(Sc());
     rv::Store(rv::Current<records::BattleTask>()->work_18, Add(rv::Current<records::BattleTask>()->step_x, static_cast<int>(Field_Kind2X)));
     rv::Store(rv::Current<records::BattleTask>()->work_1c, Add(rv::Current<records::BattleTask>()->step_z, static_cast<int>(Field_Kind2Z)));
     int v = Sin(0);
@@ -634,7 +634,7 @@ S11_EXPORT void __cdecl Tornado_Start(void) {
     Call0(bof3::addr::Tornado_AverageHeight);
     MH_CALL(Sound_PlayById)(0x100);
     unsigned char* const s = Sc();
-    s[9] = Mem(Tornado_FacingPhase_addr + s[8] * 4u)[0];
+    s[9] = Mem(::bof3::Img(Tornado_FacingPhase_addr) + s[8] * 4u)[0];
     Inc(s[1]);
 }
 
@@ -656,7 +656,7 @@ S11_EXPORT void __cdecl Tornado_Spin(void) {
 
 // original 0x4AFF00: the funnel (kind 1, parameter 0x40): a jmp through
 // TornadoFunnel_Types 0x65AA80 by +1, read in place (one entry).
-S11_EXPORT void __cdecl TornadoFunnel_Dispatch(void) { Entry(TornadoFunnel_Types_addr, Sc()[1])(); }
+S11_EXPORT void __cdecl TornadoFunnel_Dispatch(void) { Entry(::bof3::Img(TornadoFunnel_Types_addr), Sc()[1])(); }
 
 // original 0x4AFF20: its phase +2 through TornadoFunnel_Phases 0x65AA84
 // (four entries: TornadoFunnel_Reset, _Grow, TornadoFx_Hold and group S07's
@@ -665,7 +665,7 @@ S11_EXPORT void __cdecl TornadoFunnel_Dispatch(void) { Entry(TornadoFunnel_Types
 // 0x20 at angles (8 k - +9) & 0x3F, eight of 0x50 at (2 (4 k + 2 - +9)) &
 // 0x3F, k = 0..3, -4..-1; +9 read before each.
 S11_EXPORT void __cdecl TornadoFunnel_Task(void) {
-    Entry(TornadoFunnel_Phases_addr, Sc()[2])();
+    Entry(::bof3::Img(TornadoFunnel_Phases_addr), Sc()[2])();
     const unsigned char* const s = Sc();
     if (s[0] == 0 || s[2] == 0) return;
     Call0(bof3::addr::TornadoFunnel_PushMatrix);
@@ -858,7 +858,7 @@ S11_EXPORT void __cdecl TornadoFunnel_DrawBand(unsigned angle, unsigned radius) 
 
 // original 0x4B0800: a mote: a jmp through TornadoMote_Types 0x65AA94 by +1,
 // read in place (one entry).
-S11_EXPORT void __cdecl TornadoMote_Dispatch(void) { Entry(TornadoMote_Types_addr, Sc()[1])(); }
+S11_EXPORT void __cdecl TornadoMote_Dispatch(void) { Entry(::bof3::Img(TornadoMote_Types_addr), Sc()[1])(); }
 
 // original 0x4B0820: its phase +2 through TornadoMote_Phases 0x65AA98 (four
 // entries: TornadoMote_Place, _Rise, TornadoFx_Hold, TornadoMote_Fade), read
@@ -869,7 +869,7 @@ S11_EXPORT void __cdecl TornadoMote_Dispatch(void) { Entry(TornadoMote_Types_add
 // frame (the cell taken before the call, as the original takes it); its
 // screen point, its quad.
 S11_EXPORT void __cdecl TornadoMote_Task(void) {
-    Entry(TornadoMote_Phases_addr, Sc()[2])();
+    Entry(::bof3::Img(TornadoMote_Phases_addr), Sc()[2])();
     const unsigned char* const s0 = Sc();
     if (s0[0] == 0 || s0[2] == 0) return;
     SetSW(0xE, ((s0[9] * 3u) & 0x3F) << 6);
@@ -976,7 +976,7 @@ S11_EXPORT void __cdecl TornadoMote_Draw(void) {
 // original 0x4B0C50: the first free mote of the pool 0x681A20 marked in use;
 // its index in al, or 0xFF when all 24 are (its one caller keeps al,
 // unchecked).
-S11_EXPORT unsigned char __cdecl TornadoMote_Alloc(void) { return PoolAlloc(TornadoMote_Pool_addr, kTornadoMotes); }
+S11_EXPORT unsigned char __cdecl TornadoMote_Alloc(void) { return PoolAlloc(::bof3::Img(TornadoMote_Pool_addr), kTornadoMotes); }
 
 // original 0x4B0CB0: the task's height +0x3E the average (idiv, toward zero)
 // of the heights +0x3E of the live actors (Battle_ActorIsOut) on the side
@@ -986,7 +986,7 @@ S11_EXPORT unsigned char __cdecl TornadoMote_Alloc(void) { return PoolAlloc(Torn
 S11_EXPORT void __cdecl Tornado_AverageHeight(void) {
     int sum = 0;
     int count = 0;
-    if (Mem(at::kActor)[0] < 3) {
+    if (Mem(::bof3::Img(at::kActor))[0] < 3) {
         for (unsigned i = 0; i < 8; ++i) {
             if ((MH_CALL(Battle_ActorIsOut)(3 + i) & 0xFF) != 0) continue;
             sum = Add(sum, S16(EnemyRecord(3 + i) + 0x3E));

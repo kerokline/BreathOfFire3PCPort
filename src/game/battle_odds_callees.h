@@ -17,30 +17,30 @@ using U = std::uint32_t;
 // --- Addresses without a name --------------------------------------------------
 // The banner pool's current entry and the mask of kinds seen this frame
 // (battle_misc_callees.h has the pool's layout).
-constexpr U kBannerCurrent = 0x93B8C0;
+constexpr ::bof3::image::Va kBannerCurrent{0x93B8C0};
 // kBannerKinds: now BattleMisc_BannerKinds (symbols.toml).
-constexpr U kBanners = 0x93B8E0;
+constexpr ::bof3::image::Va kBanners{0x93B8E0};
 // Window records (WindowRecords 0x803160, 0x24 bytes each) the two banner
 // handlers write: record 0's +3 and +0xA, record 4's +3 and +0xA.
-constexpr U kWin0State = 0x803163;
+constexpr ::bof3::image::Va kWin0State{0x803163};
 // kWin0Index: now Window0_ParamA (symbols.toml).
-constexpr U kWin4State = 0x8031F3;
+constexpr ::bof3::image::Va kWin4State{0x8031F3};
 // kWin4Index: now Window4_Index (symbols.toml).
 // Effect_ApplyResult's operands (battle_damage_callees.h): the result record's
 // pointer, the target byte, the acting dword (its low byte the actor).
-constexpr U kResult = 0x904B60;
-constexpr U kTarget = 0x904B54;
-constexpr U kActing = 0x904B34;
+constexpr ::bof3::image::Va kResult{0x904B60};
+constexpr ::bof3::image::Va kTarget{0x904B54};
+constexpr ::bof3::image::Va kActing{0x904B34};
 // The acting actor's object, stored by the action phase (0x42F400: mov
 // [0x904B4C], ecx, the object whose +8 and +0x2E it reads next).
-constexpr U kActorObject = 0x904B4C;
+constexpr ::bof3::image::Va kActorObject{0x904B4C};
 // The target byte Battle_SetTargetFlag40 is handed (battle_sprites_callees.h
 // kTarget) and the round's flags, whose bit 2 the finish state sets.
-constexpr U kFlagTarget = 0x904B44;
-constexpr U kRoundFlags = 0x904AA8;
+constexpr ::bof3::image::Va kFlagTarget{0x904B44};
+constexpr ::bof3::image::Va kRoundFlags{0x904AA8};
 // Effect_ApplyResult's 130 handlers (Effect_Handlers): the two of this group
 // are slots 8 and 31.
-constexpr U kHandlerTable = 0x64E73C;
+constexpr ::bof3::image::Va kHandlerTable{0x64E73C};
 
 // The named data, by the address its symbols.gen.h macro names.
 namespace at {

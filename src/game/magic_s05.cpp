@@ -51,9 +51,9 @@ using move_script::Long;
 using move_script::SetLong;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char ActorByte() { return Mem(at::kActor)[0]; }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char ActorByte() { return Mem(::bof3::Img(at::kActor))[0]; }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 void AddB(unsigned char& b, unsigned v) { b = static_cast<unsigned char>(b + v); }
@@ -62,13 +62,13 @@ void AddLong(unsigned char* at, std::int32_t v) {
     SetLong(at, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(at)) + static_cast<std::uint32_t>(v)));
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
 // The acting actor's record as the originals index it: a member (0x802D40,
 // stride 0x14C) at 0..2, else the enemy by index - 3 (0x93B960, stride
 // 0x128), unchecked.
 unsigned char* ActorRecord(unsigned char actor) {
-    if (actor <= 2) return Mem(ObjTrio_addr + actor * at::kPartyStride);
-    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
+    if (actor <= 2) return Mem(::bof3::Img(ObjTrio_addr) + actor * at::kPartyStride);
+    return Mem(::bof3::Img(Battle_Enemies_addr) + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
 }
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
@@ -77,26 +77,26 @@ unsigned char* ActorRecord(unsigned char actor) {
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};
 using TaskFn = void (__cdecl*)(unsigned char*);
-void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
+void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset.v)(task); }
 
 // Capcom's, unnamed, in no group: 0x435A70(actor, animation) makes the enemy
 // record of battle index `actor` (the byte; 0x93B960 + 0x128 (actor - 3))
 // the current enemy 0x939AD8 for a BattleEnemy_SetAnimation(animation), then
 // puts the old one back. The originals push the actor byte with stale upper
 // bytes; the callee masks them off.
-constexpr std::uint32_t kEnemyAnimation = bof3::addr::BattleEnemy_SetAnimationOf;   // 0x435A70, R3A's (round 14)
+constexpr ::bof3::image::CodeVa kEnemyAnimation{bof3::addr::BattleEnemy_SetAnimationOf};   // 0x435A70, R3A's (round 14)
 using EnemyAnimFn = void (__cdecl*)(unsigned, unsigned);
-void EnemyAnimation(unsigned char actor, unsigned animation) { MH_AT(EnemyAnimFn, kEnemyAnimation)(actor, animation); }
+void EnemyAnimation(unsigned char actor, unsigned animation) { MH_AT(EnemyAnimFn, kEnemyAnimation.v)(actor, animation); }
 
 // The step handlers of other groups the tables hold, by their addresses (a
 // phase is always called through the address its table holds): group E's
 // done flag and free (0x43FE80) and target flag 0x40 with the done flag and
 // free (0x43F460), round eight's task free (0x4AEE90).
-constexpr std::uint32_t kDoneAndFree = bof3::addr::MagicFx_DoneAndFree;
-constexpr std::uint32_t kFlagTargetEnd = bof3::addr::MagicFx_FlagTargetEnd;
-constexpr std::uint32_t kFreeTask = bof3::addr::BattleFx_FreeTask;
+constexpr ::bof3::image::CodeVa kDoneAndFree{bof3::addr::MagicFx_DoneAndFree};
+constexpr ::bof3::image::CodeVa kFlagTargetEnd{bof3::addr::MagicFx_FlagTargetEnd};
+constexpr ::bof3::image::CodeVa kFreeTask{bof3::addr::BattleFx_FreeTask};
 
 // The kinds-table parameters of the images (BattleTask_Create(1, n)).
 constexpr unsigned kImage017 = 0x21;   // Magic017Image_Task
@@ -222,7 +222,7 @@ S05_EXPORT void __cdecl Magic017_Wait(void) {
 // task freed (a tail jmp).
 S05_EXPORT void __cdecl Magic017_End(void) {
     MH_CALL(SpriteClut_RestoreFxRow)();
-    Mem(at::kFlags)[0] |= 4;
+    Mem(::bof3::Img(at::kFlags))[0] |= 4;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -244,7 +244,7 @@ S05_EXPORT void __cdecl Magic017Image_Run(void) {
         bof3::addr::Magic017Image_Appear, bof3::addr::Magic017Image_Drift,   bof3::addr::Magic017Image_Leap,
         bof3::addr::Magic017Image_Return, bof3::addr::Magic017Image_Strike,  bof3::addr::Magic017Image_Script,
         bof3::addr::Magic017Image_Reshow, bof3::addr::Magic017Image_Home,    bof3::addr::Magic017Image_Done,
-        kFreeTask};
+        kFreeTask.v};
     const unsigned step = Sc()[2];
     if (step >= 10) PastTable("Magic017Image_Run", step, 10);
     magic_harness::Phase(kSteps[step])();
@@ -301,11 +301,11 @@ S05_EXPORT void __cdecl Magic017Image_Leap(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->x) +
+        ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)))->x) +
                                                     static_cast<std::uint32_t>(ts->step_x));
-        ts->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->z) +
+        ts->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)))->z) +
                                                     static_cast<std::uint32_t>(ts->step_z));
-        rv::Store(ts->height, rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->height);
+        rv::Store(ts->height, rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)))->height);
         ts->step_x = 0;
         ts->step_z = (s[0xB] & 1) ? 0x1000 : static_cast<std::int32_t>(0xFFFFF000u);
         Turn(s);
@@ -415,7 +415,7 @@ S05_EXPORT void __cdecl Magic017Image_Done(void) {
 // MagicFx_FlagTargetEnd (never reached: the third frees the task).
 S05_EXPORT void __cdecl Magic018Row5_Task(void) {
     static constexpr std::uint32_t kPhases[4] = {bof3::addr::Magic018Row5_Start, bof3::addr::Magic018Row5_Wait,
-                                                 kDoneAndFree, kFlagTargetEnd};
+                                                 kDoneAndFree.v, kFlagTargetEnd.v};
     const unsigned phase = Sc()[1];
     if (phase >= 4) PastTable("Magic018Row5_Task", phase, 4);
     magic_harness::Phase(kPhases[phase])();
@@ -443,7 +443,7 @@ S05_EXPORT void __cdecl Magic018Row5_Wait(void) {
 // Magic019_Start, Magic019_End, MagicFx_FlagTargetEnd (never reached:
 // Magic019_End frees the task).
 S05_EXPORT void __cdecl Magic019_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Magic019_Start, bof3::addr::Magic019_End, kFlagTargetEnd};
+    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Magic019_Start, bof3::addr::Magic019_End, kFlagTargetEnd.v};
     const unsigned phase = Sc()[1];
     if (phase >= 3) PastTable("Magic019_Task", phase, 3);
     magic_harness::Phase(kPhases[phase])();
@@ -466,7 +466,7 @@ S05_EXPORT void __cdecl Magic019_End(void) {
     if (Sc()[0xB] != 0xFF) return;
     MH_CALL(SpriteClut_RestoreFxRow)();
     MH_CALL(BattleActor_SetAnimation)(4, 0);
-    Mem(at::kFlags)[0] |= 4;
+    Mem(::bof3::Img(at::kFlags))[0] |= 4;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -475,7 +475,7 @@ S05_EXPORT void __cdecl Magic019_End(void) {
 // MagicFx_FlagTargetEnd (never reached).
 S05_EXPORT void __cdecl Magic018Row53_Task(void) {
     static constexpr std::uint32_t kPhases[4] = {bof3::addr::Magic018Row53_Start, bof3::addr::Magic018Row53_Wait,
-                                                 kDoneAndFree, kFlagTargetEnd};
+                                                 kDoneAndFree.v, kFlagTargetEnd.v};
     const unsigned phase = Sc()[1];
     if (phase >= 4) PastTable("Magic018Row53_Task", phase, 4);
     magic_harness::Phase(kPhases[phase])();
@@ -517,7 +517,7 @@ S05_EXPORT void __cdecl Magic018Row53_Wait(void) {
 // MagicFx_FlagTargetEnd (never reached).
 S05_EXPORT void __cdecl Magic018Row54_Task(void) {
     static constexpr std::uint32_t kPhases[4] = {bof3::addr::Magic018Row54_Start, bof3::addr::Magic018_WaitOneImage,
-                                                 kDoneAndFree, kFlagTargetEnd};
+                                                 kDoneAndFree.v, kFlagTargetEnd.v};
     const unsigned phase = Sc()[1];
     if (phase >= 4) PastTable("Magic018Row54_Task", phase, 4);
     magic_harness::Phase(kPhases[phase])();
@@ -535,7 +535,7 @@ S05_EXPORT void __cdecl Magic018Row54_Start(void) {
 // Magic018Row68_Start, Magic018_WaitOneImage, MagicFx_DoneAndFree.
 S05_EXPORT void __cdecl Magic018Row68_Task(void) {
     static constexpr std::uint32_t kPhases[3] = {bof3::addr::Magic018Row68_Start, bof3::addr::Magic018_WaitOneImage,
-                                                 kDoneAndFree};
+                                                 kDoneAndFree.v};
     const unsigned phase = Sc()[1];
     if (phase >= 3) PastTable("Magic018Row68_Task", phase, 3);
     magic_harness::Phase(kPhases[phase])();

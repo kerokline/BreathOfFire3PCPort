@@ -189,8 +189,8 @@ std::uint32_t MovesPose(const std::uint32_t*, std::uint32_t answer) {
 #define W2A_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 #define W2A_THEIRS(name) #name, KeyOf(name), KeyOf(name)
 const ah::Callee kCallees[] = {
-    {"FlagsToggle_57C160", at::kFlagsToggle, at::kFlagsToggle, 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
-    {"SpawnKind4_469FE0", at::kSpawnKind4, at::kSpawnKind4, 1, {kU8}, ah::Answer::kGarbage, 0, 0},
+    {"FlagsToggle_57C160", at::kFlagsToggle.v, at::kFlagsToggle.v, 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
+    {"SpawnKind4_469FE0", at::kSpawnKind4.v, at::kSpawnKind4.v, 1, {kU8}, ah::Answer::kGarbage, 0, 0},
     {W2A_OURS(Flags_Test), 2, {kAll, kU8}, ah::Answer::kBool, 0, 0, {}, &MovesPose},
     // slots inside the group's four effect records, or none
     {W2A_OURS(Effect_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x03, {}, &MovesCurrent},

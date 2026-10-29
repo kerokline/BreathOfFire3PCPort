@@ -221,8 +221,8 @@ const sh::Callee kCallees[] = {
     {E_OURS(Inventory_Remove), 3, {0xFF, 0xFF, 0xFF}, kF, 0, 0},              // 0x591B60 reads three bytes
     {E_OURS(AreaMap_Elevation), 2, {kAll, kAll}, kG, 0, 0, {}, &ElevationEffect},
     // E1B's and E1F's, by address (docs/effect_1e.md section 8)
-    {"0x469750", at::kBoxPrims, at::kBoxPrims, 5, {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},   // 0x469790 / 0x469960 read x, y, w, h & 0xFFFF
-    {"0x52CE20", at::kClearEffects, at::kClearEffects, 0, {}, kG, 0, 0},
+    {"0x469750", at::kBoxPrims.v, at::kBoxPrims.v, 5, {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},   // 0x469790 / 0x469960 read x, y, w, h & 0xFFFF
+    {"0x52CE20", at::kClearEffects.v, at::kClearEffects.v, 0, {}, kG, 0, 0},
     // nobody's, by address
     {E_RAW(0x52B2A0), 1, {0xFF}, kG, 0, 0, {}, &Effect3ModeEffect},
     {E_RAW(0x52B1B0), 0, {}, kG, 0, 0, {}, &PoseSoundEffect},
@@ -255,7 +255,7 @@ const sh::DataTable kTables[] = {
 const sh::Region kRegions[] = {
     {0x939A00, 0x30},
     {0x6BC700, 0x20},
-    {at::kPools, 0xE8},
+    {at::kPools.v, 0xE8},
     {0x66C7E8, 4},
     {0x903584, 0x10},
 };
@@ -306,7 +306,7 @@ void Seed(unsigned k) {
     unsigned char* const p = rv::Bytes(&Sprite_Objects[pick]);
     p[6] = static_cast<unsigned char>(PickOf(0x16, 0x16, sh::Next() % 0x16, sh::Next() % 0x16, sh::Next() % 0x74));
     SetWord(p + 0x9C, PickOf(s[9], s[9] + 1u, s[9] - 1u, sh::Next() & 0xFF, sh::Next()));
-    Mem(at::kBestCounts + p[6])[0] = static_cast<unsigned char>(PickOf(p[0x9C], p[0x9C] - 1u, p[0x9C] + 1u, 0, sh::Next()));
+    Mem(::bof3::Img(at::kBestCounts.v) + p[6])[0] = static_cast<unsigned char>(PickOf(p[0x9C], p[0x9C] - 1u, p[0x9C] + 1u, 0, sh::Next()));
     // the record pointers into the scratch buffers
     sh::SetPointer(Effect1a_PanelScript_addr, sh::Scratch(0) + sh::Next() % 0x30);
     sh::SetPointer(Effect1a_PanelSet_addr, sh::Scratch(1) + sh::Next() % 0x28);

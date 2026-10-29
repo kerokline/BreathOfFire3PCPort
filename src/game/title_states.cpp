@@ -26,17 +26,17 @@ using move_script::Word;
 
 // Bytes the handlers touch that have no name (docs/title-states.md has the
 // PSX twin of each).
-constexpr std::uint32_t kPlayClock = 0x9040C8;      // four bytes zeroed starting the demo (PSX 0x80144FBC)
+constexpr ::bof3::image::Va kPlayClock{0x9040C8};      // four bytes zeroed starting the demo (PSX 0x80144FBC)
 // kPartyCombo: now AreaW0b_PartySet (symbols.toml). 0xFF when the demo ends (PSX 0x80145020)
 // kMusicTrack: now Music_Track (symbols.toml). the track Music_Play last started, 0xFF none
-constexpr std::uint32_t kScenarioBytes = 0x8034E0;  // Cond_ByteFA and the nine bytes after it (PSX 0x8014686C)
+constexpr ::bof3::image::Va kScenarioBytes{0x8034E0};  // Cond_ByteFA and the nine bytes after it (PSX 0x8014686C)
 // kScenarioFlags: now Chapter_FlagRow (symbols.toml). the address of the chapter's Cond_Flags dword (PSX 0x80146868)
 // kSubState: now ScenaSc7_DrawPool (symbols.toml). the dispatcher 0x56D8B0's bytes (PSX 0x801448E4)
 // kSubInitTable: now Scenario_SubInitTable (symbols.toml). 16 bytes Scenario_SubInit copies (PSX 0x801C94A4)
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, where they go (PSX 0x80144F24)
-constexpr std::uint32_t kDemoEntry = bof3::addr::Field_Task;      // task 0's entry for the demo (the field task)
-constexpr std::uint32_t kMenuEntry = bof3::addr::TitleTask_Run;      // task 0's entry for the title menu
-constexpr std::uint32_t kModeDispatch = bof3::addr::Field_ModeDispatch;   // Field_ModeDispatch, another file's: called by address
+constexpr ::bof3::image::CodeVa kDemoEntry{bof3::addr::Field_Task};      // task 0's entry for the demo (the field task)
+constexpr ::bof3::image::CodeVa kMenuEntry{bof3::addr::TitleTask_Run};      // task 0's entry for the title menu
+constexpr ::bof3::image::CodeVa kModeDispatch{bof3::addr::Field_ModeDispatch};   // Field_ModeDispatch, another file's: called by address
 const std::uint32_t kCondFlags = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Cond_Flags));
 
 // DIVERGENCE DIV-0131 (D256): on a PSP base (a PSP-only install, the cache's
@@ -95,12 +95,12 @@ const Callees kOriginals = {
     Port_DroppedCall, LoadDatFile, File_LoadDone, Task_Sleep, Gfx_ClutStripRestore, Music_Play, Transition_Start,
     Title_FadeMusic, Title_StopMusic, Effect_ClearAll, Scenario_Start, Task_Create, Music_FadeOut, Music_FadeOutStop,
     Title_DrawBadge, Task_Exit, Gpu_SetDrawMode, Gfx_CommitPrim, Title_Sprite, Prim_SetShade, Scenario_Load,
-    Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(kModeDispatch)),
+    Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kModeDispatch.v))),
 };
 Callees g = kOriginals;
 
 // Task 0's state word, +0 of its record: 0 while no task 0 runs.
-std::uint16_t TaskZeroState() { return Word(At(bof3::addr::Task_Records)); }
+std::uint16_t TaskZeroState() { return Word(At(::bof3::Img(bof3::addr::Task_Records))); }
 
 // The 16-bit words the handlers count with, as the original's `inc word` /
 // `dec word` in memory: wrapping at 0x10000.
@@ -196,13 +196,13 @@ extern "C" void __cdecl Title_StateStartDemo(void) {
     g.stop_music();
     g.dropped(0);
     g.effect_clear();
-    At(kPlayClock)[3] = 0;
-    At(kPlayClock)[2] = 0;
-    At(kPlayClock)[1] = 0;
-    At(kPlayClock)[0] = 0;
+    At(::bof3::Img(kPlayClock.v))[3] = 0;
+    At(::bof3::Img(kPlayClock.v))[2] = 0;
+    At(::bof3::Img(kPlayClock.v))[1] = 0;
+    At(::bof3::Img(kPlayClock.v))[0] = 0;
     Draw_PassFlags = 0;
     g.scenario_start(0x10);
-    g.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(kDemoEntry)));
+    g.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kDemoEntry.v))));
     BumpState();
 }
 
@@ -251,7 +251,7 @@ extern "C" void __cdecl Title_StateMenu(void) {
     if (Transition_Busy != 0) return;
     g.stop_music();
     g.dropped(0);
-    g.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(kMenuEntry)));
+    g.task_create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kMenuEntry.v))));
     g.task_exit();
 }
 
@@ -403,7 +403,7 @@ extern "C" void __cdecl Title_DrawSetB(int x, int y, unsigned flag, unsigned sha
 // never runs.
 extern "C" void __cdecl Scenario_Start(int chapter) {
     const auto c = static_cast<signed char>(chapter);
-    unsigned char* const s = At(kScenarioBytes);
+    unsigned char* const s = At(::bof3::Img(kScenarioBytes.v));
     s[0] = static_cast<unsigned char>(c);
     s[2] = 0;
     s[3] = 0;
@@ -438,7 +438,7 @@ extern "C" void __cdecl Scenario_Load(void) {
 // As the original has it: four dword copies (the PSX copies bytewise); the
 // table and the flags do not overlap, so the order is unobservable.
 extern "C" void __cdecl Scenario_SubInit(void) {
-    unsigned char* const s = At(ScenaSc7_DrawPool_addr);
+    unsigned char* const s = At(::bof3::Img(ScenaSc7_DrawPool_addr));
     s[2] = 1;
     s[0] = 0;
     s[3] = 0;
@@ -447,7 +447,7 @@ extern "C" void __cdecl Scenario_SubInit(void) {
     s[5] = 0;
     s[1] = 0;
     SetWord(s + 8, 0);
-    for (unsigned i = 0; i < 16; i += 4) SetLong(At(Cond_Flags_addr + 0xa0 + i), Long(At(Scenario_SubInitTable_addr + i)));
+    for (unsigned i = 0; i < 16; i += 4) SetLong(At(::bof3::Img(Cond_Flags_addr) + 0xa0 + i), Long(At(::bof3::Img(Scenario_SubInitTable_addr) + i)));
 }
 
 namespace {
@@ -489,25 +489,25 @@ std::uint32_t Id(const void* p) {
 // moved before a call, or a store moved across one, shows.
 struct Watch { std::uint32_t at; unsigned char lo, hi; };   // a value in lo..hi, or any when lo > hi
 const Watch kWatch[] = {
-    {0x66C808, 0, 7},     // Title_State, low byte
-    {0x66C809, 0, 1},     // Title_State, high byte
-    {0x66C7F9, 0, 3},     // Title_Fade
-    {0x66C7FA, 0, 3},     // Title_LogoState
-    {0x66C7FB, 0, 1},     // Title_StartArmed
-    {0x66C7F8, 0, 1},     // Title_BadgeOn
-    {0x66C806, 1, 0},     // Title_BlinkCount
-    {0x66C807, 0, 1},
-    {Music_Track_addr, 0xFE, 0xFF},
-    {0x937F90, 1, 0},     // Gfx_ClutStripDirty
-    {kPlayClock, 1, 0},
-    {kPlayClock + 3, 1, 0},
-    {0x7E0918, 1, 0},     // Draw_PassFlags
-    {kScenarioBytes + 4, 1, 0},   // MoveScript_Var7
-    {AreaW0b_PartySet_addr, 1, 0},
-    {0x66C7D8, 4, 6},     // Field_Request
-    {0x904EFC, 0xFE, 0xFF},  // Game_AreaNumber, low byte
-    {0x904EFD, 0xFE, 0xFF},
-    {0x66C7D0, 0, 1},     // task 0's state
+    {::bof3::Img(0x66C808), 0, 7},     // Title_State, low byte
+    {::bof3::Img(0x66C809), 0, 1},     // Title_State, high byte
+    {::bof3::Img(0x66C7F9), 0, 3},     // Title_Fade
+    {::bof3::Img(0x66C7FA), 0, 3},     // Title_LogoState
+    {::bof3::Img(0x66C7FB), 0, 1},     // Title_StartArmed
+    {::bof3::Img(0x66C7F8), 0, 1},     // Title_BadgeOn
+    {::bof3::Img(0x66C806), 1, 0},     // Title_BlinkCount
+    {::bof3::Img(0x66C807), 0, 1},
+    {::bof3::Img(Music_Track_addr), 0xFE, 0xFF},
+    {::bof3::Img(0x937F90), 1, 0},     // Gfx_ClutStripDirty
+    {::bof3::Img(kPlayClock.v), 1, 0},
+    {::bof3::Img(kPlayClock.v + 3), 1, 0},
+    {::bof3::Img(0x7E0918), 1, 0},     // Draw_PassFlags
+    {::bof3::Img(kScenarioBytes.v + 4), 1, 0},   // MoveScript_Var7
+    {::bof3::Img(AreaW0b_PartySet_addr), 1, 0},
+    {::bof3::Img(0x66C7D8), 4, 6},     // Field_Request
+    {::bof3::Img(0x904EFC), 0xFE, 0xFF},  // Game_AreaNumber, low byte
+    {::bof3::Img(0x904EFD), 0xFE, 0xFF},
+    {::bof3::Img(0x66C7D0), 0, 1},     // task 0's state
 };
 void Disturb() {
     const std::uint32_t h = Hash();
@@ -678,18 +678,18 @@ const Clone kClones[kCount] = {
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {bof3::addr::Task_Records, 0x48},   // task 0's state, Field_Request, Game_Mode, task 1's words,
+    {::bof3::Img(bof3::addr::Task_Records), 0x48},   // task 0's state, Field_Request, Game_Mode, task 1's words,
                                         // Transition_Busy
-    {0x7E1BEC, 4},                      // Input_Pressed, read as a dword
-    {0x7E0918, 1},                      // Draw_PassFlags
-    {0x937F90, 1},                      // Gfx_ClutStripDirty
-    {kScenarioBytes, 0x10},             // Cond_ByteFA .. Field_StepCountPrev
-    {Chapter_FlagRow_addr, 4},
-    {ScenaSc7_DrawPool_addr, 0x10},
-    {0x903F90 - 0x400, 0x808},          // Cond_Flags - 0x400: every chapter's dword, the story flags,
+    {::bof3::Img(0x7E1BEC), 4},                      // Input_Pressed, read as a dword
+    {::bof3::Img(0x7E0918), 1},                      // Draw_PassFlags
+    {::bof3::Img(0x937F90), 1},                      // Gfx_ClutStripDirty
+    {::bof3::Img(kScenarioBytes.v), 0x10},             // Cond_ByteFA .. Field_StepCountPrev
+    {::bof3::Img(Chapter_FlagRow_addr), 4},
+    {::bof3::Img(ScenaSc7_DrawPool_addr), 0x10},
+    {::bof3::Img(0x903F90) - 0x400, 0x808},          // Cond_Flags - 0x400: every chapter's dword, the story flags,
                                         // the play clock, the party combination and the music track
-    {0x904EFC, 2},                      // Game_AreaNumber
-    {Scenario_SubInitTable_addr, 0x10},
+    {::bof3::Img(0x904EFC), 2},                      // Game_AreaNumber
+    {::bof3::Img(Scenario_SubInitTable_addr), 0x10},
 };
 constexpr unsigned kRegionBytes = 0x48 + 4 + 1 + 1 + 0x10 + 4 + 0x10 + 0x808 + 2 + 0x10;
 
@@ -725,7 +725,7 @@ std::uint32_t Next() { g_rng ^= g_rng << 13; g_rng ^= g_rng >> 17; g_rng ^= g_rn
 bool Often() { return Next() % 3 != 0; }
 std::uint16_t Pick(const std::uint16_t* values, unsigned n) { return values[Next() % n]; }
 
-void SetTaskZero(bool running) { SetWord(At(bof3::addr::Task_Records), running ? 1 + Next() % 2 : 0); }
+void SetTaskZero(bool running) { SetWord(At(::bof3::Img(bof3::addr::Task_Records)), running ? 1 + Next() % 2 : 0); }
 
 // Each branch's boundaries, on top of the random bytes; `args` are the four
 // dwords every function is called with (cdecl: the ones it does not take are
@@ -807,18 +807,18 @@ struct Coverage {
     unsigned state_advanced[8];   // rounds in which a state handler moved Title_State on by one
     unsigned demo_over, demo_start, badge_off, badge_drawn, blink, music_stopped, loops;
 } g_cover;
-unsigned Byte(const State& s, std::uint32_t address) { return s.memory[address - bof3::addr::Task_Records]; }
+unsigned Byte(const State& s, std::uint32_t address) { return s.memory[address - ::bof3::Img(bof3::addr::Task_Records)]; }
 unsigned Half(const State& s, std::uint32_t address) { return Byte(s, address) | Byte(s, address + 1) << 8; }
 bool Logged(const State& s, std::uint32_t what) {
     for (unsigned i = 0; i < s.log_n && i < kLog; ++i) if (s.log[i].what == what) return true;
     return false;
 }
 void Cover(unsigned k, const State& in, const State& out) {
-    constexpr std::uint32_t aState = 0x66C808, aBadge = 0x66C7F8, aBlink = 0x66C806;
+    const std::uint32_t aState = ::bof3::Img(0x66C808), aBadge = ::bof3::Img(0x66C7F8), aBlink = ::bof3::Img(0x66C806);
     // (State 7 does not move the word: it ends the task - counted by the call.)
     if (k < kStateMenu && Half(out, aState) == ((Half(in, aState) + 1) & 0xFFFF)) ++g_cover.state_advanced[k];
     if (k == kStateMenu && Logged(out, 16)) ++g_cover.state_advanced[k];
-    if ((k == kStateDemo || k == kStateDemoEnd) && Half(in, bof3::addr::Task_Records) == 0) ++g_cover.demo_over;
+    if ((k == kStateDemo || k == kStateDemoEnd) && Half(in, ::bof3::Img(bof3::addr::Task_Records)) == 0) ++g_cover.demo_over;
     if (k == kStateDemo && Logged(out, 14)) ++g_cover.demo_start;
     if (k == kBadge && Byte(in, aBadge) != 0 && Byte(out, aBadge) == 0) ++g_cover.badge_off;
     if (k == kBadge && Logged(out, 22)) ++g_cover.badge_drawn;

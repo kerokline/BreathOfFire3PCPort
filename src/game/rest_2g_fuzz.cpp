@@ -159,25 +159,25 @@ const Spec kSpecs[kCount] = {
     {0, 0, 4, 0x20, 0xB6, 0},                                // MenuList_SlideRightTo182
     {0, 0, 4, -0x20, 0x5C, 0},                               // MenuList_SlideLeftTo92
     {0, 0, 4, 0x20, 0x5C, 0},                                // MenuList_SlideRightTo92
-    {0, 0, 4, -0x20, kOperand32, at::kLeftOff300Bound},      // MenuList_SlideLeftOff300
+    {0, 0, 4, -0x20, kOperand32, at::kLeftOff300Bound.v},      // MenuList_SlideLeftOff300
     {0, 0, 4, 0x20, 0x11, 0},                                // MenuList_SlideRightTo17Ge
     {0, 0, 4, -0x20, 0xB6, 0},                               // MenuList_SlideLeftTo182
     {0, 0, 4, -0x20, 0xC8, 0},                               // MenuList_SlideLeftTo200
-    {0, 0, 4, -0x20, kOperand32, at::kLeftOff100Bound},      // MenuList_SlideLeftOff100
+    {0, 0, 4, -0x20, kOperand32, at::kLeftOff100Bound.v},      // MenuList_SlideLeftOff100
     {0, 0, 4, 0x20, 0x10, 0},                                // MenuList_SlideRightTo16
     {0, 0, 6, 0x10, 0x2A, 0},                                // MenuList_SlideDownTo42
     {7, 0, 0, 0, 0, 0},                                      // MenuList_StatsPanel
     {0, 0, 4, -0x20, kBesidePanel, 0},                       // MenuList_SlideLeftBesidePanel
     {0, 0, 6, -0x10, 0x3E, 0},                               // MenuList_SlideUpTo62Le
     {0, 0, 6, 0x10, kPanelRow, 0},                           // MenuList_SlideDownToPanelRow
-    {0, 0, 4, -0x20, kOperand32, at::kLeftOff180Bound},      // MenuList_SlideLeftOff180
+    {0, 0, 4, -0x20, kOperand32, at::kLeftOff180Bound.v},      // MenuList_SlideLeftOff180
     {0, 0, 4, 0x20, 0x89, 0},                                // MenuList_SlideRightTo137Ge
     {3, 0, 0, 0, 0, 0},                                      // MenuList_EquipPanel
     {0, 0, 4, -0x20, 0xA6, 0},                               // MenuList_SlideLeftTo166
     {3, 0, 0, 0, 0, 0},                                      // MenuList_ExpPanel
     {0, 0, 4, 0x20, 0x2D, 0},                                // MenuList_SlideRightTo45
     {3, 0, 0, 0, 0, 0},                                      // MenuList_NextLevelPanel
-    {0, 0, 4, -0x20, kOperand32, at::kLeftOff110Bound},      // MenuList_SlideLeftOff110
+    {0, 0, 4, -0x20, kOperand32, at::kLeftOff110Bound.v},      // MenuList_SlideLeftOff110
     {3, 0, 0, 0, 0, 0},                                      // MenuList_WideTitleBox
     {0, 0, 0, 0, 0, 0},                                      // MenuList_CursorBox
     {3, 0, 0, 0, 0, 0},                                      // MenuList_IconWheel
@@ -211,8 +211,8 @@ const sh::DataTable kTables[] = {
 const sh::Region kRegions[] = {
     {WindowRecords_addr, at::kWindowCount * at::kWindowStride}, // WindowRecords 0x803160..0x803477
     {0x903A94, 0x903F90 - 0x903A94},                         // CharacterRecords past the style region
-    {at::kGridWords, 0x24},                                  // the eighteen words GeneWin_GridOpen clears
-    {at::kGridCells, 0x14},                                  // the eighteen grid cells
+    {at::kGridWords.v, 0x24},                                  // the eighteen words GeneWin_GridOpen clears
+    {at::kGridCells.v, 0x14},                                  // the eighteen grid cells
     {BattleTask_Slots_addr, at::kTaskCount * at::kTaskStride}, // the battle task pool
 };
 
@@ -241,7 +241,7 @@ void Move(U h) {
     case 9: if (in) SetLong(r + 0x20, static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
     case 10: Mem(Cond_Flags_addr + 0xd2 + b % 6)[0] = static_cast<unsigned char>(v % 9); break;
     case 11: Mem(Config_WindowColour_addr)[0] = b; break;
-    case 12: Mem(at::kGridCells + b % 0x12)[0] ^= static_cast<unsigned char>(v | 1); break;
+    case 12: Mem(::bof3::Img(at::kGridCells.v) + b % 0x12)[0] ^= static_cast<unsigned char>(v | 1); break;
     case 13: if (in) r[3] = b; break;
     default: break;
     }
@@ -265,7 +265,7 @@ U TextAnswer(const U* a, U answer) {
 U TaskMoving(const U* a, U answer) {
     Moving(a, answer);
     const U n = sh::Noise();
-    Mem(at::kGridCells + n % 0x12)[0] = static_cast<unsigned char>(n & 0x100 ? 0 : n >> 9);
+    Mem(::bof3::Img(at::kGridCells.v) + n % 0x12)[0] = static_cast<unsigned char>(n & 0x100 ? 0 : n >> 9);
     return answer;
 }
 // 0x4469D0: the record its answer names gets another level and EXP (the
@@ -330,8 +330,8 @@ const sh::Callee kCallees[] = {
     {R2G_STATE(0x59A9E0)},
     {R2G_STATE(0x59AA50)},
     // nobody's yet, by address: R3B's roster index, R2H's reserve list
-    {"0x4469D0", kRosterIndex, kRosterIndex, 1, {kAll}, sh::Answer::kByte, 0, 7, {}, &RosterMoving},
-    {"0x59AA80", kReserveList, kReserveList, 1, {kAll}, kG, 0, 0},
+    {"0x4469D0", kRosterIndex.v, kRosterIndex.v, 1, {kAll}, sh::Answer::kByte, 0, 7, {}, &RosterMoving},
+    {"0x59AA80", kReserveList.v, kReserveList.v, 1, {kAll}, kG, 0, 0},
 };
 #undef R2G_OURS
 #undef R2G_STATE
@@ -349,7 +349,7 @@ int BoundOf(const Spec& s, const unsigned char* r) {
         // GridSlideIn's 0x42, or GridSlideOut's bounds by +0xA
         const int n = sh::Next() % 3;
         if (n == 0) return 0x42;
-        return r[0xA] == 0 ? static_cast<short>(Word(Mem(at::kGridOutRight))) : static_cast<short>(Word(Mem(at::kGridOutLeft)));
+        return r[0xA] == 0 ? static_cast<short>(Word(Mem(at::kGridOutRight.v))) : static_cast<short>(Word(Mem(at::kGridOutLeft.v)));
     }
     default: return s.bound;
     }
@@ -372,7 +372,7 @@ void Seed(unsigned k) {
     // the party, the grid cells, the battle party's ids
     for (unsigned i = 0; i < 6; ++i)
         Mem(Cond_Flags_addr + 0xd2 + i)[0] = static_cast<unsigned char>(sh::Next() % 5 ? sh::Next() % 9 : sh::Next());
-    for (unsigned i = 0; i < 0x12; ++i) Mem(at::kGridCells + i)[0] = static_cast<unsigned char>(sh::Next() % 3 ? 0 : sh::Next() | 1);
+    for (unsigned i = 0; i < 0x12; ++i) Mem(::bof3::Img(at::kGridCells.v) + i)[0] = static_cast<unsigned char>(sh::Next() % 3 ? 0 : sh::Next() | 1);
     for (unsigned i = 0; i < 3; ++i)
         Mem(ObjTrio_addr + 0x89 + at::kObjStride * i)[0] = static_cast<unsigned char>(sh::Next() % 4 ? sh::Next() % 9 : sh::Next());
     // the levels and the EXP the next level is compared with

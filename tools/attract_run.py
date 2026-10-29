@@ -42,6 +42,9 @@ OURS = None   # the pid of the game our launcher started (launch()); the helpers
 # only to find a pid; ended by pid only, never by image name - other
 # checkouts' self-tests run beside these scripts.
 GAME_IMAGES = ('BOF3.exe', 'bof3x.exe')
+# A developer's bof3x.exe written at another base (BOF3X_IMAGEBASE,
+# docs/relocatable-image-design.md 1.5) is bof3x-<BASE>.exe.
+MOVED_IMAGE = re.compile(r'bof3x-[0-9a-f]+\.exe', re.I)
 
 # The switches that need Capcom's code, which only the hosted build maps
 # (src/hook/exe_host.cpp refuses each): a run that sets one goes --host bof3.
@@ -51,7 +54,7 @@ HOSTED_ONLY = ('BOF3X_ORIGINAL', 'BOF3X_SHADOW', 'BOF3X_CALLTRACE')
 def is_game_row(row):
     """A tasklist CSV row of one of GAME_IMAGES."""
     name = row.split('","')[0].strip('"').lower()
-    return name in (n.lower() for n in GAME_IMAGES)
+    return name in (n.lower() for n in GAME_IMAGES) or bool(MOVED_IMAGE.fullmatch(name))
 
 
 def pid_alive(pid):
@@ -89,7 +92,7 @@ def kill_stale(launcher):
     the given launcher's directory (a crashed earlier run of these scripts), and
     no other; by pid."""
     want = os.path.normcase(os.path.dirname(os.path.abspath(launcher)))
-    ps = ("Get-Process -Name BOF3,bof3x -ErrorAction SilentlyContinue | ForEach-Object { "
+    ps = ("Get-Process -Name BOF3,bof3x,bof3x-* -ErrorAction SilentlyContinue | ForEach-Object { "
           "$m = $_.Modules | Where-Object { $_.ModuleName -eq 'bof3x.dll' } | Select-Object -First 1; "
           "if ($m) { '{0}|{1}' -f $_.Id, $m.FileName } }")
     out = subprocess.run(['powershell', '-NoProfile', '-Command', ps], capture_output=True, text=True).stdout

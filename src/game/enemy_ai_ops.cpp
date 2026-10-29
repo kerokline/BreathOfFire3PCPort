@@ -44,8 +44,8 @@ const Callees kOriginals = {
     BattleEnemy_SetAnimation, BattleEnemy_ScriptTick, BattleEnemy_ScriptTickOnce, BattleEnemy_Chance70,
     Battle_EnemyDefeated,
     Sprite_ScriptTickOnce, Battle_StatusTint, Sprite_SetTint, Tint_Release, Sprite_ReleaseTint, Battle_ApplyDamage,
-    Effect_ApplyResult, Fn<unsigned (__cdecl*)(unsigned, unsigned)>(kItemClass), Battle_SetDamagePopup,
-    Fn<void (__cdecl*)(unsigned, unsigned)>(kApPopup), EnemyAI_TurnCheck, Fn<void (__cdecl*)(unsigned)>(kPlayCue),
+    Effect_ApplyResult, Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kItemClass.v)), Battle_SetDamagePopup,
+    Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kApPopup.v)), EnemyAI_TurnCheck, Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kPlayCue.v)),
     Sound_PlayEffect, Battle_PlayHitSound, Battle_SetHitPopup, Battle_ClearActorBit,
 };
 Callees g = kOriginals;
@@ -82,7 +82,7 @@ Handler Entry(std::uint32_t table, unsigned index) {
 }
 
 // The 24-byte ability record's flag bytes, by the word 0x904B80 read afresh.
-unsigned char AbilityByte(std::uint32_t flags) { return At(flags + Word(At(at::kMagicId)) * 24u)[0]; }
+unsigned char AbilityByte(std::uint32_t flags) { return At(flags + Word(At(::bof3::Img(at::kMagicId.v))) * 24u)[0]; }
 
 // The enemy's +0xF4 hook.
 using HookFn = void (__cdecl*)(int);
@@ -95,28 +95,28 @@ using HookFn = void (__cdecl*)(int);
 
 // original 0x4360F0 (PSX 0x801E3140): state 0 of the enemy state table
 // 0x64B084 - a tail jump through EnemyOp_Steps 0x64B1A0 by Sprite_Current +1.
-extern "C" void __cdecl EnemyOp_StepDispatch(void) { Entry(EnemyOp_Steps_addr, rv::As<records::BattleEnemy>(Sc())->state)(); }
+extern "C" void __cdecl EnemyOp_StepDispatch(void) { Entry(::bof3::Img(EnemyOp_Steps_addr), rv::As<records::BattleEnemy>(Sc())->state)(); }
 
 // original 0x436170 (PSX 0x801E3224): step 1, the entrance - through
 // EnemyOp_EnterSubs 0x64B1D4 by +2 (0x436190, EnemyOp_SlideDispatch 0x436270).
-extern "C" void __cdecl EnemyOp_EnterDispatch(void) { Entry(EnemyOp_EnterSubs_addr, rv::As<records::BattleEnemy>(Sc())->step)(); }
+extern "C" void __cdecl EnemyOp_EnterDispatch(void) { Entry(::bof3::Img(EnemyOp_EnterSubs_addr), rv::As<records::BattleEnemy>(Sc())->step)(); }
 
 // original 0x436190 (PSX 0x801E3268): the entrance's first part, the
 // scale-in - through EnemyOp_ScaleInSubs 0x64B1DC by +3 (0x4361B0, 0x436210).
-extern "C" void __cdecl EnemyOp_ScaleInDispatch(void) { Entry(EnemyOp_ScaleInSubs_addr, rv::As<records::BattleEnemy>(Sc())->state3)(); }
+extern "C" void __cdecl EnemyOp_ScaleInDispatch(void) { Entry(::bof3::Img(EnemyOp_ScaleInSubs_addr), rv::As<records::BattleEnemy>(Sc())->state3)(); }
 
 // original 0x4366E0 (PSX 0x801E3AE0): step 6 - through EnemyOp_ActSubs
 // 0x64B1FC by +2 (0x436700, 0x436720, 0x436700, EnemyOp_Act3Dispatch 0x436BC0,
 // 0x436D90, EnemyOp_Act5Dispatch 0x436F00).
-extern "C" void __cdecl EnemyOp_ActDispatch(void) { Entry(EnemyOp_ActSubs_addr, rv::As<records::BattleEnemy>(Sc())->step)(); }
+extern "C" void __cdecl EnemyOp_ActDispatch(void) { Entry(::bof3::Img(EnemyOp_ActSubs_addr), rv::As<records::BattleEnemy>(Sc())->step)(); }
 
 // original 0x436720 (PSX 0x801E3B48): the hit taken - through
 // EnemyOp_HitSubs 0x64B214 by +3 (0x436740, 0x436A00, 0x436A20).
-extern "C" void __cdecl EnemyOp_HitDispatch(void) { Entry(EnemyOp_HitSubs_addr, rv::As<records::BattleEnemy>(Sc())->state3)(); }
+extern "C" void __cdecl EnemyOp_HitDispatch(void) { Entry(::bof3::Img(EnemyOp_HitSubs_addr), rv::As<records::BattleEnemy>(Sc())->state3)(); }
 
 // original 0x436D90 (PSX 0x801E46B8): the death - through EnemyOp_DeathSubs
 // 0x64B234 by +3 (0x436DB0, 0x436E00, 0x436E40, 0x436EC0).
-extern "C" void __cdecl EnemyOp_DeathDispatch(void) { Entry(EnemyOp_DeathSubs_addr, rv::As<records::BattleEnemy>(Sc())->state3)(); }
+extern "C" void __cdecl EnemyOp_DeathDispatch(void) { Entry(::bof3::Img(EnemyOp_DeathSubs_addr), rv::As<records::BattleEnemy>(Sc())->state3)(); }
 
 // ===========================================================================
 // The entrance and the idle loop
@@ -131,9 +131,9 @@ extern "C" void __cdecl EnemyOp_DeathDispatch(void) { Entry(EnemyOp_DeathSubs_ad
 // Sprite_Current after each call. The status goes out as a word with the
 // upper half of whatever edx held; Battle_StatusTint reads bit 7 alone.
 extern "C" void __cdecl EnemyOp_Begin(void) {
-    rv::As<records::BattleEnemy>(Enemy())->anim_table = at::kAnimTable;
-    BattleHook_End = at::kHookAValue;
-    BattleHook_Exit = at::kHookBValue;
+    rv::As<records::BattleEnemy>(Enemy())->anim_table = ::bof3::Img(at::kAnimTable.v);
+    BattleHook_End = ::bof3::Code(at::kHookAValue.v);
+    BattleHook_Exit = ::bof3::Code(at::kHookBValue.v);
     g.set_animation(0);
     rv::As<records::BattleEnemy>(Sc())->flags = static_cast<unsigned char>(rv::As<records::BattleEnemy>(Sc())->flags | 0x40);
     g.status_tint(rv::As<records::BattleEnemy>(Enemy())->status);
@@ -197,13 +197,13 @@ extern "C" void __cdecl EnemyOp_Idle(void) {
 // the call; the actor byte and the slot's byte are re-read at each use (a
 // slot past the 48 is not refused - the actor byte is 3..10 for an enemy).
 extern "C" void __cdecl EnemyOp_Wait(void) {
-    Entry(EnemyOp_WaitSubs_addr, rv::As<records::BattleEnemy>(Sc())->step)();
+    Entry(::bof3::Img(EnemyOp_WaitSubs_addr), rv::As<records::BattleEnemy>(Sc())->step)();
     unsigned char* const e = Enemy();
     auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
     if ((e[0x92] & 0x20) != 0) {
         unsigned char* const s = Sc();
         auto* const enemy_s = rv::As<records::BattleEnemy>(s);
-        const auto slot = [s] { return At(BattleTask_Slots_addr + s[5] * at::kTaskSize); };
+        const auto slot = [s] { return At(::bof3::Img(BattleTask_Slots_addr) + s[5] * at::kTaskSize); };
         bool flip;
         if ((enemy_rec->flags_110 & 0x800) != 0) {
             slot()[9] = static_cast<unsigned char>(slot()[9] + 1);
@@ -229,7 +229,7 @@ extern "C" void __cdecl EnemyOp_Wait(void) {
 // +2 = 1.
 extern "C" void __cdecl EnemyOp_HighlightOn(void) {
     if (BattleE4_Picking == 0) return;
-    const unsigned char target = PtrAt(at::kCommandSource)[0];
+    const unsigned char target = PtrAt(::bof3::Img(at::kCommandSource.v))[0];
     unsigned char* const s = Sc();
     auto* const enemy_s = rv::As<records::BattleEnemy>(s);
     if (target != enemy_s->actor && (target & 0x40) == 0) return;
@@ -249,12 +249,12 @@ extern "C" void __cdecl EnemyOp_HighlightOn(void) {
 extern "C" void __cdecl EnemyOp_HighlightPulse(void) {
     unsigned char* const s = Sc();
     auto* const enemy_s = rv::As<records::BattleEnemy>(s);
-    const unsigned char pulse = At(at::kPulse)[0];
-    At(MoveScript_TintRecords_addr + s[7] * at::kTintSize + 4)[0] = pulse;
-    At(MoveScript_TintRecords_addr + s[7] * at::kTintSize + 3)[0] = pulse;
-    At(MoveScript_TintRecords_addr + s[7] * at::kTintSize + 2)[0] = pulse;
+    const unsigned char pulse = At(::bof3::Img(at::kPulse.v))[0];
+    At(::bof3::Img(MoveScript_TintRecords_addr) + s[7] * at::kTintSize + 4)[0] = pulse;
+    At(::bof3::Img(MoveScript_TintRecords_addr) + s[7] * at::kTintSize + 3)[0] = pulse;
+    At(::bof3::Img(MoveScript_TintRecords_addr) + s[7] * at::kTintSize + 2)[0] = pulse;
     if (BattleE4_Picking != 0) {
-        const unsigned char target = PtrAt(at::kCommandSource)[0];
+        const unsigned char target = PtrAt(::bof3::Img(at::kCommandSource.v))[0];
         if (target == enemy_s->actor) return;
         if ((target & 0x40) != 0) return;
     }
@@ -309,24 +309,24 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
     auto* const enemy_s = rv::As<records::BattleEnemy>(s);
     unsigned char* e = Enemy();
     records::BattleEnemy* enemy_rec = rv::As<records::BattleEnemy>(e);
-    SetWord(At(at::kStatusAdd2), 0);
-    SetWord(At(at::kStatusAdd), 0);
+    SetWord(At(::bof3::Img(at::kStatusAdd2.v)), 0);
+    SetWord(At(::bof3::Img(at::kStatusAdd.v)), 0);
     const unsigned char actor = enemy_s->actor;
     BattleE3_HitSprite = s;
-    At(at::kResultTarget)[0] = actor;
-    SetPtrAt(at::kResult, e + 0x104);
-    rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(at::kResult))->hp_change, 0);
-    rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(at::kResult))->ap_change, 0);
-    PtrAt(at::kResult)[8] = 0;
+    At(::bof3::Img(at::kResultTarget.v))[0] = actor;
+    SetPtrAt(::bof3::Img(at::kResult.v), e + 0x104);
+    rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(::bof3::Img(at::kResult.v)))->hp_change, 0);
+    rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(::bof3::Img(at::kResult.v)))->ap_change, 0);
+    PtrAt(::bof3::Img(at::kResult.v))[8] = 0;
     e = Enemy();
     enemy_rec = rv::As<records::BattleEnemy>(e);
-    for (unsigned i = 0; i < 32; i += 4) SetLong(At(at::kStatBlock + i), Long(e + 0xB0 + i));
-    const unsigned char kind = At(at::kActionKind)[0];
+    for (unsigned i = 0; i < 32; i += 4) SetLong(At(::bof3::Img(at::kStatBlock.v) + i), Long(e + 0xB0 + i));
+    const unsigned char kind = At(::bof3::Img(at::kActionKind.v))[0];
     if (kind == 1) {
-        const unsigned target = At(at::kTarget)[0];
-        const unsigned attacker = At(at::kActor)[0];
+        const unsigned target = At(::bof3::Img(at::kTarget.v))[0];
+        const unsigned attacker = At(::bof3::Img(at::kActor.v))[0];
         const short delta = g.apply_damage(attacker, target);
-        rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(at::kResult))->hp_change, static_cast<std::uint16_t>(delta));
+        rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(::bof3::Img(at::kResult.v)))->hp_change, static_cast<std::uint16_t>(delta));
         e = Enemy();
         enemy_rec = rv::As<records::BattleEnemy>(e);
     } else if (kind > 3 && kind <= 5) {
@@ -344,19 +344,19 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
         return;
     }
     if ((enemy_rec->flags_110 & 0x200) == 0) {
-        if (At(at::kActionKind)[0] == 1) {
+        if (At(::bof3::Img(at::kActionKind.v))[0] == 1) {
             g.set_animation(4);
             e = Enemy();
             enemy_rec = rv::As<records::BattleEnemy>(e);
         }
-        if (At(at::kActionKind)[0] == 5) {
-            const unsigned id = At(at::kMagicId)[0];
-            const unsigned category = At(at::kMagicId + 1)[0];
+        if (At(::bof3::Img(at::kActionKind.v))[0] == 5) {
+            const unsigned id = At(::bof3::Img(at::kMagicId.v))[0];
+            const unsigned category = At(::bof3::Img(at::kMagicId.v) + 1)[0];
             if ((g.item_class(category, id) & 4) == 0) g.set_animation(4);
             e = Enemy();
             enemy_rec = rv::As<records::BattleEnemy>(e);
         }
-        if (At(at::kActionKind)[0] == 4 && (AbilityByte(at::kAbilityFlags8) & 4) == 0) {
+        if (At(::bof3::Img(at::kActionKind.v))[0] == 4 && (AbilityByte(::bof3::Img(at::kAbilityFlags8.v)) & 4) == 0) {
             g.set_animation(4);
             e = Enemy();
             enemy_rec = rv::As<records::BattleEnemy>(e);
@@ -372,15 +372,15 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
         e = Enemy();
         enemy_rec = rv::As<records::BattleEnemy>(e);
     }
-    enemy_rec->status = enemy_rec->status | Word(At(at::kStatusAdd));
-    SetWord(At(at::kStatusAdd), 0);
+    enemy_rec->status = enemy_rec->status | Word(At(::bof3::Img(at::kStatusAdd.v)));
+    SetWord(At(::bof3::Img(at::kStatusAdd.v)), 0);
     g.turn_check();
     e = Enemy();
     enemy_rec = rv::As<records::BattleEnemy>(e);
     if (static_cast<short>(enemy_rec->hp_change) > 0) {
         if (enemy_rec->hp == 0) {
             Sc()[9] = 0;
-            if ((At(at::kRoundFlags)[0] & 0x80) != 0) g.set_tint(Sc(), 0x10, 0x10, 0x10, 0);
+            if ((At(::bof3::Img(at::kRoundFlags.v))[0] & 0x80) != 0) g.set_tint(Sc(), 0x10, 0x10, 0x10, 0);
             rv::As<records::BattleEnemy>(Enemy())->status = 0x4000;
             e = Enemy();
             enemy_rec = rv::As<records::BattleEnemy>(e);
@@ -391,17 +391,17 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
         }
     }
     if (static_cast<short>(enemy_rec->hp_change) < 0 || static_cast<short>(enemy_rec->ap_change) < 0) g.play_effect(0x206);
-    if ((ULong(At(at::kRoundFlags)) & 0x2000) == 0) {
-        if (At(at::kActionKind)[0] == 1) {
+    if ((ULong(At(::bof3::Img(at::kRoundFlags.v))) & 0x2000) == 0) {
+        if (At(::bof3::Img(at::kActionKind.v))[0] == 1) {
             g.hit_sound();
             g.hit_popup();
         }
-        if (At(at::kActionKind)[0] == 4 && (AbilityByte(at::kAbilityFlagsD) & 8) != 0) {
+        if (At(::bof3::Img(at::kActionKind.v))[0] == 4 && (AbilityByte(::bof3::Img(at::kAbilityFlagsD.v)) & 8) != 0) {
             g.hit_sound();
             g.hit_popup();
         }
     }
-    SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0xFF7F);
+    SetWord(At(::bof3::Img(at::kRoundFlags.v)), Word(At(::bof3::Img(at::kRoundFlags.v))) & 0xFF7F);
     g.script_tick();
     rv::As<records::BattleEnemy>(Sc())->state3 = static_cast<unsigned char>(rv::As<records::BattleEnemy>(Sc())->state3 + 1);
 }
@@ -433,20 +433,20 @@ extern "C" void __cdecl EnemyOp_HitEnd(void) {
     if ((Enemy()[0x93] & 0x40) != 0) {
         g.release_tint(Sc());
         auto* const enemy_s = rv::As<records::BattleEnemy>(Sc());
-        SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0xFFBF);
+        SetWord(At(::bof3::Img(at::kRoundFlags.v)), Word(At(::bof3::Img(at::kRoundFlags.v))) & 0xFFBF);
         enemy_s->state = 6;
         rv::As<records::BattleEnemy>(Sc())->step = 4;
         rv::As<records::BattleEnemy>(Sc())->state3 = 0;
         return;
     }
-    if ((At(at::kRoundFlags)[0] & 0x40) != 0) {
-        SetWord(At(at::kRoundFlags), (Word(At(at::kRoundFlags)) & 0xFFBF) | 0x1000);
-    } else if ((At(at::kTarget)[0] & 0xC0) == 0) {
-        if (At(at::kActionKind)[0] == 1 && g.chance70() != 0)
-            At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] | 0x40);
-        if (At(at::kActionKind)[0] == 4 && (AbilityByte(at::kAbilityFlagsD) & 8) != 0 && g.chance70() != 0 &&
-            (AbilityByte(at::kAbilityFlags8) & 0x10) == 0)
-            At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] | 0x40);
+    if ((At(::bof3::Img(at::kRoundFlags.v))[0] & 0x40) != 0) {
+        SetWord(At(::bof3::Img(at::kRoundFlags.v)), (Word(At(::bof3::Img(at::kRoundFlags.v))) & 0xFFBF) | 0x1000);
+    } else if ((At(::bof3::Img(at::kTarget.v))[0] & 0xC0) == 0) {
+        if (At(::bof3::Img(at::kActionKind.v))[0] == 1 && g.chance70() != 0)
+            At(::bof3::Img(at::kRoundFlags.v))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kRoundFlags.v))[0] | 0x40);
+        if (At(::bof3::Img(at::kActionKind.v))[0] == 4 && (AbilityByte(::bof3::Img(at::kAbilityFlagsD.v)) & 8) != 0 && g.chance70() != 0 &&
+            (AbilityByte(::bof3::Img(at::kAbilityFlags8.v)) & 0x10) == 0)
+            At(::bof3::Img(at::kRoundFlags.v))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kRoundFlags.v))[0] | 0x40);
     }
     g.clear_actor_bit(rv::As<records::BattleEnemy>(Sc())->actor);
     rv::As<records::BattleEnemy>(Enemy())->flags_110 = rv::As<records::BattleEnemy>(Enemy())->flags_110 & 0xFFFFFF8Fu;

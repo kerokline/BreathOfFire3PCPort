@@ -76,7 +76,7 @@ U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n
 U Half(U v) { return Sar(v + (S32(v) < 0 ? 1u : 0u), 1); }
 // imul of two whole registers: the low 32 bits.
 U Mul(U a, std::int32_t b) { return a * static_cast<U>(b); }
-const unsigned char* Story() { return At(Cond_Flags_addr + 0xa0); }
+const unsigned char* Story() { return At(::bof3::Img(Cond_Flags_addr) + 0xa0); }
 
 // --- x87 as the original has it (the game's control word: round to nearest, 53
 // bits); every value goes through the FPU as Capcom's does.
@@ -195,8 +195,8 @@ unsigned char Kind6FColour(unsigned byte, const char* who) {
     if (k >= at::kKind6FColourCount)
         bof3::Fatal("%s: +6 is %u, past kind 0x6F's one colour row at 0x%X - the original reads EffectKind6F_States' "
                     "bytes as a colour (docs/effect_3c.md section 6)",
-                    who, k, (unsigned)at::kKind6FColour);
-    return At(at::kKind6FColour + 3 * k + byte)[0];
+                    who, k, at::kKind6FColour.v);
+    return At(::bof3::Img(at::kKind6FColour.v) + 3 * k + byte)[0];
 }
 
 // ObjTrio record m (Party_MemberAt's answer); past the three, ours aborts.
@@ -226,7 +226,7 @@ extern "C" void __cdecl EffectKind6E_Run(void) {
 // shard spread (0x483C10), +9 = 0xB4, +1 up.
 extern "C" void __cdecl EffectKind6E_Start(void) {
     Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags | 0x40u);
-    SH_AT(VoidFn, at::kShardsSpread)();
+    SH_AT(VoidFn, at::kShardsSpread.v)();
     S()[9] = 0xB4;
     Step(1);
 }
@@ -333,7 +333,7 @@ extern "C" unsigned char __cdecl EffectKind6E_DrawShards(void) {
                 cur[0] = 0;
                 cur = At(Effect3c_ShardCursor);
             }
-            SH_AT(RecordFn, at::kShardQuad)(cur);
+            SH_AT(RecordFn, at::kShardQuad.v)(cur);
             c = Effect3c_ShardCursor;
             any = 1;
         }
@@ -371,7 +371,7 @@ extern "C" void __cdecl EffectKind6D_Move(void) {
 // original 0x4842F0: +0 = 0 in the 32 particles of the block 0x92C780 +
 // 0x500 * +6 (+6 unbounded: the block is computed, not checked).
 extern "C" void __cdecl EffectKind6D_ClearParticles(void) {
-    U p = at::kParticles + at::kParticleBlock * S()[6];
+    U p = ::bof3::Img(at::kParticles.v) + at::kParticleBlock * S()[6];
     for (unsigned n = at::kParticleCount; n != 0; --n, p += at::kParticleStride) At(p)[0] = 0;
 }
 
@@ -381,7 +381,7 @@ extern "C" void __cdecl EffectKind6D_ClearParticles(void) {
 // frees it) and drawn (EffectKind6D_DrawParticle). al 1 when any was live.
 extern "C" unsigned char __cdecl EffectKind6D_MoveParticles(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
-    unsigned char* r = At(at::kParticles + at::kParticleBlock * S()[6]);
+    unsigned char* r = At(::bof3::Img(at::kParticles.v) + at::kParticleBlock * S()[6]);
     unsigned char any = 0;
     for (unsigned n = at::kParticleCount; n != 0; --n, r += at::kParticleStride) {
         if (r[0] == 0) continue;
@@ -411,15 +411,15 @@ extern "C" void __cdecl EffectKind6D_DrawParticle(unsigned char* p) {
     DrawMode(1, 0x3C0, 0, 0);
     SH_CALL(MapView_LinkPrimAt)(UL(p + 0x18), UL(p + 0x1C), 0, 0xC);
     unsigned char* const prim = Gfx_PacketNext;
-    SH_AT(RecordFn, at::kPolyF3)(prim);
+    SH_AT(RecordFn, at::kPolyF3.v)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
     SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(p + 0x18), reinterpret_cast<float*>(prim + 8));
     const unsigned k = p[4];
     if (k >= at::kParticleShapeCount)
         bof3::Fatal("EffectKind6D_DrawParticle: +4 is %u, past the eight shapes at 0x%X - the original reads what "
                     "follows (docs/effect_3c.md section 6)",
-                    k, (unsigned)at::kParticleShapes);
-    const unsigned char* const row = At(at::kParticleShapes + 8 * k);
+                    k, at::kParticleShapes.v);
+    const unsigned char* const row = At(::bof3::Img(at::kParticleShapes.v) + 8 * k);
     FildAdd(SW(row + 0), prim + 8, prim + 0x14);
     FildAdd(SW(row + 2), prim + 0xC, prim + 0x18);
     FildAdd(SW(row + 4), prim + 8, prim + 0x20);
@@ -439,7 +439,7 @@ extern "C" void __cdecl EffectKind6D_DrawParticle(unsigned char* p) {
 // + .., z 0x318000 + .., +0x20 (0x420000 - z) << 7, +8 (x - 0x88000) >> 4,
 // +0xC -0x800, +0x10 as before. Then +0 1, +1 0, +2 0x18, +3 0x60, +4 Rand & 7.
 extern "C" void __cdecl EffectKind6D_InitParticles(void) {
-    unsigned char* r = At(at::kParticles + at::kParticleBlock * S()[6]);
+    unsigned char* r = At(::bof3::Img(at::kParticles.v) + at::kParticleBlock * S()[6]);
     for (unsigned n = at::kParticleCount; n != 0; --n, r += at::kParticleStride) {
         if (S()[6] == 0) {
             SetUL(r + 0x18, ((static_cast<U>(SH_CALL(Rand)()) & 0x1FFu) + 0x1200u) << 8);
@@ -604,7 +604,7 @@ extern "C" void __cdecl EffectKind6F_PushParty(unsigned which) {
     U slot = which;
     const unsigned sel = which & 0xFFu;
     if (sel > 1) return;
-    const U cells = sel == 0 ? at::kKind6FCellsZ : at::kKind6FCellsX;
+    const U cells = sel == 0 ? ::bof3::Img(at::kKind6FCellsZ.v) : ::bof3::Img(at::kKind6FCellsX.v);
     for (unsigned i = 0; i < 4; ++i) {
         const U cell = At(cells + i)[0];
         if (sel == 0) {
@@ -841,8 +841,8 @@ extern "C" void __cdecl EffectDebris_InitOne(unsigned char* d) {
     SH_CALL(Gte_RotMatrixY)(-static_cast<int>(static_cast<short>(ay)), m.m);
     SH_CALL(Gte_RotMatrixZ)(static_cast<short>(az), m.m);
     using Turn = void (__cdecl*)(const short*, const short*, short*);
-    SH_AT(Turn, at::kMatrixVector)(m.m, reinterpret_cast<const short*>(d + 0x10), reinterpret_cast<short*>(d + 0x10));
-    SH_AT(Turn, at::kMatrixVector)(m.m, reinterpret_cast<const short*>(d + 0x18), reinterpret_cast<short*>(d + 0x18));
+    SH_AT(Turn, at::kMatrixVector.v)(m.m, reinterpret_cast<const short*>(d + 0x10), reinterpret_cast<short*>(d + 0x10));
+    SH_AT(Turn, at::kMatrixVector.v)(m.m, reinterpret_cast<const short*>(d + 0x18), reinterpret_cast<short*>(d + 0x18));
     SetWord(d + 0x28, (static_cast<U>(SH_CALL(Rand)()) & 7u) + 8u);
     SetWord(d + 0x20, 0);
     SetWord(d + 0x22, 0);
@@ -1221,14 +1221,14 @@ extern "C" void __cdecl EffectKind75_Brighten(void) {
     } else {
         S()[1] = 2;
     }
-    SH_AT(VoidFn, at::kScreenTile)();
+    SH_AT(VoidFn, at::kScreenTile.v)();
     SH_CALL(EffectKind75_MarkSprites)();
 }
 
 // original 0x485C50 (state 2): the screen tile and a tail jump to
 // EffectKind75_MarkSprites.
 extern "C" void __cdecl EffectKind75_Hold(void) {
-    SH_AT(VoidFn, at::kScreenTile)();
+    SH_AT(VoidFn, at::kScreenTile.v)();
     SH_CALL(EffectKind75_MarkSprites)();
 }
 

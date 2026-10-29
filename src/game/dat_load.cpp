@@ -51,7 +51,7 @@ constexpr int kTile = 0x20;
 
 // Kind-0 payloads land at this base plus the chunk tag: the port's image of
 // PSX RAM from 0x80010000 (symbols.toml, MessagePools).
-std::uint8_t* Arena() { return reinterpret_cast<std::uint8_t*>(bof3::addr::MessagePools); }
+std::uint8_t* Arena() { return reinterpret_cast<std::uint8_t*>(::bof3::Img(bof3::addr::MessagePools)); }
 
 // Kind 1. The tag packs a tile grid: byte 3 = x, byte 2 = y, byte 1 = columns,
 // all in 32-px tiles. The payload is size >> 11 tiles, uploaded left to right

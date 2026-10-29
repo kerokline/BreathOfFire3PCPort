@@ -14,46 +14,46 @@ namespace effect_2e::at {
 // Callees in no group of the cut (catalog parts 6 and 7, read 2026-09-29 for
 // their arguments and what they read and write), called through the harness by
 // address (SH_AT). Each is cdecl.
-constexpr std::uint32_t kRing = bof3::addr::EffectRing_Draw;         // 0x479EE0, R3E's: (unsigned char *ring): a ring of G4 quads from the 0x12-byte record
+constexpr ::bof3::image::CodeVa kRing{bof3::addr::EffectRing_Draw};         // 0x479EE0, R3E's: (unsigned char *ring): a ring of G4 quads from the 0x12-byte record
                                                   // kind 0x48's state 7 keeps at 0x92D1C8 (the pointer 0x6761D0)
-constexpr std::uint32_t kSpiralInit = bof3::addr::EffectSpiral_Init;   // 0x4799C0, R3E's: (unsigned char *spiral): the 0xD20-byte record at 0x92C4A4 (the
+constexpr ::bof3::image::CodeVa kSpiralInit{bof3::addr::EffectSpiral_Init};   // 0x4799C0, R3E's: (unsigned char *spiral): the 0xD20-byte record at 0x92C4A4 (the
                                                   // pointer 0x6761CC) set up from its point +0..+8 and its turn word
                                                   // 0x92D1B4 (+0xD10)
-constexpr std::uint32_t kSpiralDraw = bof3::addr::EffectSpiral_StepDraw;   // 0x479B70, R3E's: (unsigned char *spiral): that record stepped and drawn (read to
+constexpr ::bof3::image::CodeVa kSpiralDraw{bof3::addr::EffectSpiral_StepDraw};   // 0x479B70, R3E's: (unsigned char *spiral): that record stepped and drawn (read to
                                                   // +0xD20; PSX twin 0x801F9330)
-constexpr std::uint32_t kSparksInit = bof3::addr::EffectGlowSparks_Clear;   // 0x4790C0, R3E's: (void): no arguments, no calls
-constexpr std::uint32_t kSparkFree = bof3::addr::EffectSpark_FindFree;    // (void): the first of the 8 records of 0x1C at 0x92BF80 whose +0 is
+constexpr ::bof3::image::CodeVa kSparksInit{bof3::addr::EffectGlowSparks_Clear};   // 0x4790C0, R3E's: (void): no arguments, no calls
+constexpr ::bof3::image::CodeVa kSparkFree{bof3::addr::EffectSpark_FindFree};    // (void): the first of the 8 records of 0x1C at 0x92BF80 whose +0 is
                                                   // 0, or 0 when none is; eax
-constexpr std::uint32_t kSparkSet = bof3::addr::EffectGlowSparks_StartBurst;     // 0x479160, R3E's: (unsigned char *spark): the record's +0..+0x17 set (in use, +2 = 8,
+constexpr ::bof3::image::CodeVa kSparkSet{bof3::addr::EffectGlowSparks_StartBurst};     // 0x479160, R3E's: (unsigned char *spark): the record's +0..+0x17 set (in use, +2 = 8,
                                                   // a point round Sprite_Current's at a random angle); Rand, Math_*
-constexpr std::uint32_t kSparksRun = bof3::addr::EffectGlowSparks_Run;    // 0x479260, R3E's: (void): the 8 records stepped through the table 0x654660 by their
+constexpr ::bof3::image::CodeVa kSparksRun{bof3::addr::EffectGlowSparks_Run};    // 0x479260, R3E's: (void): the 8 records stepped through the table 0x654660 by their
                                                   // +1 and drawn; al 1 when any is in use, else 0
-constexpr std::uint32_t kBurstStep = bof3::addr::EffectGlowTrail_Update;    // 0x4794D0, R3E's: (unsigned char *burst): the record at 0x92C060 (read to +0x440,
+constexpr ::bof3::image::CodeVa kBurstStep{bof3::addr::EffectGlowTrail_Update};    // 0x4794D0, R3E's: (unsigned char *burst): the record at 0x92C060 (read to +0x440,
                                                   // written to +0x402) stepped; calls EffectAngle_Mean
-constexpr std::uint32_t kBurstDraw = bof3::addr::EffectGlowTrail_Draw;    // 0x4796B0, R3E's: (unsigned char *burst): that record drawn as G4 quads (read to +0x400)
-constexpr std::uint32_t kSqrt = bof3::addr::Gte_SquareRoot0;         // library layer: (long v) the square root through fsqrt and _ftol; eax
-constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV; // library layer: (matrix, in, out) - an SVECTOR turned by the 3 x 3
+constexpr ::bof3::image::CodeVa kBurstDraw{bof3::addr::EffectGlowTrail_Draw};    // 0x4796B0, R3E's: (unsigned char *burst): that record drawn as G4 quads (read to +0x400)
+constexpr ::bof3::image::CodeVa kSqrt{bof3::addr::Gte_SquareRoot0};         // library layer: (long v) the square root through fsqrt and _ftol; eax
+constexpr ::bof3::image::CodeVa kMatrixVector{bof3::addr::Gte_ApplyMatrixSV}; // library layer: (matrix, in, out) - an SVECTOR turned by the 3 x 3
                                                   // (18 bytes read), 6 bytes written; in and out may be one
 // Callees another group of round thirteen owns (analysis/round13_cut.tsv),
 // called by address until the coordinator rebinds them.
-constexpr std::uint32_t kDebrisDraw = bof3::addr::EffectDebris_Draw;   // 0x485030, E3C's (unsigned char *debris): a G3 of a 0x2C-byte debris record
+constexpr ::bof3::image::CodeVa kDebrisDraw{bof3::addr::EffectDebris_Draw};   // 0x485030, E3C's (unsigned char *debris): a G3 of a 0x2C-byte debris record
                                                   // (its point +0, edges +0x10 / +0x18 turned by +0x24, scaled by
                                                   // +0x28, shaded +0x2A); Gfx_CommitPrim(1, 0x34)
-constexpr std::uint32_t kDiscDraw = bof3::addr::EffectKind4E_DrawDisc;     // E2F's (radius, centre, rim): a fan of 32 G3 triangles round the
+constexpr ::bof3::image::CodeVa kDiscDraw{bof3::addr::EffectKind4E_DrawDisc};     // E2F's (radius, centre, rim): a fan of 32 G3 triangles round the
                                                   // screen point Sprite_Current +0x74 / +0x78 (floats), the radius read
                                                   // as an s16 (movsx), the rim as a byte
 
 // Data.
-constexpr std::uint32_t kState7Steps = 0x65460C;  // two byte tables after kind 0x48's state-7 table (0x6545FC): the
-constexpr std::uint32_t kState7Adds = 0x654614;   // mask and the add EffectKind48_State7_Swell indexes by +9
-constexpr std::uint32_t kSpiral = 0x92C4A4;       // the 0xD20-byte record kind 0x48's states 8 and 10 use
+constexpr ::bof3::image::Va kState7Steps{0x65460C};  // two byte tables after kind 0x48's state-7 table (0x6545FC): the
+constexpr ::bof3::image::Va kState7Adds{0x654614};   // mask and the add EffectKind48_State7_Swell indexes by +9
+constexpr ::bof3::image::Va kSpiral{0x92C4A4};       // the 0xD20-byte record kind 0x48's states 8 and 10 use
 // kSpiralTurn: now Effect2e_SpiralTurn (symbols.toml). its turn word (+0xD10)
-constexpr std::uint32_t kSpiralPtr = 0x6761CC;    // unsigned char *: points at kSpiral
-constexpr std::uint32_t kRingRecord = 0x92D1C8;   // the ring record of state 7: +0..+8 its point, +0x10 a word
-constexpr std::uint32_t kRingPtr = 0x6761D0;      // unsigned char *: points at kRingRecord
+constexpr ::bof3::image::Va kSpiralPtr{0x6761CC};    // unsigned char *: points at kSpiral
+constexpr ::bof3::image::Va kRingRecord{0x92D1C8};   // the ring record of state 7: +0..+8 its point, +0x10 a word
+constexpr ::bof3::image::Va kRingPtr{0x6761D0};      // unsigned char *: points at kRingRecord
 // kSoundSwitch: now Effect2e_SoundSwitch (symbols.toml). a byte: kind 0x4D's sound 0x209 when set, else 0x208
 // kBurst: now EffectKind30_Shards[0xe0] (symbols.toml). state 12's record (0x440 bytes)
-constexpr std::uint32_t kBurstSize = 0x92C49E;    // a word inside it: state 12's size
+constexpr ::bof3::image::Va kBurstSize{0x92C49E};    // a word inside it: state 12's size
 // kSparks: now EffectKind30_Shards (symbols.toml). 8 records of 0x1C (state 9's sparks), or kind 0x4A's trail
 // kTrail: now EffectKind30_Shards (symbols.toml). kind 0x4A: 64 records of 0x34 (a point +0..+8, its two edge points
                                                   // +0x10 / +0x20, an angle word +0x30), to 0x92CC80
@@ -61,13 +61,13 @@ constexpr std::uint32_t kTrailStride = 0x34;
 constexpr unsigned kTrailCount = 64;
 // kTrailTurn: now Effect2e_TrailTurn (symbols.toml). kind 0x4A: the angle word the newest point takes
 // kTrailSpin: now Effect2e_TrailSpin (symbols.toml). kind 0x4A: a byte, set: the angle word turns 0x40 a frame
-constexpr std::uint32_t kDebris = 0x92CC84;       // kind 0x4B: 32 debris records of 0x2C, to 0x92D204
+constexpr ::bof3::image::Va kDebris{0x92CC84};       // kind 0x4B: 32 debris records of 0x2C, to 0x92D204
 constexpr std::uint32_t kDebrisStride = 0x2C;
 constexpr unsigned kDebrisCount = 32;
 // kSphereVerts: now Effect2e_SphereVerts (symbols.toml). the sphere: 0x1E2 vertices of 8 bytes (x, y, z, pad) ...
-constexpr std::uint32_t kSphereScreen = 0x92E8EC; // ... projected, 0x1E2 of 12 bytes (x, y, depth) ...
-constexpr std::uint32_t kSphereQuads = 0x92FF84;  // ... 0x200 quads of four u16 vertex numbers ...
-constexpr std::uint32_t kSphereShades = 0x930F84; // ... a shade byte a vertex ...
+constexpr ::bof3::image::Va kSphereScreen{0x92E8EC}; // ... projected, 0x1E2 of 12 bytes (x, y, depth) ...
+constexpr ::bof3::image::Va kSphereQuads{0x92FF84};  // ... 0x200 quads of four u16 vertex numbers ...
+constexpr ::bof3::image::Va kSphereShades{0x930F84}; // ... a shade byte a vertex ...
 // kSphereLight: now Effect2e_SphereLight (symbols.toml). ... and the light, three longs, to 0x931174
 constexpr unsigned kSphereVertCount = 0x1E2;
 constexpr unsigned kSphereQuadCount = 0x200;

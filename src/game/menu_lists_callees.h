@@ -17,6 +17,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"   // bof3::addr:: for the constants rebound to their names
 
 namespace menu_lists {
@@ -26,7 +28,7 @@ namespace at {
 // The field menu's state block (docs/menu-screens.md section 1).
 // kMenu: now BattleE1_Mode (symbols.toml). u8 state (the dword's low byte picks FieldMenu_Run's entry)
 // kStep: now FieldS_State (symbols.toml). u8 step inside a state
-constexpr std::uint32_t kCountdown = 0x929F04;     // u8 the open / close countdown
+constexpr ::bof3::image::Va kCountdown{0x929F04};     // u8 the open / close countdown
 // kCursor: now MenuLists_Cursor (symbols.toml). u8 the top bar's cursor, 0..6
 // kOpenedAt: now ScenaSc6_Load10 (symbols.toml). u8: 1 opens the menu straight on state 5, step 5
 // kPartyChanged: now MenuLists_PartyChanged (symbols.toml). u8: set when a member of the party left it
@@ -35,28 +37,28 @@ constexpr std::uint32_t kCountdown = 0x929F04;     // u8 the open / close countd
 // characters, then three of the reserve; 0xFF is none.
 // kParty: now Cond_Flags[0xd2] (symbols.toml).
 // kReserve: now Cond_Flags[0xd5] (symbols.toml).
-constexpr std::uint32_t kReserveData = 0x9045FC;   // 3 bytes a reserve slot, kept with its member
+constexpr ::bof3::image::Va kReserveData{0x9045FC};   // 3 bytes a reserve slot, kept with its member
 // kMoney: now Party_Zenny (symbols.toml). dword, Menu_DrawMoneyBox's value
-constexpr std::uint32_t kCampFlag = 0x904152;      // u8 (hypothesis: "camping allowed anywhere")
-constexpr std::uint32_t kMemberRecord = 0x66972C;  // u8 by character: its record (Character_IndexById)
+constexpr ::bof3::image::Va kCampFlag{0x904152};      // u8 (hypothesis: "camping allowed anywhere")
+constexpr ::bof3::image::Va kMemberRecord{0x66972C};  // u8 by character: its record (Character_IndexById)
 // kCharRecords: now CharacterRecords (symbols.toml). 0xA4 bytes each
 constexpr std::uint32_t kCharRecordSize = 0xA4;
 // kColour: now Config_WindowColour (symbols.toml). Config's window colour byte
 // kBackground: now Config_Background (symbols.toml). Config's "Background" byte
 // The party as the menu opened on it (FieldMenu_Open), for
 // FieldMenu_ReconcileParty to compare the party it closes on against.
-constexpr std::uint32_t kSavedParty = 0x6BDF98;
-constexpr std::uint32_t kSavedReserve = 0x6BDF9B;
+constexpr ::bof3::image::Va kSavedParty{0x6BDF98};
+constexpr ::bof3::image::Va kSavedReserve{0x6BDF9B};
 // The window records (WindowRecords, docs/window-task.md section 3).
 // kRecords: now WindowRecords (symbols.toml).
 constexpr std::uint32_t kRecordSize = 0x24;
-constexpr std::uint32_t kRecordsEnd = 0x803478;
+constexpr ::bof3::image::Va kRecordsEnd{0x803478};
 // kCurrent: now BattleWinStates_Current (symbols.toml). dword: the record the window layer is running
 // kMemberPanels: now WindowRecords[4] (symbols.toml). record 4: the first member panel
-constexpr std::uint32_t kMoneyWindow = 0x80325C;   // record 7
-constexpr std::uint32_t kTimeWindow = 0x803280;    // record 8
-constexpr std::uint32_t kIconWindow = 0x8032A4;    // record 9, the top bar's icons
-constexpr std::uint32_t kTitleWindow = 0x8032C8;   // record 10, the screen title
+constexpr ::bof3::image::Va kMoneyWindow{0x80325C};   // record 7
+constexpr ::bof3::image::Va kTimeWindow{0x803280};    // record 8
+constexpr ::bof3::image::Va kIconWindow{0x8032A4};    // record 9, the top bar's icons
+constexpr ::bof3::image::Va kTitleWindow{0x8032C8};   // record 10, the screen title
 // kObjTrio: now ObjTrio (symbols.toml). the party's working records; Sprite_Current for the gateway test
 // Field_InputFlags, Game_AreaNumber, Game_Step, Input_Pressed and the
 // confirm / cancel words are bound in symbols.gen.h; read here by address
@@ -88,11 +90,11 @@ constexpr std::uint32_t kRightOffBound = 0x59A5E6; // imm32 of `mov ecx, 0x140` 
 
 // Callees with no name in symbols.gen.h: other groups' functions this round,
 // or no group's, called by address.
-constexpr std::uint32_t kExitGateway = bof3::addr::Field_GatewayExit;   // u8(): an exit from the gateway tables (event_ops_callees.h); no group
-constexpr std::uint32_t kCampCell = bof3::addr::FieldMenu_CampAllowedCell;   // 0x589FB0, R2D's (rest_2d.cpp): u8(): 1 unless ObjTrio's cell is 0xA0 / 0xA1 / 0xAF / 0x91 (AreaMap_ByteAt & 0xF0)
-constexpr std::uint32_t kMemberBody = bof3::addr::Menu_DrawMemberStatus;    // group DD's: a member's panel (x, y, record, flag, 0)
-constexpr std::uint32_t kMemberFace = bof3::addr::Menu_DrawCell8;    // group DD's: an 8 x 8 cell SPRT (x, y, u / 8, v / 8, clut, shade)
-constexpr std::uint32_t kTimeBox = bof3::addr::Menu_DrawPlayTime;       // group DD's: the play-time box (x, y)
+constexpr ::bof3::image::CodeVa kExitGateway{bof3::addr::Field_GatewayExit};   // u8(): an exit from the gateway tables (event_ops_callees.h); no group
+constexpr ::bof3::image::CodeVa kCampCell{bof3::addr::FieldMenu_CampAllowedCell};   // 0x589FB0, R2D's (rest_2d.cpp): u8(): 1 unless ObjTrio's cell is 0xA0 / 0xA1 / 0xAF / 0x91 (AreaMap_ByteAt & 0xF0)
+constexpr ::bof3::image::CodeVa kMemberBody{bof3::addr::Menu_DrawMemberStatus};    // group DD's: a member's panel (x, y, record, flag, 0)
+constexpr ::bof3::image::CodeVa kMemberFace{bof3::addr::Menu_DrawCell8};    // group DD's: an 8 x 8 cell SPRT (x, y, u / 8, v / 8, clut, shade)
+constexpr ::bof3::image::CodeVa kTimeBox{bof3::addr::Menu_DrawPlayTime};       // group DD's: the play-time box (x, y)
 
 struct Callees {
     // ours, in this file

@@ -62,7 +62,7 @@ std::uint32_t Coordinate(unsigned char half, unsigned char whole) {
 // A character's record +0xB (CharacterRecords, stride 0xA4) through
 // Character_IndexById[id] - both indexes a whole byte, unchecked.
 unsigned char* RecordFlags(unsigned char id) {
-    return At(CharacterRecords_addr + 0xB + Character_IndexById[id] * at::kObjectStride);
+    return At(::bof3::Img(CharacterRecords_addr) + 0xB + Character_IndexById[id] * at::kObjectStride);
 }
 
 }  // namespace
@@ -76,11 +76,11 @@ unsigned char* RecordFlags(unsigned char id) {
 // the same way). No PSX twin paired.
 extern "C" void __cdecl Field_StartEventBattle(unsigned id_arg) {
     const unsigned char id = static_cast<unsigned char>(id_arg);
-    At(at::kScriptFlags2High)[0] = static_cast<unsigned char>(At(at::kScriptFlags2High)[0] | 0x10);
+    At(::bof3::Img(at::kScriptFlags2High))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kScriptFlags2High))[0] | 0x10);
     EventBattle_Id = id;
-    unsigned char* const leader = At(ObjTrio_addr);
+    unsigned char* const leader = At(::bof3::Img(ObjTrio_addr));
     leader[1] = 5;
-    const unsigned char flags = At(bof3::addr::EventBattle_Records)[id * 4u];
+    const unsigned char flags = At(::bof3::Img(bof3::addr::EventBattle_Records))[id * 4u];
     leader[2] = 0;
     leader[3] = 0;
     leader[4] = 0;
@@ -98,7 +98,7 @@ extern "C" void __cdecl Scena08_PartyJoin784(void) {
     SH_CALL(Party_Join)(7);
     SH_CALL(Party_Join)(8);
     SH_CALL(Party_Join)(4);
-    SH_AT(void (__cdecl*)(), at::kPartyPalettes)();
+    SH_AT(void (__cdecl*)(), at::kPartyPalettes.v)();
 }
 
 // original 0x524870: an effect object of kind 0x34 at the cell (x, z). With
@@ -197,7 +197,7 @@ extern "C" unsigned char __cdecl Party_AddToLists(unsigned member_arg) {
     const unsigned char member = static_cast<unsigned char>(member_arg);
     unsigned char* const flags = RecordFlags(member);
     *flags = static_cast<unsigned char>(*flags | 3);
-    unsigned char* const lists = At(Cond_Flags_addr + 0xd2);
+    unsigned char* const lists = At(::bof3::Img(Cond_Flags_addr) + 0xd2);
     const unsigned char n = Field_MemberCount;
     if (n < 3) {
         Field_MemberCount = static_cast<unsigned char>(n + 1);

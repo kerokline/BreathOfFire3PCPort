@@ -52,24 +52,24 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F, Scratch_Swap its +0xC) and the four
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
-constexpr std::uint32_t kS = SharedScratch_addr;
+constexpr ::bof3::image::Va kS{SharedScratch_addr};
 // kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char* Source() { return Pointer(::bof3::Img(BattleOdds_ActorObject_addr)); }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, std::uint32_t v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, std::uint32_t v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
 void AddSW(unsigned k, std::uint32_t v) { SetSW(k, SW(k) + v); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
-void SetVW(unsigned k, std::uint32_t v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, std::uint32_t v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -87,8 +87,8 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
-unsigned char* EnemyRecord(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
+unsigned char* EnemyRecord(unsigned i) { return Mem(::bof3::Img(Battle_Enemies_addr) + i * at::kEnemyStride); }
 void SetPtr(unsigned char* at, const void* p) {
     SetLong(at, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)));
 }
@@ -132,8 +132,8 @@ std::uint32_t CosShlW(int a, unsigned n, unsigned add) {
 using Fn0 = void (__cdecl*)();
 using Fn1 = void (__cdecl*)(unsigned);
 using PrimFn = void (__cdecl*)(unsigned char*);
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
-void Call1(std::uint32_t address, unsigned a) { MH_AT(Fn1, address)(a); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
+void Call1(std::uint32_t address, unsigned a) { MH_WORD(Fn1, address)(a); }
 
 // The projections with the arguments the originals push: the depth and flag
 // pointers past the vertices (ours reads the first).
@@ -772,11 +772,11 @@ S27_EXPORT void __cdecl WhelpBreathSprite_Run(void) {
         bof3::addr::WhelpBreathFlames_Grow,  bof3::addr::WhelpBreathFlames_End, bof3::addr::WhelpBreathGlow_Grow,
         bof3::addr::WhelpBreathGlow_Hold,    bof3::addr::WhelpBreathGlow_End};
     ModeCommit(3, 0x15);
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(raw::kBankEffects));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(raw::kBankEffects)));
     const unsigned phase = Sc()[2];
     if (phase >= 8) PastTable("WhelpBreathSprite_Run", phase, 8);
     magic_harness::Phase(kPhases[phase])();
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(raw::kBankDefault));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(raw::kBankDefault)));
 }
 
 // original 0x4DB7F0: the sprite at its owner (direction byte, position);

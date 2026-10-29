@@ -52,22 +52,22 @@ using move_script::At;
 void Set(unsigned a, unsigned b, unsigned c) { SH_CALL(PartySet_Load)(a, b, c, 0); }
 void Reload() { SH_CALL(Field_PartyLoad)(0); }
 void Join(unsigned id) { SH_CALL(Party_Join)(id); }
-void Leave(unsigned id) { SH_AT(void (__cdecl*)(unsigned), at::kLeave)(id); }
-void Palettes() { SH_AT(void (__cdecl*)(), at::kPalettes)(); }
+void Leave(unsigned id) { SH_AT(void (__cdecl*)(unsigned), at::kLeave.v)(id); }
+void Palettes() { SH_AT(void (__cdecl*)(), at::kPalettes.v)(); }
 
 // Field member i (ObjTrio + 0x14C i, unchecked) and its character id +0x89.
 unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
-unsigned char MemberId(unsigned i) { return At(ObjTrio_addr + 0x89 + i * at::kMemberStride)[0]; }
+unsigned char MemberId(unsigned i) { return At(::bof3::Img(ObjTrio_addr) + 0x89 + i * at::kMemberStride)[0]; }
 
 // The character record of Character_IndexById[k] (CharacterRecords, 0xA4
 // each; the byte found unchecked), the index read at the call.
 unsigned char* RecordOf(unsigned k) {
-    return At(CharacterRecords_addr + Character_IndexById[k] * at::kRecordStride);
+    return At(::bof3::Img(CharacterRecords_addr) + Character_IndexById[k] * at::kRecordStride);
 }
 
 // Both 3-byte party lists 0x904062..0x904067 to 0xFF.
 void EmptyLists() {
-    unsigned char* const lists = At(Cond_Flags_addr + 0xd2);
+    unsigned char* const lists = At(::bof3::Img(Cond_Flags_addr) + 0xd2);
     for (unsigned i = 0; i < 6; ++i) lists[i] = 0xFF;
 }
 
@@ -485,7 +485,7 @@ extern "C" void __cdecl Scena09_Set765ReloadJoin5(void) {
 // As the original has it: the id is a byte in a pushed dword whose upper three
 // bytes are the caller's ecx; PartySet_Load and Party_Join read only the byte.
 extern "C" void __cdecl ScenaCall_Party72Saved(void) {
-    unsigned char* const saved = At(at::kSaved);
+    unsigned char* const saved = At(::bof3::Img(at::kSaved));
     unsigned char k = 8;
     for (unsigned i = 0; i < 3; ++i) {
         const unsigned char b = saved[i];
@@ -575,7 +575,7 @@ extern "C" void __cdecl ScenaCall_Leave8(void) {
 extern "C" void __cdecl scena_calls_SaveAndLeave(std::uint32_t ecx) {
     unsigned char local[4];
     std::memcpy(local, &ecx, sizeof local);
-    unsigned char* const saved = At(at::kSaved);
+    unsigned char* const saved = At(::bof3::Img(at::kSaved));
     const unsigned n = Field_MemberCount;
     for (unsigned i = 0; i < n; ++i) {
         const unsigned char id = MemberId(i);
@@ -652,7 +652,7 @@ extern "C" void __cdecl ScenaCall_Join5(void) {
 // 6-byte local (their upper bytes are the neighbours and stale stack), and
 // the joins' ids are al over the last call's eax; the callees read the byte.
 extern "C" void __cdecl Scena10_RestoreSaved(void) {
-    const unsigned char* const saved = At(at::kSaved);
+    const unsigned char* const saved = At(::bof3::Img(at::kSaved));
     const unsigned char s[3] = {saved[0], saved[1], saved[2]};
     Set(s[0], s[1], s[2]);
     for (unsigned char id : s)
@@ -717,8 +717,8 @@ extern "C" void __cdecl Scena13_Party765(void) {
 // id read from 0x903A10 after the last call), the set (7, 4, 8) and member 7;
 // 0x533E00.
 extern "C" void __cdecl Scena13_SaveParty7(void) {
-    unsigned char* const saved = At(at::kSaved);
-    const unsigned char* const lists = At(Cond_Flags_addr + 0xd2);
+    unsigned char* const saved = At(::bof3::Img(at::kSaved));
+    const unsigned char* const lists = At(::bof3::Img(Cond_Flags_addr) + 0xd2);
     for (unsigned i = 0; i < 3; ++i) {
         saved[i] = lists[i];
         saved[3 + i] = lists[3 + i];
@@ -744,14 +744,14 @@ extern "C" void __cdecl Scena13_Set758Party7(void) {
 // As the original has it: the three ids are dwords read across a 6-byte
 // local; the callees read the byte.
 extern "C" void __cdecl Scena13_RestoreSaved(void) {
-    unsigned char* const saved = At(at::kSaved);
+    unsigned char* const saved = At(::bof3::Img(at::kSaved));
     const unsigned char s[3] = {saved[0], saved[1], saved[2]};
     Set(s[0], s[1], s[2]);
     Field_MemberCount = 0;
     Join(s[0]);
     Join(s[1]);
     Join(s[2]);
-    unsigned char* const lists = At(Cond_Flags_addr + 0xd2);
+    unsigned char* const lists = At(::bof3::Img(Cond_Flags_addr) + 0xd2);
     for (unsigned i = 0; i < 3; ++i) lists[3 + i] = saved[3 + i];
 }
 
@@ -822,7 +822,7 @@ extern "C" void __cdecl Scena14_SaveLeaveAllPartyA(void) {
     unsigned char ids[3];
     for (unsigned i = 0; i < 3; ++i) {
         const unsigned char id = MemberId(i);
-        if (id != 7 && id != 4) At(at::kSaved)[0] = id;
+        if (id != 7 && id != 4) At(::bof3::Img(at::kSaved))[0] = id;
         ids[i] = id;
     }
     for (unsigned char id : ids) Leave(id);
@@ -855,7 +855,7 @@ extern "C" void __cdecl Scena14_Party015Lists785(void) {
     Join(1);
     Join(5);
     Palettes();
-    unsigned char* const lists = At(Cond_Flags_addr + 0xd2);
+    unsigned char* const lists = At(::bof3::Img(Cond_Flags_addr) + 0xd2);
     lists[3] = 7;
     lists[4] = 8;
     lists[5] = 5;
@@ -875,11 +875,11 @@ extern "C" void __cdecl Scena14_Party726(void) {
 // members 7, 4 and the first saved id, read again after the two joins; tail
 // 0x533E00.
 extern "C" void __cdecl Scena14_Party74First(void) {
-    Set(7, 4, At(at::kSaved)[0]);
+    Set(7, 4, At(::bof3::Img(at::kSaved))[0]);
     Field_MemberCount = 0;
     Join(7);
     Join(4);
-    Join(At(at::kSaved)[0]);
+    Join(At(::bof3::Img(at::kSaved))[0]);
     Palettes();
 }
 
@@ -887,7 +887,7 @@ extern "C" void __cdecl Scena14_Party74First(void) {
 // in 0x903A10..12, each sent away (read from there after the last call, 7
 // too), the set (7, 8, 4) and member 7; 0x533E00.
 extern "C" void __cdecl Scena14_SaveLeaveAllParty7(void) {
-    unsigned char* const saved = At(at::kSaved);
+    unsigned char* const saved = At(::bof3::Img(at::kSaved));
     for (unsigned i = 0; i < 3; ++i) saved[i] = MemberId(i);
     for (unsigned i = 0; i < 3; ++i) Leave(saved[i]);
     Set(7, 8, 4);
@@ -920,7 +920,7 @@ extern "C" void __cdecl ScenaCall_Party784(void) {
 // As the original has it: the id is a byte in a stack dword whose upper bytes
 // are stale; the callees read the byte.
 extern "C" void __cdecl Scena14_Party74Other(void) {
-    const unsigned char* const saved = At(at::kSaved);
+    const unsigned char* const saved = At(::bof3::Img(at::kSaved));
     unsigned char k;
     unsigned i = 0;
     for (;;) {

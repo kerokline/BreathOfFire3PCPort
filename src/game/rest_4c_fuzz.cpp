@@ -256,7 +256,7 @@ U NameEffect(const U*, U answer) { return Key(sh::Text() + (answer & 0xF0)); }
 // one call in four: a louder stand-in than the real draw, so a re-read missed
 // after a draw is seen).
 U ShuffleEffect(const U*, U answer) {
-    for (unsigned i = 0; i < 9; ++i) B(at::kCards + i) = static_cast<unsigned char>(1 + sh::Noise() % 9);
+    for (unsigned i = 0; i < 9; ++i) B(::bof3::Img(at::kCards.v) + i) = static_cast<unsigned char>(1 + sh::Noise() % 9);
     return answer;
 }
 void MoveCell(U n);
@@ -287,11 +287,11 @@ const sh::Callee kCallees[] = {
     {G_OURS(Commu_RandDigit), 1, {0xFF}, sh::Answer::kByte, 1, 9},
     {G_OURS(CommuHiLo_Quit), 0, {}, kG, 0, 0},
     // R4D's (wave four), by address (rest_4c_callees.h)
-    {"0x45C400", at::kGuessPanel, at::kGuessPanel, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0, {}, &DrawEffect},
-    {"0x45C7D0", at::kGuessRow, at::kGuessRow, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0, {}, &DrawEffect},
-    {"0x45C850", at::kSecret, at::kSecret, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0, {}, &DrawEffect},
+    {"0x45C400", at::kGuessPanel.v, at::kGuessPanel.v, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0, {}, &DrawEffect},
+    {"0x45C7D0", at::kGuessRow.v, at::kGuessRow.v, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0, {}, &DrawEffect},
+    {"0x45C850", at::kSecret.v, at::kSecret.v, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0, {}, &DrawEffect},
     // Capcom's library POLY_F3 set-up, by address
-    {"0x5A7570", at::kSetPolyF3, at::kSetPolyF3, 1, {kAll}, kG, 0, 0, {}, &PolyF3Effect, nullptr, true},
+    {"0x5A7570", at::kSetPolyF3.v, at::kSetPolyF3.v, 1, {kAll}, kG, 0, 0, {}, &PolyF3Effect, nullptr, true},
     // ours, re-listed with what this group needs
     {G_OURS(Input_AutoRepeat), 1, {kAll}, kG, 0, 0, {}, &RepeatEffect},
     {G_OURS(Sound_PlayEffect), 1, {0xFFFF}, kG, 0, 0, {}, &DrawEffect},   // louder: the stake and the money are read after sounds
@@ -381,7 +381,7 @@ void Seed(unsigned k) {
     B(Rest4c_Lost_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     // the stake and the money at the compares (0, 10, 100, 1000, 10000; the
     // stake's three digits from its low byte)
-    SetLong(Mem(at::kBet), static_cast<std::int32_t>(PickOf(0, 1, 9, 10, 11, 50, 99, 100, 101, 127, 128, 0xFF, 999,
+    SetLong(Mem(::bof3::Img(at::kBet.v)), static_cast<std::int32_t>(PickOf(0, 1, 9, 10, 11, 50, 99, 100, 101, 127, 128, 0xFF, 999,
                                                             1000, 1001, 9999, 10000, 10001, 0xFFFFFFFFu, 0x80000000u,
                                                             sh::Next())));
     SetLong(Mem(Party_Zenny_addr),
@@ -390,22 +390,22 @@ void Seed(unsigned k) {
     for (unsigned i = 0; i < 3; ++i)
         B(at::kDigits_addr + i) = static_cast<unsigned char>(PickOf(0, 1, 5, 8, 9, 10, 0xFF, 0x80, sh::Next()));
     // the values, the picks and the guess records: digits 1..9 mostly
-    for (unsigned i = 0; i < 9; ++i) B(at::kCards + i) = static_cast<unsigned char>(sh::Often() ? 1 + sh::Next() % 9 : sh::Next());
-    for (unsigned i = 1; i <= 8; ++i) B(at::kPicks + i) = static_cast<unsigned char>(PickOf(0, 1, 0, 1, sh::Next()));
+    for (unsigned i = 0; i < 9; ++i) B(::bof3::Img(at::kCards.v) + i) = static_cast<unsigned char>(sh::Often() ? 1 + sh::Next() % 9 : sh::Next());
+    for (unsigned i = 1; i <= 8; ++i) B(::bof3::Img(at::kPicks.v) + i) = static_cast<unsigned char>(PickOf(0, 1, 0, 1, sh::Next()));
     for (unsigned i = 0; i < 40; ++i)
-        B(at::kRecords + i) = static_cast<unsigned char>(sh::Often() ? 1 + sh::Next() % 9 : sh::Next());
+        B(::bof3::Img(at::kRecords.v) + i) = static_cast<unsigned char>(sh::Often() ? 1 + sh::Next() % 9 : sh::Next());
     // a guess sometimes the secret itself, or a permutation of it (three hits,
     // or blows)
     if (k == kBScore && sh::Half()) {
         const int r = static_cast<signed char>(B(Rest4c_Count_addr));
-        unsigned char* const rec = Mem(at::kRecords + 5 * r);
+        unsigned char* const rec = Mem(::bof3::Img(at::kRecords.v) + 5 * r);
         const unsigned shift = sh::Next() % 3;
-        for (unsigned j = 0; j < 3; ++j) rec[j] = B(at::kCards + (j + shift) % 3);
+        for (unsigned j = 0; j < 3; ++j) rec[j] = B(::bof3::Img(at::kCards.v) + (j + shift) % 3);
     }
     // a pick that matches the card comparison half the time (the win path)
     if (k == kHReveal && sh::Half()) {
         const int t = static_cast<signed char>(B(Rest4c_Turn_addr));
-        B(at::kPicks + t) = B(at::kCards + t - 1) >= B(at::kCards + t) ? 1 : 0;
+        B(::bof3::Img(at::kPicks.v) + t) = B(::bof3::Img(at::kCards.v) + t - 1) >= B(::bof3::Img(at::kCards.v) + t) ? 1 : 0;
     }
     // the paths that wait on one value: the ninth card dealt, the second
     // game's end at its step 1 with the counter one short of 4
@@ -463,9 +463,9 @@ void MoveCell(U n) {
     case 2: B(Rest4c_Cursor_addr) = static_cast<unsigned char>(CursorRoom(g_current) == 3 ? b % 3 : b); break;
     case 3: B(Rest4c_Turn_addr) = static_cast<unsigned char>(1 + b % 8); break;
     case 4: B(Rest4b_BoardState_addr + (b & 3) % 3) = static_cast<unsigned char>((b >> 2) % 14); break;
-    case 5: SetLong(Mem(at::kBet), static_cast<std::int32_t>((b & 1) ? (b >> 1) % 2 * 10000 + v % 3 : v)); break;
+    case 5: SetLong(Mem(::bof3::Img(at::kBet.v)), static_cast<std::int32_t>((b & 1) ? (b >> 1) % 2 * 10000 + v % 3 : v)); break;
     case 6: SetLong(Mem(Party_Zenny_addr), static_cast<std::int32_t>(v)); break;
-    case 7: B(at::kCards + b % 0x2B) = static_cast<unsigned char>(1 + (v >> 8) % 9); break;
+    case 7: B(::bof3::Img(at::kCards.v) + b % 0x2B) = static_cast<unsigned char>(1 + (v >> 8) % 9); break;
     case 8: B(at::kDigits_addr + b % 3) = static_cast<unsigned char>(static_cast<int>((v >> 8) % 12) - 1); break;
     case 9: B((b & 1) ? Rest4c_Lost_addr : Rest4c_Again_addr) = static_cast<unsigned char>((b & 2) ? 0 : b); break;
     case 10: B(AreaW0c_TailState_addr) = b; break;

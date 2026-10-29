@@ -16,7 +16,7 @@
 namespace glyph_draw {
 
 // A bare `ret` (24 callers), called twice by the handler with a 1 pushed.
-constexpr std::uint32_t kRetOnly = bof3::addr::BareRet;
+constexpr ::bof3::image::CodeVa kRetOnly{bof3::addr::BareRet};
 
 // The glyph texture cache: 128 entries of 0x14 bytes from 0x7C9F50
 // (Font_TexCache): u16 glyph +0, u16 clut +2, u32 the CLUT row's generation

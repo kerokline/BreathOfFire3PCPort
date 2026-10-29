@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
@@ -21,7 +23,7 @@ namespace at {
 // The message box's answer to a choice (the cursor's row, read as s8 where
 // it indexes) and the message word a choice handler leaves (0xFFFF: none).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
 // (Field_ModeTailKinds 0x662CE8), its state (s8), a sub-kind.
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
@@ -29,8 +31,8 @@ constexpr std::uint32_t kMessage = 0x7DEE48;
 // kTailSub: now AreaW0c_TailSub (symbols.toml).
 // The movement script's counters 0 and 3 (MoveScript_CounterOps), and the
 // byte after MoveScript_Var7 (the run's step, as the chapters use it).
-constexpr std::uint32_t kCounter0 = 0x903848;
-constexpr std::uint32_t kCounter3 = 0x90384B;
+constexpr ::bof3::image::Va kCounter0{0x903848};
+constexpr ::bof3::image::Va kCounter3{0x90384B};
 // kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
 // The story flags (Flags_Set / Flags_Test's bank), Cond_Flags row 14 (the row
 // area 189's code tests bits 4, 9 and 0xA of: 0x903F90 + 8 * 14) and the row
@@ -41,7 +43,7 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // The focus object: the object whose talk ran last (area_w3f_callees.h's
 // kFocusObject); areas 188 and 191's choices store a byte pair at its +0x18
 // and +0x1C.
-constexpr std::uint32_t kFocusObject = 0x903804;
+constexpr ::bof3::image::Va kFocusObject{0x903804};
 // A byte area 188's choice 3 clears on the yes of its one-answer path; no
 // reader read this round.
 // k929F0F: now AreaW3c_Load0F (symbols.toml).
@@ -58,12 +60,12 @@ constexpr std::uint32_t kFocusObject = 0x903804;
 // the pending place the exit button saves (x, z dwords, the area word, a
 // byte counted up) - all inside Cond_Flags' region to 0x904160.
 // kWalkFrames: now Cond_Flags[0xcc] (symbols.toml).
-constexpr std::uint32_t kWalkCount = 0x90405E;
+constexpr ::bof3::image::Va kWalkCount{0x90405E};
 // kWalkReserve: now Cond_Flags[0xcf] (symbols.toml).
 // kSavedX: now AreaW2d_ReturnPoint (symbols.toml).
 // kSavedZ: now AreaW4d_ReturnZ (symbols.toml).
 // kSavedArea: now AreaW4d_ReturnArea (symbols.toml).
-constexpr std::uint32_t kSavedCount = 0x904152;
+constexpr ::bof3::image::Va kSavedCount{0x904152};
 // kWalkFacing: now AreaW3g_HealByte (symbols.toml).
 // Two bytes area 189's arrival counts with: steps since the last event and
 // events since the last big one.
@@ -72,10 +74,10 @@ constexpr std::uint32_t kSavedCount = 0x904152;
 // The pending area change Field_ChangeArea keeps: the area word, x and z
 // dwords, the flags byte (docs/area_w3b.md's kPlace, kPendingX / Z,
 // kChangeFlags).
-constexpr std::uint32_t kPlace = 0x937F82;
-constexpr std::uint32_t kPendingX = 0x903860;
+constexpr ::bof3::image::Va kPlace{0x937F82};
+constexpr ::bof3::image::Va kPendingX{0x903860};
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml).
-constexpr std::uint32_t kChangeFlags = 0x905B88;
+constexpr ::bof3::image::Va kChangeFlags{0x905B88};
 // The button words (a dword: two masks) area 189's arrival tests against
 // Field_InputHeld with 0xB000 added.
 // kButtonMap0: now Gfx_UnpackScratch[0x1f000] (symbols.toml).
@@ -106,14 +108,14 @@ constexpr unsigned kEffectCount = 20;
 // kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object
 // kCondByteFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
 // kCondByteFF: now Cond_ByteFF (symbols.toml). Cond_ByteFF
-constexpr std::uint32_t kInputHeld = 0x7E1BE8;         // Input_Held (Input_Pressed 0x7E1BEC)
+constexpr ::bof3::image::Va kInputHeld{0x7E1BE8};         // Input_Held (Input_Pressed 0x7E1BEC)
 // kPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags
 // kCameraShiftY: now Camera_ShiftY (symbols.toml). Camera_ShiftY
 // kVertexScratch: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch (three shorts)
 // kScreenXY: now MapView_ScreenXY (symbols.toml). MapView_ScreenXY (two floats)
 // kCameraAngles: now Camera_Angles (symbols.toml). Camera_Angles; Cond_AngleFB 0x929ECC after
 // kWaitWordDA: now Transition_Busy (symbols.toml). Transition_Busy
-constexpr std::uint32_t kDamageScratch = SharedScratch_addr; // SharedScratch (the slot word EventOp_0x reads)
+constexpr ::bof3::image::Va kDamageScratch{SharedScratch_addr}; // SharedScratch (the slot word EventOp_0x reads)
 
 // --- the areas' tables (symbols.toml [[data]]) ---
 
@@ -152,14 +154,14 @@ constexpr std::uint32_t kEventOpRecord = 0x11;           // one EventOp_0x recor
 // 0x511C10 (long x, long z): the map's height at (x, z) from the area block's
 // corner table (AreaMap_Corners), answered in ax (the callers sign-extend it).
 // Engine; no group's.
-constexpr std::uint32_t kHeightAt = bof3::addr::AreaMap_CornerHeight;   // 0x511C10, E6C's
+constexpr ::bof3::image::CodeVa kHeightAt{bof3::addr::AreaMap_CornerHeight};   // 0x511C10, E6C's
 // 0x42C2D0 (no arguments): area 192's block (group AR4F's band this wave):
 // each of eight actor records (CharacterRecords) with bit 0 of +0xB has its
 // words +0x20 / +0x22 copied to +0x18 / +0x1A and its word +0x10 cleared;
 // then each of Field_MemberCount's party lists' actors is copied whole (0xA4
 // bytes) to its party record's +0x80. Called raw by area 191's tail kind 53,
 // state 3.
-constexpr std::uint32_t kRestoreRecords = bof3::addr::Area192_RestoreCharacters;
+constexpr ::bof3::image::CodeVa kRestoreRecords{bof3::addr::Area192_RestoreCharacters};
 
 }  // namespace at
 }  // namespace area_w4e

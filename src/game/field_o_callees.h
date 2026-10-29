@@ -45,7 +45,7 @@ constexpr U kFmtSlot = 0x6639D4;         // the save slot's number format
 constexpr U kFmtTime = 0x654830;         // the save slot's play time format (hours, minutes)
 constexpr U kColon = 0x6639D0;           // the save slot's colon text
 constexpr U kEmptySlot = 0x669CCC;       // the empty slot's text
-constexpr U kNameInsetSite = 0x576A48;   // the disp8 of `lea eax, [ebp + 0x13]` at 0x576A46: DIV-0029's byte
+constexpr ::bof3::image::CodeVa kNameInsetSite{0x576A48};   // the disp8 of `lea eax, [ebp + 0x13]` at 0x576A46: DIV-0029's byte
 constexpr U kTextScratch = 0x904BA0;     // the text scratch Crt_sprintf and the slot's name copy write
 
 // --- Menu_DrawPieces / Menu_DrawPiece lists the panels draw (image) ---
@@ -68,8 +68,6 @@ constexpr U kOp87States = 0x663B04;      // 2 handlers (MoveCmd_Op87), then Even
 // kOpE9States: now MoveCmd_OpE9States (symbols.toml). 4 handlers of seven words (MoveCmd_OpE9)
 // kDirectionVelocity: now MoveCmd_F9Steps (symbols.toml). 8 x (x, z) s32 by direction: MoveCmd_OpF9's step per unit of speed
 
-// .text, for the table reads: an entry outside it is not code.
-constexpr U kTextLo = 0x401000, kTextHi = 0x5C3000;
 
 }  // namespace at
 }  // namespace field_o

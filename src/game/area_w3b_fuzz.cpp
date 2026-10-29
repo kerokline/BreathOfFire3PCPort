@@ -316,7 +316,7 @@ constexpr U kFzPlateAnimsEnd = 0x6236A0;
 enum : unsigned { kRegWmPackets = 3 };
 ah::Region g_regionsWm[] = {
     {AreaW0b_MapMode_addr, 1}, {Draw_PassFlags_addr, 1}, {Gfx_PacketNext_addr, 4}, {0, kPacketBytes}, {Prim_VertexScratch_addr, 0x20}, {Game_Mode_addr, 2},
-    {Gfx_UnpackScratch_addr + 0x1f000, 0x10}, {at::kAreaText, 4}, {CharacterRecords_addr + 0x9, 1},
+    {Gfx_UnpackScratch_addr + 0x1f000, 0x10}, {at::kAreaText.v, 4}, {CharacterRecords_addr + 0x9, 1},
     {Area121_Places_addr, kFzPlacesEnd - Area121_Places_addr}, {Area121_PlateAnims_addr, kFzPlateAnimsEnd - Area121_PlateAnims_addr}, {Area121_Cells_addr, 8},
     {Area121_Directions_addr, 0x18},
 };
@@ -345,7 +345,7 @@ void DisturbWm(U h) {
     case 4: Mem(AreaW0c_TailState_addr)[0] = static_cast<unsigned char>(v % 3); break;
     case 5: Game_Mode = static_cast<unsigned short>(Game_Mode ^ 1); break;
     case 6: SetWord(Mem(AreaW0b_Place_addr), Word(Mem(Area121_Places_addr + (v % 4) * 2))); break;
-    case 7: Mem(at::kLeaderCellX + (v & 1) * 2)[0] = static_cast<unsigned char>(v); break;
+    case 7: Mem(::bof3::Img(at::kLeaderCellX.v) + (v & 1) * 2)[0] = static_cast<unsigned char>(v); break;
     case 8: Mem(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(v & 1 ? 0xC : v); break;
     default: break;
     }
@@ -469,8 +469,8 @@ void SeedWm(unsigned k) {
         const auto near = [](unsigned char* cell, unsigned centre) {
             SetWord(cell, centre + AH_PICK(0, 25, 26, static_cast<U>(-25), static_cast<U>(-26), 1, 100));
         };
-        if (ah::Often()) near(Mem(at::kLeaderCellX), rv::As<records::SpriteHead>(o)->x_whole);
-        if (ah::Often()) near(Mem(at::kLeaderCellZ), rv::As<records::SpriteHead>(o)->z_whole);
+        if (ah::Often()) near(Mem(::bof3::Img(at::kLeaderCellX.v)), rv::As<records::SpriteHead>(o)->x_whole);
+        if (ah::Often()) near(Mem(::bof3::Img(at::kLeaderCellZ.v)), rv::As<records::SpriteHead>(o)->z_whole);
         if (ah::Half()) Frame_Counter = AH_PICK(0, 15, 16, 31, 0x2F, 0xFFFFFFFFu);
         break;
     }
@@ -584,17 +584,17 @@ U PaceEffect(const U*, U answer) {
 }
 
 const ah::Callee kCalleesLeader[] = {
-    {"0x4156C0", kLeaderCharge104, kLeaderCharge104, 0, {}, ah::Answer::kGarbage, 0, 0},
-    {"0x415640", kLeaderHalt104, kLeaderHalt104, 0, {}, ah::Answer::kGarbage, 0, 0},
-    {"0x415680", kLeaderPace104, kLeaderPace104, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &PaceEffect, nullptr},
-    {"Area121_LeaderControl", kLeaderControl, kLeaderControl, 0, {}, ah::Answer::kPhase, 0, 0},
-    {"Area121_PushObject", kPushObject, kPushObject, 0, {}, ah::Answer::kPhase, 0, 0},
-    {"Area121_StepAround", kStepAround, kStepAround, 3, {kAll, kAll, kU8}, ah::Answer::kFlag, 0, 0},
-    {"Area121_DirectionTo", kDirectionTo, kDirectionTo, 3, {kAll, kAll, kU8}, ah::Answer::kByte, 0, 7},
-    {"Area121_StepOffObject", kStepOffObject, kStepOffObject, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &StepOffAnswer, nullptr},
-    {"Area121_MenuButton", kMenuButton, kMenuButton, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MenuAnswer, nullptr},
-    {"Area121_Request4Button", kRequest4Button, kRequest4Button, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &Request4Answer, nullptr},
-    {"Area121_TurnInput", kTurnInput, kTurnInput, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &TurnEffect, nullptr},
+    {"0x4156C0", kLeaderCharge104.v, kLeaderCharge104.v, 0, {}, ah::Answer::kGarbage, 0, 0},
+    {"0x415640", kLeaderHalt104.v, kLeaderHalt104.v, 0, {}, ah::Answer::kGarbage, 0, 0},
+    {"0x415680", kLeaderPace104.v, kLeaderPace104.v, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &PaceEffect, nullptr},
+    {"Area121_LeaderControl", kLeaderControl.v, kLeaderControl.v, 0, {}, ah::Answer::kPhase, 0, 0},
+    {"Area121_PushObject", kPushObject.v, kPushObject.v, 0, {}, ah::Answer::kPhase, 0, 0},
+    {"Area121_StepAround", kStepAround.v, kStepAround.v, 3, {kAll, kAll, kU8}, ah::Answer::kFlag, 0, 0},
+    {"Area121_DirectionTo", kDirectionTo.v, kDirectionTo.v, 3, {kAll, kAll, kU8}, ah::Answer::kByte, 0, 7},
+    {"Area121_StepOffObject", kStepOffObject.v, kStepOffObject.v, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &StepOffAnswer, nullptr},
+    {"Area121_MenuButton", kMenuButton.v, kMenuButton.v, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MenuAnswer, nullptr},
+    {"Area121_Request4Button", kRequest4Button.v, kRequest4Button.v, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &Request4Answer, nullptr},
+    {"Area121_TurnInput", kTurnInput.v, kTurnInput.v, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &TurnEffect, nullptr},
     {"Field_LeaderCellEvent", bof3::addr::Field_LeaderCellEvent, KeyOf(&::Field_LeaderCellEvent), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &CellEventAnswer, nullptr},
     {"Field_LeaderTalkTest", bof3::addr::Field_LeaderTalkTest, KeyOf(&::Field_LeaderTalkTest), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &TalkAnswer, nullptr},
     {"Field_LeaderStepTarget", bof3::addr::Field_LeaderStepTarget, KeyOf(&::Field_LeaderStepTarget), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &StepTargetAnswer, nullptr},
@@ -757,14 +757,14 @@ U TurnStepAnswer(const U*, U answer) {
 #define W3B_THROUGH(name, n) {#name, bof3::addr::name, KeyOf(&::name), n, {}, ah::Answer::kThrough, 0, 0}
 
 const ah::Callee kCalleesFx[] = {
-    {"Area121_Kind5CFollow", kKind5CFollow, kKind5CFollow, 0, {}, ah::Answer::kPhase, 0, 0},
-    {"Area121_Kind5CFace", kKind5CFace, kKind5CFace, 0, {}, ah::Answer::kPhase, 0, 0},
-    {"Area121_Kind5CTurn", kKind5CTurn, kKind5CTurn, 0, {}, ah::Answer::kPhase, 0, 0},
-    {"Area121_RingRise", kRingRise, kRingRise, 0, {}, ah::Answer::kPhase, 0, 0},
-    {"Area121_GaugeSprite", kGaugeSprite, kGaugeSprite, 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
-    {"Area121_Kind5CTurnStep", kKind5CTurnStep, kKind5CTurnStep, 2, {kU8, kU8}, ah::Answer::kGarbage, 0, 0, {}, &TurnStepAnswer, nullptr},
+    {"Area121_Kind5CFollow", kKind5CFollow.v, kKind5CFollow.v, 0, {}, ah::Answer::kPhase, 0, 0},
+    {"Area121_Kind5CFace", kKind5CFace.v, kKind5CFace.v, 0, {}, ah::Answer::kPhase, 0, 0},
+    {"Area121_Kind5CTurn", kKind5CTurn.v, kKind5CTurn.v, 0, {}, ah::Answer::kPhase, 0, 0},
+    {"Area121_RingRise", kRingRise.v, kRingRise.v, 0, {}, ah::Answer::kPhase, 0, 0},
+    {"Area121_GaugeSprite", kGaugeSprite.v, kGaugeSprite.v, 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
+    {"Area121_Kind5CTurnStep", kKind5CTurnStep.v, kKind5CTurnStep.v, 2, {kU8, kU8}, ah::Answer::kGarbage, 0, 0, {}, &TurnStepAnswer, nullptr},
     // the gauge row: both bytes (one pushed with a stale register above it)
-    {"0x415940", kGaugeRow104, kGaugeRow104, 2, {kU8, kU8}, ah::Answer::kGarbage, 0, 0},
+    {"0x415940", kGaugeRow104.v, kGaugeRow104.v, 2, {kU8, kU8}, ah::Answer::kGarbage, 0, 0},
     {"KeyItem_Has", bof3::addr::KeyItem_Has, KeyOf(&::KeyItem_Has), 1, {kAll}, ah::Answer::kFlag, 0, 0},
     kFindFree, kSet40,
     W3B_THROUGH(Gte_PushMatrix, 0), W3B_THROUGH(Gte_PopMatrix, 0), W3B_THROUGH(Gte_RotTrans, 2), W3B_THROUGH(Gte_RotMatrix, 2),

@@ -217,6 +217,9 @@ void SelfTestOpen(OpenFn theirs) {
     OpenCapture(saved);
     unsigned long saved_handlers[77];
     std::memcpy(saved_handlers, MapCell_Handlers, sizeof saved_handlers);
+    // Our stand-ins' own addresses in the game's handler table, not places
+    // (common/image_base.h): put back before the self-test returns, and the
+    // shadow self-test runs hosted only (exe_host.cpp refuses BOF3X_SHADOW).
     const unsigned long stand_ins[4] = {
         static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(&OpenStandIn0)),
         static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(&OpenStandIn1)),
@@ -311,7 +314,7 @@ void SelfTestOpen(OpenFn theirs) {
 // As the original has it: the slot is not checked against the eight there are.
 extern "C" void __cdecl Gfx_CommitPrim(unsigned slot, unsigned size) {
     size &= 0xFF;
-    const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + kPoolLimit;
+    const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
     const std::uint32_t next = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Gfx_PacketNext));
     if (limit <= next + size) {
         // Diagnostic only (BOF3X_DRAWORDER): the original's silent skip.

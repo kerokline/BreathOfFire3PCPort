@@ -41,21 +41,21 @@ namespace at {
 using U = std::uint32_t;
 
 // --- the battle's cells (0x904AA0..0x904BA0) ---------------------------------
-constexpr U kFlags = 0x904AA8;            // u16: the round flags (bit 1 cleared by Gaist's hook, bit 2 the action's done flag, bit 15 read)
+constexpr ::bof3::image::Va kFlags{0x904AA8};            // u16: the round flags (bit 1 cleared by Gaist's hook, bit 2 the action's done flag, bit 15 read)
 // kScript: now BossSe_Script (symbols.toml). u8: the fights' script bits (set-up 34: bit 0 the member put first, bit 1 the ability given)
-constexpr U kRoundSlot = 0x904AE2;        // u8: the turn order's cursor (0x446700 decrements it)
+constexpr ::bof3::image::Va kRoundSlot{0x904AE2};        // u8: the turn order's cursor (0x446700 decrements it)
 // kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 1 the win; bit 3 set by set-up 34's end hook
-constexpr U kActor = 0x904B34;            // u8: the acting actor (0..2 a member, 3..10 an enemy)
-constexpr U kActKind = 0x904B35;          // u8: the acting kind (battle_actions.md)
-constexpr U kAction = 0x904B40;           // unsigned char *: the action record set-up 34's hook writes +1 and +2 of
-constexpr U kTarget = 0x904B44;           // u8: the target
-constexpr U kWord80 = 0x904B80;           // u16: set to 0x40 beside the action record's +2 (its reader not read)
+constexpr ::bof3::image::Va kActor{0x904B34};            // u8: the acting actor (0..2 a member, 3..10 an enemy)
+constexpr ::bof3::image::Va kActKind{0x904B35};          // u8: the acting kind (battle_actions.md)
+constexpr ::bof3::image::Va kAction{0x904B40};           // unsigned char *: the action record set-up 34's hook writes +1 and +2 of
+constexpr ::bof3::image::Va kTarget{0x904B44};           // u8: the target
+constexpr ::bof3::image::Va kWord80{0x904B80};           // u16: set to 0x40 beside the action record's +2 (its reader not read)
 
 // --- the hooks -------------------------------------------------------------------
 // kHookEnd: now BattleHook_End (symbols.toml). BattleHook_End
 // kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
 // kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
-constexpr U kExitTransition4 = bof3::addr::BossHook_ExitTransition4;  // BossHook_ExitTransition4 (BSE's): set-up 35's exit hook
+constexpr ::bof3::image::CodeVa kExitTransition4{bof3::addr::BossHook_ExitTransition4};  // BossHook_ExitTransition4 (BSE's): set-up 35's exit hook
 
 // --- set-up 34's member pick ------------------------------------------------------
 // kPickId: now Character_IndexById[4] (symbols.toml). u8: the byte a member's +0x148 is compared with (written by scenario code)
@@ -71,7 +71,7 @@ constexpr U kPartyStride = 0x14C;
 constexpr U kEnemyStride = 0x128;
 // kEnemy0X: now BossSb_Enemy0Pose (symbols.toml). enemy 0's word +0x58 (set-up 34's exit copies it)
 // kEnemy0Y: now Battle_Enemies[0].frame_word (symbols.toml). enemy 0's word +0x5A
-constexpr U kEnemyDataCount9 = 0x8C5652;  // the area's enemy data records' byte +0x8A (stride 0x8C): the count step 4 starts with
+constexpr ::bof3::image::Va kEnemyDataCount9{0x8C5652};  // the area's enemy data records' byte +0x8A (stride 0x8C): the count step 4 starts with
 
 // --- the effect task slots (BattleTask_Create's) -----------------------------------
 // kTasks: now BattleTask_Slots (symbols.toml).
@@ -80,21 +80,21 @@ constexpr unsigned kTaskCount = 48;
 
 // --- the chapter -------------------------------------------------------------------
 // kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter run's step
-constexpr U kPoseSet = 0x8C5D80;          // the frame set set-up 34's end hook poses the party from
+constexpr ::bof3::image::Va kPoseSet{0x8C5D80};          // the frame set set-up 34's end hook poses the party from
 
 // --- the kinds' byte tables stored as literals (+0xFC / +0xF8) -----------------------
 // kMikbaAnims: now BossMikba_Anims (symbols.toml). kind 40's +0xFC bytes (group BSG's kind), kind 48 stores it too
 // kMikbaSounds: now BossMikba_Sounds (symbols.toml). kind 40's +0xF8 words, kind 48 stores it too
-constexpr U kTorchAnims = 0x675F0C;       // kind 42's +0xFC: 12 bytes of .data nothing in the exe writes (zeros)
+constexpr ::bof3::image::Va kTorchAnims{0x675F0C};       // kind 42's +0xFC: 12 bytes of .data nothing in the exe writes (zeros)
 // kTorchSounds: now BossTorch_Sounds (symbols.toml). kind 42's +0xF8: 0xFFFF words (no sound)
 
 // --- the callees nobody owns ----------------------------------------------------------
-constexpr U kOrderFront = bof3::addr::Battle_OrderPushFront;       // (actor)
-constexpr U kEnemySound = bof3::addr::Sound_PlayEffectUnlessNone;       // (sound) (BE3's since round twelve: the same value)
-constexpr U kEnemyActEnd = bof3::addr::EnemyOp_EndAction;      // () (BE3's since round twelve: the same value)
-constexpr U kEnemyActChance = bof3::addr::EnemyOp_RollBit80Task;   // () (BE3's since round twelve: the same value)
-constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
-constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () step 2
+constexpr ::bof3::image::CodeVa kOrderFront{bof3::addr::Battle_OrderPushFront};       // (actor)
+constexpr ::bof3::image::CodeVa kEnemySound{bof3::addr::Sound_PlayEffectUnlessNone};       // (sound) (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kEnemyActEnd{bof3::addr::EnemyOp_EndAction};      // () (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kEnemyActChance{bof3::addr::EnemyOp_RollBit80Task};   // () (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kEndWin{bof3::addr::BattleEnd_EnterStep1};           // () the end phase, step 1
+constexpr ::bof3::image::CodeVa kEndOther{bof3::addr::BattleEnd_EnterStep2};         // () step 2
 
 }  // namespace at
 }  // namespace boss_sh

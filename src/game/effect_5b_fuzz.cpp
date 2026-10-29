@@ -348,8 +348,8 @@ void Leader(const unsigned char* s, bool start) {
     U x = static_cast<U>(static_cast<std::int16_t>(Word(s + 0x36)));
     U z = static_cast<U>(static_cast<std::int16_t>(Word(s + 0x3A)));
     if (start && x < at::kGateCount) {
-        z = P(at::kGateCells + 1 + 2 * x)[0];
-        x = P(at::kGateCells + 2 * x)[0];
+        z = P(::bof3::Img(at::kGateCells.v) + 1 + 2 * x)[0];
+        x = P(::bof3::Img(at::kGateCells.v) + 2 * x)[0];
     }
     const U off[] = {0, 0x8000, 0x8001, 0xFFFF8000u, 0xFFFF7FFFu, 0x10000, 0x10001, 0x20000, 0x20001,
                      0xFFFE0000u, 0xFFFDFFFFu, 0x30000, 0x30001, 0x18000, 0x18001, 0xFFFE8000u, 0xFFFE7FFFu,

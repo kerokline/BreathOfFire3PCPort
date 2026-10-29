@@ -38,23 +38,23 @@ namespace at {
 // u8: 1 while a target is being picked (set with the latch cleared, 0 on the
 // commit; its readers were not read - a hypothesis: the target cursor's)
 // kPicking: now BattleE4_Picking (symbols.toml).
-constexpr std::uint32_t kPartyCount = 0x904AB0;  // read as a dword, its low byte used
+constexpr ::bof3::image::Va kPartyCount{0x904AB0};  // read as a dword, its low byte used
 // kEnemyCount: now Battle_EnemyCount (symbols.toml). u8
 // kCommandsChosen: now BattleActorCopies_EntryCount (symbols.toml). u8, one up for each command committed
 // The party item list's last page, top row and cursor, kept for its next
 // opening (ItemMenu_SetupForParty reads them back).
-constexpr std::uint32_t kSavedList = 0x904605;
+constexpr ::bof3::image::Va kSavedList{0x904605};
 // Pointers: the command being built (+0 the target, +1 the action kind, +2 a
 // word: category << 8 | item, +0xA the list row, dword +0xC flags), and the
 // acting member's record (ObjTrio + 0x14C n: +1 its state, +5 its actor index,
 // +0x125 a byte).
-constexpr std::uint32_t kCommandRecord = 0x939FA0;
+constexpr ::bof3::image::Va kCommandRecord{0x939FA0};
 // kActing: now BattleE4_MenuActor (symbols.toml).
 // The party's records.
 // kMembers: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kMemberSize = 0x14C;
 // Input_AutoRepeat's latch word: zeroed so that a held direction starts over.
-constexpr std::uint32_t kRepeatLatch = 0x7E01B8;
+constexpr ::bof3::image::Va kRepeatLatch{0x7E01B8};
 // The window task's records, 0x24 bytes each from 0x803160.
 //   Record 16 (0x8033A0), the party's item list: +3 done, dword +4 x (its
 //   low word), word +6 y, +8 the use mode, +0xA the category (0..3),
@@ -63,17 +63,17 @@ constexpr std::uint32_t kRepeatLatch = 0x7E01B8;
 //   Record 19 (0x80340C): +0 shown, words +4 / +6 x and y (the hand).
 //   Record 21 (0x803454): opened by the list's up-at-the-top.
 //   Record 4 (0x8031F0): +0 cleared then.
-constexpr std::uint32_t kList = 0x8033A0;
+constexpr ::bof3::image::Va kList{0x8033A0};
 // kHand: now Window19 (symbols.toml).
 // kAbove: now Window21 (symbols.toml).
 // kRecord4: now WindowRecords[4] (symbols.toml).
 // The inventory lists by category: ids and counts, five pointers each
 // (0x904154 + 0x80 c and 0x904354 + 0x80 c for 0..3; docs/char-stats.md).
-constexpr std::uint32_t kInventoryIds = 0x656B00;
-constexpr std::uint32_t kInventoryCounts = 0x656B14;
+constexpr ::bof3::image::Va kInventoryIds{0x656B00};
+constexpr ::bof3::image::Va kInventoryCounts{0x656B14};
 // The battle message queue: 16 entries of 8 (+0 a, +1 b, dword +4 the text)
 // and its write index (BattleQueue_Push).
-constexpr std::uint32_t kQueue = 0x93C2C0;
+constexpr ::bof3::image::Va kQueue{0x93C2C0};
 // kQueueWrite: now BattleActorCopies_QueueWrite (symbols.toml).
 // The four dispatch tables (.data).
 // kAttackStates: now BattleAttackCmd_States (symbols.toml).
@@ -84,8 +84,8 @@ constexpr std::uint32_t kQueue = 0x93C2C0;
 }  // namespace at
 
 // Callees with no name in symbols.gen.h, called by address.
-constexpr std::uint32_t kPrevTarget = bof3::addr::Battle_PrevTarget;  // Battle_DefaultTarget's downward twin: the first actor not out from the byte down; 0xFF if none
-constexpr std::uint32_t kItemFlags = bof3::addr::Item_UseFlags;   // group TWO's (2026-10-06), the value unchanged: (category, item) -> the item's flag byte (0x656B38 / 0x657461 / 0x657D79 / 0x658461 tables)
+constexpr ::bof3::image::CodeVa kPrevTarget{bof3::addr::Battle_PrevTarget};  // Battle_DefaultTarget's downward twin: the first actor not out from the byte down; 0xFF if none
+constexpr ::bof3::image::CodeVa kItemFlags{bof3::addr::Item_UseFlags};   // group TWO's (2026-10-06), the value unchanged: (category, item) -> the item's flag byte (0x656B38 / 0x657461 / 0x657D79 / 0x658461 tables)
 
 struct Callees {
     unsigned char (__cdecl* default_target)(unsigned);

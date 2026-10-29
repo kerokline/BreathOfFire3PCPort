@@ -59,9 +59,9 @@ using scenario_harness::Handler;
 unsigned Step() { return MoveScript_PartyRecords[0x65]; }
 void SetStep(unsigned v) { MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(v); }
 void SetRun(unsigned v) { MoveScript_Var7 = static_cast<signed char>(v); }
-unsigned char& Counter(unsigned i) { return At(at::kCounters + i)[0]; }
-unsigned Timer() { return Word(At(MoveScript_PartyRecords_addr + 0x66)); }
-void SetTimer(unsigned v) { SetWord(At(MoveScript_PartyRecords_addr + 0x66), v); }
+unsigned char& Counter(unsigned i) { return At(::bof3::Img(at::kCounters) + i)[0]; }
+unsigned Timer() { return Word(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66)); }
+void SetTimer(unsigned v) { SetWord(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), v); }
 void SetAreaByte(unsigned v) { AreaW1f_MusicCurrent = static_cast<unsigned char>(v); }
 bool MessageUp() { return Field_Request == 2; }
 void OpenMessage(unsigned id) {
@@ -96,9 +96,9 @@ void Set40() { SH_CALL(ScriptFlags_Set40)(); }
 void Clear40() { SH_CALL(ScriptFlags_Clear40)(); }
 void LoadStream() { SH_CALL(Sound_LoadStream)(0); }
 bool StreamDone() { return SH_CALL(Sound_StreamDone)() != 0; }
-void PartyRestore() { SH_AT(cl::VoidFn, cl::kPartyRestore)(); }
-void PartyPlace(int x, int z, unsigned facing) { SH_AT(cl::PartyPlaceFn, cl::kPartyPlace)(x, z, facing); }
-bool AngleTest(int a, int b) { return SH_AT(cl::AngleTestFn, cl::kAngleTest)(a, b) != 0; }
+void PartyRestore() { SH_AT(cl::VoidFn, cl::kPartyRestore.v)(); }
+void PartyPlace(int x, int z, unsigned facing) { SH_AT(cl::PartyPlaceFn, cl::kPartyPlace.v)(x, z, facing); }
+bool AngleTest(int a, int b) { return SH_AT(cl::AngleTestFn, cl::kAngleTest.v)(a, b) != 0; }
 void SetCell(unsigned x, unsigned z, unsigned value) { SH_CALL(AreaMap_SetByte)(x, z, value); }
 
 // An effect slot taken into 0x903850; false (the slot 0xFF stored) when none
@@ -165,7 +165,7 @@ void OpenShop(unsigned step) {
     ModeStates_ShopObject = 0xFE;
     BattleE1_Mode = 0;
     ScenaSc1_ShopByteB = 0;
-    At(at::kShopByteC)[0] = 1;
+    At(::bof3::Img(at::kShopByteC))[0] = 1;
     Game_Mode = 7;
     SetStep(step);
 }
@@ -194,8 +194,8 @@ Handler Entry(std::uint32_t table, unsigned index) {
 extern "C" void __cdecl Scena01_Start(void) {
     SH_CALL(Scenario_CallA)(0);
     ChangeArea(9, 0x570000, 0x40000, 7);
-    SetLong(At(Cond_Flags_addr + 0x8), 0);
-    SetLong(At(at::kCounters), 0);
+    SetLong(At(::bof3::Img(Cond_Flags_addr) + 0x8), 0);
+    SetLong(At(::bof3::Img(at::kCounters)), 0);
     MoveScript_PartyRecords[0x62] = 1;
 }
 
@@ -206,7 +206,7 @@ extern "C" void __cdecl Scena01_Run(void) {
     const int run = MoveScript_Var7;
     if (run < 0 || run >= static_cast<int>(at::kRunCount))
         bof3::Fatal("Scena01_Run: run %d past Scena01_Runs (%u entries)", run, at::kRunCount);
-    Entry(Scena01_Runs_addr, static_cast<unsigned>(run))();
+    Entry(::bof3::Img(Scena01_Runs_addr), static_cast<unsigned>(run))();
 }
 
 // original 0x53A2C0: run 1, three steps: on counter 0 = 1 the change to area
@@ -503,9 +503,9 @@ extern "C" void __cdecl Scena01_Scene05(void) {
 extern "C" void __cdecl Scena01_Scene06(void) {
     switch (Step()) {
     case 0:
-        if (Word(At(at::kChoiceWord)) != 2) return;
-        if ((At(at::kChoiceBits)[0] & 2) != 2) return;
-        if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 4) == 0) return;
+        if (Word(At(::bof3::Img(at::kChoiceWord))) != 2) return;
+        if ((At(::bof3::Img(at::kChoiceBits))[0] & 2) != 2) return;
+        if (SH_CALL(Flags_Test)(At(::bof3::Img(at::kStoryFlags)), 4) == 0) return;
         Set40();
         Counter(0) = 5;
         SetStep(1);
@@ -554,7 +554,7 @@ extern "C" void __cdecl Scena01_Scene06(void) {
         SetStep(0x10);
         Counter(2) = 4;
         Draw_PassFlags = 0;
-        At(CharacterRecords_addr + 0xb + member * 0xA4)[0] &= 0xFE;
+        At(::bof3::Img(CharacterRecords_addr) + 0xb + member * 0xA4)[0] &= 0xFE;
         SH_CALL(Scenario_CallB)(0);
         SetFlag(5);
         ChangeArea(8, 0x320000, 0x120000, 0x84);
@@ -784,7 +784,7 @@ extern "C" void __cdecl Scena01_Scene08(void) {
     case 0x39:
         if (Counter(0) != 0x23) return;
         SetStep(0x3A);
-        SH_AT(cl::SeHelperFn, cl::kSeHelper)(2);
+        SH_AT(cl::SeHelperFn, cl::kSeHelper.v)(2);
         return;
     case 0x3A:
         if (Counter(0) != 0x24) return;
@@ -1026,7 +1026,7 @@ extern "C" void __cdecl Scena01_Scene09(void) {
         return;
     case 0x24:
         if (Counter(0) != 0x6C) return;
-        SH_AT(cl::SeHelperFn, cl::kSeHelper)(3);
+        SH_AT(cl::SeHelperFn, cl::kSeHelper.v)(3);
         SetStep(0x25);
         return;
     case 0x25:
@@ -1351,11 +1351,11 @@ void Scene0DEnd(bool all, unsigned n) {
 // test and afresh for the second; the first with the bit clear returns.
 void Scene0DChoice(bool all) {
     if (Counter(3) == 0x14) {
-        if ((At(at::kChoiceBits)[0] & 2) != 2) return;
+        if ((At(::bof3::Img(at::kChoiceBits))[0] & 2) != 2) return;
         Scene0DEnd(all, 0x3C);
     }
     if (Counter(3) != 0x19) return;
-    if ((At(at::kChoiceBits)[0] & 2) != 2) return;
+    if ((At(::bof3::Img(at::kChoiceBits))[0] & 2) != 2) return;
     Scene0DEnd(all, 0x3D);
 }
 
@@ -1526,7 +1526,7 @@ extern "C" void __cdecl Scena01_Scene0E(void) {
         SetRun(0);
         Draw_PassFlags = 0;
         ChangeArea(0xF, 0x360000, 0x500000, 0);
-        SH_AT(cl::VoidFn, cl::kStatusBit80)();
+        SH_AT(cl::VoidFn, cl::kStatusBit80.v)();
         return;
     default:   // 1, 2, 6, and 0xA and up
         return;
@@ -1920,7 +1920,7 @@ extern "C" void __cdecl Scena01_PlaceEffect(unsigned char n) {
     rec()[5] = 6;
     rec()[6] = kind;
     rv::As<records::EffectObject>(rec())->step_x = 0;
-    SetLong(rec() + 0x10, static_cast<signed char>(At(at::kEffectX + Cond_Flags[0xd2])[0]));
+    SetLong(rec() + 0x10, static_cast<signed char>(At(::bof3::Img(at::kEffectX) + Cond_Flags[0xd2])[0]));
     SetWord(rec() + 0x2E, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->screen_x));
     SetWord(rec() + 0x30, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->screen_y));
 }
@@ -1935,7 +1935,7 @@ extern "C" void __cdecl Scena01_ObjectHook(unsigned char* object) {
     if (k >= at::kObjectCount)
         bof3::Fatal("Scena01_ObjectHook: object +0x86 %u past Scena01_ObjectHandlers (%u entries)", k, at::kObjectCount);
     using ObjectFn = void (__cdecl*)(unsigned char*, unsigned char*);
-    reinterpret_cast<ObjectFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(Scena01_ObjectHandlers_addr + 4 * k)))))(object, At(Cond_Flags_addr + 0x8));
+    reinterpret_cast<ObjectFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(::bof3::Img(Scena01_ObjectHandlers_addr) + 4 * k)))))(object, At(::bof3::Img(Cond_Flags_addr) + 0x8));
 }
 
 namespace {
@@ -2076,12 +2076,12 @@ extern "C" void __cdecl Scena01_Object11(unsigned char*, unsigned char*) {
 // same arguments. The original indexes the table by any al of 0..0x7F; ours
 // aborts past its two.
 extern "C" unsigned char __cdecl Scena01_CellHook(int x, int z) {
-    const unsigned char found = SH_AT(cl::CellFindFn, cl::kCellFind)(At(Scena01_Cells_addr), 2, x, z);
+    const unsigned char found = SH_AT(cl::CellFindFn, cl::kCellFind.v)(At(::bof3::Img(Scena01_Cells_addr)), 2, x, z);
     if (static_cast<signed char>(found) < 0) return 0xFF;
     if (found >= at::kCellCount)
         bof3::Fatal("Scena01_CellHook: cell %u past Scena01_CellHandlers (%u entries)", found, at::kCellCount);
     using CellFn = unsigned char (__cdecl*)(int, int);
-    return reinterpret_cast<CellFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(Scena01_CellHandlers_addr + 4u * found)))))(x, z);
+    return reinterpret_cast<CellFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(::bof3::Img(Scena01_CellHandlers_addr) + 4u * found)))))(x, z);
 }
 
 // original 0x53DD50: both of Scena01_CellHandlers' entries: with flag 3 set

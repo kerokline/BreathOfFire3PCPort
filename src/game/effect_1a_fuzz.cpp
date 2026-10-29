@@ -261,15 +261,15 @@ const sh::Callee kCallees[] = {
     // x to 0x52CFE0 and movsx; width and shade `mov bl` / `mov dl`; blink `mov al`
     {E1A_OURS(EffectHud_DrawMark), 6, {k16, kW, k8, k8, kW, k8}, kG, 0, 0},
     // E1F's (round thirteen), by address until it merges
-    {"0x52CD50 (E1F)", at::kDepthPair, at::kDepthPair, 0, {}, kG, 0, 0},
+    {"0x52CD50 (E1F)", at::kDepthPair.v, at::kDepthPair.v, 0, {}, kG, 0, 0},
     // E1B's (round thirteen), by address until it merges, read to their use of
     // the arguments: 0x469AD0's pen `mov cl, [esp + 8]; and ecx, 0xF`, the text
     // (its first two bytes), the width `mov al`, x a word
-    {"0x469AD0 (E1B)", at::kMessageLine, at::kMessageLine, 4, {0xF, kW, k8, k16}, kG, 0, 0, {0, 2, 0, 0}, nullptr, nullptr, true},
-    {"0x469210 (E1B)", at::kMemberRows, at::kMemberRows, 2, {kW, kW}, kG, 0, 0},
-    {"0x468C50 (E1B)", at::kItemListA, at::kItemListA, 2, {kW, kW}, kG, 0, 0},
-    {"0x468F00 (E1B)", at::kItemListB, at::kItemListB, 2, {kW, kW}, kG, 0, 0},
-    {"0x468A40 (E1B)", at::kPanelTitle, at::kPanelTitle, 0, {}, kG, 0, 0},
+    {"0x469AD0 (E1B)", at::kMessageLine.v, at::kMessageLine.v, 4, {0xF, kW, k8, k16}, kG, 0, 0, {0, 2, 0, 0}, nullptr, nullptr, true},
+    {"0x469210 (E1B)", at::kMemberRows.v, at::kMemberRows.v, 2, {kW, kW}, kG, 0, 0},
+    {"0x468C50 (E1B)", at::kItemListA.v, at::kItemListA.v, 2, {kW, kW}, kG, 0, 0},
+    {"0x468F00 (E1B)", at::kItemListB.v, at::kItemListB.v, 2, {kW, kW}, kG, 0, 0},
+    {"0x468A40 (E1B)", at::kPanelTitle.v, at::kPanelTitle.v, 0, {}, kG, 0, 0},
     // standard entries re-listed: the widths the callees read (msgbox.cpp
     // Text_DrawAt: x and y to shorts, text_draw.cpp: the colour's and the
     // count's low bytes; field_e1.cpp FieldPanel_*: x and y to 0x52CFE0 as s16,
@@ -286,7 +286,7 @@ const sh::Callee kCallees[] = {
     {E1A_OURS(Gte_RotTransPers), 3, {0, kW, 0}, kG, 0, 0, {6, 0, 0}, &FxRotTransPers, nullptr, true},
     // louder: the cursor the draws read again after it
     {E1A_OURS(MapView_LinkPrimAt), 4, {kW, kW, k8, k8}, kG, 0, 0, {}, &FxLink, nullptr, true},
-    {"0x5171E0", at::kStringCount, at::kStringCount, 1, {0}, kG, 0, 0, {sh::kDerefString}, &FxCount, nullptr, true},
+    {"0x5171E0", at::kStringCount.v, at::kStringCount.v, 1, {0}, kG, 0, 0, {sh::kDerefString}, &FxCount, nullptr, true},
 };
 #undef E1A_OURS
 
@@ -312,7 +312,7 @@ sh::Region g_regions[sizeof kRegions / sizeof kRegions[0]];
 // --- the seed ------------------------------------------------------------------------
 
 unsigned char* Rec(unsigned r) { return sh::EffectRecord(r); }
-bool LineOk(unsigned text) { return P(at::kKind0FTexts + text * 8)[4] != 0xFF; }
+bool LineOk(unsigned text) { return P(::bof3::Img(at::kKind0FTexts.v) + text * 8)[4] != 0xFF; }
 
 // Every one of the 20 records the disturbance may move Sprite_Current among:
 // what function k's code indexes kept inside its table.
@@ -334,7 +334,7 @@ void Records(unsigned k) {
         if ((k == k0FLineNext || k == k0FLineFade) && !LineOk(text)) text = 0;
         s[0x4B] = static_cast<unsigned char>(text);
         unsigned column = sh::Next() % 3;
-        if (k == k0FLineStart && P(at::kKind0FRows + s[6] * 4u + column)[0] >= at::kKind0FTextCount) column = 0;
+        if (k == k0FLineStart && P(::bof3::Img(at::kKind0FRows.v) + s[6] * 4u + column)[0] >= at::kKind0FTextCount) column = 0;
         s[0x4A] = static_cast<unsigned char>(column);
         SetLong(s + 0x50, static_cast<std::int32_t>(Key(g_chars + sh::Next() % 0x40)));
         SetLong(s + 0x54, static_cast<std::int32_t>(Key(g_chars + sh::Next() % 0x40)));
@@ -367,8 +367,8 @@ void Seed(unsigned k) {
     // walk's wrap at 0x20)
     const U counts = PickOf(0, 1, 2, 2, 3);
     for (unsigned i = 0; i < 0x20; ++i)
-        Mem(at::kKindCounts + i)[0] = static_cast<unsigned char>(counts == 0 || counts == 3 ? 0 : counts == 1 ? (sh::Half() ? 0 : sh::Next()) : sh::Next() | 1);
-    if (counts == 3) Mem(at::kKindCounts + (sh::Half() ? 0x1F : sh::Next() % 0x20))[0] = static_cast<unsigned char>(sh::Next() | 1);
+        Mem(::bof3::Img(at::kKindCounts.v) + i)[0] = static_cast<unsigned char>(counts == 0 || counts == 3 ? 0 : counts == 1 ? (sh::Half() ? 0 : sh::Next()) : sh::Next() | 1);
+    if (counts == 3) Mem(::bof3::Img(at::kKindCounts.v) + (sh::Half() ? 0x1F : sh::Next() % 0x20))[0] = static_cast<unsigned char>(sh::Next() | 1);
     // the small counters the states step and compare
     s[9] = static_cast<unsigned char>(PickOf(0, 1, 2, 4, 5, 6, 0xF, 0xE, sh::Next()));
     s[0xA] = static_cast<unsigned char>(PickOf(0, 1, 2, sh::Next()));
@@ -387,7 +387,7 @@ void Seed(unsigned k) {
         break;
     case k05Rise:
         if (sh::Half()) SetLong(s + 0x38, Long(s + 0x10));
-        else if (sh::Half()) SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(s + 0x10)) + static_cast<U>(Long(P(at::kKind05Bounce + s[6] * 8)))));
+        else if (sh::Half()) SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(s + 0x10)) + static_cast<U>(Long(P(::bof3::Img(at::kKind05Bounce.v) + s[6] * 8)))));
         if (sh::Half()) SetLong(s + 0x38, 0x3C4000);
         SetLong(s + 0x14, static_cast<std::int32_t>(PickOf(0, 1, 0xFFFFFFFFu, sh::Next())));
         break;

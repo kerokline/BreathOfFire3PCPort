@@ -15,27 +15,27 @@ namespace at {
 constexpr std::uint32_t kWindowStride = 0x24;
 constexpr unsigned kWindowCount = 22;
 // kCurrent: now BattleWinStates_Current (symbols.toml). the record Field_RunTaskRecords is running
-constexpr std::uint32_t kRecord4X = 0x8031F4;         // window record 4's +4 (the field menu's first member panel)
+constexpr ::bof3::image::Va kRecord4X{0x8031F4};         // window record 4's +4 (the field menu's first member panel)
 
 // The window style byte (Menu_DrawBox's colour) and the party list the panels read.
 // kColour: now Config_WindowColour (symbols.toml).
-constexpr std::uint32_t kParty = 0x904062;            // the party's three character ids, then the reserve's
-constexpr std::uint32_t kMemberRecord = 0x66972C;     // the character-to-record byte (Character_IndexById in symbols.toml; docs/menu_lists.md section 8)
+constexpr ::bof3::image::Va kParty{0x904062};            // the party's three character ids, then the reserve's
+constexpr ::bof3::image::Va kMemberRecord{0x66972C};     // the character-to-record byte (Character_IndexById in symbols.toml; docs/menu_lists.md section 8)
 
 // The battle party's field objects (ObjTrio, 0x14C each): +0x89 the character id.
-constexpr std::uint32_t kObjTrio = 0x802D40;
+constexpr ::bof3::image::Va kObjTrio{0x802D40};
 constexpr std::uint32_t kObjStride = 0x14C;
 // The character records (CharacterRecords, 0xA4 each): +0xA the level, +0xC the EXP.
 // kCharRecords: now CharacterRecords (symbols.toml).
 constexpr std::uint32_t kCharStride = 0xA4;
 // Char_ExpTable: 99 rows of 8 bytes a roster index, the first word of a row the
 // EXP its level takes.
-constexpr std::uint32_t kExpTable = 0x658F48;
+constexpr ::bof3::image::Va kExpTable{0x658F48};
 
 // The gene grid's cells: 0x939820 eighteen words zeroed on open, 0x939A60 the
 // eighteen cells (a byte each, 0 empty); the battle task pool 0x93A000, 48 of 0x84.
-constexpr std::uint32_t kGridWords = 0x939820;
-constexpr std::uint32_t kGridCells = 0x939A60;
+constexpr ::bof3::image::Va kGridWords{0x939820};
+constexpr ::bof3::image::Va kGridCells{0x939A60};
 // kTasks: now BattleTask_Slots (symbols.toml).
 constexpr std::uint32_t kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
@@ -59,27 +59,27 @@ constexpr unsigned kTaskCount = 48;
 // kReserveStates: now MenuList_ReserveStates (symbols.toml). kind 19
 // The label list (kind 15): its piece lists, the text pointers and the rows
 // (a count, then up to five text indices, 6 bytes a row).
-constexpr std::uint32_t kLabelPieces = 0x66B0CC;
-constexpr std::uint32_t kLabelRowPieces = 0x66B0F0;
-constexpr std::uint32_t kLabelEndPieces = 0x66B0FC;
-constexpr std::uint32_t kLabelTexts = 0x66B12C;
-constexpr std::uint32_t kLabelRows = 0x66B158;
+constexpr ::bof3::image::Va kLabelPieces{0x66B0CC};
+constexpr ::bof3::image::Va kLabelRowPieces{0x66B0F0};
+constexpr ::bof3::image::Va kLabelEndPieces{0x66B0FC};
+constexpr ::bof3::image::Va kLabelTexts{0x66B12C};
+constexpr ::bof3::image::Va kLabelRows{0x66B158};
 
 // DIV-0041's slide bounds inside this group's bodies (widescreen.cpp g_slides):
 // the imm32 of `mov ecx, imm32` or the imm16 of `cmp cx, imm16`, read back on
 // every call.
-constexpr std::uint32_t kLeftOff300Bound = 0x599CC6;  // -300 in MenuList_SlideLeftOff300
-constexpr std::uint32_t kLeftOff100Bound = 0x599DF6;  // -100 in MenuList_SlideLeftOff100
-constexpr std::uint32_t kLeftOff180Bound = 0x59A136;  // -180 in MenuList_SlideLeftOff180
-constexpr std::uint32_t kLeftOff110Bound = 0x59A2B6;  // -110 in MenuList_SlideLeftOff110
-constexpr std::uint32_t kGridOutRight = 0x598A08;     // 0x142 in GeneWin_GridSlideOut
-constexpr std::uint32_t kGridOutLeft = 0x598A1C;      // -0xBE in GeneWin_GridSlideOut
+constexpr ::bof3::image::CodeVa kLeftOff300Bound{0x599CC6};  // -300 in MenuList_SlideLeftOff300
+constexpr ::bof3::image::CodeVa kLeftOff100Bound{0x599DF6};  // -100 in MenuList_SlideLeftOff100
+constexpr ::bof3::image::CodeVa kLeftOff180Bound{0x59A136};  // -180 in MenuList_SlideLeftOff180
+constexpr ::bof3::image::CodeVa kLeftOff110Bound{0x59A2B6};  // -110 in MenuList_SlideLeftOff110
+constexpr ::bof3::image::CodeVa kGridOutRight{0x598A08};     // 0x142 in GeneWin_GridSlideOut
+constexpr ::bof3::image::CodeVa kGridOutLeft{0x598A1C};      // -0xBE in GeneWin_GridSlideOut
 
 }  // namespace at
 
 // Callees of other groups, by address: ours since their owners merged, named by
 // symbol, the values unchanged (round fourteen's rebinding, docs/round-14-cleanup.md).
-constexpr std::uint32_t kRosterIndex = bof3::addr::CharId_ToRosterIndex;      // 0x4469D0, R3B's (the same value): CharId_ToRosterIndex (battle_result_callees.h), the byte at 0x66972C + id, 7 is 0
-constexpr std::uint32_t kReserveList = bof3::addr::MenuList_ReserveWinDraw;      // R2H's: a panel's reserve list (menu_frame.cpp, DIV-0011's site 0x59AA98)
+constexpr ::bof3::image::CodeVa kRosterIndex{bof3::addr::CharId_ToRosterIndex};      // 0x4469D0, R3B's (the same value): CharId_ToRosterIndex (battle_result_callees.h), the byte at 0x66972C + id, 7 is 0
+constexpr ::bof3::image::CodeVa kReserveList{bof3::addr::MenuList_ReserveWinDraw};      // R2H's: a panel's reserve list (menu_frame.cpp, DIV-0011's site 0x59AA98)
 
 }  // namespace rest_2g

@@ -64,14 +64,14 @@ const bh::Callee kCallees[] = {
     // argument - logged with no arguments here, as a table entry
     {"Port_DroppedCall (a table entry)", 0x4DF820, KeyOf(&::Port_DroppedCall), 0, {}, bh::Answer::kGarbage, 0, 0},
     // the engine's unnamed three (boss_sa_callees.h): 0x437450 reads the word
-    {"0x437450", at::kPlayCue, at::kPlayCue, 1, {0xFFFFu}, bh::Answer::kGarbage, 0, 0},
-    {"0x4376A0", at::kTurnClose, at::kTurnClose, 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"0x4376F0", at::kTurnChance, at::kTurnChance, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x437450", at::kPlayCue.v, at::kPlayCue.v, 1, {0xFFFFu}, bh::Answer::kGarbage, 0, 0},
+    {"0x4376A0", at::kTurnClose.v, at::kTurnClose.v, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x4376F0", at::kTurnChance.v, at::kTurnChance.v, 0, {}, bh::Answer::kGarbage, 0, 0},
 };
 
 // The cells the set-ups' hooks write beyond the standard regions: MoveScript
 // counter 0, the music track, the window records' pass byte.
-const bh::Region kRegions[] = {{at::kMoveVar3, 1}, {Key(&Music_Track), 1}, {BossSa_WindowPass_addr, 1}};
+const bh::Region kRegions[] = {{at::kMoveVar3.v, 1}, {Key(&Music_Track), 1}, {BossSa_WindowPass_addr, 1}};
 
 unsigned char* Enemy() { return bh::Pointer(BattleE3_CurrentEnemy_addr); }
 unsigned char Byte(std::initializer_list<U> often) {
@@ -194,11 +194,11 @@ void Seed01(unsigned k) {
     case kEvent: {
         // phase 0: 0x904AA8 bit 0x40 and the target 0
         Mem(bh::at::kFlags)[0] = Byte({0x40, 0, 0xBF, 0xFF});
-        if (bh::Half()) Mem(at::kTarget)[0] = 0;
+        if (bh::Half()) Mem(::bof3::Img(at::kTarget.v))[0] = 0;
         // phase 1: the actor 0, the kind 4, the action's id 0x78 at +2 of
         // [0x904B40] - a record in the compared state
-        if (bh::Often()) Mem(at::kActor)[0] = 0;
-        Mem(at::kActionKind)[0] = Byte({4, 4, 3, 5, 0x84});
+        if (bh::Often()) Mem(::bof3::Img(at::kActor.v))[0] = 0;
+        Mem(::bof3::Img(at::kActionKind.v))[0] = Byte({4, 4, 3, 5, 0x84});
         unsigned char* const record = bh::SpriteRecord(bh::Next()) + 4 * (bh::Next() % 16);
         bh::SetPointer(BattleSprites_Action_addr, record);
         if (bh::Half()) SetWord(record + 2, bh::Half() ? 0x78 : BH_PICK(0x77, 0x79, 0x178, 0));
@@ -345,7 +345,7 @@ void SeedWeretigr(unsigned k) {
     switch (k) {
     case kWFx:
         // the acting actor: an enemy 3..10 mostly (the harness draws 0..2)
-        if (bh::Often()) Mem(at::kActor)[0] = static_cast<unsigned char>(3 + bh::Next() % 8);
+        if (bh::Often()) Mem(::bof3::Img(at::kActor.v))[0] = static_cast<unsigned char>(3 + bh::Next() % 8);
         break;
     case kWCue:
         s[0xA] = Byte({1, 1, 0, 2, 0x10, 0xFF});

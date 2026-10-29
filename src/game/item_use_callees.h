@@ -20,6 +20,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 namespace item_use {
@@ -28,7 +30,7 @@ namespace at {
 
 // kCharRecords: now CharacterRecords (symbols.toml). CharacterRecords (a block), stride 0xA4
 constexpr std::uint32_t kCharStride = 0xA4;
-constexpr std::uint32_t kWorkRecords = 0x802DC0;   // member i's working copy of its character record,
+constexpr ::bof3::image::Va kWorkRecords{0x802DC0};   // member i's working copy of its character record,
 constexpr std::uint32_t kWorkStride = 0x14C;       // 0x14C apart (PartyWorkingRecords' stride)
 // A record's fields (the PSX record's offsets + 4, docs/item-use.md section 2).
 constexpr unsigned kStatus = 0x10;      // u16 status bits
@@ -41,34 +43,34 @@ constexpr unsigned kRecordBytes = 0xA4;
 
 // kPartyLists: now Cond_Flags[0xd2] (symbols.toml). Party_Count's 3-byte lists (move_cmds_callees.h)
 // kMemberRecord: now Character_IndexById (symbols.toml). u8 per party entry: its record index (Character_IndexById)
-constexpr std::uint32_t kItemFlags = 0x656B38;     // NameTable_Consumables + 0x10: each record's flags byte
+constexpr ::bof3::image::Va kItemFlags{0x656B38};     // NameTable_Consumables + 0x10: each record's flags byte
 constexpr std::uint32_t kItemStride = 22;
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0 (title-states.md section 3)
 // ItemUse_FaerieTiara's cells.
 // kMenuState: now FieldS_State (symbols.toml). u8, set to 0xA
-constexpr std::uint32_t kTiaraCount = 0x905B61;    // u8, 0xB9 less the clear flags counted
+constexpr ::bof3::image::Va kTiaraCount{0x905B61};    // u8, 0xB9 less the clear flags counted
 // kLeaderXZ: now ObjTrio[0].x (symbols.toml). two dwords (ObjTrio +0x34 / +0x38)
 // kReturnPoint: now AreaW2d_ReturnPoint (symbols.toml). two dwords, then the area word at 0x904150
-constexpr std::uint32_t kWaterJug = 0x90405F;      // u8, set to 0xF0
+constexpr ::bof3::image::Va kWaterJug{0x90405F};      // u8, set to 0xF0
 // The message box (msgbox_callees.h names the same cells).
 // kSubState: now ItemUse_SubState (symbols.toml). u8
-constexpr std::uint32_t kMessage = 0x7DEE48;       // u16
+constexpr ::bof3::image::Va kMessage{0x7DEE48};       // u16
 // kColorHigh: now ItemUse_ColorHigh (symbols.toml). u8
 // kChoiceId: now ItemUse_ChoiceId (symbols.toml). u8
-constexpr std::uint32_t kCursor = 0x7DEE67;        // s8 as the system choices read it
-constexpr std::uint32_t kWindow0State = 0x803163;  // u8
+constexpr ::bof3::image::Va kCursor{0x7DEE67};        // s8 as the system choices read it
+constexpr ::bof3::image::Va kWindow0State{0x803163};  // u8
 // kWindow1State: now Window1_State (symbols.toml). u8
-constexpr std::uint32_t kSysMessages = 0x658F08;   // u16 pairs, 4 bytes per system choice id
+constexpr ::bof3::image::Va kSysMessages{0x658F08};   // u16 pairs, 4 bytes per system choice id
 // kSysFlag: now FieldS_Answer (symbols.toml). u8, choice 0x80's answer
-constexpr std::uint32_t kSysCounter = 0x903848;    // u8, MoveScript variable 3 (move_cmds' kCounters)
+constexpr ::bof3::image::Va kSysCounter{0x903848};    // u8, MoveScript variable 3 (move_cmds' kCounters)
 // Input_AutoRepeat's two words.
 // kRepeatTimer: now ItemUse_RepeatTimer (symbols.toml). u16
-constexpr std::uint32_t kRepeatLatch = 0x7E01B8;   // u16
+constexpr ::bof3::image::Va kRepeatLatch{0x7E01B8};   // u16
 
 }  // namespace at
 
-constexpr std::uint32_t kSystemChoice = bof3::addr::MsgBox_SystemChoice;  // MsgBox_SystemChoice (docs/item-use.md)
-constexpr std::uint32_t kInventoryAdd = bof3::addr::Inventory_Add;  // Inventory_Add; called with a fourth dword it does not read
+constexpr ::bof3::image::CodeVa kSystemChoice{bof3::addr::MsgBox_SystemChoice};  // MsgBox_SystemChoice (docs/item-use.md)
+constexpr ::bof3::image::CodeVa kInventoryAdd{bof3::addr::Inventory_Add};  // Inventory_Add; called with a fourth dword it does not read
 
 using Handler = unsigned char (__cdecl*)(unsigned, unsigned);
 using Choice = void (__cdecl*)();

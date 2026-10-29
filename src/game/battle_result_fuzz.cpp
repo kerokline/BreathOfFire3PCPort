@@ -75,7 +75,7 @@ std::uint32_t Bytes(const unsigned char* p, unsigned n) {
 // shows.
 std::uint32_t TextHash(const unsigned char* p) { return Bytes(p, 12); }
 
-unsigned char* Member(unsigned slot) { return At(at::kMembers + slot * at::kMemberSize); }
+unsigned char* Member(unsigned slot) { return At(::bof3::Img(at::kMembers.v) + slot * at::kMemberSize); }
 
 // Set for the DrawExp rounds seeded with 14..16 slots, where the line's y
 // byte wraps: the stand-ins' moves of the party count then keep it long.
@@ -96,7 +96,7 @@ void Disturb() {
     case 0: At(BattleE4_Step4_addr)[0] = static_cast<unsigned char>(v); break;
     case 1: At(BattleE4_Step3_addr)[0] = static_cast<unsigned char>(v); break;
     case 2: At(BossSb_Countdown_addr)[0] = static_cast<unsigned char>(v % 5); break;
-    case 3: At(at::kPartyCount)[0] = PartyCount(v, 5); break;
+    case 3: At(::bof3::Img(at::kPartyCount.v))[0] = PartyCount(v, 5); break;
     case 4: At(Battle_DropCount_addr)[0] = static_cast<unsigned char>(v % 18); break;
     case 5: SetLong(At(Battle_ExpTotal_addr), static_cast<std::int32_t>(v % 2 ? w % 100 : h * 0x9E3779B1u)); break;
     case 6: SetLong(At(BattleFlow_ZennyTotal_addr), static_cast<std::int32_t>(v % 2 ? w % 100 : h * 0x9E3779B1u)); break;
@@ -107,13 +107,13 @@ void Disturb() {
     case 11: At(Battle_EndFlags_addr)[0] = static_cast<unsigned char>(At(Battle_EndFlags_addr)[0] ^ 0x20); break;
     case 12: WindowSlot(1)[w % 10] = static_cast<unsigned char>(v); break;
     case 13: WindowSlot(0x15)[w % 10] = static_cast<unsigned char>(v); break;
-    case 14: SetWord(At(at::kDropItems + 2 * (w % 18)), h >> 16); break;
-    case 15: At(at::kDropCounts + w % 18)[0] = static_cast<unsigned char>(v); break;
+    case 14: SetWord(At(::bof3::Img(at::kDropItems.v) + 2 * (w % 18)), h >> 16); break;
+    case 15: At(::bof3::Img(at::kDropCounts.v) + w % 18)[0] = static_cast<unsigned char>(v); break;
     case 16: SetWord(At(Game_AreaNumber_addr), h >> 16); break;
     case 17: SetLong(At(Party_Zenny_addr), static_cast<std::int32_t>(h * 0x2545F491u)); break;
     case 18: SetPtr(BattleWinStates_Current_addr, WindowSlot(w % kWindowSlots)); break;
-    case 19: At(at::kText2 + w % 16)[0] = static_cast<unsigned char>(v); break;
-    case 20: At(at::kText0 + w % 16)[0] = static_cast<unsigned char>(v); break;
+    case 19: At(::bof3::Img(at::kText2.v) + w % 16)[0] = static_cast<unsigned char>(v); break;
+    case 20: At(::bof3::Img(at::kText0.v) + w % 16)[0] = static_cast<unsigned char>(v); break;
     default: SetWord(At(Input_Held_addr + 4 * (w % 2)), v % 3 ? 0 : h >> 16); break;
     }
 }
@@ -161,7 +161,7 @@ unsigned char __cdecl StubRosterIndex(unsigned id) {
 unsigned __cdecl StubLevelUpPending(unsigned index, unsigned b) {
     Record(44, index & 0xFF, b & 0xFF);
     const std::uint32_t h = Hash();
-    if ((h >> 3) % 2) At(at::kPartyCount)[0] = PartyCount(h >> 8, 5);
+    if ((h >> 3) % 2) At(::bof3::Img(at::kPartyCount.v))[0] = PartyCount(h >> 8, 5);
     Disturb();
     // non-zero one call in three - half of those with a low byte of 0 -
     // and half of the zeros only in the low word
@@ -184,7 +184,7 @@ unsigned char __cdecl StubAddZenny(unsigned n, unsigned flag) {
 void __cdecl StubDrawFrame(int x, int y, int w, int h) {
     Record(47, static_cast<std::uint32_t>(x) & 0xFFFF, static_cast<std::uint32_t>(y) & 0xFFFF,
            static_cast<std::uint32_t>(w) & 0xFFFF, static_cast<std::uint32_t>(h) & 0xFFFF);
-    if (Hash() % 2) At(at::kPartyCount)[0] = PartyCount(Hash(), 6);
+    if (Hash() % 2) At(::bof3::Img(at::kPartyCount.v))[0] = PartyCount(Hash(), 6);
     Disturb();
 }
 // 0x598810 reads its slot as a byte; its answer is a dword, printed.
@@ -241,7 +241,7 @@ unsigned __cdecl StubWindowAlloc(unsigned slot, unsigned kind) {
     }
     const std::uint32_t h = Hash();
     if ((h >> 3) % 2) At(Battle_DropCount_addr)[0] = static_cast<unsigned char>((h >> 8) % 18);
-    if ((h >> 4) % 2) At(at::kPartyCount)[0] = PartyCount(h >> 12, 5);
+    if ((h >> 4) % 2) At(::bof3::Img(at::kPartyCount.v))[0] = PartyCount(h >> 12, 5);
     if ((h >> 5) % 2) SetLong(At(Battle_ExpTotal_addr), static_cast<std::int32_t>((h >> 16) % 3 ? (h >> 20) % 64 : h));
     if ((h >> 6) % 2) SetLong(At(BattleFlow_ZennyTotal_addr), static_cast<std::int32_t>((h >> 16) % 3 ? (h >> 20) % 64 : h * 7));
     Disturb();
@@ -269,7 +269,7 @@ unsigned char __cdecl StubInventoryAdd(unsigned category, unsigned item, unsigne
 const unsigned char* __cdecl StubTextDrawAt(int x, int y, int color, int count, const unsigned char* text) {
     Record(56, static_cast<std::uint32_t>(x) & 0xFFFF, static_cast<std::uint32_t>(y) & 0xFFFF,
            static_cast<std::uint32_t>(color), static_cast<std::uint32_t>(count), Id(text) ^ TextHash(text));
-    if (Hash() % 2) At(at::kPartyCount)[0] = PartyCount(Hash(), 6);
+    if (Hash() % 2) At(::bof3::Img(at::kPartyCount.v))[0] = PartyCount(Hash(), 6);
     if (Hash() % 3 == 0) Member((Hash() >> 8) % kMaxMembers)[0xA] = static_cast<unsigned char>(Hash() % 2 ? 0x63 : Hash() >> 16);
     Disturb();
     return text;
@@ -290,15 +290,15 @@ void __cdecl StubDrawMediumBox(int x, int y) {
 const void* StubFor(std::uint32_t target) {
     const auto f = [](auto p) { return reinterpret_cast<const void*>(p); };
     switch (target) {
-    case kCountMembers: return f(&StubCountMembers);
-    case kZennyBonus: return f(&StubZennyBonus);
-    case kAddExp: return f(&StubAddExp);
-    case kRosterIndex: return f(&StubRosterIndex);
-    case kLevelUpPending: return f(&StubLevelUpPending);
-    case kLevelUp: return f(&StubLevelUp);
-    case kAddZenny: return f(&StubAddZenny);
-    case kDrawFrame: return f(&StubDrawFrame);
-    case kExpToNext: return f(&StubExpToNext);
+    case kCountMembers.v: return f(&StubCountMembers);
+    case kZennyBonus.v: return f(&StubZennyBonus);
+    case kAddExp.v: return f(&StubAddExp);
+    case kRosterIndex.v: return f(&StubRosterIndex);
+    case kLevelUpPending.v: return f(&StubLevelUpPending);
+    case kLevelUp.v: return f(&StubLevelUp);
+    case kAddZenny.v: return f(&StubAddZenny);
+    case kDrawFrame.v: return f(&StubDrawFrame);
+    case kExpToNext.v: return f(&StubExpToNext);
     case 0x5B9380: return f(&StubSprintf);
     case 0x497740: return f(&StubMsgSystem);
     case 0x536AC0: return f(&StubPartySet);
@@ -340,18 +340,18 @@ struct Clone {
     int n_calls;
 };
 
-constexpr Call kSplitCalls[] = {{0xA, kCountMembers}, {0x42, 0x5B9380}, {0x49, 0x497740}, {0x5F, 0x536AC0}};
+constexpr Call kSplitCalls[] = {{0xA, kCountMembers.v}, {0x42, 0x5B9380}, {0x49, 0x497740}, {0x5F, 0x536AC0}};
 constexpr Call kOpenCalls[] = {{0x4, 0x59E2D0}};
-constexpr Call kExpTickCalls[] = {{0xA, 0x454810}, {0x34, kAddExp}, {0x56, kAddExp}};
+constexpr Call kExpTickCalls[] = {{0xA, 0x454810}, {0x34, kAddExp.v}, {0x56, kAddExp.v}};
 constexpr Call kExpDoneCalls[] = {{0x0, 0x454810}};
-constexpr Call kFindCalls[] = {{0x26, kRosterIndex}, {0x41, kLevelUpPending}};
-constexpr Call kSetupCalls[] = {{0x55, kRosterIndex}, {0x5E, kLevelUpPending}, {0x73, kRosterIndex}, {0x79, kLevelUp},
-                                {0x90, kZennyBonus},  {0xB4, 0x59E2D0},        {0xD7, 0x5B9380},     {0xDE, 0x497740},
+constexpr Call kFindCalls[] = {{0x26, kRosterIndex.v}, {0x41, kLevelUpPending.v}};
+constexpr Call kSetupCalls[] = {{0x55, kRosterIndex.v}, {0x5E, kLevelUpPending.v}, {0x73, kRosterIndex.v}, {0x79, kLevelUp.v},
+                                {0x90, kZennyBonus.v},  {0xB4, 0x59E2D0},        {0xD7, 0x5B9380},     {0xDE, 0x497740},
                                 {0x123, 0x59E2D0},    {0x251, 0x454770}};
-constexpr Call kZennyTickCalls[] = {{0xA, 0x454810}, {0x38, kAddZenny}, {0x5A, kAddZenny}};
+constexpr Call kZennyTickCalls[] = {{0xA, 0x454810}, {0x38, kAddZenny.v}, {0x5A, kAddZenny.v}};
 constexpr Call kAwardCalls[] = {{0x1, 0x454810}, {0x3E, 0x590BB0}};
-constexpr Call kDrawExpCalls[] = {{0x18, kDrawFrame}, {0x5E, 0x516B30}, {0x81, 0x5B9380}, {0x93, 0x516F60},
-                                  {0x99, kExpToNext}, {0xA9, 0x5B9380}, {0xBB, 0x516F60}, {0xC2, 0x497740},
+constexpr Call kDrawExpCalls[] = {{0x18, kDrawFrame.v}, {0x5E, 0x516B30}, {0x81, 0x5B9380}, {0x93, 0x516F60},
+                                  {0x99, kExpToNext.v}, {0xA9, 0x5B9380}, {0xBB, 0x516F60}, {0xC2, 0x497740},
                                   {0xD5, 0x516B30}, {0xE1, 0x497740}, {0xF1, 0x516B30}};
 constexpr Call kDrawZennyCalls[] = {{0x4, 0x443870}, {0x19, 0x5B9380}, {0x29, 0x516F60}, {0x41, 0x516B30}};
 
@@ -394,9 +394,9 @@ const Region kRegions[] = {
     {0x904AA0, 0x460},                                  // the battle's globals, the drop list, the text records, 0x904EFC
     {Party_Zenny_addr, 4},
     {AreaW0b_PartySet_addr, 1},
-    {at::kMsgCurrent, 4},
+    {at::kMsgCurrent.v, 4},
     {Input_Held_addr, 8},                               // Input_Held .. Input_Pressed
-    {at::kMembers, kMaxMembers * at::kMemberSize},      // the party slots' records, and past the third
+    {at::kMembers.v, kMaxMembers * at::kMemberSize},      // the party slots' records, and past the third
     {WindowRecords_addr, kWindowSlots * at::kWindowSize}, // the window records 0..0x15
     {BattleWinStates_Current_addr, 4},
 };
@@ -445,7 +445,7 @@ bool Half() { return (Next() & 1) != 0; }
 // pointer, the counts, the text records' ends.
 void Fix() {
     SetPtr(BattleWinStates_Current_addr, WindowSlot(Next() % kWindowSlots));
-    At(at::kPartyCount)[0] = static_cast<unsigned char>(Often() ? Next() % 5 : Next() % (kMaxMembers + 1));
+    At(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(Often() ? Next() % 5 : Next() % (kMaxMembers + 1));
     At(Battle_DropCount_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 17 : Next() % 0x21);
     At(BossSb_Countdown_addr)[0] = static_cast<unsigned char>(Next() % 5);
     for (unsigned i = 0; i < kMaxMembers; ++i)
@@ -455,8 +455,8 @@ void Fix() {
     if (Half()) At(Battle_EndFlags_addr)[0] = static_cast<unsigned char>(At(Battle_EndFlags_addr)[0] & ~0x20u);
     for (unsigned s = 0; s < kWindowSlots; ++s)
         if (Half()) WindowSlot(s)[0] = 0;
-    At(at::kText0 + 0x1F)[0] = 0;
-    At(at::kText2 + 0x1F)[0] = 0;
+    At(::bof3::Img(at::kText0.v) + 0x1F)[0] = 0;
+    At(::bof3::Img(at::kText2.v) + 0x1F)[0] = 0;
 }
 
 // Amounts at the tick's edges: 0, 1, 29 / 30 / 31, the step and one either
@@ -491,7 +491,7 @@ void Seed(unsigned k) {
             static const unsigned char kCounts[] = {0, 1, 2, 3, 5, 15, 16, 17, 0x20};
             if (Often()) At(Battle_DropCount_addr)[0] = kCounts[Next() % 9];
             for (unsigned i = 0; i < 0x20; ++i)
-                if (Often()) SetWord(At(at::kDropItems + 2 * i), Half() ? Next() % 4 : (Next() % 4) << 8 | Next() % 4);
+                if (Often()) SetWord(At(::bof3::Img(at::kDropItems.v) + 2 * i), Half() ? Next() % 4 : (Next() % 4) << 8 | Next() % 4);
         }
         break;
     case kExpWaitHeld:
@@ -527,7 +527,7 @@ void Seed(unsigned k) {
     case kDrawExp:
         // the y byte wraps past 14 slots
         g_long = Next() % 8 == 0;
-        if (g_long) At(at::kPartyCount)[0] = static_cast<unsigned char>(14 + Next() % 3);
+        if (g_long) At(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(14 + Next() % 3);
         break;
     default:
         break;
@@ -564,7 +564,7 @@ void Cover(unsigned k, const State& in, const State& out) {
         break;
     }
     case kFindLevelUp:
-        if ((ByteOf(out, at::kBattleEnd) & 0x20) && !(ByteOf(in, at::kBattleEnd) & 0x20)) ++g_cover.levelup_found;
+        if ((ByteOf(out, at::kBattleEnd.v) & 0x20) && !(ByteOf(in, at::kBattleEnd.v) & 0x20)) ++g_cover.levelup_found;
         else if (ByteOf(out, BattleE4_Step3_addr) != ByteOf(in, BattleE4_Step3_addr)) ++g_cover.levelup_none;
         break;
     case kSetup: {
@@ -576,9 +576,9 @@ void Cover(unsigned k, const State& in, const State& out) {
             if (out.log[i].what == 52) ++allocs;
         if (allocs >= 2) ++g_cover.dropped_window;
         unsigned moved = 0;
-        for (unsigned i = 0; i < 0x40; ++i) moved += ByteOf(out, at::kDropItems + i) != ByteOf(in, at::kDropItems + i);
+        for (unsigned i = 0; i < 0x40; ++i) moved += ByteOf(out, at::kDropItems.v + i) != ByteOf(in, at::kDropItems.v + i);
         if (moved) ++g_cover.sorted_swaps;
-        if (moved && ByteOf(in, at::kDropCount) > 16) ++g_cover.past16;
+        if (moved && ByteOf(in, at::kDropCount.v) > 16) ++g_cover.past16;
         break;
     }
     case kAwardDrops:

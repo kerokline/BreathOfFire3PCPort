@@ -829,7 +829,7 @@ const Region kRegions[] = {
     {Address(rv::Bytes(Sprite_ObjectsExtra)), 8 * 0xA4}, // the party objects and what a slot up to 7 reaches
     {Address(MoveScript_TintRecords), MoveScript_TintRecords_count},
     {Address(MoveScript_PartyRecords), MoveScript_PartyRecords_count},
-    {SharedScratch_addr - 8, 12},
+    {::bof3::Img(SharedScratch_addr) - 8, 12},
     {Address(&Field_Kind2Z), 8},
     {Address(&Field_ScriptFlags), 2},
     {Address(&MoveScript_F3Divisor), 2},

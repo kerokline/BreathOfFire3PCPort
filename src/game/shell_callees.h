@@ -13,11 +13,11 @@ namespace shell {
 using U = std::uint32_t;
 
 // --- Data, all Capcom's addresses (docs/shell.md section 1) ------------------
-constexpr U kCfgName = 0x65DAD8;      // the BOF3.CFG literal Cfg_Load opens
-constexpr U kModeRt = 0x65DAE4;       // its mode literal, text read
-constexpr U kPairFormat = 0x65DAD0;   // the two-integer sscanf format of lines 3 on
-constexpr U kModeRb = 0x66BC38;       // Disc_Probe's mode literal, binary read
-constexpr U kRootFormat = 0x66BC30;   // Disc_Probe's two-string sprintf format
+constexpr ::bof3::image::Va kCfgName{0x65DAD8};      // the BOF3.CFG literal Cfg_Load opens
+constexpr ::bof3::image::Va kModeRt{0x65DAE4};       // its mode literal, text read
+constexpr ::bof3::image::Va kPairFormat{0x65DAD0};   // the two-integer sscanf format of lines 3 on
+constexpr ::bof3::image::Va kModeRb{0x66BC38};       // Disc_Probe's mode literal, binary read
+constexpr ::bof3::image::Va kRootFormat{0x66BC30};   // Disc_Probe's two-string sprintf format
 // kCdRoot: now File_CdRootBuf (symbols.toml). File_CdRootBuf, the drive root File_Open prepends
 // The globals symbols.gen.h binds as typed lvalues (so their bof3::addr
 // constants are hidden behind the macros), by address for the fuzz's regions
@@ -29,7 +29,7 @@ constexpr U kRootFormat = 0x66BC30;   // Disc_Probe's two-string sprintf format
 // kGameQuitFlag: now Game_QuitFlag (symbols.toml). Game_QuitFlag, a byte
 // kGfxBufferIndex: now Gfx_BufferIndex (symbols.toml). Gfx_BufferIndex, a byte
 // kGfxCurrentEnv: now Gfx_CurrentEnv (symbols.toml). Gfx_CurrentEnv, the current block
-constexpr U kGfxOtPointers = 0x929EA0;     // Gfx_OtPointers, 8 dwords
+constexpr ::bof3::image::Va kGfxOtPointers{0x929EA0};     // Gfx_OtPointers, 8 dwords
 // kGfxOtHeads: now Gfx_OtHeads (symbols.toml). Gfx_OtHeads, 8 list heads per buffer
 constexpr U kBlocks = bof3::addr::Gfx_BufferBlocks;  // 0x903880, the two double-buffer blocks
 constexpr U kBlockBytes = 0x90;       // DISPENV +0, DRAWENV +0x14, the ordering table +0x70
@@ -52,7 +52,7 @@ constexpr U kDriveCdrom = 5;          // DRIVE_CDROM
 
 // The sound set-up Game_Init calls (0x4FD144), not ours and not named
 // tonight: the platform round's sound group reads it (docs/shell.md section 6).
-constexpr U kSoundSetup = bof3::addr::Snd_Init;   // ours since group PS (the same night), the value unchanged
+constexpr ::bof3::image::CodeVa kSoundSetup{bof3::addr::Snd_Init};   // ours since group PS (the same night), the value unchanged
 
 using DriveTypeFn = unsigned (__stdcall*)(const char* root);   // GetDriveTypeA
 

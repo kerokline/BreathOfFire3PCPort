@@ -60,7 +60,7 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-constexpr U kMessage = 0x7DEE48;   // the message word a choice handler leaves (0xFFFF: none)
+constexpr ::bof3::image::Va kMessage{0x7DEE48};   // the message word a choice handler leaves (0xFFFF: none)
 
 unsigned char* Cur() { return Sprite_Current; }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
@@ -111,16 +111,16 @@ using Pers4 = long (__cdecl*)(const short*, const short*, const short*, const sh
 // variable 3 (0x903848) = 0x14 when the answer byte 0x7DEE67 is not 0, else 0xA.
 extern "C" void __cdecl Area120_ChoiceVar3A(void) {
     const unsigned char answer = static_cast<unsigned char>(AreaW0c_ChoiceAnswer);
-    SetWord(At(kMessage), 0xFFFF);
-    At(at::kScriptVar3)[0] = answer != 0 ? 0x14 : 0x0A;
+    SetWord(At(::bof3::Img(kMessage.v)), 0xFFFF);
+    At(::bof3::Img(at::kScriptVar3.v))[0] = answer != 0 ? 0x14 : 0x0A;
 }
 
 // original 0x41A9F0 (area 120's choice 1): no message; variable 3 = 0x1E when
 // the answer is not 0, else 0x28.
 extern "C" void __cdecl Area120_ChoiceVar3B(void) {
     const unsigned char answer = static_cast<unsigned char>(AreaW0c_ChoiceAnswer);
-    SetWord(At(kMessage), 0xFFFF);
-    At(at::kScriptVar3)[0] = answer != 0 ? 0x1E : 0x28;
+    SetWord(At(::bof3::Img(kMessage.v)), 0xFFFF);
+    At(::bof3::Img(at::kScriptVar3.v))[0] = answer != 0 ? 0x1E : 0x28;
 }
 
 // original 0x41AA10 (area 120's choice 2): answer 0 - no message, the word
@@ -128,11 +128,11 @@ extern "C" void __cdecl Area120_ChoiceVar3B(void) {
 // at step 8; any other answer - message 0x35.
 extern "C" void __cdecl Area120_ChoiceStartRun13(void) {
     if (static_cast<unsigned char>(AreaW0c_ChoiceAnswer) != 0) {
-        SetWord(At(kMessage), 0x35);
+        SetWord(At(::bof3::Img(kMessage.v)), 0x35);
         return;
     }
     unsigned char* const record = reinterpret_cast<unsigned char*>(AreaW1a_FocusObject);
-    SetWord(At(kMessage), 0xFFFF);
+    SetWord(At(::bof3::Img(kMessage.v)), 0xFFFF);
     SetWord(record + 0x8A, Word(record + 0x8A) + 1u);
     MoveScript_Var7 = 0xD;
     MoveScript_PartyRecords[0x65] = 8;
@@ -145,7 +145,7 @@ extern "C" void __cdecl Area120_ChoiceStartRun13(void) {
 // original 0x41AA50 (area 121's handler 0; PSX 0x801F2C3C): Area121_CameraStates
 // 0x62461C by Sprite_Current +4 - _CameraFar, _CameraApproach. A tail jump;
 // ours aborts past the two entries.
-extern "C" void __cdecl Area121_CameraRun(void) { StateEntry("Area121", "CameraRun", Area121_CameraStates_addr, 2, Cur()[4])(); }
+extern "C" void __cdecl Area121_CameraRun(void) { StateEntry("Area121", "CameraRun", ::bof3::Img(Area121_CameraStates_addr), 2, Cur()[4])(); }
 
 // original 0x41AA70 (Area121_CameraStates 0; PSX 0x801F2C80): Camera_Distance =
 // -0x424 (0xFBDC), +4 = 1, the script word - 2 (the op runs again).
@@ -180,10 +180,10 @@ extern "C" void __cdecl Area121_StartRun4(void) {
     rv::As<records::SpriteObject>(Field_ActiveMember)->script_position = 0;
     AH_CALL(Sound_PlayEffect)(0x217);
     AH_CALL(ScriptFlags_Set40)();
-    At(at::kScriptVar3)[0] = 0;
-    At(at::kScriptVar4)[0] = 0;
-    At(at::kScriptVar5)[0] = 0;
-    At(at::kScriptVar6)[0] = 0;
+    At(::bof3::Img(at::kScriptVar3.v))[0] = 0;
+    At(::bof3::Img(at::kScriptVar4.v))[0] = 0;
+    At(::bof3::Img(at::kScriptVar5.v))[0] = 0;
+    At(::bof3::Img(at::kScriptVar6.v))[0] = 0;
     MoveScript_PartyRecords[0x65] = 0;
     MoveScript_Var7 = 4;
 }
@@ -383,7 +383,7 @@ void FrameSlideIn(const WorldMapTables& t) {
 // ours passes the word sign-extended.
 void FrameHold(const WorldMapTables& t) {
     if (AreaW0b_MapMode == 2) Cur()[2] = 3;
-    AH_AT(DrawAt, t.fn_draw_frame)(0x10, S16(Cur() + 0x2E));
+    AH_WORD(DrawAt, t.fn_draw_frame)(0x10, S16(Cur() + 0x2E));
 }
 
 // State 3: the word +0x2E -= 0x10; at -0x30 and below +2 = 0; unless the
@@ -399,7 +399,7 @@ void FrameSlideOut(const WorldMapTables& t) {
         o[2] = 1;
         o = Cur();
     }
-    AH_AT(DrawAt, t.fn_draw_frame)(0x10, S16(o + 0x2E));
+    AH_WORD(DrawAt, t.fn_draw_frame)(0x10, S16(o + 0x2E));
 }
 
 // The region box, state 1: y +0x30 -= 10; at 0xC8 and below (s16) +3 + 1;
@@ -415,7 +415,7 @@ void BoxSlideIn(const WorldMapTables& t) {
         o[3] = 3;
         o = Cur();
     }
-    AH_AT(DrawAt, t.fn_draw_hud)(0x5C, S16(o + 0x30));
+    AH_WORD(DrawAt, t.fn_draw_hud)(0x5C, S16(o + 0x30));
 }
 
 // State 2: while +0xB is 0 +9 + 1, at 0x5A and above (u8) +0xB + 1; when the
@@ -434,7 +434,7 @@ void BoxHold(const WorldMapTables& t) {
         o[3] = static_cast<unsigned char>(o[3] + 1);
         o = Cur();
     }
-    AH_AT(DrawAt, t.fn_draw_hud)(0x5C, S16(o + 0x30));
+    AH_WORD(DrawAt, t.fn_draw_hud)(0x5C, S16(o + 0x30));
 }
 
 // State 3: y +0x30 += 10; at 0xF0 and above (s16) +3 = 0; unless the mode
@@ -451,7 +451,7 @@ void BoxSlideOut(const WorldMapTables& t) {
         o[3] = 1;
         o = Cur();
     }
-    AH_AT(DrawAt, t.fn_draw_hud)(0x5C, S16(o + 0x30));
+    AH_WORD(DrawAt, t.fn_draw_hud)(0x5C, S16(o + 0x30));
 }
 
 // The dial frame at (x, y) (area 33's WorldMap_DrawFrame 0x404390,
@@ -471,22 +471,22 @@ void BoxSlideOut(const WorldMapTables& t) {
 void DrawFrame(const WorldMapTables& t, int x, int y) {
     if ((Draw_PassFlags & 0x1B) == 0) return;
     world_map_legend::Begin();   // DIV-0135: which page; the port's key names painted over
-    const auto sprite = AH_AT(DrawSpriteAt, t.fn_draw_sprite);
+    const auto sprite = AH_WORD(DrawSpriteAt, t.fn_draw_sprite);
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x9C, 0);
     AH_CALL(Gfx_CommitPrim)(1, 0xC);
     sprite(x, y, 0);
-    const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(at::kLeaderCellX))),
-                                                       static_cast<short>(Word(At(at::kLeaderCellZ))));
+    const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
+                                                       static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v)))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
     if (!withheld1) sprite(x + 0x30, y, 1);
-    world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f000))), x + 0x38, y + 8,
+    world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000))), x + 0x38, y + 8,
                           withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) sprite(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f00c))), x + 0x38, y + 0x10,
+    world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c))), x + 0x38, y + 0x10,
                           withheld2);
-    bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(at::kLeaderCellX))),
-                                            static_cast<short>(Word(At(at::kLeaderCellZ)))) != 0;
+    bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellX.v)))),
+                                            static_cast<short>(Word(At(::bof3::Img(at::kLeaderCellZ.v))))) != 0;
     if (!third) third = (Field_ScriptFlags2 & 0x1000) != 0;
     if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
     if (!third) third = (Field_ScriptFlags & 0x4000) != 0;
@@ -528,9 +528,9 @@ void DrawSprite(const WorldMapTables& t, int x, int y, unsigned index) {
 // area 121, as for areas 87 and 88).
 void DrawHud(const WorldMapTables& t, int x, int y) {
     if ((Draw_PassFlags & 0x1B) == 0) return;
-    AH_AT(DrawSpriteAt, t.fn_draw_sprite)(x, y, 4);
-    AH_AT(DrawSpriteAt, t.fn_draw_sprite)(x + 0x80, y, 5);
-    const unsigned char* const text = At(at::kAreaText + (static_cast<U>(Long(At(t.label_offset))) & 0xFFFF));
+    AH_WORD(DrawSpriteAt, t.fn_draw_sprite)(x, y, 4);
+    AH_WORD(DrawSpriteAt, t.fn_draw_sprite)(x + 0x80, y, 5);
+    const unsigned char* const text = At(::bof3::Img(at::kAreaText.v) + (static_cast<U>(Long(At(t.label_offset))) & 0xFFFF));
     AH_CALL(Text_DrawAt)(x + 4, y + 4, 0, 0xFF, text);
 }
 
@@ -638,10 +638,10 @@ void DrawDrift() {
         rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->z_whole, 0xFFF8);
         o = Cur();
     }
-    std::int32_t dx = S16(At(at::kLeaderCellX)) - S16(o + 0x36);
+    std::int32_t dx = S16(At(::bof3::Img(at::kLeaderCellX.v))) - S16(o + 0x36);
     if (dx < 0) dx = -dx;
     if (dx > 0x19) {
-        std::int32_t dz = S16(At(at::kLeaderCellZ)) - S16(o + 0x3A);
+        std::int32_t dz = S16(At(::bof3::Img(at::kLeaderCellZ.v))) - S16(o + 0x3A);
         if (dz < 0) dz = -dz;
         if (dz > 0x19) return;
     }
@@ -774,8 +774,8 @@ extern "C" void __cdecl Area121_DrawDrift(void) { DrawDrift(); }
 // the two entries), then a tail jump to 0x415640's neighbour 0x4156C0 (area
 // 104's block: +0xA counted down, the charge on +0xB).
 extern "C" void __cdecl Area121_LeaderRun(void) {
-    StateEntry("Area121", "LeaderRun", Area121_LeaderStates_addr, 2, Cur()[2])();
-    AH_AT(Handler, area_w3b::kLeaderCharge104)();
+    StateEntry("Area121", "LeaderRun", ::bof3::Img(Area121_LeaderStates_addr), 2, Cur()[2])();
+    AH_AT(Handler, area_w3b::kLeaderCharge104.v)();
 }
 
 // original 0x41B9F0 (Area121_LeaderStates 0; also Area121_LeaderStep's tail):
@@ -797,7 +797,7 @@ extern "C" void __cdecl Area121_LeaderRun(void) {
 // Field_JumpCheckHeight, +9 - 1, Field_LeaderStepTick, +0x137 = +2 = 1 (the
 // step). Any other target: nothing.
 extern "C" void __cdecl Area121_LeaderControl(void) {
-    if (AH_AT(ByteFn, area_w3b::kStepOffObject)() != 0) return;
+    if (AH_AT(ByteFn, area_w3b::kStepOffObject.v)() != 0) return;
     if ((Field_ScriptFlags & 0x100) != 0) return;
     if ((Field_ScriptFlags2 & 0x40) != 0) return;
     if (Field_Request != 0) return;
@@ -807,17 +807,17 @@ extern "C" void __cdecl Area121_LeaderControl(void) {
         if ((Field_ActorStates[state[0x148] * at::kObjectStride] & 0x20) == 0) state[0x136] = 0;
     }
     if (AH_CALL(Field_LeaderCellEvent)() != 0) return;
-    if (AH_AT(ByteFn, area_w3b::kMenuButton)() != 0) return;
+    if (AH_AT(ByteFn, area_w3b::kMenuButton.v)() != 0) return;
     if (AH_CALL(Field_LeaderTalkTest)() != 0) return;
-    if (AH_AT(ByteFn, area_w3b::kRequest4Button)() != 0) return;
+    if (AH_AT(ByteFn, area_w3b::kRequest4Button.v)() != 0) return;
     const unsigned char old = Cur()[8];
-    const unsigned char turned = AH_AT(ByteFn, area_w3b::kTurnInput)();
+    const unsigned char turned = AH_AT(ByteFn, area_w3b::kTurnInput.v)();
     unsigned char* o = Cur();
-    const bool pressed = (Word(At(Gfx_UnpackScratch_addr + 0x1f002)) & Input_Held & 0xFFFFu) != 0;
+    const bool pressed = (Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f002)) & Input_Held & 0xFFFFu) != 0;
     if ((turned == 0 && !pressed) || o[0xB] == 0x40) {
         o[8] = old;
         Field_State[0x137] = 0;
-        AH_AT(Handler, area_w3b::kLeaderHalt104)();
+        AH_AT(Handler, area_w3b::kLeaderHalt104.v)();
         Cur()[9] = 0;
         Cur()[2] = 0;
         return;
@@ -863,10 +863,10 @@ extern "C" void __cdecl Area121_LeaderControl(void) {
     if (AH_CALL(Field_LeaderPushObjects)() != 0) {
         Field_State[0x137] = 0;
         Cur()[2] = 0;
-        AH_AT(Handler, area_w3b::kPushObject)();
+        AH_AT(Handler, area_w3b::kPushObject.v)();
         return;
     }
-    AH_AT(Handler, area_w3b::kLeaderPace104)();
+    AH_AT(Handler, area_w3b::kLeaderPace104.v)();
     if (Field_State[0x128] == 4 && Cur()[8] != old) {
         Cur()[8] = old;
         Field_State[0x137] = 0;
@@ -897,7 +897,7 @@ extern "C" void __cdecl Area121_PushObject(void) {
     const auto x = static_cast<long>(static_cast<U>(rv::As<records::SpriteHead>(o)->x) + StepX(d) * 2u);
     const auto z = static_cast<long>(static_cast<U>(rv::As<records::SpriteHead>(o)->z) + StepZ(d) * 2u);
     const unsigned char k = AH_CALL(Sprite_ObjectAt)(x, z, 1);
-    const bool pressed = (Word(At(Gfx_UnpackScratch_addr + 0x1f002)) & Input_Held & 0xFFFFu) != 0;
+    const bool pressed = (Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f002)) & Input_Held & 0xFFFFu) != 0;
     if (pressed) {
         unsigned char* const object = ObjectRecord(k);
         if ((object[8] & 7) == Cur()[8]) {
@@ -905,7 +905,7 @@ extern "C" void __cdecl Area121_PushObject(void) {
             return;
         }
     }
-    if (AH_AT(StepFn, area_w3b::kStepAround)(x, z, k) == 0) return;
+    if (AH_AT(StepFn, area_w3b::kStepAround.v)(x, z, k) == 0) return;
     AH_CALL(Field_JumpStart)();
     Cur()[9] = static_cast<unsigned char>(Cur()[9] - 1);
     AH_CALL(Field_LeaderStepTick)();
@@ -920,7 +920,7 @@ extern "C" void __cdecl Area121_PushObject(void) {
 // Eight turns without: 0.
 extern "C" unsigned char __cdecl Area121_StepAround(long x, long z, unsigned k) {
     if ((k & 0xFF) == 0xFF) return 0;
-    const unsigned char direction = AH_AT(StepFn, area_w3b::kDirectionTo)(x, z, k);
+    const unsigned char direction = AH_AT(StepFn, area_w3b::kDirectionTo.v)(x, z, k);
     Cur()[8] = direction;
     for (unsigned i = 0; i < 8; ++i) {
         if (AH_CALL(Field_LeaderStepTarget)() == 0 && AH_CALL(Sprite_ObjectAt)(x, z, 0) == 0xFF) return 1;
@@ -955,7 +955,7 @@ extern "C" unsigned char __cdecl Area121_StepOffObject(void) {
     const unsigned char* o = Cur();
     const unsigned char k = AH_CALL(Sprite_ObjectAt)(rv::As<records::SpriteHead>(o)->x, rv::As<records::SpriteHead>(o)->z, 1);
     o = Cur();
-    if (AH_AT(StepFn, area_w3b::kStepAround)(rv::As<records::SpriteHead>(o)->x, rv::As<records::SpriteHead>(o)->z, k) == 0) return 0;
+    if (AH_AT(StepFn, area_w3b::kStepAround.v)(rv::As<records::SpriteHead>(o)->x, rv::As<records::SpriteHead>(o)->z, k) == 0) return 0;
     AH_CALL(Field_JumpStart)();
     Cur()[9] = static_cast<unsigned char>(Cur()[9] - 1);
     AH_CALL(Field_LeaderStepTick)();
@@ -1003,7 +1003,7 @@ extern "C" void __cdecl Area121_LeaderStep(void) {
     const unsigned char facing = Cur()[8];
     Field_StepCount = static_cast<unsigned short>(Field_StepCount + 1);
     if (facing == 2 || facing == 6) Field_StepCount = static_cast<unsigned short>(Field_StepCount + 1);
-    AH_AT(Handler, area_w3b::kLeaderHalt104)();
+    AH_AT(Handler, area_w3b::kLeaderHalt104.v)();
     o = Cur();
     if (AH_CALL(Scenario_ArriveHook)(rv::As<records::SpriteHead>(o)->x, rv::As<records::SpriteHead>(o)->z) != 0) {
         Cur()[2] = 0;
@@ -1011,9 +1011,9 @@ extern "C" void __cdecl Area121_LeaderStep(void) {
     }
     AH_CALL(Field_Bit80Tick)();
     if ((Field_ScriptFlags & 0x100) == 0 && (Field_ScriptFlags2 & 0x40) == 0) {
-        const unsigned buttons = Word(At(Gfx_UnpackScratch_addr + 0x1f002)) | Word(At(Gfx_UnpackScratch_addr + 0x1f000)) | 0xF000u;
+        const unsigned buttons = Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f002)) | Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000)) | 0xF000u;
         if ((Field_InputHeld & buttons) != 0) {
-            AH_AT(Handler, area_w3b::kLeaderControl)();
+            AH_AT(Handler, area_w3b::kLeaderControl.v)();
             return;
         }
     }
@@ -1039,7 +1039,7 @@ extern "C" unsigned char __cdecl Area121_MenuButton(void) {
 // (Field_InputHeld): Field_Request = 4, +2 = 0, al 1. Else al 0.
 extern "C" unsigned char __cdecl Area121_Request4Button(void) {
     if ((Field_ScriptFlags & 0x2000) != 0) return 0;
-    if ((Word(At(Gfx_UnpackScratch_addr + 0x1f006)) & Field_InputHeld) == 0) return 0;
+    if ((Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f006)) & Field_InputHeld) == 0) return 0;
     Field_Request = 4;
     Cur()[2] = 0;
     return 1;
@@ -1068,7 +1068,7 @@ extern "C" unsigned char __cdecl Area121_TurnInput(void) {
 // original 0x41C190 (jumped to by 0x462B6F): Area121_Kind5CStates 0x62470C by
 // Sprite_Current +1 - _Kind5CStart, _Kind5CFace, _Kind5CTurn, _RingWait,
 // _RingRise. A tail jump; ours aborts past the five entries.
-extern "C" void __cdecl Area121_Kind5CRun(void) { StateEntry("Area121", "Kind5CRun", Area121_Kind5CStates_addr, 5, Cur()[1])(); }
+extern "C" void __cdecl Area121_Kind5CRun(void) { StateEntry("Area121", "Kind5CRun", ::bof3::Img(Area121_Kind5CStates_addr), 5, Cur()[1])(); }
 
 // original 0x41C1B0 (Area121_Kind5CStates 0): +8 = the leader's facing;
 // Sprite_InitFromEntry(the dword +8 of Area_Descriptors[Game_AreaNumber], + 8);
@@ -1090,7 +1090,7 @@ extern "C" void __cdecl Area121_Kind5CStart(void) {
     Cur()[0x5E] = 0x80;
     Cur()[0x5F] = 0x80;
     Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);
-    AH_AT(Handler, area_w3b::kKind5CFollow)();
+    AH_AT(Handler, area_w3b::kKind5CFollow.v)();
     if (Game_AreaNumber == 0x68 && AH_CALL(KeyItem_Has)(0xA) == 0) return;
     for (U i = 0; i < 4; ++i) {
         const unsigned char slot = AH_CALL(Effect_FindFree)();
@@ -1116,8 +1116,8 @@ extern "C" void __cdecl Area121_Kind5CFollow(void) {
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, ObjTrio[0].height_whole);
     AH_CALL(Sprite_UpdateScreenA)();
     if ((Draw_PassFlags & 0x1B) == 0) return;
-    const auto gauge = AH_AT(GaugeFn, area_w3b::kGaugeSprite);
-    const auto row = AH_AT(RowFn, area_w3b::kGaugeRow104);
+    const auto gauge = AH_AT(GaugeFn, area_w3b::kGaugeSprite.v);
+    const auto row = AH_AT(RowFn, area_w3b::kGaugeRow104.v);
     if ((Field_StatusBits & 0x40) != 0) {
         gauge(0xDC, 0x10, 0);
         row(0x40, 0);
@@ -1168,11 +1168,11 @@ extern "C" void __cdecl Area121_GaugeSprite(int x, int y, unsigned n) {
 // Area121_Kind5CFollow.
 extern "C" void __cdecl Area121_Kind5CFace(void) {
     if (Cur()[8] != ObjTrio[0].direction) {
-        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep)(Cur()[8], ObjTrio[0].direction) != 0) return;
-        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep)(Cur()[8] ^ 4u, ObjTrio[0].direction) != 0) return;
+        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep.v)(Cur()[8], ObjTrio[0].direction) != 0) return;
+        if (AH_AT(TurnFn, area_w3b::kKind5CTurnStep.v)(Cur()[8] ^ 4u, ObjTrio[0].direction) != 0) return;
         ObjTrio[0].direction = Cur()[8];
     }
-    AH_AT(Handler, area_w3b::kKind5CFollow)();
+    AH_AT(Handler, area_w3b::kKind5CFollow.v)();
 }
 
 // original 0x41C440 (a, b; called by Area121_Kind5CFace): the facings a and b
@@ -1203,7 +1203,7 @@ extern "C" unsigned char __cdecl Area121_Kind5CTurnStep(unsigned a, unsigned b) 
     unsigned char* const o = Cur();
     ObjTrio[0].direction = o[8];
     o[9] = 8;
-    AH_AT(Handler, area_w3b::kKind5CTurn)();
+    AH_AT(Handler, area_w3b::kKind5CTurn.v)();
     Cur()[1] = 2;
     return 1;
 }
@@ -1218,10 +1218,10 @@ extern "C" void __cdecl Area121_Kind5CTurn(void) {
     unsigned char* const o = Cur();
     if (o[9] == 0) {
         o[1] = 1;
-        AH_AT(Handler, area_w3b::kKind5CFace)();
+        AH_AT(Handler, area_w3b::kKind5CFace.v)();
         return;
     }
-    AH_AT(Handler, area_w3b::kKind5CFollow)();
+    AH_AT(Handler, area_w3b::kKind5CFollow.v)();
 }
 
 // original 0x41C560 (Area121_Kind5CStates 3, a ring's wait): +0xA counts down;
@@ -1236,7 +1236,7 @@ extern "C" void __cdecl Area121_RingWait(void) {
     rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->x, ObjTrio[0].x);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, ObjTrio[0].z);
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(ObjTrio[0].height) + 0x800000u));
-    AH_AT(Handler, area_w3b::kRingRise)();
+    AH_AT(Handler, area_w3b::kRingRise.v)();
     Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);
 }
 
@@ -1335,7 +1335,7 @@ extern "C" void __cdecl Area121_DrawTopBand(void) {
     std::memcpy(prim + 0x18, &width, 4);
     SetLong(prim + 0x1C, 0);
     std::memcpy(prim + 0x28, &left, 4);
-    const float height = static_cast<float>(At(Area121_BandHeights_addr + Cond_ByteFE)[0]);
+    const float height = static_cast<float>(At(::bof3::Img(Area121_BandHeights_addr) + Cond_ByteFE)[0]);
     std::memcpy(prim + 0x38, &width, 4);
     std::memcpy(prim + 0x2C, &height, 4);
     std::memcpy(prim + 0x3C, &height, 4);

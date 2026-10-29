@@ -96,13 +96,13 @@ const bh::Callee kCallees[] = {
      bh::Answer::kGarbage, 0, 0},
     {"MagicFx_CenterOnSide", ::bof3::addr::MagicFx_CenterOnSide, KeyOf(&::MagicFx_CenterOnSide), 0, {},
      bh::Answer::kGarbage, 0, 0, {}, &CenterEffect},
-    {"0x4376F0", at::kTurnChance, at::kTurnChance, 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"0x4376A0", at::kTurnClose, at::kTurnClose, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x4376F0", at::kTurnChance.v, at::kTurnChance.v, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x4376A0", at::kTurnClose.v, at::kTurnClose.v, 0, {}, bh::Answer::kGarbage, 0, 0},
 };
 
 // The cells beyond the harness's battle frame the 50 read or write.
 const bh::Region kRegions[] = {
-    {at::kScriptVar3, 4},      // the movement script's variables
+    {at::kScriptVar3.v, 4},      // the movement script's variables
     {Music_Track_addr, 4},     // Music_Track
     {BossSi_CentreX_addr, 8},  // the fight's centre
     {Field_Kind2Z_addr, 8},    // Field_Kind2Z, Field_Kind2X
@@ -145,7 +145,7 @@ void Disturb(U h) {
     case 1: bh::Pointer(BattleE3_CurrentEnemy_addr)[5] = Byte(v); break;
     case 2: Sprite_Current[9 + (v & 1)] = Byte(v >> 1); break;
     case 3: bh::Pointer(BattleE2_Owner_addr)[1 + (v & 1)] = Byte(v >> 1); break;
-    default: B(at::kTarget) = Byte(v); break;
+    default: B(::bof3::Img(at::kTarget.v)) = Byte(v); break;
     }
 }
 
@@ -274,7 +274,7 @@ void SeedK58(unsigned k) {
         // +2 up by one: its wrap
         if (bh::Half()) s[2] = Byte(BH_PICK(0, 1, 0xFF, 0x7F));
         break;
-    case kK58Await: B(at::kFlags) = Byte(bh::Half() ? bh::Next() | 4 : bh::Next() & ~4u); break;
+    case kK58Await: B(::bof3::Img(at::kFlags.v)) = Byte(bh::Half() ? bh::Next() | 4 : bh::Next() & ~4u); break;
     default: break;
     }
 }

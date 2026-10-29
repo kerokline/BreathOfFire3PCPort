@@ -55,7 +55,7 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F; words by function) and the four SVECTORs
 // of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again after every
 // call, as the originals read them.
-constexpr std::uint32_t kS = SharedScratch_addr;
+constexpr ::bof3::image::Va kS{SharedScratch_addr};
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // MAGIC064's streak pool in .bss: 0xC0 records of 0x1C bytes (+0 live, +1 the
@@ -76,18 +76,18 @@ constexpr unsigned kPoolCount = 0xC0;
 // kFrameCounter: now Frame_Counter (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
-unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
+unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(::bof3::Img(at::kActor)))) & 0xFF; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -109,12 +109,12 @@ void PutFloat(unsigned char* at, int v) {
     std::memcpy(at, &f, sizeof f);
 }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
 // The party records by the battle index, unchecked (the originals index
 // ObjTrio by the actor byte whatever it holds).
-unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* PoolRecord(unsigned i) { return Mem(WeretigerStreak_Pool_addr + i * kPoolStride); }
-unsigned char* PoolCurrent() { return Pointer(WeretigerStreak_Current_addr); }
+unsigned char* PartyRecord(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
+unsigned char* PoolRecord(unsigned i) { return Mem(::bof3::Img(WeretigerStreak_Pool_addr) + i * kPoolStride); }
+unsigned char* PoolCurrent() { return Pointer(::bof3::Img(WeretigerStreak_Current_addr)); }
 
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }
 
@@ -122,13 +122,13 @@ unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, para
 // the game the jmp Inject put there (or Capcom's code under
 // BOF3X_ORIGINAL), in the fuzz that address's recorder.
 using Fn0 = void (__cdecl*)();
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Capcom's phase handlers a table holds, unnamed, in the engine: 0x492750
 // steps +1 on; 0x437CC0 is a bare ret (a step that waits for a child to move
 // +2 on).
-constexpr std::uint32_t kStepOn = bof3::addr::Effect_StateNext;   // 0x492750, ours since round thirteen
-constexpr std::uint32_t kNothing = bof3::addr::BareRet;
+constexpr ::bof3::image::CodeVa kStepOn{bof3::addr::Effect_StateNext};   // 0x492750, ours since round thirteen
+constexpr ::bof3::image::CodeVa kNothing{bof3::addr::BareRet};
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -168,7 +168,7 @@ void CopyRecord(unsigned char* dst, const unsigned char* src) {
 // original 0x4B3F00: the kind-2 task. A three-entry stack table by +1: the
 // engine's 0x492750 (+1 on), Weretiger_Run, Weretiger_End.
 S14_EXPORT void __cdecl Weretiger_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {kStepOn, bof3::addr::Weretiger_Run, bof3::addr::Weretiger_End};
+    static constexpr std::uint32_t kPhases[3] = {kStepOn.v, bof3::addr::Weretiger_Run, bof3::addr::Weretiger_End};
     const unsigned phase = Sc()[1];
     if (phase >= 3) PastTable("Weretiger_Task", phase, 3);
     magic_harness::Phase(kPhases[phase])();
@@ -181,8 +181,8 @@ S14_EXPORT void __cdecl Weretiger_Task(void) {
 S14_EXPORT void __cdecl Weretiger_Run(void) {
     static constexpr std::uint32_t kSteps[12] = {
         bof3::addr::Weretiger_Pose,     bof3::addr::Weretiger_WaitPose, bof3::addr::Weretiger_FocusActor,
-        bof3::addr::Weretiger_Burst,    kNothing,                       bof3::addr::Weretiger_Copy,
-        bof3::addr::Weretiger_Release,  kNothing,                       bof3::addr::Weretiger_LoadForm,
+        bof3::addr::Weretiger_Burst,    kNothing.v,                       bof3::addr::Weretiger_Copy,
+        bof3::addr::Weretiger_Release,  kNothing.v,                       bof3::addr::Weretiger_LoadForm,
         bof3::addr::Weretiger_FadeIn,   bof3::addr::Weretiger_WaitScript, bof3::addr::Weretiger_Return};
     const unsigned phase = Sc()[2];
     if (phase >= 12) PastTable("Weretiger_Run", phase, 12);
@@ -370,7 +370,7 @@ S14_EXPORT void __cdecl Weretiger_FadeIn(void) {
     }
     MH_CALL(Sprite_EnsureAnimation)(Sc()[8]);
     MH_CALL(Sprite_ReleaseTint)(PartyRecord(ActorIndex()));
-    MH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(Mem(0x80D380 + (static_cast<std::uint32_t>(Sc()[5]) << 6))),
+    MH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(Mem(::bof3::Img(0x80D380) + (static_cast<std::uint32_t>(Sc()[5]) << 6))),
                                 0);
     MH_CALL(Battle_StatusTint)(rv::As<records::PartyMember>(PartyRecord(ActorIndex()))->status);
     MH_CALL(Sprite_SetClutStp)();
@@ -425,7 +425,7 @@ S14_EXPORT void __cdecl Weretiger_End(void) {
         if (was != 0) return;
     }
     const unsigned actor = ActorIndex();
-    Mem(at::kFlags)[0] |= 4;
+    Mem(::bof3::Img(at::kFlags))[0] |= 4;
     unsigned char* const record = PartyRecord(actor);
     rv::Store<std::int32_t>(rv::As<records::PartyMember>(record)->flags_134, static_cast<std::int32_t>(U(static_cast<std::int32_t>(rv::As<records::PartyMember>(record)->flags_134)) | 1u));
     record[0x142] = 0;
@@ -529,7 +529,7 @@ S14_EXPORT void __cdecl WeretigerCopy_Spawn(void) {
         const Image im = SpawnImage();
         Sprite_Current = im.child;
         PlaceImage(im, 0x38, 0x20, 0x40, 0x7B);
-        PaletteImage(im, 0x80D440, 0);
+        PaletteImage(im, ::bof3::Img(0x80D440), 0);
     }
     {
         const Image im = SpawnImage();
@@ -539,7 +539,7 @@ S14_EXPORT void __cdecl WeretigerCopy_Spawn(void) {
         const Image im = SpawnImage();
         Sprite_Current = im.child;
         PlaceImage(im, 0x3C, 0x80, 0x40, 0x7C);
-        PaletteImage(im, 0x80D480, 1);
+        PaletteImage(im, ::bof3::Img(0x80D480), 1);
     }
     const Image im = SpawnImage();
     PlaceImage(im, 0x3C, 0x80, 0x90, 0x7D);
@@ -572,7 +572,7 @@ S14_EXPORT void __cdecl WeretigerBurst_Run(void) {
     for (unsigned i = 0; i < kPoolCount; ++i) {
         unsigned char* const record = PoolRecord(i);
         if (record[0] == 0) continue;
-        SetLong(Mem(WeretigerStreak_Current_addr), static_cast<std::int32_t>(Key(record)));
+        SetLong(Mem(::bof3::Img(WeretigerStreak_Current_addr)), static_cast<std::int32_t>(Key(record)));
         Call0(bof3::addr::WeretigerStreak_Run);
     }
 }
@@ -597,7 +597,7 @@ S14_EXPORT void __cdecl WeretigerBurst_Emit(void) {
 // it is 0x18 or more the owner's +2 on (the parent's step 4 ends) and +2 on.
 S14_EXPORT void __cdecl WeretigerBurst_Grow(void) {
     Call0(bof3::addr::WeretigerStreak_Alloc6);
-    if (Mem(Frame_Counter_addr)[0] & 1) return;
+    if (Mem(::bof3::Img(Frame_Counter_addr))[0] & 1) return;
     unsigned char* const s = Sc();
     const unsigned char size = s[0xB];
     if (size >= 0x18) {
@@ -661,12 +661,12 @@ S14_EXPORT void __cdecl WeretigerStreak_Start(void) {
     SetLong(PoolCurrent() + 0x18, 0x19800);
     {
         const unsigned char* const record = PartyRecord(ActorIndex());
-        const int dx = static_cast<signed char>(Mem(WeretigerStreak_Offsets_addr + 2u * record[8])[0]);
+        const int dx = static_cast<signed char>(Mem(::bof3::Img(WeretigerStreak_Offsets_addr) + 2u * record[8])[0]);
         SetLong(PoolCurrent() + 4, dx + S16(record + 0x2E));
     }
     {
         const unsigned char* const record = PartyRecord(ActorIndex());
-        const int dy = static_cast<signed char>(Mem(WeretigerStreak_Offsets_addr + 1 + 2u * record[8])[0]);
+        const int dy = static_cast<signed char>(Mem(::bof3::Img(WeretigerStreak_Offsets_addr) + 1 + 2u * record[8])[0]);
         SetLong(PoolCurrent() + 8, dy + S16(record + 0x30));
     }
     Inc(PoolCurrent()[1]);
@@ -825,8 +825,8 @@ S14_EXPORT void __cdecl Weretiger_DrawSprite(unsigned image, unsigned abr, unsig
     const unsigned char which = static_cast<unsigned char>(image);
     PutFloat(p + 8, S16(Sc() + 0x2E) - (which > 1 ? 0x28 : 0x20));
     PutFloat(p + 0xC, S16(Sc() + 0x30) - 0x40);
-    p[0x14] = Mem(WeretigerImage_UV_addr + 4u * which)[0];
-    p[0x15] = Mem(WeretigerImage_UV_addr + 2 + 4u * which)[0];
+    p[0x14] = Mem(::bof3::Img(WeretigerImage_UV_addr) + 4u * which)[0];
+    p[0x15] = Mem(::bof3::Img(WeretigerImage_UV_addr) + 2 + 4u * which)[0];
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 0x50);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 0x48);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -913,12 +913,12 @@ S14_EXPORT char* __cdecl Item_CopyName(unsigned index, unsigned category) {
     const unsigned i = index & 0xFF;
     const unsigned char* name;
     switch (category & 0xFF) {
-    case 1: name = Mem(bof3::addr::NameTable_Weapons) + i * 0x1C; break;
-    case 2: name = Mem(bof3::addr::NameTable_Armour) + i * 0x1A; break;
-    case 3: name = Mem(bof3::addr::NameTable_Accessories) + i * 0x18; break;
-    default: name = Mem(bof3::addr::NameTable_Consumables) + i * 0x16; break;
+    case 1: name = Mem(::bof3::Img(bof3::addr::NameTable_Weapons)) + i * 0x1C; break;
+    case 2: name = Mem(::bof3::Img(bof3::addr::NameTable_Armour)) + i * 0x1A; break;
+    case 3: name = Mem(::bof3::Img(bof3::addr::NameTable_Accessories)) + i * 0x18; break;
+    default: name = Mem(::bof3::Img(bof3::addr::NameTable_Consumables)) + i * 0x16; break;
     }
-    return MH_CALL(Str_CopyN)(reinterpret_cast<char*>(Mem(bof3::addr::Text_Records)), reinterpret_cast<const char*>(name), 0x10);
+    return MH_CALL(Str_CopyN)(reinterpret_cast<char*>(Mem(::bof3::Img(bof3::addr::Text_Records))), reinterpret_cast<const char*>(name), 0x10);
 }
 
 // ===========================================================================
@@ -1185,7 +1185,7 @@ S14_EXPORT void __cdecl TsunamiRings_Run(void) {
 // original 0x4B6180: the four ring phases (0x68478C) 0, +9 0, +2 on.
 S14_EXPORT void __cdecl TsunamiRings_Start(void) {
     unsigned char* const s = Sc();
-    SetLong(Mem(TsunamiRing_Phases_addr), 0);
+    SetLong(Mem(::bof3::Img(TsunamiRing_Phases_addr)), 0);
     s[9] = 0;
     Inc(Sc()[2]);
 }
@@ -1211,7 +1211,7 @@ namespace {
 // on its side, the position its +0x34 / +0x38 / +0x3C plus the height's
 // offsets; the ring's matrix, its quads, the matrix popped.
 void RingAt(unsigned height, unsigned index, const unsigned char* actor) {
-    const unsigned char* const offset = Mem(TsunamiRing_Offsets_addr + 0xC * height);
+    const unsigned char* const offset = Mem(::bof3::Img(TsunamiRing_Offsets_addr) + 0xC * height);
     Sc()[0xB] = static_cast<unsigned char>(height);
     Sc()[0xA] = static_cast<unsigned char>(index);
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Long(offset)) + U(rv::As<records::SpriteHead>(actor)->x)));
@@ -1234,7 +1234,7 @@ S14_EXPORT void __cdecl TsunamiRings_Draw(void) {
     for (unsigned height = 0; height < 3; ++height)
         for (unsigned e = 0; e < 8; ++e) {
             if (MH_CALL(Battle_ActorIsOut)(e + 3) & 0xFF) continue;
-            RingAt(height, e, Mem(Battle_Enemies_addr + e * at::kEnemyStride));
+            RingAt(height, e, Mem(::bof3::Img(Battle_Enemies_addr) + e * at::kEnemyStride));
         }
     for (unsigned height = 0; height < 3; ++height)
         for (unsigned m = 0; m < 3; ++m) {
@@ -1244,7 +1244,7 @@ S14_EXPORT void __cdecl TsunamiRings_Draw(void) {
     {
         const unsigned char* const s = Sc();
         for (unsigned j = 0, c = 0; c < 0xC; c += 3, ++j) {
-            unsigned char& phase = Mem(TsunamiRing_Phases_addr + j)[0];
+            unsigned char& phase = Mem(::bof3::Img(TsunamiRing_Phases_addr) + j)[0];
             if (c < s[9]) Inc(phase);
             if (s[2] == 1) phase &= 0xF;
         }
@@ -1260,12 +1260,12 @@ S14_EXPORT void __cdecl TsunamiRings_Draw(void) {
 S14_EXPORT void __cdecl TsunamiRing_DrawQuads(void) {
     for (unsigned j = 0, c = 0; c < 0xC; c += 3, ++j) {
         if (static_cast<int>(c) >= static_cast<int>(Sc()[9])) continue;
-        if (Mem(TsunamiRing_Phases_addr + j)[0] >= 0x10) continue;
+        if (Mem(::bof3::Img(TsunamiRing_Phases_addr) + j)[0] >= 0x10) continue;
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyFT4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
         {
-            const unsigned b = Mem(TsunamiRing_Phases_addr + j)[0];
+            const unsigned b = Mem(::bof3::Img(TsunamiRing_Phases_addr) + j)[0];
             SetSW(0, b * 4 + 0x32);
             SetSW(4, b * 15);
         }
@@ -1287,7 +1287,7 @@ S14_EXPORT void __cdecl TsunamiRing_DrawQuads(void) {
         p[0x35] = 0x20;
         p[0x44] = 0x20;
         p[0x45] = 0x20;
-        const unsigned shade = (0x41u - ((static_cast<unsigned>(Mem(TsunamiRing_Phases_addr + j)[0]) >> 1) << 2)) & 0xFFFF;
+        const unsigned shade = (0x41u - ((static_cast<unsigned>(Mem(::bof3::Img(TsunamiRing_Phases_addr) + j)[0]) >> 1) << 2)) & 0xFFFF;
         SetSW(2, shade);
         p[4] = static_cast<unsigned char>(shade);
         p[5] = SB(2);

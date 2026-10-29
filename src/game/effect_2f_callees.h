@@ -9,28 +9,28 @@ namespace effect_2f::at {
 
 // Callees nobody owns yet (read 2026-09-29 for what they read and write):
 // called through the harness by address (SH_AT).
-constexpr std::uint32_t kAngleMean = bof3::addr::EffectAngle_Mean;     // E2E (wave two): (a, b), each & 0xFFF; eax the mean angle of the
+constexpr ::bof3::image::CodeVa kAngleMean{bof3::addr::EffectAngle_Mean};     // E2E (wave two): (a, b), each & 0xFFF; eax the mean angle of the
                                                    // two, the short way round (+0x800 when they are 0x800 or more apart)
-constexpr std::uint32_t kSparkInit = bof3::addr::EffectGlowSparks_StartRise;     // 0x4790F0, R3E's (round fourteen): (unsigned char *spark): +0 = 1, +1 = 0,
+constexpr ::bof3::image::CodeVa kSparkInit{bof3::addr::EffectGlowSparks_StartRise};     // 0x4790F0, R3E's (round fourteen): (unsigned char *spark): +0 = 1, +1 = 0,
                                                    // +2 = 8, +3 = 0, +8 = 0, +4 = 0x40, +0xC / +0x10 Sprite_Current's
                                                    // +0x34 / +0x38 plus ((Rand & 0xFF) - 0x80) << 11, +0x14 its +0x3C
-constexpr std::uint32_t kSparkDraw = bof3::addr::EffectGlowSparks_Draw;     // 0x4792E0, R3E's (round fourteen): (unsigned char *spark): sixteen Gouraud
+constexpr ::bof3::image::CodeVa kSparkDraw{bof3::addr::EffectGlowSparks_Draw};     // 0x4792E0, R3E's (round fourteen): (unsigned char *spark): sixteen Gouraud
                                                    // triangles round the spark's point +0xC (EffectGte_ProjectSize of a
                                                    // size 0x20, EffectGte_ProjectPoint), shaded +3 at the centre
-constexpr std::uint32_t kSqrt = bof3::addr::Gte_SquareRoot0;          // library layer: (long v): fild, fsqrt, _ftol - eax the root
+constexpr ::bof3::image::CodeVa kSqrt{bof3::addr::Gte_SquareRoot0};          // library layer: (long v): fild, fsqrt, _ftol - eax the root
 
 // Library layer (no name): (unsigned char *prim, const unsigned char *rect):
 // prim +4 = 0xF0000000, prim +8 = rect's address.
-constexpr std::uint32_t kPrimRect = bof3::addr::Gpu_SetTexWindow;
+constexpr ::bof3::image::CodeVa kPrimRect{bof3::addr::Gpu_SetTexWindow};
 
 // Data.
-constexpr std::uint32_t kCounter0 = 0x903848;      // the chapters' counter byte (scenario_harness at::kCounter)
-constexpr std::uint32_t kCounter3 = 0x90384B;      // the counter byte three after it: kind 0x56 waits on 0xA and 0xE
+constexpr ::bof3::image::Va kCounter0{0x903848};      // the chapters' counter byte (scenario_harness at::kCounter)
+constexpr ::bof3::image::Va kCounter3{0x90384B};      // the counter byte three after it: kind 0x56 waits on 0xA and 0xE
 // kTrail: now EffectKind30_Shards[0xe0] (symbols.toml). kind 0x52's trail: 32 points of 0x20 (+0 x, z, height; +0x10
                                                    // the screen x, y, depth floats; +0x1C an angle, +0x1E a width),
                                                    // then 31 angle words at +0x400 and the width word +0x43E - 0x440
                                                    // bytes inside EffectKind30_Shards' extent (not named: it overlaps)
-constexpr std::uint32_t kTrailSize = 0x92C49E;     // the trail's width word (+0x43E)
+constexpr ::bof3::image::Va kTrailSize{0x92C49E};     // the trail's width word (+0x43E)
 // kExtra0Point: now Sprite_ObjectsExtra[0].x (symbols.toml). Sprite_ObjectsExtra[0] +0x34: x, z, height (three dwords)
 constexpr std::uint32_t kEffectStride = 0x80;      // Effect_Objects' records
 constexpr unsigned kEffects = 20;                  // Effect_Objects' twenty

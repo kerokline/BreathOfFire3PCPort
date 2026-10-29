@@ -318,7 +318,7 @@ extern "C" void __cdecl MoveCmd_OpF7(long x, long z, unsigned char frames, unsig
 // stack dword there (and on the PSX); 0 here. Neither caller reads it
 // (MoveScript_Group8's op 84 copies three; MoveCmd_AttachMove's copy is dead).
 extern "C" long* __cdecl MoveCmd_HandlePosition(long* out, unsigned char handle, unsigned char offset) {
-    std::memcpy(At(MapView_CornerPtr_addr), &Sprite_Current, 4);
+    std::memcpy(At(::bof3::Img(MapView_CornerPtr_addr)), &Sprite_Current, 4);
     unsigned char* object;
     if (handle & 0x80) {
         unsigned char count = 0;
@@ -338,7 +338,7 @@ extern "C" long* __cdecl MoveCmd_HandlePosition(long* out, unsigned char handle,
     const std::int32_t x = Add(buffer[0], at->x);
     const std::int32_t z = Add(buffer[1], at->z);
     const std::int32_t y = Add(buffer[2], static_cast<short>(at->height_whole));
-    std::memcpy(&Sprite_Current, At(MapView_CornerPtr_addr), 4);
+    std::memcpy(&Sprite_Current, At(::bof3::Img(MapView_CornerPtr_addr)), 4);
     out[0] = x;
     out[1] = z;
     out[2] = y;
@@ -439,16 +439,16 @@ extern "C" int __cdecl MoveScript_Variable(unsigned char index) {
     case 1: return Game_AreaNumber;
     case 2: {
         const unsigned char* flags;
-        std::memcpy(&flags, At(Chapter_FlagRow_addr), sizeof flags);
+        std::memcpy(&flags, At(::bof3::Img(Chapter_FlagRow_addr)), sizeof flags);
         return Long(flags);
     }
-    case 3: case 4: case 5: case 6: return At(kCounters)[index - 3];
+    case 3: case 4: case 5: case 6: return At(::bof3::Img(kCounters))[index - 3];
     case 7: return MoveScript_Var7;
     case 8: return Cond_ByteFD;
     case 9: return Field_StatusBits & 1;
     case 10: return rv::Current<records::SpriteHead>()->script_pos;
     case 11: return ObjTrio[0].char_id;
-    case 12: return Long(At(Cond_Flags_addr + 0xa0));
+    case 12: return Long(At(::bof3::Img(Cond_Flags_addr) + 0xa0));
     case 13: return 1;
     default: return 0xFF;
     }

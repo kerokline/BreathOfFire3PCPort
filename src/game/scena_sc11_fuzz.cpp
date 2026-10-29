@@ -183,9 +183,9 @@ const sh::Callee kCallees[] = {
     {SC11_OURS(Kind2_Place), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
     {SC11_OURS(MoveCmd_TestFB), 2, {kU16, kU16}, sh::Answer::kGarbage, 0, 0},   // answer unread
     {SC11_OURS(Port_DroppedCall), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC11_RAW("0x534DB0", kSpriteSetUp), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC11_RAW("0x537480", kCountDown), 2, {kU16, kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC11_RAW("0x56D6F0", kStatusBit80), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC11_RAW("0x534DB0", kSpriteSetUp.v), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
+    {SC11_RAW("0x537480", kCountDown.v), 2, {kU16, kU8}, sh::Answer::kGarbage, 0, 0},
+    {SC11_RAW("0x56D6F0", kStatusBit80.v), 0, {}, sh::Answer::kGarbage, 0, 0},
     // effects and sprites: a slot of the 20 records or none (0xFF)
     {SC11_OURS(Effect_FindFree), 0, {}, sh::Answer::kByte, 0xFF, 0x13},
     {SC11_OURS(Sprite_SetAnimationBank), 1, {kU16}, sh::Answer::kGarbage, 0, 0},   // answer unread
@@ -206,7 +206,7 @@ const sh::Callee kCallees[] = {
     {SC11_OURS(Sound_LoadStream), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
     {SC11_OURS(Sound_StreamDone), 0, {}, sh::Answer::kBool, 0, 0},
     {SC11_OURS(Sound_ResumeAll), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC11_RAW("0x587B80", kSoundJmp), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC11_RAW("0x587B80", kSoundJmp.v), 0, {}, sh::Answer::kGarbage, 0, 0},
     // Scena11_Triggers' entries while Scena11_ObjectTrigger is fuzzed: the
     // entry's index, the object and the row logged (below)
     {"Scena11_Triggers[] (keyed on 0x55E170)", 0x55E170, 0x55E170, 2, {kAll, kAll}, sh::Answer::kGarbage, 0, 0, {}, nullptr,

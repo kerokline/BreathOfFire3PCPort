@@ -29,20 +29,20 @@ namespace at {
 using U = std::uint32_t;
 
 // --- the battle's cells (0x904AA0..0x904BA0, the harness's battle bytes) ---
-constexpr U kRoundFlagsHi = 0x904AA9;     // u8: the round flags' high byte (0x904AA8 + 1); Amalgam's death sets bit 2
+constexpr ::bof3::image::Va kRoundFlagsHi{0x904AA9};     // u8: the round flags' high byte (0x904AA8 + 1); Amalgam's death sets bit 2
 // kFight: now EventBattle_Id (symbols.toml). u8: the event battle
 // kFightFlags: now BossSe_Script (symbols.toml). u8: the fight's own progress bits (fights 13 / 16: which lines were shown)
 // kCount4AE2: now BossSe_RoundSlot (symbols.toml). u8: Nina's action hook decrements it once (what it counts was not read)
 // kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 1 the win
 // kBattleExp: now Battle_ExpTotal (symbols.toml). u32: the battle's experience sum (Battle_EnemyDefeated adds +0x96)
-constexpr U kActor = 0x904B34;            // u8: the acting actor
-constexpr U kAction = 0x904B35;           // u8: the enemy's action pick
-constexpr U kTarget = 0x904B44;           // u8: the battle's target
+constexpr ::bof3::image::Va kActor{0x904B34};            // u8: the acting actor
+constexpr ::bof3::image::Va kAction{0x904B35};           // u8: the enemy's action pick
+constexpr ::bof3::image::Va kTarget{0x904B44};           // u8: the battle's target
 
 // --- a byte of the move scripts' counters (MoveScript_CounterTest's 0x903848
 // + n): the end hooks store the scene the field runs next; what each value
 // selects was not read.
-constexpr U kMoveCounter = 0x903848;
+constexpr ::bof3::image::Va kMoveCounter{0x903848};
 
 // --- the field's cells B16's hooks write --------------------------------------
 // kSaveWord: now Field_ScriptFlags (symbols.toml). u16 in the live game block (bit 7 cleared by fight 16's end hook)
@@ -68,11 +68,11 @@ constexpr U kEnemyStatus = 0x92;          // u32 from +0x92: bit 0x2000 (+0x93 b
 constexpr U kEnemyExp = 0x96;             // u16
 
 // --- the callees nobody owns ------------------------------------------------
-constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
-constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () step 2
-constexpr U kEndThird = bof3::addr::BattleEnd_EnterStep3;         // () step 3
-constexpr U kSlotsReleaseFor = bof3::addr::Field_SlotsReleaseOwner;  // 0x454A80 (object; BE6, 2026-09-29)
-constexpr U kSlotStart = bof3::addr::Field_SlotStart;               // 0x455290 (object, script; BE6, 2026-09-29)
+constexpr ::bof3::image::CodeVa kEndWin{bof3::addr::BattleEnd_EnterStep1};           // () the end phase, step 1
+constexpr ::bof3::image::CodeVa kEndOther{bof3::addr::BattleEnd_EnterStep2};         // () step 2
+constexpr ::bof3::image::CodeVa kEndThird{bof3::addr::BattleEnd_EnterStep3};         // () step 3
+constexpr ::bof3::image::CodeVa kSlotsReleaseFor{bof3::addr::Field_SlotsReleaseOwner};  // 0x454A80 (object; BE6, 2026-09-29)
+constexpr ::bof3::image::CodeVa kSlotStart{bof3::addr::Field_SlotStart};               // 0x455290 (object, script; BE6, 2026-09-29)
 
 }  // namespace at
 }  // namespace boss_sc

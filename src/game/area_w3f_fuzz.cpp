@@ -227,7 +227,7 @@ U MovesScriptObject(const U*, U answer) {
 U Set40Effect(const U*, U answer) {
     const U n = ah::Noise();
     static const unsigned short kMessages[] = {0x44, 0x44, 0x45, 0x144, 0x43, 0xFFFF};
-    if (n & 1) SetWord(ah::Mem(at::kMessage), kMessages[(n >> 8) % 6]);
+    if (n & 1) SetWord(ah::Mem(::bof3::Img(at::kMessage.v)), kMessages[(n >> 8) % 6]);
     if (n & 2) Cond_ByteFE = static_cast<unsigned char>(n & 0x400 ? 0 : n >> 16);
     if (n & 4) MoveCurrent(n >> 4);
     return answer;
@@ -320,8 +320,8 @@ const ah::Callee kCallees[] = {
     // Capcom's, unnamed: the map camera; a point projected (its vector a
     // local of the caller's: its twelve bytes; the vertex it writes, the
     // caller's local, not by address)
-    {"SetMapCamera_494060", at::kSetMapCamera, at::kSetMapCamera, 0, {}, ah::Answer::kGarbage, 0, 0},
-    {"ProjectPoint_494110", at::kProjectPoint, at::kProjectPoint, 2, {kAll, 0}, ah::Answer::kGarbage, 0, 0, {12}, &ProjectEffect},
+    {"SetMapCamera_494060", at::kSetMapCamera.v, at::kSetMapCamera.v, 0, {}, ah::Answer::kGarbage, 0, 0},
+    {"ProjectPoint_494110", at::kProjectPoint.v, at::kProjectPoint.v, 2, {kAll, 0}, ah::Answer::kGarbage, 0, 0, {12}, &ProjectEffect},
     // the group's own, called directly: the cylinders (the point by its
     // twelve bytes), the trails (the timer's low word, the record's low
     // byte; answers 0..2)
@@ -348,8 +348,8 @@ ah::Region g_regions143[] = {
     {Gfx_PacketNext_addr, 4},
     {0, kPacketBytes},      // g_packets
     {0, sizeof g_point},    // g_point
-    {Gfx_ClutStripSource_addr + 0x600, at::kClutSourceEnd - (Gfx_ClutStripSource_addr + 0x600)},
-    {Gfx_ClutStripSource_addr + 0x600 + at::kClutToLive, at::kClutSourceEnd - (Gfx_ClutStripSource_addr + 0x600)},
+    {Gfx_ClutStripSource_addr + 0x600, at::kClutSourceEnd.v - (Gfx_ClutStripSource_addr + 0x600)},
+    {Gfx_ClutStripSource_addr + 0x600 + at::kClutToLive, at::kClutSourceEnd.v - (Gfx_ClutStripSource_addr + 0x600)},
 };
 const ah::Region kRegions144[] = {
     {Effect_Objects_addr, at::kEffectCount * at::kEffectStride},
@@ -363,7 +363,7 @@ ah::Region g_regions145[] = {
     {Field_ActiveMember_addr, 4},
     {MoveScript_Object_addr, 4},
     {MoveScript_PartyRecords_addr, 0x60},
-    {at::kTextRecords, 16},
+    {at::kTextRecords.v, 16},
     {Field_Kind2Hold_addr, 1},
     {Camera_Angles_addr + 0x2 - 2, 6}, // Camera_Angles
     {Transition_Busy_addr, 2},
@@ -399,8 +399,8 @@ void Disturb(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 10) {
     case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 0x26 : v); break;
-    case 1: B(at::kCounter3) = static_cast<unsigned char>(h & 0x100 ? (v & 1 ? 0 : 0x40) : v); break;
-    case 2: SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? v % 3 : v); break;
+    case 1: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(h & 0x100 ? (v & 1 ? 0 : 0x40) : v); break;
+    case 2: SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), h & 0x100 ? v % 3 : v); break;
     case 3: ah::SetPointer(MoveScript_Object_addr, ScriptRecord(h >> 16)); break;
     case 4: ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(h >> 16)); break;
     case 5: SetMember(h >> 12); break;
@@ -459,7 +459,7 @@ void Seed143(unsigned k) {
     case k143Mark3: case k143Mark5: case k143Ask54: case k143Msg49: SeedAnswer(); break;
     case k143Run8:
         SeedAnswer();
-        if (ah::Half()) SetWord(ah::Mem(at::kMessage), AH_PICK(0x44, 0x45, 0x144, 0xFFFF));
+        if (ah::Half()) SetWord(ah::Mem(::bof3::Img(at::kMessage.v)), AH_PICK(0x44, 0x45, 0x144, 0xFFFF));
         break;
     case k143ByMember: SeedMemberKeys(Area143_MemberKeys_addr); break;
     case k143Skip7:
@@ -554,11 +554,11 @@ void Seed145(unsigned k) {
         B(AreaW0c_TailState_addr) = state;
         const bool on = ah::Often();   // the cell the state waits on, at its value or beside it
         switch (state) {
-        case 8: B(at::kCounter3) = static_cast<unsigned char>(on ? 0 : AH_PICK(1, 0x40, 0x80)); break;
-        case 0xB: B(at::kCounter3) = static_cast<unsigned char>(on ? 0x40 : AH_PICK(0, 0x3F, 0x41, 0xC0)); break;
-        case 0xC: SetWord(ah::Mem(at::kTailTimer), AH_PICK(0, 4, 5, 0x36, 0x37, 0xFFFF, 0x104)); break;
+        case 8: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(on ? 0 : AH_PICK(1, 0x40, 0x80)); break;
+        case 0xB: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(on ? 0x40 : AH_PICK(0, 0x3F, 0x41, 0xC0)); break;
+        case 0xC: SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), AH_PICK(0, 4, 5, 0x36, 0x37, 0xFFFF, 0x104)); break;
         case 0x15: case 0x20: Field_Kind2Hold = static_cast<unsigned char>(on ? 0 : AH_PICK(1, 0x80)); break;
-        case 0x1A: case 0x21: case 0x24: SetWord(ah::Mem(at::kTailTimer), on ? 0 : AH_PICK(1, 2, 0x100, 0xFFFF)); break;
+        case 0x1A: case 0x21: case 0x24: SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), on ? 0 : AH_PICK(1, 2, 0x100, 0xFFFF)); break;
         case 0x1F: case 0x23: Transition_Busy = static_cast<unsigned short>(on ? 0 : AH_PICK(1, 0x100, 0xFFFF)); break;
         default: break;
         }

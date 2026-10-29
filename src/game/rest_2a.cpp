@@ -55,7 +55,7 @@ constexpr unsigned kEffectCount = 20;
 // any other byte no code of this band stores, and ours aborts.
 const unsigned char* EffectRead(unsigned index, const char* who) {
     if (index < kEffectCount) return rv::Bytes(&Effect_Objects[index]);
-    if (index == 0xFF) return At(Gfx_PacketPools_addr + 0x7560);
+    if (index == 0xFF) return At(::bof3::Img(Gfx_PacketPools_addr) + 0x7560);
     bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original reads at 0x%X", who, index,
                 static_cast<unsigned>(Addr(rv::Bytes(Effect_Objects)) + index * kEffectStride));
     return nullptr;
@@ -116,8 +116,8 @@ U MemberSpriteIndex() {
 // Area08_MessageFormat, amount), Msg_OpenSystem(5), Field_Request = 2,
 // Sprite_Current (read after the calls) state 4.
 void ShowAmount(unsigned amount) {
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(bof3::addr::Text_Records)),
-                         reinterpret_cast<const char*>(At(bof3::addr::Area08_MessageFormat)), amount);
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(bof3::addr::Text_Records))),
+                         reinterpret_cast<const char*>(At(::bof3::Img(bof3::addr::Area08_MessageFormat))), amount);
     SH_CALL(Msg_OpenSystem)(5);
     unsigned char* const c = Sprite_Current;
     Field_Request = 2;
@@ -144,7 +144,7 @@ void RollBody(const Roll& r) {
     unsigned char* const s = Sprite_Current;
     if (!(s[7] & 8)) FaceAwayFromLeader();
     unsigned char* const member = Field_ActiveMember;
-    At(at::kScriptFlagsHi)[0] |= 1;
+    At(::bof3::Img(at::kScriptFlagsHi.v))[0] |= 1;
     const unsigned char mark = member[0xA0];
     if (mark & 0x80) {
         SH_CALL(LinkedObject_SpawnEffect19)(roll > 7 ? 1 : r.other);
@@ -168,7 +168,7 @@ void RollBody(const Roll& r) {
 }
 
 // CharacterRecords' record n (stride 0xA4), unchecked as the originals index it.
-unsigned char* Record(unsigned n) { return At(CharacterRecords_addr + n * at::kRecordStride); }
+unsigned char* Record(unsigned n) { return At(::bof3::Img(CharacterRecords_addr) + n * at::kRecordStride); }
 
 // The states each Run builds on its stack, in the order it stores them.
 const U kStatesA[] = {bof3::addr::LinkedObjectA_Roll, bof3::addr::LinkedObject_Show2, bof3::addr::LinkedObject_Show5,
@@ -207,9 +207,9 @@ extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
             SH_CALL(Sprite_UpdateScreenA)();
             continue;
         }
-        const unsigned count = At(at::kBankCount)[0];
+        const unsigned count = At(::bof3::Img(at::kBankCount.v))[0];
         const unsigned char* const records = reinterpret_cast<const unsigned char*>(
-            static_cast<std::uintptr_t>(static_cast<U>(Long(At(MoveScript_TintRecords_addr + 0x180)))));
+            static_cast<std::uintptr_t>(static_cast<U>(Long(At(::bof3::Img(MoveScript_TintRecords_addr) + 0x180)))));
         const unsigned bank_byte = rv::As<records::SpriteObject>(s)->column;
         unsigned i = 0;
         while (i < count && records[i * 8 + 7] != bank_byte) ++i;
@@ -343,7 +343,7 @@ extern "C" void __cdecl LinkedObjectB_Roll(void) {
     if (!(s[7] & 8)) FaceAwayFromLeader();
     SH_CALL(LinkedObject_SpawnEffect19)(roll > 6 ? 2 : 3);
     unsigned char* const c = Sprite_Current;
-    At(at::kScriptFlagsHi)[0] |= 1;
+    At(::bof3::Img(at::kScriptFlagsHi.v))[0] |= 1;
     c[4] = 1;
 }
 

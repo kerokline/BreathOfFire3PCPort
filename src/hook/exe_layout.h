@@ -16,7 +16,10 @@
 namespace bof3::exe_layout {
 
 // ImageBase: Capcom's, so GetModuleHandle(nullptr) is the hinstance his
-// WinMain received.
+// WinMain received - the player's executable's base, and the frame every VA
+// below is written in. A developer's bof3x.exe may lie at another base
+// (make_exe.py --image-base); the engine reads the base at run time
+// (common/image_base.h ImageBase) and places each VA with Img.
 inline constexpr std::uint32_t kImageBase = 0x400000;
 // .stub: BOF3.exe's .text range, int3 (0xCC) except a jmp at each function
 // start we own (section 2). RWX while the engine writes it, then RX.

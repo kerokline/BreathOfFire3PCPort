@@ -37,7 +37,7 @@ constexpr std::uint32_t kVerbs = 22;
 // kSlots: now Menu_Verbs (symbols.toml).
 constexpr std::uint32_t kSlotRoom = 8;
 
-constexpr std::uint32_t kTextDrawAt = 0x516B30;   // Text_DrawAt: the site's target in Capcom's bytes, a patch fact (raw)
+constexpr ::bof3::image::CodeVa kTextDrawAt{0x516B30};   // Text_DrawAt: the site's target in Capcom's bytes, a patch fact (raw)
 constexpr std::uint32_t kRowLabelCall = 0x57499B; // 0x574890: the label draw
 
 // The number of characters 0x57D800 counts - a byte below 0x80 is one, a byte
@@ -76,7 +76,7 @@ struct SlotTable {
     std::uint32_t pointers, slots, count, room;
 };
 
-constexpr SlotTable kVerbTable = {"menu verbs", "DIV-0018", Menu_VerbPointers_addr, Menu_Verbs_addr, kVerbs, kSlotRoom};
+const SlotTable kVerbTable = {"menu verbs", "DIV-0018", ::bof3::Img(Menu_VerbPointers_addr), ::bof3::Img(Menu_Verbs_addr), kVerbs, kSlotRoom};
 
 // DIVERGENCE DIV-0019: the battle's command labels - the box beside the
 // command cross, 2026-09-21. Seven 8-byte slots at 0x669D28 behind the
@@ -86,7 +86,7 @@ constexpr SlotTable kVerbTable = {"menu verbs", "DIV-0018", Menu_VerbPointers_ad
 // exactly three of the US disc's 8-unit ones: "Atk", "Abl", "Use", "Exa",
 // "Def", "Chg", "Esc". So the strings go in and nothing about the layout
 // changes.
-constexpr SlotTable kBattleTable = {"battle commands", "DIV-0019", 0x669D60, 0x669D28, 7, 8};
+const SlotTable kBattleTable = {"battle commands", "DIV-0019", ::bof3::Img(0x669D60), ::bof3::Img(0x669D28), 7, 8};
 
 void ApplySlots(const SlotTable& t, std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
     if (tag != 0) bof3::Fatal("%s chunk tag is 0x%X, expected 0", t.what, (unsigned)tag);
@@ -130,7 +130,7 @@ void BattleCommands_Apply(std::uint32_t tag, const std::uint8_t* payload, std::u
 namespace {
 // What the call at kRowLabelCall reaches in this build (MenuVerbs_ActiveLabel):
 // a value of ours, never read from the site (docs/operand-store.md).
-std::uint32_t g_label_call = kTextDrawAt;
+std::uint32_t g_label_call = kTextDrawAt.v;
 }  // namespace
 
 void MenuVerbs_Inject() {
@@ -138,7 +138,7 @@ void MenuVerbs_Inject() {
     // A Latin language overlay only: BOF3X_LANG set, not "original" (as
     // every Latin layout tests it, Lang_Latin), and not a full-width language.
     if (!Lang_Latin()) return;   // DIV-0056: full-width verbs centre as the original does
-    if (bof3::RetargetCall("MenuVerbs", kRowLabelCall, kTextDrawAt, reinterpret_cast<void*>(&MenuVerbs_DrawLabel)))
+    if (bof3::RetargetCall("MenuVerbs", kRowLabelCall, kTextDrawAt.v, reinterpret_cast<void*>(&MenuVerbs_DrawLabel)))
         g_label_call = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&MenuVerbs_DrawLabel));
 }
 
@@ -146,4 +146,4 @@ void MenuVerbs_Inject() {
 // (src/game/menu_windows.cpp): it asks here which label draw the patched
 // original would call - the value above, which is whatever RetargetCall
 // did, BOF3X_ORIGINAL=MenuVerbs included.
-MenuVerbs_LabelFn MenuVerbs_ActiveLabel() { return g_label_call == kTextDrawAt ? nullptr : &MenuVerbs_DrawLabel; }
+MenuVerbs_LabelFn MenuVerbs_ActiveLabel() { return g_label_call == kTextDrawAt.v ? nullptr : &MenuVerbs_DrawLabel; }

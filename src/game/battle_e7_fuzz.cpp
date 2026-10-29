@@ -180,8 +180,8 @@ const bh::Callee kCallees[] = {
     {"GeneWin_DrawFormIcon", 0x599910, KeyOf(&::GeneWin_DrawFormIcon), 3, {kU16, kU16, kU8}, bh::Answer::kGarbage, 0, 0},
     {"GeneWin_DrawCursorBox", 0x599A00, KeyOf(&::GeneWin_DrawCursorBox), 6, {kU16, kU16, kU16, kU16, kU8, kU8}, bh::Answer::kGarbage, 0, 0},
     // --- another group's (BE1's 0x432170) and nobody's (0x59DB70), by address
-    {"0x432170", at::kStatGain, at::kStatGain, 2, {kU8, kU8}, bh::Answer::kFlag, 0, 0},
-    {"0x59DB70", at::kDrawBar, at::kDrawBar, 6, {kU16, kU16, kU8, kU8, kU16, kU8}, bh::Answer::kGarbage, 0, 0},   // reads x, y and the clut as words (0x59DB70's and / cx)
+    {"0x432170", at::kStatGain.v, at::kStatGain.v, 2, {kU8, kU8}, bh::Answer::kFlag, 0, 0},
+    {"0x59DB70", at::kDrawBar.v, at::kDrawBar.v, 6, {kU16, kU16, kU8, kU8, kU16, kU8}, bh::Answer::kGarbage, 0, 0},   // reads x, y and the clut as words (0x59DB70's and / cx)
     // --- the draws, narrowed to what ours reads (see the header)
     {"Menu_DrawBox", bof3::addr::Menu_DrawBox, KeyOf(&::Menu_DrawBox), 6, {kU16, kU16, kU16, kU16, kU8, kU8}, bh::Answer::kGarbage, 0, 0},   // menu_windows.cpp: U16 x/y/w/h, bytes
     {"Menu_DrawPiece", bof3::addr::Menu_DrawPiece, KeyOf(&::Menu_DrawPiece), 4, {kU16, kU16, kU8, kU8}, bh::Answer::kGarbage, 0, 0},   // S16 x/y, Menu_PieceRect's id & 0xFF, the flag byte
@@ -205,8 +205,8 @@ const bh::Callee kCallees[] = {
 // draw (0x904BA0; the level-up window's eight at 0x904D20) and the two lists'
 // scroll marks 0x939848 / 0x939850.
 const bh::Region kRegions[] = {
-    {at::kPrintBuf, 0x20},
-    {at::kLevelBufs, 0xF0},
+    {at::kPrintBuf.v, 0x20},
+    {at::kLevelBufs.v, 0xF0},
     {0x939840, 0x20},
 };
 
@@ -273,8 +273,8 @@ void Seed(unsigned k) {
     case 0x5984B0: {  // the drops: a count 0..8, words zero sometimes
         Mem(Battle_DropCount_addr)[0] = Byte({0, 1, 2, 3, 5, 8, 8});
         for (unsigned i = 0; i < 8; ++i) {
-            if (bh::Half()) SetWord(Mem(at::kDropItems + 2 * i), 0);
-            if (bh::Half()) Mem(at::kDropCounts + i)[0] = Byte({0, 1, 2, 9});
+            if (bh::Half()) SetWord(Mem(::bof3::Img(at::kDropItems.v) + 2 * i), 0);
+            if (bh::Half()) Mem(::bof3::Img(at::kDropCounts.v) + i)[0] = Byte({0, 1, 2, 9});
         }
         break;
     }
@@ -293,19 +293,19 @@ void Seed(unsigned k) {
     // the slide-outs' bounds as the code holds them: DIV-0041 widens them
     // before this runs when the view is wide (battle_e7.cpp reads them there)
     case 0x599020: case 0x599050: case 0x599080: case 0x5990B0: {
-        const unsigned out = Word16(at::kListOutBound);
+        const unsigned out = Word16(at::kListOutBound.v);
         Slide(4, {0x5B, 0x3B, 0x11, out, out + 0x20, 0x31});
-        Rows(at::kGeneList, 6, 3);
+        Rows(::bof3::Img(at::kGeneList.v), 6, 3);
         break;
     }
-    case 0x5990E0: Rows(at::kGeneList, 6, 3); break;
+    case 0x5990E0: Rows(::bof3::Img(at::kGeneList.v), 6, 3); break;
     case 0x599410: case 0x599440: case 0x599510: case 0x599540: {
-        const unsigned out2 = Word16(at::kList2OutBound), out3 = Word16(at::kList3OutBound);
+        const unsigned out2 = Word16(at::kList2OutBound.v), out3 = Word16(at::kList3OutBound.v);
         Slide(4, {0x5B, 0x7B, out2, out2 - 0x20, 0xA3, 0xC3, out3, out3 - 0x20});
-        Rows(at::kGeneList2, 12, 9);
+        Rows(::bof3::Img(at::kGeneList2.v), 12, 9);
         break;
     }
-    case 0x599570: Rows(at::kGeneList2, 12, 9); break;
+    case 0x599570: Rows(::bof3::Img(at::kGeneList2.v), 12, 9); break;
     case 0x59D640: {  // the record's rows +0xA / +0xB, +0xD bit 1, BATE's member
         g_record = bh::WindowAt(bh::Next());
         unsigned char* const r = g_record;
@@ -364,7 +364,7 @@ void Disturb(U h) {
     case 2: Mem(BossSb_Countdown_addr)[0] = static_cast<unsigned char>((b & 0x80) | (b % 3)); break;
     case 3: Mem(BattleActions_ApCost_addr)[0] = b; break;
     case 4: Mem(BattleE5_GeneRow_addr)[0] = h & 0x1000000 ? 0xFF : static_cast<unsigned char>(b % 4); break;
-    case 5: Mem(at::kGeneList + (h >> 24) % 0x48)[0] = b; break;
+    case 5: Mem(::bof3::Img(at::kGeneList.v) + (h >> 24) % 0x48)[0] = b; break;
     case 6: Mem(BattleActorCopies_ItemActor_addr)[0] = static_cast<unsigned char>(b % 3); break;
     default: Mem(BattleE1_Roster_addr)[0] = static_cast<unsigned char>(b % 5); break;
     }

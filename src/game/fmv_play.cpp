@@ -47,14 +47,14 @@ using U = std::uint32_t;
 
 // The seven MCI strings, each referenced by this function alone (pe_xref.py,
 // docs/replacing-mci.md section 1).
-constexpr U kFmtOpen = 0x66B674;        // "open avivideo!%s alias vfw"
-constexpr U kFmtOpenRoot = 0x66B654;    // "open avivideo!%s%s alias vfw"
-constexpr U kFmtWindow = 0x66B62C;      // "window vfw handle %d"
-constexpr U kPlay = 0x66B5E8;           // "play vfw window from 0 notify"
-constexpr U kStop = 0x66B5D8;           // "stop vfw wait"
-constexpr U kClose = 0x66B644;          // "close vfw wait"
-constexpr U kPause = 0x66B690;          // "pause vfw"
-constexpr U kResume = 0x66B69C;         // "resume vfw"
+constexpr ::bof3::image::Va kFmtOpen{0x66B674};        // "open avivideo!%s alias vfw"
+constexpr ::bof3::image::Va kFmtOpenRoot{0x66B654};    // "open avivideo!%s%s alias vfw"
+constexpr ::bof3::image::Va kFmtWindow{0x66B62C};      // "window vfw handle %d"
+constexpr ::bof3::image::Va kPlay{0x66B5E8};           // "play vfw window from 0 notify"
+constexpr ::bof3::image::Va kStop{0x66B5D8};           // "stop vfw wait"
+constexpr ::bof3::image::Va kClose{0x66B644};          // "close vfw wait"
+constexpr ::bof3::image::Va kPause{0x66B690};          // "pause vfw"
+constexpr ::bof3::image::Va kResume{0x66B69C};         // "resume vfw"
 // 0x66B608 "put vfw destination at 0 0 640 480" is the literal DIV-0035
 // replaces with a computed rectangle.
 const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
@@ -106,9 +106,9 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
     char command[0x80];
     Fmv_Playing = 0;
 
-    Crt_sprintf(command, Str(kFmtOpen), filename);
+    Crt_sprintf(command, Str(::bof3::Img(kFmtOpen.v)), filename);
     if (const MCIERROR first = mciSendStringA(command, nullptr, 0, nullptr)) {
-        Crt_sprintf(command, Str(kFmtOpenRoot), File_CdRoot(), filename);
+        Crt_sprintf(command, Str(::bof3::Img(kFmtOpenRoot.v)), File_CdRoot(), filename);
         if (const MCIERROR root = mciSendStringA(command, nullptr, 0, nullptr)) {
             LogNotOpened(filename, first, root);
             return;
@@ -117,8 +117,8 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
 
     (void)fullscreen;   // DIV-0035: no Fmv_EnterFullscreen, whatever it says
 
-    const LONG saved_proc = SetWindowLongA(hwnd, GWL_WNDPROC, static_cast<LONG>(bof3::addr::Fmv_WndProc));
-    Crt_sprintf(command, Str(kFmtWindow), hwnd);
+    const LONG saved_proc = SetWindowLongA(hwnd, GWL_WNDPROC, static_cast<LONG>(::bof3::Code(bof3::addr::Fmv_WndProc)));
+    Crt_sprintf(command, Str(::bof3::Img(kFmtWindow.v)), hwnd);
     mciSendStringA(command, nullptr, 0, nullptr);
 
     RECT client = {};
@@ -130,7 +130,7 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
     bof3::Log("DIV-0035    %s into the window at %ld,%ld %ld x %ld of %ld x %ld", filename, dest.left, dest.top,
               dest.right, dest.bottom, client.right - client.left, client.bottom - client.top);
 
-    mciSendStringA(Str(kPlay), nullptr, 0, hwnd);
+    mciSendStringA(Str(::bof3::Img(kPlay.v)), nullptr, 0, hwnd);
     Fmv_Playing = 1;
     // DIVERGENCE DIV-0066: the pad skips too. The original's pump is a
     // blocking GetMessage, ended by Fmv_WndProc (a key, a click, the video's
@@ -164,8 +164,8 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
         pad_was_down = pad_down;
         MsgWaitForMultipleObjects(0, nullptr, FALSE, 16, QS_ALLINPUT);
     }
-    mciSendStringA(Str(kStop), nullptr, 0, nullptr);
-    mciSendStringA(Str(kClose), nullptr, 0, nullptr);
+    mciSendStringA(Str(::bof3::Img(kStop.v)), nullptr, 0, nullptr);
+    mciSendStringA(Str(::bof3::Img(kClose.v)), nullptr, 0, nullptr);
     SetWindowLongA(hwnd, GWL_WNDPROC, saved_proc);
 }
 
@@ -199,9 +199,9 @@ extern "C" long __stdcall Fmv_WndProc(void* hwnd_, unsigned msg, unsigned wparam
     case WM_ACTIVATEAPP:
         if (wparam) {
             SetFocus(hwnd);
-            if (!WinMain_Background()) mciSendStringA(Str(kResume), nullptr, 0, nullptr);
+            if (!WinMain_Background()) mciSendStringA(Str(::bof3::Img(kResume.v)), nullptr, 0, nullptr);
         } else if (!WinMain_Background()) {
-            mciSendStringA(Str(kPause), nullptr, 0, nullptr);
+            mciSendStringA(Str(::bof3::Img(kPause.v)), nullptr, 0, nullptr);
         }
         return 0;
     case MM_MCINOTIFY:

@@ -8,6 +8,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"
 
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
@@ -23,7 +25,7 @@ namespace at {
 // byte (docs/item-use.md section 5), and the message word a choice handler
 // leaves (0xFFFF: no new message).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
 // (Field_ModeTailKinds 0x662CE8, s8 0x9039F3), its state and a sub-kind;
 // and the byte two before the mode phase 0x9039F2 that area 76's step hook
@@ -33,10 +35,10 @@ constexpr std::uint32_t kMessage = 0x7DEE48;
 // kTailState: now AreaW0c_TailState (symbols.toml).
 // kTailSub: now AreaW0c_TailSub (symbols.toml).
 // The movement script's four counters (MoveScript_CounterOps, ops A0..AF).
-constexpr std::uint32_t kCounter0 = 0x903848;
-constexpr std::uint32_t kCounter1 = 0x903849;
-constexpr std::uint32_t kCounter2 = 0x90384A;
-constexpr std::uint32_t kCounter3 = 0x90384B;
+constexpr ::bof3::image::Va kCounter0{0x903848};
+constexpr ::bof3::image::Va kCounter1{0x903849};
+constexpr ::bof3::image::Va kCounter2{0x90384A};
+constexpr ::bof3::image::Va kCounter3{0x90384B};
 // The byte and the word after MoveScript_Var7 (the run step and its word,
 // which area 78's scene reset clears beside Var7).
 // kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
@@ -51,7 +53,7 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // kPartyList0: now Cond_Flags[0xd2] (symbols.toml).
 // The leader's record (ObjTrio): byte +8 (the pose the cell hook compares),
 // byte +0x89 (area 84's handler tests it).
-constexpr std::uint32_t kLeader = 0x802D40;
+constexpr ::bof3::image::Va kLeader{0x802D40};
 // kLeaderPose: now ObjTrio[0].direction (symbols.toml).
 // kLeaderByte89: now ObjTrio[0].char_id (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
@@ -110,11 +112,11 @@ constexpr unsigned kArea79StateCount = 2;
 // 0x57C160 (0x1F bytes): (bits, index) - bits[index >> 3] ^= 1 << (index & 7),
 // the index a byte: Flags_Set / Flags_Clear's sibling that toggles
 // (docs/area_w1c.md section 9). Engine.
-constexpr std::uint32_t kFlagsToggle = bof3::addr::Flags_Toggle;
+constexpr ::bof3::image::CodeVa kFlagsToggle{bof3::addr::Flags_Toggle};
 // 0x469FE0 (0x3C bytes): (v) - Effect_FindFree; a free slot gets +0 = 1,
 // kind +5 = 4, +9 = v, and story flag 0x1C is set (docs/area_w1c.md
 // section 9). Engine.
-constexpr std::uint32_t kSpawnKind4 = bof3::addr::Effect_HoldFlag1C;
+constexpr ::bof3::image::CodeVa kSpawnKind4{bof3::addr::Effect_HoldFlag1C};
 
 }  // namespace at
 }  // namespace area_w2a

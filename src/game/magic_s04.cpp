@@ -57,7 +57,7 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F) and the four SVECTORs of
 // Prim_VertexScratch (0x9037A0..0x9037BF), read again after every call as the
 // originals read them.
-constexpr std::uint32_t kS = SharedScratch_addr;
+constexpr ::bof3::image::Va kS{SharedScratch_addr};
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
@@ -66,20 +66,20 @@ constexpr std::uint32_t kPoolStride = 0x84;
 constexpr unsigned kPoolRecords = 64;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
-unsigned char ActorByte() { return Mem(at::kActor)[0]; }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char* Source() { return Pointer(::bof3::Img(BattleOdds_ActorObject_addr)); }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
+unsigned char ActorByte() { return Mem(::bof3::Img(at::kActor))[0]; }
 
-std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
-void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
-short SS(unsigned k) { return static_cast<short>(Word(Mem(kS + k))); }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
+std::int32_t SD(unsigned k) { return Long(Mem(::bof3::Img(kS.v) + k)); }
+void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(::bof3::Img(kS.v) + k), static_cast<std::int32_t>(v)); }
+short SS(unsigned k) { return static_cast<short>(Word(Mem(::bof3::Img(kS.v) + k))); }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -99,7 +99,7 @@ int ShlSar(int v, unsigned l, unsigned r) { return static_cast<int>(static_cast<
 // `cdq / sub eax, edx / sar 1`: a signed halving toward zero.
 int Half(int v) { return (v - (v >> 31)) >> 1; }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
 unsigned char* PoolRecord(unsigned i) { return Mem(Addr(SnapSpark_Pool) + i * kPoolStride); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
@@ -113,16 +113,16 @@ int Cos(int angle) { return MH_CALL(Math_Cos)(angle); }
 // recorder.
 using Fn0 = void (__cdecl*)();
 using ByteFn = unsigned char (__cdecl*)();
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Capcom's code this group calls (docs/magic_s04.md section 3); other groups'
 // phase handlers (S35's LastResort_WaitChildren, S05's Magic018Row53_Wait,
 // S11's MagicFx_UncountAndFree) are ours now and named in the tables.
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;       // engine: +0xC / +0x10 of a task turned by its +8
-constexpr std::uint32_t kPolyF3 = bof3::addr::Gpu_SetPolyF3;           // libgpu SetPolyF3 by shape (code 0x20), unnamed
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};       // engine: +0xC / +0x10 of a task turned by its +8
+constexpr ::bof3::image::CodeVa kPolyF3{bof3::addr::Gpu_SetPolyF3};           // libgpu SetPolyF3 by shape (code 0x20), unnamed
 using TaskFn = void (__cdecl*)(unsigned char*);
 using PrimFn = void (__cdecl*)(unsigned char*);
-void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
+void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset.v)(task); }
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -198,8 +198,8 @@ void GroundPoint(const unsigned char* s, short height, short* v) {
 // The acting actor's record as the originals index it (a party member at
 // 0..2, else the enemy by index - 3, unchecked).
 unsigned char* ActorRecord(unsigned char a) {
-    if (a < 3) return Mem(ObjTrio_addr + a * at::kPartyStride);
-    return Mem(Battle_Enemies_addr + (a - 3u) * at::kEnemyStride);
+    if (a < 3) return Mem(::bof3::Img(ObjTrio_addr) + a * at::kPartyStride);
+    return Mem(::bof3::Img(Battle_Enemies_addr) + (a - 3u) * at::kEnemyStride);
 }
 // A kind-1 child of parameter 0x23 made a copy of the acting actor's record's
 // first 0x80 bytes (`rep movsd`, forward): MAGIC015's images.
@@ -238,16 +238,16 @@ namespace {
 // and the owner are read after the phase call that precedes the walk.
 void WalkPool() {
     unsigned char* const self = Sprite_Current;
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < kPoolRecords; ++i) {
         unsigned char* const rec = PoolRecord(i);
         records::BattleTask* const trec = rv::As<records::BattleTask>(rec);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t rec_owner = static_cast<std::int32_t>(trec->owner);
         Sprite_Current = rec;
-        SetLong(Mem(BattleE2_Owner_addr), rec_owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), rec_owner);
         Call0(bof3::addr::SnapSpark_Task);
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
         Sprite_Current = self;
     }
 }
@@ -623,7 +623,7 @@ S04_EXPORT void __cdecl SnapSpark_Draw(void) {
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
     LinkAtSprite(0xC);
     unsigned char* const p = Gfx_PacketNext;
-    MH_AT(PrimFn, kPolyF3)(p);
+    MH_AT(PrimFn, kPolyF3.v)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     SetVW(0, static_cast<unsigned>(ShlSar(Sin(0), 4, 12)));
     SetVW(2, static_cast<unsigned>(ShlSar(Cos(0), 4, 12)));
@@ -1117,17 +1117,17 @@ S04_EXPORT void __cdecl AirRaidImage_Dive(void) {
 // a later image gone (the owner's +0xB down, the task freed), the first unshaded
 // on the source's height and +2 on.
 S04_EXPORT void __cdecl AirRaidImage_Bounce(void) {
-    constexpr std::uint32_t kSteps = 0x65A696;   // AirRaidImage_ShadeSteps - 2: byte pairs by +0xB
+    constexpr ::bof3::image::Va kSteps{0x65A696};   // AirRaidImage_ShadeSteps - 2: byte pairs by +0xB
     unsigned char* s = Sc();
     const unsigned char b = s[0xB];
     if (b != 0) {
         const unsigned char d = s[0x5D];
         if (d != 0x80) {
-            s[0x5D] = static_cast<unsigned char>(d - Mem(kSteps + 2u * b)[0]);
+            s[0x5D] = static_cast<unsigned char>(d - Mem(::bof3::Img(kSteps.v) + 2u * b)[0]);
             s = Sc();
-            s[0x5E] = static_cast<unsigned char>(s[0x5E] - Mem(kSteps + 1 + 2u * s[0xB])[0]);
+            s[0x5E] = static_cast<unsigned char>(s[0x5E] - Mem(::bof3::Img(kSteps.v) + 1 + 2u * s[0xB])[0]);
             s = Sc();
-            s[0x5F] = static_cast<unsigned char>(s[0x5F] - Mem(kSteps + 1 + 2u * s[0xB])[0]);
+            s[0x5F] = static_cast<unsigned char>(s[0x5F] - Mem(::bof3::Img(kSteps.v) + 1 + 2u * s[0xB])[0]);
             s = Sc();
         }
     } else {
@@ -1141,7 +1141,7 @@ S04_EXPORT void __cdecl AirRaidImage_Bounce(void) {
     }
     if (s[9] != 0x10) Dec(s[9]);
     MH_CALL(Sprite_ScriptTickOnce)();
-    MH_CALL(MagicFx_StepAround)(Pointer(MagicS23_ActorSprite_addr), 0x2000, 0);
+    MH_CALL(MagicFx_StepAround)(Pointer(::bof3::Img(MagicS23_ActorSprite_addr)), 0x2000, 0);
     RiseAndFall();
     s = Sc();
     if (rv::As<records::BattleTask>(s)->step_y >= 0 || rv::As<records::BattleTask>(s)->height >= rv::As<records::SpriteHead>(Source())->height) return;
@@ -1243,7 +1243,7 @@ S04_EXPORT void __cdecl FlyingKickImage_Dive(void) {
 // +0x5D..+0x5F 0) on the source's height, +2 on.
 S04_EXPORT void __cdecl FlyingKickImage_Bounce(void) {
     MH_CALL(Sprite_ScriptTickOnce)();
-    MH_CALL(MagicFx_StepAround)(Pointer(MagicS23_ActorSprite_addr), 0x2000, 0);
+    MH_CALL(MagicFx_StepAround)(Pointer(::bof3::Img(MagicS23_ActorSprite_addr)), 0x2000, 0);
     RiseAndFall();
     unsigned char* s = Sc();
     if (rv::As<records::BattleTask>(s)->step_y >= 0) {

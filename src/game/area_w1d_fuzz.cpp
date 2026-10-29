@@ -210,7 +210,7 @@ std::uint32_t Set40Effect(const std::uint32_t*, std::uint32_t answer) {
 }
 std::uint32_t SoundEffect(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = ah::Noise();
-    if (n & 1) B(at::kCounter0) = static_cast<unsigned char>(n >> 8);
+    if (n & 1) B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(n >> 8);
     if (n & 2) {
         // all seven flags (bit 7 either way), one of them clear, or any
         static const unsigned char kRow[] = {0x7F, 0xFF, 0x7F, 0xFF, 0x3F, 0xBF, 0x7E, 0x5F, 0x77, 0};
@@ -264,7 +264,7 @@ const ah::Callee kCallees[] = {
     {W1D_OURS(Inventory_Count), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &CountAnswer},
     {W1D_OURS(Inventory_Remove), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {W1D_OURS(Item_NamePtr), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &NameEffect},
-    {"PositionHook_4220D0", at::kPositionHook, at::kPositionHook, 1, {kAll}, ah::Answer::kGarbage, 0, 0, {12}},
+    {"PositionHook_4220D0", at::kPositionHook.v, at::kPositionHook.v, 1, {kAll}, ah::Answer::kGarbage, 0, 0, {12}},
 };
 #undef W1D_OURS
 #undef W1D_THEIRS
@@ -283,7 +283,7 @@ const ah::Region kRegions[] = {
     {AreaW1a_FocusObject_addr, 4},
     {Field_ActiveMember_addr, 4},
     {AreaW0c_AnswerMark_addr, 1},
-    {at::kTextRecords, 16},
+    {at::kTextRecords.v, 16},
     {Area63_Weights_addr, 8},
     {Area64_Weights_addr, 8},
 };
@@ -304,12 +304,12 @@ void Disturb(std::uint32_t h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 7) {
     case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 4 : v); break;
-    case 1: B(at::kCounter0) = static_cast<unsigned char>(h & 0x100 ? 0xA + v % 3 : v); break;
+    case 1: B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(h & 0x100 ? 0xA + v % 3 : v); break;
     case 2: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 4); break;
     case 3: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
     case 4: ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(h >> 16)); break;
     case 5: B(Cond_Flags_addr + 0x18 + 1) = static_cast<unsigned char>(h & 0x100 ? 0x7F : v); break;
-    default: B(at::kCounter3) = v; break;
+    default: B(::bof3::Img(at::kCounter3.v)) = v; break;
     }
 }
 
@@ -447,7 +447,7 @@ void Seed62(unsigned k) {
     const auto state = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0, 1, 2, 3, 0xFF, 0x80, 0x7F));
     B(AreaW0c_TailState_addr) = state;
     const bool on = ah::Often();
-    if (state == 1) B(at::kCounter0) = static_cast<unsigned char>(on ? 0xB : AH_PICK(0xA, 0xC, 0x8B, 0));
+    if (state == 1) B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(on ? 0xB : AH_PICK(0xA, 0xC, 0x8B, 0));
     if (state == 2) Field_Request = static_cast<unsigned char>(on ? AH_PICK(0, 1, 3, 5) : 2);
 }
 

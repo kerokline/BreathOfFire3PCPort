@@ -74,7 +74,7 @@ std::uint32_t Id(const void* p) {
     if (at >= pool && at < pool + sizeof g_prim) return 0x10000u + (at - pool);
     if (at >= zones && at < zones + sizeof g_zones) return 0x20000u + (at - zones);
     if (at >= lists && at < lists + sizeof g_lists) return 0x30000u + (at - lists);
-    if (at >= WindowRecords_addr && at < window_task::at::kRecordsEnd)
+    if (at >= WindowRecords_addr && at < window_task::at::kRecordsEnd.v)
         return 0x40000u + (at - WindowRecords_addr);
     return at;
 }
@@ -262,7 +262,7 @@ const void* StubFor(std::uint32_t target) {
     case bof3::addr::Window_DrawOutline:   return f(&StubDrawOutline);
     case bof3::addr::Window_DrawLine:      return f(&StubDrawLine);
     case bof3::addr::Window_FreeCurrent:   return f(&StubFreeCurrent);
-    case kMsgBoxFrameTask:                 return f(&StubMsgBoxFrame);
+    case kMsgBoxFrameTask.v:                 return f(&StubMsgBoxFrame);
     case bof3::addr::Gpu_SetDrawMode:      return f(&StubDrawMode);
     case bof3::addr::Gfx_CommitPrim:       return f(&StubCommit);
     case bof3::addr::Gpu_SetTile:          return f(&StubSetTile);
@@ -272,11 +272,11 @@ const void* StubFor(std::uint32_t target) {
     case bof3::addr::Gpu_SetSemiTrans:     return f(&StubSetSemi);
     case bof3::addr::Gpu_GetTPage:         return f(&StubGetTPage);
     case bof3::addr::Gpu_GetClut:          return f(&StubGetClut);
-    case kListSetUp:                       return f(&StubHandler<20>);
-    case kListDraw:                        return f(&StubHandler<21>);
-    case kListCursorDraw:                  return f(&StubHandler<22>);
-    case kSetDraw:                         return f(&StubHandler<23>);
-    case kSetCursorDraw:                   return f(&StubHandler<24>);
+    case kListSetUp.v:                       return f(&StubHandler<20>);
+    case kListDraw.v:                        return f(&StubHandler<21>);
+    case kListCursorDraw.v:                  return f(&StubHandler<22>);
+    case kSetDraw.v:                         return f(&StubHandler<23>);
+    case kSetCursorDraw.v:                   return f(&StubHandler<24>);
     default: bof3::Fatal("window_task: no stand-in for a call to 0x%X", static_cast<unsigned>(target)); return nullptr;
     }
 }
@@ -311,13 +311,13 @@ constexpr Call kChangeAreaCalls[] = {{0x2B, bof3::addr::Area_ClassifyPending}, {
 constexpr Call kZoneIdCalls[] = {{0x11, bof3::addr::Area_ZoneAtIn}};
 constexpr Call kPickMusicCalls[] = {{0x23, bof3::addr::Area_ZoneAtIn}, {0x78, bof3::addr::Flags_Test}};
 constexpr Call kGrowCalls[] = {{0x18C, bof3::addr::Window_DrawOutline}};
-constexpr Call kKind0FrameCalls[] = {{0x2D, bof3::addr::Window_DrawFrame}, {0x35, kMsgBoxFrameTask}};
-constexpr Call kShrinkCalls[] = {{0x1FA, bof3::addr::Window_DrawOutline}, {0x20E, kMsgBoxFrameTask}};
-constexpr Call kKind0CloseCalls[] = {{0x00, kMsgBoxFrameTask}, {0x0E, bof3::addr::Window_FreeCurrent}};
-constexpr Call kKind1OpenCalls[] = {{0x00, kListSetUp}};
-constexpr Call kKind1FrameCalls[] = {{0x27, bof3::addr::Window_DrawFrame}, {0x2F, kListDraw}, {0x34, kListCursorDraw}};
+constexpr Call kKind0FrameCalls[] = {{0x2D, bof3::addr::Window_DrawFrame}, {0x35, kMsgBoxFrameTask.v}};
+constexpr Call kShrinkCalls[] = {{0x1FA, bof3::addr::Window_DrawOutline}, {0x20E, kMsgBoxFrameTask.v}};
+constexpr Call kKind0CloseCalls[] = {{0x00, kMsgBoxFrameTask.v}, {0x0E, bof3::addr::Window_FreeCurrent}};
+constexpr Call kKind1OpenCalls[] = {{0x00, kListSetUp.v}};
+constexpr Call kKind1FrameCalls[] = {{0x27, bof3::addr::Window_DrawFrame}, {0x2F, kListDraw.v}, {0x34, kListCursorDraw.v}};
 constexpr Call kFreeStateCalls[] = {{0x00, bof3::addr::Window_FreeCurrent}};
-constexpr Call kKind2FrameCalls[] = {{0x27, bof3::addr::Window_DrawFrame}, {0x2F, kSetDraw}, {0x34, kSetCursorDraw}};
+constexpr Call kKind2FrameCalls[] = {{0x27, bof3::addr::Window_DrawFrame}, {0x2F, kSetDraw.v}, {0x34, kSetCursorDraw.v}};
 constexpr Call kDrawFrameCalls[] = {
     {0x015, bof3::addr::Gpu_SetDrawMode},  {0x01E, bof3::addr::Gfx_CommitPrim},   {0x02A, bof3::addr::Gpu_SetTile},
     {0x09B, bof3::addr::Gpu_SetSemiTrans}, {0x0A4, bof3::addr::Gfx_CommitPrim},   {0x0DF, bof3::addr::Gpu_SetDrawMode},
@@ -416,7 +416,7 @@ const Region kRegions[] = {
     {0x7DEE40, 0x40},                       // MsgBoxState: the list dword, set, count, cursor, placement and rows
     {AreaW0b_Place_addr, 2},
     {Area_EnterTransition_addr, 1},
-    {window_task::at::kPendingX_addr, 4},
+    {window_task::at::kPendingX_addr.v, 4},
     {AreaEntry_PendingZ_addr, 4},
     {AreaEntry_PendingFlags_addr, 1},       // Gfx_BufferIndex is the byte after it: one byte, exactly
     {AreaW1f_MusicCurrent_addr, 1},
@@ -470,7 +470,7 @@ bool Half() { return (Next() & 1) != 0; }
 // and give the zone lists a record that matches everything so that the
 // lookup's endless loop always ends.
 void Fix() {
-    for (std::uint32_t a = WindowRecords_addr; a < window_task::at::kRecordsEnd; a += 0x24) {
+    for (std::uint32_t a = WindowRecords_addr; a < window_task::at::kRecordsEnd.v; a += 0x24) {
         unsigned char* const r = At(a);
         r[0] = static_cast<unsigned char>(Often() ? 1 + Next() % 3 : 0);
         r[1] = static_cast<unsigned char>(Next() % 9);
@@ -499,8 +499,8 @@ void Fix() {
     for (unsigned s = 0; s < kSets; ++s) {
         for (unsigned b = 0; b < sizeof g_lists[s]; ++b) g_lists[s][b] = static_cast<unsigned char>(Next());
         const unsigned count = Next() % 5;
-        SetLong(At(window_task::at::kMusicSets + s * 8u), static_cast<std::int32_t>(Address(g_lists[s])));
-        At(window_task::at::kMusicSets + s * 8u)[4] = static_cast<unsigned char>(count);
+        SetLong(At(::bof3::Img(window_task::at::kMusicSets.v) + s * 8u), static_cast<std::int32_t>(Address(g_lists[s])));
+        At(::bof3::Img(window_task::at::kMusicSets.v) + s * 8u)[4] = static_cast<unsigned char>(count);
     }
 }
 
@@ -714,7 +714,7 @@ void SelfTest() {
     for (unsigned a = 0; a < kAreas; ++a)
         saved_zone[a] = static_cast<std::uint32_t>(Long(At(Area_StateRecords_addr + a * 4u)));
     for (unsigned s = 0; s < kSets * 2; ++s)
-        saved_sets[s] = static_cast<std::uint32_t>(Long(At(window_task::at::kMusicSets + s * 4u)));
+        saved_sets[s] = static_cast<std::uint32_t>(Long(At(::bof3::Img(window_task::at::kMusicSets.v) + s * 4u)));
     Gfx_PacketNext = g_prim;
     Capture(saved);
     g = kStubs;
@@ -766,7 +766,7 @@ void SelfTest() {
     for (unsigned a = 0; a < kAreas; ++a)
         SetLong(At(Area_StateRecords_addr + a * 4u), static_cast<std::int32_t>(saved_zone[a]));
     for (unsigned s = 0; s < kSets * 2; ++s)
-        SetLong(At(window_task::at::kMusicSets + s * 4u), static_cast<std::int32_t>(saved_sets[s]));
+        SetLong(At(::bof3::Img(window_task::at::kMusicSets.v) + s * 4u), static_cast<std::int32_t>(saved_sets[s]));
 
     bof3::Log("shadow      window_task self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, "
               "%u MISMATCHES; the 22 window records, the current record, the pass byte, MsgBoxState, the pending area "

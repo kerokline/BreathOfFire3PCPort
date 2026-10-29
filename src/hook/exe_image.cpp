@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "common/image_base.h"
 #include "common/sha256.h"
 #include "hook/exe_host.h"
 #include "hook/exe_layout.h"
@@ -167,7 +168,7 @@ void ExeImage_Check() {
         Fatal("BOF3X_EXEIMAGE: data.toml's image is 0x%X + 0x%X (zero to 0x%X), the running .data 0x%X + 0x%X (to 0x%X)",
               (unsigned)im.va, (unsigned)im.size, (unsigned)im.bss_end, (unsigned)va, (unsigned)raw, (unsigned)(va + vsz));
     const std::vector<unsigned char> bin = ReadBin(exe_dir + im.file, im.size);
-    auto* live = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va));
+    auto* live = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Img(va)));
 
     // .bss: zero-initialised by the loader, as state 3's engine must do itself.
     for (std::uint32_t a = va + raw; a < im.bss_end; ++a)
@@ -535,7 +536,7 @@ void ExeImage_CompareWithFile() {
     }
     std::vector<unsigned char> pc(im.size);
     ExeFile_Read(im.va, pc.data(), im.size);
-    const auto* live = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(im.va));
+    const auto* live = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Img(im.va)));
     struct Count {
         std::uint32_t ranges, bytes, differ_ranges, differ;
     } by[sizeof kClasses / sizeof kClasses[0]] = {};

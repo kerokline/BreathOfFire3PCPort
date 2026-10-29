@@ -45,13 +45,13 @@ template <typename T, typename F> T As(F f) { return reinterpret_cast<T>(reinter
 template <typename T> T Raw(U address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
 
 const Callees kOriginals = {
-    Raw<void (__cdecl*)()>(kState0),
+    Raw<void (__cdecl*)()>(::bof3::Code(kState0.v)),
     WorldMap_DrawFrame,
     Gpu_SetDrawMode,
     Gfx_CommitPrim,
     WorldMap_DrawSprite,
     AreaMap_ByteAt,
-    Raw<unsigned char (__cdecl*)(short, short)>(kCellEvent),
+    Raw<unsigned char (__cdecl*)(short, short)>(::bof3::Code(kCellEvent.v)),
     WorldMap_DrawNeedle,
     Gpu_SetSprt,
     Gpu_SetSemiTrans,
@@ -207,16 +207,16 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawFrame(i
     g.commit_prim(1, 0xC);
     g.draw_sprite(x, y, 0);
     const unsigned char cell =
-        g.byte_at(static_cast<short>(Word(At(kLeaderCellX))), static_cast<short>(Word(At(kLeaderCellZ))));
+        g.byte_at(static_cast<short>(Word(At(::bof3::Img(kLeaderCellX)))), static_cast<short>(Word(At(::bof3::Img(kLeaderCellZ)))));
     const bool withheld1 =
         cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Word(At(at::Field_ScriptFlags2At())) & 0x1000) != 0;
     if (!withheld1) g.draw_sprite(x + 0x30, y, 1);
-    world_map_legend::Key(g.draw_sprite, kButtonTable, 6, Long(At(Gfx_UnpackScratch_addr + 0x1f000)), x + 0x38, y + 8, withheld1);
+    world_map_legend::Key(g.draw_sprite, ::bof3::Img(kButtonTable), 6, Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f000)), x + 0x38, y + 8, withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) g.draw_sprite(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(g.draw_sprite, kButtonTable, 8, Long(At(Gfx_UnpackScratch_addr + 0x1f00c)), x + 0x38, y + 0x10, withheld2);
+    world_map_legend::Key(g.draw_sprite, ::bof3::Img(kButtonTable), 8, Long(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f00c)), x + 0x38, y + 0x10, withheld2);
     const unsigned char event =
-        g.cell_event(static_cast<short>(Word(At(kLeaderCellX))), static_cast<short>(Word(At(kLeaderCellZ))));
+        g.cell_event(static_cast<short>(Word(At(::bof3::Img(kLeaderCellX)))), static_cast<short>(Word(At(::bof3::Img(kLeaderCellZ)))));
     bool third = event != 0;
     if (!third) third = (Word(At(at::Field_ScriptFlags2At())) & 0x1000) != 0;
     if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
@@ -254,7 +254,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawSprite(
     PutFloat(prim + 0xC, static_cast<float>(static_cast<short>(y)));
     prim[4] = prim[5] = prim[6] = 0x80;
     rv::As<records::GpuSprt>(prim)->clut = 0x7B80;
-    const unsigned char* const entry = At(kSpriteTable + (index & 0xFF) * 4u);
+    const unsigned char* const entry = At(::bof3::Img(kSpriteTable) + (index & 0xFF) * 4u);
     rv::As<records::GpuSprt>(prim)->w = entry[0];
     rv::As<records::GpuSprt>(prim)->h = entry[1];
     prim[0x14] = entry[2];
@@ -272,7 +272,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawHud(int
     if (!(At(at::Draw_PassFlagsAt())[0] & 0x1B)) return;
     g.draw_sprite(x, y, 4);
     g.draw_sprite(x + 0x80, y, 5);
-    const unsigned char* text = At(kAreaText + (Long(At(kAreaTextOffset)) & 0xFFFF));
+    const unsigned char* text = At(::bof3::Img(kAreaText) + (Long(At(::bof3::Img(kAreaTextOffset))) & 0xFFFF));
     g.text_draw_at(x + 4, y + 4, 0, 0xFF, text);
 }
 
@@ -372,7 +372,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(u
     if (draw_order::Tagging())
         bof3::Log("draworder   linked %08X (%u bytes) into row %d from %08X", prim, bytes, row,
                   static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(__builtin_return_address(0))));
-    const U bound = (static_cast<U>(At(at::Gfx_BufferIndexAt())[0]) << 16) + kPoolBound;
+    const U bound = (static_cast<U>(At(at::Gfx_BufferIndexAt())[0]) << 16) + ::bof3::Img(kPoolBound);
     if (bound <= prim + bytes) {
         if (draw_order::Tagging())
             bof3::Log("draworder   packet pool full: a %u-byte primitive for row %d skipped (MapView_LinkPrimAt) from %08X", bytes, row,
@@ -380,10 +380,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(u
         return;
     }
     const U slot_index = static_cast<U>(row) * 6u;
-    unsigned char* const slot = At(DrawLayers_addr + 0x24 + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u);
+    unsigned char* const slot = At(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u);
     g.link_prim(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(Long(slot))), prim);
     const U next = Long(At(at::Gfx_PacketNextAt()));
-    PutLong(At(DrawLayers_addr + 0x24 + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u), next);
+    PutLong(At(::bof3::Img(DrawLayers_addr) + 0x24 + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u), next);
     PutLong(At(at::Gfx_PacketNextAt()), next + bytes);
 }
 
@@ -494,7 +494,7 @@ const StandIn* StandInFor(U bit) {
 }
 
 const unsigned char* StandInText(const StandIn& s) {
-    return At(Long(At(kStandInStrings + s.string * 4)));
+    return At(Long(At(::bof3::Img(kStandInStrings) + s.string * 4)));
 }
 
 // The withheld (dim) form of a stand-in. A disc draws a withheld row's key
@@ -552,7 +552,7 @@ void DimCluts(std::uint16_t out[5][16]) {
 // character (the small font's (u, v) pair for colours under 16, the glyph
 // b - 0x26 or an overlay's 8 x 8 one) with that CLUT for 0x7800 | colour.
 void EmitDim(int x, int y, int w, const unsigned char* text, unsigned colour) {
-    const unsigned char* const uv = At(kSmallUV + (colour >> 4) * 2);
+    const unsigned char* const uv = At(::bof3::Img(kSmallUV) + (colour >> 4) * 2);
     unsigned glyph = (text[0] - 0x26u) & 0xFFFF;
     if (const unsigned small = Labels_SmallGlyph(text)) glyph = small;
     rv::Store<U>(rv::As<records::GpuGlyph>(PacketNext())->glyph, glyph);
@@ -674,7 +674,7 @@ void Key(SpriteFn sprite, std::uint32_t buttons, std::uint32_t count, std::uint3
 
 void Start(int x, int y, bool withheld) {
     if (!g_standin) return;
-    const unsigned char* const uv = At(kSmallUV);
+    const unsigned char* const uv = At(::bof3::Img(kSmallUV));
     const unsigned u = uv[0], v = uv[1];
     static const char kStart[] = "START";
     for (int i = 0; kStart[i] != 0; ++i) {
@@ -744,8 +744,8 @@ void LegendSelfTest() {
             continue;
         }
         ++tables;
-        const unsigned char* const row1 = KeyEntry(kButtonTable, 6, words[0]);
-        const unsigned char* const row2 = KeyEntry(kButtonTable, 8, words[6]);
+        const unsigned char* const row1 = KeyEntry(::bof3::Img(kButtonTable), 6, words[0]);
+        const unsigned char* const row2 = KeyEntry(::bof3::Img(kButtonTable), 8, words[6]);
         if (row1 == nullptr || Word(row1) != sg::Apply(t, 0x20)) fail("row 1 is not Sigma(circle)", words[0], sg::Apply(t, 0x20));
         if (row2 == nullptr || Word(row2) != sg::Apply(t, 0x40)) fail("row 2 is not Sigma(cross)", words[6], sg::Apply(t, 0x40));
         bool identity = true;
@@ -761,7 +761,7 @@ void LegendSelfTest() {
     } while (std::next_permutation(perm, perm + 6));
     // 2. The stand-ins.
     for (U k = 0; k < 6; ++k) {
-        const unsigned char* const entry = At(kButtonTable + k * 4);
+        const unsigned char* const entry = At(::bof3::Img(kButtonTable) + k * 4);
         const StandIn* const s = StandInFor(Word(entry));
         if (s == nullptr) {
             fail("a button entry has no stand-in", k, Word(entry));

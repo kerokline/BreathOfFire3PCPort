@@ -11,29 +11,29 @@
 namespace effect_5c::at {
 
 // --- group E5D's (wave five; E5D merges before E5C) --------------------------------
-constexpr std::uint32_t kDrawMoveStep = bof3::addr::EffectKind18Sub17_CopyFrame;   // (step): a Gpu_SetDrawMove from the byte pairs at 0x65E268 + 2 *
+constexpr ::bof3::image::CodeVa kDrawMoveStep{bof3::addr::EffectKind18Sub17_CopyFrame};   // (step): a Gpu_SetDrawMove from the byte pairs at 0x65E268 + 2 *
                                                     // step and Sprite_Current +0xB, committed at slot 6 (0x18) - the
                                                     // step read as a whole word (an index)
-constexpr std::uint32_t kDrawQuads = bof3::addr::EffectKind18Sub17_DrawPatch;      // (variant): the scenario harness's 0x503FA0 row (E5D's; sixteen
+constexpr ::bof3::image::CodeVa kDrawQuads{bof3::addr::EffectKind18Sub17_DrawPatch};      // (variant): the scenario harness's 0x503FA0 row (E5D's; sixteen
                                                     // textured quads round Sprite_Current's point)
-constexpr std::uint32_t kDrawMoves = bof3::addr::EffectKind18Sub17_ScrollTexture;      // (void): four Gpu_SetDrawMoves at Sprite_Current +0x34 / +0x38's
+constexpr ::bof3::image::CodeVa kDrawMoves{bof3::addr::EffectKind18Sub17_ScrollTexture};      // (void): four Gpu_SetDrawMoves at Sprite_Current +0x34 / +0x38's
                                                     // cell; sub-kind 0x17's states tail-jump to it
 
 // --- cells ------------------------------------------------------------------------
 // kFlagRow9: now Cond_Flags[0x48] (symbols.toml). Cond_Flags row 9 (Cond_Flags + 0x48): sub-kinds 0x10 and 0x50 test it
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flags (Cond_Flags + 0xA0): sub-kinds 0x11 and 0x12
-constexpr std::uint32_t kCounter = 0x903848;        // the chapter counter byte sub-kind 0x17 waits on and sets
+constexpr ::bof3::image::Va kCounter{0x903848};        // the chapter counter byte sub-kind 0x17 waits on and sets
 // kLeaderX: now ObjTrio[0].x (symbols.toml). ObjTrio record 0's +0x34 (x, 16.16): sub-kind 0x10's near test
 // kLeaderZ: now ObjTrio[0].z (symbols.toml). ObjTrio record 0's +0x38 (z, 16.16)
-constexpr std::uint32_t kKind2ZCell = 0x905E62;     // Field_Kind2Z's high word (s16): sub-kind 0x15's corner rows
-constexpr std::uint32_t kEnemy0Bits = 0x93B9F2;     // EnemyWorkingRecords record 0's +0x12 (a dword read; bit 14 tested)
+constexpr ::bof3::image::Va kKind2ZCell{0x905E62};     // Field_Kind2Z's high word (s16): sub-kind 0x15's corner rows
+constexpr ::bof3::image::Va kEnemy0Bits{0x93B9F2};     // EnemyWorkingRecords record 0's +0x12 (a dword read; bit 14 tested)
 // kEnemy1Bits: now BossH_Enemy1Status (symbols.toml). EnemyWorkingRecords record 1's +0x12 (the same)
 // kLayer15Tails: now DrawLayers[0xbd] (symbols.toml). DrawLayers + 0x2F4: layer 15's third list head's last pointer,
                                                     // one per display buffer 8 apart (sub-kind 0x15's commit)
 constexpr std::uint32_t kPoolLimit = 0x7F1BAC;      // Gfx_PacketPools 0x7E1C00 + 0x10000 - 0x54 (draw_emit.cpp's)
 
 // --- the image's tables (read in place) --------------------------------------------------
-constexpr std::uint32_t kSub50Lights = 0x65E034;    // 4 bytes: the row-9 flag that picks the wall's texture, by
+constexpr ::bof3::image::Va kSub50Lights{0x65E034};    // 4 bytes: the row-9 flag that picks the wall's texture, by
                                                     // +0xB - E5B's 0x50096F and 0x5011E0 read it too (not named here)
 constexpr unsigned kSub50FlagCount = 4;             // EffectKind18Sub50_Flags' bytes, and the four above before
                                                     // other data

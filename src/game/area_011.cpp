@@ -49,13 +49,13 @@ extern "C" void __cdecl Area11_StepCameraDistance(void) {
 // Sprite_Current[0xB], Sprite_Current read again after the call. The member
 // id indexes the eight-byte table unchecked, as the original's.
 extern "C" void __cdecl Area11_SpawnEffect(void) {
-    const unsigned member = Mem(Cond_Flags_addr + 0xd4)[0];
-    const unsigned char* const leader = Mem(ObjTrio_addr);
+    const unsigned member = Mem(::bof3::Img(Cond_Flags_addr) + 0xd4)[0];
+    const unsigned char* const leader = Mem(::bof3::Img(ObjTrio_addr));
     const auto* const tLeader = rv::AsConst<records::PartyMember>(leader);
     const auto z = static_cast<short>(static_cast<std::uint16_t>(tLeader->screen_y));
     const auto x = static_cast<short>(static_cast<std::uint16_t>(tLeader->screen_x));
     const unsigned char kind = Area11_EffectKinds[member];
-    Sprite_Current = Mem(ObjTrio_addr);
+    Sprite_Current = Mem(::bof3::Img(ObjTrio_addr));
     const unsigned char slot = AH_CALL(Effect_Spawn)(1, 0, static_cast<signed char>(kind), x, z);
     if (slot != 0xFF) Sprite_Current[0xB] = slot;
 }
@@ -69,8 +69,8 @@ extern "C" void __cdecl Area11_SpawnEffect(void) {
 // dwords. As the original: a step of 0 on an entry of another kind never
 // ends (read, not run: the fuzz keeps the steps above 0).
 extern "C" void __cdecl Area11_DimBackdrop(void) {
-    if (!AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0x70), at::kInitFlagOn)) return;
-    if (AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0x70), at::kInitFlagOff)) return;
+    if (!AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0x70), at::kInitFlagOn)) return;
+    if (AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0x70), at::kInitFlagOff)) return;
     unsigned char* entry = AreaMap_Header + static_cast<std::uint32_t>(AreaMap_EntryBase) * 4u;
     for (std::uint32_t e = static_cast<std::uint32_t>(Long(entry)); e != 0; e = static_cast<std::uint32_t>(Long(entry))) {
         if ((e & 0xFF000000u) == at::kBackdropKind) {

@@ -63,8 +63,8 @@ U Long(U a) {
 void SetLong(U a, U v) { std::memcpy(At(a), &v, 4); }
 
 // Effect record 6's cells, the menu's state.
-unsigned char& R6(unsigned offset) { return B(at::kRecord6 + offset); }
-U R6Address(unsigned offset) { return Effect_Objects_addr + 0x300 + offset; }
+unsigned char& R6(unsigned offset) { return B(::bof3::Img(at::kRecord6.v) + offset); }
+U R6Address(unsigned offset) { return ::bof3::Img(Effect_Objects_addr) + 0x300 + offset; }
 
 // jmp [table + 4 * index], unchecked in the original: the table's words read in
 // place (the fuzz swaps them for recorders), a Fatal past its entries, where
@@ -82,16 +82,16 @@ void Hand(int x, int y) { SH_CALL(Menu_DrawHand)(x, y, 0); }
 // Text_DrawAt(0x1D, 0x14, 0, 0xFF, MessagePools + the pool's word at `cell`):
 // the original adds the word, zero-extended (movzx or `and 0xFFFF`), to 0x803580.
 void Label(U cell) {
-    SH_CALL(Text_DrawAt)(0x1D, 0x14, 0, 0xFF, At(bof3::addr::MessagePools + Word(cell)));
+    SH_CALL(Text_DrawAt)(0x1D, 0x14, 0, 0xFF, At(::bof3::Img(bof3::addr::MessagePools) + Word(cell)));
 }
 // The id at the s16 index of the category-3 list, and its record's kind byte
 // (24-byte NameTable_Accessories records, +0x12): both read in place, unchecked
 // as in the original.
 unsigned char IdAt(U index_cell) {
     const S index = static_cast<short>(Word(index_cell));
-    return B(at::kAccessoryIds + static_cast<U>(index));
+    return B(::bof3::Img(at::kAccessoryIds.v) + static_cast<U>(index));
 }
-unsigned char KindOf(unsigned char id) { return B(at::kAccessoryKind + 24u * id); }
+unsigned char KindOf(unsigned char id) { return B(::bof3::Img(at::kAccessoryKind.v) + 24u * id); }
 
 // The shared exit of ExtraSlots_PickItem's cancel and confirm: record 6 +7 bit
 // 1 cleared, Sprite_Current +4 down (the original's 0x52A922, after the sound).
@@ -129,7 +129,7 @@ extern "C" void __cdecl ExtraSlots_Enter(void) {
         unsigned char* const s = Sprite_Current;
         s[4] = static_cast<unsigned char>(s[4] + 1);
     }
-    Label((R6(7) & 1) ? at::kLabelB : at::kLabelA);
+    Label((R6(7) & 1) ? ::bof3::Img(at::kLabelB.v) : ::bof3::Img(at::kLabelA.v));
 }
 
 // original 0x52A780: the repeat of Input_Pressed's bits 12 and 14
@@ -169,10 +169,10 @@ extern "C" void __cdecl ExtraSlots_PickSlot(void) {
         R6(1) = state;
         s[4] = static_cast<unsigned char>(s[4] - 1);
     }
-    Label((R6(7) & 1) ? at::kLabelB : at::kLabelA);
+    Label((R6(7) & 1) ? ::bof3::Img(at::kLabelB.v) : ::bof3::Img(at::kLabelA.v));
     const unsigned char b = R6(7);
     if (!(b & 0x80)) {
-        const unsigned char held = (b & 1) ? CharStats_ExtraItem : B(at::kExtraAccessory);
+        const unsigned char held = (b & 1) ? CharStats_ExtraItem : B(::bof3::Img(at::kExtraAccessory.v));
         SetWord(R6Address(0x2C), held ? held + 4u : 0xFFFFu);
     }
     Hand(0x1C, static_cast<int>(((b & 1u) << 4) + 0x58));
@@ -209,14 +209,14 @@ extern "C" void __cdecl ExtraSlots_PickItem(void) {
         return;
     }
     if (!(R6(7) & 1)) {
-        Label(at::kListLabelA);
+        Label(::bof3::Img(at::kListLabelA.v));
         if (Input_Pressed & Field_ConfirmButtons) {
             const unsigned char id = IdAt(R6Address(0x36));
             if (KindOf(id) == 0xB) {
                 SH_CALL(Inventory_Remove)(3, id, 1);
-                const unsigned char old = B(at::kExtraAccessory);
+                const unsigned char old = B(::bof3::Img(at::kExtraAccessory.v));
                 if (old) SH_CALL(Inventory_Add)(3, old, 1);
-                B(at::kExtraAccessory) = id;
+                B(::bof3::Img(at::kExtraAccessory.v)) = id;
             }
             Sound(0x103);
             PickItemBack();
@@ -239,7 +239,7 @@ extern "C" void __cdecl ExtraSlots_PickItem(void) {
         Hand(0xA8, static_cast<int>(Long(R6Address(0xC)) * 13u + 0x5A));
         return;
     }
-    Label(at::kListLabelB);
+    Label(::bof3::Img(at::kListLabelB.v));
     if (R6(0xA) == 0) {
         const unsigned short pressed = Input_Pressed;
         if (Field_ConfirmButtons & pressed) {
@@ -252,7 +252,7 @@ extern "C" void __cdecl ExtraSlots_PickItem(void) {
                 CharStats_ExtraCount = 1;
                 S count = 0;
                 for (U i = 0; i < 0x80; ++i)
-                    if (KindOf(B(at::kAccessoryIds + i)) == 0xA) ++count;
+                    if (KindOf(B(::bof3::Img(at::kAccessoryIds.v) + i)) == 0xA) ++count;
                 if (static_cast<S>(Long(R6Address(0x1C))) >= count && Word(R6Address(0x38)) != 0) {
                     const S scroll = static_cast<S>(Long(R6Address(0x38)) & 0xFFFF);
                     if (scroll > count - 9) SetWord(R6Address(0x38), Word(R6Address(0x38)) - 1u);
@@ -414,7 +414,7 @@ extern "C" void __cdecl Effect_ResetFirstSeven(void) {
 // idiv threshold) * points, divided by 10 (signed; every value is small and
 // not negative), in eax whole.
 extern "C" unsigned long __cdecl FieldPanel_KindPoints(unsigned kind, unsigned count) {
-    const U record = Fish_Kinds_addr + 0x10 + 36u * (kind & 0xFF);
+    const U record = ::bof3::Img(Fish_Kinds_addr) + 0x10 + 36u * (kind & 0xFF);
     const unsigned threshold = B(record + 0xF);
     const unsigned low = count & 0xFFFF;
     if (low >= threshold) return (count & 0xFFFF0000u) | Word(record + 0x12);
@@ -428,7 +428,7 @@ extern "C" unsigned long __cdecl FieldPanel_KindPoints(unsigned kind, unsigned c
 extern "C" unsigned short __cdecl FieldPanel_KindTotal(void) {
     U sum = 0;
     for (U i = 0; i < 0x20; ++i) {
-        const unsigned char count = B(at::kKindCounts + i);
+        const unsigned char count = B(::bof3::Img(at::kKindCounts.v) + i);
         if (count) sum += SH_CALL(FieldPanel_KindPoints)(i, count);
     }
     return static_cast<unsigned short>(sum);
@@ -437,7 +437,7 @@ extern "C" unsigned short __cdecl FieldPanel_KindTotal(void) {
 // original 0x52CF00: game mode 8's frame (its step 1; step 0 calls it once).
 extern "C" void __cdecl GameMode8_Frame(void) {
     SH_CALL(Field_MembersFrame)();
-    SH_AT(void (__cdecl*)(), at::kMode8Panel)();
+    SH_AT(void (__cdecl*)(), at::kMode8Panel.v)();
     SH_CALL(AreaMap_Frame)();
     SH_CALL(Party_UpdateScreens)();
     SH_CALL(Sprite_UpdateAllScaled)();
@@ -447,7 +447,7 @@ extern "C" void __cdecl GameMode8_Frame(void) {
 
 // original 0x52CF30 (PSX 0x801E0C78): game mode 8's step 3, a tail jump to 0x593950 (the item
 // trade's dispatcher by the byte 0x93985C).
-extern "C" void __cdecl GameMode8_TradeStep(void) { SH_AT(void (__cdecl*)(), at::kTradeDispatch)(); }
+extern "C" void __cdecl GameMode8_TradeStep(void) { SH_AT(void (__cdecl*)(), at::kTradeDispatch.v)(); }
 
 // original 0x52CF40 (PSX 0x801E0C98): the frame game mode 8's step 2 draws while it waits.
 extern "C" void __cdecl GameMode8_WaitFrame(void) {

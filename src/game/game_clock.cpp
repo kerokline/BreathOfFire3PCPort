@@ -92,8 +92,11 @@ void GameClock_Inject() {
     std::uint8_t expected[4], replacement[4];
     std::memcpy(expected, &real, 4);
     std::memcpy(replacement, &ours, 4);
-    const auto slot = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&Imp_GetTickCount));
-    bof3::PatchBytes("Game_Clock", slot, expected, replacement, 4);
+    // PatchBytes takes the slot's VA, a name (detour.cpp: a VA in the linked
+    // span is written at its place, Img(va)); &Imp_GetTickCount is already the
+    // place, which at a moved base PatchBytes would only write right by its
+    // "not in the linked span" branch, and name in its messages.
+    bof3::PatchBytes("Game_Clock", Imp_GetTickCount_addr, expected, replacement, 4);
     g_ours = reinterpret_cast<std::uintptr_t>(Imp_GetTickCount) == ours;
     if (g_ours)
         bof3::Log("DIV-0022    game clock: milliseconds since the game started, from %lu", g_base);

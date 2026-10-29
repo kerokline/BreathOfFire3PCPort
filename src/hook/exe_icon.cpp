@@ -58,7 +58,7 @@ struct Record {
 // when it would leave the page or VRAM (make_icon.py's end-of-table test).
 bool ReadRecord(Record& r) {
     const auto* p = reinterpret_cast<const std::uint8_t*>(
-        static_cast<std::uintptr_t>(menu_windows::at::kIconRects + kIcon * 4));
+        static_cast<std::uintptr_t>(::bof3::Img(menu_windows::at::kIconRects) + kIcon * 4));
     r = {p[0], p[1], p[2] & 0xF0, kClutBaseY + p[3]};
     return r.u + kIconW <= 256 && r.v + kIconH <= 256 && r.clut_y < kVramH;
 }

@@ -59,13 +59,13 @@ constexpr std::uint32_t kCtrl = 6;
 // The record table at 0x6536F8: 16 bytes each, [0] count, [1] signed x,
 // [2..] the string. Read 2026-09-20; the row -> first record and row -> count
 // tables at 0x653808 / 0x653810 are byte-identical to the PlayStation's.
-constexpr std::uint32_t kRecordBase = 0x6536F8;
+constexpr ::bof3::image::Va kRecordBase{0x6536F8};
 constexpr std::uint32_t kRecordStride = 16;
 constexpr std::uint32_t kRecordRoom = kRecordStride - 2;   // string + its NUL
 
 // The controller panel's six names. The pointer table at 0x66A368 is data, so
 // unlike the labels these are re-aimed by writing the table itself.
-constexpr std::uint32_t kCtrlPointers = 0x66A368;
+constexpr ::bof3::image::Va kCtrlPointers{0x66A368};
 constexpr std::uint32_t kCtrlExpected[kCtrl] = {
     0x66A338, 0x66A340, 0x66A348, 0x66A350, 0x66A358, 0x66A360,
 };
@@ -94,8 +94,11 @@ constexpr LabelSite kLabelSites[kLabels] = {
 // The values of ours (ConfigText_Operands), the original's until a patch goes
 // in; and, for the hosted check, the bytes of each multi-byte patch as they
 // stand (the original's, then the replacement).
+// The labels are the strings' places (Config_DrawRowLabel draws them); hosted,
+// where the code holds the VAs, Img is the identity.
 ConfigTextOperands g_ops = {
-    {0x669F0C, 0x669F18, 0x669F24, 0x669F2C, 0x669F34, 0x669F3C},
+    {::bof3::Img(0x669F0C), ::bof3::Img(0x669F18), ::bof3::Img(0x669F24), ::bof3::Img(0x669F2C), ::bof3::Img(0x669F34),
+     ::bof3::Img(0x669F3C)},
     0x3A, false, false, 0x516B30, 0x516B30, false, 0x20, 0x68, true, 0xC,
 };
 std::uint8_t g_anchor_now = 0x3A;
@@ -167,7 +170,7 @@ constexpr std::uint32_t kIconCircle = kUiGlyphs + kSetCells + 1, kIconCross = kI
 // ends four past it.
 constexpr int kIconX = -0x0C;   // the owner, 2026-09-24: half a glyph right of -0x14
 
-constexpr std::uint32_t kTextDrawAt = 0x516B30;   // Text_DrawAt: the sites' target in Capcom's bytes, a patch fact (raw)
+constexpr ::bof3::image::CodeVa kTextDrawAt{0x516B30};   // Text_DrawAt: the sites' target in Capcom's bytes, a patch fact (raw)
 constexpr std::uint32_t kBigLabelCall = 0x46189F, kBigOptionCall = 0x4619F9;
 constexpr std::uint32_t kCtrlNameCall = 0x461B43;   // Config_DrawControllerRow's one draw (DIV-0026)
 
@@ -222,12 +225,12 @@ extern "C" void __cdecl Config_DrawControllerCell(int x, int y, unsigned int wor
         {0x20, 2, 0x65382C, 3}, {0x40, 1, 0x653828, 3}, {0x10, 6, 0x653824, 3},
         {0x80, 5, 0x653820, 3}, {0x04, 0, 0x65381C, 4}, {0x08, 0, 0x653818, 3},
     };
-    constexpr std::uint32_t kGlyphPointers = 0x66A2FC;   // the six one-byte glyph strings 0x66A2E0..
+    constexpr ::bof3::image::Va kGlyphPointers{0x66A2FC};   // the six one-byte glyph strings 0x66A2E0..
     for (unsigned i = 0; i < sizeof kCells / sizeof kCells[0]; ++i) {
         const Cell& c = kCells[i];
         if (!(word & c.bit)) continue;
         const auto* glyph = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(
-            *reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(kGlyphPointers + 4 * i))));
+            *reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(kGlyphPointers.v) + 4 * i))));
         // DIV-0051's 2026-10-21 amendment: under ja-JP the stand-in behind
         // 0x66A2FC is empty (no Japanese layer writes it); the Japan disc's
         // own icon, in the same colour at the same place.
@@ -244,7 +247,7 @@ extern "C" void __cdecl Config_DrawControllerCell(int x, int y, unsigned int wor
         }
         SH_CALL(Text_DrawAt)(x + 4, y, c.color, 3, glyph);
         SH_CALL(Text_DrawAt)(x - 0x10, y, 0, c.letter_count,
-                             reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(c.letter)));
+                             reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(c.letter))));
         return;
     }
     if (!(word & 0x100)) return;
@@ -322,7 +325,7 @@ void ConfigText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint3
             bof3::Fatal("config chunk: option %u is %u bytes, the record holds %u", (unsigned)i,
                         (unsigned)std::strlen(s) + 1, (unsigned)kRecordRoom);
         auto* rec = reinterpret_cast<std::uint8_t*>(
-            static_cast<std::uintptr_t>(kRecordBase + i * kRecordStride));
+            static_cast<std::uintptr_t>(::bof3::Img(kRecordBase.v) + i * kRecordStride));
         rec[0] = count;
         rec[1] = x;
         std::memset(rec + 2, 0, kRecordRoom);
@@ -339,10 +342,10 @@ void ConfigText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint3
                         (unsigned)std::strlen(s) + 1, (unsigned)kCtrlRoom);
         std::memcpy(g_ctrl[i], s, std::strlen(s) + 1);
         auto* entry = reinterpret_cast<std::uint32_t*>(
-            static_cast<std::uintptr_t>(kCtrlPointers + i * sizeof(std::uint32_t)));
-        if (*entry != kCtrlExpected[i])
-            bof3::Fatal("config: controller pointer %u holds 0x%08X, expected 0x%08X", (unsigned)i,
-                        (unsigned)*entry, (unsigned)kCtrlExpected[i]);
+            static_cast<std::uintptr_t>(::bof3::Img(kCtrlPointers.v) + i * sizeof(std::uint32_t)));
+        if (*entry != ::bof3::Img(kCtrlExpected[i]))   // a pointer word: the place
+            bof3::Fatal("config: controller pointer %u holds 0x%08X, expected 0x%08X (VA 0x%08X)", (unsigned)i,
+                        (unsigned)*entry, (unsigned)::bof3::Img(kCtrlExpected[i]), (unsigned)kCtrlExpected[i]);
         *entry = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(g_ctrl[i]));
     }
 
@@ -430,9 +433,9 @@ void ConfigText_Inject() {
     //                 -> shl eax,1 / nop      (then shl 2)  count * 8
     // which makes each the same number its small branch already computes, so a
     // row does not move when the cursor lands on it - as on the disc.
-    bof3::RetargetCall("ConfigText", kBigLabelCall, kTextDrawAt,
+    bof3::RetargetCall("ConfigText", kBigLabelCall, kTextDrawAt.v,
                        reinterpret_cast<void*>(&ConfigText_DrawSelected));
-    bof3::RetargetCall("ConfigText", kBigOptionCall, kTextDrawAt,
+    bof3::RetargetCall("ConfigText", kBigOptionCall, kTextDrawAt.v,
                        reinterpret_cast<void*>(&ConfigText_DrawSelected));
     static const std::uint8_t label_was[] = {0x8D, 0x0C, 0x49, 0xD1, 0xE1};
     static const std::uint8_t label_is[] = {0xC1, 0xE1, 0x02, 0x90, 0x90};
@@ -466,7 +469,7 @@ void ConfigText_Inject() {
     // every patch here (docs/glyph-draw.md section 8 had it for this one).
     {
         // One name again: all of the controller panel's go in, or none.
-        const bool ctrl_on = bof3::RetargetCall("ConfigController", kCtrlNameCall, kTextDrawAt,
+        const bool ctrl_on = bof3::RetargetCall("ConfigController", kCtrlNameCall, kTextDrawAt.v,
                                                 reinterpret_cast<void*>(&ConfigText_DrawSelected));
         static const std::uint8_t ctrl_was[] = {0x8D, 0x04, 0x49};
         static const std::uint8_t ctrl_is[] = {0x8D, 0x04, 0x09};

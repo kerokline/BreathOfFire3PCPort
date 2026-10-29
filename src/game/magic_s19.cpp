@@ -54,28 +54,29 @@ using move_script::SetWord;
 using move_script::Word;
 
 // The crystals' pool: 24 slots of a task's shape, flag bit 0 of byte 0 live.
-constexpr std::uint32_t kPool = 0x68FA78;
+constexpr ::bof3::image::Va kPool{0x68FA78};
 constexpr std::uint32_t kPoolStride = 0x84;
 constexpr unsigned kPoolCount = 0x18;
 
 // MoveScript_TintRecords: 12 bytes each, +2..+4 the three levels.
 // kTints: now MoveScript_TintRecords (symbols.toml).
 
-constexpr std::uint32_t kActorKind = 0x904B35;   // u8: 4 is the one kind Shield_Kind leaves alone
-constexpr std::uint32_t kAbility = 0x904B80;     // u16: the id of the action being cast
+constexpr ::bof3::image::Va kActorKind{0x904B35};   // u8: 4 is the one kind Shield_Kind leaves alone
+constexpr ::bof3::image::Va kAbility{0x904B80};     // u16: the id of the action being cast
 
 // The GTE's input vectors (four SVECTORs) and the effects' scratch words.
 // kV0: now Prim_VertexScratch (symbols.toml).
 // kV1: now Prim_VertexScratch[1] (symbols.toml).
 // kV2: now Prim_VertexScratch[2] (symbols.toml).
 // kV3: now Prim_VertexScratch[3] (symbols.toml).
-constexpr std::uint32_t kRadius = SharedScratch_addr; // s16 (dword for MAGIC086's draws)
-constexpr std::uint32_t kHeight = 0x903852;   // s16
-constexpr std::uint32_t kAngle = 0x903854;    // s16 (dword: MAGIC086's inner radius)
-constexpr std::uint32_t kShade = 0x903856;    // u16
+constexpr ::bof3::image::Va kRadius{SharedScratch_addr}; // s16 (dword for MAGIC086's draws)
+constexpr ::bof3::image::Va kHeight{0x903852};   // s16
+constexpr ::bof3::image::Va kAngle{0x903854};    // s16 (dword: MAGIC086's inner radius)
+constexpr ::bof3::image::Va kShade{0x903856};    // u16
 // kBlue: now Scratch_Swap (symbols.toml).
-constexpr std::uint32_t kRed = 0x903858, kGreen = 0x90385A;  // u16 (0x90385C a dword: MAGIC086's lift)
-constexpr std::uint32_t kFace = 0x90385E;     // u16
+constexpr ::bof3::image::Va kRed{0x903858};  // u16 (0x90385C a dword: MAGIC086's lift)
+constexpr ::bof3::image::Va kGreen{0x90385A};
+constexpr ::bof3::image::Va kFace{0x90385E};     // u16
 
 // .data (MAGIC083's; the colour tables by kind, 0..3, and face).
 // kTopColours: now ShieldSpark_TopColours (symbols.toml). ShieldSpark_TopColours: 4 kinds x 4 faces x rgb
@@ -104,12 +105,12 @@ using LinkSortedFn = void (__cdecl*)(unsigned long, unsigned long, long*, unsign
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Drop(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 
-unsigned char* Pool(unsigned i) { return Mem(kPool + i * kPoolStride); }
-unsigned char* Task(unsigned slot) { return Mem(BattleTask_Slots_addr + (slot & 0xFF) * at::kTaskStride); }
-unsigned char* Tint(unsigned i) { return Mem(MoveScript_TintRecords_addr + 12 * i); }
-unsigned char* Enemy(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
-unsigned char* Member(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
+unsigned char* Pool(unsigned i) { return Mem(::bof3::Img(kPool.v) + i * kPoolStride); }
+unsigned char* Task(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + (slot & 0xFF) * at::kTaskStride); }
+unsigned char* Tint(unsigned i) { return Mem(::bof3::Img(MoveScript_TintRecords_addr) + 12 * i); }
+unsigned char* Enemy(unsigned i) { return Mem(::bof3::Img(Battle_Enemies_addr) + i * at::kEnemyStride); }
+unsigned char* Member(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 
 // A .data handler table's cell, read in place.
 Handler Cell(std::uint32_t table, unsigned index) {
@@ -159,15 +160,15 @@ MS19_EXPORT void __cdecl Shield_Task(void) {
     if (phase >= 2) bof3::Fatal("Shield_Task: phase %u, past the two-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
     unsigned char* const cur = Sprite_Current;
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < kPoolCount; ++i) {
         unsigned char* const slot = Pool(i);
         records::BattleTask* const tslot = rv::As<records::BattleTask>(slot);
         if (!(slot[0] & 1)) continue;
         Sprite_Current = slot;
-        SetLong(Mem(BattleE2_Owner_addr), static_cast<std::int32_t>(tslot->owner));
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), static_cast<std::int32_t>(tslot->owner));
         MH_CALL(ShieldSpark_Dispatch)();
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
         Sprite_Current = cur;
     }
 }
@@ -218,7 +219,7 @@ MS19_EXPORT void __cdecl Shield_Start(void) {
     Bump(Sprite_Current[1]);
     unsigned char order = 0;
     unsigned char delay = 1;
-    if (Mem(at::kTarget)[0] & 0x40) {
+    if (Mem(::bof3::Img(at::kTarget))[0] & 0x40) {
         for (unsigned i = 0; i < 8; ++i)
             if (!MH_CALL(Battle_ActorIsOut)(i + 3)) SpawnAura(i, Enemy(i), order, delay);
     } else {
@@ -226,8 +227,8 @@ MS19_EXPORT void __cdecl Shield_Start(void) {
             if (!MH_CALL(Battle_ActorIsOut)(i)) SpawnAura(i, Member(i), order, delay);
     }
     for (unsigned n = 0; n < 16; ++n) {
-        SetWord(Mem(0x812980 + 2 * n), Word(Mem(0x80E980 + 2 * n)));
-        SetWord(Mem(0x8129A0 + 2 * n), Word(Mem(0x80E9A0 + 2 * n)));
+        SetWord(Mem(::bof3::Img(0x812980) + 2 * n), Word(Mem(::bof3::Img(0x80E980) + 2 * n)));
+        SetWord(Mem(::bof3::Img(0x8129A0) + 2 * n), Word(Mem(::bof3::Img(0x80E9A0) + 2 * n)));
     }
     Gfx_ClutStripDirty = 1;
     MH_CALL(Sound_PlayById)(0x100);
@@ -238,18 +239,18 @@ MS19_EXPORT void __cdecl Shield_Start(void) {
 // (this overlay's own ability id). MAGIC082's twin (0x4C04F0, S18's) maps
 // three ids to 0x52 / 0x54 / 0x55 and kinds 0 / 1 / 2.
 MS19_EXPORT unsigned char __cdecl Shield_Kind(void) {
-    if (Mem(kActorKind)[0] != 4 && Word(Mem(kAbility)) == 0x136) SetWord(Mem(kAbility), 0x53);
+    if (Mem(::bof3::Img(kActorKind.v))[0] != 4 && Word(Mem(::bof3::Img(kAbility.v))) == 0x136) SetWord(Mem(::bof3::Img(kAbility.v)), 0x53);
     return 0;
 }
 
 // original 0x4C1730: kind 1 parameter 0x22 - jmp [ShieldAura_Types + 4 * +1].
-MS19_EXPORT void __cdecl ShieldAura_Dispatch(void) { Cell(ShieldAura_Types_addr, Sprite_Current[1])(); }
+MS19_EXPORT void __cdecl ShieldAura_Dispatch(void) { Cell(::bof3::Img(ShieldAura_Types_addr), Sprite_Current[1])(); }
 
 // original 0x4C1750: ShieldAura_Types[0]. The phase +2 through
 // ShieldAura_Phases; then, while the slot is live (byte 0) and past its first
 // phase, the halo and the disc under the actor's matrix.
 MS19_EXPORT void __cdecl ShieldAura_Task(void) {
-    Cell(ShieldAura_Phases_addr, Sprite_Current[2])();
+    Cell(::bof3::Img(ShieldAura_Phases_addr), Sprite_Current[2])();
     const unsigned char* const cur = Sprite_Current;
     if (cur[0] == 0 || cur[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -271,7 +272,7 @@ MS19_EXPORT void __cdecl ShieldAura_Wait(void) {
     Drop(Sprite_Current[9]);
     const unsigned char* const cur = Sprite_Current;
     if (cur[9] != 0) return;
-    unsigned char* const member = AuraMember((Mem(at::kTarget)[0] & 0x40) != 0, cur[3]);
+    unsigned char* const member = AuraMember((Mem(::bof3::Img(at::kTarget))[0] & 0x40) != 0, cur[3]);
     MH_CALL(Sprite_ReleaseTint)(member);
     const unsigned char tint = MH_CALL(Sprite_SetTint)(member, 0, 0, 0, 1);
     Sprite_Current[0xA] = tint;
@@ -327,7 +328,7 @@ MS19_EXPORT void __cdecl ShieldAura_Rise(void) {
 // (ShieldAura_Phases[4], 0x4D1AA0, MAGIC105's: the owner's count down and
 // free once +0xB is 0 again).
 MS19_EXPORT void __cdecl ShieldAura_Fade(void) {
-    const bool enemies = (Mem(at::kTarget)[0] & 0x40) != 0;
+    const bool enemies = (Mem(::bof3::Img(at::kTarget))[0] & 0x40) != 0;
     unsigned char* const cur = Sprite_Current;
     const unsigned char index = cur[3];
     const unsigned char actor = static_cast<unsigned char>(enemies ? index + 3 : index);
@@ -354,37 +355,37 @@ MS19_EXPORT void __cdecl ShieldAura_Fade(void) {
 MS19_EXPORT void __cdecl ShieldAura_DrawDisc(void) {
     DrawModeAndCommit(0x35);
     const unsigned char* const cur = Sprite_Current;
-    Put16(kShade, cur[9] * 5u);
-    Put16(kRed, Mem(ShieldAura_DiscColours_addr)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
-    Put16(kGreen, Mem(ShieldAura_DiscColours_addr + 1)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
-    Put16(Scratch_Swap_addr, Mem(ShieldAura_DiscColours_addr + 2)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
-    Put16(Prim_VertexScratch_addr + 0x10, static_cast<std::uint32_t>(ShlSar(Sin(0), 7, 12)));
-    Put16(Prim_VertexScratch_addr + 0x10 + 2, static_cast<std::uint32_t>(ShlSar(Cos(0), 7, 12)));
+    Put16(::bof3::Img(kShade.v), cur[9] * 5u);
+    Put16(::bof3::Img(kRed.v), Mem(::bof3::Img(ShieldAura_DiscColours_addr))[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
+    Put16(::bof3::Img(kGreen.v), Mem(::bof3::Img(ShieldAura_DiscColours_addr) + 1)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
+    Put16(::bof3::Img(Scratch_Swap_addr), Mem(::bof3::Img(ShieldAura_DiscColours_addr) + 2)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10, static_cast<std::uint32_t>(ShlSar(Sin(0), 7, 12)));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, static_cast<std::uint32_t>(ShlSar(Cos(0), 7, 12)));
     for (std::int32_t a = 0x100; a < 0x1100; a += 0x100) {
-        Put16(Prim_VertexScratch_addr, 0);
-        Put16(Prim_VertexScratch_addr + 2, 0);
-        Put16(Prim_VertexScratch_addr + 0x8, Word(Mem(Prim_VertexScratch_addr + 0x10)));
-        Put16(Prim_VertexScratch_addr + 0x8 + 2, Word(Mem(Prim_VertexScratch_addr + 0x10 + 2)));
-        Put16(Prim_VertexScratch_addr + 0x10, static_cast<std::uint32_t>(ShlSar(Sin(a), 7, 12)));
-        Put16(Prim_VertexScratch_addr + 0x10 + 2, static_cast<std::uint32_t>(ShlSar(Cos(a), 7, 12)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr), 0);
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 2, 0);
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + 0x10)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10, static_cast<std::uint32_t>(ShlSar(Sin(a), 7, 12)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, static_cast<std::uint32_t>(ShlSar(Cos(a), 7, 12)));
         unsigned char* const prim = Prim();
-        Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
-        Put16(Prim_VertexScratch_addr + 0x8 + 4, 0);
-        Put16(Prim_VertexScratch_addr + 4, 0);
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 4, 0);
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 4, 0);
         MH_CALL(Gpu_SetPolyG3)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
         long depth;
-        MH_CALL(Gte_RotTransPers3)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &depth);
+        MH_CALL(Gte_RotTransPers3)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &depth);
         MH_CALL(Gte_PrimDepths3_10B)(prim);
-        prim[4] = Mem(kShade)[0];
-        prim[5] = Mem(kShade)[0];
-        prim[6] = Mem(kShade)[0];
-        prim[0x14] = Mem(kRed)[0];
-        prim[0x15] = Mem(kGreen)[0];
-        prim[0x16] = Mem(Scratch_Swap_addr)[0];
-        prim[0x24] = Mem(kRed)[0];
-        prim[0x25] = Mem(kGreen)[0];
-        prim[0x26] = Mem(Scratch_Swap_addr)[0];
+        prim[4] = Mem(::bof3::Img(kShade.v))[0];
+        prim[5] = Mem(::bof3::Img(kShade.v))[0];
+        prim[6] = Mem(::bof3::Img(kShade.v))[0];
+        prim[0x14] = Mem(::bof3::Img(kRed.v))[0];
+        prim[0x15] = Mem(::bof3::Img(kGreen.v))[0];
+        prim[0x16] = Mem(::bof3::Img(Scratch_Swap_addr))[0];
+        prim[0x24] = Mem(::bof3::Img(kRed.v))[0];
+        prim[0x25] = Mem(::bof3::Img(kGreen.v))[0];
+        prim[0x26] = Mem(::bof3::Img(Scratch_Swap_addr))[0];
         MH_CALL(Gfx_CommitPrim)(5, 0x34);
     }
     DrawModeAndCommit(0x15);
@@ -396,39 +397,39 @@ MS19_EXPORT void __cdecl ShieldAura_DrawDisc(void) {
 MS19_EXPORT void __cdecl ShieldAura_DrawHalo(void) {
     DrawModeAndCommit(0x35);
     const unsigned char* const cur = Sprite_Current;
-    Put16(kRed, Mem(ShieldAura_HaloColours_addr)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
-    Put16(kGreen, Mem(ShieldAura_HaloColours_addr + 1)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
-    Put16(Scratch_Swap_addr, Mem(ShieldAura_HaloColours_addr + 2)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
-    Put16(Prim_VertexScratch_addr + 0x8, static_cast<std::uint32_t>(ShlSar(Sin(0), 7, 12)));
-    Put16(Prim_VertexScratch_addr + 0x8 + 2, static_cast<std::uint32_t>(ShlSar(Cos(0), 7, 12)));
-    Put16(Prim_VertexScratch_addr + 0x18, static_cast<std::uint32_t>(ShlSar(Sin(0), 8, 12)));
-    Put16(Prim_VertexScratch_addr + 0x18 + 2, static_cast<std::uint32_t>(ShlSar(Cos(0), 8, 12)));
+    Put16(::bof3::Img(kRed.v), Mem(::bof3::Img(ShieldAura_HaloColours_addr))[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
+    Put16(::bof3::Img(kGreen.v), Mem(::bof3::Img(ShieldAura_HaloColours_addr) + 1)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
+    Put16(::bof3::Img(Scratch_Swap_addr), Mem(::bof3::Img(ShieldAura_HaloColours_addr) + 2)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8, static_cast<std::uint32_t>(ShlSar(Sin(0), 7, 12)));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, static_cast<std::uint32_t>(ShlSar(Cos(0), 7, 12)));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x18, static_cast<std::uint32_t>(ShlSar(Sin(0), 8, 12)));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2, static_cast<std::uint32_t>(ShlSar(Cos(0), 8, 12)));
     for (std::int32_t a = 0x100; a < 0x1100; a += 0x100) {
-        Put16(Prim_VertexScratch_addr, Word(Mem(Prim_VertexScratch_addr + 0x8)));
-        Put16(Prim_VertexScratch_addr + 2, Word(Mem(Prim_VertexScratch_addr + 0x8 + 2)));
-        Put16(Prim_VertexScratch_addr + 0x10, Word(Mem(Prim_VertexScratch_addr + 0x18)));
-        Put16(Prim_VertexScratch_addr + 0x10 + 2, Word(Mem(Prim_VertexScratch_addr + 0x18 + 2)));
-        Put16(Prim_VertexScratch_addr + 0x8, static_cast<std::uint32_t>(ShlSar(Sin(a), 7, 12)));
-        Put16(Prim_VertexScratch_addr + 0x8 + 2, static_cast<std::uint32_t>(ShlSar(Cos(a), 7, 12)));
-        Put16(Prim_VertexScratch_addr + 0x18, static_cast<std::uint32_t>(ShlSar(Sin(a), 8, 12)));
-        Put16(Prim_VertexScratch_addr + 0x18 + 2, static_cast<std::uint32_t>(ShlSar(Cos(a), 8, 12)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr), Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + 0x8)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 2, Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10, Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + 0x18)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8, static_cast<std::uint32_t>(ShlSar(Sin(a), 7, 12)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, static_cast<std::uint32_t>(ShlSar(Cos(a), 7, 12)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x18, static_cast<std::uint32_t>(ShlSar(Sin(a), 8, 12)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2, static_cast<std::uint32_t>(ShlSar(Cos(a), 8, 12)));
         unsigned char* const prim = Prim();
-        Put16(Prim_VertexScratch_addr + 0x18 + 4, 0);
-        Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
-        Put16(Prim_VertexScratch_addr + 0x8 + 4, 0);
-        Put16(Prim_VertexScratch_addr + 4, 0);
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 4, 0);
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 4, 0);
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 4, 0);
         MH_CALL(Gpu_SetPolyG4)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
         long depth;
-        MH_CALL(Gte_RotTransPers4)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), Vec(Prim_VertexScratch_addr + 0x18), At(prim, 8), At(prim, 0x18), At(prim, 0x28),
+        MH_CALL(Gte_RotTransPers4)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x18), At(prim, 8), At(prim, 0x18), At(prim, 0x28),
                                    At(prim, 0x38), &depth);
         MH_CALL(Gte_PrimDepths4_10B)(prim);
-        prim[4] = Mem(kRed)[0];
-        prim[5] = Mem(kGreen)[0];
-        prim[6] = Mem(Scratch_Swap_addr)[0];
-        prim[0x14] = Mem(kRed)[0];
-        prim[0x15] = Mem(kGreen)[0];
-        prim[0x16] = Mem(Scratch_Swap_addr)[0];
+        prim[4] = Mem(::bof3::Img(kRed.v))[0];
+        prim[5] = Mem(::bof3::Img(kGreen.v))[0];
+        prim[6] = Mem(::bof3::Img(Scratch_Swap_addr))[0];
+        prim[0x14] = Mem(::bof3::Img(kRed.v))[0];
+        prim[0x15] = Mem(::bof3::Img(kGreen.v))[0];
+        prim[0x16] = Mem(::bof3::Img(Scratch_Swap_addr))[0];
         prim[0x24] = 1;
         prim[0x25] = 1;
         prim[0x26] = 1;
@@ -441,10 +442,10 @@ MS19_EXPORT void __cdecl ShieldAura_DrawHalo(void) {
 }
 
 // original 0x4C1E70: a crystal - jmp [ShieldSpark_Types + 4 * +1].
-MS19_EXPORT void __cdecl ShieldSpark_Dispatch(void) { Cell(ShieldSpark_Types_addr, Sprite_Current[1])(); }
+MS19_EXPORT void __cdecl ShieldSpark_Dispatch(void) { Cell(::bof3::Img(ShieldSpark_Types_addr), Sprite_Current[1])(); }
 
 // original 0x4C1E90: ShieldSpark_Types[0] - jmp [ShieldSpark_Phases + 4 * +2].
-MS19_EXPORT void __cdecl ShieldSpark_Task(void) { Cell(ShieldSpark_Phases_addr, Sprite_Current[2])(); }
+MS19_EXPORT void __cdecl ShieldSpark_Task(void) { Cell(::bof3::Img(ShieldSpark_Phases_addr), Sprite_Current[2])(); }
 
 // original 0x4C1EB0: ShieldSpark_Phases[0]. +9 down; at 0 the crystal placed
 // on the aura's circle - the angle (+0xB & 0x1F) << 7 (kept in 0x903854), x
@@ -456,10 +457,10 @@ MS19_EXPORT void __cdecl ShieldSpark_Place(void) {
     const unsigned char* const cur = Sprite_Current;
     if (cur[9] != 0) return;
     const std::uint32_t angle = (cur[0xB] & 0x1Fu) << 7;
-    Put16(kAngle, angle);
+    Put16(::bof3::Img(kAngle.v), angle);
     const std::int32_t s = Sin(static_cast<std::int16_t>(angle));
     rv::Store(rv::Current<records::BattleTask>()->x, Add(MulSar(s, 176, 3), rv::As<records::SpriteHead>(Owner())->x));
-    const std::int32_t c = Cos(S16(kAngle));
+    const std::int32_t c = Cos(S16(::bof3::Img(kAngle.v)));
     rv::Store(rv::Current<records::BattleTask>()->z, Add(MulSar(c, 176, 3), rv::As<records::SpriteHead>(Owner())->z));
     rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     rv::Store(rv::Current<records::BattleTask>()->step_y, 0x40);
@@ -571,12 +572,12 @@ MS19_EXPORT void __cdecl ShieldSpark_Orbit(void) {
     Sprite_Current[0xB] = static_cast<unsigned char>(Sprite_Current[0xB] + 2);
     const unsigned char* const cur = Sprite_Current;
     const std::uint32_t angle = (cur[0xB] & 0x1Fu) << 7;
-    Put16(kAngle, angle);
-    Put16(kRadius, static_cast<std::uint32_t>(cur[0xA]) * Word(cur + 0x10) + 0xB0);
+    Put16(::bof3::Img(kAngle.v), angle);
+    Put16(::bof3::Img(kRadius.v), static_cast<std::uint32_t>(cur[0xA]) * Word(cur + 0x10) + 0xB0);
     const std::int32_t s = Sin(static_cast<std::int16_t>(angle));
-    rv::Store(rv::Current<records::BattleTask>()->x, Add(MulSar(s, S16(kRadius), 3), rv::As<records::SpriteHead>(Owner())->x));
-    const std::int32_t c = Cos(S16(kAngle));
-    rv::Store(rv::Current<records::BattleTask>()->z, Add(MulSar(c, S16(kRadius), 3), rv::As<records::SpriteHead>(Owner())->z));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(MulSar(s, S16(::bof3::Img(kRadius.v)), 3), rv::As<records::SpriteHead>(Owner())->x));
+    const std::int32_t c = Cos(S16(::bof3::Img(kAngle.v)));
+    rv::Store(rv::Current<records::BattleTask>()->z, Add(MulSar(c, S16(::bof3::Img(kRadius.v)), 3), rv::As<records::SpriteHead>(Owner())->z));
     Bump(Sprite_Current[0xA]);
     if (Sprite_Current[0xA] != 0x10) return;
     Drop(Owner()[0xB]);
@@ -590,38 +591,38 @@ namespace {
 // (Gte_RotAverage3) into depths[face]. Returns the Sprite_Current it read last.
 unsigned char* CrystalFace(std::uint32_t colours, std::int32_t step, unsigned char* cur, std::int16_t height, long* depths) {
     const std::int16_t face = static_cast<std::int16_t>((step - static_cast<std::int32_t>(cur[9])) / 8);
-    Put16(kFace, static_cast<std::uint16_t>(face));
+    Put16(::bof3::Img(kFace.v), static_cast<std::uint16_t>(face));
     const std::int32_t row = (face + static_cast<std::int32_t>(cur[4]) * 4) * 3;
-    Put16(kRed, Mem(colours + row)[0]);
-    Put16(kGreen, Mem(colours + row + 1)[0]);
-    Put16(Prim_VertexScratch_addr, 0);
-    Put16(Prim_VertexScratch_addr + 2, 0);
-    Put16(Scratch_Swap_addr, Mem(colours + row + 2)[0]);
+    Put16(::bof3::Img(kRed.v), Mem(colours + row)[0]);
+    Put16(::bof3::Img(kGreen.v), Mem(colours + row + 1)[0]);
+    Put16(::bof3::Img(Prim_VertexScratch_addr), 0);
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 2, 0);
+    Put16(::bof3::Img(Scratch_Swap_addr), Mem(colours + row + 2)[0]);
     const std::uint32_t a0 = (static_cast<std::uint32_t>(step) & 0x1F) << 7;
-    Put16(kAngle, a0);
-    Put16(Prim_VertexScratch_addr + 4, static_cast<std::uint16_t>(height));
-    Put16(Prim_VertexScratch_addr + 0x8, static_cast<std::uint32_t>(MulSar(Sin(static_cast<std::int16_t>(a0)), S16(kRadius), 12)));
-    Put16(Prim_VertexScratch_addr + 0x8 + 2, static_cast<std::uint32_t>(MulSar(Cos(S16(kAngle)), S16(kRadius), 12)));
-    Put16(Prim_VertexScratch_addr + 0x8 + 4, 0);
+    Put16(::bof3::Img(kAngle.v), a0);
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 4, static_cast<std::uint16_t>(height));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8, static_cast<std::uint32_t>(MulSar(Sin(static_cast<std::int16_t>(a0)), S16(::bof3::Img(kRadius.v)), 12)));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, static_cast<std::uint32_t>(MulSar(Cos(S16(::bof3::Img(kAngle.v))), S16(::bof3::Img(kRadius.v)), 12)));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 4, 0);
     const std::uint32_t a1 = (static_cast<std::uint32_t>(step + 8) & 0x1F) << 7;
-    Put16(kAngle, a1);
-    Put16(Prim_VertexScratch_addr + 0x10, static_cast<std::uint32_t>(MulSar(Sin(static_cast<std::int16_t>(a1)), S16(kRadius), 12)));
-    Put16(Prim_VertexScratch_addr + 0x10 + 2, static_cast<std::uint32_t>(MulSar(Cos(S16(kAngle)), S16(kRadius), 12)));
+    Put16(::bof3::Img(kAngle.v), a1);
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10, static_cast<std::uint32_t>(MulSar(Sin(static_cast<std::int16_t>(a1)), S16(::bof3::Img(kRadius.v)), 12)));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, static_cast<std::uint32_t>(MulSar(Cos(S16(::bof3::Img(kAngle.v))), S16(::bof3::Img(kRadius.v)), 12)));
     unsigned char* const prim = Prim();
-    Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
     MH_CALL(Gpu_SetPolyG3)(prim);
     MH_CALL(Gpu_SetSemiTrans)(prim, 0);
     long p;
     const long depth =
-        MH_CALL(Gte_RotAverage3)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &p);
+        MH_CALL(Gte_RotAverage3)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &p);
     const std::int32_t slot = (step - static_cast<std::int32_t>(Sprite_Current[9])) / 8;
     if (slot < 0 || slot > 3)
         bof3::Fatal("ShieldSpark_DrawCrystal: face %d, past the four-entry depth array", static_cast<int>(slot));
     depths[slot] = depth;
     for (unsigned v = 0; v < 3; ++v) {
-        prim[4 + 0x10 * v] = Mem(kRed)[0];
-        prim[5 + 0x10 * v] = Mem(kGreen)[0];
-        prim[6 + 0x10 * v] = Mem(Scratch_Swap_addr)[0];
+        prim[4 + 0x10 * v] = Mem(::bof3::Img(kRed.v))[0];
+        prim[5 + 0x10 * v] = Mem(::bof3::Img(kGreen.v))[0];
+        prim[6 + 0x10 * v] = Mem(::bof3::Img(Scratch_Swap_addr))[0];
     }
     Gfx_PacketNext = Gfx_PacketNext + 0x34;
     return Sprite_Current;
@@ -647,9 +648,9 @@ MS19_EXPORT void __cdecl ShieldSpark_DrawCrystal(void) {
     unsigned char* const first = Prim();
     long depths[4];
     for (std::int32_t step = cur[9]; step < static_cast<std::int32_t>(cur[9]) + 0x20; step += 8) {
-        Put16(kHeight, 0x50);
-        Put16(kRadius, 0x30);
-        cur = CrystalFace(ShieldSpark_TopColours_addr, step, cur, 0x50, depths);
+        Put16(::bof3::Img(kHeight.v), 0x50);
+        Put16(::bof3::Img(kRadius.v), 0x30);
+        cur = CrystalFace(::bof3::Img(ShieldSpark_TopColours_addr), step, cur, 0x50, depths);
     }
     MH_AT(LinkSortedFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(Long(cur + 0x34)),
                                                          static_cast<unsigned long>(Long(cur + 0x38)), depths, first, 4,
@@ -657,7 +658,7 @@ MS19_EXPORT void __cdecl ShieldSpark_DrawCrystal(void) {
     cur = Sprite_Current;
     unsigned char* const second = Prim();
     for (std::int32_t step = cur[9]; step < static_cast<std::int32_t>(cur[9]) + 0x20; step += 8)
-        cur = CrystalFace(ShieldSpark_BottomColours_addr, step, cur, static_cast<std::int16_t>(-S16(kHeight)), depths);
+        cur = CrystalFace(::bof3::Img(ShieldSpark_BottomColours_addr), step, cur, static_cast<std::int16_t>(-S16(::bof3::Img(kHeight.v))), depths);
     MH_AT(LinkSortedFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(Long(cur + 0x34)),
                                                          static_cast<unsigned long>(Long(cur + 0x38)), depths, second,
                                                          4, 0x34, 0);
@@ -719,7 +720,7 @@ void SpawnPart(unsigned char type) {
 // ring (+1 1, +0xB 0x30) - with +9 and +0xA 0; sound 0x100; +0xB and +9 0;
 // the phase on.
 MS19_EXPORT void __cdecl Barrier_Start(void) {
-    const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
+    const unsigned char* const source = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(source)->x);
     rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(source)->z);
     rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(source)->height);
@@ -736,7 +737,7 @@ MS19_EXPORT void __cdecl Barrier_Start(void) {
 // +9 0x10; the phase on (to BattleFx_Brighten, which raises it).
 MS19_EXPORT void __cdecl Barrier_Tint(void) {
     const unsigned char* const cur = Sprite_Current;
-    unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
+    unsigned char* const source = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     if (cur[0xB] != 1) return;
     MH_CALL(Sprite_ReleaseTint)(source);
     const unsigned char tint = MH_CALL(Sprite_SetTint)(source, 1, 1, 1, 0);
@@ -760,18 +761,18 @@ MS19_EXPORT void __cdecl Barrier_Fade(void) {
     Drop(Tint(cur[0xA])[3]);
     Drop(Tint(cur[0xA])[4]);
     if (Tint(cur[0xA])[2] != 0) return;
-    MH_CALL(Sprite_ReleaseTint)(Pointer(BattleOdds_ActorObject_addr));
-    MH_CALL(BattleActor_Flash)(Mem(at::kTarget)[0]);
+    MH_CALL(Sprite_ReleaseTint)(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)));
+    MH_CALL(BattleActor_Flash)(Mem(::bof3::Img(at::kTarget))[0]);
     Bump(Sprite_Current[1]);
 }
 
 // original 0x4C2A50: kind 1 parameter 0x1D - jmp [BarrierPart_Types + 4 * +1].
-MS19_EXPORT void __cdecl BarrierPart_Dispatch(void) { Cell(BarrierPart_Types_addr, Sprite_Current[1])(); }
+MS19_EXPORT void __cdecl BarrierPart_Dispatch(void) { Cell(::bof3::Img(BarrierPart_Types_addr), Sprite_Current[1])(); }
 
 // original 0x4C2A70: BarrierPart_Types[0], the disc. Its phase +2 through
 // BarrierDisc_Phases; while live, the disc under the actor's matrix.
 MS19_EXPORT void __cdecl BarrierDisc_Task(void) {
-    Cell(BarrierDisc_Phases_addr, Sprite_Current[2])();
+    Cell(::bof3::Img(BarrierDisc_Phases_addr), Sprite_Current[2])();
     if (Sprite_Current[0] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
     MH_CALL(BarrierDisc_Draw)();
@@ -806,24 +807,24 @@ MS19_EXPORT void __cdecl BarrierDisc_Shrink(void) {
 // 0x15. The rim's first two bytes are read back from the primitive.
 MS19_EXPORT void __cdecl BarrierDisc_Draw(void) {
     DrawModeAndCommit(0x35);
-    SetLong(Mem(kRadius), static_cast<std::int32_t>(Sprite_Current[0xA] * 12u));
-    Put16(Prim_VertexScratch_addr + 0x10, static_cast<std::uint32_t>(MulSar(Sin(0), Long(Mem(kRadius)), 12)));
-    Put16(Prim_VertexScratch_addr + 0x10 + 2, static_cast<std::uint32_t>(MulSar(Cos(0), Long(Mem(kRadius)), 12)));
+    SetLong(Mem(::bof3::Img(kRadius.v)), static_cast<std::int32_t>(Sprite_Current[0xA] * 12u));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10, static_cast<std::uint32_t>(MulSar(Sin(0), Long(Mem(::bof3::Img(kRadius.v))), 12)));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, static_cast<std::uint32_t>(MulSar(Cos(0), Long(Mem(::bof3::Img(kRadius.v))), 12)));
     for (std::int32_t a = 0x80; a < 0x1080; a += 0x80) {
-        Put16(Prim_VertexScratch_addr, 0);
-        Put16(Prim_VertexScratch_addr + 2, 0);
-        Put16(Prim_VertexScratch_addr + 0x8, Word(Mem(Prim_VertexScratch_addr + 0x10)));
-        Put16(Prim_VertexScratch_addr + 0x8 + 2, Word(Mem(Prim_VertexScratch_addr + 0x10 + 2)));
-        Put16(Prim_VertexScratch_addr + 0x10, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(kRadius)), 12)));
-        Put16(Prim_VertexScratch_addr + 0x10 + 2, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(kRadius)), 12)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr), 0);
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 2, 0);
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + 0x10)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(::bof3::Img(kRadius.v))), 12)));
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(::bof3::Img(kRadius.v))), 12)));
         unsigned char* const prim = Prim();
-        Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
-        Put16(Prim_VertexScratch_addr + 0x8 + 4, 0);
-        Put16(Prim_VertexScratch_addr + 4, 0);
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 4, 0);
+        Put16(::bof3::Img(Prim_VertexScratch_addr) + 4, 0);
         MH_CALL(Gpu_SetPolyG3)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
         long depth;
-        MH_CALL(Gte_RotTransPers3)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &depth);
+        MH_CALL(Gte_RotTransPers3)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &depth);
         MH_CALL(Gte_PrimDepths3_10B)(prim);
         prim[4] = static_cast<unsigned char>(Sprite_Current[9] * 6);
         prim[5] = static_cast<unsigned char>(Sprite_Current[9] * 6);
@@ -845,7 +846,7 @@ MS19_EXPORT void __cdecl BarrierDisc_Draw(void) {
 // original 0x4C2CE0: BarrierPart_Types[1], the ring. Its phase +2 through
 // BarrierRing_Phases; while live, the ring under the actor's matrix.
 MS19_EXPORT void __cdecl BarrierRing_Task(void) {
-    Cell(BarrierRing_Phases_addr, Sprite_Current[2])();
+    Cell(::bof3::Img(BarrierRing_Phases_addr), Sprite_Current[2])();
     if (Sprite_Current[0] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
     MH_CALL(BarrierRing_Draw)();
@@ -923,14 +924,14 @@ MS19_EXPORT void __cdecl BarrierRing_End(void) {
 MS19_EXPORT void __cdecl BarrierRing_Draw(void) {
     DrawModeAndCommit(0x35);
     const unsigned char* const cur = Sprite_Current;
-    SetLong(Mem(kRadius), cur[2] != 0 ? 0xC0 : static_cast<std::int32_t>(cur[9] * 12u));
-    SetLong(Mem(kAngle), static_cast<std::int32_t>(cur[9] * 14u));
-    SetLong(Mem(Scratch_Swap_addr), static_cast<std::int32_t>(static_cast<std::uint32_t>(cur[0xA]) << 4));
+    SetLong(Mem(::bof3::Img(kRadius.v)), cur[2] != 0 ? 0xC0 : static_cast<std::int32_t>(cur[9] * 12u));
+    SetLong(Mem(::bof3::Img(kAngle.v)), static_cast<std::int32_t>(cur[9] * 14u));
+    SetLong(Mem(::bof3::Img(Scratch_Swap_addr)), static_cast<std::int32_t>(static_cast<std::uint32_t>(cur[0xA]) << 4));
     const std::uint32_t frame = Frame_Counter;
     const std::uint32_t gap0 = frame & 7, gap1 = (frame + 1) & 7;
-    Put16(Prim_VertexScratch_addr + 0x18, static_cast<std::uint32_t>(MulSar(Cos(0), Long(Mem(kRadius)), 12)));
-    Put16(Prim_VertexScratch_addr + 0x18 + 2, static_cast<std::uint32_t>(MulSar(Sin(0), Long(Mem(kRadius)), 12)));
-    Put16(Prim_VertexScratch_addr + 0x18 + 4, 0);
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x18, static_cast<std::uint32_t>(MulSar(Cos(0), Long(Mem(::bof3::Img(kRadius.v))), 12)));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2, static_cast<std::uint32_t>(MulSar(Sin(0), Long(Mem(::bof3::Img(kRadius.v))), 12)));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 4, 0);
     // The wall's link point: the original keeps it in registers across
     // segments, and before the first wall segment they hold an uninitialised
     // stack cell - reached only if Sprite_Current[2] changed between the two
@@ -943,23 +944,23 @@ MS19_EXPORT void __cdecl BarrierRing_Draw(void) {
         if (seg != gap0 && seg != gap1 && Sprite_Current[2] != 0) {
             const std::int32_t b = a - 0x40;
             const std::uint32_t wave = ((Frame_Counter + i) & 0x1F) << 7;
-            Put16(Prim_VertexScratch_addr, static_cast<std::uint32_t>(MulSar(Cos(b), Long(Mem(kRadius)), 12)));
-            Put16(Prim_VertexScratch_addr + 2, static_cast<std::uint32_t>(MulSar(Sin(b), Long(Mem(kRadius)), 12)));
+            Put16(::bof3::Img(Prim_VertexScratch_addr), static_cast<std::uint32_t>(MulSar(Cos(b), Long(Mem(::bof3::Img(kRadius.v))), 12)));
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 2, static_cast<std::uint32_t>(MulSar(Sin(b), Long(Mem(::bof3::Img(kRadius.v))), 12)));
             const std::int32_t w0 = Sin(static_cast<std::int32_t>(wave));
-            Put16(Prim_VertexScratch_addr + 4, static_cast<std::uint32_t>(-Add(ShlSar(w0, 5, 12), Long(Mem(Scratch_Swap_addr)))));
-            Put16(Prim_VertexScratch_addr + 0x8, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(kRadius)), 12)));
-            Put16(Prim_VertexScratch_addr + 0x8 + 2, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(kRadius)), 12)));
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 4, static_cast<std::uint32_t>(-Add(ShlSar(w0, 5, 12), Long(Mem(::bof3::Img(Scratch_Swap_addr))))));
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(::bof3::Img(kRadius.v))), 12)));
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(::bof3::Img(kRadius.v))), 12)));
             const std::int32_t w1 = Sin(static_cast<std::int32_t>(wave));
-            const std::uint16_t old_y = Word(Mem(Prim_VertexScratch_addr + 0x18 + 2));
-            Put16(Prim_VertexScratch_addr + 0x10 + 2, old_y);
-            const std::uint16_t y1 = Word(Mem(Prim_VertexScratch_addr + 0x8 + 2));
-            Put16(Prim_VertexScratch_addr + 0x8 + 4, static_cast<std::uint32_t>(-Add(ShlSar(w1, 5, 12), Long(Mem(Scratch_Swap_addr)))));
-            Put16(Prim_VertexScratch_addr + 0x10, Word(Mem(Prim_VertexScratch_addr + 0x18)));
-            const std::uint16_t x1 = Word(Mem(Prim_VertexScratch_addr + 0x8));
-            Put16(Prim_VertexScratch_addr + 0x18, x1);
-            Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
-            Put16(Prim_VertexScratch_addr + 0x18 + 2, y1);
-            Put16(Prim_VertexScratch_addr + 0x18 + 4, 0);
+            const std::uint16_t old_y = Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2));
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, old_y);
+            const std::uint16_t y1 = Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2));
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 4, static_cast<std::uint32_t>(-Add(ShlSar(w1, 5, 12), Long(Mem(::bof3::Img(Scratch_Swap_addr))))));
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10, Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + 0x18)));
+            const std::uint16_t x1 = Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + 0x8));
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x18, x1);
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2, y1);
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 4, 0);
             const unsigned char* const now = Sprite_Current;
             const records::BattleTask* const tnow = rv::AsConst<records::BattleTask>(now);
             x = Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int16_t>(x1))) << 9),
@@ -971,25 +972,25 @@ MS19_EXPORT void __cdecl BarrierRing_Draw(void) {
             MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 0, 0xC);
         } else {
             const std::int32_t b = a - 0x40;
-            Put16(Prim_VertexScratch_addr, static_cast<std::uint32_t>(MulSar(Cos(b), Long(Mem(kAngle)), 12)));
-            Put16(Prim_VertexScratch_addr + 2, static_cast<std::uint32_t>(MulSar(Sin(b), Long(Mem(kAngle)), 12)));
-            Put16(Prim_VertexScratch_addr + 4, 0);
-            Put16(Prim_VertexScratch_addr + 0x8, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(kAngle)), 12)));
-            Put16(Prim_VertexScratch_addr + 0x8 + 2, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(kAngle)), 12)));
-            const std::uint16_t old_y = Word(Mem(Prim_VertexScratch_addr + 0x18 + 2));
-            Put16(Prim_VertexScratch_addr + 0x8 + 4, 0);
-            Put16(Prim_VertexScratch_addr + 0x10, Word(Mem(Prim_VertexScratch_addr + 0x18)));
-            Put16(Prim_VertexScratch_addr + 0x10 + 2, old_y);
-            Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
-            Put16(Prim_VertexScratch_addr + 0x18, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(kRadius)), 12)));
-            Put16(Prim_VertexScratch_addr + 0x18 + 4, 0);
-            Put16(Prim_VertexScratch_addr + 0x18 + 2, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(kRadius)), 12)));
+            Put16(::bof3::Img(Prim_VertexScratch_addr), static_cast<std::uint32_t>(MulSar(Cos(b), Long(Mem(::bof3::Img(kAngle.v))), 12)));
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 2, static_cast<std::uint32_t>(MulSar(Sin(b), Long(Mem(::bof3::Img(kAngle.v))), 12)));
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 4, 0);
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(::bof3::Img(kAngle.v))), 12)));
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(::bof3::Img(kAngle.v))), 12)));
+            const std::uint16_t old_y = Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2));
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 4, 0);
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10, Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + 0x18)));
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, old_y);
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x18, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(::bof3::Img(kRadius.v))), 12)));
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 4, 0);
+            Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(::bof3::Img(kRadius.v))), 12)));
         }
         unsigned char* const prim = Prim();
         MH_CALL(Gpu_SetPolyG4)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
         long depth;
-        MH_CALL(Gte_RotTransPers4)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), Vec(Prim_VertexScratch_addr + 0x18), At(prim, 8), At(prim, 0x18), At(prim, 0x28),
+        MH_CALL(Gte_RotTransPers4)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x18), At(prim, 8), At(prim, 0x18), At(prim, 0x28),
                                    At(prim, 0x38), &depth);
         MH_CALL(Gte_PrimDepths4_10B)(prim);
         if (seg != gap0 && seg != gap1 && Sprite_Current[2] != 0) {
@@ -1030,7 +1031,7 @@ MS19_EXPORT void __cdecl BarrierRing_Draw(void) {
 // BarrierLine_Phases; while live and past its first phase, the line under the
 // actor's matrix. Nothing read here creates one (a part with +1 2).
 MS19_EXPORT void __cdecl BarrierLine_Task(void) {
-    Cell(BarrierLine_Phases_addr, Sprite_Current[2])();
+    Cell(::bof3::Img(BarrierLine_Phases_addr), Sprite_Current[2])();
     const unsigned char* const cur = Sprite_Current;
     if (cur[0] == 0 || cur[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -1072,18 +1073,18 @@ MS19_EXPORT void __cdecl BarrierLine_Fly(void) {
 // 0x35; both linked at the line's map cell, one row up (dy 2).
 MS19_EXPORT void __cdecl BarrierLine_Draw(void) {
     const std::int32_t s = ShlSar(Sin(static_cast<std::int32_t>(static_cast<std::uint32_t>(Sprite_Current[0xB]) << 9)), 7, 12);
-    Put16(Prim_VertexScratch_addr + 0x10, static_cast<std::uint32_t>(s));
-    Put16(Prim_VertexScratch_addr + 0x8, static_cast<std::uint32_t>(s));
-    Put16(Prim_VertexScratch_addr, static_cast<std::uint32_t>(s));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10, static_cast<std::uint32_t>(s));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8, static_cast<std::uint32_t>(s));
+    Put16(::bof3::Img(Prim_VertexScratch_addr), static_cast<std::uint32_t>(s));
     const std::int32_t cosine = Cos(static_cast<std::int32_t>(static_cast<std::uint32_t>(Sprite_Current[0xB]) << 9));
     unsigned char* const mode = Prim();
     const std::int32_t c = ShlSar(cosine, 7, 12);
-    Put16(Prim_VertexScratch_addr + 0x10 + 2, static_cast<std::uint32_t>(c));
-    Put16(Prim_VertexScratch_addr + 0x8 + 2, static_cast<std::uint32_t>(c));
-    Put16(Prim_VertexScratch_addr + 2, static_cast<std::uint32_t>(c));
-    Put16(Prim_VertexScratch_addr + 4, 0x20);
-    Put16(Prim_VertexScratch_addr + 0x8 + 4, 0x18);
-    Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, static_cast<std::uint32_t>(c));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, static_cast<std::uint32_t>(c));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 2, static_cast<std::uint32_t>(c));
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 4, 0x20);
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 4, 0x18);
+    Put16(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
     MH_CALL(Gpu_SetDrawMode)(mode, 0, 1, 0x35, 0);
     {
         const unsigned char* const cur = Sprite_Current;
@@ -1095,7 +1096,7 @@ MS19_EXPORT void __cdecl BarrierLine_Draw(void) {
     MH_CALL(Gpu_SetLineG3)(prim);
     MH_CALL(Gpu_SetSemiTrans)(prim, 1);
     long depth;
-    MH_CALL(Gte_RotTransPers3)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &depth);
+    MH_CALL(Gte_RotTransPers3)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &depth);
     MH_CALL(Gte_PrimDepths3_10C)(prim);
     prim[0x14] = 0xC0;
     prim[4] = 0x40;

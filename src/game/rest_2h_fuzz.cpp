@@ -98,7 +98,7 @@ constexpr sh::CallSite kCalls59DBF0[] = {{0x70, 0x57D9A0}, {0x87, 0x591720}, {0x
 constexpr move_script::Table kTable59DBF0 = {0x19, 0x554, 5};
 // 0x59E160 (catalogued as the renderer's; read 2026-10-04)
 constexpr sh::CallSite kCalls59E160[] = {{0x1A, 0x57CF60}, {0x48, 0x516B30}, {0x63, 0x57D910}, {0x7A, 0x57CF60}, {0xA2, 0x516B30}, {0xBE, 0x57D910}};
-constexpr sh::CallSite kCalls5A9620[] = {{0x48, at::kStricmp}};
+constexpr sh::CallSite kCalls5A9620[] = {{0x48, at::kStricmp.v}};
 
 // --- this file's copies ------------------------------------------------------------------
 // Every site re-aimed at a trampoline into the recorder that stands in for its
@@ -384,7 +384,7 @@ void SeedSkills(unsigned master) {
     for (unsigned i = 0; i < 8 && p[i] != 0xFF; ++i) {
         if (!sh::Often()) continue;
         if (sh::Half()) Mem(Field_ActorStates_addr + 0x6e + (sh::Next() % 7) * at::kRecordStride + sh::Next() % 10)[0] = p[i];
-        else Mem(at::kSharedList + sh::Next() % 0x80)[0] = p[i];
+        else Mem(::bof3::Img(at::kSharedList.v) + sh::Next() % 0x80)[0] = p[i];
     }
 }
 
@@ -404,7 +404,7 @@ void Seed(unsigned k) {
     // the gene bits: some of the eighteen, rarely all (the list then has no 0 in its 18)
     SetLong(Mem(Gene_Bits_addr), static_cast<std::int32_t>(sh::Often() ? sh::Next() & 0x1FFFF : PickOf(0, 0x3FFFF, 0x7FFFF, sh::Next())));
     // the masters' bits
-    for (unsigned i = 0; i < 3; ++i) Mem(at::kMasterBits + i)[0] = static_cast<unsigned char>(sh::Next());
+    for (unsigned i = 0; i < 3; ++i) Mem(::bof3::Img(at::kMasterBits.v) + i)[0] = static_cast<unsigned char>(sh::Next());
     Mem(Cond_Flags_addr + 0xd1)[0] = static_cast<unsigned char>(sh::Next());
     switch (k) {
     case kSharedSlide: SeedSlide(self, 4, 0x20, 0x28); break;
@@ -459,7 +459,7 @@ void Seed(unsigned k) {
         // place) with all eighteen set half the time: the first 0 ends the rows
         g_window[0xA] = static_cast<unsigned char>(PickOf(1, 3, 6, 9, 10, 11, 14, 20));
         if (sh::Half()) SetLong(Mem(Gene_Bits_addr), 0x3FFFF);
-        for (unsigned i = 0x12; i < 0x30; ++i) Mem(at::kGeneList + i)[0] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
+        for (unsigned i = 0x12; i < 0x30; ++i) Mem(::bof3::Img(at::kGeneList.v) + i)[0] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
         break;
     case kKeys: break;
     case kEnum: {
@@ -486,7 +486,7 @@ void Args(unsigned k, U* a) {
     case kAvailable: a[0] = (a[0] & 0xFFFFFF00u) | PickOf(0xB, 0xC, 0xD, 0xE, sh::Next() % at::kMasterCount, sh::Next() % at::kMasterCount); break;
     case kSkill: {
         const U pick = sh::Half() ? Mem(Field_ActorStates_addr + 0x6e + (a[1] % 7) * at::kRecordStride + a[2] % 10)[0]
-                                  : (sh::Half() ? Mem(at::kSharedList + a[2] % 0x80)[0] : a[0]);
+                                  : (sh::Half() ? Mem(::bof3::Img(at::kSharedList.v) + a[2] % 0x80)[0] : a[0]);
         a[0] = (a[0] & 0xFFFFFF00u) | (pick & 0xFF);
         break;
     }
@@ -509,7 +509,7 @@ void Disturb(U h) {
     // the item list: three cases of the thirteen move the lit row's id or count
     // (read again for its second draw) instead of the cells the others read
     if (g_k == kItemsDraw && h % 13 >= 9 && h % 13 <= 11) {
-        Mem((b & 1 ? at::kUseIds : at::kUseCounts) + g_window[0xB])[0] = static_cast<unsigned char>(v);
+        Mem((b & 1 ? ::bof3::Img(at::kUseIds.v) : ::bof3::Img(at::kUseCounts.v)) + g_window[0xB])[0] = static_cast<unsigned char>(v);
         return;
     }
     switch (h % 13) {
@@ -521,7 +521,7 @@ void Disturb(U h) {
     case 5: SetWord(g_window + (b & 1 ? 4 : 6), v & 0x1FF); break;
     case 6: Mem(Window1_Master_addr)[0] = static_cast<unsigned char>(b % 4); break;
     case 7: Record(b)[(b >> 3) & 1 ? 0xB : 0x1F] = static_cast<unsigned char>(v); break;
-    case 8: Mem(at::kUseIds + (b & 1 ? g_window[0xB] + (b >> 1) % 3 - 1u : b % 0x80u))[0] = static_cast<unsigned char>(v); break;
+    case 8: Mem(::bof3::Img(at::kUseIds.v) + (b & 1 ? g_window[0xB] + (b >> 1) % 3 - 1u : b % 0x80u))[0] = static_cast<unsigned char>(v); break;
     case 9: g_window[0xC] = static_cast<unsigned char>(b % 3); break;
     case 10: Mem(Cond_Flags_addr + 0xd5 + b % 3)[0] = static_cast<unsigned char>(v); break;
     case 11: g_window[9] = static_cast<unsigned char>(b % 7); break;
@@ -541,9 +541,9 @@ void Disturb(U h) {
 void SelfTest() {
     // the four copies of this file
     g_r2h_reserve_copy = Copy("MenuList_ReserveWinDraw", 0x59AA80, 0x35D, kCalls59AA80,
-                              static_cast<int>(sizeof kCalls59AA80 / sizeof kCalls59AA80[0]), at::kFrameSite);
+                              static_cast<int>(sizeof kCalls59AA80 / sizeof kCalls59AA80[0]), at::kFrameSite.v);
     g_r2h_items_copy = Copy("BattleEquipWin_DrawItems", 0x59DBF0, 0x568, kCalls59DBF0,
-                            static_cast<int>(sizeof kCalls59DBF0 / sizeof kCalls59DBF0[0]), at::kTitleSite);
+                            static_cast<int>(sizeof kCalls59DBF0 / sizeof kCalls59DBF0[0]), at::kTitleSite.v);
     move_script::Relocate(g_r2h_items_copy, 0x59DBF0, 0x568, kTable59DBF0);
     g_r2h_slide_copy = bof3::CloneOriginal("MasterWin_SlideOut", 0x59C130, 0x28);
     g_r2h_enum_copy = Copy("DInput_EnumJoystick", 0x5A9620, 0x64, kCalls5A9620,
@@ -553,19 +553,19 @@ void SelfTest() {
     g_clones[kMasterOut].base = Wrapper(&R2hSlideTheirs, 0x25);
     g_clones[kEnum].base = Wrapper(&R2hEnumTheirs, 0x74);
     // the divergences' sites: rows of their own when they reach ours
-    const U frame = SiteTarget(at::kFrameSite);
+    const U frame = SiteTarget(at::kFrameSite.v);
     if (frame != bof3::addr::Port_DroppedCall) {
         sh::Callee& row = g_callees[kFrameRow];
         row.name = "Menu_DrawFrame (DIV-0011)";
-        row.address = at::kFrameSite;
+        row.address = at::kFrameSite.v;
         row.key = frame;
         for (unsigned i = 0; i < 4; ++i) row.masks[i] = i < 2 ? kU16 : kU8;
     }
-    const U title = SiteTarget(at::kTitleSite);
+    const U title = SiteTarget(at::kTitleSite.v);
     if (title != bof3::addr::Text_DrawAt) {
         sh::Callee& row = g_callees[kTitleRow];
         row.name = "ListTitle_DrawAt (DIV-0059)";
-        row.address = at::kTitleSite;
+        row.address = at::kTitleSite.v;
         row.key = title;
     }
     // the fakes and the regions of this file's own

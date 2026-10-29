@@ -32,9 +32,9 @@ constexpr rdata::Const k10000At{0x5C4648};
 constexpr rdata::Const k127At{0x5C427C};
 // The format strings: BGM\%03d.DAT (loops), BGM\%03dN.DAT (plays once), and
 // the decoder's memory-stream name %X@%X (size, address).
-constexpr std::uint32_t kLoopingName = 0x666FB8;
-constexpr std::uint32_t kOnceName = 0x666FA8;
-constexpr std::uint32_t kMemoryName = 0x66BC24;
+constexpr ::bof3::image::Va kLoopingName{0x666FB8};
+constexpr ::bof3::image::Va kOnceName{0x666FA8};
+constexpr ::bof3::image::Va kMemoryName{0x66BC24};
 // Where a cue's four voice words and a bank's 64 voice entries start: bank n
 // (1..6 in the shipped data) is Sound_Banks + (n - 1) * 0x384, its cues 16
 // bytes each from +0, its voice entries 8 bytes each (sample, buffer) from

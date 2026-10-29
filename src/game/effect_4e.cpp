@@ -159,7 +159,7 @@ unsigned char* Shard(unsigned i) { return rv::Bytes(&EffectKindA0_Shards[i]); }
 void Trail9C() {
     unsigned char* const s = S();
     using Trail = void (__cdecl*)(const long*, const long*, unsigned);
-    SH_AT(Trail, at::kTrail9C)(Point(s + 0x34), Point(s + 0xC), s[0x5D]);
+    SH_AT(Trail, at::kTrail9C.v)(Point(s + 0x34), Point(s + 0xC), s[0x5D]);
 }
 // Kind 0x9C's glow: EffectKindA0_DrawGlow(+0x34, the word +0x2E, 2).
 void Glow9C() {
@@ -844,7 +844,7 @@ extern "C" void __cdecl EffectKindA0_Sparkle(void) {
     if (Tick()) SH_CALL(EffectKindA0_SpawnSpark)();
     SH_CALL(EffectKindA0_DrawShards)();
     SH_CALL(EffectKindA0_StepSparks)();
-    if (At(at::kCounter)[0] != 0x14) return;
+    if (At(::bof3::Img(at::kCounter.v))[0] != 0x14) return;
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_18, rv::As<records::EffectObject>(S())->angle[0]);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_1c, rv::As<records::EffectObject>(S())->angle[1]);
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, rv::As<records::EffectObject>(S())->angle[2]);
@@ -924,7 +924,7 @@ extern "C" void __cdecl EffectKindA0_FlyWait(void) {
     SH_CALL(EffectKindA0_StepSparks)();
     SH_CALL(EffectKindA0_DrawShards)();
     TrailA0(0x40);
-    if (At(at::kCounter)[0] != 0x17) return;
+    if (At(::bof3::Img(at::kCounter.v))[0] != 0x17) return;
     S()[3] = 0x80;
     S()[9] = 8;
     NextState();
@@ -1183,8 +1183,8 @@ extern "C" void __cdecl EffectKindA0_InitShard(unsigned char* shard) {
     SH_CALL(Gte_RotMatrixY)(-S16(y), m);
     SH_CALL(Gte_RotMatrixZ)(S16(z), m);
     using Turn = void (__cdecl*)(const short*, short*, short*);
-    SH_AT(Turn, at::kMatrixVector)(m, reinterpret_cast<short*>(shard + 0x10), reinterpret_cast<short*>(shard + 0x10));
-    SH_AT(Turn, at::kMatrixVector)(m, reinterpret_cast<short*>(shard + 0x18), reinterpret_cast<short*>(shard + 0x18));
+    SH_AT(Turn, at::kMatrixVector.v)(m, reinterpret_cast<short*>(shard + 0x10), reinterpret_cast<short*>(shard + 0x10));
+    SH_AT(Turn, at::kMatrixVector.v)(m, reinterpret_cast<short*>(shard + 0x18), reinterpret_cast<short*>(shard + 0x18));
     const U speed = (static_cast<U>(SH_CALL(Rand)()) & 2u) + 3u;
     rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->shade, 0x40);
     rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->speed, speed);
@@ -1293,7 +1293,7 @@ extern "C" void __cdecl EffectKindA7_Run(void) {
     unsigned char* const s = S();
     if (s[1] == 0) return;
     using Glow = void (__cdecl*)(const long*, unsigned, unsigned);
-    SH_AT(Glow, at::kGlowA7)(Point(s + 0x34), Word(s + 0xC), 7);
+    SH_AT(Glow, at::kGlowA7.v)(Point(s + 0x34), Word(s + 0xC), 7);
 }
 
 // original 0x491BA0 (hidden in 0x4918B0): jmp [EffectKindA8_States + +1 * 4],
@@ -1310,7 +1310,7 @@ extern "C" void __cdecl EffectKindA9_Run(void) {
     unsigned char* const s = S();
     if (s[1] == 0) return;
     using Disc = void (__cdecl*)(unsigned, unsigned, unsigned);
-    SH_AT(Disc, at::kDiscA9)(rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, 0x80);
+    SH_AT(Disc, at::kDiscA9.v)(rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, 0x80);
 }
 
 void Effect4E_Inject() {

@@ -31,7 +31,7 @@ constexpr std::uint32_t kEntrySlot = 0x18;
 
 // The unit, and each entry's offset in it (the fuzz clones it whole: every
 // jump inside it stays inside it).
-constexpr std::uint32_t kUnit = 0x5A98A0;
+constexpr ::bof3::image::CodeVa kUnit{0x5A98A0};
 constexpr std::uint32_t kUnitSize = 0x182;   // to Task_ClearPrivate's ret at 0x5A9A21
 constexpr std::uint32_t kAtRunAll = 0x00;
 constexpr std::uint32_t kAtBack = 0x50;      // 0x5A98F0

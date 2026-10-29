@@ -11,16 +11,21 @@
 #include <vector>
 
 #include "bof3/symbols.gen.h"
+#include "hook/bind.h"
 #include "hook/input_script.h"
 #include "hook/log.h"
 
 // The file (little-endian, read by tools/statehash.py):
 //
-//   header   "BOF3SH3\0", u32 base, u32 pages, u32 page size, u32 skip ranges,
+//   header   "BOF3SH4\0", u32 base, u32 pages, u32 page size, u32 skip ranges,
 //            u32 skip list hash (FNV-1a over each range's address and length
 //            in the list's order; 0 without a list), u32 flags (bit 0: our
 //            pointers normalised, below; 0 under BOF3X_STATEHASH_RAW=1;
-//            bit 1: the run-time slots below are normalised too, 2026-10-11)
+//            bit 1: the run-time slots below are normalised too, 2026-10-11;
+//            bit 2: a bound code word hashed as its VA, below, 2026-10-29),
+//            u32 image base (where the game's image lay: 0x400000 in every
+//            host until the relocatable image), u32 fold base (the
+//            BOF3X_STATEHASH_FOLD address, 0 without one)
 //   record   u32 tick, u32 Frame_Counter, u32 recipe frame, u32 n,
 //            then n times (u32 page index, u32 hash)
 //
@@ -29,7 +34,10 @@
 // counted from the first. "BOF3SH1\0" (until 2026-10-05) had no skip list
 // hash: two runs under different lists of one length compared without a
 // word (round fourteen's review, item 3). "BOF3SH2\0" (until 2026-10-10) had
-// no flags and never normalised. The tool reads all three.
+// no flags and never normalised. "BOF3SH3\0" (until 2026-10-28) had no
+// bases: every run had the image at 0x400000 and folded nothing, which is
+// what a BOF3SH4 run with base 0x400000 and no fold hashes, bit for bit. The
+// tool reads all four.
 //
 // The normalisation (docs/state-hash.md section 7). A language overlay
 // re-aims Capcom's pointer tables at text in our DLL, whose addresses move
@@ -46,12 +54,65 @@
 // frame, measured), so a scan of every word by range would rename game data.
 // A page with no normalised word hashes exactly as BOF3SH2 did. The raw dumps
 // keep the raw bytes.
+//
+// Bound code words (flags bit 2, the relocatable-image round's stage C2,
+// docs/state-hash.md section 8). In bof3x.exe a code word of the game's - a
+// handler in a .data table, a task's entry, a hook - holds the function of
+// ours the bind table names for Capcom's VA, through its place: a jump of ours
+// at (top << 24) | VA, under a top byte no value of the game's data takes with
+// a bound VA below it (src/hook/bind.cpp, measured over every raw dump), where
+// BOF3.exe holds the VA. So, before the slots above, every aligned word of a
+// page whose value is exactly such a place is hashed as its VA, slot or not, with no
+// index mixed in: it hashes as Capcom's raw word, and a page of such words
+// matches Capcom's run - wherever the word lies, as the game copies code
+// words from table to record. Nothing else is renamed: a value equal to our
+// function's own address is data (a texel, a packed pair; the first rule, by
+// the function's address, renamed such words on eight pages of the stage C2
+// proof). Hosted there is no table and nothing is renamed. The census counts a
+// word holding a place at its time as a slot, as it counted the VA it
+// replaced.
+//
+// The image's own pointers (docs/state-hash.md section 8, 2026-10-28). Once
+// the image can lie elsewhere than 0x400000 (IDEAS I44 stage 3), every
+// pointer into it - the 18,831 words of recipes/exe-pointers.tsv the loader
+// rebases, and the ones the game stores at run time in the arena and its
+// records (895 to 3,144 aligned words outside the load-time slots in the raw
+// dumps measured that day) - holds base + offset. Each such word is hashed as
+// 0x400000 + offset: a value in a folded range [F, F + 0x53F000) is replaced
+// by 0x400000 + (value - F), on every aligned word of the page, slot or not.
+// The folded ranges are the image's own base when it is not 0x400000 and the
+// BOF3X_STATEHASH_FOLD address. Game data holds values in any such range (no
+// 5 MB window below 0x80000000 is free of them across the 219 raw dumps of
+// analysis/statehash), so a run at 0x400000 folds the moved run's range too,
+// with BOF3X_STATEHASH_FOLD set to it: then a data word in that range is
+// folded alike on both sides, and a pointer reads 0x400000 + offset on both.
+// No index is mixed in for a folded word, so that a pointer folded on one
+// side hashes as the same pointer stored at 0x400000 on the other; and with
+// no folded range - every host today, BOF3X_STATEHASH_FOLD unset - the hash
+// is BOF3SH3's, bit for bit.
+//
+// The ordering tables' links (the relocatable-image round's proof,
+// 2026-10-28): a link is a 24-bit address with a length byte on top
+// (Gpu_ClearOTagR, shell.cpp; the display blocks at 0x903880), so a link into
+// a moved image is 0xLL000000 | (F + offset) and never lies in [F, F +
+// 0x53F000) as a whole word. A word whose own value is not folded but whose
+// low 24 bits lie in a folded range has those 24 bits folded and its top
+// byte kept (Fold24). Both sides of a comparison fold the same ranges, so the
+// hash stays a function of the bytes and the ranges alone: a colour or a
+// packed number that happens to have such low bits is rewritten alike on
+// both sides, and two words that differ still differ (the fold is one to one
+// within the range); what it cannot tell apart is a moved link from an
+// unmoved number that reads as the folded link - the limit the whole-word
+// fold has too. A range at or above 16 MB has no 24-bit link into it, so
+// there the rule changes nothing.
 
 namespace bof3 {
 namespace {
 
 // BOF3.exe's .data, from its section header: 0x5DA000, virtual size 0x3636EC,
-// which the loader maps to the end of its last page.
+// which the loader maps to the end of its last page. Addresses as at the
+// image's own base 0x400000 (the skip list's, the file's base, the run-time
+// slots'); g_data is where .data is read.
 constexpr std::uint32_t kBase = 0x5DA000;
 constexpr std::uint32_t kEnd = 0x93E000;
 constexpr std::uint32_t kPage = 0x1000;
@@ -78,6 +139,16 @@ std::uint32_t g_tick = 0;
 // is a pointer slot of Capcom's: a table entry, a record's string pointer.
 constexpr std::uint32_t kExeLo = 0x400000;
 constexpr std::uint32_t kExeHi = 0x93F000;
+constexpr std::uint32_t kImageSize = kExeHi - kExeLo;
+
+// Where the image lies (StateHash_SetImageBase), where its .data is read, and
+// the folded ranges: the image's base when it is not kExeLo, and the
+// BOF3X_STATEHASH_FOLD address (the file's comment). At most two.
+std::uint32_t g_image = kExeLo;
+std::uint32_t g_data = kBase;
+std::uint32_t g_fold_env = 0;
+std::uint32_t g_folds[2];
+unsigned g_nfolds = 0;
 
 // What a normalised word is hashed as when its target has no content to name
 // it by: code. Which of our functions a table names has no build-independent
@@ -130,6 +201,36 @@ inline std::uint32_t WordAt(std::uint32_t va) {
 }
 
 inline bool InDll(std::uint32_t v) { return v >= g_dll_lo && v < g_dll_hi; }
+
+// A value in a folded range, as it would read with the image at 0x400000.
+inline bool Fold(const std::uint32_t* folds, unsigned n, std::uint32_t v, std::uint32_t* out) {
+    for (unsigned i = 0; i < n; ++i)
+        if (v - folds[i] < kImageSize) {
+            *out = kExeLo + (v - folds[i]);
+            return true;
+        }
+    return false;
+}
+
+// A word whose low 24 bits lie in a folded range (an ordering-table link into
+// the moved image, its length byte on top), as it would read with the image
+// at 0x400000: those 24 bits folded, the top byte kept. Tried only when the
+// whole word is not folded.
+inline bool Fold24(const std::uint32_t* folds, unsigned n, std::uint32_t v, std::uint32_t* out) {
+    std::uint32_t c;
+    if ((v & 0xFF000000u) == 0 || !Fold(folds, n, v & 0xFFFFFFu, &c) || c > 0xFFFFFFu) return false;
+    *out = (v & 0xFF000000u) | c;
+    return true;
+}
+
+// A Capcom slot is a word whose value at the census lies in the image: at
+// 0x400000, or in a folded range (where a moved image's rebased words lie; a
+// run at 0x400000 folding that range lists the same words, so both sides of
+// a moved pair test the same slots).
+inline bool InImage(std::uint32_t v) {
+    std::uint32_t c;
+    return (v >= kExeLo && v < kExeHi) || Fold(g_folds, g_nfolds, v, &c);
+}
 
 // The section of ours a value names, or null.
 const Section* Named(std::uint32_t v) {
@@ -188,7 +289,7 @@ void Census(const char* when) {
     std::size_t k = 0;
     for (std::uint32_t off = 0; off < kEnd - kBase; off += 4) {
         while (k < g_sites.size() && g_sites[k] < off) ++k;
-        const std::uint32_t w = WordAt(kBase + off);
+        const std::uint32_t w = WordAt(g_data + off);
         if (!InDll(w)) continue;
         ++all;
         if (!Named(w)) continue;
@@ -201,7 +302,7 @@ void Census(const char* when) {
         (unsigned long)g_named_lo, (unsigned long)g_named_hi, (unsigned long)listed.size());
     for (std::size_t i = 0; i < listed.size() && i < 32; ++i)
         Log("statehash     slot 0x%06lX = 0x%08lX", (unsigned long)(kBase + listed[i]),
-            (unsigned long)WordAt(kBase + listed[i]));
+            (unsigned long)WordAt(g_data + listed[i]));
     if (listed.size() > 32) Log("statehash     and %lu more slots", (unsigned long)(listed.size() - 32));
 }
 
@@ -214,6 +315,247 @@ std::uint32_t HashPage(const unsigned char* p) {
         h ^= h >> 29;
     }
     return static_cast<std::uint32_t>(h ^ (h >> 32));
+}
+
+// One page as the file records it: the skip ranges zeroed; Capcom's slots
+// that hold a pointer of ours hashed by what they name (with `dll`); every
+// aligned word in a folded range as at 0x400000; then the hash, with each
+// named slot's index mixed in after. `sites` are the slots' byte offsets
+// within the page, `scratch` a page of room; `normalised` counts the slots
+// that named ours. With `dll`, a bound code word is hashed as its VA first
+// (the file's comment). Shared by the tick and the self-test.
+std::uint32_t HashNormalised(const unsigned char* page, const std::vector<Skip>& skips, const std::uint32_t* sites,
+                             std::uint32_t nsites, bool dll, const std::uint32_t* folds, unsigned nfolds,
+                             unsigned char* scratch, std::uint32_t* normalised) {
+    const unsigned char* p = page;
+    if (!skips.empty()) {
+        std::memcpy(scratch, p, kPage);
+        for (const Skip& s : skips) std::memset(scratch + s.at, 0, s.len);
+        p = scratch;
+    }
+    // Capcom's pointer slots on this page that hold a pointer of ours, after
+    // the skip list (a masked slot is 0, never ours): each hashed by what it
+    // names, and its index mixed in after.
+    std::uint32_t mix = 0;
+    std::uint32_t mixes[kPage / 4];
+    if (dll) {
+        // Bound code words, as the VA each stands for (bind.h Bind_VaOf).
+        for (std::uint32_t at = 0; at < kPage; at += 4) {
+            std::uint32_t w;
+            std::memcpy(&w, p + at, 4);
+            const std::uint32_t va = Bind_VaOf(w);
+            if (!va) continue;
+            if (p == page) {
+                std::memcpy(scratch, page, kPage);
+                p = scratch;
+            }
+            std::memcpy(scratch + at, &va, 4);
+        }
+        for (std::uint32_t k = 0; k < nsites; ++k) {
+            const std::uint32_t at = sites[k];
+            std::uint32_t w;
+            std::memcpy(&w, p + at, 4);
+            const Section* named = Named(w);
+            if (!named) continue;
+            if (p == page) {
+                std::memcpy(scratch, page, kPage);
+                p = scratch;
+            }
+            const std::uint32_t id = Identity(*named, w);
+            std::memcpy(scratch + at, &id, 4);
+            mixes[mix++] = at / 4;
+        }
+        *normalised += mix;
+    }
+    // The image's pointers, as at 0x400000. An identity has bit 31 set and a
+    // folded range ends at or below 0x80000000, so no identity is folded; our
+    // image lies in no folded range (StateHash_BeforeInjects), so no pointer
+    // of ours is either.
+    if (nfolds) {
+        for (std::uint32_t at = 0; at < kPage; at += 4) {
+            std::uint32_t w, c;
+            std::memcpy(&w, p + at, 4);
+            if (!Fold(folds, nfolds, w, &c) && !Fold24(folds, nfolds, w, &c)) continue;
+            if (p == page) {
+                std::memcpy(scratch, page, kPage);
+                p = scratch;
+            }
+            std::memcpy(scratch + at, &c, 4);
+        }
+    }
+    std::uint32_t h = HashPage(p);
+    for (std::uint32_t m = 0; m < mix; ++m) h = (h ^ (0x9E3779B9u + mixes[m])) * 16777619u;
+    return h;
+}
+
+// A base for the image or a folded range: 64 KiB aligned, its whole extent
+// in the low 2 GB (an identity has bit 31 set), and clear of the image's own
+// range at 0x400000 unless it is that base.
+void CheckImageBase(const char* what, unsigned long long b) {
+    if ((b & 0xFFFF) || b == 0 || b + kImageSize > 0x80000000ull)
+        Fatal("%s: 0x%llX is not a 64 KiB-aligned base whose 0x%lX-byte image ends at or below 0x80000000", what, b,
+              (unsigned long)kImageSize);
+    if (b != kExeLo && b < kExeHi && b + kImageSize > kExeLo)
+        Fatal("%s: 0x%llX..0x%llX overlaps the image's own range 0x%lX..0x%lX", what, b, b + kImageSize,
+              (unsigned long)kExeLo, (unsigned long)kExeHi);
+}
+
+// The hash's own test, on synthetic pages (BOF3X_SELFTEST_ONLY): a page as
+// the image at 0x400000 leaves it, and the same page with the image at F -
+// every pointer into the image, in a slot or not, moved by F - 0x400000; the
+// game's data unmoved, among it values in F's range and numbers that read as
+// addresses in the image. Folding F, the two hash the same; without the fold
+// they do not; a byte of data changed is seen through the fold; and with no
+// fold a page hashes as its raw bytes (BOF3SH3's hash, bit for bit).
+void SelfTest() {
+    auto* mem = static_cast<unsigned char*>(VirtualAlloc(nullptr, 4 * kPage, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
+    if (!mem) Fatal("statehash self-test: VirtualAlloc of the scratch pages failed");
+    unsigned char* const at0 = mem;               // the image at 0x400000
+    unsigned char* const atf = mem + kPage;       // the image at F
+    unsigned char* const scratch = mem + 2 * kPage;
+    unsigned char* const raw = mem + 3 * kPage;
+    constexpr std::uint32_t F = 0x70000000u;
+    CheckImageBase("statehash self-test", F);
+    constexpr std::uint32_t delta = F - kExeLo;
+    std::uint32_t seed = 0x2545F491u;
+    auto next = [&] { return seed = seed * 1664525u + 1013904223u; };
+    std::vector<std::uint32_t> sites;
+    std::uint32_t pointers = 0, data_in_fold = 0, numbers = 0;
+    for (std::uint32_t at = 0; at < kPage; at += 4) {
+        const std::uint32_t kind = (next() >> 24) % 8;
+        std::uint32_t w0 = next(), wf = w0;
+        if (kind < 2) {   // a pointer into the image: a slot (0) the loader rebases, or one stored at run time (1)
+            w0 = kExeLo + ((next() % kImageSize) & ~3u);
+            wf = w0 + delta;
+            if (kind == 0) sites.push_back(at);
+            ++pointers;
+        } else if (kind == 2) {   // data whose value lies where the image moved: unmoved
+            w0 = wf = F + next() % kImageSize;
+            ++data_in_fold;
+        } else if (kind == 3) {   // a number that reads as an address in the image: unmoved
+            w0 = wf = kExeLo + next() % kImageSize;
+            ++numbers;
+        }
+        std::memcpy(at0 + at, &w0, 4);
+        std::memcpy(atf + at, &wf, 4);
+    }
+    // A pointer the skip list masks, on both sides, and a range across words.
+    const std::uint32_t masked0 = kExeLo + 0x1DA100, maskedf = masked0 + delta;
+    std::memcpy(at0 + 0x40, &masked0, 4);
+    std::memcpy(atf + 0x40, &maskedf, 4);
+    const std::vector<Skip> skips = {{0x40, 4}, {0x7F2, 6}};
+    const std::vector<Skip> none;
+    const std::uint32_t folds[1] = {F};
+    std::uint32_t n = 0;
+    auto hash = [&](const unsigned char* page, const std::vector<Skip>& sk, unsigned nf) {
+        return HashNormalised(page, sk, sites.data(), static_cast<std::uint32_t>(sites.size()), false, folds, nf,
+                              scratch, &n);
+    };
+    const std::uint32_t h0 = hash(at0, skips, 1), hf = hash(atf, skips, 1);
+    if (h0 != hf)
+        Fatal("statehash self-test: the page with the image at 0x%08lX hashes 0x%08lX, at 0x400000 0x%08lX, both "
+              "folding 0x%08lX", (unsigned long)F, (unsigned long)hf, (unsigned long)h0, (unsigned long)F);
+    if (hash(at0, skips, 0) == hash(atf, skips, 0))
+        Fatal("statehash self-test: without the fold the moved page hashes as the unmoved one");
+    std::memcpy(raw, atf, kPage);
+    raw[0x200] ^= 1;
+    if (hash(raw, skips, 1) == hf) Fatal("statehash self-test: a changed byte hashes as before through the fold");
+    std::memcpy(raw, at0, kPage);
+    for (const Skip& s : skips) std::memset(raw + s.at, 0, s.len);
+    if (hash(at0, skips, 0) != HashPage(raw))
+        Fatal("statehash self-test: with no folded range the page does not hash as its masked bytes (BOF3SH3)");
+    if (hash(at0, none, 0) != HashPage(at0))
+        Fatal("statehash self-test: with no skip and no fold the page does not hash as its raw bytes");
+    // Ordering-table links into the image (Fold24): the same links, a length
+    // byte on top, with the image at 0x400000 and at a base below 16 MB, hash
+    // alike folding that base, and not without the fold.
+    constexpr std::uint32_t F24 = 0xA00000u;
+    CheckImageBase("statehash self-test", F24);
+    for (std::uint32_t at = 0; at < kPage; at += 4) {
+        const std::uint32_t len = (next() >> 24) & 0x0F;
+        const std::uint32_t off = (next() % kImageSize) & ~3u;
+        const std::uint32_t l0 = len << 24 | (kExeLo + off), lf = len << 24 | (F24 + off);
+        std::memcpy(at0 + at, &l0, 4);
+        std::memcpy(atf + at, &lf, 4);
+    }
+    const std::uint32_t folds24[1] = {F24};
+    auto hash24 = [&](const unsigned char* page, unsigned nf) {
+        return HashNormalised(page, none, nullptr, 0, false, folds24, nf, scratch, &n);
+    };
+    if (hash24(at0, 1) != hash24(atf, 1))
+        Fatal("statehash self-test: a page of ordering-table links into the image at 0x%08lX does not hash as at "
+              "0x400000 folding it", (unsigned long)F24);
+    if (hash24(at0, 0) == hash24(atf, 0))
+        Fatal("statehash self-test: without the fold the moved links hash as the unmoved ones");
+    // Bound code words (flags bit 2). (a) A page of the game's data that
+    // holds our functions' own addresses as data words - a texel or a packed
+    // pair that happens to equal one (the stage C2 proof: 0x10770000 in the
+    // VRAM shadow, 0x1000FE40 in six area tables) - hashes as its raw bytes,
+    // in either host. (b) In bof3x.exe, a page whose cells hold code places
+    // hashes as the page holding the VAs, each cell its own VA - two cells of
+    // two VAs two different VAs, as Capcom's file holds them, whichever
+    // function of ours serves them - and differs without the normalisation;
+    // a word one byte into a place is not renamed.
+    const unsigned rows = Bind_Rows();
+    std::uint32_t nb = 0;
+    auto hashb = [&](const unsigned char* page, bool dll) {
+        return HashNormalised(page, none, nullptr, 0, dll, nullptr, 0, scratch, &nb);
+    };
+    for (std::uint32_t at = 0; at < kPage; at += 4) {
+        std::uint32_t w = next() >> 8;   // data
+        if ((next() >> 24) % 4 == 0)     // a data word equal to one of our functions' addresses
+            w = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Bind_Ours(Bind_RowVa((next() >> 8) % rows))));
+        std::memcpy(raw + at, &w, 4);
+    }
+    if (hashb(raw, true) != HashPage(raw))
+        Fatal("statehash self-test: a page of data holding our functions' addresses does not hash as its raw bytes");
+    unsigned placed = 0;
+    if (Bind_Active()) {
+        for (std::uint32_t at = 0; at < kPage; at += 4) {
+            std::uint32_t wv = next() >> 8, wo = wv;
+            if ((next() >> 24) % 4 == 0) {
+                const std::uint32_t va = Bind_RowVa((next() >> 8) % rows);
+                wv = va;
+                wo = ::bof3::Code(va);
+                ++placed;
+            }
+            std::memcpy(at0 + at, &wv, 4);
+            std::memcpy(atf + at, &wo, 4);
+        }
+        // two cells, two VAs (Capcom's file holds the same VA in cells that
+        // share a function, and a different one where they differ)
+        const std::uint32_t va1 = Bind_RowVa(0), va2 = Bind_RowVa(rows - 1);
+        const std::uint32_t p1 = ::bof3::Code(va1), p2 = ::bof3::Code(va2);
+        std::memcpy(at0 + 0x200, &va1, 4);
+        std::memcpy(at0 + 0x204, &va2, 4);
+        std::memcpy(atf + 0x200, &p1, 4);
+        std::memcpy(atf + 0x204, &p2, 4);
+        if (p1 == p2 || Bind_VaOf(p1) != va1 || Bind_VaOf(p2) != va2)
+            Fatal("statehash self-test: two cells of two VAs do not map back to their two VAs");
+        if (hashb(at0, true) != hashb(atf, true))
+            Fatal("statehash self-test: a page of code places does not hash as the VAs they stand for");
+        if (hashb(atf, false) == hashb(at0, false))
+            Fatal("statehash self-test: without the normalisation the code places hash as the VAs");
+        if (hashb(at0, true) != HashPage(at0)) Fatal("statehash self-test: a page of VAs does not hash as its raw bytes");
+        const std::uint32_t inside = p1 + 1;
+        std::memcpy(at0 + 0x100, &inside, 4);
+        std::memcpy(atf + 0x100, &inside, 4);
+        if (Bind_VaOf(inside) != 0 || hashb(at0, true) != hashb(atf, true) || hashb(at0, true) != HashPage(at0))
+            Fatal("statehash self-test: a word one byte into a code place is renamed");
+    }
+    if (pointers == 0 || sites.empty() || data_in_fold == 0 || numbers == 0)
+        Fatal("statehash self-test: the synthetic page lacks a kind of word (%lu pointers, %lu slots, %lu data, %lu "
+              "numbers)", (unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)data_in_fold,
+              (unsigned long)numbers);
+    VirtualFree(mem, 0, MEM_RELEASE);
+    Log("statehash   self-test: a page with %lu image pointers (%lu of them slots) moved by 0x%08lX, %lu data words "
+        "in the moved range and %lu image-shaped numbers unmoved, hashes the same folding 0x%08lX; differs without "
+        "the fold and with a byte changed; with no fold hashes as its raw bytes; ordering-table links into an image "
+        "at 0x00A00000 hash as at 0x400000 folding it (24 bits, the length byte kept); a page of data holding our "
+        "functions' addresses hashes as its raw bytes%s",
+        (unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)delta, (unsigned long)data_in_fold,
+        (unsigned long)numbers, (unsigned long)F,
+        placed ? "; a page of code places, two cells of two VAs among them, hashes as the VAs they stand for" : "");
 }
 
 void Put(std::uint32_t v) { std::fwrite(&v, 4, 1, g_out); }
@@ -257,7 +599,7 @@ void Dump() {
     std::snprintf(path, sizeof path, "%s.%lu.bin", g_path.c_str(), static_cast<unsigned long>(g_tick));
     FILE* f = std::fopen(path, "wb");
     if (!f) Fatal("BOF3X_STATEHASH_DUMP: cannot open %s for writing", path);
-    std::fwrite(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(kBase)), 1, kEnd - kBase, f);
+    std::fwrite(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(g_data)), 1, kEnd - kBase, f);
     std::fclose(f);
     Log("statehash   tick %lu (Frame_Counter %lu): .data dumped to %s", static_cast<unsigned long>(g_tick),
         static_cast<unsigned long>(Frame_Counter), path);
@@ -265,7 +607,15 @@ void Dump() {
 
 }  // namespace
 
+void StateHash_SetImageBase(unsigned long base) {
+    if (g_census) Fatal("statehash: the image's base set to 0x%08lX after the census", base);
+    CheckImageBase("statehash: the image's base", base);
+    g_image = static_cast<std::uint32_t>(base);
+    g_data = g_image + (kBase - kExeLo);
+}
+
 void StateHash_BeforeInjects(void* dll_module) {
+    if (GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0) SelfTest();
     if (GetEnvironmentVariableA("BOF3X_STATEHASH", nullptr, 0) == 0) return;
     char raw[8];
     const DWORD rn = GetEnvironmentVariableA("BOF3X_STATEHASH_RAW", raw, sizeof raw);
@@ -273,18 +623,61 @@ void StateHash_BeforeInjects(void* dll_module) {
         Fatal("BOF3X_STATEHASH_RAW: wants 1 (hash our pointers raw, as BOF3SH2 did) or 0");
     g_normalise = !(rn > 0 && raw[0] == '1');
     ReadDllImage(dll_module);
+    // The folded ranges (the file's comment): the image's own base when it
+    // moved, and BOF3X_STATEHASH_FOLD - on a run at 0x400000, the moved run's
+    // base, so both sides fold the same range.
+    char fold[24];
+    const DWORD fn = GetEnvironmentVariableA("BOF3X_STATEHASH_FOLD", fold, sizeof fold);
+    if (fn >= sizeof fold) Fatal("BOF3X_STATEHASH_FOLD: wants an address, as 0x70000000");
+    if (fn > 0) {
+        char* end = nullptr;
+        const unsigned long long f = std::strtoull(fold, &end, 0);
+        if (end == fold || *end) Fatal("BOF3X_STATEHASH_FOLD: wants an address, as 0x70000000; got '%s'", fold);
+        CheckImageBase("BOF3X_STATEHASH_FOLD", f);
+        g_fold_env = static_cast<std::uint32_t>(f);
+    }
+    if (g_image != kExeLo) g_folds[g_nfolds++] = g_image;
+    if (g_fold_env && g_fold_env != kExeLo && g_fold_env != g_image) {
+        if (g_nfolds && g_fold_env < g_image + kImageSize && g_fold_env + kImageSize > g_image)
+            Fatal("BOF3X_STATEHASH_FOLD: 0x%08lX overlaps the image at 0x%08lX without being its base",
+                  (unsigned long)g_fold_env, (unsigned long)g_image);
+        g_folds[g_nfolds++] = g_fold_env;
+    }
+    // A folded range names the image: our DLL must not lie in one, or a
+    // pointer of ours would read as one of the image's.
+    for (unsigned i = 0; i < g_nfolds; ++i)
+        if (g_folds[i] < g_dll_hi && g_folds[i] + kImageSize > g_dll_lo)
+            Fatal("statehash: the folded range 0x%08lX..0x%08lX overlaps our image 0x%08lX..0x%08lX; set "
+                  "BOF3X_STATEHASH_FOLD (and the image's base) elsewhere", (unsigned long)g_folds[i],
+                  (unsigned long)(g_folds[i] + kImageSize), (unsigned long)g_dll_lo, (unsigned long)g_dll_hi);
+    // The table of code places (bind.cpp) under a top byte the dumps did not
+    // measure: a data word may read as a place and be renamed. Said here, so a
+    // proof run on such a machine is read with it in mind.
+    if (Bind_TableHi() && !Bind_TableMeasured())
+        Log("statehash   the place table lies at 0x%08lX..0x%08lX, not under a measured top byte: a data word "
+            "(top << 24) | a bound VA there is hashed as that VA", (unsigned long)Bind_TableLo(),
+            (unsigned long)Bind_TableHi());
+    // Nor the table of code places (bind.cpp): a place must read as its VA.
+    for (unsigned i = 0; i < g_nfolds; ++i)
+        if (Bind_TableHi() && g_folds[i] < Bind_TableHi() && g_folds[i] + kImageSize > Bind_TableLo())
+            Fatal("statehash: the folded range 0x%08lX..0x%08lX overlaps the table of code places 0x%08lX..0x%08lX; set "
+                  "BOF3X_STATEHASH_FOLD elsewhere", (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageSize),
+                  (unsigned long)Bind_TableLo(), (unsigned long)Bind_TableHi());
+    for (unsigned i = 0; i < g_nfolds; ++i)
+        Log("statehash   the image at 0x%08lX: a word whose value lies in 0x%08lX..0x%08lX is hashed as at 0x400000",
+            (unsigned long)g_image, (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageSize));
     // The identities have bit 31 set. Neither image reaches it here, so no
     // identity equals a pointer into either; game data can hold any value,
     // which is why the word's index is mixed into the page hash as well.
     Log("statehash   our image 0x%08lX..0x%08lX, %u sections a pointer can name in 0x%08lX..0x%08lX; BOF3.exe's "
         "0x%06lX..0x%06lX; identities 0x80000000.. %s both",
         (unsigned long)g_dll_lo, (unsigned long)g_dll_hi, (unsigned)g_sections.size(), (unsigned long)g_named_lo,
-        (unsigned long)g_named_hi, (unsigned long)kExeLo, (unsigned long)kExeHi,
+        (unsigned long)g_named_hi, (unsigned long)g_image, (unsigned long)(g_image + kImageSize),
         g_dll_hi <= 0x80000000u ? "lie above" : "OVERLAP our image - the index mix still keeps them apart -");
     g_page_sites.assign(kPages + 1, 0);
     for (std::uint32_t off = 0; off < kEnd - kBase; off += 4) {
-        const std::uint32_t w = WordAt(kBase + off);
-        if (w >= kExeLo && w < kExeHi) g_sites.push_back(off);
+        const std::uint32_t w = WordAt(g_data + off);
+        if (InImage(w) || (g_normalise && Bind_VaOf(w))) g_sites.push_back(off);
     }
     // The run-time slots (above) join the list, kept ascending; one that the
     // scan already listed (a word not zero at the census) is not doubled.
@@ -347,7 +740,7 @@ bool StateHash_Start() {
     g_out = std::fopen(path, "wb");
     if (!g_out) Fatal("BOF3X_STATEHASH: cannot open %s for writing", path);
     std::setvbuf(g_out, nullptr, _IOFBF, 1 << 20);
-    std::fwrite("BOF3SH3", 1, 8, g_out);
+    std::fwrite("BOF3SH4", 1, 8, g_out);
     Put(kBase);
     Put(kPages);
     Put(kPage);
@@ -360,13 +753,53 @@ bool StateHash_Start() {
                 for (int b = 0; b < 4; ++b) skip_hash = (skip_hash ^ ((w >> (8 * b)) & 0xFF)) * 16777619u;
     }
     Put(skip_hash);
-    Put(g_normalise ? 3u : 0u);   // bit 0 the slots, bit 1 the run-time slots with them
+    Put(g_normalise ? 7u : 0u);   // bit 0 the slots, bit 1 the run-time slots with them, bit 2 the bound code words
+    Put(g_image);
+    Put(g_fold_env);
     g_last.assign(kPages, 0);
     Log("statehash   %lu pages of .data from 0x%lX, a record a logic frame to %s; %u skip ranges, %u dump ticks, "
-        "our pointers %s",
+        "our pointers %s; the image at 0x%08lX, %u folded ranges",
         static_cast<unsigned long>(kPages), static_cast<unsigned long>(kBase), path, (unsigned)g_skips.size(),
-        (unsigned)g_dump_ticks.size(), g_normalise ? "normalised" : "raw (BOF3X_STATEHASH_RAW=1)");
+        (unsigned)g_dump_ticks.size(), g_normalise ? "normalised" : "raw (BOF3X_STATEHASH_RAW=1)",
+        static_cast<unsigned long>(g_image), g_nfolds);
     return true;
+}
+
+// The watch on code words stored without their place (bof3x.exe, the
+// relocatable-image round's stage C2): on every page whose hash changed, an
+// aligned word that holds our function's own address where a bound function
+// starts, or a value inside the table of code places that is not an entry,
+// is a code word our code stored without ::bof3::Code() (or derived from a
+// place), which hashes raw where Capcom's run holds the VA. Each such word is
+// logged once, with its address and what it holds, at most 64 lines a run; a
+// value of the game's data equal to our function's address (a texel pair) is
+// logged too and says so by where it lies. It changes no hash.
+static void Watch(std::uint32_t page_index) {
+    static unsigned lines = 0;
+    static std::vector<std::uint32_t> seen;
+    if (lines >= 64 || !Bind_TableHi()) return;
+    const std::uint32_t lo = Bind_TableLo(), hi = Bind_TableHi();
+    for (std::uint32_t at = 0; at < kPage && lines < 64; at += 4) {
+        const std::uint32_t w = WordAt(g_data + page_index * kPage + at);
+        const std::uint32_t va = kBase + page_index * kPage + at;
+        const char* what = nullptr;
+        std::uint32_t named = 0;
+        if (w >= lo && w < hi) {
+            if (Bind_VaOf(w)) continue;
+            what = "a value inside the table of code places, not an entry (a place with an offset)";
+        } else if ((named = Bind_VaOfFunction(w)) != 0) {
+            what = "our function's own address, not its place";
+        } else {
+            continue;
+        }
+        if (std::find(seen.begin(), seen.end(), va) != seen.end()) continue;
+        seen.push_back(va);
+        ++lines;
+        std::uint32_t start = 0;
+        const char* fn = named ? Bind_FuncName(named, &start) : nullptr;
+        Log("statehash   watch: tick %lu, the word at 0x%06lX holds 0x%08lX: %s%s%s%s", (unsigned long)g_tick,
+            (unsigned long)va, (unsigned long)w, what, fn ? " (" : "", fn ? fn : "", fn ? ")" : "");
+    }
 }
 
 void StateHash_Tick() {
@@ -377,44 +810,20 @@ void StateHash_Tick() {
     g_last_frame = frame;
 
     static std::vector<std::uint32_t> changed;
+    static std::vector<std::uint32_t> sites;
     changed.clear();
     unsigned char masked[kPage];
     std::uint32_t normalised = 0;
     for (std::uint32_t i = 0; i < kPages; ++i) {
-        const unsigned char* const page = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(kBase + i * kPage));
-        const unsigned char* p = page;
-        if (!g_page_skips[i].empty()) {
-            std::memcpy(masked, p, kPage);
-            for (const Skip& s : g_page_skips[i]) std::memset(masked + s.at, 0, s.len);
-            p = masked;
-        }
-        // Capcom's pointer slots on this page that hold a pointer of ours,
-        // after the skip list (a masked slot is 0, never ours): each hashed
-        // by what it names, and its index mixed in after.
-        std::uint32_t mix = 0;
-        std::uint32_t mixes[kPage / 4];
-        if (g_normalise) {
-            for (std::uint32_t k = g_page_sites[i]; k < g_page_sites[i + 1]; ++k) {
-                const std::uint32_t at = g_sites[k] - i * kPage;
-                std::uint32_t w;
-                std::memcpy(&w, p + at, 4);
-                const Section* named = Named(w);
-                if (!named) continue;
-                if (p == page) {
-                    std::memcpy(masked, page, kPage);
-                    p = masked;
-                }
-                const std::uint32_t id = Identity(*named, w);
-                std::memcpy(masked + at, &id, 4);
-                mixes[mix++] = at / 4;
-            }
-            normalised += mix;
-        }
-        std::uint32_t h = HashPage(p);
-        for (std::uint32_t m = 0; m < mix; ++m) h = (h ^ (0x9E3779B9u + mixes[m])) * 16777619u;
+        const unsigned char* const page = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(g_data + i * kPage));
+        sites.clear();
+        for (std::uint32_t k = g_page_sites[i]; k < g_page_sites[i + 1]; ++k) sites.push_back(g_sites[k] - i * kPage);
+        const std::uint32_t h = HashNormalised(page, g_page_skips[i], sites.data(), static_cast<std::uint32_t>(sites.size()),
+                                               g_normalise, g_folds, g_nfolds, masked, &normalised);
         if (g_first || h != g_last[i]) {
             g_last[i] = h;
             changed.push_back(i);
+            if (g_normalise) Watch(i);
         }
     }
     g_first = false;

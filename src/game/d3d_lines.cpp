@@ -61,9 +61,9 @@ using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
 // DrawPrimitive(TRIANGLESTRIP, D3DFVF_TLVERTEX, D3d_Vertices, 4, 0), the device
 // read afresh as the handlers read it.
 long DrawStrip4() {
-    void** device = *reinterpret_cast<void** volatile*>(At(D3d_Device_addr));
+    void** device = *reinterpret_cast<void** volatile*>(At(::bof3::Img(D3d_Device_addr)));
     void* method = (*reinterpret_cast<void***>(device))[0x70 / 4];
-    return reinterpret_cast<Com6>(method)(device, 5, 0x1C4, D3d_Vertices_addr, 4, 0);
+    return reinterpret_cast<Com6>(method)(device, 5, 0x1C4, ::bof3::Img(D3d_Vertices_addr), 4, 0);
 }
 
 struct End {
@@ -79,7 +79,7 @@ long DrawWide(unsigned corners) {
     const float hx = sx * 0.5f, hy = sy * 0.5f;
     End ends[4];
     for (unsigned i = 0; i < corners; ++i) {
-        const unsigned char* v = At(D3d_Vertices_addr + i * 0x20);
+        const unsigned char* v = At(::bof3::Img(D3d_Vertices_addr) + i * 0x20);
         ends[i].x = FloatAt(v) + hx;   // the pixel's centre
         ends[i].y = FloatAt(v + 4) + hy;
         std::memcpy(ends[i].rest, v + 8, sizeof ends[i].rest);
@@ -102,7 +102,7 @@ long DrawWide(unsigned corners) {
         const float xs[4] = {a.x - ex + wx, a.x - ex - wx, b.x + ex + wx, b.x + ex - wx};
         const float ys[4] = {a.y - ey + wy, a.y - ey - wy, b.y + ey + wy, b.y + ey - wy};
         for (unsigned k = 0; k < 4; ++k) {
-            unsigned char* out = At(D3d_Vertices_addr + k * 0x20);
+            unsigned char* out = At(::bof3::Img(D3d_Vertices_addr) + k * 0x20);
             PutFloat(out, xs[k]);
             PutFloat(out + 4, ys[k]);
             std::memcpy(out + 8, (k < 2 ? a : b).rest, sizeof a.rest);

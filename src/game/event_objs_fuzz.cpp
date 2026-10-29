@@ -259,25 +259,25 @@ const void* StubFor(std::uint32_t target) {
     case 0x534610: return f(kStubs.jump_setup);
     case 0x534710: return f(kStubs.jump_camera);
     case 0x5345E0: return f(kStubs.jump_start);
-    case kSlopeAt: return f(kStubs.slope_at);
+    case kSlopeAt.v: return f(kStubs.slope_at);
     case 0x572570: return f(kStubs.ground_at);
     case 0x534800: return f(kStubs.shade_raise);
     case 0x5366A0: return f(kStubs.load_palette);
     case 0x535390: return f(kStubs.cells_all);
     case 0x5353E0: return f(kStubs.cells_all4);
-    case kCellsAllWide: return f(kStubs.cells_all_wide);
+    case kCellsAllWide.v: return f(kStubs.cells_all_wide);
     case 0x535C50: return f(kStubs.cells_none);
     case 0x535CA0: return f(kStubs.cells_none4);
-    case kCellsNoneWide: return f(kStubs.cells_none_wide);
+    case kCellsNoneWide.v: return f(kStubs.cells_none_wide);
     case 0x536700: return f(kStubs.byte_at);
-    case kFloorHurt: return f(kStubs.floor_hurt);
-    case kFlash: return f(kStubs.flash);
+    case kFloorHurt.v: return f(kStubs.floor_hurt);
+    case kFlash.v: return f(kStubs.flash);
     case 0x531BB0: return f(kStubs.party_count);
-    case kHpLose: return f(kStubs.hp_lose);
-    case kHpGain: return f(kStubs.hp_gain);
+    case kHpLose.v: return f(kStubs.hp_lose);
+    case kHpGain.v: return f(kStubs.hp_gain);
     case 0x589810: return f(kStubs.effect_free);
     case 0x535150: return f(kStubs.tile_turn);
-    case kTurnProbe: return f(kStubs.turn_probe);
+    case kTurnProbe.v: return f(kStubs.turn_probe);
     case 0x535310: return f(kStubs.equip_count);
     default: bof3::Fatal("event_objs: no stand-in for a call to 0x%X", static_cast<unsigned>(target));
     }
@@ -290,21 +290,21 @@ const void* StubFor(std::uint32_t target) {
 struct Call { std::uint32_t offset, target; };
 struct Clone { const char* name; std::uint32_t base, size; const Call* calls; int n_calls; unsigned args; bool boolean; };
 constexpr Call kJumpStartCalls[] = {{0x0, 0x534610}, {0x24, 0x534710}};
-constexpr Call kJumpSetUpCalls[] = {{0xBC, kSlopeAt}, {0xD0, 0x572570}};
+constexpr Call kJumpSetUpCalls[] = {{0xBC, kSlopeAt.v}, {0xD0, 0x572570}};
 constexpr Call kShadeStepCalls[] = {{0x5, 0x534800}, {0x2A, 0x5366A0}};
 constexpr Call kTileCalls[] = {{0x2B, 0x535390}};
 constexpr Call kFloorCalls[] = {{0x5A, 0x535390}, {0x8C, 0x535390}, {0xBF, 0x535390}, {0xF2, 0x535390},
                                 {0x125, 0x535390}, {0x158, 0x535390}, {0x18B, 0x535390}, {0x1BB, 0x535390},
-                                {0x1EB, 0x535390}, {0x202, kFloorHurt}, {0x212, kFlash}};
-constexpr Call kBit80Calls[] = {{0x8, 0x531BB0}, {0x9A, kFlash}, {0xE3, kHpLose}, {0x129, kHpLose}, {0x13C, 0x589810}};
+                                {0x1EB, 0x535390}, {0x202, kFloorHurt.v}, {0x212, kFlash.v}};
+constexpr Call kBit80Calls[] = {{0x8, 0x531BB0}, {0x9A, kFlash.v}, {0xE3, kHpLose.v}, {0x129, kHpLose.v}, {0x13C, 0x589810}};
 constexpr Call kTile8xCalls[] = {{0x19, 0x535150}};
-constexpr Call kTileTurnCalls[] = {{0x1E, 0x535C50}, {0x86, kTurnProbe}};
-constexpr Call kEquipTickCalls[] = {{0x10, 0x535310}, {0x2B, kHpGain}, {0x44, 0x535310},
-                                    {0x5E, kHpGain}, {0x77, 0x535310}, {0x92, kHpGain}};
-constexpr Call kCellsAllCalls[] = {{0x1C, 0x5353E0}, {0x39, kCellsAllWide}};
-constexpr Call kCellsNoneCalls[] = {{0x1C, 0x535CA0}, {0x39, kCellsNoneWide}};
+constexpr Call kTileTurnCalls[] = {{0x1E, 0x535C50}, {0x86, kTurnProbe.v}};
+constexpr Call kEquipTickCalls[] = {{0x10, 0x535310}, {0x2B, kHpGain.v}, {0x44, 0x535310},
+                                    {0x5E, kHpGain.v}, {0x77, 0x535310}, {0x92, kHpGain.v}};
+constexpr Call kCellsAllCalls[] = {{0x1C, 0x5353E0}, {0x39, kCellsAllWide.v}};
+constexpr Call kCellsNoneCalls[] = {{0x1C, 0x535CA0}, {0x39, kCellsNoneWide.v}};
 constexpr Call kCells4Calls[] = {{0xE, 0x536700}, {0x1C, 0x536700}, {0x28, 0x536700}, {0x33, 0x536700}};
-constexpr Call kCheckCalls[] = {{0x28, kSlopeAt}, {0x3B, 0x572570}, {0x65, 0x5345E0}};
+constexpr Call kCheckCalls[] = {{0x28, kSlopeAt.v}, {0x3B, 0x572570}, {0x65, 0x5345E0}};
 
 enum Fn : unsigned {
     kShadeBegin, kJumpStart, kJumpSetUp, kJumpCamera, kShadeStep, kShadeRaise, kTileD0, kTileA4, kFloorDamage,

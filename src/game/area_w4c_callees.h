@@ -6,6 +6,8 @@
 
 #include <cstdint>
 
+#include "common/image_base.h"
+
 #include "bof3/symbols.gen.h"   // bof3::addr: the constants below naming group BE6's functions (docs/battle_e6.md section 5)
 
 namespace area_w4c {
@@ -13,11 +15,11 @@ namespace area_w4c {
 // --- engine callees nobody owns (raw; the rebinding pass names them) ---
 // 0x454A80 (object): releases every Field_Slots record whose +0xC is the
 // object (area_w2b_callees.h, read 2026-09-28 by AR2B, 0x454A80..0x454AAA).
-constexpr std::uint32_t kSlotsReleaseFor = bof3::addr::Field_SlotsReleaseOwner;   // 0x454A80 (BE6, 2026-09-29)
+constexpr ::bof3::image::CodeVa kSlotsReleaseFor{bof3::addr::Field_SlotsReleaseOwner};   // 0x454A80 (BE6, 2026-09-29)
 // 0x455290 (object, script): the first free Field_Slots record of eight gets
 // the object and the script; al its index, 0xFF none (area_w2b_callees.h,
 // 0x455290..0x4552F5). Area 174's handler 0 does not read the answer.
-constexpr std::uint32_t kSlotStart = bof3::addr::Field_SlotStart;                  // 0x455290 (BE6, 2026-09-29)
+constexpr ::bof3::image::CodeVa kSlotStart{bof3::addr::Field_SlotStart};                  // 0x455290 (BE6, 2026-09-29)
 
 namespace at {
 
@@ -26,25 +28,25 @@ namespace at {
 // The message box's answer to a choice (a byte) and the message word a choice
 // handler leaves (0xFFFF: no new message).
 // kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
-constexpr std::uint32_t kMessage = 0x7DEE48;
+constexpr ::bof3::image::Va kMessage{0x7DEE48};
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
 // (Field_ModeTailKinds 0x662CE8), its state, and a word timer.
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
 // kTailState: now AreaW0c_TailState (symbols.toml).
-constexpr std::uint32_t kTailTimer = 0x9039F6;
+constexpr ::bof3::image::Va kTailTimer{0x9039F6};
 // The movement script's counter 3 (MoveScript_CounterOps; area_w3d's
 // kCounter3): area 173's tail waits on it.
-constexpr std::uint32_t kCounter3 = 0x90384B;
+constexpr ::bof3::image::Va kCounter3{0x90384B};
 // A byte of the camera / scratch cells (0x903840 + 8) area 174's handler 11
 // compares its script's byte with. No name.
-constexpr std::uint32_t kStepLimit = 0x903848;
+constexpr ::bof3::image::Va kStepLimit{0x903848};
 // The story flags (Flags_Set's bank).
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // The leader's record (ObjTrio): +8 its direction.
 // kLeaderDir: now ObjTrio[0].direction (symbols.toml).
 // The party records: +0x89 a byte the member handlers match (area 173's
 // handlers 1 and 2 against their id lists, handlers 3 and 4 on Field_State's).
-constexpr std::uint32_t kParty = 0x802D40;
+constexpr ::bof3::image::Va kParty{0x802D40};
 constexpr std::uint32_t kPartyStride = 0x14C;
 // kParty89: now ObjTrio[0].char_id (symbols.toml).
 // MoveScript_Var7's neighbour (0x8034E4 + 1): area 174's choice 0 stores 0x1E
@@ -53,7 +55,7 @@ constexpr std::uint32_t kPartyStride = 0x14C;
 // Two bytes area 175's choices 23 and 25 store (the answer; 0 or 4). No name;
 // not in the harness's regions (the group's own); no reader read this round.
 // kChoiceByte3C: now Rest4b_BoardFlag (symbols.toml).
-constexpr std::uint32_t kChoiceByte3E = 0x939A3E;
+constexpr ::bof3::image::Va kChoiceByte3E{0x939A3E};
 // Named cells, by address for the fuzz's regions (symbols.gen.h spells each
 // name as a macro of its value):
 // kEffectObjects: now Effect_Objects (symbols.toml). Effect_Objects, 20 of 0x80
@@ -67,7 +69,7 @@ constexpr unsigned kObjectStride = 0xA4;
 // kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object
 // kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember
 // kClutSource: now Gfx_ClutStripSource[0xf00] (symbols.toml). a row of Gfx_ClutStripSource (0x80B580 + 0x1E00)
-constexpr std::uint32_t kDescriptors = 0x667590;     // Area_Descriptors
+constexpr ::bof3::image::Va kDescriptors{0x667590};     // Area_Descriptors
 
 // --- area 173's .data (descriptor 0x63FF68; symbols.toml [[data]]) ---
 

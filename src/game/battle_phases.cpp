@@ -51,9 +51,9 @@ const Callees kOriginals = {
     Battle_InitActorContexts, Formation_ApplyStatMods, Gfx_ClutStripCopyRow, Sprite_SetClutStp, LoadDatFile,
     Window_Alloc, Msg_SystemPtr, BattleQueue_Push, BattleWin_OpenStatus, Battle_OpenEnemyNames,
     BattleWin_OpenSub1, BattleQueue_Pending, File_LoadDone, BattleWin_OpenSub2, BattleWin_OpenSub3,
-    Battle_ClearCommands, Battle_BuildEntryOrder, Fn<void (__cdecl*)()>(kAutoFillCommands),
+    Battle_ClearCommands, Battle_BuildEntryOrder, Fn<void (__cdecl*)()>(::bof3::Code(kAutoFillCommands.v)),
     Battle_SpawnActorCopies, BattleBanner_ShowName, Sound_PlayEffect,
-    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(kReturnItem), BattleWin_DrawCommandCross,
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kReturnItem.v)), BattleWin_DrawCommandCross,
     BattleWin_DrawCommandLabel, BattleWin_DrawPartyStatus, Battle_PulseStep,
     Battle_BuildTurnOrder, EnemyAI_ChooseActions,
 };
@@ -72,13 +72,13 @@ unsigned char* PtrAt(std::uint32_t address) {
 void SetPtrAt(std::uint32_t address, const unsigned char* p) {
     SetLong(At(address), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)));
 }
-unsigned char* Member(unsigned index) { return At(ObjTrio_addr + index * at::kMemberSize); }
-unsigned char* EnemyObject(unsigned index) { return At(Battle_Enemies_addr + index * at::kEnemySize); }
-unsigned char* Window(unsigned index) { return At(WindowRecords_addr + index * at::kWindowSize); }
+unsigned char* Member(unsigned index) { return At(::bof3::Img(ObjTrio_addr) + index * at::kMemberSize); }
+unsigned char* EnemyObject(unsigned index) { return At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemySize); }
+unsigned char* Window(unsigned index) { return At(::bof3::Img(WindowRecords_addr) + index * at::kWindowSize); }
 // The member the menu is for (0x939EC4) and its command record (0x939FA0),
 // each re-read wherever the original re-reads it.
 unsigned char* MenuActor() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor); }
-unsigned char* MenuRecord() { return PtrAt(at::kMenuRecord); }
+unsigned char* MenuRecord() { return PtrAt(::bof3::Img(at::kMenuRecord.v)); }
 int S8(std::uint32_t address) { return static_cast<signed char>(B(address)); }
 
 // A tail jump through a .data table, as the three stubs have it: the entry
@@ -105,8 +105,8 @@ void JumpThrough(std::uint32_t table, unsigned index) {
 // party's extra screens, the effects, the field slots, the tint, the window
 // tasks, and a tail jump to Field_DrawFrame.
 extern "C" void __cdecl Battle_Frame(void) {
-    if ((B(at::kRoundFlags) & 2) == 0) {
-        const unsigned phase = B(at::kPhase);
+    if ((B(::bof3::Img(at::kRoundFlags.v)) & 2) == 0) {
+        const unsigned phase = B(::bof3::Img(at::kPhase.v));
         const bool window_held = WindowRecords[0].in_use != 0 && phase != 5;
         const bool flag_held = (BattleMisc_BannerKinds & 2) != 0 && phase != 5;
         if (!window_held && !flag_held) g.phase_dispatch();
@@ -189,30 +189,30 @@ void BattlePhases_ArmPickClear() {
 
 extern "C" void __cdecl Battle_Init(void) {
     g.banner_clear_all();
-    const unsigned count = B(at::kActorCount);
+    const unsigned count = B(::bof3::Img(at::kActorCount.v));
     Battle_PartyStanding = 0;
     if (count != 0) {
         unsigned i = 0;
         do {
             if (g.actor_is_out(i) == 0) Battle_PartyStanding = static_cast<unsigned char>(Battle_PartyStanding + 1);
             ++i;
-        } while (i < B(at::kActorCount));
+        } while (i < B(::bof3::Img(at::kActorCount.v)));
     }
     BattleE4_MenuActor = reinterpret_cast<records::PartyMember*>(Member(0));
     BossSb_Countdown = 0;
     BattleE5_GeneRow = 0;
     BattleE1_Roster = 0;
-    B(at::kCommand) = 0;
-    B(at::kCrossGrow) = 8;
-    SetWord(At(at::kRoundFlags), 0);
+    B(::bof3::Img(at::kCommand.v)) = 0;
+    B(::bof3::Img(at::kCrossGrow.v)) = 8;
+    SetWord(At(::bof3::Img(at::kRoundFlags.v)), 0);
     Battle_EndFlags = 0;
-    SetLong(At(at::kTurnCounter), 1);
+    SetLong(At(::bof3::Img(at::kTurnCounter.v)), 1);
     BattleFlow_ZennyTotal = 0;
     Battle_ExpTotal = 0;
     BattlePhases_AE6 = 0;
     BossSe_Script = 0;
     BattlePhases_B7A = 0;
-    SetWord(At(at::kB98), 0);
+    SetWord(At(::bof3::Img(at::kB98.v)), 0);
     Battle_DropCount = 0;
     BattleActions_Pending = 0;
     BattlePhases_B8B = 0;
@@ -250,7 +250,7 @@ extern "C" void __cdecl Battle_Init(void) {
         auto* const member_rec = rv::As<records::PartyMember>(p);
         if ((member_rec->flags & 1) != 0) std::memcpy(p + 0xA0, p + 0xC0, 0x20);
     }
-    for (unsigned i = 0; i < 16; ++i) SetWord(At(Gfx_ClutStrip_addr + 0x1fe0 + 2 * i), Word(At(Gfx_ClutStripSource_addr + 0x1fe0 + 2 * i)));
+    for (unsigned i = 0; i < 16; ++i) SetWord(At(::bof3::Img(Gfx_ClutStrip_addr) + 0x1fe0 + 2 * i), Word(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1fe0 + 2 * i)));
     g.clut_strip_copy_row(0x1A);
     g.clut_strip_copy_row(0x1B);
     for (unsigned a = 0; a <= 10; ++a) {
@@ -268,8 +268,8 @@ extern "C" void __cdecl Battle_Init(void) {
     }
     if (EventBattle_Id == 0) g.load_dat(static_cast<int>(Game_AreaNumber + 0x15D));
     const unsigned char event = EventBattle_Id;
-    for (unsigned i = 0; i < 4; ++i) SetLong(At(BattlePhases_B24_addr + 4 * i), 0);
-    if (event != 0) reinterpret_cast<void (__cdecl*)(int)>(PtrAt(at::kEventHook))(6);
+    for (unsigned i = 0; i < 4; ++i) SetLong(At(::bof3::Img(BattlePhases_B24_addr) + 4 * i), 0);
+    if (event != 0) reinterpret_cast<void (__cdecl*)(int)>(PtrAt(::bof3::Img(at::kEventHook.v)))(6);
     BattleActions_Step = static_cast<unsigned char>(BattleActions_Step + 1);
 }
 
@@ -300,7 +300,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleIntro_Dispatch
 // record is then 0xFF's, past the 64 (0x80551C..).
 extern "C" void __cdecl BattleIntro_OpenWindows(void) {
     BattleWindows_MsgHead = 0;
-    B(at::kC2A0 + 1) = 0;
+    B(::bof3::Img(at::kC2A0.v) + 1) = 0;
     auto* const window_first = rv::As<records::WindowRecord>(Window(g.window_alloc(0x14, 3) & 0xFF));
     window_first->kind = 7;
     window_first->state = 0;
@@ -317,9 +317,9 @@ extern "C" void __cdecl BattleIntro_OpenWindows(void) {
         const unsigned pair = (member_rec->direction + member_rec->char_id * 4u) * 2u;
         window_rec->kind = 5;
         window_rec->state = 0;
-        const unsigned facing = ((B(at::kFacing) ^ 2u) >> 1) * 2u;
-        window_rec->x = static_cast<unsigned>(S8(at::kFacingOffsets + facing) + S8(at::kStatusOffsets + pair) + static_cast<std::uint16_t>(member_rec->screen_x));
-        window_rec->y = static_cast<unsigned>(S8(at::kStatusOffsets + pair + 1) + static_cast<std::uint16_t>(member_rec->screen_y) + 0xC);
+        const unsigned facing = ((B(::bof3::Img(at::kFacing.v)) ^ 2u) >> 1) * 2u;
+        window_rec->x = static_cast<unsigned>(S8(::bof3::Img(at::kFacingOffsets.v) + facing) + S8(::bof3::Img(at::kStatusOffsets.v) + pair) + static_cast<std::uint16_t>(member_rec->screen_x));
+        window_rec->y = static_cast<unsigned>(S8(::bof3::Img(at::kStatusOffsets.v) + pair + 1) + static_cast<std::uint16_t>(member_rec->screen_y) + 0xC);
         w[0xA] = static_cast<unsigned char>(m);
         w[8] = 0;
         w[9] = 0;
@@ -343,13 +343,13 @@ extern "C" void __cdecl BattleIntro_PrepareCross(void) {
     g.open_sub1(0);
     if (BattlePhases_Initiative >= 2) {
         rv::As<records::WindowRecord>(Window(2))->state = 2;
-        SetLong(At(at::kCrossGrow), 0);
-        SetWord(At(at::kCrossGrow + 4), 0);
-        B(at::kCrossGrow + 6) = 0;
+        SetLong(At(::bof3::Img(at::kCrossGrow.v)), 0);
+        SetWord(At(::bof3::Img(at::kCrossGrow.v) + 4), 0);
+        B(::bof3::Img(at::kCrossGrow.v) + 6) = 0;
     } else {
-        SetLong(At(at::kCrossGrow), 0x10101010);
-        SetWord(At(at::kCrossGrow + 4), 0x1010);
-        B(at::kCrossGrow + 6) = 0x10;
+        SetLong(At(::bof3::Img(at::kCrossGrow.v)), 0x10101010);
+        SetWord(At(::bof3::Img(at::kCrossGrow.v) + 4), 0x1010);
+        B(::bof3::Img(at::kCrossGrow.v) + 6) = 0x10;
     }
     BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
 }
@@ -364,7 +364,7 @@ extern "C" void __cdecl BattleIntro_Finish(void) {
     if (g.file_load_done() == 0) return;
     g.open_sub2(BattlePhases_Initiative >= 2 ? 2u : 1u);
     g.open_sub3(2);
-    B(at::kPhase) = static_cast<unsigned char>(B(at::kPhase) + 1);
+    B(::bof3::Img(at::kPhase.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kPhase.v)) + 1);
     BattleActions_Step = 0;
     BattleE4_Step2 = 0;
 }
@@ -377,7 +377,7 @@ extern "C" void __cdecl BattleIntro_Finish(void) {
 // through Battle_InputSteps 0x64AE28 by the step 0x904AA1: Battle_RoundStart,
 // BattleInput_NextMember, BattleMenu_CommandSelect, BattleHold_Dispatch 0x42ED90 (BE1's; a sub-step
 // dispatch through 0x64AE48, not this group's), BattleMenu_ConfirmDispatch.
-extern "C" void __cdecl BattleInput_Dispatch(void) { JumpThrough(Battle_InputSteps_addr, BattleActions_Step); }
+extern "C" void __cdecl BattleInput_Dispatch(void) { JumpThrough(::bof3::Img(Battle_InputSteps_addr), BattleActions_Step); }
 
 // original 0x42E9A0 (PSX Battle_RoundStart 0x801D1C88): the commands
 // cleared, the entry order built, the menu index 0x904AC3 zeroed. With auto
@@ -387,11 +387,11 @@ extern "C" void __cdecl BattleInput_Dispatch(void) { JumpThrough(Battle_InputSte
 extern "C" void __cdecl Battle_RoundStart(void) {
     g.clear_commands();
     g.build_entry_order();
-    const unsigned char flags = B(at::kRoundFlags);
+    const unsigned char flags = B(::bof3::Img(at::kRoundFlags.v));
     BattleActorCopies_EntryCount = 0;
     if ((flags & 0x10) != 0) {
         g.auto_fill_commands();
-        B(at::kPhase) = 2;
+        B(::bof3::Img(at::kPhase.v)) = 2;
         return;
     }
     g.spawn_actor_copies();
@@ -413,7 +413,7 @@ extern "C" void __cdecl BattleInput_NextMember(void) {
     if (index == 0) Input_Held = 0;
     if (index < 3) {
         for (;;) {
-            const unsigned c = B(static_cast<std::uint32_t>(static_cast<std::int32_t>(at::kEntryOrder) + index));
+            const unsigned c = B(static_cast<std::uint32_t>(static_cast<std::int32_t>(::bof3::Img(at::kEntryOrder.v)) + index));
             if (c != 0xFF) {
                 BattleE4_AutoMember = static_cast<unsigned char>(c);
                 const unsigned char* const q = Member(c);
@@ -421,7 +421,7 @@ extern "C" void __cdecl BattleInput_NextMember(void) {
                 if ((q[0x90] & 0x20) == 0 && (static_cast<std::uint32_t>(static_cast<std::int32_t>(member_q->flags_134)) & 0x14001u) == 0) {
                     unsigned char* const p = Member(c);
                     BattleE4_MenuActor = reinterpret_cast<records::PartyMember*>(p);
-                    SetPtrAt(at::kMenuRecord, p + 0x124);
+                    SetPtrAt(::bof3::Img(at::kMenuRecord.v), p + 0x124);
                     g.banner_show_name(p);
                     rv::As<records::WindowRecord>(Window(4))->state = 1;
                     rv::As<records::WindowRecord>(Window(3))->state = 1;
@@ -435,11 +435,11 @@ extern "C" void __cdecl BattleInput_NextMember(void) {
             if (index >= 3) break;
         }
     }
-    const unsigned char phase = B(at::kPhase);
+    const unsigned char phase = B(::bof3::Img(at::kPhase.v));
     BossSb_Countdown = 0;
     BattleE5_GeneRow = 0;
     BattleResult_TickStep = 0xE;
-    B(at::kPhase) = static_cast<unsigned char>(phase + 1);
+    B(::bof3::Img(at::kPhase.v)) = static_cast<unsigned char>(phase + 1);
     BattleActions_Step = 0;
 }
 
@@ -484,7 +484,7 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
         const unsigned char step = static_cast<unsigned char>(BattleActions_Step - 1);
         BattleActorCopies_EntryCount = index;
         BattleActions_Step = step;
-        unsigned char* p = Member(B(static_cast<std::uint32_t>(static_cast<std::int32_t>(at::kEntryOrder) + static_cast<signed char>(index))));
+        unsigned char* p = Member(B(static_cast<std::uint32_t>(static_cast<std::int32_t>(::bof3::Img(at::kEntryOrder.v)) + static_cast<signed char>(index))));
         records::PartyMember* member_rec = rv::As<records::PartyMember>(p);
         BattleE4_MenuActor = reinterpret_cast<records::PartyMember*>(p);
         member_rec->flags_134 = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_134)) & ~4u);
@@ -503,14 +503,14 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
         return;
     }
     if ((Field_ConfirmButtons & pressed) != 0) {
-        const unsigned command = B(at::kCommand);
+        const unsigned command = B(::bof3::Img(at::kCommand.v));
         if ((command == 2 || command == 3) && CommandsGreyed()) {
             g.play_effect(0x107);
             return;
         }
         g.play_effect(0x104);
         const unsigned char step = static_cast<unsigned char>(BattleActions_Step + 2);
-        const unsigned char chosen = B(at::kCommand);
+        const unsigned char chosen = B(::bof3::Img(at::kCommand.v));
         rv::As<records::WindowRecord>(Window(3))->state = 2;
         rv::As<records::WindowRecord>(Window(2))->state = 2;
         BattleActions_Step = step;
@@ -526,7 +526,7 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
         rv::As<records::WindowRecord>(Window(1))->state = 2;
         rv::As<records::WindowRecord>(Window(3))->state = 2;
         g.draw_command_cross(static_cast<int>(x), static_cast<int>(y));
-        g.draw_command_label(B(at::kCommand));
+        g.draw_command_label(B(::bof3::Img(at::kCommand.v)));
         g.draw_party_status(static_cast<int>(rv::As<records::WindowRecord>(Window(1))->x), static_cast<int>(rv::As<records::WindowRecord>(Window(1))->y));
         BattleActions_Step = static_cast<unsigned char>(BattleActions_Step + 1);
         return;
@@ -535,11 +535,11 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
     // View lines' buttons now. Battle_CommandPadMasks stays Capcom's bytes:
     // each mask is read as it is and asked through sigma.
     if ((held & Sigma(0xF00C)) == 0) {
-        if (B(at::kCommand) != 0) B(at::kCommand) = 0;
+        if (B(::bof3::Img(at::kCommand.v)) != 0) B(::bof3::Img(at::kCommand.v)) = 0;
         return;
     }
     for (int k = 5; k >= 0; --k) {
-        const unsigned mask = Sigma(static_cast<std::uint16_t>(Word(At(Battle_CommandPadMasks_addr + 2 * static_cast<unsigned>(k)))));
+        const unsigned mask = Sigma(static_cast<std::uint16_t>(Word(At(::bof3::Img(Battle_CommandPadMasks_addr) + 2 * static_cast<unsigned>(k)))));
         if ((mask & held) == 0) continue;
         if ((pressed & mask) != 0) {
             g.play_effect(0x101);
@@ -550,7 +550,7 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
                     return;
                 }
                 const unsigned char step = static_cast<unsigned char>(BattleActions_Step + 2);
-                B(at::kCommand) = static_cast<unsigned char>(k + 1);
+                B(::bof3::Img(at::kCommand.v)) = static_cast<unsigned char>(k + 1);
                 BattleE4_Step2 = static_cast<unsigned char>(k + 1);
                 rv::As<records::WindowRecord>(Window(3))->state = 2;
                 rv::As<records::WindowRecord>(Window(2))->state = 2;
@@ -564,7 +564,7 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
             BattleE5_GeneRow = static_cast<unsigned char>(k + 1);
             held = Input_Held;
         }
-        B(at::kCommand) = static_cast<unsigned char>(k + 1);
+        B(::bof3::Img(at::kCommand.v)) = static_cast<unsigned char>(k + 1);
     }
 }
 
@@ -575,7 +575,7 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
 // PSX's Cmd_AutoBattle_Begin, unowned), 0x44A000, 0x44FF00.
 extern "C" void __cdecl BattleMenu_ConfirmDispatch(void) {
     g.pulse_step();
-    JumpThrough(Battle_MenuSteps_addr, BattleE4_Step2);
+    JumpThrough(::bof3::Img(Battle_MenuSteps_addr), BattleE4_Step2);
 }
 
 // original 0x42EEF0 (PSX 0x801D2514, the Defend confirm the sibling's
@@ -605,7 +605,7 @@ extern "C" void __cdecl Cmd_ConfirmDefend(void) {
 // original 0x42F070 (no PSX twin paired): phase 2's entry. A tail jump
 // through Battle_CommitSteps 0x64AE74 by the step 0x904AA1:
 // Battle_CommitRound, BattleCommit_QueueMessages, BattleCommit_WaitLoad.
-extern "C" void __cdecl BattleCommit_Dispatch(void) { JumpThrough(Battle_CommitSteps_addr, BattleActions_Step); }
+extern "C" void __cdecl BattleCommit_Dispatch(void) { JumpThrough(::bof3::Img(Battle_CommitSteps_addr), BattleActions_Step); }
 
 // original 0x42F080 (PSX Battle_CommitRound 0x801D2774): the turn order
 // built; window 4's +3 = 2 unless auto battle, windows 3 and 2 too;
@@ -616,10 +616,10 @@ extern "C" void __cdecl BattleCommit_Dispatch(void) { JumpThrough(Battle_CommitS
 // (re-read) DAT file 0xD1 is loaded; the step on.
 extern "C" void __cdecl Battle_CommitRound(void) {
     g.build_turn_order();
-    if ((B(at::kRoundFlags) & 0x10) == 0) rv::As<records::WindowRecord>(Window(4))->state = 2;
+    if ((B(::bof3::Img(at::kRoundFlags.v)) & 0x10) == 0) rv::As<records::WindowRecord>(Window(4))->state = 2;
     rv::As<records::WindowRecord>(Window(3))->state = 2;
     rv::As<records::WindowRecord>(Window(2))->state = 2;
-    B(at::kB8E0) = 0;
+    B(::bof3::Img(at::kB8E0.v)) = 0;
     for (unsigned m = 0; m <= 2; ++m) {
         if (g.actor_is_out(m) != 0) continue;
         unsigned char* const p = Member(m);
@@ -631,9 +631,9 @@ extern "C" void __cdecl Battle_CommitRound(void) {
         if ((flags & 0x4000) == 0) g.return_item(p[0x12E], item);
         else member_rec->flags_130 = static_cast<std::int32_t>(flags & ~0x4000u);
     }
-    B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) | 8);
+    B(::bof3::Img(at::kRoundFlags.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kRoundFlags.v)) | 8);
     g.choose_actions();
-    if ((B(at::kRoundFlags) & 0x10) == 0) g.load_dat(0xD1);
+    if ((B(::bof3::Img(at::kRoundFlags.v)) & 0x10) == 0) g.load_dat(0xD1);
     BattleActions_Step = static_cast<unsigned char>(BattleActions_Step + 1);
 }
 
@@ -650,9 +650,9 @@ extern "C" void __cdecl BattleCommit_QueueMessages(void) {
         BattleActions_Step = static_cast<unsigned char>(BattleActions_Step + 1);
         return;
     }
-    unsigned char* const text = At(at::kTextRecord0);
+    unsigned char* const text = At(::bof3::Img(at::kTextRecord0.v));
     std::memset(text, 0, 0x20);
-    const unsigned char* const record = At(at::kMessages + count * 4);
+    const unsigned char* const record = At(::bof3::Img(at::kMessages.v) + count * 4);
     const unsigned char* const name = EnemyObject(record[0]) + 0x80;
     SetLong(text, Long(name));
     SetLong(text + 4, Long(name + 4));
@@ -668,13 +668,13 @@ extern "C" void __cdecl BattleCommit_QueueMessages(void) {
 // phase on, step 0.
 extern "C" void __cdecl BattleCommit_WaitLoad(void) {
     if (g.file_load_done() == 0) return;
-    if ((B(at::kRoundFlags) & 0x10) == 0) {
+    if ((B(::bof3::Img(at::kRoundFlags.v)) & 0x10) == 0) {
         const unsigned wait = BattleResult_TickStep;
         BattleResult_TickStep = wait - 1;
         if (wait != 0) return;
     }
-    const unsigned char phase = B(at::kPhase);
+    const unsigned char phase = B(::bof3::Img(at::kPhase.v));
     BattleResult_TickStep = 0;
-    B(at::kPhase) = static_cast<unsigned char>(phase + 1);
+    B(::bof3::Img(at::kPhase.v)) = static_cast<unsigned char>(phase + 1);
     BattleActions_Step = 0;
 }

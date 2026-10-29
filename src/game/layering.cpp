@@ -413,7 +413,7 @@ constexpr unsigned kTableFaerieScript = 1;
 // `height` gets that cell's.
 bool TableFaerie(const unsigned char* sprite, int feet, int cell_x, int cell_z, Height* height) {
     if (Game_AreaNumber != kTableArea) return false;
-    const unsigned char* const objects = reinterpret_cast<const unsigned char*>(Sprite_Objects_addr);
+    const unsigned char* const objects = reinterpret_cast<const unsigned char*>(::bof3::Img(Sprite_Objects_addr));
     if (sprite < objects || sprite >= objects + 30u * 0xA4u || (sprite - objects) % 0xA4u != 0) return false;
     if (sprite[0x83] != kTableFaerieScript) return false;
     if (cell_x <= 0 || cell_z <= 0 || cell_x >= AreaMap_Header[0] || cell_z >= AreaMap_Header[1]) return false;
@@ -680,7 +680,7 @@ void AfterSprite(const unsigned char* sprite) {
     // the draw-item record's half for this buffer. Not at all when the
     // packet pool has no room for every one (Gfx_CommitPrim's own limit,
     // tested once for the whole set).
-    const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + kPoolLimit;
+    const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
     if (limit <= Address(Gfx_PacketNext) + 0xCu + g_faerie_sides_n * 0x48u) {
         if (g_log) bof3::Log("D300 fix    frame %u: no room in the packet pool for the table's sides", static_cast<unsigned>(Frame_Counter));
         g_faerie = nullptr;

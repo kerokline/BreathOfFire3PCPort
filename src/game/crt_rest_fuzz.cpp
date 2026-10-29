@@ -705,7 +705,7 @@ int __cdecl PlantedScanSaturate(const char* s, const char* fmt, ...) {   // the 
 using ScanFn = int (__cdecl*)(const char*, const char*, ...);
 // hex false: Cfg_Load's format at 0x65DAD0; true: the decoder's at 0x672854.
 unsigned CompareScan(ScanFn ours, unsigned rounds, bool log, bool hex = false) {
-    const ScanFn theirs = reinterpret_cast<ScanFn>(bof3::orig::Crt_sscanf);
+    const ScanFn theirs = bof3::orig::Crt_sscanf;   // orig:: converts to its pointer (tools/gen_symbols.py)
     const char* const fmt = reinterpret_cast<const char*>(hex ? 0x672854 : 0x65DAD0);
     unsigned differ = 0;
     const U saved = g_rand;

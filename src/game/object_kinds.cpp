@@ -74,7 +74,7 @@ struct Callees {
     void (__cdecl* msg_system)(unsigned);         // Msg_OpenSystem a dword
 };
 Callees Originals() {
-    return {reinterpret_cast<const PaceFn*>(static_cast<std::uintptr_t>(kPaceTable)),
+    return {reinterpret_cast<const PaceFn*>(static_cast<std::uintptr_t>(::bof3::Img(kPaceTable))),
             Field_Pace0,
             Rand,
             Field_ObjectRandomTurn,
@@ -93,8 +93,8 @@ Callees Originals() {
             Area_ObjectHandler,
             Field_ObjectTrigger,
             EventScript_Run,
-            reinterpret_cast<void (__cdecl*)(unsigned short)>(static_cast<std::uintptr_t>(bof3::addr::Msg_OpenScript)),
-            reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(bof3::addr::Msg_OpenSystem))};
+            reinterpret_cast<void (__cdecl*)(unsigned short)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Msg_OpenScript))),
+            reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Msg_OpenSystem)))};
 }
 Callees g = Originals();
 
@@ -234,7 +234,7 @@ void FadeInStep() {
 // return 1; else with flags bit 1 and steps left, a move's frames.
 unsigned char PaceCounted(unsigned char* object, unsigned speed, unsigned flags, unsigned char bit, unsigned char add) {
     auto* const obj = rv::As<records::SpriteObject>(object);
-    if ((flags & 1) && ((At(Field_StepCount_addr)[0] ^ At(Field_StepCountPrev_addr)[0]) & bit)) {
+    if ((flags & 1) && ((At(::bof3::Img(Field_StepCount_addr))[0] ^ At(::bof3::Img(Field_StepCountPrev_addr))[0]) & bit)) {
         if (obj->move_steps < 0xFA) obj->move_steps = static_cast<unsigned char>(obj->move_steps + add);
         return 1;
     }
@@ -405,7 +405,7 @@ extern "C" unsigned char __cdecl Field_ObjectRandomTurn(unsigned char* object) {
 // home box. Everything from the argument, not Sprite_Current.
 extern "C" unsigned char __cdecl Field_ObjectInHome(unsigned char* object) {
     auto* const obj = rv::As<records::SpriteObject>(object);
-    const unsigned char* const step = At(Field_DirectionSteps_addr) + (object[8] & 7) * 8u;
+    const unsigned char* const step = At(::bof3::Img(Field_DirectionSteps_addr)) + (object[8] & 7) * 8u;
     const std::uint32_t x = static_cast<std::uint32_t>(Long(step)) + static_cast<std::uint32_t>(obj->x);
     const std::uint32_t z = static_cast<std::uint32_t>(Long(step + 4)) + static_cast<std::uint32_t>(obj->z);
     int dx = static_cast<short>(x >> 16) - static_cast<short>(Word(object + 0x8E));
@@ -449,7 +449,7 @@ extern "C" void __cdecl Field_ObjectIdleLong(unsigned char* object) {
     const unsigned char direction = rv::Current<records::SpriteObject>()->direction;
     unsigned char n = 0;
     for (; n < 4; ++n) {
-        rv::Current<records::SpriteObject>()->direction = At(kAsideRows)[n + (ObjTrio[0].direction & 7) * 4u];
+        rv::Current<records::SpriteObject>()->direction = At(::bof3::Img(kAsideRows))[n + (ObjTrio[0].direction & 7) * 4u];
         if (g.blocked_ahead(object)) continue;
         if (rv::Current<records::SpriteObject>()->state == 3 || Sprite_Current[3] == 3) {
             if (g.in_home(object)) break;
@@ -488,11 +488,11 @@ extern "C" void __cdecl Field_ObjectIdle(unsigned char* object) {
     unsigned char* const sprite = Sprite_Current;
     if (sprite[6] == 5) {
         BattleE1_Mode = 0;
-        At(BattleE1_Mode_addr)[1] = 0;
+        At(::bof3::Img(BattleE1_Mode_addr))[1] = 0;
         Game_Mode = 7;
         // (object - Sprite_Objects) / 0xA4, signed as the original's imul.
         const auto offset = static_cast<std::int32_t>(Address(object) - Address(rv::Bytes(Sprite_Objects)));
-        At(BattleE1_Mode_addr)[0xC] = static_cast<unsigned char>(offset / 0xA4);
+        At(::bof3::Img(BattleE1_Mode_addr))[0xC] = static_cast<unsigned char>(offset / 0xA4);
         return;
     }
     if (!(Field_StatusBits & 0x40)) {
@@ -528,7 +528,7 @@ extern "C" unsigned char __cdecl MoveScript_SetTurnTarget(unsigned char* context
     SetWord(context + 8, word);
     if (rv::Current<records::SpriteObject>()->flags2 & 4) context[0] &= 0xDF;
     unsigned char* const member = Field_ActiveMember;
-    std::memcpy(At(AreaW1a_FocusObject_addr), &member, sizeof member);
+    std::memcpy(At(::bof3::Img(AreaW1a_FocusObject_addr)), &member, sizeof member);
     return 1;
 }
 
@@ -691,7 +691,8 @@ struct Clone {
     std::uint32_t pace[3];
     int n_pace;
 };
-constexpr std::uint32_t kFadeBase = 0x5193B0, kFadeSize = 0x249, kFadeInOffset = 0x130;
+constexpr ::bof3::image::CodeVa kFadeBase{0x5193B0};
+constexpr std::uint32_t kFadeSize = 0x249, kFadeInOffset = 0x130;
 const Clone kClones[] = {
     {"Field_ObjectWander", 0x517640, 0x14F,
      {{0x7b, 0x518dd0}, {0x90, 0x5b93d2}, {0xc1, 0x518ca0}, {0x112, 0x5196e0}, {0x139, 0x518d10}, {0x142, 0x518980}}, 6, {0x21, 0x6f, 0xab}, 3},
@@ -703,7 +704,7 @@ const Clone kClones[] = {
      {{0x7a, 0x518dd0}, {0x8f, 0x5b93d2}, {0xc0, 0x518ca0}, {0xdd, 0x518000}, {0x129, 0x5196e0}, {0x15e, 0x518d10}, {0x167, 0x518980}}, 7, {0x20, 0x6e, 0xaa}, 3},
     {"Field_ObjectWait", 0x518AC0, 0x31, {}, 0, {}, 0},
     {"Field_ObjectStill", 0x517FE0, 0x17, {}, 0, {}, 0},
-    {"Field_ObjectFadeOut", kFadeBase, kFadeSize, {{0x2e, 0x454cc0}, {0xf4, 0x454d60}, {0x15e, 0x454cc0}, {0x217, 0x454d60}}, 4, {}, 0},
+    {"Field_ObjectFadeOut", kFadeBase.v, kFadeSize, {{0x2e, 0x454cc0}, {0xf4, 0x454d60}, {0x15e, 0x454cc0}, {0x217, 0x454d60}}, 4, {}, 0},
     {"Field_ObjectFadeIn", 0, 0, {}, 0, {}, 0},   // FadeOut's copy + 0x130
     {"Field_ObjectTurn", 0x5196E0, 0x103, {{0x4d, 0x518080}, {0x84, 0x578c10}}, 2, {}, 0},
     {"Field_ObjectLinked", 0x519600, 0x6F, {{0x35, 0x537540}, {0x68, 0x537540}}, 2, {}, 0},
@@ -743,14 +744,14 @@ void Patch32(void* copy, std::uint32_t at, std::uint32_t expected, std::uint32_t
 struct Region { std::uint32_t at, size; };
 constexpr std::uint32_t kObjectsLow = 0x7DEE80 - 0x200;
 const Region kRegions[] = {
-    {kObjectsLow, 0x7E1300 - kObjectsLow},
+    {::bof3::Img(kObjectsLow), 0x7E1300 - kObjectsLow},
     {Address(&Field_Request), 1},
     {Address(&Game_Mode), 2},
-    {BattleE1_Mode_addr, 0x10},
-    {0x8034E0, 0x10},   // kBlockFlags, kCounterSeen
+    {::bof3::Img(BattleE1_Mode_addr), 0x10},
+    {::bof3::Img(0x8034E0), 0x10},   // kBlockFlags, kCounterSeen
     {Address(&Field_ScriptFlags), 2},
-    {AreaW1a_FocusObject_addr, 4},
-    {Field_StepCount_addr, 1},
+    {::bof3::Img(AreaW1a_FocusObject_addr), 4},
+    {::bof3::Img(Field_StepCount_addr), 1},
     {Address(rv::Bytes(ObjTrio)), 0x100}, // kLeaderDirection, kLinkArgument
 };
 constexpr unsigned kRegionBytes = (0x7E1300 - kObjectsLow) + 1 + 2 + 0x10 + 0x10 + 2 + 4 + 1 + 0x100;
@@ -840,7 +841,7 @@ unsigned char* Seed(unsigned k, State& input, unsigned& speed, unsigned& flags) 
     Apply(input);
 
     unsigned char* object = g_object;
-    if (k == kIdle && Often()) object = At(kObjectsLow + Next() % (0x200 + 29 * 0xA4));   // in, and below, Sprite_Objects
+    if (k == kIdle && Often()) object = At(::bof3::Img(kObjectsLow) + Next() % (0x200 + 29 * 0xA4));   // in, and below, Sprite_Objects
     g_current_object = object;
     unsigned char* const s = Sprite_Current;
     unsigned char* const member = Field_ActiveMember;
@@ -874,13 +875,13 @@ unsigned char* Seed(unsigned k, State& input, unsigned& speed, unsigned& flags) 
     // Globals.
     if (Often()) Field_Request = 2;
     if (Often()) Field_StatusBits &= 0xBF;
-    if (Often()) At(Field_StepCount_addr)[0] = At(Field_StepCountPrev_addr)[0];
+    if (Often()) At(::bof3::Img(Field_StepCount_addr))[0] = At(::bof3::Img(Field_StepCountPrev_addr))[0];
     // The talk word: none, a script, a system message, a script message.
     const unsigned talk = Next() % 4;
     SetWord(object + 0x88, talk == 0 ? 0xFFFFu : talk == 1 ? (0x8000u | Next()) : talk == 2 ? ((Next() & 0x5FFFu) | 0x2000u) : Next() & 0x5FFFu);
     // The home box: the next step's high words at the edge, just in, just out.
     if (k == kInHome && Next() % 4) {
-        const unsigned char* const step = At(Field_DirectionSteps_addr) + (object[8] & 7) * 8u;
+        const unsigned char* const step = At(::bof3::Img(Field_DirectionSteps_addr)) + (object[8] & 7) * 8u;
         for (unsigned axis = 0; axis < 2; ++axis) {
             const auto home = static_cast<std::int16_t>(Next() % 4 ? Next() % 64 : Next());
             const auto half = static_cast<std::int16_t>(Next() % 8 ? Next() % 8 : Next());
@@ -980,11 +981,11 @@ void ObjectKinds_Inject() {
             for (int i = 0; i < c.n_pace; ++i) Patch32(clones[k], c.pace[i], kPaceTable, Address(g_pace_stubs), c.name);
         }
         // The fades: the four case addresses of 0x65F654 / 0x65F65C, moved.
-        const std::uint32_t moved = Address(clones[kFadeOut]) - kFadeBase;
+        const std::uint32_t moved = Address(clones[kFadeOut]) - kFadeBase.v;
         for (unsigned i = 0; i < 4; ++i) {
             std::uint32_t target;
-            std::memcpy(&target, At(Field_ObjectFadeOutSteps_addr + 4 * i), sizeof target);
-            if (target < kFadeBase || target >= kFadeBase + kFadeSize) bof3::Fatal("object_kinds: fade case %u is 0x%X", i, (unsigned)target);
+            std::memcpy(&target, At(::bof3::Img(Field_ObjectFadeOutSteps_addr) + 4 * i), sizeof target);
+            if (target < kFadeBase.v || target >= kFadeBase.v + kFadeSize) bof3::Fatal("object_kinds: fade case %u is 0x%X", i, (unsigned)target);
             g_fade_table[i] = target + moved;
         }
         Patch32(clones[kFadeOut], 0xE, 0x65F654, Address(&g_fade_table[0]), "Field_ObjectFadeOut");

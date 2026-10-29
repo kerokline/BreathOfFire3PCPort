@@ -38,7 +38,16 @@
 #     --strict              and every one in src/game a row of
 #                           analysis/typed_left.tsv with a reason, no listed
 #                           src/game key stale (docs/typed-data-census.md 3)
-#   tools/bgm/host          the SPU model's and the sequencer's unit tests
+#   tools/reloc_census.py   the relocation census's gated counts may not rise
+#     --check               (analysis/reloc_census.tsv)
+#   tools/reloc_bare.py     no new bare image address in src/game, src/input,
+#     --check               src/render - a literal in the linked span, a VA in
+#                           a non-placing accessor, a code VA cast to a
+#                           function pointer or handed to Task_Create without
+#                           Img / Code / CodePlace - beyond the ones
+#                           analysis/reloc_bare.tsv lists
+#                           (docs/relocatable-image-round.md 5)
+#   tools/bgm/host         the SPU model's and the sequencer's unit tests
 #                           (spu_tests, seq_tests) on synthetic samples and songs
 #   tools/lift/selftest.sh  the x86 -> C lifter prototype against its
 #                           synthetic corpus, with its negative controls
@@ -103,6 +112,12 @@ jobs:
 
       - name: Every raw data site in src/game is listed with a reason (no game data)
         run: python tools/data_census.py --strict
+
+      - name: The relocation census's gated site counts may not rise (no game data)
+        run: python tools/reloc_census.py --check
+
+      - name: No new bare image address in src/game, src/input, src/render (no game data)
+        run: python tools/reloc_bare.py --check
 
   music-host:
     # The SPU model and libsnd's sequencer (src/audio/) built with the system

@@ -183,7 +183,7 @@ const sh::Callee kCallees[] = {
 // cells hold (0x903A94 up to Cond_Flags: records 0..7).
 const sh::Region kRegions[] = {  // (dynamic initialisation: the first is a symbol's address)
     {Key(&Field_ActiveMember), 4},
-    {at::kBankCount, 4 + 17 * 8},
+    {at::kBankCount.v, 4 + 17 * 8},
     {MoveScript_TintRecords_addr + 0x180, 4},
     {0x92BF18, 4},
     {bof3::addr::Text_Records, 0x10},
@@ -192,12 +192,12 @@ const sh::Region kRegions[] = {  // (dynamic initialisation: the first is a symb
 
 // --- the seed ----------------------------------------------------------------------------
 
-unsigned char* Records() { return sh::Mem(at::kBankRecordsAt); }
+unsigned char* Records() { return sh::Mem(::bof3::Img(at::kBankRecordsAt.v)); }
 
 // The bank list: up to 16 records, each a bank word that is often one of
 // Mode11_ScreenBanks (read in place) and a +7 byte.
 void SeedBanks() {
-    sh::Mem(at::kBankCount)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 4, 8, 16, sh::Next() % 17));
+    sh::Mem(::bof3::Img(at::kBankCount.v))[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 4, 8, 16, sh::Next() % 17));
     sh::SetPointer(MoveScript_TintRecords_addr + 0x180, Records());
     unsigned char* const r = Records();
     for (unsigned i = 0; i < 17; ++i) {

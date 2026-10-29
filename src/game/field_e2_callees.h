@@ -10,18 +10,18 @@
 namespace field_e2::at {
 
 // --- callees nobody owns, called through the harness by address (SH_AT) ------
-constexpr std::uint32_t kHpLoss2 = bof3::addr::Char_LoseAp;   // R2A: (amount word, member byte): record +0x1A down, never below 1 (Char_LoseHp's AP twin)
-constexpr std::uint32_t kFtol = 0x5B9550;            // the CRT's _ftol - st(0) truncated to edx:eax (inlined here, x87 as the CRT)
-constexpr std::uint32_t kLoadWait = bof3::addr::MasterTalk_Reset;        // no arguments, no calls (FieldTail_LoadBank's step 1)
-constexpr std::uint32_t kLoadStep = bof3::addr::MasterTalk_Dispatch;        // jmp through 0x66450C by the byte 0x9398CF (FieldTail_LoadBank's step 2, a tail jump)
-constexpr std::uint32_t kTradeBox = ::bof3::addr::Panel_DrawWindow;   // 0x469750 (E1B's): five words: a window drawn (the trade screen's frame)
-constexpr std::uint32_t kTradeList = bof3::addr::ItemTrade_DrawList;       // (flag): the trade list drawn
-constexpr std::uint32_t kTradeCursor = bof3::addr::ItemTrade_DrawNeeds;     // no arguments: a window drawn
-constexpr std::uint32_t kTradeFrame = bof3::addr::ItemTrade_DrawBackground;      // no arguments: a window frame drawn
-constexpr std::uint32_t kTradeRows = bof3::addr::ItemTrade_RowCount;       // al: the row count, stored at 0x6BE08D
-constexpr std::uint32_t kTradeLacks = bof3::addr::ItemTrade_Lacks;      // (row byte, quantity byte), al: 1 when an ingredient falls short
-constexpr std::uint32_t kTradeCount = bof3::addr::ItemTrade_DrawCount;      // no arguments: a window drawn
-constexpr std::uint32_t kTradeTake = bof3::addr::ItemTrade_TakeNeeds;       // no arguments: the ingredients taken (Inventory_Remove behind a test)
+constexpr ::bof3::image::CodeVa kHpLoss2{bof3::addr::Char_LoseAp};   // R2A: (amount word, member byte): record +0x1A down, never below 1 (Char_LoseHp's AP twin)
+constexpr ::bof3::image::CodeVa kFtol{0x5B9550};            // the CRT's _ftol - st(0) truncated to edx:eax (inlined here, x87 as the CRT)
+constexpr ::bof3::image::CodeVa kLoadWait{bof3::addr::MasterTalk_Reset};        // no arguments, no calls (FieldTail_LoadBank's step 1)
+constexpr ::bof3::image::CodeVa kLoadStep{bof3::addr::MasterTalk_Dispatch};        // jmp through 0x66450C by the byte 0x9398CF (FieldTail_LoadBank's step 2, a tail jump)
+constexpr ::bof3::image::CodeVa kTradeBox{::bof3::addr::Panel_DrawWindow};   // 0x469750 (E1B's): five words: a window drawn (the trade screen's frame)
+constexpr ::bof3::image::CodeVa kTradeList{bof3::addr::ItemTrade_DrawList};       // (flag): the trade list drawn
+constexpr ::bof3::image::CodeVa kTradeCursor{bof3::addr::ItemTrade_DrawNeeds};     // no arguments: a window drawn
+constexpr ::bof3::image::CodeVa kTradeFrame{bof3::addr::ItemTrade_DrawBackground};      // no arguments: a window frame drawn
+constexpr ::bof3::image::CodeVa kTradeRows{bof3::addr::ItemTrade_RowCount};       // al: the row count, stored at 0x6BE08D
+constexpr ::bof3::image::CodeVa kTradeLacks{bof3::addr::ItemTrade_Lacks};      // (row byte, quantity byte), al: 1 when an ingredient falls short
+constexpr ::bof3::image::CodeVa kTradeCount{bof3::addr::ItemTrade_DrawCount};      // no arguments: a window drawn
+constexpr ::bof3::image::CodeVa kTradeTake{bof3::addr::ItemTrade_TakeNeeds};       // no arguments: the ingredients taken (Inventory_Remove behind a test)
 
 // --- the event records (save block +0xCF0..) ----------------------------------
 // kPairs: now Community_Records (symbols.toml). 60 x 8 bytes: +0 in use, +1 the record it names (1-based)
@@ -137,7 +137,5 @@ constexpr std::uint32_t kScenarioHooks = 0x662C80;   // Scenario_Hooks
 // kAreaNumber: now Game_AreaNumber (symbols.toml). Game_AreaNumber (u16)
 // kMapRow: now MapView_Row (symbols.toml). MapView_Row (s16)
 // kMapColumn: now MapView_Column (symbols.toml). MapView_Column (s16)
-
-constexpr std::uint32_t kTextLo = 0x401000, kTextHi = 0x5C3000;   // .text
 
 }  // namespace field_e2::at

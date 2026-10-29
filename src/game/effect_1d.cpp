@@ -104,8 +104,8 @@ unsigned char* NewRecord(const char* who, unsigned index) {
 // 0xC as read on entry; both callees take it).
 unsigned char* ArmFrame() {
     unsigned char* const arm = S() + 0xC;
-    SH_AT(void (__cdecl*)(unsigned char*), at::kArmVertices)(arm);
-    SH_AT(void (__cdecl*)(unsigned char*), at::kArmDraw)(arm);
+    SH_AT(void (__cdecl*)(unsigned char*), at::kArmVertices.v)(arm);
+    SH_AT(void (__cdecl*)(unsigned char*), at::kArmDraw.v)(arm);
     return arm;
 }
 
@@ -241,7 +241,7 @@ extern "C" void __cdecl EffectKind22_WaitArms(void) {
     const unsigned char* const s = S();
     for (unsigned i = 0; i < 5; ++i)
         if (At(UL(s + 0xC + 4 * i))[6] == 0) return;
-    unsigned char* const counter = At(at::kCounter0);
+    unsigned char* const counter = At(::bof3::Img(at::kCounter0.v));
     counter[0] = static_cast<unsigned char>(counter[0] + 1);
     SH_CALL(Effect_Release)();
 }
@@ -310,7 +310,7 @@ extern "C" void __cdecl EffectKind24_Start(void) {
 // FIRST is set 0 (as the original writes it) and +1 up.
 extern "C" void __cdecl EffectKind24_Shrink(void) {
     unsigned char* const ray = S() + 0xC;
-    SH_AT(void (__cdecl*)(const unsigned char*), at::kRayDraw)(ray);
+    SH_AT(void (__cdecl*)(const unsigned char*), at::kRayDraw.v)(ray);
     AddWord(ray + 6, 0xFFF0u);
     if (SW(ray + 6) < 0) SetWord(ray + 6, 0);
     if (SW(ray + 6) < 0x80) AddWord(ray + 8, 0xFFF0u);

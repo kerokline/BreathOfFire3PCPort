@@ -47,10 +47,10 @@ const Callees kOriginals = {
     {0x4981F1, 0x4983F1},
     Look_Return, Field_LoadingFrame, Menu_Frame,
     Field_Frame, LoadDatFile, File_LoadDone, Task_Sleep, Gfx_ClutStripCopyRow, Sprite_FaceDirection,
-    Snd_LoadBankFile, Fn<void (__cdecl*)()>(kAfterShop), Text_EmitGlyph,
+    Snd_LoadBankFile, Fn<void (__cdecl*)()>(::bof3::Code(kAfterShop.v)), Text_EmitGlyph,
     AreaMap_Frame, Party_ExtraScreens, Party_UpdateScreens, Field_ObjectsScreen, Effect_RunObjects,
-    MoveScript_TintFrame, Field_DrawFrame, Field_ModeDispatch, Fn<void (__cdecl*)()>(kMenuStates),
-    Field_RunTaskRecords, Fn<void (__cdecl*)()>(kShopStates),
+    MoveScript_TintFrame, Field_DrawFrame, Field_ModeDispatch, Fn<void (__cdecl*)()>(::bof3::Code(kMenuStates.v)),
+    Field_RunTaskRecords, Fn<void (__cdecl*)()>(::bof3::Code(kShopStates.v)),
     Sprite_ShadeFadeBegin, Sprite_ShadeFadeStep,
     Flags_Test, Flags_Set, ScriptFlags_Set40, Music_LoadFile, Music_FadeOutStop, Sound_PlayEffect,
     Effect_FindFree, Scenario_CallA, AreaMap_SetupEntries, MoveCmd_TestFB, Field_ChangeArea,
@@ -98,7 +98,7 @@ void WaitLoadFramed() {
 
 // Scenario chapter 1's bytes (docs/field-modes.md section 2).
 unsigned Area() { return Game_AreaNumber; }
-unsigned char& Counter(unsigned i) { return At(at::kCounters + i)[0]; }
+unsigned char& Counter(unsigned i) { return At(::bof3::Img(at::kCounters) + i)[0]; }
 void ClearCounters() { for (unsigned i = 0; i < 4; ++i) Counter(i) = 0; }
 void SetStep5(unsigned v) { MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(v); }
 void SetRun(int v) { MoveScript_Var7 = static_cast<signed char>(v); }
@@ -138,8 +138,8 @@ bool PlaceEffect(unsigned char kind) {
 // to 21 past it); the held word is read once.
 extern "C" void __cdecl Look_PadControl(void) {
     const unsigned held = Input_Held;
-    if ((Word(At(Gfx_UnpackScratch_addr + 0x1f006)) & held & 0xFFFF) == 0) {
-        const short pitch = Signed16(kPitch);
+    if ((Word(At(::bof3::Img(Gfx_UnpackScratch_addr) + 0x1f006)) & held & 0xFFFF) == 0) {
+        const short pitch = Signed16(::bof3::Img(kPitch));
         if (pitch > 0x200) {
             ModeStates_LookTurn = 0;
         } else if (pitch < 0x200) {
@@ -150,20 +150,20 @@ extern "C" void __cdecl Look_PadControl(void) {
     }
     const unsigned buttons = (held >> 8) & 0xFF;
     if ((buttons & 0x40) != 0 && Camera_Angles[0] > static_cast<short>(0xFD56)) {
-        AddWord(kYaw, -0x16);
-        AddWord(kYawCopy, -0x16);
+        AddWord(::bof3::Img(kYaw), -0x16);
+        AddWord(::bof3::Img(kYawCopy), -0x16);
     }
     if ((buttons & 0x10) != 0 && Camera_Angles[0] < static_cast<short>(0xFE39)) {
-        AddWord(kYaw, 0x16);
-        AddWord(kYawCopy, 0x16);
+        AddWord(::bof3::Img(kYaw), 0x16);
+        AddWord(::bof3::Img(kYawCopy), 0x16);
     }
-    if ((buttons & 0x20) != 0 && Signed16(kPitch) < 0x355) {
-        AddWord(kPitch, 0x16);
-        AddWord(kPitchCopy, 0x16);
+    if ((buttons & 0x20) != 0 && Signed16(::bof3::Img(kPitch)) < 0x355) {
+        AddWord(::bof3::Img(kPitch), 0x16);
+        AddWord(::bof3::Img(kPitchCopy), 0x16);
     }
-    if ((buttons & 0x80) != 0 && Signed16(kPitch) > 0xAA) {
-        AddWord(kPitch, -0x16);
-        AddWord(kPitchCopy, -0x16);
+    if ((buttons & 0x80) != 0 && Signed16(::bof3::Img(kPitch)) > 0xAA) {
+        AddWord(::bof3::Img(kPitch), -0x16);
+        AddWord(::bof3::Img(kPitchCopy), -0x16);
     }
 }
 
@@ -178,31 +178,31 @@ extern "C" void __cdecl Look_PadControl(void) {
 // it lies.
 extern "C" void __cdecl Look_Return(void) {
     if (Camera_Angles[0] > static_cast<short>(0xFD56)) {
-        AddWord(kYaw, -0x16);
-        AddWord(kYawCopy, -0x16);
+        AddWord(::bof3::Img(kYaw), -0x16);
+        AddWord(::bof3::Img(kYawCopy), -0x16);
     } else {
         Camera_Angles[0] = 0xFD56;
         Light_AnglesCopy[0] = 0xFD56;
     }
-    const short pitch = Signed16(kPitch);
+    const short pitch = Signed16(::bof3::Img(kPitch));
     if (pitch == 0x200) return;
     if (ModeStates_LookTurn == 0) {
         if (pitch <= 0x200) {
-            SetWord(At(Cond_AngleFB_addr), 0x200);
+            SetWord(At(::bof3::Img(Cond_AngleFB_addr)), 0x200);
             Light_AnglesCopy[2] = 0x200;
             return;
         }
-        AddWord(kPitchCopy, -0x16);
-        SetWord(At(Cond_AngleFB_addr), static_cast<unsigned>(pitch - 0x16));
+        AddWord(::bof3::Img(kPitchCopy), -0x16);
+        SetWord(At(::bof3::Img(Cond_AngleFB_addr)), static_cast<unsigned>(pitch - 0x16));
         return;
     }
     if (pitch >= 0x200) {
-        SetWord(At(Cond_AngleFB_addr), 0x200);
+        SetWord(At(::bof3::Img(Cond_AngleFB_addr)), 0x200);
         Light_AnglesCopy[2] = 0x200;
         return;
     }
-    AddWord(kPitchCopy, 0x16);
-    SetWord(At(Cond_AngleFB_addr), static_cast<unsigned>(pitch + 0x16));
+    AddWord(::bof3::Img(kPitchCopy), 0x16);
+    SetWord(At(::bof3::Img(Cond_AngleFB_addr)), static_cast<unsigned>(pitch + 0x16));
 }
 
 // original 0x496250 (no PSX twin paired): mode 6's step 1 - Look_Return, and
@@ -210,7 +210,7 @@ extern "C" void __cdecl Look_Return(void) {
 // with Field_Request and Game_Step 0.
 extern "C" void __cdecl GameMode_LookEnd(void) {
     g.look_return();
-    if (static_cast<std::uint16_t>(Camera_Angles[0]) == 0xFD56 && Word(At(Cond_AngleFB_addr)) == 0x200) {
+    if (static_cast<std::uint16_t>(Camera_Angles[0]) == 0xFD56 && Word(At(::bof3::Img(Cond_AngleFB_addr))) == 0x200) {
         Game_Mode = 2;
         Field_Request = 0;
         Game_Step = 0;
@@ -225,7 +225,7 @@ extern "C" void __cdecl GameMode_LookEnd(void) {
 // entry 7) - a tail jump through GameMode_ShopSteps 0x656AAC on Game_Step:
 // 0 Shop_Open, 1 Shop_Frame, 2 Shop_Close. Unchecked: step 3 would run mode
 // 8's first step, GameMode8_Enter 0x496440, the word after the table.
-extern "C" void __cdecl GameMode_Shop(void) { Entry(GameMode_ShopSteps_addr, Game_Step)(); }
+extern "C" void __cdecl GameMode_Shop(void) { Entry(::bof3::Img(GameMode_ShopSteps_addr), Game_Step)(); }
 
 // original 0x4962A0 (no PSX twin paired; PSX 0x80199270): the shop's step 0. The object the
 // shop was opened on is the s8 0x929F0C (Field_ObjectIdle sets it with
@@ -418,7 +418,7 @@ extern "C" __attribute__((noinline, disable_tail_calls)) void __cdecl MsgBox_Sys
 // glyph bound here (Text_DrawString's 0xA00 test is not in this draw).
 extern "C" const unsigned char* __cdecl Text_DrawSmall(int x, int y, unsigned colour, unsigned count, const unsigned char* text) {
     const unsigned c = colour & 0xFF;
-    const unsigned char* const uv = At(at::kSmallUV + (c >> 4) * 2);
+    const unsigned char* const uv = At(::bof3::Img(at::kSmallUV) + (c >> 4) * 2);
     const unsigned u = uv[0], v = uv[1];
     const int clut = static_cast<int>(0x7800u | (c & 0xF));
     const unsigned char* p = text;
@@ -464,13 +464,13 @@ extern "C" const unsigned char* __cdecl Text_DrawSmall(int x, int y, unsigned co
 // FieldCore_State2Steps 0x66011C on Sprite_Current +2 (9 entries:
 // 0x525390, 0x5257A0, FieldCore_Fade, 0x525960, 0x525CA0, 0x5261E0,
 // 0x526490, 0x526A90, 0x526B80). Unchecked, the byte read afresh.
-extern "C" void __cdecl FieldCore_State2(void) { Entry(FieldCore_State2Steps_addr, Sprite_Current[2])(); }
+extern "C" void __cdecl FieldCore_State2(void) { Entry(::bof3::Img(FieldCore_State2Steps_addr), Sprite_Current[2])(); }
 
 // original 0x5258B0 (PSX 0x801B8264): sub-state 2 of state 2 - a tail jump
 // through FieldCore_FadeSteps 0x660158 on Sprite_Current +3 (0
 // FieldCore_FadeBegin, 1 FieldCore_FadeStep). Unchecked: 2 would run
 // 0x525960's table, the words after.
-extern "C" void __cdecl FieldCore_Fade(void) { Entry(FieldCore_FadeSteps_addr, Sprite_Current[3])(); }
+extern "C" void __cdecl FieldCore_Fade(void) { Entry(::bof3::Img(FieldCore_FadeSteps_addr), Sprite_Current[3])(); }
 
 // original 0x5258D0 (PSX 0x801B82A8): the fade's first frame -
 // Sprite_ShadeFadeBegin, then the shade bytes +0x5D..+0x5F 0x80 and +0x5C 1,
@@ -507,7 +507,7 @@ extern "C" void __cdecl FieldCore_FadeStep(void) {
 // Scena01_States 0x660D7C on the s8 0x8034E2: 0 0x539AE0 (the start), 1
 // Scena01_EnterArea, 2 0x53A2B0 (the run). Unchecked, as Scena16_Frame.
 extern "C" void __cdecl Scena01_Frame(void) {
-    Entry(Scena01_States_addr, static_cast<signed char>(MoveScript_PartyRecords[0x62]))();
+    Entry(::bof3::Img(Scena01_States_addr), static_cast<signed char>(MoveScript_PartyRecords[0x62]))();
 }
 
 namespace {
@@ -590,7 +590,7 @@ void Scena01_EnterAreaBody() {
             }
         } else if (c == 4) {
             ClearCounters();
-            SetWord(At(MoveScript_PartyRecords_addr + 0x66), 0);
+            SetWord(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), 0);
             g.music_stop(0xA);
             Draw_PassFlags = 0x1F;
         } else {
@@ -738,7 +738,7 @@ void Scena01_EnterAreaBody() {
         ClearCounters();
         SetRun(0);
         SetStep5(0);
-        SetWord(At(MoveScript_PartyRecords_addr + 0x66), 0);
+        SetWord(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), 0);
     }
 }
 
@@ -879,7 +879,7 @@ extern "C" unsigned char __cdecl Scena01_StepHook(int x, int z) {
 // low words only, so ours passes them zero-extended.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_DrawCursor(void) {
     const unsigned set = MenuWindows_ListSet;
-    const unsigned char* const rows = At(at::kCursorRows + set * 6);
+    const unsigned char* const rows = At(::bof3::Img(at::kCursorRows) + set * 6);
     const short row = AreaW0c_ChoiceAnswer;
     const unsigned char* const w = reinterpret_cast<const unsigned char*>(BattleWinStates_Current);
     const unsigned y = (Word(rows + 4) * static_cast<unsigned>(row) + static_cast<unsigned>(static_cast<short>(Word(w + 6)) >> 4) +

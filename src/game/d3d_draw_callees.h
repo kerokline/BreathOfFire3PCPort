@@ -19,13 +19,13 @@ using U = std::uint32_t;
 
 // A bare `ret` (24 callers); every handler calls it twice (the cell sprite
 // once) with an argument pushed.
-constexpr U kRetOnly = bof3::addr::BareRet;
+constexpr ::bof3::image::CodeVa kRetOnly{bof3::addr::BareRet};
 
 // Data the handlers read, all Capcom's addresses (docs/d3d-draw.md section 2).
 // kScaleX: now D3d_ScaleX (symbols.toml). D3d_ScaleX, float
 // kScaleY: now D3d_ScaleY (symbols.toml). D3d_ScaleY, float
 // kVertices: now D3d_Vertices (symbols.toml). D3d_Vertices, 4 x D3DTLVERTEX
-constexpr U kTexCoords = 0x7CA9E0;    // D3d_TexCoords, 256 floats, tc[i] = (i + 0.512) / 256 in game
+constexpr ::bof3::image::Va kTexCoords{0x7CA9E0};    // D3d_TexCoords, 256 floats, tc[i] = (i + 0.512) / 256 in game
 // kDrawTpage: now Gfx_DrawTpage (symbols.toml). Gfx_DrawTpage, u16: the last draw-mode primitive's tpage word
 // kShadeCache: now D3d_ShadeModeCache (symbols.toml). D3d_ShadeModeCache
 // kRenderFlags: now Gfx_RenderFlags (symbols.toml). Gfx_RenderFlags, byte: bit 0 the software surfaces

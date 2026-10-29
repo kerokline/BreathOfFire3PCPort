@@ -203,8 +203,8 @@ const bh::Callee kCallees[] = {
     {"Battle_PrevTarget", 0x4457F0, KeyOf(&::Battle_PrevTarget), 1, {kAll}, bh::Answer::kByte, 0xFF, 10},
     {"Battle_ReturnItem", 0x446D90, KeyOf(&::Battle_ReturnItem), 2, {kU8, kU16}, bh::Answer::kFlag, 0, 0},
     {"Escape_Chance", 0x44A520, KeyOf(&::Escape_Chance), 1, {kAll}, bh::Answer::kByte, 0, 0x40},
-    {"0x44FDE0", at::kAfterEquip, at::kAfterEquip, 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"0x453300", at::kMemberRefresh, at::kMemberRefresh, 1, {kU8}, bh::Answer::kGarbage, 0, 0},
+    {"0x44FDE0", at::kAfterEquip.v, at::kAfterEquip.v, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x453300", at::kMemberRefresh.v, at::kMemberRefresh.v, 1, {kU8}, bh::Answer::kGarbage, 0, 0},
     {"Inventory_Add", bof3::addr::Inventory_Add, KeyOf(&::Inventory_Add), 3, {kU8, kU8, kU8}, bh::Answer::kFlag, 0, 0},
     {"Inventory_Remove", bof3::addr::Inventory_Remove, KeyOf(&::Inventory_Remove), 3, {kU8, kU8, kU8}, bh::Answer::kFlag, 0, 0},
     {"Battle_ReturnQueuedItem", bof3::addr::Battle_ReturnQueuedItem, KeyOf(&::Battle_ReturnQueuedItem), 1, {kU8}, bh::Answer::kGarbage, 0, 0},
@@ -219,11 +219,11 @@ const bh::Region kRegions[] = {
     {0x903B24, 0x903F90 - 0x903B24},   // CharacterRecords 1..7 (0x903A70 + 8 x 0xA4 = Cond_Flags)
     {0x904060, 0x10},                  // 0x904065..0x904067
     {Character_IndexById_addr, 0x18}, // Character_IndexById
-    {at::kPreview, 8},
-    {at::kTint_addr, 4},
+    {at::kPreview.v, 8},
+    {at::kTint_addr.v, 4},
     {0x904EFC, 4},                     // MoveScript_FAWord
     {Field_Kind2Z_addr, 8},            // Field_Kind2Z, Field_Kind2X
-    {at::kRepeatLatch, 4},
+    {at::kRepeatLatch.v, 4},
     {0x904154, 0x9045FC - 0x904154},   // the inventory's id and count lists (0x656B00 / 0x656B14)
     {0x93C320, 0x3C0},                 // the queue's tail to 0x93C340, Escape_Roll's objects past the eight
 };
@@ -311,36 +311,36 @@ void Seed(unsigned k) {
     Buttons();
     Windows();
     // the counts every loop runs to: the party 0..3 (1..3 where it divides), the divisors at least 1
-    M(at::kPartyCount)[0] = Byte({0, 1, 2, 3, 3, 3});
+    M(::bof3::Img(at::kPartyCount.v))[0] = Byte({0, 1, 2, 3, 3, 3});
     M(Battle_PartyStanding_addr)[0] = Byte({1, 1, 2, 3, 8});
     M(Battle_EnemiesLeft_addr)[0] = Byte({1, 2, 3, 8});
-    M(at::kFaceStep)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 4 : bh::Next());
+    M(::bof3::Img(at::kFaceStep.v))[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 4 : bh::Next());
     switch (base) {
     case 0x4463E0:   // divides by the count
-        M(at::kPartyCount)[0] = static_cast<unsigned char>(1 + bh::Next() % 3);
+        M(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(1 + bh::Next() % 3);
         break;
     case 0x446110:
     case 0x4461B0:
-        M(at::kFlags)[0] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? M(at::kFlags)[0] | 0x80 : M(at::kFlags)[0] & 0x7F);
+        M(::bof3::Img(at::kFlags.v))[0] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? M(::bof3::Img(at::kFlags.v))[0] | 0x80 : M(::bof3::Img(at::kFlags.v))[0] & 0x7F);
         M(BattleE3_EvadeBoost_addr)[0] = Byte({0, 1, 49, 50, 98, 99, 100, 0xFF});
         M(BattleE4_HitEnemy_addr)[0] = Byte({0, 1, 49, 50, 98, 99, 100, 0xFF});
         break;
     case 0x446810: {
         unsigned char* const fs = Field_State;
         auto* const member_rec = rv::As<records::PartyMember>(fs);
-        M(at::kFlags)[0] = static_cast<unsigned char>(bh::Next() % 3 == 0 ? M(at::kFlags)[0] | 0x40 : M(at::kFlags)[0] & 0xBF);
-        M(at::kActor)[0] = static_cast<unsigned char>(bh::Next() % 11);
+        M(::bof3::Img(at::kFlags.v))[0] = static_cast<unsigned char>(bh::Next() % 3 == 0 ? M(::bof3::Img(at::kFlags.v))[0] | 0x40 : M(::bof3::Img(at::kFlags.v))[0] & 0xBF);
+        M(::bof3::Img(at::kActor.v))[0] = static_cast<unsigned char>(bh::Next() % 11);
         if (bh::Often()) fs[0x130] &= 0xFE;
         if (bh::Often()) member_rec->status = member_rec->status & ~0x4864u;
-        M(at::kActionKind)[0] = Byte({4, 4, 1, bh::Next()});
-        SetWord(M(at::kAbility), Word16({0xA1, 0xA1, 0xA0, bh::Next() & 0xFFFF}));
+        M(::bof3::Img(at::kActionKind.v))[0] = Byte({4, 4, 1, bh::Next()});
+        SetWord(M(::bof3::Img(at::kAbility.v)), Word16({0xA1, 0xA1, 0xA0, bh::Next() & 0xFFFF}));
         M(BattleFlow_AnimGate_addr)[0] = Byte({0, 0, 1, bh::Next()});
         fs[0xB9] = Byte({0, 1, 50, 99, 100, bh::Next()});
         break;
     }
     case 0x446720:   // the entry order: members or the 0xFF end, the count 0..3
         M(BattleActorCopies_EntryCount_addr)[0] = static_cast<unsigned char>(bh::Next() % 4);
-        for (unsigned i = 0; i < 3; ++i) M(at::kEntryOrder)[i] = Byte({0, 1, 2, 0xFF});
+        for (unsigned i = 0; i < 3; ++i) M(::bof3::Img(at::kEntryOrder.v))[i] = Byte({0, 1, 2, 0xFF});
         break;
     case 0x446700:   // the front stays inside the battle bytes (0x904ACC + 0xD3 = 0x904B9F)
         M(BossSe_RoundSlot_addr)[0] = static_cast<unsigned char>(1 + bh::Next() % 0x20);
@@ -363,7 +363,7 @@ void Seed(unsigned k) {
         break;
     case 0x446D90:   // counts at 99 here and there
         for (unsigned c = 0; c < 4; ++c) {
-            unsigned char* const counts = M(static_cast<U>(Long(M(at::kInventoryCounts + 4 * c))));
+            unsigned char* const counts = M(static_cast<U>(Long(M(::bof3::Img(at::kInventoryCounts.v) + 4 * c))));
             for (unsigned i = 0; i < 0x80; ++i)
                 if (bh::Next() % 3 == 0) counts[i] = 0x63;
         }
@@ -376,7 +376,7 @@ void Seed(unsigned k) {
         const unsigned member = M(Window18_addr + 0xC)[0];
         const unsigned char c = M(Character_IndexById_addr + M(Cond_Flags_addr + 0xd5 + member)[0])[0];
         const unsigned char* const r = M(CharacterRecords_addr + c * at::kCharStride);
-        for (unsigned i = 0; i < 6; ++i) M(at::kPreview + i)[0] = Byte({0, r[0x12 + i], r[0x12 + i], bh::Next()});
+        for (unsigned i = 0; i < 6; ++i) M(::bof3::Img(at::kPreview.v) + i)[0] = Byte({0, r[0x12 + i], r[0x12 + i], bh::Next()});
         break;
     }
     case 0x449C70: {   // the slot's item: none a third of the time
@@ -466,7 +466,7 @@ void Disturb(U h) {
     case 2: SetWord(M(Window18_addr + 0x10), b & 1 ? 0 : h >> 12); break;
     case 3: M(Window17_addr + 0xD)[0] = b; break;
     case 4: M(Window21_addr + 0xA)[0] = b & 1; break;
-    case 5: M(at::kPartyCount)[0] = static_cast<unsigned char>(b % 4); break;
+    case 5: M(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(b % 4); break;
     default: M(Field_Kind2Hold_addr)[0] = b & 1; break;
     }
 }

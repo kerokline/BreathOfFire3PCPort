@@ -177,7 +177,7 @@ const sh::Callee kCallees[] = {
     // nobody's this round (catalog part 6), by address: the arm's draw reads
     // the four points 0x46F570 wrote and the words after them - hashed to
     // +0x54 where the standard row logs the pointer only
-    {"0x46F690", at::kArmDraw, at::kArmDraw, 1, {0}, kG, 0, 0, {0x54}, nullptr, nullptr, true},
+    {"0x46F690", at::kArmDraw.v, at::kArmDraw.v, 1, {0}, kG, 0, 0, {0x54}, nullptr, nullptr, true},
     // standard rows re-listed: EffectGte_ProjectPoint's point is a stack local
     // (its address differs between the copy and ours): hashed, not logged; out
     // (the packet) logged and filled

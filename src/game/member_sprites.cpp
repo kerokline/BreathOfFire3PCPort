@@ -38,23 +38,23 @@ template <class To> To Fn(std::uint32_t address) { return reinterpret_cast<To>(s
 // nobody's, Capcom's addresses typed from their call sites and, where read,
 // their first instructions (docs/member-sprites.md, section 3).
 const Callees kOriginals = {
-    Sprite_RestoreClut, reinterpret_cast<const std::uint32_t*>(Member_States_addr),
+    Sprite_RestoreClut, reinterpret_cast<const std::uint32_t*>(::bof3::Img(Member_States_addr)),
     Sprite_ClearSteps, MapView_GroundAt, Sprite_SetAnimation,
-    reinterpret_cast<const std::uint32_t*>(at::kControlStates), Sprite_ScriptTick,
-    Fn<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Field_Tile89), Fn<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Field_Tile8A),
+    reinterpret_cast<const std::uint32_t*>(::bof3::Img(at::kControlStates.v)), Sprite_ScriptTick,
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Field_Tile89)), Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(bof3::addr::Field_Tile8A)),
     Sprite_EnsureAnimation, Member_Idle, Member_FollowStep,
-    Fn<unsigned char (__cdecl*)()>(bof3::addr::Field_LeaderPushObjects), Fn<void (__cdecl*)()>(bof3::addr::Field_JumpSetUp), Fn<void (__cdecl*)()>(bof3::addr::Field_JumpCheckHeight),
-    Fn<void (__cdecl*)()>(bof3::addr::Field_LeaderStepTick),
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderPushObjects)), Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_JumpSetUp)), Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_JumpCheckHeight)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_LeaderStepTick)),
     Member_WalkEnd,
-    Fn<void (__cdecl*)()>(bof3::addr::Field_EquipTick), Fn<void (__cdecl*)()>(bof3::addr::Field_Bit20Tick), Fn<void (__cdecl*)()>(bof3::addr::Field_Bit80Tick),
-    Fn<void (__cdecl*)()>(bof3::addr::Field_FloorDamage), Fn<unsigned char (__cdecl*)()>(bof3::addr::Field_TileD0),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_EquipTick)), Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_Bit20Tick)), Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_Bit80Tick)),
+    Fn<void (__cdecl*)()>(::bof3::Code(bof3::addr::Field_FloorDamage)), Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_TileD0)),
     Member_Follow,
     Member_CatchUp, Field_DirectionTo, Member_StepAhead,
-    Fn<unsigned char (__cdecl*)(long, long, unsigned, long)>(bof3::addr::Field_WayBlocked),
-    Field_CellAhead, Fn<long (__cdecl*)(long, long, unsigned)>(bof3::addr::MapView_SlopeAt),
-    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(bof3::addr::AreaMap_CellNibble),
+    Fn<unsigned char (__cdecl*)(long, long, unsigned, long)>(::bof3::Code(bof3::addr::Field_WayBlocked)),
+    Field_CellAhead, Fn<long (__cdecl*)(long, long, unsigned)>(::bof3::Code(bof3::addr::MapView_SlopeAt)),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(bof3::addr::AreaMap_CellNibble)),
     Rand,
-    Fn<unsigned char (__cdecl*)()>(bof3::addr::Field_CellAheadRaised), Field_CellAheadFlat,
+    Fn<unsigned char (__cdecl*)()>(::bof3::Code(bof3::addr::Field_CellAheadRaised)), Field_CellAheadFlat,
     Field_ReadCells, Field_CellClass, Field_TurnUnless, Field_CellSlope, Field_CellPairTurn,
     Field_CellKind,
     AreaMap_ByteAt, Field_CellFacing, Field_ObjectAhead,
@@ -78,7 +78,7 @@ unsigned char* Member(unsigned i) { return At(Address(rv::Bytes(ObjTrio)) + i * 
 
 // The member records' views (game/record_views.h): Sprite_Current
 // and Field_State are ObjTrio records here.
-unsigned char& Cell(unsigned i) { return At(at::kCells)[i & 0xFF]; }
+unsigned char& Cell(unsigned i) { return At(::bof3::Img(at::kCells.v))[i & 0xFF]; }
 std::uint32_t U(const unsigned char* at) { return static_cast<std::uint32_t>(Long(at)); }
 void Dispatch(const std::uint32_t* table, unsigned index) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
@@ -322,8 +322,8 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
     const std::uint32_t gz = static_cast<std::uint32_t>(target->step_z) * target_steps + static_cast<std::uint32_t>(target->z);
     const unsigned dir = target->direction;
     const std::int32_t near = rv::Bytes(target)[0x70] ? 0x20000 : 0x18000;
-    const std::uint32_t px = gx - (RowX(Field_DirectionSteps_addr, dir) << 1);
-    const std::uint32_t pz = gz - (RowZ(Field_DirectionSteps_addr, dir) << 1);
+    const std::uint32_t px = gx - (RowX(::bof3::Img(Field_DirectionSteps_addr), dir) << 1);
+    const std::uint32_t pz = gz - (RowZ(::bof3::Img(Field_DirectionSteps_addr), dir) << 1);
     if (Abs(static_cast<std::uint32_t>(c->x) - gx) <= near && Abs(static_cast<std::uint32_t>(c->z) - gz) <= near) return 1;
 
     g.catch_up(static_cast<long>(px), static_cast<long>(pz));
@@ -411,11 +411,11 @@ extern "C" unsigned char __cdecl Member_StepAhead(void) {
     const std::uint32_t frames = c->step_frames;
     std::uint32_t ax, az;
     if (rv::Bytes(c)[0x70] == 0) {
-        ax = RowX(MoveCmd_F9Steps_addr, c->direction) * frames * speed + static_cast<std::uint32_t>(c->x);
-        az = RowZ(MoveCmd_F9Steps_addr, c->direction) * frames * speed + static_cast<std::uint32_t>(c->z);
+        ax = RowX(::bof3::Img(MoveCmd_F9Steps_addr), c->direction) * frames * speed + static_cast<std::uint32_t>(c->x);
+        az = RowZ(::bof3::Img(MoveCmd_F9Steps_addr), c->direction) * frames * speed + static_cast<std::uint32_t>(c->z);
     } else {
-        ax = static_cast<std::uint32_t>(c->x) + ((RowX(MoveCmd_F9Steps_addr, c->direction) * frames * speed) << 1);
-        az = static_cast<std::uint32_t>(c->z) + ((RowZ(MoveCmd_F9Steps_addr, c->direction) * frames * speed) << 1);
+        ax = static_cast<std::uint32_t>(c->x) + ((RowX(::bof3::Img(MoveCmd_F9Steps_addr), c->direction) * frames * speed) << 1);
+        az = static_cast<std::uint32_t>(c->z) + ((RowZ(::bof3::Img(MoveCmd_F9Steps_addr), c->direction) * frames * speed) << 1);
     }
     at::kAimX = static_cast<std::int32_t>(ax);
     Scratch_Swap = static_cast<std::int32_t>(az);
@@ -491,8 +491,8 @@ extern "C" void __cdecl Member_CatchUp(long x_arg, long z_arg) {
     bool found = false;
     for (;;) {
         g.direction_to(x_arg, z_arg, &dir);
-        rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->x, static_cast<std::int32_t>(((RowX(Field_DirectionSteps_addr, dir) << 1) * static_cast<std::uint32_t>(left)) + ox));
-        rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->z, static_cast<std::int32_t>(((RowZ(Field_DirectionSteps_addr, dir) << 1) * static_cast<std::uint32_t>(left)) + oz));
+        rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->x, static_cast<std::int32_t>(((RowX(::bof3::Img(Field_DirectionSteps_addr), dir) << 1) * static_cast<std::uint32_t>(left)) + ox));
+        rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->z, static_cast<std::int32_t>(((RowZ(::bof3::Img(Field_DirectionSteps_addr), dir) << 1) * static_cast<std::uint32_t>(left)) + oz));
         {
             const records::PartyMember* c = rv::Current<records::PartyMember>();
             const long object = g.object_at(c->x, c->z, dir);
@@ -644,7 +644,7 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
     const records::PartyMember* c = rv::Current<records::PartyMember>();
     const unsigned char facing = c->direction;
     if (c->x_frac != 0 && c->z_frac != 0) return 1;
-    const unsigned char* const offsets = At(at::kCellOffsets) + facing * 2u;
+    const unsigned char* const offsets = At(::bof3::Img(at::kCellOffsets.v)) + facing * 2u;
     const std::uint16_t ahead_z = static_cast<std::uint16_t>(static_cast<signed char>(offsets[1]) + c->z_whole);
     const std::uint16_t ahead_x = static_cast<std::uint16_t>(static_cast<signed char>(offsets[0]) + c->x_whole);
     g.read_cells(ahead_x, ahead_z);
@@ -951,7 +951,7 @@ extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned
     case 0x10:
         if (to == 0x11) {
             const unsigned char* const s = Sprite_Current;
-            if (Address(s) == FieldEvent_Object905DA0_addr) return (s[0xB] & 1) ? 0 : 0xFF;
+            if (Address(s) == ::bof3::Img(FieldEvent_Object905DA0_addr)) return (s[0xB] & 1) ? 0 : 0xFF;
             return (Field_State[0x138] & 1) ? 0 : 0xFF;
         }
         [[fallthrough]];

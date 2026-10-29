@@ -15,8 +15,8 @@
 #include "hook/log.h"
 
 namespace draw_pool {
-unsigned char* g_items = DrawItems;
-unsigned short* g_free = DrawItemPool_Free;
+unsigned char* g_items = nullptr;   // the original's until DrawPool_Grow (draw_pool.h)
+unsigned short* g_free = nullptr;
 unsigned g_count = DrawItemPool_Free_count;
 }  // namespace draw_pool
 
@@ -249,9 +249,11 @@ void DrawPool_Reserve() {
     if (bof3::IsExeHost()) {
         static_assert(bof3::exe_layout::kPoolSize == kBytes && bof3::exe_layout::kPoolVa + kBytes <= 0x1000000,
                       ".pool holds the 2,048 items below 16 MB");
-        auto* p = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(bof3::exe_layout::kPoolVa));
+        // At the image's place (host.cpp keeps the image below 16 MB).
+        auto* p = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(bof3::exe_layout::kPoolVa)));
         if (std::memcmp(p, kStamp, sizeof kStamp) != 0)
-            bof3::Fatal("DIV-0062: bof3x.exe's .pool at 0x%08X does not carry the stamp", (unsigned)bof3::exe_layout::kPoolVa);
+            bof3::Fatal("DIV-0062: bof3x.exe's .pool at 0x%08X (VA 0x%08X) does not carry the stamp",
+                        (unsigned)::bof3::Img(bof3::exe_layout::kPoolVa), (unsigned)bof3::exe_layout::kPoolVa);
         items = p;
     }
     // The launcher's block, stamped, at one of the candidates (launcher.cpp).

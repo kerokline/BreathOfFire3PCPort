@@ -44,8 +44,8 @@ std::uint8_t* Mem(std::uint32_t at) { return reinterpret_cast<std::uint8_t*>(sta
 constexpr unsigned kEntriesMax = 4;
 constexpr unsigned kEntryBytes = 8;
 struct Model {
-    std::uint32_t entry;     // the entry's address
-    std::uint32_t records;   // its records' address
+    std::uint32_t entry;     // the entry's place
+    std::uint32_t records;   // its records' place (the pointer the entry holds)
     std::uint32_t bytes;     // count * kModelRecordBytes
 };
 Model g_models[kEntriesMax];
@@ -57,12 +57,13 @@ std::uint32_t g_records_len = 0;
 // Area 52: byte +1 of the first extra-object entry.
 std::uint8_t g_area52_byte = 0;
 
-bool InData(std::uint32_t at) { return at >= bof3::kGameDataVa && at < Area108_Model_addr; }
+// A pointer the image holds, a place: inside .data below the entries.
+bool InData(std::uint32_t at) { return at >= ::bof3::Img(bof3::kGameDataVa) && at < ::bof3::Img(Area108_Model_addr); }
 
 void Snapshot() {
     std::uint32_t off = 0;
     for (unsigned k = 0; k < kEntriesMax; ++k) {
-        const std::uint32_t entry = Area108_Model_addr + k * kEntryBytes;
+        const std::uint32_t entry = ::bof3::Img(Area108_Model_addr) + k * kEntryBytes;
         const std::uint8_t* const e = Mem(entry);
         const auto count = static_cast<signed char>(e[0]);
         std::uint32_t records;
@@ -76,7 +77,7 @@ void Snapshot() {
     }
     if (g_model_count == 0) bof3::Fatal("DIV-0182: Area108_Model names no model - not the image's shape");
     g_records_len = off;
-    g_area52_byte = Mem(Area52_ExtraObjects_addr)[1];
+    g_area52_byte = Mem(::bof3::Img(Area52_ExtraObjects_addr))[1];
 }
 
 // True when anything was put back.
@@ -103,7 +104,7 @@ void AreaDataReload_Inject() {
     bof3::PatchBytes("AreaDataReload", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_on)), &was, &is, 1);
     bof3::Log("DIV-0182    area 108's models and area 52's scene byte put back at the area's load (on unless the line above says OFF); "
               "%u models, %u record bytes from 0x%08X",
-              g_model_count, g_records_len, g_models[0].records);
+              g_model_count, g_records_len, g_models[0].records - (::bof3::ImageBase() - ::bof3::image::kBase));   // its VA
 }
 
 void AreaDataReload_OnLoad(unsigned area) {
@@ -111,7 +112,7 @@ void AreaDataReload_OnLoad(unsigned area) {
     if (area == kArea108) {
         if (PutBackArea108()) bof3::Log("DIV-0182    area 108's models put back at the area's load");
     } else if (area == kArea52) {
-        std::uint8_t* const byte = Mem(Area52_ExtraObjects_addr) + 1;
+        std::uint8_t* const byte = Mem(::bof3::Img(Area52_ExtraObjects_addr)) + 1;
         if (*byte != g_area52_byte) bof3::Log("DIV-0182    area 52's scene byte %02X put back to %02X at the area's load", *byte, g_area52_byte);
         *byte = g_area52_byte;
     }

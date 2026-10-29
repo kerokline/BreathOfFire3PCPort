@@ -224,14 +224,14 @@ void ListCallees(int chapter) {
         Add(c);
     }
     // Nobody's, by address (scena_sc3_callees.h).
-    Add(SC3_CAPCOM("0x533E50", kPartyRestore, 0));
+    Add(SC3_CAPCOM("0x533E50", kPartyRestore.v, 0));
     // an index below n (1) or 0xFF; the callers test al's sign
-    Add(Answering(SC3_CAPCOM("0x56D800", kCellFind, 4, kAll, 0xFF, kAll, kAll), sh::Answer::kByte, 0xFF, 0x00));
+    Add(Answering(SC3_CAPCOM("0x56D800", kCellFind.v, 4, kAll, 0xFF, kAll, kAll), sh::Answer::kByte, 0xFF, 0x00));
     // a Sprite_Objects index 0..0x1D, or 0xFF none
-    Add(Answering(SC3_CAPCOM("0x57CD90", kSpriteFindFree, 0), sh::Answer::kByte, 0xFF, 0x1D));
-    Add(SC3_CAPCOM("0x587B80", kMusicStop, 0));
-    Add(SC3_CAPCOM("0x590C90", kItemEvent, 4, 0xFF, kAll, 0xFF, kAll));
-    Add(SC3_CAPCOM("0x591900", kKeyItemAdd, 1, 0xFF));
+    Add(Answering(SC3_CAPCOM("0x57CD90", kSpriteFindFree.v, 0), sh::Answer::kByte, 0xFF, 0x1D));
+    Add(SC3_CAPCOM("0x587B80", kMusicStop.v, 0));
+    Add(SC3_CAPCOM("0x590C90", kItemEvent.v, 4, 0xFF, kAll, 0xFF, kAll));
+    Add(SC3_CAPCOM("0x591900", kKeyItemAdd.v, 1, 0xFF));
     // Ours the originals' E8 / E9 reach: those whose answer is read answer
     // as their callers read it; the rest log the chapter bytes (kPhase).
     Add(Answering(SC3_OURS_CALLEE(Scena03_SpawnAtMember, 1, 0xFF), sh::Answer::kFlag));

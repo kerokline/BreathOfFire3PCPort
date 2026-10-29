@@ -182,8 +182,8 @@ void Seed(unsigned k) {
     case k2BPlace: {
         const U v = sh::Next() % at::kSub2BVariants;
         SetWord(s + 0x36, v);
-        cx = Mem(at::kSub2BCells + 2 * v)[0];
-        cz = Mem(at::kSub2BCells + 2 * v + 1)[0];
+        cx = Mem(::bof3::Img(at::kSub2BCells.v) + 2 * v)[0];
+        cz = Mem(::bof3::Img(at::kSub2BCells.v) + 2 * v + 1)[0];
         break;
     }
     case k2CPlace:
@@ -191,8 +191,8 @@ void Seed(unsigned k) {
         const U v = sh::Next() % at::kSub2CVariants;
         SetWord(s + 0x36, v);
         if (sh::Half()) SetWord(s + 0x3A, 0);   // +8 from the spawn's z cell
-        cx = Mem(at::kSub2CCells + 2 * v)[0];
-        cz = Mem(at::kSub2CCells + 2 * v + 1)[0];
+        cx = Mem(::bof3::Img(at::kSub2CCells.v) + 2 * v)[0];
+        cz = Mem(::bof3::Img(at::kSub2CCells.v) + 2 * v + 1)[0];
         break;
     }
     default: break;

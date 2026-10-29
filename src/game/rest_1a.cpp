@@ -46,8 +46,8 @@ const unsigned char* Member(unsigned i) { return rv::Bytes(ObjTrio) + i * at::kM
 
 // Field_DirectionSteps' row for a direction (x then z), read in place with the
 // direction byte unmasked, as every reader of the table does.
-U StepX(unsigned d) { return static_cast<U>(L(at::kSteps + d * 8)); }
-U StepZ(unsigned d) { return static_cast<U>(L(at::kSteps + d * 8 + 4)); }
+U StepX(unsigned d) { return static_cast<U>(L(::bof3::Img(at::kSteps.v) + d * 8)); }
+U StepZ(unsigned d) { return static_cast<U>(L(::bof3::Img(at::kSteps.v) + d * 8 + 4)); }
 
 // `cdq; xor eax, edx; sub eax, edx`: the absolute value with the original's
 // wrap (the most negative stays negative).
@@ -71,7 +71,7 @@ Handler CodeAt(U table, unsigned count, unsigned index, const char* who) {
     const U cell = table + 4u * index;
     if (index >= count)
         bof3::Fatal("%s: index %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index,
-                    count, static_cast<unsigned>(table), static_cast<unsigned>(cell));
+                    count, static_cast<unsigned>(::bof3::VaOf(table)), static_cast<unsigned>(::bof3::VaOf(cell)));
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(L(cell))));
 }
 
@@ -82,8 +82,8 @@ Handler CodeAt(U table, unsigned count, unsigned index, const char* who) {
 // callee answers 0..0x21 or 0xFF only, so ours aborts on any other.
 void MarkObject(unsigned char found, const char* who) {
     if (found > 0x21) bof3::Fatal("%s: Sprite_ObjectAt answered 0x%X, no object (it answers 0..0x21 or 0xFF); the original marks a record past the tables", who, found);
-    if (found < 0x1E) B(at::kObjectFlags + found * at::kObjectStride) |= 1;
-    else B(at::kExtraFlags + (found - 0x1Eu) * at::kObjectStride) |= 1;
+    if (found < 0x1E) B(::bof3::Img(at::kObjectFlags.v) + found * at::kObjectStride) |= 1;
+    else B(::bof3::Img(at::kExtraFlags.v) + (found - 0x1Eu) * at::kObjectStride) |= 1;
 }
 
 // An Effect_Objects record by an index a callee answered (Field_EffectAhead,
@@ -139,8 +139,8 @@ void Form0Begin() {
         ++Sc()[2];
     } else {
         Sc()[0x2B] = 1;
-        SideProbe(Field_DirectionSteps_addr + 0x18, 3);
-        SideProbe(Field_DirectionSteps_addr + 0x28, 5);
+        SideProbe(::bof3::Img(Field_DirectionSteps_addr) + 0x18, 3);
+        SideProbe(::bof3::Img(Field_DirectionSteps_addr) + 0x28, 5);
         SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(Word(Sc() + 0x2C) + 0x100));
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(Sc()[8]) + 0x42));
         Sc()[0xA] = 5;
@@ -210,7 +210,7 @@ unsigned char CellPickup(unsigned x, unsigned z) {
     } else if (cell == 0xF8) {
         SH_CALL(Effect_SpawnAtCell)(0, x, z);
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, 0x56);
-        for (unsigned k = 0; k < 16; k += 4) SetLong(At(bof3::addr::Text_Records + k), Long(name + k));
+        for (unsigned k = 0; k < 16; k += 4) SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
         if (SH_CALL(Inventory_Add)(0, 0x56, 1) != 0) {
             SH_CALL(Sound_PlayEffect)(0x106);
             SH_CALL(Msg_OpenSystem)(2);
@@ -287,7 +287,7 @@ extern "C" void __cdecl Member_FormActionState(void) {
         Abs32(static_cast<std::int32_t>(static_cast<U>(rv::As<records::PartyMember>(s)->z) - az)) > reach)
         stop = 1;
     if ((Field_ScriptFlags2 & 0x1C00) == 0 && stop == 0)
-        CodeAt(Field_FormActions_addr, Field_FormActions_count, AreaW0b_PartySet & 0x7Fu, "Member_FormActionState (0x51BAA0)")();
+        CodeAt(::bof3::Img(Field_FormActions_addr), Field_FormActions_count, AreaW0b_PartySet & 0x7Fu, "Member_FormActionState (0x51BAA0)")();
     else
         Fs()[0x137] = 0;
     if (Fs()[0x137] != 0) return;
@@ -303,7 +303,7 @@ extern "C" void __cdecl Member_FormActionState(void) {
 // Member_JumpSteps 0x65F9A4[+2] (Field_JumpBegin, Field_JumpOut,
 // Member_JumpAir, Field_JumpIn - the leader's Field_JumpSteps with this
 // group's step 2).
-extern "C" void __cdecl Member_JumpState(void) { CodeAt(Member_JumpSteps_addr, Member_JumpSteps_count, Sc()[2], "Member_JumpState (0x51BCF0)")(); }
+extern "C" void __cdecl Member_JumpState(void) { CodeAt(::bof3::Img(Member_JumpSteps_addr), Member_JumpSteps_count, Sc()[2], "Member_JumpState (0x51BCF0)")(); }
 
 // original 0x51BD10 (0x8D bytes), jump step 2: the member against the one it
 // follows (ObjTrio record +6, unchecked) - when that one's +0x137 is 3: more
@@ -336,55 +336,55 @@ extern "C" void __cdecl Member_JumpAir(void) {
 // ===========================================================================
 
 // original 0x51C740: Field_FormActions[0] - PartyFormAction0_Forms 0x65F9F4 by u16 +0x2C.
-extern "C" void __cdecl PartyFormAction0_ByForm(void) { CodeAt(PartyFormAction0_Forms_addr, PartyFormAction0_Forms_count, rv::As<records::PartyMember>(Sc())->column, "PartyFormAction0_ByForm (0x51C740)")(); }
+extern "C" void __cdecl PartyFormAction0_ByForm(void) { CodeAt(::bof3::Img(PartyFormAction0_Forms_addr), PartyFormAction0_Forms_count, rv::As<records::PartyMember>(Sc())->column, "PartyFormAction0_ByForm (0x51C740)")(); }
 // original 0x51C760: Field_ActionBySet[0] - PartyAction0_Forms 0x65FA00 by u16 +0x2C.
-extern "C" void __cdecl PartyAction0_ByForm(void) { CodeAt(PartyAction0_Forms_addr, PartyAction0_Forms_count, rv::As<records::PartyMember>(Sc())->column, "PartyAction0_ByForm (0x51C760)")(); }
+extern "C" void __cdecl PartyAction0_ByForm(void) { CodeAt(::bof3::Img(PartyAction0_Forms_addr), PartyAction0_Forms_count, rv::As<records::PartyMember>(Sc())->column, "PartyAction0_ByForm (0x51C760)")(); }
 // original 0x51CC00: Field_FormActions[1] - 0x65FA50 by u16 +0x2C.
-extern "C" void __cdecl PartyFormAction1_ByForm(void) { CodeAt(PartyFormAction1_Forms_addr, PartyFormAction1_Forms_count, rv::As<records::PartyMember>(Sc())->column, "PartyFormAction1_ByForm (0x51CC00)")(); }
+extern "C" void __cdecl PartyFormAction1_ByForm(void) { CodeAt(::bof3::Img(PartyFormAction1_Forms_addr), PartyFormAction1_Forms_count, rv::As<records::PartyMember>(Sc())->column, "PartyFormAction1_ByForm (0x51CC00)")(); }
 // original 0x51CC20: Field_ActionBySet[1] - 0x65FA5C by u16 +0x2C.
-extern "C" void __cdecl PartyAction1_ByForm(void) { CodeAt(PartyAction1_Forms_addr, PartyAction1_Forms_count, rv::As<records::PartyMember>(Sc())->column, "PartyAction1_ByForm (0x51CC20)")(); }
+extern "C" void __cdecl PartyAction1_ByForm(void) { CodeAt(::bof3::Img(PartyAction1_Forms_addr), PartyAction1_Forms_count, rv::As<records::PartyMember>(Sc())->column, "PartyAction1_ByForm (0x51CC20)")(); }
 
 // original 0x51BE90: 0x65F9B4 by +2 (PartyFormAction_Form0Begin, PartyFormAction_Form0Turn, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction0_Form0(void) { CodeAt(PartyFormAction0_Form0States_addr, PartyFormAction0_Form0States_count, Sc()[2], "PartyFormAction0_Form0 (0x51BE90)")(); }
+extern "C" void __cdecl PartyFormAction0_Form0(void) { CodeAt(::bof3::Img(PartyFormAction0_Form0States_addr), PartyFormAction0_Form0States_count, Sc()[2], "PartyFormAction0_Form0 (0x51BE90)")(); }
 // original 0x51C430: 0x65F9CC by +2 (PartyFormAction_Form1Begin, PartyFormAction_Form1Turn, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction0_Form1(void) { CodeAt(PartyFormAction0_Form1States_addr, PartyFormAction0_Form1States_count, Sc()[2], "PartyFormAction0_Form1 (0x51C430)")(); }
+extern "C" void __cdecl PartyFormAction0_Form1(void) { CodeAt(::bof3::Img(PartyFormAction0_Form1States_addr), PartyFormAction0_Form1States_count, Sc()[2], "PartyFormAction0_Form1 (0x51C430)")(); }
 // original 0x51C470: 0x65F9E0 by +2 (0x520840, PartyFormAction_Form2Turn, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction0_Form2(void) { CodeAt(PartyFormAction0_Form2States_addr, PartyFormAction0_Form2States_count, Sc()[2], "PartyFormAction0_Form2 (0x51C470)")(); }
+extern "C" void __cdecl PartyFormAction0_Form2(void) { CodeAt(::bof3::Img(PartyFormAction0_Form2States_addr), PartyFormAction0_Form2States_count, Sc()[2], "PartyFormAction0_Form2 (0x51C470)")(); }
 // original 0x51BFB0: PartyAction0_Form0States 0x65F9C0 by +2.
-extern "C" void __cdecl PartyAction0_Form0(void) { CodeAt(PartyAction0_Form0States_addr, PartyAction0_Form0States_count, Sc()[2], "PartyAction0_Form0 (0x51BFB0)")(); }
+extern "C" void __cdecl PartyAction0_Form0(void) { CodeAt(::bof3::Img(PartyAction0_Form0States_addr), PartyAction0_Form0States_count, Sc()[2], "PartyAction0_Form0 (0x51BFB0)")(); }
 // original 0x51C450: 0x65F9D8 by +2 (0x5252B0, 0x521A20).
-extern "C" void __cdecl PartyAction0_Form1(void) { CodeAt(PartyAction0_Form1States_addr, PartyAction0_Form1States_count, Sc()[2], "PartyAction0_Form1 (0x51C450)")(); }
+extern "C" void __cdecl PartyAction0_Form1(void) { CodeAt(::bof3::Img(PartyAction0_Form1States_addr), PartyAction0_Form1States_count, Sc()[2], "PartyAction0_Form1 (0x51C450)")(); }
 // original 0x51C510: 0x65F9EC by +2 (PartyAction0_Form2Begin, 0x521C40).
-extern "C" void __cdecl PartyAction0_Form2(void) { CodeAt(PartyAction0_Form2States_addr, PartyAction0_Form2States_count, Sc()[2], "PartyAction0_Form2 (0x51C510)")(); }
+extern "C" void __cdecl PartyAction0_Form2(void) { CodeAt(::bof3::Img(PartyAction0_Form2States_addr), PartyAction0_Form2States_count, Sc()[2], "PartyAction0_Form2 (0x51C510)")(); }
 // original 0x51C780: 0x65FA0C by +2 (PartyFormAction_Form0Begin, PartyFormAction_Form0Turn, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction1_Form0(void) { CodeAt(PartyFormAction1_Form0States_addr, PartyFormAction1_Form0States_count, Sc()[2], "PartyFormAction1_Form0 (0x51C780)")(); }
+extern "C" void __cdecl PartyFormAction1_Form0(void) { CodeAt(::bof3::Img(PartyFormAction1_Form0States_addr), PartyFormAction1_Form0States_count, Sc()[2], "PartyFormAction1_Form0 (0x51C780)")(); }
 // original 0x51CB80: 0x65FA24 by +2 (PartyFormAction_Form1Begin, PartyFormAction_Form1Turn, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction1_Form1(void) { CodeAt(PartyFormAction1_Form1States_addr, PartyFormAction1_Form1States_count, Sc()[2], "PartyFormAction1_Form1 (0x51CB80)")(); }
+extern "C" void __cdecl PartyFormAction1_Form1(void) { CodeAt(::bof3::Img(PartyFormAction1_Form1States_addr), PartyFormAction1_Form1States_count, Sc()[2], "PartyFormAction1_Form1 (0x51CB80)")(); }
 // original 0x51CBC0: 0x65FA38 by +2 (0x520840, 0x51FC80, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction1_Form2(void) { CodeAt(PartyFormAction1_Form2States_addr, PartyFormAction1_Form2States_count, Sc()[2], "PartyFormAction1_Form2 (0x51CBC0)")(); }
+extern "C" void __cdecl PartyFormAction1_Form2(void) { CodeAt(::bof3::Img(PartyFormAction1_Form2States_addr), PartyFormAction1_Form2States_count, Sc()[2], "PartyFormAction1_Form2 (0x51CBC0)")(); }
 // original 0x51C7A0: PartyAction1_Form0States 0x65FA18 by +2.
-extern "C" void __cdecl PartyAction1_Form0(void) { CodeAt(PartyAction1_Form0States_addr, PartyAction1_Form0States_count, Sc()[2], "PartyAction1_Form0 (0x51C7A0)")(); }
+extern "C" void __cdecl PartyAction1_Form0(void) { CodeAt(::bof3::Img(PartyAction1_Form0States_addr), PartyAction1_Form0States_count, Sc()[2], "PartyAction1_Form0 (0x51C7A0)")(); }
 // original 0x51CBA0: 0x65FA30 by +2 (0x5252B0, 0x521A20).
-extern "C" void __cdecl PartyAction1_Form1(void) { CodeAt(PartyAction1_Form1States_addr, PartyAction1_Form1States_count, Sc()[2], "PartyAction1_Form1 (0x51CBA0)")(); }
+extern "C" void __cdecl PartyAction1_Form1(void) { CodeAt(::bof3::Img(PartyAction1_Form1States_addr), PartyAction1_Form1States_count, Sc()[2], "PartyAction1_Form1 (0x51CBA0)")(); }
 // original 0x51CBE0: 0x65FA44 by +2 (0x5239F0, 0x51DE20, 0x520350).
-extern "C" void __cdecl PartyAction1_Form2(void) { CodeAt(PartyAction1_Form2States_addr, PartyAction1_Form2States_count, Sc()[2], "PartyAction1_Form2 (0x51CBE0)")(); }
+extern "C" void __cdecl PartyAction1_Form2(void) { CodeAt(::bof3::Img(PartyAction1_Form2States_addr), PartyAction1_Form2States_count, Sc()[2], "PartyAction1_Form2 (0x51CBE0)")(); }
 // original 0x51CC40: 0x65FA68 by +2 (PartyFormAction_Form0Begin, PartyFormAction_Form0Turn, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction2_Form0(void) { CodeAt(PartyFormAction2_Form0States_addr, PartyFormAction2_Form0States_count, Sc()[2], "PartyFormAction2_Form0 (0x51CC40)")(); }
+extern "C" void __cdecl PartyFormAction2_Form0(void) { CodeAt(::bof3::Img(PartyFormAction2_Form0States_addr), PartyFormAction2_Form0States_count, Sc()[2], "PartyFormAction2_Form0 (0x51CC40)")(); }
 // original 0x51D0D0: 0x65FA80 by +2 (PartyFormAction_Form1Begin, PartyFormAction_Form1Turn, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction2_Form1(void) { CodeAt(PartyFormAction2_Form1States_addr, PartyFormAction2_Form1States_count, Sc()[2], "PartyFormAction2_Form1 (0x51D0D0)")(); }
+extern "C" void __cdecl PartyFormAction2_Form1(void) { CodeAt(::bof3::Img(PartyFormAction2_Form1States_addr), PartyFormAction2_Form1States_count, Sc()[2], "PartyFormAction2_Form1 (0x51D0D0)")(); }
 // original 0x51D200: 0x65FA94 by +2 (0x520840, 0x51FC80, BossOp_ScriptTick).
-extern "C" void __cdecl PartyFormAction2_Form2(void) { CodeAt(PartyFormAction2_Form2States_addr, PartyFormAction2_Form2States_count, Sc()[2], "PartyFormAction2_Form2 (0x51D200)")(); }
+extern "C" void __cdecl PartyFormAction2_Form2(void) { CodeAt(::bof3::Img(PartyFormAction2_Form2States_addr), PartyFormAction2_Form2States_count, Sc()[2], "PartyFormAction2_Form2 (0x51D200)")(); }
 // original 0x51CCF0: PartyAction2_Form0States 0x65FA74 by +2.
-extern "C" void __cdecl PartyAction2_Form0(void) { CodeAt(PartyAction2_Form0States_addr, PartyAction2_Form0States_count, Sc()[2], "PartyAction2_Form0 (0x51CCF0)")(); }
+extern "C" void __cdecl PartyAction2_Form0(void) { CodeAt(::bof3::Img(PartyAction2_Form0States_addr), PartyAction2_Form0States_count, Sc()[2], "PartyAction2_Form0 (0x51CCF0)")(); }
 // original 0x51D1E0: 0x65FA8C by +2 (0x5252B0, 0x521A20).
-extern "C" void __cdecl PartyAction2_Form1(void) { CodeAt(PartyAction2_Form1States_addr, PartyAction2_Form1States_count, Sc()[2], "PartyAction2_Form1 (0x51D1E0)")(); }
+extern "C" void __cdecl PartyAction2_Form1(void) { CodeAt(::bof3::Img(PartyAction2_Form1States_addr), PartyAction2_Form1States_count, Sc()[2], "PartyAction2_Form1 (0x51D1E0)")(); }
 // original 0x51D220: 0x65FAA0 by +2 (PartyAction2_Form2State0, PartyAction2_Form2State1).
-extern "C" void __cdecl PartyAction2_Form2(void) { CodeAt(PartyAction2_Form2States_addr, PartyAction2_Form2States_count, Sc()[2], "PartyAction2_Form2 (0x51D220)")(); }
+extern "C" void __cdecl PartyAction2_Form2(void) { CodeAt(::bof3::Img(PartyAction2_Form2States_addr), PartyAction2_Form2States_count, Sc()[2], "PartyAction2_Form2 (0x51D220)")(); }
 // original 0x51D240: 0x65FAA8 by +3 (PartyAction2_Form2Aim, PartyAction2_Form2Strike,
 // PartyAction_FinishPalette, 0x51F850, 0x522DE0).
-extern "C" void __cdecl PartyAction2_Form2State0(void) { CodeAt(PartyAction2_Form2State0Steps_addr, PartyAction2_Form2State0Steps_count, Sc()[3], "PartyAction2_Form2State0 (0x51D240)")(); }
+extern "C" void __cdecl PartyAction2_Form2State0(void) { CodeAt(::bof3::Img(PartyAction2_Form2State0Steps_addr), PartyAction2_Form2State0Steps_count, Sc()[3], "PartyAction2_Form2State0 (0x51D240)")(); }
 // original 0x51D670: 0x65FABC by +3 (PartyAction2_Form2Reaim, 0x523F10, PartyAction_WaitEffect).
-extern "C" void __cdecl PartyAction2_Form2State1(void) { CodeAt(PartyAction2_Form2State1Steps_addr, PartyAction2_Form2State1Steps_count, Sc()[3], "PartyAction2_Form2State1 (0x51D670)")(); }
+extern "C" void __cdecl PartyAction2_Form2State1(void) { CodeAt(::bof3::Img(PartyAction2_Form2State1Steps_addr), PartyAction2_Form2State1Steps_count, Sc()[3], "PartyAction2_Form2State1 (0x51D670)")(); }
 
 // ===========================================================================
 // The form actions' states (shared: each sits in several sets' tables)
@@ -398,7 +398,7 @@ extern "C" void __cdecl PartyAction2_Form2State1(void) { CodeAt(PartyAction2_For
 // from 3 (|d - 5| > |d - 3|), else facing 5 and the pose 0x52. A facing f:
 // +0xB = Sprite_TurnSense(f), +3 = f. Then +9 = 2 and +2 one on.
 extern "C" void __cdecl PartyFormAction_Form0Begin(void) {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x8), 0x16) != 0) {
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x8), 0x16) != 0) {
         if (static_cast<unsigned char>(SH_CALL(Party_Count)(0)) == 1 && (Field_InputFlags & 0x40) == 0) Sc()[4] = 0x50;
         else Sc()[4] = 0x40;
     } else {
@@ -526,7 +526,7 @@ extern "C" void __cdecl PartyAction0_Form2Begin(void) {
         SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(Word(Sc() + 0x2C) + 0x100));
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(Sc()[8] + 8));
         Fs()[0x128] = 2;
-        B(at::kScriptFlags3) = static_cast<unsigned char>(B(at::kScriptFlags3) | 0x10);
+        B(::bof3::Img(at::kScriptFlags3.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kScriptFlags3.v)) | 0x10);
         SH_CALL(Field_JumpStart)();
         --Sc()[9];
         SH_CALL(Field_LeaderStepTick)();
@@ -607,7 +607,7 @@ extern "C" unsigned char __cdecl PartyAction2_CellStrike(unsigned x, unsigned z)
     if (roll < 7) {
         SH_CALL(Effect_SpawnAtCellHigh)(3, x, z);
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, 0x29);
-        for (unsigned k = 0; k < 16; k += 4) SetLong(At(bof3::addr::Text_Records + k), Long(name + k));
+        for (unsigned k = 0; k < 16; k += 4) SetLong(At(::bof3::Img(bof3::addr::Text_Records) + k), Long(name + k));
         if (SH_CALL(Inventory_Add)(0, 0x29, 1) != 0) {
             SH_CALL(Sound_PlayEffect)(0x106);
             SH_CALL(Msg_OpenSystem)(2);
@@ -685,7 +685,7 @@ extern "C" void __cdecl PartyAction2_Form2Strike(void) {
 // first).
 extern "C" void __cdecl PartyAction_FinishPalette(void) {
     if (Sc()[0xB] == 1) {
-        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(static_cast<std::uintptr_t>(Gfx_ClutStripSource_addr + 0x1e00 + (static_cast<U>(Sc()[5]) << 6))), 0);
+        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(static_cast<std::uintptr_t>(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + (static_cast<U>(Sc()[5]) << 6))), 0);
         Sc()[0xB] = 2;
     }
     const unsigned char b = Sc()[0xB];

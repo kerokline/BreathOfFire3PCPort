@@ -165,13 +165,13 @@ unsigned char* Item(const char* who, U item) {
 // + 2 * base) * 2, plus base, plus (height * width + 1) / 2 - every byte and
 // word re-read where the original re-reads them.
 unsigned char* CellRecord(U x, U z, U run) {
-    const U header = UL(at::kAreaHeader);
+    const U header = UL(::bof3::Img(at::kAreaHeader.v));
     const U width = header & 0xFF;
-    const U base = Word(At(AreaMap_Header_addr + 0x2));
-    const U word = Word(At(AreaMap_Header_addr + 2 * (x + width * z + 2 * base)));
+    const U base = Word(At(::bof3::Img(AreaMap_Header_addr) + 0x2));
+    const U word = Word(At(::bof3::Img(AreaMap_Header_addr) + 2 * (x + width * z + 2 * base)));
     const U height = (header >> 8) & 0xFF;
     const U half = (height * width + 1) / 2;   // cdq; sub eax, edx; sar 1 - never negative here
-    return At(AreaMap_Header_addr + 4 * (base + word + half + run));
+    return At(::bof3::Img(AreaMap_Header_addr) + 4 * (base + word + half + run));
 }
 
 }  // namespace
@@ -191,9 +191,9 @@ unsigned char* CellRecord(U x, U z, U run) {
 extern "C" long __cdecl AreaMap_CornerHeight(long x, long z) {
     const U ux = static_cast<U>(x), uz = static_cast<U>(z);
     const U xi = Sar(ux + 0x8000u, 16) & 0xFF, zi = Sar(uz + 0x8000u, 16) & 0xFF;
-    const U block = At(at::kBlockMap)[((xi >> 4) & 0xF) | (zi & 0xF0)];
+    const U block = At(::bof3::Img(at::kBlockMap.v))[((xi >> 4) & 0xF) | (zi & 0xF0)];
     const U index = ((block & 0xF0) | (zi & 0xF)) * 0x60 + (((block & 0xF) << 4) | (xi & 0xF));
-    const U corners = UL(at::kAreaCorners + 4 * index);
+    const U corners = UL(::bof3::Img(at::kAreaCorners.v) + 4 * index);
     const std::int32_t c0 = static_cast<signed char>(corners & 0xFF);
     const std::int32_t c1 = static_cast<signed char>((corners >> 8) & 0xFF);
     const std::int32_t c2 = static_cast<signed char>((corners >> 16) & 0xFF);
@@ -227,12 +227,12 @@ extern "C" void __cdecl EffectKind18Sub44_Commit(unsigned size) {
     unsigned char* const next = Gfx_PacketNext;
     const unsigned buffer = Gfx_BufferIndex;
     const U bytes = size & 0xFFu;
-    const U limit = (static_cast<U>(buffer) << 16) + at::kPoolLimit;
+    const U limit = (static_cast<U>(buffer) << 16) + ::bof3::Img(at::kPoolLimit);
     if (limit <= AddressOf(next) + bytes) return;
-    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(at::kLayerTails + 8 * buffer))),
+    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(::bof3::Img(at::kLayerTails.v) + 8 * buffer))),
                           AddressOf(next));
     unsigned char* const now = Gfx_PacketNext;
-    SetUL(at::kLayerTails + 8u * Gfx_BufferIndex, AddressOf(now));
+    SetUL(::bof3::Img(at::kLayerTails.v) + 8u * Gfx_BufferIndex, AddressOf(now));
     Gfx_PacketNext = now + bytes;
 }
 
@@ -272,9 +272,9 @@ extern "C" void __cdecl EffectKind18Sub44_Follow(void) {
     rv::Current<records::EffectObject>()->screen_xf = 0x43200000u; // 160.0f
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0xA0);
     if (static_cast<std::uint32_t>(ObjTrio[0].step_y) != 0) {
-        CopyQuiet(S() + 0x78, At(MapView_ScreenXY_addr + 0x4));
-        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, Ftol(D(at::kScreenY)));
-        ObjTrio[0].screen_y = Ftol(D(at::kScreenY));
+        CopyQuiet(S() + 0x78, At(::bof3::Img(MapView_ScreenXY_addr) + 0x4));
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, Ftol(D(::bof3::Img(at::kScreenY.v))));
+        ObjTrio[0].screen_y = Ftol(D(::bof3::Img(at::kScreenY.v)));
     } else {
         SetD(S() + 0x78, Fi(static_cast<U>(static_cast<std::int32_t>(ObjTrio[0].screen_y))));
         unsigned char* const s = S();
@@ -282,7 +282,7 @@ extern "C" void __cdecl EffectKind18Sub44_Follow(void) {
     }
     const unsigned count = Sprite_DrawListCount;
     if (count < 0x28) {
-        SetUL(at::kDrawList + 4 * count, AddressOf(S()));
+        SetUL(::bof3::Img(at::kDrawList.v) + 4 * count, AddressOf(S()));
         Sprite_DrawListCount = static_cast<unsigned char>(count + 1);
     }
     if (Cond_ByteFE == 2) {
@@ -347,8 +347,8 @@ extern "C" void __cdecl EffectKind18Sub44_DrawTwinkle(unsigned char* tile) {
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetTile1)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
-        SetD(p + 8, Fi(static_cast<U>(S8(at::kTwinkle + 2 * i))) + static_cast<double>(F(tile + 8)));
-        SetD(p + 0xC, Fi(static_cast<U>(S8(at::kTwinkle + 2 * i + 1))) + static_cast<double>(F(tile + 0xC)));
+        SetD(p + 8, Fi(static_cast<U>(S8(::bof3::Img(at::kTwinkle.v) + 2 * i))) + static_cast<double>(F(tile + 8)));
+        SetD(p + 0xC, Fi(static_cast<U>(S8(::bof3::Img(at::kTwinkle.v) + 2 * i + 1))) + static_cast<double>(F(tile + 0xC)));
         p[4] = static_cast<unsigned char>(tile[4] >> 2);
         p[5] = static_cast<unsigned char>(tile[5] >> 2);
         p[6] = static_cast<unsigned char>(tile[6] >> 2);
@@ -385,7 +385,7 @@ extern "C" void __cdecl EffectKind18Sub44_DrawStars(int level_word) {
     }
     {
         unsigned char* const p = Gfx_PacketNext;
-        const float y = static_cast<float>(Fi(static_cast<U>(S16(at::kKind2ZHigh) / 85 - 1)));
+        const float y = static_cast<float>(Fi(static_cast<U>(S16(::bof3::Img(at::kKind2ZHigh.v)) / 85 - 1)));
         SetF(p + 0xC, y);
         if (!(y < F(at::kZero)) && y < F(at::kNinety)) {
             SH_CALL(Gpu_SetTile1)(p);
@@ -400,8 +400,8 @@ extern "C" void __cdecl EffectKind18Sub44_DrawStars(int level_word) {
     }
     {
         unsigned char* const p = Gfx_PacketNext;
-        const U dz = Abs(0x1400u - static_cast<U>(S16(at::kKind2ZHigh)));
-        const U x_word = Word(At(at::kKind2XHigh));
+        const U dz = Abs(0x1400u - static_cast<U>(S16(::bof3::Img(at::kKind2ZHigh.v))));
+        const U x_word = Word(At(::bof3::Img(at::kKind2XHigh.v)));
         const U past = static_cast<std::int16_t>(x_word & 0xFF00u) >= 0xF00 ? 1u : 0u;
         const std::int32_t step = (static_cast<std::int16_t>(x_word) - 0xF00) / 25;
         const U y = static_cast<U>(I(dz * dz) / 98304) + past * static_cast<U>(step) + 8u;
@@ -411,7 +411,7 @@ extern "C" void __cdecl EffectKind18Sub44_DrawStars(int level_word) {
             SH_CALL(Gpu_SetTile1)(p);
             SH_CALL(Gpu_SetSemiTrans)(p, 1);
             const U x = Sar((static_cast<U>(static_cast<std::int16_t>(Cond_AngleFB & 0xFFFF)) - 0x200u) * 10u, 5) +
-                        static_cast<U>((S16(at::kKind2ZHigh) - 0x1480) / 17);
+                        static_cast<U>((S16(::bof3::Img(at::kKind2ZHigh.v)) - 0x1480) / 17);
             SetD(p + 8, Fi(x));
             for (unsigned c = 4; c < 7; ++c) {
                 const U r = static_cast<U>(SH_CALL(Rand)());
@@ -421,14 +421,14 @@ extern "C" void __cdecl EffectKind18Sub44_DrawStars(int level_word) {
             SH_CALL(EffectKind18Sub44_DrawTwinkle)(p);
         }
     }
-    const std::int32_t x = S16(at::kKind2XHigh), z = S16(at::kKind2ZHigh);
+    const std::int32_t x = S16(::bof3::Img(at::kKind2XHigh.v)), z = S16(::bof3::Img(at::kKind2ZHigh.v));
     U ax = Abs(static_cast<U>(x - 0x1480)), az = Abs(static_cast<U>(z - 0x1380));
     if (I(ax) > 0x900) ax = 0x900;
     if (I(az) > 0x400) az = 0x400;
     U size = static_cast<U>(I(0xD00u - az - ax) / 43 + 0x14);
     if (I(size) < 0x28) size = 0x28;
-    const std::int32_t cx = static_cast<std::int16_t>(Word(At(at::kKind2XHigh))) < 0xB00 ? 0xB00 : (x > 0x1E00 ? 0x1E00 : x);
-    const std::int32_t cz = static_cast<std::int16_t>(Word(At(at::kKind2ZHigh))) < 0xF00 ? 0xF00 : (z > 0x1800 ? 0x1800 : z);
+    const std::int32_t cx = static_cast<std::int16_t>(Word(At(::bof3::Img(at::kKind2XHigh.v)))) < 0xB00 ? 0xB00 : (x > 0x1E00 ? 0x1E00 : x);
+    const std::int32_t cz = static_cast<std::int16_t>(Word(At(::bof3::Img(at::kKind2ZHigh.v)))) < 0xF00 ? 0xF00 : (z > 0x1800 ? 0x1800 : z);
     for (U back = 0; I(back) < 0x1E; back += 0xA, size += 8) {
         unsigned char* const p = Gfx_PacketNext;
         const float fs = static_cast<float>(Fi(size));
@@ -587,7 +587,7 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
         p[4] = p[5] = p[6] = 0xFF;
         SH_CALL(EffectKind18Sub44_Commit)(0x1C);
     }
-    const U clock = Word(At(Cond_Flags_addr + 0xcc));
+    const U clock = Word(At(::bof3::Img(Cond_Flags_addr) + 0xcc));
     if (clock < 0x1B0) {
         SetV(0xC, 0x80);
         SetV(0xA, 0x80);
@@ -616,7 +616,7 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
         if (n >= at::kSkyTintSteps)
             bof3::Fatal("EffectKind18Sub44_Draw: the frame word 0x%X is step %u, past the %u tints of 0x%X - the "
                         "original reads on into the twinkle offsets (docs/effect_6c.md section 7)",
-                        (unsigned)clock, (unsigned)n, at::kSkyTintSteps, (unsigned)at::kSkyTints);
+                        (unsigned)clock, (unsigned)n, at::kSkyTintSteps, at::kSkyTints.v);
         const U past = FloorZero(n - 6);
         SetV(0, 0x80u - past * 12u);
         SetV(4, (0x10 - n) << 3);
@@ -624,8 +624,8 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
         SetV(0xC, n * 8);
         SetV(0xA, n * 8);
         SetV(8, n * 8);
-        SH_CALL(Gfx_ClutAdjust)(0, 6, S8(at::kSkyTints + 3 * n), S8(at::kSkyTints + 3 * n + 1),
-                                S8(at::kSkyTints + 3 * n + 2));
+        SH_CALL(Gfx_ClutAdjust)(0, 6, S8(::bof3::Img(at::kSkyTints.v) + 3 * n), S8(::bof3::Img(at::kSkyTints.v) + 3 * n + 1),
+                                S8(::bof3::Img(at::kSkyTints.v) + 3 * n + 2));
     }
     for (U row = 0; row < 2; ++row) {
         const U clut = (row + 0x1E6) << 6;
@@ -669,14 +669,14 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
             unsigned char* const p = first + 0x44 * m;
             SH_CALL(Gpu_SetPolyG4)(p);
             SH_CALL(Gpu_SetSemiTrans)(p, 1);
-            SetD(p + 8, Fi(Word(At(at::kSkyXs + 2 * m))));
+            SetD(p + 8, Fi(Word(At(::bof3::Img(at::kSkyXs.v) + 2 * m))));
             SetUL(p + 0xC, 0x42B40000u);   // 90.0f
-            SetD(p + 0x18, Fi(Word(At(at::kSkyXs + 2 * m + 2))));
+            SetD(p + 0x18, Fi(Word(At(::bof3::Img(at::kSkyXs.v) + 2 * m + 2))));
             SetUL(p + 0x1C, 0x42B40000u);
-            SetD(p + 0x28, Fi(Word(At(at::kSkyXs + 2 * m))));
-            SetD(p + 0x2C, Fi(*At(at::kSkyYs + m)));
-            SetD(p + 0x38, Fi(Word(At(at::kSkyXs + 2 * m + 2))));
-            SetD(p + 0x3C, Fi(*At(at::kSkyYs + m + 1)));
+            SetD(p + 0x28, Fi(Word(At(::bof3::Img(at::kSkyXs.v) + 2 * m))));
+            SetD(p + 0x2C, Fi(*At(::bof3::Img(at::kSkyYs.v) + m)));
+            SetD(p + 0x38, Fi(Word(At(::bof3::Img(at::kSkyXs.v) + 2 * m + 2))));
+            SetD(p + 0x3C, Fi(*At(::bof3::Img(at::kSkyYs.v) + m + 1)));
             RowColour(p + 4, row);
             RowColour(p + 0x14, row);
             p[0x24] = p[0x25] = p[0x26] = 0;
@@ -699,9 +699,9 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
                 SetUL(p + 0x18, std::bit_cast<U>(x1));
                 SetUL(p + 0x1C, 0x42B40000u);
                 SetUL(p + 0x28, std::bit_cast<U>(x0));
-                SetD(p + 0x2C, Fi(*At(at::kSkyYs + edge)));
+                SetD(p + 0x2C, Fi(*At(::bof3::Img(at::kSkyYs.v) + edge)));
                 SetUL(p + 0x38, std::bit_cast<U>(x1));
-                SetD(p + 0x3C, Fi(*At(at::kSkyYs + edge)));
+                SetD(p + 0x3C, Fi(*At(::bof3::Img(at::kSkyYs.v) + edge)));
                 RowColour(p + 4, row);
                 RowColour(p + 0x14, row);
                 p[0x24] = p[0x25] = p[0x26] = 0;
@@ -711,15 +711,15 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
         }
     }
     {
-        const U near = Abs(static_cast<U>(S16(at::kKind2XHigh) - 0x1780)) + Abs(static_cast<U>(S16(at::kKind2ZHigh) - 0x1380));
+        const U near = Abs(static_cast<U>(S16(::bof3::Img(at::kKind2XHigh.v)) - 0x1780)) + Abs(static_cast<U>(S16(::bof3::Img(at::kKind2ZHigh.v)) - 0x1380));
         U level = 0xC0u - static_cast<U>(I(near) / 3);
         if (I(level) > 0x80) level = 0x80;
         level = FloorZero(level);
         if (level != 0)
             SH_CALL(EffectKind18Sub44_DrawGlow)(I(level), I(AngleX(((Cond_AngleFB - 0x800u) & 0xFFF) - 0x400u) - 0x28u));
     }
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x70), 4) == 0) return;
-    const std::int32_t x = S16(at::kKind2XHigh), z = S16(at::kKind2ZHigh);
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x70), 4) == 0) return;
+    const std::int32_t x = S16(::bof3::Img(at::kKind2XHigh.v)), z = S16(::bof3::Img(at::kKind2ZHigh.v));
     const U dx = static_cast<U>(x - 0x1780), dz = static_cast<U>(z - 0xE00);
     U level = 0x100u - DivP2(Abs(dz) + Abs(dx), 2);
     if (I(level) > 0x80) level = 0x80;
@@ -745,12 +745,12 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
 extern "C" void __cdecl EffectKind18Sub45_DrawRing(int outer_word, int inner_word, int half_word) {
     const U outer = static_cast<U>(outer_word), inner = static_cast<U>(inner_word), half = static_cast<U>(half_word);
     SetUL(AddressOf(MapView_ScreenXY), 0xC6690000u);   // -14912.0f
-    SetUL(at::kScreenY, 0xC63D0000u);                   // -12096.0f
-    SetUL(at::kScreenZ, 0xC4700000u);                   // -960.0f
+    SetUL(::bof3::Img(at::kScreenY.v), 0xC63D0000u);                   // -12096.0f
+    SetUL(::bof3::Img(at::kScreenZ.v), 0xC4700000u);                   // -960.0f
     if (half >= at::kRingHalves)
         bof3::Fatal("EffectKind18Sub45_DrawRing: the half %u, past the %u pairs of 0x%X - the original reads sub-kind "
                     "0x51's rectangles (docs/effect_6c.md section 7)",
-                    (unsigned)half, at::kRingHalves, (unsigned)at::kRingUv);
+                    (unsigned)half, at::kRingHalves, at::kRingUv.v);
     for (U angle = 0; I(angle) < 0x20000; angle += 0x1000) {
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(p);
@@ -761,9 +761,9 @@ extern "C" void __cdecl EffectKind18Sub45_DrawRing(int outer_word, int inner_wor
             SetV(8 * v, Ftol(D(AddressOf(MapView_ScreenXY))));
             const U q = DivP2(t, 5);
             const U sine = Sar(static_cast<U>(SH_CALL(Math_Sin)(I(q))) * radius, 13);
-            SetV(8 * v + 2, Ftol(D(at::kScreenY) - Fi(sine)));
+            SetV(8 * v + 2, Ftol(D(::bof3::Img(at::kScreenY.v)) - Fi(sine)));
             const U cosine = Sar(static_cast<U>(SH_CALL(Math_Cos)(I(q))) * radius, 13);
-            SetV(8 * v + 4, Ftol(Fi(cosine) + D(at::kScreenZ)));
+            SetV(8 * v + 4, Ftol(Fi(cosine) + D(::bof3::Img(at::kScreenZ.v))));
         }
         long depth;
         SH_CALL(Gte_RotTransPers4)(Vx(0), Vx(1), Vx(2), Vx(3), Fp(p + 8), Fp(p + 0x18), Fp(p + 0x28), Fp(p + 0x38), &depth);
@@ -775,7 +775,7 @@ extern "C" void __cdecl EffectKind18Sub45_DrawRing(int outer_word, int inner_wor
         rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, (Sar((half << 7) + 0x140u, 6) & 0xF) | 0x90u);
         rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, 0x7940);
         const U q0 = DivP2(angle, 5), q1 = DivP2(angle + 0x1000u, 5);
-        const unsigned char* const uv = At(at::kRingUv + 2 * half);
+        const unsigned char* const uv = At(::bof3::Img(at::kRingUv.v) + 2 * half);
         struct Corner { unsigned at; U q; U radius; };
         const Corner corners[] = {{0x14, q0, outer}, {0x24, q1, outer}, {0x34, q0, inner}, {0x44, q1, inner}};
         for (const Corner& c : corners) {
@@ -863,10 +863,10 @@ U Variant51(const char* who) {
     if (v < 0 || v >= static_cast<std::int32_t>(at::kRect51Variants))
         bof3::Fatal("%s: the variant +0x36 is %d, past the %u rectangles of 0x%X - the original reads on into "
                     "EffectKind18Sub51_States (docs/effect_6c.md section 7)",
-                    who, (int)v, at::kRect51Variants, (unsigned)at::kRect51);
+                    who, (int)v, at::kRect51Variants, at::kRect51.v);
     return static_cast<U>(v);
 }
-U Rect51(const char* who, unsigned field) { return At(at::kRect51 + 4 * Variant51(who) + field)[0]; }
+U Rect51(const char* who, unsigned field) { return At(::bof3::Img(at::kRect51.v) + 4 * Variant51(who) + field)[0]; }
 
 // Each cell of the variant's rectangle, z rows outer, x inner, every bound read
 // again from the record current at that point (as the original re-reads +0x36):
@@ -910,8 +910,8 @@ extern "C" void __cdecl EffectKind18Sub51_Wait(void) {
         if (Cond_ByteFE == 1) s[2] = static_cast<unsigned char>(s[2] + 1);
         return;
     }
-    const bool set = v == 0 ? SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x70), 0x14) != 0
-                            : SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x7A + (v - 2)) != 0;
+    const bool set = v == 0 ? SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x70), 0x14) != 0
+                            : SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x7A + (v - 2)) != 0;
     if (set) S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
 
@@ -960,7 +960,7 @@ extern "C" void __cdecl EffectKind18Sub53_Run(void) {
     }
     {
         const unsigned char* const s = S();
-        const U near = Abs(static_cast<U>(S16(at::kKind2ZHigh) - S16(s + 0x3A))) + Abs(static_cast<U>(S16(at::kKind2XHigh) - S16(s + 0x36)));
+        const U near = Abs(static_cast<U>(S16(::bof3::Img(at::kKind2ZHigh.v)) - S16(s + 0x3A))) + Abs(static_cast<U>(S16(::bof3::Img(at::kKind2XHigh.v)) - S16(s + 0x36)));
         if (I(near) > 0x14) return;
     }
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);
@@ -971,7 +971,7 @@ extern "C" void __cdecl EffectKind18Sub53_Run(void) {
     S()[9] = static_cast<unsigned char>(S()[9] + 2);
     for (U k = 0, ring = 0; I(ring) < 0x100; ++k, ring += 0x10) {
         const unsigned char shade = static_cast<unsigned char>(0xFFu - ((S()[9] - ring) & 0xFF));
-        const std::int32_t spin = S8(at::kSpin53 + (k & 1));
+        const std::int32_t spin = S8(::bof3::Img(at::kSpin53.v) + (k & 1));
         for (U angle = 0; I(angle) < 0x1000; angle += 0x100) {
             unsigned char* const p = Gfx_PacketNext;
             SH_CALL(Gpu_SetTile1)(p);
@@ -1026,7 +1026,7 @@ extern "C" void __cdecl EffectKind18Sub55_Draw(int shade_word, int lift_word) {
             SH_CALL(Gpu_SetShadeTex)(p, 0);
             SH_CALL(Gte_PrimDepthFlat4_10)(p);
             const double h = Fi(half), side = Fi(half * 2);
-            const double sx = D(AddressOf(MapView_ScreenXY)), sy = D(at::kScreenY);
+            const double sx = D(AddressOf(MapView_ScreenXY)), sy = D(::bof3::Img(at::kScreenY.v));
             SetD(p + 8, sx - h);
             SetD(p + 0xC, sy - h);
             SetD(p + 0x18, (sx - h) + side);
@@ -1064,7 +1064,7 @@ extern "C" void __cdecl EffectKind18Sub55_Run(void) {
 // original 0x5128D0 (sub-state 1): once flag 0xE of 0x904000 is set, +9 0 and
 // +2 up. The squares drawn (0x80, 0).
 extern "C" void __cdecl EffectKind18Sub55_Wait(void) {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x70), 0xE) != 0) {
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0x70), 0xE) != 0) {
         S()[9] = 0;
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
     }
@@ -1116,11 +1116,11 @@ extern "C" void __cdecl EffectKind18Sub59_DrawRing(int glow_word) {
     {
         const unsigned char* const s = S();
         SetD(AddressOf(MapView_ScreenXY), Fi(Sar(UL(s + 0x34), 9) - 0x4000u));
-        SetD(at::kScreenY, Fi(Sar(UL(s + 0x38), 9) - 0x4000u));
+        SetD(::bof3::Img(at::kScreenY.v), Fi(Sar(UL(s + 0x38), 9) - 0x4000u));
     }
     for (U i = 0, angle = 0; I(angle) < 0x10000; ++i, angle += 0x1000) {
         const U b0 = DivP2(angle, 4), b1 = DivP2(angle + 0x1000u, 4);
-        const U row = *At(at::kRows59 + i);
+        const U row = *At(::bof3::Img(at::kRows59.v) + i);
         for (std::int32_t k = 0; k + 7 >= 0; --k) {
             const U ki = static_cast<U>(k);
             unsigned char* const p = Gfx_PacketNext;
@@ -1128,16 +1128,16 @@ extern "C" void __cdecl EffectKind18Sub59_DrawRing(int glow_word) {
             SH_CALL(Gpu_SetSemiTrans)(p, 1);
             struct Corner { unsigned at; U b; U radius; U height; };
             const Corner corners[] = {
-                {0, b0, at::kRadii59 + 7 + ki, at::kHeights59 + 7 + ki},
-                {8, b1, at::kRadii59 + 7 + ki, at::kHeights59 + 7 + ki},
-                {0x10, b0, at::kRadii59 + 8 + ki, at::kHeights59 + 8 + ki},
-                {0x18, b1, at::kRadii59 + 8 + ki, at::kHeights59 + 8 + ki},
+                {0, b0, ::bof3::Img(at::kRadii59.v) + 7 + ki, ::bof3::Img(at::kHeights59.v) + 7 + ki},
+                {8, b1, ::bof3::Img(at::kRadii59.v) + 7 + ki, ::bof3::Img(at::kHeights59.v) + 7 + ki},
+                {0x10, b0, ::bof3::Img(at::kRadii59.v) + 8 + ki, ::bof3::Img(at::kHeights59.v) + 8 + ki},
+                {0x18, b1, ::bof3::Img(at::kRadii59.v) + 8 + ki, ::bof3::Img(at::kHeights59.v) + 8 + ki},
             };
             for (const Corner& c : corners) {
                 const U sine = static_cast<U>(SH_CALL(Math_Sin)(I(c.b)));
                 SetV(c.at, Ftol(Fi(Sar(sine, 8) * *At(c.radius)) + D(AddressOf(MapView_ScreenXY))));
                 const U cosine = static_cast<U>(SH_CALL(Math_Cos)(I(c.b)));
-                SetV(c.at + 2, Ftol(Fi(Sar(cosine, 8) * *At(c.radius)) + D(at::kScreenY)));
+                SetV(c.at + 2, Ftol(Fi(Sar(cosine, 8) * *At(c.radius)) + D(::bof3::Img(at::kScreenY.v))));
                 SetV(c.at + 4, 0u - (static_cast<U>(*At(c.height)) << 5));
             }
             long depth;
@@ -1154,7 +1154,7 @@ extern "C" void __cdecl EffectKind18Sub59_DrawRing(int glow_word) {
                 q[0x51] = 0x3F;
                 SetWord(q + 0x2A, page);
                 SetWord(q + 0x16, clut);
-                const unsigned char near = *At(at::kShades59 + 7 + ki), far = *At(at::kShades59 + 8 + ki);
+                const unsigned char near = *At(::bof3::Img(at::kShades59.v) + 7 + ki), far = *At(::bof3::Img(at::kShades59.v) + 8 + ki);
                 q[4] = q[5] = q[6] = near;
                 q[0x18] = q[0x19] = q[0x1A] = near;
                 q[0x2C] = q[0x2D] = q[0x2E] = far;
@@ -1191,12 +1191,12 @@ extern "C" void __cdecl EffectKind18Sub59_DrawRing(int glow_word) {
         U e = b0;
         for (U back = 0; I(back) < 0x10; back += 8, e += 0x80) {
             const U sine = static_cast<U>(SH_CALL(Math_Sin)(I(e)));
-            SetV(0x10, Ftol(Fi(Sar(sine, 8) * *At(at::kRadii59 + 8)) + D(AddressOf(MapView_ScreenXY))));
+            SetV(0x10, Ftol(Fi(Sar(sine, 8) * *At(::bof3::Img(at::kRadii59.v) + 8)) + D(AddressOf(MapView_ScreenXY))));
             const U cosine = static_cast<U>(SH_CALL(Math_Cos)(I(e)));
-            SetV(0x12, Ftol(Fi(Sar(cosine, 8) * *At(at::kRadii59 + 8)) + D(at::kScreenY)));
-            SetV(0x14, 0u - (static_cast<U>(*At(at::kHeights59 + 8)) << 5));
+            SetV(0x12, Ftol(Fi(Sar(cosine, 8) * *At(::bof3::Img(at::kRadii59.v) + 8)) + D(::bof3::Img(at::kScreenY.v))));
+            SetV(0x14, 0u - (static_cast<U>(*At(::bof3::Img(at::kHeights59.v) + 8)) << 5));
             long a;
-            SH_CALL(Gte_RotTransPers)(Vx(2), reinterpret_cast<unsigned long*>(At(Effect6c_GlowXY_addr)), &a);
+            SH_CALL(Gte_RotTransPers)(Vx(2), reinterpret_cast<unsigned long*>(At(::bof3::Img(Effect6c_GlowXY_addr))), &a);
             const std::int32_t divisor = static_cast<std::int16_t>(Camera_Distance) + 0x1194;
             if (divisor == 0)
                 bof3::Fatal("EffectKind18Sub59_DrawRing: Camera_Distance is -0x1194, the glow's divisor 0 - the original "
@@ -1207,14 +1207,14 @@ extern "C" void __cdecl EffectKind18Sub59_DrawRing(int glow_word) {
             SH_CALL(Gpu_SetShadeTex)(p, 0);
             SH_CALL(Gte_PrimDepthFlat4_10)(p);
             const double h = Fi(size), side = Fi(size * 2);
-            SetD(p + 8, D(at::kGlowXY) - h);
-            SetD(p + 0xC, D(at::kGlowY) - h);
-            SetD(p + 0x18, (D(at::kGlowXY) - h) + side);
-            SetD(p + 0x1C, D(at::kGlowY) - h);
-            SetD(p + 0x28, D(at::kGlowXY) - h);
-            SetD(p + 0x2C, (D(at::kGlowY) - h) + side);
-            SetD(p + 0x38, (D(at::kGlowXY) - h) + side);
-            SetD(p + 0x3C, (D(at::kGlowY) - h) + side);
+            SetD(p + 8, D(::bof3::Img(at::kGlowXY.v)) - h);
+            SetD(p + 0xC, D(::bof3::Img(at::kGlowY.v)) - h);
+            SetD(p + 0x18, (D(::bof3::Img(at::kGlowXY.v)) - h) + side);
+            SetD(p + 0x1C, D(::bof3::Img(at::kGlowY.v)) - h);
+            SetD(p + 0x28, D(::bof3::Img(at::kGlowXY.v)) - h);
+            SetD(p + 0x2C, (D(::bof3::Img(at::kGlowY.v)) - h) + side);
+            SetD(p + 0x38, (D(::bof3::Img(at::kGlowXY.v)) - h) + side);
+            SetD(p + 0x3C, (D(::bof3::Img(at::kGlowY.v)) - h) + side);
             SH_CALL(Gpu_SetSemiTrans)(p, 1);
             p[4] = bright;
             p[5] = bright;
@@ -1296,7 +1296,7 @@ extern "C" void __cdecl EffectKind18Sub59_Hold(void) {
 // (0x65EF14) is 0, +9 0x60 and +2 up.
 extern "C" void __cdecl EffectKind18Sub59_Fade(void) {
     S()[9] = static_cast<unsigned char>(S()[9] + 1);
-    unsigned char* const shades = At(at::kShades59);
+    unsigned char* const shades = At(::bof3::Img(at::kShades59.v));
     for (unsigned e = 0; e < 9; ++e) {
         if (shades[e] == 0) continue;
         for (unsigned n = 0; n < 4; ++n) {
@@ -1309,7 +1309,7 @@ extern "C" void __cdecl EffectKind18Sub59_Fade(void) {
     SH_CALL(EffectKind18Sub59_DrawRing)(I(glow));
     Scroll59(4);
     SH_CALL(EffectKind18Sub59_Move)();
-    if (*At(at::kShades59 + 8) != 0) return;
+    if (*At(::bof3::Img(at::kShades59.v) + 8) != 0) return;
     S()[9] = 0x60;
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
@@ -1456,7 +1456,7 @@ extern "C" void __cdecl EffectKind18Sub5A_Run(void) {
 // second cycle); else +2 up.
 extern "C" void __cdecl EffectKind18Sub5A_Start(void) {
     S()[9] = 0;
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x80) != 0)
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x80) != 0)
         S()[2] = 5;
     else
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
@@ -1480,7 +1480,7 @@ extern "C" void __cdecl EffectKind18Sub5A_Animate(void) {
 // 0); the first records of cells (0x11, 0x61) and (0x12, 0x61) given 0xE6 and
 // 0xE7 and their items textured (2) - DIV-0062's site 0x5139C2; +2 up.
 extern "C" void __cdecl EffectKind18Sub5A_Set(void) {
-    SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x80);
+    SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x80);
     S()[9] = 0;
     SH_CALL(EffectKind18Sub5A_Move)(0xC0, 0);
     for (U e = 0; I(e) < 2; ++e) {
@@ -1506,10 +1506,10 @@ void Cycle5A(U rows, int y) {
 }  // namespace
 
 // original 0x5139F0 (sub-state 4): the cycle through kSlide5A, y 0xC0.
-extern "C" void __cdecl EffectKind18Sub5A_Cycle(void) { Cycle5A(at::kSlide5A, 0xC0); }
+extern "C" void __cdecl EffectKind18Sub5A_Cycle(void) { Cycle5A(::bof3::Img(at::kSlide5A.v), 0xC0); }
 
 // original 0x513A60 (sub-state 5): the cycle through kSlide5B, y 0.
-extern "C" void __cdecl EffectKind18Sub5A_CycleOpen(void) { Cycle5A(at::kSlide5B, 0); }
+extern "C" void __cdecl EffectKind18Sub5A_CycleOpen(void) { Cycle5A(::bof3::Img(at::kSlide5B.v), 0); }
 
 // ===========================================================================
 // Sub-kind 0x5B: EffectKind18_States[0x5B] (0x6541D8), EffectKind18Sub5B_States
@@ -1528,25 +1528,25 @@ extern "C" void __cdecl EffectKind18Sub5B_DrawPart(int part_word) {
     if (part >= at::kParts5BCount)
         bof3::Fatal("EffectKind18Sub5B_DrawPart: part %u, past the %u ranges of 0x%X - the original reads on "
                     "(docs/effect_6c.md section 7)",
-                    (unsigned)part, at::kParts5BCount, (unsigned)at::kParts5B);
-    for (U j = *At(at::kParts5B + 2 * part); I(j) < I(*At(at::kParts5B + 2 * part + 1)); ++j) {
-        const unsigned char* const r = At(at::kPieces5B + at::kPieceStride * j);
+                    (unsigned)part, at::kParts5BCount, at::kParts5B.v);
+    for (U j = *At(::bof3::Img(at::kParts5B.v) + 2 * part); I(j) < I(*At(::bof3::Img(at::kParts5B.v) + 2 * part + 1)); ++j) {
+        const unsigned char* const r = At(::bof3::Img(at::kPieces5B.v) + at::kPieceStride * j);
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
         SetD(AddressOf(MapView_ScreenXY), Fi((static_cast<U>(r[0]) << 7) - 0x4040u));
-        SetD(at::kScreenY, Fi((static_cast<U>(r[1]) << 7) - 0x4040u));
+        SetD(::bof3::Img(at::kScreenY.v), Fi((static_cast<U>(r[1]) << 7) - 0x4040u));
         for (unsigned v = 0; v < 4; ++v) {
             const unsigned char* const c = r + 2 + 3 * v;
-            SetV(8 * v, Ftol((Fi(static_cast<U>(c[0]) << 6) + D(at::kOffsetX)) + D(AddressOf(MapView_ScreenXY))));
-            SetV(8 * v + 2, Ftol(Fi(static_cast<U>(c[1]) << 6) + D(at::kScreenY)));
-            SetV(8 * v + 4, Ftol(Fi((6u - c[2]) << 6) + D(at::kOffsetY)));
+            SetV(8 * v, Ftol((Fi(static_cast<U>(c[0]) << 6) + D(::bof3::Img(at::kOffsetX.v))) + D(AddressOf(MapView_ScreenXY))));
+            SetV(8 * v + 2, Ftol(Fi(static_cast<U>(c[1]) << 6) + D(::bof3::Img(at::kScreenY.v))));
+            SetV(8 * v + 4, Ftol(Fi((6u - c[2]) << 6) + D(::bof3::Img(at::kOffsetY.v))));
         }
         long depth;
         SH_CALL(Gte_RotTransPers4)(Vx(0), Vx(1), Vx(2), Vx(3), Fp(p + 8), Fp(p + 0x18), Fp(p + 0x28), Fp(p + 0x38), &depth);
         SH_CALL(Gte_PrimDepths4_10)(p);
         SH_CALL(Prim_SetTexture)(UL(r + 0x10), p, 1);
-        const U x = Ftol(Fi(static_cast<U>(r[0]) << 16) + D(at::kOffsetX) * D(at::kPieceScale));
+        const U x = Ftol(Fi(static_cast<U>(r[0]) << 16) + D(::bof3::Img(at::kOffsetX.v)) * D(at::kPieceScale));
         SH_CALL(MapView_LinkPrimAt)(x, static_cast<U>(r[1]) << 16, 0, 0x48);
     }
 }
@@ -1554,14 +1554,14 @@ extern "C" void __cdecl EffectKind18Sub5B_DrawPart(int part_word) {
 namespace {
 // The three parts, the offsets set before each as the states set them.
 void SetOffset(U x_bits, U y_bits) {
-    SetUL(at::kOffsetX, x_bits);
-    SetUL(at::kOffsetY, y_bits);
+    SetUL(::bof3::Img(at::kOffsetX.v), x_bits);
+    SetUL(::bof3::Img(at::kOffsetY.v), y_bits);
 }
 void Part(int part) { SH_CALL(EffectKind18Sub5B_DrawPart)(part); }
 // float(-(+9 << shift)) / float(+9 << shift) as fild / fstp store them.
 void OffsetX(bool negative, unsigned shift) {
     const U v = static_cast<U>(S()[9]) << shift;
-    SetD(at::kOffsetX, Fi(negative ? 0u - v : v));
+    SetD(::bof3::Img(at::kOffsetX.v), Fi(negative ? 0u - v : v));
 }
 }  // namespace
 
@@ -1575,7 +1575,7 @@ extern "C" void __cdecl EffectKind18Sub5B_Run(void) {
 // original 0x513CF0 (sub-state 0): story flag 0x81 set: +2 = 6 (opened
 // already); else Cond_ByteFE 3 and +2 up.
 extern "C" void __cdecl EffectKind18Sub5B_Start(void) {
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x81) != 0) {
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x81) != 0) {
         S()[2] = 6;
         return;
     }
@@ -1600,12 +1600,12 @@ namespace {
 // Sub-states 2 and 4: the lift 0; part 0 at -(+9 << 3), part 1 at +9 << 3 (read
 // again), part 2 at 0; +9 up; past `end` +9 0 and +2 up.
 void Slide5B(unsigned end) {
-    SetUL(at::kOffsetY, 0);
+    SetUL(::bof3::Img(at::kOffsetY.v), 0);
     OffsetX(true, 3);
     Part(0);
     OffsetX(false, 3);
     Part(1);
-    SetUL(at::kOffsetX, 0);
+    SetUL(::bof3::Img(at::kOffsetX.v), 0);
     Part(2);
     S()[9] = static_cast<unsigned char>(S()[9] + 1);
     if (S()[9] <= end) return;
@@ -1622,9 +1622,9 @@ extern "C" void __cdecl EffectKind18Sub5B_SlideOut(void) { Slide5B(8); }
 extern "C" void __cdecl EffectKind18Sub5B_Hold(void) {
     SetOffset(0xC2800000u, 0);   // -64.0f
     Part(0);
-    SetUL(at::kOffsetX, 0x42800000u);   // 64.0f
+    SetUL(::bof3::Img(at::kOffsetX.v), 0x42800000u);   // 64.0f
     Part(1);
-    SetUL(at::kOffsetX, 0);
+    SetUL(::bof3::Img(at::kOffsetX.v), 0);
     Part(2);
     S()[9] = static_cast<unsigned char>(S()[9] + 1);
     if (S()[9] <= 0x1E) return;
@@ -1642,14 +1642,14 @@ extern "C" void __cdecl EffectKind18Sub5B_SlideWide(void) { Slide5B(0x30); }
 extern "C" void __cdecl EffectKind18Sub5B_Lift(void) {
     SetOffset(0xC3C00000u, 0);   // -384.0f
     Part(0);
-    SetUL(at::kOffsetX, 0x43C00000u);   // 384.0f
+    SetUL(::bof3::Img(at::kOffsetX.v), 0x43C00000u);   // 384.0f
     Part(1);
-    SetUL(at::kOffsetX, 0);
-    SetD(at::kOffsetY, Fi(static_cast<U>(S()[9]) << 3));
+    SetUL(::bof3::Img(at::kOffsetX.v), 0);
+    SetD(::bof3::Img(at::kOffsetY.v), Fi(static_cast<U>(S()[9]) << 3));
     Part(2);
     S()[9] = static_cast<unsigned char>(S()[9] + 1);
     if (S()[9] <= 0x30) return;
-    SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x81);
+    SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x81);
     SH_CALL(MoveCmd_TestFB)(0x30, 0x71);
     SH_CALL(Effect_Release)();
 }
@@ -1658,11 +1658,11 @@ extern "C" void __cdecl EffectKind18Sub5B_Lift(void) {
 // cleared, sound 0x206, the parts at -384 / 384 / 0 lifted 384, +9 0x60, +2 up.
 extern "C" void __cdecl EffectKind18Sub5B_Reopen(void) {
     if (Cond_ByteFE != 2) return;
-    SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), 0x81);
+    SH_CALL(Flags_Clear)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x81);
     SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(at::kSoundStep5B));
     SetOffset(0xC3C00000u, 0);   // -384.0f
     Part(0);
-    SetUL(at::kOffsetX, 0x43C00000u);   // 384.0f
+    SetUL(::bof3::Img(at::kOffsetX.v), 0x43C00000u);   // 384.0f
     Part(1);
     SetOffset(0, 0x43C00000u);
     Part(2);
@@ -1673,7 +1673,7 @@ extern "C" void __cdecl EffectKind18Sub5B_Reopen(void) {
 // original 0x514030 (sub-state 7): part 0 at -(+9 << 2), part 1 at +9 << 2,
 // part 2 at 0 lifted 384; +9 down to 0.
 extern "C" void __cdecl EffectKind18Sub5B_Close(void) {
-    SetUL(at::kOffsetY, 0);
+    SetUL(::bof3::Img(at::kOffsetY.v), 0);
     OffsetX(true, 2);
     Part(0);
     OffsetX(false, 2);

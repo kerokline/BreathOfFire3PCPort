@@ -45,12 +45,12 @@ unsigned char* EffectAt(unsigned slot) { return rv::Bytes(&Effect_Objects[slot])
 unsigned char* PartyAt(unsigned member) { return rv::Bytes(&ObjTrio[member]); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
 unsigned char* FlagRow() {
-    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(Chapter_FlagRow_addr)))));
+    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(::bof3::Img(Chapter_FlagRow_addr))))));
 }
 
 // The choice answer, as every choice of the band reads it: a signed byte.
-signed char Answer() { return static_cast<signed char>(B(AreaW0c_ChoiceAnswer_addr)); }
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+signed char Answer() { return static_cast<signed char>(B(::bof3::Img(AreaW0c_ChoiceAnswer_addr))); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 // A message word from a choice's table by the signed answer (unchecked: a
 // negative answer reads before the table, a large one past it - in .data).
 unsigned MessageAt(std::uint32_t table, signed char answer) {
@@ -60,8 +60,8 @@ unsigned MessageAt(std::uint32_t table, signed char answer) {
 // The band's commonest choice: no new message; answer 0 sets counter 0 to
 // `on0`, answer 1 to `on1`, any other nothing.
 void CountersByAnswer(signed char answer, unsigned char on0, unsigned char on1) {
-    if (answer == 0) B(at::kCounter0) = on0;
-    else if (answer == 1) B(at::kCounter0) = on1;
+    if (answer == 0) B(::bof3::Img(at::kCounter0.v)) = on0;
+    else if (answer == 1) B(::bof3::Img(at::kCounter0.v)) = on1;
 }
 void ChoiceCounter0(unsigned char on0, unsigned char on1) {
     const signed char answer = Answer();
@@ -77,7 +77,7 @@ void ChoiceMessageCounter0(std::uint32_t table, unsigned char on0, unsigned char
 
 // The story-flag toggle nobody owns (area_w2a_callees.h).
 void FlagsToggle(unsigned char* bits, unsigned index) {
-    AH_AT(void (__cdecl*)(unsigned char*, unsigned), at::kFlagsToggle)(bits, index);
+    AH_AT(void (__cdecl*)(unsigned char*, unsigned), at::kFlagsToggle.v)(bits, index);
 }
 
 // Area 77's ten spawns (as area 49's SpawnAtMember, docs/area_w1c.md):
@@ -91,7 +91,7 @@ void SpawnAtMember(unsigned member, unsigned char kind, std::uint32_t kinds) {
     const auto* const tRecord = rv::AsConst<records::PartyMember>(record);
     const auto z = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_y));
     const auto x = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_x));
-    const unsigned char effect = B(kinds + B(Cond_Flags_addr + 0xd2 + member));
+    const unsigned char effect = B(kinds + B(::bof3::Img(Cond_Flags_addr) + 0xd2 + member));
     Sprite_Current = PartyAt(member);
     const unsigned char slot = AH_CALL(Effect_Spawn)(kind, 0, static_cast<signed char>(effect), x, z);
     if (slot != 0xFF) Sprite_Current[0xB] = slot;
@@ -124,10 +124,10 @@ void ShiftCamera(int by) {
 // arguments: it reads none, event_ops.cpp): with the mode tail kind at 5,
 // the kind, its state and the byte 0x9039F1 cleared. Answers 0 in al.
 extern "C" unsigned char __cdecl Area76_StepDisarmTail5(void) {
-    if (B(AreaW0a_TailKind_addr) == 5) {
-        B(AreaW0a_TailKind_addr) = 0;
-        B(AreaW0c_TailState_addr) = 0;
-        B(AreaW2a_ModeByte_addr) = 0;
+    if (B(::bof3::Img(AreaW0a_TailKind_addr)) == 5) {
+        B(::bof3::Img(AreaW0a_TailKind_addr)) = 0;
+        B(::bof3::Img(AreaW0c_TailState_addr)) = 0;
+        B(::bof3::Img(AreaW2a_ModeByte_addr)) = 0;
     }
     return 0;
 }
@@ -144,18 +144,18 @@ extern "C" unsigned char __cdecl Area76_StepDisarmTail5(void) {
 // Story flag 0x1C set: 0. Else its story flag toggled (0x57C160),
 // Sound_PlayEffect(0x201), 0x469FE0(0xF), answer 1.
 extern "C" int __cdecl Area77_CellHook(long x, long z) {
-    if (AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0x30), 0x2C)) return 0;
-    const unsigned char pose = B(ObjTrio_addr + 0x8);
+    if (AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0x30), 0x2C)) return 0;
+    const unsigned char pose = B(::bof3::Img(ObjTrio_addr) + 0x8);
     unsigned i = 0;
     for (; i < at::kArea77CellSwitchCount; ++i) {
-        const unsigned char* const r = Mem(Area77_CellSwitches_addr + i * 4u);
+        const unsigned char* const r = Mem(::bof3::Img(Area77_CellSwitches_addr) + i * 4u);
         if (static_cast<unsigned char>(x) == r[0] && static_cast<unsigned char>(z) == r[1] && r[2] == pose) break;
     }
     if (i == at::kArea77CellSwitchCount) return 0;
-    if (AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0xa0), 0x1C)) return 0;
-    FlagsToggle(Mem(Cond_Flags_addr + 0xa0), B(Area77_CellSwitches_addr + i * 4u + 3));
+    if (AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C)) return 0;
+    FlagsToggle(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), B(::bof3::Img(Area77_CellSwitches_addr) + i * 4u + 3));
     AH_CALL(Sound_PlayEffect)(0x201);
-    AH_AT(void (__cdecl*)(unsigned), at::kSpawnKind4)(0xF);
+    AH_AT(void (__cdecl*)(unsigned), at::kSpawnKind4.v)(0xF);
     return 1;
 }
 
@@ -164,15 +164,15 @@ extern "C" int __cdecl Area77_CellHook(long x, long z) {
 // 7; answers 0 in al.
 extern "C" unsigned char __cdecl Area77_Trigger34(unsigned char*, unsigned char*) {
     AH_CALL(ScriptFlags_Set40)();
-    B(AreaW0a_TailKind_addr) = 0x2C;
-    B(AreaW0c_TailState_addr) = 0;
-    B(AreaW0c_TailSub_addr) = 7;
+    B(::bof3::Img(AreaW0a_TailKind_addr)) = 0x2C;
+    B(::bof3::Img(AreaW0c_TailState_addr)) = 0;
+    B(::bof3::Img(AreaW0c_TailSub_addr)) = 7;
     return 0;
 }
 
 // original 0x40EC70 (Area77_Choices[0]): the message word from
 // Area77_ChoiceMessages by the signed answer, unchecked.
-extern "C" void __cdecl Area77_ChoiceMessage(void) { SetMessage(MessageAt(Area77_ChoiceMessages_addr, Answer())); }
+extern "C" void __cdecl Area77_ChoiceMessage(void) { SetMessage(MessageAt(::bof3::Img(Area77_ChoiceMessages_addr), Answer())); }
 
 // original 0x40EC90 (Area77_Choices[1]): no new message; answer 0 sets
 // counter 0 to 1, answer 1 to 0.
@@ -195,18 +195,18 @@ extern "C" void __cdecl Area77_ClearByteFE(void) {
 // originals 0x40ED00, 0x40ED50, 0x40EDD0, 0x40EE20, 0x40EE70 (handlers 2, 3,
 // 6, 7, 8; PSX 0x801F5AAC, 0x801F5B2C, 0x801F5C00, 0x801F5C80, 0x801F5D00):
 // SpawnAtMember with lists A..E.
-extern "C" void __cdecl Area77_Spawn3AtMember0ListA(void) { SpawnAtMember(0, 3, Area77_EffectKindsA_addr); }
-extern "C" void __cdecl Area77_Spawn4AtMember0ListB(void) { SpawnAtMember(0, 4, Area77_EffectKindsA_addr + 0x8); }
-extern "C" void __cdecl Area77_Spawn2AtMember0ListC(void) { SpawnAtMember(0, 2, Area77_EffectKindsA_addr + 0x10); }
-extern "C" void __cdecl Area77_Spawn3AtMember1ListD(void) { SpawnAtMember(1, 3, Area77_EffectKindsA_addr + 0x18); }
-extern "C" void __cdecl Area77_Spawn3AtMember2ListE(void) { SpawnAtMember(2, 3, Area77_EffectKindsA_addr + 0x20); }
+extern "C" void __cdecl Area77_Spawn3AtMember0ListA(void) { SpawnAtMember(0, 3, ::bof3::Img(Area77_EffectKindsA_addr)); }
+extern "C" void __cdecl Area77_Spawn4AtMember0ListB(void) { SpawnAtMember(0, 4, ::bof3::Img(Area77_EffectKindsA_addr) + 0x8); }
+extern "C" void __cdecl Area77_Spawn2AtMember0ListC(void) { SpawnAtMember(0, 2, ::bof3::Img(Area77_EffectKindsA_addr) + 0x10); }
+extern "C" void __cdecl Area77_Spawn3AtMember1ListD(void) { SpawnAtMember(1, 3, ::bof3::Img(Area77_EffectKindsA_addr) + 0x18); }
+extern "C" void __cdecl Area77_Spawn3AtMember2ListE(void) { SpawnAtMember(2, 3, ::bof3::Img(Area77_EffectKindsA_addr) + 0x20); }
 
 // original 0x40EDA0 (Area77_Handlers[4]; PSX 0x801F5BAC): Inventory_Remove(1,
 // 0x47, 1) - the original pushes a fourth word, 0, that the callee never reads.
 extern "C" void __cdecl Area77_RemoveItem47(void) { AH_CALL(Inventory_Remove)(1, 0x47, 1); }
 
 // original 0x40EDC0 (Area77_Handlers[5]; PSX 0x801F5BD8): story flag 4 set.
-extern "C" void __cdecl Area77_SetFlag4(void) { AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 4); }
+extern "C" void __cdecl Area77_SetFlag4(void) { AH_CALL(Flags_Set)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 4); }
 
 // original 0x40EEC0 (Area77_Handlers[9]; PSX 0x801F5D80): Camera_ShiftY -
 // 0x14, MapView_Redraw 2, Sound_PlayEffect(0x200).
@@ -218,14 +218,14 @@ extern "C" void __cdecl Area77_ShiftCameraDownSound(void) {
 // originals 0x40EEE0, 0x40EF30, 0x40EF80 (handlers 12, 13, 14; PSX
 // 0x801F5E04, 0x801F5E84, 0x801F5F04): SpawnAtMember kind 4 for members 1,
 // 2, 0, all three by list 0.
-extern "C" void __cdecl Area77_Spawn4AtMember1List0(void) { SpawnAtMember(1, 4, Area77_EffectKinds0_addr); }
-extern "C" void __cdecl Area77_Spawn4AtMember2List0(void) { SpawnAtMember(2, 4, Area77_EffectKinds0_addr); }
-extern "C" void __cdecl Area77_Spawn4AtMember0List0(void) { SpawnAtMember(0, 4, Area77_EffectKinds0_addr); }
+extern "C" void __cdecl Area77_Spawn4AtMember1List0(void) { SpawnAtMember(1, 4, ::bof3::Img(Area77_EffectKinds0_addr)); }
+extern "C" void __cdecl Area77_Spawn4AtMember2List0(void) { SpawnAtMember(2, 4, ::bof3::Img(Area77_EffectKinds0_addr)); }
+extern "C" void __cdecl Area77_Spawn4AtMember0List0(void) { SpawnAtMember(0, 4, ::bof3::Img(Area77_EffectKinds0_addr)); }
 
 // originals 0x40EFD0, 0x40F020 (handlers 15, 16; PSX 0x801F5F84,
 // 0x801F6004): SpawnAtMember for member 0 by lists F and G.
-extern "C" void __cdecl Area77_Spawn1AtMember0ListF(void) { SpawnAtMember(0, 1, Area77_EffectKindsA_addr + 0x28); }
-extern "C" void __cdecl Area77_Spawn3AtMember0ListG(void) { SpawnAtMember(0, 3, Area77_EffectKindsA_addr + 0x30); }
+extern "C" void __cdecl Area77_Spawn1AtMember0ListF(void) { SpawnAtMember(0, 1, ::bof3::Img(Area77_EffectKindsA_addr) + 0x28); }
+extern "C" void __cdecl Area77_Spawn3AtMember0ListG(void) { SpawnAtMember(0, 3, ::bof3::Img(Area77_EffectKindsA_addr) + 0x30); }
 
 // original 0x40F140 (called by handlers 17 and 18): a free effect record of
 // kind `kind` (its low byte), +0 = 1. The answer is unread.
@@ -254,14 +254,14 @@ extern "C" void __cdecl Area77_LeapStep(void) {
     const unsigned area = Game_AreaNumber;
     if (area >= at::kDescriptorCount)
         bof3::Fatal("Area77_LeapStep: Game_AreaNumber %u past Area_Descriptors' %u", area, at::kDescriptorCount);
-    const std::uint32_t descriptor = static_cast<std::uint32_t>(Long(Mem(Area_Descriptors_addr + area * 4)));
+    const std::uint32_t descriptor = static_cast<std::uint32_t>(Long(Mem(::bof3::Img(Area_Descriptors_addr) + area * 4)));
     const unsigned position = rv::As<records::ScriptContext>(object)->position;
     const std::uint32_t scripts = static_cast<std::uint32_t>(Long(Mem(descriptor + 0x10)));
     const std::uint32_t script = static_cast<std::uint32_t>(Long(Mem(scripts + object[3] * 4u)));
     const unsigned char operand = B(script + position + 2);
     const std::uint32_t pair = operand * 2u;
-    const std::uint32_t dx = (pair & 0xFFFFFF00u) | B(Area77_Leaps_addr + pair);
-    const std::uint32_t dz = (scripts & 0xFFFFFF00u) | B(Area77_Leaps_addr + pair + 1);
+    const std::uint32_t dx = (pair & 0xFFFFFF00u) | B(::bof3::Img(Area77_Leaps_addr) + pair);
+    const std::uint32_t dz = (scripts & 0xFFFFFF00u) | B(::bof3::Img(Area77_Leaps_addr) + pair + 1);
     if (AH_CALL(Scena06_Leap)(object, dx, dz, 0x40, 0xFFFFFC00u, 4, 0)) {
         AddWord(MoveScript_Object + 0xA, -2);
         return;
@@ -289,7 +289,7 @@ extern "C" void __cdecl Area78_ChoiceRowFlag16or17(void) {
     SetMessage(0xFFFF);
     if (answer != 0 && answer != 1) return;
     unsigned char* const row = FlagRow();
-    B(at::kCounter0) = 0x1E;
+    B(::bof3::Img(at::kCounter0.v)) = 0x1E;
     AH_CALL(Flags_Set)(row, answer == 0 ? 0x16 : 0x17);
 }
 
@@ -307,18 +307,18 @@ extern "C" void __cdecl Area78_ChoiceCounterAor2(void) { ChoiceCounter0(0xA, 2);
 // MoveScript_Var7 0, MoveScript_Var7 0xE; answer 1: counter 0 0.
 extern "C" void __cdecl Area78_ChoiceResetScene(void) {
     const signed char answer = Answer();
-    SetMessage(MessageAt(Area78_ChoiceMessages_addr, answer));
+    SetMessage(MessageAt(::bof3::Img(Area78_ChoiceMessages_addr), answer));
     if (answer == 0) {
         AH_CALL(ScriptFlags_Set40)();
-        B(at::kCounter0) = 0;
-        B(at::kCounter1) = 0;
-        B(at::kCounter2) = 0;
-        B(at::kCounter3) = 0;
-        B(MoveScript_PartyRecords_addr + 0x65) = 0;
-        SetWord(Mem(MoveScript_PartyRecords_addr + 0x66), 0);
+        B(::bof3::Img(at::kCounter0.v)) = 0;
+        B(::bof3::Img(at::kCounter1.v)) = 0;
+        B(::bof3::Img(at::kCounter2.v)) = 0;
+        B(::bof3::Img(at::kCounter3.v)) = 0;
+        B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65) = 0;
+        SetWord(Mem(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), 0);
         MoveScript_Var7 = 0xE;
     } else if (answer == 1) {
-        B(at::kCounter0) = 0;
+        B(::bof3::Img(at::kCounter0.v)) = 0;
     }
 }
 
@@ -342,7 +342,7 @@ extern "C" void __cdecl Area79_ChoiceCounter1or14(void) { ChoiceCounter0(1, 0x14
 extern "C" void __cdecl Area79_ChoiceCounter3(void) {
     const int answer = Answer();
     if (static_cast<unsigned>(answer) > 5) return;
-    B(at::kCounter3) = static_cast<unsigned char>(answer + 1);
+    B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(answer + 1);
 }
 
 // original 0x40F340 (Area79_Choices[3]): the message word from
@@ -350,9 +350,9 @@ extern "C" void __cdecl Area79_ChoiceCounter3(void) {
 // unchecked); an answer 0..5 sets counter 3 to 0xB + the answer.
 extern "C" void __cdecl Area79_ChoiceMessageCounter3(void) {
     const signed char answer = Answer();
-    SetMessage(MessageAt(Area79_ChoiceMessages_addr, answer));
+    SetMessage(MessageAt(::bof3::Img(Area79_ChoiceMessages_addr), answer));
     if (static_cast<unsigned>(static_cast<int>(answer)) > 5) return;
-    B(at::kCounter3) = static_cast<unsigned char>(0xB + answer);
+    B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(0xB + answer);
 }
 
 // original 0x40F3B0 (Area79_Choices[4]): counter 0 8 for answer 0, 9 for 1.
@@ -369,9 +369,9 @@ extern "C" void __cdecl Area79_ObjectState(void) {
     const unsigned state = Sprite_Current[4];
     if (state >= at::kArea79StateCount)
         bof3::Fatal("Area79_ObjectState: state %u outside Area79_States' %u at 0x%X", state, at::kArea79StateCount,
-                    static_cast<unsigned>(Area79_States_addr));
+                    static_cast<unsigned>(::bof3::Img(Area79_States_addr)));
     reinterpret_cast<area_harness::Handler>(static_cast<std::uintptr_t>(
-        static_cast<std::uint32_t>(Long(Mem(Area79_States_addr + state * 4)))))();
+        static_cast<std::uint32_t>(Long(Mem(::bof3::Img(Area79_States_addr) + state * 4)))))();
 }
 
 // original 0x40F430 (Area79_States[1]): with a count at Sprite_Current +0xA,
@@ -386,11 +386,11 @@ extern "C" void __cdecl Area79_StateSlide(void) {
         s[4] = 0;
         return;
     }
-    const auto dx = static_cast<std::uint32_t>(static_cast<int>(static_cast<signed char>(B(Area79_SlideSteps_addr + (s[0xA] & 0xFu)))));
+    const auto dx = static_cast<std::uint32_t>(static_cast<int>(static_cast<signed char>(B(::bof3::Img(Area79_SlideSteps_addr) + (s[0xA] & 0xFu)))));
     tS->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(tS->x) + (dx << 11));
     s = Sprite_Current;
     tS = rv::As<records::SpriteObject>(s);
-    const auto dz = static_cast<std::uint32_t>(-static_cast<int>(static_cast<signed char>(B(Area79_SlideSteps_addr + (s[0xA] & 0xFu)))));
+    const auto dz = static_cast<std::uint32_t>(-static_cast<int>(static_cast<signed char>(B(::bof3::Img(Area79_SlideSteps_addr) + (s[0xA] & 0xFu)))));
     tS->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(tS->z) + (dz << 11));
     s = Sprite_Current;
     tS = rv::As<records::SpriteObject>(s);
@@ -406,9 +406,9 @@ extern "C" void __cdecl Area79_StateSlide(void) {
 // originals 0x40F4A0, 0x40F4D0, 0x40F500 (Area80_Choices[0..2]): the message
 // word from the choice's pair in Area80_ChoiceMessages by the signed answer
 // (unchecked); counter 0 1 for answer 0, 0xA for 1.
-extern "C" void __cdecl Area80_ChoiceMessage0(void) { ChoiceMessageCounter0(Area80_ChoiceMessages_addr, 1, 0xA); }
-extern "C" void __cdecl Area80_ChoiceMessage1(void) { ChoiceMessageCounter0(Area80_ChoiceMessages_addr + 4, 1, 0xA); }
-extern "C" void __cdecl Area80_ChoiceMessage2(void) { ChoiceMessageCounter0(Area80_ChoiceMessages_addr + 8, 1, 0xA); }
+extern "C" void __cdecl Area80_ChoiceMessage0(void) { ChoiceMessageCounter0(::bof3::Img(Area80_ChoiceMessages_addr), 1, 0xA); }
+extern "C" void __cdecl Area80_ChoiceMessage1(void) { ChoiceMessageCounter0(::bof3::Img(Area80_ChoiceMessages_addr) + 4, 1, 0xA); }
+extern "C" void __cdecl Area80_ChoiceMessage2(void) { ChoiceMessageCounter0(::bof3::Img(Area80_ChoiceMessages_addr) + 8, 1, 0xA); }
 
 // original 0x40F530 (Area80_Handlers[2], PSX 0x801F3D34; named by twelve
 // areas' tables: 7, 8, 15, 23, 49, 77, 80, 81, 100, 119, 134, 188):
@@ -429,7 +429,7 @@ extern "C" void __cdecl Area81_ChoiceCounter1or2(void) { ChoiceCounter0(1, 2); }
 // original 0x40F580 (Area81_Choices[1]): the message word from
 // Area81_ChoiceMessages by the signed answer (unchecked); counter 0 3 for
 // answer 0, 4 for 1.
-extern "C" void __cdecl Area81_ChoiceMessageCounter3or4(void) { ChoiceMessageCounter0(Area81_ChoiceMessages_addr, 3, 4); }
+extern "C" void __cdecl Area81_ChoiceMessageCounter3or4(void) { ChoiceMessageCounter0(::bof3::Img(Area81_ChoiceMessages_addr), 3, 4); }
 
 // original 0x40F5B0 (Area81_Handlers[0]; PSX 0x801F2C94): a free effect
 // record of kind 0x27 put at the running object's x and z (Sprite_Current
@@ -494,8 +494,8 @@ extern "C" void __cdecl Area82_OpenMessageByRowFlag4(void) {
 extern "C" void __cdecl Area84_SetFlag31At5(void) {
     unsigned char* const member = Field_ActiveMember;
     member[0x80] = static_cast<unsigned char>(member[0x80] & 0xFE);
-    if (B(ObjTrio_addr + 0x89) != 5) return;
-    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x31);
+    if (B(::bof3::Img(ObjTrio_addr) + 0x89) != 5) return;
+    AH_CALL(Flags_Set)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x31);
     AH_CALL(MoveCmd_TestFB)(9, 0x10);
     Sprite_Current[0] = 0;
 }

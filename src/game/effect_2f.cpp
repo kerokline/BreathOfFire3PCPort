@@ -498,7 +498,7 @@ void Kind51Grow(unsigned reload) {
 void Kind51Wait() {
     SH_CALL(EffectKind51_DrawFrame)();
     SwayStep();
-    if (At(at::kCounter0)[0] != 0xB) return;
+    if (At(::bof3::Img(at::kCounter0.v))[0] != 0xB) return;
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->frame_word, 0x20);
     NextState();
 }
@@ -693,7 +693,7 @@ extern "C" void __cdecl EffectKind51_DrawColumn(unsigned half, unsigned sway) {
     U i = 0;
     do {
         const U kk = S16(k);
-        const U w = static_cast<U>(SH_AT(long (__cdecl*)(long), at::kSqrt)(static_cast<long>(hh - kk * kk)));
+        const U w = static_cast<U>(SH_AT(long (__cdecl*)(long), at::kSqrt.v)(static_cast<long>(hh - kk * kk)));
         if (i >= at::kAngles)
             bof3::Fatal("EffectKind51_DrawColumn: row %u of %d, past the %u words of EffectKind51_Angles - the original "
                         "reads past them (docs/effect_2f.md section 2)",
@@ -891,7 +891,7 @@ extern "C" void __cdecl EffectKind51_DrawRing(unsigned radius) {
 
 namespace {
 
-unsigned char* Trail() { return At(EffectKind30_Shards_addr + 0xe0); }
+unsigned char* Trail() { return At(::bof3::Img(EffectKind30_Shards_addr) + 0xe0); }
 
 // The timer byte +9 down; at 0, +9 = `reload` and +2 up.
 void SubCountDown(unsigned char reload) {
@@ -945,7 +945,7 @@ extern "C" void __cdecl EffectKind52_SparksEmit(void) {
     if (rv::As<records::EffectObject>(S())->frame_word == 4) SH_CALL(Sound_PlayEffect)(0x201);
     if ((S()[0x5A] & 7) == 0) {
         unsigned char* const spark = SH_CALL(EffectSpark_FindFree)();
-        if (spark != nullptr) SH_AT(void (__cdecl*)(unsigned char*), at::kSparkInit)(spark);
+        if (spark != nullptr) SH_AT(void (__cdecl*)(unsigned char*), at::kSparkInit.v)(spark);
     }
     SH_CALL(EffectKind52_MoveSparks)();
     unsigned char* const s = S();
@@ -971,7 +971,7 @@ extern "C" void __cdecl EffectKind52_Trail(void) {
 // width (its last word, 0x92C49E) = 0xC0; the record put at (0x6B, 0x46) on the
 // ground.
 extern "C" void __cdecl EffectKind52_TrailStart(void) {
-    SetWord(At(at::kTrailSize), 0xC0);
+    SetWord(At(::bof3::Img(at::kTrailSize.v)), 0xC0);
     TrailPlace(0x6B0000, 0x460000);
 }
 
@@ -1009,7 +1009,7 @@ extern "C" void __cdecl EffectKind52_TrailHold(void) { SubCountDown(8); }
 // width down 0x18; +9 down, at 0 a tail jmp to Effect_Release.
 extern "C" void __cdecl EffectKind52_TrailFade(void) {
     unsigned char* const s = S();
-    unsigned char* const size = At(at::kTrailSize);
+    unsigned char* const size = At(::bof3::Img(at::kTrailSize.v));
     SetWord(size, Word(size) - 0x18u);
     s[9] = static_cast<unsigned char>(s[9] - 1);
     if (s[9] == 0) SH_CALL(Effect_Release)();
@@ -1050,8 +1050,8 @@ extern "C" unsigned char __cdecl EffectKind52_MoveSparks(void) {
                         "the original calls through the dword after (docs/effect_2f.md section 2)",
                         i, state, EffectKind52_SparkStates_count);
         reinterpret_cast<void (__cdecl*)(unsigned char*)>(
-            static_cast<std::uintptr_t>(UL(At(AddressOf(EffectKind52_SparkStates) + 4 * state))))(k);
-        SH_AT(void (__cdecl*)(unsigned char*), at::kSparkDraw)(k);
+            static_cast<std::uintptr_t>(::bof3::CodePlace(UL(At(AddressOf(EffectKind52_SparkStates) + 4 * state)))))(k);
+        SH_AT(void (__cdecl*)(unsigned char*), at::kSparkDraw.v)(k);
         any = 1;
     }
     return any;
@@ -1145,7 +1145,7 @@ extern "C" void __cdecl EffectKind52_TrailUpdate(unsigned char* trail) {
     SetWord(trail + 0x1C, Word(angles));
     for (unsigned k = 0; k < 0x1E; ++k)
         SetWord(trail + 0x3C + 0x20 * k,
-                static_cast<U>(SH_AT(long (__cdecl*)(unsigned, unsigned), at::kAngleMean)(Word(angles + 2 * k),
+                static_cast<U>(SH_AT(long (__cdecl*)(unsigned, unsigned), at::kAngleMean.v)(Word(angles + 2 * k),
                                                                                           Word(angles + 2 * k + 2))));
     SetWord(trail + 0x3FC, Word(trail + 0x43C));
 }
@@ -1375,7 +1375,7 @@ extern "C" void __cdecl EffectKind53_TexWindow(unsigned x, unsigned y, unsigned 
     SetWord(rect + 2, y);
     SetWord(rect + 4, w);
     SetWord(rect + 6, h);
-    SH_AT(void (__cdecl*)(unsigned char*, unsigned char*), at::kPrimRect)(Gfx_PacketNext, rect);
+    SH_AT(void (__cdecl*)(unsigned char*, unsigned char*), at::kPrimRect.v)(Gfx_PacketNext, rect);
     const unsigned char* const s = S();
     SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 0, 0xC);
 }
@@ -1399,7 +1399,7 @@ extern "C" void __cdecl EffectKind56_Start(void) {
 
 // original 0x47D950 (state 1): once the counter byte 0x90384B is 0xA, +1 = 2.
 extern "C" void __cdecl EffectKind56_Wait(void) {
-    if (At(at::kCounter3)[0] == 0xA) S()[1] = 2;
+    if (At(::bof3::Img(at::kCounter3.v))[0] == 0xA) S()[1] = 2;
 }
 
 // original 0x47D970 (state 2): +1 = 3.
@@ -1434,7 +1434,7 @@ extern "C" void __cdecl EffectKind56_Markers(void) {
     s[0x5D] = 0xFF;
     s = S();
     SH_CALL(EffectKind56_DrawCross)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z, rv::As<records::EffectObject>(s)->step_y, 0);
-    if (At(at::kCounter3)[0] == 0xE) S()[1] = 1;
+    if (At(::bof3::Img(at::kCounter3.v))[0] == 0xE) S()[1] = 1;
 }
 
 // original 0x47DA60: the record's point = Sprite_ObjectsExtra[0]'s (+0x34,
@@ -1442,7 +1442,7 @@ extern "C" void __cdecl EffectKind56_Markers(void) {
 // MapView_GroundAt(x, z)'s low word << 16. The callers push an argument it
 // never reads.
 extern "C" void __cdecl EffectKind56_Place(void) {
-    const unsigned char* const extra = At(Sprite_ObjectsExtra_addr + 0x34);
+    const unsigned char* const extra = At(::bof3::Img(Sprite_ObjectsExtra_addr) + 0x34);
     rv::Store<U>(rv::Current<records::EffectObject>()->x, UL(extra));
     rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(extra + 4));
     rv::Store<U>(rv::Current<records::EffectObject>()->height, UL(extra + 8));

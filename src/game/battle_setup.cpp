@@ -39,18 +39,18 @@ template <typename F> F Fn(std::uint32_t address) { return reinterpret_cast<F>(s
 }  // namespace
 
 const Callees kOriginals = {
-    Fn<unsigned (__cdecl*)(unsigned)>(kActorAbsent),
-    Fn<unsigned (__cdecl*)(unsigned)>(kActorCanAct),
-    Fn<void (__cdecl*)(unsigned)>(kSetPending),
-    Fn<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, const unsigned char*)>(kMessage),
-    Fn<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned, const unsigned char*)>(kMessageAt),
-    Fn<void (__cdecl*)(unsigned)>(kStatusTint),
-    Fn<void (__cdecl*)(unsigned)>(kPartyName),
-    Fn<void (__cdecl*)(unsigned)>(kEnemyName),
-    Fn<unsigned (__cdecl*)(unsigned)>(kWakeRoll),
-    Fn<void (__cdecl*)(unsigned)>(kSetHpChange),
-    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(kEnemyOutpaces),
-    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(kReturnItem),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kActorAbsent.v)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kActorCanAct.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kSetPending.v)),
+    Fn<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, const unsigned char*)>(::bof3::Code(kMessage.v)),
+    Fn<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned, const unsigned char*)>(::bof3::Code(kMessageAt.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kStatusTint.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kPartyName.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kEnemyName.v)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kWakeRoll.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kSetHpChange.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kEnemyOutpaces.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kReturnItem.v)),
     Sprite_ReleaseTint,
     Msg_SystemPtr,
     Window_Alloc,
@@ -135,11 +135,11 @@ extern "C" unsigned __cdecl Battle_ActorStanding(unsigned actor) {
     unsigned r;
     if (a < 3) {
         offset = a * at::kPartyStride;
-        auto* const member_rec = rv::AsConst<records::PartyMember>(At(ObjTrio_addr + offset));
+        auto* const member_rec = rv::AsConst<records::PartyMember>(At(::bof3::Img(ObjTrio_addr) + offset));
         r = (member_rec->flags & 1) && (member_rec->status & 0x4944) == 0 ? 1 : 0;
     } else {
         offset = ((a - 3) & 0xFF) * at::kEnemyStride;
-        auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(At(Battle_Enemies_addr + offset));
+        auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(At(::bof3::Img(Battle_Enemies_addr) + offset));
         r = (enemy_rec->flags & 1) && (enemy_rec->status & 0x4144) == 0 ? 1 : 0;
     }
     return (offset & ~0xFFu) | r;
@@ -167,9 +167,9 @@ extern "C" unsigned __cdecl Battle_PartyOutpaces(unsigned actor, unsigned averag
 // kind 4 with ability 0xA3. An actor above 2 is an enemy, (actor - 3) * 0x128
 // - unbounded, as the original's.
 extern "C" void __cdecl Battle_ClearActingFlags() {
-    const std::uint32_t acting = static_cast<std::uint32_t>(Long(At(at::kActing)));
+    const std::uint32_t acting = static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kActing.v))));
     const unsigned a = acting & 0xFF, kind = (acting >> 8) & 0xFF;
-    const unsigned ability = Word(At(at::kAbility));
+    const unsigned ability = Word(At(::bof3::Img(at::kAbility.v)));
     const auto clear = [a](unsigned bit, unsigned party_count, unsigned enemy_count) {
         const bool party = a <= 2;
         unsigned char* const o = party ? P(a) : E(a);
@@ -203,7 +203,7 @@ extern "C" void __cdecl Battle_TickCounters() {
         auto* const enemy_rec = rv::As<records::BattleEnemy>(E(i));
         if ((static_cast<std::int32_t>(enemy_rec->flags_114) & 0x4000) && enemy_rec->count_4000 <= 2) ++enemy_rec->count_4000;
     }
-    unsigned char* const timer = At(BattleFlow_AnimGate_addr);
+    unsigned char* const timer = At(::bof3::Img(BattleFlow_AnimGate_addr));
     if (*timer == 0) return;
     if (--*timer != 0) return;
     for (unsigned i = 0; i <= 2; ++i)
@@ -277,7 +277,7 @@ extern "C" unsigned __cdecl Battle_ClearStatus(unsigned actor, unsigned mask) {
     unsigned s = Word(status) & ~(mask & 0x48DFu);
     if ((mask & 0x20) && (s & 0x20)) {
         s &= ~0x20u;
-        std::memcpy(o + at::kPos, At(BattleTask_Slots_addr + 0x34 + a * at::kSavedPosStride), 12);
+        std::memcpy(o + at::kPos, At(::bof3::Img(BattleTask_Slots_addr) + 0x34 + a * at::kSavedPosStride), 12);
     }
     g.release_tint(o);
     SetWord(status, s);
@@ -303,7 +303,7 @@ extern "C" void __cdecl Battle_ReturnQueuedItem(unsigned actor) {
     unsigned i = static_cast<unsigned char>(BossSe_RoundSlot - 1);
     for (;;) {
         if (i >= to) return;
-        if (At(at::kItemQueue + i)[0] == a) break;
+        if (At(::bof3::Img(at::kItemQueue.v) + i)[0] == a) break;
         ++i;
     }
     unsigned char* const o = P(a);
@@ -318,7 +318,7 @@ extern "C" void __cdecl Battle_ReturnQueuedItem(unsigned actor) {
 // through 0x44A6E0(0, 2, 0, 0, 0xFF, text).
 extern "C" void __cdecl Battle_OpeningMessage() {
     static constexpr unsigned char kLines[6] = {0, 1, 2, 3, 4, 0};
-    const std::uint32_t kind = static_cast<std::uint32_t>(Long(At(at::kOpening)));
+    const std::uint32_t kind = static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kOpening.v))));
     const unsigned base = kind == 1 ? 0 : (kind == 0 || kind > 4) ? 4 : 2;
     const unsigned id = kLines[base + (static_cast<unsigned>(g.rand()) & 1)];
     g.message_at(0, 2, 0, 0, 0xFF, g.msg(id));
@@ -563,7 +563,7 @@ extern "C" unsigned __cdecl BattleStep_ApUpkeep() {
             member_rec->flags_134 = static_cast<std::int32_t>(flags & ~0x20u);
             continue;
         }
-        const int cost = static_cast<int>((static_cast<std::uint32_t>(Long(At(BattleActions_ApCost_addr))) & 0xFF) + 1) / 2;
+        const int cost = static_cast<int>((static_cast<std::uint32_t>(Long(At(::bof3::Img(BattleActions_ApCost_addr)))) & 0xFF) + 1) / 2;
         if (static_cast<int>(member_rec->ap) < cost) {
             member_rec->state = 6;
             member_rec->step = 4;

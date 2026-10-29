@@ -90,7 +90,7 @@ U FindFreeEffect(const U*, U answer) {
 U DropInEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) ah::SetPointer(AreaW1a_FocusObject_addr, ah::Object(n >> 8));
-    if (n & 2) B(at::kScriptFlagsHigh) = static_cast<unsigned char>(B(at::kScriptFlagsHigh) ^ 0x10);
+    if (n & 2) B(::bof3::Img(at::kScriptFlagsHigh.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kScriptFlagsHigh.v)) ^ 0x10);
     if (n & 4) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(n & 8 ? 0xA : 1);
     if (n & 0x10) Cond_ByteFD = static_cast<unsigned char>(n & 0x20 ? 6 : 5);
     return answer;
@@ -214,9 +214,9 @@ const ah::Callee kCallees[] = {
     {W1A_OURS(Area40_PuzzleSolved), 0, {}, ah::Answer::kFlag, 0, 0},
     {W1A_OURS(Area41_TintUp), 0, {}, ah::Answer::kPhase, 0, 0},
     // group SX's, by raw address
-    {"FreeObject_57CD90", at::kFreeObject, at::kFreeObject, 0, {}, ah::Answer::kByte, 0xFF, 0x1D, {}, &FreeObjectEffect},
-    {"KeyItemAdd_591900", at::kKeyItemAdd, at::kKeyItemAdd, 1, {kAll}, ah::Answer::kGarbage, 0, 0},
-    {"InventoryTake_591B60", at::kInventoryTake, at::kInventoryTake, 4, {kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
+    {"FreeObject_57CD90", at::kFreeObject.v, at::kFreeObject.v, 0, {}, ah::Answer::kByte, 0xFF, 0x1D, {}, &FreeObjectEffect},
+    {"KeyItemAdd_591900", at::kKeyItemAdd.v, at::kKeyItemAdd.v, 1, {kAll}, ah::Answer::kGarbage, 0, 0},
+    {"InventoryTake_591B60", at::kInventoryTake.v, at::kInventoryTake.v, 4, {kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
 };
 #undef W1A_OURS
 
@@ -232,7 +232,7 @@ ah::Region g_regions[] = {
     {Chapter_FlagRow_addr, 4},
     {AreaW1a_FocusObject_addr, 4},
     {AreaW0c_AnswerMark_addr, 1},
-    {at::kKeyItems, at::kKeyItemCount},
+    {at::kKeyItems.v, at::kKeyItemCount},
     {Input_Held_addr, 4},
     {Gfx_PacketNext_addr, 4},
     {0, kPacketBytes},            // g_packets (set at start-up)
@@ -342,9 +342,9 @@ void Seed39(unsigned k) {
     case k39KeyItem:
         // no 0xE a third of the time, else one or two planted
         for (unsigned i = 0; i < at::kKeyItemCount; ++i)
-            if (B(at::kKeyItems + i) == 0xE) B(at::kKeyItems + i) = 0xF;
-        if (ah::Often()) B(at::kKeyItems + ah::Next() % at::kKeyItemCount) = 0xE;
-        if (ah::Half()) B(at::kKeyItems + ah::Next() % at::kKeyItemCount) = 0xE;
+            if (B(::bof3::Img(at::kKeyItems.v) + i) == 0xE) B(::bof3::Img(at::kKeyItems.v) + i) = 0xF;
+        if (ah::Often()) B(::bof3::Img(at::kKeyItems.v) + ah::Next() % at::kKeyItemCount) = 0xE;
+        if (ah::Half()) B(::bof3::Img(at::kKeyItems.v) + ah::Next() % at::kKeyItemCount) = 0xE;
         break;
     case k39Counter:
         if (ah::Often()) B(Cond_Flags_addr + 0xd2) = static_cast<unsigned char>(AH_PICK(4, 4, 3, 5, 0x84, 0));
@@ -446,7 +446,7 @@ void Seed40(unsigned k) {
         break;
     case k40Tail:
         if (ah::Often()) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 2, 3, 0xFF, 0xA));
-        if (ah::Often()) B(at::kCounter0) = static_cast<unsigned char>(AH_PICK(0x63, 0x63, 0x62, 0x64, 0xE3));
+        if (ah::Often()) B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(AH_PICK(0x63, 0x63, 0x62, 0x64, 0xE3));
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(0, 0, 1, 2));
         if (ah::Half()) Game_AreaNumber = static_cast<unsigned short>(AH_PICK(0x29, 0x128, 0x27));
         if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(6, 6, 5, 7, 0x86));

@@ -27,25 +27,25 @@ const Callees kOriginals = {
     Field_JumpSetUp,
     Field_JumpCamera,
     Field_JumpStart,
-    Fn<long (__cdecl*)(long, long, unsigned)>(kSlopeAt),
+    Fn<long (__cdecl*)(long, long, unsigned)>(::bof3::Code(kSlopeAt.v)),
     MapView_GroundAt,
     Sprite_ShadeRaise,
     Sprite_LoadPalette,
     AreaMap_CellsAll,
     AreaMap_CellsAll4,
-    Fn<unsigned char (__cdecl*)(long, long, unsigned, unsigned)>(kCellsAllWide),
+    Fn<unsigned char (__cdecl*)(long, long, unsigned, unsigned)>(::bof3::Code(kCellsAllWide.v)),
     AreaMap_CellsNone,
     AreaMap_CellsNone4,
-    Fn<unsigned char (__cdecl*)(long, long, unsigned, unsigned)>(kCellsNoneWide),
+    Fn<unsigned char (__cdecl*)(long, long, unsigned, unsigned)>(::bof3::Code(kCellsNoneWide.v)),
     AreaMap_ByteAt,
-    Fn<void (__cdecl*)(unsigned)>(kFloorHurt),
-    Fn<void (__cdecl*)(unsigned)>(kFlash),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kFloorHurt.v)),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kFlash.v)),
     Party_Count,
-    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(kHpLose),
-    Fn<void (__cdecl*)(unsigned, unsigned)>(kHpGain),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kHpLose.v)),
+    Fn<void (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kHpGain.v)),
     Effect_FindFree,
     Field_TileTurn,
-    Fn<unsigned char (__cdecl*)(long, long, unsigned, unsigned)>(kTurnProbe),
+    Fn<unsigned char (__cdecl*)(long, long, unsigned, unsigned)>(::bof3::Code(kTurnProbe.v)),
     Actor_EquipCount,
 };
 Callees g = kOriginals;
@@ -94,7 +94,7 @@ std::int32_t Idiv(std::int32_t dividend, std::int32_t divisor) {
 unsigned char ScratchByte() { return SharedScratch.b_00; }
 // The low byte of an actor record's state word (Field_ActorStates + n * 0xA4),
 // n a whole byte as the original's.
-unsigned char& ActorState(unsigned n) { return At(0x903A80u + n * kRecordSize)[0]; }
+unsigned char& ActorState(unsigned n) { return At(::bof3::Img(0x903A80u) + n * kRecordSize)[0]; }
 // The landing point of a jump: the step times the frames, from the position.
 long LandingX(const unsigned char* s) { return Add(Mul(rv::As<records::SpriteObject>(s)->step_x, s[9]), rv::As<records::SpriteObject>(s)->x); }
 long LandingZ(const unsigned char* s) { return Add(Mul(rv::As<records::SpriteObject>(s)->step_z, s[9]), rv::As<records::SpriteObject>(s)->z); }
@@ -141,11 +141,11 @@ void Cells(long x, long z, unsigned char c[4]) {
 // each word; the last store reads SC and +5 afresh.
 extern "C" void __cdecl Sprite_ShadeFadeBegin(void) {
     unsigned char* const s = Sprite_Current;
-    for (unsigned i = 0; i < 31; ++i) At(Gfx_ClutStrip_addr + 0x1e00 + (s[5] * 32u + i) * 2 + 1)[0] |= 0x80;
+    for (unsigned i = 0; i < 31; ++i) At(::bof3::Img(Gfx_ClutStrip_addr) + 0x1e00 + (s[5] * 32u + i) * 2 + 1)[0] |= 0x80;
     s[0] = static_cast<unsigned char>(s[0] | 0x20);
     const unsigned clut = Sprite_Current[5];
     Gfx_ClutStripDirty = 1;
-    SetWord(At(Gfx_ClutStrip_addr + 0x1e00 + 0x3E + clut * 64), 0);
+    SetWord(At(::bof3::Img(Gfx_ClutStrip_addr) + 0x1e00 + 0x3E + clut * 64), 0);
 }
 
 // original 0x534790 (PSX 0x801C37D8): one step of the fade; at its end the
@@ -153,7 +153,7 @@ extern "C" void __cdecl Sprite_ShadeFadeBegin(void) {
 // and the semi-transparency go. al only (callers test al).
 extern "C" unsigned char __cdecl Sprite_ShadeFadeStep(unsigned step) {
     if (!g.shade_raise(step)) return 0;
-    g.load_palette(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + Sprite_Current[5] * 64u)), 0);
+    g.load_palette(reinterpret_cast<unsigned short*>(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + Sprite_Current[5] * 64u)), 0);
     Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] & 0xDF);
     Sprite_Current[0x5D] = 0;
     Sprite_Current[0x5E] = 0;
@@ -209,8 +209,8 @@ extern "C" void __cdecl Field_JumpSetUp(void) {
     }
     Sprite_Current[9] = static_cast<unsigned char>(Idiv(Sprite_Current[9], static_cast<std::int32_t>(speed)));
     if (Field_ScriptFlags & 0x1000) Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] << 1);
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, Mul(Long(At(MoveCmd_F9Steps_addr + Sprite_Current[8] * 8u)), static_cast<std::int32_t>(speed)));
-    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, Mul(Long(At(MoveCmd_F9Steps_addr + Sprite_Current[8] * 8u + 4)), static_cast<std::int32_t>(speed)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, Mul(Long(At(::bof3::Img(MoveCmd_F9Steps_addr) + Sprite_Current[8] * 8u)), static_cast<std::int32_t>(speed)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, Mul(Long(At(::bof3::Img(MoveCmd_F9Steps_addr) + Sprite_Current[8] * 8u + 4)), static_cast<std::int32_t>(speed)));
     const unsigned char* const s = Sprite_Current;
     const long x = LandingX(s), z = LandingZ(s);
     long ground = g.slope_at(x, z, s[8]);
@@ -439,7 +439,7 @@ extern "C" void __cdecl Field_EquipTick(void) {
 // of `kind` are `value`. Nothing bounds the member (a whole byte into
 // Character_IndexById's 24) or the record it names.
 extern "C" unsigned char __cdecl Actor_EquipCount(unsigned member, unsigned kind, unsigned value) {
-    const unsigned char* const r = At(CharacterRecords_addr + Character_IndexById[member & 0xFF] * kRecordSize);
+    const unsigned char* const r = At(::bof3::Img(CharacterRecords_addr) + Character_IndexById[member & 0xFF] * kRecordSize);
     const auto v = static_cast<unsigned char>(value);
     switch (kind & 0xFF) {
     case 1: return r[0x12] == v;

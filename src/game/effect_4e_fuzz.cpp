@@ -270,7 +270,7 @@ const sh::Callee kCallees[] = {
     {E4E_OURS(EffectKind64_DrawSpark), 1, {kW}, kG, 0, 0, {0x18}, nullptr, nullptr, true},
     // R3F's EffectKindA7_DrawGlow: the point, the word +0xC (`mov
     // dx` over edx's leftover - the standard row compares the whole word), 7
-    {"EffectKindA7_DrawGlow", at::kGlowA7, at::kGlowA7, 3, {kW, k16, k8}, kG, 0, 0, {12}, nullptr, nullptr, true},
+    {"EffectKindA7_DrawGlow", at::kGlowA7.v, at::kGlowA7.v, 3, {kW, k16, k8}, kG, 0, 0, {12}, nullptr, nullptr, true},
     // standard rows re-listed: the cursor's spare (0x90) for the commits and the
     // map links; EffectGte_ProjectSize hashing the size's two words
     {E4E_OURS(Gfx_CommitPrim), 2, {k8, k8}, kG, 0, 0, {0, 0}, &FxCommit, nullptr, true},
@@ -334,7 +334,7 @@ void Seed(unsigned k) {
     SetWord(s + 0x2E, PickOf(0, 0x10, 1, 0x11, 0xFFFF, 0xFFF0, 0x8000, 0x7FFF, 0x40, sh::Next()));
     s[0x5D] = static_cast<unsigned char>(PickOf(0, 8, 1, 7, 9, 0x80, 0x7F, 0xFF, sh::Next()));
     s[0x5E] = static_cast<unsigned char>(PickOf(0, 0xC0, 0x40, 0x80, sh::Next()));
-    sh::Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(0x14, 0x17, 0x13, 0x16, 0x18, sh::Next()));
+    sh::Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>(PickOf(0x14, 0x17, 0x13, 0x16, 0x18, sh::Next()));
     switch (k) {
     case k9BRise:
         // the height +0x14 after this step at, below and above 0x8000000
@@ -438,7 +438,7 @@ void Disturb(U h) {
     case 5:
         if (sh::InRegions(s, 0x80)) s[3] = static_cast<unsigned char>(v);
         break;
-    case 6: sh::Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 0x14u : (v & 2) ? 0x17u : v >> 2); break;
+    case 6: sh::Mem(::bof3::Img(at::kCounter.v))[0] = static_cast<unsigned char>((v & 1) ? 0x14u : (v & 2) ? 0x17u : v >> 2); break;
     default: break;
     }
 }

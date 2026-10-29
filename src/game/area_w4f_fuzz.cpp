@@ -280,9 +280,9 @@ const ah::Callee kCallees[] = {
     {W4F_OURS(Sprite_QueueOverlay), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
     {W4F_OURS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},
     // Capcom's, unnamed (area_w4f_callees.h)
-    {"SlotsRelease_454A80", at::kSlotsReleaseFor, at::kSlotsReleaseFor, 1, {kAll}, ah::Answer::kGarbage, 0, 0},
-    {"SlotStart_455290", at::kSlotStart, at::kSlotStart, 2, {kAll, kAll}, ah::Answer::kByte, 0xFF, 0x07},
-    {"RoundHigh_441090", at::kRoundHigh, at::kRoundHigh, 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0},
+    {"SlotsRelease_454A80", at::kSlotsReleaseFor.v, at::kSlotsReleaseFor.v, 1, {kAll}, ah::Answer::kGarbage, 0, 0},
+    {"SlotStart_455290", at::kSlotStart.v, at::kSlotStart.v, 2, {kAll, kAll}, ah::Answer::kByte, 0xFF, 0x07},
+    {"RoundHigh_441090", at::kRoundHigh.v, at::kRoundHigh.v, 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     // the group's own, called directly: the second talk table (the index,
     // rank and level as bytes; who is passed and unread), the restore, the
     // drop, effect kind 0xA6's state 1 (also its table's entry 1)
@@ -299,7 +299,7 @@ const ah::Callee kCallees[] = {
 // Every area's list opens with the five pointer and word cells the seeds, the
 // louder stand-ins and the disturbance write (the harness puts back only its
 // regions after the run), then the area's own.
-#define W4F_BASE_REGIONS {at::kFocusObject, 4}, {at::kFlagRow, 4}, {at::kActiveMember, 4}, {at::kScriptObject, 4}, {at::kWaitWordDA, 2}
+#define W4F_BASE_REGIONS {at::kFocusObject.v, 4}, {at::kFlagRow.v, 4}, {at::kActiveMember.v, 4}, {at::kScriptObject.v, 4}, {at::kWaitWordDA.v, 2}
 const ah::Region kRegions192[] = {
     W4F_BASE_REGIONS,
     {CharacterRecords_addr, at::kCharCount * at::kCharStride},
@@ -363,9 +363,9 @@ void Disturb(U h) {
         if (g_area == 192) B(Field_ActorStates_addr + 0xe) = static_cast<unsigned char>(h & 0x100 ? 4 + (v & 1) + (v & 2) * 2 : v);
         break;
     case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 0x20 : v); break;
-    case 1: B(at::kCounter0) = static_cast<unsigned char>(h & 0x100 ? v % 5 : v); break;
-    case 2: B(at::kCounter1) = static_cast<unsigned char>(h & 0x100 ? 0 : v); break;
-    case 3: B(at::kCounter3) = static_cast<unsigned char>(h & 0x100 ? 0x24 : v); break;
+    case 1: B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(h & 0x100 ? v % 5 : v); break;
+    case 2: B(::bof3::Img(at::kCounter1.v)) = static_cast<unsigned char>(h & 0x100 ? 0 : v); break;
+    case 3: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(h & 0x100 ? 0x24 : v); break;
     case 4: ah::SetPointer(MoveScript_Object_addr, ScriptRecord(h >> 16)); break;
     case 5: ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(h >> 16)); break;
     case 6: SetMember(h >> 12); break;
@@ -510,7 +510,7 @@ void Seed197(unsigned k) {
         break;
     case k197Tail:
         if (ah::Often()) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 1, 0, 1, 2, 0xFF, 0x80, 0x1E));
-        if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(0x24, 0x24, 0x23, 0x25, 0xA4));
+        if (ah::Often()) B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(AH_PICK(0x24, 0x24, 0x23, 0x25, 0xA4));
         break;
     case k197Step:
         if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(4, 4, 4, 3, 5, 0x84));
@@ -548,7 +548,7 @@ void Seed198(unsigned k) {
         break;
     }
     case k198Shake:
-        if (ah::Half()) B(at::kCounter1) = 0;
+        if (ah::Half()) B(::bof3::Img(at::kCounter1.v)) = 0;
         for (unsigned off = 0x5D; off <= 0x5F; ++off)
             if (ah::Half()) Sprite_Current[off] = static_cast<unsigned char>(AH_PICK(0, 0, 8, 0xF8, 0xC0));
         break;
@@ -562,7 +562,7 @@ void Seed198(unsigned k) {
         break;
     case k198Drops:
         if (ah::Often()) Frame_Counter = Frame_Counter & ~7u;
-        if (ah::Often()) B(at::kCounter0) = static_cast<unsigned char>(AH_PICK(2, 3, 4, 3, 4, 0xFF, 0));
+        if (ah::Often()) B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(AH_PICK(2, 3, 4, 3, 4, 0xFF, 0));
         if (ah::Half()) Sprite_Current[0xB] = static_cast<unsigned char>(Sprite_Current[0xB] & 0xF8);
         break;
     case k198EffRun:

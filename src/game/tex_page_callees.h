@@ -18,13 +18,13 @@ using U = std::uint32_t;
 // kPageCache: now Gfx_TexCache (symbols.toml). Gfx_TexCache: 32 pages x 32 entries of 0x18
 constexpr U kEntryBytes = 0x18;
 // kVram: now Gfx_VramShadow (symbols.toml). Gfx_VramShadow: 1024 x 512 cells of 16 bits, rows 0x800 bytes
-constexpr U kClutRows = 0x6C2A40;     // Gfx_ClutRows: u32 generation, u32 pointer, per VRAM row
-constexpr U kTexKey = 0x7DED0C;       // Gfx_TexCacheKey: s16 x, y, w, h
+constexpr ::bof3::image::Va kClutRows{0x6C2A40};     // Gfx_ClutRows: u32 generation, u32 pointer, per VRAM row
+constexpr ::bof3::image::Va kTexKey{0x7DED0C};       // Gfx_TexCacheKey: s16 x, y, w, h
 // kRenderFlags: now Gfx_RenderFlags (symbols.toml). Gfx_RenderFlags: bit 0 the software surfaces, bit 5 colour-keyed textures
-constexpr U kDirectDraw = 0x7CC334;   // Dd_DirectDraw, an IDirectDraw4 *
-constexpr U kStage = 0x7CC344;        // Dd_StageSurface: 320 x 256, made by 0x5A5160 through Dd_CreatePlainSurface
+constexpr ::bof3::image::Va kDirectDraw{0x7CC334};   // Dd_DirectDraw, an IDirectDraw4 *
+constexpr ::bof3::image::Va kStage{0x7CC344};        // Dd_StageSurface: 320 x 256, made by 0x5A5160 through Dd_CreatePlainSurface
 // kPixelFormat: now Gfx_PixelFormat (symbols.toml). Gfx_PixelFormat: byte +3 bytes per pixel, +4/+8/+0xC shifts, +0x10/+0x14/+0x18 masks
-constexpr U kFormats = 0x7DED80;      // the DDPIXELFORMAT at +0x20 of each 0x40-byte format record from 0x7DED60
+constexpr ::bof3::image::Va kFormats{0x7DED80};      // the DDPIXELFORMAT at +0x20 of each 0x40-byte format record from 0x7DED60
 constexpr rdata::Const kTexture2Iid{0x5C4488};  // IID_IDirect3DTexture2 in .rdata
 
 struct Callees {

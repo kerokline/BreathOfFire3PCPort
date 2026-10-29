@@ -189,8 +189,8 @@ const ah::Callee kCallees[] = {
     // kPhase recorder returns before the effect)
     {W4C_OURS(Area174_SetPose), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
     // engine callees nobody owns (raw)
-    {"0x454A80", kSlotsReleaseFor, kSlotsReleaseFor, 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
-    {"0x455290", kSlotStart, kSlotStart, 2, {kAll, kAll}, ah::Answer::kByte, 0xFF, 0x07, {}, &MovesCurrent},
+    {"0x454A80", kSlotsReleaseFor.v, kSlotsReleaseFor.v, 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
+    {"0x455290", kSlotStart.v, kSlotStart.v, 2, {kAll, kAll}, ah::Answer::kByte, 0xFF, 0x07, {}, &MovesCurrent},
     // named, beyond the standard set
     {W4C_OURS(Effect_FindFree), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &EffectSlotEffect},
     {W4C_OURS(ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0},
@@ -235,10 +235,10 @@ void Disturb(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 6) {
     case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 13 : v); break;
-    case 1: B(at::kCounter3) = v; break;
+    case 1: B(::bof3::Img(at::kCounter3.v)) = v; break;
     case 2: ah::SetPointer(MoveScript_Object_addr, h & 0x10000 ? ah::Object(h >> 17) : ah::PartyOf(static_cast<unsigned char>(h >> 17))); break;
     case 3: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 12)); break;
-    case 4: SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? 1 : v); break;
+    case 4: SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), h & 0x100 ? 1 : v); break;
     default: Cond_ByteFD = static_cast<unsigned char>(h & 0x100 ? v % 3 : v); break;
     }
 }
@@ -269,16 +269,16 @@ void SeedTail() {
     const bool on = ah::Often();
     switch (state) {
     case 1:
-        B(at::kCounter3) = static_cast<unsigned char>(on ? 0x18 : AH_PICK(0x17, 0x19, 0x98, 0));
+        B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(on ? 0x18 : AH_PICK(0x17, 0x19, 0x98, 0));
         Cond_ByteFD = static_cast<unsigned char>(AH_PICK(2, 2, 0, 1, 3, 0x82));
         break;
-    case 0xA: B(at::kCounter3) = static_cast<unsigned char>(on ? 0x20 : AH_PICK(0x1F, 0x21, 0xA0, 0)); break;
-    case 0xB: SetWord(ah::Mem(at::kTailTimer), on ? 1 : AH_PICK(0, 2, 0x101, 0x8001, 0xFFFF)); break;
-    case 0xC: B(at::kCounter3) = static_cast<unsigned char>(on ? 0 : AH_PICK(1, 0x80, 0xFF, 0x24)); break;
+    case 0xA: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(on ? 0x20 : AH_PICK(0x1F, 0x21, 0xA0, 0)); break;
+    case 0xB: SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), on ? 1 : AH_PICK(0, 2, 0x101, 0x8001, 0xFFFF)); break;
+    case 0xC: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(on ? 0 : AH_PICK(1, 0x80, 0xFF, 0x24)); break;
     default:
         // the empty states with each live state's counter value, so a state
         // run as its neighbour shows
-        if (on) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(0x18, 0x20, 0, 0));
+        if (on) B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(AH_PICK(0x18, 0x20, 0, 0));
         break;
     }
 }
@@ -340,7 +340,7 @@ void Seed(unsigned slice_k) {
         if (script + offset + 2 < 0x8CB580 + 0x2000) {
             const auto b = static_cast<unsigned char>(ah::Next());
             B(script + offset + 2) = b;
-            B(at::kStepLimit) = static_cast<unsigned char>(b + AH_PICK(0xFF, 0, 1, 0x80, 0x7F));
+            B(::bof3::Img(at::kStepLimit.v)) = static_cast<unsigned char>(b + AH_PICK(0xFF, 0, 1, 0x80, 0x7F));
         }
         break;
     }

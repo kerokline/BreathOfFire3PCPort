@@ -122,14 +122,14 @@ void Disturb() {
     switch ((h >> 4) % 27) {
     case 0: PutByte(FieldS_Step_addr, v); g_touched = true; break;
     case 1: PutByte(FieldS_State_addr, v); g_touched = true; break;
-    case 2: PutByte(at::kCounter, v); break;
+    case 2: PutByte(::bof3::Img(at::kCounter.v), v); break;
     case 3: PutByte(BattleActorCopies_ItemActor_addr, v % 5 == 0 ? v : v % 3); break;
     case 4: PutByte(FieldS_Answer_addr, v % 3 == 0 ? v : v % 2); break;
     case 5: PutByte(ShopStates2_Kind_addr, v % 5); break;
     case 6: PutByte(ShopStates2_Item_addr, v); break;
     case 7: PutByte(ShopStates2_Row_addr, v % 7 == 0 ? v : v % 6); break;
     case 8: PutByte(ShopStates2_Count_addr, v % 4 == 0 ? v : v % 12); break;
-    case 9: PutLong(at::kMaxCount, v % 2 ? v % 40 : h); break;
+    case 9: PutLong(::bof3::Img(at::kMaxCount.v), v % 2 ? v % 40 : h); break;
     case 10: PutLong(ShopStates2_UnitPrice_addr, v % 2 ? v * 3 : h >> 8); break;
     case 11: PutLong(Party_Zenny_addr, v % 2 ? w : h); break;
     case 12: PutLong(Input_Pressed_addr, h * 0x2C1B3C6Du); break;
@@ -144,7 +144,7 @@ void Disturb() {
     case 21: PutByte(Gfx_ClutStripDirty_addr, v); break;
     case 22: PutByte(ShopStates2_SlotCursor_addr, v % 3 == 0 ? v : v % 2); break;
     case 23: g_counts[w % 5][kInvAt + (v % 0x90) - 0x10] = static_cast<unsigned char>(h >> 8); break;
-    case 24: PutWord(at::kRate, h); break;
+    case 24: PutWord(::bof3::Img(at::kRate.v), h); break;
     case 25: PutByte(ShopStates2_Choice_addr, v % 3 == 0 ? v : v % 2); break;
     default: PutByte(0x803264, v); break;
     }
@@ -324,7 +324,7 @@ const void* StubFor(std::uint32_t target) {
 
 // The dispatch tables' thirty dwords (0x664118..0x66418F) and the mode
 // table's two.
-constexpr unsigned kTableDwords = (at::kTablesEnd - ShopTrade_States_addr) / 4;
+constexpr unsigned kTableDwords = (at::kTablesEnd.v - ShopTrade_States_addr) / 4;
 static_assert(kTableDwords == 30, "the shop's dispatch tables are thirty dwords");
 using Handler = void (__cdecl*)();
 template <unsigned... N> struct Handlers { static constexpr Handler kAll[] = {&StubHandler<N>...}; };
@@ -424,7 +424,7 @@ const Region kRegions[] = {
     {Game_Mode_addr, 4},         // Game_Mode, Game_Step
     {Gfx_ClutStripDirty_addr, 4},
     {Character_IndexById_addr, 0x18}, // constant data from here on - random here, put back after
-    {at::kIdLists, 0x28},        // the inventory's list pointers
+    {at::kIdLists.v, 0x28},        // the inventory's list pointers
 };
 constexpr unsigned kRegionBytes = 0x20 + 0x40 + 0x320 + 4 + 0x10 + 8 + 0x14 + 4 + 4 + 0x18 + 0x28;
 
@@ -477,8 +477,8 @@ bool Half() { return (Next() & 1) != 0; }
 void Fix() {
     PutLong(ShopStates2_ShopList_addr, Address(g_list + kListAt));
     for (unsigned k = 0; k < 5; ++k) {
-        PutLong(at::kIdLists + k * 4, Address(g_ids[k] + kInvAt));
-        PutLong(at::kCountLists + k * 4, Address(g_counts[k] + kInvAt));
+        PutLong(::bof3::Img(at::kIdLists.v) + k * 4, Address(g_ids[k] + kInvAt));
+        PutLong(::bof3::Img(at::kCountLists.v) + k * 4, Address(g_counts[k] + kInvAt));
     }
     g_list[kListAt] = static_cast<unsigned char>(Often() ? Next() % 9 : Next() % 0x80);
     for (unsigned i = 0; i < 0x80; ++i)
@@ -528,7 +528,7 @@ void Seed(unsigned k) {
     case kSellClose:
     case kClose: {
         static const unsigned char kCounters[] = {0, 1, 1, 2, 5, 0xFF};
-        PutByte(at::kCounter, kCounters[Next() % sizeof kCounters]);
+        PutByte(::bof3::Img(at::kCounter.v), kCounters[Next() % sizeof kCounters]);
         break;
     }
     case kChoice: PutByte(ShopStates2_Choice_addr, Often() ? Next() % 2 : Next()); break;
@@ -545,7 +545,7 @@ void Seed(unsigned k) {
         static const unsigned char kCounts[] = {0, 1, 1, 2, 9, 10, 11, 0x7F, 0x80, 0xFF};
         PutByte(ShopStates2_Count_addr, kCounts[Next() % sizeof kCounts]);
         static const std::uint32_t kMost[] = {0, 1, 2, 10, 11, 20, 99, 0x80, 0xFF, 0x100};
-        PutLong(at::kMaxCount, Often() ? kMost[Next() % 10] : Next());
+        PutLong(::bof3::Img(at::kMaxCount.v), Often() ? kMost[Next() % 10] : Next());
         break;
     }
     case kBuyConfirm:
@@ -622,8 +622,8 @@ void Cover(unsigned k, const State& in, const State& out, bool touched) {
     switch (k) {
     case kBuyList:
         if (Logged(out, 9) == 2) {
-            if (LongOf(out, at::kMaxCount) == 0 && Byte(out, at::kCount) == 0) ++g_cover.held_full;
-            else if (LongOf(out, at::kMaxCount) < 99) ++g_cover.room_cut;
+            if (LongOf(out, ::bof3::Img(at::kMaxCount.v)) == 0 && Byte(out, ::bof3::Img(at::kCount.v)) == 0) ++g_cover.held_full;
+            else if (LongOf(out, ::bof3::Img(at::kMaxCount.v)) < 99) ++g_cover.room_cut;
             if (Logged(out, 18, 0x103)) ++g_cover.afforded;
         }
         break;
@@ -631,8 +631,8 @@ void Cover(unsigned k, const State& in, const State& out, bool touched) {
     case kSellCount: {
         const unsigned id = k == kBuyCount ? 0x100 : 0x101;
         if (Logged(out, 18, id) == 2) ++g_cover.double_sound;
-        if (Byte(out, at::kCount) == 1 && Byte(in, at::kCount) != 1) ++g_cover.clamped_one;
-        if (Byte(out, at::kCount) == Byte(in, at::kMaxCount) && Byte(in, at::kCount) != Byte(in, at::kMaxCount)) ++g_cover.clamped_most;
+        if (Byte(out, ::bof3::Img(at::kCount.v)) == 1 && Byte(in, ::bof3::Img(at::kCount.v)) != 1) ++g_cover.clamped_one;
+        if (Byte(out, ::bof3::Img(at::kCount.v)) == Byte(in, ::bof3::Img(at::kMaxCount.v)) && Byte(in, ::bof3::Img(at::kCount.v)) != Byte(in, ::bof3::Img(at::kMaxCount.v))) ++g_cover.clamped_most;
         break;
     }
     case kSellConfirm:

@@ -48,7 +48,10 @@ template <class T> T Get(const unsigned char* p, unsigned offset) {
 }
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 const unsigned char* Pointer(std::uint32_t a) { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a)); }
-bool InImage(std::uint32_t a) { return a >= kImageLo && a < kImageHi; }
+// A pointer the game holds is a place: the image's span at its base.
+bool InImage(std::uint32_t a) { return a >= ::bof3::Img(kImageLo) && a < ::bof3::Img(kImageHi); }
+// A place in the image as the VA the file prints (docs/relocatable-image-design.md 9).
+std::uint32_t AsVa(std::uint32_t a) { return InImage(a) ? a - ::bof3::Img(kImageLo) + kImageLo : a; }
 
 // --- what one sprite on the draw list is, this frame -------------------------
 
@@ -139,7 +142,7 @@ const char* BandName(int cls) { return cls == kLeft169 || cls == kRight169 ? "16
 void WriteRow(const Row& r) {
     if (!g_out) return;
     std::fprintf(g_out, "%u\t%d\t%u\t%s\t%d\t%u\t%08X\t%u\t%u\t%u\t%u\t%u\t%.1f\t%.1f\t%.1f\t%.1f\t%s\t%s\t%s\t%u\t%02X\t%s\t%s\n",
-                 r.area, r.chapter, r.mode, kWhoName[r.who], r.index, r.type, r.sprite, r.first, r.last, r.seen, r.rfirst,
+                 r.area, r.chapter, r.mode, kWhoName[r.who], r.index, r.type, AsVa(r.sprite), r.first, r.last, r.seen, r.rfirst,
                  r.rlast, r.xlo, r.xhi, r.ylo, r.yhi, SideName(r.cls), BandName(r.cls), kParkedName[r.parked],
                  r.scene ? 1u : 0u, r.mask, kScriptName[r.script], r.hidden ? "yes" : "no");
     std::fflush(g_out);

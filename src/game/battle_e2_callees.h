@@ -34,82 +34,83 @@ namespace at {
 using U = std::uint32_t;
 
 // --- raw callees (above) ------------------------------------------------------
-constexpr U kMemberRecalc = bof3::addr::BattleParty_RecalcStats;     // BE3
-constexpr U kMemberStatusSet = bof3::addr::Battle_RecalcStats;  // BE6
-constexpr U kTurnVelocity = bof3::addr::Battle_TurnVectorC;     // BE4
-constexpr U kPlayCue = bof3::addr::Sound_PlayEffectUnlessNone;          // BE3
-constexpr U kEnemyTaskChance = bof3::addr::EnemyOp_RollBit80Task;  // BE3
-constexpr U kEnemyOpEnd = bof3::addr::EnemyOp_EndAction;       // BE3
-constexpr U kActorMayAct = bof3::addr::Battle_AutoTargetCheck;      // R4A's (round 14), ours
+constexpr ::bof3::image::CodeVa kMemberRecalc{bof3::addr::BattleParty_RecalcStats};     // BE3
+constexpr ::bof3::image::CodeVa kMemberStatusSet{bof3::addr::Battle_RecalcStats};  // BE6
+constexpr ::bof3::image::CodeVa kTurnVelocity{bof3::addr::Battle_TurnVectorC};     // BE4
+constexpr ::bof3::image::CodeVa kPlayCue{bof3::addr::Sound_PlayEffectUnlessNone};          // BE3
+constexpr ::bof3::image::CodeVa kEnemyTaskChance{bof3::addr::EnemyOp_RollBit80Task};  // BE3
+constexpr ::bof3::image::CodeVa kEnemyOpEnd{bof3::addr::EnemyOp_EndAction};       // BE3
+constexpr ::bof3::image::CodeVa kActorMayAct{bof3::addr::Battle_AutoTargetCheck};      // R4A's (round 14), ours
 
 // --- the battle bytes (the harness's 0x904AA0..0x904BA0) ----------------------
-constexpr U kRoundFlags = 0x904AA8;       // u16 / u32: the round flags (0x400, 0x4000, 0x8000 read here)
+constexpr ::bof3::image::Va kRoundFlags{0x904AA8};       // u16 / u32: the round flags (0x400, 0x4000, 0x8000 read here)
 // kFight: now EventBattle_Id (symbols.toml). u8: the event battle, 0 none
 // kTapCommand: now BattleE5_GeneRow (symbols.toml). u8: 0xFF none (battle_phases_callees.h kTapCommand)
-constexpr U kPartyCount = 0x904AB0;       // u8 (read as a dword, the low byte): members in the fight
+constexpr ::bof3::image::Va kPartyCount{0x904AB0};       // u8 (read as a dword, the low byte): members in the fight
 // kPartyIn: now Battle_PartyStanding (symbols.toml). u8: members counted in
 // kEnemiesLeft: now Battle_EnemiesLeft (symbols.toml). u8
-constexpr U kActor = 0x904B34;            // u8: the acting actor
-constexpr U kActKind = 0x904B35;          // u8: the action's kind (1 attack, 2, 3, 4 an ability)
-constexpr U kTarget = 0x904B44;           // u8: the target, 0xFF none
-constexpr U kMagicId = 0x904B80;          // u16: the ability or spell id
-constexpr U kPickList = 0x904B84;         // u8[3]: the list effect 9 compares its +0xB with
+constexpr ::bof3::image::Va kActor{0x904B34};            // u8: the acting actor
+constexpr ::bof3::image::Va kActKind{0x904B35};          // u8: the action's kind (1 attack, 2, 3, 4 an ability)
+constexpr ::bof3::image::Va kTarget{0x904B44};           // u8: the target, 0xFF none
+constexpr ::bof3::image::Va kMagicId{0x904B80};          // u16: the ability or spell id
+constexpr ::bof3::image::Va kPickList{0x904B84};         // u8[3]: the list effect 9 compares its +0xB with
 // kPickCount: now BattleE5_GeneCount (symbols.toml). u8: entries of that list
 // kSavedCount: now BattleE2_SavedCount (symbols.toml). u8: the party count Accession kept (magic_s33.cpp)
 // kPlace94: now BattleE2_Place94 (symbols.toml). u8, u8: copied into 0x9045FD / 0x9045FE
 // kPlace95: now BattleE2_Place95 (symbols.toml).
 
 // --- the party's formation (inventory_ops_callees.h kFormation) --------------
-constexpr U kFormation = 0x904060;        // u8 (read as a dword, the low byte)
+constexpr ::bof3::image::Va kFormation{0x904060};        // u8 (read as a dword, the low byte)
 
 // --- the party (ObjTrio, stride 0x14C) and its backup (0x939AE0, the same
 // stride: battle_turn_steps_callees.h kCopies) ------------------------------------
 // kParty: now ObjTrio (symbols.toml).
 constexpr U kPartyStride = 0x14C;
-constexpr U kBackup = 0x939AE0;
-constexpr U kBackupFlags = 0x939C14;      // kBackup + 0x134
-constexpr U kBackupBit40 = 0x939B71;      // kBackup + 0x91 (bit 0x40 tested)
+constexpr ::bof3::image::Va kBackup{0x939AE0};
+constexpr ::bof3::image::Va kBackupFlags{0x939C14};      // kBackup + 0x134
+constexpr ::bof3::image::Va kBackupBit40{0x939B71};      // kBackup + 0x91 (bit 0x40 tested)
 
 // --- the enemies' objects (0x93B960, stride 0x128) -----------------------------
 // kEnemies: now Battle_Enemies (symbols.toml).
 constexpr U kEnemyStride = 0x128;
 
 // --- the task slots (0x93A000, stride 0x84; +0x80 the owner) --------------------
-constexpr U kTasks = 0x93A000, kTaskStride = 0x84;
-constexpr U kOwner = 0x93B940;            // the running slot's owner (a pointer)
+constexpr ::bof3::image::Va kTasks{0x93A000};
+constexpr U kTaskStride = 0x84;
+constexpr ::bof3::image::Va kOwner{0x93B940};            // the running slot's owner (a pointer)
 // kEnemyCurrent: now BattleE3_CurrentEnemy (symbols.toml). the current enemy (a pointer)
 
 // --- the window records (WindowRecords 0x803160, stride 0x24) ------------------
 // kWindow1Count: now Window1_ParamA (symbols.toml). record 1 (0x803184) +0xA: the party count
-constexpr U kWindow1X = 0x803188;         // record 1 +4 (u16): x by the count
-constexpr U kPartyGauges = 0x80333F;      // record 13 + i (0x803334 + 0x24 i) +0xB / +0xC: HP / AP gauge bytes
-constexpr U kPartyValues = 0x803348;      // the same records +0x14 / +0x16: u16 HP, u16 AP
+constexpr ::bof3::image::Va kWindow1X{0x803188};         // record 1 +4 (u16): x by the count
+constexpr ::bof3::image::Va kPartyGauges{0x80333F};      // record 13 + i (0x803334 + 0x24 i) +0xB / +0xC: HP / AP gauge bytes
+constexpr ::bof3::image::Va kPartyValues{0x803348};      // the same records +0x14 / +0x16: u16 HP, u16 AP
 // kWindow18: now Window18 (symbols.toml). record 18: +0 in use, +4 / +6 x, y, +0x12 a row base (s16), +0x1E its copy
 // kWindow19: now Window19 (symbols.toml). record 19: the same fields
 // kWindow21: now Window21 (symbols.toml). record 21: +0 in use, +4 / +6 x, y
 
 // --- the pointer the sprite pose pool lives at while a task draws --------------
 // kAnimSet: now BattleE2_AnimSet (symbols.toml).
-constexpr U kAnimSetBattle = 0x8C5D80;
-constexpr U kAnimSetField = 0x8B3580;
+constexpr ::bof3::image::Va kAnimSetBattle{0x8C5D80};
+constexpr ::bof3::image::Va kAnimSetField{0x8B3580};
 
 // --- tables read in place (.data) ----------------------------------------------
-constexpr U kStatusIcons = 0x64B048;      // u8 by status bit: the icon's animation
-constexpr U kCountX = 0x64B073;           // u8 by the party count: window 1's x
-constexpr U kFormationWeights3 = 0x64B18C;  // u8 [formation * 3 + member]
-constexpr U kFormationWeights2 = 0x64B184;  // u8 [formation * 2 + member]
-constexpr U kActKinds = 0x65563C;         // u8 by the enemy's +0x8E: four 2-bit kinds
-constexpr U kAbilities = 0x65C4D8;        // NameTable_Abilities: 24 bytes a record, byte 0 flags
+constexpr ::bof3::image::Va kStatusIcons{0x64B048};      // u8 by status bit: the icon's animation
+constexpr ::bof3::image::Va kCountX{0x64B073};           // u8 by the party count: window 1's x
+constexpr ::bof3::image::Va kFormationWeights3{0x64B18C};  // u8 [formation * 3 + member]
+constexpr ::bof3::image::Va kFormationWeights2{0x64B184};  // u8 [formation * 2 + member]
+constexpr ::bof3::image::Va kActKinds{0x65563C};         // u8 by the enemy's +0x8E: four 2-bit kinds
+constexpr ::bof3::image::Va kAbilities{0x65C4D8};        // NameTable_Abilities: 24 bytes a record, byte 0 flags
 // kMemberOffsets: now BattleWin_MemberTargetOffsets (symbols.toml). BattleWin_MemberTargetOffsets: s8 x by (row * 4 + column) * 2
-constexpr U kMemberRowY = 0x64DFC8;       // u8 by row * 2 (+0 for column 0..1, +1 otherwise)
-constexpr U kEnemyDataY = 0x8C564F;       // the area's enemy data records (stride 0x8C) + 0x87
-constexpr U kEnemyDataCount = 0x8C5652;   // + 0x8A
+constexpr ::bof3::image::Va kMemberRowY{0x64DFC8};       // u8 by row * 2 (+0 for column 0..1, +1 otherwise)
+constexpr ::bof3::image::Va kEnemyDataY{0x8C564F};       // the area's enemy data records (stride 0x8C) + 0x87
+constexpr ::bof3::image::Va kEnemyDataCount{0x8C5652};   // + 0x8A
 // kFieldActors: now Field_ActorStates[0xe] (symbols.toml). Field_ActorStates + 0xE, stride 0x8C
-constexpr U kMemberPositions = 0x7E06E0;  // i32 x, z per member (event_ops_callees.h kMemberPositions)
+constexpr ::bof3::image::Va kMemberPositions{0x7E06E0};  // i32 x, z per member (event_ops_callees.h kMemberPositions)
 // kPalettes: now Gfx_ClutStripSource[0xf00] (symbols.toml). 0x40 bytes a member slot
-constexpr U kPlaceCells = 0x9045FD;       // u8, u8 per member (3 apart)
-constexpr U kGrid18 = 0x904608;           // the 18 dwords (bytes by row * 4 + column), window 18's
-constexpr U kGrid19 = 0x904620;           // window 19's
+constexpr ::bof3::image::Va kPlaceCells{0x9045FD};       // u8, u8 per member (3 apart)
+constexpr ::bof3::image::Va kGrid18{0x904608};           // the 18 dwords (bytes by row * 4 + column), window 18's
+constexpr ::bof3::image::Va kGrid19{0x904620};           // window 19's
 
 // --- the member's cells kept across the restore (BE2's, round twelve) -----------
 // kKeptAp: now BattleE2_KeptAp (symbols.toml). u16: +0x9A

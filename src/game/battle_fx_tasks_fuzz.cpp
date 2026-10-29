@@ -80,8 +80,8 @@ void Disturb() {
     case 3: rv::As<records::BattleTask>(CurSlot())->state = static_cast<unsigned char>(v % 6); break;
     case 4: rv::As<records::BattleTask>(CurSlot())->mode = static_cast<unsigned char>(v % 5); break;
     case 5: Sprite_Current[0] = static_cast<unsigned char>(v); break;
-    case 6: At(at::kPhase)[0] = static_cast<unsigned char>(v % 7); break;
-    case 7: At(at::kRoundCount)[0] = static_cast<unsigned char>(v); break;
+    case 6: At(::bof3::Img(at::kPhase.v))[0] = static_cast<unsigned char>(v % 7); break;
+    case 7: At(::bof3::Img(at::kRoundCount.v))[0] = static_cast<unsigned char>(v); break;
     case 8: Owner()[0] = static_cast<unsigned char>(v); break;
     case 9: Owner()[5] = static_cast<unsigned char>(v % 11); break;
     case 10: rv::As<records::BattleTask>(CurSlot())->clut = static_cast<unsigned char>(v); break;
@@ -125,7 +125,7 @@ void __cdecl StubLabel(int x, int y, unsigned clut, unsigned cell) {
 // first free.
 void __cdecl StubFree() {
     Record(4, Address(CurSlot()));
-    if (Hash() % 2) At(at::kPhase)[0] = static_cast<unsigned char>((Hash() >> 8) % 3);
+    if (Hash() % 2) At(::bof3::Img(at::kPhase.v))[0] = static_cast<unsigned char>((Hash() >> 8) % 3);
     Disturb();
 }
 // The actor test moves the owner pointer and the owner's actor half the time:
@@ -161,7 +161,7 @@ void __cdecl StubAfterArea() { Record(11); Disturb(); }
 // The transition moves 0x904AA2 half the time: the hook adds to it after.
 void __cdecl StubTransition(unsigned char k) {
     Record(12, k);
-    if (Hash() % 2) At(at::kRoundCount)[0] = static_cast<unsigned char>(Hash() >> 8);
+    if (Hash() % 2) At(::bof3::Img(at::kRoundCount.v))[0] = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
 }
 
@@ -311,7 +311,7 @@ struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {BattleTask_Slots_addr, 0x22A0}, // the 48 slots, 0x93B8C4, 0x93B940, the eight enemy objects
     {0x937F88, 4},             // Sprite_Current
-    {at::kPhase, 0xA0},        // the battle's globals to 0x904B40
+    {at::kPhase.v, 0xA0},        // the battle's globals to 0x904B40
     {ObjTrio_addr, 0x3E4},     // ObjTrio
     {BattleE2_AnimSet_addr, 4},
     {AreaW2c_LastArea_addr, 2},
@@ -378,7 +378,7 @@ void Seed(unsigned k) {
     case kMagicDispatch: task_rec->kind = static_cast<unsigned char>(Next() % 110); break;
     case kMagicRow:
         sc[5] = static_cast<unsigned char>(Often() ? Next() % at::kMagicRowCount : Next() % 2 ? 0 : 150);
-        if (Half()) At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] ^ 8);
+        if (Half()) At(::bof3::Img(at::kRoundFlags.v) + 1)[0] = static_cast<unsigned char>(At(::bof3::Img(at::kRoundFlags.v) + 1)[0] ^ 8);
         break;
     case kPopup:
         task_rec->state = static_cast<unsigned char>(Often() ? 2 + Next() % 2 : Next() % 5);
@@ -415,12 +415,12 @@ void Seed(unsigned k) {
         break;
     case kWatch:
         sc[1] = static_cast<unsigned char>(Next() % 5);
-        At(at::kPhase)[0] = static_cast<unsigned char>(Half() ? 5 : Next() % 7);
+        At(::bof3::Img(at::kPhase.v))[0] = static_cast<unsigned char>(Half() ? 5 : Next() % 7);
         break;
     case kWatchTest: {
-        if (Half()) At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] ^ 4);
+        if (Half()) At(::bof3::Img(at::kRoundFlags.v) + 1)[0] = static_cast<unsigned char>(At(::bof3::Img(at::kRoundFlags.v) + 1)[0] ^ 4);
         o[5] = static_cast<unsigned char>(Half() ? 2 + Next() % 2 : Next() % 11);
-        if (Next() % 4 == 0) At(at::kTurnGate)[0] = o[5];
+        if (Next() % 4 == 0) At(::bof3::Img(at::kTurnGate.v))[0] = o[5];
         // the status bytes the test reads, at each bit of 0x58 alone, at its
         // neighbours and at none; the test is only reached past the actor test
         static const unsigned char kStatus[] = {0, 0x40, 0x10, 0x08, 0x20, 0x80, 0x04, 0x58};
@@ -437,7 +437,7 @@ void Seed(unsigned k) {
     case kFollow: sc[1] = 0; break;
     case kFollowOwner:
         if (Half()) o[0] = static_cast<unsigned char>(o[0] ^ 1);
-        if (Half()) At(at::kPhase)[0] = 1;
+        if (Half()) At(::bof3::Img(at::kPhase.v))[0] = 1;
         break;
     case kHookScript:
     case kHookTransition:

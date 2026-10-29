@@ -268,7 +268,7 @@ const sh::Callee kCallees[] = {
     // a group of an earlier wave's, ours by name, its stand-in the real one's answer
     {E4C_OURS(EffectKind6E_FindShard), 0, {}, kG, 0, 0, {}, &FxFind16},
     // another group's of this round, by address until it merges
-    {"0x48CA90 (E4D)", at::kScreenTile, at::kScreenTile, 0, {}, kG, 0, 0, {}, &FxTile},
+    {"0x48CA90 (E4D)", at::kScreenTile.v, at::kScreenTile.v, 0, {}, kG, 0, 0, {}, &FxTile},
     // re-listed: the standard row's fractional floats never reach a NaN, which
     // the chip draw quiets in its FPU copy of the depth
     {E4C_OURS(EffectGte_ProjectPoint), 2, {0, 0}, kG, 0, 0, {12, 0}, &FxProjectPoint, nullptr, true},
@@ -287,7 +287,7 @@ const std::uint8_t kKinds[] = {0x8D, 0x8E, 0x8F, 0x90, 0x93, 0x99};
 // standard 0x644 bytes at EffectKind30_Shards (to 0x92E580).
 const sh::Region kRegions[] = {
     {Effect4c_Stage_addr, 8},
-    {EffectKind30_Shards_addr + sh::at::kShardsSize, at::kShardEnd - (EffectKind30_Shards_addr + sh::at::kShardsSize)},
+    {EffectKind30_Shards_addr + sh::at::kShardsSize, at::kShardEnd.v - (EffectKind30_Shards_addr + sh::at::kShardsSize)},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -340,7 +340,7 @@ void Seed(unsigned k) {
     case k8EFall:
         s[2] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
         Pool(Shards(), at::kChipStride, at::kChipCount);
-        Pool(at::kDots, at::kDotStride, at::kDotCount);
+        Pool(::bof3::Img(at::kDots.v), at::kDotStride, at::kDotCount);
         break;
     case k8EMoveChips:
         Pool(Shards(), at::kChipStride, at::kChipCount);
@@ -350,9 +350,9 @@ void Seed(unsigned k) {
         }
         break;
     case k8EMoveDots:
-        Pool(at::kDots, at::kDotStride, at::kDotCount);
+        Pool(::bof3::Img(at::kDots.v), at::kDotStride, at::kDotCount);
         for (unsigned i = 0; i < at::kDotCount; ++i) {
-            unsigned char* const r = P(at::kDots + i * at::kDotStride);
+            unsigned char* const r = P(::bof3::Img(at::kDots.v) + i * at::kDotStride);
             Floor(r + 0x1C, r + 0xC);
         }
         break;
@@ -430,7 +430,7 @@ void Seed(unsigned k) {
 void Args(unsigned k, U* a) {
     switch (k) {
     case k8EDrawChip: a[0] = Shards() + at::kChipStride * (sh::Next() % at::kChipCount); break;
-    case k8EDrawDot: a[0] = at::kDots + at::kDotStride * (sh::Next() % at::kDotCount); break;
+    case k8EDrawDot: a[0] = ::bof3::Img(at::kDots.v) + at::kDotStride * (sh::Next() % at::kDotCount); break;
     case k8EInitChips:
     case k8EInitDots: {
         const U first = PickOf(0, 0x20, 0x60, 0x7F, 0x80, sh::Next() % 0x81);

@@ -53,18 +53,18 @@ void SetUL(U a, U v) { SetUL(At(a), v); }
 unsigned char* Ptr(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 
 // The community's records and buildings, and the traits table by record.
-unsigned char* Rec(U i) { return At(Community_Records_addr + 8u * i); }
-unsigned char* Bld(U b) { return At(Community_Buildings_addr + 8u * b); }
-unsigned char Trait(U i, U field) { return At(at::kRecordTraits + at::kTraitStride * i + field)[0]; }
-unsigned char* Pose(U object) { return At(Sprite_Objects_addr + 0x88 + at::kSpriteStride * object); }
-unsigned char Count(U building) { return At(at::kResidentCounts + building)[0]; }
+unsigned char* Rec(U i) { return At(::bof3::Img(Community_Records_addr) + 8u * i); }
+unsigned char* Bld(U b) { return At(::bof3::Img(Community_Buildings_addr) + 8u * b); }
+unsigned char Trait(U i, U field) { return At(::bof3::Img(at::kRecordTraits.v) + at::kTraitStride * i + field)[0]; }
+unsigned char* Pose(U object) { return At(::bof3::Img(Sprite_Objects_addr) + 0x88 + at::kSpriteStride * object); }
+unsigned char Count(U building) { return At(::bof3::Img(at::kResidentCounts.v) + building)[0]; }
 
 // The event queue: kind at +0, the record at +1 (the levels and the area
 // queue write +0 only, in place).
 void QueueKindRecord(unsigned char kind, unsigned char record) {
     const unsigned char n = Rest4b_BusyB;
-    At(at::kEvents + 2u * n)[0] = kind;
-    At(at::kEvents + 2u * n + 1)[0] = record;
+    At(::bof3::Img(at::kEvents.v) + 2u * n)[0] = kind;
+    At(::bof3::Img(at::kEvents.v) + 2u * n + 1)[0] = record;
     Rest4b_BusyB = static_cast<unsigned char>(n + 1);
 }
 // The first record in use whose +1 is building + 1; 60 when none.
@@ -75,7 +75,7 @@ unsigned char FirstOf(U building) {
     return j;
 }
 
-unsigned char CommuCount() { return SH_AT(unsigned char (__cdecl*)(), at::kCommuCount)(); }
+unsigned char CommuCount() { return SH_AT(unsigned char (__cdecl*)(), at::kCommuCount.v)(); }
 
 // Rand's answer reduced as the community's pickers do: & 0x7F, above 100
 // less 100 (a byte).
@@ -104,7 +104,7 @@ unsigned char Percent(int r) {
 // the target is the argument, answer 1; bit 6 alone - 0x904B8B, 0.
 // The enemy index is not checked (argument 3..255 indexes 0x128 records).
 extern "C" unsigned char __cdecl Battle_AutoTargetCheck(unsigned actor) {
-    const U flags = UL(at::kBattleFlags);
+    const U flags = UL(::bof3::Img(at::kBattleFlags.v));
     if (!(flags & 0x4000)) return 1;
     const unsigned char out = SH_CALL(Battle_ActorIsOut)((flags & 0xFFFFFF00u) | BattlePhases_B8B);
     if (out) return 1;
@@ -112,27 +112,27 @@ extern "C" unsigned char __cdecl Battle_AutoTargetCheck(unsigned actor) {
     const auto a = static_cast<unsigned char>(actor);
     if (forced == a) return 1;
     if (a < 3) {
-        At(at::kTarget)[0] = forced;
+        At(::bof3::Img(at::kTarget.v))[0] = forced;
         return 0;
     }
     const U e = at::kEnemyStride * (static_cast<U>(a) - 3);
-    if (Word(At(at::kEnemyIntel + e)) > 1 && !(At(Battle_Enemies_addr + 0x92 + e)[0] & 0x20) && !(UL(at::kEnemyFlags + e) & 0x4000))
+    if (Word(At(::bof3::Img(at::kEnemyIntel.v) + e)) > 1 && !(At(::bof3::Img(Battle_Enemies_addr) + 0x92 + e)[0] & 0x20) && !(UL(::bof3::Img(at::kEnemyFlags.v) + e) & 0x4000))
         return 1;
-    if (At(at::kAutoMode)[0] != 4) {
-        At(at::kTarget)[0] = forced;
+    if (At(::bof3::Img(at::kAutoMode.v))[0] != 4) {
+        At(::bof3::Img(at::kTarget.v))[0] = forced;
         return 0;
     }
-    const unsigned char bits = At(at::kAbilityFlags + at::kAbilityStride * Word(At(Battle_Enemies_addr + 0x106 + e)))[0];
+    const unsigned char bits = At(::bof3::Img(at::kAbilityFlags.v) + at::kAbilityStride * Word(At(::bof3::Img(Battle_Enemies_addr) + 0x106 + e)))[0];
     if (bits & 0x10) {
-        if (bits & 0x80) At(at::kTarget)[0] = 0xC0;
-        else At(at::kTarget)[0] = forced >= 3 ? 0x80 : 0x40;
+        if (bits & 0x80) At(::bof3::Img(at::kTarget.v))[0] = 0xC0;
+        else At(::bof3::Img(at::kTarget.v))[0] = forced >= 3 ? 0x80 : 0x40;
         return 1;
     }
     if (!(bits & 0x40)) {
-        At(at::kTarget)[0] = a;
+        At(::bof3::Img(at::kTarget.v))[0] = a;
         return 1;
     }
-    At(at::kTarget)[0] = forced;
+    At(::bof3::Img(at::kTarget.v))[0] = forced;
     return 0;
 }
 
@@ -190,7 +190,7 @@ extern "C" unsigned char __cdecl Battle_RandomLiveEnemy(void) {
 // original 0x454260 (no PSX twin paired): 1 when the member's action word
 // (ObjTrio + 0x126 of the argument's low byte, unchecked) is 0xE or 0x128.
 extern "C" unsigned char __cdecl Battle_MemberActionIs0E(unsigned member) {
-    const unsigned short w = Word(At(ObjTrio_addr + 0x126 + at::kMemberStride * (member & 0xFFu)));
+    const unsigned short w = Word(At(::bof3::Img(ObjTrio_addr) + 0x126 + at::kMemberStride * (member & 0xFFu)));
     if (w == 0xE) return 1;
     return w == 0x128 ? 1 : 0;
 }
@@ -202,7 +202,7 @@ extern "C" unsigned char __cdecl Battle_MemberActionIs0E(unsigned member) {
 // the target 0x904B44 the answer.
 extern "C" void __cdecl Battle_MemberAutoFixed(unsigned member) {
     const U m = member & 0xFFu;
-    auto odds = static_cast<signed char>(At(ObjTrio_addr + 0x142 + at::kMemberStride * m)[0]);
+    auto odds = static_cast<signed char>(At(::bof3::Img(ObjTrio_addr) + 0x142 + at::kMemberStride * m)[0]);
     if (odds > 5) odds = 5;
     const int r = SH_CALL(Rand)();
     const int roll = r % 20;
@@ -213,9 +213,9 @@ extern "C" void __cdecl Battle_MemberAutoFixed(unsigned member) {
         const int r2 = SH_CALL(Rand)();
         target = SH_CALL(Battle_DefaultTarget)((static_cast<U>(r2) & 0xFFFFFF00u) | static_cast<unsigned char>((r2 & 7) + 3));
     }
-    At(ObjTrio_addr + 0x125 + at::kMemberStride * m)[0] = 1;
-    At(at::kAutoMode)[0] = 1;
-    At(at::kTarget)[0] = target;
+    At(::bof3::Img(ObjTrio_addr) + 0x125 + at::kMemberStride * m)[0] = 1;
+    At(::bof3::Img(at::kAutoMode.v))[0] = 1;
+    At(::bof3::Img(at::kTarget.v))[0] = target;
 }
 
 // original 0x454310 (no PSX twin paired): of members 0..2, those
@@ -279,10 +279,10 @@ extern "C" void __cdecl Field_SlotClutCopy(unsigned char* slot) {
     unsigned char* const obj = Ptr(UL(slot + 0xC));
     const int frame = slot[3];
     const unsigned char kind = obj[0x28];
-    const int divisor = At(at::kSlotDivisors + kind)[0];
+    const int divisor = At(::bof3::Img(at::kSlotDivisors.v) + kind)[0];
     if (divisor == 0) bof3::Fatal("Field_SlotClutCopy: object kind %u has no frames - the original divides by 0", (unsigned)kind);
     auto row = static_cast<unsigned char>(frame / divisor);
-    const auto offset = static_cast<unsigned char>((frame % divisor) * At(at::kSlotSteps + kind)[0]);
+    const auto offset = static_cast<unsigned char>((frame % divisor) * At(::bof3::Img(at::kSlotSteps.v) + kind)[0]);
     const unsigned char* const script = Ptr(UL(slot + 8));
     const auto to = static_cast<unsigned char>(script[0] + offset);
     const auto from = static_cast<unsigned char>(script[1] + offset);
@@ -363,22 +363,22 @@ extern "C" void __cdecl CommuSim_AreaEnter(void) {
 extern "C" void __cdecl CommuSim_QueueAreas(void) {
     const unsigned short area = Game_AreaNumber;
     if (area <= Rest4a_AreaSeen) return;
-    int n = static_cast<int>((UL(at::kAreaSeen) & 0xFFFF) + 1);
+    int n = static_cast<int>((UL(::bof3::Img(at::kAreaSeen.v)) & 0xFFFF) + 1);
     const int last = area;
     if (n <= last) {
         unsigned char count = Rest4b_BusyB;
         unsigned char seen = 0;
         for (; n <= last; ++n) {
-            const unsigned char kind = At(at::kAreaKinds + static_cast<U>(n))[0];
+            const unsigned char kind = At(::bof3::Img(at::kAreaKinds.v) + static_cast<U>(n))[0];
             if (kind == 4) {
                 if (!(seen & 1)) {
-                    At(at::kEvents + 2u * count)[0] = 4;
+                    At(::bof3::Img(at::kEvents.v) + 2u * count)[0] = 4;
                     ++count;
                     seen |= 1;
                 }
             } else if (kind == 5) {
                 if (!(seen & 2)) {
-                    At(at::kEvents + 2u * count)[0] = 5;
+                    At(::bof3::Img(at::kEvents.v) + 2u * count)[0] = 5;
                     ++count;
                     seen |= 2;
                 }
@@ -481,7 +481,7 @@ extern "C" void __cdecl CommuSim_LevelLit(void) {
     unsigned char count;
     LevelSums(true, sum, count);
     if (count == 0) return;
-    auto v = static_cast<std::int16_t>(static_cast<unsigned short>(Word(At(at::kLevelLitCosts + 2u * Rest4a_LevelLit)) - sum));
+    auto v = static_cast<std::int16_t>(static_cast<unsigned short>(Word(At(::bof3::Img(at::kLevelLitCosts.v) + 2u * Rest4a_LevelLit)) - sum));
     if (v <= 0) v = 1;
     const U last = Rest4a_StampLevelLit;
     if (Game_BattleCount - last < static_cast<U>(static_cast<int>(v))) return;
@@ -489,7 +489,7 @@ extern "C" void __cdecl CommuSim_LevelLit(void) {
     Rest4a_StampLevelLit = last + static_cast<U>(static_cast<int>(v));
     const unsigned char n = Rest4b_BusyB;
     Rest4a_LevelLit = static_cast<unsigned char>(level + 1);
-    At(at::kEvents + 2u * n)[0] = 7;
+    At(::bof3::Img(at::kEvents.v) + 2u * n)[0] = 7;
     Rest4b_BusyB = static_cast<unsigned char>(n + 1);
 }
 
@@ -508,11 +508,11 @@ extern "C" void __cdecl CommuSim_LevelDark(void) {
     const U last = Rest4a_StampLevelDark;
     if (Game_BattleCount - last < static_cast<U>(static_cast<int>(v))) return;
     const unsigned char level = FieldE2_LevelA;
-    if (Rest4a_LevelLit < At(at::kLevelDarkNeeds + level)[0]) return;
+    if (Rest4a_LevelLit < At(::bof3::Img(at::kLevelDarkNeeds.v) + level)[0]) return;
     Rest4a_StampLevelDark = last + static_cast<U>(static_cast<int>(v));
     const unsigned char n = Rest4b_BusyB;
     FieldE2_LevelA = static_cast<unsigned char>(level + 1);
-    At(at::kEvents + 2u * n)[0] = 6;
+    At(::bof3::Img(at::kEvents.v) + 2u * n)[0] = 6;
     Rest4b_BusyB = static_cast<unsigned char>(n + 1);
 }
 
@@ -552,10 +552,10 @@ extern "C" void __cdecl CommuSim_TickKind5(void) {
         if (static_cast<std::int16_t>(raised) > cap) bl[3] = static_cast<unsigned char>(cap);
         SetUL(bl + 4, Game_BattleCount);
         const unsigned char n = Rest4b_BusyB;
-        At(at::kEvents + 2u * n)[0] = 0;
+        At(::bof3::Img(at::kEvents.v) + 2u * n)[0] = 0;
         const unsigned char first = FirstOf(b);
         const unsigned char n2 = Rest4b_BusyB;
-        At(at::kEvents + 2u * n + 1)[0] = first;
+        At(::bof3::Img(at::kEvents.v) + 2u * n + 1)[0] = first;
         Rest4b_BusyB = static_cast<unsigned char>(n2 + 1);
     }
 }
@@ -591,7 +591,7 @@ extern "C" void __cdecl CommuSim_TickKind9(void) {
                     const unsigned char n = Rest4a_RemovedCount;
                     r[0] = 0;
                     Rest4a_RemovedCount = static_cast<unsigned char>(n + 1);
-                    At(at::kRemoved + n)[0] = static_cast<unsigned char>(i | 0x80);
+                    At(::bof3::Img(at::kRemoved.v) + n)[0] = static_cast<unsigned char>(i | 0x80);
                     continue;
                 }
                 r[2] = 3;
@@ -633,35 +633,35 @@ extern "C" void __cdecl CommuSim_TickKindD(void) {
             unsigned char flags;
             switch (status & 0xF) {
             case 0:
-                price = Word(At(at::kConsumables + 22u * item + 4));
-                flags = At(at::kConsumables + 22u * item)[0];
+                price = Word(At(::bof3::Img(at::kConsumables.v) + 22u * item + 4));
+                flags = At(::bof3::Img(at::kConsumables.v) + 22u * item)[0];
                 break;
             case 1:
-                price = Word(At(at::kWeapons + 28u * item + 9));
-                flags = At(at::kWeapons + 28u * item)[0];
+                price = Word(At(::bof3::Img(at::kWeapons.v) + 28u * item + 9));
+                flags = At(::bof3::Img(at::kWeapons.v) + 28u * item)[0];
                 break;
             case 2:
-                price = Word(At(at::kArmour + 26u * item + 7));
-                flags = At(at::kArmour + 26u * item)[0];
+                price = Word(At(::bof3::Img(at::kArmour.v) + 26u * item + 7));
+                flags = At(::bof3::Img(at::kArmour.v) + 26u * item)[0];
                 break;
             default:
-                price = Word(At(at::kAccessories + 24u * item + 5));
-                flags = At(at::kAccessories + 24u * item)[0];
+                price = Word(At(::bof3::Img(at::kAccessories.v) + 24u * item + 5));
+                flags = At(::bof3::Img(at::kAccessories.v) + 24u * item)[0];
                 break;
             }
             U tier = 0;
-            for (U p = at::kPriceTiers; price > Word(At(p));) {
+            for (U p = ::bof3::Img(at::kPriceTiers.v); price > Word(At(p));) {
                 p += 6;
                 ++tier;
-                if (p >= at::kPriceTiersEnd) break;
+                if (p >= ::bof3::Img(at::kPriceTiersEnd.v)) break;
             }
             const U stamp = rv::As<records::CommunityRecord>(r)->stamp;
-            if (Game_BattleCount - stamp < Word(At(at::kPriceTiers + 6 * tier + 2))) continue;
+            if (Game_BattleCount - stamp < Word(At(::bof3::Img(at::kPriceTiers.v) + 6 * tier + 2))) continue;
             r[3] = static_cast<unsigned char>(status & 0xF);
             if (flags & 8) {
                 r[3] = static_cast<unsigned char>((status & 0xF) | 0x30);
             } else {
-                const unsigned short odds = Word(At(at::kPriceTiers + 6 * tier + 4));
+                const unsigned short odds = Word(At(::bof3::Img(at::kPriceTiers.v) + 6 * tier + 4));
                 const int scaled = static_cast<int>(static_cast<U>(Trait(i, 0x13)) * odds) / 20;
                 const auto e = static_cast<std::int16_t>(static_cast<unsigned short>(scaled + odds));
                 const std::int16_t chance = e < 0 ? 0 : (e > 0x64 ? 0x64 : e);
@@ -702,7 +702,7 @@ extern "C" void __cdecl CommuSim_TickKindB(void) {
             SetUL(bl + 4, Game_BattleCount);
             continue;
         }
-        if (level >= At(at::kKindBCaps + (UL(at::kLevelLit) & 0xFF))[0]) continue;
+        if (level >= At(::bof3::Img(at::kKindBCaps.v) + (UL(::bof3::Img(at::kLevelLit.v)) & 0xFF))[0]) continue;
         unsigned char count = 0;
         for (U i = 0; i < at::kRecordCount; ++i)
             if (Rec(i)[0] != 0 && Rec(i)[1] == b + 1) ++count;
@@ -714,14 +714,14 @@ extern "C" void __cdecl CommuSim_TickKindB(void) {
         if ((q & 0xFFFF) == 0) continue;
         const auto raised = static_cast<unsigned char>(bl[3] + q);
         bl[3] = raised;
-        const unsigned char cap = At(at::kKindBCaps + (UL(at::kLevelLit) & 0xFF))[0];
+        const unsigned char cap = At(::bof3::Img(at::kKindBCaps.v) + (UL(::bof3::Img(at::kLevelLit.v)) & 0xFF))[0];
         if (raised > cap) bl[3] = cap;
         SetUL(bl + 4, Game_BattleCount);
         const unsigned char n = Rest4b_BusyB;
-        At(at::kEvents + 2u * n)[0] = 1;
+        At(::bof3::Img(at::kEvents.v) + 2u * n)[0] = 1;
         const unsigned char first = FirstOf(b);
         const unsigned char n2 = Rest4b_BusyB;
-        At(at::kEvents + 2u * n + 1)[0] = first;
+        At(::bof3::Img(at::kEvents.v) + 2u * n + 1)[0] = first;
         Rest4b_BusyB = static_cast<unsigned char>(n2 + 1);
     }
 }
@@ -746,12 +746,12 @@ extern "C" void __cdecl CommuSim_AddRecord(void) {
     rec[1] = 0;
     rv::As<records::CommunityRecord>(rec)->stamp = Game_BattleCount;
     rec[2] = 0;
-    unsigned char* const copy = At(at::kRecordCopies + 5u * r);
-    SetUL(copy, UL(at::kRecordTraits + at::kTraitStride * r));
+    unsigned char* const copy = At(::bof3::Img(at::kRecordCopies.v) + 5u * r);
+    SetUL(copy, UL(::bof3::Img(at::kRecordTraits.v) + at::kTraitStride * r));
     copy[4] = Trait(r, 4);
     const unsigned char n = Rest4b_BusyA;
     Rest4b_BusyA = static_cast<unsigned char>(n + 1);
-    At(at::kSpawned + n)[0] = r;
+    At(::bof3::Img(at::kSpawned.v) + n)[0] = r;
 }
 
 // original 0x455FF0 (no PSX twin paired): a record removed: from Rand() & 0x3F
@@ -776,7 +776,7 @@ extern "C" void __cdecl CommuSim_RemoveRecord(void) {
     Rec(r)[0] = 0;
     const unsigned char n = Rest4a_RemovedCount;
     Rest4a_RemovedCount = static_cast<unsigned char>(n + 1);
-    At(at::kRemoved + n)[0] = r;
+    At(::bof3::Img(at::kRemoved.v) + n)[0] = r;
 }
 
 // original 0x456080 (no PSX twin paired; R4B's 0x456E20 calls it): the bytes
@@ -804,13 +804,13 @@ extern "C" void __cdecl CommuSim_SumKindsAB(void) {
 // 25}[group] by subtracting Rand() & 0xF, never 0x9F or 0xA0.
 extern "C" void __cdecl CommuSim_RollOffers(void) {
     static constexpr unsigned char kLimits[3] = {0xF, 0x14, 0x19};
-    SetUL(at::kOfferWords, 0);
-    SetUL(at::kOfferWords + 4, 0);
-    SetUL(at::kOfferWords + 8, 0);
-    SetUL(at::kOfferWords + 0xC, 0);
-    SetWord(At(at::kOfferWords + 0x10), 0);
+    SetUL(::bof3::Img(at::kOfferWords.v), 0);
+    SetUL(::bof3::Img(at::kOfferWords.v) + 4, 0);
+    SetUL(::bof3::Img(at::kOfferWords.v) + 8, 0);
+    SetUL(::bof3::Img(at::kOfferWords.v) + 0xC, 0);
+    SetWord(At(::bof3::Img(at::kOfferWords.v) + 0x10), 0);
     for (U g = 0; g < 3; ++g) {
-        const U group = at::kOfferWords + 6 * g;
+        const U group = ::bof3::Img(at::kOfferWords.v) + 6 * g;
         U filled = 0;
         do {
             auto n = static_cast<unsigned char>(SH_CALL(Rand)() & 0x1F);
@@ -819,7 +819,7 @@ extern "C" void __cdecl CommuSim_RollOffers(void) {
             U k = 0;
             while (k < 3 && v != Word(At(group + 2 * k))) ++k;
             if (v != 0x9F && v != 0xA0 && k >= 3) {
-                SetWord(At(at::kOfferWords + 2 * (filled + 3 * g)), v);
+                SetWord(At(::bof3::Img(at::kOfferWords.v) + 2 * (filled + 3 * g)), v);
                 ++filled;
             }
         } while (filled < 3);
@@ -835,8 +835,8 @@ extern "C" void __cdecl CommuSim_RollOffers(void) {
 // kind takes no object. The objects after the last up to 20 are cleared (+0).
 // The object index is not bounded (60 records reach past Sprite_Objects).
 extern "C" void __cdecl CommuSim_PlaceObjects(void) {
-    SetUL(at::kResidentCounts, 0);
-    SetUL(at::kResidentCounts + 4, 0);
+    SetUL(::bof3::Img(at::kResidentCounts.v), 0);
+    SetUL(::bof3::Img(at::kResidentCounts.v) + 4, 0);
     U object = 0;
     for (U i = 0; i < at::kRecordCount; ++i) {
         if (Rec(i)[0] == 0) continue;
@@ -871,14 +871,14 @@ extern "C" void __cdecl CommuSim_PlaceObjects(void) {
         ++object;
     }
     if (static_cast<int>(object) < 0x14)
-        for (U o = object; o < 0x14; ++o) At(Sprite_Objects_addr + at::kSpriteStride * o)[0] = 0;
+        for (U o = object; o < 0x14; ++o) At(::bof3::Img(Sprite_Objects_addr) + at::kSpriteStride * o)[0] = 0;
 }
 
 namespace {
 // The part CommuSim_PlaceLoose and _PlaceResident end with: the animation bank
 // by +5 % 6, then the facing +8 (Sprite_Current read again for each).
 void BankAndFace() {
-    const unsigned short bank = Word(At(at::kBanks + 2u * (Sprite_Current[5] % 6u)));
+    const unsigned short bank = Word(At(::bof3::Img(at::kBanks.v) + 2u * (Sprite_Current[5] % 6u)));
     SH_CALL(Sprite_SetAnimationBank)(bank);
     SH_CALL(Sprite_FaceDirection)(Sprite_Current[8]);
 }
@@ -892,10 +892,10 @@ void BankAndFace() {
 // Sprite_Current); +5 the record; the bank and the facing.
 extern "C" void __cdecl CommuSim_PlaceLoose(unsigned record, unsigned object) {
     const U o = object & 0xFFu;
-    unsigned char* const base = At(Sprite_Objects_addr + at::kSpriteStride * o);
+    unsigned char* const base = At(::bof3::Img(Sprite_Objects_addr) + at::kSpriteStride * o);
     Sprite_Current = base;
     base[6] = 1;
-    if (At(at::kObjectPlaces + 3 * o + 2)[0] != 0) {
+    if (At(::bof3::Img(at::kObjectPlaces.v) + 3 * o + 2)[0] != 0) {
         Sprite_Current[1] = 0;
         base[0x84] = 2;
         Sprite_Current[2] = 1;
@@ -904,9 +904,9 @@ extern "C" void __cdecl CommuSim_PlaceLoose(unsigned record, unsigned object) {
         base[0x84] = 0;
         Sprite_Current[2] = 0;
     }
-    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->x_whole, At(at::kObjectPlaces + 3 * o)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->x_whole, At(::bof3::Img(at::kObjectPlaces.v) + 3 * o)[0]);
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->x_frac, 0);
-    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->z_whole, At(at::kObjectPlaces + 3 * o + 1)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->z_whole, At(::bof3::Img(at::kObjectPlaces.v) + 3 * o + 1)[0]);
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->z_frac, 0);
     const long height = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteObject>(base)->x, rv::As<records::SpriteObject>(base)->z);
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->height_whole, static_cast<unsigned>(height));
@@ -927,20 +927,20 @@ extern "C" void __cdecl CommuSim_PlaceResident(unsigned record, unsigned object)
     const auto building = static_cast<unsigned char>(Rec(record & 0xFFu)[1] - 1);
     const U o = object & 0xFFu;
     const U row = 3u * building;
-    unsigned char* const base = At(Sprite_Objects_addr + at::kSpriteStride * o);
+    unsigned char* const base = At(::bof3::Img(Sprite_Objects_addr) + at::kSpriteStride * o);
     Sprite_Current = base;
     Sprite_Current[5] = static_cast<unsigned char>(record);
     Sprite_Current[1] = 6;
     base[0x84] = 0;
     Sprite_Current[2] = 0;
-    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->x_whole, At(at::kResidentPlaces + 3 * (Count(building) + row))[0]);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->x_whole, At(::bof3::Img(at::kResidentPlaces.v) + 3 * (Count(building) + row))[0]);
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->x_frac, 0);
-    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->z_whole, At(at::kResidentPlaces + 3 * (Count(building) + row) + 1)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->z_whole, At(::bof3::Img(at::kResidentPlaces.v) + 3 * (Count(building) + row) + 1)[0]);
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->z_frac, 0);
     unsigned char* const s = Sprite_Current;
     const long height = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z);
     rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->height_whole, static_cast<unsigned>(height));
-    const unsigned char facing = At(at::kResidentPlaces + 3 * (Count(building) + row) + 2)[0];
+    const unsigned char facing = At(::bof3::Img(at::kResidentPlaces.v) + 3 * (Count(building) + row) + 2)[0];
     Sprite_Current[8] = facing;
     Sprite_Current[0x48] = 0;
     BankAndFace();
@@ -958,7 +958,7 @@ extern "C" void __cdecl CommuSim_PlaceResident(unsigned record, unsigned object)
     case 0xD: SH_CALL(CommuPose_KindD)(object); break;
     default: break;
     }
-    At(at::kResidentCounts + building)[0] = static_cast<unsigned char>(Count(building) + 1);
+    At(::bof3::Img(at::kResidentCounts.v) + building)[0] = static_cast<unsigned char>(Count(building) + 1);
 }
 
 // --- the poses (each: the object's +0x88 word; +6 through Sprite_Current) ---
@@ -969,7 +969,7 @@ extern "C" void __cdecl CommuPose_Kind0(unsigned object) {
     auto roll = static_cast<unsigned char>(SH_CALL(Rand)() & 7);
     if (roll > 4) roll = static_cast<unsigned char>(roll + 0xFC);
     const U o = object & 0xFFu;
-    At(Sprite_Objects_addr + 0x6 + at::kSpriteStride * o)[0] = 1;
+    At(::bof3::Img(Sprite_Objects_addr) + 0x6 + at::kSpriteStride * o)[0] = 1;
     SetWord(Pose(o), roll + 0xC2u);
 }
 
@@ -1037,7 +1037,7 @@ extern "C" void __cdecl CommuPose_Kind8(unsigned record, unsigned object, unsign
     const U age = Game_BattleCount - rv::As<records::CommunityRecord>(Rec(r))->stamp;
     const U row = age < 0x14 ? 0 : (age < 0x28 ? 1 : 2);
     const U index = Count(building & 0xFFu) + 3 * row;
-    SetWord(Pose(object & 0xFFu), Word(At(at::kOfferWords + 2 * index)));
+    SetWord(Pose(object & 0xFFu), Word(At(::bof3::Img(at::kOfferWords.v) + 2 * index)));
 }
 
 // original 0x456920 (no PSX twin paired): by the record's +2: 0 - +6 = 1, pose
@@ -1087,7 +1087,7 @@ extern "C" void __cdecl CommuPose_KindB(unsigned object, unsigned building) {
         return;
     }
     if (count == 1) {
-        const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x92);
+        const unsigned char set = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x92);
         SetWord(Pose(o), set ? 0xC00B : 0xD4);
         return;
     }
@@ -1127,7 +1127,7 @@ unsigned char TailTriggerSub(unsigned char* object, unsigned char kind, unsigned
     return 0;
 }
 char* Row(U a) { return reinterpret_cast<char*>(At(a)); }
-const char* Format() { return reinterpret_cast<const char*>(At(at::kNumberFormat)); }
+const char* Format() { return reinterpret_cast<const char*>(At(::bof3::Img(at::kNumberFormat.v))); }
 }  // namespace
 
 // original 0x456B20 (Field_ObjectTriggers id 1; no PSX twin paired): tail kind
@@ -1139,10 +1139,10 @@ extern "C" unsigned char __cdecl FieldTrigger01(unsigned char* object, unsigned 
 // 0x904134 (the community's clock) and 0x904138 - then Msg_OpenScript(0x55)
 // and Field_Request 2.
 extern "C" unsigned char __cdecl FieldTrigger02(unsigned char*, unsigned char*) {
-    SH_CALL(Crt_sprintf)(Row(at::kTextRow0), Format(), static_cast<U>(At(at::kCountA)[0]));
-    SH_CALL(Crt_sprintf)(Row(at::kTextRow1), Format(), static_cast<std::uint32_t>(MapFieldObjects_ClockMinutes));
-    SH_CALL(Crt_sprintf)(Row(at::kTextRow2), Format(), Game_BattleCount);
-    SH_CALL(Crt_sprintf)(Row(at::kTextRow3), Format(), Rest4a_CountC);
+    SH_CALL(Crt_sprintf)(Row(::bof3::Img(at::kTextRow0.v)), Format(), static_cast<U>(At(::bof3::Img(at::kCountA.v))[0]));
+    SH_CALL(Crt_sprintf)(Row(::bof3::Img(at::kTextRow1.v)), Format(), static_cast<std::uint32_t>(MapFieldObjects_ClockMinutes));
+    SH_CALL(Crt_sprintf)(Row(::bof3::Img(at::kTextRow2.v)), Format(), Game_BattleCount);
+    SH_CALL(Crt_sprintf)(Row(::bof3::Img(at::kTextRow3.v)), Format(), Rest4a_CountC);
     SH_CALL(Msg_OpenScript)(0x55);
     Field_Request = 2;
     return 0;
@@ -1151,9 +1151,9 @@ extern "C" unsigned char __cdecl FieldTrigger02(unsigned char*, unsigned char*) 
 // original 0x456BF0 (id 3): three numbers - the dwords 0x90413C, 0x904140,
 // 0x904144 - into rows 0..2, Msg_OpenScript(0x56), Field_Request 2.
 extern "C" unsigned char __cdecl FieldTrigger03(unsigned char*, unsigned char*) {
-    SH_CALL(Crt_sprintf)(Row(at::kTextRow0), Format(), Rest4a_CountD);
-    SH_CALL(Crt_sprintf)(Row(at::kTextRow1), Format(), FieldE1_ContentCount);
-    SH_CALL(Crt_sprintf)(Row(at::kTextRow2), Format(), Rest4a_CountF);
+    SH_CALL(Crt_sprintf)(Row(::bof3::Img(at::kTextRow0.v)), Format(), Rest4a_CountD);
+    SH_CALL(Crt_sprintf)(Row(::bof3::Img(at::kTextRow1.v)), Format(), FieldE1_ContentCount);
+    SH_CALL(Crt_sprintf)(Row(::bof3::Img(at::kTextRow2.v)), Format(), Rest4a_CountF);
     SH_CALL(Msg_OpenScript)(0x56);
     Field_Request = 2;
     return 0;
@@ -1176,7 +1176,7 @@ extern "C" unsigned char __cdecl FieldTrigger08(unsigned char* object, unsigned 
 extern "C" unsigned char __cdecl FieldTrigger09(unsigned char* object, unsigned char*) {
     const unsigned char building = Rec(object[5])[1];
     const U shop = UL(object + 0x1C);
-    At(at::kShopRecords + at::kShopStride * shop)[0] = At(at::kBuildingLevels + 8u * building)[0];
+    At(::bof3::Img(at::kShopRecords.v) + at::kShopStride * shop)[0] = At(::bof3::Img(at::kBuildingLevels.v) + 8u * building)[0];
     return 0;
 }
 

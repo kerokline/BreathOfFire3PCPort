@@ -71,7 +71,7 @@ const bh::Callee kCallees[] = {
 // The cells beyond the standard regions: the move-script counter the end
 // hooks of set-ups 17 and 21 set, and the four words set-ups 18..20 keep for
 // the area-79 kinds.
-const bh::Region kRegions[] = {{at::kCounter0, 4}, {BossSd_KeptA6_addr, 8}};
+const bh::Region kRegions[] = {{at::kCounter0.v, 4}, {BossSd_KeptA6_addr, 8}};
 
 // --- seeding helpers -------------------------------------------------------------
 

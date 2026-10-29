@@ -55,8 +55,10 @@ void Zero(U address, U bytes) { std::memset(At(address), 0, bytes); }
 constexpr U kTexCacheBytes = 0x6000;
 // kClutRows: now Gfx_ClutRows (symbols.toml).
 constexpr U kClutRowsBytes = 0x1000;
-constexpr U kFontCache = 0x7C9F50, kFontCacheBytes = 0xA00, kFontEntry = 0x14;
-constexpr U kBackdropBlock = 0x6BE9F8, kBackdropBytes = 0x1C;
+constexpr ::bof3::image::Va kFontCache{0x7C9F50};
+constexpr U kFontCacheBytes = 0xA00, kFontEntry = 0x14;
+constexpr ::bof3::image::Va kBackdropBlock{0x6BE9F8};
+constexpr U kBackdropBytes = 0x1C;
 // kAfterDrawBlock: now D3d_CaptureReady (symbols.toml).
 constexpr U kAfterDrawBytes = 0x1C;
 // kCellCache: now D3d_CellTexCache (symbols.toml).
@@ -64,23 +66,26 @@ constexpr U kCellCacheBytes = 0x1400;
 // kPixelFormat: now Gfx_PixelFormat (symbols.toml).
 constexpr U kPixelFormatRecord = 0x40;
 // kShadeCache: now D3d_ShadeModeCache (symbols.toml).
-constexpr U kRenderFlags = 0x6C3A4C;
+constexpr ::bof3::image::Va kRenderFlags{0x6C3A4C};
 // kUnread6C3A48: now Display_ZeroedUnread (symbols.toml).
 // kTexCoords: now D3d_TexCoords (symbols.toml).
 // kDeviceCountLess1: now Display_DeviceCountLess1 (symbols.toml).
-constexpr U kDeviceRecords = 0x6C3A50, kDeviceRecord = 0x13C;
-constexpr U kModeLists = 0x6BE1E8, kModeListsBytes = 0x810;
+constexpr ::bof3::image::Va kDeviceRecords{0x6C3A50};
+constexpr U kDeviceRecord = 0x13C;
+constexpr ::bof3::image::Va kModeLists{0x6BE1E8};
+constexpr U kModeListsBytes = 0x810;
 // kDirectDraw: now Dd_DirectDraw (symbols.toml).
 // kClipper: now PsxRest_Clipper (symbols.toml).
 // kZBuffer: now PsxRest_ZBuffer (symbols.toml).
-constexpr U kDirect3D = 0x7CC34C;
+constexpr ::bof3::image::Va kDirect3D{0x7CC34C};
 // kScreenRight: now Gfx_ScreenRect[2] (symbols.toml).
 // kScreenBottom: now Gfx_ScreenRect[3] (symbols.toml).
 // kModeBpp: now Display_ModeBpp (symbols.toml).
 // kScaleX: now D3d_ScaleX (symbols.toml).
 // kScaleY: now D3d_ScaleY (symbols.toml).
 constexpr U kMaxScale = 8;   // BOF3X_SCALE's range since the backend (render-backend.md)
-constexpr U kDeviceDesc = 0x7CC238, kDeviceDescBytes = 0xFC;
+constexpr ::bof3::image::Va kDeviceDesc{0x7CC238};
+constexpr U kDeviceDescBytes = 0xFC;
 // kPrimary: now DDraw_Primary (symbols.toml).
 // kBackBuffer: now DDraw_BackBuffer (symbols.toml).
 // kStage: now Dd_StageSurface (symbols.toml).
@@ -169,11 +174,11 @@ void Rescale(U k) {
     const U width = render::TargetWidth(), height = render::TargetHeight();
     Gfx_ScreenRect[2] = width;
     Gfx_ScreenRect[3] = height;
-    PutFloat(D3d_ScaleX_addr, static_cast<float>(k));
-    PutFloat(D3d_ScaleY_addr, static_cast<float>(k));
+    PutFloat(::bof3::Img(D3d_ScaleX_addr), static_cast<float>(k));
+    PutFloat(::bof3::Img(D3d_ScaleY_addr), static_cast<float>(k));
     SprtDraw_SetScale(k);
-    auto* primary = *reinterpret_cast<render::Surface**>(At(DDraw_Primary_addr));
-    auto* back = *reinterpret_cast<render::Surface**>(At(DDraw_BackBuffer_addr));
+    auto* primary = *reinterpret_cast<render::Surface**>(At(::bof3::Img(DDraw_Primary_addr)));
+    auto* back = *reinterpret_cast<render::Surface**>(At(::bof3::Img(DDraw_BackBuffer_addr)));
     if (primary && back) {
         if (!render::ResizeSurface(primary, width, height) || !render::ResizeSurface(back, width, height))
             bof3::Fatal("Display_Setup: out of memory resizing the primary and back surfaces to %u x %u", width, height);
@@ -226,39 +231,39 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     ReleaseDC(nullptr, dc);
 
     // 2.2 the caches, reset - every one the original zeroes
-    Zero(Gfx_TexCache_addr, kTexCacheBytes);
-    Zero(Gfx_ClutRows_addr, kClutRowsBytes);
-    Zero(Font_TexCache_addr, kFontCacheBytes);
-    for (U i = 0; i < kFontCacheBytes / kFontEntry; ++i) PutWord(kFontCache + i * kFontEntry, 0xFFFF);
-    Zero(kBackdropBlock, kBackdropBytes);
-    Zero(D3d_CaptureReady_addr, kAfterDrawBytes);
-    Zero(D3d_CellTexCache_addr, kCellCacheBytes);
-    Zero(Gfx_PixelFormat_addr, 3 * kPixelFormatRecord);
-    PutLong(kRenderFlags, 0);
+    Zero(::bof3::Img(Gfx_TexCache_addr), kTexCacheBytes);
+    Zero(::bof3::Img(Gfx_ClutRows_addr), kClutRowsBytes);
+    Zero(::bof3::Img(Font_TexCache_addr), kFontCacheBytes);
+    for (U i = 0; i < kFontCacheBytes / kFontEntry; ++i) PutWord(::bof3::Img(kFontCache.v) + i * kFontEntry, 0xFFFF);
+    Zero(::bof3::Img(kBackdropBlock.v), kBackdropBytes);
+    Zero(::bof3::Img(D3d_CaptureReady_addr), kAfterDrawBytes);
+    Zero(::bof3::Img(D3d_CellTexCache_addr), kCellCacheBytes);
+    Zero(::bof3::Img(Gfx_PixelFormat_addr), 3 * kPixelFormatRecord);
+    PutLong(::bof3::Img(kRenderFlags.v), 0);
     Display_ZeroedUnread = 0;
     D3d_ShadeModeCache = 0;
 
     // 2.3 the texture coordinates: i / 256 + 0.002 in double, stored as float
-    for (U i = 0; i < 256; ++i) PutFloat(D3d_TexCoords_addr + i * 4, static_cast<float>(i * 0.00390625 + 0.0020000000949949026));
+    for (U i = 0; i < 256; ++i) PutFloat(::bof3::Img(D3d_TexCoords_addr) + i * 4, static_cast<float>(i * 0.00390625 + 0.0020000000949949026));
 
     // 2.4 the device records: 0 the original's synthetic software renderer (kept
     // so that F7's name overlay reads it), 1 this backend. No enumeration.
     if (static_cast<std::int32_t>(Display_DeviceCountLess1) < 1) {
-        Zero(kDeviceRecords, 2 * kDeviceRecord);
-        Zero(kModeLists, kModeListsBytes);
-        PutLong(kDeviceRecords + 0, 1);
-        PutLong(kDeviceRecords + 4, 1);
-        std::memcpy(At(kDeviceRecords + 0x18), "Software Render", 16);
-        PutLong(kDeviceRecords + kDeviceRecord + 0, 1);
-        PutLong(kDeviceRecords + kDeviceRecord + 4, 1);
-        std::memcpy(At(kDeviceRecords + kDeviceRecord + 0x18), "Direct3D 11 (bof3x)", 20);
+        Zero(::bof3::Img(kDeviceRecords.v), 2 * kDeviceRecord);
+        Zero(::bof3::Img(kModeLists.v), kModeListsBytes);
+        PutLong(::bof3::Img(kDeviceRecords.v) + 0, 1);
+        PutLong(::bof3::Img(kDeviceRecords.v) + 4, 1);
+        std::memcpy(At(::bof3::Img(kDeviceRecords.v) + 0x18), "Software Render", 16);
+        PutLong(::bof3::Img(kDeviceRecords.v) + kDeviceRecord + 0, 1);
+        PutLong(::bof3::Img(kDeviceRecords.v) + kDeviceRecord + 4, 1);
+        std::memcpy(At(::bof3::Img(kDeviceRecords.v) + kDeviceRecord + 0x18), "Direct3D 11 (bof3x)", 20);
         Display_DeviceCountLess1 = 1;
     }
     // 2.5 which device: the original wraps an index past the last record to 0
     // and takes record 0 as the software renderer. Here every index is the
     // hardware path (DIV-0031); the wrap is kept for F7's cycling.
     if (*device < 0 || *device > 1) *device = 0;
-    PutLong(kRenderFlags, 2);   // bit 1: the device allows windowed
+    PutLong(::bof3::Img(kRenderFlags.v), 2);   // bit 1: the device allows windowed
 
     // 2.6 the mode and the scale: the logical picture is the target's size
     const render::Options options = ReadOptions(hwnd, *fullscreen != 0);
@@ -275,20 +280,20 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     // The game's scale is k, the view's - not the target's width over 320,
     // which a wide target (DIV-0041) would make 1.33k: the game keeps
     // drawing a 320-wide view and the backend shifts it into the target.
-    PutFloat(D3d_ScaleX_addr, static_cast<float>(g_scale));
-    PutFloat(D3d_ScaleY_addr, static_cast<float>(g_scale));
+    PutFloat(::bof3::Img(D3d_ScaleX_addr), static_cast<float>(g_scale));
+    PutFloat(::bof3::Img(D3d_ScaleY_addr), static_cast<float>(g_scale));
     SprtDraw_SetScale(g_scale);   // DIV-0010's far edge follows the scale (display-overhaul.md 4b)
-    Zero(D3d_DeviceDesc_addr, kDeviceDescBytes);
-    PutLong(kDeviceDesc + kDescTextureCaps, kTextureCaps);
-    PutLong(kDeviceDesc + kDescMinW, kMinTexture);
-    PutLong(kDeviceDesc + kDescMinH, kMinTexture);
-    PutLong(kDeviceDesc + kDescMaxW, kMaxTexture);
-    PutLong(kDeviceDesc + kDescMaxH, kMaxTexture);
+    Zero(::bof3::Img(D3d_DeviceDesc_addr), kDeviceDescBytes);
+    PutLong(::bof3::Img(kDeviceDesc.v) + kDescTextureCaps, kTextureCaps);
+    PutLong(::bof3::Img(kDeviceDesc.v) + kDescMinW, kMinTexture);
+    PutLong(::bof3::Img(kDeviceDesc.v) + kDescMinH, kMinTexture);
+    PutLong(::bof3::Img(kDeviceDesc.v) + kDescMaxW, kMaxTexture);
+    PutLong(::bof3::Img(kDeviceDesc.v) + kDescMaxH, kMaxTexture);
 
     // 2.7 the windowed path, always: DirectDraw, primary, back buffer, no
     // clipper, Gfx_RenderFlags bit 0x200. The window rect stays 0x5A5130's.
     Dd_DirectDraw = render::DirectDrawObject();
-    PutPtr(kDirect3D, render::DirectDrawObject());   // released by the teardown, read by nothing else
+    PutPtr(::bof3::Img(kDirect3D.v), render::DirectDrawObject());   // released by the teardown, read by nothing else
     render::Surface* primary = render::MakeSurface(width, height, 32, 0x200, 0, true, false);
     render::Surface* back = render::MakeSurface(width, height, 32, 0x2040, 0, false, true);
     if (!primary || !back) bof3::Fatal("Display_Setup: out of memory for the primary and back surfaces");
@@ -296,18 +301,18 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     DDraw_BackBuffer = back;
     PsxRest_Clipper = 0;
     PsxRest_ZBuffer = 0;
-    *reinterpret_cast<U*>(At(Gfx_RenderFlags_addr)) |= 0x200;
+    *reinterpret_cast<U*>(At(::bof3::Img(Gfx_RenderFlags_addr))) |= 0x200;
     (void)fullscreen;   // never forced: no display mode is set (DIV-0031)
 
     // 2.9 the device
     D3d_Device = render::DeviceObject();
 
     // 2.10 the texture formats, the staging surface, the back buffer's pitch
-    FillFormat(Gfx_PixelFormat_addr + 0 * kPixelFormatRecord, kFormatAlpha, kRankAlpha);
-    FillFormat(Gfx_PixelFormat_addr + 1 * kPixelFormatRecord, kFormatOpaque, kRankOpaque);
-    FillFormat(Gfx_PixelFormat_addr + 2 * kPixelFormatRecord, kFormatScreen, kRankScreen);
-    if (kNoAlphaFormat) *reinterpret_cast<U*>(At(Gfx_RenderFlags_addr)) |= 0x20;
-    if (!Dd_CreatePlainSurface(0x140, 0x100, reinterpret_cast<void**>(At(Dd_StageSurface_addr)), 0))
+    FillFormat(::bof3::Img(Gfx_PixelFormat_addr) + 0 * kPixelFormatRecord, kFormatAlpha, kRankAlpha);
+    FillFormat(::bof3::Img(Gfx_PixelFormat_addr) + 1 * kPixelFormatRecord, kFormatOpaque, kRankOpaque);
+    FillFormat(::bof3::Img(Gfx_PixelFormat_addr) + 2 * kPixelFormatRecord, kFormatScreen, kRankScreen);
+    if (kNoAlphaFormat) *reinterpret_cast<U*>(At(::bof3::Img(Gfx_RenderFlags_addr))) |= 0x20;
+    if (!Dd_CreatePlainSurface(0x140, 0x100, reinterpret_cast<void**>(At(::bof3::Img(Dd_StageSurface_addr))), 0))
         bof3::Fatal("Display_Setup: the staging surface");
     Display_BackPitch = back->pitch;
 

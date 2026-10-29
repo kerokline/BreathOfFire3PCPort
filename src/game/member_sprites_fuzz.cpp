@@ -103,7 +103,7 @@ unsigned char g_scratch[0x150];   // an object that is not a party member
 unsigned char g_out[4];           // Field_DirectionTo's destination when it is tested alone
 
 unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
-unsigned char* Cells() { return At(at::kCells); }
+unsigned char* Cells() { return At(::bof3::Img(at::kCells.v)); }
 // Sprite_Current may be any of the five, Field_State one of the four with +0x148.
 unsigned char* SpriteChoice(unsigned v) {
     switch (v % 5) {
@@ -258,7 +258,7 @@ unsigned char __cdecl StubStepAhead() {
     if (h % 2) {   // near the sprite, or on it (as far as it is: the caller's tie)
         const unsigned char* const c = Sprite_Current;
         const bool on = Hash(243) % 3 == 0;
-        SetLong(At(at::kAimX_addr), Long(c + 0x34) + (on ? 0 : static_cast<std::int32_t>(Hash(241) % 0x100000) - 0x80000));
+        SetLong(At(::bof3::Img(at::kAimX_addr.v)), Long(c + 0x34) + (on ? 0 : static_cast<std::int32_t>(Hash(241) % 0x100000) - 0x80000));
         SetLong(At(Scratch_Swap_addr), Long(c + 0x38) + (on ? 0 : static_cast<std::int32_t>(Hash(242) % 0x100000) - 0x80000));
     }
     static const unsigned char kAnswers[] = {0, 1, 1, 1, 5, 6, 0xFF, 2};
@@ -524,7 +524,7 @@ void AimTable(void* copy, const Clone& c, std::uint32_t at, std::uint8_t op, std
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {Address(rv::Bytes(ObjTrio)), (ObjTrio_count * sizeof(records::PartyMember))},
-    {at::kCells, 0x100},
+    {at::kCells.v, 0x100},
     {Address(&Field_ScriptFlags), 2},
     {CharacterRecords_addr, kActors * kActorBytes},
     {Address(&Field_InputFlags), 6},   // Field_InputFlags, a byte, Field_ScriptFlags2, Field_InputHeld
@@ -766,7 +766,7 @@ void SelfTest() {
         theirs[k] = bof3::CloneOriginal(c.name, c.base, c.size, calls, n);
     }
     AimTable(theirs[kMemberFrame], kClones[kMemberFrame], 0x10, 0x24, Member_States_addr, g_member_states);
-    AimTable(theirs[kControl], kClones[kControl], 0xB, 0x14, at::kControlStates, g_control_states);
+    AimTable(theirs[kControl], kClones[kControl], 0xB, 0x14, at::kControlStates.v, g_control_states);
     move_script::Relocate(theirs[kFollow], 0x51AD60, 0x260, {0xB8, 0x244, 7});
     move_script::Relocate(theirs[kStepAhead], 0x51B430, 0x198, {0x118, 0x178, 8});
     move_script::Relocate(theirs[kCellKind], 0x528370, 0x3BD, {0xFE, 0x2A8, 9});

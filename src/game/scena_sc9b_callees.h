@@ -115,12 +115,12 @@ constexpr unsigned kObject10Count = 13;
 // kSlot10: now Scena10_Slot (symbols.toml). u8 Scena10_Slot: the chapter's effect slot
 
 // Callees nobody owns (above).
-constexpr std::uint32_t kCellFind = bof3::addr::Field_CellTriggerAt;
-constexpr std::uint32_t kPartyPlace = bof3::addr::Party_PlaceForBattle;
-constexpr std::uint32_t kSetBit80 = bof3::addr::Field_SetStatus80;
-constexpr std::uint32_t kKeyItemAdd = bof3::addr::KeyItem_Add;
-constexpr std::uint32_t kMusicStop = bof3::addr::Sound_StopMusic;
-constexpr std::uint32_t kSpriteFindFree = bof3::addr::Sprite_FindFree;
+constexpr ::bof3::image::CodeVa kCellFind{bof3::addr::Field_CellTriggerAt};
+constexpr ::bof3::image::CodeVa kPartyPlace{bof3::addr::Party_PlaceForBattle};
+constexpr ::bof3::image::CodeVa kSetBit80{bof3::addr::Field_SetStatus80};
+constexpr ::bof3::image::CodeVa kKeyItemAdd{bof3::addr::KeyItem_Add};
+constexpr ::bof3::image::CodeVa kMusicStop{bof3::addr::Sound_StopMusic};
+constexpr ::bof3::image::CodeVa kSpriteFindFree{bof3::addr::Sprite_FindFree};
 
 }  // namespace at
 

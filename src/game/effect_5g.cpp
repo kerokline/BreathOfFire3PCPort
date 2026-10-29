@@ -179,13 +179,13 @@ U Place2C(const char* who) {
     unsigned char* s = S();
     s[8] = rv::As<records::EffectObject>(s)->z_whole == 0 ? 1 : 0;
     const U v = Variant(who, s, at::kSub2CVariants);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(at::kSub2CCells + 2 * v)[0]);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(at::kSub2CCells + 2 * v + 1)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(::bof3::Img(at::kSub2CCells.v) + 2 * v)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(::bof3::Img(at::kSub2CCells.v) + 2 * v + 1)[0]);
     const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
     const std::int32_t half = static_cast<std::int16_t>(static_cast<U>(h) & 0xFFFFu) / 2;
     s = S();
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, (0u - static_cast<U>(half)) - Word(At(at::kSub2CHeights + 2 * v)));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, UL(At(at::kSub2CTextures + 4 * v)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, (0u - static_cast<U>(half)) - Word(At(::bof3::Img(at::kSub2CHeights.v) + 2 * v)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, UL(At(::bof3::Img(at::kSub2CTextures.v) + 4 * v)));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0);
     return v;
 }
@@ -239,7 +239,7 @@ extern "C" void __cdecl EffectKind18Sub2B_Draw(int follow) {
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
         unsigned char* const s = S();
-        const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(at::kSub2BSides)[i])));
+        const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(::bof3::Img(at::kSub2BSides.v))[i])));
         const U slide = rv::As<records::EffectWork>(s)->work_30 * sign;
         const U z = static_cast<U>(rv::As<records::EffectObject>(s)->z_whole) << 7;
         rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, slide + z - 0x3F40u);
@@ -300,7 +300,7 @@ extern "C" void __cdecl EffectKind18Sub2C_Draw(void) {
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
         unsigned char* const s = S();
-        const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(at::kSub2CSides)[side])));
+        const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(::bof3::Img(at::kSub2CSides.v))[side])));
         const U slide = rv::As<records::EffectWork>(s)->work_30 * sign;
         if (s[8] != 0) {
             const U x = (side + rv::As<records::EffectObject>(s)->x_whole) << 7;
@@ -339,8 +339,8 @@ extern "C" void __cdecl EffectKind18Sub3A_DrawPanel(unsigned side, int dy) {
         if (side >= at::kSidesRoom)
             bof3::Fatal("EffectKind18Sub3A_DrawPanel: side %u, past the %u bytes of 0x%X - the original reads on into "
                         "EffectKind18Sub4A_States (docs/effect_5g.md section 6)",
-                        side, at::kSidesRoom, (unsigned)at::kSub3ASides);
-        const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(at::kSub3ASides)[side])));
+                        side, at::kSidesRoom, at::kSub3ASides.v);
+        const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(::bof3::Img(at::kSub3ASides.v))[side])));
         const U slide = sign * Word(s + 0x30);
         const U x = (side + rv::As<records::EffectObject>(s)->x_whole) << 7;
         rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, x - slide - 0x4040u);
@@ -388,15 +388,15 @@ extern "C" void __cdecl EffectKind18Sub2B_Run(void) {
 extern "C" void __cdecl EffectKind18Sub2B_Place(void) {
     unsigned char* s = S();
     const U v = Variant("EffectKind18Sub2B_Place", s, at::kSub2BVariants);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(at::kSub2BCells + 2 * v)[0]);
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(at::kSub2BCells + 2 * v + 1)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(::bof3::Img(at::kSub2BCells.v) + 2 * v)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(::bof3::Img(at::kSub2BCells.v) + 2 * v + 1)[0]);
     const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
-    const U height = Word(At(at::kSub2BHeights + 2 * v));
+    const U height = Word(At(::bof3::Img(at::kSub2BHeights.v) + 2 * v));
     const std::int32_t half = static_cast<std::int16_t>(static_cast<U>(h) & 0xFFFFu) / 2;
     s = S();
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, (0u - height) - static_cast<U>(half));
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_32, height);
-    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, static_cast<U>(At(at::kSub2BTextures + v)[0]) << 24);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, static_cast<U>(At(::bof3::Img(at::kSub2BTextures.v) + v)[0]) << 24);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0);
     s[2] = static_cast<unsigned char>(s[2] + 1);
     if (LeaderAt(s, false, 0x8000, 0x10000)) {
@@ -475,8 +475,8 @@ extern "C" void __cdecl EffectKind18Sub36_Pulse(void) {
     if (step >= at::kSub36Steps)
         bof3::Fatal("EffectKind18Sub36_Pulse: +2 is %u, past the %u steps of 0x%X - the original reads on into "
                     "sub-kind 0x2C's heights (docs/effect_5g.md section 6)",
-                    step, at::kSub36Steps, (unsigned)at::kSub36Blues);
-    p[6] = static_cast<unsigned char>(At(at::kSub36Blues)[step] << 3);
+                    step, at::kSub36Steps, at::kSub36Blues.v);
+    p[6] = static_cast<unsigned char>(At(::bof3::Img(at::kSub36Blues.v))[step] << 3);
     SH_CALL(Gfx_CommitPrim)(3, 0x38);
     if ((Frame_Counter & 7) == 0) {
         unsigned char* const s = S();
@@ -627,8 +627,8 @@ extern "C" void __cdecl EffectKind18Sub4A_Run(void) {
 // read afresh), +2 up. The draw.
 extern "C" void __cdecl EffectKind18Sub4A_Place(void) {
     const U v = Place2C("EffectKind18Sub4A_Place");
-    S()[0xB] = At(at::kSub4ASubKinds + 4 * v)[0];
-    const unsigned char* const mark = At(at::kSub4AMarks + 4 * v);
+    S()[0xB] = At(::bof3::Img(at::kSub4ASubKinds.v) + 4 * v)[0];
+    const unsigned char* const mark = At(::bof3::Img(at::kSub4AMarks.v) + 4 * v);
     {
         unsigned char* const s = S();
         SH_CALL(AreaMap_SetByte)(rv::As<records::EffectObject>(s)->x_whole, rv::As<records::EffectObject>(s)->z_whole, mark[0]);

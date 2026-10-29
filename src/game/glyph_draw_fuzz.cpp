@@ -135,8 +135,8 @@ DrawFn CloneDraw() {
     const bof3::CloneCall calls[] = {
         {0x2C, reinterpret_cast<const void*>(&StubPrimColor), 0x59FBA0},
         {0x25B, reinterpret_cast<const void*>(&StubGlyphTexture), 0x5A2BC0},
-        {0x262, reinterpret_cast<const void*>(&StubRetOnly), kRetOnly},
-        {0x269, reinterpret_cast<const void*>(&StubRetOnly), kRetOnly},
+        {0x262, reinterpret_cast<const void*>(&StubRetOnly), kRetOnly.v},
+        {0x269, reinterpret_cast<const void*>(&StubRetOnly), kRetOnly.v},
         {0x276, reinterpret_cast<const void*>(&StubSetBlend), 0x59FCA0},
         {0x27D, reinterpret_cast<const void*>(&StubSetShade), 0x59FD80},
     };

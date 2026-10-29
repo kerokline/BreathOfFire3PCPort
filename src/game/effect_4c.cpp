@@ -299,7 +299,7 @@ extern "C" void __cdecl EffectKind8D_Start(void) {
     unsigned char* const s = S();
     Camera_Distance = 0x1C80;
     MapView_Redraw = 2;
-    for (unsigned i = 0; i < 3; ++i) At(ObjTrio_addr + 0x48 + at::kObjStride * i)[0] = 1;
+    for (unsigned i = 0; i < 3; ++i) At(::bof3::Img(ObjTrio_addr) + 0x48 + at::kObjStride * i)[0] = 1;
     s[0x5F] = 0x7F;
     S()[0x5E] = 0x7F;
     S()[0x5D] = 0x7F;
@@ -309,7 +309,7 @@ extern "C" void __cdecl EffectKind8D_Start(void) {
 
 // original 0x48B280 (state 1): a tail jump to E4D's screen tint 0x48CA90 (the
 // tint held; nothing here moves +1 on).
-extern "C" void __cdecl EffectKind8D_Hold(void) { SH_AT(VoidFn, at::kScreenTile)(); }
+extern "C" void __cdecl EffectKind8D_Hold(void) { SH_AT(VoidFn, at::kScreenTile.v)(); }
 
 // original 0x48B290 (state 2): +9 down; not 0: Camera_Distance - 0x2A and,
 // while +0x5D is not 0, the tint +0x5D / +0x5E / +0x5F each down one (+0x5D
@@ -334,13 +334,13 @@ extern "C" void __cdecl EffectKind8D_Pull(void) {
         s[1] = 3;
     }
     MapView_Redraw = 2;
-    SH_AT(VoidFn, at::kScreenTile)();
+    SH_AT(VoidFn, at::kScreenTile.v)();
 }
 
 // original 0x48B2F0 (state 3): the byte after MoveScript_Var7 (0x8034E5) up;
 // a tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind8D_End(void) {
-    unsigned char* const step = At(MoveScript_PartyRecords_addr + 0x65);
+    unsigned char* const step = At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65);
     step[0] = static_cast<unsigned char>(step[0] + 1);
     SH_CALL(Effect_Release)();
 }
@@ -431,15 +431,15 @@ extern "C" void __cdecl EffectKind8E_DrawChip(unsigned char* p) {
     DrawMode(1, 0x3C0, 0, 0);
     SH_CALL(MapView_LinkPrimAt)(UL(p + 0x18), UL(p + 0x1C), -2, 0xC);
     unsigned char* const prim = Gfx_PacketNext;
-    SH_AT(RecordFn, at::kPolyF3)(prim);
+    SH_AT(RecordFn, at::kPolyF3.v)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
     SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(p + 0x18), reinterpret_cast<float*>(prim + 8));
     const unsigned k = p[4];
     if (k >= at::kChipShapeCount)
         bof3::Fatal("EffectKind8E_DrawChip: +4 is %u, past the eight shapes at 0x%X - the original reads what "
                     "follows (docs/effect_4c.md section 6)",
-                    k, (unsigned)at::kChipShapes);
-    const unsigned char* const row = At(at::kChipShapes + 8 * k);
+                    k, at::kChipShapes.v);
+    const unsigned char* const row = At(::bof3::Img(at::kChipShapes.v) + 8 * k);
     FildAdd(SW(row + 0), prim + 8, prim + 0x14);
     FildAdd(SW(row + 2), prim + 0xC, prim + 0x18);
     FildAdd(SW(row + 4), prim + 8, prim + 0x20);
@@ -496,7 +496,7 @@ extern "C" void __cdecl EffectKind8E_InitChips(unsigned first, unsigned last, co
 // and drawn (EffectKind8E_DrawDot). al 1 when any was live, else 0.
 extern "C" unsigned char __cdecl EffectKind8E_MoveDots(void) {
     unsigned char any = 0;
-    unsigned char* r = At(at::kDots);
+    unsigned char* r = At(::bof3::Img(at::kDots.v));
     for (unsigned n = at::kDotCount; n != 0; --n, r += at::kDotStride) {
         if (r[0] == 0) continue;
         Fall(r + 0x14, r + 4);
@@ -528,7 +528,7 @@ extern "C" void __cdecl EffectKind8E_DrawDot(unsigned char* p) {
 
 // original 0x48B850: +0 = 0 in the 128 dots.
 extern "C" void __cdecl EffectKind8E_ClearDots(void) {
-    unsigned char* r = At(at::kDots);
+    unsigned char* r = At(::bof3::Img(at::kDots.v));
     for (unsigned n = at::kDotCount; n != 0; --n, r += at::kDotStride) r[0] = 0;
 }
 
@@ -543,7 +543,7 @@ extern "C" void __cdecl EffectKind8E_InitDots(unsigned first, unsigned last, con
         bof3::Fatal("EffectKind8E_InitDots: dots %u..%u, past the 128 at 0x92D380 - the original writes on past the "
                     "pool (docs/effect_4c.md section 6)",
                     (unsigned)f, (unsigned)l);
-    unsigned char* r = At(at::kDots + at::kDotStride * f);
+    unsigned char* r = At(::bof3::Img(at::kDots.v) + at::kDotStride * f);
     for (U n = l - f; n != 0; --n, r += at::kDotStride) {
         const U lo0 = static_cast<U>(lo[0]);
         SetUL(r + 0x14, Spread("EffectKind8E_InitDots", lo0, &hi[0], 8));
@@ -649,14 +649,14 @@ extern "C" void __cdecl EffectKind8F_Sequence(void) {
             if (a >= at::kStageCount)
                 bof3::Fatal("EffectKind8F_Sequence: the stage byte 0x%X is %u, past the five rows of 0x%X - the "
                             "original reads on (docs/effect_4c.md section 6)",
-                            (unsigned)Effect4c_Stage_addr, a, (unsigned)at::kStageCounts);
-            SH_CALL(EffectKind8F_SpawnShuffled)(At(at::kStageCounts + a)[0]);
+                            (unsigned)Effect4c_Stage_addr, a, at::kStageCounts.v);
+            SH_CALL(EffectKind8F_SpawnShuffled)(At(::bof3::Img(at::kStageCounts.v) + a)[0]);
             const unsigned b = Effect4c_Stage;
             if (b >= at::kStageCount)
                 bof3::Fatal("EffectKind8F_Sequence: the stage byte 0x%X is %u, past the five rows of 0x%X - the "
                             "original reads on (docs/effect_4c.md section 6)",
-                            (unsigned)Effect4c_Stage_addr, b, (unsigned)at::kStageWaits);
-            rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, At(at::kStageWaits + b)[0]);
+                            (unsigned)Effect4c_Stage_addr, b, at::kStageWaits.v);
+            rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, At(::bof3::Img(at::kStageWaits.v) + b)[0]);
         } else {
             rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, wait - 1);
         }
@@ -683,17 +683,17 @@ extern "C" void __cdecl EffectKind8F_SpawnShard(unsigned i) {
     if (k >= at::kShardRowCount)
         bof3::Fatal("EffectKind8F_SpawnShard: row %u, past the sixteen of 0x%X - the original reads what follows "
                     "(docs/effect_4c.md section 6)",
-                    k, (unsigned)at::kShardStarts);
+                    k, at::kShardStarts.v);
     r[0] = 1;
     r[1] = 0;
     r[2] = 0;
     r[3] = 0x20;
     SetWord(r + 4, 0x80);
-    SetUL(r + 8, static_cast<U>(SW(At(at::kShardStarts + 4 * k))) << 8);
-    SetUL(r + 0xC, static_cast<U>(SW(At(at::kShardStarts + 4 * k + 2))) << 8);
+    SetUL(r + 8, static_cast<U>(SW(At(::bof3::Img(at::kShardStarts.v) + 4 * k))) << 8);
+    SetUL(r + 0xC, static_cast<U>(SW(At(::bof3::Img(at::kShardStarts.v) + 4 * k + 2))) << 8);
     SetUL(r + 0x10, 0);
-    SetUL(r + 0x18, static_cast<U>(SW(At(at::kShardSpeeds + 4 * k))) << 5);
-    SetUL(r + 0x1C, static_cast<U>(SW(At(at::kShardSpeeds + 4 * k + 2))) << 5);
+    SetUL(r + 0x18, static_cast<U>(SW(At(::bof3::Img(at::kShardSpeeds.v) + 4 * k))) << 5);
+    SetUL(r + 0x1C, static_cast<U>(SW(At(::bof3::Img(at::kShardSpeeds.v) + 4 * k + 2))) << 5);
     SetUL(r + 0x20, 0);
 }
 
@@ -1033,8 +1033,8 @@ extern "C" void __cdecl EffectKind99_Spread(void) {
 extern "C" void __cdecl EffectKind99_DrawDisc(const long* point, long radius) {
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned i = 0; i < at::kFanCount; ++i) {
-        const long dz = Long(At(at::kFanDz + 4 * i));
-        const long dx = Long(At(at::kFanDx + 4 * i));
+        const long dz = Long(At(::bof3::Img(at::kFanDz.v) + 4 * i));
+        const long dx = Long(At(::bof3::Img(at::kFanDx.v) + 4 * i));
         SH_CALL(EffectKind99_DrawFan)(point, radius, i << 10, dx, dz);
     }
 }
@@ -1067,7 +1067,7 @@ extern "C" void __cdecl EffectKind99_DrawFan(const long* point, long radius, uns
         const U lz = static_cast<U>(point[1]) + static_cast<U>(dz);
         SH_CALL(MapView_LinkPrimAt)(lx, lz, 0, 0x38);
         unsigned char* const prim = Gfx_PacketNext;
-        SH_AT(RecordFn, at::kPolyF3)(prim);
+        SH_AT(RecordFn, at::kPolyF3.v)(prim);
         SH_CALL(Gpu_SetSemiTrans)(prim, 1);
         std::memcpy(prim + 8, centre, 12);
         std::memcpy(prim + 0x14, edge, 12);

@@ -196,7 +196,7 @@ U StreamEffect(const U*, U answer) {
 U Kind2Effect(const U*, U answer) {
     static const unsigned char kCounts[] = {0xB, 0xD, 0x10, 0x12, 0x15, 0x11, 0};
     const U n = ah::Noise();
-    if (n & 1) B(at::kCounter3) = kCounts[(n >> 8) % 7];
+    if (n & 1) B(::bof3::Img(at::kCounter3.v)) = kCounts[(n >> 8) % 7];
     if (n & 2) B(Field_Kind2Hold_addr) = static_cast<unsigned char>(n >> 16);
     return answer;
 }
@@ -251,8 +251,8 @@ const ah::Callee kCallees[] = {
     {W3D_OURS(Area135_Kind2ToObject0), 1, {kU16}, ah::Answer::kGarbage, 0, 0, {}, &Kind2Effect},
     {W3D_OURS(Area135_OpenMessage), 1, {kU8}, ah::Answer::kGarbage, 0, 0, {}, &MessageEffect},
     // engine callees nobody owns (raw)
-    {"Engine_46D710", kEngine46D710, kEngine46D710, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
-    {"Engine_46D770", kEngine46D770, kEngine46D770, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
+    {"Engine_46D710", kEngine46D710.v, kEngine46D710.v, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
+    {"Engine_46D770", kEngine46D770.v, kEngine46D770.v, 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
     // named, beyond the standard set
     {W3D_OURS(ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W3D_OURS(ScriptFlags_Clear40), 0, {}, ah::Answer::kGarbage, 0, 0},
@@ -328,7 +328,7 @@ void Disturb(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 9) {
     case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 0x20 : v); break;
-    case 1: B(at::kCounter3) = v; break;
+    case 1: B(::bof3::Img(at::kCounter3.v)) = v; break;
     case 2: ah::SetPointer(MoveScript_Object_addr, h & 0x10000 ? ah::Object(h >> 17) : ah::PartyOf(static_cast<unsigned char>(h >> 17))); break;
     case 3: B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(v % at::kObjectCount); break;
     case 4: B(AreaW3d_EffectSlot_addr) = static_cast<unsigned char>(v % at::kEffectCount); break;
@@ -367,7 +367,7 @@ void SeedTail() {
     case 0: case 1: case 0xB: case 0x14:
         Field_Request = static_cast<unsigned char>(on ? AH_PICK(0, 1, 3, 5) : 2);
         break;
-    case 6: SetWord(ah::Mem(at::kTailTimer), on ? 0 : AH_PICK(1, 2, 0x100, 0xFFFF)); break;
+    case 6: SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), on ? 0 : AH_PICK(1, 2, 0x100, 0xFFFF)); break;
     case 0x15: case 0x1F: B(Field_Kind2Hold_addr) = static_cast<unsigned char>(on ? 0 : AH_PICK(1, 0x80, 0xFF)); break;
     case 0x16: case 0x19:
         B(Input_Held_addr) = static_cast<unsigned char>(on ? B(Input_Held_addr) | 0x20 : B(Input_Held_addr) & ~0x20u);
@@ -375,15 +375,15 @@ void SeedTail() {
     case 0x18:
         B(Input_Pressed_addr) = static_cast<unsigned char>(on ? B(Input_Pressed_addr) | 0x20 : B(Input_Pressed_addr) & ~0x20u);
         break;
-    case 0x17: B(at::kCounter3) = static_cast<unsigned char>(on ? 0xB : AH_PICK(0xA, 0xC, 0x8B)); break;
-    case 0x1A: B(at::kCounter3) = static_cast<unsigned char>(on ? 0xD : AH_PICK(0xC, 0xE, 0x8D)); break;
+    case 0x17: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(on ? 0xB : AH_PICK(0xA, 0xC, 0x8B)); break;
+    case 0x1A: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(on ? 0xD : AH_PICK(0xC, 0xE, 0x8D)); break;
     case 0x1B:
-        B(at::kCounter3) = static_cast<unsigned char>(on ? 0x10 : AH_PICK(0xF, 0x11, 0x90));
+        B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(on ? 0x10 : AH_PICK(0xF, 0x11, 0x90));
         if (ah::Half()) B(AreaW0c_TailSub_addr) = 0xFF;
         break;
-    case 0x1C: B(at::kCounter3) = static_cast<unsigned char>(on ? 0x11 : AH_PICK(0x10, 0x12, 0x91)); break;
-    case 0x1D: B(at::kCounter3) = static_cast<unsigned char>(on ? 0x12 : AH_PICK(0x11, 0x13, 0x92)); break;
-    case 0x1E: B(at::kCounter3) = static_cast<unsigned char>(on ? 0x15 : AH_PICK(0x14, 0x16, 0x95)); break;
+    case 0x1C: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(on ? 0x11 : AH_PICK(0x10, 0x12, 0x91)); break;
+    case 0x1D: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(on ? 0x12 : AH_PICK(0x11, 0x13, 0x92)); break;
+    case 0x1E: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(on ? 0x15 : AH_PICK(0x14, 0x16, 0x95)); break;
     default: break;
     }
 }

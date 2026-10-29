@@ -46,9 +46,9 @@ const Callees kOriginals = {
     Pad_Read,
     Crt_fopen, Crt_fgets, Crt_atoi, Cast<int (__cdecl*)(const char*, const char*, void*, void*)>(Crt_sscanf), Crt_fclose,
     Cfg_SetKeyTable, Cfg_SetDefaultKeys,
-    Cast<int (__cdecl*)(char*, const char*, const char*, const char*)>(Crt_sprintf), Shell_ImportGetDriveType_addr,
+    Cast<int (__cdecl*)(char*, const char*, const char*, const char*)>(Crt_sprintf), ::bof3::Img(Shell_ImportGetDriveType_addr),
     Gte_InitGeom, Gte_SetGeomOffset, Gte_SetGeomScreen, DInput_Init,
-    reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(kSoundSetup)), Port_DroppedCall,
+    reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(::bof3::Code(kSoundSetup.v))), Port_DroppedCall,
     Gpu_SetDefDrawEnv, Gpu_SetDefDispEnv, Gfx_InitBufferBlock, Gfx_BeginFrame, Task_SetStackBase,
     Gpu_ClearOTagR, Gpu_AddPrim,
 };
@@ -94,7 +94,7 @@ using namespace shell;
 unsigned char g_cfg_own_table = 0;
 alignas(4) unsigned char g_cfg_table[0x80 + 8];
 extern "C" void __cdecl Shell_CfgLoadFrame(unsigned char* frame) {
-    void* const file = g.open(Str(kCfgName), Str(kModeRt));
+    void* const file = g.open(Str(::bof3::Img(kCfgName.v)), Str(::bof3::Img(kModeRt.v)));
     if (file == nullptr) {
         Cfg_Fullscreen = 1;
         Cfg_RenderMode = 1;
@@ -111,9 +111,9 @@ extern "C" void __cdecl Shell_CfgLoadFrame(unsigned char* frame) {
         else if (n == 1)
             Cfg_RenderMode = g.to_int(line);
         else if (!own)
-            g.scan_pair(line, Str(kPairFormat), frame + kCfgPairs + 2 * n, frame + kCfgPairs + 1 + 2 * n);
+            g.scan_pair(line, Str(::bof3::Img(kPairFormat.v)), frame + kCfgPairs + 2 * n, frame + kCfgPairs + 1 + 2 * n);
         else if (n - 2 < 0x40)   // DIV-0078: entry (n - 2) / 2 of 32; later lines ignored
-            g.scan_pair(line, Str(kPairFormat), g_cfg_table + 2 * (n - 2), g_cfg_table + 1 + 2 * (n - 2));
+            g.scan_pair(line, Str(::bof3::Img(kPairFormat.v)), g_cfg_table + 2 * (n - 2), g_cfg_table + 1 + 2 * (n - 2));
         ++n;
     }
     g.close(file);
@@ -148,7 +148,7 @@ extern "C" __attribute__((naked)) void __cdecl Cfg_Load(void) {
 extern "C" void __cdecl Cfg_SetDefaultKeys(void) {
     unsigned char rule[0x80];
     bof3x::input::DefaultKeyTable(rule, sizeof rule);
-    std::memcpy(At(Key_Table_addr), rule, sizeof rule);
+    std::memcpy(At(::bof3::Img(Key_Table_addr)), rule, sizeof rule);
 }
 
 // Key_TableDefault 0x66C648 written from the engine's rule at map time, so
@@ -162,7 +162,7 @@ void Shell_MapDefaultKeys() {
     const bool present = bof3::ExeFile_Present();
     if (present) {
         if (bof3::IsExeHost()) bof3::ExeFile_Read(Key_TableDefault_addr, theirs, sizeof theirs);
-        else std::memcpy(theirs, At(Key_TableDefault_addr), sizeof theirs);
+        else std::memcpy(theirs, At(::bof3::Img(Key_TableDefault_addr)), sizeof theirs);
         for (unsigned i = 0; i < sizeof rule; i += 4)
             if (std::memcmp(rule + i, theirs + i, 4) != 0)
                 bof3::Fatal("keys: the default key table's entry %u is key 0x%02X%02X bits 0x%02X%02X by the engine's "
@@ -170,7 +170,7 @@ void Shell_MapDefaultKeys() {
                             rule[i + 3], rule[i + 2], theirs[i + 1], theirs[i], theirs[i + 3], theirs[i + 2],
                             (unsigned)(Key_TableDefault_addr + i));
     }
-    std::memcpy(At(Key_TableDefault_addr), rule, sizeof rule);
+    std::memcpy(At(::bof3::Img(Key_TableDefault_addr)), rule, sizeof rule);
     bof3::Log("keys: Key_TableDefault 0x%06X written from the engine's rule (%u keys)%s", (unsigned)Key_TableDefault_addr,
               (unsigned)bof3x::input::DefaultKeys().size(),
               present ? ", equal to BOF3.exe's" : "; no BOF3.exe to compare it with");
@@ -204,7 +204,7 @@ extern "C" void __cdecl Input_Latch(void) {
 // left naming the drive. None: 0, the root left at L. The path is built in a
 // 0x50-byte buffer as the original's; WinMain's two names fit it.
 extern "C" int __cdecl Disc_Probe(const char* local_file, const char* disc_file) {
-    void* const local = g.open(local_file, Str(kModeRb));
+    void* const local = g.open(local_file, Str(::bof3::Img(kModeRb.v)));
     if (local != nullptr) {
         g.close(local);
         File_CdRootBuf[0] = 0;
@@ -215,9 +215,9 @@ extern "C" int __cdecl Disc_Probe(const char* local_file, const char* disc_file)
     char path[0x50];
     for (U i = 0; i < 10; ++i) {
         File_CdRootBuf[0] = static_cast<unsigned char>('C' + i);
-        if (drive_type(Str(File_CdRootBuf_addr)) != kDriveCdrom) continue;
-        g.format(path, Str(kRootFormat), Str(File_CdRootBuf_addr), disc_file);
-        void* const disc = g.open(path, Str(kModeRb));
+        if (drive_type(Str(::bof3::Img(File_CdRootBuf_addr))) != kDriveCdrom) continue;
+        g.format(path, Str(::bof3::Img(kRootFormat.v)), Str(::bof3::Img(File_CdRootBuf_addr)), disc_file);
+        void* const disc = g.open(path, Str(::bof3::Img(kModeRb.v)));
         if (disc != nullptr) {
             g.close(disc);
             return 1;
@@ -234,8 +234,8 @@ extern "C" void* __cdecl Shell_GameInitBody(void) {
     g.dinput_init(Game_HInstance, Game_Hwnd);
     g.sound_setup(Game_Hwnd);   // read again: DInput_Init may have changed it
     g.dropped_call(0);
-    unsigned char* const block0 = At(kBlocks);
-    unsigned char* const block1 = At(kBlocks + kBlockBytes);
+    unsigned char* const block0 = At(::bof3::Img(kBlocks));
+    unsigned char* const block1 = At(::bof3::Img(kBlocks) + kBlockBytes);
     g.set_def_draw_env(block0 + kBlockDrawEnv, 0, 0, 0x140, 0xF0);
     g.set_def_disp_env(block0, 0, 0xF0, 0x140, 0xF0);
     g.set_def_draw_env(block1 + kBlockDrawEnv, 0, 0xF0, 0x140, 0xF0);
@@ -280,10 +280,10 @@ extern "C" void __cdecl Gfx_InitBufferBlock(unsigned char* block) {
 // read afresh each pass, after the call before.
 extern "C" void __cdecl Gfx_LinkOTags(void) {
     for (U i = 0; i < kOtSlots; ++i) {
-        const U link = Long(kGfxOtPointers + 4 * i);
+        const U link = Long(::bof3::Img(kGfxOtPointers.v) + 4 * i);
         const U buffer = Gfx_BufferIndex;
         const U block = Addr(Gfx_CurrentEnv);
-        g.add_prim(Longs(block + kBlockOt + 4 * i), Longs(Gfx_OtHeads_addr + (i + buffer * 8) * 4), Longs(link));
+        g.add_prim(Longs(block + kBlockOt + 4 * i), Longs(::bof3::Img(Gfx_OtHeads_addr) + (i + buffer * 8) * 4), Longs(link));
     }
 }
 

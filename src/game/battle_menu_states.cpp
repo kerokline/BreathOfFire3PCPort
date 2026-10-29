@@ -42,7 +42,7 @@ template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(s
 
 const Callees kOriginals = {
     Battle_DefaultTarget,
-    Fn<unsigned char (__cdecl*)(unsigned)>(kPrevTarget),
+    Fn<unsigned char (__cdecl*)(unsigned)>(::bof3::Code(kPrevTarget.v)),
     Battle_WrapIndex,
     BattleBanner_SetMessage,
     Input_AutoRepeat,
@@ -53,7 +53,7 @@ const Callees kOriginals = {
     ItemMenu_FreeWindows,
     Item_HelpMessage,
     Item_CanUse,
-    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(kItemFlags),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(::bof3::Code(kItemFlags.v)),
     Battle_ReturnTrue,
 };
 Callees g = kOriginals;
@@ -75,9 +75,9 @@ unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
 // wherever the original re-reads it.
 // 0x939FA0 points at the menu member's +0x124, its action record
 // (records::ActionRecord; BattleInput_NextMember stores it, battle_phases.cpp).
-unsigned char* Command() { return PtrAt(at::kCommandRecord); }
+unsigned char* Command() { return PtrAt(::bof3::Img(at::kCommandRecord.v)); }
 unsigned char* Acting() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor); }
-unsigned char* List() { return At(Window16_addr); }
+unsigned char* List() { return At(::bof3::Img(Window16_addr)); }
 // Entry i of a dispatch table in .data, read at the dispatch: no bound, as
 // the original has it - an index past the table reads the next one's.
 Handler Entry(std::uint32_t table, unsigned i) {
@@ -89,7 +89,7 @@ Handler Entry(std::uint32_t table, unsigned i) {
 unsigned ListItem() {
     const unsigned category = List()[0xA];
     const unsigned row = List()[0xC];
-    return PtrAt(at::kInventoryIds + 4 * category)[row];
+    return PtrAt(::bof3::Img(at::kInventoryIds.v) + 4 * category)[row];
 }
 // The list's item's flag byte: 0x591810(category, item).
 unsigned char ListItemFlags() {
@@ -135,7 +135,7 @@ void StepEnemyTarget(unsigned repeat) {
 // the command's state byte 0x904AA3 through BattleAttackCmd_States 0x64E44C -
 // 0x447FE0, 0x448020, 0x4480E0, 0x448140 (the cancel, never reached on the
 // route and left Capcom's). The index is not checked, as the original has it.
-extern "C" void __cdecl BattleAttackCmd_Dispatch(void) { Entry(BattleAttackCmd_States_addr, BattleE4_Step3)(); }
+extern "C" void __cdecl BattleAttackCmd_Dispatch(void) { Entry(::bof3::Img(BattleAttackCmd_States_addr), BattleE4_Step3)(); }
 
 // original 0x447FE0: state 0. The target is Battle_DefaultTarget(3) - the
 // first enemy not out - the banner is message 2 (BattleBanner_SetMessage(2,
@@ -147,7 +147,7 @@ extern "C" void __cdecl BattleAttackCmd_Begin(void) {
     g.banner_message(2, 0);
     const unsigned char state = static_cast<unsigned char>(BattleE4_Step3 + 1);
     BattleE4_Picking = 1;
-    SetWord(At(at::kRepeatLatch), 0);
+    SetWord(At(::bof3::Img(at::kRepeatLatch.v)), 0);
     BattleE4_Step3 = state;
 }
 
@@ -198,12 +198,12 @@ extern "C" void __cdecl BattleAttackCmd_Confirm(void) {
 // Capcom's), 3 the target kind (0x448630), 4 the target (0x4486C0), 5
 // 0x448B80, 6 0x448C80, 7 0x4493E0, 8 0x449480, 9 0x4498F0 (the last five
 // unread, not this group's). No bound, as the original has it.
-extern "C" void __cdecl BattleItemCmd_Dispatch(void) { Entry(BattleItemCmd_States_addr, BattleE4_Step3)(); }
+extern "C" void __cdecl BattleItemCmd_Dispatch(void) { Entry(::bof3::Img(BattleItemCmd_States_addr), BattleE4_Step3)(); }
 
 // original 0x448190: state 0, by the sub-state 0x904AA4 (read as a dword, its
 // low byte) through BattleItemCmd_OpenSteps 0x64E484 - 0x4481B0, 0x4481E0.
 extern "C" void __cdecl BattleItemCmd_OpenDispatch(void) {
-    Entry(BattleItemCmd_OpenSteps_addr, static_cast<std::uint32_t>(Long(At(BattleE4_Step4_addr))) & 0xFF)();
+    Entry(::bof3::Img(BattleItemCmd_OpenSteps_addr), static_cast<std::uint32_t>(Long(At(::bof3::Img(BattleE4_Step4_addr)))) & 0xFF)();
 }
 
 // original 0x4481B0: the prompt. System message 0x4000 (Msg_SystemPtr: bank 1,
@@ -263,7 +263,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     hand_window->in_use = 1;
     hand_window->x = static_cast<unsigned>(Long(list + 4)) + 7;
     const unsigned top_row = list[0xB];
-    auto* const member_rec = rv::As<records::PartyMember>(At(ObjTrio_addr + actor * at::kMemberSize));
+    auto* const member_rec = rv::As<records::PartyMember>(At(::bof3::Img(ObjTrio_addr) + actor * at::kMemberSize));
     member_rec->flags_130 = static_cast<std::int32_t>(member_rec->flags_130) & 0xBFFF;
     const unsigned cursor_row = list[0xC];
     const unsigned pressed = Input_Pressed & Sigma(0xF00C);
@@ -337,14 +337,14 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     const unsigned item = ListItem();
     const unsigned message = g.item_price(category, item);
     const unsigned char* const help = g.system_ptr(message);
-    SetLong(At(at::kQueue + 4 + entry), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(help)));
+    SetLong(At(::bof3::Img(at::kQueue.v) + 4 + entry), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(help)));
     if (Word(list + 0x12) != 0) return;
 
     if (up && before == 0) {
         g.sound(0x100);
         const std::uint32_t x = static_cast<std::uint32_t>(Long(list + 4)) + 0x20;
         const unsigned y = list_window->y - 0x16u;
-        unsigned char* const above = At(Window21_addr);
+        unsigned char* const above = At(::bof3::Img(Window21_addr));
         auto* const above_window = rv::As<records::WindowRecord>(above);
         above_window->handler = 8;
         above_window->kind = 5;
@@ -365,9 +365,9 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
         unsigned char* const acting = Acting();
         list_window->state = 1;
         hand_window->in_use = 0;
-        At(at::kQueue + 1 + entry)[0] = 1;
-        Byte(at::kSavedList + 1) = top;
-        Byte(at::kSavedList + 2) = row;
+        At(::bof3::Img(at::kQueue.v) + 1 + entry)[0] = 1;
+        Byte(::bof3::Img(at::kSavedList.v) + 1) = top;
+        Byte(::bof3::Img(at::kSavedList.v) + 2) = row;
         acting[0x125] = 0;
         g.sound(0x106);
         BattleE4_Step3 = static_cast<unsigned char>(BattleE4_Step3 + 1);
@@ -387,8 +387,8 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     }
     const unsigned char page = list[0xA], top = list[0xB], row = list[0xC];
     BattleMisc_PartyPages = page;
-    Byte(at::kSavedList + 1) = top;
-    Byte(at::kSavedList + 2) = row;
+    Byte(::bof3::Img(at::kSavedList.v) + 1) = top;
+    Byte(::bof3::Img(at::kSavedList.v) + 2) = row;
     g.sound(0x103);
     list_window->state = 1;
     hand_window->in_use = 0;
@@ -425,7 +425,7 @@ extern "C" void __cdecl BattleItemCmd_TargetKind(void) {
 // (an enemy), 0x4488C0 (a member), 0x448A70 (commit), 0x448B40 (back to the
 // list; unread, not this group's).
 extern "C" void __cdecl BattleItemCmd_TargetDispatch(void) {
-    Entry(BattleItemCmd_TargetSteps_addr, static_cast<std::uint32_t>(Long(At(BattleE4_Step4_addr))) & 0xFF)();
+    Entry(::bof3::Img(BattleItemCmd_TargetSteps_addr), static_cast<std::uint32_t>(Long(At(::bof3::Img(BattleE4_Step4_addr)))) & 0xFF)();
 }
 
 // original 0x4486E0: the target pick begun. Flag bit 0x20: the first enemy not
@@ -439,7 +439,7 @@ extern "C" void __cdecl BattleItemCmd_TargetBegin(void) {
         const unsigned char target = g.default_target(3);
         Command()[0] = target;
         BattleE4_Step4 = 1;
-        SetWord(At(at::kRepeatLatch), 0);
+        SetWord(At(::bof3::Img(at::kRepeatLatch.v)), 0);
         BattleE4_Picking = 1;
         return;
     }
@@ -450,7 +450,7 @@ extern "C" void __cdecl BattleItemCmd_TargetBegin(void) {
         Command()[0] = target;
     }
     BattleE4_Step4 = 2;
-    SetWord(At(at::kRepeatLatch), 0);
+    SetWord(At(::bof3::Img(at::kRepeatLatch.v)), 0);
     BattleE4_Picking = 1;
 }
 
@@ -511,7 +511,7 @@ extern "C" void __cdecl BattleItemCmd_PickMember(void) {
         g.sound(0x101);
         return;
     }
-    const auto party_high = [] { return static_cast<long>(static_cast<std::uint32_t>(Long(At(at::kPartyCount))) & 0xFF) - 1; };
+    const auto party_high = [] { return static_cast<long>(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kPartyCount.v)))) & 0xFF) - 1; };
     if (repeat & 0x2000) {
         if (g.return_true() != 0) {
             const long high = party_high();
@@ -563,18 +563,18 @@ extern "C" void __cdecl BattleItemCmd_Commit(void) {
     command = Command();
     const unsigned char row = List()[0xC];
     BattleActorCopies_EntryCount = chosen;
-    At(at::kQueue + 1 + LastQueueEntry())[0] = 1;
+    At(::bof3::Img(at::kQueue.v) + 1 + LastQueueEntry())[0] = 1;
     command[0xA] = row;
     const unsigned index = static_cast<std::uint32_t>(Long(List() + 0xC)) & 0xFF;
     const unsigned category = List()[0xA];
-    unsigned char* const count = PtrAt(at::kInventoryCounts + 4 * category) + index;
+    unsigned char* const count = PtrAt(::bof3::Img(at::kInventoryCounts.v) + 4 * category) + index;
     if (*count > 1) {
         *count = static_cast<unsigned char>(*count - 1);
     } else {
-        PtrAt(at::kInventoryIds + 4 * category)[index] = 0;
+        PtrAt(::bof3::Img(at::kInventoryIds.v) + 4 * category)[index] = 0;
         const unsigned index2 = static_cast<std::uint32_t>(Long(List() + 0xC)) & 0xFF;
         const unsigned category2 = List()[0xA];
-        PtrAt(at::kInventoryCounts + 4 * category2)[index2] = 0;
+        PtrAt(::bof3::Img(at::kInventoryCounts.v) + 4 * category2)[index2] = 0;
     }
     g.free_windows();
     BattleE4_Step2 = 0;

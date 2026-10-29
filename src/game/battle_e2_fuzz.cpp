@@ -232,17 +232,17 @@ const bh::Callee kCallees[] = {
      &ActorInEffect},
     // the standard lists it whole; every caller here pushes a register whose
     // upper bytes are its own (0x452DD0 reads the low byte, its disassembly)
-    {"0x452DD0", at::kActorMayAct, at::kActorMayAct, 1, {kU8}, A::kFlag, 0, 0},
+    {"0x452DD0", at::kActorMayAct.v, at::kActorMayAct.v, 1, {kU8}, A::kFlag, 0, 0},
     // the actor word likewise: al loaded over a pointer's upper bytes
     {"Battle_SetDamagePopup", bof3::addr::Battle_SetDamagePopup, KeyOf(&::Battle_SetDamagePopup), 2, {kU16, kU8},
      A::kGarbage, 0, 0},
     // other groups' (battle_e2_callees.h), raw until they merge
-    {"0x442310", at::kMemberRecalc, at::kMemberRecalc, 0, {0x905D98}, A::kPhase, 0, 0},   // logs Field_State
-    {"0x453300", at::kMemberStatusSet, at::kMemberStatusSet, 1, {kU8}, A::kGarbage, 0, 0},
-    {"0x446770", at::kTurnVelocity, at::kTurnVelocity, 1, {kAll}, A::kGarbage, 0, 0, {}, &TurnEffect},
-    {"0x437450", at::kPlayCue, at::kPlayCue, 1, {kU16}, A::kGarbage, 0, 0},
-    {"0x4376F0", at::kEnemyTaskChance, at::kEnemyTaskChance, 0, {}, A::kPhase, 0, 0},
-    {"0x4376A0", at::kEnemyOpEnd, at::kEnemyOpEnd, 0, {}, A::kPhase, 0, 0},
+    {"0x442310", at::kMemberRecalc.v, at::kMemberRecalc.v, 0, {0x905D98}, A::kPhase, 0, 0},   // logs Field_State
+    {"0x453300", at::kMemberStatusSet.v, at::kMemberStatusSet.v, 1, {kU8}, A::kGarbage, 0, 0},
+    {"0x446770", at::kTurnVelocity.v, at::kTurnVelocity.v, 1, {kAll}, A::kGarbage, 0, 0, {}, &TurnEffect},
+    {"0x437450", at::kPlayCue.v, at::kPlayCue.v, 1, {kU16}, A::kGarbage, 0, 0},
+    {"0x4376F0", at::kEnemyTaskChance.v, at::kEnemyTaskChance.v, 0, {}, A::kPhase, 0, 0},
+    {"0x4376A0", at::kEnemyOpEnd.v, at::kEnemyOpEnd.v, 0, {}, A::kPhase, 0, 0},
     // the group's own, called directly
     {"BattleFx_NextStatusIcon", 0x434870, KeyOf(&::BattleFx_NextStatusIcon), 0, {}, A::kByte, 0xFF, 0x0F},
     {"BattleFx_PlaceOverOwner", 0x434730, KeyOf(&::BattleFx_PlaceOverOwner), 0, {}, A::kPhase, 0, 0},
@@ -262,7 +262,7 @@ const bh::Region kRegions[] = {
     {BattleE2_AnimSet_addr, 4}, // the pose pool pointer 0x9039D8
     {BattleE2_KeptAp_addr, 0xC}, // the kept cells 0x675ECC..0x675ED7
     {Cond_Flags_addr + 0xd0, 4}, // the formation 0x904060
-    {at::kMemberPositions, 0x18},   // the members' spots 0x7E06E0
+    {at::kMemberPositions.v, 0x18},   // the members' spots 0x7E06E0
 };
 
 // ===========================================================================
@@ -275,7 +275,7 @@ unsigned char Byte(std::initializer_list<U> often) {
     return static_cast<unsigned char>(v[bh::Next() % often.size()]);
 }
 unsigned char* Owner() { return bh::Pointer(BattleE2_Owner_addr); }
-unsigned char* Backup(unsigned i) { return Mem(at::kBackup + (i % 3) * at::kPartyStride); }
+unsigned char* Backup(unsigned i) { return Mem(::bof3::Img(at::kBackup.v) + (i % 3) * at::kPartyStride); }
 unsigned char* Enemy() { return bh::Pointer(BattleE3_CurrentEnemy_addr); }
 
 // The formations whose weights (both tables) are all non-zero and sum below
@@ -286,8 +286,8 @@ unsigned g_good_n = 0;
 void FindFormations() {
     g_good_n = 0;
     for (unsigned f = 0; f < 32; ++f) {
-        const unsigned char* const w3 = Mem(at::kFormationWeights3 + 3 * f);
-        const unsigned char* const w2 = Mem(at::kFormationWeights2 + 2 * f);
+        const unsigned char* const w3 = Mem(::bof3::Img(at::kFormationWeights3.v) + 3 * f);
+        const unsigned char* const w2 = Mem(::bof3::Img(at::kFormationWeights2.v) + 2 * f);
         if (w3[0] == 0 || w3[1] == 0 || w3[2] == 0 || w2[0] == 0 || w2[1] == 0) continue;
         if (w3[0] + w3[1] + w3[2] >= 0x100 || w2[0] + w2[1] >= 0x100) continue;
         g_good[g_good_n++] = f;
@@ -303,7 +303,7 @@ unsigned g_ids_n[4];
 void FindAbilities() {
     for (unsigned& n : g_ids_n) n = 0;
     for (unsigned id = 0; id < 0x400; ++id) {
-        const unsigned char a = Mem(at::kAbilities + id * 24)[0];
+        const unsigned char a = Mem(::bof3::Img(at::kAbilities.v) + id * 24)[0];
         const unsigned c = (a & 0x10) != 0 ? 0 : (a & 0x40) == 0 ? 1 : (a & 0x20) != 0 ? 2 : 3;
         g_ids[c][g_ids_n[c]++] = static_cast<unsigned short>(id);
     }
@@ -352,7 +352,7 @@ void SeedRestore() {
         b[5] = static_cast<unsigned char>(bh::Often() ? i : bh::Next() % 3);
     }
     Mem(BattleE2_SavedCount_addr)[0] = static_cast<unsigned char>(bh::Next() % 5);
-    Mem(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(bh::Half() ? Mem(at::kRoundFlags + 1)[0] | 0x80 : Mem(at::kRoundFlags + 1)[0] & 0x7F);
+    Mem(::bof3::Img(at::kRoundFlags.v) + 1)[0] = static_cast<unsigned char>(bh::Half() ? Mem(::bof3::Img(at::kRoundFlags.v) + 1)[0] | 0x80 : Mem(::bof3::Img(at::kRoundFlags.v) + 1)[0] & 0x7F);
     SeedOwner(true);
     Sprite_Current[5] = static_cast<unsigned char>(Sprite_Current[5] % 3);
 }
@@ -372,9 +372,9 @@ void SeedMarkers() {
     s[0xA] = static_cast<unsigned char>(bh::Next() % 6);
     Mem(BattleE5_GeneCount_addr)[0] = Byte({0, 1, 2, 3});
     for (unsigned i = 0; i < 3; ++i)
-        Mem(at::kPickList + i)[0] = static_cast<unsigned char>(bh::Half() ? s[0xB] : bh::Next() % 18);
+        Mem(::bof3::Img(at::kPickList.v) + i)[0] = static_cast<unsigned char>(bh::Half() ? s[0xB] : bh::Next() % 18);
     Mem(BattleE5_GeneRow_addr)[0] = Byte({0xFF, 0xFF, 0, 1, 4});
-    for (U g : {at::kGrid18, at::kGrid19})
+    for (const U g : {::bof3::Img(at::kGrid18.v), ::bof3::Img(at::kGrid19.v)})
         for (unsigned i = 0; i < 0x48; ++i)
             if (bh::Next() % 4 == 0) Mem(g + i)[0] = 0xFF;
     s[2] = static_cast<unsigned char>(s[2] % 3);
@@ -422,10 +422,10 @@ void Seed(unsigned k) {
     // --- the watch and its helpers
     case 0x433650:
         SeedOwner(false);
-        Mem(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(bh::Half() ? Mem(at::kRoundFlags + 1)[0] | 4 : Mem(at::kRoundFlags + 1)[0] & 0xFB);
-        if (bh::Half()) Mem(at::kActor)[0] = Owner()[5];
-        Mem(at::kActKind)[0] = Byte({4, 4, 1});
-        SetWord(Mem(at::kMagicId), bh::Often() ? BH_PICK(0x97, 0xE1, 0x96, 0xE0) : bh::Next());
+        Mem(::bof3::Img(at::kRoundFlags.v) + 1)[0] = static_cast<unsigned char>(bh::Half() ? Mem(::bof3::Img(at::kRoundFlags.v) + 1)[0] | 4 : Mem(::bof3::Img(at::kRoundFlags.v) + 1)[0] & 0xFB);
+        if (bh::Half()) Mem(::bof3::Img(at::kActor.v))[0] = Owner()[5];
+        Mem(::bof3::Img(at::kActKind.v))[0] = Byte({4, 4, 1});
+        SetWord(Mem(::bof3::Img(at::kMagicId.v)), bh::Often() ? BH_PICK(0x97, 0xE1, 0x96, 0xE0) : bh::Next());
         s[0xA] = Byte({0, 0, 1, 2});
         s[0xB] = static_cast<unsigned char>(bh::Next() % 16);
         break;
@@ -478,9 +478,9 @@ void Seed(unsigned k) {
             x[0x92] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? x[0x92] | 0x20 : x[0x92] & 0xDF);
             x[0x115] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? x[0x115] | 0x40 : x[0x115] & 0xBF);
         }
-        Mem(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(bh::Half() ? Mem(at::kRoundFlags + 1)[0] | 0x40 : Mem(at::kRoundFlags + 1)[0] & 0xBF);
+        Mem(::bof3::Img(at::kRoundFlags.v) + 1)[0] = static_cast<unsigned char>(bh::Half() ? Mem(::bof3::Img(at::kRoundFlags.v) + 1)[0] | 0x40 : Mem(::bof3::Img(at::kRoundFlags.v) + 1)[0] & 0xBF);
         if (bh::Half()) Mem(EventBattle_Id_addr)[0] = 0;
-        Mem(at::kTarget)[0] = Byte({0xFF, 0xFF, 3, 0});
+        Mem(::bof3::Img(at::kTarget.v))[0] = Byte({0xFF, 0xFF, 3, 0});
         break;
     }
     case 0x435C40:
@@ -491,7 +491,7 @@ void Seed(unsigned k) {
         g_in = 3 + bh::Next() % 8;
         break;
     case 0x435CF0:
-        Mem(at::kActKind)[0] = Byte({1, 1, 4, 4, 4, 0, 2, 3, 5});
+        Mem(::bof3::Img(at::kActKind.v))[0] = Byte({1, 1, 4, 4, 4, 0, 2, 3, 5});
         for (unsigned i = 0; i < 8; ++i) rv::Store<unsigned>(rv::As<records::BattleEnemy>(bh::EnemyAt(i))->ability, bh::Often() ? AbilityId() : bh::Next());
         break;
     case 0x435E10:
@@ -507,9 +507,9 @@ void Seed(unsigned k) {
         Mem(Battle_EnemiesLeft_addr)[0] = Byte({1, 1, 2, 3, 0});
         break;
     case 0x435EF0:
-        SetLong(Mem(at::kPartyCount), static_cast<std::int32_t>((bh::Next() & 0xFFFFFF00u) | Byte({3, 3, 2, 2, 1, 0, 4})));
+        SetLong(Mem(::bof3::Img(at::kPartyCount.v)), static_cast<std::int32_t>((bh::Next() & 0xFFFFFF00u) | Byte({3, 3, 2, 2, 1, 0, 4})));
         SetLong(Mem(Cond_Flags_addr + 0xd0), static_cast<std::int32_t>((bh::Next() & 0xFFFFFF00u) | g_good[bh::Next() % g_good_n]));
-        g_in = bh::Next() % (Mem(at::kPartyCount)[0] == 2 ? 2 : 3);
+        g_in = bh::Next() % (Mem(::bof3::Img(at::kPartyCount.v))[0] == 2 ? 2 : 3);
         break;
     default:
         SeedOp(base);
@@ -539,11 +539,11 @@ void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 6) {
     case 0: Owner()[5] = b; break;
-    case 1: Mem(at::kPartyCount)[0] = static_cast<unsigned char>(b % 4); break;
+    case 1: Mem(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(b % 4); break;
     case 2: Mem(Window21_addr)[0] = b; break;
     case 3: Mem(BattleE5_GeneRow_addr)[0] = h & 0x1000000 ? 0xFF : b; break;
     case 4: Mem(Battle_EnemiesLeft_addr)[0] = b; break;
-    default: Mem(at::kRoundFlags + 1)[0] = b; break;
+    default: Mem(::bof3::Img(at::kRoundFlags.v) + 1)[0] = b; break;
     }
 }
 

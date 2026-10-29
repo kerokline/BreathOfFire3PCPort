@@ -116,7 +116,7 @@ void DefineRegions() {
     g_regions[rChoice] = {0x6BC880, 0x40};
     g_regions[rMusicBuf] = {0x7DE3C0, 0xC};
     g_regions[rDatNames] = {Dat_FileNames_addr, 0x40};
-    g_regions[rStreamTables] = {at::kStreamTables, 0x50};
+    g_regions[rStreamTables] = {at::kStreamTables.v, 0x50};
     g_regions[rPacketNext] = {Gfx_PacketNext_addr, 4};
     g_regions[rPrim] = {Addr(g_prim), kPrimBytes};
     g_regions[rHeap] = {Addr(g_heap), kHeapBytes};
@@ -166,7 +166,7 @@ void DisturbFlow() {
     case 0: PutByte(SaveMenu_FlowState_addr, h >> 8); break;
     case 1: PutByte(FieldS_Answer_addr, (h >> 8) & 1); break;
     case 2: PutLong(Rest2c_Slot_addr, (h >> 8) % 20); break;
-    default: PutLong(at::kSlotTop, (h >> 8) % 20); break;
+    default: PutLong(::bof3::Img(at::kSlotTop.v), (h >> 8) % 20); break;
     }
 }
 // Gfx_PacketNext moved within g_prim, as a commit moves it.
@@ -180,7 +180,7 @@ int __cdecl StubFileOpen(const char* path, int a, int b) {
     // The name is compared by its first bytes, which the sprintf stand-in wrote.
     U head = 0;
     std::memcpy(&head, path, 4);
-    Record(0x01, head, static_cast<U>(a), static_cast<U>(b), Addr(path) == at::kPath);
+    Record(0x01, head, static_cast<U>(a), static_cast<U>(b), Addr(path) == ::bof3::Img(at::kPath.v));
     const U h = Hash(0x0E1);
     return (h % 5 == 0) ? -1 : static_cast<int>(h % 16);
 }
@@ -213,7 +213,7 @@ int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
     va_start(ap, fmt);
     const U arg = va_arg(ap, U);
     va_end(ap);
-    Record(0x08, Addr(dst) == at::kPath ? 1 : 0, Addr(fmt), arg);
+    Record(0x08, Addr(dst) == ::bof3::Img(at::kPath.v) ? 1 : 0, Addr(fmt), arg);
     // Something short and deterministic for File_Open to see.
     const U h = Hash(0x5F1) ^ arg;
     for (int i = 0; i < 8; ++i) dst[i] = static_cast<char>('A' + ((h >> (i * 3)) & 15));
@@ -437,9 +437,9 @@ void __cdecl StubDrawFrame() {
 void __cdecl StubDrawRows(unsigned glow) {
     Record(0x3D, glow);
     const U h = Hash(0x3DA);
-    if (h % 4 == 0) PutByte(at::kCounter, h >> 8);
+    if (h % 4 == 0) PutByte(::bof3::Img(at::kCounter.v), h >> 8);
     if (h % 4 == 1) PutByte(SaveMenu_Cursor_addr, h >> 8);
-    if (h % 4 == 2) PutByte(at::kRowBright + (h >> 8) % 3, h >> 16);
+    if (h % 4 == 2) PutByte(::bof3::Img(at::kRowBright.v) + (h >> 8) % 3, h >> 16);
 }
 void __cdecl StubDrawRow(int y, unsigned row, unsigned glow) { Record(0x3E, static_cast<U>(y), row, glow); }
 void __cdecl StubDrawPiece(int x, int y, unsigned index, unsigned slot) {
@@ -581,8 +581,8 @@ const void* StubFor(U target) {
     case 0x5B9660: return F(&StubMalloc);
     case 0x5B9577: return F(&StubFree);
     case 0x5B9380: return F(&StubSprintf);
-    case kFindFirst: return F(&StubFindFirst);
-    case kFindNext: return F(&StubFindNext);
+    case kFindFirst.v: return F(&StubFindFirst);
+    case kFindNext.v: return F(&StubFindNext);
     case 0x5B93D2: return F(&StubRand);
     case 0x587CD0: return F(&StubLoadBank);
     case 0x587740: return F(&StubPlayEffect);
@@ -590,26 +590,26 @@ const void* StubFor(U target) {
     case 0x5A6CC0: return F(&StubMusicStart);
     case 0x5A6FB0: return F(&StubMusicVolume);
     case 0x5A7020: return F(&StubMusicPlaying);
-    case kVoicePlay: return F(&StubVoicePlay);
-    case kVoiceIsPlaying: return F(&StubVoicePlaying);
+    case kVoicePlay.v: return F(&StubVoicePlay);
+    case kVoiceIsPlaying.v: return F(&StubVoicePlaying);
     case 0x590F60: return F(&StubClearStatus);
-    case kRecalcStats: return F(&StubRecalc);
+    case kRecalcStats.v: return F(&StubRecalc);
     case 0x57C140: return F(&StubFlagsTest);
     case 0x531BB0: return F(&StubPartyCount);
-    case kItemPrice: return F(&StubItemPrice);
-    case kShopFlag: return F(&StubShopFlag);
-    case kInventoryRemove: return F(&StubInvRemove);
-    case kInventoryAdd: return F(&StubInvAdd);
-    case kWindowFrame: return F(&StubWindowFrame);
-    case kWindowBox: return F(&StubWindowBox);
-    case kWindowBack: return F(&StubWindowBack);
-    case kWindowFrame5: return F(&StubWindowFrame5);
-    case kSlotDraw: return F(&StubSlotDraw);
-    case kSlotCursor: return F(&StubSlotCursor);
-    case kMenuYesNo: return F(&StubYesNo);
+    case kItemPrice.v: return F(&StubItemPrice);
+    case kShopFlag.v: return F(&StubShopFlag);
+    case kInventoryRemove.v: return F(&StubInvRemove);
+    case kInventoryAdd.v: return F(&StubInvAdd);
+    case kWindowFrame.v: return F(&StubWindowFrame);
+    case kWindowBox.v: return F(&StubWindowBox);
+    case kWindowBack.v: return F(&StubWindowBack);
+    case kWindowFrame5.v: return F(&StubWindowFrame5);
+    case kSlotDraw.v: return F(&StubSlotDraw);
+    case kSlotCursor.v: return F(&StubSlotCursor);
+    case kMenuYesNo.v: return F(&StubYesNo);
     case 0x497740: return F(&StubMsgPtr);
     case 0x516B30: return F(&StubTextDraw);
-    case kDrawHand: return F(&StubDrawHand);
+    case kDrawHand.v: return F(&StubDrawHand);
     case 0x461EB0: return F(&StubAutoRepeat);
     case 0x5A7740: return F(&StubSetTile);
     case 0x5A7710: return F(&StubSetSprt);
@@ -628,7 +628,7 @@ const void* StubFor(U target) {
     case 0x536AC0: return F(&StubPartySelect);
     case 0x454810: return F(&StubLoadDone);
     case 0x5A9949: return F(&StubTaskSleep);
-    case kTaskRestart: return F(&StubTaskRestart);
+    case kTaskRestart.v: return F(&StubTaskRestart);
     case 0x4548B0: return F(&StubListFiles);
     case 0x454820: return F(&StubReadFile);
     case 0x588DC0: return F(&StubReadSummaries);
@@ -652,27 +652,27 @@ const Call kCalls[] = {
     // kReadFile
     {0xA, 0x5A7380}, {0x23, 0x5A74F0}, {0x33, 0x5A7470}, {0x39, 0x5A7510}, {0, 0},
     // kListFiles
-    {0x28, kFindFirst}, {0x86, kFindNext}, {0, 0},
+    {0x28, kFindFirst.v}, {0x86, kFindNext.v}, {0, 0},
     // kClutRow
     {0, 0},
     // kRestore
-    {0x27, 0x590F60}, {0x3C, kRecalcStats}, {0x5D, 0x590F60}, {0x7D, 0x57C140}, {0x93, 0x57C140}, {0, 0},
+    {0x27, 0x590F60}, {0x3C, kRecalcStats.v}, {0x5D, 0x590F60}, {0x7D, 0x57C140}, {0x93, 0x57C140}, {0, 0},
     // kChoices
-    {0x20, kWindowFrame}, {0x2B, kWindowBox}, {0x43, 0x497740}, {0x59, 0x516B30}, {0x7B, kDrawHand}, {0, 0},
+    {0x20, kWindowFrame.v}, {0x2B, kWindowBox.v}, {0x43, 0x497740}, {0x59, 0x516B30}, {0x7B, kDrawHand.v}, {0, 0},
     // kBlack
     {0x9, 0x5A7740}, {0x12, 0x5A7780}, {0x38, 0x461E50}, {0, 0},
     // kPriceRate
-    {0x12, 0x531BB0}, {0x66, 0x531BB0}, {0x7F, kShopFlag}, {0, 0},
+    {0x12, 0x531BB0}, {0x66, 0x531BB0}, {0x7F, kShopFlag.v}, {0, 0},
     // kScale
     {0, 0},
     // kSell
-    {0xB, kItemPrice}, {0, 0},
+    {0xB, kItemPrice.v}, {0, 0},
     // kInitWin
     {0, 0},
     // kEquip
-    {0x3D, kInventoryRemove}, {0x4C, kInventoryAdd}, {0x65, kInventoryRemove}, {0x74, kInventoryAdd},
-    {0x8D, kInventoryRemove}, {0x9C, kInventoryAdd}, {0xB5, kInventoryRemove}, {0xC4, kInventoryAdd},
-    {0xDD, kInventoryRemove}, {0xEC, kInventoryAdd}, {0x105, kInventoryRemove}, {0x114, kInventoryAdd}, {0, 0},
+    {0x3D, kInventoryRemove.v}, {0x4C, kInventoryAdd.v}, {0x65, kInventoryRemove.v}, {0x74, kInventoryAdd.v},
+    {0x8D, kInventoryRemove.v}, {0x9C, kInventoryAdd.v}, {0xB5, kInventoryRemove.v}, {0xC4, kInventoryAdd.v},
+    {0xDD, kInventoryRemove.v}, {0xEC, kInventoryAdd.v}, {0x105, kInventoryRemove.v}, {0x114, kInventoryAdd.v}, {0, 0},
     // kDrawRows
     {0x13, 0x5888D0}, {0x1D, 0x5888D0}, {0x2A, 0x5888D0}, {0x36, 0x5888D0}, {0x43, 0x5888D0}, {0, 0},
     // kDrawRow
@@ -689,14 +689,14 @@ const Call kCalls[] = {
     // kDrawPiece
     {0x8, 0x5A7710}, {0x84, 0x461E50}, {0, 0},
     // kDrawSlots
-    {0x4B, kSlotDraw}, {0x91, kSlotCursor}, {0, 0},
+    {0x4B, kSlotDraw.v}, {0x91, kSlotCursor.v}, {0, 0},
     // kSummaries
     {0x7C, 0x454820}, {0, 0},
     // kLoadStream
     {0x2E, 0x5B9380}, {0x3C, 0x5A7380}, {0x59, 0x5B9577}, {0x62, 0x5A74D0}, {0x6A, 0x5B9660}, {0x77, 0x5A7470},
-    {0x7D, 0x5A7510}, {0x95, kVoicePlay}, {0xB6, 0x5A7050}, {0xCB, 0x5A6CC0}, {0xD5, 0x5A6FB0}, {0, 0},
+    {0x7D, 0x5A7510}, {0x95, kVoicePlay.v}, {0xB6, 0x5A7050}, {0xCB, 0x5A6CC0}, {0xD5, 0x5A6FB0}, {0, 0},
     // kStreamDone
-    {0x9, kVoiceIsPlaying}, {0x12, 0x5A7020}, {0, 0},
+    {0x9, kVoiceIsPlaying.v}, {0x12, 0x5A7020}, {0, 0},
     // kMusicPlaying
     {0, 0},
     // kStep
@@ -724,28 +724,28 @@ const Call kCalls[] = {
     // kList
     {0x2, 0x495040}, {0x16, 0x4548B0}, {0x1F, 0x588DC0}, {0x30, 0x587740}, {0, 0},
     // kLOpen
-    {0x6, kWindowBack}, {0x1D, kWindowFrame5}, {0x27, 0x497740}, {0x38, 0x516B30}, {0x43, 0x588D20}, {0, 0},
+    {0x6, kWindowBack.v}, {0x1D, kWindowFrame5.v}, {0x27, 0x497740}, {0x38, 0x516B30}, {0x43, 0x588D20}, {0, 0},
     // kLChoose
-    {0x7, kWindowBack}, {0x1E, kWindowFrame5}, {0x28, 0x497740}, {0x39, 0x516B30}, {0x44, 0x588D20},
+    {0x7, kWindowBack.v}, {0x1E, kWindowFrame5.v}, {0x28, 0x497740}, {0x39, 0x516B30}, {0x44, 0x588D20},
     {0x57, 0x461EB0}, {0xC0, 0x587740}, {0xF5, 0x587740}, {0x117, 0x587740}, {0x12F, 0x587740}, {0, 0},
     // kConfirm
-    {0x6, kWindowBack}, {0x1D, kWindowFrame5}, {0x27, 0x497740}, {0x38, 0x516B30}, {0x43, 0x588D20},
-    {0x4B, kMenuYesNo}, {0, 0},
+    {0x6, kWindowBack.v}, {0x1D, kWindowFrame5.v}, {0x27, 0x497740}, {0x38, 0x516B30}, {0x43, 0x588D20},
+    {0x4B, kMenuYesNo.v}, {0, 0},
     // kRead
-    {0x7, kWindowBack}, {0x1E, kWindowFrame5}, {0x29, 0x588D20}, {0x4D, 0x5B9380}, {0x5E, 0x454820},
+    {0x7, kWindowBack.v}, {0x1E, kWindowFrame5.v}, {0x29, 0x588D20}, {0x4D, 0x5B9380}, {0x5E, 0x454820},
     {0xB3, 0x587740}, {0, 0},
     // kError
-    {0x8, kWindowBack}, {0x1F, kWindowFrame5}, {0x65, 0x497740}, {0x76, 0x516B30}, {0x92, 0x587740}, {0, 0},
+    {0x8, kWindowBack.v}, {0x1F, kWindowFrame5.v}, {0x65, 0x497740}, {0x76, 0x516B30}, {0x92, 0x587740}, {0, 0},
     // kLoaded
-    {0x6, kWindowBack}, {0x1D, kWindowFrame5}, {0x28, 0x588D20}, {0x32, 0x497740}, {0x43, 0x516B30},
+    {0x6, kWindowBack.v}, {0x1D, kWindowFrame5.v}, {0x28, 0x588D20}, {0x32, 0x497740}, {0x43, 0x516B30},
     {0x4A, 0x495040}, {0, 0},
     // kApply
     {0xAB, 0x531BB0}, {0xC1, 0x536AC0}, {0xC9, 0x454810}, {0xD4, 0x5A9949}, {0xDC, 0x454810}, {0xF1, 0x536AC0},
     {0xF9, 0x454810}, {0x104, 0x5A9949}, {0x10C, 0x454810}, {0x117, 0x533CE0}, {0x18A, 0x56D670},
-    {0x18F, 0x454810}, {0x19A, 0x5A9949}, {0x1A2, 0x454810}, {0x1DD, kWindowBack}, {0x1F3, kWindowFrame5},
+    {0x18F, 0x454810}, {0x19A, 0x5A9949}, {0x1A2, 0x454810}, {0x1DD, kWindowBack.v}, {0x1F3, kWindowFrame5.v},
     {0x1FE, 0x588D20}, {0x208, 0x497740}, {0x219, 0x516B30}, {0, 0},
     // kEnter
-    {0x49, 0x588AC0}, {0x4F, kRecalcStats}, {0x6D, kTaskRestart}, {0, 0},
+    {0x49, 0x588AC0}, {0x4F, kRecalcStats.v}, {0x6D, kTaskRestart.v}, {0, 0},
 };
 
 void CloneAll() {
@@ -853,7 +853,7 @@ void Sane() {
     PutWord(Transition_Busy_addr, Next() % 2 ? 0 : Next());
     PutLong(Rest2c_Slot_addr, Next() % 4 ? Next() % 17 : Next() % 0x100);
     // The first slot shown: its upper bytes reach 0x576960's slot argument.
-    PutLong(at::kSlotTop, Next() % 4 ? Next() % 17 : Next() % 2 ? Next() % 0x1000 : 0u - Next() % 16);
+    PutLong(::bof3::Img(at::kSlotTop.v), Next() % 4 ? Next() % 17 : Next() % 2 ? Next() % 0x1000 : 0u - Next() % 16);
 }
 
 Args Generate(unsigned k) {
@@ -890,7 +890,7 @@ Args Generate(unsigned k) {
         break;
     }
     case kReadFile:
-        x.a[0] = at::kPath;
+        x.a[0] = ::bof3::Img(at::kPath.v);
         break;
     case kListFiles:
         break;
@@ -963,7 +963,7 @@ Args Generate(unsigned k) {
     case kSummaries:
     case kLChoose: {
         // Summaries present or not, directory names with hex digits and their neighbours at byte 7.
-        for (U i = 0; i < 20; ++i) PutByte(at::kSummaries + i * at::kSummaryBytes + 0x15, Next() % 2 ? 0xFF : Next());
+        for (U i = 0; i < 20; ++i) PutByte(::bof3::Img(at::kSummaries.v) + i * at::kSummaryBytes + 0x15, Next() % 2 ? 0xFF : Next());
         for (U i = 0; i < 16; ++i)
             PutByte(Save_Directory_addr + i * at::kDirectoryBytes + 7,
                     Pick({'0', '9', 'A', 'F', 'a', 'f', '/', ':', '@', 'G', '`', 'g', Next(), '0' + Next() % 10,
@@ -971,7 +971,7 @@ Args Generate(unsigned k) {
         x.a[2] = Pick({0, 1, Next()});
         if (k == kLChoose) {
             PutLong(Rest2c_Slot_addr, Pick({0, 1, 2, 14, 15, 16, Next() % 17, 0x100, 0xFFFFFFFF}));
-            PutLong(at::kSlotTop, Pick({0, 1, 13, 14, Next() % 17, Long(Rest2c_Slot_addr), Long(Rest2c_Slot_addr) - 2}));
+            PutLong(::bof3::Img(at::kSlotTop.v), Pick({0, 1, 13, 14, Next() % 17, Long(Rest2c_Slot_addr), Long(Rest2c_Slot_addr) - 2}));
             const U pad = Next() & 0xFFFF;
             PutWord(Input_Pressed_addr, pad);
             PutWord(Field_ConfirmButtons_addr, Next() % 3 ? (pad & 0x20) | 0x20 : Next());
@@ -983,7 +983,7 @@ Args Generate(unsigned k) {
         // Kinds up to 19: ids above 0xFFFF, as 0x446E8B can push.
         const U kind = Next() % 3 ? Next() % 4 : Next() % 20;
         x.a[0] = (kind << 12) | (Next() % 0x100);
-        for (U i = 0; i < 20; ++i) PutLong(at::kStreamTables + i * 4, Addr(g_names));
+        for (U i = 0; i < 20; ++i) PutLong(::bof3::Img(at::kStreamTables.v) + i * 4, Addr(g_names));
         PutLong(SaveMenu_StreamData_addr, Next() % 3 == 0 ? 0 : Next());
         PutLong(Music_FadeCount_addr, Next() % 2 ? 0 : Next());
         break;
@@ -1001,17 +1001,17 @@ Args Generate(unsigned k) {
         PutLong(Field_State_addr, ObjTrio_addr);
         break;
     case kOpenWait:
-        PutByte(at::kCounter, Pick({0, 1, 2, Next()}));
+        PutByte(::bof3::Img(at::kCounter.v), Pick({0, 1, 2, Next()}));
         break;
     case kFadeIn:
-        PutByte(at::kCounter, Pick({0xF0, 0xE0, 0, Next()}));
-        for (U i = 0; i < 3; ++i) PutByte(at::kRowBright + i, Pick({0x37, 0x38, 0x39, 0x40, 0xF8, 0xFF, Next()}));
+        PutByte(::bof3::Img(at::kCounter.v), Pick({0xF0, 0xE0, 0, Next()}));
+        for (U i = 0; i < 3; ++i) PutByte(::bof3::Img(at::kRowBright.v) + i, Pick({0x37, 0x38, 0x39, 0x40, 0xF8, 0xFF, Next()}));
         PutByte(SaveMenu_Cursor_addr, Pick({0, 1, 2, 3, 0xFF, Next()}));
         break;
     case kChoose: {
         for (U i = 0; i < 3; ++i)
-            PutByte(at::kRowBright + i, Pick({0x40, 0x47, 0x48, 0x49, 0x78, 0x79, 0x80, 0x81, 0xF8, 0x05, Next()}));
-        PutByte(at::kMenuFlags, Next() % 4 ? Next() | 2 : Next());
+            PutByte(::bof3::Img(at::kRowBright.v) + i, Pick({0x40, 0x47, 0x48, 0x49, 0x78, 0x79, 0x80, 0x81, 0xF8, 0x05, Next()}));
+        PutByte(::bof3::Img(at::kMenuFlags.v), Next() % 4 ? Next() | 2 : Next());
         U pad = Next() % 3 ? Pick({0x1000, 0x4000, 0x5000, 0x800, 0x20, 0x1020, 0}) : Next();
         pad |= Next() & 0xFFFF0000u;
         PutLong(Input_Pressed_addr, pad);
@@ -1082,8 +1082,8 @@ void SelfTest() {
     static State saved, input, theirs, ours;
     Capture(saved, all);
     U tables[kTableEntries];
-    std::memcpy(tables, At(at::kStepTable), sizeof tables);
-    for (unsigned i = 0; i < kTableEntries; ++i) PutLong(at::kStepTable + i * 4, Addr(reinterpret_cast<const void*>(TargetTable()[i])));
+    std::memcpy(tables, At(::bof3::Img(at::kStepTable.v)), sizeof tables);
+    for (unsigned i = 0; i < kTableEntries; ++i) PutLong(::bof3::Img(at::kStepTable.v) + i * 4, Addr(reinterpret_cast<const void*>(TargetTable()[i])));
 
     const unsigned short cw_saved = ControlWord();
     const Callees g_saved = g;
@@ -1130,7 +1130,7 @@ void SelfTest() {
         }
     }
     g = g_saved;
-    std::memcpy(At(at::kStepTable), tables, sizeof tables);
+    std::memcpy(At(::bof3::Img(at::kStepTable.v)), tables, sizeof tables);
     Apply(saved, all);
     SetControlWord(cw_saved);
     bof3::Log("shadow      save_menu self-test: %u rounds (%u per kind, %u kinds), %u MISMATCHES; calls: file open %u, "

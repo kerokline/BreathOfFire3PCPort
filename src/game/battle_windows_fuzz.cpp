@@ -122,9 +122,9 @@ void Disturb() {
     const auto byte = static_cast<unsigned char>(h >> 24);
     switch ((h >> 4) % 18) {
     case 0: At(Config_WindowColour_addr)[0] = SmallRow(v); break;
-    case 1: At(at::kPartyCount)[0] = static_cast<unsigned char>(v % 6); break;
-    case 2: At(at::kCrossSel)[0] = static_cast<unsigned char>(v % 8); break;
-    case 3: At(at::kCrossGrow + v % 7)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
+    case 1: At(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(v % 6); break;
+    case 2: At(::bof3::Img(at::kCrossSel.v))[0] = static_cast<unsigned char>(v % 8); break;
+    case 3: At(::bof3::Img(at::kCrossGrow.v) + v % 7)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
     case 4:
     case 5: {
         static const unsigned kFields[] = {0x90, 0x91, 0x98, 0x99, 0x9A, 0x9B, 0xA0, 0xA1, 0xA2, 0xA3};
@@ -142,7 +142,7 @@ void Disturb() {
     case 10: At(BattleWindows_MsgHead_addr)[0] = static_cast<unsigned char>(v % 0x14); break;
     case 11: g_buf.objects[v % kObjects][0x134] = byte; break;
     case 12: At(Gfx_ClutStripSource_addr + 0x228 + 64 * (static_cast<int>(v % 12) - 2) + (h >> 20) % 2)[0] = byte; break;
-    case 13: At(at::kMsgRing + 8 * ((h >> 20) % 16))[0] = byte; break;
+    case 13: At(::bof3::Img(at::kMsgRing.v) + 8 * ((h >> 20) % 16))[0] = byte; break;
     // the first members' extra charge byte, read again after the first line
     case 14: At(WindowRecords_addr + 0x1df + 36 * (v % 3) + 3)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
     default: break;
@@ -317,18 +317,18 @@ const void* StubFor(std::uint32_t target) {
     case 0x5893A0: return f(&StubTick);
     case 0x589410: return f(&StubTickOnce);
     case 0x589330: return f(&StubEnsurePose);
-    case kPoseFrom: return f(&StubPoseFrom);
-    case kDrawValue: return f(&StubDrawValue);
-    case kDrawEdge: return f(&StubDrawEdge);
-    case kDrawTile: return f(&StubDrawTile);
-    case kDrawTileRgb: return f(&StubDrawTileRgb);
-    case kDrawBar: return f(&StubDrawBar);
-    case kDrawDigit: return f(&StubDrawDigit);
-    case kLinePlain: return f(&StubLinePlain);
-    case kLineSemi0: return f(&StubLineSemi0);
-    case kLineSemi1: return f(&StubLineSemi1);
-    case kEnemyNameShown: return f(&StubNameShown);
-    case kTinyFont: return f(&StubTinyFont);
+    case kPoseFrom.v: return f(&StubPoseFrom);
+    case kDrawValue.v: return f(&StubDrawValue);
+    case kDrawEdge.v: return f(&StubDrawEdge);
+    case kDrawTile.v: return f(&StubDrawTile);
+    case kDrawTileRgb.v: return f(&StubDrawTileRgb);
+    case kDrawBar.v: return f(&StubDrawBar);
+    case kDrawDigit.v: return f(&StubDrawDigit);
+    case kLinePlain.v: return f(&StubLinePlain);
+    case kLineSemi0.v: return f(&StubLineSemi0);
+    case kLineSemi1.v: return f(&StubLineSemi1);
+    case kEnemyNameShown.v: return f(&StubNameShown);
+    case kTinyFont.v: return f(&StubTinyFont);
     case 0x4411E0: return f(&StubRunState);
     case 0x4434C0: return f(&StubCommandIcon);
     case 0x443610: return f(&StubMessageBox);
@@ -513,7 +513,7 @@ void Fix() {
     Sprite_Current = g_buf.objects[Next() % kObjects];
     SetLong(At(BattleE4_MenuActor_addr), static_cast<std::int32_t>(Address(g_buf.objects[Next() % kObjects])));
     At(Config_WindowColour_addr)[0] = SmallRow(Next());
-    At(at::kPartyCount)[0] = static_cast<unsigned char>(Next() % 6);
+    At(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(Next() % 6);
     for (unsigned k = 0; k < kTexts; ++k) Text(g_buf.texts[k], kTextBytes);
 }
 
@@ -573,10 +573,10 @@ Args Seed(unsigned k) {
     }
     case kPickPose: {
         static const unsigned char kKinds[] = {5, 5, 4, 6, 0};
-        At(at::kBattleKind)[0] = Often() ? kKinds[Next() % 5] : static_cast<unsigned char>(Next());
+        At(::bof3::Img(at::kBattleKind.v))[0] = Often() ? kKinds[Next() % 5] : static_cast<unsigned char>(Next());
         At(Battle_EndFlags_addr)[0] = static_cast<unsigned char>(Next() & 3);
         At(EventBattle_Flags_addr)[0] = static_cast<unsigned char>(Next() & 0x30);
-        At(at::kPoseMode)[0] = static_cast<unsigned char>(Next() & 0x18);
+        At(::bof3::Img(at::kPoseMode.v))[0] = static_cast<unsigned char>(Next() & 0x18);
         unsigned char* const f = Field_State;
         SeedMember(f);
         f[0x91] = static_cast<unsigned char>(Half() ? f[0x91] & ~0x48u : f[0x91]);
@@ -600,8 +600,8 @@ Args Seed(unsigned k) {
         args.a[0] = Coord();
         args.a[1] = Coord();
         static const unsigned char kSel[] = {0, 1, 2, 3, 4, 5, 6, 7, 2, 3};
-        At(at::kCrossSel)[0] = Often() ? kSel[Next() % 10] : static_cast<unsigned char>(Next());
-        for (unsigned j = 0; j < 7; ++j) At(at::kCrossGrow + j)[0] = static_cast<unsigned char>(Half() ? 0 : Next());
+        At(::bof3::Img(at::kCrossSel.v))[0] = Often() ? kSel[Next() % 10] : static_cast<unsigned char>(Next());
+        for (unsigned j = 0; j < 7; ++j) At(::bof3::Img(at::kCrossGrow.v) + j)[0] = static_cast<unsigned char>(Half() ? 0 : Next());
         break;
     }
     case kCommandIcon: {
@@ -701,7 +701,7 @@ void SelfTest() {
     for (unsigned i = 0; i < 256; ++i) g_state_table[i] = Address(reinterpret_cast<const void*>(kStates.f[i % 32]));
     g_skills_n = 0;
     for (unsigned i = 0; i < 0x140; ++i) {
-        const unsigned b = At(at::kSkillFlags + 24 * i)[0];
+        const unsigned b = At(::bof3::Img(at::kSkillFlags.v) + 24 * i)[0];
         if (((b >> 3) & 1) != ((b >> 2) & 1) || ((b >> 3) & 1) != ((b >> 4) & 1)) g_skills[g_skills_n++] = static_cast<std::uint16_t>(i);
     }
 

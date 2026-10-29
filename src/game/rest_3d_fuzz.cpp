@@ -168,8 +168,8 @@ U RateEffect(const U*, U answer) {
 // some not - the side of slots 116 / 124 / 127 is the read before the call.
 void MoveTarget(U n) {
     if ((n & 1) == 0) return;
-    bh::Note(Mem(at::kTarget)[0]);
-    Mem(at::kTarget)[0] = static_cast<unsigned char>((n >> 8) % 11);
+    bh::Note(Mem(::bof3::Img(at::kTarget.v))[0]);
+    Mem(::bof3::Img(at::kTarget.v))[0] = static_cast<unsigned char>((n >> 8) % 11);
 }
 U CalcDamageEffect(const U*, U answer) {
     MoveTarget(bh::Noise());
@@ -182,7 +182,7 @@ U HpDamageEffect(const U*, U answer) {
     const U n = bh::Noise();
     MoveTarget(n);
     if ((n & 2) == 0) return answer;
-    const unsigned t = Mem(at::kTarget)[0];
+    const unsigned t = Mem(::bof3::Img(at::kTarget.v))[0];
     const U def = t <= 2 ? move_script::Word(Mem(ObjTrio_addr + t * at::kPartyStride + 0xA6))
                          : move_script::Word(Mem(Battle_Enemies_addr + (t - 3) * at::kEnemyStride + 0xB6));
     return (answer & 0xFFFF0000u) | ((def + (n >> 16) % 5 - 2) & 0xFFFF);
@@ -229,7 +229,7 @@ const bh::Callee kCallees[] = {
     {"BattleForm_ApplyStats", bof3::addr::BattleForm_ApplyStats, KeyOf(&::BattleForm_ApplyStats), 0, {}, bh::Answer::kGarbage, 0, 0},
     {"Effect_DrainAp", bof3::addr::Effect_DrainAp, KeyOf(&::Effect_DrainAp), 0, {}, bh::Answer::kGarbage, 0, 0},
     // this wave's R3C (ours; the row keyed by address)
-    {"0x44D8B0", at::kAbility6AHelper, at::kAbility6AHelper, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x44D8B0", at::kAbility6AHelper.v, at::kAbility6AHelper.v, 0, {}, bh::Answer::kGarbage, 0, 0},
 };
 
 const bh::DataTable kTables[] = {
@@ -282,13 +282,13 @@ U Status() {
 // status words, Field_State's equipment bytes at the items the inflict
 // tests, the party size 0..3, the members' characters 0..7.
 void Frame() {
-    Mem(at::kActor)[0] = static_cast<unsigned char>(ActorByte());
-    Mem(at::kTarget)[0] = static_cast<unsigned char>(ActorByte());
-    SetWord(Mem(at::kAbility), bh::Often() ? bh::Next() % 0x200 : BH_PICK(0x4E, 0x6A, 0, 1));
+    Mem(::bof3::Img(at::kActor.v))[0] = static_cast<unsigned char>(ActorByte());
+    Mem(::bof3::Img(at::kTarget.v))[0] = static_cast<unsigned char>(ActorByte());
+    SetWord(Mem(::bof3::Img(at::kAbility.v)), bh::Often() ? bh::Next() % 0x200 : BH_PICK(0x4E, 0x6A, 0, 1));
     SetWord(Mem(BattleDamage_AttackerInt_addr), Word16({0, 1, 249, 250, 254, 255, 499, 500, 1000}));
     SetWord(Mem(BattleDamage_TargetInt_addr), Word16({0, 1, 374, 375, 379, 380, 500, 1000}));
-    SetWord(Mem(at::kNewStatus), Word16({0, 0, 0x80, 0x840}));
-    Mem(at::kPartySize)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 2, 3, 3) : bh::Next() % 4);   // past 3 ours aborts
+    SetWord(Mem(::bof3::Img(at::kNewStatus.v)), Word16({0, 0, 0x80, 0x840}));
+    Mem(::bof3::Img(at::kPartySize.v))[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 2, 3, 3) : bh::Next() % 4);   // past 3 ours aborts
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = Member(m);
         for (unsigned i = 0; i < 4; ++i) p[0xB4 + i] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
@@ -373,10 +373,10 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 8) {
-    case 0: Mem(at::kTarget)[0] = static_cast<unsigned char>(b % 11); break;
-    case 1: Mem(at::kActor)[0] = static_cast<unsigned char>(b % 11); break;
-    case 2: Mem(at::kPartySize)[0] = static_cast<unsigned char>(b % 4); break;
-    case 3: SetWord(Mem(at::kNewStatus), h >> 12); break;
+    case 0: Mem(::bof3::Img(at::kTarget.v))[0] = static_cast<unsigned char>(b % 11); break;
+    case 1: Mem(::bof3::Img(at::kActor.v))[0] = static_cast<unsigned char>(b % 11); break;
+    case 2: Mem(::bof3::Img(at::kPartySize.v))[0] = static_cast<unsigned char>(b % 4); break;
+    case 3: SetWord(Mem(::bof3::Img(at::kNewStatus.v)), h >> 12); break;
     case 4: rv::Store<std::uint32_t>(rv::As<records::PartyMember>(Member(b))->status, h >> 20); break;
     case 5: rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(EnemyN(b))->status, h >> 20); break;
     case 6: EnemyN(b)[0x8D] = static_cast<unsigned char>(h & 0x100 ? 4 : h >> 24); break;

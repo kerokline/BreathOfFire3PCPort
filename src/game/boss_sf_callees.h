@@ -35,38 +35,38 @@ namespace at {
 using U = std::uint32_t;
 
 // --- the battle's cells (0x904AA0..0x904BA0, the harness's battle bytes) ---
-constexpr U kPhase = 0x904AA0;            // u8: Battle_PhaseDispatch's phase (5: the battle's end)
-constexpr U kRoundFlags = 0x904AA8;       // u8: the round flags' low byte (bit 2 set by the kinds' action ends)
-constexpr U kRoundFlagsHi = 0x904AA9;     // u8: the round flags' high byte (bit 3 set by Myria's cost step)
+constexpr ::bof3::image::Va kPhase{0x904AA0};            // u8: Battle_PhaseDispatch's phase (5: the battle's end)
+constexpr ::bof3::image::Va kRoundFlags{0x904AA8};       // u8: the round flags' low byte (bit 2 set by the kinds' action ends)
+constexpr ::bof3::image::Va kRoundFlagsHi{0x904AA9};     // u8: the round flags' high byte (bit 3 set by Myria's cost step)
 // kFight: now EventBattle_Id (symbols.toml). u8: the event battle (Boss_SetupTable's index)
 // kScript: now BossSe_Script (symbols.toml). u8: the fights' script bits (set-up 27: bits 0..5)
-constexpr U kOrderBefore = 0x904ACB;      // u8[]: the turn order 0x904ACC one before - indexed by the cursor
+constexpr ::bof3::image::Va kOrderBefore{0x904ACB};      // u8[]: the turn order 0x904ACC one before - indexed by the cursor
 // kCursor: now BossSe_RoundSlot (symbols.toml). u8: the turn order's cursor (battle_actions.md)
 // kBattleEnd: now Battle_EndFlags (symbols.toml). u8: bit 1 the win; bit 2 set by set-up 27's event hook
 // kBanner: now BattleMisc_BannerKinds (symbols.toml). u8: bit 1 holds the phases until phase 5 (battle_phases_callees.h)
-constexpr U kActKind = 0x904B35;          // u8: the acting kind (4 an ability)
-constexpr U kTarget = 0x904B44;           // u8: the battle's target
+constexpr ::bof3::image::Va kActKind{0x904B35};          // u8: the acting kind (4 an ability)
+constexpr ::bof3::image::Va kTarget{0x904B44};           // u8: the battle's target
 // kMyriaWait: now BossSa_EndCount (symbols.toml). u16: Myria's pending effect code (0x440630's third word; 3, 5, 8 read)
-constexpr U kAbility = 0x904B80;          // u16: the action id in hand (24-byte records at 0x65C4D8)
+constexpr ::bof3::image::Va kAbility{0x904B80};          // u16: the action id in hand (24-byte records at 0x65C4D8)
 // kCost: now BattleE3_Cost (symbols.toml). u8: the AP cost shown (battle_actions_callees.h kCostShown)
 // kSoundSet: now BattleE3_SoundSet (symbols.toml). u8: Battle_LoadSoundByKey's set (battle_obj_states_callees.h)
-constexpr U kTurn = 0x904B90;             // u32: the turn counter (battle_phases.md)
+constexpr ::bof3::image::Va kTurn{0x904B90};             // u32: the turn counter (battle_phases.md)
 // kHookEnd: now BattleHook_End (symbols.toml). BattleHook_End
 // kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
 // kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
 
 // --- the ability records (NameTable_Abilities, 24 bytes each) -----------------
-constexpr U kAbilityFlags4 = 0x65C4D8;    // + 24 * id: the byte Myria's action pick tests with 4
-constexpr U kAbilityFlags8 = 0x65C4DD;    // + 24 * id: the byte states 7 and 8 test with 8
+constexpr ::bof3::image::Va kAbilityFlags4{0x65C4D8};    // + 24 * id: the byte Myria's action pick tests with 4
+constexpr ::bof3::image::Va kAbilityFlags8{0x65C4DD};    // + 24 * id: the byte states 7 and 8 test with 8
 constexpr U kAbilityStride = 24;
 
 // --- the enemies (0x93B960 + n * 0x128) and the running sprite ---------------
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running (its object)
 // kEnemies: now Battle_Enemies (symbols.toml). enemy 0's object
 // kEnemy1: now Battle_Enemies[1] (symbols.toml). enemy 1's object
-constexpr U kEnemy0Status = 0x93B9F2;     // enemy 0's +0x92 (u32; bit 0x4000 read by set-up 27)
+constexpr ::bof3::image::Va kEnemy0Status{0x93B9F2};     // enemy 0's +0x92 (u32; bit 0x4000 read by set-up 27)
 // kEnemy1Status: now BossH_Enemy1Status (symbols.toml). enemy 1's +0x92 (u32)
-constexpr U kEnemyData = 0x8C55C8;        // the area's enemy data records (stride 0x8C), by the enemy's +0xF0
+constexpr ::bof3::image::Va kEnemyData{0x8C55C8};        // the area's enemy data records (stride 0x8C), by the enemy's +0xF0
 constexpr U kEnemyDataStride = 0x8C;
 // kOwner: now BattleE2_Owner (symbols.toml). the running task's owner (BattleTask_RunAll: the slot's +0x80)
 // kTaskSlots: now BattleTask_Slots (symbols.toml). BattleTask_Create's slots
@@ -79,24 +79,24 @@ constexpr U kPartyStride = 0x14C;
 
 // --- other cells ------------------------------------------------------------
 // kWindowUp: now Window20_State (symbols.toml). u8: a window record's byte (0x803430's); the count waits while set
-constexpr U kScriptVar3 = 0x903848;       // u8: movement-script variable 3 (area_w0a.md), set by set-up 28's end
+constexpr ::bof3::image::Va kScriptVar3{0x903848};       // u8: movement-script variable 3 (area_w0a.md), set by set-up 28's end
 // kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter run's step
-constexpr U kPoseSet = 0x8C5D80;          // the frame set set-up 27's end hook poses the party from
-constexpr U kTextRow1 = 0x904D00;         // Text_Records[1] (battle_actions_callees.h): the count's digits
+constexpr ::bof3::image::Va kPoseSet{0x8C5D80};          // the frame set set-up 27's end hook poses the party from
+constexpr ::bof3::image::Va kTextRow1{0x904D00};         // Text_Records[1] (battle_actions_callees.h): the count's digits
 // kCountText0: now BossSf_CountText0 (symbols.toml). .data: the text pointer drawn before the count
 // kCountText1: now BossSf_CountText1 (symbols.toml). .data: the text pointer drawn after it
 // kCountFormat: now Boss26Fx_CountFormat (symbols.toml). Boss26Fx_CountFormat, the count's sprintf format
-constexpr U kMyriaSlotScript = 0x64DD04;  // .data: the script Myria's entrance hands 0x455290 (not read)
+constexpr ::bof3::image::Va kMyriaSlotScript{0x64DD04};  // .data: the script Myria's entrance hands 0x455290 (not read)
 
 // --- the callees nobody owns ------------------------------------------------
-constexpr U kEnemySound = bof3::addr::Sound_PlayEffectUnlessNone;       // (sound) (BE3's since round twelve: the same value)
-constexpr U kEnemyActEnd = bof3::addr::EnemyOp_EndAction;      // () (BE3's since round twelve: the same value)
-constexpr U kEnemyActChance = bof3::addr::EnemyOp_RollBit80Task;   // () (BE3's since round twelve: the same value)
-constexpr U kSlotsReleaseFor = bof3::addr::Field_SlotsReleaseOwner;  // 0x454A80 (object; BE6, 2026-09-29)
-constexpr U kSlotStart = bof3::addr::Field_SlotStart;               // 0x455290 (object, script; BE6, 2026-09-29)
-constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
-constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () step 2
-constexpr U kEndThird = bof3::addr::BattleEnd_EnterStep3;         // () step 3
+constexpr ::bof3::image::CodeVa kEnemySound{bof3::addr::Sound_PlayEffectUnlessNone};       // (sound) (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kEnemyActEnd{bof3::addr::EnemyOp_EndAction};      // () (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kEnemyActChance{bof3::addr::EnemyOp_RollBit80Task};   // () (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kSlotsReleaseFor{bof3::addr::Field_SlotsReleaseOwner};  // 0x454A80 (object; BE6, 2026-09-29)
+constexpr ::bof3::image::CodeVa kSlotStart{bof3::addr::Field_SlotStart};               // 0x455290 (object, script; BE6, 2026-09-29)
+constexpr ::bof3::image::CodeVa kEndWin{bof3::addr::BattleEnd_EnterStep1};           // () the end phase, step 1
+constexpr ::bof3::image::CodeVa kEndOther{bof3::addr::BattleEnd_EnterStep2};         // () step 2
+constexpr ::bof3::image::CodeVa kEndThird{bof3::addr::BattleEnd_EnterStep3};         // () step 3
 
 }  // namespace at
 }  // namespace boss_sf

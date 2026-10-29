@@ -42,31 +42,31 @@ constexpr std::uint32_t kTaskSize = 0x84;
 constexpr std::uint32_t kTintSize = 12;
 // The action being resolved (PSX 0x80146390.., sibling BATTLE_RAM.md
 // "Commands, Auto, Run and the enemy AI").
-constexpr std::uint32_t kStatBlock = 0x939F80;     // 32 bytes: the target's +0xB0.. copied in
-constexpr std::uint32_t kCommandSource = 0x939FA0; // pointer: byte +0 the actor the command is aimed at
-constexpr std::uint32_t kRoundFlags = 0x904AA8;    // u16 (PSX 0x801462E4)
+constexpr ::bof3::image::Va kStatBlock{0x939F80};     // 32 bytes: the target's +0xB0.. copied in
+constexpr ::bof3::image::Va kCommandSource{0x939FA0}; // pointer: byte +0 the actor the command is aimed at
+constexpr ::bof3::image::Va kRoundFlags{0x904AA8};    // u16 (PSX 0x801462E4)
 // kEventBattle: now EventBattle_Id (symbols.toml). u8 (docs/battle_flow.md: "event battle" is a guess)
 // kTargeting: now BattleE4_Picking (symbols.toml). u8: non-zero while a target is being picked (by use here)
-constexpr std::uint32_t kPulse = 0x904AC8;         // u8: the menu cursor's pulse (Battle_PulseStep)
-constexpr std::uint32_t kActor = 0x904B34;         // u8: the acting actor
-constexpr std::uint32_t kActionKind = 0x904B35;    // u8: 1 attack, 4 ability, 5 item (sibling's command bytes)
-constexpr std::uint32_t kTarget = 0x904B44;        // u8: the target actor, or 0x40 / 0x80 / 0xC0 a side
-constexpr std::uint32_t kResultTarget = 0x904B54;  // u8 (PSX 0x80146390)
+constexpr ::bof3::image::Va kPulse{0x904AC8};         // u8: the menu cursor's pulse (Battle_PulseStep)
+constexpr ::bof3::image::Va kActor{0x904B34};         // u8: the acting actor
+constexpr ::bof3::image::Va kActionKind{0x904B35};    // u8: 1 attack, 4 ability, 5 item (sibling's command bytes)
+constexpr ::bof3::image::Va kTarget{0x904B44};        // u8: the target actor, or 0x40 / 0x80 / 0xC0 a side
+constexpr ::bof3::image::Va kResultTarget{0x904B54};  // u8 (PSX 0x80146390)
 // kResultSprite: now BattleE3_HitSprite (symbols.toml). pointer: the target's sprite
-constexpr std::uint32_t kResult = 0x904B60;        // pointer: the result record, +4 HP and +6 AP delta, +8 flags
+constexpr ::bof3::image::Va kResult{0x904B60};        // pointer: the result record, +4 HP and +6 AP delta, +8 flags
 // kHookA: now BattleHook_End (symbols.toml). code pointers stored by EnemyOp_Begin
 // kHookB: now BattleHook_Exit (symbols.toml).
-constexpr std::uint32_t kMagicId = 0x904B80;       // u16: the item or ability (low byte id, high byte category)
-constexpr std::uint32_t kStatusAdd = 0x904B98;     // u16: status bits ORed into the target after the effect
-constexpr std::uint32_t kStatusAdd2 = 0x904B9A;    // u16: zeroed with it
+constexpr ::bof3::image::Va kMagicId{0x904B80};       // u16: the item or ability (low byte id, high byte category)
+constexpr ::bof3::image::Va kStatusAdd{0x904B98};     // u16: status bits ORed into the target after the effect
+constexpr ::bof3::image::Va kStatusAdd2{0x904B9A};    // u16: zeroed with it
 // The 24-byte ability records (0x65C4D0 + 24 id): the ops test byte +8 bits
 // 2 and 4 and byte +0xD bit 3 (what each does here: docs/enemy_ai_ops.md).
-constexpr std::uint32_t kAbilityFlags8 = 0x65C4D8;
-constexpr std::uint32_t kAbilityFlagsD = 0x65C4DD;
+constexpr ::bof3::image::Va kAbilityFlags8{0x65C4D8};
+constexpr ::bof3::image::Va kAbilityFlagsD{0x65C4DD};
 // Constants the ops store.
-constexpr std::uint32_t kAnimTable = 0x64B078;     // the enemy's animation bytes 0..7
-constexpr std::uint32_t kHookAValue = bof3::addr::BattleHook_Area189Script;    // group CE's
-constexpr std::uint32_t kHookBValue = bof3::addr::BattleHook_Area189Transition;    // group CE's
+constexpr ::bof3::image::Va kAnimTable{0x64B078};     // the enemy's animation bytes 0..7
+constexpr ::bof3::image::CodeVa kHookAValue{bof3::addr::BattleHook_Area189Script};    // group CE's
+constexpr ::bof3::image::CodeVa kHookBValue{bof3::addr::BattleHook_Area189Transition};    // group CE's
 
 // The op tables in .data (symbols.toml [[data]] EnemyOp_*): each a run of
 // code pointers indexed by one of Sprite_Current's step bytes.
@@ -81,9 +81,9 @@ constexpr std::uint32_t kHookBValue = bof3::addr::BattleHook_Area189Transition; 
 }  // namespace at
 
 // Callees with no name in symbols.gen.h, or another group's: by address.
-constexpr std::uint32_t kItemClass = bof3::addr::Item_UseFlags;     // group TWO's (2026-10-06), the value unchanged; (category, id) -> a class byte (docs/battle_sprites.md)
-constexpr std::uint32_t kApPopup = bof3::addr::Battle_SetApPopup;   // 0x453EB0 (BE6, rebound 2026-09-29; the value unchanged): Battle_SetDamagePopup's AP twin
-constexpr std::uint32_t kPlayCue = bof3::addr::Sound_PlayEffectUnlessNone;       // Sound_PlayEffect(id) unless id is 0xFFFF (BE3's since round twelve: the same value)
+constexpr ::bof3::image::CodeVa kItemClass{bof3::addr::Item_UseFlags};     // group TWO's (2026-10-06), the value unchanged; (category, id) -> a class byte (docs/battle_sprites.md)
+constexpr ::bof3::image::CodeVa kApPopup{bof3::addr::Battle_SetApPopup};   // 0x453EB0 (BE6, rebound 2026-09-29; the value unchanged): Battle_SetDamagePopup's AP twin
+constexpr ::bof3::image::CodeVa kPlayCue{bof3::addr::Sound_PlayEffectUnlessNone};       // Sound_PlayEffect(id) unless id is 0xFFFF (BE3's since round twelve: the same value)
 
 using Handler = void (__cdecl*)();
 

@@ -128,13 +128,13 @@ void Hold(unsigned next) {
 // The pushes have ended (0x903849 0xFF) or the presses have (0x90384A 0x80):
 // +1 0x17, +2 0; else 0x903849 0 and +1, +2 0 (back to the start).
 void Again() {
-    if (B(at::kCounterB) == 0xFF || B(at::kCounterC) == 0x80) {
+    if (B(::bof3::Img(at::kCounterB.v)) == 0xFF || B(::bof3::Img(at::kCounterC.v)) == 0x80) {
         S()[1] = 0x17;
         S()[2] = 0;
         return;
     }
     unsigned char* const s = S();
-    B(at::kCounterB) = 0;
+    B(::bof3::Img(at::kCounterB.v)) = 0;
     s[1] = 0;
     S()[2] = 0;
 }
@@ -143,11 +143,11 @@ void Again() {
 // (signed): true, with 0x903849 0xFF, 0x90384A / B 0 and the step 0x14.
 bool PastLine() {
     const std::int32_t x = ObjTrio[2].x;
-    Field_State = P(ObjTrio_addr + 0x298);
+    Field_State = P(::bof3::Img(ObjTrio_addr) + 0x298);
     if (x < at::kTrio2Line) return false;
-    B(at::kCounterB) = 0xFF;
-    B(at::kCounterC) = 0;
-    B(at::kCounterD) = 0;
+    B(::bof3::Img(at::kCounterB.v)) = 0xFF;
+    B(::bof3::Img(at::kCounterC.v)) = 0;
+    B(::bof3::Img(at::kCounterD.v)) = 0;
     MoveScript_PartyRecords[0x65] = 0x14;
     return true;
 }
@@ -165,13 +165,13 @@ bool CountingHeld() {
 
 // original 0x488020 (EffectKind82_States[11], hidden in 0x487BF0): record 0
 // reached the leader: +1 0xD, +9 0; else +1 0xC.
-extern "C" void __cdecl EffectKind82_Check11(void) { Check(Sprite_Objects_addr + 0x34, 0xC); }
+extern "C" void __cdecl EffectKind82_Check11(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0x34, 0xC); }
 
 // original 0x488060 (state 12): +1 0; 0x903849 0 when it is 0xFF or 0x90384A
 // is 0x80.
 extern "C" void __cdecl EffectKind82_Restart(void) {
     S()[1] = 0;
-    if (B(at::kCounterB) == 0xFF || B(at::kCounterC) == 0x80) B(at::kCounterB) = 0;
+    if (B(::bof3::Img(at::kCounterB.v)) == 0xFF || B(::bof3::Img(at::kCounterC.v)) == 0x80) B(::bof3::Img(at::kCounterB.v)) = 0;
 }
 
 // original 0x488090 (state 13): record 0's z + 0x4000 twice, +1 0xE, +9 8.
@@ -201,9 +201,9 @@ extern "C" void __cdecl EffectKind82_Again(void) { Again(); }
 // step 0x1E; 0x90384A and 0x90384B 0 either way; a tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind82_End(void) {
     if (!PastLine()) {
-        B(at::kCounterB) = 0xFE;
-        B(at::kCounterC) = 0;
-        B(at::kCounterD) = 0;
+        B(::bof3::Img(at::kCounterB.v)) = 0xFE;
+        B(::bof3::Img(at::kCounterC.v)) = 0;
+        B(::bof3::Img(at::kCounterD.v)) = 0;
         MoveScript_PartyRecords[0x65] = 0x1E;
     }
     SH_CALL(Effect_Release)();
@@ -225,15 +225,15 @@ extern "C" void __cdecl EffectKind83_Run(void) {
 // 0x4882C4 and the jump table 0x4882B0 in the code), else nothing.
 extern "C" void __cdecl EffectKind83_Wait(void) {
     unsigned char* s = S();
-    if (Reached(Sprite_Objects_addr + 0x34)) {
+    if (Reached(::bof3::Img(Sprite_Objects_addr) + 0x34)) {
         s[1] = 0x16;
         s = S();
     }
-    if (B(at::kCounterC) == 0x80) {
+    if (B(::bof3::Img(at::kCounterC.v)) == 0x80) {
         s[1] = 0x17;
         s = S();
     }
-    switch (B(at::kCounterB)) {
+    switch (B(::bof3::Img(at::kCounterB.v))) {
     case 3: s[1] = 6; return;
     case 4: s[1] = 4; return;
     case 5: s[1] = 2; return;
@@ -244,46 +244,46 @@ extern "C" void __cdecl EffectKind83_Wait(void) {
 
 // original 0x4883D0 (state 2, a start no list of the cut has): record 1's x
 // + 0x4000 four times (a cell), +1 3.
-extern "C" void __cdecl EffectKind83_Push2(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x34, 4, 0x4000u, 3, -1); }
+extern "C" void __cdecl EffectKind83_Push2(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x34, 4, 0x4000u, 3, -1); }
 // original 0x488410 (state 3): record 1 reached: +1 0xD, +9 0; else +1 4.
-extern "C" void __cdecl EffectKind83_Check3(void) { Check(Sprite_Objects_addr + 0xd8, 4); }
+extern "C" void __cdecl EffectKind83_Check3(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0xd8, 4); }
 // original 0x488450 (state 4): a push, +1 5.
-extern "C" void __cdecl EffectKind83_Push4(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x34, 4, 0x4000u, 5, -1); }
+extern "C" void __cdecl EffectKind83_Push4(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x34, 4, 0x4000u, 5, -1); }
 // original 0x488490 (state 5): reached: +1 0xD; else +1 6.
-extern "C" void __cdecl EffectKind83_Check5(void) { Check(Sprite_Objects_addr + 0xd8, 6); }
+extern "C" void __cdecl EffectKind83_Check5(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0xd8, 6); }
 // original 0x4884D0 (state 6): a push, +1 7.
-extern "C" void __cdecl EffectKind83_Push6(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x34, 4, 0x4000u, 7, -1); }
+extern "C" void __cdecl EffectKind83_Push6(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x34, 4, 0x4000u, 7, -1); }
 // original 0x488510 (state 7): reached: +1 0xD; else +1 8.
-extern "C" void __cdecl EffectKind83_Check7(void) { Check(Sprite_Objects_addr + 0xd8, 8); }
+extern "C" void __cdecl EffectKind83_Check7(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0xd8, 8); }
 // original 0x488550 (state 8): a push, +1 9.
-extern "C" void __cdecl EffectKind83_Push8(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x34, 4, 0x4000u, 9, -1); }
+extern "C" void __cdecl EffectKind83_Push8(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x34, 4, 0x4000u, 9, -1); }
 // original 0x488590 (state 9): reached: +1 0xD; else +1 0xA.
-extern "C" void __cdecl EffectKind83_Check9(void) { Check(Sprite_Objects_addr + 0xd8, 0xA); }
+extern "C" void __cdecl EffectKind83_Check9(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0xd8, 0xA); }
 // original 0x4885D0 (state 10): a push, +1 0xB.
-extern "C" void __cdecl EffectKind83_Push10(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x34, 4, 0x4000u, 0xB, -1); }
+extern "C" void __cdecl EffectKind83_Push10(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x34, 4, 0x4000u, 0xB, -1); }
 // original 0x488610 (state 11): reached: +1 0xD; else +1 0xC.
-extern "C" void __cdecl EffectKind83_Check11(void) { Check(Sprite_Objects_addr + 0xd8, 0xC); }
+extern "C" void __cdecl EffectKind83_Check11(void) { Check(::bof3::Img(Sprite_Objects_addr) + 0xd8, 0xC); }
 
 // original 0x433640 (EffectKind83_States[12], and the stack table of the
 // battle's BattleFx_ActorWatch 0x433460, its state 2; hidden in 0x432F10): +1 0.
 extern "C" void __cdecl Sprite_StateRestart(void) { S()[1] = 0; }
 
 // original 0x488650 (state 13): record 1's z + 0x4000 twice, +1 0xE, +9 8.
-extern "C" void __cdecl EffectKind83_Nudge13(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x38, 2, 0x4000u, 0xE, 8); }
+extern "C" void __cdecl EffectKind83_Nudge13(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x38, 2, 0x4000u, 0xE, 8); }
 
 // original 0x488690 (state 14 of kinds 0x82 and 0x83): +9 down; +1 0xF when it
 // was 0.
 extern "C" void __cdecl EffectKind83_Hold14(void) { Hold(0xF); }
 
 // original 0x4886B0 (state 15): record 1's z - 0x4000 four times, +1 0x10, +9 8.
-extern "C" void __cdecl EffectKind83_Nudge15(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x38, 4, 0xFFFFC000u, 0x10, 8); }
+extern "C" void __cdecl EffectKind83_Nudge15(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x38, 4, 0xFFFFC000u, 0x10, 8); }
 
 // original 0x4886F0 (state 16 of kinds 0x82 and 0x83): +9 down; +1 0x11 when
 // it was 0.
 extern "C" void __cdecl EffectKind83_Hold16(void) { Hold(0x11); }
 
 // original 0x488710 (state 17): record 1's z + 0x4000 twice, +1 0x12.
-extern "C" void __cdecl EffectKind83_Nudge17(void) { Nudge(P(Sprite_Objects_addr + 0xa4), 0x38, 2, 0x4000u, 0x12, -1); }
+extern "C" void __cdecl EffectKind83_Nudge17(void) { Nudge(P(::bof3::Img(Sprite_Objects_addr) + 0xa4), 0x38, 2, 0x4000u, 0x12, -1); }
 
 // original 0x488750 (state 18): +2 up one; when it was 0xF or more +1 0xD;
 // else kind 0x82's state 20 in line (EffectKind83_States[20] is BareRet).
@@ -331,14 +331,14 @@ extern "C" void __cdecl EffectKind84_WaitPress(void) {
 // third member past the line: Effect_Release, done. Else 0x903849 the push
 // count EffectKind84_PushCounts[Rand & 0xF], +1 2.
 extern "C" void __cdecl EffectKind84_Pick(void) {
-    if (B(at::kCounterB) == 0xFE) SH_CALL(Effect_Release)();
+    if (B(::bof3::Img(at::kCounterB.v)) == 0xFE) SH_CALL(Effect_Release)();
     if (PastLine()) {
         SH_CALL(Effect_Release)();
         return;
     }
     const U r = static_cast<U>(SH_CALL(Rand)()) & 0xFu;
     unsigned char* const s = S();
-    B(at::kCounterB) = B(at::kPushCounts + r);
+    B(::bof3::Img(at::kCounterB.v)) = B(::bof3::Img(at::kPushCounts.v) + r);
     s[1] = 2;
 }
 
@@ -347,30 +347,30 @@ extern "C" void __cdecl EffectKind84_Pick(void) {
 // each frame a counting held word: 0x90384A up one, and when it was 0x10 or
 // more 0x90384A 0x80 and Effect_Release.
 extern "C" void __cdecl EffectKind84_Mash(void) {
-    if (B(at::kCounterB) == 0xFE) SH_CALL(Effect_Release)();
+    if (B(::bof3::Img(at::kCounterB.v)) == 0xFE) SH_CALL(Effect_Release)();
     if (PastLine()) {
         SH_CALL(Effect_Release)();
         return;
     }
-    if (B(at::kCounterB) == 0) {
+    if (B(::bof3::Img(at::kCounterB.v)) == 0) {
         const U r = static_cast<U>(SH_CALL(Rand)()) & 0xFu;
         unsigned char* const s = S();
-        s[9] = B(at::kWaits + r);
+        s[9] = B(::bof3::Img(at::kWaits.v) + r);
         S()[1] = 3;
         return;
     }
     if (!CountingHeld()) return;
-    const unsigned char was = B(at::kCounterC);
-    B(at::kCounterC) = static_cast<unsigned char>(was + 1);
+    const unsigned char was = B(::bof3::Img(at::kCounterC.v));
+    B(::bof3::Img(at::kCounterC.v)) = static_cast<unsigned char>(was + 1);
     if (was < 0x10) return;
-    B(at::kCounterC) = 0x80;
+    B(::bof3::Img(at::kCounterC.v)) = 0x80;
     SH_CALL(Effect_Release)();
 }
 
 // original 0x488970 (state 3): the stop and the line as state 1 (the line a
 // tail jump). Else +9 down; when it was 0 the step word 0x8034E6 0 and +1 1.
 extern "C" void __cdecl EffectKind84_Pause(void) {
-    if (B(at::kCounterB) == 0xFE) SH_CALL(Effect_Release)();
+    if (B(::bof3::Img(at::kCounterB.v)) == 0xFE) SH_CALL(Effect_Release)();
     if (PastLine()) {
         SH_CALL(Effect_Release)();
         return;
@@ -380,7 +380,7 @@ extern "C" void __cdecl EffectKind84_Pause(void) {
     s[9] = static_cast<unsigned char>(was - 1);
     if (was != 0) return;
     unsigned char* const t = S();
-    SetWord(At(MoveScript_PartyRecords_addr + 0x66), 0);
+    SetWord(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), 0);
     t[1] = 1;
 }
 
@@ -426,7 +426,7 @@ namespace {
 // The end of states 1..4: the tile (E4D's 0x48CA90), then a tail jump to
 // EffectKind85_ShowObjects.
 void FadeAndShow() {
-    SH_AT(Handler, at::kFade)();
+    SH_AT(Handler, at::kFade.v)();
     SH_CALL(EffectKind85_ShowObjects)();
 }
 }  // namespace
@@ -472,7 +472,7 @@ extern "C" void __cdecl EffectKind85_NextMessage(void) {
             S()[0x5E] = 0xFF;
             S()[0x5D] = 0xFF;
             S()[1] = 4;
-            B(at::kCounter) = static_cast<unsigned char>(B(at::kCounter) + 1);
+            B(::bof3::Img(at::kCounter.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter.v)) + 1);
         } else {
             SH_CALL(Msg_OpenScript)(message);
             unsigned char* const u = S();
@@ -486,7 +486,7 @@ extern "C" void __cdecl EffectKind85_NextMessage(void) {
 // original 0x488B70 (state 4): Effect_Release when the counter 0x903848 is
 // 0x35; then the tile and the objects (the record's +6 read after the release).
 extern "C" void __cdecl EffectKind85_Wait(void) {
-    if (B(at::kCounter) == 0x35) SH_CALL(Effect_Release)();
+    if (B(::bof3::Img(at::kCounter.v)) == 0x35) SH_CALL(Effect_Release)();
     FadeAndShow();
 }
 
@@ -522,9 +522,9 @@ extern "C" void __cdecl EffectKind86_Spawn(void) {
     }
     Object(kWho, s[4])[0] = 1;
     at::kObjectCount = s[3];
-    SH_CALL(EventOp_0x)(P(at::kPlaceOp));
+    SH_CALL(EventOp_0x)(P(::bof3::Img(at::kPlaceOp.v)));
     at::kObjectCount = s[4];
-    SH_CALL(EventOp_0x)(P(at::kPlaceOp));
+    SH_CALL(EventOp_0x)(P(::bof3::Img(at::kPlaceOp.v)));
     Sprite_Current = s;
     unsigned char* const a = Object(kWho, s[3]);
     auto* const ao = rv::As<records::SpriteObject>(a);
@@ -567,7 +567,7 @@ extern "C" void __cdecl EffectKind86_Tint(void) {
     static const char* const kWho = "EffectKind86_Tint";
     unsigned char* const s = S();
     if (s[9] == 0) {
-        B(at::kCounter) = static_cast<unsigned char>(B(at::kCounter) + 1);
+        B(::bof3::Img(at::kCounter.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kCounter.v)) + 1);
         s[1] = 3;
         return;
     }
@@ -607,7 +607,7 @@ extern "C" void __cdecl EffectKind87_Run(void) {
 extern "C" void __cdecl EffectKind87_Start(void) {
     S()[6] = Draw_PassFlags;
     Draw_PassFlags = 0x1B;
-    SH_AT(Handler, at::kKind87Setup)();
+    SH_AT(Handler, at::kKind87Setup.v)();
     unsigned char* const s = S();
     Effect4b_SoundIndex = 0;
     s[1] = static_cast<unsigned char>(s[1] + 1);
@@ -616,16 +616,16 @@ extern "C" void __cdecl EffectKind87_Start(void) {
 // original 0x488FB0 (state 1): E4B's 0x489220 answered 0 (al): E4B's 0x4891F0,
 // Sound_PlayEffect(0x203), +1 up one.
 extern "C" void __cdecl EffectKind87_Step1(void) {
-    const unsigned char going = SH_AT(unsigned char (__cdecl*)(), at::kKind87Step)();
+    const unsigned char going = SH_AT(unsigned char (__cdecl*)(), at::kKind87Step.v)();
     if (going != 0) return;
-    SH_AT(Handler, at::kKind87Reset)();
+    SH_AT(Handler, at::kKind87Reset.v)();
     SH_CALL(Sound_PlayEffect)(0x203);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 
 // original 0x488FE0 (state 2): 0x489220 answered 0: +1 up one.
 extern "C" void __cdecl EffectKind87_Step2(void) {
-    const unsigned char going = SH_AT(unsigned char (__cdecl*)(), at::kKind87Step)();
+    const unsigned char going = SH_AT(unsigned char (__cdecl*)(), at::kKind87Step.v)();
     if (going == 0) S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 
@@ -640,7 +640,7 @@ extern "C" void __cdecl EffectKind87_Restore(void) {
 // original 0x489020 (state 8): Effect_Release, then the step word 0x8034E6 0.
 extern "C" void __cdecl EffectKind87_End(void) {
     SH_CALL(Effect_Release)();
-    SetWord(At(MoveScript_PartyRecords_addr + 0x66), 0);
+    SetWord(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), 0);
 }
 
 void Effect4A_Inject() {

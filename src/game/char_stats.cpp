@@ -69,8 +69,8 @@ unsigned short* Stat(unsigned char* record, unsigned offset) { return reinterpre
 // The inventory's list pointers for a category's low byte, read from the
 // tables as the original reads them - unbounded (a category above 4 reads the
 // neighbouring pointers, then the consumables' names).
-unsigned char* IdList(unsigned cat) { return At(static_cast<std::uint32_t>(Long(At(at::kInvIds + 4 * cat)))); }
-unsigned char* CountList(unsigned cat) { return At(static_cast<std::uint32_t>(Long(At(at::kInvCounts + 4 * cat)))); }
+unsigned char* IdList(unsigned cat) { return At(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kInvIds.v) + 4 * cat)))); }
+unsigned char* CountList(unsigned cat) { return At(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kInvCounts.v) + 4 * cat)))); }
 
 void SetFloat(unsigned char* at, int value) {
     const auto f = static_cast<float>(value);   // exact: every value here is below 2^24
@@ -229,9 +229,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Char_RecalcStats(uns
     for (unsigned bit = 0; bit < 8; ++bit)
         if (r[at::kHalveBits] & (1u << bit)) g.add_resist(r + kHalved[bit], 2);
     for (unsigned i = 0; i < 8; ++i) {
-        if (r != At(CharacterRecords_addr + i * at::kCharStride)) continue;
+        if (r != At(::bof3::Img(CharacterRecords_addr) + i * at::kCharStride)) continue;
         for (unsigned j = 0; j < 5; ++j)
-            if (r[at::kPercent + j] != 0) g.add_cap100(r + at::kPercent + j, At(at::kRosterBonus + 5 * i + j)[0]);
+            if (r[at::kPercent + j] != 0) g.add_cap100(r + at::kPercent + j, At(::bof3::Img(at::kRosterBonus.v) + 5 * i + j)[0]);
     }
 }
 
@@ -244,7 +244,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Char_RecalcStats(uns
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Char_ApplyTraits(unsigned char* record) {
     const unsigned trait = record[at::kMaster];
     if (trait == 0xFF) return;
-    const unsigned char* e = At(static_cast<std::uint32_t>(Long(At(at::kTraitLists + 4 * trait))));
+    const unsigned char* e = At(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kTraitLists.v) + 4 * trait))));
     if (e == nullptr) return;
     unsigned kind = e[0];
     if (kind == 0xE) return;
@@ -264,7 +264,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Char_ApplyTraits(uns
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Char_ApplyWeapon(unsigned char* record) {
     unsigned char* const r = record;
     const unsigned id = r[at::kWeapon];
-    const unsigned char* const item = At(at::kWeapons + id * at::kWeaponStride);
+    const unsigned char* const item = At(::bof3::Img(at::kWeapons.v) + id * at::kWeaponStride);
     g.add_clamped(Stat(r, at::kAtk), item[0x16]);
     g.add_clamped(Stat(r, at::kAgi), 0u - item[0x14]);
     switch (id) {
@@ -309,7 +309,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Char_ApplyArmour(uns
     const unsigned char ids[3] = {r[at::kArmour], r[at::kArmour + 1], r[at::kArmour + 2]};
     for (unsigned k = 0; k < 3; ++k) {
         const unsigned id = ids[k];
-        const unsigned char* const item = At(at::kArmourTable + id * at::kArmourStride);
+        const unsigned char* const item = At(::bof3::Img(at::kArmourTable.v) + id * at::kArmourStride);
         g.add_clamped(Stat(r, at::kDef), item[0x14]);
         g.add_clamped(Stat(r, at::kAgi), 0u - item[0x13]);
         switch (id) {
@@ -358,7 +358,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Char_ApplyAccessorie
     const unsigned char ids[2] = {r[at::kAccessory], r[at::kAccessory + 1]};
     for (unsigned k = 0; k < 2; ++k) {
         const unsigned id = ids[k];
-        const unsigned char* const item = At(at::kAccessories + id * at::kAccessoryStride);
+        const unsigned char* const item = At(::bof3::Img(at::kAccessories.v) + id * at::kAccessoryStride);
         g.add_clamped(Stat(r, at::kAgi), 0u - item[0x13]);
         switch (id) {
         case 0x01: g.add_clamped(Stat(r, at::kAtk), 0xA); break;
@@ -448,7 +448,7 @@ void ComparePreview(unsigned char* record, unsigned char* copy, unsigned char* m
 // above 5 none) set to the item's low byte in the copy, the copy recomputed,
 // and the four stats compared.
 extern "C" void __cdecl Equip_PreviewSlot(unsigned id, unsigned slot, unsigned item, unsigned char* marks, unsigned short* values) {
-    unsigned char* const record = At(CharacterRecords_addr + (id & 0xFF) * at::kCharStride);
+    unsigned char* const record = At(::bof3::Img(CharacterRecords_addr) + (id & 0xFF) * at::kCharStride);
     unsigned char copy[at::kRecordBytes];
     std::memcpy(copy, record, sizeof copy);
     if ((slot & 0xFF) <= 5) copy[at::kWeapon + (slot & 0xFF)] = static_cast<unsigned char>(item);
@@ -459,7 +459,7 @@ extern "C" void __cdecl Equip_PreviewSlot(unsigned id, unsigned slot, unsigned i
 // original 0x590AB0 (no PSX twin): the same with all six equipment bytes
 // from `set`.
 extern "C" void __cdecl Equip_PreviewSet(unsigned id, const unsigned char* set, unsigned char* marks, unsigned short* values) {
-    unsigned char* const record = At(CharacterRecords_addr + (id & 0xFF) * at::kCharStride);
+    unsigned char* const record = At(::bof3::Img(CharacterRecords_addr) + (id & 0xFF) * at::kCharStride);
     unsigned char copy[at::kRecordBytes];
     std::memcpy(copy, record, sizeof copy);
     for (unsigned k = 0; k < 6; ++k) copy[at::kWeapon + k] = set[k];
@@ -484,7 +484,7 @@ extern "C" unsigned char __cdecl Inventory_Add(unsigned category, unsigned item,
     const auto n = static_cast<unsigned char>(count);
     if (n == 0) return 0;
     const unsigned cat = category & 0xFF;
-    unsigned char* const scratch = At(SharedScratch_addr);
+    unsigned char* const scratch = At(::bof3::Img(SharedScratch_addr));
     scratch[0] = 0;
     if (cat != 4) {
         unsigned char* const ids = IdList(cat);
@@ -539,7 +539,7 @@ extern "C" unsigned short __cdecl Inventory_Count(unsigned category, unsigned it
     }
     unsigned char n = 0;
     for (unsigned k = 0; k < 8; ++k) {
-        const unsigned char* const r = At(CharacterRecords_addr + k * at::kCharStride);
+        const unsigned char* const r = At(::bof3::Img(CharacterRecords_addr) + k * at::kCharStride);
         if ((r[at::kFlags] & 1) == 0) continue;
         switch (cat) {
         case 1:
@@ -557,7 +557,7 @@ extern "C" unsigned short __cdecl Inventory_Count(unsigned category, unsigned it
         }
     }
     if (cat == 3) {
-        if (At(at::kExtraAccessory)[0] == id) ++n;
+        if (At(::bof3::Img(at::kExtraAccessory.v))[0] == id) ++n;
         if (CharStats_ExtraItem == id) n = static_cast<unsigned char>(n + CharStats_ExtraCount);
     }
     return n;
@@ -580,7 +580,7 @@ extern "C" unsigned char __cdecl Inventory_CountUsed(unsigned category) {
 extern "C" unsigned char __cdecl KeyItem_Has(unsigned item) {
     const auto id = static_cast<unsigned char>(item);
     for (unsigned i = 0; i < 0x20; ++i)
-        if (At(at::kKeyItems)[i] == id) return 1;
+        if (At(::bof3::Img(at::kKeyItems.v))[i] == id) return 1;
     return 0;
 }
 
@@ -593,11 +593,11 @@ extern "C" unsigned char __cdecl KeyItem_Has(unsigned item) {
 extern "C" unsigned char* __cdecl Item_NamePtr(unsigned category, unsigned item) {
     const unsigned i = item & 0xFF;
     switch (category & 0xFF) {
-    case 1: return At(at::kWeapons + i * at::kWeaponStride);
-    case 2: return At(at::kArmourTable + i * at::kArmourStride);
-    case 3: return At(at::kAccessories + i * at::kAccessoryStride);
-    case 4: return At(at::kKeyItemTable + i * at::kKeyItemStride);
-    default: return At(at::kConsumables + i * at::kConsumableStride);
+    case 1: return At(::bof3::Img(at::kWeapons.v) + i * at::kWeaponStride);
+    case 2: return At(::bof3::Img(at::kArmourTable.v) + i * at::kArmourStride);
+    case 3: return At(::bof3::Img(at::kAccessories.v) + i * at::kAccessoryStride);
+    case 4: return At(::bof3::Img(at::kKeyItemTable.v) + i * at::kKeyItemStride);
+    default: return At(::bof3::Img(at::kConsumables.v) + i * at::kConsumableStride);
     }
 }
 
@@ -608,10 +608,10 @@ extern "C" unsigned char* __cdecl Item_NamePtr(unsigned category, unsigned item)
 extern "C" unsigned __cdecl Item_IconKind(unsigned category, unsigned item) {
     const unsigned i = item & 0xFF;
     switch (category & 0xFF) {
-    case 1: return At(at::kWeapons + i * at::kWeaponStride)[0x12] & 0xFu;
-    case 2: return At(at::kArmourTable + i * at::kArmourStride)[0x12] & 0xFu;
-    case 3: return At(at::kAccessories + i * at::kAccessoryStride)[0x12] & 0xFu;
-    default: return At(at::kConsumables + i * at::kConsumableStride)[0x11] & 0xFu;
+    case 1: return At(::bof3::Img(at::kWeapons.v) + i * at::kWeaponStride)[0x12] & 0xFu;
+    case 2: return At(::bof3::Img(at::kArmourTable.v) + i * at::kArmourStride)[0x12] & 0xFu;
+    case 3: return At(::bof3::Img(at::kAccessories.v) + i * at::kAccessoryStride)[0x12] & 0xFu;
+    default: return At(::bof3::Img(at::kConsumables.v) + i * at::kConsumableStride)[0x11] & 0xFu;
     }
 }
 
@@ -625,9 +625,9 @@ extern "C" unsigned __cdecl Item_EquipMask(unsigned category, unsigned item) {
     const unsigned i = item & 0xFF;
     const unsigned cat = category & 0xFF;
     switch (cat) {
-    case 1: return At(at::kWeapons + i * at::kWeaponStride)[0x10];
-    case 2: return ((i * 13) & ~0xFFu) | At(at::kArmourTable + i * at::kArmourStride)[0x10];   // eax held id * 13
-    case 3: return At(at::kAccessories + i * at::kAccessoryStride)[0x10];
+    case 1: return At(::bof3::Img(at::kWeapons.v) + i * at::kWeaponStride)[0x10];
+    case 2: return ((i * 13) & ~0xFFu) | At(::bof3::Img(at::kArmourTable.v) + i * at::kArmourStride)[0x10];   // eax held id * 13
+    case 3: return At(::bof3::Img(at::kAccessories.v) + i * at::kAccessoryStride)[0x10];
     default: return (cat - 1u) | 0xFFu;
     }
 }
@@ -637,11 +637,11 @@ extern "C" unsigned __cdecl Item_EquipMask(unsigned category, unsigned item) {
 extern "C" unsigned __cdecl Item_HelpMessage(unsigned category, unsigned item) {
     const unsigned i = item & 0xFF;
     switch (category & 0xFF) {
-    case 1: return Word(At(at::kWeapons + i * at::kWeaponStride + 0x18));
-    case 2: return Word(At(at::kArmourTable + i * at::kArmourStride + 0x16));
-    case 3: return Word(At(at::kAccessories + i * at::kAccessoryStride + 0x14));
-    case 4: return Word(At(at::kKeyItemTable + i * at::kKeyItemStride + 0x10));
-    default: return Word(At(at::kConsumables + i * at::kConsumableStride + 0x12));
+    case 1: return Word(At(::bof3::Img(at::kWeapons.v) + i * at::kWeaponStride + 0x18));
+    case 2: return Word(At(::bof3::Img(at::kArmourTable.v) + i * at::kArmourStride + 0x16));
+    case 3: return Word(At(::bof3::Img(at::kAccessories.v) + i * at::kAccessoryStride + 0x14));
+    case 4: return Word(At(::bof3::Img(at::kKeyItemTable.v) + i * at::kKeyItemStride + 0x10));
+    default: return Word(At(::bof3::Img(at::kConsumables.v) + i * at::kConsumableStride + 0x12));
     }
 }
 
@@ -656,7 +656,7 @@ extern "C" unsigned __cdecl Item_HelpMessage(unsigned category, unsigned item) {
 extern "C" void __cdecl TextRecord_Set(unsigned slot, unsigned length, const unsigned char* text) {
     unsigned n = length & 0xFF;
     if (n >= 0x20) n = 0x1F;
-    unsigned char* const d = At(at::kTextRecords + (slot & 0xFF) * 0x20);
+    unsigned char* const d = At(::bof3::Img(at::kTextRecords.v) + (slot & 0xFF) * 0x20);
     for (unsigned i = 0; i < n; ++i) *static_cast<volatile unsigned char*>(d + i) = *static_cast<const volatile unsigned char*>(text + i);
     d[n] = 0;
 }

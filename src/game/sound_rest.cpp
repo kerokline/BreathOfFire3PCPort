@@ -50,7 +50,7 @@ void Release(void* object) { Method<ComCall>(object, sound::kRelease)(object); }
 
 const Callees kOriginals = {
     SndBuf_Stop, SndStream_Stop, Music_Halt, Music_Resume, Music_IsPlaying,
-    reinterpret_cast<long (__stdcall*)(const void*, void**, void*)>(static_cast<std::uintptr_t>(kDirectSoundCreate)),
+    reinterpret_cast<long (__stdcall*)(const void*, void**, void*)>(static_cast<std::uintptr_t>(::bof3::Code(kDirectSoundCreate.v))),
 };
 
 }  // namespace sound_rest
@@ -87,7 +87,7 @@ extern "C" __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) { __asm__
 // leaves - a value no one set either way, read only where DirectSound's
 // GetStatus does not write its out (section 3).
 int Sound_PauseAllEax(void) {
-    for (std::uint32_t p = Address(Sound_Channels); p < kChannelsEnd; p += 4) {
+    for (std::uint32_t p = Address(Sound_Channels); p < ::bof3::Img(kChannelsEnd); p += 4) {
         const std::uint32_t buffer = Dword(p);
         if (buffer != 0) SoundRest_g.sndbuf_stop(At(buffer));
     }

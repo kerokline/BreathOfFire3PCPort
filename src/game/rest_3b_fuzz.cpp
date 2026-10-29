@@ -213,8 +213,8 @@ U RosterMoves(const U*, U answer) {
 U CountMoves(const U*, U answer) {
     const U n = bh::Noise();
     if (n & 1) {
-        bh::Note(Mem(at::kPartyCount)[0]);
-        Mem(at::kPartyCount)[0] = static_cast<unsigned char>((n >> 8) % 4);
+        bh::Note(Mem(::bof3::Img(at::kPartyCount.v))[0]);
+        Mem(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>((n >> 8) % 4);
     }
     return answer;
 }
@@ -234,7 +234,7 @@ unsigned char* Rec(unsigned n, U party_at, U enemy_at) {
 U HitAtHpEffect(const U*, U answer) {
     const U n = bh::Noise();
     if (n % 3 != 0) return answer;
-    const unsigned t = Mem(at::kTarget)[0];
+    const unsigned t = Mem(::bof3::Img(at::kTarget.v))[0];
     const U hp = move_script::Word(Rec(t, 0x98, 0xA4));
     return (answer & 0xFFFF0000u) | ((hp + (n >> 8) % 3 - 1) & 0xFFFF);
 }
@@ -243,7 +243,7 @@ U HitAtHpEffect(const U*, U answer) {
 U ShareAtStatEffect(const U*, U answer) {
     const U n = bh::Noise();
     if (n % 3 != 0) return answer;
-    const unsigned t = Mem(at::kTarget)[0];
+    const unsigned t = Mem(::bof3::Img(at::kTarget.v))[0];
     const U v = move_script::Word(Mem(Battle_Enemies_addr + static_cast<U>(static_cast<std::int32_t>(t) - 3) * at::kEnemyStride + 0xB6));
     return (answer & 0xFFFF0000u) | ((v + (n >> 8) % 3 - 1) & 0xFFFF);
 }
@@ -252,8 +252,8 @@ U ShareAtStatEffect(const U*, U answer) {
 U RandMovesTarget(const U*, U answer) {
     const U n = bh::Noise();
     if (n & 1) {
-        bh::Note(Mem(at::kTarget)[0]);
-        Mem(at::kTarget)[0] = static_cast<unsigned char>((n >> 8) % 11);
+        bh::Note(Mem(::bof3::Img(at::kTarget.v))[0]);
+        Mem(::bof3::Img(at::kTarget.v))[0] = static_cast<unsigned char>((n >> 8) % 11);
     }
     return answer & 0x7FFF;
 }
@@ -286,10 +286,10 @@ const bh::Callee kCallees[] = {
     {"Char_AbilityList", bof3::addr::Char_AbilityList, KeyOf(&::Char_AbilityList), 3, {kU8, kU8, kAll}, bh::Answer::kGarbage, 0, 0,
      {}, &AbilityListEffect},
     // R3D's (this wave, ours; rows keyed by address): each takes one pushed immediate
-    {"0x44FBB0", at::kStatMod, at::kStatMod, 1, {kAll}, bh::Answer::kFlag, 0, 0},
-    {"0x44FC60", at::kInflictMiss, at::kInflictMiss, 1, {kAll}, bh::Answer::kFlag, 0, 0},
-    {"0x44FCA0", at::kRollInflict, at::kRollInflict, 1, {kAll}, bh::Answer::kFlag, 0, 0},
-    {"0x44FCE0", at::kHpShare, at::kHpShare, 1, {kAll}, bh::Answer::kGarbage, 0, 0, {}, &ShareAtStatEffect},
+    {"0x44FBB0", at::kStatMod.v, at::kStatMod.v, 1, {kAll}, bh::Answer::kFlag, 0, 0},
+    {"0x44FC60", at::kInflictMiss.v, at::kInflictMiss.v, 1, {kAll}, bh::Answer::kFlag, 0, 0},
+    {"0x44FCA0", at::kRollInflict.v, at::kRollInflict.v, 1, {kAll}, bh::Answer::kFlag, 0, 0},
+    {"0x44FCE0", at::kHpShare.v, at::kHpShare.v, 1, {kAll}, bh::Answer::kGarbage, 0, 0, {}, &ShareAtStatEffect},
     // the engine set's rows, louder (the same masks): the answers at the
     // slots' boundaries, the target moved by Rand, the counters noted
     {"Battle_CalcDamage", bof3::addr::Battle_CalcDamage, KeyOf(&::Battle_CalcDamage), 3, {kU8, kU8, kU16}, bh::Answer::kGarbage, 0, 0,
@@ -309,7 +309,7 @@ const bh::DataTable kTables[] = {
 // The cells beyond the engine frame the group reads or writes.
 const bh::Region kRegions[] = {
     {0x903B24, 0x903F90 - 0x903B24},   // CharacterRecords past the engine frame's 0x903A50..0x903B24 (records 0..7)
-    {at::kRepeatLatch, 4},             // Input_AutoRepeat's latch (BattleItem_SideBegin zeroes it)
+    {at::kRepeatLatch.v, 4},             // Input_AutoRepeat's latch (BattleItem_SideBegin zeroes it)
     // past the window records to the chapter bytes, and past those: a party
     // record by an actor or a target byte 3..10, as slots 6 and 47 index it
     {0x803478, 0x8034E0 - 0x803478},
@@ -352,8 +352,8 @@ void Keys() {
 // members' characters (0..23 index the roster table's 24; 0x0A slot 6's test),
 // their and the enemies' status words, HP and maxima at their boundaries.
 void BattleFrame() {
-    Mem(at::kActor)[0] = static_cast<unsigned char>(bh::Next() % 11);
-    Mem(at::kTarget)[0] = static_cast<unsigned char>(bh::Next() % 11);
+    Mem(::bof3::Img(at::kActor.v))[0] = static_cast<unsigned char>(bh::Next() % 11);
+    Mem(::bof3::Img(at::kTarget.v))[0] = static_cast<unsigned char>(bh::Next() % 11);
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = Member(m);
         p[0x89] = bh::Half() ? 0x0A : static_cast<unsigned char>(bh::Next() % 24);
@@ -370,9 +370,9 @@ void BattleFrame() {
         rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(e)->hp, bh::Half() ? max - bh::Next() % 3 : Word16({0, 1, 0xFFFF}));
         rv::As<records::BattleEnemy>(e)->status = static_cast<std::uint16_t>(bh::Half() ? bh::Next() | 0x4000 : bh::Next() & ~0x4000u);
     }
-    SetWord(Mem(at::kAbility), Word16({0, 1, 0x55, 0x5D, 0x62, 0x65, 0x66, 0xE2}) % 0xE4);
+    SetWord(Mem(::bof3::Img(at::kAbility.v)), Word16({0, 1, 0x55, 0x5D, 0x62, 0x65, 0x66, 0xE2}) % 0xE4);
     SetWord(Mem(Rest3b_PowerAdd2_addr), Word16({0, 1, 139, 140, 141, 142, 0xFFFF}));
-    Mem(at::kPartyCount)[0] = static_cast<unsigned char>(bh::Next() % 4);
+    Mem(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(bh::Next() % 4);
 }
 
 // The menus' frame: the keys, the command's target byte at the party's ends,
@@ -439,9 +439,9 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 8) {
-    case 0: Mem(at::kTarget)[0] = static_cast<unsigned char>(b % 11); break;
-    case 1: Mem(at::kActor)[0] = static_cast<unsigned char>(b % 11); break;
-    case 2: Mem(at::kPartyCount)[0] = static_cast<unsigned char>(b % 4); break;
+    case 0: Mem(::bof3::Img(at::kTarget.v))[0] = static_cast<unsigned char>(b % 11); break;
+    case 1: Mem(::bof3::Img(at::kActor.v))[0] = static_cast<unsigned char>(b % 11); break;
+    case 2: Mem(::bof3::Img(at::kPartyCount.v))[0] = static_cast<unsigned char>(b % 4); break;
     case 3: Member(b)[0x89] = static_cast<unsigned char>((b >> 2) % 24); break;
     case 4: Member(b)[0x91] = static_cast<unsigned char>(Member(b)[0x91] ^ 0x40); break;
     case 5: EnemyN(b)[0x93] = static_cast<unsigned char>(EnemyN(b)[0x93] ^ 0x40); break;

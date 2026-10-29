@@ -146,7 +146,7 @@ extern "C" void __cdecl EffectKindAC_FadeIn(void) {
     {
         const unsigned char* const s = S();
         const U product = static_cast<U>(S8(s[9]) * -0x20) & 0xFFFFu;
-        SH_AT(void(__cdecl*)(U), at::kFadeDraw)((AddressOf(s) & 0xFFFF0000u) | product);
+        SH_AT(void(__cdecl*)(U), at::kFadeDraw.v)((AddressOf(s) & 0xFFFF0000u) | product);
     }
     S()[9] = static_cast<unsigned char>(S()[9] - 1);
     if (S()[9] != 0) return;
@@ -162,7 +162,7 @@ extern "C" void __cdecl EffectKindAC_FadeOut(void) {
         const unsigned char* const s = S();
         const unsigned char n = s[9];
         const U shade = n == 8 ? 0xFFu : (AddressOf(s) & 0xFFFFFF00u) | static_cast<unsigned char>(n << 5);
-        SH_AT(void(__cdecl*)(U), at::kFadeDraw)(shade);
+        SH_AT(void(__cdecl*)(U), at::kFadeDraw.v)(shade);
     }
     S()[9] = static_cast<unsigned char>(S()[9] - 1);
     if (S()[9] == 0) SH_CALL(Effect_Release)();
@@ -200,7 +200,7 @@ extern "C" void __cdecl EffectKindAD_Rise(void) {
         SH_CALL(EffectKindAD_DrawArc)(reinterpret_cast<const long*>(s + 0x34), reinterpret_cast<const long*>(s + 0xC),
                                       s[0x5D], s[0x5E]);
     }
-    if (At(at::kCounter)[0] == 0xB) S()[1] = static_cast<unsigned char>(S()[1] + 1);
+    if (At(::bof3::Img(at::kCounter.v))[0] == 0xB) S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 
 // ===========================================================================
@@ -310,7 +310,7 @@ extern "C" int __cdecl Screen_TriangleWinding(const float* a, const float* b, co
 // three bytes it never wrote; its callee reads their low bytes only.
 extern "C" void __cdecl Battle_PlaceBossActors(void) {
     const unsigned event = EventBattle_Id;
-    const unsigned row = At(at::kEventRows + 4 * event)[0];
+    const unsigned row = At(::bof3::Img(at::kEventRows.v) + 4 * event)[0];
     Battle_EnemyCount = 0;
     if (row >= at::kEncounterRows)
         bof3::Fatal("Battle_PlaceBossActors: event battle %u names encounter row %u, past Encounter_Rows' %u - the original "
@@ -318,7 +318,7 @@ extern "C" void __cdecl Battle_PlaceBossActors(void) {
                     event, row, at::kEncounterRows);
     unsigned char count = 0;
     for (unsigned slot = 0; slot < 8; ++slot) {
-        const unsigned kind = At(Encounter_Rows_addr + 9 * row + slot)[0];
+        const unsigned kind = At(::bof3::Img(Encounter_Rows_addr) + 9 * row + slot)[0];
         if (kind == 0xFF) continue;
         SH_CALL(Battle_PlaceBossActor)(slot, count, kind);
         count = static_cast<unsigned char>(count + 1);
@@ -351,7 +351,7 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
         bof3::Fatal("Battle_PlaceBossActor: count %u, past the %u enemy records - the original writes past them "
                     "(docs/rest_3g.md section 7)",
                     n, at::kEnemyCount);
-    unsigned char* const e = At(Battle_Enemies_addr + at::kEnemyStride * n);
+    unsigned char* const e = At(::bof3::Img(Battle_Enemies_addr) + at::kEnemyStride * n);
     for (unsigned i = 0; i < 0x80; i += 4) SetUL(e + i, UL(actor + i));
     Sprite_Current = e;
     unsigned char* const s = S();
@@ -374,12 +374,12 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
     s[6] = 0;
     s[7] = 0;
     s[0x2B] = 0;
-    s[8] = static_cast<unsigned char>(At(at::kFormation)[0] ^ 2);
+    s[8] = static_cast<unsigned char>(At(::bof3::Img(at::kFormation.v))[0] ^ 2);
     s[0x48] = 0;
     SH_CALL(Battle_CopyEnemyData)(count, kind);
-    psp_code::MyriaItem(At(Battle_Enemies_addr + at::kEnemyStride * n), Game_AreaNumber, EventBattle_Id);
+    psp_code::MyriaItem(At(::bof3::Img(Battle_Enemies_addr) + at::kEnemyStride * n), Game_AreaNumber, EventBattle_Id);
     SH_CALL(Battle_SetEnemyOffset)(count, kind & 0xFF);
-    At(Battle_Enemies_addr + at::kEnemyStride * n + 0x8F)[0] = Cheats_EnemyInfoShown() ? 1 : 0;   // DIV-0187
+    At(::bof3::Img(Battle_Enemies_addr) + at::kEnemyStride * n + 0x8F)[0] = Cheats_EnemyInfoShown() ? 1 : 0;   // DIV-0187
     actor[0] = static_cast<unsigned char>(actor[0] | 0x40);
     Battle_EnemyCount = static_cast<unsigned char>(Battle_EnemyCount + 1);
 }
@@ -388,7 +388,7 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
 // Escape_Leave): bytes +0..+4 of the eight enemy records 0.
 extern "C" void __cdecl BattleEnemy_ClearStates(void) {
     for (unsigned i = 0; i < at::kEnemyCount; ++i) {
-        unsigned char* const e = At(Battle_Enemies_addr + at::kEnemyStride * i);
+        unsigned char* const e = At(::bof3::Img(Battle_Enemies_addr) + at::kEnemyStride * i);
         for (unsigned k = 0; k < 5; ++k) e[k] = 0;
     }
 }
@@ -451,7 +451,7 @@ void LoadBank() {
 extern "C" void __cdecl GameMode8_Leave(void) {
     {
         const unsigned char was = AreaW0b_PartySet;
-        At(Field_ScriptFlags2_addr)[0] = static_cast<unsigned char>(At(Field_ScriptFlags2_addr)[0] | 0x40);
+        At(::bof3::Img(Field_ScriptFlags2_addr))[0] = static_cast<unsigned char>(At(::bof3::Img(Field_ScriptFlags2_addr))[0] | 0x40);
         const unsigned char b = static_cast<unsigned char>(was | 0x80);
         AreaW0b_PartySet = b;
         SH_CALL(Snd_LoadBankFile)((b & 0x7Fu) + 0x2C2u);
@@ -461,8 +461,8 @@ extern "C" void __cdecl GameMode8_Leave(void) {
     SH_CALL(Transition_Start)(0);
     WaitWord(&Mode8Frame);
     {
-        const U z = UL(at::kReturnZ);
-        const U x = UL(at::kReturnX);
+        const U z = UL(::bof3::Img(at::kReturnZ.v));
+        const U x = UL(::bof3::Img(at::kReturnX.v));
         const unsigned area = AreaW2c_LastArea;
         SH_CALL(Field_ChangeArea)(area, I(x), I(z), 4);
     }
@@ -550,7 +550,7 @@ extern "C" void __cdecl GameMode11_Look(void) {
 extern "C" void __cdecl GameMode11_LookEnd(void) {
     SH_CALL(Look_Return)();
     SH_CALL(Mode11_FieldFrame)();
-    if (static_cast<std::uint16_t>(Camera_Angles[0]) == 0xFD56 && Word(At(Cond_AngleFB_addr)) == 0x200) Game_Step = 0;
+    if (static_cast<std::uint16_t>(Camera_Angles[0]) == 0xFD56 && Word(At(::bof3::Img(Cond_AngleFB_addr))) == 0x200) Game_Step = 0;
 }
 
 // ===========================================================================
@@ -578,7 +578,7 @@ extern "C" unsigned __cdecl Quake_VertexLift(long x, long z) {
     }
     if (I(a) >= 0x20 || I(b) >= 0x1C || I(a) < 0 || I(b) < 0) return a & 0xFFFF0000u;
     const U i = (Sar(a, 1) * 15u) + Sar(b, 1);
-    auto t = [&](U offset) { return static_cast<U>(S8(At(at::kQuakeLast + offset + i)[0])); };
+    auto t = [&](U offset) { return static_cast<U>(S8(At(::bof3::Img(at::kQuakeLast.v) + offset + i)[0])); };
     if (((a | b) & 1) == 0) return (0u - (t(1) + t(0xF))) << 3;
     if ((b & 1) != 0 && (a & 1) == 0) return (0u - (t(0x10) + t(1))) << 3;
     if ((b & 1) == 0 && (a & 1) != 0) return (0u - (t(0x10) + t(0xF))) << 3;
@@ -594,7 +594,7 @@ extern "C" unsigned __cdecl Quake_VertexLift(long x, long z) {
 extern "C" int __cdecl Area109_SwitchPattern(void) {
     U bits = 0;
     for (unsigned i = 0; i < 3; ++i) {
-        const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), At(at::kPatternFlags + i)[0]);
+        const unsigned char set = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), At(::bof3::Img(at::kPatternFlags.v) + i)[0]);
         if (set != 0) bits |= 1u << i;
     }
     return static_cast<int>(bits + 1);
@@ -607,12 +607,12 @@ extern "C" int __cdecl Area109_SwitchPattern(void) {
 // 0x202; al 1. Otherwise al 0 (the rest of eax the caller's).
 extern "C" unsigned char __cdecl Area109_SwitchHook(long x, long z) {
     if ((static_cast<U>(x) & 0xFF) != 0x1C || (static_cast<U>(z) & 0xFF) != 6 || ObjTrio[0].direction != 3) return 0;
-    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x1C) != 0) return 0;
+    if (SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x1C) != 0) return 0;
     const int pattern = SH_CALL(Area109_SwitchPattern)();
     int bits = pattern % 6;
     for (unsigned i = 0; i < 3; ++i) {
-        SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), At(at::kPatternFlags + i)[0]);
-        if (bits & 1) SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), At(at::kPatternFlags + i)[0]);
+        SH_CALL(Flags_Clear)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), At(::bof3::Img(at::kPatternFlags.v) + i)[0]);
+        if (bits & 1) SH_CALL(Flags_Set)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), At(::bof3::Img(at::kPatternFlags.v) + i)[0]);
         bits >>= 1;
     }
     SH_CALL(Effect_HoldFlag1C)(0xF);
@@ -633,7 +633,7 @@ extern "C" unsigned char __cdecl Area109_SwitchHook(long x, long z) {
 extern "C" void __cdecl EffectKind18Sub41_DrawPanels(unsigned lift, unsigned texture) {
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, 0);
     SH_CALL(Gfx_CommitPrim)(5, 0xC);
-    for (U from = at::kPanelVertices; from < at::kPanelVerticesEnd; from += 12) {
+    for (U from = ::bof3::Img(at::kPanelVertices.v); from < ::bof3::Img(at::kPanelVerticesEnd.v); from += 12) {
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
@@ -805,8 +805,8 @@ constexpr U kWideYFloat = 0x5C4244, kNarrowYFloat = 0x5C4238;
 // The float an `fcomp dword ptr [mem]` operand names: the two above, or
 // DIV-0041's four as widescreen.cpp holds them.
 float Bound(U operand_at) {
-    if (operand_at == at::kWideYAt) return AreaMapBD_WideYBound;
-    if (operand_at == at::kNarrowYAt) return AreaMapBD_NarrowYBound;
+    if (operand_at == at::kWideYAt.v) return AreaMapBD_WideYBound;
+    if (operand_at == at::kNarrowYAt.v) return AreaMapBD_NarrowYBound;
     return Fl(Widescreen_RangeOperand(operand_at));
 }
 }  // namespace
@@ -843,7 +843,7 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
     const U octant = Sar(static_cast<U>(Cond_AngleFB) + 0x100u, 9) & 7u;
     const U fx = ((static_cast<U>(MapView_FocusX) >> 8) - 0x80u) & 0xFFu;
     const U fz = ((static_cast<U>(MapView_FocusZ) >> 8) - 0x80u) & 0xFFu;
-    const unsigned char* const rec = At(at::kOctants + octant * 6);
+    const unsigned char* const rec = At(::bof3::Img(at::kOctants.v) + octant * 6);
     const U even = (~octant) & 1u;   // not eax; and eax, 1
     const U x0 = static_cast<U>(S8(rec[0])) - fx + 0x100u;
     const U z0 = static_cast<U>(S8(rec[3])) - fz + 0x100u;
@@ -864,7 +864,7 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
             const U x = static_cast<U>(I(a) / 2) + static_cast<U>(S8(rec[1])) * col + static_cast<std::uint32_t>(static_cast<std::int16_t>(at::kOriginX));
             const U b = static_cast<U>(S8(rec[5])) * (row + 1u);
             const U z = static_cast<U>(I(b) / 2) + static_cast<U>(S8(rec[4])) * col + static_cast<std::uint32_t>(static_cast<std::int16_t>(at::kOriginZ));
-            const unsigned char block = At(at::kBlocks + ((Sar(x, 4) & 0xFu) | (z & 0xF0u)))[0];
+            const unsigned char block = At(::bof3::Img(at::kBlocks.v) + ((Sar(x, 4) & 0xFu) | (z & 0xF0u)))[0];
             const U map_row = (block & 0xF0u) | (z & 0xFu);
             const U map_col = ((block & 0xFu) << 4) | (x & 0xFu);
             const U cell = map_row * at::kMapWidth + map_col;
@@ -880,10 +880,10 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
             // x87 fcomp against the operands' floats: an unordered compare sets
             // C0 and C3 both.
             const float sx = Fl(AddressOf(MapView_ScreenXY)), sy = Fl(AddressOf(MapView_ScreenXY) + 4);
-            bool keep = sy > Bound(at::kWideYAt) && sx > Bound(at::kWideLoAt) && sx < Bound(at::kWideHiAt);
+            bool keep = sy > Bound(at::kWideYAt.v) && sx > Bound(at::kWideLoAt.v) && sx < Bound(at::kWideHiAt.v);
             if (!keep) {
-                const bool y_ok = !(sy >= Bound(at::kNarrowYAt));
-                keep = y_ok && sx > Bound(at::kNarrowLoAt) && !(sx >= Bound(at::kNarrowHiAt));
+                const bool y_ok = !(sy >= Bound(at::kNarrowYAt.v));
+                keep = y_ok && sx > Bound(at::kNarrowLoAt.v) && !(sx >= Bound(at::kNarrowHiAt.v));
             }
             if (!keep) continue;
 
@@ -920,11 +920,11 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
             SH_CALL(Gte_LoadVertices3)(reinterpret_cast<const unsigned long*>(v + 8));
             SH_CALL(Gte_Rtpt)();
             {
-                const U last = at::kLayerLast + (Gfx_BufferIndex - row * 6u) * 8u;
+                const U last = ::bof3::Img(at::kLayerLast.v) + (Gfx_BufferIndex - row * 6u) * 8u;
                 unsigned char* const quad = item + Gfx_BufferIndex * 0x48u;
                 SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(last))), AddressOf(quad));
             }
-            SetUL(at::kLayerLast + (Gfx_BufferIndex - row * 6u) * 8u, AddressOf(item + Gfx_BufferIndex * 0x48u));
+            SetUL(::bof3::Img(at::kLayerLast.v) + (Gfx_BufferIndex - row * 6u) * 8u, AddressOf(item + Gfx_BufferIndex * 0x48u));
             {
                 unsigned char* const quad = item + Gfx_BufferIndex * 0x48u;
                 SH_CALL(Gte_StoreScreenXY3)(reinterpret_cast<unsigned long*>(quad + 0x18), reinterpret_cast<unsigned long*>(quad + 0x28),
@@ -981,8 +981,8 @@ extern "C" int __cdecl EffectKind0F_CharCount(const unsigned char* text) {
 }
 
 void Rest3G_Inject() {
-    bof3::OperandExpect("AreaMapBD_BuildView y bound", at::kWideYAt, &kWideYFloat, 4);
-    bof3::OperandExpect("AreaMapBD_BuildView y bound", at::kNarrowYAt, &kNarrowYFloat, 4);
+    bof3::OperandExpect("AreaMapBD_BuildView y bound", at::kWideYAt.v, &kWideYFloat, 4);
+    bof3::OperandExpect("AreaMapBD_BuildView y bound", at::kNarrowYAt.v, &kNarrowYFloat, 4);
     if (bof3::WantsShadow("rest_3g")) rest_3g::SelfTest();
     BOF3_INJECT(EffectKindAC_Start);
     BOF3_INJECT(EffectKindAC_FadeIn);

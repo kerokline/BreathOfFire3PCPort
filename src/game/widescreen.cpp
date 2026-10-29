@@ -188,8 +188,9 @@ unsigned SlideColumns() {
 Split* SplitOf(unsigned char* rec) {
     if (g_test_rec != nullptr) return rec == g_test_rec ? g_test_split : nullptr;
     const U a = static_cast<U>(reinterpret_cast<std::uintptr_t>(rec));
-    if (a >= WindowRecords_addr && a < WindowRecords_addr + kRecordSize * kRecordCount && (a - WindowRecords_addr) % kRecordSize == 0)
-        return &g_split[(a - WindowRecords_addr) / kRecordSize];
+    const U records = ::bof3::Img(WindowRecords_addr);   // a record pointer: a place
+    if (a >= records && a < records + kRecordSize * kRecordCount && (a - records) % kRecordSize == 0)
+        return &g_split[(a - records) / kRecordSize];
     // Not a window record: the box is drawn at Capcom's x (the original's
     // picture), and said once.
     static bool said = false;
@@ -330,7 +331,7 @@ const std::int32_t* Widescreen_SlideOperand(unsigned at) {
 
 U Widescreen_RangeOperand(unsigned at) {
     for (const Site& s : g_sites)
-        if (s.at == at) return s.now;
+        if (s.at == at) return s.now == s.rdata ? ::bof3::Img(s.rdata) : s.now;   // the .rdata float's place, or ours
     bof3::Fatal("widescreen: 0x%X is not one of DIV-0041's area-map range operands", at);
 }
 
@@ -504,7 +505,7 @@ void Widescreen_CheckSlides() {
     static const unsigned kWidths[] = {0, kColumns16x9, kColumns21x9};
     constexpr int kMaxFrames = 0x10000 / 0x20 + 8;
 
-    volatile U* const current = reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr));
+    volatile U* const current = reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(::bof3::Img(BattleWinStates_Current_addr)));
     const U current_was = *current;
     alignas(4) unsigned char rec[kRecordSize];
     Split split;

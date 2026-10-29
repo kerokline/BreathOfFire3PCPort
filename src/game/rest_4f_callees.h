@@ -20,7 +20,7 @@ namespace rest_4f::at {
 // kScreenStep: now FieldS_State (symbols.toml).
 // kState: now FieldS_Step (symbols.toml).
 // kOpenState: now Rest2d_MenuSub (symbols.toml).
-constexpr std::uint32_t kCounter = 0x929F04;
+constexpr ::bof3::image::Va kCounter{0x929F04};
 // kCursor: now MenuLists_Cursor (symbols.toml).
 // The settings (docs/config-screen.md section 2 has the rows): row 0 0x903A58
 // (0..2), row 1 the window style 0x903A5A (0..3), row 2 the backdrop 0x903A5B
@@ -35,50 +35,50 @@ constexpr std::uint32_t kCounter = 0x929F04;
 // kSetting4: now FieldE2_RunDefault (symbols.toml).
 // The button words: 0x903580 + 2 * n (n = the controller table's byte; 2 is
 // Field_MenuButton, 7 Field_ConfirmButtons, 8 Field_CancelButtons).
-constexpr std::uint32_t kButtons = 0x903580;
+constexpr ::bof3::image::Va kButtons{0x903580};
 // Input_Pressed (0x7E1BEC) as the original reads it in places: a dword, the
 // word after it in its high half - only bits of the low word tested.
-constexpr std::uint32_t kPressedDword = 0x7E1BEC;
+constexpr ::bof3::image::Va kPressedDword{0x7E1BEC};
 // The controller panel's rows: six bytes, the button word of each row (read by
 // the row, 0x6536F0 + row, and by the cursor, 0x6536E8 + cursor, cursors 8..13).
-constexpr std::uint32_t kPadRows = 0x6536F0;
-constexpr std::uint32_t kPadRowsByCursor = 0x6536E8;
+constexpr ::bof3::image::Va kPadRows{0x6536F0};
+constexpr ::bof3::image::Va kPadRowsByCursor{0x6536E8};
 constexpr unsigned kPadRowCount = 6;
 // The option rows (docs/config-screen.md section 1): the first record and the
 // count of each row by the row byte, the 16-byte records (+0 a count, +1 an s8
 // x, +2 the string).
-constexpr std::uint32_t kOptionFirst = 0x653808;
-constexpr std::uint32_t kOptionCount = 0x653810;
-constexpr std::uint32_t kOptionRecords = 0x6536F8;
+constexpr ::bof3::image::Va kOptionFirst{0x653808};
+constexpr ::bof3::image::Va kOptionCount{0x653810};
+constexpr ::bof3::image::Va kOptionRecords{0x6536F8};
 // The controller panel's six names (a pointer table; config_text.cpp re-points it).
-constexpr std::uint32_t kPadNames = 0x66A368;
+constexpr ::bof3::image::Va kPadNames{0x66A368};
 constexpr unsigned kPadNameCount = 6;
 // The sites and operands the divergences rewrite, read in place at every call
 // (menu_frame.cpp DIV-0011; config_text.cpp DIV-0017, DIV-0026, DIV-0051).
-constexpr std::uint32_t kPanelFrameSite = 0x461778;   // in Config_DrawPanel: E8 rel32 (Port_DroppedCall, or Menu_DrawFrame)
-constexpr std::uint32_t kPadFrameSite = 0x461A84;     // in Config_DrawControllerPanel: the same
-constexpr std::uint32_t kPadFrameW = 0x461A62;        // imm8 of its `push 0xC` (DIV-0026 / DIV-0051: 0xD)
-constexpr std::uint32_t kPadFrameH = 0x461A60;        // imm8 of its `push 0xF`
-constexpr std::uint32_t kOptionWidth = 0x4619E1;      // 3 bytes: lea eax,[eax+eax*2] (x 12 with the shl 2), or DIV-0017's shl eax,1 / nop (x 8)
-constexpr std::uint32_t kOptionBigSite = 0x4619F9;    // E8 rel32: Text_DrawAt, or DIV-0017's ConfigText_DrawSelected
-constexpr std::uint32_t kPadBoxWidth = 0x461B07;      // imm8 of `push 0x68` (DIV-0051: 0x58)
-constexpr std::uint32_t kPadNameWidth = 0x461B36;     // 3 bytes: lea eax,[ecx+ecx*2] (x 6 with the shl 1), or DIV-0026's [ecx+ecx] (x 4)
-constexpr std::uint32_t kPadNameEdge = 0x461B41;      // imm8 of `add ecx, 0x20` (DIV-0026: 0x36)
-constexpr std::uint32_t kPadNameSite = 0x461B43;      // E8 rel32: Text_DrawAt, or DIV-0026's ConfigText_DrawSelected
-constexpr std::uint32_t kPadSecondCell = 0x461BAC;    // 6 bytes: mov esi,[Gfx_PacketNext], or DIV-0051's jmp over the second cell
+constexpr ::bof3::image::CodeVa kPanelFrameSite{0x461778};   // in Config_DrawPanel: E8 rel32 (Port_DroppedCall, or Menu_DrawFrame)
+constexpr ::bof3::image::CodeVa kPadFrameSite{0x461A84};     // in Config_DrawControllerPanel: the same
+constexpr ::bof3::image::CodeVa kPadFrameW{0x461A62};        // imm8 of its `push 0xC` (DIV-0026 / DIV-0051: 0xD)
+constexpr ::bof3::image::CodeVa kPadFrameH{0x461A60};        // imm8 of its `push 0xF`
+constexpr ::bof3::image::CodeVa kOptionWidth{0x4619E1};      // 3 bytes: lea eax,[eax+eax*2] (x 12 with the shl 2), or DIV-0017's shl eax,1 / nop (x 8)
+constexpr ::bof3::image::CodeVa kOptionBigSite{0x4619F9};    // E8 rel32: Text_DrawAt, or DIV-0017's ConfigText_DrawSelected
+constexpr ::bof3::image::CodeVa kPadBoxWidth{0x461B07};      // imm8 of `push 0x68` (DIV-0051: 0x58)
+constexpr ::bof3::image::CodeVa kPadNameWidth{0x461B36};     // 3 bytes: lea eax,[ecx+ecx*2] (x 6 with the shl 1), or DIV-0026's [ecx+ecx] (x 4)
+constexpr ::bof3::image::CodeVa kPadNameEdge{0x461B41};      // imm8 of `add ecx, 0x20` (DIV-0026: 0x36)
+constexpr ::bof3::image::CodeVa kPadNameSite{0x461B43};      // E8 rel32: Text_DrawAt, or DIV-0026's ConfigText_DrawSelected
+constexpr ::bof3::image::CodeVa kPadSecondCell{0x461BAC};    // 6 bytes: mov esi,[Gfx_PacketNext], or DIV-0051's jmp over the second cell
 
 // --- the world map's exit records (Field_ExitFromCell's list) ---------------------------
-constexpr std::uint32_t kExitRecords = 0x653924;      // WorldMap_Records' +0x14, a data pointer
+constexpr ::bof3::image::Va kExitRecords{0x653924};      // WorldMap_Records' +0x14, a data pointer
 constexpr std::uint32_t kRecordSize = 0x1C;
 constexpr unsigned kRecordCount = 12;                 // the eleven records and index 11, "none" (as effect_1a.cpp)
 
 // --- effect kinds 2, 7, 8, 9 and 0xB -----------------------------------------------------
-constexpr std::uint32_t kChapterCount = 0x903848;     // the chapter's count: kind 9's last open adds one
-constexpr std::uint32_t kChapterByte4A = 0x90384A;    // compared by kind 8's lines (0x32, 0x34)
+constexpr ::bof3::image::Va kChapterCount{0x903848};     // the chapter's count: kind 9's last open adds one
+constexpr ::bof3::image::Va kChapterByte4A{0x90384A};    // compared by kind 8's lines (0x32, 0x34)
 constexpr unsigned kObjectCount = 30;                 // Sprite_Objects: kind 8's object by +6
 // kExtra0: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra[0]: kind 0xB's point and angles
-constexpr std::uint32_t kKind0BOffset = 0x653AAC;     // two s8: kind 0xB's start x, y offsets from the extra record's word +0x2E / +0x30
-constexpr std::uint32_t kKind0BRise = 0x653AB0;       // s8 by +9 >> 2: kind 0xB's rise per frame
+constexpr ::bof3::image::Va kKind0BOffset{0x653AAC};     // two s8: kind 0xB's start x, y offsets from the extra record's word +0x2E / +0x30
+constexpr ::bof3::image::Va kKind0BRise{0x653AB0};       // s8 by +9 >> 2: kind 0xB's rise per frame
 constexpr rdata::Const kKind0BStepX{0x5C41C8};      // 4.0f
 constexpr rdata::Const kKind0BStepY{0x5C41C0};      // 2.0f
 // Kind 2: ObjTrio record 0 (0x802D40): its +2 (0x802D42), +0x27 the palette,
@@ -86,9 +86,9 @@ constexpr rdata::Const kKind0BStepY{0x5C41C0};      // 2.0f
 // with 0x38; the CLUT shadow 0x80F580 (64 bytes a palette), palette 0x7B
 // (0x811440) the record's own.
 // kLeader: now ObjTrio (symbols.toml).
-constexpr std::uint32_t kKind02Word = 0x905E62;
+constexpr ::bof3::image::Va kKind02Word{0x905E62};
 // kClutShadow: now Gfx_ClutStrip (symbols.toml).
-constexpr std::uint32_t kClut7B = 0x811440;
+constexpr ::bof3::image::Va kClut7B{0x811440};
 constexpr unsigned kClutBytes = 0x40;
 
 // --- the state tables this group's dispatchers read (symbols.toml [[data]]) ----------------

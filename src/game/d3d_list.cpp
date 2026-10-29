@@ -19,7 +19,7 @@ namespace d3d_list {
 
 namespace {
 using Handler = long(__cdecl*)(const unsigned char*);
-Handler H(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(address)); }
+Handler H(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(::bof3::CodePlace(address))); }
 }  // namespace
 
 // The handlers of each table, by entry, as the original's case blocks call them.
@@ -27,7 +27,7 @@ const Callees kOriginals = {
     {
         // the software surfaces, first table 0x59F2A0
         H(0x5A3A60), H(0x5A3B60), H(0x5A3D70), H(0x5A3E90), H(0x5A3FB0), H(0x5A40C0), H(0x5A41A0),
-        H(0x5A42E0), H(kRetOnly), H(kRetOnly), H(kRetOnly), H(kRetOnly), H(kRetOnly), H(kRetOnly),
+        H(0x5A42E0), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v), H(kRetOnly.v),
         H(0x5A4400), H(0x5A45B0), H(0x5A4500), H(0x5A4900), H(0x5A46E0), H(0x5A47F0), H(0x5A4C40),
     },
     {
@@ -63,7 +63,7 @@ void PutWord(U address, U v) {
 }
 
 void Scene(U offset) {   // 0x24 BeginScene, 0x28 EndScene; the device re-read each time
-    void** device = *reinterpret_cast<void** volatile*>(At(D3d_Device_addr));
+    void** device = *reinterpret_cast<void** volatile*>(At(::bof3::Img(D3d_Device_addr)));
     reinterpret_cast<long(__stdcall*)(void*)>((*reinterpret_cast<void***>(device))[offset / 4])(device);
 }
 
@@ -73,7 +73,7 @@ void Scene(U offset) {   // 0x24 BeginScene, 0x28 EndScene; the device re-read e
 // Gfx_TexCacheKey.
 void DrawMode(U p) {
     Gfx_DrawEnable = At(p + 6)[0] & 1;
-    At(Gfx_DrawEnable_addr - 1)[0] = (At(p + 6)[0] >> 1) & 1;
+    At(::bof3::Img(Gfx_DrawEnable_addr) - 1)[0] = (At(p + 6)[0] >> 1) & 1;
     Gfx_DrawTpage = Word(p + 4);
     const U key = Long(p + 8);
     if (key != 0) {
@@ -211,7 +211,7 @@ void Gfx_DrawOTag(unsigned long* ot) {
         node = p;
     }
     if (!software) Scene(0x28);
-    for (U a = kFontInUse; a < kFontInUseEnd; a += 0x14) PutWord(a, 0);
-    for (U a = kCellInUse; a < kCellInUseEnd; a += 0x28) PutWord(a, 0);
+    for (U a = ::bof3::Img(kFontInUse); a < ::bof3::Img(kFontInUseEnd); a += 0x14) PutWord(a, 0);
+    for (U a = ::bof3::Img(kCellInUse); a < ::bof3::Img(kCellInUseEnd); a += 0x28) PutWord(a, 0);
     if (D3d_AfterDrawRequest != 0) g.after_draw();
 }

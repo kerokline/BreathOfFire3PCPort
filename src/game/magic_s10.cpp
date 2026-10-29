@@ -60,16 +60,16 @@ using move_script::Word;
 // sixteen bytes (0x903850..0x90385F, words) and the four SVECTORs of
 // Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again after every
 // call, as the originals read them.
-constexpr std::uint32_t kS = SharedScratch_addr;
+constexpr ::bof3::image::Va kS{SharedScratch_addr};
 // kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
 // kActorRecord: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting actor's sprite record
 // kEventBattle: now EventBattle_Id (symbols.toml). u8: not 0 in an event battle (its kind)
 // kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
-constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
-constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
-constexpr std::uint32_t kFrameSetBlast = 0x8C5D80;
+constexpr ::bof3::image::Va kFrameSetBattle{0x8B3580};
+constexpr ::bof3::image::Va kFrameSetEffect{0x8E3580};
+constexpr ::bof3::image::Va kFrameSetBlast{0x8C5D80};
 
 // MAGIC053's own pool of 32 task-like records (Lavaburst_Pool) and the byte
 // table its start reads (Lavaburst_ChildDelays), both read in place.
@@ -78,19 +78,19 @@ constexpr unsigned kPoolRecords = 32;
 // kChildDelays: now Lavaburst_ChildDelays (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
-unsigned char ActorByte() { return Mem(at::kActor)[0]; }
+unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
+unsigned char ActorByte() { return Mem(::bof3::Img(at::kActor))[0]; }
 
-std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
+std::uint16_t SW(unsigned k) { return Word(Mem(::bof3::Img(kS.v) + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
-unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
-void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
+unsigned char SB(unsigned k) { return Mem(::bof3::Img(kS.v) + k)[0]; }
+void SetSW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(kS.v) + k), v & 0xFFFF); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(::bof3::Img(Prim_VertexScratch_addr) + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
@@ -107,17 +107,17 @@ std::uint32_t Mul(int a, int b) { return static_cast<std::uint32_t>(a) * static_
 // `shl n` on a dword.
 std::uint32_t Shl(int v, unsigned n) { return static_cast<std::uint32_t>(v) << n; }
 
-unsigned char* TaskSlot(unsigned slot) { return Mem(BattleTask_Slots_addr + slot * at::kTaskStride); }
-unsigned char* PoolRecord(unsigned index) { return Mem(Lavaburst_Pool_addr + index * 0x84u); }
+unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
+unsigned char* PoolRecord(unsigned index) { return Mem(::bof3::Img(Lavaburst_Pool_addr) + index * 0x84u); }
 // The originals index the records by the battle index, unchecked: the party
 // member's by index, the enemy's by index - 3 (a party index lands below the
 // enemy records).
-unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
-    return Mem(Battle_Enemies_addr + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
+    return Mem(::bof3::Img(Battle_Enemies_addr) + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
 // MAGIC054's walk counts the enemies from 0.
-unsigned char* EnemyByOrder(unsigned i) { return Mem(Battle_Enemies_addr + i * at::kEnemyStride); }
+unsigned char* EnemyByOrder(unsigned i) { return Mem(::bof3::Img(Battle_Enemies_addr) + i * at::kEnemyStride); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }
@@ -137,18 +137,18 @@ using Fn0 = void (__cdecl*)();
 using ByteFn = unsigned char (__cdecl*)();
 using TaskFn = void (__cdecl*)(unsigned char*);
 using AnimFn = void (__cdecl*)(std::uint32_t, std::uint32_t);
-void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
+void Call0(std::uint32_t address) { MH_WORD(Fn0, address)(); }
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).
-constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
-void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
+constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};
+void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset.v)(task); }
 // The engine's enemy animations, unnamed, in no group: an enemy by battle
 // index - 3 (the index's low byte) given animation `arg` through
 // BattleEnemy_SetAnimation; 0x435A20 makes it Sprite_Current for the call,
 // 0x435A70 does not (docs/magic_s01.md).
-constexpr std::uint32_t kEnemyAnimCurrent = bof3::addr::BattleEnemy_SetAnimationAs;   // 0x435A20
-constexpr std::uint32_t kEnemyAnim = bof3::addr::BattleEnemy_SetAnimationOf;   // 0x435A70
+constexpr ::bof3::image::CodeVa kEnemyAnimCurrent{bof3::addr::BattleEnemy_SetAnimationAs};   // 0x435A20
+constexpr ::bof3::image::CodeVa kEnemyAnim{bof3::addr::BattleEnemy_SetAnimationOf};   // 0x435A70
 
 // The phase handlers and callees of other units (docs/magic_s10.md section 3)
 // are ours now and called by name: S38's MagicFx_CountDownFlag10 and
@@ -223,9 +223,9 @@ S10_EXPORT void __cdecl Ovum_Spawn(void) {
     child[2] = 0;
     RandCall();
     const std::uint32_t r1 = RandCall();
-    rv::Store<unsigned>(tchild->screen_x, (r1 & 0xF) + static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->screen_x));
+    rv::Store<unsigned>(tchild->screen_x, (r1 & 0xF) + static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Pointer(::bof3::Img(BattleOdds_ActorObject_addr)))->screen_x));
     const std::uint32_t r2 = RandCall();
-    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+    const unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
     rv::Store<unsigned>(tchild->screen_y, Word(src + 0x30) - (r2 & 0x1F));
     SetWord(child + 0x32, Word(src + 0x32));
     unsigned char* const s = Sc();
@@ -248,7 +248,7 @@ S10_EXPORT void __cdecl Ovum_End(void) {
     s[0xA] = static_cast<unsigned char>(was - 1);
     if (was != 0) return;
     MH_CALL(Battle_SetTargetFlag40)(TargetByte());
-    Mem(at::kFlags)[0] |= 4;
+    Mem(::bof3::Img(at::kFlags))[0] |= 4;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -265,10 +265,10 @@ S10_EXPORT void __cdecl OvumChild_Task(void) {
 S10_EXPORT void __cdecl OvumChild_Run(void) {
     static constexpr std::uint32_t kSteps[3] = {addr::OvumChild_Start, addr::MainCannonBlast_Play, addr::BattleFx_FreeTask};
     const unsigned phase = Sc()[2];
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBlast));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBlast.v)));
     Dispatch(kSteps, 3, phase, "OvumChild_Run");
     if (Sc()[0] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x4ABE80: the sprite fields (+0x24..+0x2D); sound 0x102 for the
@@ -299,16 +299,16 @@ namespace {
 // owner are read after the phase call that precedes the walk.
 void WalkPool() {
     unsigned char* const self = Sprite_Current;
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < kPoolRecords; ++i) {
         unsigned char* const rec = PoolRecord(i);
         records::BattleTask* const trec = rv::As<records::BattleTask>(rec);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t rec_owner = static_cast<std::int32_t>(trec->owner);
         Sprite_Current = rec;
-        SetLong(Mem(BattleE2_Owner_addr), rec_owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), rec_owner);
         Call0(addr::LavaburstRecord_Task);
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
         Sprite_Current = self;
     }
 }
@@ -346,7 +346,7 @@ S10_EXPORT void __cdecl Lavaburst_Start(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
     const bool enemies = (TargetByte() & 0x40) != 0;
     const unsigned actor = ActorByte();
-    unsigned char facing = Pointer(MagicS23_ActorSprite_addr)[8];
+    unsigned char facing = Pointer(::bof3::Img(MagicS23_ActorSprite_addr))[8];
     if (enemies ? actor < 3 : actor >= 3) facing = static_cast<unsigned char>(facing ^ 2);
     Sc()[8] = facing;
     Sc()[0xB] = 0;
@@ -357,7 +357,7 @@ S10_EXPORT void __cdecl Lavaburst_Start(void) {
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
         records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
-        const unsigned char delay = Mem(Lavaburst_ChildDelays_addr)[i];
+        const unsigned char delay = Mem(::bof3::Img(Lavaburst_ChildDelays_addr))[i];
         tchild->owner = static_cast<std::int32_t>(Key(self));
         child[1] = 0;
         child[4] = static_cast<unsigned char>(delay >> 4);
@@ -387,7 +387,7 @@ S10_EXPORT void __cdecl LavaburstChild_Run(void) {
     static constexpr std::uint32_t kSteps[5] = {addr::LavaburstChild_Launch, addr::LavaburstChild_Rise,
                                                 addr::LavaburstChild_Shake, addr::LavaburstChild_Settle,
                                                 addr::LavaburstChild_End};
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetEffect.v)));
     Dispatch(kSteps, 5, Sc()[2], "LavaburstChild_Run");
     const unsigned char* const s = Sc();
     if ((s[0] & 1) != 0 && s[2] != 0 && s[2] < 4) {
@@ -398,7 +398,7 @@ S10_EXPORT void __cdecl LavaburstChild_Run(void) {
         Call0(addr::MeteorStrikeRock_DrawRing);
         MH_CALL(Gte_PopMatrix)();
     }
-    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(::bof3::Img(BattleE2_AnimSet_addr)), static_cast<std::int32_t>(::bof3::Img(kFrameSetBattle.v)));
 }
 
 // original 0x4AC160: +9 down; at 0 the child starts: at an angle +0xB << 9
@@ -725,7 +725,7 @@ void CopyToChild(unsigned char* rec, unsigned number) {
 // party) given an animation - an enemy 4 through the engine's 0x435A20, a
 // member its +8 + 0x10 - and copied into a child; sound 0x100.
 S10_EXPORT void __cdecl Howling_Start(void) {
-    if (Mem(EventBattle_Id_addr)[0] == 0x37) {
+    if (Mem(::bof3::Img(EventBattle_Id_addr))[0] == 0x37) {
         MH_CALL(Battle_SetTargetFlags)(TargetByte(), 0x10);
         Sc()[1] = 3;
         Sc()[9] = 0x1E;
@@ -736,7 +736,7 @@ S10_EXPORT void __cdecl Howling_Start(void) {
     if ((TargetByte() & 0x40) != 0) {
         for (unsigned i = 0; i < 8; ++i) {
             if ((MH_CALL(Battle_ActorIsOut)(i + 3) & 0xFF) != 0) continue;
-            MH_AT(AnimFn, kEnemyAnimCurrent)(i + 3, 4);
+            MH_AT(AnimFn, kEnemyAnimCurrent.v)(i + 3, 4);
             CopyToChild(EnemyByOrder(i), i);
         }
     } else {
@@ -883,7 +883,7 @@ S10_EXPORT void __cdecl Ebonfire_Task(void) {
 // +0xA 1, +1 on.
 S10_EXPORT void __cdecl Ebonfire_Start(void) {
     {
-        const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
+        const unsigned char* const src = Pointer(::bof3::Img(BattleOdds_ActorObject_addr));
         Sc()[8] = src[8];
         rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
         rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
@@ -1449,12 +1449,12 @@ S10_EXPORT void __cdecl SacrificeActor_Split(void) {
         Inc(owner[0xB]);
     }
     MH_CALL(Sound_PlayById)(0x100);
-    std::uint32_t actor = static_cast<std::uint32_t>(Long(Mem(at::kActor)));
+    std::uint32_t actor = static_cast<std::uint32_t>(Long(Mem(::bof3::Img(at::kActor))));
     if ((actor & 0xFF) < 3) {
         unsigned char* const kept = Field_State;
         Field_State = PartyRecord(actor & 0xFF);
         MH_CALL(Battle_PlayActorCue)(0);
-        actor = static_cast<std::uint32_t>(Long(Mem(at::kActor)));
+        actor = static_cast<std::uint32_t>(Long(Mem(::bof3::Img(at::kActor))));
         Field_State = kept;
         if ((actor & 0xFF) < 3) {
             MemberAndCopyAnimation(actor & 0xFF, 0x10);
@@ -1463,7 +1463,7 @@ S10_EXPORT void __cdecl SacrificeActor_Split(void) {
             return;
         }
     }
-    MH_AT(AnimFn, kEnemyAnim)(actor, 4);
+    MH_AT(AnimFn, kEnemyAnim.v)(actor, 4);
     Sc()[9] = 0x1E;
     Inc(Sc()[2]);
 }
@@ -1488,14 +1488,14 @@ S10_EXPORT void __cdecl SacrificeActor_Return(void) {
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         TintBy(s, 0xF0);
         if (s[0x5D] != 0x80) return;
-        const unsigned char* const actor_sprite = Pointer(MagicS23_ActorSprite_addr);
+        const unsigned char* const actor_sprite = Pointer(::bof3::Img(MagicS23_ActorSprite_addr));
         ts->x = rv::As<records::SpriteHead>(actor_sprite)->x;
-        ts->z = rv::As<records::SpriteHead>(Pointer(MagicS23_ActorSprite_addr))->z;
-        rv::Store(ts->height, rv::As<records::SpriteHead>(Pointer(MagicS23_ActorSprite_addr))->height);
+        ts->z = rv::As<records::SpriteHead>(Pointer(::bof3::Img(MagicS23_ActorSprite_addr)))->z;
+        rv::Store(ts->height, rv::As<records::SpriteHead>(Pointer(::bof3::Img(MagicS23_ActorSprite_addr)))->height);
     }
-    const std::uint32_t actor = static_cast<std::uint32_t>(Long(Mem(at::kActor)));
+    const std::uint32_t actor = static_cast<std::uint32_t>(Long(Mem(::bof3::Img(at::kActor))));
     if ((actor & 0xFF) < 3) MemberAndCopyAnimation(actor & 0xFF, 0x1C);
-    else MH_AT(AnimFn, kEnemyAnim)(actor, 4);
+    else MH_AT(AnimFn, kEnemyAnim.v)(actor, 4);
     Inc(Sc()[2]);
 }
 

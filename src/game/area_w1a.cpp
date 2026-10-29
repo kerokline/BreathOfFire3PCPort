@@ -56,7 +56,7 @@ Handler StateEntry(const char* who, U table, unsigned count, unsigned index) {
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(table + index * 4u)))));
 }
 
-void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
+void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 // Field_ActiveMember's word +0x8A less 2 (area 39's handlers).
 void MemberStep() { AddWord(Field_ActiveMember + 0x8A, -2); }
 // Field_State's word +0x12E less 2 (area 41's states).
@@ -88,7 +88,7 @@ void SpawnForMember(U list, U record) {
     EffectAt(cur[0xB])[5] = 6;
     EffectAt(cur[0xB])[6] = 3;
     rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->step_x, 0);
-    const auto step = static_cast<signed char>(B(Area38_EffectBytes_addr + B(list)));
+    const auto step = static_cast<signed char>(B(::bof3::Img(Area38_EffectBytes_addr) + B(list)));
     rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->step_z, step);
     rv::Store<unsigned>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->screen_x, static_cast<std::uint16_t>(tCur->screen_x));
     rv::Store<unsigned>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->screen_y, static_cast<std::uint16_t>(tCur->screen_y));
@@ -97,10 +97,10 @@ void SpawnForMember(U list, U record) {
 // Area 40's four lever choices (0x405810..0x4058D0): message 0xFFFF; answer
 // 0: lever flag `flag` of the row 0x903FB0, the gate redrawn, sound 0x203.
 void Lever(unsigned flag) {
-    const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
+    const unsigned char answer = B(::bof3::Img(AreaW0c_ChoiceAnswer_addr));
     SetMessage(0xFFFF);
     if (answer != 0) return;
-    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0x20), flag);
+    AH_CALL(Flags_Set)(Mem(::bof3::Img(Cond_Flags_addr) + 0x20), flag);
     AH_CALL(Area40_SetGate)();
     AH_CALL(Sound_PlayEffect)(0x203);
 }
@@ -109,8 +109,8 @@ void Lever(unsigned flag) {
 // &= 0xEFF9, the tail kind and state 0.
 void TailOff() {
     Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xEFF9);
-    B(AreaW0a_TailKind_addr) = 0;
-    B(AreaW0c_TailState_addr) = 0;
+    B(::bof3::Img(AreaW0a_TailKind_addr)) = 0;
+    B(::bof3::Img(AreaW0c_TailState_addr)) = 0;
 }
 
 // The 28 gate cells, x 0x41..0x44 by z 3..9 (Area40_SetGate, Area40_Init).
@@ -174,10 +174,10 @@ extern "C" void __cdecl Area38_SetCellsC0(void) {
 
 // original 0x405410 (Area38_Handlers[2]; PSX 0x801F2C94): party-list byte
 // 0x904063, party record 1.
-extern "C" void __cdecl Area38_SpawnEffectMember1(void) { SpawnForMember(Cond_Flags_addr + 0xd3, ObjTrio_addr + 0x14c); }
+extern "C" void __cdecl Area38_SpawnEffectMember1(void) { SpawnForMember(::bof3::Img(Cond_Flags_addr) + 0xd3, ::bof3::Img(ObjTrio_addr) + 0x14c); }
 
 // original 0x4054D0 (Area38_Handlers[3]; PSX 0x801F2E60): 0x904064, record 2.
-extern "C" void __cdecl Area38_SpawnEffectMember2(void) { SpawnForMember(Cond_Flags_addr + 0xd4, ObjTrio_addr + 0x298); }
+extern "C" void __cdecl Area38_SpawnEffectMember2(void) { SpawnForMember(::bof3::Img(Cond_Flags_addr) + 0xd4, ::bof3::Img(ObjTrio_addr) + 0x298); }
 
 // ===========================================================================
 // Area 39 (descriptor 0x5F3E60): eleven handlers of its own and a two-state
@@ -187,7 +187,7 @@ extern "C" void __cdecl Area38_SpawnEffectMember2(void) { SpawnForMember(Cond_Fl
 // original 0x405590 (Area39_Handlers[0]; PSX 0x801F2C04): Area39_States by
 // Sprite_Current[4].
 extern "C" void __cdecl Area39_Run(void) {
-    StateEntry("Area39_Run", Area39_States_addr, at::kArea39StateCount, Sprite_Current[4])();
+    StateEntry("Area39_Run", ::bof3::Img(Area39_States_addr), at::kArea39StateCount, Sprite_Current[4])();
 }
 
 // original 0x4055B0 (Area39_States[0]): +0xA = 0x40, state 1; the member's
@@ -207,9 +207,9 @@ extern "C" void __cdecl Area39_DriftStep(void) {
         cur[4] = 0;
         return;
     }
-    AddLong(cur + 0x34, static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(Area39_DriftSteps_addr + (cur[0xA] & 0xF))))) << 11);
+    AddLong(cur + 0x34, static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(::bof3::Img(Area39_DriftSteps_addr) + (cur[0xA] & 0xF))))) << 11);
     cur = Sprite_Current;
-    const auto step = static_cast<std::int32_t>(static_cast<signed char>(B(Area39_DriftSteps_addr + (cur[0xA] & 0xF))));
+    const auto step = static_cast<std::int32_t>(static_cast<signed char>(B(::bof3::Img(Area39_DriftSteps_addr) + (cur[0xA] & 0xF))));
     AddLong(cur + 0x38, (0u - static_cast<U>(step)) << 11);
     cur = Sprite_Current;
     cur[0xA] = static_cast<unsigned char>(cur[0xA] - 1);
@@ -253,17 +253,17 @@ extern "C" void __cdecl Area39_PlayMusicA3(void) { AH_CALL(Music_Play)(0xA3, 8);
 
 // original 0x405710 (Area39_Handlers[11]; PSX 0x801F2EEC): Field_ScriptFlags'
 // low byte |= 8.
-extern "C" void __cdecl Area39_SetScriptFlag8(void) { B(Field_ScriptFlags_addr) = static_cast<unsigned char>(B(Field_ScriptFlags_addr) | 8); }
+extern "C" void __cdecl Area39_SetScriptFlag8(void) { B(::bof3::Img(Field_ScriptFlags_addr)) = static_cast<unsigned char>(B(::bof3::Img(Field_ScriptFlags_addr)) | 8); }
 
 // original 0x405720 (Area39_Handlers[12]; PSX 0x801F2F0C): the first key-item
 // byte of 0xE becomes 4; none: 0x591900(4), the key item 4 added.
 extern "C" void __cdecl Area39_SwapKeyItemE(void) {
     for (unsigned i = 0; i < at::kKeyItemCount; ++i)
-        if (B(at::kKeyItems + i) == 0xE) {
-            B(at::kKeyItems + i) = 4;
+        if (B(::bof3::Img(at::kKeyItems.v) + i) == 0xE) {
+            B(::bof3::Img(at::kKeyItems.v) + i) = 4;
             return;
         }
-    AH_AT(void (__cdecl*)(unsigned), at::kKeyItemAdd)(4);
+    AH_AT(void (__cdecl*)(unsigned), at::kKeyItemAdd.v)(4);
 }
 
 // original 0x405750 (Area39_Handlers[13], also area 130's +0x3C[4]; PSX
@@ -272,7 +272,7 @@ extern "C" void __cdecl Area39_FadeOutMusic(void) { AH_CALL(Music_FadeOutStop)(0
 
 // original 0x405760 (Area39_Handlers[14]; PSX 0x801F2F94): counter 1 = the
 // first party-list byte is not 4.
-extern "C" void __cdecl Area39_Counter1Not4(void) { B(at::kCounter1) = B(Cond_Flags_addr + 0xd2) != 4 ? 1 : 0; }
+extern "C" void __cdecl Area39_Counter1Not4(void) { B(::bof3::Img(at::kCounter1.v)) = B(::bof3::Img(Cond_Flags_addr) + 0xd2) != 4 ? 1 : 0; }
 
 // ===========================================================================
 // Area 40 (descriptor 0x5F4BD8): ten choices (two of them the handlers), an
@@ -284,13 +284,13 @@ extern "C" void __cdecl Area39_Counter1Not4(void) { B(at::kCounter1) = B(Cond_Fl
 // the running script's position back 2 (the op again next frame); else event
 // op Area40_PlaceOp places it.
 extern "C" void __cdecl Area40_PlaceObject(void) {
-    const unsigned char free = AH_AT(unsigned char (__cdecl*)(), at::kFreeObject)();
-    SetWord(Mem(at::kScratchWord), free);
+    const unsigned char free = AH_AT(unsigned char (__cdecl*)(), at::kFreeObject.v)();
+    SetWord(Mem(::bof3::Img(at::kScratchWord.v)), free);
     if (free == 0xFF) {
         AddWord(MoveScript_Object + 0xA, -2);
         return;
     }
-    AH_CALL(EventOp_0x)(Mem(Area40_PlaceOp_addr));
+    AH_CALL(EventOp_0x)(Mem(::bof3::Img(Area40_PlaceOp_addr)));
 }
 
 // original 0x4057A0 (Area40_Choices[9] = Area40_Handlers[1]; PSX
@@ -304,10 +304,10 @@ extern "C" void __cdecl Area40_NudgeObject(void) {
 // MoveScript_Var7 0x1C (answer 0) or 0x1E; flag 5 of the chapter's row; then
 // Field_ScriptFlags bits 3 and 7 and Field_StatusBits bit 6 cleared.
 extern "C" void __cdecl Area40_ChoiceFlag5(void) {
-    const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
-    unsigned char* const row = Ptr(Chapter_FlagRow_addr);
+    const unsigned char answer = B(::bof3::Img(AreaW0c_ChoiceAnswer_addr));
+    unsigned char* const row = Ptr(::bof3::Img(Chapter_FlagRow_addr));
     SetMessage(0xFFFF);
-    B(MoveScript_PartyRecords_addr + 0x65) = answer != 0 ? 0x1E : 0x1C;
+    B(::bof3::Img(MoveScript_PartyRecords_addr) + 0x65) = answer != 0 ? 0x1E : 0x1C;
     AH_CALL(Flags_Set)(row, 5);
     const unsigned char status = Field_StatusBits;
     Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xFF77);
@@ -325,7 +325,7 @@ extern "C" void __cdecl Area40_ChoiceLever8(void) { Lever(8); }
 // low nibble of 0x903FB1) at 5 open the gate (its 28 cells 0, al 1); any
 // other closes it (0xA4, al 0).
 extern "C" unsigned char __cdecl Area40_SetGate(void) {
-    if ((B(Cond_Flags_addr + 0x21) & 0xF) == 5) {
+    if ((B(::bof3::Img(Cond_Flags_addr) + 0x21) & 0xF) == 5) {
         Gate(0);
         return 1;
     }
@@ -338,20 +338,20 @@ extern "C" unsigned char __cdecl Area40_SetGate(void) {
 // tail armed, ScriptFlags_Set40 and the tail kind 0x10 (Area40_TailPuzzle) at
 // state 0.
 extern "C" void __cdecl Area40_ChoiceTail16(void) {
-    const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
+    const unsigned char answer = B(::bof3::Img(AreaW0c_ChoiceAnswer_addr));
     SetMessage(0xFFFF);
     if (answer != 0) {
         TailOff();
         return;
     }
-    if (B(ObjTrio_addr + 0x89) == 2) {
+    if (B(::bof3::Img(ObjTrio_addr) + 0x89) == 2) {
         SetMessage(0x3C);
         return;
     }
-    if (B(AreaW0a_TailKind_addr) != 0) return;
+    if (B(::bof3::Img(AreaW0a_TailKind_addr)) != 0) return;
     AH_CALL(ScriptFlags_Set40)();
-    B(AreaW0a_TailKind_addr) = 0x10;
-    B(AreaW0c_TailState_addr) = 0;
+    B(::bof3::Img(AreaW0a_TailKind_addr)) = 0x10;
+    B(::bof3::Img(AreaW0c_TailState_addr)) = 0;
 }
 
 // original 0x405A10 (Field_ModeTailKinds[0x10]): the puzzle's frame, by the
@@ -362,35 +362,35 @@ extern "C" void __cdecl Area40_ChoiceTail16(void) {
 // Area40_InputMap; the grid drawn. Then, every state: unless the area is 0x28,
 // the state not 0xA and Cond_ByteFD 6, the tail off.
 extern "C" void __cdecl Area40_TailPuzzle(void) {
-    switch (static_cast<signed char>(B(AreaW0c_TailState_addr))) {
+    switch (static_cast<signed char>(B(::bof3::Img(AreaW0c_TailState_addr)))) {
     case 0:
         AH_CALL(ScriptFlags_Clear40)();
-        if (AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0xa0), 0x27) != 0) {
-            B(AreaW0c_TailState_addr) = 0xA;
+        if (AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x27) != 0) {
+            B(::bof3::Img(AreaW0c_TailState_addr)) = 0xA;
             break;
         }
         AH_CALL(Party_DropIn)(4);
-        B(at::kScriptFlagsHigh) = static_cast<unsigned char>(B(at::kScriptFlagsHigh) | 0x10);
-        B(AreaW0c_TailState_addr) = 1;
+        B(::bof3::Img(at::kScriptFlagsHigh.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kScriptFlagsHigh.v)) | 0x10);
+        B(::bof3::Img(AreaW0c_TailState_addr)) = 1;
         break;
     case 1:
-        if (B(at::kCounter0) != 0x63) break;
-        B(Field_ScriptFlags_addr) = static_cast<unsigned char>(B(Field_ScriptFlags_addr) | 6);
-        B(at::kCounter0) = 0;
-        B(AreaW0c_TailState_addr) = 2;
+        if (B(::bof3::Img(at::kCounter0.v)) != 0x63) break;
+        B(::bof3::Img(Field_ScriptFlags_addr)) = static_cast<unsigned char>(B(::bof3::Img(Field_ScriptFlags_addr)) | 6);
+        B(::bof3::Img(at::kCounter0.v)) = 0;
+        B(::bof3::Img(AreaW0c_TailState_addr)) = 2;
         break;
     case 2:
         if (Field_Request == 0) {
-            SetWord(Mem(at::kScratchWord), Word(Mem(Input_Held_addr)));
-            const U held = static_cast<U>(Long(Mem(Input_Held_addr)));
-            const U top = B(Area40_InputMap_addr + ((held & 0xFFFF) >> 12));
-            SetWord(Mem(Input_Held_addr), top << 12 | (held & 0xFFF));
+            SetWord(Mem(::bof3::Img(at::kScratchWord.v)), Word(Mem(::bof3::Img(Input_Held_addr))));
+            const U held = static_cast<U>(Long(Mem(::bof3::Img(Input_Held_addr))));
+            const U top = B(::bof3::Img(Area40_InputMap_addr) + ((held & 0xFFFF) >> 12));
+            SetWord(Mem(::bof3::Img(Input_Held_addr)), top << 12 | (held & 0xFFF));
         }
         AH_CALL(Area40_DrawGrid)();
         break;
     default: break;
     }
-    if (Game_AreaNumber == 0x28 && B(AreaW0c_TailState_addr) != 0xA && Cond_ByteFD == 6) return;
+    if (Game_AreaNumber == 0x28 && B(::bof3::Img(AreaW0c_TailState_addr)) != 0xA && Cond_ByteFD == 6) return;
     TailOff();
 }
 
@@ -405,8 +405,8 @@ extern "C" void __cdecl Area40_TailPuzzle(void) {
 extern "C" unsigned char __cdecl Area40_ArriveHook(unsigned long x, unsigned long z) {
     if (Cond_ByteFD != 6) return 0;
     if (Field_State[0x2B] != 0) return 0;
-    if (AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0xa0), 0x27) != 0) return 0;
-    if (B(AreaW0a_TailKind_addr) != 0x10) return 0;
+    if (AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x27) != 0) return 0;
+    if (B(::bof3::Img(AreaW0a_TailKind_addr)) != 0x10) return 0;
     AH_CALL(Area40_ClearGrid)();
     const auto cx = static_cast<std::uint16_t>(x >> 16), cz = static_cast<std::uint16_t>(z >> 16);
     if (InGrid(cx, cz)) {
@@ -442,19 +442,19 @@ extern "C" unsigned char __cdecl Area40_TileLit(unsigned long x, unsigned long z
     if (diagonal >= 0x38 || diagonal < 0) return 0;
     std::int32_t column = diagonal / 2 + MapView_Column + 1;
     if (column >= 0x1C) column -= 0x1C;
-    const U cell = Word(Mem(MapView_Cells_addr + static_cast<U>(column + row * 28) * 2u));
+    const U cell = Word(Mem(::bof3::Img(MapView_Cells_addr) + static_cast<U>(column + row * 28) * 2u));
     if (cell == 0) return 0;
-    const U index = cell + (static_cast<U>(Long(Mem(AreaMap_CellBase_addr))) & 0xFFFF);
-    U walk = AreaMap_Header_addr + index * 4u;
+    const U index = cell + (static_cast<U>(Long(Mem(::bof3::Img(AreaMap_CellBase_addr)))) & 0xFFFF);
+    U walk = ::bof3::Img(AreaMap_Header_addr) + index * 4u;
     const U count = static_cast<U>(Long(Mem(walk - 4))) >> 16;
     const U end = walk + count * 4u - 4u;
     if (walk == end) return 0;
-    const U patch_base = static_cast<U>(Long(Mem(AreaMap_PatchBase_addr))) & 0xFFFF;
+    const U patch_base = static_cast<U>(Long(Mem(::bof3::Img(AreaMap_PatchBase_addr)))) & 0xFFFF;
     do {
         const U record = static_cast<U>(Long(Mem(walk)));
         const U kind = record & 0xFF000000u;
         if (kind == 0x23000000u || kind == 0x24000000u || kind == 0x25000000u) {
-            const U entry = static_cast<U>(Long(Mem(AreaMap_Header_addr + ((record & 0xFFFF) + patch_base) * 4u)));
+            const U entry = static_cast<U>(Long(Mem(::bof3::Img(AreaMap_Header_addr) + ((record & 0xFFFF) + patch_base) * 4u)));
             if ((entry & 0xF000) == 0x8000) return static_cast<unsigned char>(entry & 1);
         }
         walk += ((record >> 16) & 0xFF) * 4u;
@@ -470,13 +470,13 @@ extern "C" unsigned char __cdecl Area40_TileLit(unsigned long x, unsigned long z
 extern "C" unsigned char __cdecl Area40_PuzzleSolved(void) {
     for (unsigned r = 0; r < at::kGridSide; ++r)
         for (unsigned c = 0; c < at::kGridSide; ++c)
-            if (AH_CALL(Area40_TileLit)(at::kGridX + c, at::kGridZ + r) != B(Area40_Pattern_addr + r * 4 + c)) return 0;
-    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), 0x27);
+            if (AH_CALL(Area40_TileLit)(at::kGridX + c, at::kGridZ + r) != B(::bof3::Img(Area40_Pattern_addr) + r * 4 + c)) return 0;
+    AH_CALL(Flags_Set)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x27);
     SetByte(0x92, 0x1C, 0xA1);
     SetByte(0x93, 0x1C, 0xA1);
     SetByte(0x92, 0x1D, 0xC0);
     SetByte(0x93, 0x1D, 0xC0);
-    B(AreaW0c_TailState_addr) = 0xA;
+    B(::bof3::Img(AreaW0c_TailState_addr)) = 0xA;
     AH_CALL(MoveCmd_TestFB)(0x92, 0x1D);
     AH_CALL(Sound_PlayEffect)(0x103);
     return 1;
@@ -497,9 +497,9 @@ extern "C" void __cdecl Area40_ClearGrid(void) {
 // new high word with z's low word above it, z's new high word with two bytes
 // of the caller's frame above it (read in 16 bits).
 extern "C" void __cdecl Area40_MarkBehind(unsigned long x, unsigned long z) {
-    const unsigned d = B(ObjTrio_addr + 0x8) & 7;
-    const auto sx = static_cast<std::int16_t>(static_cast<signed char>(B(at::kCellDelta + d * 2)));
-    const auto sz = static_cast<std::int16_t>(static_cast<signed char>(B(at::kCellDelta + d * 2 + 1)));
+    const unsigned d = B(::bof3::Img(ObjTrio_addr) + 0x8) & 7;
+    const auto sx = static_cast<std::int16_t>(static_cast<signed char>(B(::bof3::Img(at::kCellDelta.v) + d * 2)));
+    const auto sz = static_cast<std::int16_t>(static_cast<signed char>(B(::bof3::Img(at::kCellDelta.v) + d * 2 + 1)));
     const auto cx = static_cast<std::uint16_t>((x >> 16) - static_cast<std::uint16_t>(sx));
     const auto cz = static_cast<std::uint16_t>((z >> 16) - static_cast<std::uint16_t>(sz));
     if (!InGrid(cx, cz)) return;
@@ -545,25 +545,25 @@ extern "C" void __cdecl Area40_DrawGrid(void) {
 // 12, flag 0x27 and counter 0 cleared. From zone 4: the pattern's cells lit.
 extern "C" void __cdecl Area40_Init(void) {
     if (Cond_ByteFD != 1) {
-        B(Cond_Flags_addr + 0x21) = static_cast<unsigned char>(B(Cond_Flags_addr + 0x21) & 0xF0);
+        B(::bof3::Img(Cond_Flags_addr) + 0x21) = static_cast<unsigned char>(B(::bof3::Img(Cond_Flags_addr) + 0x21) & 0xF0);
         Gate(0xA4);
     }
-    if (Cond_ByteFD == 6 && AH_CALL(Flags_Test)(Mem(Cond_Flags_addr + 0xa0), 0x27) == 0) {
+    if (Cond_ByteFD == 6 && AH_CALL(Flags_Test)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x27) == 0) {
         SetByte(0x92, 0x1D, 0);
         SetByte(0x93, 0x1D, 0);
         SetByte(0x92, 0x1C, 0x50);
         SetByte(0x93, 0x1C, 0x50);
     }
-    if (B(AreaW1a_EntryZone_addr) == 6) {
+    if (B(::bof3::Img(AreaW1a_EntryZone_addr)) == 6) {
         if (Cond_ByteFD != 2) return;
         Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xEFFF);
-        AH_CALL(Flags_Clear)(Mem(Cond_Flags_addr + 0xa0), 0x27);
-        B(at::kCounter0) = 0;
+        AH_CALL(Flags_Clear)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x27);
+        B(::bof3::Img(at::kCounter0.v)) = 0;
     }
-    if (B(AreaW1a_EntryZone_addr) != 4) return;
+    if (B(::bof3::Img(AreaW1a_EntryZone_addr)) != 4) return;
     for (unsigned r = 0; r < at::kGridSide; ++r)
         for (unsigned c = 0; c < at::kGridSide; ++c)
-            if (B(Area40_Pattern_addr + r * 4 + c) != 0)
+            if (B(::bof3::Img(Area40_Pattern_addr) + r * 4 + c) != 0)
                 AH_CALL(MoveCmd_TestFB)(static_cast<short>(at::kGridX + c), static_cast<short>(at::kGridZ + r));
 }
 
@@ -575,31 +575,31 @@ extern "C" void __cdecl Area40_Init(void) {
 // original 0x406200 (Area41_Choices[0]): message 0xFFFF; answer 0:
 // Party_DropIn(1), counter 1 = 0xA; else Party_DropIn(2), 0x14.
 extern "C" void __cdecl Area41_ChoiceDropIn12(void) {
-    const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
+    const unsigned char answer = B(::bof3::Img(AreaW0c_ChoiceAnswer_addr));
     SetMessage(0xFFFF);
     if (answer == 0) {
         AH_CALL(Party_DropIn)(1);
-        B(at::kCounter1) = 0xA;
+        B(::bof3::Img(at::kCounter1.v)) = 0xA;
         return;
     }
     AH_CALL(Party_DropIn)(2);
-    B(at::kCounter1) = 0x14;
+    B(::bof3::Img(at::kCounter1.v)) = 0x14;
 }
 
 // original 0x406240 (Area41_Choices[1]): answer 0: Party_DropIn(3), counter 1
 // = 0x1E; else Party_DropIn(4), the byte 0x903804 points at (read after the
 // call) 0, counter 1 = 0x28.
 extern "C" void __cdecl Area41_ChoiceDropIn34(void) {
-    const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
+    const unsigned char answer = B(::bof3::Img(AreaW0c_ChoiceAnswer_addr));
     SetMessage(0xFFFF);
     if (answer == 0) {
         AH_CALL(Party_DropIn)(3);
-        B(at::kCounter1) = 0x1E;
+        B(::bof3::Img(at::kCounter1.v)) = 0x1E;
         return;
     }
     AH_CALL(Party_DropIn)(4);
-    Ptr(AreaW1a_FocusObject_addr)[0] = 0;
-    B(at::kCounter1) = 0x28;
+    Ptr(::bof3::Img(AreaW1a_FocusObject_addr))[0] = 0;
+    B(::bof3::Img(at::kCounter1.v)) = 0x28;
 }
 
 // original 0x406280 (Area41_Choices[3]): the message Area41_GiveMessages[the
@@ -607,42 +607,42 @@ extern "C" void __cdecl Area41_ChoiceDropIn34(void) {
 // side); answer 0 with flag 6 of the chapter's row clear: sound 0x106, item
 // 0x28 of category 0 given, the flag set (the row pointer read again).
 extern "C" void __cdecl Area41_ChoiceGiveItem(void) {
-    const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
+    const unsigned char answer = B(::bof3::Img(AreaW0c_ChoiceAnswer_addr));
     const auto index = static_cast<std::int32_t>(static_cast<signed char>(answer));
-    SetMessage(Word(Mem(Area41_GiveMessages_addr + static_cast<U>(index) * 2u)));
+    SetMessage(Word(Mem(::bof3::Img(Area41_GiveMessages_addr) + static_cast<U>(index) * 2u)));
     if (answer != 0) return;
-    if (AH_CALL(Flags_Test)(Ptr(Chapter_FlagRow_addr), 6) != 0) return;
+    if (AH_CALL(Flags_Test)(Ptr(::bof3::Img(Chapter_FlagRow_addr)), 6) != 0) return;
     AH_CALL(Sound_PlayEffect)(0x106);
     AH_CALL(Inventory_Add)(0, 0x28, 1);   // the original pushes a fourth word, 0, never read
-    AH_CALL(Flags_Set)(Ptr(Chapter_FlagRow_addr), 6);
+    AH_CALL(Flags_Set)(Ptr(::bof3::Img(Chapter_FlagRow_addr)), 6);
 }
 
 // original 0x4062E0 (Area41_Choices[4]): answer 0 with items 0x49, 0x3F, 0x27
 // and 0x1D of category 0 all held: each taken (0x591B60), message 0x62; any
 // missing: message 0x63 and the mark. Answer not 0: 0x64 and the mark.
 extern "C" void __cdecl Area41_ChoiceTrade(void) {
-    if (B(AreaW0c_ChoiceAnswer_addr) != 0) {
+    if (B(::bof3::Img(AreaW0c_ChoiceAnswer_addr)) != 0) {
         SetMessage(0x64);
-        B(AreaW0c_AnswerMark_addr) = 6;
+        B(::bof3::Img(AreaW0c_AnswerMark_addr)) = 6;
         return;
     }
     static constexpr unsigned kItems[4] = {0x49, 0x3F, 0x27, 0x1D};
     for (unsigned item : kItems)
         if (AH_CALL(Inventory_Count)(0, item, 0) == 0) {
             SetMessage(0x63);
-            B(AreaW0c_AnswerMark_addr) = 6;
+            B(::bof3::Img(AreaW0c_AnswerMark_addr)) = 6;
             return;
         }
-    for (unsigned item : kItems) AH_AT(void (__cdecl*)(unsigned, unsigned, unsigned, unsigned), at::kInventoryTake)(0, item, 1, 0);
+    for (unsigned item : kItems) AH_AT(void (__cdecl*)(unsigned, unsigned, unsigned, unsigned), at::kInventoryTake.v)(0, item, 1, 0);
     SetMessage(0x62);
 }
 
 // original 0x4063A0 (Area41_Choices[7] and [8]): answer not 0: message 0x64
 // and the mark; else 0xFFFF.
 extern "C" void __cdecl Area41_ChoiceConfirm64(void) {
-    if (B(AreaW0c_ChoiceAnswer_addr) != 0) {
+    if (B(::bof3::Img(AreaW0c_ChoiceAnswer_addr)) != 0) {
         SetMessage(0x64);
-        B(AreaW0c_AnswerMark_addr) = 6;
+        B(::bof3::Img(AreaW0c_AnswerMark_addr)) = 6;
         return;
     }
     SetMessage(0xFFFF);
@@ -651,7 +651,7 @@ extern "C" void __cdecl Area41_ChoiceConfirm64(void) {
 // original 0x4063D0 (Area41_Choices[12] = Area41_Handlers[2]; PSX
 // 0x801F3E3C): Area41_States by Sprite_Current[4].
 extern "C" void __cdecl Area41_Run(void) {
-    StateEntry("Area41_Run", Area41_States_addr, at::kArea41StateCount, Sprite_Current[4])();
+    StateEntry("Area41_Run", ::bof3::Img(Area41_States_addr), at::kArea41StateCount, Sprite_Current[4])();
 }
 
 // original 0x4063F0 (Area41_States[0]): the step +0xC = 0x4000, a tint step
@@ -712,8 +712,8 @@ extern "C" void __cdecl Area41_PlaceKind2(void) { AH_CALL(Kind2_Place)(8); }
 // ScriptFlags_Set40, the mode tail kind 4 with sub-kind 0xA; al 0.
 extern "C" unsigned char __cdecl Area41_Trigger29(unsigned char*, unsigned char*) {
     AH_CALL(ScriptFlags_Set40)();
-    B(AreaW0a_TailKind_addr) = 4;
-    B(AreaW0c_TailSub_addr) = 0xA;
+    B(::bof3::Img(AreaW0a_TailKind_addr)) = 4;
+    B(::bof3::Img(AreaW0c_TailSub_addr)) = 0xA;
     return 0;
 }
 
@@ -721,7 +721,7 @@ extern "C" unsigned char __cdecl Area41_Trigger29(unsigned char*, unsigned char*
 // byte 0x5F5F2D + the object's +0x86 names (Area41_TriggerFlags for 59, 60;
 // the flags argument is not read), sound 0x201; al 0.
 extern "C" unsigned char __cdecl Area41_TriggerFlag(unsigned char* object, unsigned char*) {
-    AH_CALL(Flags_Set)(Mem(Cond_Flags_addr + 0xa0), B(at::kArea41TriggerBase + object[0x86]));
+    AH_CALL(Flags_Set)(Mem(::bof3::Img(Cond_Flags_addr) + 0xa0), B(::bof3::Img(at::kArea41TriggerBase.v) + object[0x86]));
     AH_CALL(Sound_PlayEffect)(0x201);
     return 0;
 }

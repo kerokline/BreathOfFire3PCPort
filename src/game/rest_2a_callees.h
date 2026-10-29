@@ -16,16 +16,16 @@ namespace at {
 // dword's low byte), and a pointer to its 8-byte records (Title_LoadTask sets
 // it to 0x8C3584, just after the count). +0 the bank (u16), +7 the byte a
 // sprite keeps in its u16 +0x2C.
-constexpr std::uint32_t kBankCount = 0x8C3580;
+constexpr ::bof3::image::Va kBankCount{0x8C3580};
 // kBankRecords: now MoveScript_TintRecords[0x180] (symbols.toml). unsigned char * to the records
-constexpr std::uint32_t kBankRecordsAt = 0x8C3584;  // where Title_LoadTask points it
+constexpr ::bof3::image::Va kBankRecordsAt{0x8C3584};  // where Title_LoadTask points it
 
 // The leader (ObjTrio's first record): its direction +8 and its byte +0x30.
 // kLeaderDirection: now ObjTrio[0].direction (symbols.toml).
 // kLeader30: now ObjTrio[0].screen_y (symbols.toml).
 
 // Field_ScriptFlags' high byte (bit 0: the word's 0x100).
-constexpr std::uint32_t kScriptFlagsHi = 0x9039A3;
+constexpr ::bof3::image::Va kScriptFlagsHi{0x9039A3};
 
 // CharacterRecords' words +0x10 (state), +0x18 (HP), +0x1A (AP), +0x20 (max HP)
 // by the record stride.
@@ -34,7 +34,7 @@ constexpr std::uint32_t kRecordStride = 0xA4;
 // Effect_Objects record 255: where the originals read an effect record's +0
 // when a sprite's +0xB holds Effect_FindFree's 0xFF ("none free"). Inside
 // Gfx_PacketPools (0x7E1C00..), read in place by ours as by the original.
-constexpr std::uint32_t kEffectNone = 0x7E9160;
+constexpr ::bof3::image::Va kEffectNone{0x7E9160};
 
 }  // namespace at
 }  // namespace rest_2a

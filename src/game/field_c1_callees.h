@@ -12,8 +12,8 @@ namespace field_c1::at {
 // Callees another group of round twelve's wave two owns (group FC2, by
 // analysis/round12_cut.tsv), called through the harness by address (SH_AT)
 // until FC2 merges; the coordinator rebinds them after both have merged.
-constexpr std::uint32_t kFc2Aim = bof3::addr::EffectKind3A_LeaderPose;          // void(void): EffectKind1B_Start's one callee (FC2)
-constexpr std::uint32_t kFc2Place = bof3::addr::EffectKind30_ClaimCells;        // void(void): EffectKind30_Start's one callee (FC2)
+constexpr ::bof3::image::CodeVa kFc2Aim{bof3::addr::EffectKind3A_LeaderPose};          // void(void): EffectKind1B_Start's one callee (FC2)
+constexpr ::bof3::image::CodeVa kFc2Place{bof3::addr::EffectKind30_ClaimCells};        // void(void): EffectKind30_Start's one callee (FC2)
 
 // The effect kinds' state tables are named in symbols.toml and taken by
 // name (AddressOf(EffectKind19_States), ...): EffectKind19_States (3, by +1),
@@ -40,10 +40,10 @@ constexpr unsigned kMemberCount = 3;                 // ObjTrio's
 // of config_text.cpp rewrite in the original's code, read in place by ours at
 // every call so that each patch holds for ours as it does for Capcom's
 // (docs/field_c1.md section 2).
-constexpr std::uint32_t kRowLabelOperands = 0x461832;   // six imm32, 8 bytes apart: the row labels
-constexpr std::uint32_t kRowLabelWidth = 0x461894;      // 5 bytes: lea ecx,[ecx+ecx*2] / shl ecx,1 (len * 6), or DIV-0017's shl ecx,2 / nop / nop (len * 4)
-constexpr std::uint32_t kRowAnchorBig = 0x46189D;       // imm8 of `add edx, 0x3A` (the large branch's right edge)
-constexpr std::uint32_t kRowBigCall = 0x46189F;         // E8 rel32: Text_DrawAt, or DIV-0017's ConfigText_DrawSelected
-constexpr std::uint32_t kRowAnchorSmall = 0x4618ED;     // imm8 of `add eax, 0x3A` (the small branch's)
+constexpr ::bof3::image::CodeVa kRowLabelOperands{0x461832};   // six imm32, 8 bytes apart: the row labels
+constexpr ::bof3::image::CodeVa kRowLabelWidth{0x461894};      // 5 bytes: lea ecx,[ecx+ecx*2] / shl ecx,1 (len * 6), or DIV-0017's shl ecx,2 / nop / nop (len * 4)
+constexpr ::bof3::image::CodeVa kRowAnchorBig{0x46189D};       // imm8 of `add edx, 0x3A` (the large branch's right edge)
+constexpr ::bof3::image::CodeVa kRowBigCall{0x46189F};         // E8 rel32: Text_DrawAt, or DIV-0017's ConfigText_DrawSelected
+constexpr ::bof3::image::CodeVa kRowAnchorSmall{0x4618ED};     // imm8 of `add eax, 0x3A` (the small branch's)
 
 }  // namespace field_c1::at

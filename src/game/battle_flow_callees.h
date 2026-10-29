@@ -33,11 +33,11 @@ namespace at {
 // byte +0 flags (bit 0 taken; any non-zero byte is run), +5 the parameter,
 // +6 the kind (0..3), +0xA a count (s8), +0xB, +0x32 / +0x36 / +0x3A words,
 // +0x80 the owner (a dword).
-constexpr std::uint32_t kTasks = 0x93A000;
+constexpr ::bof3::image::Va kTasks{0x93A000};
 constexpr std::uint32_t kTaskSize = 0x84;
 constexpr unsigned kTaskCount = 0x30;
 // kTaskCurrent: now BattleFlow_TaskCurrent (symbols.toml). unsigned char*: the slot being run (PSX 0x801EC250)
-constexpr std::uint32_t kTaskOwner = 0x93B940;    // the running slot's +0x80
+constexpr ::bof3::image::Va kTaskOwner{0x93B940};    // the running slot's +0x80
 // The eight enemy objects, 0x128 bytes each (the working record, PSX
 // 0x801EB620, is +0x80 of each; kinship-probe-battle-engine.md).
 // kEnemies: now Battle_Enemies (symbols.toml).
@@ -46,35 +46,35 @@ constexpr unsigned kEnemyCount = 8;
 // kEnemyCurrent: now BattleE3_CurrentEnemy (symbols.toml). unsigned char*: the enemy being run (PSX 0x801EB458)
 // kEnemyStates: now BattleEnemy_States (symbols.toml). code pointers by +0x100; 0x64B088 in an event battle
 // The battle's globals (PSX 0x801462E0..).
-constexpr std::uint32_t kPhase = 0x904AA0;         // dword; its low byte picks Battle_PhaseDispatch's entry
-constexpr std::uint32_t kRoundFlags = 0x904AA8;    // u16 (PSX 0x801462E4)
+constexpr ::bof3::image::Va kPhase{0x904AA0};         // dword; its low byte picks Battle_PhaseDispatch's entry
+constexpr ::bof3::image::Va kRoundFlags{0x904AA8};    // u16 (PSX 0x801462E4)
 // u8: non-zero in some battles - compared with 0x10, 0x19, 0x1A and 0x25 by
 // other battle code (pe_xref.py, 48 references), so a number, not a flag;
 // "event battle" is a guess from what it switches on here (the hook below,
 // the enemies' +0xF4 hooks and the shifted state table)
 // kEventBattle: now EventBattle_Id (symbols.toml).
 // kEnemiesLeft: now Battle_EnemiesLeft (symbols.toml). u8 (PSX 0x801462EF)
-constexpr std::uint32_t kDropCount = 0x904AE7;     // u8, at most 15 (PSX 0x80146323)
-constexpr std::uint32_t kBattleEnd = 0x904AE8;     // u8, |= 2 when the last enemy falls (PSX 0x80146324)
+constexpr ::bof3::image::Va kDropCount{0x904AE7};     // u8, at most 15 (PSX 0x80146323)
+constexpr ::bof3::image::Va kBattleEnd{0x904AE8};     // u8, |= 2 when the last enemy falls (PSX 0x80146324)
 // kExpTotal: now Battle_ExpTotal (symbols.toml). dword (PSX 0x80146328)
 // kZennyTotal: now BattleFlow_ZennyTotal (symbols.toml). dword (PSX 0x8014632C)
-constexpr std::uint32_t kDropItems = 0x904AF4;     // u16 x 16 (PSX 0x80146330)
-constexpr std::uint32_t kDropCounts = 0x904B14;    // u8 x 16 (PSX 0x80146350)
-constexpr std::uint32_t kTurnGate = 0x904B34;      // u8, BattleEnemy_Chance70's "3 or more" gate
-constexpr std::uint32_t kFormation = 0x904B35;     // u8, BattleEnemy_Chance70's "4" gate
-constexpr std::uint32_t kEventHook = 0x904B6C;     // void (*)(int): BattleHook_Event, stored by the boss set-ups (Boss_SetupTable 0x656954:
+constexpr ::bof3::image::Va kDropItems{0x904AF4};     // u16 x 16 (PSX 0x80146330)
+constexpr ::bof3::image::Va kDropCounts{0x904B14};    // u8 x 16 (PSX 0x80146350)
+constexpr ::bof3::image::Va kTurnGate{0x904B34};      // u8, BattleEnemy_Chance70's "3 or more" gate
+constexpr ::bof3::image::Va kFormation{0x904B35};     // u8, BattleEnemy_Chance70's "4" gate
+constexpr ::bof3::image::Va kEventHook{0x904B6C};     // void (*)(int): BattleHook_Event, stored by the boss set-ups (Boss_SetupTable 0x656954:
                                                    // Boss01_Event 0x437CF0, Boss04_Event 0x438450, BareRetZero 0x43C9F0 ...); called with 3
-constexpr std::uint32_t kMagicId = 0x904B80;       // u16: the item or ability the magic loaders were given
+constexpr ::bof3::image::Va kMagicId{0x904B80};       // u16: the item or ability the magic loaders were given
 // kActorAt: now BattleFlow_ActorAt (symbols.toml). u8 (PSX 0x801463C6)
 // kAnimGate: now BattleFlow_AnimGate (symbols.toml). u8 (PSX 0x801463CA)
-constexpr std::uint32_t kNumberText = 0x904BA0;    // char[]: Battle_DrawNumber's sprintf buffer
-constexpr std::uint32_t kLoadFlags = 0x904AA9;     // u8, |= 4 once a magic file is asked for
+constexpr ::bof3::image::Va kNumberText{0x904BA0};    // char[]: Battle_DrawNumber's sprintf buffer
+constexpr ::bof3::image::Va kLoadFlags{0x904AA9};     // u8, |= 4 once a magic file is asked for
 // Constant tables in .data.
-constexpr std::uint32_t kItemRows = 0x64B274;      // 4 pointers to u8 tables: (id >> 8, id & 0xFF) -> row (PSX 0x800B39F0)
-constexpr std::uint32_t kAbilityRows = 0x64C1D0;   // u8 by ability (PSX 0x800B3450)
+constexpr ::bof3::image::Va kItemRows{0x64B274};      // 4 pointers to u8 tables: (id >> 8, id & 0xFF) -> row (PSX 0x800B39F0)
+constexpr ::bof3::image::Va kAbilityRows{0x64C1D0};   // u8 by ability (PSX 0x800B3450)
 // kMagicFiles: now Magic_Rows (symbols.toml). 8-byte rows, the u16 DAT file first (PSX 0x800B3538)
-constexpr std::uint32_t kAbilityFlags = 0x65C4DD;  // a byte in each 24-byte ability record; bit 0x10 wants a second task
-constexpr std::uint32_t kNumberFormat = 0x64E324;  // "%3d"
+constexpr ::bof3::image::Va kAbilityFlags{0x65C4DD};  // a byte in each 24-byte ability record; bit 0x10 wants a second task
+constexpr ::bof3::image::Va kNumberFormat{0x64E324};  // "%3d"
 // The party's working records (ObjTrio, 0x14C each) and the enemy objects,
 // as Battle_ActorIsOut reads them: actor 0..2 a member, 3.. an enemy.
 // kMembers: now ObjTrio (symbols.toml).
@@ -84,9 +84,9 @@ constexpr std::uint32_t kMemberSize = 0x14C;
 
 // Callees with no name in symbols.gen.h: other groups' functions this round,
 // called by address (the round's cross-group rule).
-constexpr std::uint32_t kRemoveFromTurnOrder = bof3::addr::Battle_RemoveFromTurnOrder;  // group BE's; PSX Battle_RemoveFromTurnOrder 0x801DD114
-constexpr std::uint32_t kSetFlagBit = bof3::addr::Battle_SetEnemyKindFlag;           // group BG's; ORs bit (n & 0x1F) into dword 0x904068 + (n >> 5) * 4
-constexpr std::uint32_t kClearTurnBit = bof3::addr::Battle_ClearActorBit;         // group BF's; word 0x904B82 &= ~(1 << n)
+constexpr ::bof3::image::CodeVa kRemoveFromTurnOrder{bof3::addr::Battle_RemoveFromTurnOrder};  // group BE's; PSX Battle_RemoveFromTurnOrder 0x801DD114
+constexpr ::bof3::image::CodeVa kSetFlagBit{bof3::addr::Battle_SetEnemyKindFlag};           // group BG's; ORs bit (n & 0x1F) into dword 0x904068 + (n >> 5) * 4
+constexpr ::bof3::image::CodeVa kClearTurnBit{bof3::addr::Battle_ClearActorBit};         // group BF's; word 0x904B82 &= ~(1 << n)
 
 using Handler = void (__cdecl*)();
 

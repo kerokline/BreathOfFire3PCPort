@@ -27,6 +27,8 @@ frame; the stack above it may have changed. Chains that repeat are real.
 import argparse, bisect, ctypes, json, os, struct, subprocess, sys, time, tomllib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import proc_image  # noqa: E402
 k = ctypes.WinDLL('kernel32', use_last_error=True)
 
 TASK_RECORDS, TASK_SIZE, TASK_COUNT = 0x66C7D0, 0x20, 4
@@ -35,11 +37,15 @@ STATE = {0: 'free', 1: 'sleeping', 2: 'runnable'}
 
 
 def find_game():
-    """The running game's pid: BOF3.exe (hosted) or bof3x.exe (ours)."""
-    for image in ('BOF3.exe', 'bof3x.exe'):
+    """The running game's pid: BOF3.exe (hosted), bof3x.exe (ours) or a
+    developer's bof3x-<BASE>.exe (BOF3X_IMAGEBASE)."""
+    for image in ('BOF3.exe', 'bof3x.exe', 'bof3x-*'):
         out = subprocess.run(['tasklist', '/FI', f'IMAGENAME eq {image}', '/FO', 'CSV', '/NH'],
                              capture_output=True, text=True).stdout
-        rows = [r for r in out.splitlines() if r.lower().startswith('"%s"' % image.lower())]
+        name = lambda r: r.split('","')[0].strip('"').lower()
+        rows = [r for r in out.splitlines()
+                if (name(r) == image.lower() or (image.endswith('*') and name(r).startswith(image[:-1].lower())))
+                and not name(r).startswith('bof3x-launcher')]
         if rows:
             return int(rows[0].split('","')[1])
     sys.exit('neither BOF3.exe nor bof3x.exe is running')
@@ -50,10 +56,16 @@ class Game:
         self.h = k.OpenProcess(0x0410, False, pid)
         if not self.h:
             sys.exit('OpenProcess failed: %d' % ctypes.get_last_error())
+        # The image's move: 0 unless a developer's bof3x.exe lies at another
+        # base (tools/proc_image.py); read() places a VA by it.
+        self.move = proc_image.move_of(self.h)
 
     def read(self, addr, n):
+        """n bytes at addr: a VA of the image (placed by the move), or any
+        other address of the process as it is."""
         buf = ctypes.create_string_buffer(n)
         got = ctypes.c_size_t()
+        addr = proc_image.place(addr, self.move)
         if not k.ReadProcessMemory(self.h, ctypes.c_void_p(addr), buf, n, ctypes.byref(got)):
             return None
         return buf.raw[:got.value]
@@ -108,7 +120,7 @@ def chain(game, funcs, esp, cache):
         return []
     out = []
     for i in range(0, len(raw) - 3, 4):
-        v = struct.unpack_from('<I', raw, i)[0]
+        v = proc_image.va(struct.unpack_from('<I', raw, i)[0], game.move)   # a return into the image, as its VA
         if not (funcs.lo <= v < funcs.hi):
             continue
         if v not in cache:

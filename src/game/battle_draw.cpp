@@ -50,7 +50,7 @@ template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<s
 
 const Callees kOriginals = {
     D3d_PrimColor,
-    Fn<void (__cdecl*)(unsigned)>(kRetOnly),
+    Fn<void (__cdecl*)(unsigned)>(::bof3::Code(kRetOnly.v)),
     D3d_SetBlend,
     D3d_SetShadeMode,
     Menu_DrawBox,
@@ -65,11 +65,11 @@ const Callees kOriginals = {
     Menu_DrawPieces,
     Menu_DrawPiece,
     Menu_DrawScrollBar,
-    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(kSkillUsable),
-    Fn<void (__cdecl*)(int, int, int, unsigned, const unsigned char*, unsigned, int)>(kSkillRow),
-    Fn<unsigned (__cdecl*)(unsigned)>(kSkillIcon),
-    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(kSkillCost),
-    Fn<const unsigned char* (__cdecl*)(unsigned, unsigned, unsigned)>(kSkillList),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kSkillUsable.v)),
+    Fn<void (__cdecl*)(int, int, int, unsigned, const unsigned char*, unsigned, int)>(::bof3::Code(kSkillRow.v)),
+    Fn<unsigned (__cdecl*)(unsigned)>(::bof3::Code(kSkillIcon.v)),
+    Fn<unsigned (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kSkillCost.v)),
+    Fn<const unsigned char* (__cdecl*)(unsigned, unsigned, unsigned)>(::bof3::Code(kSkillList.v)),
     Gfx_ClutAdjust,
     AreaMap_ClutCycleStart,
 };
@@ -125,7 +125,7 @@ inline float X87Div(float a, float b) {
 }
 
 // D3d_Device, read afresh before every COM call as the original does.
-void** Device() { return *reinterpret_cast<void** volatile*>(At(D3d_Device_addr)); }
+void** Device() { return *reinterpret_cast<void** volatile*>(At(::bof3::Img(D3d_Device_addr))); }
 void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 using Com3 = long(__stdcall*)(void*, U, U);
 using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
@@ -136,10 +136,10 @@ long SetTexture(U stage, U texture) {
 // DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
 long DrawVertices(U type, U count) {
     void** device = Device();
-    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, D3d_Vertices_addr, count, 0);
+    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
 }
-unsigned char* Vertex(U i) { return At(D3d_Vertices_addr + i * 0x20); }
-U DrawMode() { return Long(At(Gfx_DrawTpage_addr)) & 0xFFFF; }
+unsigned char* Vertex(U i) { return At(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
+U DrawMode() { return Long(At(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF; }
 // sx, sy = the scales times the corner's float x, y; sz its z as it is (a mov);
 // rhw = 0.1 / z; the diffuse as given. Specular, tu and tv are not written.
 void PutCorner(unsigned char* out, const unsigned char* xyz, U diffuse) {
@@ -257,11 +257,11 @@ int ListTitleX(const unsigned char* label, int n) {
     return 78 - static_cast<int>(TextAdvance_Width(label) / 2);
 }
 
-constexpr U kTextDrawAt = 0x516B30;    // Text_DrawAt: the sites' target in Capcom's bytes, a patch fact (raw)
+constexpr ::bof3::image::CodeVa kTextDrawAt{0x516B30};    // Text_DrawAt: the sites' target in Capcom's bytes, a patch fact (raw)
 // The title draws of the two list windows that are still Capcom's: the
 // Text_DrawAt call after `6 * (13 - Text_CharCount) + x` in each.
-constexpr U kTitleCallA = 0x596D13;    // titles 0x66AF10
-constexpr U kTitleCallB = 0x59DEFA;    // titles 0x66B5C4
+constexpr ::bof3::image::CodeVa kTitleCallA{0x596D13};    // titles 0x66AF10
+constexpr ::bof3::image::CodeVa kTitleCallB{0x59DEFA};    // titles 0x66B5C4
 
 // What those two calls reach under DIV-0059: the x they reckoned, 6 * (13 -
 // n) + the window's, moved to the centre less half the real width.
@@ -272,10 +272,11 @@ extern "C" const unsigned char* __cdecl ListTitle_DrawAt(int x, int y, int colou
 }
 }  // namespace
 
-// What kTitleCallA and kTitleCallB call now (ListTitle_SiteDraw).
-U g_title_site_draw = kTextDrawAt;
-
 int ListTitle_X(const unsigned char* label, int n) { return ListTitleX(label, n); }
+
+// What kTitleCallA and kTitleCallB call now (ListTitle_SiteDraw): a place, the
+// game calls through it once OperandCall has re-aimed their calls.
+U g_title_site_draw = ::bof3::Code(kTextDrawAt.v);
 std::uint32_t ListTitle_SiteDraw() { return g_title_site_draw; }
 bool ListTitle_Centring() { return g_list_title_centre != 0; }
 
@@ -285,8 +286,8 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
     unsigned char offset = 0, moving = 0;
     const unsigned char top = g.list_scroll(w + 0xB, &offset, &moving, w + 0x12);
     const U category = w[0xA];
-    U items = Long(At(kInventory + category * 4)) + top;
-    U counts = Long(At(kCounts + category * 4)) + top;   // 0 + top for key items: not read then
+    U items = Long(At(::bof3::Img(kInventory.v) + category * 4)) + top;
+    U counts = Long(At(::bof3::Img(kCounts.v) + category * 4)) + top;   // 0 + top for key items: not read then
     U row = static_cast<std::uint16_t>(S8(offset) + static_cast<U>(window_rec->y)) + 0x1Au;
     const unsigned rows = moving + 7u;
     for (unsigned char i = 0; i < rows; ++i) {
@@ -294,7 +295,7 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
         if (item != 0) {
             unsigned char dim = 1;
             if (w[9] == 0) {
-                const unsigned member = Byte(kMemberRecord + Byte(kBattleParty + BattleActorCopies_ItemActor));
+                const unsigned member = Byte(::bof3::Img(kMemberRecord.v) + Byte(::bof3::Img(kBattleParty.v) + BattleActorCopies_ItemActor));
                 dim = g.can_use(w[8], member, w[0xA], item) ? 0 : 1;
             }
             unsigned char colour = dim ? 7 : 0;
@@ -321,7 +322,7 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
     g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 0x7A, 0x99, 8, w[9], static_cast<unsigned char>(Config_WindowColour));
     {
         const unsigned char grey = w[9] ? 7 : 0;
-        const unsigned char* const label = At(Long(At(kItemLabels + w[0xA] * 4u)));
+        const unsigned char* const label = At(Long(At(::bof3::Img(kItemLabels.v) + w[0xA] * 4u)));
         const int y = static_cast<int>(static_cast<U>(window_rec->y)) + 7;
         const unsigned n = g.char_count(label);
         g.text_draw_at(static_cast<int>(ListTitleX(label, static_cast<int>(n)) + static_cast<int>(static_cast<U>(window_rec->x))), y, grey,
@@ -331,12 +332,12 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
         const unsigned char cat = w[0xA];
         const unsigned room = cat != 4 ? 0x80 : 0x20;
         const unsigned have = g.count_used(cat) & 0xFFu;
-        g.sprintf_(reinterpret_cast<char*>(At(kPrintBuf)), reinterpret_cast<const char*>(At(kFmt3d3d)), have, room);
+        g.sprintf_(reinterpret_cast<char*>(At(::bof3::Img(kPrintBuf.v))), reinterpret_cast<const char*>(At(::bof3::Img(kFmt3d3d.v))), have, room);
         const unsigned char grey = w[9] ? 7 : 0;
-        g.font8(static_cast<U>(window_rec->x) + 0x55, static_cast<U>(window_rec->y) + 0x7A, grey, At(kPrintBuf));
+        g.font8(static_cast<U>(window_rec->x) + 0x55, static_cast<U>(window_rec->y) + 0x7A, grey, At(::bof3::Img(kPrintBuf.v)));
     }
-    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[0x10] & 2) ? kTitleBit1On : kTitleBit1Off), 1);
-    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[0x10] & 1) ? kTitleBit0On : kTitleBit0Off), 1);
+    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[0x10] & 2) ? ::bof3::Img(kTitleBit1On.v) : ::bof3::Img(kTitleBit1Off.v)), 1);
+    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[0x10] & 1) ? ::bof3::Img(kTitleBit0On.v) : ::bof3::Img(kTitleBit0Off.v)), 1);
     {
         const U t = Word(w + 0x10);
         PutWord(w + 0x10, (t & 0xF0) ? t - 0x10 : 0);
@@ -351,7 +352,7 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
     g.piece(static_cast<U>(window_rec->x) + 0x50, static_cast<U>(window_rec->y) + 0x78, 0x1B, 1);
     for (int b = 0; b < 6; ++b) g.piece(static_cast<U>(window_rec->x) + b * 8 + 0x58, static_cast<U>(window_rec->y) + 0x78, 0x1C, 1);
     g.piece(static_cast<U>(window_rec->x) + 0x88, static_cast<U>(window_rec->y) + 0x78, 0x1D, 1);
-    g.scroll_bar(At(Long(At(kInventory + w[0xA] * 4u))), w[0xB], static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + 0x18, 7, 0x80,
+    g.scroll_bar(At(Long(At(::bof3::Img(kInventory.v) + w[0xA] * 4u))), w[0xB], static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + 0x18, 7, 0x80,
                  0x5C);
 }
 
@@ -394,7 +395,7 @@ extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
             const unsigned cost = g.skill_cost(static_cast<unsigned char>(BattleActorCopies_ItemActor), At(ids)[0], 1) & 0xFFu;
             const unsigned icon = g.skill_icon(At(ids)[0]) & 0xFFu;
             const std::int32_t here = static_cast<std::int32_t>(i) + S16(Word(w + 0x10));
-            const unsigned char* const record = At(kSkillRecords + At(ids)[0] * 0x18u);
+            const unsigned char* const record = At(::bof3::Img(kSkillRecords.v) + At(ids)[0] * 0x18u);
             if (here == static_cast<std::int32_t>(w[0xD]) || here == static_cast<std::int32_t>(w[0xC])) {
                 if (colour != 7) g.skill_row(static_cast<int>(static_cast<U>(window_rec->x)) + 7, static_cast<int>(row), 7, icon, record, cost, 1);
                 g.skill_row(static_cast<int>(static_cast<U>(window_rec->x)) + 7, static_cast<int>(row) - 2, colour, icon, record, cost,
@@ -410,13 +411,13 @@ extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
     g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x14, 0, static_cast<unsigned char>(Config_WindowColour));
     {
         const unsigned char* const label =
-            At(Word(w + 0x14) != 0 ? BattleDraw_SkillLabelAlt : Long(At(kSkillLabels + w[0xB] * 4u)));
+            At(Word(w + 0x14) != 0 ? BattleDraw_SkillLabelAlt : Long(At(::bof3::Img(kSkillLabels.v) + w[0xB] * 4u)));
         const int y = static_cast<int>(static_cast<U>(window_rec->y)) + 7;
         const U length = static_cast<U>(std::strlen(reinterpret_cast<const char*>(label)));
         g.text_draw_at(static_cast<int>(ListTitleX(label, static_cast<int>(length)) + static_cast<U>(window_rec->x)), y, 0, 0x10, label);
     }
-    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[9] & 2) ? kTitleBit1On : kTitleBit1Off), 1);
-    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[9] & 1) ? kTitleBit0On : kTitleBit0Off), 1);
+    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[9] & 2) ? ::bof3::Img(kTitleBit1On.v) : ::bof3::Img(kTitleBit1Off.v)), 1);
+    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[9] & 1) ? ::bof3::Img(kTitleBit0On.v) : ::bof3::Img(kTitleBit0Off.v)), 1);
     {
         const unsigned char t = w[9];
         w[9] = (t & 0xF0) ? static_cast<unsigned char>(t - 0x10) : 0;
@@ -459,8 +460,8 @@ extern "C" void __cdecl AreaMap_TintClut(int level) {
 }
 
 void BattleDraw_Inject() {
-    bof3::OperandCall("DIV-0059 list title draw", kTitleCallA, &g_title_site_draw);
-    bof3::OperandCall("DIV-0059 list title draw", kTitleCallB, &g_title_site_draw);
+    bof3::OperandCall("DIV-0059 list title draw", kTitleCallA.v, &g_title_site_draw);
+    bof3::OperandCall("DIV-0059 list title draw", kTitleCallB.v, &g_title_site_draw);
     if (bof3::WantsShadow("battle_draw")) battle_draw::SelfTest();
     // DIVERGENCE DIV-0059: a Latin language overlay only, as MenuLists_Inject
     // tests it for DIV-0058.
@@ -471,9 +472,9 @@ void BattleDraw_Inject() {
                              static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_list_title_centre)),
                              &was, &is, 1);
             bof3::Log("DIV-0059    list titles centred on their width: %s", g_list_title_centre ? "on" : "off");
-            const bool a = bof3::RetargetCall("BattleListTitleCentre", kTitleCallA, kTextDrawAt,
+            const bool a = bof3::RetargetCall("BattleListTitleCentre", kTitleCallA.v, kTextDrawAt.v,
                                               reinterpret_cast<void*>(&ListTitle_DrawAt));
-            const bool b = bof3::RetargetCall("BattleListTitleCentre", kTitleCallB, kTextDrawAt,
+            const bool b = bof3::RetargetCall("BattleListTitleCentre", kTitleCallB.v, kTextDrawAt.v,
                                               reinterpret_cast<void*>(&ListTitle_DrawAt));
             if (a != b) bof3::Fatal("DIV-0059: one title call re-aimed and not the other");   // one name: both or neither
             if (a) g_title_site_draw = static_cast<U>(reinterpret_cast<std::uintptr_t>(&ListTitle_DrawAt));

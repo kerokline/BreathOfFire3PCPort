@@ -269,9 +269,9 @@ const ah::Callee kCallees[] = {
     {W2D_OURS(AreaMap_SetByte), 3, {kU16, kU16, kU8}, ah::Answer::kGarbage, 0, 0},
     {W2D_OURS(AreaMap_ByteAt), 2, {kU16, kU16}, ah::Answer::kFlag, 0, 0},
     {W2D_OURS(AreaMap_Elevation), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &ElevationEffect},
-    {"FlagsToggle_57C160", at::kFlagsToggle, at::kFlagsToggle, 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
+    {"FlagsToggle_57C160", at::kFlagsToggle.v, at::kFlagsToggle.v, 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
     // the point three dwords on the caller's stack: its bytes, not its address
-    {"RingAt_4220D0", at::kRingAt, at::kRingAt, 1, {0}, ah::Answer::kGarbage, 0, 0, {12}},
+    {"RingAt_4220D0", at::kRingAt.v, at::kRingAt.v, 1, {0}, ah::Answer::kGarbage, 0, 0, {12}},
     // slots inside the group's four effect records, or none
     {W2D_OURS(Effect_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x03, {}, &FindFreeEffect},
     {W2D_OURS(Sound_PlayEffect), 1, {kU16}, ah::Answer::kGarbage, 0, 0, {}, &SoundEffect},
@@ -324,12 +324,12 @@ void Disturb(std::uint32_t h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 9) {
     case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 6 : v); break;
-    case 1: B(at::kCounter0) = static_cast<unsigned char>(h & 0x100 ? v % 3 : v); break;
-    case 2: B(at::kCounter3) = static_cast<unsigned char>(h & 0x100 ? v % 4 : v); break;
+    case 1: B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(h & 0x100 ? v % 3 : v); break;
+    case 2: B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(h & 0x100 ? v % 4 : v); break;
     case 3: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
     case 4: ah::SetPointer(MoveScript_Object_addr, ScriptRecord(h >> 16)); break;
     case 5: ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(h >> 16)); break;
-    case 6: move_script::SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? v % 3 : v); break;
+    case 6: move_script::SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), h & 0x100 ? v % 3 : v); break;
     case 7: B(Field_MoveSpeeds_addr + 0x3) = static_cast<unsigned char>(1 + v % 16); break;
     default: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 6); break;
     }
@@ -433,7 +433,7 @@ void Seed97(unsigned k) {
     switch (k) {
     case k97Tail:
         if (ah::Often()) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 0, 1, 2, 0xFF, 0x80, 0x81));
-        if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(2, 2, 1, 3, 0, 0x82));
+        if (ah::Often()) B(::bof3::Img(at::kCounter3.v)) = static_cast<unsigned char>(AH_PICK(2, 2, 1, 3, 0, 0x82));
         break;
     case k97Step:
         if (ah::Often()) B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 7, 0x80, 0x81));
@@ -502,13 +502,13 @@ void Seed100(unsigned k) {
         B(AreaW0c_TailState_addr) = state;
         const bool on = ah::Often();   // the cell the state waits on, at its value or beside it
         switch (state) {
-        case 1: B(at::kCounter0) = static_cast<unsigned char>(on ? 1 : AH_PICK(0, 2, 0x81)); break;
-        case 2: move_script::SetWord(ah::Mem(at::kTailTimer), on ? 1 : AH_PICK(0, 2, 0x101, 0xFFFF)); break;
-        case 3: B(at::kCounter0) = static_cast<unsigned char>(on ? 0 : AH_PICK(1, 0xFF, 0x80)); break;
+        case 1: B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(on ? 1 : AH_PICK(0, 2, 0x81)); break;
+        case 2: move_script::SetWord(ah::Mem(::bof3::Img(at::kTailTimer.v)), on ? 1 : AH_PICK(0, 2, 0x101, 0xFFFF)); break;
+        case 3: B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(on ? 0 : AH_PICK(1, 0xFF, 0x80)); break;
         case 4: Field_Request = static_cast<unsigned char>(on ? AH_PICK(0, 1, 3, 0x82) : 2); break;
         default: break;
         }
-        if (state == 2 && ah::Half()) B(at::kCounter0) = static_cast<unsigned char>(AH_PICK(0, 0xFF, 1));
+        if (state == 2 && ah::Half()) B(::bof3::Img(at::kCounter0.v)) = static_cast<unsigned char>(AH_PICK(0, 0xFF, 1));
         break;
     }
     case k100Step:

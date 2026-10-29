@@ -10,6 +10,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "hook/bind.h"
 #include "hook/host.h"
 #include "hook/log.h"
 #include "hook/statehash.h"
@@ -48,8 +49,9 @@ HANDLE g_done = nullptr;
 
 wchar_t g_dump_path[MAX_PATH];
 size_t g_dump_stem = 0;  // length of "...\bof3x."
-std::uint32_t g_text_lo = 0, g_text_hi = 0;
+std::uint32_t g_text_lo = 0, g_text_hi = 0;   // places: Capcom's code range as this host maps it
 std::uint32_t g_dll_lo = 0, g_dll_hi = 0;
+std::uint32_t g_image_lo = 0, g_image_hi = 0;   // the main module, the game's image
 
 using WriteDumpFn = BOOL(WINAPI*)(HANDLE, DWORD, HANDLE, MINIDUMP_TYPE, PMINIDUMP_EXCEPTION_INFORMATION,
                                   PMINIDUMP_USER_STREAM_INFORMATION, PMINIDUMP_CALLBACK_INFORMATION);
@@ -98,6 +100,16 @@ bool InCode(std::uint32_t v) {
     return (v >= g_text_lo && v < g_text_hi) || (v >= g_dll_lo && v < g_dll_hi);
 }
 
+// " (VA 0x...)" for a place in the game's image when it lies elsewhere than
+// 0x400000 (docs/relocatable-image-design.md 8): the logs, symbols.toml and
+// tools/crash_report.py speak VAs. Empty otherwise.
+const char* VaOf(std::uint32_t a, char* out, size_t cap) {
+    out[0] = '\0';
+    if (a >= g_image_lo && a < g_image_hi && ImageBase() != image::kBase)
+        std::snprintf(out, cap, " (VA 0x%08X)", (unsigned)(a - ImageBase() + image::kBase));
+    return out;
+}
+
 // A stack word is a plausible return address if it points into code and the
 // bytes before it are a call: E8 rel32, or FF /2 in its 2-, 3- and 6-byte forms.
 // Only the FF opcode byte is tested, not the /2 in ModRM, so this is a filter
@@ -116,18 +128,33 @@ void Report() {
     auto addr = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(r.ExceptionAddress));
     Where(addr, where, sizeof where);
 
-    Log("CRASH %ld: exception 0x%08lX at 0x%08X (%s), thread %lu", (long)n, r.ExceptionCode,
-        (unsigned)addr, where, g_job.thread);
+    char va[24];
+    Log("CRASH %ld: exception 0x%08lX at 0x%08X%s (%s), thread %lu", (long)n, r.ExceptionCode,
+        (unsigned)addr, VaOf(addr, va, sizeof va), where, g_job.thread);
     if ((r.ExceptionCode == EXCEPTION_ACCESS_VIOLATION || r.ExceptionCode == EXCEPTION_IN_PAGE_ERROR) &&
         r.NumberParameters >= 2) {
         // ExceptionInformation[0]: 0 read, 1 write, 8 execute (DEP).
         const ULONG_PTR k = r.ExceptionInformation[0];
         const char* kind = k == 0 ? "reading" : k == 1 ? "writing" : k == 8 ? "executing" : nullptr;
         if (kind)
-            Log("CRASH %ld: %s 0x%08lX", (long)n, kind, (unsigned long)r.ExceptionInformation[1]);
+            Log("CRASH %ld: %s 0x%08lX%s", (long)n, kind, (unsigned long)r.ExceptionInformation[1],
+                VaOf(static_cast<std::uint32_t>(r.ExceptionInformation[1]), va, sizeof va));
         else
             Log("CRASH %ld: access kind %lu at 0x%08lX", (long)n, (unsigned long)k,
                 (unsigned long)r.ExceptionInformation[1]);
+        // The trap (docs/relocatable-image-design.md 4.5): in bof3x.exe .stub
+        // is no-access, so a code value no function of ours stands for faults
+        // there - named by its VA and the [[func]] it lies in.
+        const auto at = static_cast<std::uint32_t>(r.ExceptionInformation[1]);
+        if (Bind_Active() && at >= g_text_lo && at < g_text_hi) {
+            const std::uint32_t va = at - ImageBase() + image::kBase;
+            std::uint32_t start = 0;
+            const char* fn = Bind_FuncName(va, &start);
+            Log("CRASH %ld: the trap - %s VA 0x%08X, %s+0x%X: a code value no function of ours stands for (the bind "
+                "table, symbols.toml impl)",
+                (long)n, k == 8 ? "a call or jump to" : "an access to", (unsigned)va, fn ? fn : "no [[func]]",
+                (unsigned)(va - start));
+        }
     }
     Log("CRASH %ld: eax %08lX ebx %08lX ecx %08lX edx %08lX esi %08lX edi %08lX", (long)n, c.Eax, c.Ebx,
         c.Ecx, c.Edx, c.Esi, c.Edi);
@@ -146,9 +173,9 @@ void Report() {
     // (symbols.toml Task_Records, MsgBoxState).
     std::uint16_t area = 0, task0[2] = {0, 0}, mode_step[2] = {0, 0}, message = 0;
     Peek(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&Game_AreaNumber)), &area, sizeof area);
-    Peek(addr::Task_Records, task0, sizeof task0);
-    Peek(addr::Task_Records + 0x18, mode_step, sizeof mode_step);
-    Peek(addr::MsgBoxState + 8, &message, sizeof message);
+    Peek(Img(addr::Task_Records), task0, sizeof task0);
+    Peek(Img(addr::Task_Records) + 0x18, mode_step, sizeof mode_step);
+    Peek(Img(addr::MsgBoxState) + 8, &message, sizeof message);
     Log("CRASH %ld: area 0x%04X, task 0 state %u sleep %u, mode %u step %u, message 0x%04X", (long)n, area,
         task0[0], task0[1], mode_step[0], mode_step[1], message);
 
@@ -160,8 +187,8 @@ void Report() {
         std::uint32_t v = 0;
         if (!Peek(c.Esp + off, &v, sizeof v)) break;
         if (!AfterCall(v)) continue;
-        Log("CRASH %ld: stack +0x%04lX  0x%08lX%s", (long)n, (unsigned long)off, (unsigned long)v,
-            v >= g_dll_lo && v < g_dll_hi ? "  (bof3x.dll)" : "");
+        Log("CRASH %ld: stack +0x%04lX  0x%08lX%s%s", (long)n, (unsigned long)off, (unsigned long)v,
+            v >= g_dll_lo && v < g_dll_hi ? "  (bof3x.dll)" : "", VaOf(v, va, sizeof va));
         ++shown;
     }
 
@@ -252,10 +279,13 @@ void ImageRange(const void* module, std::uint32_t* lo, std::uint32_t* hi) {
 
 void Crash_Start(void* dll_module) {
     // Capcom's code range as this host maps it: BOF3.exe's .text, or the
-    // stub page (host.h) - a return address into it is a jmp of ours or int3.
-    g_text_lo = CodeLo();
-    g_text_hi = CodeHi();
+    // stub page (host.h) - in bof3x.exe the no-access trap, where no return
+    // address lies and an access is named as the trap (Report).
+    // CodeLo and CodeHi are VAs; these are the places.
+    g_text_lo = Img(CodeLo());
+    g_text_hi = Img(CodeHi());
     ImageRange(dll_module, &g_dll_lo, &g_dll_hi);
+    ImageRange(GetModuleHandleW(nullptr), &g_image_lo, &g_image_hi);
 
     DWORD len = GetModuleFileNameW(static_cast<HMODULE>(dll_module), g_dump_path, MAX_PATH);
     if (len < 4 || len + 32 > MAX_PATH) Fatal("crash reporter: DLL path unusable for dump files");

@@ -25,13 +25,13 @@ constexpr rdata::Const kCullTop{0x5C4200};       // -150.0
 constexpr rdata::Const kCullBottom{0x5C41FC};    // 300.0
 
 // --- sub-kind 0x0D's byte arrays (back to back; each read by a record byte) -----
-constexpr std::uint32_t kSub0DOpenFrames = 0x65DF64;   // 4: _Open's frame by +9 >> 1
-constexpr std::uint32_t kSub0DShutFrames = 0x65DF68;   // 4: _Shut's frame by +9 / 3
-constexpr std::uint32_t kSub0DFlashFrames = 0x65DF6C;  // 4: _Flash's frame by +9 >> 1
-constexpr std::uint32_t kSub0DGlowX = 0x65DF70;        // 4: the glow's cell x by the column +0x36
-constexpr std::uint32_t kSub0DGlowZ = 0x65DF74;        // 4: its cell z
-constexpr std::uint32_t kSub0DGlowY = 0x65DF78;        // 4: its height (eighths)
-constexpr std::uint32_t kSub0DGlowSize = 0x65DF7C;     // 4: its radius
+constexpr ::bof3::image::Va kSub0DOpenFrames{0x65DF64};   // 4: _Open's frame by +9 >> 1
+constexpr ::bof3::image::Va kSub0DShutFrames{0x65DF68};   // 4: _Shut's frame by +9 / 3
+constexpr ::bof3::image::Va kSub0DFlashFrames{0x65DF6C};  // 4: _Flash's frame by +9 >> 1
+constexpr ::bof3::image::Va kSub0DGlowX{0x65DF70};        // 4: the glow's cell x by the column +0x36
+constexpr ::bof3::image::Va kSub0DGlowZ{0x65DF74};        // 4: its cell z
+constexpr ::bof3::image::Va kSub0DGlowY{0x65DF78};        // 4: its height (eighths)
+constexpr ::bof3::image::Va kSub0DGlowSize{0x65DF7C};     // 4: its radius
 constexpr unsigned kSub0DArray = 4;
 
 // --- sub-kind 0x0B's eighteen tiles: (cell x, cell z, row dy) ------------------
@@ -40,26 +40,26 @@ constexpr std::uint32_t kSub0BTilesEnd = 0x65DFC3;     // the loop's bound on it
 constexpr unsigned kSub0BTileCount = 18;
 
 // --- sub-kind 0x0C's byte arrays ------------------------------------------------
-constexpr std::uint32_t kSub0CFlags = 0x65DFC4;        // 8: the story flag by the column +0x36
+constexpr ::bof3::image::Va kSub0CFlags{0x65DFC4};        // 8: the story flag by the column +0x36
 constexpr unsigned kSub0CFlagCount = 8;
-constexpr std::uint32_t kSub0COpenFrames = 0x65DFE4;   // 4
-constexpr std::uint32_t kSub0CShutFrames = 0x65DFE8;   // 4
-constexpr std::uint32_t kSub0CFlashFrames = 0x65DFEC;  // 4
-constexpr std::uint32_t kSub0CColumns = 0x65DFF0;      // 8: the VRAM column by +0x36
+constexpr ::bof3::image::Va kSub0COpenFrames{0x65DFE4};   // 4
+constexpr ::bof3::image::Va kSub0CShutFrames{0x65DFE8};   // 4
+constexpr ::bof3::image::Va kSub0CFlashFrames{0x65DFEC};  // 4
+constexpr ::bof3::image::Va kSub0CColumns{0x65DFF0};      // 8: the VRAM column by +0x36
 constexpr unsigned kSub0CColumnCount = 8;
 
 // --- sub-kind 0x13's arrays, by +0xB --------------------------------------------
-constexpr std::uint32_t kSub13Flags = 0x65E010;        // 4: row 9's flag that shows the panel
-constexpr std::uint32_t kSub13Faces = 0x65E014;        // 4: row 9's flag that picks the face
-constexpr std::uint32_t kSub13Cells = 0x65E02C;        // 4 pairs (cell x, cell z)
+constexpr ::bof3::image::Va kSub13Flags{0x65E010};        // 4: row 9's flag that shows the panel
+constexpr ::bof3::image::Va kSub13Faces{0x65E014};        // 4: row 9's flag that picks the face
+constexpr ::bof3::image::Va kSub13Cells{0x65E02C};        // 4 pairs (cell x, cell z)
 constexpr unsigned kSub13Count = 4;
 
 // --- the gates' arrays (sub-kinds 0x0F and 0x4F), by the variant +0x36 ---------
-constexpr std::uint32_t kGateFlags = 0x65E034;         // 4, by +0x3A: row 9's flag
+constexpr ::bof3::image::Va kGateFlags{0x65E034};         // 4, by +0x3A: row 9's flag
 constexpr unsigned kGateFlagCount = 4;
-constexpr std::uint32_t kGateHeights = 0x65E038;       // 8 words
-constexpr std::uint32_t kGateTextures = 0x65E048;      // 8 words
-constexpr std::uint32_t kGateCells = 0x65E058;         // 8 pairs (cell x, cell z)
+constexpr ::bof3::image::Va kGateHeights{0x65E038};       // 8 words
+constexpr ::bof3::image::Va kGateTextures{0x65E048};      // 8 words
+constexpr ::bof3::image::Va kGateCells{0x65E058};         // 8 pairs (cell x, cell z)
 constexpr unsigned kGateCount = 8;
 
 }  // namespace effect_5b::at

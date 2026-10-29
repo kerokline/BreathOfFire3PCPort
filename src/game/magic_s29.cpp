@@ -90,12 +90,12 @@ std::uint16_t Ftol16(std::uint32_t bits) {
 }
 
 inline unsigned char* Sc() { return Sprite_Current; }
-inline unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
-inline unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
-inline unsigned char* TaskSlot(unsigned index) { return Mem(BattleTask_Slots_addr + (index & 0xFFu) * at::kTaskStride); }
-inline unsigned char* Mote(unsigned index) { return Mem(cell::kMotePool + (index & 0xFFu) * cell::kMoteStride); }
-inline unsigned char* Shade(unsigned index) { return Mem(ShadowMote_Pool_addr + (index & 0xFFu) * cell::kShadeStride); }
-inline unsigned char* Cur() { return Pointer(ShadowMote_Current_addr); }
+inline unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
+inline unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
+inline unsigned char* TaskSlot(unsigned index) { return Mem(::bof3::Img(BattleTask_Slots_addr) + (index & 0xFFu) * at::kTaskStride); }
+inline unsigned char* Mote(unsigned index) { return Mem(::bof3::Img(cell::kMotePool) + (index & 0xFFu) * cell::kMoteStride); }
+inline unsigned char* Shade(unsigned index) { return Mem(::bof3::Img(ShadowMote_Pool_addr) + (index & 0xFFu) * cell::kShadeStride); }
+inline unsigned char* Cur() { return Pointer(::bof3::Img(ShadowMote_Current_addr)); }
 
 // The scratch words and vertices, read and written in place.
 inline std::uint16_t SW(std::uint32_t a) { return Word(Mem(a)); }
@@ -135,26 +135,26 @@ void LinkAtCur(unsigned size) {
 }
 void Project3(unsigned char* p) {
     long depth;
-    MH_CALL(Gte_RotTransPers3)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), Xy(p, 8), Xy(p, 0x18), Xy(p, 0x28), &depth);
+    MH_CALL(Gte_RotTransPers3)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Xy(p, 8), Xy(p, 0x18), Xy(p, 0x28), &depth);
     MH_CALL(Gte_PrimDepths3_10B)(p);
 }
 void Project4(unsigned char* p) {
     long depth;
-    MH_CALL(Gte_RotTransPers4)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), Vec(Prim_VertexScratch_addr + 0x18), Xy(p, 8), Xy(p, 0x18),
+    MH_CALL(Gte_RotTransPers4)(Vec(::bof3::Img(Prim_VertexScratch_addr)), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x8), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x10), Vec(::bof3::Img(Prim_VertexScratch_addr) + 0x18), Xy(p, 8), Xy(p, 0x18),
                                Xy(p, 0x28), Xy(p, 0x38), &depth);
     MH_CALL(Gte_PrimDepths4_10B)(p);
 }
 // Three colour bytes from the scratch words' low bytes (red, green, blue).
 void Shade3(unsigned char* p) {
-    p[0] = SB(cell::kW6);
-    p[1] = SB(cell::kW8);
-    p[2] = SB(cell::kWA);
+    p[0] = SB(::bof3::Img(cell::kW6));
+    p[1] = SB(::bof3::Img(cell::kW8));
+    p[2] = SB(::bof3::Img(cell::kWA));
 }
 void Fill3(unsigned char* p, unsigned char v) { p[0] = p[1] = p[2] = v; }
 
 using TaskFn = void (__cdecl*)(unsigned char*);
 using AllocFn = unsigned char (__cdecl*)();
-void CallOwn(std::uint32_t address) { MH_AT(Handler, address)(); }
+void CallOwn(std::uint32_t address) { MH_WORD(Handler, address)(); }
 
 }  // namespace
 
@@ -174,16 +174,16 @@ S29_EXPORT void __cdecl DivineBreath_Task(void) {
     if (phase >= 2) PastTable("DivineBreath_Task", phase, 2);
     magic_harness::Phase(kPhases[phase])();
     unsigned char* const saved = Sprite_Current;
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < cell::kMotes; ++i) {
         unsigned char* const m = Mote(i);
         records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         if ((m[0] & 1) == 0) continue;
         const std::int32_t its = static_cast<std::int32_t>(tm->owner);
         Sprite_Current = m;
-        SetLong(Mem(BattleE2_Owner_addr), its);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), its);
         CallOwn(bof3::addr::DivineMote_Task);
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
         Sprite_Current = saved;
     }
 }
@@ -223,7 +223,7 @@ S29_EXPORT void __cdecl DivineBreath_Start(void) {
 S29_EXPORT void __cdecl DivineBreathFx_Task(void) {
     const unsigned phase = Sc()[1];
     if (phase >= 2) PastTable("DivineBreathFx_Task", phase, 2);
-    DataPhase(DivineBreathFx_Kinds_addr, phase)();
+    DataPhase(::bof3::Img(DivineBreathFx_Kinds_addr), phase)();
 }
 
 // original 0x4E0A80: DivineBeam_Steps (three) by +2, unchecked; then while
@@ -233,7 +233,7 @@ S29_EXPORT void __cdecl DivineBreathFx_Task(void) {
 S29_EXPORT void __cdecl DivineBeam_Run(void) {
     const unsigned phase = Sc()[2];
     if (phase >= 3) PastTable("DivineBeam_Run", phase, 3);
-    DataPhase(DivineBeam_Steps_addr, phase)();
+    DataPhase(::bof3::Img(DivineBeam_Steps_addr), phase)();
     const unsigned char* const s = Sc();
     if (s[0] == 0 || s[2] == 0) return;
     if ((Frame_Counter & 1) == 0) {
@@ -290,9 +290,9 @@ namespace {
 // colour byte +0x5D / +0x5E / +0x5F times the brightness +9.
 void BeamColours() {
     const unsigned char* const s = Sc();
-    Put(cell::kW6, Mul(static_cast<signed char>(s[0x5D]), s[9]));
-    Put(cell::kW8, Mul(static_cast<signed char>(s[0x5E]), s[9]));
-    Put(cell::kWA, Mul(static_cast<signed char>(s[0x5F]), s[9]));
+    Put(::bof3::Img(cell::kW6), Mul(static_cast<signed char>(s[0x5D]), s[9]));
+    Put(::bof3::Img(cell::kW8), Mul(static_cast<signed char>(s[0x5E]), s[9]));
+    Put(::bof3::Img(cell::kWA), Mul(static_cast<signed char>(s[0x5F]), s[9]));
 }
 
 }  // namespace
@@ -305,34 +305,34 @@ void BeamColours() {
 S29_EXPORT void __cdecl DivineBeam_DrawDisc(void) {
     DrawMode(0x35);
     Commit(5, 0xC);
-    Put(cell::kR, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_y));
+    Put(::bof3::Img(cell::kR), static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_y));
     {
         const int s = Sin(0);
-        Put(Prim_VertexScratch_addr + 0x10, Mul12(s, SS(cell::kR)));
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10, Mul12(s, SS(::bof3::Img(cell::kR))));
     }
     {
         const int c = Cos(0);
-        Put(Prim_VertexScratch_addr + 0x10 + 2, Mul12(c, SS(cell::kR)));
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, Mul12(c, SS(::bof3::Img(cell::kR))));
     }
     BeamColours();
     for (int a = 0x100; a < 0x1100; a += 0x100) {
-        const std::uint16_t y = SW(Prim_VertexScratch_addr + 0x10 + 2);
-        const std::uint16_t x = SW(Prim_VertexScratch_addr + 0x10);
-        Put(Prim_VertexScratch_addr, 0);
-        Put(Prim_VertexScratch_addr + 2, 0);
-        Put(Prim_VertexScratch_addr + 0x8, x);
-        Put(Prim_VertexScratch_addr + 0x8 + 2, y);
+        const std::uint16_t y = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2);
+        const std::uint16_t x = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x10);
+        Put(::bof3::Img(Prim_VertexScratch_addr), 0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 2, 0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, x);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, y);
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr + 0x10, Mul12(s, SS(cell::kR)));
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10, Mul12(s, SS(::bof3::Img(cell::kR))));
         }
         const int c = Cos(a);
-        const int ny = Mul12(c, SS(cell::kR));
+        const int ny = Mul12(c, SS(::bof3::Img(cell::kR)));
         unsigned char* const p = Gfx_PacketNext;
-        Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
-        Put(Prim_VertexScratch_addr + 0x10 + 2, ny);
-        Put(Prim_VertexScratch_addr + 0x8 + 4, 0);
-        Put(Prim_VertexScratch_addr + 4, 0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, ny);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 4, 0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 4, 0);
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
         Project3(p);
@@ -351,39 +351,39 @@ S29_EXPORT void __cdecl DivineBeam_DrawDisc(void) {
 // each after Gpu_SetDrawMode(.., 0x35) linked by MapView_LinkPrimAt at the
 // task's point plus the new rim point << 9 (0, 0xC), and again (0, 0x44).
 S29_EXPORT void __cdecl DivineBeam_DrawWall(void) {
-    Put(cell::kR, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_y));
+    Put(::bof3::Img(cell::kR), static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_y));
     {
         const int s = Sin(0);
-        Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(cell::kR)));
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Mul12(s, SS(::bof3::Img(cell::kR))));
     }
     {
         const int c = Cos(0);
-        Put(Prim_VertexScratch_addr + 0x8 + 2, Mul12(c, SS(cell::kR)));
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, Mul12(c, SS(::bof3::Img(cell::kR))));
     }
     BeamColours();
     for (int a = 0x80; a < 0x1080; a += 0x80) {
-        const std::uint16_t y = SW(Prim_VertexScratch_addr + 0x8 + 2);
-        const std::uint16_t x = SW(Prim_VertexScratch_addr + 0x8);
-        Put(Prim_VertexScratch_addr, x);
-        Put(Prim_VertexScratch_addr + 2, y);
-        Put(Prim_VertexScratch_addr + 4, -0x300);
-        Put(Prim_VertexScratch_addr + 0x10, x);
-        Put(Prim_VertexScratch_addr + 0x10 + 2, y);
-        Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
+        const std::uint16_t y = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2);
+        const std::uint16_t x = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x8);
+        Put(::bof3::Img(Prim_VertexScratch_addr), x);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 2, y);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 4, -0x300);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10, x);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, y);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(cell::kR)));
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Mul12(s, SS(::bof3::Img(cell::kR))));
         }
         const int c = Cos(a);
-        const int ny = Mul12(c, SS(cell::kR));
-        const std::uint16_t nx = SW(Prim_VertexScratch_addr + 0x8);
-        Put(Prim_VertexScratch_addr + 0x8 + 4, -0x300);
-        Put(Prim_VertexScratch_addr + 0x18, nx);
-        Put(Prim_VertexScratch_addr + 0x18 + 4, 0);
+        const int ny = Mul12(c, SS(::bof3::Img(cell::kR)));
+        const std::uint16_t nx = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x8);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 4, -0x300);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18, nx);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 4, 0);
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-        Put(Prim_VertexScratch_addr + 0x8 + 2, ny);
-        Put(Prim_VertexScratch_addr + 0x18 + 2, ny);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, ny);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2, ny);
         const std::int32_t lx = Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<short>(nx)) << 9),
                                     ts->x);
         const std::int32_t lz = Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<short>(ny)) << 9),
@@ -407,7 +407,7 @@ S29_EXPORT void __cdecl DivineBeam_DrawWall(void) {
 S29_EXPORT void __cdecl DivineBurst_Run(void) {
     const unsigned phase = Sc()[2];
     if (phase >= 3) PastTable("DivineBurst_Run", phase, 3);
-    DataPhase(DivineBurst_Steps_addr, phase)();
+    DataPhase(::bof3::Img(DivineBurst_Steps_addr), phase)();
     const unsigned char* const s = Sc();
     if (s[0] == 0 || s[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -454,7 +454,7 @@ S29_EXPORT void __cdecl DivineBurst_Shrink(void) {
         const unsigned slot = MH_AT(AllocFn, bof3::addr::DivineMote_Alloc)();
         unsigned char* const m = Mote(slot);
         records::BattleTask* const tm = rv::As<records::BattleTask>(m);
-        tm->owner = Long(Mem(BattleE2_Owner_addr));
+        tm->owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
         m[1] = 0;
         m[0xB] = static_cast<unsigned char>(i);
         const std::uint32_t r = RandCall();
@@ -483,7 +483,7 @@ S29_EXPORT void __cdecl DivineBurst_Fade(void) {
 S29_EXPORT void __cdecl DivineMote_Task(void) {
     const unsigned phase = Sc()[1];
     if (phase >= 1) PastTable("DivineMote_Task", phase, 1);
-    DataPhase(DivineMote_TaskTable_addr, phase)();
+    DataPhase(::bof3::Img(DivineMote_TaskTable_addr), phase)();
 }
 
 // original 0x4E1260: DivineMote_Steps (two) by +2, unchecked; then while +0
@@ -493,7 +493,7 @@ S29_EXPORT void __cdecl DivineMote_Task(void) {
 S29_EXPORT void __cdecl DivineMote_Run(void) {
     const unsigned phase = Sc()[2];
     if (phase >= 2) PastTable("DivineMote_Run", phase, 2);
-    DataPhase(DivineMote_Steps_addr, phase)();
+    DataPhase(::bof3::Img(DivineMote_Steps_addr), phase)();
     const unsigned char* const s = Sc();
     if (s[0] == 0 || s[2] == 0) return;
     DrawMode(0x35);
@@ -528,17 +528,17 @@ S29_EXPORT void __cdecl DivineMote_Launch(void) {
         ts->work_18 = 0x200;
         rv::Store(ts->step_y, 0x80000);
         rv::Store(ts->work_20, 0x40000);
-        Put(cell::kR, static_cast<std::uint16_t>(ts->step_x));
-        Put(cell::kW4, MoteAngle(s));
+        Put(::bof3::Img(cell::kR), static_cast<std::uint16_t>(ts->step_x));
+        Put(::bof3::Img(cell::kW4), MoteAngle(s));
     }
     {
-        const int sn = Sin(SS(cell::kW4));
-        const std::int32_t v = Add(Mul12(sn, SS(cell::kR)), rv::As<records::SpriteHead>(Owner())->x);
+        const int sn = Sin(SS(::bof3::Img(cell::kW4)));
+        const std::int32_t v = Add(Mul12(sn, SS(::bof3::Img(cell::kR))), rv::As<records::SpriteHead>(Owner())->x);
         rv::Current<records::BattleTask>()->x = v;
     }
     {
-        const int c = Cos(SS(cell::kW4));
-        const std::int32_t v = Add(Mul12(c, SS(cell::kR)), rv::As<records::SpriteHead>(Owner())->z);
+        const int c = Cos(SS(::bof3::Img(cell::kW4)));
+        const std::int32_t v = Add(Mul12(c, SS(::bof3::Img(cell::kR))), rv::As<records::SpriteHead>(Owner())->z);
         rv::Current<records::BattleTask>()->z = v;
     }
     rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
@@ -570,18 +570,18 @@ S29_EXPORT void __cdecl DivineMote_Fly(void) {
     unsigned char* x = nullptr;
     {
         unsigned char* const s = Sc();
-        Put(cell::kR, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_x));
+        Put(::bof3::Img(cell::kR), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_x));
         x = s + 0x34;
-        Put(cell::kW4, MoteAngle(s));
+        Put(::bof3::Img(cell::kW4), MoteAngle(s));
     }
     {
-        const int sn = Sin(SS(cell::kW4));
-        SetLong(x, Add(Long(x), Mul12(sn, SS(cell::kR))));
+        const int sn = Sin(SS(::bof3::Img(cell::kW4)));
+        SetLong(x, Add(Long(x), Mul12(sn, SS(::bof3::Img(cell::kR)))));
     }
     unsigned char* const z = Sc() + 0x38;
     {
-        const int c = Cos(SS(cell::kW4));
-        SetLong(z, Add(Long(z), Mul12(c, SS(cell::kR))));
+        const int c = Cos(SS(::bof3::Img(cell::kW4)));
+        SetLong(z, Add(Long(z), Mul12(c, SS(::bof3::Img(cell::kR)))));
     }
     {
         unsigned char* const s = Sc();
@@ -598,20 +598,20 @@ S29_EXPORT void __cdecl DivineMote_Fly(void) {
 // the centre 0xF0 grey, the rim the colour bytes << 4; each linked at the
 // mote (2, 0x34).
 S29_EXPORT void __cdecl DivineMote_DrawStar(void) {
-    Put(cell::kR, Sc()[0xA]);
+    Put(::bof3::Img(cell::kR), Sc()[0xA]);
     {
         const int s = Sin(0);
-        Put(Prim_VertexScratch_addr, Mul12(s, SS(cell::kR)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+        Put(::bof3::Img(Prim_VertexScratch_addr), Mul12(s, SS(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
     }
     {
         const int c = Cos(0);
-        Put(Prim_VertexScratch_addr + 2, Mul12(c, SS(cell::kR)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 2, Mul12(c, SS(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
     }
     {
         const unsigned char* const s = Sc();
-        Put(cell::kW6, Mul(static_cast<signed char>(s[0x5D]), 16));
-        Put(cell::kW8, Mul(static_cast<signed char>(s[0x5E]), 16));
-        Put(cell::kWA, Mul(static_cast<signed char>(s[0x5F]), 16));
+        Put(::bof3::Img(cell::kW6), Mul(static_cast<signed char>(s[0x5D]), 16));
+        Put(::bof3::Img(cell::kW8), Mul(static_cast<signed char>(s[0x5E]), 16));
+        Put(::bof3::Img(cell::kWA), Mul(static_cast<signed char>(s[0x5F]), 16));
     }
     for (int a = 0x200; a < 0x1200; a += 0x200) {
         unsigned char* const p = Gfx_PacketNext;
@@ -621,19 +621,19 @@ S29_EXPORT void __cdecl DivineMote_DrawStar(void) {
             const unsigned char* const s = Sc();
             PutFloat(p + 8, S16(s + 0x2E));
             PutFloat(p + 0xC, S16(s + 0x30));
-            PutFloat(p + 0x18, SS(Prim_VertexScratch_addr));
-            PutFloat(p + 0x1C, SS(Prim_VertexScratch_addr + 2));
+            PutFloat(p + 0x18, SS(::bof3::Img(Prim_VertexScratch_addr)));
+            PutFloat(p + 0x1C, SS(::bof3::Img(Prim_VertexScratch_addr) + 2));
         }
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr, Mul12(s, SS(cell::kR)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
-            PutFloat(p + 0x28, SS(Prim_VertexScratch_addr));
+            Put(::bof3::Img(Prim_VertexScratch_addr), Mul12(s, SS(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+            PutFloat(p + 0x28, SS(::bof3::Img(Prim_VertexScratch_addr)));
         }
         {
             const int c = Cos(a);
-            Put(Prim_VertexScratch_addr + 2, Mul12(c, SS(cell::kR)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 2, Mul12(c, SS(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
             Fill3(p + 4, 0xF0);
-            PutFloat(p + 0x2C, SS(Prim_VertexScratch_addr + 2));
+            PutFloat(p + 0x2C, SS(::bof3::Img(Prim_VertexScratch_addr) + 2));
             Shade3(p + 0x14);
             Shade3(p + 0x24);
         }
@@ -648,8 +648,8 @@ S29_EXPORT void __cdecl DivineMote_DrawStar(void) {
 S29_EXPORT void __cdecl DivineMote_DrawRing(void) {
     {
         const unsigned char* const s = Sc();
-        Put(cell::kR, s[0xA]);
-        Put(cell::kR2, s[0xA] * 2);
+        Put(::bof3::Img(cell::kR), s[0xA]);
+        Put(::bof3::Img(cell::kR2), s[0xA] * 2);
     }
     // the rim points: v0 on the outer circle, v1 on the inner, at angle a
     const auto rim = [](int a, std::uint32_t radius, std::uint32_t v) {
@@ -660,37 +660,37 @@ S29_EXPORT void __cdecl DivineMote_DrawRing(void) {
         const int c = Cos(a);
         Put(v + 2, Mul12(c, SS(radius)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
     };
-    rim(0, cell::kR2, Prim_VertexScratch_addr);
-    rim(0, cell::kR, cell::kV1);
+    rim(0, ::bof3::Img(cell::kR2), ::bof3::Img(Prim_VertexScratch_addr));
+    rim(0, ::bof3::Img(cell::kR), ::bof3::Img(cell::kV1));
     for (int a = 0x200; a < 0x1200; a += 0x200) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        PutFloat(p + 8, SS(Prim_VertexScratch_addr));
-        PutFloat(p + 0xC, SS(Prim_VertexScratch_addr + 2));
-        PutFloat(p + 0x28, SS(Prim_VertexScratch_addr + 0x8));
-        PutFloat(p + 0x2C, SS(Prim_VertexScratch_addr + 0x8 + 2));
+        PutFloat(p + 8, SS(::bof3::Img(Prim_VertexScratch_addr)));
+        PutFloat(p + 0xC, SS(::bof3::Img(Prim_VertexScratch_addr) + 2));
+        PutFloat(p + 0x28, SS(::bof3::Img(Prim_VertexScratch_addr) + 0x8));
+        PutFloat(p + 0x2C, SS(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2));
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr, Mul12(s, SS(cell::kR2)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
-            PutFloat(p + 0x18, SS(Prim_VertexScratch_addr));
+            Put(::bof3::Img(Prim_VertexScratch_addr), Mul12(s, SS(::bof3::Img(cell::kR2))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+            PutFloat(p + 0x18, SS(::bof3::Img(Prim_VertexScratch_addr)));
         }
         {
             const int c = Cos(a);
-            Put(Prim_VertexScratch_addr + 2, Mul12(c, SS(cell::kR2)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
-            PutFloat(p + 0x1C, SS(Prim_VertexScratch_addr + 2));
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 2, Mul12(c, SS(::bof3::Img(cell::kR2))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+            PutFloat(p + 0x1C, SS(::bof3::Img(Prim_VertexScratch_addr) + 2));
         }
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(cell::kR)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
-            PutFloat(p + 0x38, SS(Prim_VertexScratch_addr + 0x8));
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Mul12(s, SS(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+            PutFloat(p + 0x38, SS(::bof3::Img(Prim_VertexScratch_addr) + 0x8));
         }
         {
             const int c = Cos(a);
-            Put(Prim_VertexScratch_addr + 0x8 + 2, Mul12(c, SS(cell::kR)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, Mul12(c, SS(::bof3::Img(cell::kR))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
             Fill3(p + 4, 1);
             Fill3(p + 0x14, 1);
-            PutFloat(p + 0x3C, SS(Prim_VertexScratch_addr + 0x8 + 2));
+            PutFloat(p + 0x3C, SS(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2));
             Shade3(p + 0x24);
             Shade3(p + 0x34);
         }
@@ -723,15 +723,15 @@ S29_EXPORT void __cdecl ShadowBreath_Task(void) {
     const unsigned phase = Sc()[1];
     if (phase >= 2) PastTable("ShadowBreath_Task", phase, 2);
     magic_harness::Phase(kPhases[phase])();
-    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
+    const std::int32_t owner = Long(Mem(::bof3::Img(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < cell::kShades; ++i) {
         unsigned char* const r = Shade(i);
         if ((r[0] & 1) == 0) continue;
         const std::int32_t its = Long(r + 0x1C);
-        SetPtr(Mem(ShadowMote_Current_addr), r);
-        SetLong(Mem(BattleE2_Owner_addr), its);
+        SetPtr(Mem(::bof3::Img(ShadowMote_Current_addr)), r);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), its);
         CallOwn(bof3::addr::ShadowMote_Task);
-        SetLong(Mem(BattleE2_Owner_addr), owner);
+        SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), owner);
     }
 }
 
@@ -774,7 +774,7 @@ S29_EXPORT void __cdecl ShadowBreath_Start(void) {
 S29_EXPORT void __cdecl ShadowBreathFx_Task(void) {
     const unsigned phase = Sc()[1];
     if (phase >= 3) PastTable("ShadowBreathFx_Task", phase, 3);
-    DataPhase(ShadowBreathFx_Kinds_addr, phase)();
+    DataPhase(::bof3::Img(ShadowBreathFx_Kinds_addr), phase)();
 }
 
 // original 0x4E1B00: ShadowOrb_Steps (four: MAGIC056's 0x4ADB50, Grow,
@@ -783,7 +783,7 @@ S29_EXPORT void __cdecl ShadowBreathFx_Task(void) {
 S29_EXPORT void __cdecl ShadowOrb_Run(void) {
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("ShadowOrb_Run", phase, 4);
-    DataPhase(ShadowOrb_Steps_addr, phase)();
+    DataPhase(::bof3::Img(ShadowOrb_Steps_addr), phase)();
     const unsigned char* const s = Sc();
     if (s[0] == 0 || s[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -814,40 +814,40 @@ S29_EXPORT void __cdecl ShadowOrb_DrawDisc(void) {
     Commit(5, 0xC);
     {
         const unsigned char* const s = Sc();
-        Put(cell::kR, s[0xA] * 2);
-        Put(cell::kW6, s[9] * 12);
-        Put(cell::kW8, s[9] * 12);
-        Put(cell::kWA, s[9] * 12);
+        Put(::bof3::Img(cell::kR), s[0xA] * 2);
+        Put(::bof3::Img(cell::kW6), s[9] * 12);
+        Put(::bof3::Img(cell::kW8), s[9] * 12);
+        Put(::bof3::Img(cell::kWA), s[9] * 12);
     }
     {
         const int s = Sin(0);
-        Put(Prim_VertexScratch_addr + 0x10, Mul12(s, SS(cell::kR)));
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10, Mul12(s, SS(::bof3::Img(cell::kR))));
     }
     {
         const int c = Cos(0);
-        const int y = Mul12(c, SS(cell::kR));
-        Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
-        Put(Prim_VertexScratch_addr + 0x10 + 2, y);
-        Put(Prim_VertexScratch_addr + 0x8 + 4, 0);
-        Put(Prim_VertexScratch_addr + 4, 0);
+        const int y = Mul12(c, SS(::bof3::Img(cell::kR)));
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, y);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 4, 0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 4, 0);
     }
     for (int a = 0x100; a < 0x2100; a += 0x100) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        const std::uint16_t x = SW(Prim_VertexScratch_addr + 0x10);
-        const std::uint16_t y = SW(Prim_VertexScratch_addr + 0x10 + 2);
-        Put(Prim_VertexScratch_addr, 0);
-        Put(Prim_VertexScratch_addr + 2, 0);
-        Put(Prim_VertexScratch_addr + 0x8, x);
-        Put(Prim_VertexScratch_addr + 0x8 + 2, y);
+        const std::uint16_t x = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x10);
+        const std::uint16_t y = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2);
+        Put(::bof3::Img(Prim_VertexScratch_addr), 0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 2, 0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, x);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, y);
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr + 0x10, Mul12(s, SS(cell::kR)));
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10, Mul12(s, SS(::bof3::Img(cell::kR))));
         }
         {
             const int c = Cos(a);
-            Put(Prim_VertexScratch_addr + 0x10 + 2, Mul12(c, SS(cell::kR)));
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, Mul12(c, SS(::bof3::Img(cell::kR))));
         }
         Project3(p);
         Shade3(p + 4);
@@ -866,52 +866,52 @@ namespace {
 void OrbRing(bool shade_first) {
     {
         const int s = Sin(0);
-        Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(cell::kR2)));
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Mul12(s, SS(::bof3::Img(cell::kR2))));
     }
     {
         const int c = Cos(0);
-        Put(Prim_VertexScratch_addr + 0x8 + 2, Mul12(c, SS(cell::kR2)));
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, Mul12(c, SS(::bof3::Img(cell::kR2))));
     }
     {
         const int s = Sin(0);
-        Put(Prim_VertexScratch_addr + 0x18, Mul12(s, SS(cell::kR)));
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18, Mul12(s, SS(::bof3::Img(cell::kR))));
     }
     {
         const int c = Cos(0);
-        const int y = Mul12(c, SS(cell::kR));
-        Put(Prim_VertexScratch_addr + 0x18 + 4, 0);
-        Put(Prim_VertexScratch_addr + 0x18 + 2, y);
-        Put(Prim_VertexScratch_addr + 0x10 + 4, 0);
-        Put(Prim_VertexScratch_addr + 0x8 + 4, 0);
-        Put(Prim_VertexScratch_addr + 4, 0);
+        const int y = Mul12(c, SS(::bof3::Img(cell::kR)));
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 4, 0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2, y);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 4, 0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 4, 0);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 4, 0);
     }
     for (int a = 0x100; a < 0x1100; a += 0x100) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        const std::uint16_t x1 = SW(Prim_VertexScratch_addr + 0x8);
-        const std::uint16_t y1 = SW(Prim_VertexScratch_addr + 0x8 + 2);
-        const std::uint16_t x3 = SW(Prim_VertexScratch_addr + 0x18);
-        Put(Prim_VertexScratch_addr, x1);
-        const std::uint16_t y3 = SW(Prim_VertexScratch_addr + 0x18 + 2);
-        Put(Prim_VertexScratch_addr + 2, y1);
-        Put(Prim_VertexScratch_addr + 0x10, x3);
-        Put(Prim_VertexScratch_addr + 0x10 + 2, y3);
+        const std::uint16_t x1 = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x8);
+        const std::uint16_t y1 = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2);
+        const std::uint16_t x3 = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x18);
+        Put(::bof3::Img(Prim_VertexScratch_addr), x1);
+        const std::uint16_t y3 = SW(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 2, y1);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10, x3);
+        Put(::bof3::Img(Prim_VertexScratch_addr) + 0x10 + 2, y3);
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(cell::kR2)));
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8, Mul12(s, SS(::bof3::Img(cell::kR2))));
         }
         {
             const int c = Cos(a);
-            Put(Prim_VertexScratch_addr + 0x8 + 2, Mul12(c, SS(cell::kR2)));
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x8 + 2, Mul12(c, SS(::bof3::Img(cell::kR2))));
         }
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr + 0x18, Mul12(s, SS(cell::kR)));
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18, Mul12(s, SS(::bof3::Img(cell::kR))));
         }
         {
             const int c = Cos(a);
-            Put(Prim_VertexScratch_addr + 0x18 + 2, Mul12(c, SS(cell::kR)));
+            Put(::bof3::Img(Prim_VertexScratch_addr) + 0x18 + 2, Mul12(c, SS(::bof3::Img(cell::kR))));
         }
         Project4(p);
         if (shade_first) {
@@ -937,14 +937,14 @@ void OrbRing(bool shade_first) {
 S29_EXPORT void __cdecl ShadowOrb_DrawRim(void) {
     DrawMode(0x35);
     Commit(5, 0xC);
-    Put(cell::kR, Sc()[0xA] * 2);
+    Put(::bof3::Img(cell::kR), Sc()[0xA] * 2);
     const std::uint32_t r = RandCall();
     {
         const unsigned char* const s = Sc();
-        Put(cell::kR2, (r & 3) + s[0xA] * 3u);
-        Put(cell::kW6, s[9] * 15);
-        Put(cell::kW8, s[9] * 4);
-        Put(cell::kWA, s[9] * 15);
+        Put(::bof3::Img(cell::kR2), (r & 3) + s[0xA] * 3u);
+        Put(::bof3::Img(cell::kW6), s[9] * 15);
+        Put(::bof3::Img(cell::kW8), s[9] * 4);
+        Put(::bof3::Img(cell::kWA), s[9] * 15);
     }
     OrbRing(false);
 }
@@ -957,11 +957,11 @@ S29_EXPORT void __cdecl ShadowOrb_DrawBand(void) {
     Commit(5, 0xC);
     {
         const unsigned char* const s = Sc();
-        Put(cell::kR, s[0xA]);
-        Put(cell::kR2, s[0xA] * 2);
-        Put(cell::kW6, s[9] * 15);
-        Put(cell::kW8, s[9] * 4);
-        Put(cell::kWA, s[9] * 15);
+        Put(::bof3::Img(cell::kR), s[0xA]);
+        Put(::bof3::Img(cell::kR2), s[0xA] * 2);
+        Put(::bof3::Img(cell::kW6), s[9] * 15);
+        Put(::bof3::Img(cell::kW8), s[9] * 4);
+        Put(::bof3::Img(cell::kWA), s[9] * 15);
     }
     OrbRing(true);
 }
@@ -972,7 +972,7 @@ S29_EXPORT void __cdecl ShadowOrb_DrawBand(void) {
 S29_EXPORT void __cdecl ShadowGlow_Run(void) {
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("ShadowGlow_Run", phase, 4);
-    DataPhase(ShadowGlow_Steps_addr, phase)();
+    DataPhase(::bof3::Img(ShadowGlow_Steps_addr), phase)();
     const unsigned char* const s = Sc();
     if (s[0] == 0 || s[2] == 0) return;
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -1009,11 +1009,11 @@ S29_EXPORT void __cdecl ShadowGlow_Grow(void) {
 S29_EXPORT void __cdecl ShadowGlow_Draw(void) {
     {
         const unsigned char* const s = Sc();
-        Put(cell::kR, 0x28);
-        Put(cell::kR2, s[9]);
-        Put(cell::kW4, s[0xA] << 3);
-        Put(Scratch_Swap_addr, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
-        Put(cell::kY, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
+        Put(::bof3::Img(cell::kR), 0x28);
+        Put(::bof3::Img(cell::kR2), s[9]);
+        Put(::bof3::Img(cell::kW4), s[0xA] << 3);
+        Put(::bof3::Img(Scratch_Swap_addr), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+        Put(::bof3::Img(cell::kY), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     }
     DrawMode(0xB5);
     LinkAtSc(0xC);
@@ -1021,7 +1021,7 @@ S29_EXPORT void __cdecl ShadowGlow_Draw(void) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyGT4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        const int x = SS(Scratch_Swap_addr), y = SS(cell::kY), r = SS(cell::kR), h = SS(cell::kR2);
+        const int x = SS(::bof3::Img(Scratch_Swap_addr)), y = SS(::bof3::Img(cell::kY)), r = SS(::bof3::Img(cell::kR)), h = SS(::bof3::Img(cell::kR2));
         const int top = k == 0 ? y - h - 0x10 : y - 0x10;
         const int foot = k == 0 ? y - 0x10 : y;
         PutFloat(p + 8, x - r);
@@ -1040,7 +1040,7 @@ S29_EXPORT void __cdecl ShadowGlow_Draw(void) {
             const unsigned c = MH_CALL(Gpu_GetClut)(0, 0x1FA);
             rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, c & 0xFFFFu);
         }
-        const auto v = [](unsigned add) { return static_cast<unsigned char>(SB(cell::kR2) + add); };
+        const auto v = [](unsigned add) { return static_cast<unsigned char>(SB(::bof3::Img(cell::kR2)) + add); };
         if (k == 0) {
             p[0x14] = 8;
             p[0x15] = 8;
@@ -1060,7 +1060,7 @@ S29_EXPORT void __cdecl ShadowGlow_Draw(void) {
             p[0x3D] = v(0x18);
             p[0x51] = v(0x18);
         }
-        const unsigned char g = SB(cell::kW4);
+        const unsigned char g = SB(::bof3::Img(cell::kW4));
         Fill3(p + 4, g);
         Fill3(p + 0x18, g);
         Fill3(p + 0x2C, k == 0 ? g : 1);
@@ -1074,7 +1074,7 @@ S29_EXPORT void __cdecl ShadowGlow_Draw(void) {
 S29_EXPORT void __cdecl ShadowSeeker_Run(void) {
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("ShadowSeeker_Run", phase, 4);
-    DataPhase(ShadowSeeker_Steps_addr, phase)();
+    DataPhase(::bof3::Img(ShadowSeeker_Steps_addr), phase)();
     const unsigned char* const s = Sc();
     if (s[0] == 0 || s[2] == 0) return;
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -1103,10 +1103,10 @@ int HeadingToOwner() {
 S29_EXPORT void __cdecl ShadowSeeker_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    Sc()[8] = Pointer(MagicS23_ActorSprite_addr)[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Pointer(MagicS23_ActorSprite_addr))->x);
-    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(MagicS23_ActorSprite_addr))->z);
-    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(MagicS23_ActorSprite_addr))->height);
+    Sc()[8] = Pointer(::bof3::Img(MagicS23_ActorSprite_addr))[8];
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Pointer(::bof3::Img(MagicS23_ActorSprite_addr)))->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(::bof3::Img(MagicS23_ActorSprite_addr)))->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(::bof3::Img(MagicS23_ActorSprite_addr)))->height);
     rv::Current<records::BattleTask>()->step_x = 0x8000;
     rv::Current<records::BattleTask>()->step_z = 0;
     MH_AT(TaskFn, magic_s29::kTurnByFacing)(Sc());
@@ -1186,7 +1186,7 @@ S29_EXPORT void __cdecl ShadowSeeker_Burst(void) {
     for (unsigned i = 0; i < 0x40; ++i) {
         const unsigned index = MH_AT(AllocFn, bof3::addr::ShadowMote_Alloc)();
         unsigned char* const r = Shade(index);
-        SetLong(r + 0x1C, Long(Mem(BattleE2_Owner_addr)));
+        SetLong(r + 0x1C, Long(Mem(::bof3::Img(BattleE2_Owner_addr))));
         r[1] = 0;
         r[4] = static_cast<unsigned char>(i);
         const std::uint32_t n = RandCall();
@@ -1217,37 +1217,37 @@ S29_EXPORT void __cdecl ShadowSeeker_Draw(void) {
     Commit(3, 0xC);
     {
         const unsigned char* const s = Sc();
-        Put(cell::kW4, 0);
-        Put(cell::kR, 0x18);
-        Put(Scratch_Swap_addr, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
-        Put(cell::kY, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
-        const unsigned char* const c = Mem(ShadowSeeker_Colours_addr + s[0xB] * 2u);
-        Put(cell::kW6, c[0] * s[9]);
-        Put(cell::kW8, s[9]);
-        Put(cell::kWA, c[1] * s[9]);
+        Put(::bof3::Img(cell::kW4), 0);
+        Put(::bof3::Img(cell::kR), 0x18);
+        Put(::bof3::Img(Scratch_Swap_addr), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+        Put(::bof3::Img(cell::kY), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
+        const unsigned char* const c = Mem(::bof3::Img(ShadowSeeker_Colours_addr) + s[0xB] * 2u);
+        Put(::bof3::Img(cell::kW6), c[0] * s[9]);
+        Put(::bof3::Img(cell::kW8), s[9]);
+        Put(::bof3::Img(cell::kWA), c[1] * s[9]);
     }
     for (int i = 0; i < 0x10; ++i) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        PutFloat(p + 8, SS(Scratch_Swap_addr));
-        PutFloat(p + 0xC, SS(cell::kY));
+        PutFloat(p + 8, SS(::bof3::Img(Scratch_Swap_addr)));
+        PutFloat(p + 0xC, SS(::bof3::Img(cell::kY)));
         {
-            const int s = Sin(SS(cell::kW4));
-            PutFloat(p + 0x18, Add(Mul12(s, SS(cell::kR)), SS(Scratch_Swap_addr)));
+            const int s = Sin(SS(::bof3::Img(cell::kW4)));
+            PutFloat(p + 0x18, Add(Mul12(s, SS(::bof3::Img(cell::kR))), SS(::bof3::Img(Scratch_Swap_addr))));
         }
         {
-            const int c = Cos(SS(cell::kW4));
-            PutFloat(p + 0x1C, Add(Mul12(c, SS(cell::kR)), SS(cell::kY)));
+            const int c = Cos(SS(::bof3::Img(cell::kW4)));
+            PutFloat(p + 0x1C, Add(Mul12(c, SS(::bof3::Img(cell::kR))), SS(::bof3::Img(cell::kY))));
         }
-        Put(cell::kW4, (i + 1) << 8);
+        Put(::bof3::Img(cell::kW4), (i + 1) << 8);
         {
-            const int s = Sin(SS(cell::kW4));
-            PutFloat(p + 0x28, Add(Mul12(s, SS(cell::kR)), SS(Scratch_Swap_addr)));
+            const int s = Sin(SS(::bof3::Img(cell::kW4)));
+            PutFloat(p + 0x28, Add(Mul12(s, SS(::bof3::Img(cell::kR))), SS(::bof3::Img(Scratch_Swap_addr))));
         }
         {
-            const int c = Cos(SS(cell::kW4));
-            PutFloat(p + 0x2C, Add(Mul12(c, SS(cell::kR)), SS(cell::kY)));
+            const int c = Cos(SS(::bof3::Img(cell::kW4)));
+            PutFloat(p + 0x2C, Add(Mul12(c, SS(::bof3::Img(cell::kR))), SS(::bof3::Img(cell::kY))));
         }
         Shade3(p + 4);
         Fill3(p + 0x14, 1);
@@ -1261,7 +1261,7 @@ S29_EXPORT void __cdecl ShadowSeeker_Draw(void) {
 S29_EXPORT void __cdecl ShadowMote_Task(void) {
     const unsigned phase = Cur()[1];
     if (phase >= 1) PastTable("ShadowMote_Task", phase, 1);
-    DataPhase(ShadowMote_TaskTable_addr, phase)();
+    DataPhase(::bof3::Img(ShadowMote_TaskTable_addr), phase)();
 }
 
 // original 0x4E2C10: ShadowMote_Steps (four) by the current record's +2,
@@ -1270,7 +1270,7 @@ S29_EXPORT void __cdecl ShadowMote_Task(void) {
 S29_EXPORT void __cdecl ShadowMote_Run(void) {
     const unsigned phase = Cur()[2];
     if (phase >= 4) PastTable("ShadowMote_Run", phase, 4);
-    DataPhase(ShadowMote_Steps_addr, phase)();
+    DataPhase(::bof3::Img(ShadowMote_Steps_addr), phase)();
     const unsigned char* const r = Cur();
     if (r[0] == 0 || r[2] == 0) return;
     CallOwn(bof3::addr::ShadowMote_Project);
@@ -1288,12 +1288,12 @@ std::uint16_t ShadeAngle(const unsigned char* r) { return static_cast<std::uint1
 // word).
 template <typename Radius> void ShadeCircle(Radius radius) {
     {
-        const int s = Sin(static_cast<short>(SW(cell::kW4)));
+        const int s = Sin(static_cast<short>(SW(::bof3::Img(cell::kW4))));
         unsigned char* const r = Cur();
         SetLong(r + 0x10, Add(Mul(s, radius(r)), rv::As<records::SpriteHead>(Owner())->x));
     }
     {
-        const int c = Cos(SS(cell::kW4));
+        const int c = Cos(SS(::bof3::Img(cell::kW4)));
         unsigned char* const r = Cur();
         SetLong(r + 0x14, Add(Mul(c, radius(r)), rv::As<records::SpriteHead>(Owner())->z));
     }
@@ -1303,7 +1303,7 @@ int SpreadRadius(const unsigned char* r) { return r[7]; }
 // The three moving steps' common middle: the angle, the point at radius +7,
 // the height +0x18 up the rise +8.
 void ShadeMove() {
-    Put(cell::kW4, ShadeAngle(Cur()));
+    Put(::bof3::Img(cell::kW4), ShadeAngle(Cur()));
     ShadeCircle(&SpreadRadius);
     unsigned char* const r = Cur();
     SetLong(r + 0x18, Add(Long(r + 0x18), Long(r + 8)));
@@ -1319,14 +1319,14 @@ S29_EXPORT void __cdecl ShadowMote_Wait(void) {
     Dec(Cur()[5]);
     const unsigned char* const r = Cur();
     if (r[5] != 0) return;
-    Put(cell::kW4, ShadeAngle(r));
-    Put(cell::kR, (r[4] >> 4) * 8 + 8);
-    ShadeCircle([](const unsigned char*) { return static_cast<int>(SS(cell::kR)); });
+    Put(::bof3::Img(cell::kW4), ShadeAngle(r));
+    Put(::bof3::Img(cell::kR), (r[4] >> 4) * 8 + 8);
+    ShadeCircle([](const unsigned char*) { return static_cast<int>(SS(::bof3::Img(cell::kR))); });
     SetLong(Cur() + 0x18, Add(rv::As<records::SpriteHead>(Owner())->height, 0x800000));
     SetLong(Cur() + 8, 0);
     Cur()[5] = 0;
     Cur()[6] = 0;
-    Cur()[7] = SB(cell::kR);
+    Cur()[7] = SB(::bof3::Img(cell::kR));
     Inc(Cur()[2]);
 }
 
@@ -1375,11 +1375,11 @@ S29_EXPORT void __cdecl ShadowMote_Fade(void) {
 S29_EXPORT void __cdecl ShadowMote_Draw(void) {
     {
         const unsigned char* const r = Cur();
-        Put(cell::kR, r[5]);
-        Put(cell::kR2, r[5] * 4);
-        Put(cell::kW4, r[6] * 6);
-        Put(Scratch_Swap_addr, Word(r + 0xC));
-        Put(cell::kY, Word(r + 0xE));
+        Put(::bof3::Img(cell::kR), r[5]);
+        Put(::bof3::Img(cell::kR2), r[5] * 4);
+        Put(::bof3::Img(cell::kW4), r[6] * 6);
+        Put(::bof3::Img(Scratch_Swap_addr), Word(r + 0xC));
+        Put(::bof3::Img(cell::kY), Word(r + 0xE));
     }
     DrawMode(0xB5);
     LinkAtCur(0xC);
@@ -1387,7 +1387,7 @@ S29_EXPORT void __cdecl ShadowMote_Draw(void) {
     MH_CALL(Gpu_SetPolyFT4)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     {
-        const int x = SS(Scratch_Swap_addr), y = SS(cell::kY), r = SS(cell::kR), h = SS(cell::kR2);
+        const int x = SS(::bof3::Img(Scratch_Swap_addr)), y = SS(::bof3::Img(cell::kY)), r = SS(::bof3::Img(cell::kR)), h = SS(::bof3::Img(cell::kR2));
         PutFloat(p + 8, x - r);
         PutFloat(p + 0xC, y - h);
         PutFloat(p + 0x18, x + r);
@@ -1413,7 +1413,7 @@ S29_EXPORT void __cdecl ShadowMote_Draw(void) {
     p[0x35] = 0x48;
     p[0x44] = 0x68;
     p[0x45] = 0x48;
-    Fill3(p + 4, SB(cell::kW4));
+    Fill3(p + 4, SB(::bof3::Img(cell::kW4)));
     LinkAtCur(0x48);
 }
 
