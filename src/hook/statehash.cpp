@@ -58,11 +58,11 @@
 // Bound code words (flags bit 2, the relocatable-image round's stage C2,
 // docs/state-hash.md section 8). In bof3x.exe a code word of the game's - a
 // handler in a .data table, a task's entry, a hook - holds the function of
-// ours the bind table names for Capcom's VA, through its place: an entry of a
-// table of jumps, one per VA, at an address no value of the game's data takes
-// (src/hook/bind.cpp, measured over every raw dump), where BOF3.exe holds the
-// VA. So, before the slots above, every aligned word of a page whose value is
-// exactly such an entry is hashed as that entry's VA, slot or not, with no
+// ours the bind table names for Capcom's VA, through its place: a jump of ours
+// at (top << 24) | VA, under a top byte no value of the game's data takes with
+// a bound VA below it (src/hook/bind.cpp, measured over every raw dump), where
+// BOF3.exe holds the VA. So, before the slots above, every aligned word of a
+// page whose value is exactly such a place is hashed as its VA, slot or not, with no
 // index mixed in: it hashes as Capcom's raw word, and a page of such words
 // matches Capcom's run - wherever the word lies, as the game copies code
 // words from table to record. Nothing else is renamed: a value equal to our

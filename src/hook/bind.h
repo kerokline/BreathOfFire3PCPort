@@ -5,10 +5,10 @@
 // bof3x.exe maps no code of Capcom's. Its .stub section is reserved address
 // space with no access, a trap: every code word the game holds, and every
 // code VA our code places (Code, CodePlace, common/image_base.h), is the VA's
-// place - an entry of a table of jumps of ours, one per VA, each jumping to
-// the function of ours that symbols.toml's `impl` names for that VA - one
-// representation in every table, record and hook cell, and one that names its
-// VA (bind.cpp). The table is generated (tools/gen_symbols.py --bind-out, bind.gen.h)
+// place - a jump of ours at (top << 24) | VA, one per VA, to the function of
+// ours that symbols.toml's `impl` names for that VA - one representation in
+// every table, record and hook cell, one that names its VA, and one whose low
+// three bytes are the VA's (bind.cpp). The table is generated (tools/gen_symbols.py --bind-out, bind.gen.h)
 // and static: it is there before DllMain, for the namespace-scope tables that
 // place a code VA in the DLL's CRT start-up. Hosted, nothing is bound:
 // BOF3.exe's code is mapped, a code VA is its own place, and Inject writes the
@@ -36,9 +36,9 @@ bool Bind_Active();
 const void* Bind_Ours(std::uint32_t va);
 
 // The reverse map: the VA a code place stands for, or 0 when `place` is not
-// one. A place is an entry of the table of jumps bind.cpp builds in bof3x.exe,
-// one per VA, at an address no value of the game's data takes; our function's
-// own address is not a place. Hosted there is no table and this is 0. The
+// one. A place is (top << 24) | VA for a bound VA, the jump bind.cpp writes
+// there in bof3x.exe, under a top byte no value of the game's data takes with a
+// bound VA below it (measured); our function's own address is not a place. Hosted there is no table and this is 0. The
 // state hash hashes a word holding a place as its VA (statehash.cpp).
 std::uint32_t Bind_VaOf(std::uint32_t place);
 

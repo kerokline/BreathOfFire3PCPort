@@ -18221,26 +18221,38 @@ site	src/hook/bind.cpp	32	const_def	literal	kDirectSoundSlot	0x5c4014	data	platf
 site	src/hook/bind.cpp	38	module_const	-	kDirectSoundSlot	0x5c4014	data	platform	hook	base_helper	Imp_DirectSoundCreate	file	std::memcpy(&fn, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(Img(kDirectSoundSlot))), sizeof fn);
 site	src/hook/bind.cpp	42	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	(unsigned)kDirectSoundThunk, (unsigned)kDirectSoundSlot);
 site	src/hook/bind.cpp	42	module_const	-	kDirectSoundSlot	0x5c4014	data	platform	hook	call	Imp_DirectSoundCreate	file	(unsigned)kDirectSoundThunk, (unsigned)kDirectSoundSlot);
-site	src/hook/bind.cpp	151	addr_eq	==	kDirectSoundThunk	0x5acbbc	code	platform	hook	-	-	file	if (va == kDirectSoundThunk) return Entry(kRows);
-site	src/hook/bind.cpp	177	range_cmp	>=	image::kTextVa	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	-	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
-site	src/hook/bind.cpp	177	range_cmp	<	image::kTextVa	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	-	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
-site	src/hook/bind.cpp	200	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	-	-	file	return i < kRows ? kBind[i].va : kDirectSoundThunk;
-site	src/hook/bind.cpp	264	const_def	literal	kHi	0x93e000	data	platform	hook	module	-	-	constexpr std::uint32_t kLo = 0x5DA000, kHi = 0x93E000, kPage = 0x1000;
-site	src/hook/bind.cpp	264	const_def	literal	kLo	0x5da000	data	platform	hook	module	-	-	constexpr std::uint32_t kLo = 0x5DA000, kHi = 0x93E000, kPage = 0x1000;
-site	src/hook/bind.cpp	267	module_const	-	kLo	0x5da000	data	platform	hook	-	-	file	for (std::uint32_t va = kLo; va < kHi; va += 4) {
-site	src/hook/bind.cpp	267	range_cmp	<	kHi	0x93e000	data	platform	hook	-	-	file	for (std::uint32_t va = kLo; va < kHi; va += 4) {
-site	src/hook/bind.cpp	272	ptr_sub	runtime_left	kLo	0x5da000	data	platform	hook	-	-	file	const unsigned page = (va - kLo) / kPage + 1;
-site	src/hook/bind.cpp	274	module_const	-	kLo	0x5da000	data	platform	hook	-	-	file	if (pages < 8) first_pages[pages] = kLo + (page - 1) * kPage;
-site	src/hook/bind.cpp	281	module_const	-	kHi	0x93e000	data	platform	hook	-	-	file	words, pages, (kHi - kLo) / kPage, (unsigned)first_pages[0], (unsigned)first_pages[1],
-site	src/hook/bind.cpp	281	ptr_sub	two_constants	kLo	0x5da000	data	platform	hook	-	-	file	words, pages, (kHi - kLo) / kPage, (unsigned)first_pages[0], (unsigned)first_pages[1],
-site	src/hook/bind.cpp	340	base_offset	-	0x5DA000	0x5da000	data	platform	hook	base_helper	-	-	if (IsCodeWord(Img(0x5DA000)) || IsCodeWord(Img(kBind[0].va + 1)))
-site	src/hook/bind.cpp	343	module_const	-	kDirectSoundSlot	0x5c4014	data	platform	hook	base_helper	Imp_DirectSoundCreate	file	std::memcpy(&slot, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(Img(kDirectSoundSlot))), 4);
-site	src/hook/bind.cpp	344	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	base_helper	-	file	if (Code(kDirectSoundThunk) != Entry(kRows) || CodeToCall(kDirectSoundThunk) != Entry(kRows) ||
-site	src/hook/bind.cpp	344	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	if (Code(kDirectSoundThunk) != Entry(kRows) || CodeToCall(kDirectSoundThunk) != Entry(kRows) ||
-site	src/hook/bind.cpp	345	addr_eq	!=	kDirectSoundThunk	0x5acbbc	code	platform	hook	-	-	file	Bind_VaOf(Entry(kRows)) != kDirectSoundThunk || !IsCodeWord(Entry(kRows)) || slot == 0 ||
-site	src/hook/bind.cpp	348	module_const	-	kDirectSoundSlot	0x5c4014	data	platform	hook	call	Imp_DirectSoundCreate	file	(unsigned)kDirectSoundSlot);
-site	src/hook/bind.cpp	349	base_offset	-	0x5DA000	0x5da000	data	platform	hook	base_helper	-	-	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
-site	src/hook/bind.cpp	349	image_meta	-	image::kTextVa	0x401000	code	platform	hook	base_helper	Area00_ChoiceVars3And6	-	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
+site	src/hook/bind.cpp	68	const_def	derived	kSpanHi	0x5c4000	data	platform	hook	module	Imp_DirectDrawEnumerateA	-	constexpr std::uint32_t kSpanLo = image::kCodeLo, kSpanHi = image::kCodeHi;
+site	src/hook/bind.cpp	68	const_def	derived	kSpanLo	0x401000	code	platform	hook	module	Area00_ChoiceVars3And6	-	constexpr std::uint32_t kSpanLo = image::kCodeLo, kSpanHi = image::kCodeHi;
+site	src/hook/bind.cpp	79	code_const	module	kSpanLo	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	file	const std::uint32_t lo = (static_cast<std::uint32_t>(b) << 24) | kSpanLo;
+site	src/hook/bind.cpp	93	code_const	module	kSpanLo	0x401000	code	platform	hook	cast	Area00_ChoiceVars3And6	file	auto* const t = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(top | kSpanLo));
+site	src/hook/bind.cpp	96	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	-	-	file	const std::uint32_t va = i < kRows ? kBind[i].va : kDirectSoundThunk;
+site	src/hook/bind.cpp	106	code_const	module	kSpanLo	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	file	if (!VirtualProtect(at, kSpan + (kSpanLo & 0xFFFF), PAGE_EXECUTE_READ, &old))
+site	src/hook/bind.cpp	167	addr_eq	==	kDirectSoundThunk	0x5acbbc	code	platform	hook	-	-	file	if (Find(va) || va == kDirectSoundThunk) return PlaceAt(va);
+site	src/hook/bind.cpp	193	range_cmp	>=	image::kTextVa	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	-	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
+site	src/hook/bind.cpp	193	range_cmp	<	image::kTextVa	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	-	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
+site	src/hook/bind.cpp	216	addr_eq	==	kDirectSoundThunk	0x5acbbc	code	platform	hook	-	-	file	return Find(va) || va == kDirectSoundThunk ? va : 0;
+site	src/hook/bind.cpp	237	code_const	module	kSpanLo	0x401000	code	platform	hook	-	Area00_ChoiceVars3And6	file	std::uint32_t Bind_TableLo() { return g_table ? g_table | kSpanLo : 0; }
+site	src/hook/bind.cpp	238	module_const	-	kSpanHi	0x5c4000	data	platform	hook	-	Imp_DirectDrawEnumerateA	file	std::uint32_t Bind_TableHi() { return g_table ? g_table | kSpanHi : 0; }
+site	src/hook/bind.cpp	298	const_def	literal	kHi	0x93e000	data	platform	hook	module	-	-	constexpr std::uint32_t kLo = 0x5DA000, kHi = 0x93E000, kPage = 0x1000;
+site	src/hook/bind.cpp	298	const_def	literal	kLo	0x5da000	data	platform	hook	module	-	-	constexpr std::uint32_t kLo = 0x5DA000, kHi = 0x93E000, kPage = 0x1000;
+site	src/hook/bind.cpp	301	module_const	-	kLo	0x5da000	data	platform	hook	-	-	file	for (std::uint32_t va = kLo; va < kHi; va += 4) {
+site	src/hook/bind.cpp	301	range_cmp	<	kHi	0x93e000	data	platform	hook	-	-	file	for (std::uint32_t va = kLo; va < kHi; va += 4) {
+site	src/hook/bind.cpp	306	ptr_sub	runtime_left	kLo	0x5da000	data	platform	hook	-	-	file	const unsigned page = (va - kLo) / kPage + 1;
+site	src/hook/bind.cpp	308	module_const	-	kLo	0x5da000	data	platform	hook	-	-	file	if (pages < 8) first_pages[pages] = kLo + (page - 1) * kPage;
+site	src/hook/bind.cpp	315	module_const	-	kHi	0x93e000	data	platform	hook	-	-	file	words, pages, (kHi - kLo) / kPage, (unsigned)first_pages[0], (unsigned)first_pages[1],
+site	src/hook/bind.cpp	315	ptr_sub	two_constants	kLo	0x5da000	data	platform	hook	-	-	file	words, pages, (kHi - kLo) / kPage, (unsigned)first_pages[0], (unsigned)first_pages[1],
+site	src/hook/bind.cpp	375	base_offset	-	0x5DA000	0x5da000	data	platform	hook	base_helper	-	-	if (IsCodeWord(Img(0x5DA000)) || IsCodeWord(Img(kBind[0].va + 1)))
+site	src/hook/bind.cpp	378	module_const	-	kDirectSoundSlot	0x5c4014	data	platform	hook	base_helper	Imp_DirectSoundCreate	file	std::memcpy(&slot, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(Img(kDirectSoundSlot))), 4);
+site	src/hook/bind.cpp	379	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	base_helper	-	file	if (Code(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) || CodeToCall(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) ||
+site	src/hook/bind.cpp	379	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	if (Code(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) || CodeToCall(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) ||
+site	src/hook/bind.cpp	379	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	if (Code(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) || CodeToCall(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) ||
+site	src/hook/bind.cpp	379	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	if (Code(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) || CodeToCall(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) ||
+site	src/hook/bind.cpp	380	addr_eq	!=	kDirectSoundThunk	0x5acbbc	code	platform	hook	-	-	file	Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
+site	src/hook/bind.cpp	380	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
+site	src/hook/bind.cpp	380	code_const	module	kDirectSoundThunk	0x5acbbc	code	platform	hook	call	-	file	Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
+site	src/hook/bind.cpp	383	module_const	-	kDirectSoundSlot	0x5c4014	data	platform	hook	call	Imp_DirectSoundCreate	file	(unsigned)kDirectSoundSlot);
+site	src/hook/bind.cpp	384	base_offset	-	0x5DA000	0x5da000	data	platform	hook	base_helper	-	-	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
+site	src/hook/bind.cpp	384	image_meta	-	image::kTextVa	0x401000	code	platform	hook	base_helper	Area00_ChoiceVars3And6	-	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
 site	src/hook/calltrace.cpp	344	addr_eq	!=	addr::Task_RunAll	0x5a98a0	code	platform	hook	-	Task_RunAll	-	if (addr != addr::Task_RunAll) {
 site	src/hook/calltrace.cpp	426	code_const	gen_func	addr::Task_RunAll	0x5a98a0	code	platform	hook	-	Task_RunAll	-	const std::uint32_t frame_entry = addr::Task_RunAll;
 site	src/hook/crash.cpp	108	addr_eq	!=	image::kBase	0x400000	base	platform	hook	-	-	-	if (a >= g_image_lo && a < g_image_hi && ImageBase() != image::kBase)
@@ -18535,6 +18547,7 @@ site	src/hook/statehash.cpp	687	module_const	-	kMsgRing	0x93c2c4	data	platform	h
 site	src/hook/statehash.cpp	688	module_const	-	kMsgCurrent	0x93b8e4	data	platform	hook	call	-	file	add_site(kMsgCurrent);
 site	src/hook/statehash.cpp	737	module_const	-	kBase	0x5da000	data	platform	hook	call	-	file	Put(kBase);
 site	src/hook/statehash.cpp	755	module_const	-	kBase	0x5da000	data	platform	hook	cast	-	file	static_cast<unsigned long>(kPages), static_cast<unsigned long>(kBase), path, (unsigned)g_skips.size(),
+site	src/hook/statehash.cpp	777	module_const	-	kBase	0x5da000	data	platform	hook	-	-	file	const std::uint32_t va = kBase + page_index * kPage + at;
 site	src/hook/wav_dump.cpp	623	code_const	gen_func	addr::Game_WinMain	0x4fcb00	code	platform	hook	call	Game_WinMain	-	if (!IsEnabled(addr::Game_WinMain)) {
 site	src/input/button_tests.cpp	33	code_literal	literal	0x528A90	0x528a90	code	platform	input	init	LeaderPanel_S1Buttons	symbol	{" ", 0x528A90, 0x0074},
 site	src/input/button_tests.cpp	34	code_literal	literal	0x528A90	0x528a90	code	platform	input	init	LeaderPanel_S1Buttons	symbol	{" ", 0x528A90, 0x0004},
@@ -20901,11 +20914,12 @@ range	src/game/worldmap_area_fuzz.cpp	322	addr_eq	case	0x461E50	0x461e50	code	fu
 range	src/game/worldmap_area_fuzz.cpp	323	addr_eq	case	0x572F70	0x572f70	code	fuzz	case 0x572F70: return f(kStubs.item_half_at);
 range	src/game/worldmap_area_fuzz.cpp	324	addr_eq	case	0x572FA0	0x572fa0	code	fuzz	case 0x572FA0: return f(kStubs.link_prim_at);
 range	src/game/yes_no_layout.cpp	397	addr_eq	==	kMsgSystemPtr	0x497740	code	game	return g_line_call == kMsgSystemPtr.v ? nullptr : &YesNo_Line;
-range	src/hook/bind.cpp	151	addr_eq	==	kDirectSoundThunk	0x5acbbc	code	platform	if (va == kDirectSoundThunk) return Entry(kRows);
-range	src/hook/bind.cpp	177	range_cmp	>=	image::kTextVa	0x401000	code	platform	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
-range	src/hook/bind.cpp	177	range_cmp	<	image::kTextVa	0x401000	code	platform	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
-range	src/hook/bind.cpp	267	range_cmp	<	kHi	0x93e000	data	platform	for (std::uint32_t va = kLo; va < kHi; va += 4) {
-range	src/hook/bind.cpp	345	addr_eq	!=	kDirectSoundThunk	0x5acbbc	code	platform	Bind_VaOf(Entry(kRows)) != kDirectSoundThunk || !IsCodeWord(Entry(kRows)) || slot == 0 ||
+range	src/hook/bind.cpp	167	addr_eq	==	kDirectSoundThunk	0x5acbbc	code	platform	if (Find(va) || va == kDirectSoundThunk) return PlaceAt(va);
+range	src/hook/bind.cpp	193	range_cmp	>=	image::kTextVa	0x401000	code	platform	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
+range	src/hook/bind.cpp	193	range_cmp	<	image::kTextVa	0x401000	code	platform	if (Mode() == 1) return word >= image::kTextVa && word < image::kTextVa + image::kTextSize;
+range	src/hook/bind.cpp	216	addr_eq	==	kDirectSoundThunk	0x5acbbc	code	platform	return Find(va) || va == kDirectSoundThunk ? va : 0;
+range	src/hook/bind.cpp	301	range_cmp	<	kHi	0x93e000	data	platform	for (std::uint32_t va = kLo; va < kHi; va += 4) {
+range	src/hook/bind.cpp	380	addr_eq	!=	kDirectSoundThunk	0x5acbbc	code	platform	Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
 range	src/hook/calltrace.cpp	344	addr_eq	!=	addr::Task_RunAll	0x5a98a0	code	platform	if (addr != addr::Task_RunAll) {
 range	src/hook/crash.cpp	108	addr_eq	!=	image::kBase	0x400000	base	platform	if (a >= g_image_lo && a < g_image_hi && ImageBase() != image::kBase)
 range	src/hook/detour.cpp	151	addr_eq	!=	image::kBase	0x400000	base	platform	if (reinterpret_cast<std::uintptr_t>(base) != image::kBase)
@@ -20967,12 +20981,12 @@ helper	src/game/scenario_harness.cpp	314	Readable	src/game/scenario_harness.cpp:
 helper	src/game/scenario_harness.cpp	316	Readable	src/game/scenario_harness.cpp:151	fuzz	r[i] = s.deref[i] && (!s.guard || Readable(p, s.deref[i])) ? HashBytes(p, s.deref[i]) : a[i] & s.masks[i];
 helper	src/game/scenario_harness.cpp	546	Readable	src/game/scenario_harness.cpp:151	fuzz	if (Readable(t, 12)) NoteBytes(t, 12);
 helper	src/game/scenario_harness.cpp	578	Readable	src/game/scenario_harness.cpp:151	fuzz	return (answer & 0xFFFFFF00u) | (Readable(top, 1) ? *top : answer & 0xFF);
-helper	src/hook/bind.cpp	311	IsCodeWord	src/hook/bind.cpp:177	platform	if (IsCodeWord(expect) != true) Fatal(" ", (unsigned)r.va);
-helper	src/hook/bind.cpp	340	IsCodeWord	src/hook/bind.cpp:177	platform	if (IsCodeWord(Img(0x5DA000)) || IsCodeWord(Img(kBind[0].va + 1)))
-helper	src/hook/bind.cpp	340	IsCodeWord	src/hook/bind.cpp:177	platform	if (IsCodeWord(Img(0x5DA000)) || IsCodeWord(Img(kBind[0].va + 1)))
-helper	src/hook/bind.cpp	345	IsCodeWord	src/hook/bind.cpp:177	platform	Bind_VaOf(Entry(kRows)) != kDirectSoundThunk || !IsCodeWord(Entry(kRows)) || slot == 0 ||
-helper	src/hook/bind.cpp	349	IsCodeWord	src/hook/bind.cpp:177	platform	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
-helper	src/hook/bind.cpp	349	IsCodeWord	src/hook/bind.cpp:177	platform	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
+helper	src/hook/bind.cpp	345	IsCodeWord	src/hook/bind.cpp:193	platform	if (IsCodeWord(expect) != true) Fatal(" ", (unsigned)r.va);
+helper	src/hook/bind.cpp	375	IsCodeWord	src/hook/bind.cpp:193	platform	if (IsCodeWord(Img(0x5DA000)) || IsCodeWord(Img(kBind[0].va + 1)))
+helper	src/hook/bind.cpp	375	IsCodeWord	src/hook/bind.cpp:193	platform	if (IsCodeWord(Img(0x5DA000)) || IsCodeWord(Img(kBind[0].va + 1)))
+helper	src/hook/bind.cpp	380	IsCodeWord	src/hook/bind.cpp:193	platform	Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
+helper	src/hook/bind.cpp	384	IsCodeWord	src/hook/bind.cpp:193	platform	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
+helper	src/hook/bind.cpp	384	IsCodeWord	src/hook/bind.cpp:193	platform	} else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
 helper	src/hook/statehash.cpp	221	Fold	src/hook/statehash.cpp:208	platform	if ((v & 0xFF000000u) == 0 || !Fold(folds, n, v & 0xFFFFFFu, &c) || c > 0xFFFFFFu) return false;
 helper	src/hook/statehash.cpp	232	Fold	src/hook/statehash.cpp:208	platform	return (v >= kExeLo && v < kExeHi) || Fold(g_folds, g_nfolds, v, &c);
 helper	src/hook/statehash.cpp	378	Fold	src/hook/statehash.cpp:208	platform	if (!Fold(folds, nfolds, w, &c) && !Fold24(folds, nfolds, w, &c)) continue;
@@ -25152,12 +25166,13 @@ file	src/game/yes_no_layout.cpp	game	ui	code_literal	2
 file	src/game/yes_no_layout.cpp	game	ui	const_def_literal	6
 file	src/game/yes_no_layout.cpp	hosted	ui	code_const	6
 file	src/game/yes_no_layout.cpp	hosted	ui	code_literal	4
-file	src/hook/bind.cpp	platform	hook	addr_eq	2
+file	src/hook/bind.cpp	platform	hook	addr_eq	3
 file	src/hook/bind.cpp	platform	hook	base_offset	2
-file	src/hook/bind.cpp	platform	hook	code_const	4
+file	src/hook/bind.cpp	platform	hook	code_const	12
+file	src/hook/bind.cpp	platform	hook	const_def_derived	2
 file	src/hook/bind.cpp	platform	hook	const_def_literal	4
 file	src/hook/bind.cpp	platform	hook	image_meta	1
-file	src/hook/bind.cpp	platform	hook	module_const	7
+file	src/hook/bind.cpp	platform	hook	module_const	8
 file	src/hook/bind.cpp	platform	hook	ptr_sub	2
 file	src/hook/bind.cpp	platform	hook	range_cmp	3
 file	src/hook/calltrace.cpp	platform	hook	addr_eq	1
@@ -25224,7 +25239,7 @@ file	src/hook/statehash.cpp	platform	hook	addr_eq	3
 file	src/hook/statehash.cpp	platform	hook	code_const	11
 file	src/hook/statehash.cpp	platform	hook	const_def_derived	1
 file	src/hook/statehash.cpp	platform	hook	const_def_literal	6
-file	src/hook/statehash.cpp	platform	hook	module_const	17
+file	src/hook/statehash.cpp	platform	hook	module_const	18
 file	src/hook/statehash.cpp	platform	hook	ptr_sub	8
 file	src/hook/statehash.cpp	platform	hook	range_cmp	17
 file	src/hook/stp_census.cpp	platform	hook	accessor	9
@@ -25245,9 +25260,9 @@ file	src/launcher/launcher.cpp	launcher	launcher	module_const	2
 file	src/render/gfx_snapshot.cpp	platform	render	accessor	30
 file	src/render/gfx_snapshot.cpp	platform	render	base_offset	22
 file	src/render/render_shim.cpp	platform	render	accessor	1
-#count sites	123005
+#count sites	123018
 #count sites_game	54558
-#count sites_platform	577
+#count sites_platform	590
 #count sites_hosted	290
 #count sites_fuzz	67572
 #count sites_launcher	8
@@ -25269,15 +25284,15 @@ file	src/render/render_shim.cpp	platform	render	accessor	1
 #count class_at_global_hosted	0
 #count class_at_global_fuzz	1620
 #count class_at_global_launcher	0
-#count class_module_const	3357
+#count class_module_const	3359
 #count class_module_const_game	2176
-#count class_module_const_platform	75
+#count class_module_const_platform	77
 #count class_module_const_hosted	0
 #count class_module_const_fuzz	1104
 #count class_module_const_launcher	2
-#count class_code_const	7900
+#count class_code_const	7908
 #count class_code_const_game	2392
-#count class_code_const_platform	30
+#count class_code_const_platform	38
 #count class_code_const_hosted	82
 #count class_code_const_fuzz	5396
 #count class_code_const_launcher	0
@@ -25317,9 +25332,9 @@ file	src/render/render_shim.cpp	platform	render	accessor	1
 #count class_range_cmp_hosted	0
 #count class_range_cmp_fuzz	113
 #count class_range_cmp_launcher	0
-#count class_addr_eq	2115
+#count class_addr_eq	2116
 #count class_addr_eq_game	59
-#count class_addr_eq_platform	23
+#count class_addr_eq_platform	24
 #count class_addr_eq_hosted	172
 #count class_addr_eq_fuzz	1858
 #count class_addr_eq_launcher	3
@@ -25329,9 +25344,9 @@ file	src/render/render_shim.cpp	platform	render	accessor	1
 #count class_ptr_sub_hosted	0
 #count class_ptr_sub_fuzz	75
 #count class_ptr_sub_launcher	0
-#count class_const_def	4291
+#count class_const_def	4293
 #count class_const_def_game	3918
-#count class_const_def_platform	30
+#count class_const_def_platform	32
 #count class_const_def_hosted	0
 #count class_const_def_fuzz	342
 #count class_const_def_launcher	1
@@ -25348,10 +25363,10 @@ file	src/render/render_shim.cpp	platform	render	accessor	1
 #count class_image_meta_fuzz	0
 #count class_image_meta_launcher	0
 #count const_def_literal	3274
-#count const_def_derived	1017
+#count const_def_derived	1019
 #count value_literal	28
 #count base_offset	1319
-#count module_srcwide_not_counted	1334
+#count module_srcwide_not_counted	1336
 #count asm_operands_all	516
 #count at_ambiguous	0
 #count raw_literal_ctx_accessor	10
@@ -25382,7 +25397,7 @@ file	src/render/render_shim.cpp	platform	render	accessor	1
 #count gate_asm_text	0
 #count gate_abs_call	1340
 #count gate_range_cmp	75
-#count gate_addr_eq	82
+#count gate_addr_eq	83
 #count gate_ptr_sub	50
 #count gate_const_def_literal	2984
 #count gate_raw_literal	658
@@ -25391,7 +25406,7 @@ file	src/render/render_shim.cpp	platform	render	accessor	1
 #gate asm_text	0
 #gate abs_call	1340
 #gate range_cmp	75
-#gate addr_eq	82
+#gate addr_eq	83
 #gate ptr_sub	50
 #gate const_def_literal	2984
 #gate raw_literal	658

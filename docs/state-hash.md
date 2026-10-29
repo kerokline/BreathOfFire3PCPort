@@ -743,9 +743,9 @@ round's stage C2, 2026-10-29). In `bof3x.exe` the stub page is a no-access
 trap, and every code word of the game's - the 8,673 load-time words of
 `exe-pointers.tsv` whose target has a function of ours, a task's entry, a
 hook the game calls, and every copy the game's logic makes of one - holds
-the VA's **place**: an entry of a table of jumps of ours, one 8-byte entry
-per VA, at `0x47E90000` (`src/hook/bind.cpp`), where `BOF3.exe` holds
-Capcom's VA. Section 7's rule would hash such a word raw or as the code tag,
+the VA's **place**: a jump of ours to its function at `(top << 24) | VA`
+(`src/hook/bind.cpp`; the top byte 0x7C, else 0x70, 0x7E, 0x7B, 0x7D), where
+`BOF3.exe` holds Capcom's VA - the same word in all but its top byte. Section 7's rule would hash such a word raw or as the code tag,
 and every page with one would differ from Capcom's references. So, under the
 same normalisation switch (`BOF3X_STATEHASH_RAW` unset):
 
@@ -753,11 +753,21 @@ same normalisation switch (`BOF3X_STATEHASH_RAW` unset):
    entry of the table is hashed as that entry's VA, **with no index mixed
    in**: it hashes as Capcom's raw word would. The test is by value, because
    the game copies code words from table to record and so no list of
-   locations holds them all; and it is safe by value because the table's
-   address is one no value of the game's data takes - measured over the 219
-   raw dumps of `analysis/statehash` and the stage C runs' dumps, no aligned
-   word of `.data` holds a value in `0x47E70000..0x47F10000`, the longest such
-   range below `0x80000000`. A word one byte into an entry is not renamed.
+   locations holds them all; and it is safe by value because no value of the
+   game's data is `(top << 24) | a bound VA` for the top bytes used - measured
+   over the 219 raw dumps of `analysis/statehash` and the round's 8 (227 in
+   all): of the top bytes 0x20..0x7F, 0x7C, 0x70, 0x7E, 0x7B and 0x7D have no
+   such word. A word one byte into a place is not renamed.
+   **Why the VA's low three bytes** (the stage C2 proof's whelpBoss,
+   2026-10-29): Capcom's code reads past its own tables into the code-pointer
+   tables after them, so a byte of a code word is game data too -
+   `EffectKind0B_Rise` reads its s8 rise table `0x653AB0` at `+9 >> 2`, which
+   reaches 16, the low byte of `EffectKind0B_States[0]`: `0x80` in Capcom's
+   word, -128 added to the effect's screen y (`Effect_Objects` +0x7A, the high
+   half of the float, -38.0 against 138.0 with a place at `0x47E9xxxx`). With
+   the VA's low three bytes in the place, such a byte, a low halfword and a
+   24-bit link packed from a code word are Capcom's; only the top byte
+   differs.
 2. **Nothing else is renamed.** The first rule (the C2 build of 2026-10-28)
    renamed a word holding **our function's own address** - and the game's
    data holds such values as data: on the combat route the VRAM shadow's

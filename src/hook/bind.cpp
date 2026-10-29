@@ -45,51 +45,68 @@ long __stdcall DirectSoundThunk(const void* guid, void** out, void* outer) {
 
 // --- The places: one per VA ------------------------------------------------
 //
-// A code VA's place in bof3x.exe is not our function's address itself but an
-// entry of a table of jumps of ours, one entry per bound VA (and one for the
-// thunk above): `jmp ours`, then int3 to the entry's 8 bytes. So every code
-// word the game holds - loaded by the rebase, stored by our code, copied by the
-// game's logic from one record to another - names exactly one VA, even where
-// one function of ours served several, and the state hash reads it back by its
-// value alone with the value test confined to the table's range (Bind_VaOf;
-// statehash.cpp). The address is fixed and chosen by measurement: no aligned
-// word of .data in the 219 raw dumps of analysis/statehash and the stage C
-// runs' dumps holds a value in 0x47E70000..0x47F10000 (the longest such range
-// below 0x80000000), and the table lies inside it - a value of the game's data
-// does not read as a code place, as our function's own address in the DLL did
-// (the stage C2 proof, 2026-10-29: 0x10770000 in the VRAM shadow, 0x1000FE40
-// in six area tables). The stub page's jmps (mode S) were the same idea in
-// Capcom's range; these are in our memory, and .stub stays the trap.
-constexpr std::uint32_t kTableVa = 0x47E90000;
-constexpr std::uint32_t kEntry = 8;
-constexpr unsigned kEntries = kRows + 1;   // the last: DirectSoundCreate's thunk
-constexpr std::uint32_t kTableBytes = kEntries * kEntry;
-static_assert(kTableVa + kTableBytes <= 0x47EF0000, "the table stays inside the measured empty range");
+// A code VA's place in bof3x.exe is not our function's address itself but a
+// jump of ours to it, one per bound VA (and one for the thunk above), at
+// (top << 24) | VA: the VA's own low three bytes under a top byte of ours. So
+// every code word the game holds - loaded by the rebase, stored by our code,
+// copied by the game's logic from one record to another - names exactly one
+// VA, and reads as Capcom's word in all but its top byte: a byte or a low
+// halfword the game's logic reads out of a code word (Capcom's code reads
+// past its tables into the code-pointer table after them: EffectKind0B_Rise's
+// s8 rise table 0x653AB0 at +9 >> 2 = 16 reads EffectKind0B_States[0]'s low
+// byte, the stage C2 proof's whelpBoss, 2026-10-29), and a 24-bit link packed
+// from one, are the VA's. The state hash reads a place back by its value
+// (Bind_VaOf; statehash.cpp), exactly a bound VA under the top byte.
+//
+// The top byte is chosen by measurement: of the bytes 0x20..0x7F, the ones no
+// aligned word of .data takes as (top << 24) | a bound VA, in the 227 raw dumps
+// of analysis/statehash and the relocatable-image round's runs - 0x7C, 0x70,
+// 0x7E, 0x7B and 0x7D. The first whose 0x1C3000 bytes the process can reserve
+// is taken (a Fatal when none). The stub page's jmps (mode S) were the same
+// idea at top byte 0; these are in our memory, and .stub stays the trap.
+constexpr std::uint8_t kTops[] = {0x7C, 0x70, 0x7E, 0x7B, 0x7D};
+constexpr std::uint32_t kSpanLo = image::kCodeLo, kSpanHi = image::kCodeHi;
+constexpr std::uint32_t kSpan = kSpanHi - kSpanLo;
 
-std::uint32_t g_table = 0;   // kTableVa once built (bof3x.exe), 0 hosted
+std::uint32_t g_table = 0;   // (top << 24) once built (bof3x.exe), 0 hosted
 
-std::uint32_t Entry(unsigned i) { return g_table + i * kEntry; }
+std::uint32_t PlaceAt(std::uint32_t va) { return g_table | va; }
 
 void BuildTable() {
-    void* const at = VirtualAlloc(reinterpret_cast<void*>(static_cast<std::uintptr_t>(kTableVa)), kTableBytes,
-                                  MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    if (at != reinterpret_cast<void*>(static_cast<std::uintptr_t>(kTableVa)))
-        Fatal("bind: cannot reserve the table of code places at 0x%08X (%u bytes), error %lu: something else lies there",
-              (unsigned)kTableVa, (unsigned)kTableBytes, GetLastError());
-    auto* t = static_cast<std::uint8_t*>(at);
-    std::memset(t, 0xCC, kTableBytes);
-    for (unsigned i = 0; i < kEntries; ++i) {
+    void* at = nullptr;
+    std::uint32_t top = 0;
+    for (const std::uint8_t b : kTops) {
+        const std::uint32_t lo = (static_cast<std::uint32_t>(b) << 24) | kSpanLo;
+        at = VirtualAlloc(reinterpret_cast<void*>(static_cast<std::uintptr_t>(lo & ~0xFFFFu)), kSpan + (lo & 0xFFFF),
+                          MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+        if (at == reinterpret_cast<void*>(static_cast<std::uintptr_t>(lo & ~0xFFFFu))) {
+            top = static_cast<std::uint32_t>(b) << 24;
+            break;
+        }
+        if (at) VirtualFree(at, 0, MEM_RELEASE);
+        at = nullptr;
+    }
+    if (!at)
+        Fatal("bind: cannot reserve the table of code places at any of its measured top bytes (0x7C, 0x70, 0x7E, "
+              "0x7B, 0x7D), error %lu",
+              GetLastError());
+    auto* const t = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(top | kSpanLo));
+    std::memset(t, 0xCC, kSpan);
+    for (unsigned i = 0; i <= kRows; ++i) {
+        const std::uint32_t va = i < kRows ? kBind[i].va : kDirectSoundThunk;
         const std::uint32_t to = i < kRows ? Key(kBind[i].ours) : Key(reinterpret_cast<const void*>(&DirectSoundThunk));
-        const std::uint32_t from = kTableVa + i * kEntry;
+        const std::uint32_t from = top | va;
+        auto* e = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(from));
+        if (e[0] != 0xCC) Fatal("bind: the place of 0x%08X overlaps another's jump", (unsigned)va);
         const std::int32_t rel = static_cast<std::int32_t>(to - (from + 5));
-        t[i * kEntry] = 0xE9;
-        std::memcpy(t + i * kEntry + 1, &rel, 4);
+        e[0] = 0xE9;
+        std::memcpy(e + 1, &rel, 4);
     }
     DWORD old = 0;
-    if (!VirtualProtect(at, kTableBytes, PAGE_EXECUTE_READ, &old))
+    if (!VirtualProtect(at, kSpan + (kSpanLo & 0xFFFF), PAGE_EXECUTE_READ, &old))
         Fatal("bind: VirtualProtect of the table of code places failed, error %lu", GetLastError());
-    FlushInstructionCache(GetCurrentProcess(), at, kTableBytes);
-    g_table = kTableVa;
+    FlushInstructionCache(GetCurrentProcess(), t, kSpan);
+    g_table = top;
 }
 
 // The entry of a VA the table binds, or 0.
@@ -147,8 +164,7 @@ bool g_injected[kRows];
 unsigned g_checked = 0;
 
 std::uint32_t PlaceOf(std::uint32_t va) {
-    if (const bind_gen::Row* r = Find(va)) return Entry(static_cast<unsigned>(r - kBind));
-    if (va == kDirectSoundThunk) return Entry(kRows);
+    if (Find(va) || va == kDirectSoundThunk) return PlaceAt(va);
     return 0;
 }
 
@@ -195,9 +211,9 @@ const void* Bind_Ours(std::uint32_t va) {
 }
 
 std::uint32_t Bind_VaOf(std::uint32_t place) {
-    if (g_table == 0 || place - g_table >= kTableBytes || (place - g_table) % kEntry) return 0;
-    const unsigned i = (place - g_table) / kEntry;
-    return i < kRows ? kBind[i].va : kDirectSoundThunk;
+    if (g_table == 0 || (place & 0xFF000000u) != g_table) return 0;
+    const std::uint32_t va = place & 0xFFFFFFu;
+    return Find(va) || va == kDirectSoundThunk ? va : 0;
 }
 
 std::uint32_t Bind_VaOfFunction(std::uint32_t ours) {
@@ -218,8 +234,8 @@ std::uint32_t Bind_VaOfFunction(std::uint32_t ours) {
     return p != end && Key(kBind[*p].ours) == ours ? kBind[*p].va : 0;
 }
 
-std::uint32_t Bind_TableLo() { return g_table; }
-std::uint32_t Bind_TableHi() { return g_table ? g_table + kTableBytes : 0; }
+std::uint32_t Bind_TableLo() { return g_table ? g_table | kSpanLo : 0; }
+std::uint32_t Bind_TableHi() { return g_table ? g_table | kSpanHi : 0; }
 
 const char* Bind_FuncName(std::uint32_t va, std::uint32_t* start) {
     if (va < image::kCodeLo || va >= image::kCodeHi) return nullptr;
@@ -260,7 +276,7 @@ void Bind_Report() {
         Log("bind: hosted - nothing bound, a code VA is its own place in BOF3.exe (%u rows in the table, unused)", kRows);
     } else {
         Log("bind: bof3x.exe - %u functions bound by name (symbols.toml impl), %u of them named by an Inject; their "
-            "places a table of jumps at 0x%08X..0x%08X, one per VA; .stub the trap; %u distinct VAs a table placed with "
+            "places jumps at 0x%08X..0x%08X, one per VA under its low three bytes; .stub the trap; %u distinct VAs a table placed with "
             "no function of ours (%u times), each given the trap:",
             kRows, g_checked, (unsigned)Bind_TableLo(), (unsigned)Bind_TableHi(), g_misses, g_miss_calls);
         for (unsigned i = 0; i < g_misses && i < kMissMax; ++i) {
@@ -321,7 +337,7 @@ void Bind_SelfTest() {
         std::uint32_t start = 0;
         const char* fn = Bind_FuncName(r.va, &start);
         if (!fn || start != r.va) Fatal("bind self-test: 0x%08X has no [[func]] of its own", (unsigned)r.va);
-        const std::uint32_t expect = Bind_Active() ? Entry(i) : Img(r.va);
+        const std::uint32_t expect = Bind_Active() ? PlaceAt(r.va) : Img(r.va);
         if (Code(r.va) != expect || CodeToCall(r.va) != expect || CodePlace(r.va) != expect)
             Fatal("bind self-test: 0x%08X places as 0x%08X, not 0x%08X", (unsigned)r.va, (unsigned)Code(r.va),
                   (unsigned)expect);
@@ -329,7 +345,8 @@ void Bind_SelfTest() {
         if (IsCodeWord(expect) != true) Fatal("bind self-test: 0x%08X's place is not a code word", (unsigned)r.va);
         if (Bind_Active()) {
             // one place per VA, mapped back to that VA alone, its jmp reaching ours
-            if (Bind_VaOf(expect) != r.va || Bind_VaOf(expect + 1) != 0 || Bind_VaOf(expect + 4) != 0)
+            if (Bind_VaOf(expect) != r.va || Bind_VaOf(expect + 1) != 0 || Bind_VaOf(expect + 4) != 0 ||
+                (expect & 0xFFFFFFu) != r.va)
                 Fatal("bind self-test: the place 0x%08X does not map back to 0x%08X alone", (unsigned)expect, (unsigned)r.va);
             const auto* e = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(expect));
             std::int32_t rel = 0;
@@ -359,8 +376,8 @@ void Bind_SelfTest() {
             Fatal("bind self-test: a data place or the trap reads as a code word");
         std::uint32_t slot = 0;
         std::memcpy(&slot, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(Img(kDirectSoundSlot))), 4);
-        if (Code(kDirectSoundThunk) != Entry(kRows) || CodeToCall(kDirectSoundThunk) != Entry(kRows) ||
-            Bind_VaOf(Entry(kRows)) != kDirectSoundThunk || !IsCodeWord(Entry(kRows)) || slot == 0 ||
+        if (Code(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) || CodeToCall(kDirectSoundThunk) != PlaceAt(kDirectSoundThunk) ||
+            Bind_VaOf(PlaceAt(kDirectSoundThunk)) != kDirectSoundThunk || !IsCodeWord(PlaceAt(kDirectSoundThunk)) || slot == 0 ||
             Bind_VaOf(Key(reinterpret_cast<const void*>(&DirectSoundThunk))) != 0)
             Fatal("bind self-test: DirectSoundCreate's thunk is not ours, or its slot 0x%08X is empty",
                   (unsigned)kDirectSoundSlot);
@@ -369,7 +386,7 @@ void Bind_SelfTest() {
     }
     Log("bind self-test: %u rows ascending, each looked up, placed (%s), mapped back and named; %u VAs between rows "
         "not bound%s; %u function names ascending, %u of them with no function of ours",
-        kRows, Bind_Active() ? "as its own entry of the table of jumps" : "as itself, hosted", gaps,
+        kRows, Bind_Active() ? "as its own jump, the VA under a top byte" : "as itself, hosted", gaps,
         Bind_Active() ? ", their words the trap; DirectSoundCreate's thunk ours, through its bound slot" : "", kFuncs,
         unbound);
 }
