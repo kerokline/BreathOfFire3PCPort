@@ -10322,3 +10322,56 @@ the original's result when it is off; until then a fuzz run keeps every
 code name on (no preset but `recommended`, no `off=`), and the stage's
 state-hash proof did not combine `BOF3X_SHADOW` with a list.
 
+
+## D397 — Giant Growth cast first in a session crashes at the hit pop-up: `Battle_SetHitPopup` reads a target block nothing has written (Capcom's PC code; seen 2026-10-29; fixed by DIV-0185)
+
+**Seen:** the owner, 2026-10-29 morning, on the play build: an enemy cast
+Giant Growth and the game stopped with "an exception nobody handled:
+0xC0000005 at 0x102020A5". `CRASH 0`: `bof3x.dll+0x2020A5`,
+`Battle_SetHitPopup` (`0x454410`), reading `0x0000000C`, `ebx` 0, the bytes
+`8A 7B 0C` (`mov bh, [ebx + 0xC]`); area `0x69`, mode 5. Called from
+`BattleObj_HitReceive` (`battle_e3.cpp`, the kind-4 branch: an ability whose
+word has `0x800`). The same enemy's skill in a later fight did not crash.
+
+**Established** (the dump, `game/bof3x.crash-10408-0.dmp`, and
+disassembly of `BOF3.exe`):
+- `0x904B50` is the target's block. Its only writers are
+  `BattleAction_BeginStep` (`0x42F3F2`, `0x42F45E`) and
+  `BattleAction_AbilityCheck` (`0x42F90E`, `0x42F971`), each behind
+  `cmp al, 0xA; ja` - a target of 0..10 - and `BattleAction_EnemyMessages`
+  (`0x430107`), which swaps the actor and target sets. Nothing clears it,
+  so a side target (0x40 / 0x80 / 0xC0) leaves the last one-target
+  action's block, and a session with no one-target action yet leaves 0.
+- The dump: the actor `0x904B34` 3 (enemy 0, a Spiker; its list
+  `33 33 33 33 12 12 12 12`, the ability `+0x106` 0x12 - Giant Growth, the
+  sibling's id 17 read one id down), the kind `0x904B35` 4, the target
+  `0x904B44` **0x80**, and `0x904B48..0x904B53` all 0.
+- Capcom's function tests `[esi + 0xC]` with `esi = [0x904B50]` and no
+  null test (`0x454455`, `0x45448D`), so `BOF3.exe` faults the same way.
+- A Defend fills the block too (target byte 0, member 0's block
+  `0x802E64`), so any party action before the cast hides the crash: it
+  needs an enemy that acts first in a fresh session and rolls Giant Growth.
+  With the pointer stale (any earlier one-target action) the original reads
+  that earlier target's `+0xC` bit 1 for the pop-up's style.
+
+**Measured 2026-10-29** (harness root `C:/Users/kerok/bof3x-runs/gg1029`,
+the owner's `giantGrowth` save and route; the route's own fight is two
+BombSeeds, not the Spiker): the route replayed unchanged reaches round two
+with no crash (the trace: Nina's Defend first, the BombSeeds' actions on
+themselves, kind 2). Forced (`force_gg.txt`: at the first cross the
+party's agility `+0xA8` 0, the enemies' `+0xB8` 999, the kind row
+`0x65563D` 0xFF, both lists 0x12; the crosses Defend): the first BombSeed
+casts with target 0x80 and the pointer 0, and ours faults at
+`Battle_SetHitPopup` reading `0x0000000C`, the same bytes as the owner's.
+`--original Battle_SetHitPopup`: Capcom's code faults at `0x45448D`,
+reading `0x0000000C`. The list byte 0x38 (the BombSeeds' own) with the
+same target does not crash (`force_rowff.txt`); why it misses the pop-up
+path was not read.
+
+**PlayStation:** the twin (`0x800A8840`) was not read. A read of address
+`0x0000000C` does not fault on the console (low RAM, the kernel's), so the
+crash is the port's even if the read is Capcom's.
+
+**Status:** fixed by DIV-0185 (2026-10-29): a null block reads as bit 1
+clear (the actor's hit class); a written one, stale or not, takes Capcom's
+path unchanged. `BOF3X_ORIGINAL=Battle_SetHitPopup` for the original's read.

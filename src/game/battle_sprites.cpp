@@ -1,5 +1,7 @@
 // Group BG of the seventh round (docs/battle_sprites.md): 32 functions of the
-// battle engine and two small helpers, each faithful to Capcom's PC code.
+// battle engine and two small helpers, each faithful to Capcom's PC code but
+// one: since DIV-0185 Battle_SetHitPopup reads a null target block as bit 1
+// clear instead of faulting.
 //
 //   0x452BF0 Battle_RollPendingFlag     0x453FA0 Battle_MemberAutoTarget
 //   0x452F70 Battle_SetTargetFlags      0x454220 Battle_MemberOutAction
@@ -550,6 +552,18 @@ extern "C" void __cdecl Battle_PlayHitSound(void) {
 // sprite's +8 and Field_State +0x89 for a party one - +0x32 the sprite's,
 // and +8 the owning record's byte +8. The sprite and the two block pointers
 // are read once; the table indices again for the second offset.
+//
+// DIVERGENCE DIV-0185 (D397): 0x904B50 is the target's block, written by
+// BattleAction_BeginStep / AbilityCheck only for a target of 0..10 and
+// cleared by nothing, so a side target (0x40 / 0x80 / 0xC0) leaves the last
+// one-target action's block there - and in a session with no such action
+// yet, 0. The original tests +0xC unchecked and faults reading 0x0000000C:
+// an enemy that acts first in a fresh session and casts Giant Growth (game
+// byte 0x12, side target 0x80, the pop-up path) - measured 2026-10-29 on the
+// owner's crash and forced on giantGrowth (Capcom's function the same,
+// 0x45448D). Ours: a null block counts as bit 1 clear, the actor's hit class;
+// a written one takes the original's path unchanged, stale or not.
+// BOF3X_ORIGINAL=Battle_SetHitPopup leaves Capcom's function, its read with it.
 extern "C" void __cdecl Battle_SetHitPopup(void) {
     const unsigned slot = g.popup_slot(0, 3) & 0xFFu;
     const unsigned char actor = At(::bof3::Img(at::kActor.v))[0];
@@ -558,8 +572,12 @@ extern "C" void __cdecl Battle_SetHitPopup(void) {
     auto* const popup = rv::As<records::BattleTask>(rec);
     unsigned char* const s = Sprite_Current;
     popup->owner = Address(s);
-    if (actor <= 2) popup->mode = (block[0xC] & 2) ? 7 : At(::bof3::Img(at::kHitClass.v))[rv::As<records::PartyMember>(Party(actor))->weapon * 0x1Cu];
-    else popup->mode = (block[0xC] & 2) ? 7 : rv::As<records::BattleEnemy>(Enemy(actor - 3u))->hit_class;
+    if (block == nullptr)   // DIV-0185: no target block yet, the bit read as clear
+        bof3::Log("DIV-0185    Battle_SetHitPopup: no target block (actor %u, target 0x%02X), the actor's hit class", actor,
+                  Target());
+    const bool fixed = block != nullptr && (block[0xC] & 2) != 0;
+    if (actor <= 2) popup->mode = fixed ? 7 : At(::bof3::Img(at::kHitClass.v))[rv::As<records::PartyMember>(Party(actor))->weapon * 0x1Cu];
+    else popup->mode = fixed ? 7 : rv::As<records::BattleEnemy>(Enemy(actor - 3u))->hit_class;
     if (s[5] > 2) {
         const unsigned char* const offsets = Ptr(At(::bof3::Img(BattleE3_CurrentEnemy_addr)));
         rv::Store<unsigned>(popup->screen_x, static_cast<unsigned>(static_cast<signed char>(offsets[0xF2]) + Word(s + 0x2E)));

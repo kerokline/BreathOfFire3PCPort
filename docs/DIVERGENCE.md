@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 184 entries, DIV-0001..0184, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 185 entries, DIV-0001..0185, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -13081,5 +13081,56 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=DialTranslucent (ini off=)
 - **Toward:** psx, psp - the PlayStation's operand; the owner's PSP capture of 2026-10-27 shows the glass the same
+- **Languages:** any
+- **State:** active
+
+### The hit pop-up reads a missing target block as "no fixed style", instead of reading address 0x0C
+
+- **ID:** DIV-0185
+- **Date:** 2026-10-29
+- **Subsystem:** battle - `Battle_SetHitPopup` `0x454410` (ours,
+  `src/game/battle_sprites.cpp`), reached from `BattleObj_HitReceive` for a
+  kind-4 ability whose word has `0x800`. D397
+  ([`known-defects.md`](known-defects.md)); found live by the owner,
+  2026-10-29.
+- **Tier:** Intent - a port repair.
+- **Original behaviour:** the pop-up's style byte `+7` is 7 when the target
+  block `[0x904B50]` has `+0xC` bit 1, else the actor's hit class; the
+  block is read with no null test (`0x454455`, `0x45448D`). The block is
+  written only for a target of 0..10 (`BattleAction_BeginStep`,
+  `BattleAction_AbilityCheck`) and never cleared, so a side target leaves
+  the last one-target action's block, and in a session with no one-target
+  action yet the pointer is 0 and the read faults at `0x0000000C`. Seen:
+  an enemy acting first in a fresh session with Giant Growth (game byte
+  0x12, target 0x80).
+- **New behaviour:** a null block counts as bit 1 clear, so the pop-up takes
+  the actor's hit class, and the function goes on as written. One log line,
+  `DIV-0185`, names the actor and the target. A written block, current or
+  stale, takes the original's path unchanged.
+- **Rationale:** a crash to the desktop in an ordinary fight. On the
+  PlayStation the same read of address `0x0C` does not fault (low RAM), so
+  the console never stopped here; the PC's protected page 0 made it a
+  crash. With no target block there is no style to read, and the hit class
+  is the branch the original takes whenever the bit is clear. The stale
+  case is left as Capcom has it: it does not crash, and changing it would
+  change a pop-up that plays today.
+- **Also in the PSX version?** The twin (`0x800A8840`) was not read; the
+  null read cannot fault there (above).
+- **Verification:** 2026-10-29, root `C:/Users/kerok/bof3x-runs/gg1029`:
+  `force_gg.txt` (the owner's `giantGrowth` route, the party's agility 0 and
+  the enemies' 999, every enemy roll an ability, both lists Giant Growth,
+  the crosses Defend) faults before the change - ours at
+  `Battle_SetHitPopup`, Capcom's (`--original Battle_SetHitPopup`) at
+  `0x45448D`, both reading `0x0000000C` - and after it reaches the end of
+  the recipe with the log's `DIV-0185` line. The start-up fuzz
+  (`BOF3X_SHADOW=battle_sprites`) seeds a written block every round
+  (`battle_sprites_fuzz.cpp`'s `hit[0x20]`), so it compares the unchanged
+  path alone.
+- **Reversible?** `BOF3X_ORIGINAL=Battle_SetHitPopup` leaves Capcom's
+  function, its read with it.
+- **Switch:** Battle_SetHitPopup
+- **Default:** on
+- **Player:** costly - the original path is Capcom's function (a detour name only); ours would have to grow its null read, a crash
+- **Toward:** none - the console's same read takes a low-RAM byte at 0x0C (not measured), no release has a style to restore
 - **Languages:** any
 - **State:** active
