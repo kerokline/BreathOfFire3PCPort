@@ -47,6 +47,13 @@ std::uint32_t Bind_VaOf(std::uint32_t place);
 // bof3x.exe (statehash.cpp Watch): a code word stored without Code().
 std::uint32_t Bind_VaOfFunction(std::uint32_t ours);
 
+// Whether the table lies under one of the five measured top bytes (0x7C,
+// 0x70, 0x7E, 0x7B, 0x7D), under which no .data word of the measured dumps
+// reads as a place. False hosted, and when the process could reserve none of
+// them and the table took another top byte 0x20..0x7F: the game runs the same,
+// and the state hash may rename a data word (statehash.cpp logs it).
+bool Bind_TableMeasured();
+
 // The table of code places, [lo, hi); both 0 hosted.
 std::uint32_t Bind_TableLo();
 std::uint32_t Bind_TableHi();

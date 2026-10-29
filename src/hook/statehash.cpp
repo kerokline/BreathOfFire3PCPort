@@ -650,6 +650,13 @@ void StateHash_BeforeInjects(void* dll_module) {
             Fatal("statehash: the folded range 0x%08lX..0x%08lX overlaps our image 0x%08lX..0x%08lX; set "
                   "BOF3X_STATEHASH_FOLD (and the image's base) elsewhere", (unsigned long)g_folds[i],
                   (unsigned long)(g_folds[i] + kImageSize), (unsigned long)g_dll_lo, (unsigned long)g_dll_hi);
+    // The table of code places (bind.cpp) under a top byte the dumps did not
+    // measure: a data word may read as a place and be renamed. Said here, so a
+    // proof run on such a machine is read with it in mind.
+    if (Bind_TableHi() && !Bind_TableMeasured())
+        Log("statehash   the place table lies at 0x%08lX..0x%08lX, not under a measured top byte: a data word "
+            "(top << 24) | a bound VA there is hashed as that VA", (unsigned long)Bind_TableLo(),
+            (unsigned long)Bind_TableHi());
     // Nor the table of code places (bind.cpp): a place must read as its VA.
     for (unsigned i = 0; i < g_nfolds; ++i)
         if (Bind_TableHi() && g_folds[i] < Bind_TableHi() && g_folds[i] + kImageSize > Bind_TableLo())

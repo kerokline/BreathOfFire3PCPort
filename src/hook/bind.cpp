@@ -3,6 +3,7 @@
 #include <windows.h>
 
 #include <algorithm>
+#include <iterator>
 #include <cstring>
 
 #include "bof3/bind.gen.h"
@@ -62,7 +63,11 @@ long __stdcall DirectSoundThunk(const void* guid, void** out, void* outer) {
 // aligned word of .data takes as (top << 24) | a bound VA, in the 227 raw dumps
 // of analysis/statehash and the relocatable-image round's runs - 0x7C, 0x70,
 // 0x7E, 0x7B and 0x7D. The first whose 0x1C3000 bytes the process can reserve
-// is taken (a Fatal when none). The stub page's jmps (mode S) were the same
+// is taken; if none, the first other top byte 0x20..0x7F that can be (logged:
+// only the state hash's guarantee depends on the measurement); a Fatal only
+// when no range at all can be reserved. The image itself, at 0x400000 or a
+// developer's base (BOF3X_IMAGEBASE: 0x990000..0xA70000, below 16 MB), never
+// reaches 0x20000000, so the table and the image cannot overlap. The stub page's jmps (mode S) were the same
 // idea at top byte 0; these are in our memory, and .stub stays the trap.
 constexpr std::uint8_t kTops[] = {0x7C, 0x70, 0x7E, 0x7B, 0x7D};
 constexpr std::uint32_t kSpanLo = image::kCodeLo, kSpanHi = image::kCodeHi;
@@ -72,24 +77,46 @@ std::uint32_t g_table = 0;   // (top << 24) once built (bof3x.exe), 0 hosted
 
 std::uint32_t PlaceAt(std::uint32_t va) { return g_table | va; }
 
+// Whether the table lies under one of the measured top bytes. Only the state
+// hash cares (a data word under another top byte may read as a place and be
+// renamed); the game runs the same under any.
+bool g_measured = false;
+unsigned g_refused = 0;   // top bytes tried that the process could not reserve
+
+// The range (top << 24) | 0x401000 .. | 0x5C4000, reserved and committed
+// read-write at that address, or null when something else holds part of it.
+void* Reserve(std::uint32_t top) {
+    const std::uint32_t lo = (top | kSpanLo) & ~0xFFFFu;
+    void* const at = VirtualAlloc(reinterpret_cast<void*>(static_cast<std::uintptr_t>(lo)), (top | kSpanHi) - lo,
+                                  MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    if (at == reinterpret_cast<void*>(static_cast<std::uintptr_t>(lo))) return at;
+    if (at) VirtualFree(at, 0, MEM_RELEASE);
+    ++g_refused;
+    return nullptr;
+}
+
 void BuildTable() {
+    // The measured top bytes first; then any top byte 0x20..0x7F whose range
+    // the process can reserve - a complete table either way, the game the
+    // same, only the state hash's guarantee lost (logged by Bind_Report and the
+    // state hash); a Fatal only when no range at all can be had.
     void* at = nullptr;
     std::uint32_t top = 0;
     for (const std::uint8_t b : kTops) {
-        const std::uint32_t lo = (static_cast<std::uint32_t>(b) << 24) | kSpanLo;
-        at = VirtualAlloc(reinterpret_cast<void*>(static_cast<std::uintptr_t>(lo & ~0xFFFFu)), kSpan + (lo & 0xFFFF),
-                          MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-        if (at == reinterpret_cast<void*>(static_cast<std::uintptr_t>(lo & ~0xFFFFu))) {
+        if ((at = Reserve(static_cast<std::uint32_t>(b) << 24)) != nullptr) {
             top = static_cast<std::uint32_t>(b) << 24;
+            g_measured = true;
             break;
         }
-        if (at) VirtualFree(at, 0, MEM_RELEASE);
-        at = nullptr;
+    }
+    for (std::uint32_t b = 0x20; !at && b < 0x80; ++b) {
+        if (std::find(std::begin(kTops), std::end(kTops), b) != std::end(kTops)) continue;
+        if ((at = Reserve(b << 24)) != nullptr) top = b << 24;
     }
     if (!at)
-        Fatal("bind: cannot reserve the table of code places at any of its measured top bytes (0x7C, 0x70, 0x7E, "
-              "0x7B, 0x7D), error %lu",
-              GetLastError());
+        Fatal("bind: cannot reserve the table of code places (0x%X bytes at (top << 24) | 0x%X) under any top byte "
+              "0x20..0x7F, error %lu: the address space is full",
+              (unsigned)kSpan, (unsigned)kSpanLo, GetLastError());
     auto* const t = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(top | kSpanLo));
     std::memset(t, 0xCC, kSpan);
     for (unsigned i = 0; i <= kRows; ++i) {
@@ -234,6 +261,8 @@ std::uint32_t Bind_VaOfFunction(std::uint32_t ours) {
     return p != end && Key(kBind[*p].ours) == ours ? kBind[*p].va : 0;
 }
 
+bool Bind_TableMeasured() { return g_measured; }
+
 std::uint32_t Bind_TableLo() { return g_table ? g_table | kSpanLo : 0; }
 std::uint32_t Bind_TableHi() { return g_table ? g_table | kSpanHi : 0; }
 
@@ -279,6 +308,10 @@ void Bind_Report() {
             "places jumps at 0x%08X..0x%08X, one per VA under its low three bytes; .stub the trap; %u distinct VAs a table placed with "
             "no function of ours (%u times), each given the trap:",
             kRows, g_checked, (unsigned)Bind_TableLo(), (unsigned)Bind_TableHi(), g_misses, g_miss_calls);
+        if (!g_measured)
+            Log("bind: place table at 0x%08X: not a measured top byte (the five measured were taken: %u ranges "
+                "refused), the state hash may rename data words",
+                (unsigned)Bind_TableLo(), g_refused);
         for (unsigned i = 0; i < g_misses && i < kMissMax; ++i) {
             std::uint32_t start = 0;
             const char* fn = Bind_FuncName(g_miss[i], &start);
