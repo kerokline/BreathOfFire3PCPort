@@ -30,7 +30,7 @@ What is sampled, every ~5 ms, logged only when something changes:
 Output is derived from a running copy of the game: it goes under analysis/,
 which is gitignored.
 """
-import argparse, ctypes, ctypes.wintypes as w, os, struct, subprocess, sys, time
+import argparse, ctypes, ctypes.wintypes as w, os, re, struct, subprocess, sys, time
 
 k = ctypes.WinDLL('kernel32', use_last_error=True)
 u = ctypes.WinDLL('user32')
@@ -43,17 +43,27 @@ A_FLIP, A_ACTIVE, A_MSG, A_AREA, A_SEQ, A_TLSIDX = (
 LCG_A, LCG_C = 0x343FD, 0x269EC3
 
 
+def is_game_image(name):
+    """True for a game's executable name: BOF3.exe, bof3x.exe, or a moved
+    bof3x-<hex base>.exe (bof3x-A00000.exe); not a launcher."""
+    return re.fullmatch(r'(bof3|bof3x|bof3x-[0-9a-f]+)\.exe', name.lower()) is not None
+
+
 def find_game(wait=0.0):
     """pid of the running BOF3.exe; with `wait`, poll that many seconds for one."""
     t0 = time.time()
     want = os.environ.get('BOF3X_RUN_PID')   # attract_run.py names the game it started
     while True:
-        # By the pid attract_run.py started, else the one game of either name
-        # (BOF3.exe hosted, bof3x.exe ours: docs/state3-design.md section 6.3).
-        filters = [f'PID eq {want}'] if want else ['IMAGENAME eq BOF3.exe', 'IMAGENAME eq bof3x.exe']
+        # By the pid attract_run.py started, else the one game of any name:
+        # BOF3.exe hosted, bof3x.exe ours (docs/state3-design.md section 6.3),
+        # or a developer's moved executable bof3x-<BASE>.exe (make_exe.py
+        # --image-base, the launcher's BOF3X_IMAGEBASE; bof3x-A00000.exe) -
+        # never a launcher, bof3x-launcher*.exe.
+        filters = [f'PID eq {want}'] if want else ['IMAGENAME eq BOF3.exe', 'IMAGENAME eq bof3x.exe',
+                                                   'IMAGENAME eq bof3x-*']
         for f in filters:
             out = subprocess.run(['tasklist', '/FI', f, '/FO', 'CSV', '/NH'], capture_output=True, text=True).stdout
-            rows = [r for r in out.splitlines() if r.lower().startswith(('"bof3.exe"', '"bof3x.exe"'))]
+            rows = [r for r in out.splitlines() if is_game_image(r.split('","')[0].strip('"'))]
             if rows:
                 return int(rows[0].split('","')[1])
         if time.time() - t0 >= wait:

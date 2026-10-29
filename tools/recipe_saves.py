@@ -110,14 +110,16 @@ def unattended(pid):
 
 
 def games_running():
-    """Pids of every game on the machine, whoever started it: BOF3.exe (hosted)
-    and bof3x.exe (ours, docs/state3-design.md section 6.3)."""
+    """Pids of every game on the machine, whoever started it: BOF3.exe (hosted),
+    bof3x.exe (ours, docs/state3-design.md section 6.3) and a developer's moved
+    executable bof3x-<hex base>.exe (BOF3X_IMAGEBASE; never a launcher)."""
     pids = []
-    for image in ('BOF3.exe', 'bof3x.exe'):
+    for image in ('BOF3.exe', 'bof3x.exe', 'bof3x-*'):
         out = subprocess.run(['tasklist', '/FI', f'IMAGENAME eq {image}', '/FO', 'CSV', '/NH'],
                              capture_output=True, text=True).stdout
-        pids += [int(row.split('","')[1]) for row in out.splitlines() if row.lower().startswith('"%s"' % image.lower())]
-    return pids
+        pids += [int(row.split('","')[1]) for row in out.splitlines()
+                 if re.fullmatch(r'(bof3|bof3x|bof3x-[0-9a-f]+)\.exe', row.split('","')[0].strip('"').lower())]
+    return sorted(set(pids))
 
 
 def players_games():
