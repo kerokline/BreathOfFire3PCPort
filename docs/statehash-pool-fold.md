@@ -1,8 +1,11 @@
 # The state hash's fold and `.pool`: staging the fix (PR #168 review, left open)
 
-**Status:** STAGED (2026-10-29; not launched. Found in PR #168's review and
-left open as part of that PR; one agent, no owner's call needed beyond
-section 5's one question of shape.)
+**Status:** BUILT (2026-10-29, branch `statehash/pool-fold` off `main`
+`e839eaf7`: the fold to `0x587000`, header `BOF3SH5` with the extent - the
+owner's answer (a) to section 5 - both self-tests extended and passing in
+both hosts; section 7, "as run". Owed, the coordinator's: section 2.2's pair
+on `cutsceneAndNue` with rows 175-183 lifted, and the ten routes of
+section 2.3. Found in PR #168's review and left open as part of that PR.)
 
 ## 0. The finding, measured on `relocatable-image/round` `e04d4a59`
 
@@ -141,3 +144,91 @@ One question: the header, (a) `BOF3SH5` with the extent recorded, or (b)
   `state-hash.md` 8 measured 2) include `.pool` addresses at either base:
   the pair of section 2.2 answers it on one route; the other nine are a
   re-run of the proof scripts, if the owner wants the full set.
+
+## 7. As run (2026-10-29, one agent, worktree `C:\Users\kerok\bof3x-runs\pf1029\wt`)
+
+**What changed.** `src/hook/statehash.cpp`: `kImageSize` (`0x53F000`) is
+now `kImageExtent = exe_layout::kPoolVa + kPoolSize - kImageBase`
+(`0x587000`), used by `Fold`, `Fold24`, `CheckImageBase` (whose overlap test
+now runs to `0x987000`), the start-up fences and log lines, and the
+self-test's draws; the header is `BOF3SH5`, the extent written after the
+fold address. `InImage`'s `kExeHi` test stays, with the reason at the line:
+no load-time pointer word of `BOF3.exe` names `0x93F000..0x987000` (below),
+and `bof3x.exe`'s `.pool` is zero at the census. `tools/statehash.py`: the
+extent read from `exe_layout.h` through `make_exe.read_layout` (asserted
+`0x587000`), `BOF3SH5` read, a `BOF3SH4` file read as extent `0x53F000`,
+runs folding the same bases over different extents refused, `fold_dump`,
+`check_fold` and the texts on the extent. `tools/quicksave_check.py`'s
+`HashRun` read its records from a table of versions 1-3 and raised
+`KeyError` on any `BOF3SH4` file; it now takes `Run.header`.
+`state-hash.md` 8: point 1, point 7, the header paragraph with a table of
+the versions, the variable rows, the tests. No ledger entry, no defect
+number (section 4).
+
+**Measured.**
+
+- **The self-tests, section 2.1.** Both extended as section 2.1 asks (the
+  numbers in `state-hash.md` 8, "The tests"). Before the fix - the extent
+  put back to `0x53F000` in a scratch build, not committed - `bof3x.exe`'s
+  self-test exits 3: "the page with the image at 0x70000000 hashes
+  0x2340E720, at 0x400000 0x17D605B3, both folding 0x70000000"; with that
+  check made a log line, the `.pool` page's own check exits 3: "a page of
+  pointers and links into .pool 0x0093F000..0x00987000 moved to 0x70000000
+  and 0x00A00000 hashes 0xD97F997D, at 0x400000 0x37438283, folding both".
+  The tool's self-test with `IMAGE_EXTENT` set to `0x53F000` fails the two
+  folded-equal checks (`.data` and links). After: exit 0 in all three
+  starts (hosted with `BOF3X_SHADOW='*'`; `--host exe`; `--host exe` with
+  `BOF3X_IMAGEBASE=0xA00000` - the exe host refuses `BOF3X_SHADOW` by
+  design, so those two run without it), and `statehash.py selftest` passes.
+- **The unfolded hash unchanged.** `main`'s `statehash.py` and this one on
+  the same inputs, 33 commands: `check` of every route's `orig4` pair against
+  its own `orig4b`, of the `orig4` pairs against the `BOF3SH4` re-hashes
+  `ri1027\ra2\sh\cn_<route>_orig4r.sh`, `diff` of the `BOF3SH4` folded pairs
+  `ri1027\c1\sh\cn_<route>_orig5f` / `_c1m` and of `ri1027\smoke`'s
+  `attract_lo` / `attract_m`, `diff` of the combat pair, `info` of a
+  `BOF3SH3` file: identical output and exit code, all 33. Nothing under
+  `analysis/statehash` is re-recorded. (The `BOF3SH4` folded files compare
+  among themselves as before; against a `BOF3SH5` run folding the same base
+  they are refused, by design.)
+- **Section 6, item 1.** Every word of `recipes/exe-pointers.tsv` read from
+  `BOF3.exe`: 18,831 pointer words, **0** with a target at or above
+  `0x93F000`; the highest is `0x93C6C0` (`.bss`). Capcom's sections end with
+  `.rsrc` at `0x93E000 + 0xCA8`.
+- **Section 6, item 2.** Read with `.pool` in mind, the rows whose stated
+  reason is a pointer into the draw pool are the **nine ranges on lines
+  175-183** of `tools/statehash_skip.txt` (line 174 is their comment; the
+  plan's "174-182" is one line short and leaves out `Gfx_OtPointers+0x18`,
+  line 183; `pf1029\statehash_skip_nopool.txt` drops all nine). No other
+  row's reason names the pool. A value scan of the 219 raw dumps of
+  `analysis/statehash` for words in `0x93F000..0x987000` (whole, or as a
+  24-bit link under a top byte) finds such values inside other rows too -
+  `Music_Staging` (line 30), the task scheduler's range (20), `Sound_Banks`
+  (26), the D3D caches (167, 168) - and outside every row, but in Capcom's
+  dumps as in ours (the VRAM shadow's texels at `0x74C000..0x78Fxxx` lead),
+  so a value in the range is no evidence of a pointer and the dumps cannot
+  settle it offline; section 2.2's pair is the measurement.
+- **Section 3, what else names `0x93F000`** (none changed): in `src/game`,
+  `band_census.cpp:42` (follows the area scripts' and sprites' pointers,
+  Capcom's data, never `.pool`); `scenario_harness.cpp:151` and
+  `field_e1_fuzz.cpp:195` (the fuzz harness's readable image and a text
+  pointer's guard, hosted only, Capcom's image); the comments at
+  `battle_e5_fuzz.cpp:328`, `battle_turn_steps_fuzz.cpp:61`,
+  `rest_3b_fuzz.cpp:351`, `rest_3d_fuzz.cpp:267` and `magic_engine.cpp:305`
+  (where Capcom's objects run off his image's end - true of `BOF3.exe`);
+  in `tools`, `make_exe.py:14` (`.pool`'s own VA in the layout listing) and
+  `reloc_census.py:21` (`BOF3.exe`'s `SizeOfImage`, `.pool` counted beside
+  it). Eight places in `src/game` and two in `tools`, not the plan's ten in
+  `src/game`; in `src/hook`, `exe_layout.h` (the layout itself) and
+  `statehash.cpp`'s `kExeHi` (kept, above).
+- **The gates.** `cmake --preset i686 && cmake --build build`: 0.
+  `reloc_bare --check`, `reloc_census --check`, `data_census --check`,
+  `typed_left --check`, `ledger_check`: all pass. (A first version used two
+  `static_assert`s and an `kPoolVa - kExeLo`, which `reloc_census` counts as
+  new `addr_eq` / `ptr_sub` sites; they were rewritten rather than the
+  census regenerated.)
+
+**Owed (the coordinator's).** Section 2.2's pair (`cutsceneAndNue`, moved
+and at `0x400000` with the same fold, under the skip list without lines
+175-183) - the measurement of the fold without the mask, and the answer to
+section 6's item 3 on one route; then the ten routes of section 2.3,
+re-recorded under `BOF3SH5` (`pf1029\proof_pf.sh`).

@@ -1,6 +1,6 @@
 # The state hash
 
-**Status:** WORKING (2026-10-05; every reference pair recorded under the 168-range skip list at `main` `2df90d9`, section 6; the shop route's difference was the runner's, section 5; `BOF3SH3`, our pointers in Capcom's slots hashed by what they name, 2026-10-10, section 7 - the cross-build pair under an overlay measured live 2026-10-11, and the 17 run-time slots of the battle's messages added the same morning, flags bit 1; `BOF3SH4`, the image's own pointers hashed as at `0x400000` wherever the image lies, 2026-10-28, section 8 - built and self-tested, the live re-hash of the references owed; code words bound to our functions hashed as their VAs, flags bit 2, 2026-10-29, section 8)
+**Status:** WORKING (2026-10-05; every reference pair recorded under the 168-range skip list at `main` `2df90d9`, section 6; the shop route's difference was the runner's, section 5; `BOF3SH3`, our pointers in Capcom's slots hashed by what they name, 2026-10-10, section 7 - the cross-build pair under an overlay measured live 2026-10-11, and the 17 run-time slots of the battle's messages added the same morning, flags bit 1; `BOF3SH4`, the image's own pointers hashed as at `0x400000` wherever the image lies, 2026-10-28, section 8 - built and self-tested, the live re-hash of the references owed; code words bound to our functions hashed as their VAs, flags bit 2, 2026-10-29, section 8; `BOF3SH5`, the folded range widened to `.pool`'s end, `0x587000`, and the extent in the header, 2026-10-29, section 8 - built and self-tested, the live pair owed)
 
 A regression check that compares two runs by **what the game's memory held,
 frame for frame**, whoever's code wrote it. Built before round fourteen
@@ -33,7 +33,7 @@ so a recipe's pad words are the previous frame's on both sides.
 | `BOF3X_STATEHASH_SKIP` | a list of `ADDRESS LENGTH # why` ranges hashed as zero - [`tools/statehash_skip.txt`](../tools/statehash_skip.txt) |
 | `BOF3X_STATEHASH_DUMP` | ticks, comma-separated, at which all of `.data` is also written raw to `<file>.<tick>.bin` (3.5 MB each; game-derived, `analysis/` only) |
 | `BOF3X_STATEHASH_RAW` | `1`: hash our pointers in Capcom's slots raw, as before 2026-10-10 (section 7), and a bound code word raw too (section 8); unset or `0`, the default, hashes them by what they name and a bound code word as its VA |
-| `BOF3X_STATEHASH_FOLD` | an address: every word whose value lies in the game's image placed there is hashed as at `0x400000` (section 8); for the run at `0x400000` compared with a run whose image lies there. Unset, the default, nothing is folded |
+| `BOF3X_STATEHASH_FOLD` | an address: every word whose value lies in the game's image placed there (to `.pool`'s end, `0x587000` bytes) is hashed as at `0x400000` (section 8); for the run at `0x400000` compared with a run whose image lies there. Unset, the default, nothing is folded |
 
 A **tick** is one logic frame seen by the latch, counted from the first; the
 record also carries `Frame_Counter` and the recipe frame. The file is flushed
@@ -588,7 +588,7 @@ the reports in `analysis/calltrace/platform_1011/statehash_ours*.txt`):**
    next time the list changes for another reason, `0x6BC8C8 92` goes in with it.
    The Chinese pairs stay as they are.
 
-## 8. The image's own pointers: `BOF3SH4` (2026-10-28)
+## 8. The image's own pointers: `BOF3SH4` (2026-10-28), `BOF3SH5` (2026-10-29)
 
 **The problem.** The relocatable-image round ([`relocatable-image-round.md`](relocatable-image-round.md),
 IDEAS I44 stage 3) places the game's image at another base than `0x400000`.
@@ -621,7 +621,18 @@ applied; the scripts in `C:\Users\kerok\bof3x-runs\ri1027\ra2\scratch`):**
 
 **The design.**
 
-1. **A fold.** A *folded range* is `[F, F + 0x53F000)`. Every aligned word
+1. **A fold.** A *folded range* is `[F, F + 0x587000)`: the image to the
+   end of `bof3x.exe`'s `.pool` (`exe_layout.h` `kPoolVa + kPoolSize -
+   kImageBase`, the extent `host.cpp`'s loader fence and `input_script.cpp`'s
+   `AsVa` already use). From 2026-10-28 to 2026-10-29 (`BOF3SH4`) it was
+   `[F, F + 0x53F000)`, `BOF3.exe`'s `SizeOfImage`; but `.pool` (DIV-0062's
+   draw items, `0x93F000..0x987000`) lies past Capcom's range and moves with
+   the image, so a pointer or an ordering-table link into a moved `.pool`
+   was left raw and differed between the bases - hidden only because the
+   skip list's `ours` rows mask every word known to hold one
+   ([`statehash-pool-fold.md`](statehash-pool-fold.md)). In `BOF3.exe`
+   nothing lies there, so a value in the widened tail is data, folded alike
+   on both sides. Every aligned word
    of a page, slot or not, whose value lies in a folded range is hashed as
    `0x400000 + (value - F)`: the value it would hold with the image at
    `0x400000`. The skip list applies first, and section 7's rule for our
@@ -662,23 +673,39 @@ applied; the scripts in `C:\Users\kerok\bof3x-runs\ri1027\ra2\scratch`):**
    skip list, the file's base, the run-time slots of section 7, the tool's
    symbols.
 7. **The bounds.** A base or a fold address is 64 KiB aligned, its image
-   ends at or below `0x80000000`, and it does not overlap `0x400000..0x93F000`
-   unless it is `0x400000`; a folded range that overlaps our DLL's image is
+   ends at or below `0x80000000`, and it does not overlap `0x400000..0x987000`
+   (the extent, `.pool` with it; `0x93F000` until 2026-10-29) unless it is
+   `0x400000`; a folded range that overlaps our DLL's image is
    refused (our DLL loaded at `0x10000000` in the headless runs of this
    day). Each is a `Fatal` at start-up, naming the address.
 
 | Variable | |
 |---|---|
-| `BOF3X_STATEHASH_FOLD` | an address, as `0x70000000`: also hash every word whose value lies in the image placed there as at `0x400000`. Set it on the run at `0x400000` that is compared with a run whose image lies at that address. Unset, nothing is folded at `0x400000` |
+| `BOF3X_STATEHASH_FOLD` | an address, as `0x70000000`: also hash every word whose value lies in the image placed there - its `0x587000` bytes to `.pool`'s end - as at `0x400000`. Set it on the run at `0x400000` that is compared with a run whose image lies at that address. Unset, nothing is folded at `0x400000` |
 
 **The header.** `BOF3SH4\0` adds two `u32`s after the flags: the image's
-base during the run and the fold address (0 without one). The tool reads all
-four versions; an older file is a run at `0x400000` that folded nothing.
-**Runs whose folded ranges differ are refused**, `diff` and `check` alike
-(point 3 of the measurements: such runs differ wherever game data lies in a
-range one side folded), with a message naming both. Runs that folded the
-same ranges compare whatever their bases. `info` names the base and the
-ranges.
+base during the run and the fold address (0 without one). `BOF3SH5\0`
+(2026-10-29) adds a third, the folded range's extent, `0x587000` (point 1),
+written whether or not anything is folded:
+
+| Version | After the flags | A folded range |
+|---|---|---|
+| `BOF3SH3` and older | nothing | none: the image at `0x400000`, nothing folded |
+| `BOF3SH4` | `u32` image base, `u32` fold address | `[F, F + 0x53F000)`, read so by the tool (the header does not say) |
+| `BOF3SH5` | `u32` image base, `u32` fold address, `u32` extent | `[F, F + extent)`: `0x587000`, the image to `.pool`'s end |
+
+The tool reads all five versions; an older file is a run at `0x400000` that
+folded nothing. **Runs whose folded ranges differ are refused**, `diff` and
+`check` alike (point 3 of the measurements: such runs differ wherever game
+data lies in a range one side folded), with a message naming both - and
+since 2026-10-29 runs that folded the same bases over different extents (a
+`BOF3SH4` file beside a `BOF3SH5`) too, since a word between the two ends is
+folded on one side and raw on the other. With nothing folded the extent
+changes nothing: a `BOF3SH5` run at `0x400000` without
+`BOF3X_STATEHASH_FOLD` hashes as `BOF3SH3` and `BOF3SH4` did, bit for bit,
+and compares with them as before, so no reference is re-recorded. Runs that
+folded the same ranges compare whatever their bases. `info` names the base,
+the ranges and the extent.
 
 **The tool's other changes.** `bytes --fold ADDR` folds both raw dumps as
 the hash does (a dump keeps the raw bytes), for section 2's loop across two
@@ -709,6 +736,22 @@ change as from `main`'s.
   `BOF3SH4` files read alike; a moved run against a run at `0x400000` folding
   its base is compared, against one that folded nothing or another range,
   refused.
+- **`.pool`, from `BOF3SH5`** (2026-10-29,
+  [`statehash-pool-fold.md`](statehash-pool-fold.md) 2.1). In the DLL the
+  mixed page's draws span the whole extent and add 111 pointers into `.pool`
+  moved with the image, and a page of its own holds 520 pointers into
+  `.pool` with the image at `0x70000000` and 504 ordering-table links into
+  it with the image at `0x00A00000`: folding both bases it hashes as at
+  `0x400000`, differs without the fold and with a byte changed. Measured
+  with the extent put back to `0x53F000` in a scratch build: exit 3, "the
+  page with the image at 0x70000000 hashes 0x2340E720, at 0x400000
+  0x17D605B3", and with that check made a log line, "a page of pointers and
+  links into .pool ... the extent 0x53F000 does not reach .pool's end". The
+  tool's self-test adds 21,142 `.pool` pointers to the synthetic `.data`
+  and 88,883 `.pool` links to the links' dump: equal folded over `0x587000`,
+  differing over `0x53F000` and with a byte changed; and a `BOF3SH4` run
+  folding a base against a `BOF3SH5` run folding the same base is refused
+  both ways, while unfolded files of every version compare as before.
 
 **What it does not do.**
 

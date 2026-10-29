@@ -263,7 +263,7 @@ class HashRun(statehash.Run):
     def __init__(self, path):
         super().__init__(path, 'tick')
         d = open(path, 'rb').read()
-        o = {1: 24, 2: 28, 3: 32}[self.version]
+        o = self.header   # where the records start, by version (a BOF3SH4 or BOF3SH5 file raised KeyError here)
         self.rf = []
         while o + 16 <= len(d) and len(self.rf) < len(self.keys):
             tick, fc, rf, n = struct.unpack_from('<4I', d, o)
