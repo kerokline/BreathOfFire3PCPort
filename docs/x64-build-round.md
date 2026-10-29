@@ -316,8 +316,9 @@ a time with the gate after each; B4; stage B's PR; stage C; stage D. Every
 commit `git commit -s`. Agents run no game: the coordinator runs the
 self-tests and the proof, one at a time, in this round's own harness root
 under `C:\Users\kerok\bof3x-runs\x64<mmdd>` (Defender-excluded,
-one root per session). Ledger entries from DIV-0187, defects from
-D398, both checked against `main` at launch. Worktrees reset onto the round
+one root per session). Ledger entries take the next number after
+DIV-0186 (0187 today) and defects the next after D397, both checked against
+`main` at launch. Worktrees reset onto the round
 branch's tip, not `main`.
 
 ## 9. Not in this round
