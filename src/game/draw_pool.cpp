@@ -15,8 +15,8 @@
 #include "hook/log.h"
 
 namespace draw_pool {
-unsigned char* g_items = DrawItems;
-unsigned short* g_free = DrawItemPool_Free;
+unsigned char* g_items = nullptr;   // the original's until DrawPool_Grow (draw_pool.h)
+unsigned short* g_free = nullptr;
 unsigned g_count = DrawItemPool_Free_count;
 }  // namespace draw_pool
 
