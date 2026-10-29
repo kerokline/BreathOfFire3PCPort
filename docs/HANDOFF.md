@@ -43,13 +43,13 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 2. **The two rounds staged by PR #157**, both run:
    - **The ledger-fields round is done through stage C on `ledger-fields/round`** (off `main` `ac1682fe`, the
      PR #161 merge; LF0, four groups, an audit and a fix agent, one worktree each under
-     `C:\Users\kerok\bof3x-runs\lf1027`, merged one at a time; unpushed, **PR at the owner's word**;
+     `C:\Users\kerok\bof3x-runs\lf1027`, merged one at a time;
      [`ledger-fields-round.md`](ledger-fields-round.md), the "as run" sections of 2, 3 and 4; the reports
      `lf1027\<group>\REPORT.md`). Every entry carries the six fields `Switch:` / `Default:` / `Player:` / `Toward:` /
      `Languages:` / `State:`, `ledger_check.py` is strict, and the counts are in [`STATUS.md`](STATUS.md). The round
      merged as PR #162 (2026-10-28 morning). **Stage D done the same day on `ledger-fields/stage-d`** (section 5's
      four "as run" subsections; three Opus agents, worktrees under `C:\Users\kerok\bof3x-runs\lfd1028`, reports
-     `lfd1028\d<n>\REPORT.md`; unpushed, **PR at the owner's word**): `BOF3X_OFF` (ini `off=`) read by both hosts
+     `lfd1028\d<n>\REPORT.md`; **merged as PR #164**, `main` `15518394`): `BOF3X_OFF` (ini `off=`) read by both hosts
      for code names only, with a known-but-inactive name logged and an unknown one a Fatal (`src/hook/code_names.h`,
      generated); `cheap` retired, the 67 entries `Player: yes`; `tools/ledger_registry.py` writes
      `src/launcher/ledger_registry.h` (CI gate) and `presets` is the Python reference; the launcher's `preset=`

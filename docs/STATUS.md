@@ -10,9 +10,9 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 **The relocatable-image round, 2026-10-28..29, on `relocatable-image/round`** (off `main` `15518394`, the PR #164 merge; stages A (census, address-independent state hash, loader design), B (every address in the source spelled as a VA placed by `Img` / `Code`, machine code identical throughout), C (the move, C1, and the binding, C2) and D (the audit, the docs, the rule); Opus agents in worktrees under `C:\Users\kerok\bof3x-runs\ri1027`, merged one at a time, the proof by the coordinator; unpushed, **PR at the owner's word**; [`relocatable-image-round.md`](relocatable-image-round.md), sections 2..5). **The image is movable** (IDEAS I44 stage 3): the base is read at run time, `.data`'s pointer words are rebased at load, and the code words are bound by name to places of ours - `(top << 24) | VA`, a table of jumps (`src/hook/bind.cpp`) - so the **entry-stub page is gone** and `.stub` is a no-access trap. **What the player sees: nothing changed** - `bof3x.exe` stays at `0x400000`, and its state hash matches the references on all ten routes; the developer switch `BOF3X_IMAGEBASE=0xA00000` (the developer launcher, which fences the linked span) runs the same ten routes hash-equal to `0x400000`, and a quicksave across bases is refused. Stage D found two defects and fixed both (`BOF3X_MP3_COMPARE` reaching Capcom's decoder, now refused in `bof3x.exe`; a place handed to `PatchBytes`), and `tools/reloc_bare.py --check` (CI) refuses a new bare image address. No ledger entry: no behaviour a player meets changed. **Owed the owner's eye: nothing player-visible**; the open items are in the round doc's section 5 "Left".
 
-**Stage D of the ledger-fields round, 2026-10-28, on `ledger-fields/stage-d`** (off `main` `de7aeb3d`, the PR #162
+**Stage D of the ledger-fields round, 2026-10-28, merged as PR #164 (`main` `15518394`)** (off `main` `de7aeb3d`, the PR #162
 merge; three Opus agents D0, D1, D2 one worktree each under `C:\Users\kerok\bof3x-runs\lfd1028`, merged one at a
-time, the proof by the coordinator; unpushed, PR at the owner's word; [`ledger-fields-round.md`](ledger-fields-round.md)
+time, the proof by the coordinator; [`ledger-fields-round.md`](ledger-fields-round.md)
 section 5's four "as run" subsections). **The player's switch exists:** `BOF3X_OFF=<names>` (ini `off=`, the
 `BOF3X_ORIGINAL` list syntax) is read by both hosts for the code names - a `PatchBytes` or `RetargetCall` name,
 whose original path is in our code - so the 67 former `cheap` entries are `Player: yes` (126 `yes`, 28 `costly`,
@@ -30,9 +30,9 @@ under `BOF3X_ORIGINAL` with the same 66 names, identical on every page but the D
 of either side shows to be run-to-run noise under the list. **New: D396** (the hosted fuzz's rows assume their
 switch on). Owed the owner's eye: the Preset page.
 
-**The ledger-fields round, 2026-10-28, on `ledger-fields/round`** (off `main` `ac1682fe`, the PR #161 merge;
+**The ledger-fields round, 2026-10-28, merged as PR #162** (off `main` `ac1682fe`, the PR #161 merge;
 LF0, four groups, an audit and a fix agent, Opus, one worktree each under `C:\Users\kerok\bof3x-runs\lf1027`,
-merged one at a time; unpushed, PR at the owner's word; [`ledger-fields-round.md`](ledger-fields-round.md), the
+merged one at a time; [`ledger-fields-round.md`](ledger-fields-round.md), the
 three "as run" sections). **Every ledger entry now carries six machine-read fields** - `Switch:`, `Default:`,
 `Player:`, `Toward:`, `Languages:`, `State:` - and `tools/ledger_check.py` refuses an entry without them, a switch name
 nothing in `src/` or the launcher reads, or a `Player:` the names do not give; `tools/ledger_switches.py`
@@ -84,8 +84,8 @@ No DIV or D number came of it. The owner's calls and looks are in [`owner-review
   member, and the PSP-only install's revive halo (D394) and Simoon's dusts (D245).
 - **The ledger-fields and relocatable-image rounds staged** (PR #157, docs only;
   [`ledger-fields-round.md`](ledger-fields-round.md), [`relocatable-image-round.md`](relocatable-image-round.md)):
-  the ledger-fields round run through stage C on 2026-10-28 (above, unpushed); the relocatable-image round not
-  launched.
+  the ledger-fields round run and merged on 2026-10-28 (PRs #162 and #164, above); the relocatable-image round
+  run 2026-10-28..29 (the top of this section, unpushed).
 - **After PR #157:** the away day (PR #158, above); D42, the world map's opaque dial, drawn semi-transparent as on
   the PlayStation (PR #159, DIV-0184); the boss sweep (PR #161, [`boss-sweep.md`](boss-sweep.md)): the `battle ID` op,
   crafted pre-fight saves and `spell_sweep.py run --fight`, fifteen fights played to the death on PC, US-disc and
