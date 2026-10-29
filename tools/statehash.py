@@ -20,8 +20,9 @@ bytes  two raw dumps (BOF3X_STATEHASH_DUMP) compared byte for byte: the
        --fold ADDR reads every aligned word of both dumps whose value lies in
        the image placed at ADDR as at 0x400000, as the hash does (below).
 selftest  the reader and the fold on synthetic files: a dump with every
-       image pointer moved by a constant compares equal folded, and runs
-       hashed with different folded ranges are refused.
+       image pointer moved by a constant - into .pool too - compares equal
+       folded, and runs hashed with different folded ranges or extents are
+       refused.
 
 Runs hashed under different skip lists are refused, except where the run
 under test (check's NEW, diff's B) only adds ranges to the reference's:
@@ -42,6 +43,14 @@ BOF3SH3 bit for bit, so every older file is a run that folded nothing. Runs
 that folded different ranges are refused: game data holds values in any such
 range, and those hash differently on the two sides.
 
+A BOF3SH5 file (2026-10-29) adds the folded range's extent: 0x587000, the
+image to the end of bof3x.exe's .pool (src/hook/exe_layout.h), where a
+BOF3SH4 file folded [F, F + 0x53F000), BOF3.exe's SizeOfImage, and left the
+pointers into a moved .pool raw (docs/statehash-pool-fold.md). A BOF3SH4 file
+is read as extent 0x53F000. Runs that folded the same ranges over different
+extents are refused as different ranges are; with nothing folded the extent
+changes nothing, and every file compares as before.
+
 Runs are aligned by tick (the logic frames the latch saw, from the first) or,
 with --align recipe, by the recipe frame of a scripted run. docs/state-hash.md
 has the method and what the hash does not see.
@@ -49,10 +58,21 @@ has the method and what the hash does not see.
 import argparse, array, bisect, os, re, struct, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from make_exe import read_layout  # noqa: E402  (the `kName = 0x...;` lines of exe_layout.h)
+
 BASE, END = 0x5DA000, 0x93E000
-# BOF3.exe's image at its own base (statehash.cpp kExeLo, kImageSize)
-IMAGE, IMAGE_SIZE = 0x400000, 0x53F000
-VERSIONS = {b'BOF3SH1\0': 1, b'BOF3SH2\0': 2, b'BOF3SH3\0': 3, b'BOF3SH4\0': 4}
+# The image at its own base, and a folded range's extent (statehash.cpp kExeLo,
+# kImageExtent): to the end of bof3x.exe's .pool, which moves with the image -
+# taken from src/hook/exe_layout.h, as the engine takes it, not written again
+_LAYOUT = read_layout(os.path.join(ROOT, 'src', 'hook', 'exe_layout.h'))
+IMAGE = _LAYOUT['ImageBase']
+IMAGE_EXTENT = _LAYOUT['PoolVa'] + _LAYOUT['PoolSize'] - IMAGE
+# A BOF3SH4 file's extent, which its header does not record: BOF3.exe's
+# SizeOfImage, the range statehash.cpp folded from 2026-10-28 to 2026-10-29
+SH4_EXTENT = 0x53F000
+assert IMAGE == 0x400000 and IMAGE_EXTENT == 0x587000, 'exe_layout.h moved: read docs/state-hash.md section 8'
+VERSIONS = {b'BOF3SH1\0': 1, b'BOF3SH2\0': 2, b'BOF3SH3\0': 3, b'BOF3SH4\0': 4, b'BOF3SH5\0': 5}
 
 
 class Run:
@@ -80,11 +100,15 @@ class Run:
         # an older file is a run at 0x400000 that folded nothing
         self.image, self.fold = struct.unpack_from('<2I', d, 32) if self.version >= 4 else (IMAGE, 0)
         self.folds = frozenset(b for b in (self.image, self.fold) if b and b != IMAGE)
+        # BOF3SH5 (2026-10-29) adds the folded range's extent; a BOF3SH4 file
+        # folded BOF3.exe's SizeOfImage, an older one nothing
+        self.extent = (struct.unpack_from('<I', d, 40)[0] if self.version >= 5 else
+                       SH4_EXTENT if self.version == 4 else None)
         self.path = path
         self.keys = []      # per record: the alignment key
         self.fc = []        # per record: Frame_Counter
         self.recs = []      # per record: [(page, hash)...] changed
-        o = {1: 24, 2: 28, 3: 32, 4: 40}[self.version]
+        o = self.header = {1: 24, 2: 28, 3: 32, 4: 40, 5: 44}[self.version]
         while o + 16 <= len(d):
             tick, fc, rf, n = struct.unpack_from('<4I', d, o)
             if o + 16 + 8 * n > len(d):
@@ -262,6 +286,13 @@ def same_headers(runs, strict=False, skip_lists=()):
             sys.exit(f'{r.path} folded {fold_text(r)} and {first.path} {fold_text(first)}: game data holds values '
                      'in such a range, hashed as at 0x400000 on one side and raw on the other - the runs were not '
                      'hashed alike; record both with the same BOF3X_STATEHASH_FOLD (docs/state-hash.md section 8)')
+        if r.folds and r.extent != first.extent:
+            # the same bases folded over different lengths: a word between the
+            # two ends (a pointer into a moved .pool, or data there) is folded
+            # on one side and raw on the other
+            sys.exit(f'{r.path} folded {fold_text(r)} and {first.path} {fold_text(first)}: the ranges differ in '
+                     'extent (a BOF3SH4 file folded 0x53F000 bytes, BOF3SH5 to .pool\'s end) - the runs were not '
+                     'hashed alike; record both with one build (docs/state-hash.md section 8)')
     notes(runs)
     keys = [(r.skips, r.skip_hash) for r in runs]
     if any(r.skip_hash is None for r in runs):
@@ -307,7 +338,8 @@ def same_headers(runs, strict=False, skip_lists=()):
 def fold_text(r):
     if not r.folds:
         return 'nothing (the image at 0x400000)'
-    return ' and '.join(f'0x{b:08X}..0x{b + IMAGE_SIZE:08X}' for b in sorted(r.folds)) + f' (the image at 0x{r.image:08X})'
+    return (' and '.join(f'0x{b:08X}..0x{b + r.extent:08X}' for b in sorted(r.folds))
+            + f' (the image at 0x{r.image:08X}, extent 0x{r.extent:X})')
 
 
 def notes(runs):
@@ -406,16 +438,18 @@ def cmd_check(a):
     return 1 if per else 0
 
 
-def fold_dump(d, fold):
+def fold_dump(d, fold, extent=None):
     """A raw dump with every aligned word whose value lies in the image placed
     at `fold` read as at 0x400000 (statehash.cpp's Fold); and, failing that, a
     word whose low 24 bits do - an ordering-table link into the moved image,
     its length byte on top - with those 24 bits folded and the top byte kept
-    (Fold24). The dump keeps the raw bytes, the hash does this."""
+    (Fold24). The image is `extent` bytes, to .pool's end; the self-test
+    passes BOF3SH4's 0x53F000 to show what that missed. The dump keeps the raw
+    bytes, the hash does this."""
     w = array.array('I', d)
     if sys.byteorder != 'little':
         w.byteswap()
-    lo, hi, n = fold, fold + IMAGE_SIZE, 0
+    lo, hi, n = fold, fold + (IMAGE_EXTENT if extent is None else extent), 0
     for i, v in enumerate(w):
         if lo <= v < hi:
             w[i] = v - fold + IMAGE
@@ -431,9 +465,10 @@ def fold_dump(d, fold):
 def check_fold(f):
     if f is None:
         return
-    if f % 0x10000 or not f or f + IMAGE_SIZE > 0x80000000 or (f != IMAGE and f < IMAGE + IMAGE_SIZE and f + IMAGE_SIZE > IMAGE):
+    if (f % 0x10000 or not f or f + IMAGE_EXTENT > 0x80000000
+            or (f != IMAGE and f < IMAGE + IMAGE_EXTENT and f + IMAGE_EXTENT > IMAGE)):
         sys.exit(f'--fold 0x{f:X}: not a 64 KiB-aligned base whose image ends at or below 0x80000000, clear of '
-                 '0x400000..0x93F000')
+                 f'0x{IMAGE:X}..0x{IMAGE + IMAGE_EXTENT:X} (the image to .pool\'s end)')
 
 
 def cmd_bytes(a):
@@ -444,7 +479,7 @@ def cmd_bytes(a):
     if a.fold is not None and a.fold != IMAGE:
         da, na = fold_dump(da, a.fold)
         db, nb = fold_dump(db, a.fold)
-        print(f'folded 0x{a.fold:08X}..0x{a.fold + IMAGE_SIZE:08X} as at 0x400000: {na} words of {a.a}, {nb} of {a.b}')
+        print(f'folded 0x{a.fold:08X}..0x{a.fold + IMAGE_EXTENT:08X} as at 0x400000: {na} words of {a.a}, {nb} of {a.b}')
     return compare_dumps(da, db, a)
 
 
@@ -490,24 +525,29 @@ def cmd_selftest(a):
     F = 0x70000000
     w0 = array.array('I', bytes(END - BASE))
     wf = array.array('I', bytes(END - BASE))
-    kinds = [0, 0, 0, 0]
+    # bof3x.exe's .pool (exe_layout.h kPoolVa..kOwnVa), past BOF3.exe's SizeOfImage
+    pool, pool_size = _LAYOUT['PoolVa'], _LAYOUT['PoolSize']
+    kinds = [0, 0, 0, 0, 0]
     for i in range(0, n, 7):    # one word in seven set, the rest zero
-        k = rnd.randrange(5)
+        k = rnd.randrange(6)
         if k < 2:       # a pointer into the image, in a slot or stored at run time: moved
-            v = IMAGE + (rnd.randrange(IMAGE_SIZE) & ~3)
+            v = IMAGE + (rnd.randrange(IMAGE_EXTENT) & ~3)
+            w0[i], wf[i] = v, v - IMAGE + F
+        elif k == 5:    # a pointer into .pool (a draw item), stored at run time: moved with the image
+            v = pool + (rnd.randrange(pool_size) & ~3)
             w0[i], wf[i] = v, v - IMAGE + F
         elif k == 2:    # data in the moved image's range: unmoved
-            w0[i] = wf[i] = F + rnd.randrange(IMAGE_SIZE)
+            w0[i] = wf[i] = F + rnd.randrange(IMAGE_EXTENT)
         elif k == 3:    # a number that reads as an address in the image: unmoved
-            w0[i] = wf[i] = IMAGE + rnd.randrange(IMAGE_SIZE)
+            w0[i] = wf[i] = IMAGE + rnd.randrange(IMAGE_EXTENT)
         else:
             w0[i] = wf[i] = rnd.getrandbits(32)
-        kinds[(0, 0, 1, 2, 3)[k]] += 1
+        kinds[(0, 0, 1, 2, 3, 4)[k]] += 1
     if sys.byteorder != 'little':
         w0.byteswap(); wf.byteswap()
     d0, df = w0.tobytes(), wf.tobytes()
-    print(f'synthetic .data: {kinds[0]} image pointers moved by 0x{F - IMAGE:08X}, {kinds[1]} data words in the moved '
-          f'range, {kinds[2]} image-shaped numbers and {kinds[3]} others unmoved')
+    print(f'synthetic .data: {kinds[0]} image pointers and {kinds[4]} .pool pointers moved by 0x{F - IMAGE:08X}, '
+          f'{kinds[1]} data words in the moved range, {kinds[2]} image-shaped numbers and {kinds[3]} others unmoved')
     q = argparse.Namespace(gap=3)
     import contextlib, io
     with contextlib.redirect_stdout(io.StringIO()):
@@ -515,19 +555,29 @@ def cmd_selftest(a):
         f0, _ = fold_dump(d0, F)
         ff, _ = fold_dump(df, F)
         folded = compare_dumps(f0, ff, q)
+        o0, _ = fold_dump(d0, F, SH4_EXTENT)
+        of, _ = fold_dump(df, F, SH4_EXTENT)
+        folded_sh4 = compare_dumps(o0, of, q)
         df2 = bytearray(df); df2[0x1234] ^= 1
         ff2, _ = fold_dump(bytes(df2), F)
         changed = compare_dumps(f0, ff2, q)
     expect('the moved dump against the unmoved, raw: differs', raw, 1)
-    expect('the same pair, both folded at the moved base: equal', folded, 0)
+    expect(f'the same pair, both folded at the moved base over 0x{IMAGE_EXTENT:X}: equal', folded, 0)
+    expect(f"the same pair folded over BOF3SH4's 0x{SH4_EXTENT:X} (the .pool pointers raw): differs", folded_sh4, 1)
     expect('a byte changed in the moved dump, folded: differs', changed, 1)
 
-    # ordering-table links (a length byte over a 24-bit address) into an image below 16 MB
+    # ordering-table links (a length byte over a 24-bit address) into an image
+    # below 16 MB, every other one into .pool
     F24 = 0xA00000
     l0 = array.array('I', bytes(END - BASE))
     lf = array.array('I', bytes(END - BASE))
+    pool_links = 0
     for i in range(0, n, 5):
-        off = rnd.randrange(IMAGE_SIZE) & ~3
+        if i % 2:
+            off = pool - IMAGE + (rnd.randrange(pool_size) & ~3)
+            pool_links += 1
+        else:
+            off = rnd.randrange(IMAGE_EXTENT) & ~3
         top = rnd.randrange(1, 16) << 24
         l0[i], lf[i] = top | (IMAGE + off), top | (F24 + off)
     if sys.byteorder != 'little':
@@ -537,27 +587,45 @@ def cmd_selftest(a):
         g0, _ = fold_dump(l0.tobytes(), F24)
         gf, _ = fold_dump(lf.tobytes(), F24)
         links_folded = compare_dumps(g0, gf, q)
+        h0, _ = fold_dump(l0.tobytes(), F24, SH4_EXTENT)
+        hf, _ = fold_dump(lf.tobytes(), F24, SH4_EXTENT)
+        links_sh4 = compare_dumps(h0, hf, q)
+        lf2 = bytearray(lf.tobytes()); lf2[4 * 5 * 3] ^= 0x10   # the low byte of a link into .pool
+        gf2, _ = fold_dump(bytes(lf2), F24)
+        links_changed = compare_dumps(g0, gf2, q)
+    print(f'synthetic links: {len(range(0, n, 5))}, {pool_links} of them into .pool')
     expect('ordering-table links into the moved image, raw: differ', links_raw, 1)
     expect('the same links folded at 0xA00000 (24 bits, the length byte kept): equal', links_folded, 0)
+    expect(f"the same links folded over BOF3SH4's 0x{SH4_EXTENT:X} (the .pool links raw): differ", links_sh4, 1)
+    expect('a byte changed in a moved link into .pool, folded: differs', links_changed, 1)
 
-    def sh(path, version, image=IMAGE, fold=0):
+    def sh(path, version, image=IMAGE, fold=0, extent=IMAGE_EXTENT):
         with open(path, 'wb') as f:
             f.write(b'BOF3SH%d\0' % version + struct.pack('<4I', BASE, 4, 0x1000, 0) + struct.pack('<2I', 0, 3))
             if version >= 4:
                 f.write(struct.pack('<2I', image, fold))
+            if version >= 5:
+                f.write(struct.pack('<I', extent))
             f.write(struct.pack('<4I', 0, 1, 0, 4) + struct.pack('<8I', 0, 7, 1, 8, 2, 9, 3, 10))
             f.write(struct.pack('<4I', 1, 2, 1, 1) + struct.pack('<2I', 2, 11))
     with tempfile.TemporaryDirectory() as t:
         paths = {}
         for name, args in (('sh3', (3,)), ('sh4', (4,)), ('moved', (4, F, 0)), ('folding', (4, IMAGE, F)),
-                           ('other', (4, IMAGE, 0x60000000))):
+                           ('other', (4, IMAGE, 0x60000000)), ('sh5', (5,)), ('moved5', (5, F, 0)),
+                           ('folding5', (5, IMAGE, F)), ('other5', (5, IMAGE, 0x60000000))):
             paths[name] = os.path.join(t, name + '.sh')
             sh(paths[name], *args)
         runs = {k: Run(v) for k, v in paths.items()}
         expect('a BOF3SH4 run at 0x400000 folds', [hex(b) for b in sorted(runs['sh4'].folds)], [])
         expect('a moved run folds', [hex(b) for b in sorted(runs['moved'].folds)], [hex(F)])
         expect('a run at 0x400000 folding the moved base folds', [hex(b) for b in sorted(runs['folding'].folds)], [hex(F)])
-        expect('the records read alike across versions', runs['sh3'].recs == runs['sh4'].recs == runs['moved'].recs, True)
+        expect('a BOF3SH5 run at 0x400000 folds', [hex(b) for b in sorted(runs['sh5'].folds)], [])
+        expect('the extents read: BOF3SH3, BOF3SH4, BOF3SH5',
+               [None if runs[x].extent is None else hex(runs[x].extent) for x in ('sh3', 'sh4', 'sh5')],
+               [None, hex(SH4_EXTENT), hex(IMAGE_EXTENT)])
+        expect('the records read alike across versions',
+               runs['sh3'].recs == runs['sh4'].recs == runs['moved'].recs == runs['sh5'].recs == runs['moved5'].recs,
+               True)
 
         def compared(x, y):
             try:
@@ -570,6 +638,15 @@ def cmd_selftest(a):
         expect('the moved run against a run at 0x400000 folding its base', compared('folding', 'moved'), 'compared')
         expect('the moved run against a run that folded nothing', compared('sh4', 'moved'), 'refused')
         expect('two runs folding different ranges', compared('folding', 'other'), 'refused')
+        expect('BOF3SH3 against BOF3SH5 at 0x400000', compared('sh3', 'sh5'), 'compared')
+        expect('BOF3SH4 against BOF3SH5 at 0x400000, nothing folded (the extents differ)', compared('sh4', 'sh5'),
+               'compared')
+        expect('a moved BOF3SH5 run against a BOF3SH5 run folding its base', compared('folding5', 'moved5'), 'compared')
+        expect('a moved BOF3SH5 run against a BOF3SH4 run folding its base (the extents differ)',
+               compared('folding', 'moved5'), 'refused')
+        expect('a moved BOF3SH4 run against a BOF3SH5 run folding its base (the extents differ)',
+               compared('folding5', 'moved'), 'refused')
+        expect('two BOF3SH5 runs folding different ranges', compared('folding5', 'other5'), 'refused')
     print('selftest ' + ('passed' if ok else 'FAILED'))
     return 0 if ok else 1
 

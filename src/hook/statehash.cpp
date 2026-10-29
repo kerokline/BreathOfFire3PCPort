@@ -12,12 +12,13 @@
 
 #include "bof3/symbols.gen.h"
 #include "hook/bind.h"
+#include "hook/exe_layout.h"
 #include "hook/input_script.h"
 #include "hook/log.h"
 
 // The file (little-endian, read by tools/statehash.py):
 //
-//   header   "BOF3SH4\0", u32 base, u32 pages, u32 page size, u32 skip ranges,
+//   header   "BOF3SH5\0", u32 base, u32 pages, u32 page size, u32 skip ranges,
 //            u32 skip list hash (FNV-1a over each range's address and length
 //            in the list's order; 0 without a list), u32 flags (bit 0: our
 //            pointers normalised, below; 0 under BOF3X_STATEHASH_RAW=1;
@@ -25,7 +26,9 @@
 //            bit 2: a bound code word hashed as its VA, below, 2026-10-29),
 //            u32 image base (where the game's image lay: 0x400000 in every
 //            host until the relocatable image), u32 fold base (the
-//            BOF3X_STATEHASH_FOLD address, 0 without one)
+//            BOF3X_STATEHASH_FOLD address, 0 without one), u32 fold extent
+//            (a folded range's length: 0x587000, the image to .pool's end,
+//            below; written whether or not anything is folded)
 //   record   u32 tick, u32 Frame_Counter, u32 recipe frame, u32 n,
 //            then n times (u32 page index, u32 hash)
 //
@@ -36,8 +39,11 @@
 // word (round fourteen's review, item 3). "BOF3SH2\0" (until 2026-10-10) had
 // no flags and never normalised. "BOF3SH3\0" (until 2026-10-28) had no
 // bases: every run had the image at 0x400000 and folded nothing, which is
-// what a BOF3SH4 run with base 0x400000 and no fold hashes, bit for bit. The
-// tool reads all four.
+// what a BOF3SH4 run with base 0x400000 and no fold hashes, bit for bit.
+// "BOF3SH4\0" (2026-10-28 to 2026-10-29) had no extent: its folded range was
+// [F, F + 0x53F000), BOF3.exe's SizeOfImage, which left .pool's draw items
+// unfolded (docs/statehash-pool-fold.md); with nothing folded it hashes as a
+// BOF3SH5 run does, bit for bit, as BOF3SH3 did. The tool reads all five.
 //
 // The normalisation (docs/state-hash.md section 7). A language overlay
 // re-aims Capcom's pointer tables at text in our DLL, whose addresses move
@@ -78,8 +84,15 @@
 // rebases, and the ones the game stores at run time in the arena and its
 // records (895 to 3,144 aligned words outside the load-time slots in the raw
 // dumps measured that day) - holds base + offset. Each such word is hashed as
-// 0x400000 + offset: a value in a folded range [F, F + 0x53F000) is replaced
+// 0x400000 + offset: a value in a folded range [F, F + 0x587000) is replaced
 // by 0x400000 + (value - F), on every aligned word of the page, slot or not.
+// The extent is bof3x.exe's image to .pool's end (exe_layout.h kPoolVa +
+// kPoolSize - kImageBase, as host.cpp's fence and input_script.cpp's AsVa
+// reckon it), not BOF3.exe's SizeOfImage 0x53F000: .pool (DIV-0062's draw
+// items, 0x93F000..0x987000) moves with the image, so a pointer or a link
+// into it is one of the image's own words (docs/statehash-pool-fold.md,
+// 2026-10-29). In BOF3.exe nothing lies there, so a word with such a value is
+// data, folded alike on both sides as any data word in a folded range is.
 // The folded ranges are the image's own base when it is not 0x400000 and the
 // BOF3X_STATEHASH_FOLD address. Game data holds values in any such range (no
 // 5 MB window below 0x80000000 is free of them across the 219 raw dumps of
@@ -95,7 +108,7 @@
 // 2026-10-28): a link is a 24-bit address with a length byte on top
 // (Gpu_ClearOTagR, shell.cpp; the display blocks at 0x903880), so a link into
 // a moved image is 0xLL000000 | (F + offset) and never lies in [F, F +
-// 0x53F000) as a whole word. A word whose own value is not folded but whose
+// 0x587000) as a whole word. A word whose own value is not folded but whose
 // low 24 bits lie in a folded range has those 24 bits folded and its top
 // byte kept (Fold24). Both sides of a comparison fold the same ranges, so the
 // hash stays a function of the bytes and the ranges alone: a colour or a
@@ -139,7 +152,14 @@ std::uint32_t g_tick = 0;
 // is a pointer slot of Capcom's: a table entry, a record's string pointer.
 constexpr std::uint32_t kExeLo = 0x400000;
 constexpr std::uint32_t kExeHi = 0x93F000;
-constexpr std::uint32_t kImageSize = kExeHi - kExeLo;
+// A folded range's extent (the file's comment): the image to the end of
+// .pool, which bof3x.exe carries after Capcom's range (exe_layout.h: .pool
+// begins at kExeHi) and which moves with the image - 0x587000, as host.cpp's
+// fence and input_script.cpp's AsVa reckon the image. Recorded in the header
+// (BOF3SH5); tools/statehash.py reads the same constants and asserts the
+// value. No static_assert here: tools/reloc_census.py counts each comparison
+// of an image address as a site, and the layout is checked where it lives.
+constexpr std::uint32_t kImageExtent = exe_layout::kPoolVa + exe_layout::kPoolSize - exe_layout::kImageBase;
 
 // Where the image lies (StateHash_SetImageBase), where its .data is read, and
 // the folded ranges: the image's base when it is not kExeLo, and the
@@ -205,7 +225,7 @@ inline bool InDll(std::uint32_t v) { return v >= g_dll_lo && v < g_dll_hi; }
 // A value in a folded range, as it would read with the image at 0x400000.
 inline bool Fold(const std::uint32_t* folds, unsigned n, std::uint32_t v, std::uint32_t* out) {
     for (unsigned i = 0; i < n; ++i)
-        if (v - folds[i] < kImageSize) {
+        if (v - folds[i] < kImageExtent) {
             *out = kExeLo + (v - folds[i]);
             return true;
         }
@@ -229,6 +249,12 @@ inline bool Fold24(const std::uint32_t* folds, unsigned n, std::uint32_t v, std:
 // a moved pair test the same slots).
 inline bool InImage(std::uint32_t v) {
     std::uint32_t c;
+    // kExeHi, not the extent: a slot is a word of Capcom's image as loaded,
+    // and his image has no .pool - no load-time pointer word of BOF3.exe
+    // names 0x93F000..0x987000 (none of recipes/exe-pointers.tsv's 18,831,
+    // counted 2026-10-29), and bof3x.exe's .pool is zero at the census. So
+    // the extent here would list only data words, alike on both sides. The
+    // folded half takes the whole extent, as Fold does everywhere.
     return (v >= kExeLo && v < kExeHi) || Fold(g_folds, g_nfolds, v, &c);
 }
 
@@ -390,14 +416,16 @@ std::uint32_t HashNormalised(const unsigned char* page, const std::vector<Skip>&
 
 // A base for the image or a folded range: 64 KiB aligned, its whole extent
 // in the low 2 GB (an identity has bit 31 set), and clear of the image's own
-// range at 0x400000 unless it is that base.
+// range at 0x400000 unless it is that base - the whole extent, .pool's
+// 0x93F000..0x987000 with it, since a pointer into the unmoved .pool must not
+// read as one into the folded range.
 void CheckImageBase(const char* what, unsigned long long b) {
-    if ((b & 0xFFFF) || b == 0 || b + kImageSize > 0x80000000ull)
+    if ((b & 0xFFFF) || b == 0 || b + kImageExtent > 0x80000000ull)
         Fatal("%s: 0x%llX is not a 64 KiB-aligned base whose 0x%lX-byte image ends at or below 0x80000000", what, b,
-              (unsigned long)kImageSize);
-    if (b != kExeLo && b < kExeHi && b + kImageSize > kExeLo)
-        Fatal("%s: 0x%llX..0x%llX overlaps the image's own range 0x%lX..0x%lX", what, b, b + kImageSize,
-              (unsigned long)kExeLo, (unsigned long)kExeHi);
+              (unsigned long)kImageExtent);
+    if (b != kExeLo && b < kExeLo + kImageExtent && b + kImageExtent > kExeLo)
+        Fatal("%s: 0x%llX..0x%llX overlaps the image's own range 0x%lX..0x%lX", what, b, b + kImageExtent,
+              (unsigned long)kExeLo, (unsigned long)(kExeLo + kImageExtent));
 }
 
 // The hash's own test, on synthetic pages (BOF3X_SELFTEST_ONLY): a page as
@@ -420,20 +448,24 @@ void SelfTest() {
     std::uint32_t seed = 0x2545F491u;
     auto next = [&] { return seed = seed * 1664525u + 1013904223u; };
     std::vector<std::uint32_t> sites;
-    std::uint32_t pointers = 0, data_in_fold = 0, numbers = 0;
+    std::uint32_t pointers = 0, data_in_fold = 0, numbers = 0, pool_mixed = 0;
     for (std::uint32_t at = 0; at < kPage; at += 4) {
         const std::uint32_t kind = (next() >> 24) % 8;
         std::uint32_t w0 = next(), wf = w0;
         if (kind < 2) {   // a pointer into the image: a slot (0) the loader rebases, or one stored at run time (1)
-            w0 = kExeLo + ((next() % kImageSize) & ~3u);
+            w0 = kExeLo + ((next() % kImageExtent) & ~3u);
             wf = w0 + delta;
             if (kind == 0) sites.push_back(at);
             ++pointers;
+        } else if (kind == 4) {   // a pointer into .pool, stored at run time (a draw item): moved with the image
+            w0 = exe_layout::kPoolVa + ((next() % exe_layout::kPoolSize) & ~3u);
+            wf = w0 + delta;
+            ++pool_mixed;
         } else if (kind == 2) {   // data whose value lies where the image moved: unmoved
-            w0 = wf = F + next() % kImageSize;
+            w0 = wf = F + next() % kImageExtent;
             ++data_in_fold;
         } else if (kind == 3) {   // a number that reads as an address in the image: unmoved
-            w0 = wf = kExeLo + next() % kImageSize;
+            w0 = wf = kExeLo + next() % kImageExtent;
             ++numbers;
         }
         std::memcpy(at0 + at, &w0, 4);
@@ -473,7 +505,7 @@ void SelfTest() {
     CheckImageBase("statehash self-test", F24);
     for (std::uint32_t at = 0; at < kPage; at += 4) {
         const std::uint32_t len = (next() >> 24) & 0x0F;
-        const std::uint32_t off = (next() % kImageSize) & ~3u;
+        const std::uint32_t off = (next() % kImageExtent) & ~3u;
         const std::uint32_t l0 = len << 24 | (kExeLo + off), lf = len << 24 | (F24 + off);
         std::memcpy(at0 + at, &l0, 4);
         std::memcpy(atf + at, &lf, 4);
@@ -487,6 +519,46 @@ void SelfTest() {
               "0x400000 folding it", (unsigned long)F24);
     if (hash24(at0, 0) == hash24(atf, 0))
         Fatal("statehash self-test: without the fold the moved links hash as the unmoved ones");
+    // .pool (DIV-0062's draw items, exe_layout.h kPoolVa..kOwnVa, past
+    // BOF3.exe's SizeOfImage): a page of what a moved bof3x.exe holds into it
+    // - pointers with the image at F, ordering-table links (a length byte on
+    // top) with the image at F24 - against the same page at 0x400000. Folding
+    // both bases the two hash alike, which they did not with the extent at
+    // 0x53F000 (docs/statehash-pool-fold.md 2.1); without the fold they
+    // differ; a data byte changed is seen through the fold.
+    std::uint32_t pool_pointers = 0, pool_links = 0;
+    for (std::uint32_t at = 0; at < kPage; at += 4) {
+        // .pool's offset in the image: the extent's last kPoolSize bytes
+        const std::uint32_t off = kImageExtent - exe_layout::kPoolSize + ((next() % exe_layout::kPoolSize) & ~3u);
+        std::uint32_t p0, pf;
+        if ((next() >> 24) & 1) {
+            p0 = kExeLo + off;
+            pf = F + off;
+            ++pool_pointers;
+        } else {
+            const std::uint32_t len = (next() >> 24) & 0x0F;
+            p0 = len << 24 | (kExeLo + off);
+            pf = len << 24 | (F24 + off);
+            ++pool_links;
+        }
+        std::memcpy(at0 + at, &p0, 4);
+        std::memcpy(atf + at, &pf, 4);
+    }
+    const std::uint32_t folds_pool[2] = {F, F24};
+    auto hashp = [&](const unsigned char* page, unsigned nf) {
+        return HashNormalised(page, none, nullptr, 0, false, folds_pool, nf, scratch, &n);
+    };
+    const std::uint32_t hp0 = hashp(at0, 2), hpf = hashp(atf, 2);
+    if (hp0 != hpf)
+        Fatal("statehash self-test: a page of pointers and links into .pool 0x%08lX..0x%08lX moved to 0x%08lX and "
+              "0x%08lX hashes 0x%08lX, at 0x400000 0x%08lX, folding both: the extent 0x%lX does not reach .pool's end",
+              (unsigned long)exe_layout::kPoolVa, (unsigned long)exe_layout::kOwnVa, (unsigned long)F,
+              (unsigned long)F24, (unsigned long)hpf, (unsigned long)hp0, (unsigned long)kImageExtent);
+    if (hashp(at0, 0) == hashp(atf, 0))
+        Fatal("statehash self-test: without the fold the moved .pool page hashes as the unmoved one");
+    std::memcpy(raw, atf, kPage);
+    raw[0x300] ^= 0x10;
+    if (hashp(raw, 2) == hpf) Fatal("statehash self-test: a changed byte on the .pool page hashes as before through the fold");
     // Bound code words (flags bit 2). (a) A page of the game's data that
     // holds our functions' own addresses as data words - a texel or a packed
     // pair that happens to equal one (the stage C2 proof: 0x10770000 in the
@@ -543,18 +615,24 @@ void SelfTest() {
         if (Bind_VaOf(inside) != 0 || hashb(at0, true) != hashb(atf, true) || hashb(at0, true) != HashPage(at0))
             Fatal("statehash self-test: a word one byte into a code place is renamed");
     }
-    if (pointers == 0 || sites.empty() || data_in_fold == 0 || numbers == 0)
-        Fatal("statehash self-test: the synthetic page lacks a kind of word (%lu pointers, %lu slots, %lu data, %lu "
-              "numbers)", (unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)data_in_fold,
-              (unsigned long)numbers);
+    if (pointers == 0 || sites.empty() || data_in_fold == 0 || numbers == 0 || pool_mixed == 0 || pool_pointers == 0 ||
+        pool_links == 0)
+        Fatal("statehash self-test: the synthetic pages lack a kind of word (%lu pointers, %lu slots, %lu data, %lu "
+              "numbers, %lu .pool pointers among them; %lu .pool pointers and %lu .pool links)", (unsigned long)pointers,
+              (unsigned long)sites.size(), (unsigned long)data_in_fold, (unsigned long)numbers,
+              (unsigned long)pool_mixed, (unsigned long)pool_pointers, (unsigned long)pool_links);
     VirtualFree(mem, 0, MEM_RELEASE);
-    Log("statehash   self-test: a page with %lu image pointers (%lu of them slots) moved by 0x%08lX, %lu data words "
-        "in the moved range and %lu image-shaped numbers unmoved, hashes the same folding 0x%08lX; differs without "
-        "the fold and with a byte changed; with no fold hashes as its raw bytes; ordering-table links into an image "
-        "at 0x00A00000 hash as at 0x400000 folding it (24 bits, the length byte kept); a page of data holding our "
-        "functions' addresses hashes as its raw bytes%s",
-        (unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)delta, (unsigned long)data_in_fold,
-        (unsigned long)numbers, (unsigned long)F,
+    Log("statehash   self-test: a page with %lu image pointers (%lu of them slots) and %lu .pool pointers moved by "
+        "0x%08lX, %lu data words in the moved range and %lu image-shaped numbers unmoved, hashes the same folding "
+        "0x%08lX (extent 0x%lX); differs without the fold and with a byte changed; with no fold hashes as its raw "
+        "bytes; ordering-table links into an image at 0x00A00000 hash as at 0x400000 folding it (24 bits, the length "
+        "byte kept); a page of %lu pointers and %lu links into .pool 0x%06lX..0x%06lX, moved, hashes as at 0x400000 "
+        "folding, differs without the fold and with a byte changed; a page of data holding our functions' addresses "
+        "hashes as its raw bytes%s",
+        (unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)pool_mixed, (unsigned long)delta,
+        (unsigned long)data_in_fold, (unsigned long)numbers, (unsigned long)F, (unsigned long)kImageExtent,
+        (unsigned long)pool_pointers, (unsigned long)pool_links, (unsigned long)exe_layout::kPoolVa,
+        (unsigned long)exe_layout::kOwnVa,
         placed ? "; a page of code places, two cells of two VAs among them, hashes as the VAs they stand for" : "");
 }
 
@@ -638,7 +716,7 @@ void StateHash_BeforeInjects(void* dll_module) {
     }
     if (g_image != kExeLo) g_folds[g_nfolds++] = g_image;
     if (g_fold_env && g_fold_env != kExeLo && g_fold_env != g_image) {
-        if (g_nfolds && g_fold_env < g_image + kImageSize && g_fold_env + kImageSize > g_image)
+        if (g_nfolds && g_fold_env < g_image + kImageExtent && g_fold_env + kImageExtent > g_image)
             Fatal("BOF3X_STATEHASH_FOLD: 0x%08lX overlaps the image at 0x%08lX without being its base",
                   (unsigned long)g_fold_env, (unsigned long)g_image);
         g_folds[g_nfolds++] = g_fold_env;
@@ -646,10 +724,10 @@ void StateHash_BeforeInjects(void* dll_module) {
     // A folded range names the image: our DLL must not lie in one, or a
     // pointer of ours would read as one of the image's.
     for (unsigned i = 0; i < g_nfolds; ++i)
-        if (g_folds[i] < g_dll_hi && g_folds[i] + kImageSize > g_dll_lo)
+        if (g_folds[i] < g_dll_hi && g_folds[i] + kImageExtent > g_dll_lo)
             Fatal("statehash: the folded range 0x%08lX..0x%08lX overlaps our image 0x%08lX..0x%08lX; set "
                   "BOF3X_STATEHASH_FOLD (and the image's base) elsewhere", (unsigned long)g_folds[i],
-                  (unsigned long)(g_folds[i] + kImageSize), (unsigned long)g_dll_lo, (unsigned long)g_dll_hi);
+                  (unsigned long)(g_folds[i] + kImageExtent), (unsigned long)g_dll_lo, (unsigned long)g_dll_hi);
     // The table of code places (bind.cpp) under a top byte the dumps did not
     // measure: a data word may read as a place and be renamed. Said here, so a
     // proof run on such a machine is read with it in mind.
@@ -659,20 +737,20 @@ void StateHash_BeforeInjects(void* dll_module) {
             (unsigned long)Bind_TableHi());
     // Nor the table of code places (bind.cpp): a place must read as its VA.
     for (unsigned i = 0; i < g_nfolds; ++i)
-        if (Bind_TableHi() && g_folds[i] < Bind_TableHi() && g_folds[i] + kImageSize > Bind_TableLo())
+        if (Bind_TableHi() && g_folds[i] < Bind_TableHi() && g_folds[i] + kImageExtent > Bind_TableLo())
             Fatal("statehash: the folded range 0x%08lX..0x%08lX overlaps the table of code places 0x%08lX..0x%08lX; set "
-                  "BOF3X_STATEHASH_FOLD elsewhere", (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageSize),
+                  "BOF3X_STATEHASH_FOLD elsewhere", (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageExtent),
                   (unsigned long)Bind_TableLo(), (unsigned long)Bind_TableHi());
     for (unsigned i = 0; i < g_nfolds; ++i)
         Log("statehash   the image at 0x%08lX: a word whose value lies in 0x%08lX..0x%08lX is hashed as at 0x400000",
-            (unsigned long)g_image, (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageSize));
+            (unsigned long)g_image, (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageExtent));
     // The identities have bit 31 set. Neither image reaches it here, so no
     // identity equals a pointer into either; game data can hold any value,
     // which is why the word's index is mixed into the page hash as well.
-    Log("statehash   our image 0x%08lX..0x%08lX, %u sections a pointer can name in 0x%08lX..0x%08lX; BOF3.exe's "
-        "0x%06lX..0x%06lX; identities 0x80000000.. %s both",
+    Log("statehash   our image 0x%08lX..0x%08lX, %u sections a pointer can name in 0x%08lX..0x%08lX; the game's "
+        "image to .pool's end 0x%06lX..0x%06lX; identities 0x80000000.. %s both",
         (unsigned long)g_dll_lo, (unsigned long)g_dll_hi, (unsigned)g_sections.size(), (unsigned long)g_named_lo,
-        (unsigned long)g_named_hi, (unsigned long)g_image, (unsigned long)(g_image + kImageSize),
+        (unsigned long)g_named_hi, (unsigned long)g_image, (unsigned long)(g_image + kImageExtent),
         g_dll_hi <= 0x80000000u ? "lie above" : "OVERLAP our image - the index mix still keeps them apart -");
     g_page_sites.assign(kPages + 1, 0);
     for (std::uint32_t off = 0; off < kEnd - kBase; off += 4) {
@@ -740,7 +818,7 @@ bool StateHash_Start() {
     g_out = std::fopen(path, "wb");
     if (!g_out) Fatal("BOF3X_STATEHASH: cannot open %s for writing", path);
     std::setvbuf(g_out, nullptr, _IOFBF, 1 << 20);
-    std::fwrite("BOF3SH4", 1, 8, g_out);
+    std::fwrite("BOF3SH5", 1, 8, g_out);
     Put(kBase);
     Put(kPages);
     Put(kPage);
@@ -756,12 +834,13 @@ bool StateHash_Start() {
     Put(g_normalise ? 7u : 0u);   // bit 0 the slots, bit 1 the run-time slots with them, bit 2 the bound code words
     Put(g_image);
     Put(g_fold_env);
+    Put(kImageExtent);   // BOF3SH5: a folded range's length
     g_last.assign(kPages, 0);
     Log("statehash   %lu pages of .data from 0x%lX, a record a logic frame to %s; %u skip ranges, %u dump ticks, "
-        "our pointers %s; the image at 0x%08lX, %u folded ranges",
+        "our pointers %s; the image at 0x%08lX, %u folded ranges of 0x%lX bytes",
         static_cast<unsigned long>(kPages), static_cast<unsigned long>(kBase), path, (unsigned)g_skips.size(),
         (unsigned)g_dump_ticks.size(), g_normalise ? "normalised" : "raw (BOF3X_STATEHASH_RAW=1)",
-        static_cast<unsigned long>(g_image), g_nfolds);
+        static_cast<unsigned long>(g_image), g_nfolds, static_cast<unsigned long>(kImageExtent));
     return true;
 }
 
