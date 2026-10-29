@@ -73,7 +73,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      The worktrees under `lf1027` and `lfd1028` are removable once the PRs are in. Also on `main` since PR #162: the
      regenerated `analysis/data_census.tsv` (line numbers only).
    - **The relocatable-image round is built through stage D on `relocatable-image/round`** (off `main`
-     `15518394`, `main` merged through PR #167; [`relocatable-image-round.md`](relocatable-image-round.md)
+     `15518394`, `main` merged through PR #169; [`relocatable-image-round.md`](relocatable-image-round.md)
      sections 2..5 "as run" and "Before the PR", the reports
      `C:\Users\kerok\bof3x-runs\ri1027\<group>\REPORT.md`, the proofs `c1\PROOF.md` and `c2\PROOF.md`; **its PR
      open**). The image is movable and the stub page gone ([`STATUS.md`](STATUS.md)); nothing a player sees

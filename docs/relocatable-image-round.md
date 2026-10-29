@@ -632,6 +632,12 @@ null-block test over the placed `At(Img(at::kHitClass.v))` read, and
 DIV-0186's `Particles()` answering `Img(at::kPixels.v)` when the room is off
 (a VA would have been a bare address at a moved base; `reloc_bare.py --check`
 agrees). Nothing else of either PR touches the round's shapes.
+A third merge the same afternoon, PR #169 (DIV-0187, the enemy-information
+cheat): one conflict, `Battle_SetupEnemy`'s write of the enemy record's
+`+0x8F` byte, which `main` made `Cheats_EnemyInfoShown() ? 1 : 0` and the
+round had placed under `Img`; resolved keeping both. The cheat's other
+writer, in `Battle_PlaceBossActor`, merged clean on a line the round had
+already placed.
 
 **A regression the gate never saw.** Stage D's gate ran the self-test as
 `BOF3X_SELFTEST_ONLY=1` without `BOF3X_SHADOW='*'`, so the shadow fuzz
