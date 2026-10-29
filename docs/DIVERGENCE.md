@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 185 entries, DIV-0001..0185, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 186 entries, DIV-0001..0186, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -13132,5 +13132,65 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** costly - the original path is Capcom's function (a detour name only); ours would have to grow its null read, a crash
 - **Toward:** none - the console's same read takes a low-RAM byte at 0x0C (not measured), no release has a style to restore
+- **Languages:** any
+- **State:** active
+
+### The Gaist's turn-to-ash effect has room for every pixel, instead of overwriting Sprite_Current past 1,881
+
+- **ID:** DIV-0186
+- **Date:** 2026-10-29
+- **Subsystem:** effects - kind 0x6B, chapter 10's run 13 after the Gaist
+  fight: `EffectKind6B_Scatter` `0x475F20`, `EffectKind6B_Arm` `0x4760E0`,
+  `EffectKind6B_Fall` `0x476120` (ours, `src/game/effect_2c.cpp`). D217
+  ([`known-defects.md`](known-defects.md)); issue #163;
+  [`effect_2c.md`](effect_2c.md) section 7.
+- **Tier:** Intent - a port repair.
+- **Original behaviour:** the scatter turns each pixel that is not 0 of the
+  80 x 72 read-back of sprite record 2 into a 0x14-byte particle at
+  `0x92EC80 + 0x14 n`, with no bound. The room before `Gfx_CurrentEnv`
+  (`0x937F84`) holds 1,881; the 1,882nd particle writes over
+  `Sprite_Current`, and the next state's `inc byte [eax+1]` faults. Seen
+  2026-10-29: the owner's natural save, the Gaist's collapsed body in record
+  2, 2,201 particles - the crash of issue #163, reproduced in the harness
+  every time (D217).
+- **New behaviour:** the particles go to a room of ours that holds the
+  rectangle's every pixel (5,760, 115,200 bytes in the dll), so the whole
+  sprite crumbles. The count, the particle order and fields, the fall and
+  the draw are the original's; only the array's address moves. Armed after
+  the module's self-test (`PatchBytes "AshRoom"`), which still compares
+  ours with Capcom's at `0x92EC80`. Nothing else names the array (a raw scan
+  of the image: `0x92EC80` only at `0x475F76`, `0x4760E7` and, as +1,
+  `0x476145`), and the frame `0x6544A8` that sizes it (80 x 72) is read and
+  never written; a larger rectangle aborts loudly rather than overrun. One
+  log line at start-up, `DIV-0186`, says on or OFF.
+- **Rationale:** a crash to the desktop at a story boss. The PlayStation
+  gives the same code a room that holds the Gaist (below), so the crash is
+  the port's placement of the array, and room for every pixel is what the
+  code assumed.
+- **Also in the PSX version?** The same code without a bound; no crash.
+  Read 2026-10-29 (US `AREA120.EMI` section 13, loaded at `0x801F2C00`; JP
+  the same instruction for instruction): the read-back `0x801F2F84` stores
+  the 80 x 72 rectangle at `0x800E4800`; the scatter `0x801F3010` walks it
+  from `0x800E4800` with the same test (`lhu`; `beqz`, `0x801F30E4`), and
+  writes 12-byte particles from `0x800E7500` (`ori $s5, 0x7500`,
+  `0x801F3094`; `addiu $s0, 0xc`), the count at `0x801F4FD4`, bounded only
+  by w and h (`0x801F31B4`). AREA120 loads nothing between `0x800E4488` and
+  section 12 at `0x80104000`. Inferred, not sampled live: the boot exe resets
+  a per-frame staging pointer to `0x800F5000` (`0x8014B0C8..`), so 4,672
+  particles fit before it - the Gaist's 2,201 with room to spare; 5,760
+  would reach that staging area and spoil, not crash.
+- **Verification:** 2026-10-29, root `C:/Users/kerok/bof3x-runs/gg1029`,
+  the owner's `gaistFullRoute` with 600 frames added (`gaist_fix.txt`, shots
+  of the crumble): crashes before the change at about frame 18,714 with
+  2,201 particles; after it the route plays through the crumble. The start-up
+  fuzz `BOF3X_SHADOW=effect_2c` compares the unchanged path at the original
+  address.
+- **Reversible?** `BOF3X_ORIGINAL=AshRoom` leaves the particles at
+  `0x92EC80`, the overrun with them. A player turns it off with
+  `BOF3X_OFF=AshRoom` (the ini's `off=`).
+- **Switch:** AshRoom
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=AshRoom (ini off=)
+- **Toward:** psx - the PlayStation's room holds the Gaist's particles
 - **Languages:** any
 - **State:** active

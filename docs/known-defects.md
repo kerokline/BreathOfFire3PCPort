@@ -6057,7 +6057,7 @@ play ever puts a point on the eye's plane is not established.
 **Status:** latent; ours aborts where the original would end the process,
 and wraps as it does.
 
-## D217 — Kinds 0x61 and 0x6B make a particle of every opaque pixel, with no bound: past 2,048 (0x61) or 1,881 (0x6B) they overwrite `Sprite_Current` (latent, faithful)
+## D217 — Kinds 0x61 and 0x6B make a particle of every opaque pixel, with no bound: past 2,048 (0x61) or 1,881 (0x6B) they overwrite `Sprite_Current` (0x61 latent; 0x6B seen 2026-10-29, issue #163, fixed by DIV-0186)
 
 **Seen:** not seen in play; found by reading the code while taking it over,
 2026-09-29 (E2C, [`effect_2c.md`](effect_2c.md) §7) and 2026-10-03 (E3A,
@@ -6089,8 +6089,8 @@ more than 2,048 opaque pixels in its 64 x 64 is not measured; E2C - chapter
 10's run 13 captures sprite record 2, its pixel count is the sprite's, not
 measured.
 
-**Status:** latent, faithful; a crash candidate if a captured sprite is
-opaque enough. **Kind 0x6B seen in play, 2026-10-29: issue #163** (below).
+**Status:** kind 0x61 latent, faithful; kind 0x6B seen in play 2026-10-29
+(issue #163, below) and fixed by DIV-0186.
 
 **Kind 0x6B in play (2026-10-29, issue #163).** ScrubOasis's crash after
 the Gaist fight (build `de7aeb3d`, a US-PSX + EU-PSP disc install) is this
@@ -6132,6 +6132,24 @@ before the fight (the owner's or the reporter's), on the PC and on
 Mednafen, reading record 2 the same way; then the repair - room for the
 whole rectangle (5,760 particles), a port repair under the twin rule if the
 PlayStation is shown to hold the Gaist's count without harm.
+
+**Reproduced on a natural save (2026-10-29).** The owner played to the
+Gaist from a real chapter-10 save and the game crashed the same way:
+`NextState`'s `inc byte [eax+1]`, writing `0x427712E1`, `Sprite_Current`
+`0x427712E0`, the count `0x676110` **0x899 = 2,201**. The recording
+(`gaistFullRoute`, the recipe from frame 0 and its save) replayed in the
+harness with 600 frames added after it (it ends where the game died)
+crashes at about frame 18,714 every time, the same address and count
+(root `C:/Users/kerok/bof3x-runs/gg1029`, `gaist_tail.txt`). Record 2
+(`0x7DEFC8`) is live (flags `0x11`), and the 80 x 72 read-back at
+`0x92BF80`, drawn from the dump, is **the Gaist's collapsed body**: 2,201
+opaque pixels, 320 past the room. So the reach is the natural one, and
+the crafted save's Torch was the exception.
+
+**Status (kind 0x6B):** fixed by DIV-0186 (2026-10-29): the particles in a
+room of ours for all 5,760 pixels, armed after the self-test;
+`BOF3X_ORIGINAL=AshRoom` / `BOF3X_OFF=AshRoom` for the original's room.
+Kind 0x61 is unchanged: latent.
 
 ## D218 — `EffectKind69_Spawn` writes nine records without testing `Effect_FindFree` for none (latent; ours aborts)
 

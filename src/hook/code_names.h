@@ -10,13 +10,14 @@
 
 namespace bof3::code_names {
 
-constexpr int kCount = 83;
+constexpr int kCount = 84;
 constexpr const char* kNames[kCount] = {
     "ApplyMatrixLVExact",
     "Area135MarkerPlaced",
     "AreaDataReload",
     "AreaKeepStoppingNone",
     "AreaTrackFallback",
+    "AshRoom",
     "BattleBannerCentre",
     "BattleDrawSigned",
     "BattleEquipLabelsRow",
