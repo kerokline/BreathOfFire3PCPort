@@ -182,7 +182,7 @@ template <typename F> inline F Call(F callee) {
 // A handler a chapter dispatches to through a table (a .data state or run
 // table, a stack table's immediate): called by the address the table holds,
 // which in the game is Capcom's function or the jmp Inject put there to ours
-// (hosted), our function the bind table names (bof3x.exe).
+// (hosted), the jmp to ours at its place in the bind table (bof3x.exe).
 using Handler = void (__cdecl*)();
 inline Handler Phase(std::uint32_t address) { return SH_WORD(Handler, address); }
 

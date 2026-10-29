@@ -7,7 +7,7 @@
 //         developer's, at another base (docs/relocatable-image-design.md 1.5;
 //         ImageBase(), common/image_base.h) - importing bof3x.dll - no code
 //         of Capcom's is mapped; .stub is a no-access trap, and every code
-//         word and code place is the function of ours the bind table names
+//         word and code place is its VA's place in the bind table, a jmp to ours
 //         (bind.h).
 //
 // DetectHost reads the main module's headers once, in DllMain; anything that

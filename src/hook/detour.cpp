@@ -169,7 +169,7 @@ void Inject(const char* name, std::uint32_t original, void* ours, bool instrumen
     // `original` is a VA, a name. Hosted the jmp goes at it, in BOF3.exe's
     // code. In the exe host there is no code to write: .stub is the no-access
     // trap, and every place of the VA - a code word of .data, a Code() of
-    // ours - is already the function the bind table names for it, which must
+    // ours - is already its place in the bind table, a jmp to the function that must
     // be this one (bind.cpp; docs/relocatable-image-design.md 4.1). The pair
     // is recorded, as hosted, for IsOwned and IsEnabled.
     auto* orig = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(Img(original)));

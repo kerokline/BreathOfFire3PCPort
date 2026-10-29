@@ -58,17 +58,19 @@
 // Bound code words (flags bit 2, the relocatable-image round's stage C2,
 // docs/state-hash.md section 8). In bof3x.exe a code word of the game's - a
 // handler in a .data table, a task's entry, a hook - holds the function of
-// ours the bind table names for Capcom's VA (src/hook/bind.h), where BOF3.exe
-// holds the VA. So, before the slots above, every aligned word of a page whose
-// value is exactly the start of a bound function of ours is hashed as that
-// VA, slot or not, with no index mixed in: it hashes as Capcom's raw word, in
-// either host, and a page of such words matches Capcom's run. A value of the
-// game's data equal to one of those ~10,000 starts exactly would be renamed
-// too; none is expected (the starts lie in our DLL's code, the game's data
-// holds numbers and its own places), and both sides of a comparison of ours
-// rename alike. Hosted, a word our code stored as our function's address
-// rather than the VA reads as the VA as well. The census counts a word bound at
-// its time as a slot, as it counted the VA it replaced.
+// ours the bind table names for Capcom's VA, through its place: an entry of a
+// table of jumps, one per VA, at an address no value of the game's data takes
+// (src/hook/bind.cpp, measured over every raw dump), where BOF3.exe holds the
+// VA. So, before the slots above, every aligned word of a page whose value is
+// exactly such an entry is hashed as that entry's VA, slot or not, with no
+// index mixed in: it hashes as Capcom's raw word, and a page of such words
+// matches Capcom's run - wherever the word lies, as the game copies code
+// words from table to record. Nothing else is renamed: a value equal to our
+// function's own address is data (a texel, a packed pair; the first rule, by
+// the function's address, renamed such words on eight pages of the stage C2
+// proof). Hosted there is no table and nothing is renamed. The census counts a
+// word holding a place at its time as a slot, as it counted the VA it
+// replaced.
 //
 // The image's own pointers (docs/state-hash.md section 8, 2026-10-28). Once
 // the image can lie elsewhere than 0x400000 (IDEAS I44 stage 3), every
@@ -485,38 +487,61 @@ void SelfTest() {
               "0x400000 folding it", (unsigned long)F24);
     if (hash24(at0, 0) == hash24(atf, 0))
         Fatal("statehash self-test: without the fold the moved links hash as the unmoved ones");
-    // Bound code words (flags bit 2): a page holding Capcom's code VAs and the
-    // same page holding the functions of ours bound to them hash alike with
-    // the normalisation and differ without it; a word one past a bound
-    // function's start is not renamed.
+    // Bound code words (flags bit 2). (a) A page of the game's data that
+    // holds our functions' own addresses as data words - a texel or a packed
+    // pair that happens to equal one (the stage C2 proof: 0x10770000 in the
+    // VRAM shadow, 0x1000FE40 in six area tables) - hashes as its raw bytes,
+    // in either host. (b) In bof3x.exe, a page whose cells hold code places
+    // hashes as the page holding the VAs, each cell its own VA - two cells of
+    // two VAs two different VAs, as Capcom's file holds them, whichever
+    // function of ours serves them - and differs without the normalisation;
+    // a word one byte into a place is not renamed.
     const unsigned rows = Bind_Rows();
-    for (std::uint32_t at = 0; at < kPage; at += 4) {
-        std::uint32_t wv = next() >> 8, wo = wv;   // data, below the DLL's range
-        if ((next() >> 24) % 4 == 0) {
-            const std::uint32_t va = Bind_RowVa((next() >> 8) % rows);
-            wv = va;
-            wo = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Bind_Ours(va)));
-        }
-        std::memcpy(at0 + at, &wv, 4);
-        std::memcpy(atf + at, &wo, 4);
-    }
     std::uint32_t nb = 0;
     auto hashb = [&](const unsigned char* page, bool dll) {
         return HashNormalised(page, none, nullptr, 0, dll, nullptr, 0, scratch, &nb);
     };
-    if (hashb(at0, true) != hashb(atf, true))
-        Fatal("statehash self-test: a page of bound code words does not hash as the VAs they stand for");
-    if (hashb(atf, false) == hashb(at0, false))
-        Fatal("statehash self-test: without the normalisation the bound words hash as the VAs");
-    if (hashb(at0, true) != HashPage(at0)) Fatal("statehash self-test: a page of VAs does not hash as its raw bytes");
-    {
-        const std::uint32_t past = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Bind_Ours(Bind_RowVa(0)))) + 1;
-        std::memcpy(raw, atf, kPage);
-        std::memcpy(raw + 0x100, &past, 4);
-        std::memcpy(at0 + 0x100, &past, 4);
-        std::memcpy(atf + 0x100, &past, 4);
-        if (Bind_VaOf(past) != 0 || hashb(raw, true) != hashb(at0, true))
-            Fatal("statehash self-test: a word one past a bound function's start is renamed");
+    for (std::uint32_t at = 0; at < kPage; at += 4) {
+        std::uint32_t w = next() >> 8;   // data
+        if ((next() >> 24) % 4 == 0)     // a data word equal to one of our functions' addresses
+            w = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Bind_Ours(Bind_RowVa((next() >> 8) % rows))));
+        std::memcpy(raw + at, &w, 4);
+    }
+    if (hashb(raw, true) != HashPage(raw))
+        Fatal("statehash self-test: a page of data holding our functions' addresses does not hash as its raw bytes");
+    unsigned placed = 0;
+    if (Bind_Active()) {
+        for (std::uint32_t at = 0; at < kPage; at += 4) {
+            std::uint32_t wv = next() >> 8, wo = wv;
+            if ((next() >> 24) % 4 == 0) {
+                const std::uint32_t va = Bind_RowVa((next() >> 8) % rows);
+                wv = va;
+                wo = ::bof3::Code(va);
+                ++placed;
+            }
+            std::memcpy(at0 + at, &wv, 4);
+            std::memcpy(atf + at, &wo, 4);
+        }
+        // two cells, two VAs (Capcom's file holds the same VA in cells that
+        // share a function, and a different one where they differ)
+        const std::uint32_t va1 = Bind_RowVa(0), va2 = Bind_RowVa(rows - 1);
+        const std::uint32_t p1 = ::bof3::Code(va1), p2 = ::bof3::Code(va2);
+        std::memcpy(at0 + 0x200, &va1, 4);
+        std::memcpy(at0 + 0x204, &va2, 4);
+        std::memcpy(atf + 0x200, &p1, 4);
+        std::memcpy(atf + 0x204, &p2, 4);
+        if (p1 == p2 || Bind_VaOf(p1) != va1 || Bind_VaOf(p2) != va2)
+            Fatal("statehash self-test: two cells of two VAs do not map back to their two VAs");
+        if (hashb(at0, true) != hashb(atf, true))
+            Fatal("statehash self-test: a page of code places does not hash as the VAs they stand for");
+        if (hashb(atf, false) == hashb(at0, false))
+            Fatal("statehash self-test: without the normalisation the code places hash as the VAs");
+        if (hashb(at0, true) != HashPage(at0)) Fatal("statehash self-test: a page of VAs does not hash as its raw bytes");
+        const std::uint32_t inside = p1 + 1;
+        std::memcpy(at0 + 0x100, &inside, 4);
+        std::memcpy(atf + 0x100, &inside, 4);
+        if (Bind_VaOf(inside) != 0 || hashb(at0, true) != hashb(atf, true) || hashb(at0, true) != HashPage(at0))
+            Fatal("statehash self-test: a word one byte into a code place is renamed");
     }
     if (pointers == 0 || sites.empty() || data_in_fold == 0 || numbers == 0)
         Fatal("statehash self-test: the synthetic page lacks a kind of word (%lu pointers, %lu slots, %lu data, %lu "
@@ -526,10 +551,11 @@ void SelfTest() {
     Log("statehash   self-test: a page with %lu image pointers (%lu of them slots) moved by 0x%08lX, %lu data words "
         "in the moved range and %lu image-shaped numbers unmoved, hashes the same folding 0x%08lX; differs without "
         "the fold and with a byte changed; with no fold hashes as its raw bytes; ordering-table links into an image "
-        "at 0x00A00000 hash as at 0x400000 folding it (24 bits, the length byte kept); a page of bound code words "
-        "hashes as the VAs they stand for",
+        "at 0x00A00000 hash as at 0x400000 folding it (24 bits, the length byte kept); a page of data holding our "
+        "functions' addresses hashes as its raw bytes%s",
         (unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)delta, (unsigned long)data_in_fold,
-        (unsigned long)numbers, (unsigned long)F);
+        (unsigned long)numbers, (unsigned long)F,
+        placed ? "; a page of code places, two cells of two VAs among them, hashes as the VAs they stand for" : "");
 }
 
 void Put(std::uint32_t v) { std::fwrite(&v, 4, 1, g_out); }
@@ -624,6 +650,12 @@ void StateHash_BeforeInjects(void* dll_module) {
             Fatal("statehash: the folded range 0x%08lX..0x%08lX overlaps our image 0x%08lX..0x%08lX; set "
                   "BOF3X_STATEHASH_FOLD (and the image's base) elsewhere", (unsigned long)g_folds[i],
                   (unsigned long)(g_folds[i] + kImageSize), (unsigned long)g_dll_lo, (unsigned long)g_dll_hi);
+    // Nor the table of code places (bind.cpp): a place must read as its VA.
+    for (unsigned i = 0; i < g_nfolds; ++i)
+        if (Bind_TableHi() && g_folds[i] < Bind_TableHi() && g_folds[i] + kImageSize > Bind_TableLo())
+            Fatal("statehash: the folded range 0x%08lX..0x%08lX overlaps the table of code places 0x%08lX..0x%08lX; set "
+                  "BOF3X_STATEHASH_FOLD elsewhere", (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageSize),
+                  (unsigned long)Bind_TableLo(), (unsigned long)Bind_TableHi());
     for (unsigned i = 0; i < g_nfolds; ++i)
         Log("statehash   the image at 0x%08lX: a word whose value lies in 0x%08lX..0x%08lX is hashed as at 0x400000",
             (unsigned long)g_image, (unsigned long)g_folds[i], (unsigned long)(g_folds[i] + kImageSize));

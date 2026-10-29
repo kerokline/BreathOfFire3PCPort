@@ -43,7 +43,57 @@ long __stdcall DirectSoundThunk(const void* guid, void** out, void* outer) {
     return fn(guid, out, outer);
 }
 
-std::uint32_t Thunk() { return Key(reinterpret_cast<const void*>(&DirectSoundThunk)); }
+// --- The places: one per VA ------------------------------------------------
+//
+// A code VA's place in bof3x.exe is not our function's address itself but an
+// entry of a table of jumps of ours, one entry per bound VA (and one for the
+// thunk above): `jmp ours`, then int3 to the entry's 8 bytes. So every code
+// word the game holds - loaded by the rebase, stored by our code, copied by the
+// game's logic from one record to another - names exactly one VA, even where
+// one function of ours served several, and the state hash reads it back by its
+// value alone with the value test confined to the table's range (Bind_VaOf;
+// statehash.cpp). The address is fixed and chosen by measurement: no aligned
+// word of .data in the 219 raw dumps of analysis/statehash and the stage C
+// runs' dumps holds a value in 0x47E70000..0x47F10000 (the longest such range
+// below 0x80000000), and the table lies inside it - a value of the game's data
+// does not read as a code place, as our function's own address in the DLL did
+// (the stage C2 proof, 2026-10-29: 0x10770000 in the VRAM shadow, 0x1000FE40
+// in six area tables). The stub page's jmps (mode S) were the same idea in
+// Capcom's range; these are in our memory, and .stub stays the trap.
+constexpr std::uint32_t kTableVa = 0x47E90000;
+constexpr std::uint32_t kEntry = 8;
+constexpr unsigned kEntries = kRows + 1;   // the last: DirectSoundCreate's thunk
+constexpr std::uint32_t kTableBytes = kEntries * kEntry;
+static_assert(kTableVa + kTableBytes <= 0x47EF0000, "the table stays inside the measured empty range");
+
+std::uint32_t g_table = 0;   // kTableVa once built (bof3x.exe), 0 hosted
+
+std::uint32_t Entry(unsigned i) { return g_table + i * kEntry; }
+
+void BuildTable() {
+    void* const at = VirtualAlloc(reinterpret_cast<void*>(static_cast<std::uintptr_t>(kTableVa)), kTableBytes,
+                                  MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    if (at != reinterpret_cast<void*>(static_cast<std::uintptr_t>(kTableVa)))
+        Fatal("bind: cannot reserve the table of code places at 0x%08X (%u bytes), error %lu: something else lies there",
+              (unsigned)kTableVa, (unsigned)kTableBytes, GetLastError());
+    auto* t = static_cast<std::uint8_t*>(at);
+    std::memset(t, 0xCC, kTableBytes);
+    for (unsigned i = 0; i < kEntries; ++i) {
+        const std::uint32_t to = i < kRows ? Key(kBind[i].ours) : Key(reinterpret_cast<const void*>(&DirectSoundThunk));
+        const std::uint32_t from = kTableVa + i * kEntry;
+        const std::int32_t rel = static_cast<std::int32_t>(to - (from + 5));
+        t[i * kEntry] = 0xE9;
+        std::memcpy(t + i * kEntry + 1, &rel, 4);
+    }
+    DWORD old = 0;
+    if (!VirtualProtect(at, kTableBytes, PAGE_EXECUTE_READ, &old))
+        Fatal("bind: VirtualProtect of the table of code places failed, error %lu", GetLastError());
+    FlushInstructionCache(GetCurrentProcess(), at, kTableBytes);
+    g_table = kTableVa;
+}
+
+// The entry of a VA the table binds, or 0.
+std::uint32_t PlaceOf(std::uint32_t va);
 
 // 0: not read yet; 1: hosted, nothing bound; 2: bof3x.exe, bound. A plain
 // int, zero before any initialiser runs, set on the first Code() - which may
@@ -67,6 +117,7 @@ int Mode() {
     // that need it.
     if (mode == 2 && (kBind[0].ours == nullptr || kBind[kRows - 1].ours == nullptr))
         Fatal("bind: the bind table is empty at its first use: it was not initialised statically");
+    if (mode == 2) BuildTable();
     g_mode = mode;
     return mode;
 }
@@ -91,30 +142,15 @@ void Miss(std::uint32_t va) {
     ++g_misses;
 }
 
-// The reverse map: the rows' indices by our address. Built on first use, on
-// the one thread that asks (the state hash, the dispatchers' IsCodeWord: the
-// game's thread).
-std::uint16_t g_by_ours[kRows];
-bool g_reverse = false;
-std::uint32_t g_ours_lo = 0, g_ours_hi = 0;
-
-void BuildReverse() {
-    static_assert(kRows <= 0x10000, "the reverse map's indices are 16-bit");
-    for (unsigned i = 0; i < kRows; ++i) g_by_ours[i] = static_cast<std::uint16_t>(i);
-    std::sort(g_by_ours, g_by_ours + kRows,
-              [](std::uint16_t a, std::uint16_t b) { return Key(kBind[a].ours) < Key(kBind[b].ours); });
-    for (unsigned i = 1; i < kRows; ++i)
-        if (Key(kBind[g_by_ours[i]].ours) == Key(kBind[g_by_ours[i - 1]].ours))
-            Fatal("bind: %s 0x%08X and 0x%08X are bound to the same function of ours %p", "the VAs",
-                  (unsigned)kBind[g_by_ours[i - 1]].va, (unsigned)kBind[g_by_ours[i]].va, kBind[g_by_ours[i]].ours);
-    g_ours_lo = Key(kBind[g_by_ours[0]].ours);
-    g_ours_hi = Key(kBind[g_by_ours[kRows - 1]].ours);
-    g_reverse = true;
-}
-
 // Which rows an Inject named (bof3x.exe), for the report.
 bool g_injected[kRows];
 unsigned g_checked = 0;
+
+std::uint32_t PlaceOf(std::uint32_t va) {
+    if (const bind_gen::Row* r = Find(va)) return Entry(static_cast<unsigned>(r - kBind));
+    if (va == kDirectSoundThunk) return Entry(kRows);
+    return 0;
+}
 
 }  // namespace
 
@@ -122,16 +158,14 @@ unsigned g_checked = 0;
 
 std::uint32_t Code(std::uint32_t va) {
     if (Mode() == 1) return Img(va);
-    if (const bind_gen::Row* r = Find(va)) return Key(r->ours);
-    if (va == kDirectSoundThunk) return Thunk();
+    if (const std::uint32_t place = PlaceOf(va)) return place;
     Miss(va);
     return Img(va);
 }
 
 std::uint32_t CodeToCall(std::uint32_t va) {
     if (Mode() == 1) return Img(va);
-    if (const bind_gen::Row* r = Find(va)) return Key(r->ours);
-    if (va == kDirectSoundThunk) return Thunk();
+    if (const std::uint32_t place = PlaceOf(va)) return place;
     std::uint32_t start = 0;
     const char* name = Bind_FuncName(va, &start);
     Fatal("bind: a call to 0x%08X (%s%s+0x%X), which no function of ours stands for in bof3x.exe: Capcom's code is "
@@ -160,16 +194,14 @@ const void* Bind_Ours(std::uint32_t va) {
     return r ? r->ours : nullptr;
 }
 
-std::uint32_t Bind_VaOf(std::uint32_t ours) {
-    if (!g_reverse) BuildReverse();
-    if (ours == Thunk()) return kDirectSoundThunk;
-    if (ours < g_ours_lo || ours > g_ours_hi) return 0;
-    const std::uint16_t* const begin = g_by_ours;
-    const std::uint16_t* const end = g_by_ours + kRows;
-    const std::uint16_t* p =
-        std::lower_bound(begin, end, ours, [](std::uint16_t i, std::uint32_t v) { return Key(kBind[i].ours) < v; });
-    return p != end && Key(kBind[*p].ours) == ours ? kBind[*p].va : 0;
+std::uint32_t Bind_VaOf(std::uint32_t place) {
+    if (g_table == 0 || place - g_table >= kTableBytes || (place - g_table) % kEntry) return 0;
+    const unsigned i = (place - g_table) / kEntry;
+    return i < kRows ? kBind[i].va : kDirectSoundThunk;
 }
+
+std::uint32_t Bind_TableLo() { return g_table; }
+std::uint32_t Bind_TableHi() { return g_table ? g_table + kTableBytes : 0; }
 
 const char* Bind_FuncName(std::uint32_t va, std::uint32_t* start) {
     if (va < image::kCodeLo || va >= image::kCodeHi) return nullptr;
@@ -199,7 +231,7 @@ void Bind_Check(const char* name, std::uint32_t va, const void* ours) {
 std::uint32_t Bind_Word(std::uint32_t va, bool* bound) {
     const bind_gen::Row* r = Find(va);
     *bound = r != nullptr;
-    return r ? Key(r->ours) : Img(va);
+    return r ? PlaceOf(va) : Img(va);
 }
 
 void Bind_Report() {
@@ -207,13 +239,12 @@ void Bind_Report() {
         Fatal("bind: the bind table reads the host as %s, DetectHost as %s", Bind_Active() ? "bof3x.exe" : "BOF3.exe",
               IsExeHost() ? "bof3x.exe" : "BOF3.exe");
     if (!Bind_Active()) {
-        Log("bind: hosted - nothing bound, a code VA is its own place in BOF3.exe (%u rows in the table, the reverse "
-            "map for the state hash)",
-            kRows);
+        Log("bind: hosted - nothing bound, a code VA is its own place in BOF3.exe (%u rows in the table, unused)", kRows);
     } else {
-        Log("bind: bof3x.exe - %u functions bound by name (symbols.toml impl), %u of them named by an Inject; .stub "
-            "the trap; %u distinct VAs a table placed with no function of ours (%u times), each given the trap:",
-            kRows, g_checked, g_misses, g_miss_calls);
+        Log("bind: bof3x.exe - %u functions bound by name (symbols.toml impl), %u of them named by an Inject; their "
+            "places a table of jumps at 0x%08X..0x%08X, one per VA; .stub the trap; %u distinct VAs a table placed with "
+            "no function of ours (%u times), each given the trap:",
+            kRows, g_checked, (unsigned)Bind_TableLo(), (unsigned)Bind_TableHi(), g_misses, g_miss_calls);
         for (unsigned i = 0; i < g_misses && i < kMissMax; ++i) {
             std::uint32_t start = 0;
             const char* fn = Bind_FuncName(g_miss[i], &start);
@@ -227,9 +258,9 @@ void Bind_Report() {
         }
         if (listed > 16) Log("bind:   and %u more bound, not injected", listed - 16);
         // Where the bound words lie: every aligned word of .data and .bss
-        // (the state hash's range, 0x5DA000..0x93E000) holding a bound
-        // function's start, by page - the pages whose hash the reverse map
-        // keeps equal to Capcom's (statehash.cpp, flags bit 2).
+        // (the state hash's range, 0x5DA000..0x93E000) holding a code place,
+        // by page - the pages whose hash the reverse map keeps equal to
+        // Capcom's (statehash.cpp, flags bit 2).
         constexpr std::uint32_t kLo = 0x5DA000, kHi = 0x93E000, kPage = 0x1000;
         unsigned words = 0, pages = 0, last = 0;
         std::uint32_t first_pages[8] = {};
@@ -245,7 +276,7 @@ void Bind_Report() {
                 last = page;
             }
         }
-        Log("bind: %u aligned words of .data hold a bound function of ours, on %u of its %u pages (from 0x%06X, "
+        Log("bind: %u aligned words of .data hold a code place, on %u of its %u pages (from 0x%06X, "
             "0x%06X, 0x%06X, 0x%06X, ...)",
             words, pages, (kHi - kLo) / kPage, (unsigned)first_pages[0], (unsigned)first_pages[1],
             (unsigned)first_pages[2], (unsigned)first_pages[3]);
@@ -266,17 +297,28 @@ void Bind_SelfTest() {
         if (r.va < image::kCodeLo || r.va >= image::kCodeHi)
             Fatal("bind self-test: row %u, 0x%08X, is outside the code range", i, (unsigned)r.va);
         if (Bind_Ours(r.va) != r.ours) Fatal("bind self-test: 0x%08X does not look up as its row", (unsigned)r.va);
-        if (Bind_VaOf(Key(r.ours)) != r.va) Fatal("bind self-test: %p does not map back to 0x%08X", r.ours, (unsigned)r.va);
-        if (Bind_VaOf(Key(r.ours) + 1) != 0) Fatal("bind self-test: %p + 1 maps back to a VA", r.ours);
+        // our function's own address is not a code place: a value of the game's
+        // data equal to it is data (the stage C2 proof, 2026-10-29)
+        if (Bind_VaOf(Key(r.ours)) != 0) Fatal("bind self-test: our function %p reads as a code place", r.ours);
         std::uint32_t start = 0;
         const char* fn = Bind_FuncName(r.va, &start);
         if (!fn || start != r.va) Fatal("bind self-test: 0x%08X has no [[func]] of its own", (unsigned)r.va);
-        const std::uint32_t expect = Bind_Active() ? Key(r.ours) : Img(r.va);
+        const std::uint32_t expect = Bind_Active() ? Entry(i) : Img(r.va);
         if (Code(r.va) != expect || CodeToCall(r.va) != expect || CodePlace(r.va) != expect)
             Fatal("bind self-test: 0x%08X places as 0x%08X, not 0x%08X", (unsigned)r.va, (unsigned)Code(r.va),
                   (unsigned)expect);
-        if (CodePlace(Key(r.ours)) != Key(r.ours)) Fatal("bind self-test: the bound word %p is placed again", r.ours);
+        if (CodePlace(expect) != expect) Fatal("bind self-test: the place of 0x%08X is placed again", (unsigned)r.va);
         if (IsCodeWord(expect) != true) Fatal("bind self-test: 0x%08X's place is not a code word", (unsigned)r.va);
+        if (Bind_Active()) {
+            // one place per VA, mapped back to that VA alone, its jmp reaching ours
+            if (Bind_VaOf(expect) != r.va || Bind_VaOf(expect + 1) != 0 || Bind_VaOf(expect + 4) != 0)
+                Fatal("bind self-test: the place 0x%08X does not map back to 0x%08X alone", (unsigned)expect, (unsigned)r.va);
+            const auto* e = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(expect));
+            std::int32_t rel = 0;
+            std::memcpy(&rel, e + 1, 4);
+            if (e[0] != 0xE9 || expect + 5 + static_cast<std::uint32_t>(rel) != Key(r.ours))
+                Fatal("bind self-test: the place 0x%08X does not jump to %p", (unsigned)expect, r.ours);
+        }
         // a VA inside a function, between two rows: no function of ours
         if (i + 1 < kRows && kBind[i + 1].va - r.va > 1) {
             if (Bind_Ours(r.va + 1) != nullptr) Fatal("bind self-test: 0x%08X + 1 looks up", (unsigned)r.va);
@@ -299,8 +341,9 @@ void Bind_SelfTest() {
             Fatal("bind self-test: a data place or the trap reads as a code word");
         std::uint32_t slot = 0;
         std::memcpy(&slot, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(Img(kDirectSoundSlot))), 4);
-        if (Code(kDirectSoundThunk) != Thunk() || CodeToCall(kDirectSoundThunk) != Thunk() ||
-            Bind_VaOf(Thunk()) != kDirectSoundThunk || !IsCodeWord(Thunk()) || slot == 0)
+        if (Code(kDirectSoundThunk) != Entry(kRows) || CodeToCall(kDirectSoundThunk) != Entry(kRows) ||
+            Bind_VaOf(Entry(kRows)) != kDirectSoundThunk || !IsCodeWord(Entry(kRows)) || slot == 0 ||
+            Bind_VaOf(Key(reinterpret_cast<const void*>(&DirectSoundThunk))) != 0)
             Fatal("bind self-test: DirectSoundCreate's thunk is not ours, or its slot 0x%08X is empty",
                   (unsigned)kDirectSoundSlot);
     } else if (IsCodeWord(Img(0x5DA000)) || !IsCodeWord(Img(image::kTextVa))) {
@@ -308,7 +351,7 @@ void Bind_SelfTest() {
     }
     Log("bind self-test: %u rows ascending, each looked up, placed (%s), mapped back and named; %u VAs between rows "
         "not bound%s; %u function names ascending, %u of them with no function of ours",
-        kRows, Bind_Active() ? "as our function" : "as itself, hosted", gaps,
+        kRows, Bind_Active() ? "as its own entry of the table of jumps" : "as itself, hosted", gaps,
         Bind_Active() ? ", their words the trap; DirectSoundCreate's thunk ours, through its bound slot" : "", kFuncs,
         unbound);
 }

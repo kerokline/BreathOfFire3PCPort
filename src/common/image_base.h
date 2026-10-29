@@ -82,9 +82,10 @@ inline constexpr std::uint32_t kCodeHi = 0x5C4000;
 // A VA in the image's code, as a place to call or to store where the game
 // calls (docs/relocatable-image-design.md 4.4, mode B). Hosted, the VA itself:
 // BOF3.exe's code is mapped there, and Inject's jmp at the start of each
-// function of ours. In bof3x.exe, which maps no code of Capcom's, the function
-// of ours the bind table names for that VA (src/hook/bind.cpp, generated from
-// symbols.toml's `impl`); a VA it does not name - a function Capcom's alone,
+// function of ours. In bof3x.exe, which maps no code of Capcom's, the VA's
+// place in the bind table: an entry of a table of jumps, one per VA, to the
+// function of ours symbols.toml's `impl` names (src/hook/bind.cpp) - a value
+// that names its VA wherever the game copies it; a VA it does not name - a function Capcom's alone,
 // a cell that is not a function - gives the trap, Img(va) on the no-access
 // stub page, where a call faults and the crash reporter names the VA and its
 // function. A table holds such cells legitimately (the MP3 decoder's

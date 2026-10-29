@@ -740,45 +740,58 @@ change as from `main`'s.
 
 **Code words bound to our functions: flags bit 2** (the relocatable-image
 round's stage C2, 2026-10-29). In `bof3x.exe` the stub page is a no-access
-trap and every code word of the game's - the 8,673 load-time words of
+trap, and every code word of the game's - the 8,673 load-time words of
 `exe-pointers.tsv` whose target has a function of ours, a task's entry, a
-hook the game calls - holds that function's address in our DLL, where
-`BOF3.exe` holds Capcom's VA (`src/hook/bind.h`). Section 7's rule would hash
-such a slot as the code tag, and a word outside the slots raw: every page
-with one would differ from Capcom's references and from a hosted run of
-ours. So the bind table's **reverse map** - our function to the VA it is
-bound for, one to one (`Bind_VaOf`) - is applied first, under the same
-normalisation switch (`BOF3X_STATEHASH_RAW` unset):
+hook the game calls, and every copy the game's logic makes of one - holds
+the VA's **place**: an entry of a table of jumps of ours, one 8-byte entry
+per VA, at `0x47E90000` (`src/hook/bind.cpp`), where `BOF3.exe` holds
+Capcom's VA. Section 7's rule would hash such a word raw or as the code tag,
+and every page with one would differ from Capcom's references. So, under the
+same normalisation switch (`BOF3X_STATEHASH_RAW` unset):
 
-1. **Every aligned word** of a page, slot or not, whose value is exactly the
-   start of a bound function is hashed as that VA, **with no index mixed
-   in**: it hashes as Capcom's raw word would. A word one byte into a
-   function, or into our data, is not renamed. A word that is not a code
-   word but equals one of the ~10,000 starts exactly would be renamed too;
-   none is expected (the starts lie in our DLL's code), and both sides of a
-   comparison of ours rename alike.
-2. **Both hosts.** Hosted, the words the game holds are VAs already; a word
-   our code wrote as our function's address rather than the VA reads as the
-   VA as well, which only brings a page closer to Capcom's.
-3. **The census** counts a word holding a bound function at its time as a
-   slot of Capcom's, as it counted the VA that word replaced, so the slot
-   lists of a bound run and a run with the VAs are the same.
-4. **The header** sets bit 2 of the flags (with bits 0 and 1: 7 when
+1. **Every aligned word** of a page, slot or not, whose value is exactly an
+   entry of the table is hashed as that entry's VA, **with no index mixed
+   in**: it hashes as Capcom's raw word would. The test is by value, because
+   the game copies code words from table to record and so no list of
+   locations holds them all; and it is safe by value because the table's
+   address is one no value of the game's data takes - measured over the 219
+   raw dumps of `analysis/statehash` and the stage C runs' dumps, no aligned
+   word of `.data` holds a value in `0x47E70000..0x47F10000`, the longest such
+   range below `0x80000000`. A word one byte into an entry is not renamed.
+2. **Nothing else is renamed.** The first rule (the C2 build of 2026-10-28)
+   renamed a word holding **our function's own address** - and the game's
+   data holds such values as data: on the combat route the VRAM shadow's
+   `0x7606F8` is `0x10770000` (a texel pair, the start of our
+   `BattleAction_Kind3Wait`), and six area tables hold `0x1000FE40` (the
+   address of the DirectSoundCreate thunk then). Eight pages differed from
+   the `orig4` pair from tick 0 or 1, in both hosts alike (a hosted run of
+   that build hashed them the same wrong way); the CLUT strips and the unpack
+   scratch later. A function of ours serving several VAs is no cause: the
+   area tables' cells that hold `0x403050` (`Area22_ArmTailOnYes`) in three
+   tables, or `BareRet` three times, hold the same VA in Capcom's file.
+3. **Hosted** there is no table and nothing is renamed: a hosted run hashes
+   as before flags bit 2, bit for bit.
+4. **The census** counts a word holding a place at its time as a slot of
+   Capcom's, as it counted the VA that word replaced.
+5. **The header** sets bit 2 of the flags (with bits 0 and 1: 7 when
    normalising). `statehash.py info` says "bound code words as their VAs",
    and `diff` / `check` print a note, not a refusal, for runs that differ in
-   the bit: a run without it differs only on pages holding a bound word, which
-   hosted is a word our code stored as our address.
-5. **The test** (`statehash.cpp` `SelfTest`): a page of Capcom's code VAs and
-   the same page holding the functions of ours bound to them hash alike with
-   the normalisation and differ without it; the page of VAs hashes as its raw
-   bytes; a word one past a bound function's start is not renamed.
-6. **The check against Capcom's references is where the map matters.** A
+   the bit.
+6. **The test** (`statehash.cpp` `SelfTest`, both hosts): a page of data
+   holding our functions' addresses as data words hashes as its raw bytes; in
+   `bof3x.exe`, a page of Capcom's code VAs and the same page holding their
+   places - two cells of two VAs among them - hash alike with the
+   normalisation and differ without it, and a word one byte into a place is
+   not renamed. A planted fault (the by-function rule put back) exits 3 with
+   "a page of data holding our functions' addresses does not hash as its raw
+   bytes".
+7. **The check against Capcom's references is where the map matters.** A
    moved run against ours at `0x400000` would not show a missing map - both
-   sides are ours and hold the same functions; ours at `0x400000`, unfolded,
-   against the `orig4` pair would differ from tick 0 on every page holding a
-   bound word. The bind table's own log line counts them: 8,673 aligned words
-   on 121 of `.data`'s 868 pages in a headless start of `bof3x.exe` at either
-   base (`bind: ... aligned words of .data hold a bound function of ours`).
+   sides are ours; ours at `0x400000`, unfolded, against the `orig4` pair
+   would differ from tick 0 on every page holding a place. The bind table's
+   log line counts them: 8,673 aligned words on 121 of `.data`'s 868 pages in
+   a headless start of `bof3x.exe` at either base (`bind: ... aligned words of
+   .data hold a code place`).
 
 **Re-hashing the references.** A hash file holds page hashes, not bytes, so
 no file can be re-normalised offline - and none needs to be: with nothing

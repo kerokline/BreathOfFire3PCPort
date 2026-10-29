@@ -327,8 +327,8 @@ void CopyData() {
 // hold an address in its section's linked range - else a Fatal naming the
 // word: a layer or a cache that wrote a number over a pointer is refused, not
 // moved - and then the data words moved by ImageBase() - 0x400000. Code words
-// are bound (mode B, design 4.1): each becomes the function of ours the bind
-// table names for its VA, or the trap Img(va) when the table names none
+// are bound (mode B, design 4.1): each becomes its VA's place in the bind
+// table (a jmp to our function), or the trap Img(va) when the table names none
 // (design 4.2: the C runtime's tables, the blitters' jump table, three words at
 // the head of .data). At the player's base the data move is zero and the check
 // still runs: it is the loader's own test of the table against the data it
@@ -374,8 +374,8 @@ void Rebase() {
         if (words[c] != rebase::kWords[c])
             Fatal("rebase: %u %s words moved, the table counts %u", words[c], linked[c].name, rebase::kWords[c]);
     Log("rebase: %u runs, words data %u, bss %u, rdata %u, text %u (%u the recipe holds as pointers left alone: strings and numbers) checked in "
-        "their linked ranges; the data words moved by 0x%X (the image at 0x%08X); the code words bound, %u to a function "
-        "of ours and %u to the trap (no function of ours: design 4.2)",
+        "their linked ranges; the data words moved by 0x%X (the image at 0x%08X); the code words bound, %u to their places "
+        "(a jmp to our function each) and %u to the trap (no function of ours: design 4.2)",
         rebase::kRunCount, words[rebase::kData], words[rebase::kBss], words[rebase::kRdata], words[rebase::kText],
         rebase::kNotMoved, (unsigned)move, (unsigned)ImageBase(), bound, trapped);
 }

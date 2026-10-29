@@ -114,7 +114,7 @@ template <typename F> inline F Call(F callee) {
 // A phase an area function dispatches to through a table (a stack table's
 // immediate, a .data entry): called by the address the table holds, which in
 // the game is Capcom's function or the jmp Inject put there to ours (hosted),
-// our function the bind table names (bof3x.exe).
+// the jmp to ours at its place in the bind table (bof3x.exe).
 using Handler = void (__cdecl*)();
 inline Handler Phase(std::uint32_t address) { return AH_WORD(Handler, address); }
 // A hook's shape (Area_StepHook's, Area_ArriveHook's, the cell hook's

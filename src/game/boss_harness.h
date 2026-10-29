@@ -210,7 +210,7 @@ template <typename F> inline F Call(F callee) {
 // A handler a boss function reaches by an address in its own code (a stack
 // table's immediate, a direct call to a function of its group): called by that
 // address, which in the game is Capcom's function or the jmp Inject put there
-// to ours (hosted), our function the bind table names (bof3x.exe). A handler
+// to ours (hosted), the jmp to ours at its place in the bind table (bof3x.exe). A handler
 // read from a .data table (a kind's state table, a hook
 // table) is called as read - the fuzz swaps the table's cells for recorders
 // (DataTable) - and so is a hook stored in a cell (0x904B64..6C, an enemy's
