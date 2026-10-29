@@ -265,7 +265,7 @@ extern "C" void __cdecl Battle_BuildTurnOrder() {
         SetWord(slot + 2, a);
         SetWord(slot, 0);
         if (command == 4) {
-            const unsigned kind = At(bof3::addr::NameTable_Abilities + pr->queued_id * at::kAbilityStride)[1];
+            const unsigned kind = At(::bof3::Img(bof3::addr::NameTable_Abilities) + pr->queued_id * at::kAbilityStride)[1];
             if (kind == 0) SetWord(slot, 4);
             else if (kind == 1 || kind == 3) SetWord(slot, 2);
         }

@@ -17398,8 +17398,8 @@ site	src/game/shell.cpp	116	module_const	-	kPairFormat	0x65dad0	data	game	engine
 site	src/game/shell.cpp	207	module_const	-	kModeRb	0x66bc38	data	game	engine	base_helper	-	include	void* const local = g.open(local_file, Str(::bof3::Img(kModeRb.v)));
 site	src/game/shell.cpp	219	module_const	-	kRootFormat	0x66bc30	data	game	engine	base_helper	-	include	g.format(path, Str(::bof3::Img(kRootFormat.v)), Str(::bof3::Img(File_CdRootBuf_addr)), disc_file);
 site	src/game/shell.cpp	220	module_const	-	kModeRb	0x66bc38	data	game	engine	base_helper	-	include	void* const disc = g.open(path, Str(::bof3::Img(kModeRb.v)));
-site	src/game/shell.cpp	237	module_const	-	kBlocks	0x903880	data	game	engine	accessor	Gfx_BufferBlocks	include	unsigned char* const block0 = At(kBlocks);
-site	src/game/shell.cpp	238	module_const	-	kBlocks	0x903880	data	game	engine	accessor	Gfx_BufferBlocks	include	unsigned char* const block1 = At(kBlocks + kBlockBytes);
+site	src/game/shell.cpp	237	module_const	-	kBlocks	0x903880	data	game	engine	base_helper	Gfx_BufferBlocks	include	unsigned char* const block0 = At(::bof3::Img(kBlocks));
+site	src/game/shell.cpp	238	module_const	-	kBlocks	0x903880	data	game	engine	base_helper	Gfx_BufferBlocks	include	unsigned char* const block1 = At(::bof3::Img(kBlocks) + kBlockBytes);
 site	src/game/shell.cpp	283	module_const	-	kGfxOtPointers	0x929ea0	data	game	engine	base_helper	Gfx_OtPointers	include	const U link = Long(::bof3::Img(kGfxOtPointers.v) + 4 * i);
 site	src/game/shell_callees.h	16	const_def	literal	kCfgName	0x65dad8	data	game	engine	module	-	-	constexpr ::bof3::image::Va kCfgName{0x65DAD8};
 site	src/game/shell_callees.h	17	const_def	literal	kModeRt	0x65dae4	data	game	engine	module	-	-	constexpr ::bof3::image::Va kModeRt{0x65DAE4};
