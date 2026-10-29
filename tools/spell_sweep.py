@@ -209,6 +209,9 @@ def route_steps(path, cut):
             if frame + cost > cut:
                 if w == 'wait':
                     out.append(f'wait {cut - frame}')
+                elif w == 'hold' and cut > frame:
+                    # a fight a held confirm starts (geist: the last text box's circle runs into the battle)
+                    out.append(f'hold {t[1]} {cut - frame}')
                 break
             frame += cost
             out.append(line)
@@ -974,6 +977,13 @@ def fight_summary(path, fight=None):
                    and (fight is None or int(v, 16) == fight)), None)
     after = called if called is not None else -1
     start = next((f for f, n, o, v in w if n == 'mode' and o and f >= after and le(v, 0, 2) == 5), None)
+    if called is None and start is None:
+        # --scene cut at the battle's first frame (geist): the watches are set with the fight byte and mode
+        # 5 already in place, so the first values stand for the call and the start
+        called = next((f for f, n, o, v in w if n == 'fight' and not o and int(v, 16) != 0
+                       and (fight is None or int(v, 16) == fight)), None)
+        start = next((f for f, n, o, v in w if n == 'mode' and not o and le(v, 0, 2) == 5), None) \
+            if called is not None else None
     s0 = start if start is not None else 10 ** 9
     back = next((f for f, n, o, v in w if n == 'mode' and o and f > s0 and le(v, 0, 2) == 2), None)
     e0 = back if back is not None else 10 ** 9

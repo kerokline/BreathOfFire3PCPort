@@ -91,8 +91,15 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - **The boss sweep** ([`boss-sweep.md`](boss-sweep.md), 2026-10-27/28, branch `boss-sweep/integration`): the
      `battle ID` op, crafted pre-fight saves ([`boss-fights.md`](boss-fights.md)) and `spell_sweep.py run --fight`:
      fifteen fights played to the death on PC, US-disc and PSP, six of the seven boss-only skills cast by their
-     own boss; left: fight 35 (Gaist, Corona - the owner's recording), the owner's calls in its section 7.9.
-   - **Not reached:** fight 35's Corona (above); the stallion route's first fight (no pick within 300 frames); by-kind runs on a
+     own boss; fight 35 (Gaist, Corona) reached by the owner's route `geist` on 2026-10-29 and Corona cast on the PC (its
+     section 8; the US-disc / PSP runs of it not done); left: the owner's calls in its section 7.9.
+   - **Issue #163, the Gaist's ash crash** (branch `fix/issue-163-gaist-ash`, 2026-10-29): D217's kind 0x6B overrun
+     ([`known-defects.md`](known-defects.md) D217 has the measurements). The ash captures `Sprite_Objects` record 2;
+     with the owner's `geist` save (crafted lineage) it is a Torch's freed record - 600 particles on PC and PSX
+     (Mednafen) alike - while a let's play crumbles the Gaist. Next: a natural save before the fight (the owner
+     is reaching one; or the reporter's), record 2 read on the PC and on Mednafen (`gaist_sampler.py` in
+     `C:\Users\kerok\bof3x-runs\g35abc\psx`), then room for 5,760 particles as a ledgered port repair.
+   - **Not reached:** the stallion route's first fight (no pick within 300 frames); by-kind runs on a
      PSP install; a PSP-JP install; a disc-built install's D.Zombie-class play of the twelve rows the twin read
      placed (the Ward / Revive / Air Raid spells, area 121's band, scene 2's effects). Rows left unplaced:
      `WardMote_Tilts+0x8` (MAGIC044's two shorts, no reader), `LinkedObjectD_Amounts` on PSP-EU, the PSPs'
