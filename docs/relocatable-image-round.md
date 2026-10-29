@@ -618,10 +618,25 @@ from a code word), a literal under six hex digits, or an accessor it does not
 recognise; the fence, the trap and `CodeToCall`'s `Fatal` are the run-time
 answer to those.
 
-**Left:** the fold's width (question 1); the two sub-word reads not proven
-and the 729 not read (question 3); the exit trace's stack scan in `bof3x.exe`
-(question 2); the run-time base's cost on the attract's pace, unmeasured
-(needs a quiet game run at both bases, the coordinator's).
+**Left:** the fold's width (question 1; staged as
+[`statehash-pool-fold.md`](statehash-pool-fold.md), its agent launched the
+evening of 2026-10-29 with the owner's call, `BOF3SH5`); the two sub-word
+reads not proven and the 729 not read (question 3); the exit trace's stack
+scan in `bof3x.exe` (question 2).
+
+**The run-time base's cost, measured after the merge** (2026-10-29 evening,
+`C:\Users\kerok\bof3x-runs\ri1027\pace`: `pace.sh`, the `attract_*.runlog`
+and `cpu.tsv`): the attract sequence six minutes at each base, twice,
+alternating linked and moved, the machine otherwise idle, no state hash and
+no `BOF3X_OPT` change - the player's defaults but the harness's `--wide 0`.
+Logic frames per 360 s: **10,742 and 10,789 linked, 10,789 and 10,789
+moved** - the pace loop's cap on every run (the first linked run's 47 fewer
+fell in the minute the launcher was relinked beside it). Processor time over
+each run, sampled every 10 s: 346 and 357 s linked, 363 and 377 s moved - a
+full core at both bases, because the pace loop spins, so the sample cannot
+resolve `Code()`'s share; the moved runs' 2 to 6 % more lies within the
+spin's run-to-run spread and the sampler's 10 s grain. **No base effect on
+the pace**; the bitmap of review item 7 is not wanted on this evidence.
 
 ### Before the PR (2026-10-29, the coordinator)
 
@@ -685,8 +700,9 @@ code): five fixed in one commit, two left as the round's open items.
    launcher though `DetectHost` accepts it; only a base other than `0x400000`
    is refused hosted now.
 7. `Code()` is a binary search per call where stage B resolved at compile
-   time: the cost is the round's open measurement (the attract's pace at both
-   bases); a bitmap over the code range would make it O(1) if it shows.
+   time: the cost was measured after the merge (section 5 "Left": the
+   attract at its cap at both bases, no effect seen); a bitmap over the code
+   range would make it O(1) if a finer measurement ever shows it.
 
 ## 6. Ownership, merge order, numbering
 

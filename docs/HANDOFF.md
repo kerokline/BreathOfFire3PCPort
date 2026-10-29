@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-29: the relocatable-image round built through stage D on `relocatable-image/round`, unpushed, item 2; the ledger-fields round is on `main` through PR #164)
+**Status:** IN PROGRESS (2026-10-29: the relocatable-image round merged as PR #168 and the enemy-information cheat as PR #169; `v0.1.0-alpha.6` cut from `main`, item 2)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -14,12 +14,15 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
-**`origin/main` is `ac1682fe`** (PR #161, 2026-10-28): since the reading-row round (PR #106) it took the faster
+**`origin/main` is `e839eaf7`** (PR #168, 2026-10-29) plus the alpha.6 notes: since the reading-row round (PR #106) it took the faster
 text, the bit-15 round, the PlayStation verdict pass and twin-diff, fix wave 1023, the sound-layer round, the
 issue fixes of 2026-10-24..26, build-difference prevention (the data diff and the every-door sweep), the spell
-sweep and its fix wave, the two staged rounds, the away day (PR #158), D42's dial (PR #159) and the boss sweep (PR #161) ([`STATUS.md`](STATUS.md) lists them with their PRs). Every
-branch the earlier versions of this file called unpushed is merged; the open work is below. **The ledger-fields round is
-the one unpushed branch meant for a PR** (item 2). Owed throughout:
+sweep and its fix wave, the two staged rounds, the away day (PR #158), D42's dial (PR #159), the boss sweep (PR #161), the ledger-fields round (PRs #162, #164), D397 and issue #163
+(PRs #166, #167), the relocatable-image round (PR #168) and the enemy-information cheat (PR #169)
+([`STATUS.md`](STATUS.md) lists them with their PRs). Every branch the earlier versions of this file called
+unpushed is merged; the open work is below. **No branch meant for a PR is unpushed**; `v0.1.0-alpha.6` is the
+release cut from this state ([`releases/v0.1.0-alpha.6.md`](releases/v0.1.0-alpha.6.md), a draft until the owner
+publishes it). Owed throughout:
 the owner's play, eye and ear ([`owner-review.md`](owner-review.md), item 13). Layers built before DIV-0148 carry
 no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fishing tag 3: rebuild a language
 (`importer.py build`, or `loc_build.py all --discs` for an install's `DAT\<tag>.*.DAT`) before comparing one.
@@ -75,15 +78,17 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - **The relocatable-image round is built through stage D on `relocatable-image/round`** (off `main`
      `15518394`, `main` merged through PR #169; [`relocatable-image-round.md`](relocatable-image-round.md)
      sections 2..5 "as run" and "Before the PR", the reports
-     `C:\Users\kerok\bof3x-runs\ri1027\<group>\REPORT.md`, the proofs `c1\PROOF.md` and `c2\PROOF.md`; **its PR
-     open**). The image is movable and the stub page gone ([`STATUS.md`](STATUS.md)); nothing a player sees
+     `C:\Users\kerok\bof3x-runs\ri1027\<group>\REPORT.md`, the proofs `c1\PROOF.md` and `c2\PROOF.md`; **merged as
+     PR #168, 2026-10-29**). The image is movable and the stub page gone ([`STATUS.md`](STATUS.md)); nothing a player sees
      changed. The PR's day found what the stage D gate had skipped: the hosted `BOF3X_SHADOW='*'` suite, which
      faulted in `field_misc`'s fuzz on a static-initialisation order the move created (`draw_pool`'s pointers,
-     fixed `41372e3c`, section 5 "Before the PR"). **Next:** the merge; then, for whoever picks the round's ends up (none needs the owner): the
+     fixed `41372e3c`, section 5 "Before the PR"). **Next**, for whoever picks the round's ends up (none needs the owner): the
      state hash's fold widened to cover `.pool` (`statehash.cpp` and `statehash.py` together, the folded
      references re-recorded); the two sub-word reads not proven and the 729 not read (section 5, question 3);
-     the exit trace's stack scan in `bof3x.exe`; the run-time base's cost on the attract's pace, measured on a
-     quiet machine at both bases. **Developer switch:** `BOF3X_IMAGEBASE=0xA00000` takes `bof3x-A00000.exe` through
+     the exit trace's stack scan in `bof3x.exe`. **Done since:** the run-time base's cost on the attract's pace,
+     measured the evening of 2026-10-29 (section 5 "Left": the cap at both bases, no effect); the fold's width
+     is the pool-fold agent's ([`statehash-pool-fold.md`](statehash-pool-fold.md), `BOF3SH5` the owner's call).
+     **Developer switch:** `BOF3X_IMAGEBASE=0xA00000` takes `bof3x-A00000.exe` through
      `bof3x-launcher-dev.exe`. **Traps paid for:** `Code(Code(x))` compiles; a word read from game memory is
      already a place (`CodePlace` passes it, `Img` must not be applied); `tools/reloc_bare.py --check` lists a new
      bare address - place it, or regenerate the list if it is a name. The worktrees under `ri1027` are removable
