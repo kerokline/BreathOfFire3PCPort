@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 181;
+inline constexpr std::size_t kSwitchCount = 182;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -254,9 +254,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "AreaDataReload", 0, 14},   // DIV-0182
     {SwitchForm::Name, "Paralyzer_Start", 0, 15},   // DIV-0183
     {SwitchForm::Name, "DialTranslucent", 0, 15},   // DIV-0184
+    {SwitchForm::Name, "Battle_SetHitPopup", 0, 18},   // DIV-0185
 };
 
-inline constexpr std::size_t kEntryCount = 184;
+inline constexpr std::size_t kEntryCount = 185;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -626,6 +627,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Intent, State::Active, 0, 179, 1, true, Player::Costly, 0, kLangAny},
     {184, "The world map's dial is drawn semi-transparent, so its glass shows the map as on the PlayStation",
      Tier::Intent, State::Active, 0, 180, 1, true, Player::Yes, kTowardPsx | kTowardPsp, kLangAny},
+    {185, "The hit pop-up reads a missing target block as \"no fixed style\", instead of reading address 0x0C",
+     Tier::Intent, State::Active, 0, 181, 1, true, Player::Costly, 0, kLangAny},
 };
 
 // The switches of one entry.
