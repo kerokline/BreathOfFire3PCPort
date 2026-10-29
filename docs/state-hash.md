@@ -785,7 +785,14 @@ same normalisation switch (`BOF3X_STATEHASH_RAW` unset):
    not renamed. A planted fault (the by-function rule put back) exits 3 with
    "a page of data holding our functions' addresses does not hash as its raw
    bytes".
-7. **The check against Capcom's references is where the map matters.** A
+7. **The watch** (`statehash.cpp` `Watch`, `bof3x.exe` only, no hash changed): on
+   every page whose hash changed, an aligned word holding our function's own
+   address where a bound function starts, or a value inside the table that is
+   not an entry, is logged once (`statehash   watch: tick T, the word at ...`,
+   at most 64 lines a run) - a code word our code stored without
+   `::bof3::Code()`, which hashes raw where Capcom's run holds the VA. A texel
+   pair equal to such an address is logged too; where it lies says which.
+8. **The check against Capcom's references is where the map matters.** A
    moved run against ours at `0x400000` would not show a missing map - both
    sides are ours; ours at `0x400000`, unfolded, against the `orig4` pair
    would differ from tick 0 on every page holding a place. The bind table's

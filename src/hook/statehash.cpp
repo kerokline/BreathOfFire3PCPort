@@ -758,6 +758,43 @@ bool StateHash_Start() {
     return true;
 }
 
+// The watch on code words stored without their place (bof3x.exe, the
+// relocatable-image round's stage C2): on every page whose hash changed, an
+// aligned word that holds our function's own address where a bound function
+// starts, or a value inside the table of code places that is not an entry,
+// is a code word our code stored without ::bof3::Code() (or derived from a
+// place), which hashes raw where Capcom's run holds the VA. Each such word is
+// logged once, with its address and what it holds, at most 64 lines a run; a
+// value of the game's data equal to our function's address (a texel pair) is
+// logged too and says so by where it lies. It changes no hash.
+static void Watch(std::uint32_t page_index) {
+    static unsigned lines = 0;
+    static std::vector<std::uint32_t> seen;
+    if (lines >= 64 || !Bind_TableHi()) return;
+    const std::uint32_t lo = Bind_TableLo(), hi = Bind_TableHi();
+    for (std::uint32_t at = 0; at < kPage && lines < 64; at += 4) {
+        const std::uint32_t w = WordAt(g_data + page_index * kPage + at);
+        const std::uint32_t va = kBase + page_index * kPage + at;
+        const char* what = nullptr;
+        std::uint32_t named = 0;
+        if (w >= lo && w < hi) {
+            if (Bind_VaOf(w)) continue;
+            what = "a value inside the table of code places, not an entry (a place with an offset)";
+        } else if ((named = Bind_VaOfFunction(w)) != 0) {
+            what = "our function's own address, not its place";
+        } else {
+            continue;
+        }
+        if (std::find(seen.begin(), seen.end(), va) != seen.end()) continue;
+        seen.push_back(va);
+        ++lines;
+        std::uint32_t start = 0;
+        const char* fn = named ? Bind_FuncName(named, &start) : nullptr;
+        Log("statehash   watch: tick %lu, the word at 0x%06lX holds 0x%08lX: %s%s%s%s", (unsigned long)g_tick,
+            (unsigned long)va, (unsigned long)w, what, fn ? " (" : "", fn ? fn : "", fn ? ")" : "");
+    }
+}
+
 void StateHash_Tick() {
     if (!g_out) return;
     const std::uint32_t frame = Frame_Counter;
@@ -779,6 +816,7 @@ void StateHash_Tick() {
         if (g_first || h != g_last[i]) {
             g_last[i] = h;
             changed.push_back(i);
+            if (g_normalise) Watch(i);
         }
     }
     g_first = false;

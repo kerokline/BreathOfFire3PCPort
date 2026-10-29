@@ -42,6 +42,11 @@ const void* Bind_Ours(std::uint32_t va);
 // state hash hashes a word holding a place as its VA (statehash.cpp).
 std::uint32_t Bind_VaOf(std::uint32_t place);
 
+// The VA whose function of ours starts at `ours` (our function's own address,
+// not its place), or 0. For the state hash's watch on words that hold one in
+// bof3x.exe (statehash.cpp Watch): a code word stored without Code().
+std::uint32_t Bind_VaOfFunction(std::uint32_t ours);
+
 // The table of code places, [lo, hi); both 0 hosted.
 std::uint32_t Bind_TableLo();
 std::uint32_t Bind_TableHi();

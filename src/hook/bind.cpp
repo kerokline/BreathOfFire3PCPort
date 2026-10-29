@@ -200,6 +200,24 @@ std::uint32_t Bind_VaOf(std::uint32_t place) {
     return i < kRows ? kBind[i].va : kDirectSoundThunk;
 }
 
+std::uint32_t Bind_VaOfFunction(std::uint32_t ours) {
+    // the rows' indices by our address, sorted on first use (the game's thread)
+    static std::uint16_t by_ours[kRows];
+    static bool built = false;
+    static_assert(kRows <= 0x10000, "16-bit row indices");
+    if (!built) {
+        for (unsigned i = 0; i < kRows; ++i) by_ours[i] = static_cast<std::uint16_t>(i);
+        std::sort(by_ours, by_ours + kRows,
+                  [](std::uint16_t a, std::uint16_t b) { return Key(kBind[a].ours) < Key(kBind[b].ours); });
+        built = true;
+    }
+    const std::uint16_t* const begin = by_ours;
+    const std::uint16_t* const end = by_ours + kRows;
+    const std::uint16_t* p =
+        std::lower_bound(begin, end, ours, [](std::uint16_t i, std::uint32_t v) { return Key(kBind[i].ours) < v; });
+    return p != end && Key(kBind[*p].ours) == ours ? kBind[*p].va : 0;
+}
+
 std::uint32_t Bind_TableLo() { return g_table; }
 std::uint32_t Bind_TableHi() { return g_table ? g_table + kTableBytes : 0; }
 
