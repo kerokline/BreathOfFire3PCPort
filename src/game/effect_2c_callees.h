@@ -58,6 +58,7 @@ constexpr std::uint32_t kSparkStride44 = 0xA0;
 constexpr unsigned kSparkCount44 = 8;
 constexpr ::bof3::image::Va kPixels{0x92EC80};        // kind 0x6B: the particles, 0x14 each
 constexpr std::uint32_t kPixelStride = 0x14;
+constexpr std::uint32_t kPixelRoom = 0x50 * 0x48;   // DIV-0186: the rectangle's every pixel, ours
 
 // Sprite_Objects records 1 and 2 (0x7DEE80 + 0xA4 k) and their points (+0x34).
 // kSprite1Point: now Sprite_Objects[1].x (symbols.toml).

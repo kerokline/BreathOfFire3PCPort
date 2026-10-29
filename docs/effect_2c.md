@@ -409,7 +409,7 @@ any:
 - **`EffectKind6B_Capture` with `Effect_FindFree` above 19**: the callee
   answers 0..19 or 0xFF.
 
-## 7. Latent defects (Capcom's, described, not fixed)
+## 7. Latent defects (Capcom's, described; D217's kind 0x6B fixed by DIV-0186)
 
 - **`EffectKind44_SparksClear` clears one spark of eight.** (D232) It sets the cursor
   `0x6761B8` to the first spark record and then clears the in-use byte the
@@ -431,7 +431,12 @@ any:
   colour, and the next state's `Sprite_Current` access goes astray. What the
   PSX reserved there is not read here; on the PC the unnamed room before
   `0x937F84` holds 1,881. Reach: chapter 10's run 13 captures sprite record 2;
-  its pixel count is the sprite's - not measured.
+  its pixel count is the sprite's. Measured 2026-10-29 (issue #163, known-defects.md D217): 600
+  with the owner's route, on the PC and the PlayStation alike, record 2 being a Torch's freed
+  battle-tagged record; the reporter's crash is the overrun, likely with the Gaist in record 2.
+  The same day the owner's natural save put the Gaist in record 2 (2,201 particles) and crashed;
+  **fixed by DIV-0186**: the particles in a room of ours for all 5,760 (`BOF3X_OFF=AshRoom` for
+  the original's). The PlayStation's array (`0x800E7500`, 12 bytes each) has room for the Gaist.
 - **`EffectKind43_SparksRun` phases above 4 never end.** (D238) A spark whose phase is
   5 or more is drawn each frame and never taken out of use. The phase after
   rising is `1 + the record's +6 + 1`, and only kind 0x43's states write `+6`

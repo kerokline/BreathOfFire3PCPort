@@ -1,6 +1,6 @@
 # The boss sweep: every boss's moves, by its own fight
 
-**Status:** PROPOSED; steps 1 to 3 MEASURED, sections 5 to 7 (2026-10-27 evening, the owner's ask before the staged
+**Status:** PROPOSED; steps 1 to 3 MEASURED, sections 5 to 8 (2026-10-27 evening, the owner's ask before the staged
 rounds: "update the spell/item harness to also test boss moves"; the owner's
 suspicion that the kind injections of [`spell-sweep.md`](spell-sweep.md) 11
 could swap the enemy kind and graphic in combat so moves like Nue Stomp render
@@ -8,7 +8,8 @@ from the right body. Section 1 answers that from the code; sections 2 to 4 are
 the plan. Section 5 is step 1, the `battle ID` op and its proof,
 2026-10-27 night; section 6 step 2, the fight table and the crafted
 pre-fight saves, 2026-10-27 night; section 7 step 3, the fights played to
-their deaths on three installs, 2026-10-28.)
+their deaths on three installs, 2026-10-28; section 8 fight 35 from the
+owner's route, 2026-10-29.)
 
 ## 1. Why a kind swap cannot stage a boss, and what can
 
@@ -307,7 +308,7 @@ frame by frame; the others at 568 by the 10-frame probe). The donor is
 
 ### 5.4 What no crafted save reaches yet (for the owner's recordings)
 
-- **Fight 35** (Gaist, Torch, area 120; Corona): section 6.2.
+- **Fight 35** (Gaist, Torch, area 120; Corona): section 6.2; reached by the owner's route `geist` since 2026-10-29 (section 8).
 - **Not tried, no owner's route**: 3 (the owner's `nue2` save is chapter 1
   run 9 step 0x11 in area 22 and stalls there with no type-7 actor; `nue`,
   run 8 step 0 in area 23, stalls the same), 4, 5, 6 (zone-dependent:
@@ -628,7 +629,7 @@ flags from the prologue's peeks), then the kill, on all three installs:
 
 **Six of section 2.1's seven boss-only skills are cast by their own
 bosses** on the PC, the US disc and the PSP disc (`casts_boss.png`; Holocaust's beams from its fifth shot, `holo.png`);
-Corona (Gaist, fight 35) is not reached. The pictures across the installs:
+Corona (Gaist, fight 35) was not reached then; it is cast by its own boss on the PC since 2026-10-29 (section 8). The pictures across the installs:
 0 frames differ for the routed casts but the PSP's Stallion colours (207
 frames, as 7.7) and for the crafted ones but the load screen and the
 name box (7.7). Several of the crafted fights frame the enemies out of
@@ -659,7 +660,7 @@ boss is not always in the shot - Head Cracker and Main Cannon among them.
 
 ### 7.10 Not reached
 
-- **Fight 35** (Gaist; Corona): the coordinator's note - no type-7 actor, skipped.
+- **Fight 35** (Gaist; Corona): the coordinator's note - no type-7 actor, skipped. Reached 2026-10-29 by the owner's route (section 8).
 - **Chimera's kill** (fight 50): the cast of Paralyzer wipes out the donor's
   one-member party; the kill runs only without the cast.
 - The post-fight scenes of staged fights (7.1.3) - the route's own run is
@@ -682,6 +683,92 @@ python tools/spell_sweep.py fightlog <root>\bof3x_<tag>.log --fight N
 ```
 
 The cut: the frame three before the route's `fight` watch first changes
-(a `--reference` run gives it). A disc-only install as spell-sweep.md 10:
+(a `--reference` run gives it). A fight a talk starts (the last text box's confirm runs into the
+battle) is cut at its first mode-5 frame with `--scene` instead (section 8). A disc-only install as spell-sweep.md 10:
 `--game`, `BOF3X_EXEIMAGE` and `BOF3X_CACHE` naming its cache,
 `BOF3X_RECIPE_SAVES` the main checkout's saves.
+
+## 8. Fight 35, the Gaist (2026-10-29)
+
+ScrubOasis reported trouble in the Gaist fight, so the owner played to it.
+Section 6.2's crafts stalled because the scene is started by walking and
+talking in area 120, the cave town, not by any one run step:
+
+- `Scena10_StepHook` starts chapter 10's run 0xD at step 0 on the town path
+  (zone 0, x 0x58000, z within 4 cells of 0x11; flag 0x37 clear; a member of
+  kind 2), and the run takes the party into the forge room.
+- Scenario counter 0 is moved by area 120's own choice handlers
+  (`Area120_ChoiceVar3A` / `_ChoiceVar3B` write `0x903848`), and choice 2
+  (`Area120_ChoiceStartRun13`) sets run 0xD at step 8. Step 0x10's wait on
+  counter 0 = 0xE is the talks' to satisfy, which a craft never does.
+
+The owner started from the craft `bf35v` (`tools/chapter_jump.py`: area
+120's town at that cell, chapter-10 flags 0x37..0x3D clear, adult Ryu and
+Garr), played up to the room, saved, and recorded the route `geist`
+(`tools/recipes/geist.txt`, save `geist`, en-US, the point filter). The
+fight is adult Ryu alone (the frames).
+
+**The crafts' own lesson:** a craft that sets the party must set the party
+set too (block +0x74C, `AreaW0b_PartySet`, with its 0x80 bit): the load
+brings in the sprites of that row of the set table at
+`MoveScript_EffectArg + 0xC` (row 7: Garr, Rei, adult Ryu; row 0xB: Garr,
+adult Ryu, ...), and a member outside the row runs `Field_MemberSprite`
+off the bank table (a crash reading `0x041D1130` in the load). With the
+row right, a party of adult Ryu, Garr and Rei in that order still crashed
+the first field draw (Rei's record had no frame, `+0x54` 0); Rei second
+loads (`bf35tx`). Not looked into further.
+
+**The route, measured** (`--reference`, PC install `game\game`, the main
+build of 2026-10-29): fight byte and mode 5 at recipe frame 1468, inside a
+106-frame hold of circle from 1381 - the last text box's confirm runs
+into the battle; kinds 41 (the Gaist, 2500 HP) and 42 (two Torches, 300
+HP each); end / exit / event hooks `0x43E770` / `0x43E790` / `0x43E750`; won
+at 4931, the field again at 5062.
+
+**The fight mode.** A cut before 1468 sits in that text (mode 4, the
+battle never comes), so fight 35 is staged with `--scene --cut 1468`: the
+route kept to the battle's first frame. Two harness fixes came with it
+(`tools/spell_sweep.py`): `route_steps` keeps a hold the cut falls in,
+shortened (it dropped it, and the text box waited forever); and
+`fight_summary` takes the watches' first values for the call and the
+start when the run is set at mode 5 already. Played: three rounds of
+Defend and the kill - start 1468, win 3499, field again 3579, the same
+three hooks as the route's own fight.
+
+**Corona.** `--ids 137 --play 1 --kill`: the Gaist picked 137 (`+0x106`
+0x89 at 1584), the "Corona" box and the cast, then a Torch's Flare, the
+kill and the return (win 3071, field 3149). **Seven of section 2.1's seven
+boss-only skills are now cast by their own bosses** - Corona on the PC
+install only so far; the US-disc and PSP runs of 7.7 are not done for it.
+
+```
+python tools/spell_sweep.py run --route tools/recipes/geist.txt --fight 35 --cut 1468 --scene \
+    --enemies 3 --play 3 --kill --after 1200 --root <root> --launcher <launcher dir>\bof3x-launcher.exe \
+    --game <the game folder> --lang en-US --speed 4 --env BOF3X_FILTER=point
+```
+
+### 8.1 The route on the disc installs, and the ash (issue #163)
+
+The same route, `--reference --cut 7868` (frames 4931 / 5062 are the PC's
+win and return):
+
+| Install | Win | Field again | Note |
+|---|--:|--:|---|
+| PSX-US alone (`abc_run.py prepare --only psx-us`) | 4931 | 5062 | as the PC |
+| PSP-EU alone (`--only psp-eu`, `en-150`) | 4931 | 5062 | as the PC |
+| US-PSX + EU-PSP (`D:\bof3x-runs\i130`, the reporter's shape) | 6228 | 6524 | **the fight runs differently** with the same inputs - its PSP data layers, not wide (6228 with wide off too) |
+
+None crashed. Issue #163 (ScrubOasis, the crash after the fight) is
+D217's kind 0x6B overrun, read on a build of the reporter's commit: see
+[`known-defects.md`](known-defects.md) D217, which holds the measurements
+(600 particles everywhere with this route, the PlayStation included) and
+why: the ash effect captures `Sprite_Objects` record 2, here a Torch's
+freed battle-tagged record behind the right torch, so the ash falls there
+(seen in wide) while the Gaist switches to his heap pose - the
+PlayStation does the same. A let's play shows the crumble on the Gaist,
+so record 2 depends on the history, and `geist` descends from a crafted
+chapter-14-donor save. Two harness notes from the day: the default
+`bof3\` install's en-US overlay files are stale against the current
+build (`labels chunk tag is 0x18`), so runs used the play install; and
+the shot frames are at recipe frames 6766..6900, the ash's count set at
+6772.

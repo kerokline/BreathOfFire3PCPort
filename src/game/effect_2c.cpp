@@ -24,8 +24,9 @@
 //              10's run 13).
 //
 // Every call goes through the harness (SH_CALL / SH_AT), so the start-up fuzz
-// can stand recorders in for ours as for the originals' copies. No divergence:
-// each is a faithful replacement. Every x87 operation is done in x87 (long
+// can stand recorders in for ours as for the originals' copies. One divergence,
+// DIV-0186: kind 0x6B's particles live in a room of ours
+// (EffectKind6B_Particles below); otherwise each is a faithful replacement. Every x87 operation is done in x87 (long
 // double, loads through `flds`) as the original does it, so rounding and NaNs
 // come out alike. Where the original jumps through a state table past its end,
 // divides by 0, indexes kind 0x6B's column heights past their 80 or loops
@@ -142,6 +143,23 @@ U HeightAt(const char* who, std::int32_t column) {
                     who, (int)column);
     return ::bof3::Img(EffectKind6B_Heights_addr) + 2u * static_cast<U>(column);
 }
+
+// DIVERGENCE DIV-0186 (D217, issue #163): kind 0x6B's particles. The original
+// writes one 0x14-byte particle per opaque pixel of the 80 x 72 read-back at
+// 0x92EC80 with no bound; the room before Gfx_CurrentEnv (0x937F84) holds
+// 1,881, and the 1,882nd overwrites Sprite_Current - the crash of issue #163,
+// measured 2026-10-29 on the owner's gaistFullRoute: the Gaist's collapsed
+// body in record 2, 2,201 pixels. Ours: once g_ash_room is armed (after the
+// self-test, PatchBytes "AshRoom") the particles go to a room of ours that
+// holds the rectangle's every pixel (5,760), so the whole sprite crumbles;
+// the count, the order, the fields and the draw are the original's. Nothing
+// but these three states names the particles (a raw scan of the image: 0x92EC80
+// only at 0x475F76, 0x4760E7 and, as +1, 0x476145), and the frame 0x6544A8
+// that sizes them is read and never written. BOF3X_ORIGINAL=AshRoom (or
+// BOF3X_OFF) leaves them at 0x92EC80, the overrun with them.
+unsigned char g_ash_room = 0;
+alignas(4) unsigned char g_particles[at::kPixelRoom * at::kPixelStride];
+U Particles() { return g_ash_room ? AddressOf(g_particles) : ::bof3::Img(at::kPixels.v); }
 
 // +9 down one (Sprite_Current read for each access, as the originals); at 0,
 // +9 = reload and +1 up.
@@ -955,7 +973,7 @@ extern "C" void __cdecl EffectKind6B_Scatter(void) {
     alignas(4) unsigned char o[12];
     SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(o));
     U pixel = ::bof3::Img(EffectKind30_Shards_addr);
-    U particle = ::bof3::Img(at::kPixels.v);
+    U particle = Particles();   // DIV-0186
     EffectKind6B_PixelCount = 0;
     unsigned char row = 0;
     if (EffectKind6B_Frame[3] <= 0) {
@@ -966,6 +984,10 @@ extern "C" void __cdecl EffectKind6B_Scatter(void) {
         bof3::Fatal("EffectKind6B_Scatter: the rectangle is %d x %d - the original's row and column bytes never reach "
                     "past 0xFF, it never ends (docs/effect_2c.md section 6)",
                     (int)EffectKind6B_Frame[2], (int)EffectKind6B_Frame[3]);
+    if (g_ash_room && EffectKind6B_Frame[2] * EffectKind6B_Frame[3] > static_cast<int>(at::kPixelRoom))
+        bof3::Fatal("EffectKind6B_Scatter: the rectangle is %d x %d, past DIV-0186's room of %u particles (the frame "
+                    "0x6544A8 is 80 x 72 in Capcom's data and nothing writes it)",
+                    (int)EffectKind6B_Frame[2], (int)EffectKind6B_Frame[3], at::kPixelRoom);
     U width = UL(::bof3::Img(at::kFrameW.v));
     do {
         unsigned char column = 0;
@@ -1007,7 +1029,7 @@ extern "C" void __cdecl EffectKind6B_Scatter(void) {
 // flagged 3 - live, waiting on its count; Sound_PlayEffect(0x200); +1 up.
 extern "C" void __cdecl EffectKind6B_Arm(void) {
     U n = EffectKind6B_PixelCount;
-    for (U p = ::bof3::Img(at::kPixels.v); n != 0; --n, p += at::kPixelStride) At(p)[0] = 3;
+    for (U p = Particles(); n != 0; --n, p += at::kPixelStride) At(p)[0] = 3;
     SH_CALL(Sound_PlayEffect)(0x200);
     NextState();
 }
@@ -1024,7 +1046,7 @@ extern "C" void __cdecl EffectKind6B_Fall(void) {
     unsigned char none = 1;
     if (EffectKind6B_PixelCount != 0) {
         U i = 0;
-        U particle = ::bof3::Img(at::kPixels.v);
+        U particle = Particles();
         do {
             unsigned char* const p = At(particle);
             const unsigned char flags = p[0];
@@ -1458,6 +1480,12 @@ extern "C" unsigned char* __cdecl EffectKind44_SparkFind(void) {
 
 void Effect2C_Inject() {
     if (bof3::WantsShadow("effect_2c")) effect_2c::SelfTest();
+    // DIV-0186: armed after the self-test, which compares ours with Capcom's at
+    // 0x92EC80.
+    static const std::uint8_t ash_was = 0, ash_is = 1;
+    bof3::PatchBytes("AshRoom", AddressOf(&g_ash_room), &ash_was, &ash_is, 1);
+    bof3::Log("DIV-0186    kind 0x6B's particles in a room of %u (the original's holds 1,881): %s", at::kPixelRoom,
+              g_ash_room ? "on" : "OFF (BOF3X_ORIGINAL=AshRoom)");
     BOF3_INJECT(EffectKind3E_Run);
     BOF3_INJECT(EffectKind3E_Start);
     BOF3_INJECT(EffectKind3E_Bolts);

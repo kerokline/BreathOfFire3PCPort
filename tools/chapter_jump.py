@@ -26,6 +26,7 @@ block from offset 0, the live copy at 0x9039E0):
 | +0x5B0 + 8 c | `Cond_Flags` + 8 c | chapter c's flag row (`Chapter_FlagRow`), bit n at byte n >> 3, bit n & 7 | `Flags_Test` |
 | +0x30..+0x35 | 0x903A10 | a saved party (`Scena13_SaveParty7` writes it; `party='saved'` copies it to +0x682) | chapter 13's call table A |
 | +0x682..+0x687 | 0x904062 | the two party lists, three member ids each (0xFF none) | the load's joins, `Party_Join`, 0x534030 |
+| +0x74C | 0x90412C | the party set (`AreaW0b_PartySet`, with its 0x80 bit): the sprite-set row the load's members must be in (`party_set=`) | `PartySet_Select`, `Field_MemberSprite` |
 | +0x650 | `Cond_Flags` + 0xA0 | the story flags the area inits test (`Area167_Init`'s 0x8F / 0x90) | `Flags_Test` |
 
 The rest of the first 16 bytes is zeroed (as `craft.py` of group SW and
@@ -47,6 +48,7 @@ CHAPTER_ROWS = 0x5B0
 STORY = 0x650
 SAVED = 0x30    # 0x903A10: a saved party, two lists of three ids (Scena13_SaveParty7)
 PARTY = 0x682   # 0x904062 / 0x904065: the two party lists the load joins from
+PARTY_SET = 0x74C  # 0x90412C AreaW0b_PartySet: which members' sprites the load brings in
 
 # name: donor, chapter, state, run, step, area, entry flags, x, z, chapter flags
 # set / cleared, story flags set / cleared, counters; and why, with the code
@@ -126,6 +128,15 @@ CRAFTS = {
                  x=0x250000, z=0x748000, cset=[0x39, 0x3A, 0x3B], cclr=[0x3C, 0x3D],
                  why='fight 35 (Gaist, Torch): Scena10_Run13 from step 0xF in area 120 at the cell '
                      'Scena10_ArriveHook tests (scena_sc9b.cpp:2375-2381)'),
+    'bf35tx': dict(donor='adult_ryu', chapter=10, state=2, run=0, step=0, area=0x78, flags=0x81,
+                   x=0x208000, z=0x738000, cset=[0x38, 0x39, 0x3A], cclr=[0x3B, 0x3C, 0x3D], party=[7, 4, 2],
+                   party_set=7, why="fight 35's room (bf35's position before the talks: run 0, flags 0x38..0x3A) with adult Ryu, Rei and "
+                       "Garr - Rei second: third, Rei loaded with no frame and the first field draw crashed (2026-10-29)"),
+    'bf35v': dict(donor='adult_ryu', chapter=10, state=2, run=0, step=0, area=0x78, flags=1,
+                  x=0x58000, z=0x118000, cclr=list(range(0x37, 0x3E)), party=[7, 2], party_set=0xB,
+                  why="fight 35 from the town: area 120's zone-0 cell Scena10_StepHook tests (x 0x58000, z near "
+                      "0x11; flag 0x37 clear, a member of kind 2) - run 0xD from step 0 takes the party into the "
+                      "room (scena_sc9b.cpp:2306-2322); adult Ryu and Garr"),
     'bf38': dict(donor='radiationRoom', chapter=12, state=2, run=9, step=0xA, area=0x86, flags=1,
                  x=0x200000, z=0x258000, cset=[1, 0x2F],
                  why='fight 38 (Ammonite): Scena12_Run9 from step 0xA in area 134, as Scena12_StepHook '
@@ -227,6 +238,15 @@ def make(name, out_dir, donor_dir):
         flag(b, STORY, n, True)
     for n in c.get('sclr', []):
         flag(b, STORY, n, False)
+    if isinstance(c.get('party'), list):
+        # Both party lists set to the given member ids (names/characters.toml in the sibling: Garr 2,
+        # Rei 4; adult Ryu 7), padded with 0xFF.
+        ids = (c['party'] + [0xFF] * 3)[:3]
+        b[PARTY:PARTY + 6] = bytes(ids + ids)
+        # The party set (AreaW0b_PartySet 0x90412C, saved with its 0x80 bit): the row of the sprite-set
+        # table at MoveScript_EffectArg + 0xC the load reads member sprites from. A member not in the
+        # row walks Field_MemberSprite off the bank table (fight 35's first Garr-and-Rei craft, 2026-10-29).
+        b[PARTY_SET] = 0x80 | c['party_set']
     if c.get('party') == 'saved':
         # The two party lists (0x904062, 0x904065) from the saved-party record (0x903A10..15),
         # as Scena13_SaveParty7 wrote it; refused when the record is empty.
