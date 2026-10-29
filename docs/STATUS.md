@@ -8,6 +8,8 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The enemy-information cheat, 2026-10-29, on `cheat/enemy-info`** (off `main` `628aa521`, the PR #167 merge; unpushed, PR at the owner's word). A player asked for every enemy's HP bar shown; the owner named the lever, the enemy record's "discovered" byte `+0x8F`, which the HP gauge and Identify's panel read and which the original copies from the save's "kind beaten before" bit set (0 for a boss). **DIV-0187:** `cheat.enemy_info=1` / `BOF3X_ENEMY_INFO=1` makes `Battle_SetupEnemy` and `Battle_PlaceBossActor` write 1, so every enemy and every boss shows its gauge and its stats from the first meeting; the save's bit set is untouched. A box on the Cheats sub-page beside Steal; off by default; a Fatal when a writer is left as Capcom's. Headless checks in [`cheats.md`](cheats.md) section 6; not yet played.
+
 **Stage D of the ledger-fields round, 2026-10-28, on `ledger-fields/stage-d`** (off `main` `de7aeb3d`, the PR #162
 merge; three Opus agents D0, D1, D2 one worktree each under `C:\Users\kerok\bof3x-runs\lfd1028`, merged one at a
 time, the proof by the coordinator; unpushed, PR at the owner's word; [`ledger-fields-round.md`](ledger-fields-round.md)

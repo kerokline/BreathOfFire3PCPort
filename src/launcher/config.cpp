@@ -278,6 +278,9 @@ void ConfigLoad(const std::string& text, Config& cfg, std::string& error) {
         } else if (key == "cheat.steal") {
             if (value == "0") cfg.cheats.steal = false;
             else if (value == "1") cfg.cheats.steal = true;
+        } else if (key == "cheat.enemy_info") {
+            if (value == "0") cfg.cheats.enemy_info = false;
+            else if (value == "1") cfg.cheats.enemy_info = true;
         } else if (key.compare(0, 4, "key.") == 0) {
             if (!keys_seen) cfg.bindings.keys.clear();
             keys_seen = true;
@@ -383,10 +386,12 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# 1 (shipped default) | 0 -> line 2 of the game's BOF3.CFG\r\n";
     out += std::string("renderer=") + (cfg.renderer ? "1" : "0") + "\r\n";
     out += "# cheats (docs/cheats.md): EXP and zenny won in battle times 0..10, 1 the original's (DIV-0045);\r\n";
-    out += "# steal 1 makes Pilfer and Steal take an item whenever the enemy carries one (DIV-0046)\r\n";
+    out += "# steal 1 makes Pilfer and Steal take an item whenever the enemy carries one (DIV-0046);\r\n";
+    out += "# enemy_info 1 shows every enemy's HP gauge and Identify stats, bosses too (DIV-0187)\r\n";
     out += "cheat.exp=" + std::to_string(cfg.cheats.exp) + "\r\n";
     out += "cheat.zenny=" + std::to_string(cfg.cheats.zenny) + "\r\n";
     out += std::string("cheat.steal=") + (cfg.cheats.steal ? "1" : "0") + "\r\n";
+    out += std::string("cheat.enemy_info=") + (cfg.cheats.enemy_info ? "1" : "0") + "\r\n";
     out += "# the keyboard: key.KEY=action (docs/controls.md; actions up down left right cross circle square\r\n";
     out += "# triangle l1 l2 r1 r2 start select, joined with +); at most 32 lines. Replaces the game's own table\r\n";
     out += "# (BOF3.CFG lines 3+) when it differs from the default, which is that table.\r\n";
@@ -580,6 +585,8 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
         SetEnvironmentVariableA("BOF3X_ZENNY", std::to_string(cfg.cheats.zenny).c_str());
     if (GetEnvironmentVariableW(L"BOF3X_STEAL", existing, 64) == 0 && cfg.cheats.steal)
         SetEnvironmentVariableW(L"BOF3X_STEAL", L"1");
+    if (GetEnvironmentVariableW(L"BOF3X_ENEMY_INFO", existing, 64) == 0 && cfg.cheats.enemy_info)
+        SetEnvironmentVariableW(L"BOF3X_ENEMY_INFO", L"1");
 
     const input::Bindings defaults = input::Bindings::Defaults();
     const bool keys_default = cfg.bindings.keys.size() == defaults.keys.size() &&
@@ -1289,7 +1296,7 @@ const char* IniVariable(std::string_view key) {
         {"background", "BOF3X_BACKGROUND"}, {"screen", "BOF3X_PRESENT"}, {"text_speed", "BOF3X_TEXT_SPEED"},
         {"unlearned_blue", "BOF3X_UNLEARNED_BLUE"}, {"snap", "BOF3X_SNAP"}, {"wide", "BOF3X_WIDE"},
         {"scale", "BOF3X_SCALE"},         {"cheat.exp", "BOF3X_EXP"}, {"cheat.zenny", "BOF3X_ZENNY"},
-        {"cheat.steal", "BOF3X_STEAL"}};
+        {"cheat.steal", "BOF3X_STEAL"},   {"cheat.enemy_info", "BOF3X_ENEMY_INFO"}};
     for (const auto& [k, v] : kFeeds)
         if (key == k) return v;
     return nullptr;

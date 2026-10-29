@@ -206,12 +206,14 @@ struct Config {
     // DIV-0042: the picture on the window at whole multiples of its size
     // (the default) or stretched to the client's height (BOF3X_SNAP=0).
     bool snap = true;
-    // DIV-0045 / DIV-0046: the cheats behind the "Cheats..." button
+    // DIV-0045 / DIV-0046 / DIV-0187: the cheats on the Cheats sub-page
     // (docs/cheats.md). The multipliers, 0..10, go out as BOF3X_EXP /
-    // BOF3X_ZENNY when not 1; the steal switch as BOF3X_STEAL=1 when on.
+    // BOF3X_ZENNY when not 1; the steal switch as BOF3X_STEAL=1 when on; the
+    // enemy-information switch as BOF3X_ENEMY_INFO=1 when on.
     struct Cheats {
         int exp = 1, zenny = 1;
         bool steal = false;
+        bool enemy_info = false;
     } cheats;
     // The physical bindings (docs/controls.md section 4.2, DIV-0050): the
     // keyboard's (scancode -> PlayStation bits) table, which replaces the
