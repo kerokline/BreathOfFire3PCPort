@@ -13237,8 +13237,19 @@ designed in rather than bolted on.
   that no save is rewritten and nothing of the kill record is lost.
 - **Also in the PSX version?** No. The same byte and bit set on the console
   (the sibling's `BATTLE_RAM.md`); not measured here.
-- **Verification:** 2026-10-29, headless (`BOF3X_SELFTEST_ONLY=1`): see
-  [`cheats.md`](cheats.md) section 6. Not yet watched in play.
+- **Verification:** 2026-10-29, headless (`BOF3X_SELFTEST_ONLY=1`, a clean
+  launcher copy under `C:\Users\kerok\bof3x-runs\ei1029`): unset,
+  `BOF3X_SHADOW='*'` exit 0, every fuzz group at 0 mismatches. With
+  `BOF3X_ENEMY_INFO=1` the `battle_sprites` fuzz differs in
+  `Battle_SetupEnemy` alone (2,237 of 3,000 rounds - the rounds whose kind
+  bit was 0; call logs 5 / 5, so the bit is still read) and the `rest_3g`
+  fuzz in `Battle_PlaceBossActor` alone, the first differing byte each time
+  `0x93B960 + 0x128 n + 0x8F`: the switch reaches both writers and changes
+  nothing else those groups cover. `BOF3X_ENEMY_INFO=2` is `FATAL:
+  BOF3X_ENEMY_INFO must be 0 or 1`; the switch on with
+  `BOF3X_ORIGINAL=Battle_SetupEnemy` or `=Battle_PlaceBossActor` is the
+  `Fatal` that names the writer. Not yet watched in play
+  ([`cheats.md`](cheats.md) section 6).
 - **Reversible?** Yes: the box off, `BOF3X_ENEMY_INFO` unset.
 - **Switch:** ini:cheat.enemy_info=0
 - **Default:** off - the box starts off

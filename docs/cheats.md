@@ -270,5 +270,23 @@ Why per spawn and not the bit set: setting every kind's bit would rewrite
 the player's save at the first battle, lose the kill record for nothing, and
 still miss the bosses, whose writer ignores the set.
 
-**Verification.** 2026-10-29, headless: see the ledger entry and the
-session's log lines below.
+**Verification.** 2026-10-29, headless (`BOF3X_SELFTEST_ONLY=1`, a clean
+copy of the four launcher files under `C:\Users\kerok\bof3x-runs\ei1029`):
+
+- unset, `BOF3X_SHADOW='*'`: exit 0, every fuzz group at 0 mismatches;
+- `BOF3X_ENEMY_INFO=1 BOF3X_SHADOW=battle_sprites`: the log line `DIV-0187
+  every enemy shows its HP gauge and its Identify stats, bosses too`, and
+  the fuzz differs in `Battle_SetupEnemy` alone, 2,237 of 3,000 rounds (the
+  rounds whose kind bit was 0), call logs 5 / 5 (the bit is still read), 31
+  other functions at 0;
+- `BOF3X_ENEMY_INFO=1 BOF3X_SHADOW=rest_3g`: differs in
+  `Battle_PlaceBossActor` alone, the first differing byte each time `0x93B960
+  + 0x128 n + 0x8F` - the record's `+0x8F`, nothing else;
+- `BOF3X_ENEMY_INFO=2`: `FATAL: BOF3X_ENEMY_INFO must be 0 or 1`;
+- `BOF3X_ENEMY_INFO=1 BOF3X_ORIGINAL=Battle_SetupEnemy` and
+  `=Battle_PlaceBossActor`: `FATAL: BOF3X_ENEMY_INFO=1 needs <writer> ours,
+  and it is disabled`.
+
+Owed: the owner's eye - an ordinary fight with a kind never beaten (the bar
+under the name from turn one) and a boss (the bar, and Identify's numbers);
+the Cheats sub-page's new group, 176 dialog units high now.
