@@ -3,8 +3,8 @@
 **Status:** IN PROGRESS (launched 2026-10-28 afternoon on `relocatable-image/round`
 off `main` `15518394`, the PR #164 merge; stage A's three agents in worktrees
 under `C:\Users\kerok\bof3x-runs\ri1027`, baseline build `wt_base`. The
-owner's three calls are answered, section 7. Stage B merged and gated 2026-10-28
-evening, both waves, section 3; stage C next.)
+owner's three calls are answered, section 7. Stage C merged and proved 2026-10-29
+morning, section 4; stage D next.)
 
 The owner's word, 2026-10-27: stage "the data image as typed source" work as
 a round. Stages 1 and 2 of [`IDEAS.md`](IDEAS.md) I44 are done (the
@@ -422,6 +422,97 @@ at the rows.
   quicksave taken at one base and loaded at the other doing what RA3
   decided. No ledger entry if the hashes agree: nothing a player sees
   changes.
+
+### Stage C as run (2026-10-28 evening to 2026-10-29 morning, one agent, the coordinator's proof)
+
+**Branch `relocatable-image/c`**, one Opus agent for both steps, merged as
+3aa7c7e3. C1 is `dfd29152` plus four fix-ups (`31dbe817`); C2 is
+`e8929e66` plus four fix-ups (`44bea515`). Reports `ri1027\c1\REPORT.md`
+(C1 and its fix-ups), `c1\PROOF.md`, `c2\REPORT.md`, `c2\PROOF.md`.
+
+**C1, the move (mode S).** `ImageBase()` reads the main module's base from
+the process environment block (`fs:0x30` + 8) in one non-volatile asm,
+valid before `DllMain`, read once per function (`.text` +3.3 %; a lazily
+set variable cost 21 %). `make_exe.py --image-base` writes a second
+executable at another base (`build/bof3x-A00000.exe`, the `bof3x_exe_moved`
+target, not shipped); the launcher's `BOF3X_IMAGEBASE` starts it. The legal
+bases are `0x990000..0xA70000`: the image must lie wholly off the linked span
+`0x400000..0x98F000` (so a word in the span is always a VA) and below 16 MB.
+**The fence is the developer launcher's**: at `Engine_Main` only 64 KB of the
+span is free (mapped files, heaps and stacks take the rest once the
+executable is not there), so `bof3x-launcher-dev.exe` starts the game
+suspended, reserves the whole span no-access, then resumes it; the engine's
+own fence takes what is left. The rebase (`tools/gen_rebase.py` from
+`recipes/exe-pointers.tsv`): 2,661 runs, data 9,936 words, bss 29, rdata 63,
+text 8,784, each checked to lie in its class's linked range; **19 words the
+recipe holds as pointers are left alone with a reason each** (`NOT_MOVED`):
+the four bss numbers of design 3.4 and fifteen strings and numbers in
+`.data` whose bytes read as addresses (`"%2d"` at `0x64D3EC` among them).
+The 29 asm operands are displacements from `Bof3_ImageMove` in a register
+the original leaves free. `orig::Name` is a constant object that places its
+VA when converted or called. The crash reporter prints the VA beside a
+faulting address in the image; `tools/proc_image.py` translates for the
+tools. Design 13's measurements are in the C1 report section 4.
+
+**C2, the binding (mode B).** `tools/gen_symbols.py --bind-out` writes the
+bind table (10,088 rows, one per `impl`, sorted by VA; static data, no
+initialiser). In `bof3x.exe` `Code(va)` is a lookup; a miss in a table
+returns the trap and is logged (23 distinct VAs at start-up, the expected
+set: d3d_list's 15 software-surface handlers and the 8 `Mp3_*`); a miss at
+a call (`CodeToCall`, `CodePlaceToCall`, the harness `*_AT` / `*_WORD`
+macros) is a `Fatal` naming the VA and its `[[func]]`. The rebase binds
+8,673 code words to places and 111 to the trap at either base; `.stub` is
+`PAGE_NOACCESS` after `CheckLayout`; `FillStub`, the `jmp` writing,
+`WriteThunk`, `CheckStub` and `ProtectStub` are deleted; `Inject` writes
+nothing in `bof3x.exe` and checks each (VA, ours) pair against the table.
+**A place is `(top << 24) | VA`**, a `jmp ours` written at that address in a
+reserved table (the top byte `0x7C` by measurement over 227 raw dumps, then
+`0x70`, `0x7E`, `0x7B`, `0x7D`, then any top byte the process can reserve,
+logged; a `Fatal` only when the address space is full). So a code word's
+low three bytes are Capcom's wherever the game copies or reads it as data,
+and the state hash maps a value back to its VA only inside that table. The
+eight handler-word-is-code checks use `IsCodeWord` (hosted `.text`'s exact
+extent; in `bof3x.exe` a bound function). The `DirectSoundCreate` thunk is
+a thunk of ours calling through the slot as it reads at the call.
+
+**The proof as run** (`c1\proof_c1.sh`, `c2\proof_c2.sh`; results per route
+in the two PROOF files). Its shape, settled on cutsceneAndNue: **(1) ours at
+`0x400000`, unfolded, against the `orig4` pair = the route's `b1027`
+signature plus the three save-list pages** (the owner's saves changed since
+`orig4`); **(2) ours moved against ours at `0x400000` with the same fold, by
+`statehash.py diff` = the noise class only** (tick-3 upload frames, VRAM
+shadow and sound windows, the D3D handle-cache page); Capcom's folded pair
+is a cross-check, since a value fold cannot tell the music stream's heap
+pointers from image pointers in `0xA00000..0xF3F000` of a `0x400000`
+process. On the final tips all ten routes pass both at both bases; the
+quicksave taken at one base and loaded at the other is refused as "another
+span" in both directions, and one taken and loaded moved restores.
+The attract sequence, six minutes at each base (`ri1027\smoke`): moved against the linked base with the same fold, identical on 9,793 ticks but the tick-3 upload frame; at the linked base against the 2026-10-04 references, the SunderLoop page, the window-record page and one six-tick VRAM and sound window. Its pace ranged 9,106 to 10,789 logic frames per 360 s across the four runs at both bases with the machine's load, no base effect visible; a clean measurement of the run-time base's cost is stage D's.
+
+**What the proof found, a class each time** (the fence catching the rest):
+C1 - a file-local identity accessor given a VA (`shell.cpp:237`, census
+class `accessor`; sweep: 490 definitions, 4 sites); the `"%2d"` string
+rebased as a pointer and the display blocks' 24-bit ordering-table links
+unfolded (`Fold24`; a link folds on its low 24 bits); the first cell of a
+two-cell `kOriginals` line bare (`field_event.cpp:43-47`; a per-cell sweep
+of 8,679 casts and 358 task and hook arguments); the fuzz harnesses' shared
+helpers (`magic_harness::PartyOf`, `EnemyOf`) building places from VAs for
+live magic code (118 other harness hits fuzz-only). C2 - the hash's reverse
+map by value renaming game data equal to an address of ours (a VRAM texel
+`0x10770000` = `BattleAction_Kind3Wait`; six area tables holding the old
+thunk's address): the place table; then `EffectKind0B_Rise` reading past
+its 16-byte rise table into the low byte of `EffectKind0B_States[0]`, a
+code word (Capcom's own over-read, its behaviour on both sides, no ledger
+entry): the VA kept in the place's low three bytes. Proof-side: the runs
+want `--host exe` and this branch's tools; a hosted Capcom reference crashed
+in `BOF3.exe`'s own code on a `WM_LBUTTONDBLCLK` that reached the window
+(a double-click at the machine; re-recorded).
+
+**Left for stage D**: byte 3 / the high halfword of a code word read as
+data (no reader known; 213 sub-word reads with unbounded indices listed by
+`c2\subword.py`); `wide_rand.cpp:386-387`'s stores of two functions with no VA;
+the docs that still describe the stub page (design 10, `state3-design.md`,
+`state3-build.md`, `quicksave-census.md`'s `CheckStub` row).
 
 ## 5. Stage D: audit and docs
 
