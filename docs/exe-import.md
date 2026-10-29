@@ -241,6 +241,8 @@ N for song N). A PSP-only install also lacks `sin_table`.
 
 ## 6. What the engine will need (read and listed here; the engine half started in [`exe-import-engine.md`](exe-import-engine.md))
 
+> **Amended 2026-10-29:** item 1's entry-stub page was built (state 3) and retired by the relocatable-image round ([`relocatable-image-round.md`](relocatable-image-round.md) 4): code words are bound to places of ours, `.stub` is a no-access trap.
+
 **Since 2026-10-10** ([`exe-import-engine.md`](exe-import-engine.md)): item 2's
 rebuild transform is built (JP 7,138 of the 9,959 data pointers, every one the
 PC's; the words it would get wrong per build in `recipes/exe-rebuild.tsv`);

@@ -1,10 +1,10 @@
 # The relocatable-image round: staging (IDEAS I44, stage 3)
 
-**Status:** IN PROGRESS (launched 2026-10-28 afternoon on `relocatable-image/round`
+**Status:** BUILT, stage D done 2026-10-29 (section 5's "as run"; the PR at the owner's word). Launched 2026-10-28 afternoon on `relocatable-image/round`
 off `main` `15518394`, the PR #164 merge; stage A's three agents in worktrees
 under `C:\Users\kerok\bof3x-runs\ri1027`, baseline build `wt_base`. The
 owner's three calls are answered, section 7. Stage C merged and proved 2026-10-29
-morning, section 4; stage D next.)
+morning, section 4; stage D the same day, section 5.)
 
 The owner's word, 2026-10-27: stage "the data image as typed source" work as
 a round. Stages 1 and 2 of [`IDEAS.md`](IDEAS.md) I44 are done (the
@@ -520,6 +520,106 @@ An independent read of stage C's diff and of every range comparison; I44's
 outcome line, `state3-design.md`'s amendments, `STATUS.md`, `HANDOFF.md`;
 `data_census.py`'s strict rule extended (or a second rule) so a new
 absolute address in `src/game` is refused.
+
+### Stage D as run (2026-10-29, one agent; report `ri1027\d\REPORT.md`)
+
+**Branch `relocatable-image/d`** off the round tip `997b6d1d`. An independent
+read of `git diff d1d4696b..997b6d1d` by six questions (one helper agent bounded
+the sub-word reads), the docs, and a census rule. No game was run beyond the
+headless self-tests.
+
+**The audit's answers** (file and line in the report):
+1. **Range comparisons** (`reloc_census.py --full`: 163 distinct lines in the
+   game and platform scopes, plus the helpers): each tests a VA against VAs or
+   a place against places. Most of the game's are world coordinates
+   (`x == 0x4D8000`) or name compares (`rest_2d:133`, `menu_verbs:149`); the
+   platform's place their bounds (`crash.cpp`, `snapshot.cpp`'s span,
+   `input_script.cpp` `AsVa`, the fences' `0x400000..0x98F000`) or test VAs
+   (`InCode`, `PatchBytes`' linked test, `exe_host.cpp`'s layout). The state
+   hash's fold covers `0x53F000` bytes, the image to `.bss`'s end, not `.pool`
+   (`0x93F000..0x987000`): a pointer into `.pool` is not folded at a moved base.
+   That can only add a difference to a moved proof, never hide one; widening it
+   changes every folded reference, so it is left for the coordinator.
+2. **VAs and places outside the C sweeps' shapes**: no `Va` is built from a
+   run-time word; every `Img()` of a variable reads a table of VAs of ours
+   (`labels.cpp`, `wide_staging.cpp`, `name_tables.cpp`'s chunk tags); every
+   `VaOf` is of a place, in a `Fatal`. **One place handed where a VA is meant:**
+   `game_clock.cpp:95` gave `PatchBytes` `&Imp_GetTickCount`; it wrote the right
+   bytes at a moved base only through `PatchBytes`' not-in-the-span branch and
+   named the place as a VA - now `Imp_GetTickCount_addr` (`ffb98199`). Left, a
+   diagnostic: `win_main.cpp`'s exit trace scans the stack for returns into
+   `.stub`, where none lies in `bof3x.exe` since C2 (hosted unchanged).
+3. **The sub-word reads**: all 388 rows of `c2\subword.py` (213 resolved, 175
+   with a base the script could not follow), per row in `ri1027\d\q3\subword_bounds.tsv`:
+   177 bounded by our code (masks, loop bounds, `Fatal` index checks,
+   alignment: a 4-aligned base read at an offset 0 or 1 mod 4 never touches
+   byte 3), 66 bounded only by the game's data, 36 further than `0x40` from
+   a code word, 109 past the last code word of `.data`. **None shown to reach
+   byte 3 or a high halfword.** Two not proven: `window_task.cpp`'s
+   `kPlaceXY` (`0x66AE10`) u16 reads, reached by a placement of 12 or more -
+   `Window_Kind0Open` strips the placement's two high bits before a kind-2 box
+   can open, but a head that reaches a kind-2 box while window 0 is still
+   allocated would keep them (no route found); `menu_draw_helpers.cpp:215`'s
+   `ShopWin_CursorBoxWidths` u16 at index 3 would read the high halfword of
+   `ShopWin_MemberStatsSteps[0]` (its `+0xA` writer for a kind-4 shop window not
+   found). Both are Capcom's unchecked indices; reached, they would draw at a
+   different wrong place than the original. The script listed only tables
+   within `0x40` of a code word; the other 729 sub-word reads were not read.
+4. **`wide_rand.cpp:386-387`** (and `draw_emit.cpp:225`, the same shape the C2
+   sweep did not list): our functions' own addresses stored into
+   `MapCell_Handlers` by the shadow self-tests, the table put back before any
+   frame; hosted only (`exe_host.cpp` refuses `BOF3X_SHADOW`), where the hash
+   renames nothing. No place needed: a documented exception, said at both
+   sites (`ffb98199`).
+5. **The place table's exposure**: byte 3 / the high halfword is the one
+   difference (question 3). The fallback top byte changes nothing the game
+   sees, only the hash's no-collision guarantee (logged). The ordering-table
+   walkers (`d3d_list.cpp:207-212` `Gfx_DrawOTag`, `layering.cpp:203` and
+   `:449`, `draw_order.cpp:244` and `:285`) read a link word, mask it to 24 bits
+   and follow it: the links are built from packet and list-head addresses in
+   `.bss` and `.pool`, never from a code word, and a link that reached one
+   would land on `.stub`'s VA and fault, not read a top byte silently.
+6. **The 111 trap words and the 23 start-up misses**: the 111 are the C
+   runtime's tables (three at the head of `.data`, ten at `0x672930..0x672968`)
+   and the blitters' jump table after `Gfx_PackRgb` (98 words,
+   `0x6722BC..0x672450`), read by Capcom's code alone; nothing in `src/` names
+   them. d3d_list's 15 software handlers are dispatched only when
+   `Gfx_RenderFlags` bit 0 is set, which only Capcom's `Display_Setup` does
+   (ours never, DIV-0031). The 8 `Mp3_*` are replaced by `mp3dec::Arm` before
+   any music, refused under `BOF3X_MP3=original` - **and reachable under
+   `BOF3X_MP3_COMPARE`**, whose comparison calls Capcom's decoder through
+   `sound::kOriginals`: a fault on `.stub` in `bof3x.exe` (an `int3` before C2).
+   Now refused in the exe host and taken to the hosted build by the launcher
+   (`ffb98199`).
+
+**The docs**: dated notes, the history kept, in `state3-design.md` (0, 1.1, 1.2,
+2, 3.2, 6.2, 7, 11, 12), `state3-build.md` (2.2, 2.3, 4),
+`exe-import-engine.md` (4.2, 5, 7.6), `exe-import.md` (6), `quicksave.md` (3),
+`quicksave-census.md` (the `CheckStub()::mine` row), `mp3-decoder.md`;
+`relocatable-image-design.md` BUILT with an "as built" paragraph under 0 and
+notes at 1.4, 4.1, 4.4, 4.5, 6, 10; I44's status and outcome lines.
+
+**The rule** (`tools/reloc_bare.py --check`, in CI beside `reloc_census.py
+--check`): a hex literal in the linked span outside a `Va` / `CodeVa`
+definition, a VA name in a memory accessor that does not place, a code VA
+cast to a function pointer or handed to `Task_Create` without
+`Img` / `Code` / `CodePlace`, in `src/game`, `src/input`, `src/render` (not the
+fuzz): 2,889 sites listed today in `analysis/reloc_bare.tsv` (2,780 literals,
+109 accessor sites in the harness helpers the fuzz alone reaches and
+`rdata_consts.cpp`'s file read, no cast, no task argument), keyed by the
+line's text; a new one is refused until it is placed or the list is
+regenerated and committed. Its negative controls: stage C's four misses
+(`shell.cpp:237`, `field_event.cpp:43`, `magic_harness.cpp:478`, a bare task
+entry) and a planted literal, each refused. It cannot see a VA that reaches
+a place at run time (a table of VAs of ours, a parameter, a word computed
+from a code word), a literal under six hex digits, or an accessor it does not
+recognise; the fence, the trap and `CodeToCall`'s `Fatal` are the run-time
+answer to those.
+
+**Left:** the fold's width (question 1); the two sub-word reads not proven
+and the 729 not read (question 3); the exit trace's stack scan in `bof3x.exe`
+(question 2); the run-time base's cost on the attract's pace, unmeasured
+(needs a quiet game run at both bases, the coordinator's).
 
 ## 6. Ownership, merge order, numbering
 

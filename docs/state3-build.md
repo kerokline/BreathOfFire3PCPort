@@ -135,6 +135,8 @@ dropped the file rule - the first configure built no executable at all.
 
 ### 2.2 The engine side (`src/hook/host.*`, `exe_host.*`, `code_bytes.*`)
 
+> **Superseded in part 2026-10-29 by the relocatable-image round** ([`relocatable-image-round.md`](relocatable-image-round.md) 4): the log lines below that fill `.stub` with `int3`, write the jmps and the thunk and take `CheckStub`'s inventory are gone with those functions; `.stub` is made no-access after the layout check and never written, the code words are bound by the rebase to their places (`src/hook/bind.cpp`), and `DetectHost` finds the exe host by its identity at whatever base the header gave it. The call trace stays refused in the exe host. What follows is the first build as it ran.
+
 `DllMain` opens the log and calls `DetectHost` (Capcom's timestamp and
 `SizeOfImage`, or ours with `.stub` at `0x401000`; anything else a Fatal);
 in the exe host it returns. `Engine_Main` then runs section 4 in order. The
@@ -197,6 +199,8 @@ back - on the fill, that byte is `0xCC` again, and the thread would trap
 forever; and every entry it could arm is either `int3` or a jmp of ours.
 
 ### 2.3 Section 7, measured again: forty reads, not one
+
+> **Amended 2026-10-29:** `CheckStub` is deleted (stage C2 of the relocatable-image round); `.stub` is no-access, so a write or a read of it faults at once. The fifteen software-renderer handlers below now meet the trap, not `int3` - reached only when `Gfx_RenderFlags` bit 0 selects the software path, which only Capcom's `Display_Setup` sets and ours never does (DIV-0031).
 
 The brief's section 7 counted **one** direct read of Capcom's code bytes
 (`yes_no_layout.cpp:368`). That is wrong. A scan of `src/` (comments
@@ -380,6 +384,8 @@ at `0x672950`, which no start-up writes now. The state hash does not use it.
   attract run was unattended and `--no-front`.
 
 ## 4. What section 11 leaves
+
+> **Amended 2026-10-29:** "int3 in the exe host" below reads "the no-access trap" since the relocatable-image round's stage C2.
 
 The routes, the stack watch, the cache as the `.data` source and the attract
 check with the skip list's new entries ran in the away batch (section 5).

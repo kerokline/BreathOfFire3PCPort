@@ -1,6 +1,6 @@
 # The relocatable image: the loader's design
 
-**Status:** DRAFT (2026-10-28, the relocatable-image round's group RA3, written
+**Status:** BUILT (2026-10-29: stage C as section 0's "as built" paragraph says; below it, RA3's design as drafted, with a dated note in each section where the build differs). Was: DRAFT (2026-10-28, the relocatable-image round's group RA3, written
 on `relocatable-image/ra3` from `main` `15518394` before any code; every
 number below is a count, a file and line, or a session script run against
 that checkout and the player's `BOF3.exe`, read only - section 14. Nothing
@@ -22,6 +22,8 @@ stub-page choice, the layout table), [`exe-import.md`](exe-import.md) 5 and
 [`IDEAS.md`](IDEAS.md) I44 and I46.
 
 ## 0. The shape in one paragraph
+
+**As built (2026-10-29, stage C; [`relocatable-image-round.md`](relocatable-image-round.md) 4, the reports `ri1027\c1\REPORT.md` and `c2\REPORT.md`).** Mode B, the owner's option R: the stub page is gone, with no switch to bring it back. `ImageBase()` reads the main module's base from the process environment block (`fs:0x30` + 8) in one non-volatile asm, valid before `DllMain`, in both hosts (`.text` +3.3 %; a lazily set variable cost 21 %). **A code VA's place in `bof3x.exe` is `(top << 24) | VA`**: an entry of a table of `jmp ours` that the engine reserves under a top byte no aligned `.data` word takes as such a value in 227 dumps (`0x7C` first, then `0x70`, `0x7E`, `0x7B`, `0x7D`, then any it can reserve, logged; `src/hook/bind.cpp`) - not our function's own address - so a code word's low three bytes stay Capcom's wherever the game reads it as data, and the state hash maps a place back to its VA exactly; byte 3 and the high halfword read the top byte where Capcom has `0x00` (no reader known; stage D read the 388 sub-word reads near a code word and found none that reaches, two left open, round doc 5).`Code(va)` is a lookup in a generated bind table (10,088 rows); a miss in a table returns the trap and is logged, a miss at a call is a `Fatal`. **The fence is the developer launcher's** (`bof3x-launcher-dev.exe` reserves the linked span while the game is suspended), since at `Engine_Main` only 64 KB of it is still free; the legal moved bases are `0x990000..0xA70000`, wholly off the linked span `0x400000..0x98F000`, so a word in the span is always a VA. Section 13's measurements are answered in the C1 report's section 4. The paragraph below is the design as drafted.
 
 The image stays where state 3 put it - **the sections of `bof3x.exe`**,
 `.stub`, `.game` and `.pool` at their RVAs `0x1000`, `0x1C4000`, `0x53F000` -
@@ -110,6 +112,8 @@ changes is the code that **tests** it as a number:
 | `src/hook/detour.cpp:148-151` (`VerifyImage`), `host.cpp:26` | the hosted build: `BOF3.exe` at `0x400000` | unchanged: that is the player's file, which is fixed |
 
 ### 1.4 The base at run time: one DLL, two hosts
+
+> **As built (2026-10-29):** not computed from `GetModuleHandleW(nullptr)` on first use but read from the process environment block in one non-volatile asm (`common/image_base.h`), with no variable to set and nothing to test at each place; `DetectHost` checks it against `GetModuleHandleW(nullptr)`. The initialisers are counted (C1 report 4: 128 namespace-scope in 78 objects, 133 more guarded statics).
 
 The round doc's stage C keeps the base `constexpr` in the hosted build. One
 binary cannot do that: `CMakeLists.txt:97` builds one `bof3x SHARED`, loaded
@@ -320,6 +324,8 @@ measured (section 13), and the fence covers it.
 
 ### 4.1 Bound by name
 
+> **As built (2026-10-29):** each word gets its VA's place, a jump of ours to the function, not `&ours` (section 0's note). The stage C2 proof found two reasons, one each: the state hash's reverse map by value renamed game data equal to an address of ours, and `EffectKind0B_Rise` reads past its rise table into the low byte of a code word, which must stay Capcom's.
+
 `recipes/exe-layout.tsv`'s 8,784 `code` rows (section 14): **8,673 name a
 `[[func]]`, 6,211 functions, and every one of those has `impl`** - no word
 targets one of the twelve without (`Fmv_EnterFullscreen`, `Crt_ftol`,
@@ -346,6 +352,8 @@ among the 358. Numbers stay numbers: neither mode touches them.
 
 ### 4.4 Our code's code places
 
+> **As built (2026-10-29):** `Code(va)` looks up a bind table generated from `symbols.toml` (`tools/gen_symbols.py --bind-out`, `bind.gen.h`, static data), not `detour.cpp`'s owned list, and returns the VA's place; a miss in a table returns the trap and is logged (23 distinct VAs at start-up: `d3d_list.cpp`'s 15 software-surface handlers and the 8 `Mp3_*`), a miss at a call (`CodeToCall`, `CodePlaceToCall`, the harnesses' `*_AT` / `*_WORD`) is a `Fatal`. `Inject` writes nothing in `bof3x.exe` and checks each pair against the table. The `DirectSoundCreate` thunk is a function of ours that calls through the slot as it reads at the call (binding it to the slot's value failed: a callee table placed it before the slots were bound).
+
 The stub page today makes every Capcom code address our code holds a working
 call. Without it (mode B), each code VA our code **places** - calls, or
 stores where the game will call or compare it - must give the bound function,
@@ -371,6 +379,8 @@ address, the reason the 61 calls of
 being the helpers is what keeps them out of stage B's site count.
 
 ### 4.5 What replaces the `int3` wall
+
+> **As built (2026-10-29):** mode B as described; mode S is deleted. `.stub` goes no-access right after the layout check (`exe_host.cpp` `TrapStub`), and `crash.cpp` names an access there as the trap with the VA and its `[[func]]`. The place table itself is filled with `int3` between the jumps.
 
 In mode B `.stub` is not written and goes **`PAGE_NOACCESS`** after the
 layout check: 1.8 MB of reserved address space (`kStubSize` `0x1C3000`), no
@@ -410,6 +420,8 @@ the moved base.
   definitions in the headers) are stage B sites.
 
 ## 6. The entry-stub page: two options (the owner's call 2)
+
+> **Answered and built:** the owner chose R on 2026-10-28; stage C built C1 (mode S, the move alone) and then C2 (mode B), deleting mode S's code - no `BOF3X_STUBPAGE`, no mode in the quicksave's build id (2026-10-29).
 
 ### 6.1 The two modes
 
@@ -506,6 +518,8 @@ host puts the image. The ones that touch a running exe host or its products:
 | hosted only | `calltrace.py`, `owned_sweep.py` (reads `.text` ranges of the file) | none: the call trace is refused in the exe host (`exe_host.cpp:75-77`) |
 
 ## 10. Stage C's loader, in order
+
+> **As built (2026-10-29):** `Engine_Main` runs `RefuseHostedSwitches`, `Fence` (the developer launcher's reservation counted, what is still free taken), `CheckLayout`, `TrapStub` (`.stub` no-access, before any copy), `CopyData`, `Rebase` (every listed word checked in its class's linked range, the data words moved, the code words bound; 19 words the recipe holds as pointers left alone, `tools/gen_rebase.py` `NOT_MOVED`), `BindSlots`, `SetX87`, `StateHash_SetImageBase`, the state hash's census, `InjectAll` (recording, checked against the bind table), the census after. The place table is built at the first `Code()`, before `DllMain`. Mode S's step 8 is gone.
 
 The exe host's `Engine_Main` (`exe_host.cpp:420-476`), with what changes:
 

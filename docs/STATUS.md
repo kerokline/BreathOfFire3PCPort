@@ -1,12 +1,14 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-28)
+**Status:** IN PROGRESS (2026-10-29)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
 true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
+
+**The relocatable-image round, 2026-10-28..29, on `relocatable-image/round`** (off `main` `15518394`, the PR #164 merge; stages A (census, address-independent state hash, loader design), B (every address in the source spelled as a VA placed by `Img` / `Code`, machine code identical throughout), C (the move, C1, and the binding, C2) and D (the audit, the docs, the rule); Opus agents in worktrees under `C:\Users\kerok\bof3x-runs\ri1027`, merged one at a time, the proof by the coordinator; unpushed, **PR at the owner's word**; [`relocatable-image-round.md`](relocatable-image-round.md), sections 2..5). **The image is movable** (IDEAS I44 stage 3): the base is read at run time, `.data`'s pointer words are rebased at load, and the code words are bound by name to places of ours - `(top << 24) | VA`, a table of jumps (`src/hook/bind.cpp`) - so the **entry-stub page is gone** and `.stub` is a no-access trap. **What the player sees: nothing changed** - `bof3x.exe` stays at `0x400000`, and its state hash matches the references on all ten routes; the developer switch `BOF3X_IMAGEBASE=0xA00000` (the developer launcher, which fences the linked span) runs the same ten routes hash-equal to `0x400000`, and a quicksave across bases is refused. Stage D found two defects and fixed both (`BOF3X_MP3_COMPARE` reaching Capcom's decoder, now refused in `bof3x.exe`; a place handed to `PatchBytes`), and `tools/reloc_bare.py --check` (CI) refuses a new bare image address. No ledger entry: no behaviour a player meets changed. **Owed the owner's eye: nothing player-visible**; the open items are in the round doc's section 5 "Left".
 
 **Stage D of the ledger-fields round, 2026-10-28, on `ledger-fields/stage-d`** (off `main` `de7aeb3d`, the PR #162
 merge; three Opus agents D0, D1, D2 one worktree each under `C:\Users\kerok\bof3x-runs\lfd1028`, merged one at a
