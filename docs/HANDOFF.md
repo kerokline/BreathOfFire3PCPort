@@ -73,10 +73,13 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      The worktrees under `lf1027` and `lfd1028` are removable once the PRs are in. Also on `main` since PR #162: the
      regenerated `analysis/data_census.tsv` (line numbers only).
    - **The relocatable-image round is built through stage D on `relocatable-image/round`** (off `main`
-     `15518394`; [`relocatable-image-round.md`](relocatable-image-round.md) sections 2..5 "as run", the reports
-     `C:\Users\kerok\bof3x-runs\ri1027\<group>\REPORT.md`, the proofs `c1\PROOF.md` and `c2\PROOF.md`; unpushed,
-     **PR at the owner's word**). The image is movable and the stub page gone ([`STATUS.md`](STATUS.md)); nothing a
-     player sees changed. **Next:** the PR; then, for whoever picks the round's ends up (none needs the owner): the
+     `15518394`, `main` merged through PR #167; [`relocatable-image-round.md`](relocatable-image-round.md)
+     sections 2..5 "as run" and "Before the PR", the reports
+     `C:\Users\kerok\bof3x-runs\ri1027\<group>\REPORT.md`, the proofs `c1\PROOF.md` and `c2\PROOF.md`; **its PR
+     open**). The image is movable and the stub page gone ([`STATUS.md`](STATUS.md)); nothing a player sees
+     changed. The PR's day found what the stage D gate had skipped: the hosted `BOF3X_SHADOW='*'` suite, which
+     faulted in `field_misc`'s fuzz on a static-initialisation order the move created (`draw_pool`'s pointers,
+     fixed `41372e3c`, section 5 "Before the PR"). **Next:** the merge; then, for whoever picks the round's ends up (none needs the owner): the
      state hash's fold widened to cover `.pool` (`statehash.cpp` and `statehash.py` together, the folded
      references re-recorded); the two sub-word reads not proven and the 729 not read (section 5, question 3);
      the exit trace's stack scan in `bof3x.exe`; the run-time base's cost on the attract's pace, measured on a
@@ -369,7 +372,7 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   copy with its own `bof3x.ini` (or none: self-tests and references want an ini-less copy, Traps). End a run with
   `taskkill //F //IM BOF3.exe` only for a game you started (the runners do exactly that now,
   [`world-map.md`](world-map.md) §6); batches run detached.
-- **Self-tests, headless:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config` (a hosted run: the player's launcher hands it to `bof3x-launcher-dev.exe` beside it since 2026-10-15, [`launcher-settings.md`](launcher-settings.md) 2).
+- **Self-tests, headless:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config` (a hosted run: the player's launcher hands it to `bof3x-launcher-dev.exe` beside it since 2026-10-15, [`launcher-settings.md`](launcher-settings.md) 2). **Keep the `BOF3X_SHADOW='*'`:** without it only the start-up self-tests run, not the shadow fuzz suite - the relocatable-image round's gate dropped it and shipped a fault the suite finds in its first module (2026-10-29, [`relocatable-image-round.md`](relocatable-image-round.md) 5 "Before the PR"). A fault inside a self-test is silent (the crash reporter's thread cannot run under the loader lock; the process exits 0xC0000005 after 20 s): the log's last line names the module, and a `Log` in `crash.cpp`'s handler itself names the fault. Beside it the exe host's: `... --host exe`, and moved: `BOF3X_IMAGEBASE=0xA00000 ... --host exe`.
   **A launcher copy holds four files** - `bof3x-launcher.exe`, `bof3x-launcher-dev.exe`, `bof3x.dll` and `bof3x.exe`
   (the exe host) - and no `bof3x.ini`; without `bof3x.exe` the launcher stops on a modal "bof3x.exe is missing"
   dialog (Traps). `abc_run.py prepare` copies all four; a hand-made copy must too. Unattended runs that pass a

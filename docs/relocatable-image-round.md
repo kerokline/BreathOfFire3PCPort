@@ -621,6 +621,40 @@ and the 729 not read (question 3); the exit trace's stack scan in `bof3x.exe`
 (question 2); the run-time base's cost on the attract's pace, unmeasured
 (needs a quiet game run at both bases, the coordinator's).
 
+### Before the PR (2026-10-29, the coordinator)
+
+**`main` merged twice** (PR #166, DIV-0185 in `Battle_SetHitPopup`; PR #167,
+DIV-0186 in kind 0x6B's particles): one conflict each, both the same shape -
+`main` changed a line the round had placed. Resolved keeping both: DIV-0185's
+null-block test over the placed `At(Img(at::kHitClass.v))` read, and
+DIV-0186's `Particles()` answering `Img(at::kPixels.v)` when the room is off
+(a VA would have been a bare address at a moved base; `reloc_bare.py --check`
+agrees). Nothing else of either PR touches the round's shapes.
+
+**A regression the gate never saw.** Stage D's gate ran the self-test as
+`BOF3X_SELFTEST_ONLY=1` without `BOF3X_SHADOW='*'`, so the shadow fuzz
+suite had not run on the round since stage B. Hosted under `'*'` the build
+faulted in `field_misc`'s fuzz, silently: the fault is under the loader lock,
+where the crash reporter's thread cannot run (it waits its 20 s, then the
+process dies with 0xC0000005 - `crash.cpp`'s design note). A temporary log in
+the handler itself named it: `memcpy` from address 0, 0x2400 bytes -
+`kDrawItems`, the fuzz's file-scope constant from `draw_pool::Items()`.
+Bisected over the stage builds under `ri1027` (every `rb*` and `rc*` build
+passes, stage C's fails): `draw_pool.cpp`'s `g_items = DrawItems` became a
+dynamic initialiser when C1 made the macro `Img(...)` of a run-time base, and
+the order between its unit and the fuzz's is unspecified - the fuzz read a
+null pool. Fixed in `41372e3c`: the pool's two pointers start null, and
+`Items()` / `Free()` answer the original's arrays at their place until
+`DrawPool_Grow`'s switch; DIV-0062 is unchanged. A sweep of every file-scope
+initialiser in `src` that names an `Img` macro, an `at::*At()` accessor or
+the pool found no other that reads another unit's dynamically initialised
+global (the rest read `Img()` itself, valid at any time). The full hosted
+suite (`BOF3X_SHADOW='*'`), the exe-host and moved self-tests and the eight
+check tools then pass on the merged branch; `main`'s own binaries pass the
+suite too, so the fault was the round's alone. **The gate's lesson:** a
+round's self-test line is `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, hosted,
+beside the exe-host and moved runs - HANDOFF's "How to run things" says so.
+
 ## 6. Ownership, merge order, numbering
 
 | File or area | Owner |
