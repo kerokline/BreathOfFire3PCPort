@@ -37,6 +37,7 @@
 #include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_3g_callees.h"
+#include "game/cheats.h"
 #include "game/scenario_harness.h"
 #include "game/draw_pool.h"
 #include "game/psp_code.h"
@@ -333,6 +334,10 @@ extern "C" void __cdecl Battle_PlaceBossActors(void) {
 // Battle_CopyEnemyData(count, kind), Battle_SetEnemyOffset(count, kind's byte);
 // the record's +0x8F 0; the actor's +0 | 0x40; 0x904AB2 up.
 //
+// DIV-0187 (src/game/cheats.cpp): under BOF3X_ENEMY_INFO=1 the record's +0x8F
+// is 1 instead of 0, so a boss shows its HP gauge and its Identify stats as
+// a beaten kind does.
+//
 // DIV-0108 (psp_code.h): with the PSP's myria-item on, in area 198 under
 // event battle 0x37 the record's item word +0xA8 is 0x317 after
 // Battle_CopyEnemyData - the PSP's added store (PSP-JP 0x141570..0x141598,
@@ -374,7 +379,7 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
     SH_CALL(Battle_CopyEnemyData)(count, kind);
     psp_code::MyriaItem(At(Battle_Enemies_addr + at::kEnemyStride * n), Game_AreaNumber, EventBattle_Id);
     SH_CALL(Battle_SetEnemyOffset)(count, kind & 0xFF);
-    At(Battle_Enemies_addr + at::kEnemyStride * n + 0x8F)[0] = 0;
+    At(Battle_Enemies_addr + at::kEnemyStride * n + 0x8F)[0] = Cheats_EnemyInfoShown() ? 1 : 0;   // DIV-0187
     actor[0] = static_cast<unsigned char>(actor[0] | 0x40);
     Battle_EnemyCount = static_cast<unsigned char>(Battle_EnemyCount + 1);
 }
@@ -1011,4 +1016,8 @@ void Rest3G_Inject() {
     BOF3_INJECT(AreaMapBD_BuildView);
     BOF3_INJECT(AreaMapBD_CellTexture);
     BOF3_INJECT(EffectKind0F_CharCount);
+    // DIV-0187 writes a boss's +0x8F here; Capcom's Battle_PlaceBossActor
+    // would clear it and the cheat would miss every boss.
+    if (Cheats_EnemyInfoShown() && !bof3::IsEnabled(bof3::addr::Battle_PlaceBossActor))
+        bof3::Fatal("BOF3X_ENEMY_INFO=1 needs Battle_PlaceBossActor ours, and it is disabled");
 }

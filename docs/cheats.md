@@ -1,14 +1,16 @@
-# Cheats — EXP and zenny multipliers, and a steal that always lands
+# Cheats — EXP and zenny multipliers, a steal that always lands, and every enemy's information shown
 
 **Status:** BUILT + CONFIRMED IN GAME (2026-09-24, the recorded combat route,
 watched by the owner). 2026-10-03: the cap 10 and the two boss hooks (§2a,
-§2b) built and checked headless; the live run in §5 is owed.
+§2b) built and checked headless; the live run in §5 is owed. 2026-10-29: the
+enemy-information switch (§6) built and checked headless; not yet played.
 
 The archival sibling ships three cheats as mods: EXP and zenny multiplier
 sliders (its `docs/EXP_BOOST.md`) and a "steal always succeeds" patch (its
-`docs/STEAL.md`). This is the same three as launcher settings here - a
-"Cheats..." button on the settings dialog, beside "Play", with two sliders
-and one switch. Ledger entries DIV-0045 and DIV-0046.
+`docs/STEAL.md`). This is the same three as launcher settings here - the
+Cheats sub-page under Game Options, with two sliders and one switch - and
+since 2026-10-29 a fourth of our own, every enemy's HP gauge and stats shown
+(§6). Ledger entries DIV-0045, DIV-0046 and DIV-0187.
 
 ## 1. Where each one lives
 
@@ -17,6 +19,7 @@ and one switch. Ledger entries DIV-0045 and DIV-0046.
 | EXP won, times | `cheat.exp=` 0..10 | `BOF3X_EXP=n` when not 1 | 1 | our `Battle_EnemyDefeated` `0x437470`, [`battle_flow.md`](battle_flow.md); and two boss hooks that write the EXP total themselves, `Boss16_End` `0x43A190` and `BossWeretigr_EndMove` `0x43D5A0` (§2a) |
 | Zenny won, times | `cheat.zenny=` 0..10 | `BOF3X_ZENNY=n` when not 1 | 1 | our `Battle_EnemyDefeated` only (§2a: no other writer) |
 | Steal always succeeds | `cheat.steal=` 0 / 1 | `BOF3X_STEAL=1` when on | off | two `PatchBytes` of one immediate each, `src/game/cheats.cpp` |
+| Every enemy's HP bar and stats shown | `cheat.enemy_info=` 0 / 1 | `BOF3X_ENEMY_INFO=1` when on | off | our `Battle_SetupEnemy` `0x494320` and `Battle_PlaceBossActor` `0x494570` write the enemy's byte `+0x8F` (§6) |
 
 Unset, nothing here changes a byte or a number: every harness and oracle
 run leaves the variables unset, and the `battle_flow` fuzz compares ours
@@ -227,3 +230,45 @@ F..F+600 shows the EXP line (`BattleResult_SplitExp` first turns the total
 into a member's share and the counter ticks it down, so a right picture
 reads 0 and a wrong one the share). For the owner: one picture of the
 second fight's result screen on ours under `cheat.exp=0`.
+
+## 6. Every enemy's HP gauge and Identify stats (DIV-0187, 2026-10-29)
+
+A player asked for every enemy's HP bar shown instead of hidden. The owner
+named the lever: the enemy's "discovered" byte, which also opens Identify's
+panel and the bosses' gauges.
+
+**What the byte is.** Each enemy record's byte `+0x8F` (`records.h`
+`BattleEnemy::kind_flag`). Three readers, all ours:
+
+| Reader | Reads it as |
+|---|---|
+| `EnemyGauge` in `BattleWin_DrawTargetEnemy` `0x443B10` and `BattleWin_DrawEnemyStatus` `0x443D90` (`battle_windows.cpp`) | 1: the HP bar; else the ":" glyph of value 0xFFFF |
+| `Identify_DrawEnemy` `0x4B11F0` (`magic_s12.cpp`) | not 0: the six element glyphs, EXP and zenny; else question marks |
+| `Identify_Roll` (`magic_s12.cpp`) | not 0 and the roll hits: `Identify_MarkSeen`; else the cast fails |
+
+Two writers, both ours: `Battle_SetupEnemy` `0x494320` copies
+`Battle_EnemyKindFlag(kind)` `0x494EA0` - bit `kind` of the set at `0x904068`
+(the save's flag block, `Cond_Flags + 0xD8`), which `Battle_EnemyDefeated`
+`0x437470` sets through `Battle_SetEnemyKindFlag` `0x494ED0` (its only
+caller) when one of that kind falls. So the byte reads "a kind the party has
+beaten before", and a kind shows its gauge and stats from its second
+meeting. `Battle_PlaceBossActor` `0x494570` writes 0 for an event battle's
+actors: a boss never shows either, except Beyd's two fights, whose enter
+hooks write 1 (`boss_se.md`).
+
+**The switch.** `Cheats_Inject` reads `BOF3X_ENEMY_INFO` (0 or 1, unset is
+off, anything else a `Fatal`) into `Cheats_EnemyInfoShown()`. With it on,
+`Battle_SetupEnemy` writes 1 after reading the kind's bit (the read stays,
+as the original's does), and `Battle_PlaceBossActor` writes 1 instead of 0.
+Nothing writes the bit set: the save still records what the party beat, and
+with the switch off the game is where it would have been. Each module's
+inject checks that its writer is ours when the switch is on
+(`BattleSprites_Inject`, `Rest3G_Inject`): a `BOF3X_ORIGINAL` or `BOF3X_OFF`
+that leaves Capcom's writer in place is a `Fatal`, never a cheat half on.
+
+Why per spawn and not the bit set: setting every kind's bit would rewrite
+the player's save at the first battle, lose the kill record for nothing, and
+still miss the bosses, whose writer ignores the set.
+
+**Verification.** 2026-10-29, headless: see the ledger entry and the
+session's log lines below.

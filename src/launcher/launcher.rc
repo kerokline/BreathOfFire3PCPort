@@ -234,8 +234,8 @@ BEGIN
                     -1, 9, 34, 260, 18
 END
 
-// DIV-0045 / DIV-0046: the cheats (docs/cheats.md), Game Options' third sub-page.
-IDD_PAGE_GAME DIALOGEX 0, 0, 290, 140
+// DIV-0045 / DIV-0046 / DIV-0187: the cheats (docs/cheats.md), Game Options' third sub-page.
+IDD_PAGE_GAME DIALOGEX 0, 0, 290, 176
 STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 9, "Segoe UI", 400, 0, 0x1
@@ -250,12 +250,17 @@ BEGIN
     LTEXT           "1 is normal. 0 gives no EXP or Zenny (no level-ups). Applies when each enemy is defeated.",
                     -1, 7, 47, 276, 9
 
-    GROUPBOX        "Stealing", -1, 0, 69, 286, 46
-    AUTOCHECKBOX    "&Steal always succeeds", IDC_CH_STEAL, 7, 83, 270, 10
+    GROUPBOX        "Stealing", -1, 0, 69, 286, 42
+    AUTOCHECKBOX    "&Steal always succeeds", IDC_CH_STEAL, 7, 81, 270, 10
     LTEXT           "Pilfer and Steal always take the enemy's item on the first try, if the enemy has an item.",
-                    -1, 19, 95, 260, 18
+                    -1, 19, 93, 260, 18
 
-    PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS, 0, 122, 52, 14
+    GROUPBOX        "Enemy information", -1, 0, 115, 286, 42
+    AUTOCHECKBOX    "Show every enemy's &HP bar and stats", IDC_CH_INFO, 7, 127, 270, 10
+    LTEXT           "The HP bar and the Identify stats show for every enemy, bosses too, before you defeat that kind.",
+                    -1, 19, 139, 260, 18
+
+    PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS, 0, 160, 52, 14
 END
 
 // The three suites (docs/launcher-suites.md, recipes/suites.toml): each the

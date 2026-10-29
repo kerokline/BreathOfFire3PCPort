@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 186 entries, DIV-0001..0186, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 187 entries, DIV-0001..0187, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -13192,5 +13192,57 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=AshRoom (ini off=)
 - **Toward:** psx - the PlayStation's room holds the Gaist's particles
+- **Languages:** any
+- **State:** active
+
+### Every enemy shows its HP gauge and its Identify stats from the first meeting, bosses too
+
+- **ID:** DIV-0187
+- **Date:** 2026-10-29
+- **Subsystem:** battle - `Battle_SetupEnemy` `0x494320` (ours,
+  `src/game/battle_sprites.cpp`) and `Battle_PlaceBossActor` `0x494570`
+  (ours, `src/game/rest_3g.cpp`), the two writers of an enemy record's byte
+  `+0x8F`; the switch in `src/game/cheats.cpp`; the launcher's Cheats
+  sub-page; [`cheats.md`](cheats.md) section 6.
+- **Tier:** Extension
+- **Original behaviour:** an enemy's HP gauge in the target and status
+  banners (`BattleWin_DrawTargetEnemy` `0x443B10`, `BattleWin_DrawEnemyStatus`
+  `0x443D90`: the gauge when the record's `+0x8F` is 1, else the ":" glyph
+  of value 0xFFFF) and Identify's stats panel (`Identify_DrawEnemy`
+  `0x4B11F0`: the elements, EXP and zenny when `+0x8F` is not 0, else
+  question marks; `Identify_Roll` lands only then) read the byte `+0x8F`.
+  `Battle_SetupEnemy` copies it from the save's per-kind bit set at
+  `0x904068` (`Battle_EnemyKindFlag` `0x494EA0`, the flag block's `+0xD8`),
+  and `Battle_EnemyDefeated` `0x437470` sets a kind's bit when one falls
+  (`Battle_SetEnemyKindFlag` `0x494ED0`, its only caller), so a kind shows
+  its gauge and stats once the party has beaten one of it.
+  `Battle_PlaceBossActor` writes `+0x8F` = 0 for an event battle's actors,
+  so a boss never shows either - except Beyd's two fights, whose enter hooks
+  write 1 (`BossBeyd_Enter` `0x43B910`, `BossBeyd2_Enter` `0x43BB20`,
+  [`boss_se.md`](boss_se.md)).
+- **New behaviour:** with `BOF3X_ENEMY_INFO=1` both writers put 1 in
+  `+0x8F`: every enemy shows its HP gauge from the first meeting, Identify's
+  panel shows its stats and its roll can land, and a boss does the same. The
+  bit set is still read, as the original reads it, and still set on a kill,
+  so the save records what the party beat as before and the cheat off is
+  the game as it was. Off by default; `cheat.enemy_info=1` in `bof3x.ini`,
+  the "Show every enemy's HP bar and stats" box on the Cheats sub-page. A
+  start with the switch on and either writer left as Capcom's
+  (`BOF3X_ORIGINAL` / `BOF3X_OFF`) is a `Fatal`, so the cheat is never
+  silently half on.
+- **Rationale:** a player's request, relayed by the owner 2026-10-29: every
+  enemy's HP bar shown instead of hidden. The owner chose the "discovered"
+  byte as the lever, since it opens Identify's panel and the bosses' gauges
+  with the same change. Set per spawn rather than in the save's bit set so
+  that no save is rewritten and nothing of the kill record is lost.
+- **Also in the PSX version?** No. The same byte and bit set on the console
+  (the sibling's `BATTLE_RAM.md`); not measured here.
+- **Verification:** 2026-10-29, headless (`BOF3X_SELFTEST_ONLY=1`): see
+  [`cheats.md`](cheats.md) section 6. Not yet watched in play.
+- **Reversible?** Yes: the box off, `BOF3X_ENEMY_INFO` unset.
+- **Switch:** ini:cheat.enemy_info=0
+- **Default:** off - the box starts off
+- **Player:** yes
+- **Toward:** none
 - **Languages:** any
 - **State:** active

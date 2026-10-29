@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 183;
+inline constexpr std::size_t kSwitchCount = 184;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -256,9 +256,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "DialTranslucent", 0, 15},   // DIV-0184
     {SwitchForm::Name, "Battle_SetHitPopup", 0, 18},   // DIV-0185
     {SwitchForm::Name, "AshRoom", 0, 7},   // DIV-0186
+    {SwitchForm::Ini, "ini:cheat.enemy_info=0", 4, 16},   // DIV-0187
 };
 
-inline constexpr std::size_t kEntryCount = 186;
+inline constexpr std::size_t kEntryCount = 187;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -632,6 +633,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Intent, State::Active, 0, 181, 1, true, Player::Costly, 0, kLangAny},
     {186, "The Gaist's turn-to-ash effect has room for every pixel, instead of overwriting Sprite_Current past 1,881",
      Tier::Intent, State::Active, 0, 182, 1, true, Player::Yes, kTowardPsx, kLangAny},
+    {187, "Every enemy shows its HP gauge and its Identify stats from the first meeting, bosses too",
+     Tier::Extension, State::Active, 0, 183, 1, false, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.
