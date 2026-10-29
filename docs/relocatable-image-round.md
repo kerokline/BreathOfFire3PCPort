@@ -511,6 +511,8 @@ in `BOF3.exe`'s own code on a `WM_LBUTTONDBLCLK` that reached the window
 **Left for stage D**: byte 3 / the high halfword of a code word read as
 data (no reader known; 213 sub-word reads with unbounded indices listed by
 `c2\subword.py`); `wide_rand.cpp:386-387`'s stores of two functions with no VA;
+the fold's extent, `0x53F000`, which leaves a moved `.pool` raw (PR #168's
+review; staged as [`statehash-pool-fold.md`](statehash-pool-fold.md));
 the docs that still describe the stub page (design 10, `state3-design.md`,
 `state3-build.md`, `quicksave-census.md`'s `CheckStub` row).
 
