@@ -361,7 +361,7 @@ void Rebase() {
     for (unsigned c = 0; c < 4; ++c)
         if (words[c] != rebase::kWords[c])
             Fatal("rebase: %u %s words moved, the table counts %u", words[c], linked[c].name, rebase::kWords[c]);
-    Log("rebase: %u runs, words data %u, bss %u, rdata %u, text %u (%u held as pointers left as numbers) checked in "
+    Log("rebase: %u runs, words data %u, bss %u, rdata %u, text %u (%u the recipe holds as pointers left alone: strings and numbers) checked in "
         "their linked ranges and moved by 0x%X (the image at 0x%08X)",
         rebase::kRunCount, words[rebase::kData], words[rebase::kBss], words[rebase::kRdata], words[rebase::kText],
         rebase::kNotMoved, (unsigned)move, (unsigned)ImageBase());

@@ -71,6 +71,21 @@
 // side hashes as the same pointer stored at 0x400000 on the other; and with
 // no folded range - every host today, BOF3X_STATEHASH_FOLD unset - the hash
 // is BOF3SH3's, bit for bit.
+//
+// The ordering tables' links (the relocatable-image round's proof,
+// 2026-10-28): a link is a 24-bit address with a length byte on top
+// (Gpu_ClearOTagR, shell.cpp; the display blocks at 0x903880), so a link into
+// a moved image is 0xLL000000 | (F + offset) and never lies in [F, F +
+// 0x53F000) as a whole word. A word whose own value is not folded but whose
+// low 24 bits lie in a folded range has those 24 bits folded and its top
+// byte kept (Fold24). Both sides of a comparison fold the same ranges, so the
+// hash stays a function of the bytes and the ranges alone: a colour or a
+// packed number that happens to have such low bits is rewritten alike on
+// both sides, and two words that differ still differ (the fold is one to one
+// within the range); what it cannot tell apart is a moved link from an
+// unmoved number that reads as the folded link - the limit the whole-word
+// fold has too. A range at or above 16 MB has no 24-bit link into it, so
+// there the rule changes nothing.
 
 namespace bof3 {
 namespace {
@@ -176,6 +191,17 @@ inline bool Fold(const std::uint32_t* folds, unsigned n, std::uint32_t v, std::u
             return true;
         }
     return false;
+}
+
+// A word whose low 24 bits lie in a folded range (an ordering-table link into
+// the moved image, its length byte on top), as it would read with the image
+// at 0x400000: those 24 bits folded, the top byte kept. Tried only when the
+// whole word is not folded.
+inline bool Fold24(const std::uint32_t* folds, unsigned n, std::uint32_t v, std::uint32_t* out) {
+    std::uint32_t c;
+    if ((v & 0xFF000000u) == 0 || !Fold(folds, n, v & 0xFFFFFFu, &c) || c > 0xFFFFFFu) return false;
+    *out = (v & 0xFF000000u) | c;
+    return true;
 }
 
 // A Capcom slot is a word whose value at the census lies in the image: at
@@ -317,7 +343,7 @@ std::uint32_t HashNormalised(const unsigned char* page, const std::vector<Skip>&
         for (std::uint32_t at = 0; at < kPage; at += 4) {
             std::uint32_t w, c;
             std::memcpy(&w, p + at, 4);
-            if (!Fold(folds, nfolds, w, &c)) continue;
+            if (!Fold(folds, nfolds, w, &c) && !Fold24(folds, nfolds, w, &c)) continue;
             if (p == page) {
                 std::memcpy(scratch, page, kPage);
                 p = scratch;
@@ -408,6 +434,27 @@ void SelfTest() {
         Fatal("statehash self-test: with no folded range the page does not hash as its masked bytes (BOF3SH3)");
     if (hash(at0, none, 0) != HashPage(at0))
         Fatal("statehash self-test: with no skip and no fold the page does not hash as its raw bytes");
+    // Ordering-table links into the image (Fold24): the same links, a length
+    // byte on top, with the image at 0x400000 and at a base below 16 MB, hash
+    // alike folding that base, and not without the fold.
+    constexpr std::uint32_t F24 = 0xA00000u;
+    CheckImageBase("statehash self-test", F24);
+    for (std::uint32_t at = 0; at < kPage; at += 4) {
+        const std::uint32_t len = (next() >> 24) & 0x0F;
+        const std::uint32_t off = (next() % kImageSize) & ~3u;
+        const std::uint32_t l0 = len << 24 | (kExeLo + off), lf = len << 24 | (F24 + off);
+        std::memcpy(at0 + at, &l0, 4);
+        std::memcpy(atf + at, &lf, 4);
+    }
+    const std::uint32_t folds24[1] = {F24};
+    auto hash24 = [&](const unsigned char* page, unsigned nf) {
+        return HashNormalised(page, none, nullptr, 0, false, folds24, nf, scratch, &n);
+    };
+    if (hash24(at0, 1) != hash24(atf, 1))
+        Fatal("statehash self-test: a page of ordering-table links into the image at 0x%08lX does not hash as at "
+              "0x400000 folding it", (unsigned long)F24);
+    if (hash24(at0, 0) == hash24(atf, 0))
+        Fatal("statehash self-test: without the fold the moved links hash as the unmoved ones");
     if (pointers == 0 || sites.empty() || data_in_fold == 0 || numbers == 0)
         Fatal("statehash self-test: the synthetic page lacks a kind of word (%lu pointers, %lu slots, %lu data, %lu "
               "numbers)", (unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)data_in_fold,
@@ -415,7 +462,8 @@ void SelfTest() {
     VirtualFree(mem, 0, MEM_RELEASE);
     Log("statehash   self-test: a page with %lu image pointers (%lu of them slots) moved by 0x%08lX, %lu data words "
         "in the moved range and %lu image-shaped numbers unmoved, hashes the same folding 0x%08lX; differs without "
-        "the fold and with a byte changed; with no fold hashes as its raw bytes",
+        "the fold and with a byte changed; with no fold hashes as its raw bytes; ordering-table links into an image "
+        "at 0x00A00000 hash as at 0x400000 folding it (24 bits, the length byte kept)",
         (unsigned long)pointers, (unsigned long)sites.size(), (unsigned long)delta, (unsigned long)data_in_fold,
         (unsigned long)numbers, (unsigned long)F);
 }

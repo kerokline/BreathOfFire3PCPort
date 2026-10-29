@@ -96,7 +96,10 @@ The rule is wider than the paragraph above: **every aligned word** of a page
 whose value lies in a folded range `[F, F+0x53F000)` is hashed as
 `0x400000 + (value - F)`, not only the pointer slots, because 895..3,144
 run-time pointers sit outside the start-up slots (a slot-only rule would have
-failed stage C's proof). Both sides of a comparison fold the same range (the
+failed stage C's proof); and a word whose low 24 bits lie in a folded range
+has those bits folded and its top byte kept (an ordering-table link, a
+length byte over a 24-bit address: added in stage C1 after the first moved
+proof run). Both sides of a comparison fold the same range (the
 image's own base when moved, and `BOF3X_STATEHASH_FOLD=<addr>` for the side
 at `0x400000`), because no 64 KiB-aligned window of `0x53F000` bytes below
 `0x80000000` is free of game data in 219 dumps; the tool refuses pairs whose

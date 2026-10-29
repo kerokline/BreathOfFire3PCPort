@@ -397,8 +397,10 @@ def cmd_check(a):
 
 def fold_dump(d, fold):
     """A raw dump with every aligned word whose value lies in the image placed
-    at `fold` read as at 0x400000 (statehash.cpp's Fold); the dump keeps the
-    raw bytes, the hash does this."""
+    at `fold` read as at 0x400000 (statehash.cpp's Fold); and, failing that, a
+    word whose low 24 bits do - an ordering-table link into the moved image,
+    its length byte on top - with those 24 bits folded and the top byte kept
+    (Fold24). The dump keeps the raw bytes, the hash does this."""
     w = array.array('I', d)
     if sys.byteorder != 'little':
         w.byteswap()
@@ -406,6 +408,9 @@ def fold_dump(d, fold):
     for i, v in enumerate(w):
         if lo <= v < hi:
             w[i] = v - fold + IMAGE
+            n += 1
+        elif v >> 24 and lo <= (v & 0xFFFFFF) < hi and (v & 0xFFFFFF) - fold + IMAGE <= 0xFFFFFF:
+            w[i] = (v & 0xFF000000) | ((v & 0xFFFFFF) - fold + IMAGE)
             n += 1
     if sys.byteorder != 'little':
         w.byteswap()
@@ -505,6 +510,24 @@ def cmd_selftest(a):
     expect('the moved dump against the unmoved, raw: differs', raw, 1)
     expect('the same pair, both folded at the moved base: equal', folded, 0)
     expect('a byte changed in the moved dump, folded: differs', changed, 1)
+
+    # ordering-table links (a length byte over a 24-bit address) into an image below 16 MB
+    F24 = 0xA00000
+    l0 = array.array('I', bytes(END - BASE))
+    lf = array.array('I', bytes(END - BASE))
+    for i in range(0, n, 5):
+        off = rnd.randrange(IMAGE_SIZE) & ~3
+        top = rnd.randrange(1, 16) << 24
+        l0[i], lf[i] = top | (IMAGE + off), top | (F24 + off)
+    if sys.byteorder != 'little':
+        l0.byteswap(); lf.byteswap()
+    with contextlib.redirect_stdout(io.StringIO()):
+        links_raw = compare_dumps(l0.tobytes(), lf.tobytes(), q)
+        g0, _ = fold_dump(l0.tobytes(), F24)
+        gf, _ = fold_dump(lf.tobytes(), F24)
+        links_folded = compare_dumps(g0, gf, q)
+    expect('ordering-table links into the moved image, raw: differ', links_raw, 1)
+    expect('the same links folded at 0xA00000 (24 bits, the length byte kept): equal', links_folded, 0)
 
     def sh(path, version, image=IMAGE, fold=0):
         with open(path, 'wb') as f:

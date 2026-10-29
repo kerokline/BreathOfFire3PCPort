@@ -628,6 +628,16 @@ applied; the scripts in `C:\Users\kerok\bof3x-runs\ri1027\ra2\scratch`):**
    pointers is unchanged (the two cannot meet: our image may not lie in a
    folded range, and an identity has bit 31 set where a folded range ends
    at or below `0x80000000`).
+   **The ordering tables' links** (added in stage C1, 2026-10-28, after the
+   first moved proof run differed on page `0x903000` from tick 0): a link is
+   a 24-bit address with a length byte on top (`Gpu_ClearOTagR`; the display
+   blocks at `0x903880`), so a link into a moved image never lies in a
+   folded range as a whole word. A word that is not folded whole but whose
+   low 24 bits lie in a folded range has those bits folded and its top byte
+   kept (`Fold24` in `statehash.cpp`, the same in `statehash.py`'s
+   `fold_dump`). Both sides fold the same ranges, so a colour or a packed
+   number with such low bits is rewritten alike on both; a range at or above
+   16 MB has no such link, and with no fold nothing changes.
 2. **The ranges.** The image's own base when it is not `0x400000`, and the
    address `BOF3X_STATEHASH_FOLD` names. Point 3 above is why the second
    exists: **both sides of a comparison fold the same range.** The run at
