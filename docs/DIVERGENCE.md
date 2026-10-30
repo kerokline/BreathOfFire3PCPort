@@ -5688,6 +5688,7 @@ designed in rather than bolted on.
   shown frame 1,044 called it correct as it is (section 4 of the doc).
   **The owner, 2026-10-29 night, on the sheet:** "that looks correct to me,
   so no change needed. I think your new layering rule looks good".
+- **Reversible?** `BOF3X_LAYERING=0`. `BOF3X_LAYERING_AHEAD`
   (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
   `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each
   sprite's verdict and what stopped it.
