@@ -810,16 +810,17 @@ extern "C" void __cdecl EffectKind55_DrawTime(void) {
 // Latin layer's font shows as a glyph of its own (the owner's catch).
 extern "C" void __cdecl EffectKind55_DrawCount(void) {
     char* const text = reinterpret_cast<char*>(At(::bof3::Img(at::kText.v)));
+    const auto score = static_cast<unsigned>(B(::bof3::Img(at::kScore.v)));
     if (Labels_Written(25)) {
         const unsigned char* const layout = Labels_Slot(25, 1);
         SH_AT(void (__cdecl*)(int, int, int, int, int), at::kBox.v)(0xC8, 0xA0, layout[0], 0x14, 1);
-        SH_CALL(Crt_sprintf)(text, Boss26Fx_CountFormat, static_cast<unsigned>(B(::bof3::Img(at::kScore.v))));
+        SH_CALL(Crt_sprintf)(text, Boss26Fx_CountFormat, score);
         SH_CALL(Text_DrawAt)(layout[1], 0xA3, 4, 0xFF, reinterpret_cast<const unsigned char*>(text));
         if (layout[2] != 0xFF) SH_CALL(Text_DrawAt)(layout[2], 0xA4, 0, 0xFF, Labels_Slot(25, 0));
         return;
     }
     SH_AT(void (__cdecl*)(int, int, int, int, int), at::kBox.v)(0xC8, 0xA0, 0x2E, 0x14, 1);
-    SH_CALL(Crt_sprintf)(text, Boss26Fx_CountFormat, static_cast<unsigned>(B(::bof3::Img(at::kScore.v))));
+    SH_CALL(Crt_sprintf)(text, Boss26Fx_CountFormat, score);
     SH_CALL(Text_DrawFont12)(0xCD, 0xA3, 0, reinterpret_cast<const unsigned char*>(text));
     SH_CALL(Text_DrawAt)(0xE5, 0xA4, 0, 0xFF, At(::bof3::Img(at::kKind55Label.v)));
 }
