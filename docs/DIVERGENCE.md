@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 188 entries, DIV-0001..0188, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 189 entries, DIV-0001..0189, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -13442,6 +13442,74 @@ designed in rather than bolted on.
 - **Switch:** ini:cheat.no_fail=0
 - **Default:** off - the box starts off
 - **Player:** yes
+- **Toward:** none
+- **Languages:** any
+- **State:** active
+
+### The Items screen's NormalItem and CombatItem sorts order each half by item id
+
+- **ID:** DIV-0189
+- **Date:** 2026-10-30
+- **Subsystem:** the field menu's Items screen - `FieldItemSort_ConsumableFlag1`
+  `0x58BE00` and `FieldItemSort_ConsumableFlag2` `0x58BEB0` (ours,
+  `src/game/rest_2e.cpp`), `FieldItems_Sorts[1]` and `[2]`, the rows
+  `NormalItem` / `CombatItem` of the consumables' sort window
+  (`FieldItems_ArrangeRows` `0x667360`, row 0: ids 0, 1, 2);
+  [`rest_2e.md`](rest_2e.md).
+- **Tier:** Intent - an extension of the sort.
+- **Original behaviour:** each of the two sorts is `FieldItemSort_Compact`
+  (the empty slots to the end) and then 127 bubble passes over the 128-slot
+  consumables list `0x904154` (its counts at `+0x200` swapped with the ids)
+  whose one rule is: a pair of non-empty entries swaps when the second's flag
+  bit is set and the first's clear - bit 0 of `NameTable_Consumables +0x10`
+  (`0x656B38 + 22 * id`, the field-usable bit `Item_CanUse` mode 1 tests)
+  for `NormalItem`, bit 1 (battle-usable, mode 2) for `CombatItem`. A
+  partition, not an order: the bubble sort is stable, so within each half the
+  entries keep the order the player's pick-ups and hand-arranging left them
+  in. Measured 2026-10-30: the exe's 92 flag bytes equal the Japanese
+  disc's (`GAME.EMI#0`, the sibling's `names/items.toml`), 0 differing;
+  every consumable's icon nibble (`+0x11`, the `Kind` sort's key) is 0, which
+  is why Capcom offers the consumables no `Kind` row.
+- **New behaviour:** the same partition, and within each half the entries
+  in ascending item id - the record's index in the consumables table, the
+  EMI's order: the healing items 1..15, the throwables 16..24, the
+  permanent boosts 25..31, the odds and ends 32..55, the fish 56..77,
+  Momo's parts 78..85, the late additions 86..91. One comparator
+  (`ConsumableGoesFirst`): the flag bits differ - the original's rule; alike
+  and the switch armed - the lower id first. The passes, the compaction,
+  the count swaps, the other five sorts, the hand-arranging and the
+  equipment sorts are unchanged. The order is the saved inventory itself,
+  so a sort persists through save and load and is what battle's item list
+  shows, as before. The id order groups by Capcom's table, not by type: a
+  hand-written type order (healing, then throwables, then fish) is the
+  owner's possible next step and would replace the id compare alone.
+- **Rationale:** the owner's call, 2026-10-30: "the big win will be
+  sorting the items at all instead of merely bucketing them" - the
+  partition alone leaves a bucket in pick-up order, so the sort rows do
+  almost nothing for a long game's inventory. Id order first, "and maybe
+  we'll edit it later".
+- **Also in the PSX version?** The PlayStation's sorts are the same
+  partition (the port's two functions are faithful replacements of the
+  disc's; not re-measured on the disc for this entry). Not a repair.
+- **Verification:** 2026-10-30, headless, a clean copy of the four
+  launcher files under `C:\Users\kerok\bof3x-runs\sort1030`:
+  `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=rest_2e` (the switch is armed only
+  after the self-test, so the fuzz compares the original's partition):
+  294,000 rounds over 49 functions, 0 mismatches, exit 0, the log line
+  `DIV-0189 ... on`; the exe host (`bof3x.exe`, no `BOF3X_SHADOW`) exit 0,
+  both sorts bound, the line `on`; `BOF3X_ORIGINAL=ItemSortById` exit 0, the
+  line `OFF (BOF3X_ORIGINAL=ItemSortById)`. The launcher's registry and the
+  presets' reference tables regenerated; the launcher host tests 3,292
+  checks, 0 failures (the as-shipped count 74 was a stale 75 on `main`
+  before this entry made it 76). The sorted order itself is not
+  yet watched: the owner's `tools/recipes/sortScreens.txt` reaches both
+  rows (frame 420 of `analysis/shots/sortScreens2`), and the owner plays it.
+- **Reversible?** `BOF3X_ORIGINAL=ItemSortById` leaves the partition alone
+  in both hosts. A player turns it off with `BOF3X_OFF=ItemSortById` (the
+  ini's `off=`). The start-up log line `DIV-0189` says on or OFF.
+- **Switch:** ItemSortById
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=ItemSortById (ini off=)
 - **Toward:** none
 - **Languages:** any
 - **State:** active

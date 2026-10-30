@@ -21679,10 +21679,8 @@ src/game/rest_2e.cpp	BubbleFixed	record	At	ids + i	0	-	param	computed	param (At(
 src/game/rest_2e.cpp	BubbleFixed	record	At	ids + i + 1	0	-	param	no-struct	At(ids + i + 1): param, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2e.cpp	BubbleFixed	record	At	ids + i + 0x200	0	-	param	no-struct	At(ids + i + 0x200): param, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2e.cpp	BubbleFixed	record	At	ids + i + 0x201	0	-	param	no-struct	At(ids + i + 0x201): param, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_2e.cpp	FieldItemSort_ConsumableFlag1	global	B	kConsumableFlags	0	0x656b38	-	no-entry	kConsumableFlags 0x656b38 -	b0
-src/game/rest_2e.cpp	FieldItemSort_ConsumableFlag1	global	B	kConsumableFlags	1	0x656b38	-	no-entry	kConsumableFlags 0x656b38 -	b0
-src/game/rest_2e.cpp	FieldItemSort_ConsumableFlag2	global	B	kConsumableFlags	0	0x656b38	-	no-entry	kConsumableFlags 0x656b38 -	b0
-src/game/rest_2e.cpp	FieldItemSort_ConsumableFlag2	global	B	kConsumableFlags	1	0x656b38	-	no-entry	kConsumableFlags 0x656b38 -	b0
+src/game/rest_2e.cpp	ConsumableGoesFirst	global	B	kConsumableFlags	0	0x656b38	-	no-entry	kConsumableFlags 0x656b38 -	b0
+src/game/rest_2e.cpp	ConsumableGoesFirst	global	B	kConsumableFlags	1	0x656b38	-	no-entry	kConsumableFlags 0x656b38 -	b0
 src/game/rest_2e.cpp	FieldItemSort_WeaponsByPower	global	B	kWeaponB	0	0x657466	-	no-entry	kWeaponB 0x657466 -	b0
 src/game/rest_2e.cpp	FieldItemSort_WeaponsByPower	global	B	kWeaponB	1	0x657466	-	no-entry	kWeaponB 0x657466 -	b0
 src/game/rest_2e.cpp	FieldItemSort_ArmourByPower	global	B	kArmourB	0	0x657d7c	-	no-entry	kArmourB 0x657d7c -	b0

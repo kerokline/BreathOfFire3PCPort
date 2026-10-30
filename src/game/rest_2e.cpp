@@ -704,22 +704,39 @@ constexpr ::bof3::image::Va kConsumableIds{0x904154};   // Inventory_IdLists[0];
 constexpr ::bof3::image::Va kWeaponIds{0x9041D4};       // [1]
 constexpr ::bof3::image::Va kArmourIds{0x904254};       // [2]
 
-}  // namespace
+// DIVERGENCE DIV-0189: the two consumable sorts order each bucket. The
+// original's NormalItem / CombatItem sorts are a partition: the items whose
+// flag bit (bit 0 field-usable, bit 1 battle-usable) is set go first, and
+// within each half the bubble sort, being stable, leaves the list in the
+// order the player had it. Ours, once g_sort_by_id is armed (after the
+// self-test, PatchBytes "ItemSortById"), sorts within each half by the item
+// id ascending - the record's index in the consumables table, the EMI's
+// order (Green Apple 1 .. Water Jug 91). Unarmed, the original's partition.
+unsigned char g_sort_by_id = 0;
 
-// original 0x58BE00: FieldItems_Sorts[1] - consumables with flag bit 0 first.
-extern "C" void __cdecl FieldItemSort_ConsumableFlag1(void) {
-    SH_CALL(FieldItemSort_Compact)();
-    BubbleFixed(::bof3::Img(kConsumableIds.v), [](UC x, UC y) {
-        return (B(::bof3::Img(kConsumableFlags.v) + 22u * x) & 1) == 0 && (B(::bof3::Img(kConsumableFlags.v) + 22u * y) & 1) != 0;
-    });
+// The pair (x, y) of non-empty entries exchanged: y's flag bit set and x's
+// clear (the original's rule), or - armed - both alike and y's id the lower.
+bool ConsumableGoesFirst(UC x, UC y, UC bit) {
+    const bool fx = (B(::bof3::Img(kConsumableFlags.v) + 22u * x) & bit) != 0;
+    const bool fy = (B(::bof3::Img(kConsumableFlags.v) + 22u * y) & bit) != 0;
+    if (fx != fy) return fy;
+    return g_sort_by_id && y < x;
 }
 
-// original 0x58BEB0: FieldItems_Sorts[2] - consumables with flag bit 1 first.
+}  // namespace
+
+// original 0x58BE00: FieldItems_Sorts[1] - consumables with flag bit 0 first
+// (DIV-0189: then by id within each half).
+extern "C" void __cdecl FieldItemSort_ConsumableFlag1(void) {
+    SH_CALL(FieldItemSort_Compact)();
+    BubbleFixed(::bof3::Img(kConsumableIds.v), [](UC x, UC y) { return ConsumableGoesFirst(x, y, 1); });
+}
+
+// original 0x58BEB0: FieldItems_Sorts[2] - consumables with flag bit 1 first
+// (DIV-0189: then by id within each half).
 extern "C" void __cdecl FieldItemSort_ConsumableFlag2(void) {
     SH_CALL(FieldItemSort_Compact)();
-    BubbleFixed(::bof3::Img(kConsumableIds.v), [](UC x, UC y) {
-        return (B(::bof3::Img(kConsumableFlags.v) + 22u * x) & 2) == 0 && (B(::bof3::Img(kConsumableFlags.v) + 22u * y) & 2) != 0;
-    });
+    BubbleFixed(::bof3::Img(kConsumableIds.v), [](UC x, UC y) { return ConsumableGoesFirst(x, y, 2); });
 }
 
 // original 0x58BF60: FieldItems_Sorts[3] - weapons by +0x16, the highest first.
@@ -1892,6 +1909,14 @@ extern "C" void __cdecl FieldAbility_ViewEnd(void) {
 
 void Rest2E_Inject() {
     if (bof3::WantsShadow("rest_2e")) rest_2e::SelfTest();
+    {
+        // DIV-0189: armed after the self-test, which compares the two
+        // consumable sorts with Capcom's partition.
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("ItemSortById", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_sort_by_id)), &was, &is, 1);
+        bof3::Log("DIV-0189    the Items screen's NormalItem / CombatItem sorts order each half by item id: %s",
+                  g_sort_by_id ? "on" : "OFF (BOF3X_ORIGINAL=ItemSortById)");
+    }
     BOF3_INJECT(FieldItems_ArrangeCategory);
     BOF3_INJECT(FieldItems_ArrangeHow);
     BOF3_INJECT(FieldItems_ArrangeMove);
