@@ -281,6 +281,8 @@ const Box* DrawnBox(const unsigned char* sprite) {
     return nullptr;
 }
 
+void Keep(const unsigned char* sprite, const Box& box);
+
 // The cell sprite at `prim`, just committed for `sprite`: its box kept.
 void KeepDrawn(const unsigned char* sprite, const unsigned char* prim) {
     const unsigned first = Get<std::uint16_t>(prim + 0x18), count = Get<std::uint16_t>(prim + 0x1A);
@@ -299,6 +301,12 @@ void KeepDrawn(const unsigned char* sprite, const unsigned char* prim) {
     const float sx = Get<float>(prim + 0x10), sy = Get<float>(prim + 0x14);
     const bool flip = (Get<std::uint16_t>(prim + 0x1E) & 0x400) != 0;
     const Box box = {flip ? x - r * sx : x + l * sx, y + t * sy, flip ? x - l * sx : x + r * sx, y + b * sy};
+    Keep(sprite, box);
+}
+
+// `box` kept as what `sprite` drew this pass (DrawnBox next pass); boxes off
+// any screen are not (a vertex behind the eye projects to 1e24 and the like).
+void Keep(const unsigned char* sprite, const Box& box) {
     if (!(box.x0 > -kFar && box.x1 < kFar && box.y0 > -kFar && box.y1 < kFar)) return;   // NaN included
     const unsigned g = g_pass & 1;
     if (g_drawn_stamp[g] != g_pass) {
@@ -468,8 +476,9 @@ unsigned LayerFor(unsigned index, unsigned layer) {
     // them (known-defects D242, docs/faerie-over-table.md section 6).
     if (sprite[0x24] & 0x40) {
         if (g_log && draw_order::Tagging())
-            bof3::Log("DIV-0071    frame %u: sprite %08X is a model: layer %u kept", static_cast<unsigned>(Frame_Counter),
-                      Address(sprite), layer);
+            bof3::Log("DIV-0071    frame %u: sprite %08X is a model: layer %u kept (key %04X, at (%g, %g), cell %d,%d, feet %d, pos %08X %08X)",
+                      static_cast<unsigned>(Frame_Counter), Address(sprite), layer, Get<std::uint16_t>(sprite + 0x32), sx, sy,
+                      cell_x, cell_z, feet, Get<std::uint32_t>(sprite + 0x34), Get<std::uint32_t>(sprite + 0x38));
         return layer;
     }
     const Box feet_box = BoxRound(sprite, kFeetHalfWidth, kFeetAbove, kFeetBelow);
@@ -482,7 +491,7 @@ unsigned LayerFor(unsigned index, unsigned layer) {
     for (unsigned other = 0; other < Sprite_DrawListCount; ++other) {
         const unsigned char* const o = Sprite_DrawList[other];
         if (other == index || !(o[0x24] & 0x40) || static_cast<unsigned>(Get<std::uint16_t>(o + 0x32) >> 8) != layer) continue;
-        if (Overlap(BoxRound(o, kBodyHalfWidth, kBodyAbove, kBodyBelow), whole_box)) {
+        if (Overlap(Reach(o, BoxRound(o, kBodyHalfWidth, kBodyAbove, kBodyBelow)), reach_box)) {
             if (g_log && draw_order::Tagging())
                 bof3::Log("DIV-0071    frame %u: sprite %08X beside model %08X in layer %u: kept",
                           static_cast<unsigned>(Frame_Counter), Address(sprite), Address(o), layer);
@@ -569,8 +578,9 @@ unsigned LayerFor(unsigned index, unsigned layer) {
                       drawn_in == layer ? g_why : "", drawn_in == layer ? 0u : g_faerie_sides_n);
     }
     if (g_log && draw_order::Tagging())
-        bof3::Log("DIV-0071    frame %u: sprite %08X at (%g, %g), cell %d,%d, feet %d: layer %u drawn in layer %u; stopped by %s",
-                  static_cast<unsigned>(Frame_Counter), Address(sprite), sx, sy, cell_x, cell_z, feet, layer, drawn_in,
+        bof3::Log("DIV-0071    frame %u: sprite %08X at (%g, %g), cell %d,%d, feet %d, key %04X, pos %08X %08X: layer %u drawn in layer %u; stopped by %s",
+                  static_cast<unsigned>(Frame_Counter), Address(sprite), sx, sy, cell_x, cell_z, feet, Get<std::uint16_t>(sprite + 0x32),
+                  Get<std::uint32_t>(sprite + 0x34), Get<std::uint32_t>(sprite + 0x38), layer, drawn_in,
                   drawn_in == layer + static_cast<unsigned>(g_ahead) ? "nothing" : g_why);
     return drawn_in;
 }
@@ -693,6 +703,23 @@ void AfterSprite(const unsigned char* sprite) {
         Gfx_CommitPrim(6, 0x48);
     }
     g_faerie = nullptr;   // once a pass
+}
+
+void AfterModel(const unsigned char* object, const unsigned long* records, unsigned count) {
+    // The quads' screen points (Sprite_AddDrawRecords: four at +8, +0x18,
+    // +0x28, +0x38 of each POLY_FT4), their union box.
+    Box box = {1e9f, 1e9f, -1e9f, -1e9f};
+    for (unsigned i = 0; i < count; ++i) {
+        const unsigned char* const prim = Pointer(static_cast<std::uint32_t>(records[i * 3]));
+        for (unsigned k = 0; k < 4; ++k) {
+            const float x = Get<float>(prim + 8 + 0x10 * k), y = Get<float>(prim + 0xC + 0x10 * k);
+            if (x < box.x0) box.x0 = x;
+            if (x > box.x1) box.x1 = x;
+            if (y < box.y0) box.y0 = y;
+            if (y > box.y1) box.y1 = y;
+        }
+    }
+    if (count != 0) Keep(object, box);
 }
 
 bool g_in_run = false;

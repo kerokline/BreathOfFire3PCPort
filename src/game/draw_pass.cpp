@@ -377,7 +377,10 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                     Sprite_Current = object;
                     unsigned long* const record = Sprite_DrawRecords + 3 * static_cast<int>(static_cast<signed char>(records));
                     if (object[0x24] & 0x40) {
-                        records = static_cast<unsigned char>(records + static_cast<unsigned char>(g_add_records(record)));
+                        const unsigned char added = static_cast<unsigned char>(g_add_records(record));
+                        records = static_cast<unsigned char>(records + added);
+                        // What the model drew, kept for the next pass's Defer (layering.h, issue 141).
+                        if (layering::g_mode == layering::kFloor && added != 0) layering::AfterModel(object, record, added);
                     } else {
                         record[0] = static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(object));
                         record[1] = static_cast<unsigned long>(Long(object, 0x60)) | 0x80000000u;
