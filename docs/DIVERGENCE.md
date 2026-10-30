@@ -13498,7 +13498,10 @@ designed in rather than bolted on.
   294,000 rounds over 49 functions, 0 mismatches, exit 0, the log line
   `DIV-0189 ... on`; the exe host (`bof3x.exe`, no `BOF3X_SHADOW`) exit 0,
   both sorts bound, the line `on`; `BOF3X_ORIGINAL=ItemSortById` exit 0, the
-  line `OFF (BOF3X_ORIGINAL=ItemSortById)`. The sorted order itself is not
+  line `OFF (BOF3X_ORIGINAL=ItemSortById)`. The launcher's registry and the
+  presets' reference tables regenerated; the launcher host tests 3,292
+  checks, 0 failures (the as-shipped count 74 was a stale 75 on `main`
+  before this entry made it 76). The sorted order itself is not
   yet watched: the owner's `tools/recipes/sortScreens.txt` reaches both
   rows (frame 420 of `analysis/shots/sortScreens2`), and the owner plays it.
 - **Reversible?** `BOF3X_ORIGINAL=ItemSortById` leaves the partition alone
