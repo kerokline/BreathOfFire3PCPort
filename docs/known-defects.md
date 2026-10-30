@@ -10457,5 +10457,5 @@ union of its quads, kept each pass as the sprites' boxes are). 54 of 256
 captured frames change, each to Capcom's order. Seen on captures; not yet in
 play; the owner, shown the sheet, circled frames 440 and 1,060 and called
 them resolved. What stays: Garr with his feet 1.5 rows behind the block's
-corner is drawn behind its near face, Capcom's order, not reported
-([`block-layering.md`](block-layering.md) 4).
+corner is drawn behind its near face, Capcom's order; the owner saw it and
+called it correct ([`block-layering.md`](block-layering.md) 4).

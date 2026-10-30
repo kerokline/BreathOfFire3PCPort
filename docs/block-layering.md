@@ -85,8 +85,9 @@ The fix repairs ScrubOasis's frames and the one-frame pops. Shown
 meant and called them resolved (2026-10-29 night). The first reading of
 their report - Garr behind the block's near face with his feet 1.25 to 2
 rows behind its corner (`behind_corner_f1044.png`, `corner_on_sheet.png`
-1,000..1,052) - was wrong; that case is not reported, and the fix leaves it
-as Capcom draws it. Should it ever be wanted otherwise, the choices:
+1,000..1,052) - was wrong; shown that frame, the owner called it correct
+("no change needed") and the rule as amended good. The fix leaves it as
+Capcom draws it. Should it ever be wanted otherwise, the choices:
 
 - **Keep Capcom's.** Behind until the feet pass the corner's row, then in
   front at once (frames 1,057 on in the fix build are the pop at that row).
