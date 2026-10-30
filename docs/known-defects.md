@@ -10455,6 +10455,7 @@ disc alone and the US + PSP-EU install.
 **Status:** fixed by DIV-0071's 2026-10-29 amendment (a model's box is the
 union of its quads, kept each pass as the sprites' boxes are). 54 of 256
 captured frames change, each to Capcom's order. Seen on captures; not yet in
-play. What stays: Garr with his feet 1.5 rows behind the block's corner is
-drawn behind its near face, Capcom's order - the owner's own report, their
-call ([`block-layering.md`](block-layering.md) 4).
+play; the owner, shown the sheet, circled frames 440 and 1,060 and called
+them resolved. What stays: Garr with his feet 1.5 rows behind the block's
+corner is drawn behind its near face, Capcom's order, not reported
+([`block-layering.md`](block-layering.md) 4).

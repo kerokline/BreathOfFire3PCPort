@@ -1,7 +1,7 @@
 # Garr beside the pushed block: a model's box in the layering rule (issue 141)
 
 **Status:** MEASURED (2026-10-29). Fixed by DIV-0071's 2026-10-29 amendment on
-`fix/issue-141-model-box`; the owner's eye owed on the remainder (section 4).
+`fix/issue-141-model-box`; the owner saw the sheet and called it resolved.
 
 ## 1. The reports
 
@@ -15,8 +15,9 @@
   block, where he starts to walk past the block's bottom edge, but part of
   his sprite still is behind its upper part."
 
-These are opposite complaints about the same spot, and section 4 says which
-is which.
+Read first as opposite complaints about the same spot; they were the same
+one. Shown the sheet, the owner circled frames 440 and 1,060 (Garr drawn
+over the block) and called them resolved (section 4).
 
 ## 2. What was measured
 
@@ -77,13 +78,15 @@ top. Capcom's order chooses behind, on the PlayStation as on the PC (the same
 key and the same per-quad sort, `FUN_8014D184`), and after the fix ours does
 too, everywhere the feet are behind the corner.
 
-## 4. The owner's call
+## 4. What stays, and the owner's answer
 
-The fix repairs ScrubOasis's frames and the one-frame pops. What it does not
-touch - and makes consistent, so there are a few more such frames - is the
-owner's report: Garr with his feet 1.25 to 2 rows behind the block's corner,
-drawn behind its near face (`corner_on_sheet.png` 1,000..1,052;
-`fix_sheet.png` right column). The choices:
+The fix repairs ScrubOasis's frames and the one-frame pops. Shown
+`fix_sheet.png`, the owner circled frames 440 and 1,060 as the scenarios they
+meant and called them resolved (2026-10-29 night). The first reading of
+their report - Garr behind the block's near face with his feet 1.25 to 2
+rows behind its corner (`behind_corner_f1044.png`, `corner_on_sheet.png`
+1,000..1,052) - was wrong; that case is not reported, and the fix leaves it
+as Capcom draws it. Should it ever be wanted otherwise, the choices:
 
 - **Keep Capcom's.** Behind until the feet pass the corner's row, then in
   front at once (frames 1,057 on in the fix build are the pop at that row).

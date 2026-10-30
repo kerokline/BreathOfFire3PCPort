@@ -5683,7 +5683,8 @@ designed in rather than bolted on.
   drawn with his arm behind the block's near face, by Capcom's order and by
   ours - the block's whole near face is nearer than his feet, and a 72 px
   billboard beside a box has no drawing that is right from every angle. The
-  owner's report of 2026-10-29 reads as that case; it is their call
+  owner's report of 2026-10-29 was the fixed case, not this one: shown the
+  sheet, they circled frames 440 and 1,060 and called them resolved
   (section 4 of the doc).
   (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
   `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each
