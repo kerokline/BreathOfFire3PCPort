@@ -13341,7 +13341,7 @@ designed in rather than bolted on.
   `src/game/area_w1f.cpp`), the rope pull's judgement, and `EffectKind45_Tune`
   `0x477250` / `EffectKind45_Aim` `0x477370` (ours, `src/game/effect_2d.cpp`),
   the lighthouse valve gauge's; the switch in `src/game/cheats.cpp`; the
-  launcher's More cheats sub-page; [`cheats.md`](cheats.md) section 7.
+  launcher's Cheats sub-tab, Page 2; [`cheats.md`](cheats.md) section 7.
 - **Tier:** Extension
 - **Original behaviour:** the rope pull (area 75, `Field_ModeTailKinds[30]`,
   armed by `Area75_ArmTail30` `0x40D7D0` from the area's step hook) judges
@@ -13374,7 +13374,8 @@ designed in rather than bolted on.
   switch as a recorded route reaches it and the change is verified (the
   owner's list, 2026-10-30: the chop and the well next).
   Off by default; `cheat.no_fail=1` in `bof3x.ini`, the "You cannot fail a
-  minigame" box on the More cheats sub-page. A start with the switch on and
+  minigame" box on the Cheats sub-tab's Page 2 (a third row of buttons under
+  the sub-tabs, the owner's word over a second sub-tab). A start with the switch on and
   any of the three guarded functions left as Capcom's (`BOF3X_ORIGINAL` /
   `BOF3X_OFF`) is a `Fatal`, so the cheat is never silently half on.
 - **Amended 2026-10-30, afternoon - the chop:** the wood-chopping minigame

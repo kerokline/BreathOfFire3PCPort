@@ -15,8 +15,9 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 ## 2026-10-30, the no-fail minigames cheat and the chop's count box (`cheat/no-fail-minigames`, unmerged)
 
-- **The two Cheats sub-pages** (Cheats; More cheats with the enemy information and "You cannot fail a
-  minigame"): open Configure, Game Options; do the four sub-tabs read right at their new widths?
+- **The Cheats sub-tab's two pages** (Page 1 / Page 2 on a third row, your word; Page 2 holds the enemy
+  information and "You cannot fail a minigame"): open Configure, Game Options, Cheats; do the rows read
+  right?
 - **A minigame with the box on**: the rope pull, the lighthouse valve or the chop - each should run to its
   end whatever you press (the rope pull's counters still go red when the other side pulls ahead; the chop
   wins at any count). [`cheats.md`](cheats.md) 7 has what each does.

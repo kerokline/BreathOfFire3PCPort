@@ -48,9 +48,14 @@ enum Page { kPageTitle = -1, kPageSettings, kPageControls, kPageMusic, kPageGame
 // The sub-pages, each a child dialog. A tab shows one at a time; a tab with
 // more than one shows a button for each over it (IDC_SUB0 + its place among
 // the tab's), so every page fits the 640 x 480 window at any display scale.
+// Consecutive entries of a tab with the same label are one sub-tab of several
+// pages, paged by a third row of buttons under the sub-tabs (IDC_SHEET0 +
+// the page's place, labelled by `sheet`): the Cheats sub-tab's Page 1 and
+// Page 2 (the owner's call, 2026-10-30, over a second Cheats sub-tab).
 struct SubPage {
     int page, templ;
     const wchar_t* label;   // the sub-tab button's, when the tab has more than one
+    const wchar_t* sheet;   // the third row's button, when the sub-tab has more than one page
 };
 constexpr SubPage kSubPages[] = {
     // Settings and the preset (launcher/config.h; docs/launcher-settings.md
@@ -62,10 +67,11 @@ constexpr SubPage kSubPages[] = {
     {kPageMusic, IDD_PAGE_MUSIC, nullptr},
     {kPageGame, IDD_PAGE_VERSIONS, L"Graphics and audio"},
     {kPageGame, IDD_PAGE_VERSIONS2, L"Data"},
-    {kPageGame, IDD_PAGE_GAME, L"Cheats"},
-    // The cheats on two sub-pages (the owner's call, 2026-10-30): the second
-    // holds the enemy information (DIV-0187) and the minigames (DIV-0188).
-    {kPageGame, IDD_PAGE_GAME2, L"More cheats"},
+    // The cheats on two pages of one sub-tab (the owner's call, 2026-10-30):
+    // the second holds the enemy information (DIV-0187) and the minigames
+    // (DIV-0188).
+    {kPageGame, IDD_PAGE_GAME, L"Cheats", L"Page 1"},
+    {kPageGame, IDD_PAGE_GAME2, L"Cheats", L"Page 2"},
     // The Mods tab's sub-row (the owner's call, 2026-10-22): Data, the player's
     // mods (docs/mods.md; its own procedure, ModsPageProc), and Extras, the
     // launcher's extras - today the Row above the text toggle (ruby_ui=).
@@ -75,6 +81,12 @@ constexpr SubPage kSubPages[] = {
 };
 constexpr int kSubPageCount = static_cast<int>(std::size(kSubPages));
 constexpr int kSubTabsMax = 4;   // IDC_SUB0 .. IDC_SUB0 + 3
+constexpr int kSheetsMax = 2;    // IDC_SHEET0 .. IDC_SHEET0 + 1
+
+// Two entries of a tab are pages of one sub-tab when their labels read the same.
+bool SameSubTab(const SubPage& a, const SubPage& b) {
+    return a.page == b.page && a.label && b.label && std::wcscmp(a.label, b.label) == 0;
+}
 
 struct DialogState {
     Config* cfg = nullptr;
@@ -102,7 +114,8 @@ struct DialogState {
     // and Game Options pages' edits - written to cfg only when touched, so an
     // untouched window writes bindings and cheats back as they were read.
     int page = kPageTitle;
-    int sub[kPageCount] = {};             // each tab's sub-page shown, its place among the tab's
+    int sub[kPageCount] = {};             // each tab's sub-tab shown, its place among the tab's
+    int sheet[kPageCount] = {};           // each tab's page shown within that sub-tab (the third row)
     HWND pages[kSubPageCount] = {};       // kSubPages' order
     Cells cells{};
     bool cells_touched = false, cheats_touched = false;
@@ -968,9 +981,10 @@ const CheatSlider kCheatSliders[] = {
 };
 constexpr int kCheatMultiplierMax = 10;   // the DLL clamps more to this (src/game/cheats.cpp)
 
-// The cheats sit on two sub-pages since 2026-10-30 (IDD_PAGE_GAME: the
-// rewards and stealing; IDD_PAGE_GAME2: the enemy information and the
-// minigames); `dlg` is the first and `dlg2` the second.
+// The cheats sit on two pages of the Cheats sub-tab since 2026-10-30
+// (IDD_PAGE_GAME, Page 1: the rewards and stealing; IDD_PAGE_GAME2, Page 2:
+// the enemy information and the minigames); `dlg` is the first and `dlg2`
+// the second.
 void CheatsPopulate(HWND dlg, HWND dlg2, const Config::Cheats& ch) {
     for (const CheatSlider& s : kCheatSliders) {
         HWND h = GetDlgItem(dlg, s.id);
@@ -1251,7 +1265,13 @@ constexpr int kPictureW = 640, kPictureH = 480;
 // Configure's rows, in the picture's pixels: the banner's band, the tabs, the
 // sub-tabs when the tab has them, the page.
 constexpr int kBandH = 60, kTabsY = 70, kTabH = 23, kPageY = kTabsY + kTabH + 8, kSubTabH = 22,
-              kSubPageY = kPageY + kSubTabH + 6, kMargin = 13, kBottom = 8;
+              kSubPageY = kPageY + kSubTabH + 6, kSheetPageY = kSubPageY + kSubTabH + 6, kMargin = 13, kBottom = 8;
+
+// Where a sub-page's top sits, in the picture's pixels: under the tabs, under
+// the sub-tabs, or under the third row.
+int PageTop(const SubPage& p) {
+    return p.sheet ? kSheetPageY : p.label ? kSubPageY : kPageY;
+}
 // The title page's buttons, in the picture's pixels (the owner's mock-up, 2026-10-15).
 struct TitleButton {
     int id, x0, x1;
@@ -1391,7 +1411,7 @@ void Layout(HWND dlg, DialogState& state) {
     for (int i = 0; i < kSubPageCount; ++i) {
         RECT r;
         GetWindowRect(state.pages[i], &r);
-        const int top = px(kSubPages[i].label ? kSubPageY : kPageY);
+        const int top = px(PageTop(kSubPages[i]));
         need_w = std::max(need_w, static_cast<int>(r.right - r.left) + 2 * px(kMargin));
         need_h = std::max(need_h, top + static_cast<int>(r.bottom - r.top) + px(kBottom));
     }
@@ -1446,24 +1466,28 @@ void Layout(HWND dlg, DialogState& state) {
     ReleaseDC(dlg, dc);
 
     for (int i = 0; i < kSubPageCount; ++i)
-        SetWindowPos(state.pages[i], nullptr, px(kMargin), px(kSubPages[i].label ? kSubPageY : kPageY), 0, 0,
+        SetWindowPos(state.pages[i], nullptr, px(kMargin), px(PageTop(kSubPages[i])), 0, 0,
                      SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
 // The tab's sub-tab buttons from the left, each as wide as the tab's longest
-// label (so four fit where three did, 2026-10-30): the dialog font, as the
-// pages use. A tab with no labels leaves them where they were; they are
-// hidden then.
+// label (2026-10-30): the dialog font, as the pages use. The third row's
+// buttons likewise, from the tab's sheet labels, under the sub-tabs. A tab
+// with no labels leaves them where they were; they are hidden then.
 void PlaceSubTabs(HWND dlg, DialogState& state, int page) {
     const auto px = [&state](double v) { return Px(state, v); };
     HDC dc = GetDC(dlg);
     HGDIOBJ old = SelectObject(dc, reinterpret_cast<HFONT>(SendMessageW(dlg, WM_GETFONT, 0, 0)));
-    int sub_w = 0;
-    for (const SubPage& p : kSubPages) {
-        if (p.page != page || !p.label) continue;
+    int sub_w = 0, sheet_w = 0;
+    const auto widest = [&](const wchar_t* text, int& w) {
         SIZE size{};
-        GetTextExtentPoint32W(dc, p.label, static_cast<int>(std::wcslen(p.label)), &size);
-        sub_w = std::max(sub_w, std::max(static_cast<int>(size.cx) + px(20), px(80)));
+        GetTextExtentPoint32W(dc, text, static_cast<int>(std::wcslen(text)), &size);
+        w = std::max(w, std::max(static_cast<int>(size.cx) + px(20), px(80)));
+    };
+    for (const SubPage& p : kSubPages) {
+        if (p.page != page) continue;
+        if (p.label) widest(p.label, sub_w);
+        if (p.sheet) widest(p.sheet, sheet_w);
     }
     SelectObject(dc, old);
     ReleaseDC(dlg, dc);
@@ -1471,6 +1495,10 @@ void PlaceSubTabs(HWND dlg, DialogState& state, int page) {
     for (int k = 0; k < kSubTabsMax; ++k)
         SetWindowPos(GetDlgItem(dlg, IDC_SUB0 + k), nullptr, px(kMargin) + k * (sub_w + px(6)), px(kPageY), sub_w,
                      px(kSubTabH), SWP_NOZORDER | SWP_NOACTIVATE);
+    if (sheet_w == 0) return;
+    for (int k = 0; k < kSheetsMax; ++k)
+        SetWindowPos(GetDlgItem(dlg, IDC_SHEET0 + k), nullptr, px(kMargin) + k * (sheet_w + px(6)), px(kSubPageY),
+                     sheet_w, px(kSubTabH), SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
 // The title page (kPageTitle) or one of Configure's tabs, on the sub-page the
@@ -1485,19 +1513,39 @@ void ShowPage(HWND dlg, DialogState& state, int page) {
         CheckDlgButton(dlg, IDC_TAB0 + i, i == page ? BST_CHECKED : BST_UNCHECKED);
     }
     ShowWindow(GetDlgItem(dlg, IDC_BACK), title ? SW_HIDE : SW_SHOW);
-    int k = 0;   // a sub-page's place among the tab's
+    // A sub-page's place: k its sub-tab among the tab's, s its page within
+    // the sub-tab (0 unless the sub-tab has several, SameSubTab).
+    int k = -1, s = 0, sheets = 0, prev = -1;
     for (int i = 0; i < kSubPageCount; ++i) {
         const bool mine = !title && kSubPages[i].page == page;
-        ShowWindow(state.pages[i], mine && k == state.sub[page] ? SW_SHOW : SW_HIDE);
-        if (!mine) continue;
-        if (kSubPages[i].label && k < kSubTabsMax) {
-            SetDlgItemTextW(dlg, IDC_SUB0 + k, kSubPages[i].label);
-            CheckDlgButton(dlg, IDC_SUB0 + k, k == state.sub[page] ? BST_CHECKED : BST_UNCHECKED);
+        if (!mine) {
+            ShowWindow(state.pages[i], SW_HIDE);
+            continue;
         }
-        ++k;
+        if (prev >= 0 && SameSubTab(kSubPages[prev], kSubPages[i])) {
+            ++s;
+        } else {
+            ++k;
+            s = 0;
+        }
+        prev = i;
+        const bool current = k == state.sub[page];
+        ShowWindow(state.pages[i], current && s == state.sheet[page] ? SW_SHOW : SW_HIDE);
+        if (kSubPages[i].label && k < kSubTabsMax && s == 0) {
+            SetDlgItemTextW(dlg, IDC_SUB0 + k, kSubPages[i].label);
+            CheckDlgButton(dlg, IDC_SUB0 + k, current ? BST_CHECKED : BST_UNCHECKED);
+        }
+        if (current && kSubPages[i].sheet && s < kSheetsMax) {
+            SetDlgItemTextW(dlg, IDC_SHEET0 + s, kSubPages[i].sheet);
+            CheckDlgButton(dlg, IDC_SHEET0 + s, s == state.sheet[page] ? BST_CHECKED : BST_UNCHECKED);
+            sheets = s + 1;
+        }
     }
+    ++k;   // the tab's sub-tabs
     for (int j = 0; j < kSubTabsMax; ++j)
         ShowWindow(GetDlgItem(dlg, IDC_SUB0 + j), k > 1 && j < k ? SW_SHOW : SW_HIDE);
+    for (int j = 0; j < kSheetsMax; ++j)
+        ShowWindow(GetDlgItem(dlg, IDC_SHEET0 + j), sheets > 1 && j < sheets ? SW_SHOW : SW_HIDE);
     SendMessageW(dlg, WM_NEXTDLGCTL, reinterpret_cast<WPARAM>(GetDlgItem(dlg, title ? IDOK : IDC_TAB0 + page)), TRUE);
     // the window and every page and control on it, so nothing shows the face before
     RedrawWindow(dlg, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN);
@@ -1742,6 +1790,12 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         }
         if (id >= IDC_SUB0 && id < IDC_SUB0 + kSubTabsMax && state->page != kPageTitle) {
             state->sub[state->page] = id - IDC_SUB0;
+            ShowPage(dlg, *state, state->page);
+            SendMessageW(dlg, WM_NEXTDLGCTL, reinterpret_cast<WPARAM>(GetDlgItem(dlg, id)), TRUE);
+            return TRUE;
+        }
+        if (id >= IDC_SHEET0 && id < IDC_SHEET0 + kSheetsMax && state->page != kPageTitle) {
+            state->sheet[state->page] = id - IDC_SHEET0;
             ShowPage(dlg, *state, state->page);
             SendMessageW(dlg, WM_NEXTDLGCTL, reinterpret_cast<WPARAM>(GetDlgItem(dlg, id)), TRUE);
             return TRUE;

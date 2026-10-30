@@ -18,11 +18,12 @@
 #define IDD_PAGE_EXTRA    119   // the Mods tab's second sub-page, Extras (ruby_ui=; owner, 2026-10-22)
 #define IDR_BACKGROUND    120   // docs/images/launcherBackground.png, the title page's picture
 #define IDD_PAGE_PRESET   121   // the Settings tab's second sub-page: the preset (preset=; docs/launcher-settings.md)
-#define IDD_PAGE_GAME2    122   // Game Options' fourth sub-page, More cheats (DIV-0187, DIV-0188; the owner's split, 2026-10-30)
+#define IDD_PAGE_GAME2    122   // The Cheats sub-tab's Page 2 (DIV-0187, DIV-0188; the owner's split, 2026-10-30)
 #define IDC_CONFIGURE   1020
 #define IDC_BACK        1021
 #define IDC_TAB0        1022    // the six tabs, IDC_TAB0 + page
 #define IDC_SUB0        1032    // a tab's sub-tabs, IDC_SUB0 + place (four)
+#define IDC_SHEET0      1036    // a sub-tab's pages, the third row: IDC_SHEET0 + place (two)
 
 #define IDC_LANGUAGE    1001
 #define IDC_LANGNOTE    1002
@@ -90,9 +91,9 @@
 #define IDC_CH_ZENNY_V  1211
 #define IDC_CH_STEAL    1220
 #define IDC_CH_DEFAULTS 1221
-#define IDC_CH_INFO     1222  // Every enemy's HP gauge and stats shown: cheat.enemy_info= (DIV-0187); on More cheats
-#define IDC_CH_NOFAIL   1223  // The minigames cannot be failed: cheat.no_fail= (DIV-0188); on More cheats
-#define IDC_CH_DEFAULTS2 1224 // More cheats' Defaults: every cheat back to its default, both pages
+#define IDC_CH_INFO     1222  // Every enemy's HP gauge and stats shown: cheat.enemy_info= (DIV-0187); Cheats' Page 2
+#define IDC_CH_NOFAIL   1223  // The minigames cannot be failed: cheat.no_fail= (DIV-0188); Cheats' Page 2
+#define IDC_CH_DEFAULTS2 1224 // Page 2's Defaults: every cheat back to its default, both pages
 
 // The Controls page (DIV-0050, docs/controls.md section 4.2): fourteen rows,
 // one an action, each with two key boxes and two pad boxes - the ids are

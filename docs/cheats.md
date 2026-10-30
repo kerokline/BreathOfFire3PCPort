@@ -295,7 +295,7 @@ the Cheats sub-page's new group, 176 dialog units high now.
 
 The owner's call, with the groundwork laid for every minigame: one switch,
 `BOF3X_NO_FAIL=1` (`cheat.no_fail=1`, the "You cannot fail a minigame" box
-on the More cheats sub-page), read by `Cheats_Inject` into
+on the Cheats sub-tab's Page 2), read by `Cheats_Inject` into
 `Cheats_MinigameNoFail()` (0 or 1, unset is off, anything else a `Fatal`).
 
 **Why per minigame.** The engine has no "minigame" state. Each minigame is a
@@ -397,12 +397,16 @@ the West's narrower box and the count alone, the Japanese build's glyph only
 under its own layer. The owner's install picks it up when the launcher
 rebuilds the stale `loc` step at its next setup prompt.
 
-The launcher: the cheats on two sub-pages since this change (the owner's
-call, so the page does not crowd) - Cheats holds the battle rewards and
-stealing, More cheats the enemy information (DIV-0187) and the minigames;
-either page's Defaults resets every cheat. The sub-tab buttons are placed
-per tab, each as wide as that tab's longest label, since four of the old
-width would not fit the picture. `tools/launcher_host/dialog_test.py` passes
+The launcher: the cheats on two pages since this change (the owner's call,
+so the page does not crowd) - the Cheats sub-tab carries a third row of
+buttons, Page 1 and Page 2 (the owner's word over a second Cheats sub-tab,
+the same afternoon): Page 1 holds the battle rewards and stealing, Page 2
+the enemy information (DIV-0187) and the minigames; either page's Defaults
+resets every cheat. The sub-tab buttons are placed per tab, each as wide as
+that tab's longest label, and the third row likewise under them; the row
+shows only over a sub-tab with more than one page (`config_dialog.cpp`
+`SubPage::sheet`, `IDC_SHEET0`). `tools/launcher_host/dialog_test.py` checks
+the rows and both pages (`cheats_page1.png`, `cheats_page2.png`) and passes
 as on `main` (its two mod-zip failures are `main`'s too, 2026-10-30).
 
 Owed: the owner's eye on the two pages, on a pull, a valve or a chop played

@@ -49,6 +49,10 @@ BEGIN
     AUTORADIOBUTTON "", 1033, 0, 0, 50, 14, BS_PUSHLIKE
     AUTORADIOBUTTON "", 1034, 0, 0, 50, 14, BS_PUSHLIKE
     AUTORADIOBUTTON "", 1035, 0, 0, 50, 14, BS_PUSHLIKE
+    // A sub-tab's pages, a third row (IDC_SHEET0 + place): shown only over a
+    // sub-tab with more than one page (the Cheats sub-tab's Page 1 / Page 2).
+    AUTORADIOBUTTON "", 1036, 0, 0, 50, 14, BS_PUSHLIKE | WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "", 1037, 0, 0, 50, 14, BS_PUSHLIKE
 END
 
 // The title page's picture: a screenshot on the terms of docs/LICENSING.md
@@ -237,8 +241,9 @@ END
 
 // DIV-0045 / DIV-0046: the cheats (docs/cheats.md), Game Options' third sub-page.
 // The owner split the page 2026-10-30 so it does not crowd: the battle
-// rewards and stealing here, the enemy information and the minigames on
-// More cheats (IDD_PAGE_GAME2). Each page's Defaults resets every cheat.
+// rewards and stealing here (Page 1), the enemy information and the
+// minigames on Page 2 (IDD_PAGE_GAME2), a third row of buttons under the
+// Cheats sub-tab. Each page's Defaults resets every cheat.
 IDD_PAGE_GAME DIALOGEX 0, 0, 290, 130
 STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
@@ -262,7 +267,7 @@ BEGIN
     PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS, 0, 114, 52, 14
 END
 
-// DIV-0187 / DIV-0188: More cheats, Game Options' fourth sub-page.
+// DIV-0187 / DIV-0188: the Cheats sub-tab's Page 2.
 IDD_PAGE_GAME2 DIALOGEX 0, 0, 290, 130
 STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
@@ -275,7 +280,7 @@ BEGIN
 
     GROUPBOX        "Minigames", -1, 0, 46, 286, 42
     AUTOCHECKBOX    "You cannot &fail a minigame", IDC_CH_NOFAIL, 7, 58, 270, 10
-    LTEXT           "A minigame does not end with a loss. Applies to the rope pull and the lighthouse valve. Other minigames follow as they are verified.",
+    LTEXT           "A minigame does not end with a loss. Applies to the rope pull, the lighthouse valve and the wood chopping. Other minigames follow as they are verified.",
                     -1, 19, 70, 260, 18
 
     PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS2, 0, 114, 52, 14

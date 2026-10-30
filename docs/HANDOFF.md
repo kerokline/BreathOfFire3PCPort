@@ -30,7 +30,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 ## Pick up here
 
 0. **The no-fail minigames cheat (DIV-0188, 2026-10-30)** on `cheat/no-fail-minigames`: the switch, the rope pull,
-   the lighthouse valve and (the afternoon) the chop under it, the Cheats sub-page split ([`cheats.md`](cheats.md) 7).
+   the lighthouse valve and (the afternoon) the chop under it, the cheats on two pages of the Cheats sub-tab, a third
+   row of buttons ([`cheats.md`](cheats.md) 7).
    With the chop, the owner's catch: the count's one-glyph word after the number is now DIV-0064's group 25, the
    West's own layout (the count alone in the narrower box) read off every disc's `AREA008.EMI` and PSP-EU's
    `BOOT.BIN`; the owner's install takes it when the launcher rebuilds the stale `loc` step at its setup prompt.
