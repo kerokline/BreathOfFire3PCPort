@@ -51,6 +51,13 @@ void Restore();
 // docs/faerie-fix.md), draws its table's side triangles again right after it.
 void BeforeSprite();
 void AfterSprite(const unsigned char* sprite);
+// After Sprite_AddDrawRecords added `count` records for the model `object`:
+// the union of its quads' screen points kept as the model's box for the next
+// pass, as AfterSprite keeps a sprite's (issue 141: the stop test against a
+// model took a sprite-sized box round its point, and Garr's arm reached past
+// it round Angel Tower's pushed block - drawn over the block for a frame at a
+// time, and for good once a narrower walking frame slipped past).
+void AfterModel(const unsigned char* object, const unsigned long* records, unsigned count);
 
 // What each map cell's record run drew (docs/campfire-and-crystal.md section
 // 4). DrawLayer_Open's, mode kFloor: RunBegin before a run's first record is

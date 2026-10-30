@@ -10434,3 +10434,28 @@ crash is the port's even if the read is Capcom's.
 **Status:** fixed by DIV-0185 (2026-10-29): a null block reads as bit 1
 clear (the actor's hit class); a written one, stale or not, takes Capcom's
 path unchanged. `BOF3X_ORIGINAL=Battle_SetHitPopup` for the original's read.
+
+## D398 — A sprite beside a model is drawn over it once a narrower frame slips past the model's 28 px test box (ours, DIV-0071; fixed by its 2026-10-29 amendment, issue #141)
+
+**Found:** ScrubOasis, GitHub issue #141 (2026-10-24), a screenshot of Garr
+beside Angel Tower's pushed stone block with his elbow drawn over the block's
+top while his feet stand behind its near corner; the owner's `garrBlocks`
+route and save (2026-10-29) walk the same block round.
+
+**Established:** the block is a model (`+0x24` bit `0x40`) of 25 quads, 85 x
+93 px on screen; DIV-0071's later-sprite test took the 28 x 50 px body box
+round its screen point, since a model draws no cell sprite for `Reach` to grow
+the box with. Garr's 72 px frame reached that box by a few pixels; the
+narrower walking frames did not, and the rule moved him past the block's
+layer - for a frame at a time while walking beside it, and for good once he
+stood 1.25 rows behind its corner. With `BOF3X_LAYERING=0` the block covers
+his arm in every such frame. Ours, not Capcom's; the same on the PC, the US
+disc alone and the US + PSP-EU install.
+
+**Status:** fixed by DIV-0071's 2026-10-29 amendment (a model's box is the
+union of its quads, kept each pass as the sprites' boxes are). 54 of 256
+captured frames change, each to Capcom's order. Seen on captures; not yet in
+play; the owner, shown the sheet, circled frames 440 and 1,060 and called
+them resolved. What stays: Garr with his feet 1.5 rows behind the block's
+corner is drawn behind its near face, Capcom's order; the owner saw it and
+called it correct ([`block-layering.md`](block-layering.md) 4).

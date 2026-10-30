@@ -5649,6 +5649,45 @@ designed in rather than bolted on.
     every mismatch count 0, 10,087 ours (the rule arms after the self-tests).
 
   **Owed:** the owner's look at the camp.
+- **Amended 2026-10-29 (GitHub issue #141, a player; the owner's `garrBlocks`
+  route; known-defects D398; [`block-layering.md`](block-layering.md)): a
+  model's box is what it drew.** Angel Tower's pushed stone block (`AREA083`,
+  object `0x7E12E0`, a model of 25 quads about 85 x 93 px on screen) stops a
+  sprite's move past its layer through the later-sprite test, as any later
+  sprite does - but a model draws no cell sprite, so `Reach` had nothing to
+  grow its box with and the test took the 28 x 50 px body box round its
+  screen point. Garr beside the block, two cells west of its centre and his
+  feet 1.25 to 2 rows behind its near corner, reaches that small box only by
+  the edge of his 72 px frame: on the walking frames where his drawn box is
+  narrower he slipped past, and the rule drew him over the block's top for a
+  frame at a time (route frames 368, 1,032, 1,156) and for good once he
+  stood beyond it (428..496, 1,060..1,128, 1,180..1,216) - the player's
+  screenshot, Garr's elbow over the block while his feet are behind its
+  corner. Now `Sprite_DrawPass` hands each model's records to
+  `layering::AfterModel` right after `Sprite_AddDrawRecords` makes them, and
+  the union of its quads' screen points is kept in the same table as the
+  sprites' cell-sprite boxes (`Keep`), so `Reach` grows a model's box as it
+  grows a sprite's; the same box serves the own-layer "beside model" test.
+  The amendment only stops moves: every pixel it changes is Capcom's order
+  at that spot, and within the block's layer a sprite is still sorted
+  against the block's quads one by one as the original sorts it. Verified
+  live, 16:9, en-US, the PC install, layering on, `main` (`b7bd1d29`)
+  against this build, a frame every 4 from route frame 300 (`input_run.py`,
+  launcher `D:\bof3x-runs\lay141\L2`): 54 of 256 frames differ, every one
+  in Garr's box beside a block, every one now drawn as `BOF3X_LAYERING=0`
+  draws it; the `garrBlocks` A/B/C on the PC, the US disc alone and the US
+  disc with PSP-EU (the player's install) before the fix: identical in the
+  field, so the fault was the rule's, not an install's. **What this
+  amendment does not change:** Garr standing beside the block with his feet
+  1.5 rows behind its corner (route frames 1,033..1,056 and the like) is
+  drawn with his arm behind the block's near face, by Capcom's order and by
+  ours - the block's whole near face is nearer than his feet, and a 72 px
+  billboard beside a box has no drawing that is right from every angle. The
+  owner's report of 2026-10-29 was the fixed case, not this one: shown the
+  sheet, they circled frames 440 and 1,060 and called them resolved, and
+  shown frame 1,044 called it correct as it is (section 4 of the doc).
+  **The owner, 2026-10-29 night, on the sheet:** "that looks correct to me,
+  so no change needed. I think your new layering rule looks good".
 - **Reversible?** `BOF3X_LAYERING=0`. `BOF3X_LAYERING_AHEAD`
   (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
   `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each
