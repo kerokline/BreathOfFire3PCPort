@@ -290,3 +290,93 @@ copy of the four launcher files under `C:\Users\kerok\bof3x-runs\ei1029`):
 Owed: the owner's eye - an ordinary fight with a kind never beaten (the bar
 under the name from turn one) and a boss (the bar, and Identify's numbers);
 the Cheats sub-page's new group, 176 dialog units high now.
+
+## 7. The minigames cannot be failed (DIV-0188, 2026-10-30)
+
+The owner's call, with the groundwork laid for every minigame: one switch,
+`BOF3X_NO_FAIL=1` (`cheat.no_fail=1`, the "You cannot fail a minigame" box
+on the More cheats sub-page), read by `Cheats_Inject` into
+`Cheats_MinigameNoFail()` (0 or 1, unset is off, anything else a `Fatal`).
+
+**Why per minigame.** The engine has no "minigame" state. Each minigame is a
+state of its own subsystem, armed by its area's or chapter's own code, and
+judges the player's attempt in a step of its own
+([`button-tests.md`](button-tests.md) 2.2):
+
+| Minigame | Where it lives | Judged in | Under the switch |
+|---|---|---|---|
+| the rope pull (area 75) | `Field_ModeTailKinds[30]`, armed by `Area75_ArmTail30` | `Area75_PhasePlay` `0x40E330`: more than three presses out of turn, more than 0x1E idle frames or the counters more than 0xC8 apart send the pull to `Area75_PhaseMissed` | **yes**: the judgement skipped, the pull runs until the player's counter reaches the mark |
+| the lighthouse valve (area 77, chapter 6) | effect kind `0x45`, the oscilloscope gauge, spawned by `Scena06`'s run (`scena_sc6.cpp` 1626), which then steps on its row's flag 0x26: set, "The main valve is open!"; clear, "Whoops! The boiler stopped" | `EffectKind45_Aim` `0x477370` (`effect_2d.cpp`): a confirm press sets flag 0x26 only with the trace's offset at 8 and its phase within 0x1C..0x24; `EffectKind45_Tune` `0x477250`, the state before it: a confirm press ends the gauge with the flag as it was (clear) - too soon | **yes**: a confirm press sets the flag in either state; cancel stays a cancel |
+| the chop (area 8) | `Scena01_Scene06` step 0x12 | not read yet | no route yet |
+| the well (area 68) | effect kind `0x8C` | not read yet | no route yet |
+| the crane (area 135), the antenna dial, the ram (area 121), the dock's parts menu (area 128) | the button round's sites | not read yet | no route yet |
+
+The lighthouse is not among the button round's seven sites: its gauge reads
+the confirm and cancel button sets (`Field_ConfirmButtons`, `Field_CancelButtons`),
+not a hard-coded bit, so the Config swap never touched it. Finding it was a
+replay of the owner's recording with `watch` and `peek` lines (the area word
+`0x904EFC` 0x4D, the live effect slots' kinds): no tail kind changes in the
+area, and the only effect alive through the meter is kind `0x45`.
+
+A minigame joins the switch when a recorded route reaches it (the owner
+records the start with `BOF3X_RECORD`, [`button-routes.md`](button-routes.md)
+5), its judgement is read, and a variant of the route that loses without the
+switch is seen to go on with it. The module that owns a guarded function
+checks at inject that the function is ours when the switch is on
+(`AreaW1f_Inject`, `Effect2D_Inject`): a `BOF3X_ORIGINAL` or `BOF3X_OFF` that
+leaves Capcom's judgement in place is a `Fatal`, never a cheat half on.
+
+**The rope pull.** `Area75_PhasePlay` runs the move's presses, counts the
+move's frames down, and - unless the press flags' bit 8 - judges: more than
+three early presses (`0x93C347`), more than 0x1E idle frames (`0x93C348`) or
+`CounterGap()` over 0xC8 set the phase byte `0x93C340` to 3, and
+`Area75_PhaseMissed` ends the attempt (Cond row 10 flag 1, tail state 0x1E).
+With the switch on the function returns before that judgement. The moves,
+the rhythm table, the two counters, the sounds and the other side's pulling
+are as they were; `Area75_PhaseDeal` still ends the pull at the mark
+(the player's counter at 0x1F4 or less, phase 4).
+
+**Verification.** 2026-10-30, headless (`BOF3X_SELFTEST_ONLY=1`, a clean
+copy of the four launcher files under `C:\Users\kerok\bof3x-runs\rope1030\T`):
+
+- `BOF3X_NO_FAIL=1 BOF3X_SHADOW=area_w1f`: the log line `DIV-0188 the
+  minigames cannot be failed (BOF3X_NO_FAIL)`, and the fuzz differs in
+  `Area75_PhasePlay` alone, 3,490 of 6,000 rounds, the first differing byte
+  each time `0x93C340` (the phase byte), the group's 30 other functions at 0;
+- `BOF3X_NO_FAIL=2`: `FATAL: BOF3X_NO_FAIL must be 0 or 1`;
+- `BOF3X_NO_FAIL=1 BOF3X_ORIGINAL=Area75_PhasePlay`: `FATAL: BOF3X_NO_FAIL=1
+  needs Area75_PhasePlay ours, and it is disabled`;
+- `BOF3X_NO_FAIL=1 BOF3X_SHADOW=effect_2d`: differs in `EffectKind45_Tune`
+  (3,179 of 6,000 rounds) and `EffectKind45_Aim` (4,794) alone, the group's
+  52 other functions at 0; `BOF3X_ORIGINAL=EffectKind45_Aim` with the switch:
+  `FATAL: BOF3X_NO_FAIL=1 needs EffectKind45_Tune and EffectKind45_Aim ours,
+  and one is disabled`;
+- unset, `BOF3X_SHADOW='*'`: the rope pull's build, 766 groups, 0 mismatches,
+  exit 0 (about 25 minutes); the build with both minigames, again 766 groups, 0 mismatches, exit 0.
+
+Live, the same day, from the owner's two recordings (`tools/recipes/ropeMiniGame.txt`,
+`lighthousePowerMiniGame.txt`, their saves in `tools/recipe_saves/`), replayed on
+a clean launcher copy at x8 / x4 with shots (`C:\Users\kerok\bof3x-runs\rope1030`,
+the sheets `sheet_idle_*.png`, `sheet_l_*.png`):
+
+- the rope pull, the player's first turn of presses (recipe frames
+  1,634..1,762) made idle (`rope_idle.txt`): unset, "You failed..." at frame
+  1,740 and the foreman's "if you feel like trying again"; with the switch the
+  pull runs on - the other side pulls ahead, the counters turn red past 0x96
+  apart, the player's later turns pull back - no loss through frame 3,300;
+- the lighthouse, the valve press (frame 817) moved 40 frames early and 40
+  frames late (`light_early.txt`, `light_late.txt`): unset, "Whoops! The boiler
+  stopped" both ways; with the switch, "The main valve is open!" both ways;
+- the recordings as made (a pull won, a valve opened) replay the same with the
+  switch unset, under the owner's ini and under none.
+
+The launcher: the cheats on two sub-pages since this change (the owner's
+call, so the page does not crowd) - Cheats holds the battle rewards and
+stealing, More cheats the enemy information (DIV-0187) and the minigames;
+either page's Defaults resets every cheat. The sub-tab buttons are placed
+per tab, each as wide as that tab's longest label, since four of the old
+width would not fit the picture. `tools/launcher_host/dialog_test.py` passes
+as on `main` (its two mod-zip failures are `main`'s too, 2026-10-30).
+
+Owed: the owner's eye on the two pages and on a pull played with the box on.
+

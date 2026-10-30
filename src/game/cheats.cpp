@@ -10,8 +10,9 @@
 #include "hook/log.h"
 
 // Cheats: the same three the archival sibling offers as mods (its
-// docs/EXP_BOOST.md and docs/STEAL.md) as launcher settings here, and a
-// fourth of our own, every enemy's information shown (DIV-0187).
+// docs/EXP_BOOST.md and docs/STEAL.md) as launcher settings here, and two
+// of our own: every enemy's information shown (DIV-0187) and the minigames
+// that cannot be failed (DIV-0188).
 //
 // DIV-0045: BOF3X_EXP=n / BOF3X_ZENNY=n, 0..10 (more is clamped to 10, with
 // a log line, so that an older bof3x.ini's 50 still starts the game).
@@ -59,6 +60,19 @@
 // from the first meeting, bosses included. The bit set, and so the save, is
 // left as it was: the cheat off, the game is where it would have been.
 //
+// DIV-0188: BOF3X_NO_FAIL=1. Each minigame is a state of its own
+// subsystem (an area's field tail kind, an effect kind, a scenario step:
+// docs/button-tests.md 2.2), and each judges the player's attempt in a
+// step of its own, so the switch is one flag here and one guarded branch
+// per minigame, added as each is reached by a recorded route and verified.
+// The rope pull (area 75): Area75_PhasePlay sends the pull to its missed
+// phase on more than three presses out of turn, more than 0x1E idle frames
+// or the two counters more than 0xC8 apart; with the switch on it never
+// does, and the pull runs until the player's counter reaches the mark.
+// The module that owns a guarded function checks at inject that the
+// function is ours when the switch is on (AreaW1f_Inject): Capcom's body
+// would judge as before and the cheat would be silently half off.
+//
 // Every harness run leaves these unset: with the variables unset nothing
 // here changes a byte or a number, and the battle_flow fuzz compares ours
 // against the original with the multipliers at 1.
@@ -67,6 +81,7 @@ namespace {
 
 std::uint32_t g_exp = 1, g_zenny = 1;
 bool g_enemy_info = false;
+bool g_no_fail = false;
 // The roll masks: the imm32 at kPilferMaskImm / kStealMaskImm in this build -
 // 0xFF, or 0 once DIV-0046's patch goes in. Values of ours, never read from
 // the code (docs/operand-store.md); hosted, Operands_Check compares them.
@@ -118,6 +133,9 @@ void Cheats_Inject() {
     g_enemy_info = Flag("BOF3X_ENEMY_INFO");
     if (g_enemy_info) bof3::Log("DIV-0187    every enemy shows its HP gauge and its Identify stats, bosses too (BOF3X_ENEMY_INFO)");
 
+    g_no_fail = Flag("BOF3X_NO_FAIL");
+    if (g_no_fail) bof3::Log("DIV-0188    the minigames cannot be failed (BOF3X_NO_FAIL)");
+
     bof3::Operand("DIV-0046 Pilfer roll mask", kPilferMaskImm, &g_pilfer_mask, 4);
     bof3::Operand("DIV-0046 Steal roll mask", kStealMaskImm, &g_steal_mask, 4);
     if (!Flag("BOF3X_STEAL")) return;
@@ -133,3 +151,4 @@ std::uint32_t Cheats_ZennyMultiplier() { return g_zenny; }
 std::uint32_t Cheats_PilferRollMask() { return g_pilfer_mask; }
 std::uint32_t Cheats_StealRollMask() { return g_steal_mask; }
 bool Cheats_EnemyInfoShown() { return g_enemy_info; }
+bool Cheats_MinigameNoFail() { return g_no_fail; }

@@ -21,6 +21,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/area_harness.h"
 #include "game/area_w1f_callees.h"
+#include "game/cheats.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/record_views.h"
@@ -927,7 +928,9 @@ extern "C" void __cdecl Area75_PhaseDeal(void) {
 // Area75_PlayerPress; any other: Area75_EarlyPress. Then the move's frames
 // less 1; at 0, phase 1 unless the flags' bit 8 (then the frames 0x2710).
 // Without bit 8: more than 3 presses out of turn, more than 0x1E idle frames
-// or the counters more than 0xC8 apart: phase 3.
+// or the counters more than 0xC8 apart: phase 3 - unless DIV-0188's switch
+// is on (Cheats_MinigameNoFail): then the pull is never judged missed and
+// runs until the player's counter reaches the mark (Area75_PhaseDeal).
 extern "C" void __cdecl Area75_PhasePlay(void) {
     switch (B(::bof3::Img(AreaW1f_Move_addr))) {
     case 0:
@@ -951,6 +954,7 @@ extern "C" void __cdecl Area75_PhasePlay(void) {
             SetWord(Mem(::bof3::Img(AreaW1f_MoveFrames_addr)), 0x2710);
     }
     if (flags & 8) return;
+    if (Cheats_MinigameNoFail()) return;
     if (B(::bof3::Img(AreaW1f_EarlyPresses_addr)) > 3 || B(::bof3::Img(AreaW1f_IdleFrames_addr)) > 0x1E || CounterGap() > 0xC8) B(::bof3::Img(AreaW1f_Phase_addr)) = 3;
 }
 
@@ -1297,4 +1301,9 @@ void AreaW1f_Inject() {
     BOF3_INJECT(Area75_EarlyPress);
     BOF3_INJECT(Area75_DrawCounters);
     BOF3_INJECT(Area75_DrawWindow);
+    // DIV-0188 guards the rope pull's judgement here; Capcom's
+    // Area75_PhasePlay would judge as before and the cheat would be silently
+    // half off.
+    if (Cheats_MinigameNoFail() && !bof3::IsEnabled(bof3::addr::Area75_PhasePlay))
+        bof3::Fatal("BOF3X_NO_FAIL=1 needs Area75_PhasePlay ours, and it is disabled");
 }

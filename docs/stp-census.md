@@ -241,7 +241,8 @@ bit-15 texels. The `diffs.py` script in the root measures each pair.
 
 ### 6.5 Still not reached
 
-- The minigames other than fishing: none is recorded ([`button-routes.md`](button-routes.md) lists the seven
+- **The rope pull is now reached** (2026-10-30, the owner's `ropeMiniGame.txt`, x1, `C:\Users\kerok\bof3x-runs\rope1030\census_rope2.tsv`: 10,440 frames, 32 rows): area 75's 689,604 draws change by 0.7 %, every changed row the page-15 text palettes `7800` / `7807` (the counters' windows and the messages), as section 4 found everywhere else; the rooftop rope is area 28's, not this area's. Nothing new for the bit-15 change.
+- The minigames other than fishing and the rope pull: none is recorded ([`button-routes.md`](button-routes.md) lists the seven
   placed saves).
 - The spell sweep's enemy side and the items. The member side ran at x4, which draws about a quarter of the
   frames.

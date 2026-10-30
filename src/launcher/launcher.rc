@@ -48,6 +48,7 @@ BEGIN
     AUTORADIOBUTTON "", 1032, 0, 0, 50, 14, BS_PUSHLIKE | WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "", 1033, 0, 0, 50, 14, BS_PUSHLIKE
     AUTORADIOBUTTON "", 1034, 0, 0, 50, 14, BS_PUSHLIKE
+    AUTORADIOBUTTON "", 1035, 0, 0, 50, 14, BS_PUSHLIKE
 END
 
 // The title page's picture: a screenshot on the terms of docs/LICENSING.md
@@ -234,8 +235,11 @@ BEGIN
                     -1, 9, 34, 260, 18
 END
 
-// DIV-0045 / DIV-0046 / DIV-0187: the cheats (docs/cheats.md), Game Options' third sub-page.
-IDD_PAGE_GAME DIALOGEX 0, 0, 290, 176
+// DIV-0045 / DIV-0046: the cheats (docs/cheats.md), Game Options' third sub-page.
+// The owner split the page 2026-10-30 so it does not crowd: the battle
+// rewards and stealing here, the enemy information and the minigames on
+// More cheats (IDD_PAGE_GAME2). Each page's Defaults resets every cheat.
+IDD_PAGE_GAME DIALOGEX 0, 0, 290, 130
 STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 9, "Segoe UI", 400, 0, 0x1
@@ -255,12 +259,26 @@ BEGIN
     LTEXT           "Pilfer and Steal always take the enemy's item on the first try, if the enemy has an item.",
                     -1, 19, 93, 260, 18
 
-    GROUPBOX        "Enemy information", -1, 0, 115, 286, 42
-    AUTOCHECKBOX    "Show every enemy's &HP bar and stats", IDC_CH_INFO, 7, 127, 270, 10
-    LTEXT           "The HP bar and the Identify stats show for every enemy, bosses too, before you defeat that kind.",
-                    -1, 19, 139, 260, 18
+    PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS, 0, 114, 52, 14
+END
 
-    PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS, 0, 160, 52, 14
+// DIV-0187 / DIV-0188: More cheats, Game Options' fourth sub-page.
+IDD_PAGE_GAME2 DIALOGEX 0, 0, 290, 130
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Enemy information", -1, 0, 0, 286, 42
+    AUTOCHECKBOX    "Show every enemy's &HP bar and stats", IDC_CH_INFO, 7, 12, 270, 10
+    LTEXT           "The HP bar and the Identify stats show for every enemy, bosses too, before you defeat that kind.",
+                    -1, 19, 24, 260, 18
+
+    GROUPBOX        "Minigames", -1, 0, 46, 286, 42
+    AUTOCHECKBOX    "You cannot &fail a minigame", IDC_CH_NOFAIL, 7, 58, 270, 10
+    LTEXT           "A minigame does not end with a loss. Applies to the rope pull and the lighthouse valve. Other minigames follow as they are verified.",
+                    -1, 19, 70, 260, 18
+
+    PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS2, 0, 114, 52, 14
 END
 
 // The three suites (docs/launcher-suites.md, recipes/suites.toml): each the

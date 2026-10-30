@@ -416,7 +416,9 @@ a frame is lost to both. F12 (read from the game's own DirectInput key bytes
 at `0x7DE828`, DIK `0x58` - `GetAsyncKeyState` saw nothing on the first
 recording) writes a one-frame `shot` in place of its frame.
 `tools/recipe_shots.py` adds shots every N frames to a recording after the
-fact, again without moving a frame. Record in the language you will play back
+fact, again without moving a frame; since 2026-10-30 it keeps the zero-frame
+`key KEY 0` and `quit` lines in place too (before that it refused a recording
+holding them, the rope pull's the first). Record in the language you will play back
 in: text timing differs.
 
 **Function keys (2026-10-24).** F1..F11, and any key that ends a pause, are

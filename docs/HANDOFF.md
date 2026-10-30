@@ -29,6 +29,14 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 
 ## Pick up here
 
+0. **The no-fail minigames cheat (DIV-0188, 2026-10-30)** on `cheat/no-fail-minigames`: the switch, the rope pull
+   and the lighthouse valve under it, the Cheats sub-page split ([`cheats.md`](cheats.md) 7). **Next minigames**, each
+   when the owner records its start (`BOF3X_RECORD`): the chop (`Scena01_Scene06` step 0x12), the well (effect kind
+   `0x8C`). The pattern: read the judgement (a `watch` / `peek` replay finds the subsystem when the docs do not: the
+   lighthouse was effect kind `0x45` in area 77, not the button round's area 135), guard it on
+   `Cheats_MinigameNoFail()`, the module's inject `Fatal` when the function is not ours, a losing variant of the
+   route seen to go on, the table in cheats.md 7. **Owed:** the owner's eye on the two pages and a pull with the box on.
+
 1. **The away day of 2026-10-27 is merged as PR #158** (with `away1027/twins` and `away1027/docs`; four Opus
    agents, [`STATUS.md`](STATUS.md) has a line each; the evidence in [`install-gap-labels.md`](install-gap-labels.md)
    9..9.2, [`exe-import-engine.md`](exe-import-engine.md) 7.11, [`stp-census.md`](stp-census.md) 6 and
@@ -226,7 +234,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - **Quicksaves** (DIV-0145..0147): not played yet; whether F6 / F7 get an on-screen line (logged only today, as
      F12's is, DIV-0032); IDEAS I47 (one translation's quicksave loaded under another) when they want it.
    - **From the button round (PR #85):** record the minigame starts with `BOF3X_RECORD`
-     ([`button-routes.md`](button-routes.md) 5) and look at the contact sheets; `Scena19_Run0`'s R1. **The root
+     ([`button-routes.md`](button-routes.md) 5; **the rope pull is recorded, `ropeMiniGame.txt`, 2026-10-30** - six sites
+     left) and look at the contact sheets; `Scena19_Run0`'s R1. **The root
      `C:\Users\kerok\b_rc` that held the placed saves and the sheets was deleted 2026-10-21**: before the owner's
      check, re-prepare a root under `C:\Users\kerok\bof3x-runs\` and regenerate them (`button-routes.md`'s commands,
      `abc_run.py prepare --set sigma`, `sigma_saves.py`, `sigma_sheets.py`, with the new root). **From PR #81:** the stale-install prompt in a real start, the PSP-only title in play, D310.

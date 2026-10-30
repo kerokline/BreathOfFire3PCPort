@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <cwchar>
 #include <string>
 #include <vector>
 
@@ -62,6 +63,9 @@ constexpr SubPage kSubPages[] = {
     {kPageGame, IDD_PAGE_VERSIONS, L"Graphics and audio"},
     {kPageGame, IDD_PAGE_VERSIONS2, L"Data"},
     {kPageGame, IDD_PAGE_GAME, L"Cheats"},
+    // The cheats on two sub-pages (the owner's call, 2026-10-30): the second
+    // holds the enemy information (DIV-0187) and the minigames (DIV-0188).
+    {kPageGame, IDD_PAGE_GAME2, L"More cheats"},
     // The Mods tab's sub-row (the owner's call, 2026-10-22): Data, the player's
     // mods (docs/mods.md; its own procedure, ModsPageProc), and Extras, the
     // launcher's extras - today the Row above the text toggle (ruby_ui=).
@@ -70,7 +74,7 @@ constexpr SubPage kSubPages[] = {
     {kPageData, IDD_PAGE_DATA, nullptr},
 };
 constexpr int kSubPageCount = static_cast<int>(std::size(kSubPages));
-constexpr int kSubTabsMax = 3;   // IDC_SUB0 .. IDC_SUB0 + 2
+constexpr int kSubTabsMax = 4;   // IDC_SUB0 .. IDC_SUB0 + 3
 
 struct DialogState {
     Config* cfg = nullptr;
@@ -964,7 +968,10 @@ const CheatSlider kCheatSliders[] = {
 };
 constexpr int kCheatMultiplierMax = 10;   // the DLL clamps more to this (src/game/cheats.cpp)
 
-void CheatsPopulate(HWND dlg, const Config::Cheats& ch) {
+// The cheats sit on two sub-pages since 2026-10-30 (IDD_PAGE_GAME: the
+// rewards and stealing; IDD_PAGE_GAME2: the enemy information and the
+// minigames); `dlg` is the first and `dlg2` the second.
+void CheatsPopulate(HWND dlg, HWND dlg2, const Config::Cheats& ch) {
     for (const CheatSlider& s : kCheatSliders) {
         HWND h = GetDlgItem(dlg, s.id);
         SendMessageW(h, TBM_SETRANGE, TRUE, MAKELPARAM(0, kCheatMultiplierMax));
@@ -976,16 +983,18 @@ void CheatsPopulate(HWND dlg, const Config::Cheats& ch) {
         SetDlgItemInt(dlg, s.label, static_cast<UINT>(v), FALSE);
     }
     CheckDlgButton(dlg, IDC_CH_STEAL, ch.steal ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(dlg, IDC_CH_INFO, ch.enemy_info ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(dlg2, IDC_CH_INFO, ch.enemy_info ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(dlg2, IDC_CH_NOFAIL, ch.no_fail ? BST_CHECKED : BST_UNCHECKED);
 }
 
-void CheatsReadBack(HWND dlg, Config::Cheats& ch) {
+void CheatsReadBack(HWND dlg, HWND dlg2, Config::Cheats& ch) {
     for (const CheatSlider& s : kCheatSliders) {
         const int pos = static_cast<int>(SendDlgItemMessageW(dlg, s.id, TBM_GETPOS, 0, 0));
         ch.*s.value = pos < 0 ? 0 : pos > kCheatMultiplierMax ? kCheatMultiplierMax : pos;
     }
     ch.steal = IsDlgButtonChecked(dlg, IDC_CH_STEAL) == BST_CHECKED;
-    ch.enemy_info = IsDlgButtonChecked(dlg, IDC_CH_INFO) == BST_CHECKED;
+    ch.enemy_info = IsDlgButtonChecked(dlg2, IDC_CH_INFO) == BST_CHECKED;
+    ch.no_fail = IsDlgButtonChecked(dlg2, IDC_CH_NOFAIL) == BST_CHECKED;
 }
 
 // A slider on the page moved: show its value. False when it is not one of these.
@@ -1432,13 +1441,7 @@ void Layout(HWND dlg, DialogState& state) {
     }
     const int back = width(DialogText(dlg, IDC_BACK), 24, 88);
     place(IDC_BACK, cw - px(kMargin) - back, px(kTabsY), back, px(kTabH), state.button_font);
-    // The sub-tabs, as wide as the longest label any tab gives them (ShowPage sets them).
-    SelectObject(dc, reinterpret_cast<HFONT>(SendMessageW(dlg, WM_GETFONT, 0, 0)));
-    int sub_w = 0;
-    for (const SubPage& p : kSubPages)
-        if (p.label) sub_w = std::max(sub_w, width(p.label, 20, 80));
-    for (int k = 0; k < kSubTabsMax; ++k)
-        place(IDC_SUB0 + k, px(kMargin) + k * (sub_w + px(6)), px(kPageY), sub_w, px(kSubTabH), nullptr);
+    // The sub-tabs are placed by ShowPage, per tab (PlaceSubTabs).
     SelectObject(dc, old);
     ReleaseDC(dlg, dc);
 
@@ -1447,11 +1450,35 @@ void Layout(HWND dlg, DialogState& state) {
                      SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
+// The tab's sub-tab buttons from the left, each as wide as the tab's longest
+// label (so four fit where three did, 2026-10-30): the dialog font, as the
+// pages use. A tab with no labels leaves them where they were; they are
+// hidden then.
+void PlaceSubTabs(HWND dlg, DialogState& state, int page) {
+    const auto px = [&state](double v) { return Px(state, v); };
+    HDC dc = GetDC(dlg);
+    HGDIOBJ old = SelectObject(dc, reinterpret_cast<HFONT>(SendMessageW(dlg, WM_GETFONT, 0, 0)));
+    int sub_w = 0;
+    for (const SubPage& p : kSubPages) {
+        if (p.page != page || !p.label) continue;
+        SIZE size{};
+        GetTextExtentPoint32W(dc, p.label, static_cast<int>(std::wcslen(p.label)), &size);
+        sub_w = std::max(sub_w, std::max(static_cast<int>(size.cx) + px(20), px(80)));
+    }
+    SelectObject(dc, old);
+    ReleaseDC(dlg, dc);
+    if (sub_w == 0) return;
+    for (int k = 0; k < kSubTabsMax; ++k)
+        SetWindowPos(GetDlgItem(dlg, IDC_SUB0 + k), nullptr, px(kMargin) + k * (sub_w + px(6)), px(kPageY), sub_w,
+                     px(kSubTabH), SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
 // The title page (kPageTitle) or one of Configure's tabs, on the sub-page the
 // tab was left on.
 void ShowPage(HWND dlg, DialogState& state, int page) {
     state.page = page;
     const bool title = page == kPageTitle;
+    if (!title) PlaceSubTabs(dlg, state, page);
     for (const TitleButton& b : kTitleButtons) ShowWindow(GetDlgItem(dlg, b.id), title ? SW_SHOW : SW_HIDE);
     for (int i = 0; i < kPageCount; ++i) {
         ShowWindow(GetDlgItem(dlg, IDC_TAB0 + i), title ? SW_HIDE : SW_SHOW);
@@ -1519,7 +1546,8 @@ INT_PTR CALLBACK PageProc(HWND page, UINT msg, WPARAM wp, LPARAM lp) {
 void ApplyPages(HWND dlg, DialogState& state) {
     ReadCache(dlg, *state.cfg);
     ReadBack(dlg, state);
-    if (state.cheats_touched) CheatsReadBack(SubPageOf(state, IDD_PAGE_GAME), state.cfg->cheats);
+    if (state.cheats_touched)
+        CheatsReadBack(SubPageOf(state, IDD_PAGE_GAME), SubPageOf(state, IDD_PAGE_GAME2), state.cfg->cheats);
     if (state.cells_touched) {
         const int layout = Selected(dlg, IDC_CT_LAYOUT);
         state.cells.layout = static_cast<input::Layout>(layout < 0 ? 0 : layout);
@@ -1555,7 +1583,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         }
         if (!LoadPicture(*state)) std::fprintf(stderr, "bof3x-launcher: the title page's picture could not be decoded\n");
         Populate(dlg, *state);
-        CheatsPopulate(SubPageOf(*state, IDD_PAGE_GAME), state->cfg->cheats);
+        CheatsPopulate(SubPageOf(*state, IDD_PAGE_GAME), SubPageOf(*state, IDD_PAGE_GAME2), state->cfg->cheats);
         state->cells = CellsFrom(state->cfg->bindings);
         ControlsPopulate(dlg, state->cells);
         Layout(dlg, *state);
@@ -1670,10 +1698,12 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             return TRUE;
         case IDC_CH_STEAL:
         case IDC_CH_INFO:
+        case IDC_CH_NOFAIL:
             if (HIWORD(wp) == BN_CLICKED) state->cheats_touched = true;
             return TRUE;
         case IDC_CH_DEFAULTS:
-            CheatsPopulate(SubPageOf(*state, IDD_PAGE_GAME), Config::Cheats{});
+        case IDC_CH_DEFAULTS2:   // either page's Defaults: every cheat, both pages
+            CheatsPopulate(SubPageOf(*state, IDD_PAGE_GAME), SubPageOf(*state, IDD_PAGE_GAME2), Config::Cheats{});
             state->cheats_touched = true;
             return TRUE;
         case IDC_CT_LAYOUT:

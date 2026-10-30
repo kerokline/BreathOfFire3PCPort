@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 187 entries, DIV-0001..0187, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 188 entries, DIV-0001..0188, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -13291,6 +13291,91 @@ designed in rather than bolted on.
   ([`cheats.md`](cheats.md) section 6).
 - **Reversible?** Yes: the box off, `BOF3X_ENEMY_INFO` unset.
 - **Switch:** ini:cheat.enemy_info=0
+- **Default:** off - the box starts off
+- **Player:** yes
+- **Toward:** none
+- **Languages:** any
+- **State:** active
+
+### The minigames cannot be failed: a Cheats switch, the rope pull and the lighthouse valve first
+
+- **ID:** DIV-0188
+- **Date:** 2026-10-30
+- **Subsystem:** field minigames - `Area75_PhasePlay` `0x40E330` (ours,
+  `src/game/area_w1f.cpp`), the rope pull's judgement, and `EffectKind45_Tune`
+  `0x477250` / `EffectKind45_Aim` `0x477370` (ours, `src/game/effect_2d.cpp`),
+  the lighthouse valve gauge's; the switch in `src/game/cheats.cpp`; the
+  launcher's More cheats sub-page; [`cheats.md`](cheats.md) section 7.
+- **Tier:** Extension
+- **Original behaviour:** the rope pull (area 75, `Field_ModeTailKinds[30]`,
+  armed by `Area75_ArmTail30` `0x40D7D0` from the area's step hook) judges
+  each move in `Area75_PhasePlay`: unless the press flags' bit 8
+  (`0x93C346`), more than three presses out of turn (`0x93C347`), more than
+  0x1E idle frames (`0x93C348`) or the two counters (`0x93C34A`, `0x93C34C`)
+  more than 0xC8 apart send the pull to phase 3, `Area75_PhaseMissed`
+  `0x40E3C0` (Cond row 10 flag 1 set, the tail state 0x1E), and the attempt
+  ends as a loss. The lighthouse's valve (area 77, chapter 6: `Scena06`'s
+  run spawns effect kind `0x45`, clears its row's flag 0x26 and sets 0x2D,
+  waits for 0x2D to clear, then steps to 4 on flag 0x26 - "The main valve is
+  open!" - or 6 - "Whoops! The boiler stopped", `scena_sc6.cpp`'s step 3):
+  the gauge effect's tuning state ends on any confirm or cancel press with
+  the flag as it was (clear), and its aiming state sets flag 0x26 on a
+  confirm press only when the trace's offset is 8 and its phase within
+  0x1C..0x24, else clears it. The engine has no "minigame" state: each of the
+  game's minigames is a state of its own subsystem and judges its own attempt
+  in a step of its own ([`button-tests.md`](button-tests.md) 2.2 - the
+  well's effect kind `0x8C`, the chop's and the antenna's scenario steps, the
+  dock's effect kind `0x5E`, area 135's tail kind 18).
+- **New behaviour:** with `BOF3X_NO_FAIL=1` `Area75_PhasePlay` skips that
+  judgement: the pull runs until the player's counter reaches the mark
+  (`Area75_PhaseDeal`'s 0x1F4, phase 4) however many presses are out of
+  turn, however long the idle, whatever the gap. Nothing else of the pull
+  changes: the moves, the rhythm, the counters, the sounds, the other side's
+  pulling. At the lighthouse's gauge a confirm press sets flag 0x26 wherever
+  the trace is, in the aiming state and in the tuning state before it (too
+  soon), so the valve opens on any confirm press; a cancel press is a cancel
+  as before. The other minigames are unchanged today; each joins the same
+  switch as a recorded route reaches it and the change is verified (the
+  owner's list, 2026-10-30: the chop and the well next).
+  Off by default; `cheat.no_fail=1` in `bof3x.ini`, the "You cannot fail a
+  minigame" box on the More cheats sub-page. A start with the switch on and
+  any of the three guarded functions left as Capcom's (`BOF3X_ORIGINAL` /
+  `BOF3X_OFF`) is a `Fatal`, so the cheat is never silently half on.
+- **Rationale:** the owner's call, 2026-10-30: the groundwork for one
+  switch that covers every minigame, for a player who wants the story
+  without the reflex tests. One guarded branch per minigame, because the
+  engine has no shared minigame state to hook; the flag and the list of
+  guarded sites are the whole mechanism.
+- **Also in the PSX version?** Not applicable: an extension. The console
+  judges the pull the same way (the function's twin in `AREA075.EMI`,
+  `names/area_records.toml` area 75); not measured here.
+- **Verification:** 2026-10-30, headless (`BOF3X_SELFTEST_ONLY=1`, a clean
+  copy of the four launcher files under `C:\Users\kerok\bof3x-runs\rope1030`):
+  with `BOF3X_NO_FAIL=1 BOF3X_SHADOW=area_w1f` the log line `DIV-0188 the
+  minigames cannot be failed` and the fuzz differs in `Area75_PhasePlay`
+  alone, 3,490 of 6,000 rounds, the first differing byte each time
+  `0x93C340` (the phase byte), the group's 30 other functions at 0;
+  `BOF3X_NO_FAIL=2` is `FATAL: BOF3X_NO_FAIL must be 0 or 1`; the switch on
+  with `BOF3X_ORIGINAL=Area75_PhasePlay` is `FATAL: BOF3X_NO_FAIL=1 needs
+  Area75_PhasePlay ours, and it is disabled`; with `BOF3X_NO_FAIL=1
+  BOF3X_SHADOW=effect_2d` the fuzz differs in `EffectKind45_Tune` (3,179 of
+  6,000 rounds) and `EffectKind45_Aim` (4,794) alone, the group's 52 other
+  functions at 0, and `BOF3X_ORIGINAL=EffectKind45_Aim` with the switch is
+  the `Fatal` naming both. Unset, `BOF3X_SHADOW='*'` (the switch's first
+  build, the rope pull alone): 766 groups, 0 mismatches, exit 0; the build with both, again 766 groups, 0 mismatches, exit 0.
+  Live, both minigames from the owner's recordings of the day, x8 / x4, a
+  clean launcher copy: the rope pull's `ropeMiniGame.txt` with the player's
+  first turn of presses (recipe frames 1,634..1,762) made idle - unset, "You
+  failed..." at frame 1,740 and the foreman's retry; with the switch the pull
+  runs on, the counters drawn red once more than 0x96 apart, no loss through
+  frame 3,300. The lighthouse's `lighthousePowerMiniGame.txt` with its valve
+  press (frame 817) moved 40 frames early and 40 late - unset, "Whoops! The
+  boiler stopped" both ways; with the switch "The main valve is open!" both
+  ways. The recordings themselves (a pull won, a valve opened) replay the same
+  with the switch unset under the owner's ini and under none
+  ([`button-routes.md`](button-routes.md) 5).
+- **Reversible?** Yes: the box off, `BOF3X_NO_FAIL` unset.
+- **Switch:** ini:cheat.no_fail=0
 - **Default:** off - the box starts off
 - **Player:** yes
 - **Toward:** none

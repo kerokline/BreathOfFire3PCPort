@@ -1,14 +1,24 @@
 // Cheats (docs/cheats.md): the EXP and zenny multipliers, DIV-0045, the
-// steal roll that always passes, DIV-0046, and every enemy's information
-// shown, DIV-0187. Each is a launcher setting carried by an environment
-// variable, off when the variable is unset.
+// steal roll that always passes, DIV-0046, every enemy's information
+// shown, DIV-0187, and the minigames that cannot be failed, DIV-0188. Each
+// is a launcher setting carried by an environment variable, off when the
+// variable is unset.
 #pragma once
 
 #include <cstdint>
 
-// Reads BOF3X_EXP / BOF3X_ZENNY / BOF3X_STEAL / BOF3X_ENEMY_INFO and patches
-// the two steal rolls when asked. Called once from InjectAll.
+// Reads BOF3X_EXP / BOF3X_ZENNY / BOF3X_STEAL / BOF3X_ENEMY_INFO /
+// BOF3X_NO_FAIL and patches the two steal rolls when asked. Called once from
+// InjectAll.
 void Cheats_Inject();
+
+// DIV-0188: true under BOF3X_NO_FAIL=1. A minigame's own code then skips
+// the step that judges the player's attempt a failure, one site at a time
+// as each is reached and verified (docs/cheats.md section 7): the rope pull
+// (Area75_PhasePlay, src/game/area_w1f.cpp). Nothing else of a minigame
+// changes - the player still plays it, they just cannot lose it. False when
+// unset.
+bool Cheats_MinigameNoFail();
 
 // DIV-0187: true under BOF3X_ENEMY_INFO=1. Battle_SetupEnemy
 // (src/game/battle_sprites.cpp) and Battle_PlaceBossActor

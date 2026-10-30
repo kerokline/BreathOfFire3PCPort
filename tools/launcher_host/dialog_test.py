@@ -548,7 +548,7 @@ def ruby_ui_checks(env, report):
         shot(dlg, "settings_row_hidden")
         u.SendMessageW(item(IDC_TAB_MODS), BM_CLICK, 0, 0)
         wait_idle(item)
-        got["subrow"] = [(text(item(IDC_SUB0 + k)), vis(item, IDC_SUB0 + k)) for k in range(3)]
+        got["subrow"] = [(text(item(IDC_SUB0 + k)), vis(item, IDC_SUB0 + k)) for k in range(4)]
         got["data"] = (vis(item, IDC_MOD_LIST), vis(item, IDC_EXTRA_RUBY))
         shot(dlg, "mods_data")
         u.SendMessageW(item(IDC_SUB0 + 1), BM_CLICK, 0, 0)
@@ -568,8 +568,8 @@ def ruby_ui_checks(env, report):
     st, ini, err = run("[bof3x]\nopt=\ncache=\nlanguage=ja-JP\nruby=en-US\n", act_off, env)
     report("Row above the text toggle: no ruby_ui=, no mod: the box and its label hidden",
            got.get("settings") == (False, False, True), repr(got.get("settings")))
-    report("  Mods' sub-row: Data and Extras, a third button hidden",
-           got.get("subrow") == [("Data", True), ("Extras", True), ("", False)], repr(got.get("subrow")))
+    report("  Mods' sub-row: Data and Extras, the third and fourth buttons hidden",
+           got.get("subrow") == [("Data", True), ("Extras", True), ("", False), ("", False)], repr(got.get("subrow")))
     report("  the Mods tab opens on Data: the mod list shown, the toggle not", got.get("data") == (True, False),
            repr(got.get("data")))
     x = got.get("extras", (None,) * 5)
