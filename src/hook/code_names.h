@@ -10,7 +10,7 @@
 
 namespace bof3::code_names {
 
-constexpr int kCount = 84;
+constexpr int kCount = 85;
 constexpr const char* kNames[kCount] = {
     "ApplyMatrixLVExact",
     "Area135MarkerPlaced",
@@ -54,6 +54,7 @@ constexpr const char* kNames[kCount] = {
     "Gfx_FilterPoint",
     "GlyphTexelCentres",
     "InnNightPause",
+    "ItemSortById",
     "JingleResume",
     "LinesWide",
     "MantleCap",
