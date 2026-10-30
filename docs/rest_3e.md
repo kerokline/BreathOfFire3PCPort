@@ -591,7 +591,7 @@ So `tools/importer.py` is unchanged and no cache needs rebuilding.
 > - **Reversible?** `BOF3X_ORIGINAL=DockLegend` (the page as it is), or
 >   `BOF3X_ORIGINAL=EffectKind5E_DrawPanel`.
 
-### 11.7 The words, from the disc (DIV-0189, 2026-10-30)
+### 11.7 The words, from the disc (DIV-0190, 2026-10-30)
 
 The owner's recording `tools/recipes/shipPartsMenu.txt` (save
 `shipPartsMenu.DAT`) is the first route to reach the dock: the panel drawn

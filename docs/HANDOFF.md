@@ -29,7 +29,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 
 ## Pick up here
 
-0. **The dock's legend words from the disc (DIV-0189, 2026-10-30 evening)** on `loc/ship-parts-menu`: the owner's
+0. **The dock's legend words from the disc (DIV-0190, 2026-10-30 evening)** on `loc/ship-parts-menu`: the owner's
    `shipPartsMenu.txt` reached the parts menu (area 128), whose button legend was still the page's Japanese paint.
    `loc_build.py build_dock_panel` now carries the panel's word columns from each Western disc's `AREA128.EMI` page
    into `<tag>.AREA128.DAT` (`OK` / `End` / `Memo`; French `Fin`; German `Ende` / `Notiz`), the icon column left the

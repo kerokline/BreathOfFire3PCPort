@@ -20,6 +20,13 @@ jumps by the state `0x929F01`, a few states by the step `0x929F02`):
   (state 5) jumps to through `FieldMenuItems_State5Steps`, states 6 (the discard
   prompt), 7 (a consumable used on a member) and 9 (a 32-entry list view), two
   window helpers R2D's states call, and `FieldItems_Sort` with its seven sorts.
+  **One divergence** (2026-10-30, DIV-0189): the two consumable sorts
+  (`NormalItem` / `CombatItem`) order each half by item id once the switch
+  `ItemSortById` is armed after the self-test; the fuzz compares the
+  original's partition. The row table they are picked from,
+  `FieldItems_ArrangeRows` `0x667360` (6 bytes a category: a count, then
+  sort ids), read 2026-10-30: consumables 0, 1, 2; weapons 0, 3; armour
+  0, 4, 5; accessories 0, 5 - sort 6 in no row, 0 the hand-arrange step.
 - **The Equipment screen** (`FieldMenu_States[4]`): `FieldEquip_Run` and its
   states but FS's two choosers (`Equip_ChooseSlot`, `Equip_ChooseItem`, round
   twelve, [`field_s.md`](field_s.md)), the two "best equipment" previews and

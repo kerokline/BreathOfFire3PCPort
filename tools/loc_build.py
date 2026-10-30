@@ -4241,7 +4241,7 @@ def build_village_sheet(game, disc):
 
 # ---------------------------------------------------------------- the dock's parts-menu legend
 
-# DIV-0189 (docs/rest_3e.md section 11.1). The legend beside the dock's parts
+# DIV-0190 (docs/rest_3e.md section 11.1). The legend beside the dock's parts
 # list (area 128, EffectKind5E_DrawPanel, rest_3e.cpp) is paint on the area
 # page: the kind-1 chunk tagged DOCK_PAGE_TAG of AREA128.DAT, an upload of
 # 32 x 32-halfword tiles, sixteen a row, whose dest word gives VRAM (x / 32,
