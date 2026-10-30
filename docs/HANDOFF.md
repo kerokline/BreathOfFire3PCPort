@@ -29,6 +29,13 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 
 ## Pick up here
 
+0. **The dock's legend words from the disc (DIV-0189, 2026-10-30 evening)** on `loc/ship-parts-menu`: the owner's
+   `shipPartsMenu.txt` reached the parts menu (area 128), whose button legend was still the page's Japanese paint.
+   `loc_build.py build_dock_panel` now carries the panel's word columns from each Western disc's `AREA128.EMI` page
+   into `<tag>.AREA128.DAT` (`OK` / `End` / `Memo`; French `Fin`; German `Ende` / `Notiz`), the icon column left the
+   port's for DIV-0137 ([`rest_3e.md`](rest_3e.md) 11.7). Seen under en-US, fr-FR and de-DE in the replay; the owner's
+   install takes it when the launcher rebuilds the stale `loc` step. **Owed the owner's eye:** the panel on their
+   own install (a West-default Config shows the West's icons through DIV-0137's cell swap).
 0. **The no-fail minigames cheat (DIV-0188, 2026-10-30)** on `cheat/no-fail-minigames`: the switch, the rope pull,
    the lighthouse valve and (the afternoon) the chop under it, the cheats on two pages of the Cheats sub-tab, a third
    row of buttons ([`cheats.md`](cheats.md) 7).

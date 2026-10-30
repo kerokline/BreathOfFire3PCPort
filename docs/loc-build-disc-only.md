@@ -96,6 +96,7 @@ What `loc_build all` reads from the PC side, and where the cache has it:
 | the text CLUT, `FIRST.DAT` 0x8000 | the PC's strip with the disc's row 0 | no (loc/zh-CN) | the disc's whole strip: the strips differ in row 0 alone (US: rows 1..15 equal), so the same bytes |
 | the title page, `START.DAT` 0x1C000200 | its size (a check) | no (loc/zh-CN; `START` also `pc-edit`) | the recipe's size |
 | the village sheet, `COMMU01` / `COMMU05` 0x1C080200 | the PC's sheet, the label rows from the disc | no (loc/zh-CN) | not built (4.3) |
+| the dock's legend, `AREA128` 0x0A081000 (DIV-0189) | the PC's page, the panel's word columns from the disc | no (loc/zh-CN) | not built: the install's page is the disc's own |
 | the plates' four sections, 10 world maps | sizes and the frame header (checks) | the page not; 0xB0000 / 0xA000 as the disc's own stand-ins | the recipe's sizes; the header check is the shape's |
 | 37 anchors in `.data` | `BOF3.exe` | `base/exe/data.bin` where carried | the image's bytes, or the anchor's hash (3) |
 

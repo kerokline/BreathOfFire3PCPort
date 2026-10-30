@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 188 entries, DIV-0001..0188, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 189 entries, DIV-0001..0189, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -13444,4 +13444,69 @@ designed in rather than bolted on.
 - **Player:** yes
 - **Toward:** none
 - **Languages:** any
+- **State:** active
+
+### The dock's parts-menu legend words from the disc's own paint
+
+- **ID:** DIV-0189
+- **Date:** 2026-10-30
+- **Subsystem:** the dock's parts menu (area 128): the area page that
+  `EffectKind5E_DrawPanel` `0x47FBE0` (ours, `src/game/rest_3e.cpp`) draws
+  the legend from, the kind-1 chunk tagged `0x0A081000` of `AREA128.DAT`;
+  `tools/loc_build.py`'s `build_dock_panel`; [`rest_3e.md`](rest_3e.md)
+  sections 11.1 and 11.7
+- **Tier:** Sensible
+- **Original behaviour:** the legend beside the parts list - three rows,
+  each a button icon and its word: place the part, quit, the memo board - is
+  paint on the area page (texture page `(0x2C0, 0x100)` at 4 bits, the panel
+  u `0xC0..0xFF`, v `0x50..0x78`), ○…決定 / ×…終了 / △…メモを見る on the
+  port's page, which is the Japanese disc's byte for byte, and every language
+  layer left it: no layer carried the page ([`rest_3e.md`](rest_3e.md) 11.1,
+  2026-10-17). Each Western disc repainted the three words in its own
+  language and baked its own default buttons in the icon column, and nowhere
+  else on the 256 KB page: against the PC's chunk the US and European discs
+  differ in 683 texels, the French in 666, the German in 704, every one
+  inside the panel (u offsets 6..58, v 6..33), the Japanese disc in none
+  (measured 2026-10-30, a scratch render of all seven builds' pages).
+- **New behaviour:** `loc_build.py` writes into `<tag>.AREA128.DAT` a kind-1
+  chunk of the page's tag: the port's page with, inside the panel, every
+  texel from u offset 15 on - the words' columns; the icon column is 4..14 -
+  taken from the disc where it differs: `OK` / `End` / `Memo` on the US and
+  European discs and PSP-EU (514 texels), `OK` / `Fin` / `Memo` on the French
+  (497), `OK` / `Ende` / `Notiz` on the German (535). The icon column stays
+  the port's: DIV-0137 reads the icons off the page and draws the Config's
+  buttons in their cells, and with that switch off a Japan-default install
+  keeps Japan's icons beside its words. A disc whose words are the port's
+  (Japan) gets no chunk; a disc-only build none either, its page being the
+  disc's own. The chunk uploads after the shipped one (DIV-0005's walk) and
+  lands on the same VRAM, as DIV-0088's village sheet does.
+- **Rationale:** the owner's recording of 2026-10-30
+  (`tools/recipes/shipPartsMenu.txt`, the dock's parts menu under en-US):
+  the legend was the one Japanese text left on the screen - the title
+  `Choose parts` is DIV-0064's group 20, the list and the dialogue the
+  layer's. The discs painted the words, so nothing is drawn by hand (as
+  DIV-0088).
+- **Also in the PSX version?** Each disc's own paint, where the PC's has
+  Japan's.
+- **Verification:** `loc_build.py all` on each disc into a staging copy of the
+  install (`C:\Users\kerok\bof3x-runs\spm1030\stage`): `dock legend:
+  AREA128.DAT, 514 texels of the words from the disc` on the US, European
+  and PSP-EU images, 497 on the French, 535 on the German, `the PC's words on
+  this disc` on the Japanese. The owner's recording replayed from an ini-less
+  launcher copy against those layers under en-US
+  (`tools/recipe_shots.py --every 60 --from 420 --to 600`): the panel reads
+  `OK` / `End` / `Memo` beside the circle, cross and triangle of the port's
+  page, DockLegend's log `page circle / cross / triangle, shown circle /
+  cross / triangle`; the frames before it as recorded. Under fr-FR and de-DE
+  the same recording stays in step through the menu and the panel reads
+  `OK` / `Fin` / `Memo` and `OK` / `Ende` / `Notiz`. Nothing of the engine
+  changed, so no self-test ran. **Owed the owner's eye** on their own
+  install, where a West-default Config shows the West's icons through
+  DIV-0137's cell swap beside these words.
+- **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
+- **Switch:** lang
+- **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
+- **Player:** yes
+- **Toward:** psx - each PlayStation disc's own paint
+- **Languages:** en-US, en-150, fr-FR, de-DE - `build_dock_panel` runs on every disc, PSP-EU's included; the Japanese disc paints the port's words, so ja-JP carries no chunk; a disc-only layer none, its page the disc's own
 - **State:** active

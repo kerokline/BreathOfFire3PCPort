@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 185;
+inline constexpr std::size_t kSwitchCount = 186;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -258,9 +258,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "AshRoom", 0, 7},   // DIV-0186
     {SwitchForm::Ini, "ini:cheat.enemy_info=0", 4, 16},   // DIV-0187
     {SwitchForm::Ini, "ini:cheat.no_fail=0", 4, 13},   // DIV-0188
+    {SwitchForm::Lang, "lang", 0, 4},   // DIV-0189
 };
 
-inline constexpr std::size_t kEntryCount = 188;
+inline constexpr std::size_t kEntryCount = 189;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -638,6 +639,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Extension, State::Active, 0, 183, 1, false, Player::Yes, 0, kLangAny},
     {188, "The minigames cannot be failed: a Cheats switch, the rope pull and the lighthouse valve first",
      Tier::Extension, State::Active, 0, 184, 1, false, Player::Yes, 0, kLangAny},
+    {189, "The dock's parts-menu legend words from the disc's own paint",
+     Tier::Sensible, State::Active, 0, 185, 1, true, Player::Yes, kTowardPsx, kLangEnUs | kLangEn150 | kLangFrFr | kLangDeDe},
 };
 
 // The switches of one entry.

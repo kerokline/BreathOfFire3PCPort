@@ -4239,6 +4239,67 @@ def build_village_sheet(game, disc):
     return out, skipped
 
 
+# ---------------------------------------------------------------- the dock's parts-menu legend
+
+# DIV-0189 (docs/rest_3e.md section 11.1). The legend beside the dock's parts
+# list (area 128, EffectKind5E_DrawPanel, rest_3e.cpp) is paint on the area
+# page: the kind-1 chunk tagged DOCK_PAGE_TAG of AREA128.DAT, an upload of
+# 32 x 32-halfword tiles, sixteen a row, whose dest word gives VRAM (x / 32,
+# y / 32) in its top bytes (the sibling's TEXT_TABLES.md). The panel is three
+# rows, each a button icon and its word, 0x40 x 0x28 texels of the 4-bit page
+# at (0x2C0, 0x100), u 0xC0.., v 0x50... Every Western disc repainted the
+# words (OK / End / Memo; the French Fin, the German Ende / Notiz) and baked
+# its own default buttons in the icon column; the JP disc's page is the PC's
+# byte for byte (measured 2026-10-30: the pages differ inside the panel alone,
+# US 683 texels, FR 666, DE 704). The overlay is the PC's page with the
+# panel's word columns taken from the disc. The icon column stays the PC's:
+# the draw reads the icons off the page and puts the Config's buttons in
+# their cells (DIV-0137), and with that switch off a Japanese-default install
+# must keep Japan's icons beside its words.
+DOCK_PAGE_TAG, DOCK_PAGE_SIZE = 0x0A081000, 0x40000
+DOCK_PAGE_X, DOCK_PAGE_Y = 0x2C0, 0x100            # the dock's texture page, halfwords (rest_3e.cpp dock::kPageX)
+DOCK_PANEL_U, DOCK_PANEL_V = 0xC0, 0x50            # the panel quad's top-left texel (dock::kU0, kV0)
+DOCK_PANEL_W, DOCK_PANEL_H = 0x40, 0x28            # its size (dock::kBoxW, kBoxH)
+DOCK_WORD_U = 15                                   # the icon column is u offsets 4..14; the words from 15 on
+PAGE_TILE_BYTES, PAGE_TILES_A_ROW = 0x800, 16      # a 32 x 32-halfword tile; 512 halfwords a row
+
+
+def page_texel(tag, page_x, page_y, u, v):
+    """(byte offset, shift) of 4-bit texel (u, v) of the texture page at VRAM
+    (page_x, page_y) inside the tiled upload whose dest word is `tag`."""
+    hx = page_x - (tag >> 24) * 32 + u // 4
+    row = page_y - ((tag >> 16) & 0xFF) * 32 + v
+    off = ((row // 32) * PAGE_TILES_A_ROW + hx // 32) * PAGE_TILE_BYTES + (row % 32) * 64 + (hx % 32) * 2 + (u % 4) // 2
+    return off, 4 * (u % 2)
+
+
+def build_dock_panel(game, disc):
+    """({name: [(kind, tag, payload)]}, texels taken, skipped): AREA128.DAT's page
+    with the legend's words from the disc; nothing when the disc paints the
+    PC's words (Japan); skipped disc-only, where the install's page is the
+    disc's own."""
+    found = disc.find("AREA128.EMI")
+    base = chunk_of(game, "AREA128.DAT", 1, DOCK_PAGE_TAG)
+    if not found or base is None:
+        return {}, 0, False
+    if base[0] is None:
+        return {}, 0, True
+    donor = [sec for dest, sec in emi_sections(disc.read(found[0])) if dest == DOCK_PAGE_TAG]
+    if not donor or len(donor[0]) != DOCK_PAGE_SIZE or len(base[0]) != DOCK_PAGE_SIZE:
+        raise SystemExit("dock legend: AREA128's page is not %d bytes on both sides" % DOCK_PAGE_SIZE)
+    page, changed = bytearray(base[0]), 0
+    for v in range(DOCK_PANEL_H):
+        for u in range(DOCK_WORD_U, DOCK_PANEL_W):
+            off, shift = page_texel(DOCK_PAGE_TAG, DOCK_PAGE_X, DOCK_PAGE_Y, DOCK_PANEL_U + u, DOCK_PANEL_V + v)
+            theirs = (donor[0][off] >> shift) & 0xF
+            if ((page[off] >> shift) & 0xF) != theirs:
+                page[off] = (page[off] & ~(0xF << shift) & 0xFF) | (theirs << shift)
+                changed += 1
+    if not changed:
+        return {}, 0, False
+    return {"AREA128.DAT": [(1, DOCK_PAGE_TAG, bytes(page))]}, changed, False
+
+
 # ---------------------------------------------------------------- the world-map place plates
 
 # DIV-0055 (docs/world-map.md section 5, docs/world-map-hud.md section 5.2). The
@@ -4804,6 +4865,12 @@ def build_all(args, disc_path):
         for name, chunks in plates.items():
             overlays.setdefault(name, []).extend(chunks)
         print("place plates: %d world maps" % len(plates))
+        dock, texels, dock_skipped = build_dock_panel(src, disc)
+        for name, chunks in dock.items():
+            overlays.setdefault(name, []).extend(chunks)
+        print("dock legend: " + ("AREA128.DAT, %d texels of the words from the disc" % texels if dock else
+                                 "not built disc-only (the install's page is the disc's own)" if dock_skipped else
+                                 "the PC's words on this disc"))
         if src.disc_only:
             standins, left = build_standins(src, disc, overlays)
             for name, chunks in standins.items():

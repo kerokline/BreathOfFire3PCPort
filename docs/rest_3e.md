@@ -590,3 +590,26 @@ So `tools/importer.py` is unchanged and no cache needs rebuilding.
 >   capture: no route reaches the dock.
 > - **Reversible?** `BOF3X_ORIGINAL=DockLegend` (the page as it is), or
 >   `BOF3X_ORIGINAL=EffectKind5E_DrawPanel`.
+
+### 11.7 The words, from the disc (DIV-0189, 2026-10-30)
+
+The owner's recording `tools/recipes/shipPartsMenu.txt` (save
+`shipPartsMenu.DAT`) is the first route to reach the dock: the panel drawn
+under en-US read ○…決定 / ×…終了 / △…メモを見る, the page's own paint.
+Every Western disc repainted the three words (US / EU / PSP-EU `OK` / `End` /
+`Memo`, French `OK` / `Fin` / `Memo`, German `OK` / `Ende` / `Notiz`) and
+nothing else on the page but the icon column (the whole 256 KB page diffed
+against the PC's chunk on all seven builds: every differing texel inside the
+panel, u offsets 6..58, v 6..33; the JP disc's page identical). So
+`loc_build.py`'s `build_dock_panel` writes a kind-1 chunk of the page's tag
+into `<tag>.AREA128.DAT`: the port's page with the panel's texels from u
+offset 15 on taken from the disc - the words - and the icon column left the
+port's, so that this section's cell reading sees the same three icons under
+every layer, and with DockLegend off a Japan-default install keeps Japan's
+icons beside its words. The replay under en-US against the built layer shows
+`OK` / `End` / `Memo` beside circle, cross and triangle, the log's plan
+`page circle / cross / triangle, shown circle / cross / triangle`; under
+fr-FR and de-DE the recording stays in step and reads `OK` / `Fin` / `Memo`
+and `OK` / `Ende` / `Notiz`. The memo
+board itself (`EffectKind5D_DrawBoard`, the same page at `(0, 0)`) carries
+marks and no words, and the discs' pages equal the PC's there.
