@@ -126,7 +126,7 @@ record to its end state (9, 0xE) when the count's bit 7 is set.
 | 1 | `_Tick` `0x47EAD0` | the clock and the count drawn; the frames down, below 0 (s8) back to 0x1D and the seconds down; the seconds below 0: both 0, `+1` up |
 | 2 | `_Finish` `0x47EB30` | the count at 16 or more: bit 7 on the count and the cue; else on the count; `Music_FadeOutStop(0xA)`, `Effect_Release` |
 | - | `_DrawTime` `0x47EB90` | a box `0x586160(0x78, 0x38, 0x46, 0x14, 1)`; `Crt_sprintf` of the seconds and the hundredths (frames * 100 / 30, toward zero) by the format `0x654830`; `Text_DrawFont12` at (0x7D, 0x3B); then the text made "." and drawn at (0x95, 0x39) and (0x95, 0x3D) |
-| - | `_DrawCount` `0x47EC30` | a box `0x586160(0xC8, 0xA0, 0x2E, 0x14, 1)`; the count by `Boss26Fx_CountFormat` at (0xCD, 0xA3); the text `0x66A094` by `Text_DrawAt` at (0xE5, 0xA4) |
+| - | `_DrawCount` `0x47EC30` | a box `0x586160(0xC8, 0xA0, 0x2E, 0x14, 1)`; the count by `Boss26Fx_CountFormat` at (0xCD, 0xA3); the text `0x66A094` by `Text_DrawAt` at (0xE5, 0xA4). DIVERGENCE DIV-0064 group 25 (2026-10-30): under a layer that has written the chop count, the disc's width, count x and word (none on the West), the count through `Text_DrawAt` in colour 4 |
 
 ### 1.5 Kinds 0x57, 0x5A, 0x5B
 

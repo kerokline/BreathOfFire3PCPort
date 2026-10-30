@@ -20,7 +20,12 @@
 //               the object +0xB names answers the cue, the count 0x90384B up on
 //               a hit
 //   kind 0x55   a thirty-second clock and the count, then the end (bit 7 of
-//               the count; bit 7 of the cue too at a count of 16 or more)
+//               the count; bit 7 of the cue too at a count of 16 or more) -
+//               the chop of area 8 (Scena01_Scene06 steps 0x12..0x14, which
+//               take the cue's bit 7 as the win): under BOF3X_NO_FAIL the cue
+//               is raised at any count (DIVERGENCE DIV-0188), and under a
+//               language overlay that has written DIV-0064's group 25 the
+//               count's box, place and word are the disc's own
 //   kind 0x57   a ring of sixteen shaded quads round the screen's centre (in
 //               area 2 it stays)
 //   kind 0x5A   a glowing cylinder placed on the ground at (10, 0x63)
@@ -30,18 +35,22 @@
 //               rows, no group's this round)
 //
 // Every call goes through the harness (SH_CALL / SH_AT), so the start-up fuzz
-// can stand recorders in for ours as for the originals' copies. No divergence:
-// each is a faithful replacement. Where the original jumps through a state
-// table past its end or indexes a table or the object pool past its records,
-// ours aborts with a message (docs/effect_2g.md section 6).
+// can stand recorders in for ours as for the originals' copies. Two
+// divergences, both kind 0x55's (DIV-0188 in EffectKind55_Finish, DIV-0064's
+// group 25 in EffectKind55_DrawCount); every other function is a faithful
+// replacement. Where the original jumps through a state table past its end or
+// indexes a table or the object pool past its records, ours aborts with a
+// message (docs/effect_2g.md section 6).
 #include "game/effect_2g.h"
 
 #include <cstdint>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/cheats.h"
 #include "game/effect_2g_callees.h"
 #include "game/effect_gte.h"
+#include "game/labels.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -749,8 +758,12 @@ extern "C" void __cdecl EffectKind55_Tick(void) {
 // original 0x47EB30 (state 2): the count at 16 or more: bit 7 set on the count
 // and on the cue; else on the count only. Music_FadeOutStop(0xA), a tail jump
 // to Effect_Release.
+//
+// DIVERGENCE DIV-0188: under BOF3X_NO_FAIL the cue's bit 7 is set at any
+// count - Scena01_Scene06 step 0x14 reads it as the chop won (step 0x19, the
+// scene's end) where a clear bit sends the scene to step 0x15, the retry.
 extern "C" void __cdecl EffectKind55_Finish(void) {
-    if (B(::bof3::Img(at::kScore.v)) >= 0x10) {
+    if (B(::bof3::Img(at::kScore.v)) >= 0x10 || Cheats_MinigameNoFail()) {
         const auto score = static_cast<unsigned char>(B(::bof3::Img(at::kScore.v)) | 0x80);
         const auto cue = static_cast<unsigned char>(B(::bof3::Img(at::kCue.v)) | 0x80);
         B(::bof3::Img(at::kScore.v)) = score;
@@ -785,9 +798,27 @@ extern "C" void __cdecl EffectKind55_DrawTime(void) {
 // 0x14, 1)); the count 0x90384B printed by Boss26Fx_CountFormat and drawn at
 // (0xCD, 0xA3); the text 0x66A094 at (0xE5, 0xA4) by Text_DrawAt (colour 0, all
 // of it).
+//
+// DIVERGENCE DIV-0064 (group 25, 2026-10-30): under a language overlay that
+// has written the chop count, the disc's own layout - the box of the disc's
+// width, the count at the disc's x, then the disc's word at its x, or no word
+// (the Western discs draw the count alone: US AREA008.EMI 0x801F3D18, the box
+// 0x22 wide, the count at 0xD1). The disc draws the count through 0x8014FF0C,
+// the dialogue font's 8 x 12 digit cells in colour 4 (DIV-0119's amendment),
+// so ours draws it with Text_DrawAt in colour 4, not the 12 px numerals. The
+// shipped word is the PC's copy of the Japanese disc's one glyph, which a
+// Latin layer's font shows as a glyph of its own (the owner's catch).
 extern "C" void __cdecl EffectKind55_DrawCount(void) {
-    SH_AT(void (__cdecl*)(int, int, int, int, int), at::kBox.v)(0xC8, 0xA0, 0x2E, 0x14, 1);
     char* const text = reinterpret_cast<char*>(At(::bof3::Img(at::kText.v)));
+    if (Labels_Written(25)) {
+        const unsigned char* const layout = Labels_Slot(25, 1);
+        SH_AT(void (__cdecl*)(int, int, int, int, int), at::kBox.v)(0xC8, 0xA0, layout[0], 0x14, 1);
+        SH_CALL(Crt_sprintf)(text, Boss26Fx_CountFormat, static_cast<unsigned>(B(::bof3::Img(at::kScore.v))));
+        SH_CALL(Text_DrawAt)(layout[1], 0xA3, 4, 0xFF, reinterpret_cast<const unsigned char*>(text));
+        if (layout[2] != 0xFF) SH_CALL(Text_DrawAt)(layout[2], 0xA4, 0, 0xFF, Labels_Slot(25, 0));
+        return;
+    }
+    SH_AT(void (__cdecl*)(int, int, int, int, int), at::kBox.v)(0xC8, 0xA0, 0x2E, 0x14, 1);
     SH_CALL(Crt_sprintf)(text, Boss26Fx_CountFormat, static_cast<unsigned>(B(::bof3::Img(at::kScore.v))));
     SH_CALL(Text_DrawFont12)(0xCD, 0xA3, 0, reinterpret_cast<const unsigned char*>(text));
     SH_CALL(Text_DrawAt)(0xE5, 0xA4, 0, 0xFF, At(::bof3::Img(at::kKind55Label.v)));
@@ -1102,6 +1133,11 @@ void Effect2G_Inject() {
     BOF3_INJECT(EffectKind55_Start);
     BOF3_INJECT(EffectKind55_Tick);
     BOF3_INJECT(EffectKind55_Finish);
+    // DIV-0188: with the switch on, the chop's judgement must be ours - left
+    // as Capcom's (BOF3X_ORIGINAL / BOF3X_OFF), the count would be judged as
+    // before and the cheat would be silently half off.
+    if (Cheats_MinigameNoFail() && !bof3::IsEnabled(bof3::addr::EffectKind55_Finish))
+        bof3::Fatal("BOF3X_NO_FAIL=1 needs EffectKind55_Finish ours, and it is disabled");
     BOF3_INJECT(EffectKind55_DrawTime);
     BOF3_INJECT(EffectKind55_DrawCount);
     BOF3_INJECT(EffectKind57_Run);

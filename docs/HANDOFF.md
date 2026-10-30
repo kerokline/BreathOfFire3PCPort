@@ -29,13 +29,16 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 
 ## Pick up here
 
-0. **The no-fail minigames cheat (DIV-0188, 2026-10-30)** on `cheat/no-fail-minigames`: the switch, the rope pull
-   and the lighthouse valve under it, the Cheats sub-page split ([`cheats.md`](cheats.md) 7). **Next minigames**, each
-   when the owner records its start (`BOF3X_RECORD`): the chop (`Scena01_Scene06` step 0x12), the well (effect kind
-   `0x8C`). The pattern: read the judgement (a `watch` / `peek` replay finds the subsystem when the docs do not: the
+0. **The no-fail minigames cheat (DIV-0188, 2026-10-30)** on `cheat/no-fail-minigames`: the switch, the rope pull,
+   the lighthouse valve and (the afternoon) the chop under it, the Cheats sub-page split ([`cheats.md`](cheats.md) 7).
+   With the chop, the owner's catch: the count's one-glyph word after the number is now DIV-0064's group 25, the
+   West's own layout (the count alone in the narrower box) read off every disc's `AREA008.EMI` and PSP-EU's
+   `BOOT.BIN`; the owner's install takes it when the launcher rebuilds the stale `loc` step at its setup prompt.
+   **Next minigame**, when the owner records its start (`BOF3X_RECORD`): the well (effect kind `0x8C`). The pattern: read the judgement (a `watch` / `peek` replay finds the subsystem when the docs do not: the
    lighthouse was effect kind `0x45` in area 77, not the button round's area 135), guard it on
    `Cheats_MinigameNoFail()`, the module's inject `Fatal` when the function is not ours, a losing variant of the
-   route seen to go on, the table in cheats.md 7. **Owed:** the owner's eye on the two pages and a pull with the box on.
+   route seen to go on, the table in cheats.md 7. **Owed:** the owner's eye on the two pages, a pull, valve or chop with
+   the box on, and the chop's count box under `en-US`.
 
 1. **The away day of 2026-10-27 is merged as PR #158** (with `away1027/twins` and `away1027/docs`; four Opus
    agents, [`STATUS.md`](STATUS.md) has a line each; the evidence in [`install-gap-labels.md`](install-gap-labels.md)

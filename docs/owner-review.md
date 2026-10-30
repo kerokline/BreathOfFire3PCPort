@@ -13,6 +13,19 @@ Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
 
+## 2026-10-30, the no-fail minigames cheat and the chop's count box (`cheat/no-fail-minigames`, unmerged)
+
+- **The two Cheats sub-pages** (Cheats; More cheats with the enemy information and "You cannot fail a
+  minigame"): open Configure, Game Options; do the four sub-tabs read right at their new widths?
+- **A minigame with the box on**: the rope pull, the lighthouse valve or the chop - each should run to its
+  end whatever you press (the rope pull's counters still go red when the other side pulls ahead; the chop
+  wins at any count). [`cheats.md`](cheats.md) 7 has what each does.
+- **The chop's count box under en-US** (DIV-0064 group 25, your catch): the launcher's setup prompt
+  rebuilds the stale `loc` step; after it the box after the woodcutting should be the narrower one with the
+  count alone, as the US disc draws it, no glyph after the number. **Left as the port's:** the clock beside
+  it is drawn with the PC's 12 px numerals at `0x7D`, where the discs draw their digit cells at `0x86` with
+  the colon at `0x97` - one more layout if you want the clock the disc's too.
+
 ## 2026-10-23 evening, the sound-layer round (merged as PR #122, not heard)
 
 The PlayStation's positional sound, pause and cuts back in the port's DirectSound layer

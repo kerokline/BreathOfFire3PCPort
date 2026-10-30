@@ -31,7 +31,7 @@ Addresses, sizes, counts, symbol and file names only (CLAUDE.md rule 1).
 | `CommuRank_Modes+0x8C` `0x653200..0x653210` (D289) | all 7 | **FIXED** on every Latin build; JP builds D280's | group 16's slots (section 3) |
 | `Encounter_SlotChance+0x38` `0x669CE8..0x669CED` | all 7 | **FIXED since DIV-0118** on the four Western PSX builds (the census missed it); **now PSP-EU**; JP builds D280's | group 17, PSP-EU from `BOOT.BIN` (section 4.1) |
 | `CommuName_RecordNames+0xF4` `0x66A098..0x66A0AC` | all 7 | **FIXED under the layer** (Western PSX, PSP-EU); JP builds D280's | `EffectKind5E`'s twin found: `SCENA10.EMI`; label group 20 (section 4.2) |
-| `CommuName_RecordNames+0xF0` `0x66A094..0x66A096` | all 7 | **NEEDS FIX stays, no Western source**: the Western routine draws no word; JP's word is in `AREA008.EMI` (D280's) | section 4.3 |
+| `CommuName_RecordNames+0xF0` `0x66A094..0x66A096` | all 7 | **FIXED 2026-10-30 as a layout** (DIV-0064 group 25): the Western routine draws no word, so the layer carries its box and count x; JP's word is in `AREA008.EMI` (D280's) | section 4.3 |
 | `Effect1b_ToggleText+0x28` `0x66A0B0..0x66A0D8` (Super Combo's prompt texts; D393, 2026-10-26) | all 7 | **FIXED under the layer** on every build, the JP ones too | `SuperCombo_DrawText`'s twin in `MAGIC003.EMI` / `BOOT.BIN`; label group 24 (section 4.5) |
 
 "Under the layer": the image's bytes stay zero on a disc-built image; the
@@ -431,7 +431,9 @@ boxes (DIV-0069's centring, unchanged here) - for the owner's eye.
   titles, and kind 0x5E's menu title. Keep?
 - `0x66A094` under a Western layer: draw nothing (as now on a disc-only
   install, the PC's glyph on the PC) or take the West's layout (the narrower
-  box, the count at `0xD1`)?
+  box, the count at `0xD1`)? **Answered 2026-10-30:** the West's layout
+  (DIV-0064 group 25), on the owner's catch in play - the glyph after the
+  count read as a localisation defect.
 - The JP builds' rows (group 16, 17, 20, the `0x66A094` word) wait on D280.
 
 ## 9. The `language` rows that are not text (2026-10-27, away day, agent `lang`)

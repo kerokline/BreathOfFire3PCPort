@@ -307,7 +307,7 @@ judges the player's attempt in a step of its own
 |---|---|---|---|
 | the rope pull (area 75) | `Field_ModeTailKinds[30]`, armed by `Area75_ArmTail30` | `Area75_PhasePlay` `0x40E330`: more than three presses out of turn, more than 0x1E idle frames or the counters more than 0xC8 apart send the pull to `Area75_PhaseMissed` | **yes**: the judgement skipped, the pull runs until the player's counter reaches the mark |
 | the lighthouse valve (area 77, chapter 6) | effect kind `0x45`, the oscilloscope gauge, spawned by `Scena06`'s run (`scena_sc6.cpp` 1626), which then steps on its row's flag 0x26: set, "The main valve is open!"; clear, "Whoops! The boiler stopped" | `EffectKind45_Aim` `0x477370` (`effect_2d.cpp`): a confirm press sets flag 0x26 only with the trace's offset at 8 and its phase within 0x1C..0x24; `EffectKind45_Tune` `0x477250`, the state before it: a confirm press ends the gauge with the flag as it was (clear) - too soon | **yes**: a confirm press sets the flag in either state; cancel stays a cancel |
-| the chop (area 8) | `Scena01_Scene06` step 0x12 | not read yet | no route yet |
+| the chop (area 8, chapter 1) | effect kind `0x55`, the thirty-second clock and the count, spawned with kind `0x15` by `Scena01_Scene06` step 0x11; step 0x14 reads the cue byte `0x90384A`: bit 7 the win (step 0x19), clear the second attempt (step 0x15) | `EffectKind55_Finish` `0x47EB30` (`effect_2g.cpp`): at the clock's end bit 7 of the count `0x90384B` always, of the cue only at a count of 16 or more | **yes**: the cue's bit 7 at any count |
 | the well (area 68) | effect kind `0x8C` | not read yet | no route yet |
 | the crane (area 135), the antenna dial, the ram (area 121), the dock's parts menu (area 128) | the button round's sites | not read yet | no route yet |
 
@@ -370,6 +370,33 @@ the sheets `sheet_idle_*.png`, `sheet_l_*.png`):
 - the recordings as made (a pull won, a valve opened) replay the same with the
   switch unset, under the owner's ini and under none.
 
+**The chop** (2026-10-30, afternoon; the owner's recording
+`tools/recipes/bunyanHouseChoppingMiniGame.txt`, its save in
+`tools/recipe_saves/`). The recording replayed with the scenario counters
+watched: area 8 from recipe frame 251, the chop's cue `0x90384A` first set at
+11,495, a hit about every thirty frames, the count at 0x15 (21) by 12,370, the
+clock's end at 12,396 - the cue's bit 7 and the count's together, so the
+judgement is `EffectKind55_Finish`, not the scene (the docs' earlier guess of
+`Scena01_Scene06` step 0x12 was the swing). Under the switch the function
+sets the cue's bit 7 at any count. Verification (`C:\Users\kerok\bof3x-runs\rope1030`):
+
+- `BOF3X_NO_FAIL=1 BOF3X_SHADOW=effect_2g`: differs in `EffectKind55_Finish`
+  alone (746 of its 4,000 rounds), the group's other 57 functions at 0; unset,
+  232,000 rounds over 58 functions, 0 mismatches, exit 0; `BOF3X_NO_FAIL=1 BOF3X_ORIGINAL=EffectKind55_Finish`: `FATAL:
+  BOF3X_NO_FAIL=1 needs EffectKind55_Finish ours, and it is disabled`;
+- live, every pad word of the chop's window (11,495..12,396) cleared
+  (`chop_nopress.txt`, the sheets `sheet_chop_np_*.png`): unset, the count's bit 7 alone at 12,396, the cue's clear, Bunyan's "Humph! Only 0...?", "I'm afraid you haven't learned your lesson yet...", "Try again" and a second thirty seconds from 12,848;
+  with the switch, both bits at 12,396, Bunyan's "Hmmm... 0", "Not bad...", Teepo's "There! We worked, didn't we" and the scene's end;
+- the recording as made (21 hits, the chop won) replays the same with the
+  switch unset.
+
+The count's one-glyph word after the number, which the owner saw during the
+same recording, is a localisation defect, not a cheat's business: DIV-0064's
+group 25 (the same afternoon) draws the chop's count box as the disc does -
+the West's narrower box and the count alone, the Japanese build's glyph only
+under its own layer. The owner's install picks it up when the launcher
+rebuilds the stale `loc` step at its next setup prompt.
+
 The launcher: the cheats on two sub-pages since this change (the owner's
 call, so the page does not crowd) - Cheats holds the battle rewards and
 stealing, More cheats the enemy information (DIV-0187) and the minigames;
@@ -378,5 +405,8 @@ per tab, each as wide as that tab's longest label, since four of the old
 width would not fit the picture. `tools/launcher_host/dialog_test.py` passes
 as on `main` (its two mod-zip failures are `main`'s too, 2026-10-30).
 
-Owed: the owner's eye on the two pages and on a pull played with the box on.
+Owed: the owner's eye on the two pages, on a pull, a valve or a chop played
+with the box on, and on the chop's count box under `en-US` once the layer is
+rebuilt. Next under the switch: the well (effect kind `0x8C`), when a
+recording reaches it.
 
