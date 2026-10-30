@@ -2169,6 +2169,18 @@ def convert_battle_commands(game, donor):
 #      the routine with the `- 0x3F`, its two reads of `which`); every disc
 #      holds the US words but the French, whose first record is longer (its
 #      stride 14, read off the code). On the PSPs, BOOT.BIN's own copy.
+#  25  the chop's count word (2026-10-30, the owner's catch; the census's
+#      0x66A094 row): the one glyph EffectKind55_DrawCount draws after the
+#      count, the PC's copy of the Japanese disc's. Two slots in the DLL's
+#      buffers: the word (a space where the disc has none) and the layout,
+#      three raw bytes - the box's width, the count's x, the word's x (0xFF:
+#      none). Read off AREA008.EMI's twin (chop_count: the call drawing the
+#      box at CHOP_BOX, then to its `jr $ra` the draw on row CHOP_COUNT_ROW
+#      and any on row CHOP_WORD_ROW with a string): the four Western discs a
+#      box of 0x22 and the count at 0xD1 with no word, the Japanese build the
+#      PC's own 0x2E / 0xCD / 0xE5 and its glyph. On a PSP the AREA008.EMI is
+#      the Japanese build's, and the PSP's own draw is in BOOT.BIN (PSP-EU
+#      0x3FCF4, the West's layout), so the PSP path reads that.
 #  11  the zenny unit, 4 bytes at 0x66A31C: the one byte `s`, whose
 #      single-byte slot of the shipped font is the port's coin, repainted
 #      by the overlay into a letter. START.EMI has the US code 0x60 (the
@@ -2206,6 +2218,9 @@ FAERIE_TRAITS, FAERIE_COUNT, FAERIE_STRIDE, FAERIE_DISC_STRIDE = 0x653210, 60, 2
 FAERIE_NAMES = 0x653200     # record r's name field, 16 bytes at + 20 r; its stats follow (FAERIE_TRAITS)
 # Group 20: kind 0x5E's menu title, its PlayStation twin in SCENA10.EMI.
 PARTS_TITLE_ROOM = 20       # the PC's field 0x66A098..0x66A0AC (its NUL at 0x66A0AC)
+# Group 25: the chop's count box (0xC8, 0xA0), the count's row and the word's (the PC's
+# EffectKind55_DrawCount's and every disc's twin's), and the layout byte for no word.
+CHOP_BOX, CHOP_COUNT_ROW, CHOP_WORD_ROW, CHOP_NO_WORD = (0xC8, 0xA0), 0xA3, 0xA4, 0xFF
 # Group 24: Super Combo's prompt texts, the PC's four slots behind 0x66A0D8.
 COMBO_PROMPT_ROOMS = (16, 8, 8, 8)
 COMBO_GLYPH_BASE = 0x3F     # SuperCombo_DrawText's `c - 0x3F`, the glyph's index on the page
@@ -2214,13 +2229,14 @@ LABEL_GENE_LIST_HEAD = 0x66B1E0
 LABEL_ROOMS = {1: (8, 8), 2: (8, 8, 8, 8), 3: (16,) * 5, 4: (16,) * 5, 5: (8, 8, 8, 8), 6: (8, 4),
                7: (16,) * 11, 8: (8, 12), 9: (8,), 10: (16,) * 10, 11: (4,), 12: (8, 8, 8), 13: (16,) * 20,
                14: (16,) * 5, 15: (16,) * 6, 16: (16,) * 60, 17: (5,), 18: (16,) * 3, 19: (16,) * 3,
-               20: (PARTS_TITLE_ROOM,), 21: (8, 4, 8), 22: (8,), 23: (8,), 24: COMBO_PROMPT_ROOMS}
+               20: (PARTS_TITLE_ROOM,), 21: (8, 4, 8), 22: (8,), 23: (8,), 24: COMBO_PROMPT_ROOMS,
+               25: (16, 4)}
 LABEL_NAMES = {1: "status words", 2: "menu stats", 3: "item types", 4: "skill types", 5: "battle stats",
                6: "master list", 7: "sort menus", 8: "note sort", 9: "ink label", 10: "formations",
                11: "zenny unit", 12: "gene tabs", 13: "village lists", 14: "village words",
                15: "identify words", 16: "faerie names", 17: "guest name", 18: "turn counter",
                19: "hi-lo choices", 20: "parts title", 21: "panel labels", 22: "list title", 23: "gene title",
-               24: "combo prompts"}
+               24: "combo prompts", 25: "chop count"}
 
 
 def label_pointers(donor, at, count):
@@ -2443,6 +2459,52 @@ def turn_counter(sections):
     return None
 
 
+def chop_count(sections):
+    """The chop's count draw (group 25): (word, layout) or None. The routine is
+    the one call drawing the box at CHOP_BOX (its $a2 the width); to its
+    `jr $ra`, the call with $a1 = CHOP_COUNT_ROW draws the count ($a0 its x),
+    and a call with $a1 = CHOP_WORD_ROW the word ($a0 its x), the word the one
+    string loaded between the count's draw and it. No such call: the word is a
+    space and the word's x CHOP_NO_WORD (the Western discs: US AREA008.EMI
+    0x801F3D18, the box 0x22, the count at 0xD1). The layout is the raw bytes
+    width, count x, word x. Exactly one box call, else None."""
+    insns = list(mips_insns(sections))
+    calls = mips_calls(sections)
+    found = []
+    for k, (at, target, regs) in enumerate(calls):
+        if (regs.get(4), regs.get(5)) != CHOP_BOX or 6 not in regs:
+            continue
+        end = next((i[0] for i in insns if i[0] > at and i[1] == 0 and i[7] == 0x08 and i[2] == 31), None)
+        if end is None:
+            continue
+        rest = [c for c in calls[k + 1:] if c[0] < end]
+        count = [c for c in rest if c[2].get(5) == CHOP_COUNT_ROW and 4 in c[2]]
+        word = [c for c in rest if c[2].get(5) == CHOP_WORD_ROW and 4 in c[2]]
+        if len(count) != 1 or len(word) > 1:
+            continue
+        width, x_count = regs[6], count[0][2][4]
+        if word:
+            hi, strings = {}, []
+            for a, op, rs, rt, rd, imm, simm, funct, w in insns:
+                if not count[0][0] < a < word[0][0]:
+                    continue
+                if op == 0x0F:
+                    hi[rt] = imm << 16
+                elif op == 0x09 and rs in hi:
+                    s = mips_cstr(sections, (hi[rs] + simm) & 0xFFFFFFFF)
+                    if s and b"%" not in s:
+                        strings.append(s)
+            if len(strings) != 1:
+                continue
+            text, x_word = strings[0], word[0][2][4]
+        else:
+            text, x_word = b" ", CHOP_NO_WORD
+        if not (0 < width < 0x100 and 0 < x_count < 0x100 and 0 < x_word <= 0xFF):
+            continue
+        found.append((text, bytes([width, x_count, x_word])))
+    return found[0] if len(found) == 1 else None
+
+
 def parts_title(code, data):
     """Kind 0x5E's menu title (group 20), or None: the PC's EffectKind5E_DrawMenu
     0x47F9E0 prints the title through "%s" into the text scratch and draws it
@@ -2597,11 +2659,11 @@ def code_label_chunks(magic, bate, boss, report):
 
 
 def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=None, boss=None, scena10=None,
-                   status=None, magic003=None):
+                   status=None, magic003=None, area008=None):
     """[(kind, tag, payload)] and a report, from the whole START.EMI, BATTLE.EMI and SHOP.EMI (each may
     be None), every COMMU*.EMI (the faerie village's overlays), the sections of MAGIC060.EMI,
-    BATE.EMI and BOSS025.EMI (code_label_chunks), SCENA10.EMI (group 20) and MAGIC003.EMI
-    (group 24), and the whole STATUS.EMI (group 23)."""
+    BATE.EMI and BOSS025.EMI (code_label_chunks), SCENA10.EMI (group 20), MAGIC003.EMI
+    (group 24) and WORLD00/AREA008.EMI (group 25), and the whole STATUS.EMI (group 23)."""
     chunks, report = [], []
     panel_labels = list_title = None
     cut = lambda blob, at, size: blob[at:at + size].split(b"\0")[0]
@@ -2866,6 +2928,18 @@ def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=No
         chunk = combo_prompt_chunk(kseg0(magic003), kseg0(magic003), report)
         if chunk:
             chunks.append(chunk)
+    # 25: the chop's count word and layout, read off AREA008's twin of
+    # EffectKind55_DrawCount (2026-10-30). A word the language cannot encode
+    # (the Japanese glyph, were a Western layer built from a Japanese disc)
+    # leaves the group out, the PC's own drawn.
+    if area008:
+        chop = chop_count(kseg0(area008))
+        if chop is None:
+            report.append("chop count: no one routine drawing the box (0xC8, 0xA0) and a count on row 0xA3 in AREA008.EMI")
+        elif chop[0] != b" " and any(encode_char(c) is None for c in chop[0]):
+            report.append("chop count: the disc's word holds a code this language does not have, the PC's own drawn")
+        else:
+            chunks.append(label_chunk(25, list(chop), report, raw={0, 1} if chop[0] == b" " else {1}))
     return chunks, report
 
 
@@ -3162,8 +3236,17 @@ def convert_labels_psp(game, boot, verbs, magic=None, text_end=None):
         chunk = combo_prompt_chunk(code, data, report)
         if chunk:
             chunks.append(chunk)
+        # 25: the chop's count, BOOT.BIN's own twin of EffectKind55_DrawCount
+        # (PSP-EU 0x3FCF4: the West's box of 0x22, the count at 0xD1, no word;
+        # docs/install-gap-labels.md 4.3) - not the AREA008.EMI's, which is the
+        # Japanese build's (2026-10-30).
+        chop = chop_count(code)
+        if chop:
+            chunks.append(label_chunk(25, list(chop), report, raw={0, 1} if chop[0] == b" " else {1}))
+        else:
+            missing("chop count", "no one routine drawing the box (0xC8, 0xA0) and a count on row 0xA3")
     # In convert_labels' order, so that FIRST.DAT is byte for byte the PSX's where the words are.
-    order = (1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 8, 9, 17, 18, 19, 20, 21, 22, 23, 24)
+    order = (1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 8, 9, 17, 18, 19, 20, 21, 22, 23, 24, 25)
     return sorted(chunks, key=lambda c: order.index(c[1])), report
 
 
@@ -4669,7 +4752,7 @@ def build_all(args, disc_path):
                                             module_sections(disc, "MAGIC060.EMI"), module_sections(disc, "BATE.EMI"),
                                             module_sections(disc, "BOSS025.EMI"), module_sections(disc, "SCENA10.EMI"),
                                             read_module(status_emi) if status_emi else None,
-                                            module_sections(disc, "MAGIC003.EMI"))
+                                            module_sections(disc, "MAGIC003.EMI"), module_sections(disc, "AREA008.EMI"))
         overlays["FIRST.DAT"] += labels
         print("labels: " + (", ".join(report) if report else "not found on this disc"))
     elif donor_ja and not args.only:
@@ -5037,6 +5120,20 @@ def selftest_code_labels():
     want = (b"Ff\xffgg", b"Ff\xffg", bytes([0x94, 0x70]) + b">" + bytes([0x14]))
     if turn_counter(section(code)) != want:
         raise SystemExit("selftest: turn_counter gave %s" % (turn_counter(section(code)),))
+    # Group 25: the box at CHOP_BOX, the count's draw on its row; a word's draw
+    # on its row with one string loaded before it (the Japanese shape), or none
+    # (the Western shape, a space and 0xFF); two box calls are refused.
+    west = ([addiu(a0, zero, CHOP_BOX[0]), addiu(a1, zero, CHOP_BOX[1]), jal(base + 0x800), addiu(a2, zero, 0x22)]
+            + load(a1, b"%2d") + [jal(base + 0x880), 0, addiu(a0, zero, 0xD1), jal(base + 0x900),
+                                  addiu(a1, zero, CHOP_COUNT_ROW), jr_ra, 0])
+    east = ([addiu(a0, zero, CHOP_BOX[0]), addiu(a1, zero, CHOP_BOX[1]), jal(base + 0x800), addiu(a2, zero, 0x2E)]
+            + load(a1, b"%2d") + [jal(base + 0x880), 0, addiu(a0, zero, 0xCD), jal(base + 0x900),
+                                  addiu(a1, zero, CHOP_COUNT_ROW)]
+            + load(a0, b"\x13\x87") + [addiu(a0, zero, 0xE5), jal(base + 0x980), addiu(a1, zero, CHOP_WORD_ROW), jr_ra, 0])
+    if chop_count(section(west)) != (b" ", bytes([0x22, 0xD1, CHOP_NO_WORD])) \
+            or chop_count(section(east)) != (b"\x13\x87", bytes([0x2E, 0xCD, 0xE5])) \
+            or chop_count(section(west + east)) is not None:
+        raise SystemExit("selftest: chop_count gave %s / %s" % (chop_count(section(west)), chop_count(section(east))))
     # Group 20: a "%s" print of a 12-byte title with no NUL (a pointer after
     # it), then a draw of 12; a second print, so two, is refused.
     a3 = 7

@@ -37,6 +37,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/cheats.h"
 #include "game/effect_2d_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
@@ -132,6 +133,9 @@ extern "C" void __cdecl EffectKind45_Start(void) {
 // 0x200), the amplitude +0x32 up 1 on a frame a multiple of 4 (not above 0x18)
 // and the offset +0x36 0; a sample pushed. Then the trace. Frequency 0x200 and
 // amplitude 0x18: +1 up; else a cancel or confirm button pressed: +1 = 3.
+// DIV-0188 (Cheats_MinigameNoFail): a confirm press here - too soon, before
+// the aim - sets the chapter's flag 0x26 as a press in the window would, so
+// the lighthouse's valve opens whenever the player presses.
 extern "C" void __cdecl EffectKind45_Tune(void) {
     SH_CALL(EffectKind45_DrawPanel)(0x82, 0xA);
     for (unsigned pass = 0; pass < 2; ++pass) {
@@ -156,7 +160,8 @@ extern "C" void __cdecl EffectKind45_Tune(void) {
         return;
     }
     const unsigned short pressed = Input_Pressed;
-    if ((Field_CancelButtons & pressed) != 0 || (Field_ConfirmButtons & pressed) != 0) s[1] = 3;
+    if ((Field_ConfirmButtons & pressed) != 0 && Cheats_MinigameNoFail()) SH_CALL(Flags_Set)(Row(), 0x26);
+    if ((Field_CancelButtons & pressed) != 0 || (Field_ConfirmButtons & pressed) != 0) S()[1] = 3;
 }
 
 // original 0x477370 (state 2): the markers lit (+0x5D = 0x80) when the offset
@@ -164,7 +169,8 @@ extern "C" void __cdecl EffectKind45_Tune(void) {
 // back to 0 and the offset down 8 (five bits); a sample pushed; at phase 2
 // Sound_PlayEffect(0x205). Then the trace. Confirm pressed: the flag 0x26 set
 // when the offset is 8 and the phase within 0x1C..0x24, else cleared; +1 = 3
-// either way. Cancel pressed: +1 = 3.
+// either way. Cancel pressed: +1 = 3. DIV-0188 (Cheats_MinigameNoFail): a
+// confirm press sets the flag wherever the trace is.
 extern "C" void __cdecl EffectKind45_Aim(void) {
     {
         unsigned char* const s = S();
@@ -186,7 +192,8 @@ extern "C" void __cdecl EffectKind45_Aim(void) {
     const unsigned short pressed = Input_Pressed;
     if ((Field_ConfirmButtons & pressed) != 0) {
         unsigned char* const s = S();
-        if (rv::As<records::EffectObject>(s)->x_whole == 8 && static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e) >= 0x1C && static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e) <= 0x24) {
+        if (Cheats_MinigameNoFail() ||
+            (rv::As<records::EffectObject>(s)->x_whole == 8 && static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e) >= 0x1C && static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e) <= 0x24)) {
             SH_CALL(Flags_Set)(Row(), 0x26);
             S()[1] = 3;
             return;
@@ -1050,6 +1057,11 @@ void Effect2D_Inject() {
     BOF3_INJECT(EffectKind45_DrawSegment);
     BOF3_INJECT(EffectKind45_Plot);
     BOF3_INJECT(EffectKind45_FillRect);
+    // DIV-0188 guards the lighthouse gauge's judgement in EffectKind45_Tune
+    // and _Aim; Capcom's would judge as before and the cheat would be silently
+    // half off.
+    if (Cheats_MinigameNoFail() && (!bof3::IsEnabled(bof3::addr::EffectKind45_Tune) || !bof3::IsEnabled(bof3::addr::EffectKind45_Aim)))
+        bof3::Fatal("BOF3X_NO_FAIL=1 needs EffectKind45_Tune and EffectKind45_Aim ours, and one is disabled");
     BOF3_INJECT(EffectKind46_Run);
     BOF3_INJECT(EffectKind46_Start);
     BOF3_INJECT(EffectKind46_FadeIn);

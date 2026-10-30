@@ -128,7 +128,8 @@ disc-only title draws its TM whole); D280 not built:
   `EffectKind66_States` / `EffectKind5B_States`**: the disc's numbers or the
   PC's ([`install-gap-twins.md`](install-gap-twins.md) 2, 3).
 - **`0x66A094`'s layout** under a Western layer
-  ([`install-gap-labels.md`](install-gap-labels.md) 4.3, 8).
+  ([`install-gap-labels.md`](install-gap-labels.md) 4.3, 8) - **done
+  2026-10-30** as DIV-0064's group 25, on the owner's catch in play.
 - **`Area65_DriftUV`** and the other `port-relaid` rows (7..8 per build),
   which the owner holds.
 

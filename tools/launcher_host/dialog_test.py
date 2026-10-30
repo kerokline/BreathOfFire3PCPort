@@ -22,7 +22,7 @@ run on this Python (BOF3X_PYTHON), and mod zips mods.py's own self-test makes - 
 Since group LX (2026-10-22): the Mods tab's sub-row (Data, Extras) and Extras' toggle, ruby_ui=,
 which hides and shows the Row above the text box - captured on both sub-buttons and both ways.
 """
-import ctypes, os, shutil, subprocess, sys, tempfile, time
+import ctypes, difflib, os, shutil, subprocess, sys, tempfile, time
 from ctypes import wintypes as W
 
 u = ctypes.WinDLL("user32", use_last_error=True)
@@ -181,6 +181,8 @@ CACHE_LAYERS["ruby"] = CACHE_LAYERS["all"] + ["ruby-furigana-ja-JP", "ruby-en-US
 CACHE_LOC["ruby"] = ["ja-JP", "en-US", "de-DE"]
 TOOLS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IDC_RUBY, IDC_TAB_MODS, IDC_TAB_SETTINGS = 1012, 1026, 1022
+# Game Options' Cheats sub-tab and its third row, Page 1 / Page 2 (the owner's call, 2026-10-30).
+IDC_TAB_GAME, IDC_SHEET0, IDC_CH_STEAL_, IDC_CH_INFO_ = 1025, 1036, 1220, 1222
 IDC_MOD_LIST, IDC_MOD_REMOVE, IDC_MOD_PATH, IDC_MOD_ADD, IDC_MOD_STATUS, IDC_MOD_LOG = 1700, 1701, 1702, 1704, 1705, 1706
 # The Mods tab's sub-row (Data, Extras; the owner's call, 2026-10-22) and Extras' toggle, ruby_ui=:
 # the Settings page's Row above the text box and its label hidden unless it is on.
@@ -548,7 +550,7 @@ def ruby_ui_checks(env, report):
         shot(dlg, "settings_row_hidden")
         u.SendMessageW(item(IDC_TAB_MODS), BM_CLICK, 0, 0)
         wait_idle(item)
-        got["subrow"] = [(text(item(IDC_SUB0 + k)), vis(item, IDC_SUB0 + k)) for k in range(3)]
+        got["subrow"] = [(text(item(IDC_SUB0 + k)), vis(item, IDC_SUB0 + k)) for k in range(4)]
         got["data"] = (vis(item, IDC_MOD_LIST), vis(item, IDC_EXTRA_RUBY))
         shot(dlg, "mods_data")
         u.SendMessageW(item(IDC_SUB0 + 1), BM_CLICK, 0, 0)
@@ -563,13 +565,27 @@ def ruby_ui_checks(env, report):
         u.SendMessageW(item(IDC_TAB_SETTINGS), BM_CLICK, 0, 0)
         got["on_settings"] = (vis(item, IDC_RUBY), vis(item, IDC_RUBYLABEL))
         shot(dlg, "settings_row_shown")
+        # Game Options' Cheats sub-tab: the third row shown, Page 1 up; Page 2 on its button.
+        u.SendMessageW(item(IDC_TAB_GAME), BM_CLICK, 0, 0)
+        got["gamerow"] = [(text(item(IDC_SUB0 + k)), vis(item, IDC_SUB0 + k)) for k in range(4)]
+        got["nosheets"] = [vis(item, IDC_SHEET0 + k) for k in range(2)]
+        u.SendMessageW(item(IDC_SUB0 + 2), BM_CLICK, 0, 0)
+        wait_idle(item)
+        got["sheets"] = [(text(item(IDC_SHEET0 + k)), vis(item, IDC_SHEET0 + k)) for k in range(2)]
+        got["page1"] = (vis(item, IDC_CH_STEAL_), vis(item, IDC_CH_INFO_))
+        shot(dlg, "cheats_page1")
+        u.SendMessageW(item(IDC_SHEET0 + 1), BM_CLICK, 0, 0)
+        wait_idle(item)
+        got["page2"] = (vis(item, IDC_CH_STEAL_), vis(item, IDC_CH_INFO_))
+        shot(dlg, "cheats_page2")
         u.SendMessageW(item(IDC_TAB_MODS), BM_CLICK, 0, 0)
         got["back"] = (vis(item, IDC_EXTRA_RUBY), vis(item, IDC_MOD_LIST))   # the tab keeps its sub-page
+        got["sheets_hidden"] = [vis(item, IDC_SHEET0 + k) for k in range(2)]
     st, ini, err = run("[bof3x]\nopt=\ncache=\nlanguage=ja-JP\nruby=en-US\n", act_off, env)
     report("Row above the text toggle: no ruby_ui=, no mod: the box and its label hidden",
            got.get("settings") == (False, False, True), repr(got.get("settings")))
-    report("  Mods' sub-row: Data and Extras, a third button hidden",
-           got.get("subrow") == [("Data", True), ("Extras", True), ("", False)], repr(got.get("subrow")))
+    report("  Mods' sub-row: Data and Extras, the third and fourth buttons hidden",
+           got.get("subrow") == [("Data", True), ("Extras", True), ("", False), ("", False)], repr(got.get("subrow")))
     report("  the Mods tab opens on Data: the mod list shown, the toggle not", got.get("data") == (True, False),
            repr(got.get("data")))
     x = got.get("extras", (None,) * 5)
@@ -583,6 +599,15 @@ def ruby_ui_checks(env, report):
            lh[0] < ls and lh[0] == lh[1], "hidden %r (the box's top %r), shown %r" % (lh[0], lh[1], ls))
     report("  the Mods tab comes back on the sub-page it was left on", got.get("back") == (True, False),
            repr(got.get("back")))
+    report("  Game Options' sub-row: Graphics and audio, Data, Cheats; no third row over the first sub-tab",
+           got.get("gamerow") == [("Graphics and audio", True), ("Data", True), ("Cheats", True), ("", False)]
+           and got.get("nosheets") == [False, False], "%r %r" % (got.get("gamerow"), got.get("nosheets")))
+    report("  the Cheats sub-tab: a third row, Page 1 / Page 2, Page 1 up (Steal shown, the enemy box not)",
+           got.get("sheets") == [("Page 1", True), ("Page 2", True)] and got.get("page1") == (True, False),
+           "%r %r" % (got.get("sheets"), got.get("page1")))
+    report("  Page 2 on its button (the enemy box shown, Steal not); the row hidden over Mods",
+           got.get("page2") == (False, True) and got.get("sheets_hidden") == [False, False],
+           "%r %r" % (got.get("page2"), got.get("sheets_hidden")))
     report("  ruby_ui=1 written; ruby=en-US as read",
            lines(ini).get("ruby_ui") == "1" and lines(ini).get("ruby") == "en-US",
            "%r %r" % (lines(ini).get("ruby_ui"), lines(ini).get("ruby")))
@@ -649,7 +674,8 @@ def main():
     # 1. A fresh ini as the launcher writes it, then an untouched dialog: byte-identical.
     _, first, _ = run("[bof3x]\nopt=\ncache=%s\nmusic=seq\n" % C, None)
     st, again, err = run(first, None)
-    report("PC+PSX+PSP untouched: the ini byte-identical", again == first)
+    report("PC+PSX+PSP untouched: the ini byte-identical", again == first,
+           " | ".join(difflib.unified_diff(first.splitlines(), again.splitlines(), lineterm="", n=0)))
     report("  music=seq shown as the default entry", st["music"] == 0, str(st["music"]))
     report("  the note: the PlayStation's base (the builds are on Data, Sources since issue 124)",
            "uses PlayStation data" in st["note"], st["note"])

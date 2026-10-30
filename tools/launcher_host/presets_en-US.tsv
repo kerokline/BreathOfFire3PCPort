@@ -188,6 +188,7 @@ en-US	as-shipped	off	DIV-0184	DialTranslucent	The world map's dial is drawn semi
 en-US	as-shipped	cannot	DIV-0185	Battle_SetHitPopup	The hit pop-up reads a missing target block as "no fixed style", instead of reading address 0x0C	Player costly: the original is only Capcom's function; this build cannot
 en-US	as-shipped	off	DIV-0186	AshRoom	The Gaist's turn-to-ash effect has room for every pixel, instead of overwriting Sprite_Current past 1,881	Player yes
 en-US	as-shipped	already-off	DIV-0187	ini:cheat.enemy_info=0	Every enemy shows its HP gauge and its Identify stats from the first meeting, bosses too	Default off: already off
+en-US	as-shipped	already-off	DIV-0188	ini:cheat.no_fail=0	The minigames cannot be failed: a Cheats switch, the rope pull and the lighthouse valve first	Default off: already off
 en-US	repaired	lang-governed	DIV-0005	lang	Walk a language overlay after each `DAT` file	Switch: lang - part of the language pick, which no preset changes
 en-US	repaired	lang-governed	DIV-0006	lang	Advance the dialogue pen by the glyph's width	Switch: lang - part of the language pick, which no preset changes
 en-US	repaired	lang-governed	DIV-0007	lang	Move the system message pool out of the area script's way	Switch: lang - part of the language pick, which no preset changes
@@ -310,6 +311,7 @@ en-US	repaired	off	DIV-0175	WindowResetFull	The window reset clears every field 
 en-US	repaired	off	DIV-0176	SunderLoop	Sunder's animation at Mt. Myrneg's entry loops until the scene reaches him	Player yes
 en-US	repaired	already-off	DIV-0179	ini:unlearned_blue=0	The name of an enemy's skill the party can still learn shows in blue	Default off: already off
 en-US	repaired	already-off	DIV-0187	ini:cheat.enemy_info=0	Every enemy shows its HP gauge and its Identify stats from the first meeting, bosses too	Default off: already off
+en-US	repaired	already-off	DIV-0188	ini:cheat.no_fail=0	The minigames cannot be failed: a Cheats switch, the rope pull and the lighthouse valve first	Default off: already off
 en-US	playstation	also-available	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: the preset keeps it on, so switch it on yourself
 en-US	playstation	already-off	DIV-0041	ini:wide=0	A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side	Default off: already off
 en-US	playstation	already-off	DIV-0086	ini:opt=	Optional layers from the player's PSP disc, walked after the language overlay	Default off: already off

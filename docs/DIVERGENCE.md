@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 187 entries, DIV-0001..0187, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 188 entries, DIV-0001..0188, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -4984,6 +4984,42 @@ designed in rather than bolted on.
   layer**: slot 0's two spaces become the discs' half spaces (6 px each in
   place of the PC's 12), and under `fr-FR` the first text is the French
   disc's. *Verification:* `loc_build.py selftest` (the reader on synthetic code: the US chain found, a stride-6 chain refused); the reader over the seven discs (`combo prompts 4` on each: the US words on six, the French first text on `psx-fr`); `importer.py check` and `exe_tables.py check` 0 errors; the US + PSP-EU disc-built install rebuilt from this branch (root `C:\Users\kerok\bof3x-runs\ss1026\sc`) and a PC install copy with an `en-US` layer from it, the sweep's ability 3 alone on each, the install's log `DIV-0064: 4 of 4 combo prompts` on both: the disc install's `a003_1.png` reads READY, `a003_2.png` GO!! and `a003_5.png` O HIT COMBO!! where the before-image's box was empty; the PC copy under `en-US` draws the same frames to the pixel, and under `original` its own bytes (the full-width spaces, text 0 wider). The gap watch (`gap,unread,language`, 900 latches) still lists `0x66A096..0x66A0D8` read 720 times "before a write" with writes 0 - the parked-page blind spot of [`install-gap-reads.md`](install-gap-reads.md) 9.3 (page `0x66A000` is parked on most latches, so the layer's load-time writes are not seen; the row is written by the log line and the shot). Not captured: the French first text under `fr-FR`.
+  **Amended 2026-10-30 - group 25, the chop's count word** (the owner's
+  catch in play: the count after the woodcutting read as a number with a
+  kanji after it; [`install-gap-labels.md`](install-gap-labels.md) 4.3's open
+  row, [`install-gap-census.md`](install-gap-census.md) 5's `0x66A094`).
+  *Original:* `EffectKind55_DrawCount` `0x47EC30` (ours, `effect_2g.cpp`)
+  draws the chop's count in a box of `0x2E` at (`0xC8`, `0xA0`), the count in
+  the 12 px numerals at `0xCD` and the one-glyph word `0x66A094` (`push` at
+  `0x47EC72`, its one reader) at `0xE5` - the PC's copy of the Japanese disc's
+  glyph, which a Latin layer's font shows as whatever its two codes map to;
+  on a disc-built image the row is `language-zero`, so nothing after the count
+  and the box too wide. *New:* group 25, two slots in buffers of ours read by
+  our draw: the disc's word (a space where it has none) and its layout, three
+  raw bytes - the box's width, the count's x, the word's x (`0xFF`: none).
+  The builder reads them off `WORLD00/AREA008.EMI`'s twin (`chop_count`: the
+  call drawing the box at (`0xC8`, `0xA0`), its third argument the width; to
+  the `jr $ra` the draw on row `0xA3`, the count's x, and a draw on row `0xA4`
+  with one string loaded before it, the word): the US, European, French and
+  German discs draw the count alone, the box `0x22`, the count at `0xD1` (US
+  `0x801F3D18`); the Japanese disc's `AREA008.EMI`, and both PSPs' (the
+  Japanese build's), the PC's own `0x2E` / `0xCD` / `0xE5` with the glyph
+  `13 87`; PSP-EU's own draw is `BOOT.BIN`'s (`0x3FCF4`), the West's layout,
+  which its path reads. Under a written group the draw is the disc's: the box
+  of its width, the count through `Text_DrawAt` in colour 4 (the dialogue
+  font's 8 x 12 digit cells, as the discs' `0x8014FF0C` draws it - DIV-0119's
+  amendment), the word only where the disc has one. A Japanese layer builds
+  no group (its draw is the shipped one); a word the language cannot encode
+  leaves the group out with a report line. The clock beside it
+  (`EffectKind55_DrawTime`: the PC's 12 px numerals at `0x7D`, the discs'
+  digit cells at `0x86` and the colon at `0x97`) stays the port's. *Why:* the
+  owner's word (2026-10-30, a localisation defect seen in play), which
+  answers section 8's question - the West's layout, not an empty word in
+  the wide box. *Verification:* `loc_build.py selftest` (the reader on
+  synthetic code: the Western shape, the Japanese shape, two boxes refused);
+  the reader over the seven discs (the four Western `AREA008.EMI`s `0x22` /
+  `0xD1` / none, the three Japanese-build ones `0x2E` / `0xCD` / `0xE5` with
+  the glyph; PSP-EU's `BOOT.BIN` `0x22` / `0xD1` / none); a PC install copy with an `en-US` layer built from this branch and the US disc (`loc_build.py all`, its report `chop count 2`; root `C:\Users\kerok\bof3x-runs\rope1030\pc`, the game's `capcom.avi` beside it for the disc probe), the owner's chop recording replayed on it with a frame every 60 through the chop (`sheet_chop_layer_box.png`): the log `DIV-0064: 2 of 2 chop count`, the box the narrower one, the count alone in the dialogue font's digits (12, 14, 16 ... 20), no glyph after it; the same recording on the owner's install (its layer built before this group) draws the wide box, the 12 px numerals and the glyph as before.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
 - **Switch:** lang
@@ -13291,6 +13327,119 @@ designed in rather than bolted on.
   ([`cheats.md`](cheats.md) section 6).
 - **Reversible?** Yes: the box off, `BOF3X_ENEMY_INFO` unset.
 - **Switch:** ini:cheat.enemy_info=0
+- **Default:** off - the box starts off
+- **Player:** yes
+- **Toward:** none
+- **Languages:** any
+- **State:** active
+
+### The minigames cannot be failed: a Cheats switch, the rope pull and the lighthouse valve first
+
+- **ID:** DIV-0188
+- **Date:** 2026-10-30
+- **Subsystem:** field minigames - `Area75_PhasePlay` `0x40E330` (ours,
+  `src/game/area_w1f.cpp`), the rope pull's judgement, and `EffectKind45_Tune`
+  `0x477250` / `EffectKind45_Aim` `0x477370` (ours, `src/game/effect_2d.cpp`),
+  the lighthouse valve gauge's; the switch in `src/game/cheats.cpp`; the
+  launcher's Cheats sub-tab, Page 2; [`cheats.md`](cheats.md) section 7.
+- **Tier:** Extension
+- **Original behaviour:** the rope pull (area 75, `Field_ModeTailKinds[30]`,
+  armed by `Area75_ArmTail30` `0x40D7D0` from the area's step hook) judges
+  each move in `Area75_PhasePlay`: unless the press flags' bit 8
+  (`0x93C346`), more than three presses out of turn (`0x93C347`), more than
+  0x1E idle frames (`0x93C348`) or the two counters (`0x93C34A`, `0x93C34C`)
+  more than 0xC8 apart send the pull to phase 3, `Area75_PhaseMissed`
+  `0x40E3C0` (Cond row 10 flag 1 set, the tail state 0x1E), and the attempt
+  ends as a loss. The lighthouse's valve (area 77, chapter 6: `Scena06`'s
+  run spawns effect kind `0x45`, clears its row's flag 0x26 and sets 0x2D,
+  waits for 0x2D to clear, then steps to 4 on flag 0x26 - "The main valve is
+  open!" - or 6 - "Whoops! The boiler stopped", `scena_sc6.cpp`'s step 3):
+  the gauge effect's tuning state ends on any confirm or cancel press with
+  the flag as it was (clear), and its aiming state sets flag 0x26 on a
+  confirm press only when the trace's offset is 8 and its phase within
+  0x1C..0x24, else clears it. The engine has no "minigame" state: each of the
+  game's minigames is a state of its own subsystem and judges its own attempt
+  in a step of its own ([`button-tests.md`](button-tests.md) 2.2 - the
+  well's effect kind `0x8C`, the chop's and the antenna's scenario steps, the
+  dock's effect kind `0x5E`, area 135's tail kind 18).
+- **New behaviour:** with `BOF3X_NO_FAIL=1` `Area75_PhasePlay` skips that
+  judgement: the pull runs until the player's counter reaches the mark
+  (`Area75_PhaseDeal`'s 0x1F4, phase 4) however many presses are out of
+  turn, however long the idle, whatever the gap. Nothing else of the pull
+  changes: the moves, the rhythm, the counters, the sounds, the other side's
+  pulling. At the lighthouse's gauge a confirm press sets flag 0x26 wherever
+  the trace is, in the aiming state and in the tuning state before it (too
+  soon), so the valve opens on any confirm press; a cancel press is a cancel
+  as before. The other minigames are unchanged today; each joins the same
+  switch as a recorded route reaches it and the change is verified (the
+  owner's list, 2026-10-30: the chop and the well next).
+  Off by default; `cheat.no_fail=1` in `bof3x.ini`, the "You cannot fail a
+  minigame" box on the Cheats sub-tab's Page 2 (a third row of buttons under
+  the sub-tabs, the owner's word over a second sub-tab). A start with the switch on and
+  any of the three guarded functions left as Capcom's (`BOF3X_ORIGINAL` /
+  `BOF3X_OFF`) is a `Fatal`, so the cheat is never silently half on.
+- **Amended 2026-10-30, afternoon - the chop:** the wood-chopping minigame
+  of area 8 (chapter 1, Bunyan's house; the owner's recording of the day,
+  `tools/recipes/bunyanHouseChoppingMiniGame.txt`) is judged by its clock
+  effect. `Scena01_Scene06` `0x53AC30` (ours, `src/game/scena_sc1.cpp`)
+  spawns effect kinds 0x15 and 0x55 at step 0x11, runs the player's swings
+  through steps 0x12 and 0x13 (kind 0x54's object counts a hit into
+  `0x90384B`), and at step 0x14 reads the cue byte `0x90384A`: bit 7 set is
+  the win (step 0x19, flag 7, the scene's end), clear the second attempt
+  (step 0x15: the two effects spawned again, the second member at the axe).
+  `EffectKind55_Finish` `0x47EB30` (ours, `src/game/effect_2g.cpp`) sets the
+  bits when the thirty seconds end: bit 7 of the count always, of the cue
+  only at a count of 16 or more. *New:* under the switch the cue's bit 7 at
+  any count - the chop is won whatever was cut. Nothing else changes: the
+  clock, the count, the swings, the hits, the sounds. `Effect2G_Inject` is
+  the `Fatal` when the function is left as Capcom's under the switch.
+  *Verification:* headless, `BOF3X_NO_FAIL=1 BOF3X_SHADOW=effect_2g`: the
+  fuzz differs in `EffectKind55_Finish` alone (746 of its 4,000 rounds, the
+  group's other 57 functions at 0); unset, 232,000 rounds over 58 functions, 0 mismatches, exit 0; `BOF3X_NO_FAIL=1
+  BOF3X_ORIGINAL=EffectKind55_Finish`: `FATAL: BOF3X_NO_FAIL=1 needs
+  EffectKind55_Finish ours, and it is disabled`. Live, the recording
+  (13,741 frames; the cue and count watched: the chop from recipe frame
+  11,495, 21 hits by 12,370, the cue's bit 7 at 12,396) with every pad word
+  of the chop's window cleared (`chop_nopress.txt`, root
+  `C:\Users\kerok\bof3x-runs\rope1030`): unset, the count's bit 7 alone at 12,396, the cue's clear, Bunyan's "Humph! Only 0...?", "I'm afraid you haven't learned your lesson yet...", "Try again" and a second thirty seconds from 12,848; with the switch,
+  both bits at 12,396, Bunyan's "Hmmm... 0", "Not bad...", Teepo's "There! We worked, didn't we" and the scene's end. The count's one-glyph word after the number, the owner's catch
+  during the same recording, is DIV-0064's group 25 (its amendment of the
+  same day).
+- **Rationale:** the owner's call, 2026-10-30: the groundwork for one
+  switch that covers every minigame, for a player who wants the story
+  without the reflex tests. One guarded branch per minigame, because the
+  engine has no shared minigame state to hook; the flag and the list of
+  guarded sites are the whole mechanism.
+- **Also in the PSX version?** Not applicable: an extension. The console
+  judges the pull the same way (the function's twin in `AREA075.EMI`,
+  `names/area_records.toml` area 75); not measured here.
+- **Verification:** 2026-10-30, headless (`BOF3X_SELFTEST_ONLY=1`, a clean
+  copy of the four launcher files under `C:\Users\kerok\bof3x-runs\rope1030`):
+  with `BOF3X_NO_FAIL=1 BOF3X_SHADOW=area_w1f` the log line `DIV-0188 the
+  minigames cannot be failed` and the fuzz differs in `Area75_PhasePlay`
+  alone, 3,490 of 6,000 rounds, the first differing byte each time
+  `0x93C340` (the phase byte), the group's 30 other functions at 0;
+  `BOF3X_NO_FAIL=2` is `FATAL: BOF3X_NO_FAIL must be 0 or 1`; the switch on
+  with `BOF3X_ORIGINAL=Area75_PhasePlay` is `FATAL: BOF3X_NO_FAIL=1 needs
+  Area75_PhasePlay ours, and it is disabled`; with `BOF3X_NO_FAIL=1
+  BOF3X_SHADOW=effect_2d` the fuzz differs in `EffectKind45_Tune` (3,179 of
+  6,000 rounds) and `EffectKind45_Aim` (4,794) alone, the group's 52 other
+  functions at 0, and `BOF3X_ORIGINAL=EffectKind45_Aim` with the switch is
+  the `Fatal` naming both. Unset, `BOF3X_SHADOW='*'` (the switch's first
+  build, the rope pull alone): 766 groups, 0 mismatches, exit 0; the build with both, again 766 groups, 0 mismatches, exit 0.
+  Live, both minigames from the owner's recordings of the day, x8 / x4, a
+  clean launcher copy: the rope pull's `ropeMiniGame.txt` with the player's
+  first turn of presses (recipe frames 1,634..1,762) made idle - unset, "You
+  failed..." at frame 1,740 and the foreman's retry; with the switch the pull
+  runs on, the counters drawn red once more than 0x96 apart, no loss through
+  frame 3,300. The lighthouse's `lighthousePowerMiniGame.txt` with its valve
+  press (frame 817) moved 40 frames early and 40 late - unset, "Whoops! The
+  boiler stopped" both ways; with the switch "The main valve is open!" both
+  ways. The recordings themselves (a pull won, a valve opened) replay the same
+  with the switch unset under the owner's ini and under none
+  ([`button-routes.md`](button-routes.md) 5).
+- **Reversible?** Yes: the box off, `BOF3X_NO_FAIL` unset.
+- **Switch:** ini:cheat.no_fail=0
 - **Default:** off - the box starts off
 - **Player:** yes
 - **Toward:** none

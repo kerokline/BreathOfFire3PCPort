@@ -151,12 +151,26 @@
 //      records on a PlayStation disc, BOOT.BIN's on a PSP; every disc the US
 //      words but the French first text); in place, each slot witnessed by
 //      its entry of the pointer table.
+//  25  the chop's count word (2026-10-30, the owner's catch on the wood-chopping
+//      minigame; install-gap-census.md's `0x66A094` row): the one glyph
+//      EffectKind55_DrawCount 0x47EC30 draws after the count in its box
+//      (`push 0x66A094` at 0x47EC72, its one reader), the PC's copy of the
+//      Japanese disc's 回 - two slots in buffers of ours, read by our draw
+//      (effect_2g.cpp): the word, and the layout as three raw bytes - the
+//      box's width, the count's x, the word's x (0xFF: no word). Read off
+//      each disc's AREA008.EMI by what its twin draws (loc_build.py
+//      chop_count): the four Western discs draw the count alone in a box of
+//      0x22 at 0xD1 (US 0x801F3D18), so their word is a space and the draw
+//      skipped; the Japanese build the PC's own box of 0x2E, count at 0xCD
+//      and word at 0xE5, so no Japanese layer carries the group; PSP-EU's
+//      draw is BOOT.BIN's own (0x3FCF4, the West's layout), not its
+//      AREA008.EMI's, which is the Japanese build's.
 //
 // Groups 1, 2, 5, 6, 8..12, 16 and 20..24 are written in place, one byte a letter in the
 // single-byte slots the overlay paints with the dialogue font, so a draw
 // through Text_DrawAt shows them as it shows every other overlay string.
 // Groups 3, 4, 7 and 13 are reached by nothing but their pointer tables (and
-// groups 14, 15, 17, 18 and 19 by our code alone) (a scan of
+// groups 14, 15, 17, 18, 19 and 25 by our code alone) (a scan of
 // the image for each slot's address, 2026-09-29), so their strings go into
 // buffers of ours, 16 bytes each, and every table is re-aimed: the French
 // disc's ARMEMENT and CAPACITE and the German RUESTUNG are eight letters, one
@@ -215,7 +229,8 @@ struct Table {
 };
 
 char g_item_types[5][kRoom], g_skill_types[5][kRoom], g_sort_menus[11][kRoom], g_village_lists[20][kRoom],
-    g_village_words[5][kRoom], g_identify_words[6][kRoom], g_turn_words[3][kRoom], g_hilo_words[3][kRoom], g_guest_name[1][kRoom];
+    g_village_words[5][kRoom], g_identify_words[6][kRoom], g_turn_words[3][kRoom], g_hilo_words[3][kRoom], g_guest_name[1][kRoom],
+    g_chop_count[2][kRoom];
 
 constexpr std::uint32_t kFormations = 0x6636B0, kFormationBase = 0x573FC6;
 constexpr std::uint32_t kFaeries = 0x653210;   // the trait records: four stats, a name of 16
@@ -347,6 +362,10 @@ constexpr Table kTables[] = {
     // each slot witnessed by its own entry.
     {24, "combo prompts", 4, {{0x66A0B0, 16, 0x66A0D8}, {0x66A0C0, 8, 0x66A0DC}, {0x66A0C8, 8, 0x66A0E0},
                               {0x66A0D0, 8, 0x66A0E4}}, {}, nullptr, false},
+    // 25: the word, then the layout (three raw bytes: the box's width, the
+    // count's x, the word's x or 0xFF); both witnessed by the push operand
+    // that names the shipped word, as group 18's layout is by its second word's.
+    {25, "chop count", 2, {{0x66A094, 4, 0x47EC73}, {0x66A094, 4, 0x47EC73}}, {}, g_chop_count, false},
 };
 
 // The overlay's 8 x 8 set: the US disc's code - 0x30 from here, and a letter

@@ -5,7 +5,9 @@
     python tools/recipe_shots.py R.txt --every 4 --from 11476 --to 11540 --out R_window.txt
 
 For a recipe BOF3X_RECORD wrote (only `wait N` / `hold BUTTONS N` / `shot NAME 1
-[BUTTONS]` lines after the header comments). A shot of one frame holding that
+[BUTTONS]` lines after the header comments, with the zero-frame `key KEY 0`
+and `quit` lines the recorder and the owner write; those cost no frame, so
+each is kept in place, before the frame it precedes). A shot of one frame holding that
 frame's buttons takes the place of the frame, so the inputs the game sees are
 unchanged and the recipe keeps its timing (src/hook/input_script.cpp).
 """
@@ -23,11 +25,15 @@ def main():
     a = ap.parse_args()
 
     header, frames = [], []          # frames: one entry per frame, (buttons or '', shot name or None)
+    keys_at = {}                     # frame index -> the zero-frame key lines before that frame
     for line in open(a.recipe):
         t = line.split('#')[0].split()
         if not t:
             if not frames:
                 header.append(line.rstrip('\n'))
+            continue
+        if (t[0] == 'key' and len(t) == 3 and t[2] == '0') or t[0] == 'quit':
+            keys_at.setdefault(len(frames), []).append(line.rstrip('\n'))
             continue
         if t[0] == 'wait':
             frames += [('', None)] * int(t[1])
@@ -49,16 +55,18 @@ def main():
     out = header + [f'# Shots every {a.every} frames added by tools/recipe_shots.py from {a.recipe}.']
     i = 0
     while i < len(frames):
+        out += keys_at.get(i, [])
         b, shot = frames[i]
         if shot:
             out.append(f'shot {shot} 1' + (f' {b}' if b else ''))
             i += 1
             continue
-        j = i
-        while j < len(frames) and frames[j] == (b, None):
+        j = i + 1
+        while j < len(frames) and frames[j] == (b, None) and j not in keys_at:
             j += 1
         out.append(f'hold {b} {j - i}' if b else f'wait {j - i}')
         i = j
+    out += keys_at.get(len(frames), [])
     open(a.out, 'w', newline='\n').write('\n'.join(out) + '\n')
     print(f'{len(frames)} frames, {n} shots added -> {a.out}')
 
