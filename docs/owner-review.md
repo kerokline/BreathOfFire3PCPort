@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-31, the away day's lines under "To review in play", "Decisions the measurements raised" and "Parked"; the sound-layer round's section at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-31, the docs audit's section "2026-10-28..31" at the top and its strikes, the away day's lines under "To review in play", "Decisions the measurements raised" and "Parked"; the sound-layer round's section at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,6 +12,25 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+
+## 2026-10-28..31, owed after the merges
+
+Gathered by the docs audit of 2026-10-31 from the docs that name them; each doc has the reading.
+
+- **The exe-gap round** (`exe-gap/round`, PR at your word; [`exe-gap-round.md`](exe-gap-round.md) 7, "Still the
+  owner's"): a listen to the loss tune on a disc-only install (DIV-0192, D320) and to the PAL banks on a European
+  disc-only install (DIV-0194, D257); your eye on DIV-0195's regional boxes on a Western PSX-only install (area
+  135's three panel pieces, kind 0x5E's frame and menu box); your word on a fresh `cn_<route>_orig4` re-record
+  with the current saves (section 9a item 4). The nine pending FR / DE music-player labels are the 2026-10-18
+  item below. JA's sheets and DIV-0196 were seen and approved on 2026-10-31.
+- **The Preset page** (ledger-fields stage D, PR #164; [`ledger-fields-round.md`](ledger-fields-round.md) 5): the
+  Settings sub-tab at 100 % and 200 % scale, screenshots in `C:\Users\kerok\bof3x-runs\lfd1028\d2\shots`.
+- **The enemy-information cheat** (DIV-0187, PR #169; [`cheats.md`](cheats.md) 6): checked headless only; a fight
+  with `cheat.enemy_info=1` shows every enemy's HP gauge and Identify stats from the first meeting.
+- **The consumables sorted by id** (DIV-0189, PR #173; [`rest_2e.md`](rest_2e.md)): a sort on a long game's bag,
+  and your word on a hand-written type order as the next step.
+- **The no-fail cheat's next minigame** (DIV-0188; [`cheats.md`](cheats.md) 7): a recording of the well's start
+  (`BOF3X_RECORD`).
 
 ## 2026-10-23 evening, the sound-layer round (merged as PR #122, not heard)
 
@@ -79,7 +98,7 @@ already names, 6 the port's. Three want the owner's word; none is built.
   icon page is laid out 32 apart; one look at the icons in a dragon fight
   settles it (every icon the right picture, none cut).
 
-## 2026-10-22, the reading-row round (built)
+## 2026-10-22, the reading-row round (built, merged as PR #106)
 
 Built on `localization/second-script` ([`reading-row-round.md`](reading-row-round.md);
 its section 6 holds the calls; the contract is [`reading-row.md`](reading-row.md) 1).
@@ -131,8 +150,7 @@ and DIV-0157 (mods); the round's findings are known-defects D326..D330.
   (the saves now carry themselves: D331, `carry_saves` in `setup`, from
   the previous game folder and from the home folder's old layout): the
   furigana zip must be built
-  (`tools/make_mod.py furigana`, `build
-eleaseurigana-0.1.0.zip`) and
+  (`tools/make_mod.py furigana`, `build\release\furigana-0.1.0.zip`) and
   added on the Mods tab, and `language=ja-JP` chosen for its entry.
 
 - **From ML:** should a mod also build into a cache named by `cache=`, or
@@ -391,9 +409,9 @@ the doc that has the reading.
 - ~~**The Western u16 fields of `EffectKind66_States` and `EffectKind5B_States`**~~ -
   answered 2026-10-31: the PC's, which both PSP discs hold too (measured;
   [`exe-gap-round.md`](exe-gap-round.md) 7).
-- **`0x66A094`'s layout** under a Western layer: draw nothing (as now on a
-  disc-only install), or take the West's narrower box and the count's x?
-  [`install-gap-labels.md`](install-gap-labels.md) 4.3 and 8.
+- ~~**`0x66A094`'s layout** under a Western layer~~ - done 2026-10-30 as
+  DIV-0064's group 25 (the West's own layout), on your catch in the chop's
+  recording; the chop's count box seen 2026-10-31 ([`cheats.md`](cheats.md) 7).
 - **The FR / DE music-player labels** (`CommuMusic_CloseSteps+0x28` / `+0x40` /
   `+0x66`): a raw-byte label group, after a capture of the texture page on each
   install kind? [`install-gap-labels.md`](install-gap-labels.md) 4.4.
@@ -404,16 +422,16 @@ the doc that has the reading.
   and `0x5295F0` (`LeaderPanel_S4Run`): FP's and OT's methods share nothing and
   both derive another twin than the entry's. Correct them?
   [`install-gap-pairs.md`](install-gap-pairs.md) 2.3, [`exe-immediate-places.md`](exe-immediate-places.md) 3.
-- **A Defender exclusion** for the build and harness folders: Windows Defender
-  quarantines every local launcher build, so the round's live end batch (the
-  A/B/C caches, the attract gate, the hash routes, the captures) has not run.
-  This is a machine setting only you can make:
-  [`install-gap-round.md`](install-gap-round.md) 5, [`install-gap-reads.md`](install-gap-reads.md) 8.
+- ~~**A Defender exclusion** for the build and harness folders~~ - made: the
+  harness roots go under `C:\Users\kerok\bof3x-runs\` or `D:\bof3x-runs\`, both
+  excluded ([`HANDOFF.md`](HANDOFF.md) "How to run things"), and the round's
+  live end batch ran on 2026-10-18 ([`install-gap-round.md`](install-gap-round.md) 5).
 - ~~**D321, PSP-JP-only item lists stop at start** ([`known-defects.md`](known-defects.md) D321): the L1 / R1 corner has no Japanese source - blank, the Latin icons, or part of the ja-JP layer (D280)?~~
   **Decided 2026-10-18 and built:** a capital `L` and `R` from the `ja-JP`
   font (DIV-0138 amended, `install-gap/d321`); psp-jp's five item-list
-  routes now run to the end. Owed: your eye on the corner
-  (`C:\Users\kerok\g_d321\shots\pspjp_*_corner_*`).
+  routes now run to the end. Owed: your eye on the corner (the captures
+  were in `C:\Users\kerok\g_d321\shots\`, now gone: a PSP-JP install's item
+  list shows it).
 
 ## 2026-10-17, the button unification round
 
@@ -491,8 +509,8 @@ new root in place of `b_rc`).
 ## 2026-10-17, stale installs, the gap census's fixes, the PSP-only title
 
 `install/recipe-version`. Captures are in session `6467ad33`'s scratchpad
-(game-derived, never in the tree); the scratch homes are `C:\Users\kerok\rv`
-(PSX-US + PSP-EU) and `rvp` (PSP-EU only), the launcher folder `rvL`.
+(game-derived, never in the tree); the scratch homes were `C:\Users\kerok\rv`
+(PSX-US + PSP-EU) and `rvp` (PSP-EU only), the launcher folder `rvL` (all three gone).
 
 ### Approved by the owner (struck, 2026-10-17)
 
@@ -629,7 +647,8 @@ checkout's `analysis/` (never in the tree).
   from the disc's `GAME.EMI#1`, built as its own `titlemark` rule in
   `tools/psp_exe.py` rather than a `twin` row.
 - **A ja-JP layer, D280**: **yes, all of kinds 7..16** from the Japan disc
-  (DIV-0015 / 0018 / 0019 / 0020 / 0064 / 0069 extended).
+  (DIV-0015 / 0018 / 0019 / 0020 / 0064 / 0069 extended). **Built**: kind 16
+  2026-10-18 (D279), kinds 7..15 2026-10-31 (the exe-gap round's group JA).
 - **The fishing crash, D279**: **both** - kind 16 through the ja-JP layer, and
   the scroller declining an empty line (a code DIV). **Built** 2026-10-18:
   DIV-0144 and DIV-0069's amendment, `install-gap/d279`.
@@ -673,8 +692,9 @@ checkout's `analysis/` (never in the tree).
   - q5: the fishing ticker - the disc's one message at a time against the
     PC's packed band; the disc's circle glyph against the PC's red ring; PSP's
     "buttons" - which style?
-  - q6: under ja-JP the Config grid is the port's Chinese (D280) - see "to
-    decide"; the rest equal narrow / wide.
+  - ~~q6: under ja-JP the Config grid is the port's Chinese (D280)~~ - the
+    Japan disc's since the exe-gap round's group JA (2026-10-31; its sheets
+    seen and approved, DIV-0196 for the labels).
   - q7, D255: PSX-EU never comes back from the inn's black (now a hang) -
     see "to decide".
 - **The arena sheets, `analysis/shots/arena-render-1013/`** (`README.md`,
@@ -688,7 +708,7 @@ checkout's `analysis/` (never in the tree).
   ([`labels-1013.md`](labels-1013.md) 1.4): `WEAK POINT`, `ITEM` / `OBJET` /
   `OBJEKT`, `EP` on the Identify panel (DIV-0117) - placed right?
 - **The Japanese world map**, `C:\Users\kerok\abj\runs\jp1013_worldMapAndAreaTransition`
-  frames 1140..1770 (D281, [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md) 3.3):
+  (gone with the root on 2026-10-21; a jp-set re-run makes it again) frames 1140..1770 (D281, [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md) 3.3):
   PSX-JP draws it about a third closer than the PC and PSP-JP. **The owner's
   note (2026-10-13):** does not remember the Japanese release's map being
   closer, but it is subtle enough that they would not; since the PC port and
@@ -697,11 +717,11 @@ checkout's `analysis/` (never in the tree).
   1012 sweep). Recorded as the owner's hypothesis; the PSX twin read (JP
   against US `GAME.EMI`'s world-map camera set-up) is the check - anything to
   add?
-- **Area 65's forest canopy** (`C:\Users\kerok\abu\runsဓ_fairyVillage`, the
+- **Area 65's forest canopy** (`C:\Users\kerok\abu\runs\u1013_fairyVillage`, gone with the root on 2026-10-21; the
   PC's `AREA065` art against both discs', [`abc-sweep-1013-us.md`](abc-sweep-1013-us.md)
   3.3) and **bossAndFlash's three boss-effect frames** 3480, 4530,
   4800..4830 that differ between the installs on both runs
-  (`abu\runsဓ_bossAndFlash`, `u1013r_bossAndFlash`; that doc 9) -
+  (`abu\runs\u1013_bossAndFlash`, `u1013r_bossAndFlash`, gone with the root; that doc 9) -
   anything visibly wrong?
 
 ### To listen to
@@ -768,7 +788,7 @@ checkout's `analysis/` (never in the tree).
 
 ## To review in play
 
-**The away day of 2026-10-27** (`away1027/integration`, unpushed; [`HANDOFF.md`](HANDOFF.md) item 1):
+**The away day of 2026-10-27** (`away1027/integration`, merged as PR #158; [`HANDOFF.md`](HANDOFF.md) item 1):
 
 - **Area 9 on a PSP-built install** ([`install-gap-labels.md`](install-gap-labels.md) 9): its entry script was
   zero on both PSP-built images until today and is now placed from the PSP's own `AREA009.EMI`. What the zero
@@ -1107,8 +1127,8 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
 - **The faerie village's talk line under a Western layer on the PC install** (2026-10-27, agent `lang`;
   [`install-gap-labels.md`](install-gap-labels.md) 9.1): one villager's talk script (script 6, areas 175..185)
   names its message by number, and the Western discs set it to `0x6D` where the PC and the JP disc have `0xE1`.
-  On a Western disc-built install the disc's `0x6D` is right, and the `exe_twins.py` tie-break in flight places
-  it. The open call is the PC install under a Western language layer: its `.data` keeps `0xE1` while the text
+  On a Western disc-built install the disc's `0x6D` is right, and the `exe_twins.py` tie-break (merged with the
+  away day, PR #158) places it. The open call is the PC install under a Western language layer: its `.data` keeps `0xE1` while the text
   block is the disc's, so that villager opens the Western block's message `0xE1`, not the `0x6D` the Western
   release shows (which line that is was not read). Should a Western layer carry this operand too?
 - **The Capcom game values no disc carries** (2026-10-12, NB and IN of the
@@ -1127,7 +1147,11 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
   [`disc-gap-fills.md`](disc-gap-fills.md)); what is left (the formation names, the long tail of section 3
   there) is still this call. The event battles' track half was filled by
   rule on 2026-10-17 after players reported it (issue #83, D316): each
-  boss file's own music through the disc's song table.
+  boss file's own music through the disc's song table. **Settled row by
+  row 2026-10-31** by the exe-gap round, launched at your word: every `gap`
+  row left has an answer in `recipes/exe-gaps-accepted.tsv` (the layer,
+  unread, or pending - the nine FR / DE labels), and STRICT refuses an
+  unanswered one by default ([`exe-gap-round.md`](exe-gap-round.md) 4a).
 - **The faerie village's label group writes names one record late** (LG,
   2026-10-12; [`loc-build-disc-only.md`](loc-build-disc-only.md) 5.4; DIV-0064's
   group 16): the PC record is name first at `0x653200`, `labels.cpp` writes
@@ -1223,7 +1247,8 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
   on the disc, by the engine playing a kind-0 stream from PCM.
 
 - **Step 6's three calls** ([`sound-import.md`](sound-import.md) section 6,
-  2026-10-08): (1) the PAL discs' 8 swapped area banks - refused by hash
+  2026-10-08; (1) answered 2026-10-31, "let's take the pal banks", DIV-0194; (2) answered
+  2026-10-13, "clamp now", the away day's section): (1) the PAL discs' 8 swapped area banks - refused by hash
   today, so a PAL-only player lacks 8 containers' banks; accept as that
   build's? (2) the port's converter wraps where the SPU clamps - 9 sample
   values in 5 sounds, a full-scale click on the PC (`AREA000`'s bank holds

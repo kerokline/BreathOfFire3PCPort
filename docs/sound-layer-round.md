@@ -3,7 +3,7 @@
 **Status:** BUILT (2026-10-23 evening, `sound/round` off `main` `300ce67f`; the four groups merged
 one at a time, DIV-0169..0175, D353 and D354; the end batch's state hash and WAV dumps in section 5,
 its last runs re-made on the fixed build and every WAV difference attributed to its entry; **not heard by the owner** - the listens and two calls in
-[`owner-review.md`](owner-review.md); PR at the owner's word). Sections 0..3 are the staging as written;
+[`owner-review.md`](owner-review.md); merged as PR #122). Sections 0..3 are the staging as written;
 4 and 5 are what was built and measured.
 
 ## 0. What the round is for
