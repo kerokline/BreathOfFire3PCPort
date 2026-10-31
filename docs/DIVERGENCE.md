@@ -14099,3 +14099,5 @@ designed in rather than bolted on.
   suite's `field_c1` and `config_text` rows under `ja-JP` at 0 mismatches
   (the clone carries the same patches); `BOF3X_ORIGINAL=ConfigLabelJapanese`
   the sheets' layout again.
+  **Seen by the owner on the captures, 2026-10-31 evening: "that'll work -
+  it all fits in the row, even when selected".**
