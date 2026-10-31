@@ -10628,3 +10628,4 @@ entry	DIV-0186	code,launcher	yes	AshRoom, env:BOF3X_OFF, ini:off		tier Intent; k
 entry	DIV-0187	launcher	yes	env:BOF3X_ENEMY_INFO		tier Extension; kind launcher
 entry	DIV-0188	launcher	yes	env:BOF3X_NO_FAIL		tier Extension; kind launcher
 entry	DIV-0189	code,launcher	yes	ItemSortById, env:BOF3X_OFF, ini:off		tier Intent; kind code
+entry	DIV-0190	lang	yes	lang		tier Sensible; kind lang

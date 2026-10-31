@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 186;
+inline constexpr std::size_t kSwitchCount = 187;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -259,9 +259,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Ini, "ini:cheat.enemy_info=0", 4, 16},   // DIV-0187
     {SwitchForm::Ini, "ini:cheat.no_fail=0", 4, 13},   // DIV-0188
     {SwitchForm::Name, "ItemSortById", 0, 12},   // DIV-0189
+    {SwitchForm::Lang, "lang", 0, 4},   // DIV-0190
 };
 
-inline constexpr std::size_t kEntryCount = 189;
+inline constexpr std::size_t kEntryCount = 190;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -641,6 +642,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Extension, State::Active, 0, 184, 1, false, Player::Yes, 0, kLangAny},
     {189, "The Items screen's NormalItem and CombatItem sorts order each half by item id",
      Tier::Intent, State::Active, 0, 185, 1, true, Player::Yes, 0, kLangAny},
+    {190, "The dock's parts-menu legend words from the disc's own paint",
+     Tier::Sensible, State::Active, 0, 186, 1, true, Player::Yes, kTowardPsx, kLangEnUs | kLangEn150 | kLangFrFr | kLangDeDe},
 };
 
 // The switches of one entry.
