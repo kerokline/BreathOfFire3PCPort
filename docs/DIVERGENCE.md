@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 191 entries, DIV-0001..0191, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 194 entries, DIV-0001..0194, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -13689,14 +13689,9 @@ designed in rather than bolted on.
 - **Languages:** any
 - **State:** active
 
-## Drafts (the exe-gap round's group AU, 2026-10-31; lettered, the coordinator numbers)
+### The loss tune from the disc on an install with a disc cache
 
-Not entries yet (`####` headings, which the checker passes over). At the merge each
-`#### DIV-<letter>` below becomes an entry with the next free number and the
-`- **ID:**` line, and the code's `SaveSlotBlank` log prefix takes its number.
-
-#### DIV-A - The loss tune from the disc on an install with a disc cache
-
+- **ID:** DIV-0192
 - **Date:** 2026-10-31
 - **Subsystem:** the importer's music step (`tools/seq.py` `songs` and
   `LOSS_SONG`, `tools/ppms.py` `songs`; `fixtures/bgm.tsv`,
@@ -13741,8 +13736,9 @@ Not entries yet (`####` headings, which the checker passes over). At the merge e
 - **Languages:** any
 - **State:** active
 
-#### DIV-B - An empty save slot draws no text
+### An empty save slot draws no text
 
+- **ID:** DIV-0193
 - **Date:** 2026-10-31
 - **Subsystem:** the save and load slots (`Menu_DrawSaveSlot` `0x576960`,
   ours in `src/game/field_o.cpp`; the string `Encounter_SlotChance+0x1C`
@@ -13774,8 +13770,9 @@ Not entries yet (`####` headings, which the checker passes over). At the merge e
 - **Languages:** any
 - **State:** active
 
-#### DIV-C - A European disc-only install takes its disc's own eight area banks
+### A European disc-only install takes its disc's own eight area banks
 
+- **ID:** DIV-0194
 - **Date:** 2026-10-31
 - **Subsystem:** the importer's base chunks (`tools/importer.py`
   `pal_bank`, `get_chunk`, `cmd_pal_banks`, `check_pal_banks`, `verify`;

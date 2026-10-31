@@ -7467,7 +7467,7 @@ PlayStation rectangles cutting the PSP's pages, whose pieces lie elsewhere.
 A PSP base now cuts them where they lie. A PlayStation title on a PSP base is
 not possible on a PSP-only install (no disc there carries one).
 
-## D257 — A European PSX disc alone builds 733 of 741 containers: eight area banks are the PAL swap (the owner's open call)
+## D257 — A European PSX disc alone builds 733 of 741 containers: eight area banks are the PAL swap (the owner's call, 2026-10-31: taken; fixed by DIV-0194)
 
 **Found:** EB, 2026-10-12 ([`psp-end-batch.md`](psp-end-batch.md) V1 and
 defect 7): `importer.py build` from the European PSX disc alone with
@@ -8930,7 +8930,7 @@ maps take the same range from. The bytes equal `BOF3.exe`'s ("0 not
 BOF3.exe's"). `exe-gaps.tsv`'s German row becomes `0x663668..0x663677`,
 `language`. Not seen in play.
 
-## D320 — On every PSX-only and PSP-only install a lost fight restarts the fight's own music instead of the loss tune: song 166 is missing (ours, the importer; open)
+## D320 — On every PSX-only and PSP-only install a lost fight restarts the fight's own music instead of the loss tune: song 166 is missing (ours, the importer; fixed by DIV-0192, 2026-10-31)
 
 **Found:** group RD of the install-gap round, by reading, 2026-10-18
 ([`install-gap-readers.md`](install-gap-readers.md) 3). Not run, not heard.

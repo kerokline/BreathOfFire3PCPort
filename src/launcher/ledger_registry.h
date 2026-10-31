@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 188;
+inline constexpr std::size_t kSwitchCount = 190;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -261,9 +261,11 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "ItemSortById", 0, 12},   // DIV-0189
     {SwitchForm::Lang, "lang", 0, 4},   // DIV-0190
     {SwitchForm::Name, "MountainPasses", 0, 14},   // DIV-0191
+    {SwitchForm::Ini, "ini:music=pc", 4, 5},   // DIV-0192
+    {SwitchForm::Name, "SaveSlotBlank", 0, 13},   // DIV-0193
 };
 
-inline constexpr std::size_t kEntryCount = 191;
+inline constexpr std::size_t kEntryCount = 194;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -647,6 +649,12 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Sensible, State::Active, 0, 186, 1, true, Player::Yes, kTowardPsx, kLangEnUs | kLangEn150 | kLangFrFr | kLangDeDe},
     {191, "Mt. Zublo and Mt. Levett passable on the world map once the way through is open",
      Tier::Intent, State::Active, 0, 187, 1, true, Player::Yes, 0, kLangAny},
+    {192, "The loss tune from the disc on an install with a disc cache",
+     Tier::Sensible, State::Active, 0, 188, 1, true, Player::Yes, kTowardPsx | kTowardPsp, kLangAny},
+    {193, "An empty save slot draws no text",
+     Tier::Sensible, State::Active, 0, 189, 1, true, Player::Yes, kTowardPsx, kLangAny},
+    {194, "A European disc-only install takes its disc's own eight area banks",
+     Tier::Sensible, State::Active, 0, 190, 0, true, Player::Never, kTowardPsx, kLangAny},
 };
 
 // The switches of one entry.
