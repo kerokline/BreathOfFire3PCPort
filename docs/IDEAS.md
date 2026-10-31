@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-10-22, I21 and I50 built; 52 entries, I1..I52 - see the index for each one's state)
+**Status:** IN PROGRESS (2026-10-22, I21 and I50 built; 52 entries, I1..I52 - see the index for each one's state; 2026-10-31, the index brought to I33's, I43's and I44's outcomes)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -77,7 +77,7 @@ rule ([`README.md`](README.md)) here too.
 | I30 | Machine-readable docs: Open Knowledge Format frontmatter and a generated wiki | docs / tooling | HIGH | open; parked until the spec hardens or is validated outside Google (owner, 2026-10-04) |
 | I31 | The platform layers: the C runtime, the MP3 decoder, the renderer's remainder, the small glue layers, and the cutover to our own executable | engine / platform | MIXED | **built through state 3** (2026-10-12, PRs #49..#53: the C runtime, minimp3, state 2 proved, `bof3x.exe`); the renderer's remainder open - [`platform-layers-plan.md`](platform-layers-plan.md); its first step (a read pass and a reach trace) needs no decision |
 | I32 | The PSP release's game-logic changes, found by measurement and offered as a config toggle | game behaviour | UNKNOWN | **measured, built in part** (the PSP-only round: the code diff `psp-code-diff*.md`, DIV-0108's two switches, PR #56); opened 2026-10-04 (the owner); sixteen leads from players' reports, catalogued in the entry and unmeasured but for the widescreen - the first step is the diff, beside [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 8's phase 4 item |
-| I33 | Productisation: what stands between our own executable and a finished product - a portable platform layer, mods as cache layers, presets from the ledger, in-game settings, first-run import, saves, the release gate, the commercial audit | engine / product | MIXED | open 2026-10-04 (the owner); three early decisions of shape, the rest after the cutover (I31) |
+| I33 | Productisation: what stands between our own executable and a finished product - a portable platform layer, mods as cache layers, presets from the ledger, in-game settings, first-run import, saves, the release gate, the commercial audit | engine / product | MIXED | open 2026-10-04 (the owner); three early decisions of shape, the rest after the cutover (I31); early decision 1 **built** 2026-10-28 as the ledger-fields round (PRs #162, #164: the machine-read fields, `BOF3X_OFF`, the presets) |
 | I34 | The name entry back: the community's renamer and naming at New Game, from the PlayStation routine ([`name-entry-restoration.md`](name-entry-restoration.md)) | gameplay / localisation | HIGH / MEDIUM | open 2026-10-05 (the owner); researched, deferred to the localisation rework of phases 4 and 5; DIV-0075 ends the hang meanwhile |
 | I35 | The music host suite (`tools/bgm/host`) building and running on the owner's Windows machine, not only a POSIX cloud host | tooling | HIGH | built 2026-10-10 (`catchup/music-tooling`): `abort_check.h`, the suite in CI |
 | I36 | Our own ATRAC3plus decoder for the PSP's sound effects, voice and jingles, in place of the player's ffmpeg | platform | MEDIUM | open 2026-10-10 (the owner): **low priority** |
@@ -87,8 +87,8 @@ rule ([`README.md`](README.md)) here too.
 | I40 | Port the importer to C++ inside the launcher, so a release needs no bundled Python ([`install-sources.md`](install-sources.md) 7) | platform | MEDIUM | open 2026-10-15 (the owner: bundle Python now, port later) |
 | I41 | Read CHD and CSO images as sources (today refused with a sentence; [`install-sources.md`](install-sources.md) 4) | tooling | MEDIUM | open 2026-10-15, from the Sources page work |
 | I42 | Make the install faster: setup rebuilds everything from every source on each add (about 3 to 4 minutes a setup, two of them the movie's conversion; [`install-sources.md`](install-sources.md) 5 and 6) - keep the base (movie, music, its `DAT` files) across setups and build only a new source's layers | tooling | MEDIUM | **partly built** 2026-10-15: every step timed; the movie, PSX sound and language layers reused when unchanged (adding a disc 89 s, not 372); the PSP's conversions left; 2026-10-25: every slow piece reused, the second-language rows in parallel, kept pieces hard-linked - an unchanged upgrade 248 s -> 31 s ([`install-staleness.md`](install-staleness.md) 5) |
-| I43 | Settle every gap of a disc-built exe image: each of the ranges where the PC's `.data` has a value and the image leaves zero (`recipes/exe-gaps.tsv`; for the EU disc 188 ranges, 2,561 bytes on `main` the day it opened) placed from a disc, filled by an engine rule, or shown never read - first by placing a region from the pointers that point into it | tooling / engine | HIGH | **step 1 built** 2026-10-16 (the owner asked), from the forest sprite of a PSX-only install: the importer places a region from the pointers into it (gap ranges EU 185 to 177, the sprite fixed); steps 2..4 open |
-| I44 | The data image as typed source: the next step toward reconstructed source (stages 1..3; I5's file boundaries folded in 2026-10-21) | engine / tooling | HIGH / MEDIUM | stages 1 and 2 **built** in the typed-data round ([`typed-data-round.md`](typed-data-round.md), PRs #94, #100); stage 3 (relocatable) **built** 2026-10-29 ([`relocatable-image-round.md`](relocatable-image-round.md), unpushed); the source-layout pass open |
+| I43 | Settle every gap of a disc-built exe image: each of the ranges where the PC's `.data` has a value and the image leaves zero (`recipes/exe-gaps.tsv`; for the EU disc 188 ranges, 2,561 bytes on `main` the day it opened) placed from a disc, filled by an engine rule, or shown never read - first by placing a region from the pointers that point into it | tooling / engine | HIGH | **step 1 built** 2026-10-16 (the owner asked), from the forest sprite of a PSX-only install: the importer places a region from the pointers into it (gap ranges EU 185 to 177, the sprite fixed); step 2 measured 2026-10-18 ([`install-gap-reads.md`](install-gap-reads.md)); steps 3 and 4 **built** 2026-10-31 by the exe-gap round ([`exe-gap-round.md`](exe-gap-round.md): every `gap` row answered, STRICT on by default for disc-built images; on `exe-gap/round`, PR at the owner's word) |
+| I44 | The data image as typed source: the next step toward reconstructed source (stages 1..3; I5's file boundaries folded in 2026-10-21) | engine / tooling | HIGH / MEDIUM | stages 1 and 2 **built** in the typed-data round ([`typed-data-round.md`](typed-data-round.md), PRs #94, #100); stage 3 (relocatable) **built** 2026-10-29 ([`relocatable-image-round.md`](relocatable-image-round.md), merged as PR #168); the source-layout pass open |
 | I45 | Shrink the quicksave files (about 4 MB raw) | engine | HIGH | open 2026-10-17 (the owner): nothing measured |
 | I46 | A quicksave is native memory: revisit what loading one trusts | engine | HIGH | open 2026-10-19 (the owner): a note to consider again |
 | I47 | Quick-loading across translations: review the text that carries over | engine | HIGH | open 2026-10-20 (the owner): nothing measured |
@@ -1500,6 +1500,9 @@ _(2026-10-27) early decision 1 staged as a round at the owner's word:
 [`ledger-fields-round.md`](ledger-fields-round.md) - the tier is already the
 kind; the round adds the fields a preset needs and measures which switches a
 player's build can reach._
+_(2026-10-28) early decision 1 built and merged_ (PRs #162 and #164,
+[`ledger-fields-round.md`](ledger-fields-round.md)): six machine-read fields on
+every entry, the player's switch `BOF3X_OFF`, the registry and four presets.
 
 ## I34 — The name entry back: the community's renamer, and naming at New Game
 
@@ -1940,6 +1943,7 @@ to rebuild it (`FilledSince()`, the row `0x669868..0x669883`; the general
 form is HANDOFF "Pick up here" 11). Steps 2 to 4 open.
 _(2026-10-17) steps 2 to 4 staged_ in [`install-gap-round.md`](install-gap-round.md): RW the read watch (step 2), the fix groups by method (step 3), the strict default as the end batch's last item (step 4).
 _(2026-10-20) step 2 measured, steps 3 and 4 framed_: the read watch found only the owner's two rows read while zero ([`install-gap-reads.md`](install-gap-reads.md) 9.7), but STRICT refuses every `gap` row, read or not (49..74 per build after stage 0's recount, `recipes/exe-gaps.tsv`), so the default waits on [`exe-gap-round.md`](exe-gap-round.md): every row accounted for, STRICT narrowed to rows not on a reviewed list, then on.
+_(2026-10-31) steps 3 and 4 built_ by the exe-gap round ([`exe-gap-round.md`](exe-gap-round.md) 4a, 9a; on `exe-gap/round`, PR at the owner's word): every `gap` row answered in `recipes/exe-gaps-accepted.tsv` (40 / 41 / 44 / 44 / 18 / 18 / 16 rows for US, EU-en, FR, DE, JP, PSP-JP, PSP-EU; 9 pending the owner), the answers carried in the image, and an unanswered gap or an older image refused at start by default; the read watch over the attract and the ten routes on all seven installs read none of the 60 ranges watched.
 
 ## I44 — The data image as typed source: the next step toward reconstructed source
 
@@ -1954,7 +1958,7 @@ machine code identical again (the typed tables, `GameData`, the strict CI
 rule; every raw site left has a reason), its PR after the owner's smoke run.
 **Status (2026-10-21):** stages 1 and 2 DONE (PR #94 2026-10-19, stage C
 PR #100 2026-10-20); stage 3, the relocatable image, open and not staged.
-**Status (2026-10-29):** stage 3 BUILT on `relocatable-image/round` ([`relocatable-image-round.md`](relocatable-image-round.md); stages A..D, unpushed, the PR at the owner's word); the source-layout pass (I5) open.
+**Status (2026-10-29):** stage 3 BUILT on `relocatable-image/round` ([`relocatable-image-round.md`](relocatable-image-round.md); stages A..D), merged as PR #168 the same day; the source-layout pass (I5) open.
 **Feasibility:** HIGH for stages 1 and 2 (mechanical, no behaviour change,
 parallel by file group); MEDIUM for stage 3 (a loader change, proved by the
 state hash). **Gated on:** nothing for stage 1; stage 3 on the state hash
