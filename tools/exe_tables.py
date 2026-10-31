@@ -1634,6 +1634,40 @@ def load_gaps(path=GAPS):
     return rows, measured
 
 
+# recipes/exe-gaps-accepted.tsv (the exe-gap round, group AC; tools/exe_scan.py
+# --accepted keeps it one for one with exe-gaps.tsv's `gap` rows): the answer
+# for each `gap` row, which write_exe carries into data.toml's `accepted`
+# list beside the ranges, so that the engine tells an accounted gap from a new
+# one (src/hook/exe_image.cpp; DIV-0101, the exe-gap round's group ST).
+ACCEPTED = os.path.join(ROOT, "recipes", "exe-gaps-accepted.tsv")
+ACCEPTED_COLS = ["build", "lo", "hi", "symbol", "answer", "evidence"]
+ACCEPTED_ANSWERS = ("layer", "port-own", "unread", "pending")
+
+
+def load_accepted(path=ACCEPTED):
+    """{(build, lo, hi, symbol): answer} from recipes/exe-gaps-accepted.tsv. Its
+    shape is exe_scan.py --accepted's to check; an answer outside the four, a
+    malformed line or a missing file stops the build here, since an image
+    written without the answers would be refused at start."""
+    if not os.path.exists(path):
+        fail("%s is absent: the engine refuses a disc-built image whose gaps it cannot tell accounted "
+             "(docs/exe-gap-round.md 4, ST)" % os.path.relpath(path, ROOT))
+    out = {}
+    with open(path, encoding="utf-8") as f:
+        for n, line in enumerate(f, 1):
+            line = line.rstrip("\n")
+            if not line or line.startswith("#"):
+                continue
+            fields = line.split("\t")
+            if fields == ACCEPTED_COLS:
+                continue
+            if len(fields) != len(ACCEPTED_COLS) or fields[4] not in ACCEPTED_ANSWERS:
+                fail("%s:%d: not a row of %s with an answer of %s"
+                     % (os.path.basename(path), n, ", ".join(ACCEPTED_COLS), " / ".join(ACCEPTED_ANSWERS)))
+            out[(fields[0], int(fields[1], 16), int(fields[2], 16), fields[3])] = fields[4]
+    return out
+
+
 def gap_rows(pc, bid, segs):
     """One build's rows: `segs` is exe_own.py measure's <bid>.own.tsv as [(lo, hi,
     cls)] (the segment's class from its readers and the disc search); each byte
@@ -1765,7 +1799,9 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
              "# by recipes/exe-gaps.tsv: `language` (a language layer's handlers write it or our code reads",
              "# around it), `unread` (nothing the exe host runs reads it), `keys` (Key_TableDefault, the",
              "# engine's rule), `gap` (zero where the PC has a value; `from` is its kind and symbol), and",
-             "# `none` (the PC's bytes are zero there too).",
+             "# `none` (the PC's bytes are zero there too). On a disc build `accepted` follows: each",
+             "# [answer, pc, end] the answer recipes/exe-gaps-accepted.tsv gives a `gap` range; the engine",
+             "# refuses a `gap` range with none, and an image without the list (src/hook/exe_image.cpp).",
              "", "[image]", 'file = "data.bin"', "va = 0x%06X" % DATA_LO, "size = %d" % len(img),
              "bss_end = 0x%06X" % bss_end, 'sha256 = "%s"' % sha(img), 'build = "%s"' % bid,
              'source = %s' % json.dumps(os.path.basename(os.path.normpath(source))),
@@ -1779,14 +1815,18 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
         gaps, measured = load_gaps()
         if bid not in measured:
             fail("recipes/exe-gaps.tsv has not measured %s: run exe_own.py measure and exe_tables.py gaps" % bid)
+        accepted = load_accepted()
         lines.insert(lines.index("ranges = ["), 'gaps = "recipes/exe-gaps.tsv"')
         lines.insert(lines.index("ranges = ["), "")
         gap = {}
         for lo, hi, how, gkind, sym in gaps[bid]:
+            answer = accepted.get((bid, lo, hi, sym), "") if how == "gap" else ""
             for x in range(lo, hi):
-                gap[x] = (how, "%s %s" % (gkind, sym) if how == "gap" else sym)
+                gap[x] = (how, "%s %s" % (gkind, sym) if how == "gap" else sym, answer)
         kind = lambda x: "own" if x in own else "pointer" if x in ptr else gap.get(x, ("none", ""))[0]
-        gap_from = lambda x: gap.get(x, ("none", ""))[1] if kind(x) in GAP_HOWS else ""
+        # a run's `from` and its answer: a run of one class splits where either changes
+        gap_from = lambda x: gap.get(x, ("none", "", ""))[1:] if kind(x) in GAP_HOWS else ("", "")
+        answers, unanswered = [], []
         for lo, hi, k in spans(owner, ranges):
             if k is not None and ranges[k][2] == "layout":
                 lines.append('  [0x%06X, 0x%06X, "layout", "%s"],' % (lo, hi, ranges[k][3]))
@@ -1798,13 +1838,25 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
                 continue
             p = lo                                      # an unfilled run: pointer words and the rest
             while p < hi:
-                kp, wp = kind(p), gap_from(p)
+                kp, (wp, ap) = kind(p), gap_from(p)
                 q = p
-                while q < hi and kind(q) == kp and gap_from(q) == wp:
+                while q < hi and kind(q) == kp and gap_from(q) == (wp, ap):
                     q += 1
                 lines.append('  [0x%06X, 0x%06X, "%s", "%s"],' % (p, q, kp, wp))
+                if kp == "gap":
+                    (answers if ap else unanswered).append((p, q, ap, wp))
                 p = q
     lines.append("]")
+    if owner is not None:
+        # The answers, after the ranges and in their order: a list the engine
+        # reads beside them (a range line's shape is left as it was, so every
+        # reader of `ranges` is unchanged). Present, even empty, on every disc
+        # build: its absence is how the engine tells an image written before it.
+        lines += ["", "accepted = ["] + ['  ["%s", 0x%06X, 0x%06X],' % (ap, p, q) for p, q, ap, _ in answers] + ["]"]
+        for p, q, _, wp in unanswered:
+            print("exe_tables: %s 0x%06X..0x%06X (%s) is a gap recipes/exe-gaps-accepted.tsv does not answer: the "
+                  "engine refuses this image (tools/exe_scan.py --accepted names the row to add)" % (bid, p, q, wp),
+                  file=sys.stderr)
     with open(os.path.join(d, "data.toml"), "w", newline="\n", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
     return sha(img)
