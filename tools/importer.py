@@ -79,6 +79,8 @@ import psp_layers   # noqa: E402  (the suites' engine half: opt/ layers beside a
 
 RECIPE = os.path.join(ROOT, "recipes", "pc-zh.toml")
 PREFER = os.path.join(ROOT, "recipes", "prefer.toml")
+PAL_BANKS = os.path.join(ROOT, "recipes", "pal-banks.toml")
+PAL_BUILDS = ("psx-eu-en", "psx-fr", "psx-de")   # the European PlayStation releases (region-diff.md 8.4)
 TARGET = "pc-zh"
 # The order a recipe lists a chunk's disc sources in; the player's source
 # order, not this, decides which one is used.
@@ -846,6 +848,126 @@ def preferred(f, slot, ch, chunked, prefer):
     return None
 
 
+# ---------------------------------------------------------------- the PAL banks (D257)
+#
+# The owner's call of 2026-10-31: a European disc-only install takes its disc's
+# own area banks. Eight area banks of the European PlayStation releases are the
+# PAL sample swap (region-diff.md 8.4): wave-from-vag builds them faithfully,
+# but not to the recipe's hash (the PC's, which is Japan's and the US's), so
+# until now they were refused and those eight containers were not written.
+# recipes/pal-banks.toml holds one row per such chunk - the European builds
+# whose disc gives it, the section, the PAL bank's hash and the recipe hash it
+# stands for - written by `importer.py pal-banks` from the discs. A row, not a
+# second hash in recipes/pc-zh.toml: that file is generated from the PC's DAT/
+# and the discs' sections (`recipes`), which never builds a bank, so a hash
+# added there would not survive its next run, and a second hash alone could not
+# say which releases it belongs to.
+
+def load_pal_banks(path=None):
+    """recipes/pal-banks.toml: {(file, kind, tag): row}, {} without the file."""
+    path = path or PAL_BANKS
+    if not os.path.exists(path):
+        return {}
+    with open(path, "rb") as f:
+        rows = tomllib.load(f).get("pal", [])
+    return {(r["file"], r["kind"], r["tag"]): r for r in rows}
+
+
+def pal_bank(s, f, slot, ch, chunked, pal):
+    """A European PSX disc's own area bank where recipes/pal-banks.toml has the
+    chunk's row: (build, ("pal", EMI, section), payload, None), or None - no
+    row, not a build the row names, or the PC's DAT/ among the sources (a PC
+    install keeps the PC's banks, so only a disc-only install takes these).
+    Built by wave-from-vag and hashed against the row; a mismatch, or a row
+    written against another recipe, stops the build."""
+    row = (pal or {}).get((f["name"], ch["kind"], ch["tag"]))
+    if not row or s.id not in row["from"] or not hasattr(s, "build"):
+        return None
+    if any(isinstance(x, PcSource) for x in chunked):
+        return None
+    if row["for"] != ch["sha256"]:
+        raise SystemExit("%s chunk %d: recipes/pal-banks.toml was written against another recipe - regenerate it "
+                         "(importer.py pal-banks)" % (f["name"], slot))
+    got = vag.bank_from_disc(s.build, f["name"], sum(1 for c in f["chunks"][:slot] if c["kind"] == 2))
+    if got is None or "%s#%d" % got[:2] != row["emi"] or sha(got[2]) != row["sha256"]:
+        raise SystemExit("%s chunk %d from %s (pal, wave-from-vag): not the bank recipes/pal-banks.toml records"
+                         % (f["name"], slot, s.id))
+    return s.id, ("pal", got[0], got[1]), got[2], None
+
+
+def cmd_pal_banks(a):
+    """recipes/pal-banks.toml from the European discs: every recipe `bank` chunk
+    a disc builds to another hash than the recipe's. Hashes and indices only."""
+    rec = load_recipe(a.recipe)
+    discs = [open_source(p) for p in a.disc]
+    if not discs or any(d.id not in PAL_BUILDS for d in discs):
+        raise SystemExit("pal-banks takes the European PSX discs (%s) only" % ", ".join(PAL_BUILDS))
+    rows = collections.OrderedDict()
+    for f in rec["file"]:
+        for slot, ch in enumerate(f["chunks"]):
+            if ch.get("class") != "bank":
+                continue
+            ordinal = sum(1 for c in f["chunks"][:slot] if c["kind"] == 2)
+            for d in discs:
+                got = vag.bank_from_disc(d.build, f["name"], ordinal)
+                if got is None or sha(got[2]) == ch["sha256"]:
+                    continue
+                key = (f["name"], ch["kind"], ch["tag"])
+                row = rows.setdefault(key, dict(emi="%s#%d" % got[:2], sha256=sha(got[2]), sources=[]))
+                if row["emi"] != "%s#%d" % got[:2] or row["sha256"] != sha(got[2]):
+                    raise SystemExit("%s chunk %d: the European discs build two different banks" % (f["name"], slot))
+                row["sources"].append(d.id)
+                row["for"] = ch["sha256"]
+    lines = [
+        "# recipes/pal-banks.toml - the European PlayStation releases' own area banks (D257; written by",
+        "# `tools/importer.py pal-banks` from the European discs, then read by `build`, `verify` and `check`).",
+        "#",
+        "# The owner's call of 2026-10-31: \"let's take the pal banks\" (docs/exe-gap-round.md 7). Eight area",
+        "# banks of the European discs are the PAL sample swap (docs/region-diff.md 8.4): one sound replaced. A",
+        "# disc-only install takes the European disc's own bank at that disc's place in the player's order (a",
+        "# source before it that gives the recipe's bank wins), hashed against `sha256`; with the PC's DAT/",
+        "# among the sources the PC's bank stays. `for` is the recipe's (the PC's) hash, so a row cannot outlive the",
+        "# recipe it was written against. The manifest records such a chunk as `<build>:pal:<emi>`.",
+        "# Names, indices and hashes only - no byte of the game (CLAUDE.md rule 1).",
+    ]
+    why = "the PAL sample swap of region-diff.md 8.4, the European disc's own bank (D257, the owner's call of 2026-10-31)"
+    for (name, kind, tag), r in rows.items():
+        lines += ["", "[[pal]]", "file = %s" % toml_str(name), "kind = %d" % kind, "tag = 0x%08X" % tag,
+                  "from = [%s]" % ", ".join(toml_str(b) for b in PAL_BUILDS if b in r["sources"]),
+                  "emi = %s" % toml_str(r["emi"]), "sha256 = %s" % toml_str(r["sha256"]),
+                  "for = %s" % toml_str(r["for"]), "why = %s" % toml_str(why)]
+    out = a.out or PAL_BANKS
+    with open(out, "w", newline="\n", encoding="utf-8") as fh:
+        fh.write("\n".join(lines) + "\n")
+    print("%s: %d rows from %s" % (out, len(rows), ", ".join(d.id for d in discs)))
+
+
+def check_pal_banks(rec, path=None):
+    """recipes/pal-banks.toml's shape against the recipe and fixtures.toml (no game data)."""
+    errs = []
+    try:
+        pal = load_pal_banks(path)
+    except (tomllib.TOMLDecodeError, KeyError) as e:
+        return ["pal-banks.toml: %s" % e]
+    builds = {b["id"] for b in _fixtures()["build"]}
+    chunks = {(f["name"], c["kind"], c["tag"]): c for f in rec["file"] for c in f["chunks"]}
+    for k, r in pal.items():
+        name = "pal-banks.toml %s 0x%08X" % (k[0], k[2])
+        c = chunks.get(k)
+        if c is None or c.get("class") != "bank" or c["layer"] != "base":
+            errs.append("%s: not a base/ bank chunk of the recipe" % name)
+            continue
+        if r.get("for") != c["sha256"]:
+            errs.append("%s: `for` is not the recipe's hash - regenerate it (importer.py pal-banks)" % name)
+        if not r.get("from") or any(b not in builds or b not in PAL_BUILDS for b in r["from"]):
+            errs.append("%s: from %s - European PSX builds fixtures.toml holds" % (name, r.get("from")))
+        if not re.fullmatch(r"[0-9a-f]{64}", r.get("sha256", "")) or r["sha256"] == c["sha256"]:
+            errs.append("%s: sha256 not a hash, or the recipe's own" % name)
+        if not re.fullmatch(r"[A-Z0-9_/]+\.EMI#\d+", r.get("emi", "")) or not r.get("why"):
+            errs.append("%s: emi or why" % name)
+    return errs
+
+
 def check_prefer(rec, path=None):
     """recipes/prefer.toml's shape against the recipe and fixtures.toml (no game data)."""
     errs = []
@@ -917,11 +1039,13 @@ MISSING_WHY = {
 FROM_OTHER_BUILDS = "on builds not given (the recipe's `on`); a PSP disc's differ: step 4"
 
 
-def get_chunk(f, slot, ch, chunked, prefer=None):
+def get_chunk(f, slot, ch, chunked, prefer=None, pal=None):
     """(build, (how, EMI, section), payload, names): the base policy's disc form when
     recipes/prefer.toml lists the chunk and names a disc given (`prefer`); else from the
-    first source in the player's order that the recipe lists; else the first stand-in
-    (own) in the player's order; else None. Every payload is hashed against the recipe.
+    first source in the player's order that the recipe lists - or, on a disc-only install,
+    whose European disc's own bank recipes/pal-banks.toml records (`pal`, D257); else the
+    first stand-in (own) in the player's order; else None. Every payload is hashed against
+    the recipe, or the row that stands for it.
     `names` is the enemy table's [(tag, name)] when the PC gave it, else None."""
     got = preferred(f, slot, ch, chunked, prefer)
     if got:
@@ -954,6 +1078,9 @@ def get_chunk(f, slot, ch, chunked, prefer=None):
         bank = vag.importer_source(s, f, slot, ch)      # wave-from-vag (docs/sound-import.md), hashed inside
         if bank:
             return bank[0], bank[1][1:], bank[2], None
+        got = pal_bank(s, f, slot, ch, chunked, pal)    # D257: a European disc's own bank, disc-only
+        if got:
+            return got
     for s in chunked:
         for b, key, sec, h in owns_of(ch):
             if b != s.id:
@@ -1063,6 +1190,7 @@ def _build_base(a):
     print("sources, in order: %s" % ", ".join("%s (%s)" % (s.id, s.path) for s in sources))
     chunked = [s for s in sources if not isinstance(s, ExeSource)]
     prefer = load_prefer(getattr(a, "prefer", None))
+    pal = load_pal_banks(getattr(a, "pal_banks", None))
     assets, missing, used = [], collections.Counter(), collections.Counter()
     written, blocked = collections.Counter(), collections.Counter()
     t_chunks = time.perf_counter()
@@ -1070,7 +1198,7 @@ def _build_base(a):
         layers, tails = collections.OrderedDict(), collections.defaultdict(list)
         lacks = collections.defaultdict(set)
         for slot, ch in enumerate(f["chunks"]):
-            got = get_chunk(f, slot, ch, chunked, prefer)
+            got = get_chunk(f, slot, ch, chunked, prefer, pal)
             layers.setdefault(ch["layer"], [])
             if "names" in ch:
                 layers.setdefault(ch["names"], [])
@@ -1081,9 +1209,9 @@ def _build_base(a):
                 assets.append((f["name"], slot, ch["layer"], None, ch["sha256"]))
                 continue
             bid, how, body, names = got
-            used[(bid, ch["layer"], how[0] if how[0] in ("own", "prefer", "dial") else "")] += 1
+            used[(bid, ch["layer"], how[0] if how[0] in ("own", "prefer", "dial", "pal") else "")] += 1
             layers[ch["layer"]].append(chunk_bytes(ch["kind"], ch["tag"], body))
-            h = ch.get("base", ch["sha256"]) if how[0] not in ("own", "prefer", "dial") else sha(body)
+            h = ch.get("base", ch["sha256"]) if how[0] not in ("own", "prefer", "dial", "pal") else sha(body)
             assets.append((f["name"], slot, ch["layer"], (bid,) + how, h))
             if "names" in ch:
                 if names is None:          # from a disc: the stats only
@@ -1158,6 +1286,7 @@ def cmd_build(a):
         print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, {
             "own": " (its own sections standing in)",
             "prefer": " (the base policy's disc form, recipes/prefer.toml)",
+            "pal": " (the European disc's own area banks, recipes/pal-banks.toml, D257)",
             "dial": " (the port's dial page with this disc's button shapes, DIV-0135)"}.get(own, "")))
     for layer, n in sorted(written.items()):
         print("  %-9s %d containers written" % (layer, n))
@@ -1339,7 +1468,8 @@ def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_as
     lines = ["# The cache's provenance, written by tools/importer.py build. Every chunk: its",
              "# container, slot, layer, the build and recipe step it came from (`own`: that",
              "# disc's own section standing in; `prefer`: the base policy's disc form,",
-             "# recipes/prefer.toml; `names`: an enemy table's names), its hash.",
+             "# recipes/prefer.toml; `pal`: a European disc's own area bank,",
+             "# recipes/pal-banks.toml; `names`: an enemy table's names), its hash.",
              "", "[meta]",
              "target = %s" % toml_str(rec["meta"]["target"]),
              "recipe_sha256 = %s" % toml_str(rsha)] + (
@@ -2187,8 +2317,17 @@ def cmd_verify(a):
     man = {(n, slot, layer): h for n, slot, layer, where, h in assets}
     own = {n for n, slot, layer, where, h in assets if where.split(":")[1:2] in (["own"], ["dial"])}
     prefer, pbad = load_prefer(getattr(a, "prefer", None)), []
+    pal = load_pal_banks(getattr(a, "pal_banks", None))
     took = {}
     for n, slot, layer, where, h in assets:
+        if where.split(":")[1:2] == ["pal"]:
+            own.add(n)
+            f = next(f for f in rec["file"] if f["name"] == n)
+            ch = f["chunks"][slot]
+            row = pal.get((n, ch["kind"], ch["tag"]))
+            if (not row or row["sha256"] != h or row["for"] != ch["sha256"] or where.split(":")[0] not in row["from"]
+                    or where.split(":", 2)[2] != row["emi"]):
+                pbad.append("%s slot %d: a `pal` row recipes/pal-banks.toml does not give" % (n, slot))
         if where.split(":")[1:2] == ["prefer"]:
             took[n] = took.get(n, 0) + 1
             f = next(f for f in rec["file"] if f["name"] == n)
@@ -2643,6 +2782,7 @@ def cmd_check(a):
                 if b not in OWN_FROM or c["layer"] != "base" or c.get("own_why") not in OWN_WHY or len(h) != 64:
                     errs.append("%s: stand-in %s" % (f["name"], b))
     errs += check_prefer(rec, getattr(a, "prefer", None))
+    errs += check_pal_banks(rec, getattr(a, "pal_banks", None))
     oerrs = check_opt(a.opt_recipe)
     serrs = ["seq.py: " + e for e in seq.check()]     # base/bgm/'s writer and reader, a synthetic round trip
     serrs += ["seq.py: " + e for e in seq.check_fixture(builds)]   # fixtures/bgm.tsv's shape and format versions
@@ -2745,6 +2885,7 @@ def main():
     p.add_argument("--recipe")
     p.add_argument("--opt-recipe")
     p.add_argument("--prefer", help="the base policy's table (default recipes/prefer.toml)")
+    p.add_argument("--pal-banks", help="the European discs' own area banks (default recipes/pal-banks.toml, D257)")
     p.add_argument("--psp-available", action="store_true",
                    help="also every PSP layer the sources can build (not on a PSP base): what setup builds, so the "
                         "launcher's suites can offer them (docs/install-sources.md 5)")
@@ -2774,10 +2915,16 @@ def main():
     p.add_argument("--recipe")
     p.add_argument("--opt-recipe")
     p.add_argument("--prefer")
+    p.add_argument("--pal-banks")
     p = s.add_parser("check")
     p.add_argument("--recipe")
     p.add_argument("--opt-recipe")
     p.add_argument("--prefer")
+    p.add_argument("--pal-banks")
+    p = s.add_parser("pal-banks", help="recipes/pal-banks.toml from the European PSX discs (D257)")
+    p.add_argument("--disc", action="append", required=True, help="a European PSX disc; repeat")
+    p.add_argument("--recipe")
+    p.add_argument("--out")
     p = s.add_parser("stale", help="which pieces of an install's cache this release would make differently")
     g = p.add_mutually_exclusive_group(required=True)
     g.add_argument("--home", help="the install's home folder; its cache folder is judged")
@@ -2789,7 +2936,8 @@ def main():
         import player_sources
         sys.exit((player_sources.cmd_sources if a.cmd == "sources" else player_sources.cmd_setup)(a) or 0)
     fn = {"recipes": cmd_recipes, "identify": cmd_identify, "build": cmd_build, "verify": cmd_verify,
-          "check": cmd_check, "opt-recipes": cmd_opt_recipes, "install": cmd_install, "stale": cmd_stale}[a.cmd]
+          "check": cmd_check, "opt-recipes": cmd_opt_recipes, "install": cmd_install, "stale": cmd_stale,
+          "pal-banks": cmd_pal_banks}[a.cmd]
     sys.exit(fn(a) or 0)
 
 
