@@ -14048,7 +14048,7 @@ designed in rather than bolted on.
 - **Toward:** psx - the Western PlayStation releases' own layout
 - **Languages:** any
 - **State:** active
-### The Config screen's label column left-aligned two glyphs in under a Japanese layer
+### The Config screen's label column left-aligned one glyph in under a Japanese layer
 
 - **ID:** DIV-0196
 - **Date:** 2026-10-31
@@ -14068,16 +14068,19 @@ designed in rather than bolted on.
   round's group JA) the nine-character label begins left of the row box and
   the selected row's large label runs under the hand (`eg1031\ja\sheets\config.png`).
 - **New behaviour:** under a Japanese layer the labels are left-aligned at
-  `x_arg + 0x20`: the `sub` at each path is two nops (nothing comes off
-  `x`) and the anchor is `0x20`, two glyphs (16 units each in this font) in
-  from the box's left edge, so every label begins at one column inside the
-  border and ends where its length ends; the options untouched. Not under a
+  `x_arg + 0x10`: the `sub` at each path is two nops (nothing comes off
+  `x`) and the anchor is `0x10`, one glyph (16 units in this font) in from
+  the box's left edge, so every label begins one column inside the border
+  and ends where its length ends, the selected row's large text included;
+  the options untouched. Not under a
   Latin layer (DIV-0017's right alignment at `0x5F`) and not with the
   shipped Chinese.
 - **Rationale:** the owner, 2026-10-31 afternoon, on JA's sheets: the
-  labels two glyphs to the right and left-aligned "so that it all fits
-  within the border"; right-aligned Japanese labels are not a convention of
-  the language, and the disc itself centres them.
+  labels to the right and left-aligned "so that it all fits within the
+  border"; right-aligned Japanese labels are not a convention of the
+  language, and the disc itself centres them. Two glyphs in at first, then
+  "shift it back one glyph" the same afternoon: at two the selected row's
+  large text ran off the right side.
 - **Also in the PSX version?** No: the disc centres its labels; this is
   neither the port's right alignment nor the disc's centring.
 - **Reversible?** `BOF3X_ORIGINAL=ConfigLabelJapanese`, or the ini's
@@ -14090,7 +14093,7 @@ designed in rather than bolted on.
 - **State:** active
 - **Verification:** 2026-10-31, headless, the `config_screen` recipe on the
   PC install under `ja-JP`, psx-jp and psp-jp (the exe-gap round's JA
-  harness, `eg1031\ja\x\runs\jplabel2_*`): the label column left-aligned
+  harness, `eg1031\ja\x\runs\jplabel3_*`): the label column left-aligned
   inside the row box on all three, the options unmoved; the hosted shadow
   suite's `field_c1` and `config_text` rows under `ja-JP` at 0 mismatches
   (the clone carries the same patches); `BOF3X_ORIGINAL=ConfigLabelJapanese`
