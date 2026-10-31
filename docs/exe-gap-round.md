@@ -303,10 +303,12 @@ round tip first, one merge at a time, the coordinator numbers.
 - **"The PC's numbers" has no supplier on a Western-PSX-only install**: no
   engine function fills the six u16 fields, the PSP discs are not in such
   an install, and no PC bytes go into code - so today the fields are zero
-  there. The coordinator's call, pending the owner's word: **the Western
-  disc's own values on the four Western PSX builds** (PL, a twin per field,
-  a ledger entry as a regional value); an install with a PSP disc follows
-  the recipe's precedence. This is the "disc's numbers" option of the
+  there. The coordinator's call: **the Western disc's own values on the four
+  Western PSX builds** (PL, a twin per field, a ledger entry as a regional
+  value, DIV-0195); an install with a PSP disc follows the recipe's
+  precedence. **Confirmed by the owner, 2026-10-31 afternoon**: "using the
+  PSX bytes for a psx-only build instead of saving hardcoded values is
+  fine". This is the "disc's numbers" option of the
   original question, chosen because the only alternative without the PC's
   bytes is zero.
 - **The Identify panel's words on psx-jp, psp-jp and psp-eu**: those discs'

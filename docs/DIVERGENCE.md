@@ -13882,6 +13882,9 @@ designed in rather than bolted on.
   section 7) holds wherever a disc carries them; a Western PSX-only install
   has none, and zero draws the panel and the windows wrong. Each field is
   taken whole, never half one release's, as the pieced rule's segments are.
+  **The owner, 2026-10-31 afternoon:** "using the PSX bytes for a psx-only
+  build instead of saving hardcoded values is fine" - the regional fields
+  confirmed.
 - **Also in the PSX version?** No for the original behaviour (the PC's are
   Japan's numbers); the new behaviour is each Western PlayStation release's
   own layout.
