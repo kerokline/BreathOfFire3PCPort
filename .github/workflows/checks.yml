@@ -25,6 +25,10 @@
 #                           and exe_tables.py check
 #   tools/exe_own.py check  exe_own.cpp's regions well-formed, its generated
 #                           name lists equal to recipes/pc-zh*.toml's
+#   tools/exe_scan.py       every `gap` row of recipes/exe-gaps.tsv accounted in
+#     --accepted            recipes/exe-gaps-accepted.tsv (one answer and its
+#                           evidence each) and no accepted row without its gap
+#                           (docs/exe-gap-round.md 4, group AC)
 #   tools/data_diff.py      recipes/data-diff.tsv (the disc-built images'
 #     check                 decoded tables against the PC's, docs/data-diff.md):
 #                           every row listed in recipes/data-known.toml, no
@@ -103,6 +107,9 @@ jobs:
 
       - name: The engine's own .data regions and their names against the recipes (no game data)
         run: python tools/exe_own.py check
+
+      - name: Every gap of the disc-built image accounted, the list in step with the gaps (no game data)
+        run: python tools/exe_scan.py --accepted
 
       - name: The disc-built image's data diff, every row known, made from today's recipe (no game data)
         run: python tools/data_diff.py check
