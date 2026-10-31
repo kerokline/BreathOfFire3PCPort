@@ -49,9 +49,9 @@ few families, which is what makes the round small enough to cut:
 
 | Family | Ranges | Builds | What they are | The answer this round writes |
 |---|--:|---|---|---|
-| `Scena17_EndSteps+0xD4..+0xA10` | 37 | the four Western PSX | the Western ending roll's step table and strings | **accepted unread**: DIV-0148 carries the roll as kind 17 of the language layer, the engine reads it from there; nothing reads these bytes on a Western image (section 3) |
+| `Scena17_EndSteps+0xD4..+0xA10` | 35 | the four Western PSX | the Western ending roll's step table and strings | **accepted unread**: DIV-0148 carries the roll as kind 17 of the language layer, the engine reads it from there; nothing reads these bytes on a Western image (section 3) |
 | `Equip_SlotIcons+0x50..+0x14C` | 10 | all 7 | the ten formation names, 16 bytes of each record | **layer**: kind 15 group 10 writes them under a Latin layer (DIV-0064); blank under `ja-JP` until JA (D280) |
-| `CommuMusic_LabelC+0xC..+0x4C` | 6 | mixed (DE/FR 3, US 1, EU 1, JP+PSP 1) | bytes among the faerie music-player labels no twin placed; no census row | **PL**: find the reader, place or class |
+| `CommuMusic_LabelC+0xC..+0x4C` | 6 | mixed (DE/FR 3, US 1, EU 1, JP+PSP 1) | bytes among the faerie music-player labels no twin placed (the census's `CommuMusic_CloseSteps+0x28..+0x68` rows) | **PL** for `+0x4C` (the reader `CommuMusic_DrawList`); the FR / DE label rows are **pending**: the owner's open question, [`install-gap-labels.md`](install-gap-labels.md) 4.4 |
 | `ConfigScreen_OpenStates+0x141` | 2 | all 7 | the bytes after D282's row tables | **PL**: reader, then place or `unread` |
 | `EffectKind66_States+0x18/+0x20/+0x28`, `Rest3e_Windows+0x14/+0x18/+0x1C` | 6 | the four Western PSX | the Western u16 fields (`install-gap-twins.md` 2, 3) | **port-own**: the PC's, which both PSP discs hold too (section 7, measured 2026-10-31) |
 | `TornadoMote_Phases+0x10` (PSX) / `+0x15` (PSP) | 2 | all 7 | the Identify panel's ASCII `WEAK` / `EXP` labels (the `?` marks are the engine's since D278) | **PL**: a label group or the engine's own string |
@@ -297,6 +297,28 @@ round tip first, one merge at a time, the coordinator numbers.
   the importer accepts the eight sample-swapped banks on a European
   disc-only install, a ledger entry, D257 fixed.
 - **D280's layer**: "let's do it now" - JA runs in stage A.
+
+**Found by AC at the accounting (2026-10-31 midday), the coordinator's calls:**
+
+- **"The PC's numbers" has no supplier on a Western-PSX-only install**: no
+  engine function fills the six u16 fields, the PSP discs are not in such
+  an install, and no PC bytes go into code - so today the fields are zero
+  there. The coordinator's call, pending the owner's word: **the Western
+  disc's own values on the four Western PSX builds** (PL, a twin per field,
+  a ledger entry as a regional value); an install with a PSP disc follows
+  the recipe's precedence. This is the "disc's numbers" option of the
+  original question, chosen because the only alternative without the PC's
+  bytes is zero.
+- **The Identify panel's words on psx-jp, psp-jp and psp-eu**: those discs'
+  `MAGIC060.EMI` holds no Identify words, so label group 15's slots 2..5 fall
+  back to the `TornadoMote_Phases` range, a gap there: the panel probably
+  draws no `WEAK` / `EXP` / `ITEM` / `POINT`. PL verifies and fixes it as
+  D278's marks were fixed (the engine's own word when the slot is empty).
+- **Nine `pending` rows remain**: the FR / DE music-player labels
+  (`CommuMusic_LabelC+0xC / +0x24 / +0x2E / +0x4A`), the owner's open
+  question of 2026-10-18 ([`install-gap-labels.md`](install-gap-labels.md)
+  4.4: a raw-byte label group after a capture of the texture page on each
+  install kind). ST's narrowed STRICT accepts a pending row.
 
 **Still the owner's**, after the merge: a listen to the loss tune (AU, D320)
 and the PAL banks on a European disc-only install; the eye on JA's sheets.
