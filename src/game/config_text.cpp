@@ -424,6 +424,26 @@ void ConfigText_Inject() {
     bof3::OperandRule("DIV-0051 controller second cell", 0x461BE9, sizeof kEspWas, &SecondCellEspAsRead);
     bof3::OperandRule("DIV-0051 controller frame", 0x461A61, 3, &FrameAsRead);
 
+    // --- the label column under ja-JP (DIV-0196) ----------------------------
+    // The Japan disc centres each row's label; the port right-aligns them at
+    // x_arg + 0x3A, and with the Japan disc's words (DIV-0015's 2026-10-31
+    // amendment) the nine-character label begins left of the row box and
+    // the selected row's large label runs under the hand (the owner's eye on
+    // the sheets, 2026-10-31). The owner's rule: the column two glyphs to
+    // the right, 32 units of the 16 a glyph advances in this font, so the
+    // edge is 0x3A + 0x20 = 0x5A at both sites. Japanese only: the Latin
+    // layout below has its own anchor, and the shipped Chinese keeps 0x3A.
+    if (Lang_Japanese() && !Lang_Latin()) {
+        static const std::uint8_t ja_was[] = {0x3A};
+        static const std::uint8_t ja_is[] = {0x5A};
+        const bool ja_on = bof3::PatchBytes("ConfigLabelJapanese", 0x46189D, ja_was, ja_is, 1);   // the big path
+        bof3::PatchBytes("ConfigLabelJapanese", 0x4618ED, ja_was, ja_is, 1);                      // the small path
+        if (ja_on) g_ops.anchor = ja_is[0];
+        bof3::Log("DIV-0196    the Config label column under ja-JP two glyphs right (edge 0x%02X) %s", (unsigned)g_ops.anchor,
+                  ja_on ? "on" : "OFF (BOF3X_ORIGINAL=ConfigLabelJapanese)");
+        return;
+    }
+
     // Layout only, and only under a language overlay: with the shipped Chinese
     // text every number below is right as it stands.
     // Lang_Latin: set, not "original", not full-width (DIV-0056). Until

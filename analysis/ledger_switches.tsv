@@ -3306,14 +3306,15 @@ switch	CommuTail_RandomGift	detour	costly		src/game/rest_4b.cpp:1790	BOF3_INJECT
 switch	CommuTail_RestoreFacing	detour	costly		src/game/rest_4b.cpp:1784	BOF3_INJECT
 switch	CommuTail_TimedGift	detour	costly		src/game/rest_4b.cpp:1786	BOF3_INJECT
 switch	CommuTail_WaitLoad	detour	costly		src/game/rest_4b.cpp:1781	BOF3_INJECT
-switch	Config_DrawControllerCell	detour	costly		src/game/config_text.cpp:537	Inject
+switch	Config_DrawControllerCell	detour	costly		src/game/config_text.cpp:557	Inject
 switch	Config_DrawControllerPanel	detour	costly		src/game/rest_4f.cpp:1448	BOF3_INJECT
 switch	Config_DrawControllerRow	detour	costly		src/game/rest_4f.cpp:1449	BOF3_INJECT
 switch	Config_DrawPanel	detour	costly		src/game/rest_4f.cpp:1446	BOF3_INJECT
 switch	Config_DrawRowLabel	detour	costly		src/game/field_c1.cpp:1149	BOF3_INJECT
 switch	Config_DrawRowOptions	detour	costly		src/game/rest_4f.cpp:1447	BOF3_INJECT
-switch	ConfigController	code	yes		src/game/config_text.cpp:494 src/game/config_text.cpp:496 src/game/config_text.cpp:509 src/game/config_text.cpp:521 src/game/config_text.cpp:522 src/game/config_text.cpp:523 src/game/config_text.cpp:528	PatchBytes, RetargetCall
+switch	ConfigController	code	yes		src/game/config_text.cpp:514 src/game/config_text.cpp:516 src/game/config_text.cpp:529 src/game/config_text.cpp:541 src/game/config_text.cpp:542 src/game/config_text.cpp:543 src/game/config_text.cpp:548	PatchBytes, RetargetCall
 switch	ConfigJapaneseIcons	code	yes		src/game/config_text.cpp:403	PatchBytes
+switch	ConfigLabelJapanese	code	yes		src/game/config_text.cpp:439 src/game/config_text.cpp:440	PatchBytes
 switch	ConfigMenu_Body	detour	costly		src/game/rest_2f.cpp:1549	BOF3_INJECT
 switch	ConfigMenu_Close	detour	costly		src/game/rest_2f.cpp:1550	BOF3_INJECT
 switch	ConfigMenu_Open	detour	costly		src/game/rest_2f.cpp:1548	BOF3_INJECT
@@ -3328,7 +3329,7 @@ switch	ConfigScreen_Run	detour	costly		src/game/rest_4f.cpp:1436	BOF3_INJECT
 switch	ConfigScreen_SlideIn	detour	costly		src/game/rest_4f.cpp:1440	BOF3_INJECT
 switch	ConfigScreen_SlideOut	detour	costly		src/game/rest_4f.cpp:1444	BOF3_INJECT
 switch	ConfigScreen_TopBar	detour	costly		src/game/rest_4f.cpp:1441	BOF3_INJECT
-switch	ConfigText	code	yes		src/game/config_text.cpp:391 src/game/config_text.cpp:451 src/game/config_text.cpp:452 src/game/config_text.cpp:463 src/game/config_text.cpp:465 src/game/config_text.cpp:467 src/game/config_text.cpp:468	PatchBytes, RetargetCall
+switch	ConfigText	code	yes		src/game/config_text.cpp:391 src/game/config_text.cpp:471 src/game/config_text.cpp:472 src/game/config_text.cpp:483 src/game/config_text.cpp:485 src/game/config_text.cpp:487 src/game/config_text.cpp:488	PatchBytes, RetargetCall
 switch	Corona_End	detour	costly		src/game/magic_s31.cpp:1526	BOF3_INJECT
 switch	Corona_Start	detour	costly		src/game/magic_s31.cpp:1524	BOF3_INJECT
 switch	Corona_Task	detour	costly		src/game/magic_s31.cpp:1523	BOF3_INJECT
@@ -10636,3 +10637,4 @@ entry	DIV-0192	launcher	yes	env:BOF3X_MUSIC, ini:music		tier Sensible; kind laun
 entry	DIV-0193	code,launcher	yes	SaveSlotBlank, env:BOF3X_OFF, ini:off		tier Sensible; kind code
 entry	DIV-0194					tier Sensible; kind unparsed
 entry	DIV-0195					tier Sensible; kind unparsed
+entry	DIV-0196	code,launcher	yes	ConfigLabelJapanese, ini:off		tier Intent; kind code

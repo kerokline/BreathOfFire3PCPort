@@ -15,12 +15,12 @@ original	as-shipped	off	DIV-0011	Menu_DrawFrame	Draw the Config panel's frame, w
 original	as-shipped	already-off	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: already off
 original	as-shipped	skipped-language	DIV-0013	lang	White text in the disc's shades when the text is the disc's	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	as-shipped	skipped-language	DIV-0014	lang	The title menu in the overlay's language, its third row cut from the disc's letters	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
-original	as-shipped	skipped-language	DIV-0015	lang	The in-game Config screen in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE
+original	as-shipped	skipped-language	DIV-0015	lang	The in-game Config screen in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	as-shipped	skipped-language	DIV-0016	lang	The donor's 8 x 8 UI font, and a glyph guard that follows the table	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	as-shipped	skipped-language	DIV-0017	ConfigText	The Config screen's selected row, in the dialogue font at its own advance	acts only under en-US, en-150, fr-FR, de-DE
-original	as-shipped	skipped-language	DIV-0018	lang	The menu's short verbs - the buttons above a panel - in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE
-original	as-shipped	skipped-language	DIV-0019	lang	The battle's command labels in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE
-original	as-shipped	skipped-language	DIV-0020	lang	The characters' default names in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE
+original	as-shipped	skipped-language	DIV-0018	lang	The menu's short verbs - the buttons above a panel - in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	as-shipped	skipped-language	DIV-0019	lang	The battle's command labels in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	as-shipped	skipped-language	DIV-0020	lang	The characters' default names in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	as-shipped	never	DIV-0021	Gte_MulMatrix0	Zeros in the matrix product's padding bytes	Player never: Forced or one-way
 original	as-shipped	off	DIV-0022	Game_Clock	The game's clock starts with the game	Player yes
 original	as-shipped	never	DIV-0023	MapCell_DrawQuads, Sprite_ProjectA, MapCell_DrawFrames, MapCell_DrawShaded, MapCell_DrawSpinning, Mode11_ObjectDraw	Zeros in a map cell's vertex padding	Player never: Forced or one-way
@@ -52,7 +52,7 @@ original	as-shipped	cannot	DIV-0048	Game_WndProc	F1 toggles double speed	Player 
 original	as-shipped	cannot	DIV-0049	Fmv_WndProc	The logo videos keep playing when the window is not in front	Player costly: the original is only Capcom's function; this build cannot
 original	as-shipped	cannot	DIV-0050	DInput_Init, Pad_Read, DInput_Shutdown	The pad through SDL3; the keyboard as the original; the DirectInput joystick dropped	Player costly: the original is only Capcom's function; this build cannot
 original	as-shipped	skipped-language	DIV-0051	ConfigController, Config_DrawControllerCell, ConfigJapaneseIcons	The Config screen's controller panel: the PlayStation's one icon column	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
-original	as-shipped	skipped-language	DIV-0052	lang	The battle banner's words and its EX suffix	acts only under en-US, en-150, fr-FR, de-DE
+original	as-shipped	skipped-language	DIV-0052	lang	The battle banner's words and its EX suffix	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	as-shipped	skipped-language	DIV-0053	lang	Enemy names in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	as-shipped	skipped-language	DIV-0054	lang	French and German overlays, with the discs' accented glyphs	acts only under fr-FR, de-DE
 original	as-shipped	skipped-language	DIV-0055	lang	The world map's place plates from the donor disc	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
@@ -118,9 +118,9 @@ original	as-shipped	never	DIV-0114	none	A disc-only install draws the disc's tit
 original	as-shipped	never	DIV-0115	none	Prefer the Japanese PlayStation disc's data over a port change the owner has decided; the 27A arenas' held loop first	Player never: Forced or one-way
 original	as-shipped	off	DIV-0116	EncounterOnScreenLowerBounds	An encounter refuses a combatant left of or above the screen, as the PlayStation does	Player yes
 original	as-shipped	skipped-language	DIV-0117	lang	The Identify panel's small words: WEAK POINT on the weakness row, the disc's own item word and EXP label	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
-original	as-shipped	skipped-language	DIV-0118	BattleExtra_EquipOpen	Beyd's name from the disc when the battle extra opens its equipment screen	acts only under en-US, en-150, fr-FR, de-DE
+original	as-shipped	skipped-language	DIV-0118	BattleExtra_EquipOpen	Beyd's name from the disc when the battle extra opens its equipment screen	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	as-shipped	skipped-language	DIV-0119	Boss26Fx_DrawCount	Fight 26's turn counter in the disc's words and layout	acts only under en-US, en-150, fr-FR, de-DE
-original	as-shipped	skipped-language	DIV-0120	CommuHiLo_DrawChoice	The hi-lo game's three choices from the disc, centred in their boxes	acts only under en-US, en-150, fr-FR, de-DE
+original	as-shipped	skipped-language	DIV-0120	CommuHiLo_DrawChoice	The hi-lo game's three choices from the disc, centred in their boxes	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	as-shipped	off	DIV-0121	EdgeNoArea	A map edge that leads to no area holds, instead of crashing	Player yes
 original	as-shipped	off	DIV-0122	env:BOF3X_WIDE_STAGING=0	The wide modes re-stage the scenes' edge actors	Player yes
 original	as-shipped	off	DIV-0123	env:BOF3X_WIDE_STAGING=0	Case zero takes the PSP's staging in the wide modes	Player yes
@@ -196,6 +196,7 @@ original	as-shipped	off	DIV-0192	ini:music=pc	The loss tune from the disc on an 
 original	as-shipped	off	DIV-0193	SaveSlotBlank	An empty save slot draws no text	Player yes
 original	as-shipped	never	DIV-0194	none	A European disc-only install takes its disc's own eight area banks	Player never: Forced or one-way
 original	as-shipped	never	DIV-0195	none	A Western PSX disc-built image takes its disc's own regional layout fields	Player never: Forced or one-way
+original	as-shipped	skipped-language	DIV-0196	ConfigLabelJapanese	The Config screen's label column two glyphs to the right under a Japanese layer	acts only under ja-JP
 original	repaired	skipped-language	DIV-0005	lang	Walk a language overlay after each `DAT` file	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0006	lang	Advance the dialogue pen by the glyph's width	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0007	lang	Move the system message pool out of the area script's way	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
@@ -204,12 +205,12 @@ original	repaired	skipped-language	DIV-0009	lang	Tighten the apostrophe and the 
 original	repaired	already-off	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: already off
 original	repaired	skipped-language	DIV-0013	lang	White text in the disc's shades when the text is the disc's	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0014	lang	The title menu in the overlay's language, its third row cut from the disc's letters	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
-original	repaired	skipped-language	DIV-0015	lang	The in-game Config screen in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE
+original	repaired	skipped-language	DIV-0015	lang	The in-game Config screen in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0016	lang	The donor's 8 x 8 UI font, and a glyph guard that follows the table	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0017	ConfigText	The Config screen's selected row, in the dialogue font at its own advance	acts only under en-US, en-150, fr-FR, de-DE
-original	repaired	skipped-language	DIV-0018	lang	The menu's short verbs - the buttons above a panel - in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE
-original	repaired	skipped-language	DIV-0019	lang	The battle's command labels in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE
-original	repaired	skipped-language	DIV-0020	lang	The characters' default names in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE
+original	repaired	skipped-language	DIV-0018	lang	The menu's short verbs - the buttons above a panel - in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	repaired	skipped-language	DIV-0019	lang	The battle's command labels in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
+original	repaired	skipped-language	DIV-0020	lang	The characters' default names in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0026	ConfigController	The Config screen's controller panel: names at their own width, in the dialogue font, inside a wider frame	acts only under en-US, en-150, fr-FR, de-DE
 original	repaired	skipped-language	DIV-0027	YesNoLayout	The Yes / No chooser laid out for Latin text	acts only under en-US, en-150, fr-FR, de-DE
 original	repaired	skipped-language	DIV-0029	SaveNameInset	The save / load slot's name two units further in	acts only under en-US, en-150, fr-FR, de-DE
@@ -231,7 +232,7 @@ original	repaired	cannot	DIV-0048	Game_WndProc	F1 toggles double speed	Player co
 original	repaired	cannot	DIV-0049	Fmv_WndProc	The logo videos keep playing when the window is not in front	Player costly: the original is only Capcom's function; this build cannot
 original	repaired	cannot	DIV-0050	DInput_Init, Pad_Read, DInput_Shutdown	The pad through SDL3; the keyboard as the original; the DirectInput joystick dropped	Player costly: the original is only Capcom's function; this build cannot
 original	repaired	skipped-language	DIV-0051	ConfigController, Config_DrawControllerCell, ConfigJapaneseIcons	The Config screen's controller panel: the PlayStation's one icon column	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
-original	repaired	skipped-language	DIV-0052	lang	The battle banner's words and its EX suffix	acts only under en-US, en-150, fr-FR, de-DE
+original	repaired	skipped-language	DIV-0052	lang	The battle banner's words and its EX suffix	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0053	lang	Enemy names in the overlay's language	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0054	lang	French and German overlays, with the discs' accented glyphs	acts only under fr-FR, de-DE
 original	repaired	skipped-language	DIV-0055	lang	The world map's place plates from the donor disc	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
@@ -281,9 +282,9 @@ original	repaired	already-off	DIV-0113	ini:opt=	The battle chord as the PSP play
 original	repaired	never	DIV-0114	none	A disc-only install draws the disc's title page, not the PC port's	Player never: Forced or one-way
 original	repaired	never	DIV-0115	none	Prefer the Japanese PlayStation disc's data over a port change the owner has decided; the 27A arenas' held loop first	Player never: Forced or one-way
 original	repaired	skipped-language	DIV-0117	lang	The Identify panel's small words: WEAK POINT on the weakness row, the disc's own item word and EXP label	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
-original	repaired	skipped-language	DIV-0118	BattleExtra_EquipOpen	Beyd's name from the disc when the battle extra opens its equipment screen	acts only under en-US, en-150, fr-FR, de-DE
+original	repaired	skipped-language	DIV-0118	BattleExtra_EquipOpen	Beyd's name from the disc when the battle extra opens its equipment screen	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0119	Boss26Fx_DrawCount	Fight 26's turn counter in the disc's words and layout	acts only under en-US, en-150, fr-FR, de-DE
-original	repaired	skipped-language	DIV-0120	CommuHiLo_DrawChoice	The hi-lo game's three choices from the disc, centred in their boxes	acts only under en-US, en-150, fr-FR, de-DE
+original	repaired	skipped-language	DIV-0120	CommuHiLo_DrawChoice	The hi-lo game's three choices from the disc, centred in their boxes	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	off	DIV-0121	EdgeNoArea	A map edge that leads to no area holds, instead of crashing	Player yes
 original	repaired	off	DIV-0122	env:BOF3X_WIDE_STAGING=0	The wide modes re-stage the scenes' edge actors	Player yes
 original	repaired	off	DIV-0123	env:BOF3X_WIDE_STAGING=0	Case zero takes the PSP's staging in the wide modes	Player yes
