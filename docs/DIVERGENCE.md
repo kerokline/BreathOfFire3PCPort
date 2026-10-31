@@ -5079,7 +5079,9 @@ designed in rather than bolted on.
   readers are eleven immediates in the code, and stays as shipped), 2 (the
   Japan disc's slots 8, 8, 4, 8), 3..7, 9..14, 16, 17, 19, 20, 24, 25 and the
   new 26; 21..23 are not sent (the PC's bytes are the Japan disc's ASCII
-  words). Found where the disc's code reads them: the village lists by the
+  words). A PSP-JP layer reads the UMD's modules (the Japan disc's) and
+  takes group 15 from its `MAGIC060.EMI` as PSP-EU's does, so the Identify
+  panel there draws its words where it drew only the target's name. Found where the disc's code reads them: the village lists by the
   board's two list draws (`COMMU01.EMI`, strides 6 and 5, three characters,
   no NUL where the word fills its slot), the count word and the hi-lo
   game's titles and choices by their reads (`village_ja`), the turn words by
