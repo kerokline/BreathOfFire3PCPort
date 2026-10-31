@@ -13688,3 +13688,133 @@ designed in rather than bolted on.
 - **Toward:** none
 - **Languages:** any
 - **State:** active
+
+## Drafts (the exe-gap round's group AU, 2026-10-31; lettered, the coordinator numbers)
+
+Not entries yet (`####` headings, which the checker passes over). At the merge each
+`#### DIV-<letter>` below becomes an entry with the next free number and the
+`- **ID:**` line, and the code's `SaveSlotBlank` log prefix takes its number.
+
+#### DIV-A - The loss tune from the disc on an install with a disc cache
+
+- **Date:** 2026-10-31
+- **Subsystem:** the importer's music step (`tools/seq.py` `songs` and
+  `LOSS_SONG`, `tools/ppms.py` `songs`; `fixtures/bgm.tsv`,
+  `fixtures/bgm-psp.tsv`); played by DIV-0087's seam, unchanged
+  (`BattleEnd_LossBanner` `0x431550` -> `Music_Play(0xA6, 10)`)
+- **Tier:** Sensible - a repair of our importer: the PC plays a loss tune
+  there, and a disc-only install played the fight's music again (D320).
+- **Original behaviour:** after a lost fight `BattleEnd_LossBanner` fades the
+  music and plays song 166, `BGM\166.DAT`, an MP3 of 57.05 s (ffprobe) that
+  loops. The importer wrote `base/bgm/000..165` from a disc and no 166, so on
+  a PSX-only or PSP-only install `Music_LoadFile(166)` found nothing and
+  `Music_Play` restarted the fight's own track (D24's path, D320); on a PC
+  install with a disc cache 166 alone stayed the MP3 among the disc's songs.
+- **New behaviour:** the importer writes `base/bgm/166.DAT` from sub-song 2 of
+  `BGMBAT00.EMI` (a PSX disc's SEP section, a PSP disc's pPMS), through
+  `BGMBAT00`'s bank, as 165 is its sub 1. The loss banner then plays the
+  disc's loss tune: an intro to tick 2,318 (41.99 s), a loop body to tick
+  2,702 (6.96 s), so 48.95 s to the first loop end against the MP3's
+  57.05 s (the MP3 reads as a second pass and a release tail: a hypothesis,
+  not measured). The same song file from all seven discs (one hash in both
+  fixtures).
+- **Rationale:** the PlayStation's loss twin plays the resident battle
+  bundle's sub-song 2 after the same bit test (D320's reading); its events
+  equal `BGM082`'s sub 2 (table song 86) on psx-us, psx-jp and psx-eu-en,
+  and the owner's names call 166 the alternate of 86 (`data/music-names.tsv`).
+  On the PSX the fight's own bundle is resident and the bundles' banks differ
+  under programs 3 and 4 (`BGMBAT01`, `03`, `04` against `00`); `BGMBAT00`'s
+  is taken, as for 165 - the same open choice.
+- **Also in the PSX version?** Yes in substance: the PlayStation's own loss
+  tune, through one bank of the four the bundles carry.
+- **Verification:** the fixtures regenerated from the seven discs (`seq.py
+  fixture`, `ppms.py fixture`): 1,240 and 496 rows, the only change one
+  `166.DAT` row per build; `importer.py check` 0 errors; the harness's
+  psx-us and psp-eu disc-only installs hold `base/bgm/166.DAT` and a lost
+  fight's log opens it (the group's report). The listen is the owner's.
+- **Reversible?** `music=pc` (`BOF3X_MUSIC=pc`): the MP3 where the install
+  has one; on a disc-only install that is the fight's music again.
+- **Switch:** ini:music=pc - the song is the cache's; the PC's music source plays the MP3, or on a disc-only install restarts the fight's track
+- **Default:** on - wherever the player has a cache built from a disc
+- **Player:** yes
+- **Toward:** psx, psp - the consoles' loss tune (the PSP's pPMS gives the same song file)
+- **Languages:** any
+- **State:** active
+
+#### DIV-B - An empty save slot draws no text
+
+- **Date:** 2026-10-31
+- **Subsystem:** the save and load slots (`Menu_DrawSaveSlot` `0x576960`,
+  ours in `src/game/field_o.cpp`; the string `Encounter_SlotChance+0x1C`
+  `0x669CCC`)
+- **Tier:** Sensible - presentation: one look for an empty slot on every
+  install (the owner's call of 2026-10-31, "blank it everywhere for
+  consistency", `exe-gap-round.md` 7).
+- **Original behaviour:** a slot with no save (summary 0) draws the port's
+  string at `0x669CCC` through `Text_DrawAt` at `(x + 0x13, y + 2)`, five
+  characters; a disc-built image has that range as a `gap` (zero), so it
+  drew nothing there already, as the US PlayStation release does.
+- **New behaviour:** the empty slot draws its box, number and frame pieces
+  and no text, on every install and language; `0x669CCC` is no longer read.
+  One log line at start, `SaveSlotBlank  an empty save slot draws no text`.
+- **Rationale:** the owner's call; it also makes the `0x669CCC` gap row
+  unread on a disc-built image (`exe-gap-round.md` 1, the AC list).
+- **Also in the PSX version?** The US disc draws nothing in an empty slot
+  (the round's reading, `exe-gap-round.md` 3); other releases not measured.
+- **Verification:** built with llvm-mingw, no new warning;
+  `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` exit 0 (the switch arms after
+  `field_o`'s fuzz, as DIV-0084's); captures of the load screen on the PC
+  install with `BOF3X_OFF=SaveSlotBlank` and without (the group's report).
+- **Reversible?** `BOF3X_OFF=SaveSlotBlank` (ini `off=`), or hosted
+  `BOF3X_ORIGINAL=SaveSlotBlank`: the port's string as before.
+- **Switch:** SaveSlotBlank
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=SaveSlotBlank (ini off=)
+- **Toward:** psx - the US PlayStation release's empty slot
+- **Languages:** any
+- **State:** active
+
+#### DIV-C - A European disc-only install takes its disc's own eight area banks
+
+- **Date:** 2026-10-31
+- **Subsystem:** the importer's base chunks (`tools/importer.py`
+  `pal_bank`, `get_chunk`, `cmd_pal_banks`, `check_pal_banks`, `verify`;
+  `recipes/pal-banks.toml`); played by `Snd_LoadBankFile` as any bank
+- **Tier:** Sensible - a European install sounds like a European disc (the
+  owner's call of 2026-10-31, "let's take the pal banks", D257).
+- **Original behaviour:** the PC's area banks are Japan's (and the US's).
+  From a European PlayStation disc (EU-English, French, German) the importer
+  built eight of them - `AREA100`, `112`, `135`, `138`, `147`, `168`, `170`,
+  `188`, the PAL sample swap of `region-diff.md` 8.4 - faithfully but to
+  another hash than the recipe's, refused them, and wrote 733 of 741
+  containers: those eight areas' containers were missing from a European
+  disc-only install (D257).
+- **New behaviour:** `recipes/pal-banks.toml` holds one row per such chunk:
+  the European builds whose disc gives it (all three, one hash), the
+  section, the PAL bank's hash and the recipe hash it stands for. On an
+  install with no PC `DAT/` among its sources, a European disc's own bank
+  is taken at that disc's place in the player's order (a source before it
+  that gives the recipe's bank wins), hashed against the row; the manifest
+  records `<build>:pal:<emi>` and `verify` checks it against the row. A
+  European disc-only install writes all 741 containers. With the PC's
+  `DAT/` among the sources nothing changes.
+- **Rationale:** the owner's call; D257. A row file, not a second hash in
+  `recipes/pc-zh.toml`: that file is generated from the PC's `DAT/` and the
+  discs' sections, a generator that never builds a bank, so a hash added
+  there would not survive its next run, and a hash alone could not say
+  which releases it belongs to.
+- **Also in the PSX version?** Yes: the European discs' own banks, built by
+  the same wave-from-vag transform as every other bank.
+- **Verification:** `importer.py pal-banks` over the three European discs: 8
+  rows, each bank identical on the three; `importer.py check` 0 errors; a
+  psx-eu-en disc-only install built with 741 containers and one of the
+  eight areas loading its bank under `BOF3X_DATLOG=1` (the group's report).
+  The listen is the owner's.
+- **Reversible?** Build the cache with the PC's `DAT/` among the sources,
+  or with a US or Japanese disc before the European one.
+- **Switch:** none - the cache is built, not switched: the sources decide
+- **Default:** on
+- **Player:** never - the install's sources decide, not a runtime switch: a cache built with the PC's `DAT/` keeps the PC's banks
+- **Toward:** psx - the European PlayStation's banks
+- **Languages:** any
+- **State:** active
