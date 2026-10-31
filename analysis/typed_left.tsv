@@ -14026,7 +14026,7 @@ src/game/field_o.cpp	Menu_DrawSaveSlot	global	Sprintf	at::kFmtSlot	0	0x6639d4	-	
 src/game/field_o.cpp	Menu_DrawSaveSlot	global	Sprintf	at::kFmtTime	0	0x654830	-	no-entry	at::kFmtTime 0x654830 -	b0
 src/game/field_o.cpp	Menu_DrawSaveSlot	global	Text	at::kColon	0	0x6639d0	-	no-entry	at::kColon 0x6639d0 -	b0
 src/game/field_o.cpp	Menu_DrawSaveSlot	global	Text	at::kColon	1	0x6639d0	-	no-entry	at::kColon 0x6639d0 -	b0
-src/game/field_o.cpp	Menu_DrawSaveSlot	record	Long	summary + 0x10	0	-	-	no-family	`summary`: not shown to point at one of the nine record families	b1-field
+src/game/field_o.cpp	Menu_DrawSaveSlot	record	Long	summary + 0x10	0	-	param	no-family	`summary`: not shown to point at one of the nine record families	b1-field
 src/game/field_o.cpp	Menu_DrawSaveSlot	global	Text	at::kEmptySlot	0	0x669ccc	-	no-entry	at::kEmptySlot 0x669ccc -	b0
 src/game/field_o.cpp	Menu_DrawSaveSlot	global	Text	at::kSlotPieces	0	0x663584	-	no-entry	at::kSlotPieces 0x663584 -	b0
 src/game/field_o.cpp	MoveCmd_OpF9	record	Bytes	rv::Bytes(sc)	0	-	base=sc	view	a typed record's own bytes at an offset its struct does not name for this reader (rv::Bytes; stage C4)	c4-rule
@@ -23087,13 +23087,13 @@ src/game/rest_3e.cpp	EffectKind5D_DrawBoard	global	B	at::kCounts	0	0x903a10	-	no
 src/game/rest_3e.cpp	EffectKind5D_DrawBoard	global	B	at::kRows	0	0x6548bc	-	no-entry	at::kRows 0x6548bc -	b0
 src/game/rest_3e.cpp	EffectKind5D_DrawBoard	global	W	at::kMarks	0	0x6548d4	-	no-entry	at::kMarks 0x6548d4 -	b0
 src/game/rest_3e.cpp	EffectKind5D_DrawBoard	global	W	at::kMarks	1	0x6548d4	-	no-entry	at::kMarks 0x6548d4 -	b0
+src/game/rest_3e.cpp	EffectKind5E_DrawMenu	global	static_assert	at::kTitle	0	0x66a098	-	no-entry	at::kTitle 0x66a098 - (the title slot Labels_Slot(20, 0) stands for since D280; the assert names it, no access)	b0
 src/game/rest_3e.cpp	EffectKind5E_DrawMenu	global	W	at::kMenuBox	0	0x654870	-	no-entry	at::kMenuBox 0x654870 -	b0
 src/game/rest_3e.cpp	EffectKind5E_DrawMenu	global	W	at::kMenuBox	1	0x654870	-	no-entry	at::kMenuBox 0x654870 -	b0
 src/game/rest_3e.cpp	EffectKind5E_DrawMenu	global	W	at::kMenuBox	2	0x654870	-	no-entry	at::kMenuBox 0x654870 -	b0
 src/game/rest_3e.cpp	EffectKind5E_DrawMenu	global	W	at::kMenuBox	3	0x654870	-	no-entry	at::kMenuBox 0x654870 -	b0
 src/game/rest_3e.cpp	EffectKind5E_DrawMenu	global	At	at::kStringFormat	0	0x654900	-	no-entry	at::kStringFormat 0x654900 -	b0
 src/game/rest_3e.cpp	EffectKind5E_DrawMenu	global	At	at::kText	0	0x904ba0	-	no-entry	at::kText 0x904ba0 -	b0
-src/game/rest_3e.cpp	EffectKind5E_DrawMenu	global	At	at::kTitle	0	0x66a098	-	no-entry	at::kTitle 0x66a098 -	b0
 src/game/rest_3e.cpp	EffectKind5E_DrawMenu	global	UL	at::kMenuBox	0	0x654870	-	no-entry	at::kMenuBox 0x654870 -	b0
 src/game/rest_3e.cpp	EffectKind5E_DrawMenu	global	W	at::kMenuBox	4	0x654870	-	no-entry	at::kMenuBox 0x654870 -	b0
 src/game/rest_3e.cpp	EffectKind5E_DrawMenu	global	At	at::kText	1	0x904ba0	-	no-entry	at::kText 0x904ba0 -	b0
