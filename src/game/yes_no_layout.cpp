@@ -324,9 +324,17 @@ void SelfTest() {
 // with the two pushes between them (6A 00, 6A 18) that PatchBytes leaves.
 constexpr std::uint8_t kStopsMoved[15] = {0xB9, 0x12, 0x01, 0x00, 0x00, 0x6A, 0x00, 0x6B, 0xC0, 0x38, 0x6A, 0x18, 0x90, 0x90, 0x90};
 std::uint32_t g_line_call = kMsgSystemPtr.v;    // what the call at kLineCall reaches
-std::uint8_t g_stops[15] = {   // the original's until the patches go in
+constexpr std::uint8_t kStopsOriginal[15] = {
     0xB9, 0xFE, 0x00, 0x00, 0x00, 0x6A, 0x00, 0x8D, 0x04, 0xC0, 0x6A, 0x18, 0xC1, 0xE0, 0x02};
-bool g_stops_moved = false;
+bool g_stops_moved = false;   // what the readers read (YesNoLayout_StopsMoved)
+
+// Hosted (OperandRule): the 15 bytes at 0x5747F0 are the ones g_stops_moved
+// stands for - the flag the readers read, not a copy of the bytes beside it
+// (docs/disc-only-round-review.md 2).
+bool StopsAsRead() {
+    const auto* const code = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(0x5747F0));
+    return std::memcmp(code, g_stops_moved ? kStopsMoved : kStopsOriginal, sizeof kStopsOriginal) == 0;
+}
 std::uint32_t g_master_line_call = kTextDrawAt.v, g_master_hand_call = kMenuDrawHand.v;
 std::uint8_t g_name_inset = 0x13;              // the disp8 at 0x576A48: Capcom's 0x13, DIV-0029's 0x15
 
@@ -338,7 +346,7 @@ unsigned char YesNoLayout_SaveNameInset() { return g_name_inset; }
 
 void YesNoLayout_Inject() {
     bof3::OperandCall("DIV-0027 yes / no line", kLineCall, &g_line_call);
-    bof3::Operand("DIV-0027 yes / no stops", 0x5747F0, g_stops, sizeof g_stops);
+    bof3::OperandRule("DIV-0027 yes / no stops", 0x5747F0, sizeof kStopsOriginal, &StopsAsRead);
     bof3::OperandCall("DIV-0027 master's line", kMasterLineCall, &g_master_line_call);
     bof3::OperandCall("DIV-0027 master's hand", kMasterHandCall, &g_master_hand_call);
     bof3::Operand("DIV-0029 save name inset", 0x576A48, &g_name_inset, 1);
@@ -359,7 +367,6 @@ void YesNoLayout_Inject() {
     if (line != stop || stop != step || step != shift) bof3::Fatal("DIV-0027: Menu_YesNo's four patches went in apart");
     if (line) {
         g_line_call = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&YesNo_Line));
-        std::memcpy(g_stops, kStopsMoved, sizeof g_stops);
         g_stops_moved = true;
     }
     bof3::Log("DIV-0027    Yes / No: %u spaces into the gap, hand stops 218 and 274 (on unless the lines above say OFF)", kMoved);

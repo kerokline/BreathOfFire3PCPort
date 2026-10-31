@@ -97,10 +97,34 @@ std::vector<Since> FilledSince() {
 Image g_mapped;
 bool g_disc_mapped = false;
 
+// BOF3X_EXEIMAGE's directory, read with the wide API as the launcher sets it
+// and held as UTF-8 (the log's and Fatal's text); "" when unset. A path
+// outside the ANSI code page reads whole (docs/disc-only-round-review.md 2).
+std::string ImageDir() {
+    wchar_t w[MAX_PATH];
+    const DWORD n = GetEnvironmentVariableW(L"BOF3X_EXEIMAGE", w, MAX_PATH);
+    if (n == 0) return std::string();
+    if (n >= MAX_PATH) Fatal("BOF3X_EXEIMAGE: the path is longer than %u", (unsigned)MAX_PATH);
+    const int len = WideCharToMultiByte(CP_UTF8, 0, w, static_cast<int>(n), nullptr, 0, nullptr, nullptr);
+    std::string out(static_cast<std::size_t>(len > 0 ? len : 0), '\0');
+    if (len <= 0 || WideCharToMultiByte(CP_UTF8, 0, w, static_cast<int>(n), &out[0], len, nullptr, nullptr) != len)
+        Fatal("BOF3X_EXEIMAGE: the path does not convert to UTF-8 (error %lu)", GetLastError());
+    return out;
+}
+
+// A file under ImageDir() (UTF-8) opened for reading through the wide API.
+FILE* OpenUtf8(const std::string& path) {
+    const int len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.c_str(), -1, nullptr, 0);
+    if (len <= 0) Fatal("BOF3X_EXEIMAGE: %s is not UTF-8", path.c_str());
+    std::wstring w(static_cast<std::size_t>(len), L'\0');
+    MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.c_str(), -1, &w[0], len);
+    return _wfopen(w.c_str(), L"rb");
+}
+
 // data.toml as tools/exe_tables.py writes it: `key = value` lines in [image],
 // then one `[0x.., 0x.., "how", "from"],` line a range. Only that shape.
 Image ReadToml(const std::string& path) {
-    FILE* f = std::fopen(path.c_str(), "rb");
+    FILE* f = OpenUtf8(path);
     if (!f) Fatal("BOF3X_EXEIMAGE: cannot open %s", path.c_str());
     Image im;
     char line[1024];
@@ -133,7 +157,7 @@ Image ReadToml(const std::string& path) {
 }
 
 std::vector<unsigned char> ReadBin(const std::string& path, std::uint32_t size) {
-    FILE* f = std::fopen(path.c_str(), "rb");
+    FILE* f = OpenUtf8(path);
     if (!f) Fatal("BOF3X_EXEIMAGE: cannot open %s", path.c_str());
     std::vector<unsigned char> out(size + 1);
     const std::size_t n = std::fread(out.data(), 1, out.size(), f);
@@ -156,11 +180,9 @@ void LiveData(std::uint32_t& va, std::uint32_t& raw, std::uint32_t& vsz) {
 }  // namespace
 
 void ExeImage_Check() {
-    char dir[MAX_PATH];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_EXEIMAGE", dir, sizeof dir);
-    if (n == 0) return;
-    if (n >= sizeof dir) Fatal("BOF3X_EXEIMAGE: the path is longer than %u", (unsigned)sizeof dir);
-    const std::string exe_dir = std::string(dir) + "\\base\\exe\\";
+    const std::string dir = ImageDir();
+    if (dir.empty()) return;
+    const std::string exe_dir = dir + "\\base\\exe\\";
     const Image im = ReadToml(exe_dir + "data.toml");
     std::uint32_t va = 0, raw = 0, vsz = 0;
     LiveData(va, raw, vsz);
@@ -216,11 +238,9 @@ void ExeImage_Check() {
 }
 
 bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32_t bss_end) {
-    char dir[MAX_PATH];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_EXEIMAGE", dir, sizeof dir);
-    if (n == 0) return false;
-    if (n >= sizeof dir) Fatal("BOF3X_EXEIMAGE: the path is longer than %u", (unsigned)sizeof dir);
-    const std::string exe_dir = std::string(dir) + "\\base\\exe\\";
+    const std::string dir = ImageDir();
+    if (dir.empty()) return false;
+    const std::string exe_dir = dir + "\\base\\exe\\";
     const Image im = ReadToml(exe_dir + "data.toml");
     if (im.va != va || im.size != size || im.bss_end != bss_end)
         Fatal("BOF3X_EXEIMAGE: data.toml's image is 0x%X + 0x%X (zero to 0x%X), BOF3.exe's .data 0x%X + 0x%X (to 0x%X)",
