@@ -29,7 +29,9 @@
 // Every call goes through the harness (SH_CALL), so the start-up fuzz stands
 // recorders in for ours as for the originals' copies. No divergence: each is
 // a faithful replacement (Menu_DrawSaveSlot reads DIV-0029's byte as
-// yes_no_layout.cpp holds it, as Menu_YesNo reads DIV-0027's). The unchecked indexes the originals make are
+// yes_no_layout.cpp holds it, as Menu_YesNo reads DIV-0027's) - save for
+// the empty save slot's text, drawn blank under SaveSlotBlank (the exe-gap
+// round), and DIV-0059's and DIV-0084's switches below. The unchecked indexes the originals make are
 // reproduced; where the original would jump to what is not code or divide by
 // zero, ours aborts with a message (docs/field_o.md section 6).
 #include "game/field_o.h"
@@ -606,6 +608,14 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
 // The inset is the disp8 at 0x576A48 - 0x13 as Capcom shipped it, 0x15 under
 // DIV-0029 (YesNoLayout_Inject patches those bytes) - as yes_no_layout.cpp
 // holds it (YesNoLayout_SaveNameInset; docs/operand-store.md).
+// DIVERGENCE (exe-gap round, group AU; the coordinator numbers it): an empty
+// slot draws no text, as the US PlayStation release draws it and as a
+// disc-built image already did (0x669CCC is a gap there, zero). 0 until
+// FieldO_Inject patches it to 1, after the fuzz, under the name SaveSlotBlank
+// (BOF3X_ORIGINAL=SaveSlotBlank, or BOF3X_OFF, draws the port's string).
+namespace {
+unsigned char g_empty_slot_blank = 0;
+}  // namespace
 extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const unsigned char* summary) {
     SH_CALL(Menu_DrawBox)(x + 8, y, 0xC8, 0x30, 0, Style());
     Sprintf(::bof3::Img(at::kFmtSlot), slot & 0xFF);
@@ -631,7 +641,7 @@ extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const uns
         SH_CALL(Text_DrawFont8)(x + 0x27, y + 0x27, 0, Text(::bof3::Img(at::kColon)));
         SH_CALL(Menu_DrawExpBar)(x + 0x14, y + 0x12, 0, summary[8], static_cast<U>(Long(summary + 0x10)));
         flags = summary[0x14] ? 2 : 0;
-    } else {
+    } else if (!g_empty_slot_blank) {
         SH_CALL(Text_DrawAt)(x + 0x13, y + 2, 0, 5, Text(::bof3::Img(at::kEmptySlot)));
     }
     SH_CALL(Menu_DrawPieces)(x, y, Text(::bof3::Img(at::kSlotPieces)), static_cast<int>(flags));
@@ -1324,6 +1334,14 @@ void FieldO_Inject() {
                          static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_wheel_name_centre)),
                          &was, &is, 1);
         bof3::Log("DIV-0084    formation names centred: %s", g_wheel_name_centre ? "on" : "off");
+    }
+    // An empty save slot drawn blank on every install and language (the
+    // owner's call of 2026-10-31, docs/exe-gap-round.md 7).
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("SaveSlotBlank", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_empty_slot_blank)),
+                         &was, &is, 1);
+        bof3::Log("SaveSlotBlank  an empty save slot draws %s", g_empty_slot_blank ? "no text" : "the port's text (0x669CCC)");
     }
     BOF3_INJECT(Menu_DrawStatsPanel);
     BOF3_INJECT(Menu_DrawExpPanel);

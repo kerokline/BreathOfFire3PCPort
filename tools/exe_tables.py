@@ -214,10 +214,13 @@ def bss_numbers(pc):
     .bss, so no disc tests these words; a pointer to a .bss variable is
     4-aligned (every one the C runtime's data and the inventory lists hold is),
     so a word into .bss is a number when it is `not 4-aligned` (packed bytes of
-    a record, such as the area tables' 12-byte rows), `two small halfwords` (each
-    below 0x100 or from 0xFF00: an x and a y, a width and a height - the
-    `MsgBox_PlacementTable` and `Title_Sprites` entries that
-    docs/exe-code-pointers-midfunc.md read), `text` (printable characters to a
+    a record, such as the area tables' 12-byte rows), `two small halfwords` (an x
+    and a y, a width and a height - the `MsgBox_PlacementTable` and
+    `Title_Sprites` entries that docs/exe-code-pointers-midfunc.md read; the
+    test is each halfword below 0x100 or from 0xFF00, but a word into .bss has
+    its high halfword 0x67..0x93 always, so what it decides on is the LOW
+    halfword alone: a word whose low halfword is within 0x100 of a 64 KiB
+    boundary), `text` (printable characters to a
     NUL: the C runtime's `pen`, `%lx`), or `a column of numbers` (aligned by
     chance in a record table whose column holds such numbers either side)."""
     out = {}
@@ -232,8 +235,10 @@ def bss_numbers(pc):
         elif all(h < 0x100 or h >= 0xFF00 for h in (v & 0xFFFF, v >> 16)):
             # Every .bss address is 0x676000..0x93D6EC, so the high halfword always
             # passes: what this tests is the low one - a pointer within 0x100 bytes
-            # of a 64 KiB boundary would be classed a number (none of today's hits
-            # is one: IN's "every class that must equal, equal" on the real install).
+            # of a 64 KiB boundary would be classed a number. None of today's hits
+            # is one: measured 2026-10-31 on BOF3.exe, 1,112 words take this class
+            # and none holds the start of any of symbols.toml's 756 .bss [[data]]
+            # entries (IN's "every class that must equal, equal" agrees).
             out[a] = "two small halfwords"
         elif n >= 2 and all(0x20 <= c < 0x7F for c in b[:n]):
             out[a] = "text"

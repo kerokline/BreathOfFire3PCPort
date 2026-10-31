@@ -83,6 +83,10 @@ void Late(Entry* e) {
     if (!e || IsExeHost()) return;
     if (UnderJmp(e->va, e->n)) {
         e->under_jmp = true;   // its bytes are our jmp's already: nothing to compare
+        // Named now, not only at the next Operands_Check: an entry registered
+        // after the last check would otherwise go unlogged (operand-store.md 1).
+        Log("operands    %s at 0x%08X + %u: registered after a jmp of ours covered it, never compared", e->site,
+            (unsigned)e->va, (unsigned)e->n);
         return;
     }
     if (g_late) CheckOne(*e);

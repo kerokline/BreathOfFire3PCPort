@@ -318,6 +318,10 @@ check stand in for it until then.
    are the PAL sample swap (`region-diff.md` 8.4). The importer refuses them by
    hash, so a PAL-only player lacks those 8 containers' banks. Should they be
    accepted as that build's? 8.4's verdict was to keep JP / US.
+   **Answered 2026-10-31** ("let's take the pal banks", `exe-gap-round.md`
+   7): a European disc-only install takes them, by the rows of
+   `recipes/pal-banks.toml` (`importer.py pal-banks`), a lettered ledger draft
+   of the exe-gap round's group AU; a PC install keeps the PC's.
 2. **The wrap clicks.** 9 sample values in 5 sounds (76 containers' banks)
    wrap where the SPU clamps. The PC plays a full-scale click; the PlayStation
    does not. Clamping would be a one-line option in `vag.decode_port`, and a
