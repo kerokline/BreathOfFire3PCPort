@@ -437,17 +437,16 @@ void ConfigText_Inject() {
     // paths), and with the Japan disc's words (DIV-0015's 2026-10-31
     // amendment) the nine-character label begins left of the row box and
     // the selected row's large label runs under the hand (the owner's eye on
-    // the sheets, 2026-10-31). The owner's rule: left-aligned, one glyph in
-    // from the box's left edge (two at first; the selected row's large text
-    // then ran off the right, so one, the owner's second look the same day) -
-    // the `sub` at each path made two nops, so nothing comes off x, and the
-    // anchor 0x10 (16 units, a glyph's advance in this font; the box starts
-    // at x). Japanese only: the
+    // the sheets, 2026-10-31). The owner's rule: left-aligned at the box's
+    // own x, no buffer glyph (two glyphs in at first, then one: the selected
+    // row's large text of the longest label ran off the right at both, the
+    // owner's looks the same day) - the `sub` at each path made two nops, so
+    // nothing comes off x, and the anchor 0. Japanese only: the
     // Latin layout below keeps its right alignment at 0x5F, and the shipped
     // Chinese the original's at 0x3A. Ours (field_c1.cpp) reads both operands.
     if (Lang_Japanese() && !Lang_Latin()) {
         static const std::uint8_t ja_anchor_was[] = {0x3A};
-        static const std::uint8_t ja_anchor_is[] = {0x10};
+        static const std::uint8_t ja_anchor_is[] = {0x00};
         const bool ja_on = bof3::PatchBytes("ConfigLabelJapanese", 0x461899, kSubBigWas, kSubNops, sizeof kSubBigWas);   // big path: no width off x
         bof3::PatchBytes("ConfigLabelJapanese", 0x46189D, ja_anchor_was, ja_anchor_is, 1);                             // big path: x + 0x20
         bof3::PatchBytes("ConfigLabelJapanese", 0x4618E7, kSubSmallWas, kSubNops, sizeof kSubSmallWas);                 // small path: no width off x
@@ -456,7 +455,7 @@ void ConfigText_Inject() {
             g_ops.anchor = ja_anchor_is[0];
             g_ops.label_left = true;
         }
-        bof3::Log("DIV-0196    the Config label column under ja-JP left-aligned one glyph in (x + 0x%02X) %s", (unsigned)g_ops.anchor,
+        bof3::Log("DIV-0196    the Config label column under ja-JP left-aligned at the box's x (x + 0x%02X) %s", (unsigned)g_ops.anchor,
                   ja_on ? "on" : "OFF (BOF3X_ORIGINAL=ConfigLabelJapanese)");
         return;
     }
