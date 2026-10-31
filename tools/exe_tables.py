@@ -686,6 +686,68 @@ IMM_SKIP = [(0x61B4F0, 0x61B4F7, "Area104_PlateAnims: DIV-0055's re-laid plates,
 IMM_FOLD = 8    # a reader's operand this far below a region that starts at its data symbol is an index fold
 
 
+IMM_STRING = range(0x20, 0x7F)    # a string piece's characters: printable ASCII only
+
+
+def imm_strings(pc, lo, hi, ops, twins, srcs, byfile, scans, ptr):
+    """The string pieces of a region no whole-region row fits (the faerie music
+    player's glyph strings, CommuMusic_DrawList's pushes of 0x653144 / 48 / 4C,
+    which the PlayStation's twin lays out in the other order: docs/exe-gap-round.md
+    section 4, PL): for each reader operand inside [lo, hi) that starts a
+    NUL-terminated printable-ASCII string, the PC's bytes past the NUL zero up to
+    the next operand or the region's end, the piece [operand, NUL] (cut at hi) is
+    an `immref` row when exactly one place - an address a twin's lui pair of that
+    reader forms, `at` 0 - holds the same string with its NUL. Anchored at both
+    ends (the operand is the string's start, the twin's address the disc string's),
+    so the floor is the whole string and its NUL, not four bytes. [row] for the
+    pieces when every non-zero byte of the region is in one, else None."""
+    import exe_imm
+    inner = sorted({v for f in ops for v in ops[f] if lo <= v < hi})
+    out, covered = [], set()
+    for n, a_op in enumerate(inner):
+        if not pc[a_op - DATA_LO] or a_op in ptr:
+            continue
+        nul = pc.index(0, a_op - DATA_LO) + DATA_LO
+        s = pc[a_op - DATA_LO:nul - DATA_LO + 1]
+        stop = min(inner[n + 1] if n + 1 < len(inner) else hi, hi)
+        if (stop <= nul < hi) or any(b not in IMM_STRING for b in s[:-1]) or any(
+                pc[x - DATA_LO] for x in range(nul + 1, stop)) or any(x in ptr for x in range(a_op, nul + 1)):
+            continue
+        places = {}
+        for f in sorted(f for f in ops if a_op in ops[f]):
+            for k, g in sorted(twins.get(f, ())):
+                if (k, g) not in scans:
+                    read = exe_imm.blob_reader(srcs[k][1], srcs[k][0])
+                    end = exe_imm.extent(read, g)
+                    scans[k, g] = (read, exe_imm.scan(read, g, end) if end else ([], []))
+                read, (_, refs) = scans[k, g]
+                for addr, offs in refs:
+                    if len(offs) != 2:
+                        continue
+                    try:
+                        if exe_imm.decode_ref(read, g, offs[0], offs[1]) != addr:
+                            continue
+                    except ValueError:
+                        continue
+                    hold = [kk for kk in byfile[k[0]]
+                            if srcs[kk][0] <= addr and addr + len(s) <= srcs[kk][0] + len(srcs[kk][1])]
+                    if len(hold) != 1:
+                        continue
+                    b2, blob2 = srcs[hold[0]]
+                    if blob2[addr - b2:addr - b2 + len(s)] != s:
+                        continue
+                    places.setdefault((hold[0][0], addr), {
+                        "kind": "immref", "pc": a_op, "pc_end": min(nul + 1, hi), "file": k[0], "section": k[1],
+                        "func": g, "at": 0, "insns": "%X+%X" % (offs[0], offs[1])})
+        if len(places) == 1:
+            row = next(iter(places.values()))
+            out.append(row)
+            covered.update(range(row["pc"], row["pc_end"]))
+    if not out or any(pc[x - DATA_LO] and x not in covered for x in range(lo, hi)):
+        return None
+    return out
+
+
 def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=None, data_ends=None):
     """The owning-function rows for one build (docs/exe-immediate-places.md): for
     each region imm_regions gives, each PC function whose operands name it (from
@@ -796,6 +858,12 @@ def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=
                                     break
                                 ok = False
                                 break
+                        # a region another range closes exactly where the twin's section ends is at the
+                        # section's tail too: the PSPs fill the byte after Area121_BandHeights, so their
+                        # region stops one short of the byte the loop above would find off the section
+                        # (docs/exe-gap-round.md section 4, PL)
+                        if ok and end == hi and not tail and addr + (hi - a_op) - b2 == len(blob2):
+                            tail = True
                         span = [x for x in range(min(a_op, lo), end) if x not in ptr]
                         agree = len(span)
                         agree_nz = sum(1 for x in span if pc[x - DATA_LO])
@@ -827,7 +895,16 @@ def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=
                                "func": g, "at": lo - a_op, "insns": "%X+%X" % (offs[0], offs[1])}
                         found.setdefault(("immref",) + place, row)
         if not found:
-            stats["nothing fits"] += 1
+            pieces = imm_strings(pc, lo, hi, ops, twins, srcs, byfile, scans, ptr)
+            if pieces is None:
+                stats["nothing fits"] += 1
+                continue
+            for row in pieces:
+                row["build"] = bid
+                rows.append(row)
+                stats["placed immref"] += 1
+                stats["placed string"] += 1
+                stats["bytes immref"] += sum(1 for x in range(row["pc"], row["pc_end"]) if pc[x - DATA_LO])
             continue
         places = {key for key in found if key[0] == "immref"}
         if len(places) > 1 or (not places and len(found) > 1):

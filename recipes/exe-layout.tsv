@@ -12612,6 +12612,7 @@ pc	kind	target
 0x65484C	code	EffectKind5B_Start
 0x654850	code	EffectKind5B_Glow
 0x654854	code	EffectKind5B_Fade
+0x65486C	number	-
 0x654878	number	-
 0x65487C	number	-
 0x654898	code	EffectKind5D_Start

@@ -109,7 +109,7 @@ RECIPE = os.path.join(ROOT, "recipes", "exe-psp.tsv")
 TRACK_NONE = 0xFF            # an event battle's track when its file has no music: the scene's song plays on (DIV-0149)
 COLS = ["build", "rule", "pc", "pc_end", "file", "section", "addr", "filled"]
 RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide", "wmrec", "boxxy", "cellhk",
-         "faerie", "pspmap", "verb", "fishrec", "fishpen", "margins", "titlemark")   # widen<k>: the disc's name is k bytes
+         "faerie", "pspmap", "verb", "fishrec", "fishpen", "margins", "titlemark", "regional")   # widen<k>: the disc's name is k bytes
 # twin: (PC range, the disc file whose code reads it, what). Each is zero on every disc-built
 # image before this rule (recipes/exe-gaps.tsv), and each file is the one its reader's PSX twin
 # is loaded from (docs/visual-findings-1012.md 2, 3); a fifth field limits a run to those builds
@@ -118,7 +118,10 @@ RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "mset
 # for a file that holds the run more than once and whose reader reads a later one; a seventh
 # (the pieced rule, docs/install-gap-twins.md 2) lists sub-ranges of the run: the place is
 # where every one holds BOF3.exe's bytes at one displacement, and each becomes a recipe row
-# of its own (so fill's other-file rule, D268's, applies per segment).
+# of its own (so fill's other-file rule, D268's, applies per segment); an eighth (the regional
+# rule, docs/exe-gap-round.md section 4 PL, the coordinator's call of 2026-10-31) lists whole
+# fields between the segments that the run's builds hold as their own release's values: each
+# is a `regional` row, copied from the same place, the disc's own value (no BOF3.exe compare).
 # Addresses and names only.
 TWINS = [
     (0x64AE18, 0x64AE28, "BATTLE/BATTLE.EMI", "the BATE equipment screen's slot icons and categories"),
@@ -290,10 +293,16 @@ TWINS = [
     # Pieced (a seventh field, the segments): one table at one place, the segments BOF3.exe's
     # bytes there and the bytes between them the disc's own (the Western discs' re-laid
     # numbers, FR / DE's own label words), which stay unfilled (docs/install-gap-twins.md 2).
+    # The three fields between the segments are each release's own layout (the place records' x of
+    # EffectKind66_DrawPiece; Rest3e_Windows' board width, the menu box's x and width): on a Western
+    # PSX build no disc holds BOF3.exe's, so they are the Western disc's own (regional, the eighth
+    # field; DIVERGENCE's entry for the regional fields). Each field whole, never half one release's.
     (0x654770, 0x654798, "WORLD03/AREA135.EMI", "EffectKind66_States+0x18 (u16 fields; three are the West's own)",
-     ("psx-us", "psx-eu-en", "psx-fr", "psx-de"), 0, ((0x654772, 0x654778), (0x65477A, 0x654780), (0x654782, 0x654798))),
+     ("psx-us", "psx-eu-en", "psx-fr", "psx-de"), 0, ((0x654772, 0x654778), (0x65477A, 0x654780), (0x654782, 0x654798)),
+     ((0x654770, 0x654772), (0x654778, 0x65477A), (0x654780, 0x654782))),
     (0x654858, 0x654876, "SCENARIO/SCENA10.EMI", "EffectKind5B_States+0xC (u16 fields; three are the West's own)",
-     ("psx-us", "psx-eu-en", "psx-fr", "psx-de"), 0, ((0x654858, 0x65486C), (0x65486E, 0x654870), (0x654872, 0x654874))),
+     ("psx-us", "psx-eu-en", "psx-fr", "psx-de"), 0, ((0x654858, 0x65486C), (0x65486E, 0x654870), (0x654872, 0x654874)),
+     ((0x65486C, 0x65486E), (0x654870, 0x654872), (0x654874, 0x654876))),
     (0x653104, 0x653150, "ETC/COMMU03.EMI", "the music player's labels FR / DE keep in the PC's words (at the US map's place)",
      ("psx-fr", "psx-de"), 0, ((0x65310C, 0x65311C), (0x65313C, 0x653142))),
     # PB's BOOT.BIN twins (docs/install-gap-twins.md 5): each copy the one the PSP's relocated
@@ -321,6 +330,11 @@ TWINS = [
     # CW (docs/install-gap-live-rows.md): the two live rows RW found read while zero.
     (0x65A608, 0x65A62C, "BMAGIC/MAGIC009.EMI", "ChlorineCloud_Offsets (ChlorineCloud_Start's twin 0x801EF198 reads it at 0x801EF8B0)"),
     (0x669738, 0x669743, "BOOT.BIN", "Char_WhelpSlot+0x2: the member flag bytes (Field_MemberSprite's kMemberFlags, to sprite +0x2B)", PSP),
+    # PL (docs/exe-gap-round.md section 4): PSP-EU's GAME.EMI mixes the layouts, so the overlay
+    # twin's pair forms an address holding other bytes; BOOT.BIN's copy read at its first byte by
+    # LinkedObjectD_ShowAmount's native twin (the +4 index, the status bit, the call with 5). PSP-JP
+    # places it from GAME.EMI already (an immref row).
+    (0x660CCC, 0x660CD0, "BOOT.BIN", "LinkedObjectD_Amounts (LinkedObjectD_ShowAmount's amounts)", ("psp-eu",)),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges
@@ -818,7 +832,7 @@ def build_fill(row, disc, elf, rule, srcs):
         for i in range((hi - lo) // 28):
             out[28 * i + 16:28 * i + 28] = blob[at + (k + 12) * i + k:at + (k + 12) * i + k + 12]
             mask[28 * i + 16:28 * i + 28] = [True] * 12
-    elif rl in ("psxmap", "pspmap", "twin"):
+    elif rl in ("psxmap", "pspmap", "twin", "regional"):
         out[:] = blob[at:at + hi - lo]
         mask = [True] * (hi - lo)
     elif rl == "boxxy":
@@ -1012,6 +1026,7 @@ def find_rows(disc, bid, pc, ref_srcs=None):
         only = extra[0] if extra else None
         nth = extra[1] if len(extra) > 1 else 0
         segs = extra[2] if len(extra) > 2 else ((tlo, thi),)
+        fields = extra[3] if len(extra) > 3 else ()
         if only and bid not in only:
             continue
         if tfile == "BOOT.BIN":
@@ -1032,6 +1047,9 @@ def find_rows(disc, bid, pc, ref_srcs=None):
             for slo, shi in segs:                     # the pieced rule: a recipe row per segment
                 rows.append({"build": bid, "rule": "twin", "pc": slo, "pc_end": shi, "file": tfile, "section": t[0],
                              "addr": t[1] + slo - tlo})
+            for flo, fhi in fields:                   # the regional rule: the release's own whole fields
+                rows.append({"build": bid, "rule": "regional", "pc": flo, "pc_end": fhi, "file": tfile,
+                             "section": t[0], "addr": t[1] + flo - tlo})
         else:
             print("  %s twin 0x%06X..0x%06X: not in %s" % (bid, tlo, thi, tfile))
     rows += link_rows(bid, srcs, pc)
@@ -1109,7 +1127,8 @@ def find_rows(disc, bid, pc, ref_srcs=None):
         # fishpen: the release's own pens, BOF3.exe's only on a Japanese build; kept by its
         # place (fish_place) beside the fishrec row, whose bytes are BOF3.exe's
         # titlemark: the release's own mark width (D266), BOF3.exe's only on a Japanese disc
-        if not bad or r["rule"] == "titlemark" or (r["rule"] == "fishpen" and any(k["rule"] == "fishrec" for k in kept)):
+        # regional: the release's own fields between a pieced twin's segments (TWINS' eighth field)
+        if not bad or r["rule"] in ("titlemark", "regional") or (r["rule"] == "fishpen" and any(k["rule"] == "fishrec" for k in kept)):
             kept.append(r)
     if not psp:
         return kept
@@ -1560,6 +1579,15 @@ def boot_place(elf, want, lo, tables=None):
                 hits.append((a, rd, None))
             a = elf.img.find(want, a + 1, s1)
     why = "%d copies, %d read by a relocated pair with the symbol's pointer words in place" % (len(copies), len(hits))
+    if len(hits) > 1 and sym == lo:
+        # a run that starts at its symbol is read at its first byte (the PC's operand names
+        # the symbol itself): of several copies read, the one a pair forms the address of
+        # (LinkedObjectD_Amounts on PSP-EU, whose other copy a pair reads one byte in;
+        # docs/exe-gap-round.md section 4, PL)
+        first = [h for h in hits if h[0] in elf.text_refs]
+        if len(first) == 1:
+            return first[0]
+        why += ", %d of them at their first byte" % len(first)
     if not hits:
         tabs = pc_tables_to(lo) if tables is None else tables
         for a in copies:
@@ -1645,10 +1673,11 @@ def write_recipe(rows):
              "# COMMU00's 9-byte records), verb (set 8's Western 23rd verb as the port's Quit), fishrec and",
              "# fishpen (the fishing banner's line records and the release's own label pens, D313), margins",
              "# (Sprite_ScreenMargins from BOOT.BIN, the PSP's x margins less its 32 columns), titlemark (the",
-             "# Western title mark's width, the disc's own, D266) - and how",
+             "# Western title mark's width, the disc's own, D266), regional (a release's own whole field between",
+             "# a pieced twin's segments, psp_exe.TWINS' eighth field) - and how",
              "# many bytes it fills.",
              "# A row is written only when every",
-             "# byte equals BOF3.exe's, but a fishpen row (each release's own pens), a titlemark row and a pairs track",
+             "# byte equals BOF3.exe's, but a fishpen row (each release's own pens), a titlemark row, a regional row and a pairs track",
              "# naming a song the disc makes the same (byte-identical BGM files).",
              "# Addresses and counts only (CLAUDE.md rule 1).",
              "\t".join(COLS)]
@@ -1784,6 +1813,10 @@ def check():
                 not (tlo <= s0 < s1 <= thi) for s0, s1 in segs) or any(
                 a[1] > b[0] for a, b in zip(segs, segs[1:])):
             errs.append("TWINS 0x%06X..0x%06X %s: a segment outside the run, empty or out of order" % (tlo, thi, tfile))
+        fields = extra[3] if len(extra) > 3 else ()      # the regional fields: inside, between the segments
+        if fields and (len(segs) < 2 or any(not (tlo <= f0 < f1 <= thi) for f0, f1 in fields) or any(
+                f0 < s1 and s0 < f1 for f0, f1 in fields for s0, s1 in segs)):
+            errs.append("TWINS 0x%06X..0x%06X %s: a regional field outside the run or over a segment" % (tlo, thi, tfile))
     errs += table_selftest()
     rows = load_recipe()
     ptr = set()
