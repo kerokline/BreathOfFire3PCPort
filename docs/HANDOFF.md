@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-31: the exe-gap round staged on `exe-gap/round`, item 14; `main` at PR #175, the mountain passes; since alpha.6, PRs #171..#175 - issue #141, the no-fail cheat, the item sort, the dock legend, the passes; the owner's approvals of 2026-10-31 struck)
+**Status:** IN PROGRESS (2026-10-31: the exe-gap round built on `exe-gap/round`, item 14, PR at the owner's word; `main` at PR #175, the mountain passes; since alpha.6, PRs #171..#175 - issue #141, the no-fail cheat, the item sort, the dock legend, the passes; the owner's approvals of 2026-10-31 struck)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -262,16 +262,21 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - The ultrawide round's and the away day's looks, listens and calls (owner-review's 2026-10-14 and 2026-10-13
      sections); Peco's EXP table (item 22).
 
-14. **The exe-gap round is staged** (2026-10-31, at the owner's word; [`exe-gap-round.md`](exe-gap-round.md),
-   re-measured at `main` `43e98773`: 20..51 `gap` rows a build, 71 distinct ranges in a dozen families, mostly
-   the Western ending roll (unread since DIV-0148) and names a layer writes). Six groups: stage A **JA** (D280's
-   `ja-JP` layer, kinds 7..15), **PL** (placement with no owner), **AC** (`recipes/exe-gaps-accepted.tsv` and its
-   check), **AU** (D320's loss tune on disc-only installs, the disc-only review's notes); stage B **ST** (STRICT
-   refuses only an unaccounted gap, on by default for disc-built images, DIV-0101 amended) and the coordinator's
-   end batch (the read watch on all seven installs, psp-jp included). Briefs and `launch.sh` / `merge.sh` under
-   `C:\Users\kerok\bof3x-runs\eg1031`, the round doc on `exe-gap/round` (unpushed). **Unlaunched**: the owner's
-   word starts it; nothing in section 7 blocks it (the owner's rows are accounted `pending`). The ledger and defect
-   numbers continue from the last (DIV-0191, D398).
+14. **The exe-gap round is built on `exe-gap/round`** (2026-10-31; [`exe-gap-round.md`](exe-gap-round.md) 4a
+   "as run", 7 the owner's calls; tip `2b27a3c0` plus the end batch's record; unpushed, **PR at the owner's
+   word**). Five groups merged the same day: AC (`recipes/exe-gaps-accepted.tsv`, 221 rows, the CI check),
+   AU (DIV-0192 the loss tune on disc-only installs, DIV-0193 `SaveSlotBlank`, DIV-0194 the European disc's own
+   banks; D320 and D257 fixed), PL (three families placed, DIV-0195 the Western disc's regional fields - the
+   owner's word: "using the PSX bytes for a psx-only build instead of saving hardcoded values is fine" - and the
+   Identify words engine-own), JA (the `ja-JP` layer's kinds 7..15 from the Japan disc, nine amendments, D280
+   closed), ST (the accepted answers travel in the image's `data.toml`; a disc-built image with an unanswered
+   gap, or built by an older release, is refused at start by default; DIV-0101 amended). Gap rows a build
+   40 / 41 / 44 / 44 / 18 / 18 / 16 (US, EU-en, FR, DE, JP, PSP-JP, PSP-EU), every one accounted, 9 pending (the
+   FR / DE music-player labels, the owner's open question). **Every existing disc-built install is rebuilt**
+   (the launcher's stale prompt names the `exe` step). **Owed the owner:** a listen to the loss tune and the PAL
+   banks on a European disc-only install; the eye on JA's sheets (`eg1031\ja\sheets\`: the Config labels run
+   past the panel), on DIV-0195's regional boxes on a Western PSX-only install, and on the empty save slot.
+   **The end batch** (section 9) ran unattended after the merge; its record is in the round doc.
 
 14a. **The 64-bit build round is staged, not launched** ([`x64-build-round.md`](x64-build-round.md); staged
    2026-10-29, re-measured 2026-10-31 on `main` `43e98773` on `docs/x64-refresh`, unpushed - the doc had no

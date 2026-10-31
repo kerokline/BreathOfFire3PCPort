@@ -8,12 +8,19 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**The exe-gap round staged, 2026-10-31** (on `exe-gap/round`, unlaunched; [`exe-gap-round.md`](exe-gap-round.md)).
-Re-measured: a disc-built image's `gap` rows are down to 20..51 a build from 2026-10-20's 49..74, 71 distinct ranges
-in a dozen families. Six groups cut and briefed (JA the `ja-JP` layer for D280, PL placement, AC the accepted list,
-AU the loss tune and the review notes, then ST making STRICT the default for disc-built images with only an
-unaccounted gap refused, and the coordinator's read-watch end batch). The disc-only and PSP polish item is folded in.
-Launch at the owner's word.
+**The exe-gap round, 2026-10-31** (built on `exe-gap/round`, unpushed, PR at the owner's word;
+[`exe-gap-round.md`](exe-gap-round.md) 4a). Staged in the morning (re-measured: 71 distinct `gap` ranges, 20..51 a
+build) and run the same day by five Opus agents: **AC** wrote `recipes/exe-gaps-accepted.tsv`, an answer and a
+pointer for every `gap` row of a disc-built image, with a CI check; **AU** gave disc-only installs the loss tune
+(DIV-0192, D320), blanked the empty save slot everywhere (DIV-0193), took the European disc's own eight area banks
+(DIV-0194, D257) and did the disc-only review's notes; **PL** placed three more families from the discs and the six
+Western layout fields as regional twins (DIV-0195, the owner's call), and made the Identify words the engine's own
+(a psp-jp install drew no EXP label); **JA** built the `ja-JP` layer's kinds 7..15 from the Japan disc, so the PC
+under `ja-JP` and the Japanese disc-only installs draw Japanese where they drew the port's Chinese or nothing (D280,
+nine entries amended); **ST** made the image carry each gap's answer and the engine refuse, by default, a disc-built
+image with an unanswered gap or one built by an older release (DIV-0101 amended; `BOF3X_EXEIMAGE_STRICT=0` runs
+it). Gap rows a build are 40 / 41 / 44 / 44 / 18 / 18 / 16, all accounted, 9 pending for the owner. Every disc-built
+install is rebuilt at its next start. Owed the owner: the listens, JA's sheets, DIV-0195's boxes.
 
 **Mt. Zublo and Mt. Levett passable on the world map, 2026-10-30 night, merged as PR #175** (`main` `43e98773`; DIV-0191,
 switch `MountainPasses`; [`mountain-passes.md`](mountain-passes.md)). The owner's request of the evening: once the way

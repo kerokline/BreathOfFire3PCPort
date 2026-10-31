@@ -1,15 +1,12 @@
 # The exe-gap round: the disc-built image's last differences, and STRICT as the default
 
-**Status:** STAGED (2026-10-31, at the owner's word: re-measured at `main`
-`43e98773`, six groups cut, briefs and the launch script under
-`C:\Users\kerok\bof3x-runs\eg1031`, nothing launched; framed 2026-10-20,
-when stage 0, D266 and the ending roll were done on `fix/d266-title-mark`,
-sections 1 and 3). It also carries what HANDOFF's "disc-only and PSP polish"
-item still held (group AU, section 4), so that item is this round's. The idea is
-[`IDEAS.md`](IDEAS.md) I43, steps 3 and 4. The rounds before it are the
-install-gap round ([`install-gap-round.md`](install-gap-round.md), PR #91)
-and the second pairing pass ([`install-gap-pairs.md`](install-gap-pairs.md)
-8, merged with PR #94).
+**Status:** BUILT, end batch running (2026-10-31 afternoon: launched at the
+owner's word 2026-10-31 late morning, five groups merged on `exe-gap/round`,
+tip `2b27a3c0` plus the end batch's record; section 4a has each group as
+run, section 7 the owner's calls; unpushed, PR at the owner's word. Framed
+2026-10-20, re-measured and staged 2026-10-31 morning, briefs under
+`C:\Users\kerok\bof3x-runs\eg1031`.) It also carried HANDOFF's "disc-only
+and PSP polish" item (group AU).
 
 ## 0. What the round is for
 
@@ -245,6 +242,102 @@ The ledger: DIV-0101 amended, the `Switch:` / `Default:` fields updated.
 **CV - coverage, the coordinator's end batch** (section 9): the read watch
 over the eleven routes on all seven installs, psp-jp included, under this
 tip; the attract; the A/B/C routes; the state hash. Not an agent.
+
+### 4a. As run (2026-10-31, Opus agents in `eg1031\wt_<group>`, merged in the order AC, AU, PL, JA, ST)
+
+Stage A's four ran in parallel from `657d5a89` (the round tip after the
+owner's four calls, section 7) and reported within the day; ST ran off
+`1e735bba` (AC, AU and PL merged) while JA was still running, and merged
+after it. The order planned (PL first) was not kept: AC and AU were ready
+first, and AC's check pruned the rows PL placed at PL's merge instead. After
+every merge: `exe_tables.py check`, `ledger_check.py`, `exe_scan.py
+--accepted`, the registry and switches regenerated, the build, and the
+whole hosted shadow suite from an ini-less copy (`eg1031\gate\`): exit 0, no
+mismatch, after AC + AU and after PL; JA's and ST's are the end batch's.
+The reports: `C:\Users\kerok\bof3x-runs\eg1031\<group>\REPORT.md`.
+
+**AC (merged `9ed06325`).** `recipes/exe-gaps-accepted.tsv`, one row per
+`gap` row with `answer` (layer / port-own / unread / pending) and
+`evidence`; `tools/exe_scan.py --accepted` fails on a gap with no row, a
+row with no gap, a duplicate, a bad answer or an empty evidence, and runs in
+CI (`checks.yml`); census section 8 rewritten as the rows today, the
+2026-10-18 statuses kept whole below it. 258 rows at its tip; **221 after
+PL's placements** (100 / 24 / 125 / 9 by answer before; after PL and JA:
+91 layer, 0 port-own, 121 unread, 9 pending). It found section 1's two
+errors (35 roll ranges, not 37; the music-player label rows are the census's
+`CommuMusic_CloseSteps` rows and still the owner's question), that "the
+PC's numbers" had no supplier on a Western-PSX-only install, and the
+Identify words' probable read-while-zero on the Japanese and PSP builds.
+
+**AU (merged `136ddd03`, numbered `6b43bb45`).** DIV-0192: `base/bgm/166.DAT`
+written for every disc cache from sub-song 2 of `BGMBAT00.EMI` through its
+bank (D320 fixed; a PC install with a disc cache now plays the disc's loss
+tune, `music=pc` the MP3). DIV-0193 `SaveSlotBlank`: an empty save slot
+draws no text on every install, as the US disc; `BOF3X_OFF=SaveSlotBlank`
+the port's string. DIV-0194: a European disc-only install takes its disc's
+own eight area banks through the new `recipes/pal-banks.toml` (written by
+`importer.py pal-banks` from the three European discs, identical on all
+three; D257 fixed; 741 containers, area 112 loaded from a crafted save with
+the PAL bank's hash). The review notes: the Config and `yes_no_layout`
+hosted checks compare the fields the readers use, `BOF3X_EXEIMAGE` read
+wide, `bss_numbers`' docstring, an `under_jmp` log line; `fmv_install`
+already DIV-0099's, `check_relaid` tooling. Shadow suite 1,325 s, exit 0.
+
+**PL (merged `7dd4eb4a`, numbered `1e735bba`).** Placed:
+`CommuMusic_LabelC+0x4C` on psx-jp / psp-jp / psp-eu (a new `imm_strings`
+piece rule: the PlayStation lays the three glyph strings in the other
+order); `Area121_BandHeights+0x1` on the PSPs (the section-tail floor);
+`LinkedObjectD_Amounts` on psp-eu (a `BOOT.BIN` twin read at its first
+byte); the six Western u16 fields as `regional` twins on the four Western
+PSX builds (**DIV-0195**, section 7: area 135's three panel pieces 56 px
+right of the PC's, kind 0x5E's frame 1 px narrower, its menu box 84 px
+right and 158 px narrower, 60 / 118 on FR). The Identify words
+(`TornadoMote_Phases+0x10 / +0x15`) are the engine's own
+(`exe_own.cpp IdentifyWords`, DIV-0101 amended): AC's psp-eu worry did
+not hold (its layer draws all four words), but psp-jp drew no EXP label
+and now does. Not placed, with the reason: the West's own `CommuMusic`
+text (pending / layer), `ConfigScreen_OpenStates+0x144` (the PC keyboard's
+default key names, `port-platform`, accounted unread),
+`Char_DefaultRecords+0x47C` (the layer's), `WardMote_Tilts+0x8` (the
+PlayStation's table is followed by zero padding too: unread). Gap rows
+47 / 48 / 51 / 51 / 20 / 21 / 20 to **40 / 41 / 44 / 44 / 18 / 18 / 16**
+(US, EU-en, FR, DE, JP, PSP-JP, PSP-EU); `data_diff.py run` 0 errors.
+
+**JA (merged `6eb88ea9`, folded `c3ece5bb`).** `loc_build.py convert_exe_ja`
+reads the Japan disc's own tables where each module's code reads them
+(`BOOT.BIN` holds 180 of the 188 words for PSP-JP; the 8 it lacks are the
+Config rows the PSP's own Config screen has not): kind 7 (6 labels, 17
+options, 6 controller names), 8 (22 verbs), 9 (7 commands), 10 (8 names;
+character 2 takes a pair code, which reaches the save), 11, 12 (12 battle
+messages), 15 (24 groups; the second status word left as shipped, 9 bytes
+for an 8-byte slot). DLL: group 8 and group 20 (kind 0x5E's title) in
+buffers of ours, a new group 26 (fight 26's two turn words), the
+BattleExtra name copy whole beyond five bytes. Nine amendments (DIV-0015 /
+0018 / 0019 / 0020 / 0052 / 0057 / 0064 / 0118 / 0120), no new number.
+psp-jp's Identify panel takes group 15 from the UMD's `MAGIC060.EMI` as
+PSP-EU's does. L1 / R1 keep DIV-0051's cells. Latin overlays rebuilt
+byte-identical. **For the owner's eye** (`eg1031\ja\sheets\`): the Config
+labels run past the panel (the disc centres, the port right-aligns), the
+pair code in a saved name.
+
+**ST (merged `3c00b19b`, folded `2b27a3c0`).** `write_exe` writes an
+`accepted = [[answer, lo, hi], ...]` list into the image's `data.toml` from
+the accepted recipe (the range rows unchanged: five readers unpack four
+fields); the engine, on a disc-built image, logs an answered gap with its
+answer and refuses an unanswered one or an image with no list ("built by
+an older release ... rebuild the install"), `BOF3X_EXEIMAGE_STRICT=0` runs
+them, `=1` keeps refusing every gap (DIV-0101's `Switch:` value, which the
+presets send), another value a Fatal; `exe_image STRICT self-test` in the
+exe host (8 checks on a synthetic list, 10 with an image mapped); the
+launcher's stale check names the `exe` step for an older install. Seven
+installs start under the default (40 / 41 / 44 / 44 / 18 / 18 / 16
+accepted, 0 not), an older image is refused, a planted gap is refused by
+name, the attract on psx-us runs to its end. The preset reference tables
+had no rows for DIV-0192..0195 (stale since AU): regenerated, the
+as-shipped count 79. **Decisions taken:** no `off=` name for the switch
+(a rebuild is the player's way out; `=0` is a developer's); every existing
+disc-built install - the harness roots and the owner's - is rebuilt by the
+launcher's stale prompt or `importer.py build`.
 
 ## 5. Order and method
 
