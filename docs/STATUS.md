@@ -8,6 +8,13 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The exe-gap round staged, 2026-10-31** (on `exe-gap/round`, unlaunched; [`exe-gap-round.md`](exe-gap-round.md)).
+Re-measured: a disc-built image's `gap` rows are down to 20..51 a build from 2026-10-20's 49..74, 71 distinct ranges
+in a dozen families. Six groups cut and briefed (JA the `ja-JP` layer for D280, PL placement, AC the accepted list,
+AU the loss tune and the review notes, then ST making STRICT the default for disc-built images with only an
+unaccounted gap refused, and the coordinator's read-watch end batch). The disc-only and PSP polish item is folded in.
+Launch at the owner's word.
+
 **Mt. Zublo and Mt. Levett passable on the world map, 2026-10-30 night, merged as PR #175** (`main` `43e98773`; DIV-0191,
 switch `MountainPasses`; [`mountain-passes.md`](mountain-passes.md)). The owner's request of the evening: once the way
 through is open, the two mountains should not need their area walked every time. Zublo's drawn walkway (four cells

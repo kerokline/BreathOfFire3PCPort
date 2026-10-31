@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-31: `main` at PR #175, the mountain passes; since alpha.6, PRs #171..#175 - issue #141, the no-fail cheat, the item sort, the dock legend, the passes; the owner's approvals of 2026-10-31 struck)
+**Status:** IN PROGRESS (2026-10-31: the exe-gap round staged on `exe-gap/round`, item 14; `main` at PR #175, the mountain passes; since alpha.6, PRs #171..#175 - issue #141, the no-fail cheat, the item sort, the dock legend, the passes; the owner's approvals of 2026-10-31 struck)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -262,12 +262,16 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - The ultrawide round's and the away day's looks, listens and calls (owner-review's 2026-10-14 and 2026-10-13
      sections); Peco's EXP table (item 22).
 
-14. **The exe-gap round** ([`exe-gap-round.md`](exe-gap-round.md), framed, not staged): what is left between a
-   disc-built image and `BOF3X_EXEIMAGE_STRICT=1` as the default - 49..74 `gap` rows per build, STRICT narrowed to a
-   reviewed list, D280's `ja-JP` kinds 7..15 (answered yes, not built), the owner's open rows (the empty save slot
-   first), psp-jp's read-watch coverage now that D321 is fixed. Stage 0 and D266 are done (PR #98); issue #139's
-   neighbour rule (7.9), the descriptor-table rule (7.11) and the narrowed `language` rule
-   ([`install-gap-labels.md`](install-gap-labels.md) 9) have moved rows since. Staging it is the owner's word.
+14. **The exe-gap round is staged** (2026-10-31, at the owner's word; [`exe-gap-round.md`](exe-gap-round.md),
+   re-measured at `main` `43e98773`: 20..51 `gap` rows a build, 71 distinct ranges in a dozen families, mostly
+   the Western ending roll (unread since DIV-0148) and names a layer writes). Six groups: stage A **JA** (D280's
+   `ja-JP` layer, kinds 7..15), **PL** (placement with no owner), **AC** (`recipes/exe-gaps-accepted.tsv` and its
+   check), **AU** (D320's loss tune on disc-only installs, the disc-only review's notes); stage B **ST** (STRICT
+   refuses only an unaccounted gap, on by default for disc-built images, DIV-0101 amended) and the coordinator's
+   end batch (the read watch on all seven installs, psp-jp included). Briefs and `launch.sh` / `merge.sh` under
+   `C:\Users\kerok\bof3x-runs\eg1031`, the round doc on `exe-gap/round` (unpushed). **Unlaunched**: the owner's
+   word starts it; nothing in section 7 blocks it (the owner's rows are accounted `pending`). Numbers from
+   DIV-0192 and D399.
 
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
@@ -289,9 +293,9 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - D270's look owed; D284 and D285 not traced; D287 (the launcher's clipped lines); DIV-0064's amendment pending
      the owner's confirmation.
 
-17. **The follow-up round: disc-only and PSP polish** (not staged): PSP-EU's image's 39 ranges
-   ([`exe-image-twins-1013.md`](exe-image-twins-1013.md) 6); [`disc-only-round.md`](disc-only-round.md) 5; D246 and
-   D257, the owner's. D320 (song 166 on disc-only installs) is open.
+17. **The follow-up round: disc-only and PSP polish** is folded into item 14's round (group AU: D320; PL: the
+   PSP-EU image's remainder, [`exe-image-twins-1013.md`](exe-image-twins-1013.md) 6, where a reader is found).
+   Left to the owner: D257 (the PAL banks) and D256 (the PSP-only title's layout), in the round doc's section 7.
 
 18. **The staged localisation PR**: the empty save slot blank as the US disc draws it (`0x669CCC`) and IDEAS I34, the
    name entry back ([`name-entry-restoration.md`](name-entry-restoration.md); its section 8 is the owner's first).
