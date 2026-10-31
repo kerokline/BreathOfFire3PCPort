@@ -121,7 +121,7 @@ Details that matter:
   `list` shows the saves, which recipes use each, any lock, and every
   `BOF3.exe` up with whether it is scripted.
 - **The player's game is never swapped under.** An unattended game marks
-  itself: `dllmain.cpp` creates the event `Localof3x_unattended_<pid>`
+  itself: `dllmain.cpp` creates the event `Local\bof3x_unattended_<pid>`
   when `BOF3X_INPUT` or `BOF3X_SELFTEST_ONLY` is set, and the runner opens
   it per `BOF3.exe` it finds. One without the marker - the owner's game,
   a `BOF3X_RECORD` session - refuses the swap, since that game read its slot

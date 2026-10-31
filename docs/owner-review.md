@@ -150,8 +150,7 @@ and DIV-0157 (mods); the round's findings are known-defects D326..D330.
   (the saves now carry themselves: D331, `carry_saves` in `setup`, from
   the previous game folder and from the home folder's old layout): the
   furigana zip must be built
-  (`tools/make_mod.py furigana`, `build
-eleaseurigana-0.1.0.zip`) and
+  (`tools/make_mod.py furigana`, `build\release\furigana-0.1.0.zip`) and
   added on the Mods tab, and `language=ja-JP` chosen for its entry.
 
 - **From ML:** should a mod also build into a cache named by `cache=`, or
@@ -510,8 +509,8 @@ new root in place of `b_rc`).
 ## 2026-10-17, stale installs, the gap census's fixes, the PSP-only title
 
 `install/recipe-version`. Captures are in session `6467ad33`'s scratchpad
-(game-derived, never in the tree); the scratch homes are `C:\Users\kerok\rv`
-(PSX-US + PSP-EU) and `rvp` (PSP-EU only), the launcher folder `rvL`.
+(game-derived, never in the tree); the scratch homes were `C:\Users\kerok\rv`
+(PSX-US + PSP-EU) and `rvp` (PSP-EU only), the launcher folder `rvL` (all three gone).
 
 ### Approved by the owner (struck, 2026-10-17)
 
@@ -709,7 +708,7 @@ checkout's `analysis/` (never in the tree).
   ([`labels-1013.md`](labels-1013.md) 1.4): `WEAK POINT`, `ITEM` / `OBJET` /
   `OBJEKT`, `EP` on the Identify panel (DIV-0117) - placed right?
 - **The Japanese world map**, `C:\Users\kerok\abj\runs\jp1013_worldMapAndAreaTransition`
-  frames 1140..1770 (D281, [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md) 3.3):
+  (gone with the root on 2026-10-21; a jp-set re-run makes it again) frames 1140..1770 (D281, [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md) 3.3):
   PSX-JP draws it about a third closer than the PC and PSP-JP. **The owner's
   note (2026-10-13):** does not remember the Japanese release's map being
   closer, but it is subtle enough that they would not; since the PC port and
@@ -718,11 +717,11 @@ checkout's `analysis/` (never in the tree).
   1012 sweep). Recorded as the owner's hypothesis; the PSX twin read (JP
   against US `GAME.EMI`'s world-map camera set-up) is the check - anything to
   add?
-- **Area 65's forest canopy** (`C:\Users\kerok\abu\runsဓ_fairyVillage`, the
+- **Area 65's forest canopy** (`C:\Users\kerok\abu\runs\u1013_fairyVillage`, gone with the root on 2026-10-21; the
   PC's `AREA065` art against both discs', [`abc-sweep-1013-us.md`](abc-sweep-1013-us.md)
   3.3) and **bossAndFlash's three boss-effect frames** 3480, 4530,
   4800..4830 that differ between the installs on both runs
-  (`abu\runsဓ_bossAndFlash`, `u1013r_bossAndFlash`; that doc 9) -
+  (`abu\runs\u1013_bossAndFlash`, `u1013r_bossAndFlash`, gone with the root; that doc 9) -
   anything visibly wrong?
 
 ### To listen to
