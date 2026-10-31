@@ -1,10 +1,11 @@
 # The exe-gap round: the disc-built image's last differences, and STRICT as the default
 
-**Status:** BUILT, end batch running (2026-10-31 afternoon: launched at the
-owner's word 2026-10-31 late morning, five groups merged on `exe-gap/round`,
-tip `2b27a3c0` plus the end batch's record; section 4a has each group as
-run, section 7 the owner's calls; unpushed, PR at the owner's word. Framed
-2026-10-20, re-measured and staged 2026-10-31 morning, briefs under
+**Status:** DONE, PR at the owner's word (2026-10-31: launched at the owner's
+word late morning, five groups merged on `exe-gap/round` the same day, the
+end batch run unattended in the afternoon and evening and passed whole
+(section 9a); DIV-0196 the owner's rule on the Config labels after it;
+unpushed. Section 4a has each group as run, section 7 the owner's calls.
+Framed 2026-10-20, re-measured and staged 2026-10-31 morning, briefs under
 `C:\Users\kerok\bof3x-runs\eg1031`.) It also carried HANDOFF's "disc-only
 and PSP polish" item (group AU).
 
@@ -334,7 +335,8 @@ answer and refuses an unanswered one or an image with no list ("built by
 an older release ... rebuild the install"), `BOF3X_EXEIMAGE_STRICT=0` runs
 them, `=1` keeps refusing every gap (DIV-0101's `Switch:` value, which the
 presets send), another value a Fatal; `exe_image STRICT self-test` in the
-exe host (8 checks on a synthetic list, 10 with an image mapped); the
+exe host (8 checks on a synthetic list, 9 with an image mapped: the planted
+copy; ST's report said 10, its logs 9); the
 launcher's stale check names the `exe` step for an older install. Seven
 installs start under the default (40 / 41 / 44 / 44 / 18 / 18 / 16
 accepted, 0 not), an older image is refused, a planted gap is refused by
@@ -422,7 +424,11 @@ round tip first, one merge at a time, the coordinator numbers.
   install kind). ST's narrowed STRICT accepts a pending row.
 
 **Still the owner's**, after the merge: a listen to the loss tune (AU, D320)
-and the PAL banks on a European disc-only install; the eye on JA's sheets.
+and the PAL banks on a European disc-only install; the eye on DIV-0195's
+regional boxes on a Western PSX-only install; the word on a fresh
+`cn_<route>_orig4` re-record with the current saves (section 9a item 4);
+the nine pending rows (the FR / DE music-player labels). JA's sheets and
+DIV-0196 were seen and approved the same day.
 
 ## 8. Ownership, merge order, numbering
 
@@ -466,6 +472,62 @@ pauses on focus loss):
    `cn_<route>_orig4` / `_orig4b` (`BOF3X_OPT=none`, the skip list), equal.
 5. Captures for the owner: JA's screens on psx-jp and the PC under `ja-JP`,
    the loss tune's log line on a disc-only install.
+
+### 9a. As run (2026-10-31 afternoon and evening, an Opus agent at the round tip `2b27a3c0`; `end\REPORT.md`)
+
+**Every step passed; nothing needed a fix before the default stayed on.**
+Root `C:\Users\kerok\bof3x-runs\eg1031\end\`, the seven disc-only installs
+rebuilt with this tip's importer (1,859 s), the PC install a copy of the
+tooling install with junctions, the launcher copy `L\` ini-less, one game at
+a time, the chain waiting for the coordinator's gate before it started.
+
+1. **Self-tests.** The exe host on the PC install: the STRICT self-test 8
+   checks right; on all seven disc-only installs 9 (the planted copy of the
+   mapped `data.toml` with one answer taken out refused and the range named),
+   0 FATAL, and every install "N accepted, 0 not" at 18 / 40 / 41 / 44 / 44 /
+   18 / 16 (JP, US, EU-en, FR, DE, PSP-JP, PSP-EU). The hosted shadow suite
+   on the PC install: exit 0 in 1,173 s, every mismatch line 0, 10,087 ours.
+2. **The seven installs under the default.** The attract and the ten routes
+   on each, 77 runs, every one to `recipe done` with exit 0 and no FATAL,
+   393,120 latches watched under the read watch. 76 of 77 area sequences
+   follow psx-us; the exception psx-fr `worldMapAndAreaTransition` is the
+   known one (install-gap-reads.md 9.1), and psp-jp `combat` and
+   `dragonTransform` now follow the US sequence where 9.1 had them part.
+3. **The read watch:** 0 of 60 ranges read in any run. The only range
+   written is `Char_DefaultRecords` by the layer, read by nothing. Two edge
+   hits were checked and are accesses that end before the range
+   (`EffectKind0F_DrawToggles`' pointer reads below `0x66A094`,
+   `CharNames_Apply`'s writes below `0x669CE8`). The nine `pending` rows were
+   not exercised: no route opens the faerie music player.
+4. **The state hash on the PC install:** the ten routes under the pool-fold
+   proof's conditions. Against `cn_<route>_orig4` every route differs on the
+   standing signature, not the round (`0x5FD000` from tick 0 is DIV-0176
+   SunderLoop; the save-list pages are the owner's slot 6 saved after orig4;
+   the DIV-0092 and DIV-0154 pages are ledgered); against the pool-fold
+   proof's own 2026-10-29 runs three routes are identical on every tick and
+   the other seven differ only on the known noise pages (sound, the VRAM
+   shadow, two windows, the D3D page), the two widest re-run with the windows
+   moved or gone. **No PC-install difference on any game page.** A fresh
+   orig4 re-record with the current saves would make "equal" literal (an
+   item for the owner, section 7).
+5. **Captures:** the lost fight on psx-eu-en logs `DIV-0087 track 166 from
+   the cache: base\bgm\166.DAT, bank BGMBAT00, looping`
+   (`end\runs\cap_gameover_r2\psx-eu-en\`); the PC install's load list draws
+   no text in its empty slots under `SaveSlotBlank` (`end\s5\slot_pc\load_list.png`).
+
+Findings, none needing a fix: `gapwatch.py`'s `edge` counter counts any
+access starting up to 7 bytes below a range whatever its width (a tooling
+note); ST's report's "10 checks" is 9. Not run: the four stale Chinese pairs
+of DIV-0092; the owner's newer recordings as extra routes; A/B/C picture
+compares (no frames at `--every 100000`). Durations: the routes 3 h 57 min,
+the hash 42 min.
+
+**After the batch:** DIV-0196 (the Config labels under `ja-JP`, section 4a
+under JA) landed on the round branch with its own proof - the `field_c1`
+and `config_text` shadow rows under `ja-JP` at 0 mismatches and the
+`config_screen` captures on the three Japanese installs - and the owner's
+approval of the captures; the batch's installs predate it, which touches no
+disc-built image.
 
 ## 10. The brief, per group
 

@@ -20,7 +20,11 @@ under `ja-JP` and the Japanese disc-only installs draw Japanese where they drew 
 nine entries amended); **ST** made the image carry each gap's answer and the engine refuse, by default, a disc-built
 image with an unanswered gap or one built by an older release (DIV-0101 amended; `BOF3X_EXEIMAGE_STRICT=0` runs
 it). Gap rows a build are 40 / 41 / 44 / 44 / 18 / 18 / 16, all accounted, 9 pending for the owner. Every disc-built
-install is rebuilt at its next start. Owed the owner: the listens and DIV-0195's boxes; JA's sheets seen and approved the same afternoon.
+install is rebuilt at its next start. **The end batch passed whole** (77 route runs on the seven rebuilt installs under
+the default, the read watch at 0 of 60 ranges read, the PC install's state hash with no game-page difference; the
+round doc's 9a). After it, DIV-0196: the Config screen's label column left-aligned at the row box under a Japanese
+layer, the owner's rule on JA's sheets, seen and approved. Owed the owner: the listens, DIV-0195's boxes, the word
+on a fresh orig4 re-record.
 
 **Mt. Zublo and Mt. Levett passable on the world map, 2026-10-30 night, merged as PR #175** (`main` `43e98773`; DIV-0191,
 switch `MountainPasses`; [`mountain-passes.md`](mountain-passes.md)). The owner's request of the evening: once the way

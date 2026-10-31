@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-31: the exe-gap round built on `exe-gap/round`, item 14, PR at the owner's word; `main` at PR #175, the mountain passes; since alpha.6, PRs #171..#175 - issue #141, the no-fail cheat, the item sort, the dock legend, the passes; the owner's approvals of 2026-10-31 struck)
+**Status:** IN PROGRESS (2026-10-31 evening: the exe-gap round done on `exe-gap/round`, end batch passed, item 14, PR at the owner's word; `main` at PR #175, the mountain passes; since alpha.6, PRs #171..#175 - issue #141, the no-fail cheat, the item sort, the dock legend, the passes; the owner's approvals of 2026-10-31 struck)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -276,7 +276,11 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    (the launcher's stale prompt names the `exe` step). **Owed the owner:** a listen to the loss tune and the PAL
    banks on a European disc-only install; the eye on DIV-0195's regional boxes on a Western PSX-only install, and on the empty save slot. JA's four sheets were seen and approved by the owner the same afternoon, and the Config labels got the owner's
    rule as DIV-0196 (`ConfigLabelJapanese`: left-aligned at the row box under a Japanese layer).
-   **The end batch** (section 9) ran unattended after the merge; its record is in the round doc.
+   **The end batch ran unattended after the merge and passed whole** (section 9a: 77 route runs on the seven
+   rebuilt installs under the default, the read watch at 0 of 60 ranges read, the PC install's state hash with no
+   game-page difference against the pool-fold proof's runs; `end\REPORT.md`). **Owed the owner, new:** the word on a
+   fresh `cn_<route>_orig4` re-record with the current saves (the references carry the standing SunderLoop and
+   slot-6 signature).
 
 14a. **The 64-bit build round is staged, not launched** ([`x64-build-round.md`](x64-build-round.md); staged
    2026-10-29, re-measured 2026-10-31 on `main` `43e98773` on `docs/x64-refresh`, unpushed - the doc had no
