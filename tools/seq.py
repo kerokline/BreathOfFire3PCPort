@@ -52,8 +52,15 @@ import tables       # noqa: E402
 SONG_MAGIC, SONG_VERSION = b"BF3S", 1
 BANK_MAGIC, BANK_VERSION = b"BF3B", 2
 NONE = 0xFFFFFFFF
-SONGS = 165                     # the table's; 165 itself is the battle bundles' sub 1
+SONGS = 165                     # the table's; 165 and 166 are the battle bundles' subs 1 and 2
 BATTLE_SONG = (165, "BGMBAT00", 1)
+# The loss tune: the PC's BattleEnd_LossBanner 0x431550 plays 166, the
+# PlayStation's loss twin the resident battle bundle's sub 2 (D320). Through
+# BGMBAT00's bank, as 165: on the PSX the fight's own bundle is resident, and
+# the bundles' banks differ under it (the same open choice as 165's).
+LOSS_SONG = (166, "BGMBAT00", 2)
+EXTRA_SONGS = (BATTLE_SONG, LOSS_SONG)
+LAST_SONG = EXTRA_SONGS[-1][0]
 SONG_HEAD, EVENT = 56, 12
 BANK_HEAD, PROGRAM, TONE, SAMPLE = 36, 8, 24, 8
 VAB_HEAD, VAB_PROG, VAB_TONE = 32, 16, 32
@@ -313,7 +320,7 @@ def songs(disc, bid=None):
     """Every song: [{song, emi (path under BIN/), name, vh, sep, vb (section
     indices), sub}] for 0..164 from the boot EXE's song table (where
     tables.toml's `songs` records it for this build), plus 165 =
-    BGMBAT00.EMI sub 1."""
+    BGMBAT00.EMI sub 1 and 166 = its sub 2 (EXTRA_SONGS)."""
     bid = bid or disc_build_id(disc)
     cat, _, _ = tables.load()
     t = next(t for t in cat["table"] if t["key"] == "songs")
@@ -328,7 +335,7 @@ def songs(disc, bid=None):
         if seq != 0 or sub > 3 or fid >= len(paths) or not paths[fid].startswith("BIN/BGM/"):
             raise SystemExit("song %d: file id 0x%X seq %d sub %d is not a BIN/BGM file's sub-song" % (n, fid, seq, sub))
         out.append(dict(song=n, emi=paths[fid][4:], sub=sub))
-    out.append(dict(song=BATTLE_SONG[0], emi="BGM/%s.EMI" % BATTLE_SONG[1], sub=BATTLE_SONG[2]))
+    out += [dict(song=n, emi="BGM/%s.EMI" % name, sub=sub) for n, name, sub in EXTRA_SONGS]
     for s in out:
         if s["emi"] not in sections:
             blob = disc.read("BIN/" + s["emi"])
@@ -454,7 +461,7 @@ def load_fixture(path=None):
 
 def check_fixture(builds, path=None):
     """fixtures/bgm.tsv's shape, no game data: the format versions seq.py writes,
-    builds fixtures.toml holds, every build the same 166 songs, each song's EMI
+    builds fixtures.toml holds, every build the same 167 songs, each song's EMI
     with its bank, nothing else. Returns the errors."""
     path = path or FIXTURE
     if not os.path.exists(path):
@@ -464,13 +471,13 @@ def check_fixture(builds, path=None):
     if versions != (SONG_VERSION, BANK_VERSION):
         errs.append("bgm.tsv: written for song / bank format %s, seq.py writes %d / %d - regenerate it (seq.py fixture)"
                     % (versions, SONG_VERSION, BANK_VERSION))
-    songs_want = {"base/bgm/%03d.DAT" % i for i in range(SONGS + 1)}
+    songs_want = {"base/bgm/%03d.DAT" % i for i in range(LAST_SONG + 1)}
     for bid, files in sorted(rows.items()):
         if bid not in builds or not bid.startswith("psx-"):
             errs.append("bgm.tsv: build %s is not a PSX build of fixtures.toml" % bid)
         got = {r for r in files if not r.startswith("base/bgm/bank/")}
         if got != songs_want:
-            errs.append("bgm.tsv %s: %d song files, not the %d of 000..%03d" % (bid, len(got), len(songs_want), SONGS))
+            errs.append("bgm.tsv %s: %d song files, not the %d of 000..%03d" % (bid, len(got), len(songs_want), LAST_SONG))
         banks = {r for r in files if r.startswith("base/bgm/bank/")}
         named = {"base/bgm/bank/%s.DAT" % files[r][1].split(".EMI")[0] for r in got}
         if banks != named:
