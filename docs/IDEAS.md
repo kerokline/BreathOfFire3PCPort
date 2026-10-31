@@ -1854,7 +1854,7 @@ to look at every one of them, not wait for play to trip over the next.
 The owner, on a PSX-only install: the child's field sprite in the forest after
 the mine (area 9, the `whelpBoss` route, frames about 4,530..6,870) is drawn
 in pieces and displaced up and to the right. Runs under
-`C:\Users\kerok\abv\runs\`, each `whelpBoss`, frame 4710's sprite region
+`C:\Users\kerok\abv\runs\` (gone with the root on 2026-10-21), each `whelpBoss`, frame 4710's sprite region
 scored against the PC install's (pixels differing by more than 40):
 
 | Run | What | Score |
