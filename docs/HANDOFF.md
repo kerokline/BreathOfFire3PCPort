@@ -471,6 +471,11 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
+- **`fix/mountain-passes`** (2026-10-30 evening): DIV-0191, the switch `MountainPasses` - Mt. Zublo's road cells
+  from chapter 9 and Mt. Levett's hidden object dropped once crossed (our save-block byte `+0x1040`);
+  [`mountain-passes.md`](mountain-passes.md). Self-tested headless, unpushed; **owed the owner's play** (both
+  mountains, both ways, the `DIV-0191` log lines) and their eye on the four Zublo cells against the drawn path. The
+  sampler `tools/cell_peek.py` reads a running game's cells around the leader.
 - **`away1027/integration`** (item 1): the four agents' branches `away1027/{lang,desc,stp,sweep}` merged, the
   coordinator's batched validation on it; unpushed, PR at the owner's word. **`away1027/twins`** is running (a
   sixth agent, off the integration). Worktrees `C:\Users\kerok\bof3x-runs\away1027\wt_*`, the game lock
