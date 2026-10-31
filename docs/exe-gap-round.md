@@ -316,7 +316,7 @@ and the PAL banks on a European disc-only install; the eye on JA's sheets.
 
 Merge order: PL, AC, JA, AU, then ST. Numbering: groups draft lettered
 ledger entries and describe defects without numbers; the coordinator numbers
-from **DIV-0192** and **D399** (2026-10-31; DIV-0191 and D398 are the last).
+from the first free after DIV-0191 and D398 (2026-10-31).
 Every commit `git commit -s`; no game data in any file, report or commit
 message (rule 1): addresses, symbol names, counts and file names only.
 
