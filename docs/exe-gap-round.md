@@ -316,9 +316,9 @@ BattleExtra name copy whole beyond five bytes. Nine amendments (DIV-0015 /
 0018 / 0019 / 0020 / 0052 / 0057 / 0064 / 0118 / 0120), no new number.
 psp-jp's Identify panel takes group 15 from the UMD's `MAGIC060.EMI` as
 PSP-EU's does. L1 / R1 keep DIV-0051's cells. Latin overlays rebuilt
-byte-identical. **For the owner's eye** (`eg1031\ja\sheets\`): the Config
-labels run past the panel (the disc centres, the port right-aligns), the
-pair code in a saved name.
+byte-identical. **Seen by the owner on the four sheets, 2026-10-31
+afternoon: "those all look great"** - the Config labels past the panel
+included; the pair code in a saved name stays a note.
 
 **ST (merged `3c00b19b`, folded `2b27a3c0`).** `write_exe` writes an
 `accepted = [[answer, lo, hi], ...]` list into the image's `data.toml` from

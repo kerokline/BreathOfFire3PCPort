@@ -20,7 +20,7 @@ under `ja-JP` and the Japanese disc-only installs draw Japanese where they drew 
 nine entries amended); **ST** made the image carry each gap's answer and the engine refuse, by default, a disc-built
 image with an unanswered gap or one built by an older release (DIV-0101 amended; `BOF3X_EXEIMAGE_STRICT=0` runs
 it). Gap rows a build are 40 / 41 / 44 / 44 / 18 / 18 / 16, all accounted, 9 pending for the owner. Every disc-built
-install is rebuilt at its next start. Owed the owner: the listens, JA's sheets, DIV-0195's boxes.
+install is rebuilt at its next start. Owed the owner: the listens and DIV-0195's boxes; JA's sheets seen and approved the same afternoon.
 
 **Mt. Zublo and Mt. Levett passable on the world map, 2026-10-30 night, merged as PR #175** (`main` `43e98773`; DIV-0191,
 switch `MountainPasses`; [`mountain-passes.md`](mountain-passes.md)). The owner's request of the evening: once the way

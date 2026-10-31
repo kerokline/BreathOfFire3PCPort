@@ -274,8 +274,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    40 / 41 / 44 / 44 / 18 / 18 / 16 (US, EU-en, FR, DE, JP, PSP-JP, PSP-EU), every one accounted, 9 pending (the
    FR / DE music-player labels, the owner's open question). **Every existing disc-built install is rebuilt**
    (the launcher's stale prompt names the `exe` step). **Owed the owner:** a listen to the loss tune and the PAL
-   banks on a European disc-only install; the eye on JA's sheets (`eg1031\ja\sheets\`: the Config labels run
-   past the panel), on DIV-0195's regional boxes on a Western PSX-only install, and on the empty save slot.
+   banks on a European disc-only install; the eye on DIV-0195's regional boxes on a Western PSX-only install, and on the empty save slot. JA's four sheets were seen and approved by the owner the same afternoon.
    **The end batch** (section 9) ran unattended after the merge; its record is in the round doc.
 
 14a. **The 64-bit build round is staged, not launched** ([`x64-build-round.md`](x64-build-round.md); staged
