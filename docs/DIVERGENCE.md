@@ -8359,7 +8359,7 @@ designed in rather than bolted on.
   fields; `ConfigScreen_OpenStates+0x144` (the default keys' names) classed
   `port-platform`; `exe_tables.py check` with the seven discs 0 errors,
   `exe_scan.py` no `missing/none`, `data_diff.py run` 0 errors.
-- Amended 2026-10-31 (the exe-gap round, group ST, draft ST-A;
+- Amended 2026-10-31 (the exe-gap round, group ST;
   [`exe-gap-round.md`](exe-gap-round.md) sections 2 and 4; I43 step 4):
   **the strict switch narrowed, then on by default for a disc-built image.**
   - **Before:** every `gap` range of a disc-built image ran as zero, logged;
