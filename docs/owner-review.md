@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-27, the away day's lines under "To review in play", "Decisions the measurements raised" and "Parked"; the sound-layer round's section at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-31, the away day's lines under "To review in play", "Decisions the measurements raised" and "Parked"; the sound-layer round's section at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,20 +12,6 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
-
-## 2026-10-30, the no-fail minigames cheat and the chop's count box (`cheat/no-fail-minigames`, unmerged)
-
-- **The Cheats sub-tab's two pages** (Page 1 / Page 2 on a third row, your word; Page 2 holds the enemy
-  information and "You cannot fail a minigame"): open Configure, Game Options, Cheats; do the rows read
-  right?
-- **A minigame with the box on**: the rope pull, the lighthouse valve or the chop - each should run to its
-  end whatever you press (the rope pull's counters still go red when the other side pulls ahead; the chop
-  wins at any count). [`cheats.md`](cheats.md) 7 has what each does.
-- **The chop's count box under en-US** (DIV-0064 group 25, your catch): the launcher's setup prompt
-  rebuilds the stale `loc` step; after it the box after the woodcutting should be the narrower one with the
-  count alone, as the US disc draws it, no glyph after the number. **Left as the port's:** the clock beside
-  it is drawn with the PC's 12 px numerals at `0x7D`, where the discs draw their digit cells at `0x86` with
-  the colon at `0x97` - one more layout if you want the clock the disc's too.
 
 ## 2026-10-23 evening, the sound-layer round (merged as PR #122, not heard)
 
