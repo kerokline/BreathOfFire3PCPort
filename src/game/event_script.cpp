@@ -316,6 +316,113 @@ extern "C" const unsigned char* __cdecl EventScript_CaseSkip(const unsigned char
 
 // --- the placements ---------------------------------------------------------------------
 
+// DIVERGENCE DIV-0191 (switch MountainPasses): two mountains the world map
+// never lets the party walk over once the way through is open.
+//
+// Mt. Zublo on the Rhapala map (area 87): the volcano's two doors are the
+// place cells (0x37, 0x1D) (from the south road through the link cell
+// (0x37, 0x1E), the choice-table link) and (0x36, 0x1B) (its link cell
+// (0x35, 0x1B) -> area 195); the Urkan map is reached from (0x36, 0x1B)
+// westward over the passage cell (0x34, 0x1B) 0x91, the link (0x33, 0x1B)
+// -> area 88 and the stored exit (0x33, 0x1A) 0xAF. Between the doors is
+// 0x10 ground, which Field_CellKind refuses, and a step from a link cell
+// onto a place cell loads the area (docs/mountain-passes.md). The volcano's
+// own road is blocked only while the chapter byte is 6..8 (area 195's
+// placement script places a third object at (0x28, 0x3B) for those chapters
+// and never after). So from chapter 9 on, four cells east of the hut are
+// made road - the drawn walkway: the platform cell (0x38, 0x1D), the strip
+// (0x38, 0x1C), (0x38, 0x1B) up its east side and the ledge cell (0x37,
+// 0x1B) beside the upper door ((0x38, 0x1E), in front of the platform's
+// wall, is ground: the owner's eye), so the route is the south road (0x37,
+// 0x1F) -> the lower door's link cell (0x37, 0x1E), as the stairs already
+// go -> the platform -> the strip -> (0x37, 0x1B) -> the upper door
+// (0x36, 0x1B) -> the link (0x35, 0x1B) -> the passage (0x34, 0x1B) -> the
+// link (0x33, 0x1B) -> the stored exit (0x33, 0x1A) -> the Urkan map, and
+// the same back. A door reached from a plain cell, or the stored exit
+// stepped onto from one, acts on the LAST place any link cell armed (the
+// plate looks it up; confirm and the stored exit change area to it), which
+// is what faulted the first build and would warp the second; so the step
+// hook (event_ops.cpp, MountainPasses_StepArm) arms the right link whenever
+// a step targets one of those cells, on both maps.
+//
+// Mt. Levett on the Yraall map (area 16): the mountain is a band of place
+// cells (0x38, 0x38), (0x37, 0x39), (0x38, 0x39), (0x36, 0x3A), (0x37, 0x3A)
+// between the link cells (0x39, 0x38) and (0x36, 0x3B), both -> area 70.
+// Place to place passes, but area 16's placement script ends with an
+// unconditional hidden object at (0x38, 0x39) (op 1x at 0x5E5DCC, flags
+// 0x41: in use, not drawn), and an object in the cell ahead refuses the
+// step: the "invisible wall" the owner hits. Area 70's own script places
+// nothing conditional and no flag of Capcom's records a crossing (the whole
+// flag block was watched unchanged through one), so bit 0 of
+// MountainPasses_Bits (block +0x1040, ours) is set when the party enters
+// area 70 by one door and comes out by the other - arrival cells from the
+// links: the north-east link lands at area 70's (0x38, 0x2F), the
+// south-west one at (0x16, 0x3A); area 70's exits land on the link cells
+// themselves. With the bit set the hidden object is dropped after the
+// placement runs, and the band walks.
+//
+// Both run here, after the placement script and before the descriptor's
+// init: 0x594E60 sets Game_AreaNumber, sets the cell plane (0x56F670) and
+// then calls Area_RunPlacement, so the plane and the area are current, and
+// the pending arrival dwords are the link's. Armed by PatchBytes after the
+// self-test (the fuzz compares the placement runner with Capcom's). Nothing
+// here under BOF3X_ORIGINAL=MountainPasses: no cell, no object, no bit.
+unsigned char g_mountain_passes = 0;
+
+namespace {
+
+std::uint16_t g_placed_area = 0xFFFF;   // the area the last placement ran for
+std::uint8_t g_levett_door = 0;          // 1 entered area 70 by the north-east door, 2 the south-west, 0 neither
+
+void MountainPasses_AfterPlacement() {
+    if (!g_mountain_passes) return;
+    const std::uint16_t area = Game_AreaNumber;
+    const std::uint16_t from = g_placed_area;
+    g_placed_area = area;
+    const unsigned px = static_cast<unsigned>(SharedScratch.d_10 >> 16) & 0xFFu;
+    const unsigned pz = static_cast<unsigned>(static_cast<std::int32_t>(AreaEntry_PendingZ) >> 16) & 0xFFu;
+    if (area == 70 && from == 16) {
+        g_levett_door = static_cast<std::uint8_t>(px == 0x38 ? 1 : px == 0x16 ? 2 : 0);
+        bof3::Log("DIV-0191    Mt. Levett entered at (%#x, %#x): door %u", px, pz, g_levett_door);
+    } else if (area == 16 && from == 70) {
+        const unsigned link = (px == 0x39 && pz == 0x38) ? 1u : (px == 0x36 && pz == 0x3B) ? 2u : 0u;
+        if (link != 0 && g_levett_door != 0 && link != g_levett_door && !(MountainPasses_Bits & 1)) {
+            MountainPasses_Bits = static_cast<unsigned char>(MountainPasses_Bits | 1);
+            bof3::Log("DIV-0191    Mt. Levett crossed (door %u to link %u): the map is passable from now on", g_levett_door, link);
+        }
+        g_levett_door = 0;
+    }
+    if (area == 16 && (MountainPasses_Bits & 1)) {
+        for (int i = 0; i < 30; ++i) {
+            unsigned char* const o = Object(i);
+            const auto* const head = rv::As<records::SpriteHead>(o);
+            if (o[0] != 0 && head->x_whole == 0x38 && head->z_whole == 0x39) {
+                o[0] = 0;
+                bof3::Log("DIV-0191    Mt. Levett: object %d at (0x38, 0x39) dropped", i);
+            }
+        }
+    }
+    if (area == 87 && Cond_ByteFA >= 9) {
+        unsigned char* const plane = const_cast<unsigned char*>(AreaMap_Bytes);
+        const unsigned width = AreaMap_Header[0];
+        // 0x91, the passage kind: it walks (Field_CellKind class 0), has no
+        // encounter (the encounter test wants a 0 cell), no plate, and the
+        // field menu's camp test refuses it (its AreaMap_ByteAt & 0xF0 among
+        // 0xA0 / 0x91, docs/menu_lists.md) - as the passage cells (0x34,
+        // 0x1B) beside it already do. The owner's call, 2026-10-30 night.
+        static constexpr unsigned char kCells[][2] = {{0x38, 0x1D}, {0x38, 0x1C}, {0x38, 0x1B}, {0x37, 0x1B}};
+        for (const auto& c : kCells) plane[c[1] * width + c[0]] = 0x91;
+        // The strip's corner heights (AreaMap_Corners, the mesh's and the
+        // leader's alike) stay the ground's 0x10: raised to the hut's 0x16
+        // they lifted the drawn tiles with the leader (the owner's eye,
+        // 2026-10-30 night), so the leader stands a step below the painted
+        // block there - Capcom's art over Capcom's mesh, left as it is.
+        bof3::Log("DIV-0191    Mt. Zublo: four passage cells laid east of the hut (chapter %d)", Cond_ByteFA);
+    }
+}
+
+}  // namespace
+
 // original 0x579740: an area's placement script (PSX FUN_801A4E58), from the
 // area descriptor +0. As the original has it: the count is signed - a count
 // the script left negative clears from that (negative) entry, before the
@@ -329,6 +436,7 @@ extern "C" void __cdecl Area_RunPlacement(const unsigned char* script) {
     if (n >= 30) return;
     SetCount(30);   // stored before the loop, as the original stores it
     for (int i = n; i < 30; ++i) Object(i)[0] = 0;
+    MountainPasses_AfterPlacement();
 }
 
 // original 0x579E30: the current object's reset (PSX FUN_801A5AB0) - its
@@ -579,6 +687,16 @@ extern "C" void __cdecl ObjTrio_SetBit40(void) {
     ObjTrio[0].flags |= 0x40;
     ObjTrio[1].flags |= 0x40;
     ObjTrio[2].flags |= 0x40;
+}
+
+// DIV-0191: armed from inject_all.cpp after every module's self-test (the
+// placement runner's, the step hook's and the plate copies' fuzzes all
+// compare with Capcom's unarmed code).
+void MountainPasses_Arm() {
+    const std::uint8_t was = 0, is = 1;
+    bof3::PatchBytes("MountainPasses", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_mountain_passes)), &was, &is, 1);
+    bof3::Log("DIV-0191    Mt. Zublo (chapter 9 on) and Mt. Levett (once crossed) passable on the world map: %s",
+              g_mountain_passes ? "on" : "OFF (BOF3X_ORIGINAL=MountainPasses)");
 }
 
 void EventScript_Inject() {

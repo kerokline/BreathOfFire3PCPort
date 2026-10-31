@@ -48,6 +48,7 @@
 #include "game/record_views.h"
 #include "game/records.h"
 #include "game/worldmap_area_callees.h"
+#include "game/event_script.h"   // DIV-0191: g_mountain_passes
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -268,7 +269,14 @@ extern "C" void __cdecl WorldMap33_PlateShow(void) {
     if (kind == 1) {
         const unsigned place = AreaW0b_Place;
         U entry = ::bof3::Img(WorldMap33_PlateAnims_addr);
-        while (Word(At(entry)) != place) entry += 4;
+        // DIV-0191: the original searches with no bound; a place not in the
+        // table (one armed by a link cell this map has no plate for) runs
+        // into the records after it and the animation byte is garbage
+        // (the fault the owner hit on 2026-10-30). Ours stops at the table's
+        // end, 0x5EF338 (WorldMap_Records record 1's data), and shows no plate.
+        const U end = g_mountain_passes ? ::bof3::Img(WorldMap33_PlateAnims_addr) + 6 * 4 : ~0u;
+        while (entry < end && Word(At(entry)) != place) entry += 4;
+        if (entry >= end) return;
         rv::Store<std::int32_t>(rv::As<records::EffectObject>(Cur())->work_18, static_cast<std::int32_t>(place));
         animation = At(entry + 2)[0];
     } else if (kind == 2) {

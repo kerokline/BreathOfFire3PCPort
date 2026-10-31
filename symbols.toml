@@ -134228,6 +134228,13 @@ status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 13 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x904148], eax at 0x413bf2; mov eax, dword ptr [0x904148] at 0x429dfa; mov ecx, dword ptr [0x904148] at 0x42a2c8 and 10 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: area_w2d::kReturnPoint, area_w4d::kReturnPoint, area_w4d::kReturnX, area_w4e::kSavedX, area_w4f::kReturnPoint, event_leader::kReturnPoint, event_ops::kReturnPoint, field_e2::kReturnX, item_use::kReturnPoint, mode_rest::kTripX."
 
 [[data]]
+pc = 0x904A20
+name = "MountainPasses_Bits"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "ours, 2026-10-30 (DIV-0191): byte +0x1040 of the live save block 0x9039E0. Capcom's code never addresses it: analysis/pc_xref.json has no reference into 0x904A1D..0x904A8F, the US 42-hour save's last non-zero byte is block +0x103C (docs/save-interchange.md section 2a) and the live bytes read zero on the owner's chapter-10 game; the block's 0x10B0 bytes are zeroed by task 0's first body (docs/mode-flow.md) and the whole 0x12B0 block is what Save_BuildBlock writes and a load copies back, so the byte persists through save and load. Bit 0: the party has crossed Mt. Levett (area 70) once; written and read only by MountainPasses_AfterPlacement (src/game/event_script.cpp) under the switch MountainPasses."
+
+[[data]]
 pc = 0x90414C
 name = "AreaW4d_ReturnZ"
 ctype = "unsigned long"

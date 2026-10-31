@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 190 entries, DIV-0001..0190, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 191 entries, DIV-0001..0191, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -13577,4 +13577,114 @@ designed in rather than bolted on.
 - **Player:** yes
 - **Toward:** psx - each PlayStation disc's own paint
 - **Languages:** en-US, en-150, fr-FR, de-DE - `build_dock_panel` runs on every disc, PSP-EU's included; the Japanese disc paints the port's words, so ja-JP carries no chunk; a disc-only layer none, its page the disc's own
+- **State:** active
+
+### Mt. Zublo and Mt. Levett passable on the world map once the way through is open
+
+- **ID:** DIV-0191
+- **Date:** 2026-10-30
+- **Subsystem:** the world map's walk - `Area_RunPlacement` `0x579740`
+  (ours, `src/game/event_script.cpp`, the hook
+  `MountainPasses_AfterPlacement` at its end), the Rhapala map's cell plane
+  (area 87) and the Yraall map's placed objects (area 16);
+  [`mountain-passes.md`](mountain-passes.md).
+- **Tier:** Intent - a quality-of-life extension.
+- **Original behaviour:** two mountains the party has the way through
+  stay impassable on the world map, so the area must be loaded and its road
+  walked every time. Mt. Zublo (area 87): the volcano's two doors are the
+  place cells `(0x37, 0x1D)` and `(0x36, 0x1B)` with `0x10` ground between
+  them, which `Field_CellKind` refuses; the lower door is reached only
+  through its link cell `(0x37, 0x1E)`, and a step from a link cell onto a
+  place cell loads the area. The volcano's road itself is blocked only in
+  chapters 6..8: area 195's placement script places a third object at
+  `(0x28, 0x3B)` under those chapter cases and never after
+  (`tools/event_scan.py --area 195`). Mt. Levett (area 16): the mountain is
+  a band of five place cells `(0x38, 0x38)`, `(0x37, 0x39)`, `(0x38,
+  0x39)`, `(0x36, 0x3A)`, `(0x37, 0x3A)` between the link cells `(0x39,
+  0x38)` and `(0x36, 0x3B)` (both -> area 70), and place to place passes -
+  but area 16's placement script ends with an unconditional hidden object
+  at `(0x38, 0x39)` (op `1x` at `0x5E5DCC`; live flags `0x41`, in use and
+  not drawn), and an object in the cell ahead refuses the step. Measured
+  2026-10-30 on the owner's chapter-10 game with `tools/cell_peek.py` and
+  the object list; no field object stood on the Rhapala map. Area 70's
+  script places nothing conditional and no flag of Capcom's records a
+  crossing (`tools/mem_watch.py` over `Cond_Flags`, the chapter bytes and
+  the area word through one crossing: only the area word changed).
+- **New behaviour:** after a map's placement script runs (the mode-5 step
+  has set `Game_AreaNumber` and the cell plane by then, and the link's
+  pending arrival cells are current): on area 87 with the chapter byte
+  `Cond_ByteFA` at 9 or more, the cells `(0x38, 0x1D)`, `(0x38, 0x1C)`,
+  `(0x38, 0x1B)` and `(0x37, 0x1B)` are made passage cells
+  (`0x91`: walkable, no encounter, no plate, and the field menu's camp test
+  refuses them as it does the passage beside them - the owner's call);
+  their corner heights stay Capcom's (the strip's art is painted a block
+  higher than its mesh, so the leader stands a step below it there; raising
+  the corners raised the drawn tiles too), and a party member on the
+  strip's two cells `(0x38, 0x1C)`, `(0x38, 0x1B)` is drawn as many layers
+  ahead as DIV-0071's pass allows with no stop test (`layering.cpp`
+  `LayerFor`), since the painted face of the cell in front otherwise covers
+  its legs and nothing nearer the camera there is anything but that paint
+  and ground - the drawn walkway: the platform
+  in front of the hut, the strip up its east side and the ledge cell beside
+  the upper door - so the south road
+  `(0x37, 0x1F)`, over the lower door's link cell `(0x37, 0x1E)`, reaches the upper door `(0x36, 0x1B)`, its link `(0x35,
+  0x1B)`, the passage `(0x34, 0x1B)`, the link `(0x33, 0x1B)` and the stored
+  exit `(0x33, 0x1A)` to the Urkan map, and the same back. A door or the
+  stored exit reached from a plain cell acts on the last place any link
+  armed (`AreaW0b_Place` and the pending cells: the plate looks it up,
+  confirm and the stored exit change area to it) - the first build's road
+  did that, and the plate's unbounded search over a stale place faulted
+  (`Sprite_SetAnimationAt`, dump `bof3x.crash-28652-0`). So, under the
+  switch: `Area_StepHook` arms the place's own link whenever a step targets
+  such a cell (`Area_LinkAt` of the lower door's link `(0x37, 0x1E)`, the
+  upper door's `(0x35, 0x1B)`, the stored exit's `(0x33, 0x1B)`; on area 16
+  the band's north-east cells -> `(0x39, 0x38)`, its south-west cells ->
+  `(0x36, 0x3B)`), where the original arms only on arrival at a link cell;
+  and the plate's place search in `WorldMap33_PlateShow`, `Area16_PlateShow`
+  and areas 87 / 88's shared `PlateShow` stops at the table's end and shows
+  no plate for a place not in it (the original reads on into the next
+  records); the five other maps' copies are unchanged. The volcano's own
+  links are untouched. On area 16, when bit
+  0 of `MountainPasses_Bits` is set, the object standing on `(0x38, 0x39)`
+  is dropped (`+0` = 0) and the band walks. The bit - our byte at save block
+  `+0x1040` (`0x904A20`; no symbol, no operand in `pc_xref.json`, zero on
+  the owner's game, inside the span zeroed at launch and the block saved
+  and loaded whole) - is set once when the party enters area 70 by one door
+  and leaves by the other: the door from the arrival cell in area 70
+  (`(0x38, 0x2F)` the north-east link's, `(0x16, 0x3A)` the south-west's,
+  from area 16's link list), the exit from the arrival cell in area 16 (the
+  link cell, where area 70's exits land). Backing out by the same door sets
+  nothing. One log line `DIV-0191` per event.
+- **Rationale:** the owner's request, 2026-10-30: "if that could be flagged
+  as walkable, that would be a nice QoL fix" for Zublo once adult, and for
+  Levett "update to be map passable after you've passed through Mt. Levett
+  once". The map is drawn as if the road went over both (the owner's
+  screenshot outlines the walkway round the Zublo hut).
+- **Also in the PSX version?** The PlayStation has the same cells, links
+  and scripts (the port's placement scripts are byte-identical to the disc's,
+  `event-script.md`); not re-measured on the disc for this entry. Not a
+  repair.
+- **Verification:** 2026-10-30, headless, a clean copy of the four launcher
+  files: `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=event_script` (the switch is
+  armed only after the self-test): the group's 28 functions, 560,000
+  rounds, 0 mismatches, exit 0, the log line `DIV-0191 ... on`; the exe host
+  (`bof3x.exe`) exit 0, the line `on`; hosted with
+  `BOF3X_ORIGINAL=MountainPasses` exit 0, the line `OFF` (the A/B switch
+  is hosted-only: the exe host refuses it by design). The launcher's
+  registry and the presets' reference tables regenerated; the host tests
+  3,320 checks, 0 failures, the as-shipped count 77. Played by the owner
+  the same night over six builds, by their eye: Zublo's walkway walks with
+  camp refused, Levett walks after one crossing, and a child-era save keeps
+  Zublo's wall ("as it should"). The full shadow suite was run on every
+  build, each 0 mismatches.
+- **Reversible?** `BOF3X_ORIGINAL=MountainPasses` leaves every cell, object,
+  byte, link and plate search as the original has them, in both hosts (the
+  byte is armed from `inject_all.cpp` after every module's self-test). A player turns it off
+  with `BOF3X_OFF=MountainPasses` (the ini's `off=`); a save that already
+  carries the bit keeps it, harmlessly, since nothing else reads the byte.
+- **Switch:** MountainPasses
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=MountainPasses (ini off=)
+- **Toward:** none
+- **Languages:** any
 - **State:** active
