@@ -8331,7 +8331,13 @@ designed in rather than bolted on.
     `Fatal`; under `=0` exit 0, every gap `NOT accepted`; one answer line
     taken out, exit 3, the `Fatal` naming `0x662430..0x662442`
     (`Scena17_EndSteps+0x364`); the same under `=0` exit 0, "39 accepted,
-    1 not"; `=1` exit 3 at the first gap; `=yes` exit 3.
+    1 not"; `=1` exit 3 at the first gap; `=yes` exit 3. A cache built at
+    the round tip: `importer.py stale` says `stale exe` (`write_exe`
+    changed); this importer's: `fresh`. The PC install: `.data` from the
+    file, and from its pc-zh cache with and without `=1`, exit 0. The
+    attract on the psx-us install to its end (`abc_run.py run --route
+    attract`), exit 0, "40 accepted, 0 not"; `BOF3X_SHADOW='*'` from an
+    ini-less launcher dir, exit 0.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
