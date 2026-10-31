@@ -53,12 +53,12 @@ few families, which is what makes the round small enough to cut:
 | `Equip_SlotIcons+0x50..+0x14C` | 10 | all 7 | the ten formation names, 16 bytes of each record | **layer**: kind 15 group 10 writes them under a Latin layer (DIV-0064); blank under `ja-JP` until JA (D280) |
 | `CommuMusic_LabelC+0xC..+0x4C` | 6 | mixed (DE/FR 3, US 1, EU 1, JP+PSP 1) | bytes among the faerie music-player labels no twin placed; no census row | **PL**: find the reader, place or class |
 | `ConfigScreen_OpenStates+0x141` | 2 | all 7 | the bytes after D282's row tables | **PL**: reader, then place or `unread` |
-| `EffectKind66_States+0x18/+0x20/+0x28`, `Rest3e_Windows+0x14/+0x18/+0x1C` | 6 | the four Western PSX | the Western u16 fields (`install-gap-twins.md` 2, 3) | **the owner's** (section 3); until answered, **pending** |
+| `EffectKind66_States+0x18/+0x20/+0x28`, `Rest3e_Windows+0x14/+0x18/+0x1C` | 6 | the four Western PSX | the Western u16 fields (`install-gap-twins.md` 2, 3) | **port-own**: the PC's, which both PSP discs hold too (section 7, measured 2026-10-31) |
 | `TornadoMote_Phases+0x10` (PSX) / `+0x15` (PSP) | 2 | all 7 | the Identify panel's ASCII `WEAK` / `EXP` labels (the `?` marks are the engine's since D278) | **PL**: a label group or the engine's own string |
 | `Char_DefaultRecords`, `+0x47C` | 2 | all 7; psp-eu | the default names' fields | **layer** (DIV-0020); the psp-eu tail **PL** |
 | `WardMote_Tilts+0x8` | 1 | all 7 | four bytes past the placed tilts, no reader found | **accepted unread** or **PL** (a reader) |
 | `Area121_BandHeights+0x1`, `LinkedObjectD_Amounts` | 2 | the PSPs; psp-eu | bytes under every `find_imm` floor | **PL**: the floor, or a hand-read twin |
-| `Encounter_SlotChance+0x1C` (`0x669CCC`) | 1 | all 7 | the empty save slot's text | **the owner's** (section 3): the staged localisation PR |
+| `Encounter_SlotChance+0x1C` (`0x669CCC`) | 1 | all 7 | the empty save slot's text | **unread** once AU draws the slot blank on every install (section 7) |
 | `BattleE1_GuestHeadOut+0x8`, `Effect1b_ToggleText+0x10`, `CommuRank_Modes+0x8C` | 3 | the two Japanese builds | a name copied at the extra-equip screen, the chop's count word and the faerie record 0 name, all written by a Latin layer on the other builds | **JA** (D280) |
 | `Effect1b_ToggleText+0xC` (`0x66A094`) | 1 | all 7 | the count's one-glyph word | **layer**: DIV-0064 group 25 (2026-10-30) |
 
@@ -75,9 +75,9 @@ the table above is the status today and AC rewrites section 8 from it.
    accounted row from a new one: group AC writes the list, group ST makes
    the engine read it.
 2. **The owner's rows**: ~~D266~~ (done 2026-10-20), the empty save slot and
-   the Western u16 fields (section 3). Neither blocks the default: an
-   owner's row is accounted as **pending** with its pointer, and a pending
-   row is not a new gap.
+   the Western u16 fields - both answered 2026-10-31 (section 7): the slot
+   blank everywhere (AU), the fields the PC's (port-own). The `pending`
+   answer stays available for a later owner's row.
 3. **Coverage.** "Not read" rests on eleven routes (19 areas, four battles);
    48 of the 88 unread rows were sampled, before the placements since. psp-jp
    stopped at five routes on D321's Fatal; **D321 is fixed since 2026-10-18**,
@@ -119,7 +119,7 @@ disc-only title draws its TM whole); D280 not built:
   table by its reader on the Japan disc (`lui_sites`), counts in characters.
   The largest single piece of the round.
 
-**Open, each with its doc** (none blocks the round: AC accounts each as `pending` with the pointer):
+**Answered 2026-10-31** (section 7 has the answers; the lines kept for the pointers):
 
 - **The empty save slot** (`Encounter_SlotChance+0x1C`, `0x669CCC`, all
   seven builds, read on every load screen): the staged localisation PR,
@@ -219,8 +219,14 @@ the fields the readers use (`g_ops`, `g_stops_moved`), `exe_image.cpp`
 reads `BOF3X_EXEIMAGE` with the wide API, `bss_numbers`' halfword test says
 what it tests, `under_jmp` entries get a log line. (c) The four stale
 Chinese pairs (DIV-0092) are the coordinator's to re-record in the end
-batch, not AU's. **Not AU's:** D257 (the PAL banks, the owner's call,
-section 7) and the PSP-EU title's layout (D256, the owner's).
+batch, not AU's. (c) **The empty save slot drawn blank on the PC install**
+(`Encounter_SlotChance+0x1C`, `Menu_DrawSaveSlot`): the owner's call of
+2026-10-31, as the US disc draws it; a ledger entry with a switch. (d)
+**D257, the PAL banks** (the owner's call of 2026-10-31): the importer
+accepts the eight sample-swapped area banks a European PSX disc builds
+(`region-diff.md` 8.4, `sound-import.md` 7 item 1) for a European
+disc-only install; a ledger entry. **Not AU's:** the PSP-EU title's layout
+(D256, the owner's).
 
 ### Stage B (after JA, PL, AC and AU merge)
 
@@ -268,20 +274,32 @@ round tip first, one merge at a time, the coordinator numbers.
 
 ## 7. For the owner
 
-**Nothing here blocks the launch.** Each is accounted `pending` until
-answered, and the answer is a later fix:
+**Answered 2026-10-31 morning**, before the launch:
 
-- **The empty save slot** (`0x669CCC`): the staged localisation PR,
-  [`name-entry-restoration.md`](name-entry-restoration.md) 8 first.
-- **The Western u16 fields** of `EffectKind66_States` / `Rest3e_Windows`:
-  the disc's numbers or the PC's ([`install-gap-twins.md`](install-gap-twins.md)
-  2, 3).
-- **D257, the PAL banks**: take the PAL disc's sample-swapped banks for the
-  eight areas on a European disc-only install (a ledger entry), or not
-  (`sound-import.md` 7 item 1).
-- **D280's layer** is in this round as JA; say if it should wait (it is the
-  largest group and the others do not depend on it).
-- **The loss tune** (AU, D320): a listen on a disc-only install once merged.
+- **The empty save slot** (`0x669CCC`): "blank it everywhere for
+  consistency" - the PC install draws an empty slot as the US disc does,
+  nothing; group AU's item (c), a ledger entry. The name-entry questions of
+  [`name-entry-restoration.md`](name-entry-restoration.md) 8 stay with the
+  localisation PR.
+- **The Western u16 fields** of `EffectKind66_States+0x18/+0x20/+0x28` and
+  `Rest3e_Windows+0x14/+0x18/+0x1C`: the owner asked whether the PSP keeps
+  the Western layout. **Measured 2026-10-31** (five images built in memory
+  by `exe_tables.build_from` from `D:\bof3x-discs\paths.json`, the six
+  fields compared with `BOF3.exe`'s `.data`, relations only): the PC,
+  psx-jp, psp-jp **and psp-eu** hold the same six values; psx-us and
+  psx-eu-en leave them zero (the Western PSX discs hold other numbers
+  there, `install-gap-twins.md` 2). Capcom's PSP Western release kept the
+  Japanese numbers, so the PC's are consistent with it: **the PC's** - the
+  rows are accounted **port-own** with this measurement as the evidence,
+  no twin placed. (The owner's standing answer, reversible by a `twin` row
+  if the Western PSX layout is ever wanted.)
+- **D257, the PAL banks**: "let's take the pal banks" - group AU's item (d),
+  the importer accepts the eight sample-swapped banks on a European
+  disc-only install, a ledger entry, D257 fixed.
+- **D280's layer**: "let's do it now" - JA runs in stage A.
+
+**Still the owner's**, after the merge: a listen to the loss tune (AU, D320)
+and the PAL banks on a European disc-only install; the eye on JA's sheets.
 
 ## 8. Ownership, merge order, numbering
 

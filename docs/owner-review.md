@@ -383,15 +383,14 @@ the doc that has the reading.
   title. Built and in place, the confirmation pending: [`install-gap-labels.md`](install-gap-labels.md) 8.
 - ~~**`Title_Sprites+0xE`** (D266, the Western title mark)~~ - answered
   2026-10-13 and built 2026-10-20 (the section above).
-- **`Encounter_SlotChance+0x1C`** (the empty save slot `0x669CCC`): read on
-  every load screen of all seven installs; the staged localisation PR, its
-  section 8 first: [`name-entry-restoration.md`](name-entry-restoration.md), census 8.2.
+- ~~**`Encounter_SlotChance+0x1C`** (the empty save slot `0x669CCC`)~~ - answered
+  2026-10-31: blank everywhere; the exe-gap round's group AU.
 - **`Area124_Weights+0x50`** (EU, DE): the European discs give area 125 other
   weights. Take the disc's own, or the PC's (which no disc has a reader for)?
   [`install-gap-twins.md`](install-gap-twins.md) 3.
-- **The Western u16 fields of `EffectKind66_States` and `EffectKind5B_States`**
-  (three each, Western PSX): the Western discs' own numbers or the PC's (JP
-  equals the PC)? [`install-gap-twins.md`](install-gap-twins.md) 2 and 3.
+- ~~**The Western u16 fields of `EffectKind66_States` and `EffectKind5B_States`**~~ -
+  answered 2026-10-31: the PC's, which both PSP discs hold too (measured;
+  [`exe-gap-round.md`](exe-gap-round.md) 7).
 - **`0x66A094`'s layout** under a Western layer: draw nothing (as now on a
   disc-only install), or take the West's narrower box and the count's x?
   [`install-gap-labels.md`](install-gap-labels.md) 4.3 and 8.
@@ -901,7 +900,7 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
     disc's XA as the jingle, or the failed stream ending the wait.
   - **The PSP title's framing** (D256): look at a PSP-EU title capture.
   - **The field menu's time and money boxes** in wide mode: you check on the PSP; unchanged until then.
-  - **The PAL banks** (D257): take a PAL disc's eight area banks for a PAL disc-only install, or not.
+  - ~~**The PAL banks** (D257)~~ - answered 2026-10-31: take them; the exe-gap round's group AU.
   - **The PSP-only mode** (probably fishing): adopt it as a layer of ours, or leave it.
 
 0. **The game from the cache** (DIV-0089, 2026-10-10,

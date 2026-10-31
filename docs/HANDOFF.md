@@ -270,8 +270,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    refuses only an unaccounted gap, on by default for disc-built images, DIV-0101 amended) and the coordinator's
    end batch (the read watch on all seven installs, psp-jp included). Briefs and `launch.sh` / `merge.sh` under
    `C:\Users\kerok\bof3x-runs\eg1031`, the round doc on `exe-gap/round` (unpushed). **Unlaunched**: the owner's
-   word starts it; nothing in section 7 blocks it (the owner's rows are accounted `pending`). Numbers from
-   DIV-0192 and D399.
+   word starts it; nothing in section 7 blocks it (the owner's rows are accounted `pending`). The ledger and defect
+   numbers continue from the last (DIV-0191, D398).
 
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
