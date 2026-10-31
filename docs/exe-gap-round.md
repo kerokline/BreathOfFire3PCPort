@@ -317,8 +317,14 @@ BattleExtra name copy whole beyond five bytes. Nine amendments (DIV-0015 /
 psp-jp's Identify panel takes group 15 from the UMD's `MAGIC060.EMI` as
 PSP-EU's does. L1 / R1 keep DIV-0051's cells. Latin overlays rebuilt
 byte-identical. **Seen by the owner on the four sheets, 2026-10-31
-afternoon: "those all look great"** - the Config labels past the panel
-included; the pair code in a saved name stays a note.
+afternoon: "those all look great"**; then, on the Config labels past the
+panel, the owner's rule the same afternoon, **DIV-0196** (`ConfigLabelJapanese`):
+the label column left-aligned at the row box's own x under a Japanese
+layer (two glyphs in, then one, then none, by three looks at the headless
+captures: the longest label's large text ran off the right at the first
+two); the `sub` of the width at both paths made nops and the anchor 0,
+ours reading the operand (`field_c1.cpp`), the `field_c1` shadow rows at
+0 mismatches under `ja-JP`. The pair code in a saved name stays a note.
 
 **ST (merged `3c00b19b`, folded `2b27a3c0`).** `write_exe` writes an
 `accepted = [[answer, lo, hi], ...]` list into the image's `data.toml` from
