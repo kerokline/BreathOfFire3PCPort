@@ -125,7 +125,7 @@ No DIV or D number came of it. The owner's calls and looks are in [`owner-review
 - **The ledger-fields and relocatable-image rounds staged** (PR #157, docs only;
   [`ledger-fields-round.md`](ledger-fields-round.md), [`relocatable-image-round.md`](relocatable-image-round.md)):
   the ledger-fields round run and merged on 2026-10-28 (PRs #162 and #164, above); the relocatable-image round
-  run 2026-10-28..29 (the top of this section, unpushed).
+  run 2026-10-28..29 and merged as PR #168 (above).
 - **After PR #157:** the away day (PR #158, above); D42, the world map's opaque dial, drawn semi-transparent as on
   the PlayStation (PR #159, DIV-0184); the boss sweep (PR #161, [`boss-sweep.md`](boss-sweep.md)): the `battle ID` op,
   crafted pre-fight saves and `spell_sweep.py run --fight`, fifteen fights played to the death on PC, US-disc and
@@ -827,8 +827,9 @@ widescreen choices taken at our 53 columns (DIV-0041), and the owner's visual fi
    (DIV-0055). Japanese names use pair codes (DIV-0057), and a layout switch
    keeps the original's full-width layout for `ja` / `zh` (DIV-0056).
    Japanese is seen by capture only; French and German are captured on the
-   world map only. Still Chinese: the exe's own strings in Japanese mode,
-   some labels and headers, and text in artwork
+   world map only. Still Chinese: some labels and headers, and text in artwork
+   (the exe's own strings in Japanese mode are the Japan disc's since the exe-gap round's group JA,
+   2026-10-31, D280)
    ([`HANDOFF.md`](HANDOFF.md)). What this means in detail is the owner's to
    say; the asset side of selectable languages is surveyed below ("A stated
    goal worth recording now"), and any swap is a divergence in the ledger
@@ -994,9 +995,10 @@ an unrecognised disc can be named rather than guessed at.
   few to fit a cutoff.
 - **The away day's calls (2026-10-13)** - [`owner-review.md`](owner-review.md), "2026-10-13, the away day": the
   disc-data inventory's Q6 and Q7, the arenas and Ryu's byte (D288), the Western weakness row, the hi-lo count, the
-  US title layout (D277), a `ja-JP` layer for the exe's strings and the Japanese fishing crash (D279, D280), wide
-  and `Rand` (D283), D255's fix (built 2026-10-16 as DIV-0129, `fix/psx-only-1016`), the key icons' five
-  questions, the two headerless recipes' saves, the Western title mark (D266).
+  US title layout (D277), wide and `Rand` (D283), the key icons' five questions, the two headerless recipes'
+  saves. Answered and built since: D255's fix (DIV-0129, 2026-10-16), the Japanese fishing crash (D279,
+  DIV-0144, 2026-10-18), the Western title mark (D266, PR #98, 2026-10-20) and the `ja-JP` layer for the exe's
+  strings (D280, the exe-gap round's group JA, 2026-10-31).
 - ~~**Phase 3 subsystem order.**~~ Moot since 2026-10-06: the game's own code is all ours (PR #43), and the
   platform layer followed through state 3 (#53).
 
