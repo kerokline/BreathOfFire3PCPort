@@ -1145,10 +1145,13 @@ extern "C" void __cdecl EffectKind5D_DrawMark(int x, int y) {
 // DIVERGENCE DIV-0064 (group 20, docs/install-gap-labels.md): once a language
 // overlay has written the title (the disc's own, SCENA10.EMI's: the French
 // seventeen letters past the original's count of 15), it is drawn whole, to
-// its NUL (Labels_Written's rule).
+// its NUL (Labels_Written's rule). Since D280's ja-JP layer the title is
+// printed from the group's buffer (Labels_Slot: the slot 0x66A098 itself
+// while no layer wrote it), which holds the Japan disc's fifteen characters.
 extern "C" void __cdecl EffectKind5E_DrawMenu(void) {
+    static_assert(at::kTitle.v == 0x66A098, "Labels_Slot(20, 0) stands for the title slot");
     SH_CALL(Menu_DrawBox)(W(::bof3::Img(at::kMenuBox.v)), W(::bof3::Img(at::kMenuBox.v) + 2), W(::bof3::Img(at::kMenuBox.v) + 4), W(::bof3::Img(at::kMenuBox.v) + 6), 2, static_cast<unsigned char>(Config_WindowColour));
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kText.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kStringFormat.v))), At(::bof3::Img(at::kTitle.v)));
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kText.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kStringFormat.v))), Labels_Slot(20, 0));
     const int count = Labels_Written(20) ? 0xFF : 0xF;
     SH_CALL(Text_DrawAt)(static_cast<int>(UL(::bof3::Img(at::kMenuBox.v)) + 4), static_cast<int>((W(::bof3::Img(at::kMenuBox.v) + 2) + 2) & 0xFFFFu), 0, count, At(::bof3::Img(at::kText.v)));
     SH_CALL(EffectKind5E_DrawList)();

@@ -166,11 +166,22 @@
 //      draw is BOOT.BIN's own (0x3FCF4, the West's layout), not its
 //      AREA008.EMI's, which is the Japanese build's.
 //
-// Groups 1, 2, 5, 6, 8..12, 16 and 20..24 are written in place, one byte a letter in the
+// Amended for D280 (2026-10-31, the exe-gap round's group JA): a ja-JP layer
+// carries the groups too, from the Japan disc's own tables (loc_build.py
+// convert_exe_ja), two bytes a character in the ja-JP font. Three changes
+// follow: group 8 goes into buffers behind its one reader, the table
+// 0x66B36C (the Japan disc's second choice is six characters, 13 bytes of
+// the slot's 12); group 20 into a buffer of 32 that our
+// EffectKind5E_DrawMenu prints (fifteen characters, 31 of the slot's 20);
+// and group 26, fight 26's two turn words in place at 0x669D10 / 0x669D18
+// for a disc whose routine is the PC's own (the Japan disc's - group 18 is
+// the West's re-laid one).
+//
+// Groups 1, 2, 5, 6, 9..12, 16, 21..24 and 26 are written in place, one byte a letter in the
 // single-byte slots the overlay paints with the dialogue font, so a draw
 // through Text_DrawAt shows them as it shows every other overlay string.
-// Groups 3, 4, 7 and 13 are reached by nothing but their pointer tables (and
-// groups 14, 15, 17, 18, 19 and 25 by our code alone) (a scan of
+// Groups 3, 4, 7, 8 and 13 are reached by nothing but their pointer tables (and
+// groups 14, 15, 17, 18, 19, 20 and 25 by our code alone) (a scan of
 // the image for each slot's address, 2026-09-29), so their strings go into
 // buffers of ours, 16 bytes each, and every table is re-aimed: the French
 // disc's ARMEMENT and CAPACITE and the German RUESTUNG are eight letters, one
@@ -211,6 +222,10 @@ struct PointerTable {
 };
 
 constexpr std::uint32_t kRoom = 16;   // our buffers: a title of 15 letters, which the 0x99-wide box holds
+// A group's buffers are kBufferMax bytes; a chunk may fill kRoom of them, or
+// the group's own buffer_room (group 20 under ja-JP, D280: the Japan disc's
+// title is fifteen characters, thirty bytes in the ja-JP font).
+constexpr std::uint32_t kBufferMax = 32;
 
 constexpr std::uint32_t kMaxSlots = 60;
 
@@ -220,17 +235,19 @@ struct Table {
     std::uint32_t count;
     Slot slots[kMaxSlots];
     PointerTable tables[5];   // none for a group written in place
-    char (*buffers)[kRoom];   // ours, for a repointed group
+    char (*buffers)[kBufferMax];   // ours, for a repointed group
     bool small;               // drawn by the 8 px draw: Labels_SmallGlyph serves its slots
     // The count an older overlay builder wrote, its strings the first slots
     // (0: none). The slots past it have a shipped string the draw may fall
     // back on, so the group counts as written once the first `legacy` are.
     std::uint32_t legacy = 0;
+    std::uint32_t buffer_room = kRoom;   // the bytes a chunk may put in each buffer, its NUL included
 };
 
-char g_item_types[5][kRoom], g_skill_types[5][kRoom], g_sort_menus[11][kRoom], g_village_lists[20][kRoom],
-    g_village_words[5][kRoom], g_identify_words[6][kRoom], g_turn_words[3][kRoom], g_hilo_words[3][kRoom], g_guest_name[1][kRoom],
-    g_chop_count[2][kRoom];
+char g_item_types[5][kBufferMax], g_skill_types[5][kBufferMax], g_sort_menus[11][kBufferMax],
+    g_village_lists[20][kBufferMax], g_village_words[5][kBufferMax], g_identify_words[6][kBufferMax],
+    g_turn_words[3][kBufferMax], g_hilo_words[3][kBufferMax], g_guest_name[1][kBufferMax], g_chop_count[2][kBufferMax],
+    g_note_sort[2][kBufferMax], g_parts_title[1][kBufferMax];
 
 constexpr std::uint32_t kFormations = 0x6636B0, kFormationBase = 0x573FC6;
 constexpr std::uint32_t kFaeries = 0x653210;   // the trait records: four stats, a name of 16
@@ -253,7 +270,9 @@ constexpr Table kTables[] = {
                            {0x66A1AC, 8, 0x66B144}, {0x66A1B4, 8, 0x66B148}, {0x66A1BC, 8, 0x66B14C},
                            {0x66A1C4, 12, 0x66B150}, {0x66A1D0, 12, 0x66B154}},
      {{0x66B12C, 0, 11}, {0x66B374, 7, 2}}, g_sort_menus, false},
-    {8, "note sort", 2, {{0x66A1DC, 8, 0x66B36C}, {0x66A1E4, 12, 0x66B370}}, {}, nullptr, false},
+    // 8: since D280's ja-JP layer, into buffers behind its one reader, the
+    // table 0x66B36C (a scan of the image: no other word names the slots).
+    {8, "note sort", 2, {{0x66A1DC, 8, 0x66B36C}, {0x66A1E4, 12, 0x66B370}}, {{0x66B36C, 0, 2}}, g_note_sort, false},
     {9, "ink label", 1, {{0x66A118, 8, 0x585965}}, {}, nullptr, false},
     {10, "formations", 10, {{kFormations, 16, kFormationBase, kFormations},
                             {kFormations + 28, 16, kFormationBase, kFormations},
@@ -352,8 +371,11 @@ constexpr Table kTables[] = {
      g_turn_words, false},
     {19, "hi-lo choices", 3, {{0x669F44, 4, 0x669F54}, {0x669F48, 4, 0x669F58}, {0x669F4C, 8, 0x669F5C}}, {},
      g_hilo_words, false},
-    // 20..23: in place, each witnessed by the operand that names its slot.
-    {20, "parts title", 1, {{0x66A098, 20, 0x47FA0D}}, {}, nullptr, false},
+    // 20: since D280, in a buffer of ours that our EffectKind5E_DrawMenu
+    // prints (rest_3e.cpp, Labels_Slot), 32 bytes for the Japan disc's
+    // fifteen characters; witnessed by the push that names the slot.
+    {20, "parts title", 1, {{0x66A098, 20, 0x47FA0D}}, {}, g_parts_title, false, 0, kBufferMax},
+    // 21..23: in place, each witnessed by the operand that names its slot.
     {21, "panel labels", 3, {{0x663668, 8, 0x573A9F}, {0x663670, 4, 0x573C2E}, {0x663674, 8, 0x573C3C}}, {}, nullptr,
      false},
     {22, "list title", 1, {{0x664288, 8, 0x5852A4}}, {}, nullptr, false},
@@ -366,6 +388,12 @@ constexpr Table kTables[] = {
     // count's x, the word's x or 0xFF); both witnessed by the push operand
     // that names the shipped word, as group 18's layout is by its second word's.
     {25, "chop count", 2, {{0x66A094, 4, 0x47EC73}, {0x66A094, 4, 0x47EC73}}, {}, g_chop_count, false},
+    // 26: fight 26's two turn-counter words in place (D280), for a layer whose
+    // disc draws the PC's own layout (the Japan disc's BOSS025.EMI: a word,
+    // the count, a word, at the PC's places), which Boss26Fx_DrawCount's
+    // original path draws through 0x669D20 / 0x669D24; each witnessed by
+    // that pointer word.
+    {26, "turn words", 2, {{0x669D10, 8, 0x669D20}, {0x669D18, 8, 0x669D24}}, {}, nullptr, false},
 };
 
 // The overlay's 8 x 8 set: the US disc's code - 0x30 from here, and a letter
@@ -406,7 +434,7 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
         if (p >= end) bof3::Fatal("%s chunk: ran out inside string %u", t->what, (unsigned)i);
         ++p;
         const std::size_t len = std::strlen(s);
-        const std::uint32_t room = t->buffers ? kRoom : slot.room;
+        const std::uint32_t room = t->buffers ? t->buffer_room : slot.room;
         if (len + 1 > room)
             bof3::Fatal("%s chunk: string %u is %u bytes, the slot holds %u", t->what, (unsigned)i,
                         (unsigned)len + 1, (unsigned)room);
@@ -435,7 +463,7 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
         }
         if (len == 0) continue;   // the overlay's builder had no string that fits: as shipped
         auto* dest = t->buffers ? t->buffers[i] : reinterpret_cast<char*>(static_cast<std::uintptr_t>(::bof3::Img(slot.va)));
-        std::memset(dest, 0, room);
+        std::memset(dest, 0, t->buffers ? kBufferMax : room);
         std::memcpy(dest, s, len);
         ++written;
         if (i < needed) ++required;

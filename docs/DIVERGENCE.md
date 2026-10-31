@@ -1141,6 +1141,25 @@ designed in rather than bolted on.
   the six label operands and the two anchor bytes from the original's code at
   every call, so this entry's patches hold for ours unchanged; no behaviour
   moved. Not yet seen in game through ours.
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-A):** under `ja-JP` a
+  kind-7 chunk too, from the Japan disc's `START.EMI` (`loc_build.py`
+  `convert_config_ja`): the seventeen option records before the row tables,
+  a count of characters, the x and the string - the count and x the PC's own
+  values (the PC's layout is the Japanese build's); the six row labels the
+  row draw's twin names (JP `0x801E2738`, a `lui` / `addiu` and a copy each)
+  ending at the gap table its code reads; the six controller records of 21
+  bytes after it (a count of characters, then the string). Two bytes a
+  character in the `ja-JP` font, so the PC's own arithmetic - which centres
+  a two-byte label as it centres the Chinese ones - stands: no layout patch
+  under `ja-JP` (`Lang_Latin` is false). The panel's L1 / R1 cell: the
+  Japan disc draws its capital L or R with its small-font 1 beside it (the
+  cell's twin `0x801E2F78`, the one-character strings after the four
+  `0x15 0x08..0x0B` icon codes); DIV-0051's 2026-10-21 amendment, which
+  draws the disc's own small L1 / R1 cells there, stays. On PSP-JP the same
+  module from the UMD (the Japan disc's, D280): its six labels and the two
+  Sound-row options are not in `BOOT.BIN`, whose own screen has no Sound
+  row (DIV-0141's), so the PlayStation's words are the ones the PC's screen
+  has rows for.
 - **Reversible?** play without `BOF3X_LANG`, or delete `en.FIRST.DAT`;
   `BOF3X_ORIGINAL=ConfigText` leaves all thirteen operands alone - the six
   label pointers and the seven layout numbers - so the labels stay Chinese and
@@ -1150,7 +1169,7 @@ designed in rather than bolted on.
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes - `BOF3X_ORIGINAL=ConfigText` leaves the options and the controller names in the overlay's language (for A/B)
 - **Toward:** psx - the PlayStation's own text, its quirks included (above)
-- **Languages:** en-US, en-150, fr-FR, de-DE - kind 7 is not built for a Japanese disc (`tools/loc_build.py` `build_all`); PSP-EU's is DIV-0141's
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - `ja-JP` since D280 (2026-10-31, `convert_config_ja`); PSP-EU's is DIV-0141's
 - **State:** active
 - **Checked:** the extractor reproduces the owner's screenshot of the
   PlayStation screen string for string (2026-09-20), and a read-only
@@ -1317,13 +1336,18 @@ designed in rather than bolted on.
   label two units a character left of centre.
 - **Also in the PSX version?** Yes - these are the PlayStation's strings; the
   US verbs are abbreviated to fit its buttons.
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-B):** under `ja-JP` the
+  22 verbs from the Japan disc's `START.EMI`, found as the US disc's are (the
+  PC's own set records end the pointer table), two bytes a character in the
+  `ja-JP` font; the centring stays the original's (DIV-0056). PSP-JP: the
+  UMD's module.
 - **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=MenuVerbs` keeps
   the original centring (for A/B only - the English labels then sit left).
 - **Switch:** lang
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes - `BOF3X_ORIGINAL=MenuVerbs` keeps the centring only (for A/B)
 - **Toward:** psx - the PlayStation's strings (above)
-- **Languages:** en-US, en-150, fr-FR, de-DE - kind 8 is not built for a Japanese disc; the centring is under `Lang_Latin` (`src/game/menu_verbs.cpp:140`)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - `ja-JP` since D280 (2026-10-31); the centring is under `Lang_Latin` (`src/game/menu_verbs.cpp:140`)
 - **State:** active
 - **Checked:** the chunk's 22 slots are validated against the pointer table
   before any write; captured by input recipe 2026-09-21 on the Config screen
@@ -1359,12 +1383,15 @@ designed in rather than bolted on.
   `0x64E2C8`, which is how `loc_build.py` finds them. The owner chose the
   disc's wording over authored English.
 - **Also in the PSX version?** Yes - the PlayStation's strings.
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-C):** under `ja-JP` the
+  seven labels from the Japan disc's `BATTLE.EMI`, the eight-byte slots
+  right before the box table as on the US disc, two bytes a character.
 - **Reversible?** play without `BOF3X_LANG`.
 - **Switch:** lang
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes
 - **Toward:** psx - the PlayStation's strings (above)
-- **Languages:** en-US, en-150, fr-FR, de-DE - kind 9 is not built for a Japanese disc (`tools/loc_build.py` `build_all`)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - `ja-JP` since D280 (2026-10-31)
 - **State:** active
 - **Checked:** captured by `tools/recipes/battle_commands.txt`, 2026-09-21:
   all seven, each in its box, Chg on L1 and Esc on R1. Still Chinese in the
@@ -1398,12 +1425,22 @@ designed in rather than bolted on.
 - **Also in the PSX version?** Yes - the PlayStation's default names; the
   PlayStation also asks for Ryu's, which the port does not
   ([`save-interchange.md`](save-interchange.md) §2).
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-D):** under `ja-JP` the
+  eight default names from the Japan disc's `START.EMI` records (a name of
+  five, the same tails) and the merchant's from its fishing module, each
+  paired from its end until it fits (DIV-0057's rule for names): the
+  merchant's and character 2's five characters need one pair code each, the
+  other seven fit as they are. The whelp's reset copy at `0x42E090` copies
+  the whole name and its NUL when it is longer than Capcom's five (six or
+  more bytes in the `ja-JP` font; DIV-0118's amendment, `NameCopy`); every
+  name of the PC's and of a Latin layer is at most five, so the copy is five
+  for them as before.
 - **Reversible?** play without `BOF3X_LANG`.
 - **Switch:** lang
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes
 - **Toward:** psx - the PlayStation's default names; it also asks for Ryu's, which the port does not (above)
-- **Languages:** en-US, en-150, fr-FR, de-DE - kind 10 is not built for a Japanese disc (`tools/loc_build.py` `build_all`)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - `ja-JP` since D280 (2026-10-31)
 - **State:** active
 - **Checked:** captured 2026-09-21 in the new game's battle: "Whelp" in the
   turn banner and the status bar. **Not changed: saves.** A loaded save
@@ -3948,12 +3985,18 @@ designed in rather than bolted on.
   port's glyphs, 2026-09-24. **Confirmed by the owner in game the same day
   with the disc's EX: "the EX looks good now".** **Owed:** a message banner
   (Attack, Critical, ...) seen in game.
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-E):** under `ja-JP` the
+  twelve messages from the Japan disc's `BATTLE.EMI`: eight-byte slots, the
+  second and fourth the two extra-turn suffixes (a space and two `0x15`
+  codes, the disc's own glyphs in the `ja-JP` font), the first slot read by
+  the module's code (`0x801EAFB0`, by `0x801DE92C`; `convert_battle_messages_ja`).
+  The longest is ten bytes encoded, inside the copy's twelve.
 - **Reversible?** play without `BOF3X_LANG`.
 - **Switch:** lang
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes
 - **Toward:** psx - the PlayStation's strings and copy length
-- **Languages:** en-US, en-150, fr-FR, de-DE - kind 12 is not built for a Japanese disc (`tools/loc_build.py` `build_all`)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - `ja-JP` since D280 (2026-10-31, `convert_battle_messages_ja`)
 - **State:** active
 
 ### Enemy names in the overlay's language
@@ -4260,6 +4303,15 @@ designed in rather than bolted on.
   - **Self-tests:** `text_draw` 6,000 strings, `menu_windows` 74,000
     rounds, `battle_windows` 66,000 rounds, all 0 mismatches.
   - **English is unchanged:** 245 of 245 files.
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-F):** the default
+  character names and the merchant's are paired too (DIV-0020's
+  amendment): character 2's five characters and the merchant's. Unlike the
+  item and enemy names these reach the save (the character records), so a
+  save keeps the pair code's number; the layer's pairs are numbered in build
+  order and these are taken last (`convert_exe_ja` runs after the names), so
+  a rebuild of the same layer gives the same numbers. A layer whose earlier
+  pairs change would renumber them (a finding of the round, described in its
+  report).
 - **Reversible?** play without `BOF3X_LANG`, or in any other language.
 - **Switch:** lang
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
@@ -5020,13 +5072,38 @@ designed in rather than bolted on.
   the reader over the seven discs (the four Western `AREA008.EMI`s `0x22` /
   `0xD1` / none, the three Japanese-build ones `0x2E` / `0xCD` / `0xE5` with
   the glyph; PSP-EU's `BOOT.BIN` `0x22` / `0xD1` / none); a PC install copy with an `en-US` layer built from this branch and the US disc (`loc_build.py all`, its report `chop count 2`; root `C:\Users\kerok\bof3x-runs\rope1030\pc`, the game's `capcom.avi` beside it for the disc probe), the owner's chop recording replayed on it with a frame every 60 through the chop (`sheet_chop_layer_box.png`): the log `DIV-0064: 2 of 2 chop count`, the box the narrower one, the count alone in the dialogue font's digits (12, 14, 16 ... 20), no glyph after it; the same recording on the owner's install (its layer built before this group) draws the wide box, the 12 px numerals and the glyph as before.
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-G):** a `ja-JP`
+  layer carries the groups from the Japan disc's own tables
+  (`convert_exe_ja`, `convert_labels` under `donor_ja`), two bytes a
+  character: 1 (the second status word does not fit its 8-byte slot, whose
+  readers are eleven immediates in the code, and stays as shipped), 2 (the
+  Japan disc's slots 8, 8, 4, 8), 3..7, 9..14, 16, 17, 19, 20, 24, 25 and the
+  new 26; 21..23 are not sent (the PC's bytes are the Japan disc's ASCII
+  words). A PSP-JP layer reads the UMD's modules (the Japan disc's) and
+  takes group 15 from its `MAGIC060.EMI` as PSP-EU's does, so the Identify
+  panel there draws its words where it drew only the target's name. Found where the disc's code reads them: the village lists by the
+  board's two list draws (`COMMU01.EMI`, strides 6 and 5, three characters,
+  no NUL where the word fills its slot), the count word and the hi-lo
+  game's titles and choices by their reads (`village_ja`), the turn words by
+  fight 26's routine (`turn_words_ja`). A word the `ja-JP` font cannot fit
+  in its slot takes the one-byte slots for its Latin capitals, digits and
+  signs (`ja_compact`). In the DLL: group 8 now goes into buffers behind its
+  one reader, the table `0x66B36C` (the Japan disc's second choice is six
+  characters); group 20 into a buffer of 32 that our `EffectKind5E_DrawMenu`
+  prints through `Labels_Slot` (fifteen characters, 31 bytes with the NUL,
+  where the slot `0x66A098` holds 20 - so the row
+  `Effect1b_ToggleText+0x10` stays zero on the Japanese images and is read
+  by nothing; every Latin layer's title moves to the buffer too and is
+  drawn the same); group 26 writes fight 26's two words in place at
+  `0x669D10` / `0x669D18` (witnessed by `0x669D20` / `0x669D24`), drawn by
+  `Boss26Fx_DrawCount`'s original path, whose layout is the Japan disc's.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
 - **Switch:** lang
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes
 - **Toward:** psx - the US disc's own strings in its own slots
-- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - the Latin layers' groups; a Japanese layer carries groups 15 and 24 (`tools/loc_build.py` `build_all`)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - the Latin layers' groups and, since D280 (2026-10-31), a Japanese layer's (`tools/loc_build.py` `convert_exe_ja`)
 - **State:** active
 
 ### The battle equip window's stat labels beside their own values
@@ -9206,13 +9283,22 @@ designed in rather than bolted on.
   `battle_e1` group in the `'*'` self-test (the fuzz runs before an overlay
   loads). **Not seen in game:** no recipe reaches the duel's equipment
   screen ([`labels-1013.md`](labels-1013.md) 4).
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-H):** the copy at
+  `0x42DC20` (and the whelp's back at `0x42E090`) takes the whole name and
+  its NUL when it is longer than Capcom's five bytes, at most the record's
+  nine (`NameCopy`, `src/game/battle_e1.cpp`): the Japan disc's guest name
+  is three characters, seven bytes in the `ja-JP` font, which the copy of
+  five cut mid-character. Group 17 is built for a Japanese disc too
+  (`guest_name` takes a name the `ja-JP` font has). Every name of the PC's
+  and of a Latin layer is at most five with its NUL, so their copy stays
+  five.
 - **Reversible?** play without `BOF3X_LANG`, or
   `BOF3X_ORIGINAL=BattleExtra_EquipOpen` (Capcom's copy reads `0x669CE8`).
 - **Switch:** BattleExtra_EquipOpen
 - **Default:** on - under its languages
 - **Player:** costly - a detour name only; narrower than the language, which stays in Reversible?
 - **Toward:** psx - the same copy, the name the disc's
-- **Languages:** en-US, en-150, fr-FR, de-DE - group 17 (`src/game/battle_e1.cpp:326`), not built for a Japanese disc
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - group 17 (`src/game/battle_e1.cpp`), for a Japanese disc since D280 (2026-10-31)
 - **State:** active
 
 ### Fight 26's turn counter in the disc's words and layout
@@ -9299,13 +9385,18 @@ designed in rather than bolted on.
   Western discs; the log `DIV-0064: 3 of 3 hi-lo choices`; the `rest_4c`
   group in the `'*'` self-test. **Not seen in game:** no recipe reaches the
   hi-lo game (`labels-1013.md` 4).
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-I):** group 19 is built
+  for a Japanese disc too: the Japan disc's `COMMU02.EMI` holds the three
+  choices in the same three 4-byte slots before the rectangles (two kana,
+  two kana, two kanji filling its slot), read through their base; ours
+  centres each in its box as for a Latin layer.
 - **Reversible?** play without `BOF3X_LANG`, or
   `BOF3X_ORIGINAL=CommuHiLo_DrawChoice`.
 - **Switch:** CommuHiLo_DrawChoice
 - **Default:** on - under its languages
 - **Player:** costly - a detour name only; narrower than the language, which stays in Reversible?
 - **Toward:** psx - the disc's words and places; every word drawn whole ("Also in the PSX version?" above)
-- **Languages:** en-US, en-150, fr-FR, de-DE - group 19 (`src/game/rest_4c.cpp:400`), not built for a Japanese disc
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - group 19 (`src/game/rest_4c.cpp:400`), for a Japanese disc since D280 (2026-10-31)
 - **State:** active
 
 ### A map edge that leads to no area holds, instead of crashing

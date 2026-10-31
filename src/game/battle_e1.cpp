@@ -307,6 +307,18 @@ extern "C" unsigned long __cdecl BattleExtra_EquipOpenDispatch(unsigned long thr
     return Dispatch("BattleExtra_EquipOpenDispatch", ::bof3::Img(BattleExtra_EquipOpenSteps_addr), FieldS_Step, 3, through);
 }
 
+// Capcom's copy of five bytes over character record 7's name, or - DIV-0118's
+// amendment for D280 - the name and its NUL when they are longer (a ja-JP
+// layer's names, two bytes a character), at most the nine-byte field. Every
+// name of the PC's and of a Latin layer is at most five with its NUL, so the
+// count stays five for them.
+static U NameCopy(U name) {
+    const std::size_t len = std::strlen(reinterpret_cast<const char*>(static_cast<std::uintptr_t>(name)));
+    if (len + 1 > 9) bof3::Fatal("BattleExtra: the name copied over character 7's is %u bytes, the field holds 9",
+                                 (unsigned)len + 1);
+    return len + 1 > 5 ? static_cast<U>(len + 1) : 5u;
+}
+
 // original 0x42DC20 (0x64ADEC[1]): the backdrop; once no transition runs,
 // Sound_PlayEffect(0x102), 0x42E0E0(), 0x929F04 = 4, 0x929F02 + 1 (read after
 // the calls), and the five bytes 0x669CE8 copied over character record 7's
@@ -315,6 +327,9 @@ extern "C" unsigned long __cdecl BattleExtra_EquipOpenDispatch(unsigned long thr
 // DIVERGENCE DIV-0118 (DIV-0064's group 17): under a language overlay that
 // has written the guest's name, the five bytes come from the overlay's
 // string (BATE.EMI's Beyd) instead of 0x669CE8's shipped Chinese name.
+// Amended for D280 (NameCopy): a name longer than five bytes with its NUL -
+// the Japan disc's, two bytes a character in the ja-JP font - is copied
+// whole, its NUL included, at most the record's nine-byte name field.
 extern "C" void __cdecl BattleExtra_EquipOpen(void) {
     Backdrop();
     if (Transition_Busy != 0) return;
@@ -326,7 +341,7 @@ extern "C" void __cdecl BattleExtra_EquipOpen(void) {
     const U name = Labels_Written(17)
         ? static_cast<U>(reinterpret_cast<std::uintptr_t>(Labels_Slot(17, 0)))
         : ::bof3::Img(at::kGuestHeadIn.v);
-    Memcpy(::bof3::Img(CharacterRecords_addr) + 0x47c, name, 5);
+    Memcpy(::bof3::Img(CharacterRecords_addr) + 0x47c, name, NameCopy(name));
 }
 
 // original 0x42DC80 (0x64ADEC[2]): the backdrop; 0x929F04 - 1, and at 0:
@@ -526,7 +541,8 @@ extern "C" void __cdecl BattleExtra_EquipLeave(void) {
         BattleE1_Mode = 1;
         FieldS_State = 0;
         FieldS_Step = 0;
-        Memcpy(::bof3::Img(CharacterRecords_addr) + 0x47c, ::bof3::Img(BattleE1_GuestHeadOut_addr), 5);
+        Memcpy(::bof3::Img(CharacterRecords_addr) + 0x47c, ::bof3::Img(BattleE1_GuestHeadOut_addr),
+               NameCopy(::bof3::Img(BattleE1_GuestHeadOut_addr)));   // DIV-0020 / DIV-0118, amended for D280
         return;
     }
     Backdrop();
