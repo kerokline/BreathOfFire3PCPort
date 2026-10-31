@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-29)
+**Status:** IN PROGRESS (2026-10-31)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -8,9 +8,25 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**The dock's legend words, 2026-10-30 evening** (on `loc/ship-parts-menu`; DIV-0190). The owner's new recording `shipPartsMenu.txt` reached the dock's parts menu (area 128) under en-US with its button legend still the area page's Japanese paint (○…決定 / ×…終了 / △…メモを見る), the one screen text no layer touched. Every Western disc repainted the three words on its own page and nothing else there (US / EU / PSP-EU `OK` / `End` / `Memo`, French `Fin`, German `Ende` / `Notiz`; the JP disc's page the PC's), so `loc_build.py` now carries the panel's word columns into `<tag>.AREA128.DAT` as DIV-0088 carries the village board's buttons, the icon column kept the port's for DIV-0137's cell reading ([`rest_3e.md`](rest_3e.md) 11.7). Seen in the replay under en-US, fr-FR and de-DE; owed the owner's eye on their own install.
+**Mt. Zublo and Mt. Levett passable on the world map, 2026-10-30 night, merged as PR #175** (`main` `43e98773`; DIV-0191,
+switch `MountainPasses`; [`mountain-passes.md`](mountain-passes.md)). The owner's request of the evening: once the way
+through is open, the two mountains should not need their area walked every time. Zublo's drawn walkway (four cells
+beside the volcano's doors) is made passage from chapter 9, its doors' links armed on approach (the first build's
+road faulted the plate's unbounded place search, now bounded in three maps' `PlateShow`), the strip's party members
+drawn ahead; Levett's hidden blocking object is dropped once the party has crossed area 70 door to door, recorded in a
+byte of ours in the save block (`+0x1040`). Read live on the owner's chapter-10 game with `tools/cell_peek.py`; six builds
+by the owner's eye, approved ("Brilliant"). A child-era save keeps Zublo's wall.
 
-**The no-fail minigames cheat, 2026-10-30** (on `cheat/no-fail-minigames`, off `main` `494c270a`, the PR #171 merge; DIV-0188). The owner's call: one switch, `cheat.no_fail=1` / `BOF3X_NO_FAIL=1`, under which a minigame cannot be lost, each minigame joining as a recorded route reaches it - the rope pull (`Area75_PhasePlay`'s judgement skipped) and the lighthouse valve (effect kind `0x45`'s, `EffectKind45_Tune` / `_Aim`) first, from the owner's two recordings of that morning (`ropeMiniGame.txt`, `lighthousePowerMiniGame.txt`, [`button-routes.md`](button-routes.md) 5), each seen to lose without the switch and go on with it. The cheats on two pages of the Cheats sub-tab (a third row of buttons, Page 1 / Page 2, the owner's word), the sub-tabs placed per tab. Headless: the `area_w1f` and `effect_2d` fuzzes differ in the three guarded functions alone under the switch, the whole shadow self-test at 0 without it; [`cheats.md`](cheats.md) 7. **The afternoon:** the chop joined the switch from the owner's `bunyanHouseChoppingMiniGame.txt` (`EffectKind55_Finish`, the clock effect's judgement), and the one-glyph word after the chop's count - the owner's catch in that recording - became DIV-0064's group 25: the West's own layout (the count alone in the narrower box) read off every disc's `AREA008.EMI` and PSP-EU's `BOOT.BIN`, the Japanese build's glyph only under its own layer ([`install-gap-labels.md`](install-gap-labels.md) 4.3's open row closed).
+**The consumables sorted by id, 2026-10-30, merged as PR #173** (DIV-0189, switch `ItemSortById`;
+[`rest_2e.md`](rest_2e.md)). The owner's call: the Items screen's `NormalItem` / `CombatItem` rows only partition
+the list by a flag bit and leave each half in pick-up order, so within each half the entries now sort by item id (the
+EMI's order: healing, throwables, boosts, odds and ends, fish, Momo's parts). The passes, the other sorts and the
+hand-arranging are unchanged; a hand-written type order is the possible next step. Headless: the `rest_2e` fuzz at 0
+mismatches with the switch armed after the self-test. Not yet played.
+
+**The dock's legend words, 2026-10-30 evening, merged as PR #174** (DIV-0190). The owner's new recording `shipPartsMenu.txt` reached the dock's parts menu (area 128) under en-US with its button legend still the area page's Japanese paint (○…決定 / ×…終了 / △…メモを見る), the one screen text no layer touched. Every Western disc repainted the three words on its own page and nothing else there (US / EU / PSP-EU `OK` / `End` / `Memo`, French `Fin`, German `Ende` / `Notiz`; the JP disc's page the PC's), so `loc_build.py` now carries the panel's word columns into `<tag>.AREA128.DAT` as DIV-0088 carries the village board's buttons, the icon column kept the port's for DIV-0137's cell reading ([`rest_3e.md`](rest_3e.md) 11.7). Seen in the replay under en-US, fr-FR and de-DE, and by the owner on their own install on 2026-10-31.
+
+**The no-fail minigames cheat, 2026-10-30, merged as PR #172** (off `main` `494c270a`, the PR #171 merge; DIV-0188; the two Cheats pages, a rope pull with the box on and the chop's count box seen by the owner on 2026-10-31). The owner's call: one switch, `cheat.no_fail=1` / `BOF3X_NO_FAIL=1`, under which a minigame cannot be lost, each minigame joining as a recorded route reaches it - the rope pull (`Area75_PhasePlay`'s judgement skipped) and the lighthouse valve (effect kind `0x45`'s, `EffectKind45_Tune` / `_Aim`) first, from the owner's two recordings of that morning (`ropeMiniGame.txt`, `lighthousePowerMiniGame.txt`, [`button-routes.md`](button-routes.md) 5), each seen to lose without the switch and go on with it. The cheats on two pages of the Cheats sub-tab (a third row of buttons, Page 1 / Page 2, the owner's word), the sub-tabs placed per tab. Headless: the `area_w1f` and `effect_2d` fuzzes differ in the three guarded functions alone under the switch, the whole shadow self-test at 0 without it; [`cheats.md`](cheats.md) 7. **The afternoon:** the chop joined the switch from the owner's `bunyanHouseChoppingMiniGame.txt` (`EffectKind55_Finish`, the clock effect's judgement), and the one-glyph word after the chop's count - the owner's catch in that recording - became DIV-0064's group 25: the West's own layout (the count alone in the narrower box) read off every disc's `AREA008.EMI` and PSP-EU's `BOOT.BIN`, the Japanese build's glyph only under its own layer ([`install-gap-labels.md`](install-gap-labels.md) 4.3's open row closed).
 
 **The enemy-information cheat, 2026-10-29, merged as PR #169** (off `main` `628aa521`, the PR #167 merge). A player asked for every enemy's HP bar shown; the owner named the lever, the enemy record's "discovered" byte `+0x8F`, which the HP gauge and Identify's panel read and which the original copies from the save's "kind beaten before" bit set (0 for a boss). **DIV-0187:** `cheat.enemy_info=1` / `BOF3X_ENEMY_INFO=1` makes `Battle_SetupEnemy` and `Battle_PlaceBossActor` write 1, so every enemy and every boss shows its gauge and its stats from the first meeting; the save's bit set is untouched. A box on the Cheats sub-page beside Steal; off by default; a Fatal when a writer is left as Capcom's. Headless checks in [`cheats.md`](cheats.md) section 6; not yet played.
 
@@ -104,7 +120,8 @@ No DIV or D number came of it. The owner's calls and looks are in [`owner-review
 - **Issue fixes:** #149, Bone Dance's beat lengths on disc-built installs and area 108's cart put back at the area's
   load (PR #151, DIV-0182); #142, the dragon-zombie puddle drawn whole (PR #145, DIV-0125 amended) and Ryu's turning
   in the Dauna Mine exchange, the port's stale cell-texture cache (PR #148, DIV-0181, D360); #132, Garr's spear over
-  Ryu at the camp (PR #146, DIV-0071 amended); #152, the faerie board's Yes / No tile (PR #154, DIV-0027 amended);
+  Ryu at the camp (PR #146, DIV-0071 amended); #141, Garr's block in Angel Tower, the model box (PR #171, DIV-0071
+  amended again, D398); #152, the faerie board's Yes / No tile (PR #154, DIV-0027 amended);
   #139, #130 and #134, a disc-built install's missing or wrong exits (PRs #144 and #136,
   [`exe-import-engine.md`](exe-import-engine.md) 7.8, 7.9); #121, the lift stall under instant text (PR #135,
   DIV-0158's pacing floor, D357) with the console flash's 32-bit wrap (DIV-0178, D358); #118 and #120 (PR #129,

@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-29: the relocatable-image round merged as PR #168, the enemy-information cheat as PR #169 and the state hash's pool fold as PR #170; `v0.1.0-alpha.6` cut from `main`, item 2)
+**Status:** IN PROGRESS (2026-10-31: `main` at PR #175, the mountain passes; since alpha.6, PRs #171..#175 - issue #141, the no-fail cheat, the item sort, the dock legend, the passes; the owner's approvals of 2026-10-31 struck)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -14,11 +14,11 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
-**`origin/main` is `db017c74`** (PR #170, 2026-10-29) plus the alpha.6 notes: since the reading-row round (PR #106) it took the faster
+**`origin/main` is `43e98773`** (PR #175, 2026-10-30; `v0.1.0-alpha.6` was cut at `b7bd1d29`, after PR #170): since the reading-row round (PR #106) it took the faster
 text, the bit-15 round, the PlayStation verdict pass and twin-diff, fix wave 1023, the sound-layer round, the
 issue fixes of 2026-10-24..26, build-difference prevention (the data diff and the every-door sweep), the spell
 sweep and its fix wave, the two staged rounds, the away day (PR #158), D42's dial (PR #159), the boss sweep (PR #161), the ledger-fields round (PRs #162, #164), D397 and issue #163
-(PRs #166, #167), the relocatable-image round (PR #168) and the enemy-information cheat (PR #169)
+(PRs #166, #167), the relocatable-image round (PR #168), the enemy-information cheat (PR #169), the pool fold (PR #170), and after alpha.6 issue #141's model box (PR #171), the no-fail minigames cheat (PR #172), the item sort (PR #173), the dock's legend (PR #174) and the mountain passes (PR #175)
 ([`STATUS.md`](STATUS.md) lists them with their PRs). Every branch the earlier versions of this file called
 unpushed is merged; the open work is below. **No branch meant for a PR is unpushed**; `v0.1.0-alpha.6` is the
 release cut from this state ([`releases/v0.1.0-alpha.6.md`](releases/v0.1.0-alpha.6.md), a draft until the owner
@@ -29,7 +29,17 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 
 ## Pick up here
 
-0. **The dock's legend words from the disc (DIV-0190, 2026-10-30 evening)** on `loc/ship-parts-menu`: the owner's
+0. **The mountain passes (DIV-0191, 2026-10-30 night, merged as PR #175)**: Mt. Zublo's walkway passable from
+   chapter 9 and Mt. Levett's once crossed, played and approved by the owner on six builds
+   ([`mountain-passes.md`](mountain-passes.md)). **Owed:** nothing of the owner's; the doc's "Left" items (a
+   child-era save keeps Zublo's wall by design). Traps paid: a door reached from a plain cell acts on the last place
+   a link armed, so arm in the step hook; the map's corners are the mesh, not the paint; check the object list before
+   the cells. `tools/cell_peek.py` reads a running game's cells around the leader.
+0. **The consumables sorted by id (DIV-0189, 2026-10-30, merged as PR #173)**: within each half of the
+   `NormalItem` / `CombatItem` partition, ascending item id; switch `ItemSortById`. **Owed the owner's play** (a
+   sort on a long game's bag) and their word on a hand-written type order (healing, throwables, fish...) as the next
+   step, which would replace the id compare.
+0. **The dock's legend words from the disc (DIV-0190, 2026-10-30 evening, merged as PR #174)** on `loc/ship-parts-menu`: the owner's
    `shipPartsMenu.txt` reached the parts menu (area 128), whose button legend was still the page's Japanese paint.
    `loc_build.py build_dock_panel` now carries the panel's word columns from each Western disc's `AREA128.EMI` page
    into `<tag>.AREA128.DAT` (`OK` / `End` / `Memo`; French `Fin`; German `Ende` / `Notiz`), the icon column left the
@@ -470,18 +480,11 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **`fix/mountain-passes`** (2026-10-30 evening): DIV-0191, the switch `MountainPasses` - Mt. Zublo's road cells
-  from chapter 9 and Mt. Levett's hidden object dropped once crossed (our save-block byte `+0x1040`);
-  [`mountain-passes.md`](mountain-passes.md). Self-tested headless, unpushed; **owed the owner's play** (both
-  mountains, both ways, the `DIV-0191` log lines) and their eye on the four Zublo cells against the drawn path. The
-  sampler `tools/cell_peek.py` reads a running game's cells around the leader.
-- **`away1027/integration`** (item 1): the four agents' branches `away1027/{lang,desc,stp,sweep}` merged, the
-  coordinator's batched validation on it; unpushed, PR at the owner's word. **`away1027/twins`** is running (a
-  sixth agent, off the integration). Worktrees `C:\Users\kerok\bof3x-runs\away1027\wt_*`, the game lock
-  `away1027\game.lock` (a directory; `mkdir` takes it), the agents' roots `away1027\<agent>\`.
-- **Merged, still to remove:** the worktrees `C:\Users\kerok\bof3x-runs\ss1026\wt_wave` (`fix/sweep-wave`, PR
-  #156) and `C:\Users\kerok\bof3x-runs\stg1027\wt` (`staging/ledger-and-reloc-1027`, PR #157) and their local
-  branches; `tools/recorder-fkeys` (in `main` by patch as `d2089fde`). About thirty merged branches are still on
+- **Nothing is in flight** (2026-10-31 morning): every branch meant for a PR is merged. **Merged, still to
+  remove:** the worktree `C:\Users\kerok\bof3x-runs\spm1030\wt` (`loc/ship-parts-menu`, PR #174) and the local
+  branches `cheat/no-fail-minigames`, `fix/mountain-passes`, `loc/ship-parts-menu`, `sort/items-by-id`;
+  `tools/recorder-fkeys` (in `main` by patch as `d2089fde`); the scratch roots `ss1026` and `stg1027` (their
+  worktrees are gone). About thirty merged branches are still on
   `origin`; `git cherry` before deleting any (Traps).
 - **Local, not for merge:** `test/alpha4-fasttext` (issue #121's test build) and `gameplay/angel-tower-skip` (one
   commit, the Angel Tower skip measured and unexplained, IDEAS I32 P1).
