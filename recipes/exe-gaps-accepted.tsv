@@ -11,24 +11,24 @@
 # Addresses, classes and symbol names only (CLAUDE.md rule 1). docs/exe-gap-round.md 4 (group AC),
 # docs/install-gap-census.md 8.
 build	lo	hi	symbol	answer	evidence
-psx-jp	0x64B390	0x64B397	Char_DefaultRecords	layer	JA, this round (D280): kind 10 is not built for a Japanese disc today (DIV-0020 Languages)
-psx-jp	0x653200	0x653210	CommuRank_Modes+0x8C	layer	JA, this round (D280)
+psx-jp	0x64B390	0x64B397	Char_DefaultRecords	layer	ja-JP kind 10 writes the eight default names in place (DIV-0020 amended 2026-10-31, the exe-gap round's group JA); a Latin layer the same
+psx-jp	0x653200	0x653210	CommuRank_Modes+0x8C	layer	ja-JP label group 16 record 0 written in place (DIV-0064 amended 2026-10-31, group JA)
 psx-jp	0x653818	0x65382D	ConfigScreen_OpenStates+0x144	unread	the PC keyboard's default key names (S, A, C, Z, X, V), classed port-platform by the exe-gap round's group PL (2026-10-31): Config_DrawControllerCell draws icons under a Latin layer (DIV-0051) and no PlayStation draws a key; under ja-JP the icon path is JA's
 psx-jp	0x65A920	0x65A924	WardMote_Tilts+0x8	unread	no reader: past WardMote_Tilts' short[4] extent, exe-immediate-places.md 7; not read on the routes, install-gap-reads.md 4.1; PL, this round
-psx-jp	0x6636B0	0x6636C0	Equip_SlotIcons+0x50	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psx-jp	0x6636CC	0x6636DC	Equip_SlotIcons+0x6C	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psx-jp	0x6636E8	0x6636F8	Equip_SlotIcons+0x88	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psx-jp	0x663704	0x663714	Equip_SlotIcons+0xA4	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psx-jp	0x663720	0x663730	Equip_SlotIcons+0xC0	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psx-jp	0x66373C	0x66374C	Equip_SlotIcons+0xDC	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psx-jp	0x663758	0x663768	Equip_SlotIcons+0xF8	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psx-jp	0x663774	0x663784	Equip_SlotIcons+0x114	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psx-jp	0x663790	0x6637A0	Equip_SlotIcons+0x130	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psx-jp	0x6637AC	0x6637BC	Equip_SlotIcons+0x14C	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
+psx-jp	0x6636B0	0x6636C0	Equip_SlotIcons+0x50	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psx-jp	0x6636CC	0x6636DC	Equip_SlotIcons+0x6C	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psx-jp	0x6636E8	0x6636F8	Equip_SlotIcons+0x88	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psx-jp	0x663704	0x663714	Equip_SlotIcons+0xA4	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psx-jp	0x663720	0x663730	Equip_SlotIcons+0xC0	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psx-jp	0x66373C	0x66374C	Equip_SlotIcons+0xDC	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psx-jp	0x663758	0x663768	Equip_SlotIcons+0xF8	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psx-jp	0x663774	0x663784	Equip_SlotIcons+0x114	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psx-jp	0x663790	0x6637A0	Equip_SlotIcons+0x130	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psx-jp	0x6637AC	0x6637BC	Equip_SlotIcons+0x14C	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
 psx-jp	0x669CCC	0x669CD4	Encounter_SlotChance+0x1C	unread	AU draws the slot blank on every install, exe-gap-round.md 7
-psx-jp	0x669CE8	0x669CED	BattleE1_GuestHeadOut+0x8	layer	JA, this round (D280)
-psx-jp	0x66A094	0x66A096	Effect1b_ToggleText+0xC	layer	JA, this round (D280): a Japanese layer builds no group 25 today, so EffectKind55_DrawCount (src/game/effect_2g.cpp) reads this range (DIV-0064, 2026-10-30)
-psx-jp	0x66A098	0x66A0AC	Effect1b_ToggleText+0x10	layer	JA, this round (D280)
+psx-jp	0x669CE8	0x669CED	BattleE1_GuestHeadOut+0x8	unread	ja-JP label group 17 holds the name in a buffer of ours; the .data bytes stay zero and nothing reads them (DIV-0064 amended 2026-10-31, group JA)
+psx-jp	0x66A094	0x66A096	Effect1b_ToggleText+0xC	unread	label group 25 (the chop's count word) is held in a buffer of ours under every layer; the .data bytes stay zero and nothing reads them (DIV-0064 amended 2026-10-31, group JA)
+psx-jp	0x66A098	0x66A0AC	Effect1b_ToggleText+0x10	unread	kind 0x5E's menu title, label group 20, held in a 32-byte buffer of ours under every layer; the .data bytes stay zero and nothing reads them (DIV-0064 amended 2026-10-31, group JA)
 psx-us	0x64B390	0x64B397	Char_DefaultRecords	layer	kind 10, the default names (DIVERGENCE DIV-0020; CharNames_Apply, src/game/char_names.cpp)
 psx-us	0x653144	0x653150	CommuMusic_LabelC+0x4C	unread	a reader no route reaches: CommuMusic_DrawList 0x45FA80's three Text_DrawFont8 strings (src/game/rest_4e.cpp kGlyphsA..C), the faerie music player; install-gap-reads.md 4.1 (as CommuMusic_CloseSteps+0x68, sampled), install-gap-labels.md 4.4; PL, this round
 psx-us	0x653818	0x653830	ConfigScreen_OpenStates+0x144	unread	the PC keyboard's default key names (S, A, C, Z, X, V), classed port-platform by the exe-gap round's group PL (2026-10-31): Config_DrawControllerCell draws icons under a Latin layer (DIV-0051) and no PlayStation draws a key; under ja-JP the icon path is JA's
@@ -198,24 +198,24 @@ psx-de	0x663790	0x6637A0	Equip_SlotIcons+0x130	layer	kind 15 group 10, the forma
 psx-de	0x6637AC	0x6637BC	Equip_SlotIcons+0x14C	layer	kind 15 group 10, the formation names (DIVERGENCE DIV-0064 item 10; Menu_DrawIconWheel 0x573F70)
 psx-de	0x669CCC	0x669CD4	Encounter_SlotChance+0x1C	unread	AU draws the slot blank on every install, exe-gap-round.md 7
 psx-de	0x66A094	0x66A096	Effect1b_ToggleText+0xC	layer	kind 15 group 25, the chop's count word: EffectKind55_DrawCount (src/game/effect_2g.cpp) reads the group's slots once written (DIVERGENCE DIV-0064, 2026-10-30)
-psp-jp	0x64B390	0x64B397	Char_DefaultRecords	layer	JA, this round (D280): kind 10 is not built for a Japanese disc today (DIV-0020 Languages)
-psp-jp	0x653200	0x653210	CommuRank_Modes+0x8C	layer	JA, this round (D280)
+psp-jp	0x64B390	0x64B397	Char_DefaultRecords	layer	ja-JP kind 10 writes the eight default names in place (DIV-0020 amended 2026-10-31, the exe-gap round's group JA); a Latin layer the same
+psp-jp	0x653200	0x653210	CommuRank_Modes+0x8C	layer	ja-JP label group 16 record 0 written in place (DIV-0064 amended 2026-10-31, group JA)
 psp-jp	0x653818	0x65382D	ConfigScreen_OpenStates+0x144	unread	the PC keyboard's default key names (S, A, C, Z, X, V), classed port-platform by the exe-gap round's group PL (2026-10-31): Config_DrawControllerCell draws icons under a Latin layer (DIV-0051) and no PlayStation draws a key; under ja-JP the icon path is JA's
 psp-jp	0x65A920	0x65A924	WardMote_Tilts+0x8	unread	no reader: past WardMote_Tilts' short[4] extent, exe-immediate-places.md 7; not read on the routes, install-gap-reads.md 4.1; PL, this round
-psp-jp	0x6636B0	0x6636C0	Equip_SlotIcons+0x50	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psp-jp	0x6636CC	0x6636DC	Equip_SlotIcons+0x6C	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psp-jp	0x6636E8	0x6636F8	Equip_SlotIcons+0x88	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psp-jp	0x663704	0x663714	Equip_SlotIcons+0xA4	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psp-jp	0x663720	0x663730	Equip_SlotIcons+0xC0	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psp-jp	0x66373C	0x66374C	Equip_SlotIcons+0xDC	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psp-jp	0x663758	0x663768	Equip_SlotIcons+0xF8	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psp-jp	0x663774	0x663784	Equip_SlotIcons+0x114	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psp-jp	0x663790	0x6637A0	Equip_SlotIcons+0x130	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
-psp-jp	0x6637AC	0x6637BC	Equip_SlotIcons+0x14C	layer	JA, this round (D280): a Japanese layer builds no group 10 today (DIV-0064 Languages)
+psp-jp	0x6636B0	0x6636C0	Equip_SlotIcons+0x50	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psp-jp	0x6636CC	0x6636DC	Equip_SlotIcons+0x6C	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psp-jp	0x6636E8	0x6636F8	Equip_SlotIcons+0x88	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psp-jp	0x663704	0x663714	Equip_SlotIcons+0xA4	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psp-jp	0x663720	0x663730	Equip_SlotIcons+0xC0	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psp-jp	0x66373C	0x66374C	Equip_SlotIcons+0xDC	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psp-jp	0x663758	0x663768	Equip_SlotIcons+0xF8	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psp-jp	0x663774	0x663784	Equip_SlotIcons+0x114	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psp-jp	0x663790	0x6637A0	Equip_SlotIcons+0x130	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
+psp-jp	0x6637AC	0x6637BC	Equip_SlotIcons+0x14C	layer	ja-JP label group 10 writes the ten formation names in place (DIV-0064 amended 2026-10-31, group JA); a Latin layer the same
 psp-jp	0x669CCC	0x669CD4	Encounter_SlotChance+0x1C	unread	AU draws the slot blank on every install, exe-gap-round.md 7
-psp-jp	0x669CE8	0x669CED	BattleE1_GuestHeadOut+0x8	layer	JA, this round (D280)
-psp-jp	0x66A094	0x66A096	Effect1b_ToggleText+0xC	layer	JA, this round (D280): a Japanese layer builds no group 25 today, so EffectKind55_DrawCount (src/game/effect_2g.cpp) reads this range (DIV-0064, 2026-10-30)
-psp-jp	0x66A098	0x66A0AC	Effect1b_ToggleText+0x10	layer	JA, this round (D280)
+psp-jp	0x669CE8	0x669CED	BattleE1_GuestHeadOut+0x8	unread	ja-JP label group 17 holds the name in a buffer of ours; the .data bytes stay zero and nothing reads them (DIV-0064 amended 2026-10-31, group JA)
+psp-jp	0x66A094	0x66A096	Effect1b_ToggleText+0xC	unread	label group 25 (the chop's count word) is held in a buffer of ours under every layer; the .data bytes stay zero and nothing reads them (DIV-0064 amended 2026-10-31, group JA)
+psp-jp	0x66A098	0x66A0AC	Effect1b_ToggleText+0x10	unread	kind 0x5E's menu title, label group 20, held in a 32-byte buffer of ours under every layer; the .data bytes stay zero and nothing reads them (DIV-0064 amended 2026-10-31, group JA)
 psp-eu	0x64B390	0x64B397	Char_DefaultRecords	layer	kind 10, the default names (DIVERGENCE DIV-0020; CharNames_Apply, src/game/char_names.cpp)
 psp-eu	0x64B80C	0x64B813	Char_DefaultRecords+0x47C	layer	kind 10, the eighth record's name field (DIVERGENCE DIV-0020; CharNames_Apply, src/game/char_names.cpp); PL, this round
 psp-eu	0x653818	0x65382D	ConfigScreen_OpenStates+0x144	unread	the PC keyboard's default key names (S, A, C, Z, X, V), classed port-platform by the exe-gap round's group PL (2026-10-31): Config_DrawControllerCell draws icons under a Latin layer (DIV-0051) and no PlayStation draws a key; under ja-JP the icon path is JA's

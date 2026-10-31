@@ -1141,7 +1141,7 @@ designed in rather than bolted on.
   the six label operands and the two anchor bytes from the original's code at
   every call, so this entry's patches hold for ours unchanged; no behaviour
   moved. Not yet seen in game through ours.
-- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-A):** under `ja-JP` a
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** under `ja-JP` a
   kind-7 chunk too, from the Japan disc's `START.EMI` (`loc_build.py`
   `convert_config_ja`): the seventeen option records before the row tables,
   a count of characters, the x and the string - the count and x the PC's own
@@ -1336,7 +1336,7 @@ designed in rather than bolted on.
   label two units a character left of centre.
 - **Also in the PSX version?** Yes - these are the PlayStation's strings; the
   US verbs are abbreviated to fit its buttons.
-- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-B):** under `ja-JP` the
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** under `ja-JP` the
   22 verbs from the Japan disc's `START.EMI`, found as the US disc's are (the
   PC's own set records end the pointer table), two bytes a character in the
   `ja-JP` font; the centring stays the original's (DIV-0056). PSP-JP: the
@@ -1383,7 +1383,7 @@ designed in rather than bolted on.
   `0x64E2C8`, which is how `loc_build.py` finds them. The owner chose the
   disc's wording over authored English.
 - **Also in the PSX version?** Yes - the PlayStation's strings.
-- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-C):** under `ja-JP` the
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** under `ja-JP` the
   seven labels from the Japan disc's `BATTLE.EMI`, the eight-byte slots
   right before the box table as on the US disc, two bytes a character.
 - **Reversible?** play without `BOF3X_LANG`.
@@ -1425,7 +1425,7 @@ designed in rather than bolted on.
 - **Also in the PSX version?** Yes - the PlayStation's default names; the
   PlayStation also asks for Ryu's, which the port does not
   ([`save-interchange.md`](save-interchange.md) §2).
-- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-D):** under `ja-JP` the
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** under `ja-JP` the
   eight default names from the Japan disc's `START.EMI` records (a name of
   five, the same tails) and the merchant's from its fishing module, each
   paired from its end until it fits (DIV-0057's rule for names): the
@@ -3985,7 +3985,7 @@ designed in rather than bolted on.
   port's glyphs, 2026-09-24. **Confirmed by the owner in game the same day
   with the disc's EX: "the EX looks good now".** **Owed:** a message banner
   (Attack, Critical, ...) seen in game.
-- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-E):** under `ja-JP` the
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** under `ja-JP` the
   twelve messages from the Japan disc's `BATTLE.EMI`: eight-byte slots, the
   second and fourth the two extra-turn suffixes (a space and two `0x15`
   codes, the disc's own glyphs in the `ja-JP` font), the first slot read by
@@ -4303,7 +4303,7 @@ designed in rather than bolted on.
   - **Self-tests:** `text_draw` 6,000 strings, `menu_windows` 74,000
     rounds, `battle_windows` 66,000 rounds, all 0 mismatches.
   - **English is unchanged:** 245 of 245 files.
-- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-F):** the default
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** the default
   character names and the merchant's are paired too (DIV-0020's
   amendment): character 2's five characters and the merchant's. Unlike the
   item and enemy names these reach the save (the character records), so a
@@ -5072,7 +5072,7 @@ designed in rather than bolted on.
   the reader over the seven discs (the four Western `AREA008.EMI`s `0x22` /
   `0xD1` / none, the three Japanese-build ones `0x2E` / `0xCD` / `0xE5` with
   the glyph; PSP-EU's `BOOT.BIN` `0x22` / `0xD1` / none); a PC install copy with an `en-US` layer built from this branch and the US disc (`loc_build.py all`, its report `chop count 2`; root `C:\Users\kerok\bof3x-runs\rope1030\pc`, the game's `capcom.avi` beside it for the disc probe), the owner's chop recording replayed on it with a frame every 60 through the chop (`sheet_chop_layer_box.png`): the log `DIV-0064: 2 of 2 chop count`, the box the narrower one, the count alone in the dialogue font's digits (12, 14, 16 ... 20), no glyph after it; the same recording on the owner's install (its layer built before this group) draws the wide box, the 12 px numerals and the glyph as before.
-- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-G):** a `ja-JP`
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** a `ja-JP`
   layer carries the groups from the Japan disc's own tables
   (`convert_exe_ja`, `convert_labels` under `donor_ja`), two bytes a
   character: 1 (the second status word does not fit its 8-byte slot, whose
@@ -9283,7 +9283,7 @@ designed in rather than bolted on.
   `battle_e1` group in the `'*'` self-test (the fuzz runs before an overlay
   loads). **Not seen in game:** no recipe reaches the duel's equipment
   screen ([`labels-1013.md`](labels-1013.md) 4).
-- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-H):** the copy at
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** the copy at
   `0x42DC20` (and the whelp's back at `0x42E090`) takes the whole name and
   its NUL when it is longer than Capcom's five bytes, at most the record's
   nine (`NameCopy`, `src/game/battle_e1.cpp`): the Japan disc's guest name
@@ -9385,7 +9385,7 @@ designed in rather than bolted on.
   Western discs; the log `DIV-0064: 3 of 3 hi-lo choices`; the `rest_4c`
   group in the `'*'` self-test. **Not seen in game:** no recipe reaches the
   hi-lo game (`labels-1013.md` 4).
-- **Amended 2026-10-31 (D280, the exe-gap round's group JA; ledger draft JA-I):** group 19 is built
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** group 19 is built
   for a Japanese disc too: the Japan disc's `COMMU02.EMI` holds the three
   choices in the same three 4-byte slots before the rectangles (two kana,
   two kana, two kanji filling its slot), read through their base; ours
