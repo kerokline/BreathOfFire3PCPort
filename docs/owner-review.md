@@ -394,11 +394,10 @@ passed 2026-10-20: the round doc's section 3). The C4 audit's two names, answere
 DIV-0069 and DIV-0064 amended, D319 and D320). Each call below is one line, with
 the doc that has the reading.
 
-- **Keep DIV-0064's amendment?** (LA's DIV-B) It changes the PC install under
-  every Latin layer. Each faerie shows its own name (D289's fix), and the French
-  and German layers show their discs' words for the equip and experience panel
-  labels, the shared list's title, the gene list's title and kind 0x5E's menu
-  title. Built and in place, the confirmation pending: [`install-gap-labels.md`](install-gap-labels.md) 8.
+- ~~**Keep DIV-0064's amendment?** (LA's DIV-B)~~ - confirmed by the owner 2026-10-31
+  evening ("we can mark that as good, I've had a chance to see most of those by
+  now"): the faerie names and the FR / DE panel labels stay as the amendment
+  built them ([`install-gap-labels.md`](install-gap-labels.md) 8).
 - ~~**`Title_Sprites+0xE`** (D266, the Western title mark)~~ - answered
   2026-10-13 and built 2026-10-20 (the section above).
 - ~~**`Encounter_SlotChance+0x1C`** (the empty save slot `0x669CCC`)~~ - answered

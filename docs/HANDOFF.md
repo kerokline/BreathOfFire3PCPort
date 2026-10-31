@@ -316,7 +316,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - **The JP world map's camera** (D281, [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md) 3.3).
    - **Groups 17 and 18 from PSP-EU and ja-JP** ([`labels-1013.md`](labels-1013.md) 7): not built.
    - **The `_pre1013` entry lists** in `analysis/`: remove once nothing reads them.
-   - D270's look owed; D284 and D285 not traced; D287 (the launcher's clipped lines); DIV-0064's amendment pending
+   - D270's look owed; D284 and D285 not traced; D287 (the launcher's clipped lines); DIV-0064's 2026-10-18 amendment confirmed by the owner 2026-10-31
      the owner's confirmation.
 
 17. **The follow-up round: disc-only and PSP polish** is folded into item 14's round (group AU: D320; PL: the
