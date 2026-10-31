@@ -407,30 +407,48 @@ literal	src/game/config_text.cpp	0x461842	1	{0x461832, 0x669F0C}, {0x46183A, 0x6
 literal	src/game/config_text.cpp	0x46184A	1	{0x46184A, 0x669F2C}, {0x461852, 0x669F34}, {0x46185A, 0x669F3C},
 literal	src/game/config_text.cpp	0x461852	1	{0x46184A, 0x669F2C}, {0x461852, 0x669F34}, {0x46185A, 0x669F3C},
 literal	src/game/config_text.cpp	0x46185A	1	{0x46184A, 0x669F2C}, {0x461852, 0x669F34}, {0x46185A, 0x669F3C},
-literal	src/game/config_text.cpp	0x461894	1	Patch(" ", 0x461894, label_was, label_is, 5, g_label_w_now);
-literal	src/game/config_text.cpp	0x461894	1	bof3::Operand(" ", 0x461894, g_label_w_now, sizeof g_label_w_now);
-literal	src/game/config_text.cpp	0x46189D	1	bof3::Operand(" ", 0x46189D, &g_anchor_now, 1);
+literal	src/game/config_text.cpp	0x461894	1	bof3::OperandRule(" ", 0x461894, sizeof kLabelWas, &LabelWidthAsRead);
+literal	src/game/config_text.cpp	0x461894	1	bof3::PatchBytes(" ", 0x461894, kLabelWas, kLabelIs, sizeof kLabelWas);
+literal	src/game/config_text.cpp	0x461894	1	bool LabelWidthAsRead() { return CodeIs(0x461894, g_ops.label_x4 ? kLabelIs : kLabelWas, sizeof kLabelWas); }
+literal	src/game/config_text.cpp	0x461899	1	bof3::OperandRule(" ", 0x461899, sizeof kSubBigWas, &LabelSubBigAsRead);
+literal	src/game/config_text.cpp	0x461899	1	bool LabelSubBigAsRead() { return CodeIs(0x461899, g_ops.label_left ? kSubNops : kSubBigWas, sizeof kSubBigWas); }
+literal	src/game/config_text.cpp	0x461899	1	const bool ja_on = bof3::PatchBytes(" ", 0x461899, kSubBigWas, kSubNops, sizeof kSubBigWas);
+literal	src/game/config_text.cpp	0x46189D	1	bof3::OperandRule(" ", 0x46189D, 1, &AnchorBigAsRead);
+literal	src/game/config_text.cpp	0x46189D	1	bof3::PatchBytes(" ", 0x46189D, ja_anchor_was, ja_anchor_is, 1);
 literal	src/game/config_text.cpp	0x46189D	1	const bool on = bof3::PatchBytes(" ", 0x46189D, anchor_was, anchor_is, 1);
+literal	src/game/config_text.cpp	0x46189D	1	return CodeIs(0x46189D, b, sizeof b);
 literal	src/game/config_text.cpp	0x46189F	1	constexpr std::uint32_t kBigLabelCall = 0x46189F, kBigOptionCall = 0x4619F9;
-literal	src/game/config_text.cpp	0x4618ED	1	bof3::Operand(" ", 0x4618ED, &g_anchor_now, 1);
+literal	src/game/config_text.cpp	0x4618E7	1	bof3::OperandRule(" ", 0x4618E7, sizeof kSubSmallWas, &LabelSubSmallAsRead);
+literal	src/game/config_text.cpp	0x4618E7	1	bof3::PatchBytes(" ", 0x4618E7, kSubSmallWas, kSubNops, sizeof kSubSmallWas);
+literal	src/game/config_text.cpp	0x4618E7	1	bool LabelSubSmallAsRead() { return CodeIs(0x4618E7, g_ops.label_left ? kSubNops : kSubSmallWas, sizeof kSubSmallWas); }
+literal	src/game/config_text.cpp	0x4618ED	1	bof3::OperandRule(" ", 0x4618ED, 1, &AnchorSmallAsRead);
 literal	src/game/config_text.cpp	0x4618ED	1	bof3::PatchBytes(" ", 0x4618ED, anchor_was, anchor_is, 1);
-literal	src/game/config_text.cpp	0x4619E1	1	Patch(" ", 0x4619E1, option_was, option_is, 3, g_option_w_now);
-literal	src/game/config_text.cpp	0x4619E1	1	bof3::Operand(" ", 0x4619E1, g_option_w_now, sizeof g_option_w_now);
+literal	src/game/config_text.cpp	0x4618ED	1	bof3::PatchBytes(" ", 0x4618ED, ja_anchor_was, ja_anchor_is, 1);
+literal	src/game/config_text.cpp	0x4618ED	1	return CodeIs(0x4618ED, b, sizeof b);
+literal	src/game/config_text.cpp	0x4619E1	1	bof3::OperandRule(" ", 0x4619E1, sizeof kOptionWas, &OptionWidthAsRead);
+literal	src/game/config_text.cpp	0x4619E1	1	bof3::PatchBytes(" ", 0x4619E1, kOptionWas, kOptionIs, sizeof kOptionWas);
+literal	src/game/config_text.cpp	0x4619E1	1	bool OptionWidthAsRead() { return CodeIs(0x4619E1, g_ops.option_x8 ? kOptionIs : kOptionWas, sizeof kOptionWas); }
 literal	src/game/config_text.cpp	0x4619F9	1	constexpr std::uint32_t kBigLabelCall = 0x46189F, kBigOptionCall = 0x4619F9;
-literal	src/game/config_text.cpp	0x461A61	1	Patch(" ", 0x461A61, frame_was, frame_is, 3, g_frame_now);
-literal	src/game/config_text.cpp	0x461A61	1	bof3::Operand(" ", 0x461A61, g_frame_now, sizeof g_frame_now);
-literal	src/game/config_text.cpp	0x461B06	1	Patch(" ", 0x461B06, box_was, box_is, 2, g_box_now);
-literal	src/game/config_text.cpp	0x461B06	1	bof3::Operand(" ", 0x461B06, g_box_now, sizeof g_box_now);
-literal	src/game/config_text.cpp	0x461B36	1	Patch(" ", 0x461B36, ctrl_was, ctrl_is, 3, g_name_w_now);
-literal	src/game/config_text.cpp	0x461B36	1	bof3::Operand(" ", 0x461B36, g_name_w_now, sizeof g_name_w_now);
-literal	src/game/config_text.cpp	0x461B3F	1	Patch(" ", 0x461B3F, edge_was, edge_is, 3, g_edge_now);
-literal	src/game/config_text.cpp	0x461B3F	1	bof3::Operand(" ", 0x461B3F, g_edge_now, sizeof g_edge_now);
+literal	src/game/config_text.cpp	0x461A61	1	bof3::OperandRule(" ", 0x461A61, 3, &FrameAsRead);
+literal	src/game/config_text.cpp	0x461A61	1	bof3::PatchBytes(" ", 0x461A61, frame_was, frame_is, 3);
+literal	src/game/config_text.cpp	0x461A61	1	return CodeIs(0x461A61, b, sizeof b);
+literal	src/game/config_text.cpp	0x461B06	1	bof3::OperandRule(" ", 0x461B06, 2, &BoxWidthAsRead);
+literal	src/game/config_text.cpp	0x461B06	1	bof3::PatchBytes(" ", 0x461B06, box_was, box_is, 2);
+literal	src/game/config_text.cpp	0x461B06	1	return CodeIs(0x461B06, b, sizeof b);
+literal	src/game/config_text.cpp	0x461B36	1	bof3::OperandRule(" ", 0x461B36, sizeof kCtrlWas, &NameWidthAsRead);
+literal	src/game/config_text.cpp	0x461B36	1	bof3::PatchBytes(" ", 0x461B36, kCtrlWas, kCtrlIs, sizeof kCtrlWas);
+literal	src/game/config_text.cpp	0x461B36	1	bool NameWidthAsRead() { return CodeIs(0x461B36, g_ops.name_x4 ? kCtrlIs : kCtrlWas, sizeof kCtrlWas); }
+literal	src/game/config_text.cpp	0x461B3F	1	bof3::OperandRule(" ", 0x461B3F, 3, &NameEdgeAsRead);
+literal	src/game/config_text.cpp	0x461B3F	1	bof3::PatchBytes(" ", 0x461B3F, edge_was, edge_is, 3);
+literal	src/game/config_text.cpp	0x461B3F	1	return CodeIs(0x461B3F, b, sizeof b);
 literal	src/game/config_text.cpp	0x461B43	1	constexpr std::uint32_t kCtrlNameCall = 0x461B43;
-literal	src/game/config_text.cpp	0x461BAC	1	Patch(" ", 0x461BAC, cell2_was, cell2_is, 6, g_cell2_now);
-literal	src/game/config_text.cpp	0x461BAC	1	bof3::Operand(" ", 0x461BAC, g_cell2_now, sizeof g_cell2_now);
-literal	src/game/config_text.cpp	0x461BE9	1	Patch(" ", 0x461BE9, esp_was, esp_is, 3, g_esp_now);
-literal	src/game/config_text.cpp	0x461BE9	1	bof3::Operand(" ", 0x461BE9, g_esp_now, sizeof g_esp_now);
-literal	src/game/config_text.cpp	0x516B30	2	0x3A, false, false, 0x516B30, 0x516B30, false, 0x20, 0x68, true, 0xC,
+literal	src/game/config_text.cpp	0x461BAC	1	bof3::OperandRule(" ", 0x461BAC, sizeof kCell2Was, &SecondCellAsRead);
+literal	src/game/config_text.cpp	0x461BAC	1	bof3::PatchBytes(" ", 0x461BAC, kCell2Was, kCell2Is, sizeof kCell2Was);
+literal	src/game/config_text.cpp	0x461BAC	1	bool SecondCellAsRead() { return CodeIs(0x461BAC, g_ops.second_cell ? kCell2Was : kCell2Is, sizeof kCell2Was); }
+literal	src/game/config_text.cpp	0x461BE9	1	bof3::OperandRule(" ", 0x461BE9, sizeof kEspWas, &SecondCellEspAsRead);
+literal	src/game/config_text.cpp	0x461BE9	1	bof3::PatchBytes(" ", 0x461BE9, kEspWas, kEspIs, sizeof kEspWas);
+literal	src/game/config_text.cpp	0x461BE9	1	bool SecondCellEspAsRead() { return CodeIs(0x461BE9, g_ops.second_cell ? kEspWas : kEspIs, sizeof kEspWas); }
+literal	src/game/config_text.cpp	0x516B30	2	0x3A, false, false, 0x516B30, 0x516B30, false, 0x20, 0x68, true, 0xC, false,
 literal	src/game/config_text.cpp	0x653818	1	{0x80, 5, 0x653820, 3}, {0x04, 0, 0x65381C, 4}, {0x08, 0, 0x653818, 3},
 literal	src/game/config_text.cpp	0x65381C	1	{0x80, 5, 0x653820, 3}, {0x04, 0, 0x65381C, 4}, {0x08, 0, 0x653818, 3},
 literal	src/game/config_text.cpp	0x653820	1	{0x80, 5, 0x653820, 3}, {0x04, 0, 0x65381C, 4}, {0x08, 0, 0x653818, 3},
@@ -1152,7 +1170,7 @@ literal	src/game/labels.cpp	0x45E945	1	{0x65369C, 16, 0x45E945, kFaeries}}, {}, 
 literal	src/game/labels.cpp	0x4607B8	1	{14, " ", 5, {{0x669E10, 8, 0x459144}, {0x669F08, 4, 0x4607B8}, {0x669F08, 4, 0x4609A6},
 literal	src/game/labels.cpp	0x4609A6	1	{14, " ", 5, {{0x669E10, 8, 0x459144}, {0x669F08, 4, 0x4607B8}, {0x669F08, 4, 0x4609A6},
 literal	src/game/labels.cpp	0x47EC73	2	{25, " ", 2, {{0x66A094, 4, 0x47EC73}, {0x66A094, 4, 0x47EC73}}, {}, g_chop_count, false},
-literal	src/game/labels.cpp	0x47FA0D	1	{20, " ", 1, {{0x66A098, 20, 0x47FA0D}}, {}, nullptr, false},
+literal	src/game/labels.cpp	0x47FA0D	1	{20, " ", 1, {{0x66A098, 20, 0x47FA0D}}, {}, g_parts_title, false, 0, kBufferMax},
 literal	src/game/labels.cpp	0x4B10E6	1	{15, " ", 6, {{0x66A3E0, 8, 0x4B10E6}, {0x66A3E8, 8, 0x4B1192},
 literal	src/game/labels.cpp	0x4B1150	2	{0x65AAA8, 8, 0x4B1150, 0x65AAB0}, {0x65AABC, 8, 0x4B1150, 0x65AAB0},
 literal	src/game/labels.cpp	0x4B1150	2	{0x65AAB4, 8, 0x4B1150, 0x65AAB0}, {0x65AAB0, 4, 0x4B1150}},
@@ -1266,9 +1284,13 @@ literal	src/game/labels.cpp	0x669CF8	1	{5, " ", 4, {{0x669CF0, 8, 0x64AE08}, {0x
 literal	src/game/labels.cpp	0x669D00	1	{5, " ", 4, {{0x669CF0, 8, 0x64AE08}, {0x669CF8, 8, 0x64AE0C}, {0x669D00, 8, 0x64AE10},
 literal	src/game/labels.cpp	0x669D08	1	{0x669D08, 8, 0x64AE14}}, {}, nullptr, false},
 literal	src/game/labels.cpp	0x669D10	1	{18, " ", 3, {{0x669D10, 8, 0x669D20}, {0x669D18, 8, 0x669D24}, {0x669D18, 8, 0x669D24}}, {},
+literal	src/game/labels.cpp	0x669D10	1	{26, " ", 2, {{0x669D10, 8, 0x669D20}, {0x669D18, 8, 0x669D24}}, {}, nullptr, false},
 literal	src/game/labels.cpp	0x669D18	2	{18, " ", 3, {{0x669D10, 8, 0x669D20}, {0x669D18, 8, 0x669D24}, {0x669D18, 8, 0x669D24}}, {},
+literal	src/game/labels.cpp	0x669D18	1	{26, " ", 2, {{0x669D10, 8, 0x669D20}, {0x669D18, 8, 0x669D24}}, {}, nullptr, false},
 literal	src/game/labels.cpp	0x669D20	1	{18, " ", 3, {{0x669D10, 8, 0x669D20}, {0x669D18, 8, 0x669D24}, {0x669D18, 8, 0x669D24}}, {},
+literal	src/game/labels.cpp	0x669D20	1	{26, " ", 2, {{0x669D10, 8, 0x669D20}, {0x669D18, 8, 0x669D24}}, {}, nullptr, false},
 literal	src/game/labels.cpp	0x669D24	2	{18, " ", 3, {{0x669D10, 8, 0x669D20}, {0x669D18, 8, 0x669D24}, {0x669D18, 8, 0x669D24}}, {},
+literal	src/game/labels.cpp	0x669D24	1	{26, " ", 2, {{0x669D10, 8, 0x669D20}, {0x669D18, 8, 0x669D24}}, {}, nullptr, false},
 literal	src/game/labels.cpp	0x669E10	1	{14, " ", 5, {{0x669E10, 8, 0x459144}, {0x669F08, 4, 0x4607B8}, {0x669F08, 4, 0x4609A6},
 literal	src/game/labels.cpp	0x669E18	1	{13, " ", 20, {{0x669E18, 8, 0x669E68}, {0x669E20, 8, 0x669E6C}, {0x669E28, 8, 0x669E70},
 literal	src/game/labels.cpp	0x669E20	1	{13, " ", 20, {{0x669E18, 8, 0x669E68}, {0x669E20, 8, 0x669E6C}, {0x669E28, 8, 0x669E70},
@@ -1322,7 +1344,7 @@ literal	src/game/labels.cpp	0x669F5C	1	{19, " ", 3, {{0x669F44, 4, 0x669F54}, {0
 literal	src/game/labels.cpp	0x669F60	1	{0x669F60, 8, 0x45B4BE}, {0x669F68, 8, 0x45B61E}}, {}, g_village_words, false},
 literal	src/game/labels.cpp	0x669F68	1	{0x669F60, 8, 0x45B4BE}, {0x669F68, 8, 0x45B61E}}, {}, g_village_words, false},
 literal	src/game/labels.cpp	0x66A094	2	{25, " ", 2, {{0x66A094, 4, 0x47EC73}, {0x66A094, 4, 0x47EC73}}, {}, g_chop_count, false},
-literal	src/game/labels.cpp	0x66A098	1	{20, " ", 1, {{0x66A098, 20, 0x47FA0D}}, {}, nullptr, false},
+literal	src/game/labels.cpp	0x66A098	1	{20, " ", 1, {{0x66A098, 20, 0x47FA0D}}, {}, g_parts_title, false, 0, kBufferMax},
 literal	src/game/labels.cpp	0x66A0B0	1	{24, " ", 4, {{0x66A0B0, 16, 0x66A0D8}, {0x66A0C0, 8, 0x66A0DC}, {0x66A0C8, 8, 0x66A0E0},
 literal	src/game/labels.cpp	0x66A0C0	1	{24, " ", 4, {{0x66A0B0, 16, 0x66A0D8}, {0x66A0C0, 8, 0x66A0DC}, {0x66A0C8, 8, 0x66A0E0},
 literal	src/game/labels.cpp	0x66A0C8	1	{24, " ", 4, {{0x66A0B0, 16, 0x66A0D8}, {0x66A0C0, 8, 0x66A0DC}, {0x66A0C8, 8, 0x66A0E0},
@@ -1360,8 +1382,8 @@ literal	src/game/labels.cpp	0x66A1B4	1	{0x66A1AC, 8, 0x66B144}, {0x66A1B4, 8, 0x
 literal	src/game/labels.cpp	0x66A1BC	1	{0x66A1AC, 8, 0x66B144}, {0x66A1B4, 8, 0x66B148}, {0x66A1BC, 8, 0x66B14C},
 literal	src/game/labels.cpp	0x66A1C4	1	{0x66A1C4, 12, 0x66B150}, {0x66A1D0, 12, 0x66B154}},
 literal	src/game/labels.cpp	0x66A1D0	1	{0x66A1C4, 12, 0x66B150}, {0x66A1D0, 12, 0x66B154}},
-literal	src/game/labels.cpp	0x66A1DC	1	{8, " ", 2, {{0x66A1DC, 8, 0x66B36C}, {0x66A1E4, 12, 0x66B370}}, {}, nullptr, false},
-literal	src/game/labels.cpp	0x66A1E4	1	{8, " ", 2, {{0x66A1DC, 8, 0x66B36C}, {0x66A1E4, 12, 0x66B370}}, {}, nullptr, false},
+literal	src/game/labels.cpp	0x66A1DC	1	{8, " ", 2, {{0x66A1DC, 8, 0x66B36C}, {0x66A1E4, 12, 0x66B370}}, {{0x66B36C, 0, 2}}, g_note_sort, false},
+literal	src/game/labels.cpp	0x66A1E4	1	{8, " ", 2, {{0x66A1DC, 8, 0x66B36C}, {0x66A1E4, 12, 0x66B370}}, {{0x66B36C, 0, 2}}, g_note_sort, false},
 literal	src/game/labels.cpp	0x66A1F0	1	{6, " ", 2, {{0x66A1F0, 8, 0x59C5B6}, {0x66A2D8, 4, 0x59C465}}, {}, nullptr, false},
 literal	src/game/labels.cpp	0x66A200	1	{4, " ", 5, {{0x66A200, 8, 0x663984}, {0x66A208, 8, 0x663988}, {0x66A210, 8, 0x66398C},
 literal	src/game/labels.cpp	0x66A208	1	{4, " ", 5, {{0x66A200, 8, 0x663984}, {0x66A208, 8, 0x663988}, {0x66A210, 8, 0x66398C},
@@ -1386,8 +1408,8 @@ literal	src/game/labels.cpp	0x66B14C	1	{0x66A1AC, 8, 0x66B144}, {0x66A1B4, 8, 0x
 literal	src/game/labels.cpp	0x66B150	1	{0x66A1C4, 12, 0x66B150}, {0x66A1D0, 12, 0x66B154}},
 literal	src/game/labels.cpp	0x66B154	1	{0x66A1C4, 12, 0x66B150}, {0x66A1D0, 12, 0x66B154}},
 literal	src/game/labels.cpp	0x66B1F0	1	{23, " ", 1, {{0x66B1F0, 8, 0x59B046}}, {}, nullptr, false},
-literal	src/game/labels.cpp	0x66B36C	1	{8, " ", 2, {{0x66A1DC, 8, 0x66B36C}, {0x66A1E4, 12, 0x66B370}}, {}, nullptr, false},
-literal	src/game/labels.cpp	0x66B370	1	{8, " ", 2, {{0x66A1DC, 8, 0x66B36C}, {0x66A1E4, 12, 0x66B370}}, {}, nullptr, false},
+literal	src/game/labels.cpp	0x66B36C	2	{8, " ", 2, {{0x66A1DC, 8, 0x66B36C}, {0x66A1E4, 12, 0x66B370}}, {{0x66B36C, 0, 2}}, g_note_sort, false},
+literal	src/game/labels.cpp	0x66B370	1	{8, " ", 2, {{0x66A1DC, 8, 0x66B36C}, {0x66A1E4, 12, 0x66B370}}, {{0x66B36C, 0, 2}}, g_note_sort, false},
 literal	src/game/labels.cpp	0x66B374	1	{{0x66B12C, 0, 11}, {0x66B374, 7, 2}}, g_sort_menus, false},
 literal	src/game/labels.cpp	0x66B58C	1	{{0x663970, 0, 5}, {0x663994, 0, 5}, {0x66AF10, 0, 5}, {0x66B58C, 0, 5}, {0x66B5C4, 0, 5}}, g_item_types, false},
 literal	src/game/labels.cpp	0x66B5A0	1	{{0x663984, 0, 4}, {0x66B5A0, 0, 4}, {0x66B5B0, 4, 1}}, g_skill_types, false},
@@ -2708,7 +2730,8 @@ literal	src/game/worldmap_area_callees.h	0x7DF3A0	1	constexpr std::uint32_t kFie
 literal	src/game/worldmap_area_callees.h	0x905E62	1	constexpr std::uint32_t kLeaderCellZ = 0x905E62;
 literal	src/game/worldmap_area_callees.h	0x905E66	1	constexpr std::uint32_t kLeaderCellX = 0x905E66;
 literal	src/game/yes_no_layout.cpp	0x5747D2	1	constexpr std::uint32_t kLineCall = 0x5747D2;
-literal	src/game/yes_no_layout.cpp	0x5747F0	1	bof3::Operand(" ", 0x5747F0, g_stops, sizeof g_stops);
+literal	src/game/yes_no_layout.cpp	0x5747F0	1	bof3::OperandRule(" ", 0x5747F0, sizeof kStopsOriginal, &StopsAsRead);
+literal	src/game/yes_no_layout.cpp	0x5747F0	1	const auto* const code = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(0x5747F0));
 literal	src/game/yes_no_layout.cpp	0x5747F0	1	const bool stop = bof3::PatchBytes(" ", 0x5747F0, stop_was, stop_is, 5);
 literal	src/game/yes_no_layout.cpp	0x5747F7	1	const bool step = bof3::PatchBytes(" ", 0x5747F7, step_was, step_is, 3);
 literal	src/game/yes_no_layout.cpp	0x5747FC	1	const bool shift = bof3::PatchBytes(" ", 0x5747FC, shift_was, shift_is, 3);
