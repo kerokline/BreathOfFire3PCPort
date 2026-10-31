@@ -329,10 +329,21 @@ extern "C" const unsigned char* __cdecl EventScript_CaseSkip(const unsigned char
 // onto a place cell loads the area (docs/mountain-passes.md). The volcano's
 // own road is blocked only while the chapter byte is 6..8 (area 195's
 // placement script places a third object at (0x28, 0x3B) for those chapters
-// and never after). So from chapter 9 on, four cells west of the doors are
-// made road: (0x36, 0x1E), (0x36, 0x1D), (0x36, 0x1C) and (0x35, 0x1C),
-// joining the south road (0x37, 0x1F) to the passage cell (0x34, 0x1B)
-// without a step from a link cell onto either door.
+// and never after). So from chapter 9 on, four cells east of the hut are
+// made road - the drawn walkway: the platform cell (0x38, 0x1D), the strip
+// (0x38, 0x1C), (0x38, 0x1B) up its east side and the ledge cell (0x37,
+// 0x1B) beside the upper door ((0x38, 0x1E), in front of the platform's
+// wall, is ground: the owner's eye), so the route is the south road (0x37,
+// 0x1F) -> the lower door's link cell (0x37, 0x1E), as the stairs already
+// go -> the platform -> the strip -> (0x37, 0x1B) -> the upper door
+// (0x36, 0x1B) -> the link (0x35, 0x1B) -> the passage (0x34, 0x1B) -> the
+// link (0x33, 0x1B) -> the stored exit (0x33, 0x1A) -> the Urkan map, and
+// the same back. A door reached from a plain cell, or the stored exit
+// stepped onto from one, acts on the LAST place any link cell armed (the
+// plate looks it up; confirm and the stored exit change area to it), which
+// is what faulted the first build and would warp the second; so the step
+// hook (event_ops.cpp, MountainPasses_StepArm) arms the right link whenever
+// a step targets one of those cells, on both maps.
 //
 // Mt. Levett on the Yraall map (area 16): the mountain is a band of place
 // cells (0x38, 0x38), (0x37, 0x39), (0x38, 0x39), (0x36, 0x3A), (0x37, 0x3A)
@@ -356,7 +367,7 @@ extern "C" const unsigned char* __cdecl EventScript_CaseSkip(const unsigned char
 // the pending arrival dwords are the link's. Armed by PatchBytes after the
 // self-test (the fuzz compares the placement runner with Capcom's). Nothing
 // here under BOF3X_ORIGINAL=MountainPasses: no cell, no object, no bit.
-static std::uint8_t g_mountain_passes = 0;
+unsigned char g_mountain_passes = 0;
 
 namespace {
 
@@ -394,9 +405,19 @@ void MountainPasses_AfterPlacement() {
     if (area == 87 && Cond_ByteFA >= 9) {
         unsigned char* const plane = const_cast<unsigned char*>(AreaMap_Bytes);
         const unsigned width = AreaMap_Header[0];
-        static constexpr unsigned char kCells[][2] = {{0x36, 0x1E}, {0x36, 0x1D}, {0x36, 0x1C}, {0x35, 0x1C}};
-        for (const auto& c : kCells) plane[c[1] * width + c[0]] = 0;
-        bof3::Log("DIV-0191    Mt. Zublo: four road cells laid west of the doors (chapter %d)", Cond_ByteFA);
+        // 0x91, the passage kind: it walks (Field_CellKind class 0), has no
+        // encounter (the encounter test wants a 0 cell), no plate, and the
+        // field menu's camp test refuses it (its AreaMap_ByteAt & 0xF0 among
+        // 0xA0 / 0x91, docs/menu_lists.md) - as the passage cells (0x34,
+        // 0x1B) beside it already do. The owner's call, 2026-10-30 night.
+        static constexpr unsigned char kCells[][2] = {{0x38, 0x1D}, {0x38, 0x1C}, {0x38, 0x1B}, {0x37, 0x1B}};
+        for (const auto& c : kCells) plane[c[1] * width + c[0]] = 0x91;
+        // The strip's corner heights (AreaMap_Corners, the mesh's and the
+        // leader's alike) stay the ground's 0x10: raised to the hut's 0x16
+        // they lifted the drawn tiles with the leader (the owner's eye,
+        // 2026-10-30 night), so the leader stands a step below the painted
+        // block there - Capcom's art over Capcom's mesh, left as it is.
+        bof3::Log("DIV-0191    Mt. Zublo: four passage cells laid east of the hut (chapter %d)", Cond_ByteFA);
     }
 }
 
@@ -668,6 +689,16 @@ extern "C" void __cdecl ObjTrio_SetBit40(void) {
     ObjTrio[2].flags |= 0x40;
 }
 
+// DIV-0191: armed from inject_all.cpp after every module's self-test (the
+// placement runner's, the step hook's and the plate copies' fuzzes all
+// compare with Capcom's unarmed code).
+void MountainPasses_Arm() {
+    const std::uint8_t was = 0, is = 1;
+    bof3::PatchBytes("MountainPasses", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_mountain_passes)), &was, &is, 1);
+    bof3::Log("DIV-0191    Mt. Zublo (chapter 9 on) and Mt. Levett (once crossed) passable on the world map: %s",
+              g_mountain_passes ? "on" : "OFF (BOF3X_ORIGINAL=MountainPasses)");
+}
+
 void EventScript_Inject() {
     if (bof3::WantsShadow("event_script")) event_script::SelfTest();
     {
@@ -675,13 +706,6 @@ void EventScript_Inject() {
         const std::uint8_t was = 0, is = 1;
         bof3::PatchBytes("SpriteReachWord", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_reach_word)), &was, &is, 1);
         bof3::Log("DIV-0164    op Bx stores the extra object's reach byte as a whole dword +0x70 (on unless the line above says OFF)");
-    }
-    {
-        // DIV-0191: after the self-test, which compared the placement runner.
-        const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("MountainPasses", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_mountain_passes)), &was, &is, 1);
-        bof3::Log("DIV-0191    Mt. Zublo (chapter 9 on) and Mt. Levett (once crossed) passable on the world map: %s",
-                  g_mountain_passes ? "on" : "OFF (BOF3X_ORIGINAL=MountainPasses)");
     }
     BOF3_INJECT(Area_RunPlacement);
     BOF3_INJECT(EventScript_Run);

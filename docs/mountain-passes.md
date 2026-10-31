@@ -1,8 +1,9 @@
 # Mountain passes on the world map: Mt. Zublo and Mt. Levett (DIV-0191)
 
-**Status:** BUILT (2026-10-30) - the owner's question of the evening, read
-live on their chapter-10 game with `tools/cell_peek.py` and the exe; the
-fix on `fix/mountain-passes`, owed the owner's play.
+**Status:** PLAYED (2026-10-30 night) - the owner's question of the
+evening, read live on their chapter-10 game with `tools/cell_peek.py` and
+the exe; the fix on `fix/mountain-passes`, six builds by the owner's eye,
+approved ("Brilliant"); a child-era save keeps Zublo's wall.
 
 The owner's report: once Mt. Zublo's road is open (adult Ryu) and once Mt.
 Levett has been walked through, the world map still stops the party at each
@@ -75,13 +76,74 @@ and its code (area 65's init `0x40FC40`, shared) writes no cell.
 road block the owner remembers as a child; chapter 9 is "adult". The
 volcano has no handlers and no init (`+0x3C` and `+0x40` both 0).
 
-**The fix:** from chapter 9, four cells become road after the map's
-placement runs: `(0x36, 0x1E)`, `(0x36, 0x1D)`, `(0x36, 0x1C)` and `(0x35,
-0x1C)`. The route is then south road `(0x37, 0x1F)` -> `(0x36, 0x1E)` ->
-`(0x36, 0x1D)` -> `(0x36, 0x1C)` -> `(0x35, 0x1C)` -> passage `(0x34,
-0x1B)` -> link `(0x33, 0x1B)` -> stored exit `(0x33, 0x1A)`, and the same
-back, never a step from a link cell onto a door. The volcano's own links
-are untouched: walking onto either door from its link still enters it.
+**What a door really is** (the crash of the first build, 2026-10-30
+evening, `game/bof3x.crash-28652-0.dmp`): the volcano's only exit to this
+map lands on the lower door's link cell `(0x37, 0x1E)` (area 195's list:
+`(0x28, 0x57) x4 -> 87 at (0x37, 0x1E)`); its upper entrance is reached by
+confirm on `(0x36, 0x1B)` after the link cell `(0x35, 0x1B)` armed it, and
+the volcano's `(0x13, 0x22)` leads straight to the Urkan map. A link cell
+arms `AreaW0b_Place` and the pending cells; a door cell is where the party
+stands and confirms (`Field_LeaderCellEvent` -> `Field_ChangeArea` of the
+armed place), and the plate looks the armed place up in the map's table. So
+a door reached from a plain cell, or the stored exit `0xAF` stepped onto
+from one, acts on **whatever place was armed last** - the owner walked the
+first build's road, stood on the upper door with place 0x48 armed, and the
+plate search (no bound in the original) ran off the ten entries into the
+records after them: `Sprite_SetAnimation` of garbage, a fault in
+`Sprite_SetAnimationAt`. Confirm there would have warped to area 0x48.
+
+**The fix:** from chapter 9, four cells become passage cells (`0x91`)
+after the map's placement runs, the drawn walkway by the owner's eye (Ryu
+on `(0x38, 0x1D)` facing north at the blocked tile, 2026-10-30 night): the
+platform cell `(0x38, 0x1D)`, the strip `(0x38, 0x1C)`, `(0x38, 0x1B)` up
+its east side and the ledge cell `(0x37, 0x1B)`; `(0x38, 0x1E)`, in front
+of the platform's wall (corners 0x0C under the platform's 0x10), is ground
+and stays so, so the road reaches the platform over the lower door's link
+cell `(0x37, 0x1E)` as the stairs already do. `0x91` rather
+than plain road because the owner wants the walkway to refuse camping as
+the passage beside it does: the field menu's camp test declines a cell
+whose byte `& 0xF0` is a place or passage kind ([`menu_lists.md`](menu_lists.md)
+"Camp"), and `0x91` otherwise walks (`Field_CellKind` class 0), has no
+encounter (the encounter test wants a 0 cell) and no plate. The strip's two
+cells `(0x38, 0x1C)`, `(0x38, 0x1B)` keep their corner heights
+(`AreaMap_Corners`, read with the sampler's `--corners`: 0x10, the
+platform's, under art painted as the hut's 0x16 block), so the leader
+stands a step below the painted block there ("steps down", the owner). A
+build that raised them to 0x16 lifted the drawn tiles with him - the
+corners are the mesh - so Capcom's art over Capcom's mesh stays as it is.
+The same mismatch put the painted face of the cell in front over his legs
+(DIV-0071's pass keeps a sprite in its layer when a non-floor quad reaches
+it, and the painted block is not floor at his height): so, under the
+switch, a party member standing on `(0x38, 0x1C)` or `(0x38, 0x1B)` of the
+Rhapala map is drawn as many layers ahead as the pass allows with no stop
+test (`layering.cpp` `LayerFor`) - nothing nearer the camera than the strip
+is anything but that block's paint and ground; the hut stands behind it.
+The route is south road
+`(0x37, 0x1F)` -> link `(0x37, 0x1E)` -> the platform -> the strip ->
+`(0x37, 0x1B)` -> the upper door `(0x36, 0x1B)` -> link `(0x35, 0x1B)` -> passage `(0x34, 0x1B)` ->
+link `(0x33, 0x1B)` -> stored exit `(0x33, 0x1A)` -> the Urkan map, and the
+same back. (A second build's road ran west of the hut on cells next to no
+door, and a third's cut behind the hut; the owner's eye put it on the
+walkway.) On screen, +z is down-left and +x down-right.
+
+**The stale place made right.** Since the walkway reaches the doors and the
+stored exit from plain cells, `Area_StepHook` (ours, `event_ops.cpp`,
+`MountainPasses_StepArm`) arms the right link whenever a step targets one
+of those cells: on area 87 the lower door `(0x37, 0x1D)` -> `Area_LinkAt(0x37,
+0x1E)`, the upper door `(0x36, 0x1B)` -> `(0x35, 0x1B)`, the stored exit
+`(0x33, 0x1A)` -> `(0x33, 0x1B)`; on area 16 the band's three north-east
+cells -> `(0x39, 0x38)` and its two south-west cells -> `(0x36, 0x3B)`. So the
+plate names the mountain, confirm on a door enters it and the stored exit
+goes to the Urkan map, whichever way the party walked up. The original arms
+only on arrival at a link cell. The volcano's own links are untouched.
+
+**The plate search bounded.** Under the switch, `WorldMap33_PlateShow`,
+`Area16_PlateShow` and the shared `PlateShow` of areas 87 / 88
+(`area_w2b.cpp`) stop at their table's end and show no plate for a place
+not in it, where the original reads on (known-defects: the unbounded
+search) - the belt to the step hook's braces. The copies of areas 104, 115,
+121, 151 and 152 keep the original's loop (their tables' ends are not in
+their `WorldMapTables`); none of those maps has a new road.
 
 ## 3. Mt. Levett (Yraall map, area 16)
 
@@ -140,22 +202,27 @@ try).
 
 ## 5. Where it runs
 
-`Area_RunPlacement` (ours, `src/game/event_script.cpp`), at its end. The
-mode-5 step `0x594E60` (Capcom's) stores `Game_AreaNumber` at `0x594EF2`,
-sets the cell plane at `0x594F76` (`0x56F670`) and calls the placement at
-`0x59501F`, then the descriptor's init at `0x59503E` - so at the hook the
-area, the plane and the link's pending cells are all current. The switch
-`MountainPasses` is armed by `PatchBytes` after the group's self-test, which
-compares the runner with Capcom's; `BOF3X_ORIGINAL=MountainPasses` leaves
-every cell, object and byte as the original has them.
+The cells, the object and the bit: `Area_RunPlacement` (ours,
+`src/game/event_script.cpp`), at its end. The mode-5 step `0x594E60`
+(Capcom's) stores `Game_AreaNumber` at `0x594EF2`, sets the cell plane at
+`0x594F76` (`0x56F670`) and calls the placement at `0x59501F`, then the
+descriptor's init at `0x59503E` - so at the hook the area, the plane and
+the link's pending cells are all current. The arming of a place: the start
+of `Area_StepHook` (`event_ops.cpp`). The plate bound: the three
+`PlateShow` copies. The switch `MountainPasses` is one byte
+(`g_mountain_passes`, `event_script.h`) armed by `PatchBytes` from
+`inject_all.cpp` after every module's self-test, since the placement
+runner, the step hook and the plate copies are all fuzzed against Capcom's;
+`BOF3X_ORIGINAL=MountainPasses` leaves every cell, object, byte, link and
+search as the original has them.
 
 ## 6. Owed
 
-- The owner's play: Zublo from the south stairs to the Urkan map and back;
-  Levett once through area 70 and then over the band both ways; the log
-  lines `DIV-0191`.
-- The four Zublo cells against the drawn path (the owner's screenshot
-  outlines the walkway round the hut); move them by eye if the art says so.
+- The owner's play: done 2026-10-30 night (Zublo both ways, camp refused;
+  Levett after one crossing; a kid save still blocked).
+- The three Zublo cells against the drawn walkway, by the owner's eye.
+- Confirm on a door reached along the new road (both mountains): the step
+  hook should have armed the mountain's own link; watch the plate's name.
 - New Game after a crossed save in one process (section 4).
 - `tools/cell_peek.py` is the sampler this used; `docs/event-ops.md` line
   172's "0 -> 1 (walk)" and the comment at `event_ops.cpp` `Field_LeaderStepTarget`

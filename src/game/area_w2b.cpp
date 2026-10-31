@@ -46,6 +46,7 @@
 #include "game/record_views.h"
 #include "game/records.h"
 #include "game/world_map.h"
+#include "game/event_script.h"   // DIV-0191: g_mountain_passes
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -451,7 +452,11 @@ void PlateShow(const WorldMapTables& t) {
     if (kind == 1) {
         const unsigned place = AreaW0b_Place;
         U entry = t.plate_anims;
-        while (Word(At(entry)) != place) entry += 4;
+        // DIV-0191: bounded at the table's end; a place not in it shows no
+        // plate instead of reading the records after it (a fault otherwise).
+        const U end = g_mountain_passes ? t.plate_anims_end : ~0u;
+        while (entry < end && Word(At(entry)) != place) entry += 4;
+        if (entry >= end) return;
         rv::Store<std::int32_t>(rv::Current<records::EffectObject>()->work_18, static_cast<std::int32_t>(place));
         animation = At(entry + 2)[0];
     } else if (kind == 2) {

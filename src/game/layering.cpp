@@ -9,6 +9,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/draw_pool.h"
+#include "game/event_script.h"   // DIV-0191: g_mountain_passes
 #include "hook/draw_order.h"
 #include "hook/log.h"
 #include "hook/snapshot.h"
@@ -532,6 +533,26 @@ unsigned LayerFor(unsigned index, unsigned layer) {
         return true;
     };
     unsigned drawn_in = layer;
+    // DIV-0191 (docs/mountain-passes.md section 2): a party member on the
+    // Zublo walkway's strip, (0x38, 0x1C) or (0x38, 0x1B) of the Rhapala map,
+    // is drawn as far ahead as the engine allows, with no stop test. The
+    // strip's art is a block painted a step higher than its mesh (corners
+    // 0x10 under a 0x16 block), so the painted face of the cell in front
+    // covers the member's legs when the pass keeps them in their layer; and
+    // nothing nearer the camera than the strip is anything but that block's
+    // paint and ground (the hut stands behind, up-left). The owner's eye,
+    // 2026-10-30 night: "render on top of the road".
+    if (g_mountain_passes && Game_AreaNumber == 87 && (cell_z == 0x1C || cell_z == 0x1B) && cell_x == 0x38) {
+        const unsigned char* const trio = reinterpret_cast<const unsigned char*>(::bof3::Img(ObjTrio_addr));
+        if (sprite >= trio && sprite < trio + 3u * 0x14Cu) {
+            drawn_in = layer + static_cast<unsigned>(g_ahead);
+            if (drawn_in > 0x36) drawn_in = 0x36;
+            if (g_log && draw_order::Tagging())
+                bof3::Log("DIV-0191    frame %u: member %08X on the Zublo strip cell %d,%d: layer %u drawn in layer %u, no stop test",
+                          static_cast<unsigned>(Frame_Counter), Address(sprite), cell_x, cell_z, layer, drawn_in);
+            return drawn_in;
+        }
+    }
     for (unsigned next = layer + 1; next < 0x37 && next <= layer + static_cast<unsigned>(g_ahead); ++next) {
         if (!clear_to(next, nullptr)) break;
         drawn_in = next;

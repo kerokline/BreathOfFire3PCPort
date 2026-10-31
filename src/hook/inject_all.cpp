@@ -4,6 +4,7 @@
 #include "render/gfx_snapshot.h"
 
 #include "game/band_census.h"
+#include "game/event_script.h"
 #include "game/pillarbox.h"
 #include "hook/gapwatch.h"
 #include "game/wide_staging.h"
@@ -1500,6 +1501,8 @@ void InjectAll() {
                                 // (BOF3X_SHADOW=snapshot) - after DrawPool_Grow, which places the hosted pool it copies
     QuickMenu_Inject();         // the quicksave round's QM: the lists' and the cursor's self-test, then draft B's
                                 // split save list (SaveLists) - after every module's self-test, which compared the original's
+    MountainPasses_Arm();       // DIV-0191 (game/event_script.h): the placement hook, the step hook and the bounded
+                                // plate searches - after every module's self-test, which compared the unarmed code
     InjectReport();
 }
 

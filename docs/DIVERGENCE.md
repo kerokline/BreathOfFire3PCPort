@@ -13613,11 +13613,38 @@ designed in rather than bolted on.
 - **New behaviour:** after a map's placement script runs (the mode-5 step
   has set `Game_AreaNumber` and the cell plane by then, and the link's
   pending arrival cells are current): on area 87 with the chapter byte
-  `Cond_ByteFA` at 9 or more, the cells `(0x36, 0x1E)`, `(0x36, 0x1D)`,
-  `(0x36, 0x1C)` and `(0x35, 0x1C)` are made road (0), joining the south
-  road `(0x37, 0x1F)` to the passage cell `(0x34, 0x1B)` and so to the
-  Urkan map's link and stored exit without a step from a link cell onto
-  either door; the volcano's own links are untouched. On area 16, when bit
+  `Cond_ByteFA` at 9 or more, the cells `(0x38, 0x1D)`, `(0x38, 0x1C)`,
+  `(0x38, 0x1B)` and `(0x37, 0x1B)` are made passage cells
+  (`0x91`: walkable, no encounter, no plate, and the field menu's camp test
+  refuses them as it does the passage beside them - the owner's call);
+  their corner heights stay Capcom's (the strip's art is painted a block
+  higher than its mesh, so the leader stands a step below it there; raising
+  the corners raised the drawn tiles too), and a party member on the
+  strip's two cells `(0x38, 0x1C)`, `(0x38, 0x1B)` is drawn as many layers
+  ahead as DIV-0071's pass allows with no stop test (`layering.cpp`
+  `LayerFor`), since the painted face of the cell in front otherwise covers
+  its legs and nothing nearer the camera there is anything but that paint
+  and ground - the drawn walkway: the platform
+  in front of the hut, the strip up its east side and the ledge cell beside
+  the upper door - so the south road
+  `(0x37, 0x1F)`, over the lower door's link cell `(0x37, 0x1E)`, reaches the upper door `(0x36, 0x1B)`, its link `(0x35,
+  0x1B)`, the passage `(0x34, 0x1B)`, the link `(0x33, 0x1B)` and the stored
+  exit `(0x33, 0x1A)` to the Urkan map, and the same back. A door or the
+  stored exit reached from a plain cell acts on the last place any link
+  armed (`AreaW0b_Place` and the pending cells: the plate looks it up,
+  confirm and the stored exit change area to it) - the first build's road
+  did that, and the plate's unbounded search over a stale place faulted
+  (`Sprite_SetAnimationAt`, dump `bof3x.crash-28652-0`). So, under the
+  switch: `Area_StepHook` arms the place's own link whenever a step targets
+  such a cell (`Area_LinkAt` of the lower door's link `(0x37, 0x1E)`, the
+  upper door's `(0x35, 0x1B)`, the stored exit's `(0x33, 0x1B)`; on area 16
+  the band's north-east cells -> `(0x39, 0x38)`, its south-west cells ->
+  `(0x36, 0x3B)`), where the original arms only on arrival at a link cell;
+  and the plate's place search in `WorldMap33_PlateShow`, `Area16_PlateShow`
+  and areas 87 / 88's shared `PlateShow` stops at the table's end and shows
+  no plate for a place not in it (the original reads on into the next
+  records); the five other maps' copies are unchanged. The volcano's own
+  links are untouched. On area 16, when bit
   0 of `MountainPasses_Bits` is set, the object standing on `(0x38, 0x39)`
   is dropped (`+0` = 0) and the band walks. The bit - our byte at save block
   `+0x1040` (`0x904A20`; no symbol, no operand in `pc_xref.json`, zero on
@@ -13645,10 +13672,14 @@ designed in rather than bolted on.
   `BOF3X_ORIGINAL=MountainPasses` exit 0, the line `OFF` (the A/B switch
   is hosted-only: the exe host refuses it by design). The launcher's
   registry and the presets' reference tables regenerated; the host tests
-  3,320 checks, 0 failures, the as-shipped count 77. Not yet played: the
-  owner walks both (section 6 of the doc).
-- **Reversible?** `BOF3X_ORIGINAL=MountainPasses` leaves every cell, object
-  and byte as the original has them, in both hosts. A player turns it off
+  3,320 checks, 0 failures, the as-shipped count 77. Played by the owner
+  the same night over six builds, by their eye: Zublo's walkway walks with
+  camp refused, Levett walks after one crossing, and a child-era save keeps
+  Zublo's wall ("as it should"). The full shadow suite was run on every
+  build, each 0 mismatches.
+- **Reversible?** `BOF3X_ORIGINAL=MountainPasses` leaves every cell, object,
+  byte, link and plate search as the original has them, in both hosts (the
+  byte is armed from `inject_all.cpp` after every module's self-test). A player turns it off
   with `BOF3X_OFF=MountainPasses` (the ini's `off=`); a save that already
   carries the bit keeps it, harmlessly, since nothing else reads the byte.
 - **Switch:** MountainPasses

@@ -24,6 +24,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/event_ops_callees.h"
+#include "game/event_script.h"   // DIV-0191: g_mountain_passes
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
@@ -1329,8 +1330,28 @@ extern "C" int __cdecl Scenario_ArriveHook(long x, long z) {
 // sign-extended; 0 for any other area.
 // As the original has it: area 0x4C's handler 0x40EB90 is called with no
 // arguments pushed (it reads none).
+// DIV-0191 (switch MountainPasses, docs/mountain-passes.md section 2): on
+// the two maps with a new road, a step whose target is a door cell, a Mt.
+// Levett band cell or the Zublo stored exit arms that place's own link
+// (Area_LinkAt of its link cell), so the plate, confirm and the stored
+// exit act on the right place whichever cell the party came from. The
+// original arms only on arrival at the link cell itself.
+static void MountainPasses_StepArm(unsigned short area, int cx, int cz) {
+    struct Arm { unsigned char x, z, lx, lz; };
+    static constexpr Arm kZublo[] = {{0x37, 0x1D, 0x37, 0x1E}, {0x36, 0x1B, 0x35, 0x1B}, {0x33, 0x1A, 0x33, 0x1B}};
+    static constexpr Arm kLevett[] = {{0x38, 0x38, 0x39, 0x38}, {0x37, 0x39, 0x39, 0x38}, {0x38, 0x39, 0x39, 0x38},
+                                      {0x37, 0x3A, 0x36, 0x3B}, {0x36, 0x3A, 0x36, 0x3B}};
+    const Arm* arms = nullptr;
+    unsigned n = 0;
+    if (area == 87) { arms = kZublo; n = sizeof kZublo / sizeof kZublo[0]; }
+    else if (area == 16) { arms = kLevett; n = sizeof kLevett / sizeof kLevett[0]; }
+    for (unsigned i = 0; i < n; ++i)
+        if (arms[i].x == cx && arms[i].z == cz) { g.link_at(arms[i].lx, arms[i].lz); return; }
+}
+
 extern "C" int __cdecl Area_StepHook(long x, long z) {
     if (g.return_gate(x, z)) return 1;
+    if (g_mountain_passes) MountainPasses_StepArm(Game_AreaNumber, Whole(static_cast<std::uint32_t>(x)), Whole(static_cast<std::uint32_t>(z)));
     static const unsigned short kAreas[kStepCases] = {
         0x24, 0x2A, 0x2E, 0x31, 0x3B, 0x4B, 0x4C, 0x61, 0x64, 0x69, 0x6A, 0x70, 0x74, 0x87, 0x8C, 0x8F, 0x91, 0x92, 0x96,
         0xAA, 0xAB, 0xAC, 0xAE, 0xAF, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xBF, 0xC0, 0xC1, 0xC5,

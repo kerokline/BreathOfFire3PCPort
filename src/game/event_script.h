@@ -8,3 +8,12 @@
 #pragma once
 
 void EventScript_Inject();
+
+// DIV-0191 (switch MountainPasses): 1 once armed. Read by the placement
+// runner's hook (event_script.cpp), the step hook (event_ops.cpp) and the
+// three bounded plate searches (worldmap_area.cpp, area_w0b.cpp,
+// area_w2b.cpp). Armed by MountainPasses_Arm from inject_all.cpp after
+// every module's self-test, since each of those fuzzes compares its
+// function with Capcom's unarmed one.
+extern unsigned char g_mountain_passes;
+void MountainPasses_Arm();
