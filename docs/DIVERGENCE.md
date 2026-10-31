@@ -13688,3 +13688,95 @@ designed in rather than bolted on.
 - **Toward:** none
 - **Languages:** any
 - **State:** active
+
+## Drafts (the exe-gap round's group PL, 2026-10-31; lettered, the coordinator numbers)
+
+Not entries yet (`####` headings, which the checker passes over). At the merge
+the `#### DIV-PL-A` below becomes an entry with the next free number and the
+`- **ID:**` line; `#### Amendment PL-B to DIV-0101` is folded into DIV-0101 as
+its next "Amended" paragraph (the entry's six fields unchanged).
+
+#### DIV-PL-A - A Western PSX disc-built image takes its disc's own regional layout fields
+
+- **Date:** 2026-10-31
+- **Subsystem:** the exe image (`tools/psp_exe.py` `TWINS`' eighth field, the
+  `regional` rule; `recipes/exe-psp.tsv`); read by `EffectKind66_DrawPiece`
+  `0x47DE50` (`EffectKind66_States+0x18 / +0x20 / +0x28`, `0x654770`,
+  `0x654778`, `0x654780`) and by `EffectKind5E_Wait` `0x47F720` /
+  `EffectKind5E_DrawMenu` `0x47F9E0` (`Rest3e_Windows+0x14 / +0x18 / +0x1C`,
+  `0x65486C`, `0x654870`, `0x654874`); [`exe-gap-round.md`](exe-gap-round.md)
+  section 4 (PL), [`install-gap-twins.md`](install-gap-twins.md) 2
+- **Tier:** Sensible - the release the player owns: no disc of a Western
+  PSX-only install holds the PC's numbers, and no PC bytes go into code.
+- **Original behaviour:** `BOF3.exe` holds Japan's layout in six u16 fields:
+  the x of kind 0x66's three texture-piece places (area 135's panel, drawn
+  as POLY_FT4 quads from the place records `0x654770 + 8 place`), and in
+  `Rest3e_Windows` window 2's width (kind 0x5E's board frame) and window 3's
+  x and width (kind 0x5E's menu box). The PC, psx-jp, psp-jp and psp-eu hold
+  the same six values (measured 2026-10-31, `exe-gap-round.md` 7). A
+  Western PSX disc-built image left the six zero: `TWINS`' pieced rows place
+  the segments around them and skip them on purpose, since the four Western
+  PSX discs hold other values there, so the panel's three pieces were drawn
+  at x 0 and the board and the menu box at x 0 / width 0.
+- **New behaviour:** on psx-us, psx-eu-en, psx-fr and psx-de the six fields
+  are each Western disc's own, read whole at the pieced row's place
+  (`WORLD03/AREA135.EMI#14` `0x801F6230..`, `SCENARIO/SCENA10.EMI#0`
+  `0x801FE7CC..`): the three panel pieces 56 px right of the PC's (all four
+  discs), window 2 one pixel narrower, and the menu box further right and
+  narrower (84 px right and 158 narrower on US, EU-en and DE; 60 and 118 on
+  FR) - the Western releases' layout. A Japanese or PSP disc-built image and
+  every PC install are unchanged. An install built from a Western PSX disc
+  with a PSP disc after it builds its image from the first disc
+  (`importer.py`'s exe source), so it takes the Western fields; one with the
+  PSP disc first keeps the PC's (the PSP's) values.
+- **Rationale:** the owner's answer of 2026-10-31 ("the PC's numbers",
+  section 7) holds wherever a disc carries them; a Western PSX-only install
+  has none, and zero draws the panel and the windows wrong. Each field is
+  taken whole, never half one release's, as the pieced rule's segments are.
+- **Also in the PSX version?** No for the original behaviour (the PC's are
+  Japan's numbers); the new behaviour is each Western PlayStation release's
+  own layout.
+- **Verification:** the recipe chain regenerated over the seven discs
+  (`psp_exe.py recipe`, `exe_tables.py recipe`, `exe_own.py measure`,
+  `exe_tables.py gaps`): six `regional` rows per Western PSX build, the six
+  `gap` rows gone from each; `exe_scan.py` shows them `differ/place`;
+  `psp_exe.py check` OK; `exe_tables.py check` 0 errors (PL's report).
+- **Reversible?** no switch: the image is built at install time; rebuilding
+  the cache with the eighth field removed puts the zeros back.
+- **Switch:** none
+- **Default:** on - on a Western PSX disc-built image
+- **Player:** never - an install-time image, no runtime name
+- **Toward:** psx - the Western PlayStation releases' own layout
+- **Languages:** any
+- **State:** active
+
+#### Amendment PL-B to DIV-0101 - the exe-gap round's placements and the Identify words
+
+- Amended 2026-10-31 (the exe-gap round, group PL; [`exe-gap-round.md`](exe-gap-round.md)
+  section 4): four placements of bytes the PC has and a disc carries, and one
+  engine-own region.
+  - **A string piece of an owning-function region** (`exe_tables.imm_strings`):
+    where no whole-region row fits, a reader operand inside the region that
+    starts a printable NUL-ended string is placed alone when exactly one
+    address its twin's lui pair forms holds the same string and NUL. The faerie
+    music player's `=` and `;` (`CommuMusic_DrawList`'s pushes of `0x653144` /
+    `0x653148`; the PlayStation's twin lays the three glyph strings in the other
+    order) place from `ETC/COMMU03.EMI#6` on psx-jp, psp-jp and psp-eu.
+  - **The tail floor at a region another range closes**: `Area121_BandHeights+0x1`
+    places on both PSPs (the region stops where the twin's section ends).
+  - **A `BOOT.BIN` twin read at its first byte**: of several copies a relocated
+    pair reads, the one a pair forms the address of, for a run that starts at
+    its symbol; `LinkedObjectD_Amounts` on psp-eu from the copy
+    `LinkedObjectD_ShowAmount`'s native twin reads.
+  - **The Identify panel's words** (`0x65AAA8..0x65AAC4`, label group 15's
+    shipped slots and the EXP label `Identify_Draw*` read in place) are the
+    engine's own (`exe_own.cpp` `IdentifyWords`), as D278's marks are: no
+    Japanese or PSP disc's MAGIC060 carries them in the PC's place, and PSP-JP's
+    layer writes no group 15, so a PSP-JP disc-built install drew no EXP label
+    (captured 2026-10-31, `identify.txt` frame 900 before and after; PSP-EU's
+    layer draws all four words, unchanged). Equal to `BOF3.exe`'s on a PC install.
+  `gap` rows per build 47 / 48 / 51 / 51 / 20 / 21 / 20 (US, EU-en, FR, DE, JP,
+  PSP-JP, PSP-EU) to 40 / 41 / 44 / 44 / 18 / 18 / 16 with DIV-PL-A's regional
+  fields; `ConfigScreen_OpenStates+0x144` (the default keys' names) classed
+  `port-platform`; `exe_tables.py check` with the seven discs 0 errors,
+  `exe_scan.py` no `missing/none`, `data_diff.py run` 0 errors.

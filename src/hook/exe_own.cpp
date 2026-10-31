@@ -151,6 +151,19 @@ void IdentifyMarks(std::uint8_t* at, std::uint32_t size) {
     std::memcpy(at, kMarks, sizeof kMarks);
 }
 
+void IdentifyWords(std::uint8_t* at, std::uint32_t size) {
+    // Identify_Draw*'s words in their 8-byte slots: the weakness row's two, the
+    // EXP label (drawn with the count 3), the item word. Read in place by
+    // Identify_DrawMember / _DrawEnemy (EXP) and, for a label group 15 slot its
+    // layer leaves empty, by Labels_Slot (labels.cpp): the Japanese and both PSP
+    // discs' MAGIC060 carry no such words, so a disc-built image of those builds
+    // left the slots zero and the panel drew none (docs/exe-gap-round.md 4, PL).
+    static const char kWords[] = {'W', 'E', 'A', 'K', 0, 0, 0, 0, 'E', 'X', 'P', 0, 'I', 'T', 'E', 'M',
+                                  0,   0,   0,   0,   'P', 'O', 'I', 'N', 'T', 0, 0, 0};
+    if (size != sizeof kWords) Fatal("exe_own: the Identify words' region is %u bytes", (unsigned)size);
+    std::memcpy(at, kWords, sizeof kWords);
+}
+
 void PlayTimeSeparator(std::uint8_t* at, std::uint32_t size) {
     Strings(at, size, {"."});   // Menu_DrawPlayTime's, drawn twice in the tiny font as the colon
 }
@@ -252,6 +265,7 @@ constexpr Row kRows[] = {
     {{0x653084, 0x653098, "CommuBoard_DrawRows' dash and formats (D310)"}, BoardFormats},
     {{0x654900, 0x654904, "the level-up's ability name format (D310)"}, AbilityFormat},
     {{0x656AEC, 0x656B00, "the field button map's defaults Boot_Task copies (a rule)"}, FieldButtonDefaults},
+    {{0x65AAA8, 0x65AAC4, "the Identify panel's words (group 15's shipped slots)"}, IdentifyWords},
     {{0x65AAC4, 0x65AAD0, "the Identify panel's unknown marks (D278)"}, IdentifyMarks},
     {{0x65DA44, 0x65DA50, "Cfg_Fullscreen, Cfg_RenderMode, Cursor_Hidden: 1"}, CfgInitial},
     {{0x65DA54, 0x65DA76, "WinMain's messages and the logo AVI's name"}, WinMainMessages},
