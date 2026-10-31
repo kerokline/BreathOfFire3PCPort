@@ -1284,13 +1284,17 @@ std::string IniNotHere(const std::wstring& game_dir, const Config& cfg, const st
 
 // Why this install cannot take an env: value, or empty when it can: the two
 // that stop a disc-built install (no BOF3.exe), whose DAT\ is not the PC's
-// and whose .data has gaps (DIV-0089, DIV-0101).
+// and whose .data has gaps (DIV-0089, DIV-0101). BOF3X_EXEIMAGE_STRICT=1
+// refuses every gap, the accepted ones too; the engine's default (unset)
+// refuses only a gap that recipes/exe-gaps-accepted.tsv does not answer, and
+// =0 refuses none, so only =1 is kept from a disc-built install.
 std::string EnvNotHere(const std::wstring& game_dir, const std::string& name, const std::string& value) {
     const bool pc = AnyMatch(game_dir + L"\\BOF3.exe");
     if (name == "BOF3X_CACHE_DATA" && value == "0" && !pc)
         return "a disc-built install (no BOF3.exe) has no PC DAT folder to read in place of the cache";
     if (name == "BOF3X_EXEIMAGE_STRICT" && value != "0" && !pc)
-        return "a disc-built install (no BOF3.exe) has gaps in its .data, which the strict switch refuses";
+        return "a disc-built install (no BOF3.exe) has gaps in its .data, and this value stops the game at all "
+               "gaps, also at the gaps that this release accepts";
     return std::string();
 }
 

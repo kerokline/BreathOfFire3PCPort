@@ -29,7 +29,13 @@ void ExeImage_Check();
 // (docs/exe-import-engine.md section 4.4), every range must be a class the
 // engine accounts for, as recipes/exe-gaps.tsv named them: no pointer word
 // unfilled, each `gap` range (zero where the PC has a value no disc
-// carries) logged once - a Fatal with BOF3X_EXEIMAGE_STRICT=1. False,
+// carries) logged once with the answer data.toml's `accepted` list gives it
+// (recipes/exe-gaps-accepted.tsv, written there by tools/exe_tables.py). By
+// default a gap with no answer, or an image written before the list, is a
+// Fatal that tells the player to rebuild; BOF3X_EXEIMAGE_STRICT=0 runs every
+// gap, logged, and =1 refuses every gap (DIV-0101). Under
+// BOF3X_SELFTEST_ONLY the refusal's own test runs here too, on a synthetic
+// data.toml and on a copy of the mapped one with one answer taken out. False,
 // copying nothing, when the variable is unset.
 bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32_t bss_end);
 

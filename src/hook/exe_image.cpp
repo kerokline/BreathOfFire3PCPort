@@ -24,10 +24,20 @@ struct Range {
     std::string how, from;
 };
 
+// One row of data.toml's `accepted` list (tools/exe_tables.py write_exe since
+// the exe-gap round's group ST): the answer recipes/exe-gaps-accepted.tsv
+// gives the `gap` range [lo, hi) - layer, port-own, unread or pending.
+struct Accepted {
+    std::uint32_t lo, hi;
+    std::string answer;
+};
+
 struct Image {
     std::uint32_t va = 0, size = 0, bss_end = 0;
     std::string build, file, gaps;
     std::vector<Range> ranges;
+    bool has_accepted = false;   // the `accepted = [` line: absent in an image written before the list
+    std::vector<Accepted> accepted;
 };
 
 // data.toml's classes (tools/exe_tables.py write_exe), what the engine does
@@ -42,7 +52,8 @@ struct Image {
 //   language                       zero; a language layer's handlers write it, or ours read around it
 //   unread                         zero; nothing the exe host runs reads it
 //   gap                            zero where the PC has a value no disc carries: logged, each range
-//                                  once; BOF3X_EXEIMAGE_STRICT=1 makes it a Fatal
+//                                  once with its answer from data.toml's `accepted` list; a gap with
+//                                  no answer is a Fatal (BOF3X_EXEIMAGE_STRICT, StrictMode below)
 //   pointer                        a pointer word left unfilled: a Fatal (no disc build has one)
 struct Class {
     const char* how;
@@ -122,19 +133,31 @@ FILE* OpenUtf8(const std::string& path) {
 }
 
 // data.toml as tools/exe_tables.py writes it: `key = value` lines in [image],
-// then one `[0x.., 0x.., "how", "from"],` line a range. Only that shape.
-Image ReadToml(const std::string& path) {
-    FILE* f = OpenUtf8(path);
-    if (!f) Fatal("BOF3X_EXEIMAGE: cannot open %s", path.c_str());
+// then one `[0x.., 0x.., "how", "from"],` line a range, then on a disc build
+// the `accepted = [` list, one `["answer", 0x.., 0x..],` line a gap range it
+// answers. Only that shape; `path` names it in a Fatal.
+Image ParseToml(const std::string& text, const std::string& path) {
     Image im;
-    char line[1024];
-    while (std::fgets(line, sizeof line, f)) {
+    std::size_t at = 0;
+    while (at < text.size()) {
+        std::size_t end = text.find('\n', at);
+        if (end == std::string::npos) end = text.size();
+        const std::string line = text.substr(at, end - at);
+        at = end + 1;
+        if (line.size() >= 1024)
+            Fatal("BOF3X_EXEIMAGE: %s has a line of %u characters", path.c_str(), (unsigned)line.size());
         unsigned a = 0, b = 0;
         char s[64] = {0}, from[256] = {0};
-        const char* p = line;
+        const char* p = line.c_str();
         while (*p == ' ') ++p;
         const int got = std::sscanf(p, "[0x%x, 0x%x, \"%63[^\"]\", \"%255[^\"]\"", &a, &b, s, from);
-        if (got >= 3) {
+        if (std::strncmp(p, "accepted = [", 12) == 0) {
+            im.has_accepted = true;
+        } else if (std::sscanf(p, "[\"%63[^\"]\", 0x%x, 0x%x]", s, &a, &b) == 3) {
+            if (!im.has_accepted) Fatal("BOF3X_EXEIMAGE: %s has an answer line outside its accepted list", path.c_str());
+            im.accepted.push_back({a, b, s});
+        } else if (got >= 3) {
+            if (im.has_accepted) Fatal("BOF3X_EXEIMAGE: %s has a range after its accepted list", path.c_str());
             im.ranges.push_back({a, b, s, got == 4 ? from : ""});
         } else if (std::sscanf(p, "va = 0x%x", &a) == 1) {
             im.va = a;
@@ -150,10 +173,210 @@ Image ReadToml(const std::string& path) {
             im.gaps = s;
         }
     }
-    std::fclose(f);
     if (!im.va || !im.size || !im.bss_end || im.build.empty() || im.file.empty() || im.ranges.empty())
         Fatal("BOF3X_EXEIMAGE: %s is not a data.toml exe_tables.py wrote", path.c_str());
     return im;
+}
+
+std::string ReadWhole(const std::string& path) {
+    FILE* f = OpenUtf8(path);
+    if (!f) Fatal("BOF3X_EXEIMAGE: cannot open %s", path.c_str());
+    std::string out;
+    char buf[4096];
+    std::size_t n;
+    while ((n = std::fread(buf, 1, sizeof buf, f)) > 0) out.append(buf, n);
+    std::fclose(f);
+    return out;
+}
+
+Image ReadToml(const std::string& path) { return ParseToml(ReadWhole(path), path); }
+
+// BOF3X_EXEIMAGE_STRICT: what a disc-built image's `gap` ranges may be
+// (DIV-0101, amended by the exe-gap round's group ST, docs/exe-gap-round.md 4).
+//   unset   the default: a gap with an answer in data.toml's accepted list
+//           (recipes/exe-gaps-accepted.tsv) runs, logged; a gap with none, or
+//           an image written before the list, is a Fatal that says to rebuild
+//   0       every gap runs, logged, answered or not (the leniency before the
+//           round: a developer's switch for an image under a new gap list)
+//   1       every gap is a Fatal, answered or not: no game value of the PC's
+//           runs as zero (the entry's off value, which the presets send)
+// Any other value is a Fatal: a misspelt switch must not pick a mode.
+enum class Strict { kAccepted, kLenient, kEvery };
+
+Strict StrictMode() {
+    char v[8] = {};
+    const DWORD n = GetEnvironmentVariableA("BOF3X_EXEIMAGE_STRICT", v, sizeof v);
+    if (n == 0) return Strict::kAccepted;
+    if (n < sizeof v && std::strcmp(v, "0") == 0) return Strict::kLenient;
+    if (n < sizeof v && std::strcmp(v, "1") == 0) return Strict::kEvery;
+    Fatal("BOF3X_EXEIMAGE_STRICT=%s: the switch takes 0 (every gap runs, logged) or 1 (every gap refused); unset, "
+          "a gap recipes/exe-gaps-accepted.tsv does not answer is refused",
+          n < sizeof v ? v : "(too long)");
+}
+
+const char* StrictName(Strict m) {
+    return m == Strict::kAccepted  ? " unset: an unanswered gap refused"
+           : m == Strict::kLenient ? "=0: every gap runs"
+                                   : "=1: every gap refused";
+}
+
+// The answer data.toml's accepted list gives the gap range `r`, or null.
+const char* AnswerOf(const Image& im, const Range& r) {
+    for (const Accepted& a : im.accepted)
+        if (a.lo == r.lo && a.hi == r.hi) return a.answer.c_str();
+    return nullptr;
+}
+
+// The accepted list as exe_tables.py writes it: each row a known answer, on a
+// `gap` range of the image, in the ranges' order, once. Empty when it is,
+// else why not (a hand-edited or a damaged data.toml: a Fatal in every mode).
+std::string AcceptedProblem(const Image& im) {
+    char msg[256];
+    std::uint32_t last = 0;
+    for (const Accepted& a : im.accepted) {
+        const bool known =
+            a.answer == "layer" || a.answer == "port-own" || a.answer == "unread" || a.answer == "pending";
+        bool on_gap = false;
+        for (const Range& r : im.ranges) on_gap = on_gap || (r.how == "gap" && r.lo == a.lo && r.hi == a.hi);
+        if (!known || !on_gap || a.lo < last) {
+            std::snprintf(msg, sizeof msg, "the accepted row \"%s\" 0x%06X..0x%06X %s", a.answer.c_str(),
+                          (unsigned)a.lo, (unsigned)a.hi,
+                          !known    ? "is not an answer (layer, port-own, unread, pending)"
+                          : !on_gap ? "is on no gap range of the image"
+                                    : "is out of order or twice");
+            return msg;
+        }
+        last = a.hi;
+    }
+    return std::string();
+}
+
+// Why a disc-built image is refused for its gaps under `mode`, or empty when
+// it runs: the text of the Fatal, a player's lines first (as FilledSince()'s),
+// then the engine's. `where` is the cache's base\exe\ directory.
+std::string GapRefusal(const Image& im, Strict mode, const std::string& where) {
+    if (mode == Strict::kLenient) return std::string();
+    std::vector<char> msg(2048);
+    std::uint32_t gaps = 0;
+    for (const Range& r : im.ranges) gaps += r.how == "gap";
+    if (mode == Strict::kAccepted && !im.has_accepted) {
+        std::snprintf(msg.data(), msg.size(),
+                      "This install's game data was built by an older release. This release must know which gaps of "
+                      "the data it accepts, and the older release did not record them. Rebuild the install: in the "
+                      "launcher's Sources page add the disc again, or run tools/importer.py build.\n\n"
+                      "BOF3X_EXEIMAGE: %s (%s) has %u gap ranges and no accepted list (its data.toml was written "
+                      "before recipes/exe-gaps-accepted.tsv); BOF3X_EXEIMAGE_STRICT=0 runs it with every gap logged",
+                      where.c_str(), im.build.c_str(), (unsigned)gaps);
+        return msg.data();
+    }
+    for (const Range& r : im.ranges) {
+        if (r.how != "gap") continue;
+        const char* answer = AnswerOf(im, r);
+        if (mode == Strict::kEvery) {
+            std::snprintf(msg.data(), msg.size(),
+                          "BOF3X_EXEIMAGE_STRICT=1: 0x%06X..0x%06X (%u bytes, %s) of the %s image is a gap - the PC "
+                          "has a value there that no disc carries - and the strict switch refuses an image with one%s%s%s",
+                          (unsigned)r.lo, (unsigned)r.hi, (unsigned)(r.hi - r.lo), r.from.c_str(), im.build.c_str(),
+                          answer ? " (accepted as " : "", answer ? answer : "", answer ? ")" : "");
+            return msg.data();
+        }
+        if (answer) continue;
+        std::snprintf(msg.data(), msg.size(),
+                      "This install's game data has a gap that this release does not accept: some bytes are zero "
+                      "where the PC has a value that no disc carries. Rebuild the install: in the launcher's Sources "
+                      "page add the disc again, or run tools/importer.py build. If the problem stays after the "
+                      "rebuild, the gap list of this release has a new row (tools/exe_scan.py --accepted names it).\n\n"
+                      "BOF3X_EXEIMAGE: %s (%s) leaves 0x%06X..0x%06X (%u bytes, %s) a gap that its accepted list "
+                      "does not answer (recipes/exe-gaps-accepted.tsv); BOF3X_EXEIMAGE_STRICT=0 runs it, logged",
+                      where.c_str(), im.build.c_str(), (unsigned)r.lo, (unsigned)r.hi, (unsigned)(r.hi - r.lo),
+                      r.from.c_str());
+        return msg.data();
+    }
+    return std::string();
+}
+
+// The gate's negative control (BOF3X_SELFTEST_ONLY, the exe host): the parser
+// and GapRefusal on a synthetic data.toml, then, when `mapped_text` is the
+// disc-built image's own data.toml, on a copy of it with one gap's answer
+// taken out - which the default must refuse, naming that range.
+void StrictSelfTest(const std::string& mapped_text) {
+    const std::string head =
+        "[image]\nfile = \"data.bin\"\nva = 0x001000\nsize = 64\nbss_end = 0x001080\n"
+        "build = \"psx-xx\"\ngaps = \"recipes/exe-gaps.tsv\"\n\nranges = [\n"
+        "  [0x001000, 0x001010, \"map\", \"A@0x80000000\"],\n"
+        "  [0x001010, 0x001018, \"gap\", \"game-value Sym_A\"],\n"
+        "  [0x001018, 0x001020, \"none\", \"\"],\n"
+        "  [0x001020, 0x001028, \"gap\", \"game-value Sym_B+0x4\"],\n"
+        "  [0x001028, 0x001040, \"map\", \"A@0x80000028\"],\n]\n";
+    const std::string full =
+        head + "\naccepted = [\n  [\"layer\", 0x001010, 0x001018],\n  [\"pending\", 0x001020, 0x001028],\n]\n";
+    const std::string planted = head + "\naccepted = [\n  [\"layer\", 0x001010, 0x001018],\n]\n";
+    const std::string w = "selftest\\base\\exe\\";
+    unsigned ok = 0, n = 0;
+    const auto check = [&](bool good, const char* what) {
+        ++n;
+        if (good) ++ok;
+        else Log("exe_image   STRICT self-test: WRONG - %s", what);
+    };
+    const Image a = ParseToml(full, "synthetic"), b = ParseToml(planted, "synthetic"), c = ParseToml(head, "synthetic");
+    check(a.has_accepted && a.accepted.size() == 2 && a.ranges.size() == 5 && AcceptedProblem(a).empty(),
+          "the synthetic image parsed: 5 ranges, 2 answers");
+    check(!c.has_accepted && c.accepted.empty() && c.ranges.size() == 5, "an image without the list parsed as old");
+    check(GapRefusal(a, Strict::kAccepted, w).empty(), "every gap answered: runs under the default");
+    const std::string refused = GapRefusal(b, Strict::kAccepted, w);
+    check(refused.find("0x001020..0x001028") != std::string::npos && refused.find("Sym_B+0x4") != std::string::npos &&
+              refused.find("psx-xx") != std::string::npos && refused.find("Rebuild the install") != std::string::npos,
+          "the planted gap refused under the default, by range, symbol and build, with the rebuild line");
+    check(GapRefusal(c, Strict::kAccepted, w).find("older release") != std::string::npos,
+          "an image written before the list refused under the default");
+    check(GapRefusal(b, Strict::kLenient, w).empty() && GapRefusal(c, Strict::kLenient, w).empty(),
+          "BOF3X_EXEIMAGE_STRICT=0 runs the planted and the old image");
+    check(GapRefusal(a, Strict::kEvery, w).find("0x001010..0x001018") != std::string::npos,
+          "BOF3X_EXEIMAGE_STRICT=1 refuses an answered gap");
+    Image d = a;
+    d.accepted[1].answer = "maybe";
+    Image e = a;
+    e.accepted[1].lo = 0x1018;
+    e.accepted[1].hi = 0x1020;
+    Image f = a;
+    f.accepted.push_back(a.accepted[0]);
+    check(!AcceptedProblem(d).empty() && !AcceptedProblem(e).empty() && !AcceptedProblem(f).empty(),
+          "an unknown answer, an answer on a range that is not a gap, an answer twice: each refused");
+    std::string mapped = "no disc-built image mapped";
+    if (!mapped_text.empty()) {
+        // A copy of the image's own data.toml with its first answer line taken
+        // out - when the image itself runs under the default; one that does not
+        // is refused by ExeImage_Source right after this test, by its own range.
+        const Image m = ParseToml(mapped_text, "the mapped data.toml");
+        const std::size_t list = mapped_text.find("\naccepted = [\n");
+        const std::size_t row = list == std::string::npos ? list : mapped_text.find("\n  [\"", list + 1);
+        if (!GapRefusal(m, Strict::kAccepted, w).empty()) {
+            mapped = "the mapped " + m.build + " image is itself refused under the default, so nothing is planted in it";
+        } else if (row != std::string::npos) {
+            const std::size_t row_end = mapped_text.find('\n', row + 1);
+            unsigned lo = 0, hi = 0;
+            char answer[64] = {};
+            std::sscanf(mapped_text.c_str() + row + 3, "[\"%63[^\"]\", 0x%x, 0x%x]", answer, &lo, &hi);
+            std::string copy = mapped_text;
+            copy.erase(row, row_end - row);
+            const Image p = ParseToml(copy, "a copy of the mapped data.toml");
+            char range[32];
+            std::snprintf(range, sizeof range, "0x%06X..0x%06X", lo, hi);
+            const std::string why = GapRefusal(p, Strict::kAccepted, w);
+            check(p.accepted.size() + 1 == m.accepted.size() && why.find(range) != std::string::npos &&
+                      why.find(m.build) != std::string::npos,
+                  "a copy of the mapped image with one answer taken out refused, naming that range");
+            mapped = "a copy of the mapped " + m.build + " image's data.toml with the answer of " + range + " (" +
+                     answer + ") taken out refused, naming it";
+        } else {
+            mapped = "the mapped " + m.build + " image has no answered gap to plant";
+        }
+    }
+    if (ok != n) Fatal("exe_image STRICT self-test: %u of %u checks right (each WRONG line above)", ok, n);
+    Log("exe_image   STRICT self-test: %u checks right - a synthetic data.toml parsed with its accepted list; an "
+        "unanswered gap and an image without the list refused under the default and run under =0; an answered gap "
+        "refused under =1; three malformed lists refused; %s",
+        n, mapped.c_str());
 }
 
 std::vector<unsigned char> ReadBin(const std::string& path, std::uint32_t size) {
@@ -238,10 +461,16 @@ void ExeImage_Check() {
 }
 
 bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32_t bss_end) {
+    const bool selftest = GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0;
+    const Strict mode = StrictMode();   // read on every install, so that a misspelt value stops a PC install too
     const std::string dir = ImageDir();
-    if (dir.empty()) return false;
+    if (dir.empty()) {
+        if (selftest) StrictSelfTest(std::string());
+        return false;
+    }
     const std::string exe_dir = dir + "\\base\\exe\\";
-    const Image im = ReadToml(exe_dir + "data.toml");
+    const std::string toml_text = ReadWhole(exe_dir + "data.toml");
+    const Image im = ParseToml(toml_text, exe_dir + "data.toml");
     if (im.va != va || im.size != size || im.bss_end != bss_end)
         Fatal("BOF3X_EXEIMAGE: data.toml's image is 0x%X + 0x%X (zero to 0x%X), BOF3.exe's .data 0x%X + 0x%X (to 0x%X)",
               (unsigned)im.va, (unsigned)im.size, (unsigned)im.bss_end, (unsigned)va, (unsigned)size, (unsigned)bss_end);
@@ -265,6 +494,7 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
         ExeOwn_Fill(static_cast<std::uint8_t*>(to));
         Log("BOF3X_EXEIMAGE: .data at 0x%X from base/exe/data.bin (pc-zh), %u bytes: the source in the exe host",
             (unsigned)va, (unsigned)im.size);
+        if (selftest) StrictSelfTest(std::string());
         return true;
     }
 
@@ -290,10 +520,12 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
                       "BOF3X_EXEIMAGE: %s (%s) leaves 0x%06X..0x%06X a gap (%s)",
                       s.what, s.effect, exe_dir.c_str(), im.build.c_str(), (unsigned)r.lo, (unsigned)r.hi,
                       r.from.c_str());
-    const bool strict = [] {
-        char v[8] = {};
-        return GetEnvironmentVariableA("BOF3X_EXEIMAGE_STRICT", v, sizeof v) > 0 && std::strcmp(v, "0") != 0;
-    }();
+    if (const std::string why = AcceptedProblem(im); !why.empty())
+        Fatal("BOF3X_EXEIMAGE: %sdata.toml (%s): %s - not a list tools/exe_tables.py wrote. Rebuild the cache "
+              "(tools/importer.py build).",
+              exe_dir.c_str(), im.build.c_str(), why.c_str());
+    if (selftest) StrictSelfTest(toml_text);   // before the refusal below, so that the control runs on any image
+    if (const std::string why = GapRefusal(im, mode, exe_dir); !why.empty()) Fatal("%s", why.c_str());
 
     std::memcpy(to, bin.data(), im.size);
     ExeOwn_Fill(static_cast<std::uint8_t*>(to));   // the engine's own regions, over the image's zeros
@@ -303,24 +535,25 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
         std::uint32_t ranges, bytes;
     } by[sizeof kClasses / sizeof kClasses[0]] = {};
     for (std::size_t i = 0; i < sizeof kClasses / sizeof kClasses[0]; ++i) by[i].how = kClasses[i].how;
+    std::uint32_t answered = 0, unanswered = 0;
     for (const Range& r : im.ranges) {
         const std::size_t i = static_cast<std::size_t>(ClassOf(r) - kClasses);
         by[i].ranges += 1;
         by[i].bytes += r.hi - r.lo;
         if (r.how != "gap") continue;
-        if (strict)
-            Fatal("BOF3X_EXEIMAGE_STRICT: 0x%06X..0x%06X (%u bytes, %s) is a gap - the PC has a value there that no "
-                  "disc carries - and the strict switch refuses an image with one",
-                  (unsigned)r.lo, (unsigned)r.hi, (unsigned)(r.hi - r.lo), r.from.c_str());
-        Log("BOF3X_EXEIMAGE  gap 0x%06X..0x%06X %4u bytes  %s: zero (the PC has a value; no disc carries it)",
-            (unsigned)r.lo, (unsigned)r.hi, (unsigned)(r.hi - r.lo), r.from.c_str());
+        const char* answer = AnswerOf(im, r);   // null here only under BOF3X_EXEIMAGE_STRICT=0 (GapRefusal)
+        (answer ? answered : unanswered) += 1;
+        Log("BOF3X_EXEIMAGE  gap 0x%06X..0x%06X %4u bytes  %s: zero (the PC has a value; no disc carries it), %s%s",
+            (unsigned)r.lo, (unsigned)r.hi, (unsigned)(r.hi - r.lo), r.from.c_str(),
+            answer ? "accepted: " : "NOT accepted - runs under BOF3X_EXEIMAGE_STRICT=0", answer ? answer : "");
     }
     for (const Count& c : by)
         if (c.ranges) Log("BOF3X_EXEIMAGE  %-8s %5u ranges %7u bytes", c.how, (unsigned)c.ranges, (unsigned)c.bytes);
     Log("BOF3X_EXEIMAGE: .data at 0x%X from base/exe/data.bin (%s, disc-built), %u bytes; the engine's own regions "
-        "filled; the key table next (Shell_MapDefaultKeys); every gap zero, as logged (BOF3X_EXEIMAGE_STRICT=1 "
-        "refuses them)",
-        (unsigned)va, im.build.c_str(), (unsigned)im.size);
+        "filled; the key table next (Shell_MapDefaultKeys); every gap zero, as logged: %u accepted, %u not%s "
+        "(BOF3X_EXEIMAGE_STRICT%s)",
+        (unsigned)va, im.build.c_str(), (unsigned)im.size, (unsigned)answered, (unsigned)unanswered,
+        im.has_accepted ? "" : ", the image written before the accepted list", StrictName(mode));
     g_mapped = im;
     g_disc_mapped = true;
     return true;

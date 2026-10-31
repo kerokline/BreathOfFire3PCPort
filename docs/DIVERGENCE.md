@@ -8250,7 +8250,7 @@ designed in rather than bolted on.
 
 - **Switch:** env:BOF3X_EXEIMAGE_STRICT=1
 - **Default:** on
-- **Player:** yes - `BOF3X_EXEIMAGE_STRICT` (`src/hook/exe_image.cpp`) refuses a disc-built image with a gap; the default runs it
+- **Player:** yes - `BOF3X_EXEIMAGE_STRICT=1` (`src/hook/exe_image.cpp`) refuses a disc-built image with any gap; the default runs the gaps `recipes/exe-gaps-accepted.tsv` answers and refuses the rest (`=0` runs every gap, logged)
 - **Toward:** none - the PlayStation's executable carries its own tables ("Not applicable" above)
 - **Languages:** any
 - **State:** active
@@ -8282,6 +8282,56 @@ designed in rather than bolted on.
   fields; `ConfigScreen_OpenStates+0x144` (the default keys' names) classed
   `port-platform`; `exe_tables.py check` with the seven discs 0 errors,
   `exe_scan.py` no `missing/none`, `data_diff.py run` 0 errors.
+- Amended 2026-10-31 (the exe-gap round, group ST, draft ST-A;
+  [`exe-gap-round.md`](exe-gap-round.md) sections 2 and 4; I43 step 4):
+  **the strict switch narrowed, then on by default for a disc-built image.**
+  - **Before:** every `gap` range of a disc-built image ran as zero, logged;
+    `BOF3X_EXEIMAGE_STRICT=1` refused the image at its first `gap`, so it
+    would have refused all seven disc builds (40 / 41 / 44 / 44 / 18 / 18 /
+    16 ranges, US, EU-en, FR, DE, JP, PSP-JP, PSP-EU).
+  - **Now:** `tools/exe_tables.py` `write_exe` writes, after `data.toml`'s
+    `ranges`, an `accepted` list - one `[answer, pc, end]` row for each `gap`
+    range that `recipes/exe-gaps-accepted.tsv` answers (`layer`, `port-own`,
+    `unread` or `pending`); the range rows keep their four fields, so every
+    reader of `ranges` is unchanged. The engine (`exe_image.cpp`
+    `GapRefusal`), with `BOF3X_EXEIMAGE_STRICT` unset: a `gap` with an answer
+    runs as zero and is logged with its answer; a `gap` with none is a
+    `Fatal` that names the range, the symbol and the build and tells the
+    player to rebuild the install (the launcher's Sources page, or
+    `tools/importer.py build`); an image with no `accepted` list - written
+    before this change - is a `Fatal` that says an older release built it.
+    `=0` runs every gap, answered or not, each logged (`NOT accepted`) - the
+    leniency of before, kept for a developer's image under a new gap list.
+    `=1` keeps its meaning: every gap refused, answered or not (the entry's
+    off value; the presets send it, and the launcher keeps it from a
+    disc-built install, `EnvNotHere`). Any other value is a `Fatal`. An
+    `accepted` row that is not an answer, is on no `gap` range or is out of
+    order is a `Fatal` in every mode. A PC install (`pc-zh`, or `BOF3.exe`
+    read in place) is unchanged. An install built before the change is also
+    `stale exe` to the launcher's check before the game starts
+    (`install-staleness.md`: `write_exe`'s body and the accepted list are in
+    the `exe` step's measured record).
+  - **Why:** a new gap that a regeneration of `exe-gaps.tsv` brings fails
+    loudly at start instead of drawing wrong; an accounted one runs as it did.
+    The step `install-gap-reads.md` 9.7 could not take while the switch
+    refused every gap.
+  - **No `off=` code name.** The switch is read by the exe host before any
+    module registers a `PatchBytes`, and `src/hook/code_names.h` holds only
+    `PatchBytes` / `RetargetCall` names (`tools/ledger_switches.py`); the
+    entry's `Switch:` stays the `env:` value the presets already carry.
+  - **Verification** (harness root `C:\Users\kerok\bof3x-runs\eg1031\st`;
+    seven disc-only installs built by this importer, `abc_run.py prepare`):
+    each starts under the default with every gap accepted (US 40, EU-en 41,
+    FR 44, DE 44, JP 18, PSP-JP 18, PSP-EU 16; 0 not), exe host
+    `BOF3X_SELFTEST_ONLY=1`, exit 0. The self-test `exe_image STRICT
+    self-test` (the exe host, `BOF3X_SELFTEST_ONLY`) refuses a planted gap -
+    a synthetic `data.toml`'s and a copy of the mapped image's with one
+    answer taken out - and passes on all seven. The psx-us install: its
+    `data.toml` as the round tip's writer writes it, exit 3, the older-release
+    `Fatal`; under `=0` exit 0, every gap `NOT accepted`; one answer line
+    taken out, exit 3, the `Fatal` naming `0x662430..0x662442`
+    (`Scena17_EndSteps+0x364`); the same under `=0` exit 0, "39 accepted,
+    1 not"; `=1` exit 3 at the first gap; `=yes` exit 3.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
