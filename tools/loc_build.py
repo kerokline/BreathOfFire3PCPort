@@ -3052,14 +3052,18 @@ def convert_exe_ja(src, disc):
     finally:
         donor_pointers = saved
     if is_psp(disc):
-        # As before D280's layer: no group 15 on a PSP disc, and Super Combo's
-        # prompts from BOOT.BIN, where the PSP's own effect reads them.
+        # Super Combo's prompts from BOOT.BIN, where the PSP's own effect
+        # reads them. Group 15 (the Identify panel's headings and words) is
+        # the UMD's MAGIC060.EMI's, as PSP-EU's branch takes it
+        # (convert_labels_psp); before D280's layer a PSP-JP layer had none,
+        # and the panel drew only the target's name there (group PL's
+        # capture, 2026-10-31).
         boot = disc.boot()
-        labels = [c for c in labels if c[1] != 15]
-        lines = [l for l in lines if not l.startswith("identify words")]
         combo = combo_prompt_chunk([(0, boot[:disc.text_end])], [(0, boot)], lines)
         labels += [combo] if combo else []
     chunks += labels
+    lines = [l for l in lines if not l.startswith(("panel labels", "list title"))]
+    lines.append("panel labels, list title and gene title the PC's own (the Japan disc's ASCII words)")
     report.append("labels: " + ", ".join(lines))
     words += JA_WORDS
     if is_psp(disc):
