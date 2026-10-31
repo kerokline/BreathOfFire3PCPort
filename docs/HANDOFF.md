@@ -273,6 +273,15 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    word starts it; nothing in section 7 blocks it (the owner's rows are accounted `pending`). The ledger and defect
    numbers continue from the last (DIV-0191, D398).
 
+14a. **The 64-bit build round is staged, not launched** ([`x64-build-round.md`](x64-build-round.md); staged
+   2026-10-29, re-measured 2026-10-31 on `main` `43e98773` on `docs/x64-refresh`, unpushed - the doc had no
+   pointer from here or STATUS, so it was missed). Its census has the commands; the relocatable-image round
+   settled the code tokens (the bind table) and made the image a module, DirectSound's objects live in 32-bit
+   slots (54 vtable calls in 5 files), the quicksave needs only its `dll_base` word widened. **The owner's four
+   calls before it starts:** a narrow image (32-bit words inside a 64-bit process; saves, quicksave and the
+   state-hash references unchanged - recommended) or a wide one; x86-64 Windows only or more targets; a developer
+   build first or the player's default; SDL3 confirmed as the platform library (heavier now, for DirectSound).
+
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
    (D330). Open from the `orig3` reading: which of the button round's glyph changes moves `masterAndManillo`'s pages
