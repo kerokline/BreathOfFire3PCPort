@@ -1,6 +1,6 @@
 # The boss sweep: every boss's moves, by its own fight
 
-**Status:** PROPOSED; steps 1 to 3 MEASURED, sections 5 to 8 (2026-10-27 evening, the owner's ask before the staged
+**Status:** CLOSED (2026-10-31, the owner: the boss sweep is integrated into the spell harness, `tools/spell_sweep.py` and [`spell-sweep.md`](spell-sweep.md); steps 1 to 3 merged as PR #161). Written as PROPOSED, steps 1 to 3 MEASURED, sections 5 to 8 (2026-10-27 evening, the owner's ask before the staged
 rounds: "update the spell/item harness to also test boss moves"; the owner's
 suspicion that the kind injections of [`spell-sweep.md`](spell-sweep.md) 11
 could swap the enemy kind and graphic in combat so moves like Nue Stomp render

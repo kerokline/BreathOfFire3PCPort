@@ -1,10 +1,12 @@
 # What a player install still lacks, by source: the census
 
-**Status:** IN PROGRESS (verified 2026-10-17 against `origin/main` `cf809700`;
-a reading and counting pass - no game run, no capture, nothing fixed, no
-recipe regenerated. Section 8 rewritten 2026-10-18 with each item's status
-after the install-gap round, at `install-gap/round` `0baf26f7`; sections 0..7
-are the 2026-10-17 census as it was)
+**Status:** IN PROGRESS (section 8 rewritten 2026-10-31 by the exe-gap
+round's group AC as "the rows today", at `exe-gap/round` `657d5a89`: every
+`gap` row of `recipes/exe-gaps.tsv` answered in `recipes/exe-gaps-accepted.tsv`,
+checked by `tools/exe_scan.py --accepted` in CI; a reading pass, no game run.
+Its 2026-10-18 statuses after the install-gap round, at `install-gap/round`
+`0baf26f7`, are kept whole in a dated subsection of 8. Sections 0..7 are the
+census verified 2026-10-17 against `origin/main` `cf809700`, as it was)
 
 A census of what each kind of player install - PC-only, PSX-only (`psx-jp`,
 `psx-us`, `psx-eu-en`, `psx-fr`, `psx-de`), PSP-only (`psp-jp`, `psp-eu`) -
@@ -412,7 +414,138 @@ port's text and the MP3s. It lacks only what a disc adds:
 
 The launcher lists each one, greyed with its reason.
 
-## 8. The NEEDS FIX items after the install-gap round
+## 8. The `gap` rows today
+
+Rewritten 2026-10-31 by the exe-gap round's group AC
+([`exe-gap-round.md`](exe-gap-round.md) 4, "AC"), at `exe-gap/round`
+`657d5a89`, from [`recipes/exe-gaps-accepted.tsv`](../recipes/exe-gaps-accepted.tsv):
+one row per `how = gap` row of `recipes/exe-gaps.tsv` (last regenerated
+2026-10-27; 258 rows, 71 distinct ranges over the seven builds), each with one
+answer and its evidence. `python tools/exe_scan.py --accepted` checks that the
+two files stay in step and is a CI check (`.github/workflows/checks.yml`):
+a regeneration that adds a gap fails until the gap is accounted, and a
+placement that removes one fails until its row is dropped. The statuses of
+2026-10-18 follow, kept whole, under their own heading.
+
+The answers ([`exe-gap-round.md`](exe-gap-round.md) 4, AC):
+
+- **layer** - a language layer writes it (the kind and group);
+- **port-own** - the engine supplies the value itself (the function, or the
+  owner's measured answer);
+- **unread** - no reader, or a reader no route reaches (the disassembly or
+  the read watch);
+- **pending** - an owner's row not yet answered (the owner-review pointer).
+
+Counts per answer per build (`exe_scan.py --accepted`, 2026-10-31):
+
+| Build | layer | port-own | unread | pending | total |
+|---|--:|--:|--:|--:|--:|
+| psx-jp | 17 | 0 | 3 | 0 | 20 |
+| psx-us | 13 | 6 | 28 | 0 | 47 |
+| psx-eu-en | 13 | 6 | 28 | 1 | 48 |
+| psx-fr | 13 | 6 | 28 | 4 | 51 |
+| psx-de | 13 | 6 | 28 | 4 | 51 |
+| psp-jp | 17 | 0 | 4 | 0 | 21 |
+| psp-eu | 14 | 0 | 6 | 0 | 20 |
+| all | 100 | 24 | 125 | 9 | 258 |
+
+"JA" below is the round's group JA (D280, the `ja-JP` layer's kinds 7..15):
+an answer that says "JA, this round" is a layer's answer that holds only once
+JA merges. "PL" is the round's group PL: a row PL places is dropped from the
+list at PL's merge (the check names it); a row PL leaves keeps the answer
+here. The Latin builds are the four Western PSX and psp-eu; the Japanese
+builds are psx-jp and psp-jp. "Reads" is
+[`install-gap-reads.md`](install-gap-reads.md); its run roots (`g_rw`,
+`g_rw2`) are gone, so its tables are the record of the watch.
+
+### The rows today, by family
+
+The families of [`exe-gap-round.md`](exe-gap-round.md) 1. "Ranges" counts
+distinct (lo, hi) pairs and "rows" the file's rows.
+
+**Read by nothing on the image, or by a draw of ours instead:**
+
+| Family | Ranges / rows | Builds | Answer | Evidence |
+|---|--:|---|---|---|
+| `Scena17_EndSteps+0xD4..+0xA10` | 35 / 99 | the four Western PSX | **unread** | DIV-0148: on a Western image `RollEntry` (`src/game/scena_sc15.cpp`) takes the roll's lines, the 14 after them and their text from the layer's kind 17 for `Scena17_ScrollRoll` `0x56D110`; DIV-0102 refuses `original` on a disc-only install; not read on the routes (reads 4.1) |
+| `Encounter_SlotChance+0x1C` (`0x669CCC`) | 1 / 7 | all 7 | **unread** | AU draws the slot blank on every install ([`exe-gap-round.md`](exe-gap-round.md) 7); read in play until AU merges (reads 9.2) |
+| `WardMote_Tilts+0x8` | 1 / 7 | all 7 | **unread** | no reader: past the symbol's `short[4]` extent ([`exe-immediate-places.md`](exe-immediate-places.md) 7); not read on the routes (reads 4.1); PL |
+| `ConfigScreen_OpenStates+0x141` | 2 / 5 | the Latin builds | **unread** | `Config_DrawControllerCell` (`src/game/config_text.cpp`, DIV-0051) draws the icon column under a Latin layer and reads no letter cell of the range; reads 9.6 (sampled); PL |
+
+**A reader no route reaches** (the weak `unread`s: a player who reaches the
+screen reads the zero):
+
+| Family | Ranges / rows | Builds | Answer | Evidence |
+|---|--:|---|---|---|
+| `CommuMusic_LabelC+0x4C` | 2 / 4 | psx-jp, psx-us, both PSPs | **unread** | `CommuMusic_DrawList` `0x45FA80`'s three `Text_DrawFont8` strings (`src/game/rest_4e.cpp` `kGlyphsA..C`), the faerie music player; reads 4.1 (as `CommuMusic_CloseSteps+0x68`, every run's page parked: sampled); [`install-gap-labels.md`](install-gap-labels.md) 4.4; PL |
+| `Area121_BandHeights+0x1` | 1 / 2 | both PSPs | **unread** | `Area121_DrawTopBand` (`src/game/area_w3b.cpp`) reads `Area121_BandHeights[Cond_ByteFE]` in area 121, which no route enters (reads 4.1); PL |
+| `LinkedObjectD_Amounts` | 1 / 1 | psp-eu | **unread** | `LinkedObjectD_Amounts[state]` (`src/game/rest_2a.cpp`, original `0x537CE0`); not read on the routes (reads 4.1, sampled); exe-immediate-places.md 7; PL |
+
+**Written by a language layer:**
+
+| Family | Ranges / rows | Builds | Answer | Evidence |
+|---|--:|---|---|---|
+| `Equip_SlotIcons+0x50..+0x14C` | 10 / 70 | all 7 | **layer** | kind 15 group 10, the formation names (DIV-0064 item 10; `Menu_DrawIconWheel` `0x573F70`); on the Japanese builds JA: a Japanese layer builds no group 10 today |
+| `Char_DefaultRecords` | 1 / 7 | all 7 | **layer** | kind 10 (DIV-0020; `CharNames_Apply`, `src/game/char_names.cpp`); on the Japanese builds JA: kind 10 is not built for a Japanese disc today |
+| `Char_DefaultRecords+0x47C` | 1 / 1 | psp-eu | **layer** | kind 10, the eighth record's name field (DIV-0020, `CharNames_Apply`); PL |
+| `Effect1b_ToggleText+0xC` (`0x66A094`) | 1 / 7 | all 7 | **layer** | kind 15 group 25: `EffectKind55_DrawCount` (`src/game/effect_2g.cpp`) reads the group's slots once written (DIV-0064, 2026-10-30); on the Japanese builds JA: a Japanese layer builds no group 25, so the shipped draw reads the range |
+| `TornadoMote_Phases+0x10` (PSX) / `+0x15` (PSP) | 2 / 7 | all 7 | **layer** | kind 15 group 15 slots 2..5, the Identify words (DIV-0064, DIV-0117; `src/game/magic_s12.cpp` `DrawSmallWords` / `DrawExpLabel` read the slots); on psx-jp and both PSPs the disc's `MAGIC060.EMI` has no words, so the empty slots draw the range; PL |
+| `BattleE1_GuestHeadOut+0x8`, `Effect1b_ToggleText+0x10`, `CommuRank_Modes+0x8C` | 3 / 6 | the Japanese builds | **layer** | JA, this round (D280) |
+| `ConfigScreen_OpenStates+0x141` | 1 / 2 | the Japanese builds | **layer** | JA: under `ja-JP` `Config_DrawControllerCell`'s Japanese-icon path still draws the letter cells from the range (DIV-0051's 2026-10-21 amendment); PL |
+
+**The engine's, by the owner's answer:**
+
+| Family | Ranges / rows | Builds | Answer | Evidence |
+|---|--:|---|---|---|
+| `EffectKind66_States+0x18 / +0x20 / +0x28`, `Rest3e_Windows+0x14 / +0x18 / +0x1C` | 6 / 24 | the four Western PSX | **port-own** | the PC's numbers, which psp-jp and psp-eu hold too; measured 2026-10-31, [`exe-gap-round.md`](exe-gap-round.md) 7 |
+
+**The owner's, still open:**
+
+| Family | Ranges / rows | Builds | Answer | Evidence |
+|---|--:|---|---|---|
+| `CommuMusic_LabelC+0xC / +0x24 / +0x2E / +0x4A` | 4 / 9 | psx-fr, psx-de (all four); psx-eu-en (`+0x4A`) | **pending** | [`owner-review.md`](owner-review.md) "2026-10-18, the install-gap round": the FR / DE music-player labels (then `CommuMusic_CloseSteps+0x28` / `+0x40` / `+0x66`); [`install-gap-labels.md`](install-gap-labels.md) 4.4 |
+
+### What the accounting found
+
+Against the 2026-10-18 statuses below and the round doc:
+
+- **`CommuMusic_LabelC` has census rows**, under its old name. The round
+  doc's section 1 says "no census row", but the same addresses are
+  `CommuMusic_CloseSteps+0x28` / `+0x40` / `+0x66` / `+0x68` in 4, 8.4 and
+  reads 4.1 (the typed-data rounds renamed the symbols). Its FR / DE labels
+  are an **owner's row still open** in `owner-review.md`, so they are
+  `pending`, not the "none today" the round expected. The `+0x4C` glyph
+  strings (8.4's "NEEDS FIX - P3, the three glyphs") have a reader no route
+  reaches.
+- **The other renames**: `CommuName_RecordNames+0xF0` is now
+  `Effect1b_ToggleText+0xC`, `CommuName_RecordNames+0xF4` is
+  `Effect1b_ToggleText+0x10`, and `Encounter_SlotChance+0x38` is
+  `BattleE1_GuestHeadOut+0x8`. The addresses are the same.
+- **Overturned 2026-10-18 statuses**:
+  - `Scena17_EndSteps` (8.7, OWNER CALL) is **unread** since DIV-0148
+    (2026-10-20);
+  - the Western u16 fields (8.4 item 11 and 8.5, OWNER CALL) are
+    **port-own** by the owner's answer of 2026-10-31;
+  - `Encounter_SlotChance+0x1C` (8.2, OWNER CALL) is **unread** once AU
+    merges;
+  - `0x66A094` (8.5, OWNER CALL) is **layer**, group 25 (2026-10-30);
+  - `TornadoMote_Phases+0x10` (8.5, "a `language` row by nature, for LA's
+    layer") is written by group 15's slots on the Western PSX builds; on
+    psx-jp and both PSPs the empty slots still draw the zero;
+  - `ConfigScreen_OpenStates+0x141` (8.5, no status: "the bytes after D282's
+    row tables") holds the controller panel's letter cells, which a Latin
+    layer does not read and the `ja-JP` path does.
+- **The round doc's count of `Scena17_EndSteps`** is 37 ranges. The file has
+  35 distinct (lo, hi) pairs (99 rows), and with 35 the families sum to the
+  71 distinct ranges the doc also gives.
+
+### The statuses of 2026-10-18 (sections 8.0..8.7, kept whole)
+
+What follows is section 8 as the install-gap round left it, with its headings
+one level down and its first part numbered 8.0. It is the record, not the
+status: the status is the list above.
+
+#### 8.0 The NEEDS FIX items after the install-gap round
 
 Rewritten 2026-10-18 at the end of the install-gap round
 ([`install-gap-round.md`](install-gap-round.md); stages A and B merged on
@@ -436,7 +569,7 @@ kinds), with DIV-0103's (the PSP's screen margins), DIV-0069's (D286's FR /
 DE headings) and DIV-0064's (D289 and groups 20..23, the owner's confirmation
 pending).
 
-### 8.1 Before and after: the `gap` rows
+#### 8.1 Before and after: the `gap` rows
 
 `recipes/exe-gaps.tsv`'s `gap` class, as rows / bytes / the PC's non-zero
 bytes, counted from the recipe against `bof3\BOF3.exe`'s `.data` (scratch
@@ -483,7 +616,7 @@ builds and stay `gap` / `language-zero` under ja-JP. The `unread` gains are
 `MasterWin_Requirements+0x44` (FP 7) and `SKILL` at `0x664290` (LA 2.3). The
 `keys` row is unchanged.
 
-### 8.2 The ten rows read in play while zero (RW)
+#### 8.2 The ten rows read in play while zero (RW)
 
 RW's watch, run over the attract, ten routes and targeted runs on the seven
 installs (RW 0), and their status on the round's tip:
@@ -509,7 +642,7 @@ CALL), and the fishing label is a second path to D279 (CW 3.2). The watch was
 run before stages A and B merged; it is to be re-run on the merged branch
 before I43 step 4.
 
-### 8.3 P1 - a screen or gameplay effect on a common path
+#### 8.3 P1 - a screen or gameplay effect on a common path
 
 1. **FIXED 2026-10-17 (D310).** Level-up ability names `0x654900` (Western PSX).
    OT found that `immref` would place a disc copy from `SCENA10.EMI` on PSX-US.
@@ -531,7 +664,7 @@ before I43 step 4.
 9. **FIXED 2026-10-17 (D310).** Countdown and counter formats.
 10. **FIXED 2026-10-17 (D267, D268).** Meteor Strike lifts, `AREA111`'s overreach.
 
-### 8.4 P2 - twins the disc search locates, PSP values read every area
+#### 8.4 P2 - twins the disc search locates, PSP values read every area
 
 11. The disc-unplaced rows with windows found (TW, twins 1 to 3):
     - **FIXED:**
@@ -587,7 +720,7 @@ Added by the round:
     for sub-song 2, after a render confirms the pairing. It needs a ledger
     entry. RD 3.
 
-### 8.5 P3 - the long tail
+#### 8.5 P3 - the long tail
 
 **FIXED by the round:**
 
@@ -713,7 +846,7 @@ Rows still in the file that this list never named keep the status sections
 `ConfigScreen_OpenStates+0x141` is the bytes after D282's row tables, split
 off section 5's IN FLIGHT row by D282's fix.
 
-### 8.6 P4 - find a reader first
+#### 8.6 P4 - find a reader first
 
 - **HARMLESS (unread).** `Music_LoadedTrack+0x1E30`. It is the tail of the PSX
   title overlay's lists, which the PC never reads; it was not read on the attract
@@ -722,7 +855,7 @@ off section 5's IN FLIGHT row by D282's fix.
 - `ConfigMenu_Steps+0xC` (PSP): a reader found, now P2 item 14, **FIXED**.
 - Song 166: now P2 item 16, **NEEDS FIX** (D320).
 
-### 8.7 The owner's
+#### 8.7 The owner's
 
 These are unchanged from 2026-10-17:
 

@@ -1,7 +1,8 @@
 # The ledger-fields round: staging (IDEAS I33, early decision 1)
 
-**Status:** STAGES A..C DONE (2026-10-28, on `ledger-fields/round`, unpushed;
-stage D not briefed. The "as run" sections of 2, 3 and 4 say what landed.)
+**Status:** DONE (2026-10-28: stages A..C on `ledger-fields/round`, merged as
+PR #162; stage D the same day, merged as PR #164. The "as run" sections of 2,
+3, 4 and 5 say what landed.)
 
 The owner's word, 2026-10-27: stage "the ledger kinds work" as a round. The
 source is [`IDEAS.md`](IDEAS.md) I33's first early decision - *tag the

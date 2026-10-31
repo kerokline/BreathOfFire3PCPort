@@ -1,10 +1,11 @@
 # Quicksaves: the snapshot core (F6, F7, `BISLPS1X.DAT`)
 
-**Status:** IN PROGRESS (2026-10-19, the quicksave round's group SN, branch
+**Status:** BUILT (2026-10-19, the quicksave round's group SN, branch
 `quicksave/sn`; built, self-tested headless in the exe host, measured
-in-process once - section 8. Audio and graphics have no participant yet:
-a quick-load is visibly and audibly imperfect there until stage B, by
-design of the round. Not played by the owner.)
+in-process once - section 8. Stage B added the graphics and audio
+participants the same day (sections SP-G and 10) and the F5 menu (QM);
+the round merged as PR #95, [`quicksave-round.md`](quicksave-round.md).
+Not played by the owner.)
 
 The round's plan is [`quicksave-round.md`](quicksave-round.md); SC's census
 of what lives outside the span is [`quicksave-census.md`](quicksave-census.md)

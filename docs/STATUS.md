@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-29)
+**Status:** IN PROGRESS (2026-10-31)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -8,9 +8,43 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**The dock's legend words, 2026-10-30 evening** (on `loc/ship-parts-menu`; DIV-0190). The owner's new recording `shipPartsMenu.txt` reached the dock's parts menu (area 128) under en-US with its button legend still the area page's Japanese paint (○…決定 / ×…終了 / △…メモを見る), the one screen text no layer touched. Every Western disc repainted the three words on its own page and nothing else there (US / EU / PSP-EU `OK` / `End` / `Memo`, French `Fin`, German `Ende` / `Notiz`; the JP disc's page the PC's), so `loc_build.py` now carries the panel's word columns into `<tag>.AREA128.DAT` as DIV-0088 carries the village board's buttons, the icon column kept the port's for DIV-0137's cell reading ([`rest_3e.md`](rest_3e.md) 11.7). Seen in the replay under en-US, fr-FR and de-DE; owed the owner's eye on their own install.
+**The exe-gap round, 2026-10-31** (built on `exe-gap/round`, unpushed, PR at the owner's word;
+[`exe-gap-round.md`](exe-gap-round.md) 4a). Staged in the morning (re-measured: 71 distinct `gap` ranges, 20..51 a
+build) and run the same day by five Opus agents: **AC** wrote `recipes/exe-gaps-accepted.tsv`, an answer and a
+pointer for every `gap` row of a disc-built image, with a CI check; **AU** gave disc-only installs the loss tune
+(DIV-0192, D320), blanked the empty save slot everywhere (DIV-0193), took the European disc's own eight area banks
+(DIV-0194, D257) and did the disc-only review's notes; **PL** placed three more families from the discs and the six
+Western layout fields as regional twins (DIV-0195, the owner's call), and made the Identify words the engine's own
+(a psp-jp install drew no EXP label); **JA** built the `ja-JP` layer's kinds 7..15 from the Japan disc, so the PC
+under `ja-JP` and the Japanese disc-only installs draw Japanese where they drew the port's Chinese or nothing (D280,
+nine entries amended); **ST** made the image carry each gap's answer and the engine refuse, by default, a disc-built
+image with an unanswered gap or one built by an older release (DIV-0101 amended; `BOF3X_EXEIMAGE_STRICT=0` runs
+it). Gap rows a build are 40 / 41 / 44 / 44 / 18 / 18 / 16, all accounted, 9 pending for the owner. Every disc-built
+install is rebuilt at its next start. **The end batch passed whole** (77 route runs on the seven rebuilt installs under
+the default, the read watch at 0 of 60 ranges read, the PC install's state hash with no game-page difference; the
+round doc's 9a). After it, DIV-0196: the Config screen's label column left-aligned at the row box under a Japanese
+layer, the owner's rule on JA's sheets, seen and approved. Owed the owner: the listens, DIV-0195's boxes, the word
+on a fresh orig4 re-record.
 
-**The no-fail minigames cheat, 2026-10-30** (on `cheat/no-fail-minigames`, off `main` `494c270a`, the PR #171 merge; DIV-0188). The owner's call: one switch, `cheat.no_fail=1` / `BOF3X_NO_FAIL=1`, under which a minigame cannot be lost, each minigame joining as a recorded route reaches it - the rope pull (`Area75_PhasePlay`'s judgement skipped) and the lighthouse valve (effect kind `0x45`'s, `EffectKind45_Tune` / `_Aim`) first, from the owner's two recordings of that morning (`ropeMiniGame.txt`, `lighthousePowerMiniGame.txt`, [`button-routes.md`](button-routes.md) 5), each seen to lose without the switch and go on with it. The cheats on two pages of the Cheats sub-tab (a third row of buttons, Page 1 / Page 2, the owner's word), the sub-tabs placed per tab. Headless: the `area_w1f` and `effect_2d` fuzzes differ in the three guarded functions alone under the switch, the whole shadow self-test at 0 without it; [`cheats.md`](cheats.md) 7. **The afternoon:** the chop joined the switch from the owner's `bunyanHouseChoppingMiniGame.txt` (`EffectKind55_Finish`, the clock effect's judgement), and the one-glyph word after the chop's count - the owner's catch in that recording - became DIV-0064's group 25: the West's own layout (the count alone in the narrower box) read off every disc's `AREA008.EMI` and PSP-EU's `BOOT.BIN`, the Japanese build's glyph only under its own layer ([`install-gap-labels.md`](install-gap-labels.md) 4.3's open row closed).
+**Mt. Zublo and Mt. Levett passable on the world map, 2026-10-30 night, merged as PR #175** (`main` `43e98773`; DIV-0191,
+switch `MountainPasses`; [`mountain-passes.md`](mountain-passes.md)). The owner's request of the evening: once the way
+through is open, the two mountains should not need their area walked every time. Zublo's drawn walkway (four cells
+beside the volcano's doors) is made passage from chapter 9, its doors' links armed on approach (the first build's
+road faulted the plate's unbounded place search, now bounded in three maps' `PlateShow`), the strip's party members
+drawn ahead; Levett's hidden blocking object is dropped once the party has crossed area 70 door to door, recorded in a
+byte of ours in the save block (`+0x1040`). Read live on the owner's chapter-10 game with `tools/cell_peek.py`; six builds
+by the owner's eye, approved ("Brilliant"). A child-era save keeps Zublo's wall.
+
+**The consumables sorted by id, 2026-10-30, merged as PR #173** (DIV-0189, switch `ItemSortById`;
+[`rest_2e.md`](rest_2e.md)). The owner's call: the Items screen's `NormalItem` / `CombatItem` rows only partition
+the list by a flag bit and leave each half in pick-up order, so within each half the entries now sort by item id (the
+EMI's order: healing, throwables, boosts, odds and ends, fish, Momo's parts). The passes, the other sorts and the
+hand-arranging are unchanged; a hand-written type order is the possible next step. Headless: the `rest_2e` fuzz at 0
+mismatches with the switch armed after the self-test. Not yet played.
+
+**The dock's legend words, 2026-10-30 evening, merged as PR #174** (DIV-0190). The owner's new recording `shipPartsMenu.txt` reached the dock's parts menu (area 128) under en-US with its button legend still the area page's Japanese paint (○…決定 / ×…終了 / △…メモを見る), the one screen text no layer touched. Every Western disc repainted the three words on its own page and nothing else there (US / EU / PSP-EU `OK` / `End` / `Memo`, French `Fin`, German `Ende` / `Notiz`; the JP disc's page the PC's), so `loc_build.py` now carries the panel's word columns into `<tag>.AREA128.DAT` as DIV-0088 carries the village board's buttons, the icon column kept the port's for DIV-0137's cell reading ([`rest_3e.md`](rest_3e.md) 11.7). Seen in the replay under en-US, fr-FR and de-DE, and by the owner on their own install on 2026-10-31.
+
+**The no-fail minigames cheat, 2026-10-30, merged as PR #172** (off `main` `494c270a`, the PR #171 merge; DIV-0188; the two Cheats pages, a rope pull with the box on and the chop's count box seen by the owner on 2026-10-31). The owner's call: one switch, `cheat.no_fail=1` / `BOF3X_NO_FAIL=1`, under which a minigame cannot be lost, each minigame joining as a recorded route reaches it - the rope pull (`Area75_PhasePlay`'s judgement skipped) and the lighthouse valve (effect kind `0x45`'s, `EffectKind45_Tune` / `_Aim`) first, from the owner's two recordings of that morning (`ropeMiniGame.txt`, `lighthousePowerMiniGame.txt`, [`button-routes.md`](button-routes.md) 5), each seen to lose without the switch and go on with it. The cheats on two pages of the Cheats sub-tab (a third row of buttons, Page 1 / Page 2, the owner's word), the sub-tabs placed per tab. Headless: the `area_w1f` and `effect_2d` fuzzes differ in the three guarded functions alone under the switch, the whole shadow self-test at 0 without it; [`cheats.md`](cheats.md) 7. **The afternoon:** the chop joined the switch from the owner's `bunyanHouseChoppingMiniGame.txt` (`EffectKind55_Finish`, the clock effect's judgement), and the one-glyph word after the chop's count - the owner's catch in that recording - became DIV-0064's group 25: the West's own layout (the count alone in the narrower box) read off every disc's `AREA008.EMI` and PSP-EU's `BOOT.BIN`, the Japanese build's glyph only under its own layer ([`install-gap-labels.md`](install-gap-labels.md) 4.3's open row closed).
 
 **The enemy-information cheat, 2026-10-29, merged as PR #169** (off `main` `628aa521`, the PR #167 merge). A player asked for every enemy's HP bar shown; the owner named the lever, the enemy record's "discovered" byte `+0x8F`, which the HP gauge and Identify's panel read and which the original copies from the save's "kind beaten before" bit set (0 for a boss). **DIV-0187:** `cheat.enemy_info=1` / `BOF3X_ENEMY_INFO=1` makes `Battle_SetupEnemy` and `Battle_PlaceBossActor` write 1, so every enemy and every boss shows its gauge and its stats from the first meeting; the save's bit set is untouched. A box on the Cheats sub-page beside Steal; off by default; a Fatal when a writer is left as Capcom's. Headless checks in [`cheats.md`](cheats.md) section 6; not yet played.
 
@@ -91,7 +125,7 @@ No DIV or D number came of it. The owner's calls and looks are in [`owner-review
 - **The ledger-fields and relocatable-image rounds staged** (PR #157, docs only;
   [`ledger-fields-round.md`](ledger-fields-round.md), [`relocatable-image-round.md`](relocatable-image-round.md)):
   the ledger-fields round run and merged on 2026-10-28 (PRs #162 and #164, above); the relocatable-image round
-  run 2026-10-28..29 (the top of this section, unpushed).
+  run 2026-10-28..29 and merged as PR #168 (above).
 - **After PR #157:** the away day (PR #158, above); D42, the world map's opaque dial, drawn semi-transparent as on
   the PlayStation (PR #159, DIV-0184); the boss sweep (PR #161, [`boss-sweep.md`](boss-sweep.md)): the `battle ID` op,
   crafted pre-fight saves and `spell_sweep.py run --fight`, fifteen fights played to the death on PC, US-disc and
@@ -104,7 +138,8 @@ No DIV or D number came of it. The owner's calls and looks are in [`owner-review
 - **Issue fixes:** #149, Bone Dance's beat lengths on disc-built installs and area 108's cart put back at the area's
   load (PR #151, DIV-0182); #142, the dragon-zombie puddle drawn whole (PR #145, DIV-0125 amended) and Ryu's turning
   in the Dauna Mine exchange, the port's stale cell-texture cache (PR #148, DIV-0181, D360); #132, Garr's spear over
-  Ryu at the camp (PR #146, DIV-0071 amended); #152, the faerie board's Yes / No tile (PR #154, DIV-0027 amended);
+  Ryu at the camp (PR #146, DIV-0071 amended); #141, Garr's block in Angel Tower, the model box (PR #171, DIV-0071
+  amended again, D398); #152, the faerie board's Yes / No tile (PR #154, DIV-0027 amended);
   #139, #130 and #134, a disc-built install's missing or wrong exits (PRs #144 and #136,
   [`exe-import-engine.md`](exe-import-engine.md) 7.8, 7.9); #121, the lift stall under instant text (PR #135,
   DIV-0158's pacing floor, D357) with the console flash's 32-bit wrap (DIV-0178, D358); #118 and #120 (PR #129,
@@ -792,8 +827,9 @@ widescreen choices taken at our 53 columns (DIV-0041), and the owner's visual fi
    (DIV-0055). Japanese names use pair codes (DIV-0057), and a layout switch
    keeps the original's full-width layout for `ja` / `zh` (DIV-0056).
    Japanese is seen by capture only; French and German are captured on the
-   world map only. Still Chinese: the exe's own strings in Japanese mode,
-   some labels and headers, and text in artwork
+   world map only. Still Chinese: some labels and headers, and text in artwork
+   (the exe's own strings in Japanese mode are the Japan disc's since the exe-gap round's group JA,
+   2026-10-31, D280)
    ([`HANDOFF.md`](HANDOFF.md)). What this means in detail is the owner's to
    say; the asset side of selectable languages is surveyed below ("A stated
    goal worth recording now"), and any swap is a divergence in the ledger
@@ -959,9 +995,10 @@ an unrecognised disc can be named rather than guessed at.
   few to fit a cutoff.
 - **The away day's calls (2026-10-13)** - [`owner-review.md`](owner-review.md), "2026-10-13, the away day": the
   disc-data inventory's Q6 and Q7, the arenas and Ryu's byte (D288), the Western weakness row, the hi-lo count, the
-  US title layout (D277), a `ja-JP` layer for the exe's strings and the Japanese fishing crash (D279, D280), wide
-  and `Rand` (D283), D255's fix (built 2026-10-16 as DIV-0129, `fix/psx-only-1016`), the key icons' five
-  questions, the two headerless recipes' saves, the Western title mark (D266).
+  US title layout (D277), wide and `Rand` (D283), the key icons' five questions, the two headerless recipes'
+  saves. Answered and built since: D255's fix (DIV-0129, 2026-10-16), the Japanese fishing crash (D279,
+  DIV-0144, 2026-10-18), the Western title mark (D266, PR #98, 2026-10-20) and the `ja-JP` layer for the exe's
+  strings (D280, the exe-gap round's group JA, 2026-10-31).
 - ~~**Phase 3 subsystem order.**~~ Moot since 2026-10-06: the game's own code is all ours (PR #43), and the
   platform layer followed through state 3 (#53).
 

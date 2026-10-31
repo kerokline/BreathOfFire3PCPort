@@ -76,6 +76,12 @@ python tools/seq.py check                                     (synthetic round t
     exactly at its length. All 165 pass.
   - **Song 165** is added: `BGMBAT00.EMI` sub 1
     ([`bgm-comparison.md`](bgm-comparison.md) 6.3).
+  - **Song 166** is added since 2026-10-31 (the exe-gap round, group AU;
+    D320): `BGMBAT00.EMI` sub 2, the loss tune `BattleEnd_LossBanner`
+    `0x431550` asks for - the PlayStation's loss twin plays the battle
+    bundle's sub 2. Its events equal `BGM082`'s sub 2 (table song 86). So
+    a disc cache holds 167 songs, `000..166`; the counts below are the
+    2026-10-08 measurement's, before it.
   - The table read equals `inventory.json`'s table in 165 of 165 (file and
     sub).
 
@@ -109,7 +115,7 @@ python tools/seq.py check                                     (synthetic round t
 
 - **Song 21** (`BGM019` sub 0) is written: 399 events, loops at 18..1554.
   The PC has no file for it (D24).
-- **`166`** has no sequence and gets no file.
+- **`166`** had no sequence and got no file until 2026-10-31; it is `BGMBAT00`'s sub 2 now (section 1).
 - **No table song is an empty placeholder.** Every one of the 166 has at
   least one sounding note-on. The thinnest are drones: song 49 (`BGM041`
   sub 0) is two held notes, released by the note-ons with velocity 0 that

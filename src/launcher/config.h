@@ -546,7 +546,8 @@ struct PresetPlan {
 // in `game_dir` with the settings `cfg`. Reads the environment (a variable it
 // has is kept) and the install (the install rules: music=pc needs BGM\*.DAT;
 // music=psx and psp a cache with those songs; BOF3X_CACHE_DATA=0 and
-// BOF3X_EXEIMAGE_STRICT=1 a PC install, BOF3.exe in `game_dir`); an
+// BOF3X_EXEIMAGE_STRICT=1 - every gap refused, the accepted ones too; the
+// engine's default refuses only an unanswered one - a PC install, BOF3.exe in `game_dir`); an
 // opt= value only overrides an empty opt= (the launcher's default list, the
 // case the ledger's ini:opt=none is written for); an env: value is kept where
 // an ini value of the same plan decides that variable (music=pc and

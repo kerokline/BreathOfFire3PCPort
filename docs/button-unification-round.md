@@ -3,7 +3,7 @@
 **Status:** DONE (staged 2026-10-17 against `origin/main` `8382691d`; every
 group built and merged into `buttons/round` the same day and validated by
 RC's routes on the four install kinds, [`button-routes.md`](button-routes.md)
-9..9.2; the round's end on `buttons/round-end`, not yet a PR. Ledgered as
+9..9.2; the round's end on `buttons/round-end`; merged as PR #85. Ledgered as
 DIV-0133..0141, defects D312..D315; owed: the six minigame starts recorded
 from RC's placed saves and the owner's eye on the contact sheets, section
 5.2.)

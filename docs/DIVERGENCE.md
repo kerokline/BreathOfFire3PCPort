@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 191 entries, DIV-0001..0191, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 196 entries, DIV-0001..0196, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -1141,6 +1141,25 @@ designed in rather than bolted on.
   the six label operands and the two anchor bytes from the original's code at
   every call, so this entry's patches hold for ours unchanged; no behaviour
   moved. Not yet seen in game through ours.
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** under `ja-JP` a
+  kind-7 chunk too, from the Japan disc's `START.EMI` (`loc_build.py`
+  `convert_config_ja`): the seventeen option records before the row tables,
+  a count of characters, the x and the string - the count and x the PC's own
+  values (the PC's layout is the Japanese build's); the six row labels the
+  row draw's twin names (JP `0x801E2738`, a `lui` / `addiu` and a copy each)
+  ending at the gap table its code reads; the six controller records of 21
+  bytes after it (a count of characters, then the string). Two bytes a
+  character in the `ja-JP` font, so the PC's own arithmetic - which centres
+  a two-byte label as it centres the Chinese ones - stands: no layout patch
+  under `ja-JP` (`Lang_Latin` is false). The panel's L1 / R1 cell: the
+  Japan disc draws its capital L or R with its small-font 1 beside it (the
+  cell's twin `0x801E2F78`, the one-character strings after the four
+  `0x15 0x08..0x0B` icon codes); DIV-0051's 2026-10-21 amendment, which
+  draws the disc's own small L1 / R1 cells there, stays. On PSP-JP the same
+  module from the UMD (the Japan disc's, D280): its six labels and the two
+  Sound-row options are not in `BOOT.BIN`, whose own screen has no Sound
+  row (DIV-0141's), so the PlayStation's words are the ones the PC's screen
+  has rows for.
 - **Reversible?** play without `BOF3X_LANG`, or delete `en.FIRST.DAT`;
   `BOF3X_ORIGINAL=ConfigText` leaves all thirteen operands alone - the six
   label pointers and the seven layout numbers - so the labels stay Chinese and
@@ -1150,7 +1169,7 @@ designed in rather than bolted on.
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes - `BOF3X_ORIGINAL=ConfigText` leaves the options and the controller names in the overlay's language (for A/B)
 - **Toward:** psx - the PlayStation's own text, its quirks included (above)
-- **Languages:** en-US, en-150, fr-FR, de-DE - kind 7 is not built for a Japanese disc (`tools/loc_build.py` `build_all`); PSP-EU's is DIV-0141's
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - `ja-JP` since D280 (2026-10-31, `convert_config_ja`); PSP-EU's is DIV-0141's
 - **State:** active
 - **Checked:** the extractor reproduces the owner's screenshot of the
   PlayStation screen string for string (2026-09-20), and a read-only
@@ -1317,13 +1336,18 @@ designed in rather than bolted on.
   label two units a character left of centre.
 - **Also in the PSX version?** Yes - these are the PlayStation's strings; the
   US verbs are abbreviated to fit its buttons.
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** under `ja-JP` the
+  22 verbs from the Japan disc's `START.EMI`, found as the US disc's are (the
+  PC's own set records end the pointer table), two bytes a character in the
+  `ja-JP` font; the centring stays the original's (DIV-0056). PSP-JP: the
+  UMD's module.
 - **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=MenuVerbs` keeps
   the original centring (for A/B only - the English labels then sit left).
 - **Switch:** lang
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes - `BOF3X_ORIGINAL=MenuVerbs` keeps the centring only (for A/B)
 - **Toward:** psx - the PlayStation's strings (above)
-- **Languages:** en-US, en-150, fr-FR, de-DE - kind 8 is not built for a Japanese disc; the centring is under `Lang_Latin` (`src/game/menu_verbs.cpp:140`)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - `ja-JP` since D280 (2026-10-31); the centring is under `Lang_Latin` (`src/game/menu_verbs.cpp:140`)
 - **State:** active
 - **Checked:** the chunk's 22 slots are validated against the pointer table
   before any write; captured by input recipe 2026-09-21 on the Config screen
@@ -1359,12 +1383,15 @@ designed in rather than bolted on.
   `0x64E2C8`, which is how `loc_build.py` finds them. The owner chose the
   disc's wording over authored English.
 - **Also in the PSX version?** Yes - the PlayStation's strings.
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** under `ja-JP` the
+  seven labels from the Japan disc's `BATTLE.EMI`, the eight-byte slots
+  right before the box table as on the US disc, two bytes a character.
 - **Reversible?** play without `BOF3X_LANG`.
 - **Switch:** lang
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes
 - **Toward:** psx - the PlayStation's strings (above)
-- **Languages:** en-US, en-150, fr-FR, de-DE - kind 9 is not built for a Japanese disc (`tools/loc_build.py` `build_all`)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - `ja-JP` since D280 (2026-10-31)
 - **State:** active
 - **Checked:** captured by `tools/recipes/battle_commands.txt`, 2026-09-21:
   all seven, each in its box, Chg on L1 and Esc on R1. Still Chinese in the
@@ -1398,12 +1425,22 @@ designed in rather than bolted on.
 - **Also in the PSX version?** Yes - the PlayStation's default names; the
   PlayStation also asks for Ryu's, which the port does not
   ([`save-interchange.md`](save-interchange.md) §2).
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** under `ja-JP` the
+  eight default names from the Japan disc's `START.EMI` records (a name of
+  five, the same tails) and the merchant's from its fishing module, each
+  paired from its end until it fits (DIV-0057's rule for names): the
+  merchant's and character 2's five characters need one pair code each, the
+  other seven fit as they are. The whelp's reset copy at `0x42E090` copies
+  the whole name and its NUL when it is longer than Capcom's five (six or
+  more bytes in the `ja-JP` font; DIV-0118's amendment, `NameCopy`); every
+  name of the PC's and of a Latin layer is at most five, so the copy is five
+  for them as before.
 - **Reversible?** play without `BOF3X_LANG`.
 - **Switch:** lang
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes
 - **Toward:** psx - the PlayStation's default names; it also asks for Ryu's, which the port does not (above)
-- **Languages:** en-US, en-150, fr-FR, de-DE - kind 10 is not built for a Japanese disc (`tools/loc_build.py` `build_all`)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - `ja-JP` since D280 (2026-10-31)
 - **State:** active
 - **Checked:** captured 2026-09-21 in the new game's battle: "Whelp" in the
   turn banner and the status bar. **Not changed: saves.** A loaded save
@@ -3948,12 +3985,18 @@ designed in rather than bolted on.
   port's glyphs, 2026-09-24. **Confirmed by the owner in game the same day
   with the disc's EX: "the EX looks good now".** **Owed:** a message banner
   (Attack, Critical, ...) seen in game.
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** under `ja-JP` the
+  twelve messages from the Japan disc's `BATTLE.EMI`: eight-byte slots, the
+  second and fourth the two extra-turn suffixes (a space and two `0x15`
+  codes, the disc's own glyphs in the `ja-JP` font), the first slot read by
+  the module's code (`0x801EAFB0`, by `0x801DE92C`; `convert_battle_messages_ja`).
+  The longest is ten bytes encoded, inside the copy's twelve.
 - **Reversible?** play without `BOF3X_LANG`.
 - **Switch:** lang
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes
 - **Toward:** psx - the PlayStation's strings and copy length
-- **Languages:** en-US, en-150, fr-FR, de-DE - kind 12 is not built for a Japanese disc (`tools/loc_build.py` `build_all`)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - `ja-JP` since D280 (2026-10-31, `convert_battle_messages_ja`)
 - **State:** active
 
 ### Enemy names in the overlay's language
@@ -4260,6 +4303,15 @@ designed in rather than bolted on.
   - **Self-tests:** `text_draw` 6,000 strings, `menu_windows` 74,000
     rounds, `battle_windows` 66,000 rounds, all 0 mismatches.
   - **English is unchanged:** 245 of 245 files.
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** the default
+  character names and the merchant's are paired too (DIV-0020's
+  amendment): character 2's five characters and the merchant's. Unlike the
+  item and enemy names these reach the save (the character records), so a
+  save keeps the pair code's number; the layer's pairs are numbered in build
+  order and these are taken last (`convert_exe_ja` runs after the names), so
+  a rebuild of the same layer gives the same numbers. A layer whose earlier
+  pairs change would renumber them (a finding of the round, described in its
+  report).
 - **Reversible?** play without `BOF3X_LANG`, or in any other language.
 - **Switch:** lang
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
@@ -5020,13 +5072,38 @@ designed in rather than bolted on.
   the reader over the seven discs (the four Western `AREA008.EMI`s `0x22` /
   `0xD1` / none, the three Japanese-build ones `0x2E` / `0xCD` / `0xE5` with
   the glyph; PSP-EU's `BOOT.BIN` `0x22` / `0xD1` / none); a PC install copy with an `en-US` layer built from this branch and the US disc (`loc_build.py all`, its report `chop count 2`; root `C:\Users\kerok\bof3x-runs\rope1030\pc`, the game's `capcom.avi` beside it for the disc probe), the owner's chop recording replayed on it with a frame every 60 through the chop (`sheet_chop_layer_box.png`): the log `DIV-0064: 2 of 2 chop count`, the box the narrower one, the count alone in the dialogue font's digits (12, 14, 16 ... 20), no glyph after it; the same recording on the owner's install (its layer built before this group) draws the wide box, the 12 px numerals and the glyph as before.
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** a `ja-JP`
+  layer carries the groups from the Japan disc's own tables
+  (`convert_exe_ja`, `convert_labels` under `donor_ja`), two bytes a
+  character: 1 (the second status word does not fit its 8-byte slot, whose
+  readers are eleven immediates in the code, and stays as shipped), 2 (the
+  Japan disc's slots 8, 8, 4, 8), 3..7, 9..14, 16, 17, 19, 20, 24, 25 and the
+  new 26; 21..23 are not sent (the PC's bytes are the Japan disc's ASCII
+  words). A PSP-JP layer reads the UMD's modules (the Japan disc's) and
+  takes group 15 from its `MAGIC060.EMI` as PSP-EU's does, so the Identify
+  panel there draws its words where it drew only the target's name. Found where the disc's code reads them: the village lists by the
+  board's two list draws (`COMMU01.EMI`, strides 6 and 5, three characters,
+  no NUL where the word fills its slot), the count word and the hi-lo
+  game's titles and choices by their reads (`village_ja`), the turn words by
+  fight 26's routine (`turn_words_ja`). A word the `ja-JP` font cannot fit
+  in its slot takes the one-byte slots for its Latin capitals, digits and
+  signs (`ja_compact`). In the DLL: group 8 now goes into buffers behind its
+  one reader, the table `0x66B36C` (the Japan disc's second choice is six
+  characters); group 20 into a buffer of 32 that our `EffectKind5E_DrawMenu`
+  prints through `Labels_Slot` (fifteen characters, 31 bytes with the NUL,
+  where the slot `0x66A098` holds 20 - so the row
+  `Effect1b_ToggleText+0x10` stays zero on the Japanese images and is read
+  by nothing; every Latin layer's title moves to the buffer too and is
+  drawn the same); group 26 writes fight 26's two words in place at
+  `0x669D10` / `0x669D18` (witnessed by `0x669D20` / `0x669D24`), drawn by
+  `Boss26Fx_DrawCount`'s original path, whose layout is the Japan disc's.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
 - **Switch:** lang
 - **Default:** on - under its languages; the launcher's language starts at `original` on a PC install (`src/launcher/config.h` `Config::language`), at the first held language on a disc-only one (DIV-0102)
 - **Player:** yes
 - **Toward:** psx - the US disc's own strings in its own slots
-- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - the Latin layers' groups; a Japanese layer carries groups 15 and 24 (`tools/loc_build.py` `build_all`)
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - the Latin layers' groups and, since D280 (2026-10-31), a Japanese layer's (`tools/loc_build.py` `convert_exe_ja`)
 - **State:** active
 
 ### The battle equip window's stat labels beside their own values
@@ -8250,10 +8327,94 @@ designed in rather than bolted on.
 
 - **Switch:** env:BOF3X_EXEIMAGE_STRICT=1
 - **Default:** on
-- **Player:** yes - `BOF3X_EXEIMAGE_STRICT` (`src/hook/exe_image.cpp`) refuses a disc-built image with a gap; the default runs it
+- **Player:** yes - `BOF3X_EXEIMAGE_STRICT=1` (`src/hook/exe_image.cpp`) refuses a disc-built image with any gap; the default runs the gaps `recipes/exe-gaps-accepted.tsv` answers and refuses the rest (`=0` runs every gap, logged)
 - **Toward:** none - the PlayStation's executable carries its own tables ("Not applicable" above)
 - **Languages:** any
 - **State:** active
+- Amended 2026-10-31 (the exe-gap round, group PL; [`exe-gap-round.md`](exe-gap-round.md)
+  section 4): four placements of bytes the PC has and a disc carries, and one
+  engine-own region.
+  - **A string piece of an owning-function region** (`exe_tables.imm_strings`):
+    where no whole-region row fits, a reader operand inside the region that
+    starts a printable NUL-ended string is placed alone when exactly one
+    address its twin's lui pair forms holds the same string and NUL. The faerie
+    music player's `=` and `;` (`CommuMusic_DrawList`'s pushes of `0x653144` /
+    `0x653148`; the PlayStation's twin lays the three glyph strings in the other
+    order) place from `ETC/COMMU03.EMI#6` on psx-jp, psp-jp and psp-eu.
+  - **The tail floor at a region another range closes**: `Area121_BandHeights+0x1`
+    places on both PSPs (the region stops where the twin's section ends).
+  - **A `BOOT.BIN` twin read at its first byte**: of several copies a relocated
+    pair reads, the one a pair forms the address of, for a run that starts at
+    its symbol; `LinkedObjectD_Amounts` on psp-eu from the copy
+    `LinkedObjectD_ShowAmount`'s native twin reads.
+  - **The Identify panel's words** (`0x65AAA8..0x65AAC4`, label group 15's
+    shipped slots and the EXP label `Identify_Draw*` read in place) are the
+    engine's own (`exe_own.cpp` `IdentifyWords`), as D278's marks are: no
+    Japanese or PSP disc's MAGIC060 carries them in the PC's place, and PSP-JP's
+    layer writes no group 15, so a PSP-JP disc-built install drew no EXP label
+    (captured 2026-10-31, `identify.txt` frame 900 before and after; PSP-EU's
+    layer draws all four words, unchanged). Equal to `BOF3.exe`'s on a PC install.
+  `gap` rows per build 47 / 48 / 51 / 51 / 20 / 21 / 20 (US, EU-en, FR, DE, JP,
+  PSP-JP, PSP-EU) to 40 / 41 / 44 / 44 / 18 / 18 / 16 with DIV-PL-A's regional
+  fields; `ConfigScreen_OpenStates+0x144` (the default keys' names) classed
+  `port-platform`; `exe_tables.py check` with the seven discs 0 errors,
+  `exe_scan.py` no `missing/none`, `data_diff.py run` 0 errors.
+- Amended 2026-10-31 (the exe-gap round, group ST;
+  [`exe-gap-round.md`](exe-gap-round.md) sections 2 and 4; I43 step 4):
+  **the strict switch narrowed, then on by default for a disc-built image.**
+  - **Before:** every `gap` range of a disc-built image ran as zero, logged;
+    `BOF3X_EXEIMAGE_STRICT=1` refused the image at its first `gap`, so it
+    would have refused all seven disc builds (40 / 41 / 44 / 44 / 18 / 18 /
+    16 ranges, US, EU-en, FR, DE, JP, PSP-JP, PSP-EU).
+  - **Now:** `tools/exe_tables.py` `write_exe` writes, after `data.toml`'s
+    `ranges`, an `accepted` list - one `[answer, pc, end]` row for each `gap`
+    range that `recipes/exe-gaps-accepted.tsv` answers (`layer`, `port-own`,
+    `unread` or `pending`); the range rows keep their four fields, so every
+    reader of `ranges` is unchanged. The engine (`exe_image.cpp`
+    `GapRefusal`), with `BOF3X_EXEIMAGE_STRICT` unset: a `gap` with an answer
+    runs as zero and is logged with its answer; a `gap` with none is a
+    `Fatal` that names the range, the symbol and the build and tells the
+    player to rebuild the install (the launcher's Sources page, or
+    `tools/importer.py build`); an image with no `accepted` list - written
+    before this change - is a `Fatal` that says an older release built it.
+    `=0` runs every gap, answered or not, each logged (`NOT accepted`) - the
+    leniency of before, kept for a developer's image under a new gap list.
+    `=1` keeps its meaning: every gap refused, answered or not (the entry's
+    off value; the presets send it, and the launcher keeps it from a
+    disc-built install, `EnvNotHere`). Any other value is a `Fatal`. An
+    `accepted` row that is not an answer, is on no `gap` range or is out of
+    order is a `Fatal` in every mode. A PC install (`pc-zh`, or `BOF3.exe`
+    read in place) is unchanged. An install built before the change is also
+    `stale exe` to the launcher's check before the game starts
+    (`install-staleness.md`: `write_exe`'s body and the accepted list are in
+    the `exe` step's measured record).
+  - **Why:** a new gap that a regeneration of `exe-gaps.tsv` brings fails
+    loudly at start instead of drawing wrong; an accounted one runs as it did.
+    The step `install-gap-reads.md` 9.7 could not take while the switch
+    refused every gap.
+  - **No `off=` code name.** The switch is read by the exe host before any
+    module registers a `PatchBytes`, and `src/hook/code_names.h` holds only
+    `PatchBytes` / `RetargetCall` names (`tools/ledger_switches.py`); the
+    entry's `Switch:` stays the `env:` value the presets already carry.
+  - **Verification** (harness root `C:\Users\kerok\bof3x-runs\eg1031\st`;
+    seven disc-only installs built by this importer, `abc_run.py prepare`):
+    each starts under the default with every gap accepted (US 40, EU-en 41,
+    FR 44, DE 44, JP 18, PSP-JP 18, PSP-EU 16; 0 not), exe host
+    `BOF3X_SELFTEST_ONLY=1`, exit 0. The self-test `exe_image STRICT
+    self-test` (the exe host, `BOF3X_SELFTEST_ONLY`) refuses a planted gap -
+    a synthetic `data.toml`'s and a copy of the mapped image's with one
+    answer taken out - and passes on all seven. The psx-us install: its
+    `data.toml` as the round tip's writer writes it, exit 3, the older-release
+    `Fatal`; under `=0` exit 0, every gap `NOT accepted`; one answer line
+    taken out, exit 3, the `Fatal` naming `0x662430..0x662442`
+    (`Scena17_EndSteps+0x364`); the same under `=0` exit 0, "39 accepted,
+    1 not"; `=1` exit 3 at the first gap; `=yes` exit 3. A cache built at
+    the round tip: `importer.py stale` says `stale exe` (`write_exe`
+    changed); this importer's: `fresh`. The PC install: `.data` from the
+    file, and from its pc-zh cache with and without `=1`, exit 0. The
+    attract on the psx-us install to its end (`abc_run.py run --route
+    attract`), exit 0, "40 accepted, 0 not"; `BOF3X_SHADOW='*'` from an
+    ini-less launcher dir, exit 0.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
@@ -9178,13 +9339,22 @@ designed in rather than bolted on.
   `battle_e1` group in the `'*'` self-test (the fuzz runs before an overlay
   loads). **Not seen in game:** no recipe reaches the duel's equipment
   screen ([`labels-1013.md`](labels-1013.md) 4).
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** the copy at
+  `0x42DC20` (and the whelp's back at `0x42E090`) takes the whole name and
+  its NUL when it is longer than Capcom's five bytes, at most the record's
+  nine (`NameCopy`, `src/game/battle_e1.cpp`): the Japan disc's guest name
+  is three characters, seven bytes in the `ja-JP` font, which the copy of
+  five cut mid-character. Group 17 is built for a Japanese disc too
+  (`guest_name` takes a name the `ja-JP` font has). Every name of the PC's
+  and of a Latin layer is at most five with its NUL, so their copy stays
+  five.
 - **Reversible?** play without `BOF3X_LANG`, or
   `BOF3X_ORIGINAL=BattleExtra_EquipOpen` (Capcom's copy reads `0x669CE8`).
 - **Switch:** BattleExtra_EquipOpen
 - **Default:** on - under its languages
 - **Player:** costly - a detour name only; narrower than the language, which stays in Reversible?
 - **Toward:** psx - the same copy, the name the disc's
-- **Languages:** en-US, en-150, fr-FR, de-DE - group 17 (`src/game/battle_e1.cpp:326`), not built for a Japanese disc
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - group 17 (`src/game/battle_e1.cpp`), for a Japanese disc since D280 (2026-10-31)
 - **State:** active
 
 ### Fight 26's turn counter in the disc's words and layout
@@ -9271,13 +9441,18 @@ designed in rather than bolted on.
   Western discs; the log `DIV-0064: 3 of 3 hi-lo choices`; the `rest_4c`
   group in the `'*'` self-test. **Not seen in game:** no recipe reaches the
   hi-lo game (`labels-1013.md` 4).
+- **Amended 2026-10-31 (D280, the exe-gap round's group JA):** group 19 is built
+  for a Japanese disc too: the Japan disc's `COMMU02.EMI` holds the three
+  choices in the same three 4-byte slots before the rectangles (two kana,
+  two kana, two kanji filling its slot), read through their base; ours
+  centres each in its box as for a Latin layer.
 - **Reversible?** play without `BOF3X_LANG`, or
   `BOF3X_ORIGINAL=CommuHiLo_DrawChoice`.
 - **Switch:** CommuHiLo_DrawChoice
 - **Default:** on - under its languages
 - **Player:** costly - a detour name only; narrower than the language, which stays in Reversible?
 - **Toward:** psx - the disc's words and places; every word drawn whole ("Also in the PSX version?" above)
-- **Languages:** en-US, en-150, fr-FR, de-DE - group 19 (`src/game/rest_4c.cpp:400`), not built for a Japanese disc
+- **Languages:** en-US, en-150, fr-FR, de-DE, ja-JP - group 19 (`src/game/rest_4c.cpp:400`), for a Japanese disc since D280 (2026-10-31)
 - **State:** active
 
 ### A map edge that leads to no area holds, instead of crashing
@@ -13688,3 +13863,241 @@ designed in rather than bolted on.
 - **Toward:** none
 - **Languages:** any
 - **State:** active
+
+### The loss tune from the disc on an install with a disc cache
+
+- **ID:** DIV-0192
+- **Date:** 2026-10-31
+- **Subsystem:** the importer's music step (`tools/seq.py` `songs` and
+  `LOSS_SONG`, `tools/ppms.py` `songs`; `fixtures/bgm.tsv`,
+  `fixtures/bgm-psp.tsv`); played by DIV-0087's seam, unchanged
+  (`BattleEnd_LossBanner` `0x431550` -> `Music_Play(0xA6, 10)`)
+- **Tier:** Sensible - a repair of our importer: the PC plays a loss tune
+  there, and a disc-only install played the fight's music again (D320).
+- **Original behaviour:** after a lost fight `BattleEnd_LossBanner` fades the
+  music and plays song 166, `BGM\166.DAT`, an MP3 of 57.05 s (ffprobe) that
+  loops. The importer wrote `base/bgm/000..165` from a disc and no 166, so on
+  a PSX-only or PSP-only install `Music_LoadFile(166)` found nothing and
+  `Music_Play` restarted the fight's own track (D24's path, D320); on a PC
+  install with a disc cache 166 alone stayed the MP3 among the disc's songs.
+- **New behaviour:** the importer writes `base/bgm/166.DAT` from sub-song 2 of
+  `BGMBAT00.EMI` (a PSX disc's SEP section, a PSP disc's pPMS), through
+  `BGMBAT00`'s bank, as 165 is its sub 1. The loss banner then plays the
+  disc's loss tune: an intro to tick 2,318 (41.99 s), a loop body to tick
+  2,702 (6.96 s), so 48.95 s to the first loop end against the MP3's
+  57.05 s (the MP3 reads as a second pass and a release tail: a hypothesis,
+  not measured). The same song file from all seven discs (one hash in both
+  fixtures).
+- **Rationale:** the PlayStation's loss twin plays the resident battle
+  bundle's sub-song 2 after the same bit test (D320's reading); its events
+  equal `BGM082`'s sub 2 (table song 86) on psx-us, psx-jp and psx-eu-en,
+  and the owner's names call 166 the alternate of 86 (`data/music-names.tsv`).
+  On the PSX the fight's own bundle is resident and the bundles' banks differ
+  under programs 3 and 4 (`BGMBAT01`, `03`, `04` against `00`); `BGMBAT00`'s
+  is taken, as for 165 - the same open choice.
+- **Also in the PSX version?** Yes in substance: the PlayStation's own loss
+  tune, through one bank of the four the bundles carry.
+- **Verification:** the fixtures regenerated from the seven discs (`seq.py
+  fixture`, `ppms.py fixture`): 1,240 and 496 rows, the only change one
+  `166.DAT` row per build; `importer.py check` 0 errors; the harness's
+  psx-us and psp-eu disc-only installs hold `base/bgm/166.DAT` and a lost
+  fight's log opens it (the group's report). The listen is the owner's.
+- **Reversible?** `music=pc` (`BOF3X_MUSIC=pc`): the MP3 where the install
+  has one; on a disc-only install that is the fight's music again.
+- **Switch:** ini:music=pc - the song is the cache's; the PC's music source plays the MP3, or on a disc-only install restarts the fight's track
+- **Default:** on - wherever the player has a cache built from a disc
+- **Player:** yes
+- **Toward:** psx, psp - the consoles' loss tune (the PSP's pPMS gives the same song file)
+- **Languages:** any
+- **State:** active
+
+### An empty save slot draws no text
+
+- **ID:** DIV-0193
+- **Date:** 2026-10-31
+- **Subsystem:** the save and load slots (`Menu_DrawSaveSlot` `0x576960`,
+  ours in `src/game/field_o.cpp`; the string `Encounter_SlotChance+0x1C`
+  `0x669CCC`)
+- **Tier:** Sensible - presentation: one look for an empty slot on every
+  install (the owner's call of 2026-10-31, "blank it everywhere for
+  consistency", `exe-gap-round.md` 7).
+- **Original behaviour:** a slot with no save (summary 0) draws the port's
+  string at `0x669CCC` through `Text_DrawAt` at `(x + 0x13, y + 2)`, five
+  characters; a disc-built image has that range as a `gap` (zero), so it
+  drew nothing there already, as the US PlayStation release does.
+- **New behaviour:** the empty slot draws its box, number and frame pieces
+  and no text, on every install and language; `0x669CCC` is no longer read.
+  One log line at start, `SaveSlotBlank  an empty save slot draws no text`.
+- **Rationale:** the owner's call; it also makes the `0x669CCC` gap row
+  unread on a disc-built image (`exe-gap-round.md` 1, the AC list).
+- **Also in the PSX version?** The US disc draws nothing in an empty slot
+  (the round's reading, `exe-gap-round.md` 3); other releases not measured.
+- **Verification:** built with llvm-mingw, no new warning;
+  `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` exit 0 (the switch arms after
+  `field_o`'s fuzz, as DIV-0084's); captures of the load screen on the PC
+  install with `BOF3X_OFF=SaveSlotBlank` and without (the group's report).
+- **Reversible?** `BOF3X_OFF=SaveSlotBlank` (ini `off=`), or hosted
+  `BOF3X_ORIGINAL=SaveSlotBlank`: the port's string as before.
+- **Switch:** SaveSlotBlank
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=SaveSlotBlank (ini off=)
+- **Toward:** psx - the US PlayStation release's empty slot
+- **Languages:** any
+- **State:** active
+
+### A European disc-only install takes its disc's own eight area banks
+
+- **ID:** DIV-0194
+- **Date:** 2026-10-31
+- **Subsystem:** the importer's base chunks (`tools/importer.py`
+  `pal_bank`, `get_chunk`, `cmd_pal_banks`, `check_pal_banks`, `verify`;
+  `recipes/pal-banks.toml`); played by `Snd_LoadBankFile` as any bank
+- **Tier:** Sensible - a European install sounds like a European disc (the
+  owner's call of 2026-10-31, "let's take the pal banks", D257).
+- **Original behaviour:** the PC's area banks are Japan's (and the US's).
+  From a European PlayStation disc (EU-English, French, German) the importer
+  built eight of them - `AREA100`, `112`, `135`, `138`, `147`, `168`, `170`,
+  `188`, the PAL sample swap of `region-diff.md` 8.4 - faithfully but to
+  another hash than the recipe's, refused them, and wrote 733 of 741
+  containers: those eight areas' containers were missing from a European
+  disc-only install (D257).
+- **New behaviour:** `recipes/pal-banks.toml` holds one row per such chunk:
+  the European builds whose disc gives it (all three, one hash), the
+  section, the PAL bank's hash and the recipe hash it stands for. On an
+  install with no PC `DAT/` among its sources, a European disc's own bank
+  is taken at that disc's place in the player's order (a source before it
+  that gives the recipe's bank wins), hashed against the row; the manifest
+  records `<build>:pal:<emi>` and `verify` checks it against the row. A
+  European disc-only install writes all 741 containers. With the PC's
+  `DAT/` among the sources nothing changes.
+- **Rationale:** the owner's call; D257. A row file, not a second hash in
+  `recipes/pc-zh.toml`: that file is generated from the PC's `DAT/` and the
+  discs' sections, a generator that never builds a bank, so a hash added
+  there would not survive its next run, and a hash alone could not say
+  which releases it belongs to.
+- **Also in the PSX version?** Yes: the European discs' own banks, built by
+  the same wave-from-vag transform as every other bank.
+- **Verification:** `importer.py pal-banks` over the three European discs: 8
+  rows, each bank identical on the three; `importer.py check` 0 errors; a
+  psx-eu-en disc-only install built with 741 containers and one of the
+  eight areas loading its bank under `BOF3X_DATLOG=1` (the group's report).
+  The listen is the owner's.
+- **Reversible?** Build the cache with the PC's `DAT/` among the sources,
+  or with a US or Japanese disc before the European one.
+- **Switch:** none - the cache is built, not switched: the sources decide
+- **Default:** on
+- **Player:** never - the install's sources decide, not a runtime switch: a cache built with the PC's `DAT/` keeps the PC's banks
+- **Toward:** psx - the European PlayStation's banks
+- **Languages:** any
+- **State:** active
+
+### A Western PSX disc-built image takes its disc's own regional layout fields
+
+- **ID:** DIV-0195
+- **Date:** 2026-10-31
+- **Subsystem:** the exe image (`tools/psp_exe.py` `TWINS`' eighth field, the
+  `regional` rule; `recipes/exe-psp.tsv`); read by `EffectKind66_DrawPiece`
+  `0x47DE50` (`EffectKind66_States+0x18 / +0x20 / +0x28`, `0x654770`,
+  `0x654778`, `0x654780`) and by `EffectKind5E_Wait` `0x47F720` /
+  `EffectKind5E_DrawMenu` `0x47F9E0` (`Rest3e_Windows+0x14 / +0x18 / +0x1C`,
+  `0x65486C`, `0x654870`, `0x654874`); [`exe-gap-round.md`](exe-gap-round.md)
+  section 4 (PL), [`install-gap-twins.md`](install-gap-twins.md) 2
+- **Tier:** Sensible - the release the player owns: no disc of a Western
+  PSX-only install holds the PC's numbers, and no PC bytes go into code.
+- **Original behaviour:** `BOF3.exe` holds Japan's layout in six u16 fields:
+  the x of kind 0x66's three texture-piece places (area 135's panel, drawn
+  as POLY_FT4 quads from the place records `0x654770 + 8 place`), and in
+  `Rest3e_Windows` window 2's width (kind 0x5E's board frame) and window 3's
+  x and width (kind 0x5E's menu box). The PC, psx-jp, psp-jp and psp-eu hold
+  the same six values (measured 2026-10-31, `exe-gap-round.md` 7). A
+  Western PSX disc-built image left the six zero: `TWINS`' pieced rows place
+  the segments around them and skip them on purpose, since the four Western
+  PSX discs hold other values there, so the panel's three pieces were drawn
+  at x 0 and the board and the menu box at x 0 / width 0.
+- **New behaviour:** on psx-us, psx-eu-en, psx-fr and psx-de the six fields
+  are each Western disc's own, read whole at the pieced row's place
+  (`WORLD03/AREA135.EMI#14` `0x801F6230..`, `SCENARIO/SCENA10.EMI#0`
+  `0x801FE7CC..`): the three panel pieces 56 px right of the PC's (all four
+  discs), window 2 one pixel narrower, and the menu box further right and
+  narrower (84 px right and 158 narrower on US, EU-en and DE; 60 and 118 on
+  FR) - the Western releases' layout. A Japanese or PSP disc-built image and
+  every PC install are unchanged. An install built from a Western PSX disc
+  with a PSP disc after it builds its image from the first disc
+  (`importer.py`'s exe source), so it takes the Western fields; one with the
+  PSP disc first keeps the PC's (the PSP's) values.
+- **Rationale:** the owner's answer of 2026-10-31 ("the PC's numbers",
+  section 7) holds wherever a disc carries them; a Western PSX-only install
+  has none, and zero draws the panel and the windows wrong. Each field is
+  taken whole, never half one release's, as the pieced rule's segments are.
+  **The owner, 2026-10-31 afternoon:** "using the PSX bytes for a psx-only
+  build instead of saving hardcoded values is fine" - the regional fields
+  confirmed.
+- **Also in the PSX version?** No for the original behaviour (the PC's are
+  Japan's numbers); the new behaviour is each Western PlayStation release's
+  own layout.
+- **Verification:** the recipe chain regenerated over the seven discs
+  (`psp_exe.py recipe`, `exe_tables.py recipe`, `exe_own.py measure`,
+  `exe_tables.py gaps`): six `regional` rows per Western PSX build, the six
+  `gap` rows gone from each; `exe_scan.py` shows them `differ/place`;
+  `psp_exe.py check` OK; `exe_tables.py check` 0 errors (PL's report).
+- **Reversible?** no switch: the image is built at install time; rebuilding
+  the cache with the eighth field removed puts the zeros back.
+- **Switch:** none
+- **Default:** on - on a Western PSX disc-built image
+- **Player:** never - an install-time image, no runtime name
+- **Toward:** psx - the Western PlayStation releases' own layout
+- **Languages:** any
+- **State:** active
+### The Config screen's label column left-aligned at the box under a Japanese layer
+
+- **ID:** DIV-0196
+- **Date:** 2026-10-31
+- **Subsystem:** menu / Config screen - `Config_DrawRowLabel` `0x461800`
+  (ours, `src/game/field_c1.cpp`, reading the operands as `config_text.cpp`
+  holds them): the two `sub reg, width` instructions `0x461899` (the
+  selected row's large path) and `0x4618E7` (the small path) and the two
+  anchors `0x46189D` / `0x4618ED`, patched from `ConfigText_Inject` under
+  `Lang_Japanese()`; the operand rules `DIV-0196 Config label alignment`
+  and `DIV-0017 Config label anchor` read the values back.
+- **Tier:** Intent - a layout rule of ours for the Japanese layer.
+- **Original behaviour:** both paths place a row's label right-aligned to a
+  fixed edge, `x_arg + 0x3A - width`, `x_arg` the row box's left; with the
+  shipped Chinese words (four characters at most) the column sits inside
+  the box. The Japan disc centres each label instead. With the Japan disc's
+  own words under `ja-JP` (DIV-0015's 2026-10-31 amendment, the exe-gap
+  round's group JA) the nine-character label begins left of the row box and
+  the selected row's large label runs under the hand (`eg1031\ja\sheets\config.png`).
+- **New behaviour:** under a Japanese layer the labels are left-aligned at
+  `x_arg` itself: the `sub` at each path is two nops (nothing comes off
+  `x`) and the anchor is `0`, so every label begins at the box's own left
+  edge, no buffer glyph, and ends where its length ends, the selected row's
+  large text of the longest label (nine characters at 12 units each)
+  included; the options untouched. Not under a
+  Latin layer (DIV-0017's right alignment at `0x5F`) and not with the
+  shipped Chinese.
+- **Rationale:** the owner, 2026-10-31 afternoon, on JA's sheets: the
+  labels to the right and left-aligned "so that it all fits within the
+  border"; right-aligned Japanese labels are not a convention of the
+  language, and the disc itself centres them. Two glyphs in at first, then one,
+  then none, the same afternoon: at two and at one the selected row's large
+  text of the longest label ran off the right side ("we'll need to fully
+  left align (no buffer glyph). That's ok though if it fits").
+- **Also in the PSX version?** No: the disc centres its labels; this is
+  neither the port's right alignment nor the disc's centring.
+- **Reversible?** `BOF3X_ORIGINAL=ConfigLabelJapanese`, or the ini's
+  `off=ConfigLabelJapanese`.
+- **Switch:** ConfigLabelJapanese
+- **Default:** on - under its languages
+- **Player:** yes - BOF3X_OFF=ConfigLabelJapanese (ini off=)
+- **Toward:** none
+- **Languages:** ja-JP - `Lang_Japanese` and not `Lang_Latin` (`src/game/config_text.cpp`)
+- **State:** active
+- **Verification:** 2026-10-31, headless, the `config_screen` recipe on the
+  PC install under `ja-JP`, psx-jp and psp-jp (the exe-gap round's JA
+  harness, `eg1031\ja\x\runs\jplabel4_*`): the label column left-aligned
+  inside the row box on all three, the options unmoved; the hosted shadow
+  suite's `field_c1` and `config_text` rows under `ja-JP` at 0 mismatches
+  (the clone carries the same patches); `BOF3X_ORIGINAL=ConfigLabelJapanese`
+  the sheets' layout again.
+  **Seen by the owner on the captures, 2026-10-31 evening: "that'll work -
+  it all fits in the row, even when selected".**

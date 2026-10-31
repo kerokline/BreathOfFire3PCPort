@@ -42,5 +42,6 @@ struct ConfigTextOperands {
     unsigned box_width;         // 0x461B07: the row's dark box, 0x68; DIV-0051's 0x58
     bool second_cell;           // 0x461BAC: the row's second cell drawn; not under DIV-0051
     int frame_w;                // 0x461A62: the controller frame's cells across, 0xC; DIV-0051's 0xD
+    bool label_left;            // 0x461899, 0x4618E7: the label's x less its width (sub), or DIV-0196's nops: left-aligned at x + anchor (0)
 };
 const ConfigTextOperands& ConfigText_Operands();

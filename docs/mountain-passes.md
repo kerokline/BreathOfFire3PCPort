@@ -3,7 +3,7 @@
 **Status:** PLAYED (2026-10-30 night) - the owner's question of the
 evening, read live on their chapter-10 game with `tools/cell_peek.py` and
 the exe; the fix on `fix/mountain-passes`, six builds by the owner's eye,
-approved ("Brilliant"); a child-era save keeps Zublo's wall.
+approved ("Brilliant"), merged as PR #175; a child-era save keeps Zublo's wall.
 
 The owner's report: once Mt. Zublo's road is open (adult Ryu) and once Mt.
 Levett has been walked through, the world map still stops the party at each

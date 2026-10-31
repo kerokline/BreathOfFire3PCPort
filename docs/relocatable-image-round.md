@@ -1,6 +1,6 @@
 # The relocatable-image round: staging (IDEAS I44, stage 3)
 
-**Status:** BUILT, stage D done 2026-10-29 (section 5's "as run"; the PR at the owner's word). Launched 2026-10-28 afternoon on `relocatable-image/round`
+**Status:** BUILT, stage D done 2026-10-29 (section 5's "as run"); merged as PR #168 the same day. Launched 2026-10-28 afternoon on `relocatable-image/round`
 off `main` `15518394`, the PR #164 merge; stage A's three agents in worktrees
 under `C:\Users\kerok\bof3x-runs\ri1027`, baseline build `wt_base`. The
 owner's three calls are answered, section 7. Stage C merged and proved 2026-10-29

@@ -214,10 +214,13 @@ def bss_numbers(pc):
     .bss, so no disc tests these words; a pointer to a .bss variable is
     4-aligned (every one the C runtime's data and the inventory lists hold is),
     so a word into .bss is a number when it is `not 4-aligned` (packed bytes of
-    a record, such as the area tables' 12-byte rows), `two small halfwords` (each
-    below 0x100 or from 0xFF00: an x and a y, a width and a height - the
-    `MsgBox_PlacementTable` and `Title_Sprites` entries that
-    docs/exe-code-pointers-midfunc.md read), `text` (printable characters to a
+    a record, such as the area tables' 12-byte rows), `two small halfwords` (an x
+    and a y, a width and a height - the `MsgBox_PlacementTable` and
+    `Title_Sprites` entries that docs/exe-code-pointers-midfunc.md read; the
+    test is each halfword below 0x100 or from 0xFF00, but a word into .bss has
+    its high halfword 0x67..0x93 always, so what it decides on is the LOW
+    halfword alone: a word whose low halfword is within 0x100 of a 64 KiB
+    boundary), `text` (printable characters to a
     NUL: the C runtime's `pen`, `%lx`), or `a column of numbers` (aligned by
     chance in a record table whose column holds such numbers either side)."""
     out = {}
@@ -232,8 +235,10 @@ def bss_numbers(pc):
         elif all(h < 0x100 or h >= 0xFF00 for h in (v & 0xFFFF, v >> 16)):
             # Every .bss address is 0x676000..0x93D6EC, so the high halfword always
             # passes: what this tests is the low one - a pointer within 0x100 bytes
-            # of a 64 KiB boundary would be classed a number (none of today's hits
-            # is one: IN's "every class that must equal, equal" on the real install).
+            # of a 64 KiB boundary would be classed a number. None of today's hits
+            # is one: measured 2026-10-31 on BOF3.exe, 1,112 words take this class
+            # and none holds the start of any of symbols.toml's 756 .bss [[data]]
+            # entries (IN's "every class that must equal, equal" agrees).
             out[a] = "two small halfwords"
         elif n >= 2 and all(0x20 <= c < 0x7F for c in b[:n]):
             out[a] = "text"
@@ -681,6 +686,68 @@ IMM_SKIP = [(0x61B4F0, 0x61B4F7, "Area104_PlateAnims: DIV-0055's re-laid plates,
 IMM_FOLD = 8    # a reader's operand this far below a region that starts at its data symbol is an index fold
 
 
+IMM_STRING = range(0x20, 0x7F)    # a string piece's characters: printable ASCII only
+
+
+def imm_strings(pc, lo, hi, ops, twins, srcs, byfile, scans, ptr):
+    """The string pieces of a region no whole-region row fits (the faerie music
+    player's glyph strings, CommuMusic_DrawList's pushes of 0x653144 / 48 / 4C,
+    which the PlayStation's twin lays out in the other order: docs/exe-gap-round.md
+    section 4, PL): for each reader operand inside [lo, hi) that starts a
+    NUL-terminated printable-ASCII string, the PC's bytes past the NUL zero up to
+    the next operand or the region's end, the piece [operand, NUL] (cut at hi) is
+    an `immref` row when exactly one place - an address a twin's lui pair of that
+    reader forms, `at` 0 - holds the same string with its NUL. Anchored at both
+    ends (the operand is the string's start, the twin's address the disc string's),
+    so the floor is the whole string and its NUL, not four bytes. [row] for the
+    pieces when every non-zero byte of the region is in one, else None."""
+    import exe_imm
+    inner = sorted({v for f in ops for v in ops[f] if lo <= v < hi})
+    out, covered = [], set()
+    for n, a_op in enumerate(inner):
+        if not pc[a_op - DATA_LO] or a_op in ptr:
+            continue
+        nul = pc.index(0, a_op - DATA_LO) + DATA_LO
+        s = pc[a_op - DATA_LO:nul - DATA_LO + 1]
+        stop = min(inner[n + 1] if n + 1 < len(inner) else hi, hi)
+        if (stop <= nul < hi) or any(b not in IMM_STRING for b in s[:-1]) or any(
+                pc[x - DATA_LO] for x in range(nul + 1, stop)) or any(x in ptr for x in range(a_op, nul + 1)):
+            continue
+        places = {}
+        for f in sorted(f for f in ops if a_op in ops[f]):
+            for k, g in sorted(twins.get(f, ())):
+                if (k, g) not in scans:
+                    read = exe_imm.blob_reader(srcs[k][1], srcs[k][0])
+                    end = exe_imm.extent(read, g)
+                    scans[k, g] = (read, exe_imm.scan(read, g, end) if end else ([], []))
+                read, (_, refs) = scans[k, g]
+                for addr, offs in refs:
+                    if len(offs) != 2:
+                        continue
+                    try:
+                        if exe_imm.decode_ref(read, g, offs[0], offs[1]) != addr:
+                            continue
+                    except ValueError:
+                        continue
+                    hold = [kk for kk in byfile[k[0]]
+                            if srcs[kk][0] <= addr and addr + len(s) <= srcs[kk][0] + len(srcs[kk][1])]
+                    if len(hold) != 1:
+                        continue
+                    b2, blob2 = srcs[hold[0]]
+                    if blob2[addr - b2:addr - b2 + len(s)] != s:
+                        continue
+                    places.setdefault((hold[0][0], addr), {
+                        "kind": "immref", "pc": a_op, "pc_end": min(nul + 1, hi), "file": k[0], "section": k[1],
+                        "func": g, "at": 0, "insns": "%X+%X" % (offs[0], offs[1])})
+        if len(places) == 1:
+            row = next(iter(places.values()))
+            out.append(row)
+            covered.update(range(row["pc"], row["pc_end"]))
+    if not out or any(pc[x - DATA_LO] and x not in covered for x in range(lo, hi)):
+        return None
+    return out
+
+
 def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=None, data_ends=None):
     """The owning-function rows for one build (docs/exe-immediate-places.md): for
     each region imm_regions gives, each PC function whose operands name it (from
@@ -791,6 +858,12 @@ def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=
                                     break
                                 ok = False
                                 break
+                        # a region another range closes exactly where the twin's section ends is at the
+                        # section's tail too: the PSPs fill the byte after Area121_BandHeights, so their
+                        # region stops one short of the byte the loop above would find off the section
+                        # (docs/exe-gap-round.md section 4, PL)
+                        if ok and end == hi and not tail and addr + (hi - a_op) - b2 == len(blob2):
+                            tail = True
                         span = [x for x in range(min(a_op, lo), end) if x not in ptr]
                         agree = len(span)
                         agree_nz = sum(1 for x in span if pc[x - DATA_LO])
@@ -822,7 +895,16 @@ def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=
                                "func": g, "at": lo - a_op, "insns": "%X+%X" % (offs[0], offs[1])}
                         found.setdefault(("immref",) + place, row)
         if not found:
-            stats["nothing fits"] += 1
+            pieces = imm_strings(pc, lo, hi, ops, twins, srcs, byfile, scans, ptr)
+            if pieces is None:
+                stats["nothing fits"] += 1
+                continue
+            for row in pieces:
+                row["build"] = bid
+                rows.append(row)
+                stats["placed immref"] += 1
+                stats["placed string"] += 1
+                stats["bytes immref"] += sum(1 for x in range(row["pc"], row["pc_end"]) if pc[x - DATA_LO])
             continue
         places = {key for key in found if key[0] == "immref"}
         if len(places) > 1 or (not places and len(found) > 1):
@@ -1552,6 +1634,40 @@ def load_gaps(path=GAPS):
     return rows, measured
 
 
+# recipes/exe-gaps-accepted.tsv (the exe-gap round, group AC; tools/exe_scan.py
+# --accepted keeps it one for one with exe-gaps.tsv's `gap` rows): the answer
+# for each `gap` row, which write_exe carries into data.toml's `accepted`
+# list beside the ranges, so that the engine tells an accounted gap from a new
+# one (src/hook/exe_image.cpp; DIV-0101, the exe-gap round's group ST).
+ACCEPTED = os.path.join(ROOT, "recipes", "exe-gaps-accepted.tsv")
+ACCEPTED_COLS = ["build", "lo", "hi", "symbol", "answer", "evidence"]
+ACCEPTED_ANSWERS = ("layer", "port-own", "unread", "pending")
+
+
+def load_accepted(path=ACCEPTED):
+    """{(build, lo, hi, symbol): answer} from recipes/exe-gaps-accepted.tsv. Its
+    shape is exe_scan.py --accepted's to check; an answer outside the four, a
+    malformed line or a missing file stops the build here, since an image
+    written without the answers would be refused at start."""
+    if not os.path.exists(path):
+        fail("%s is absent: the engine refuses a disc-built image whose gaps it cannot tell accounted "
+             "(docs/exe-gap-round.md 4, ST)" % os.path.relpath(path, ROOT))
+    out = {}
+    with open(path, encoding="utf-8") as f:
+        for n, line in enumerate(f, 1):
+            line = line.rstrip("\n")
+            if not line or line.startswith("#"):
+                continue
+            fields = line.split("\t")
+            if fields == ACCEPTED_COLS:
+                continue
+            if len(fields) != len(ACCEPTED_COLS) or fields[4] not in ACCEPTED_ANSWERS:
+                fail("%s:%d: not a row of %s with an answer of %s"
+                     % (os.path.basename(path), n, ", ".join(ACCEPTED_COLS), " / ".join(ACCEPTED_ANSWERS)))
+            out[(fields[0], int(fields[1], 16), int(fields[2], 16), fields[3])] = fields[4]
+    return out
+
+
 def gap_rows(pc, bid, segs):
     """One build's rows: `segs` is exe_own.py measure's <bid>.own.tsv as [(lo, hi,
     cls)] (the segment's class from its readers and the disc search); each byte
@@ -1683,7 +1799,9 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
              "# by recipes/exe-gaps.tsv: `language` (a language layer's handlers write it or our code reads",
              "# around it), `unread` (nothing the exe host runs reads it), `keys` (Key_TableDefault, the",
              "# engine's rule), `gap` (zero where the PC has a value; `from` is its kind and symbol), and",
-             "# `none` (the PC's bytes are zero there too).",
+             "# `none` (the PC's bytes are zero there too). On a disc build `accepted` follows: each",
+             "# [answer, pc, end] the answer recipes/exe-gaps-accepted.tsv gives a `gap` range; the engine",
+             "# refuses a `gap` range with none, and an image without the list (src/hook/exe_image.cpp).",
              "", "[image]", 'file = "data.bin"', "va = 0x%06X" % DATA_LO, "size = %d" % len(img),
              "bss_end = 0x%06X" % bss_end, 'sha256 = "%s"' % sha(img), 'build = "%s"' % bid,
              'source = %s' % json.dumps(os.path.basename(os.path.normpath(source))),
@@ -1697,14 +1815,18 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
         gaps, measured = load_gaps()
         if bid not in measured:
             fail("recipes/exe-gaps.tsv has not measured %s: run exe_own.py measure and exe_tables.py gaps" % bid)
+        accepted = load_accepted()
         lines.insert(lines.index("ranges = ["), 'gaps = "recipes/exe-gaps.tsv"')
         lines.insert(lines.index("ranges = ["), "")
         gap = {}
         for lo, hi, how, gkind, sym in gaps[bid]:
+            answer = accepted.get((bid, lo, hi, sym), "") if how == "gap" else ""
             for x in range(lo, hi):
-                gap[x] = (how, "%s %s" % (gkind, sym) if how == "gap" else sym)
+                gap[x] = (how, "%s %s" % (gkind, sym) if how == "gap" else sym, answer)
         kind = lambda x: "own" if x in own else "pointer" if x in ptr else gap.get(x, ("none", ""))[0]
-        gap_from = lambda x: gap.get(x, ("none", ""))[1] if kind(x) in GAP_HOWS else ""
+        # a run's `from` and its answer: a run of one class splits where either changes
+        gap_from = lambda x: gap.get(x, ("none", "", ""))[1:] if kind(x) in GAP_HOWS else ("", "")
+        answers, unanswered = [], []
         for lo, hi, k in spans(owner, ranges):
             if k is not None and ranges[k][2] == "layout":
                 lines.append('  [0x%06X, 0x%06X, "layout", "%s"],' % (lo, hi, ranges[k][3]))
@@ -1716,13 +1838,25 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
                 continue
             p = lo                                      # an unfilled run: pointer words and the rest
             while p < hi:
-                kp, wp = kind(p), gap_from(p)
+                kp, (wp, ap) = kind(p), gap_from(p)
                 q = p
-                while q < hi and kind(q) == kp and gap_from(q) == wp:
+                while q < hi and kind(q) == kp and gap_from(q) == (wp, ap):
                     q += 1
                 lines.append('  [0x%06X, 0x%06X, "%s", "%s"],' % (p, q, kp, wp))
+                if kp == "gap":
+                    (answers if ap else unanswered).append((p, q, ap, wp))
                 p = q
     lines.append("]")
+    if owner is not None:
+        # The answers, after the ranges and in their order: a list the engine
+        # reads beside them (a range line's shape is left as it was, so every
+        # reader of `ranges` is unchanged). Present, even empty, on every disc
+        # build: its absence is how the engine tells an image written before it.
+        lines += ["", "accepted = ["] + ['  ["%s", 0x%06X, 0x%06X],' % (ap, p, q) for p, q, ap, _ in answers] + ["]"]
+        for p, q, _, wp in unanswered:
+            print("exe_tables: %s 0x%06X..0x%06X (%s) is a gap recipes/exe-gaps-accepted.tsv does not answer: the "
+                  "engine refuses this image (tools/exe_scan.py --accepted names the row to add)" % (bid, p, q, wp),
+                  file=sys.stderr)
     with open(os.path.join(d, "data.toml"), "w", newline="\n", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
     return sha(img)

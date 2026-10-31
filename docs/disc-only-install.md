@@ -135,7 +135,12 @@ save slot number's `"%X"` and the empty slot's text stay zero.
 None of it is copied (CLAUDE.md rule 1); whether a disc-only build accepts
 it, derives the values by a rule, or asks for the PC's exe for those tables
 is the owner's call ([`disc-only-round.md`](disc-only-round.md) section 2).
-`BOF3X_EXEIMAGE_STRICT=1` refuses to start with any gap.
+`BOF3X_EXEIMAGE_STRICT=1` refuses to start with any gap. **Since the exe-gap round (2026-10-31, DIV-0101 amended):** the image's
+`data.toml` carries an `accepted` list, the answer for every `gap` range from
+`recipes/exe-gaps-accepted.tsv`, and the engine refuses by default a gap with no
+answer, or an image with no list (built by an older release: rebuild the
+install); `BOF3X_EXEIMAGE_STRICT=0` runs it anyway, `=1` refuses every gap as
+before.
 
 ## 4. The movies
 

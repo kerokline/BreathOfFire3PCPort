@@ -166,16 +166,18 @@ extern "C" void __cdecl Config_DrawRowLabel(int x, int y, unsigned row, unsigned
     const ConfigTextOperands& ops = ConfigText_Operands();   // at::kRowLabelOperands .. kRowAnchorSmall, as config_text.cpp holds them
     const auto* const label = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(ops.label[r]));
     const int len = static_cast<int>(std::strlen(reinterpret_cast<const char*>(label)));
+    // DIV-0196 (ops.label_left, ja-JP): the `sub` that takes the width off x is
+    // two nops in the original's code, so the label is left-aligned at x + anchor.
     if (s == 3) {
         const int width = ops.label_x4 ? len * 4 : len * 6;   // DIV-0017's shl ecx,2, or the original's lea / shl 1
         const int anchor = ops.anchor;
         const U big = ops.big_draw;
         using Draw = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
-        SH_WORD(Draw, big)(x - width + anchor, y - 1, 0, 0xFF, label);
+        SH_WORD(Draw, big)(x - (ops.label_left ? 0 : width) + anchor, y - 1, 0, 0xFF, label);
         if (FieldS_Step != 1) SH_CALL(Menu_DrawHand)(x + 4, y, 0);
     } else {
         const int anchor = ops.anchor;
-        SH_CALL(Text_DrawSmall)(x - len * 4 + anchor, y + 1, 0, 0xFF, label);
+        SH_CALL(Text_DrawSmall)(x - (ops.label_left ? 0 : len * 4) + anchor, y + 1, 0, 0xFF, label);
     }
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetLineF2)(prim);

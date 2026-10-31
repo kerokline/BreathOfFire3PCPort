@@ -372,8 +372,10 @@ def world_blobs(disc):
     """(name, bytes) of every module a fishing area's text could be in: each
     WORLDnn/AREAnnn.EMI of a PlayStation disc; BOOT.BIN alone on a PSP disc,
     whose EMIs keep the Japanese build's overlays (region-diff.md 5) and whose
-    own code and strings are the ELF's (its pointers then offsets from 0)."""
-    if is_psp(disc):
+    own code and strings are the ELF's (its pointers then offsets from 0).
+    A Japanese PSP disc's EMIs are the Japan disc's own modules (D280), so a
+    ja-JP layer reads them there, as convert_fishing_ja does."""
+    if is_psp(disc) and not donor_ja:
         yield PSP_BOOT, disc.boot()
         return
     for name in sorted(disc.files):
@@ -1910,10 +1912,9 @@ def convert_verbs(game, donor):
     payload = bytearray([VERB_COUNT])
     for i in range(VERB_COUNT):
         raw = donor[starts[i]:donor.index(b"\0", starts[i])]
-        enc = [encode_char(c) for c in raw]
-        if not raw or any(e is None for e in enc):
-            raise SystemExit("verbs: verb %d holds a code English does not have: %s" % (i, raw.hex(" ")))
-        out = b"".join(enc)
+        out = encode_text(raw) if raw else None     # a Japanese lead byte and its code: one character (D280)
+        if out is None:
+            raise SystemExit("verbs: verb %d holds a code this language does not have: %s" % (i, raw.hex(" ")))
         if len(out) + 1 > VERB_ROOM:
             raise SystemExit("verbs: verb %d encodes to %d bytes, the slot holds %d" % (i, len(out) + 1, VERB_ROOM))
         payload += out + b"\0"
@@ -1971,10 +1972,12 @@ def convert_char_names(game, donor):
     for k in range(CHAR_COUNT):
         us = records[k]
         raw = us[:CHAR_NAME_US].split(b"\x00")[0]
-        enc = [encode_char(c) for c in raw]
-        if not raw or any(e is None for e in enc):
-            raise SystemExit("names: character %d holds a code English does not have: %s" % (k, raw.hex(" ")))
-        out = b"".join(enc)
+        # A Japanese name is up to five characters, ten bytes in the ja-JP
+        # font where the field holds eight and a NUL: paired from its end
+        # until it fits (DIV-0057's rule for names), D280.
+        out = (ja_name(raw, CHAR_NAME_PC - 1) if donor_ja else encode_text(raw)) if raw else None
+        if out is None:
+            raise SystemExit("names: character %d holds a code this language does not have: %s" % (k, raw.hex(" ")))
         if len(out) + 1 > CHAR_NAME_PC:
             raise SystemExit("names: character %d encodes to %d bytes, the field holds %d"
                              % (k, len(out) + 1, CHAR_NAME_PC))
@@ -1998,10 +2001,10 @@ def convert_merchant(game, disc):
         if at < 0:
             continue
         raw = blob[at + 12:at + 12 + MERCHANT_US_SLOT].split(b"\x00")[0]
-        enc = [encode_char(c) for c in raw]
-        if not raw or any(e is None for e in enc):
-            raise SystemExit("merchant: %s holds a code English does not have: %s" % (name, raw.hex(" ")))
-        out = b"".join(enc)
+        # A Japanese name paired from its end until it fits the slot (DIV-0057's rule for names), D280.
+        out = (ja_name(raw, MERCHANT_ROOM - 1) if donor_ja else encode_text(raw)) if raw else None
+        if out is None:
+            raise SystemExit("merchant: %s holds a code this language does not have: %s" % (name, raw.hex(" ")))
         if len(out) + 1 > MERCHANT_ROOM:
             raise SystemExit("merchant: the name encodes to %d bytes, the slot holds %d" % (len(out) + 1, MERCHANT_ROOM))
         return [(KIND_MERCHANT, 0, out + b"\x00")]
@@ -2038,10 +2041,9 @@ def convert_battle_commands(game, donor):
     for i in range(BATTLE_COUNT):
         slot = donor[at - (BATTLE_COUNT - i) * BATTLE_ROOM:at - (BATTLE_COUNT - i - 1) * BATTLE_ROOM]
         raw = slot.split(b"\0")[0]
-        enc = [encode_char(c) for c in raw]
-        if not raw or any(e is None for e in enc):
-            raise SystemExit("battle: label %d holds a code English does not have: %s" % (i, slot.hex(" ")))
-        out = b"".join(enc)
+        out = encode_text(raw) if raw else None     # a Japanese lead byte and its code: one character (D280)
+        if out is None:
+            raise SystemExit("battle: label %d holds a code this language does not have: %s" % (i, slot.hex(" ")))
         if len(out) + 1 > BATTLE_ROOM:
             raise SystemExit("battle: label %d encodes to %d bytes, the slot holds %d" % (i, len(out) + 1, BATTLE_ROOM))
         payload += out + b"\0"
@@ -2181,6 +2183,16 @@ def convert_battle_commands(game, donor):
 #      PC's own 0x2E / 0xCD / 0xE5 and its glyph. On a PSP the AREA008.EMI is
 #      the Japanese build's, and the PSP's own draw is in BOOT.BIN (PSP-EU
 #      0x3FCF4, the West's layout), so the PSP path reads that.
+#  26  fight 26's turn words in place (2026-10-31, D280): 0x669D10 / 0x669D18
+#      behind 0x669D20 / 0x669D24, for the Japan disc, whose BOSS025.EMI draws
+#      the PC's own layout - a word, the count, a word at the PC's places
+#      (turn_words_ja) - where group 18 is the West's re-laid counter.
+#
+# Under ja-JP (D280, convert_exe_ja) the groups come from the Japan disc's
+# own tables: two bytes a character in the ja-JP font, groups 8 and 20 in
+# the DLL's buffers (JA_LABEL_ROOMS), 21..23 not sent (the PC's bytes are
+# the Japan disc's ASCII words), 18 replaced by 26.
+#
 #  11  the zenny unit, 4 bytes at 0x66A31C: the one byte `s`, whose
 #      single-byte slot of the shipped font is the port's coin, repainted
 #      by the overlay into a letter. START.EMI has the US code 0x60 (the
@@ -2230,13 +2242,23 @@ LABEL_ROOMS = {1: (8, 8), 2: (8, 8, 8, 8), 3: (16,) * 5, 4: (16,) * 5, 5: (8, 8,
                7: (16,) * 11, 8: (8, 12), 9: (8,), 10: (16,) * 10, 11: (4,), 12: (8, 8, 8), 13: (16,) * 20,
                14: (16,) * 5, 15: (16,) * 6, 16: (16,) * 60, 17: (5,), 18: (16,) * 3, 19: (16,) * 3,
                20: (PARTS_TITLE_ROOM,), 21: (8, 4, 8), 22: (8,), 23: (8,), 24: COMBO_PROMPT_ROOMS,
-               25: (16, 4)}
+               25: (16, 4), 26: (8, 8)}
+# D280: a ja-JP layer's rooms where they are not LABEL_ROOMS': group 20, the
+# Japan disc's fifteen-character title, is kept in a 32-byte buffer of the
+# DLL's (labels.cpp), where the PC's slot holds 19 bytes.
+JA_LABEL_ROOMS = {20: (32,),
+                  # group 8 into the DLL's buffers (its one reader the table
+                  # 0x66B36C): the Japan disc's choice is six characters
+                  8: (16, 16),
+                  # group 17: the whole name with its NUL, at most the
+                  # character record's nine (battle_e1.cpp copies it whole)
+                  17: (9,)}
 LABEL_NAMES = {1: "status words", 2: "menu stats", 3: "item types", 4: "skill types", 5: "battle stats",
                6: "master list", 7: "sort menus", 8: "note sort", 9: "ink label", 10: "formations",
                11: "zenny unit", 12: "gene tabs", 13: "village lists", 14: "village words",
                15: "identify words", 16: "faerie names", 17: "guest name", 18: "turn counter",
                19: "hi-lo choices", 20: "parts title", 21: "panel labels", 22: "list title", 23: "gene title",
-               24: "combo prompts", 25: "chop count"}
+               24: "combo prompts", 25: "chop count", 26: "turn words"}
 
 
 def label_pointers(donor, at, count):
@@ -2254,7 +2276,10 @@ def label_chunk(tag, raws, report, raw=()):
     the slots in `raw` as they are (bytes the DLL reads itself: group 15's
     words, which the 8 px draw maps by their ASCII; group 18's layout)."""
     payload, kept = bytearray([len(raws)]), 0
-    for i, (word, room) in enumerate(zip(raws, LABEL_ROOMS[tag])):
+    rooms = JA_LABEL_ROOMS.get(tag, LABEL_ROOMS[tag]) if donor_ja else LABEL_ROOMS[tag]
+    if donor_ja:
+        JA_WORDS.extend(w for i, w in enumerate(raws) if w and i not in raw)
+    for i, (word, room) in enumerate(zip(raws, rooms)):
         if i in raw:
             if not word or 0 in word or len(word) + 1 > room:
                 raise SystemExit("labels: %s %d is not a string of 1..%d bytes: %s"
@@ -2262,14 +2287,23 @@ def label_chunk(tag, raws, report, raw=()):
             payload += word + b"\0"
             continue
         raw_ = word
-        enc = [encode_char(c) for c in raw_]
         if not raw_ and tag in (15, 16):  # a faerie record, or an identify word not found: as shipped
             payload += b"\0"
             continue
-        if not raw_ or any(e is None for e in enc):
+        # encode_text: a Japanese record's lead byte and its code are one
+        # character (D280); a Latin donor has no lead bytes, so it is
+        # encode_char a byte, as before.
+        out = encode_text(raw_) if raw_ else None
+        if out is None:
             raise SystemExit("labels: %s %d holds a code this language does not have: %s"
                              % (LABEL_NAMES[tag], i, raw_.hex(" ")))
-        out = b"".join(enc)
+        if len(out) + 1 > room and donor_ja:
+            # D280: a Japanese word that does not fit in the ja-JP font's
+            # glyphs takes the one-byte slots for its Latin capitals, digits
+            # and signs (JA_SHARED: the port's half-width glyphs on a PC
+            # install, the disc's on a disc-only one), as the exe's own
+            # strings draw them.
+            out = ja_compact(raw_)
         if len(out) + 1 > room:
             out, kept = b"", kept + 1
         payload += out + b"\0"
@@ -2402,7 +2436,10 @@ def guest_name(sections, data=None):
         regs = calls[k][2]
         if regs.get(6) == GUEST_COPY and 5 in regs and calls[k - 2][2].get(4) == GUEST_SOUND:
             s = mips_cstr(sections if data is None else data, regs[5])
-            if s and is_label_word(s, GUEST_COPY):
+            # The Japan disc's name is its own codes (D280): one that the
+            # ja-JP font has, whose copy of GUEST_COPY bytes holds it whole.
+            if s and (is_label_word(s, GUEST_COPY) if not donor_ja else
+                      len(s) < GUEST_COPY and encode_text(s) is not None):
                 return s
     return None
 
@@ -2457,6 +2494,56 @@ def turn_counter(sections):
             continue
         return plural, singular, bytes([x_count, x_words]) + test[0] + bytes([test[1]])
     return None
+
+
+# Group 26 (D280): the PC's Boss26Fx_DrawCount 0x43C780 draws a word at
+# (0x7A, 0x12), the count at 0x92 and a word at 0xAA - the Japanese routine's
+# places; its two words are the slots 0x669D10 / 0x669D18 behind 0x669D20 /
+# 0x669D24.
+TURN_PC_ROW_X = (0x7A, 0x92, 0xAA)
+
+
+def turn_words_ja(sections):
+    """The Japan disc's turn counter words (before, after), or None: the
+    routine begins at the call drawing TURN_BOX; to its `jr $ra`, three calls
+    on row TURN_ROW at the PC's places TURN_PC_ROW_X; the string the routine
+    names with a `lui` / `addiu` before the first is the word before the count
+    (JP BOSS025.EMI 0x800C30B4, passed on the stack), and the routine's
+    `addiu` of 4 to that register before the third names the word after it -
+    the next string, 4-aligned. Each must be a string of the ja-JP font."""
+    insns = list(mips_insns(sections))
+    calls = mips_calls(sections)
+    found = []
+    for k, (at, target, regs) in enumerate(calls):
+        if (regs.get(4), regs.get(5)) != TURN_BOX:
+            continue
+        end = next((i[0] for i in insns if i[0] > at and i[1] == 0 and i[7] == 0x08 and i[2] == 31), None)
+        if end is None:
+            continue
+        row = [c for c in calls[k + 1:] if c[0] < end and c[2].get(5) == TURN_ROW and 4 in c[2]]
+        if tuple(c[2][4] for c in row) != TURN_PC_ROW_X:
+            continue
+        hi, before = {}, None
+        for a, op, rs, rt, rd, imm, simm, funct, w in insns:
+            if not at < a < row[0][0]:
+                continue
+            if op == 0x0F:
+                hi[rt] = imm << 16
+            elif op == 0x09 and rs in hi and rt == rs:
+                s = mips_cstr(sections, (hi[rs] + simm) & 0xFFFFFFFF)
+                if s and b"%" not in s:
+                    before = (rt, (hi[rs] + simm) & 0xFFFFFFFF, s)
+        if before is None:
+            continue
+        reg, va, first = before
+        step = ((len(first) + 1 + 3) & ~3)
+        if not any(row[1][0] < i[0] < row[2][0] and i[1] == 0x09 and i[2] == reg and i[3] == reg and i[6] == step
+                   for i in insns):
+            continue
+        second = mips_cstr(sections, va + step)
+        if second and all(w and encode_text(w) is not None for w in (first, second)):
+            found.append((first, second))
+    return found[0] if len(found) == 1 else None
 
 
 def chop_count(sections):
@@ -2650,12 +2737,342 @@ def code_label_chunks(magic, bate, boss, report):
         out[17] = label_chunk(17, [name], report)
     elif bate:
         report.append("guest name: not found in BATE.EMI")
-    turns = turn_counter(kseg0(boss)) if boss else None
+    turns = turn_counter(kseg0(boss)) if boss and not donor_ja else None
+    words = turn_words_ja(kseg0(boss)) if boss and donor_ja else None
+    if words:
+        # D280: the Japan disc's routine is the PC's own - a word before the
+        # count and one after it, at the PC's places - so its two words go
+        # in place (group 26), and the PC's draw stays as it is.
+        out[26] = label_chunk(26, list(words), report)
+    elif boss and donor_ja:
+        report.append("turn words: not found in BOSS025.EMI")
     if turns:
         out[18] = label_chunk(18, list(turns), report, raw={2})
-    elif boss:
+    elif boss and not donor_ja:
         report.append("turn counter: not found in BOSS025.EMI")
     return out
+
+
+# ---- D280: the exe's own strings from the Japan disc (a ja-JP layer)
+#
+# The Japan disc's tables are laid out as the PC's are (the PC port is the
+# Japanese build's), not as the Western discs' the Latin finders know: counts
+# in characters, slots without a NUL, the space 0xFF. Each table below is
+# found by structure and taken only where the module's own code reads it - a
+# `lui` / `addiu` (lw, lbu) naming its address (`emi_readers`), as D279's
+# fix found the fishing module's.
+
+def emi_va(blob, off):
+    """The KSEG0 address a file offset of an EMI is loaded at, or None."""
+    count, = struct.unpack_from("<I", blob, 0)
+    pos = 0x800
+    for i in range(count):
+        size, dest = struct.unpack_from("<II", blob, 0x10 + 16 * i)
+        if pos <= off < pos + size and 0x80000000 <= dest < 0x80800000:
+            return dest + off - pos
+        pos += ((size + 0x7FF) >> 11) * 0x800
+    return None
+
+
+def emi_readers(blob):
+    """The addresses the module's code names with a `lui` and an `addiu` /
+    `lw` / `lbu` (lui_sites), over its KSEG0 sections."""
+    out = set()
+    for d, s in kseg0(emi_sections(blob)):
+        words = struct.unpack_from("<%dI" % (len(s) // 4), s)
+        out.update(v for k, op, v in lui_sites(words))
+    return out
+
+
+def ja_compact(raw):
+    """A Japanese string encoded with its JA_SHARED codes (Latin capitals,
+    digits, signs) in their one-byte slots and the rest as encode_text."""
+    out, i = bytearray(), 0
+    while i < len(raw):
+        if raw[i] in LEAD:
+            out += ja_encode(raw[i + 1], raw[i])
+            i += 2
+        else:
+            out += bytes([raw[i]]) if raw[i] in JA_SHARED else ja_encode(raw[i])
+            i += 1
+    return bytes(out)
+
+
+def ja_count(raw):
+    """The characters in a Japanese string: a lead byte and its code are one."""
+    n = i = 0
+    while i < len(raw):
+        i += 2 if raw[i] in LEAD else 1
+        n += 1
+    return n
+
+
+def ja_slot(blob, at, chars, room):
+    """A Japanese slot's string: up to `chars` characters (ja_chars) within
+    `room` bytes and the rest of the slot NUL, or None."""
+    raw = ja_chars(blob, at, chars, room)
+    if not raw or any(blob[at + len(raw):at + room]):
+        return None
+    return raw
+
+
+def ja_fit(raw, room, what):
+    """A Japanese string encoded for the ja-JP font, or SystemExit if a code
+    has no glyph or it does not fit `room` with its NUL."""
+    out = encode_text(raw)
+    if out is None:
+        raise SystemExit("%s: a code the ja-JP font has not: %s" % (what, raw.hex(" ")))
+    if len(out) + 1 > room:
+        raise SystemExit("%s: %d bytes encoded with its NUL, the room is %d" % (what, len(out) + 1, room))
+    return out
+
+
+def config_ja_around(start, gap, readers):
+    """(labels, controller names) around a gap table at `gap`, or None: the
+    CONFIG_LABELS strings the code names that end, NUL-padded, right at it,
+    and CONFIG_CTRL records of CTRL_STRIDE after it, each a count of
+    characters and as many, the first named by the code."""
+    labels, p, end = [], gap, gap
+    while len(labels) < CONFIG_LABELS and p > gap - 0x80:
+        p -= 1
+        # A label's start is where the code names it (the first follows a
+        # pointer table on the Japan disc, no NUL before it).
+        if start[p] and emi_va(start, p) in readers:
+            raw = start[p:start.index(b"\0", p)]
+            if any(start[p + len(raw):end]):
+                return None
+            labels.insert(0, raw)
+            end = p
+    ctrl = gap + len(CONFIG_GAP)
+    if len(labels) != CONFIG_LABELS or emi_va(start, ctrl) not in readers:
+        return None
+    ctrls = []
+    for i in range(CONFIG_CTRL):
+        rec = start[ctrl + i * CTRL_STRIDE:ctrl + (i + 1) * CTRL_STRIDE]
+        raw = ja_slot(rec, 1, rec[0], CTRL_STRIDE - 1) if 0 < rec[0] < CTRL_STRIDE else None
+        if raw is None or ja_count(raw) != rec[0]:
+            return None
+        ctrls.append(raw)
+    return labels, ctrls
+
+
+def convert_config_ja(start, report):
+    """(the Config screen's kind-7 chunk, its strings) from the Japan disc's
+    START.EMI, or (None, []). The records end at the row tables
+    (CONFIG_TABLES), as on every disc, each a count of characters, the x and
+    the string; the six labels are the strings the row draw names (JP
+    0x801E2764.., a `lui` / `addiu` and a copy each) ending at the gap table
+    CONFIG_GAP its code reads; the six controller names the records of
+    CTRL_STRIDE after it (a count of characters, then the string), read by
+    the panel's draw."""
+    at = start.find(CONFIG_TABLES[1:])
+    if at < 1 or start[at - 1] != 0 or start.find(CONFIG_TABLES[1:], at + 1) >= 0:
+        report.append("config screen: not found on this disc")
+        return None, []
+    readers = emi_readers(start)
+    first = at - 1 - CONFIG_RECORDS * 8
+    records = []
+    for i in range(CONFIG_RECORDS):
+        r = start[first + 8 * i:first + 8 * i + 8]
+        raw = ja_slot(r, 2, r[0], 6)
+        if raw is None or ja_count(raw) != r[0]:
+            raise SystemExit("config (Japanese): record %d does not hold the %d characters its count says" % (i, r[0]))
+        records.append((r[0], r[1], raw))
+    if emi_va(start, first) not in readers:
+        raise SystemExit("config (Japanese): the option records are read by no code of START.EMI")
+    found, seen = [], start.find(CONFIG_GAP)
+    while seen >= 0:
+        # The gap table read by the code (the Japan disc's from the NUL before
+        # it), the six labels right before it and the six controller records
+        # right after: one place on the disc has all three.
+        if emi_va(start, seen) in readers or emi_va(start, seen - 1) in readers:
+            got = config_ja_around(start, seen, readers)
+            if got:
+                found.append(got)
+        seen = start.find(CONFIG_GAP, seen + 1)
+    if len(found) != 1:
+        raise SystemExit("config (Japanese): %d gap tables with six read labels before and six controller records "
+                         "after, wanted one" % len(found))
+    labels, ctrls = found[0]
+    payload = bytearray([CONFIG_LABELS])
+    for i, raw in enumerate(labels):
+        payload += ja_fit(raw, 32, "config label %d" % i) + b"\0"
+    payload.append(CONFIG_RECORDS)
+    for i, (count, x, raw) in enumerate(records):
+        # The disc's count and x, which are the PC's own (the PC's layout is
+        # the Japanese build's); 14 bytes of string after them.
+        payload += bytes([count, x]) + ja_fit(raw, 14, "config option %d" % i) + b"\0"
+    payload.append(CONFIG_CTRL)
+    for i, raw in enumerate(ctrls):
+        payload += ja_fit(raw, 32, "controller name %d" % i) + b"\0"
+    report.append("config screen: %d labels, %d options, %d controller names"
+                  % (CONFIG_LABELS, CONFIG_RECORDS, CONFIG_CTRL))
+    return (KIND_CONFIG, 0, bytes(payload)), labels + [r[2] for r in records] + ctrls
+
+
+def convert_battle_messages_ja(game, battle, report):
+    """(the banner's twelve messages, their strings) from the Japan disc's
+    BATTLE.EMI, or (None, []): eight-byte slots, the second and the fourth
+    the extra-turn suffixes (a space and two 0x15 codes, as the US slots
+    end), the first slot read by the module's code (JP 0x801EAFB0, by
+    0x801DE92C)."""
+    table = struct.unpack("<%dI" % MESSAGE_COUNT, exe_bytes(game, MESSAGE_TABLE, 4 * MESSAGE_COUNT))
+    if not game.disc_only and table != MESSAGE_SHIPPED:
+        raise SystemExit("battle messages: the table at 0x%X is not the one this build expects" % MESSAGE_TABLE)
+    ex, second, stride = b"\xff\x15\x1b\x15\x1c\x00", b"\xff\x15\x1f\x15\x20\x00", 8
+    readers, found = emi_readers(battle), []
+    at = battle.find(ex)
+    while at >= 0:
+        if at >= stride and battle[at + 2 * stride:at + 2 * stride + len(second)] == second \
+                and emi_va(battle, at - stride) in readers:
+            found.append(at - stride)
+        at = battle.find(ex, at + 1)
+    if len(found) != 1:
+        report.append("battle messages: %d runs of eight-byte slots read by BATTLE.EMI's code, wanted one" % len(found))
+        return None, []
+    raws, payload = [], bytearray([MESSAGE_COUNT])
+    for i in range(MESSAGE_COUNT):
+        raw = ja_slot(battle, found[0] + stride * i, stride, stride)
+        if raw is None:
+            raise SystemExit("battle messages (Japanese): slot %d is not one string" % i)
+        payload += ja_fit(raw, MESSAGE_ROOM + 1, "battle message %d" % i) + b"\0"
+        raws.append(raw)
+    report.append("battle messages: %d" % MESSAGE_COUNT)
+    return (KIND_MESSAGES, 0, bytes(payload)), raws
+
+
+VILLAGE_LIST_CHARS = 3      # the board's list boxes draw each line with Text_DrawAt's count 3 (PC 0x4598A0, JP COMMU01)
+
+
+def village_ja(game, commu):
+    """(lists, titles, pair, hilo) for groups 13, 14 and 19 from the Japan
+    disc's COMMU*.EMI, each None where not found:
+      - the two lists of ten: two bases the module's code names whose
+        distance is ten slots of 4..8 bytes, every slot up to three
+        characters and NUL after (no NUL where the word fills it), the second
+        list's stride the one whose end, 4-aligned, is named too (the rows
+        table): JP COMMU01 0x801D4D44 stride 6, 0x801D4D80 stride 5, the board
+        list draws 0x801D4290 / 0x801D4648 with Text_DrawAt's count 3;
+      - the count word: two equal 4-byte slots ending at the kind table;
+      - the money and stake titles: three characters each at the end of the
+        rectangles and 12 bytes on (the zenny code's 4-byte slot between),
+        both named; the hi-lo choices: three 4-byte slots right before the
+        rectangles, their base named."""
+    lists = titles = pair = hilo = None
+    n = LABEL_VILLAGE_LISTS // 2
+    for blob in commu:
+        readers = emi_readers(blob)
+        named = lambda off: emi_va(blob, off) in readers
+        at = find_anchor(game, blob, "village kinds")
+        if pair is None and at >= 8:
+            found = [ja_slot(blob, at - 8 + 4 * i, 4, 4) for i in range(2)]
+            if all(found) and found[0] == found[1]:
+                pair = found
+        for d, s in kseg0(emi_sections(blob)) if lists is None else ():
+            cands = sorted(v - d for v in readers if d <= v < d + len(s))
+            for a, b in zip(cands, cands[1:]):
+                if (b - a) % n or not 4 <= (b - a) // n <= 8:
+                    continue
+                sa = (b - a) // n
+                first = [ja_slot(s, a + sa * i, VILLAGE_LIST_CHARS, sa) for i in range(n)]
+                if not all(first):
+                    continue
+                for sb in range(4, 9):
+                    end = b + sb * n
+                    rows = (end + 3) & ~3
+                    second = [ja_slot(s, b + sb * i, VILLAGE_LIST_CHARS, sb) for i in range(n)]
+                    if all(second) and not any(s[end:rows]) and d + rows in readers:
+                        lists = first + second
+                        break
+                if lists:
+                    break
+            if lists:
+                break
+        at = find_anchor(game, blob, "village rects")
+        if at >= 12:
+            end = at + LABEL_VILLAGE_RECTS_LEN
+            if titles is None and named(end) and named(end + 12):
+                found = [ja_slot(blob, end, 3, 8), ja_slot(blob, end + 12, 3, 4)]
+                if all(found):
+                    titles = found
+            if hilo is None and named(at - 12):
+                found = [ja_slot(blob, at - 12 + 4 * i, 4, 4) for i in range(3)]
+                if all(found):
+                    hilo = found
+    return lists, titles, pair, hilo
+
+
+JA_WORDS = []               # every Japanese string label_chunk takes (convert_exe_ja's BOOT.BIN check)
+
+
+def convert_exe_ja(src, disc):
+    """The exe's own strings for a ja-JP layer from the Japan disc (D280):
+    kind 7 (the Config screen), 8 (the menu verbs), 10 (the default names),
+    11 (the merchant), 9 and 12 (the battle's commands and messages) and the
+    kind-15 label groups, each read off the module that draws it. A PSP-JP
+    disc's EMIs are the Japan disc's own modules, so they are read there too,
+    and each word is looked for in BOOT.BIN's data, where the PSP's own code
+    reads it (reported, as convert_fishing_ja's check is). Prints its report;
+    returns the chunks."""
+    global donor_pointers
+    if not donor_ja:
+        raise SystemExit("the exe's strings (Japanese): not a Japanese disc")
+    found = lambda name: disc.find(name)
+    read = lambda name: disc.read(found(name)[0]) if found(name) else None
+    sections = lambda name: module_sections(disc, name)
+    start, battle, shop, status = read("START.EMI"), read("BATTLE.EMI"), read("SHOP.EMI"), read("STATUS.EMI")
+    commu = [disc.read(p) for p in sorted(disc.files) if re.match(r"(.*/)?COMMU[0-9A-Z]*\.EMI$", p)]
+    chunks, report, words = [], [], []
+    saved, donor_pointers = donor_pointers, PSX_POINTERS     # an EMI's pointers are KSEG0's, on a PSP disc too
+    del JA_WORDS[:]
+    try:
+        if start:
+            cfg, raws = convert_config_ja(start, report)
+            chunks += [cfg] if cfg else []
+            words += raws
+            verbs = convert_verbs(src, start)
+            chunks += verbs
+            report.append("menu verbs: " + ("%d" % VERB_COUNT if verbs else "not found"))
+            names = convert_char_names(src, start)
+            chunks += names
+            report.append("character names: " + ("%d" % CHAR_COUNT if names else "not found"))
+        merchant = convert_merchant(src, disc)
+        chunks += merchant
+        report.append("merchant name: " + ("found" if merchant else "not found"))
+        if battle:
+            cmds = convert_battle_commands(src, battle)
+            chunks += cmds
+            report.append("battle commands: " + ("%d" % BATTLE_COUNT if cmds else "not found"))
+            msgs, raws = convert_battle_messages_ja(src, battle, report)
+            chunks += [msgs] if msgs else []
+            words += raws
+        labels, lines = convert_labels(src, start, battle, shop, commu, sections("MAGIC060.EMI"), sections("BATE.EMI"),
+                                       sections("BOSS025.EMI"), sections("SCENA10.EMI"), status,
+                                       None if is_psp(disc) else sections("MAGIC003.EMI"), sections("AREA008.EMI"))
+    finally:
+        donor_pointers = saved
+    if is_psp(disc):
+        # Super Combo's prompts from BOOT.BIN, where the PSP's own effect
+        # reads them. Group 15 (the Identify panel's headings and words) is
+        # the UMD's MAGIC060.EMI's, as PSP-EU's branch takes it
+        # (convert_labels_psp); before D280's layer a PSP-JP layer had none,
+        # and the panel drew only the target's name there (group PL's
+        # capture, 2026-10-31).
+        boot = disc.boot()
+        combo = combo_prompt_chunk([(0, boot[:disc.text_end])], [(0, boot)], lines)
+        labels += [combo] if combo else []
+    chunks += labels
+    lines = [l for l in lines if not l.startswith(("panel labels", "list title"))]
+    lines.append("panel labels, list title and gene title the PC's own (the Japan disc's ASCII words)")
+    report.append("labels: " + ", ".join(lines))
+    words += JA_WORDS
+    if is_psp(disc):
+        data = disc.boot()[disc.text_end:]
+        held = sum(1 for w in words if w in data)
+        report.append("BOOT.BIN's data holds %d of the %d words taken from the UMD's modules" % (held, len(words)))
+    for line in report:
+        print(line)
+    return chunks
 
 
 def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=None, boss=None, scena10=None,
@@ -2668,18 +3085,26 @@ def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=No
     panel_labels = list_title = None
     cut = lambda blob, at, size: blob[at:at + size].split(b"\0")[0]
     if start:
+        # The status words and the menu's stats between the head and the
+        # tail: two slots of 8 and four of 4 on a Western disc; on the Japan
+        # disc two of 8 and four of 8, 8, 4, 8 (D280: START.EMI 0x801EC8C0..,
+        # each slot read by its own `lui` / `addiu` in the member panel's and
+        # the stats panel's draws), 44 bytes in all.
+        stat_slots = (8, 8, 4, 8) if donor_ja else (4, 4, 4, 4)
+        between = 16 + sum(stat_slots)
         at = find_anchor(game, start, "label head")
         while at >= 0 and not same_anchor(game, "label tail",
-                                          start[at + LABEL_HEAD_LEN + 32:at + LABEL_HEAD_LEN + 32 + LABEL_TAIL_LEN]):
+                                          start[at + LABEL_HEAD_LEN + between:at + LABEL_HEAD_LEN + between + LABEL_TAIL_LEN]):
             at = find_anchor(game, start, "label head", at + 1)
         if at >= 0:
             first = at + LABEL_HEAD_LEN
             chunks.append(label_chunk(1, [cut(start, first + 8 * i, 8) for i in range(2)], report))
-            chunks.append(label_chunk(2, [cut(start, first + 16 + 4 * i, 4) for i in range(4)], report))
+            offs = [16 + sum(stat_slots[:i]) for i in range(4)]
+            chunks.append(label_chunk(2, [cut(start, first + o, n) for o, n in zip(offs, stat_slots)], report))
             # 21: the three panel labels the PC has right after the tail
             # (EQUIP 0x663668, EXP 0x663670, NEXT 0x663674): the disc's own
             # words in the same three slots (the French SUIV., the German AUSR).
-            tail = first + 32 + LABEL_TAIL_LEN
+            tail = first + between + LABEL_TAIL_LEN
             panel = [cut(start, tail, 8), cut(start, tail + 8, 4), cut(start, tail + 12, 8)]
             if all(w and all(is_word_byte(c) for c in w) for w in panel):
                 panel_labels = label_chunk(21, panel, report)
@@ -2761,7 +3186,8 @@ def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=No
         chunks.append(label_chunk(10, names, report))
         at = find_anchor(game, start, "wheel triangle")
         unit = at + LABEL_WHEEL_TRIANGLE_LEN
-        if at < 0 or start[unit + 4:unit + 8] != b"\x3e\0\0\0":
+        # The full stop is the script's: the West's 0x3E, the Japan disc's 0x3A (D280).
+        if at < 0 or start[unit + 4:unit + 8] != (b"\x3a\0\0\0" if donor_ja else b"\x3e\0\0\0"):
             raise SystemExit("labels: START.EMI's icon wheel triangle is not followed by the unit and the full stop")
         chunks.append(label_chunk(11, [cut(start, unit, 4)], report))
     if battle:
@@ -2794,7 +3220,9 @@ def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=No
             out.append(word)
         return out
 
-    for blob in commu:
+    if donor_ja:
+        lists, titles, pair, hilo = village_ja(game, commu)
+    for blob in () if donor_ja else commu:
         at = find_anchor(game, blob, "village kinds")
         if pair is None and at >= 32:
             # Two (plural, singular) pairs of 8-byte slots end right at the
@@ -2884,7 +3312,8 @@ def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=No
         while at >= 0:
             ink = at + len(LABEL_NOTE_HEAD) + 12
             word = cut(shop, ink, 8)
-            if label_pointers(shop, at + len(LABEL_NOTE_HEAD), 3) and 0 < len(word) < 8 and max(word) < 0x80:
+            if label_pointers(shop, at + len(LABEL_NOTE_HEAD), 3) and 0 < len(word) < 8 \
+                    and (encode_text(word) is not None if donor_ja else max(word) < 0x80):
                 break
             at = shop.find(LABEL_NOTE_HEAD, at + 1)
         if at < 0:
@@ -2897,7 +3326,7 @@ def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=No
             list_title = label_chunk(22, [title], report)
         else:
             report.append("list title: no word before the SKILL slot")
-    chunks += [coded[t] for t in (17, 18) if t in coded]
+    chunks += [coded[t] for t in (17, 18, 26) if t in coded]
     if hilo:
         chunks.append(label_chunk(19, hilo, report))
     else:
@@ -2908,11 +3337,14 @@ def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=No
         chunks.append(label_chunk(20, [title], report))
     elif scena10:
         report.append("parts title: not found in SCENA10.EMI")
-    chunks += [c for c in (panel_labels, list_title) if c]
+    # Under ja-JP the panel labels and the list and gene titles are the
+    # PC's own bytes already (the Japan disc's ASCII words, which a disc-only
+    # image carries from the disc): not sent (D280).
+    chunks += [c for c in (panel_labels, list_title) if c and not donor_ja]
     # 23: the gene list's title: the word after the 16 bytes the PC has at
     # LABEL_GENE_LIST_HEAD, in STATUS.EMI (whose twin of MenuList_GeneWinDraw
     # reads it, US 0x801EB250); the other copy of those bytes has no word after it.
-    if status:
+    if status and not donor_ja:
         at, found = find_anchor(game, status, "gene list head"), []
         while at >= 0:
             word = cut(status, at + 16, 8)
@@ -2936,7 +3368,7 @@ def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=No
         chop = chop_count(kseg0(area008))
         if chop is None:
             report.append("chop count: no one routine drawing the box (0xC8, 0xA0) and a count on row 0xA3 in AREA008.EMI")
-        elif chop[0] != b" " and any(encode_char(c) is None for c in chop[0]):
+        elif chop[0] != b" " and encode_text(chop[0]) is None:
             report.append("chop count: the disc's word holds a code this language does not have, the PC's own drawn")
         else:
             chunks.append(label_chunk(25, list(chop), report, raw={0, 1} if chop[0] == b" " else {1}))
@@ -4750,11 +5182,9 @@ def build_all(args, disc_path):
         donor_pointers = disc.pointers()
         read_module = lambda found: boot
     if donor_ja:
-        # The exe's own strings (kinds 7..12) are found with the US layouts and
-        # drawn through the Latin layout patches; a Japanese overlay leaves
-        # them as shipped for now.
-        print("config, verbs, character names, merchant, battle labels and messages: "
-              "not built for a Japanese disc")
+        # The exe's own strings (kinds 7..12 and 15) from the Japan disc's own
+        # tables (convert_exe_ja, D280), after the names: so the pair codes
+        # the item and enemy names take keep the numbers they had.
         start_emi = None
         if not args.only:
             # D279: the fishing banner's lines, labels and tabs, by the module's own readers.
@@ -4816,23 +5246,6 @@ def build_all(args, disc_path):
                                             module_sections(disc, "MAGIC003.EMI"), module_sections(disc, "AREA008.EMI"))
         overlays["FIRST.DAT"] += labels
         print("labels: " + (", ".join(report) if report else "not found on this disc"))
-    elif donor_ja and not args.only:
-        # A Japanese disc builds no labels but group 15 (the PlayStation's:
-        # its panel's words are the PC's own English, and its headings are the
-        # small words too) and group 24 (both: Super Combo's prompts are the
-        # English the effect's own page draws; PSP-JP's from BOOT.BIN as
-        # PSP-EU's, 2026-10-26).
-        report, chunks = [], []
-        if not is_psp(disc):
-            chunks.append(code_label_chunks(module_sections(disc, "MAGIC060.EMI"), None, None, report)[15])
-            magic003 = module_sections(disc, "MAGIC003.EMI")
-            chunk = combo_prompt_chunk(kseg0(magic003), kseg0(magic003), report) if magic003 else None
-        else:
-            chunk = combo_prompt_chunk([(0, boot[:disc.text_end])], [(0, boot)], report)
-        if chunk:
-            chunks.append(chunk)
-        overlays["FIRST.DAT"] += chunks
-        print("labels: " + ", ".join(report))
     if not donor_ja and not is_psp(disc) and not args.only:
         # DIV-0148: the release's own staff roll (a US or PAL disc). A Japanese
         # or PSP layer carries none: the roll is .data's, the Japanese release's.
@@ -4851,6 +5264,8 @@ def build_all(args, disc_path):
         names, report = convert_names(src, emi_sections(disc.read(game_emi[0]))[0][1])
         overlays["FIRST.DAT"] += names
         print("names: " + ", ".join(report))
+    if donor_ja and not args.only:
+        overlays["FIRST.DAT"] += convert_exe_ja(src, disc)
     print("enemy names: %d (%d kept)" % (enemies, kept_enemy))
     print("button codes: %d in the dialogue, by %s (docs/button-dialogue.md)" % (sum(button_counts.values()), how))
     for line in button_report(button_counts):
@@ -5379,6 +5794,83 @@ def selftest_fishing_ja():
           "characters; two tables and a gap refused")
 
 
+def selftest_exe_ja():
+    """D280's readers on synthetic modules (no game data): the Config
+    screen's labels and controller records around a gap table its code
+    reads, the counts as characters (a copy of the gap table with nothing
+    read around it, and a record whose count is not its characters,
+    refused); fight 26's turn words by the routine's three draws at the PC's
+    places and its step of 4 (other places refused)."""
+    global donor_ja
+    saved, donor_ja = donor_ja, True
+    try:
+        base, zero, v0, a0, a1, a2, a3, s0, ra = 0x801D0000, 0, 2, 4, 5, 6, 7, 16, 31
+        lui = lambda rt, imm: (0x0F << 26) | (rt << 16) | (imm & 0xFFFF)
+        addiu = lambda rt, rs, imm: (0x09 << 26) | (rs << 21) | (rt << 16) | (imm & 0xFFFF)
+        jal = lambda target: (0x03 << 26) | ((target >> 2) & 0x3FFFFFF)
+        hi = lambda a: (a + 0x8000) >> 16
+        names = lambda a, r=v0: [lui(r, hi(a)), addiu(r, r, a)]
+
+        def emi(code, data_at, data):
+            sec = bytearray(0x3000)
+            sec[:4 * len(code)] = struct.pack("<%dI" % len(code), *code)
+            sec[data_at - base:data_at - base + len(data)] = data
+            head = bytearray(0x800)
+            struct.pack_into("<I", head, 0, 1)
+            head[8:16] = b"MATH_TBL"
+            struct.pack_into("<II", head, 0x10, len(sec), base)
+            return bytes(head + sec)
+        labels = [b"\x5b\x5c\x5d", b"\x12\x01\x5e", b"\x5f\x60", b"\x61\x62\x63\x64", b"\x12\x02", b"\x65"]
+        data, at = bytearray(b"\x80\x80\x80\x80"), []          # the labels follow a pointer, no NUL before
+        for w in labels:
+            at.append(base + 0x2000 + len(data))
+            data += w + b"\0"
+            data += bytes(-len(data) % 4)
+        gap = base + 0x2000 + len(data) + 1
+        data += b"\0" + CONFIG_GAP
+        ctrl = base + 0x2000 + len(data)
+        for k in range(CONFIG_CTRL):
+            w = labels[k]
+            data += bytes([ja_count(w)]) + w + bytes(CTRL_STRIDE - 1 - len(w))
+        data += bytes(8) + CONFIG_GAP + bytes(64)                      # a second gap table, nothing read around it
+        code = sum((names(a) for a in at), []) + names(gap - 1) + names(ctrl) + names(ctrl + 0x80)
+        blob = emi(code, base + 0x2000, bytes(data))
+        readers = emi_readers(blob)
+        off = lambda va: 0x800 + va - base
+        got = config_ja_around(blob, off(gap), readers)
+        if got != (labels, labels[:CONFIG_CTRL]):
+            raise SystemExit("selftest: config_ja_around gave %s" % (got,))
+        if config_ja_around(blob, off(ctrl + CONFIG_CTRL * CTRL_STRIDE + 8), readers) is not None:
+            raise SystemExit("selftest: config_ja_around took a gap table with nothing read around it")
+        bad = bytearray(blob)
+        bad[off(ctrl)] += 1
+        if config_ja_around(bytes(bad), off(gap), readers) is not None:
+            raise SystemExit("selftest: config_ja_around took a record whose count is not its characters")
+
+        words = base + 0x2400
+
+        def counter(xs, step=4):
+            return ([addiu(a0, zero, TURN_BOX[0]), addiu(a1, zero, TURN_BOX[1]), jal(base + 0x900), 0,
+                     addiu(a0, zero, xs[0]), addiu(a1, zero, TURN_ROW)] + names(words, s0) + [jal(base + 0x904), 0,
+                     addiu(a0, zero, xs[1]), addiu(a1, zero, TURN_ROW), jal(base + 0x908), 0,
+                     addiu(a0, zero, xs[2]), addiu(a1, zero, TURN_ROW), addiu(s0, s0, step), jal(base + 0x904), 0,
+                     (ra << 21) | 0x08, 0])
+        text = b"\x12\x4b\x82\0\xba\xfc\xd8\0"
+        sections = lambda code: emi_sections(emi(code, words, text))
+        got = turn_words_ja(sections(counter(TURN_PC_ROW_X)))
+        if got != (b"\x12\x4b\x82", b"\xba\xfc\xd8"):
+            raise SystemExit("selftest: turn_words_ja gave %s" % (got,))
+        if turn_words_ja(sections(counter((0x70, 0x80, 0x90)))) is not None:
+            raise SystemExit("selftest: turn_words_ja took a routine at other places")
+        if turn_words_ja(sections(counter(TURN_PC_ROW_X, step=8))) is not None:
+            raise SystemExit("selftest: turn_words_ja took a second word the routine does not step to")
+    finally:
+        donor_ja = saved
+    print("  the exe's strings (Japanese): the Config labels and controller records around the read gap table, counts "
+          "in characters; the turn words by the routine's places and step; a bare gap table, a wrong count, other "
+          "places and another step refused")
+
+
 def cmd_selftest(args):
     selftest_empty_records()
     selftest_rules()
@@ -5387,6 +5879,7 @@ def cmd_selftest(args):
     selftest_code_labels()
     selftest_buttons()
     selftest_fishing_ja()
+    selftest_exe_ja()
     import exe_roll   # DIV-0148: the staff roll's chunk
     errs = exe_roll.selftest()
     if errs:

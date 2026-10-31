@@ -44,7 +44,7 @@ song with a PSX disc's and names its class (docs/psp-music.md 3).
 The song table is the PSP's own: tables.toml's `songs` row for the build, in
 `BOOT.BIN`. Its file ids index `BOOT.BIN`'s path table (64-byte records,
 found by shape: the longest run of records that each name a file of the
-disc's data folder). Song 165 is `BGMBAT00.EMI` sub 1, as on the PSX (seq.py).
+disc's data folder). Songs 165 and 166 are `BGMBAT00.EMI` subs 1 and 2, as on the PSX (seq.py).
 
     python tools/ppms.py build   --disc ISO --out CACHE         (CACHE/base/bgm/: the songs, and their banks by
                                                              vag.psp_music_vab; what importer.py build does
@@ -280,7 +280,8 @@ def file_paths(disc, root=None):
 
 def songs(disc, bid=None):
     """Every song: [{song, emi (key under the data folder), name, sub}] for
-    0..164 from BOOT.BIN's song table, plus 165 = BGMBAT00.EMI sub 1."""
+    0..164 from BOOT.BIN's song table, plus seq.EXTRA_SONGS: 165 = BGMBAT00.EMI
+    sub 1, 166 = its sub 2 (the loss tune, D320)."""
     bid = bid or disc_build_id(disc)
     cat, _, _ = tables.load()
     t = next(t for t in cat["table"] if t["key"] == "songs")
@@ -295,7 +296,7 @@ def songs(disc, bid=None):
         if sq != 0 or sub > 3 or fid >= len(paths) or not paths[fid].startswith("BGM/"):
             raise SystemExit("song %d: file id 0x%X seq %d sub %d is not a BGM file's sub-song" % (n, fid, sq, sub))
         out.append(dict(song=n, emi=paths[fid], sub=sub))
-    out.append(dict(song=seq.BATTLE_SONG[0], emi="BGM/%s.EMI" % seq.BATTLE_SONG[1], sub=seq.BATTLE_SONG[2]))
+    out += [dict(song=n, emi="BGM/%s.EMI" % name, sub=sub) for n, name, sub in seq.EXTRA_SONGS]
     for s in out:
         s["name"] = s["emi"].rsplit("/", 1)[-1][:-4]
     return out
@@ -313,7 +314,7 @@ def _music(build, key):
 
 def song_files(disc_path, bid=None, st=None, with_banks=False):
     """(build id, [(song number, bank name, song file bytes, the pPMS's section
-    index)]) for the 166 songs of a PSP disc; with `with_banks`, a third item
+    index)]) for the 167 songs of a PSP disc; with `with_banks`, a third item
     {bank name: (EMI key, its music sections)} for the EMIs the songs name."""
     build = region_diff.Build("psp", disc_path)
     bid = bid or disc_build_id(build.disc)
@@ -346,7 +347,7 @@ def bank_file(name, sections):
 # ---------------------------------------------------------------- build (base/bgm/ from a PSP disc)
 
 def build(disc_path, out, bid=None):
-    """base/bgm/ under `out` from a PSP disc: the 166 songs and the 81 banks
+    """base/bgm/ under `out` from a PSP disc: the 167 songs and the 81 banks
     they name. Returns (build id, [(path under out, source, sha256)], stats),
     seq.build's shape, so the manifest's `bgm` rows and `verify` take either.
     A song's source is `<build>:ppms:NAME.EMI#i` (the pPMS section), a bank's
@@ -426,7 +427,7 @@ def load_fixture():
 
 def check_fixture(builds):
     """fixtures/bgm-psp.tsv's shape, no game data: seq.py's format versions,
-    PSP builds of fixtures.toml, each the 166 songs and exactly the banks they
+    PSP builds of fixtures.toml, each the 167 songs and exactly the banks they
     name, every row well formed. Returns the errors."""
     if not os.path.exists(FIXTURE):
         return ["bgm-psp.tsv: missing"]
@@ -435,13 +436,13 @@ def check_fixture(builds):
     if versions != (seq.SONG_VERSION, seq.BANK_VERSION):
         errs.append("bgm-psp.tsv: written for song / bank format %s, seq.py writes %d / %d - regenerate it "
                     "(ppms.py fixture)" % (versions, seq.SONG_VERSION, seq.BANK_VERSION))
-    want = {"base/bgm/%03d.DAT" % i for i in range(seq.SONGS + 1)}
+    want = {"base/bgm/%03d.DAT" % i for i in range(seq.LAST_SONG + 1)}
     for bid, files in sorted(rows.items()):
         if bid not in builds or not bid.startswith("psp-"):
             errs.append("bgm-psp.tsv: build %s is not a PSP build of fixtures.toml" % bid)
         got = {r for r in files if not r.startswith("base/bgm/bank/")}
         if got != want:
-            errs.append("bgm-psp.tsv %s: %d song files, not the %d of 000..%03d" % (bid, len(got), len(want), seq.SONGS))
+            errs.append("bgm-psp.tsv %s: %d song files, not the %d of 000..%03d" % (bid, len(got), len(want), seq.LAST_SONG))
         banks = {r for r in files if r.startswith("base/bgm/bank/")}
         named = {"base/bgm/bank/%s.DAT" % files[r][1].split(".EMI")[0] for r in got}
         if banks != named:

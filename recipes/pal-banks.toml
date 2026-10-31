@@ -1,0 +1,90 @@
+# recipes/pal-banks.toml - the European PlayStation releases' own area banks (D257; written by
+# `tools/importer.py pal-banks` from the European discs, then read by `build`, `verify` and `check`).
+#
+# The owner's call of 2026-10-31: "let's take the pal banks" (docs/exe-gap-round.md 7). Eight area
+# banks of the European discs are the PAL sample swap (docs/region-diff.md 8.4): one sound replaced. A
+# disc-only install takes the European disc's own bank at that disc's place in the player's order (a
+# source before it that gives the recipe's bank wins), hashed against `sha256`; with the PC's DAT/
+# among the sources the PC's bank stays. `for` is the recipe's (the PC's) hash, so a row cannot outlive the
+# recipe it was written against. The manifest records such a chunk as `<build>:pal:<emi>`.
+# Names, indices and hashes only - no byte of the game (CLAUDE.md rule 1).
+
+[[pal]]
+file = "AREA100.DAT"
+kind = 2
+tag = 0x00000002
+from = ["psx-eu-en", "psx-fr", "psx-de"]
+emi = "WORLD02/AREA100.EMI#0"
+sha256 = "ac8c7c76fec56f1c1d08763b1a6fc6d800abbda05681a49e6c024f24170341db"
+for = "69f2d45153a335e0f4809db918f106166f0f72909fa2ba2c1648850c27bffe5b"
+why = "the PAL sample swap of region-diff.md 8.4, the European disc's own bank (D257, the owner's call of 2026-10-31)"
+
+[[pal]]
+file = "AREA112.DAT"
+kind = 2
+tag = 0x00000002
+from = ["psx-eu-en", "psx-fr", "psx-de"]
+emi = "WORLD02/AREA112.EMI#0"
+sha256 = "4e3e1ec77d794a386dd08836d901ac02591407edeb39bd3dae7c8b47c35fa0d1"
+for = "308d41e6714c2bc221f97c96b31504e475ec42518959fd3ca3a60e66ded0ba0e"
+why = "the PAL sample swap of region-diff.md 8.4, the European disc's own bank (D257, the owner's call of 2026-10-31)"
+
+[[pal]]
+file = "AREA135.DAT"
+kind = 2
+tag = 0x00000002
+from = ["psx-eu-en", "psx-fr", "psx-de"]
+emi = "WORLD03/AREA135.EMI#0"
+sha256 = "70d6392a2cf721a29d0976cce2fdfade8ae318326c0c41811281949d34bf0f5e"
+for = "77313edc6c4d08c0ecdf198867c959876c659a9f63af8905f15c07940ec087c5"
+why = "the PAL sample swap of region-diff.md 8.4, the European disc's own bank (D257, the owner's call of 2026-10-31)"
+
+[[pal]]
+file = "AREA138.DAT"
+kind = 2
+tag = 0x00000002
+from = ["psx-eu-en", "psx-fr", "psx-de"]
+emi = "WORLD03/AREA138.EMI#0"
+sha256 = "b21419b965cdae5566a2695a1410666a3bed96f241e632f20fcbae86a3adbed3"
+for = "073ac54eb7ff2cb8fbf060b7e97300c9f81ef920a356a25508a59936971018e6"
+why = "the PAL sample swap of region-diff.md 8.4, the European disc's own bank (D257, the owner's call of 2026-10-31)"
+
+[[pal]]
+file = "AREA147.DAT"
+kind = 2
+tag = 0x00000002
+from = ["psx-eu-en", "psx-fr", "psx-de"]
+emi = "WORLD03/AREA147.EMI#0"
+sha256 = "7efa1e9f2f3485f811be49dc1dc62684a6bf3aa8bf2216ec7de69a77eaad6e96"
+for = "e321bcd77af5b44c59a723869f4cf769f2f8abc64e98618a3be87f33620a98d7"
+why = "the PAL sample swap of region-diff.md 8.4, the European disc's own bank (D257, the owner's call of 2026-10-31)"
+
+[[pal]]
+file = "AREA168.DAT"
+kind = 2
+tag = 0x00000002
+from = ["psx-eu-en", "psx-fr", "psx-de"]
+emi = "WORLD04/AREA168.EMI#0"
+sha256 = "d412b8bf2009b3cdfc71cfbdce8258ed82e05678c474ff2ee3a4bedd9cbb1477"
+for = "42891de2925ecd8f9d1a0f50769cfd8a390eef846e710fd1b17f918a828e9bfc"
+why = "the PAL sample swap of region-diff.md 8.4, the European disc's own bank (D257, the owner's call of 2026-10-31)"
+
+[[pal]]
+file = "AREA170.DAT"
+kind = 2
+tag = 0x00000002
+from = ["psx-eu-en", "psx-fr", "psx-de"]
+emi = "WORLD04/AREA170.EMI#0"
+sha256 = "3c3a35fa1779a5f5d21c0e6c4d4813647161ba584f152547d23a69e4b9e3e631"
+for = "352f6015a443949e302a57266b3f376f73059c1f7446732e4bc8f794e3ed3659"
+why = "the PAL sample swap of region-diff.md 8.4, the European disc's own bank (D257, the owner's call of 2026-10-31)"
+
+[[pal]]
+file = "AREA188.DAT"
+kind = 2
+tag = 0x00000002
+from = ["psx-eu-en", "psx-fr", "psx-de"]
+emi = "WORLD04/AREA188.EMI#0"
+sha256 = "42385814c7be6fde7196eb909ca5cb725559f3b7147e3d36f190a88cf78061ce"
+for = "b9c303ab7ed7caf8877fcbac2b55fa812e050b4d417a21b00ddddefebc382178"
+why = "the PAL sample swap of region-diff.md 8.4, the European disc's own bank (D257, the owner's call of 2026-10-31)"
