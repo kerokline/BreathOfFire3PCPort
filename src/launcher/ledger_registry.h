@@ -265,7 +265,7 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "SaveSlotBlank", 0, 13},   // DIV-0193
 };
 
-inline constexpr std::size_t kEntryCount = 194;
+inline constexpr std::size_t kEntryCount = 195;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -654,6 +654,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
     {193, "An empty save slot draws no text",
      Tier::Sensible, State::Active, 0, 189, 1, true, Player::Yes, kTowardPsx, kLangAny},
     {194, "A European disc-only install takes its disc's own eight area banks",
+     Tier::Sensible, State::Active, 0, 190, 0, true, Player::Never, kTowardPsx, kLangAny},
+    {195, "A Western PSX disc-built image takes its disc's own regional layout fields",
      Tier::Sensible, State::Active, 0, 190, 0, true, Player::Never, kTowardPsx, kLangAny},
 };
 

@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 194 entries, DIV-0001..0194, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 195 entries, DIV-0001..0195, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -8254,6 +8254,34 @@ designed in rather than bolted on.
 - **Toward:** none - the PlayStation's executable carries its own tables ("Not applicable" above)
 - **Languages:** any
 - **State:** active
+- Amended 2026-10-31 (the exe-gap round, group PL; [`exe-gap-round.md`](exe-gap-round.md)
+  section 4): four placements of bytes the PC has and a disc carries, and one
+  engine-own region.
+  - **A string piece of an owning-function region** (`exe_tables.imm_strings`):
+    where no whole-region row fits, a reader operand inside the region that
+    starts a printable NUL-ended string is placed alone when exactly one
+    address its twin's lui pair forms holds the same string and NUL. The faerie
+    music player's `=` and `;` (`CommuMusic_DrawList`'s pushes of `0x653144` /
+    `0x653148`; the PlayStation's twin lays the three glyph strings in the other
+    order) place from `ETC/COMMU03.EMI#6` on psx-jp, psp-jp and psp-eu.
+  - **The tail floor at a region another range closes**: `Area121_BandHeights+0x1`
+    places on both PSPs (the region stops where the twin's section ends).
+  - **A `BOOT.BIN` twin read at its first byte**: of several copies a relocated
+    pair reads, the one a pair forms the address of, for a run that starts at
+    its symbol; `LinkedObjectD_Amounts` on psp-eu from the copy
+    `LinkedObjectD_ShowAmount`'s native twin reads.
+  - **The Identify panel's words** (`0x65AAA8..0x65AAC4`, label group 15's
+    shipped slots and the EXP label `Identify_Draw*` read in place) are the
+    engine's own (`exe_own.cpp` `IdentifyWords`), as D278's marks are: no
+    Japanese or PSP disc's MAGIC060 carries them in the PC's place, and PSP-JP's
+    layer writes no group 15, so a PSP-JP disc-built install drew no EXP label
+    (captured 2026-10-31, `identify.txt` frame 900 before and after; PSP-EU's
+    layer draws all four words, unchanged). Equal to `BOF3.exe`'s on a PC install.
+  `gap` rows per build 47 / 48 / 51 / 51 / 20 / 21 / 20 (US, EU-en, FR, DE, JP,
+  PSP-JP, PSP-EU) to 40 / 41 / 44 / 44 / 18 / 18 / 16 with DIV-PL-A's regional
+  fields; `ConfigScreen_OpenStates+0x144` (the default keys' names) classed
+  `port-platform`; `exe_tables.py check` with the seven discs 0 errors,
+  `exe_scan.py` no `missing/none`, `data_diff.py run` 0 errors.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
@@ -13816,15 +13844,9 @@ designed in rather than bolted on.
 - **Languages:** any
 - **State:** active
 
-## Drafts (the exe-gap round's group PL, 2026-10-31; lettered, the coordinator numbers)
+### A Western PSX disc-built image takes its disc's own regional layout fields
 
-Not entries yet (`####` headings, which the checker passes over). At the merge
-the `#### DIV-PL-A` below becomes an entry with the next free number and the
-`- **ID:**` line; `#### Amendment PL-B to DIV-0101` is folded into DIV-0101 as
-its next "Amended" paragraph (the entry's six fields unchanged).
-
-#### DIV-PL-A - A Western PSX disc-built image takes its disc's own regional layout fields
-
+- **ID:** DIV-0195
 - **Date:** 2026-10-31
 - **Subsystem:** the exe image (`tools/psp_exe.py` `TWINS`' eighth field, the
   `regional` rule; `recipes/exe-psp.tsv`); read by `EffectKind66_DrawPiece`
@@ -13876,34 +13898,3 @@ its next "Amended" paragraph (the entry's six fields unchanged).
 - **Toward:** psx - the Western PlayStation releases' own layout
 - **Languages:** any
 - **State:** active
-
-#### Amendment PL-B to DIV-0101 - the exe-gap round's placements and the Identify words
-
-- Amended 2026-10-31 (the exe-gap round, group PL; [`exe-gap-round.md`](exe-gap-round.md)
-  section 4): four placements of bytes the PC has and a disc carries, and one
-  engine-own region.
-  - **A string piece of an owning-function region** (`exe_tables.imm_strings`):
-    where no whole-region row fits, a reader operand inside the region that
-    starts a printable NUL-ended string is placed alone when exactly one
-    address its twin's lui pair forms holds the same string and NUL. The faerie
-    music player's `=` and `;` (`CommuMusic_DrawList`'s pushes of `0x653144` /
-    `0x653148`; the PlayStation's twin lays the three glyph strings in the other
-    order) place from `ETC/COMMU03.EMI#6` on psx-jp, psp-jp and psp-eu.
-  - **The tail floor at a region another range closes**: `Area121_BandHeights+0x1`
-    places on both PSPs (the region stops where the twin's section ends).
-  - **A `BOOT.BIN` twin read at its first byte**: of several copies a relocated
-    pair reads, the one a pair forms the address of, for a run that starts at
-    its symbol; `LinkedObjectD_Amounts` on psp-eu from the copy
-    `LinkedObjectD_ShowAmount`'s native twin reads.
-  - **The Identify panel's words** (`0x65AAA8..0x65AAC4`, label group 15's
-    shipped slots and the EXP label `Identify_Draw*` read in place) are the
-    engine's own (`exe_own.cpp` `IdentifyWords`), as D278's marks are: no
-    Japanese or PSP disc's MAGIC060 carries them in the PC's place, and PSP-JP's
-    layer writes no group 15, so a PSP-JP disc-built install drew no EXP label
-    (captured 2026-10-31, `identify.txt` frame 900 before and after; PSP-EU's
-    layer draws all four words, unchanged). Equal to `BOF3.exe`'s on a PC install.
-  `gap` rows per build 47 / 48 / 51 / 51 / 20 / 21 / 20 (US, EU-en, FR, DE, JP,
-  PSP-JP, PSP-EU) to 40 / 41 / 44 / 44 / 18 / 18 / 16 with DIV-PL-A's regional
-  fields; `ConfigScreen_OpenStates+0x144` (the default keys' names) classed
-  `port-platform`; `exe_tables.py check` with the seven discs 0 errors,
-  `exe_scan.py` no `missing/none`, `data_diff.py run` 0 errors.
