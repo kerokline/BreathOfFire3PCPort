@@ -196,7 +196,7 @@ original	as-shipped	off	DIV-0192	ini:music=pc	The loss tune from the disc on an 
 original	as-shipped	off	DIV-0193	SaveSlotBlank	An empty save slot draws no text	Player yes
 original	as-shipped	never	DIV-0194	none	A European disc-only install takes its disc's own eight area banks	Player never: Forced or one-way
 original	as-shipped	never	DIV-0195	none	A Western PSX disc-built image takes its disc's own regional layout fields	Player never: Forced or one-way
-original	as-shipped	skipped-language	DIV-0196	ConfigLabelJapanese	The Config screen's label column two glyphs to the right under a Japanese layer	acts only under ja-JP
+original	as-shipped	skipped-language	DIV-0196	ConfigLabelJapanese	The Config screen's label column left-aligned two glyphs in under a Japanese layer	acts only under ja-JP
 original	repaired	skipped-language	DIV-0005	lang	Walk a language overlay after each `DAT` file	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0006	lang	Advance the dialogue pen by the glyph's width	acts only under en-US, en-150, fr-FR, de-DE, ja-JP
 original	repaired	skipped-language	DIV-0007	lang	Move the system message pool out of the area script's way	acts only under en-US, en-150, fr-FR, de-DE, ja-JP

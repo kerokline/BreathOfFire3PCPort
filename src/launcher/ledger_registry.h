@@ -658,7 +658,7 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Sensible, State::Active, 0, 190, 0, true, Player::Never, kTowardPsx, kLangAny},
     {195, "A Western PSX disc-built image takes its disc's own regional layout fields",
      Tier::Sensible, State::Active, 0, 190, 0, true, Player::Never, kTowardPsx, kLangAny},
-    {196, "The Config screen's label column two glyphs to the right under a Japanese layer",
+    {196, "The Config screen's label column left-aligned two glyphs in under a Japanese layer",
      Tier::Intent, State::Active, 0, 190, 1, true, Player::Yes, 0, kLangJaJp},
 };
 

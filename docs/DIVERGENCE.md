@@ -14048,33 +14048,38 @@ designed in rather than bolted on.
 - **Toward:** psx - the Western PlayStation releases' own layout
 - **Languages:** any
 - **State:** active
-### The Config screen's label column two glyphs to the right under a Japanese layer
+### The Config screen's label column left-aligned two glyphs in under a Japanese layer
 
 - **ID:** DIV-0196
 - **Date:** 2026-10-31
-- **Subsystem:** menu / Config screen - `Config_DrawRowLabel` `0x461800`'s
-  two anchors `0x46189D` (the selected row's large path) and `0x4618ED` (the
-  small path), patched from `src/game/config_text.cpp` `ConfigText_Inject`
-  under `Lang_Japanese()`; the operand rules `DIV-0017 Config label anchor`
-  read the value back.
+- **Subsystem:** menu / Config screen - `Config_DrawRowLabel` `0x461800`
+  (ours, `src/game/field_c1.cpp`, reading the operands as `config_text.cpp`
+  holds them): the two `sub reg, width` instructions `0x461899` (the
+  selected row's large path) and `0x4618E7` (the small path) and the two
+  anchors `0x46189D` / `0x4618ED`, patched from `ConfigText_Inject` under
+  `Lang_Japanese()`; the operand rules `DIV-0196 Config label alignment`
+  and `DIV-0017 Config label anchor` read the values back.
 - **Tier:** Intent - a layout rule of ours for the Japanese layer.
-- **Original behaviour:** both paths place a row's label at `x_arg + 0x3A -
-  width`, right-aligned to a fixed edge; with the shipped Chinese words
-  (four characters at most) the column sits inside the row box. The Japan
-  disc centres each label instead. With the Japan disc's own words under
-  `ja-JP` (DIV-0015's 2026-10-31 amendment, the exe-gap round's group JA)
-  the nine-character label begins left of the row box and the selected
-  row's large label runs under the hand (`eg1031\ja\sheets\config.png`).
-- **New behaviour:** under a Japanese layer the edge is `0x5A` at both
-  sites: the whole label column two glyphs (32 units; a glyph in this font
-  advances 16) to the right, so every label falls inside the row box, the
-  options untouched. Not under a Latin layer (DIV-0017's own anchor `0x5F`)
-  and not with the shipped Chinese.
-- **Rationale:** the owner, 2026-10-31 afternoon, on JA's sheets: "make a JP
-  only localization rule to shift the label column two glyph to the right so
-  that it falls within the box".
-- **Also in the PSX version?** No: the disc centres its labels; this is a
-  shift of the port's right alignment, neither the port's nor the disc's.
+- **Original behaviour:** both paths place a row's label right-aligned to a
+  fixed edge, `x_arg + 0x3A - width`, `x_arg` the row box's left; with the
+  shipped Chinese words (four characters at most) the column sits inside
+  the box. The Japan disc centres each label instead. With the Japan disc's
+  own words under `ja-JP` (DIV-0015's 2026-10-31 amendment, the exe-gap
+  round's group JA) the nine-character label begins left of the row box and
+  the selected row's large label runs under the hand (`eg1031\ja\sheets\config.png`).
+- **New behaviour:** under a Japanese layer the labels are left-aligned at
+  `x_arg + 0x20`: the `sub` at each path is two nops (nothing comes off
+  `x`) and the anchor is `0x20`, two glyphs (16 units each in this font) in
+  from the box's left edge, so every label begins at one column inside the
+  border and ends where its length ends; the options untouched. Not under a
+  Latin layer (DIV-0017's right alignment at `0x5F`) and not with the
+  shipped Chinese.
+- **Rationale:** the owner, 2026-10-31 afternoon, on JA's sheets: the
+  labels two glyphs to the right and left-aligned "so that it all fits
+  within the border"; right-aligned Japanese labels are not a convention of
+  the language, and the disc itself centres them.
+- **Also in the PSX version?** No: the disc centres its labels; this is
+  neither the port's right alignment nor the disc's centring.
 - **Reversible?** `BOF3X_ORIGINAL=ConfigLabelJapanese`, or the ini's
   `off=ConfigLabelJapanese`.
 - **Switch:** ConfigLabelJapanese
@@ -14085,8 +14090,8 @@ designed in rather than bolted on.
 - **State:** active
 - **Verification:** 2026-10-31, headless, the `config_screen` recipe on the
   PC install under `ja-JP`, psx-jp and psp-jp (the exe-gap round's JA
-  harness, `eg1031\ja\x\runs\jplabel_*`): the label column inside the row
-  box on all three, the options unmoved; the hosted shadow suite's
-  `config_text` rows under `ja-JP` at 0 mismatches; `BOF3X_ORIGINAL=ConfigLabelJapanese`
+  harness, `eg1031\ja\x\runs\jplabel2_*`): the label column left-aligned
+  inside the row box on all three, the options unmoved; the hosted shadow
+  suite's `field_c1` and `config_text` rows under `ja-JP` at 0 mismatches
+  (the clone carries the same patches); `BOF3X_ORIGINAL=ConfigLabelJapanese`
   the sheets' layout again.
-

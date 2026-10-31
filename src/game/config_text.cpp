@@ -97,7 +97,7 @@ constexpr LabelSite kLabelSites[kLabels] = {
 ConfigTextOperands g_ops = {
     {::bof3::Img(0x669F0C), ::bof3::Img(0x669F18), ::bof3::Img(0x669F24), ::bof3::Img(0x669F2C), ::bof3::Img(0x669F34),
      ::bof3::Img(0x669F3C)},
-    0x3A, false, false, 0x516B30, 0x516B30, false, 0x20, 0x68, true, 0xC,
+    0x3A, false, false, 0x516B30, 0x516B30, false, 0x20, 0x68, true, 0xC, false,
 };
 
 // The multi-byte patches below, the original's bytes and ours. The hosted
@@ -115,6 +115,9 @@ constexpr std::uint8_t kCell2Was[] = {0x8B, 0x35, 0x70, 0x06, 0x7E, 0x00};
 constexpr std::uint8_t kCell2Is[] = {0xEB, 0x3B, 0x90, 0x90, 0x90, 0x90};
 constexpr std::uint8_t kEspWas[] = {0x83, 0xC4, 0x44};
 constexpr std::uint8_t kEspIs[] = {0x83, 0xC4, 0x38};
+constexpr std::uint8_t kSubBigWas[] = {0x2B, 0xD1};     // 0x461899 sub edx,ecx (x less the large label's width)
+constexpr std::uint8_t kSubSmallWas[] = {0x2B, 0xC1};   // 0x4618E7 sub eax,ecx (x less the small label's width)
+constexpr std::uint8_t kSubNops[] = {0x90, 0x90};       // DIV-0196: no width taken off - left-aligned at x + anchor
 
 // Hosted only (OperandRule): the n bytes of Capcom's code at va are `want`.
 bool CodeIs(std::uint32_t va, const std::uint8_t* want, std::size_t n) {
@@ -128,6 +131,8 @@ bool AnchorSmallAsRead() {
     const std::uint8_t b[] = {static_cast<std::uint8_t>(g_ops.anchor)};
     return CodeIs(0x4618ED, b, sizeof b);
 }
+bool LabelSubBigAsRead() { return CodeIs(0x461899, g_ops.label_left ? kSubNops : kSubBigWas, sizeof kSubBigWas); }
+bool LabelSubSmallAsRead() { return CodeIs(0x4618E7, g_ops.label_left ? kSubNops : kSubSmallWas, sizeof kSubSmallWas); }
 bool LabelWidthAsRead() { return CodeIs(0x461894, g_ops.label_x4 ? kLabelIs : kLabelWas, sizeof kLabelWas); }
 bool OptionWidthAsRead() { return CodeIs(0x4619E1, g_ops.option_x8 ? kOptionIs : kOptionWas, sizeof kOptionWas); }
 bool NameWidthAsRead() { return CodeIs(0x461B36, g_ops.name_x4 ? kCtrlIs : kCtrlWas, sizeof kCtrlWas); }
@@ -413,6 +418,8 @@ void ConfigText_Inject() {
     bof3::OperandRule("DIV-0017 Config label anchor", 0x46189D, 1, &AnchorBigAsRead);
     bof3::OperandRule("DIV-0017 Config label anchor", 0x4618ED, 1, &AnchorSmallAsRead);
     bof3::OperandRule("DIV-0017 Config label width", 0x461894, sizeof kLabelWas, &LabelWidthAsRead);
+    bof3::OperandRule("DIV-0196 Config label alignment", 0x461899, sizeof kSubBigWas, &LabelSubBigAsRead);
+    bof3::OperandRule("DIV-0196 Config label alignment", 0x4618E7, sizeof kSubSmallWas, &LabelSubSmallAsRead);
     bof3::OperandRule("DIV-0017 Config option width", 0x4619E1, sizeof kOptionWas, &OptionWidthAsRead);
     bof3::OperandCall("DIV-0017 Config selected draw", kBigLabelCall, &g_ops.big_draw);
     bof3::OperandCall("DIV-0017 Config selected draw", kBigOptionCall, &g_ops.big_draw);
@@ -425,21 +432,29 @@ void ConfigText_Inject() {
     bof3::OperandRule("DIV-0051 controller frame", 0x461A61, 3, &FrameAsRead);
 
     // --- the label column under ja-JP (DIV-0196) ----------------------------
-    // The Japan disc centres each row's label; the port right-aligns them at
-    // x_arg + 0x3A, and with the Japan disc's words (DIV-0015's 2026-10-31
+    // The Japan disc centres each row's label; the port right-aligns them to
+    // the edge x_arg + 0x3A (`sub reg, width` then `add reg, 0x3A` in both
+    // paths), and with the Japan disc's words (DIV-0015's 2026-10-31
     // amendment) the nine-character label begins left of the row box and
     // the selected row's large label runs under the hand (the owner's eye on
-    // the sheets, 2026-10-31). The owner's rule: the column two glyphs to
-    // the right, 32 units of the 16 a glyph advances in this font, so the
-    // edge is 0x3A + 0x20 = 0x5A at both sites. Japanese only: the Latin
-    // layout below has its own anchor, and the shipped Chinese keeps 0x3A.
+    // the sheets, 2026-10-31). The owner's rule: left-aligned, two glyphs in
+    // from the box's left edge - the `sub` at each path made two nops, so
+    // nothing comes off x, and the anchor 0x20 (32 units, the 16 a glyph
+    // advances in this font twice; the box starts at x). Japanese only: the
+    // Latin layout below keeps its right alignment at 0x5F, and the shipped
+    // Chinese the original's at 0x3A. Ours (field_c1.cpp) reads both operands.
     if (Lang_Japanese() && !Lang_Latin()) {
-        static const std::uint8_t ja_was[] = {0x3A};
-        static const std::uint8_t ja_is[] = {0x5A};
-        const bool ja_on = bof3::PatchBytes("ConfigLabelJapanese", 0x46189D, ja_was, ja_is, 1);   // the big path
-        bof3::PatchBytes("ConfigLabelJapanese", 0x4618ED, ja_was, ja_is, 1);                      // the small path
-        if (ja_on) g_ops.anchor = ja_is[0];
-        bof3::Log("DIV-0196    the Config label column under ja-JP two glyphs right (edge 0x%02X) %s", (unsigned)g_ops.anchor,
+        static const std::uint8_t ja_anchor_was[] = {0x3A};
+        static const std::uint8_t ja_anchor_is[] = {0x20};
+        const bool ja_on = bof3::PatchBytes("ConfigLabelJapanese", 0x461899, kSubBigWas, kSubNops, sizeof kSubBigWas);   // big path: no width off x
+        bof3::PatchBytes("ConfigLabelJapanese", 0x46189D, ja_anchor_was, ja_anchor_is, 1);                             // big path: x + 0x20
+        bof3::PatchBytes("ConfigLabelJapanese", 0x4618E7, kSubSmallWas, kSubNops, sizeof kSubSmallWas);                 // small path: no width off x
+        bof3::PatchBytes("ConfigLabelJapanese", 0x4618ED, ja_anchor_was, ja_anchor_is, 1);                             // small path: x + 0x20
+        if (ja_on) {
+            g_ops.anchor = ja_anchor_is[0];
+            g_ops.label_left = true;
+        }
+        bof3::Log("DIV-0196    the Config label column under ja-JP left-aligned two glyphs in (x + 0x%02X) %s", (unsigned)g_ops.anchor,
                   ja_on ? "on" : "OFF (BOF3X_ORIGINAL=ConfigLabelJapanese)");
         return;
     }
