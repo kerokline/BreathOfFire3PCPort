@@ -664,7 +664,7 @@ extern "C" unsigned long __cdecl BattleAction_Kind3Dispatch(unsigned long throug
 // 0x904AA3 + 1.
 extern "C" void __cdecl BattleAction_Kind3Banner(void) {
     BH_CALL(Battle_ClearActingFlags)();
-    BH_CALL(BattleBanner_Add)(1, 0, 0, 0x1E, reinterpret_cast<const char*>(BattleE1_BannerText));
+    BH_CALL(BattleBanner_Add)(1, 0, 0, 0x1E, reinterpret_cast<const char*>(BattleE1_BannerText.Native()));
     const unsigned char actor = B(::bof3::Img(at::kActor.v));
     WindowRecords[4].state = 1;
     BH_CALL(Battle_SetActorBit)(actor);

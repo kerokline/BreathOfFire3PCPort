@@ -1608,7 +1608,7 @@ extern "C" void __cdecl MapCell_DrawSpinning(const unsigned char* record, unsign
 extern "C" void __cdecl AreaMap_ClearCell(unsigned x, unsigned z) {
     const int zs = static_cast<short>(z), xs = static_cast<short>(x);
     const U width = LongAt(AreaMap_Header) & 0xFF;
-    const_cast<unsigned char*>(AreaMap_Bytes)[static_cast<std::int32_t>(width * static_cast<U>(zs)) + xs] = 0;
+    const_cast<unsigned char*>(AreaMap_Bytes.Native())[static_cast<std::int32_t>(width * static_cast<U>(zs)) + xs] = 0;
     const int c = static_cast<short>(x + 1u - static_cast<std::uint16_t>(MapView_Origin[0]));
     const int r = static_cast<short>(z - static_cast<std::uint16_t>(MapView_Origin[1]));
     int row = c + r;

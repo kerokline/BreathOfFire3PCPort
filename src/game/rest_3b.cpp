@@ -241,7 +241,7 @@ void CancelHead(bool windows) {
         WindowRecords[3].state = 1;
         WindowRecords[2].state = 1;
     }
-    BH_CALL(BattleBanner_ShowName)(reinterpret_cast<unsigned char*>(BattleE4_MenuActor));
+    BH_CALL(BattleBanner_ShowName)(reinterpret_cast<unsigned char*>(BattleE4_MenuActor.Native()));
     BattleE4_Picking = 0;
 }
 }  // namespace

@@ -124,7 +124,7 @@ void Dispatch(const char* who, U table, unsigned entries) {
 // cell, AreaMap_Corners a dword a cell - each read again for every store, as
 // the originals read them.
 unsigned MapWidth() { return AreaMap_Header[0]; }
-void SetCell(U offset, unsigned char v) { const_cast<unsigned char*>(AreaMap_Bytes)[offset] = v; }
+void SetCell(U offset, unsigned char v) { const_cast<unsigned char*>(AreaMap_Bytes.Native())[offset] = v; }
 void SetCorner(U index, U v) { SetUL(At(AddressOf(&AreaMap_Corners) + 4 * index), v); }
 
 // --- sub-kind 0x50's small tables (the variant and the flag index) -----------------------

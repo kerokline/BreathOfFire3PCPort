@@ -417,7 +417,7 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
     float unused;
     const unsigned next_item = Word(item + 0x7E);
     if (draw_order::Tagging() && (next_item != 0 || Word(item + 0x8E) != 0)) {
-        const signed char* const c = reinterpret_cast<const signed char*>(MapView_CornerPtr);
+        const signed char* const c = reinterpret_cast<const signed char*>(MapView_CornerPtr.Native());
         bof3::Log("map_layers: cell %u,%u layer %d item %u: next side %u, below side %u; corners %d %d %d %d; screen (%g, %g)",
                   (unsigned)cell[0], (unsigned)cell[1], layer, index, next_item, Word(item + 0x8E), c[0], c[1], c[2], c[3],
                   MapView_ScreenXY[0], MapView_ScreenXY[1]);

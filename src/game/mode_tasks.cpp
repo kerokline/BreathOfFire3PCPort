@@ -100,7 +100,7 @@ extern "C" void __cdecl Title_Task(void) {
     for (;;) {
         g.sleep(1);
         g.check_start();
-        reinterpret_cast<void (__cdecl*)()>(Title_States[Title_State])();
+        reinterpret_cast<void (__cdecl*)()>(Title_States[Title_State].Native())();
         g.backdrop();
         g.logo();
     }

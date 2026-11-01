@@ -117,7 +117,7 @@ unsigned char UsedOr4(unsigned char first, unsigned char second) { return (first
 extern "C" __attribute__((disable_tail_calls)) unsigned char __cdecl ItemUse_Dispatch(unsigned id, unsigned item, unsigned battle) {
     const unsigned it = item & 0xFF;
     if (At(::bof3::Img(at::kItemFlags.v))[it * at::kItemStride] == 0) return 2;
-    const auto handler = reinterpret_cast<Handler>(ItemUse_Handlers[ItemUse_HandlerIndex[it]]);
+    const auto handler = reinterpret_cast<Handler>(ItemUse_Handlers[ItemUse_HandlerIndex[it]].Native());
     const unsigned char answer = handler(id, battle);
     return answer;
 }

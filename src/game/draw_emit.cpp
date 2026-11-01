@@ -315,7 +315,7 @@ void SelfTestOpen(OpenFn theirs) {
 extern "C" void __cdecl Gfx_CommitPrim(unsigned slot, unsigned size) {
     size &= 0xFF;
     const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
-    const std::uint32_t next = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Gfx_PacketNext));
+    const std::uint32_t next = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Gfx_PacketNext.Native()));
     if (limit <= next + size) {
         // Diagnostic only (BOF3X_DRAWORDER): the original's silent skip.
         if (draw_order::Tagging())
@@ -330,7 +330,7 @@ extern "C" void __cdecl Gfx_CommitPrim(unsigned slot, unsigned size) {
     // pass's verdicts; only while DrawLayer_Open runs a record under mode 1.
     if (layering::g_in_run) layering::RunPrim(Gfx_PacketNext, size);
     Gpu_LinkPrim(Gfx_OtPointers[slot], next);
-    Gfx_OtPointers[slot] = reinterpret_cast<unsigned long*>(Gfx_PacketNext);
+    Gfx_OtPointers[slot] = reinterpret_cast<unsigned long*>(Gfx_PacketNext.Native());
     Gfx_PacketNext = Gfx_PacketNext + size;
 }
 

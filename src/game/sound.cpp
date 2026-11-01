@@ -871,7 +871,9 @@ extern "C" void* __cdecl Music_OpenDecoder(const void* file, unsigned size) {
 // event is read back from Music_Events after the second is made, the second
 // used as CreateEventA returned it. Returns SetNotificationPositions' result.
 extern "C" long __cdecl Music_SetNotify(void* buffer) {
-    Method<ComQuery>(buffer, kQueryInterface)(buffer, At(kIidNotify), &Music_Notify);
+    // The slot as QueryInterface's out parameter (void**): the 32-bit spelling,
+    // as Snd_Init's (sound_rest.cpp); B5's sound layer replaces it.
+    Method<ComQuery>(buffer, kQueryInterface)(buffer, At(kIidNotify), reinterpret_cast<void**>(&Music_Notify));
     Music_Events[0] = g.create_event(nullptr, 0, 0, nullptr);
     void* const second = g.create_event(nullptr, 0, 0, nullptr);
     Music_Events[1] = second;
@@ -1910,7 +1912,7 @@ void SnapRestore(bof3::SnapshotReader& r) {
         g.music_load_file(static_cast<unsigned>(file_track));
         if (!Music_File || Music_FileSize != file_size || Music_FileLoops != file_loops || Music_LoadedTrack != file_track)
             bof3::Fatal("quicksave SOUND: track %d read again is not the take's (file %p, %d bytes looping %d, track %d; "
-                        "the take's %d bytes looping %d)", file_track, Music_File, Music_FileSize, Music_FileLoops,
+                        "the take's %d bytes looping %d)", file_track, Music_File.Native(), Music_FileSize, Music_FileLoops,
                         Music_LoadedTrack, file_size, file_loops);
     }
     // The music stream.

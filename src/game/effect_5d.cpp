@@ -1462,7 +1462,7 @@ extern "C" void __cdecl EffectKind18Sub22_SetMap(void) {
                     do {
                         const unsigned char value = S()[2] != 2 ? 0x11 : 0;
                         const U width = AreaMap_Header[0];
-                        const_cast<unsigned char*>(AreaMap_Bytes)[width * z + x] = value;
+                        const_cast<unsigned char*>(AreaMap_Bytes.Native())[width * z + x] = value;
                         ++z;
                     } while (z < Rect(Sub22Place(), 3));
                 }

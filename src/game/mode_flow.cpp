@@ -308,7 +308,7 @@ extern "C" void __cdecl Field_Task(void) {
     g.clear_private();
     g.window_reset();
     for (;;) {
-        reinterpret_cast<Handler>(GameMode_Handlers[Game_Mode])();
+        reinterpret_cast<Handler>(GameMode_Handlers[Game_Mode].Native())();
         g.clock_tick();
         g.sleep(1);
     }

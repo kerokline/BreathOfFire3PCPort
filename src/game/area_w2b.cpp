@@ -769,7 +769,7 @@ void Record4MarkCell(const WorldMapTables& t) {
     const U record = t.cells + Cur()[0xB] * 4u;
     const U z = At(record + 1)[0];
     const U x = At(record)[0];
-    const_cast<unsigned char*>(AreaMap_Bytes)[z * width + x] = 0xA0;
+    const_cast<unsigned char*>(AreaMap_Bytes.Native())[z * width + x] = 0xA0;
     AH_CALL(Sprite_SetAnimation)(0);
     Cur()[1] = 1;
 }

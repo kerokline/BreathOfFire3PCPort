@@ -207,7 +207,7 @@ void Project4(unsigned char* prim, unsigned stride) {
 // original's 32-bit sums: no bound, as Capcom's.
 unsigned char* Cell(I x, I z) {
     const U width = AreaMap_Header[0];
-    return const_cast<unsigned char*>(AreaMap_Bytes) + (static_cast<U>(z) * width + static_cast<U>(x));
+    return const_cast<unsigned char*>(AreaMap_Bytes.Native()) + (static_cast<U>(z) * width + static_cast<U>(x));
 }
 
 // The record's cell words (+0x36 x, +0x3A z) as 16.16 against the leader's point:

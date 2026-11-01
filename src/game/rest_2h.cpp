@@ -848,11 +848,19 @@ extern "C" int __stdcall DInput_EnumJoystick(const void* instance, void* context
     (void)context;
     auto* const di = static_cast<IDirectInputA*>(DInput_Object);
     const auto* const inst = static_cast<const unsigned char*>(instance);
-    const HRESULT created =
-        di->CreateDevice(*reinterpret_cast<const GUID*>(inst + 4), reinterpret_cast<LPDIRECTINPUTDEVICEA*>(&DInput_Joystick), nullptr);
+    // The two objects land in native locals seeded from the slots and are
+    // stored back (Slot32<void>, common/slot32.h): DirectInput writes a
+    // native pointer, which the original's direct write into the 4-byte slot
+    // cannot hold on x86-64. A slot reads as the original's once the call has
+    // returned, whether the callee wrote its out parameter or not.
+    auto joystick = static_cast<LPDIRECTINPUTDEVICEA>(DInput_Joystick.Native());
+    const HRESULT created = di->CreateDevice(*reinterpret_cast<const GUID*>(inst + 4), &joystick, nullptr);
+    DInput_Joystick = joystick;
     if (created != 0) return 1;
     auto* const joy = static_cast<IUnknown*>(DInput_Joystick);
-    joy->QueryInterface(*reinterpret_cast<const IID*>(static_cast<std::uintptr_t>(at::kJoystickIid)), &DInput_Joystick2);
+    void* joystick2 = DInput_Joystick2;
+    joy->QueryInterface(*reinterpret_cast<const IID*>(static_cast<std::uintptr_t>(at::kJoystickIid)), &joystick2);
+    DInput_Joystick2 = joystick2;
     const int differs = SH_CALL(Crt_stricmp)(
         reinterpret_cast<const char*>(inst + 0x12C), reinterpret_cast<const char*>(At(::bof3::Img(at::kProductName.v))));
     if (differs == 0) DInput_JoystickFound = 1;
