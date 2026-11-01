@@ -217,6 +217,7 @@ set(_dll_sources
   src/game/frame_callees.cpp
   src/game/kind2_object.cpp
   src/game/area_slope.cpp
+  src/game/area_slope_fuzz.cpp
   src/game/mode_tasks.cpp
   src/game/title_states.cpp
   src/game/field_blocked.cpp
