@@ -25,6 +25,7 @@
 
 #include "audio/mp3.h"
 #include "bof3/symbols.gen.h"
+#include "common/asm_name.h"
 #include "game/display_env_callees.h"
 #include "game/mode_flow.h"
 #include "game/music_loops.h"
@@ -73,12 +74,13 @@ unsigned __stdcall ImportMsgWait(unsigned count, const void* handles, int all, u
 }  // namespace sound
 
 // The five with an eax result, under the assembler names of the void
-// declarations symbols.gen.h makes (i686 cdecl: a leading underscore).
-extern "C" int __cdecl Sound_PlayEffectEax(unsigned short id) __asm__("_Sound_PlayEffect");
-extern "C" int __cdecl Music_PlayEax(unsigned int track, int frames) __asm__("_Music_Play");
-extern "C" int __cdecl Music_FadeOutStopEax(int frames) __asm__("_Music_FadeOutStop");
-extern "C" int __cdecl Music_FadeInEax(int frames) __asm__("_Music_FadeIn");
-extern "C" int __cdecl Music_FadeOutEax(int frames) __asm__("_Music_FadeOut");
+// declarations symbols.gen.h makes (common/asm_name.h: the i686 ABI's leading
+// underscore, none on x86-64).
+extern "C" int __cdecl Sound_PlayEffectEax(unsigned short id) BOF3_ASM_NAME(Sound_PlayEffect);
+extern "C" int __cdecl Music_PlayEax(unsigned int track, int frames) BOF3_ASM_NAME(Music_Play);
+extern "C" int __cdecl Music_FadeOutStopEax(int frames) BOF3_ASM_NAME(Music_FadeOutStop);
+extern "C" int __cdecl Music_FadeInEax(int frames) BOF3_ASM_NAME(Music_FadeIn);
+extern "C" int __cdecl Music_FadeOutEax(int frames) BOF3_ASM_NAME(Music_FadeOut);
 
 namespace sound {
 

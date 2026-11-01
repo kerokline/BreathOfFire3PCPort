@@ -21,17 +21,13 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "common/asm_name.h"
 #include "game/shell_callees.h"
 #include "hook/detour.h"
 #include "hook/exe_host.h"
 #include "hook/host.h"
 #include "hook/log.h"
 #include "input/bindings.h"
-
-// A C symbol as the assembler sees it (i686 mingw prefixes an underscore).
-#define SHELL_STR2(x) #x
-#define SHELL_STR(x) SHELL_STR2(x)
-#define SHELL_SYM(name) SHELL_STR(__USER_LABEL_PREFIX__) #name
 
 namespace shell {
 
@@ -133,7 +129,7 @@ extern "C" __attribute__((naked)) void __cdecl Cfg_Load(void) {
         "pushl %esi\n\t"
         "leal 8(%esp), %eax\n\t"
         "pushl %eax\n\t"
-        "call " SHELL_SYM(Shell_CfgLoadFrame) "\n\t"
+        "call " BOF3_SYM(Shell_CfgLoadFrame) "\n\t"
         "addl $4, %esp\n\t"
         "popl %esi\n\t"
         "popl %edi\n\t"
@@ -256,7 +252,7 @@ extern "C" void* __cdecl Shell_GameInitBody(void) {
 // to Task_SetStackBase, so that the task stacks hang from the esp this was
 // entered with: the body runs as a call, and the jmp is made from here.
 extern "C" __attribute__((naked)) void __cdecl Game_Init(void) {
-    asm("call " SHELL_SYM(Shell_GameInitBody) "\n\t"
+    asm("call " BOF3_SYM(Shell_GameInitBody) "\n\t"
         "jmp *%eax");
 }
 

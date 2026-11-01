@@ -27,6 +27,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "common/asm_name.h"
 #include "game/field_misc_callees.h"
 #include "game/map_rim.h"
 #include "hook/detour.h"
@@ -322,7 +323,10 @@ extern "C" unsigned long __cdecl MapView_ItemAt(long x, long y) {
 // several of which return it on or partly overwrite it (an E8 scan,
 // docs/field-misc.md section 2). The declared signature (symbols.toml, and
 // the callers' pointer tables) is unsigned char, so each is a naked jump into
-// a body that returns the register.
+// a body that returns the register. The jump is the same on both widths: a
+// tail jump forwards the arguments where they lie (the stack on i686, ecx and
+// edx on x86-64) and the body answers in eax; the symbol's spelling is
+// common/asm_name.h's.
 extern "C" unsigned long __cdecl FieldMisc_TestFB(unsigned long x, unsigned long z) {
     return TileTest(static_cast<U>(x), static_cast<U>(z), 0x8000);
 }
@@ -330,10 +334,10 @@ extern "C" unsigned long __cdecl FieldMisc_TestFC(unsigned long x, unsigned long
     return TileTest(static_cast<U>(x), static_cast<U>(z), 0x8001);
 }
 extern "C" __attribute__((naked)) unsigned char __cdecl MoveCmd_TestFB(short, short) {
-    asm("jmp _FieldMisc_TestFB");
+    asm("jmp " BOF3_SYM(FieldMisc_TestFB));
 }
 extern "C" __attribute__((naked)) unsigned char __cdecl MoveCmd_TestFC(short, short) {
-    asm("jmp _FieldMisc_TestFC");
+    asm("jmp " BOF3_SYM(FieldMisc_TestFC));
 }
 
 // --- the area patch list -------------------------------------------------------

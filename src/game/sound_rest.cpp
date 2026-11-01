@@ -14,6 +14,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "common/asm_name.h"
 #include "game/sound_callees.h"
 #include "game/sound_in.h"
 #include "game/sound_rest_callees.h"
@@ -61,8 +62,9 @@ extern "C" Callees SoundRest_g = kOriginals;
 
 // Sound_PauseAll's eax: Music_Halt's, which its tail jump hands back. Defined
 // under the assembler name of the void declaration symbols.gen.h makes, as
-// sound.cpp's five are; the one caller (Game_WndProc, ours) does not read it.
-extern "C" int __cdecl Sound_PauseAllEax(void) __asm__("_Sound_PauseAll");
+// sound.cpp's five are (common/asm_name.h); the one caller (Game_WndProc,
+// ours) does not read it.
+extern "C" int __cdecl Sound_PauseAllEax(void) BOF3_ASM_NAME(Sound_PauseAll);
 
 // original 0x587B80: `jmp Music_Halt`. The caller's ecx and stack reach
 // Music_Halt as they were: a jump through SoundRest_g, not a call.
