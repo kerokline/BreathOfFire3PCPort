@@ -119,8 +119,8 @@ extern "C" void __cdecl Gpu_SetLineG4(unsigned char* prim) {
 // 0xF0 copies the rect from that pointer into Gfx_TexCacheKey
 // (docs/d3d-draw.md section 3), so the rect must outlive the frame's draw.
 extern "C" void __cdecl Gpu_SetTexWindow(unsigned char* prim, const unsigned char* rect) {
-    PutLong(static_cast<U>(reinterpret_cast<std::uintptr_t>(prim + 4)), kTexWindowCode);
-    const U address = static_cast<U>(reinterpret_cast<std::uintptr_t>(rect));
+    PutLong(Low32(prim + 4), kTexWindowCode);
+    const U address = Low32(rect);
     std::memcpy(prim + 8, &address, 4);
 }
 

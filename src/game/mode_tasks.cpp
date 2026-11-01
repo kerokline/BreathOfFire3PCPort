@@ -548,7 +548,7 @@ struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {::bof3::Img(bof3::addr::Task_Records), 0x48},   // task 0's state, Field_Request, Game_Mode / Game_Step,
                                         // task 1's words, Transition_Busy
-    {static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&Input_Pressed)), 2},
+    {Low32(&Input_Pressed), 2},
     {::bof3::Img(Music_Track_addr) - 1, 8},          // the track and the battle count
     {::bof3::Img(kBattleBytes), 4},
     {::bof3::Img(kMemberByte0), 1},

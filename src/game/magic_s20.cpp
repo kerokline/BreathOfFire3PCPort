@@ -135,7 +135,7 @@ unsigned char* Member(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * a
 unsigned char* Tint(unsigned i) { return Mem(::bof3::Img(0x7E0700) + i * 12); }   // MoveScript_TintRecords, unchecked
 unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 std::int32_t PtrValue(const unsigned char* p) {
-    return static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)));
+    return static_cast<std::int32_t>(Low32(p));
 }
 void Bump(unsigned char& b, int by) { b = static_cast<unsigned char>(b + by); }
 

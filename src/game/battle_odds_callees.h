@@ -44,7 +44,7 @@ constexpr ::bof3::image::Va kHandlerTable{0x64E73C};
 
 // The named data, by the address its symbols.gen.h macro names.
 namespace at {
-inline U Of(const volatile void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+inline U Of(const volatile void* p) { return Low32(p); }
 inline U Sprite_CurrentAt() { return Of(&Sprite_Current); }
 inline U TintRecordsAt() { return Of(MoveScript_TintRecords); }   // 0x7E0700: 32 of 12 bytes (+2..+4 r g b)
 }  // namespace at

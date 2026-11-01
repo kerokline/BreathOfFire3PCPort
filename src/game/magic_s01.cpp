@@ -71,7 +71,7 @@ short S16(const unsigned char* a) { return static_cast<short>(Word(a)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 void AddB(unsigned char& b, unsigned v) { b = static_cast<unsigned char>(b + v); }
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 // A dword added in place, wrapping.
 void AddL(unsigned char* a, std::uint32_t v) {
     SetLong(a, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(a)) + v));

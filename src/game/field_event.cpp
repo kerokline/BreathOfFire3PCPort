@@ -73,7 +73,7 @@ using field_event::Handler;
 
 constexpr unsigned kMemberBytes = 0x14C, kActorBytes = 0xA4;
 
-std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const volatile void* p) { return Low32(p); }
 unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
 
 // The record views (game/record_views.h). The leader's states and the party's
@@ -877,7 +877,7 @@ void FieldEvent_Inject() {
     {
         // DIV-0153: after the self-test, which compared Capcom's roll.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("MantleCap", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_mantle_cap)), &was, &is, 1);
+        bof3::PatchBytes("MantleCap", Low32(&g_mantle_cap), &was, &is, 1);
         bof3::Log("DIV-0153    the Holy Mantle's doubled encounter threshold stops at 255 instead of wrapping (on unless the line above says OFF)");
     }
     BOF3_INJECT(Field_LeaderFrame);

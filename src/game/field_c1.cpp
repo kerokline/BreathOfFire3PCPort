@@ -59,7 +59,7 @@ using U = std::uint32_t;
 using Handler = void (__cdecl*)();
 
 unsigned char* Cur() { return Sprite_Current; }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 U L(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t S32(U v) { return static_cast<std::int32_t>(v); }

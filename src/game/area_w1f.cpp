@@ -55,7 +55,7 @@ unsigned char* PartyAt(unsigned member) { return rv::Bytes(&ObjTrio[member]); }
 // pointer less Sprite_Objects, divided by 0xA4 as a signed dword (imul by
 // 0x63E7063F, sar 6, the sign added back): C's truncating division.
 unsigned char ObjectIndex(const unsigned char* record) {
-    const auto delta = static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(record)) -
+    const auto delta = static_cast<std::int32_t>(Low32(record) -
                                                  ::bof3::Img(Sprite_Objects_addr));
     return static_cast<unsigned char>(delta / static_cast<std::int32_t>(at::kObjectStride));
 }
@@ -1096,7 +1096,7 @@ extern "C" void __cdecl Area75_DrawWindow(int x, int y, int w, int h, int flag) 
     SetWord(rect0 + 4, 0x10);
     SetWord(rect0 + 6, 0x10);
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage,
-                             static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(rect0)));
+                             Low32(rect0));
     AH_CALL(Gfx_CommitPrim)(1, 0xC);
     const auto w1 = static_cast<std::uint32_t>(w) + 1;
     const auto h1 = static_cast<std::uint32_t>(h) + 1;
@@ -1233,7 +1233,7 @@ extern "C" void __cdecl Area75_DrawWindow(int x, int y, int w, int h, int flag) 
     SetWord(rect1 + 4, 0x100);
     SetWord(rect1 + 6, 0x100);
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage,
-                             static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(rect1)));
+                             Low32(rect1));
     AH_CALL(Gfx_CommitPrim)(1, 0xC);
     AH_CALL(Menu_DrawOutline)(static_cast<int>(static_cast<std::uint32_t>(x) + 2),
                               static_cast<int>(static_cast<std::uint32_t>(y) + 2), static_cast<int>(w1 - 5),

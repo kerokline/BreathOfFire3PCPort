@@ -83,7 +83,7 @@ constexpr ::bof3::image::CodeVa kTinyFont{bof3::addr::Text_DrawSmall};
 
 // The named tables, by the address their symbols.gen.h macros name.
 namespace at {
-inline U Of(const volatile void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+inline U Of(const volatile void* p) { return Low32(p); }
 inline U UprightCountsAt() { return Of(MapCell_UprightCounts); }       // 0x66313C
 inline U UprightOffsetsXAt() { return Of(MapCell_UprightOffsetsX); }   // 0x663148
 inline U UprightOffsetsYAt() { return Of(MapCell_UprightOffsetsY); }   // 0x6631B4

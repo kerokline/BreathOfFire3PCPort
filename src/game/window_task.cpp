@@ -282,7 +282,7 @@ extern "C" void __cdecl Field_RunTaskRecords(void) {
                 continue;
             }
             if (record[0xF] != pass) continue;
-            BattleWinStates_Current = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(record));
+            BattleWinStates_Current = static_cast<std::int32_t>(Low32(record));
             const unsigned handler = record[1];
             if (handler >= 9)
                 bof3::Fatal("window record %u names handler %u; the original's stack table holds nine",
@@ -681,7 +681,7 @@ extern "C" void __cdecl Window_DrawFrame(int x_arg, int y_arg, int w_arg, int h_
     SetWord(window1 + 6, 0x10);
     SetWord(window1 + 4, 0x10);
     g.draw_mode(Gfx_PacketNext, 0, 0, 0xF,
-                static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(window1)));
+                Low32(window1));
     g.commit(1, 0xC);
 
     // 3. the window's textured quad
@@ -729,7 +729,7 @@ extern "C" void __cdecl Window_DrawFrame(int x_arg, int y_arg, int w_arg, int h_
     SetWord(window2 + 6, 0x100);
     SetWord(window2 + 4, 0x100);
     g.draw_mode(Gfx_PacketNext, 0, 0, 5,
-                static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(window2)));
+                Low32(window2));
     g.commit(1, 0xC);
 
     // 5. three sides of the bright outline
@@ -808,7 +808,7 @@ extern "C" void __cdecl Window_DrawLine(int x0, int y0, int x1, int y1, unsigned
 void AreaKeepStoppingNone_Arm() {
     static const std::uint8_t was = 0, is = 1;
     bof3::PatchBytes("AreaKeepStoppingNone",
-                     static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_keep_stopping_none)), &was, &is, 1);
+                     Low32(&g_keep_stopping_none), &was, &is, 1);
     bof3::Log("DIV-0143    an area change that keeps the track while it is fading to a stop keeps none "
               "(on unless the line above says OFF)");
 }

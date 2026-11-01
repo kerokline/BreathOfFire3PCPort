@@ -43,7 +43,7 @@ std::uint32_t g_direct_opaque = 0;   // DIV-0159; 1 through PatchBytes("DirectOp
 namespace {
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Addr(const void* p) { return Low32(p); }
 U Long(U address) {
     U v;
     std::memcpy(&v, At(address), sizeof v);
@@ -471,7 +471,7 @@ void TexPage_Inject() {
         // DIV-0159: armed after the fuzz, which compares Capcom's rule.
         const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
         const bool direct = bof3::PatchBytes(
-            "DirectOpaque", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_direct_opaque)), was, is, 4);
+            "DirectOpaque", Low32(&g_direct_opaque), was, is, 4);
         bof3::Log("DIV-0159    a direct-colour page's texels are opaque but for 0, as Gfx_ConvertRow's are (on unless "
                   "the line above says OFF)");
         // DIV-0160: the textures carry bit 15 - armed after the gfx_clut and
@@ -479,12 +479,12 @@ void TexPage_Inject() {
         // texel has alpha clear on a colour, which DIV-0160 reads as drawn.
         if (direct) {
             const bool texels = bof3::PatchBytes(
-                "StpTexels", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&render::g_stp_texels)), was, is, 4);
+                "StpTexels", Low32(&render::g_stp_texels), was, is, 4);
             bof3::Log("DIV-0160    the textures carry the PlayStation's bit 15 (alpha clear on a colour), under our "
                       "backend (on unless the line above says OFF)");
             if (texels) {
                 bof3::PatchBytes("StpBlend",
-                                 static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&render::g_stp_blend)), was, is, 4);
+                                 Low32(&render::g_stp_blend), was, is, 4);
                 bof3::Log("DIV-0160    a semi-transparent primitive blends only its bit-15 texels, the others opaque "
                           "(on unless the line above says OFF)");
             }

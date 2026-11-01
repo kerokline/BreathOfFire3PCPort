@@ -74,7 +74,7 @@ U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 U SW(const unsigned char* p) { return static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(Word(p)))); }
 unsigned char& B(U a) { return At(a)[0]; }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 void SetBits(unsigned char* to, U bits) { std::memcpy(to, &bits, 4); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }

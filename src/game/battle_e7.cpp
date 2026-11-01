@@ -65,7 +65,7 @@ void PutFloat(unsigned char* p, std::int32_t v) {
     const auto f = static_cast<float>(v);
     std::memcpy(p, &f, sizeof f);
 }
-U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Addr(const void* p) { return Low32(p); }
 const char* Str(U address) { return reinterpret_cast<const char*>(At(address)); }
 char* Buf(U address) { return reinterpret_cast<char*>(At(address)); }
 const unsigned char* Text(U address) { return At(address); }
@@ -913,14 +913,14 @@ void BattleE7_Inject() {
     // DIVERGENCE DIV-0065: after the self-test, which compares the original's rows.
     {
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("BattleEquipLabelsRow", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_equip_labels_row)),
+        bof3::PatchBytes("BattleEquipLabelsRow", Low32(&g_equip_labels_row),
                          &was, &is, 1);
         bof3::Log("DIV-0065    the battle equip window's stat labels beside their values");
     }
     {
         // DIV-0161: after the self-test, which compared Capcom's unsigned reading.
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("BattleDrawSigned", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_cursor_box_signed)),
+        bof3::PatchBytes("BattleDrawSigned", Low32(&g_cursor_box_signed),
                          &was, &is, 1);
         bof3::Log("DIV-0161    the gene list's cursor box takes its corners signed, as the PlayStation (on unless the line above says OFF)");
     }

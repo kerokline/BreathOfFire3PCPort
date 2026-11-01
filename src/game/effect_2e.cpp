@@ -60,7 +60,7 @@ std::int32_t SL(const unsigned char* p) { return Long(p); }
 U SW(const unsigned char* p) { return static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(Word(p)))); }
 void AddWord(unsigned char* p, U d) { SetWord(p, Word(p) + d); }
 void AddLong(unsigned char* p, U d) { SetUL(p, UL(p) + d); }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // `fild dword i; fadd dword [f]; fstp dword [out]`, on the x87 as the original

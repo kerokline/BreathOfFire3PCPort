@@ -94,7 +94,7 @@ using namespace save_menu;
 namespace {
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-U Addr(const volatile void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Addr(const volatile void* p) { return Low32(p); }
 U Byte(U address) { return At(address)[0]; }
 void PutByte(U address, U v) { At(address)[0] = static_cast<unsigned char>(v); }
 U Word(U address) {

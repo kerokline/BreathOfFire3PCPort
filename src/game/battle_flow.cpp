@@ -74,7 +74,7 @@ unsigned char* PtrAt(std::uint32_t address) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(address)))));
 }
 void SetPtrAt(std::uint32_t address, const unsigned char* p) {
-    SetLong(At(address), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)));
+    SetLong(At(address), static_cast<std::int32_t>(Low32(p)));
 }
 // The enemy being run (0x939AD8) and the battle-task slot being run (0x93B8C4),
 // each re-read wherever the original re-reads it.
@@ -262,7 +262,7 @@ extern "C" void __cdecl BattleEnemy_SetAnimation(unsigned animation) {
     const unsigned mode = Sprite_Current[8];
     if (mode > 3) return;
     const unsigned index = (animation & 0xFF) + (mode >= 2 ? 1u : 0u);
-    const auto table = [] { return PtrAt(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Enemy() + 0xFC))); };
+    const auto table = [] { return PtrAt(Low32(Enemy() + 0xFC)); };
     g.ensure_animation(static_cast<unsigned char>(table()[index] & 0x7F));
     const bool high = (table()[index] & 0x80) != 0;
     const bool flip = (mode == 0 || mode == 2) ? high : !high;

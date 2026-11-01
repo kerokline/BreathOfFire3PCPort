@@ -72,8 +72,8 @@ constexpr unsigned kMaxWidth = 8;
 // the DLL's own base).
 extern "C" char __ImageBase;
 const char* CallerText(const void* ret, char* out, std::size_t cap) {
-    const auto at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(ret));
-    const auto dll = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&__ImageBase));
+    const auto at = Low32(ret);
+    const auto dll = Low32(&__ImageBase);
     if (at - ::bof3::ImageBase() < 0x58F000u)
         std::snprintf(out, cap, "VA 0x%08X", static_cast<unsigned>(::bof3::VaOf(at)));
     else
@@ -85,7 +85,7 @@ const char* CallerText(const void* ret, char* out, std::size_t cap) {
     char from[40];
     bof3::Fatal("Crt_sprintf: \"%s\" (at 0x%08X) has the conversion \"%.*s\", which no format of the game uses and "
                 "ours does not take (docs/crt-rest.md section 2.2); called from %s",
-                fmt, static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(fmt)), static_cast<int>(len), spec,
+                fmt, Low32(fmt), static_cast<int>(len), spec,
                 CallerText(caller, from, sizeof from));
 }
 
@@ -451,7 +451,7 @@ void CrtRest_Inject() {
          GetEnvironmentVariableA("BOF3X_RECORD", nullptr, 0) > 0) &&
         GetEnvironmentVariableA("BOF3X_CALLTRACE", nullptr, 0) == 0 && !bof3::IsExeHost()) {
         constexpr std::uint32_t kRandSize = 0x22;
-        const auto get_ptd = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Crt_GetPtd));   // still Capcom's
+        const auto get_ptd = Low32(Crt_GetPtd);   // still Capcom's
         const bof3::CloneCall calls[] = {{0, nullptr, get_ptd}};
         g_original_copy = reinterpret_cast<int (__cdecl*)()>(
             bof3::CloneOriginal("Rand", bof3::addr::Rand, kRandSize, calls, 1));

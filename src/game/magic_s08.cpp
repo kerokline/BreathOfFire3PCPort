@@ -96,7 +96,7 @@ void AddLong(unsigned char* p, std::uint32_t v) {
     SetLong(p, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(p)) + v));
 }
 void AddWord(unsigned char* p, unsigned v) { SetWord(p, Word(p) + v); }
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 
 // `imul` then `sar 0xC`: the 32-bit product wraps, the shift is arithmetic.
 int Mul12(int a, int b) { return static_cast<int>(static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b)) >> 12; }

@@ -184,7 +184,7 @@ void SpawnAura(unsigned index, const unsigned char* record, unsigned char& order
     unsigned char* const t = Task(slot);
     records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     unsigned char* const cur = Sprite_Current;
-    tt->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(cur));
+    tt->owner = static_cast<std::int32_t>(Low32(cur));
     t[1] = 0;
     t[3] = static_cast<unsigned char>(index);
     t[4] = cur[4];
@@ -305,7 +305,7 @@ MS19_EXPORT void __cdecl ShieldAura_Rise(void) {
             unsigned char* const e = Pool(slot);
             records::BattleTask* const te = rv::As<records::BattleTask>(e);
             unsigned char* const aura = Sprite_Current;
-            te->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(aura));
+            te->owner = static_cast<std::int32_t>(Low32(aura));
             e[1] = 0;
             e[2] = 0;
             e[3] = angle;
@@ -704,7 +704,7 @@ void SpawnPart(unsigned char type) {
     records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     const unsigned char* const cur = Sprite_Current;
     const records::BattleTask* const tcur = rv::AsConst<records::BattleTask>(cur);
-    tt->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(cur));
+    tt->owner = static_cast<std::int32_t>(Low32(cur));
     t[1] = type;
     if (type == 1) t[0xB] = 0x30;
     t[9] = 0;

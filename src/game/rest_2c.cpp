@@ -57,7 +57,7 @@ U Bits(float v) {
     std::memcpy(&u, &v, sizeof u);
     return u;
 }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 
 // A state table's handler, jumped to as the original's `jmp [table + 4 *
 // index]` does: the index must lie inside the table's own count (its reader's
@@ -1186,7 +1186,7 @@ void Rest2C_Inject() {
     {
         static const std::uint8_t was = 0, is = 1;
         bof3::PatchBytes("SaveSummaryRecord0",
-                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_summary_record0)), &was, &is, 1);
+                         Low32(&g_summary_record0), &was, &is, 1);
         bof3::Log("DIV-0076    the save slot's summary names record 0, whose level it already shows");
     }
     BOF3_INJECT(MasterFigure_DrawFaded);

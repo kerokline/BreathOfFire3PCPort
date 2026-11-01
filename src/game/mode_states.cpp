@@ -64,7 +64,7 @@ using namespace mode_states;
 
 namespace {
 
-std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const void* p) { return Low32(p); }
 
 // A table of code pointers in the exe's data, read as the original reads it:
 // afresh, and indexed without a bound.

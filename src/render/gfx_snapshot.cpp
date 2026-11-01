@@ -30,7 +30,7 @@ using bof3::Log;
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 template <class T>
 U Va(T* p) {
-    return static_cast<U>(reinterpret_cast<std::uintptr_t>(p));
+    return Low32(p);
 }
 U Long(U address) {
     U v;

@@ -61,7 +61,7 @@ unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_Curren
 unsigned char* Owner() { return At(BattleE2_Owner); }
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
-template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+template <typename T> U AddressOf(T* p) { return Low32(p); }
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, a
 // Fatal past them (the original jumps through the dword after). The jmp

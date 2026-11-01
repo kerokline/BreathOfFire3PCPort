@@ -56,7 +56,7 @@ namespace {
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
 const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
 unsigned long* Longs(U address) { return reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(address)); }
-U Addr(const volatile void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Addr(const volatile void* p) { return Low32(p); }
 U Long(U address) {
     U v;
     std::memcpy(&v, At(address), sizeof v);
@@ -313,7 +313,7 @@ void Shell_Inject() {
     // DIVERGENCE DIV-0078: after the self-test, which compares Capcom's frame.
     {
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("CfgOwnKeyTable", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_cfg_own_table)),
+        bof3::PatchBytes("CfgOwnKeyTable", Low32(&g_cfg_own_table),
                          &was, &is, 1);
         bof3::Log("DIV-0078    BOF3.CFG's key lines scan into a 32-entry table of our own; lines past it are ignored");
     }

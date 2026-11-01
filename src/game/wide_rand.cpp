@@ -389,8 +389,8 @@ void SelfTest() {
     // two functions with no VA need no place of their own (the relocatable-image
     // round's stage D; draw_emit.cpp SelfTestOpen is the same shape).
     for (unsigned i = 0; i < 77; ++i)
-        MapCell_Handlers[i] = static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(&OtherStandIn));
-    MapCell_Handlers[kRising] = static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(&RisingStandIn));
+        MapCell_Handlers[i] = Low32(&OtherStandIn);
+    MapCell_Handlers[kRising] = Low32(&RisingStandIn);
     std::memset(DrawLayers, 0, kLayerBytes);   // no first list: DrawLayer_Open links nothing
     AreaMap_CellBase = 0xABCD0000u | kCellBase;
     Gfx_BufferIndex = 0;

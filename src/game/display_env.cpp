@@ -32,7 +32,7 @@ Callees g = kOriginals;
 namespace {
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-U Addr(const volatile void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Addr(const volatile void* p) { return Low32(p); }
 U Long(U address) {
     U v;
     std::memcpy(&v, At(address), sizeof v);

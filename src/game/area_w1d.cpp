@@ -39,7 +39,7 @@ using move_script::Word;
 using Handler = void (__cdecl*)();
 
 unsigned char& B(std::uint32_t address) { return *Mem(address); }
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 void AddWord(unsigned char* p, int v) { SetWord(p, static_cast<unsigned>(Word(p) + v)); }
 
 // A state handler read from an area's .data table in place, as the

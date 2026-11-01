@@ -70,6 +70,7 @@
 
 #include "audio/sound_sdl.h"
 #include "bof3/symbols.gen.h"
+#include "common/image_base.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -503,9 +504,7 @@ void PatchSlot(void** slot, void* to) {
 // address as 4 bytes (the DLL is below 4 GB; checked), never a whole pointer
 // over the slot beside it.
 void PatchSlotWord(void** slot, void* to) {
-    const std::uint64_t v = static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(to));
-    if (v >> 32) Fatal("wav: the hook at %016llX lies above 4 GB, which the import slot cannot hold", static_cast<unsigned long long>(v));
-    const std::uint32_t word = static_cast<std::uint32_t>(v);
+    const std::uint32_t word = Low32(to);   // the hook is ours, below 4 GB by the DLL's placement
     DWORD old = 0;
     if (!VirtualProtect(slot, 4, PAGE_READWRITE, &old))
         Fatal("wav: VirtualProtect(%p) failed, error %lu", static_cast<void*>(slot), GetLastError());

@@ -918,7 +918,7 @@ void WinMain_Inject() {
     {
         // DIV-0152: Start + Select held a second returns to the title.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("PadReset", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_pad_reset)), &was, &is, 1);
+        bof3::PatchBytes("PadReset", Low32(&g_pad_reset), &was, &is, 1);
         bof3::Log("DIV-0152    Start + Select held 60 frames returns to the title, as on the Western discs (on unless the line above says OFF)");
     }
     BOF3_INJECT(Game_WinMain);

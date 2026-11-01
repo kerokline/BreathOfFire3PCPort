@@ -48,7 +48,7 @@ inline unsigned char* Scratch() { return At(::bof3::Img(SharedScratch_addr)); }
 struct Table { std::uint32_t jmp_disp, table, entries; };
 inline void Relocate(void* copy, std::uint32_t base, std::uint32_t size, const Table& t) {
     auto* code = static_cast<std::uint8_t*>(copy);
-    const std::uint32_t moved = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(code)) - base;
+    const std::uint32_t moved = Low32(code) - base;
     for (std::uint32_t i = 0; i < t.entries; ++i) {
         std::uint32_t target;
         std::memcpy(&target, code + t.table + 4 * i, sizeof target);

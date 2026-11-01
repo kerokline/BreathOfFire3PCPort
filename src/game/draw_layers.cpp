@@ -105,7 +105,7 @@ extern "C" void __cdecl DrawLayers_Reset(void) {
     auto* layer = reinterpret_cast<unsigned char*>(DrawLayers) + Gfx_BufferIndex * 8u;
     for (unsigned i = 0; i < kLayers; ++i, layer += kLayerBytes) {
         for (unsigned char* head = layer; head != layer + 0x20; head += 0x10) {
-            const std::uint32_t none = 0, self = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(head));
+            const std::uint32_t none = 0, self = Low32(head);
             std::memcpy(head, &none, 4);
             std::memcpy(head + 4, &self, 4);
         }

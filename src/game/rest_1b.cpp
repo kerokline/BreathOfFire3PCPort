@@ -45,7 +45,7 @@ constexpr ::bof3::image::Va kScriptFlagsHigh{0x9039A3};                // Field_
 
 unsigned char* S() { return Sprite_Current; }
 // A .data table's address (its symbols.toml name is a pointer).
-U TableAt(const unsigned long* table) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(table)); }
+U TableAt(const unsigned long* table) { return Low32(table); }
 
 // A .data dispatch table read in place. The original's index is unchecked:
 // past the table it jumps through the next table's cell, or into data. Ours

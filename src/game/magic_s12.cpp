@@ -91,8 +91,8 @@ unsigned char* SC() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char TargetByte() { return Mem(::bof3::Img(at::kTarget))[0]; }
 unsigned char* Slot(unsigned k) { return Mem(::bof3::Img(BattleTask_Slots_addr) + (k & 0xFFu) * at::kTaskStride); }
-std::int32_t Ptr(const void* p) { return static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-std::uint32_t U32(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::int32_t Ptr(const void* p) { return static_cast<std::int32_t>(Low32(p)); }
+std::uint32_t U32(const void* p) { return Low32(p); }
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Drop(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 std::int32_t AddL(std::int32_t a, std::uint32_t b) { return static_cast<std::int32_t>(static_cast<std::uint32_t>(a) + b); }

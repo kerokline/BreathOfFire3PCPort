@@ -84,7 +84,7 @@ constexpr ::bof3::image::Va kActingKind{0x904B35};          // byte 1 of 0x904B3
 
 // The named data, by the address its symbols.gen.h macro names.
 namespace at {
-inline U Of(const volatile void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+inline U Of(const volatile void* p) { return Low32(p); }
 inline U Sprite_CurrentAt() { return Of(&Sprite_Current); }
 inline U Field_StateAt() { return Of(&Field_State); }
 inline U ObjTrioAt() { return Of(ObjTrio); }

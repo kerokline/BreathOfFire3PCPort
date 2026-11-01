@@ -1481,7 +1481,7 @@ extern "C" void __cdecl Scena08_EnterArea(void) {
                 // Flags_Set sets the flag the pointer's low byte names and
                 // never reads the 0x14 (docs/scena_sc7.md section 7).
                 unsigned char* const bank = Bank();
-                SH_CALL(Flags_Set)(bank, static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(bank)) & 0xFF);
+                SH_CALL(Flags_Set)(bank, Low32(bank) & 0xFF);
                 SetRun(0xA);
                 SetStep(0xA);
             }

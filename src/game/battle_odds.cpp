@@ -106,7 +106,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind1(void) {
         }
     }
     Window4_Index = SharedScratch.b_00;
-    return static_cast<U>(reinterpret_cast<std::uintptr_t>(e));
+    return Low32(e);
 }
 
 // original 0x44A7B0 (kind 2; PSX 0x801DE71C): as kind 1 with three
@@ -132,7 +132,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
         return eax;
     }
     Window0_ParamA = SharedScratch.b_00;
-    return static_cast<U>(reinterpret_cast<std::uintptr_t>(e));
+    return Low32(e);
 }
 
 // --- two effect handlers -------------------------------------------------------------
@@ -182,14 +182,14 @@ extern "C" unsigned long __cdecl BattleFx_TintActor(void) {
     unsigned char* s = Sprite();
     s[9] = static_cast<unsigned char>(s[9] - 1);
     s = Sprite();
-    if (s[9] != 0) return static_cast<U>(reinterpret_cast<std::uintptr_t>(s));
+    if (s[9] != 0) return Low32(s);
     g.release_tint(object);
     const U index = g.set_tint(object, 0, 0, 0, 1);
     Sprite()[0xA] = static_cast<unsigned char>(index);
     Sprite()[9] = 8;
     s = Sprite();
     s[1] = static_cast<unsigned char>(s[1] + 1);
-    return static_cast<U>(reinterpret_cast<std::uintptr_t>(s));
+    return Low32(s);
 }
 
 // original 0x4B1ED0: the red, green and blue bytes (+2, +3, +4) of tint record
@@ -206,7 +206,7 @@ extern "C" unsigned long __cdecl BattleFx_Brighten(void) {
     s[9] = static_cast<unsigned char>(s[9] - 1);
     unsigned char* const t = Sprite();
     if (t[9] == 0) t[1] = static_cast<unsigned char>(t[1] + 1);
-    return static_cast<U>(reinterpret_cast<std::uintptr_t>(t));
+    return Low32(t);
 }
 
 // original 0x4ED5C0: +9 = BattleActor_FxSize() (al; Sprite_Current read after
@@ -216,18 +216,18 @@ extern "C" unsigned long __cdecl BattleFx_SetSize(void) {
     Sprite()[9] = static_cast<unsigned char>(size);
     unsigned char* const s = Sprite();
     s[2] = static_cast<unsigned char>(s[2] + 1);
-    return static_cast<U>(reinterpret_cast<std::uintptr_t>(s));
+    return Low32(s);
 }
 
 // original 0x4EE8A0: once +0xB is 4 or below (unsigned), +9 = 8 and the next
 // state. eax Sprite_Current.
 extern "C" unsigned long __cdecl BattleFx_WaitStep4(void) {
     unsigned char* s = Sprite();
-    if (s[0xB] > 4) return static_cast<U>(reinterpret_cast<std::uintptr_t>(s));
+    if (s[0xB] > 4) return Low32(s);
     s[9] = 8;
     s = Sprite();
     s[1] = static_cast<unsigned char>(s[1] + 1);
-    return static_cast<U>(reinterpret_cast<std::uintptr_t>(s));
+    return Low32(s);
 }
 
 // original 0x4F7350: once +0xB is 0 - Battle_SetTargetFlag40(the byte

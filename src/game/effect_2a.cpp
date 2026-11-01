@@ -66,7 +66,7 @@ void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 std::int32_t S32(U v) { return static_cast<std::int32_t>(v); }
 void AddWord(unsigned char* p, U d) { SetWord(p, Word(p) + d); }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // cdq; and edx, 7; add eax, edx; sar eax, 3: a signed divide by 8, toward zero.

@@ -66,7 +66,7 @@ unsigned char T(U a) { return *At(a); }
 std::int32_t TS(U a) { return static_cast<signed char>(*At(a)); }
 U TL(U a) { return static_cast<U>(Long(At(a))); }
 std::int32_t Sar(U v, unsigned n) { return static_cast<std::int32_t>(v) >> n; }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 
 using Handler = scenario_harness::Handler;
 

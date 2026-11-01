@@ -57,7 +57,7 @@ U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 std::int32_t SL(U a) { return Long(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 unsigned char& B(U a) { return *At(a); }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 
 using Handler = scenario_harness::Handler;

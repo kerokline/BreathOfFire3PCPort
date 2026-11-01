@@ -44,7 +44,7 @@ namespace at = effect_1f::at;
 using bof3x::input::sigma::Sigma;
 
 unsigned char* At(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 unsigned char& B(U a) { return *At(a); }
 std::uint16_t Word(U a) {
     std::uint16_t v;

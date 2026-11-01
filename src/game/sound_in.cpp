@@ -402,13 +402,13 @@ void Inject() {
     if (bof3::WantsShadow("shop_states") || bof3::WantsShadow("sound_in")) SelfTest();
     const std::uint8_t was = 0, is = 1;
     bof3::PatchBytes("InnNightPause",
-                     static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_inn_pause)), &was, &is, 1);
+                     Low32(&g_inn_pause), &was, &is, 1);
     bof3::Log("DIV-0169    the inn's night halts the area's song as the fade starts and resumes it at its position "
               "after the morning's message, as the PlayStation does (on unless the line above says OFF)");
     // DIV-0177: after the sound, save_menu and shop_states fuzzes (Inject_All
     // runs them first), which drive Sound_LoadStream and Sound_Tick as Capcom's.
     bof3::PatchBytes("JingleResume",
-                     static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_jingle_resume)), &was, &is, 1);
+                     Low32(&g_jingle_resume), &was, &is, 1);
     bof3::Log("DIV-0177    the area's song resumes where it stopped once a jingle ends, as the PlayStation's plays on "
               "under its XA jingles (on unless the line above says OFF)");
 }

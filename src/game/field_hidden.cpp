@@ -376,7 +376,7 @@ FH_EXPORT void __cdecl Sprite_CopyFrames(unsigned frame, unsigned char* buffer, 
     const unsigned n = size & 0xFFFF;
     unsigned char* const to = buffer + static_cast<std::uint32_t>(Sprite_Current[5]) * n;
     for (unsigned i = 0; i < n; ++i) to[i] = PtrIn(Sprite_Current + 0x50)[i];
-    rv::Current<records::SpriteObject>()->script = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(to));
+    rv::Current<records::SpriteObject>()->script = static_cast<std::int32_t>(Low32(to));
 }
 
 // original 0x589110: Sprite_CopyFrames(animation, set, size); when +0x4B is
@@ -506,7 +506,7 @@ FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_c
     }
     const unsigned row = Al(g.pick_row());
     const unsigned char* const picked = At(::bof3::Img(Encounter_Rows_addr) + row * 9);
-    FieldHidden_RowUsed = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(picked));
+    FieldHidden_RowUsed = static_cast<std::int32_t>(Low32(picked));
     const unsigned char count = Al(g.fill_slots(picked));
     FieldHidden_EnemyCount = count;
     if (count == 0) return 0;

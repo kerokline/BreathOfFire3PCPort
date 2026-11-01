@@ -62,7 +62,7 @@ void Dispatch(const char* who, const char* by, U table, unsigned index, unsigned
 }
 // A state table's address (symbols.toml [[data]]: the name is a pointer to its
 // first dword).
-U Table(const unsigned long* t) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(t)); }
+U Table(const unsigned long* t) { return Low32(t); }
 void ByState2(const char* who, U table, unsigned entries) { Dispatch(who, "the state byte +2", table, S()[2], entries); }
 void ByState3(const char* who, U table, unsigned entries) { Dispatch(who, "the state byte +3", table, S()[3], entries); }
 void ByForm(const char* who, U table) { Dispatch(who, "the form word +0x2C", table, rv::As<records::PartyMember>(S())->column, 3); }
@@ -176,7 +176,7 @@ void Form2Begin() {
     // The upper bits pass through an empty asm: without it this toolchain's
     // x86 back end dropped them (the IR keeps the `or`; the code pushed the
     // byte alone - 12,000 mismatches, docs/rest_1e.md section 4).
-    U upper = static_cast<U>(reinterpret_cast<std::uintptr_t>(s)) & 0xFFFFFF00u;
+    U upper = Low32(s) & 0xFFFFFF00u;
     asm volatile("" : "+r"(upper));
     const U direction = upper | s[8];
     SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), direction);   // its answer unused

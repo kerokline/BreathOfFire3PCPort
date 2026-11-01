@@ -37,7 +37,7 @@ constexpr ::bof3::image::Va kScenarioBytes{0x8034E0};  // Cond_ByteFA and the ni
 constexpr ::bof3::image::CodeVa kDemoEntry{bof3::addr::Field_Task};      // task 0's entry for the demo (the field task)
 constexpr ::bof3::image::CodeVa kMenuEntry{bof3::addr::TitleTask_Run};      // task 0's entry for the title menu
 constexpr ::bof3::image::CodeVa kModeDispatch{bof3::addr::Field_ModeDispatch};   // Field_ModeDispatch, another file's: called by address
-const std::uint32_t kCondFlags = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Cond_Flags));
+const std::uint32_t kCondFlags = Low32(Cond_Flags);
 
 // DIVERGENCE DIV-0131 (D256): on a PSP base (a PSP-only install, the cache's
 // base_policy "psp") the title's logo pages are the PSP's own art, laid out
@@ -538,7 +538,7 @@ void __cdecl StubStopMusic() { Record(9); Disturb(); }
 void __cdecl StubEffectClear() { Record(10); Disturb(); }
 void __cdecl StubScenarioStart(int chapter) { Record(11, static_cast<std::uint32_t>(chapter) & 0xFF); Disturb(); }
 void __cdecl StubTaskCreate(int slot, void* entry) {
-    Record(12, static_cast<std::uint32_t>(slot), static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(entry)));
+    Record(12, static_cast<std::uint32_t>(slot), Low32(entry));
     Disturb();
 }
 // The fades may end the track or leave it: what Title_StopMusic stores over.

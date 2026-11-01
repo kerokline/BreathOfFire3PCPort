@@ -361,7 +361,7 @@ void CallTrace_Start(void* dll_module) {
         auto* dll = reinterpret_cast<const std::uint8_t*>(dll_module);
         auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(dll);
         auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(dll + dos->e_lfanew);
-        g_dll.lo = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(dll));
+        g_dll.lo = Low32(dll);
         g_dll.hi = g_dll.lo + nt->OptionalHeader.SizeOfImage;
     }
 

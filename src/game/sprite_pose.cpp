@@ -54,7 +54,7 @@ constexpr unsigned kEffects = 20, kEffectBytes = 0x80;
 // in 32 bits as the original's `add` / `lea` do it.
 unsigned char* Ptr(std::uint32_t address) { return At(static_cast<std::uint32_t>(Long(At(address)))); }
 unsigned char* Offset(const unsigned char* base, std::uint32_t by) {
-    return At(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(base)) + by);
+    return At(Low32(base) + by);
 }
 
 }  // namespace
@@ -154,7 +154,7 @@ extern "C" void __cdecl Sprite_SetAnimationAt(unsigned char animation, unsigned 
     }
     const unsigned char* const offsets = Ptr(::bof3::Img(at::kFrameOffsets));
     const unsigned char* const table = Offset(offsets, static_cast<std::uint32_t>(Long(offsets + sprite->column * 4u)));
-    sprite->script = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Offset(table, Word(table + sprite->animation * 2u))));
+    sprite->script = static_cast<std::int32_t>(Low32(Offset(table, Word(table + sprite->animation * 2u))));
     g.script_start(start);
 }
 
@@ -204,13 +204,13 @@ extern "C" unsigned char* __cdecl Sprite_SetFrameQueueUpload(unsigned frame) {
             SetWord(At(::bof3::Img(Gfx_UploadQueueY_addr) + count * 2u), sprite->tex_row);
         }
         const unsigned char* const image = Offset(images, static_cast<std::uint32_t>(Long(images + entry[0] * 4u)));
-        SetLong(At(::bof3::Img(Gfx_UploadQueueRecord_addr) + count * 4u), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(image)));
+        SetLong(At(::bof3::Img(Gfx_UploadQueueRecord_addr) + count * 4u), static_cast<std::int32_t>(Low32(image)));
         Gfx_UploadQueueCount = static_cast<unsigned char>(Gfx_UploadQueueCount + 1);
     }
     if (PoseLogOn()) PoseLog("QueueUpload entry ", sprite, frame, entry[0] | entry[1] << 8 | entry[2] << 16);
     sprite->flip = entry[2];
     unsigned char* const script = Offset(words, Word(words + entry[1] * 2u));
-    rv::Current<records::SpriteObject>()->script = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(script));
+    rv::Current<records::SpriteObject>()->script = static_cast<std::int32_t>(Low32(script));
     return script;
 }
 
@@ -326,7 +326,7 @@ void SpritePose_Inject() {
     {
         // DIV-0164: after the self-test, which compared Capcom's masked store.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("SpriteReachWord", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_reach_word)), &was, &is, 1);
+        bof3::PatchBytes("SpriteReachWord", Low32(&g_reach_word), &was, &is, 1);
         bof3::Log("DIV-0164    the bank setter stores the sprite's reach byte as a whole dword +0x70 (on unless the line above says OFF)");
     }
     BOF3_INJECT(Sprite_SetAnimation);

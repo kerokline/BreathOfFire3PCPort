@@ -54,7 +54,7 @@ using move_script::SetWord;
 using move_script::Word;
 using Handler = void (__cdecl*)();
 
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 unsigned char B(U address) { return At(address)[0]; }
 short S(const unsigned char* p) { return static_cast<short>(Word(p)); }
 std::int32_t Sx(const unsigned char* p) { return static_cast<std::int32_t>(S(p)); }

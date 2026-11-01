@@ -87,8 +87,8 @@ void GameClock_Inject() {
     // The slot must already hold kernel32's GetTickCount - the loader has
     // bound the imports by the time the DLL is injected. PatchBytes refuses
     // otherwise.
-    const auto real = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&GetTickCount));
-    const auto ours = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&SessionTickCount));
+    const auto real = Low32(&GetTickCount);
+    const auto ours = Low32(&SessionTickCount);
     std::uint8_t expected[4], replacement[4];
     std::memcpy(expected, &real, 4);
     std::memcpy(replacement, &ours, 4);

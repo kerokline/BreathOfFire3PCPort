@@ -99,7 +99,7 @@ short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 std::uint32_t U(std::int32_t v) { return static_cast<std::uint32_t>(v); }
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 void AddLong(unsigned char* at, std::uint32_t v) { SetLong(at, static_cast<std::int32_t>(U(Long(at)) + v)); }
 void CopyLong(unsigned char* to, const unsigned char* from) { SetLong(to, Long(from)); }
 

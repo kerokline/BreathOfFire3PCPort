@@ -490,8 +490,8 @@ void Arm() {
     std::string how;
     g_release = ReadInstallRelease(how);
     static const std::uint8_t was = 0, is = 1;
-    bof3::PatchBytes("ButtonSigma", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_sigma_on)), &was, &is, 1);
-    bof3::PatchBytes("StartConfigBySource", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_by_source)), &was,
+    bof3::PatchBytes("ButtonSigma", Low32(&g_sigma_on), &was, &is, 1);
+    bof3::PatchBytes("StartConfigBySource", Low32(&g_by_source), &was,
                      &is, 1);
     g_armed = true;
     // A table now if the words already hold a Config (an inject after boot is

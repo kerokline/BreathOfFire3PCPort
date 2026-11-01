@@ -78,7 +78,7 @@ void PauseText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32
     if (p != end) bof3::Fatal("DIV-0038: pause chunk has %u bytes past its four lines", (unsigned)(end - p));
     g_applied = true;
     for (U i = 0; i < 4; ++i) {
-        const U ours = static_cast<U>(reinterpret_cast<std::uintptr_t>(g_text[i]));
+        const U ours = Low32(g_text[i]);
         std::uint8_t was[4], is[4];
         const U was_place = ::bof3::Img(kLines[i].original);   // the pointer word holds the place
         std::memcpy(was, &was_place, 4);

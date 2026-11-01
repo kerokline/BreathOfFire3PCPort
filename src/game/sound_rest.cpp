@@ -36,7 +36,7 @@ namespace sound_rest {
 namespace {
 
 unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const volatile void* p) { return Low32(p); }
 std::uint32_t Dword(std::uint32_t address) {
     std::uint32_t v;
     std::memcpy(&v, At(address), sizeof v);

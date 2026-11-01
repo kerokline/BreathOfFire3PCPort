@@ -144,7 +144,7 @@ inline const unsigned char* Ptr(std::uint32_t address) {
     return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(address)));
 }
 inline void SetPtr(std::uint32_t address, const unsigned char* p) {
-    SetL(address, static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)));
+    SetL(address, Low32(p));
 }
 
 // The same accessors for a VA held as a bof3::Va (common/image_base.h): the

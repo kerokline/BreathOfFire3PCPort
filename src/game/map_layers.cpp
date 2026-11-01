@@ -65,7 +65,7 @@ void SetWord(unsigned char* p, unsigned v) {
     std::memcpy(p, &w, sizeof w);
 }
 void SetDword(unsigned char* p, std::uint32_t v) { std::memcpy(p, &v, sizeof v); }
-std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const void* p) { return Low32(p); }
 int S8(unsigned v) { return static_cast<signed char>(v); }
 unsigned Width() { return AreaMap_Header[0]; }
 

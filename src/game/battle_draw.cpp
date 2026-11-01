@@ -82,7 +82,7 @@ namespace {
 using namespace battle_draw;
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Addr(const void* p) { return Low32(p); }
 U Word(const unsigned char* p) {
     std::uint16_t v;
     std::memcpy(&v, p, sizeof v);
@@ -469,7 +469,7 @@ void BattleDraw_Inject() {
         if (Lang_Latin()) {
             static const std::uint8_t was = 0, is = 1;
             bof3::PatchBytes("BattleListTitleCentre",
-                             static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_list_title_centre)),
+                             Low32(&g_list_title_centre),
                              &was, &is, 1);
             bof3::Log("DIV-0059    list titles centred on their width: %s", g_list_title_centre ? "on" : "off");
             const bool a = bof3::RetargetCall("BattleListTitleCentre", kTitleCallA.v, kTextDrawAt.v,
@@ -477,7 +477,7 @@ void BattleDraw_Inject() {
             const bool b = bof3::RetargetCall("BattleListTitleCentre", kTitleCallB.v, kTextDrawAt.v,
                                               reinterpret_cast<void*>(&ListTitle_DrawAt));
             if (a != b) bof3::Fatal("DIV-0059: one title call re-aimed and not the other");   // one name: both or neither
-            if (a) g_title_site_draw = static_cast<U>(reinterpret_cast<std::uintptr_t>(&ListTitle_DrawAt));
+            if (a) g_title_site_draw = Low32(&ListTitle_DrawAt);
         }
     }
     BOF3_INJECT(D3d_DrawPolyG3);

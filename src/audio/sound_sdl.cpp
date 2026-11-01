@@ -116,17 +116,6 @@ constexpr std::uint32_t kIidNotifyVa = 0x5C45B8;
 
 // --- Width helpers ----------------------------------------------------------
 
-// A pointer of ours as the 32-bit word the game's slots hold. Every object
-// here is a static of the DLL (below 4 GB by its fixed base, design 3); the
-// check is the loud trap for a build that moves one. B4's Low32() in
-// image_base.h replaces this when it merges.
-std::uint32_t Low(const void* p) {
-    const std::uint64_t v = static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(p));
-    if (v >> 32) Fatal("sound_sdl: an object of ours at %016llX lies above 4 GB, which the game's 32-bit slots cannot hold",
-                       static_cast<unsigned long long>(v));
-    return static_cast<std::uint32_t>(v);
-}
-
 template <class T>
 T* Widen(std::uint32_t place) { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(place)); }
 
@@ -144,7 +133,7 @@ std::uint16_t U16At(const void* p, unsigned off) {
 // An object's address into the game's out-slot, as 4 bytes (the header
 // comment's width rule).
 void PutObject(void** out, const void* object) {
-    const std::uint32_t word = Low(object);
+    const std::uint32_t word = Low32(object);
     std::memcpy(out, &word, 4);
 }
 
@@ -964,7 +953,7 @@ void SelfTest() {
     g_device.refs = 1;
     g_device.cooperative = false;
     PutObject(reinterpret_cast<void**>(&slot_words[0]), &g_device);
-    SDL_CHECK(slot_words[0] == Low(&g_device) && slot_words[1] == 0xCAFEF00Du, "the device's slot word");
+    SDL_CHECK(slot_words[0] == Low32(&g_device) && slot_words[1] == 0xCAFEF00Du, "the device's slot word");
     void* const device = FromSlot(slot_words[0]);
     SDL_CHECK(Method<MCooperate>(device, 0x18)(device, nullptr, 3) == kOk, "SetCooperativeLevel(EXCLUSIVE)");
     SDL_CHECK(Method<MCooperate>(device, 0x18)(device, nullptr, 9) == kInvalidParam, "SetCooperativeLevel(9) accepted");
@@ -999,7 +988,7 @@ void SelfTest() {
     // A 16-bit mono 22,050 Hz buffer of 400 frames holding a ramp s[i] = 10 i.
     static unsigned char fmt_mono[kFormatSize];
     WriteFormat(Format{1, 1, 2, 16, 0, 22050, 44100}, fmt_mono);
-    const TestDesc sdesc = MakeDesc(0x180E2, 800, Low(fmt_mono));
+    const TestDesc sdesc = MakeDesc(0x180E2, 800, Low32(fmt_mono));
     std::uint32_t words[2] = {0, 0x12345678u};
     SDL_CHECK(Method<MCreate>(device, 0x0C)(device, sdesc.bytes, reinterpret_cast<void**>(&words[0]), nullptr) == kOk && words[1] == 0x12345678u,
               "a secondary buffer, 4 bytes into its slot");
@@ -1096,7 +1085,7 @@ void SelfTest() {
     // 1,000 frames (4,000 bytes), events at 0 and 2,000.
     static unsigned char fmt_ring[kFormatSize];
     WriteFormat(Format{1, 2, 4, 16, 0, 44100, 176400}, fmt_ring);
-    const TestDesc rdesc = MakeDesc(0x181E0, 4000, Low(fmt_ring));
+    const TestDesc rdesc = MakeDesc(0x181E0, 4000, Low32(fmt_ring));
     std::uint32_t ring_word = 0;
     SDL_CHECK(Method<MCreate>(device, 0x0C)(device, rdesc.bytes, reinterpret_cast<void**>(&ring_word), nullptr) == kOk, "the ring");
     void* const ring = FromSlot(ring_word);
@@ -1136,7 +1125,7 @@ void SelfTest() {
     // Two full-scale buffers clip; an 8-bit source is centred at 0x80.
     static unsigned char fmt_8[kFormatSize];
     WriteFormat(Format{1, 1, 1, 8, 0, 44100, 44100}, fmt_8);
-    const TestDesc d8 = MakeDesc(0x180E2, 4, Low(fmt_8));
+    const TestDesc d8 = MakeDesc(0x180E2, 4, Low32(fmt_8));
     std::uint32_t w8 = 0;
     SDL_CHECK(Method<MCreate>(device, 0x0C)(device, d8.bytes, reinterpret_cast<void**>(&w8), nullptr) == kOk, "an 8-bit buffer");
     void* const eight = FromSlot(w8);
@@ -1147,7 +1136,7 @@ void SelfTest() {
     SDL_CHECK(out[0] == 0 && out[2] == 0x7F00 && out[4] == -0x8000 && out[6] == 0, "8-bit samples: %d %d %d %d", out[0], out[2], out[4], out[6]);
     {
         std::int16_t loud[4] = {32767, 32767, -32768, -32768};
-        const TestDesc dl = MakeDesc(0x180E2, 8, Low(fmt_mono));
+        const TestDesc dl = MakeDesc(0x180E2, 8, Low32(fmt_mono));
         std::uint32_t wa = 0, wb = 0;
         SDL_CHECK(Method<MCreate>(device, 0x0C)(device, dl.bytes, reinterpret_cast<void**>(&wa), nullptr) == kOk &&
                       Method<MCreate>(device, 0x0C)(device, dl.bytes, reinterpret_cast<void**>(&wb), nullptr) == kOk,
@@ -1232,7 +1221,7 @@ void SoundSdl_Start() {
     constexpr std::uint32_t kSlotVa = Imp_DirectSoundCreate_addr;
     unsigned char now[4], ours[4];
     std::memcpy(now, Widen<const void>(Img(kSlotVa)), 4);
-    const std::uint32_t create = Low(reinterpret_cast<const void*>(&Create));
+    const std::uint32_t create = Low32(&Create);
     std::memcpy(ours, &create, 4);
     std::uint32_t before;
     std::memcpy(&before, now, 4);

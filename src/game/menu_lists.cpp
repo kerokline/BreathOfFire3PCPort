@@ -633,7 +633,7 @@ void MenuLists_Inject() {
         if (Lang_Latin()) {
             static const std::uint8_t was = 0, is = 1;
             bof3::PatchBytes("MenuTitleCentre",
-                             static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_title_centre)),
+                             Low32(&g_title_centre),
                              &was, &is, 1);
             bof3::Log("DIV-0058    menu screen title centred on its width: %s", g_title_centre ? "on" : "off");
         }

@@ -47,7 +47,7 @@ using sh::Arg;
 using sh::ArgAt;
 using sh::Shape;
 
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 const void* InPlace(std::uint32_t address) { return reinterpret_cast<const void*>(static_cast<std::uintptr_t>(address)); }
 
 // The two callees the copies standing in as ours reach: the harness's stand-in

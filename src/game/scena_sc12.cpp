@@ -310,8 +310,8 @@ SC12_EXPORT unsigned char __cdecl Scena12_CellDoor(void) {
     SetCounter(3, 0);
     SetStep(0);
     const unsigned char* const sprite = Sprite_Current;
-    SH_CALL(MoveCmd_TestFB)(static_cast<short>(W(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(sprite)) + 0x36)),
-                            static_cast<short>(W(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(sprite)) + 0x3A)));
+    SH_CALL(MoveCmd_TestFB)(static_cast<short>(W(Low32(sprite) + 0x36)),
+                            static_cast<short>(W(Low32(sprite) + 0x3A)));
     SH_CALL(Sound_PlayEffect)(0x103);
     return 1;
 }

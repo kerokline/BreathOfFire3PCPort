@@ -72,7 +72,7 @@ unsigned Message() { return Word(At(::bof3::Img(at::kMessage))); }
 void ScriptFlagsOr80() { Byte(::bof3::Img(at::kScriptFlags)) = static_cast<unsigned char>(Byte(::bof3::Img(at::kScriptFlags)) | 0x80); }
 void ScriptFlagsAnd(unsigned mask) { Field_ScriptFlags = Field_ScriptFlags & mask; }
 short S16(std::uint32_t a) { return static_cast<short>(Word(At(a))); }
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 
 // A table of code pointers in the exe's data, read as the original reads it:
 // afresh, and indexed without a bound.

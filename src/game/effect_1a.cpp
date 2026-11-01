@@ -58,7 +58,7 @@ unsigned char* S() { return Sprite_Current; }
 // in FishingEmpty_Arm, after every module's self-test.
 std::uint8_t g_empty_line_none = 0;
 std::uint8_t g_low_glyph_none = 0;
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 U L(const unsigned char* p) { return static_cast<U>(move_script::Long(p)); }
 U L(U a) { return L(At(a)); }
 void SetL(unsigned char* p, U v) { move_script::SetLong(p, static_cast<std::int32_t>(v)); }
@@ -2145,9 +2145,9 @@ bool FishingEmpty_LowGlyphNone() { return g_low_glyph_none != 0; }
 
 void FishingEmpty_Arm() {
     static const std::uint8_t was = 0, is = 1;
-    bof3::PatchBytes("FishingEmptyLine", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_empty_line_none)),
+    bof3::PatchBytes("FishingEmptyLine", Low32(&g_empty_line_none),
                      &was, &is, 1);
-    bof3::PatchBytes("FishingLowGlyph", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_low_glyph_none)),
+    bof3::PatchBytes("FishingLowGlyph", Low32(&g_low_glyph_none),
                      &was, &is, 1);
     bof3::Log("DIV-0144    the fishing banner draws no glyph for an empty line (%s) nor for a one-byte code below "
               "0x26 (%s)", g_empty_line_none ? "on" : "OFF", g_low_glyph_none ? "on" : "OFF");

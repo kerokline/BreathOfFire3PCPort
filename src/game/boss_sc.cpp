@@ -224,7 +224,7 @@ extern "C" unsigned __cdecl BossAmalgam_DeathTick(void) {
     unsigned char* const s = Sprite_Current;
     auto* const cur_enemy = rv::As<records::BattleEnemy>(s);
     cur_enemy->state3 = 1;
-    return static_cast<U>(reinterpret_cast<std::uintptr_t>(s));
+    return Low32(s);
 }
 
 // original 0x439790: death step 1: 0x904AA9 |= 4; Sprite_ScriptTickOnce (not
@@ -513,7 +513,7 @@ extern "C" unsigned __cdecl BossNina_WalkStep(void) {
     auto* const cur_enemy = rv::As<records::BattleEnemy>(s);
     if (cur_enemy->flags & 0x80) {
         cur_enemy->step += 1;
-        return static_cast<U>(reinterpret_cast<std::uintptr_t>(s));
+        return Low32(s);
     }
     cur_enemy->x = static_cast<std::int32_t>(static_cast<U>(cur_enemy->x) + 0x8000);
     BH_CALL(Sprite_ScriptTick)();

@@ -62,7 +62,7 @@ using move_script::SetWord;
 using move_script::Word;
 using U = std::uint32_t;
 
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 unsigned char* Ptr(U a) { return At(a); }
 unsigned char* PtrAt(const unsigned char* cell) { return At(static_cast<U>(Long(cell))); }
 const char* Str(U a) { return reinterpret_cast<const char*>(At(a)); }
@@ -1331,7 +1331,7 @@ void FieldO_Inject() {
     if (Lang_Latin()) {
         static const std::uint8_t was = 0, is = 1;
         bof3::PatchBytes("FormationNameCentre",
-                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_wheel_name_centre)),
+                         Low32(&g_wheel_name_centre),
                          &was, &is, 1);
         bof3::Log("DIV-0084    formation names centred: %s", g_wheel_name_centre ? "on" : "off");
     }
@@ -1339,7 +1339,7 @@ void FieldO_Inject() {
     // owner's call of 2026-10-31, docs/exe-gap-round.md 7).
     {
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("SaveSlotBlank", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_empty_slot_blank)),
+        bof3::PatchBytes("SaveSlotBlank", Low32(&g_empty_slot_blank),
                          &was, &is, 1);
         bof3::Log("SaveSlotBlank  an empty save slot draws %s", g_empty_slot_blank ? "no text" : "the port's text (0x669CCC)");
     }

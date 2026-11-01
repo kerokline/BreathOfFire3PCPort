@@ -68,7 +68,7 @@ unsigned char& B(U address) { return At(address)[0]; }
 U ULong(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetULong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 short SWord(const unsigned char* p) { return static_cast<short>(Word(p)); }
-template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+template <typename T> U AddressOf(T* p) { return Low32(p); }
 // A word's low byte, stored alone as the original's byte `or` does.
 unsigned char& LowByte(unsigned short& w) { return *reinterpret_cast<unsigned char*>(&w); }
 

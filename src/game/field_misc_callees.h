@@ -49,14 +49,14 @@ constexpr ::bof3::image::CodeVa kRetOnly{bof3::addr::BareRet};       // a bare r
 // The named data, by the address its symbols.gen.h macro names (the macros are
 // typed lvalues or pointers, so bof3::addr's constants are shadowed by them).
 namespace at {
-inline U Of(const volatile void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+inline U Of(const volatile void* p) { return Low32(p); }
 inline U AreaMap_BytesAt() { return Of(&AreaMap_Bytes); }
 inline U AreaMap_CellBaseAt() { return Of(&AreaMap_CellBase); }
 inline U AreaMap_CornersAt() { return Of(&AreaMap_Corners); }
 inline U AreaMap_HeaderAt() { return Of(AreaMap_Header); }
 inline U AreaMap_PatchBaseAt() { return Of(&AreaMap_PatchBase); }
 // DIV-0062: the item array is the pool's, wherever it is now.
-inline U DrawItemsAt() { return static_cast<U>(reinterpret_cast<std::uintptr_t>(draw_pool::Items())); }
+inline U DrawItemsAt() { return Low32(draw_pool::Items()); }
 inline U ItemFaceB() { return DrawItemsAt() + 0x7E; }   // kItemFaceB, live
 inline U ItemFaceA() { return DrawItemsAt() + 0x8E; }   // kItemFaceA, live
 inline U Draw_OtSlotAt() { return Of(&Draw_OtSlot); }

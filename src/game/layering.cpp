@@ -52,7 +52,7 @@ T Get(const void* p) {
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const void* p) { return Low32(p); }
 unsigned char* Pointer(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 
 int EnvInt(const char* name, int fallback, int lo, int hi) {

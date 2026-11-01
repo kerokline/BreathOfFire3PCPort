@@ -28,6 +28,8 @@
 #include <bit>
 #include <cstdint>
 
+#include "common/image_base.h"   // Low32
+
 struct _DIDATAFORMAT;   // dinput.h's DIDATAFORMAT
 
 namespace rdata {
@@ -135,7 +137,7 @@ struct Const {
         if (!Held(a)) throw "rdata::Const: not a constant rdata_consts.h holds";
     }
     operator std::uint32_t() const {
-        return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&kCopies[(pc - kLo) / 4]));
+        return Low32(&kCopies[(pc - kLo) / 4]);
     }
 };
 

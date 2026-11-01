@@ -767,7 +767,7 @@ void ModeFlow_Inject() {
     {
         // DIV-0175: after the self-test, which compared Capcom's five-field reset.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("WindowResetFull", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_reset_full)), &was, &is, 1);
+        bof3::PatchBytes("WindowResetFull", Low32(&g_reset_full), &was, &is, 1);
         bof3::Log("DIV-0175    the window reset clears +0..+0x1F of every record, as the US disc (on unless the line above says OFF)");
     }
     BOF3_INJECT(Transition_Start);

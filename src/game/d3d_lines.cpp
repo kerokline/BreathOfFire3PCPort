@@ -121,7 +121,7 @@ void Arm() {
         return;
     }
     static const std::uint8_t was = 0, is = 1;
-    bof3::PatchBytes("LinesWide", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_wide)), &was, &is, 1);
+    bof3::PatchBytes("LinesWide", Low32(&g_wide), &was, &is, 1);
     bof3::Log("DIV-0079    LINE primitives drawn as quads of the scale's width (BOF3X_LINES=0 for the strip)");
 }
 

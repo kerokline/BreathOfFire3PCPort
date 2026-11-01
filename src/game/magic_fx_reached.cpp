@@ -100,7 +100,7 @@ unsigned char* Ptr(std::uint32_t cell) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(cell)))));
 }
 std::int32_t PtrValue(const unsigned char* p) {
-    return static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)));
+    return static_cast<std::int32_t>(Low32(p));
 }
 // A task slot by its index, unchecked as the originals index it.
 unsigned char* Task(unsigned index) { return At(::bof3::Img(BattleTask_Slots_addr) + index * at::kTaskStride); }
@@ -400,7 +400,7 @@ MFX_EXPORT void __cdecl Steal_Report(void) {
         sc = Sprite_Current;
     }
     const unsigned char* const text = g.msg_system(sc[0xA]);
-    g.queue_push(1, 0x1E, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(text)));
+    g.queue_push(1, 0x1E, Low32(text));
     Bump(Sprite_Current[1], 1);
 }
 

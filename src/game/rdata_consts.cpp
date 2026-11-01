@@ -52,14 +52,14 @@ void VerifyKeyboardFormat() {
                     "(0x%lX 0x%lX 0x%lX 0x%lX %lu)", ours.dwSize, ours.dwObjSize, ours.dwFlags, ours.dwDataSize,
                     ours.dwNumObjs, kKeyboardFormat.v, theirs.dwSize, theirs.dwObjSize, theirs.dwFlags,
                     theirs.dwDataSize, theirs.dwNumObjs);
-    const auto table = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(theirs.rgodf));
+    const auto table = Low32(theirs.rgodf);
     for (DWORD i = 0; i < ours.dwNumObjs; ++i) {
         DIOBJECTDATAFORMAT obj;
         static_assert(sizeof obj == 16, "DIOBJECTDATAFORMAT is 16 bytes on i686");
         Theirs(table + 16 * i, &obj, sizeof obj);
         const DIOBJECTDATAFORMAT& mine = ours.rgodf[i];
         GUID guid{};
-        const auto at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(obj.pguid));
+        const auto at = Low32(obj.pguid);
         if (at) Theirs(at, &guid, sizeof guid);
         const bool guid_same =
             (at == 0) == (mine.pguid == nullptr) && (!at || std::memcmp(&guid, mine.pguid, sizeof guid) == 0);

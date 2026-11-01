@@ -32,7 +32,7 @@ namespace {
 using namespace move_script;
 using namespace move_cmds;
 
-std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const volatile void* p) { return Low32(p); }
 std::int32_t Add(std::int32_t a, std::int32_t b) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(a) + static_cast<std::uint32_t>(b));
 }

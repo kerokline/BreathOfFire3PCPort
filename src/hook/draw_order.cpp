@@ -115,7 +115,7 @@ bool BoxOf(std::uint32_t p, unsigned code, Box& out) {
         const unsigned first = Get<std::uint16_t>(p + 0x18), count = Get<std::uint16_t>(p + 0x1A);
         int l = 0, r = 0, t = 0, b = 0;
         for (unsigned i = 0; i < count && i < 256; ++i) {
-            const std::uint32_t rec = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(SpriteCell_Table)) + (first + i) * 8u;
+            const std::uint32_t rec = Low32(SpriteCell_Table) + (first + i) * 8u;
             const int x = Get<std::int16_t>(rec), y = Get<std::int8_t>(rec + 2);
             const unsigned size = Get<std::uint8_t>(rec + 3);
             const int w = static_cast<int>(size & 0xF) * 8, h = static_cast<int>(size >> 4) * 8;
@@ -140,14 +140,14 @@ bool BoxOf(std::uint32_t p, unsigned code, Box& out) {
 // A draw item of MapView_Build's (draw_pool's 0x90-byte items, two 0x48-byte
 // halves): the view cell whose word names it, found by search.
 void DescribeItem(std::uint32_t p, char* out, std::size_t n) {
-    const std::uint32_t items = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(draw_pool::Items()));
+    const std::uint32_t items = Low32(draw_pool::Items());
     if (p < items || p >= items + draw_pool::Count() * 0x90u) {
         std::snprintf(out, n, "not a draw item");
         return;
     }
     const unsigned index = (p - items) / 0x90u, half = (p - items) % 0x90u / 0x48u;
     for (unsigned c = 0; c < 1568; ++c) {
-        const std::uint32_t cell = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(MapView_CellItems)) + c * 4u;
+        const std::uint32_t cell = Low32(MapView_CellItems) + c * 4u;
         const unsigned word = Get<std::uint16_t>(cell + 2);
         if ((word & 0xFFFu) != index) continue;
         std::snprintf(out, n, "item %u half %u, view cell %u (map %u,%u) word %04X", index, half, c,
@@ -266,7 +266,7 @@ void LogWalk(const unsigned long* ot) {
         // The packet pool's fill at the walk: Gfx_PacketNext against this
         // buffer's 64 KB (Gfx_PacketPools + (buffer << 16), draw_emit.cpp's limit).
         const std::uint32_t base = ::bof3::Img(Gfx_PacketPools_addr) + (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16);
-        const std::uint32_t next = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Gfx_PacketNext.Native()));
+        const std::uint32_t next = Low32(Gfx_PacketNext.Native());
         bof3::Log("draworder   frame %u: packet pool at %u of 65536 bytes (buffer %u)", f, next - base,
                   static_cast<unsigned>(Gfx_BufferIndex));
     }
@@ -274,12 +274,12 @@ void LogWalk(const unsigned long* ot) {
     // is handed +0x8C, the heads were cleared in reverse) and passes each head
     // on its way down to entry 0: a node inside them says which slot the
     // primitives after it were committed to. Slot 7 is drawn first, 0 last.
-    const std::uint32_t env = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(ot)) - 7u * 4u;
+    const std::uint32_t env = Low32(ot) - 7u * 4u;
     bof3::Log("draworder   frame %u (Frame_Counter %u, buffer %u): the walk, primitives over (%g, %g)-(%g, %g)", f,
               static_cast<unsigned>(Frame_Counter), static_cast<unsigned>(Gfx_BufferIndex), g_x0, g_y0, g_x1, g_y1);
     int slot = 7;
     unsigned index = 0, shown = 0, unboxed = 0, outside = 0;
-    std::uint32_t node = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(ot));
+    std::uint32_t node = Low32(ot);
     for (unsigned steps = 0; steps < 200000; ++steps) {
         const std::uint32_t link = Get<std::uint32_t>(node);
         if (link == 0xFFFFFFFFu) break;

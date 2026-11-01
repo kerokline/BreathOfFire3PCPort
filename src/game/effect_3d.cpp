@@ -72,7 +72,7 @@ U W(const unsigned char* p) { return Word(p); }
 U W(U a) { return Word(At(a)); }
 unsigned char& B(U a) { return *At(a); }
 std::int32_t S16(U v) { return static_cast<std::int16_t>(v & 0xFFFFu); }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 unsigned char* P(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 void Copy4(unsigned char* to, const unsigned char* from) { std::memcpy(to, from, 4); }   // mov reg, [from]; mov [to], reg
 void SetBits(unsigned char* to, U bits) { std::memcpy(to, &bits, 4); }

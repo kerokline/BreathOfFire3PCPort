@@ -70,7 +70,7 @@ int Tier(int d) {
 // The message, the queue, the phase on: every end of the roll.
 void Report(unsigned id) {
     const unsigned char* const text = MH_CALL(Msg_SystemPtr)(id);
-    MH_CALL(BattleQueue_Push)(1, 0xFF, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(text)));
+    MH_CALL(BattleQueue_Push)(1, 0xFF, Low32(text));
     Bump(Sprite_Current[1]);
 }
 
@@ -145,7 +145,7 @@ MSTEAL_EXPORT void __cdecl SkillSteal_Roll(void) {
     }
     MH_AT(ItemNameFn, bof3::addr::Item_CopyName)(item, category);
     const unsigned char* const text = MH_CALL(Msg_SystemPtr)(0x38);
-    MH_CALL(BattleQueue_Push)(1, 0xFF, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(text)));
+    MH_CALL(BattleQueue_Push)(1, 0xFF, Low32(text));
     unsigned char* const after = EnemyOf(Mem(::bof3::Img(at::kTarget))[0]);
     after[kEnemyRate] = 0;
     SetWord(after + kEnemyItem, 0);
