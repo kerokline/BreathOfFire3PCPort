@@ -174,20 +174,35 @@ extern "C" int __cdecl SoundRest_StreamPlayingBody(std::uint32_t ecx) {
 }
 
 // The two entries whose originals read the ecx their caller left: each passes
-// it to its body, above, as it found it.
+// it to its body, above, as it found it - a pair by width
+// (docs/x64-asm-policy.md 8 unit 4): on i686 pushed as the body's argument,
+// on x86-64 one jump, since the caller's ecx is the first argument register
+// already.
 extern "C" __attribute__((naked)) int __cdecl Music_Halt(void) {
+#if defined(__i386__)
     __asm__ volatile(
         "push %ecx\n\t"
-        "call _SoundRest_HaltBody\n\t"
+        "call " BOF3_SYM(SoundRest_HaltBody) "\n\t"
         "add $4, %esp\n\t"
         "ret");
+#elif defined(__x86_64__)
+    __asm__ volatile("jmp " BOF3_SYM(SoundRest_HaltBody));   // the caller's ecx is the body's first argument already
+#else
+#error "no ecx entry for this architecture"
+#endif
 }
 extern "C" __attribute__((naked)) int __cdecl SndStream_IsPlaying(void) {
+#if defined(__i386__)
     __asm__ volatile(
         "push %ecx\n\t"
-        "call _SoundRest_StreamPlayingBody\n\t"
+        "call " BOF3_SYM(SoundRest_StreamPlayingBody) "\n\t"
         "add $4, %esp\n\t"
         "ret");
+#elif defined(__x86_64__)
+    __asm__ volatile("jmp " BOF3_SYM(SoundRest_StreamPlayingBody));   // the caller's ecx is the body's first argument already
+#else
+#error "no ecx entry for this architecture"
+#endif
 }
 
 // original 0x5A6830: the sound set-up, Game_Init's (hwnd Game_Hwnd). The

@@ -33,6 +33,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "common/asm_name.h"
 #include "game/dat_cache.h"
 #include "game/dat_load.h"
 #include "game/music_seq.h"
@@ -1298,20 +1299,35 @@ extern "C" void __cdecl TitleFlow_EnterGame(void) {
 
 // The two entries whose originals read the ecx their caller left, through
 // an uninitialised local: 0x5A7020 (Music_IsPlaying) and 0x5884A0
-// (LoadMenu_Error). Each passes ecx to its body, above, as it found it.
+// (LoadMenu_Error). Each passes ecx to its body, above, as it found it: a
+// pair by width (docs/x64-asm-policy.md 8 unit 4) - on i686 pushed as the
+// body's argument, on x86-64 one jump, since the caller's ecx is the first
+// argument register already.
 extern "C" __attribute__((naked)) int __cdecl Music_IsPlaying(void) {
+#if defined(__i386__)
     __asm__ volatile(
         "push %ecx\n\t"
-        "call _SaveMenu_MusicPlayingBody\n\t"
+        "call " BOF3_SYM(SaveMenu_MusicPlayingBody) "\n\t"
         "add $4, %esp\n\t"
         "ret");
+#elif defined(__x86_64__)
+    __asm__ volatile("jmp " BOF3_SYM(SaveMenu_MusicPlayingBody));   // the caller's ecx is the body's first argument already
+#else
+#error "no ecx entry for this architecture"
+#endif
 }
 extern "C" __attribute__((naked)) void __cdecl LoadMenu_Error(void) {
+#if defined(__i386__)
     __asm__ volatile(
         "push %ecx\n\t"
-        "call _SaveMenu_LoadErrorBody\n\t"
+        "call " BOF3_SYM(SaveMenu_LoadErrorBody) "\n\t"
         "add $4, %esp\n\t"
         "ret");
+#elif defined(__x86_64__)
+    __asm__ volatile("jmp " BOF3_SYM(SaveMenu_LoadErrorBody));   // the caller's ecx is the body's first argument already
+#else
+#error "no ecx entry for this architecture"
+#endif
 }
 
 // 0x587DB0, task 0's mode 1: `jmp [0x6671F4 + 4 Game_Step]`, the word
