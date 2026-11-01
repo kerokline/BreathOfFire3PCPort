@@ -32,10 +32,10 @@ struct TexCacheEntry {
     std::uint16_t clut;        // +2: PSX CLUT id the texture was built with
     std::uint32_t generation;  // +4: that CLUT row's generation at the time (Gfx_ClutRows)
     std::uint32_t key[2];      // +8: Gfx_TexCacheKey at the time
-    ComObject* a;              // +0x10
-    ComObject* b;              // +0x14
+    ::bof3::Slot32<ComObject> a;   // +0x10: the render shim's surface objects (ours, below 4 GB)
+    ::bof3::Slot32<ComObject> b;   // +0x14
 };
-static_assert(sizeof(TexCacheEntry) == 0x18);
+static_assert(sizeof(TexCacheEntry) == 0x18, "the image's 24-byte entry on every width (common/slot32.h)");
 
 constexpr int kPerPage = 32;
 constexpr int kEntries = 32 * kPerPage;
