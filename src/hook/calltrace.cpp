@@ -296,7 +296,7 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
         free_slot->entry = addr;
         ctx->EFlags |= kTrapFlag;
     }
-    ctx->Eip = addr;
+    CtxSetIp(*ctx, addr);
     return EXCEPTION_CONTINUE_EXECUTION;
 }
 

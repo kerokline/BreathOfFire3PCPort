@@ -464,7 +464,7 @@ void BindSlots() {
                   s.name ? s.name : "#1");
     }
     std::uint32_t tick_word = 0;
-    std::memcpy(&tick_word, Place(addr::Imp_GetTickCount), 4);
+    std::memcpy(&tick_word, Place(Imp_GetTickCount_addr), 4);   // the slot's VA (the bare name is the accessor macro)
     const DWORD before = GetTickCount();
     const DWORD through = reinterpret_cast<DWORD(WINAPI*)()>(static_cast<std::uintptr_t>(tick_word))();
     const DWORD after = GetTickCount();

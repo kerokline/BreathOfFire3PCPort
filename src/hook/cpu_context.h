@@ -33,4 +33,16 @@ namespace bof3 {
 #endif
 }
 
+// The program counter written back: a handler that resumes elsewhere (the
+// call trace's int3 at a traced entry resumes at the entry itself).
+[[gnu::always_inline]] inline void CtxSetIp(CONTEXT& c, std::uintptr_t ip) {
+#if defined(__i386__)
+    c.Eip = ip;
+#elif defined(__x86_64__)
+    c.Rip = ip;
+#else
+#error "cpu_context: no program counter for this architecture"
+#endif
+}
+
 }  // namespace bof3
