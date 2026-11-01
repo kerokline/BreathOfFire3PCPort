@@ -503,6 +503,105 @@ under `x641101\b<n>`, merged in the order B3, B1, B4, B5:
 28 casts, the `rdata_consts` / `gfx_clut` / `gfx_texcache` asserts by width,
 and the `unsigned long` rows; `0 differ`. Then stage B's PR.
 
+### Stage B wave 1 as run (2026-11-01, merged on `x64/round` in the order B3, B4, B5, B1; reports `x641101\b<n>\REPORT.md`)
+
+The four groups ran in parallel, were paused once at the account's usage
+limit (each committed work in progress and a state report, and resumed with
+its context), and merged the same evening. The round branch moved to its own
+worktree (`x641101\round`) when a concurrent session on the main checkout
+switched branches under the first two merges; those were reset off its branch
+and redone. The same session took DIV-0197 and DIV-0198 for issues #177 and
+#178, so B5's entry is **DIV-0199**, and the round's PR follows theirs so the
+ledger has no gap (the ledger's status line and `ledger_registry.h` are
+settled when `main` is merged in).
+
+- **B3** (`6710e1c9`): `src/common/slot32.h`, one `Slot32<T>` struct on both
+  widths (the coordinator's call: no `using Slot32 = T*` on i686), 4 bytes,
+  `T* v` behind a reference conversion on i686, `std::uint32_t v` with a
+  below-4 GB `Fatal` on x86-64; `gen_symbols.py` emits it for every pointer
+  ctype (220 generated lines); 58 sites spell `.Native()`, 48 of the 53
+  address-of sites unchanged, the three sound out-slots
+  `reinterpret_cast<void**>(&slot)` (B5's `Create` writes 4 bytes, so they
+  match), `rest_2h`'s DirectInput out-parameters as native locals stored
+  back. `codegen_same.py`: 648 objects, 4 differ, each proved (`rest_2h` the
+  intended locals, its fuzz 144,000 rounds 0 mismatches; `rest_2h_fuzz` the
+  fakes; `magic_s13` mangled names only, 50,000 rounds; `sound.cpp` one
+  six-instruction hunk in `sound_snapshot::SelfTest`'s own check chain). The
+  hosted suite `'*'` and the exe host passed. The `x86_64` compile: **20 of
+  631 objects fail, none at the generated header** (XA4 saw 352).
+- **B4** (`9e474043`): `image_base.h` by width (`ImageBase()` from
+  `gs:0x60`+`0x10`, `Low32()` **a macro that is exactly the cast on i686**
+  and a checked always-inline function on x86-64, the two-signature shape so
+  `__builtin_FUNCTION()` defaults never reach i686 `.rdata`; `LowBlock()`),
+  `host.cpp` (the PE32+ check, the `BOF3.exe` identity refused on x86-64,
+  `Bof3_ImageMove` 32-bit), `bind.h` / `bind.cpp` (`Key()` through `Low32`,
+  the thunk page, `Bind_ImportThunk`, a rel32 reach check on x86-64),
+  `exe_host.cpp` (`BindSlots` thunks), `snapshot.cpp` (`kSlice`
+  `0x4000` / `0x8000`, `dll_base` 32-bit), `crash.cpp` by design 11, a new
+  `hook/cpu_context.h` for the `CONTEXT` users, `fmv_play.cpp` `GWLP_WNDPROC`,
+  `crt_rest.cpp`'s `Crt_malloc` / `Crt_calloc` through `LowBlock` (no
+  `HeapCreate` fallback: `_msize` in `sound.cpp` would break), `detour.cpp`'s
+  hosted writers a `Fatal` on x86-64, `crash_report.py` and `task_stacks.py`
+  by width. **648 objects, 0 differ**; the hosted suite, the exe host and the
+  moved base passed; all 16 owned files compile for x86-64 against B3's
+  header. The launcher's fence under option (a) read correct as it is.
+- **B5** (`54b5714e`, renumbered `da5b773b`): `src/audio/sound_sdl.{h,cpp}`,
+  objects of ours with DirectSound-shaped vtables (the device, a 1,024-buffer
+  static pool, each buffer's notify facet, a mixer, one SDL3 device stream),
+  bound on the `DirectSoundCreate` slot by `SoundSdl_Start` from `dllmain.cpp`
+  and `exe_host.cpp`; the switch `SoundSdl` a `PatchBytes` on the slot,
+  ignored with a log line on x86-64; the WAV dump wraps either `Create`;
+  `SDL_AUDIO` turned on in `CMakeLists.txt`. 7 differ, all its own or the
+  registry's; the hosted suite with the switch on and under
+  `BOF3X_OFF=SoundSdl`, the exe host on and off, all passed; the SDL3 device
+  opened in the exe host's self-test (Speakers, 44,100 Hz, 441 frames). The
+  hosted self-test skips the device open: under `DllMain`'s loader lock it
+  deadlocked (in play `Create` runs from `Snd_Init` on the game thread).
+  **Nobody has listened**: the owner's list is in DIV-0199's verification
+  field (a loop point, a battle, DIV-0171's pans and fades, the inn jingle,
+  the quicksave take and load, the same route under `off=SoundSdl`). The
+  WAV pair shows what the game asked of either layer, not the mixer's output.
+- **B1** (`3d843a17`, ten commits): unit 1 `src/common/asm_name.h` (the
+  `__USER_LABEL_PREFIX__` macro, the six aliases, `MoveCmd_TestFB/FC`,
+  `shell.cpp`'s `SHELL_SYM` folded); unit 2 `task_switch.h` with
+  `task_switch_i686.h` / `task_switch_x86_64.h` (the i686 text byte for byte,
+  the x86-64 switch for `rsp` with 8 GPRs and `xmm6..xmm15`, the contract a
+  third variant joins), `stackwatch.cpp` whole by width; the mp3 decoder's
+  stack switch as a pair; units 3..6 all **pairs** (the call tables with
+  `Bof3_ImageMove` sign-extended by `movslq`, the ecx entries, the sound jumps,
+  `Battle_StatusTint` and `ScriptFlags_Clear40` - a thunk failed
+  `Battle_StatusTint`'s fuzz 1,494 of 3,000 rounds because the fuzz compares
+  the whole `eax`, so the pairs stayed; `Cfg_Load` likewise); `Game_Init` as
+  musttail C++; unit 8 `mode_tasks` on `__builtin_setjmp` with a barrier
+  (the old "registers came back wrong" was clang tail-jumping after popping
+  the frame) and `area_slope`; unit 9 the TEB reads as `NtCurrentTeb()`. 6
+  differ, each explained (`stackwatch` two log lines widened, `shell`'s
+  `Game_Init`, the two fuzz-only files, the two harnesses' inlined TEB load);
+  fourteen module fuzzes at 0 mismatches (`field_e2` 306,000 rounds,
+  `scena_calls` 294,000, `battle_misc` 147,500 ...); the whole suite 20 min
+  8 s, 0 non-zero mismatch lines; the exe host passed; every B1 file compiles
+  for x86-64.
+
+**Defects found by the wave, to number at the PR** (D399 and D400 went to
+issues #177 and #178 the same day): `game_clock.cpp:90-99` computes
+DIV-0022's expected bytes from `&GetTickCount`, which the 64-bit slot (a thunk
+place) will not match - design 4's fix is the slot's current word, before the
+first 64-bit run; `__builtin_FUNCTION()` defaults in a shared header change
+i686 `.rdata` (the two-signature shape is the rule); `AreaMap_Slope` reads its
+caller's argument slots through `__builtin_frame_address` (no x86-64 meaning;
+B2); `snapshot.cpp`'s `4 * 0x4000` arena should follow `task_sched`'s
+`kStackSize` (stage C sets it from the stackwatch and checks `exe_layout`'s
+reserve); `mp3.cpp`'s i686 block lacks `xmm` clobbers (kept byte for byte);
+`CreateSoundBuffer`'s out-locals at `sound.cpp:504` / `:904` are zeroed today,
+so a 4-byte write fills them on x86-64 - an unzeroed local would keep a stale
+high half. Stale text for the docs pass: `THIRD_PARTY.md` 2 ("no audio"),
+`wav-dump.md` 1 (the slot check), `pad_sdl.cpp`'s "SDL's only user".
+
+**The merged tree** (`ebc2416e`): builds; `codegen_same.py` against the stage
+A tip's build gives the 17 explained objects and no other; the hosted suite,
+the exe host and the moved base re-run on it by the coordinator (below, as
+run). **Wave 2 launched** off it: B2 on `x64/b2`, the brief `x641101\b2\BRIEF.md`.
+
 Stage B merges to `main` as a PR of its own when every group is in: the
 32-bit build is proved by its own gates, and the 64-bit build is not yet
 claimed.
