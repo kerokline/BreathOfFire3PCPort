@@ -75,6 +75,10 @@ layout.bin
 # names from src/ (tools/reloc_bare.py, the relocatable-image round's stage D);
 # its --check refuses a site the list does not hold.
 !/analysis/reloc_bare.tsv
+# ...and the width census: our own source lines, names and VAs from src/,
+# symbols.toml and exe_host.cpp (tools/width_census.py, the 64-bit build
+# round's XA1); its --check refuses a live site the list does not hold.
+!/analysis/width_census.tsv
 
 # Symbol/name data IS tracked — it is our own work product, not game data.
 !/names/
