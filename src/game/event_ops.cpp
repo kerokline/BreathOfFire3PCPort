@@ -806,11 +806,25 @@ extern "C" unsigned char __cdecl Field_EffectAhead(void) {
 // As the original has it: cells compare as bytes, but a run's end
 // (entry[0] or entry[1] + k) as a whole int, so a run past 0xFF never
 // matches there; the direction indexes the cell table whole.
+// DIVERGENCE DIV-0197 (D399, issue #177): an area with no list (+0x2C null -
+// 105 of the 200 descriptors, recipes/exe-layout.tsv) answers "no passage".
+// The original walks the null list - entry 0's count at address 3 - which the
+// console's low RAM tolerates and the PC's protected page 0 does not: the
+// faerie village's area 185 crashed on the talk button at the board.
 extern "C" const unsigned char* __cdecl Area_PassageAhead(void) {
     const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
     int n = descriptor[0x31];
     const unsigned char* list;
     std::memcpy(&list, descriptor + 0x2C, sizeof list);
+    if (list == nullptr) {
+        static unsigned short logged = 0xFFFF;
+        if (logged != Game_AreaNumber) {
+            logged = Game_AreaNumber;
+            bof3::Log("DIV-0197    Area_PassageAhead: area 0x%02X has no passage list (+0x2C null, +0x31 %d), none ahead",
+                      static_cast<unsigned>(Game_AreaNumber), n);
+        }
+        return nullptr;
+    }
     const unsigned char* const sc = Sprite_Current;
     for (const unsigned char* e = list + n * 8; n >= 0; --n, e -= 8) {
         for (int k = e[3] - 1; k >= 0; --k) {
