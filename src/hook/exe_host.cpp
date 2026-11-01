@@ -60,6 +60,7 @@
 #include "hook/stackwatch.h"
 #include "hook/statehash.h"
 #include "hook/wav_dump.h"
+#include "audio/sound_sdl.h"
 
 namespace bof3 {
 namespace {
@@ -628,6 +629,7 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
     CopyData();
     Rebase();
     BindSlots();
+    SoundSdl_Start();   // DIV-0199: the DirectSoundCreate slot 0x5C4014 to our Create, after BindSlots filled it (sound_sdl.h; design 4, 6.3)
     SetX87();
 
     Crash_Start(module);

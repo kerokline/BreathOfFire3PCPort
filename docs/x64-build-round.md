@@ -493,7 +493,7 @@ under `x641101\b<n>`, merged in the order B3, B1, B4, B5:
   `stallwatch`, `calltrace`, `win_main`), `fmv_play.cpp`'s `GWL_WNDPROC`; `0
   differ` on i686 or the fuzz.
 - **B5** owns `src/audio/sound_sdl.cpp` (design 6.3) and the WAV dump's tap,
-  reserves DIV-0197 (the sound output through SDL3 on both widths, the
+  reserves DIV-0199 (the sound output through SDL3 on both widths, the
   32-bit build keeping DirectSound behind a switch for the owner's A/B
   listen), and touches `exe_host.cpp` for the slot binding alone (merged
   after B4, keep-both).

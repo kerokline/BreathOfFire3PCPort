@@ -68,6 +68,7 @@
 #include <string>
 #include <vector>
 
+#include "audio/sound_sdl.h"
 #include "bof3/symbols.gen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -91,9 +92,9 @@ constexpr unsigned long kPrimaryBuffer = 0x01, kPositionNotify = 0x100;         
 constexpr unsigned long kLockFromWriteCursor = 0x01, kLockEntireBuffer = 0x02;   // DSBLOCK_*
 constexpr unsigned long kPlayLooping = 0x01;                                     // DSBPLAY_LOOPING
 
-struct BufferDesc {   // DSBUFFERDESC
+struct BufferDesc {   // the game's DSBUFFERDESC, 0x24 bytes: lpwfxFormat a 32-bit place (the image is 32-bit whatever the host)
     unsigned long size, flags, bytes, reserved;
-    const WAVEFORMATEX* format;
+    std::uint32_t format;
 };
 
 // --- The model --------------------------------------------------------------
@@ -498,6 +499,20 @@ void PatchSlot(void** slot, void* to) {
     VirtualProtect(slot, sizeof(void*), old, &old);
 }
 
+// The import slot is a 32-bit word of the image in either width: our hook's
+// address as 4 bytes (the DLL is below 4 GB; checked), never a whole pointer
+// over the slot beside it.
+void PatchSlotWord(void** slot, void* to) {
+    const std::uint64_t v = static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(to));
+    if (v >> 32) Fatal("wav: the hook at %016llX lies above 4 GB, which the import slot cannot hold", static_cast<unsigned long long>(v));
+    const std::uint32_t word = static_cast<std::uint32_t>(v);
+    DWORD old = 0;
+    if (!VirtualProtect(slot, 4, PAGE_READWRITE, &old))
+        Fatal("wav: VirtualProtect(%p) failed, error %lu", static_cast<void*>(slot), GetLastError());
+    std::memcpy(slot, &word, 4);
+    VirtualProtect(slot, 4, old, &old);
+}
+
 void HookBufferVtable(void* object) {
     void** const vt = VtableOf(object);
     for (const VTable& v : g_vtables)
@@ -519,23 +534,33 @@ void HookBufferVtable(void* object) {
         static_cast<unsigned>(g_vtables.size()));
 }
 
+// The object an out-slot holds: a 32-bit word of the image (&Snd_Primary) or
+// a local the game zeroed, in either host's width (sound_sdl.cpp's rule).
+void* SlotObject(void** out) {
+    std::uint32_t word = 0;
+    std::memcpy(&word, out, 4);
+    return reinterpret_cast<void*>(static_cast<std::uintptr_t>(word));
+}
+
 long __stdcall HookCreateBuffer(void* device, const BufferDesc* desc, void** out, void* outer) {
     const long r = As<long (__stdcall*)(void*, const BufferDesc*, void**, void*)>(g_device_originals[0])(device, desc, out, outer);
-    if (r != 0 || !out || !*out || !desc) return r;
+    if (r != 0 || !out || !SlotObject(out) || !desc) return r;
+    void* const made = SlotObject(out);
     if (desc->flags & kPrimaryBuffer) {
-        Log("wav         the primary buffer %p: not mixed from (DirectSound mixes the secondaries into it)", *out);
+        Log("wav         the primary buffer %p: not mixed from (%s mixes the secondaries into it)", made,
+            SoundSdl_On() ? "our mixer" : "DirectSound");
         return r;
     }
     Guard g;
     AdvanceNow();
-    const WAVEFORMATEX* const f = desc->format;
+    const WAVEFORMATEX* const f = reinterpret_cast<const WAVEFORMATEX*>(static_cast<std::uintptr_t>(desc->format));
     if (!f) Fatal("wav: a secondary buffer with no format");
     if (f->wFormatTag != WAVE_FORMAT_PCM || (f->wBitsPerSample != 8 && f->wBitsPerSample != 16) || f->nChannels < 1 ||
         f->nChannels > 2 || f->nBlockAlign != f->nChannels * f->wBitsPerSample / 8)
         Fatal("wav: a secondary buffer of format tag %u, %u channels, %u bits, block %u is not modelled", f->wFormatTag,
               f->nChannels, f->wBitsPerSample, f->nBlockAlign);
     auto* b = new Buffer;
-    b->object = *out;
+    b->object = made;
     b->stream = (desc->flags & kPositionNotify) != 0;
     b->channels = f->nChannels;
     b->bits = f->wBitsPerSample;
@@ -547,10 +572,10 @@ long __stdcall HookCreateBuffer(void* device, const BufferDesc* desc, void** out
     ++g_created;
     if (b->stream) {
         ++g_streams;
-        Log("wav         stream %p: %lu bytes, %lu Hz %u-bit %u channel(s), flags 0x%lX (queued in write order)", *out,
+        Log("wav         stream %p: %lu bytes, %lu Hz %u-bit %u channel(s), flags 0x%lX (queued in write order)", made,
             desc->bytes, static_cast<unsigned long>(f->nSamplesPerSec), b->bits, b->channels, desc->flags);
     }
-    HookBufferVtable(*out);
+    HookBufferVtable(made);
     return r;
 }
 
@@ -562,11 +587,12 @@ long __stdcall HookDuplicate(void* device, void* original, void** out) {
 
 long __stdcall HookDirectSoundCreate(const void* guid, void** out, void* outer) {
     const long r = g_real_create(guid, out, outer);
-    if (r != 0 || !out || !*out) {
+    if (r != 0 || !out || !SlotObject(out)) {
         Log("wav         DirectSoundCreate failed (0x%08lX): the game plays silent and so does the dump", static_cast<unsigned long>(r));
         return r;
     }
-    void** const vt = VtableOf(*out);
+    void* const device = SlotObject(out);
+    void** const vt = VtableOf(device);
     if (g_device_vtable && g_device_vtable != vt) Fatal("wav: a second DirectSound device class (%p, then %p)", static_cast<void*>(g_device_vtable), static_cast<void*>(vt));
     if (!g_device_vtable) {
         g_device_vtable = vt;
@@ -575,7 +601,7 @@ long __stdcall HookDirectSoundCreate(const void* guid, void** out, void* outer) 
         PatchSlot(vt + kCreateSoundBuffer / 4, reinterpret_cast<void*>(&HookCreateBuffer));
         PatchSlot(vt + kDuplicateSoundBuffer / 4, reinterpret_cast<void*>(&HookDuplicate));
     }
-    Log("wav         DirectSoundCreate: device %p, vtable %p hooked", *out, static_cast<void*>(vt));
+    Log("wav         DirectSoundCreate: device %p, vtable %p hooked", device, static_cast<void*>(vt));
     return r;
 }
 
@@ -636,19 +662,30 @@ void WavDump_Start() {
         Log("wav         BOF3X_SPEED=%s: the logic frames outrun the device, so the music's queue runs dry (counted as "
             "underrun samples); effects are mixed as ever", speed);
 
+    // The slot holds DSOUND.dll's DirectSoundCreate, or - DIV-0199, SoundSdl on
+    // - our Create (sound_sdl.cpp): the dump wraps either the same way, the
+    // device's vtable and each buffer's, so the two sides of the owner's A/B
+    // listen are dumped by one model. A 32-bit word of .rdata, read as one.
     void** const slot = reinterpret_cast<void**>(static_cast<std::uintptr_t>(Img(Imp_DirectSoundCreate_addr)));
-    HMODULE dsound = GetModuleHandleA("dsound.dll");
-    void* const real = dsound ? reinterpret_cast<void*>(GetProcAddress(dsound, MAKEINTRESOURCEA(1))) : nullptr;
-    if (!real) Fatal("wav: DSOUND.dll is not loaded, or has no DirectSoundCreate (#1)");
-    if (*slot != real)
-        Fatal("wav: the import slot 0x%08X holds %p, not DSOUND.dll's DirectSoundCreate %p", static_cast<unsigned>(Imp_DirectSoundCreate_addr),
-              *slot, real);
-    g_real_create = reinterpret_cast<long (__stdcall*)(const void*, void**, void*)>(real);
-    PatchSlot(slot, reinterpret_cast<void*>(&HookDirectSoundCreate));
+    void* const held = SlotObject(slot);
+    const char* holder = nullptr;
+    if (SoundSdl_IsCreate(held)) {
+        holder = "the SDL3 layer's Create (DIV-0199)";
+    } else {
+        HMODULE dsound = GetModuleHandleA("dsound.dll");
+        void* const real = dsound ? reinterpret_cast<void*>(GetProcAddress(dsound, MAKEINTRESOURCEA(1))) : nullptr;
+        if (!real) Fatal("wav: DSOUND.dll is not loaded, or has no DirectSoundCreate (#1), and the slot is not the SDL3 layer's Create");
+        if (held != real)
+            Fatal("wav: the import slot 0x%08X holds %p, neither DSOUND.dll's DirectSoundCreate %p nor the SDL3 layer's Create",
+                  static_cast<unsigned>(Imp_DirectSoundCreate_addr), held, real);
+        holder = "DSOUND.dll's DirectSoundCreate";
+    }
+    g_real_create = reinterpret_cast<long (__stdcall*)(const void*, void**, void*)>(held);
+    PatchSlotWord(slot, reinterpret_cast<void*>(&HookDirectSoundCreate));
     g_on = true;
-    Log("wav         BOF3X_WAV_DIR %s, label %s: DirectSoundCreate's slot 0x%08X hooked; a logic frame is %.4f ms "
+    Log("wav         BOF3X_WAV_DIR %s, label %s: DirectSoundCreate's slot 0x%08X hooked in front of %s; a logic frame is %.4f ms "
         "(%s WinMain)", Utf8Path(g_dir.c_str()).text, Utf8Path(g_label.c_str()).text, static_cast<unsigned>(Imp_DirectSoundCreate_addr),
-        g_frame_ms, g_frame_ms == kCapcomFrameMs ? "Capcom's" : "our");
+        holder, g_frame_ms, g_frame_ms == kCapcomFrameMs ? "Capcom's" : "our");
 }
 
 void WavDump_Tick() {
