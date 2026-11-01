@@ -693,7 +693,7 @@ void CacheSelfTest() {
         else if (lstrcmpiA(n, Dat_FileNames[index]) != 0) index2 = static_cast<int>(i);
     }
     if (index2 < 0) bof3::Fatal("DIV-0089 self-test: Dat_FileNames has no two names");
-    const std::string name = Dat_FileNames[index], name2 = Dat_FileNames[index2];
+    const std::string name = Dat_FileNames[index].Native(), name2 = Dat_FileNames[index2].Native();
     const std::string root = "T:\\bof3x-dat-selftest";
     using dat_cache::TestContainer;
     std::vector<dat_cache::TestFile> files = {

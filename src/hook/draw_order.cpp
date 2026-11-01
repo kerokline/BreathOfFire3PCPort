@@ -266,7 +266,7 @@ void LogWalk(const unsigned long* ot) {
         // The packet pool's fill at the walk: Gfx_PacketNext against this
         // buffer's 64 KB (Gfx_PacketPools + (buffer << 16), draw_emit.cpp's limit).
         const std::uint32_t base = ::bof3::Img(Gfx_PacketPools_addr) + (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16);
-        const std::uint32_t next = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Gfx_PacketNext));
+        const std::uint32_t next = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Gfx_PacketNext.Native()));
         bof3::Log("draworder   frame %u: packet pool at %u of 65536 bytes (buffer %u)", f, next - base,
                   static_cast<unsigned>(Gfx_BufferIndex));
     }

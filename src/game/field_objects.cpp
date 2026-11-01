@@ -61,7 +61,7 @@ Callees g = kOriginals;
 
 // As MoveScript_GroupD's: Field_ActiveMember's party slot, as a byte.
 unsigned char PartySlot() {
-    const auto distance = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember) -
+    const auto distance = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember.Native()) -
                                                     Address(rv::Bytes(Sprite_ObjectsExtra)));
     return static_cast<unsigned char>(distance / 0xA4);
 }

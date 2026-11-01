@@ -60,7 +60,7 @@ unsigned char* PtrIn(const unsigned char* p) { return At(UL(p)); }
 unsigned char* PtrAt(U cell) { return At(UL(At(cell))); }
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return PtrAt(::bof3::Img(at::kOwner.v)); }
-unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy.Native()); }
 // rv::Current<T>() is typed by who runs: a battle task slot, or the enemy an
 // enemy op runs on (docs/battle_e2.md 1.1, 1.3).
 // An enemy object and a party member by an actor's index, as the originals

@@ -97,7 +97,7 @@ void GameClock_Inject() {
     // place, which at a moved base PatchBytes would only write right by its
     // "not in the linked span" branch, and name in its messages.
     bof3::PatchBytes("Game_Clock", Imp_GetTickCount_addr, expected, replacement, 4);
-    g_ours = reinterpret_cast<std::uintptr_t>(Imp_GetTickCount) == ours;
+    g_ours = reinterpret_cast<std::uintptr_t>(Imp_GetTickCount.Native()) == ours;
     if (g_ours)
         bof3::Log("DIV-0022    game clock: milliseconds since the game started, from %lu", g_base);
 }

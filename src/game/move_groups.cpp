@@ -83,7 +83,7 @@ std::int32_t S16(const unsigned char* at) { return static_cast<std::int16_t>(at[
 // Ops D4..D6: the party slot Field_ActiveMember is, as a byte - the original
 // divides the pointer's distance from Sprite_ObjectsExtra by 0xA4, truncating.
 unsigned char PartySlot() {
-    const auto distance = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember) -
+    const auto distance = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember.Native()) -
                                                     Address(rv::Bytes(Sprite_ObjectsExtra)));
     return static_cast<unsigned char>(distance / 0xA4);
 }

@@ -78,7 +78,7 @@ void SetPtrAt(std::uint32_t address, const unsigned char* p) {
 }
 // The enemy being run (0x939AD8) and the battle-task slot being run (0x93B8C4),
 // each re-read wherever the original re-reads it.
-unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy.Native()); }
 unsigned char* CurrentTask() { return PtrAt(::bof3::Img(BattleFlow_TaskCurrent_addr)); }
 unsigned char* Task(unsigned index) { return At(::bof3::Img(BattleTask_Slots_addr) + index * at::kTaskSize); }
 unsigned char* EnemyObject(unsigned index) { return At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemySize); }

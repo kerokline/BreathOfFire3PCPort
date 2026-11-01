@@ -77,6 +77,15 @@ keeps its own literal: one inside .text, one that starts inside an earlier
 member (two views of the same bytes: Area00_Choices and Area00_Handlers),
 and a field entry (`field_of`, a field of its block's records).
 
+Pointer-typed rows (the 64-bit build round's stage B3,
+docs/x64-build-design.md 9). A [[data]] ctype that is a pointer (`void *`,
+`unsigned char *`, `records::BattleEnemy *`, ...) names a 4-byte word of the
+image that holds a 32-bit address: the member and the accessor are spelled
+`bof3::Slot32<T>` (src/common/slot32.h), 4 bytes on every width, which a
+site uses as the pointer it names. The 32-bit build's code is the pointer's
+(tools/codegen_same.py); on x86-64 the slot keeps GameData's layout, and a
+store checks that the address fits.
+
 Names and places (the relocatable-image round's RB0,
 docs/relocatable-image-design.md 2). Every address this emits is a VA, a
 name in the frame BOF3.exe was linked in: `bof3::addr::Name`, `<Name>_addr`
@@ -146,6 +155,15 @@ SCALAR_SIZES = {'char': 1, 'signed char': 1, 'unsigned char': 1, 'short': 2, 'un
                 'std::uint32_t': 4, 'std::int32_t': 4}
 
 
+def slot_type(ct):
+    """The C++ type a ctype is spelled as: a pointer ctype `T *` as the 4-byte
+    slot `::bof3::Slot32<T>` (the module docstring), anything else itself."""
+    c = ct.strip()
+    if c.endswith('*'):
+        return f'::bof3::Slot32<{c[:-1].strip()}>'
+    return c
+
+
 def ctype_size(ct):
     """(size, alignment) of one element of a ctype; None for one this does
     not know (the entry is then not a GameData member)."""
@@ -204,7 +222,7 @@ def emit_game_data(w, start, end, members):
             w(f"    unsigned char pad_{cur:x}[{pc - cur:#x}];")
         packed = " __attribute__((packed, aligned(1)))" if pc % al else ""
         dim = f"[{n}]" if n is not None else ""
-        w(f"    using {name}_type = {ct};")
+        w(f"    using {name}_type = {slot_type(ct)};")
         w(f"    {name}_type {name}{dim}{packed};")
         cur = pc + size
     if end > cur:
@@ -331,6 +349,10 @@ def main():
     w('// Img(va) and Code(va): a VA below is a name; these make it a place')
     w('// (docs/relocatable-image-design.md 2).')
     w('#include "common/image_base.h"')
+    w('')
+    w('// Slot32<T>: a pointer-typed row as the 4-byte slot it is on every width')
+    w('// (docs/x64-build-design.md 9).')
+    w('#include "common/slot32.h"')
     w('')
     w('namespace bof3::image {')
     w(f'inline constexpr std::uint32_t kTimestamp = {meta["pe_timestamp"]:#x};')
@@ -462,6 +484,7 @@ def main():
         # typed entry its literal pc
         at = f'{e["name"]}_addr' if e['name'] in in_gd else f'{e["pc"]:#x}'
         at = f'::bof3::Img({at})'
+        ty = slot_type(ty)
         if 'count' in e:
             return f'#define {e["name"]} (reinterpret_cast<{ty} *>({at}))'
         return f'#define {e["name"]} (*reinterpret_cast<{ty} *>({at}))'

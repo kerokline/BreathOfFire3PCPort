@@ -69,7 +69,7 @@ LogEntry g_log[kLog];
 unsigned g_log_n, g_stub_seed;
 
 void Record(unsigned long what, unsigned long arg) {
-    if (g_log_n < kLog) g_log[g_log_n] = {what, arg, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(Sprite_Current))};
+    if (g_log_n < kLog) g_log[g_log_n] = {what, arg, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(Sprite_Current.Native()))};
     ++g_log_n;
 }
 void __cdecl StubOpen(int layer) { Record(1, static_cast<unsigned long>(layer)); }

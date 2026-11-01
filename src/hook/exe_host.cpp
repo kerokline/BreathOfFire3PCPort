@@ -444,7 +444,7 @@ void BindSlots() {
         if (now != Resolve(s)) Fatal("slots: 0x%08X does not read back as %s!%s", (unsigned)s.at, s.dll, s.name ? s.name : "#1");
     }
     const DWORD before = GetTickCount();
-    const DWORD through = reinterpret_cast<DWORD(WINAPI*)()>(Imp_GetTickCount)();
+    const DWORD through = reinterpret_cast<DWORD(WINAPI*)()>(Imp_GetTickCount.Native())();
     const DWORD after = GetTickCount();
     if (through < before || through > after)
         Fatal("slots: GetTickCount through 0x5C407C answered %lu, outside %lu..%lu", through, before, after);

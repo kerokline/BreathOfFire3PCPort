@@ -90,7 +90,7 @@ unsigned char* PtrAt(U address) { return At(static_cast<U>(Long(At(address)))); 
 // 0x939FA0 points at the menu member's +0x124, its action record
 // (records::ActionRecord; BattleInput_NextMember stores it, battle_phases.cpp).
 unsigned char* Command() { return PtrAt(::bof3::Img(at::kCommand.v)); }
-unsigned char* Acting() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor); }
+unsigned char* Acting() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor.Native()); }
 unsigned char ItemFlags(unsigned id) { return B(::bof3::Img(at::kItemRecords.v) + id * at::kItemRecordSize); }
 unsigned char Low(U eax) { return static_cast<unsigned char>(eax); }
 

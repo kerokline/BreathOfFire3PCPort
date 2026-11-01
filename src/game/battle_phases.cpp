@@ -77,7 +77,7 @@ unsigned char* EnemyObject(unsigned index) { return At(::bof3::Img(Battle_Enemie
 unsigned char* Window(unsigned index) { return At(::bof3::Img(WindowRecords_addr) + index * at::kWindowSize); }
 // The member the menu is for (0x939EC4) and its command record (0x939FA0),
 // each re-read wherever the original re-reads it.
-unsigned char* MenuActor() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor); }
+unsigned char* MenuActor() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor.Native()); }
 unsigned char* MenuRecord() { return PtrAt(::bof3::Img(at::kMenuRecord.v)); }
 int S8(std::uint32_t address) { return static_cast<signed char>(B(address)); }
 

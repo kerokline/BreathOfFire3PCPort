@@ -104,10 +104,12 @@ void StackCall(const std::uint32_t* table, unsigned n, unsigned phase, const cha
 }
 // A .data table's call, `call` / `jmp [table + phase * 4]`, read in place (the
 // fuzz swaps the cells for recorders); the table's own entries only - what
-// follows is the next table or data.
-void CellCall(void* const* table, unsigned n, unsigned phase, const char* who) {
+// follows is the next table or data. The table's cells are the image's
+// 4-byte slots (Slot32<void>, common/slot32.h), so the stride is 4 on every
+// width.
+void CellCall(const ::bof3::Slot32<void>* table, unsigned n, unsigned phase, const char* who) {
     if (phase >= n) PastTable(who, phase, n);
-    reinterpret_cast<magic_harness::Handler>(const_cast<void*>(table[phase]))();
+    reinterpret_cast<magic_harness::Handler>(table[phase].Native())();
 }
 
 // The mote's point: the owner's +0x34 / +0x38 plus sin / cos of the angle +0xE
@@ -349,7 +351,7 @@ namespace {
 // 0x4B3370 / 0x4B3A90: the step through `steps` by +2; then, while the mote
 // is live (+0) and past its first step (+2), its matrix, its triangles, the
 // matrix popped.
-void MoteRun(void* const* steps, unsigned n, const char* who) {
+void MoteRun(const ::bof3::Slot32<void>* steps, unsigned n, const char* who) {
     CellCall(steps, n, M()[2], who);
     const unsigned char* const m = M();
     if (m[0] == 0 || m[2] == 0) return;

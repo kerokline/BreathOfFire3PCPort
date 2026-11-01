@@ -1363,7 +1363,7 @@ void CacheSoundSelfTest() {
     unsigned index = 0;
     while (index < Dat_FileNames_count && !Dat_FileNames[index]) ++index;
     if (index == Dat_FileNames_count) bof3::Fatal("DIV-0089 self-test: Dat_FileNames is empty");
-    const std::string bank = Dat_FileNames[index];
+    const std::string bank = Dat_FileNames[index].Native();
     const std::string root = "T:\\bof3x-dat-selftest";
     using dat_cache::TestContainer;
     std::vector<dat_cache::TestFile> files = {

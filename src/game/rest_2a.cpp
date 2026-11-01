@@ -107,7 +107,7 @@ void EndEvent(const unsigned char* s) {
 // (pointer - Sprite_Objects) / 0xA4, a signed division (imul by 0x63E7063F,
 // sar 6, the sign added) - the member need not lie in the array.
 U MemberSpriteIndex() {
-    const auto offset = static_cast<std::int32_t>(static_cast<U>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember)) -
+    const auto offset = static_cast<std::int32_t>(static_cast<U>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember.Native())) -
                                                   Addr(rv::Bytes(Sprite_Objects)));
     return static_cast<U>(offset / static_cast<std::int32_t>(kSpriteStride));
 }

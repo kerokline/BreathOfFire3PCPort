@@ -403,7 +403,7 @@ void MountainPasses_AfterPlacement() {
         }
     }
     if (area == 87 && Cond_ByteFA >= 9) {
-        unsigned char* const plane = const_cast<unsigned char*>(AreaMap_Bytes);
+        unsigned char* const plane = const_cast<unsigned char*>(AreaMap_Bytes.Native());
         const unsigned width = AreaMap_Header[0];
         // 0x91, the passage kind: it walks (Field_CellKind class 0), has no
         // encounter (the encounter test wants a 0 cell), no plate, and the

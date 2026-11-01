@@ -157,7 +157,7 @@ bool g_have_windowed_rect = false;
 
 // GetTickCount through the import slot, as the original reads it: DIV-0022's
 // clock lives in that slot.
-DWORD Tick() { return reinterpret_cast<DWORD(WINAPI*)(void)>(Imp_GetTickCount)(); }
+DWORD Tick() { return reinterpret_cast<DWORD(WINAPI*)(void)>(Imp_GetTickCount.Native())(); }
 
 // The original's windowed placement: a 640 x 480 client, the frame added by
 // AdjustWindowRect, centred on the desktop by (desktop - outer) / 2 - the
@@ -781,7 +781,8 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 } else if (bof3::QuickMenu_Frame()) {
                     // F5's quick menu (draft D) in place of the pause lines.
                 } else {
-                    const unsigned char* const* lines = (Title_LogoState == 0 && Title_Fade == 0) ? Pause_LinesGame : Pause_LinesTitle;
+                    // two 4-byte slots each (Slot32, common/slot32.h): the stride is the image's on every width
+                    const ::bof3::Slot32<const unsigned char>* lines = (Title_LogoState == 0 && Title_Fade == 0) ? Pause_LinesGame : Pause_LinesTitle;
                     // DIV-0038: the English lines are centred on their width
                     Text_DrawAt(PauseText_X(lines[0], 100), 100, 0, 100, lines[0]);
                     Text_DrawAt(PauseText_X(lines[1], 0x70), 0x80, 0, 100, lines[1]);

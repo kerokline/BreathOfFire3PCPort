@@ -68,7 +68,7 @@ unsigned char* Ptr(U cell) { return At(static_cast<U>(Long(At(cell)))); }
 unsigned char* Party(unsigned member) { return At(::bof3::Img(ObjTrio_addr) + (member & 0xFF) * at::kPartyStride); }
 unsigned char* Enemy(unsigned actor) { return At(::bof3::Img(Battle_Enemies_addr) + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
 unsigned char* CharRecord(unsigned index) { return At(::bof3::Img(CharacterRecords_addr) + (index & 0xFF) * at::kCharStride); }
-unsigned char* MenuActor() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor); }
+unsigned char* MenuActor() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor.Native()); }
 // 0x939FA0 points at the menu member's +0x124, its action record
 // (records::ActionRecord; BattleInput_NextMember stores it, battle_phases.cpp).
 unsigned char* Command() { return Ptr(::bof3::Img(at::kCommand.v)); }
@@ -1367,7 +1367,7 @@ extern "C" void __cdecl Escape_FailDispatch(void) { DispatchStep4("Escape_FailDi
 // count's members not out turns (+8 ^ 2) with +0x125 = 0, +1 = 2, +2..+4 = 0;
 // sub-state + 1.
 extern "C" void __cdecl Escape_Begin(void) {
-    const auto text = reinterpret_cast<const char*>(BattleE1_BannerText);
+    const auto text = reinterpret_cast<const char*>(BattleE1_BannerText.Native());
     B(::bof3::Img(at::kFlee.v)) = 0;
     BH_CALL(BattleBanner_Add)(1, 0, 0, 0x3C, text);
     WindowRecords[4].state = 1;

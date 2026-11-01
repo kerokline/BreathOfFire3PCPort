@@ -59,7 +59,7 @@ short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 // Sprite_Current, the running task slot (0x93B8C4) and its owner (0x93B940),
 // each read afresh where the original reads it.
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Slot() { return rv::Bytes(BattleFlow_TaskCurrent); }
+unsigned char* Slot() { return rv::Bytes(BattleFlow_TaskCurrent.Native()); }
 unsigned char* Owner() { return PtrAt(::bof3::Img(at::kTaskOwner.v)); }
 
 // jmp [table + 4 * index]: the entry as read (the fuzz swaps the table's

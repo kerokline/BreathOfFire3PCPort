@@ -463,7 +463,7 @@ const unsigned char* Line(unsigned id) { return BH_CALL(Msg_SystemPtr)(id); }
 void ShowLine(const unsigned char* text) {
     SetLong(At(::bof3::Img(at::kMsgText.v) + ((BattleActorCopies_QueueWrite - 1u) & 0xF) * 8), static_cast<S32>(Key(text)));
 }
-unsigned char* Member() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor); }
+unsigned char* Member() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor.Native()); }
 void MarkMember() {
     auto* const member_rec = rv::As<records::PartyMember>(Member());
     member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);

@@ -204,7 +204,11 @@ extern "C" __attribute__((naked)) int __cdecl SndStream_IsPlaying(void) {
 // format's words are stored around the dwords as the original orders them.
 extern "C" int __cdecl Snd_Init(void* hwnd) {
     if (Snd_Device != nullptr) return 0;
-    if (SoundRest_g.create(nullptr, &Snd_Device, nullptr) != 0) {
+    // The slot as the out parameter DirectSoundCreate writes (void**): the
+    // 32-bit spelling, since Snd_Device is a 4-byte Slot32<void> and the
+    // callee is Windows'. B5's sound layer (docs/x64-build-design.md 6.3)
+    // replaces this call on both widths; until then it is 32-bit only.
+    if (SoundRest_g.create(nullptr, reinterpret_cast<void**>(&Snd_Device), nullptr) != 0) {
         Snd_Device = nullptr;
         return kNoDevice;
     }
@@ -222,7 +226,7 @@ extern "C" int __cdecl Snd_Init(void* hwnd) {
     SetDword(desc + 0x0C, 0);                // dwReserved
     SetDword(desc + 0x10, 0);                // lpwfxFormat
     device = Snd_Device;
-    if (Method<ComCreate>(device, sound::kCreateSoundBuffer)(device, At(desc), &Snd_Primary, nullptr) != 0) {
+    if (Method<ComCreate>(device, sound::kCreateSoundBuffer)(device, At(desc), reinterpret_cast<void**>(&Snd_Primary), nullptr) != 0) {
         Release(Snd_Device);
         Snd_Device = nullptr;
         return kNoPrimary;
