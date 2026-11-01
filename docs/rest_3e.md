@@ -473,8 +473,11 @@ frame the panel is drawn:
    - else **the port's stand-in**: the string `0x461C00` draws for that
      button (`[0x66A2FC + 4k]`, k in the order circle, cross, triangle,
      square, L1, R1, read with capstone 2026-10-17), in the same colour.
-   The glyph's top-left is the cell's `(x + 4, y + 3)` (a 12-unit glyph,
-   `Text_DrawAt`'s `y + 1` its top, centred on the cell).
+   The glyph is drawn at the cell's `(x + 4, y - 2)`: `Text_DrawAt`'s
+   `y + 1` is the glyph's top, so the 12 units sit at `y - 1 .. y + 11`,
+   centred on the 10-texel cell. (`y + 3` until 2026-11-01, which put the
+   glyph at `y + 4 .. y + 16`, its lower half over the next row's icon:
+   issue #178's capture, the first of this draw, section 11.5.)
 5. **A page whose cells are not three of the four shapes** (a mod, or a page
    not loaded) is drawn as it is, and the log says so once.
 
@@ -541,8 +544,12 @@ So `tools/importer.py` is unchanged and no cache needs rebuilding.
 ### 11.5 Open
 
 - The glyph fallback's size and place (12 units centred on an 8 x 8 icon's
-  cell) are measured off the code, not seen; the owner tunes them by eye off
-  the first capture.
+  cell) were measured off the code, not seen. **The first capture, issue
+  #178 (2026-11-01, a PSX + PSP English disc-built install):** the circle
+  glyph in row 0 drew 5 texels low, its lower half over row 1's icon - the
+  `y + 3` had the glyph's top at `y + 4`, not `y - 1`. Now `y - 2`; the
+  owner's eye on the next capture is still owed, and the glyph's x (the
+  column's left, 12 units over an 11-texel column) with it.
 - Under a Japanese overlay (`Lang_FullWidth`) the fallback is the port's
   stand-in, as the Config panel's original cell draws there; not checked
   whether that overlay keeps the one-byte stand-in glyphs.
@@ -613,3 +620,29 @@ fr-FR and de-DE the recording stays in step and reads `OK` / `Fin` / `Memo`
 and `OK` / `Ende` / `Notiz`. The memo
 board itself (`EffectKind5D_DrawBoard`, the same page at `(0, 0)`) carries
 marks and no words, and the discs' pages equal the PC's there.
+
+## 12. The parts list's first line follows the image's release (DIV-0198, 2026-11-01)
+
+**Status:** BUILT (2026-11-01, issue #178; owed the owner's `shipPartsMenu`
+replay on a Western-disc-built install). The defect is D400.
+
+`EffectKind5E_DrawList` draws its eight lines from the list box's `y +
+0x14`, 15 apart, and `EffectKind5E_DrawMenu` the hand at the hand word's y
+plus 15 per pick. The two words come from the same table (`0x654878`,
+`0x654894`) but the margin is a code constant, and the Western PSX release
+changed both the box and the constant:
+
+| | list box `0x654878` | hand `0x654894` | the twin's margin | first part |
+|---|---|---|---|---|
+| PC (`BOF3.exe`), psx-jp, PSP-EU (`SCENA10.EMI#0` `0x1F7B50`) | 96, 80, 128, 144 | 100, 100 | 0x14 | y 100 |
+| psx-us (`SCENA10.EMI#0`, the twin `0x801F7AD4`, `0x801F7B50 addiu $s3, $v1, 4`) | 96, 96, 128, 128 | 100, 100 | 4 | y 100 |
+
+Since DIV-0195 a Western PSX disc-built image carries the West's box (the
+map run `0x654876..0x654898` from the disc; `exe_maps/psx-us.tsv`'s `agree
+138` for it is wrong by those two words), so the PC's 0x14 put the first
+part at y 116, 16 px under the hand - issue #178's "hand on the empty row".
+`ListFirstLine()` answers the twin's constant for the release of
+`ExeImage_MappedBuild()`'s build (`sigma::ReleaseOfSources`: `kWest` 4,
+else 0x14; the PC's own `.data` 0x14), once, logged once. The hosted fuzz
+runs with no mapped image, so it compares the 0x14 path alone. Not read: the
+EU-en, FR and DE twins and words (inferred from DIV-0195's all-four finding).

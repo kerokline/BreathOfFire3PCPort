@@ -1,8 +1,9 @@
 // The Direct3D draw handlers, their state helpers and the two texture lookups
 // under them, read to the last instruction with capstone against bof3/BOF3.exe
 // (docs/d3d-draw.md). All are the PC port's own: the PlayStation drew these
-// primitives on its GPU, so there is no PSX twin to read them against. Faithful:
-// no divergence.
+// primitives on its GPU, so there is no PSX twin to read them against. Faithful
+// but for DIVERGENCE DIV-0181 (the cell textures, below) and DIV-0199 (the
+// textured quads' far texture edge, game/quad_far_edge.h).
 //
 //   D3d_PrimColor          0x59FBA0..0x59FC83 (0xE4), jump table 0x59FC84
 //   D3d_SetBlend           0x59FCA0..0x59FD68 (0xC9), jump table 0x59FD6C
@@ -33,6 +34,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/d3d_draw_callees.h"
 #include "game/d3d_list_callees.h"
+#include "game/quad_far_edge.h"
 #include "hook/detour.h"
 #include "hook/draw_order.h"
 #include "hook/log.h"
@@ -185,6 +187,34 @@ void PutTexel(unsigned char* out, const unsigned char* uv) {
     PutFloat(out + 0x1C, X87Pass(FloatAt(::bof3::Img(kTexCoords.v) + uv[1] * 4u)));
 }
 
+// DIVERGENCE DIV-0199 (D198): a screen-rectangle quad's texture edges
+// (game/quad_far_edge.h), by the draw's filter,
+// over the four vertices just written; uv the first corner's u, v bytes and
+// `stride` the primitive's corner size. Off (0) until D3dDraw_Inject, after the
+// self-tests, and under BOF3X_ORIGINAL=QuadFarEdge.
+std::uint8_t g_quad_far = 0;
+void QuadFarEdge(const unsigned char* uv, U stride) {
+    if (!g_quad_far) return;
+    float x[4], y[4], tu[4], tv[4];
+    unsigned char u[4], v[4];
+    for (U i = 0; i < 4; ++i) {
+        const unsigned char* const out = Vertex(i);
+        x[i] = Float(out + 0x00);
+        y[i] = Float(out + 0x04);
+        tu[i] = Float(out + 0x18);
+        tv[i] = Float(out + 0x1C);
+        u[i] = uv[i * stride];
+        v[i] = uv[i * stride + 1];
+    }
+    const bool point = render::CurrentState().point_filter;
+    quad_far_edge::ApplyAxis(x, y, u, tu, point);
+    quad_far_edge::ApplyAxis(x, y, v, tv, point);
+    for (U i = 0; i < 4; ++i) {
+        PutFloat(Vertex(i) + 0x18, tu[i]);
+        PutFloat(Vertex(i) + 0x1C, tv[i]);
+    }
+}
+
 }  // namespace
 }  // namespace d3d_draw
 
@@ -316,6 +346,7 @@ long D3d_DrawPolyFT4(const unsigned char* prim) {
         PutLong(out + 0x14, static_cast<U>(specular));
     }
     for (U i = 0; i < 4; ++i) PutTexel(Vertex(i), prim + 0x14 + i * 0x10);
+    QuadFarEdge(prim + 0x14, 0x10);   // DIV-0199
     g.bind_texture(Word(prim + 0x26), Word(prim + 0x16));
     g.ret_only(Word(prim + 0x26) & 0x400);
     g.ret_only(Word(prim + 0x26) & 0x800);
@@ -342,6 +373,7 @@ long D3d_DrawPolyGT4(const unsigned char* prim) {
         PutLong(out + 0x14, static_cast<U>(specular[i]));
         PutTexel(out, in + 0xC);
     }
+    QuadFarEdge(prim + 0x14, 0x14);   // DIV-0199
     g.bind_texture(Word(prim + 0x2A), Word(prim + 0x16));
     g.ret_only(0);
     g.ret_only(0);
@@ -602,6 +634,14 @@ void D3dDraw_Inject() {
         const std::uint8_t was = 0, is = 1;
         bof3::PatchBytes("CellTextureVram", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_cell_vram)), &was, &is, 1);
         bof3::Log("DIV-0181    a cell texture is rebuilt after an upload over its cells (on unless the line above says OFF)");
+    }
+    {
+        // DIV-0199: the textured quads' far texture edge, after the self-tests
+        // (which compare Capcom's texture coordinates).
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("QuadFarEdge", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_quad_far)), &was, &is, 1);
+        bof3::Log("DIV-0199    a screen-rectangle textured quad samples the texels the PlayStation draws: %s",
+                  g_quad_far ? "on" : "OFF (BOF3X_ORIGINAL=QuadFarEdge)");
     }
     d3d_list::Operands();   // Gfx_DrawOTag's byte tables, ours, against the code's (docs/operand-store.md)
     BOF3_INJECT(Gfx_DrawOTag);

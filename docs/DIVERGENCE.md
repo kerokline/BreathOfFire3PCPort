@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 196 entries, DIV-0001..0196, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 200 entries, DIV-0001..0200, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -10391,6 +10391,14 @@ designed in rather than bolted on.
   each); the rule read the seven builds' pages as [`rest_3e.md`](rest_3e.md)
   11's table. **Not seen:** no recorded route reaches the dock yet (RC's
   placed save `dock128` is the owner's to record).
+  **Amended 2026-11-01** (issue #178, the first capture of the glyph
+  fallback, a PSX + PSP English disc-built install): the glyph was drawn
+  at the cell's `y + 3`, which with `Text_DrawAt`'s `y + 1` put its 12
+  units at `y + 4 .. y + 16` - the circle's lower half over the next row's
+  icon. Now `y - 2`, the glyph at `y - 1 .. y + 11`, centred on the
+  10-texel cell ([`rest_3e.md`](rest_3e.md) 11.2 and 11.5). The plan, the
+  cell copies and the rule are unchanged; the owner's eye on the next
+  capture is owed.
 - **Reversible?** `BOF3X_ORIGINAL=DockLegend` (the page as it is), or
   `BOF3X_ORIGINAL=EffectKind5E_DrawPanel`.
   A player turns it off with `BOF3X_OFF=DockLegend` (the ini's `off=`).
@@ -14101,3 +14109,278 @@ designed in rather than bolted on.
   the sheets' layout again.
   **Seen by the owner on the captures, 2026-10-31 evening: "that'll work -
   it all fits in the row, even when selected".**
+
+### An area with no passage list answers "no passage ahead", instead of reading address 3
+
+- **ID:** DIV-0197
+- **Date:** 2026-11-01
+- **Subsystem:** field - `Area_PassageAhead` `0x530600` (ours,
+  `src/game/event_ops.cpp`), reached from `Field_LeaderTalkTest` on the
+  talk button when no object is faced, no 0x51 cell hook takes it, and a
+  0x50 / 0x52 / 0x53 / 0x55 cell is around. D399
+  ([`known-defects.md`](known-defects.md)); issue #177 (ScrubOasis, a
+  PSX + PSP English disc-built install, the faerie village's board,
+  area 185); [`event-ops.md`](event-ops.md) section 5.
+- **Tier:** Intent - a port repair.
+- **Original behaviour:** the function walks the descriptor's `+0x2C` list
+  of 8-byte passage runs from index `+0x31` down to 0, reading each run's
+  count at `entry[3]`, with no test of the list pointer. 105 of the 200
+  descriptors hold no list at `+0x2C` - `recipes/exe-layout.tsv` lists no
+  pointer word there for them, areas 175..185 (the faerie village) among
+  them - and for those the first read is of address `0x00000003`. Seen:
+  issue #177's report on `main` `7bd917d`, `CRASH 0: exception 0xC0000005
+  at bof3x.dll+0x1B7486`, reading `0x00000003`, `eax` 0 (the list),
+  `ecx 0x644628` (area 185's descriptor, `Area_Descriptors[0xB9]` in
+  `exe-layout.tsv`), `esi` 0 (`+0x31`), area `0x00B9`; the stack
+  `Field_LeaderTalkTest` <- `Field_LeaderWalk` <- `Field_LeaderControl`
+  <- `Field_MembersFrame` <- `Field_Frame`. A layout-identical build of
+  that commit (llvm-mingw 20260616, the CI toolchain) names the address
+  `Area_PassageAhead+0x56`, the bytes at eip `0F B6 78 03` (`movzx edi,
+  byte [eax+3]`) the report's own.
+- **New behaviour:** a null `+0x2C` answers null - no passage ahead - and
+  `Field_LeaderTalkTest` goes on as the port already has it (it tests the
+  answer for null, [`event-ops.md`](event-ops.md) section 5: the porting
+  house's own fix, kept). One log line, `DIV-0197`, names the area, once
+  per area. A descriptor with a list takes the original's walk unchanged.
+- **Rationale:** a crash to the desktop on the talk button. The same read
+  on the PlayStation (`FUN_801B6C4C`) takes a byte of low RAM at address 3
+  and finds a run there or not; the PC's protected page 0 turned that into
+  a fault, latent in Capcom's port for every area without a list. The
+  PC's own data has no list for area 185 either (the layout table), so
+  the port crashes the same way from a PC install; the disc-built install
+  only brought a player to the cell first. With no list there is no
+  passage to find, and "none" is the answer the original's test already
+  handles.
+- **Also in the PSX version?** The unchecked walk is Capcom's; the null
+  read cannot fault there (low RAM; the byte not measured). Whether a run
+  the console reads off address 0 ever matches a cell is not known.
+- **Verification:** the start-up fuzz (`BOF3X_SHADOW=event_ops`,
+  `event_ops_fuzz.cpp`'s `SeedPassages`) seeds area 0's descriptor with a
+  list of its own every round - Capcom's clone would fault on a null one -
+  so it compares the unchanged path alone. **Owed:** the null path live -
+  the reporter's spot (area 185's board on a disc-built install, the talk
+  button) before and after; and the same press on the PC install, where
+  the reading above says Capcom's `0x530600` faults on the same
+  `entry[3]` read (`--original Area_PassageAhead`).
+  **Reproduced 2026-11-01** on the PC install: a recipe save moved into
+  area 185 with the leader on the whole cell (0x30, 0x0B) facing 1 (block
+  `+0x27`), toward the plaque - the area's one 0x50 cell, which has no
+  dialogue (the owner: only the lead faerie beside it answers the talk
+  button) - and the talk button pressed: under `--original
+  Area_PassageAhead` `CRASH 0: exception 0xC0000005 at BOF3.exe+0x130639`,
+  `eax 0`, area 0xB9, the report's read in Capcom's own function; with
+  ours, `DIV-0197 ... area 0xB9 has no passage list ... none ahead`, and
+  nothing happens, as a plaque should. (A leader between cells on both
+  axes finds no cell at all - `Field_CellAroundNear` - so a press while
+  still moving does not reach it.)
+  **The village's maps, read 2026-11-01** (each area loaded and its whole
+  80 x 100 plane read with `tools/cell_peek.py`): ten of the eleven - areas
+  176..185 - hold exactly one passage cell, the same plaque's 0x50 at
+  (0x30, 0x0A), and none holds a 0x52, 0x53 or 0x55; area 175 holds none.
+  All eleven share the board's 0x51 at (0x3F, 0x0E). So in the village the
+  plaque is the one place the press reaches the null list, in every stage
+  but the first.
+- **Reversible?** `BOF3X_ORIGINAL=Area_PassageAhead` leaves Capcom's
+  function, its read with it.
+- **Switch:** Area_PassageAhead
+- **Default:** on
+- **Player:** costly - the original path is Capcom's function (a detour name only); ours would have to grow its null read, a crash
+- **Toward:** none - the console reads a low-RAM byte at address 3 (not measured), no release has a passage to restore
+- **Languages:** any
+- **State:** active
+
+### The dock's parts list starts its lines where the image's release puts them
+
+- **ID:** DIV-0198
+- **Date:** 2026-11-01
+- **Subsystem:** the dock's parts menu (area 128): `EffectKind5E_DrawList`
+  `0x47FAF0` (ours, `src/game/rest_3e.cpp`, `ListFirstLine`); the list box
+  `Rest3e_Windows+0x20` (`0x654878`) and the hand word `Rest3e_Hand`
+  (`0x654894`). D400 ([`known-defects.md`](known-defects.md)); issue #178
+  (ScrubOasis, a PSX-US + PSP-EU disc-built install); DIV-0195's family;
+  [`rest_3e.md`](rest_3e.md) section 12.
+- **Tier:** Sensible - the release the player owns, as DIV-0195.
+- **Original behaviour:** the list's eight lines start at the list box's
+  `y + 0x14` and the hand at the hand word's y plus 15 per pick. The PC's
+  data is Japan's: list box (96, 80, 128, 144), hand (100, 100), so the
+  first part is at y 100 under the hand, with a 20 px strip above it. The
+  Western PSX release changed both halves: its `SCENA10.EMI#0` holds a list
+  box of (96, 96, 128, 128) and the same hand, and its twin of this function
+  (`0x801F7AD4` on psx-us) adds **4**, not 0x14 (`0x801F7B50 addiu $s3,
+  $v1, 4`; `x + 8` and `x + 0x62` as the PC's) - the first part again at
+  y 100, under the hand, and the box 16 px lower and shorter. PSP-EU's disc
+  and twin are Japan's (box (96, 80, 128, 144), `0x1F7B50 addiu $s3, $v1,
+  0x14`). Since DIV-0195 a Western PSX disc-built image carries the West's
+  box (the map run `0x654876..0x654898` from the disc; measured 2026-11-01
+  on an image built from the US disc with the PSP disc after it), and the
+  PC's code added Japan's 0x14 over it: the first part at y 116, the hand 16
+  px above it on the box's empty strip - issue #178's "hand on the empty
+  row". `exe_maps/psx-us.tsv` counts that run `agree 138` of 138, which the
+  two differing words show to be wrong; not chased.
+- **New behaviour:** the first line's offset is the twin's for the release
+  the mapped image's list box is in: 4 when `ExeImage_MappedBuild()`'s
+  build is a Western PSX disc (`sigma::ReleaseOfSources` `kWest` - psx-us,
+  psx-eu-en, psx-fr, psx-de), else 0x14 (the PC's own `.data`, a Japanese or
+  a PSP image). Read once, one log line `DIV-0198`. The rows' 15 px step,
+  the names' and counts' x, the colours and the hand are unchanged.
+- **Rationale:** the West's box with Japan's margin is a layout no release
+  had, and the hand points at the wrong line. The West's own pairing is the
+  US PlayStation's screen, read off its code; Japan's pairing is the PC's.
+- **Also in the PSX version?** Each release's own pairing (above). The
+  Western twins other than the US one were not read: the EU-en, FR and DE
+  discs' list box words and `+4` are inferred from DIV-0195's finding that
+  all four hold their own layout here, and owed a read.
+- **Verification:** the image built here from the US and PSP-EU discs
+  (`importer.py build`, psx-us first) holds the words above at `0x654878`
+  and `0x654894` (`base/exe/data.toml`: the run `map
+  SCENARIO/SCENA10.EMI#0@0x801FE7EA`); the US twin read with capstone from
+  the same disc's `SCENA10.EMI#0`; the PSP-EU twin and words from its
+  `SCENA10.EMI#0`. The hosted fuzz (`BOF3X_SHADOW=rest_3e`) runs with the
+  PC's `.data` and no mapped image, so `ListFirstLine()` is 0x14 there and
+  the clone compares equal. **Owed:** the owner's `shipPartsMenu` recording
+  on a Western-disc-built install (the hand on `Part A`, the eight rows in
+  the box) and on the PC (unchanged). **Seen 2026-11-01** on the owner's
+  disc-only installs (`shipPartsMenu`, the DIV-0199 build): US disc alone
+  `y + 4 (psx-us)`, the hand on `Part A`, the owner's eye: correct; PSP-EU
+  disc alone `y + 20 (psp-eu)`, the same rows at the same y under Japan's
+  taller box (its top at y 80, the US box's at 96, both ending at 224).
+  **The owner's call, 2026-11-01:** each install keeps the box of the disc
+  it is built from; Japan's pairing - the PC's, the Japanese disc's and the
+  PSP's - is the default, the Western PSX discs' the exception.
+- **Reversible?** `BOF3X_ORIGINAL=EffectKind5E_DrawList` leaves Capcom's
+  function, Japan's 0x14 with it.
+- **Switch:** EffectKind5E_DrawList
+- **Default:** on
+- **Player:** costly - the original path is Capcom's function (a detour name only); ours would have to grow Japan's margin over the West's box
+- **Toward:** psx - the Western PlayStation's own pairing of box and margin, on its own image
+- **Languages:** any
+- **State:** active
+
+### A screen-rectangle textured quad samples the texels the PlayStation draws, and never the one past its far edge
+
+- **ID:** DIV-0199
+- **Date:** 2026-11-01
+- **Subsystem:** render - `D3d_DrawPolyFT4` `0x5A0C40` and `D3d_DrawPolyGT4`
+  `0x5A14C0` (ours, `src/game/d3d_draw.cpp`), the rule in
+  `src/game/quad_far_edge.h`. D198 ([`known-defects.md`](known-defects.md));
+  issue #179 (ScrubOasis: the line under the ship's ENGINE gauge, the crane
+  button's border); DIV-0010's family (the same edge on the `SPRT` path).
+- **Tier:** Intent - a port repair.
+- **Original behaviour:** both handlers take every corner's texture
+  coordinate from `D3d_TexCoords` `0x7CA9E0`, `tc[i] = (i + 0.512) / 256`,
+  the centre of texel `i`. The PlayStation rasteriser never draws a
+  polygon's right column or bottom row - game pixel `g` of a side `W` long
+  takes texel `floor(t0 + (t1 - t0) g / W)` - so a builder's far coordinate
+  (`u + w`) is exclusive. The port's far corner sits half a texel past the
+  last texel the console draws, and above scale 1 the last screen pixels
+  sample the next texel in the page: under the ENGINE gauge (`Area104_DrawGauge`,
+  v `0xD8..0xE0`) texel row `0xE0`, the top of the next glyphs; the fishing
+  menu's frame lines (D198); the crane button's right and bottom border. The
+  near edge is half a texel late as well, so at scale 2 and up every texel
+  boundary inside a quad is half a game pixel off the console's.
+- **New behaviour:** for a quad that is a rectangle on screen along the axis
+  a coordinate runs on (the menus' and HUD's quads), that coordinate's four
+  values are rewritten from the PlayStation's run of texels - `[t0, t1)`
+  running up, `[t1 + 1, t0 + 1)` running down (a mirrored quad) - and the
+  screen pixels `n` between the two sides, by the draw's filter:
+  point (`BOF3X_FILTER=point`), pixel `i` samples `s + (e - s)(i + 0.5) / n`
+  - the console's texel at every screen pixel of a quad drawn 1:1 or
+  mirrored, at every scale; bilinear (the default), the first pixel samples
+  the first texel's centre and the last pixel the last texel's centre -
+  DIV-0010's rule with the quad's own `n`, so a stretched quad (the gauge:
+  4 texels over 16 game pixels) does not blend in the texel past its run
+  either. Any other quad - a model's polygon, a rotated or sheared one -
+  keeps the original's coordinates, and so does a coordinate the same at all
+  four corners. One log line `DIV-0199` at start-up.
+- **Rationale:** a bug of the port's coordinate table, not a choice: the
+  data is the console's byte for byte, and the console never shows the
+  texel. Models are left alone on purpose: the port's uniform `+0.512`
+  keeps two polygons that share an edge continuous across it, and moving one
+  side's far corner without its neighbour's near one would open a seam
+  along every shared edge of a mesh.
+- **Also in the PSX version?** No - the console's rasteriser is the
+  reference this follows.
+- **Verification:** `tools/probes/quad_edge_probe.cpp` draws random quads
+  through Direct3D 11 (WARP) the way the backend does (Direct3D 6 pixel
+  centres, a 256 x 256 page, the backend's point and linear samplers) with
+  the original's coordinates and with this rule, over a page holding the
+  PlayStation's run of texels as art and a marker colour everywhere else.
+  1,000 quads of each kind (1:1, stretched or shrunk, an inclusive builder's
+  `u + w - 1`, mirrored), scales 1..4, both filters, 2026-11-01: the
+  original's coordinates sample the marker in 8,032,586 pixels, ours in
+  none; under point, ours matches the PlayStation's texel at every pixel of
+  every 1:1 and mirrored quad at every scale (the original's misses
+  341,331 pixels at scale 2 for the 1:1 kind alone). Stretched and
+  inclusive quads keep a texel change inside a game pixel where the console
+  steps on game pixels - inside the run, never past it. Sheared quads: the
+  same pixels both ways, as designed.
+- **Reversible?** `BOF3X_ORIGINAL=QuadFarEdge` (and a player's
+  `BOF3X_OFF=QuadFarEdge`, the ini's `off=`) leaves the original's
+  coordinates; `BOF3X_ORIGINAL=D3d_DrawPolyFT4,D3d_DrawPolyGT4` runs
+  Capcom's handlers.
+- **Switch:** QuadFarEdge
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=QuadFarEdge (ini off=)
+- **Toward:** psx - the PlayStation's rasteriser never samples a quad's far coordinate
+- **Languages:** any
+- **State:** active
+
+### A faerie's name drawn from its five-byte slot ends at the slot's last whole glyph
+
+- **ID:** DIV-0200
+- **Date:** 2026-11-01
+- **Subsystem:** the faerie village's boards - `CommuBoard_DrawRecordCard`
+  `0x458830` (`src/game/rest_4b.cpp`), `CommuEntry_DrawPanel` `0x45E870`,
+  `CommuRank_DrawListA` `0x460730` and `CommuRank_DrawListB` `0x460920`
+  (`src/game/rest_4e.cpp`); the rule in `src/game/faerie_name.h`. D401
+  ([`known-defects.md`](known-defects.md)); the owner's question of
+  2026-11-01 about reports of a Chinese-only village crash that a reload
+  clears - not issue #177's crash (that one is DIV-0197's).
+- **Tier:** Intent - a port repair.
+- **Original behaviour:** a birth (`CommuSim_AddRecord`) copies five bytes of
+  the trait record's name into the save's name table `0x9048F0`, sixty
+  five-byte slots with nothing between them, and these four draws hand a
+  slot to `Text_DrawAt` with a count of five **characters**. The port's
+  Chinese names are two bytes a glyph: 28 of the 60 are three or four
+  glyphs, so their slot ends on half a glyph and the draw reads on into the
+  next slot, out of step. Where the next slot holds a name - a faerie born
+  there at some time - a byte of it taken as the first of a two-byte code
+  makes a glyph past 0xA00, and `Text_DrawString`'s trap for that (`in al,
+  dx`, a privileged instruction) ends the game. Read off the PC's 60 names: 16
+  trap when their neighbour has been born, none when it has not. The births
+  list is the news board the village board opens after births
+  (`Area179_CellHook`'s tail kind 0x1A, `CommuTail26`), and its counts sit
+  past the saved block (`Save_BuildBlock` saves 0x10B0 bytes from
+  `0x9039E0`, ending at the births count `0x904A90`), which fits "a reload
+  clears it". A Latin layer's names fill the count in five bytes and never
+  reach it; the shipped Chinese text, or a save made under it, does.
+- **New behaviour:** each of the four draws reads the slot through a
+  buffer: its bytes up to the last whole character (a byte from 0x80 up
+  starts a two-byte code), then a NUL. A name that fits its slot draws as
+  before; a Chinese name cut at half a glyph draws its whole glyphs and
+  stops. The table, the births and the save are unchanged, and so is the
+  editor's own name buffer.
+- **Rationale:** a crash to the desktop on reading the board, in the
+  shipped language, decided by which faeries happen to be born side by side.
+- **Also in the PSX version?** No - the trap is the port's own code, and the
+  console's names are its own single-byte or Japanese ones.
+- **Verification:** reproduced before the fix: `fairyVillage` replayed under
+  `--lang original` with its save's sixty slots holding a trait record's
+  five Chinese bytes (`81 E9 86 EF 84`, record 8's - a crafted save, not
+  committed): the first village entry spawns three faeries, Alto (trait
+  record 12, a three-glyph name) among them, and the news board's births
+  page ends the game - `CRASH 0: exception 0xC0000096`, area 0xB1, `ecx
+  00006986` (the glyph the reading predicts), `esi 00904932` (slot 13's
+  second byte, the neighbour's). After, the same run plays to its last
+  frame (4719) and the births page draws Alto's two whole glyphs; with
+  `BOF3X_ORIGINAL=FaerieNameEnd` it crashes as before. The `rest_4b` and
+  `rest_4e` self-tests (which run with the switch off) report 0 mismatches.
+- **Reversible?** `BOF3X_ORIGINAL=FaerieNameEnd` (a player's
+  `BOF3X_OFF=FaerieNameEnd`, the ini's `off=`) draws from the table as the
+  original does.
+- **Switch:** FaerieNameEnd
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=FaerieNameEnd (ini off=)
+- **Toward:** none - the PlayStation has no glyph trap and no two-byte faerie names to cut
+- **Languages:** any
+- **State:** active
