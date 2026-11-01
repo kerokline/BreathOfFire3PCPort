@@ -7,8 +7,14 @@
 // one whose suspended context holds the image's entry point in eax (where
 // the user-mode thread start takes it from), else the earliest created. Its
 // TEB comes from NtQueryInformationThread(ThreadBasicInformation); the TEB
-// words read are NT_TIB's StackBase +0x04 and StackLimit +0x08 and the
-// 32-bit TEB's DeallocationStack +0xE0C (the reservation's low end).
+// words read are NT_TIB's StackBase and StackLimit and the TEB's
+// DeallocationStack (the reservation's low end), at the width's offsets
+// (kTebStackBase and the two beside it). The stack's addresses are kept as
+// 32-bit words, as the game's Task_StackTop and the records hold them: on
+// the 64-bit host the main thread's stack lies below 4 GB by the executable's
+// placement (docs/x64-build-design.md 7.1), and Narrow() is a Fatal where it
+// does not. Hosted (the injected thread, the main thread found suspended) is
+// the i686 build's alone; the CONTEXT record it reads is the width's.
 //
 // BOF3X_STACKWATCH=1 adds two lines. At Task_SetStackBase (its asm calls
 // StackWatch_AtSetStackBase): Task_StackTop, the arrival esp and its depth
@@ -30,23 +36,50 @@
 #include <cstdio>
 #include <cstring>
 
+#include "common/asm_name.h"
 #include "common/image_base.h"
+#include "game/task_switch.h"
 #include "hook/host.h"
 #include "hook/log.h"
 
 extern "C" volatile unsigned char StackWatch_Armed = 0;
+extern "C" void __cdecl Task_SetStackBase(void);   // game/task_switch.h's, for the armed check
 
 namespace bof3 {
 namespace {
 
 // The literal addresses are the symbols.toml data: 0x66C858 Task_StackTop.
 constexpr std::uint32_t kTaskStackTop = 0x66C858;
-constexpr std::uint32_t kSlice = 0x4000;   // Task_Create: slot * 0x4000
-constexpr std::uint32_t kSlices = 4;       // Task_Records: four records
+constexpr std::uint32_t kSlice = task_sched::kStackSize;   // Task_Create: slot * kStackSize (the width's, task_switch.h)
+constexpr std::uint32_t kSlices = 4;                       // Task_Records: four records
+
+// The TEB's words, by width: NT_TIB StackBase and StackLimit, and the TEB's
+// DeallocationStack (TEB32 +0xE0C, TEB64 +0x1478).
+#if defined(__i386__)
+constexpr std::uintptr_t kTebStackBase = 0x04, kTebStackLimit = 0x08, kTebDeallocationStack = 0xE0C;
+#elif defined(__x86_64__)
+constexpr std::uintptr_t kTebStackBase = 0x08, kTebStackLimit = 0x10, kTebDeallocationStack = 0x1478;
+#else
+#error "stackwatch: no TEB layout for this architecture"
+#endif
+
+// A stack address as the 32-bit word the game's records hold: the cast on
+// the 32-bit build; on the 64-bit one a Fatal at or above 4 GB, where no
+// word of the game could hold it (x64-build-design.md 7.1).
+std::uint32_t Narrow(std::uintptr_t v, const char* what) {
+#if UINTPTR_MAX > 0xFFFFFFFFu
+    if (v > 0xFFFFFFFFu)
+        Fatal("stackwatch: %s 0x%llX lies at or above 4 GB, where no word of the game can hold it", what,
+              static_cast<unsigned long long>(v));
+#else
+    (void)what;
+#endif
+    return static_cast<std::uint32_t>(v);
+}
 
 // The main thread, found at start-up.
 DWORD g_main_id;
-std::uint32_t g_teb;
+std::uintptr_t g_teb;
 std::uint32_t g_base;      // StackBase: the top, exclusive
 std::uint32_t g_dealloc;   // DeallocationStack: the reservation's low end
 
@@ -70,19 +103,25 @@ struct ThreadBasicInformation {   // THREAD_BASIC_INFORMATION
 };
 using NtQueryInformationThreadFn = LONG(WINAPI*)(HANDLE, int, void*, ULONG, ULONG*);
 
-std::uint32_t Long(std::uint32_t address) {
+std::uint32_t Long(std::uintptr_t address) {
     std::uint32_t v;
-    std::memcpy(&v, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(address)), sizeof v);
+    std::memcpy(&v, reinterpret_cast<const void*>(address), sizeof v);
+    return v;
+}
+// A pointer-sized word of the TEB (the stack words are pointers there).
+std::uintptr_t Word(std::uintptr_t address) {
+    std::uintptr_t v;
+    std::memcpy(&v, reinterpret_cast<const void*>(address), sizeof v);
     return v;
 }
 
-std::uint32_t TebOf(HANDLE thread) {
+std::uintptr_t TebOf(HANDLE thread) {
     static NtQueryInformationThreadFn query = reinterpret_cast<NtQueryInformationThreadFn>(
         reinterpret_cast<void*>(GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "NtQueryInformationThread")));
     if (!query) return 0;
     ThreadBasicInformation info{};
     if (query(thread, 0 /* ThreadBasicInformation */, &info, sizeof info, nullptr) < 0) return 0;
-    return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(info.teb));
+    return reinterpret_cast<std::uintptr_t>(info.teb);
 }
 
 // The low end of the pages running down from `address` with its page's
@@ -159,6 +198,7 @@ MainThread FindMain(std::uint32_t entry) {
         MainThread c;
         c.id = te.th32ThreadID;
         CONTEXT ctx{};
+#if defined(__i386__)
         ctx.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_FLOATING_POINT | CONTEXT_EXTENDED_REGISTERS;
         if (GetThreadContext(h, &ctx)) {
             c.context = true;
@@ -168,6 +208,20 @@ MainThread FindMain(std::uint32_t entry) {
             std::memcpy(&mx, ctx.ExtendedRegisters + 24, sizeof mx);
             c.mxcsr = mx;
         }
+#elif defined(__x86_64__)
+        // Not reached today: the 64-bit build is the exe host alone, whose
+        // main thread is this one (StackWatch_Start). Whole all the same, for
+        // a 64-bit process that has a thread to find.
+        ctx.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_FLOATING_POINT;
+        if (GetThreadContext(h, &ctx)) {
+            c.context = true;
+            c.esp = Narrow(ctx.Rsp, "a found thread's rsp");
+            c.eip = Narrow(ctx.Rip, "a found thread's rip");
+            c.eax = static_cast<std::uint32_t>(ctx.Rax);
+            c.cw = ctx.FltSave.ControlWord & 0xFFFF;
+            c.mxcsr = ctx.FltSave.MxCsr;
+        }
+#endif
         FILETIME created, exited, kernel, user;
         const bool timed = GetThreadTimes(h, &created, &exited, &kernel, &user) != 0;
         CloseHandle(h);
@@ -194,13 +248,16 @@ const char* Where(std::uint32_t lo, std::uint32_t hi, std::uint32_t committed_lo
 }  // namespace
 
 void StackWatch_Start() {
-    // The image's own request: IMAGE_OPTIONAL_HEADER32 of the mapped BOF3.exe.
+    // The image's own request: the optional header of the mapped main module
+    // (BOF3.exe's PE32 hosted; bof3x.exe's, PE32 or PE32+ by the build's
+    // width, in the exe host - IMAGE_NT_HEADERS is the width's own).
     const auto* image = reinterpret_cast<const unsigned char*>(GetModuleHandleW(nullptr));
     const auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(image);
-    const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(image + dos->e_lfanew);
-    const std::uint32_t reserve = nt->OptionalHeader.SizeOfStackReserve;
-    const std::uint32_t commit = nt->OptionalHeader.SizeOfStackCommit;
-    const std::uint32_t entry = nt->OptionalHeader.ImageBase + nt->OptionalHeader.AddressOfEntryPoint;
+    const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS*>(image + dos->e_lfanew);
+    const auto reserve = static_cast<std::uint32_t>(nt->OptionalHeader.SizeOfStackReserve);
+    const auto commit = static_cast<std::uint32_t>(nt->OptionalHeader.SizeOfStackCommit);
+    const std::uint32_t entry =
+        Narrow(static_cast<std::uintptr_t>(nt->OptionalHeader.ImageBase) + nt->OptionalHeader.AddressOfEntryPoint, "the image's entry point");
 
     // This thread's words. Hosted, the launcher's CreateRemoteThread: Windows'
     // new thread defaults, as the main thread starts with them too. In the
@@ -228,8 +285,8 @@ void StackWatch_Start() {
     }
 
     // The TEB query checked on this thread, whose TEB is known.
-    const std::uint32_t own = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(NtCurrentTeb()));
-    const std::uint32_t queried = TebOf(GetCurrentThread());
+    const std::uintptr_t own = reinterpret_cast<std::uintptr_t>(NtCurrentTeb());
+    const std::uintptr_t queried = TebOf(GetCurrentThread());
     // Hosted, the main thread is found among the suspended process's
     // threads; in the exe host it is this one - Engine_Main runs on it, as
     // Capcom's entry ran on it (docs/state3-design.md section 5).
@@ -239,7 +296,13 @@ void StackWatch_Start() {
         main.how = "this thread, Engine_Main's";
         main.context = true;
         main.eip = entry;
+#if defined(__i386__)
         asm volatile("movl %%esp, %0" : "=r"(main.esp));
+#elif defined(__x86_64__)
+        std::uintptr_t rsp;
+        asm volatile("movq %%rsp, %0" : "=r"(rsp));
+        main.esp = Narrow(rsp, "the main thread's rsp");
+#endif
         main.cw = cw;
         main.mxcsr = mxcsr;
         g_teb = own;
@@ -251,16 +314,17 @@ void StackWatch_Start() {
     }
     if (queried != own || !g_teb) {
         if (want)
-            Fatal("stack: no main thread TEB (thread %lu, TEB 0x%08X; this thread's query 0x%08X, fs:[0x18] 0x%08X)",
-                  main.id, (unsigned)g_teb, (unsigned)queried, (unsigned)own);
-        Log("stack: not measured: main thread %lu, TEB 0x%08X; this thread's query 0x%08X, fs:[0x18] 0x%08X",
-            main.id, (unsigned)g_teb, (unsigned)queried, (unsigned)own);
+            Fatal("stack: no main thread TEB (thread %lu, TEB 0x%llX; this thread's query 0x%llX, NtCurrentTeb 0x%llX)",
+                  main.id, static_cast<unsigned long long>(g_teb), static_cast<unsigned long long>(queried),
+                  static_cast<unsigned long long>(own));
+        Log("stack: not measured: main thread %lu, TEB 0x%llX; this thread's query 0x%llX, NtCurrentTeb 0x%llX", main.id,
+            static_cast<unsigned long long>(g_teb), static_cast<unsigned long long>(queried), static_cast<unsigned long long>(own));
         return;
     }
     g_main_id = main.id;
-    g_base = Long(g_teb + 0x04);
-    const std::uint32_t limit = Long(g_teb + 0x08);
-    g_dealloc = Long(g_teb + 0xE0C);
+    g_base = Narrow(Word(g_teb + kTebStackBase), "the main thread's StackBase");
+    const std::uint32_t limit = Narrow(Word(g_teb + kTebStackLimit), "the main thread's StackLimit");
+    g_dealloc = Narrow(Word(g_teb + kTebDeallocationStack), "the main thread's DeallocationStack");
     DWORD state, protect;
     std::uint32_t guard;
     Below(limit, &state, &protect, &guard);
@@ -290,10 +354,12 @@ void StackWatch_Start() {
         // registers; Task_StackTop is put back (the game sets it itself).
         const std::uint32_t saved = Long(Img(kTaskStackTop));
         g_checking = true;
+#if defined(__i386__)
+        // Capcom's register contract: eax the value, ecx and edx untouched.
         std::uint32_t eax, ecx, edx;
         asm volatile("movl $0x11111111, %%ecx\n\t"
                      "movl $0x22222222, %%edx\n\t"
-                     "call _Task_SetStackBase\n\t"
+                     "call " BOF3_SYM(Task_SetStackBase) "\n\t"
                      "movl %%ecx, %1\n\t"
                      "movl %%edx, %2"
                      : "=a"(eax), "=m"(ecx), "=m"(edx)
@@ -307,6 +373,21 @@ void StackWatch_Start() {
                   (unsigned)eax, (unsigned)stored, (unsigned)ecx, (unsigned)edx);
         Log("stackwatch: armed: Task_SetStackBase and exit will log the main thread's stack "
             "(the armed path checked on this thread: eax = Task_StackTop, ecx and edx kept)");
+#else
+        // The x86_64 half keeps the C++ ABI (task_switch_x86_64.h), so the
+        // check is what it stored: a top one slice below this frame.
+        Task_SetStackBase();
+        g_checking = false;
+        const std::uint32_t stored = Long(Img(kTaskStackTop));
+        std::memcpy(reinterpret_cast<void*>(static_cast<std::uintptr_t>(Img(kTaskStackTop))), &saved, sizeof saved);
+        const std::uint32_t here = Narrow(reinterpret_cast<std::uintptr_t>(&saved), "this frame");
+        if (stored >= here || here - stored > kSlice + 0x1000)
+            Fatal("stackwatch: the armed Task_SetStackBase stored 0x%08X, called from a frame at 0x%08X (a slice is 0x%X)",
+                  (unsigned)stored, (unsigned)here, (unsigned)kSlice);
+        Log("stackwatch: armed: Task_SetStackBase and exit will log the main thread's stack "
+            "(the armed path checked on this thread: Task_StackTop 0x%X below the caller's frame)",
+            (unsigned)(here - stored));
+#endif
     }
 }
 
@@ -320,7 +401,7 @@ void StackWatch_Exit() {
             self, g_main_id, top_protect);
         return;
     }
-    const std::uint32_t limit = self == g_main_id ? Long(g_teb + 0x08) : 0;
+    const std::uint32_t limit = self == g_main_id ? Narrow(Word(g_teb + kTebStackLimit), "the main thread's StackLimit") : 0;
     DWORD state, protect;
     std::uint32_t guard;
     Below(low, &state, &protect, &guard);
@@ -354,7 +435,7 @@ void StackWatch_Exit() {
 }  // namespace bof3
 
 // From Task_SetStackBase's asm - on the game's main thread, and once on the
-// injected thread for StackWatch_Start's check - with 0x4000 bytes
+// injected thread for StackWatch_Start's check - with a slice (kSlice)
 // between arrival_esp and the Task_StackTop just stored: the frames here stay
 // well inside that (Log's buffer is 1 KB).
 extern "C" void __cdecl StackWatch_AtSetStackBase(unsigned long arrival_esp) {

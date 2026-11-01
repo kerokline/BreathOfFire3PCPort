@@ -22,12 +22,11 @@ constexpr std::uint32_t kPrivate = 8;    // +8..+0x1F the task's own words
 constexpr std::uint16_t kSleeping = 1;
 constexpr std::uint16_t kRunnable = 2;
 
-// The stacks: task k owns the kStackSize bytes below Task_StackTop - k *
-// kStackSize. A fresh task's saved esp is kFirstFrame below its top, and its
-// entry sits kEntrySlot above that: six dwords popped, then the entry by ret.
-constexpr std::uint32_t kStackSize = 0x4000;
-constexpr std::uint32_t kFirstFrame = 0x1C;
-constexpr std::uint32_t kEntrySlot = 0x18;
+// The stacks - kStackSize, kFirstFrame, kEntrySlot: task k owns the
+// kStackSize bytes below Task_StackTop - k * kStackSize, a fresh task's saved
+// sp is kFirstFrame below its top and its entry sits kEntrySlot above that -
+// are the architecture's, from game/task_switch.h (included below the
+// namespace: the i686 header's 0x4000, 0x1C, 0x18 are Capcom's).
 
 // The unit, and each entry's offset in it (the fuzz clones it whole: every
 // jump inside it stays inside it).
@@ -43,3 +42,5 @@ constexpr std::uint32_t kAtExit = 0x10D;     // 0x5A99AD
 constexpr std::uint32_t kAtClear = 0x154;    // 0x5A99F4
 
 }  // namespace task_sched
+
+#include "game/task_switch.h"

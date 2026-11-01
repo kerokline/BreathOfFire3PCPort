@@ -13,12 +13,13 @@
 
 extern "C" {
 // Non-zero once StackWatch_Start has armed BOF3X_STACKWATCH. Read by
-// Task_SetStackBase's asm (task_sched.cpp) as _StackWatch_Armed.
+// Task_SetStackBase's asm (game/task_switch_<arch>.h) by its symbol.
 extern volatile unsigned char StackWatch_Armed;
 
 // Called from Task_SetStackBase's asm, after it stored Task_StackTop, with
 // every register and the flags saved: `arrival_esp` is esp as the call
-// arrived (the return address on top). cdecl.
+// arrived (the return address on top; the low 32 bits of rsp on x86-64,
+// where the stack lies below 4 GB or the asm has aborted first). cdecl.
 void __cdecl StackWatch_AtSetStackBase(unsigned long arrival_esp);
 }
 
