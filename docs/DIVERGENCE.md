@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 199 entries, DIV-0001..0199, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 200 entries, DIV-0001..0200, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -14162,6 +14162,24 @@ designed in rather than bolted on.
   button) before and after; and the same press on the PC install, where
   the reading above says Capcom's `0x530600` faults on the same
   `entry[3]` read (`--original Area_PassageAhead`).
+  **Reproduced 2026-11-01** on the PC install: a recipe save moved into
+  area 185 with the leader on the whole cell (0x30, 0x0B) facing 1 (block
+  `+0x27`), toward the plaque - the area's one 0x50 cell, which has no
+  dialogue (the owner: only the lead faerie beside it answers the talk
+  button) - and the talk button pressed: under `--original
+  Area_PassageAhead` `CRASH 0: exception 0xC0000005 at BOF3.exe+0x130639`,
+  `eax 0`, area 0xB9, the report's read in Capcom's own function; with
+  ours, `DIV-0197 ... area 0xB9 has no passage list ... none ahead`, and
+  nothing happens, as a plaque should. (A leader between cells on both
+  axes finds no cell at all - `Field_CellAroundNear` - so a press while
+  still moving does not reach it.)
+  **The village's maps, read 2026-11-01** (each area loaded and its whole
+  80 x 100 plane read with `tools/cell_peek.py`): ten of the eleven - areas
+  176..185 - hold exactly one passage cell, the same plaque's 0x50 at
+  (0x30, 0x0A), and none holds a 0x52, 0x53 or 0x55; area 175 holds none.
+  All eleven share the board's 0x51 at (0x3F, 0x0E). So in the village the
+  plaque is the one place the press reaches the null list, in every stage
+  but the first.
 - **Reversible?** `BOF3X_ORIGINAL=Area_PassageAhead` leaves Capcom's
   function, its read with it.
 - **Switch:** Area_PassageAhead
@@ -14304,5 +14322,65 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=QuadFarEdge (ini off=)
 - **Toward:** psx - the PlayStation's rasteriser never samples a quad's far coordinate
+- **Languages:** any
+- **State:** active
+
+### A faerie's name drawn from its five-byte slot ends at the slot's last whole glyph
+
+- **ID:** DIV-0200
+- **Date:** 2026-11-01
+- **Subsystem:** the faerie village's boards - `CommuBoard_DrawRecordCard`
+  `0x458830` (`src/game/rest_4b.cpp`), `CommuEntry_DrawPanel` `0x45E870`,
+  `CommuRank_DrawListA` `0x460730` and `CommuRank_DrawListB` `0x460920`
+  (`src/game/rest_4e.cpp`); the rule in `src/game/faerie_name.h`. D401
+  ([`known-defects.md`](known-defects.md)); the owner's question of
+  2026-11-01 about reports of a Chinese-only village crash that a reload
+  clears - not issue #177's crash (that one is DIV-0197's).
+- **Tier:** Intent - a port repair.
+- **Original behaviour:** a birth (`CommuSim_AddRecord`) copies five bytes of
+  the trait record's name into the save's name table `0x9048F0`, sixty
+  five-byte slots with nothing between them, and these four draws hand a
+  slot to `Text_DrawAt` with a count of five **characters**. The port's
+  Chinese names are two bytes a glyph: 28 of the 60 are three or four
+  glyphs, so their slot ends on half a glyph and the draw reads on into the
+  next slot, out of step. Where the next slot holds a name - a faerie born
+  there at some time - a byte of it taken as the first of a two-byte code
+  makes a glyph past 0xA00, and `Text_DrawString`'s trap for that (`in al,
+  dx`, a privileged instruction) ends the game. Read off the PC's 60 names: 16
+  trap when their neighbour has been born, none when it has not. The births
+  list is the news board the village board opens after births
+  (`Area179_CellHook`'s tail kind 0x1A, `CommuTail26`), and its counts sit
+  past the saved block (`Save_BuildBlock` saves 0x10B0 bytes from
+  `0x9039E0`, ending at the births count `0x904A90`), which fits "a reload
+  clears it". A Latin layer's names fill the count in five bytes and never
+  reach it; the shipped Chinese text, or a save made under it, does.
+- **New behaviour:** each of the four draws reads the slot through a
+  buffer: its bytes up to the last whole character (a byte from 0x80 up
+  starts a two-byte code), then a NUL. A name that fits its slot draws as
+  before; a Chinese name cut at half a glyph draws its whole glyphs and
+  stops. The table, the births and the save are unchanged, and so is the
+  editor's own name buffer.
+- **Rationale:** a crash to the desktop on reading the board, in the
+  shipped language, decided by which faeries happen to be born side by side.
+- **Also in the PSX version?** No - the trap is the port's own code, and the
+  console's names are its own single-byte or Japanese ones.
+- **Verification:** reproduced before the fix: `fairyVillage` replayed under
+  `--lang original` with its save's sixty slots holding a trait record's
+  five Chinese bytes (`81 E9 86 EF 84`, record 8's - a crafted save, not
+  committed): the first village entry spawns three faeries, Alto (trait
+  record 12, a three-glyph name) among them, and the news board's births
+  page ends the game - `CRASH 0: exception 0xC0000096`, area 0xB1, `ecx
+  00006986` (the glyph the reading predicts), `esi 00904932` (slot 13's
+  second byte, the neighbour's). After, the same run plays to its last
+  frame (4719) and the births page draws Alto's two whole glyphs; with
+  `BOF3X_ORIGINAL=FaerieNameEnd` it crashes as before. The `rest_4b` and
+  `rest_4e` self-tests (which run with the switch off) report 0 mismatches.
+- **Reversible?** `BOF3X_ORIGINAL=FaerieNameEnd` (a player's
+  `BOF3X_OFF=FaerieNameEnd`, the ini's `off=`) draws from the table as the
+  original does.
+- **Switch:** FaerieNameEnd
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=FaerieNameEnd (ini off=)
+- **Toward:** none - the PlayStation has no glyph trap and no two-byte faerie names to cut
 - **Languages:** any
 - **State:** active
