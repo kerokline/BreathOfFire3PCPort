@@ -67,16 +67,43 @@ extern "C" Callees SoundRest_g = kOriginals;
 extern "C" int __cdecl Sound_PauseAllEax(void) BOF3_ASM_NAME(Sound_PauseAll);
 
 // original 0x587B80: `jmp Music_Halt`. The caller's ecx and stack reach
-// Music_Halt as they were: a jump through SoundRest_g, not a call.
-extern "C" __attribute__((naked)) void __cdecl Sound_StopMusic(void) { __asm__ volatile("jmp *(_SoundRest_g+8)"); }
+// Music_Halt as they were: a jump through SoundRest_g, not a call. A pair by
+// width (docs/x64-asm-policy.md 8 unit 5): the i686 operand's offset is the
+// table of 4-byte pointers', the x86_64 half's is offsetof over the 8-byte
+// ones, RIP-relative (sound_rest_callees.h's assert ties the two).
+extern "C" __attribute__((naked)) void __cdecl Sound_StopMusic(void) {
+#if defined(__i386__)
+    __asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+8)");
+#elif defined(__x86_64__)
+    __asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(Callees, halt)));
+#else
+#error "no callee-table jump for this architecture"
+#endif
+}
 
 // original 0x587B90: `jmp Music_Resume`, the same way.
-extern "C" __attribute__((naked)) void __cdecl Sound_ResumeAll(void) { __asm__ volatile("jmp *(_SoundRest_g+12)"); }
+extern "C" __attribute__((naked)) void __cdecl Sound_ResumeAll(void) {
+#if defined(__i386__)
+    __asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+12)");
+#elif defined(__x86_64__)
+    __asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(Callees, resume)));
+#else
+#error "no callee-table jump for this architecture"
+#endif
+}
 
 // original 0x587C20: `jmp Music_IsPlaying`, the same way - Music_IsPlaying
 // reads the ecx it is handed (save_menu.cpp). Its callers are Game_Mode 3's
 // steps 0x495BC0 and 0x495C50, still Capcom's (docs/sound-rest.md section 5).
-extern "C" __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) { __asm__ volatile("jmp *(_SoundRest_g+16)"); }
+extern "C" __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) {
+#if defined(__i386__)
+    __asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+16)");
+#elif defined(__x86_64__)
+    __asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(Callees, music_playing)));
+#else
+#error "no callee-table jump for this architecture"
+#endif
+}
 
 // original 0x587C30: everything paused - WndProc's on a deactivation and on
 // F9. Each of the 23 Sound_Channels dwords that is not 0, SndBuf_Stop (the

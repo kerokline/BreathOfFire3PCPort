@@ -48,8 +48,12 @@ struct Callees {
     int (__cdecl* music_playing)();                        // Music_IsPlaying (ours, save_menu.cpp): 0x587C20's jmp
     long (__stdcall* create)(const void*, void**, void*);  // DirectSoundCreate, through its thunk
 };
-// The thunks' jumps read these three by offset (sound_rest.cpp).
-static_assert(offsetof(Callees, halt) == 8 && offsetof(Callees, resume) == 12 && offsetof(Callees, music_playing) == 16,
+// The thunks' jumps read these three by offset (sound_rest.cpp): the i686
+// operands are the literal 8, 12, 16 of a table of 4-byte pointers; the
+// x86_64 operands are offsetof itself, so the assert ties the i686 literals
+// to the layout at any pointer width.
+static_assert(offsetof(Callees, halt) == 2 * sizeof(void*) && offsetof(Callees, resume) == 3 * sizeof(void*) &&
+                  offsetof(Callees, music_playing) == 4 * sizeof(void*),
               "the thunks' jmp operands");
 extern const Callees kOriginals;
 
