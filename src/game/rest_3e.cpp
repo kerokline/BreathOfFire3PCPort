@@ -18,7 +18,10 @@
 // One divergence rides on EffectKind5E_DrawPanel, its own switch
 // (DockLegend, DIV-0137 of docs/button-unification-round.md): the dock's
 // legend shows the buttons the Config has on its three tests now (section
-// "the dock's legend" below).
+// "the dock's legend" below). A second on EffectKind5E_DrawList (DIV-0198):
+// the list's first line follows the release the mapped image's list box is
+// in - the Western PSX twin's y + 4 over the West's own box, Japan's y + 0x14
+// over Japan's.
 #include "game/rest_3e.h"
 
 #include <algorithm>
@@ -27,6 +30,7 @@
 #include <cstring>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "bof3/symbols.gen.h"
 #include "game/labels.h"
@@ -37,6 +41,7 @@
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
+#include "hook/exe_image.h"
 #include "hook/log.h"
 #include "input/sigma.h"
 
@@ -1166,16 +1171,41 @@ extern "C" void __cdecl EffectKind5E_DrawMenu(void) {
     SH_CALL(Sprite_QueueOverlay)();
 }
 
+namespace {
+// DIVERGENCE DIV-0198 (issue #178): the list's first line below the box's y.
+// Japan's code (the PC's, and PSP-EU's twin) adds 0x14 over a list box of y
+// 80 / h 144; the Western PSX twin (psx-us SCENA10.EMI#0 0x801F7B50, `addiu
+// $s3, $v1, 4`) adds 4 over the West's own box of y 96 / h 128 - both put
+// the first part at y 100, the hand's row 0 (0x654894). A Western PSX
+// disc-built image carries the West's box (DIV-0195's family, the map run
+// 0x654876..0x654898 from the disc), so it takes the West's 4; the PC's
+// .data, a Japanese or a PSP image keep 0x14. Read once, logged once.
+unsigned ListFirstLine() {
+    static int cached = -1;
+    if (cached < 0) {
+        const char* const build = bof3::ExeImage_MappedBuild();
+        std::string error;
+        const auto release = build == nullptr ? bof3x::input::sigma::Release::kJapan
+                                              : bof3x::input::sigma::ReleaseOfSources(std::vector<std::string>{build}, error);
+        if (!error.empty()) bof3::Fatal("DIV-0198 EffectKind5E_DrawList: the mapped image's build: %s", error.c_str());
+        cached = release == bof3x::input::sigma::Release::kWest ? 4 : 0x14;
+        bof3::Log("DIV-0198    EffectKind5E_DrawList: the parts list's first line at the box's y + %d (%s)", cached,
+                  build == nullptr ? "the running .data is BOF3.exe's" : build);
+    }
+    return static_cast<unsigned>(cached);
+}
+}  // namespace
+
 // original 0x47FAF0: the list - its box (Menu_DrawBox, flags 0, the style);
 // for each item 0x4E..0x55 a line 0xF lower from (x + 8, y + 0x14): its name
 // (Item_NamePtr(0, item)) in colour 0 when held, else 7 (Inventory_Count(0,
 // item, 0)'s low byte), its length Text_CharCount; the count (that byte)
 // through the format 0x653EC0 at (x + 8 + 0x5A, the line + 3) in the same
-// colour (Text_DrawFont8).
+// colour (Text_DrawFont8). The 0x14 is ListFirstLine() above (DIV-0198).
 extern "C" void __cdecl EffectKind5E_DrawList(void) {
     SH_CALL(Menu_DrawBox)(W(::bof3::Img(at::kListBox.v)), W(::bof3::Img(at::kListBox.v) + 2), W(::bof3::Img(at::kListBox.v) + 4), W(::bof3::Img(at::kListBox.v) + 6), 0, static_cast<unsigned char>(Config_WindowColour));
     const U x = UL(::bof3::Img(at::kListBox.v)) + 8;
-    U line = W(::bof3::Img(at::kListBox.v) + 2) + 0x14;
+    U line = W(::bof3::Img(at::kListBox.v) + 2) + ListFirstLine();
     for (unsigned item = at::kFirstItem; item < at::kFirstItem + at::kItems; ++item, line += 0xF) {
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, item);
         const auto count = static_cast<unsigned char>(SH_CALL(Inventory_Count)(0, item, 0));

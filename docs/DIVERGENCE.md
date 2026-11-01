@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 197 entries, DIV-0001..0197, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 198 entries, DIV-0001..0198, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -14168,5 +14168,65 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** costly - the original path is Capcom's function (a detour name only); ours would have to grow its null read, a crash
 - **Toward:** none - the console reads a low-RAM byte at address 3 (not measured), no release has a passage to restore
+- **Languages:** any
+- **State:** active
+
+### The dock's parts list starts its lines where the image's release puts them
+
+- **ID:** DIV-0198
+- **Date:** 2026-11-01
+- **Subsystem:** the dock's parts menu (area 128): `EffectKind5E_DrawList`
+  `0x47FAF0` (ours, `src/game/rest_3e.cpp`, `ListFirstLine`); the list box
+  `Rest3e_Windows+0x20` (`0x654878`) and the hand word `Rest3e_Hand`
+  (`0x654894`). D400 ([`known-defects.md`](known-defects.md)); issue #178
+  (ScrubOasis, a PSX-US + PSP-EU disc-built install); DIV-0195's family;
+  [`rest_3e.md`](rest_3e.md) section 12.
+- **Tier:** Sensible - the release the player owns, as DIV-0195.
+- **Original behaviour:** the list's eight lines start at the list box's
+  `y + 0x14` and the hand at the hand word's y plus 15 per pick. The PC's
+  data is Japan's: list box (96, 80, 128, 144), hand (100, 100), so the
+  first part is at y 100 under the hand, with a 20 px strip above it. The
+  Western PSX release changed both halves: its `SCENA10.EMI#0` holds a list
+  box of (96, 96, 128, 128) and the same hand, and its twin of this function
+  (`0x801F7AD4` on psx-us) adds **4**, not 0x14 (`0x801F7B50 addiu $s3,
+  $v1, 4`; `x + 8` and `x + 0x62` as the PC's) - the first part again at
+  y 100, under the hand, and the box 16 px lower and shorter. PSP-EU's disc
+  and twin are Japan's (box (96, 80, 128, 144), `0x1F7B50 addiu $s3, $v1,
+  0x14`). Since DIV-0195 a Western PSX disc-built image carries the West's
+  box (the map run `0x654876..0x654898` from the disc; measured 2026-11-01
+  on an image built from the US disc with the PSP disc after it), and the
+  PC's code added Japan's 0x14 over it: the first part at y 116, the hand 16
+  px above it on the box's empty strip - issue #178's "hand on the empty
+  row". `exe_maps/psx-us.tsv` counts that run `agree 138` of 138, which the
+  two differing words show to be wrong; not chased.
+- **New behaviour:** the first line's offset is the twin's for the release
+  the mapped image's list box is in: 4 when `ExeImage_MappedBuild()`'s
+  build is a Western PSX disc (`sigma::ReleaseOfSources` `kWest` - psx-us,
+  psx-eu-en, psx-fr, psx-de), else 0x14 (the PC's own `.data`, a Japanese or
+  a PSP image). Read once, one log line `DIV-0198`. The rows' 15 px step,
+  the names' and counts' x, the colours and the hand are unchanged.
+- **Rationale:** the West's box with Japan's margin is a layout no release
+  had, and the hand points at the wrong line. The West's own pairing is the
+  US PlayStation's screen, read off its code; Japan's pairing is the PC's.
+- **Also in the PSX version?** Each release's own pairing (above). The
+  Western twins other than the US one were not read: the EU-en, FR and DE
+  discs' list box words and `+4` are inferred from DIV-0195's finding that
+  all four hold their own layout here, and owed a read.
+- **Verification:** the image built here from the US and PSP-EU discs
+  (`importer.py build`, psx-us first) holds the words above at `0x654878`
+  and `0x654894` (`base/exe/data.toml`: the run `map
+  SCENARIO/SCENA10.EMI#0@0x801FE7EA`); the US twin read with capstone from
+  the same disc's `SCENA10.EMI#0`; the PSP-EU twin and words from its
+  `SCENA10.EMI#0`. The hosted fuzz (`BOF3X_SHADOW=rest_3e`) runs with the
+  PC's `.data` and no mapped image, so `ListFirstLine()` is 0x14 there and
+  the clone compares equal. **Owed:** the owner's `shipPartsMenu` recording
+  on a Western-disc-built install (the hand on `Part A`, the eight rows in
+  the box) and on the PC (unchanged).
+- **Reversible?** `BOF3X_ORIGINAL=EffectKind5E_DrawList` leaves Capcom's
+  function, Japan's 0x14 with it.
+- **Switch:** EffectKind5E_DrawList
+- **Default:** on
+- **Player:** costly - the original path is Capcom's function (a detour name only); ours would have to grow Japan's margin over the West's box
+- **Toward:** psx - the Western PlayStation's own pairing of box and margin, on its own image
 - **Languages:** any
 - **State:** active
