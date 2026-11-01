@@ -63,6 +63,37 @@ the route's: a cell the board's 0x51 hook (`Area179_CellHook`, cell `(0x3F, 0xE)
 pose 1) does not take, beside a door cell, is the guess. `tools/crash_report.py
 <dmp> --read 0x644628 0x44` on the reporter's dump would show the descriptor.
 
+**Follow-up, 2026-11-01 (the owner's session).** The reporter, on the fixed
+build: "reading the board just doesn't do anything". The owner's builds had
+crashed at the plaque in the village centre, not at the board. Measured:
+
+- **The cell grid.** `AreaMap_Bytes` is the `0xC8000` block (`AreaMap_Header`)
+  at its `+0x14` word x 4 (`0x7D30`), 80 x 100. In area 185 the one `0x51`
+  is `(0x3F, 0xE)`, the board, `Area179_CellHook`'s cell; the one `0x50` is
+  `(0x30, 0xA)`, 15 cells away. Areas 176..184 have the same two cells; area
+  175 has the `0x51` alone. The patch lists hold texture records only (kind
+  0), none that writes a cell.
+- **The installs agree.** Grid hashes equal for areas 175..185 on the PC
+  install (`game\`), the US PSX + PSP-EU build (`D:\bof3x-runs\i130`) and
+  `build-psp_only`; every tagged chunk of areas 176..185 equal between the
+  first two (area 175 differs in `0xC2000`, the enemy table, 8 bytes). No
+  build moves either cell.
+- **The owner's crash is the plaque.** `build-psp_only/bof3x.crash-29072-0.dmp`
+  (pre-fix): `ObjTrio` 0 at `(0x30, 0xB)`, `+8` (facing) 1, so the cell
+  ahead is `(0x30, 0xA)`, the `0x50`.
+- **The console does nothing there.** The owner, Mednafen, the PlayStation
+  release: the talk button at that plaque gives no message and no action.
+  DIV-0197's "no passage ahead" is the console's behaviour.
+- **The board answers from one side.** `Area179_CellHook` takes `(0x3F,
+  0xE)` with facing 1 only: from `(0x3F, 0xF)`, below it. `(0x3E, 0xE)`,
+  beside it, is floor; from there the hook refuses and, with no 0x50 cell
+  in reach, the press does nothing. That is Capcom's test on every build.
+
+So the reporter pressed either the plaque (which fits both reports: the
+crash, then nothing) or the board from the side (which fits the second
+alone). His `bof3x.log` settles it: the `DIV-0197` line for area `0xB9`
+appears only for the plaque. Asked on the issue.
+
 ## 2. #178 - the dock's parts menu: two unrelated misses
 
 The owner's reading of the capture ("the parts loaded one row too low, the circle

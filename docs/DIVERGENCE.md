@@ -4887,6 +4887,22 @@ designed in rather than bolted on.
      of the label's pen width by a letter when it would collide (the
      owner's word), the count's word following. Whether the French
      PlayStation overlaps the same way was not read.
+     **The deaths page's cause column** (amended 2026-11-01, issue #177,
+     ScrubOasis's capture: `Due to food shortage` past the board's right
+     edge): `CommuRank_DrawListA` `0x460730` draws each row's cause, message
+     `0x39` / `0x3A`, at `x + 0x70` (game x 152 with the list at `0x28`).
+     Read off each disc's `COMMU05.EMI` twin `0x801D1048` (capstone, the
+     `addiu` offsets from the list's x): the JP disc `0x58` heading, `0x70`
+     cause, as the PC; the US, Europe, France and Germany discs `0x48` cause
+     (the US, Europe and France heading `0x28`; Germany's heading in other
+     registers). So the West moved the column 40 px left, and the US line
+     ends near game x 232 on the board. Now: a Latin language (`Lang_Latin`,
+     DIV-0056 - en, fr, de) draws the cause at `x + 0x48`; Japanese, Chinese
+     and the original keep `x + 0x70`. The flag is set in `Rest4E_Inject`
+     after the self-test, so the `rest_4e` fuzz compares Capcom's column; one
+     log line, `DIV-0064    the village's deaths page`, says it is on. The
+     heading is not moved (it is centred already, above). **Owed the owner's
+     eye:** the deaths page on an English install (no route reaches it yet).
   *Verification:* `loc_build.py all` on the US disc reports `gene tabs 3,
   village lists 20, village words 5`; `rest_4b`, `rest_4c` and `rest_4e`
   self-tests 0 mismatches (the fuzz runs before any overlay loads, so every
@@ -14152,14 +14168,25 @@ designed in rather than bolted on.
   passage to find, and "none" is the answer the original's test already
   handles.
 - **Also in the PSX version?** The unchecked walk is Capcom's; the null
-  read cannot fault there (low RAM; the byte not measured). Whether a run
-  the console reads off address 0 ever matches a cell is not known.
+  read cannot fault there (low RAM; the byte not measured). **Measured
+  2026-11-01 (the owner, Mednafen, the PlayStation release):** the talk
+  button facing area 185's one 0x50 cell - the small plaque at cell
+  `(0x30, 0xA)`, pressed from `(0x30, 0xB)` facing 1 - does nothing: no
+  message, no action. So the console's walk finds no run there, and "no
+  passage ahead" is its behaviour. That is the cell the owner's pre-fix
+  crash had (`build-psp_only`'s dump: the leader at `(0x30, 0xB)`, `+8`
+  1). The board is a different cell: its `0x51` at `(0x3F, 0xE)`, taken by
+  `Area179_CellHook` with facing 1 only; no 0x50 cell is in reach of it.
+  The grid (the `0xC8000` block's bytes at index `+0x14` x 4) is
+  identical in all three installs read (the PC, a US PSX + PSP-EU disc
+  build, PSP-only) for areas 175..185; area 175 has no 0x50 cell.
 - **Verification:** the start-up fuzz (`BOF3X_SHADOW=event_ops`,
   `event_ops_fuzz.cpp`'s `SeedPassages`) seeds area 0's descriptor with a
   list of its own every round - Capcom's clone would fault on a null one -
   so it compares the unchanged path alone. **Owed:** the null path live -
-  the reporter's spot (area 185's board on a disc-built install, the talk
-  button) before and after; and the same press on the PC install, where
+  the reporter's spot (area 185, the talk button; which cell is open - the
+  reporter calls it the board, the data says the plaque, see above) before
+  and after; and the same press on the PC install, where
   the reading above says Capcom's `0x530600` faults on the same
   `entry[3]` read (`--original Area_PassageAhead`).
 - **Reversible?** `BOF3X_ORIGINAL=Area_PassageAhead` leaves Capcom's
@@ -14167,7 +14194,7 @@ designed in rather than bolted on.
 - **Switch:** Area_PassageAhead
 - **Default:** on
 - **Player:** costly - the original path is Capcom's function (a detour name only); ours would have to grow its null read, a crash
-- **Toward:** none - the console reads a low-RAM byte at address 3 (not measured), no release has a passage to restore
+- **Toward:** none - the console reads a low-RAM byte at address 3 and does nothing at that cell (Mednafen, 2026-11-01), no release has a passage to restore
 - **Languages:** any
 - **State:** active
 

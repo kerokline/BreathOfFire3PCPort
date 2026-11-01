@@ -25,6 +25,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
 #include "game/labels.h"
+#include "game/lang_layout.h"
 #include "game/rest_4e_callees.h"
 #include "game/rdata_consts.h"
 #include "game/text_advance.h"
@@ -1268,20 +1269,33 @@ void ListHeading(int x, int y, unsigned icon, unsigned title, U count) {
         SH_CALL(Text_DrawAt)(x + 0x84, y + 0x14, 0, 1, At(::bof3::Img(kOneGlyph.v)));
 }
 
+namespace {
+// DIVERGENCE DIV-0064 group 14 (amended 2026-11-01, issue #177): set by
+// Rest4E_Inject after the self-test, for a Latin language (DIV-0056).
+bool g_west_cause_column = false;
+}  // namespace
+
 // original 0x460730: the first list's page `page` (its low byte) at (x, y):
 // its heading (icon 1, message 0x38, the count 0x9039A0), then up to seven
 // rows from 0x9039C0 + 7 page, each the name of the entry its low 7 bits name
 // at (x + 0x14, y + 0x2C + 16 i) and message 0x3A (bit 7 set) or 0x39 at (x +
 // 0x70, ...); the count read again each row.
+//
+// DIV-0064 group 14 (amended 2026-11-01): x + 0x70 is the Japanese column
+// (COMMU05.EMI's twin 0x801D1048 on the JP disc, as the PC); the four Western
+// discs draw the message at x + 0x48, where `Due to food shortage` ends on
+// the board - from x + 0x70 it ran off its right edge. A Latin language takes
+// the West's column; Japanese, Chinese and the original keep 0x70.
 extern "C" void __cdecl CommuRank_DrawListA(int x, int y, unsigned page) {
     ListHeading(x, y, 1, 0x38, ::bof3::Img(Rest4a_RemovedCount_addr));
+    const int cause_x = x + (g_west_cause_column ? 0x48 : 0x70);
     const unsigned base = 7 * (page & 0xFF);
     for (unsigned i = 0; i < 7; ++i) {
         if (static_cast<int>(base + i) >= Rest4a_RemovedCount) break;
         const int row = 16 * static_cast<int>(i) + y + 0x2C;
         SH_CALL(Text_DrawAt)(x + 0x14, row, 0, 5, At(::bof3::Img(kEntryNames.v) + 5 * (B(::bof3::Img(kListAEntries.v) + base + i) & 0x7F)));
         const unsigned id = B(::bof3::Img(kListAEntries.v) + base + i) & 0x80 ? 0x3A : 0x39;
-        SH_CALL(Text_DrawAt)(x + 0x70, row, 0, 0xFF, Message(id));
+        SH_CALL(Text_DrawAt)(cause_x, row, 0, 0xFF, Message(id));
     }
 }
 
@@ -1394,6 +1408,12 @@ extern "C" void __cdecl CommuRank_DrawTile(int x, int y, unsigned u, unsigned v,
 
 void Rest4E_Inject() {
     if (bof3::WantsShadow("rest_4e")) rest_4e::SelfTest();
+    // DIVERGENCE DIV-0064 group 14 (amended 2026-11-01): after the self-test,
+    // which compares Capcom's column; a Latin language only (DIV-0056).
+    if (Lang_Latin()) {
+        g_west_cause_column = true;
+        bof3::Log("DIV-0064    the village's deaths page: the cause at x + 0x48, the Western discs' column");
+    }
     BOF3_INJECT(CommuEntry_DrawPanel);
     BOF3_INJECT(CommuEntry_DrawPanelFrame);
     BOF3_INJECT(CommuEntry_DrawBar);
