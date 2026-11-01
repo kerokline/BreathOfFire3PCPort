@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 196 entries, DIV-0001..0196, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 197 entries, DIV-0001..0197, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -14101,3 +14101,64 @@ designed in rather than bolted on.
   the sheets' layout again.
   **Seen by the owner on the captures, 2026-10-31 evening: "that'll work -
   it all fits in the row, even when selected".**
+
+### An area with no passage list answers "no passage ahead", instead of reading address 3
+
+- **ID:** DIV-0197
+- **Date:** 2026-11-01
+- **Subsystem:** field - `Area_PassageAhead` `0x530600` (ours,
+  `src/game/event_ops.cpp`), reached from `Field_LeaderTalkTest` on the
+  talk button when no object is faced, no 0x51 cell hook takes it, and a
+  0x50 / 0x52 / 0x53 / 0x55 cell is around. D399
+  ([`known-defects.md`](known-defects.md)); issue #177 (ScrubOasis, a
+  PSX + PSP English disc-built install, the faerie village's board,
+  area 185); [`event-ops.md`](event-ops.md) section 5.
+- **Tier:** Intent - a port repair.
+- **Original behaviour:** the function walks the descriptor's `+0x2C` list
+  of 8-byte passage runs from index `+0x31` down to 0, reading each run's
+  count at `entry[3]`, with no test of the list pointer. 105 of the 200
+  descriptors hold no list at `+0x2C` - `recipes/exe-layout.tsv` lists no
+  pointer word there for them, areas 175..185 (the faerie village) among
+  them - and for those the first read is of address `0x00000003`. Seen:
+  issue #177's report on `main` `7bd917d`, `CRASH 0: exception 0xC0000005
+  at bof3x.dll+0x1B7486`, reading `0x00000003`, `eax` 0 (the list),
+  `ecx 0x644628` (area 185's descriptor, `Area_Descriptors[0xB9]` in
+  `exe-layout.tsv`), `esi` 0 (`+0x31`), area `0x00B9`; the stack
+  `Field_LeaderTalkTest` <- `Field_LeaderWalk` <- `Field_LeaderControl`
+  <- `Field_MembersFrame` <- `Field_Frame`. A layout-identical build of
+  that commit (llvm-mingw 20260616, the CI toolchain) names the address
+  `Area_PassageAhead+0x56`, the bytes at eip `0F B6 78 03` (`movzx edi,
+  byte [eax+3]`) the report's own.
+- **New behaviour:** a null `+0x2C` answers null - no passage ahead - and
+  `Field_LeaderTalkTest` goes on as the port already has it (it tests the
+  answer for null, [`event-ops.md`](event-ops.md) section 5: the porting
+  house's own fix, kept). One log line, `DIV-0197`, names the area, once
+  per area. A descriptor with a list takes the original's walk unchanged.
+- **Rationale:** a crash to the desktop on the talk button. The same read
+  on the PlayStation (`FUN_801B6C4C`) takes a byte of low RAM at address 3
+  and finds a run there or not; the PC's protected page 0 turned that into
+  a fault, latent in Capcom's port for every area without a list. The
+  PC's own data has no list for area 185 either (the layout table), so
+  the port crashes the same way from a PC install; the disc-built install
+  only brought a player to the cell first. With no list there is no
+  passage to find, and "none" is the answer the original's test already
+  handles.
+- **Also in the PSX version?** The unchecked walk is Capcom's; the null
+  read cannot fault there (low RAM; the byte not measured). Whether a run
+  the console reads off address 0 ever matches a cell is not known.
+- **Verification:** the start-up fuzz (`BOF3X_SHADOW=event_ops`,
+  `event_ops_fuzz.cpp`'s `SeedPassages`) seeds area 0's descriptor with a
+  list of its own every round - Capcom's clone would fault on a null one -
+  so it compares the unchanged path alone. **Owed:** the null path live -
+  the reporter's spot (area 185's board on a disc-built install, the talk
+  button) before and after; and the same press on the PC install, where
+  the reading above says Capcom's `0x530600` faults on the same
+  `entry[3]` read (`--original Area_PassageAhead`).
+- **Reversible?** `BOF3X_ORIGINAL=Area_PassageAhead` leaves Capcom's
+  function, its read with it.
+- **Switch:** Area_PassageAhead
+- **Default:** on
+- **Player:** costly - the original path is Capcom's function (a detour name only); ours would have to grow its null read, a crash
+- **Toward:** none - the console reads a low-RAM byte at address 3 (not measured), no release has a passage to restore
+- **Languages:** any
+- **State:** active
