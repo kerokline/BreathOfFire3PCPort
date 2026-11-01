@@ -14221,7 +14221,14 @@ designed in rather than bolted on.
   PC's `.data` and no mapped image, so `ListFirstLine()` is 0x14 there and
   the clone compares equal. **Owed:** the owner's `shipPartsMenu` recording
   on a Western-disc-built install (the hand on `Part A`, the eight rows in
-  the box) and on the PC (unchanged).
+  the box) and on the PC (unchanged). **Seen 2026-11-01** on the owner's
+  disc-only installs (`shipPartsMenu`, the DIV-0199 build): US disc alone
+  `y + 4 (psx-us)`, the hand on `Part A`, the owner's eye: correct; PSP-EU
+  disc alone `y + 20 (psp-eu)`, the same rows at the same y under Japan's
+  taller box (its top at y 80, the US box's at 96, both ending at 224).
+  **The owner's call, 2026-11-01:** each install keeps the box of the disc
+  it is built from; Japan's pairing - the PC's, the Japanese disc's and the
+  PSP's - is the default, the Western PSX discs' the exception.
 - **Reversible?** `BOF3X_ORIGINAL=EffectKind5E_DrawList` leaves Capcom's
   function, Japan's 0x14 with it.
 - **Switch:** EffectKind5E_DrawList
