@@ -105,10 +105,15 @@ inline constexpr std::uint32_t kBase = 0x400000;
 // VirtualAlloc(nullptr), our DLL at 0x10000000), so a value that trips this is
 // a defect of the design to be named, not a number to truncate.
 //
-// Two signatures, not one with defaulted arguments: a __builtin_FUNCTION()
-// default puts the caller's name in .rdata even where the branch that reads
-// it is compiled out, and the 32-bit build must stay byte for byte what it
-// was (tools/codegen_same.py, which compares .rdata too).
+// Two spellings, not one function with defaulted arguments: a
+// __builtin_FUNCTION() default puts the caller's name in .rdata even where
+// the branch that reads it is compiled out, and on i686 even an always-inline
+// function of the cast moves blocks (host.cpp DetectHost: measured 7
+// disassembly lines against the cast's 0), while the 32-bit build must stay
+// byte for byte what it was (tools/codegen_same.py, which compares code and
+// .rdata; the coordinator's call, 2026-11-01). So on i686 Low32 is the cast
+// itself, a macro: write it unqualified, Low32(p), never ::bof3::Low32(p) and
+// never as a function's address; p is evaluated once.
 #if UINTPTR_MAX > 0xFFFFFFFFu
 [[gnu::always_inline]] inline std::uint32_t Low32(const void* p, const char* file = __builtin_FILE(),
                                                   unsigned line = __builtin_LINE(),
@@ -120,9 +125,7 @@ inline constexpr std::uint32_t kBase = 0x400000;
     return static_cast<std::uint32_t>(v);
 }
 #else
-[[gnu::always_inline]] inline std::uint32_t Low32(const void* p) {
-    return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p));
-}
+#define Low32(p) (static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)))
 #endif
 
 // A heap block a word of the game may hold (docs/x64-build-design.md 5: the
