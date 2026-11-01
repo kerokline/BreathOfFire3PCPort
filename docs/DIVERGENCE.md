@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 198 entries, DIV-0001..0198, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 199 entries, DIV-0001..0199, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -14228,5 +14228,74 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** costly - the original path is Capcom's function (a detour name only); ours would have to grow Japan's margin over the West's box
 - **Toward:** psx - the Western PlayStation's own pairing of box and margin, on its own image
+- **Languages:** any
+- **State:** active
+
+### A screen-rectangle textured quad samples the texels the PlayStation draws, and never the one past its far edge
+
+- **ID:** DIV-0199
+- **Date:** 2026-11-01
+- **Subsystem:** render - `D3d_DrawPolyFT4` `0x5A0C40` and `D3d_DrawPolyGT4`
+  `0x5A14C0` (ours, `src/game/d3d_draw.cpp`), the rule in
+  `src/game/quad_far_edge.h`. D198 ([`known-defects.md`](known-defects.md));
+  issue #179 (ScrubOasis: the line under the ship's ENGINE gauge, the crane
+  button's border); DIV-0010's family (the same edge on the `SPRT` path).
+- **Tier:** Intent - a port repair.
+- **Original behaviour:** both handlers take every corner's texture
+  coordinate from `D3d_TexCoords` `0x7CA9E0`, `tc[i] = (i + 0.512) / 256`,
+  the centre of texel `i`. The PlayStation rasteriser never draws a
+  polygon's right column or bottom row - game pixel `g` of a side `W` long
+  takes texel `floor(t0 + (t1 - t0) g / W)` - so a builder's far coordinate
+  (`u + w`) is exclusive. The port's far corner sits half a texel past the
+  last texel the console draws, and above scale 1 the last screen pixels
+  sample the next texel in the page: under the ENGINE gauge (`Area104_DrawGauge`,
+  v `0xD8..0xE0`) texel row `0xE0`, the top of the next glyphs; the fishing
+  menu's frame lines (D198); the crane button's right and bottom border. The
+  near edge is half a texel late as well, so at scale 2 and up every texel
+  boundary inside a quad is half a game pixel off the console's.
+- **New behaviour:** for a quad that is a rectangle on screen along the axis
+  a coordinate runs on (the menus' and HUD's quads), that coordinate's four
+  values are rewritten from the PlayStation's run of texels - `[t0, t1)`
+  running up, `[t1 + 1, t0 + 1)` running down (a mirrored quad) - and the
+  screen pixels `n` between the two sides, by the draw's filter:
+  point (`BOF3X_FILTER=point`), pixel `i` samples `s + (e - s)(i + 0.5) / n`
+  - the console's texel at every screen pixel of a quad drawn 1:1 or
+  mirrored, at every scale; bilinear (the default), the first pixel samples
+  the first texel's centre and the last pixel the last texel's centre -
+  DIV-0010's rule with the quad's own `n`, so a stretched quad (the gauge:
+  4 texels over 16 game pixels) does not blend in the texel past its run
+  either. Any other quad - a model's polygon, a rotated or sheared one -
+  keeps the original's coordinates, and so does a coordinate the same at all
+  four corners. One log line `DIV-0199` at start-up.
+- **Rationale:** a bug of the port's coordinate table, not a choice: the
+  data is the console's byte for byte, and the console never shows the
+  texel. Models are left alone on purpose: the port's uniform `+0.512`
+  keeps two polygons that share an edge continuous across it, and moving one
+  side's far corner without its neighbour's near one would open a seam
+  along every shared edge of a mesh.
+- **Also in the PSX version?** No - the console's rasteriser is the
+  reference this follows.
+- **Verification:** `tools/probes/quad_edge_probe.cpp` draws random quads
+  through Direct3D 11 (WARP) the way the backend does (Direct3D 6 pixel
+  centres, a 256 x 256 page, the backend's point and linear samplers) with
+  the original's coordinates and with this rule, over a page holding the
+  PlayStation's run of texels as art and a marker colour everywhere else.
+  1,000 quads of each kind (1:1, stretched or shrunk, an inclusive builder's
+  `u + w - 1`, mirrored), scales 1..4, both filters, 2026-11-01: the
+  original's coordinates sample the marker in 8,032,586 pixels, ours in
+  none; under point, ours matches the PlayStation's texel at every pixel of
+  every 1:1 and mirrored quad at every scale (the original's misses
+  341,331 pixels at scale 2 for the 1:1 kind alone). Stretched and
+  inclusive quads keep a texel change inside a game pixel where the console
+  steps on game pixels - inside the run, never past it. Sheared quads: the
+  same pixels both ways, as designed.
+- **Reversible?** `BOF3X_ORIGINAL=QuadFarEdge` (and a player's
+  `BOF3X_OFF=QuadFarEdge`, the ini's `off=`) leaves the original's
+  coordinates; `BOF3X_ORIGINAL=D3d_DrawPolyFT4,D3d_DrawPolyGT4` runs
+  Capcom's handlers.
+- **Switch:** QuadFarEdge
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=QuadFarEdge (ini off=)
+- **Toward:** psx - the PlayStation's rasteriser never samples a quad's far coordinate
 - **Languages:** any
 - **State:** active

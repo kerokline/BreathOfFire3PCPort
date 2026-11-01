@@ -4953,7 +4953,19 @@ is far enough out ([`msgbox.md`](msgbox.md) §9).
 **Status:** fixed by DIV-0070 (a space commits nothing); recurs under
 `BOF3X_ORIGINAL=MsgBox_EffectDraw`. Not yet seen fixed in game.
 
-## D198 — A textured quad's far edge samples the texel past it above scale 1: the fishing menu's stray frame lines
+## D198 — A textured quad's far edge samples the texel past it above scale 1: the fishing menu's stray frame lines (the port's; fixed by DIV-0199, 2026-11-01)
+
+**Fixed 2026-11-01 by DIV-0199** (issue #179, which found the same edge under
+the ship's ENGINE gauge and on the crane button): a screen-rectangle quad's
+texture coordinates are rewritten from the PlayStation's run of texels
+(`src/game/quad_far_edge.h`); models and sheared quads keep the original's.
+Measured: `tools/probes/quad_edge_probe.cpp` (random quads through Direct3D
+11, scales 1..4, both filters: 8,032,586 marker pixels with the original's
+coordinates, 0 with ours), and the two routes on and off - `campingFishing`
+(bilinear) column 319 of `fishing_equip`, the line below, olive in the
+original and water in ours; `overheatAndDeepSea` (point) the gauge's
+red/blue line gone, every 3D frame of the route identical. What follows is
+the defect as found.
 
 **Seen:** owner, 2026-09-30 (`analysis/shots/owner_catalogue/fishing_equip_menu.webp`),
 English, the wide picture at scale 4: a thin vertical line right of the
@@ -5001,7 +5013,7 @@ the same frame with `BOF3X_LANG=original` and with `wide=0` (the line
 should stay, it is neither language nor width), and `BOF3X_SCALE=1` (the
 line should go).
 
-**Status:** Capcom's (the port's), by reading; seen in ours at scale 4.
+**Status:** Capcom's (the port's), by reading; seen in ours at scale 4. Fixed by DIV-0199.
 
 ## D199 — The world map's nearer cells paint over the party's shadow (the original's, PlayStation too; fixed behind a switch, DIV-0071)
 
