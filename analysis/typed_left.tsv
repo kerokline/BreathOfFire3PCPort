@@ -24054,6 +24054,7 @@ src/game/rest_4d_fuzz.cpp	SlotEntryAbandoned	global	B	Rest4c_Step_addr	0	0x939a3
 src/game/rest_4d_fuzz.cpp	SlotEntryAbandoned	global	B	Rest4c_Step_addr	1	0x939a3f	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4c_Step_addr - -)	c4-tc
 src/game/rest_4d_fuzz.cpp	MemberEntryAbandoned	global	B	Rest4c_Step_addr	0	0x939a3f	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4c_Step_addr - -)	c4-tc
 src/game/rest_4d_fuzz.cpp	MemberEntryAbandoned	global	B	Rest4c_Step_addr	1	0x939a3f	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Rest4c_Step_addr - -)	c4-tc
+src/game/rest_4e.cpp	void	global	At	kEntryNames	0	0x9048f0	-	no-entry	kEntryNames 0x9048f0 - (SlotName, DIV-0200: the two lists' sites moved into it)	b0
 src/game/rest_4e.cpp	Put	global	At	kScriptPool	0	0x803580	-	no-entry	kScriptPool 0x803580 -	b0
 src/game/rest_4e.cpp	Put	global	W	kScriptPool	0	0x803580	-	no-entry	kScriptPool 0x803580 -	b0
 src/game/rest_4e.cpp	Put	record	L	table + 4 * index	0	-	-	no-struct	L(table + 4 * index): a local, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -24155,11 +24156,9 @@ src/game/rest_4e.cpp	CommuRank_Show	global	At	kTextBuffer	1	0x904ba0	-	no-entry	
 src/game/rest_4e.cpp	CommuRank_Close	global	At	kTextBuffer	0	0x904ba0	-	no-entry	kTextBuffer 0x904ba0 -	b0
 src/game/rest_4e.cpp	CommuRank_Close	global	At	kTextBuffer	1	0x904ba0	-	no-entry	kTextBuffer 0x904ba0 -	b0
 src/game/rest_4e.cpp	CommuRank_Close	global	At	kOneGlyph	0	0x669f08	-	no-entry	kOneGlyph 0x669f08 -	b0
-src/game/rest_4e.cpp	CommuRank_DrawListA	global	At	kEntryNames	0	0x9048f0	-	no-entry	kEntryNames 0x9048f0 -	b0
 src/game/rest_4e.cpp	CommuRank_DrawListA	global	B	kListAEntries	0	0x9039c0	-	no-entry	kListAEntries 0x9039c0 -	b0
 src/game/rest_4e.cpp	CommuRank_DrawListA	global	B	kListAEntries	1	0x9039c0	-	no-entry	kListAEntries 0x9039c0 -	b0
 src/game/rest_4e.cpp	CommuRank_DrawListB	global	B	kListBEntries	0	0x904f00	-	no-entry	kListBEntries 0x904f00 -	b0
-src/game/rest_4e.cpp	CommuRank_DrawListB	global	At	kEntryNames	0	0x9048f0	-	no-entry	kEntryNames 0x9048f0 -	b0
 src/game/rest_4e.cpp	CommuRank_DrawListC	global	At	kListCPairs	0	0x904ca0	-	no-entry	kListCPairs 0x904ca0 -	b0
 src/game/rest_4e.cpp	CommuRank_DrawListC	global	W	kPairMessages	0	0x653180	-	no-entry	kPairMessages 0x653180 -	b0
 src/game/rest_4e.cpp	CommuRank_DrawListC	global	B	kTextRecords	0	0x904ce0	-	untyped-entry	kTextRecords 0x904ce0 Text_Records	b0

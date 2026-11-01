@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 193;
+inline constexpr std::size_t kSwitchCount = 195;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -266,9 +266,11 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "ConfigLabelJapanese", 0, 19},   // DIV-0196
     {SwitchForm::Name, "Area_PassageAhead", 0, 17},   // DIV-0197
     {SwitchForm::Name, "EffectKind5E_DrawList", 0, 21},   // DIV-0198
+    {SwitchForm::Name, "QuadFarEdge", 0, 11},   // DIV-0199
+    {SwitchForm::Name, "FaerieNameEnd", 0, 13},   // DIV-0200
 };
 
-inline constexpr std::size_t kEntryCount = 198;
+inline constexpr std::size_t kEntryCount = 200;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -666,6 +668,10 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Intent, State::Active, 0, 191, 1, true, Player::Costly, 0, kLangAny},
     {198, "The dock's parts list starts its lines where the image's release puts them",
      Tier::Sensible, State::Active, 0, 192, 1, true, Player::Costly, kTowardPsx, kLangAny},
+    {199, "A screen-rectangle textured quad samples the texels the PlayStation draws, and never the one past its far edge",
+     Tier::Intent, State::Active, 0, 193, 1, true, Player::Yes, kTowardPsx, kLangAny},
+    {200, "A faerie's name drawn from its five-byte slot ends at the slot's last whole glyph",
+     Tier::Intent, State::Active, 0, 194, 1, true, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.

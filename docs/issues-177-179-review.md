@@ -144,7 +144,7 @@ alone was here), inferred from DIV-0195's all-four finding.
 install (the hand on `Part A`, the eight rows in the box, the glyph centred) and on
 the PC (unchanged). The `shipPartsMenu.DAT` save the owner placed is the one.
 
-## 3. #179 (and the crane game's button) - D198, the `POLY_FT4` far edge; no change
+## 3. #179 (and the crane game's button) - D198, the `POLY_FT4` far edge; fixed as DIV-0199
 
 The red/blue line under the ENGINE gauge, and the green/yellow border on the right
 and bottom of the crane game's button, are one defect: **D198** - a textured
@@ -171,6 +171,15 @@ the front bar's width, plus the edge texel: a short two-colour line at the bar's
 right end, at whatever width the bar has - "moves with the bar". Far edges only:
 the near corner at `tc[u0]` stays inside the first texel, which fits the crane
 button's right/bottom border. Capcom's port drew this too; ours is faithful.
+
+**Taken 2026-11-01 as DIV-0199** (branch `fix/issue-179-quad-edge`): the rule
+below was refined before it landed - per screen rectangle, from the
+PlayStation's run of texels, exact under point filtering and centre to centre
+under bilinear; models and sheared quads keep the original's (a far corner
+moved alone would open a seam along every shared mesh edge). Measured by
+`tools/probes/quad_edge_probe.cpp` and the `overheatAndDeepSea` /
+`campingFishing` routes on and off; the DIV entry has the numbers. The
+crane button is not on either route: owed a look. As proposed:
 
 **The cure, the owner's call** (D198's entry: renderer-wide, an entry of its own):
 DIV-0010's `SPRT` rule carried to the `POLY_FT4` path - for the corner(s) whose u

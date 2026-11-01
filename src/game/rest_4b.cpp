@@ -22,6 +22,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/faerie_name.h"
 #include "game/labels.h"
 #include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
@@ -45,6 +46,10 @@
 // other prompts' hands are (yes_no_layout.cpp's YesNoLayout_Tail): the
 // word's pen place less one, the word's width plus one, in any language.
 unsigned char g_board_yes_no_layout = 0;
+
+// DIVERGENCE DIV-0200 (faerie_name.h): 1 through PatchBytes("FaerieNameEnd")
+// in Rest4B_Inject, after the self-test.
+static std::uint8_t g_faerie_name_end = 0;
 
 namespace {
 
@@ -1063,7 +1068,11 @@ extern "C" void __cdecl CommuBoard_DrawRecordCard(int x, int y, unsigned record,
     SH_CALL(Menu_DrawBox)(x, y, 0x48, 0x26, 0x80, static_cast<unsigned char>(Config_WindowColour));
     SH_CALL(CommuBoard_DrawCardFrame)(x, y);
     const unsigned r = record & 0xFF;
-    SH_CALL(Text_DrawAt)(x + 6, y + 4, 0, 5, At(::bof3::Img(at::kNames.v) + 5 * r));
+    // DIVERGENCE DIV-0200 (faerie_name.h): the slot NUL-ended at its last
+    // whole glyph; the original draws five characters from the table itself.
+    unsigned char ended[6];
+    const unsigned char* const slot = At(::bof3::Img(at::kNames.v) + 5 * r);
+    SH_CALL(Text_DrawAt)(x + 6, y + 4, 0, 5, g_faerie_name_end ? faerie_name::Ended(slot, ended) : slot);
     unsigned char* const p = Packet();
     SH_CALL(Gpu_SetTile)(p);
     PutF(p + 8, static_cast<float>(static_cast<short>(x) + 6));
@@ -1767,6 +1776,11 @@ extern "C" void __cdecl CommuBoard_PickHelp(unsigned char* cell) {
 
 void Rest4B_Inject() {
     if (bof3::WantsShadow("rest_4b")) rest_4b::SelfTest();
+    {
+        // DIV-0200, after the self-test (which compares Capcom's draw).
+        const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("FaerieNameEnd", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_faerie_name_end)), &was, &is, 1);
+    }
     // DIVERGENCE DIV-0027 (amended 2026-10-26): after the self-test, which
     // compares the original's panel; a Latin overlay only (DIV-0056).
     if (Lang_Latin()) {
