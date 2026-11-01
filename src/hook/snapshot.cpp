@@ -65,9 +65,14 @@ constexpr U kSaveHalf = 0x12B0;
 constexpr U kSummaryAt = 0xCA0;
 constexpr U kSummaryBytes = 0x1C;
 
-// The task arena: four slices of 0x4000 below Task_StackTop (task_sched.cpp,
-// Task_Create: slot k's stack top is Task_StackTop - k * 0x4000).
-constexpr U kArenaBytes = 4 * 0x4000;
+// The task arena: four slices below Task_StackTop (task_sched.cpp,
+// Task_Create: slot k's stack top is Task_StackTop - k * kSlice). The slice
+// is the width's: 0x4000 on i686 (task_sched_callees.h kStackSize); on x86-64
+// the frames are about twice as deep and docs/x64-build-design.md 7.4
+// estimates 0x8000 (kSlice64), the number stage C's stackwatch run on the
+// routes settles - the task switch's constant and this one must then agree.
+constexpr U kSlice = sizeof(void*) == 8 ? 0x8000 : 0x4000;
+constexpr U kArenaBytes = 4 * kSlice;
 constexpr U kPage = 0x1000;
 
 constexpr unsigned kFirstSlot = 0x10, kLastSlot = 0x1F;
@@ -171,7 +176,11 @@ constexpr Kept kKept[] = {
 constexpr std::size_t kKeptCount = sizeof kKept / sizeof kKept[0];
 
 unsigned char* At(U va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
-U Va(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+// A pointer as the 32-bit word the file holds (BuildId.dll_base, the arena's
+// top): a Fatal above 4 GB (image_base.h Low32; docs/x64-build-design.md 10
+// keeps dll_base a 32-bit word, since the 64-bit loader honours the DLL's
+// base 0x10000000 as the 32-bit one does).
+U Va(const void* p) { return Low32(p); }
 
 std::string Printf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 std::string Printf(const char* fmt, ...) {

@@ -332,8 +332,21 @@ extern "C" char* __cdecl Crt_fgets(char* buf, int n, void* stream) {
 // after the inject) pair inside the set too. The runtime's realloc 0x5C2F8E
 // and its direct HeapAlloc / HeapReAlloc paths are not moved: nothing reaches
 // them (docs/crt-rest.md section 2.6).
-extern "C" void* __cdecl Crt_malloc(unsigned size) { return std::malloc(size); }
-extern "C" void* __cdecl Crt_calloc(unsigned count, unsigned size) { return std::calloc(count, size); }
+//
+// The one chokepoint for the heap the game sees (docs/x64-build-design.md 5):
+// the nine allocation sites whose block reaches a word of the game's memory
+// (Font_GlyphData, Sound_Banks, Gfx_ClutRows, Music_File, Music_Data,
+// SaveMenu_StreamData) all come through these two, so LowBlock
+// (common/image_base.h) checks the block once here - the cast on the 32-bit
+// build, a Fatal naming the size on the 64-bit one for a block at or above
+// 4 GB, which the fixed-base executable's bottom-up placement never gives
+// (design 2, measured). No second heap: a HeapCreate'd low heap would need
+// Crt_free to tell its blocks by range and the quicksave's _msize of a
+// block (sound.cpp) to follow, so it stays the design's named fallback.
+extern "C" void* __cdecl Crt_malloc(unsigned size) { return ::bof3::LowBlock(std::malloc(size), size); }
+extern "C" void* __cdecl Crt_calloc(unsigned count, unsigned size) {
+    return ::bof3::LowBlock(std::calloc(count, size), count * size);
+}
 extern "C" void __cdecl Crt_free(void* ptr) { std::free(ptr); }
 
 // original 0x5B9AA6: sscanf, MSVC 6's _input 0x5BCF64 over a string FILE.

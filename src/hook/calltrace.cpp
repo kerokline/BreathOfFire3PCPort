@@ -9,6 +9,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "hook/cpu_context.h"
 #include "hook/detour.h"
 #include "hook/host.h"
 #include "hook/log.h"
@@ -233,7 +234,7 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
             // ended the process with 0x80000004 (docs/window-modes.md 4a).
             // The flags it saved are made the ones an untraced run saves.
             if (g_byte[Find(p.entry)] == kPushfd)
-                *reinterpret_cast<DWORD*>(static_cast<std::uintptr_t>(ctx->Esp)) &= ~kTrapFlag;
+                *reinterpret_cast<DWORD*>(CtxSp(*ctx)) &= ~kTrapFlag;
             p.thread = 0;
             return EXCEPTION_CONTINUE_EXECUTION;
         }
@@ -241,17 +242,20 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
         // because passed on it reaches the CRT's __except and the process
         // ends with no CRASH line.
         Fatal("calltrace: a single step at 0x%08lX that no traced entry asked for",
-              static_cast<unsigned long>(ctx->Eip));
+              static_cast<unsigned long>(CtxIp(*ctx)));
     }
     if (rec->ExceptionCode != EXCEPTION_BREAKPOINT) return EXCEPTION_CONTINUE_SEARCH;
 
-    auto addr = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(rec->ExceptionAddress));
+    // The tracer runs hosted alone (exe_host.cpp refuses BOF3X_CALLTRACE), in
+    // BOF3.exe's 32-bit process: Capcom's entries and their callers are 32-bit
+    // words, which Low32 says (image_base.h). The stack word is the width's.
+    auto addr = Low32(rec->ExceptionAddress);
     int i = Find(addr);
     if (i < 0) return EXCEPTION_CONTINUE_SEARCH;
 
     bool first = InterlockedExchange(&g_armed[i], 0) == 1;
     *At(addr) = g_byte[i];
-    std::uint32_t caller = *reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(ctx->Esp));
+    std::uint32_t caller = Low32(reinterpret_cast<const void*>(*reinterpret_cast<const std::uintptr_t*>(CtxSp(*ctx))));
     if (first) {
         LONG slot = InterlockedIncrement(&g_hits) - 1;
         if (slot < kMaxEntries) {
@@ -292,7 +296,7 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
         free_slot->entry = addr;
         ctx->EFlags |= kTrapFlag;
     }
-    ctx->Eip = addr;
+    CtxSetIp(*ctx, addr);
     return EXCEPTION_CONTINUE_EXECUTION;
 }
 

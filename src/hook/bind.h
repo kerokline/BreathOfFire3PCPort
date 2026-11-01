@@ -87,4 +87,15 @@ void Bind_Report();
 // and one past the last missing, the trap's place, and the thunk.
 void Bind_SelfTest();
 
+#if defined(__x86_64__)
+// The import slots' thunks, the 64-bit exe host alone (docs/x64-build-design.md
+// 4): the 14 functions of Windows' the slots name lie above 4 GB in a 64-bit
+// process, so slot `index` holds the 32-bit place of a 14-byte `jmp [rip+0]`
+// thunk of ours to `target`, written in the page after the table's last row
+// page - inside the table's reservation, below 4 GB under the same top byte.
+// Thunks are 16 bytes apart in slot order. Returns the thunk's place; a Fatal
+// before the table is built or past the page's room (exe_host.cpp BindSlots).
+std::uint32_t Bind_ImportThunk(unsigned index, const void* target);
+#endif
+
 }  // namespace bof3
