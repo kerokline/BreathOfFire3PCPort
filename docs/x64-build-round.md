@@ -325,6 +325,36 @@ answering with measurements:
   image, as stage C1 made it) and the `tools/` that read a dump
   (`tools/proc_image.py`).
 
+### XA2 as run (2026-11-01, branch `x64/xa2`, report `x641101\xa2\REPORT.md`)
+
+[`x64-build-design.md`](x64-build-design.md) and four probes under
+`tools/probes/` (`lowmem_probe.cpp` extended, `lowdll_probe.cpp`,
+`taskstack_probe.cpp`, `frame_growth.py`), measured on this machine. The
+decisions the probes forced: option (a), `make_exe.py` writes a PE32+ at
+`0x400000` with no `.reloc` and no `DYNAMIC_BASE`, which Windows 11 loads
+there (the 2026-10-29 "moved to `0x4E0000`" was that build's `DYNAMIC_BASE`
+bit); with it off the loader places the whole process bottom-up below 4 GB
+(the main stack, the heap, `VirtualAlloc(nullptr)`, the fiber stack, the
+Direct3D 11 device, the SDL3 stream), so **no low arena**: the OS's placement,
+`Low32()` as the trap and a check in `Crt_malloc` (the one chokepoint of the
+9 allocation sites whose address reaches the game), a `HeapCreate`d low heap
+as the fallback. The window below 16 MB is *not* free in such a process (an
+anonymous 16 MB view sits at `0x1000000`), which option (a) never needs. A
+64-bit `bof3x.dll` at `0x10000000` is honoured and a 5-byte `jmp rel32` row
+reaches it under every top byte the bind table may take (no 14-byte row); the
+14 import slots get a 14-byte `jmp [rip+0]` thunk each in one extra page of
+the table's reservation. The task slices stay on the main thread's stack with
+an `rsp` switch (8 GPRs and `xmm6..xmm15`, no x87 or MXCSR state per task:
+38 control-word blocks hold no call), a per-architecture `task_switch_<arch>.h`
+contract for the owner's call 2; frames grow 2.18x over 722 matched
+functions, `kSlice64` estimated `0x8000` for stage C's stackwatch to set. The
+sound objects become ours with DirectSound-shaped vtables over one SDL3
+stream and a mixer (design 6.3; the x64 `DSBUFFERDESC` is 40 bytes against
+the game's `0x24`, so a shim over the 64-bit `dsound` would marshal 11 of 21
+methods); the 54 `Method<>` sites stay as they are. `Img()` stays 32-bit,
+`ImageBase()` by width, the quicksave's format unchanged. Section 9 of the
+design is `Slot32<T>` for the 111 pointer-typed `[[data]]` rows.
+
 ### XA3: the asm policy, settled by a build
 Compile every live file that holds asm with the `x86_64` driver, in
 isolation, with a stub header that defines what the file includes. Report:
@@ -341,6 +371,28 @@ C++ rewrite is a divergence until fuzzed; the round that leaves x86
 altogether (section 9) owns that question. The C++ outside the asm is SSE
 in both builds already (section 0), so it needs no such care.
 
+### XA3 as run (2026-11-01, branch `x64/xa3`, report `x641101\xa3\REPORT.md`)
+
+[`x64-asm-policy.md`](x64-asm-policy.md): every one of the 69 live files
+with asm compiled with its own i686 command from `compile_commands.json`
+and the driver swapped. **All 127 x87 and control-word blocks assemble
+unchanged and are right**; they stay asm. 15 of the 30 stack blocks fail
+(`push` / `pop` of a 32-bit register, `jmp *%e..`); of the 15 that assemble,
+12 are wrong on x86-64 (`4(%esp)` arguments, a 32-bit `esp`, a struct offset
+that doubles, `_Bof3_ImageMove` as `ADDR32`) and 3 right. The 6 `fs:` reads
+assemble and read the wrong segment (the TEB is at `gs:`). The 11 "other"
+blocks are right, the privileged `in` included. 24 of the 27 live naked
+functions are reachable in the exe host; every caller is ours in both hosts.
+The spellings: 29 real underscored operands in 10 files (the 39 counted
+comment lines), the 6 aliases and the 10 `_Bof3_ImageMove` loads, spelled
+on x86-64 by a `__USER_LABEL_PREFIX__` macro and `Bof3_ImageMove(%rip)`.
+The build found the wider defect first: **109 `GameData` members are
+pointer-typed** in the generated header (111 `[[data]]` rows with a `*`
+ctype), so `sizeof(GameData)` is 4,640 bytes too large on x86-64 and no game
+file compiles until the slot type lands; the asm verdicts were taken
+against a patched scratch header. Section 8 of the doc is B1's list in ten
+units, unit 0 the slot type.
+
 ### XA4: the build
 A second preset `x86_64` and `cmake/x86_64-llvm-mingw.cmake`; the guard at
 `CMakeLists.txt:16` becomes a choice of the two; the hosted targets (the
@@ -351,6 +403,32 @@ built for the width; a CI job `x86_64` that configures and compiles
 (nothing runs in CI, rule 1) and uploads `bof3x-x86_64-<sha>`. Until stage
 C the `x86_64` job is allowed to fail at link; its compile log is XA3's
 second opinion.
+
+### XA4 as run (2026-11-01, branch `x64/xa4`, report `x641101\xa4\REPORT.md`)
+
+`cmake/x86_64-llvm-mingw.cmake`, the preset `x86_64` (build dir
+`build-x86_64`), the guard a choice (`BOF3X_WIDTH` 32 / 64,
+`BOF3X_HOSTED_BUILD`); the 64-bit DLL is the same source list minus the 253
+`*_fuzz.cpp` (632 against 379 objects), `bof3x-launcher-dev.exe` i686 only,
+the hosted mode's own files in both widths because 340 live objects reference
+`detour.cpp` (their `BOF3.exe`-only paths are B4's `#if`); a target
+`bof3x_compile` (every object, no link) for CI. `make_exe.py --width 64`
+writes a PE32+ (`0x20B`, `0x8664`, 8-byte thunks, an amd64 manifest, an
+entry with RIP-relative IAT calls), `pe_read.py` reads both widths; the
+32-bit output byte-identical to before. SDL3 3.4.16 builds for x86-64
+unchanged. `build.yml`'s job `x86_64`: configure blocking, compile and link
+as `continue-on-error` steps until stage C, the artefact
+`bof3x-x86_64-<sha>`. The i686 build: `codegen_same.py` against a baseline
+build of `21d06502`, `648 objects compared (code and data), 0 differ`. The
+local `x86_64` preset configures; 352 of 631 objects fail, 349 of them at
+the generated header (XA3's finding), 13 on their own front-end errors (the
+x86 `CONTEXT` users `crash`, `gapwatch`, `stackwatch`, `stallwatch`,
+`calltrace`, `win_main`; `fmv_play.cpp` `GWL_WNDPROC`; `rest_1c.cpp:460`'s
+28 pointer-to-integer casts; `rdata_consts`'s DirectInput x86 layouts,
+`gfx_clut`, `gfx_texcache`, `sound_rest_callees.h:52`). A pointer ctype as a
+plain `std::uint32_t` member was tried and reverted: 445 of 891 i686 objects
+then fail on 4,380 sites that use the pointer type, so the slot wants a
+conversion type (the design's `Slot32<T>`), B3's first unit.
 
 ## 4. Stage B: the rewrites, in the 32-bit build, gated (file groups, after XA1 and XA3 merge)
 
@@ -392,6 +470,38 @@ gate that applies, and reports. Merge one at a time.
   (the shim, or the owner's call 4's library), in the 32-bit build first,
   where the shim in front of the 32-bit `dsound` must give the same sound
   (the state hash's sound windows and a listen by the owner).
+
+### Stage B as launched (2026-11-01, off `x64/round` after the four stage A merges)
+
+Two waves, by file overlap. **Wave 1, four groups in parallel**, worktrees
+under `x641101\b<n>`, merged in the order B3, B1, B4, B5:
+
+- **B3** owns `tools/gen_symbols.py` and the generated header: `Slot32<T>`
+  for the 111 pointer ctypes (design 9) and the 53 address-of sites, `0
+  differ` on i686; then the `x86_64` compile of `src/game` is measured again
+  (349 objects should pass the header). The `unsigned long` rows are wave 2's.
+- **B1** owns the asm policy's units 1..9 and `stackwatch.cpp` whole (unit
+  10's `:242` and `CONTEXT` lines included, so one owner per file) and the
+  one-line `rsp` check in `Task_SetStackBase` (design 7.1), since
+  `task_sched.cpp` is its; the gates per unit as the policy's section 8
+  table names them, the hosted fuzz run headless by the group in its own
+  game copy.
+- **B4** owns `image_base.h` (with `Low32()` as design 8.1 writes it, which
+  wave 2's B2 then uses everywhere), `exe_host.cpp`, `bind.cpp`, `host.cpp`,
+  `snapshot.cpp`, `crash.cpp` (design 11), `crt_rest.cpp`'s `Crt_malloc` /
+  `Crt_calloc` check (design 5), the other `CONTEXT` users (`gapwatch`,
+  `stallwatch`, `calltrace`, `win_main`), `fmv_play.cpp`'s `GWL_WNDPROC`; `0
+  differ` on i686 or the fuzz.
+- **B5** owns `src/audio/sound_sdl.cpp` (design 6.3) and the WAV dump's tap,
+  reserves DIV-0197 (the sound output through SDL3 on both widths, the
+  32-bit build keeping DirectSound behind a switch for the owner's A/B
+  listen), and touches `exe_host.cpp` for the slot binding alone (merged
+  after B4, keep-both).
+
+**Wave 2** after the four merge: **B2**, the 453 live narrowings through
+`Low32()`, `Key()` and `Addr()` with it, the `%p` prints, `rest_1c.cpp:460`'s
+28 casts, the `rdata_consts` / `gfx_clut` / `gfx_texcache` asserts by width,
+and the `unsigned long` rows; `0 differ`. Then stage B's PR.
 
 Stage B merges to `main` as a PR of its own when every group is in: the
 32-bit build is proved by its own gates, and the 64-bit build is not yet
