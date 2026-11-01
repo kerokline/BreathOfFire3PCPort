@@ -1,15 +1,25 @@
 #!/usr/bin/env python
-"""Read a 32-bit PE's headers, sections, imports, exports and resources.
+"""Read a PE's headers, sections, imports, exports and resources.
 
 The project's PE parser without capstone: tools/pe_funcs.py takes its
 parse_pe from here, and tools/make_exe.py verifies the executable it writes
 with it (docs/state3-design.md section 1.3). Reads layout only; prints
 nothing of a file's content.
 
+Both widths: a PE32 (optional header magic 0x10B: BOF3.exe, the 32-bit
+bof3x.dll and bof3x.exe) and a PE32+ (magic 0x20B: the 64-bit build's,
+docs/x64-build-round.md 3 "XA4"). The two differ in the optional header's
+layout alone - the PE32+ has no BaseOfData, an 8-byte ImageBase and 8-byte
+stack and heap sizes, and its import thunks are 8 bytes with the ordinal
+flag in bit 63 - which Pe reads by the magic; `Pe.width` says which (32 or
+64). The section table, exports and resources are the same in both.
+
     python tools/pe_read.py build/bof3x.exe     # headers, sections, imports
 """
 import struct
 import sys
+
+PE32, PE32PLUS = 0x10B, 0x20B
 
 
 def parse_pe(data):
@@ -19,8 +29,12 @@ def parse_pe(data):
     nsec, = struct.unpack_from('<H', data, pe + 6)
     optsz, = struct.unpack_from('<H', data, pe + 20)
     opt = pe + 24
+    magic, = struct.unpack_from('<H', data, opt)
     entry, = struct.unpack_from('<I', data, opt + 16)
-    base, = struct.unpack_from('<I', data, opt + 28)
+    if magic == PE32PLUS:
+        base, = struct.unpack_from('<Q', data, opt + 24)
+    else:
+        base, = struct.unpack_from('<I', data, opt + 28)
     secs = []
     off = opt + optsz
     for i in range(nsec):
@@ -43,18 +57,32 @@ class Pe:
          self.characteristics) = struct.unpack_from('<HHIIIHH', data, pe + 4)
         opt = pe + 24
         self.magic, = struct.unpack_from('<H', data, opt)
-        if self.magic != 0x10B:
-            raise ValueError('not PE32')
+        if self.magic == PE32:
+            self.width = 32
+        elif self.magic == PE32PLUS:
+            self.width = 64
+        else:
+            raise ValueError(f'optional header magic {self.magic:#x}: neither PE32 nor PE32+')
         self.entry_rva, = struct.unpack_from('<I', data, opt + 16)
-        self.image_base, self.section_alignment, self.file_alignment = struct.unpack_from('<III', data, opt + 28)
+        # Up to +24 the two layouts agree. PE32: BaseOfData at +24, ImageBase
+        # at +28, the stack and heap sizes at +72 four bytes each, the
+        # directory count at +92. PE32+: no BaseOfData, ImageBase the eight
+        # bytes at +24, the sizes eight bytes each, the count at +108.
+        if self.width == 32:
+            self.image_base, = struct.unpack_from('<I', data, opt + 28)
+            size_fmt, ndirs_at = '<IIII', 92
+        else:
+            self.image_base, = struct.unpack_from('<Q', data, opt + 24)
+            size_fmt, ndirs_at = '<QQQQ', 108
+        self.section_alignment, self.file_alignment = struct.unpack_from('<II', data, opt + 32)
         (self.os_major, self.os_minor, _, _, self.subsys_major,
          self.subsys_minor) = struct.unpack_from('<HHHHHH', data, opt + 40)
         self.size_of_image, self.size_of_headers, self.checksum = struct.unpack_from('<III', data, opt + 56)
         self.subsystem, self.dll_characteristics = struct.unpack_from('<HH', data, opt + 68)
         (self.stack_reserve, self.stack_commit, self.heap_reserve,
-         self.heap_commit) = struct.unpack_from('<IIII', data, opt + 72)
-        ndirs, = struct.unpack_from('<I', data, opt + 92)
-        self.dirs = [struct.unpack_from('<II', data, opt + 96 + 8 * i) for i in range(ndirs)]
+         self.heap_commit) = struct.unpack_from(size_fmt, data, opt + 72)
+        ndirs, = struct.unpack_from('<I', data, opt + ndirs_at)
+        self.dirs = [struct.unpack_from('<II', data, opt + ndirs_at + 4 + 8 * i) for i in range(ndirs)]
         self.sections = []
         for i in range(nsec):
             s = opt + optsz + i * 40
@@ -87,12 +115,15 @@ class Pe:
                 return out
             q = self.offset(ilt or iat)
             fns = []
+            # A thunk is the width's word, the ordinal flag its top bit; a
+            # name thunk's low 31 bits are the hint/name RVA.
+            fmt, step, flag = ('<I', 4, 0x80000000) if self.width == 32 else ('<Q', 8, 1 << 63)
             while True:
-                e, = struct.unpack_from('<I', self.data, q)
-                q += 4
+                e, = struct.unpack_from(fmt, self.data, q)
+                q += step
                 if not e:
                     break
-                fns.append(f'#{e & 0xFFFF}' if e & 0x80000000 else self.cstr(e + 2))
+                fns.append(f'#{e & 0xFFFF}' if e & flag else self.cstr((e & 0x7FFFFFFF) + 2))
             out.append((self.cstr(name), fns))
 
     def exports(self):
@@ -135,7 +166,7 @@ class Pe:
 
 def main():
     pe = Pe(open(sys.argv[1], 'rb').read())
-    print(f'base {pe.image_base:#x} entry {pe.image_base + pe.entry_rva:#x} timestamp {pe.timestamp:#x} '
+    print(f'PE32{"+" if pe.width == 64 else ""} machine {pe.machine:#x} base {pe.image_base:#x} entry {pe.image_base + pe.entry_rva:#x} timestamp {pe.timestamp:#x} '
           f'characteristics {pe.characteristics:#x} dll characteristics {pe.dll_characteristics:#x} '
           f'subsystem {pe.subsystem} {pe.subsys_major}.{pe.subsys_minor} '
           f'stack {pe.stack_reserve:#x}/{pe.stack_commit:#x} size {pe.size_of_image:#x}')

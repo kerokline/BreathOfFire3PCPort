@@ -255,6 +255,19 @@ workflow artifact for 14 days. `.github/workflows/checks.yml` runs
 That was written before the TR1X note; this document supersedes it, and
 `PLAN.md` has been updated.
 
+Since the 64-bit build round ([`x64-build-round.md`](x64-build-round.md) 3
+"XA4", 2026-11-01) the same toolchain has a second width: `cmake --preset
+x86_64 && cmake --build build-x86_64` (`cmake/x86_64-llvm-mingw.cmake`, the
+`x86_64-w64-mingw32-*` drivers beside the i686 ones) builds the exe host
+alone - `bof3x.dll` without the fuzz files, `bof3x.exe` as a PE32+
+(`tools/make_exe.py --width 64`) and the player's launcher - and nothing
+that loads into `BOF3.exe`: the hosted mode, the shadow fuzz and
+`bof3x-launcher-dev.exe` are the `i686` build's for ever (`CMakeLists.txt`,
+`BOF3X_HOSTED_BUILD`). The `i686` build is unchanged by the switch
+(`tools/codegen_same.py` against the build before it: `0 differ`). CI runs
+the `x86_64` preset as a second job whose compile and link steps are
+non-blocking until the round's stage C links and runs it.
+
 Log: `build/bof3x.log`, next to the DLL, rewritten each run.
 
 ## 5. The exit test

@@ -3,6 +3,7 @@
 
     python tools/make_exe.py --layout src/hook/exe_layout.h --dll build/bof3x.dll --out build/bof3x.exe
     python tools/make_exe.py ... --image-base 0xA00000 --out build/bof3x-A00000.exe
+    python tools/make_exe.py ... --width 64 --out build-x86_64/bof3x.exe
 
 docs/state3-design.md sections 1.2 and 1.3. The image is based at 0x400000
 and spans Capcom's address range with sections of its own, so the loader
@@ -32,6 +33,23 @@ keep the image below 16 MB (the ordering table's 24-bit links,
 src/game/draw_pool.cpp) and, unless it is 0x400000, the image wholly off the
 linked span 0x400000..0x98F000 (image_base.h CodePlace): 0x990000..0xA70000,
 checked here and again by the engine.
+
+--width 64 writes the same image as a PE32+ for the 64-bit build
+(docs/x64-build-round.md 3 "XA4"): optional header magic 0x20B, machine
+0x8664, the 64-bit optional header (no BaseOfData, an 8-byte ImageBase and
+8-byte stack and heap sizes), 8-byte import thunks, the manifest's
+processorArchitecture amd64, and the entry in x86-64 code - the same three
+calls and Engine_Main(hinstance, command line, show) in rcx, rdx, r8d under
+the Win64 convention, every call through the IAT RIP-relative, so the
+moved image's entry needs no absolute operand at all. The sections, their
+RVAs and the data they carry are the 32-bit file's: the image is the same
+image (round doc section 1, the narrow image). The 32-bit file is byte for
+byte what it was before the flag existed. Two header choices a 64-bit run
+has yet to measure (stage C): the subsystem version is 5.2 rather than 4.0
+(the x64 minimum link.exe documents; still below 6.0, so the old window
+frame metrics hold), and the COFF characteristics carry LARGE_ADDRESS_AWARE
+as every x64 linker sets it - without it a 64-bit process is confined to
+the low 2 GB, which XA2's low-memory design may yet prefer.
 
 An Authenticode signature (signtool, after the build) appends a certificate
 table to the file and names it in data directory 4; --verify-only accepts a
@@ -74,11 +92,11 @@ POOL_STAMP = b'BOF3X-DRAWPOOL-2048\0'
 # (DisplaySetup_WindowedScale), so the window opens the same apparent size.
 MANIFEST = b'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-  <assemblyIdentity type="win32" name="bof3x" version="1.0.0.0" processorArchitecture="x86"/>
+  <assemblyIdentity type="win32" name="bof3x" version="1.0.0.0" processorArchitecture="ARCH"/>
   <dependency>
     <dependentAssembly>
       <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls"
-                        version="6.0.0.0" processorArchitecture="x86"
+                        version="6.0.0.0" processorArchitecture="ARCH"
                         publicKeyToken="6595b64144ccf1df" language="*"/>
     </dependentAssembly>
   </dependency>
@@ -92,6 +110,21 @@ MANIFEST = b'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   </application>
 </assembly>
 '''
+
+# The widths' header words: machine, the manifest's processorArchitecture,
+# the subsystem version, and the COFF characteristics (RELOCS_STRIPPED |
+# EXECUTABLE_IMAGE | LINE_NUMS_STRIPPED | LOCAL_SYMS_STRIPPED, plus
+# 32BIT_MACHINE for the PE32 as BOF3.exe has it, LARGE_ADDRESS_AWARE for the
+# PE32+ as x64 linkers set it).
+WIDTHS = {
+    32: dict(machine=0x14C, arch=b'x86', subsystem_version=(4, 0), characteristics=0x010F),
+    64: dict(machine=0x8664, arch=b'amd64', subsystem_version=(5, 2), characteristics=0x002F),
+}
+
+
+def manifest(width):
+    return MANIFEST.replace(b'ARCH', WIDTHS[width]['arch'])
+
 
 ICON_NAME = 'BOF3_ICON'   # what Game_WinMain's LoadIconA asks for (win_main.cpp kStrIcon)
 
@@ -236,12 +269,16 @@ def build_rsrc(rva, icons, group, version, manifest):
     return bytes(out)
 
 
-def build_idata(rva):
+def build_idata(rva, width=32):
     """The import directory, lookup tables, IAT and names. Returns (bytes,
-    {name: IAT slot RVA}, (IAT rva, IAT size), (directory rva, size))."""
+    {name: IAT slot RVA}, (IAT rva, IAT size), (directory rva, size)). A
+    thunk is the width's word (4 or 8 bytes); the descriptors and names are
+    the same in both."""
     dlls = [KERNEL32, ENGINE]
     desc_size = 20 * (len(dlls) + 1)
-    lookup_sizes = [4 * (len(fns) + 1) for _, fns in dlls]
+    thunk = width // 8
+    thunk_fmt = '<I' if width == 32 else '<Q'
+    lookup_sizes = [thunk * (len(fns) + 1) for _, fns in dlls]
     off_ilt = desc_size
     off_iat = off_ilt + sum(lookup_sizes)
     off_names = off_iat + sum(lookup_sizes)
@@ -265,19 +302,31 @@ def build_idata(rva):
         iat_rva = rva + off_iat + len(ilt)
         desc += struct.pack('<IIIII', ilt_rva, 0, 0, dll_rva[dll], iat_rva)
         for i, fn in enumerate(fns):
-            slots[fn] = iat_rva + 4 * i
-            ilt += struct.pack('<I', hint_rva[fn])
-        ilt += struct.pack('<I', 0)
+            slots[fn] = iat_rva + thunk * i
+            ilt += struct.pack(thunk_fmt, hint_rva[fn])
+        ilt += struct.pack(thunk_fmt, 0)
     desc += b'\0' * 20
     data = bytes(desc) + bytes(ilt) + bytes(ilt) + bytes(names)
     return data, slots, (rva + off_iat, len(ilt)), (rva, desc_size)
 
 
-def build_entry(base, slots):
+def build_entry(base, slots, width=32, text_rva=0):
     """The entry: show from STARTUPINFO (wShowWindow if STARTF_USESHOWWINDOW,
     else SW_SHOWDEFAULT), Engine_Main(GetModuleHandleW(NULL), GetCommandLineA(),
     show) - cdecl, which skips the program name as Capcom's _wincmdln did -
-    and its answer to ExitProcess (docs/crt-startup.md section 9, the exit row)."""
+    and its answer to ExitProcess (docs/crt-startup.md section 9, the exit row).
+
+    Width 64: the same calls in x86-64 code under the Win64 convention
+    (rcx, rdx, r8; 32 bytes of shadow space; rsp 16-aligned at each call),
+    every call [IAT slot] RIP-relative, so the code holds no absolute
+    address and a moved image's entry is the same bytes. STARTUPINFOA is
+    0x68 bytes there, dwFlags at +0x3C and wShowWindow at +0x40; the frame
+    is 0x98 bytes: the shadow space at rsp, the STARTUPINFOA at rsp+0x20,
+    show at rsp+0x88 and the command line at rsp+0x90, since every call
+    may clobber rcx, rdx and r8."""
+    if width == 64:
+        return build_entry64(slots, text_rva)
+
     def call(name):
         return b'\xFF\x15' + struct.pack('<I', base + slots[name])   # call [IAT slot]
     code = b''.join([
@@ -301,6 +350,42 @@ def build_entry(base, slots):
         b'\xCC',                         # int3: ExitProcess does not return
     ])
     return code
+
+
+def build_entry64(slots, text_rva):
+    """build_entry's x86-64 form (its docstring). The code is laid out in
+    two passes, since a RIP-relative operand is the slot's distance from the
+    instruction after the call."""
+    parts = [
+        b'\x48\x81\xEC\x98\x00\x00\x00',     # sub rsp, 0x98 (imm32: 0x98 as an imm8 would be -0x68)
+        b'\x48\x8D\x4C\x24\x20',             # lea rcx, [rsp+0x20]       a STARTUPINFOA
+        ('call', 'GetStartupInfoA'),
+        b'\xB8\x0A\x00\x00\x00',             # mov eax, 10               SW_SHOWDEFAULT
+        b'\xF6\x44\x24\x5C\x01',             # test byte [rsp+0x5C], 1   dwFlags & STARTF_USESHOWWINDOW
+        b'\x74\x05',                         # jz +5
+        b'\x0F\xB7\x44\x24\x60',             # movzx eax, word [rsp+0x60] wShowWindow
+        b'\x89\x84\x24\x88\x00\x00\x00',     # mov [rsp+0x88], eax       show
+        ('call', 'GetCommandLineA'),
+        b'\x48\x89\x84\x24\x90\x00\x00\x00', # mov [rsp+0x90], rax       the whole command line
+        b'\x31\xC9',                         # xor ecx, ecx
+        ('call', 'GetModuleHandleW'),
+        b'\x48\x89\xC1',                     # mov rcx, rax              hinstance
+        b'\x48\x8B\x94\x24\x90\x00\x00\x00', # mov rdx, [rsp+0x90]       command line
+        b'\x44\x8B\x84\x24\x88\x00\x00\x00', # mov r8d, [rsp+0x88]       show
+        ('call', 'Engine_Main'),
+        b'\x89\xC1',                         # mov ecx, eax              the exit code
+        ('call', 'ExitProcess'),
+        b'\xCC',                             # int3: ExitProcess does not return
+    ]
+    code = bytearray()
+    for part in parts:
+        if isinstance(part, bytes):
+            code += part
+        else:
+            # call [rip + disp32]: disp from the end of this 6-byte instruction.
+            next_rva = text_rva + len(code) + 6
+            code += b'\xFF\x15' + struct.pack('<i', slots[part[1]] - next_rva)
+    return bytes(code)
 
 
 # The 16 MB window (docs/relocatable-image-design.md 1.2): the image's end,
@@ -333,7 +418,8 @@ def check_base(layout, base, size_of_image=None):
     return None
 
 
-def write(layout, out_path, version, tag, base):
+def write(layout, out_path, version, tag, base, width=32):
+    w = WIDTHS[width]
     linked = layout['ImageBase']
     stub_rva = layout['StubVa'] - linked
     game_rva = layout['GameVa'] - linked
@@ -343,12 +429,12 @@ def write(layout, out_path, version, tag, base):
     # .idata and its slots first: the entry names them.
     text_rva = own_rva
     idata_rva = text_rva + SECTION_ALIGN
-    idata, slots, iat_dir, imp_dir = build_idata(idata_rva)
-    entry = build_entry(base, slots)
+    idata, slots, iat_dir, imp_dir = build_idata(idata_rva, width)
+    entry = build_entry(base, slots, width, text_rva)
     assert len(entry) < SECTION_ALIGN
     rsrc_rva = idata_rva + align(len(idata), SECTION_ALIGN)
     icons, group = brand_icon()
-    rsrc = build_rsrc(rsrc_rva, icons, group, build_version(version, tag), MANIFEST)
+    rsrc = build_rsrc(rsrc_rva, icons, group, build_version(version, tag), manifest(width))
     size_of_image = rsrc_rva + align(len(rsrc), SECTION_ALIGN)
 
     pool_init = POOL_STAMP
@@ -385,19 +471,33 @@ def write(layout, out_path, version, tag, base):
     # and OS version 4.0 (below 6.0 Windows keeps the old window-frame
     # metrics BOF3.exe's window was laid out under), no DllCharacteristics
     # (no DEP opt-in, no ASLR, as his image), GUI.
-    opt = struct.pack('<HBBIIIIIIIIIHHHHHHIIIIHHIIIIII',
-                      0x10B, 1, 0,                       # magic, linker version
-                      size_code, size_init, size_uninit,
-                      text_rva, text_rva, game_rva,      # entry, BaseOfCode, BaseOfData
-                      base, SECTION_ALIGN, FILE_ALIGN,
-                      4, 0, 0, 0, 4, 0,                  # OS, image, subsystem versions
-                      0, size_of_image, HEADERS_SIZE, 0,  # Win32VersionValue, size, headers, checksum
-                      2, 0,                              # GUI, DllCharacteristics
-                      layout['StackReserve'], layout['StackCommit'], 0x100000, 0x1000,
-                      0, 16)
+    os_major, os_minor = w['subsystem_version']
+    if width == 32:
+        opt = struct.pack('<HBBIIIIIIIIIHHHHHHIIIIHHIIIIII',
+                          0x10B, 1, 0,                       # magic, linker version
+                          size_code, size_init, size_uninit,
+                          text_rva, text_rva, game_rva,      # entry, BaseOfCode, BaseOfData
+                          base, SECTION_ALIGN, FILE_ALIGN,
+                          os_major, os_minor, 0, 0, os_major, os_minor,   # OS, image, subsystem versions
+                          0, size_of_image, HEADERS_SIZE, 0,  # Win32VersionValue, size, headers, checksum
+                          2, 0,                              # GUI, DllCharacteristics
+                          layout['StackReserve'], layout['StackCommit'], 0x100000, 0x1000,
+                          0, 16)
+    else:
+        # PE32+: no BaseOfData, ImageBase and the four sizes 8 bytes each.
+        opt = struct.pack('<HBBIIIIIQIIHHHHHHIIIIHHQQQQII',
+                          0x20B, 1, 0,                       # magic, linker version
+                          size_code, size_init, size_uninit,
+                          text_rva, text_rva,                # entry, BaseOfCode
+                          base, SECTION_ALIGN, FILE_ALIGN,
+                          os_major, os_minor, 0, 0, os_major, os_minor,   # OS, image, subsystem versions
+                          0, size_of_image, HEADERS_SIZE, 0,  # Win32VersionValue, size, headers, checksum
+                          2, 0,                              # GUI, DllCharacteristics
+                          layout['StackReserve'], layout['StackCommit'], 0x100000, 0x1000,
+                          0, 16)
     opt += b''.join(struct.pack('<II', *d) for d in dirs)
-    # RELOCS_STRIPPED | EXECUTABLE_IMAGE | LINE_NUMS_STRIPPED | LOCAL_SYMS_STRIPPED | 32BIT_MACHINE
-    coff = struct.pack('<HHIIIHH', 0x14C, len(sections), layout['Timestamp'], 0, 0, len(opt), 0x010F)
+    coff = struct.pack('<HHIIIHH', w['machine'], len(sections), layout['Timestamp'], 0, 0, len(opt),
+                       w['characteristics'])
     dos = bytearray(0x40)
     dos[0:2] = b'MZ'
     struct.pack_into('<I', dos, 0x3C, 0x40)
@@ -409,12 +509,13 @@ def write(layout, out_path, version, tag, base):
     return slots
 
 
-def verify(layout, out_path, dll_path, version, tag, base):
+def verify(layout, out_path, dll_path, version, tag, base, width=32):
     """Read the file back with pe_read and check every property the design
-    names, at `base` (the layout's ImageBase, or --image-base's). Returns a
-    list of failures."""
+    names, at `base` (the layout's ImageBase, or --image-base's) and for
+    `width`. Returns a list of failures."""
     pe = Pe(open(out_path, 'rb').read())
     linked = layout['ImageBase']
+    w = WIDTHS[width]
     bad = []
     why = check_base(layout, base, pe.size_of_image)
     if why:
@@ -424,6 +525,10 @@ def verify(layout, out_path, dll_path, version, tag, base):
         if got != want:
             bad.append(f'{what}: {got!r}, want {want!r}')
 
+    check('width', pe.width, width)
+    check('machine', hex(pe.machine), hex(w['machine']))
+    check('characteristics', hex(pe.characteristics), hex(w['characteristics']))
+    check('subsystem version', (pe.subsys_major, pe.subsys_minor), w['subsystem_version'])
     check('ImageBase', hex(pe.image_base), hex(base))
     check('TimeDateStamp', hex(pe.timestamp), hex(layout['Timestamp']))
     check('RELOCS_STRIPPED', bool(pe.characteristics & 1), True)
@@ -456,11 +561,18 @@ def verify(layout, out_path, dll_path, version, tag, base):
         t = by['.text']
         check('entry in .text', t['va'] <= pe.entry_rva < t['va'] + t['vsz'], True)
         check('own sections start at OwnVa', hex(base + t['va']), hex(base + layout['OwnVa'] - linked))
-        # The entry's five call [IAT slot] operands, absolute: at this base.
+        # The entry's five call [IAT slot] operands: absolute at this base in
+        # the 32-bit code, RIP-relative (an RVA whatever the base) in the 64-bit.
         code = pe.data[t['raw']:t['raw'] + t['vsz']]
-        calls = [struct.unpack_from('<I', code, i + 2)[0] for i in range(len(code) - 5) if code[i:i + 2] == b'\xFF\x15']
-        lo, hi = base + t['va'], base + pe.size_of_image
+        if width == 32:
+            calls = [struct.unpack_from('<I', code, i + 2)[0] for i in range(len(code) - 5) if code[i:i + 2] == b'\xFF\x15']
+            lo, hi = base + t['va'], base + pe.size_of_image
+        else:
+            calls = [t['va'] + i + 6 + struct.unpack_from('<i', code, i + 2)[0]
+                     for i in range(len(code) - 5) if code[i:i + 2] == b'\xFF\x15']
+            lo, hi = t['va'], pe.size_of_image
         check('entry calls through the IAT at this base', [hex(c) for c in calls if not lo <= c < hi], [])
+        check('entry calls', len(calls), 5)
     # Sections in order, each where the last ended (page-aligned), nothing overlapping.
     end = HEADERS_SIZE
     for s in pe.sections:
@@ -488,15 +600,18 @@ def verify(layout, out_path, dll_path, version, tag, base):
             check('certificate dwLength', length, sec_size)
             check('certificate wRevision', hex(revision), hex(0x200))
             check('certificate wCertificateType', kind, 2)
-    manifest = res.get((24, 1, 0), b'')
+    found = res.get((24, 1, 0), b'')
     for needle in (b'<activeCodePage xmlns="http://schemas.microsoft.com/SMI/2019/WindowsSettings">UTF-8</activeCodePage>',
                    b'<longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>',
                    b'<dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>',
-                   b'Microsoft.Windows.Common-Controls'):
-        if needle not in manifest:
+                   b'Microsoft.Windows.Common-Controls',
+                   b'processorArchitecture="' + w['arch'] + b'"'):
+        if needle not in found:
             bad.append(f'manifest lacks {needle.decode()}')
     if dll_path:
-        exports = Pe(open(dll_path, 'rb').read()).exports()
+        dll = Pe(open(dll_path, 'rb').read())
+        check('bof3x.dll width', dll.width, width)
+        exports = dll.exports()
         if 'Engine_Main' not in exports:
             bad.append(f'{dll_path} does not export Engine_Main (exports: {", ".join(exports[:8]) or "none"})')
     return bad, pe
@@ -513,6 +628,9 @@ def main():
     ap.add_argument('--image-base', type=lambda v: int(v, 0), default=None,
                     help="the executable's base (default the layout's kImageBase, 0x400000): a developer's moved "
                          'image (docs/relocatable-image-design.md 1.5)')
+    ap.add_argument('--width', type=int, choices=(32, 64), default=32,
+                    help='32: a PE32 for the i686 build (default); 64: a PE32+ for the x86_64 build '
+                         '(docs/x64-build-round.md 3 "XA4")')
     a = ap.parse_args()
     layout = read_layout(a.layout)
     m = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)', a.version)
@@ -525,13 +643,14 @@ def main():
     if why:
         sys.exit(f'make_exe: --image-base: {why}')
     if not a.verify_only:
-        write(layout, a.out, version, tag, base)
-    bad, pe = verify(layout, a.out, a.dll, version, tag, base)
+        write(layout, a.out, version, tag, base, a.width)
+    bad, pe = verify(layout, a.out, a.dll, version, tag, base, a.width)
     if bad:
         if not a.verify_only:
             os.remove(a.out)
         sys.exit('make_exe: ' + a.out + ' failed verification:\n  ' + '\n  '.join(bad))
-    print(f'make_exe: {a.out} verified: base {pe.image_base:#x}, {len(pe.sections)} sections '
+    print(f'make_exe: {a.out} verified: PE32{"+" if a.width == 64 else ""} (machine {pe.machine:#x}), '
+          f'base {pe.image_base:#x}, {len(pe.sections)} sections '
           f'({", ".join(s["name"] for s in pe.sections)}), entry {pe.image_base + pe.entry_rva:#x}, '
           f'stack {pe.stack_reserve:#x}/{pe.stack_commit:#x}, no relocations, imports '
           + '; '.join(f'{d}!{",".join(f)}' for d, f in pe.imports())
