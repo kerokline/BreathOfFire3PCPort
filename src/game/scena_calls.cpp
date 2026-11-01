@@ -37,6 +37,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "common/asm_name.h"
 #include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/scena_calls_callees.h"
@@ -590,11 +591,20 @@ extern "C" void __cdecl scena_calls_SaveAndLeave(std::uint32_t ecx) {
                     "return address",
                     n, n - static_cast<unsigned>(sizeof local));
 }
+// The caller's ecx (Scenario_CallA/B's n & 0xFF on both widths) as the
+// body's argument: a pair by width (docs/x64-asm-policy.md 8 unit 4).
 extern "C" __attribute__((naked)) void __cdecl ScenaCall_SaveAndLeave(void) {
-    asm("pushl %ecx\n\t"
-        "call _scena_calls_SaveAndLeave\n\t"
+#if defined(__i386__)
+    __asm__ volatile(
+        "pushl %ecx\n\t"
+        "call " BOF3_SYM(scena_calls_SaveAndLeave) "\n\t"
         "addl $4, %esp\n\t"
         "ret");
+#elif defined(__x86_64__)
+    __asm__ volatile("jmp " BOF3_SYM(scena_calls_SaveAndLeave));   // the caller's ecx is the body's first argument already
+#else
+#error "no ecx entry for this architecture"
+#endif
 }
 
 // original 0x51A360 (0xF bytes; 9 B[9]): 0x534030(7); 0x533E00.
@@ -978,11 +988,19 @@ extern "C" void __cdecl scena_calls_LeaveAllParty7(std::uint32_t ecx) {
                     "return address",
                     n, n - static_cast<unsigned>(sizeof local));
 }
+// The same pair as ScenaCall_SaveAndLeave's.
 extern "C" __attribute__((naked)) void __cdecl Scena15_LeaveAllParty7(void) {
-    asm("pushl %ecx\n\t"
-        "call _scena_calls_LeaveAllParty7\n\t"
+#if defined(__i386__)
+    __asm__ volatile(
+        "pushl %ecx\n\t"
+        "call " BOF3_SYM(scena_calls_LeaveAllParty7) "\n\t"
         "addl $4, %esp\n\t"
         "ret");
+#elif defined(__x86_64__)
+    __asm__ volatile("jmp " BOF3_SYM(scena_calls_LeaveAllParty7));   // the caller's ecx is the body's first argument already
+#else
+#error "no ecx entry for this architecture"
+#endif
 }
 
 // original 0x51ABC0 (0x16 bytes; 15 A[1]): Party_Join(4); Party_Join(2); 0x533E00.

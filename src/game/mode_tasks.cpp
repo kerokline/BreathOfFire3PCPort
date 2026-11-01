@@ -369,32 +369,12 @@ constexpr unsigned kLog = 48;
 struct Entry { std::uint32_t what, a, b, c, d; };
 Entry g_log[kLog];
 unsigned g_log_n, g_seed, g_sleeps, g_sleep_limit;
-std::uint32_t g_jump[6];
-
-extern "C" __attribute__((naked, returns_twice)) int __cdecl JumpSave(std::uint32_t* buffer) {
-    asm("movl 4(%esp), %eax\n\t"
-        "movl %ebx, 0(%eax)\n\t"
-        "movl %esi, 4(%eax)\n\t"
-        "movl %edi, 8(%eax)\n\t"
-        "movl %ebp, 12(%eax)\n\t"
-        "leal 4(%esp), %ecx\n\t"
-        "movl %ecx, 16(%eax)\n\t"
-        "movl (%esp), %ecx\n\t"
-        "movl %ecx, 20(%eax)\n\t"
-        "xorl %eax, %eax\n\t"
-        "ret");
-}
-extern "C" __attribute__((naked, noreturn)) void __cdecl JumpBack(std::uint32_t* buffer) {
-    asm("movl 4(%esp), %eax\n\t"
-        "movl 0(%eax), %ebx\n\t"
-        "movl 4(%eax), %esi\n\t"
-        "movl 8(%eax), %edi\n\t"
-        "movl 12(%eax), %ebp\n\t"
-        "movl 16(%eax), %esp\n\t"
-        "movl 20(%eax), %ecx\n\t"
-        "movl $1, %eax\n\t"
-        "jmp *%ecx");
-}
+// The long jump that ends a task body: the compiler's own setjmp (five
+// words: frame pointer, resume address, stack pointer), which it treats as
+// clobbering every register at the call - the i686 asm it replaces saved
+// ebx, esi, edi, ebp, esp and the return address itself, which has no
+// x86-64 spelling (docs/x64-asm-policy.md 8 unit 8).
+void* g_jump[5];
 unsigned char g_prim[0x100], g_sprite_out[0x80];
 
 std::uint32_t Hash() {
@@ -439,7 +419,7 @@ void DisturbField() {
 void __cdecl StubClearPrivate() { Record(1); DisturbTitle(); }
 void __cdecl StubSleep(int frames) {
     Record(2, static_cast<std::uint32_t>(frames));
-    if (++g_sleeps >= g_sleep_limit) JumpBack(g_jump);
+    if (++g_sleeps >= g_sleep_limit) __builtin_longjmp(g_jump, 1);
     DisturbTitle();
 }
 void __cdecl StubCheckStart() { Record(3, Title_State); DisturbTitle(); }
@@ -619,12 +599,20 @@ std::uint16_t Near(unsigned b) { return static_cast<std::uint16_t>(b - 3 + Next(
 using VoidFn = void (__cdecl*)();
 using SpriteFn = unsigned char* (__cdecl*)(int, int, unsigned, unsigned, unsigned);
 
-// The task body runs until the Task_Sleep recorder's long jump. A setjmp of
-// our own - ebx, esi, edi, ebp, esp and the return address - because clang's
-// __builtin_setjmp let the loop's registers come back wrong here (the first
-// build's rounds named the wrong function after the jump).
+// The task body runs until the Task_Sleep recorder's long jump. Once a
+// setjmp of our own in asm (ebx, esi, edi, ebp, esp and the return address),
+// written when clang's __builtin_setjmp "let the loop's registers come back
+// wrong" in a first build; the builtin again since the 64-bit build round,
+// and the first build's fault found: clang turned `fn()` into a tail jump
+// after popping this frame, so the body ran over the very slots the jump
+// buffer's esp pointed into, and the long jump returned through garbage.
+// The barrier after the call keeps it a call (the body's frames stay below
+// this one); the fuzz is the witness (BOF3X_SHADOW=mode_tasks).
 __attribute__((noinline)) void RunTask(VoidFn fn) {
-    if (JumpSave(g_jump) == 0) fn();
+    if (__builtin_setjmp(g_jump) == 0) {
+        fn();
+        asm volatile("" ::: "memory");   // no tail call: the frame must outlive the body
+    }
 }
 
 // Each branch's boundaries, on top of the random bytes.

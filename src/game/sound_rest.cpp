@@ -14,6 +14,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "common/asm_name.h"
 #include "game/sound_callees.h"
 #include "game/sound_in.h"
 #include "game/sound_rest_callees.h"
@@ -61,20 +62,48 @@ extern "C" Callees SoundRest_g = kOriginals;
 
 // Sound_PauseAll's eax: Music_Halt's, which its tail jump hands back. Defined
 // under the assembler name of the void declaration symbols.gen.h makes, as
-// sound.cpp's five are; the one caller (Game_WndProc, ours) does not read it.
-extern "C" int __cdecl Sound_PauseAllEax(void) __asm__("_Sound_PauseAll");
+// sound.cpp's five are (common/asm_name.h); the one caller (Game_WndProc,
+// ours) does not read it.
+extern "C" int __cdecl Sound_PauseAllEax(void) BOF3_ASM_NAME(Sound_PauseAll);
 
 // original 0x587B80: `jmp Music_Halt`. The caller's ecx and stack reach
-// Music_Halt as they were: a jump through SoundRest_g, not a call.
-extern "C" __attribute__((naked)) void __cdecl Sound_StopMusic(void) { __asm__ volatile("jmp *(_SoundRest_g+8)"); }
+// Music_Halt as they were: a jump through SoundRest_g, not a call. A pair by
+// width (docs/x64-asm-policy.md 8 unit 5): the i686 operand's offset is the
+// table of 4-byte pointers', the x86_64 half's is offsetof over the 8-byte
+// ones, RIP-relative (sound_rest_callees.h's assert ties the two).
+extern "C" __attribute__((naked)) void __cdecl Sound_StopMusic(void) {
+#if defined(__i386__)
+    __asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+8)");
+#elif defined(__x86_64__)
+    __asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(Callees, halt)));
+#else
+#error "no callee-table jump for this architecture"
+#endif
+}
 
 // original 0x587B90: `jmp Music_Resume`, the same way.
-extern "C" __attribute__((naked)) void __cdecl Sound_ResumeAll(void) { __asm__ volatile("jmp *(_SoundRest_g+12)"); }
+extern "C" __attribute__((naked)) void __cdecl Sound_ResumeAll(void) {
+#if defined(__i386__)
+    __asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+12)");
+#elif defined(__x86_64__)
+    __asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(Callees, resume)));
+#else
+#error "no callee-table jump for this architecture"
+#endif
+}
 
 // original 0x587C20: `jmp Music_IsPlaying`, the same way - Music_IsPlaying
 // reads the ecx it is handed (save_menu.cpp). Its callers are Game_Mode 3's
 // steps 0x495BC0 and 0x495C50, still Capcom's (docs/sound-rest.md section 5).
-extern "C" __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) { __asm__ volatile("jmp *(_SoundRest_g+16)"); }
+extern "C" __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) {
+#if defined(__i386__)
+    __asm__ volatile("jmp *(" BOF3_SYM(SoundRest_g) "+16)");
+#elif defined(__x86_64__)
+    __asm__ volatile("jmp *%c0+" BOF3_SYM(SoundRest_g) "(%%rip)" : : "i"(offsetof(Callees, music_playing)));
+#else
+#error "no callee-table jump for this architecture"
+#endif
+}
 
 // original 0x587C30: everything paused - WndProc's on a deactivation and on
 // F9. Each of the 23 Sound_Channels dwords that is not 0, SndBuf_Stop (the
@@ -172,20 +201,35 @@ extern "C" int __cdecl SoundRest_StreamPlayingBody(std::uint32_t ecx) {
 }
 
 // The two entries whose originals read the ecx their caller left: each passes
-// it to its body, above, as it found it.
+// it to its body, above, as it found it - a pair by width
+// (docs/x64-asm-policy.md 8 unit 4): on i686 pushed as the body's argument,
+// on x86-64 one jump, since the caller's ecx is the first argument register
+// already.
 extern "C" __attribute__((naked)) int __cdecl Music_Halt(void) {
+#if defined(__i386__)
     __asm__ volatile(
         "push %ecx\n\t"
-        "call _SoundRest_HaltBody\n\t"
+        "call " BOF3_SYM(SoundRest_HaltBody) "\n\t"
         "add $4, %esp\n\t"
         "ret");
+#elif defined(__x86_64__)
+    __asm__ volatile("jmp " BOF3_SYM(SoundRest_HaltBody));   // the caller's ecx is the body's first argument already
+#else
+#error "no ecx entry for this architecture"
+#endif
 }
 extern "C" __attribute__((naked)) int __cdecl SndStream_IsPlaying(void) {
+#if defined(__i386__)
     __asm__ volatile(
         "push %ecx\n\t"
-        "call _SoundRest_StreamPlayingBody\n\t"
+        "call " BOF3_SYM(SoundRest_StreamPlayingBody) "\n\t"
         "add $4, %esp\n\t"
         "ret");
+#elif defined(__x86_64__)
+    __asm__ volatile("jmp " BOF3_SYM(SoundRest_StreamPlayingBody));   // the caller's ecx is the body's first argument already
+#else
+#error "no ecx entry for this architecture"
+#endif
 }
 
 // original 0x5A6830: the sound set-up, Game_Init's (hwnd Game_Hwnd). The

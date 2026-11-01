@@ -38,6 +38,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "common/asm_name.h"
 #include "game/record_views.h"
 #include "game/records.h"
 #include "game/battle_misc_callees.h"
@@ -154,14 +155,28 @@ extern "C" unsigned long __cdecl Battle_PlayActorCue(unsigned cue) {
 // original 0x446BB0 (PSX 0x801DDA7C): when bit 7 of the status argument is set,
 // Sprite_SetTint(Sprite_Current, -6, -10, 0, 0) and its eax returned; otherwise
 // nothing at all - eax is the caller's own. Two of the twelve callers
-// (0x44F40E, 0x44F446) return eax on, so the no-tint path is a bare ret here too.
+// (0x44F40E, 0x44F446, in Battle_InflictStatus) return eax on, so the no-tint
+// path is a bare ret here too. A pair by width (docs/x64-asm-policy.md 8
+// unit 6): Battle_InflictStatus is ours (rest_3d.cpp) and calls this as a
+// statement, as every other caller does, so no C++ reads the no-tint eax -
+// but this file's fuzz does (battle_misc_fuzz.cpp FuzzTint seeds eax and
+// compares the result: a plain `return 0` failed 1494 of 3000 rounds), and
+// the x86_64 half is the same three instructions on the argument register.
 extern "C" unsigned long __cdecl BattleMisc_StatusTintBody(void) {
     return g.set_tint(SpriteCurrent(), 0xFFFFFFFAu, 0xFFFFFFF6u, 0, 0);
 }
 extern "C" __attribute__((naked)) unsigned long __cdecl Battle_StatusTint(unsigned) {
+#if defined(__i386__)
     asm("testb $0x80, 4(%esp)\n\t"
-        "jne _BattleMisc_StatusTintBody\n\t"
+        "jne " BOF3_SYM(BattleMisc_StatusTintBody) "\n\t"
         "ret");
+#elif defined(__x86_64__)
+    asm("testb $0x80, %cl\n\t"
+        "jne " BOF3_SYM(BattleMisc_StatusTintBody) "\n\t"
+        "ret");
+#else
+#error "Battle_StatusTint: no entry for this architecture"
+#endif
 }
 
 // --- the actor contexts -------------------------------------------------------------

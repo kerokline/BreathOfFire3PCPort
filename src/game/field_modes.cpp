@@ -10,6 +10,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "common/asm_name.h"
 #include "game/field_modes_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
@@ -133,11 +134,14 @@ extern "C" void __cdecl Field_ModeTailRun(void) { Entry(::bof3::Img(Field_ModeTa
 // later, some of them together), so no C++ signature forwards them all. None
 // of the 153 reads eax after the call (capstone, to the first branch or
 // write of eax); the jump passes the entry's through regardless.
+// A pair by width (docs/x64-asm-policy.md 8 unit 3): the i686 text as it
+// was, and the same tail jump for the x86-64 register arguments.
 extern "C" __attribute__((naked)) void __cdecl Scenario_CallA(unsigned) {
+#if defined(__i386__)
     // edx holds the image's move first (Bof3_ImageMove, src/hook/host.cpp;
-    // task_sched.cpp says why the VAs are displacements); eax, ecx and edx are
-    // the three the original writes.
-    asm("movl _Bof3_ImageMove, %%edx\n\t"
+    // task_switch_i686.h says why the VAs are displacements); eax, ecx and
+    // edx are the three the original writes.
+    asm("movl " BOF3_SYM(Bof3_ImageMove) ", %%edx\n\t"
         "movsbl %c0(%%edx), %%eax\n\t"     // Cond_ByteFA, the chapter
         "movl 4(%%esp), %%ecx\n\t"
         "movl %c1(%%edx,%%eax,4), %%edx\n\t"   // field_modes::kCallATables
@@ -145,6 +149,24 @@ extern "C" __attribute__((naked)) void __cdecl Scenario_CallA(unsigned) {
         "jmp *(%%edx,%%ecx,4)"
         :
         : "i"(0x8034E0), "i"(0x660B84));
+#elif defined(__x86_64__)
+    // The same for the Win64 arguments: n in ecx, the rest in rdx, r8, r9 and
+    // the caller's stack, forwarded untouched by a tail jump; the chapter
+    // sign-extended to 64 bits (a negative one reads below the table, as the
+    // i686 wrap does); the table word is a 32-bit code place, loaded into
+    // eax and jumped through; r10 is the scratch (volatile, not an
+    // argument). The entry sees ecx = n & 0xFF, as the i686 entry does.
+    asm("movslq " BOF3_SYM(Bof3_ImageMove) "(%%rip), %%r10\n\t"
+        "movsbq %c0(%%r10), %%rax\n\t"          // Cond_ByteFA, the chapter
+        "andl $0xFF, %%ecx\n\t"
+        "movl %c1(%%r10,%%rax,4), %%r10d\n\t"   // the chapter's table, a 32-bit place
+        "movl (%%r10,%%rcx,4), %%eax\n\t"       // the entry's code word
+        "jmp *%%rax"
+        :
+        : "i"(0x8034E0), "i"(0x660B84));
+#else
+#error "Scenario_CallA: no tail jump for this architecture"
+#endif
 }
 
 // original 0x56B2A0: scenario 16's vtable slot 0 (PSX 0x801F6C90): a tail
