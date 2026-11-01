@@ -1599,9 +1599,11 @@ extern "C" void __cdecl EffectKind5E_DrawPanel(void) {
                                     dock::kU0 + dock::kColU, dock::kV0 + from, dock::kU0 + dock::kColU + dock::kColW,
                                     dock::kV0 + from + dock::kBandH);
                 } else if (rows[r].how == dock::kGlyph) {
-                    // The 12-unit glyph centred on the cell (Text_DrawAt's
-                    // y + 1 is the glyph's top).
-                    dock::Glyph(x0 + 4, y0 + static_cast<int>(top) + 3, static_cast<dock::Shape>(rows[r].from));
+                    // The 12-unit glyph centred on the 10-texel cell: Text_DrawAt's
+                    // y + 1 is the glyph's top, so top - 2 puts it at top - 1 ..
+                    // top + 11. (top + 3 until 2026-11-01 - issue #178's capture had
+                    // the circle's lower half over the next row's icon.)
+                    dock::Glyph(x0 + 4, y0 + static_cast<int>(top) - 2, static_cast<dock::Shape>(rows[r].from));
                 }
             }
             return;

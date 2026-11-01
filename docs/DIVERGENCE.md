@@ -10391,6 +10391,14 @@ designed in rather than bolted on.
   each); the rule read the seven builds' pages as [`rest_3e.md`](rest_3e.md)
   11's table. **Not seen:** no recorded route reaches the dock yet (RC's
   placed save `dock128` is the owner's to record).
+  **Amended 2026-11-01** (issue #178, the first capture of the glyph
+  fallback, a PSX + PSP English disc-built install): the glyph was drawn
+  at the cell's `y + 3`, which with `Text_DrawAt`'s `y + 1` put its 12
+  units at `y + 4 .. y + 16` - the circle's lower half over the next row's
+  icon. Now `y - 2`, the glyph at `y - 1 .. y + 11`, centred on the
+  10-texel cell ([`rest_3e.md`](rest_3e.md) 11.2 and 11.5). The plan, the
+  cell copies and the rule are unchanged; the owner's eye on the next
+  capture is owed.
 - **Reversible?** `BOF3X_ORIGINAL=DockLegend` (the page as it is), or
   `BOF3X_ORIGINAL=EffectKind5E_DrawPanel`.
   A player turns it off with `BOF3X_OFF=DockLegend` (the ini's `off=`).

@@ -473,8 +473,11 @@ frame the panel is drawn:
    - else **the port's stand-in**: the string `0x461C00` draws for that
      button (`[0x66A2FC + 4k]`, k in the order circle, cross, triangle,
      square, L1, R1, read with capstone 2026-10-17), in the same colour.
-   The glyph's top-left is the cell's `(x + 4, y + 3)` (a 12-unit glyph,
-   `Text_DrawAt`'s `y + 1` its top, centred on the cell).
+   The glyph is drawn at the cell's `(x + 4, y - 2)`: `Text_DrawAt`'s
+   `y + 1` is the glyph's top, so the 12 units sit at `y - 1 .. y + 11`,
+   centred on the 10-texel cell. (`y + 3` until 2026-11-01, which put the
+   glyph at `y + 4 .. y + 16`, its lower half over the next row's icon:
+   issue #178's capture, the first of this draw, section 11.5.)
 5. **A page whose cells are not three of the four shapes** (a mod, or a page
    not loaded) is drawn as it is, and the log says so once.
 
@@ -541,8 +544,12 @@ So `tools/importer.py` is unchanged and no cache needs rebuilding.
 ### 11.5 Open
 
 - The glyph fallback's size and place (12 units centred on an 8 x 8 icon's
-  cell) are measured off the code, not seen; the owner tunes them by eye off
-  the first capture.
+  cell) were measured off the code, not seen. **The first capture, issue
+  #178 (2026-11-01, a PSX + PSP English disc-built install):** the circle
+  glyph in row 0 drew 5 texels low, its lower half over row 1's icon - the
+  `y + 3` had the glyph's top at `y + 4`, not `y - 1`. Now `y - 2`; the
+  owner's eye on the next capture is still owed, and the glyph's x (the
+  column's left, 12 units over an 11-texel column) with it.
 - Under a Japanese overlay (`Lang_FullWidth`) the fallback is the port's
   stand-in, as the Config panel's original cell draws there; not checked
   whether that overlay keeps the one-byte stand-in glyphs.
