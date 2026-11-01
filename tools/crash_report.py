@@ -17,6 +17,12 @@ gives the main module's base, an address inside it is shown with its VA and
 named by the VA, and --read / --u32 take VAs, as every other tool does
 (tools/proc_image.py).
 
+Both widths (docs/x64-build-design.md 11): a dump of the 32-bit process (an
+x86 CONTEXT, 4-byte stack words) and one of the x86-64 bof3x.exe (the
+SystemInfoStream says AMD64; an AMD64 CONTEXT, 8-byte stack words, addresses
+printed with 16 digits). The game's image lies below 4 GB on both, so a VA is
+read and named the same way.
+
 A dump is game-derived: it holds the game's code and data. Keep it local
 (CLAUDE.md rule 1).
 """
@@ -29,7 +35,12 @@ CODES = {0xC0000005: 'access violation', 0xC0000006: 'in-page error',
          0xC000001D: 'illegal instruction', 0xC0000096: 'privileged instruction',
          0xC00000FD: 'stack overflow', 0xC0000094: 'integer divide by zero',
          0x80000003: 'breakpoint', 0xC0000409: 'stack buffer overrun (fail-fast)'}
-REGS = ['edi', 'esi', 'ebx', 'edx', 'ecx', 'eax', 'ebp', 'eip', 'cs', 'efl', 'esp']
+# The x86 CONTEXT's integer registers, in record order from +0x9C.
+REGS32 = ['edi', 'esi', 'ebx', 'edx', 'ecx', 'eax', 'ebp', 'eip', 'cs', 'efl', 'esp']
+# The AMD64 CONTEXT's: EFlags at +0x44, Rax..R15 at +0x78 (16 qwords), Rip at +0xF8.
+REGS64 = ['rax', 'rcx', 'rdx', 'rbx', 'rsp', 'rbp', 'rsi', 'rdi',
+          'r8', 'r9', 'r10', 'r11', 'r12', 'r13', 'r14', 'r15']
+PROCESSOR_AMD64 = 9                                         # SystemInfoStream.ProcessorArchitecture
 
 
 class Dump:
@@ -39,6 +50,14 @@ class Dump:
         if sig != 0x504D444D:
             sys.exit(f'{path}: not a minidump')
         self.regions, self.modules, self.exc = [], [], None
+        # The width first: the SystemInfoStream (kind 7) may follow the
+        # ExceptionStream in the directory, and the context's layout needs it.
+        self.width = 32
+        for i in range(n):
+            kind, _, r = struct.unpack_from('<III', d, rva + 12 * i)
+            if kind == 7 and struct.unpack_from('<H', d, r)[0] == PROCESSOR_AMD64:
+                self.width = 64
+        self.word, self.fmt, self.digits = (4, '<I', 8) if self.width == 32 else (8, '<Q', 16)
         for i in range(n):
             kind, _, r = struct.unpack_from('<III', d, rva + 12 * i)
             if kind == 9:                                   # Memory64ListStream
@@ -63,7 +82,14 @@ class Dump:
                 tid, _, code, _, _, addr, nparm, _ = struct.unpack_from('<IIIIQQII', d, r)
                 params = struct.unpack_from('<15Q', d, r + 40)[:nparm]
                 _, ctx = struct.unpack_from('<II', d, r + 8 + 152)
-                regs = dict(zip(REGS, struct.unpack_from('<11I', d, ctx + 0x9C)))
+                if self.width == 32:
+                    regs = dict(zip(REGS32, struct.unpack_from('<11I', d, ctx + 0x9C)))
+                    regs['ip'], regs['sp'] = regs['eip'], regs['esp']
+                else:
+                    regs = dict(zip(REGS64, struct.unpack_from('<16Q', d, ctx + 0x78)))
+                    regs['efl'], = struct.unpack_from('<I', d, ctx + 0x44)
+                    regs['rip'], = struct.unpack_from('<Q', d, ctx + 0xF8)
+                    regs['ip'], regs['sp'] = regs['rip'], regs['rsp']
                 self.exc = dict(thread=tid, code=code, addr=addr, params=params, regs=regs)
         # The game's image: the executable among the modules (BOF3.exe or
         # bof3x*.exe), and its move from 0x400000.
@@ -120,7 +146,14 @@ def exe_bytes(a, n, _cache={}):
             pe = struct.unpack_from('<I', d, 0x3C)[0]
             nsec, = struct.unpack_from('<H', d, pe + 6)
             optsz, = struct.unpack_from('<H', d, pe + 20)
-            base, = struct.unpack_from('<I', d, pe + 24 + 28)
+            # ImageBase: <I at opt + 28 in a PE32, <Q at opt + 24 in a PE32+
+            # (tools/pe_read.py). BOF3.exe is a PE32; the branch is for a
+            # PE32+ handed to this reader (docs/x64-build-design.md 11).
+            magic, = struct.unpack_from('<H', d, pe + 24)
+            if magic == 0x20B:
+                base, = struct.unpack_from('<Q', d, pe + 24 + 24)
+            else:
+                base, = struct.unpack_from('<I', d, pe + 24 + 28)
             for i in range(nsec):
                 vsz, va, rsz, raw = struct.unpack_from('<IIII', d, pe + 24 + optsz + i * 40 + 8)
                 _cache['secs'].append((base + va, rsz, raw))
@@ -175,24 +208,31 @@ def main():
     e = dump.exc
     if not e:
         sys.exit('no exception stream in this dump')
-    print(f'exception 0x{e["code"]:08X} ({CODES.get(e["code"], "?")}) at 0x{e["addr"]:08X}  '
-          f'{where(e["addr"])}  thread {e["thread"]}')
+    w = dump.digits                                         # 8 hex digits for a 32-bit dump, 16 for a 64-bit one
+    print(f'{"x86" if dump.width == 32 else "x86-64"} process; exception 0x{e["code"]:08X} ({CODES.get(e["code"], "?")}) '
+          f'at 0x{e["addr"]:0{w}X}  {where(e["addr"])}  thread {e["thread"]}')
     if e['code'] in (0xC0000005, 0xC0000006) and len(e['params']) >= 2:
         kind = {0: 'reading', 1: 'writing', 8: 'executing'}.get(e['params'][0], '?')
         at = e['params'][1]
-        print(f'  {kind} 0x{at:08X}' + (f' (VA 0x{va(at, dump.move):08X})' if va(at, dump.move) != at else ''))
+        print(f'  {kind} 0x{at:0{w}X}' + (f' (VA 0x{va(at, dump.move):08X})' if va(at, dump.move) != at else ''))
     r = e['regs']
-    print('  ' + '  '.join(f'{k} {r[k]:08X}' for k in ('eax', 'ebx', 'ecx', 'edx', 'esi', 'edi')))
-    print('  ' + '  '.join(f'{k} {r[k]:08X}' for k in ('ebp', 'esp', 'eip', 'efl')))
+    if dump.width == 32:
+        print('  ' + '  '.join(f'{k} {r[k]:08X}' for k in ('eax', 'ebx', 'ecx', 'edx', 'esi', 'edi')))
+        print('  ' + '  '.join(f'{k} {r[k]:08X}' for k in ('ebp', 'esp', 'eip', 'efl')))
+    else:
+        print('  ' + '  '.join(f'{k} {r[k]:016X}' for k in ('rax', 'rbx', 'rcx', 'rdx', 'rsi', 'rdi')))
+        print('  ' + '  '.join(f'{k} {r[k]:016X}' for k in ('r8', 'r9', 'r10', 'r11', 'r12', 'r13', 'r14', 'r15')))
+        print('  ' + '  '.join(f'{k} {r[k]:016X}' for k in ('rbp', 'rsp', 'rip')) + f'  efl {r["efl"]:08X}')
+    sp = 'esp' if dump.width == 32 else 'rsp'
     print('return addresses on the stack (a scan, not a walk - nearest first):')
     shown = 0
-    for off in range(0, a.stack, 4):
-        m = dump.read(r['esp'] + off, 4)
+    for off in range(0, a.stack, dump.word):
+        m = dump.read(r['sp'] + off, dump.word)
         if not m:
             break
-        v, = struct.unpack('<I', m)
+        v, = struct.unpack(dump.fmt, m)
         if (name(va(v, dump.move)) or (dump.module(v) or ('',))[0].lower() == 'bof3x.dll') and after_call(dump, v):
-            print(f'  esp+0x{off:04X}  0x{v:08X}  {where(v)}')
+            print(f'  {sp}+0x{off:04X}  0x{v:0{w}X}  {where(v)}')
             shown += 1
     if not shown:
         print('  none inside BOF3.exe or bof3x.dll')

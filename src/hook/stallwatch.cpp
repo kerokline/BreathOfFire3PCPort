@@ -11,6 +11,7 @@
 #include <cstring>
 #include <cwchar>
 
+#include "hook/cpu_context.h"
 #include "hook/log.h"
 
 namespace bof3 {
@@ -24,7 +25,7 @@ constexpr std::uint32_t kScanBytes = 0x10000;   // the stack read above esp
 volatile LONG g_beats = 0;
 const volatile std::uint32_t* g_frame = nullptr;
 HANDLE g_main = nullptr;
-std::uint32_t g_stack_base = 0;   // NT_TIB StackBase of the main thread: the top, exclusive
+std::uintptr_t g_stack_base = 0;   // NT_TIB StackBase of the main thread: the top, exclusive
 DWORD g_threshold = 0;
 HANDLE g_out = INVALID_HANDLE_VALUE;
 LARGE_INTEGER g_qpf;
@@ -55,10 +56,14 @@ double NowMs() {
     return static_cast<double>(q.QuadPart) * 1000.0 / static_cast<double>(g_qpf.QuadPart);
 }
 
-bool Executable(std::uint32_t a, MEMORY_BASIC_INFORMATION* last) {
+// Addresses are native (std::uintptr_t): the main thread's stack and the
+// modules a sample names lie wherever the width's process puts them, and a
+// system DLL's return address is above 4 GB on x86-64 (docs/x64-build-design.md
+// 11). The words read off the stack are the width's.
+bool Executable(std::uintptr_t a, MEMORY_BASIC_INFORMATION* last) {
     const auto lo = reinterpret_cast<std::uintptr_t>(last->BaseAddress);
     if (!(last->RegionSize && a >= lo && a - lo < last->RegionSize)) {
-        if (VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a)), last, sizeof *last) == 0) {
+        if (VirtualQuery(reinterpret_cast<const void*>(a), last, sizeof *last) == 0) {
             last->RegionSize = 0;
             return false;
         }
@@ -71,9 +76,9 @@ bool Executable(std::uint32_t a, MEMORY_BASIC_INFORMATION* last) {
 
 struct Sample {
     bool ok;
-    std::uint32_t eip, esp;
+    std::uintptr_t eip, esp;
     unsigned n;
-    std::uint32_t at[kMaxFrames];
+    std::uintptr_t at[kMaxFrames];
 };
 
 // The main thread suspended only between SuspendThread and ResumeThread, and
@@ -87,22 +92,21 @@ void Take(Sample* s) {
     c.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER;
     if (GetThreadContext(g_main, &c)) {
         s->ok = true;
-        s->eip = c.Eip;
-        s->esp = c.Esp;
+        s->eip = CtxIp(c);
+        s->esp = CtxSp(c);
         MEMORY_BASIC_INFORMATION last = {};
         // The scan ends with the region esp is in: the thread's stack, or the
         // block the game's own code runs on there (esp outside the TEB's range).
-        std::uint32_t top = c.Esp + kScanBytes;
+        std::uintptr_t top = CtxSp(c) + kScanBytes;
         MEMORY_BASIC_INFORMATION at = {};
-        if (VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(c.Esp)), &at, sizeof at)) {
-            const std::uint32_t end = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(at.BaseAddress)) +
-                                      static_cast<std::uint32_t>(at.RegionSize);
+        if (VirtualQuery(reinterpret_cast<const void*>(CtxSp(c)), &at, sizeof at)) {
+            const std::uintptr_t end = reinterpret_cast<std::uintptr_t>(at.BaseAddress) + at.RegionSize;
             if (end < top) top = end;
         } else if (g_stack_base && top > g_stack_base) {
             top = g_stack_base;
         }
-        for (std::uint32_t p = c.Esp & ~3u; p + 4 <= top && s->n < kMaxFrames; p += 4) {
-            const std::uint32_t v = *reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(p));
+        for (std::uintptr_t p = CtxSp(c) & ~std::uintptr_t{3}; p + sizeof p <= top && s->n < kMaxFrames; p += sizeof p) {
+            const std::uintptr_t v = *reinterpret_cast<const std::uintptr_t*>(p);
             if (v > 0x10000 && Executable(v, &last)) s->at[s->n++] = v;
         }
     }
@@ -110,19 +114,23 @@ void Take(Sample* s) {
 }
 
 // module+offset, resolved after the thread is running again.
-void Name(std::uint32_t a, char* out, std::size_t cap) {
+void Name(std::uintptr_t a, char* out, std::size_t cap) {
     HMODULE m = nullptr;
     if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                           reinterpret_cast<LPCWSTR>(static_cast<std::uintptr_t>(a)), &m) && m) {
+                           reinterpret_cast<LPCWSTR>(a), &m) && m) {
         char path[MAX_PATH];
         const DWORD n = GetModuleFileNameA(m, path, MAX_PATH);
         const char* base = path;
         for (DWORD i = 0; i < n; ++i)
             if (path[i] == '\\' || path[i] == '/') base = path + i + 1;
         std::snprintf(out, cap, "%s+0x%X", n ? base : "?",
-                      static_cast<unsigned>(a - static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(m))));
+                      static_cast<unsigned>(a - reinterpret_cast<std::uintptr_t>(m)));
     } else {
+#if defined(__x86_64__)
+        std::snprintf(out, cap, "0x%016llX", static_cast<unsigned long long>(a));
+#else
         std::snprintf(out, cap, "0x%08X", static_cast<unsigned>(a));
+#endif
     }
 }
 
@@ -137,7 +145,11 @@ void Report(const Sample& s, double ms, std::uint32_t frame, bool turning) {
     std::size_t at = 0;
     char name[96];
     Name(s.eip, name, sizeof name);
+#if defined(__x86_64__)
+    at += std::snprintf(text + at, sizeof text - at, "rip %s rsp 0x%016llX; stack", name, static_cast<unsigned long long>(s.esp));
+#else
     at += std::snprintf(text + at, sizeof text - at, "eip %s esp 0x%08X; stack", name, static_cast<unsigned>(s.esp));
+#endif
     for (unsigned i = 0; i < s.n && at < sizeof text - 100; ++i) {
         Name(s.at[i], name, sizeof name);
         at += std::snprintf(text + at, sizeof text - at, " %s", name);
@@ -199,8 +211,7 @@ void StallWatch_Start(const volatile void* frame_counter) {
     g_threshold = static_cast<DWORD>(ms);
     g_frame = static_cast<const volatile std::uint32_t*>(frame_counter);
     QueryPerformanceFrequency(&g_qpf);
-    g_stack_base = static_cast<std::uint32_t>(
-        reinterpret_cast<std::uintptr_t>(reinterpret_cast<NT_TIB*>(NtCurrentTeb())->StackBase));
+    g_stack_base = reinterpret_cast<std::uintptr_t>(reinterpret_cast<NT_TIB*>(NtCurrentTeb())->StackBase);
     if (!DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &g_main,
                          THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION, FALSE, 0))
         Fatal("BOF3X_STALLWATCH: no handle on the main thread (error %lu)", GetLastError());

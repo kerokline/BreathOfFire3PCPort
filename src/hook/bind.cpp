@@ -7,6 +7,7 @@
 #include <cstring>
 
 #include "bof3/bind.gen.h"
+#include "common/image_base.h"
 #include "hook/exe_layout.h"
 #include "hook/host.h"
 #include "hook/log.h"
@@ -19,7 +20,12 @@ using bind_gen::kFunc;
 using bind_gen::kFuncs;
 using bind_gen::kRows;
 
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+// Our function's address as the 32-bit word a code place names: every
+// function of ours lies in bof3x.dll at 0x10000000 (CMakeLists.txt's
+// --image-base, --disable-dynamicbase; the 64-bit loader honours it too,
+// docs/x64-build-design.md 3), and Low32 is the Fatal if the DLL was ever
+// relocated above 4 GB.
+std::uint32_t Key(const void* p) { return Low32(p); }
 
 // DirectSoundCreate's import thunk, `jmp [0x5C4014]`, which Snd_Init calls
 // as a function (sound_rest_callees.h kDirectSoundCreate) and which is not a
@@ -73,6 +79,19 @@ constexpr std::uint8_t kTops[] = {0x7C, 0x70, 0x7E, 0x7B, 0x7D};
 constexpr std::uint32_t kSpanLo = image::kCodeLo, kSpanHi = image::kCodeHi;
 constexpr std::uint32_t kSpan = kSpanHi - kSpanLo;
 
+// The 64-bit exe host's extra page (docs/x64-build-design.md 4): right after
+// the table's last row page, (top << 24) | 0x5C4000, the import slots'
+// 14-byte `jmp [rip+0]` thunks, 16 bytes apart (Bind_ImportThunk). One
+// reservation then holds every place a 32-bit code word of ours can name,
+// and Bind_TableLo..Hi still bounds the table proper (the rows). The 32-bit
+// build reserves no such page: its slots hold Windows' functions themselves.
+#if defined(__x86_64__)
+constexpr std::uint32_t kThunkBytes = 0x1000;
+constexpr unsigned kThunkStride = 16, kThunks = kThunkBytes / kThunkStride;
+#else
+constexpr std::uint32_t kThunkBytes = 0;
+#endif
+
 std::uint32_t g_table = 0;   // (top << 24) once built (bof3x.exe), 0 hosted
 
 std::uint32_t PlaceAt(std::uint32_t va) { return g_table | va; }
@@ -83,12 +102,13 @@ std::uint32_t PlaceAt(std::uint32_t va) { return g_table | va; }
 bool g_measured = false;
 unsigned g_refused = 0;   // top bytes tried that the process could not reserve
 
-// The range (top << 24) | 0x401000 .. | 0x5C4000, reserved and committed
-// read-write at that address, or null when something else holds part of it.
+// The range (top << 24) | 0x401000 .. | 0x5C4000 (and the thunk page after
+// it on x86-64), reserved and committed read-write at that address, or null
+// when something else holds part of it.
 void* Reserve(std::uint32_t top) {
     const std::uint32_t lo = (top | kSpanLo) & ~0xFFFFu;
-    void* const at = VirtualAlloc(reinterpret_cast<void*>(static_cast<std::uintptr_t>(lo)), (top | kSpanHi) - lo,
-                                  MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    void* const at = VirtualAlloc(reinterpret_cast<void*>(static_cast<std::uintptr_t>(lo)),
+                                  (top | kSpanHi) + kThunkBytes - lo, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     if (at == reinterpret_cast<void*>(static_cast<std::uintptr_t>(lo))) return at;
     if (at) VirtualFree(at, 0, MEM_RELEASE);
     ++g_refused;
@@ -132,12 +152,24 @@ void BuildTable() {
             if (e[k] != 0xCC)
                 Fatal("bind: the place of 0x%08X overlaps another's jump at byte %u (a row within five bytes of it)",
                       (unsigned)va, k);
+#if defined(__x86_64__)
+        // A 5-byte jmp rel32 reaches our function only within 2 GB of the
+        // row: true for the DLL at 0x10000000 under every top byte the table
+        // may take (docs/x64-build-design.md 3, measured), and checked here
+        // for a DLL the loader moved - a 64-bit process has room above the
+        // table's reach, which the 32-bit one has not.
+        const std::int64_t reach = static_cast<std::int64_t>(to) - static_cast<std::int64_t>(from) - 5;
+        if (reach != static_cast<std::int32_t>(reach))
+            Fatal("bind: our function at 0x%08X is beyond a jmp rel32's reach from its row at 0x%08X: bof3x.dll must "
+                  "lie within 2 GB of the table of code places (docs/x64-build-design.md 3)",
+                  (unsigned)to, (unsigned)from);
+#endif
         const std::int32_t rel = static_cast<std::int32_t>(to - (from + 5));
         e[0] = 0xE9;
         std::memcpy(e + 1, &rel, 4);
     }
     DWORD old = 0;
-    if (!VirtualProtect(at, kSpan + (kSpanLo & 0xFFFF), PAGE_EXECUTE_READ, &old))
+    if (!VirtualProtect(at, kSpan + (kSpanLo & 0xFFFF) + kThunkBytes, PAGE_EXECUTE_READ, &old))
         Fatal("bind: VirtualProtect of the table of code places failed, error %lu", GetLastError());
     FlushInstructionCache(GetCurrentProcess(), t, kSpan);
     g_table = top;
@@ -272,6 +304,30 @@ bool Bind_TableMeasured() { return g_measured; }
 
 std::uint32_t Bind_TableLo() { return g_table ? g_table | kSpanLo : 0; }
 std::uint32_t Bind_TableHi() { return g_table ? g_table | kSpanHi : 0; }
+
+#if defined(__x86_64__)
+std::uint32_t Bind_ImportThunk(unsigned index, const void* target) {
+    if (!g_table) Fatal("bind: an import thunk asked for before the table of code places was built (Mode)");
+    if (index >= kThunks) Fatal("bind: import thunk %u, past the thunk page's %u", index, kThunks);
+    const std::uint32_t place = (g_table | kSpanHi) + index * kThunkStride;
+    auto* const e = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(place));
+    DWORD old = 0;
+    if (!VirtualProtect(e, kThunkStride, PAGE_READWRITE, &old))
+        Fatal("bind: VirtualProtect(thunk %u, read-write) failed, error %lu", index, GetLastError());
+    // FF 25 00000000: jmp [rip + 0], the 8-byte target right after it -
+    // measured to reach GetTickCount at 0x7FFA... through a 32-bit word
+    // (docs/x64-build-design.md 4). int3 fills the stride's last two bytes.
+    const std::uint8_t jmp[6] = {0xFF, 0x25, 0, 0, 0, 0};
+    std::memcpy(e, jmp, sizeof jmp);
+    const std::uint64_t t = reinterpret_cast<std::uintptr_t>(target);
+    std::memcpy(e + 6, &t, sizeof t);
+    std::memset(e + 14, 0xCC, kThunkStride - 14);
+    if (!VirtualProtect(e, kThunkStride, PAGE_EXECUTE_READ, &old))
+        Fatal("bind: VirtualProtect(thunk %u, execute) failed, error %lu", index, GetLastError());
+    FlushInstructionCache(GetCurrentProcess(), e, kThunkStride);
+    return place;
+}
+#endif
 
 const char* Bind_FuncName(std::uint32_t va, std::uint32_t* start) {
     if (va < image::kCodeLo || va >= image::kCodeHi) return nullptr;

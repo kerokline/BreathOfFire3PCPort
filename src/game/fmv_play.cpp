@@ -117,7 +117,11 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
 
     (void)fullscreen;   // DIV-0035: no Fmv_EnterFullscreen, whatever it says
 
-    const LONG saved_proc = SetWindowLongA(hwnd, GWL_WNDPROC, static_cast<LONG>(::bof3::Code(bof3::addr::Fmv_WndProc)));
+    // SetWindowLongPtrA / GWLP_WNDPROC: SetWindowLongA / GWL_WNDPROC on i686
+    // (the SDK's own aliases), the pointer-wide form on x86-64, where the
+    // 32-bit one does not exist.
+    const LONG_PTR saved_proc =
+        SetWindowLongPtrA(hwnd, GWLP_WNDPROC, static_cast<LONG_PTR>(::bof3::Code(bof3::addr::Fmv_WndProc)));
     Crt_sprintf(command, Str(::bof3::Img(kFmtWindow.v)), hwnd);
     mciSendStringA(command, nullptr, 0, nullptr);
 
@@ -166,7 +170,7 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
     }
     mciSendStringA(Str(::bof3::Img(kStop.v)), nullptr, 0, nullptr);
     mciSendStringA(Str(::bof3::Img(kClose.v)), nullptr, 0, nullptr);
-    SetWindowLongA(hwnd, GWL_WNDPROC, saved_proc);
+    SetWindowLongPtrA(hwnd, GWLP_WNDPROC, saved_proc);
 }
 
 // original 0x59E570 (read whole, 0xD4 bytes; DIV-0049): the window procedure

@@ -11,6 +11,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "hook/bind.h"
+#include "hook/cpu_context.h"
 #include "hook/host.h"
 #include "hook/log.h"
 #include "hook/statehash.h"
@@ -74,19 +75,21 @@ bool IsFault(DWORD code) {
     }
 }
 
+// Addresses are native (std::uintptr_t; docs/x64-build-design.md 11): a fault
+// in a system DLL lies at 0x7FFA... on x86-64 and is named, not truncated.
+// The image's and the DLL's ranges above stay 32-bit words - both lie below
+// 4 GB on either width - and a native value is compared against them whole.
+
 // Memory that may not be there: never dereference, always ask.
-bool Peek(std::uint32_t addr, void* out, size_t n) {
+bool Peek(std::uintptr_t addr, void* out, size_t n) {
     SIZE_T got = 0;
-    return ReadProcessMemory(GetCurrentProcess(), reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(addr)),
-                             out, n, &got) &&
-           got == n;
+    return ReadProcessMemory(GetCurrentProcess(), reinterpret_cast<LPCVOID>(addr), out, n, &got) && got == n;
 }
 
-void Where(std::uint32_t addr, char* out, size_t cap) {
+void Where(std::uintptr_t addr, char* out, size_t cap) {
     MEMORY_BASIC_INFORMATION mbi;
     char path[MAX_PATH];
-    if (VirtualQuery(reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(addr)), &mbi, sizeof mbi) &&
-        mbi.AllocationBase &&
+    if (VirtualQuery(reinterpret_cast<LPCVOID>(addr), &mbi, sizeof mbi) && mbi.AllocationBase &&
         GetModuleFileNameA(static_cast<HMODULE>(mbi.AllocationBase), path, sizeof path)) {
         const char* name = std::strrchr(path, '\\');
         std::snprintf(out, cap, "%s+0x%lX", name ? name + 1 : path,
@@ -96,14 +99,14 @@ void Where(std::uint32_t addr, char* out, size_t cap) {
     }
 }
 
-bool InCode(std::uint32_t v) {
+bool InCode(std::uintptr_t v) {
     return (v >= g_text_lo && v < g_text_hi) || (v >= g_dll_lo && v < g_dll_hi);
 }
 
 // " (VA 0x...)" for a place in the game's image when it lies elsewhere than
 // 0x400000 (docs/relocatable-image-design.md 8): the logs, symbols.toml and
 // tools/crash_report.py speak VAs. Empty otherwise.
-const char* VaOf(std::uint32_t a, char* out, size_t cap) {
+const char* VaOf(std::uintptr_t a, char* out, size_t cap) {
     out[0] = '\0';
     if (a >= g_image_lo && a < g_image_hi && ImageBase() != image::kBase)
         std::snprintf(out, cap, " (VA 0x%08X)", (unsigned)(a - ImageBase() + image::kBase));
@@ -113,8 +116,9 @@ const char* VaOf(std::uint32_t a, char* out, size_t cap) {
 // A stack word is a plausible return address if it points into code and the
 // bytes before it are a call: E8 rel32, or FF /2 in its 2-, 3- and 6-byte forms.
 // Only the FF opcode byte is tested, not the /2 in ModRM, so this is a filter
-// that lets some non-calls through - a scan, not a walk.
-bool AfterCall(std::uint32_t v) {
+// that lets some non-calls through - a scan, not a walk. The same bytes on
+// x86-64 (a REX prefix before FF leaves the FF where the 3-byte test looks).
+bool AfterCall(std::uintptr_t v) {
     std::uint8_t b[6];
     if (!InCode(v) || !Peek(v - 6, b, sizeof b)) return false;
     return b[1] == 0xE8 || b[4] == 0xFF || b[3] == 0xFF || b[0] == 0xFF;
@@ -125,29 +129,43 @@ void Report() {
     const CONTEXT& c = g_job.context;
     LONG n = g_reports;
     char where[MAX_PATH + 16];
-    auto addr = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(r.ExceptionAddress));
+    const auto addr = reinterpret_cast<std::uintptr_t>(r.ExceptionAddress);
     Where(addr, where, sizeof where);
 
     char va[24];
+#if defined(__x86_64__)
+    Log("CRASH %ld: exception 0x%08lX at 0x%016llX%s (%s), thread %lu", (long)n, r.ExceptionCode,
+        static_cast<unsigned long long>(addr), VaOf(addr, va, sizeof va), where, g_job.thread);
+#else
     Log("CRASH %ld: exception 0x%08lX at 0x%08X%s (%s), thread %lu", (long)n, r.ExceptionCode,
         (unsigned)addr, VaOf(addr, va, sizeof va), where, g_job.thread);
+#endif
     if ((r.ExceptionCode == EXCEPTION_ACCESS_VIOLATION || r.ExceptionCode == EXCEPTION_IN_PAGE_ERROR) &&
         r.NumberParameters >= 2) {
         // ExceptionInformation[0]: 0 read, 1 write, 8 execute (DEP).
         const ULONG_PTR k = r.ExceptionInformation[0];
         const char* kind = k == 0 ? "reading" : k == 1 ? "writing" : k == 8 ? "executing" : nullptr;
+#if defined(__x86_64__)
+        if (kind)
+            Log("CRASH %ld: %s 0x%016llX%s", (long)n, kind, static_cast<unsigned long long>(r.ExceptionInformation[1]),
+                VaOf(r.ExceptionInformation[1], va, sizeof va));
+        else
+            Log("CRASH %ld: access kind %lu at 0x%016llX", (long)n, (unsigned long)k,
+                static_cast<unsigned long long>(r.ExceptionInformation[1]));
+#else
         if (kind)
             Log("CRASH %ld: %s 0x%08lX%s", (long)n, kind, (unsigned long)r.ExceptionInformation[1],
-                VaOf(static_cast<std::uint32_t>(r.ExceptionInformation[1]), va, sizeof va));
+                VaOf(r.ExceptionInformation[1], va, sizeof va));
         else
             Log("CRASH %ld: access kind %lu at 0x%08lX", (long)n, (unsigned long)k,
                 (unsigned long)r.ExceptionInformation[1]);
+#endif
         // The trap (docs/relocatable-image-design.md 4.5): in bof3x.exe .stub
         // is no-access, so a code value no function of ours stands for faults
         // there - named by its VA and the [[func]] it lies in.
-        const auto at = static_cast<std::uint32_t>(r.ExceptionInformation[1]);
+        const std::uintptr_t at = r.ExceptionInformation[1];
         if (Bind_Active() && at >= g_text_lo && at < g_text_hi) {
-            const std::uint32_t va = at - ImageBase() + image::kBase;
+            const std::uint32_t va = static_cast<std::uint32_t>(at) - ImageBase() + image::kBase;
             std::uint32_t start = 0;
             const char* fn = Bind_FuncName(va, &start);
             Log("CRASH %ld: the trap - %s VA 0x%08X, %s+0x%X: a code value no function of ours stands for (the bind "
@@ -156,15 +174,31 @@ void Report() {
                 (unsigned)(va - start));
         }
     }
+#if defined(__x86_64__)
+    Log("CRASH %ld: rax %016llX rbx %016llX rcx %016llX rdx %016llX rsi %016llX rdi %016llX", (long)n,
+        static_cast<unsigned long long>(c.Rax), static_cast<unsigned long long>(c.Rbx), static_cast<unsigned long long>(c.Rcx),
+        static_cast<unsigned long long>(c.Rdx), static_cast<unsigned long long>(c.Rsi), static_cast<unsigned long long>(c.Rdi));
+    Log("CRASH %ld: r8 %016llX r9 %016llX r10 %016llX r11 %016llX r12 %016llX r13 %016llX r14 %016llX r15 %016llX", (long)n,
+        static_cast<unsigned long long>(c.R8), static_cast<unsigned long long>(c.R9), static_cast<unsigned long long>(c.R10),
+        static_cast<unsigned long long>(c.R11), static_cast<unsigned long long>(c.R12), static_cast<unsigned long long>(c.R13),
+        static_cast<unsigned long long>(c.R14), static_cast<unsigned long long>(c.R15));
+    Log("CRASH %ld: rbp %016llX rsp %016llX rip %016llX efl %08lX", (long)n, static_cast<unsigned long long>(c.Rbp),
+        static_cast<unsigned long long>(c.Rsp), static_cast<unsigned long long>(c.Rip), (unsigned long)c.EFlags);
+#else
     Log("CRASH %ld: eax %08lX ebx %08lX ecx %08lX edx %08lX esi %08lX edi %08lX", (long)n, c.Eax, c.Ebx,
         c.Ecx, c.Edx, c.Esi, c.Edi);
     Log("CRASH %ld: ebp %08lX esp %08lX eip %08lX efl %08lX", (long)n, c.Ebp, c.Esp, c.Eip, c.EFlags);
+#endif
 
     std::uint8_t code[16];
-    if (Peek(c.Eip, code, sizeof code)) {
+    if (Peek(CtxIp(c), code, sizeof code)) {
         char hex[3 * sizeof code + 1];
         for (size_t i = 0; i < sizeof code; ++i) std::snprintf(hex + 3 * i, 4, "%02X ", code[i]);
+#if defined(__x86_64__)
+        Log("CRASH %ld: bytes at rip: %s", (long)n, hex);
+#else
         Log("CRASH %ld: bytes at eip: %s", (long)n, hex);
+#endif
     }
 
     // Where the game was. Read through Peek: a crash may have taken these too.
@@ -172,7 +206,7 @@ void Report() {
     // +0x1A: the top-level mode and step; MsgBoxState +8: the message index
     // (symbols.toml Task_Records, MsgBoxState).
     std::uint16_t area = 0, task0[2] = {0, 0}, mode_step[2] = {0, 0}, message = 0;
-    Peek(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&Game_AreaNumber)), &area, sizeof area);
+    Peek(reinterpret_cast<std::uintptr_t>(&Game_AreaNumber), &area, sizeof area);
     Peek(Img(addr::Task_Records), task0, sizeof task0);
     Peek(Img(addr::Task_Records) + 0x18, mode_step, sizeof mode_step);
     Peek(Img(addr::MsgBoxState) + 8, &message, sizeof message);
@@ -181,14 +215,20 @@ void Report() {
 
     // Not a stack walk - the game's code has no frame pointers to follow and
     // the task stacks are hand-switched. Every word that looks like a return
-    // address, nearest first; tools/crash_report.py names them.
+    // address, nearest first; tools/crash_report.py names them. The words
+    // are the width's: 4 bytes at 4-byte steps, or 8 at 8.
     int shown = 0;
-    for (std::uint32_t off = 0; off < 0x2000 && shown < 40; off += 4) {
-        std::uint32_t v = 0;
-        if (!Peek(c.Esp + off, &v, sizeof v)) break;
+    for (std::uint32_t off = 0; off < 0x2000 && shown < 40; off += sizeof(std::uintptr_t)) {
+        std::uintptr_t v = 0;
+        if (!Peek(CtxSp(c) + off, &v, sizeof v)) break;
         if (!AfterCall(v)) continue;
+#if defined(__x86_64__)
+        Log("CRASH %ld: stack +0x%04lX  0x%016llX%s%s", (long)n, (unsigned long)off, static_cast<unsigned long long>(v),
+            v >= g_dll_lo && v < g_dll_hi ? "  (bof3x.dll)" : "", VaOf(v, va, sizeof va));
+#else
         Log("CRASH %ld: stack +0x%04lX  0x%08lX%s%s", (long)n, (unsigned long)off, (unsigned long)v,
             v >= g_dll_lo && v < g_dll_hi ? "  (bof3x.dll)" : "", VaOf(v, va, sizeof va));
+#endif
         ++shown;
     }
 
@@ -265,12 +305,14 @@ DWORD WINAPI SelfTest(LPVOID seconds) {
     return static_cast<DWORD>(*nowhere);
 }
 
-// Our DLL's extent, from its own headers.
+// A module's extent, from its own headers (the width's: host.cpp), as the
+// 32-bit words the image and the DLL fit - Low32 is the Fatal if either lies
+// above 4 GB (image_base.h).
 void ImageRange(const void* module, std::uint32_t* lo, std::uint32_t* hi) {
     auto* base = static_cast<const std::uint8_t*>(module);
     auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
-    auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(base + dos->e_lfanew);
-    auto b = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(base));
+    auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS*>(base + dos->e_lfanew);
+    auto b = Low32(base);
     *lo = b;
     *hi = b + nt->OptionalHeader.SizeOfImage;
 }

@@ -48,29 +48,98 @@ inline constexpr std::uint32_t kBase = 0x400000;
 // player's executable, another base for a developer's (make_exe.py
 // --image-base, the launcher's BOF3X_IMAGEBASE). It is the main module's
 // base, what GetModuleHandle(nullptr) answers, read from the process
-// environment block (PEB +8, ImageBaseAddress; fs:0x30 holds the PEB): valid
-// from before any DLL initialises, so also in the namespace-scope tables built
-// from places that run in the DLL's CRT start-up, before DllMain - with no
-// variable to set first and no test of one at each of the ~17,000 places.
-// The asm is not volatile and touches no memory the compiler knows of, so a
-// function reads it once (the value never changes in a process's life).
-// DetectHost checks it against GetModuleHandle(nullptr), the hosts'
-// identities and the 16 MB window (host.cpp). The launcher, which includes
-// this header through the generated one, never places an address.
+// environment block - x86: fs:0x30 holds the PEB, ImageBaseAddress at +8;
+// x86-64: gs:0x60 holds the PEB, ImageBaseAddress at +0x10
+// (docs/x64-build-design.md 8) - valid from before any DLL initialises, so
+// also in the namespace-scope tables built from places that run in the DLL's
+// CRT start-up, before DllMain - with no variable to set first and no test of
+// one at each of the ~17,000 places. The asm is not volatile and touches no
+// memory the compiler knows of, so a function reads it once (the value never
+// changes in a process's life). A 32-bit value on every host: the image lies
+// below 16 MB (host.cpp), and the 64-bit bof3x.exe is a fixed-base PE32+ the
+// loader maps at 0x400000 or not at all (no .reloc, no DYNAMIC_BASE;
+// x64-build-design.md 1), so the narrowing loses nothing. DetectHost checks
+// it against GetModuleHandle(nullptr), the hosts' identities and the 16 MB
+// window (host.cpp). The launcher, which includes this header through the
+// generated one, never places an address.
 [[gnu::always_inline]] inline std::uint32_t ImageBase() {
+#if defined(__i386__)
     std::uint32_t base;
     asm("movl %%fs:0x30, %0\n\t"
         "movl 8(%0), %0"
         : "=r"(base));
     return base;
+#elif defined(__x86_64__)
+    std::uintptr_t peb;
+    asm("movq %%gs:0x60, %0" : "=r"(peb));
+    std::uintptr_t base;
+    asm("movq 0x10(%1), %0" : "=r"(base) : "r"(peb));
+    return static_cast<std::uint32_t>(base);   // checked by DetectHost (host.cpp)
+#else
+#error "ImageBase: no PEB read for this architecture (docs/x64-build-design.md 8)"
+#endif
 }
 
-// A VA in the image's data, as a place.
+// A VA in the image's data, as a place: a 32-bit value on every host, since
+// the image lies below 16 MB (docs/x64-build-design.md 8.1). The memory
+// accessors widen it (zero-extend) where they dereference.
 [[gnu::always_inline]] inline std::uint32_t Img(std::uint32_t va) { return ImageBase() + (va - image::kBase); }
 
 // A place in the image as its VA, for a message: the logs, symbols.toml and
-// the tools speak VAs (docs/relocatable-image-design.md 8, 9).
+// the tools speak VAs (docs/relocatable-image-design.md 8, 9). The place is
+// 32 bits wide by the same rule; a native pointer that may lie anywhere is
+// narrowed by Low32() below, a Fatal at or above 4 GB.
 [[gnu::always_inline]] inline std::uint32_t VaOf(std::uint32_t place) { return place - ImageBase() + image::kBase; }
+
+// hook/log.h's Fatal, declared here so this header stays free of Windows (the
+// generated symbol header and the launcher include it). Only Low32 and
+// LowBlock name it, and only on the 64-bit build.
+[[noreturn]] void Fatal(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
+
+// A native address as the 32-bit word the game's memory holds (docs/x64-
+// build-design.md 2 and 8.1): on the 32-bit build the cast; on the 64-bit
+// build a Fatal when the address lies at or above 4 GB - the loud trap for an
+// address the low-memory design missed, named by the caller's file, line and
+// function. The 64-bit process keeps everything the game can see below 4 GB by
+// placement (a fixed-base executable: the main stack, the heap, every
+// VirtualAlloc(nullptr), our DLL at 0x10000000), so a value that trips this is
+// a defect of the design to be named, not a number to truncate.
+//
+// Two signatures, not one with defaulted arguments: a __builtin_FUNCTION()
+// default puts the caller's name in .rdata even where the branch that reads
+// it is compiled out, and the 32-bit build must stay byte for byte what it
+// was (tools/codegen_same.py, which compares .rdata too).
+#if UINTPTR_MAX > 0xFFFFFFFFu
+[[gnu::always_inline]] inline std::uint32_t Low32(const void* p, const char* file = __builtin_FILE(),
+                                                  unsigned line = __builtin_LINE(),
+                                                  const char* function = __builtin_FUNCTION()) {
+    const auto v = reinterpret_cast<std::uintptr_t>(p);
+    if (v > 0xFFFFFFFFu)
+        Fatal("%s:%u %s: %p lies above 4 GB, where no word of the game can hold it (docs/x64-build-design.md 2)", file,
+              line, function, p);
+    return static_cast<std::uint32_t>(v);
+}
+#else
+[[gnu::always_inline]] inline std::uint32_t Low32(const void* p) {
+    return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p));
+}
+#endif
+
+// A heap block a word of the game may hold (docs/x64-build-design.md 5: the
+// chokepoint, Crt_malloc and Crt_calloc in crt_rest.cpp): the block itself,
+// checked as Low32 checks; the message names the size. Null passes - a
+// refused allocation is the caller's to see, as today.
+#if UINTPTR_MAX > 0xFFFFFFFFu
+[[gnu::always_inline]] inline void* LowBlock(void* p, unsigned bytes, const char* function = __builtin_FUNCTION()) {
+    if (reinterpret_cast<std::uintptr_t>(p) > 0xFFFFFFFFu)
+        Fatal("%s: a heap block of %u bytes at %p lies above 4 GB, where no word of the game can hold it "
+              "(docs/x64-build-design.md 5: the heap lies below 4 GB by the fixed-base executable's placement)",
+              function, bytes, p);
+    return p;
+}
+#else
+[[gnu::always_inline]] inline void* LowBlock(void* p, unsigned) { return p; }
+#endif
 
 // The linked range of Capcom's code, 0x401000..0x5C4000 (BOF3.exe's .text to
 // .rdata; .stub's extent in bof3x.exe, exe_layout.h).

@@ -72,7 +72,7 @@ using namespace exe_layout;
 // both where they differ.
 void* At(std::uint32_t place) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(place)); }
 void* Place(std::uint32_t va) { return At(Img(va)); }
-std::uint32_t AsU32(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t AsU32(const void* p) { return Low32(p); }   // a region's base inside the image: below 4 GB, or a Fatal
 
 bool EnvSet(const char* name) { return GetEnvironmentVariableA(name, nullptr, 0) > 0; }
 
@@ -136,8 +136,11 @@ void CheckLayout() {
 // The linked span, 0x400000 to the executable's SizeOfImage: every VA of
 // ours names a place in it.
 std::uint32_t LinkedEnd() {
+    // The width's header (host.cpp DetectHost): the PE32 bof3x.exe's in the
+    // 32-bit build, the PE32+'s in the 64-bit one; SizeOfImage lies at the
+    // same offset in both.
     const auto* base = static_cast<const std::uint8_t*>(At(ImageBase()));
-    const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(base + reinterpret_cast<const IMAGE_DOS_HEADER*>(base)->e_lfanew);
+    const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS*>(base + reinterpret_cast<const IMAGE_DOS_HEADER*>(base)->e_lfanew);
     return kImageBase + nt->OptionalHeader.SizeOfImage;
 }
 
@@ -432,6 +435,46 @@ FARPROC Resolve(const Slot& s) {
     return fn;
 }
 
+constexpr unsigned kSlotCount = sizeof kSlots / sizeof kSlots[0];
+
+#if defined(__x86_64__)
+// The 64-bit host (docs/x64-build-design.md 4): a system DLL's function lies
+// at 0x7FFA... in a 64-bit process, above what a 4-byte slot can hold, so
+// each slot gets the place of a 14-byte `jmp [rip+0]` thunk of ours below
+// 4 GB (bind.cpp Bind_ImportThunk, the page after the bind table's rows) and
+// the game calls through the slot as before - a thunk is a code place that
+// calls like the function it stands for, which is all a slot's reader asks.
+// The self-test reads every slot word back as the thunk's place, reads the
+// thunk's 8-byte target back as the function, and calls GetTickCount through
+// the slot's word the way the callee headers do (the 32-bit word, widened).
+void BindSlots() {
+    std::uint32_t thunk[kSlotCount];
+    for (unsigned i = 0; i < kSlotCount; ++i) {
+        thunk[i] = Bind_ImportThunk(i, reinterpret_cast<const void*>(Resolve(kSlots[i])));
+        std::memcpy(Place(kSlots[i].at), &thunk[i], 4);
+    }
+    for (unsigned i = 0; i < kSlotCount; ++i) {
+        const Slot& s = kSlots[i];
+        std::uint32_t now = 0;
+        std::memcpy(&now, Place(s.at), 4);
+        std::uint64_t target = 0;
+        std::memcpy(&target, static_cast<const std::uint8_t*>(At(now)) + 6, sizeof target);
+        if (now != thunk[i] || target != reinterpret_cast<std::uintptr_t>(Resolve(s)))
+            Fatal("slots: 0x%08X does not read back as the thunk 0x%08X of %s!%s", (unsigned)s.at, (unsigned)thunk[i], s.dll,
+                  s.name ? s.name : "#1");
+    }
+    std::uint32_t tick_word = 0;
+    std::memcpy(&tick_word, Place(addr::Imp_GetTickCount), 4);
+    const DWORD before = GetTickCount();
+    const DWORD through = reinterpret_cast<DWORD(WINAPI*)()>(static_cast<std::uintptr_t>(tick_word))();
+    const DWORD after = GetTickCount();
+    if (through < before || through > after)
+        Fatal("slots: GetTickCount through 0x5C407C's thunk answered %lu, outside %lu..%lu", through, before, after);
+    Log("slots: %u import slots bound to 14-byte thunks at 0x%08X.. (16 apart, below 4 GB; docs/x64-build-design.md 4) "
+        "and read back (DSOUND #1, GDI32 3, KERNEL32 6, USER32 4); GetTickCount through 0x5C407C answers %lu",
+        kSlotCount, (unsigned)thunk[0], through);
+}
+#else
 void BindSlots() {
     for (const Slot& s : kSlots) {
         const FARPROC fn = Resolve(s);
@@ -449,8 +492,9 @@ void BindSlots() {
     if (through < before || through > after)
         Fatal("slots: GetTickCount through 0x5C407C answered %lu, outside %lu..%lu", through, before, after);
     Log("slots: %u import slots bound and read back (DSOUND #1, GDI32 3, KERNEL32 6, USER32 4); GetTickCount through "
-        "0x5C407C answers %lu", static_cast<unsigned>(sizeof kSlots / sizeof kSlots[0]), through);
+        "0x5C407C answers %lu", kSlotCount, through);
 }
+#endif
 
 // --- 5. The x87 control word -------------------------------------------------
 
@@ -498,9 +542,16 @@ void TrapStub() {
 // already armed) has written its CRASH lines and dump; this ends the process
 // as Fatal does, code 3.
 LONG WINAPI Unhandled(EXCEPTION_POINTERS* info) {
+#if defined(__x86_64__)
+    // The faulting address whole: a fault in a system DLL lies at 0x7FFA...
+    Fatal("an exception nobody handled: 0x%08lX at 0x%016llX (see the CRASH lines above)",
+          info->ExceptionRecord->ExceptionCode,
+          static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
+#else
     Fatal("an exception nobody handled: 0x%08lX at 0x%08lX (see the CRASH lines above)",
           info->ExceptionRecord->ExceptionCode,
           static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(info->ExceptionRecord->ExceptionAddress)));
+#endif
 }
 
 // The command line past the program name, as Capcom's _wincmdln produced it:

@@ -131,8 +131,24 @@ const char* CodeOff(const char* name) {
     return off;
 }
 
+// The hosted mode's writers into Capcom's code - WriteJmp, VerifyImage,
+// CloneOriginal - exist in the 32-bit DLL alone: the hosted build is 32-bit
+// for ever (docs/x64-build-round.md 2), a 64-bit bof3x.dll is never inside
+// BOF3.exe's process (host.cpp DetectHost refuses the identity), and the exe
+// host writes no code in either width (Inject, RetargetCall and PatchBytes
+// below take their exe-host branch before reaching these). The 64-bit DLL
+// keeps the files (the exe host shares their other functions,
+// docs/x64-build-round.md 3 "XA4 as run") and makes each writer a Fatal, so
+// a path this reasoning missed stops by name rather than patching a 32-bit
+// jmp into a 64-bit process.
+
 // `jmp to` (E9 rel32) over the first five bytes at `at`, protection restored.
 void WriteJmp(const char* name, std::uint8_t* at, const std::uint8_t* to) {
+#if defined(__x86_64__)
+    Fatal("%s: WriteJmp(%p -> %p) in the 64-bit DLL, which is never hosted in BOF3.exe and writes no code "
+          "(docs/x64-build-round.md 2)",
+          name, (void*)at, (const void*)to);
+#else
     DWORD old = 0;
     if (!VirtualProtect(at, kJmpLen, PAGE_EXECUTE_READWRITE, &old))
         Fatal("%s: VirtualProtect(%p) failed, error %lu", name, (void*)at, GetLastError());
@@ -142,11 +158,16 @@ void WriteJmp(const char* name, std::uint8_t* at, const std::uint8_t* to) {
     DWORD ignored = 0;
     VirtualProtect(at, kJmpLen, old, &ignored);
     FlushInstructionCache(GetCurrentProcess(), at, kJmpLen);
+#endif
 }
 
 }  // namespace
 
 void VerifyImage() {
+#if defined(__x86_64__)
+    Fatal("VerifyImage in the 64-bit DLL: BOF3.exe is a 32-bit process, which never hosts this DLL "
+          "(docs/x64-build-round.md 2; the hosted build is bof3x-launcher --host bof3, 32-bit)");
+#else
     auto* base = reinterpret_cast<const std::uint8_t*>(GetModuleHandleW(nullptr));
     if (reinterpret_cast<std::uintptr_t>(base) != image::kBase)
         Fatal("main module is at %p, not 0x%X: this is not BOF3.exe, or it was rebased",
@@ -163,6 +184,7 @@ void VerifyImage() {
               (unsigned)image::kTimestamp, (unsigned)image::kSizeOfImage);
     Log("image verified: base 0x%X timestamp 0x%X", (unsigned)image::kBase,
         (unsigned)image::kTimestamp);
+#endif
 }
 
 void Inject(const char* name, std::uint32_t original, void* ours, bool instrument) {
@@ -291,6 +313,13 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
     // be reached in the exe host; a clone asked for without it is a module
     // that clones outside the fuzz, and there is nothing to copy.
     if (IsExeHost()) Fatal("%s: CloneOriginal(0x%08X) in bof3x.exe, which maps no code of Capcom's to copy", name, (unsigned)original);
+#if defined(__x86_64__)
+    // The 64-bit DLL builds no fuzz file (CMakeLists.txt) and is never hosted
+    // (host.cpp): nothing of Capcom's to clone, whatever asked.
+    (void)size, (void)calls, (void)n_calls;
+    Fatal("%s: CloneOriginal(0x%08X) in the 64-bit DLL, which is never hosted in BOF3.exe (docs/x64-build-round.md 2)", name,
+          (unsigned)original);
+#else
     auto* orig = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(original));
     if (IsOwned(original)) Fatal("%s: CloneOriginal after Inject - the entry is already a jmp", name);
     // A tracer or debugger patch at the entry would be copied as a relative
@@ -344,6 +373,7 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
     FlushInstructionCache(GetCurrentProcess(), copy, size);
     Log("shadow      %-24s original 0x%08X cloned to %p, %u bytes", name, (unsigned)original, copy, (unsigned)size);
     return copy;
+#endif
 }
 
 bool WantsShadow(const char* name) {

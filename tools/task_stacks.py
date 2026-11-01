@@ -16,7 +16,12 @@ record (Task_Records 0x66C7D0, 0x20 bytes each: u16 state, u16 frames, u32
 esp). So the words from the saved esp upward are a frozen, exact stack. A word
 is reported as a return address when it points into .text just after a `call`
 instruction; the function holding it comes from analysis/pc_funcs.json and the
-name, if any, from symbols.toml.
+name, if any, from symbols.toml. The words are the target's width - 4 bytes in
+BOF3.exe and the 32-bit bof3x.exe, 8 in the x86-64 one (read from the main
+module's PE magic) - and the saved esp a 32-bit word on both
+(docs/x64-build-design.md 7.1, 11). In the exe host of either width the
+returns are into bof3x.dll, not Capcom's .text, so the chain names only what
+lies in the image's code range; the hosted BOF3.exe is this tool's subject.
 
 Two cautions. MSVC6 omits frame pointers, so a stale return address in a dead
 local slot can appear in the chain - rare, because the scan starts at the live
@@ -32,7 +37,11 @@ import proc_image  # noqa: E402
 k = ctypes.WinDLL('kernel32', use_last_error=True)
 
 TASK_RECORDS, TASK_SIZE, TASK_COUNT = 0x66C7D0, 0x20, 4
-STACK_SIZE = 0x4000
+# A slice by the target's width (docs/x64-build-design.md 7.4): 0x4000 on the
+# 32-bit game, 0x8000 the estimate for the x86-64 bof3x.exe that stage C's
+# stackwatch run settles (src/hook/snapshot.cpp kSlice, the task switch's
+# constant). The saved esp in a record stays a 32-bit word on both.
+STACK_SIZE_BY_WIDTH = {32: 0x4000, 64: 0x8000}
 STATE = {0: 'free', 1: 'sleeping', 2: 'runnable'}
 
 
@@ -59,6 +68,17 @@ class Game:
         # The image's move: 0 unless a developer's bof3x.exe lies at another
         # base (tools/proc_image.py); read() places a VA by it.
         self.move = proc_image.move_of(self.h)
+        # The target's width from the main module's optional-header magic
+        # (0x10B a PE32, 0x20B a PE32+: tools/pe_read.py), which sets the
+        # stack word's size and the slice (docs/x64-build-design.md 11).
+        base = proc_image.main_module_base(self.h) or proc_image.LINKED_BASE
+        head = self.read(base, 0x40)
+        lfanew = struct.unpack_from('<I', head, 0x3C)[0] if head and len(head) == 0x40 else 0
+        opt = self.read(base + lfanew + 24, 2) if lfanew else None
+        magic = struct.unpack_from('<H', opt)[0] if opt and len(opt) == 2 else 0x10B
+        self.width = 64 if magic == 0x20B else 32
+        self.word, self.fmt = (4, '<I') if self.width == 32 else (8, '<Q')
+        self.stack_size = STACK_SIZE_BY_WIDTH[self.width]
 
     def read(self, addr, n):
         """n bytes at addr: a VA of the image (placed by the move), or any
@@ -114,13 +134,14 @@ def after_call(game, ret):
 
 
 def chain(game, funcs, esp, cache):
-    top = (esp | (STACK_SIZE - 1)) + 1                 # a guess at the stack's end; harmless if wrong
-    raw = game.read(esp, min(top - esp, STACK_SIZE))
+    size = game.stack_size
+    top = (esp | (size - 1)) + 1                       # a guess at the stack's end; harmless if wrong
+    raw = game.read(esp, min(top - esp, size))
     if not raw:
         return []
     out = []
-    for i in range(0, len(raw) - 3, 4):
-        v = proc_image.va(struct.unpack_from('<I', raw, i)[0], game.move)   # a return into the image, as its VA
+    for i in range(0, len(raw) - (game.word - 1), game.word):   # the target's words: 4 bytes, or 8 on x86-64
+        v = proc_image.va(struct.unpack_from(game.fmt, raw, i)[0], game.move)   # a return into the image, as its VA
         if not (funcs.lo <= v < funcs.hi):
             continue
         if v not in cache:

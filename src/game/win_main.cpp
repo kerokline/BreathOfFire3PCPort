@@ -69,6 +69,7 @@
 #include "game/msgbox.h"
 #include "game/pause_text.h"
 #include "game/quick_menu.h"
+#include "hook/cpu_context.h"
 #include "hook/detour.h"
 #include "hook/exe_icon.h"
 #include "hook/exe_host.h"
@@ -862,10 +863,13 @@ LONG CALLBACK TracedUnhandled(EXCEPTION_POINTERS* info) {
     const DWORD code = info->ExceptionRecord->ExceptionCode;
     if (code != EXCEPTION_SINGLE_STEP && code != EXCEPTION_BREAKPOINT) return EXCEPTION_CONTINUE_SEARCH;
     if (InterlockedIncrement(&reports) > 4) return EXCEPTION_CONTINUE_SEARCH;
+    // The context's registers by width (hook/cpu_context.h); the exit trace's
+    // addresses are the stub page's and the DLL's, below 4 GB on both.
     bof3::Log("exittrace   exception 0x%08lX at 0x%08lX, esp 0x%08lX, eflags 0x%08lX, thread %lu, passed on by every handler",
-              code, static_cast<unsigned long>(info->ContextRecord->Eip), static_cast<unsigned long>(info->ContextRecord->Esp),
+              code, static_cast<unsigned long>(bof3::CtxIp(*info->ContextRecord)),
+              static_cast<unsigned long>(bof3::CtxSp(*info->ContextRecord)),
               static_cast<unsigned long>(info->ContextRecord->EFlags), GetCurrentThreadId());
-    LogStack("the exception", reinterpret_cast<const void*>(static_cast<std::uintptr_t>(info->ContextRecord->Esp)));
+    LogStack("the exception", reinterpret_cast<const void*>(bof3::CtxSp(*info->ContextRecord)));
     return EXCEPTION_CONTINUE_SEARCH;
 }
 BOOL WINAPI TracedTerminateProcess(HANDLE h, UINT code) {
