@@ -1,10 +1,12 @@
 # The 64-bit build round: staging (PLAN phase 4, I44 "What follows")
 
-**Status:** STAGED (2026-10-29; re-measured 2026-10-31 on `main` `43e98773`,
-still not launched. The relocatable-image round it waited on is merged
-(PR #168, with the state hash's pool fold as PR #170); section 0.1 lists what
-that merge changed in this plan. The owner's calls in section 7 come first;
-stage A needs none of them.)
+**Status:** IN PROGRESS (launched 2026-11-01 on `x64/round` off `main`
+`7bd917de`, the PR #176 merge; the owner's four calls answered the same
+morning, section 7; stage A's four groups run in worktrees under
+`C:/Users/kerok/bof3x-runs/x641101`. Staged 2026-10-29, re-measured
+2026-10-31 on `main` `43e98773`. The relocatable-image round it waited on is
+merged (PR #168, with the state hash's pool fold as PR #170); section 0.1
+lists what that merge changed in this plan.)
 
 The relocatable-image round ended with the source free of Capcom's
 addresses: every data place is `Img(va)`, every code word is bound by name
@@ -379,6 +381,26 @@ presets), `release.yml` (the second artefact, signed as the first), this
 doc's "as run" sections.
 
 ## 7. For the owner
+
+**Answered by the owner on 2026-11-01**, after a read of the narrow and wide
+roads' upsides and downsides (the chat of that morning, summarised in IDEAS
+I53):
+
+1. **(N), the narrow image.** The wide image is ledgered as a future effort,
+   IDEAS I53: once the narrow build runs with the proof in hand, a later
+   round may widen the records one struct at a time, each step gated by
+   the state hash against the narrow build.
+2. **x86-64 Windows alone, with B1's stack switch written with a third
+   variant in mind**: the `i686` and `x86_64` switches side by side in a
+   shape an ARM64 (or any later) variant slots into without a redesign.
+3. **A developer's build and a second release artefact** beside the 32-bit
+   one; the 32-bit executable stays the player's default until a release
+   of play on the 64-bit one.
+4. **SDL3.** B5 moves the sound output to SDL3 audio rather than writing a
+   DirectSound shim.
+
+The questions as staged, kept for the record:
+
 
 1. **The road: (N) the narrow image, or (W) the wide one** (section 1). The
    proposal is (N). Stage A is useful to both; (W) adds a stage B of the

@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-10-22, I21 and I50 built; 52 entries, I1..I52 - see the index for each one's state; 2026-10-31, the index brought to I33's, I43's and I44's outcomes)
+**Status:** IN PROGRESS (2026-10-22, I21 and I50 built; 53 entries, I1..I53 - see the index for each one's state; 2026-10-31, the index brought to I33's, I43's and I44's outcomes; 2026-11-01, I53 the wide image)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -97,6 +97,7 @@ rule ([`README.md`](README.md)) here too.
 | I50 | A second language in the row above the text: another held language layer re-flowed into the reading rows, page by page, by the same renderer as I21 | game behaviour / localisation | MEDIUM | **built 2026-10-22** (DIV-0156) - every held pair, the reading-row round ([`reading-row-second.md`](reading-row-second.md)); from issue #97 (the owner, 2026-10-20); the owner's play owed |
 | I51 | Revisit the battle command labels: the up command's window is `BattleItem_*` in the source though it is the ability list, the item command is `BattleItemCmd_*`, and the in-game command names of the cross were never checked against the dispatch names | source / naming | LOW | open 2026-10-26 (the owner): found while building the spell sweep ([`spell-sweep.md`](spell-sweep.md)) |
 | I52 | A state-driven injection harness for the PlayStation in Mednafen: pokes and presses gated on the emulator's RAM, so a sweep cast can be compared against a true PSX emulator | harness | LOW | open 2026-10-26 (the owner): only when a run needs comparing against real PlayStation behaviour; reads exist, writes and a driver do not |
+| I53 | The wide image: widen the records' pointer slots to native 64-bit pointers, one struct at a time, after the narrow 64-bit build runs; each step gated by the state hash against the narrow build | engine / platform | LOW | open 2026-11-01 (the owner): deferred when the 64-bit build round chose the narrow image ([`x64-build-round.md`](x64-build-round.md) 1 and 7) |
 
 ---
 
@@ -2260,3 +2261,14 @@ What was found while building the spell sweep ([`spell-sweep.md`](spell-sweep.md
 **Kind:** harness. **Feasibility:** LOW priority; medium effort.
 
 What exists: the sibling's Mednafen oracle (`../BreathOfFire3Recomp/tools/mednafen_ctl.py`, keystrokes by `SendInput` to the foreground window, snapshots, savestates) and, from the Angel Tower trials ([`angel-tower-ledge.md`](angel-tower-ledge.md) 9), reads of the PSX RAM out of the emulator's process (the party records, the camera focus, the placement scratch). What does not: a write path (the same process-memory mechanism in principle, never exercised) and a driver that gates each press on a RAM condition the way the PC recipes' `until` / `seek` do. A recorded route cannot be replayed there - Mednafen's ticks are not the PC's, so a frame-counted queue diverges at once (the owner, 2026-10-26 night, when the first attempt was stopped). The spell sweep's casts (`--dead`, the list pokes, [`spell-sweep.md`](spell-sweep.md) 9) are the shape such a harness would replay: poke the PSX records (`BATTLE_RAM.md` in the sibling has the layout), read the phase byte, press, re-read. First step, when wanted: a `poke` verb in `mednafen_ctl.py` over `WriteProcessMemory`, checked by reading the word back, then one Raise Dead over a poked-fallen Ryu on the US disc for the 543 popup question.
+
+## I53 — The wide image: native pointers in the records, after the narrow 64-bit build
+
+**Ask (2026-11-01, the owner):** ledger the wide image as a future effort, having chosen the narrow image for the 64-bit build round.
+**Kind:** engine / platform. **Feasibility:** LOW   **Gated on:** the 64-bit build round's stage C proof (the narrow build running the ten routes identical to the 32-bit references).
+
+What the two roads are is [`x64-build-round.md`](x64-build-round.md) section 1. The narrow image keeps the game's words 32 bits wide inside a 64-bit process, so the saves, the quicksave, the cache, the PSX-layout data files and the state-hash references stay as they are and a 64-bit run is compared byte for byte against the 32-bit build. The wide image widens every pointer slot to 64 bits at load: real pointers in the records, no low-memory requirement (the narrow road needs memory mappable below 16 MB and below 4 GB, true on Windows, a probe on Linux and macOS), no 4 GB cap on what the game holds; at the price of every record struct and generated offset re-derived (9,059 record sites and 27,427 raw sites by `data_census.py`), every on-disk format versioned and translated, the quicksave's native span redesigned, and a new state-hash normalisation with new references - and with it the loss of the 32-bit-against-64-bit comparison at the moment the code is most likely to break.
+
+**Why later, not never:** nothing the project wants from 64 bits today (a modern toolchain's default target, address space for our own caches, the platform-library step, I33) needs the game's words wider. What wide gives is readability of the reconstructed source (I44's "what follows") and a data model a from-scratch engine would have.
+
+**First concrete step, when wanted:** with the narrow build proved, widen one small record (one of the 43 in `src/game/records*.h` with a documented address field) behind a width-conditional accessor, regenerate its offsets, and run the ten routes on both builds with the state hash's pointer normalisation extended to that struct. The method is the typed-data round's (`codegen_same.py` on the 32-bit build, the hash on the 64-bit one), one struct per batch. Not before I5's translation-unit layout if that round comes first (the owner's 2026-10-21 word on I44's order).
