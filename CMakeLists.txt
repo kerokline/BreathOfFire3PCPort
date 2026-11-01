@@ -106,11 +106,12 @@ add_custom_command(
   VERBATIM)
 add_custom_target(bof3x_suites DEPENDS "${_suites_hdr}")
 
-# --- SDL3, for the pad (DIV-0050, docs/controls.md) ------------------------
+# --- SDL3, for the pad (DIV-0050, docs/controls.md) and the sound output
+# (DIV-0197, src/audio/sound_sdl.cpp) ------------------------------------------
 # Fetched at configure time and built static into the DLL: the joystick and
-# gamepad layers only, no video, audio or render. zlib licence
-# (docs/THIRD_PARTY.md section 2). Pinned to a release tag; the first
-# configure needs the network.
+# gamepad layers and the audio subsystem (WASAPI on Windows), no video or
+# render. zlib licence (docs/THIRD_PARTY.md section 2). Pinned to a release
+# tag; the first configure needs the network.
 include(FetchContent)
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 set(SDL_STATIC ON CACHE BOOL "" FORCE)
@@ -118,7 +119,8 @@ set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
 set(SDL_TESTS OFF CACHE BOOL "" FORCE)
 set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
-foreach(_sub AUDIO VIDEO RENDER GPU CAMERA HAPTIC SENSOR POWER DIALOG OPENGL OPENGLES VULKAN DIRECTX)
+set(SDL_AUDIO ON CACHE BOOL "" FORCE)
+foreach(_sub VIDEO RENDER GPU CAMERA HAPTIC SENSOR POWER DIALOG OPENGL OPENGLES VULKAN DIRECTX)
   set(SDL_${_sub} OFF CACHE BOOL "" FORCE)
 endforeach()
 FetchContent_Declare(SDL3
@@ -277,6 +279,7 @@ set(_dll_sources
   src/audio/seq.cpp
   src/audio/song.cpp
   src/audio/mp3.cpp
+  src/audio/sound_sdl.cpp
   src/game/d3d_draw_fuzz.cpp
   src/game/d3d_list.cpp
   src/game/d3d_list_fuzz.cpp
