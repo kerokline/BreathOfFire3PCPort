@@ -10,11 +10,12 @@
 //   Cfg_SetDefaultKeys   0x5A9880  0x16
 //
 // Faithful: no divergence. Every call out goes through shell::g, so the
-// start-up fuzz can stand recorders in for the callees. Two of the seven keep
-// the original's stack in naked asm, because what they leave depends on it:
-// Cfg_Load hands Cfg_SetKeyTable 0x80 bytes that run on past its own frame
-// into the return address and its caller's, and Game_Init ends in a jmp to
-// Task_SetStackBase, which hangs the task stacks from the esp it arrives with.
+// start-up fuzz can stand recorders in for the callees. Cfg_Load keeps the
+// original's stack in naked asm, because what it leaves depends on it: it
+// hands Cfg_SetKeyTable 0x80 bytes that run on past its own frame into the
+// return address and its caller's (a pair by width since the 64-bit build
+// round). Game_Init ends in a jump to Task_SetStackBase, which hangs the
+// task stacks from the stack pointer it arrives with: a C++ tail call.
 #include "game/shell.h"
 
 #include <cstdint>
@@ -122,8 +123,17 @@ extern "C" void __cdecl Shell_CfgLoadFrame(unsigned char* frame) {
 // original 0x4FD030; sole caller WinMain (0x4FCBFE; ours since) before the window.
 // The original's frame - 0x3C bytes, edi and esi saved under it - laid out
 // here so that what Cfg_SetKeyTable copies past the frame is what it was:
-// the return address and the caller's bytes above it.
+// the return address and the caller's bytes above it. A pair by width
+// (docs/x64-asm-policy.md 8 unit 7), not C++: the shell fuzz compares the
+// frame and everything above it, which a compiler-placed local cannot
+// reproduce. The x86_64 half lays a 0x3C-byte frame above the 32 bytes of
+// home space the callee may write (rsp+0x20..+0x5C of a 0x68-byte frame,
+// which keeps rsp at 0 mod 16 for the call); the bytes the copy runs past
+// are then this frame's pad, the return address and the caller's, as on
+// i686 - and with DIV-0078's own table on, as it is after Shell_Inject, the
+// copy never leaves the table.
 extern "C" __attribute__((naked)) void __cdecl Cfg_Load(void) {
+#if defined(__i386__)
     asm("subl $0x3C, %esp\n\t"
         "pushl %edi\n\t"
         "pushl %esi\n\t"
@@ -135,6 +145,15 @@ extern "C" __attribute__((naked)) void __cdecl Cfg_Load(void) {
         "popl %edi\n\t"
         "addl $0x3C, %esp\n\t"
         "ret");
+#elif defined(__x86_64__)
+    asm("subq $0x68, %rsp\n\t"
+        "leaq 0x20(%rsp), %rcx\n\t"
+        "call " BOF3_SYM(Shell_CfgLoadFrame) "\n\t"
+        "addq $0x68, %rsp\n\t"
+        "ret");
+#else
+#error "Cfg_Load: no frame for this architecture"
+#endif
 }
 
 // original 0x5A9880; sole caller Cfg_Load. The 32 dwords of Key_TableDefault
@@ -249,11 +268,16 @@ extern "C" void* __cdecl Shell_GameInitBody(void) {
 // geometry, the pad devices, the sound set-up, the two double-buffer blocks
 // (block 0 draws at y 0 and shows y 240, block 1 the other way round), buffer
 // 0 current, the frame begun, the quit flag down - and then a jmp, not a call,
-// to Task_SetStackBase, so that the task stacks hang from the esp this was
-// entered with: the body runs as a call, and the jmp is made from here.
-extern "C" __attribute__((naked)) void __cdecl Game_Init(void) {
-    asm("call " BOF3_SYM(Shell_GameInitBody) "\n\t"
-        "jmp *%eax");
+// to Task_SetStackBase, so that the task stacks hang from the stack pointer
+// this was entered with: the body runs as a call, and the jump is made from
+// here - a C++ tail call since the 64-bit build round (docs/x64-asm-policy.md
+// 8 unit 7), which on i686 is the same `call; jmp *%eax` as the asm it
+// replaces (codegen_same.py: 0 differ) and on x86-64 the same shape for
+// rsp; musttail refuses to compile where the jump would not be one.
+extern "C" void __cdecl Game_Init(void) {
+    using Tail = void (__cdecl*)();
+    const Tail tail = reinterpret_cast<Tail>(Shell_GameInitBody());
+    [[clang::musttail]] return tail();
 }
 
 // original 0x4FD200; Game_Init's, once for each block. The block's ordering
