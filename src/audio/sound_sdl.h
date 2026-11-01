@@ -1,4 +1,4 @@
-// The sound output through SDL3 (DIV-0197; docs/x64-build-design.md 6.3):
+// The sound output through SDL3 (DIV-0199; docs/x64-build-design.md 6.3):
 // objects of ours with DirectSound-shaped vtables - a device, its buffers,
 // each buffer's notify facet - in the slots the game keeps DirectSound's
 // pointers in, and one SDL3 device stream fed by a mixer of ours that sums

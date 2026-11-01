@@ -1,4 +1,4 @@
-// DIV-0197: the sound output through SDL3 (sound_sdl.h; docs/x64-build-design.md
+// DIV-0199: the sound output through SDL3 (sound_sdl.h; docs/x64-build-design.md
 // section 6.3, docs/x64-build-round.md stage B group B5).
 //
 // What the game keeps a pointer to (design 6.2): a DirectSound device in
@@ -1241,7 +1241,7 @@ void SoundSdl_Start() {
     if (!g_on && sizeof(void*) == 8) {
         // The 64-bit build has no DirectSound path (the header comment): the
         // switch is ignored, said once, and the slot bound all the same.
-        Log("DIV-0197    SoundSdl: off was asked for, but the 64-bit build has no DirectSound path; the switch is ignored and the "
+        Log("DIV-0199    SoundSdl: off was asked for, but the 64-bit build has no DirectSound path; the switch is ignored and the "
             "sound output is SDL3's");
         void* const slot = Widen<void>(Img(kSlotVa));
         DWORD old = 0;
@@ -1254,7 +1254,7 @@ void SoundSdl_Start() {
     std::memcpy(&after, Widen<const void>(Img(kSlotVa)), 4);
     if (g_on && after != create) Fatal("sound_sdl: the import slot 0x%08X reads 0x%08X after the patch, not our Create 0x%08X", (unsigned)kSlotVa, after, create);
     if (!g_on && after != before) Fatal("sound_sdl: the import slot 0x%08X changed under a switch that is off", (unsigned)kSlotVa);
-    Log("DIV-0197    sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
+    Log("DIV-0199    sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
         g_on ? "SDL3, objects of ours with DirectSound-shaped vtables and one device stream at 44,100 Hz 16-bit stereo"
              : "Windows' DirectSound (SoundSdl off)",
         (unsigned)kSlotVa, after, SDL_VERSIONNUM_MAJOR(SDL_GetVersion()), SDL_VERSIONNUM_MINOR(SDL_GetVersion()),

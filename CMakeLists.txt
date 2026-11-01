@@ -107,7 +107,7 @@ add_custom_command(
 add_custom_target(bof3x_suites DEPENDS "${_suites_hdr}")
 
 # --- SDL3, for the pad (DIV-0050, docs/controls.md) and the sound output
-# (DIV-0197, src/audio/sound_sdl.cpp) ------------------------------------------
+# (DIV-0199, src/audio/sound_sdl.cpp) ------------------------------------------
 # Fetched at configure time and built static into the DLL: the joystick and
 # gamepad layers and the audio subsystem (WASAPI on Windows), no video or
 # render. zlib licence (docs/THIRD_PARTY.md section 2). Pinned to a release

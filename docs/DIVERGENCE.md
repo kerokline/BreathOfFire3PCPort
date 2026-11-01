@@ -14104,7 +14104,7 @@ designed in rather than bolted on.
 
 ### Play the sound through SDL3 audio, with objects of ours in DirectSound's slots
 
-- **ID:** DIV-0197
+- **ID:** DIV-0199
 - **Date:** 2026-11-01
 - **Subsystem:** platform / audio - the sound output: `src/audio/sound_sdl.cpp`
   (the device, the buffers, each buffer's notify facet, the mixer, the SDL3
@@ -14169,7 +14169,7 @@ designed in rather than bolted on.
   are our objects' addresses. **The 32-bit build keeps Windows' DirectSound
   behind the switch** for the owner's A/B listen; the 64-bit build has no
   DirectSound path, so there the switch is ignored with a log line
-  (`DIV-0197    SoundSdl: off was asked for, but the 64-bit build has no
+  (`DIV-0199    SoundSdl: off was asked for, but the 64-bit build has no
   DirectSound path`) and the slot is bound to ours regardless. The WAV dump
   (`BOF3X_WAV_DIR`) wraps the slot's function either way - `Create`'s device
   as it wrapped DirectSound's, the vtables the same - so a route dumped
