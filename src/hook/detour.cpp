@@ -376,6 +376,7 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
 #endif
 }
 
+#if !defined(__x86_64__)   // x86-64: a constant false in detour.h (no shadow fuzz in the 64-bit build)
 bool WantsShadow(const char* name) {
     char list[8192];  // a whole round of takeovers fits: 119 names is 2,061 characters
     DWORD n = GetEnvironmentVariableA("BOF3X_SHADOW", list, sizeof list);
@@ -383,6 +384,7 @@ bool WantsShadow(const char* name) {
     if (n >= sizeof list) Fatal("BOF3X_SHADOW is longer than %u bytes", (unsigned)sizeof list);
     return NameListed(list, name);
 }
+#endif
 
 bool IsOwned(std::uint32_t original) {
     for (int i = 0; i < g_enabled + g_disabled; ++i)

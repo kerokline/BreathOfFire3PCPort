@@ -6,6 +6,12 @@
 // the wait). docs/battle_phases.md.
 #pragma once
 
+namespace battle_phases {
+// The start-up differential fuzz (battle_phases_fuzz.cpp, hosted only;
+// BOF3X_SHADOW=battle_phases).
+void SelfTest();
+}  // namespace battle_phases
+
 void BattlePhases_Inject();
 
 // DIV-0163 (D349): arms Battle_Init's clear of the target-pick flag. Called

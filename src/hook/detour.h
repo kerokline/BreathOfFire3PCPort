@@ -113,7 +113,22 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
 
 // True if `name` is listed in the BOF3X_SHADOW environment variable (the same
 // list syntax as BOF3X_ORIGINAL).
+//
+// The 64-bit build has no shadow fuzz: Capcom's code is 32-bit and cannot
+// run in the process, the exe host refuses BOF3X_SHADOW (exe_host.cpp), and
+// the fuzz files that define every module's SelfTest() are not in its source
+// list (CMakeLists.txt, docs/x64-build-round.md 2). So on x86-64 the answer
+// is a constant false, which lets the compiler drop each
+// `if (bof3::WantsShadow("m")) m::SelfTest();` site with its reference to
+// the absent SelfTest - the link resolves by that folding (measured 2026-11-01:
+// 251 undefined SelfTests with the function out of line). The presets build
+// RelWithDebInfo; an unoptimised 64-bit build would need the sites spelled
+// under a preprocessor test instead.
+#if defined(__x86_64__)
+[[gnu::always_inline]] constexpr inline bool WantsShadow(const char*) noexcept { return false; }
+#else
 bool WantsShadow(const char* name);
+#endif
 
 // True if this original address has been passed to Inject - in either
 // direction, so the answer is the same with and without BOF3X_ORIGINAL. For

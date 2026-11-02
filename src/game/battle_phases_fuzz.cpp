@@ -877,26 +877,3 @@ void SelfTest() {
 }
 
 }  // namespace battle_phases
-
-void BattlePhases_Inject() {
-    if (bof3::WantsShadow("battle_phases")) battle_phases::SelfTest();
-    BattlePhases_ArmPickClear();  // DIV-0163: after the self-test, which compared Capcom's resets
-    BOF3_INJECT(Battle_Frame);
-    BOF3_INJECT(BattleStart_Dispatch);
-    BOF3_INJECT(Battle_Init);
-    BOF3_INJECT(BattleIntro_Dispatch);
-    BOF3_INJECT(BattleIntro_OpenWindows);
-    BOF3_INJECT(BattleIntro_WaitWindow);
-    BOF3_INJECT(BattleIntro_PrepareCross);
-    BOF3_INJECT(BattleIntro_Finish);
-    BOF3_INJECT(BattleInput_Dispatch);
-    BOF3_INJECT(Battle_RoundStart);
-    BOF3_INJECT(BattleInput_NextMember);
-    BOF3_INJECT(BattleMenu_CommandSelect);
-    BOF3_INJECT(BattleMenu_ConfirmDispatch);
-    BOF3_INJECT(Cmd_ConfirmDefend);
-    BOF3_INJECT(BattleCommit_Dispatch);
-    BOF3_INJECT(Battle_CommitRound);
-    BOF3_INJECT(BattleCommit_QueueMessages);
-    BOF3_INJECT(BattleCommit_WaitLoad);
-}
