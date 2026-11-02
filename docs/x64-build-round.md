@@ -682,6 +682,64 @@ coordinator then runs:
 A difference in 1 is a defect of stage B or of XA2's design and is fixed on
 the round branch before anything else merges.
 
+### Stage C as run, the agent's part (2026-11-01 night, C1 on `x64/c1`, tip `7d6736d0` with `x64/round` `b07085e8` merged; report `x641101/c1/REPORT.md`)
+
+**The 64-bit build links and runs.** The link found 254 undefined symbols,
+all from the excluded fuzz files (251 `SelfTest`s behind `WantsShadow`, two
+helpers, and `BattlePhases_Inject`, the one inject that lived in a fuzz
+file): `WantsShadow` is a constexpr `false` on x86-64 (`detour.h`) and the
+inject moved to its live file. The DLL is a PE32+ at `0x10000000` with no
+`DYNAMIC_BASE`, `SizeOfImage` `0x590B000`; the exe a PE32+ at `0x400000`
+with no `.reloc` and `DllCharacteristics` 0, as XA4 wrote it. The 64-bit
+launcher failed with `0xC000007B` until `launcher.manifest`'s
+`processorArchitecture="x86"` became `"*"` (and ninja does not rebuild the
+`.rc.res` on a manifest edit).
+
+**None of the design's `Fatal`s fired** (`Low32`, `LowBlock`, the bind
+table's reach, `ImageBase()`, `rsp`): every address lay below 4 GB by
+placement, as design 2 measured. What stopped the runs was a class no census
+counted: **32-bit image words read or written through native pointer types**
+- `*reinterpret_cast<T**>(place)`, `memcpy(&ptr, place, sizeof ptr)`,
+`Get<T*>` / `Put<T*>` accessors, function-pointer arrays over code-word
+tables, local structs with `void*` members overlaid on image records
+(`Row`, `ClutRow`, `ChapterHooks`), a byte-offset vtable read, `Import<Fn>`
+over the import slots, the sound shim's 8-byte out-pointer writes,
+`SetVolumeBits` calling a float function through a 32-bit type, and the
+SDK's `DIDATAFORMAT` in `rdata_consts`. About 90 sites in 45 files now read
+the word on both widths; `slot32.h` gained `CodeSlot<Fn>` for code-word
+tables; `Dd_CreatePlainSurface` / `Dd_CreateTextureSurface` take a
+`Slot32<void>*` (their `symbols.toml` parameters changed). The texture
+cache's `Row` overlay was the attract's thrash: every CLUT generation
+mismatched, 64 page snapshots a frame, the frame arena's `Fatal`.
+
+**Self-tests pass on the 64-bit exe host** (exit 0, "self-test only: done",
+0 mismatches), on the merged tree too. **The attract's state hash is
+identical on all 9,665 compared ticks** between the two hosts of the same
+commit (`attract_run.py --no-front --minutes 6 --host exe`, the skip list
+applied at record time); the pace 10,789 logic frames in 360 s on x86-64
+against 9,205 on i686, back to back. Both hosts differ from the `r14`
+reference on the same two pages at the same ticks (`0x5FD000` every tick,
+`0x803000` ticks 6,833..7,074), so that distance is the build's, not the
+width's. **The stackwatch** on a quit recipe through the attract: the
+64-bit slices' deepest writes `0x5518` and `0x54F8` of `0x8000`
+(`kSlice64` holds with a third of head room) against `0x1284` / `0x12E8` /
+`0x1300` of `0x4000` on i686 - a ratio of 4.6, not the estimated 2.18, so
+the deepest route may want `0x10000` (the reserve holds it); the routes'
+`BOF3X_STACKWATCH=1` run decides, no constant changed. The i686 run used
+three slices where the 64-bit used two, unexplained.
+
+Gates on the merged tree: `codegen_same.py` against a `b07085e8` baseline,
+650 objects, 8 differ, each named with its reason and fuzz; the hosted module
+fuzzes of every touched module at 0 mismatches; the whole hosted suite
+`'*'`; the 32-bit exe host and the moved base; the `x86_64` compile and link
+at exit 0. **Defects, described:** XA4's fuzz exclusion against the
+inject-in-a-fuzz-file (fixed); the uncounted pointer-overlay class (the
+census wants it, stage D); the x86 manifest and its build dependency;
+`attract_watch`'s `holdrand @ None` on both hosts (a tool note); the
+slice-use difference; `kSlice64` possibly small. **The coordinator's runs**
+(items 1..5 above) follow in the next subsection.
+
+
 ## 6. Stage D: audit and docs
 
 A read-only audit of every width-conditional line in `src/` (the list is
