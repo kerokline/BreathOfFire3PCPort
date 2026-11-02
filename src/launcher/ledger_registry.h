@@ -271,7 +271,7 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "SoundSdl", 0, 8},   // DIV-0201
 };
 
-inline constexpr std::size_t kEntryCount = 201;
+inline constexpr std::size_t kEntryCount = 202;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -675,6 +675,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Intent, State::Active, 0, 194, 1, true, Player::Yes, 0, kLangAny},
     {201, "Play the sound through SDL3 audio, with objects of ours in DirectSound's slots",
      Tier::Sensible, State::Active, 0, 195, 1, true, Player::Yes, 0, kLangAny},
+    {202, "A game folder built from the PC install leaves out the porting house's logo movie",
+     Tier::Sensible, State::Active, 0, 196, 0, true, Player::Never, kTowardPsx, kLangAny},
 };
 
 // The switches of one entry.

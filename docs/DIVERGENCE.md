@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 201 entries, DIV-0001..0201, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 202 entries, DIV-0001..0202, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -14527,5 +14527,47 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=SoundSdl (ini off=); on the 64-bit build the name is accepted and ignored with a log line
 - **Toward:** none - the port's sound through another output, not a release's behaviour
+- **Languages:** any
+- **State:** active
+
+### A game folder built from the PC install leaves out the porting house's logo movie
+
+- **ID:** DIV-0202
+- **Date:** 2026-11-02
+- **Subsystem:** platform (the Sources page's setup: `copy_pc` in
+  `tools/player_sources.py`; [`install-sources.md`](install-sources.md) 3)
+- **Tier:** Sensible - the original's start works as designed; the change is
+  which logos a player sees before the title, and nothing in play
+- **Original behaviour:** `Game_WinMain` plays two movies through
+  `Fmv_Play` before the title: `CAPCOM.AVI`, then `LOGOS.AVI` (the string at
+  `0x65DA6C`), the porting house's logos, 640 x 480, 120 frames, 8.0 s, no
+  sound ([`fmv-import.md`](fmv-import.md) 2). The Sources page's setup copied
+  both from the player's PC folder into the game folder it lays out; a
+  folder built from a disc has `CAPCOM.AVI` only (DIV-0099), since no disc
+  carries the second movie (`fmv-import.md` 1: `LOGO/CAPCOM30.STR` is the one
+  MDEC stream on all five PSX discs), and `Fmv_Play` skips a movie it cannot
+  open (DIV-0100).
+- **New behaviour:** setup no longer copies `logos.avi`: a game folder built
+  from the PC install starts with the Capcom logo alone, as one built from a
+  disc does. The engine is unchanged - a `LOGOS.AVI` in the game folder still
+  plays, so a player's own PC folder used in place, or a folder built before
+  this change, shows it as before.
+- **Rationale:** the owner, 2026-11-02: one start for every source, so a
+  PC-built and a disc-built install open the same way. The movie is the
+  2001 porting house's branding, not Capcom's game (the question was put on
+  2026-10-12 and no technical reason to keep it was found:
+  [`owner-review.md`](owner-review.md)).
+- **Also in the PSX version?** No - the PlayStation release starts with
+  Capcom's logo stream alone; the new start is the PlayStation's.
+- **Verification:** `copy_pc` run on a PC install that holds `capcom.avi`
+  and `logos.avi` (2026-11-02, a scratch folder): `BOF3.exe`, 742 DAT files,
+  `BGM\` (166), `SND\` (893) and `capcom.avi` copied, no `logos.avi`. It was
+  the only place a tool wrote `logos.avi` (`git grep -i logos.avi tools`).
+- **Reversible?** Copy `logos.avi` from the PC folder into the game folder
+  and it plays. Not behind a switch: it is a file the setup leaves out.
+- **Switch:** none
+- **Default:** on
+- **Player:** never - a file: a `logos.avi` copied into the game folder plays
+- **Toward:** psx
 - **Languages:** any
 - **State:** active
