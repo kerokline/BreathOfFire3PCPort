@@ -145,3 +145,9 @@ venv/
 # Notes shared privately with us that must not be published yet: kept beside
 # docs/ on the owner's machine and moved into docs/ when their author agrees.
 docs/gitIgnored/
+
+# Run logs a harness or a build writes at the checkout's root (bof3x.log in a
+# launcher copy L/, cmake_*.log, the self-tests' st*.log): commit 3d83467a
+# took 24 of them by `git add -A` before a validation run.
+/*.log
+/L/

@@ -1,6 +1,0 @@
-bof3x-launcher: the default key table, 24 keys by the engine's rule, equal to BOF3.exe's: Up=up Down=down Left=left Right=right Z=triangle X=cross C=square V=circle A=l1 Q=l2 S=r1 W=r2 Enter=start RShift=select Esc=cross Space=circle Numpad8=up Numpad2=down Numpad4=left Numpad6=right Numpad9=up+right Numpad1=down+left Numpad7=up+left Numpad3=down+right 
-bof3x-launcher: preset recommended, language original: 0 off, 0 this build cannot turn off, 0 not under this language, 0 follow the language, 0 also available; 0 with a switch not on this install, 0 with a switch kept
-bof3x-launcher: layer area4-walls is installed and on by default; opt=none in bof3x.ini turns it off
-bof3x-launcher: self-test only, game pid 2500
-bof3x-launcher: self-test only, game process exit code 0
-hosted exit 0
