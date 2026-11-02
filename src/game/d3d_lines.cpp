@@ -61,7 +61,7 @@ using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
 // DrawPrimitive(TRIANGLESTRIP, D3DFVF_TLVERTEX, D3d_Vertices, 4, 0), the device
 // read afresh as the handlers read it.
 long DrawStrip4() {
-    void** device = *reinterpret_cast<void** volatile*>(At(::bof3::Img(D3d_Device_addr)));
+    void** device = reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))));
     void* method = (*reinterpret_cast<void***>(device))[0x70 / 4];
     return reinterpret_cast<Com6>(method)(device, 5, 0x1C4, ::bof3::Img(D3d_Vertices_addr), 4, 0);
 }

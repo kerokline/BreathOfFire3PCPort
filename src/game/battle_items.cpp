@@ -102,8 +102,8 @@ void PutDword(unsigned char* at, std::uint32_t v) { std::memcpy(at, &v, sizeof v
 
 // The sparkle being updated, and the battle actor the effect plays on - each
 // read from its cell every time the original reads it.
-unsigned char* Cur() { return *reinterpret_cast<unsigned char**>(At(::bof3::Img(BattleItems_SparkleCurrent_addr))); }
-unsigned char* Actor() { return *reinterpret_cast<unsigned char**>(At(::bof3::Img(BattleE2_Owner_addr))); }
+unsigned char* Cur() { return At(BattleItems_SparkleCurrent); }   // the slot's 32-bit word, a place
+unsigned char* Actor() { return At(BattleE2_Owner); }
 
 // The scratch words: SharedScratch + k, and the vertex scratch + k.
 unsigned char* Scr(unsigned k) { return At(::bof3::Img(at::kScratch.v) + k); }
@@ -144,13 +144,16 @@ std::uint32_t AnimationInPointer(const unsigned char* actor, unsigned offset) {
     return v;
 }
 
-// A method of the IDirectSoundBuffer the SND stream holds, by vtable offset.
+// A method of the IDirectSoundBuffer the SND stream holds, by the 32-bit
+// vtable offset: entry offset / 4, as sound_callees.h's Method<> reads it,
+// so the index is right where an entry is 8 bytes (an object of ours on
+// x86-64; docs/x64-build-design.md 6.1).
 template <typename F> F Method(void* object, unsigned offset) {
-    F f;
-    std::memcpy(&f, *reinterpret_cast<unsigned char**>(object) + offset, sizeof f);
-    return f;
+    void* const* vtable;
+    std::memcpy(&vtable, object, sizeof vtable);
+    return reinterpret_cast<F>(vtable[offset / 4]);
 }
-void*& StreamBuffer() { return *reinterpret_cast<void**>(At(::bof3::Img(SndStream_Buffer_addr))); }
+::bof3::Slot32<void>& StreamBuffer() { return SndStream_Buffer; }   // the 4-byte slot, read and written as one
 constexpr long kBufferLost = static_cast<long>(0x88780096u);   // DSERR_BUFFERLOST
 
 }  // namespace

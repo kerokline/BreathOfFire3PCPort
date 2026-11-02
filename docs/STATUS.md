@@ -1,12 +1,32 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-31)
+**Status:** IN PROGRESS (2026-11-02)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
 true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
+
+**The 64-bit build round, 2026-11-01..02: stages A and B merged as PR #183, stage C open as PR #187, stage D
+next** ([`x64-build-round.md`](x64-build-round.md); the owner's calls of 2026-11-01: the narrow image - the
+image's words stay 32 bits inside a 64-bit process, so saves, quicksave and the state-hash references are
+unchanged - x86-64 Windows alone, a developer build beside the 32-bit player's default, SDL3). Stage A
+measured and designed (the width census, the low-memory design, the asm policy, the `x86_64` preset); stage B
+rewrote the source to build both widths with the i686 objects unchanged (`codegen_same.py`) but for one change
+on both widths: the sound output through SDL3 audio in place of DirectSound (DIV-0201, `BOF3X_OFF=SoundSdl` for
+the original). **Stage C links and runs the 64-bit build:** the ten routes match the 32-bit host but for pages two
+runs of one width also differ on; the quicksave holds and refuses the other width's take; both AVIs play; the
+task-stack slice size holds (`0x5628` of `0x8000` at the deepest). It found one defect, fixed in #183: the 64-bit
+music stopped after a quarter second (`Music_Pump` handed 32-bit handle slots to an API that reads 8-byte
+handles), which no state hash saw. **What the player sees:** the 32-bit build stays the default; its one change
+is DIV-0201's sound output, which nobody has listened to yet. Owed the owner: that listen, and a listen and a
+look on the 64-bit build. Stage D (the audit, a check
+that hears the music, the release's second artefact) is HANDOFF item 14a.
+
+**The PC game folder leaves out the porting house's logo movie, 2026-11-02, merged as PR #186** (DIV-0202). The
+owner's call: `tools/player_sources.py` copies `capcom.avi` and no longer `logos.avi`, so a game folder built from
+the PC install starts as a disc-built one does. A `logos.avi` put in the folder by hand still plays.
 
 **The exe-gap round, 2026-10-31** (built on `exe-gap/round`, unpushed, PR at the owner's word;
 [`exe-gap-round.md`](exe-gap-round.md) 4a). Staged in the morning (re-measured: 71 distinct `gap` ranges, 20..51 a

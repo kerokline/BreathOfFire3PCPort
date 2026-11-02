@@ -975,7 +975,7 @@ extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, un
     const U exp = static_cast<U>(rv::As<records::CharRecord>(At(r))->exp);
     const unsigned level = B(r + 0xA);
     SH_CALL(MasterPanel_DrawExpBar)(x + 0x14, y + 0x12, record, level, exp);
-    SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(::bof3::Img(Gfx_PacketNext_addr))), 0, 0, 0xF, 0);
+    SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext.Native(), 0, 0, 0xF, 0);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
     const unsigned clut = SH_CALL(Gpu_GetClut)(0x10, 0x1E0);
     SH_AT(void (__cdecl*)(int, int, unsigned, unsigned, unsigned, unsigned), at::kGlyph.v)(
@@ -992,7 +992,7 @@ extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, un
 // past 99 gives -1 for both, the table's equal steps 0): the bar's end is x
 // itself.
 extern "C" void __cdecl MasterPanel_DrawExpBar(int x, int y, unsigned record, unsigned level, unsigned exp) {
-    unsigned char* const prim = *reinterpret_cast<unsigned char**>(At(::bof3::Img(Gfx_PacketNext_addr)));
+    unsigned char* const prim = Gfx_PacketNext.Native();
     SH_CALL(Gpu_SetLineF2)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 0);
     const U x16 = static_cast<U>(x) & 0xFFFF;
@@ -1040,7 +1040,7 @@ struct Quad {
     unsigned char u[4], v[4];
 };
 void EdgeQuad(const Quad& q, int clut_x) {
-    unsigned char* const p = *reinterpret_cast<unsigned char**>(At(::bof3::Img(Gfx_PacketNext_addr)));
+    unsigned char* const p = Gfx_PacketNext.Native();
     SH_CALL(Gpu_SetPolyFT4)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 1);
     for (unsigned i = 0; i < 4; ++i) {
@@ -1062,13 +1062,13 @@ void EdgeQuad(const Quad& q, int clut_x) {
 // packet cursor (x 0, y, w, h), then Gpu_SetDrawMode(cursor, 0, 1, 0xF, the
 // RECT) and Gfx_CommitPrim(1, 0xC).
 void WindowMode(unsigned y, unsigned size) {
-    unsigned char* const rect = *reinterpret_cast<unsigned char**>(At(::bof3::Img(Gfx_PacketNext_addr)));
+    unsigned char* const rect = Gfx_PacketNext.Native();
     PutL(::bof3::Img(at::kPacketNext.v), Key(rect + 8));
     PutW(Key(rect), 0);
     PutW(Key(rect + 2), y);
     PutW(Key(rect + 4), size);
     PutW(Key(rect + 6), size);
-    SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(::bof3::Img(Gfx_PacketNext_addr))), 0, 1, 0xF, Key(rect));
+    SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext.Native(), 0, 1, 0xF, Key(rect));
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
 }
 
@@ -1149,9 +1149,9 @@ extern "C" void __cdecl Menu_DrawPanelBox(int x, int y, int w, int h, unsigned c
 extern "C" void __cdecl MasterPanel_DrawFace(int x, int y, unsigned id, unsigned shade) {
     const unsigned char form = FormOf(static_cast<unsigned char>(id));
     const U entry = ::bof3::Img(at::kFaceTable.v) + 4u * form;
-    SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(::bof3::Img(Gfx_PacketNext_addr))), 0, 1, 0x1E, 0);
+    SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext.Native(), 0, 1, 0x1E, 0);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
-    unsigned char* const p = *reinterpret_cast<unsigned char**>(At(::bof3::Img(Gfx_PacketNext_addr)));
+    unsigned char* const p = Gfx_PacketNext.Native();
     SH_CALL(Gpu_SetSprt)(p);
     const auto s = static_cast<unsigned char>(shade);
     if (s == 0) {

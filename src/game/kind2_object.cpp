@@ -49,8 +49,8 @@ using Handler = void (__cdecl*)();
 // Kind2_Run). Their entries are the original addresses, which Inject turns
 // into jumps to ours; entry 0 of the run table, 0x437CC0, is Capcom's bare ret.
 struct Callees {
-    const Handler* run_table;
-    const Handler* state_table;
+    const ::bof3::CodeSlot<Handler>* run_table;     // 32-bit code words in the image
+    const ::bof3::CodeSlot<Handler>* state_table;
     unsigned char (__cdecl* step)(unsigned char*, const unsigned char*);
     long (__cdecl* elevation)(long, long);
     void (__cdecl* set_elevation)(int);
@@ -58,8 +58,8 @@ struct Callees {
     void (__cdecl* script)();   // Kind2_Move's tail jump
 };
 const Callees kOriginals = {
-    reinterpret_cast<const Handler*>(Kind2_RunTable),
-    reinterpret_cast<const Handler*>(Kind2_StateTable),
+    reinterpret_cast<const ::bof3::CodeSlot<Handler>*>(Kind2_RunTable),
+    reinterpret_cast<const ::bof3::CodeSlot<Handler>*>(Kind2_StateTable),
     MoveScript_Step, AreaMap_Elevation, MapView_SetElevation, Field_ViewReset, Kind2_Script,
 };
 Callees g = kOriginals;
@@ -127,10 +127,9 @@ extern "C" void __cdecl Kind2_Script(void) {
         return;
     }
     const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
-    const unsigned char* const* scripts;
-    std::memcpy(&scripts, descriptor + 0x1C, sizeof scripts);
+    const auto scripts = static_cast<std::uint32_t>(Long(descriptor + 0x1C));   // a table of 32-bit places
     Sprite_Current = k;
-    const unsigned char result = g.step(k + 0x80, scripts[k[0x83]]);
+    const unsigned char result = g.step(k + 0x80, At(static_cast<std::uint32_t>(Long(At(scripts + 4u * k[0x83])))));
     const unsigned char flags = k[0x80];
     k[8] = result;
     if (flags & 8) {   // the script ended: idle, at speed 3
@@ -382,7 +381,10 @@ void __cdecl StubViewReset() {
 void __cdecl StubScript() { Record(5, Sprite_Kind2.step, Sprite_Kind2.context, Sprite_Kind2.move_steps); }
 template <unsigned N> void __cdecl StubEntry() { Record(0x10 + N, Sprite_Kind2.state, Sprite_Kind2.step); }
 // As the original's .data: the run table's two entries, then the state table's five.
-const Handler kTable[7] = {StubEntry<0>, StubEntry<1>, StubEntry<2>, StubEntry<3>, StubEntry<4>, StubEntry<5>, StubEntry<6>};
+// (32-bit code words, as the image's; filled by SelfTest from kEntries, since a
+// word's initialiser from a function's address is not a constant on x86-64.)
+::bof3::CodeSlot<Handler> kTable[7];
+const Handler kEntries[7] = {StubEntry<0>, StubEntry<1>, StubEntry<2>, StubEntry<3>, StubEntry<4>, StubEntry<5>, StubEntry<6>};
 const Callees kStubs = {kTable, kTable + 2, StubStep, StubElevation, StubSetElevation, StubViewReset, StubScript};
 
 const void* StubFor(std::uint32_t target) {
@@ -487,7 +489,7 @@ void SeedDistance() {
 }
 
 // A dispatcher's copy: its `jmp [eax*4 + table]` re-aimed at `table`.
-void AimTable(void* copy, const Clone& c, const Handler* table) {
+void AimTable(void* copy, const Clone& c, const ::bof3::CodeSlot<Handler>* table) {
     auto* code = static_cast<std::uint8_t*>(copy);
     std::uint32_t disp;
     std::memcpy(&disp, code + kTableDisp, sizeof disp);
@@ -499,6 +501,7 @@ void AimTable(void* copy, const Clone& c, const Handler* table) {
 }
 
 void SelfTest(void* const (&theirs)[kCount]) {
+    for (unsigned i = 0; i < 7; ++i) kTable[i] = kEntries[i];
     constexpr unsigned kRounds = 40000;
     unsigned region_bytes = 0;
     for (const Region& r : kRegions) region_bytes += r.size;

@@ -210,7 +210,7 @@ void SelfTest() {
         return;
     }
     // The clone calls IntersectRect through the game's import slot.
-    if (*reinterpret_cast<void**>(static_cast<std::uintptr_t>(::bof3::Img(0x5C4168))) == nullptr) {
+    if (*reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(0x5C4168))) == 0) {   // the 4-byte slot word
         bof3::Log("shadow      Gfx_InvalidateTextures self-test SKIPPED: import slot 0x5C4168 not bound yet");
         return;
     }
@@ -282,7 +282,7 @@ TexCacheEntry g_find_in[kEntries], g_find_theirs[kEntries];
 
 void SelfTestFind(FindFn theirs) {
     constexpr unsigned kRounds = 6000;
-    struct Row { std::uint32_t generation; void* pixels; };
+    struct Row { std::uint32_t generation; ::bof3::Slot32<void> pixels; };   // gfx_clut.cpp's ClutRow: 8 bytes on every width
     auto* rows = reinterpret_cast<Row*>(Gfx_ClutRows);
     unsigned bad = 0, hits = 0, misses = 0, staled = 0, direct = 0;
     for (unsigned round = 0; round < kRounds; ++round) {
@@ -351,7 +351,7 @@ extern "C" int __cdecl Gfx_TexCacheFind(int page, int clut, int mode) {
             continue;
         }
         if (static_cast<int>(e.clut) != clut) continue;
-        struct Row { std::uint32_t generation; void* pixels; };
+        struct Row { std::uint32_t generation; ::bof3::Slot32<void> pixels; };   // gfx_clut.cpp's ClutRow: 8 bytes on every width
         if (e.generation != reinterpret_cast<const Row*>(Gfx_ClutRows)[clut >> 6].generation) e.state = 2;
         return i;
     }

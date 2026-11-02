@@ -225,8 +225,9 @@ extern "C" int __cdecl Disc_Probe(const char* local_file, const char* disc_file)
         File_CdRootBuf[0] = 0;
         return 1;
     }
-    DriveTypeFn drive_type;
-    std::memcpy(&drive_type, At(g.drive_type_slot), sizeof drive_type);
+    std::uint32_t drive_type_word;   // the import slot is a 32-bit word (the function, or its thunk on x86-64)
+    std::memcpy(&drive_type_word, At(g.drive_type_slot), sizeof drive_type_word);
+    const auto drive_type = reinterpret_cast<DriveTypeFn>(static_cast<std::uintptr_t>(drive_type_word));
     char path[0x50];
     for (U i = 0; i < 10; ++i) {
         File_CdRootBuf[0] = static_cast<unsigned char>('C' + i);

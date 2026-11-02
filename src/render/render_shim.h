@@ -54,7 +54,7 @@ struct TexVersion {
 
 struct Surface {
     void* const* vtable;           // IDirectDrawSurface4-shaped
-    void* const* texture_vtable;   // the IDirect3DTexture2 that QueryInterface answers: this + 4
+    void* const* texture_vtable;   // the IDirect3DTexture2 that QueryInterface answers: this + one word (4 on i686, 8 on x86-64)
     U refs;
     U width, height, bpp, pitch;   // bpp 16 or 32; pitch in bytes
     U caps, caps2;                 // DDSCAPS as created

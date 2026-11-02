@@ -402,9 +402,8 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
         return value;
     case 0xDE: {   // DE n: the area's handler n, as flow op 03
         const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
-        AreaHandler const* handlers;
-        std::memcpy(&handlers, descriptor + 0x3C, sizeof handlers);
-        handlers[p[1]]();
+        const auto handlers = static_cast<std::uint32_t>(Long(descriptor + 0x3C));   // a table of 32-bit code words
+        reinterpret_cast<AreaHandler>(static_cast<std::uintptr_t>(Long(At(handlers + 4u * p[1]))))();
         const unsigned char result = rv::Current<records::SpriteHead>()->direction;
         SetPos(object, Pos(object) + 1u);
         return result;
@@ -571,10 +570,9 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
     case 0x86: {   // 86 n: hand over to the area's +0x18 script n (kind 1), else n to context +3; restart
         if (g.kind() == 1) {
             const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
-            unsigned char* const* scripts;
-            std::memcpy(&scripts, descriptor + 0x18, sizeof scripts);
-            unsigned char* const next = scripts[script[Pos(object) + 1u]];
-            std::memcpy(Field_State + 0x130, &next, sizeof next);
+            const auto scripts = static_cast<std::uint32_t>(Long(descriptor + 0x18));   // a table of 32-bit places
+            const std::int32_t next = Long(At(scripts + 4u * script[Pos(object) + 1u]));
+            SetLong(Field_State + 0x130, next);   // the word, into the 32-bit slot
         } else {
             object[3] = script[Pos(object) + 1u];
         }

@@ -57,9 +57,9 @@ std::uint32_t Address(const volatile void* p) { return Low32(p); }
 // Win32 through the game's own import slots, as the originals call it.
 template <class Fn>
 Fn Import(std::uint32_t slot) {
-    Fn fn;
-    std::memcpy(&fn, At(slot), sizeof fn);
-    return fn;
+    std::uint32_t word;   // the import slot is a 32-bit word: Windows' function on i686, its thunk on x86-64 (design 4)
+    std::memcpy(&word, At(slot), sizeof word);
+    return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
 }
 void* __stdcall ImportCreateEvent(void* security, int manual, int initial, const char* name) {
     return Import<void* (__stdcall*)(void*, int, int, const char*)>(::bof3::Img(Sound_ImportCreateEvent_addr))(security, manual, initial, name);
@@ -113,10 +113,17 @@ Callees g = kOriginals;
 
 namespace {
 
-// Music_SetVolume with the float's bits, pushed as the originals push them
-// (a dword move, never an x87 load that would quiet a signalling NaN).
+// Music_SetVolume with the float's bits, passed as the originals pass them
+// (a dword move, never an x87 load that would quiet a signalling NaN): the
+// bits copied into a float and handed over as the float parameter it is -
+// an SSE move on both widths, so the bit pattern arrives whole. (Until the
+// 64-bit build this called through a `void (*)(std::uint32_t)` type, which
+// on i686 is the same stack dword and on x86-64 is rcx where the callee
+// reads xmm0: the first 64-bit self-test read garbage volumes.)
 void SetVolumeBits(std::uint32_t bits) {
-    reinterpret_cast<void (__cdecl*)(std::uint32_t)>(reinterpret_cast<void*>(g.music_set_volume))(bits);
+    float volume;
+    std::memcpy(&volume, &bits, sizeof volume);
+    g.music_set_volume(volume);
 }
 
 // GetStatus's bit 0, DSBSTATUS_PLAYING, into `status` - which holds on entry

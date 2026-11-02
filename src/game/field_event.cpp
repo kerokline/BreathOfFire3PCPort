@@ -221,8 +221,7 @@ extern "C" unsigned char __cdecl Field_LeaderAnimation(unsigned animation) {
 // bytes, the same as unsigned.
 extern "C" const unsigned char* __cdecl Area_ZoneAt(unsigned x_arg, unsigned z_arg) {
     const unsigned x = x_arg & 0xFF, z = z_arg & 0xFF;
-    const unsigned char* record;
-    std::memcpy(&record, At(::bof3::Img(Area_StateRecords_addr)) + Game_AreaNumber * 4u, sizeof record);
+    const unsigned char* record = At(static_cast<std::uint32_t>(Long(At(::bof3::Img(Area_StateRecords_addr)) + Game_AreaNumber * 4u)));   // a 32-bit word
     for (;; record += 8) {
         if (x < record[0] || z < record[1] || x > record[2] || z > record[3]) continue;
         return record;
@@ -321,8 +320,7 @@ extern "C" void __cdecl Sprite_ClearSteps(void) {
 // source strip lands below the strip. Each word is read, then stored to dst,
 // then to the twin. Nothing is checked: the bank pointer, the index, dst.
 extern "C" void __cdecl Sprite_LoadPalette(unsigned short* dst, unsigned index) {
-    const unsigned char* bank;
-    std::memcpy(&bank, Sprite_Current + 0x4C, sizeof bank);
+    const unsigned char* const bank = At(static_cast<std::uint32_t>(Long(Sprite_Current + 0x4C)));   // a 32-bit word
     const unsigned char* const offsets = bank + Long(bank + 4);
     const std::uint32_t d = Address(dst);
     const auto half = static_cast<std::int32_t>(d - ::bof3::Img(Gfx_ClutStripSource_addr)) >> 1;

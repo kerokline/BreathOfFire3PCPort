@@ -579,8 +579,7 @@ extern "C" void __cdecl BattleAction_EffectPreload(void) {
         has_file = Word(At(::bof3::Img(Magic_Rows_addr) + row * 8)) != 0xFFFF;
     } else if (kind == 5) {
         const unsigned w = Word(PtrAt(::bof3::Img(at::kActor.v) + at::kBAction) + 2);
-        const auto* const tables = reinterpret_cast<const unsigned char* const*>(static_cast<std::uintptr_t>(::bof3::Img(at::kItemRows.v)));
-        const unsigned row = tables[w >> 8][w & 0xFF];
+        const unsigned row = PtrAt(::bof3::Img(at::kItemRows.v) + 4u * (w >> 8))[w & 0xFF];   // four 32-bit table places
         has_file = Word(At(::bof3::Img(Magic_Rows_addr) + row * 8)) != 0xFFFF;
     }
     if (has_file) g.load_dat(0xD0);

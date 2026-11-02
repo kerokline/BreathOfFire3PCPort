@@ -38,6 +38,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <type_traits>
 
 #include "common/image_base.h"  // Low32: the one checked narrowing of a native address
 
@@ -121,6 +122,15 @@ struct Slot32 {
 };
 
 static_assert(sizeof(Slot32<void>) == 4 && alignof(Slot32<void>) == 4, "Slot32 is the 4-byte word of the image");
+
+// A code word of the image indexed as a function pointer: a table the game
+// dispatches through (`g.run_table[state]()`, `Table(va)[step]()`) is 4-byte
+// words on every width, so a `const Handler*` over it would stride 8 bytes
+// on x86-64 (stage C's first 64-bit attract, 2026-11-01). CodeSlot<Handler>
+// is the 4-byte word with Handler's conversion: `table[i]()` calls through
+// the conversion (a surrogate call), `Handler h = table[i]` reads it.
+template <class Fn>
+using CodeSlot = Slot32<std::remove_pointer_t<Fn>>;
 
 }  // namespace bof3
 

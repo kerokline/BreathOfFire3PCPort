@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <type_traits>
 
 #include "bof3/symbols.gen.h"
 #include "hook/detour.h"
@@ -28,11 +29,25 @@ constexpr unsigned kPosition = 0x58;   // u16 byte index into the steps
 constexpr unsigned kFrame = 0x5A;      // u16, the current step's frame word
 
 template <class T> T Get(const unsigned char* object, unsigned at) {
-    T v;
-    std::memcpy(&v, object + at, sizeof v);
-    return v;
+    // A pointer-typed field is a 32-bit word of the image on every width.
+    if constexpr (std::is_pointer_v<T>) {
+        std::uint32_t w;
+        std::memcpy(&w, object + at, sizeof w);
+        return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
+    } else {
+        T v;
+        std::memcpy(&v, object + at, sizeof v);
+        return v;
+    }
 }
-template <class T> void Put(unsigned char* object, unsigned at, T v) { std::memcpy(object + at, &v, sizeof v); }
+template <class T> void Put(unsigned char* object, unsigned at, T v) {
+    if constexpr (std::is_pointer_v<T>) {   // the field is a 32-bit word on every width
+        const std::uint32_t w = Low32(v);
+        std::memcpy(object + at, &w, sizeof w);
+    } else {
+        std::memcpy(object + at, &v, sizeof v);
+    }
+}
 
 // The part Sprite_ScriptTick and Sprite_ScriptTickOnce share: the hold has run
 // out and the script has not. Follows a jump if there is one - the original's

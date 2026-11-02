@@ -177,8 +177,8 @@ void Rescale(U k) {
     PutFloat(::bof3::Img(D3d_ScaleX_addr), static_cast<float>(k));
     PutFloat(::bof3::Img(D3d_ScaleY_addr), static_cast<float>(k));
     SprtDraw_SetScale(k);
-    auto* primary = *reinterpret_cast<render::Surface**>(At(::bof3::Img(DDraw_Primary_addr)));
-    auto* back = *reinterpret_cast<render::Surface**>(At(::bof3::Img(DDraw_BackBuffer_addr)));
+    auto* primary = static_cast<render::Surface*>(DDraw_Primary.Native());   // the slots' 32-bit words
+    auto* back = static_cast<render::Surface*>(DDraw_BackBuffer.Native());
     if (primary && back) {
         if (!render::ResizeSurface(primary, width, height) || !render::ResizeSurface(back, width, height))
             bof3::Fatal("Display_Setup: out of memory resizing the primary and back surfaces to %u x %u", width, height);
@@ -312,7 +312,7 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     FillFormat(::bof3::Img(Gfx_PixelFormat_addr) + 1 * kPixelFormatRecord, kFormatOpaque, kRankOpaque);
     FillFormat(::bof3::Img(Gfx_PixelFormat_addr) + 2 * kPixelFormatRecord, kFormatScreen, kRankScreen);
     if (kNoAlphaFormat) *reinterpret_cast<U*>(At(::bof3::Img(Gfx_RenderFlags_addr))) |= 0x20;
-    if (!Dd_CreatePlainSurface(0x140, 0x100, reinterpret_cast<void**>(At(::bof3::Img(Dd_StageSurface_addr))), 0))
+    if (!Dd_CreatePlainSurface(0x140, 0x100, reinterpret_cast<::bof3::Slot32<void>*>(At(::bof3::Img(Dd_StageSurface_addr))), 0))
         bof3::Fatal("Display_Setup: the staging surface");
     Display_BackPitch = back->pitch;
 

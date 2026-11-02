@@ -4091,7 +4091,7 @@ src/game/battle_actions.cpp	BattleAction_EffectPreload	global	At	at::kAbilityRow
 src/game/battle_actions.cpp	BattleAction_EffectPreload	global	At	Magic_Rows_addr + row * 8	0	0x64c2b8	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Magic_Rows_addr - -)	c4-tc
 src/game/battle_actions.cpp	BattleAction_EffectPreload	global	PtrAt	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/battle_actions.cpp	BattleAction_EffectPreload	record	Word	PtrAt(at::kActor + at::kBAction) + 2	0	-	via=PtrAt	family	no record family established for this pointer here (via=PtrAt)	b1-battle
-src/game/battle_actions.cpp	BattleAction_EffectPreload	global	-	at::kItemRows	0	0x64b274	-	untyped-entry	at::kItemRows 0x64b274 ItemMagic_RowTables	b0
+src/game/battle_actions.cpp	BattleAction_EffectPreload	global	PtrAt	at::kItemRows	0	0x64b274	-	untyped-entry	at::kItemRows 0x64b274 ItemMagic_RowTables (spelled PtrAt by the 64-bit round stage C)	x64-c1
 src/game/battle_actions.cpp	BattleAction_EffectPreload	global	At	Magic_Rows_addr + row * 8	1	0x64c2b8	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Magic_Rows_addr - -)	c4-tc
 src/game/battle_actions.cpp	BattleAction_EffectLoaded	global	At	at::kRoundFlags	0	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
 src/game/battle_actions.cpp	BattleAction_EffectLoaded	global	At	at::kRoundFlags	1	0x904aa8	-	no-entry	at::kRoundFlags 0x904aa8 -	b0
@@ -5760,7 +5760,7 @@ src/game/battle_e7_fuzz.cpp	Disturb	global	Mem	BattleE1_Roster_addr	0	0x904aa7	-
 src/game/battle_flow.cpp	Enemy	global	PtrAt	BattleFlow_TaskCurrent_addr	0	0x93b8c4	-	type	the accessor's result type cannot be kept with the typed name (BattleFlow_TaskCurrent_addr - -)	c4-tc
 src/game/battle_flow.cpp	Enemy	global	At	BattleTask_Slots_addr + index * at::kTaskSize	0	0x93a000	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (BattleTask_Slots_addr - -)	c4-tc
 src/game/battle_flow.cpp	Enemy	global	At	Battle_Enemies_addr + index * at::kEnemySize	0	0x93b960	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Battle_Enemies_addr - -)	c4-tc
-src/game/battle_flow.cpp	Enemy	global	-	at::kItemRows	0	0x64b274	-	untyped-entry	at::kItemRows 0x64b274 ItemMagic_RowTables	b0
+src/game/battle_flow.cpp	Enemy	global	PtrAt	at::kItemRows	0	0x64b274	-	untyped-entry	at::kItemRows 0x64b274 ItemMagic_RowTables (spelled PtrAt by the 64-bit round stage C)	x64-c1
 src/game/battle_flow.cpp	LoadMagicRow	global	At	Magic_Rows_addr + row * 8	0	0x64c2b8	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Magic_Rows_addr - -)	c4-tc
 src/game/battle_flow.cpp	LoadMagicRow	global	At	at::kLoadFlags	0	0x904aa9	-	no-entry	at::kLoadFlags 0x904aa9 -	b0
 src/game/battle_flow.cpp	LoadMagicRow	global	At	at::kLoadFlags	1	0x904aa9	-	no-entry	at::kLoadFlags 0x904aa9 -	b0
@@ -5959,11 +5959,8 @@ src/game/battle_fx_tasks_fuzz.cpp	Seed	global	At	AreaW2c_LastArea_addr	0	0x80229
 src/game/battle_fx_tasks_fuzz.cpp	SelfTest	global	At	Magic_Rows_addr + i * 8 + 4	0	0x64c2b8	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Magic_Rows_addr - -)	c4-tc
 src/game/battle_fx_tasks_fuzz.cpp	SelfTest	global	SetPtr	Magic_Rows_addr + i * 8 + 4	0	0x64c2b8	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Magic_Rows_addr - -)	c4-tc
 src/game/battle_fx_tasks_fuzz.cpp	SelfTest	global	At	Magic_Rows_addr + i * 8 + 4	1	0x64c2b8	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Magic_Rows_addr - -)	c4-tc
-src/game/battle_items.cpp	PutDword	global	At	BattleItems_SparkleCurrent_addr	0	0x685d90	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (BattleItems_SparkleCurrent_addr - -)	c4-tc
-src/game/battle_items.cpp	PutDword	global	At	BattleE2_Owner_addr	0	0x93b940	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (BattleE2_Owner_addr - -)	c4-tc
 src/game/battle_items.cpp	PutDword	global	At	at::kScratch	0	0x903850	-	no-entry	at::kScratch 0x903850 -	b0
 src/game/battle_items.cpp	PutDword	global	At	Prim_VertexScratch_addr + k	0	0x9037a0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Prim_VertexScratch_addr - -)	c4-tc
-src/game/battle_items.cpp	StreamBuffer	global	At	SndStream_Buffer_addr	0	0x7de3c8	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (SndStream_Buffer_addr - -)	c4-tc
 src/game/battle_items.cpp	Sparkle_Dispatch	global	At	at::kSparkleTypes	0	0x65ae28	-	no-entry	at::kSparkleTypes 0x65ae28 -	b0
 src/game/battle_items.cpp	Sparkle_Launch	record	Long	Actor() + 0x34	0	-	via=Actor	family	no record family established for this pointer here (via=Actor)	b1-battle
 src/game/battle_items.cpp	Sparkle_Launch	record	SetLong	c + 0x14	0	-	via=Cur	family	no record family established for this pointer here (via=Cur)	b1-battle
@@ -8329,8 +8326,6 @@ src/game/display_setup.cpp	FillFormat	record	PutLong	record + 0x30	0	-	param	pla
 src/game/display_setup.cpp	FillFormat	record	PutLong	record + 0x34	0	-	param	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (param)	b1-scen_ui
 src/game/display_setup.cpp	FillFormat	record	PutLong	record + 0x38	0	-	param	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (param)	b1-scen_ui
 src/game/display_setup.cpp	FillFormat	record	PutLong	record + 0x3C	0	-	param	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (param)	b1-scen_ui
-src/game/display_setup.cpp	Rescale	global	At	DDraw_Primary_addr	0	0x7cc338	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (DDraw_Primary_addr - -)	c4-tc
-src/game/display_setup.cpp	Rescale	global	At	DDraw_BackBuffer_addr	0	0x7cc33c	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (DDraw_BackBuffer_addr - -)	c4-tc
 src/game/display_setup.cpp	Display_Setup	global	PutWord	kFontCache	0	0x7c9f50	-	index	kFontCache 0x7c9f50 Font_TexCache	b0
 src/game/display_setup.cpp	Display_Setup	global	PutLong	kRenderFlags	0	0x6c3a4c	-	width	kRenderFlags 0x6c3a4c Gfx_RenderFlags	b0
 src/game/display_setup.cpp	Display_Setup	global	PutLong	kDeviceRecords	0	0x6c3a50	-	no-entry	kDeviceRecords 0x6c3a50 -	b0
@@ -9621,7 +9616,6 @@ src/game/effect_2c_fuzz.cpp	Seed	global	Mem	at::kCounter	1	0x903848	-	no-entry	a
 src/game/effect_2c_fuzz.cpp	Disturb	global	Mem	at::kCounter	0	0x903848	-	no-entry	at::kCounter 0x903848 -	b0
 src/game/effect_2c_fuzz.cpp	Disturb	record	SetWord	s + 0x32	0	-	base=Sprite_Current	harness	SetWord(s + 0x32): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
 src/game/effect_2c_fuzz.cpp	Disturb	record	SetWord	s + 0x2E	0	-	base=Sprite_Current	harness	SetWord(s + 0x2e): a *_fuzz.cpp harness file: the pointer comes from the harness (the seam rule)	b1-effect
-src/game/effect_2d.cpp	S	global	At	Chapter_FlagRow_addr	0	0x929ed0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Chapter_FlagRow_addr - -)	c4-tc
 src/game/effect_2d.cpp	S	global	At	Effect2d_PanelColour_addr	0	0x6761c4	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Effect2d_PanelColour_addr - -)	c4-tc
 src/game/effect_2d.cpp	S	record	At	table + 4 * state	0	-	-	computed	At(table + -): the offset is not a constant	b1-effect
 src/game/effect_2d.cpp	EffectKind45_Run	record	SetWord	EffectKind30_Shards + 4 * i	0	-	base=EffectKind30_Shards	computed	SetWord(EffectKind30_Shards + -): the offset is not a constant	b1-effect
@@ -9669,9 +9663,8 @@ src/game/effect_2d.cpp	EffectKind49_V2Sink	global	At	EffectKind30_Shards_addr + 
 src/game/effect_2d.cpp	EffectKind49_V2Sink	global	At	EffectKind30_Shards_addr + 0x51e	1	0x92c49e	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (EffectKind30_Shards_addr - -)	c4-tc
 src/game/effect_2d.cpp	EffectKind49_V3Burst	global	At	at::kBurstMask	0	0x6545ec	-	no-entry	at::kBurstMask 0x6545ec -	b0
 src/game/effect_2d.cpp	EffectKind49_V3Burst	global	At	at::kBurstCount	0	0x6545f4	-	no-entry	at::kBurstCount 0x6545f4 -	b0
-src/game/effect_2d.cpp	EffectKind49_V3Burst	global	At	Effect2d_DustAnchor_addr	0	0x6761d0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Effect2d_DustAnchor_addr - -)	c4-tc
-src/game/effect_2d.cpp	EffectKind49_V3Burst	record	SetWord	anchor + 0x10	0	-	-	family	SetWord(anchor + 0x10): local anchor = *reinterpret_cast<unsigned char**>(At(Ef	b1-effect
-src/game/effect_2d.cpp	EffectKind49_V3Burst	record	Word	anchor + 0x10	0	-	-	family	Word(anchor + 0x10): local anchor = *reinterpret_cast<unsigned char**>(At(Ef	b1-effect
+src/game/effect_2d.cpp	EffectKind49_V3Burst	record	SetWord	anchor + 0x10	0	-	base=Effect2d_DustAnchor	family	SetWord(anchor + 0x10): local anchor = *reinterpret_cast<unsigned char**>(At(Ef	b1-effect
+src/game/effect_2d.cpp	EffectKind49_V3Burst	record	Word	anchor + 0x10	0	-	base=Effect2d_DustAnchor	family	Word(anchor + 0x10): local anchor = *reinterpret_cast<unsigned char**>(At(Ef	b1-effect
 src/game/effect_2d.cpp	EffectKind49_V3Burst	global	At	at::kBurstCount	1	0x6545f4	-	no-entry	at::kBurstCount 0x6545f4 -	b0
 src/game/effect_2d.cpp	EffectKind49_V3Burst	global	At	at::kBurstCount	2	0x6545f4	-	no-entry	at::kBurstCount 0x6545f4 -	b0
 src/game/effect_2d_fuzz.cpp	FxPuffFind	global	FindFirstFree	at::kDust	0	0x92d1dc	-	no-entry	at::kDust 0x92d1dc -	b0
@@ -11269,7 +11262,6 @@ src/game/effect_5a.cpp	EffectKind18_06_Turn	global	At	Cond_Flags_addr + 0xa0	0	0
 src/game/effect_5a.cpp	EffectKind18_06_SetMap	global	-	at::kRects	0	0x65db6c	-	no-entry	at::kRects 0x65db6c -	b0
 src/game/effect_5a.cpp	EffectKind18_06_SetMap	global	-	at::kRects	1	0x65db6c	-	no-entry	at::kRects 0x65db6c -	b0
 src/game/effect_5a.cpp	EffectKind18_06_SetMap	record	SW	s + 0x36	0	-	-	family	SW(s + 0x36): local s declared after	b1-effect
-src/game/effect_5a.cpp	EffectKind18_06_SetMap	global	At	AreaMap_Bytes_addr	0	0x905d94	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (AreaMap_Bytes_addr - -)	c4-tc
 src/game/effect_5a.cpp	EffectKind18_06_SetMap	global	At	AreaMap_Header_addr + 4 * base + x + w * z	0	0x8cb580	-	expr	the address is part of a larger expression typed_convert does not rewrite (AreaMap_Header_addr - -)	c4-tc
 src/game/effect_5a.cpp	EffectKind18_06_Draw	global	-	at::kRuns6	0	0x65db9c	-	no-entry	at::kRuns6 0x65db9c -	b0
 src/game/effect_5a.cpp	EffectKind18_06_Draw	global	-	at::kRuns6	1	0x65db9c	-	no-entry	at::kRuns6 0x65db9c -	b0
@@ -11314,7 +11306,6 @@ src/game/effect_5a.cpp	EffectKind18_08_DrawFallen	global	T	at::kTileTex8	0	0x65d
 src/game/effect_5a.cpp	EffectKind18_08_DrawTilted	global	TL	at::kTextures7	0	0x65ddbc	-	no-entry	at::kTextures7 0x65ddbc -	b0
 src/game/effect_5a.cpp	EffectKind18_09_Pattern	global	At	at::kHeights9	0	0x65de62	-	no-entry	at::kHeights9 0x65de62 -	b0
 src/game/effect_5a.cpp	EffectKind18_09_Pattern	global	-	at::kHeights9	0	0x65de62	-	no-entry	at::kHeights9 0x65de62 -	b0
-src/game/effect_5a.cpp	EffectKind18_09_Pattern	global	At	AreaMap_Bytes_addr	0	0x905d94	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (AreaMap_Bytes_addr - -)	c4-tc
 src/game/effect_5a.cpp	EffectKind18_09_Pattern	global	T	at::kFe9	0	0x65de6f	-	no-entry	at::kFe9 0x65de6f -	b0
 src/game/effect_5a.cpp	EffectKind18_09_Pattern	global	-	at::kFe9	0	0x65de6f	-	no-entry	at::kFe9 0x65de6f -	b0
 src/game/effect_5a.cpp	EffectKind18_0A_DrawDoor	global	-	at::kDoorTextures	0	0x65deec	-	no-entry	at::kDoorTextures 0x65deec -	b0
@@ -12746,7 +12737,9 @@ src/game/event_leader.cpp	Field_SwapExchange	global	At	CharacterRecords_addr + C
 src/game/event_leader.cpp	Field_SwapExchange	record	Bytes	rv::Bytes(ObjTrio)	0	-	base=ObjTrio	view	a typed record's own bytes at an offset its struct does not name for this reader (rv::Bytes; stage C4)	c4-rule
 src/game/event_leader.cpp	Field_SwapSpinIn	global	At	Gfx_ClutStripSource_addr + 0x1e00 + m[5] * 64u	0	0x80b580	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Gfx_ClutStripSource_addr - -)	c4-tc
 src/game/event_leader.cpp	Field_PassageOpen	record	Word	e + 4	0	-	-	no-struct	no records.h family is evidenced for this pointer (-)	b1-scen_ui
+src/game/event_leader.cpp	Field_PassageOpen	record	Long	descriptor + 4	0	-	base=Area_Descriptors	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
 src/game/event_leader.cpp	Field_PassageOpen	record	Word	e + 4	1	-	-	no-struct	no records.h family is evidenced for this pointer (-)	b1-scen_ui
+src/game/event_leader.cpp	Field_PassageOpen	record	At	scripts + 4u * (Word(e + 4) & 0xFFFu)	0	-	-	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
 src/game/event_leader.cpp	Field_PassageOpen	record	SetWord	Field_State + 0x12C	0	-	base=Field_State	union	PartyMember +0x124..+0x13F: the field's script context or the battle's action record (typed-records.md 3) (base=Field_State)	b1-scen_ui
 src/game/event_leader.cpp	Field_PassageOpen	record	Word	e + 4	2	-	-	no-struct	no records.h family is evidenced for this pointer (-)	b1-scen_ui
 src/game/event_leader.cpp	Field_PassageTake	global	At	at::kPassageFlags	0	0x90410c	-	no-entry	at::kPassageFlags 0x90410c -	b0
@@ -12875,6 +12868,7 @@ src/game/event_ops.cpp	Field_LeaderMenuTest	global	Byte	kFlags2Hi	0	0x905ba5	-	i
 src/game/event_ops.cpp	Field_LeaderRequest4Test	global	Byte	kFlagsHi	0	0x9039a3	-	inside-entry	kFlagsHi 0x9039a3 Field_ScriptFlags+0x1	b0
 src/game/event_ops.cpp	Field_LeaderRequest4Test	global	At	Gfx_UnpackScratch_addr + 0x1f006	0	0x903586	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Gfx_UnpackScratch_addr - -)	c4-tc
 src/game/event_ops.cpp	Field_LeaderRequest9Test	global	Byte	kFlagsHi	0	0x9039a3	-	inside-entry	kFlagsHi 0x9039a3 Field_ScriptFlags+0x1	b0
+src/game/event_ops.cpp	Area_PassageAhead	record	Long	descriptor + 0x2C	0	-	base=Area_Descriptors	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
 src/game/event_ops.cpp	Area_PassageAhead	record	Long	sc + 0x70	0	-	base=Sprite_Current	family	SpriteObject Long reach: the pointer can be more than one family here (Field_ActiveMember an object or a party member; +0x70 reach on an object, raised on a party member; Sprite_Current at +0x80 and up)	b1-scen_ui
 src/game/event_ops.cpp	Field_LeaderCheckTest	global	At	Gfx_UnpackScratch_addr + 0x1f00c	0	0x90358c	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Gfx_UnpackScratch_addr - -)	c4-tc
 src/game/event_ops.cpp	Field_LeaderTalkTest	global	At	Gfx_UnpackScratch_addr + 0x1f000	0	0x903580	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Gfx_UnpackScratch_addr - -)	c4-tc
@@ -12937,6 +12931,8 @@ src/game/event_script.cpp	SetCount	global	At	SharedScratch_addr	0	0x903850	-	ptr
 src/game/event_script.cpp	EventObj_Reset	record	SetWord	Field_ActiveMember + 0x8A	0	-	base=Field_ActiveMember	family	SpriteObject SetWord script_position: the pointer can be more than one family here (Field_ActiveMember an object or a party member; +0x70 reach on an object, raised on a party member; Sprite_Current at +0x80 and up)	b1-scen_ui
 src/game/event_script.cpp	EventObj_Reset	record	SetWord	Field_ActiveMember + 0x9C	0	-	base=Field_ActiveMember	family	SpriteObject SetWord counter: the pointer can be more than one family here (Field_ActiveMember an object or a party member; +0x70 reach on an object, raised on a party member; Sprite_Current at +0x80 and up)	b1-scen_ui
 src/game/event_script.cpp	Sprite_InitFromEntry	record	Dword	entry + 4	0	-	param	no-struct	no records.h family is evidenced for this pointer (param)	b1-scen_ui
+src/game/event_script.cpp	EventOp_Bx	record	Dword	descriptor + 8	0	-	base=Area_Descriptors	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
+src/game/event_script.cpp	EventOp_Bx	record	Dword	sc + 0x54	0	-	base=Sprite_Current	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
 src/game/event_script_fuzz.cpp	alignas	global	At	SharedScratch_addr	0	0x903850	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (SharedScratch_addr - -)	c4-tc
 src/game/event_script_fuzz.cpp	SetCount	global	At	SharedScratch_addr	0	0x903850	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (SharedScratch_addr - -)	c4-tc
 src/game/event_script_fuzz.cpp	StubKind2Place	global	At	SharedScratch_addr	0	0x903850	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (SharedScratch_addr - -)	c4-tc
@@ -13629,13 +13625,15 @@ src/game/field_event.cpp	Field_LeaderFrame	global	At	EventOps_BlockByte_addr	0	0
 src/game/field_event.cpp	Field_LeaderStand	record	Bytes	rv::Bytes(state)	0	-	base=state	view	a typed record's own bytes at an offset its struct does not name for this reader (rv::Bytes; stage C4)	c4-rule
 src/game/field_event.cpp	Field_LeaderAnimation	global	At	at::kAnimationRemap	0	0x6608d8	-	no-entry	at::kAnimationRemap 0x6608d8 -	b0
 src/game/field_event.cpp	Area_ZoneAt	global	At	Area_StateRecords_addr	0	0x668d80	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Area_StateRecords_addr - -)	c4-tc
+src/game/field_event.cpp	Area_ZoneAt	record	Long	At(Area_StateRecords_addr) + Game_AreaNumber * 4u	0	-	via=At	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
 src/game/field_event.cpp	Field_EncounterThresholdRoll	global	At	ObjTrio_addr + 0x134	0	0x802e74	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (ObjTrio_addr - -)	c4-tc
 src/game/field_event.cpp	Field_EncounterThresholdRoll	record	Bytes	rv::Bytes(ObjTrio)	0	-	base=ObjTrio	view	a typed record's own bytes at an offset its struct does not name for this reader (rv::Bytes; stage C4)	c4-rule
 src/game/field_event.cpp	Field_EncounterThresholdRoll	record	Bytes	rv::Bytes(ObjTrio)	1	-	base=ObjTrio	view	a typed record's own bytes at an offset its struct does not name for this reader (rv::Bytes; stage C4)	c4-rule
 src/game/field_event.cpp	Field_EncounterThresholdRoll	global	At	at::kZoneBases	0	0x660a24	-	no-entry	at::kZoneBases 0x660a24 -	b0
 src/game/field_event.cpp	Party_Count	global	At	Cond_Flags_addr + 0xd2	0	0x904062	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Cond_Flags_addr - -)	c4-tc
 src/game/field_event.cpp	ScriptContext_Reset	record	SetWord	context + 0xA	0	-	param	no-family	`context`: a script context (object +0x80 or member +0x124)	b1-field
-src/game/field_event.cpp	Sprite_LoadPalette	record	Long	bank + 4	0	-	-	no-family	`bank`: an animation bank	b1-field
+src/game/field_event.cpp	Sprite_LoadPalette	record	Long	Sprite_Current + 0x4C	0	-	base=Sprite_Current	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
+src/game/field_event.cpp	Sprite_LoadPalette	record	Long	bank + 4	0	-	base=Sprite_Current	no-family	`bank`: an animation bank	b1-field
 src/game/field_event.cpp	Sprite_LoadPalette	global	At	Gfx_ClutStrip_addr + static_cast<std::uint32_t>(half) * 2u	0	0x80f580	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Gfx_ClutStrip_addr - -)	c4-tc
 src/game/field_event.cpp	Sprite_LoadPalette	record	Long	offsets + (index & 0xFF) * 4u	0	-	-	computed	offset computed at run time: offsets + (index & 0xFF) * 4u	b1-field
 src/game/field_event.cpp	Party_JoinReset	global	At	at::kJoinState	0	0x9045fc	-	no-entry	at::kJoinState 0x9045fc -	b0
@@ -14077,6 +14075,8 @@ src/game/field_o_fuzz.cpp	Seed	raw	Mem	0x90384B	0	0x90384b	-	harness	a fuzz seed
 src/game/field_o_fuzz.cpp	Seed	global	Mem	MoveCmd_OpE9States_addr + 4 * i	0	0x663b84	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (MoveCmd_OpE9States_addr - -)	c4-tc
 src/game/field_o_fuzz.cpp	Seed	record	SetLong	r + 0x14	0	-	via=SpriteRecord	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)	b1-field
 src/game/field_o_fuzz.cpp	Disturb	global	Mem	SharedScratch_addr	0	0x903850	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (SharedScratch_addr - -)	c4-tc
+src/game/field_objects.cpp	Field_ObjectUpdate	record	Long	descriptor + 0x10	0	-	base=Area_Descriptors	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
+src/game/field_objects.cpp	Field_ObjectUpdate	record	At	scripts + 4u * obj->area_script	0	-	-	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
 src/game/field_objects.cpp	Field_ObjectMotion	record	Word	Sprite_Current + 0x14	0	-	base=Sprite_Current	width	SpriteObject +0x14 read as 2 bytes; records.h has another width there	b1-field
 src/game/field_objects.cpp	Party_ApplyRecord	record	Long	r + 4	0	-	base=MoveScript_PartyRecords;stride=0x10	no-family	`r`: a shard / party-move record	b1-field
 src/game/field_objects.cpp	Party_ApplyRecord	record	Long	r + 8	0	-	base=MoveScript_PartyRecords;stride=0x10	no-family	`r`: a shard / party-move record	b1-field
@@ -14088,6 +14088,7 @@ src/game/field_objects.cpp	Field_ObjectFollow	record	Long	other + at	1	-	base=Sp
 src/game/field_objects.cpp	MoveCmd_AttachOffset	record	Word	sprite + 0x64	0	-	base=Sprite_Current	width	SpriteObject +0x64 read as 2 bytes; records.h has another width there	b1-field
 src/game/field_objects.cpp	MoveCmd_AttachOffset	record	Word	sprite + 0x68	0	-	base=Sprite_Current	width	SpriteObject +0x68 read as 2 bytes; records.h has another width there	b1-field
 src/game/field_objects.cpp	MoveCmd_AttachOffset	record	Word	sprite + 0x6C	0	-	base=Sprite_Current	width	SpriteObject +0x6c read as 2 bytes; records.h has another width there	b1-field
+src/game/field_objects.cpp	MoveCmd_AttachOffset	record	Long	descriptor + 0xC	0	-	base=Area_Descriptors	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
 src/game/field_objects.cpp	Next	record	At	Address(rv::Bytes(Sprite_ObjectsExtra)) + slot * 0xA4 + (slo	0	-	via=Address	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/field_objects.cpp	Next	record	Bytes	rv::Bytes(sprite)	0	-	base=sprite	view	a typed record's own bytes at an offset its struct does not name for this reader (rv::Bytes; stage C4)	c4-rule
 src/game/field_s.cpp	At	global	At	CharacterRecords_addr + n * at::kRecordStride	0	0x903a70	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (CharacterRecords_addr - -)	c4-tc
@@ -14730,6 +14731,8 @@ src/game/item_use_fuzz.cpp	SelfTest	global	At	ItemUse_ChoiceId_addr	0	0x7dee64	-
 src/game/item_use_fuzz.cpp	SelfTest	global	At	ItemUse_ChoiceId_addr	1	0x7dee64	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (ItemUse_ChoiceId_addr - -)	c4-tc
 src/game/item_use_fuzz.cpp	SelfTest	global	At	ItemUse_ChoiceId_addr	2	0x7dee64	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (ItemUse_ChoiceId_addr - -)	c4-tc
 src/game/item_use_fuzz.cpp	SelfTest	global	At	at::kItemFlags	1	0x656b38	-	no-entry	at::kItemFlags 0x656b38 -	b0
+src/game/kind2_object.cpp	Kind2_Script	record	Long	descriptor + 0x1C	0	-	base=Area_Descriptors	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
+src/game/kind2_object.cpp	Kind2_Script	record	At	scripts + 4u * k[0x83]	0	-	-	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
 src/game/kind2_object.cpp	Kind2_Lift	record	Word	k + 0x14	0	-	base=Sprite_Kind2	width	SpriteObject Word step_y: the access width is not the field's (a 16.16 position's whole-part word, an angle's low word, a byte of a wider field)	b1-scen_ui
 src/game/magic_c1.cpp	Sc	global	Pointer	BattleE2_Owner_addr	0	0x93b940	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (BattleE2_Owner_addr - -)	c4-tc
 src/game/magic_c1.cpp	Sc	global	Pointer	BattleOdds_ActorObject_addr	0	0x904b4c	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (BattleOdds_ActorObject_addr - -)	c4-tc
@@ -20166,9 +20169,9 @@ src/game/move_cmds.cpp	Kind2_Place	record	SetWord	k2 + kK2Height	0	-	via=Kind2	c
 src/game/move_cmds.cpp	MoveCmd_Move	record	Word	rv::Bytes(sprite) + 0x3E	0	-	via=Bytes	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there	b1-field
 src/game/move_cmds.cpp	MoveCmd_HandlePosition	global	At	MapView_CornerPtr_addr	0	0x92a0c0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (MapView_CornerPtr_addr - -)	c4-tc
 src/game/move_cmds.cpp	MoveCmd_HandlePosition	global	At	MapView_CornerPtr_addr	1	0x92a0c0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (MapView_CornerPtr_addr - -)	c4-tc
-src/game/move_cmds.cpp	MoveScript_Variable	global	At	Chapter_FlagRow_addr	0	0x929ed0	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Chapter_FlagRow_addr - -)	c4-tc
 src/game/move_cmds.cpp	MoveScript_Variable	global	At	kCounters	0	0x903848	-	no-entry	kCounters 0x903848 -	b0
 src/game/move_cmds.cpp	MoveScript_Variable	global	At	Cond_Flags_addr + 0xa0	0	0x904030	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Cond_Flags_addr - -)	c4-tc
+src/game/move_cmds.cpp	Sprite_ScriptPeek	record	Long	rv::Bytes(sprite) + 0x50	0	-	via=Bytes	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
 src/game/move_cmds_fuzz.cpp	StubPartySetLoad	global	At	Cond_Flags_addr + 0xd1	0	0x904061	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Cond_Flags_addr - -)	c4-tc
 src/game/move_cmds_fuzz.cpp	StubPartySetLoad	global	At	Cond_Flags_addr + 0xd2	0	0x904062	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Cond_Flags_addr - -)	c4-tc
 src/game/move_cmds_fuzz.cpp	StubPartyJoin	global	At	Cond_Flags_addr + 0xd1	0	0x904061	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (Cond_Flags_addr - -)	c4-tc
@@ -20191,6 +20194,11 @@ src/game/move_groups.cpp	MoveScript_GroupE	record	SetWord	object + 8	2	-	param	n
 src/game/move_groups.cpp	MoveScript_GroupD	record	SetLong	r + 0xC	0	-	via=PartyRecord	no-family	`r`: a shard / party-move record	b1-field
 src/game/move_groups.cpp	MoveScript_GroupD	record	SetLong	r + 8	0	-	via=PartyRecord	no-family	`r`: a shard / party-move record	b1-field
 src/game/move_groups.cpp	MoveScript_GroupD	record	SetLong	r + 4	0	-	via=PartyRecord	no-family	`r`: a shard / party-move record	b1-field
+src/game/move_groups.cpp	MoveScript_GroupD	record	Long	descriptor + 0x3C	0	-	base=Area_Descriptors	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
+src/game/move_groups.cpp	MoveScript_GroupD	record	At	handlers + 4u * p[1]	0	-	-	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
+src/game/move_groups.cpp	MoveScript_Group8	record	Long	descriptor + 0x18	0	-	base=Area_Descriptors	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
+src/game/move_groups.cpp	MoveScript_Group8	record	At	scripts + 4u * script[Pos(object) + 1u]	0	-	-	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
+src/game/move_groups.cpp	MoveScript_Group8	record	SetLong	Field_State + 0x130	0	-	base=Field_State	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
 src/game/move_groups.cpp	StubTintRelease	record	Word	Sprite_Current + 0x58	0	-	base=Sprite_Current	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/move_groups.cpp	StubTintRelease	record	SetWord	Sprite_Current + 0x58	0	-	base=Sprite_Current	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/move_groups.cpp	Next	record	Long	rv::Bytes(ObjTrio) + 0x34	0	-	via=Bytes	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
@@ -20198,6 +20206,8 @@ src/game/move_groups.cpp	Next	record	Long	rv::Bytes(ObjTrio) + 0x38	0	-	via=Byte
 src/game/move_groups.cpp	Next	record	Long	rv::Bytes(ObjTrio) + 0x34	1	-	via=Bytes	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/move_groups.cpp	Next	record	Long	rv::Bytes(ObjTrio) + 0x38	1	-	via=Bytes	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
 src/game/move_groups.cpp	SelfTest	record	At	Address(rv::Bytes(Sprite_ObjectsExtra)) + slot * 0xA4 + (slo	0	-	via=Address	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
+src/game/move_script.cpp	MoveScript_Flow	record	Long	descriptor + 0x3C	0	-	base=Area_Descriptors	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
+src/game/move_script.cpp	MoveScript_Flow	record	Long	table + 4u * p[1]	0	-	-	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
 src/game/move_script.cpp	MoveScript_GroupF	record	SetWord	scratch + 2	0	-	via=Scratch	no-family	`scratch`: the PSX scratchpad	b1-field
 src/game/move_script.cpp	MoveScript_GroupF	record	Word	scratch + 2	0	-	via=Scratch	no-family	`scratch`: the PSX scratchpad	b1-field
 src/game/move_script.cpp	StubMoveKind2	record	SetWord	Scratch() + 2	0	-	via=Scratch	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose	b1-field
@@ -20485,6 +20495,8 @@ src/game/object_kinds.cpp	Field_ObjectIdleLong	global	At	kAsideRows	0	0x65f624	-
 src/game/object_kinds.cpp	Field_ObjectIdle	global	At	BattleE1_Mode_addr	0	0x929f00	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (BattleE1_Mode_addr - -)	c4-tc
 src/game/object_kinds.cpp	Field_ObjectIdle	global	At	BattleE1_Mode_addr	1	0x929f00	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (BattleE1_Mode_addr - -)	c4-tc
 src/game/object_kinds.cpp	MoveScript_SetTurnTarget	record	Word	context + 8	0	-	param	no-family	`context`: a script context (object +0x80 or member +0x124)	b1-field
+src/game/object_kinds.cpp	MoveScript_SetTurnTarget	record	Long	descriptor + 4	0	-	base=Area_Descriptors	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
+src/game/object_kinds.cpp	MoveScript_SetTurnTarget	record	At	scripts + 4u * (word & 0xFFF)	0	-	-	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
 src/game/object_kinds.cpp	MoveScript_SetTurnTarget	record	Word	context + 8	1	-	param	no-family	`context`: a script context (object +0x80 or member +0x124)	b1-field
 src/game/object_kinds.cpp	MoveScript_SetTurnTarget	record	SetWord	context + 8	0	-	param	no-family	`context`: a script context (object +0x80 or member +0x124)	b1-field
 src/game/object_kinds.cpp	MoveScript_SetTurnTarget	global	At	AreaW1a_FocusObject_addr	0	0x903804	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (AreaW1a_FocusObject_addr - -)	c4-tc
@@ -21171,20 +21183,13 @@ src/game/rest_2c.cpp	MasterPanel_DrawMember	record	At	r + 0x22	0	-	stride=0xa4	n
 src/game/rest_2c.cpp	MasterPanel_DrawMember	record	At	r + 0x22	1	-	stride=0xa4	no-struct	CharacterRecords 0x903A70 stride 0xA4: no struct in records.h (typed-records.md 1)	b1-rest
 src/game/rest_2c.cpp	MasterPanel_DrawMember	global	At	at::kMemberPieces	0	0x6643d8	-	no-entry	at::kMemberPieces 0x6643d8 -	b0
 src/game/rest_2c.cpp	MasterPanel_DrawMember	record	B	r + 0xA	1	-	stride=0xa4	no-struct	B(r + 0xA): table=0x903a70;stride=0xa4, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
-src/game/rest_2c.cpp	MasterPanel_DrawMember	global	At	Gfx_PacketNext_addr	0	0x7e0670	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Gfx_PacketNext_addr - -)	c4-tc
-src/game/rest_2c.cpp	MasterPanel_DrawExpBar	global	At	Gfx_PacketNext_addr	0	0x7e0670	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Gfx_PacketNext_addr - -)	c4-tc
 src/game/rest_2c.cpp	MasterPanel_ExpForLevel	global	-	at::kExpTable	0	0x658f48	-	untyped-entry	at::kExpTable 0x658f48 Char_ExpTable	b0
 src/game/rest_2c.cpp	MasterPanel_ExpForLevel	record	At	row + 8 * i	0	-	table=0x658f48;stride=0x318	computed	table=0x658f48;stride=0x318 (At(row + 8 * i))	b1-rest
-src/game/rest_2c.cpp	EdgeQuad	global	At	Gfx_PacketNext_addr	0	0x7e0670	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Gfx_PacketNext_addr - -)	c4-tc
-src/game/rest_2c.cpp	WindowMode	global	At	Gfx_PacketNext_addr	0	0x7e0670	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Gfx_PacketNext_addr - -)	c4-tc
 src/game/rest_2c.cpp	WindowMode	global	PutL	at::kPacketNext	0	0x7e0670	-	type	at::kPacketNext 0x7e0670 Gfx_PacketNext	b0
-src/game/rest_2c.cpp	WindowMode	global	At	Gfx_PacketNext_addr	1	0x7e0670	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Gfx_PacketNext_addr - -)	c4-tc
 src/game/rest_2c.cpp	Menu_DrawPanelBox	global	F	at::kBoxAdd	0	0x5c41c0	-	no-entry	at::kBoxAdd 0x5c41c0 -	b0
 src/game/rest_2c.cpp	Menu_DrawPanelBox	global	F	at::kBoxSub	0	0x5c41bc	-	no-entry	at::kBoxSub 0x5c41bc -	b0
 src/game/rest_2c.cpp	Menu_DrawPanelBox	global	F	at::kBoxSubBottom	0	0x5c41b8	-	no-entry	at::kBoxSubBottom 0x5c41b8 -	b0
 src/game/rest_2c.cpp	MasterPanel_DrawFace	global	-	at::kFaceTable	0	0x6644b8	-	no-entry	at::kFaceTable 0x6644b8 -	b0
-src/game/rest_2c.cpp	MasterPanel_DrawFace	global	At	Gfx_PacketNext_addr	0	0x7e0670	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Gfx_PacketNext_addr - -)	c4-tc
-src/game/rest_2c.cpp	MasterPanel_DrawFace	global	At	Gfx_PacketNext_addr	1	0x7e0670	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Gfx_PacketNext_addr - -)	c4-tc
 src/game/rest_2c.cpp	MasterPanel_DrawFace	record	B	entry + 1	0	-	table=0x6644b8	no-struct	B(entry + 1): table=0x6644b8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2c.cpp	MasterPanel_DrawFace	record	B	entry + 2	0	-	table=0x6644b8	no-struct	B(entry + 2): table=0x6644b8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_2c.cpp	MasterPanel_DrawFace	record	B	entry + 3	0	-	table=0x6644b8	no-struct	B(entry + 3): table=0x6644b8, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
@@ -27183,6 +27188,7 @@ src/game/window_task.cpp	Area_ClassifyPending	global	-	at::kAreaKinds	0	0x66adc0
 src/game/window_task.cpp	Area_ClassifyPending	global	-	at::kAreaKindsEnd	0	0x66add6	-	no-entry	at::kAreaKindsEnd 0x66add6 -	b0
 src/game/window_task.cpp	Area_ZoneTrack	global	-	at::kMusicSets	0	0x669a48	-	no-entry	at::kMusicSets 0x669a48 -	b0
 src/game/window_task.cpp	Area_ZoneAtIn	global	At	Area_StateRecords_addr	0	0x668d80	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (Area_StateRecords_addr - -)	c4-tc
+src/game/window_task.cpp	Area_ZoneAtIn	record	Long	At(Area_StateRecords_addr) + (area & 0xFFFFu) * 4u	0	-	via=At	pointer-field	a 32-bit image word holding a place (a script or handler table, a record pointer), read as the word on both widths and turned into a place by At(): the 64-bit round stage C, where a native pointer type read 8 bytes	x64-c1
 src/game/window_task.cpp	Field_RunTaskRecords	global	-	at::kRecordsEnd	0	0x803478	-	no-entry	at::kRecordsEnd 0x803478 -	b0
 src/game/window_task.cpp	Window_Kind0States	global	At	at::kBoxAltXY	0	0x66ade8	-	no-entry	at::kBoxAltXY 0x66ade8 -	b0
 src/game/window_task.cpp	Window_Kind0States	global	At	at::kBoxAltXY	1	0x66ade8	-	no-entry	at::kBoxAltXY 0x66ade8 -	b0

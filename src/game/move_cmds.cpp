@@ -438,9 +438,7 @@ extern "C" int __cdecl MoveScript_Variable(unsigned char index) {
     case 0: case 14: return Cond_ByteFA;
     case 1: return Game_AreaNumber;
     case 2: {
-        const unsigned char* flags;
-        std::memcpy(&flags, At(::bof3::Img(Chapter_FlagRow_addr)), sizeof flags);
-        return Long(flags);
+        return Long(At(Chapter_FlagRow));   // the slot's 32-bit word, a place
     }
     case 3: case 4: case 5: case 6: return At(::bof3::Img(kCounters))[index - 3];
     case 7: return MoveScript_Var7;
@@ -480,8 +478,7 @@ extern "C" unsigned short __cdecl Sprite_ScriptPeek(void) {
     if (sprite->script_hold != 1) return sprite->script_pos;
     const std::uint16_t position = sprite->script_pos;
     if (static_cast<std::uint16_t>(position >> 1) == sprite->script_steps) return 2;
-    const unsigned char* data;
-    std::memcpy(&data, rv::Bytes(sprite) + 0x50, sizeof data);
+    const unsigned char* const data = At(static_cast<std::uint32_t>(Long(rv::Bytes(sprite) + 0x50)));   // a 32-bit word
     const unsigned char* const entry = data + position;
     if (entry[0] >= 0x80) return static_cast<unsigned short>(entry[1] * 2u + 2u);
     return static_cast<unsigned short>(position + 2u);

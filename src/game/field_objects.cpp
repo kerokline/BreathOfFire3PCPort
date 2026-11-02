@@ -90,9 +90,8 @@ extern "C" void __cdecl Field_ObjectUpdate(unsigned char* object) {
         if (obj->move_steps == 0) {
             if (speed_index != 0) {
                 const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
-                const unsigned char* const* scripts;
-                std::memcpy(&scripts, descriptor + 0x10, sizeof scripts);
-                const unsigned char result = g.step(context, scripts[obj->area_script]);
+                const auto scripts = static_cast<std::uint32_t>(Long(descriptor + 0x10));   // a table of 32-bit places
+                const unsigned char result = g.step(context, At(static_cast<std::uint32_t>(Long(At(scripts + 4u * obj->area_script)))));
                 if (obj->pose_wait) g.pose_wait(context);
                 if (result == 0xFF) return;
                 if (rv::Current<records::SpriteObject>()->direction != result) {
@@ -268,8 +267,7 @@ extern "C" void __cdecl MoveCmd_AttachOffset(long* out, unsigned char index) {
     g.set_rot(matrix);
     g.set_trans(matrix);
     const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
-    const short* vectors;
-    std::memcpy(&vectors, descriptor + 0xC, sizeof vectors);
+    const short* const vectors = reinterpret_cast<const short*>(At(static_cast<std::uint32_t>(Long(descriptor + 0xC))));   // a 32-bit word
     vector[0] = vectors[index * 3u];
     vector[1] = vectors[index * 3u + 1];
     vector[2] = vectors[index * 3u + 2];

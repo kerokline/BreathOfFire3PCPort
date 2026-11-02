@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-31 evening: the exe-gap round done on `exe-gap/round`, end batch passed, item 14, PR at the owner's word; `main` at PR #175, the mountain passes; since alpha.6, PRs #171..#175 - issue #141, the no-fail cheat, the item sort, the dock legend, the passes; the owner's approvals of 2026-10-31 struck; the docs audit of the same evening on `docs/audit-1031`)
+**Status:** IN PROGRESS (2026-11-02: the 64-bit build round's stages A and B merged as PR #183, stage C open as PR #187, **stage D next**, item 14a; DIV-0202 the logo movie as PR #186; `main` at PR #186; the exe-gap round merged as PR #176, issues 177..179 as PRs #181 / #182)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -14,16 +14,16 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
-**`origin/main` is `43e98773`** (PR #175, 2026-10-30; `v0.1.0-alpha.6` was cut at `b7bd1d29`, after PR #170): since the reading-row round (PR #106) it took the faster
+**`origin/main` is `d827571e`** (PR #186, 2026-11-02; `v0.1.0-alpha.6` was cut at `b7bd1d29`, after PR #170): since the reading-row round (PR #106) it took the faster
 text, the bit-15 round, the PlayStation verdict pass and twin-diff, fix wave 1023, the sound-layer round, the
 issue fixes of 2026-10-24..26, build-difference prevention (the data diff and the every-door sweep), the spell
 sweep and its fix wave, the two staged rounds, the away day (PR #158), D42's dial (PR #159), the boss sweep (PR #161), the ledger-fields round (PRs #162, #164), D397 and issue #163
-(PRs #166, #167), the relocatable-image round (PR #168), the enemy-information cheat (PR #169), the pool fold (PR #170), and after alpha.6 issue #141's model box (PR #171), the no-fail minigames cheat (PR #172), the item sort (PR #173), the dock's legend (PR #174) and the mountain passes (PR #175)
+(PRs #166, #167), the relocatable-image round (PR #168), the enemy-information cheat (PR #169), the pool fold (PR #170), and after alpha.6 issue #141's model box (PR #171), the no-fail minigames cheat (PR #172), the item sort (PR #173), the dock's legend (PR #174), the mountain passes (PR #175), the exe-gap round (PR #176),
+issues 177..179 (PRs #181, #182), the 64-bit build round's stages A and B (PR #183) and DIV-0202 (PR #186)
 ([`STATUS.md`](STATUS.md) lists them with their PRs). Every branch the earlier versions of this file called
-unpushed is merged; the open work is below. **Two branches meant for a PR are unpushed:** `exe-gap/round`
-(item 14, PR at the owner's word; it also carries local `main`'s two docs commits of 2026-10-31, which are not on
-`origin`) and `docs/x64-refresh` (item 14a). `v0.1.0-alpha.6` is the
-release cut from this state ([`releases/v0.1.0-alpha.6.md`](releases/v0.1.0-alpha.6.md), a draft until the owner
+unpushed is merged; the open work is below. **One PR is open:** #187, stage C of the 64-bit round (item 14a).
+`v0.1.0-alpha.6` is the
+release cut from an earlier state ([`releases/v0.1.0-alpha.6.md`](releases/v0.1.0-alpha.6.md), a draft until the owner
 publishes it). Owed throughout:
 the owner's play, eye and ear ([`owner-review.md`](owner-review.md), item 13). Layers built before DIV-0148 carry
 no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fishing tag 3: rebuild a language
@@ -290,14 +290,38 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    fresh `cn_<route>_orig4` re-record with the current saves (the references carry the standing SunderLoop and
    slot-6 signature).
 
-14a. **The 64-bit build round is staged, not launched** ([`x64-build-round.md`](x64-build-round.md); staged
-   2026-10-29, re-measured 2026-10-31 on `main` `43e98773` on `docs/x64-refresh`, unpushed - the doc had no
-   pointer from here or STATUS, so it was missed). Its census has the commands; the relocatable-image round
-   settled the code tokens (the bind table) and made the image a module, DirectSound's objects live in 32-bit
-   slots (54 vtable calls in 5 files), the quicksave needs only its `dll_base` word widened. **The owner's four
-   calls before it starts:** a narrow image (32-bit words inside a 64-bit process; saves, quicksave and the
-   state-hash references unchanged - recommended) or a wide one; x86-64 Windows only or more targets; a developer
-   build first or the player's default; SDL3 confirmed as the platform library (heavier now, for DirectSound).
+14a. **The 64-bit build round: stages A..C done, stage D next** ([`x64-build-round.md`](x64-build-round.md);
+   the owner's four calls of 2026-11-01 in its section 7: the narrow image, x86-64 Windows alone, a developer
+   build and a second release artefact, SDL3). Stages A and B merged as PR #183 (2026-11-02). **Stage C is PR
+   #187** (`x64/c1`, tip `7206055c`, `main` merged in): `cmake --preset x86_64 && cmake --build build-x86_64`
+   links a 64-bit `bof3x.exe`, `bof3x.dll` and launcher that play every route. Its proof (section 5, "the
+   coordinator's part", root `C:\Users\kerok\bof3x-runs\x641101\proof`): the ten routes against the 32-bit host
+   identical or run noise only, each noise page shown by a repeat of one width; the quicksave equal in process
+   and across processes, a take of the other width refused; both AVIs play; the 32-bit launcher starts the 64-bit
+   exe; the stackwatch's deepest slice-0 write `0x5628` of `0x8000`, so `kSlice64` holds. **One defect found
+   and fixed** (in #183, `0bdc1f3e`): `Music_Pump` handed two 32-bit slots to `MsgWaitForMultipleObjects` as
+   a native handle array, so 64-bit music stopped after its first quarter second - and no hash saw it.
+   **Owed the owner, before or beside stage D:** a listen to DIV-0201's SDL3 sound output on the 32-bit default
+   (its verification lists what to hear), a listen to the 64-bit build's music, the FMVs' picture, the
+   Sources page opened in the 64-bit launcher (the builds in `proof\L64f`, from before `main` was merged).
+   **Stage D, the coordinator's (section 6, no agent has started it):**
+   - **The audit.** Re-run XA1's census on the tip: every width `#if` in a game file is listed - one is known,
+     `src/game/sound.cpp`'s `Music_Pump` (kept by width because the sound fuzz's stub records the array's
+     address; a width-free copy gave 5 mismatches). Every `Low32()` that fires in no run but could. The ledger:
+     nothing stage C changed is player-visible on the 32-bit default, so no DIV is expected; say so in the doc.
+   - **Census rows the defect asks for:** an image slot array handed to an API as a native array (the class
+     `Music_Pump` was; the only handle array found), and a pointer-overlay class for C1's 23 `pointer-field`
+     rows in `analysis/typed_left.tsv` (source `x64-c1`).
+   - **A check that hears the music:** the ring's words are in the skip list and only shop waits on a stream's
+     end, so add the heard sample (`BOF3X_MUSIC_LOG=1`) or an equivalent to a route check.
+   - **Not run yet:** the moved base (`BOF3X_IMAGEBASE`, the developer launcher's fence) on the 64-bit host;
+     field_menu and menu_screens' stackwatch (their recipes end before the appended quit - the copies in
+     `proof\stackq`); the slice-use difference between widths, read and explained.
+   - **Docs and release:** STATUS, this item, [`SCAFFOLDING.md`](SCAFFOLDING.md) 4 (the presets), the round
+     doc's "as run" for stage D, and `release.yml`'s second artefact (the 64-bit exe, DLL and launcher, signed
+     as the first). The 32-bit build stays the player's default (the owner's call 3).
+   - **Numbering:** ledger entries after DIV-0202, defects after D400, both checked against `main` first (the
+     issue 177..179 work on `fix/issues-177-178` may take more).
 
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
@@ -428,7 +452,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-10-12..13._
 
 - **Build:** `cmake --preset i686 && cmake --build build` - llvm-mingw's `i686-w64-mingw32-clang++` (the `retcomm`
-  toolchain under `~/.local/share`), **not** MSYS2's. The first configure fetches SDL3 (network).
+  toolchain under `~/.local/share`), **not** MSYS2's. The first configure fetches SDL3 (network). The 64-bit
+  developer build: `cmake --preset x86_64 && cmake --build build-x86_64` (exe host only; item 14a).
 - **Run:** `build/bof3x-launcher.exe --game bof3 --no-config` from a script (`--no-config` skips the settings dialog,
   [`launcher-settings.md`](launcher-settings.md) §4); log in `build/bof3x.log`. `BOF3X_ORIGINAL=NAME` / `=*` /
   `*,-NAME` for original behaviour. Nothing mode-sets (DIV-0032); the game runs unfocused (DIV-0033), so
@@ -511,13 +536,18 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **In flight (2026-10-31 evening):** `exe-gap/round` (item 14), unpushed, PR at the owner's word; its group
-  branches `exe-gap/ac`, `au`, `pl`, `ja`, `st` and `end` with their worktrees `C:\Users\kerok\bof3x-runs\eg1031\wt_<group>`
-  are merged into it and removable once the PR is in. `docs/x64-refresh` (item 14a), one commit, unpushed. Local
-  `main` is two docs commits ahead of `origin/main` (`c7b93c85`, `22dfbf7d`); both are in `exe-gap/round`.
-- **Merged, still to remove:** the worktree `C:\Users\kerok\bof3x-runs\spm1030\wt` (`loc/ship-parts-menu`, PR #174)
+- **In flight (2026-11-02):** PR #187, `x64/c1` (item 14a, stage C), with its worktree
+  `C:\Users\kerok\bof3x-runs\x641101\c1`; stage D starts from its tip, or from `main` once it merges. The 64-bit
+  round's root `C:\Users\kerok\bof3x-runs\x641101` holds the agents' worktrees and reports (`xa1`..`xa4`, `b1`..`b5`,
+  `round`, `c1`) and the proof (`proof\`: the run scripts with their `.out`, the launcher folders `L64`, `L32`,
+  `L64f`, `Lmix`, the quit-ended recipe copies in `stackq\`); keep `proof\` until stage D's runs are done.
+  `fix/issues-177-178` in the main checkout is another session's (issues 177..179), uncommitted work on it.
+- **Merged, still to remove:** the `x64/xa1`..`xa4`, `x64/b1`..`b5` and `x64/round` branches and their worktrees
+  (PR #183), `fix/retire-logos-import` and its worktree `C:\Users\kerok\bof3x-runs\logos1102\wt` (PR #186),
+  `exe-gap/round` and its groups with `C:\Users\kerok\bof3x-runs\eg1031\wt_<group>` (PR #176),
+  `docs/x64-refresh`; the worktree `C:\Users\kerok\bof3x-runs\spm1030\wt` (`loc/ship-parts-menu`, PR #174)
   and the branches `cheat/no-fail-minigames`, `fix/mountain-passes`, `loc/ship-parts-menu`, `sort/items-by-id`,
-  local and on `origin` (the only branches `origin` holds beside `main`); the scratch roots `ss1026` and `stg1027`
+  local and on `origin`; the scratch roots `ss1026` and `stg1027`
   (their worktrees are gone). `git cherry` before deleting any (Traps).
 - **Local, not for merge:** `gameplay/angel-tower-skip` (one commit, the Angel Tower skip measured and unexplained,
   IDEAS I32 P1).

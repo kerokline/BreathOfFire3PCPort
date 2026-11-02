@@ -54,17 +54,33 @@ struct ImageObjectFormat {
 };
 static_assert(sizeof(ImageObjectFormat) == 16, "DIOBJECTDATAFORMAT is 16 bytes in the 32-bit image");
 
-// c_dfDIKeyboard against Capcom's: the header's five counts, then each
-// object's GUID (by value), offset, type and flags.
+// The SDK's c_dfDIKeyboard in the 32-bit image's layout: the two struct
+// sizes the image's (0x18 and 0x10 - the SDK's own on i686; 0x20 and 0x18
+// on x86-64, where the same format is described with 8-byte pointers), the
+// three counts the SDK's, the object table's place as a 32-bit word (the
+// SDK's table in our DLL, below 4 GB on every width; the game never reads
+// the word - pad_read.cpp passes KeyboardFormat() to DirectInput).
+ImageDataFormat KeyboardFormatAsImage() {
+    const DIDATAFORMAT& ours = c_dfDIKeyboard;
+    return ImageDataFormat{sizeof(ImageDataFormat), sizeof(ImageObjectFormat), ours.dwFlags, ours.dwDataSize,
+                           ours.dwNumObjs, Low32(ours.rgodf)};
+}
+
+// c_dfDIKeyboard against Capcom's: the header's five counts (the two sizes
+// in the image's layout), then each object's GUID (by value), offset, type
+// and flags.
 void VerifyKeyboardFormat() {
     const DIDATAFORMAT& ours = c_dfDIKeyboard;
+    const ImageDataFormat mine = KeyboardFormatAsImage();
     ImageDataFormat theirs;
     Theirs(kKeyboardFormat.v, &theirs, sizeof theirs);
-    if (ours.dwSize != theirs.size || ours.dwObjSize != theirs.obj_size || ours.dwFlags != theirs.flags ||
-        ours.dwDataSize != theirs.data_size || ours.dwNumObjs != theirs.num_objs)
+    if (mine.size != theirs.size || mine.obj_size != theirs.obj_size || mine.flags != theirs.flags ||
+        mine.data_size != theirs.data_size || mine.num_objs != theirs.num_objs)
         bof3::Fatal("rdata: c_dfDIKeyboard's header (0x%lX 0x%lX 0x%lX 0x%lX %lu) is not BOF3.exe's at 0x%06X "
-                    "(0x%lX 0x%lX 0x%lX 0x%lX %lu)", ours.dwSize, ours.dwObjSize, ours.dwFlags, ours.dwDataSize,
-                    ours.dwNumObjs, kKeyboardFormat.v, static_cast<unsigned long>(theirs.size),
+                    "(0x%lX 0x%lX 0x%lX 0x%lX %lu)", static_cast<unsigned long>(mine.size),
+                    static_cast<unsigned long>(mine.obj_size), static_cast<unsigned long>(mine.flags),
+                    static_cast<unsigned long>(mine.data_size), static_cast<unsigned long>(mine.num_objs),
+                    kKeyboardFormat.v, static_cast<unsigned long>(theirs.size),
                     static_cast<unsigned long>(theirs.obj_size), static_cast<unsigned long>(theirs.flags),
                     static_cast<unsigned long>(theirs.data_size), static_cast<unsigned long>(theirs.num_objs));
     const std::uint32_t table = theirs.rgodf;
@@ -114,7 +130,8 @@ void Map() {
     if (!bof3::IsExeHost()) bof3::Fatal("rdata::Map in the hosted build: Capcom's .rdata is the loader's there");
     const auto* ours = reinterpret_cast<const unsigned char*>(kCopies.data());
     for (const Entry& e : kEntries) std::memcpy(At(::bof3::Img(e.pc)), ours + (e.pc - kLo), e.size);   // VA placed
-    std::memcpy(At(::bof3::Img(kKeyboardFormat.v)), &c_dfDIKeyboard, sizeof c_dfDIKeyboard);
+    const ImageDataFormat keyboard = KeyboardFormatAsImage();   // the 32-bit layout, on every width
+    std::memcpy(At(::bof3::Img(kKeyboardFormat.v)), &keyboard, sizeof keyboard);
     bof3::Log("rdata: .rdata the engine's - %u constants at their addresses and c_dfDIKeyboard's header at 0x%06X (its "
               "objects the SDK's, at %p); the rest zero", (unsigned)(sizeof kEntries / sizeof kEntries[0]),
               kKeyboardFormat.v, static_cast<const void*>(c_dfDIKeyboard.rgodf));

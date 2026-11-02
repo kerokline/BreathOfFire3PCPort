@@ -217,8 +217,7 @@ unsigned char Area_ZoneTrack(const unsigned char* zone) {
     if (zone[7] == 0) return zone[6];
     const std::uint32_t set = ::bof3::Img(at::kMusicSets.v) + static_cast<std::uint32_t>(zone[6]) * 8u;
     const unsigned count = At(set)[4];
-    const unsigned char* entry;
-    std::memcpy(&entry, At(set), sizeof entry);
+    const unsigned char* entry = At(static_cast<std::uint32_t>(Long(At(set))));   // a 32-bit word
     for (unsigned i = 0; i < count; ++i, entry += 3)
         if (g.flags_test(Cond_Flags + entry[1] * 8u, entry[2]) != 0) break;
     return entry[0];
@@ -240,8 +239,7 @@ unsigned char Area_ZoneTrack(const unsigned char* zone) {
 // that guess rested on are those fourteen.
 extern "C" const unsigned char* __cdecl Area_ZoneAtIn(unsigned x_arg, unsigned z_arg, unsigned area) {
     const unsigned x = x_arg & 0xFFu, z = z_arg & 0xFFu;
-    const unsigned char* record;
-    std::memcpy(&record, At(::bof3::Img(Area_StateRecords_addr)) + (area & 0xFFFFu) * 4u, sizeof record);
+    const unsigned char* record = At(static_cast<std::uint32_t>(Long(At(::bof3::Img(Area_StateRecords_addr)) + (area & 0xFFFFu) * 4u)));   // a 32-bit word
     for (;; record += 8) {
         if (x < record[0] || z < record[1] || x > record[2] || z > record[3]) continue;
         return record;

@@ -63,7 +63,7 @@ void PutWord(U address, U v) {
 }
 
 void Scene(U offset) {   // 0x24 BeginScene, 0x28 EndScene; the device re-read each time
-    void** device = *reinterpret_cast<void** volatile*>(At(::bof3::Img(D3d_Device_addr)));
+    void** device = reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr)))));
     reinterpret_cast<long(__stdcall*)(void*)>((*reinterpret_cast<void***>(device))[offset / 4])(device);
 }
 

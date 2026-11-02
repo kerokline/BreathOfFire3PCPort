@@ -502,6 +502,16 @@ Vertex* AppendVertices(U n) {
     return v;
 }
 
+// An object's address into an out-pointer the game handed us: a 4-byte word,
+// as COM's out-pointers are on x86 and as every slot the game passes is (an
+// image slot or a cache entry's field, docs/x64-build-design.md 6.1; stage
+// C's first 64-bit run found an 8-byte store here clobbering the word beside
+// the slot). Low32 is the trap for an object above 4 GB.
+template <class P> void PutObject(P** out, const void* object) {
+    const std::uint32_t word = Low32(object);
+    std::memcpy(out, &word, sizeof word);
+}
+
 // --- IDirectDrawSurface4 -----------------------------------------------------------
 
 long __stdcall Surface_QueryInterface(void* self, const void* iid, void** out) {
@@ -517,15 +527,15 @@ long __stdcall Surface_QueryInterface(void* self, const void* iid, void** out) {
     if (!out) return static_cast<long>(kInvalidParams);
     if (std::memcmp(iid, kTexture2, 16) == 0) {
         s->refs++;
-        *out = TextureOf(s);
+        PutObject(out, TextureOf(s));
         return kDdOk;
     }
     if (std::memcmp(iid, kUnknown, 16) == 0 || std::memcmp(iid, kSurface4, 16) == 0) {
         s->refs++;
-        *out = s;
+        PutObject(out, s);
         return kDdOk;
     }
-    *out = nullptr;
+    PutObject(out, nullptr);
     return static_cast<long>(kNoInterface);
 }
 
@@ -714,7 +724,7 @@ long __stdcall Texture_Load(void* self, void* from) {
 // --- IDirectDraw4 ---------------------------------------------------------------------
 
 long __stdcall Dd_QueryInterface(void*, const void*, void** out) {
-    if (out) *out = nullptr;
+    if (out) PutObject(out, nullptr);
     return static_cast<long>(kNoInterface);
 }
 unsigned long __stdcall Dd_AddRef(void*) { return 1; }
@@ -746,14 +756,14 @@ long __stdcall Dd_CreateSurface(void*, const void* desc, Surface** out, void*) {
     s->pf_bmask = bmask;
     s->pf_amask = amask;
     s->pf_flags = kPfRgb | (amask ? 1 : 0);
-    *out = s;
+    PutObject(out, s);
     return kDdOk;
 }
 
 // --- IDirect3DDevice3 -------------------------------------------------------------
 
 long __stdcall Device_QueryInterface(void*, const void*, void** out) {
-    if (out) *out = nullptr;
+    if (out) PutObject(out, nullptr);
     return static_cast<long>(kNoInterface);
 }
 unsigned long __stdcall Device_AddRef(void*) { return 1; }
@@ -972,7 +982,7 @@ long __stdcall Device_SetTextureStageState(void*, U stage, U type, U value) {
 // --- IDirect3DViewport3 --------------------------------------------------------------
 
 long __stdcall Viewport_QueryInterface(void*, const void*, void** out) {
-    if (out) *out = nullptr;
+    if (out) PutObject(out, nullptr);
     return static_cast<long>(kNoInterface);
 }
 unsigned long __stdcall Viewport_AddRef(void*) { return 1; }
@@ -995,7 +1005,7 @@ long __stdcall Viewport_Clear(void*, U count, const long* rects, U flags) {
 // --- IDirect3DMaterial3 --------------------------------------------------------------
 
 long __stdcall Material_QueryInterface(void*, const void*, void** out) {
-    if (out) *out = nullptr;
+    if (out) PutObject(out, nullptr);
     return static_cast<long>(kNoInterface);
 }
 unsigned long __stdcall Material_AddRef(void*) { return 1; }

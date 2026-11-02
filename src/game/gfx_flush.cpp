@@ -176,7 +176,7 @@ std::uint16_t g_strip_rows_in[32][1024], g_strip_rows_theirs[32][1024];
 
 unsigned FuzzStrip(Fn theirs) {
     constexpr unsigned kRounds = 300;
-    struct Row { std::uint32_t generation; void* pixels; };
+    struct Row { std::uint32_t generation; ::bof3::Slot32<void> pixels; };   // gfx_clut.cpp's ClutRow: 8 bytes on every width
     auto* rows = reinterpret_cast<Row*>(Gfx_ClutRows) + 480;
     const unsigned long format_8888[8] = {0x04000000, 0, 8, 16, 0xFF0000, 0x00FF00, 0x0000FF, 0xFF000000};
     std::memcpy(Gfx_PixelFormat, format_8888, sizeof format_8888);
@@ -200,7 +200,8 @@ unsigned FuzzStrip(Fn theirs) {
         for (int pass = 0; pass < 2; ++pass) {
             for (int r = 0; r < 32; ++r) {
                 std::memset(g_row_buffers[r], 0xA5, sizeof g_row_buffers[r]);
-                rows[r] = {static_cast<std::uint32_t>(r), g_row_buffers[r]};
+                rows[r].generation = static_cast<std::uint32_t>(r);
+                rows[r].pixels = g_row_buffers[r];
                 std::memcpy(&Gfx_VramShadow[(480 + r) << 10], g_strip_rows_in[r], sizeof g_strip_rows_in[r]);
             }
             Gfx_ClutStripDirty = dirty;
@@ -221,7 +222,8 @@ unsigned FuzzStrip(Fn theirs) {
         if (!same && ++bad <= 8) bof3::Log("shadow      Gfx_FlushDirtyStrip self-test MISMATCH round %u, dirty %u", round, dirty);
     }
     for (int r = 0; r < 32; ++r) {
-        rows[r] = {0, nullptr};
+        rows[r].generation = 0;
+        rows[r].pixels = nullptr;
         std::memset(&Gfx_VramShadow[(480 + r) << 10], 0, 2048);
     }
     std::memset(Gfx_ClutStrip, 0, sizeof(unsigned short) * Gfx_ClutStrip_count);

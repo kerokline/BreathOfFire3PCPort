@@ -257,7 +257,10 @@ void Dd_InitSurfaceDesc(void* desc) {
 // and 0x1800 (TEXTURE | SYSTEMMEMORY) otherwise, flags 0x1007 (CAPS | HEIGHT |
 // WIDTH | PIXELFORMAT), the pixel format the 0x20 bytes at 0x7DED80 +
 // format * 0x40. Returns 1 if IDirectDraw4::CreateSurface returned DD_OK, else 0.
-int Dd_CreatePlainSurface(unsigned width, unsigned height, void** surface, unsigned format) {
+// `surface` and `texture` are the 4-byte slots the game hands over (an image
+// word or a cache entry's field), which the render shim fills as x86 COM
+// fills an out-pointer: four bytes.
+int Dd_CreatePlainSurface(unsigned width, unsigned height, ::bof3::Slot32<void>* surface, unsigned format) {
     Desc desc;
     Dd_InitSurfaceDesc(desc.b);
     const U caps = (Gfx_RenderFlags & 1) ? 0x840u : 0x1800u;
@@ -276,7 +279,7 @@ int Dd_CreatePlainSurface(unsigned width, unsigned height, void** surface, unsig
 // texture stage 0, the pixel format as above. On failure returns 0 and does
 // nothing more; on success asks the new surface (read back from *surface) for
 // IID_IDirect3DTexture2 into *texture and returns 1 whatever that answers.
-int Dd_CreateTextureSurface(unsigned width, unsigned height, void** surface, void** texture, unsigned format) {
+int Dd_CreateTextureSurface(unsigned width, unsigned height, ::bof3::Slot32<void>* surface, ::bof3::Slot32<void>* texture, unsigned format) {
     Desc desc;
     Dd_InitSurfaceDesc(desc.b);
     PutLong(desc.b + 0xC, width);
@@ -288,7 +291,7 @@ int Dd_CreateTextureSurface(unsigned width, unsigned height, void** surface, voi
     std::memcpy(desc.b + 0x48, At(::bof3::Img(kFormats.v) + (format << 6)), 0x20);
     const U dd = Long(::bof3::Img(kDirectDraw.v));
     if (Com(dd, kCreateSurface, desc.b, surface, 0u) != 0) return 0;
-    Com(Addr(*surface), kQueryInterface, At(kTexture2Iid), texture);
+    Com(Long(Low32(surface)), kQueryInterface, At(kTexture2Iid), texture);
     return 1;
 }
 
@@ -373,7 +376,7 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
     const U surface_slot = entry + 0x10;
     U result;
     if (Gfx_RenderFlags & 1) {
-        if (!Dd_CreatePlainSurface(0x100, 0x100, reinterpret_cast<void**>(At(surface_slot)), 0)) return 0;
+        if (!Dd_CreatePlainSurface(0x100, 0x100, reinterpret_cast<::bof3::Slot32<void>*>(At(surface_slot)), 0)) return 0;
         const void* table = nullptr;
         if (!(m & 2)) table = g.clut_pixels(static_cast<unsigned>(clut));
         if (Com(Long(surface_slot), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return 0;
@@ -388,8 +391,8 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
         PutLong(entry + 0x14, 0);
         result = slot;
     } else {
-        if (!Dd_CreateTextureSurface(0x100, 0x100, reinterpret_cast<void**>(At(surface_slot)),
-                                     reinterpret_cast<void**>(At(entry + 0x14)), 0))
+        if (!Dd_CreateTextureSurface(0x100, 0x100, reinterpret_cast<::bof3::Slot32<void>*>(At(surface_slot)),
+                                     reinterpret_cast<::bof3::Slot32<void>*>(At(entry + 0x14)), 0))
             return 0;
         if (Gfx_RenderFlags & 0x20) {
             U key[2] = {0, 0};   // DDCOLORKEY {0, 0}

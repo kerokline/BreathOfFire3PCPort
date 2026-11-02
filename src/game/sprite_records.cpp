@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <type_traits>
 
 #include "bof3/symbols.gen.h"
 #include "hook/detour.h"
@@ -18,11 +19,25 @@
 namespace {
 
 template <class T> T Get(const unsigned char* p, unsigned offset) {
-    T v;
-    std::memcpy(&v, p + offset, sizeof v);
-    return v;
+    // A pointer-typed field is a 32-bit word of the image on every width.
+    if constexpr (std::is_pointer_v<T>) {
+        std::uint32_t w;
+        std::memcpy(&w, p + offset, sizeof w);
+        return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
+    } else {
+        T v;
+        std::memcpy(&v, p + offset, sizeof v);
+        return v;
+    }
 }
-template <class T> void Put(unsigned char* p, unsigned offset, T v) { std::memcpy(p + offset, &v, sizeof v); }
+template <class T> void Put(unsigned char* p, unsigned offset, T v) {
+    if constexpr (std::is_pointer_v<T>) {   // the field is a 32-bit word on every width
+        const std::uint32_t w = Low32(v);
+        std::memcpy(p + offset, &w, sizeof w);
+    } else {
+        std::memcpy(p + offset, &v, sizeof v);
+    }
+}
 
 // Gfx_PacketPools + 0x10000 - 0x54: the last byte a primitive may reach in
 // buffer 0; buffer 1's is 0x10000 higher. As in draw_emit.cpp.
