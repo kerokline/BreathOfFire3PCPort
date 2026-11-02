@@ -155,12 +155,21 @@ SCALAR_SIZES = {'char': 1, 'signed char': 1, 'unsigned char': 1, 'short': 2, 'un
                 'std::uint32_t': 4, 'std::int32_t': 4}
 
 
-def slot_type(ct):
+def slot_type(ct, scalar=True):
     """The C++ type a ctype is spelled as: a pointer ctype `T *` as the 4-byte
-    slot `::bof3::Slot32<T>` (the module docstring), anything else itself."""
+    slot `::bof3::Slot32<T>` (the module docstring); a scalar row's `long` /
+    `unsigned long` - the 32-bit image's word, Win32's long - as the
+    fixed-width type, so an LP64 target reads it right (the 64-bit build
+    round, B2 item 5; 0 differ on Win32, where the two are the same width);
+    anything else itself. A `count` row keeps its element spelling: its name
+    decays to a pointer, and the hand-written helpers and the generated
+    prototypes that take it still say `unsigned long *` (the census's `long`
+    rows, a later pass)."""
     c = ct.strip()
     if c.endswith('*'):
         return f'::bof3::Slot32<{c[:-1].strip()}>'
+    if scalar:
+        return {'unsigned long': 'std::uint32_t', 'long': 'std::int32_t'}.get(c, c)
     return c
 
 
@@ -222,7 +231,7 @@ def emit_game_data(w, start, end, members):
             w(f"    unsigned char pad_{cur:x}[{pc - cur:#x}];")
         packed = " __attribute__((packed, aligned(1)))" if pc % al else ""
         dim = f"[{n}]" if n is not None else ""
-        w(f"    using {name}_type = {slot_type(ct)};")
+        w(f"    using {name}_type = {slot_type(ct, n is None)};")
         w(f"    {name}_type {name}{dim}{packed};")
         cur = pc + size
     if end > cur:
@@ -484,7 +493,7 @@ def main():
         # typed entry its literal pc
         at = f'{e["name"]}_addr' if e['name'] in in_gd else f'{e["pc"]:#x}'
         at = f'::bof3::Img({at})'
-        ty = slot_type(ty)
+        ty = slot_type(ty, 'count' not in e)
         if 'count' in e:
             return f'#define {e["name"]} (reinterpret_cast<{ty} *>({at}))'
         return f'#define {e["name"]} (*reinterpret_cast<{ty} *>({at}))'

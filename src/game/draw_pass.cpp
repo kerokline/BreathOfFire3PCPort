@@ -39,7 +39,7 @@ DrawFn g_draw = Sprite_Draw;
 
 // A layer's 0x30 bytes are three (first, last) pairs per buffer; the pass
 // appends the third, which Gfx_FrameNodes names.
-unsigned long* FrameNode(unsigned layer) { return &Gfx_FrameNodes + (Gfx_BufferIndex + layer * 6u) * 2u; }
+unsigned long* FrameNode(unsigned layer) { return reinterpret_cast<unsigned long*>(&Gfx_FrameNodes) + (Gfx_BufferIndex + layer * 6u) * 2u; }
 
 // --- BOF3X_SHADOW=draw_pass: a differential fuzz, once at start-up ----------------
 // A byte-copy of the original with its eight calls to functions of ours
