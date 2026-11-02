@@ -1052,7 +1052,16 @@ extern "C" void __cdecl Music_Release(void) {
 // DIV-0087: the synth's stream has no decoder and is fed all the same.
 extern "C" void __cdecl Music_Pump(void) {
     if ((!Music_Decoder && !music_seq::Active()) || !Music_Buffer) return;
+#if defined(__i386__)
     const unsigned signalled = g.msg_wait(2, Music_Events, 0, 0, 0xFF);
+#else
+    // MsgWaitForMultipleObjects reads a native HANDLE array, 8 bytes an entry
+    // on x86-64; Music_Events is two 32-bit image slots. Handed on as they
+    // stand, the wait read one merged handle and the word after them, failed
+    // every frame, and the ring was never refilled after its first half.
+    void* const events[2] = {Music_Events[0], Music_Events[1]};
+    const unsigned signalled = g.msg_wait(2, events, 0, 0, 0xFF);
+#endif
     if (signalled >= 2) return;
     if (Music_Finished) {
         g.music_stop();
