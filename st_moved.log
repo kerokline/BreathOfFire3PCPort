@@ -1,0 +1,2 @@
+bof3x-launcher: BOF3X_IMAGEBASE=0xA00000: C:\Users\kerok\bof3x-runs\x641101\round\L\bof3x-A00000.exe is missing (tools/make_exe.py --image-base 0xA00000 writes it)
+moved exit 1

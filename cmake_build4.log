@@ -1,0 +1,210 @@
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- bof3x: 32-bit build, hosted mode and fuzz ON
+-- Could NOT find PkgConfig (missing: PKG_CONFIG_EXECUTABLE) 
+-- Could NOT find LibUSB (missing: LibUSB_LIBRARY LibUSB_INCLUDE_PATH) (found version "LibUSB_VERSION-NOTFOUND")
+-- 
+-- SDL3 was configured with the following options:
+-- 
+-- Platform: Windows
+-- 64-bit:   FALSE
+-- Compiler: C:/Users/kerok/.local/share/retcomm/toolchains/cmake-clang-v1/latest/bin/i686-w64-mingw32-clang.exe
+-- Revision: SDL-3.4.16-release-3.4.16
+-- Vendor:   
+-- 
+-- Subsystems:
+--   Audio:    ON
+--   Video:    OFF
+--   GPU:      OFF
+--   Render:   OFF
+--   Camera:   OFF
+--   Joystick: ON
+--   Haptic:   OFF
+--   Hidapi:   ON
+--   Power:    OFF
+--   Sensor:   OFF
+--   Dialog:   OFF
+--   Tray:     ON
+-- 
+-- Options:
+--   SDL_ALSA                    (Wanted: OFF): OFF
+--   SDL_ALSA_SHARED             (Wanted: OFF): OFF
+--   SDL_ALTIVEC                 (Wanted: OFF): OFF
+--   SDL_ARMNEON                 (Wanted: OFF): OFF
+--   SDL_ASAN                    (Wanted: OFF): OFF
+--   SDL_ASSEMBLY                (Wanted: ON): ON
+--   SDL_ASSERTIONS              (Wanted: auto): auto
+--   SDL_AVX                     (Wanted: ON): ON
+--   SDL_AVX2                    (Wanted: ON): ON
+--   SDL_AVX512F                 (Wanted: ON): ON
+--   SDL_BACKGROUNDING_SIGNAL    (Wanted: OFF): OFF
+--   SDL_CCACHE                  (Wanted: OFF): OFF
+--   SDL_CLANG_TIDY              (Wanted: OFF): OFF
+--   SDL_CLOCK_GETTIME           (Wanted: OFF): OFF
+--   SDL_COCOA                   (Wanted: OFF): OFF
+--   SDL_DBUS                    (Wanted: OFF): OFF
+--   SDL_DEPS_SHARED             (Wanted: ON): OFF
+--   SDL_DIRECTX                 (Wanted: OFF): OFF
+--   SDL_DISKAUDIO               (Wanted: ON): ON
+--   SDL_DLOPEN_NOTES            (Wanted: OFF): OFF
+--   SDL_DUMMYAUDIO              (Wanted: ON): ON
+--   SDL_DUMMYCAMERA             (Wanted: OFF): OFF
+--   SDL_DUMMYVIDEO              (Wanted: OFF): OFF
+--   SDL_EXAMPLES                (Wanted: OFF): OFF
+--   SDL_EXAMPLES_LINK_SHARED    (Wanted: OFF): OFF
+--   SDL_FOREGROUNDING_SIGNAL    (Wanted: OFF): OFF
+--   SDL_FRIBIDI                 (Wanted: OFF): OFF
+--   SDL_FRIBIDI_SHARED          (Wanted: OFF): OFF
+--   SDL_GCC_ATOMICS             (Wanted: ON): ON
+--   SDL_HIDAPI                  (Wanted: ON): ON
+--   SDL_HIDAPI_JOYSTICK         (Wanted: ON): ON
+--   SDL_HIDAPI_LIBUSB           (Wanted: ON): OFF
+--   SDL_HIDAPI_LIBUSB_SHARED    (Wanted: ON): OFF
+--   SDL_IBUS                    (Wanted: OFF): OFF
+--   SDL_INSTALL                 (Wanted: OFF): OFF
+--   SDL_INSTALL_TESTS           (Wanted: OFF): OFF
+--   SDL_JACK                    (Wanted: OFF): OFF
+--   SDL_JACK_SHARED             (Wanted: OFF): OFF
+--   SDL_KMSDRM                  (Wanted: OFF): OFF
+--   SDL_KMSDRM_SHARED           (Wanted: OFF): OFF
+--   SDL_LASX                    (Wanted: OFF): OFF
+--   SDL_LIBC                    (Wanted: ON): ON
+--   SDL_LIBICONV                (Wanted: OFF): OFF
+--   SDL_LIBTHAI                 (Wanted: OFF): OFF
+--   SDL_LIBTHAI_SHARED          (Wanted: OFF): OFF
+--   SDL_LIBUDEV                 (Wanted: ON): OFF
+--   SDL_LIBURING                (Wanted: OFF): OFF
+--   SDL_LSX                     (Wanted: OFF): OFF
+--   SDL_METAL                   (Wanted: OFF): OFF
+--   SDL_MMX                     (Wanted: ON): ON
+--   SDL_OFFSCREEN               (Wanted: ON): OFF
+--   SDL_OPENGL                  (Wanted: OFF): OFF
+--   SDL_OPENGLES                (Wanted: OFF): OFF
+--   SDL_OPENVR                  (Wanted: OFF): OFF
+--   SDL_OSS                     (Wanted: OFF): OFF
+--   SDL_PIPEWIRE                (Wanted: OFF): OFF
+--   SDL_PIPEWIRE_SHARED         (Wanted: OFF): OFF
+--   SDL_PTHREADS                (Wanted: OFF): OFF
+--   SDL_PTHREADS_SEM            (Wanted: OFF): OFF
+--   SDL_PULSEAUDIO              (Wanted: OFF): OFF
+--   SDL_PULSEAUDIO_SHARED       (Wanted: OFF): OFF
+--   SDL_RENDER_D3D              (Wanted: OFF): OFF
+--   SDL_RENDER_D3D11            (Wanted: OFF): OFF
+--   SDL_RENDER_D3D12            (Wanted: OFF): OFF
+--   SDL_RENDER_GPU              (Wanted: OFF): OFF
+--   SDL_RENDER_METAL            (Wanted: OFF): OFF
+--   SDL_RENDER_VULKAN           (Wanted: OFF): OFF
+--   SDL_ROCKCHIP                (Wanted: OFF): OFF
+--   SDL_RPATH                   (Wanted: OFF): OFF
+--   SDL_RPI                     (Wanted: OFF): OFF
+--   SDL_SNDIO                   (Wanted: OFF): OFF
+--   SDL_SNDIO_SHARED            (Wanted: OFF): OFF
+--   SDL_SSE                     (Wanted: ON): ON
+--   SDL_SSE2                    (Wanted: ON): ON
+--   SDL_SSE3                    (Wanted: ON): ON
+--   SDL_SSE4_1                  (Wanted: ON): ON
+--   SDL_SSE4_2                  (Wanted: ON): ON
+--   SDL_SYSTEM_ICONV            (Wanted: OFF): OFF
+--   SDL_TESTS                   (Wanted: OFF): OFF
+--   SDL_TESTS_LINK_SHARED       (Wanted: OFF): OFF
+--   SDL_UNINSTALL               (Wanted: OFF): OFF
+--   SDL_VIRTUAL_JOYSTICK        (Wanted: ON): ON
+--   SDL_VIVANTE                 (Wanted: OFF): OFF
+--   SDL_VULKAN                  (Wanted: OFF): OFF
+--   SDL_WASAPI                  (Wanted: ON): ON
+--   SDL_WAYLAND                 (Wanted: OFF): OFF
+--   SDL_WAYLAND_LIBDECOR        (Wanted: OFF): OFF
+--   SDL_WAYLAND_LIBDECOR_SHARED (Wanted: OFF): OFF
+--   SDL_WAYLAND_SHARED          (Wanted: OFF): OFF
+--   SDL_X11                     (Wanted: OFF): OFF
+--   SDL_X11_SHARED              (Wanted: OFF): OFF
+--   SDL_X11_XCURSOR             (Wanted: OFF): OFF
+--   SDL_X11_XDBE                (Wanted: OFF): OFF
+--   SDL_X11_XFIXES              (Wanted: OFF): OFF
+--   SDL_X11_XINPUT              (Wanted: OFF): OFF
+--   SDL_X11_XRANDR              (Wanted: OFF): OFF
+--   SDL_X11_XSCRNSAVER          (Wanted: OFF): OFF
+--   SDL_X11_XSHAPE              (Wanted: OFF): OFF
+--   SDL_X11_XSYNC               (Wanted: OFF): OFF
+--   SDL_X11_XTEST               (Wanted: OFF): OFF
+--   SDL_XINPUT                  (Wanted: ON): ON
+-- 
+--  Build Shared Library: OFF
+--  Build Static Library: ON
+-- 
+-- Enabled backends:
+--   Video drivers: dummy
+--   Render drivers: 
+--   GPU drivers: disabled
+--   Audio drivers: disk dummy wasapi
+--   Joystick drivers: hidapi rawinput virtual wgi xinput
+--   Camera drivers: dummy
+-- 
+-- Configuring done (1.0s)
+-- Generating done (0.2s)
+-- Build files have been written to: C:/Users/kerok/bof3x-runs/x641101/round/build
+[0/4] Re-checking globbed directories...
+[1/25] Building CXX object CMakeFiles/bof3x.dir/src/hook/dllmain.cpp.obj
+[2/25] Building CXX object CMakeFiles/bof3x.dir/src/game/event_ops.cpp.obj
+[3/25] Building CXX object CMakeFiles/bof3x.dir/src/hook/detour.cpp.obj
+[4/25] Building CXX object CMakeFiles/bof3x.dir/src/game/rest_4b.cpp.obj
+C:/Users/kerok/bof3x-runs/x641101/round/src/game/rest_4b.cpp:74:3: warning: unused function 'Key' [-Wunused-function]
+   74 | U Key(const void* p) { return Low32(p); }
+      |   ^~~
+1 warning generated.
+[5/25] Building CXX object CMakeFiles/bof3x.dir/src/game/d3d_draw.cpp.obj
+[6/25] Building CXX object CMakeFiles/bof3x.dir/src/audio/sound_sdl.cpp.obj
+[7/25] Building CXX object CMakeFiles/bof3x.dir/src/game/rest_4e.cpp.obj
+C:/Users/kerok/bof3x-runs/x641101/round/src/game/rest_4e.cpp:111:29: warning: unused variable 'kWinOff' [-Wunused-const-variable]
+  111 | constexpr ::bof3::image::Va kWinOff{WindowRecords_addr + 3}; // u8: window 0 shut (the slide waits for 0)
+      |                             ^~~~~~~
+1 warning generated.
+[8/25] Building CXX object CMakeFiles/bof3x.dir/src/hook/exe_host.cpp.obj
+[9/25] Building CXX object CMakeFiles/bof3x.dir/src/game/rest_3e.cpp.obj
+[10/25] Building CXX object CMakeFiles/bof3x.dir/src/hook/wav_dump.cpp.obj
+[11/25] Building CXX object CMakeFiles/bof3x_launcher_dev.dir/src/launcher/launcher.cpp.obj
+[12/25] Building CXX object CMakeFiles/bof3x_launcher.dir/src/launcher/launcher.cpp.obj
+[13/25] Building CXX object CMakeFiles/bof3x_launcher_parts.dir/src/launcher/suites.cpp.obj
+[14/25] Building CXX object CMakeFiles/bof3x_launcher_parts.dir/src/launcher/sources_dialog.cpp.obj
+[15/25] Linking CXX shared library bof3x.dll
+[16/25] Writing and verifying bof3x.exe (tools/make_exe.py)
+make_exe: C:/Users/kerok/bof3x-runs/x641101/round/build/bof3x.exe verified: PE32 (machine 0x14c), base 0x400000, 6 sections (.stub, .game, .pool, .text, .idata, .rsrc), entry 0x987000, stack 0x100000/0x10000, no relocations, imports KERNEL32.dll!ExitProcess,GetModuleHandleW,GetCommandLineA,GetStartupInfoA; bof3x.dll!Engine_Main, version 0.1.0 (v0.1.0), unsigned
+[17/25] Writing and verifying bof3x-A00000.exe (tools/make_exe.py --image-base)
+make_exe: C:/Users/kerok/bof3x-runs/x641101/round/build/bof3x-A00000.exe verified: PE32 (machine 0x14c), base 0xa00000, 6 sections (.stub, .game, .pool, .text, .idata, .rsrc), entry 0xf87000, stack 0x100000/0x10000, no relocations, imports KERNEL32.dll!ExitProcess,GetModuleHandleW,GetCommandLineA,GetStartupInfoA; bof3x.dll!Engine_Main, version 0.1.0 (v0.1.0), unsigned
+[18/25] Building CXX object CMakeFiles/bof3x_launcher_parts.dir/src/launcher/config_dialog.cpp.obj
+C:/Users/kerok/bof3x-runs/x641101/round/src/launcher/config_dialog.cpp:63:51: warning: missing field 'sheet' initializer [-Wmissing-field-initializers]
+   63 |     {kPageSettings, IDD_PAGE_SETTINGS, L"Settings"},
+      |                                                   ^
+C:/Users/kerok/bof3x-runs/x641101/round/src/launcher/config_dialog.cpp:64:47: warning: missing field 'sheet' initializer [-Wmissing-field-initializers]
+   64 |     {kPageSettings, IDD_PAGE_PRESET, L"Preset"},
+      |                                               ^
+C:/Users/kerok/bof3x-runs/x641101/round/src/launcher/config_dialog.cpp:65:65: warning: missing field 'sheet' initializer [-Wmissing-field-initializers]
+   65 |     {kPageControls, IDD_PAGE_CONTROLS, L"Directions and buttons"},
+      |                                                                 ^
+C:/Users/kerok/bof3x-runs/x641101/round/src/launcher/config_dialog.cpp:66:71: warning: missing field 'sheet' initializer [-Wmissing-field-initializers]
+   66 |     {kPageControls, IDD_PAGE_CONTROLS2, L"Shoulders, Start and Select"},
+      |                                                                       ^
+C:/Users/kerok/bof3x-runs/x641101/round/src/launcher/config_dialog.cpp:67:41: warning: missing field 'sheet' initializer [-Wmissing-field-initializers]
+   67 |     {kPageMusic, IDD_PAGE_MUSIC, nullptr},
+      |                                         ^
+C:/Users/kerok/bof3x-runs/x641101/round/src/launcher/config_dialog.cpp:68:57: warning: missing field 'sheet' initializer [-Wmissing-field-initializers]
+   68 |     {kPageGame, IDD_PAGE_VERSIONS, L"Graphics and audio"},
+      |                                                         ^
+C:/Users/kerok/bof3x-runs/x641101/round/src/launcher/config_dialog.cpp:69:44: warning: missing field 'sheet' initializer [-Wmissing-field-initializers]
+   69 |     {kPageGame, IDD_PAGE_VERSIONS2, L"Data"},
+      |                                            ^
+C:/Users/kerok/bof3x-runs/x641101/round/src/launcher/config_dialog.cpp:78:39: warning: missing field 'sheet' initializer [-Wmissing-field-initializers]
+   78 |     {kPageMods, IDD_PAGE_MODS, L"Data"},
+      |                                       ^
+C:/Users/kerok/bof3x-runs/x641101/round/src/launcher/config_dialog.cpp:79:42: warning: missing field 'sheet' initializer [-Wmissing-field-initializers]
+   79 |     {kPageMods, IDD_PAGE_EXTRA, L"Extras"},
+      |                                          ^
+C:/Users/kerok/bof3x-runs/x641101/round/src/launcher/config_dialog.cpp:80:39: warning: missing field 'sheet' initializer [-Wmissing-field-initializers]
+   80 |     {kPageData, IDD_PAGE_DATA, nullptr},
+      |                                       ^
+10 warnings generated.
+[19/25] Building CXX object CMakeFiles/bof3x_launcher_parts.dir/src/launcher/music_player.cpp.obj
+[20/25] Building CXX object CMakeFiles/bof3x_launcher_parts.dir/src/launcher/config.cpp.obj
+[21/25] Linking CXX executable bof3x-launcher.exe
+[22/25] Linking CXX executable bof3x-launcher-dev.exe
+exit 0
