@@ -988,9 +988,11 @@ DIV0001_ARGS = ["-c:v", "cinepak", "-c:a", "copy", "-fflags", "+bitexact", "-fla
 
 def copy_pc(src, dst, ffmpeg, log, progress):
     """The PC game's files a game folder needs, copied: BOF3.exe, the 742
-    shipped DAT containers (no overlay a tool left there), BGM\\, SND\\ and the
-    two movies. capcom.avi as shipped (Indeo 5) is re-encoded by DIV-0001's
-    command when ffmpeg is there, else copied as it is."""
+    shipped DAT containers (no overlay a tool left there), BGM\\, SND\\ and
+    capcom.avi. capcom.avi as shipped (Indeo 5) is re-encoded by DIV-0001's
+    command when ffmpeg is there, else copied as it is. logos.avi, the
+    porting house's logos, is not copied (DIV-0202): a folder built from the
+    PC starts as one built from a disc does, with the Capcom logo alone."""
     imp = _imp()
     pc = next(b for b in imp._fixtures()["build"] if b["id"] == "pc-zh")
     shutil.copy2(_child(src, "BOF3.exe", False), os.path.join(dst, "BOF3.exe"))
@@ -1010,10 +1012,7 @@ def copy_pc(src, dst, ffmpeg, log, progress):
         else:
             os.makedirs(os.path.join(dst, d))
             print("no %s in the PC folder: left empty" % d)
-    lg = _child(src, "logos.avi", False)
-    if lg:
-        shutil.copy2(lg, os.path.join(dst, "logos.avi"))
-    cap = _child(src, "capcom.avi", False)
+    cap =_child(src, "capcom.avi", False)
     if cap is None:
         print("no capcom.avi in the PC folder")
         return

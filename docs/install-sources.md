@@ -168,7 +168,8 @@ only when everything succeeded:
    until chosen there (`install` installs only the default layers). Until
    2026-10-15 setup built none of them. Its own lines go to `H\setup.log`.
 3. With a PC folder: copy `BOF3.exe`, the 742 shipped `DAT\` containers,
-   `BGM\`, `SND\`, `logos.avi` and `capcom.avi` into the new game folder; the
+   `BGM\`, `SND\` and `capcom.avi` into the new game folder (not `logos.avi`,
+   the porting house's logos, since 2026-11-02: DIV-0202); the
    player's folder is only read (saves `BISLPS*.DAT` and `BOF3.CFG` are not
    copied). **The install's own saves are carried** (2026-10-22, D331):
    before the swap, `BISLPS??.DAT` (the saves and the quicksaves) are
