@@ -185,7 +185,7 @@ S22_EXPORT void __cdecl Blizzard_Start(void) {
         unsigned char* const child = TaskSlot(slot);
         records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         const auto delay = static_cast<unsigned char>(BlizzardShard_Delays[i] + 1);
-        tchild->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(self));
+        tchild->owner = static_cast<std::int32_t>(Low32(self));
         child[9] = delay;
         child[4] = static_cast<unsigned char>(i);
         Inc(self[0xB]);
@@ -596,7 +596,7 @@ void StartBolts(unsigned parameter) {
         unsigned char* const child = TaskSlot(slot);
         records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         const std::int32_t x = Long(r + 0x34), z = Long(r + 0x38);
-        tchild->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(self));
+        tchild->owner = static_cast<std::int32_t>(Low32(self));
         child[1] = 0;
         child[3] = static_cast<unsigned char>(i);
         tchild->x = x;
@@ -1181,7 +1181,7 @@ S22_EXPORT void __cdecl Myollnir_Start(void) {
     const auto child = [](unsigned char kind) {
         unsigned char* const c = TaskSlot(NewTask(0xC));
         records::BattleTask* const tc = rv::As<records::BattleTask>(c);
-        tc->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Sc()));
+        tc->owner = static_cast<std::int32_t>(Low32(Sc()));
         c[1] = kind;
         return c;
     };

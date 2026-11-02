@@ -48,7 +48,7 @@ using U = std::uint32_t;
 unsigned char& B(U a) { return *At(a); }
 U L(U a) { return static_cast<U>(Long(At(a))); }
 std::uint16_t W(U a) { return Word(At(a)); }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 void PutFloat(unsigned char* p, float f) { __builtin_memcpy(p, &f, 4); }
 
 using Handler = void (__cdecl*)();
@@ -548,7 +548,7 @@ void Effect1G_Inject() {
     // compares the original's prompt; a Latin overlay only (DIV-0056).
     if (Lang_Latin()) {
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("TradeLeaveLayout", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_trade_leave_layout)),
+        bof3::PatchBytes("TradeLeaveLayout", Low32(&g_trade_leave_layout),
                          &was, &is, 1);
         bof3::Log("DIV-0027    Manillo's \"Will that be all?\": answers re-spaced, the hand two units left of each");
     }

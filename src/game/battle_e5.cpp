@@ -229,7 +229,7 @@ extern "C" void __cdecl EnemyAI_ApplyAction(unsigned char* enemy, const unsigned
     }
     enemy_rec->odds_index = row[4];
     for (unsigned i = 0; i < 8; ++i) enemy[0x9C + i] = row[8 + i];
-    const U tail = static_cast<U>(reinterpret_cast<std::uintptr_t>(row + 16));
+    const U tail = Low32(row + 16);
     BH_AT(U1, at::kStatusPick.v)((tail & 0xFFFFFF00u) | enemy_rec->actor);
     if (enemy_rec->hp != 0 && Word(row + 6) != 0) {
         const unsigned n = BattleE5_EnemyMessageCount;
@@ -277,7 +277,7 @@ extern "C" void __cdecl EnemyAI_DedupMessages(void) {
 
 namespace {
 
-U Key(const unsigned char* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const unsigned char* p) { return Low32(p); }
 unsigned char* Result() { return Ptr(::bof3::Img(at::kResult.v)); }
 
 // The drains' shared body (0x44C3D0 HP: the result's word +4, the party's
@@ -1231,7 +1231,7 @@ void BattleE5_Inject() {
     {
         // DIV-0162: after the self-test, which compared Capcom's dword read.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("StoreAskWord", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_store_ask_word)), &was, &is, 1);
+        bof3::PatchBytes("StoreAskWord", Low32(&g_store_ask_word), &was, &is, 1);
         bof3::Log("DIV-0162    the dragon store prompt's hand reads its answer as the word every writer stores (on unless the line above says OFF)");
     }
     BOF3_INJECT(EnemyAI_OtherRowsDone);

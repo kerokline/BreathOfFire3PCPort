@@ -66,7 +66,7 @@ void SetUL(U a, U v) { SetUL(At(a), v); }
 std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 std::int32_t S8(unsigned char b) { return static_cast<signed char>(b); }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 unsigned char* Vertices() { return reinterpret_cast<unsigned char*>(Prim_VertexScratch); }
 // sar on the 32 bits.
 U Sar(U v, unsigned n) { return static_cast<U>(I(v) >> n); }

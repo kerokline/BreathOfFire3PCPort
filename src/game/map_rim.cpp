@@ -207,7 +207,7 @@ void ExtraReset(unsigned buffer_index) {
     if (layer + 0x18 > reinterpret_cast<unsigned char*>(g_extra) + sizeof g_extra)
         bof3::Fatal("map_rim: buffer index %u outside the extra layer's two", buffer_index);
     for (unsigned char* head = layer; head != layer + 0x20; head += 0x10) {
-        const std::uint32_t none = 0, self = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(head));
+        const std::uint32_t none = 0, self = Low32(head);
         std::memcpy(head, &none, 4);
         std::memcpy(head + 4, &self, 4);
     }

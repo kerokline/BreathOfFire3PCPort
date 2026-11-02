@@ -24,7 +24,7 @@ using namespace move_script;
 using AreaHandler = void (__cdecl*)();
 
 // Where a generated data name lives (its name is a macro, so bof3::addr:: cannot be used with it).
-std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
 // Every callee, through pointers so that the start-up fuzz can stand recording
 // functions in for them, for the original's copies and for ours alike. The
@@ -83,8 +83,7 @@ std::int32_t S16(const unsigned char* at) { return static_cast<std::int16_t>(at[
 // Ops D4..D6: the party slot Field_ActiveMember is, as a byte - the original
 // divides the pointer's distance from Sprite_ObjectsExtra by 0xA4, truncating.
 unsigned char PartySlot() {
-    const auto distance = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember.Native()) -
-                                                    Address(rv::Bytes(Sprite_ObjectsExtra)));
+    const auto distance = static_cast<std::int32_t>(Low32(Field_ActiveMember.Native()) - Address(rv::Bytes(Sprite_ObjectsExtra)));
     return static_cast<unsigned char>(distance / 0xA4);
 }
 unsigned char* PartyRecord(int slot) { return MoveScript_PartyRecords + slot * 16; }

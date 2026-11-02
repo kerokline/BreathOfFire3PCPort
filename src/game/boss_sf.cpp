@@ -58,10 +58,10 @@ unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_Curren
 // Sprite_Current (rv::Current<T>()): the boss enemy in its kind's handlers,
 // the slot in an effect task.
 unsigned char* Owner() { return At(BattleE2_Owner); }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 void SetCell(unsigned char* p, U value) { SetLong(p, static_cast<std::int32_t>(value)); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
-template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+template <typename T> U AddressOf(T* p) { return Low32(p); }
 
 // A table entry called as the original's jmp enters it: with the word the
 // dispatcher's own caller left at [esp + 4] (BattleEnemy_RunAll and

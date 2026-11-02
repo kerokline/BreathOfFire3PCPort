@@ -272,7 +272,7 @@ void DrawPool_Reserve() {
     for (std::uint32_t at = 0x10000; at + kBytes <= 0x1000000 && !items;) {
         MEMORY_BASIC_INFORMATION mbi;
         if (VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(at)), &mbi, sizeof mbi) == 0) break;
-        const auto region = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(mbi.BaseAddress));
+        const auto region = Low32(mbi.BaseAddress);
         const std::uint32_t end = region + static_cast<std::uint32_t>(mbi.RegionSize);
         if (mbi.State == MEM_FREE && end - at >= kBytes) {
             const std::uint32_t want = (at + 0xFFFF) & ~0xFFFFu;   // allocation granularity
@@ -358,7 +358,7 @@ void DrawPool_Grow() {
     }
     static unsigned short free_list[kCount];
     for (unsigned i = 0; i < kCount; ++i) free_list[i] = static_cast<unsigned short>(i);
-    const auto base = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(items));
+    const auto base = Low32(items);
     unsigned on = 0;
     for (unsigned i = 0; i < kSiteCount; ++i) {
         const Site& s = kSites[i];

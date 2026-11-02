@@ -46,7 +46,7 @@ using ObjectFn = void (__cdecl*)(unsigned char*);
 using SlotFn = unsigned (__cdecl*)(unsigned char*, const unsigned char*);
 
 unsigned char& B(U address) { return *Mem(address); }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 void AddWord(unsigned char* p, unsigned v) { SetWord(p, Word(p) + v); }
 void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
 // The movement script back (or on) by `delta` words: the running script

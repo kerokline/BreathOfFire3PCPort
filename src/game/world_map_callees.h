@@ -74,7 +74,7 @@ constexpr U kRowStride = 0x30;
 
 // The named data, by the address its symbols.gen.h macro names.
 namespace at {
-inline U Of(const volatile void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+inline U Of(const volatile void* p) { return Low32(p); }
 inline U Sprite_CurrentAt() { return Of(&Sprite_Current); }
 inline U Gfx_PacketNextAt() { return Of(&Gfx_PacketNext); }
 inline U Draw_PassFlagsAt() { return Of(&Draw_PassFlags); }
@@ -84,7 +84,7 @@ inline U Camera_AnglesAt() { return Of(Camera_Angles); }
 inline U Prim_VertexScratchAt() { return Of(reinterpret_cast<short*>(Prim_VertexScratch)); }
 inline U MapView_OriginAt() { return Of(MapView_Origin); }
 inline U Gfx_BufferIndexAt() { return Of(&Gfx_BufferIndex); }
-inline U DrawItemsAt() { return static_cast<U>(reinterpret_cast<std::uintptr_t>(draw_pool::Items())); }   // DIV-0062
+inline U DrawItemsAt() { return Low32(draw_pool::Items()); }   // DIV-0062
 }  // namespace at
 
 struct Callees {

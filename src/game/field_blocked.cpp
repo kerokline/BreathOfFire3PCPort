@@ -29,7 +29,7 @@ namespace {
 
 using namespace move_script;
 
-std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
 constexpr unsigned kObjectSize = 0xA4, kObjects = 30, kExtra = 4;   // Sprite_Objects, Sprite_ObjectsExtra
 constexpr unsigned kMemberSize = 0x14C;                             // ObjTrio's records

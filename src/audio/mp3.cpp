@@ -315,7 +315,7 @@ void DecodeAll(const Entries& e, const std::uint8_t* data, std::uint32_t size, s
     e.memory_io(io);
     e.set_io(decoder, io);
     char name[0x20];
-    std::snprintf(name, sizeof name, "%X@%X", size, static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(data)));
+    std::snprintf(name, sizeof name, "%X@%X", size, Low32(data));
     if (e.open(decoder, name, -1) != 0) return;
     if (e.start(decoder) != 0) return;
     run->opened = true;

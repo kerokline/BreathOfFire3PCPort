@@ -99,11 +99,11 @@ void PutWord(unsigned char* p, U v) {
     std::memcpy(p, &w, sizeof w);
 }
 void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
-U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Addr(const void* p) { return Low32(p); }
 
 U SpriteCurrent() { return Long(At(at::Sprite_CurrentAt())); }
 void SetSpriteCurrent(U v) { PutLong(At(at::Sprite_CurrentAt()), v); }
-U CurrentEnemy() { return static_cast<U>(reinterpret_cast<std::uintptr_t>(BattleE3_CurrentEnemy.Native())); }
+U CurrentEnemy() { return Low32(BattleE3_CurrentEnemy.Native()); }
 unsigned char* Banner(U i) { return At(::bof3::Img(kBanners.v) + i * 0xC); }
 
 // The context a slot byte names: 0x93A000 + slot * 0x84, no bound.
@@ -334,7 +334,7 @@ extern "C" unsigned char __cdecl ItemMenu_CanUseSelected(void) {
 // then 0x80340C = 0, 0x80340E = 0, kItemActor = the actor byte read again,
 // 0x80340D = 8. In that order. The one caller (0x447469) reloads eax.
 extern "C" void __cdecl ItemMenu_SetupForActor(void) {
-    const U acting = static_cast<U>(reinterpret_cast<std::uintptr_t>(BattleE4_MenuActor.Native()));
+    const U acting = Low32(BattleE4_MenuActor.Native());
     unsigned char* const w = At(::bof3::Img(Window16_addr));
     auto* const window_rec = rv::As<records::WindowRecord>(w);
     window_rec->in_use = 1;

@@ -24,7 +24,7 @@ using namespace move_script;
 // record or another family whose first 0x80 bytes are a sprite object's (an
 // ObjTrio member, the kind-2 object), so only that part is named.
 
-std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
 // Every callee, through pointers so that the start-up fuzz can stand recording
 // functions in for them - for the original's copies and for ours alike. Two
@@ -61,8 +61,7 @@ Callees g = kOriginals;
 
 // As MoveScript_GroupD's: Field_ActiveMember's party slot, as a byte.
 unsigned char PartySlot() {
-    const auto distance = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember.Native()) -
-                                                    Address(rv::Bytes(Sprite_ObjectsExtra)));
+    const auto distance = static_cast<std::int32_t>(Low32(Field_ActiveMember.Native()) - Address(rv::Bytes(Sprite_ObjectsExtra)));
     return static_cast<unsigned char>(distance / 0xA4);
 }
 
@@ -317,7 +316,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 std::uint32_t Id(const void* p) {
     if (p == g_object) return 1;
     if (p == g_object + 0x80) return 2;
-    return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p));
+    return Low32(p);
 }
 // A callee may change what the caller reads again after it.
 void Disturb() {

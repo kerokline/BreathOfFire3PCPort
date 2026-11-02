@@ -27,7 +27,7 @@ using namespace move_script;
 // record or another family whose first 0x80 bytes are a sprite object's (an
 // ObjTrio member, the kind-2 object), so only that part is named.
 
-std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
 // A function pointer as another function type, through an integer.
 template <class To, class From> To Cast(From f) { return reinterpret_cast<To>(reinterpret_cast<std::uintptr_t>(f)); }

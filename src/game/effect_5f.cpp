@@ -65,7 +65,7 @@ U W(U a) { return Word(At(a)); }
 U B(U a) { return At(a)[0]; }
 std::int32_t S16(U v) { return static_cast<std::int16_t>(v & 0xFFFFu); }
 std::int32_t S8(unsigned char v) { return static_cast<signed char>(v); }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 // cdq; xor; sub: |v| in 32 bits (0x80000000 stays itself, below every bound)
 std::int32_t Abs(U v) {
     const U m = static_cast<U>(static_cast<std::int32_t>(v) >> 31);

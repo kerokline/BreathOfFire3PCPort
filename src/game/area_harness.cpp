@@ -41,7 +41,7 @@ bool g_active = false;
 
 namespace {
 
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 
 // --- the random source and the recorders' log ---------------------------------

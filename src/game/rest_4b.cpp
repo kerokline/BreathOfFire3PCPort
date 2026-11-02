@@ -66,7 +66,7 @@ void PutF(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 void PutFBits(unsigned char* p, U bits) { std::memcpy(p, &bits, sizeof bits); }
 void PutW(unsigned char* p, unsigned v) { SetWord(p, v); }
 unsigned char* Packet() { return Gfx_PacketNext; }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 
 // A state table's handler, jumped to as the original's `jmp [table + 4 *
 // index]` does: the index must lie inside the table's own count (the run of
@@ -1771,7 +1771,7 @@ void Rest4B_Inject() {
     // compares the original's panel; a Latin overlay only (DIV-0056).
     if (Lang_Latin()) {
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("BoardYesNoLayout", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_board_yes_no_layout)),
+        bof3::PatchBytes("BoardYesNoLayout", Low32(&g_board_yes_no_layout),
                          &was, &is, 1);
         bof3::Log("DIV-0027    the faerie board's \"Do you accept?\": answers re-spaced, the tile over each");
     }

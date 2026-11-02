@@ -57,7 +57,7 @@ bool g_active = false;
 
 namespace {
 
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 
 // --- the random source and the recorders' log ---------------------------------
@@ -427,8 +427,8 @@ bool Readable(std::uint32_t p) {
     // The TIB's StackBase and StackLimit, at the width's TEB (NtCurrentTeb(), whose first member is the TIB:
     // fs:0x18 on i686, gs:0x30 on x86-64); this is hosted, i686-only code,
     // where a stack address is 32 bits.
-    const auto base = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackBase));
-    const auto limit = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackLimit));
+    const auto base = Low32(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackBase);
+    const auto limit = Low32(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackLimit);
     return p >= limit && p < base;
 }
 // Where an effect may write a string: the compared state, the text buffer,
@@ -440,8 +440,8 @@ bool Writable(std::uint32_t p, unsigned n) {
     // The TIB's StackBase and StackLimit, at the width's TEB (NtCurrentTeb(), whose first member is the TIB:
     // fs:0x18 on i686, gs:0x30 on x86-64); this is hosted, i686-only code,
     // where a stack address is 32 bits.
-    const auto base = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackBase));
-    const auto limit = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackLimit));
+    const auto base = Low32(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackBase);
+    const auto limit = Low32(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackLimit);
     return p >= limit && p + n <= base;
 }
 // The string at p to its NUL, 64 bytes at most, noted (its hash and length),

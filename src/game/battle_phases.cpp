@@ -70,7 +70,7 @@ unsigned char* PtrAt(std::uint32_t address) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(address)))));
 }
 void SetPtrAt(std::uint32_t address, const unsigned char* p) {
-    SetLong(At(address), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)));
+    SetLong(At(address), static_cast<std::int32_t>(Low32(p)));
 }
 unsigned char* Member(unsigned index) { return At(::bof3::Img(ObjTrio_addr) + index * at::kMemberSize); }
 unsigned char* EnemyObject(unsigned index) { return At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemySize); }
@@ -183,7 +183,7 @@ static std::uint8_t g_init_pick_clear = 0;
 
 void BattlePhases_ArmPickClear() {
     const std::uint8_t was = 0, is = 1;
-    bof3::PatchBytes("BattleInitPickClear", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_init_pick_clear)), &was, &is, 1);
+    bof3::PatchBytes("BattleInitPickClear", Low32(&g_init_pick_clear), &was, &is, 1);
     bof3::Log("DIV-0163    a battle's start clears the target-pick flag, as the US disc (on unless the line above says OFF)");
 }
 
@@ -306,8 +306,8 @@ extern "C" void __cdecl BattleIntro_OpenWindows(void) {
     window_first->state = 0;
     window_first->x = 0x14;
     window_first->y = 0xFFEA;
-    if (BattlePhases_Initiative == 1) g.queue_push(2, 0x30, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(g.msg_system_ptr(0x16))));
-    if (BattlePhases_Initiative == 2) g.queue_push(2, 0x30, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(g.msg_system_ptr(0x17))));
+    if (BattlePhases_Initiative == 1) g.queue_push(2, 0x30, Low32(g.msg_system_ptr(0x16)));
+    if (BattlePhases_Initiative == 2) g.queue_push(2, 0x30, Low32(g.msg_system_ptr(0x17)));
     for (unsigned m = 0; m < 3; ++m) {
         auto* const member_rec = rv::As<records::PartyMember>(Member(m));
         if ((member_rec->flags & 1) == 0) continue;
@@ -658,7 +658,7 @@ extern "C" void __cdecl BattleCommit_QueueMessages(void) {
     SetLong(text + 4, Long(name + 4));
     const unsigned message = Word(record + 2);
     SetLong(text + 8, Long(name + 8));
-    g.queue_push(1, 0, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(g.msg_system_ptr(message))));
+    g.queue_push(1, 0, Low32(g.msg_system_ptr(message)));
     BattleE5_EnemyMessageCount = static_cast<unsigned char>(BattleE5_EnemyMessageCount - 1);
 }
 

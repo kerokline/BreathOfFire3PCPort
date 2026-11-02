@@ -67,7 +67,7 @@ std::int32_t SL(const unsigned char* p) { return Long(p); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 U W(U a) { return Word(At(a)); }
 void SetW(U a, U v) { SetWord(At(a), v); }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // Config_DrawControllerPanel's frame rows: the imm8 of its `push 0xF`
 // (at::kPadFrameH), which nothing patches - the function's own constant, ours

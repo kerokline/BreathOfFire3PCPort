@@ -20,11 +20,11 @@
 // pointer - all through the conversion to the pointer (on the 32-bit build a
 // reference to the pointer in the image; on x86-64 the zero-extension of
 // the word) and the few members below. A store `Sprite_Current = p`
-// narrows: the plain cast on the 32-bit build; on x86-64 a check that the
-// address lies below 4 GB and a Fatal otherwise, since a native address
-// that does not fit is a defect of the loader's placement (design 8.1), not
-// a value to truncate silently. (The check is written here for now; wave 2's
-// B2 folds it into image_base.h's Low32() once that lands.)
+// narrows: the plain cast on the 32-bit build; on x86-64 Low32()'s check
+// (common/image_base.h) that the address lies below 4 GB, a Fatal naming the
+// storing line otherwise, since a native address that does not fit is a
+// defect of the loader's placement (design 8.1), not a value to truncate
+// silently.
 //
 // What the conversion cannot keep: a reinterpret_cast of the row itself
 // (`reinterpret_cast<std::uintptr_t>(Sprite_Current)`), which the language
@@ -39,9 +39,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#if UINTPTR_MAX > 0xFFFFFFFFu
-#include "hook/log.h"  // Fatal, for a native address the slot cannot hold
-#endif
+#include "common/image_base.h"  // Low32: the one checked narrowing of a native address
 
 // Every member is inlined before the optimiser sees the function (the
 // always-inliner runs first), so a use compiles from the same expression the
@@ -87,9 +85,7 @@ struct Slot32 {
     // bits. x86-64: the low 32 bits, after a check that the high ones are 0.
     BOF3_SLOT_INLINE Slot32& operator=(T* p) {
 #if UINTPTR_MAX > 0xFFFFFFFFu
-        const auto a = reinterpret_cast<std::uintptr_t>(p);
-        if (a >> 32) Fatal("Slot32: the address %p does not fit the 32-bit slot at %p", static_cast<const void*>(p), static_cast<const void*>(this));
-        v = static_cast<std::uint32_t>(a);
+        v = Low32(p);
 #else
         v = p;
 #endif

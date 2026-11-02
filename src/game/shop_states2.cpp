@@ -1113,7 +1113,7 @@ void ShopStates2_Inject() {
     if (bof3::WantsShadow("shop_states2")) shop_states2::SelfTest();
     if (Lang_Latin()) {   // DIVERGENCE DIV-0027 (amended 2026-10-03), DIV-0056
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("ShopYesNoLayout", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_shop_yes_no_hand)),
+        bof3::PatchBytes("ShopYesNoLayout", Low32(&g_shop_yes_no_hand),
                          &was, &is, 1);
         bof3::Log("DIV-0027    the shop's buy / equip / sell yes / no hand over the re-spaced line");
     }

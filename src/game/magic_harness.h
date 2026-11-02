@@ -69,7 +69,7 @@ const void* StandIn(std::uint32_t key);
 
 template <typename F> inline F Call(F callee) {
     if (!g_active) return callee;
-    return reinterpret_cast<F>(const_cast<void*>(StandIn(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(callee)))));
+    return reinterpret_cast<F>(const_cast<void*>(StandIn(Low32(callee))));
 }
 
 // A named callee, Capcom's or ours alike: MH_CALL(Rand)().

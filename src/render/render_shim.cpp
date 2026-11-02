@@ -626,7 +626,7 @@ void FillDesc(const Surface* s, unsigned char* d, bool with_surface) {
     PutLong(d + kDescHeight, s->height);
     PutLong(d + kDescWidth, s->width);
     PutLong(d + kDescPitch, s->pitch);
-    if (with_surface) PutLong(d + kDescSurface, static_cast<U>(reinterpret_cast<std::uintptr_t>(s->pixels)));
+    if (with_surface) PutLong(d + kDescSurface, Low32(s->pixels));
     unsigned char* pf = d + kDescPixelFormat;
     PutLong(pf + kPfSize, 0x20);
     PutLong(pf + kPfFlags, s->pf_flags);
@@ -694,7 +694,7 @@ long __stdcall Texture_GetHandle(void* self, void*, U* handle) {
     if (!handle) return static_cast<long>(kInvalidParams);
     // The interface pointer itself; nothing here takes a handle back
     // (SetTexture takes the interface).
-    *handle = static_cast<U>(reinterpret_cast<std::uintptr_t>(self));
+    *handle = Low32(self);
     return kDdOk;
 }
 long __stdcall Texture_PaletteChanged(void*, U, U) { return kDdOk; }
@@ -942,7 +942,7 @@ long __stdcall Device_SetTexture(void*, U stage, void* texture) {
         // known-defects D18: with all glyph slots in use the game hands vertex
         // bits here. DirectX refused it; so do we, and the draw goes untextured.
         static U logged;
-        if (logged++ < 8) bof3::Log("render: SetTexture(0, 0x%08X) is not a texture - refused", static_cast<U>(reinterpret_cast<std::uintptr_t>(texture)));
+        if (logged++ < 8) bof3::Log("render: SetTexture(0, 0x%08X) is not a texture - refused", Low32(texture));
         g_state.texture = nullptr;
         return static_cast<long>(kInvalidParams);
     }

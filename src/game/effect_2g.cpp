@@ -75,7 +75,7 @@ U W(U a) { return Word(At(a)); }
 unsigned char& B(U a) { return *At(a); }
 std::int32_t S16(U v) { return static_cast<std::int16_t>(v & 0xFFFFu); }
 std::int32_t S8(unsigned char v) { return static_cast<signed char>(v); }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 void StoreFloat(unsigned char* p, std::int32_t v) {
     const float f = static_cast<float>(v);   // fild dword; fstp dword
     std::memcpy(p, &f, sizeof f);

@@ -80,7 +80,7 @@ unsigned CountOf(U table, const char* who) {
     };
 #undef R1C_T
     for (const TableCount& t : kCounts)
-        if (static_cast<U>(reinterpret_cast<std::uintptr_t>(t.table)) == table) return t.count;
+        if (Low32(t.table) == table) return t.count;
     bof3::Fatal("%s: 0x%X is not one of the group's 28 dispatch tables", who, static_cast<unsigned>(table));
 }
 
@@ -457,62 +457,62 @@ void Kind30Begin(const char* who) {
 // ===========================================================================
 
 // original 0x51FA70: Field_FormActions[6] - PartyFormAction6_Forms 0x65FC88 by u16 +0x2C.
-R1C_EXPORT void __cdecl PartyFormAction6_ByForm(void) { ByForm(reinterpret_cast<U>(PartyFormAction6_Forms), "PartyFormAction6_ByForm (0x51FA70)"); }
+R1C_EXPORT void __cdecl PartyFormAction6_ByForm(void) { ByForm(::bof3::Img(PartyFormAction6_Forms_addr), "PartyFormAction6_ByForm (0x51FA70)"); }
 // original 0x51FA90: Field_ActionBySet[6] - PartyAction6_Forms 0x65FC94 by u16 +0x2C.
-R1C_EXPORT void __cdecl PartyAction6_ByForm(void) { ByForm(reinterpret_cast<U>(PartyAction6_Forms), "PartyAction6_ByForm (0x51FA90)"); }
+R1C_EXPORT void __cdecl PartyAction6_ByForm(void) { ByForm(::bof3::Img(PartyAction6_Forms_addr), "PartyAction6_ByForm (0x51FA90)"); }
 // original 0x520120: Field_FormActions[7] - PartyFormAction7_Forms 0x65FCD8.
-R1C_EXPORT void __cdecl PartyFormAction7_ByForm(void) { ByForm(reinterpret_cast<U>(PartyFormAction7_Forms), "PartyFormAction7_ByForm (0x520120)"); }
+R1C_EXPORT void __cdecl PartyFormAction7_ByForm(void) { ByForm(::bof3::Img(PartyFormAction7_Forms_addr), "PartyFormAction7_ByForm (0x520120)"); }
 // original 0x520140: Field_ActionBySet[7] - PartyAction7_Forms 0x65FCE4.
-R1C_EXPORT void __cdecl PartyAction7_ByForm(void) { ByForm(reinterpret_cast<U>(PartyAction7_Forms), "PartyAction7_ByForm (0x520140)"); }
+R1C_EXPORT void __cdecl PartyAction7_ByForm(void) { ByForm(::bof3::Img(PartyAction7_Forms_addr), "PartyAction7_ByForm (0x520140)"); }
 // original 0x5207E0: Field_FormActions[8] - PartyFormAction8_Forms 0x65FD34.
-R1C_EXPORT void __cdecl PartyFormAction8_ByForm(void) { ByForm(reinterpret_cast<U>(PartyFormAction8_Forms), "PartyFormAction8_ByForm (0x5207E0)"); }
+R1C_EXPORT void __cdecl PartyFormAction8_ByForm(void) { ByForm(::bof3::Img(PartyFormAction8_Forms_addr), "PartyFormAction8_ByForm (0x5207E0)"); }
 // original 0x520800: Field_ActionBySet[8] - PartyAction8_Forms 0x65FD40.
-R1C_EXPORT void __cdecl PartyAction8_ByForm(void) { ByForm(reinterpret_cast<U>(PartyAction8_Forms), "PartyAction8_ByForm (0x520800)"); }
+R1C_EXPORT void __cdecl PartyAction8_ByForm(void) { ByForm(::bof3::Img(PartyAction8_Forms_addr), "PartyAction8_ByForm (0x520800)"); }
 
 // original 0x51F5D0: set 6's form action, form 1 - PartyFormAction6_Form1States 0x65FC3C by +2.
-R1C_EXPORT void __cdecl PartyFormAction6_Form1(void) { ByState(reinterpret_cast<U>(PartyFormAction6_Form1States), "PartyFormAction6_Form1 (0x51F5D0)"); }
+R1C_EXPORT void __cdecl PartyFormAction6_Form1(void) { ByState(::bof3::Img(PartyFormAction6_Form1States_addr), "PartyFormAction6_Form1 (0x51F5D0)"); }
 // original 0x51F5F0: set 6's action, form 1 - PartyAction6_Form1States 0x65FC48 by +2.
-R1C_EXPORT void __cdecl PartyAction6_Form1(void) { ByState(reinterpret_cast<U>(PartyAction6_Form1States), "PartyAction6_Form1 (0x51F5F0)"); }
+R1C_EXPORT void __cdecl PartyAction6_Form1(void) { ByState(::bof3::Img(PartyAction6_Form1States_addr), "PartyAction6_Form1 (0x51F5F0)"); }
 // original 0x51F610: set 6's form action, form 2 - PartyFormAction6_Form2States 0x65FC54 by +2.
-R1C_EXPORT void __cdecl PartyFormAction6_Form2(void) { ByState(reinterpret_cast<U>(PartyFormAction6_Form2States), "PartyFormAction6_Form2 (0x51F610)"); }
+R1C_EXPORT void __cdecl PartyFormAction6_Form2(void) { ByState(::bof3::Img(PartyFormAction6_Form2States_addr), "PartyFormAction6_Form2 (0x51F610)"); }
 // original 0x51F630: set 6's action, form 2 - PartyAction6_Form2States 0x65FC60 by +2.
-R1C_EXPORT void __cdecl PartyAction6_Form2(void) { ByState(reinterpret_cast<U>(PartyAction6_Form2States), "PartyAction6_Form2 (0x51F630)"); }
+R1C_EXPORT void __cdecl PartyAction6_Form2(void) { ByState(::bof3::Img(PartyAction6_Form2States_addr), "PartyAction6_Form2 (0x51F630)"); }
 // original 0x51F650: its state 0 - PartyAction6_Form2State0Steps 0x65FC68 by +3.
-R1C_EXPORT void __cdecl PartyAction6_Form2State0(void) { ByStep(reinterpret_cast<U>(PartyAction6_Form2State0Steps), "PartyAction6_Form2State0 (0x51F650)"); }
+R1C_EXPORT void __cdecl PartyAction6_Form2State0(void) { ByStep(::bof3::Img(PartyAction6_Form2State0Steps_addr), "PartyAction6_Form2State0 (0x51F650)"); }
 // original 0x51FA10: its state 1 - PartyAction6_Form2State1Steps 0x65FC7C by +3.
-R1C_EXPORT void __cdecl PartyAction6_Form2State1(void) { ByStep(reinterpret_cast<U>(PartyAction6_Form2State1Steps), "PartyAction6_Form2State1 (0x51FA10)"); }
+R1C_EXPORT void __cdecl PartyAction6_Form2State1(void) { ByStep(::bof3::Img(PartyAction6_Form2State1Steps_addr), "PartyAction6_Form2State1 (0x51FA10)"); }
 // original 0x51FAB0: set 7's form action, form 0 - 0x65FCA0 by +2.
-R1C_EXPORT void __cdecl PartyFormAction7_Form0(void) { ByState(reinterpret_cast<U>(PartyFormAction7_Form0States), "PartyFormAction7_Form0 (0x51FAB0)"); }
+R1C_EXPORT void __cdecl PartyFormAction7_Form0(void) { ByState(::bof3::Img(PartyFormAction7_Form0States_addr), "PartyFormAction7_Form0 (0x51FAB0)"); }
 // original 0x51FAD0: set 7's action, form 0 - 0x65FCAC by +2.
-R1C_EXPORT void __cdecl PartyAction7_Form0(void) { ByState(reinterpret_cast<U>(PartyAction7_Form0States), "PartyAction7_Form0 (0x51FAD0)"); }
+R1C_EXPORT void __cdecl PartyAction7_Form0(void) { ByState(::bof3::Img(PartyAction7_Form0States_addr), "PartyAction7_Form0 (0x51FAD0)"); }
 // original 0x51FC60: set 7's form action, form 1 - 0x65FCB4 by +2.
-R1C_EXPORT void __cdecl PartyFormAction7_Form1(void) { ByState(reinterpret_cast<U>(PartyFormAction7_Form1States), "PartyFormAction7_Form1 (0x51FC60)"); }
+R1C_EXPORT void __cdecl PartyFormAction7_Form1(void) { ByState(::bof3::Img(PartyFormAction7_Form1States_addr), "PartyFormAction7_Form1 (0x51FC60)"); }
 // original 0x51FD00: set 7's form action, form 2 - 0x65FCC0 by +2.
-R1C_EXPORT void __cdecl PartyFormAction7_Form2(void) { ByState(reinterpret_cast<U>(PartyFormAction7_Form2States), "PartyFormAction7_Form2 (0x51FD00)"); }
+R1C_EXPORT void __cdecl PartyFormAction7_Form2(void) { ByState(::bof3::Img(PartyFormAction7_Form2States_addr), "PartyFormAction7_Form2 (0x51FD00)"); }
 // original 0x51FD20: set 7's action, form 2 - 0x65FCCC by +2.
-R1C_EXPORT void __cdecl PartyAction7_Form2(void) { ByState(reinterpret_cast<U>(PartyAction7_Form2States), "PartyAction7_Form2 (0x51FD20)"); }
+R1C_EXPORT void __cdecl PartyAction7_Form2(void) { ByState(::bof3::Img(PartyAction7_Form2States_addr), "PartyAction7_Form2 (0x51FD20)"); }
 // original 0x520160: set 8's form action, form 0 - 0x65FCF0 by +2.
-R1C_EXPORT void __cdecl PartyFormAction8_Form0(void) { ByState(reinterpret_cast<U>(PartyFormAction8_Form0States), "PartyFormAction8_Form0 (0x520160)"); }
+R1C_EXPORT void __cdecl PartyFormAction8_Form0(void) { ByState(::bof3::Img(PartyFormAction8_Form0States_addr), "PartyFormAction8_Form0 (0x520160)"); }
 // original 0x520180: set 8's action, form 0 - 0x65FCFC by +2.
-R1C_EXPORT void __cdecl PartyAction8_Form0(void) { ByState(reinterpret_cast<U>(PartyAction8_Form0States), "PartyAction8_Form0 (0x520180)"); }
+R1C_EXPORT void __cdecl PartyAction8_Form0(void) { ByState(::bof3::Img(PartyAction8_Form0States_addr), "PartyAction8_Form0 (0x520180)"); }
 // original 0x520310: set 8's form action, form 1 - 0x65FD04 by +2.
-R1C_EXPORT void __cdecl PartyFormAction8_Form1(void) { ByState(reinterpret_cast<U>(PartyFormAction8_Form1States), "PartyFormAction8_Form1 (0x520310)"); }
+R1C_EXPORT void __cdecl PartyFormAction8_Form1(void) { ByState(::bof3::Img(PartyFormAction8_Form1States_addr), "PartyFormAction8_Form1 (0x520310)"); }
 // original 0x520330: set 8's action, form 1 - 0x65FD10 by +2.
-R1C_EXPORT void __cdecl PartyAction8_Form1(void) { ByState(reinterpret_cast<U>(PartyAction8_Form1States), "PartyAction8_Form1 (0x520330)"); }
+R1C_EXPORT void __cdecl PartyAction8_Form1(void) { ByState(::bof3::Img(PartyAction8_Form1States_addr), "PartyAction8_Form1 (0x520330)"); }
 // original 0x5203C0: set 8's form action, form 2 - 0x65FD1C by +2.
-R1C_EXPORT void __cdecl PartyFormAction8_Form2(void) { ByState(reinterpret_cast<U>(PartyFormAction8_Form2States), "PartyFormAction8_Form2 (0x5203C0)"); }
+R1C_EXPORT void __cdecl PartyFormAction8_Form2(void) { ByState(::bof3::Img(PartyFormAction8_Form2States_addr), "PartyFormAction8_Form2 (0x5203C0)"); }
 // original 0x5203E0: set 8's action, form 2 - 0x65FD28 by +2.
-R1C_EXPORT void __cdecl PartyAction8_Form2(void) { ByState(reinterpret_cast<U>(PartyAction8_Form2States), "PartyAction8_Form2 (0x5203E0)"); }
+R1C_EXPORT void __cdecl PartyAction8_Form2(void) { ByState(::bof3::Img(PartyAction8_Form2States_addr), "PartyAction8_Form2 (0x5203E0)"); }
 // original 0x520820: set 9's form action, form 0 (R1D's 0x521320 by +0x2C) - 0x65FD4C by +2.
-R1C_EXPORT void __cdecl PartyFormAction9_Form0(void) { ByState(reinterpret_cast<U>(PartyFormAction9_Form0States), "PartyFormAction9_Form0 (0x520820)"); }
+R1C_EXPORT void __cdecl PartyFormAction9_Form0(void) { ByState(::bof3::Img(PartyFormAction9_Form0States_addr), "PartyFormAction9_Form0 (0x520820)"); }
 // original 0x5208B0: set 9's action, form 0 (R1D's 0x521340) - 0x65FD58 by +2.
-R1C_EXPORT void __cdecl PartyAction9_Form0(void) { ByState(reinterpret_cast<U>(PartyAction9_Form0States), "PartyAction9_Form0 (0x5208B0)"); }
+R1C_EXPORT void __cdecl PartyAction9_Form0(void) { ByState(::bof3::Img(PartyAction9_Form0States_addr), "PartyAction9_Form0 (0x5208B0)"); }
 // original 0x520A40: set 9's form action, form 1 - 0x65FD60 by +2.
-R1C_EXPORT void __cdecl PartyFormAction9_Form1(void) { ByState(reinterpret_cast<U>(PartyFormAction9_Form1States), "PartyFormAction9_Form1 (0x520A40)"); }
+R1C_EXPORT void __cdecl PartyFormAction9_Form1(void) { ByState(::bof3::Img(PartyFormAction9_Form1States_addr), "PartyFormAction9_Form1 (0x520A40)"); }
 // original 0x520A60: set 9's action, form 1 - 0x65FD6C by +2.
-R1C_EXPORT void __cdecl PartyAction9_Form1(void) { ByState(reinterpret_cast<U>(PartyAction9_Form1States), "PartyAction9_Form1 (0x520A60)"); }
+R1C_EXPORT void __cdecl PartyAction9_Form1(void) { ByState(::bof3::Img(PartyAction9_Form1States_addr), "PartyAction9_Form1 (0x520A60)"); }
 // original 0x520A80: its state 0 - PartyAction9_Form1State0Steps 0x65FD74 by +3.
-R1C_EXPORT void __cdecl PartyAction9_Form1State0(void) { ByStep(reinterpret_cast<U>(PartyAction9_Form1State0Steps), "PartyAction9_Form1State0 (0x520A80)"); }
+R1C_EXPORT void __cdecl PartyAction9_Form1State0(void) { ByStep(::bof3::Img(PartyAction9_Form1State0Steps_addr), "PartyAction9_Form1State0 (0x520A80)"); }
 
 // ===========================================================================
 // The state handlers

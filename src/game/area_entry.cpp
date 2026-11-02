@@ -28,7 +28,7 @@ namespace {
 using namespace move_script;
 using namespace area_entry;
 
-std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const volatile void* p) { return Low32(p); }
 unsigned char* Ptr(const unsigned char* at) { return At(static_cast<std::uint32_t>(Long(at))); }
 unsigned char* Descriptor() { return Area_Descriptors[Game_AreaNumber]; }
 unsigned char* Record(unsigned slot) { return rv::Bytes(ObjTrio) + slot * kRecord; }

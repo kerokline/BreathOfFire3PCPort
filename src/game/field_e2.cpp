@@ -53,7 +53,7 @@ U L(U a) { return static_cast<U>(Long(At(a))); }
 void SetL(U a, U v) { SetLong(At(a), static_cast<std::int32_t>(v)); }
 std::uint16_t W(U a) { return Word(At(a)); }
 void SetW(U a, unsigned v) { SetWord(At(a), v); }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 
 // The record views (game/record_views.h): the leader helpers run on the leader,
 // an ObjTrio record, and Field_State is one.
@@ -1949,7 +1949,7 @@ void FieldE2_Inject() {
     {
         // DIV-0166: after the self-test, which compared Capcom's unterminated copy.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("GeneNameNul", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_name_nul)), &was, &is, 1);
+        bof3::PatchBytes("GeneNameNul", Low32(&g_name_nul), &was, &is, 1);
         bof3::Log("DIV-0166    message 0xFA's gene name is terminated after its 8-byte copy (on unless the line above says OFF)");
     }
     BOF3_INJECT(Scenario_CallB);
@@ -2007,7 +2007,7 @@ void FieldE2_Inject() {
     // compares the original's prompt; a Latin overlay only (DIV-0056).
     if (Lang_Latin()) {
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("TradeConfirmLayout", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_trade_confirm_layout)),
+        bof3::PatchBytes("TradeConfirmLayout", Low32(&g_trade_confirm_layout),
                          &was, &is, 1);
         bof3::Log("DIV-0027    Manillo's \"Is <item> OK?\": answers re-spaced, the hand two units left of each");
     }

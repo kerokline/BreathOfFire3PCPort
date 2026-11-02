@@ -84,7 +84,7 @@ U Long(U address) {
     return v;
 }
 void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
-U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Addr(const void* p) { return Low32(p); }
 
 using Handler = void (__cdecl*)();
 Handler Entry(U table, unsigned index) { return Fn<Handler>(Long(table + index * 4)); }

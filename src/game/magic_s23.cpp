@@ -65,7 +65,7 @@ std::int32_t Imul(std::int32_t a, std::int32_t b) {
 }
 std::int32_t Shl(std::int32_t a, int n) { return static_cast<std::int32_t>(static_cast<std::uint32_t>(a) << n); }
 void SetPointerAt(unsigned char* cell, const void* p) {
-    SetLong(cell, static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p))));
+    SetLong(cell, static_cast<std::int32_t>(Low32(p)));
 }
 unsigned char* Slot(unsigned index) { return Mem(::bof3::Img(BattleTask_Slots_addr) + index * hat::kTaskStride); }
 

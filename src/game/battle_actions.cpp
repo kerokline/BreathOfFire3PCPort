@@ -85,7 +85,7 @@ unsigned char* PtrAt(std::uint32_t address) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(address)))));
 }
 void SetPtrAt(std::uint32_t address, const unsigned char* p) {
-    SetLong(At(address), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)));
+    SetLong(At(address), static_cast<std::int32_t>(Low32(p)));
 }
 std::int32_t L(std::uint32_t address) { return Long(At(address)); }
 
@@ -644,7 +644,7 @@ extern "C" void __cdecl BattleAction_EnemyMessages(void) {
     EnemyNameToText0(At(::bof3::Img(Battle_Enemies_addr) + e * at::kEnemyStride + 0x80));
     const unsigned id = Word(At(::bof3::Img(at::kMsgList.v) + n * 4 + 2));
     const unsigned char* const text = g.msg(id);
-    g.queue_push(1, 0, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(text)));
+    g.queue_push(1, 0, Low32(text));
     BattleE5_EnemyMessageCount = BattleE5_EnemyMessageCount - 1;
 }
 
@@ -712,7 +712,7 @@ void BattleActions_Inject() {
     {
         // DIV-0167: after the self-test, which compared Capcom's preload.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("EffectKeyOff", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_effect_key_off)), &was, &is, 1);
+        bof3::PatchBytes("EffectKeyOff", Low32(&g_effect_key_off), &was, &is, 1);
         bof3::Log("DIV-0167    a battle action's effect stops the sound-effect channels the last one left (on unless the line above says OFF)");
     }
     sound_st::ArmOneShotKeyOff();  // DIV-0174: after the self-test, which compared Capcom's preload

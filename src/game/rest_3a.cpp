@@ -54,7 +54,7 @@ using move_script::Word;
 unsigned char& B(U address) { return At(address)[0]; }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 unsigned char* PtrAt(U cell) { return At(L(cell)); }
-U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Addr(const void* p) { return Low32(p); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 // Sprite_Current, the running task slot (0x93B8C4) and its owner (0x93B940),
 // each read afresh where the original reads it.

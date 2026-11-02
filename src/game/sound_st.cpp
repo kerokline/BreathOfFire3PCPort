@@ -18,7 +18,7 @@ bool MusicLogOn();  // sound.cpp: BOF3X_MUSIC_LOG
 namespace sound_st {
 namespace {
 
-std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const volatile void* p) { return Low32(p); }
 std::uint32_t Dword(std::uint32_t address) {
     std::uint32_t v;
     std::memcpy(&v, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(address)), sizeof v);

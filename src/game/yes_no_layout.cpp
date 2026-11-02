@@ -366,16 +366,16 @@ void YesNoLayout_Inject() {
     const bool shift = bof3::PatchBytes("YesNoLayout", 0x5747FC, shift_was, shift_is, 3);
     if (line != stop || stop != step || step != shift) bof3::Fatal("DIV-0027: Menu_YesNo's four patches went in apart");
     if (line) {
-        g_line_call = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&YesNo_Line));
+        g_line_call = Low32(&YesNo_Line);
         g_stops_moved = true;
     }
     bof3::Log("DIV-0027    Yes / No: %u spaces into the gap, hand stops 218 and 274 (on unless the lines above say OFF)", kMoved);
 
     // DIV-0027, amended 2026-10-03: the master's "Is this OK?" (0x586D20).
     if (bof3::RetargetCall("MasterAskLayout", kMasterLineCall, kTextDrawAt.v, reinterpret_cast<void*>(&MasterAsk_Line)))
-        g_master_line_call = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&MasterAsk_Line));
+        g_master_line_call = Low32(&MasterAsk_Line);
     if (bof3::RetargetCall("MasterAskLayout", kMasterHandCall, kMenuDrawHand.v, reinterpret_cast<void*>(&MasterAsk_Hand)))
-        g_master_hand_call = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&MasterAsk_Hand));
+        g_master_hand_call = Low32(&MasterAsk_Hand);
     bof3::Log("DIV-0027    the master's prompt: its answers re-spaced, the hand two units left of each (on unless the "
               "lines above say OFF)");
 

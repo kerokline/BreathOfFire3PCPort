@@ -104,7 +104,7 @@ namespace {
 unsigned char* Party(std::uint32_t i) { return At(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
 unsigned char* Enemy(std::uint32_t i) { return At(::bof3::Img(Battle_Enemies_addr) + i * at::kEnemyStride); }
 unsigned char* Ptr(const unsigned char* at) { return At(static_cast<std::uint32_t>(Long(at))); }
-std::int32_t Address(const void* p) { return static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::int32_t Address(const void* p) { return static_cast<std::int32_t>(Low32(p)); }
 unsigned char* ActionRecord(std::uint32_t action) { return At(::bof3::Img(at::kActions.v) + action * at::kActionStride); }
 // 0x904B40 holds the acting block's +0xC: the actor's action record (a
 // member's +0x124, an enemy's +0x104; records.h ActionRecord).

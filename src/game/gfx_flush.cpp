@@ -44,7 +44,7 @@ extern "C" void __cdecl Gfx_FlushUploadQueue(void) {
             if (on == 1)
                 bof3::Log("poselog     frame %lu upload %u/%u at %d,%d size %dx%d kind %lu record %08lX", static_cast<unsigned long>(Frame_Counter),
                           static_cast<unsigned>(i), static_cast<unsigned>(Gfx_UploadQueueCount), rect[0], rect[1], rect[2], rect[3],
-                          static_cast<unsigned long>(kind), static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(record)));
+                          static_cast<unsigned long>(kind), static_cast<unsigned long>(Low32(record)));
         }
         if (kind == 1) Gfx_UploadPacked5(record + 8, rect);
         else if (kind == 2) Gfx_UploadLzss(record + 8, rect);

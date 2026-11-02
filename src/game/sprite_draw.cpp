@@ -535,7 +535,7 @@ void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_
                 cells += input.frame[offset];
                 if (object[0x48] != 0) ++scaled;
                 const std::uint32_t limit = (static_cast<std::uint32_t>(input.buffer_index) << 16) + ::bof3::Img(0x7F1BACu);
-                if (limit <= static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(input.packet_next)) + kPrimBytes)
+                if (limit <= Low32(input.packet_next) + kPrimBytes)
                     ++full;
             }
         }
@@ -840,7 +840,7 @@ void SpriteDraw_Inject() {
         // DIV-0142: armed after the fuzz, which compares Capcom's rule.
         const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
         bof3::PatchBytes("SpriteCapture",
-                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_sprite_capture)), was, is, 4);
+                         Low32(&g_sprite_capture), was, is, 4);
         bof3::Log("DIV-0142    a sprite with +0x24 bit 3 is drawn into VRAM (0x340, 0x100) as on the PlayStation (on "
                   "unless the line above says OFF)");
     }

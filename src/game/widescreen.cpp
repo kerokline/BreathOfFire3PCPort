@@ -187,7 +187,7 @@ unsigned SlideColumns() {
 
 Split* SplitOf(unsigned char* rec) {
     if (g_test_rec != nullptr) return rec == g_test_rec ? g_test_split : nullptr;
-    const U a = static_cast<U>(reinterpret_cast<std::uintptr_t>(rec));
+    const U a = Low32(rec);
     const U records = ::bof3::Img(WindowRecords_addr);   // a record pointer: a place
     if (a >= records && a < records + kRecordSize * kRecordCount && (a - records) % kRecordSize == 0)
         return &g_split[(a - records) / kRecordSize];
@@ -402,7 +402,7 @@ void Widescreen_Inject() {
     g_narrow_hi = rule::RangeHi(370.0f, columns);
     for (Site& s : g_sites) {
         std::uint8_t expected[4], replacement[4];
-        const U ours = static_cast<U>(reinterpret_cast<std::uintptr_t>(s.ours));
+        const U ours = Low32(s.ours);
         std::memcpy(expected, &s.rdata, 4);
         std::memcpy(replacement, &ours, 4);
         if (bof3::PatchBytes("Widescreen", s.at, expected, replacement, 4)) s.now = ours;
@@ -412,7 +412,7 @@ void Widescreen_Inject() {
         // so BOF3X_ORIGINAL=Widescreen leaves it off and every box slides and
         // parks as Capcom's does, at Capcom's bounds.
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("Widescreen", static_cast<U>(reinterpret_cast<std::uintptr_t>(&g_slide_switch)), &was, &is, 1);
+        bof3::PatchBytes("Widescreen", Low32(&g_slide_switch), &was, &is, 1);
     }
     g_live = columns;
     g_backdrop_pairs = rule::BackdropPairs(columns);
@@ -532,7 +532,7 @@ void Widescreen_CheckSlides() {
                 rec[2] = 5;
                 rec[3] = 1;
                 SetX(rec, x0);
-                *current = static_cast<U>(reinterpret_cast<std::uintptr_t>(rec));
+                *current = Low32(rec);
                 const int end_drawn = rule::SlideBound(bound, c);
                 // a start the box slides toward its bound from, with no wrap on the way
                 const bool regular = s.step > 0 ? x0 <= bound : x0 >= bound;

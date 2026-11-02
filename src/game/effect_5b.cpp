@@ -59,7 +59,7 @@ void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<I>(v)); }
 // movsx word
 I SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char& B(U a) { return *At(a); }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 
 using Handler = scenario_harness::Handler;
 

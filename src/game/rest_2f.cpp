@@ -138,7 +138,7 @@ constexpr ::bof3::image::Va kUsedFormat{0x6639C8};  // "%3d/%3d"
 unsigned char& B(U address) { return At(address)[0]; }
 U W(U address) { return Word(At(address)); }
 void SetW(U address, U v) { SetWord(At(address), v); }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 // Window record n's byte / word at `at`.
 U Rec(unsigned n, unsigned at) { return ::bof3::Img(WindowRecords_addr) + kWindowStride * n + at; }
 // The record Field_RunTaskRecords runs, read afresh at each use.

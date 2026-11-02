@@ -73,7 +73,7 @@ short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 unsigned char U8(int v) { return static_cast<unsigned char>(v); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
-std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Addr(const void* p) { return Low32(p); }
 
 // imul r32 (the low 32 bits), shl, sar: 32-bit arithmetic as the originals do it.
 std::int32_t Mul(std::int32_t a, std::int32_t b) {

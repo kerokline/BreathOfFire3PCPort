@@ -73,7 +73,7 @@ unsigned char& B(std::uint32_t a) { return *At(a); }
 std::uint16_t W(std::uint32_t a) { return Word(At(a)); }
 void SetW(std::uint32_t a, unsigned v) { SetWord(At(a), v); }
 std::int32_t L(std::uint32_t a) { return Long(At(a)); }
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fs() { return Field_State; }

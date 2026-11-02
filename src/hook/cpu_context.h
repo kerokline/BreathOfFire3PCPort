@@ -10,8 +10,21 @@
 #include <windows.h>
 
 #include <cstdint>
+#include <cstdio>
 
 namespace bof3 {
+
+// A register's value as hex text, as wide as the register: 8 digits on
+// i686, 16 on x86-64 - for a game file's log line, which prints it with %s
+// and so carries no width of its own (the exit trace, win_main.cpp).
+struct CtxText {
+    char text[2 * sizeof(std::uintptr_t) + 1];
+};
+inline CtxText CtxHex(std::uintptr_t v) {
+    CtxText t;
+    std::snprintf(t.text, sizeof t.text, "%0*llX", static_cast<int>(2 * sizeof(std::uintptr_t)), static_cast<unsigned long long>(v));
+    return t;
+}
 
 [[gnu::always_inline]] inline std::uintptr_t CtxIp(const CONTEXT& c) {
 #if defined(__i386__)

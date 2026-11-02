@@ -132,12 +132,12 @@ std::uint32_t RunDown(std::uint32_t address, DWORD* state, DWORD* protect) {
     *state = 0, *protect = 0;
     if (!VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(address)), &m, sizeof m)) return 0;
     *state = m.State, *protect = m.Protect;
-    std::uint32_t low = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(m.BaseAddress));
+    std::uint32_t low = Low32(m.BaseAddress);
     while (low >= 0x1000) {
         MEMORY_BASIC_INFORMATION b{};
         if (!VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(low - 1)), &b, sizeof b)) break;
         if (b.State != m.State || b.Protect != m.Protect) break;
-        low = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(b.BaseAddress));
+        low = Low32(b.BaseAddress);
     }
     return low;
 }

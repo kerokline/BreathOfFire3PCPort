@@ -221,10 +221,10 @@ void SelfTestOpen(OpenFn theirs) {
     // (common/image_base.h): put back before the self-test returns, and the
     // shadow self-test runs hosted only (exe_host.cpp refuses BOF3X_SHADOW).
     const unsigned long stand_ins[4] = {
-        static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(&OpenStandIn0)),
-        static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(&OpenStandIn1)),
-        static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(&OpenStandIn2)),
-        static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(&OpenStandIn3))};
+        Low32(&OpenStandIn0),
+        Low32(&OpenStandIn1),
+        Low32(&OpenStandIn2),
+        Low32(&OpenStandIn3)};
     for (unsigned i = 0; i < 77; ++i) MapCell_Handlers[i] = stand_ins[i % 4];
 
     std::uint32_t rng = 0x56FD2011u;
@@ -315,17 +315,17 @@ void SelfTestOpen(OpenFn theirs) {
 extern "C" void __cdecl Gfx_CommitPrim(unsigned slot, unsigned size) {
     size &= 0xFF;
     const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + ::bof3::Img(kPoolLimit);
-    const std::uint32_t next = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Gfx_PacketNext.Native()));
+    const std::uint32_t next = Low32(Gfx_PacketNext.Native());
     if (limit <= next + size) {
         // Diagnostic only (BOF3X_DRAWORDER): the original's silent skip.
         if (draw_order::Tagging())
             bof3::Log("draworder   packet pool full: a %u-byte primitive for slot %u skipped (next %08X, limit %08X) from %08X",
-                      size, slot & 0xFF, next, limit, static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(__builtin_return_address(0))));
+                      size, slot & 0xFF, next, limit, Low32(__builtin_return_address(0)));
         return;
     }
     slot &= 0xFF;
     if (draw_order::g_on)   // BOF3X_DRAWORDER, diagnostic only
-        draw_order::TagCommit(next, slot, static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(__builtin_return_address(0))));
+        draw_order::TagCommit(next, slot, Low32(__builtin_return_address(0)));
     // DIV-0071 (layering.h): what a map cell's record run draws, for the next
     // pass's verdicts; only while DrawLayer_Open runs a record under mode 1.
     if (layering::g_in_run) layering::RunPrim(Gfx_PacketNext, size);

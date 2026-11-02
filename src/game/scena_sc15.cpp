@@ -303,7 +303,7 @@ void LoadRoll(unsigned tag, const unsigned char* payload, unsigned size) {
         if (w > t || std::memchr(g_roll_text.data() + (w - 1), 0, t - (w - 1)) == nullptr)
             bof3::Fatal("DIV-0148: the staff-roll chunk's word %u starts at text offset %u with no NUL after it", i, w - 1);
         g_roll_lines[i < n ? i : i + 1] =
-            static_cast<uint32_t>(reinterpret_cast<std::uintptr_t>(g_roll_text.data() + (w - 1)));
+            Low32(g_roll_text.data() + (w - 1));
     }
     g_roll_lines[n] = 0xFFFFFFFFu;
     bof3::Log("DIV-0148: the language's staff roll, %u lines (%u text bytes)", n, t);
@@ -1648,7 +1648,7 @@ SC15_EXPORT void __cdecl Scena15_ObjectTrigger(unsigned char* object) {
 // to 0x42BA90, whose answer is the script message opened; the request 2.
 SC15_EXPORT void __cdecl Scena15_ObjectTalk(unsigned char* object, unsigned char*) {
     const unsigned area = Area();
-    const uint32_t who = (static_cast<uint32_t>(reinterpret_cast<std::uintptr_t>(object)) & 0xFFFFFF00u) |
+    const uint32_t who = (Low32(object) & 0xFFFFFF00u) |
                          B(::bof3::Img(kTalkWho) + object[0x86]);
     const unsigned id = area == 0xC0 ? SH_AT(unsigned (__cdecl*)(uint32_t), kTalkIdC0.v)(who)
                                      : SH_AT(unsigned (__cdecl*)(uint32_t), kTalkId.v)(who);

@@ -79,7 +79,7 @@ std::int32_t S16(U v) { return static_cast<std::int16_t>(v & 0xFFFFu); }
 // movsx of a .data byte, as the 32 bits the original holds
 U SB(U a) { return static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(*At(a)))); }
 unsigned char& B(U a) { return *At(a); }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // mov eax, magic; imul x; sar edx, shift; mov eax, edx; shr eax, 31; add edx,
 // eax: MSVC's signed division by a constant.

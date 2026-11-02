@@ -577,7 +577,7 @@ void BattleWindowDraw_Inject() {
     {
         // DIV-0161: after the self-test, which compared Capcom's unsigned reading.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("BattleDrawSigned", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_draw_signed)), &was, &is, 1);
+        bof3::PatchBytes("BattleDrawSigned", Low32(&g_draw_signed), &was, &is, 1);
         bof3::Log("DIV-0161    the battle strip cell takes its x and y signed, as the PlayStation (on unless the line above says OFF)");
     }
 

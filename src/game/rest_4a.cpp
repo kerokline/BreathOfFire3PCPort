@@ -1115,13 +1115,13 @@ namespace {
 // sub-kind (when given) to 0x9039F5, ScriptFlags_Set40, al 0.
 unsigned char TailTrigger(unsigned char* object, unsigned char kind) {
     AreaW0a_TailKind = kind;
-    Rest4d_Pointer = static_cast<U>(reinterpret_cast<std::uintptr_t>(object));
+    Rest4d_Pointer = Low32(object);
     SH_CALL(ScriptFlags_Set40)();
     return 0;
 }
 unsigned char TailTriggerSub(unsigned char* object, unsigned char kind, unsigned char sub) {
     AreaW0a_TailKind = kind;
-    Rest4d_Pointer = static_cast<U>(reinterpret_cast<std::uintptr_t>(object));
+    Rest4d_Pointer = Low32(object);
     AreaW0c_TailSub = sub;
     SH_CALL(ScriptFlags_Set40)();
     return 0;

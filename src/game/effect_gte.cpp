@@ -158,7 +158,7 @@ void EffectGte_Inject() {
         // DIV-0126: armed after the fuzz above, which sees Capcom's 1s.
         const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
         const bool on = bof3::PatchBytes(
-            "DiagonalIdentity", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&effect_gte::g_identity)),
+            "DiagonalIdentity", Low32(&effect_gte::g_identity),
             was, is, 4);
         if (on && bof3::WantsShadow("effect_gte")) effect_gte::IdentityCheck();
         bof3::Log("DIV-0126    EffectGte_SetDiagonalOne's diagonal is 0x1000, the PlayStation's identity (on unless the line above says OFF)");

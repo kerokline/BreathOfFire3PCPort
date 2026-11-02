@@ -864,7 +864,7 @@ void InventoryOps_Inject() {
     {
         static const std::uint8_t was = 0, is = 1;
         if (bof3::PatchBytes("EncounterOnScreenLowerBounds",
-                             static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_on_screen_lower_bounds)),
+                             Low32(&g_on_screen_lower_bounds),
                              &was, &is, 1))
             bof3::Log("DIV-0116    the encounter's on-screen test refuses a corner left of or above the screen (D56)");
         g_on_screen_log = true;

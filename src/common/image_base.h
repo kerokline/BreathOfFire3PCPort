@@ -28,6 +28,7 @@
 #pragma once
 
 #include <cstdint>
+#include <type_traits>
 
 namespace bof3 {
 
@@ -114,19 +115,39 @@ inline constexpr std::uint32_t kBase = 0x400000;
 // .rdata; the coordinator's call, 2026-11-01). So on i686 Low32 is the cast
 // itself, a macro: write it unqualified, Low32(p), never ::bof3::Low32(p) and
 // never as a function's address; p is evaluated once.
+//
+// On x86-64 it is a template over the pointer's type, not a function of
+// const void*: what the game's words hold includes our functions (a handler
+// table's cell, a stand-in a patch stores: `Low32(&OpenStandIn0)`), which
+// never convert to a data pointer, and the volatile objects the helpers take
+// (`Addr(const volatile void*)`). Anything that is not a pointer is refused
+// at compile time: a word, a Va or a Slot32 is not an address to narrow.
 #if UINTPTR_MAX > 0xFFFFFFFFu
-[[gnu::always_inline]] inline std::uint32_t Low32(const void* p, const char* file = __builtin_FILE(),
-                                                  unsigned line = __builtin_LINE(),
+template <class P>
+[[gnu::always_inline]] inline std::uint32_t Low32(P p, const char* file = __builtin_FILE(), unsigned line = __builtin_LINE(),
                                                   const char* function = __builtin_FUNCTION()) {
+    static_assert(std::is_pointer_v<P>, "Low32 narrows a pointer (an object's or a function's address), nothing else");
     const auto v = reinterpret_cast<std::uintptr_t>(p);
     if (v > 0xFFFFFFFFu)
         Fatal("%s:%u %s: %p lies above 4 GB, where no word of the game can hold it (docs/x64-build-design.md 2)", file,
-              line, function, p);
+              line, function, reinterpret_cast<const void*>(v));
     return static_cast<std::uint32_t>(v);
 }
 #else
 #define Low32(p) (static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)))
 #endif
+}  // namespace bof3
+
+// The function's name at global scope on x86-64, as the macro's is on i686:
+// the sites write Low32(p) unqualified from every namespace (the game files,
+// the hook files, the render shim), and the two builds must read one
+// spelling (measured: 4,755 "use of undeclared identifier 'Low32'" in 311
+// objects of the first x86_64 compile of the narrowed tree, 2026-11-01).
+#if UINTPTR_MAX > 0xFFFFFFFFu
+using ::bof3::Low32;
+#endif
+
+namespace bof3 {
 
 // A heap block a word of the game may hold (docs/x64-build-design.md 5: the
 // chokepoint, Crt_malloc and Crt_calloc in crt_rest.cpp): the block itself,

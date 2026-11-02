@@ -139,7 +139,7 @@ std::uint16_t Ftol16(std::uint32_t bits) {
 // because clang 22.1.8 folds the C++ spelling of a pointer's high bytes
 // merged with a byte read through it (docs/event-ops.md section 8).
 std::uint32_t AnimationInPointer(const unsigned char* actor, unsigned offset) {
-    std::uint32_t v = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(actor));
+    std::uint32_t v = Low32(actor);
     __asm__ volatile("movb 8(%1), %b0\n\taddb %b2, %b0" : "+q"(v) : "r"(actor), "q"(offset) : "memory", "cc");
     return v;
 }

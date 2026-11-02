@@ -97,7 +97,7 @@ unsigned char* Mote(unsigned i) { return Mem(::bof3::Img(ReviveMote_Pool_addr) +
 unsigned char* Tint(unsigned i) { return Mem(::bof3::Img(MoveScript_TintRecords_addr) + (i & 0xFF) * 12u); }
 unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
 unsigned char* Source() { return Pointer(::bof3::Img(BattleOdds_ActorObject_addr)); }
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 std::int32_t Table(std::uint32_t at) { return Long(Mem(at)); }
 short* V(unsigned k) { return reinterpret_cast<short*>(Mem(::bof3::Img(Prim_VertexScratch_addr) + k)); }
 unsigned char* VB(unsigned k) { return Mem(::bof3::Img(Prim_VertexScratch_addr) + k); }

@@ -34,7 +34,7 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 
 // The cursor row as a table index (movsx) and as a test (a byte).
 int CursorRow() { return static_cast<signed char>(Mem(::bof3::Img(AreaW0c_ChoiceAnswer_addr))[0]); }

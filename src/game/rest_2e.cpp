@@ -62,7 +62,7 @@ void SetW(U address, U v) { move_script::SetWord(At(address), v); }
 U L(U address) { return static_cast<U>(move_script::Long(At(address))); }
 int S8(U v) { return static_cast<signed char>(static_cast<UC>(v)); }
 // A .data table symbols.gen.h declares as a pointer: its address.
-U AddrOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddrOf(const void* p) { return Low32(p); }
 
 // --- the cells --------------------------------------------------------------------------
 
@@ -1913,7 +1913,7 @@ void Rest2E_Inject() {
         // DIV-0189: armed after the self-test, which compares the two
         // consumable sorts with Capcom's partition.
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("ItemSortById", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_sort_by_id)), &was, &is, 1);
+        bof3::PatchBytes("ItemSortById", Low32(&g_sort_by_id), &was, &is, 1);
         bof3::Log("DIV-0189    the Items screen's NormalItem / CombatItem sorts order each half by item id: %s",
                   g_sort_by_id ? "on" : "OFF (BOF3X_ORIGINAL=ItemSortById)");
     }

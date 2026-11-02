@@ -53,7 +53,7 @@ namespace {
 namespace at = battle_e4::at;
 using U = std::uint32_t;
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
-template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+template <typename T> U AddressOf(T* p) { return Low32(p); }
 using move_script::At;
 using move_script::Long;
 using move_script::SetLong;
@@ -682,7 +682,7 @@ extern "C" void __cdecl BattleItemCmd_SidePick(void) {
 // +9 / +0xC the slot cursor and the member.
 extern "C" void __cdecl BattleItemCmd_EquipMenu(void) {
     const unsigned char* const text = OptionMessage(0x2F);
-    SetLong(At(::bof3::Img(at::kQueue.v) + 4 + LastQueueEntry()), S32(static_cast<U>(reinterpret_cast<std::uintptr_t>(text))));
+    SetLong(At(::bof3::Img(at::kQueue.v) + 4 + LastQueueEntry()), S32(Low32(text)));
     if (B(::bof3::Img(at::kAbove.v) + 3) == 0) {
         WindowRecords[19].in_use = 1;
         WindowRecords[0x13].x = B(::bof3::Img(at::kAbove.v) + 0xA) * 48u + static_cast<U>(Long(At(::bof3::Img(Window21_addr) + 4)));
@@ -744,7 +744,7 @@ extern "C" void __cdecl BattleItemCmd_EquipSlotPick(void) {
     const unsigned char* const text = OptionMessage(0x30);
     const unsigned entry = LastQueueEntry();
     const unsigned pressed = Input_Pressed;
-    SetLong(At(::bof3::Img(at::kQueue.v) + 4 + entry), S32(static_cast<U>(reinterpret_cast<std::uintptr_t>(text))));
+    SetLong(At(::bof3::Img(at::kQueue.v) + 4 + entry), S32(Low32(text)));
     const unsigned repeat = BH_CALL(Input_AutoRepeat)(pressed & 0x5000);
     const unsigned pad = Input_Pressed;
     if (Field_CancelButtons & pad) {
@@ -855,7 +855,7 @@ extern "C" void __cdecl BattleItemCmd_EquipItemPick(void) {
     const unsigned char category = B(::bof3::Img(at::kCands.v) + 8);
     const unsigned help = BH_CALL(Item_HelpMessage)(category, item);
     const unsigned char* const text = BH_CALL(Msg_SystemPtr)(help);
-    SetLong(At(::bof3::Img(at::kQueue.v) + 4 + LastQueueEntry()), S32(static_cast<U>(reinterpret_cast<std::uintptr_t>(text))));
+    SetLong(At(::bof3::Img(at::kQueue.v) + 4 + LastQueueEntry()), S32(Low32(text)));
     bool back = false;
     if (Field_CancelButtons & Input_Pressed) {
         BH_CALL(Sound_PlayEffect)(0x106);
@@ -893,7 +893,7 @@ extern "C" void __cdecl BattleItemCmd_EquipUsePick(void) {
     const unsigned char* const text = OptionMessage(0x30);
     const unsigned entry = LastQueueEntry();
     const unsigned pressed = Input_Pressed;
-    SetLong(At(::bof3::Img(at::kQueue.v) + 4 + entry), S32(static_cast<U>(reinterpret_cast<std::uintptr_t>(text))));
+    SetLong(At(::bof3::Img(at::kQueue.v) + 4 + entry), S32(Low32(text)));
     const unsigned repeat = BH_CALL(Input_AutoRepeat)(pressed & 0x5000);
     const unsigned pad = Input_Pressed;
     if (Field_CancelButtons & pad) {
@@ -926,7 +926,7 @@ extern "C" void __cdecl BattleItemCmd_EquipUsePick(void) {
             B(::bof3::Img(at::kCands.v) + 3) = 2;
             WindowRecords[19].in_use = 0;
             WindowRecords[21].in_use = 0;
-            SetLong(At(::bof3::Img(at::kQueue.v) + 4 + last), S32(static_cast<U>(reinterpret_cast<std::uintptr_t>(line))));
+            SetLong(At(::bof3::Img(at::kQueue.v) + 4 + last), S32(Low32(line)));
             WindowRecords[4].in_use = 1;
             BattleE4_Step3 = 7;
         } else {

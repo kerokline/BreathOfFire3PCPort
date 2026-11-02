@@ -37,7 +37,7 @@ using namespace move_script;
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
 // Sprite_Kind2 record.
 
-std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
 using Handler = void (__cdecl*)();
 

@@ -85,7 +85,7 @@ int Shl(int v, unsigned n) { return static_cast<int>(static_cast<std::uint32_t>(
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 unsigned char* Task(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + (slot & 0xFF) * at::kTaskStride); }
 void SetPointer(unsigned char* cell, const void* p) {
-    SetLong(cell, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)));
+    SetLong(cell, static_cast<std::int32_t>(Low32(p)));
 }
 // fild dword, fst dword: an int as the single the original stores.
 void PutFloat(unsigned char* at, int v) {

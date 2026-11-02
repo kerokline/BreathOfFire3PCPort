@@ -61,7 +61,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 unsigned char* PtrAt(U cell) { return At(static_cast<U>(Long(At(cell)))); }
 void SetPtrAt(U cell, const void* p) { SetLong(At(cell), static_cast<std::int32_t>(Key(p))); }
 unsigned char* S() { return Sprite_Current; }
@@ -70,7 +70,7 @@ unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_Curren
 U ULong(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetULong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
-template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+template <typename T> U AddressOf(T* p) { return Low32(p); }
 
 // The ability record `id` (24 bytes at 0x65C4D8): a flag byte, or the word +4.
 unsigned AbilityId() { return Word(At(::bof3::Img(at::kAbility.v))); }

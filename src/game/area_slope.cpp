@@ -43,33 +43,24 @@ void SelfTest(SlopeFn theirs);
 // As the original has it:
 //  - It uses its caller's argument slots as scratch: x and y become
 //    x & 0xFFFF8000 and y & 0xFFFF8000 inside the grid, and y's four bytes
-//    then hold b, d, e (from byte 1) or p0..p3. So the arguments are read and
-//    written where the caller pushed them (through the frame address), never
-//    as copies.
+//    then hold b, d, e (from byte 1) or p0..p3. Ours keeps those in locals:
+//    no caller reads its pushed slots back (AreaMap_TooSteep, MoveCmd_Move,
+//    EffectKind17_BlockedAt, Field_LeaderStepTarget, MapView_SlopeAt's 102
+//    callers - every one read discards them), and on x86-64 the arguments
+//    are registers with no slot to scribble (the 64-bit build round, B2).
 //  - p[i] is not masked: an n of 8 or more reads past the four corners - the
-//    third argument's own bytes for 8..15, the caller's stack from 16. Kept.
+//    third argument's own bytes for 8..15 (kept: `slots` holds them), the
+//    caller's stack from 16, which no reimplementation reproduces: a Fatal by
+//    name. No caller passes 8 or more (AreaMap_TooSteep masks & 7, the others
+//    pass a sprite's facing byte 0..7; event_ops.cpp's note).
 //  - Outside the grid the return is AreaMap_Header's top half with ax 0, as
 //    AreaMap_Elevation's.
 //  - Heights are the low byte of height x MapView_HeightScale (imul r/m8), and
 //    corner sums wrap at 8 bits before they are compared or widened.
 extern "C" long __cdecl AreaMap_Slope(long x, long y, unsigned long direction) {
-    (void)x;
-    (void)y;
-    (void)direction;
-    // [ebp + 8]: x, y, direction, then the caller's frame. The named
-    // parameters are never used, so no copy of them can go stale.
-    volatile unsigned char* const args = static_cast<volatile unsigned char*>(__builtin_frame_address(0)) + 8;
-    const auto get32 = [args](unsigned at) {
-        std::uint32_t v = 0;
-        for (unsigned i = 0; i < 4; ++i) v |= static_cast<std::uint32_t>(args[at + i]) << (8 * i);
-        return v;
-    };
-    const auto put32 = [args](unsigned at, std::uint32_t v) {
-        for (unsigned i = 0; i < 4; ++i) args[at + i] = static_cast<unsigned char>(v >> (8 * i));
-    };
+    const auto ax = static_cast<std::uint32_t>(x), ay = static_cast<std::uint32_t>(y);
     std::uint32_t header;
     std::memcpy(&header, AreaMap_Header, 4);
-    const std::uint32_t ax = get32(0), ay = get32(4);
     const auto cx = static_cast<short>(ax >> 16), cy = static_cast<short>(ay >> 16);
     const unsigned width = header & 0xFFu;
     if (cy >= static_cast<short>((header >> 8) & 0xFFu) || cx >= static_cast<short>(width) || cy < 0 || cx < 0) {
@@ -77,8 +68,6 @@ extern "C" long __cdecl AreaMap_Slope(long x, long y, unsigned long direction) {
         return static_cast<long>(header & 0xFFFF0000u);
     }
     const std::uint32_t xm = ax & 0xFFFF8000u, ym = ay & 0xFFFF8000u;
-    put32(4, ym);
-    put32(0, xm);
     const int cell = cx + cy * static_cast<int>(width);
     const unsigned char* const h = AreaMap_Header + static_cast<unsigned>(AreaMap_HeightBase) * 4u + cell;
     const unsigned char* const c = reinterpret_cast<const unsigned char*>(&AreaMap_Corners) + cell * 4;
@@ -104,9 +93,6 @@ extern "C" long __cdecl AreaMap_Slope(long x, long y, unsigned long direction) {
             d = static_cast<unsigned char>(c[4 * width] + next);
             e = static_cast<unsigned char>(c[4 * width + 1] + next);
         }
-        args[5] = b;
-        args[6] = d;
-        args[7] = e;
         if (b == e && a == d) {
             Scratch()[0] = 0;
             return static_cast<long>(static_cast<std::uint32_t>(S8(b) + S8(a)) << 4);
@@ -114,25 +100,32 @@ extern "C" long __cdecl AreaMap_Slope(long x, long y, unsigned long direction) {
         Scratch()[0] = 1;
         return static_cast<long>(static_cast<std::uint32_t>(Abs(S8(b) - S8(e) - S8(d) + S8(a))) << 4);
     }
-    // Both halves: the four corners, in y's slot.
-    args[4] = static_cast<unsigned char>(c[3] + height(0));
-    args[5] = static_cast<unsigned char>(c[6] + height(1));
-    args[6] = static_cast<unsigned char>(c[4 * width + 4] + height(width + 1));
-    args[7] = static_cast<unsigned char>(c[4 * width + 1] + height(width));
-    const unsigned char p0 = args[4];
-    if (p0 == args[7] && p0 == args[6] && p0 == args[5]) {
+    // Both halves: the four corners (the original's y slot), then the
+    // direction dword's own bytes (its third slot) - what an unmasked corner
+    // index of 4..7 reads in the original.
+    unsigned char slots[8];
+    slots[0] = static_cast<unsigned char>(c[3] + height(0));
+    slots[1] = static_cast<unsigned char>(c[6] + height(1));
+    slots[2] = static_cast<unsigned char>(c[4 * width + 4] + height(width + 1));
+    slots[3] = static_cast<unsigned char>(c[4 * width + 1] + height(width));
+    const auto d32 = static_cast<std::uint32_t>(direction);
+    for (unsigned k = 0; k < 4; ++k) slots[4 + k] = static_cast<unsigned char>(d32 >> (8 * k));
+    const unsigned char p0 = slots[0];
+    if (p0 == slots[3] && p0 == slots[2] && p0 == slots[1]) {
         Scratch()[0] = 0;
         return static_cast<long>(static_cast<std::uint32_t>(S8(p0)) << 5);
     }
     Scratch()[0] = 1;
-    const unsigned n = get32(8) & 0xFFu;
+    const unsigned n = d32 & 0xFFu;
     const unsigned i = n >> 1;
-    int high = S8(args[4 + i]);   // unmasked, as the original's
+    if (i >= 8)
+        bof3::Fatal("AreaMap_Slope: direction %u would read its caller's stack past the corners in the original (no caller passes 8 or more)", n);
+    int high = S8(slots[i]);   // unmasked, as the original's: 4..7 are the direction's bytes
     if (n & 1) {
-        const int next = S8(args[4 + ((i + 1) & 3)]);
+        const int next = S8(slots[(i + 1) & 3]);
         if (high < next) high = next;
     }
-    return static_cast<long>(static_cast<std::uint32_t>(Abs(high - S8(args[4 + ((i - 2) & 3)]))) << 5);
+    return static_cast<long>(static_cast<std::uint32_t>(Abs(high - S8(slots[(i - 2) & 3]))) << 5);
 }
 
 void AreaSlope_Inject() {

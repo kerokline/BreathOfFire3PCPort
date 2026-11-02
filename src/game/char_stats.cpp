@@ -532,7 +532,7 @@ extern "C" unsigned short __cdecl Inventory_Count(unsigned category, unsigned it
     const unsigned cat = category & 0xFF;
     if ((equipped & 0xFF) == 0) {
         const unsigned char* const ids = IdList(cat);
-        const std::uint32_t counts = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(CountList(cat)));
+        const std::uint32_t counts = Low32(CountList(cat));
         for (unsigned i = 0; i < 0x80; ++i)
             if (ids[i] == id) return *reinterpret_cast<const volatile unsigned char*>(static_cast<std::uintptr_t>(counts + i));
         return 0;

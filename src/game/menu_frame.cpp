@@ -106,5 +106,5 @@ void MenuFrame_Inject() {
         on += bof3::RetargetCall("Menu_DrawFrame", site, kEmptyFunction.v, reinterpret_cast<void*>(&Menu_DrawFrame)) ? 1 : 0;
     }
     if (on != 0 && on != 4) bof3::Fatal("DIV-0011: %u of the four frame calls re-aimed", on);   // one name: all or none
-    if (on) g_frame_draw = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&Menu_DrawFrame));
+    if (on) g_frame_draw = Low32(&Menu_DrawFrame);
 }

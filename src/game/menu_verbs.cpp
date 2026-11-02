@@ -139,7 +139,7 @@ void MenuVerbs_Inject() {
     // every Latin layout tests it, Lang_Latin), and not a full-width language.
     if (!Lang_Latin()) return;   // DIV-0056: full-width verbs centre as the original does
     if (bof3::RetargetCall("MenuVerbs", kRowLabelCall, kTextDrawAt.v, reinterpret_cast<void*>(&MenuVerbs_DrawLabel)))
-        g_label_call = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&MenuVerbs_DrawLabel));
+        g_label_call = Low32(&MenuVerbs_DrawLabel);
 }
 
 // Menu_DrawButtonRow 0x574890 is ours since the sixth round

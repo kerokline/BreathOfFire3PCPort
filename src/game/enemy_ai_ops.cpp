@@ -64,7 +64,7 @@ unsigned char* PtrIn(const unsigned char* p) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(p))));
 }
 void SetPtrAt(std::uint32_t address, const unsigned char* p) {
-    SetLong(At(address), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)));
+    SetLong(At(address), static_cast<std::int32_t>(Low32(p)));
 }
 std::uint32_t ULong(const unsigned char* p) { return static_cast<std::uint32_t>(Long(p)); }
 void SetULong(unsigned char* p, std::uint32_t v) { SetLong(p, static_cast<std::int32_t>(v)); }

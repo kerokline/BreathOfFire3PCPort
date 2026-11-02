@@ -122,7 +122,7 @@ using move_script::Long;
 using move_script::SetWord;
 using move_script::Word;
 
-std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Addr(const void* p) { return Low32(p); }
 unsigned char* Ptr(std::uint32_t at) { return At(static_cast<std::uint32_t>(Long(At(at)))); }
 
 // rv::As<records::WindowRecord>(p) views a window record
@@ -1672,7 +1672,7 @@ void MenuWindows_Inject() {
     {
         // DIV-0165: after the self-test, which compared Capcom's unsigned words.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("MenuSignedXY", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_signed_xy)), &was, &is, 1);
+        bof3::PatchBytes("MenuSignedXY", Low32(&g_signed_xy), &was, &is, 1);
         bof3::Log("DIV-0165    Menu_DrawBox and Menu_DrawIcon8 take x and y as signed words (on unless the line above says OFF)");
     }
 

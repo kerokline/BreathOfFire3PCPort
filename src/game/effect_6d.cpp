@@ -68,7 +68,7 @@ std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word
 std::int32_t S16(U a) { return S16(At(a)); }
 std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
 U S8U(unsigned char b) { return static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(b))); }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 unsigned char* Vertices() { return reinterpret_cast<unsigned char*>(Prim_VertexScratch); }
 const short* Vertex(unsigned i) { return reinterpret_cast<const short*>(Vertices() + 8 * i); }
 // cdq; and edx, 0xFFF; add; sar 12 - a signed divide by 4096, toward zero.

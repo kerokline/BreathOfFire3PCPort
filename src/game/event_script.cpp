@@ -562,7 +562,7 @@ extern "C" void __cdecl Sprite_InitFromEntry(unsigned char* entry) {
     rv::Current<records::SpriteObject>()->scale_x = 0x1000;
     rv::Current<records::SpriteObject>()->scale_y = 0x1000;
     rv::Store<std::uint32_t>(rv::Current<records::SpriteHead>()->script, Dword(entry + 4));
-    rv::Store<std::uint32_t>(rv::Current<records::SpriteHead>()->frames, static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(entry)));
+    rv::Store<std::uint32_t>(rv::Current<records::SpriteHead>()->frames, Low32(entry));
     rv::Current<records::SpriteObject>()->angle[1] = 0;
     rv::Current<records::SpriteObject>()->angle[0] = 0;
     rv::Store<std::uint32_t>(rv::Current<records::SpriteHead>()->angle[2], Sprite_DirectionAngles[Sprite_Current[8]]);
@@ -694,7 +694,7 @@ extern "C" void __cdecl ObjTrio_SetBit40(void) {
 // compare with Capcom's unarmed code).
 void MountainPasses_Arm() {
     const std::uint8_t was = 0, is = 1;
-    bof3::PatchBytes("MountainPasses", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_mountain_passes)), &was, &is, 1);
+    bof3::PatchBytes("MountainPasses", Low32(&g_mountain_passes), &was, &is, 1);
     bof3::Log("DIV-0191    Mt. Zublo (chapter 9 on) and Mt. Levett (once crossed) passable on the world map: %s",
               g_mountain_passes ? "on" : "OFF (BOF3X_ORIGINAL=MountainPasses)");
 }
@@ -704,7 +704,7 @@ void EventScript_Inject() {
     {
         // DIV-0164: after the self-test, which compared Capcom's byte store.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("SpriteReachWord", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_reach_word)), &was, &is, 1);
+        bof3::PatchBytes("SpriteReachWord", Low32(&g_reach_word), &was, &is, 1);
         bof3::Log("DIV-0164    op Bx stores the extra object's reach byte as a whole dword +0x70 (on unless the line above says OFF)");
     }
     BOF3_INJECT(Area_RunPlacement);

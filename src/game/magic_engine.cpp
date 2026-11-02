@@ -198,7 +198,7 @@ MENGINE_EXPORT void __cdecl Paralyzer_Start(void) {
     const unsigned char* const enemy = Pointer(::bof3::Img(BattleE3_CurrentEnemy_addr));
     Sprite_Current = owner;
     const unsigned char* const cues =
-        enemy != nullptr ? Pointer(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(enemy)) + kEnemyCues) : nullptr;
+        enemy != nullptr ? Pointer(Low32(enemy) + kEnemyCues) : nullptr;
     if (cues != nullptr) {   // DIV-0183: no table, no cue
         const unsigned cue = static_cast<unsigned>(Word(cues) + 4) & 0xFFFF;
         MH_AT(PlayCueFn, kPlayCue.v)(cue);

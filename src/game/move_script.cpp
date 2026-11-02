@@ -455,7 +455,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
     ++g_log_n;
 }
 std::uint32_t Rel(const void* p) {
-    return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p) - reinterpret_cast<std::uintptr_t>(g_script));
+    return Low32(p) - Low32(g_script);
 }
 // A single-shot callee may move the position: the caller must read it again.
 void Nudge(unsigned char* object) {

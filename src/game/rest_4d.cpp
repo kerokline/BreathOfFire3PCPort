@@ -1251,7 +1251,7 @@ void Rest4D_Inject() {
     {
         static const std::uint8_t was = 0, is = 1;
         bof3::PatchBytes("CommuNameEntryAbandons",
-                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_entry_abandons)), &was, &is, 1);
+                         Low32(&g_entry_abandons), &was, &is, 1);
         bof3::Log("DIV-0075    the community's name entry ends unanswered where the original never leaves its step");
     }
     if (bof3::WantsShadow("rest_4d")) rest_4d::EntryAbandonTest();   // DIV-0075's row: the switch on, before the inject

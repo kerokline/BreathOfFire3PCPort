@@ -101,7 +101,7 @@ bool PutBackArea108() {
 void AreaDataReload_Inject() {
     Snapshot();
     const std::uint8_t was = 0, is = 1;
-    bof3::PatchBytes("AreaDataReload", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_on)), &was, &is, 1);
+    bof3::PatchBytes("AreaDataReload", Low32(&g_on), &was, &is, 1);
     bof3::Log("DIV-0182    area 108's models and area 52's scene byte put back at the area's load (on unless the line above says OFF); "
               "%u models, %u record bytes from 0x%08X",
               g_model_count, g_records_len, g_models[0].records - (::bof3::ImageBase() - ::bof3::image::kBase));   // its VA

@@ -45,7 +45,7 @@ namespace {
 namespace at = battle_e2::at;
 using U = std::uint32_t;
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
-template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+template <typename T> U AddressOf(T* p) { return Low32(p); }
 using boss_harness::Phase;
 using move_script::At;
 using move_script::Long;
@@ -55,7 +55,7 @@ using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 unsigned char* PtrIn(const unsigned char* p) { return At(UL(p)); }
 unsigned char* PtrAt(U cell) { return At(UL(At(cell))); }
 unsigned char* Sc() { return Sprite_Current; }

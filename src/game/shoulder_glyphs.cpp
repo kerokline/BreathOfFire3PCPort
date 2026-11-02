@@ -346,7 +346,7 @@ void SelfTest() {
     static const unsigned char kEmpty[2] = {0, 0};
     auto entry = [](int k) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Img(0x66A2FCu) + 4u * k)); };
     auto plant = [&](int k, const unsigned char* s) {
-        const auto at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(s));
+        const auto at = Low32(s);
         std::memcpy(entry(k), &at, 4);
     };
     std::uint32_t shipped[6];
@@ -428,7 +428,7 @@ void Arm() {
                   : "a PSP base: L / R, the Config panel's glyphs";
     }
     static const std::uint8_t was = 0, is = 1;
-    bof3::PatchBytes("ShoulderGlyphs", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_on)), &was, &is, 1);
+    bof3::PatchBytes("ShoulderGlyphs", Low32(&g_on), &was, &is, 1);
     bof3::Log("ShoulderGlyphs the item lists' L1 / R1 corner as sigma has it: %s (%s)",
               g_on ? "on" : "OFF (BOF3X_ORIGINAL=ShoulderGlyphs)", how.c_str());
 }
