@@ -277,12 +277,12 @@ unsigned char __cdecl StubChapterArrive(long x, long z) {
     return h % 2 ? 0 : static_cast<unsigned char>(h >> 8);
 }
 ChapterHooks g_records[4] = {
-    {{nullptr, nullptr}, &StubChapterStep<0>, &StubChapterArrive<0>},
-    {{nullptr, nullptr}, &StubChapterStep<1>, &StubChapterArrive<1>},
-    {{nullptr, nullptr}, &StubChapterStep<2>, &StubChapterArrive<2>},
-    {{nullptr, nullptr}, &StubChapterStep<3>, &StubChapterArrive<3>},
+    {{0, 0}, Low32(&StubChapterStep<0>), Low32(&StubChapterArrive<0>)},
+    {{0, 0}, Low32(&StubChapterStep<1>), Low32(&StubChapterArrive<1>)},
+    {{0, 0}, Low32(&StubChapterStep<2>), Low32(&StubChapterArrive<2>)},
+    {{0, 0}, Low32(&StubChapterStep<3>), Low32(&StubChapterArrive<3>)},
 };
-const ChapterHooks* g_chapters[256];
+::bof3::Slot32<const ChapterHooks> g_chapters[256];
 
 // Other files' functions.
 unsigned char __cdecl StubLeaderAnimation(unsigned animation) {

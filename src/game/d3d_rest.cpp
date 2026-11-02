@@ -487,12 +487,12 @@ void D3d_AfterDraw() {
         PutLong(At(::bof3::Img(D3dRest_CaptureScale_addr)), 0x3F800000); // 1.0
         D3dRest_CaptureW = 0x140;
         D3dRest_CaptureH = 0xF0;
-        if (!g.create_plain(0x140, 0x140, reinterpret_cast<void**>(At(::bof3::Img(D3d_CaptureSurface_addr))), 2)) return;
+        if (!g.create_plain(0x140, 0x140, reinterpret_cast<::bof3::Slot32<void>*>(At(::bof3::Img(D3d_CaptureSurface_addr))), 2)) return;
         g.fit_size(Long(At(::bof3::Img(D3dRest_CaptureW_addr))) & 0xFFFF, static_cast<std::uint32_t>(D3dRest_CaptureH), reinterpret_cast<unsigned*>(At(::bof3::Img(kCaptureTexW.v))),
                    reinterpret_cast<unsigned*>(At(::bof3::Img(kCaptureTexH.v))));
         if (!g.create_texture(Long(At(::bof3::Img(kCaptureTexW.v))) & 0xFFFF, Word(At(::bof3::Img(kCaptureTexH.v))),
-                              reinterpret_cast<void**>(At(::bof3::Img(D3d_CaptureTexSurface_addr))),
-                              reinterpret_cast<void**>(At(::bof3::Img(D3d_CaptureTexture_addr))), 2))
+                              reinterpret_cast<::bof3::Slot32<void>*>(At(::bof3::Img(D3d_CaptureTexSurface_addr))),
+                              reinterpret_cast<::bof3::Slot32<void>*>(At(::bof3::Img(D3d_CaptureTexture_addr))), 2))
             return;
         const U width = Word(At(::bof3::Img(kCaptureTexW.v)));
         if (width < 0x140) {

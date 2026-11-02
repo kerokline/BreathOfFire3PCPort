@@ -621,7 +621,7 @@ extern "C" void __cdecl EffectKind18_06_SetMap(void) {
     for (U x = T(r); x < T(r + 2); ++x) {
         for (U z = T(r + 1); z < T(r + 3);) {
             const U w = AreaMap_Header[0];
-            unsigned char* const bytes = *reinterpret_cast<unsigned char**>(At(::bof3::Img(AreaMap_Bytes_addr)));
+            unsigned char* const bytes = const_cast<unsigned char*>(AreaMap_Bytes.Native());
             bytes[w * z + x] = value;
             ++z;
             s = S();
@@ -938,7 +938,7 @@ extern "C" void __cdecl EffectKind18_09_Pattern(void) {
         for (U z = 3; z < 7; ++z)
             for (U x = 0x42; x < 0x45; ++x) {
                 const U w = AreaMap_Header[0];
-                unsigned char* const bytes = *reinterpret_cast<unsigned char**>(At(::bof3::Img(AreaMap_Bytes_addr)));
+                unsigned char* const bytes = const_cast<unsigned char*>(AreaMap_Bytes.Native());
                 bytes[w * z + x] = value;
             }
     }

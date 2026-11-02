@@ -697,9 +697,10 @@ void ButtonText_Arm() {
                         "language layer the PC's colour cue needs it",
                         i, (unsigned)p);
     }
-    for (int i = 0; i < 6; ++i)
-        g_bt.port[i] = port ? reinterpret_cast<const std::uint8_t* const*>(static_cast<std::uintptr_t>(::bof3::Img(kStandIns.v)))[i][0]
-                            : 0;
+    for (int i = 0; i < 6; ++i) {
+        const auto p = reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(kStandIns.v)))[i];   // a 32-bit place
+        g_bt.port[i] = port ? reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(p))[0] : 0;
+    }
     if (!port) bof3::Log("ButtonText  this image holds no port stand-ins at 0x66A2FC (a disc-built image): a layer's "
                          "codes only");
     g_bt.sigma = &LiveSigma;

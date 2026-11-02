@@ -127,10 +127,9 @@ extern "C" void __cdecl Kind2_Script(void) {
         return;
     }
     const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
-    const unsigned char* const* scripts;
-    std::memcpy(&scripts, descriptor + 0x1C, sizeof scripts);
+    const auto scripts = static_cast<std::uint32_t>(Long(descriptor + 0x1C));   // a table of 32-bit places
     Sprite_Current = k;
-    const unsigned char result = g.step(k + 0x80, scripts[k[0x83]]);
+    const unsigned char result = g.step(k + 0x80, At(static_cast<std::uint32_t>(Long(At(scripts + 4u * k[0x83])))));
     const unsigned char flags = k[0x80];
     k[8] = result;
     if (flags & 8) {   // the script ended: idle, at speed 3

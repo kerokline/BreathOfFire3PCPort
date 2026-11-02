@@ -113,10 +113,17 @@ Callees g = kOriginals;
 
 namespace {
 
-// Music_SetVolume with the float's bits, pushed as the originals push them
-// (a dword move, never an x87 load that would quiet a signalling NaN).
+// Music_SetVolume with the float's bits, passed as the originals pass them
+// (a dword move, never an x87 load that would quiet a signalling NaN): the
+// bits copied into a float and handed over as the float parameter it is -
+// an SSE move on both widths, so the bit pattern arrives whole. (Until the
+// 64-bit build this called through a `void (*)(std::uint32_t)` type, which
+// on i686 is the same stack dword and on x86-64 is rcx where the callee
+// reads xmm0: the first 64-bit self-test read garbage volumes.)
 void SetVolumeBits(std::uint32_t bits) {
-    reinterpret_cast<void (__cdecl*)(std::uint32_t)>(reinterpret_cast<void*>(g.music_set_volume))(bits);
+    float volume;
+    std::memcpy(&volume, &bits, sizeof volume);
+    g.music_set_volume(volume);
 }
 
 // GetStatus's bit 0, DSBSTATUS_PLAYING, into `status` - which holds on entry

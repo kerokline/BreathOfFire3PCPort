@@ -68,7 +68,7 @@ void StoreFloat(unsigned char* p, float f) { std::memcpy(p, &f, sizeof f); }
 // The x87 at the game's 53-bit precision: a float plus or less a whole number
 // rounded once to 53 bits, then to a float at the store.
 void StoreSum(unsigned char* p, float a, int b) { StoreFloat(p, static_cast<float>(static_cast<double>(a) + static_cast<double>(b))); }
-unsigned char* Row() { return *reinterpret_cast<unsigned char**>(At(::bof3::Img(Chapter_FlagRow_addr))); }
+unsigned char* Row() { return At(Chapter_FlagRow); }   // the slot's 32-bit word, a place
 unsigned char* Colour() { return At(::bof3::Img(Effect2d_PanelColour_addr)); } // [0] 0x6761C4, [1] 0x6761C5, [2] 0x6761C6
 
 // mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + which]; jmp [table +
@@ -1008,7 +1008,7 @@ extern "C" void __cdecl EffectKind49_V3Burst(void) {
     const unsigned step = s[9];
     if ((s[0xC] & At(::bof3::Img(at::kBurstMask.v))[step]) == 0) {
         const unsigned char add = At(::bof3::Img(at::kBurstCount.v))[step];
-        unsigned char* const anchor = *reinterpret_cast<unsigned char**>(At(::bof3::Img(Effect2d_DustAnchor_addr)));
+        unsigned char* const anchor = At(Effect2d_DustAnchor);
         SetWord(anchor + 0x10, Word(anchor + 0x10) + add);
         s = S();
         if (At(::bof3::Img(at::kBurstCount.v))[s[9]] != 0) {

@@ -9388,7 +9388,7 @@ evidence = "disasm 2026-09-23, 0x59F840..0x59F85E (0x1F bytes): rep stosd of 0x1
 pc = 0x59F860
 name = "Dd_CreatePlainSurface"
 ret = "int"
-params = "unsigned width, unsigned height, void **surface, unsigned format"
+params = "unsigned width, unsigned height, ::bof3::Slot32<void> *surface, unsigned format"
 impl = "src/game/tex_page.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x59F860..0x59F8FF (0xA0 bytes): a DDSURFACEDESC2 on the stack, Dd_InitSurfaceDesc; dwWidth = (width + 3) and not 3, dwHeight = (height + 3) and not 3, dwFlags 0x1007, ddsCaps 0x840 under Gfx_RenderFlags bit 0 else 0x1800 (neg / sbb / and 0xFFFFF040 / add 0x1800), dwCaps2 0; the 0x20-byte pixel format from 0x7DED80 + format * 0x40 (shl 6). Then Dd_DirectDraw vtable +0x18 CreateSurface(desc, surface, 0); returns 1 if it returned 0, else 0 (neg / sbb / inc). Callers 0x59F5D3 (D3d_AfterDraw), 0x5A0161, 0x5A2D20, 0x5A3625, 0x5A5886 (Dd_StageSurface, 0x140 x 0x100)."
@@ -9397,7 +9397,7 @@ evidence = "disasm 2026-09-23, 0x59F860..0x59F8FF (0xA0 bytes): a DDSURFACEDESC2
 pc = 0x59F900
 name = "Dd_CreateTextureSurface"
 ret = "int"
-params = "unsigned width, unsigned height, void **surface, void **texture, unsigned format"
+params = "unsigned width, unsigned height, ::bof3::Slot32<void> *surface, ::bof3::Slot32<void> *texture, unsigned format"
 impl = "src/game/tex_page.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x59F900..0x59F9AA (0xAB bytes): as Dd_CreatePlainSurface but width and height unrounded, dwFlags 0x101007 (with DDSD_TEXTURESTAGE), dwCaps 0x1000 (TEXTURE), dwCaps2 0x10 (TEXTUREMANAGE), dwTextureStage 0. CreateSurface failing returns 0; otherwise *surface vtable +0 QueryInterface(0x5C4488, texture) - the 16 bytes there are IID_IDirect3DTexture2 93281502-8CF8-11D0-89AB-00A0C9054129 - and returns 1 whatever it answers. Callers 0x59F629, 0x5A02EA, 0x5A2DA3, 0x5A36D5."

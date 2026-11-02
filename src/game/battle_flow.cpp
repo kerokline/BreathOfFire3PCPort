@@ -92,8 +92,7 @@ std::int32_t FloatOfShort(int v) { return std::bit_cast<std::int32_t>(static_cas
 // not checked (items use 0..3).
 unsigned ItemRow(unsigned id) {
     const unsigned w = id & 0xFFFF;
-    const auto* const tables = reinterpret_cast<const unsigned char* const*>(static_cast<std::uintptr_t>(::bof3::Img(at::kItemRows.v)));
-    return tables[w >> 8][w & 0xFF];
+    return PtrAt(::bof3::Img(at::kItemRows.v) + 4u * (w >> 8))[w & 0xFF];   // four 32-bit table places
 }
 
 // The magic file of a row: the u16 at the head of its 8-byte record; 0xFFFF

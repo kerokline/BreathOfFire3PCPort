@@ -705,9 +705,8 @@ extern "C" void __cdecl Field_PassageOpen(void) {
             Field_ActiveMember = const_cast<unsigned char*>(buffer);
             buffer[0x86] = 0xFF;
             const unsigned char* const descriptor = Area_Descriptors[area];
-            const unsigned char* const* scripts;
-            std::memcpy(&scripts, descriptor + 4, sizeof scripts);
-            g.script_run(scripts[Word(e + 4) & 0xFFFu]);
+            const auto scripts = static_cast<std::uint32_t>(Long(descriptor + 4));   // a table of 32-bit places
+            g.script_run(At(static_cast<std::uint32_t>(Long(At(scripts + 4u * (Word(e + 4) & 0xFFFu))))));
             const unsigned short message = static_cast<unsigned short>(buffer[0x88] | buffer[0x89] << 8);
             if (message != 0xFFFF) g.open_script(static_cast<unsigned short>(message & 0xFFFu));
             Field_State[0x12A] = Field_ActiveMember[0x86];

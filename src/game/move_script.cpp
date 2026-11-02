@@ -135,9 +135,9 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
         }
         case 0x03: {   // 03 n: the area's handler n
             const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
-            AreaHandler const* handlers;
-            std::memcpy(&handlers, descriptor + 0x3C, sizeof handlers);
-            handlers[p[1]]();
+            const auto handlers = static_cast<std::uint32_t>(Long(descriptor + 0x3C));   // a table of 32-bit code words
+            const auto* const table = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(handlers));
+            reinterpret_cast<AreaHandler>(static_cast<std::uintptr_t>(Long(table + 4u * p[1])))();
             result = rv::Current<records::SpriteHead>()->direction;
             SetPos(object, Pos(object) + 2u);
             break;

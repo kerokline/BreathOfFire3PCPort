@@ -515,9 +515,8 @@ extern "C" unsigned char __cdecl MoveScript_SetTurnTarget(unsigned char* context
     if (word == 0xFFFF) return 0;
     if (word & 0x8000) {
         const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
-        const unsigned char* const* scripts;
-        std::memcpy(&scripts, descriptor + 4, sizeof scripts);
-        g.event_script(scripts[word & 0xFFF]);
+        const auto scripts = static_cast<std::uint32_t>(Long(descriptor + 4));   // a table of 32-bit places
+        g.event_script(At(static_cast<std::uint32_t>(Long(At(scripts + 4u * (word & 0xFFF))))));
     }
     const std::uint16_t now = Word(context + 8);
     if (!(now & 0x8000)) {

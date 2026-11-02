@@ -61,7 +61,7 @@ const Callees kOriginals = {
     Party_CanSwap, Field_EffectAhead, Area_PassageAhead, Field_FacingObject, Field_ObjectInPath, Field_CellAround,
     Field_CellAroundNear, Field_LeaderTalkTo, Scenario_StepHook, Scenario_ArriveHook, Area_StepHook,
     Area_ArriveHook, Area_ReturnGate,
-    reinterpret_cast<const ChapterHooks* const*>(static_cast<std::uintptr_t>(::bof3::Img(Scenario_Hooks_addr))),
+    reinterpret_cast<const ::bof3::Slot32<const ChapterHooks>*>(static_cast<std::uintptr_t>(::bof3::Img(Scenario_Hooks_addr))),
     Field_LeaderAnimation, Sprite_ClearSteps, Sprite_EnsureAnimation, AreaMap_ByteAt, Field_EncounterThresholdRoll,
     Party_Count, Area_ZoneAt, Rand, Sound_PlayEffect, Area_LinkAt, MapView_GroundAt, Sprite_ScriptTick,
     Sprite_ObjectAt, Sprite_PointInReach, Field_ChangeArea, Flags_Test, Flags_Clear, EventObj_Reset,
@@ -809,8 +809,7 @@ extern "C" unsigned char __cdecl Field_EffectAhead(void) {
 extern "C" const unsigned char* __cdecl Area_PassageAhead(void) {
     const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
     int n = descriptor[0x31];
-    const unsigned char* list;
-    std::memcpy(&list, descriptor + 0x2C, sizeof list);
+    const unsigned char* const list = At(static_cast<std::uint32_t>(Long(descriptor + 0x2C)));   // a 32-bit word
     const unsigned char* const sc = Sprite_Current;
     for (const unsigned char* e = list + n * 8; n >= 0; --n, e -= 8) {
         for (int k = e[3] - 1; k >= 0; --k) {
@@ -1308,7 +1307,7 @@ extern "C" unsigned char __cdecl Scenario_NoHook(long, long) { return 0; }
 extern "C" int __cdecl Scenario_StepHook(long x, long z) {
     const ChapterHooks* const record = g.chapter_hooks[Cond_ByteFA];
     unsigned char* const saved = Sprite_Current;
-    int r = static_cast<signed char>(record->step(x, z));
+    int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->step))(x, z));
     if (r == 0) r = g.area_step(x, z);
     Sprite_Current = saved;
     return r;
@@ -1319,7 +1318,7 @@ extern "C" int __cdecl Scenario_StepHook(long x, long z) {
 extern "C" int __cdecl Scenario_ArriveHook(long x, long z) {
     const ChapterHooks* const record = g.chapter_hooks[Cond_ByteFA];
     unsigned char* const saved = Sprite_Current;
-    int r = static_cast<signed char>(record->arrive(x, z));
+    int r = static_cast<signed char>(reinterpret_cast<Hook>(static_cast<std::uintptr_t>(record->arrive))(x, z));
     if (r == 0) r = g.area_arrive(x, z);
     Sprite_Current = saved;
     return r;

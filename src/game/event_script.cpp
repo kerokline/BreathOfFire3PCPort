@@ -587,8 +587,7 @@ static std::uint8_t g_reach_word = 0;
 
 extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
     const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
-    unsigned char* table;
-    std::memcpy(&table, descriptor + 8, sizeof table);
+    unsigned char* const table = At(Dword(descriptor + 8));   // a 32-bit word
     unsigned char* const entry = table + op[9] * 8u;
     unsigned char* const o = Extra(op[0xB]);
     Sprite_Current = o;
@@ -610,8 +609,7 @@ extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
     rv::Current<records::SpriteObject>()->work_18 = 0;
     {
         unsigned char* const sc = Sprite_Current;
-        unsigned char* source;
-        std::memcpy(&source, sc + 0x54, sizeof source);
+        unsigned char* const source = At(Dword(sc + 0x54));   // a 32-bit word
         if (g_reach_word) rv::Store<std::uint32_t>(rv::As<records::SpriteHead>(sc)->reach, source[2]);
         else sc[0x70] = source[2];
     }

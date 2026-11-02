@@ -360,11 +360,11 @@ void SelfTest() {
     page->refs = glyph->refs = cell->refs = 2;   // the surface and its texture interface, as a cache holds them
     Tex(TexEntry(5, 0))->state = 1;
     Tex(TexEntry(5, 0))->surface = Va(page);
-    Tex(TexEntry(5, 0))->texture = Va(page) + 4;
+    Tex(TexEntry(5, 0))->texture = Va(&page->texture_vtable);   // the IDirect3DTexture2 facet: the object's second word, whatever its width
     Font(FontEntry(9))->surface = Va(glyph);
-    Font(FontEntry(9))->texture = Va(glyph) + 4;
+    Font(FontEntry(9))->texture = Va(&glyph->texture_vtable);   // the IDirect3DTexture2 facet: the object's second word, whatever its width
     Cell(CellEntry(77))->surface = Va(cell);
-    Cell(CellEntry(77))->texture = Va(cell) + 4;
+    Cell(CellEntry(77))->texture = Va(&cell->texture_vtable);   // the IDirect3DTexture2 facet: the object's second word, whatever its width
     for (std::size_t i = 0; i < kKeptCount; ++i) std::memset(At(kKept[i].at), 0x5A, kKept[i].bytes);
     std::vector<std::vector<unsigned char>> kept_live(kKeptCount);
     for (std::size_t i = 0; i < kKeptCount; ++i) kept_live[i].assign(At(kKept[i].at), At(kKept[i].at + kKept[i].bytes));

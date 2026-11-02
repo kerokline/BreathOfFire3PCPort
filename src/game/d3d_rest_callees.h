@@ -61,9 +61,9 @@ struct Callees {
     void (__cdecl* set_shade)(unsigned mode);                                       // D3d_SetShadeMode
     void* (__cdecl* clut_pixels)(unsigned clut_id);                                 // Gfx_ClutPixels
     void (__cdecl* init_desc)(void* desc);                                          // Dd_InitSurfaceDesc
-    int (__cdecl* create_plain)(unsigned w, unsigned h, void** surface, unsigned format);   // Dd_CreatePlainSurface
+    int (__cdecl* create_plain)(unsigned w, unsigned h, ::bof3::Slot32<void>* surface, unsigned format);   // Dd_CreatePlainSurface
     void (__cdecl* fit_size)(unsigned w, unsigned h, unsigned* out_w, unsigned* out_h);   // D3d_FitTextureSize
-    int (__cdecl* create_texture)(unsigned w, unsigned h, void** surface, void** texture,
+    int (__cdecl* create_texture)(unsigned w, unsigned h, ::bof3::Slot32<void>* surface, ::bof3::Slot32<void>* texture,
                                   unsigned format);                                 // Dd_CreateTextureSurface
 };
 

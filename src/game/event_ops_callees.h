@@ -106,11 +106,12 @@ constexpr unsigned kNoArgsCase = 6;   // Area_StepHook's case 6 calls 0x40EB90 w
 
 using Test = unsigned char (__cdecl*)();
 using Hook = unsigned char (__cdecl*)(long, long);
-struct ChapterHooks {   // the record at::kChapterHooks points at, as these two read it
-    void* unused[2];
-    Hook step;      // +8
-    Hook arrive;    // +0xC
+struct ChapterHooks {   // the record at::kChapterHooks points at, as these two read it: 32-bit words
+    std::uint32_t unused[2];
+    std::uint32_t step;     // +8, a code word (a Hook)
+    std::uint32_t arrive;   // +0xC, the same
 };
+static_assert(sizeof(ChapterHooks) == 0x10, "the image's record is four words on every width");
 
 struct Callees {
     // this file's functions, each through here so each is tested alone
@@ -137,7 +138,7 @@ struct Callees {
     int (__cdecl* area_step)(long, long);
     int (__cdecl* area_arrive)(long, long);
     unsigned char (__cdecl* return_gate)(long, long);
-    const ChapterHooks* const* chapter_hooks;   // entry 0 here; indexed -128..127
+    const ::bof3::Slot32<const ChapterHooks>* chapter_hooks;   // a table of 32-bit record places; entry 0 here; indexed -128..127
     // other files' functions
     unsigned char (__cdecl* leader_animation)(unsigned);           // Field_LeaderAnimation
     void (__cdecl* clear_steps)();                                 // Sprite_ClearSteps

@@ -656,7 +656,7 @@ void __cdecl StubInitDesc(void* desc) {
     PutLong(d + 0x48, 0x20);
     DisturbAfter(0x12);
 }
-int __cdecl StubCreatePlain(unsigned w, unsigned h, void** surface, unsigned format) {
+int __cdecl StubCreatePlain(unsigned w, unsigned h, ::bof3::Slot32<void>* surface, unsigned format) {
     Record(0x11, w, h, Addr(surface), format);
     const U m = Mix(0x13);
     const bool ok = m % 6 != 0;
@@ -673,7 +673,7 @@ void __cdecl StubFit(unsigned w, unsigned h, unsigned* out_w, unsigned* out_h) {
     *out_h = (m >> 8) % 5 == 0 ? Mix(0x17) : kSizes[(m >> 12) % 12];
     DisturbAfter(0x18);
 }
-int __cdecl StubCreateTexture(unsigned w, unsigned h, void** surface, void** texture, unsigned format) {
+int __cdecl StubCreateTexture(unsigned w, unsigned h, ::bof3::Slot32<void>* surface, ::bof3::Slot32<void>* texture, unsigned format) {
     Record(0x13, w, h, Addr(surface), Addr(texture), format);
     const U m = Mix(0x19);
     const bool ok = m % 6 != 0;

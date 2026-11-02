@@ -423,8 +423,7 @@ void OpB8(unsigned char group, unsigned char sequence, unsigned char level) {
     if (sequence != 0)
         bof3::Fatal("sound_sp: op B8 asks for sequence %u of the loaded song file; the PC's file is one song (DIV-0170)",
                     static_cast<unsigned>(sequence));
-    void* file;
-    std::memcpy(&file, At(p.file), sizeof file);
+    void* const file = At(Dword(p.file));   // the slot's 32-bit word, a place
     if (!file) return;   // no song loaded: the PlayStation's player has nothing either
     const unsigned use = *At(p.gate) ? 0u : level;
     float volume = static_cast<float>(use) * 127.0f / 100.0f;

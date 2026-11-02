@@ -346,7 +346,7 @@ void Font_BuildGlyphTexture(int slot, unsigned glyph, unsigned clut) {
     const U surface_slot = entry + 8;
     if (Gfx_RenderFlags & 1) {
         if (Long(surface_slot) == 0) {
-            if (!Dd_CreatePlainSurface(0x20, 0x20, reinterpret_cast<void**>(At(surface_slot)), 0)) return;
+            if (!Dd_CreatePlainSurface(0x20, 0x20, reinterpret_cast<::bof3::Slot32<void>*>(At(surface_slot)), 0)) return;
             Dd_ClearSurface(Ptr(Long(surface_slot)));
             PutLong(entry + 0xC, 0);
         }
@@ -355,8 +355,8 @@ void Font_BuildGlyphTexture(int slot, unsigned glyph, unsigned clut) {
         Com(Long(surface_slot), kUnlock, 0u);
     } else {
         if (Long(surface_slot) == 0) {
-            if (!Dd_CreateTextureSurface(0x20, 0x20, reinterpret_cast<void**>(At(surface_slot)),
-                                         reinterpret_cast<void**>(At(entry + 0xC)), 0))
+            if (!Dd_CreateTextureSurface(0x20, 0x20, reinterpret_cast<::bof3::Slot32<void>*>(At(surface_slot)),
+                                         reinterpret_cast<::bof3::Slot32<void>*>(At(entry + 0xC)), 0))
                 return;
             if (Gfx_RenderFlags & 0x20) {
                 U key[2] = {0, 0};   // DDCOLORKEY {0, 0}
@@ -440,7 +440,7 @@ void D3d_BuildCellTexture(int slot, unsigned first, unsigned count, unsigned clu
     Rect to = {0, 0, static_cast<std::int32_t>(Word(entry + 0)), static_cast<std::int32_t>(Word(entry + 2))};
     if (flags_now & 1) {
         if (!Dd_CreatePlainSurface(static_cast<unsigned>(to.r), static_cast<unsigned>(to.b),
-                                   reinterpret_cast<void**>(At(entry + 0x20)), 0))
+                                   reinterpret_cast<::bof3::Slot32<void>*>(At(entry + 0x20)), 0))
             return;
         const U surface = Long(entry + 0x20);
         const U stage = Long(::bof3::Img(kStage.v));
@@ -452,8 +452,8 @@ void D3d_BuildCellTexture(int slot, unsigned first, unsigned count, unsigned clu
     Com(Long(::bof3::Img(kDevice.v)), kEndScene);
     unsigned texture_w, texture_h;
     D3d_FitTextureSize(Word(entry + 0), Word(entry + 2), &texture_w, &texture_h);
-    if (!Dd_CreateTextureSurface(texture_w, texture_h, reinterpret_cast<void**>(At(entry + 0x20)),
-                                 reinterpret_cast<void**>(At(entry + 0x24)), 0))
+    if (!Dd_CreateTextureSurface(texture_w, texture_h, reinterpret_cast<::bof3::Slot32<void>*>(At(entry + 0x20)),
+                                 reinterpret_cast<::bof3::Slot32<void>*>(At(entry + 0x24)), 0))
         return;
     const U used_w = Word(entry + 0);
     if (static_cast<std::int32_t>(texture_w) < static_cast<std::int32_t>(used_w)) {

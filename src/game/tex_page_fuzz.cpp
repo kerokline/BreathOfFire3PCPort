@@ -450,8 +450,9 @@ void HelperRounds(unsigned rounds, unsigned* bad, unsigned* failed) {
         ddraw_fuzz::g_log = &g_ours;
         slots[0] = junk0;
         slots[1] = junk1;
-        U ours = texture ? Dd_CreateTextureSurface(w, h, reinterpret_cast<void**>(&slots[0]), reinterpret_cast<void**>(&slots[1]), format)
-                         : Dd_CreatePlainSurface(w, h, reinterpret_cast<void**>(&slots[0]), format);
+        U ours = texture ? Dd_CreateTextureSurface(w, h, reinterpret_cast<::bof3::Slot32<void>*>(&slots[0]),
+                                                   reinterpret_cast<::bof3::Slot32<void>*>(&slots[1]), format)
+                         : Dd_CreatePlainSurface(w, h, reinterpret_cast<::bof3::Slot32<void>*>(&slots[0]), format);
         Capture(g_ours_state);
         ddraw_fuzz::g_log = nullptr;
         if (slots[0] != their_slots[0] || slots[1] != their_slots[1]) ours ^= 0x80000000u;   // shows as the return
