@@ -739,6 +739,82 @@ census wants it, stage D); the x86 manifest and its build dependency;
 slice-use difference; `kSlice64` possibly small. **The coordinator's runs**
 (items 1..5 above) follow in the next subsection.
 
+### Stage C as run, the coordinator's part (2026-11-01 night and 2026-11-02 morning; root `x641101/proof`)
+
+The builds: C1's `L64` and `L32` (`x64/c1` `7d6736d0`), then `L64f` with the
+`Music_Pump` fix below (`x64/c1` `814b01c1`). Every run `--host exe` on the
+round's game copy, `--no-front`, hands off; hashed runs under the `orig4`
+conditions (`BOF3X_OPT=none BOF3X_LAYERING=0`, the skip list).
+`run_routes.sh`, `run_proof2.sh`, `run_quick.sh`, `run_stack.sh`,
+`run_fix.sh`, `run_stackq.sh` there, each with its `.out`.
+
+**1. The ten routes, 64-bit against 32-bit (`statehash.py diff`).** Identical
+on every tick: combat (2,561), dragonTransform (4,289), menu_screens (1,729),
+cutsceneAndNue on its second pair (7,361). The rest differ only on pages that
+also differ between two runs of one width:
+
+| Route | x32 / x64 | Read as |
+|---|---|---|
+| caughFish | `0x6C3000` from tick 395 | five `Gfx_ClutRows` block pointers (+0xB44..+0xB64, heap addresses): raw dumps at 395, 400, 2,000; x64 against x64 and x32 against x32 differ the same way |
+| masterAndManillo, worldMapAndAreaTransition | `0x6C3000` from 324 / 1,098 | the same class |
+| field_menu | `0x7DE000`, 15 ticks | the sound page (`Music_Finished`'s noise row) |
+| cutsceneAndNue (first pair) | VRAM shadow (9 pages), `0x937000`, `0x7DE000`, `0x7C9000` / `0x7CA000` | x64 against its own repeat differs on the same 12 pages; the second x32/x64 pair is identical |
+| whelpBoss | the same VRAM / `0x937000` class, on the **32-bit** side (x64 matches the references there) | run noise, either width |
+| shop | 11 game pages from tick 2,714 to the end | **a defect**, below; after the fix one tick of `0x7DE000` |
+
+Both widths against the `orig4` pairs report the same signature pages
+(the pairs predate the bind table, state-hash.md 8), page for page, on
+combat and caughFish.
+
+**The defect: the 64-bit music stopped after its first quarter second.**
+`Music_Pump` handed `Music_Events` - two 32-bit image slots - to
+`MsgWaitForMultipleObjects`, which reads 8-byte handles on x86-64: one merged
+handle and the word after the pair, a failed wait every frame, the ring never
+refilled. The music log (`BOF3X_MUSIC_LOG=1`) at f2495 of shop: heard sample
+11,520 (18,432 written) on x64 against 3,200,256 on i686; the inn's jingle
+never ended, so the morning transition never came (`Transition_Busy` 1 on
+i686 at tick 2,714, 0 on x64), the same on three 64-bit runs. Fixed on
+`x64/round` (`0bdc1f3e`): on x86-64 the two slots are copied into a native
+array first. The i686 spelling is kept by width: the copy passes a stack
+address where Capcom's passes the image's, and the sound fuzz's stub records
+that address (tried 2026-11-02: 5 `Music_Pump` mismatches in
+`BOF3X_SHADOW='*'`), so it is one width `#if` in a game file for stage D's
+list. i686 `sound.cpp.obj` 0 differ, the hosted suite `'*'` exit 0. With the
+fix, shop's heard sample at f2495 is i686's exactly. **No hash and no attract
+saw this:** the ring's words are in the skip list and the routes but one
+never wait on a stream's end - stage D's audit wants a check that hears the
+music (a census row: an image slot array handed to an API as a native
+array; this was the only handle array).
+
+**2. The quicksave** (`quick_combat`, `quicksave_check.py`): on the 64-bit
+host the in-process proof is `RESULT: equal` (300 ticks after F7 equal the
+300 after F6 but the two expected noise pages) and the cross-process proof
+exits 0. A take of the other width is refused both ways: `F7 BISLPS10.DAT
+refused: another build - made by v0.1.0 (bof3x.dll 1f676aed5476...), this is
+v0.1.0 (0be42825073e...); the save half is still a save`, the overlay
+"Quickload refused: another build".
+
+**3. The FMVs.** `CAPCOM.AVI` and `LOGOS.AVI` open through MCI and play to
+their ends on the 64-bit host (`DIV-0035 ... into the window at 0,0 640 x
+480`, no skip line, `WinMain: FMVs done`) in every run; the round's game
+copy holds those two AVIs only. What the window shows is the owner's eye.
+
+**4. The launcher.** The 64-bit launcher starts the 64-bit exe beside it in
+every run above. The 32-bit launcher with the 64-bit exe and DLL beside it
+(`Lmix`) plays the attract, 3,136 logic frames in 120 s. The Sources page
+runs `tools/importer.py` as a child and never names the executable, so it
+has nothing width-specific; opening it in the 64-bit launcher is the
+owner's look. The moved base (`BOF3X_IMAGEBASE`, the developer launcher's
+fence) was not run on the 64-bit host.
+
+**5. The stackwatch on the routes** (`BOF3X_STACKWATCH=1`, `L64f`, each route
+ending in F9 twice, F9 twice at the title and a `quit`, since the exit lines
+need a normal exit): the deepest write in task slice 0 is `0x5508` to
+`0x5628` of `0x8000` (cutsceneAndNue the deepest), slice 1 `0x54F8` on every
+route, slices 2 and 3 never committed. **`kSlice64` `0x8000` holds**, a
+third of it spare at the deepest; no change. field_menu and menu_screens end
+at their own last step before the appended quit, so they were not measured.
+
 
 ## 6. Stage D: audit and docs
 
