@@ -493,7 +493,7 @@ under `x641101\b<n>`, merged in the order B3, B1, B4, B5:
   `stallwatch`, `calltrace`, `win_main`), `fmv_play.cpp`'s `GWL_WNDPROC`; `0
   differ` on i686 or the fuzz.
 - **B5** owns `src/audio/sound_sdl.cpp` (design 6.3) and the WAV dump's tap,
-  reserves DIV-0199 (the sound output through SDL3 on both widths, the
+  reserves DIV-0201 (the sound output through SDL3 on both widths, the
   32-bit build keeping DirectSound behind a switch for the owner's A/B
   listen), and touches `exe_host.cpp` for the slot binding alone (merged
   after B4, keep-both).
@@ -511,7 +511,7 @@ its context), and merged the same evening. The round branch moved to its own
 worktree (`x641101\round`) when a concurrent session on the main checkout
 switched branches under the first two merges; those were reset off its branch
 and redone. The same session took DIV-0197 and DIV-0198 for issues #177 and
-#178, so B5's entry is **DIV-0199**, and the round's PR follows theirs so the
+#178, so B5's entry is **DIV-0201**, and the round's PR follows theirs so the
 ledger has no gap (the ledger's status line and `ledger_registry.h` are
 settled when `main` is merged in).
 
@@ -557,7 +557,7 @@ settled when `main` is merged in).
   opened in the exe host's self-test (Speakers, 44,100 Hz, 441 frames). The
   hosted self-test skips the device open: under `DllMain`'s loader lock it
   deadlocked (in play `Create` runs from `Snd_Init` on the game thread).
-  **Nobody has listened**: the owner's list is in DIV-0199's verification
+  **Nobody has listened**: the owner's list is in DIV-0201's verification
   field (a loop point, a battle, DIV-0171's pans and fades, the inn jingle,
   the quicksave take and load, the same route under `off=SoundSdl`). The
   WAV pair shows what the game asked of either layer, not the mixer's output.

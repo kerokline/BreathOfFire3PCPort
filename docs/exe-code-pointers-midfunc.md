@@ -110,9 +110,13 @@ scripts over the same inputs (`exe_twins.sources` for the disc file).
   no code names those addresses directly; it is read through the area's data,
   and the record's byte layout is inferred from its neighbours, not from the
   reading code.
-- Whether the Western PSX list box value (`0x654878`) is a regional layout
+- ~~Whether the Western PSX list box value (`0x654878`) is a regional layout
   change or a misplaced segment: the US segment there starts at `0x654876`
-  but maps the word to the same disc address as JP's.
+  but maps the word to the same disc address as JP's.~~ **Answered
+  2026-11-01** (DIV-0198, D400): a regional layout change - the US disc's
+  box is (96, 96, 128, 128) against Japan's (96, 80, 128, 144), paired with
+  a changed margin in the US twin of `EffectKind5E_DrawList` (`+4` for
+  `+0x14`); the map's `agree 138` for the run is wrong by those two words.
 - The 462 words no disc places (312 into `Scena03_Scene7`, 98 into
   `Gfx_PackRgb`, 10 into `Crt_GetPtd`, then 35 functions with 1..3 each): not
   read, as section 4.1 says. If any were a real code pointer it would need a

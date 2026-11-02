@@ -1,0 +1,316 @@
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en-US BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots;
+# F1..F11, and any key that ended a pause, are `key KEY 0` steps.
+wait 26
+hold start 5
+wait 56
+hold start 5
+wait 10
+hold start 5
+wait 39
+hold circle 3
+wait 43
+hold circle 3
+wait 11
+hold circle 4
+wait 75
+hold up+right 16
+hold right 2
+wait 44
+hold right 8
+wait 2
+hold square 39
+wait 4
+hold left 6
+wait 3
+hold square 70
+wait 81
+hold square 25
+wait 178
+hold circle 3
+wait 25
+hold circle 5
+wait 43
+hold circle 6
+wait 9
+hold circle 5
+wait 451
+hold circle 1
+wait 12
+hold circle 7
+wait 46
+hold circle 5
+wait 516
+hold circle 3
+wait 26
+hold circle 5
+wait 10
+hold circle 4
+wait 54
+hold circle 5
+wait 70
+hold circle 4
+wait 4
+hold circle 3
+wait 8
+hold circle 3
+wait 23
+hold circle 5
+wait 7
+hold circle 4
+wait 4
+hold circle 3
+wait 5
+hold circle 4
+wait 47
+hold circle 3
+wait 4
+hold circle 3
+wait 3
+hold circle 3
+wait 2
+hold circle 4
+wait 4
+hold circle 3
+wait 55
+hold circle 4
+wait 5
+hold circle 3
+wait 3
+hold circle 4
+wait 3
+hold circle 3
+wait 34
+hold circle 2
+wait 4
+hold circle 4
+wait 3
+hold circle 4
+wait 4
+hold circle 3
+wait 3
+hold circle 4
+wait 3
+hold circle 3
+wait 4
+hold circle 4
+wait 6
+hold circle 4
+wait 84
+hold circle 3
+wait 56
+hold circle 5
+wait 4
+hold circle 4
+wait 5
+hold circle 3
+wait 5
+hold circle 5
+wait 26
+hold circle 4
+wait 8
+hold circle 4
+wait 5
+hold circle 4
+wait 5
+hold circle 4
+wait 40
+hold circle 6
+wait 61
+hold circle 5
+wait 59
+hold circle 4
+wait 91
+hold circle 3
+wait 7
+hold circle 4
+wait 5
+hold circle 3
+wait 49
+hold circle 4
+wait 5
+hold circle 4
+wait 88
+hold circle 3
+wait 56
+hold circle 5
+wait 7
+hold circle 4
+wait 5
+hold circle 4
+wait 2
+hold circle 5
+wait 24
+hold circle 3
+wait 3
+hold circle 3
+wait 3
+hold circle 5
+wait 3
+hold circle 4
+wait 2
+hold circle 5
+wait 3
+hold circle 4
+wait 4
+hold circle 4
+wait 4
+hold circle 5
+wait 25
+hold circle 3
+wait 5
+hold circle 5
+wait 4
+hold circle 4
+wait 5
+hold circle 3
+wait 3
+hold circle 4
+wait 71
+hold circle 4
+wait 3
+hold circle 2
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 29
+hold circle 3
+wait 4
+hold circle 1
+wait 4
+hold circle 2
+wait 3
+hold circle 2
+wait 3
+hold circle 3
+wait 2
+hold circle 3
+wait 21
+hold circle 3
+wait 4
+hold circle 2
+wait 3
+hold circle 3
+wait 3
+hold circle 2
+wait 45
+hold circle 4
+wait 4
+hold circle 2
+wait 3
+hold circle 3
+wait 4
+hold circle 2
+wait 4
+hold circle 2
+wait 3
+hold circle 3
+wait 4
+hold circle 1
+wait 13
+hold circle 2
+wait 4
+hold circle 2
+wait 4
+hold circle 2
+wait 4
+hold circle 2
+wait 4
+hold circle 2
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 13
+hold circle 4
+wait 3
+hold circle 2
+wait 4
+hold circle 2
+wait 4
+hold circle 2
+wait 4
+hold circle 2
+wait 4
+hold circle 2
+wait 4
+hold circle 3
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 5
+hold circle 4
+wait 12
+hold circle 3
+wait 4
+hold circle 3
+wait 4
+hold circle 2
+wait 4
+hold circle 4
+wait 3
+hold circle 3
+wait 4
+hold circle 2
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 42
+hold circle 3
+wait 4
+hold circle 2
+wait 3
+hold circle 3
+wait 3
+hold circle 4
+wait 6
+hold circle 3
+wait 10
+hold circle 3
+wait 4
+hold circle 2
+wait 4
+hold circle 3
+wait 3
+hold circle 3
+wait 45
+hold circle 4
+wait 29
+hold circle 3
+wait 4
+hold circle 2
+wait 4
+hold circle 2
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 2
+hold circle 3
+wait 63
+hold down+left 7
+wait 43
+hold down 1
+hold down+left 1
+hold down 7
+wait 132
+key f9 0   # recipe frame 4253
+wait 17
+key f9 0   # recipe frame 4270, paused
+wait 71
+key f9 0   # recipe frame 4341
+wait 14
+key f9 0   # recipe frame 4355, paused
+wait 1

@@ -661,7 +661,7 @@ void WavDump_Start() {
         Log("wav         BOF3X_SPEED=%s: the logic frames outrun the device, so the music's queue runs dry (counted as "
             "underrun samples); effects are mixed as ever", speed);
 
-    // The slot holds DSOUND.dll's DirectSoundCreate, or - DIV-0199, SoundSdl on
+    // The slot holds DSOUND.dll's DirectSoundCreate, or - DIV-0201, SoundSdl on
     // - our Create (sound_sdl.cpp): the dump wraps either the same way, the
     // device's vtable and each buffer's, so the two sides of the owner's A/B
     // listen are dumped by one model. A 32-bit word of .rdata, read as one.
@@ -669,7 +669,7 @@ void WavDump_Start() {
     void* const held = SlotObject(slot);
     const char* holder = nullptr;
     if (SoundSdl_IsCreate(held)) {
-        holder = "the SDL3 layer's Create (DIV-0199)";
+        holder = "the SDL3 layer's Create (DIV-0201)";
     } else {
         HMODULE dsound = GetModuleHandleA("dsound.dll");
         void* const real = dsound ? reinterpret_cast<void*>(GetProcAddress(dsound, MAKEINTRESOURCEA(1))) : nullptr;
