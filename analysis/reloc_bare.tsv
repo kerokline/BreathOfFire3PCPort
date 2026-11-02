@@ -745,8 +745,8 @@ literal	src/game/field_e1_callees.h	0x939A28	1	constexpr std::uint32_t kBlink = 
 literal	src/game/field_e2.cpp	0x430000	1	SH_CALL(Field_ChangeArea)(area, 0x430000, 0x160000, 4);
 literal	src/game/field_e2.cpp	0x430000	1	case 2: SH_CALL(Field_ChangeArea)(0x22, 0x340000, 0x430000, 0x81); break;
 literal	src/game/field_e2.cpp	0x590000	1	case 4: SH_CALL(Field_ChangeArea)(0x6C, 0x110000, 0x590000, 0x85); break;
-literal	src/game/field_e2.cpp	0x660BD4	1	: " "(0x8034E0), " "(0x660BD4));
-literal	src/game/field_e2.cpp	0x8034E0	1	: " "(0x8034E0), " "(0x660BD4));
+literal	src/game/field_e2.cpp	0x660BD4	2	: " "(0x8034E0), " "(0x660BD4));
+literal	src/game/field_e2.cpp	0x8034E0	2	: " "(0x8034E0), " "(0x660BD4));
 literal	src/game/field_e2_callees.h	0x5C41F0	1	constexpr rdata::Const kQuadWidth{0x5C41F0};
 literal	src/game/field_e2_callees.h	0x5C4254	1	constexpr rdata::Const kQuadLift{0x5C4254};
 literal	src/game/field_e2_callees.h	0x660C7C	1	constexpr std::uint32_t kErrorFormat = 0x660C7C;
@@ -914,8 +914,8 @@ literal	src/game/field_misc_callees.h	0x905F0E	1	constexpr U kItemFaceA = 0x905F
 literal	src/game/field_modes.cpp	0x400000	1	ObjTrio[0].z = 0x400000;
 literal	src/game/field_modes.cpp	0x430000	1	g.change_area(2, 0x340000, 0x430000, 3);
 literal	src/game/field_modes.cpp	0x440000	1	g.change_area(4, 0x440000, 0x80000, 5);
-literal	src/game/field_modes.cpp	0x660B84	1	: " "(0x8034E0), " "(0x660B84));
-literal	src/game/field_modes.cpp	0x8034E0	1	: " "(0x8034E0), " "(0x660B84));
+literal	src/game/field_modes.cpp	0x660B84	2	: " "(0x8034E0), " "(0x660B84));
+literal	src/game/field_modes.cpp	0x8034E0	2	: " "(0x8034E0), " "(0x660B84));
 literal	src/game/field_modes_callees.h	0x6619FC	1	constexpr std::uint32_t kStateTable = 0x6619FC;
 literal	src/game/field_modes_callees.h	0x661A08	1	constexpr std::uint32_t kRunTable = 0x661A08;
 literal	src/game/field_modes_callees.h	0x662CD0	1	constexpr std::uint32_t kTailTable = 0x662CD0;
@@ -2527,20 +2527,34 @@ literal	src/game/sprt_draw_callees.h	0x5C41D0	1	constexpr rdata::Const kSixteen{
 literal	src/game/sprt_draw_callees.h	0x5C4610	1	constexpr rdata::Const kRhwNumerator{0x5C4610};
 literal	src/game/sprt_draw_callees.h	0x7CA9DC	1	constexpr U kCapcomFarBase = 0x7CA9DC;
 literal	src/game/sprt_draw_callees.h	0x7CA9E0	1	constexpr U kTexCoords = 0x7CA9E0;
-literal	src/game/task_sched.cpp	0x66C7D0	4	" "(0x66C7D0),
-literal	src/game/task_sched.cpp	0x66C7D2	2	" "(0x66C7D2),
-literal	src/game/task_sched.cpp	0x66C7D4	3	" "(0x66C7D4));
-literal	src/game/task_sched.cpp	0x66C7D4	1	" "(0x66C7D4),
-literal	src/game/task_sched.cpp	0x66C7D8	1	" "(0x66C7D8),
-literal	src/game/task_sched.cpp	0x66C7DC	1	" "(0x66C7DC),
-literal	src/game/task_sched.cpp	0x66C7E0	1	" "(0x66C7E0),
-literal	src/game/task_sched.cpp	0x66C7E4	1	" "(0x66C7E4));
-literal	src/game/task_sched.cpp	0x66C850	1	" "(0x66C850),
-literal	src/game/task_sched.cpp	0x66C850	3	: " "(0x66C850),
-literal	src/game/task_sched.cpp	0x66C854	1	: " "(0x66C854));
-literal	src/game/task_sched.cpp	0x66C854	1	: " "(0x66C854),
-literal	src/game/task_sched.cpp	0x66C858	1	" "(0x66C858),
-literal	src/game/task_sched.cpp	0x66C858	1	: " "(0x66C858));
+literal	src/game/task_switch_i686.h	0x66C7D0	4	" "(0x66C7D0),
+literal	src/game/task_switch_i686.h	0x66C7D2	2	" "(0x66C7D2),
+literal	src/game/task_switch_i686.h	0x66C7D4	3	" "(0x66C7D4));
+literal	src/game/task_switch_i686.h	0x66C7D4	1	" "(0x66C7D4),
+literal	src/game/task_switch_i686.h	0x66C7D8	1	" "(0x66C7D8),
+literal	src/game/task_switch_i686.h	0x66C7DC	1	" "(0x66C7DC),
+literal	src/game/task_switch_i686.h	0x66C7E0	1	" "(0x66C7E0),
+literal	src/game/task_switch_i686.h	0x66C7E4	1	" "(0x66C7E4));
+literal	src/game/task_switch_i686.h	0x66C850	1	" "(0x66C850),
+literal	src/game/task_switch_i686.h	0x66C850	3	: " "(0x66C850),
+literal	src/game/task_switch_i686.h	0x66C854	1	: " "(0x66C854));
+literal	src/game/task_switch_i686.h	0x66C854	1	: " "(0x66C854),
+literal	src/game/task_switch_i686.h	0x66C858	1	" "(0x66C858),
+literal	src/game/task_switch_i686.h	0x66C858	1	: " "(0x66C858));
+literal	src/game/task_switch_x86_64.h	0x66C7D0	4	" "(0x66C7D0),
+literal	src/game/task_switch_x86_64.h	0x66C7D2	2	" "(0x66C7D2),
+literal	src/game/task_switch_x86_64.h	0x66C7D4	2	" "(0x66C7D4));
+literal	src/game/task_switch_x86_64.h	0x66C7D4	2	" "(0x66C7D4),
+literal	src/game/task_switch_x86_64.h	0x66C7D8	1	" "(0x66C7D8),
+literal	src/game/task_switch_x86_64.h	0x66C7DC	1	" "(0x66C7DC),
+literal	src/game/task_switch_x86_64.h	0x66C7E0	1	" "(0x66C7E0),
+literal	src/game/task_switch_x86_64.h	0x66C7E4	1	" "(0x66C7E4));
+literal	src/game/task_switch_x86_64.h	0x66C850	1	" "(0x66C850),
+literal	src/game/task_switch_x86_64.h	0x66C850	3	: " "(0x66C850),
+literal	src/game/task_switch_x86_64.h	0x66C854	1	: " "(0x66C854));
+literal	src/game/task_switch_x86_64.h	0x66C854	1	: " "(0x66C854),
+literal	src/game/task_switch_x86_64.h	0x66C858	1	" "(0x66C858),
+literal	src/game/task_switch_x86_64.h	0x66C858	1	: " "(0x66C858), " "(task_sched::kStackSize));
 literal	src/game/tex_page_callees.h	0x5C4488	1	constexpr rdata::Const kTexture2Iid{0x5C4488};
 literal	src/game/text_advance.cpp	0x497A22	1	constexpr std::uint32_t kCallSite = 0x497A22;
 literal	src/game/text_draw.cpp	0x803580	1	constexpr std::uint32_t kPool = 0x803580, kPoolRoom = 0x8000;

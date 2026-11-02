@@ -1,6 +1,6 @@
 # The 64-bit build round: staging (PLAN phase 4, I44 "What follows")
 
-**Status:** IN PROGRESS (launched 2026-11-01 on `x64/round` off `main`
+**Status:** IN PROGRESS (stage B complete and gated 2026-11-02 on `x64/round`, PR at the owner's word; stage C running. Launched 2026-11-01 on `x64/round` off `main`
 `7bd917de`, the PR #176 merge; the owner's four calls answered the same
 morning, section 7; stage A's four groups run in worktrees under
 `C:/Users/kerok/bof3x-runs/x641101`. Staged 2026-10-29, re-measured
@@ -493,7 +493,7 @@ under `x641101\b<n>`, merged in the order B3, B1, B4, B5:
   `stallwatch`, `calltrace`, `win_main`), `fmv_play.cpp`'s `GWL_WNDPROC`; `0
   differ` on i686 or the fuzz.
 - **B5** owns `src/audio/sound_sdl.cpp` (design 6.3) and the WAV dump's tap,
-  reserves DIV-0199 (the sound output through SDL3 on both widths, the
+  reserves DIV-0201 (the sound output through SDL3 on both widths, the
   32-bit build keeping DirectSound behind a switch for the owner's A/B
   listen), and touches `exe_host.cpp` for the slot binding alone (merged
   after B4, keep-both).
@@ -511,7 +511,7 @@ its context), and merged the same evening. The round branch moved to its own
 worktree (`x641101\round`) when a concurrent session on the main checkout
 switched branches under the first two merges; those were reset off its branch
 and redone. The same session took DIV-0197 and DIV-0198 for issues #177 and
-#178, so B5's entry is **DIV-0199**, and the round's PR follows theirs so the
+#178, so B5's entry is **DIV-0201**, and the round's PR follows theirs so the
 ledger has no gap (the ledger's status line and `ledger_registry.h` are
 settled when `main` is merged in).
 
@@ -557,7 +557,7 @@ settled when `main` is merged in).
   opened in the exe host's self-test (Speakers, 44,100 Hz, 441 frames). The
   hosted self-test skips the device open: under `DllMain`'s loader lock it
   deadlocked (in play `Create` runs from `Snd_Init` on the game thread).
-  **Nobody has listened**: the owner's list is in DIV-0199's verification
+  **Nobody has listened**: the owner's list is in DIV-0201's verification
   field (a loop point, a battle, DIV-0171's pans and fades, the inn jingle,
   the quicksave take and load, the same route under `off=SoundSdl`). The
   WAV pair shows what the game asked of either layer, not the mixer's output.
@@ -635,6 +635,15 @@ objects fail** (4 before). No game file carries a width `#if` outside B1's
 asm pairs. Left for the audit: the census wants a `low32` class (it no longer
 counts the narrowings), the `long` remainder (23 files), the global `using`
 shape, the exit trace's `%s` width.
+
+**Stage B's tree, as gated (2026-11-02 morning, `c7a0a4e7`: wave 2 merged, then
+`main` at PR #182 merged in, the SDL3 entry renumbered DIV-0201 because `main`
+had taken DIV-0197..0200 for issues #177..#179 the same day; `ledger_check`,
+`ledger_registry --check`, `ledger_switches --check` and `width_census --check`
+clean):** the i686 build; the hosted suite `'*'` (28,510 lines, every mismatch
+line 0, no FATAL), the exe host and the moved base (`0xA00000`), each ending
+"self-test only: done" (`x641101/round/st3_*.log`). The PR is at the owner's
+word; stage C runs on `x64/c1` off the tip before the merge.
 
 Stage B merges to `main` as a PR of its own when every group is in: the
 32-bit build is proved by its own gates, and the 64-bit build is not yet

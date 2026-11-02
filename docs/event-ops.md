@@ -283,6 +283,16 @@ Read side by side, the PC differs from the PSX in one place: **the PC tests
 null read on the PlayStation when a 0x50 / 0x52 / 0x53 / 0x55 cell has no
 passage entry. The porting house's fix, kept.
 
+The walk itself has the read the porting house missed: `Area_PassageAhead`
+takes the descriptor's `+0x2C` list without a test, and 105 of the 200
+descriptors have none (`recipes/exe-layout.tsv`: no pointer word at
+`+0x2C`; the faerie village's areas 175..185 among them), so the first
+`entry[3]` is address 3 - low RAM on the console, a fault on the PC. Reached
+2026-11-01 on a disc-built install at the village board (issue #177, D399);
+**DIV-0197** answers null for a null list. The candidate list below stood
+on "none reachable by what the field sets" - this one was, by a door cell
+in an area without a list.
+
 Candidate defects, none reachable by what the field sets, so none is in
 [`known-defects.md`](known-defects.md): the signed object index (section 4),
 the divide by a zero speed (the pace is only ever set to 2, 3 or 4 - by

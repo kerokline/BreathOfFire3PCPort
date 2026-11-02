@@ -111,8 +111,8 @@ site	src/audio/sound_sdl.cpp	1244	fmt_place	word	live	(unsigned)kSlotVa	%08X	if 
 site	src/audio/sound_sdl.cpp	1244	fmt_place	word	live	after	%08X	if (g_on && after != create) Fatal("sound_sdl: the import slot 0x%08X reads 0x%08X after the patch, not our Create 0x%08X", (unsigned)kSlotVa, after, create);
 site	src/audio/sound_sdl.cpp	1244	fmt_place	word	live	create	%08X	if (g_on && after != create) Fatal("sound_sdl: the import slot 0x%08X reads 0x%08X after the patch, not our Create 0x%08X", (unsigned)kSlotVa, after, create);
 site	src/audio/sound_sdl.cpp	1245	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (!g_on && after != before) Fatal("sound_sdl: the import slot 0x%08X changed under a switch that is off", (unsigned)kSlotVa);
-site	src/audio/sound_sdl.cpp	1246	fmt_place	word	live	(unsigned)kSlotVa	%08X	Log("DIV-0199 sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
-site	src/audio/sound_sdl.cpp	1246	fmt_place	word	live	after	%08X	Log("DIV-0199 sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
+site	src/audio/sound_sdl.cpp	1246	fmt_place	word	live	(unsigned)kSlotVa	%08X	Log("DIV-0201 sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
+site	src/audio/sound_sdl.cpp	1246	fmt_place	word	live	after	%08X	Log("DIV-0201 sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
 site	src/common/asm_name.h	20	asm	other	live	(empty)	-	#define BOF3_ASM_NAME(name) __asm__(BOF3_SYM(name))
 site	src/common/image_base.h	69	asm	fs	live	movl %%fs:0x30, %0	movl	asm("movl %%fs:0x30, %0\n\t"
 site	src/common/image_base.h	69	fs_read	asm	live	movl %%fs:0x30, %0	-	asm("movl %%fs:0x30, %0\n\t"
@@ -124,8 +124,8 @@ site	src/common/image_base.h	130	uintptr	-	live	std::uintptr_t	-	const auto v = 
 site	src/common/image_base.h	132	fmt_place	pointer	live	reinterpret_cast<const void*>(v)	%p	Fatal("%s:%u %s: %p lies above 4 GB, where no word of the game can hold it (docs/x64-build-design.md 2)", file,
 site	src/common/image_base.h	137	narrow	unread	live	p	-	#define Low32(p) (static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)))
 site	src/common/image_base.h	137	uintptr	-	live	std::uintptr_t	-	#define Low32(p) (static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)))
-site	src/common/image_base.h	146	uintptr	-	live	std::uintptr_t	-	if (reinterpret_cast<std::uintptr_t>(p) > 0xFFFFFFFFu)
-site	src/common/image_base.h	147	fmt_place	pointer	live	p	%p	Fatal("%s: a heap block of %u bytes at %p lies above 4 GB, where no word of the game can hold it "
+site	src/common/image_base.h	158	uintptr	-	live	std::uintptr_t	-	if (reinterpret_cast<std::uintptr_t>(p) > 0xFFFFFFFFu)
+site	src/common/image_base.h	159	fmt_place	pointer	live	p	%p	Fatal("%s: a heap block of %u bytes at %p lies above 4 GB, where no word of the game can hold it "
 site	src/common/slot32.h	63	uintptr	-	live	std::uintptr_t	-	BOF3_SLOT_INLINE T* Native() const { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(v)); }
 site	src/common/slot32.h	63	widen	param	live	v	T*	BOF3_SLOT_INLINE T* Native() const { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(v)); }
 site	src/game/area_011_fuzz.cpp	40	narrow	helper_def	fuzz	p	-	std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -2028,43 +2028,45 @@ site	src/game/crt_rest_fuzz.cpp	497	uintptr	-	fuzz	std::uintptr_t	-	const char* 
 site	src/game/crt_rest_fuzz.cpp	497	widen	param	fuzz	kListPattern	const char*	const char* const patterns[] = {reinterpret_cast<const char*>(static_cast<std::uintptr_t>(kListPattern)), " ",
 site	src/game/crt_rest_fuzz.cpp	507	long	l	fuzz	long	-	const long handle = ::Crt_findfirst(pattern, found);
 site	src/game/crt_rest_fuzz.cpp	697	long	ul	fuzz	unsigned long	-	unsigned long x = 0, y = 0;
-site	src/game/d3d_draw.cpp	47	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
-site	src/game/d3d_draw.cpp	61	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/d3d_draw.cpp	61	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/d3d_draw.cpp	95	asm	x87	live	flds %1	flds fmuls fstps	__asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-site	src/game/d3d_draw.cpp	101	asm	x87	live	flds %1	fdivs flds fstps	__asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
-site	src/game/d3d_draw.cpp	107	asm	x87	live	flds %1	flds fstps	__asm__ volatile("flds %1\n\tfstps %0" : "=m"(r) : "m"(a) : "st");
-site	src/game/d3d_draw.cpp	113	asm	x87	live	flds %1	fadds flds fmuls fstps	__asm__ volatile("flds %1\n\tfadds %2\n\tfmuls %3\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b), "m"(c) : "st");
-site	src/game/d3d_draw.cpp	120	asm	x87	live	fildl %1	fildl fmuls fstps fsubrs	__asm__ volatile("fildl %1\n\tfmuls %2\n\tfsubrs %3\n\tfmuls %4\n\tfstps %0"
-site	src/game/d3d_draw.cpp	125	asm	x87	live	fildl %1	fadds fildl fmuls fstps	__asm__ volatile("fildl %1\n\tfmuls %2\n\tfadds %3\n\tfmuls %4\n\tfstps %0"
-site	src/game/d3d_draw.cpp	135	asm	x87	live	flds %1	fidivl flds fstps	__asm__ volatile("flds %1\n\tfidivl %2\n\tfstps %0" : "=m"(r) : "m"(k), "m"(n) : "st");
-site	src/game/d3d_draw.cpp	141	asm	x87	live	fildl %1	fidivl fildl fstps fsubs	__asm__ volatile("fildl %1\n\tfsubs %2\n\tfidivl %3\n\tfstps %0" : "=m"(r) : "m"(e), "m"(k), "m"(n) : "st");
-site	src/game/d3d_draw.cpp	150	long	l	live	long	-	using Com1 = long(__stdcall*)(void*);
-site	src/game/d3d_draw.cpp	151	long	l	live	long	-	using Com3 = long(__stdcall*)(void*, U, U);
-site	src/game/d3d_draw.cpp	152	long	l	live	long	-	using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
-site	src/game/d3d_draw.cpp	154	long	l	live	long	-	long SetRenderState(U state, U value) {
-site	src/game/d3d_draw.cpp	158	long	l	live	long	-	long SetTexture(U stage, U texture) {
-site	src/game/d3d_draw.cpp	162	long	l	live	long	-	long Scene(U offset) {
-site	src/game/d3d_draw.cpp	167	long	l	live	long	-	long DrawVertices(U type, U count) {
-site	src/game/d3d_draw.cpp	204	long	ul	live	unsigned long	-	void D3d_PrimColor(unsigned r, unsigned g, unsigned b, unsigned code, unsigned mode, unsigned long* diffuse,
-site	src/game/d3d_draw.cpp	205	long	ul	live	unsigned long	-	unsigned long* specular) {
-site	src/game/d3d_draw.cpp	265	long	l	live	long	-	long D3d_BindTexture(unsigned tpage, unsigned clut) {
-site	src/game/d3d_draw.cpp	293	uintptr	-	live	std::uintptr_t	-	render::NoteDirectPage(reinterpret_cast<void*>(static_cast<std::uintptr_t>(texture)),
-site	src/game/d3d_draw.cpp	293	widen	param	live	texture	void*	render::NoteDirectPage(reinterpret_cast<void*>(static_cast<std::uintptr_t>(texture)),
-site	src/game/d3d_draw.cpp	309	long	l	live	long	-	long D3d_DrawPolyFT4(const unsigned char* prim) {
-site	src/game/d3d_draw.cpp	310	long	ul	live	unsigned long	-	unsigned long diffuse, specular;
-site	src/game/d3d_draw.cpp	331	long	l	live	long	-	long D3d_DrawPolyGT4(const unsigned char* prim) {
-site	src/game/d3d_draw.cpp	332	long	ul	live	unsigned long	-	unsigned long diffuse[4], specular[4];
-site	src/game/d3d_draw.cpp	358	long	l	live	long	-	long DrawLines(const unsigned char* prim, U corners) {
-site	src/game/d3d_draw.cpp	360	long	ul	live	unsigned long	-	unsigned long diffuse;
-site	src/game/d3d_draw.cpp	378	long	l	live	long	-	long D3d_DrawLineF2(const unsigned char* prim) { return DrawLines(prim, 2); }
-site	src/game/d3d_draw.cpp	382	long	l	live	long	-	long D3d_DrawLineF4(const unsigned char* prim) { return DrawLines(prim, 4); }
-site	src/game/d3d_draw.cpp	389	long	l	live	long	-	long D3d_DrawTile(const unsigned char* prim) {
-site	src/game/d3d_draw.cpp	391	long	ul	live	unsigned long	-	unsigned long diffuse;
-site	src/game/d3d_draw.cpp	427	long	l	live	long	-	long D3d_DrawCellSprite(const unsigned char* prim) {
-site	src/game/d3d_draw.cpp	428	long	ul	live	unsigned long	-	unsigned long diffuse, specular;
-site	src/game/d3d_draw.cpp	522	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(Frame_Counter),
-site	src/game/d3d_draw.cpp	536	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(Frame_Counter),
+site	src/game/d3d_draw.cpp	49	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(kRetOnly.v))),
+site	src/game/d3d_draw.cpp	63	uintptr	-	live	std::uintptr_t	-	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/d3d_draw.cpp	63	widen	param	live	address	unsigned char*	unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/d3d_draw.cpp	97	asm	x87	live	flds %1	flds fmuls fstps	__asm__ volatile("flds %1\n\tfmuls %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
+site	src/game/d3d_draw.cpp	103	asm	x87	live	flds %1	fdivs flds fstps	__asm__ volatile("flds %1\n\tfdivs %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b) : "st");
+site	src/game/d3d_draw.cpp	109	asm	x87	live	flds %1	flds fstps	__asm__ volatile("flds %1\n\tfstps %0" : "=m"(r) : "m"(a) : "st");
+site	src/game/d3d_draw.cpp	115	asm	x87	live	flds %1	fadds flds fmuls fstps	__asm__ volatile("flds %1\n\tfadds %2\n\tfmuls %3\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b), "m"(c) : "st");
+site	src/game/d3d_draw.cpp	122	asm	x87	live	fildl %1	fildl fmuls fstps fsubrs	__asm__ volatile("fildl %1\n\tfmuls %2\n\tfsubrs %3\n\tfmuls %4\n\tfstps %0"
+site	src/game/d3d_draw.cpp	127	asm	x87	live	fildl %1	fadds fildl fmuls fstps	__asm__ volatile("fildl %1\n\tfmuls %2\n\tfadds %3\n\tfmuls %4\n\tfstps %0"
+site	src/game/d3d_draw.cpp	137	asm	x87	live	flds %1	fidivl flds fstps	__asm__ volatile("flds %1\n\tfidivl %2\n\tfstps %0" : "=m"(r) : "m"(k), "m"(n) : "st");
+site	src/game/d3d_draw.cpp	143	asm	x87	live	fildl %1	fidivl fildl fstps fsubs	__asm__ volatile("fildl %1\n\tfsubs %2\n\tfidivl %3\n\tfstps %0" : "=m"(r) : "m"(e), "m"(k), "m"(n) : "st");
+site	src/game/d3d_draw.cpp	152	long	l	live	long	-	using Com1 = long(__stdcall*)(void*);
+site	src/game/d3d_draw.cpp	153	long	l	live	long	-	using Com3 = long(__stdcall*)(void*, U, U);
+site	src/game/d3d_draw.cpp	154	long	l	live	long	-	using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
+site	src/game/d3d_draw.cpp	156	long	l	live	long	-	long SetRenderState(U state, U value) {
+site	src/game/d3d_draw.cpp	160	long	l	live	long	-	long SetTexture(U stage, U texture) {
+site	src/game/d3d_draw.cpp	164	long	l	live	long	-	long Scene(U offset) {
+site	src/game/d3d_draw.cpp	169	long	l	live	long	-	long DrawVertices(U type, U count) {
+site	src/game/d3d_draw.cpp	234	long	ul	live	unsigned long	-	void D3d_PrimColor(unsigned r, unsigned g, unsigned b, unsigned code, unsigned mode, unsigned long* diffuse,
+site	src/game/d3d_draw.cpp	235	long	ul	live	unsigned long	-	unsigned long* specular) {
+site	src/game/d3d_draw.cpp	295	long	l	live	long	-	long D3d_BindTexture(unsigned tpage, unsigned clut) {
+site	src/game/d3d_draw.cpp	323	uintptr	-	live	std::uintptr_t	-	render::NoteDirectPage(reinterpret_cast<void*>(static_cast<std::uintptr_t>(texture)),
+site	src/game/d3d_draw.cpp	323	widen	param	live	texture	void*	render::NoteDirectPage(reinterpret_cast<void*>(static_cast<std::uintptr_t>(texture)),
+site	src/game/d3d_draw.cpp	339	long	l	live	long	-	long D3d_DrawPolyFT4(const unsigned char* prim) {
+site	src/game/d3d_draw.cpp	340	long	ul	live	unsigned long	-	unsigned long diffuse, specular;
+site	src/game/d3d_draw.cpp	362	long	l	live	long	-	long D3d_DrawPolyGT4(const unsigned char* prim) {
+site	src/game/d3d_draw.cpp	363	long	ul	live	unsigned long	-	unsigned long diffuse[4], specular[4];
+site	src/game/d3d_draw.cpp	390	long	l	live	long	-	long DrawLines(const unsigned char* prim, U corners) {
+site	src/game/d3d_draw.cpp	392	long	ul	live	unsigned long	-	unsigned long diffuse;
+site	src/game/d3d_draw.cpp	410	long	l	live	long	-	long D3d_DrawLineF2(const unsigned char* prim) { return DrawLines(prim, 2); }
+site	src/game/d3d_draw.cpp	414	long	l	live	long	-	long D3d_DrawLineF4(const unsigned char* prim) { return DrawLines(prim, 4); }
+site	src/game/d3d_draw.cpp	421	long	l	live	long	-	long D3d_DrawTile(const unsigned char* prim) {
+site	src/game/d3d_draw.cpp	423	long	ul	live	unsigned long	-	unsigned long diffuse;
+site	src/game/d3d_draw.cpp	459	long	l	live	long	-	long D3d_DrawCellSprite(const unsigned char* prim) {
+site	src/game/d3d_draw.cpp	460	long	ul	live	unsigned long	-	unsigned long diffuse, specular;
+site	src/game/d3d_draw.cpp	554	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(Frame_Counter),
+site	src/game/d3d_draw.cpp	568	long	ul	live	unsigned long	-	bof3::Log(" ", static_cast<unsigned long>(Frame_Counter),
+site	src/game/d3d_draw.cpp	642	narrow	object_ours	live	&g_quad_far	-	bof3::PatchBytes(" ", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_quad_far)), &was, &is, 1);
+site	src/game/d3d_draw.cpp	642	uintptr	-	live	std::uintptr_t	-	bof3::PatchBytes(" ", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_quad_far)), &was, &is, 1);
 site	src/game/d3d_draw_callees.h	43	long	ul	live	unsigned long	-	unsigned long* diffuse, unsigned long* specular);
 site	src/game/d3d_draw_callees.h	43	long	ul	live	unsigned long	-	unsigned long* diffuse, unsigned long* specular);
 site	src/game/d3d_draw_callees.h	44	long	l	live	long	-	long (__cdecl* bind_texture)(unsigned tpage, unsigned clut);
@@ -2377,6 +2379,7 @@ site	src/game/draw_layers.cpp	63	long	ul	live	unsigned long	-	static unsigned lo
 site	src/game/draw_layers.cpp	66	long	ul	live	unsigned long	-	const unsigned long saved_scratch = Scratch_Swap;
 site	src/game/draw_layers.cpp	74	long	ul	live	unsigned long	-	const unsigned long scratch_in = Rng();
 site	src/game/draw_layers.cpp	80	long	ul	live	unsigned long	-	const unsigned long their_scratch = Scratch_Swap;
+site	src/game/draw_layers.cpp	86	long	ul	live	unsigned long	-	round, DrawTable_Count, their_scratch, static_cast<unsigned long>(Scratch_Swap));
 site	src/game/draw_layers.cpp	129	long	ul	live	unsigned long	-	const unsigned long a = DrawTable[i], b = DrawTable[j];
 site	src/game/draw_pass.cpp	34	long	ul	live	unsigned long	-	using AddRecordsFn = unsigned (__cdecl*)(unsigned long*);
 site	src/game/draw_pass.cpp	42	long	ul	live	unsigned long	-	unsigned long* FrameNode(unsigned layer) { return reinterpret_cast<unsigned long*>(&Gfx_FrameNodes) + (Gfx_BufferIndex + layer * 6u) * 2u; }
@@ -3944,35 +3947,35 @@ site	src/game/event_ops.cpp	552	long	l	live	long	-	const auto slope = static_cas
 site	src/game/event_ops.cpp	552	long	l	live	long	-	const auto slope = static_cast<short>(g.slope_at(static_cast<long>(x), static_cast<long>(z),
 site	src/game/event_ops.cpp	586	long	l	live	long	-	const auto slope = static_cast<short>(g.slope_at(static_cast<long>(x), static_cast<long>(z),
 site	src/game/event_ops.cpp	586	long	l	live	long	-	const auto slope = static_cast<short>(g.slope_at(static_cast<long>(x), static_cast<long>(z),
-site	src/game/event_ops.cpp	949	long	l	live	long	-	unsigned char r = g.object_ahead(static_cast<long>(StepX(left) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x)),
-site	src/game/event_ops.cpp	950	long	l	live	long	-	static_cast<long>(StepZ(left) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z)), left);
-site	src/game/event_ops.cpp	957	long	l	live	long	-	r = g.object_ahead(static_cast<long>(StepX(right) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x)),
-site	src/game/event_ops.cpp	958	long	l	live	long	-	static_cast<long>(StepZ(right) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z)), right);
-site	src/game/event_ops.cpp	965	long	l	live	long	-	return g.object_ahead(static_cast<long>(StepX(ahead) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x)),
-site	src/game/event_ops.cpp	966	long	l	live	long	-	static_cast<long>(StepZ(ahead) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z)), ahead);
-site	src/game/event_ops.cpp	982	long	l	live	long	-	return g.object_ahead(static_cast<long>(x), static_cast<long>(z), sc[8]);
-site	src/game/event_ops.cpp	982	long	l	live	long	-	return g.object_ahead(static_cast<long>(x), static_cast<long>(z), sc[8]);
-site	src/game/event_ops.cpp	991	long	l	live	long	-	extern " " unsigned char __cdecl Field_ObjectInPath(long x, long z, unsigned) {
-site	src/game/event_ops.cpp	991	long	l	live	long	-	extern " " unsigned char __cdecl Field_ObjectInPath(long x, long z, unsigned) {
-site	src/game/event_ops.cpp	1215	long	l	live	long	-	const long z = static_cast<std::int32_t>(AreaEntry_PendingZ);
-site	src/game/event_ops.cpp	1216	long	l	live	long	-	const long x = at::kExitX;
-site	src/game/event_ops.cpp	1234	long	l	live	long	-	const long z = rv::As<records::SpriteObject>(sc)->z;
-site	src/game/event_ops.cpp	1240	long	l	live	long	-	const long exit_z = static_cast<std::int32_t>(AreaEntry_PendingZ);
-site	src/game/event_ops.cpp	1242	long	l	live	long	-	const long exit_x = at::kExitX;
-site	src/game/event_ops.cpp	1271	long	l	live	long	-	auto height = static_cast<short>(g.ground_at(static_cast<long>(x), static_cast<long>(z)));
-site	src/game/event_ops.cpp	1271	long	l	live	long	-	auto height = static_cast<short>(g.ground_at(static_cast<long>(x), static_cast<long>(z)));
-site	src/game/event_ops.cpp	1302	long	l	live	long	-	extern " " unsigned char __cdecl Scenario_NoHook(long, long) { return 0; }
-site	src/game/event_ops.cpp	1302	long	l	live	long	-	extern " " unsigned char __cdecl Scenario_NoHook(long, long) { return 0; }
-site	src/game/event_ops.cpp	1308	long	l	live	long	-	extern " " int __cdecl Scenario_StepHook(long x, long z) {
-site	src/game/event_ops.cpp	1308	long	l	live	long	-	extern " " int __cdecl Scenario_StepHook(long x, long z) {
-site	src/game/event_ops.cpp	1319	long	l	live	long	-	extern " " int __cdecl Scenario_ArriveHook(long x, long z) {
-site	src/game/event_ops.cpp	1319	long	l	live	long	-	extern " " int __cdecl Scenario_ArriveHook(long x, long z) {
-site	src/game/event_ops.cpp	1352	long	l	live	long	-	extern " " int __cdecl Area_StepHook(long x, long z) {
-site	src/game/event_ops.cpp	1352	long	l	live	long	-	extern " " int __cdecl Area_StepHook(long x, long z) {
-site	src/game/event_ops.cpp	1373	long	l	live	long	-	extern " " unsigned char __cdecl Area_ReturnGate(long x, long z) {
-site	src/game/event_ops.cpp	1373	long	l	live	long	-	extern " " unsigned char __cdecl Area_ReturnGate(long x, long z) {
-site	src/game/event_ops.cpp	1390	long	l	live	long	-	extern " " int __cdecl Area_ArriveHook(long x, long z) {
-site	src/game/event_ops.cpp	1390	long	l	live	long	-	extern " " int __cdecl Area_ArriveHook(long x, long z) {
+site	src/game/event_ops.cpp	963	long	l	live	long	-	unsigned char r = g.object_ahead(static_cast<long>(StepX(left) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x)),
+site	src/game/event_ops.cpp	964	long	l	live	long	-	static_cast<long>(StepZ(left) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z)), left);
+site	src/game/event_ops.cpp	971	long	l	live	long	-	r = g.object_ahead(static_cast<long>(StepX(right) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x)),
+site	src/game/event_ops.cpp	972	long	l	live	long	-	static_cast<long>(StepZ(right) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z)), right);
+site	src/game/event_ops.cpp	979	long	l	live	long	-	return g.object_ahead(static_cast<long>(StepX(ahead) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x)),
+site	src/game/event_ops.cpp	980	long	l	live	long	-	static_cast<long>(StepZ(ahead) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z)), ahead);
+site	src/game/event_ops.cpp	996	long	l	live	long	-	return g.object_ahead(static_cast<long>(x), static_cast<long>(z), sc[8]);
+site	src/game/event_ops.cpp	996	long	l	live	long	-	return g.object_ahead(static_cast<long>(x), static_cast<long>(z), sc[8]);
+site	src/game/event_ops.cpp	1005	long	l	live	long	-	extern " " unsigned char __cdecl Field_ObjectInPath(long x, long z, unsigned) {
+site	src/game/event_ops.cpp	1005	long	l	live	long	-	extern " " unsigned char __cdecl Field_ObjectInPath(long x, long z, unsigned) {
+site	src/game/event_ops.cpp	1229	long	l	live	long	-	const long z = static_cast<std::int32_t>(AreaEntry_PendingZ);
+site	src/game/event_ops.cpp	1230	long	l	live	long	-	const long x = at::kExitX;
+site	src/game/event_ops.cpp	1248	long	l	live	long	-	const long z = rv::As<records::SpriteObject>(sc)->z;
+site	src/game/event_ops.cpp	1254	long	l	live	long	-	const long exit_z = static_cast<std::int32_t>(AreaEntry_PendingZ);
+site	src/game/event_ops.cpp	1256	long	l	live	long	-	const long exit_x = at::kExitX;
+site	src/game/event_ops.cpp	1285	long	l	live	long	-	auto height = static_cast<short>(g.ground_at(static_cast<long>(x), static_cast<long>(z)));
+site	src/game/event_ops.cpp	1285	long	l	live	long	-	auto height = static_cast<short>(g.ground_at(static_cast<long>(x), static_cast<long>(z)));
+site	src/game/event_ops.cpp	1316	long	l	live	long	-	extern " " unsigned char __cdecl Scenario_NoHook(long, long) { return 0; }
+site	src/game/event_ops.cpp	1316	long	l	live	long	-	extern " " unsigned char __cdecl Scenario_NoHook(long, long) { return 0; }
+site	src/game/event_ops.cpp	1322	long	l	live	long	-	extern " " int __cdecl Scenario_StepHook(long x, long z) {
+site	src/game/event_ops.cpp	1322	long	l	live	long	-	extern " " int __cdecl Scenario_StepHook(long x, long z) {
+site	src/game/event_ops.cpp	1333	long	l	live	long	-	extern " " int __cdecl Scenario_ArriveHook(long x, long z) {
+site	src/game/event_ops.cpp	1333	long	l	live	long	-	extern " " int __cdecl Scenario_ArriveHook(long x, long z) {
+site	src/game/event_ops.cpp	1366	long	l	live	long	-	extern " " int __cdecl Area_StepHook(long x, long z) {
+site	src/game/event_ops.cpp	1366	long	l	live	long	-	extern " " int __cdecl Area_StepHook(long x, long z) {
+site	src/game/event_ops.cpp	1387	long	l	live	long	-	extern " " unsigned char __cdecl Area_ReturnGate(long x, long z) {
+site	src/game/event_ops.cpp	1387	long	l	live	long	-	extern " " unsigned char __cdecl Area_ReturnGate(long x, long z) {
+site	src/game/event_ops.cpp	1404	long	l	live	long	-	extern " " int __cdecl Area_ArriveHook(long x, long z) {
+site	src/game/event_ops.cpp	1404	long	l	live	long	-	extern " " int __cdecl Area_ArriveHook(long x, long z) {
 site	src/game/event_ops_callees.h	108	long	l	live	long	-	using Hook = unsigned char (__cdecl*)(long, long);
 site	src/game/event_ops_callees.h	108	long	l	live	long	-	using Hook = unsigned char (__cdecl*)(long, long);
 site	src/game/event_ops_callees.h	131	long	l	live	long	-	unsigned char (__cdecl* object_ahead)(long, long, unsigned);
@@ -7874,38 +7877,38 @@ site	src/game/rest_3d.cpp	660	widen	param	live	DragonCmd_Parts[part]	Part [fn]	c
 site	src/game/rest_3d_fuzz.cpp	41	narrow	helper_def	fuzz	p	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/rest_3d_fuzz.cpp	41	uintptr	-	fuzz	std::uintptr_t	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/rest_3d_fuzz.cpp	42	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(f)	Key	template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
-site	src/game/rest_3e.cpp	83	asm	x87	live	flds %1	flds	__asm__("flds %1" : "=t"(r) : "m"(*static_cast<const float*>(p)));
-site	src/game/rest_3e.cpp	99	long	l	live	long	-	const long* Point(const unsigned char* p) { return reinterpret_cast<const long*>(p); }
-site	src/game/rest_3e.cpp	99	long	l	live	long	-	const long* Point(const unsigned char* p) { return reinterpret_cast<const long*>(p); }
-site	src/game/rest_3e.cpp	112	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<scenario_harness::Handler>(static_cast<std::uintptr_t>(UL(static_cast<const unsigned char*>(table) + 4 * state)))();
-site	src/game/rest_3e.cpp	112	widen	word_read	live	UL(static_cast<const unsigned char*>(table) + 4 * state)	scenario_harness::Handler [fn]	reinterpret_cast<scenario_harness::Handler>(static_cast<std::uintptr_t>(UL(static_cast<const unsigned char*>(table) + 4 * state)))();
-site	src/game/rest_3e.cpp	192	uintptr	-	live	std::uintptr_t	-	std::int32_t n = static_cast<std::int8_t>(reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::EffectObject>(s)->frames))[0]) *
-site	src/game/rest_3e.cpp	192	widen	other	live	rv::As<records::EffectObject>(s)->frames	unsigned char*	std::int32_t n = static_cast<std::int8_t>(reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::EffectObject>(s)->frames))[0]) *
-site	src/game/rest_3e.cpp	196	uintptr	-	live	std::uintptr_t	-	*to++ = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::EffectObject>(s)->script))[0];
-site	src/game/rest_3e.cpp	196	widen	other	live	rv::As<records::EffectObject>(s)->script	unsigned char*	*to++ = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::EffectObject>(s)->script))[0];
-site	src/game/rest_3e.cpp	250	long	l	live	long	-	long v[3] = {0, 0, 0};
-site	src/game/rest_3e.cpp	251	long	l	live	long	-	long out[3];
-site	src/game/rest_3e.cpp	256	long	l	live	long	-	case 1: v[0] = static_cast<long>(c); v[1] = static_cast<long>(s); break;
-site	src/game/rest_3e.cpp	256	long	l	live	long	-	case 1: v[0] = static_cast<long>(c); v[1] = static_cast<long>(s); break;
-site	src/game/rest_3e.cpp	257	long	l	live	long	-	case 2: v[0] = static_cast<long>(c); v[1] = 0; break;
-site	src/game/rest_3e.cpp	258	long	l	live	long	-	default: v[0] = static_cast<long>(c); v[1] = static_cast<long>(0u - s); break;
-site	src/game/rest_3e.cpp	258	long	l	live	long	-	default: v[0] = static_cast<long>(c); v[1] = static_cast<long>(0u - s); break;
-site	src/game/rest_3e.cpp	425	uintptr	-	live	std::uintptr_t	-	static_cast<std::uintptr_t>(UL(reinterpret_cast<const unsigned char*>(EffectGlowSparks_States) + 4 * state)))(k);
-site	src/game/rest_3e.cpp	596	long	l	live	long	-	std::int32_t root = static_cast<std::int32_t>(SH_AT(long (__cdecl*)(long), at::kSqrt.v)(static_cast<long>(dot)));
-site	src/game/rest_3e.cpp	596	long	l	live	long	-	std::int32_t root = static_cast<std::int32_t>(SH_AT(long (__cdecl*)(long), at::kSqrt.v)(static_cast<long>(dot)));
-site	src/game/rest_3e.cpp	596	long	l	live	long	-	std::int32_t root = static_cast<std::int32_t>(SH_AT(long (__cdecl*)(long), at::kSqrt.v)(static_cast<long>(dot)));
-site	src/game/rest_3e.cpp	618	long	l	live	long	-	SH_CALL(Gte_VectorNormal)(Point(spiral + 0xD14), reinterpret_cast<long*>(spiral + 0xD14));
-site	src/game/rest_3e.cpp	769	long	l	live	long	-	const U ground = static_cast<U>(static_cast<std::int16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(z)))) << 16;
-site	src/game/rest_3e.cpp	769	long	l	live	long	-	const U ground = static_cast<U>(static_cast<std::int16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(z)))) << 16;
-site	src/game/rest_3e.cpp	855	long	l	live	long	-	SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(UL(dust + 8)))))
-site	src/game/rest_3e.cpp	855	long	l	live	long	-	SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(UL(dust + 8)))))
-site	src/game/rest_3e.cpp	866	long	l	live	long	-	SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(UL(dust + 8)))))
-site	src/game/rest_3e.cpp	866	long	l	live	long	-	SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(UL(dust + 8)))))
-site	src/game/rest_3e.cpp	1382	uintptr	-	live	std::uintptr_t	-	const auto* text = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(UL(::bof3::Img(kStandIns.v) + 4 * s)));
-site	src/game/rest_3e.cpp	1382	widen	word_read	live	UL(::bof3::Img(kStandIns.v) + 4 * s)	const unsigned char*	const auto* text = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(UL(::bof3::Img(kStandIns.v) + 4 * s)));
-site	src/game/rest_3e.cpp	1635	long	l	live	long	-	SH_AT(void (__cdecl*)(const long*, unsigned, unsigned, unsigned), at::kR3FRing.v)(Point(S() + 0x34), 0x20, 8, last);
-site	src/game/rest_3e.cpp	1701	long	l	live	long	-	SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x)), static_cast<long>(static_cast<std::uint32_t>(rv
-site	src/game/rest_3e.cpp	1701	long	l	live	long	-	SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x)), static_cast<long>(static_cast<std::uint32_t>(rv
+site	src/game/rest_3e.cpp	88	asm	x87	live	flds %1	flds	__asm__("flds %1" : "=t"(r) : "m"(*static_cast<const float*>(p)));
+site	src/game/rest_3e.cpp	104	long	l	live	long	-	const long* Point(const unsigned char* p) { return reinterpret_cast<const long*>(p); }
+site	src/game/rest_3e.cpp	104	long	l	live	long	-	const long* Point(const unsigned char* p) { return reinterpret_cast<const long*>(p); }
+site	src/game/rest_3e.cpp	117	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<scenario_harness::Handler>(static_cast<std::uintptr_t>(UL(static_cast<const unsigned char*>(table) + 4 * state)))();
+site	src/game/rest_3e.cpp	117	widen	word_read	live	UL(static_cast<const unsigned char*>(table) + 4 * state)	scenario_harness::Handler [fn]	reinterpret_cast<scenario_harness::Handler>(static_cast<std::uintptr_t>(UL(static_cast<const unsigned char*>(table) + 4 * state)))();
+site	src/game/rest_3e.cpp	197	uintptr	-	live	std::uintptr_t	-	std::int32_t n = static_cast<std::int8_t>(reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::EffectObject>(s)->frames))[0]) *
+site	src/game/rest_3e.cpp	197	widen	other	live	rv::As<records::EffectObject>(s)->frames	unsigned char*	std::int32_t n = static_cast<std::int8_t>(reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::EffectObject>(s)->frames))[0]) *
+site	src/game/rest_3e.cpp	201	uintptr	-	live	std::uintptr_t	-	*to++ = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::EffectObject>(s)->script))[0];
+site	src/game/rest_3e.cpp	201	widen	other	live	rv::As<records::EffectObject>(s)->script	unsigned char*	*to++ = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::EffectObject>(s)->script))[0];
+site	src/game/rest_3e.cpp	255	long	l	live	long	-	long v[3] = {0, 0, 0};
+site	src/game/rest_3e.cpp	256	long	l	live	long	-	long out[3];
+site	src/game/rest_3e.cpp	261	long	l	live	long	-	case 1: v[0] = static_cast<long>(c); v[1] = static_cast<long>(s); break;
+site	src/game/rest_3e.cpp	261	long	l	live	long	-	case 1: v[0] = static_cast<long>(c); v[1] = static_cast<long>(s); break;
+site	src/game/rest_3e.cpp	262	long	l	live	long	-	case 2: v[0] = static_cast<long>(c); v[1] = 0; break;
+site	src/game/rest_3e.cpp	263	long	l	live	long	-	default: v[0] = static_cast<long>(c); v[1] = static_cast<long>(0u - s); break;
+site	src/game/rest_3e.cpp	263	long	l	live	long	-	default: v[0] = static_cast<long>(c); v[1] = static_cast<long>(0u - s); break;
+site	src/game/rest_3e.cpp	430	uintptr	-	live	std::uintptr_t	-	static_cast<std::uintptr_t>(UL(reinterpret_cast<const unsigned char*>(EffectGlowSparks_States) + 4 * state)))(k);
+site	src/game/rest_3e.cpp	601	long	l	live	long	-	std::int32_t root = static_cast<std::int32_t>(SH_AT(long (__cdecl*)(long), at::kSqrt.v)(static_cast<long>(dot)));
+site	src/game/rest_3e.cpp	601	long	l	live	long	-	std::int32_t root = static_cast<std::int32_t>(SH_AT(long (__cdecl*)(long), at::kSqrt.v)(static_cast<long>(dot)));
+site	src/game/rest_3e.cpp	601	long	l	live	long	-	std::int32_t root = static_cast<std::int32_t>(SH_AT(long (__cdecl*)(long), at::kSqrt.v)(static_cast<long>(dot)));
+site	src/game/rest_3e.cpp	623	long	l	live	long	-	SH_CALL(Gte_VectorNormal)(Point(spiral + 0xD14), reinterpret_cast<long*>(spiral + 0xD14));
+site	src/game/rest_3e.cpp	774	long	l	live	long	-	const U ground = static_cast<U>(static_cast<std::int16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(z)))) << 16;
+site	src/game/rest_3e.cpp	774	long	l	live	long	-	const U ground = static_cast<U>(static_cast<std::int16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(z)))) << 16;
+site	src/game/rest_3e.cpp	860	long	l	live	long	-	SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(UL(dust + 8)))))
+site	src/game/rest_3e.cpp	860	long	l	live	long	-	SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(UL(dust + 8)))))
+site	src/game/rest_3e.cpp	871	long	l	live	long	-	SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(UL(dust + 8)))))
+site	src/game/rest_3e.cpp	871	long	l	live	long	-	SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(UL(dust + 8)))))
+site	src/game/rest_3e.cpp	1412	uintptr	-	live	std::uintptr_t	-	const auto* text = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(UL(::bof3::Img(kStandIns.v) + 4 * s)));
+site	src/game/rest_3e.cpp	1412	widen	word_read	live	UL(::bof3::Img(kStandIns.v) + 4 * s)	const unsigned char*	const auto* text = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(UL(::bof3::Img(kStandIns.v) + 4 * s)));
+site	src/game/rest_3e.cpp	1667	long	l	live	long	-	SH_AT(void (__cdecl*)(const long*, unsigned, unsigned, unsigned), at::kR3FRing.v)(Point(S() + 0x34), 0x20, 8, last);
+site	src/game/rest_3e.cpp	1733	long	l	live	long	-	SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x)), static_cast<long>(static_cast<std::uint32_t>(rv
+site	src/game/rest_3e.cpp	1733	long	l	live	long	-	SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x)), static_cast<long>(static_cast<std::uint32_t>(rv
 site	src/game/rest_3e_fuzz.cpp	43	narrow	helper_def	fuzz	p	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/rest_3e_fuzz.cpp	43	uintptr	-	fuzz	std::uintptr_t	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/rest_3e_fuzz.cpp	44	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(f)	Key	template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
@@ -8052,8 +8055,10 @@ site	src/game/rest_4a_fuzz.cpp	381	narrow_call	image_local	fuzz	script + 4 * (sh
 site	src/game/rest_4a_fuzz.cpp	382	narrow_call	image_local	fuzz	table	Key	SetUL(r + 4, Key(table));
 site	src/game/rest_4a_fuzz.cpp	394	narrow_call	image_local	fuzz	script + 4 * (sh::Next() % 12)	Key	SetUL(r + 8, Key(script + 4 * (sh::Next() % 12)));
 site	src/game/rest_4a_fuzz.cpp	552	narrow_call	image	fuzz	Field_Slots + 16 * g_slot	Key	case kClutCopy: a[0] = Key(Field_Slots + 16 * g_slot); break;
-site	src/game/rest_4b.cpp	83	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * static_cast<U>(index))))();
-site	src/game/rest_4b.cpp	83	widen	word_read	live	L(table + 4 * static_cast<U>(index))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * static_cast<U>(index))))();
+site	src/game/rest_4b.cpp	88	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * static_cast<U>(index))))();
+site	src/game/rest_4b.cpp	88	widen	word_read	live	L(table + 4 * static_cast<U>(index))	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * static_cast<U>(index))))();
+site	src/game/rest_4b.cpp	1782	narrow	object_ours	live	&g_faerie_name_end	-	bof3::PatchBytes(" ", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_faerie_name_end)), &was, &is, 1);
+site	src/game/rest_4b.cpp	1782	uintptr	-	live	std::uintptr_t	-	bof3::PatchBytes(" ", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_faerie_name_end)), &was, &is, 1);
 site	src/game/rest_4b_fuzz.cpp	38	narrow	helper_def	fuzz	p	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/rest_4b_fuzz.cpp	38	uintptr	-	fuzz	std::uintptr_t	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/rest_4b_fuzz.cpp	39	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(f)	Key	template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
@@ -8097,8 +8102,10 @@ site	src/game/rest_4d_fuzz.cpp	254	widen	param	fuzz	a[0]	unsigned char*	auto* co
 site	src/game/rest_4d_fuzz.cpp	421	narrow_call	image	fuzz	&Field_ConfirmButtons	Key	SetW(Key(&Field_ConfirmButtons), confirm);
 site	src/game/rest_4d_fuzz.cpp	422	narrow_call	image	fuzz	&Field_CancelButtons	Key	SetW(Key(&Field_CancelButtons), cancel);
 site	src/game/rest_4d_fuzz.cpp	425	narrow_call	image	fuzz	&Input_Held	Key	SetW(Key(&Input_Held), PickOf(0, 0, sh::Next()));
-site	src/game/rest_4e.cpp	153	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
-site	src/game/rest_4e.cpp	153	widen	word_read	live	L(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
+site	src/game/rest_4e.cpp	166	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
+site	src/game/rest_4e.cpp	166	widen	word_read	live	L(table + 4 * index)	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
+site	src/game/rest_4e.cpp	1430	narrow	object_ours	live	&g_faerie_name_end	-	bof3::PatchBytes(" ", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_faerie_name_end)), &was, &is, 1);
+site	src/game/rest_4e.cpp	1430	uintptr	-	live	std::uintptr_t	-	bof3::PatchBytes(" ", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_faerie_name_end)), &was, &is, 1);
 site	src/game/rest_4e_fuzz.cpp	165	narrow	helper_def	fuzz	p	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/rest_4e_fuzz.cpp	165	uintptr	-	fuzz	std::uintptr_t	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/rest_4e_fuzz.cpp	166	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(f)	Key	template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
@@ -13304,7 +13311,8 @@ file	src/game/crt_rest_fuzz.cpp	fuzz	widen	param	3
 file	src/game/d3d_draw.cpp	live	asm	x87	8
 file	src/game/d3d_draw.cpp	live	long	l	15
 file	src/game/d3d_draw.cpp	live	long	ul	9
-file	src/game/d3d_draw.cpp	live	uintptr	-	3
+file	src/game/d3d_draw.cpp	live	narrow	object_ours	1
+file	src/game/d3d_draw.cpp	live	uintptr	-	4
 file	src/game/d3d_draw.cpp	live	widen	param	2
 file	src/game/d3d_draw_callees.h	live	long	l	1
 file	src/game/d3d_draw_callees.h	live	long	ul	3
@@ -13386,7 +13394,7 @@ file	src/game/draw_emit.cpp	live	fmt_place	word	2
 file	src/game/draw_emit.cpp	live	long	ul	16
 file	src/game/draw_emit.cpp	live	uintptr	-	3
 file	src/game/draw_emit.cpp	live	widen	param	3
-file	src/game/draw_layers.cpp	live	long	ul	6
+file	src/game/draw_layers.cpp	live	long	ul	7
 file	src/game/draw_pass.cpp	live	long	ul	28
 file	src/game/draw_pass.cpp	live	uintptr	-	7
 file	src/game/draw_pass.cpp	live	widen	other	3
@@ -14932,7 +14940,8 @@ file	src/game/rest_4a_fuzz.cpp	fuzz	narrow_call	image	1
 file	src/game/rest_4a_fuzz.cpp	fuzz	narrow_call	image_local	4
 file	src/game/rest_4a_fuzz.cpp	fuzz	uintptr	-	2
 file	src/game/rest_4a_fuzz.cpp	fuzz	widen	param	1
-file	src/game/rest_4b.cpp	live	uintptr	-	1
+file	src/game/rest_4b.cpp	live	narrow	object_ours	1
+file	src/game/rest_4b.cpp	live	uintptr	-	2
 file	src/game/rest_4b.cpp	live	widen	word_read	1
 file	src/game/rest_4b_fuzz.cpp	fuzz	narrow	helper_def	1
 file	src/game/rest_4b_fuzz.cpp	fuzz	narrow_call	func_ours	1
@@ -14956,7 +14965,8 @@ file	src/game/rest_4d_fuzz.cpp	fuzz	narrow_call	func_ours	1
 file	src/game/rest_4d_fuzz.cpp	fuzz	narrow_call	image	3
 file	src/game/rest_4d_fuzz.cpp	fuzz	uintptr	-	2
 file	src/game/rest_4d_fuzz.cpp	fuzz	widen	param	1
-file	src/game/rest_4e.cpp	live	uintptr	-	1
+file	src/game/rest_4e.cpp	live	narrow	object_ours	1
+file	src/game/rest_4e.cpp	live	uintptr	-	2
 file	src/game/rest_4e.cpp	live	widen	word_read	1
 file	src/game/rest_4e_fuzz.cpp	fuzz	narrow	helper_def	1
 file	src/game/rest_4e_fuzz.cpp	fuzz	narrow_call	func_ours	1
@@ -15589,13 +15599,13 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	12612
-#count sites_live	8403
+#count sites	12619
+#count sites_live	8410
 #count sites_fuzz	4209
 #count fuzz_files	250
-#count narrow	353
-#count narrow_live	5
-#count narrow_live_files	5
+#count narrow	356
+#count narrow_live	8
+#count narrow_live_files	8
 #count narrow_fuzz	348
 #count narrow_fuzz_files	247
 #count narrow_crt	1
@@ -15610,9 +15620,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_image_local	41
 #count narrow_image_local_live	0
 #count narrow_image_local_live_files	0
-#count narrow_object_ours	5
-#count narrow_object_ours_live	0
-#count narrow_object_ours_live_files	0
+#count narrow_object_ours	8
+#count narrow_object_ours_live	3
+#count narrow_object_ours_live_files	3
 #count narrow_pool	23
 #count narrow_pool_live	0
 #count narrow_pool_live_files	0
@@ -15671,8 +15681,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count widen_word_read	190
 #count widen_word_read_live	181
 #count widen_word_read_live_files	141
-#count long	6969
-#count long_live	6224
+#count long	6970
+#count long_live	6225
 #count long_live_files	327
 #count long_fuzz	745
 #count long_fuzz_files	79
@@ -15688,8 +15698,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_l	3709
 #count long_l_live	3125
 #count long_l_live_files	263
-#count long_ul	1472
-#count long_ul_live	1311
+#count long_ul	1473
+#count long_ul_live	1312
 #count long_ul_live_files	214
 #count asm	312
 #count asm_live	191
@@ -15759,13 +15769,13 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count sizeof_ptr_-	12
 #count sizeof_ptr_-_live	12
 #count sizeof_ptr_-_live_files	7
-#count uintptr	1444
-#count uintptr_live	778
+#count uintptr	1447
+#count uintptr_live	781
 #count uintptr_live_files	302
 #count uintptr_fuzz	666
 #count uintptr_fuzz_files	249
-#count uintptr_-	1444
-#count uintptr_-_live	778
+#count uintptr_-	1447
+#count uintptr_-_live	781
 #count uintptr_-_live_files	302
 #count fmt_place	456
 #count fmt_place_live	386
@@ -15823,9 +15833,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_member_windows_object_live_files	1
 #count asm_live_x87_only_files	32
 #count widen_live_fnptr	230
-#count long_src	5181
-#count long_src_game	4682
-#count long_src_game_ul	1281
+#count long_src	5182
+#count long_src_game	4683
+#count long_src_game_ul	1282
 #count long_ctype	1788
 #count callconv_CALLBACK	17
 #count callconv_CALLBACK_fuzz	1
@@ -15841,8 +15851,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count img_place_Code	605
 #count img_place_Code_fuzz	6
 #count img_place_Code_live	599
-#count img_place_Img	14994
+#count img_place_Img	14993
 #count img_place_Img_fuzz	1070
-#count img_place_Img_live	13924
+#count img_place_Img_live	13923
 #count img_place_VaOf	53
 #count img_place_VaOf_live	53
