@@ -22,10 +22,13 @@ using namespace move_script;
 // No calls, every jump internal: a byte-copy runs against the same globals.
 // Both are called through CallFramed, which lays a 160-byte block out as the
 // stack at the call - x, y, the direction dword, then 148 bytes of "caller's
-// frame" - and copies it back, so that the argument slots the function
-// scribbles on and the bytes an unmasked corner index reads past them are
-// both inputs and compared outputs. One round: a point in or near a random
-// grid, a direction byte (0..15 mostly, any byte one round in eight); the
+// frame" - and copies it back, so that the bytes an unmasked corner index
+// reads past the corners (the direction dword's own) are inputs, and the
+// caller's frame a compared output. The three argument slots are not
+// compared: the original scribbles on them (its scratch), ours reads them as
+// parameters and leaves them (area_slope.cpp; the 64-bit build round, B2).
+// One round: a point in or near a random grid, a direction byte 0..15 (16 and
+// up reads the caller's stack in the original and is a Fatal in ours); the
 // area window, height base and scale re-drawn every 256 rounds - random, or a
 // constant fill (every cell flat) with a few bytes disturbed, so that the
 // flat tests' ties are common. Theirs, then ours from the same state; eax,
@@ -115,7 +118,7 @@ void SelfTest(SlopeFn theirs) {
         const std::uint32_t x = RandomCoordinate(AreaMap_Header[0]), y = RandomCoordinate(AreaMap_Header[1]);
         std::memcpy(input, &x, 4);
         std::memcpy(input + 4, &y, 4);
-        input[8] = static_cast<unsigned char>(Next() % 8 ? Next() % 16 : Next());
+        input[8] = static_cast<unsigned char>(Next() % 16);
         unsigned char scratch_in[4];
         for (auto& b : scratch_in) b = static_cast<unsigned char>(Next());
 
@@ -137,7 +140,8 @@ void SelfTest(SlopeFn theirs) {
             ++four;
             if (input[8] >= 8) ++past;
         }
-        if ((their != our || std::memcmp(their_block, our_block, kBlock) != 0 || std::memcmp(their_scratch, Scratch(), 4) != 0) &&
+        if ((their != our || std::memcmp(their_block + 12, our_block + 12, kBlock - 12) != 0 ||
+             std::memcmp(their_scratch, Scratch(), 4) != 0) &&
             ++bad <= 8)
             bof3::Log("shadow      area_slope self-test MISMATCH: round %u, (%08X, %08X, %02X), %08lX / %08lX, flag %u / %u", round,
                       (unsigned)x, (unsigned)y, input[8], their, our, their_scratch[0], Scratch()[0]);
@@ -148,7 +152,7 @@ void SelfTest(SlopeFn theirs) {
     std::memcpy(Scratch(), saved_scratch, 4);
     bof3::Log("shadow      area_slope self-test: %u rounds (%u outside the grid; whole cells %u; one half %u flat / %u sloped; "
               "both halves %u flat / %u sloped, %u of them with a corner index past the four), %u MISMATCHES; eax, scratch "
-              "bytes and the 160 bytes of argument slots and caller's frame compared",
+              "bytes and the 148 bytes of caller's frame compared",
               kRounds, outside, whole, edge_flat, edge, four_flat, four, past, bad);
     if (bad) bof3::Fatal("AreaMap_Slope differs from the original in %u of %u self-test rounds", bad, kRounds);
 }
