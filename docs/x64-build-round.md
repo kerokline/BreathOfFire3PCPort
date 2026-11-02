@@ -604,6 +604,38 @@ exe host and the moved base (`0xA00000`, the fence 0x58F000 bytes reserved, 0 he
 re-run on it by the coordinator the same night, each ending "self-test only:
 done" (`x641101/round/st2_*.log`). **Wave 2 launched** off it: B2 on `x64/b2`, the brief `x641101\b2\BRIEF.md`.
 
+### Stage B wave 2 as run (2026-11-02 morning, B2 on `x64/b2`, tip `e5ab60e2`, merged; report `x641101/b2/REPORT.md`)
+
+Eight commits, one per item: **437 two-cast narrowings in 270 live files
+through `Low32(p)`**, `rest_1c.cpp`'s 28 casts as `Img(X_addr)`, `Low32` on
+x86-64 a template over pointer types (function pointers reach it), `Slot32`'s
+store and `sound_sdl`'s and `wav_dump`'s local checks folded in (0 differ);
+**the one site where `Low32` fires by the design's placement**: `Game_Clock`'s
+`expected` bytes from the slot's word instead of `&GetTickCount` (design 4;
+the intended differ, `patch ON Game_Clock` in all three runs); `rdata_consts`
+reading DirectInput's 32-bit image layouts as word structs of its own,
+`gfx_clut`'s `pixels` and `gfx_texcache`'s cells as `Slot32` (the `gfx_clut`
+differ diagnosed to the self-test's row init and restored byte for byte by an
+aggregate spelling); **`AreaMap_Slope` reading its parameters** instead of
+its caller's frame through `__builtin_frame_address` (a `Fatal` for a count
+of 16 or more, no caller passes 8; the fuzz draws 0..15 and compares the
+return, the scratch and the caller's frame, 131,072 rounds 0 mismatches; no
+ledger entry: the behaviour is the same); the generated scalar ctypes
+`unsigned long` / `long` as `std::uint32_t` / `std::int32_t` (125 + 18; the
+count rows kept, since spelling them fails 23 objects on hand-written helpers
+- the remainder); the exit trace's registers through `CtxHex` by width, no
+`#if` in the game file; the 229 function-pointer widenings read and left (all
+game-table words, none a Windows address); the census re-run (`--check`
+clean, 5 narrow rows left, each explained); `using ::bof3::Low32;` at global
+scope on x86-64 (the first compile failed 311 objects on the unqualified
+name). Gates: `codegen_same.py` 650 objects, 4 differ (`game_clock`,
+`area_slope`, `area_slope_fuzz`, `win_main`, all intended); the hosted suite,
+the exe host and the moved base passed; **the `x86_64` compile: 0 of 380
+objects fail** (4 before). No game file carries a width `#if` outside B1's
+asm pairs. Left for the audit: the census wants a `low32` class (it no longer
+counts the narrowings), the `long` remainder (23 files), the global `using`
+shape, the exit trace's `%s` width.
+
 Stage B merges to `main` as a PR of its own when every group is in: the
 32-bit build is proved by its own gates, and the 64-bit build is not yet
 claimed.
