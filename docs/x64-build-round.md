@@ -599,8 +599,10 @@ high half. Stale text for the docs pass: `THIRD_PARTY.md` 2 ("no audio"),
 
 **The merged tree** (`ebc2416e`): builds; `codegen_same.py` against the stage
 A tip's build gives the 17 explained objects and no other; the hosted suite,
-the exe host and the moved base re-run on it by the coordinator (below, as
-run). **Wave 2 launched** off it: B2 on `x64/b2`, the brief `x641101\b2\BRIEF.md`.
+the hosted suite `'*'` (28,505 lines, 1,095 mismatch lines all 0, no FATAL), the
+exe host and the moved base (`0xA00000`, the fence 0x58F000 bytes reserved, 0 held)
+re-run on it by the coordinator the same night, each ending "self-test only:
+done" (`x641101/round/st2_*.log`). **Wave 2 launched** off it: B2 on `x64/b2`, the brief `x641101\b2\BRIEF.md`.
 
 Stage B merges to `main` as a PR of its own when every group is in: the
 32-bit build is proved by its own gates, and the 64-bit build is not yet
