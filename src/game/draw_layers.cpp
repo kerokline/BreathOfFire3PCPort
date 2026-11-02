@@ -83,7 +83,7 @@ void SelfTestSort(VoidFn theirs) {
         DrawTable_Sort();
         if ((std::memcmp(their_out, DrawTable, sizeof their_out) != 0 || their_scratch != Scratch_Swap) && ++bad <= 8)
             bof3::Log("shadow      DrawTable_Sort self-test MISMATCH round %u: count %u, scratch 0x%08lX vs ours 0x%08lX",
-                      round, DrawTable_Count, their_scratch, Scratch_Swap);
+                      round, DrawTable_Count, their_scratch, static_cast<unsigned long>(Scratch_Swap));
     }
     std::memcpy(DrawTable, saved, sizeof saved);
     DrawTable_Count = saved_count;

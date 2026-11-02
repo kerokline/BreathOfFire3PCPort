@@ -136,6 +136,18 @@ template <class P>
 #else
 #define Low32(p) (static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)))
 #endif
+}  // namespace bof3
+
+// The function's name at global scope on x86-64, as the macro's is on i686:
+// the sites write Low32(p) unqualified from every namespace (the game files,
+// the hook files, the render shim), and the two builds must read one
+// spelling (measured: 4,755 "use of undeclared identifier 'Low32'" in 311
+// objects of the first x86_64 compile of the narrowed tree, 2026-11-01).
+#if UINTPTR_MAX > 0xFFFFFFFFu
+using ::bof3::Low32;
+#endif
+
+namespace bof3 {
 
 // A heap block a word of the game may hold (docs/x64-build-design.md 5: the
 // chokepoint, Crt_malloc and Crt_calloc in crt_rest.cpp): the block itself,
