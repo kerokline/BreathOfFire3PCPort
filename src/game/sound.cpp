@@ -57,9 +57,9 @@ std::uint32_t Address(const volatile void* p) { return Low32(p); }
 // Win32 through the game's own import slots, as the originals call it.
 template <class Fn>
 Fn Import(std::uint32_t slot) {
-    Fn fn;
-    std::memcpy(&fn, At(slot), sizeof fn);
-    return fn;
+    std::uint32_t word;   // the import slot is a 32-bit word: Windows' function on i686, its thunk on x86-64 (design 4)
+    std::memcpy(&word, At(slot), sizeof word);
+    return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
 }
 void* __stdcall ImportCreateEvent(void* security, int manual, int initial, const char* name) {
     return Import<void* (__stdcall*)(void*, int, int, const char*)>(::bof3::Img(Sound_ImportCreateEvent_addr))(security, manual, initial, name);

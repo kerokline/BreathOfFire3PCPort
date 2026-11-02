@@ -282,7 +282,7 @@ TexCacheEntry g_find_in[kEntries], g_find_theirs[kEntries];
 
 void SelfTestFind(FindFn theirs) {
     constexpr unsigned kRounds = 6000;
-    struct Row { std::uint32_t generation; void* pixels; };
+    struct Row { std::uint32_t generation; ::bof3::Slot32<void> pixels; };   // gfx_clut.cpp's ClutRow: 8 bytes on every width
     auto* rows = reinterpret_cast<Row*>(Gfx_ClutRows);
     unsigned bad = 0, hits = 0, misses = 0, staled = 0, direct = 0;
     for (unsigned round = 0; round < kRounds; ++round) {
@@ -351,7 +351,7 @@ extern "C" int __cdecl Gfx_TexCacheFind(int page, int clut, int mode) {
             continue;
         }
         if (static_cast<int>(e.clut) != clut) continue;
-        struct Row { std::uint32_t generation; void* pixels; };
+        struct Row { std::uint32_t generation; ::bof3::Slot32<void> pixels; };   // gfx_clut.cpp's ClutRow: 8 bytes on every width
         if (e.generation != reinterpret_cast<const Row*>(Gfx_ClutRows)[clut >> 6].generation) e.state = 2;
         return i;
     }

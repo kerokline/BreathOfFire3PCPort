@@ -81,7 +81,9 @@ unsigned char& Byte(std::uint32_t a) { return *At(a); }
 // A .data dispatch table, read at the call as the original reads it: the
 // index is a whole byte and unchecked, so an index past the end calls what
 // the next table holds (docs/event_leader.md section 3).
-const Handler* Table(std::uint32_t address) { return reinterpret_cast<const Handler*>(static_cast<std::uintptr_t>(address)); }
+const ::bof3::CodeSlot<Handler>* Table(std::uint32_t address) {   // 32-bit code words
+    return reinterpret_cast<const ::bof3::CodeSlot<Handler>*>(static_cast<std::uintptr_t>(address));
+}
 
 unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
 

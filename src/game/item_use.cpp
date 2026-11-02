@@ -382,7 +382,7 @@ void CommitChoice() {
     const unsigned id = ItemUse_ChoiceId;
     if (id < 0x80) {
         const unsigned char* const desc = Area_Descriptors[Game_AreaNumber];
-        const auto table = reinterpret_cast<Choice const*>(static_cast<std::uintptr_t>(move_script::Long(desc + 0x34)));
+        const auto table = reinterpret_cast<const ::bof3::CodeSlot<Choice>*>(static_cast<std::uintptr_t>(move_script::Long(desc + 0x34)));   // 32-bit code words
         table[id]();
     } else {
         g.system_choice();

@@ -191,10 +191,10 @@ unsigned CondBody(unsigned index, const unsigned char** at) {
 template <std::size_t N>
 unsigned __cdecl StubCondition(const unsigned char** at) { return CondBody(N, at); }
 template <std::size_t... I>
-constexpr std::array<event_script::Condition, sizeof...(I)> MakeConditions(std::index_sequence<I...>) {
-    return {{&StubCondition<I>...}};
+constexpr std::array<::bof3::CodeSlot<event_script::Condition>, sizeof...(I)> MakeConditions(std::index_sequence<I...>) {
+    return {{{&StubCondition<I>}...}};
 }
-const std::array<event_script::Condition, 512> kConditions = MakeConditions(std::make_index_sequence<512>());
+const std::array<::bof3::CodeSlot<event_script::Condition>, 512> kConditions = MakeConditions(std::make_index_sequence<512>());
 
 // EventScript_Op's handlers, numbered 0x120 + the nibble whose jump-table
 // slot calls them (0 for EventOp_0x). Now and then one rewrites the op's first

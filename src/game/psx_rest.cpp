@@ -59,9 +59,9 @@ void ReleaseIf(U slot, bool zero) {
 // Win32 through the game's own import slots, as the originals call it.
 template <class Fn>
 Fn Import(U slot) {
-    Fn fn;
-    std::memcpy(&fn, At(slot), sizeof fn);
-    return fn;
+    std::uint32_t word;   // the import slot is a 32-bit word: Windows' function on i686, its thunk on x86-64 (design 4)
+    std::memcpy(&word, At(slot), sizeof word);
+    return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
 }
 unsigned long __stdcall ImportSetTextColor(void* hdc, unsigned long color) {
     return Import<unsigned long (__stdcall*)(void*, unsigned long)>(::bof3::Img(PsxRest_ImportSetTextColor_addr))(hdc, color);

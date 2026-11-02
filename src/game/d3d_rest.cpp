@@ -159,7 +159,7 @@ inline U X87FimulFtol(std::int32_t c, float k, std::int32_t chan) {
 // --- the COM objects ---------------------------------------------------------
 
 // D3d_Device, read afresh before every call as the original does.
-void** Device() { return *reinterpret_cast<void** volatile*>(At(::bof3::Img(D3d_Device_addr))); }
+void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr))))); }
 void* Method(void** object, U offset) { return (*reinterpret_cast<void***>(object))[offset / 4]; }
 using Com2 = long(__stdcall*)(void*, U);
 using Com3 = long(__stdcall*)(void*, U, U);
@@ -182,7 +182,7 @@ long DrawVertices(U type, U count) {
     return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
 }
 // A surface pointer read from its global at the moment of the call.
-void** SurfaceAt(U address) { return *reinterpret_cast<void** volatile*>(At(address)); }
+void** SurfaceAt(U address) { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(address)))); }   // the slot's 32-bit word
 // IDirectDrawSurface4::Lock(rect, desc, flags, event), Unlock(rect), Blt(dst rect, src, src rect, flags, fx).
 long Lock(void** surface, void* desc) {
     return reinterpret_cast<Com5>(Method(surface, 0x64))(surface, 0, Addr(desc), 1, 0);   // DDLOCK_WAIT

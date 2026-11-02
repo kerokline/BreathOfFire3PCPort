@@ -897,10 +897,13 @@ int WINAPI TracedMessageBoxA(HWND h, const char* text, const char* caption, UINT
 template <typename F>
 void PatchImport(U slot, F& real, F ours) {
     void* at = reinterpret_cast<void*>(static_cast<std::uintptr_t>(slot));
-    std::memcpy(&real, at, 4);
+    std::uint32_t word;   // the slot is a 32-bit word on every width (a thunk's place on x86-64)
+    std::memcpy(&word, at, 4);
+    real = reinterpret_cast<F>(static_cast<std::uintptr_t>(word));
     DWORD old = 0;
     if (!VirtualProtect(at, 4, PAGE_READWRITE, &old)) bof3::Fatal("exittrace: VirtualProtect of the import slot 0x%08X failed", ::bof3::VaOf(slot));
-    std::memcpy(at, &ours, 4);
+    word = Low32(reinterpret_cast<const void*>(ours));
+    std::memcpy(at, &word, 4);
     VirtualProtect(at, 4, old, &old);
 }
 

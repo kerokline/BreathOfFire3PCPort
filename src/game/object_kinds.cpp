@@ -51,7 +51,7 @@ using PaceFn = unsigned char (__cdecl*)(unsigned char*, unsigned, unsigned);
 // alike. Ours among them (the pace entries, the turn, the three helpers) are
 // tested alone.
 struct Callees {
-    const PaceFn* pace;   // the table itself, read at the call as the original reads it
+    const ::bof3::CodeSlot<PaceFn>* pace;   // the table itself (32-bit code words), read at the call as the original reads it
     PaceFn pace0;         // Field_ObjectIdleLong's direct call of entry 0
     int (__cdecl* rand)();
     unsigned char (__cdecl* random_turn)(unsigned char*);
@@ -74,7 +74,7 @@ struct Callees {
     void (__cdecl* msg_system)(unsigned);         // Msg_OpenSystem a dword
 };
 Callees Originals() {
-    return {reinterpret_cast<const PaceFn*>(static_cast<std::uintptr_t>(::bof3::Img(kPaceTable))),
+    return {reinterpret_cast<const ::bof3::CodeSlot<PaceFn>*>(static_cast<std::uintptr_t>(::bof3::Img(kPaceTable))),
             Field_Pace0,
             Rand,
             Field_ObjectRandomTurn,
@@ -599,7 +599,7 @@ unsigned char __cdecl StubPace(unsigned char* o, unsigned speed, unsigned flags)
     Disturb();
     return static_cast<unsigned char>(Hash() % 3 ? 0 : Hash() >> 7 | 1);
 }
-PaceFn g_pace_stubs[256];
+::bof3::CodeSlot<PaceFn> g_pace_stubs[256];
 
 unsigned char __cdecl StubPace0(unsigned char* o, unsigned speed, unsigned flags) { Record(1, Id(o), speed & 0xFF, flags & 0xFF); Disturb(); return static_cast<unsigned char>(Hash()); }
 int __cdecl StubRand() { Record(2); return static_cast<int>(Hash()); }

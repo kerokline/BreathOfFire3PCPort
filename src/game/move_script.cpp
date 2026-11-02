@@ -96,7 +96,7 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
         const unsigned group = op & 0xF0u;
         if (group >= 0x10) {
             if (group == 0xA0) {
-                const auto ops = reinterpret_cast<CounterOp*>(MoveScript_CounterOps);
+                const auto ops = reinterpret_cast<const ::bof3::CodeSlot<CounterOp>*>(MoveScript_CounterOps);   // 32-bit code words
                 const signed char skip = ops[op & 3](p);
                 if (skip < 0) return result;
                 SetPos(object, Pos(object) + static_cast<unsigned>(skip) + 1u);

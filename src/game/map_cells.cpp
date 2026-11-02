@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <type_traits>
 
 #include "bof3/symbols.gen.h"
 #include "game/crt_rest.h"
@@ -19,9 +20,16 @@
 namespace {
 
 template <class T> T Get(const unsigned char* p, unsigned offset) {
-    T v;
-    std::memcpy(&v, p + offset, sizeof v);
-    return v;
+    // A pointer-typed field is a 32-bit word of the image on every width.
+    if constexpr (std::is_pointer_v<T>) {
+        std::uint32_t w;
+        std::memcpy(&w, p + offset, sizeof w);
+        return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
+    } else {
+        T v;
+        std::memcpy(&v, p + offset, sizeof v);
+        return v;
+    }
 }
 
 constexpr unsigned kPrimBytes = 0x48;   // a POLY_FT4 as the port lays it out

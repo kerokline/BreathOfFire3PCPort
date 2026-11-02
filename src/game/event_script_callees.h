@@ -34,7 +34,7 @@ struct Callees {
     Step case_skip;        // EventScript_CaseSkip
     // EventScript_Conditions as an array: entry 0 at this address. The
     // switch indexes it signed and unmasked, so it is read from -128 to 127.
-    const Condition* conditions;
+    const ::bof3::CodeSlot<Condition>* conditions;   // 32-bit code words
     // EventScript_Op's handlers by the high nibble; 0 and F are both EventOp_0x.
     Handler handlers[16];
     // the placements

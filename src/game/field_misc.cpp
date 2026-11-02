@@ -138,7 +138,7 @@ inline float X87Div(float a, float b) {
 }
 
 // D3d_Device, read afresh before every COM call as the original does.
-void** Device() { return *reinterpret_cast<void** volatile*>(At(::bof3::Img(D3d_Device_addr))); }
+void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(At(::bof3::Img(D3d_Device_addr))))); }
 void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 using Com3 = long(__stdcall*)(void*, U, U);
 using Com6 = long(__stdcall*)(void*, U, U, U, U, U);

@@ -602,7 +602,7 @@ void KeepDimCluts() {
     // conversion is made as Gfx_ClutPixels would make it, if not yet made,
     // and then our sixteen cells are converted (bumping the row's generation,
     // which the glyph cache checks).
-    struct ClutRow { std::uint32_t generation; void* pixels; };
+    struct ClutRow { std::uint32_t generation; ::bof3::Slot32<void> pixels; };   // gfx_clut.cpp's: 8 bytes on every width
     auto* const rows = reinterpret_cast<ClutRow*>(Gfx_ClutRows);
     for (int k = 0; k < 5; ++k) {
         const int y = kPageY + kDimClutV0 + k;

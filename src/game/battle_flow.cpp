@@ -225,10 +225,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_RunAll(v
         if (event != 0) {
             if (enemy_rec->state != 0) reinterpret_cast<HookFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(enemy_rec->event_hook))))(2);
             const unsigned state = rv::As<records::BattleEnemy>(Enemy())->run_state;
-            reinterpret_cast<const Handler*>(static_cast<std::uintptr_t>(::bof3::Img(BattleEnemy_States_addr) + 4))[state]();
+            reinterpret_cast<const ::bof3::CodeSlot<Handler>*>(static_cast<std::uintptr_t>(::bof3::Img(BattleEnemy_States_addr) + 4))[state]();
         } else {
             const unsigned state = enemy_rec->run_state;
-            reinterpret_cast<const Handler*>(static_cast<std::uintptr_t>(::bof3::Img(BattleEnemy_States_addr)))[state]();
+            reinterpret_cast<const ::bof3::CodeSlot<Handler>*>(static_cast<std::uintptr_t>(::bof3::Img(BattleEnemy_States_addr)))[state]();
         }
     }
 }

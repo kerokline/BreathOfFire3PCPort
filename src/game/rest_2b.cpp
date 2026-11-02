@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <windows.h>
 #include <cstring>
+#include <type_traits>
 
 #include "bof3/symbols.gen.h"
 #include "game/record_views.h"
@@ -120,11 +121,25 @@ U L(U address) { return static_cast<U>(Long(At(address))); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
 U Key(const void* p) { return Low32(p); }
 template <class T> T Get(const unsigned char* p, unsigned offset) {
-    T v;
-    std::memcpy(&v, p + offset, sizeof v);
-    return v;
+    // A pointer-typed field is a 32-bit word of the image on every width.
+    if constexpr (std::is_pointer_v<T>) {
+        std::uint32_t w;
+        std::memcpy(&w, p + offset, sizeof w);
+        return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
+    } else {
+        T v;
+        std::memcpy(&v, p + offset, sizeof v);
+        return v;
+    }
 }
-template <class T> void Put(unsigned char* p, unsigned offset, T v) { std::memcpy(p + offset, &v, sizeof v); }
+template <class T> void Put(unsigned char* p, unsigned offset, T v) {
+    if constexpr (std::is_pointer_v<T>) {   // the field is a 32-bit word on every width
+        const std::uint32_t w = Low32(v);
+        std::memcpy(p + offset, &w, sizeof w);
+    } else {
+        std::memcpy(p + offset, &v, sizeof v);
+    }
+}
 
 // jmp / call [table + 4 * byte]: the table's `entries` handlers, read in place
 // (the fuzz swaps the cells for recorders); a Fatal past them, where the

@@ -78,7 +78,7 @@ unsigned char* Sc() { return Sprite_Current; }
 // originals have it, the index is not checked - it is one of the object's
 // step bytes, and a step past a table's end runs the next table's entries.
 Handler Entry(std::uint32_t table, unsigned index) {
-    return reinterpret_cast<const Handler*>(static_cast<std::uintptr_t>(table))[index];
+    return reinterpret_cast<const ::bof3::CodeSlot<Handler>*>(static_cast<std::uintptr_t>(table))[index];   // 32-bit code words
 }
 
 // The 24-byte ability record's flag bytes, by the word 0x904B80 read afresh.

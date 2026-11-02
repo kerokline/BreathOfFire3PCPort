@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <type_traits>
 
 #include "bof3/symbols.gen.h"
 #include "game/record_views.h"
@@ -27,11 +28,25 @@ constexpr unsigned kZ = 0x3E;         // s16
 constexpr unsigned kRecord = 0x54;    // const u8*: +2 s8 reach, +3 bit 0x10 "not this one"
 
 template <class T> T Get(const unsigned char* at, unsigned offset) {
-    T v;
-    std::memcpy(&v, at + offset, sizeof v);
-    return v;
+    // A pointer-typed field is a 32-bit word of the image on every width.
+    if constexpr (std::is_pointer_v<T>) {
+        std::uint32_t w;
+        std::memcpy(&w, at + offset, sizeof w);
+        return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
+    } else {
+        T v;
+        std::memcpy(&v, at + offset, sizeof v);
+        return v;
+    }
 }
-template <class T> void Put(unsigned char* at, unsigned offset, T v) { std::memcpy(at + offset, &v, sizeof v); }
+template <class T> void Put(unsigned char* at, unsigned offset, T v) {
+    if constexpr (std::is_pointer_v<T>) {   // the field is a 32-bit word on every width
+        const std::uint32_t w = Low32(v);
+        std::memcpy(at + offset, &w, sizeof w);
+    } else {
+        std::memcpy(at + offset, &v, sizeof v);
+    }
+}
 
 // |a - b| as the original computes it: a 32-bit difference that may wrap, and
 // an absolute value that leaves 0x80000000 negative.
