@@ -38,7 +38,7 @@ using move_script::SetWord;
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
 // Sprite_Kind2 record.
 
-std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const void* p) { return Low32(p); }
 const unsigned char* Pointer(std::uint32_t a) { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a)); }
 // A table's script or placement op: a VA (tools/wide_staging_check.py reads the
 // table as VAs), at its place in the image.

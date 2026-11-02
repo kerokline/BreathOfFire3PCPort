@@ -34,7 +34,7 @@ template <class T> inline const T* AsConst(const unsigned char* p) { return rein
 // Current<T>(): the record Sprite_Current points at. Sprite_Current is read
 // from memory at every call, as the original reads it after each call it
 // makes; hold the result in a local only where the original holds it too.
-template <class T> inline T* Current() { return reinterpret_cast<T*>(Sprite_Current); }
+template <class T> inline T* Current() { return reinterpret_cast<T*>(Sprite_Current.Native()); }
 
 // Bytes(r): a typed record's own bytes, for an access the struct does not
 // name (a raw accessor at an offset records.h pads) or a callee that takes

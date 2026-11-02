@@ -448,7 +448,7 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
         // A push operand in Capcom's code is registered for the hosted check
         // (code_bytes.h; nothing of ours re-aims one) - in the exe host there
         // is no code to read; a table in .data is read, in either host.
-        const auto ours = t->buffers ? static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(t->buffers[i]))
+        const auto ours = t->buffers ? Low32(t->buffers[i])
                                      : ::bof3::Img(slot.va);
         const std::uint32_t expect = slot.expect ? slot.expect : slot.va;   // a VA
         if (bof3::InCode(slot.named_at)) {
@@ -478,7 +478,7 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
                 const std::uint32_t i = table.first + k;
                 if (i >= count) continue;   // an older chunk's: not sent, so not re-aimed
                 auto* entry = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(::bof3::Img(table.at) + 4 * k));
-                const auto ours = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(t->buffers[i]));
+                const auto ours = Low32(t->buffers[i]);
                 if (*entry != ::bof3::Img(t->slots[i].va) && *entry != ours)
                     bof3::Fatal("%s: table 0x%08X entry %u holds 0x%08X, expected 0x%08X (VA 0x%08X)", t->what,
                                 (unsigned)table.at, (unsigned)k, (unsigned)*entry, (unsigned)::bof3::Img(t->slots[i].va),
@@ -494,7 +494,7 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
 }
 
 unsigned Labels_SmallGlyph(const unsigned char* text) {
-    const auto at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(text));
+    const auto at = Low32(text);
     for (const Table& t : kTables) {
         if (!t.small || !g_small_written[t.tag]) continue;
         for (std::uint32_t i = 0; i < t.count; ++i) {

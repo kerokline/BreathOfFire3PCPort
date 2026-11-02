@@ -100,7 +100,7 @@ const Pool& k073 = kPools[2];
 const Pool& k074 = kPools[3];
 
 void Bump(unsigned char& b, int by = 1) { b = static_cast<unsigned char>(b + by); }
-std::int32_t PtrValue(const void* p) { return static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p))); }
+std::int32_t PtrValue(const void* p) { return static_cast<std::int32_t>(Low32(p)); }
 unsigned char* Record(const Pool& p, unsigned index) { return Mem(p.pool + index * kSparkleStride); }
 unsigned char* Cur(const Pool& p) { return Pointer(p.current); }
 unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }

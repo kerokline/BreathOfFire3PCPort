@@ -39,34 +39,49 @@ void Theirs(std::uint32_t va, void* to, std::uint32_t n) {
     else std::memcpy(to, At(va), n);
 }
 
+// BOF3.exe's bytes of a DIDATAFORMAT and of a DIOBJECTDATAFORMAT: the 32-bit
+// image's layouts, where a pointer (rgodf, pguid) is a 4-byte word. The
+// SDK's structs have that shape on i686 alone (on x86-64 they are 32 and 24
+// bytes), so Capcom's bytes are read into these, as words, on every width.
+struct ImageDataFormat {
+    std::uint32_t size, obj_size, flags, data_size, num_objs;
+    std::uint32_t rgodf;   // the object table's VA
+};
+static_assert(sizeof(ImageDataFormat) == 0x18, "DIDATAFORMAT is 24 bytes in the 32-bit image");
+struct ImageObjectFormat {
+    std::uint32_t pguid;   // the GUID's VA, or 0
+    std::uint32_t ofs, type, flags;
+};
+static_assert(sizeof(ImageObjectFormat) == 16, "DIOBJECTDATAFORMAT is 16 bytes in the 32-bit image");
+
 // c_dfDIKeyboard against Capcom's: the header's five counts, then each
 // object's GUID (by value), offset, type and flags.
 void VerifyKeyboardFormat() {
     const DIDATAFORMAT& ours = c_dfDIKeyboard;
-    DIDATAFORMAT theirs;
-    static_assert(sizeof theirs == 0x18, "DIDATAFORMAT is 24 bytes on i686");
+    ImageDataFormat theirs;
     Theirs(kKeyboardFormat.v, &theirs, sizeof theirs);
-    if (ours.dwSize != theirs.dwSize || ours.dwObjSize != theirs.dwObjSize || ours.dwFlags != theirs.dwFlags ||
-        ours.dwDataSize != theirs.dwDataSize || ours.dwNumObjs != theirs.dwNumObjs)
+    if (ours.dwSize != theirs.size || ours.dwObjSize != theirs.obj_size || ours.dwFlags != theirs.flags ||
+        ours.dwDataSize != theirs.data_size || ours.dwNumObjs != theirs.num_objs)
         bof3::Fatal("rdata: c_dfDIKeyboard's header (0x%lX 0x%lX 0x%lX 0x%lX %lu) is not BOF3.exe's at 0x%06X "
                     "(0x%lX 0x%lX 0x%lX 0x%lX %lu)", ours.dwSize, ours.dwObjSize, ours.dwFlags, ours.dwDataSize,
-                    ours.dwNumObjs, kKeyboardFormat.v, theirs.dwSize, theirs.dwObjSize, theirs.dwFlags,
-                    theirs.dwDataSize, theirs.dwNumObjs);
-    const auto table = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(theirs.rgodf));
+                    ours.dwNumObjs, kKeyboardFormat.v, static_cast<unsigned long>(theirs.size),
+                    static_cast<unsigned long>(theirs.obj_size), static_cast<unsigned long>(theirs.flags),
+                    static_cast<unsigned long>(theirs.data_size), static_cast<unsigned long>(theirs.num_objs));
+    const std::uint32_t table = theirs.rgodf;
     for (DWORD i = 0; i < ours.dwNumObjs; ++i) {
-        DIOBJECTDATAFORMAT obj;
-        static_assert(sizeof obj == 16, "DIOBJECTDATAFORMAT is 16 bytes on i686");
+        ImageObjectFormat obj;
         Theirs(table + 16 * i, &obj, sizeof obj);
         const DIOBJECTDATAFORMAT& mine = ours.rgodf[i];
         GUID guid{};
-        const auto at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(obj.pguid));
+        const std::uint32_t at = obj.pguid;
         if (at) Theirs(at, &guid, sizeof guid);
         const bool guid_same =
             (at == 0) == (mine.pguid == nullptr) && (!at || std::memcmp(&guid, mine.pguid, sizeof guid) == 0);
-        if (!guid_same || obj.dwOfs != mine.dwOfs || obj.dwType != mine.dwType || obj.dwFlags != mine.dwFlags)
+        if (!guid_same || obj.ofs != mine.dwOfs || obj.type != mine.dwType || obj.flags != mine.dwFlags)
             bof3::Fatal("rdata: c_dfDIKeyboard's object %lu (offset %lu, type 0x%lX, flags 0x%lX) is not BOF3.exe's at "
                         "0x%06X (offset %lu, type 0x%lX, flags 0x%lX, the GUID %s)", i, mine.dwOfs, mine.dwType,
-                        mine.dwFlags, (unsigned)(table + 16 * i), obj.dwOfs, obj.dwType, obj.dwFlags,
+                        mine.dwFlags, (unsigned)(table + 16 * i), static_cast<unsigned long>(obj.ofs),
+                        static_cast<unsigned long>(obj.type), static_cast<unsigned long>(obj.flags),
                         guid_same ? "equal" : "different");
     }
     bof3::Log("rdata: the keyboard format is the SDK's c_dfDIKeyboard, equal to BOF3.exe's at 0x%06X (its %lu objects "

@@ -36,6 +36,8 @@
 // process (BOF3X_SHADOW='*').
 #include "game/boss_harness.h"
 
+#include <windows.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -55,7 +57,7 @@ bool g_active = false;
 
 namespace {
 
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 
 // --- the random source and the recorders' log ---------------------------------
@@ -422,9 +424,11 @@ bool Readable(std::uint32_t p) {
     const std::uint32_t pe = image + *reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(image + 0x3C));
     const std::uint32_t size = *reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(pe + 24 + 56));   // SizeOfImage
     if (p >= image + 0x1000 && p < image + size) return true;
-    std::uint32_t base, limit;
-    asm("movl %%fs:4, %0" : "=r"(base));
-    asm("movl %%fs:8, %0" : "=r"(limit));
+    // The TIB's StackBase and StackLimit, at the width's TEB (NtCurrentTeb(), whose first member is the TIB:
+    // fs:0x18 on i686, gs:0x30 on x86-64); this is hosted, i686-only code,
+    // where a stack address is 32 bits.
+    const auto base = Low32(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackBase);
+    const auto limit = Low32(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackLimit);
     return p >= limit && p < base;
 }
 // Where an effect may write a string: the compared state, the text buffer,
@@ -433,9 +437,11 @@ bool Readable(std::uint32_t p) {
 bool Writable(std::uint32_t p, unsigned n) {
     if (p >= Key(g_text) && p + n <= Key(g_text) + kTextBytes) return true;
     if (InRegions(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(p)), n)) return true;
-    std::uint32_t base, limit;
-    asm("movl %%fs:4, %0" : "=r"(base));
-    asm("movl %%fs:8, %0" : "=r"(limit));
+    // The TIB's StackBase and StackLimit, at the width's TEB (NtCurrentTeb(), whose first member is the TIB:
+    // fs:0x18 on i686, gs:0x30 on x86-64); this is hosted, i686-only code,
+    // where a stack address is 32 bits.
+    const auto base = Low32(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackBase);
+    const auto limit = Low32(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackLimit);
     return p >= limit && p + n <= base;
 }
 // The string at p to its NUL, 64 bytes at most, noted (its hash and length),

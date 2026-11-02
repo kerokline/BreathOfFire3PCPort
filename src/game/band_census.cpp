@@ -46,7 +46,7 @@ template <class T> T Get(const unsigned char* p, unsigned offset) {
     std::memcpy(&v, p + offset, sizeof v);
     return v;
 }
-std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const void* p) { return Low32(p); }
 const unsigned char* Pointer(std::uint32_t a) { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a)); }
 // A pointer the game holds is a place: the image's span at its base.
 bool InImage(std::uint32_t a) { return a >= ::bof3::Img(kImageLo) && a < ::bof3::Img(kImageHi); }

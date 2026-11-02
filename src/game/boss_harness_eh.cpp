@@ -130,7 +130,7 @@ void* Copy(const char* name, U base, U size, const bh::CallSite* sites, int n, c
         // control 5: the stack table's entry 1 aimed at entry 2's handler
         const U aim = g_control == 5 && base == 0x598DC0 && had == 0x598E10 ? 0x598E50 : had;
         if (aim != had) bof3::Log("shadow      boss_harness_eh: control 5 planted (kWindow dispatch: entry 1 is 0x598E50's)");
-        const U to = static_cast<U>(reinterpret_cast<std::uintptr_t>(RouteTo(aim)));
+        const U to = Low32(RouteTo(aim));
         std::memcpy(copy + imms[i].offset, &to, sizeof to);
     }
     for (const Control& c : kControls) {

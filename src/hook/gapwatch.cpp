@@ -3,6 +3,8 @@
 
 #include <windows.h>
 
+#include "hook/cpu_context.h"
+
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>
@@ -51,14 +53,20 @@ struct WRange {
     const char* from;
     volatile LONG claimed;   // the first read is being recorded
     volatile LONG ready;     // and has been
-    std::uint32_t eip, frame, rframe, area, thread, kind;   // kind: 0 a guard fault, 2 a debug register
-    std::uint32_t callers[kCallers];
+    // A reader's or writer's eip and the callers above it are native: the
+    // game's and the DLL's lie below 4 GB on both widths, a system DLL's (the
+    // C run time's memcpy into .data) above it on x86-64, and the summary
+    // names either by module (Name).
+    std::uintptr_t eip;
+    std::uint32_t frame, rframe, area, thread, kind;   // kind: 0 a guard fault, 2 a debug register
+    std::uintptr_t callers[kCallers];
     volatile LONG w_claimed; // the first write: who and when
-    std::uint32_t w_eip, w_frame;
+    std::uintptr_t w_eip;
+    std::uint32_t w_frame;
     volatile LONG reads, writes;
     volatile LONG rbw;       // reads before the range's first write: the zero the image left
     volatile LONG edge;      // accesses starting up to 7 bytes below lo (a wider read may reach it)
-    std::uint32_t edge_eip;
+    std::uintptr_t edge_eip;
     volatile LONG dr_hits;   // accesses a debug register on one of its words caught
     LONG dr_latches;         // latches it had a debug register on a word of it
 };
@@ -66,7 +74,7 @@ struct WPage {
     std::uint32_t base;
     DWORD protect;           // without the guard
     volatile LONG faults, range_faults, window, parked, parks;
-    std::uint32_t top_eip[kTop];
+    std::uintptr_t top_eip[kTop];
     volatile LONG top_n[kTop];
     volatile LONG top_other;
 };
@@ -121,7 +129,7 @@ char g_classes[64] = "gap";
 unsigned g_ticks = 0;
 LARGE_INTEGER g_t0{}, g_freq{};
 
-std::uint32_t Va(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Va(const void* p) { return Low32(p); }   // a place of the image or the DLL: below 4 GB, or a Fatal
 void* Ptr(std::uint32_t va) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(va)); }
 // A place in the image as its VA, for the file and the log.
 std::uint32_t ToVa(std::uint32_t place) { return place - ImageBase() + image::kBase; }
@@ -156,26 +164,28 @@ void Unguard(int p) {
     VirtualProtect(Ptr(g_page[p].base), kPage, g_page[p].protect, &old);
 }
 
-bool InDll(std::uint32_t v) { return v >= g_dll_lo + 6 && v < g_dll_hi; }
+bool InDll(std::uintptr_t v) { return v >= g_dll_lo + 6 && v < g_dll_hi; }
 
 // A stack word that points into our DLL just after a call: E8 rel32, or FF
 // in the 2-, 3- and 6-byte forms - crash.cpp's filter, a scan and not a walk.
-bool AfterCall(std::uint32_t v) {
+bool AfterCall(std::uintptr_t v) {
     if (!InDll(v)) return false;
-    const auto* b = static_cast<const std::uint8_t*>(Ptr(v - 6));
+    const auto* b = reinterpret_cast<const std::uint8_t*>(v - 6);
     return b[1] == 0xE8 || b[4] == 0xFF || b[3] == 0xFF || b[0] == 0xFF;
 }
 
-void Callers(const CONTEXT* ctx, std::uint32_t* out) {
+// The stack's words are the width's, read from the faulting thread's stack
+// pointer (hook/cpu_context.h) to its TIB base.
+void Callers(const CONTEXT* ctx, std::uintptr_t* out) {
     for (int k = 0; k < kCallers; ++k) out[k] = 0;
     const auto* tib = reinterpret_cast<const NT_TIB*>(NtCurrentTeb());
-    const std::uint32_t top = Va(tib->StackBase);
-    std::uint32_t at = ctx->Esp;
+    const std::uintptr_t top = reinterpret_cast<std::uintptr_t>(tib->StackBase);
+    std::uintptr_t at = CtxSp(*ctx);
     if (at >= top || (at & 3)) return;
-    const std::uint32_t end = top - at > 0x800 ? at + 0x800 : top;
+    const std::uintptr_t end = top - at > 0x800 ? at + 0x800 : top;
     int n = 0;
-    for (; at + 4 <= end && n < kCallers; at += 4) {
-        const std::uint32_t v = *static_cast<const std::uint32_t*>(Ptr(at));
+    for (; at + sizeof at <= end && n < kCallers; at += sizeof at) {
+        const std::uintptr_t v = *reinterpret_cast<const std::uintptr_t*>(at);
         if (AfterCall(v)) out[n++] = v;
     }
 }
@@ -184,7 +194,7 @@ void Callers(const CONTEXT* ctx, std::uint32_t* out) {
 // not kept replaces the least counted, which it inherits plus one, so a busy
 // reader that comes late still rises (the counts of a replaced slot are then
 // an upper bound). Racy across threads, and only a measure.
-void Top(WPage& pg, std::uint32_t eip) {
+void Top(WPage& pg, std::uintptr_t eip) {
     int least = 0;
     for (int k = 0; k < kTop; ++k) {
         if (pg.top_eip[k] == eip) {
@@ -204,7 +214,7 @@ void Top(WPage& pg, std::uint32_t eip) {
 }
 
 // A read of a range: counted, and the first one recorded - who, when, where.
-void Read(WRange& r, std::uint32_t eip, std::uint32_t kind, const CONTEXT* ctx, LONG me) {
+void Read(WRange& r, std::uintptr_t eip, std::uint32_t kind, const CONTEXT* ctx, LONG me) {
     InterlockedIncrement(&r.reads);
     if (r.writes == 0) InterlockedIncrement(&r.rbw);
     if (InterlockedCompareExchange(&r.claimed, 1, 0) != 0) return;
@@ -219,7 +229,7 @@ void Read(WRange& r, std::uint32_t eip, std::uint32_t kind, const CONTEXT* ctx, 
 }
 
 // A write: counted, the first one's writer and frame kept.
-void Written(WRange& r, std::uint32_t eip) {
+void Written(WRange& r, std::uintptr_t eip) {
     InterlockedIncrement(&r.writes);
     if (InterlockedCompareExchange(&r.w_claimed, 1, 0) != 0) return;
     r.w_eip = eip;
@@ -230,7 +240,9 @@ void Written(WRange& r, std::uint32_t eip) {
 // and 2k + 1 (write, RW 01), four bytes (LEN 11), locally enabled.
 void LoadSlots(CONTEXT* ctx) {
     DWORD dr7 = 0;
-    DWORD* const dr[2 * kSlots] = {&ctx->Dr0, &ctx->Dr1, &ctx->Dr2, &ctx->Dr3};
+    // The debug registers are the width's (DWORD on x86, DWORD64 on x86-64);
+    // the words they hold are VAs of the image, below 4 GB on both.
+    decltype(ctx->Dr0)* const dr[2 * kSlots] = {&ctx->Dr0, &ctx->Dr1, &ctx->Dr2, &ctx->Dr3};
     for (int i = 0; i < 2 * kSlots; ++i) {
         const int k = i / 2;
         *dr[i] = k < g_slots ? g_slot_va[k] : 0;
@@ -282,8 +294,8 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
                     for (int j = 0; j < stepping->n && !counted; ++j) counted = stepping->page[j] == pi;
                 }
                 if (counted) continue;
-                if (ctx->Dr6 & (2u << (2 * k))) Written(r, ctx->Eip);
-                else Read(r, ctx->Eip, 2, ctx, me);
+                if (ctx->Dr6 & (2u << (2 * k))) Written(r, CtxIp(*ctx));
+                else Read(r, CtxIp(*ctx), 2, ctx, me);
             }
             ctx->Dr6 = 0;
             ours = true;
@@ -295,7 +307,7 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
         // The instruction stepped was a pushfd: it saved the trap flag we set,
         // and a popfd would step again with nobody expecting it
         // (calltrace.cpp's 0x5A9A30 case).
-        if (p->pushfd) *static_cast<DWORD*>(Ptr(ctx->Esp)) &= ~kTrapFlag;
+        if (p->pushfd) *reinterpret_cast<DWORD*>(CtxSp(*ctx)) &= ~kTrapFlag;   // the saved flags' low dword on both widths
         p->n = 0;
         p->pushfd = false;
         InterlockedExchange(&p->thread, 0);
@@ -303,13 +315,17 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
         return EXCEPTION_CONTINUE_EXECUTION;
     }
     if (rec->ExceptionCode != kGuardViolation || rec->NumberParameters < 2) return EXCEPTION_CONTINUE_SEARCH;
-    const auto addr = static_cast<std::uint32_t>(rec->ExceptionInformation[1]);
+    // The guarded pages are the image's, below 4 GB: a guard fault above it
+    // (a thread stack's, on x86-64) is someone else's before any narrowing.
+    const std::uintptr_t fault = rec->ExceptionInformation[1];
+    if (fault > 0xFFFFFFFFu) return EXCEPTION_CONTINUE_SEARCH;
+    const auto addr = static_cast<std::uint32_t>(fault);
     const int pi = FindPage(addr & ~(kPage - 1));
     if (pi < 0) return EXCEPTION_CONTINUE_SEARCH;   // not ours: a thread stack's guard, someone else's
     WPage& pg = g_page[pi];
     InterlockedIncrement(&g_faults);
     InterlockedIncrement(&pg.faults);
-    const std::uint32_t eip = ctx->Eip;
+    const std::uintptr_t eip = CtxIp(*ctx);
     Top(pg, eip);
     const auto kind = static_cast<std::uint32_t>(rec->ExceptionInformation[0]);   // 0 read, 1 write, 8 execute
 
@@ -344,7 +360,7 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
         Fatal("gapwatch: one instruction at 0x%08lX touched more than %d guarded pages", (unsigned long)eip,
               kPendingPerThread);
     p->page[p->n++] = pi;
-    if (*static_cast<const std::uint8_t*>(Ptr(eip)) == kPushfd) p->pushfd = true;
+    if (*reinterpret_cast<const std::uint8_t*>(eip) == kPushfd) p->pushfd = true;
     ctx->EFlags |= kTrapFlag;
     return EXCEPTION_CONTINUE_EXECUTION;
 }
@@ -452,7 +468,7 @@ void Rearm() {
 // An address as the file writes it: the exe's own as its VA (the stub page is
 // Capcom's address space), a module's as name+offset (our DLL is ASLR'd;
 // tools/gapwatch.py symbolises bof3x.dll+offset).
-void Name(std::uint32_t v, char* out, size_t cap) {
+void Name(std::uintptr_t v, char* out, size_t cap) {
     if (v == 0) {
         std::snprintf(out, cap, "-");
         return;
@@ -460,14 +476,20 @@ void Name(std::uint32_t v, char* out, size_t cap) {
     HMODULE m = nullptr;
     char path[MAX_PATH];
     if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                           static_cast<LPCWSTR>(Ptr(v)), &m) &&
+                           reinterpret_cast<LPCWSTR>(v), &m) &&
         m && GetModuleFileNameA(m, path, sizeof path)) {
         const char* base = std::strrchr(path, '\\');
         base = base ? base + 1 : path;
-        if (Va(m) == ImageBase()) std::snprintf(out, cap, "0x%08X", (unsigned)ToVa(v));
-        else std::snprintf(out, cap, "%s+0x%X", base, (unsigned)(v - Va(m)));
+        if (reinterpret_cast<std::uintptr_t>(m) == ImageBase())
+            std::snprintf(out, cap, "0x%08X", (unsigned)ToVa(static_cast<std::uint32_t>(v)));   // in the image: below 4 GB
+        else
+            std::snprintf(out, cap, "%s+0x%X", base, (unsigned)(v - reinterpret_cast<std::uintptr_t>(m)));
     } else {
+#if defined(__x86_64__)
+        std::snprintf(out, cap, "0x%016llX", static_cast<unsigned long long>(v));
+#else
         std::snprintf(out, cap, "0x%08X", (unsigned)v);
+#endif
     }
 }
 
@@ -554,7 +576,7 @@ bool ClassWanted(const char* how) {
 void ReadDll(void* module) {
     auto* base = static_cast<const std::uint8_t*>(module);
     auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
-    auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(base + dos->e_lfanew);
+    auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS*>(base + dos->e_lfanew);   // the width's header (host.cpp)
     g_dll_lo = Va(base);
     g_dll_hi = g_dll_lo + nt->OptionalHeader.SizeOfImage;
 }
@@ -643,7 +665,7 @@ void GapWatch_SelfTest() {
     Rearm();
     Check(PlantedRead(s + 0x101) == 0xA5, "the planted read did not read the planted value");
     Check(g_range[0].ready && g_range[0].reads == 1 && g_range[0].kind == 0, "the planted read was not recorded as the range's first read");
-    const std::uint32_t first_eip = g_range[0].eip;
+    const std::uintptr_t first_eip = g_range[0].eip;
     Check(first_eip >= Va(reinterpret_cast<void*>(&PlantedRead)) && first_eip < Va(reinterpret_cast<void*>(&PlantedRead)) + 64,
           "the first read's reader is not PlantedRead");
     Check(Guarded(b), "the page is not guarded again after the planted read");

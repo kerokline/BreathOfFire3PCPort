@@ -126,7 +126,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_SplitEx
     g.crt_sprintf(Text(::bof3::Img(at::kText0.v)), Format(::bof3::Img(at::kFormatD.v)), share);
     const unsigned char* const msg = g.msg_system(5);
     const unsigned set = AreaW0b_PartySet & 0x7Fu;
-    SetDword(::bof3::Img(at::kMsgCurrent.v), static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(msg)));
+    SetDword(::bof3::Img(at::kMsgCurrent.v), Low32(msg));
     g.party_set_select(set, 0);
     Advance(::bof3::Img(BattleE4_Step4_addr));
 }
@@ -288,7 +288,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_Setup(v
     g.crt_sprintf(Text(::bof3::Img(at::kText0.v)), Format(::bof3::Img(at::kFormatD.v)), zenny);
     const unsigned char* const msg = g.msg_system(6);
     const std::uint32_t total = BattleFlow_ZennyTotal;
-    SetDword(::bof3::Img(at::kMsgCurrent.v), static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(msg)));
+    SetDword(::bof3::Img(at::kMsgCurrent.v), Low32(msg));
     SetTickStep(total);
 
     if (Battle_DropCount != 0) {
@@ -487,7 +487,7 @@ void BattleResult_Inject() {
         if (Lang_Latin()) {
             static const std::uint8_t was = 0, is = 1;
             bof3::PatchBytes("BattleResultExpLayout",
-                             static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_exp_layout_us)),
+                             Low32(&g_exp_layout_us),
                              &was, &is, 1);
             bof3::Log("DIV-0060    EXP line in the US layout: %s", g_exp_layout_us ? "on" : "off");
         }

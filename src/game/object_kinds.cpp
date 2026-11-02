@@ -30,7 +30,7 @@ namespace {
 
 using namespace move_script;
 
-std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
 // Data these read that symbols.toml does not name.
 constexpr std::uint32_t kPaceTable = 0x65F5DC;      // 7 handlers, by Sprite_Current[2], no bound

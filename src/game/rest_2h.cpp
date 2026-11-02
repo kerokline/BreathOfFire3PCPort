@@ -54,7 +54,7 @@
 #include "hook/log.h"
 
 namespace rest_2h {
-std::uint32_t g_master_bound = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Widescreen_SlideOperand(at::kMasterBound.v)));
+std::uint32_t g_master_bound = Low32(Widescreen_SlideOperand(at::kMasterBound.v));
 // DIVERGENCE DIV-0059: the master list's title centred on the width its pen
 // covers, under a Latin overlay (ListTitle_Centring). Set by Rest2H_Inject
 // after the fuzz, which compares with the original's 6 * count arithmetic.
@@ -81,7 +81,7 @@ using Handler = void (__cdecl*)();
 unsigned char& B(U address) { return *At(address); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 int S8(unsigned v) { return static_cast<signed char>(static_cast<unsigned char>(v)); }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 
 // The current window record, re-read at every use (the originals reload
 // 0x905B84 after each call).
@@ -848,11 +848,19 @@ extern "C" int __stdcall DInput_EnumJoystick(const void* instance, void* context
     (void)context;
     auto* const di = static_cast<IDirectInputA*>(DInput_Object);
     const auto* const inst = static_cast<const unsigned char*>(instance);
-    const HRESULT created =
-        di->CreateDevice(*reinterpret_cast<const GUID*>(inst + 4), reinterpret_cast<LPDIRECTINPUTDEVICEA*>(&DInput_Joystick), nullptr);
+    // The two objects land in native locals seeded from the slots and are
+    // stored back (Slot32<void>, common/slot32.h): DirectInput writes a
+    // native pointer, which the original's direct write into the 4-byte slot
+    // cannot hold on x86-64. A slot reads as the original's once the call has
+    // returned, whether the callee wrote its out parameter or not.
+    auto joystick = static_cast<LPDIRECTINPUTDEVICEA>(DInput_Joystick.Native());
+    const HRESULT created = di->CreateDevice(*reinterpret_cast<const GUID*>(inst + 4), &joystick, nullptr);
+    DInput_Joystick = joystick;
     if (created != 0) return 1;
     auto* const joy = static_cast<IUnknown*>(DInput_Joystick);
-    joy->QueryInterface(*reinterpret_cast<const IID*>(static_cast<std::uintptr_t>(at::kJoystickIid)), &DInput_Joystick2);
+    void* joystick2 = DInput_Joystick2;
+    joy->QueryInterface(*reinterpret_cast<const IID*>(static_cast<std::uintptr_t>(at::kJoystickIid)), &joystick2);
+    DInput_Joystick2 = joystick2;
     const int differs = SH_CALL(Crt_stricmp)(
         reinterpret_cast<const char*>(inst + 0x12C), reinterpret_cast<const char*>(At(::bof3::Img(at::kProductName.v))));
     if (differs == 0) DInput_JoystickFound = 1;
@@ -882,7 +890,7 @@ void Rest2H_Inject() {
     if (Lang_Latin()) {
         static const std::uint8_t was = 0, is = 1;
         bof3::PatchBytes("MasterPupilLabel",
-                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&rest_2h::g_pupil_label_off)),
+                         Low32(&rest_2h::g_pupil_label_off),
                          &was, &is, 1);
         bof3::Log("DIV-0083    the pupils box's label left out: %s", rest_2h::g_pupil_label_off ? "on" : "off");
     }

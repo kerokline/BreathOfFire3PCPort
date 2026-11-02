@@ -60,7 +60,7 @@ unsigned char* Cur() { return Sprite_Current; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 short SW(const unsigned char* p) { return static_cast<short>(Word(p)); }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 U AddressOf(const void* p) { return Key(p); }
 U Shards() { return AddressOf(EffectKind30_Shards); }
 // Kind 0x1E's shard cursor, EffectKind1E_ShardCursor 0x675FDC.

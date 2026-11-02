@@ -54,7 +54,7 @@ U L(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t S8(unsigned char v) { return static_cast<std::int8_t>(v); }
 std::int32_t S16(unsigned v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); }
-U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Addr(const void* p) { return Low32(p); }
 float F(const unsigned char* p) {
     float f;
     std::memcpy(&f, p, sizeof f);

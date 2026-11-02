@@ -105,7 +105,7 @@ using namespace event_ops;
 
 namespace {
 
-std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const void* p) { return Low32(p); }
 unsigned char& Byte(std::uint32_t a) { return *At(a); }
 
 // Field_ScriptFlags' two bytes and Field_ScriptFlags2's, as the original

@@ -129,8 +129,8 @@ void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); 
 U W(U address) { return Word(At(address)); }
 void SetW(U address, U v) { SetWord(At(address), v); }
 // The address of a typed alias, for the accessors above.
-U AddrOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddrOf(const void* p) { return Low32(p); }
+U Key(const void* p) { return Low32(p); }
 // A register loaded with Sprite_Current, then `movzx ax, byte [reg + n]`: the
 // pointer's upper half above the byte (E1E's PtrHi).
 U PtrHi(const unsigned char* p) { return Key(p) & 0xFFFF0000u; }

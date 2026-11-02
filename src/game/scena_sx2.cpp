@@ -51,7 +51,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 std::uint32_t U(std::int32_t v) { return static_cast<std::uint32_t>(v); }
-std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Addr(const void* p) { return Low32(p); }
 
 // A signed byte over 4 the way the original divides (cdq / and 3 / add / sar
 // 2): C's truncating division.

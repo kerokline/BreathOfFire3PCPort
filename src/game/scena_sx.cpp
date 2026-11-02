@@ -176,7 +176,7 @@ extern "C" void __cdecl Party_PlaceForBattle(std::int32_t x, std::int32_t z, uns
         SetLong(pos + 4, rv::As<records::SpriteObject>(s)->z);
         s[0x48] = 0;
         s[8] = At(::bof3::Img(bof3::addr::BattleFormation_Anims))[At(::bof3::Img(at::kFormation))[0]];
-        const auto p = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(s));
+        const auto p = Low32(s);
         EnsureAnimation((p & 0xFFFFFF00u) | s[8]);
     }
 }
@@ -364,7 +364,7 @@ extern "C" void __cdecl MapView_FillCells(void) {
         std::int32_t col = MapView_Column;
         for (int j = 0; j < 0x1C; ++j) {
             col = col == 0x1B ? 0 : col + 1;
-            const std::uint32_t cell = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(MapView_CellItems)) + static_cast<std::uint32_t>(row * 28 + col) * 4;
+            const std::uint32_t cell = Low32(MapView_CellItems) + static_cast<std::uint32_t>(row * 28 + col) * 4;
             SH_CALL(MapView_CellToMap)(i, j, At(cell));
         }
     }

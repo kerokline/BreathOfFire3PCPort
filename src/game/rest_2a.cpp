@@ -42,7 +42,7 @@ using move_script::Word;
 using scenario_harness::Phase;
 
 // A typed data symbol's address (symbols.gen.h makes the name a macro).
-U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Addr(const void* p) { return Low32(p); }
 
 constexpr unsigned kSpriteStride = 0xA4;
 constexpr unsigned kEffectStride = 0x80;
@@ -107,7 +107,7 @@ void EndEvent(const unsigned char* s) {
 // (pointer - Sprite_Objects) / 0xA4, a signed division (imul by 0x63E7063F,
 // sar 6, the sign added) - the member need not lie in the array.
 U MemberSpriteIndex() {
-    const auto offset = static_cast<std::int32_t>(static_cast<U>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember)) -
+    const auto offset = static_cast<std::int32_t>(Low32(Field_ActiveMember.Native()) -
                                                   Addr(rv::Bytes(Sprite_Objects)));
     return static_cast<U>(offset / static_cast<std::int32_t>(kSpriteStride));
 }

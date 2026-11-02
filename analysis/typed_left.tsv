@@ -475,6 +475,7 @@ src/game/area_w1a.cpp	Area40_PuzzleSolved	global	B	AreaW0c_TailState_addr	0	0x90
 src/game/area_w1a.cpp	Area40_MarkBehind	global	B	ObjTrio_addr + 0x8	0	0x802d48	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (ObjTrio_addr - -)	c4-tc
 src/game/area_w1a.cpp	Area40_MarkBehind	global	B	at::kCellDelta	0	0x66971c	-	no-entry	at::kCellDelta 0x66971c -	b0
 src/game/area_w1a.cpp	Area40_MarkBehind	global	B	at::kCellDelta	1	0x66971c	-	no-entry	at::kCellDelta 0x66971c -	b0
+src/game/area_w1a.cpp	Area40_DrawGrid	record	Mem	Low32(draw_pool::Items()) + half * at::kDrawItemStride + kFr	0	-	via=Low32	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (the draw pool's item, a native pointer narrowed through Low32 by the 64-bit round)	x64-b2
 src/game/area_w1a.cpp	Area40_Init	global	B	Cond_Flags_addr + 0x21	0	0x903fb1	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Cond_Flags_addr - -)	c4-tc
 src/game/area_w1a.cpp	Area40_Init	global	B	Cond_Flags_addr + 0x21	1	0x903fb1	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Cond_Flags_addr - -)	c4-tc
 src/game/area_w1a.cpp	Area40_Init	global	Mem	Cond_Flags_addr + 0xa0	0	0x904030	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (Cond_Flags_addr - -)	c4-tc
@@ -14986,6 +14987,7 @@ src/game/magic_engine.cpp	MagicHold_Countdown	global	Mem	at::kTarget	0	0x904b44	
 src/game/magic_engine.cpp	RestoreForm_Start	global	Mem	at::kActor	0	0x904b34	-	no-entry	at::kActor 0x904b34 -	b0
 src/game/magic_engine.cpp	RestoreForm_Wait	global	Mem	BattleActions_Pending_addr	0	0x904b82	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (BattleActions_Pending_addr - -)	c4-tc
 src/game/magic_engine.cpp	Paralyzer_Start	global	Pointer	BattleE3_CurrentEnemy_addr	0	0x939ad8	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); typed_convert keeps the accessor (rule: seams) (BattleE3_CurrentEnemy_addr - -)	c4-tc
+src/game/magic_engine.cpp	Paralyzer_Start	record	Pointer	Low32(enemy) + kEnemyCues	0	-	via=Low32	pointer-field	Pointer(enemy + kEnemyCues): an enemy record reached through a native pointer narrowed by Low32 (the 64-bit round); the record's cue field, typed by its accessor elsewhere	x64-b2
 src/game/magic_engine.cpp	MagicFx_FlagTargetEnd	global	Mem	at::kTarget	0	0x904b44	-	no-entry	at::kTarget 0x904b44 -	b0
 src/game/magic_engine.cpp	HeadCracker_Windup	record	SetLong	Sprite_Current + 0xC	0	-	base=Sprite_Current	family	Sprite_Current is switched to another record (an actor or pool record) in this function; BattleTask only where it is the slot	b1-magic
 src/game/magic_engine.cpp	HeadCracker_Windup	record	Long	Sprite_Current + 0xC	0	-	base=Sprite_Current	family	Sprite_Current is switched to another record (an actor or pool record) in this function; BattleTask only where it is the slot	b1-magic
@@ -24994,6 +24996,8 @@ src/game/scena_sc12.cpp	B	global	B	at::kCounters	0	0x903848	-	no-entry	at::kCoun
 src/game/scena_sc12.cpp	B	global	B	at::kCounters	1	0x903848	-	no-entry	at::kCounters 0x903848 -	b0
 src/game/scena_sc12.cpp	Effect	global	B	at::kEffects	0	0x7e11e0	-	index	at::kEffects 0x7e11e0 Effect_Objects	b0
 src/game/scena_sc12.cpp	Entry	record	D	table + 4 * static_cast<std::uint32_t>(index)	0	-	param	computed	computed offset or index (param)	b1-scen_ui
+src/game/scena_sc12.cpp	Scena12_CellDoor	record	W	Low32(sprite) + 0x36	0	-	via=Low32	pointer-field	W(sprite + 0x36): a sprite record reached through a native pointer narrowed by Low32 (the 64-bit round)	x64-b2
+src/game/scena_sc12.cpp	Scena12_CellDoor	record	W	Low32(sprite) + 0x3A	0	-	via=Low32	pointer-field	W(sprite + 0x3A): a sprite record reached through a native pointer narrowed by Low32 (the 64-bit round)	x64-b2
 src/game/scena_sc12.cpp	EnterAreaBody	global	B	at::kScriptFlags	0	0x9039a2	-	width	at::kScriptFlags 0x9039a2 Field_ScriptFlags	b0
 src/game/scena_sc12.cpp	EnterAreaBody	global	B	at::kScriptFlags	1	0x9039a2	-	width	at::kScriptFlags 0x9039a2 Field_ScriptFlags	b0
 src/game/scena_sc12.cpp	EnterAreaBody	global	B	at::kScriptFlags	2	0x9039a2	-	width	at::kScriptFlags 0x9039a2 Field_ScriptFlags	b0
@@ -26716,6 +26720,7 @@ src/game/sound_sp.cpp	Law	record	Long	sprite + 0x38	0	-	param	seam	the sprite re
 src/game/sound_sp.cpp	PlayNear	record	At	p.objects + index * 0xA4	0	-	-	seam	the field object table indexed by the cue's object, 0xA4 a record, through the module's seam (rule: seams)	sound-round
 src/game/sound_st.cpp	NoteOneShot	record	Dword	entry + 4	0	-	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); the sound bank's voice entries and cue words, read as Sound_PlayEffect reads them (rule: seams)	sound-round
 src/game/sound_st.cpp	KeyOffOneShots	record	Dword	shot.entry + 4	0	-	-	seam	the accessor reaches memory through an out-of-line seam (a harness stand-in can sit behind it); the sound bank's voice entries and cue words, read as Sound_PlayEffect reads them (rule: seams)	sound-round
+src/game/sprite_pose.cpp	Ptr	record	At	Low32(base) + by	0	-	via=Low32	pointer-field	At(base + by): the pose reader's own helper over a native pointer narrowed by Low32 (the 64-bit round)	x64-b2
 src/game/sprite_pose.cpp	Sprite_SetAnimationAt	global	Ptr	at::kMemberAnimations	0	0x669884	-	no-entry	at::kMemberAnimations 0x669884 -	b0
 src/game/sprite_pose.cpp	Sprite_SetAnimationAt	record	Bytes	rv::Bytes(sprite)	0	-	base=sprite	view	a typed record's own bytes at an offset its struct does not name for this reader (rv::Bytes; stage C4)	c4-rule
 src/game/sprite_pose.cpp	Sprite_SetAnimationAt	global	Ptr	at::kFrameOffsets	0	0x9039d8	-	pointer-in-integer	at::kFrameOffsets 0x9039d8 BattleE2_AnimSet	b0
@@ -27367,23 +27372,22 @@ src/game/worldmap_area_fuzz.cpp	SelfTest	global	At	Area29_Cells_addr	0	0x5ee258	
 src/game/worldmap_area_fuzz.cpp	SelfTest	global	At	WorldMap33_PlateAnims_addr	0	0x5ef320	-	harness	a fuzz or harness file: its seeds and probes read and write raw addresses on purpose (typed_convert keeps the accessor) (WorldMap33_PlateAnims_addr - -)	c4-tc
 src/game/worldmap_area_fuzz.cpp	SelfTest	raw	At	0x5EF6B0	0	0x5ef6b0	-	harness	a fuzz seed writes the raw address on purpose (stage B convention)	c2-field
 src/hook/exe_icon.cpp	ReadRecord	global	-	menu_windows::at::kIconRects	0	0x66367c	-	no-entry	menu_windows::at::kIconRects 0x66367c -	b0
-src/hook/gapwatch.cpp	InDll	record	Ptr	v - 6	0	-	param	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (param)	b1-scen_ui
-src/hook/gapwatch.cpp	OnException	record	Ptr	ctx->Esp	0	-	-	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (-)	b1-scen_ui
 src/hook/snapshot.cpp	ArenaCommitted	record	At	lo - 1	0	-	-	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
 src/hook/snapshot.cpp	Take	record	At	arena_top - arena	0	-	-	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
-src/hook/snapshot.cpp	Restore	record	At	Img(kKept[i].at) + kKept[i].bytes	0	-	via=Img	-	-	-
+src/hook/snapshot.cpp	Restore	record	At	Img(kKept[i].at) + kKept[i].bytes	0	-	via=Img	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (hook file, by width since the 64-bit round)	x64-b1
 src/hook/snapshot.cpp	Restore	record	At	h.arena_top - h.arena_bytes	0	-	-	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
 src/hook/snapshot.cpp	Same	record	At	top - kArenaBytes	0	-	via=Va	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
 src/hook/snapshot.cpp	Same	record	At	top - kArenaBytes	1	-	via=Va	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
 src/hook/snapshot.cpp	Same	record	At	top - kArenaBytes	2	-	via=Va	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
-src/hook/snapshot.cpp	Same	record	At	at + kKept[i].bytes	0	-	via=Img	-	-	-
+src/hook/snapshot.cpp	Same	record	At	at + kKept[i].bytes	0	-	via=Img	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (hook file, by width since the 64-bit round)	x64-b1
 src/hook/snapshot.cpp	Same	record	At	top - kArenaBytes	3	-	via=Va	platform	outside src/game: platform or tooling code (the strict rule covers src/game)	c4-rule
-src/hook/stackwatch.cpp	StackWatch_Start	record	Long	g_teb + 0x04	0	-	via=TebOf	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (via=TebOf)	b1-scen_ui
-src/hook/stackwatch.cpp	StackWatch_Start	record	Long	g_teb + 0x08	0	-	via=TebOf	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (via=TebOf)	b1-scen_ui
-src/hook/stackwatch.cpp	StackWatch_Start	record	Long	g_teb + 0xE0C	0	-	via=TebOf	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (via=TebOf)	b1-scen_ui
+src/hook/stackwatch.cpp	StackWatch_Start	record	Word	g_teb + kTebStackBase	0	-	via=TebOf	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (hook file, by width since the 64-bit round)	x64-b1
+src/hook/stackwatch.cpp	StackWatch_Start	record	Word	g_teb + kTebStackLimit	0	-	via=TebOf	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (hook file, by width since the 64-bit round)	x64-b1
+src/hook/stackwatch.cpp	StackWatch_Start	record	Word	g_teb + kTebDeallocationStack	0	-	via=TebOf	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (hook file, by width since the 64-bit round)	x64-b1
 src/hook/stackwatch.cpp	StackWatch_Start	global	Long	kTaskStackTop	0	0x66c858	-	no-symbols-header	kTaskStackTop 0x66c858 Task_StackTop	b0
 src/hook/stackwatch.cpp	StackWatch_Start	global	Long	kTaskStackTop	1	0x66c858	-	no-symbols-header	kTaskStackTop 0x66c858 Task_StackTop	b0
-src/hook/stackwatch.cpp	StackWatch_Exit	record	Long	g_teb + 0x08	0	-	-	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (-)	b1-scen_ui
+src/hook/stackwatch.cpp	StackWatch_Start	global	Long	kTaskStackTop	2	0x66c858	-	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (hook file, by width since the 64-bit round)	x64-b1
+src/hook/stackwatch.cpp	StackWatch_Exit	record	Word	g_teb + kTebStackLimit	0	-	-	platform	host or platform buffer (packet, vertex, texture cell, DirectDraw / DirectSound descriptor, task stack, TEB), not one of the nine game records (hook file, by width since the 64-bit round)	x64-b1
 src/hook/stackwatch.cpp	StackWatch_Exit	global	Long	kTaskStackTop	0	0x66c858	-	no-symbols-header	kTaskStackTop 0x66c858 Task_StackTop	b0
 src/hook/stackwatch.cpp	StackWatch_AtSetStackBase	global	Long	kTaskStackTop	0	0x66c858	-	no-symbols-header	kTaskStackTop 0x66c858 Task_StackTop	b0
 src/input/button_tests.cpp	RunS1	raw	B	0x904130	0	0x904130	-	inside-entry	a byte inside a wider entry (typed_convert)	c2-scen_ui

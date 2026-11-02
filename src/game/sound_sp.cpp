@@ -487,7 +487,7 @@ const void* g_start_file = nullptr;
 
 void SetDw(unsigned char* q, std::uint32_t v) { std::memcpy(q, &v, 4); }
 void SetS16(unsigned char* q, std::int16_t v) { std::memcpy(q, &v, 2); }
-std::uint32_t Addr(const void* q) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(q)); }
+std::uint32_t Addr(const void* q) { return Low32(q); }
 
 // Sound_PlayEffect as far as this module sees it: each buffer the cue plays
 // passes BeforePlay, then plays.

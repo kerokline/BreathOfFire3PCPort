@@ -31,6 +31,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "common/asm_name.h"
 #include "game/map_field_objects_callees.h"
 #include "game/map_rim.h"
 #include "game/record_views.h"
@@ -698,11 +699,23 @@ extern "C" unsigned long __cdecl MapFieldObjects_Clear40Body(unsigned long eax) 
     At(at::StatusBitsAt())[0] = cleared;
     return (static_cast<U>(eax) & 0xFFFFFF00u) | cleared;
 }
+// A pair by width (docs/x64-asm-policy.md 8 unit 6): the two tail-jumpers
+// are ours now (Area111_TailGate, Scena03_Scene5: void, a statement call),
+// so no caller reads eax on either width, but the fuzz compares the
+// passthrough (map_field_objects_fuzz.cpp TestClear40), and the x86_64 half
+// costs one move: the caller's eax as the body's first argument.
 extern "C" __attribute__((naked)) void __cdecl ScriptFlags_Clear40(void) {
+#if defined(__i386__)
     asm("pushl %eax\n\t"
-        "call _MapFieldObjects_Clear40Body\n\t"
+        "call " BOF3_SYM(MapFieldObjects_Clear40Body) "\n\t"
         "addl $4, %esp\n\t"
         "ret");
+#elif defined(__x86_64__)
+    asm("movl %eax, %ecx\n\t"
+        "jmp " BOF3_SYM(MapFieldObjects_Clear40Body));
+#else
+#error "ScriptFlags_Clear40: no entry for this architecture"
+#endif
 }
 
 void MapFieldObjects_Inject() {

@@ -69,6 +69,7 @@
 #include "game/msgbox.h"
 #include "game/pause_text.h"
 #include "game/quick_menu.h"
+#include "hook/cpu_context.h"
 #include "hook/detour.h"
 #include "hook/exe_icon.h"
 #include "hook/exe_host.h"
@@ -157,7 +158,7 @@ bool g_have_windowed_rect = false;
 
 // GetTickCount through the import slot, as the original reads it: DIV-0022's
 // clock lives in that slot.
-DWORD Tick() { return reinterpret_cast<DWORD(WINAPI*)(void)>(Imp_GetTickCount)(); }
+DWORD Tick() { return reinterpret_cast<DWORD(WINAPI*)(void)>(Imp_GetTickCount.Native())(); }
 
 // The original's windowed placement: a 640 x 480 client, the frame added by
 // AdjustWindowRect, centred on the desktop by (desktop - outer) / 2 - the
@@ -781,7 +782,8 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 } else if (bof3::QuickMenu_Frame()) {
                     // F5's quick menu (draft D) in place of the pause lines.
                 } else {
-                    const unsigned char* const* lines = (Title_LogoState == 0 && Title_Fade == 0) ? Pause_LinesGame : Pause_LinesTitle;
+                    // two 4-byte slots each (Slot32, common/slot32.h): the stride is the image's on every width
+                    const ::bof3::Slot32<const unsigned char>* lines = (Title_LogoState == 0 && Title_Fade == 0) ? Pause_LinesGame : Pause_LinesTitle;
                     // DIV-0038: the English lines are centred on their width
                     Text_DrawAt(PauseText_X(lines[0], 100), 100, 0, 100, lines[0]);
                     Text_DrawAt(PauseText_X(lines[1], 0x70), 0x80, 0, 100, lines[1]);
@@ -862,10 +864,14 @@ LONG CALLBACK TracedUnhandled(EXCEPTION_POINTERS* info) {
     const DWORD code = info->ExceptionRecord->ExceptionCode;
     if (code != EXCEPTION_SINGLE_STEP && code != EXCEPTION_BREAKPOINT) return EXCEPTION_CONTINUE_SEARCH;
     if (InterlockedIncrement(&reports) > 4) return EXCEPTION_CONTINUE_SEARCH;
-    bof3::Log("exittrace   exception 0x%08lX at 0x%08lX, esp 0x%08lX, eflags 0x%08lX, thread %lu, passed on by every handler",
-              code, static_cast<unsigned long>(info->ContextRecord->Eip), static_cast<unsigned long>(info->ContextRecord->Esp),
+    // The context's registers by width (hook/cpu_context.h: read and printed
+    // as wide as the register, so a system DLL's address above 4 GB on x86-64
+    // shows whole; no #if here, a game file).
+    bof3::Log("exittrace   exception 0x%08lX at 0x%s, esp 0x%s, eflags 0x%08lX, thread %lu, passed on by every handler",
+              code, bof3::CtxHex(bof3::CtxIp(*info->ContextRecord)).text,
+              bof3::CtxHex(bof3::CtxSp(*info->ContextRecord)).text,
               static_cast<unsigned long>(info->ContextRecord->EFlags), GetCurrentThreadId());
-    LogStack("the exception", reinterpret_cast<const void*>(static_cast<std::uintptr_t>(info->ContextRecord->Esp)));
+    LogStack("the exception", reinterpret_cast<const void*>(bof3::CtxSp(*info->ContextRecord)));
     return EXCEPTION_CONTINUE_SEARCH;
 }
 BOOL WINAPI TracedTerminateProcess(HANDLE h, UINT code) {
@@ -913,7 +919,7 @@ void WinMain_Inject() {
     {
         // DIV-0152: Start + Select held a second returns to the title.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("PadReset", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_pad_reset)), &was, &is, 1);
+        bof3::PatchBytes("PadReset", Low32(&g_pad_reset), &was, &is, 1);
         bof3::Log("DIV-0152    Start + Select held 60 frames returns to the title, as on the Western discs (on unless the line above says OFF)");
     }
     BOF3_INJECT(Game_WinMain);

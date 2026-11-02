@@ -87,7 +87,7 @@ void PutFloat(unsigned char* at, int v) {
 }
 
 unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
-std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Addr(const void* p) { return Low32(p); }
 
 // The actor record by battle index as the originals compute it - an enemy
 // (i - 3) * 0x128 from 0x93B960 when the target byte has 0x40, else a party

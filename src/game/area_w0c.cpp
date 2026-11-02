@@ -411,7 +411,7 @@ extern "C" void __cdecl Area32_SpawnEffect4F(void) {
     Sprite_Current[0xB] = AH_CALL(Effect_FindFree)();
     unsigned char* const cur = Sprite_Current;
     if (cur[0xB] == 0xFF) return;
-    const auto from = static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember)) - ::bof3::Img(Sprite_Objects_addr));
+    const auto from = static_cast<std::int32_t>(Low32(Field_ActiveMember.Native()) - ::bof3::Img(Sprite_Objects_addr));
     EffectAt(cur[0xB])[0] = 1;
     EffectAt(cur[0xB])[5] = 0x4F;
     EffectAt(cur[0xB])[0xB] = static_cast<unsigned char>(from / 0xA4);
@@ -508,7 +508,7 @@ extern "C" void __cdecl Area33_Record04Start(void) {
     const unsigned width = AreaMap_Header[0];
     const std::uint32_t cell = ::bof3::Img(WorldMap33_Record04Cells_addr) + cur[0xB] * 4u;
     const unsigned z = B(cell + 1), x = B(cell);
-    const_cast<unsigned char*>(AreaMap_Bytes)[z * width + x] = 0xA0;
+    const_cast<unsigned char*>(AreaMap_Bytes.Native())[z * width + x] = 0xA0;
     AH_CALL(Sprite_SetAnimation)(0);
     Sprite_Current[1] = 1;
 }

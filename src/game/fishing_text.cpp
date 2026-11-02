@@ -210,7 +210,7 @@ unsigned OwnPen(sg::Release r, unsigned line) { return kEntryPen[EntryOf(sg::Rel
 std::uint8_t Byte(std::uint32_t at) { return *reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(at)); }
 std::uint16_t Half(std::uint32_t at) { return *reinterpret_cast<const std::uint16_t*>(static_cast<std::uintptr_t>(at)); }
 
-std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Addr(const void* p) { return Low32(p); }
 std::uint32_t* Entry(std::uint32_t at) { return reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(at)); }
 
 // Copies `count` strings into `buffers` (each `room` long) and re-aims the
@@ -491,7 +491,7 @@ void FishingText_Arm() {
     // DIV-0136: after sigma::Arm, which InjectAll calls first.
     if (bof3::WantsShadow("fishing_text")) SelfTest();
     static const std::uint8_t was = 0, is = 1;
-    bof3::PatchBytes("FishingLabelSigma", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_label_sigma)),
+    bof3::PatchBytes("FishingLabelSigma", Low32(&g_label_sigma),
                      &was, &is, 1);
     bof3::Log("FishingLabelSigma the fishing banner's labels through sigma: %s; labels in %s terms (%s)",
               g_label_sigma ? "on" : "OFF (BOF3X_ORIGINAL=FishingLabelSigma)", sg::ReleaseName(g_image_release),

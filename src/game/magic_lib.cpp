@@ -69,7 +69,7 @@ void PutFloat(unsigned char* p, int v) {
     std::memcpy(p, &f, sizeof f);
 }
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
-std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Addr(const void* p) { return Low32(p); }
 
 unsigned char* PartyRecord(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned i) { return Mem(::bof3::Img(Battle_Enemies_addr) + (i - 3u) * at::kEnemyStride); }

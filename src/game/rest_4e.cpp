@@ -144,7 +144,7 @@ U W(U address) { return Word(At(address)); }
 void SetW(U address, U v) { SetWord(At(address), v); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 template <class T> T Get(const unsigned char* p, unsigned offset) {
     T v;
     std::memcpy(&v, p + offset, sizeof v);
@@ -179,7 +179,7 @@ unsigned char* EntryRecord(const char* who) {
 void Commit(unsigned size) { SH_CALL(Gfx_CommitPrim)(1, size); }
 void DrawMode(unsigned dtd, unsigned tpage, const short* window) {
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, static_cast<int>(dtd), tpage,
-                             static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(window)));
+                             Low32(window));
     Commit(0xC);
 }
 void Grey(unsigned char* p) { p[4] = p[5] = p[6] = 0x80; }

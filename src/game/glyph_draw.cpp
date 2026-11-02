@@ -210,7 +210,7 @@ void GlyphDraw_Inject() {
     std::memcpy(was_bytes, &was, 4);
     std::memcpy(is_bytes, &is, 4);
     bof3::PatchBytes("GlyphTexelCentres",
-                     static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&glyph_draw::g_texel_inset)),
+                     Low32(&glyph_draw::g_texel_inset),
                      was_bytes, is_bytes, 4);
     bof3::Log("DIV-0025    glyph texels: (2u + 1/scale + 1/256) / 32, %s (0.5 at every scale until 2026-09-27)",
               glyph_draw::g_texel_inset != 0.0f ? "on" : "off");

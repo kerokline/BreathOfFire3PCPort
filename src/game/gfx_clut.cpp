@@ -16,10 +16,10 @@
 namespace {
 
 struct ClutRow {
-    std::uint32_t generation;   // +0: incremented on every conversion of the row
-    void* pixels;               // +4: 0x1000 bytes, or null until first wanted
+    std::uint32_t generation;         // +0: incremented on every conversion of the row
+    ::bof3::Slot32<void> pixels;      // +4: 0x1000 bytes (a Crt_malloc block, below 4 GB), or null until first wanted
 };
-static_assert(sizeof(ClutRow) == 8);
+static_assert(sizeof(ClutRow) == 8, "the image's 8-byte row on every width (common/slot32.h)");
 static_assert(sizeof(ClutRow) * 512 == sizeof(unsigned long) * Gfx_ClutRows_count);
 
 ClutRow* Rows() { return reinterpret_cast<ClutRow*>(Gfx_ClutRows); }
@@ -152,7 +152,9 @@ void PutState(int y0) {
     for (int i = 0; i < kRows; ++i) {
         std::memcpy(ShadowCell(0, y0 + i), g_shadow_in[i], sizeof g_shadow_in[i]);
         std::memcpy(g_buffers[i], g_buffers_in[i], sizeof g_buffers[i]);
-        Rows()[y0 + i] = {static_cast<std::uint32_t>(i * 7), g_buffers[i]};
+        ClutRow row{static_cast<std::uint32_t>(i * 7), {}};
+        row.pixels = g_buffers[i];
+        Rows()[y0 + i] = row;
     }
 }
 
@@ -217,7 +219,7 @@ void SelfTest(ConvertRowFn their_convert, LoadFn their_load, ClutFn their_clut) 
 
         for (int i = 0; i < kRows; ++i) {
             std::memset(ShadowCell(0, y0 + i), 0, sizeof g_shadow_in[i]);
-            Rows()[y0 + i] = {0, nullptr};
+            Rows()[y0 + i] = ClutRow{0, {}};
         }
     }
     // DIV-0160: Gfx_ConvertRow with bit 15 carried is Capcom's, less the
@@ -251,7 +253,7 @@ void SelfTest(ConvertRowFn their_convert, LoadFn their_load, ClutFn their_clut) 
         }
         for (int i = 0; i < kRows; ++i) {
             std::memset(ShadowCell(0, y0 + i), 0, sizeof g_shadow_in[i]);
-            Rows()[y0 + i] = {0, nullptr};
+            Rows()[y0 + i] = ClutRow{0, {}};
         }
     }
     bof3::Log("shadow      gfx_clut DIV-0160 self-test: 600 rows, %u cells with bit 15, %u MISMATCHES", stp_cells, stp_bad);

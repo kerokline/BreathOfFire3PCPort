@@ -98,9 +98,9 @@ void AddL(unsigned char* a, std::int32_t v) {
     SetLong(a, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(a)) + static_cast<std::uint32_t>(v)));
 }
 // A data item's address (symbols.toml's macros are typed pointers).
-std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Addr(const void* p) { return Low32(p); }
 std::int32_t PtrValue(const void* p) {
-    return static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)));
+    return static_cast<std::int32_t>(Low32(p));
 }
 
 // `imul` then `sar 0xC` (or `sar 3`): the 32-bit product wraps, the shift is

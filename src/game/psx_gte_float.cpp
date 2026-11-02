@@ -349,7 +349,7 @@ extern "C" long __cdecl Gte_DepthRamp(long value) {
     ++g_live.ramp_calls;
     if (theirs != ours && ++g_live.mismatches <= 8)
         bof3::Log("shadow      Gte_DepthRamp MISMATCH: value %ld in %ld..%ld, ours %ld, original %ld", value,
-                  Gte_RampNear, Gte_RampFar, ours, theirs);
+                  static_cast<long>(Gte_RampNear), static_cast<long>(Gte_RampFar), ours, theirs);
     LiveTick();
     return ours;
 }
@@ -373,8 +373,8 @@ extern "C" void __cdecl Gte_Perspective(float* sx, float* sy, long* sz) {
     // game's never do, and the start-up fuzz is where overlap is compared.
     if (std::memcmp(their_bits, our_bits, sizeof our_bits) != 0 && ++g_live.mismatches <= 8)
         bof3::Log("shadow      Gte_Perspective MISMATCH: (%ld, %ld, %ld) near %ld h %ld: ours %08X %08X %08X, "
-                  "original %08X %08X %08X", Gte_Transformed[0], Gte_Transformed[1], Gte_Transformed[2], Gte_NearZ,
-                  Gte_ProjDistance, (unsigned)our_bits[0], (unsigned)our_bits[1], (unsigned)our_bits[2],
+                  "original %08X %08X %08X", Gte_Transformed[0], Gte_Transformed[1], Gte_Transformed[2],
+                  static_cast<long>(Gte_NearZ), static_cast<long>(Gte_ProjDistance), (unsigned)our_bits[0], (unsigned)our_bits[1], (unsigned)our_bits[2],
                   (unsigned)their_bits[0], (unsigned)their_bits[1], (unsigned)their_bits[2]);
     LiveTick();
 }

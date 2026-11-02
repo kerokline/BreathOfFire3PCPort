@@ -90,7 +90,7 @@ void PutFloat(unsigned char* at, int v) {
 unsigned char* TaskSlot(unsigned slot) { return Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride); }
 unsigned char* EnemyRecord(unsigned i) { return Mem(::bof3::Img(Battle_Enemies_addr) + i * at::kEnemyStride); }
 void SetPtr(unsigned char* at, const void* p) {
-    SetLong(at, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)));
+    SetLong(at, static_cast<std::int32_t>(Low32(p)));
 }
 
 int RandCall() { return MH_CALL(Rand)(); }

@@ -293,11 +293,11 @@ void SprtDraw_Inject() {
     // DIVERGENCE DIV-0010: the far texture edge from our table. Patched into
     // our own base so that it has a name of its own for BOF3X_ORIGINAL.
     const U was = ::bof3::Img(kCapcomFarBase);
-    const U is = static_cast<U>(reinterpret_cast<std::uintptr_t>(g_far));
+    const U is = Low32(g_far);
     std::uint8_t was_bytes[4], is_bytes[4];
     std::memcpy(was_bytes, &was, 4);
     std::memcpy(is_bytes, &is, 4);
-    bof3::PatchBytes("SpriteFarEdge", static_cast<U>(reinterpret_cast<std::uintptr_t>(&g_far_base)), was_bytes,
+    bof3::PatchBytes("SpriteFarEdge", Low32(&g_far_base), was_bytes,
                      is_bytes, 4);
     bof3::Log("DIV-0010    our sprite handlers' far texture edge: %s", g_far_base == ::bof3::Img(kCapcomFarBase)
                                                                           ? "Capcom's, tc[u + w - 1]"

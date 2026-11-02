@@ -61,7 +61,7 @@ const Callees kOriginals = {
     Menu_DrawTitleBox,  Msg_SystemPtr,       Text_DrawAt,        Menu_DrawButtonRow,       Menu_DrawMoneyBox,
     Menu_DrawCursorBox, Shop_DrawMemberStats, Menu_DrawEquipPanel, Shop_DrawBuyList,       Shop_DrawBuyDetail,
     Menu_DrawItemList,  Shop_DrawSellDetail, Menu_DrawHand,      BattleMenu_DrawItemList, BattleMenu_DrawSkillList,
-    static_cast<U>(reinterpret_cast<std::uintptr_t>(Widescreen_SlideOperand(at::kSlideLeftBound))),
+    Low32(Widescreen_SlideOperand(at::kSlideLeftBound)),
 };
 Callees g = kOriginals;
 
@@ -367,7 +367,7 @@ void MenuDrawHelpers_Inject() {
     // compares the original's line; a Latin overlay only (DIV-0056).
     if (Lang_Latin()) {
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("ShopYesNoLayout", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_shop_yes_no_line)),
+        bof3::PatchBytes("ShopYesNoLayout", Low32(&g_shop_yes_no_line),
                          &was, &is, 1);
         bof3::Log("DIV-0027    the shop's yes / no line re-spaced as Menu_YesNo's");
     }

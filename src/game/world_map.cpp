@@ -371,12 +371,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(u
     // row alone; this says who linked it.
     if (draw_order::Tagging())
         bof3::Log("draworder   linked %08X (%u bytes) into row %d from %08X", prim, bytes, row,
-                  static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(__builtin_return_address(0))));
+                  Low32(__builtin_return_address(0)));
     const U bound = (static_cast<U>(At(at::Gfx_BufferIndexAt())[0]) << 16) + ::bof3::Img(kPoolBound);
     if (bound <= prim + bytes) {
         if (draw_order::Tagging())
             bof3::Log("draworder   packet pool full: a %u-byte primitive for row %d skipped (MapView_LinkPrimAt) from %08X", bytes, row,
-                      static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(__builtin_return_address(0))));
+                      Low32(__builtin_return_address(0)));
         return;
     }
     const U slot_index = static_cast<U>(row) * 6u;
@@ -665,7 +665,7 @@ void Key(SpriteFn sprite, std::uint32_t buttons, std::uint32_t count, std::uint3
     if (s == nullptr)
         bof3::Fatal("WorldMapLegend: the legend's button word %08X picks the table entry %08X past the six buttons "
                     "(mask %04X): no stand-in for it (BOF3X_ORIGINAL=WorldMapLegend draws the original's)",
-                    word, static_cast<U>(reinterpret_cast<std::uintptr_t>(entry)), Word(entry));
+                    word, Low32(entry), Word(entry));
     if (withheld)
         EmitDim(x, y, 8, StandInText(*s), s->colour);
     else
@@ -689,14 +689,14 @@ void Start(int x, int y, bool withheld) {
 void Arm() {
     if (bof3::WantsShadow("world_map_legend")) LegendSelfTest();
     static const std::uint8_t was = 0, is = 1;
-    bof3::PatchBytes("WorldMapLegend", static_cast<U>(reinterpret_cast<std::uintptr_t>(&g_legend_on)), &was, &is, 1);
+    bof3::PatchBytes("WorldMapLegend", Low32(&g_legend_on), &was, &is, 1);
     bof3::Log("WorldMapLegend the world map's legend: the port's key names painted over and its stand-ins drawn on "
               "the port's own page: %s",
               g_legend_on ? "on" : "OFF (BOF3X_ORIGINAL=WorldMapLegend)");
     // DIV-0184: the dial's semi-transparency bit, the PlayStation's operand; armed
     // here, after world_map_fuzz compared WorldMap_DrawSprite with the port's.
     static const std::uint8_t dial_was = 0, dial_is = 1;
-    bof3::PatchBytes("DialTranslucent", static_cast<U>(reinterpret_cast<std::uintptr_t>(&world_map_dial::g_dial_semi)),
+    bof3::PatchBytes("DialTranslucent", Low32(&world_map_dial::g_dial_semi),
                      &dial_was, &dial_is, 1);
     bof3::Log("DIV-0184    the world map's dial drawn semi-transparent as on the PlayStation (its glass blends by "
               "texel under DIV-0160): %s",

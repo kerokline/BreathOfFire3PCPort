@@ -283,7 +283,7 @@ std::uint32_t Identity(const Section& s, std::uint32_t target) {
 }
 
 void ReadDllImage(void* module) {
-    const auto base = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(module));
+    const auto base = Low32(module);
     const auto* dos = static_cast<const IMAGE_DOS_HEADER*>(module);
     if (dos->e_magic != IMAGE_DOS_SIGNATURE) Fatal("statehash: our module at 0x%08lX has no MZ header", (unsigned long)base);
     const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(static_cast<std::uintptr_t>(base + dos->e_lfanew));
@@ -576,7 +576,7 @@ void SelfTest() {
     for (std::uint32_t at = 0; at < kPage; at += 4) {
         std::uint32_t w = next() >> 8;   // data
         if ((next() >> 24) % 4 == 0)     // a data word equal to one of our functions' addresses
-            w = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Bind_Ours(Bind_RowVa((next() >> 8) % rows))));
+            w = Low32(Bind_Ours(Bind_RowVa((next() >> 8) % rows)));
         std::memcpy(raw + at, &w, 4);
     }
     if (hashb(raw, true) != HashPage(raw))

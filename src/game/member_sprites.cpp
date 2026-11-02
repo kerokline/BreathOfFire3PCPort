@@ -72,7 +72,7 @@ using member_sprites::Handler;
 
 constexpr std::uint32_t kMemberBytes = 0x14C, kActorBytes = 0xA4;
 
-std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const volatile void* p) { return Low32(p); }
 // Member i by address, i unchecked (the original indexes past the three).
 unsigned char* Member(unsigned i) { return At(Address(rv::Bytes(ObjTrio)) + i * kMemberBytes); }
 

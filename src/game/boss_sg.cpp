@@ -48,13 +48,13 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy); }
+unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy.Native()); }
 // Sprite_Current (rv::Current<T>()): the boss enemy in its kind's handlers,
 // the slot in an effect task.
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 U L(const unsigned char* p) { return static_cast<U>(Long(p)); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
-template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+template <typename T> U AddressOf(T* p) { return Low32(p); }
 
 // A table entry as the original's jmp enters it: with the word the
 // dispatcher's own caller left at [esp + 4] (BattleEnemy_RunAll and
@@ -483,7 +483,7 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Strike(void) {
         t[2] = 0;
         t[3] = 0;
         t[4] = 0;
-        cur_task->owner = S(static_cast<U>(reinterpret_cast<std::uintptr_t>(s)));
+        cur_task->owner = S(Low32(s));
         t[0xB] = s[0xB];
         if (s[0xB] != 0) s[0xB] = static_cast<unsigned char>(s[0xB] - 1);
     }

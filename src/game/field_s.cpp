@@ -2141,7 +2141,7 @@ void FieldS_Inject() {
     if (Lang_Latin()) {   // DIVERGENCE DIV-0027 (amended 2026-10-03), DIV-0056
         static const std::uint8_t was = 0, is = 1;
         bof3::PatchBytes("ShopYesNoLayout",
-                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_use_item_yes_no_hand)), &was, &is, 1);
+                         Low32(&g_use_item_yes_no_hand), &was, &is, 1);
         bof3::Log("DIV-0027    SharedList_UseItem's yes / no hand over the re-spaced line");
     }
     BOF3_INJECT(FieldSave_Confirm);

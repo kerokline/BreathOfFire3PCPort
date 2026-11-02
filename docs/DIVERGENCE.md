@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 200 entries, DIV-0001..0200, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 201 entries, DIV-0001..0201, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -14407,5 +14407,125 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=FaerieNameEnd (ini off=)
 - **Toward:** none - the PlayStation has no glyph trap and no two-byte faerie names to cut
+- **Languages:** any
+- **State:** active
+
+### Play the sound through SDL3 audio, with objects of ours in DirectSound's slots
+
+- **ID:** DIV-0201
+- **Date:** 2026-11-01
+- **Subsystem:** platform / audio - the sound output: `src/audio/sound_sdl.cpp`
+  (the device, the buffers, each buffer's notify facet, the mixer, the SDL3
+  device stream), bound on the `DirectSoundCreate` import slot `0x5C4014`
+  (`Imp_DirectSoundCreate`; `SoundSdl_Start`, called from `dllmain.cpp` and
+  `exe_host.cpp` once the slot holds a function); the WAV dump's tap
+  (`src/hook/wav_dump.cpp`) in front of either; the 64-bit build round,
+  [`x64-build-design.md`](x64-build-design.md) sections 6.2..6.4 and
+  [`x64-build-round.md`](x64-build-round.md) stage B group B5
+- **Tier:** Sensible - the one Windows API whose objects the game keeps
+  pointers to, replaced by a library the project already ships (DIV-0050),
+  so the 64-bit build has a sound output at all; the owner's call 4 of
+  2026-11-01 ("SDL3").
+- **Original behaviour:** `Snd_Init` `0x5A6830` calls `DirectSoundCreate`
+  through the import slot `0x5C4014` and keeps Windows' DirectSound device
+  in `Snd_Device` `0x7DE3BC`, its primary buffer (set to 22,050 Hz 8-bit
+  stereo, never written) in `Snd_Primary`, the music's 0x24000-byte
+  44,100 Hz 16-bit stereo ring with two position notifications in
+  `Music_Buffer` / `Music_Notify` / `Music_Events`, the SND stream in
+  `SndStream_Buffer`, and a static secondary buffer per voice of every
+  loaded bank in `Sound_Banks`' entries and `Sound_Channels`; it calls them
+  through 54 vtable sites on 21 methods of three interfaces
+  (`sound_callees.h`, design 6.2, measured 2026-11-01), and Windows'
+  software mixer sums the buffers. Every one of those words is a 32-bit slot
+  of the image; the x64 `dsound.dll` takes a 40-byte `DSBUFFERDESC` and
+  8-byte out-pointers where the game passes its 0x24-byte descriptor and
+  32-bit places, so it cannot stand behind the slots on the 64-bit host
+  (design 6.2's probe).
+- **New behaviour:** the slot holds `Create`, ours, which writes a static
+  device of ours (an `IDirectSound`-shaped vtable of 11 methods) into the
+  32-bit slot and opens one SDL3 device stream (`SDL_OpenAudioDeviceStream`,
+  44,100 Hz 16-bit stereo, the default playback device). Its
+  `CreateSoundBuffer` reads the game's 32-bit descriptor (size `0x24`, the
+  format a 32-bit place at `+0x10`) and hands out a buffer of ours from a
+  static pool (below 4 GB by the DLL's base), an `IDirectSoundBuffer`-shaped
+  vtable of 21 methods on a PCM ring in a heap block: `Lock` / `Unlock` hand
+  the ring's bytes to `SndBuf_Write`; `Play` with `DSBPLAY_LOOPING`, `Stop`
+  keeping the cursor, `GetStatus` `PLAYING` and `LOOPING` and never
+  `BUFFERLOST` (so `Restore` is a no-op and the lost-buffer paths of
+  `SndBuf_Write`, `SndBuf_Play` and `SndStream_Play` are dead);
+  `SetCurrentPosition` / `GetCurrentPosition` the play cursor in bytes,
+  advanced by exactly what the mixer consumed, the write cursor 15 ms ahead
+  as DirectSound's; `SetFrequency` / `GetFrequency` the rate (0 the
+  format's); `SetVolume` / `GetVolume` and `SetPan` / `GetPan` in
+  DirectSound's hundredths of a decibel, kept as the game's numbers (a level
+  above 0 refused, as DirectSound refuses it: `Music_SetVolume`'s note) and
+  applied as gains `10^(h / 2000)`, -10,000 silent; `QueryInterface` for
+  `IID_IDirectSoundNotify` a facet inside the buffer whose
+  `SetNotificationPositions` records the offsets and the game's event
+  handles, signalled when the play cursor moves onto or past an offset - at
+  `Play` for the start position (the ring's offset-0 event, which
+  `Music_Pump` relies on to fill the second half before the cursor reaches
+  it), at the half, and at every wrap. The primary is a buffer with
+  `SetFormat` recorded and no data. The mixer, on SDL's device thread, sums
+  every playing buffer at its frequency (linear interpolation between source
+  frames, as the WAV dump models DirectSound), volume and pan, clipped to 16
+  bits. A once-only buffer that reaches its end stops with its cursor at 0.
+  No word of `.data` is written by the layer: only the out-places the game
+  passes, which DirectSound wrote too, and the import slot in `.rdata`,
+  outside the state hash's range (design 6.4). The game's own slot writes
+  (`Music_Buffer = buffer`, `display_env.cpp:272`) are unchanged: the values
+  are our objects' addresses. **The 32-bit build keeps Windows' DirectSound
+  behind the switch** for the owner's A/B listen; the 64-bit build has no
+  DirectSound path, so there the switch is ignored with a log line
+  (`DIV-0201    SoundSdl: off was asked for, but the 64-bit build has no
+  DirectSound path`) and the slot is bound to ours regardless. The WAV dump
+  (`BOF3X_WAV_DIR`) wraps the slot's function either way - `Create`'s device
+  as it wrapped DirectSound's, the vtables the same - so a route dumped
+  under both switches is one model of the game's calls, and a difference
+  between the two files is a difference in what the game asked for.
+- **Rationale:** design 6.3's sizing: a DirectSound shim would marshal 11
+  of the 21 methods' pointer arguments and every descriptor in front of an
+  API the owner's call retires; objects of ours with DirectSound-shaped
+  vtables edit none of the 54 sites, none of the three callee tables and not
+  the SOUND participant's stand-ins (`sound.cpp` `FakeBuf`, the same shape),
+  and the mixer is new code either way. One SDL3 stream and a mixer of ours
+  rather than a stream per buffer, because the play-cursor semantics
+  (position in bytes, notifications at positions, `GetCurrentPosition` while
+  playing) are ours to compute exactly; SDL3's per-stream resampler would
+  hide the cursor. Not heard by the owner: the listen is theirs (the
+  verification below says what to listen for).
+- **Also in the PSX version?** Not applicable: the PlayStation's SPU plays
+  its voices and the port's DirectSound layer is the port's own; the new
+  behaviour is the port's sound through another output.
+- **Verification:** 2026-11-01, headless (B5's report,
+  `x641101\b5\REPORT.md`): the layer's self-test (`BOF3X_SHADOW=sound_sdl`
+  hosted; `BOF3X_SELFTEST_ONLY` in `bof3x.exe`) drives the objects through
+  their vtables and pulls the mixer by hand - the 4-byte slot writes, the
+  descriptor read, `Lock`'s regions and wrap, a 22,050 Hz ramp resampled
+  exactly, the cursor after each pull, a once-only end, a looping wrap, the
+  volume law at -600 and -10,000, pan hard left and -20 dB, the frequency
+  override, the ring's two notifications firing at `Play`, at the half and
+  at the wrap and only then, the notify facet's reference counting, `Stop`
+  keeping the cursor, clipping, an 8-bit source centred at 0x80, and the
+  refusals DirectSound makes - 0 mismatches, then the SDL3 device opened and
+  closed once; the hosted suite `'*'` with the switch on and with
+  `BOF3X_OFF=SoundSdl`, and the exe host's self-test, exit 0; the i686 gate
+  `0 differ` on every object but the file added and the WAV dump's.
+  **For the owner's ear** (nobody has listened): a music track through its
+  loop point (the ring's halves, DIV-0081's rows), a battle's voices (many
+  static buffers at once, at their cue frequencies), DIV-0171's pan and the
+  fades of DIV-0028 / DIV-0143 (the volume law), the inn's jingle through
+  the music path (D255 / DIV-0177), the quicksave's SOUND participant across
+  a take and a load (`GetFrequency` / `GetCurrentPosition` ours), and the
+  same route with `BOF3X_OFF=SoundSdl` beside it; `tools/wav_dump.py`'s
+  pair of a route under both switches is the coordinator's run.
+- **Reversible?** `BOF3X_OFF=SoundSdl` (the launcher's `off=`), or hosted
+  `BOF3X_ORIGINAL=SoundSdl`: the slot keeps Windows' `DirectSoundCreate`
+  and the game's sound is DirectSound's as shipped. On the 64-bit build
+  neither takes effect (above).
+- **Switch:** SoundSdl
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=SoundSdl (ini off=); on the 64-bit build the name is accepted and ignored with a log line
+- **Toward:** none - the port's sound through another output, not a release's behaviour
 - **Languages:** any
 - **State:** active

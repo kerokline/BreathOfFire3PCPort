@@ -202,7 +202,7 @@ void ReadBack(const char* who) {
                                 static_cast<short>(Word(P(rec + 4))), static_cast<short>(Word(P(rec + 6)))};
     SH_AT(void (__cdecl*)(const short*, unsigned char*), at::kStoreImage.v)(rect, EffectKind30_Shards);
     unsigned char* const s = S();
-    Rest3f_PixCursor = static_cast<U>(reinterpret_cast<std::uintptr_t>(EffectKind30_Shards));
+    Rest3f_PixCursor = Low32(EffectKind30_Shards);
     Rest3f_PartCursor = ::bof3::Img(at::kParticles.v);
     Rest3f_PartCount = 0;
     s[9] = 0;

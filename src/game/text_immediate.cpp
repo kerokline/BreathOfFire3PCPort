@@ -55,7 +55,7 @@ using ImmediateFn = const unsigned char* (__cdecl*)(int, int, const unsigned cha
 
 void SelfTest(void* clone) {
     auto* code = static_cast<std::uint8_t*>(clone);
-    const std::uint32_t moved = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(code)) - kBody.v;
+    const std::uint32_t moved = Low32(code) - kBody.v;
     for (std::uint32_t i = 0; i < kJumpEntries; ++i) {
         std::uint32_t target;
         std::memcpy(&target, code + kJumpTable + 4 * i, sizeof target);

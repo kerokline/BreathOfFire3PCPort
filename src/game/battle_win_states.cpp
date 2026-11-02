@@ -84,7 +84,7 @@ using namespace battle_win_states;
 
 namespace {
 
-std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Addr(const void* p) { return Low32(p); }
 unsigned char* Current() { return At(BattleWinStates_Current); }
 const unsigned char* Target() { return At(BattleActorCopies_Command); }
 bool Choosing() { return BattleE4_Picking != 0; }
@@ -541,7 +541,7 @@ void BattleWinStates_Inject() {
         if (Lang_Latin()) {
             static const std::uint8_t was = 0, is = 1;
             bof3::PatchBytes("BattleBannerCentre",
-                             static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_banner_centre)),
+                             Low32(&g_banner_centre),
                              &was, &is, 1);
             bof3::Log("DIV-0061    action banners centred on their width: %s", g_banner_centre ? "on" : "off");
         }

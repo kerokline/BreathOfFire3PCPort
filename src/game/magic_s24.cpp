@@ -66,7 +66,7 @@ inline std::int32_t Sub(std::int32_t a, std::int32_t b) {
 inline short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 inline short G16(std::uint32_t address) { return static_cast<short>(Word(Mem(address))); }
 inline void Put16(std::uint32_t address, int v) { SetWord(Mem(address), static_cast<unsigned>(v) & 0xFFFFu); }
-inline std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+inline std::uint32_t Addr(const void* p) { return Low32(p); }
 inline void SetPtr(unsigned char* at_, const void* p) { SetLong(at_, static_cast<std::int32_t>(Addr(p))); }
 inline void PutFloat(unsigned char* p, int v) {
     const float f = static_cast<float>(v);

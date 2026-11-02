@@ -22,6 +22,10 @@ long AddWrap(long a, unsigned long b) { return static_cast<long>(static_cast<uns
 
 // One vertex: rotation, translation, perspective. Gte_Transformed is left
 // holding the vertex in view space, as the original leaves it.
+// Gte_Depth as the `long *` the projections take: the row is the image's
+// 32-bit word (std::int32_t in the generated header), long on Win32.
+long* Depth() { return reinterpret_cast<long*>(&Gte_Depth); }
+
 void Project(const short* vertex, float* sx, float* sy, long* sz) {
     Gte_ApplyMatrix(reinterpret_cast<const short*>(Gte_Matrix), vertex, Gte_Transformed);
     Gte_Transformed[0] = AddWrap(Gte_Transformed[0], Gte_Matrix[5]);
@@ -50,7 +54,7 @@ void ProjectThroughFifos(const short* vertex) {
     Gte_ScreenXY[1] = Gte_ScreenXY[3];
     Gte_ScreenXY[2] = Gte_ScreenXY[4];
     Gte_ScreenXY[3] = Gte_ScreenXY[5];
-    Gte_Perspective(Screen(2), Screen(2) + 1, &Gte_Depth);
+    Gte_Perspective(Screen(2), Screen(2) + 1, Depth());
 }
 
 // _ftol 0x5B9550: fistp to 64 bits, rounding toward zero, and the caller gets
@@ -259,7 +263,7 @@ extern "C" void __cdecl Gte_Rtpt(void) {
     Gte_DepthOlder[2] = Gte_Depth;
     Project(Vertex(kV0), Screen(0), Screen(0) + 1, &Gte_DepthOlder[1]);
     Project(Vertex(kV1), Screen(1), Screen(1) + 1, &Gte_DepthOlder[0]);
-    Project(Vertex(kV2), Screen(2), Screen(2) + 1, &Gte_Depth);
+    Project(Vertex(kV2), Screen(2), Screen(2) + 1, Depth());
     Gte_Ir0 = Gte_DepthRamp(Gte_Depth);
 }
 
@@ -281,7 +285,7 @@ extern "C" long __cdecl Gte_RotTransPers3(const short* v0, const short* v1, cons
     Gte_DepthOlder[2] = Gte_Depth;
     Project(v0, sxy0, sxy0 + 1, &Gte_DepthOlder[1]);
     Project(v1, sxy1, sxy1 + 1, &Gte_DepthOlder[0]);
-    Project(v2, sxy2, sxy2 + 1, &Gte_Depth);
+    Project(v2, sxy2, sxy2 + 1, Depth());
     *p = Gte_DepthRamp(Gte_Depth);
     return Gte_Depth >> 2;
 }
@@ -290,7 +294,7 @@ extern "C" long __cdecl Gte_RotTransPers4(const short* v0, const short* v1, cons
     Project(v0, sxy0, sxy0 + 1, &Gte_DepthOlder[2]);
     Project(v1, sxy1, sxy1 + 1, &Gte_DepthOlder[1]);
     Project(v2, sxy2, sxy2 + 1, &Gte_DepthOlder[0]);
-    Project(v3, sxy3, sxy3 + 1, &Gte_Depth);
+    Project(v3, sxy3, sxy3 + 1, Depth());
     *p = Gte_DepthRamp(Gte_Depth);
     return Gte_Depth >> 2;
 }
@@ -304,7 +308,7 @@ extern "C" long __cdecl Gte_RotAverage3(const short* v0, const short* v1, const 
     Gte_DepthOlder[2] = Gte_Depth;
     Project(v0, out0, out0 + 1, &Gte_DepthOlder[1]);
     Project(v1, out1, out1 + 1, &Gte_DepthOlder[0]);
-    Project(v2, out2, out2 + 1, &Gte_Depth);
+    Project(v2, out2, out2 + 1, Depth());
     Gte_StoreDepthF3(out0 + 2, out1 + 2, out2 + 2);
     *p = Gte_DepthRamp(Gte_Depth);
     const unsigned long sum = static_cast<unsigned long>(Gte_DepthOlder[0]) +
@@ -317,7 +321,7 @@ extern "C" long __cdecl Gte_RotAverage4(const short* v0, const short* v1, const 
     Project(v0, out0, out0 + 1, &Gte_DepthOlder[2]);
     Project(v1, out1, out1 + 1, &Gte_DepthOlder[1]);
     Project(v2, out2, out2 + 1, &Gte_DepthOlder[0]);
-    Project(v3, out3, out3 + 1, &Gte_Depth);
+    Project(v3, out3, out3 + 1, Depth());
     Gte_StoreDepthF4(out0 + 2, out1 + 2, out2 + 2, out3 + 2);
     *p = Gte_DepthRamp(Gte_Depth);
     const unsigned long sum = static_cast<unsigned long>(Gte_DepthOlder[0]) + static_cast<unsigned long>(Gte_Depth) +

@@ -84,20 +84,27 @@ void GameClock_Inject() {
     QueryPerformanceFrequency(&g_qpf);
     QueryPerformanceCounter(&g_qpc_start);
 
-    // The slot must already hold kernel32's GetTickCount - the loader has
-    // bound the imports by the time the DLL is injected. PatchBytes refuses
-    // otherwise.
-    const auto real = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&GetTickCount));
-    const auto ours = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&SessionTickCount));
+    // The slot must already be bound - hosted, the loader bound the imports
+    // before the DLL was injected; in bof3x.exe, BindSlots did. `expected` is
+    // the word as it stands (docs/x64-build-design.md 4, the SoundSdl switch's
+    // shape): hosted and in the 32-bit exe host that is kernel32's
+    // GetTickCount; in the 64-bit exe host the slot holds its thunk's place,
+    // and kernel32's own address lies above 4 GB, where no 32-bit word can
+    // name it. An empty slot is a Fatal, as a slot holding something else
+    // was.
     std::uint8_t expected[4], replacement[4];
-    std::memcpy(expected, &real, 4);
+    std::memcpy(expected, &Imp_GetTickCount, 4);   // the 4-byte slot itself (Slot32<void>)
+    std::uint32_t real;
+    std::memcpy(&real, expected, 4);
+    if (real == 0) bof3::Fatal("Game_Clock: the import slot 0x%08X is empty: GameClock_Inject before it is bound", (unsigned)Imp_GetTickCount_addr);
+    const auto ours = Low32(&SessionTickCount);
     std::memcpy(replacement, &ours, 4);
     // PatchBytes takes the slot's VA, a name (detour.cpp: a VA in the linked
     // span is written at its place, Img(va)); &Imp_GetTickCount is already the
     // place, which at a moved base PatchBytes would only write right by its
     // "not in the linked span" branch, and name in its messages.
     bof3::PatchBytes("Game_Clock", Imp_GetTickCount_addr, expected, replacement, 4);
-    g_ours = reinterpret_cast<std::uintptr_t>(Imp_GetTickCount) == ours;
+    g_ours = reinterpret_cast<std::uintptr_t>(Imp_GetTickCount.Native()) == ours;
     if (g_ours)
         bof3::Log("DIV-0022    game clock: milliseconds since the game started, from %lu", g_base);
 }

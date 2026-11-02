@@ -113,7 +113,7 @@ unsigned ActorByte() { return static_cast<unsigned>(Long(Mem(::bof3::Img(at::kAc
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 // `mov ecx, [a]; add [b], ecx` on dwords: wraps.
 void AddLong(unsigned char* to, const unsigned char* by) {
     SetLong(to, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(to)) + static_cast<std::uint32_t>(Long(by))));

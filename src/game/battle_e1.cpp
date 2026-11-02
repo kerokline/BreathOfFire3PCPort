@@ -339,7 +339,7 @@ extern "C" void __cdecl BattleExtra_EquipOpen(void) {
     B(::bof3::Img(at::kModeTimer.v)) = 4;
     FieldS_Step = static_cast<unsigned char>(sub + 1);
     const U name = Labels_Written(17)
-        ? static_cast<U>(reinterpret_cast<std::uintptr_t>(Labels_Slot(17, 0)))
+        ? Low32(Labels_Slot(17, 0))
         : ::bof3::Img(at::kGuestHeadIn.v);
     Memcpy(::bof3::Img(CharacterRecords_addr) + 0x47c, name, NameCopy(name));
 }
@@ -664,7 +664,7 @@ extern "C" unsigned long __cdecl BattleAction_Kind3Dispatch(unsigned long throug
 // 0x904AA3 + 1.
 extern "C" void __cdecl BattleAction_Kind3Banner(void) {
     BH_CALL(Battle_ClearActingFlags)();
-    BH_CALL(BattleBanner_Add)(1, 0, 0, 0x1E, reinterpret_cast<const char*>(BattleE1_BannerText));
+    BH_CALL(BattleBanner_Add)(1, 0, 0, 0x1E, reinterpret_cast<const char*>(BattleE1_BannerText.Native()));
     const unsigned char actor = B(::bof3::Img(at::kActor.v));
     WindowRecords[4].state = 1;
     BH_CALL(Battle_SetActorBit)(actor);
@@ -737,7 +737,7 @@ extern "C" void __cdecl BattleAction_AbilityNotice(void) {
             if (!(flags[0] & 8)) continue;
             SetLong(flags, static_cast<std::int32_t>(static_cast<U>(Long(flags)) & ~8u));
             if (!learns) {
-                BH_CALL(BattleQueue_Push)(1, 0, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(BH_CALL(Msg_SystemPtr)(0x23))));
+                BH_CALL(BattleQueue_Push)(1, 0, Low32(BH_CALL(Msg_SystemPtr)(0x23)));
                 return;
             }
             BH_AT(void (__cdecl*)(unsigned), at::kBe4MemberName.v)(slot - 1u);
@@ -749,7 +749,7 @@ extern "C" void __cdecl BattleAction_AbilityNotice(void) {
             SetLong(At(::bof3::Img(bof3::addr::Text_Records) + 0x24), Long(At(from + 4)));
             SetLong(At(::bof3::Img(bof3::addr::Text_Records) + 0x28), Long(At(from + 8)));
             SetLong(At(::bof3::Img(bof3::addr::Text_Records) + 0x2C), Long(At(from + 0xC)));
-            BH_CALL(BattleQueue_Push)(1, 0, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(BH_CALL(Msg_SystemPtr)(0x24))));
+            BH_CALL(BattleQueue_Push)(1, 0, Low32(BH_CALL(Msg_SystemPtr)(0x24)));
             return;
         } while (slot <= 2);
     }
@@ -833,7 +833,7 @@ extern "C" void __cdecl BattleResult_LevelUpNotice(void) {
     SetWord(At(::bof3::Img(at::kNewLevel.v)), (gain & 0xFFFF) + B(::bof3::Img(at::kCharRecords.v) + again * at::kCharSize + 0xA));
     BH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(bof3::addr::Text_Records) + 0x20)),
                          reinterpret_cast<const char*>(At(::bof3::Img(bof3::addr::Area08_MessageFormat))), Word(At(::bof3::Img(at::kNewLevel.v))));
-    SetLong(At(::bof3::Img(at::kLevelMsgPtr.v)), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(BH_CALL(Msg_SystemPtr)(7))));
+    SetLong(At(::bof3::Img(at::kLevelMsgPtr.v)), static_cast<std::int32_t>(Low32(BH_CALL(Msg_SystemPtr)(7))));
     U rows = 0;
     for (unsigned k = 1; k <= 6; ++k)
         if ((BH_CALL(Char_LevelUpGain)(BattleE1_Roster, k) & 0xFFFF) != 0) rows += 0x10;

@@ -68,7 +68,7 @@ void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned W(U a) { return Word(At(a)); }
 unsigned char& B(U a) { return At(a)[0]; }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // imul r32, r32: the product's low 32 bits.
@@ -1850,7 +1850,7 @@ void Rest3E_Inject() {
     // DIVERGENCE: DIV-0137, the dock's legend from the Config (after the
     // fuzz above, which compares Capcom's one quad).
     static const std::uint8_t was = 0, is = 1;
-    bof3::PatchBytes("DockLegend", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&dock::g_on)), &was, &is, 1);
+    bof3::PatchBytes("DockLegend", Low32(&dock::g_on), &was, &is, 1);
     bof3::Log("DockLegend the dock's legend shows the buttons the Config has its three tests on: %s",
               dock::g_on ? "on" : "OFF (BOF3X_ORIGINAL=DockLegend)");
 }

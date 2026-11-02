@@ -83,7 +83,7 @@ void SelfTestSort(VoidFn theirs) {
         DrawTable_Sort();
         if ((std::memcmp(their_out, DrawTable, sizeof their_out) != 0 || their_scratch != Scratch_Swap) && ++bad <= 8)
             bof3::Log("shadow      DrawTable_Sort self-test MISMATCH round %u: count %u, scratch 0x%08lX vs ours 0x%08lX",
-                      round, DrawTable_Count, their_scratch, Scratch_Swap);
+                      round, DrawTable_Count, their_scratch, static_cast<unsigned long>(Scratch_Swap));
     }
     std::memcpy(DrawTable, saved, sizeof saved);
     DrawTable_Count = saved_count;
@@ -105,7 +105,7 @@ extern "C" void __cdecl DrawLayers_Reset(void) {
     auto* layer = reinterpret_cast<unsigned char*>(DrawLayers) + Gfx_BufferIndex * 8u;
     for (unsigned i = 0; i < kLayers; ++i, layer += kLayerBytes) {
         for (unsigned char* head = layer; head != layer + 0x20; head += 0x10) {
-            const std::uint32_t none = 0, self = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(head));
+            const std::uint32_t none = 0, self = Low32(head);
             std::memcpy(head, &none, 4);
             std::memcpy(head + 4, &self, 4);
         }

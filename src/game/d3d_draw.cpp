@@ -632,7 +632,7 @@ void D3dDraw_Inject() {
         // fuzzed builds noted footprints over fake entries: those are forgotten here.
         std::memset(g_cell_foot, 0, sizeof g_cell_foot);
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("CellTextureVram", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_cell_vram)), &was, &is, 1);
+        bof3::PatchBytes("CellTextureVram", Low32(&g_cell_vram), &was, &is, 1);
         bof3::Log("DIV-0181    a cell texture is rebuilt after an upload over its cells (on unless the line above says OFF)");
     }
     {

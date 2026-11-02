@@ -66,7 +66,7 @@ void SetUL(U a, U v) { SetUL(At(a), v); }
 U W(U a) { return Word(At(a)); }
 unsigned char& B(U a) { return *At(a); }
 U S16(U v) { return static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(v & 0xFFFFu))); }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // imul (32 bits kept)

@@ -284,7 +284,7 @@ void PsxGte_Inject() {
         // DIV-0178: armed after the fuzz above, which sees Capcom's wrapping products.
         const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
         bof3::PatchBytes("ApplyMatrixLVExact",
-                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&psx_gte::g_lv_exact)), was, is, 4);
+                         Low32(&psx_gte::g_lv_exact), was, is, 4);
         bof3::Log("DIV-0178    Gte_ApplyMatrixLV's products are exact, as the PlayStation's libgte computes them (on unless the line above says OFF)");
     }
     BOF3_INJECT(Gte_ApplyMatrix);

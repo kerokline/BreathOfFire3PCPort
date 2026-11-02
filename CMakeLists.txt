@@ -13,11 +13,27 @@ set(BOF3X_VERSION_TAG "v${PROJECT_VERSION}" CACHE STRING "The release tag stampe
 #
 # No game data is read at build time and none is produced.
 
-if(NOT CMAKE_SIZEOF_VOID_P EQUAL 4)
+# Two widths (docs/x64-build-round.md 3 "XA4"). BOF3X_WIDTH is 32 or 64:
+#   32  --preset i686: everything - the DLL in both its modes (hosted inside
+#       BOF3.exe, an i386 image, and the exe host), the shadow fuzz, both
+#       launchers, bof3x.exe as a PE32. The player's build and the oracle
+#       (round doc section 2).
+#   64  --preset x86_64: the exe host alone - bof3x.dll without the fuzz
+#       files, bof3x.exe as a PE32+, the player's launcher. Nothing that
+#       loads into BOF3.exe. BOF3X_HOSTED_BUILD is the switch below.
+if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+  set(BOF3X_WIDTH 32)
+  set(BOF3X_HOSTED_BUILD ON)
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(BOF3X_WIDTH 64)
+  set(BOF3X_HOSTED_BUILD OFF)
+else()
   message(FATAL_ERROR
-    "bof3x must be built 32-bit: it is loaded into BOF3.exe, an i386 image. "
-    "Configure with --preset i686 (cmake/i686-llvm-mingw.cmake).")
+    "bof3x is built 32-bit (--preset i686, cmake/i686-llvm-mingw.cmake: the hosted build inside "
+    "BOF3.exe, an i386 image) or 64-bit (--preset x86_64, cmake/x86_64-llvm-mingw.cmake: the exe "
+    "host alone); CMAKE_SIZEOF_VOID_P is ${CMAKE_SIZEOF_VOID_P}.")
 endif()
+message(STATUS "bof3x: ${BOF3X_WIDTH}-bit build, hosted mode and fuzz ${BOF3X_HOSTED_BUILD}")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -90,11 +106,12 @@ add_custom_command(
   VERBATIM)
 add_custom_target(bof3x_suites DEPENDS "${_suites_hdr}")
 
-# --- SDL3, for the pad (DIV-0050, docs/controls.md) ------------------------
+# --- SDL3, for the pad (DIV-0050, docs/controls.md) and the sound output
+# (DIV-0201, src/audio/sound_sdl.cpp) ------------------------------------------
 # Fetched at configure time and built static into the DLL: the joystick and
-# gamepad layers only, no video, audio or render. zlib licence
-# (docs/THIRD_PARTY.md section 2). Pinned to a release tag; the first
-# configure needs the network.
+# gamepad layers and the audio subsystem (WASAPI on Windows), no video or
+# render. zlib licence (docs/THIRD_PARTY.md section 2). Pinned to a release
+# tag; the first configure needs the network.
 include(FetchContent)
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 set(SDL_STATIC ON CACHE BOOL "" FORCE)
@@ -102,7 +119,8 @@ set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
 set(SDL_TESTS OFF CACHE BOOL "" FORCE)
 set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
-foreach(_sub AUDIO VIDEO RENDER GPU CAMERA HAPTIC SENSOR POWER DIALOG OPENGL OPENGLES VULKAN DIRECTX)
+set(SDL_AUDIO ON CACHE BOOL "" FORCE)
+foreach(_sub VIDEO RENDER GPU CAMERA HAPTIC SENSOR POWER DIALOG OPENGL OPENGLES VULKAN DIRECTX)
   set(SDL_${_sub} OFF CACHE BOOL "" FORCE)
 endforeach()
 FetchContent_Declare(SDL3
@@ -112,7 +130,15 @@ FetchContent_Declare(SDL3
 FetchContent_MakeAvailable(SDL3)
 
 # --- the injected DLL --------------------------------------------------------
-add_library(bof3x SHARED
+# One source list for both widths. The 64-bit DLL serves the exe host alone,
+# so it drops every fuzz file (any *_fuzz.cpp: the shadow fuzz runs Capcom's
+# function beside ours inside BOF3.exe, which no 64-bit process can hold) -
+# the hosted mode's own files (inject_all, detour, exe_image, code_bytes)
+# stay, since the exe host shares them (the bind table patches through
+# detour.cpp, Engine_Main runs InjectAll) and the host is told apart at run
+# time (host.cpp DetectHost); what of them a 64-bit process cannot do is
+# stage B4's #if. The i686 list is the whole list, in this order.
+set(_dll_sources
   src/hook/dllmain.cpp
   src/hook/host.cpp
   src/hook/exe_host.cpp
@@ -193,6 +219,7 @@ add_library(bof3x SHARED
   src/game/frame_callees.cpp
   src/game/kind2_object.cpp
   src/game/area_slope.cpp
+  src/game/area_slope_fuzz.cpp
   src/game/mode_tasks.cpp
   src/game/title_states.cpp
   src/game/field_blocked.cpp
@@ -253,6 +280,7 @@ add_library(bof3x SHARED
   src/audio/seq.cpp
   src/audio/song.cpp
   src/audio/mp3.cpp
+  src/audio/sound_sdl.cpp
   src/game/d3d_draw_fuzz.cpp
   src/game/d3d_list.cpp
   src/game/d3d_list_fuzz.cpp
@@ -745,6 +773,10 @@ add_library(bof3x SHARED
   src/game/crt_rest.cpp
   src/game/crt_rest_fuzz.cpp
   src/hook/bof3x.rc)
+if(NOT BOF3X_HOSTED_BUILD)
+  list(FILTER _dll_sources EXCLUDE REGEX "_fuzz\.cpp$")
+endif()
+add_library(bof3x SHARED ${_dll_sources})
 add_dependencies(bof3x bof3x_symbols bof3x_rebase)
 target_include_directories(bof3x PRIVATE src third_party "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
@@ -770,7 +802,9 @@ target_link_options(bof3x PRIVATE -Wl,--disable-dynamicbase -Wl,--image-base,0x1
 # --- bof3x.exe, our own executable (docs/state3-design.md section 1.3) ------
 # Written by tools/make_exe.py, not linked: lld will not place a section
 # before .text (docs/state3-build.md section 1.2). Based at 0x400000 and
-# spanning Capcom's range, it imports bof3x.dll!Engine_Main. The script reads
+# spanning Capcom's range, it imports bof3x.dll!Engine_Main. A PE32 in the
+# 32-bit build, a PE32+ in the 64-bit one (--width; the same sections at the
+# same RVAs, the entry in the width's machine code). The script reads
 # the layout from src/hook/exe_layout.h - the table the engine reads too -
 # and verifies what it wrote (section table, base, no relocations, stack,
 # imports, resources, and the DLL's Engine_Main export) with tools/pe_read.py;
@@ -786,6 +820,7 @@ add_custom_command(
           --layout "${CMAKE_SOURCE_DIR}/src/hook/exe_layout.h"
           --dll "$<TARGET_FILE:bof3x>"
           --version "${PROJECT_VERSION}" --version-tag "${BOF3X_VERSION_TAG}"
+          --width ${BOF3X_WIDTH}
           --out "${_exe_out}"
   COMMAND "${CMAKE_COMMAND}" -E touch "${_exe_stamp}"
   DEPENDS bof3x
@@ -811,7 +846,7 @@ add_custom_command(
           --layout "${CMAKE_SOURCE_DIR}/src/hook/exe_layout.h"
           --dll "$<TARGET_FILE:bof3x>"
           --version "${PROJECT_VERSION}" --version-tag "${BOF3X_VERSION_TAG}"
-          --image-base 0xA00000
+          --width ${BOF3X_WIDTH} --image-base 0xA00000
           --out "${_exe_moved_out}"
   COMMAND "${CMAKE_COMMAND}" -E touch "${_exe_moved_stamp}"
   DEPENDS bof3x
@@ -872,7 +907,11 @@ function(bof3x_add_launcher target output hosted)
   set_target_properties(${target} PROPERTIES OUTPUT_NAME "${output}")
 endfunction()
 bof3x_add_launcher(bof3x_launcher bof3x-launcher 0)
-bof3x_add_launcher(bof3x_launcher_dev bof3x-launcher-dev 1)
+# The developer launcher starts BOF3.exe with the DLL injected, which only a
+# 32-bit process can do to a 32-bit one: the hosted build's alone.
+if(BOF3X_HOSTED_BUILD)
+  bof3x_add_launcher(bof3x_launcher_dev bof3x-launcher-dev 1)
+endif()
 # The Jukebox's names (docs/music-player.md section 4), beside the launcher.
 # Edit data/music-names.tsv, not the copy: every build refreshes it.
 # A rule of its own, so an edit to the file alone is copied too.
@@ -882,3 +921,14 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/music-names.tsv"
   VERBATIM)
 add_custom_target(bof3x_music_names DEPENDS "${CMAKE_BINARY_DIR}/music-names.tsv")
 add_dependencies(bof3x_launcher bof3x_music_names)
+
+# --- every object, no link ---------------------------------------------------
+# The x86_64 CI job's compile step (docs/x64-build-round.md 3 "XA4"): a
+# target that builds every object of the DLL, the launcher parts, the
+# launcher and SDL3 and links nothing, so a build whose link cannot yet
+# resolve (the 64-bit build until the round's stage C) still gives a whole
+# compile log. `cmake --build <dir> --target bof3x_compile`. Not ALL: a plain
+# build is unchanged by it.
+add_custom_target(bof3x_compile
+  DEPENDS $<TARGET_OBJECTS:bof3x> $<TARGET_OBJECTS:bof3x_launcher_parts>
+          $<TARGET_OBJECTS:bof3x_launcher> $<TARGET_OBJECTS:SDL3-static>)

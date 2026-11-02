@@ -95,7 +95,7 @@ const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(::bof3::
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 void AddB(unsigned char& b, unsigned v) { b = static_cast<unsigned char>(b + v); }
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 void AddLong(unsigned char* at, std::uint32_t v) {
     SetLong(at, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(at)) + v));
 }

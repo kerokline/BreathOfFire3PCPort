@@ -86,7 +86,7 @@ using move_script::Long;
 using move_script::SetWord;
 using move_script::Word;
 
-std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Addr(const void* p) { return Low32(p); }
 unsigned char* Ptr(std::uint32_t at) { return At(static_cast<std::uint32_t>(Long(At(at)))); }
 unsigned char* Current() { return Ptr(::bof3::Img(at::kCurrent.v)); }
 unsigned char* FieldState() { return Field_State; }
@@ -304,7 +304,7 @@ namespace {
 // acting member's +0x134 has bit 1, else 0x80.
 unsigned ArmShade(unsigned j) {
     if (j == 2 || j == 3) {
-        if (reinterpret_cast<unsigned char*>(BattleE4_MenuActor)[0x134] & 2) return 0x40;
+        if (reinterpret_cast<unsigned char*>(BattleE4_MenuActor.Native())[0x134] & 2) return 0x40;
     }
     return 0x80;
 }

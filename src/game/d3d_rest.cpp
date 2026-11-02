@@ -53,7 +53,7 @@ Callees g = kOriginals;
 namespace {
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Addr(const void* p) { return Low32(p); }
 U Word(const unsigned char* p) {
     std::uint16_t v;
     std::memcpy(&v, p, sizeof v);
@@ -586,7 +586,7 @@ void D3dRest_Inject() {
         if (n > 1 || (n == 1 && text[0] != '0' && text[0] != '1')) bof3::Fatal("BOF3X_TILE1 must be 0 or 1");
         if (!off) {
             static const std::uint8_t was = 0, is = 1;
-            bof3::PatchBytes("Tile1Quad", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_tile1_quad)),
+            bof3::PatchBytes("Tile1Quad", Low32(&g_tile1_quad),
                              &was, &is, 1);
             bof3::Log("DIV-0077    TILE_1 drawn as a scale-sized quad, the PlayStation pixel's footprint (BOF3X_TILE1=0 for the point)");
         }

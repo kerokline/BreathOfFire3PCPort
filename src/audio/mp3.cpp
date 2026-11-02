@@ -36,7 +36,7 @@ struct Frame {
 };
 struct Decoder {
     std::uint32_t pad[5];
-    Frame* frame;
+    std::uint32_t frame;       // the place of frame_store: a 32-bit word, as the game reads it (the seam's shape on both widths)
     const std::uint8_t* data;  // the file in memory (Music_Data, the caller's)
     std::uint32_t size;
     std::uint32_t pos;         // the next byte to decode
@@ -46,6 +46,8 @@ struct Decoder {
 };
 static_assert(offsetof(Decoder, frame) == 0x14, "the frame pointer is read at decoder + 0x14");
 static_assert(offsetof(Frame, bytes) == 8, "the frame's bytes are read at frame + 8");
+
+Frame* FrameOf(Decoder* d) { return reinterpret_cast<Frame*>(static_cast<std::uintptr_t>(d->frame)); }
 
 // What the frame's byte count holds after the end of the stream is reported:
 // Capcom's decoder writes nothing to `out` and leaves the last frame's count,
@@ -102,7 +104,15 @@ bool g_active;
 int __stdcall Create(void** decoder) {
     Decoder* d = new Decoder();
     std::memset(d, 0, sizeof *d);
-    d->frame = &d->frame_store;
+    // The frame's place as the 32-bit word the game reads at +0x14: the heap
+    // lies below 4 GB on the 64-bit host by the executable's placement
+    // (docs/x64-build-design.md 2, 5), and a block that does not is a Fatal,
+    // never a truncated word.
+    const auto frame = reinterpret_cast<std::uintptr_t>(&d->frame_store);
+    if (sizeof(void*) > 4 && frame > 0xFFFFFFFFull)
+        bof3::Fatal("DIV-0091: the decoder at %p lies above 4 GB, where the game's word for its frame cannot reach it",
+                    static_cast<void*>(d));
+    d->frame = static_cast<std::uint32_t>(frame);
     mp3dec_init(&d->dec);
     *decoder = d;
     return 0;
@@ -136,7 +146,7 @@ int __stdcall Start(void* decoder) {
     mp3dec_init(&d->dec);
     d->pos = 0;
     d->started = true;
-    d->frame->bytes = 0;
+    FrameOf(d)->bytes = 0;
     return 0;
 }
 
@@ -153,6 +163,13 @@ int __stdcall Start(void* decoder) {
 // the next task's saved context (2026-10-10, the owner's crash at a float
 // bit pattern with every register a float). So DecodeFrame runs with esp on
 // a 256 KB block of ours, switched in and out around the one call.
+//
+// The switch is a pair by width (docs/x64-asm-policy.md 4.1, 8 unit 2;
+// x64-build-design.md 7.6): the i686 block as it was, and for x86-64 the same
+// shape for rsp - the two arguments in rcx and rdx, the 32 bytes of home space
+// under the call, the block's top 16-aligned so the callee sees rsp at 8 mod
+// 16. The block's address needs no width: its top is in a register, stored
+// nowhere the game reads.
 namespace {
 
 constexpr std::uint32_t kStackBytes = 256 * 1024;
@@ -169,8 +186,9 @@ int __stdcall Decode(void* decoder, void* out) {
         DWORD old;
         VirtualProtect(g_stack, 4096, PAGE_NOACCESS, &old);  // a guard page under it: an overrun faults, never wanders
     }
-    const std::uint32_t top = (reinterpret_cast<std::uintptr_t>(g_stack) + kStackBytes - 16) & ~15u;
+    const std::uintptr_t top = (reinterpret_cast<std::uintptr_t>(g_stack) + kStackBytes - 16) & ~static_cast<std::uintptr_t>(15);
     int result;
+#if defined(__i386__)
     asm volatile(
         "movl %%esp, %%esi\n\t"
         "movl %[top], %%esp\n\t"
@@ -181,6 +199,21 @@ int __stdcall Decode(void* decoder, void* out) {
         : "=a"(result)
         : [top] "r"(top), [out] "r"(out), [dec] "r"(decoder), [fn] "r"(&DecodeFrame)
         : "esi", "ecx", "edx", "memory", "cc");
+#elif defined(__x86_64__)
+    void* dec = decoder;   // rcx and rdx: the Win64 arguments, which the call may clobber
+    void* out_r = out;
+    asm volatile(
+        "movq %%rsp, %%rsi\n\t"
+        "movq %[top], %%rsp\n\t"
+        "subq $32, %%rsp\n\t"
+        "call *%[fn]\n\t"
+        "movq %%rsi, %%rsp\n\t"
+        : "=a"(result), "+c"(dec), "+d"(out_r)
+        : [top] "r"(top), [fn] "r"(&DecodeFrame)
+        : "rsi", "r8", "r9", "r10", "r11", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "memory", "cc");
+#else
+#error "mp3 Decode: no stack switch for this architecture"
+#endif
     return result;
 }
 
@@ -191,7 +224,7 @@ int __stdcall DecodeFrame(void* decoder, void* out) {
     if (!d->started) bof3::Fatal("DIV-0091: Mp3_Decode before Mp3_Start");
     for (;;) {
         if (d->pos >= d->size) {
-            d->frame->bytes = kEosBytes;
+            FrameOf(d)->bytes = kEosBytes;
             return sound::kEndOfStream;
         }
         mp3dec_frame_info_t info;
@@ -199,7 +232,7 @@ int __stdcall DecodeFrame(void* decoder, void* out) {
                                                 static_cast<mp3d_sample_t*>(out), &info);
         if (info.frame_bytes <= 0) {
             d->pos = d->size;
-            d->frame->bytes = kEosBytes;
+            FrameOf(d)->bytes = kEosBytes;
             return sound::kEndOfStream;
         }
         d->pos += static_cast<std::uint32_t>(info.frame_bytes);
@@ -207,7 +240,7 @@ int __stdcall DecodeFrame(void* decoder, void* out) {
         if (info.channels != 2 || info.hz != 44100)
             bof3::Fatal("DIV-0091: a frame of %d channels at %d Hz at byte %u (the stream is 44,100 Hz stereo)",
                         info.channels, info.hz, d->pos - static_cast<std::uint32_t>(info.frame_bytes));
-        d->frame->bytes = static_cast<std::uint32_t>(samples) * 4;
+        FrameOf(d)->bytes = static_cast<std::uint32_t>(samples) * 4;
         return 0;
     }
 }
@@ -282,7 +315,7 @@ void DecodeAll(const Entries& e, const std::uint8_t* data, std::uint32_t size, s
     e.memory_io(io);
     e.set_io(decoder, io);
     char name[0x20];
-    std::snprintf(name, sizeof name, "%X@%X", size, static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(data)));
+    std::snprintf(name, sizeof name, "%X@%X", size, Low32(data));
     if (e.open(decoder, name, -1) != 0) return;
     if (e.start(decoder) != 0) return;
     run->opened = true;

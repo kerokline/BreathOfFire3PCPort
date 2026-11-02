@@ -38,7 +38,7 @@ extern "C" void __cdecl Gfx_BeginFrame(void) {
         reinterpret_cast<std::uint8_t*>(&Gfx_FrameNodes) + b * 8);
     for (int n = 0x38; n != 0; --n) {
         node[0] = 0;
-        node[1] = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(node));
+        node[1] = Low32(node);
         node = reinterpret_cast<std::uint32_t*>(reinterpret_cast<std::uint8_t*>(node) + 0x30);
     }
 

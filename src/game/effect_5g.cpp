@@ -65,7 +65,7 @@ unsigned char* S() { return Sprite_Current; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 unsigned char* Vertices() { return reinterpret_cast<unsigned char*>(Prim_VertexScratch); }
 const short* Vertex(unsigned i) { return reinterpret_cast<const short*>(Vertices() + 8 * i); }
 

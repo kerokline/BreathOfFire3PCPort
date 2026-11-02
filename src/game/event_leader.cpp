@@ -946,7 +946,7 @@ void EventLeader_Inject() {
     {
         // DIV-0121: armed after the fuzz above, which sees Capcom's rule.
         const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
-        bof3::PatchBytes("EdgeNoArea", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&event_leader::g_edge_no_area)),
+        bof3::PatchBytes("EdgeNoArea", Low32(&event_leader::g_edge_no_area),
                          was, is, 4);
         bof3::Log("DIV-0121    a map edge that leads to no area (a game loaded in an encounter field) holds (on unless the line above says OFF)");
     }

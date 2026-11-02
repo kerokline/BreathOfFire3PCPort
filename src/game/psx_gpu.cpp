@@ -81,7 +81,7 @@ void FuzzAddPrim(AddFn theirs, AddFn ours) {
         // what was stored is an address in its own buffer: compare as offsets
         for (unsigned c = 0; c < 4; ++c) {
             const auto rebase = [](unsigned long v, const unsigned long* base) {
-                const unsigned long low = v & ~kLinkFlag, from = static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(base));
+                const unsigned long low = v & ~kLinkFlag, from = Low32(base);
                 return low >= from && low < from + 16 ? (v & kLinkFlag) | (low - from) | 0x40000000ul : v;
             };
             if (rebase(a[c], a) != rebase(b[c], b)) { Mismatch("Gpu_AddPrim", round); break; }
@@ -115,7 +115,7 @@ extern "C" void __cdecl Gpu_AddPrim(unsigned long* ot, unsigned long* prim, unsi
     const unsigned long flag = *prim & kLinkFlag;
     const unsigned long head = *ot;
     *link_out = head;
-    *ot = flag | static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(prim));
+    *ot = flag | Low32(prim);
 }
 
 // original 0x5A7560. One store: the list's last link now names `item`. The
@@ -186,7 +186,7 @@ extern "C" void __cdecl Gpu_ClearOTagR(unsigned long* ot, int n) {
         at -= 4u;
     }
     *reinterpret_cast<unsigned long*>(at) =
-        static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(&Gpu_OtTerminator)) | kLinkFlag;
+        Low32(&Gpu_OtTerminator) | kLinkFlag;
 }
 
 // originals 0x5A79A0, 0x5A79E0: libgpu's getTPage and getClut, bit for bit.

@@ -76,7 +76,7 @@ unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
 // 0x939FA0 points at the menu member's +0x124, its action record
 // (records::ActionRecord; BattleInput_NextMember stores it, battle_phases.cpp).
 unsigned char* Command() { return PtrAt(::bof3::Img(at::kCommandRecord.v)); }
-unsigned char* Acting() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor); }
+unsigned char* Acting() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor.Native()); }
 unsigned char* List() { return At(::bof3::Img(Window16_addr)); }
 // Entry i of a dispatch table in .data, read at the dispatch: no bound, as
 // the original has it - an index past the table reads the next one's.
@@ -213,7 +213,7 @@ extern "C" void __cdecl BattleItemCmd_OpenDispatch(void) {
 // queue's reader, not here.
 extern "C" void __cdecl BattleItemCmd_QueuePrompt(void) {
     const unsigned char* const text = g.system_ptr(0x4000);
-    g.queue_push(2, 0xFF, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(text)));
+    g.queue_push(2, 0xFF, Low32(text));
     BattleE4_Step4 = static_cast<unsigned char>(BattleE4_Step4 + 1);
 }
 
@@ -337,7 +337,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     const unsigned item = ListItem();
     const unsigned message = g.item_price(category, item);
     const unsigned char* const help = g.system_ptr(message);
-    SetLong(At(::bof3::Img(at::kQueue.v) + 4 + entry), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(help)));
+    SetLong(At(::bof3::Img(at::kQueue.v) + 4 + entry), static_cast<std::int32_t>(Low32(help)));
     if (Word(list + 0x12) != 0) return;
 
     if (up && before == 0) {

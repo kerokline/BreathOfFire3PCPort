@@ -332,7 +332,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_StartMembe
                 }
                 const unsigned task = g.task_create(0, parameter) & 0xFF;
                 SetLong(At(::bof3::Img(BattleTask_Slots_addr) + task * at::kTaskSize + 0x80),
-                        static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Member(BossSb_Countdown))));
+                        static_cast<std::int32_t>(Low32(Member(BossSb_Countdown))));
                 Inc(::bof3::Img(BossSb_Countdown_addr));
                 break;
             }
@@ -519,7 +519,7 @@ void BattleTurnSteps_Inject() {
     {
         // DIV-0154: after the self-test, which compared Capcom's bounds.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("ExtraRoundClear", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_extra_round_clear)), &was, &is, 1);
+        bof3::PatchBytes("ExtraRoundClear", Low32(&g_extra_round_clear), &was, &is, 1);
         bof3::Log("DIV-0154    the round's end clears the faster-side mark from every member and enemy (on unless the line above says OFF)");
     }
     BOF3_INJECT(BattleRoundEnd_Step);

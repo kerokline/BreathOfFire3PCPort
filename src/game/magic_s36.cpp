@@ -86,7 +86,7 @@ short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 void AddB(unsigned char& b, unsigned v) { b = static_cast<unsigned char>(b + v); }
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 std::uint32_t U32(const unsigned char* at) { return static_cast<std::uint32_t>(Long(at)); }
 std::int32_t I32(std::uint32_t v) { return static_cast<std::int32_t>(v); }
 

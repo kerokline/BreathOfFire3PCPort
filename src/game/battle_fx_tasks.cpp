@@ -81,11 +81,11 @@ using namespace battle_fx_tasks;
 
 namespace {
 
-std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const void* p) { return Low32(p); }
 // A pointer the original keeps in a dword, read afresh.
 unsigned char* PtrAt(std::uint32_t address) { return At(static_cast<std::uint32_t>(Long(At(address)))); }
 // The battle-task slot being run (0x93B8C4), and a slot's owner (+0x80).
-unsigned char* Cur() { return rv::Bytes(BattleFlow_TaskCurrent); }
+unsigned char* Cur() { return rv::Bytes(BattleFlow_TaskCurrent.Native()); }
 unsigned char* OwnerOf(const unsigned char* slot) { return At(static_cast<std::uint32_t>(Long(slot + 0x80))); }
 // Sprite_Current, read afresh at every use.
 unsigned char* Sc() { return Sprite_Current; }

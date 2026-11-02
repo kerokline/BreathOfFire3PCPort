@@ -47,7 +47,7 @@ U D(U address) { return static_cast<U>(Long(Mem(address))); }
 void SetD(U address, U v) { SetLong(Mem(address), static_cast<std::int32_t>(v)); }
 void AddWord(unsigned char* p, unsigned v) { SetWord(p, Word(p) + v); }
 void SetMessage(unsigned id) { SetWord(Mem(::bof3::Img(at::kMessage.v)), id); }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 // The movement script back (or on) by `delta` words: the running script
 // object's u16 +0xA, the pointer read at the store.
 void ScriptStep(unsigned delta) { AddWord(MoveScript_Object + 0xA, delta); }
@@ -971,7 +971,7 @@ void AreaW3d_Inject() {
     {
         // DIV-0180: after the self-test, which compared Capcom's init.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("Area135MarkerPlaced", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_place_marker)), &was, &is, 1);
+        bof3::PatchBytes("Area135MarkerPlaced", Low32(&g_place_marker), &was, &is, 1);
         bof3::Log("DIV-0180    area 135 places its marker before showing it when it was never placed (on unless the line above says OFF)");
     }
     BOF3_INJECT(Area135_ChoiceStartTail);

@@ -79,7 +79,7 @@ unsigned char* S() { return Sprite_Current; }
 unsigned char& B(U address) { return At(address)[0]; }
 std::int32_t L(U address) { return Long(At(address)); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 // A register loaded with Sprite_Current, then `movzx ax, byte [reg + n]`: the
 // pointer's upper half above the byte.
 U PtrHi(const unsigned char* p) { return Key(p) & 0xFFFF0000u; }
@@ -1207,14 +1207,14 @@ void Effect1E_Inject() {
     // compares the original's hand; a Latin overlay only (DIV-0056).
     if (Lang_Latin()) {
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("ShopAskRow", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_shop_ask_row)), &was,
+        bof3::PatchBytes("ShopAskRow", Low32(&g_shop_ask_row), &was,
                          &is, 1);
         bof3::Log("DIV-0027    the field panel's message 0x44: the hand on the row of its first answer");
     }
     // DIVERGENCE DIV-0132: after the self-test, which compares Capcom's fades.
     {
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("FishPanelDuck", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_fish_panel_duck)),
+        bof3::PatchBytes("FishPanelDuck", Low32(&g_fish_panel_duck),
                          &was, &is, 1);
         bof3::Log("DIV-0132    the fishing panel ducks the music as the PlayStation does (on unless the line above says OFF)");
     }

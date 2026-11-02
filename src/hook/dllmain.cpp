@@ -33,6 +33,7 @@
 #include "hook/stackwatch.h"
 #include "hook/statehash.h"
 #include "hook/wav_dump.h"
+#include "audio/sound_sdl.h"
 
 BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
     if (reason == DLL_PROCESS_ATTACH) {
@@ -54,6 +55,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
             CreateEventW(nullptr, TRUE, FALSE, name);
         }
         bof3::StateHash_BeforeInjects(module);   // BOF3X_STATEHASH: .data as the loader mapped it
+        bof3::SoundSdl_Start();   // DIV-0201: the DirectSoundCreate slot, bound by the loader, to our Create (sound_sdl.h)
         bof3::InjectAll();
         bof3::StateHash_AfterInjects();
         bof3::StackWatch_Start();   // the main thread's stack and the x87 word; BOF3X_STACKWATCH

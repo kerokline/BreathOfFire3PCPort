@@ -93,7 +93,7 @@ std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word
 std::int32_t S16(U a) { return S16(At(a)); }
 std::int32_t S8(U a) { return static_cast<signed char>(*At(a)); }
 std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // cdq; and edx, 2^n - 1; add eax, edx; sar eax, n: a signed divide by 2^n,

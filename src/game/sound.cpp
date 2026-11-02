@@ -25,6 +25,7 @@
 
 #include "audio/mp3.h"
 #include "bof3/symbols.gen.h"
+#include "common/asm_name.h"
 #include "game/display_env_callees.h"
 #include "game/mode_flow.h"
 #include "game/music_loops.h"
@@ -51,7 +52,7 @@ std::uint32_t Dword(std::uint32_t address) {
 }
 void SetDword(std::uint32_t address, std::uint32_t v) { std::memcpy(At(address), &v, sizeof v); }
 void SetWord(std::uint32_t address, std::uint16_t v) { std::memcpy(At(address), &v, sizeof v); }
-std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const volatile void* p) { return Low32(p); }
 
 // Win32 through the game's own import slots, as the originals call it.
 template <class Fn>
@@ -73,12 +74,13 @@ unsigned __stdcall ImportMsgWait(unsigned count, const void* handles, int all, u
 }  // namespace sound
 
 // The five with an eax result, under the assembler names of the void
-// declarations symbols.gen.h makes (i686 cdecl: a leading underscore).
-extern "C" int __cdecl Sound_PlayEffectEax(unsigned short id) __asm__("_Sound_PlayEffect");
-extern "C" int __cdecl Music_PlayEax(unsigned int track, int frames) __asm__("_Music_Play");
-extern "C" int __cdecl Music_FadeOutStopEax(int frames) __asm__("_Music_FadeOutStop");
-extern "C" int __cdecl Music_FadeInEax(int frames) __asm__("_Music_FadeIn");
-extern "C" int __cdecl Music_FadeOutEax(int frames) __asm__("_Music_FadeOut");
+// declarations symbols.gen.h makes (common/asm_name.h: the i686 ABI's leading
+// underscore, none on x86-64).
+extern "C" int __cdecl Sound_PlayEffectEax(unsigned short id) BOF3_ASM_NAME(Sound_PlayEffect);
+extern "C" int __cdecl Music_PlayEax(unsigned int track, int frames) BOF3_ASM_NAME(Music_Play);
+extern "C" int __cdecl Music_FadeOutStopEax(int frames) BOF3_ASM_NAME(Music_FadeOutStop);
+extern "C" int __cdecl Music_FadeInEax(int frames) BOF3_ASM_NAME(Music_FadeIn);
+extern "C" int __cdecl Music_FadeOutEax(int frames) BOF3_ASM_NAME(Music_FadeOut);
 
 namespace sound {
 
@@ -871,7 +873,9 @@ extern "C" void* __cdecl Music_OpenDecoder(const void* file, unsigned size) {
 // event is read back from Music_Events after the second is made, the second
 // used as CreateEventA returned it. Returns SetNotificationPositions' result.
 extern "C" long __cdecl Music_SetNotify(void* buffer) {
-    Method<ComQuery>(buffer, kQueryInterface)(buffer, At(kIidNotify), &Music_Notify);
+    // The slot as QueryInterface's out parameter (void**): the 32-bit spelling,
+    // as Snd_Init's (sound_rest.cpp); B5's sound layer replaces it.
+    Method<ComQuery>(buffer, kQueryInterface)(buffer, At(kIidNotify), reinterpret_cast<void**>(&Music_Notify));
     Music_Events[0] = g.create_event(nullptr, 0, 0, nullptr);
     void* const second = g.create_event(nullptr, 0, 0, nullptr);
     Music_Events[1] = second;
@@ -1048,7 +1052,16 @@ extern "C" void __cdecl Music_Release(void) {
 // DIV-0087: the synth's stream has no decoder and is fed all the same.
 extern "C" void __cdecl Music_Pump(void) {
     if ((!Music_Decoder && !music_seq::Active()) || !Music_Buffer) return;
+#if defined(__i386__)
     const unsigned signalled = g.msg_wait(2, Music_Events, 0, 0, 0xFF);
+#else
+    // MsgWaitForMultipleObjects reads a native HANDLE array, 8 bytes an entry
+    // on x86-64; Music_Events is two 32-bit image slots. Handed on as they
+    // stand, the wait read one merged handle and the word after them, failed
+    // every frame, and the ring was never refilled after its first half.
+    void* const events[2] = {Music_Events[0], Music_Events[1]};
+    const unsigned signalled = g.msg_wait(2, events, 0, 0, 0xFF);
+#endif
     if (signalled >= 2) return;
     if (Music_Finished) {
         g.music_stop();
@@ -1910,7 +1923,7 @@ void SnapRestore(bof3::SnapshotReader& r) {
         g.music_load_file(static_cast<unsigned>(file_track));
         if (!Music_File || Music_FileSize != file_size || Music_FileLoops != file_loops || Music_LoadedTrack != file_track)
             bof3::Fatal("quicksave SOUND: track %d read again is not the take's (file %p, %d bytes looping %d, track %d; "
-                        "the take's %d bytes looping %d)", file_track, Music_File, Music_FileSize, Music_FileLoops,
+                        "the take's %d bytes looping %d)", file_track, Music_File.Native(), Music_FileSize, Music_FileLoops,
                         Music_LoadedTrack, file_size, file_loops);
     }
     // The music stream.

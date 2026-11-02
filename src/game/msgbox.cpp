@@ -1955,7 +1955,7 @@ void MsgBox_Inject() {
     {
         static const std::uint8_t was = 0, is = 1;
         bof3::PatchBytes("MsgBoxEffectSpaceSkips",
-                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_effect_space_skips)), &was, &is, 1);
+                         Low32(&g_effect_space_skips), &was, &is, 1);
         bof3::Log("DIV-0070    a space in a growing or shrinking shout commits no primitive");
     }
     BOF3_INJECT(Msg_OpenScript);

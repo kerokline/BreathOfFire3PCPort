@@ -65,7 +65,7 @@ void SetWord(unsigned char* p, unsigned v) {
     std::memcpy(p, &w, sizeof w);
 }
 void SetDword(unsigned char* p, std::uint32_t v) { std::memcpy(p, &v, sizeof v); }
-std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Address(const void* p) { return Low32(p); }
 int S8(unsigned v) { return static_cast<signed char>(v); }
 unsigned Width() { return AreaMap_Header[0]; }
 
@@ -417,7 +417,7 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
     float unused;
     const unsigned next_item = Word(item + 0x7E);
     if (draw_order::Tagging() && (next_item != 0 || Word(item + 0x8E) != 0)) {
-        const signed char* const c = reinterpret_cast<const signed char*>(MapView_CornerPtr);
+        const signed char* const c = reinterpret_cast<const signed char*>(MapView_CornerPtr.Native());
         bof3::Log("map_layers: cell %u,%u layer %d item %u: next side %u, below side %u; corners %d %d %d %d; screen (%g, %g)",
                   (unsigned)cell[0], (unsigned)cell[1], layer, index, next_item, Word(item + 0x8E), c[0], c[1], c[2], c[3],
                   MapView_ScreenXY[0], MapView_ScreenXY[1]);

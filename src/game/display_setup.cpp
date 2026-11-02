@@ -44,7 +44,7 @@ void PutWord(U address, U v) {
     std::memcpy(At(address), &w, sizeof w);
 }
 void PutFloat(U address, float v) { std::memcpy(At(address), &v, sizeof v); }
-void PutPtr(U address, const void* p) { PutLong(address, static_cast<U>(reinterpret_cast<std::uintptr_t>(p))); }
+void PutPtr(U address, const void* p) { PutLong(address, Low32(p)); }
 void Zero(U address, U bytes) { std::memset(At(address), 0, bytes); }
 
 // --- the globals (display-setup.md section 3) -------------------------------------

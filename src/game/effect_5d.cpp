@@ -79,7 +79,7 @@ std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
 std::int32_t S16(U v) { return static_cast<std::int16_t>(v & 0xFFFFu); }
 std::int32_t S8(unsigned char v) { return static_cast<signed char>(v); }
 U Abs(std::int32_t v) { return static_cast<U>(v < 0 ? -v : v); }   // cdq; xor; sub (small values here)
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 U FC() { return Frame_Counter; }
 float Fl(U a) {
     float f;
@@ -1462,7 +1462,7 @@ extern "C" void __cdecl EffectKind18Sub22_SetMap(void) {
                     do {
                         const unsigned char value = S()[2] != 2 ? 0x11 : 0;
                         const U width = AreaMap_Header[0];
-                        const_cast<unsigned char*>(AreaMap_Bytes)[width * z + x] = value;
+                        const_cast<unsigned char*>(AreaMap_Bytes.Native())[width * z + x] = value;
                         ++z;
                     } while (z < Rect(Sub22Place(), 3));
                 }

@@ -27,6 +27,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "common/asm_name.h"
 #include "game/field_e2_callees.h"
 #include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
@@ -52,7 +53,7 @@ U L(U a) { return static_cast<U>(Long(At(a))); }
 void SetL(U a, U v) { SetLong(At(a), static_cast<std::int32_t>(v)); }
 std::uint16_t W(U a) { return Word(At(a)); }
 void SetW(U a, unsigned v) { SetWord(At(a), v); }
-U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U Key(const void* p) { return Low32(p); }
 
 // The record views (game/record_views.h): the leader helpers run on the leader,
 // an ObjTrio record, and Field_State is one.
@@ -119,11 +120,14 @@ void FollowAndTick(unsigned char* s) {
 // a tail jump, because the entries take anything from nothing to several
 // words where the callers left them. Unchecked, as the original - chapter 0's
 // table pointer is 0 (docs/field_e2.md section 6).
+// A pair by width (docs/x64-asm-policy.md 8 unit 3): the i686 text as it
+// was, and the same tail jump for the x86-64 register arguments.
 extern "C" __attribute__((naked)) void __cdecl Scenario_CallB(unsigned) {
+#if defined(__i386__)
     // edx holds the image's move first (Bof3_ImageMove, src/hook/host.cpp;
-    // task_sched.cpp says why the VAs are displacements); eax, ecx and edx are
-    // the three the original writes.
-    asm("movl _Bof3_ImageMove, %%edx\n\t"
+    // task_switch_i686.h says why the VAs are displacements); eax, ecx and
+    // edx are the three the original writes.
+    asm("movl " BOF3_SYM(Bof3_ImageMove) ", %%edx\n\t"
         "movsbl %c0(%%edx), %%eax\n\t"     // Cond_ByteFA, the chapter
         "movl 4(%%esp), %%ecx\n\t"
         "movl %c1(%%edx,%%eax,4), %%edx\n\t"   // Scenario_CallBTables
@@ -131,6 +135,24 @@ extern "C" __attribute__((naked)) void __cdecl Scenario_CallB(unsigned) {
         "jmp *(%%edx,%%ecx,4)"
         :
         : "i"(0x8034E0), "i"(0x660BD4));
+#elif defined(__x86_64__)
+    // The same for the Win64 arguments: n in ecx, the rest in rdx, r8, r9 and
+    // the caller's stack, forwarded untouched by a tail jump; the chapter
+    // sign-extended to 64 bits (a negative one reads below the table, as the
+    // i686 wrap does); the table word is a 32-bit code place, loaded into
+    // eax and jumped through; r10 is the scratch (volatile, not an
+    // argument). The entry sees ecx = n & 0xFF, as the i686 entry does.
+    asm("movslq " BOF3_SYM(Bof3_ImageMove) "(%%rip), %%r10\n\t"
+        "movsbq %c0(%%r10), %%rax\n\t"          // Cond_ByteFA, the chapter
+        "andl $0xFF, %%ecx\n\t"
+        "movl %c1(%%r10,%%rax,4), %%r10d\n\t"   // the chapter's table, a 32-bit place
+        "movl (%%r10,%%rcx,4), %%eax\n\t"       // the entry's code word
+        "jmp *%%rax"
+        :
+        : "i"(0x8034E0), "i"(0x660BD4));
+#else
+#error "Scenario_CallB: no tail jump for this architecture"
+#endif
 }
 
 // original 0x5343C0: with no pair of the sixty at 0x9046D0 (+0 in use, +1 the
@@ -1608,7 +1630,7 @@ extern "C" void __cdecl MapCell_DrawSpinning(const unsigned char* record, unsign
 extern "C" void __cdecl AreaMap_ClearCell(unsigned x, unsigned z) {
     const int zs = static_cast<short>(z), xs = static_cast<short>(x);
     const U width = LongAt(AreaMap_Header) & 0xFF;
-    const_cast<unsigned char*>(AreaMap_Bytes)[static_cast<std::int32_t>(width * static_cast<U>(zs)) + xs] = 0;
+    const_cast<unsigned char*>(AreaMap_Bytes.Native())[static_cast<std::int32_t>(width * static_cast<U>(zs)) + xs] = 0;
     const int c = static_cast<short>(x + 1u - static_cast<std::uint16_t>(MapView_Origin[0]));
     const int r = static_cast<short>(z - static_cast<std::uint16_t>(MapView_Origin[1]));
     int row = c + r;
@@ -1927,7 +1949,7 @@ void FieldE2_Inject() {
     {
         // DIV-0166: after the self-test, which compared Capcom's unterminated copy.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("GeneNameNul", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_name_nul)), &was, &is, 1);
+        bof3::PatchBytes("GeneNameNul", Low32(&g_name_nul), &was, &is, 1);
         bof3::Log("DIV-0166    message 0xFA's gene name is terminated after its 8-byte copy (on unless the line above says OFF)");
     }
     BOF3_INJECT(Scenario_CallB);
@@ -1985,7 +2007,7 @@ void FieldE2_Inject() {
     // compares the original's prompt; a Latin overlay only (DIV-0056).
     if (Lang_Latin()) {
         static const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("TradeConfirmLayout", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_trade_confirm_layout)),
+        bof3::PatchBytes("TradeConfirmLayout", Low32(&g_trade_confirm_layout),
                          &was, &is, 1);
         bof3::Log("DIV-0027    Manillo's \"Is <item> OK?\": answers re-spaced, the hand two units left of each");
     }

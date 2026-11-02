@@ -39,7 +39,7 @@ DrawFn g_draw = Sprite_Draw;
 
 // A layer's 0x30 bytes are three (first, last) pairs per buffer; the pass
 // appends the third, which Gfx_FrameNodes names.
-unsigned long* FrameNode(unsigned layer) { return &Gfx_FrameNodes + (Gfx_BufferIndex + layer * 6u) * 2u; }
+unsigned long* FrameNode(unsigned layer) { return reinterpret_cast<unsigned long*>(&Gfx_FrameNodes) + (Gfx_BufferIndex + layer * 6u) * 2u; }
 
 // --- BOF3X_SHADOW=draw_pass: a differential fuzz, once at start-up ----------------
 // A byte-copy of the original with its eight calls to functions of ours
@@ -69,7 +69,7 @@ LogEntry g_log[kLog];
 unsigned g_log_n, g_stub_seed;
 
 void Record(unsigned long what, unsigned long arg) {
-    if (g_log_n < kLog) g_log[g_log_n] = {what, arg, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(Sprite_Current))};
+    if (g_log_n < kLog) g_log[g_log_n] = {what, arg, Low32(Sprite_Current.Native())};
     ++g_log_n;
 }
 void __cdecl StubOpen(int layer) { Record(1, static_cast<unsigned long>(layer)); }
@@ -86,9 +86,9 @@ unsigned __cdecl StubAddRecords(unsigned long* record) {
     const unsigned n = h % 3u;
     for (unsigned i = 0; i < n; ++i) {
         h = h * 0x85EBCA6Bu + 1u;
-        record[3 * i] = static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(&g_prims[h >> 20 & (kPrims - 1)]));
+        record[3 * i] = Low32(&g_prims[h >> 20 & (kPrims - 1)]);
         record[3 * i + 1] = (h >> 8 & 0x7FFF0000u) | (h >> 3 & 0xFFFFu) | (h & 1u ? 0x80000000u : 0u);
-        record[3 * i + 2] = static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(g_objects[h >> 4 & 31u]));
+        record[3 * i + 2] = Low32(g_objects[h >> 4 & 31u]);
     }
     return n | 0xABCDEF00u;
 }
@@ -194,7 +194,7 @@ void SelfTest(DrawFn theirs) {
         auto* const pairs = reinterpret_cast<unsigned long*>(input.layers);
         for (unsigned d = 0; d + 1 < 0x38 * 12; d += 2) {
             if (next() % 3 == 0) pairs[d] = 0;
-            pairs[d + 1] = static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(&g_prims[next() % kPrims]));
+            pairs[d + 1] = Low32(&g_prims[next() % kPrims]);
         }
         std::memcpy(input.items, saved.items, sizeof input.items);   // the items as found: linking stores into them
         input.packet_next = Gfx_PacketPools + (next() % 2 ? 0x10000u : 0u) + next() % 0x8000u;
@@ -266,8 +266,7 @@ void SortDrawList() {
 // sprite Sprite_ProjectA leaves on the list at 0x37 stays undrawn, as on the
 // original.
 void LinkTableItem(unsigned index) {
-    const auto at = static_cast<unsigned long>(
-        reinterpret_cast<std::uintptr_t>(draw_pool::Items() + (Gfx_BufferIndex + index * 2u) * 0x48u));
+    const auto at = Low32(draw_pool::Items() + (Gfx_BufferIndex + index * 2u) * 0x48u);
     Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], at);
     Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(at));
 }
@@ -350,8 +349,7 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
             if (table_first) {
                 if (Draw_PassFlags & 4) {
                     const auto at = [item] {
-                        return static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(
-                            draw_pool::Items() + (Gfx_BufferIndex + (DrawTable[item] & 0xFFFu) * 2u) * 0x48u));
+                        return Low32(draw_pool::Items() + (Gfx_BufferIndex + (DrawTable[item] & 0xFFFu) * 2u) * 0x48u);
                     };
                     if (draw_order::g_on)
                         draw_order::TagOne(at(), draw_order::kTable, layer, Draw_OtSlot, DrawTable[item] >> 16,
@@ -382,7 +380,7 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                         // What the model drew, kept for the next pass's Defer (layering.h, issue 141).
                         if (layering::g_mode == layering::kFloor && added != 0) layering::AfterModel(object, record, added);
                     } else {
-                        record[0] = static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(object));
+                        record[0] = Low32(object);
                         record[1] = static_cast<unsigned long>(Long(object, 0x60)) | 0x80000000u;
                         ++records;
                     }

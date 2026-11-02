@@ -29,6 +29,8 @@
 // round, shows.
 #include "game/scenario_harness.h"
 
+#include <windows.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -54,7 +56,7 @@ bool g_active = false;
 
 namespace {
 
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Key(const void* p) { return Low32(p); }
 template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 
 // --- the random source and the recorders' log ---------------------------------
@@ -138,16 +140,17 @@ std::uint32_t FieldPhase() {
 // The calling thread's stack from just below the caller's frame to its base
 // (the TIB's StackBase): what a caller's locals are.
 bool OnStack(const void* p, unsigned n) {
-    std::uint32_t base;
-    __asm__("movl %%fs:4, %0" : "=r"(base));
-    const auto here = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&base));
-    const auto at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p));
+    // The TIB's StackBase at the width's TEB (NtCurrentTeb()); hosted,
+    // i686-only code, where a stack address is 32 bits.
+    const auto base = Low32(reinterpret_cast<const NT_TIB*>(NtCurrentTeb())->StackBase);
+    const auto here = Low32(&base);
+    const auto at = Low32(p);
     return at > here && at + n > at && at + n <= base;
 }
 // What a guarded dereference may read: the regions, the stack, or the image
 // (0x400000 .. the end of .rsrc; every section of BOF3.exe is readable).
 bool Readable(const void* p, unsigned n) {
-    const auto at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p));
+    const auto at = Low32(p);
     return InRegions(p, n) || OnStack(p, n) || (at >= 0x400000 && at + n > at && at + n <= 0x93F000);
 }
 // A kDerefString argument: the string at p hashed to its NUL, 64 bytes at
@@ -1419,7 +1422,7 @@ unsigned char* Scratch(unsigned i) { return g_scratch + (i % kScratchSlots) * 0x
 unsigned char* Packets() { return g_packets; }
 unsigned char* Text() { return g_text; }
 bool InRegions(const void* p, unsigned n) {
-    const auto at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p));
+    const auto at = Low32(p);
     if (at + n < at) return false;
     for (unsigned i = 0; i < g_region_n; ++i)
         if (at >= g_regions[i].at && at + n <= g_regions[i].at + g_regions[i].size) return true;

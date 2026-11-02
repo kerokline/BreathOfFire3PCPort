@@ -203,7 +203,7 @@ void Gfx_DrawOTag(unsigned long* ot) {
     const bool software = (Gfx_RenderFlags & 1) != 0;
     if (!software) Scene(0x24);
     if (stp_census::g_on && !software) stp_census::Frame();
-    U node = static_cast<U>(reinterpret_cast<std::uintptr_t>(ot));
+    U node = Low32(ot);
     while (Long(node) != 0xFFFFFFFFu) {
         U p = Long(node);
         if (p & 0xFF000000u) p &= 0xFFFFFFu;

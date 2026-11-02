@@ -3,12 +3,23 @@
   "configurePresets": [
     {
       "name": "i686",
-      "displayName": "32-bit, llvm-mingw (the only supported toolchain)",
+      "displayName": "32-bit, llvm-mingw (the player's build and the only hosted one)",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "toolchainFile": "${sourceDir}/cmake/i686-llvm-mingw.cmake",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+    },
+    {
+      "name": "x86_64",
+      "displayName": "64-bit, llvm-mingw (the exe host and the launcher alone; docs/x64-build-round.md)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-x86_64",
+      "toolchainFile": "${sourceDir}/cmake/x86_64-llvm-mingw.cmake",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
     }
   ],
-  "buildPresets": [ { "name": "i686", "configurePreset": "i686" } ]
+  "buildPresets": [
+    { "name": "i686", "configurePreset": "i686" },
+    { "name": "x86_64", "configurePreset": "x86_64" }
+  ]
 }

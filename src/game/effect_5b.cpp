@@ -59,7 +59,7 @@ void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<I>(v)); }
 // movsx word
 I SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char& B(U a) { return *At(a); }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 
 using Handler = scenario_harness::Handler;
 
@@ -207,7 +207,7 @@ void Project4(unsigned char* prim, unsigned stride) {
 // original's 32-bit sums: no bound, as Capcom's.
 unsigned char* Cell(I x, I z) {
     const U width = AreaMap_Header[0];
-    return const_cast<unsigned char*>(AreaMap_Bytes) + (static_cast<U>(z) * width + static_cast<U>(x));
+    return const_cast<unsigned char*>(AreaMap_Bytes.Native()) + (static_cast<U>(z) * width + static_cast<U>(x));
 }
 
 // The record's cell words (+0x36 x, +0x3A z) as 16.16 against the leader's point:

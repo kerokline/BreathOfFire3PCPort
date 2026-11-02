@@ -225,13 +225,17 @@ U SprintfEffect(const U* a, U answer) {
 // The joystick enumeration's two COM calls, through fake objects: stdcall
 // methods that log what they are handed (sh::Record under the call site's
 // address) and answer from the log; CreateDevice writes the device (one of two
-// fakes) on success, QueryInterface a noise pointer.
+// fakes) on success, QueryInterface a noise pointer. The out parameter is
+// logged as whether it was given, not where: the original hands the slot's
+// address, ours a native local it stores into the 4-byte slot after the
+// call (rest_2h.cpp DInput_EnumJoystick, Slot32<void>); the slots are
+// compared as before.
 constexpr U kCreateSite = 0x5A9638, kQuerySite = 0x5A965A;
 unsigned char g_com[0x40];   // +0 the IDirectInput, +0x10 / +0x18 two devices (constant: not a region)
 U g_vt_di[4], g_vt_dev[1];
 
 HRESULT __stdcall FakeCreateDevice(void* self, const GUID* guid, void** out, void* outer) {
-    sh::Record(kCreateSite, Key(self), sh::HashBytes(guid, 16), Key(out), Key(outer));
+    sh::Record(kCreateSite, Key(self), sh::HashBytes(guid, 16), out != nullptr, Key(outer));
     const U n = sh::Noise();
     if (n % 3 == 0) {
         if (n & 8) *out = nullptr;
@@ -241,7 +245,7 @@ HRESULT __stdcall FakeCreateDevice(void* self, const GUID* guid, void** out, voi
     return 0;
 }
 HRESULT __stdcall FakeQueryInterface(void* self, const IID* iid, void** out) {
-    sh::Record(kQuerySite, Key(self), sh::HashBytes(iid, 16), Key(out));
+    sh::Record(kQuerySite, Key(self), sh::HashBytes(iid, 16), out != nullptr);
     *out = reinterpret_cast<void*>(static_cast<std::uintptr_t>(sh::Noise()));
     return static_cast<HRESULT>(sh::Noise());
 }

@@ -67,7 +67,7 @@ inline std::int32_t Sub(std::int32_t a, std::int32_t b) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(a) - static_cast<std::uint32_t>(b));
 }
 inline short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
-inline std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+inline std::uint32_t Addr(const void* p) { return Low32(p); }
 inline void SetPtr(unsigned char* at_, const void* p) { SetLong(at_, static_cast<std::int32_t>(Addr(p))); }
 inline void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 inline void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }

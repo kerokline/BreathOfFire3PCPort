@@ -83,7 +83,7 @@ U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
 std::int32_t SW(U v) { return static_cast<std::int16_t>(v & 0xFFFFu); }
-U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+U AddressOf(const void* p) { return Low32(p); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(I(v) >> n); }
 // cdq; xor; sub: the absolute value of the 32 bits (0x80000000 stays itself).
@@ -124,7 +124,7 @@ void Dispatch(const char* who, U table, unsigned entries) {
 // cell, AreaMap_Corners a dword a cell - each read again for every store, as
 // the originals read them.
 unsigned MapWidth() { return AreaMap_Header[0]; }
-void SetCell(U offset, unsigned char v) { const_cast<unsigned char*>(AreaMap_Bytes)[offset] = v; }
+void SetCell(U offset, unsigned char v) { const_cast<unsigned char*>(AreaMap_Bytes.Native())[offset] = v; }
 void SetCorner(U index, U v) { SetUL(At(AddressOf(&AreaMap_Corners) + 4 * index), v); }
 
 // --- sub-kind 0x50's small tables (the variant and the flag index) -----------------------

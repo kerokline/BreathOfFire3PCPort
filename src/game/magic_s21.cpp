@@ -98,7 +98,7 @@ void Bump(unsigned char& b, int d = 1) { b = static_cast<unsigned char>(b + d); 
 unsigned char U8(int v) { return static_cast<unsigned char>(v); }
 float* F(unsigned char* prim, unsigned off) { return reinterpret_cast<float*>(prim + off); }
 void PutF(unsigned char* prim, unsigned off, std::int32_t v) { *F(prim, off) = static_cast<float>(v); }
-std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+std::uint32_t Addr(const void* p) { return Low32(p); }
 
 // An actor's record as the originals index them: 0..2 the party (stride
 // 0x14C), else an enemy (index - 3, stride 0x128), none of it checked.

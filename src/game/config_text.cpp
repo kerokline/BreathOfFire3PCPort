@@ -378,7 +378,7 @@ void ConfigText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint3
         if (*entry != ::bof3::Img(kCtrlExpected[i]))   // a pointer word: the place
             bof3::Fatal("config: controller pointer %u holds 0x%08X, expected 0x%08X (VA 0x%08X)", (unsigned)i,
                         (unsigned)*entry, (unsigned)::bof3::Img(kCtrlExpected[i]), (unsigned)kCtrlExpected[i]);
-        *entry = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(g_ctrl[i]));
+        *entry = Low32(g_ctrl[i]);
     }
 
     if (p != end)
@@ -390,8 +390,7 @@ void ConfigText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint3
     for (std::uint32_t i = 0; i < kLabels; ++i) {
         std::uint8_t expected[4], replacement[4];
         std::memcpy(expected, &kLabelSites[i].expected, 4);
-        const auto ours = static_cast<std::uint32_t>(
-            reinterpret_cast<std::uintptr_t>(g_labels[i]));
+        const auto ours = Low32(g_labels[i]);
         std::memcpy(replacement, &ours, 4);
         if (bof3::PatchBytes("ConfigText", kLabelSites[i].at, expected, replacement, 4)) g_ops.label[i] = ours;
     }
@@ -405,7 +404,7 @@ const ConfigTextOperands& ConfigText_Operands() { return g_ops; }
 void ConfigText_ArmJapanese() {
     if (Lang_Latin() || !Lang_Japanese()) return;
     static const std::uint8_t was = 0, is = 1;
-    bof3::PatchBytes("ConfigJapaneseIcons", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_ja_icons)),
+    bof3::PatchBytes("ConfigJapaneseIcons", Low32(&g_ja_icons),
                      &was, &is, 1);
     bof3::Log("DIV-0051    the Config panel's button cell under ja-JP: the Japan disc's icons %s",
               g_ja_icons ? "on" : "OFF (BOF3X_ORIGINAL=ConfigJapaneseIcons)");
@@ -506,7 +505,7 @@ void ConfigText_Inject() {
         g_ops.anchor = anchor_is[0];
         g_ops.label_x4 = true;
         g_ops.option_x8 = true;
-        g_ops.big_draw = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&ConfigText_DrawSelected));
+        g_ops.big_draw = Low32(&ConfigText_DrawSelected);
     }
 
     // --- the controller panel (DIV-0026) ------------------------------------
@@ -563,7 +562,7 @@ void ConfigText_Inject() {
         static const std::uint8_t frame_is[] = {0x6A, 0x0D, 0x32};   // the owner: a cell past the box, as at the left
         bof3::PatchBytes("ConfigController", 0x461A61, frame_was, frame_is, 3);
         if (ctrl_on) {
-            g_ops.name_draw = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&ConfigText_DrawSelected));
+            g_ops.name_draw = Low32(&ConfigText_DrawSelected);
             g_ops.name_x4 = true;
             g_ops.name_edge = edge_is[2];
             g_ops.box_width = box_is[1];
