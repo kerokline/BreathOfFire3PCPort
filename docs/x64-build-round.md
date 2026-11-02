@@ -1,6 +1,6 @@
 # The 64-bit build round: staging (PLAN phase 4, I44 "What follows")
 
-**Status:** IN PROGRESS (launched 2026-11-01 on `x64/round` off `main`
+**Status:** IN PROGRESS (stage B complete and gated 2026-11-02 on `x64/round`, PR at the owner's word; stage C running. Launched 2026-11-01 on `x64/round` off `main`
 `7bd917de`, the PR #176 merge; the owner's four calls answered the same
 morning, section 7; stage A's four groups run in worktrees under
 `C:/Users/kerok/bof3x-runs/x641101`. Staged 2026-10-29, re-measured
@@ -635,6 +635,15 @@ objects fail** (4 before). No game file carries a width `#if` outside B1's
 asm pairs. Left for the audit: the census wants a `low32` class (it no longer
 counts the narrowings), the `long` remainder (23 files), the global `using`
 shape, the exit trace's `%s` width.
+
+**Stage B's tree, as gated (2026-11-02 morning, `c7a0a4e7`: wave 2 merged, then
+`main` at PR #182 merged in, the SDL3 entry renumbered DIV-0201 because `main`
+had taken DIV-0197..0200 for issues #177..#179 the same day; `ledger_check`,
+`ledger_registry --check`, `ledger_switches --check` and `width_census --check`
+clean):** the i686 build; the hosted suite `'*'` (28,510 lines, every mismatch
+line 0, no FATAL), the exe host and the moved base (`0xA00000`), each ending
+"self-test only: done" (`x641101/round/st3_*.log`). The PR is at the owner's
+word; stage C runs on `x64/c1` off the tip before the merge.
 
 Stage B merges to `main` as a PR of its own when every group is in: the
 32-bit build is proved by its own gates, and the 64-bit build is not yet
