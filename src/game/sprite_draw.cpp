@@ -183,7 +183,16 @@ void Capture(unsigned char* object) {
     unsigned short clut;
     Sprite_ClutWord(&clut);
     const std::uint16_t* vram = Gfx_VramShadow;
-    const std::uint16_t* palette = vram + (((clut >> 6) & 0x1FF) << 10) + ((clut & 0x3F) << 4);
+    const unsigned clut_x = (clut & 0x3F) << 4, clut_y = (clut >> 6) & 0x1FF;
+    const std::uint16_t* palette = vram + (clut_y << 10) + clut_x;
+    // The PSX's palette upload is a GPU transfer that runs ahead of the frame's
+    // draws, the capture among them; the PC's Gfx_FlushDirtyStrip lays the strip
+    // into the shadow at the frame's end, after this. So a palette in the strip's
+    // rows (VRAM 0..0xFF, 0x1E0..0x1FF) changed this frame is read from the strip,
+    // as the GPU would see it: WeretigerCopy_Spawn sets its images' rows and they
+    // are captured before the flush (issue #189).
+    if (Gfx_ClutStripDirty != 0 && clut_y >= 0x1E0 && clut_x + 16 <= 0x100)
+        palette = Gfx_ClutStrip + ((clut_y - 0x1E0) << 8) + clut_x;
     const auto* vram_bytes = reinterpret_cast<const unsigned char*>(vram);
     const unsigned wide = object[0x28] != 0 ? 1u : 0u;
 
@@ -227,6 +236,7 @@ void Capture(unsigned char* object) {
                                static_cast<unsigned char>(object[0x5E] + 0x80),
                                static_cast<unsigned char>(object[0x5F] + 0x80)};
     std::uint16_t* out = Gfx_VramShadow;
+    unsigned written = 0;
     if (sx > 0.0f && sy > 0.0f) {
         const float x0 = mirror ? x - right * sx : x + left * sx, x1 = mirror ? x - left * sx : x + right * sx;
         const float y0 = y + top * sy, y1 = y + bottom * sy;
@@ -254,6 +264,7 @@ void Capture(unsigned char* object) {
                     for (int n = 0; n < 3; ++n) ch[n] = BlendChannel((d >> (5 * n)) & 0x1Fu, ch[n], abr);
                 }
                 d = static_cast<std::uint16_t>((c & 0x8000) | ch[0] | (ch[1] << 5) | (ch[2] << 10));
+                written += d != 0;
             }
         }
     }
@@ -262,8 +273,9 @@ void Capture(unsigned char* object) {
     const short rect[4] = {kCapX, kCapY, kCapW, kCapH};
     Gfx_InvalidateTextures(rect, 0);
     if (g_capture_logged < 64 && ++g_capture_logged)
-        bof3::Log("DIV-0142    capture %u: object at (%d, %d), %u pieces, scale %.3f x %.3f%s%s, into VRAM (0x%X, 0x%X)",
-                  g_capture_logged, x, y, count, sx, sy, mirror ? ", mirrored" : "", semi ? ", blended" : "", kCapX + x, kCapY + y);
+        bof3::Log("DIV-0142    capture %u: object at (%d, %d), %u pieces, scale %.3f x %.3f%s%s, shade %02X %02X %02X, into VRAM (0x%X, 0x%X), %u texels non-zero",
+                  g_capture_logged, x, y, count, sx, sy, mirror ? ", mirrored" : "", semi ? ", blended" : "", shade[0], shade[1],
+                  shade[2], kCapX + x, kCapY + y, written);
 }
 
 void Draw() {

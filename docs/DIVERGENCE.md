@@ -10806,6 +10806,32 @@ designed in rather than bolted on.
     second defect, Capcom's, came after it: a direct-colour page's texels all
     have alpha 0 and are discarded (D333). DIV-0159 fixes that; with both,
     the melt plays.
+  - **Amended 2026-11-03** (issue #189, [`known-defects.md`](known-defects.md)
+    D404): a palette set in the frame of its capture is read from
+    `Gfx_ClutStrip`. The PlayStation's CLUT upload is a GPU transfer that runs
+    ahead of the frame's draws, the capture among them; the PC's
+    `Gfx_FlushDirtyStrip` lays the strip into `Gfx_VramShadow` at the frame's
+    end, after our capture has composed the picture. So while
+    `Gfx_ClutStripDirty` is set, a CLUT inside the strip's rectangle (VRAM
+    0..0xFF, 0x1E0..0x1FF) is read from the strip, as the GPU would see it;
+    otherwise from the shadow, as before. `WeretigerCopy_Spawn` sets its four
+    images' rows (0x7B, 0x7C, and 0x7D white) in the frame they are captured:
+    the captures wrote 0 texels and Weretiger's cross-fade drew nothing, so
+    Rei vanished and the tiger popped in 64 frames later; over rows a fight had
+    filled before, the images took those colours (the issue's "inverted
+    palette", by reading). The capture's log line now gives the shade and the
+    count of texels written.
+    - Seen on the owner's `adultFight.txt` (adult Rei's cast, recipe frames
+      1170..1240, a frame every 3): before, the four captures 0 texels each
+      and the page `(0x340, 0x100)` empty through the fade (624 sampled cells,
+      0 non-zero); after, 952, 952, 2,067 and 2,067 texels, and the crouching
+      Rei fades into the dark tiger and then the bright one, as a PlayStation
+      recording of the cast shows.
+    - `ropeAndAmalgam.txt`: Amalgam's capture writes 4,990 texels and the melt
+      plays (the owner's eye, 2026-11-03).
+    - `BOF3X_SHADOW='*'` headless (hosted): exit 0, every module 0
+      mismatches, the capture self-test's 4 cases 0 mismatches; the exe host's
+      start-up self-tests: exit 0.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteCapture` (Capcom's draw), or
   `BOF3X_ORIGINAL=Sprite_Draw`.
   A player turns it off with `BOF3X_OFF=SpriteCapture` (the ini's `off=`).
