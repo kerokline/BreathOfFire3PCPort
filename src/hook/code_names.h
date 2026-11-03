@@ -10,7 +10,7 @@
 
 namespace bof3::code_names {
 
-constexpr int kCount = 91;
+constexpr int kCount = 92;
 constexpr const char* kNames[kCount] = {
     "ApplyMatrixLVExact",
     "Area135MarkerPlaced",
@@ -35,6 +35,7 @@ constexpr const char* kNames[kCount] = {
     "ConfigJapaneseIcons",
     "ConfigLabelJapanese",
     "ConfigText",
+    "DesertDirections",
     "DiagonalIdentity",
     "DialTranslucent",
     "DirectOpaque",

@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 196;
+inline constexpr std::size_t kSwitchCount = 197;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -269,9 +269,10 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "QuadFarEdge", 0, 11},   // DIV-0199
     {SwitchForm::Name, "FaerieNameEnd", 0, 13},   // DIV-0200
     {SwitchForm::Name, "SoundSdl", 0, 8},   // DIV-0201
+    {SwitchForm::Name, "DesertDirections", 0, 16},   // DIV-0203
 };
 
-inline constexpr std::size_t kEntryCount = 202;
+inline constexpr std::size_t kEntryCount = 203;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -677,6 +678,8 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Sensible, State::Active, 0, 195, 1, true, Player::Yes, 0, kLangAny},
     {202, "A game folder built from the PC install leaves out the porting house's logo movie",
      Tier::Sensible, State::Active, 0, 196, 0, true, Player::Never, kTowardPsx, kLangAny},
+    {203, "Horis's desert directions say east, as Capcom's Japanese does, in every Western layer",
+     Tier::Intent, State::Active, 0, 196, 1, true, Player::Yes, kTowardPsx | kTowardPsp, kLangEnUs | kLangEn150 | kLangFrFr | kLangDeDe},
 };
 
 // The switches of one entry.

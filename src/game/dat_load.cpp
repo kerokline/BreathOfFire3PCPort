@@ -221,10 +221,11 @@ void DatLog(const char* from, const char* path) {
 //   - the malloc results are not checked for null;
 //   - a chunk whose kind is outside 0..3 (including negative: the byte is
 //     sign-extended and compared unsigned) is skipped by its size, not
-//     rejected - except kinds 4 to 18, which are ours (DIV-0006, DIV-0008,
+//     rejected - except kinds 4 to 19, which are ours (DIV-0006, DIV-0008,
 //     DIV-0014, DIV-0015, DIV-0018, DIV-0019, DIV-0020, DIV-0052, DIV-0057,
-//     DIV-0038, DIV-0064, DIV-0069, DIV-0148, and kind 18 the reading row's,
-//     docs/reading-row.md 3, taken only from an optional layer);
+//     DIV-0038, DIV-0064, DIV-0069, DIV-0148, kind 18 the reading row's,
+//     docs/reading-row.md 3, taken only from an optional layer, and kind 19
+//     DIV-0203's corrected text block);
 //   - the walk trusts each chunk's size; nothing checks that a payload lies
 //     inside the file buffer or that a kind-0 tag lies inside the arena;
 //   - the kind-3 copy is never freed here: Font_SetGlyphData owns it (and
@@ -461,16 +462,43 @@ void ReadingRowTake(const ChunkHeader& h, const std::uint8_t* payload) {
     g_reading_row_any = true;
 }
 
+// A kind-0 chunk: its payload over the arena at its tag (the original's
+// case 0), or the system pool's (DIV-0007).
+void TakeData(const ChunkHeader& h, std::uint8_t* payload) {
+    ReadingRowDrop(h.tag);  // the reading row: a side chunk goes with its block
+    if (Gfx_UploadQueueCount && h.tag == 0x10000) Gfx_UploadQueueCount = 0;
+    if (MsgPool_TakeChunk(h.tag, payload, static_cast<std::uint32_t>(h.size))) return;  // DIV-0007
+    std::memcpy(Arena() + h.tag, payload, static_cast<std::uint32_t>(h.size));
+    if (h.tag == 0xC8000) g_area_block_loaded = true;
+}
+
+// DIVERGENCE DIV-0203: 1 through PatchBytes("DesertDirections") in
+// DatLoad_Inject. A language layer's corrected text block - kind 19, group 1
+// in the header's fourth word (tools/loc_build.py TEXT_CORRECTIONS: the
+// words its translators got wrong against Capcom's Japanese, issue #184) -
+// follows the disc's own block of the same tag, kind 0, in the same file.
+// On, it lands over that block as a kind-0 chunk would; off, it is skipped
+// and the disc's block stays, byte for byte. A group this build has no
+// switch for is refused: a layer newer than the engine.
+std::uint8_t g_desert_directions = 0;
+
+void TakeCorrected(const ChunkHeader& h, std::uint8_t* payload) {
+    if (h.unread != 1)
+        bof3::Fatal("DIV-0203: a corrected text block (kind 19, tag 0x%X) of group %u; this build knows group 1 "
+                    "(DesertDirections) alone - rebuild the language layer with this build's tools/loc_build.py",
+                    static_cast<unsigned>(h.tag), static_cast<unsigned>(h.unread));
+    bof3::Log("DIV-0203    corrected text block, tag 0x%X, area %u: %s", static_cast<unsigned>(h.tag),
+              static_cast<unsigned>(Game_AreaNumber),
+              g_desert_directions ? "taken" : "skipped (DesertDirections off: the disc's text)");
+    if (g_desert_directions) TakeData(h, payload);
+}
+
 // One chunk, by its kind: the original's switch and our kinds, for the
 // install's file and the cache's walk alike.
 void TakeChunk(void*, const ChunkHeader& h, std::uint8_t* payload) {
     switch (h.kind) {
     case 0:
-        ReadingRowDrop(h.tag);  // the reading row: a side chunk goes with its block
-        if (Gfx_UploadQueueCount && h.tag == 0x10000) Gfx_UploadQueueCount = 0;
-        if (MsgPool_TakeChunk(h.tag, payload, static_cast<std::uint32_t>(h.size))) break;  // DIV-0007
-        std::memcpy(Arena() + h.tag, payload, static_cast<std::uint32_t>(h.size));
-        if (h.tag == 0xC8000) g_area_block_loaded = true;
+        TakeData(h, payload);
         break;
     case 1:
         LoadImageChunk(h.tag, payload, h.size);
@@ -534,6 +562,9 @@ void TakeChunk(void*, const ChunkHeader& h, std::uint8_t* payload) {
         break;
     case 18:  // the reading row (docs/reading-row.md 1.1 and 3): ours.
         ReadingRowTake(h, payload);
+        break;
+    case 19:  // DIV-0203: ours.
+        TakeCorrected(h, payload);
         break;
     default:
         break;
@@ -881,5 +912,9 @@ void DatLoad_Inject() {
     const DWORD dn = GetEnvironmentVariableA("BOF3X_DATLOG", datlog, sizeof datlog);
     g_datlog = dn > 0 && dn < sizeof datlog && std::strcmp(datlog, "0") != 0;
     if (g_datlog) bof3::Log("datlog      BOF3X_DATLOG: a line per file LoadDatFile walks");
+    {
+        const std::uint8_t was = 0, is = 1;  // DIV-0203: a language layer's corrected text blocks (TakeCorrected)
+        bof3::PatchBytes("DesertDirections", Low32(&g_desert_directions), &was, &is, 1);
+    }
     BOF3_INJECT(LoadDatFile);
 }
