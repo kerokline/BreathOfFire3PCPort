@@ -183,6 +183,18 @@ name. No byte value of the game's is recorded, only the offsets and the CD's
 hashes. The build then sees the catalogued tree, so the cache and the game
 folder are the ones a `bof3\` folder gives, and nothing here is a divergence.
 
+**Measured (2026-11-03, this machine).** `identify --json`: the ZH-S `.zip`
+(by the image's sha256, no unpacking), the bare `.iso` and its 7-Zip extract
+all ok as `pc-zh` with `"repairs": 5`; the owner's `bof3\` as before, with no
+`repairs`; the ZH-TW `.iso` refused (5.1 s for the six, the USA `.zip`
+included). `setup` on three fresh homes, each with the one source: the ZH-S
+`.zip` (79 s; unpack 1.6 s, lay out 1.2 s, then the build's own hash checks
+pass on all five banks), the extracted CD folder (lay out 0.6 s; the folder
+itself left unchanged), and `bof3\`. The three `game\` folders are equal
+file by file (1,803 files, compared ignoring case: the CD's names are upper
+case), and the caches differ only in `manifest.toml`'s `built` time and
+`build-keys/base.json`'s inputs key.
+
 The Traditional Chinese CD is identified as a PC CD and refused: its
 `BOF3.exe` is another build (IDEAS I57).
 
