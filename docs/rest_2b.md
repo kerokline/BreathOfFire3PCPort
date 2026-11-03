@@ -115,7 +115,10 @@ tools read them as one run of code pointers (`0x663DD0`, "39 code entries").
 
 None in behaviour: every function is Capcom's to the byte it writes, with
 two places where the original's bytes cannot be reproduced (section 7, L1
-and L2) - **L1 is DIV-0073** (entered 2026-10-04, kept by the owner).
+and L2) - **L1 is DIV-0073** (entered 2026-10-04, kept by the owner). And
+one cheat: under DIV-0188's `BOF3X_NO_FAIL` (2026-11-03,
+[`cheats.md`](cheats.md) 7) `Shisu_Result` raises a score below 0xB4 to
+0xB4 before it ranks it - the best prize; unset it is Capcom's.
 
 ## 3. Arguments and answers
 

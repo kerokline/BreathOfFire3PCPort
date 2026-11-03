@@ -308,7 +308,8 @@ judges the player's attempt in a step of its own
 | the rope pull (area 75) | `Field_ModeTailKinds[30]`, armed by `Area75_ArmTail30` | `Area75_PhasePlay` `0x40E330`: more than three presses out of turn, more than 0x1E idle frames or the counters more than 0xC8 apart send the pull to `Area75_PhaseMissed` | **yes**: the judgement skipped, the pull runs until the player's counter reaches the mark |
 | the lighthouse valve (area 77, chapter 6) | effect kind `0x45`, the oscilloscope gauge, spawned by `Scena06`'s run (`scena_sc6.cpp` 1626), which then steps on its row's flag 0x26: set, "The main valve is open!"; clear, "Whoops! The boiler stopped" | `EffectKind45_Aim` `0x477370` (`effect_2d.cpp`): a confirm press sets flag 0x26 only with the trace's offset at 8 and its phase within 0x1C..0x24; `EffectKind45_Tune` `0x477250`, the state before it: a confirm press ends the gauge with the flag as it was (clear) - too soon | **yes**: a confirm press sets the flag in either state; cancel stays a cancel |
 | the chop (area 8, chapter 1) | effect kind `0x55`, the thirty-second clock and the count, spawned with kind `0x15` by `Scena01_Scene06` step 0x11; step 0x14 reads the cue byte `0x90384A`: bit 7 the win (step 0x19), clear the second attempt (step 0x15) | `EffectKind55_Finish` `0x47EB30` (`effect_2g.cpp`): at the clock's end bit 7 of the count `0x90384B` always, of the cue only at a count of 16 or more | **yes**: the cue's bit 7 at any count |
-| the well (area 68) | effect kind `0x8C` | not read yet | no route yet |
+| the well (area 68, the Wellkeeper's) | effect kind `0x8C`, placed by `Scena11_Scene5` step 6: two timed windows of presses, the leader steered a step between them, the second count judged against the first | every loss goes to state 0x16, `EffectKind8C_Fail` `0x48B1F0` (`effect_4b.cpp`): no press in the first window, 0x1C frames without one in either, or the counts more than one apart; it writes the step byte 8 (the retry offer), the pass `EffectKind8C_Pass` writes 0xF | **yes**: state 0x16 ends as the pass |
+| the shisu (game mode 8's step 8, the SHISU overlay's twins) | `Shisu_*` (`rest_2b.cpp`): four counts given, the kneads, the scale index | `Shisu_Result` `0x57E160` ranks `Shisu_Score`'s score: 0x32 or less a failure, then six prizes at 0x5A, 0x78, 0x96, 0xAA and 0xB4; rank 5 is the best | **yes**, the owner's call: the score raised to 0xB4 before it is ranked - the best prize always |
 | the crane (area 135), the antenna dial, the ram (area 121), the dock's parts menu (area 128) | the button round's sites | not read yet | no route yet |
 
 The lighthouse is not among the button round's seven sites: its gauge reads
@@ -411,6 +412,51 @@ as on `main` (its two mod-zip failures are `main`'s too, 2026-10-30).
 
 Owed: the owner's eye on the two pages, on a pull, a valve or a chop played
 with the box on, and on the chop's count box under `en-US` once the layer is
-rebuilt. Next under the switch: the well (effect kind `0x8C`), when a
-recording reaches it.
+rebuilt (seen and approved 2026-10-31).
+
+**The well** (2026-11-03; the owner's recording
+`tools/recipes/vinegarMinigame.txt`, its save in `tools/recipe_saves/`). The
+recording replayed with the area word, the scenario counters and the twenty
+effect records watched: area 68 (`0x44`) from recipe frame 280, effect kinds
+`0x8C` and `0x8B` spawned in records 0 and 1 at 810, kind `0x8C` released at
+1,273 with the chapter's step byte (`0x8034E5`) 8 - the loss, "Didn't quite
+get it, eh?". The replay loses (whether the owner's own attempt did is theirs
+to say). Every losing path of kind `0x8C` goes through state 0x16,
+`EffectKind8C_Fail`; under the switch that state does what the judged pass
+does (the frame count 0, then `EffectKind8C_Pass`: the counter `0x903848` 0,
+the step byte 0xF). Verification (`D:\bof3x-runs\vin1103`):
+
+- `BOF3X_NO_FAIL=1 BOF3X_SHADOW=effect_4b`: differs in `EffectKind8C_Fail`
+  alone (3,999 of its 4,000 rounds, the first differing byte `0x8034E5`), the
+  group's other 65 functions at 0; unset, 264,000 rounds over 66 functions, 0
+  mismatches; `BOF3X_NO_FAIL=1 BOF3X_ORIGINAL=EffectKind8C_Fail`: `FATAL:
+  BOF3X_NO_FAIL=1 needs EffectKind8C_Fail ours, and it is disabled`;
+- live, the recording as made: unset, the step byte 8 at 1,273, the
+  Wellkeeper's "Didn't quite get it, eh?" and the offer to try again; with
+  the switch, 0xF at the same frame, "You did it!" and "Thanks so much!".
+
+**The shisu** (2026-11-03; the owner's recording
+`tools/recipes/shisuMinigame.txt`, its save in `tools/recipe_saves/`). Not a
+failure to remove but a score: the owner's call is that the switch gives the
+best prize. `Shisu_Result` raises a score below 0xB4 to 0xB4 before it ranks
+it, so the rank is 5 and `Area130_TailGiveItem` hands out its item. The
+terms, the items taken and a screen left with no round run are unchanged.
+Verification (`D:\bof3x-runs\vin1103`):
+
+- `BOF3X_NO_FAIL=1 BOF3X_SHADOW=rest_2b`: differs in `Shisu_Result` alone
+  (2,352 of its 4,000 rounds; the first differing byte the score `0x9399FC`
+  or the counter `0x90384B`), the group's other 37 functions at 0; unset,
+  152,000 rounds over 38 functions, 0 mismatches; `BOF3X_NO_FAIL=1
+  BOF3X_ORIGINAL=Shisu_Result`: `FATAL: BOF3X_NO_FAIL=1 needs Shisu_Result
+  ours, and it is disabled`;
+- live, the recording as made (the counts 1, 15, 2, 5; the score 0x76 at
+  recipe frame 1,845): unset, the rank 1 and "You got Wisdom Seed!"; with the
+  switch, the score 0xB4, the rank 5 and "You got Shaman'sRing!".
+
+The box's note on Page 2 and the ini's comment no longer list the minigames
+(the owner's word, 2026-11-03): "Every minigame ends in a win. A minigame
+with a score gives its best prize." The table above is the list.
+
+Next under the switch: the crane (area 135), the antenna dial, the ram
+(area 121) and the dock's parts menu (area 128), as recordings reach them.
 

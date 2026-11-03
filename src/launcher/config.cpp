@@ -391,7 +391,7 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# cheats (docs/cheats.md): EXP and zenny won in battle times 0..10, 1 the original's (DIV-0045);\r\n";
     out += "# steal 1 makes Pilfer and Steal take an item whenever the enemy carries one (DIV-0046);\r\n";
     out += "# enemy_info 1 shows every enemy's HP gauge and Identify stats, bosses too (DIV-0187);\r\n";
-    out += "# no_fail 1 makes the minigames impossible to fail (DIV-0188; the rope pull today)\r\n";
+    out += "# no_fail 1: every minigame ends in a win, and a minigame with a score gives its best prize (DIV-0188)\r\n";
     out += "cheat.exp=" + std::to_string(cfg.cheats.exp) + "\r\n";
     out += "cheat.zenny=" + std::to_string(cfg.cheats.zenny) + "\r\n";
     out += std::string("cheat.steal=") + (cfg.cheats.steal ? "1" : "0") + "\r\n";

@@ -53,11 +53,15 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    With the chop, the owner's catch: the count's one-glyph word after the number is now DIV-0064's group 25, the
    West's own layout (the count alone in the narrower box) read off every disc's `AREA008.EMI` and PSP-EU's
    `BOOT.BIN`; the owner's install takes it when the launcher rebuilds the stale `loc` step at its setup prompt.
-   **Next minigame**, when the owner records its start (`BOF3X_RECORD`): the well (effect kind `0x8C`). The pattern: read the judgement (a `watch` / `peek` replay finds the subsystem when the docs do not: the
+   **The well joined the switch on 2026-11-03** (branch `cheat/no-fail-vinegar`, the owner's `vinegarMinigame.txt`:
+   `EffectKind8C_Fail` ends as the pass, cheats.md 7), and the shisu the same day (`shisuMinigame.txt`: the
+   owner's call, the score raised to the best prize's 0xB4 in `Shisu_Result`). **Next minigame**, when the owner records its start
+   (`BOF3X_RECORD`): the crane, the antenna, the ram or the dock's parts menu. The pattern: read the judgement (a `watch` / `peek` replay finds the subsystem when the docs do not: the
    lighthouse was effect kind `0x45` in area 77, not the button round's area 135), guard it on
    `Cheats_MinigameNoFail()`, the module's inject `Fatal` when the function is not ours, a losing variant of the
    route seen to go on, the table in cheats.md 7. **Seen by the owner on 2026-10-31, approved:** the two pages, a rope pull with the box on, the chop under
-   no-fail, and the chop's count box under `en-US`. Only the well's recording is still owed.
+   no-fail, and the chop's count box under `en-US`. The well's recording arrived 2026-11-03; owed: the owner's
+   play of the well and the shisu with the box on.
 
 1. **The away day of 2026-10-27 is merged as PR #158** (with `away1027/twins` and `away1027/docs`; four Opus
    agents, [`STATUS.md`](STATUS.md) has a line each; the evidence in [`install-gap-labels.md`](install-gap-labels.md)
@@ -251,7 +255,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 13. **The owner's checks** (each in [`owner-review.md`](owner-review.md), newest first):
    - **2026-10-28..31** (owner-review's section of that name): the exe-gap round's listens and DIV-0195's boxes
      (item 14), the Preset page (item 2), the enemy-information cheat in play (DIV-0187, PR #169), the item sort in play
-     (item 0, DIV-0189), the well's recording (item 0).
+     (item 0, DIV-0189), the well with the no-fail box on (item 0; recorded and guarded 2026-11-03).
    - **The away day of 2026-10-27** (item 1): the faerie operand's call, area 9 on a PSP-built install, the
      fishing spots, the kind sheet, the seven boss-only skills' routes (the stp pairs seen, owner-review).
    - **The spell sweep's looks** (item 3), **the sound-layer listens** (item 9), **issues #121, #142, #149** (items

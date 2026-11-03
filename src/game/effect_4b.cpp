@@ -41,7 +41,9 @@
 // run and whenever the picture is narrow. Kind 0x9D's start clears the
 // rectangle its quad reads before the capture lands there - DIV-0142's
 // amendment for issue #191, armed after this module's self-test (the switch
-// SpriteCapture). Otherwise no divergence: each is a
+// SpriteCapture). Kind 0x8C's losing state 0x16 (EffectKind8C_Fail) ends
+// as its passing state 0x15 does while BOF3X_NO_FAIL is on (DIVERGENCE
+// DIV-0188, the well). Otherwise no divergence: each is a
 // faithful replacement. Where the original jumps through a state
 // table past its end, indexes a table of its own past its rows, or ObjTrio or
 // Sprite_Objects past their records, ours aborts with a message
@@ -53,6 +55,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/cheats.h"
 #include "game/effect_4b_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
@@ -1484,8 +1487,18 @@ extern "C" void __cdecl EffectKind8C_Pass(void) {
 }
 
 // original 0x48B1F0 (state 0x16): the chapter's step byte 8; Effect_Release (a
-// tail jump).
+// tail jump). Every loss comes here: no press in the first window (the
+// target 0), 0x1C frames without one in either window, or a count more than
+// one off the target. DIVERGENCE DIV-0188: under BOF3X_NO_FAIL the state
+// ends as a judged pass instead - the frame count 0 (EffectKind8C_Judge's
+// store) and then state 0x15's writes, the counter 0x903848 0 and the step
+// byte 0xF.
 extern "C" void __cdecl EffectKind8C_Fail(void) {
+    if (Cheats_MinigameNoFail()) {
+        Effect4b_Presses = 0;
+        EffectKind8C_Pass();
+        return;
+    }
     MoveScript_PartyRecords[0x65] = 8;
     SH_CALL(Effect_Release)();
 }
@@ -1563,4 +1576,9 @@ void Effect4B_Inject() {
     BOF3_INJECT(EffectKind8C_Judge);
     BOF3_INJECT(EffectKind8C_Pass);
     BOF3_INJECT(EffectKind8C_Fail);
+    // DIV-0188: with the switch on, the well's losing state must be ours -
+    // left as Capcom's (BOF3X_ORIGINAL / BOF3X_OFF), a loss would stand and
+    // the cheat would be silently half off.
+    if (Cheats_MinigameNoFail() && !bof3::IsEnabled(bof3::addr::EffectKind8C_Fail))
+        bof3::Fatal("BOF3X_NO_FAIL=1 needs EffectKind8C_Fail ours, and it is disabled");
 }
