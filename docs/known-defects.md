@@ -10630,9 +10630,28 @@ only the y test was wrong (`y > 0`), so most cells survived. The hosted
 build has the floats, which is why `rest_3g`'s self-test (hosted) and every
 `BOF3X_ORIGINAL` A/B drew the sand.
 
-**Not established:** whether other functions of ours read `.rdata` by its
-image address on the exe host. Worth a sweep (`Img(` of a `.rdata` VA in
-code we own).
+**Swept 2026-11-02: no other read.** By source: every `.rdata` address
+`src/` names - 77 hex literals and the 33 `symbols.gen.h` names in
+`0x5C4000..0x5DA000` - is one of `rdata_consts.h`'s 44 constants, one of
+the 14 bound import slots, `c_dfDIKeyboard`'s header, a comment beside a
+value written in the code (`0x5C41E8`, `0x5C4214..20`, `0x5C425C..64`,
+`0x5C466C`), or these six bounds; the headers that call their strings
+".rdata" (`menu_windows_callees.h`, `battle_result_callees.h`,
+`map_field_objects_callees.h`, `rest_4c_callees.h`) name `.data`
+(`0x5E10C0..0x66B4A8`), which the exe host copies from the file. By
+measurement, on `bof3x.exe` at 4:3: a `poke` block before a route's first
+step filled the 22,353 words of `.rdata` the engine does not hold (all but
+the 175 words above) with `0x4E5A5A5A`, against twin runs of the same
+block writing 0, on `desertSummary`, `combat` and `battle_commands`. Every
+frame hash on the frames both runs drew was equal, and `statehash.py check` (two
+zero runs as the references) found only `Music_Staging`, which
+`statehash_skip.txt` line 30 lists as noise. The control: the same block
+writing `BOF3.exe`'s own `.rdata` bytes on the build before this fix drew
+the sand (1,178 of 2,768 frames differ from its zero run, 1 command
+against 1,107 at frame 727) and matched this build frame for frame; on
+this build Capcom's bytes and zeros draw alike. Not covered: reads before
+a recipe's first step (boot), and paths none of the three routes reach.
+Runs and scripts: `D:/bof3x-runs/dragnier1102/rd`.
 
 **Status:** fixed 2026-11-02: the bounds are values of ours (`Bound()` in
 `rest_3g.cpp`, `Widescreen_RangeValue`). Capcom's behaviour, so no ledger
