@@ -335,6 +335,12 @@ U Widescreen_RangeOperand(unsigned at) {
     bof3::Fatal("widescreen: 0x%X is not one of DIV-0041's area-map range operands", at);
 }
 
+float Widescreen_RangeValue(unsigned at) {
+    for (const Site& s : g_sites)
+        if (s.at == at) return *s.ours;
+    bof3::Fatal("widescreen: 0x%X is not one of DIV-0041's area-map range operands", at);
+}
+
 unsigned Widescreen_Columns() {
     static int columns = -1;
     if (columns >= 0) return static_cast<unsigned>(columns);

@@ -89,9 +89,14 @@ unsigned Widescreen_BackdropPairs();
 //   Widescreen_RangeOperand: the address of the float the `fcomp` at `at`
 //     names - .rdata's, or this file's wider copy once Widescreen_Inject has
 //     patched (still .rdata's under BOF3X_ORIGINAL=Widescreen).
+//   Widescreen_RangeValue: the value that float holds, from this file's copy -
+//     Capcom's until Widescreen_Inject widens it. Our AreaMapBD_BuildView reads
+//     this, not the address: our own exe carries no .rdata that only our
+//     functions name, so the .rdata float reads 0 there (issue 185).
 const std::int32_t* Widescreen_SlideOperand(unsigned at);
 inline short Widescreen_SlideBound(unsigned at) { return static_cast<short>(*Widescreen_SlideOperand(at)); }
 std::uint32_t Widescreen_RangeOperand(unsigned at);
+float Widescreen_RangeValue(unsigned at);
 
 // ---------------------------------------------------------------------------
 // The faster slide (DIV-0041 amended 2026-10-13, docs/ultrawide-slides.md).

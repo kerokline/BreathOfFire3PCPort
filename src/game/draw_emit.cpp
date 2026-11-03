@@ -505,7 +505,7 @@ void OpenGrown(int layer) {
 // its end, never stops.
 extern "C" void __cdecl DrawLayer_Open(int layer) {
     // DIV-0041 (wide-ring): the grown ring's walk when the view is wide.
-    if (map_rim::Active()) {
+    if (map_rim::Drawn()) {
         OpenGrown(layer);
         return;
     }

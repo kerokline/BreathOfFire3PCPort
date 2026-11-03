@@ -321,7 +321,7 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
     Gfx_CommitPrim(6, 0xC);
 
     unsigned char sprite = 0, item = 0;   // next in the draw list, next in the draw table
-    const bool grown = map_rim::Active();   // DIV-0041 (wide-ring), above
+    const bool grown = map_rim::Drawn();   // DIV-0041 (wide-ring), above
     if (grown) GrownLayerAbove();
     for (unsigned layer = 0; layer < 0x37; ++layer) {
         if (Draw_PassFlags & 4) g_open(static_cast<int>(layer));

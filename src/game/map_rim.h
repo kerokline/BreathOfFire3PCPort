@@ -36,6 +36,16 @@ constexpr int kRimCells = kRows * kColumns - 0x38 * 0x1C;   // 346
 // view wide, or forced by a self-test.
 bool Active();
 
+// The view drawn this frame is the ring's: Active(), and no builder but the
+// field's MapView_Build made it. Area 0xBD's AreaMapBD_BuildView builds its own
+// view into Capcom's layers and never empties layer -1 or walks the rim, so
+// from its first build until MapView_Build's next the draw (Sprite_DrawPass,
+// DrawLayer_Open) is Capcom's 28 x 56 - layer -1 left as the last field had
+// it was spliced in, stale, and the desert drew nothing after it (issue 185).
+// The rim is still kept (Active()), for the field the game goes back to.
+bool Drawn();
+void NoteOwnView(bool own);   // true: AreaMapBD_BuildView; false: MapView_Build
+
 // Capcom's view row of grown row gr is gr - 1; Capcom's view column of grown
 // (gr, gc) is gc - 2 - (that row odd). True when that lies in 56 x 28.
 bool InWindow(int gr, int gc);

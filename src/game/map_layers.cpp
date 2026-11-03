@@ -491,6 +491,7 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
 //   - a failed allocation leaves the cell word 0 and draws nothing, the cell
 //     released by no one.
 extern "C" void __cdecl MapView_Build(void) {
+    map_rim::NoteOwnView(false);   // the ring's view again (issue 185)
     g.layers_reset();
     const int origin_y = MapView_Origin[1], origin_x = MapView_Origin[0];
     const int kind2_z = static_cast<short>(static_cast<std::uint32_t>(Field_Kind2Z) >> 16);

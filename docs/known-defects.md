@@ -10590,3 +10590,69 @@ made under it; fixed by DIV-0200 (the draws read the slot NUL-ended at its
 last whole glyph). After the fix the same run plays to its last frame (4719)
 and the births page draws Alto's two whole glyphs; with
 `BOF3X_ORIGINAL=FaerieNameEnd` it crashes as before.
+
+## D402 — In the wide modes the Desert of Death draws a band and the party only: the grown ring's layer -1 spliced in stale (ours, DIV-0041's wide ring; seen 2026-11-02, issue #185; fixed by DIV-0041's amendment of the same day)
+
+**Seen:** ScrubOasis, issue #185 (main `922c568` and `d827571`, 16:9): day 3
+of the desert, a textured band across the picture and Ryu, no sky, stars or
+sand. The owner, 2026-11-02: the same screen after Horis's dialogue at the
+desert's edge, recorded as `desertSummary` (and, once, `FATAL: render: a
+frame holds more than 32768 commands` on entering area 189).
+
+**Established** (the owner's route replayed headless, A/B by
+`BOF3X_ORIGINAL`):
+- Capcom's `Sprite_DrawPass` alone draws the desert whole; ours with
+  `BOF3X_WIDE_RING=0` draws it whole; ours with the ring draws the band.
+- Area 189's view is `AreaMapBD_BuildView`'s, which empties lists 0 and 1
+  of Capcom's 0x38 layers itself. `DrawLayers_Reset` is not called, so the
+  ring's layer -1 record (`map_rim::ExtraReset`) kept the last field's list.
+  The grown pass linked it first: everything linked after it hung off a
+  node outside the frame.
+
+**Not established:** that the 32,768-command crash is this. A stale list
+whose last pointer leads back into the chain would loop the walk; no replay
+has crashed.
+
+**Status:** fixed 2026-11-02 (DIV-0041 amended): over area 0xBD's view the
+draw is Capcom's 28 x 56.
+
+## D403 — On our own exe the Desert of Death draws no sand at 4:3: AreaMapBD_BuildView's six cull bounds read as 0 (ours, the exe host; seen 2026-11-02 while reading issue #185)
+
+**Seen:** the owner's `desertSummary` route at 4:3 on `bof3x.exe`: the sky
+drawn, the sand not (98 commands a frame against the hosted build's 1,138).
+
+**Established:** our `AreaMapBD_BuildView` read its bounds from the
+`.rdata` floats its `fcomp` operands name (`0x5C4230..0x5C4244`: 370, -50,
+121, 520, -200, 120 in `BOF3.exe`). Our own exe carries no `.rdata` only our
+functions name, so a `peek` reads all six as 0. No cell passes `x > 0 && x <
+0` at 4:3; at the wide picture the x bounds are `widescreen.cpp`'s own and
+only the y test was wrong (`y > 0`), so most cells survived. The hosted
+build has the floats, which is why `rest_3g`'s self-test (hosted) and every
+`BOF3X_ORIGINAL` A/B drew the sand.
+
+**Swept 2026-11-02: no other read.** By source: every `.rdata` address
+`src/` names - 77 hex literals and the 33 `symbols.gen.h` names in
+`0x5C4000..0x5DA000` - is one of `rdata_consts.h`'s 44 constants, one of
+the 14 bound import slots, `c_dfDIKeyboard`'s header, a comment beside a
+value written in the code (`0x5C41E8`, `0x5C4214..20`, `0x5C425C..64`,
+`0x5C466C`), or these six bounds; the headers that call their strings
+".rdata" (`menu_windows_callees.h`, `battle_result_callees.h`,
+`map_field_objects_callees.h`, `rest_4c_callees.h`) name `.data`
+(`0x5E10C0..0x66B4A8`), which the exe host copies from the file. By
+measurement, on `bof3x.exe` at 4:3: a `poke` block before a route's first
+step filled the 22,353 words of `.rdata` the engine does not hold (all but
+the 175 words above) with `0x4E5A5A5A`, against twin runs of the same
+block writing 0, on `desertSummary`, `combat` and `battle_commands`. Every
+frame hash on the frames both runs drew was equal, and `statehash.py check` (two
+zero runs as the references) found only `Music_Staging`, which
+`statehash_skip.txt` line 30 lists as noise. The control: the same block
+writing `BOF3.exe`'s own `.rdata` bytes on the build before this fix drew
+the sand (1,178 of 2,768 frames differ from its zero run, 1 command
+against 1,107 at frame 727) and matched this build frame for frame; on
+this build Capcom's bytes and zeros draw alike. Not covered: reads before
+a recipe's first step (boot), and paths none of the three routes reach.
+Runs and scripts: `D:/bof3x-runs/dragnier1102/rd`.
+
+**Status:** fixed 2026-11-02: the bounds are values of ours (`Bound()` in
+`rest_3g.cpp`, `Widescreen_RangeValue`). Capcom's behaviour, so no ledger
+entry.
