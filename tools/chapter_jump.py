@@ -154,6 +154,16 @@ CRAFTS = {
                   why="fight 55 (Myria) on Scena15_Run6's timers alone: step 0xB with counter 0 at 0xF, so "
                       "steps 0xB..0xD need no field-script bump (skips the run's music, effects 0xA9 / 0xA8 "
                       "and step 7's party placement at (0x170000, 0x120000))"),
+    # Issue 191 (owner's request, 2026-11-03): the walk to Myria. Scena15_ArriveHook (scena_sc15.cpp) starts
+    # run 5 in area 174 on x 0x310000, z's cell 0x27..0x28 once flags 2, 4 and 5 are set - at step 5 (on to
+    # area 172 and the fight in 198) when 0xC..0x10 are set too. Run 5 sets 0x11 / 0x12 and the fight's
+    # aftermath 0x13..0x16, so those are cleared. The position is the area's one door in: area 173's link 3
+    # (the recipe op `links`: cells 17,97 -> area 174 x 0x3380 z 0x0200 flags 5).
+    'myriaHall': dict(donor='ending17', chapter=15, state=2, run=0, step=0, area=0xAE, flags=5,
+                      x=0x338000, z=0x20000, cset=[2, 3, 4, 5, 0xC, 0xD, 0xE, 0xF, 0x10],
+                      cclr=[0x11, 0x12, 0x13, 0x14, 0x15, 0x16],
+                      why="area 174 at its entrance from area 173, before Scena15_ArriveHook's run-5 cell "
+                          "(x 0x310000, z 0x27): the walk to Myria"),
     'bf54b': dict(donor='radiationRoom', chapter=9, state=2, run=9, step=3, area=0x77, flags=1,
                   x=0xA0000, z=0x28000, cset=[0x16], cclr=[0x1E], counters=[0x28, 0, 0, 0],
                   why="fight 54 (Shroom) at Scena09_Run9's battle step 3 with counter 0 at 0x28 "

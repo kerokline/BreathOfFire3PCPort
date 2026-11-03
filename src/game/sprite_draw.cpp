@@ -426,6 +426,15 @@ void LiveDraw() {
 
 }  // namespace
 
+void SpriteCapture_ClearSlot(int x, int y, int w, int h) {
+    const int x0 = Clamp(x, 0x400), x1 = Clamp(x + w, 0x400), y0 = Clamp(y, 0x200), y1 = Clamp(y + h, 0x200);
+    if (x1 <= x0 || y1 <= y0) return;
+    for (int r = y0; r < y1; ++r) std::memset(&Gfx_VramShadow[(r << 10) + x0], 0, static_cast<size_t>(x1 - x0) * 2);
+    const short rect[4] = {static_cast<short>(x0), static_cast<short>(y0), static_cast<short>(x1 - x0),
+                           static_cast<short>(y1 - y0)};
+    Gfx_InvalidateTextures(rect, 0);
+}
+
 extern "C" void __cdecl Sprite_Draw() {
     if (g_draw_clone) LiveDraw();
     else Draw();

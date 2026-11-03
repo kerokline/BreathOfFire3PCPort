@@ -10832,6 +10832,26 @@ designed in rather than bolted on.
     - `BOF3X_SHADOW='*'` headless (hosted): exit 0, every module 0
       mismatches, the capture self-test's 4 cases 0 mismatches; the exe host's
       start-up self-tests: exit 0.
+  - **Amended 2026-11-03** (issue #191, [`known-defects.md`](known-defects.md)
+    D405): effect kind 0x9D's start (`EffectKind9D_Start` `0x489D90`, ours,
+    `src/game/effect_4b.cpp`) clears the 24 x 48 rectangle its quad reads -
+    page (0x340, 0x100), u `+0x2E` - 0xC, v `+0x30` - 0x25, as `Kind9DQuad`
+    takes them - in `Gfx_VramShadow`, and the textures over it are dropped
+    (`SpriteCapture_ClearSlot`, `src/game/sprite_draw.cpp`). Capcom's PC
+    `START.DAT` leaves title art at (0x350..0x3BF, 0x160..0x1BF), where the
+    PlayStation's page is empty at the title, the load menu and in area 174
+    (a Mednafen VRAM dump of the Japan disc on the same save block); Station
+    Myria's hologram, the capture of field object 0 at (0x34C, 0x1A5), drew
+    that art around itself as a box. Kind 0x9D is placed by areas 173 and 174
+    only. Armed after `effect_4b`'s self-test, under this entry's switch.
+    - Seen on `tools/recipes/myriaHall.txt` (the craft `myriaHall`, 16:9):
+      before, the hologram in a blue box striped down its right side; after,
+      the figure alone, as the owner's let's play shows. The capture writes
+      647 texels each frame, as before.
+    - `BOF3X_SHADOW='*'` headless (hosted, an ini-less launcher copy): exit 0,
+      `effect_4b`'s fuzz run before the clear is armed; the exe host's
+      start-up self-tests: exit 0. `ledger_check` and `ledger_switches --check`:
+      0 errors.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteCapture` (Capcom's draw), or
   `BOF3X_ORIGINAL=Sprite_Draw`.
   A player turns it off with `BOF3X_OFF=SpriteCapture` (the ini's `off=`).

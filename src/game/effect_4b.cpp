@@ -38,7 +38,10 @@
 // fill of 0x489CD0 (EffectKind89_DrawTint, the site 0x489D47) is DIV-0041's
 // (section 3c): it draws at (Widescreen_FillX(), 0) Widescreen_FillWidth() x
 // 240, which is the original's (0, 0) 320 x 240 until Widescreen_ArmFills has
-// run and whenever the picture is narrow. Otherwise no divergence: each is a
+// run and whenever the picture is narrow. Kind 0x9D's start clears the
+// rectangle its quad reads before the capture lands there - DIV-0142's
+// amendment for issue #191, armed after this module's self-test (the switch
+// SpriteCapture). Otherwise no divergence: each is a
 // faithful replacement. Where the original jumps through a state
 // table past its end, indexes a table of its own past its rows, or ObjTrio or
 // Sprite_Objects past their records, ours aborts with a message
@@ -56,6 +59,7 @@
 #include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
+#include "game/sprite_draw.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -77,6 +81,7 @@ using move_script::Word;
 using Handler = scenario_harness::Handler;
 
 unsigned char* S() { return Sprite_Current; }
+std::uint32_t g_hologram_clear = 0;   // DIV-0142's amendment; 1 through PatchBytes("SpriteCapture") in Effect4B_Inject
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t S32(U v) { return static_cast<std::int32_t>(v); }
@@ -673,9 +678,18 @@ extern "C" void __cdecl EffectKind9D_Run(void) {
 // the field object of +0xB: its +0x24 bit 3 set, its words +0x2E / +0x30 the
 // record's, its point +0x34.. the record's point; the colour +0x5D..+0x5F 0;
 // +6 0 - the pulse at once (EffectKind9D_Pulse) and +1 = 1; else +1 = 2.
+//
+// DIV-0142's amendment (issue #191): first, the 24 x 48 rectangle the quad
+// reads (page (0x340, 0x100), u +0x2E - 0xC, v +0x30 - 0x25, as Kind9DQuad
+// takes them) is cleared. The PlayStation's page is empty there in areas 173
+// and 174 (a Mednafen VRAM dump, 2026-11-03); the PC's START.DAT leaves its
+// title art at (0x350..0x3BF, 0x160..0x1BF), which the hologram drew as a box.
 extern "C" void __cdecl EffectKind9D_Start(void) {
     const unsigned char request = Field_Request;
     if (request == 3 || request == 1) return;
+    if (g_hologram_clear != 0)
+        SpriteCapture_ClearSlot(0x340 + static_cast<unsigned char>(S()[0x2E] - 0xC),
+                                0x100 + static_cast<unsigned char>(S()[0x30] - 0x25), 0x18, 0x30);
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
     unsigned char* const o = Sprite(s[0xB], "EffectKind9D_Start");
@@ -1478,6 +1492,11 @@ extern "C" void __cdecl EffectKind8C_Fail(void) {
 
 void Effect4B_Inject() {
     if (bof3::WantsShadow("effect_4b")) effect_4b::SelfTest();
+    {
+        // DIV-0142's amendment (issue #191): armed after the fuzz, which compares Capcom's start.
+        const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
+        bof3::PatchBytes("SpriteCapture", Low32(&g_hologram_clear), was, is, 4);
+    }
     BOF3_INJECT(EffectKind87_Setup);
     BOF3_INJECT(EffectKind87_FadePanes);
     BOF3_INJECT(EffectKind87_StepPanes);

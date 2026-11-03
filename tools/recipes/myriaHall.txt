@@ -1,0 +1,41 @@
+# Loads tools/recipe_saves/myriaHall.DAT (tools/chapter_jump.py make myriaHall): area 174 at its entrance
+# from area 173, the walk to Myria (issue 191). The load presses are issue190.txt's. BOF3X_LANG=en-US.
+# save myriaHall
+wait 27
+hold start 5
+wait 70
+hold circle 5
+wait 4
+hold start 5
+wait 38
+hold circle 4
+wait 40
+hold circle 5
+wait 8
+hold circle 5
+until 0x904EFC u16 == 174 timeout 1200
+wait 60
+hold circle 3
+wait 25
+hold circle 3
+wait 25
+hold circle 3
+wait 25
+hold circle 3
+wait 25
+hold circle 3
+wait 25
+hold circle 3
+wait 25
+hold circle 3
+wait 25
+hold circle 3
+wait 25
+hold circle 3
+wait 25
+hold circle 3
+wait 25
+wait 6
+wait 30
+shot entrance 1
+end
