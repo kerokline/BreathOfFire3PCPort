@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 202 entries, DIV-0001..0202, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 203 entries, DIV-0001..0203, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -10806,6 +10806,32 @@ designed in rather than bolted on.
     second defect, Capcom's, came after it: a direct-colour page's texels all
     have alpha 0 and are discarded (D333). DIV-0159 fixes that; with both,
     the melt plays.
+  - **Amended 2026-11-03** (issue #189, [`known-defects.md`](known-defects.md)
+    D404): a palette set in the frame of its capture is read from
+    `Gfx_ClutStrip`. The PlayStation's CLUT upload is a GPU transfer that runs
+    ahead of the frame's draws, the capture among them; the PC's
+    `Gfx_FlushDirtyStrip` lays the strip into `Gfx_VramShadow` at the frame's
+    end, after our capture has composed the picture. So while
+    `Gfx_ClutStripDirty` is set, a CLUT inside the strip's rectangle (VRAM
+    0..0xFF, 0x1E0..0x1FF) is read from the strip, as the GPU would see it;
+    otherwise from the shadow, as before. `WeretigerCopy_Spawn` sets its four
+    images' rows (0x7B, 0x7C, and 0x7D white) in the frame they are captured:
+    the captures wrote 0 texels and Weretiger's cross-fade drew nothing, so
+    Rei vanished and the tiger popped in 64 frames later; over rows a fight had
+    filled before, the images took those colours (the issue's "inverted
+    palette", by reading). The capture's log line now gives the shade and the
+    count of texels written.
+    - Seen on the owner's `adultFight.txt` (adult Rei's cast, recipe frames
+      1170..1240, a frame every 3): before, the four captures 0 texels each
+      and the page `(0x340, 0x100)` empty through the fade (624 sampled cells,
+      0 non-zero); after, 952, 952, 2,067 and 2,067 texels, and the crouching
+      Rei fades into the dark tiger and then the bright one, as a PlayStation
+      recording of the cast shows.
+    - `ropeAndAmalgam.txt`: Amalgam's capture writes 4,990 texels and the melt
+      plays (the owner's eye, 2026-11-03).
+    - `BOF3X_SHADOW='*'` headless (hosted): exit 0, every module 0
+      mismatches, the capture self-test's 4 cases 0 mismatches; the exe host's
+      start-up self-tests: exit 0.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteCapture` (Capcom's draw), or
   `BOF3X_ORIGINAL=Sprite_Draw`.
   A player turns it off with `BOF3X_OFF=SpriteCapture` (the ini's `off=`).
@@ -14586,4 +14612,80 @@ designed in rather than bolted on.
 - **Player:** never - a file: a `logos.avi` copied into the game folder plays
 - **Toward:** psx
 - **Languages:** any
+- **State:** active
+
+### Horis's desert directions say east, as Capcom's Japanese does, in every Western layer
+
+- **ID:** DIV-0203
+- **Date:** 2026-11-03
+- **Subsystem:** text (the language layers: `tools/loc_build.py`
+  `TEXT_CORRECTIONS` / `correct_block`, chunk kind 19; `src/game/dat_load.cpp`
+  `TakeCorrected`; issue #184)
+- **Tier:** Intent - the Western translations contradict the Japanese text
+  they translate, and each other, on the one direction the player must follow
+- **Original behaviour:** in the Desert of Death, Horis tells the party how
+  to reach the oasis (AREA193 text slot 17, his menu's "About directions"),
+  and the camp's note says it again (AREA191 and AREA192 slot 108). Capcom's
+  Japanese, PSX and PSP alike (identical bytes), says: north by the North
+  Star; when the Evening Star stands due west, turn **east** (東) and keep
+  going east until it sinks; then north. The port's Chinese says the same
+  (东, glyph `0x81AC`, in the turn and the keep-going word of both texts).
+  The Western discs, measured 2026-11-03 from their script sections
+  (`0x80010000`, each message's donor bytes): **US** says east spoken and
+  west / west in the note (the highlighted turn word and "keep going");
+  **EU English** (PSX and PSP-EU, identical bytes) east spoken, east / west
+  in the note; **French** ouest / ouest spoken (the highlighted turn word and
+  the keep-going word), est / ouest in the note; **German** Westen / Westen in
+  both (the keep-going word hyphenated over a line break, "We-" then
+  "sten"). A language layer carried each disc's words as they are. The word
+  for where the star stands (west, ouest, Westen, the first in each message)
+  is right in every release and is not touched.
+- **New behaviour:** the layer's build corrects the wrong words on the
+  donor's text block before it is converted: en-US's note turn word and
+  keep-going word west -> east; en-150's note keep-going word west -> east;
+  fr-FR's spoken turn and keep-going words and the note's keep-going word
+  ouest -> est (the elided article before it reads right either way); de-DE's
+  turn word Westen -> Osten and the keep-going word's `We-` / `sten` -> `Osten`
+  whole at the start of the next line (the line break moved before it, so no
+  line grows), in all three messages. Each rule names its message by language, area and
+  slot, holds the SHA-256 of the message's donor bytes as measured (the five
+  discs' hashes; no Capcom text but the direction words) and its edits as
+  the n-th occurrence of a word; a message that does not hash as measured -
+  another disc revision - is left as the disc has it and the build's report
+  says so. A length change is carried through the block's slot table (every
+  offset past the message moves by the difference). The layer keeps the
+  disc's block as its kind-0 chunk, as before, and writes the corrected
+  block after it as a kind-19 chunk of the same tag, group 1 in the header's
+  fourth word; the engine lands it over the first unless `DesertDirections`
+  is off, and logs `DIV-0203    corrected text block` with `taken` or
+  `skipped` at each load. A kind-19 chunk of another group is refused (a
+  layer newer than the engine). The Japanese layer and the port's own text
+  are not touched: both say east already.
+- **Rationale:** the PSX disc decides what the text was, and Capcom's says
+  east twice in both places; the translations disagree among themselves
+  (the US speaks east and writes west, the French writes est and speaks
+  ouest), so no Western reading is the design. The words decide where the
+  player walks, and the wrong ones send them away from the oasis.
+- **Also in the PSX version?** Yes - every Western PlayStation disc and
+  PSP-EU carry the wrong words as listed; the Japanese PSX and PSP releases
+  do not. The new text is the Japanese release's in each language.
+- **Verification:** `loc_build.py all` from the five Western images under
+  `D:\bof3x-runs\discs` (a scratch PC install, `D:\bof3x-runs\i184\pc`;
+  PSP-EU by `--only` for the three areas, its full build stops on the
+  re-laid STATUS sheet as on `main`), before and after: every file of every
+  build byte-identical once the kind-19 chunk is dropped (247 files a PSX
+  disc, PSP-EU's three areas); the kind-19 block's 255 other slots identical
+  to the kind-0 block's, the corrected message decoding clean to its NUL
+  with its choice list intact (AREA193); blocks shrink by 2 (French note), 4
+  (French speech, German) or not at all (English). `loc_build.py selftest`
+  covers the rule on synthetic bytes. Not played.
+- **Reversible?** `BOF3X_OFF=DesertDirections` (ini `off=DesertDirections`)
+  skips the corrected blocks, and the layer's kind-0 blocks - the disc's
+  text, byte for byte - stay; `original` or no language does not reach the
+  layers at all.
+- **Switch:** DesertDirections
+- **Default:** on - under its languages
+- **Player:** yes - BOF3X_OFF=DesertDirections (ini off=)
+- **Toward:** psx, psp - Capcom's Japanese (PSX and PSP, identical bytes), which the port's Chinese also follows
+- **Languages:** en-US, en-150, fr-FR, de-DE
 - **State:** active

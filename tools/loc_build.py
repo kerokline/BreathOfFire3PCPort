@@ -901,6 +901,145 @@ def convert_block(donor, base, room):
     return block, kept
 
 
+# ---------------------------------------------------------------- text corrections (DIV-0203)
+
+# A word of a release's dialogue that its translators got wrong against
+# Capcom's Japanese, put right in the player's layer (DIV-0203; the first,
+# issue #184: Horis's desert directions). The correction is made on the
+# donor's text block, before convert_block, and the block converted a second
+# time: the layer carries the disc's block as kind 0, as before, and the
+# corrected one after it as a kind-19 chunk of the same tag
+# (KIND_CORRECTED), which the engine lands over the first unless the
+# group's switch is off (src/game/dat_load.cpp, DesertDirections). So the
+# switch off is the disc's text to the byte, and no build-time option is
+# needed or offered.
+#
+# A rule names a message by (language tag, area, slot) and holds the SHA-256
+# of the message's donor bytes as measured (no Capcom text - CLAUDE.md rule
+# 1 - only the direction words themselves) and its edits: the n-th (from 1)
+# occurrence of a word in the message as the disc has it, and the word that
+# replaces it. A message that does not hash as measured - another disc
+# revision, another release under the tag - is left as it is, with a line
+# in the build's report. A length change is carried through the block's slot
+# table: every offset past the message moves by the difference; a slot
+# pointing inside an edited word refuses the message.
+KIND_CORRECTED = 19
+CORRECTION_GROUP = 1        # a kind-19 chunk's fourth header word: DIV-0203's group, switch DesertDirections
+DONOR_TEXT = {" ": SPACE_IN, "/": 0x01, "-": 0x3D}   # a Latin donor's space, line break and hyphen; letters are ASCII
+
+# Issue #184 (measured 2026-11-03 from the five Western images; notes in the
+# ledger entry). Capcom's Japanese has Horis say to turn EAST when the
+# Evening Star is due west, and to keep going east until it sinks - spoken
+# (AREA193 slot 17) and in the camp's note (AREA191 and AREA192 slot 108).
+# PSX-EU and PSP-EU hash alike under en-150.
+TEXT_CORRECTIONS = {
+    ("en-US", 191, 108): (("88724cfbcdbafe86c3fa7f3ba8c1579f8f49d9f179ffa9a8b0daf0edca9596fc",),
+                          (("west", 2, "east"), ("west", 3, "east"))),
+    ("en-US", 192, 108): (("88724cfbcdbafe86c3fa7f3ba8c1579f8f49d9f179ffa9a8b0daf0edca9596fc",),
+                          (("west", 2, "east"), ("west", 3, "east"))),
+    ("en-150", 191, 108): (("658c9152375027f99283d769f740cba53319bd25c8f97c9b4a16eb3ae0b4c91b",),
+                           (("west", 2, "east"),)),
+    ("en-150", 192, 108): (("658c9152375027f99283d769f740cba53319bd25c8f97c9b4a16eb3ae0b4c91b",),
+                           (("west", 2, "east"),)),
+    ("fr-FR", 191, 108): (("e510570a52d7c9841abad0dc8f40306d94bfc7f003b03c41dad1bef2949b36d1",),
+                          (("ouest", 2, "est"),)),
+    ("fr-FR", 192, 108): (("0cd8fb92177233a8a2431a6d39c8a0dc4b597a603caa0d46566ab7cc9215cf49",),
+                          (("ouest", 2, "est"),)),
+    ("fr-FR", 193, 17): (("da065ec559a71b00a97bf6729992f5d251f1e5a1e1639251e970ec2944dfd632",),
+                         (("ouest", 2, "est"), ("ouest", 3, "est"))),
+    # German: the turn word, and the keep-going word that the disc hyphenates
+    # over a line break ("We-" / "sten"): "Osten" whole on the next line, so
+    # no line grows. Occurrence 1 of "Westen" is where the star stands.
+    ("de-DE", 191, 108): (("e32bf2c2390bc628588bf96a4df5ada0e8a9c8e2b598dedb0704b23afca30655",),
+                          (("Westen", 2, "Osten"), (" We-/sten", 1, "/Osten"))),
+    ("de-DE", 192, 108): (("ee6af739f6a3b869f9559d7ec550cd0c009898d2a19587745512d35b79b057d3",),
+                          (("Westen", 2, "Osten"), (" We-/sten", 1, "/Osten"))),
+    ("de-DE", 193, 17): (("83a6ebd68b7cf399a33161fc851be34beca00743f57c6453bb76d9f9cc61c549",),
+                         (("Westen", 2, "Osten"), (" We-/sten", 1, "/Osten"))),
+}
+
+
+def donor_text(s):
+    """A rule's word as a Latin donor's bytes."""
+    return bytes(DONOR_TEXT.get(c, ord(c)) for c in s)
+
+
+def correct_message(msg, edits):
+    """The message with its edits, and [(position, old length, new length)],
+    or (None, why) when an edit's occurrence is not there."""
+    found = []
+    for old, nth, new in edits:
+        o, at = donor_text(old), -1
+        for _ in range(nth):
+            at = msg.find(o, at + 1)
+            if at < 0:
+                return None, "occurrence %d of %r is not in it" % (nth, old)
+        found.append((at, o, donor_text(new)))
+    found.sort()
+    for (a, o, _), (b, _, _) in zip(found, found[1:]):
+        if a + len(o) > b:
+            return None, "two edits overlap"
+    out, last = bytearray(), 0
+    for at, o, n in found:
+        out += msg[last:at] + n
+        last = at + len(o)
+    out += msg[last:]
+    return bytes(out), [(at, len(o), len(n)) for at, o, n in found]
+
+
+def correct_block(lang, area, donor, report):
+    """The donor text block with lang's corrections for this area, or None
+    when it has none that apply. `report` gets a line a message."""
+    rules = sorted((slot, rule) for (tag, a, slot), rule in TEXT_CORRECTIONS.items() if tag == lang and a == area)
+    if not rules or donor_ja or len(donor) < 2:
+        return None
+    if area in BUTTON_AREAS:
+        raise SystemExit("DIV-0203: a correction in button area %d: its block would be converted twice and its "
+                         "button codes counted twice" % area)
+    n = struct.unpack_from("<H", donor, 0)[0] // 2
+    if not n or 2 * n > len(donor):
+        report.append("AREA%03d: the slot table does not fit its block; left as the disc has it" % area)
+        return None
+    block, changed = bytes(donor), False
+    for slot, (hashes, edits) in rules:
+        where = "AREA%03d slot %d" % (area, slot)
+        offs = list(struct.unpack_from("<%dH" % n, block, 0))
+        off = offs[slot] if slot < n else None
+        if off is None or not 2 * n <= off < len(block):
+            report.append("%s: no message there; left as the disc has it" % where)
+            continue
+        end = convert_run(block, off)[1]
+        msg = block[off:end]
+        digest = hashlib.sha256(msg).hexdigest()
+        if digest not in hashes:
+            report.append("%s: not the message measured (sha256 %s...); left as the disc has it" % (where, digest[:16]))
+            continue
+        new, spans = correct_message(msg, edits)
+        if new is None:
+            report.append("%s: %s; left as the disc has it" % (where, spans))
+            continue
+
+        def moved(p):
+            # An offset into the block, old -> new; None inside an edited word.
+            if p <= off or p > len(block):
+                return p
+            q = p
+            for at, was, now in spans:
+                if off + at < p < off + at + was:
+                    return None
+                if p >= off + at + was:
+                    q += now - was
+            return q
+        table = [moved(p) for p in offs]
+        if None in table:
+            report.append("%s: a slot points inside a corrected word; left as the disc has it" % where)
+            continue
+        block = struct.pack("<%dH" % n, *table) + block[2 * n:off] + new + block[end:]
+        changed = True
+        report.append("%s: %s" % (where, ", ".join("%s -> %s" % (o, w) for o, _, w in edits)))
+    return block if changed else None
+
+
 # ---------------------------------------------------------------- the dialogue's button codes
 
 # The button unification round, DT-1 (docs/button-dialogue.md; the census is
@@ -1165,7 +1304,8 @@ def button_report(counts):
 def write_overlay(path, chunks):
     with open(path, "wb") as f:
         for kind, tag, payload in chunks:
-            f.write(struct.pack("<4I", kind, tag, len(payload), 0))
+            # The fourth word is zero but on a corrected block, where it names the group (DIV-0203).
+            f.write(struct.pack("<4I", kind, tag, len(payload), CORRECTION_GROUP if kind == KIND_CORRECTED else 0))
             f.write(payload)
     dat.load(path)      # parses clean or raises
 
@@ -5114,7 +5254,8 @@ def build_all(args, disc_path):
     title = build_title(args, disc)
     if title:
         overlays["START.DAT"] = title
-    texts = pools = kept_text = kept_pool = enemies = kept_enemy = 0
+    texts = pools = kept_text = kept_pool = enemies = kept_enemy = corrected = 0
+    corrections = []    # DIV-0203's report, a line a message
     rmap, how = release_map(disc)
     psp_eu = is_psp(disc) and not donor_ja
     for name in src.names():
@@ -5161,6 +5302,17 @@ def build_all(args, disc_path):
                     finally:
                         set_button_area("", None, False)
                     texts, kept_text = texts + 1, kept_text + kept
+                    fixed = correct_block(args.lang, area_number(name), donor[0], corrections)   # DIV-0203
+                    if fixed is not None:
+                        # The disc's block as kind 0, as without a correction; the corrected one after it.
+                        overlays.setdefault(name, []).append((0, tag, block))
+                        try:
+                            overlays[name].append((KIND_CORRECTED, tag, convert_block(fixed, base, TEXT_ROOM)[0]))
+                            corrected += 1
+                        except ValueError as e:
+                            corrections.append("AREA%03d: the corrected block does not convert (%s); left as the "
+                                               "disc has it" % (area_number(name), e))
+                        continue
                 else:
                     donor = [s for want in POOL_DESTS for dest, s in sections if dest & 0x7FFFFFFF == want]
                     if not donor:
@@ -5171,6 +5323,10 @@ def build_all(args, disc_path):
                 print("  SKIP %s tag %X: %s" % (name, tag, e))
                 continue
             overlays.setdefault(name, []).append((0, tag, block))
+    if corrections or any(t == args.lang for t, _, _ in TEXT_CORRECTIONS):
+        print("text corrections (DIV-0203): %d area blocks carry a corrected copy" % corrected)
+        for line in corrections:
+            print("  " + line)
     start_emi = disc.find("START.EMI")
     global donor_pointers
     donor_pointers = PSX_POINTERS
@@ -5871,7 +6027,50 @@ def selftest_exe_ja():
           "places and another step refused")
 
 
+def selftest_corrections():
+    """DIV-0203's corrections on synthetic bytes (no game data): a shorter word
+    moves every later slot by the difference and only those; a message that
+    does not hash as measured, and one with a slot inside a corrected word,
+    are left as they are; the rule table names no button area and only words."""
+    global TEXT_CORRECTIONS
+    for (tag, area, slot), (hashes, edits) in TEXT_CORRECTIONS.items():
+        if tag not in language_tags.TAGS or area in BUTTON_AREAS or not hashes:
+            raise SystemExit("selftest: correction rule %s %d %d" % (tag, area, slot))
+        for old, nth, new in edits:
+            if nth < 1 or not all(c.isalpha() or c in DONOR_TEXT for c in old + new):
+                raise SystemExit("selftest: correction rule %s %d %d: %r -> %r" % (tag, area, slot, old, new))
+    words = lambda s: donor_text(s) + b"\0"
+    a, b, c = words("go ouest"), words("vers l'ouest puis ouest"), words("fin")
+    block = struct.pack("<4H", 8, 8 + len(a), 8 + len(a) + len(b), 8 + len(a) + len(b) + 4) + a + b + c
+    saved = TEXT_CORRECTIONS
+    try:
+        TEXT_CORRECTIONS = {("fr-FR", 1, 1): ((hashlib.sha256(b).hexdigest(),), (("ouest", 2, "est"),))}
+        report = []
+        got = correct_block("fr-FR", 1, block, report)
+        want_b = words("vers l'ouest puis est")
+        want = struct.pack("<4H", 8, 8 + len(a), 8 + len(a) + len(want_b), 8 + len(a) + len(want_b) + 4) \
+            + a + want_b + c
+        if got != want or len(report) != 1:
+            raise SystemExit("selftest: correct_block gave %s (%s)" % (got and got.hex(), report))
+        if correct_block("en-US", 1, block, []) is not None or correct_block("fr-FR", 2, block, []) is not None:
+            raise SystemExit("selftest: correct_block took another language's or area's rule")
+        TEXT_CORRECTIONS = {("fr-FR", 1, 1): (("0" * 64,), (("ouest", 2, "est"),))}
+        report = []
+        if correct_block("fr-FR", 1, block, report) is not None or "not the message measured" not in report[0]:
+            raise SystemExit("selftest: correct_block took a message of another hash (%s)" % report)
+        inside = struct.pack("<4H", 8, 8 + len(a), 8 + len(a) + len(b) - 3, 8 + len(a) + len(b)) + a + b + c
+        TEXT_CORRECTIONS = {("fr-FR", 1, 1): ((hashlib.sha256(b).hexdigest(),), (("ouest", 2, "est"),))}
+        report = []
+        if correct_block("fr-FR", 1, inside, report) is not None or "inside" not in report[0]:
+            raise SystemExit("selftest: correct_block moved a slot inside a corrected word (%s)" % report)
+    finally:
+        TEXT_CORRECTIONS = saved
+    print("  text corrections (DIV-0203): a shorter word moves the later slots only; another hash and a slot "
+          "inside the word refused; the rule table's %d rules name words and no button area" % len(TEXT_CORRECTIONS))
+
+
 def cmd_selftest(args):
+    selftest_corrections()
     selftest_empty_records()
     selftest_rules()
     selftest_psp()

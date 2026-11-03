@@ -197,6 +197,13 @@ en-US	as-shipped	off	DIV-0193	SaveSlotBlank	An empty save slot draws no text	Pla
 en-US	as-shipped	never	DIV-0194	none	A European disc-only install takes its disc's own eight area banks	Player never: Forced or one-way
 en-US	as-shipped	never	DIV-0195	none	A Western PSX disc-built image takes its disc's own regional layout fields	Player never: Forced or one-way
 en-US	as-shipped	skipped-language	DIV-0196	ConfigLabelJapanese	The Config screen's label column left-aligned at the box under a Japanese layer	acts only under ja-JP
+en-US	as-shipped	cannot	DIV-0197	Area_PassageAhead	An area with no passage list answers "no passage ahead", instead of reading address 3	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	cannot	DIV-0198	EffectKind5E_DrawList	The dock's parts list starts its lines where the image's release puts them	Player costly: the original is only Capcom's function; this build cannot
+en-US	as-shipped	off	DIV-0199	QuadFarEdge	A screen-rectangle textured quad samples the texels the PlayStation draws, and never the one past its far edge	Player yes
+en-US	as-shipped	off	DIV-0200	FaerieNameEnd	A faerie's name drawn from its five-byte slot ends at the slot's last whole glyph	Player yes
+en-US	as-shipped	off	DIV-0201	SoundSdl	Play the sound through SDL3 audio, with objects of ours in DirectSound's slots	Player yes
+en-US	as-shipped	never	DIV-0202	none	A game folder built from the PC install leaves out the porting house's logo movie	Player never: Forced or one-way
+en-US	as-shipped	off	DIV-0203	DesertDirections	Horis's desert directions say east, as Capcom's Japanese does, in every Western layer	Player yes
 en-US	repaired	lang-governed	DIV-0005	lang	Walk a language overlay after each `DAT` file	Switch: lang - part of the language pick, which no preset changes
 en-US	repaired	lang-governed	DIV-0006	lang	Advance the dialogue pen by the glyph's width	Switch: lang - part of the language pick, which no preset changes
 en-US	repaired	lang-governed	DIV-0007	lang	Move the system message pool out of the area script's way	Switch: lang - part of the language pick, which no preset changes
@@ -325,6 +332,9 @@ en-US	repaired	off	DIV-0192	ini:music=pc	The loss tune from the disc on an insta
 en-US	repaired	off	DIV-0193	SaveSlotBlank	An empty save slot draws no text	Player yes
 en-US	repaired	never	DIV-0194	none	A European disc-only install takes its disc's own eight area banks	Player never: Forced or one-way
 en-US	repaired	never	DIV-0195	none	A Western PSX disc-built image takes its disc's own regional layout fields	Player never: Forced or one-way
+en-US	repaired	cannot	DIV-0198	EffectKind5E_DrawList	The dock's parts list starts its lines where the image's release puts them	Player costly: the original is only Capcom's function; this build cannot
+en-US	repaired	off	DIV-0201	SoundSdl	Play the sound through SDL3 audio, with objects of ours in DirectSound's slots	Player yes
+en-US	repaired	never	DIV-0202	none	A game folder built from the PC install leaves out the porting house's logo movie	Player never: Forced or one-way
 en-US	playstation	also-available	DIV-0012	ini:filter=linear	Offer point sampling as a choice of look	Default off: the preset keeps it on, so switch it on yourself
 en-US	playstation	already-off	DIV-0041	ini:wide=0	A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side	Default off: already off
 en-US	playstation	already-off	DIV-0086	ini:opt=	Optional layers from the player's PSP disc, walked after the language overlay	Default off: already off

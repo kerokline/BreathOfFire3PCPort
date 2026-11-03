@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-11-02)
+**Status:** IN PROGRESS (2026-11-03)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -23,6 +23,15 @@ handles), which no state hash saw. **What the player sees:** the 32-bit build st
 is DIV-0201's sound output, which nobody has listened to yet. Owed the owner: that listen, and a listen and a
 look on the 64-bit build. Stage D (the audit, a check
 that hears the music, the release's second artefact) is HANDOFF item 14a.
+
+**Horis's desert directions say east in every Western layer, 2026-11-03** (issue #184, DIV-0203, on
+`fix/issue-184-desert-directions`, unpushed). Capcom's Japanese says to turn east and keep going east when the
+Evening Star is due west, spoken (AREA193 slot 17) and in the camp's note (AREA191 / AREA192 slot 108); the US,
+European, PSP-EU, French and German discs each got some of those words wrong, and disagree among themselves.
+`tools/loc_build.py` now corrects them in the layer it builds, by a rule table that names each message by
+language, area and slot and holds its measured hash, so another disc revision is left as it is; the corrected
+block is a kind-19 chunk beside the disc's own, and `BOF3X_OFF=DesertDirections` gives the disc's text back.
+A layer gets it when it is rebuilt. Not played; the German wording is owed your eye (owner-review).
 
 **The PC game folder leaves out the porting house's logo movie, 2026-11-02, merged as PR #186** (DIV-0202). The
 owner's call: `tools/player_sources.py` copies `capcom.avi` and no longer `logos.avi`, so a game folder built from

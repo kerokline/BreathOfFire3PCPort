@@ -13,6 +13,14 @@ Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
 
+## 2026-11-03, issue #184's desert directions
+
+- **The German wording of DIV-0203** (`fix/issue-184-desert-directions`): the turn word is now Osten, and the
+  keep-going word, which the disc hyphenates over a line break ("We-" / "sten"), is Osten whole at the start of
+  the next line, the break moved before it so no line grows (the sentences are in the session's report, not here:
+  CLAUDE.md rule 1). Rebuild the `de-DE` layer, ask Horis about directions in the Desert of Death and read the
+  camp's note; the French (est) and English (east) lines too, if you have them to hand.
+
 ## 2026-10-28..31, owed after the merges
 
 Gathered by the docs audit of 2026-10-31 from the docs that name them; each doc has the reading.
