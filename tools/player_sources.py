@@ -43,6 +43,7 @@ LABELS = {
     "psp-jp": "PSP, Japan",
     "psp-eu": "PSP, Europe",
 }
+PC_DISC_LABEL = "PC CD, the 2001 Chinese release"
 # The same, as "the ... disc" in a sentence.
 DISC_NAMES = {
     "psx-jp": "Japanese PlayStation", "psx-us": "USA PlayStation", "psx-eu-en": "European (English) PlayStation",
@@ -52,7 +53,10 @@ DISC_NAMES = {
 # install first, whose chunks are the recipe's target; PlayStation discs next;
 # a PSP disc last, where it fills only what the others leave (importer.py
 # resolve_preset's rule for a PSP disc beside a preset).
-ROLE_ORDER = {"pc-folder": 0, "pc-exe": 0, "psx": 1, "psp": 2}
+ROLE_ORDER = {"pc-folder": 0, "pc-disc": 0, "pc-exe": 0, "psx": 1, "psp": 2}
+# The kinds that are the PC game whole: its folder, or its CD as an .iso
+# (fixtures.toml pc-zh `iso`); setup lays the CD out as a folder.
+PC_KINDS = ("pc-folder", "pc-disc")
 SHIPPED_DAT = r"[A-Z0-9_]+\.DAT"
 CD_EXT = (".cue", ".bin", ".iso")
 # MCI fails to open a movie whose full path is around 160 characters
@@ -97,6 +101,93 @@ def _catalogue_diff(have, want):
     """How many of the catalogued files are missing or differ, and how many are extra."""
     bad = sum(1 for n, v in want.items() if have.get(n) != v)
     return bad, len(set(have) - set(want))
+
+
+# ---------------------------------------------------------------- the CD's pressing
+
+def _pc_build():
+    return next(b for b in _fixtures()["build"] if b["id"] == "pc-zh")
+
+
+def pc_dat_check(have):
+    """The PC's DAT tree against dat_tree: (bad, repairs, total). `have` is
+    {name: (size, sha256)} of the shipped containers. A file that differs is a
+    repair, not a fault, when it is a `cd_pressing` row's file with that row's
+    hash (fixtures.toml: the CD's five sound-bank bits); `bad` counts the rest."""
+    pc = _pc_build()
+    want = _imp()._manifest_rows(pc["artifacts"]["dat_tree"]["manifest"])
+    rows = {r["file"]: r for r in pc.get("cd_pressing", [])}
+    bad, repairs = 0, []
+    for n, v in want.items():
+        if have.get(n) == v:
+            continue
+        r = rows.get(n)
+        if r and have.get(n, (None, None))[1] == r["sha256"]:
+            repairs.append(r)
+        else:
+            bad += 1
+    return bad, repairs, len(want)
+
+
+def repair_pressing(path, row):
+    """Put back the one bit the CD's pressing changed in the DAT file `path`
+    (a `cd_pressing` row): of the eight flips of the byte at the row's offset,
+    the one whose file hashes as dat_tree's. The file is rewritten in place.
+    Raises SetupError when the file is not the row's or no flip gives the hash."""
+    want = _imp()._manifest_rows(_pc_build()["artifacts"]["dat_tree"]["manifest"])[row["file"]]
+    with open(path, "rb") as f:
+        b = bytearray(f.read())
+    if hashlib.sha256(b).hexdigest() != row["sha256"] or not 0 <= row["offset"] < len(b):
+        raise SetupError("%s is not the CD's copy that fixtures.toml records; the repair is not made." % path)
+    for bit in range(8):
+        b[row["offset"]] ^= 1 << bit
+        if len(b) == want[0] and hashlib.sha256(b).hexdigest() == want[1]:
+            with open(path, "wb") as f:
+                f.write(b)
+            return
+        b[row["offset"]] ^= 1 << bit
+    raise SetupError("%s: no one-bit repair at offset 0x%X gives the release's file." % (path, row["offset"]))
+
+
+def lay_out_pc(src, out):
+    """The PC game's files as a folder that copy_pc and importer.py build read
+    (BOF3.exe, the shipped DAT containers, BGM\\, SND\\, capcom.avi), made in
+    the new folder `out`, with the CD pressing's bits put back. `src` is a PC
+    game folder or the CD's .iso. Returns `out`."""
+    os.makedirs(os.path.join(out, "DAT"))
+    if os.path.isdir(src):
+        for name, want_dir in (("BOF3.exe", False), ("BGM", True), ("SND", True), ("capcom.avi", False)):
+            p = _child(src, name, want_dir)
+            if p and want_dir:
+                shutil.copytree(p, os.path.join(out, name))
+            elif p:
+                shutil.copy2(p, os.path.join(out, name))
+        dat = _child(src, "DAT", True)
+        for f in os.listdir(dat):
+            if re.fullmatch(SHIPPED_DAT, f.upper()) and os.path.isfile(os.path.join(dat, f)):
+                shutil.copy2(os.path.join(dat, f), os.path.join(out, "DAT", f.upper()))
+    else:
+        import psx_disc
+        d = psx_disc.Disc(src)
+        try:
+            for n in sorted(d.files):
+                top = n.split("/", 1)[0]
+                keep = (n in ("BOF3.EXE", "CAPCOM.AVI") or top in ("BGM", "SND")
+                        or (top == "DAT" and n.count("/") == 1 and re.fullmatch(SHIPPED_DAT, n[4:])))
+                if not keep:
+                    continue
+                name = {"BOF3.EXE": "BOF3.exe", "CAPCOM.AVI": "capcom.avi"}.get(n, n)
+                p = os.path.join(out, *name.split("/"))
+                os.makedirs(os.path.dirname(p), exist_ok=True)
+                with open(p, "wb") as f:
+                    f.write(d.read(n))
+        finally:
+            d.f.close()
+    for r in _pc_build().get("cd_pressing", []):
+        p = os.path.join(out, "DAT", r["file"])
+        if os.path.isfile(p) and _sha_file(p) == r["sha256"]:
+            repair_pressing(p, r)
+    return out
 
 
 # ---------------------------------------------------------------- identify
@@ -159,7 +250,6 @@ def identify_file(path, shown):
 
 
 def identify_folder(path, shown):
-    imp = _imp()
     import region_diff
     exe = _child(path, "BOF3.exe", False)
     dat = _child(path, "DAT", True)
@@ -180,20 +270,22 @@ def identify_folder(path, shown):
     exe_ok = _sha_file(exe) == pc["artifacts"]["exe"]["sha256"]
     body = region_diff.manifest(dat, SHIPPED_DAT)[0]
     have = {n: (int(s), h) for n, s, h in (l.split("\t") for l in body.splitlines() if l)}
-    want = imp._manifest_rows(pc["artifacts"]["dat_tree"]["manifest"])
-    bad, _ = _catalogue_diff(have, want)
+    bad, repairs, total = pc_dat_check(have)
     label = LABELS["pc-zh"]
     if exe_ok and not bad:
-        return result(shown, True, "pc-zh", "pc-folder", label)
+        r = result(shown, True, "pc-zh", "pc-folder", label)
+        if repairs:
+            r["repairs"] = len(repairs)     # copied from the CD: setup puts its bits back
+        return r
     if not exe_ok and not bad:
         why = ("The DAT folder matches the 2001 Chinese release, but this BOF3.exe does not (patched, cracked or "
                "another version); the unmodified BOF3.exe is needed.")
     elif exe_ok:
         why = ("BOF3.exe is the 2001 Chinese release's, but %d of the %d files in DAT are missing or differ "
-               "(an incomplete or modified copy)." % (bad, len(want)))
+               "(an incomplete or modified copy)." % (bad, total))
     else:
         why = ("Neither BOF3.exe nor the DAT folder matches the 2001 Chinese release (%d of the %d DAT files are "
-               "missing or differ)." % (bad, len(want)))
+               "missing or differ)." % (bad, total))
     return result(shown, False, None, "pc-folder", "PC game folder", why)
 
 
@@ -227,6 +319,8 @@ def identify_disc(path, shown):
         return result(shown, problem="This is not a disc image with a readable file system (an audio track such "
                                      "as Track 2, or a damaged file); choose the .cue or the data track.")
     platform, serial = _disc_platform(d)
+    if platform is None and "BOF3.EXE" in d.files:
+        return identify_pc_disc(d, shown)
     cooked_psx = platform == "psx" and not d.raw
     have = {}
     for n in sorted(d.files):
@@ -272,6 +366,30 @@ def identify_disc(path, shown):
     return result(shown, False, None, platform, label,
                   "This %s disc%s is not a catalogued release of Breath of Fire III (a demo or another game?); "
                   "nothing would be imported from it." % (what, " (%s)" % serial if serial else ""))
+
+
+def identify_pc_disc(d, shown):
+    """The PC game's CD as an .iso (fixtures.toml pc-zh `iso`): its BOF3.exe
+    by sha256 and its DAT tree by pc_dat_check, read from the image."""
+    pc = _pc_build()
+    exe_ok = hashlib.sha256(d.read("BOF3.EXE")).hexdigest() == pc["artifacts"]["exe"]["sha256"]
+    have = {}
+    for n in d.files:
+        if n.startswith("DAT/") and n.count("/") == 1 and re.fullmatch(SHIPPED_DAT, n[4:]):
+            b = d.read(n)
+            have[n[4:]] = (len(b), hashlib.sha256(b).hexdigest())
+    bad, repairs, total = pc_dat_check(have)
+    if exe_ok and not bad:
+        r = result(shown, True, "pc-zh", "pc-disc", PC_DISC_LABEL)
+        r["repairs"] = len(repairs)
+        return r
+    if not exe_ok:
+        return result(shown, False, None, "pc-disc", "PC CD",
+                      "This is a PC CD of Breath of Fire III, but its BOF3.exe is not the 2001 Chinese release's. "
+                      "Other versions (for example the Traditional Chinese one) are not supported yet.")
+    return result(shown, False, None, "pc-disc", "PC CD",
+                  "This CD's BOF3.exe is the 2001 Chinese release's, but %d of the %d files in DAT are missing or "
+                  "differ (a damaged or modified image)." % (bad, total))
 
 
 # ---------------------------------------------------------------- .zip
@@ -359,6 +477,10 @@ def identify_zip(path, shown, tmp):
             m = _whole_file_match(z, info)
             if m:
                 b = m[0]
+                if b["id"] == "pc-zh":       # the PC's CD (fixtures.toml pc-zh `iso`)
+                    r = result(shown, True, "pc-zh", "pc-disc", PC_DISC_LABEL)
+                    r["repairs"] = len(b.get("cd_pressing", []))
+                    return r
                 return result(shown, True, b["id"], b["id"].split("-", 1)[0], LABELS.get(b["id"]))
     tmp = tmp or bof3x_home.tmp_dir()
     os.makedirs(tmp, exist_ok=True)
@@ -588,6 +710,20 @@ class SetupError(Exception):
     pass
 
 
+def needs_layout(row, path):
+    """True when setup lays the PC source out anew (lay_out_pc): the CD's
+    .iso, or a folder holding one of the CD pressing's files (only those five
+    are hashed, now, not trusted from when the folder was added)."""
+    if row["kind"] == "pc-disc":
+        return True
+    dat = _child(path, "DAT", True)
+    for r in _pc_build().get("cd_pressing", []):
+        p = _child(dat, r["file"], False) if dat else None
+        if p and _sha_file(p) == r["sha256"]:
+            return True
+    return False
+
+
 def languages_for(rows, pc):
     """The language layers setup builds: every PlayStation disc's language;
     without the PC game also every PSP disc's (a disc-only build reads a PSP
@@ -791,7 +927,7 @@ def run_setup(a, h, log, progress, total):
         ffmpeg = at3.find_ffmpeg()
     except SystemExit:
         raise SetupError("The ffmpeg given (%s) is not there." % os.environ.get("BOF3X_FFMPEG"))
-    pc = next((r for r in rows if r["kind"] == "pc-folder"), None)
+    pc = next((r for r in rows if r["kind"] in PC_KINDS), None)
     zips = [r for r in rows if r["path"].lower().endswith(".zip")]
     langs = languages_for(rows, pc)
     import mods        # the player's mods (docs/mods.md): built after the language layers
@@ -819,7 +955,7 @@ def run_setup(a, h, log, progress, total):
     psp = [r for r in rows if r["kind"] == "psp"]
     if not ffmpeg:
         lost = []
-        if psp and not any(r["kind"] in ("psx", "pc-folder") for r in rows):
+        if psp and not any(r["kind"] in ("psx",) + PC_KINDS for r in rows):
             lost.append("the PSP's sound effects and voices")
         if psp or any(r["kind"] == "psx" for r in rows):
             lost.append("the disc's logo movie")
@@ -844,10 +980,19 @@ def run_setup(a, h, log, progress, total):
                 raise SetupError(str(e))
             unpacked.append(folder)
             paths[r["path"]] = inner
+        if pc and needs_layout(pc, paths.get(pc["path"], pc["path"])):
+            # The CD's .iso, or a folder copied from it: laid out as the PC
+            # folder, its pressing's bits put back (fixtures.toml cd_pressing).
+            progress("Reading the PC game from %s" % pc["label"])
+            os.makedirs(tmp, exist_ok=True)
+            folder = os.path.join(tmp, "pc-" + uuid.uuid4().hex[:8])
+            unpacked.append(folder)
+            with times.step("lay out pc-zh"):
+                paths[pc["path"]] = lay_out_pc(paths.get(pc["path"], pc["path"]), folder)
         src = []
         for r in rows:
             p = paths.get(r["path"], r["path"])
-            if r["kind"] == "pc-folder":
+            if r["kind"] in PC_KINDS:
                 src += [_child(p, "DAT", True), _child(p, "BOF3.exe", False)]
             else:
                 src.append(p)

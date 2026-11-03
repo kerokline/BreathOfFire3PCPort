@@ -122,6 +122,7 @@ link). Every line is flushed.
 | Given | Identified by | Usable when |
 |---|---|---|
 | A folder with `BOF3.exe` and `DAT\` (`pc-folder`) | `BOF3.exe`'s sha256 and the `DAT\` tree's per-file manifest (`[A-Z0-9_]+\.DAT`, so our overlays beside it do not count) against `pc-zh` | both match; otherwise the sentence says which part does not (and how many of the 742 DAT files) |
+| The PC CD as an `.iso` (`pc-disc`) | its `BOF3.EXE` by sha256 and its `DAT/` tree as a `pc-folder`'s, read from the image (section 4.2) | both match, the CD pressing's five files counting as matches |
 | `BOF3.exe` (`pc-exe`) | whole-file sha256 | identify: matches; add: its folder is a complete `pc-folder` |
 | A `.cue` / `.bin` (`psx`) | the ISO 9660 tree file by file against the five PSX manifests | the tree matches and the image is raw (2,352-byte sectors) |
 | A PSP `.iso` (`psp`) | the tree against the two PSP manifests | the tree matches |
@@ -148,13 +149,63 @@ sector) image`) and the movie needs too (`fmv_build` skips a cooked image). So
 and movie sectors, use the `.bin`/`.cue` - and returns `ok: false`, and `add`
 refuses it.
 
+### 4.2 The PC CD (`pc-disc`, 2026-11-03)
+
+The 2001 Simplified Chinese CD as a 2,048-byte `.iso` (`fixtures.toml` pc-zh
+`iso`, the owner's `CDImage\Breath of Fire III (Windows) (ZH-S).zip`) is a
+source of its own kind, `pc-disc`. A PC CD carries no `SYSTEM.CNF` and no
+`PSP_GAME`, so `identify_disc` hands an image with a `BOF3.EXE` at its root to
+`identify_pc_disc`. In a `.zip` it is found first by the image's own size and
+sha256, without unpacking. It is the PC source as a folder is: one of the two
+counts as `pc-zh`, and the second is refused as its duplicate.
+
+**Its pressing.** Its `BOF3.exe`, `BGM\` (166 files), `SND\` (893),
+`capcom.avi` (Indeo, as shipped) and `logos.avi` are the catalogued ones, and
+737 of its 742 `DAT\` containers are `dat_tree`'s. `AREA093`, `AREA140`,
+`BOSS020`, `BOSS051` and `DEMO` each differ by one bit, in one 16-bit sample of
+the file's first sound bank (`FFFF`, -1, where `dat_tree` has `FFF7` or
+`FFFB`). `importer.py`'s wave-from-vag decode of the same banks from the
+Japanese and the USA PlayStation discs gives `dat_tree`'s bytes in all five, so
+`dat_tree` is the release and the bits are this pressing's. A file rip of the
+same CD (2001-04-17 file dates, the owner's Downloads) has the same five. The
+two boss files share the bank and the flip at the same offset, which a random
+read error would not.
+
+**What identify and setup do with it.** `pc_dat_check` counts a differing
+file as a repair, not a fault, when it is a `cd_pressing` row's file with that
+row's sha256. A folder copied from the CD is therefore usable too (`pc-folder`
+with `"repairs": 5`). Setup lays the PC source out as a folder in `H\cache\tmp`
+(`lay_out_pc`) when it is a `pc-disc`, or a folder that holds any of the five
+files as the CD has them. It copies the files `copy_pc` reads and puts each bit
+back (`repair_pressing`): of the eight flips of the byte at the row's offset,
+the one whose file hashes as `dat_tree`'s, else setup stops with the file's
+name. No byte value of the game's is recorded, only the offsets and the CD's
+hashes. The build then sees the catalogued tree, so the cache and the game
+folder are the ones a `bof3\` folder gives, and nothing here is a divergence.
+
+**Measured (2026-11-03, this machine).** `identify --json`: the ZH-S `.zip`
+(by the image's sha256, no unpacking), the bare `.iso` and its 7-Zip extract
+all ok as `pc-zh` with `"repairs": 5`; the owner's `bof3\` as before, with no
+`repairs`; the ZH-TW `.iso` refused (5.1 s for the six, the USA `.zip`
+included). `setup` on three fresh homes, each with the one source: the ZH-S
+`.zip` (79 s; unpack 1.6 s, lay out 1.2 s, then the build's own hash checks
+pass on all five banks), the extracted CD folder (lay out 0.6 s; the folder
+itself left unchanged), and `bof3\`. The three `game\` folders are equal
+file by file (1,803 files, compared ignoring case: the CD's names are upper
+case), and the caches differ only in `manifest.toml`'s `built` time and
+`build-keys/base.json`'s inputs key.
+
+The Traditional Chinese CD is identified as a PC CD and refused: its
+`BOF3.exe` is another build (IDEAS I57).
+
 ## 5. `setup`
 
 From `sources.toml`, into `H\cache.new` and `H\game.new`, swapped into place
 only when everything succeeded:
 
 1. Unpack each `.zip` source into `H\cache\tmp` (the `.cue` and its data
-   track; nothing else).
+   track; nothing else). A PC CD, or a folder holding its pressing's files,
+   is then laid out there as a PC folder with its five bits put back (4.2).
 2. `importer.py build` with every source in the list's order (a PC folder
    gives two: its `DAT\` and its `BOF3.exe`), the language layers below, and
    the default `opt` layers (`area4-walls` whenever a Western PSX disc is
