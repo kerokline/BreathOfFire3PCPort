@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-10-22, I21 and I50 built; 55 entries, I1..I55 - see the index for each one's state; 2026-10-31, the index brought to I33's, I43's and I44's outcomes; 2026-11-01, I53 the wide image, I54 state as named data, I55 the readable form of the cache; 2026-11-03, I56 the solo-character challenge)
+**Status:** IN PROGRESS (2026-10-22, I21 and I50 built; 55 entries, I1..I55 - see the index for each one's state; 2026-10-31, the index brought to I33's, I43's and I44's outcomes; 2026-11-01, I53 the wide image, I54 state as named data, I55 the readable form of the cache; 2026-11-03, I56 the solo-character challenge, I57 the Traditional Chinese PC CD)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -101,6 +101,7 @@ rule ([`README.md`](README.md)) here too.
 | I54 | State as named data: a quicksave written field by field under the symbol table's names instead of as a memory span, so it survives a change of our exe; in tiers, the last of which (the four tasks' stacks as resumable data) is phase 5's renovation of the mode loops, and the same step that frees the project from its memory layout and, after it, its language | engine / platform | MEDIUM (tiers 0..2) / LOW (tier 3) | open 2026-11-01 (the owner): the talk-through of what 64 bits does not change; tier 0 is a small change to the quicksave's refusal path, nothing measured for the others |
 | I55 | A readable form of the cache: a `decompile` / `compile` pair beside the importer (one folder per container, one file per chunk, PNG for images, text for text blocks, TOML / TSV for tables), the decompiled tree a working copy and never an authority, the mod zip the exchange format, `compile` refusing rather than guessing; an editor program later, if ever, over the same compiler | tooling / mods | MEDIUM | open 2026-11-01 (the owner): the talk-through of how game repos keep sources and builds apart; nothing measured; first step kind-1 images, gated byte-identical |
 | I56 | A solo-character challenge: the map team and the combat team split, the L swap reaching every joined character, the members screen holding five in reserve, a champion chosen at New Game who alone fights | game behaviour | MEDIUM | open 2026-11-03 (the owner): designed in talk, read-only measurements in the entry; five more measurements, then a test branch when there is time; EXP deferred until the combat half is settled |
+| I57 | The Traditional Chinese (Taiwanese) PC CD as a source: its text as a `zh-TW` layer over our exe, or its exe (a 2001-05-09 rebuild, SafeDisc-wrapped) as a second PC build | platform / install | LOW | open 2026-11-03 (the owner): measured when the Simplified CD became a source; text layer first, exe only if it carries fixes |
 
 ---
 
@@ -2387,3 +2388,23 @@ When built: a DIVERGENCE entry, a launcher toggle whose text follows ASD-STE100,
 
 ### Outcome
 _(2026-11-03) open; designed in talk, the measurements above first, a test branch when the owner has time._
+
+## I57 — The Traditional Chinese PC CD as a second PC build
+
+**Ask (2026-11-03, the owner):** the owner holds an `.iso` of the Taiwanese (Traditional Chinese) release of the PC port beside the Simplified Chinese CD. Allow it as a PC copy for our builds later.
+**Kind:** platform / install. **Feasibility:** LOW now (a second exe to map; copy protection to take off first).   **Gated on:** the owner's word; nothing else in flight needs it.
+
+**What the CD is (measured 2026-11-03, 7-Zip extract of `Breath of Fire III[CHT].iso`, 686,614,528 bytes, `CDImage\Breath of Fire III (Windows) (ZH-TW).zip`, gitignored):**
+
+- `BOF3.exe` is 3,439,036 bytes, sha256 `46d2197e...`, linked **2001-05-09 17:05:16** (ours: 2001-04-18 03:37:42). Its `.text` is 0x1C2EC0 bytes against our 0x1C2668 (+0x858) and its `.rdata` 0x15D41 against 0x15D22; `.data` is the same size (0x3636EC). So it is a rebuild, not a patch: every address after the first changed function moves, and none of the symbol table, the reimplemented functions or the `exe_maps` applies to it as they are.
+- It is **SafeDisc-wrapped**: two extra sections `stxt774` (0x1AC) and `stxt371` (0x38B2), the entry point at 0x94004A inside them, the `BoG_` marker in the file, and `secdrv.sys` / `drvmgt.dll` beside it on the CD. Windows 10 and later do not load `secdrv.sys`, so the exe as shipped does not start there; the unwrapped `.text` is needed before any reading.
+- Of its 742 `DAT\` containers, 246 differ from `pc-zh`'s, most of them at the same size or a few bytes off - the shape of retranslated text. The other 496 are byte-identical. `BGM\`, `SND\`, the AVIs and the installer files are present as on the Simplified CD (`LOGOS.AVI` is 3,510,690 bytes, ours 3,899,442).
+- `player_sources.py identify` names it (2026-11-03): "a PC CD of Breath of Fire III, but its BOF3.exe is not the 2001 Chinese release's".
+
+**Two roads, in order of cost:**
+
+1. **Its text as a language layer** over our exe (a `zh-TW` layer beside `zh-CN`): the 246 containers diffed chunk by chunk against `pc-zh`'s, and the changed text chunks built as a layer the way `loc_build.py` builds a disc's. Needs no exe work if the text uses the same glyph pages and encoding (Big5 against GB2312 would need its own font page). Nothing measured past the file counts.
+2. **Its exe as a second PC build** (`pc-tw` in `fixtures.toml`): unwrap SafeDisc, then map it against ours the way the PSP's code was paired ([`psp-code-diff.md`](psp-code-diff.md)). Only worth it if the exe carries fixes of its own; the 0x858 bytes of `.text` growth are the place to look first.
+
+### Outcome
+_(2026-11-03) open; measured as above when the Simplified CD was added as a source (`fixtures.toml` pc-zh `iso`)._

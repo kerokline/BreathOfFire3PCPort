@@ -101,6 +101,49 @@ codec = "cvid (Cinepak), 640x480 15fps + PCM 22050 stereo (stream-copied)"
 measured = "2026-09-19, ffmpeg 9.0.1 on this machine; see docs/DIVERGENCE.md DIV-0001"
 note = "Encoder-version dependent — a different ffmpeg gives a different, equally valid file."
 
+# The 2001 CD itself, as a 2,048-byte .iso (docs/install-sources.md 4.2). Its
+# BOF3.exe, BGM\, SND\, capcom.avi and logos.avi are the ones above, and 737 of
+# its 742 DAT containers are dat_tree's. The other five are each one bit off in
+# one 16-bit sample of a sound bank (-1 where the release has -9 or -5). Both
+# PlayStation discs' banks (Japan, USA), decoded by importer.py's wave-from-vag,
+# give dat_tree's bytes, so dat_tree is the release and these bits are this
+# pressing's. A file rip of the same CD (2001-04-17 file dates) has the same
+# five. Setup puts each bit back (player_sources.py repair_pressing): a
+# `cd_pressing` row names the file, its sha256 on this CD and the byte's offset;
+# the bit is the one of eight whose flip gives dat_tree's hash, so no byte value
+# of the game's is recorded here.
+[build.artifacts.iso]
+name = "Breath of Fire III[CHS].iso"
+size = 563775488
+sha256 = "93201965b244d0faeba1dd901edbb1e326dc918618e3a3cdc2c292aeeccf218f"
+md5 = "20478453c0aba60039a800397c6607e6"
+measured = "2026-11-03, sha256sum/md5sum and tools/psx_disc.py on this machine (CDImage/, gitignored: 'Breath of Fire III (Windows) (ZH-S).zip')"
+
+[[build.cd_pressing]]
+file = "AREA093.DAT"
+sha256 = "10cde02593772bf026b54074a816f4b89b98ff9fc6204094de8e92f7c46597b9"
+offset = 0x48800
+
+[[build.cd_pressing]]
+file = "AREA140.DAT"
+sha256 = "ec3854fb1d06a65ec9198cc922dceed2d17be30d80693b612b55ca617c3f0a1b"
+offset = 0x1DF10
+
+[[build.cd_pressing]]
+file = "BOSS020.DAT"
+sha256 = "232939a6859e3ff5e56b9f03165ba7c2f5b24e6378985edc2f0ce5fd328436db"
+offset = 0x23000
+
+[[build.cd_pressing]]
+file = "BOSS051.DAT"
+sha256 = "0eb33881854bc04d3e3b6125317223af0d3960fe9feffb1516a244c9925f481d"
+offset = 0x23000
+
+[[build.cd_pressing]]
+file = "DEMO.DAT"
+sha256 = "e874e8a8b4fcd6983fcfed5e20443136142a32cd3df503a8376915d36913fc23"
+offset = 0x88278
+
 # ---------------------------------------------------------------------------
 # PlayStation releases
 #
