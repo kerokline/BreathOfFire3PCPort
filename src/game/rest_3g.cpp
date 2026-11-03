@@ -38,6 +38,7 @@
 #include "game/records.h"
 #include "game/rest_3g_callees.h"
 #include "game/cheats.h"
+#include "game/map_rim.h"
 #include "game/scenario_harness.h"
 #include "game/draw_pool.h"
 #include "game/psp_code.h"
@@ -802,12 +803,15 @@ namespace {
 // The two y bounds' operands, which nothing patches: the .rdata floats 120.0
 // and 121.0 they name - the function's own, ours since the function is.
 constexpr U kWideYFloat = 0x5C4244, kNarrowYFloat = 0x5C4238;
-// The float an `fcomp dword ptr [mem]` operand names: the two above, or
-// DIV-0041's four as widescreen.cpp holds them.
+// The value of the float an `fcomp dword ptr [mem]` operand names: the two
+// above, or DIV-0041's four as widescreen.cpp holds them. Values of ours, never
+// a read of the .rdata place: our own exe does not carry .rdata that only our
+// functions name, and the six floats read 0 there - the desert's floor culled
+// whole, its cells kept only when y > 0 at the wide picture (issue 185).
 float Bound(U operand_at) {
-    if (operand_at == at::kWideYAt.v) return AreaMapBD_WideYBound;
-    if (operand_at == at::kNarrowYAt.v) return AreaMapBD_NarrowYBound;
-    return Fl(Widescreen_RangeOperand(operand_at));
+    if (operand_at == at::kWideYAt.v) return 120.0f;     // AreaMapBD_WideYBound
+    if (operand_at == at::kNarrowYAt.v) return 121.0f;   // AreaMapBD_NarrowYBound
+    return Widescreen_RangeValue(operand_at);
 }
 }  // namespace
 
@@ -829,6 +833,7 @@ float Bound(U operand_at) {
 // point (copied through the FPU), its three other corners projected, linked
 // into list 0 of layer 0x37 - row, and its depths.
 extern "C" void __cdecl AreaMapBD_BuildView(void) {
+    map_rim::NoteOwnView(true);   // DIV-0041 (wide-ring): this view is Capcom's 28 x 56 (issue 185)
     DrawTable_Count = 0;
     {
         unsigned char* layer = At(AddressOf(DrawLayers) + Gfx_BufferIndex * 8u);

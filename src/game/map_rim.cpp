@@ -22,6 +22,7 @@ namespace {
 bool g_armed;    // Arm(): BOF3X_WIDE_RING on and the cell inset lowered
 bool g_forced;   // a self-test's
 bool g_control;  // the model test's control: Capcom's CellToMap at the grown row
+bool g_own_view; // NoteOwnView(): the view drawn is AreaMapBD_BuildView's (issue 185)
 
 // The rim, by grown position; Capcom's window positions are never read here.
 unsigned char g_cells[kRows][kColumns][4];
@@ -59,6 +60,9 @@ bool Valid(int gr, int gc) { return gr >= 0 && gr < kRows && gc >= 0 && gc < kCo
 }  // namespace
 
 bool Active() { return g_armed || g_forced; }
+
+bool Drawn() { return Active() && !g_own_view; }
+void NoteOwnView(bool own) { g_own_view = own; }
 
 bool InWindow(int gr, int gc) {
     const int r = gr - 1;
@@ -265,7 +269,7 @@ void NoteBuildPeaks(unsigned table_entries) {
 // pointers name bof3x.dll, which a load requires at the same base.
 
 namespace {
-constexpr std::uint32_t kRecordVersion = 1;
+constexpr std::uint32_t kRecordVersion = 2;   // 2: g_own_view (issue 185)
 }  // namespace
 
 void QuickSave(bof3::SnapshotWriter& w) {
@@ -281,6 +285,7 @@ void QuickSave(bof3::SnapshotWriter& w) {
     w.Put(static_cast<std::uint8_t>(g_walk_noted ? 1 : 0));
     w.Put(static_cast<std::uint32_t>(g_walk));
     w.Put(static_cast<std::uint32_t>(g_walk_written));
+    w.Put(static_cast<std::uint8_t>(g_own_view ? 1 : 0));
 }
 
 // Across widths, rebuilt (owner's answer 4, 2026-10-21): Capcom's ring is
@@ -306,6 +311,7 @@ void QuickRestore(bof3::SnapshotReader& r) {
         r.Get(items, sizeof items);
         const bool noted = r.Get<std::uint8_t>() != 0;
         const std::uint32_t walk = r.Get<std::uint32_t>(), written = r.Get<std::uint32_t>();
+        const bool own_view = r.Get<std::uint8_t>() != 0;
         if (Active()) {
             std::memcpy(g_cells, cells, sizeof g_cells);
             std::memcpy(g_runs, runs, sizeof g_runs);
@@ -316,6 +322,7 @@ void QuickRestore(bof3::SnapshotReader& r) {
             g_walk_noted = noted;
             g_walk = walk;
             g_walk_written = written;
+            g_own_view = own_view;
             if (taken != Widescreen_InsetColumns() && MapView_Redraw < 2) MapView_Redraw = 2;
             bof3::Log("quicksave   wide-ring: the rim as at the take (taken at inset columns %u, this run %u)", taken,
                       Widescreen_InsetColumns());
@@ -704,6 +711,7 @@ void Arm() {
         {"DrawLayer_Open", bof3::addr::DrawLayer_Open},
         {"DrawLayer_Close", bof3::addr::DrawLayer_Close},
         {"Sprite_DrawPass", bof3::addr::Sprite_DrawPass},
+        {"AreaMapBD_BuildView", bof3::addr::AreaMapBD_BuildView},   // NoteOwnView's writer
         {"MapView_ItemAt", bof3::addr::MapView_ItemAt},
         {"MapCell_DrawFlatFaces", bof3::addr::MapCell_DrawFlatFaces},
     };

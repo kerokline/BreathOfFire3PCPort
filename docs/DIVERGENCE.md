@@ -3225,6 +3225,22 @@ designed in rather than bolted on.
   nothing runs. Code: `src/game/map_rim.{h,cpp}` and the sites
   [`wide-ring.md`](wide-ring.md) 1.2 lists.
 
+  **Amended 2026-11-02 (issue #185, known-defects D402): the ring is not
+  drawn over area 0xBD's own view.** The desert's navigation view (area
+  189) is built by `AreaMapBD_BuildView` `0x510780`, which fills Capcom's
+  layers itself and never empties layer -1 or walks the rim; the grown draw
+  spliced layer -1 as the last field left it, and the desert drew nothing
+  after it. From `AreaMapBD_BuildView`'s first build until `MapView_Build`'s
+  next, `Sprite_DrawPass` and `DrawLayer_Open` draw Capcom's 28 x 56
+  (`map_rim::Drawn()`); the rim is still kept for the field the game goes
+  back to, and the quicksave record carries the state (version 2).
+  `AreaMapBD_BuildView` left original turns the ring off, as the other
+  sites do. *Verification:* the owner's `desertSummary` route at 4:3, 16:9
+  and 21:9: the sky, stars and sand drawn (1,193 / 1,332 / 1,420 commands at
+  most a frame), the camp field's frames before and after the desert with
+  the same command counts as before the fix; `map_rim`, `draw_pass`,
+  `draw_emit`, `rest_3g` and `widescreen` self-tests 0 mismatches.
+
   **Amended 2026-10-21 (the wide-ring round, group SW,
   [`wide-sweeps.md`](wide-sweeps.md); IDEAS I38): the two edge sweeps drawn
   mapped.** Two effects sweep across the picture and end a state at a
