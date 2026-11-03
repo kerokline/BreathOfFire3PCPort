@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-10-22, I21 and I50 built; 55 entries, I1..I55 - see the index for each one's state; 2026-10-31, the index brought to I33's, I43's and I44's outcomes; 2026-11-01, I53 the wide image, I54 state as named data, I55 the readable form of the cache)
+**Status:** IN PROGRESS (2026-10-22, I21 and I50 built; 55 entries, I1..I55 - see the index for each one's state; 2026-10-31, the index brought to I33's, I43's and I44's outcomes; 2026-11-01, I53 the wide image, I54 state as named data, I55 the readable form of the cache; 2026-11-03, I56 the solo-character challenge)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -100,6 +100,7 @@ rule ([`README.md`](README.md)) here too.
 | I53 | The wide image: widen the records' pointer slots to native 64-bit pointers, one struct at a time, after the narrow 64-bit build runs; each step gated by the state hash against the narrow build | engine / platform | LOW | open 2026-11-01 (the owner): deferred when the 64-bit build round chose the narrow image ([`x64-build-round.md`](x64-build-round.md) 1 and 7) |
 | I54 | State as named data: a quicksave written field by field under the symbol table's names instead of as a memory span, so it survives a change of our exe; in tiers, the last of which (the four tasks' stacks as resumable data) is phase 5's renovation of the mode loops, and the same step that frees the project from its memory layout and, after it, its language | engine / platform | MEDIUM (tiers 0..2) / LOW (tier 3) | open 2026-11-01 (the owner): the talk-through of what 64 bits does not change; tier 0 is a small change to the quicksave's refusal path, nothing measured for the others |
 | I55 | A readable form of the cache: a `decompile` / `compile` pair beside the importer (one folder per container, one file per chunk, PNG for images, text for text blocks, TOML / TSV for tables), the decompiled tree a working copy and never an authority, the mod zip the exchange format, `compile` refusing rather than guessing; an editor program later, if ever, over the same compiler | tooling / mods | MEDIUM | open 2026-11-01 (the owner): the talk-through of how game repos keep sources and builds apart; nothing measured; first step kind-1 images, gated byte-identical |
+| I56 | A solo-character challenge: the map team and the combat team split, the L swap reaching every joined character, the members screen holding five in reserve, a champion chosen at New Game who alone fights | game behaviour | MEDIUM | open 2026-11-03 (the owner): designed in talk, read-only measurements in the entry; five more measurements, then a test branch when there is time; EXP deferred until the combat half is settled |
 
 ---
 
@@ -2318,3 +2319,71 @@ What the two roads are is [`x64-build-round.md`](x64-build-round.md) section 1. 
 **What we author stays in the repository, readable.** `data/` already holds the readings, the music names and the icon in readable forms built at setup time; anything the project writes itself follows that, compiled on the way in. The compiler pair gives those files the same path a mod takes.
 
 **First concrete step, when wanted:** kind-1 images alone, `decompile` to PNG plus a small TOML for the CLUT and the bit and `compile` back, gated byte-identical over the PC install's 742 containers and one disc-built cache ([`importer.md`](importer.md)'s verify is the harness). Text blocks next (`loc_build.py` reads and writes them already); tables as the record types cover them. Then the mod zip's build step learns to call `compile`, and the first readable mod is a replaced image.
+
+## I56 — A solo-character challenge: the map team and the combat team split
+
+**Ask (2026-11-03, the owner):** a "solo character" mode for solo challenges. The members screen holds all five other characters in reserve, and the L swap can bring any joined character out at any time, so a section that wants a given character still works (Momo at a computer, Rei at a locked door). Combat is fought by the one chosen character alone. A champion selection screen at the start, once the New Game screens are back to their original functions (I34's naming at New Game).
+**Kind:** game behaviour. **Feasibility:** MEDIUM (the shape is measured below; five reads remain, then a prototype).   **Gated on:** nothing for the measurements and the prototype; the champion screen on I34's New Game work; the owner's word for a test branch ("when we have some free time").
+
+**What the owner said, as game facts** (the owner's, 2026-11-03, not measured here): every field action uses the current leader; some dialogue checks whether someone is in the party; some parts of the game require certain characters in the party; no combat logic is known to rely on a given character being present; the game already has solo sections (Ryu's dream, the Mines) that a combat team of one would make simpler. EXP is held over until the combat half is settled, on the owner's expectation that splitting the teams answers it.
+
+### The design: two teams
+
+- **The map team** is the party as the field knows it: the first list `0x904062`, the ObjTrio records at `0x802D40`, `Field_MemberCount`. The L swap reaches every joined character, so leader checks and "is X in the party" dialogue see whoever the player brings out.
+- **The combat team** is a list of our own: the champion. At the start of each battle we save the map team, put the combat team where the battle reads its members, and give the map team back when the battle has fully ended.
+- **The champion** is chosen at New Game, on a screen that belongs in the New Game sequence I34 rebuilds.
+
+### What already exists (read 2026-11-03, `symbols.toml` evidence strings, `tools/pe_xref.py`)
+
+- **Two 3-byte party lists, the same members in two orders.** `0x904062` is the field's order (the leader first); `0x904065` is the battle's order (`Party_PlaceForBattle` places each member at its index in it). Every writer keeps both holding the same members: `Party_Join`, `Party_AddToLists`, `Party_Remove`, and `TacticsMembers_Swap` (both lists and the reserve rewritten together, [`rest_2f.md`](rest_2f.md) 2). `Party_Count(slot)` (`0x531BB0`) counts the list at `0x904062 + 3 x slot`.
+- **The battle's members are the field's records.** Battle actors 0..2 are the ObjTrio records themselves, stride `0x14C` ([`battle_setup.md`](battle_setup.md)); the battle count `0x904AB0` is written by `GameMode5_Script` (`0x4960D0`) from `Party_Count(1)`, the second list. Its other two writers are the dragon takeover's, below.
+- **The L swap needs two members.** `Field_LeaderSwapTest` (`0x5302C0`): two members or more, the button, `Party_CanSwap` (`0x530320`); then `Field_SwapState`'s five steps rotate the members already on the field. `Field_SwapExchange` (`0x52EE70`) already reloads a member's sprite (`Field_MemberSprite`), copies its actor record from `Character_IndexById` to `+0x80`, and writes `0x904062[i]` - most of what a "replace the one member" swap needs.
+- **Field sprites and battle graphics come by party set, not by character.** 19 sorted 3-byte rows at `0x669750`; `PartySet_Find` (`0x5368F0`) calls `PartySet_ErrorLoop` (`0x536A60`, never returns) when no row holds the wanted characters. `PartySet_Select` (`0x536AC0`) loads `set + 0x2C2 / 0xFC / 0x10F / 0x2D5` by mode, and the dragon revert's slot-12 state 2 (`0x433C00`) loads `set + 0xFC` / `+ 0x10F` to bring the team back mid-battle, so those two read as the set's battle graphics (an inference from the caller, not a file read). `PartySet_Load` has 63 call sites in the script ops, so a party set loaded mid-field is an existing path.
+- **The members screen has room for three in reserve, not five.** [`rest_2f.md`](rest_2f.md) 7 items 2 and 3: from the fifth reserve member the reserve flags (`0x6BDFCD + 2j`) land on the reserve list (`0x6BDFD4`..), and rows past 2 read their screen places from past `0x6674C8`'s six entries into the state tables. A party of one makes both reachable; the screen needs its tables moved and its rows laid out, not only a wider window.
+- **Scripts build parties.** `0x531F90` (393 call sites) can require exactly N given members and rewrites the list; the 98 `Scenario_CallA` entries ([`scena_calls.md`](scena_calls.md)) join, drop, save and restore parties; `Party_Join` with three members raises `Field_Request 6`. `CharacterRecords +0xB` bit 1 makes `TacticsMembers_Swap` refuse to move a member - read as the game's "this member must stay" mark (`Party_AddToLists` sets it with bit 0).
+- **The game already fights a battle with one member and gives the team back** - the dragon takeover ("mammoth forms", the owner's words):
+  1. `DragonForm_Mix` (`0x4517A0`) or `DragonForm_ApplyRecipe` (`0x452080`) back the party records up to `0x939AE0` and rewrite the acting member's stats and abilities.
+  2. `Accession_ApplyB` (`0x4EB350`) loads the form's file for the party set, copies the acting record over party record 0, clears records 1 and 2, keeps the count in `0x904B8F`, sets `0x904AB0` to 1, and sets round flag `0x904AA8` bit 15.
+  3. At battle end `BattleEnd_StartMemberTask` (`0x431220`) starts a slot-12 task for each member with `+0x134 & 3`; it ends in `BattleFx_RestoreParty` (`0x433DA0`), which puts the count back, recreates the other members through slot-17 tasks (`0x434340`), and copies the owner's record back from `0x939AE0`.
+- **EXP divides among the battle members still standing.** `BattleResult_SplitExp` (`0x431940`) divides by `0x4319B0`, which counts the slots below `0x904AB0` that `Battle_ActorIsOut` passes. A combat team of one takes the whole total, as a party does today when the other two are out. Where the EXP is credited is not read yet.
+
+### Two shortcuts considered and set aside (2026-11-03)
+
+- **The second list as the combat team.** Too much code keeps it holding the first list's members, and the battle walks the ObjTrio records, so a member in the second list who is not walking has no record to fight with.
+- **Cast the dragon takeover on the champion, or set its flags.** Casting it makes the champion a dragon (stats, abilities, sprite). The flags alone bring dragon behaviour with them: the same `+0x134` bits feed `BattleStep_ApUpkeep`'s AP charge. The revert copies the owner's record back from before the form, which for a champion would undo the fight's HP, AP and status, past the few fields it keeps. A champion Ryu who takes a real form would use the same backup, saved count and flag, a takeover inside a takeover. And `Accession_ApplyB` copies an acting member, so a champion not on the map team has nowhere to come from.
+
+What the takeover does give is the pattern, and a checklist: what `BattleFx_RestoreParty` and slot 17 rebuild for a member (windows, palette, tint, the spot on the ground) is what our restore must rebuild.
+
+### The combat half
+
+- **Before the battle loads**, in `GameMode5_Script` before it reads `Party_Count(1)`: save the three ObjTrio records and both lists to a buffer of ours (not `0x939AE0`, not `0x904B8F`, not bit 15); build the combat team into the records the way `Field_PartyLoad` (`0x533CE0`) does; select a party set that holds the combat team. The battle starts with one member: no takeover each fight, no mid-battle record copy or file load.
+- **The battle runs untouched.** A champion's dragon forms, the takeover included, run on the game's own storage as today.
+- **After the battle has fully ended**, after the game's own reverts: the combat team's results written back to `CharacterRecords`, the map team and its lists and party set restored.
+
+### The field half
+
+- **The L swap with one member** replaces the walker with the next joined character (or opens a picker): `Field_SwapExchange`'s reload, plus a `PartySet_Load` when the incoming character is in no row with the current set. The cost of that load mid-walk is to be measured.
+- **After a script changes the party**, fold the map team back to the walker once control returns, so cutscenes and forced parties get every member they ask for.
+- **The members screen** with five reserve rows, its two latent defects answered first.
+
+### Questions for the owner
+
+1. When a script forces the map team (a solo section, a required member), does the combat team follow it, or stay the champion?
+2. Before the champion has joined, or while the story has them away: the game's own party, or something else?
+3. Members marked "must stay" (`+0xB` bit 1): may the L swap send them to the reserve in this mode?
+4. EXP (held over): whether reserve members get any in the original, and what the champion's share should be.
+
+### First concrete step
+
+Five read-only measurements, then a prototype behind a `BOF3X_` switch on a recorded battle route (battle is deterministic and has routes), with the state hash showing nothing changes when it is off:
+
+1. Which of the 19 party-set rows hold each character, and whether a row holds one alone.
+2. Where a battle's HP, AP and EXP reach `CharacterRecords`, and when.
+3. Every way out of a battle - win, flee, game over, an event battle the script continues - so the restore runs on each.
+4. Whether event battles (`0x904AAA`, `EventBattle_Records`) also enter through `GameMode5_Script`.
+5. A quicksave (DIV-0145) taken while the combat team is in place: what it holds, and what loading it restores.
+
+When built: a DIVERGENCE entry, a launcher toggle whose text follows ASD-STE100, and the boss-sweep pre-fight saves run with a team of one to find any fight that needs its members.
+
+### Outcome
+_(2026-11-03) open; designed in talk, the measurements above first, a test branch when the owner has time._
