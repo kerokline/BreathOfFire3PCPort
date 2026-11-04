@@ -1,4 +1,4 @@
-# Group R2B: Effect_Spawn, two menu primitives, and game mode 8's step 8 screen
+# Group R2B: Effect_Spawn, two menu primitives, and game mode 10's step 1 screen
 
 **Status:** MEASURED (2026-10-04) - round fourteen
 ([`takeover-queue-round14.md`](takeover-queue-round14.md)), wave two, from the
@@ -28,7 +28,9 @@ change lets `'*'` pass. **One latent defect is a ledger entry, DIV-0073**
   outline with notched corners (`Menu_DrawOutlineNotched`, `0x57D520`,
   `Menu_DrawOutline`'s sibling).
 - **`Field_ObjectTriggers[1]`** (`Field_TriggerCounterF0`, `0x56E040`).
-- **Game mode 8's step 8 screen** (`Shisu_*`, 32 functions): `Mode8_Step8`
+- **Game mode 10's step 1 screen** (`Shisu_*`, 32 functions; first written
+  as "game mode 8's step 8", corrected 2026-11-04 by
+  [`rest_3g.md`](rest_3g.md): `0x517340` is `GameMode10_Steps[1]`): `Mode8_Step8`
   (`0x517340`, FC3's) calls `Shisu_ModeDispatch` every frame. The cut paired
   two of its rows with PSX functions of the **SHISU** overlay (`0x801D1018`,
   `0x801D2308`; the sibling's `names/overlays.toml` names the overlay, not the
