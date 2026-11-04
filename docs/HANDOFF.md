@@ -116,7 +116,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      on the last place a link armed, so arm in the step hook; the map's corners are the mesh, not the paint; check
      the object list before the cells. `tools/cell_peek.py` reads a running game's cells around the leader.
    - **The no-fail minigames** (DIV-0188, PRs #172 and #198; played with, 2026-11-07 night). **Next minigame**,
-     when the owner records its start (`BOF3X_RECORD`): the crane, the antenna, the ram or the dock's parts menu.
+     when the owner records its start (`BOF3X_RECORD`): the antenna, the ram or the dock's parts menu (the crane and the legendary sailor's tides are left out, the owner's call of 2026-11-03, [`cheats.md`](cheats.md) 7).
      The pattern: read the judgement (a `watch` / `peek` replay finds the subsystem when the docs do not: the
      lighthouse was effect kind `0x45` in area 77, not the button round's area 135), guard it on
      `Cheats_MinigameNoFail()`, the module's inject `Fatal` when the function is not ours, a losing variant of the
