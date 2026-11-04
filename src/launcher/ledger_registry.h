@@ -418,7 +418,7 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Intent, State::Active, 0, 83, 1, true, Player::Yes, 0, kLangAny},
     {72, "A panel's far corners from the quad's own x, where the original reads a stack word it never wrote",
      Tier::Forced, State::Active, 0, 84, 1, true, Player::Never, kTowardPsx, kLangAny},
-    {73, "The masters' model's light matrix zeroed past its first row, where the original copies stale stack",
+    {73, "The shisu screen's model light matrix zeroed past its first row, where the original copies stale stack",
      Tier::Forced, State::Active, 0, 85, 1, true, Player::Never, 0, kLangAny},
     {74, "A random enemy from the bytes the function wrote, where the original's four-byte list overflows into stale stack",
      Tier::Forced, State::Active, 0, 86, 1, true, Player::Never, kTowardPsx, kLangAny},

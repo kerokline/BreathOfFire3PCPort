@@ -4138,8 +4138,9 @@ designed in rather than bolted on.
 - **New behaviour:** `loc_build.py all` puts four of the donor disc's
   sections for each world map into `<lang>.AREAnnn.DAT`, whole:
   - the page;
-  - `0x800D3800` -> tag `0xB0000`, the map's sprite frames, the plates sized
-    per name;
+  - `0x800D3800` -> tag `0xB0000`, the area's sprite animation bank
+    (animation scripts, each with its frames' part lists), the plates' frames
+    sized per name;
   - `0x800E3800` -> tag `0xC0000`;
   - the palette section (`0x8002D800` JP / `0x80035800` Western) -> tag
     `0xA000`, whose first CLUT is the plates'.
@@ -5886,12 +5887,14 @@ designed in rather than bolted on.
 - **The owner's word, 2026-10-03:** kept as written (entered by the
   coordinator from E5F's report).
 
-### The masters' model's light matrix zeroed past its first row, where the original copies stale stack
+### The shisu screen's model light matrix zeroed past its first row, where the original copies stale stack
 
 - **ID:** DIV-0073
 - **Date:** 2026-10-04
-- **Subsystem:** the masters' screen (`Shisu_DrawModel` `0x57EEF0`, ours in
-  `src/game/rest_2b.cpp`; game mode 8 step 8)
+- **Subsystem:** the shisu screen (`Shisu_DrawModel` `0x57EEF0`, ours in
+  `src/game/rest_2b.cpp`; game mode 10 step 1 - corrected 2026-11-04 from
+  "the masters' screen, game mode 8 step 8": `docs/rest_3g.md` reads
+  `GameMode10_Steps` `0x656AD4`, and the masters' screen is `rest_2d.md`'s)
 - **Tier:** Forced
 - **Original behaviour:** the function's light matrix is a local at
   `[esp + 0x7C]`, of which `Light_ObjectDirection` writes the first three
@@ -13697,9 +13700,10 @@ designed in rather than bolted on.
   get it, eh?" and "let me know if you want to try again"; with the switch,
   the step byte 0xF at the same frame, the counter `0x903848` 0, "You did
   it!" and "Thanks so much!".
-- **Amended 2026-11-03 - the shisu:** the shisu screen (game mode 8's
-  step 8, `Shisu_*` in `src/game/rest_2b.cpp`; the owner's recording of the
-  day, `tools/recipes/shisuMinigame.txt`) cannot be lost so much as scored
+- **Amended 2026-11-03 - the shisu:** the shisu screen (game mode 10's
+  step 1, corrected 2026-11-04 from "game mode 8's step 8" by
+  `docs/rest_3g.md`; `Shisu_*` in `src/game/rest_2b.cpp`; the owner's
+  recording of the day, `tools/recipes/shisuMinigame.txt`) cannot be lost so much as scored
   low, so the owner's call is the score itself, not a failure condition: the
   best prize always. `Shisu_Score` `0x57EB20` scores the four counts given
   (`0x9399E4..7`), the kneads (`Rest2b_Rounds`) and the scale index

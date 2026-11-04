@@ -220,7 +220,8 @@ std::uint32_t TurnEffect(const std::uint32_t* a, std::uint32_t answer) {
     mh::FillBytes(task + 0xC, 8);
     return answer;
 }
-// Sprite_UpdateScreen draws through the frame-offset table pointer 0x9039D8.
+// The phase may swap the animation bank pointer 0x9039D8 (read only by
+// Sprite_SetAnimationAt, at 0x5892FE); log it at the screen update.
 std::uint32_t UpdateScreenEffect(const std::uint32_t*, std::uint32_t answer) {
     mh::Note(static_cast<std::uint32_t>(Long(mh::Mem(0x9039D8))));
     return answer;

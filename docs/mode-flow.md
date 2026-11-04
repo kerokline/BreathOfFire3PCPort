@@ -241,8 +241,9 @@ countdowns - the whole game state); the 18-byte button map `0x903580` from
 its defaults `0x656AEC`; the party combination `0x90412C` `0xFF`; both script
 flag words 0; `0x903A58` 1 and the next six bytes 0 (`0x903A5A` is the window
 colour); `Window_ResetAll`, `MoveScript_TintReset`,
-`Field_SlotsReleaseAll`; `Draw_PassFlags` `0x1F`, `Draw_OtSlot` 6, two pool
-pointers (`0x9039D8 = 0x8B3580`, `0x7E0880 = 0x8C3584`);
+`Field_SlotsReleaseAll`; `Draw_PassFlags` `0x1F`, `Draw_OtSlot` 6, the
+animation bank pointer `0x9039D8 = 0x8B3580` (the area's, tag `0xB0000`) and
+`0x7E0880 = 0x8C3584`;
 `Gfx_ClutStripRestore` and `Gfx_ClutStripDirty` + 1; task 1 at `0x496C90`;
 `Task_Exit`. `Title_LoadTask` `0x496C90` loads DAT `0x226`, waits, and
 tail-jumps into `Title_Task`.

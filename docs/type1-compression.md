@@ -30,24 +30,38 @@ otherwise b0, b1  a back-reference into the output:
 ```
 
 An LZ77 variant with an 11-bit distance: no flag bits, no window ring. A literal
-run and a reference are told apart by the high three bits and bit 4 of the first
-byte. Counted over the 65 streams (`type1.py`'s decode loop, instrumented in
+run and a reference are told apart by bit 4 of the first byte alone
+(Capcom's routine, below). Counted over the 65 streams (`type1.py`'s decode loop, instrumented in
 scratch): 861,142 short and 60,914 extended references, 487,253 short and
 146,420 extended literal runs. The largest distance is 2,047. **No reference
 reaches before the start of the output** (so no pre-filled window is needed),
 and **bit 4 of a reference's first byte is never set**. A copy may overlap its
 own output, and the decoder copies byte by byte to allow for it.
 
-Not established: Capcom's routine itself. A scan of `SLPS_009.90` for an LZ
-loop, the EMI loader's type dispatch, or a reference to the boot EXE's one
-`MATH_TBL` string found none of them, so the routine is presumably in an overlay.
-So the meaning of the two marks (the leading `0xFFFF`, the trailing `0xFF`), and
-of a reference byte with bit 4 set, comes only from the 65 streams. The decoder
-**refuses**, with a reason, anything those streams never do: a bit-4 reference,
-a distance before the start, an overrun of `size`, a missing terminator, a
-truncated stream (CLAUDE.md rule 4). A stream from a build we have not seen will
-say so rather than be decoded on a guess. Reading the routine would settle the
-marks; nothing in the importer waits on that.
+Capcom's routine is in the boot executable: `SLPS_009.90` 0x80164A54 (616 bytes;
+`SLUS_004.22` 0x80164064, identical instruction for instruction once addresses are
+masked - capstone, 2026-11-04). 0x80164A18 starts it, called from the loader's
+read-sector step 0x80163C28; the stage step 0x80163C6C copies each 1,024-byte half of
+a sector to the scratchpad and calls the decoder, which saves its state when a frame
+crosses the half's end and resumes through a jump table at 0x80164AB0. It is
+hand-written: no compiled loop shape, state at 0x8002B7A0, and a copy that jumps into an
+unrolled block at 0x80164CE4. An earlier scan of `SLPS_009.90` for an LZ loop, the
+loader's type dispatch and a reference to `MATH_TBL` found none of them and guessed an
+overlay; `MATH_TBL` (0x80183B9C) is read at 0x80162F30 as `lbu 0x3b9c($at)` after an
+index add, which a lui/addiu pair search does not see.
+
+The routine settles what the 65 streams left open. The start step sets the input to
+scratchpad + 6, so **the leading size and `0xFFFF` are skipped, never read** by the
+decoder. `0xFF` is its only end: it has no bound on `size`. A first byte with bit 4 set
+is tested for `0xFF` and is otherwise a literal run of `0x20 - (b0 & 0x1F)` bytes (16
+takes the extension byte), **the high three bits ignored** - so a "bit-4 reference" does
+not exist: Capcom's decoder reads `0x30`..`0xFE` with bit 4 set as literal runs. The
+retail streams never use those forms. Our `tools/type1.py` still **refuses**, with a reason,
+anything those streams never do: such a byte, a distance before the start, an overrun
+of `size`, a missing terminator, a truncated stream (CLAUDE.md rule 4). A stream from a
+build we have not seen will say so rather than be decoded on a guess. The PC
+`BOF3.exe` keeps no twin of the routine (it ships the arenas decompressed);
+`Gfx_UploadLzss` 0x462070 is a different codec.
 
 ## 2. The proof
 
