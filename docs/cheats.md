@@ -310,7 +310,8 @@ judges the player's attempt in a step of its own
 | the chop (area 8, chapter 1) | effect kind `0x55`, the thirty-second clock and the count, spawned with kind `0x15` by `Scena01_Scene06` step 0x11; step 0x14 reads the cue byte `0x90384A`: bit 7 the win (step 0x19), clear the second attempt (step 0x15) | `EffectKind55_Finish` `0x47EB30` (`effect_2g.cpp`): at the clock's end bit 7 of the count `0x90384B` always, of the cue only at a count of 16 or more | **yes**: the cue's bit 7 at any count |
 | the well (area 68, the Wellkeeper's) | effect kind `0x8C`, placed by `Scena11_Scene5` step 6: two timed windows of presses, the leader steered a step between them, the second count judged against the first | every loss goes to state 0x16, `EffectKind8C_Fail` `0x48B1F0` (`effect_4b.cpp`): no press in the first window, 0x1C frames without one in either, or the counts more than one apart; it writes the step byte 8 (the retry offer), the pass `EffectKind8C_Pass` writes 0xF | **yes**: state 0x16 ends as the pass |
 | the shisu (game mode 8's step 8, the SHISU overlay's twins) | `Shisu_*` (`rest_2b.cpp`): four counts given, the kneads, the scale index | `Shisu_Result` `0x57E160` ranks `Shisu_Score`'s score: 0x32 or less a failure, then six prizes at 0x5A, 0x78, 0x96, 0xAA and 0xB4; rank 5 is the best | **yes**, the owner's call: the score raised to 0xB4 before it is ranked - the best prize always |
-| the crane (area 135), the antenna dial, the ram (area 121), the dock's parts menu (area 128) | the button round's sites | not read yet | no route yet |
+| the antenna dial, the ram (area 121), the dock's parts menu (area 128) | the button round's sites | not read yet | no route yet |
+| the crane (area 135); the legendary sailor's tides | - | not read | **no**, the owner's call (2026-11-03): skill games, not failable in the way the others are |
 
 The lighthouse is not among the button round's seven sites: its gauge reads
 the confirm and cancel button sets (`Field_ConfirmButtons`, `Field_CancelButtons`),
@@ -457,6 +458,9 @@ The box's note on Page 2 and the ini's comment no longer list the minigames
 (the owner's word, 2026-11-03): "Every minigame ends in a win. A minigame
 with a score gives its best prize." The table above is the list.
 
-Next under the switch: the crane (area 135), the antenna dial, the ram
-(area 121) and the dock's parts menu (area 128), as recordings reach them.
+Next under the switch: the antenna dial, the ram (area 121) and the dock's
+parts menu (area 128), as recordings reach them. **Left out on purpose**
+(the owner's word, 2026-11-03): the crane game and the legendary sailor's
+tides - "they're both skill games, but not really 'failable' in the same
+way as some of the others". Neither is read or guarded.
 

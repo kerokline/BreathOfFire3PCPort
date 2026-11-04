@@ -56,7 +56,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    **The well joined the switch on 2026-11-03** (branch `cheat/no-fail-vinegar`, the owner's `vinegarMinigame.txt`:
    `EffectKind8C_Fail` ends as the pass, cheats.md 7), and the shisu the same day (`shisuMinigame.txt`: the
    owner's call, the score raised to the best prize's 0xB4 in `Shisu_Result`). **Next minigame**, when the owner records its start
-   (`BOF3X_RECORD`): the crane, the antenna, the ram or the dock's parts menu. The pattern: read the judgement (a `watch` / `peek` replay finds the subsystem when the docs do not: the
+   (`BOF3X_RECORD`): the antenna, the ram or the dock's parts menu (the crane and the legendary sailor's tides are left out, the owner's call of 2026-11-03, cheats.md 7). The pattern: read the judgement (a `watch` / `peek` replay finds the subsystem when the docs do not: the
    lighthouse was effect kind `0x45` in area 77, not the button round's area 135), guard it on
    `Cheats_MinigameNoFail()`, the module's inject `Fatal` when the function is not ours, a losing variant of the
    route seen to go on, the table in cheats.md 7. **Seen by the owner on 2026-10-31, approved:** the two pages, a rope pull with the box on, the chop under
