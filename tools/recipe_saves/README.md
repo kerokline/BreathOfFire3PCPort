@@ -27,6 +27,7 @@ The saves on this machine (2026-09-26), for the record - not their contents:
 | `bunyanHouseChoppingMiniGame.DAT` | the owner's slot 0 as of 2026-10-30 12:03, copied from the play folder's slot 0: chapter 1, before the scene in Bunyan's house and the woodcutting after it | `bunyanHouseChoppingMiniGame` |
 | `vinegarMinigame.DAT` | the owner's save of 2026-11-03 17:29: before the Wellkeeper's minigame at the well of area 68 (effect kind `0x8C`) | `vinegarMinigame` |
 | `shisuMinigame.DAT` | the owner's save of 2026-11-03 17:44: before the shisu is made, the prize given near the route's end | `shisuMinigame` |
+| `ammoniteBoss.DAT` | the owner's save of 2026-11-03 23:25: area 134 before the Ammonite's chase (chapter 12 run 9, effect kinds `0x82`..`0x84`) and its fight ([`docs/ammonite-chase.md`](../../docs/ammonite-chase.md)) | `ammoniteBoss` |
 | `shipPartsMenu.DAT` | the owner's slot 0 as of 2026-10-30 18:12, copied from the play folder's slot 0: the dock (area 128), before Momo's "Did you find everything?" and the parts menu | `shipPartsMenu` |
 | `eldritchGene.DAT` | slot 0 as of 2026-10-08 22:02, imported by the owner as `eldrichGene` and renamed with the recipe on 2026-10-10: the save before the gene stone's scene | `eldritchGene`, `eldritchGene_ab` |
 | `ending17.DAT` | a crafted save, 2026-10-14: `dolphinBoss.DAT` with its scenario bytes set to chapter 17 at state 0 and the area 0xC7, the checksum at +0x70 recomputed ([`docs/ending-backdrop.md`](../../docs/ending-backdrop.md) 1) - the ending's desert scene without a route to it | `ending17` |
