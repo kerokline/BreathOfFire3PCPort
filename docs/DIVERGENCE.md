@@ -13666,6 +13666,70 @@ designed in rather than bolted on.
   both bits at 12,396, Bunyan's "Hmmm... 0", "Not bad...", Teepo's "There! We worked, didn't we" and the scene's end. The count's one-glyph word after the number, the owner's catch
   during the same recording, is DIV-0064's group 25 (its amendment of the
   same day).
+- **Amended 2026-11-03 - the well:** the minigame at the well of area 68
+  (`0x44`; the Wellkeeper's, effect kind `0x8C`, which `Scena11_Scene5` places;
+  the owner's recording of the day, `tools/recipes/vinegarMinigame.txt`) counts
+  presses in two timed windows with a steered step of the leader between them
+  and judges the second count against the first. Every loss ends in state
+  0x16, `EffectKind8C_Fail` `0x48B1F0` (ours, `src/game/effect_4b.cpp`): no
+  press in the first window (the target 0, `_Check`), 0x1C frames without a
+  press in either window (`Kind8CHold`, `_CountA`), or a count more than one
+  off the target (`_Judge`); it writes the chapter's step byte
+  (`MoveScript_PartyRecords[0x65]`, `0x8034E5`) 8 and releases the effect -
+  "Didn't quite get it, eh?" and the offer to try again. The pass, state 0x15
+  (`_Pass` `0x48B1D0`), writes the counter `0x903848` 0 and the step byte 0xF.
+  *New:* under the switch state 0x16 ends as a judged pass: the frame count 0
+  (`_Judge`'s store before 0x15) and then `_Pass`'s writes. Nothing else
+  changes: the windows, the count-downs (`Rand`'s pick of `kKind8CCounts`), the
+  steering, the sounds. `Effect4B_Inject` is the `Fatal` when the function is
+  left as Capcom's under the switch.
+  *Verification:* headless (`BOF3X_SELFTEST_ONLY=1`, a clean launcher copy
+  under `D:\bof3x-runs\vin1103\T`, the hosted build), `BOF3X_NO_FAIL=1
+  BOF3X_SHADOW=effect_4b`: the fuzz differs in `EffectKind8C_Fail` alone
+  (3,999 of its 4,000 rounds, the first differing byte `0x8034E5`, the step
+  byte), the group's other 65 functions at 0; unset, 264,000 rounds over 66
+  functions, 0 mismatches; `BOF3X_NO_FAIL=1
+  BOF3X_ORIGINAL=EffectKind8C_Fail`: `FATAL: BOF3X_NO_FAIL=1 needs
+  EffectKind8C_Fail ours, and it is disabled`. Live, the recording replayed
+  as made (its last two F9 presses left out; the area word, the counters and
+  the step byte watched; root `D:\bof3x-runs\vin1103`) loses on replay: unset,
+  the step byte 8 at recipe frame 1,273 and the Wellkeeper's "Didn't quite
+  get it, eh?" and "let me know if you want to try again"; with the switch,
+  the step byte 0xF at the same frame, the counter `0x903848` 0, "You did
+  it!" and "Thanks so much!".
+- **Amended 2026-11-03 - the shisu:** the shisu screen (game mode 8's
+  step 8, `Shisu_*` in `src/game/rest_2b.cpp`; the owner's recording of the
+  day, `tools/recipes/shisuMinigame.txt`) cannot be lost so much as scored
+  low, so the owner's call is the score itself, not a failure condition: the
+  best prize always. `Shisu_Score` `0x57EB20` scores the four counts given
+  (`0x9399E4..7`), the kneads (`Rest2b_Rounds`) and the scale index
+  (`Shisu_ScaleIndex`, from the byte `0x904101`) into `0x9399FC`;
+  `Shisu_Result` `0x57E160` ranks it: 0x32 or less the counter `0x90384B` 1,
+  else 2 and the rank `0x903F6A` 0 (below 0x5A), 1 (0x78), 2 (0x96), 3
+  (0xAA), 4 (0xB4) or 5, which `Area130_TailGiveItem` `0x41D0E0` turns into
+  the prize (rank 5 the item `{3, 0x19}`, "Shaman'sRing" on the screen). The
+  formula and the thresholds match a player's reading of the PlayStation
+  code (GameFAQs, "Shisu Quest Reverse Engineered", meth962, read 2026-11-03 - cited
+  for the cross-check only; the numbers here are ours, from our function).
+  *New:* under the switch `Shisu_Result` raises a score below 0xB4 to 0xB4
+  (stored at `0x9399FC`) before ranking it - the counter 2 and the rank 5
+  whatever was put in. The four terms at `0x9399EC..` stay as scored; the
+  items given are taken as before; a screen left with no round run
+  (`Rest2b_Rounds` 0, the step byte 5) is unchanged. `Rest2B_Inject` is
+  the `Fatal` when the function is left as Capcom's under the switch.
+  *Verification:* headless (a clean launcher copy under
+  `D:\bof3x-runs\vin1103\T2`, the hosted build), `BOF3X_NO_FAIL=1
+  BOF3X_SHADOW=rest_2b`: the fuzz differs in `Shisu_Result` alone (2,352 of
+  its 4,000 rounds, the first differing byte the score `0x9399FC` or the
+  counter `0x90384B`), the group's other 37 functions at 0; unset, 152,000
+  rounds over 38 functions, 0 mismatches; `BOF3X_NO_FAIL=1
+  BOF3X_ORIGINAL=Shisu_Result`: `FATAL: BOF3X_NO_FAIL=1 needs Shisu_Result
+  ours, and it is disabled`. Live, the recording replayed (its closing F9
+  presses left out; the step byte, the counts, the score cells, the rank and
+  the counter watched; root `D:\bof3x-runs\vin1103`): the counts 1, 15, 2, 5,
+  scored at recipe frame 1,845 to the terms 0x4B, 0x35, 0x64, 0x50 and the
+  score 0x76 - unset, the rank 1 and "You got Wisdom Seed!"; with the switch,
+  the same terms, the score 0xB4, the rank 5 and "You got Shaman'sRing!".
 - **Rationale:** the owner's call, 2026-10-30: the groundwork for one
   switch that covers every minigame, for a player who wants the story
   without the reflex tests. One guarded branch per minigame, because the

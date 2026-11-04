@@ -280,7 +280,7 @@ BEGIN
 
     GROUPBOX        "Minigames", -1, 0, 46, 286, 42
     AUTOCHECKBOX    "You cannot &fail a minigame", IDC_CH_NOFAIL, 7, 58, 270, 10
-    LTEXT           "A minigame does not end with a loss. Applies to the rope pull, the lighthouse valve and the wood chopping. Other minigames follow as they are verified.",
+    LTEXT           "Every minigame ends in a win. A minigame with a score gives its best prize.",
                     -1, 19, 70, 260, 18
 
     PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS2, 0, 114, 52, 14

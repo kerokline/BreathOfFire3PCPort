@@ -202,7 +202,10 @@ the chapter's step byte 0xF, released. `_Fail`: the step byte 8, released.
 ## 2. Divergence
 
 None of this group's own: every function is a faithful replacement but the
-tile's width, DIV-0041's (below). Every call goes through
+tile's width, DIV-0041's (below), and `EffectKind8C_Fail` under DIV-0188's
+cheat switch (2026-11-03, the well; [`cheats.md`](cheats.md) 7): with
+`BOF3X_NO_FAIL=1` state 0x16 ends as the pass (the frame count 0, then
+`_Pass`), unset it is Capcom's. Every call goes through
 `SH_CALL` (the fuzz stands recorders in); `Sprite_Current` is read again
 wherever the original reads `[0x937F88]` again; the FPU work (`fild` /
 `fadd` / `fsub` / `fstp`, `_ftol`'s truncation) is done in the FPU as

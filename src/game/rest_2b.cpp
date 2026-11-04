@@ -16,7 +16,9 @@
 // the chapter its step. Each model has its own state table (Shisu_ModelBStates
 // here; MasterFigure_States' draws past its entry 1 are R2C's).
 //
-// Every one is a faithful replacement but Shisu_DrawModel (DIV-0073). Where
+// Every one is a faithful replacement but Shisu_DrawModel (DIV-0073) and,
+// under BOF3X_NO_FAIL, Shisu_Result (DIV-0188: the score raised to the top
+// rank's 0xB4 before it is ranked). Where
 // the original indexes a .data table by a byte it never bounds (every
 // dispatcher here) ours aborts with a message (round9 doc section 6); where
 // it reads memory it never wrote (a light matrix half filled,
@@ -32,6 +34,7 @@
 #include <type_traits>
 
 #include "bof3/symbols.gen.h"
+#include "game/cheats.h"
 #include "game/record_views.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_2b_callees.h"
@@ -384,6 +387,10 @@ extern "C" void __cdecl Shisu_CloseWait(void) {
 // the score; a score of 0x32 or less sets the counter byte 0x90384B to 1, a
 // higher one to 2 and the rank 0x903F6A to 0 (below 0x5A), 1 (0x78), 2
 // (0x96), 3 (0xAA), 4 (0xB4) or 5. Then Window_ResetAll and Game_Step up one.
+// DIVERGENCE DIV-0188: under BOF3X_NO_FAIL a score below 0xB4 is raised to
+// 0xB4 (stored at 0x9399FC, as Shisu_Score stores it) before it is ranked -
+// the counter 2 and the rank 5, the best prize, whatever was put in. The four
+// terms at 0x9399EC.. are left as scored.
 extern "C" void __cdecl Shisu_Result(void) {
     if (Rest2b_Rounds == 0) {
         MoveScript_PartyRecords[0x65] = 5;
@@ -392,6 +399,7 @@ extern "C" void __cdecl Shisu_Result(void) {
         for (unsigned i = 0; i < 4; ++i) SH_CALL(Inventory_Remove)(0, kItems[i], B(::bof3::Img(kGiven.v) + i));
         MoveScript_PartyRecords[0x65] = 0x14;
         SH_CALL(Shisu_Score)();
+        if (Cheats_MinigameNoFail() && static_cast<std::int32_t>(Rest2b_Score) < 0xB4) Rest2b_Score = 0xB4;
         const auto score = static_cast<std::int32_t>(Rest2b_Score);
         if (score <= 0x32) {
             B(::bof3::Img(kCounterB.v)) = 1;
@@ -1041,6 +1049,11 @@ void Rest2B_Inject() {
     BOF3_INJECT(Shisu_CloseFade);
     BOF3_INJECT(Shisu_CloseWait);
     BOF3_INJECT(Shisu_Result);
+    // DIV-0188: with the switch on, the shisu's ranking must be ours - left as
+    // Capcom's (BOF3X_ORIGINAL / BOF3X_OFF), the score would rank as before
+    // and the cheat would be silently half off.
+    if (Cheats_MinigameNoFail() && !bof3::IsEnabled(bof3::addr::Shisu_Result))
+        bof3::Fatal("BOF3X_NO_FAIL=1 needs Shisu_Result ours, and it is disabled");
     BOF3_INJECT(Shisu_PickDispatch);
     BOF3_INJECT(Shisu_PickSide);
     BOF3_INJECT(Shisu_PickCounts);
