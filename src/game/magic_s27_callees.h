@@ -19,9 +19,9 @@ namespace magic_s27::raw {
 // byte +8 (unnamed, in no group; docs/magic_s22.md section 3).
 constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
 
-// The sprite bank the Sprite_* functions read their animations from
-// (0x9039D8, a pointer: 0x8B3580 the default, 0x8E3580 the battle effects'
-// bank - battle_fx_tasks_callees.h, magic_s24_callees.h).
+// The animation bank the Sprite_* functions read their animations from
+// (0x9039D8, a pointer: 0x8B3580 the area's, 0x8C5D80 the battle's, 0x8E3580
+// the spell's - battle_fx_tasks_callees.h, magic_s24_callees.h).
 // kSpriteBank: now BattleE2_AnimSet (symbols.toml).
 constexpr std::uint32_t kBankEffects = 0x8E3580;
 constexpr std::uint32_t kBankDefault = 0x8B3580;

@@ -4138,8 +4138,9 @@ designed in rather than bolted on.
 - **New behaviour:** `loc_build.py all` puts four of the donor disc's
   sections for each world map into `<lang>.AREAnnn.DAT`, whole:
   - the page;
-  - `0x800D3800` -> tag `0xB0000`, the map's sprite frames, the plates sized
-    per name;
+  - `0x800D3800` -> tag `0xB0000`, the area's sprite animation bank
+    (animation scripts, each with its frames' part lists), the plates' frames
+    sized per name;
   - `0x800E3800` -> tag `0xC0000`;
   - the palette section (`0x8002D800` JP / `0x80035800` Western) -> tag
     `0xA000`, whose first CLUT is the plates'.

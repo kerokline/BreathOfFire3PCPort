@@ -13,7 +13,7 @@
 //         the member-sprite set-up is pending (+0x64 / +0x68 hold it)
 //   +0x25 texture slot, +0x26 its y row, +0x27 +0x28 bytes of the bank
 //   +0x2A a pose byte (the facing half of a direction pair), +0x2B a bank byte
-//   +0x2C u16 which frame-offset table, and the member column
+//   +0x2C u16 the animation bank's section (one per sprite kind), and the member column
 //   +0x4B the current animation
 //   +0x4C the animation data (header of three offsets), +0x50 the script
 //   +0x64 dword the member, +0x68 dword the member's y (its slot * 80)
@@ -84,7 +84,7 @@ extern "C" void __cdecl Sprite_SetAnimation(unsigned char animation) {
 //
 // Then, with +0x24 bit 0, the frame is queued for upload
 // (Sprite_SetFrameQueueUpload, the known-defects D4 feed); without it the
-// script pointer +0x50 is found in place: kFrameOffsets' table for +0x2C,
+// script pointer +0x50 is found in place: the animation bank's section for +0x2C,
 // then the u16 offset for the animation.
 //
 // As the original has it: nothing is bounded - the party set row, the member

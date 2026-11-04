@@ -15,7 +15,7 @@ namespace at {
 constexpr std::uint32_t kPartySetCurrent = 0x90412C;      // byte; bit 7 from PartySet_Select mode 0
 constexpr std::uint32_t kPartySetRows = 0x669750;         // 3 bytes a row: the member in each column
 constexpr std::uint32_t kMemberAnimations = 0x669884;     // a pointer per member: 4-byte {bank, animation, +0x2A}
-constexpr std::uint32_t kFrameOffsets = 0x9039D8;         // pointer: a dword offset per +0x2C, then words per animation
+constexpr std::uint32_t kFrameOffsets = 0x9039D8;         // pointer to the animation bank: a dword section offset per +0x2C, then a u16 script offset per animation
 constexpr std::uint32_t kBankCount = 0x8C3580;            // dword; its low byte counts the bank records
 constexpr std::uint32_t kBankTable = 0x7E0880;            // pointer to the 8-byte bank records
 constexpr std::uint32_t kBankBytes = 0x6690A0;            // 2 bytes a bank: +0x70's low byte, +0x2B

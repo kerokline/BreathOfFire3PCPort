@@ -113,8 +113,8 @@ constexpr ::bof3::image::CodeVa kTurnOffset{bof3::addr::Battle_TurnVectorC};  //
 // now and called by name (bof3::addr): Port_DroppedCall (MAGIC124's extent, a
 // bare ret) and S37's MagicFx_FreeCurrentRecord among them.
 
-// The sprite frame-offset table pointer the sprite draws read (0x8B3580 the
-// battle's, 0x8E3580 the effects').
+// The sprite animation bank pointer Sprite_SetAnimationAt reads (0x8B3580 the
+// area's, 0x8C5D80 the battle's, 0x8E3580 the spell's).
 // kFrameSet: now BattleE2_AnimSet (symbols.toml).
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {

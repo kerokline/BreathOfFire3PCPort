@@ -4881,8 +4881,9 @@ def build_dock_panel(game, disc):
 # JP's only in 4..7 tiles, every one of them inside the tiles each Western
 # disc replaces; and the three data sections that go with it are JP's byte
 # for byte:
-#   - 0x800D3800 -> tag 0xB0000: the map's sprite frames, the plates' among
-#     them, sized per plate (a Western disc's is 4..12 bytes longer);
+#   - 0x800D3800 -> tag 0xB0000: the area's sprite animation bank (each record
+#     an animation script and its frames), the plates' among them, sized per
+#     plate (a Western disc's is 4..12 bytes longer);
 #   - 0x800E3800 -> tag 0xC0000: 60..400 bytes that differ only where a disc
 #     rearranged the page (AREA065 on every Western disc, AREA121 on the
 #     German), so read as where the moved blocks now are;

@@ -165,8 +165,8 @@ std::uint32_t __cdecl RecAlloc() {
     const std::uint32_t h = mh::Noise();
     return (h & 0xFFFFFF00u) | (h % 4 == 0 ? 0xFFu : (h >> 8) % 64);
 }
-// Sprite_UpdateScreen reads the frame-offset table 0x9039D8, which
-// PurifyMote_Task swaps in around it: the recorder logs it.
+// The animation bank pointer 0x9039D8 (read only by Sprite_SetAnimationAt),
+// which PurifyMote_Task swaps in around the screen update: the recorder logs it.
 void __cdecl RecUpdateScreen() {
     mh::Record(bof3::addr::Sprite_UpdateScreen, Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(0x9039D8))));
     mh::Stir();
