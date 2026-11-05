@@ -7,6 +7,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/event_script_callees.h"
+#include "game/faerie_ring.h"
 #include "game/record_views.h"
 #include "game/records.h"
 #include "game/wide_staging.h"
@@ -446,11 +447,16 @@ void MountainPasses_AfterPlacement() {
 // no link of area 152's list on it.
 constexpr unsigned kDesertFaerieX = 0x27, kDesertFaerieZ = 0x2C;
 void DesertFaerie_AfterPlacement() {
-    if (!g_desert_faerie || Game_AreaNumber != 152) return;
+    if (!g_desert_faerie) return;
+    if (Game_AreaNumber != 152) {
+        FaerieRing_Leave();   // the borrowed palette entries back to zero (faerie_ring.h)
+        return;
+    }
     unsigned char* const plane = const_cast<unsigned char*>(AreaMap_Bytes.Native());
     const unsigned width = AreaMap_Header[0];
     plane[kDesertFaerieZ * width + kDesertFaerieX] = 0xAE;
     bof3::Log("DIV-0204    the desert map's faerie village cell laid at (%#x, %#x)", kDesertFaerieX, kDesertFaerieZ);
+    FaerieRing_Lay(kDesertFaerieX, kDesertFaerieZ);   // its drawn ring (faerie_ring.h)
 }
 
 }  // namespace

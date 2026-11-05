@@ -245,6 +245,7 @@ set(_dll_sources
   src/game/field_event.cpp
   src/game/field_event_fuzz.cpp
   src/game/event_script.cpp
+  src/game/faerie_ring.cpp
   src/game/event_script_fuzz.cpp
   src/game/msgbox.cpp
   src/game/msgbox_fuzz.cpp

@@ -14829,12 +14829,20 @@ designed in rather than bolted on.
   ours, `src/game/event_script.cpp` `DesertFaerie_AfterPlacement`), armed by
   `DesertFaerie_Arm` from `src/hook/inject_all.cpp`. The launcher's
   `desert_faerie=` (`src/launcher/config.cpp`, `BOF3X_DESERT_FAERIE`) and its
-  box on Mods, Extras (`config_dialog.cpp`, `launcher.rc`). The owner's
-  request.
+  box on Mods, Extras (`config_dialog.cpp`, `launcher.rc`). The drawn ring:
+  `src/game/faerie_ring.cpp`, called from `DesertFaerie_AfterPlacement`, and
+  its cell's texture word in `MapView_CellTextures` (`0x56F9B0`, ours,
+  `src/game/map_layers.cpp`). The owner's request.
 - **Tier:** Extension - new content, off by default.
 - **Original behaviour:** the faerie village (areas 175..185) has no link in
-  any area's link list. Its one world-map entrance is a cell of byte `0xAE` on
-  the Rhapala map (area 87). Confirm on an `0xAE` cell
+  any area's link list. Its world-map entrances are cells of byte `0xAE`:
+  three on the Rhapala map (area 87: `(0x2D, 0x2D)`, `(0x1C, 0x32)`,
+  `(0x2F, 0x34)`) and two on the Lost Shore map (area 151: `(0x36, 0x1A)`
+  and `(0x26, 0x36)`), read from the player's `AREA087.DAT` / `AREA151.DAT`
+  and live with `tools/cell_peek.py` (2026-11-05). Each is drawn as a ring of
+  flowers painted into its cell's own tile, the ring and its ground one
+  16 x 16 texture of the map's page (Rhapala's on grass, Lost Shore's on
+  dirt). Confirm on an `0xAE` cell
   (`Field_LeaderCellEvent` `0x531950`, `src/game/event_ops.cpp`) starts tail
   kind `0x37`, `FieldTail_StoryWarp` (`0x56DF10`, `src/game/field_e2.cpp`):
   it shows the area's message `0x20`, or `0x21` and its choice when the party
@@ -14855,9 +14863,43 @@ designed in rather than bolted on.
   return point brings the party back to the desert map. The cell walks (a
   place cell), has no encounter, and refuses the camp and the Tiara, as the
   Rhapala cell does. It is there whenever the option is on, as the Rhapala
-  cell is (the owner, 2026-11-05). Nothing is drawn: the map's art has no
-  flower field there. `BOF3X_DESERT_FAERIE` is 0 or 1; anything else stops
-  the game at start, and 1 with `Area_RunPlacement` not ours stops it too.
+  cell is (the owner, 2026-11-05).
+
+  **The ring** (added 2026-11-05, the owner's choice from four cut-offs of
+  an offline preview). The desert map's page has no ring, and the sand tile
+  under the cell is shared by 433 cells, so the ring is made when the map
+  loads and given to the one cell (`src/game/faerie_ring.cpp`), each step a
+  rule over the player's data: the texture Lost Shore's `0xAE` cells name
+  (all must name the same one) from the player's `AREA151.DAT` (kind 1 tag
+  `0x0A081000`, kind 0 tags `0xC8000` and `0x8600`; the cache's copy when it
+  holds the file whole, DIV-0089); its ground taken out - every texel within
+  12 (RGB at 8 bits a channel) of a colour of the three textures of the tile
+  west of the first `0xAE` cell, its dirt; the desert cell's own sand texel
+  put in its place, from the loaded page. The result (on the US-language PC
+  install: 122 ring texels, 59 colours) goes into the first page-0 grid cell
+  that no texture word of the desert map names and the loaded page leaves
+  zero (`0x01`), through `Gfx_LoadImage`, and its colours at the end of
+  palette 14 (VRAM row 497, entries 197..255) in both CLUT strips (as loaded
+  and live, `Gfx_ClutStripDirty`). `MapView_CellTextures` gives that cell's
+  top the ring's texture word (`0E800001` there); its sides and every other
+  cell keep the map's. Measured before the choice, on the live game: over
+  three minutes on the desert map the 145 free page-0 cells were never
+  written, and the map's header entries hold one texture cycle and no
+  palette cycle; palette 14's entries 160..255 stayed zero on the desert map
+  in every sample of four minutes, while the Container Yard, the Oasis and
+  the village fill them with their own colours. So each load of the desert
+  map checks those entries are zero or the ring's (else the ring is not
+  drawn on that load, logged), and the next area's placement puts back to
+  zero every entry that still holds the ring's colour. **The first build
+  wrote a whole spare row of the map's twelve (palette 11), which no tile
+  names but the compass and the place plate use: both drew wrong (the
+  owner's capture, 2026-11-05).** Nothing of Capcom's is in the source: no
+  texel, colour or table, only the rules and the cut-off. A ring that cannot
+  be made (a file missing, a map not shaped as measured) is logged once and
+  not drawn; the entrance works either way.
+
+  `BOF3X_DESERT_FAERIE` is 0 or 1; anything else stops the game at start,
+  and 1 with `Area_RunPlacement` not ours stops it too.
 - **Rationale:** the owner's request: the village is far from the late game's
   maps, and the warp it needs is already in every later world map's text.
 - **Also in the PSX version?** No; this is an option of this project.
@@ -14871,9 +14913,19 @@ designed in rather than bolted on.
   party entered the village (area 185 on that save) and its exit square
   brought them back to the desert map; the log has the arm line and
   `DIV-0204    the desert map's faerie village cell laid at (0x27, 0x2c)` at
-  each load of area 152. "That worked great."
+  each load of area 152. "That worked great." The ring: the same
+  self-tests with `BOF3X_SHADOW=map_layers,event_script`, off and on, exit 0
+  (`MapView_CellTextures`' fuzz compares it with the ring unset). Played by
+  the owner 2026-11-05: the ring drawn at the cell, the compass and the
+  "Desert" plate as before, the ring kept over leaving and re-entering the
+  map four times; the log has `the ring composed from AREA151.DAT's (0x36,
+  0x1a): 122 ring texels, 59 colours` once, `the ring laid: page-0 cell 0x01,
+  palette 14 entries 197..255` at each load, and on each leaving `cleared
+  ... (0 of 118)` - the next area had loaded its own colours there. "Looks
+  good."
 - **Reversible?** Off by default; the Extras box or `desert_faerie=0`. The
-  cell is not saved: with the option off the map loads as on disc.
+  cell and the ring are not saved: with the option off the map loads as on
+  disc, and no page cell or palette entry is written.
 - **Switch:** ini:desert_faerie=0
 - **Default:** off
 - **Player:** yes - a launcher key (`src/launcher/config.cpp`)

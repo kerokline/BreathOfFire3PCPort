@@ -3,6 +3,7 @@
 #include <windows.h>
 
 #include "game/draw_pool.h"
+#include "game/faerie_ring.h"
 
 #include <cstdint>
 #include <cstring>
@@ -557,8 +558,12 @@ extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigne
     const std::int32_t half = (height * static_cast<std::int32_t>(width) + 1) / 2;
     const unsigned char* texture =
         AreaMap_Header + (static_cast<std::uint32_t>(half) + offset + tile) * 4u;
-    unsigned flags = ((static_cast<std::int32_t>(Dword(texture)) >> 15) & 0x8000) | (Dword(texture) & 0x4000u);
-    g.set_texture(Dword(texture), item + buffer * 0x48u, 1);
+    // DIV-0204: the desert entrance's cell takes the drawn ring's word for its
+    // top (faerie_ring.h); its sides, and every other cell, the map's own.
+    std::uint32_t top = Dword(texture);
+    FaerieRing_CellWord(x, y, &top);
+    unsigned flags = ((static_cast<std::int32_t>(top) >> 15) & 0x8000) | (top & 0x4000u);
+    g.set_texture(top, item + buffer * 0x48u, 1);
     texture += 4;
     const unsigned below = Word(item + 0x8E);
     if (below != 0) {
