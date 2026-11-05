@@ -161,3 +161,7 @@ navigation is meant to work: <https://gamefaqs.gamespot.com/ps/196817-breath-of-
       screen to screen and hour to hour as the FAQ describes, under ours.
 - Result goes to: [`effect_6c.md`](effect_6c.md) section 7, and
   `known-defects.md` when the defect is numbered.
+- **2026-11-05:** seen by the owner at 16:9: the ring is the sand hill, and
+  with the bytes faded it is not drawn (Manmo in the open). D226, fixed by
+  DIV-0182's amendment (the bytes put back when area 196 loads). Owed: the
+  owner's look at the scene once more, and the desert's sky item above.

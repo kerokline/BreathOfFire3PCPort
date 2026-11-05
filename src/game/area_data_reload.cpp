@@ -1,15 +1,20 @@
 // DIV-0182: an area's own .data put back when its DAT is loaded.
 //
-// Two area blocks write their own .data (D145, docs/known-defects.md):
+// Three areas' code writes its own .data (D145 and D226, docs/known-defects.md):
 // Area108_TailPlace moves Area108_Model's flags byte (+3) and the corners of
 // its records (the s8 count at +0, the records at the pointer at +4, 0x28
 // bytes each) as the cart's push scene plays; Area52_TailBlock sets byte +1
 // of the area's first extra-object entry to 0 when a timed scene begins and
-// 0xFF when it ends. On the PlayStation the area's overlay is reloaded from
+// 0xFF when it ends; area 196's sand hill (effect kind 0x18 sub-kind 0x59,
+// placed by its placement script) fades through twelve shade bytes,
+// EffectKind18Sub59_Fade writing nine of them down to 0, which nothing writes
+// back. On the PlayStation the area's overlay is reloaded from
 // disc with the area, so every visit starts from the disc's bytes; the port
 // links every overlay into one image and the values stay until the exe is
 // restarted - a second visit to area 108 (or a reload of a save there,
-// issue #149) starts from the last scene's cart.
+// issue #149) starts from the last scene's cart, and area 196's hill is
+// drawn invisible (both its blend modes at shade 0) with Manmo in the open
+// once its bytes are 0 (2026-11-05, the owner's first meeting with Manmo).
 //
 // Here the bytes are copied once at inject, before any scene, and put back
 // each time Area_Enter loads the area's DAT - the branch the PlayStation took
@@ -20,6 +25,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/effect_6c_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -27,6 +33,7 @@ namespace {
 
 constexpr unsigned kArea108 = 108;
 constexpr unsigned kArea52 = 52;
+constexpr unsigned kArea196 = 196;
 constexpr std::uint32_t kModelRecordBytes = 0x28;   // four corners of three s16, a velocity of three s16
 constexpr std::uint32_t kModelRecordsMax = 127;     // the count is a signed byte
 
@@ -57,6 +64,12 @@ std::uint32_t g_records_len = 0;
 // Area 52: byte +1 of the first extra-object entry.
 std::uint8_t g_area52_byte = 0;
 
+// Area 196: sub-kind 0x59's twelve shade bytes (effect_6c_callees.h kShades59;
+// the PlayStation's twin of the draw is in area 196's overlay alone,
+// docs/effect_6c.md section 7).
+std::uint8_t g_shades59[effect_6c::at::kShades59Size];
+std::uint8_t* Shades59() { return Mem(::bof3::Img(effect_6c::at::kShades59.v)); }
+
 // A pointer the image holds, a place: inside .data below the entries.
 bool InData(std::uint32_t at) { return at >= ::bof3::Img(bof3::kGameDataVa) && at < ::bof3::Img(Area108_Model_addr); }
 
@@ -78,6 +91,7 @@ void Snapshot() {
     if (g_model_count == 0) bof3::Fatal("DIV-0182: Area108_Model names no model - not the image's shape");
     g_records_len = off;
     g_area52_byte = Mem(::bof3::Img(Area52_ExtraObjects_addr))[1];
+    std::memcpy(g_shades59, Shades59(), sizeof g_shades59);
 }
 
 // True when anything was put back.
@@ -102,7 +116,7 @@ void AreaDataReload_Inject() {
     Snapshot();
     const std::uint8_t was = 0, is = 1;
     bof3::PatchBytes("AreaDataReload", Low32(&g_on), &was, &is, 1);
-    bof3::Log("DIV-0182    area 108's models and area 52's scene byte put back at the area's load (on unless the line above says OFF); "
+    bof3::Log("DIV-0182    area 108's models, area 52's scene byte and area 196's hill shades put back at the area's load (on unless the line above says OFF); "
               "%u models, %u record bytes from 0x%08X",
               g_model_count, g_records_len, g_models[0].records - (::bof3::ImageBase() - ::bof3::image::kBase));   // its VA
 }
@@ -115,5 +129,9 @@ void AreaDataReload_OnLoad(unsigned area) {
         std::uint8_t* const byte = Mem(::bof3::Img(Area52_ExtraObjects_addr)) + 1;
         if (*byte != g_area52_byte) bof3::Log("DIV-0182    area 52's scene byte %02X put back to %02X at the area's load", *byte, g_area52_byte);
         *byte = g_area52_byte;
+    } else if (area == kArea196) {
+        if (std::memcmp(Shades59(), g_shades59, sizeof g_shades59) != 0)
+            bof3::Log("DIV-0182    area 196's hill shades put back at the area's load (sub-kind 0x59 had faded them)");
+        std::memcpy(Shades59(), g_shades59, sizeof g_shades59);
     }
 }
