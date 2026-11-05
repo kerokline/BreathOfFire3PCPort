@@ -1,0 +1,66 @@
+# tools/revisit_diff.py --body: the title to area 196's arrival, for D226's revisit (docs/stale-overlay-state.md 2).
+# The title's load of slot 0, then the owner's desertToManmo route (recorded 2026-11-05, BOF3X_LANG=en-US)
+# from area 191 to the walk into area 196, cut after the walk in; X is 30 frames after the arrival.
+# Save: desertToManmo. Run with --lang en-US --same-rand (the desert has random encounters).
+hold start 6
+wait 52
+hold start 7
+wait 5
+hold start 5
+wait 40
+hold circle 6
+wait 29
+hold circle 4
+wait 4
+hold circle 3
+until 0x904EFC u16 == 191 timeout 3600
+wait 36
+hold left 3
+hold down+left 16
+wait 36
+hold up 1298
+wait 15
+hold right+down 21
+wait 4
+hold circle 5
+wait 93
+hold r1 12
+hold r1+circle 6
+wait 43
+hold circle 6
+wait 52
+hold right 1
+hold right+down 14
+hold down 2
+hold right+down 3
+hold down 4
+hold down+left 1
+wait 1
+hold circle 4
+wait 37
+hold circle 5
+wait 3
+hold right 1
+hold right+down 90
+wait 36
+hold up 475
+wait 53
+hold circle 4
+wait 11
+hold triangle 3
+wait 14
+hold circle 5
+wait 8
+hold circle 4
+wait 9
+hold circle 4
+wait 7
+hold cross 2
+wait 9
+hold cross 4
+wait 7
+hold cross 4
+wait 12
+hold up 487
+until 0x904EFC u16 == 196 timeout 3600
+wait 30
