@@ -4078,15 +4078,15 @@ site	src/game/event_ops_fuzz.cpp	1090	long	l	fuzz	long	-	long x = static_cast<lo
 site	src/game/event_ops_fuzz.cpp	1090	long	l	fuzz	long	-	long x = static_cast<long>(Next()), z = static_cast<long>(OneIn(2) ? 0x108000 - 1 + Next() % 3 : Next());
 site	src/game/event_ops_fuzz.cpp	1195	narrow_call	unread	fuzz	reinterpret_cast<PV>(f)()	Address	case kPassage: g_result = Address(reinterpret_cast<PV>(f)()); break;
 site	src/game/event_ops_fuzz.cpp	1200	narrow	rc_int:func_ours	fuzz	f	-	default: g_result = reinterpret_cast<U>(f)(); break;
-site	src/game/event_script.cpp	47	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
-site	src/game/event_script.cpp	47	widen	param	live	a	unsigned char*	unsigned char* At(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
-site	src/game/event_script.cpp	95	asm	other	live	cltd	cltd idivl	__asm__ volatile("cltd\n\tidivl %2" : "=a"(quotient) : "a"(dividend), "r"(divisor) : "edx", "cc");
-site	src/game/event_script.cpp	500	long	l	live	long	-	const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
-site	src/game/event_script.cpp	500	long	l	live	long	-	const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
-site	src/game/event_script.cpp	501	long	l	live	long	-	static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z)));
-site	src/game/event_script.cpp	601	long	l	live	long	-	const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
-site	src/game/event_script.cpp	601	long	l	live	long	-	const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
-site	src/game/event_script.cpp	602	long	l	live	long	-	static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z)));
+site	src/game/event_script.cpp	50	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+site	src/game/event_script.cpp	50	widen	param	live	a	unsigned char*	unsigned char* At(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
+site	src/game/event_script.cpp	98	asm	other	live	cltd	cltd idivl	__asm__ volatile("cltd\n\tidivl %2" : "=a"(quotient) : "a"(dividend), "r"(divisor) : "edx", "cc");
+site	src/game/event_script.cpp	539	long	l	live	long	-	const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
+site	src/game/event_script.cpp	539	long	l	live	long	-	const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
+site	src/game/event_script.cpp	540	long	l	live	long	-	static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z)));
+site	src/game/event_script.cpp	640	long	l	live	long	-	const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
+site	src/game/event_script.cpp	640	long	l	live	long	-	const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
+site	src/game/event_script.cpp	641	long	l	live	long	-	static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z)));
 site	src/game/event_script_callees.h	43	long	l	live	long	-	long (__cdecl* elevation)(long, long);
 site	src/game/event_script_callees.h	43	long	l	live	long	-	long (__cdecl* elevation)(long, long);
 site	src/game/event_script_callees.h	43	long	l	live	long	-	long (__cdecl* elevation)(long, long);
@@ -4129,6 +4129,7 @@ site	src/game/event_script_fuzz.cpp	798	narrow_call	image_local	fuzz	p	Address	[
 site	src/game/event_script_fuzz.cpp	798	narrow_call	image_local	fuzz	position	Address	[&] { const unsigned char* p = position; g_result = Theirs<Cond>(fn)(&p) & 0xFF; g_result |= Address(p) != Address(position) ? 0x100 : 0; },
 site	src/game/event_script_fuzz.cpp	799	narrow_call	image_local	fuzz	p	Address	[&] { const unsigned char* p = position; g_result = reinterpret_cast<Cond>(ours)(&p) & 0xFF; g_result |= Address(p) != Address(position) ? 0x100 : 0; }, bad);
 site	src/game/event_script_fuzz.cpp	799	narrow_call	image_local	fuzz	position	Address	[&] { const unsigned char* p = position; g_result = reinterpret_cast<Cond>(ours)(&p) & 0xFF; g_result |= Address(p) != Address(position) ? 0x100 : 0; }, bad);
+site	src/game/faerie_ring.cpp	318	fmt_place	word	live	g_ring.word	%08X	bof3::Log("DIV-0204 the ring laid: page-0 cell 0x%02x, palette %u entries %u..255, texture word %08X",
 site	src/game/field_blocked.cpp	66	long	l	live	long	-	using PointFn = std::uint32_t (__cdecl*)(long, long, unsigned);
 site	src/game/field_blocked.cpp	66	long	l	live	long	-	using PointFn = std::uint32_t (__cdecl*)(long, long, unsigned);
 site	src/game/field_blocked.cpp	79	long	l	live	long	-	std::uint32_t (__cdecl* steep)(long, long);
@@ -6523,48 +6524,48 @@ site	src/game/map_field_objects_fuzz.cpp	874	narrow_call	image_local	fuzz	EventS
 site	src/game/map_field_objects_fuzz.cpp	874	narrow_call	unread	fuzz	theirs(g_record)	Addr	Pair(t, r, 1, true, [&] { return Addr(theirs(g_record)); }, [&] { return Addr(EventScript_SkipSwitch(g_record)); });
 site	src/game/map_field_objects_fuzz.cpp	882	narrow_call	object_ours	fuzz	g_bytes	Addr	const Region r[] = {{Addr(g_bytes), sizeof g_bytes}, {AreaMap_Header_addr, 4}, {at::BytesAt(), 4}};
 site	src/game/map_field_objects_fuzz.cpp	888	narrow_call	object_ours	fuzz	g_bytes	Addr	SetDword(At(at::BytesAt()), Addr(g_bytes) + 0x200);
-site	src/game/map_layers.cpp	83	long	ul	live	unsigned long	-	unsigned long& Last(std::uint32_t slot) { return DrawLayers[slot * 2u + 1u]; }
-site	src/game/map_layers.cpp	88	long	ul	live	unsigned long	-	unsigned long& LastOf(int layer, std::uint32_t sub) {
-site	src/game/map_layers.cpp	97	long	ul	live	unsigned long	-	unsigned long AsLong(const void* p) { return static_cast<unsigned long>(Address(p)); }
-site	src/game/map_layers.cpp	97	long	ul	live	unsigned long	-	unsigned long AsLong(const void* p) { return static_cast<unsigned long>(Address(p)); }
-site	src/game/map_layers.cpp	131	long	l	live	long	-	MapView_FocusX = static_cast<long>(focus_x);
-site	src/game/map_layers.cpp	141	long	l	live	long	-	MapView_FocusZ = static_cast<long>(z);
-site	src/game/map_layers.cpp	144	long	l	live	long	-	MapView_Elevation = static_cast<long>(static_cast<std::uint32_t>(MapView_Elevation) +
-site	src/game/map_layers.cpp	197	long	l	live	long	-	long moved[3];
-site	src/game/map_layers.cpp	205	long	ul	live	unsigned long	-	g.set_rot(reinterpret_cast<const unsigned long*>(Camera_Matrix));
-site	src/game/map_layers.cpp	206	long	ul	live	unsigned long	-	g.set_trans(reinterpret_cast<const unsigned long*>(Camera_Matrix));
-site	src/game/map_layers.cpp	214	long	ul	live	unsigned long	-	map_layers::InsetPair map_layers::ComputeInset(unsigned long angle, short distance, unsigned char input_flags,
-site	src/game/map_layers.cpp	247	long	ul	live	unsigned long	-	Scratch_Swap = static_cast<unsigned long>(pair.lowered);
-site	src/game/map_layers.cpp	276	long	ul	live	unsigned long	-	g.load_vertex(reinterpret_cast<const unsigned long*>(s));
-site	src/game/map_layers.cpp	278	long	ul	live	unsigned long	-	g.store_xy(reinterpret_cast<unsigned long*>(MapView_ScreenXY));
-site	src/game/map_layers.cpp	354	long	ul	live	unsigned long	-	g.load_vertices3(reinterpret_cast<const unsigned long*>(s + 4));
-site	src/game/map_layers.cpp	363	long	ul	live	unsigned long	-	g.link(reinterpret_cast<unsigned long*>(LastOf(before, Gfx_BufferIndex)),
-site	src/game/map_layers.cpp	367	long	ul	live	unsigned long	-	g.link(reinterpret_cast<unsigned long*>(LastOf(layer, 2u + Gfx_BufferIndex)),
-site	src/game/map_layers.cpp	376	uintptr	-	live	std::uintptr_t	-	auto* const scratch = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(SharedScratch_addr)));
-site	src/game/map_layers.cpp	376	widen	img_place	live	::bof3::Img(SharedScratch_addr)	unsigned char*	auto* const scratch = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(SharedScratch_addr)));
-site	src/game/map_layers.cpp	404	long	ul	live	unsigned long	-	g.link(reinterpret_cast<unsigned long*>(LastOf(layer, Gfx_BufferIndex)), AsLong(item + Gfx_BufferIndex * 0x48u));
-site	src/game/map_layers.cpp	409	long	ul	live	unsigned long	-	g.store_xy3(reinterpret_cast<unsigned long*>(mine + 0x18), reinterpret_cast<unsigned long*>(mine + 0x28),
-site	src/game/map_layers.cpp	409	long	ul	live	unsigned long	-	g.store_xy3(reinterpret_cast<unsigned long*>(mine + 0x18), reinterpret_cast<unsigned long*>(mine + 0x28),
-site	src/game/map_layers.cpp	410	long	ul	live	unsigned long	-	reinterpret_cast<unsigned long*>(mine + 0x38));
-site	src/game/map_layers.cpp	439	long	ul	live	unsigned long	-	g.load_vertices3(reinterpret_cast<const unsigned long*>(s));
-site	src/game/map_layers.cpp	440	long	ul	live	unsigned long	-	g.link(reinterpret_cast<unsigned long*>(LastOf(layer, SideSub(cell, 12))), AsLong(side));
-site	src/game/map_layers.cpp	443	long	ul	live	unsigned long	-	g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x38), reinterpret_cast<unsigned long*>(side + 0x28),
-site	src/game/map_layers.cpp	443	long	ul	live	unsigned long	-	g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x38), reinterpret_cast<unsigned long*>(side + 0x28),
-site	src/game/map_layers.cpp	444	long	ul	live	unsigned long	-	reinterpret_cast<unsigned long*>(MapView_ScreenXY));
-site	src/game/map_layers.cpp	462	long	ul	live	unsigned long	-	g.load_vertices3(reinterpret_cast<const unsigned long*>(s));
-site	src/game/map_layers.cpp	463	long	ul	live	unsigned long	-	g.link(reinterpret_cast<unsigned long*>(LastOf(layer, SideSub(cell, 11))), AsLong(side));
-site	src/game/map_layers.cpp	466	long	ul	live	unsigned long	-	g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x28), reinterpret_cast<unsigned long*>(side + 0x38),
-site	src/game/map_layers.cpp	466	long	ul	live	unsigned long	-	g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x28), reinterpret_cast<unsigned long*>(side + 0x38),
-site	src/game/map_layers.cpp	467	long	ul	live	unsigned long	-	reinterpret_cast<unsigned long*>(MapView_ScreenXY));
-site	src/game/map_layers.cpp	577	fmt_place	word	live	Dword(texture - 4)	%08X	bof3::Log("map_layers: cell %u,%u: below side item %u texture word %08X (cell's %08X)", x, y, below,
-site	src/game/map_layers.cpp	577	fmt_place	word	live	Dword(texture)	%08X	bof3::Log("map_layers: cell %u,%u: below side item %u texture word %08X (cell's %08X)", x, y, below,
-site	src/game/map_layers.cpp	598	fmt_place	word	live	x	%08X	"with %08X, not %08X", x, y, file == 1 ? "south" : "east", Dword(texture),
-site	src/game/map_layers.cpp	598	fmt_place	word	live	y	%08X	"with %08X, not %08X", x, y, file == 1 ? "south" : "east", Dword(texture),
-site	src/game/map_layers.cpp	605	fmt_place	word	live	Dword(texture)	%08X	bof3::Log("map_layers: cell %u,%u: next side item %u texture word %08X", x, y, next, Dword(texture));
-site	src/game/map_layers.cpp	643	long	ul	live	unsigned long	-	const unsigned long* texture = MapCell_WallTextures + t;
-site	src/game/map_layers.cpp	675	long	l	live	long	-	long depth;
-site	src/game/map_layers.cpp	723	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(AreaMap_EntryHandlers[(e >> 24) & 0x7Fu]))(p);
-site	src/game/map_layers.cpp	723	widen	param	live	AreaMap_EntryHandlers[(e >> 24) & 0x7Fu]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(AreaMap_EntryHandlers[(e >> 24) & 0x7Fu]))(p);
+site	src/game/map_layers.cpp	84	long	ul	live	unsigned long	-	unsigned long& Last(std::uint32_t slot) { return DrawLayers[slot * 2u + 1u]; }
+site	src/game/map_layers.cpp	89	long	ul	live	unsigned long	-	unsigned long& LastOf(int layer, std::uint32_t sub) {
+site	src/game/map_layers.cpp	98	long	ul	live	unsigned long	-	unsigned long AsLong(const void* p) { return static_cast<unsigned long>(Address(p)); }
+site	src/game/map_layers.cpp	98	long	ul	live	unsigned long	-	unsigned long AsLong(const void* p) { return static_cast<unsigned long>(Address(p)); }
+site	src/game/map_layers.cpp	132	long	l	live	long	-	MapView_FocusX = static_cast<long>(focus_x);
+site	src/game/map_layers.cpp	142	long	l	live	long	-	MapView_FocusZ = static_cast<long>(z);
+site	src/game/map_layers.cpp	145	long	l	live	long	-	MapView_Elevation = static_cast<long>(static_cast<std::uint32_t>(MapView_Elevation) +
+site	src/game/map_layers.cpp	198	long	l	live	long	-	long moved[3];
+site	src/game/map_layers.cpp	206	long	ul	live	unsigned long	-	g.set_rot(reinterpret_cast<const unsigned long*>(Camera_Matrix));
+site	src/game/map_layers.cpp	207	long	ul	live	unsigned long	-	g.set_trans(reinterpret_cast<const unsigned long*>(Camera_Matrix));
+site	src/game/map_layers.cpp	215	long	ul	live	unsigned long	-	map_layers::InsetPair map_layers::ComputeInset(unsigned long angle, short distance, unsigned char input_flags,
+site	src/game/map_layers.cpp	248	long	ul	live	unsigned long	-	Scratch_Swap = static_cast<unsigned long>(pair.lowered);
+site	src/game/map_layers.cpp	277	long	ul	live	unsigned long	-	g.load_vertex(reinterpret_cast<const unsigned long*>(s));
+site	src/game/map_layers.cpp	279	long	ul	live	unsigned long	-	g.store_xy(reinterpret_cast<unsigned long*>(MapView_ScreenXY));
+site	src/game/map_layers.cpp	355	long	ul	live	unsigned long	-	g.load_vertices3(reinterpret_cast<const unsigned long*>(s + 4));
+site	src/game/map_layers.cpp	364	long	ul	live	unsigned long	-	g.link(reinterpret_cast<unsigned long*>(LastOf(before, Gfx_BufferIndex)),
+site	src/game/map_layers.cpp	368	long	ul	live	unsigned long	-	g.link(reinterpret_cast<unsigned long*>(LastOf(layer, 2u + Gfx_BufferIndex)),
+site	src/game/map_layers.cpp	377	uintptr	-	live	std::uintptr_t	-	auto* const scratch = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(SharedScratch_addr)));
+site	src/game/map_layers.cpp	377	widen	img_place	live	::bof3::Img(SharedScratch_addr)	unsigned char*	auto* const scratch = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(::bof3::Img(SharedScratch_addr)));
+site	src/game/map_layers.cpp	405	long	ul	live	unsigned long	-	g.link(reinterpret_cast<unsigned long*>(LastOf(layer, Gfx_BufferIndex)), AsLong(item + Gfx_BufferIndex * 0x48u));
+site	src/game/map_layers.cpp	410	long	ul	live	unsigned long	-	g.store_xy3(reinterpret_cast<unsigned long*>(mine + 0x18), reinterpret_cast<unsigned long*>(mine + 0x28),
+site	src/game/map_layers.cpp	410	long	ul	live	unsigned long	-	g.store_xy3(reinterpret_cast<unsigned long*>(mine + 0x18), reinterpret_cast<unsigned long*>(mine + 0x28),
+site	src/game/map_layers.cpp	411	long	ul	live	unsigned long	-	reinterpret_cast<unsigned long*>(mine + 0x38));
+site	src/game/map_layers.cpp	440	long	ul	live	unsigned long	-	g.load_vertices3(reinterpret_cast<const unsigned long*>(s));
+site	src/game/map_layers.cpp	441	long	ul	live	unsigned long	-	g.link(reinterpret_cast<unsigned long*>(LastOf(layer, SideSub(cell, 12))), AsLong(side));
+site	src/game/map_layers.cpp	444	long	ul	live	unsigned long	-	g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x38), reinterpret_cast<unsigned long*>(side + 0x28),
+site	src/game/map_layers.cpp	444	long	ul	live	unsigned long	-	g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x38), reinterpret_cast<unsigned long*>(side + 0x28),
+site	src/game/map_layers.cpp	445	long	ul	live	unsigned long	-	reinterpret_cast<unsigned long*>(MapView_ScreenXY));
+site	src/game/map_layers.cpp	463	long	ul	live	unsigned long	-	g.load_vertices3(reinterpret_cast<const unsigned long*>(s));
+site	src/game/map_layers.cpp	464	long	ul	live	unsigned long	-	g.link(reinterpret_cast<unsigned long*>(LastOf(layer, SideSub(cell, 11))), AsLong(side));
+site	src/game/map_layers.cpp	467	long	ul	live	unsigned long	-	g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x28), reinterpret_cast<unsigned long*>(side + 0x38),
+site	src/game/map_layers.cpp	467	long	ul	live	unsigned long	-	g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x28), reinterpret_cast<unsigned long*>(side + 0x38),
+site	src/game/map_layers.cpp	468	long	ul	live	unsigned long	-	reinterpret_cast<unsigned long*>(MapView_ScreenXY));
+site	src/game/map_layers.cpp	582	fmt_place	word	live	Dword(texture - 4)	%08X	bof3::Log("map_layers: cell %u,%u: below side item %u texture word %08X (cell's %08X)", x, y, below,
+site	src/game/map_layers.cpp	582	fmt_place	word	live	Dword(texture)	%08X	bof3::Log("map_layers: cell %u,%u: below side item %u texture word %08X (cell's %08X)", x, y, below,
+site	src/game/map_layers.cpp	603	fmt_place	word	live	x	%08X	"with %08X, not %08X", x, y, file == 1 ? "south" : "east", Dword(texture),
+site	src/game/map_layers.cpp	603	fmt_place	word	live	y	%08X	"with %08X, not %08X", x, y, file == 1 ? "south" : "east", Dword(texture),
+site	src/game/map_layers.cpp	610	fmt_place	word	live	Dword(texture)	%08X	bof3::Log("map_layers: cell %u,%u: next side item %u texture word %08X", x, y, next, Dword(texture));
+site	src/game/map_layers.cpp	648	long	ul	live	unsigned long	-	const unsigned long* texture = MapCell_WallTextures + t;
+site	src/game/map_layers.cpp	680	long	l	live	long	-	long depth;
+site	src/game/map_layers.cpp	728	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(AreaMap_EntryHandlers[(e >> 24) & 0x7Fu]))(p);
+site	src/game/map_layers.cpp	728	widen	param	live	AreaMap_EntryHandlers[(e >> 24) & 0x7Fu]	Handler [fn]	reinterpret_cast<Handler>(static_cast<std::uintptr_t>(AreaMap_EntryHandlers[(e >> 24) & 0x7Fu]))(p);
 site	src/game/map_layers.h	47	long	ul	live	unsigned long	-	InsetPair ComputeInset(unsigned long angle, short distance, unsigned char input_flags, unsigned char byte_fe,
 site	src/game/map_layers_callees.h	21	long	l	live	long	-	void (__cdecl* apply_matrix)(const short*, const short*, long*);
 site	src/game/map_layers_callees.h	22	long	ul	live	unsigned long	-	void (__cdecl* set_rot)(const unsigned long*);
@@ -10659,7 +10660,7 @@ site	src/input/sigma.cpp	90	uintptr	-	live	std::uintptr_t	-	std::uint16_t* Words
 site	src/input/sigma.cpp	90	widen	img_place	live	::bof3::Img(kWords.v)	std::uint16_t*	std::uint16_t* Words() { return reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(::bof3::Img(kWords.v))); }
 site	src/input/sigma.cpp	183	uintptr	-	live	std::uintptr_t	-	Check(std::memcmp(jp, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(kBootDefaults.v))), sizeof jp) == 0,
 site	src/input/sigma.cpp	183	widen	img_place	live	::bof3::Img(kBootDefaults.v)	const void*	Check(std::memcmp(jp, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(::bof3::Img(kBootDefaults.v))), sizeof jp) == 0,
-site	src/launcher/config.cpp	271	long	l	live	long	-	const long v = std::strtol(value.c_str(), &end, 10);
+site	src/launcher/config.cpp	274	long	l	live	long	-	const long v = std::strtol(value.c_str(), &end, 10);
 site	src/launcher/launcher.cpp	146	uintptr	-	live	std::uintptr_t	-	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
 site	src/launcher/launcher.cpp	146	widen	param	live	base	LPCVOID	if (!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base)), &dos, sizeof dos, nullptr) ||
 site	src/launcher/launcher.cpp	148	uintptr	-	live	std::uintptr_t	-	!ReadProcessMemory(process, reinterpret_cast<LPCVOID>(static_cast<std::uintptr_t>(base + dos.e_lfanew)), &nt, sizeof nt,
@@ -13981,6 +13982,7 @@ file	src/game/event_script_fuzz.cpp	fuzz	narrow_call	image_local	20
 file	src/game/event_script_fuzz.cpp	fuzz	narrow_call	unread	4
 file	src/game/event_script_fuzz.cpp	fuzz	uintptr	-	2
 file	src/game/event_script_fuzz.cpp	fuzz	widen	param	1
+file	src/game/faerie_ring.cpp	live	fmt_place	word	1
 file	src/game/field_blocked.cpp	live	long	l	72
 file	src/game/field_blocked.cpp	live	long	ul	2
 file	src/game/field_blocked.cpp	live	uintptr	-	2
@@ -15711,8 +15713,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	12704
-#count sites_live	8495
+#count sites	12705
+#count sites_live	8496
 #count sites_fuzz	4209
 #count fuzz_files	250
 #count narrow	356
@@ -15889,9 +15891,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count uintptr_-	1490
 #count uintptr_-_live	824
 #count uintptr_-_live_files	309
-#count fmt_place	463
-#count fmt_place_live	393
-#count fmt_place_live_files	54
+#count fmt_place	464
+#count fmt_place_live	394
+#count fmt_place_live_files	55
 #count fmt_place_fuzz	70
 #count fmt_place_fuzz_files	35
 #count fmt_place_narrowed	23
@@ -15900,9 +15902,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count fmt_place_pointer	104
 #count fmt_place_pointer_live	89
 #count fmt_place_pointer_live_files	27
-#count fmt_place_word	336
-#count fmt_place_word_live	288
-#count fmt_place_word_live_files	46
+#count fmt_place_word	337
+#count fmt_place_word_live	289
+#count fmt_place_word_live_files	47
 #count import_slot	14
 #count import_slot_live	14
 #count import_slot_live_files	1

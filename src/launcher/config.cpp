@@ -259,6 +259,9 @@ void ConfigLoad(const std::string& text, Config& cfg, std::string& error) {
         } else if (key == "unlearned_blue") {
             if (value == "0") cfg.unlearned_blue = false;
             else if (value == "1") cfg.unlearned_blue = true;
+        } else if (key == "desert_faerie") {
+            if (value == "0") cfg.desert_faerie = false;
+            else if (value == "1") cfg.desert_faerie = true;
         } else if (key == "snap") {
             if (value == "0") cfg.snap = false;
             else if (value == "1") cfg.snap = true;
@@ -345,6 +348,9 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# 1: in battle, an enemy's skill the party can learn and does not know has its name in blue\r\n";
     out += "# (DIV-0179, Mods, Extras) | 0 white, the original's\r\n";
     out += std::string("unlearned_blue=") + (cfg.unlearned_blue ? "1" : "0") + "\r\n";
+    out += "# 1: a second faerie village entrance on the desert map, near Caer Xhan (DIV-0204, Mods, Extras)\r\n";
+    out += "# | 0 the original's map: the one entrance on the Rhapala map\r\n";
+    out += std::string("desert_faerie=") + (cfg.desert_faerie ? "1" : "0") + "\r\n";
     out += "# optional layers, comma-separated, in the order they land (DIV-0086, docs/opt-layers.md): psp-art,\r\n";
     out += "# psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls (DIV-0080, from a Western PSX disc);\r\n";
     out += "# tools/importer.py install puts them in the game's DAT folder. Empty: area4-walls when installed;\r\n";
@@ -571,6 +577,9 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
 
     if (GetEnvironmentVariableW(L"BOF3X_UNLEARNED_BLUE", existing, 64) == 0 && cfg.unlearned_blue)
         SetEnvironmentVariableW(L"BOF3X_UNLEARNED_BLUE", L"1");
+
+    if (GetEnvironmentVariableW(L"BOF3X_DESERT_FAERIE", existing, 64) == 0 && cfg.desert_faerie)
+        SetEnvironmentVariableW(L"BOF3X_DESERT_FAERIE", L"1");
 
     if (GetEnvironmentVariableW(L"BOF3X_SNAP", existing, 64) == 0 && !cfg.snap)
         SetEnvironmentVariableW(L"BOF3X_SNAP", L"0");
@@ -1308,7 +1317,7 @@ const char* IniVariable(std::string_view key) {
         {"unlearned_blue", "BOF3X_UNLEARNED_BLUE"}, {"snap", "BOF3X_SNAP"}, {"wide", "BOF3X_WIDE"},
         {"scale", "BOF3X_SCALE"},         {"cheat.exp", "BOF3X_EXP"}, {"cheat.zenny", "BOF3X_ZENNY"},
         {"cheat.steal", "BOF3X_STEAL"},   {"cheat.enemy_info", "BOF3X_ENEMY_INFO"},
-        {"cheat.no_fail", "BOF3X_NO_FAIL"}};
+        {"cheat.no_fail", "BOF3X_NO_FAIL"}, {"desert_faerie", "BOF3X_DESERT_FAERIE"}};
     for (const auto& [k, v] : kFeeds)
         if (key == k) return v;
     return nullptr;

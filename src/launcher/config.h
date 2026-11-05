@@ -113,6 +113,10 @@ struct Config {
     // its battle banner in blue. unlearned_blue=0|1 -> BOF3X_UNLEARNED_BLUE;
     // any other value is dropped to the default (0, the original's white).
     bool unlearned_blue = false;
+    // DIV-0204 (Mods, Extras): a second faerie village entrance on the desert
+    // map. desert_faerie=0|1 -> BOF3X_DESERT_FAERIE; any other value is
+    // dropped to the default (0, the original's map).
+    bool desert_faerie = false;
     // DIV-0086: the optional layers (docs/opt-layers.md), BOF3X_OPT's
     // comma-separated list, in the order they land: psp-art, psp-tiles,
     // psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls. Built and

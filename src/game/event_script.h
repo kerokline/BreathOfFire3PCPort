@@ -17,3 +17,11 @@ void EventScript_Inject();
 // function with Capcom's unarmed one.
 extern unsigned char g_mountain_passes;
 void MountainPasses_Arm();
+
+// DIV-0204 (desert_faerie= in bof3x.ini, BOF3X_DESERT_FAERIE=1; off by
+// default): a second faerie village entrance on the desert map (area 152).
+// Read by the placement runner's hook (event_script.cpp). Set by
+// DesertFaerie_Arm from inject_all.cpp after every module's self-test,
+// beside MountainPasses_Arm.
+extern bool g_desert_faerie;
+void DesertFaerie_Arm();
