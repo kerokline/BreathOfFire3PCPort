@@ -159,6 +159,7 @@ set(_dll_sources
   src/hook/stallwatch.cpp
   src/hook/snapshot.cpp
   src/hook/draw_order.cpp
+  src/hook/write_watch.cpp
   src/hook/stp_census.cpp
   src/hook/crash.cpp
   src/hook/log.cpp
