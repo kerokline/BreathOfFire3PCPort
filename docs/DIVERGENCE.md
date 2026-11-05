@@ -13226,7 +13226,9 @@ designed in rather than bolted on.
   [`area_w2f.md`](area_w2f.md) 1.1) and `Area52_TailBlock` `0x40A670`
   (`src/game/area_w1c.cpp`, [`area_w1c.md`](area_w1c.md) 6). D145
   ([`known-defects.md`](known-defects.md)), found in play by issue #149's
-  reporter. The reset is `src/game/area_data_reload.cpp`.
+  reporter; since 2026-11-05 also area 196's sand hill, effect kind 0x18
+  sub-kind 0x59 (`src/game/effect_6c.cpp`, D226; the amendment below).
+  The reset is `src/game/area_data_reload.cpp`.
 - **Tier:** Intent - a port repair.
 - **Original behaviour:** area 108's extra-object entries at
   `Area108_Model` (`0x61E508`, 8 bytes each: an s8 quad count, two bytes, a
@@ -13291,6 +13293,47 @@ designed in rather than bolted on.
   taken before any fuzz; the fuzzes restore the model's bytes). Not yet:
   the owner's play, area 52's scene (no route; the byte's put-back is the
   same code path).
+- **Amended 2026-11-05 (area 196, D226):** area 196's sand hill - effect
+  kind 0x18 sub-kind 0x59, placed by the area's placement script at cell
+  (0x11, 0x17) with Manmo's field object beside it - is drawn through
+  twelve shade bytes of `.data` (`0x65EF0C..0x65EF17`,
+  `effect_6c_callees.h` `kShades59`). `EffectKind18Sub59_Fade` `0x512C30`
+  writes them as the hill rises into the fight - after it, `00` x9 then
+  `1E 3C 5A` (measured 2026-11-05 by the stale-state census on the
+  owner's `desertToManmo` route, `docs/stale-overlay-state.md` on
+  its branch `claude/bold-fermi-cbc0b2`; a fresh start reads `80` x12) - and
+  no instruction of the image writes them back (a scan of the exe for
+  every address `0x65EEF0..0x65EF1F`: only the sub-kind's own code at
+  `0x512C41..0x513192`). The PlayStation's twin of the draw is in area
+  196's overlay alone ([`effect_6c.md`](effect_6c.md) 7), so its bytes
+  came back with the area. With them at 0 both of the hill's blend modes
+  (pages 0xD5 and 0xB5: subtract and add) draw nothing: the hill is
+  missing and Manmo stands in the open, which the wide picture shows from
+  the party's arrival. **Seen by the owner** on their first meeting with
+  Manmo, 2026-11-05, in a long session; a recording of the same route
+  from a fresh start did not show it. What had zeroed the bytes in that
+  session is not known (only the fade writes them; see D226). The copy
+  now also takes those twelve bytes at inject, and the load of area 196's
+  DAT puts them back, with the log line `DIV-0182    area 196's hill
+  shades put back at the area's load` when they had changed.
+  *Verification:* a crafted save at the scene's start (chapter 14, run 2
+  step 0, area 196 at `(0x298000, 0x168000)` flags 0x80, the owner's
+  area-193 save as donor), 16:9, the scene played into the fight,
+  `C:\Users\kerok\bof3x-runs\manmo1105`: the nine bytes the hill's draw reads (`0x65EF0C..0x65EF14`) written to 0 in
+  that harness game when area 196 loaded, without this amendment, gave
+  the owner's picture (no hill, Manmo in the open; `out/p1`); written to
+  0 at the title, before the area loaded, with it: the put-back line
+  logged and the scene identical to a clean run (`out/p2` against
+  `out/w2`). Self-test: `BOF3X_SELFTEST_ONLY=1
+  BOF3X_SHADOW=mode_flow,effect_6c` from an ini-less launcher copy
+  (`--no-config`), exit 0: 41,000 rounds of `mode_flow` and 200,000 of
+  `effect_6c`, 0 mismatches (the copy is taken before either fuzz). The
+  stale-state census's revisit check (its `tools/revisit_diff.py run
+  --same-rand` on the owner's `desertToManmo` route, the scene twice in one
+  process; branch `claude/bold-fermi-cbc0b2`): without this amendment its
+  first stale row is `0x65EF0C`, 12 bytes, `80` at the first visit and `00`
+  at the second; with it (`manmo11053fix`) no row at `0x65EF0C`, and the
+  second visit logs the put-back. Not yet: the owner's play.
 - **Reversible?** `BOF3X_ORIGINAL=AreaDataReload` keeps the port's
   (the bytes stay until the exe restarts).
   A player turns it off with `BOF3X_OFF=AreaDataReload` (the ini's `off=`).

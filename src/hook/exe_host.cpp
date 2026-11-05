@@ -48,6 +48,7 @@
 #include "hook/crash.h"
 #include "hook/detour.h"
 #include "hook/draw_order.h"
+#include "hook/write_watch.h"
 #include "hook/stp_census.h"
 #include "hook/exe_icon.h"
 #include "hook/exe_image.h"
@@ -656,6 +657,7 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
     InputScript_Start();
     GapWatch_Start(module);   // BOF3X_GAPWATCH: after the recipe has read its addresses (gapwatch.h)
     draw_order::Start();
+    write_watch::Start();   // BOF3X_WRITEWATCH (write_watch.h)
     stp_census::Start();
     SetUnhandledExceptionFilter(Unhandled);
     char* const line = PastProgramName(command_line);
