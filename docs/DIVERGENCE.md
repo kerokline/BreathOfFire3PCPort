@@ -13298,7 +13298,10 @@ designed in rather than bolted on.
   (0x11, 0x17) with Manmo's field object beside it - is drawn through
   twelve shade bytes of `.data` (`0x65EF0C..0x65EF17`,
   `effect_6c_callees.h` `kShades59`). `EffectKind18Sub59_Fade` `0x512C30`
-  writes the first nine down to 0 as the hill rises into the fight, and
+  writes them as the hill rises into the fight - after it, `00` x9 then
+  `1E 3C 5A` (measured 2026-11-05 by the stale-state census on the
+  owner's `desertToManmo` route, `docs/stale-overlay-state.md` on
+  its branch `claude/bold-fermi-cbc0b2`; a fresh start reads `80` x12) - and
   no instruction of the image writes them back (a scan of the exe for
   every address `0x65EEF0..0x65EF1F`: only the sub-kind's own code at
   `0x512C41..0x513192`). The PlayStation's twin of the draw is in area
@@ -13316,7 +13319,7 @@ designed in rather than bolted on.
   *Verification:* a crafted save at the scene's start (chapter 14, run 2
   step 0, area 196 at `(0x298000, 0x168000)` flags 0x80, the owner's
   area-193 save as donor), 16:9, the scene played into the fight,
-  `C:\Users\kerok\bof3x-runs\manmo1105`: the nine bytes written to 0 in
+  `C:\Users\kerok\bof3x-runs\manmo1105`: the nine bytes the hill's draw reads (`0x65EF0C..0x65EF14`) written to 0 in
   that harness game when area 196 loaded, without this amendment, gave
   the owner's picture (no hill, Manmo in the open; `out/p1`); written to
   0 at the title, before the area loaded, with it: the put-back line
@@ -13324,8 +13327,13 @@ designed in rather than bolted on.
   `out/w2`). Self-test: `BOF3X_SELFTEST_ONLY=1
   BOF3X_SHADOW=mode_flow,effect_6c` from an ini-less launcher copy
   (`--no-config`), exit 0: 41,000 rounds of `mode_flow` and 200,000 of
-  `effect_6c`, 0 mismatches (the copy is taken before either fuzz). Not
-  yet: the owner's play.
+  `effect_6c`, 0 mismatches (the copy is taken before either fuzz). The
+  stale-state census's revisit check (its `tools/revisit_diff.py run
+  --same-rand` on the owner's `desertToManmo` route, the scene twice in one
+  process; branch `claude/bold-fermi-cbc0b2`): without this amendment its
+  first stale row is `0x65EF0C`, 12 bytes, `80` at the first visit and `00`
+  at the second; with it (`manmo11053fix`) no row at `0x65EF0C`, and the
+  second visit logs the put-back. Not yet: the owner's play.
 - **Reversible?** `BOF3X_ORIGINAL=AreaDataReload` keeps the port's
   (the bytes stay until the exe restarts).
   A player turns it off with `BOF3X_OFF=AreaDataReload` (the ini's `off=`).

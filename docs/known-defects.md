@@ -6389,7 +6389,9 @@ by the coordinator ([`takeover-queue-round13.md`](takeover-queue-round13.md)
 section 17; [`USER_CHECKS.md`](USER_CHECKS.md) item 8).
 
 **Established:** `EffectKind18Sub59_Fade` `0x512C30` writes the twelve bytes
-`0x65EF0C..0x65EF17` of the image (initially 0x80 each) down to 0, and
+`0x65EF0C..0x65EF17` of the image (initially 0x80 each) down - after the
+fade `00` x9 then `1E 3C 5A`, measured 2026-11-05 by the stale-state census
+on the owner's `desertToManmo` route - and
 nothing in the executable writes them back (a scan of `.text` for the
 addresses finds only the band's reads and the fade's writes). On the
 PlayStation the twin's table lived in an AREA overlay, reloaded with the

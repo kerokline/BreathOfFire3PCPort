@@ -7,8 +7,8 @@
 // of the area's first extra-object entry to 0 when a timed scene begins and
 // 0xFF when it ends; area 196's sand hill (effect kind 0x18 sub-kind 0x59,
 // placed by its placement script) fades through twelve shade bytes,
-// EffectKind18Sub59_Fade writing nine of them down to 0, which nothing writes
-// back. On the PlayStation the area's overlay is reloaded from
+// EffectKind18Sub59_Fade writing all twelve (nine to 0, the last three to
+// 0x1E, 0x3C, 0x5A, measured 2026-11-05), which nothing writes back. On the PlayStation the area's overlay is reloaded from
 // disc with the area, so every visit starts from the disc's bytes; the port
 // links every overlay into one image and the values stay until the exe is
 // restarted - a second visit to area 108 (or a reload of a save there,
