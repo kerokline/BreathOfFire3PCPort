@@ -752,6 +752,7 @@ void Populate(HWND dlg, DialogState& state) {
     RubyUiShow(dlg, cfg.ruby_ui);
     Check(dlg, IDC_EXTRA_TEXTSPEED, cfg.text_faster);
     Check(dlg, IDC_EXTRA_LEARNBLUE, cfg.unlearned_blue);
+    Check(dlg, IDC_EXTRA_FAERIE, cfg.desert_faerie);
 
     AddItem(dlg, IDC_FILTER, L"Smooth - bilinear (original)");
     AddItem(dlg, IDC_FILTER, L"Sharp - point (no blur)");
@@ -818,6 +819,7 @@ void ReadBack(HWND dlg, const DialogState& state) {
     cfg.ruby_ui_named = true;
     cfg.text_faster = Checked(dlg, IDC_EXTRA_TEXTSPEED);
     cfg.unlearned_blue = Checked(dlg, IDC_EXTRA_LEARNBLUE);
+    cfg.desert_faerie = Checked(dlg, IDC_EXTRA_FAERIE);
     const int preset = Selected(dlg, IDC_PRESET);   // a grey box above keeps the player's value
     if (preset >= 0 && static_cast<size_t>(preset) < std::size(kPresets)) cfg.preset = kPresets[preset].id;
 

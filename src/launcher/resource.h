@@ -159,6 +159,8 @@
 #define IDC_EXTRA_TEXTNOTE  1723
 #define IDC_EXTRA_LEARNBLUE 1724  // A skill to learn in blue: unlearned_blue= (DIV-0179)
 #define IDC_EXTRA_LEARNNOTE 1725
+#define IDC_EXTRA_FAERIE    1726  // A faerie village entrance on the desert map: desert_faerie= (DIV-0204)
+#define IDC_EXTRA_FAERIENOTE 1727
 
 // The preset (launcher/config.h, docs/launcher-settings.md "preset="): its box,
 // its sentence, the list of what it changes, and the line under Settings that

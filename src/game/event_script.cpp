@@ -1,5 +1,7 @@
 #include "game/event_script.h"
 
+#include <windows.h>
+
 #include <cstdint>
 #include <cstring>
 
@@ -368,6 +370,7 @@ extern "C" const unsigned char* __cdecl EventScript_CaseSkip(const unsigned char
 // self-test (the fuzz compares the placement runner with Capcom's). Nothing
 // here under BOF3X_ORIGINAL=MountainPasses: no cell, no object, no bit.
 unsigned char g_mountain_passes = 0;
+bool g_desert_faerie = false;   // DIV-0204, set by DesertFaerie_Arm
 
 namespace {
 
@@ -421,6 +424,35 @@ void MountainPasses_AfterPlacement() {
     }
 }
 
+// DIVERGENCE DIV-0204 (desert_faerie=1): a second faerie village entrance on
+// the desert map (area 152, the map of Caer Xhan, the Container Yard and the
+// Oasis). The village has no link anywhere: the Rhapala map's entrance is one
+// cell of byte 0xAE, and confirm on it (Field_LeaderCellEvent 0x531950)
+// starts tail kind 0x37, FieldTail_StoryWarp 0x56DF10 - message 0x20 or,
+// holding the Faerie Tiara, 0x21 and its choice; the village's stage from
+// story flags 0xF6..0xFF (area 175..185); the leader's cell and
+// Game_AreaNumber kept as the return point (0x904148..0x904150), which the
+// village's exit square (Area185_StepHook 0x429DC0) changes back to. Area
+// 152's own text holds the same two prompts at 0x20 / 0x21 (the US disc's
+// AREA152, read 2026-11-05), and its descriptor's choice handler 0 is the
+// one area 87's is (0x41D270), so one 0xAE cell is all the entrance needs;
+// the return comes back to this map by itself. The cell is written into the
+// plane after the placement script, every time the map loads (the plane on
+// disc never changes, as DIV-0191's cells). 0xAE walks (a place cell), has
+// no encounter and refuses the camp and the Tiara, as Rhapala's does.
+// Always there when on, as Rhapala's is (the owner, 2026-11-05).
+// The cell: (0x27, 0x2C), the owner's spot west of the Oasis's link (0x30,
+// 0x2B), sampled live with tools/cell_peek.py (2026-11-05): 0x00 open sand,
+// no link of area 152's list on it.
+constexpr unsigned kDesertFaerieX = 0x27, kDesertFaerieZ = 0x2C;
+void DesertFaerie_AfterPlacement() {
+    if (!g_desert_faerie || Game_AreaNumber != 152) return;
+    unsigned char* const plane = const_cast<unsigned char*>(AreaMap_Bytes.Native());
+    const unsigned width = AreaMap_Header[0];
+    plane[kDesertFaerieZ * width + kDesertFaerieX] = 0xAE;
+    bof3::Log("DIV-0204    the desert map's faerie village cell laid at (%#x, %#x)", kDesertFaerieX, kDesertFaerieZ);
+}
+
 }  // namespace
 
 // original 0x579740: an area's placement script (PSX FUN_801A4E58), from the
@@ -437,6 +469,7 @@ extern "C" void __cdecl Area_RunPlacement(const unsigned char* script) {
     SetCount(30);   // stored before the loop, as the original stores it
     for (int i = n; i < 30; ++i) Object(i)[0] = 0;
     MountainPasses_AfterPlacement();
+    DesertFaerie_AfterPlacement();
 }
 
 // original 0x579E30: the current object's reset (PSX FUN_801A5AB0) - its
@@ -695,6 +728,20 @@ void MountainPasses_Arm() {
     bof3::PatchBytes("MountainPasses", Low32(&g_mountain_passes), &was, &is, 1);
     bof3::Log("DIV-0191    Mt. Zublo (chapter 9 on) and Mt. Levett (once crossed) passable on the world map: %s",
               g_mountain_passes ? "on" : "OFF (BOF3X_ORIGINAL=MountainPasses)");
+}
+
+// DIV-0204: BOF3X_DESERT_FAERIE = 0 (the original's map, the default) or 1;
+// read after every module's self-test, which compared the placement runner
+// without the cell.
+void DesertFaerie_Arm() {
+    char v[8] = "0";
+    const DWORD n = GetEnvironmentVariableA("BOF3X_DESERT_FAERIE", v, sizeof v);
+    if (n >= sizeof v || (std::strcmp(v, "0") != 0 && std::strcmp(v, "1") != 0))
+        bof3::Fatal("BOF3X_DESERT_FAERIE is \"%s\": 0 or 1", n >= sizeof v ? "(too long)" : v);
+    g_desert_faerie = v[0] == '1';
+    if (g_desert_faerie && !bof3::IsEnabled(bof3::addr::Area_RunPlacement))
+        bof3::Fatal("BOF3X_DESERT_FAERIE=1 needs Area_RunPlacement ours, and it is disabled");
+    if (g_desert_faerie) bof3::Log("DIV-0204    a second faerie village entrance on the desert map (BOF3X_DESERT_FAERIE)");
 }
 
 void EventScript_Inject() {

@@ -14820,3 +14820,63 @@ designed in rather than bolted on.
 - **Toward:** psx, psp - Capcom's Japanese (PSX and PSP, identical bytes), which the port's Chinese also follows
 - **Languages:** en-US, en-150, fr-FR, de-DE
 - **State:** active
+
+### A second faerie village entrance on the desert map, near Caer Xhan
+
+- **ID:** DIV-0204
+- **Date:** 2026-11-05
+- **Subsystem:** the world map's cells - `Area_RunPlacement` (`0x579740`,
+  ours, `src/game/event_script.cpp` `DesertFaerie_AfterPlacement`), armed by
+  `DesertFaerie_Arm` from `src/hook/inject_all.cpp`. The launcher's
+  `desert_faerie=` (`src/launcher/config.cpp`, `BOF3X_DESERT_FAERIE`) and its
+  box on Mods, Extras (`config_dialog.cpp`, `launcher.rc`). The owner's
+  request.
+- **Tier:** Extension - new content, off by default.
+- **Original behaviour:** the faerie village (areas 175..185) has no link in
+  any area's link list. Its one world-map entrance is a cell of byte `0xAE` on
+  the Rhapala map (area 87). Confirm on an `0xAE` cell
+  (`Field_LeaderCellEvent` `0x531950`, `src/game/event_ops.cpp`) starts tail
+  kind `0x37`, `FieldTail_StoryWarp` (`0x56DF10`, `src/game/field_e2.cpp`):
+  it shows the area's message `0x20`, or `0x21` and its choice when the party
+  holds the Faerie Tiara (item `0x57`); on yes it picks the village's stage
+  from story flags `0xF6..0xFF` (area 175..185), keeps the leader's cell and
+  `Game_AreaNumber` as the return point (`0x904148..0x904150`) and changes
+  area to the village's cell `(0x43, 0x16)`. The village's exit square
+  (`Area185_StepHook` `0x429DC0`, `src/game/area_w4d.cpp`) changes back to
+  that return point. The desert map (area 152, whose links lead to Caer Xhan,
+  the Container Yard and the Oasis) has no `0xAE` cell.
+- **New behaviour:** with `desert_faerie=1`, each time area 152's map loads,
+  after its placement script, one cell of its plane is set to `0xAE`:
+  `(0x27, 0x2C)`, open sand (`0x00`) west of the Oasis's link `(0x30, 0x2B)`,
+  the owner's spot, sampled live with `tools/cell_peek.py`. Everything after that is Capcom's own path: the same plate, the
+  same messages (area 152's text block holds the same two prompts at `0x20`
+  and `0x21` as area 87's, read from the US disc 2026-11-05; its descriptor's
+  choice handler 0 is the same `0x41D270`), the same stage choice, and the
+  return point brings the party back to the desert map. The cell walks (a
+  place cell), has no encounter, and refuses the camp and the Tiara, as the
+  Rhapala cell does. It is there whenever the option is on, as the Rhapala
+  cell is (the owner, 2026-11-05). Nothing is drawn: the map's art has no
+  flower field there. `BOF3X_DESERT_FAERIE` is 0 or 1; anything else stops
+  the game at start, and 1 with `Area_RunPlacement` not ours stops it too.
+- **Rationale:** the owner's request: the village is far from the late game's
+  maps, and the warp it needs is already in every later world map's text.
+- **Also in the PSX version?** No; this is an option of this project.
+- **Verification:** builds (`feature/desert-faerie-entrance` off `main`
+  `3d0a7a7c`). From an ini-less launcher copy, `BOF3X_SELFTEST_ONLY=1`:
+  `BOF3X_SHADOW=event_script` exits 0 with the option off and on (the
+  placement runner's fuzz compares it unarmed); the exe host exits 0 with
+  it on; `BOF3X_DESERT_FAERIE=2` exits 3 with its message. Played by the
+  owner 2026-11-05 from `game\` with the Extras box ticked (the ini wrote
+  `desert_faerie=1`): confirm on the cell asked the Tiara's question, the
+  party entered the village (area 185 on that save) and its exit square
+  brought them back to the desert map; the log has the arm line and
+  `DIV-0204    the desert map's faerie village cell laid at (0x27, 0x2c)` at
+  each load of area 152. "That worked great."
+- **Reversible?** Off by default; the Extras box or `desert_faerie=0`. The
+  cell is not saved: with the option off the map loads as on disc.
+- **Switch:** ini:desert_faerie=0
+- **Default:** off
+- **Player:** yes - a launcher key (`src/launcher/config.cpp`)
+- **Toward:** none - an option of this project
+- **Languages:** any
+- **State:** active

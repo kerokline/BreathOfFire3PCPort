@@ -1503,6 +1503,8 @@ void InjectAll() {
                                 // split save list (SaveLists) - after every module's self-test, which compared the original's
     MountainPasses_Arm();       // DIV-0191 (game/event_script.h): the placement hook, the step hook and the bounded
                                 // plate searches - after every module's self-test, which compared the unarmed code
+    DesertFaerie_Arm();         // DIV-0204 (game/event_script.h): the desert map's faerie cell, opt-in - after
+                                // every module's self-test, which compared the placement runner without it
     InjectReport();
 }
 
