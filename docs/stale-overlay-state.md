@@ -148,11 +148,14 @@ equal, and what still differs differs for another reason.
 
 The craft the brief named (chapter 14, state 2, run 2, step 0, area `0xC4`
 flags `0x80` at `(0x298000, 0x168000)`, chapter flag 4 clear, donor
-`adult_ryu`) loads into area 196 but **does not start the scene**: 4,000
-frames with a circle every 40 left `MoveScript_Var7` at run 2 step 0 and the
-shades at `0x80` (`probe`). `Scena14_Run2` step 0 waits for counter 0 to be 2
-(`scena_sc13.cpp`), which the arrival from area 189 and its talk give. So the
-check uses the owner's `desertToManmo` route (recorded 2026-11-05 under
+`adult_ryu`) loads into area 196, but here 4,000 frames with a circle press
+every 40 to 50 frames left `MoveScript_Var7` at run 2 step 0 and the shades
+at `0x80` (`probe`; `Scena14_Run2` step 0 waits for counter 0 to be 2,
+`scena_sc13.cpp`). The session that fixes D226 reports that the same craft
+runs the scene with a circle every 10 frames from the load on (its recipe
+`C:\Users\kerok\bof3x-runs\manmo1105\manmo2.txt`: the talks, `Cond_ByteFE`
+1, 2, 3 at steps 2, 5 and 6, the ring around recipe frames 1,000..1,150, the
+fight at step 8); not re-run here. This check uses the owner's `desertToManmo` route (recorded 2026-11-05 under
 `en-US`; its save `desertToManmo`), split for the tool:
 [`tools/recipes/revisit_manmo_body.txt`](../tools/recipes/revisit_manmo_body.txt)
 (the load, area 191, the desert to the walk into area 196, X 30 frames after
@@ -182,6 +185,15 @@ stale    0x65EF0C     1     12 EffectKind18Sub55_States WORLD04/AREA196.EMI#13 (
 `0x00` at the same X on the revisit - D226 found by the tool, and the only
 overlay-born stale run of the scene.** (The symbol is the nearest earlier
 name; `EffectKind18Sub55_States` is three words, the shades follow it.)
+Measured, not only read from the code: after the fade (`rv_end1`, in the
+fight) the twelve bytes are `00` x 9 then `1E 3C 5A`, and `rv_x2` holds the
+same twelve. Before this, "the fade leaves `0x65EF0C..14` at 0" came from
+reading `EffectKind18Sub59_Fade`; the 2026-11-05 repro poked nine zeros.
+
+**Once D226's fix lands** (DIV-0182 amended on `fix/d226-manmo-hill` to put
+the twelve bytes back when area 196's DAT loads), the same run should show
+no row at `0x65EF0C`: the run's second visit reloads area 196 from the title,
+which is DIV-0182's load point. That run is the fix's regression check.
 
 The rest of `r3`'s stale and carried rows are `.bss` of the PC's own, none
 overlay-born by section 1's map, and are leads, not verdicts: the Manmo
