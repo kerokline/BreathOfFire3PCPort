@@ -316,7 +316,7 @@ void FaerieRing_Lay(unsigned x, unsigned z) {
     Write();
     g_ring.laid = true;
     bof3::Log("DIV-0204    the ring laid: page-0 cell 0x%02x, palette %u entries %u..255, texture word %08X",
-              g_ring.cell, kRingRow, g_ring.start, static_cast<unsigned>(g_ring.word));
+              g_ring.cell, kRingRow, g_ring.start, g_ring.word);
 }
 
 void FaerieRing_Leave() {
