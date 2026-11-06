@@ -23,6 +23,12 @@ bool QuickMenu_Frame();
 // state) or keeps it open with the refusal's reason drawn.
 void QuickMenu_AfterPoint();
 
+// LoadDatFile, after FIRST.DAT and its layers are walked: copies the load
+// menu's four system messages (0xAC, 0xB9, 0xB8, 0xF) out of the title's pool,
+// so the menu draws the title's text whatever scene's pool is loaded (a
+// battle's has other messages at those ids).
+void QuickMenu_TitlePoolLoaded();
+
 // InjectAll, after every module's self-test: the self-test of the two lists
 // and the cursor (BOF3X_SELFTEST_ONLY in the exe host, BOF3X_SHADOW=quick_menu
 // hosted), then SaveLists_Arm.

@@ -11148,12 +11148,28 @@ designed in rather than bolted on.
   at the release); live, three quicksaves listed and the second loaded back
   to its frame, a damaged file refused with the menu kept open; the recipe
   `quick_menu.txt` in the proof batch.
+- **Amended 2026-11-06 (the owner's report: F5 in a battle looked corrupt,
+  and a load from it stopped the game):** the menu drew with the live system
+  pool, which is the scene's. A battle's pool (`BATTLE.DAT`, `BOSS*.DAT`) has
+  "You can't escape" at `0xF` and nothing at `0xAC`, `0xB8` or `0xB9`, so the
+  heading was blank and DIV-0027's shape check stopped the game at the
+  Yes / No. In a battle, the backdrop's texture page (`0x340`) and CLUT rows
+  (y `0x1E2`) also hold the battle's pictures. Now the menu's four lines
+  are copied from `FIRST.DAT`'s pool when the title loads it (after its
+  language layers), and the menu draws those lines in every scene. With
+  `Game_Mode` 5 (a battle) the backdrop is left out and the black screen is
+  the background. The title box, slots, portraits, font and hand draw
+  correctly there, so they stay. Before the title has loaded `FIRST.DAT`, F5
+  does not open and writes a log line. Measured: [`quicksave.md`](quicksave.md)
+  QM.8. The owner chose this over refusing F5 in a battle or uploading the
+  backdrop's textures. Other modes than the field and the battle are not
+  measured.
 - **Reversible?** F5 is ours (nothing of Capcom's is replaced; without the
   key nothing changes). It is read only in our window procedure, so only the
   hosted build's `BOF3X_ORIGINAL=Game_WndProc` turns it off (Capcom's window
   procedure, with DIV-0033's freeze, 0040, 0042, 0048 and 0145 off too); the
   player's build has no switch for it.
-- **Switch:** Game_WndProc - F5 is read only in our window procedure (`src/game/win_main.cpp:443`, then `src/game/quick_menu.cpp:420`), its own `Inject` (`:919`)
+- **Switch:** Game_WndProc - F5 is read only in our window procedure (`src/game/win_main.cpp:443`, then `src/game/quick_menu.cpp:449`), its own `Inject` (`:919`)
 - **Default:** on
 - **Player:** costly - a detour name only (`src/game/win_main.cpp:919`)
 - **Toward:** none - no release has quicksaves
@@ -13332,7 +13348,8 @@ designed in rather than bolted on.
   --same-rand` on the owner's `desertToManmo` route, the scene twice in one
   process; branch `claude/bold-fermi-cbc0b2`): without this amendment its
   first stale row is `0x65EF0C`, 12 bytes, `80` at the first visit and `00`
-  at the second; with it (`manmo11053fix`) no row at `0x65EF0C`, and the
+  at the second; with it (`manmo1105
+3fix`) no row at `0x65EF0C`, and the
   second visit logs the put-back. Not yet: the owner's play.
 - **Reversible?** `BOF3X_ORIGINAL=AreaDataReload` keeps the port's
   (the bytes stay until the exe restarts).
