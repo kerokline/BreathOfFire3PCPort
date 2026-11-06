@@ -30,6 +30,7 @@
 #include "game/msg_pool.h"
 #include "game/name_tables.h"
 #include "game/pause_text.h"
+#include "game/quick_menu.h"
 #include "game/title_menu.h"
 #include "game/text_advance.h"
 #include "game/text_draw.h"
@@ -266,6 +267,9 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
         g_area_block_loaded = false;
         map_layers::SnapshotSides();  // DIV-0085: the side faces the file's heights give (map_layers.h)
     }
+    // DIV-0147: the quick menu's text is the title's load menu's, kept from
+    // the title's pool (a battle's pool has other messages at its ids).
+    if (_stricmp(name, "FIRST.DAT") == 0) bof3::QuickMenu_TitlePoolLoaded();
 }
 
 namespace {

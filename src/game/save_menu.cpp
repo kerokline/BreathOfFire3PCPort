@@ -153,12 +153,14 @@ void WaitLoad() {
 
 }  // namespace
 
-// The load menu's look for the quick menu (QM): the backdrop, the title box
-// and a system message, as every load-menu state draws them first. Reads the
-// Config's two bytes; writes only what the draws write.
-void save_menu::DrawLoadWindows(unsigned message) {
-    LoadWindows();
-    LoadMessage(message);
+// The load menu's look for the quick menu (QM): the backdrop (when
+// `backdrop`), the title box and a message line, as every load-menu state
+// draws them first. Reads the Config's two bytes; writes only what the draws
+// write.
+void save_menu::DrawLoadWindows(bool backdrop, const unsigned char* message) {
+    if (backdrop) g.window_back(static_cast<std::uint32_t>(Config_Background));
+    g.window_frame5(0x14, 0x12, 0x118, 0x13, static_cast<std::uint32_t>(static_cast<unsigned char>(Config_WindowColour)));
+    g.text_draw(0x1C, 0x15, 0, 0xFF, message);
 }
 
 // Every function below keeps its calls as calls: a tail jump to a function

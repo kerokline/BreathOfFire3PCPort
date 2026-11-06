@@ -76,6 +76,7 @@ constexpr unsigned kMsgChoose = 0xAC;       // the slots (LoadMenu_Open / LoadMe
 constexpr unsigned kMsgConfirm = 0xB9;      // load this game? (LoadMenu_Confirm)
 constexpr unsigned kMsgCouldNot = 0xB8;     // 0xA6 + 0x12: LoadMenu_Error's error 2, the read or the sum failed
 constexpr unsigned kMsgYesNo = 0xF;         // Menu_YesNo's line
+constexpr unsigned kBattleMode = 5;         // Game_Mode in a battle (docs/mode-rest.md 1.1)
 
 // The menu as a value: the self-test steps it without a window.
 enum class Act { None, Close, Load };
@@ -181,7 +182,31 @@ char g_refusal[64];            // the last refusal's reason, upper case for the 
 
 constexpr int kSlotsX = 0x20, kSlotsY = 0x30;   // the load menu's (LoadMenu_Choose's draw_slots)
 
+// The load menu's four lines as FIRST.DAT's pool holds them, copied when the
+// title loads it (QuickMenu_TitlePoolLoaded) - after its language layers, so
+// translated as the title's own load menu is. The live pool is the scene's:
+// a battle's (BATTLE.DAT, BOSS*.DAT) has "You can't escape" at 0xF and
+// nothing at 0xAC, 0xB8 or 0xB9 (measured over the en-US cache, 2026-11-06),
+// which drew a blank heading and stopped the game in DIV-0027's shape check.
+constexpr unsigned kTitleIds[4] = {kMsgChoose, kMsgConfirm, kMsgCouldNot, kMsgYesNo};
+constexpr unsigned kTitleLineRoom = 128;
+unsigned char g_title_lines[4][kTitleLineRoom];
+bool g_title_taken = false;
+
+const unsigned char* TitleLine(unsigned id) {
+    for (unsigned i = 0; i < 4; ++i)
+        if (kTitleIds[i] == id) return g_title_lines[i];
+    bof3::Fatal("quick menu: system message 0x%X is not one of the load menu's four", id);
+}
+
 void Open() {
+    if (!g_title_taken) {
+        // Only before the title has loaded FIRST.DAT through our LoadDatFile
+        // (or with Capcom's, BOF3X_ORIGINAL=LoadDatFile): no text to draw with.
+        bof3::Log("quickmenu   F5 at Frame_Counter %u: not opened - the title's system pool (FIRST.DAT) has not "
+                  "been loaded yet, so the load menu's text is not known", static_cast<U>(Frame_Counter));
+        return;
+    }
     const int n = ListQuicksaves("");
     g_menu = Menu{};
     g_open = true;
@@ -215,8 +240,8 @@ std::uint16_t ReadPad() {
 // without one) at (0x1C, 0x16), the hand at 0xFE - 36 * yes, or DIV-0027's
 // 0x112 - 56 * yes, y 0x18.
 void DrawYesNo(U yes) {
-    const YesNoLayout_LineFn line_fn = YesNoLayout_ActiveLine();
-    const unsigned char* const line = line_fn ? line_fn(kMsgYesNo) : Msg_SystemPtr(kMsgYesNo);
+    const unsigned char* const own = TitleLine(kMsgYesNo);
+    const unsigned char* const line = YesNoLayout_ActiveLine() ? YesNoLayout_SystemLine(own) : own;
     Text_DrawAt(0x1C, 0x16, 0, 0xFF, line);
     const U hand = YesNoLayout_StopsMoved() ? 0x112u - 56u * yes : 0xFEu - 36u * yes;
     Menu_DrawHand(static_cast<int>(hand), 0x18, 0);
@@ -225,11 +250,15 @@ void DrawYesNo(U yes) {
 // The load menu's screens, in LoadMenu_Choose's and LoadMenu_Confirm's
 // order: the windows and the message, the slots (lit while choosing), the
 // Yes / No. Menu_DrawBlackScreen first, under the backdrop: it covers a wide
-// picture's sides (DIV-0041), which the backdrop's ten columns do not.
+// picture's sides (DIV-0041), which the backdrop's ten columns do not. In a
+// battle the backdrop's texture page (0x340) and CLUT rows (y 0x1E2) hold the
+// battle's pictures, so the backdrop is left out and the black screen is the
+// background; the title box, the slots, the portraits, the font and the hand
+// draw right there (the capture of 2026-11-06, docs/quicksave.md QM.8).
 void Draw() {
     Menu_DrawBlackScreen();
     const unsigned message = g_menu.asking ? kMsgConfirm : g_refusal[0] != 0 ? kMsgCouldNot : kMsgChoose;
-    save_menu::DrawLoadWindows(message);
+    save_menu::DrawLoadWindows(Game_Mode != kBattleMode, TitleLine(message));
     save_menu::DrawSlotsOver(kSlotsX, kSlotsY, g_menu.asking ? 0 : 1, g_summaries, &g_menu.first, &g_menu.cursor);
     if (g_menu.asking) DrawYesNo(g_menu.yes);
     else if (g_refusal[0] != 0) Text_DrawFont8(0x10, 0xE0, 0, reinterpret_cast<const unsigned char*>(g_refusal));
@@ -450,6 +479,21 @@ bool QuickMenu_Frame() {
     if (g_menu.asking) g_refusal[0] = 0;   // a new question: the last refusal is answered
     Draw();
     return true;
+}
+
+void QuickMenu_TitlePoolLoaded() {
+    for (unsigned i = 0; i < 4; ++i) {
+        const unsigned char* const m = Msg_SystemPtr(kTitleIds[i]);
+        const std::size_t len = std::strlen(reinterpret_cast<const char*>(m));
+        if (len >= kTitleLineRoom)
+            bof3::Fatal("quick menu: FIRST.DAT's system message 0x%X is %u bytes, room is %u", kTitleIds[i],
+                        static_cast<unsigned>(len), kTitleLineRoom - 1);
+        std::memcpy(g_title_lines[i], m, len + 1);
+    }
+    if (!g_title_taken)
+        bof3::Log("quickmenu   the load menu's lines taken from FIRST.DAT's pool (0x%X, 0x%X, 0x%X, 0x%X)", kTitleIds[0],
+                  kTitleIds[1], kTitleIds[2], kTitleIds[3]);
+    g_title_taken = true;
 }
 
 void QuickMenu_AfterPoint() {

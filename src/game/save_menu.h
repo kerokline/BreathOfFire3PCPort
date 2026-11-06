@@ -34,10 +34,10 @@ using SummaryRead = bool (*)(const char* name, unsigned char* into, void* contex
 void ReadSummaries(const unsigned char* table, unsigned char* summaries, SummaryRead read, void* context);
 
 // The title's load menu's windows (LoadMenu_Open..LoadMenu_Loaded draw them
-// first): Menu_DrawBackdrop of the Config's background byte 0x903A5B,
-// Menu_DrawTitleBox(0x14, 0x12, 0x118, 0x13, the window colour 0x903A5A) and
-// system message `message` through Text_DrawAt at (0x1C, 0x15).
-void DrawLoadWindows(unsigned message);
+// first): Menu_DrawBackdrop of the Config's background byte 0x903A5B (when
+// `backdrop`), Menu_DrawTitleBox(0x14, 0x12, 0x118, 0x13, the window colour
+// 0x903A5A) and the line `message` through Text_DrawAt at (0x1C, 0x15).
+void DrawLoadWindows(bool backdrop, const unsigned char* message);
 
 // SaveMenu_DrawSlots' body over any summaries, first-shown word and cursor
 // word (the original's entry passes 0x905BC0, 0x8034D0 and 0x9036D4).

@@ -630,6 +630,46 @@ unwritten). The search handle's leak is not fixed.
 - After a menu load, `Sound_ResumeAll` runs after the participants'
   restores: SP-A's participant decides what is playing then.
 
+### QM.8 F5 in a battle (2026-11-06)
+
+The owner's report: F5 in a battle "looks very corrupted", and loading a
+quicksave from it crashed the game. Their log: the boss fight `BOSS051.DAT`
+in area 142, F6 at `Frame_Counter` 26125, F5 at 26243 with one quicksave
+listed, then `FATAL: DIV-0027: system message 0xF is not spaces, a word,
+spaces, a word (lead 0, words at 0..3 and 4..9, then byte 0x20)`.
+
+- **The text.** `Msg_SystemPtr` reads the pool of the scene loaded. Over the
+  en-US cache, every file that has a pool chunk (kind 0, tag `0x4000`) was
+  read at the menu's four ids. `FIRST.DAT` and `AFLDKWA.DAT` have `0xF` =
+  27 spaces + "Yes No", `0xAC` "Load which file?", `0xB9` "Load game?".
+  `BATTLE.DAT`, `BATTLE2.DAT` and the 40 `BOSS*.DAT` (44 pools in all) have `0xF` =
+  "You can't escape" and empty `0xAC` / `0xB9`. "You", a space, "can't", a
+  space: this is the fatal's shape exactly. QM.3 measured only on a field
+  (area 7), where the pool is `AFLDKWA`'s.
+- **The look.** Recipe `quick_menu_battle` (scratch, not in the tree):
+  `quick_combat_keys.txt` to its F6 at frame 900 (Rei's Pilfer mid-turn),
+  then F5, a shot, confirm on slot 0, a shot, Yes. Before the fix, the shot
+  of the list shows the slots, portraits, frames and font correct. The
+  title box is drawn, but with no heading. The backdrop is tiles of battle
+  graphics: page `0x340` and CLUT rows y `0x1E2` (`Menu_DrawBackdrop`) hold
+  the battle's pictures. The confirm then stopped on the same fatal as the
+  owner's.
+- **The fix** (DIV-0147 amended): `QuickMenu_TitlePoolLoaded` runs at the
+  end of `LoadDatFile` for `FIRST.DAT`. It copies `0xAC`, `0xB9`, `0xB8` and
+  `0xF` (bounded at 127 bytes, larger is fatal) into the menu's statics,
+  outside the snapshot span. The menu draws only those lines.
+  `DrawLoadWindows` takes the line and whether to draw the backdrop. The
+  backdrop is left out when `Game_Mode` is 5.
+- **After** (exe host, en-US, an ini-less launcher copy): in a battle,
+  "Load which file?" on black, then "Load game?" with the hand on Yes, and
+  Yes logs `F7 BISLPS10.DAT restored at Frame_Counter 956: back to
+  Frame_Counter 901`. The battle continues on the Pilfer frame. On the
+  field (`quick_menu.txt` with one shot): the leaf backdrop as before,
+  three quicksaves, and BISLPS11 restored back to 616.
+- **Not measured:** F5 in modes other than the field and the battle (the
+  world map, the minigames, the events). The backdrop test is the battle
+  mode alone.
+
 ## SP-G: the graphics participant (`GFX`)
 
 Stage B's group SP-G, branch `quicksave/spg` (2026-10-19):
