@@ -102,6 +102,7 @@ rule ([`README.md`](README.md)) here too.
 | I55 | A readable form of the cache: a `decompile` / `compile` pair beside the importer (one folder per container, one file per chunk, PNG for images, text for text blocks, TOML / TSV for tables), the decompiled tree a working copy and never an authority, the mod zip the exchange format, `compile` refusing rather than guessing; an editor program later, if ever, over the same compiler | tooling / mods | MEDIUM | open 2026-11-01 (the owner): the talk-through of how game repos keep sources and builds apart; nothing measured; first step kind-1 images, gated byte-identical |
 | I56 | A solo-character challenge: the map team and the combat team split, the L swap reaching every joined character, the members screen holding five in reserve, a champion chosen at New Game who alone fights | game behaviour | MEDIUM | open 2026-11-03 (the owner): designed in talk, read-only measurements in the entry; five more measurements, then a test branch when there is time; EXP deferred until the combat half is settled |
 | I57 | The Traditional Chinese (Taiwanese) PC CD as a source: its text as a `zh-TW` layer over our exe, or its exe (a 2001-05-09 rebuild, SafeDisc-wrapped) as a second PC build | platform / install | LOW | open 2026-11-03 (the owner): measured when the Simplified CD became a source; text layer first, exe only if it carries fixes |
+| I58 | EMI patch mods: canonical EMIs from the player's held builds as the base, a mod zip that carries a patch against one (never the EMI), a build step that applies it and writes a DAT layer plus a new `.data` image layer, refusing code edits by name; the route PSX-shaped mods take in, and the one I55's `compile` feeds later | tooling / mods | MEDIUM | open 2026-11-06 (the owner): measured that no exe-resident table has a copy in `DAT/` (0 of 519,373 placed bytes); first step a kept-sections-only patch kind |
 
 ---
 
@@ -2408,3 +2409,44 @@ _(2026-11-03) open; designed in talk, the measurements above first, a test branc
 
 ### Outcome
 _(2026-11-03) open; measured as above when the Simplified CD was added as a source (`fixtures.toml` pc-zh `iso`)._
+
+## I58 — EMI patch mods: canonical EMIs as the base, patches as the mod
+
+**Ask (2026-11-06, the owner):** move the tables the PC port holds in `BOF3.exe` back into the game's data files, so mods can take the shape of existing PlayStation mods. Refined in the same talk: keep the canonical EMIs as importer sources, and accept mod packages that carry altered EMIs the way the furigana package carries readings. That gives imported EMIs and DATs one route, and the route opens further once I55's `decompile` / `compile` exists.
+**Kind:** tooling / mods. **Feasibility:** MEDIUM.   **Gated on:** the owner's word. The first step needs nothing else; the `.data` step needs the image layer below.
+
+**What was measured (2026-11-06, read-only).** Every byte of `exe_maps/psx-jp.tsv` (the JP disc's map of the PC's `.data`, [`exe-tables-by-build.md`](exe-tables-by-build.md) 2.2) was classed by the EMI section that holds it, against `analysis/dat_census.json` (each EMI section paired to its DAT chunk or listed as dropped, [`DAT_CONTAINER.md`](DAT_CONTAINER.md) 2). The method is a short script: sum `pc_end - pc` per row; `file` = `BOOT` is the boot EXE; else look up the file's stem in the census and the row's `section` in its `dropped` or `pairs` list.
+
+| Where the PSX disc holds it | Bytes of the PC's `.data` | Also in the PC's `DAT/`? |
+|---|---|---|
+| Overlay sections the port dropped (code and data together: each AREA's `0x801F2C00` section, `BATTLE.EMI` 3 and 15, the MAGIC modules) | 493,349 | no |
+| EMIs with no PC container at all (`GAME.EMI` 10,419, some SCENA files) | 13,056 | no |
+| The boot EXE | 12,968 | no |
+| Sections the port kept as DAT chunks | **0** | - |
+| No disc holds it (the port's own bytes) | about 119,600 of 638,976 | - |
+
+So the exe's tables are not a duplicate of anything in `DAT/`. They sat inside the MIPS overlays beside the code; when the port recompiled that code to x86, the data came with it into `.data`, and the sections were left out of `DAT/`. Every catalogued content table in `tables.toml` (the item names, abilities, shops, the EXP table, event battles, encounters, the op lengths) is in `GAME.EMI` section 0 on the disc, and the PC has no `GAME.DAT`. "Moving them back" is building them again from a disc, and that already exists: the importer writes `base/exe/data.bin` from any held build through the maps and the pointer rebuild (90.4 % of the JP-built image equal to the PC's), and `BOF3X_EXEIMAGE` lays it over `.data` ([`exe-import-engine.md`](exe-import-engine.md) 0); disc-only installs run on it. What does not exist is a way for a mod to change it. Table-shaped data the PC kept in `DAT/` (the per-area enemy and formation tables at `0x800E4000`, scripts and text, arenas) is already reachable through a DAT layer.
+
+**The design.**
+
+1. **Canonical EMIs are the base.** The importer already knows every held build by its sha256 manifest and indexes every section. A patch names the build and the sha256 of the EMI it applies to; nothing else is ever a base.
+2. **The mod carries a patch, never the EMI.** An altered EMI is almost all Capcom's bytes, so `mods.py`'s refusal of `.EMI` / `.DAT` members stays (rule 1, [`mods.md`](mods.md) 2). A new kind, `emi-patch`, lists rows of `{file, base_sha256, patch}`; the patch format is a small, bounded binary diff read in pure Python (xdelta's VCDIFF or a plain ranges file; to choose). PlayStation mods are thought to be shared as disc-image patches already (unverified; nobody has measured one here), which is the same shape one level up.
+3. **The build step** applies the patch to the player's own copy, then sorts every changed byte by its section:
+   - **a section the PC kept** becomes a chunk of `cache\opt\<layer>\dat\`, through the importer's own transforms (type 1 decoded, the enemy name field re-strided, text through `loc_build.py`'s tables), as the furigana layer is written;
+   - **a dropped section, `GAME.EMI` or the boot EXE** is placed through `exe_maps` and the pointer rebuild into an image layer over `.data` (below);
+   - **a byte the maps do not place, a MIPS code change, a table moved or resized** is a refusal that names the file, the section, the range and why. The PC never runs MIPS code, so code mods cannot come this way; their behaviour is ours to reimplement under a DIV, as any other.
+4. **A local tool on top.** `make_mod.py emi-patch` diffs a modified EMI the player holds against the canonical one and writes the zip. The modified file never leaves their machine. This covers the owner's 2026-10-15 wish for side-loaded DAT and EMI files (I33, [`launcher-settings.md`](launcher-settings.md) 2a) without a second route.
+5. **After I55.** `compile` writes an altered EMI or container from an edited tree; the same step diffs it against the canonical one and the patch is what is shared. The decompiled tree stays the authoring view, the patch the exchange format, the layer the thing the engine reads. Nothing in this design changes when that arrives.
+
+**What is new work.**
+
+- **An image layer.** `opt/` layers carry only `dat\` today, and `BOF3X_EXEIMAGE` lays one whole `data.bin`. A layer needs `opt\<layer>\exe\`: ranges over `.data`, applied in the mods' order after the base image, each range in the manifest with its source (`mod:<id>@<version>`), and refused at start-up when two layers write the same byte in different values, unless the mod order says which wins.
+- **The sorting step and its sentences.** Mapping changed ranges onto the maps is cheap; refusals a modder can act on are where the time goes.
+- **The bounds.** `mods.py` caps a member at 4 MiB and a zip at 8 MiB. Patches should be well under that, but an art mod's could exceed it; to measure on a real mod first.
+- **One build per patch.** A patch made against the US disc builds only where the US `GAME.EMI` is held. The Mods tab greys a mod whose disc is not held, with the reason, as the Config page does for options ([`launcher-settings.md`](launcher-settings.md)).
+- **The ledger.** A mod's changes are the modder's, not ours; the layer's manifest rows record them. A mod is not a DIV entry, but the image layer itself is, when built (it changes what the engine reads at start-up).
+
+**First concrete step, when wanted:** `emi-patch` for kept sections alone. One patched AREA image section built as a DAT layer, the rest refused, `mods.py selftest` extended with a synthetic patch (no game data), and one end-to-end run on the owner's machine with a real patch against the held JP or US disc. The image layer is the second step, and the first `GAME.EMI` table edit (one field of a `tables.toml` table) the proof of it, checked with `tables.py dump` against the patched EMI.
+
+### Outcome
+_(2026-11-06) open; the measurement above, nothing built._
