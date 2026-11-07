@@ -32,7 +32,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 ## Pick up here
 
 0. **The FMVs decoded by our own decoders (DIV-0205, 2026-11-07, IDEAS I7 built)** on `claude/dreamy-kilby-648ea8`
-   (worktree `.claude/worktrees/dreamy-kilby-648ea8`, unpushed, no PR): D407 - the 64-bit build's Capcom movie had
+   (folded into PR #207, `x64/stage-d`, 2026-11-07): D407 - the 64-bit build's Capcom movie had
    no picture, Windows' Cinepak and Video 1 decompressors being 32-bit only. `Fmv_Play` now reads the AVI itself
    (`src/video`: the RIFF reader, a Cinepak decoder, a Microsoft Video 1 decoder, written from the public
    descriptions), draws by `StretchDIBits` into DIV-0035's rectangle on the wall clock, plays the PCM stream
@@ -336,7 +336,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    voice played the voice before the song returned: the rebuild's order, measured at 10 ms on both widths and fixed by DIV-0145's amendment the same day; the owner's listen owed). **Seen on
    that play: the Capcom movie has no picture on the 64-bit build - D407, Windows ships no 64-bit Cinepak
    decompressor (`iccvid.dll` is in `SysWOW64` alone), so stage C's "plays to its end" proved the pump, not
-   the picture; the fix is IDEAS I7 (a decoder of ours), a round of its own.** Still owed (owner-review):
+   the picture; the fix is IDEAS I7 (a decoder of ours), built the same day as DIV-0205 and folded into this
+   PR (item 0).** Still owed (owner-review):
    whether `LOGOS.AVI` (Microsoft Video 1, which 64-bit Windows has) shows; the Sources page looks right (its
    list read from an earlier build's config; an import from the 64-bit launcher is unexercised). **Traps paid:** a quit-ended recipe copy must lose the recipe's own `end` line or the quit never runs;
    a moved run's hash wants the `0x400000` side recorded with `BOF3X_STATEHASH_FOLD=<base>`; the hosted
@@ -574,8 +575,8 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **In flight (2026-11-07):** `claude/dreamy-kilby-648ea8` (DIV-0205, the FMV decoders, item 0 above), committed in
-  its worktree, unpushed; its root `C:\Users\kerok\bof3x-runs\fmv1107` removable after the merge.
+- **Folded into PR #207 (2026-11-07):** `claude/dreamy-kilby-648ea8` (DIV-0205, the FMV decoders, item 0 above);
+  its root `C:\Users\kerok\bof3x-runs\fmv1107` removable after the merge.
 - **In flight (2026-11-02):** PR #187, `x64/c1` (item 14a, stage C), with its worktree
   `C:\Users\kerok\bof3x-runs\x641101\c1`; stage D starts from its tip, or from `main` once it merges. The 64-bit
   round's root `C:\Users\kerok\bof3x-runs\x641101` holds the agents' worktrees and reports (`xa1`..`xa4`, `b1`..`b5`,

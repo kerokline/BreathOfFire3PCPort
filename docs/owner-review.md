@@ -43,8 +43,9 @@ song's `Music_Start` and its decode to the heard sample). The 546 ms figure stay
 ear's. The play was on the 64-bit build (the owner, same day): **the 64-bit build has been played, its music,
 voices and inn heard right.** The FMV "looks odd - the music is playing and the video is not": **D407**, Windows
 has no 64-bit Cinepak decompressor, so `CAPCOM.AVI` draws nothing on the 64-bit build (the 32-bit build is not
-affected). One question back: does the second movie, the publishers' logos, show its picture on the 64-bit
-build? Its codec (Microsoft Video 1) is there in 64 bits, so it should. **The Sources page looks right** (the
+affected). **Fixed the same day by DIV-0205**: the game decodes both movies itself on both widths
+([`replacing-mci.md`](replacing-mci.md) 8) - the owner's eye and ear on it owed. (The question about the second
+movie is moot: Windows' Video 1 decompressor is 32-bit only too, `msvidc32.dll` in `SysWOW64` alone.) **The Sources page looks right** (the
 owner, same day), read from a config a previous build had filled; the importer is a Python child, so what the
 64-bit launcher adds is the reading, the child's start and its pipe - one import run from the 64-bit launcher
 would cover the last two, if you care to.

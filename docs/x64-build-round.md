@@ -802,7 +802,8 @@ copy holds those two AVIs only. What the window shows is the owner's eye.
 **Seen 2026-11-07: no picture for `CAPCOM.AVI`** - the pump ran to the end
 over frames MCI could not decode, since Windows has no 64-bit `iccvid.dll`
 (D407, [`known-defects.md`](known-defects.md)). The lines above proved the
-pump, not the picture.
+pump, not the picture. **Fixed the same day by DIV-0205**, the game's own
+decoders, folded into this PR ([`replacing-mci.md`](replacing-mci.md) 8).
 
 **4. The launcher.** The 64-bit launcher starts the 64-bit exe beside it in
 every run above. The 32-bit launcher with the 64-bit exe and DLL beside it

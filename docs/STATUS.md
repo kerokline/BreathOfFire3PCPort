@@ -30,7 +30,7 @@ the `x86_64` CI job is a gate and the release carries `bof3x-<tag>-win-x64.zip` 
 entry: the 64-bit build adds no behaviour. **What the player sees:** the 32-bit build stays the default; its one
 change is DIV-0201's sound output, whose music the owner approved by ear on 2026-11-07. The owner's ear, 2026-11-07, on the 64-bit build (its first play): the inn's night, the combat loop and the voices all sound right, so the WAV pair's 546 ms offset of the song under SDL3 is the dump's model, not the ear's; a quick-load during a battle voice played the voice before the song returned (D406, ours: a 10 ms head start measured on both widths and removed by DIV-0145's amendment the same day; the owner's listen after it owed). **The one 64-bit defect seen: the Capcom movie plays with no picture (D407) - Windows has no 64-bit Cinepak decompressor, so the 64-bit build needs IDEAS I7's own decoder before it can be more than a developer build.** The Sources page looks right. Owed the owner (owner-review): whether the logos movie shows.
 
-**The FMVs decoded in-process, 2026-11-07 (DIV-0205, IDEAS I7 built; `claude/dreamy-kilby-648ea8`, unpushed).**
+**The FMVs decoded in-process, 2026-11-07 (DIV-0205, IDEAS I7 built; folded into PR #207).**
 The owner's first play of the 64-bit build showed no Capcom movie (D407): Windows ships its Cinepak and Video 1
 decompressors for 32-bit processes only, and MCI drew nothing. `Fmv_Play` now decodes both shipped AVIs itself
 (`src/video`, written from the public format descriptions, nothing vendored), draws them into DIV-0035's
