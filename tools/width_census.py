@@ -138,6 +138,49 @@ the live files alone; --check gates the live rows only.
                 __thiscall, WINAPI, CALLBACK, STDMETHODCALLTYPE spellings
   img_place     count only: `Img(`, `VaOf(`, `Code(` spellings
 
+The four classes below were added for stage D's audit (docs/x64-build-round.md
+6, 2026-11-07), after stage B had moved every narrowing into the helpers: they
+list what the 64-bit build runs, so that a reader can say which of it could
+`Fatal` and which of it the i686 build still forks by width.
+
+  low32         every call of `Low32(p)` / `LowBlock(p, n)` (src/common/
+                image_base.h: the one checked narrowing, a Fatal at or above
+                4 GB on x86-64); `detail` is the narrowed argument's class as
+                `narrow`'s (classify_native; `heap` for LowBlock, whose
+                argument is the block), `type` the helper. The audit reads the
+                rows whose class is not `image` / `image_local` / `object_ours`
+                / `func_ours` / `pool`: those are the addresses the low-memory
+                design keeps below 4 GB by placement (design doc 2); the rest
+                (`windows`, `crt`, `heap`, `unread`) are where a Fatal could
+                fire in a run no route has made.
+  handle_array  a Windows API that reads a NATIVE array of handles or pointers
+                (`WaitForMultipleObjects[Ex]`, `MsgWaitForMultipleObjects[Ex]`,
+                `ReadFileScatter`, `WriteFileGather`, and the sound layer's
+                `msg_wait` slot call): the class of stage C's one defect, where
+                `Music_Pump` handed two 32-bit image slots to such a call
+                (section 5 of the round doc). `token` the array argument,
+                `detail`: `none` (null), `native` (a local or static array of
+                native words), `slot` (an image slot array, a typed name or a
+                place in the image - wrong on x86-64 unless the site is i686-
+                only), `unread`
+  ptr_overlay   a struct or class of ours with a pointer-typed member, laid
+                over bytes by `reinterpret_cast<Name*>(...)` /
+                `static_cast<Name*>(...)`: C1's 23 `pointer-field` rows in
+                analysis/typed_left.tsv were this shape before stage C (a
+                native pointer type read 8 bytes of an image record). `token`
+                the cast's argument, `type` the struct, `detail` the argument's
+                class as `narrow`'s: `image` / `image_local` lay a native
+                pointer over the image's 4-byte words (a 64-bit defect), the
+                other classes over an object of ours (fine on both widths)
+  width_if      every `#if` / `#elif` block by width (`defined(__i386__)`,
+                `defined(__x86_64__)`, `_WIN64`, `_M_X64`, `_M_IX86`) in src/,
+                one row per `#if`; `token` the enclosing function (or the file),
+                `detail`: `asm_pair` when every branch is asm statements, an
+                `#include` or an `#error` (an i686/x86_64 register-contract pair
+                that docs/x64-asm-policy.md 8 allows, or the task switch
+                header's two includes), else `logic` (a fork of C++ by width:
+                the audit names and explains each)
+
 The TSV (write_tsv) holds `site` rows, then `file` rows (per file, standing
 and class), then `#count` lines. `--check` keys every live site by (class,
 detail, file, token, the line's text with whitespace collapsed) - not the
@@ -156,7 +199,8 @@ DEFAULT_OUT = 'analysis/width_census.tsv'
 EXE_HOST = 'src/hook/exe_host.cpp'
 
 CLASSES = ('narrow', 'narrow_call', 'widen', 'long', 'asm', 'asm_alias', 'asm_symbol', 'naked',
-           'fs_read', 'valloc_addr', 'sizeof_ptr', 'uintptr', 'fmt_place', 'import_slot', 'ptr_member')
+           'fs_read', 'valloc_addr', 'sizeof_ptr', 'uintptr', 'fmt_place', 'import_slot', 'ptr_member',
+           'low32', 'handle_array', 'ptr_overlay', 'width_if')
 ASM_CLASSES = ('x87', 'stack', 'cw', 'fs', 'other')
 NARROW_CLASSES = ('helper_def', 'func_ours', 'object_ours', 'pool', 'windows', 'image', 'image_local', 'crt', 'heap', 'unread')
 WIDEN_CLASSES = ('code_place', 'img_place', 'word_read', 'param', 'other')
@@ -173,6 +217,15 @@ WIDEN_IMG = re.compile(r'reinterpret_cast<\s*([^;{}()]*?)\s*>\s*\(\s*(?=(?:::)?b
 HELPER_DEF = re.compile(r'(?:^|[;}\n])[ \t]*(?:(?:static|inline|constexpr)\s+)*(?:std::u?int32_t|U|unsigned|unsigned\s+long)\s+'
                         r'(\w+)\s*\(\s*(?:const\s+)?(?:volatile\s+)?(?:const\s+)?(?:void|unsigned\s+char|char)\s*\*\s*(\w+)\s*\)\s*\{'
                         r'\s*return\s+(?:static_cast<std::int32_t>\()?static_cast<\s*' + U32 + r'\s*>\s*\(\s*reinterpret_cast<\s*' + UPTR)
+# the same helper spelled with the checked narrowing (stage B's rewrite): a
+# one-line `U Key(const void* p) { return Low32(p); }`, or a template over T*
+HELPER_DEF_LOW32 = re.compile(r'(?:^|[;}\n])[ \t]*(?:template\s*<[^>]*>\s*)?(?:(?:static|inline|constexpr)\s+)*'
+                              r'(?:std::u?int32_t|U|unsigned|unsigned\s+long)\s+'
+                              r'(\w+)\s*\(\s*(?:const\s+)?(?:volatile\s+)?(?:const\s+)?[\w:]+\s*\*\s*(\w+)\s*\)\s*\{'
+                              r'\s*return\s+(?:static_cast<std::int32_t>\()?Low32\s*\(\s*\2\s*\)')
+# a helper's one-line body, and the head of a two-line one (the name is group 1)
+HELPER_LINE = re.compile(r'\b(\w+)\s*\(\s*(?:const\s+)?(?:volatile\s+)?(?:const\s+)?[\w:]+\s*\*\s*\w+\s*\)\s*\{\s*return\s+')
+HELPER_HEAD = re.compile(r'\b(\w+)\s*\([^;{}]*\*\s*\w+\s*\)\s*\{?\s*$')
 ASM = re.compile(r'(?<![\w.])(?:__asm__|__asm|asm)\s*(?:(?:volatile|__volatile__|goto|inline)\s*)*\(')
 NAKED = re.compile(r'__attribute__\s*\(\(\s*(?:[a-z_]+\s*,\s*)*naked\b[^)]*\)\)')
 FUNC_NAME_AFTER = re.compile(r'[^;{}]*?\b(\w+)\s*\(')
@@ -196,6 +249,104 @@ WINDOWS_ARG = re.compile(r'BaseAddress|ExceptionAddress|\bteb\b|NtCurrentTeb|Get
 CRT_ARG = re.compile(r'\bCrt_\w+|\bFILE\b|\bstream\b')
 POOL_ARG = re.compile(r'draw_pool::|\bpacket\b|\bprim\b|\bpacket_next\b|Gfx_PacketNext|\bot\b|\bhead\b|\bitems\b|g_prims')
 FUNC_ARG = re.compile(r'^(?:callee|entry|code|ret|f|fn|handler|target|__builtin_return_address\(\d\)|Bind_Ours\(.*\))$')
+
+# Stage D's classes
+LOW32_CALL = re.compile(r'(?<![\w.>:])(Low32|LowBlock)\s*\(')
+HANDLE_ARRAY = re.compile(r'(?<![\w])((?:Msg)?WaitForMultipleObjects(?:Ex)?|ReadFileScatter|WriteFileGather|(?:\w+\.)msg_wait|msg_wait)\s*\(')
+OVERLAY_CAST = re.compile(r'(?:reinterpret_cast|static_cast)\s*<\s*(?:const\s+)?(?:volatile\s+)?((?:\w+::)*\w+)\s*\*\s*>\s*\(')
+STRUCT_DEF = re.compile(r'\b(?:struct|class)\s+(?:alignas\s*\([^)]*\)\s*)?(\w+)\s*(?::\s*[^{;]*)?\{')
+PTR_MEMBER = re.compile(r'(?:^|[;{}\n])\s*(?:const\s+)?(?:volatile\s+)?(?:unsigned\s+|signed\s+)?[\w:<>]+\s*\*\s*(?:const\s+)?\w+'
+                        r'(?:\s*\[[^\]]*\])*\s*(?:=[^;]*)?;')
+WIDTH_IF = re.compile(r'^\s*#\s*(if|elif|ifdef|ifndef|else|endif)\b(.*)$')
+WIDTH_COND = re.compile(r'__i386__|__x86_64__|_WIN64|_M_X64|_M_IX86|_M_AMD64|__LP64__|BOF3X_WIDTH')
+
+
+def pointer_member_structs(files):
+    """rel -> the names of the structs and classes defined in that file with a
+    pointer-typed data member (a function pointer member counts; a method does
+    not). A one-letter name is a template parameter, not a struct of ours."""
+    names = collections.defaultdict(set)
+    for f in files:
+        code = f.code
+        for m in STRUCT_DEF.finditer(code):
+            depth, i, n = 0, m.end() - 1, len(code)
+            start = i
+            while i < n:
+                c = code[i]
+                if c == '{':
+                    depth += 1
+                elif c == '}':
+                    depth -= 1
+                    if depth == 0:
+                        break
+                i += 1
+            body = code[start + 1:i]
+            # the top level of the body only: a nested struct is its own match
+            flat, d = [], 0
+            for c in body:
+                if c == '{':
+                    d += 1
+                elif c == '}':
+                    d -= 1
+                elif d == 0:
+                    flat.append(c)
+            body = ''.join(flat)
+            if len(m.group(1)) > 1 and (PTR_MEMBER.search(body)
+                                        or re.search(r'\(\s*(?:__\w+\s*|WINAPI\s*|CALLBACK\s*)?\*\s*\w+\s*\)\s*\(', body)):
+                names[f.rel].add(m.group(1))
+    return names
+
+
+def width_if_blocks(f):
+    """(line, detail) for every `#if` / `#elif` block by width in the file:
+    asm_pair when each branch holds only asm statements, an #include or an
+    #error, else logic."""
+    lines = f.lines
+    out = []
+    i, n = 0, len(lines)
+    while i < n:
+        m = WIDTH_IF.match(lines[i])
+        if not (m and m.group(1) in ('if', 'ifdef', 'ifndef') and WIDTH_COND.search(m.group(2))):
+            i += 1
+            continue
+        first = i
+        depth, branches, cur = 0, [], []
+        j = i
+        while j < n:
+            mm = WIDTH_IF.match(lines[j])
+            if mm:
+                k = mm.group(1)
+                if k in ('if', 'ifdef', 'ifndef'):
+                    depth += 1
+                    if depth > 1:
+                        cur.append(lines[j])
+                elif k == 'endif':
+                    depth -= 1
+                    if depth == 0:
+                        branches.append(cur)
+                        break
+                    cur.append(lines[j])
+                elif k in ('elif', 'else') and depth == 1:
+                    branches.append(cur)
+                    cur = []
+                else:
+                    cur.append(lines[j])
+            elif depth >= 1 and j != first:
+                cur.append(lines[j])
+            j += 1
+        asm_only = True
+        for b in branches:
+            text = ' '.join(x.strip() for x in b if x.strip())
+            text = re.sub(r'//.*', '', text)
+            stmts = [s.strip() for s in re.split(r';|\n', text) if s.strip()]
+            for s in stmts:
+                if re.match(r'^(?:__asm__|__asm|asm)\b', s) or re.match(r'^#\s*(?:include|error)\b', s) \
+                        or re.match(r'^:\s*(?:"[^"]*"\s*\([^)]*\)\s*,?\s*)*$', s) or re.match(r'^"[^"]*"', s):
+                    continue
+                asm_only = False
+        out.append((first + 1, 'asm_pair' if asm_only else 'logic'))
+        i = j + 1
+    return out
 
 
 def standing_of(rel):
@@ -467,6 +618,8 @@ def scan(toml='symbols.toml'):
     for f in files:
         for m in HELPER_DEF.finditer(f.code):
             helpers[f.rel].add(m.group(1))
+        for m in HELPER_DEF_LOW32.finditer(f.code):
+            helpers[f.rel].add(m.group(1))
 
     for f in files:
         code, raw = f.code, f.raw
@@ -620,6 +773,77 @@ def scan(toml='symbols.toml'):
                 extra[f'img_place_{nm}'] += n
                 extra[f'img_place_{nm}_{standing_of(f.rel)}'] += n
 
+    # Stage D's four classes (the docstring's second list).
+    overlay_defs = pointer_member_structs(files)
+    for f in files:
+        code = f.code
+        # the structs this file sees: its own and its headers'
+        overlay_names = set(overlay_defs.get(f.rel, ()))
+        for h in dc.include_closure(f, by_rel):
+            overlay_names |= overlay_defs.get(h.rel, set())
+        fn_starts = [(m.start(), m.group(1)) for m in FUNC_DEF.finditer(code)]
+        # low32: every call of the checked narrowing helpers (not their definitions)
+        for m in LOW32_CALL.finditer(code):
+            ln = dc.line_of(f.starts, m.start())
+            line = f.lines[ln - 1]
+            if re.search(r'#\s*define\s+Low32\b|inline\s+std::uint32_t\s+Low32\b|inline\s+void\s*\*\s*LowBlock\b|using\s+::bof3::Low32', line):
+                continue
+            r = dc.balanced_args(code, m.end() - 1)
+            arg = r[0][0] if r and r[0] else ''
+            if m.group(1) == 'LowBlock':
+                detail = 'heap'
+            elif (hm := HELPER_LINE.search(line)) and hm.group(1) in helpers[f.rel]:
+                detail = 'helper_def'   # its callers are narrow_call rows
+            elif ln >= 2 and re.match(r'\s*return\s+Low32\s*\(', line) and (hm := HELPER_HEAD.search(f.lines[ln - 2])) \
+                    and hm.group(1) in helpers[f.rel]:
+                detail = 'helper_def'
+            else:
+                detail = classify_native(arg, funcs, typed, toml_funcs, f.rel)
+            add(f, m.start(), 'low32', detail, arg, m.group(1))
+        # handle_array: the array argument of an API that reads native handles
+        for m in HANDLE_ARRAY.finditer(code):
+            r = dc.balanced_args(code, m.end() - 1)
+            args = r[0] if r else []
+            arg = strip_parens(args[1]) if len(args) > 1 else ''
+            if not arg or re.match(r'^(?:nullptr|0|NULL)$', arg):
+                detail = 'none'
+            elif re.match(r'^(?:&\s*)?(\w+)$', arg) and re.match(r'^(?:&\s*)?(\w+)$', arg).group(1) in typed \
+                    or re.search(r'\bAt\s*\(|\bSlot32\b|(?:^|[^\w])(?:::)?bof3::Img\s*\(', arg):
+                detail = 'slot'
+            elif re.match(r'^(?:&\s*)?\w+(?:\[\d*\])?$', arg) or re.match(r'^&\s*\w+\[', arg):
+                detail = 'native'
+            else:
+                detail = 'unread'
+            if detail == 'slot':
+                # inside an i686-only branch: Capcom's spelling kept by width (the audit names it)
+                ln = dc.line_of(f.starts, m.start())
+                for back in range(ln - 2, max(-1, ln - 12), -1):
+                    pm = WIDTH_IF.match(f.lines[back])
+                    if pm:
+                        if pm.group(1) == 'if' and '__i386__' in pm.group(2):
+                            detail = 'slot_i686'
+                        break
+            add(f, m.start(), 'handle_array', detail, arg, m.group(1))
+        # ptr_overlay: a pointer-member struct of ours cast over bytes
+        if overlay_names:
+            for m in OVERLAY_CAST.finditer(code):
+                name = m.group(1).split('::')[-1]
+                if name not in overlay_names:
+                    continue
+                r = dc.balanced_args(code, m.end() - 1)
+                arg = r[0][0] if r and r[0] else ''
+                add(f, m.start(), 'ptr_overlay', classify_native(arg, funcs, typed, toml_funcs, f.rel), arg, name)
+        # width_if: every #if by width, one row per block
+        for ln, detail in width_if_blocks(f):
+            pos = f.starts[ln - 1]
+            fn = '-'   # the nearest function defined above the block
+            for p, name in fn_starts:
+                if p < pos:
+                    fn = name
+                else:
+                    break
+            add(f, pos, 'width_if', detail, fn, f.lines[ln - 1].strip())
+
     # narrow_call: every call of a narrowing helper, in its file and in the
     # files that include it when it is a header
     for rel, names in sorted(helpers.items()):
@@ -629,7 +853,7 @@ def scan(toml='symbols.toml'):
             for name in sorted(names):
                 for m in re.finditer(r'(?<![\w.>:])' + re.escape(name) + r'\s*\(', g.code):
                     ln = dc.line_of(g.starts, m.start())
-                    if re.match(r'\s*(?:(?:static|inline|constexpr)\s+)*(?:std::u?int32_t|U|unsigned|unsigned\s+long)\s+'
+                    if re.match(r'\s*(?:template\s*<[^>]*>\s*)?(?:(?:static|inline|constexpr)\s+)*(?:std::u?int32_t|U|unsigned|unsigned\s+long)\s+'
                                 + re.escape(name) + r'\s*\(', g.lines[ln - 1]):
                         continue   # the definition
                     r = dc.balanced_args(g.code, m.end() - 1)
