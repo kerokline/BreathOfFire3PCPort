@@ -29,6 +29,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/sound.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -757,6 +758,9 @@ extern "C" unsigned char __cdecl BattleActor_FxSize(void) {
 // SetCurrentPosition(0) and Play; a lost buffer (DSERR_BUFFERLOST) gets the
 // wave's data written again (SndBuf_Write restores it) and a second Play.
 extern "C" void __cdecl SndStream_Play(const unsigned char* wave) {
+    if (sound::MusicLogOn())  // the voice stream's line in the music log (BOF3X_MUSIC_LOG=1; sound.cpp)
+        bof3::Log("music_log   f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
+                  __builtin_return_address(0));
     if (Snd_Device == nullptr) return;
     g.stream_stop();
     void* const buffer = g.create_from_wave(wave);

@@ -26,10 +26,14 @@ game-data kind or any file whose hash `fixtures.toml` catalogues.
    ```
 
 3. `.github/workflows/release.yml` runs: it builds the engine exactly as
-   `build.yml` does, runs `tools/importer.py check`, lays out the zip with
-   `tools/make_release.py --version <tag>`, and creates a **draft
-   pre-release** with the zip attached and the notes file as its text. It
-   stops if the notes file is missing.
+   `build.yml` does, in both widths, runs `tools/importer.py check`, lays
+   out the zips with `tools/make_release.py --version <tag>`, and creates a
+   **draft pre-release** with the zips attached and the notes file as its
+   text. It stops if the notes file is missing. Two zips: `bof3x-<tag>-win.zip`
+   is the 32-bit build, the player's default; `bof3x-<tag>-win-x64.zip` is
+   the 64-bit developer build of the same files
+   ([`../x64-build-round.md`](../x64-build-round.md) 6). Both need the same
+   copy of the game.
 4. The owner reads the draft on GitHub, downloads the zip, tries it on a
    clean folder, and presses **Publish**. Nothing is public before that
    click. (`workflow_dispatch` with a tag re-runs step 3 for an existing tag,
@@ -68,16 +72,19 @@ error, make a new one and replace the secret.
 
 ## The latest build (2026-10-15)
 
-Every push to `main` builds the same zip as a release does and publishes it as
-the pre-release **"Latest build (main)"**, tag `latest`, always at the same
-address:
+Every push to `main` builds the same zips as a release does and publishes
+them as the pre-release **"Latest build (main)"**, tag `latest`, always at the
+same address:
 
 ```
 https://github.com/kerokline/BreathOfFire3PCPort/releases/download/latest/bof3x-latest-win.zip
 ```
 
+That is the 32-bit build, the default. The 64-bit developer build sits
+beside it as `bof3x-latest-win-x64.zip`.
+
 `release.yml`, when run for a branch: the `latest` tag is moved to the commit,
-the zip (`make_release.py --version latest-<commit>`) replaces the one there,
+the zips (`make_release.py --version latest-<commit>`) replace the ones there,
 and the notes name the commit and the time. It is published, not a draft -
 it is the download link for current builds (the owner's ask) - and never
 marked GitHub's latest release, so a published `v*` release keeps that. No
@@ -92,10 +99,14 @@ cmake --preset i686 && cmake --build build
 python tools/make_release.py --version v0.1.0-alpha.1
 ```
 
-writes `build/release/bof3x-v0.1.0-alpha.1-win.zip`. Downloads (python.org's
-embeddable package and three PyPI wheels) are pinned by version and sha256 in
-the script and kept in `build/release-downloads/`, so a second run is
-offline. To try the bundle without the system Python:
+writes `build/release/bof3x-v0.1.0-alpha.1-win.zip`. For the 64-bit developer
+build, `cmake --preset x86_64 && cmake --build build-x86_64` and then
+`make_release.py --version v0.1.0-alpha.1 --build build-x86_64` writes
+`bof3x-v0.1.0-alpha.1-win-x64.zip`: the script reads the width from the
+build's `bof3x.exe` and adds one paragraph to that zip's `README.txt`.
+Downloads (python.org's embeddable package and three PyPI wheels) are pinned
+by version and sha256 in the script and kept in `build/release-downloads/`,
+so a second run is offline. To try the bundle without the system Python:
 
 ```
 <unzipped>\runtime\python\python.exe <unzipped>\runtime\tools\importer.py identify --json "<a .cue>"

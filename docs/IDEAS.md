@@ -51,7 +51,7 @@ rule ([`README.md`](README.md)) here too.
 | I4 | Stacktrace-driven "who called this" work-queue harvester | tooling | LOW | **first-call tracer built 2026-09-19** — [`call-trace.md`](call-trace.md) |
 | I5 | Recover Capcom's `.c` file boundaries from global blocks | tooling | MEDIUM | **folded into I44** 2026-10-21 (the owner): a later step of the typed-source work, as a source-layout pass, not an idea of its own |
 | I6 | Demo/attract playback as determinism oracle | tooling | MEDIUM | **built 2026-09-19** (external sampler) — [`attract-mode.md`](attract-mode.md) §6 |
-| I7 | Replace MCI/VFW with a bundled video decoder | platform | LOW | **overtaken 2026-09-23**: the owner chose MCI into the window (DIV-0035); `Fmv_Play` is ours. Stays on the list |
+| I7 | Replace MCI/VFW with a bundled video decoder | platform | LOW | **built 2026-11-07** as DIV-0205: our own AVI, Cinepak and Video 1 decoders, for the 64-bit build (D407); earlier overtaken 2026-09-23 by MCI into the window (DIV-0035) |
 | I8 | Replace the DirectDraw / `IDirect3D3` presentation layer | platform | LOW | **built 2026-09-23** (DIV-0031) — [`render-backend.md`](render-backend.md) |
 | I9 | Integer-scale the picture and extend the view into the remainder | game behaviour | LOW | **integer scaling built** (DIV-0036, DIV-0042); the wide view built as two fixed presets, 426 x 240 and 560 x 240 (DIV-0041, amended 2026-10-13: [`ultrawide-frame.md`](ultrawide-frame.md)), not the `W / k` rule |
 | I10 | Uses for the call-trace data (seven, ranked) | tooling | MIXED | item 1 **passed 2026-09-19** — [`call-trace.md`](call-trace.md) §7; item 2 (the work queue) **built** — §9 there |
@@ -88,7 +88,7 @@ rule ([`README.md`](README.md)) here too.
 | I41 | Read CHD and CSO images as sources (today refused with a sentence; [`install-sources.md`](install-sources.md) 4) | tooling | MEDIUM | open 2026-10-15, from the Sources page work |
 | I42 | Make the install faster: setup rebuilds everything from every source on each add (about 3 to 4 minutes a setup, two of them the movie's conversion; [`install-sources.md`](install-sources.md) 5 and 6) - keep the base (movie, music, its `DAT` files) across setups and build only a new source's layers | tooling | MEDIUM | **partly built** 2026-10-15: every step timed; the movie, PSX sound and language layers reused when unchanged (adding a disc 89 s, not 372); the PSP's conversions left; 2026-10-25: every slow piece reused, the second-language rows in parallel, kept pieces hard-linked - an unchanged upgrade 248 s -> 31 s ([`install-staleness.md`](install-staleness.md) 5) |
 | I43 | Settle every gap of a disc-built exe image: each of the ranges where the PC's `.data` has a value and the image leaves zero (`recipes/exe-gaps.tsv`; for the EU disc 188 ranges, 2,561 bytes on `main` the day it opened) placed from a disc, filled by an engine rule, or shown never read - first by placing a region from the pointers that point into it | tooling / engine | HIGH | **step 1 built** 2026-10-16 (the owner asked), from the forest sprite of a PSX-only install: the importer places a region from the pointers into it (gap ranges EU 185 to 177, the sprite fixed); step 2 measured 2026-10-18 ([`install-gap-reads.md`](install-gap-reads.md)); steps 3 and 4 **built** 2026-10-31 by the exe-gap round ([`exe-gap-round.md`](exe-gap-round.md): every `gap` row answered, STRICT on by default for disc-built images; on `exe-gap/round`, PR at the owner's word) |
-| I44 | The data image as typed source: the next step toward reconstructed source (stages 1..3; I5's file boundaries folded in 2026-10-21) | engine / tooling | HIGH / MEDIUM | stages 1 and 2 **built** in the typed-data round ([`typed-data-round.md`](typed-data-round.md), PRs #94, #100); stage 3 (relocatable) **built** 2026-10-29 ([`relocatable-image-round.md`](relocatable-image-round.md), merged as PR #168); the source-layout pass open |
+| I44 | The data image as typed source: the next step toward reconstructed source (stages 1..3; I5's file boundaries folded in 2026-10-21) | engine / tooling | HIGH / MEDIUM | stages 1 and 2 **built** in the typed-data round ([`typed-data-round.md`](typed-data-round.md), PRs #94, #100); stage 3 (relocatable) **built** 2026-10-29 ([`relocatable-image-round.md`](relocatable-image-round.md), merged as PR #168); the source-layout pass **staged** 2026-11-07 ([`source-layout-round.md`](source-layout-round.md)) |
 | I45 | Shrink the quicksave files (about 4 MB raw) | engine | HIGH | open 2026-10-17 (the owner): nothing measured |
 | I46 | A quicksave is native memory: revisit what loading one trusts | engine | HIGH | open 2026-10-19 (the owner): a note to consider again |
 | I47 | Quick-loading across translations: review the text that carries over | engine | HIGH | open 2026-10-20 (the owner): nothing measured |
@@ -293,6 +293,26 @@ _(open when written) - overtaken 2026-09-23: the owner chose MCI into the
 window over a bundled decoder (DIV-0035, [`window-modes.md`](window-modes.md)
 §3); `Fmv_Play` `0x59E360` is ours and the exclusive mode-set is gone. The
 idea stays on the list._
+
+_Back 2026-11-07: the 64-bit build (the x64 round, PR #207) plays
+`capcom.avi` through MCI with no picture, because Windows ships `iccvid.dll`
+only for 32-bit processes (D407 in [`known-defects.md`](known-defects.md)).
+The two movies are Cinepak and Microsoft Video 1, both small codecs with
+public format descriptions and no patent cost; a decoder of ours for both,
+drawing through our renderer, is the fix - and the first step is
+[`replacing-mci.md`](replacing-mci.md) 3's contract, which still holds._
+
+**Built 2026-11-07 as DIV-0205.** The 64-bit build (the x64 round) showed no
+Capcom movie: Windows has no 64-bit Cinepak decompressor (D407),
+which the "no re-encode can fix it" case above did not foresee. Not the
+licensing table's codecs: the two shipped files are read as they are, by an
+AVI reader, a Cinepak decoder and a Microsoft Video 1 decoder written from
+the public descriptions (`src/video`), bit-exact against ffmpeg on every
+frame of all three movies; the PCM stream through an SDL3 audio stream; the
+frames into DIV-0035's rectangle by GDI, paced on the wall clock. The modal
+loop, the skips and the pause kept their shape. [`replacing-mci.md`](replacing-mci.md)
+"As built". The §6 argument stood until the width changed; the §7 questions
+are answered there.
 
 ## I8 — Replace the DirectDraw / `IDirect3D3` presentation layer
 
@@ -2051,6 +2071,7 @@ pass after stage 3 - which of our files should be split or joined to match._
 _(2026-10-27) stage 3 staged at the owner's word:
 [`relocatable-image-round.md`](relocatable-image-round.md)._
 _(2026-10-29) stage 3 built: the relocatable-image round, stages A..D ([`relocatable-image-round.md`](relocatable-image-round.md) 4, 5). The player's `bof3x.exe` is unchanged in what it does - the image still at `0x400000`, its state hash matching the references on all ten routes - but nothing of ours assumes that base any more: every address in the source is a VA placed by `Img` / `Code` at a base read at run time, `.data`'s pointer words are rebased at load, and the code words are bound by name to places of ours (`(top << 24) | VA`, a table of jumps); the entry-stub page is gone and `.stub` is a no-access trap. What stays: the moved image (`BOF3X_IMAGEBASE`, `0x990000..0xA70000`) is a developer's switch, because its fence - the linked span reserved while the game is suspended - is the developer launcher's; the hosted build stays at `0x400000` by construction; `tools/reloc_bare.py --check` refuses a new bare image address in `src/game`, `src/input`, `src/render`. After it the only pin to x86-32 is pointer width inside the records; the source-layout pass is next in this idea._
+_(2026-11-07) the source-layout pass staged at the owner's word: [`source-layout-round.md`](source-layout-round.md); `.data` order follows `.text` object order, so the units can be recovered from the PC binary, with the PSX twin as the second observation._
 
 ## I45 — Shrink the quicksave files
 

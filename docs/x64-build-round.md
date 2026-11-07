@@ -61,7 +61,7 @@ runs in the hosted build only, which stays 32-bit for ever (section 2).
 | The rest of the Windows surface | `d3d11` included in 2 files (`src/render`), `dinput` in 4 (3 `src/game`, 1 `src/input`; `pad_read.cpp:241` loads `dinput.dll`), `mmsystem` in 2 (`src/hook` for the FMV's MCI, DIV-0035; the launcher); the DLL links `d3d11 dxgi d3dcompiler_47 uuid winmm bcrypt ole32 windowscodecs dinput dxguid SDL3::SDL3-static` (`CMakeLists.txt:758`); **SDL3 3.4.16 already fetched** for the pad (DIV-0050, `CMakeLists.txt:93-112`, [`THIRD_PARTY.md`](THIRD_PARTY.md) 2) | `grep -rlE "#include\s*[<\"]<name>(\.h)?[>\"]" src` per header |
 | C++ floating point | already SSE in the `i686` build: the DLL's code has 9,551 `movss`, 1,129 `mulss`, 893 `addss` against 557 `flds` and 994 `fstps` (the asm blocks, and the i686 ABI's float returns in `st(0)`). So the x86-64 build's SSE arithmetic is the 32-bit build's, outside the asm | `llvm-objdump -d --no-show-raw-insn build/bof3x.dll`, mnemonics counted (the build of 2026-10-30) |
 | The log formats that print a place | 434 conversions (`%08X` 367, `%p` 67 by the `grep`), **366 in live files**: 78 print a pointer whole (`%p`, `(void*)x`: 16 digits on x86-64 unless the design keeps the place low; `wav_dump.cpp` 17, `detour.cpp` 10, `snapshot.cpp` 9, `sound.cpp` 8, `exe_host.cpp` 7), 19 print a narrowing of their own (`(unsigned)reinterpret_cast<std::uintptr_t>(p)`, `Address(sprite)`: B2's helper's), 269 print a word (a VA, a count, a flag) | `python tools/width_census.py --counts` (`fmt_place_*`); the `fmt_place` rows, `token` the argument each conversion prints |
-| The FMV codec | `capcom.avi` shipped as Indeo 5, which no 64-bit Windows decodes; already re-encoded to Cinepak by the ledger's entry "Re-encode `capcom.avi` from Indeo 5 to Cinepak" ([`DIVERGENCE.md`](DIVERGENCE.md) line 279) | the ledger |
+| The FMV codec | `capcom.avi` shipped as Indeo 5, which no 64-bit Windows decodes; already re-encoded to Cinepak by the ledger's entry "Re-encode `capcom.avi` from Indeo 5 to Cinepak" ([`DIVERGENCE.md`](DIVERGENCE.md) line 279) - **wrong, 2026-11-07: Windows has no 64-bit Cinepak decompressor either** (`iccvid.dll` is in `SysWOW64` alone), D407 | the ledger |
 | The quicksave's build check | the quicksave's `BuildId` holds the host, the version tag, the **sha256 of `bof3x.dll`** and the DLL's base as a 32-bit word (`snapshot.cpp:126-131`, filled at `:300-319`). A quicksave from another DLL is refused already, so a 32-bit take is refused by a 64-bit build without new code; `dll_base` is the one field that must widen or stay low | the file |
 | The state hash | the tool reads `BOF3SH1`..`BOF3SH5` (`tools/statehash.py:34-75`); since PR #170 a folded `BOF3SH5` run refuses a `BOF3SH4` folded file by design; the hash maps a code word back to its VA only inside the bind table (`bind.cpp` header comment) | [`state-hash.md`](state-hash.md) 8, [`statehash-pool-fold.md`](statehash-pool-fold.md) |
 | **The low-memory probe** (a 64-bit program built with the `x86_64` driver; **not re-run** on 2026-10-31) | 2026-10-29: `VirtualAlloc(0x400000, 0x600000)` succeeds; the window `0x10000..0x1000000` is entirely free before our block; 64 MB at `0x1000000` succeeds. The same program linked by lld with `--image-base 0x400000` was moved by ASLR to `0x4E0000` and the block then failed (error 487). Not measured: a PE32+ that `make_exe.py` writes with no relocations and no `DYNAMIC_BASE`, as `bof3x.exe` is today | `tools/probes/lowmem_probe.cpp` |
@@ -666,7 +666,8 @@ coordinator then runs:
    diff`: identical but the noise class, the Rand counts the references';
 2. the quicksave: a take and a load on the 64-bit host (works); a 32-bit
    take loaded on the 64-bit host (refused by the build id, section 0);
-3. the FMV: `capcom.avi` plays through MCI on the 64-bit host (the Cinepak
+3. the FMV (D407, 2026-11-07: this run saw the clip run, not a picture; see
+   the assumptions list): `capcom.avi` plays through MCI on the 64-bit host (the Cinepak
    re-encode is the ledger's; a 64-bit `iccvid` is Windows' own, to be seen
    not assumed), and the two other AVIs;
 4. the launcher: launches the 64-bit executable from the Sources page as it
@@ -798,6 +799,11 @@ v0.1.0 (0be42825073e...); the save half is still a save`, the overlay
 their ends on the 64-bit host (`DIV-0035 ... into the window at 0,0 640 x
 480`, no skip line, `WinMain: FMVs done`) in every run; the round's game
 copy holds those two AVIs only. What the window shows is the owner's eye.
+**Seen 2026-11-07: no picture for `CAPCOM.AVI`** - the pump ran to the end
+over frames MCI could not decode, since Windows has no 64-bit `iccvid.dll`
+(D407, [`known-defects.md`](known-defects.md)). The lines above proved the
+pump, not the picture. **Fixed the same day by DIV-0205**, the game's own
+decoders, folded into this PR ([`replacing-mci.md`](replacing-mci.md) 8).
 
 **4. The launcher.** The 64-bit launcher starts the 64-bit exe beside it in
 every run above. The 32-bit launcher with the 64-bit exe and DLL beside it
@@ -819,14 +825,172 @@ at their own last step before the appended quit, so they were not measured.
 ## 6. Stage D: audit and docs
 
 A read-only audit of every width-conditional line in `src/` (the list is
-XA1's census re-run on the round's tip: the count of `#if` by width in a
-game file should be zero), of every `Low32()` that fires in no run but
+XA1's census re-run on the round's tip: every `#if` by width in a game file
+is either an i686/x86_64 asm pair that [`x64-asm-policy.md`](x64-asm-policy.md)
+allows or a logic fork the audit names and explains - on `main` `39d88ef9`,
+2026-11-07, there are 16 in 10 files under `src/game`, and the one logic fork
+known is `sound.cpp`'s `Music_Pump`, HANDOFF item 14a), of every `Low32()` that fires in no run but
 could, and of the ledger: a 64-bit build that behaves as the 32-bit one
 needs no DIV entry; anything stage C changed for the player (a refused
 quicksave, a `Fatal` on low memory, a sound the shim changed) gets one.
 `STATUS.md`, `HANDOFF.md`, [`SCAFFOLDING.md`](SCAFFOLDING.md) 4 (the
 presets), `release.yml` (the second artefact, signed as the first), this
 doc's "as run" sections.
+
+### Stage D as run (2026-11-07, branch `x64/stage-d` off `main` `39d88ef9`; root `C:\Users\kerok\bof3x-runs\x641107`)
+
+The coordinator's session, with two Opus agents for the contained parts
+(the CI and release workflows on `x64/d-ci`, the music-hearing check on
+`x64/d-music`, both merged into the branch). Every run on fresh builds of
+the branch tip, both widths (`L32`, `L64` under the root; `Lmix` is the
+32-bit launcher pair beside the 64-bit exe, DLL and moved exe), on a copy
+of the round's game folder, `--no-front`, hands off.
+
+**1. The audit, as a command.** `tools/width_census.py` has four classes
+for it since this day (its docstring says what each row is): `width_if`,
+`low32`, `handle_array` and `ptr_overlay`; `--list <class>` prints the rows,
+`analysis/width_census.tsv` holds them, and `--check` in CI refuses a new
+one in a live file. What they say on the tip:
+
+- **Every width `#if` in a game file is an asm pair the policy allows, but
+  one.** 16 blocks in 10 files under `src/game`: fifteen `asm_pair` rows -
+  the two call tables (`Scenario_CallA`, `Scenario_CallB`; policy 8 unit 3),
+  the six ecx entries (`Music_IsPlaying`, `LoadMenu_Error`,
+  `ScenaCall_SaveAndLeave`, `Scena15_LeaveAllParty7`, `Music_Halt`,
+  `SndStream_IsPlaying`; unit 4), the three callee-table jumps
+  (`Sound_StopMusic`, `Sound_ResumeAll`, `Sound_MusicPlaying`; unit 5), the
+  two eax thunks (`Battle_StatusTint`, `ScriptFlags_Clear40`; unit 6),
+  `Cfg_Load`'s frame (unit 7) and `task_switch.h`'s two includes (unit 2,
+  the named exception) - and one `logic` row, `Music_Pump` (section 5's
+  defect: the x86-64 half copies the two slots into a native handle array;
+  the i686 half keeps Capcom's call so the sound fuzz's stand-in sees the
+  image's array). The 30 other blocks are in `src/hook`, `src/audio` and
+  `src/common` (the width's `CONTEXT` fields, the detour's `jmp`, the crash
+  report's registers, `ImageBase()`, the decoder's stack switch), logic by
+  nature and outside the rule.
+- **No `Low32()` narrows an address the design places above 4 GB.** 466
+  live calls: 175 are the one-line helpers (`Key`, `Addr`, `AddressOf`...),
+  whose 1,460 callers the census now lists as `narrow_call` rows; the rest
+  by class - image_local 101, object_ours 81, func_ours 35, image 28, pool
+  18, windows 12, unread 15, crt 1 (`--counts`). The rows outside the classes
+  the low-memory design keeps below 4 GB by placement (design doc 2) were
+  read one by one: the TEB's `StackBase` / `StackLimit` (the harnesses; the
+  main thread's stack, placed low), `VirtualQuery` results walking below
+  16 MB or the main stack (`draw_pool.cpp`, `stackwatch.cpp`, `exe_host.cpp`,
+  `snapshot.cpp`), our DLL's own base and tables (`statehash.cpp`,
+  `crash.cpp`'s `ImageRange` for the DLL and the main module only,
+  `rdata_consts.cpp`'s DirectInput table), the hosted-only tracer and
+  `Crt_GetPtd` (32-bit for ever), the game's heap blocks (`mp3.cpp`,
+  `display_env.cpp`: `Crt_malloc`, whose `LowBlock` is the chokepoint), the
+  render shim's and the SDL layer's objects (`HeapAlloc` of the process heap,
+  a static pool), the WAV dump's own hook, and `Slot32`'s store (every slot,
+  the trap by design). **Where a Fatal could still fire, in a run no route
+  has made:** a process-heap block (the render shim's surfaces and pixels,
+  the game's `Crt_malloc`) once the low 4 GB has filled - the probe's first
+  block above it came after 2.75 GB of allocation (design doc 2) - and our
+  DLL if the loader ever relocated it, which `bind.cpp` refuses at load.
+  Nothing else narrows a native address.
+- **The two rows the defect asked for.** `handle_array`: three sites in
+  the tree - `fmv_play.cpp`'s wait with no array, `Music_Pump`'s two (the
+  native copy on x86-64, the image slots on the i686 branch alone,
+  `slot_i686`). `ptr_overlay`: 38 live rows, 10 in game files, none over
+  the image's bytes - the render shim's `Surface` over a slot's `.Native()`
+  (our object, whose address the slot holds narrowed), and the self-tests'
+  `FakeObject` / `FakeBuf` stand-ins of ours; the rest are launcher dialog
+  states and render objects. C1's 23 `pointer-field` rows stay as they were
+  rewritten (a 32-bit word read, then `At()`).
+- **The ledger.** Nothing stage C or D changed is player-visible on the
+  32-bit default, and the 64-bit build adds no behaviour of its own: a
+  quicksave of the other width is refused by the build id, the quicksave
+  round's rule for any other build (DIV-0145's take and load, "another
+  build" in the overlay); `BOF3X_ORIGINAL` and `BOF3X_SHADOW` are refused with the exe
+  host's existing message; the sound output is DIV-0201's on both widths.
+  **No DIV entry** for this round beyond DIV-0201, and no defect number.
+
+**2. The runs not made in stage C.**
+
+- **The moved base on the 64-bit host.** The 64-bit player's launcher
+  forwards `BOF3X_IMAGEBASE` to `bof3x-launcher-dev.exe`, which that build
+  does not make (CMakeLists.txt, `BOF3X_HOSTED_BUILD`), so it stops with the
+  "developer launcher's" message. The run is the mixed copy: the 32-bit
+  developer launcher beside the 64-bit `bof3x.exe`, `bof3x.dll` and
+  `bof3x-A00000.exe` (`build-x86_64` writes the moved one too). Its fence
+  reads the child's `SizeOfImage` at the same header offset in a PE32+ as in
+  a PE32, and reserved `0x58F000` bytes of `0x400000..0x98F000` with nothing
+  already held; the engine's own fence agreed. The exe host's self-test at
+  `0xA00000` passed (`host: ... the image at 0xA00000, moved from 0x400000`),
+  and `combat` hashed at `0xA00000` against `combat` at `0x400000` recorded
+  with `BOF3X_STATEHASH_FOLD=0xA00000` is **identical on all 2,561 ticks**
+  (`proof\diff_combat_moved.txt`). Trap: without the fold on the `0x400000`
+  side the diff refuses the pair, and `statehash.py check` against the
+  `orig4` pairs refuses a moved run for the same reason.
+- **The stackwatch on `field_menu` and `menu_screens`** (`L64`): slice 0's
+  deepest write `0x5508` of `0x8000` on both, slice 1 `0x54F8`, slices 2
+  and 3 never committed - the same figures as the other eight routes, and
+  below `cutsceneAndNue`'s `0x5628`; `kSlice64` holds on all ten. Trap paid:
+  the stage C copies in `proof\stackq` ended with the recipe's own `end`
+  line before the appended F9 / quit lines, so the quit never ran and no
+  exit line was written; the `end` removed, both quit and log.
+- **The WAV pair under both sound switches** (`L32`, `shop.txt`, `--wav`,
+  `tools/wav_diff.py`): the dump under DIV-0201 (SDL3) against the dump
+  under `BOF3X_OFF=SoundSdl` (DirectSound) is identical for the first ten
+  seconds and differs in 96 of 106 one-second windows from `10.0 s`, where
+  the town's song starts (`Music_Start` at f320); the levels match within a
+  few dB throughout. A cross-correlation of the two dumps (3 s windows at
+  15, 40 and 70 s) finds the same lag in each: **the song lies 546 ms
+  (24,084 samples) later in the SDL3 dump than in the DirectSound one**,
+  with the effects, which are frame-timed, where they were; after that
+  alignment the residual is 7..8 dB under the level. The music logs agree
+  but for the inn's resume sample (`3,200,256` under SDL3, `3,197,952` under
+  DirectSound: one 2,304-sample fold apart, DirectSound's cursor against
+  the computed one). Not settled: whether the ear hears the song that much
+  later against a cue (the inn's night, DIV-0169, is a scene with one), or
+  whether the dump's model of the computed cursor places the ring's halves
+  later than the device plays them. **The owner's listen, 2026-11-07, on the
+  64-bit build:** nothing unusual at the inn's night, the combat loop and the voices sound
+  right - the figure is the dump's model, not the ear's. It is in
+  `proof\wav_diff_shop.tsv` and the two dumps under `wav\`. The one thing the
+  owner heard, a quick-load during a battle voice bringing the voice back
+  before the song, is the rebuild's order, not the output layer's: D406.
+
+**3. The CI and the release** (`x64/d-ci`): the `x86_64` job of
+`build.yml` is a gate like the `i686` one - configure, build, the same
+import check (`Arch: x86_64`, system DLLs only; `bof3x.exe` imports
+`bof3x.dll` and `KERNEL32.dll` alone), the three binaries uploaded as
+`bof3x-x86_64-<sha>`. `release.yml` builds both widths in its one job,
+signs all six binaries in the one jsign call, verifies the 64-bit exe's
+layout with `make_exe.py --width 64`, and attaches a second zip,
+`bof3x-<tag>-win-x64.zip`, to the draft and to `latest` beside the 32-bit
+one, whose name and place do not change; `make_release.py` reads the exe's
+width and says so in the zip's README. A dry run of the 64-bit zip from
+this day's build listed 1,203 files, no game data. The jsign call with six
+files is unexercised until the next push to `main`
+([`releases/README.md`](releases/README.md)).
+
+**4. The ear beside the hash** (`x64/d-music`): `Sound_Tick` writes a
+`music_log ... ring track <t> heard <sample> written <samples> playing|halted`
+line once in every 60 frames under `BOF3X_MUSIC_LOG=1`, held during a
+self-test-only run so the hosted suite's logs stay as they were, and
+`tools/music_heard.py <log>` fails (exit 1) on the stage C defect's shape, a
+track playing with no advance of the heard sample, and with exit 2 when the
+log has no ring line at all. On the merged tip, rebuilt in both widths, the
+ten routes on the 64-bit exe host with the switch pass the check one by one
+(`proof\heard_<route>_x64.txt`: `whelpBoss` 164 ring lines over 6 tracks,
+`cutsceneAndNue` 116 over 5, `caughFish` 62 over 6, `combat` 40 over 4,
+`dragonTransform` 67 over 4, `masterAndManillo` 89 over 6, `field_menu` 20
+over 2, `menu_screens` 25 over 2, `shop` 46 over 2,
+`worldMapAndAreaTransition` 33 over 5), `shop` on the 32-bit exe host
+passes alike (46 over 2), and stage C's `shop_x64m.log` from before the
+`Music_Pump` fix exits 2, as the log of a build without the ring line must
+(`run_d3.out`). The i686 gate on the same tip: the hosted suite with
+`BOF3X_SHADOW='*'` exits 0 plain and under the music log, the exe host's
+self-test exits 0 in both widths.
+
+Trap paid (the coordinator's, not the agent's): the hosted `'*'` suite
+takes about forty minutes and its log grows by hundreds of lines a minute
+the whole way; a run judged hung from one tail and a stale mtime was
+killed mid-way and had to be run again. Count the log's lines twice a
+minute apart before calling a `'*'` run hung.
 
 ## 7. For the owner
 
@@ -932,7 +1096,10 @@ behaviour needs no ledger entry; anything it does change does.
 - The 64-bit frames' depth on the task stacks: a stackwatch run on the
   64-bit host, stage C.
 - That Windows ships a 64-bit Cinepak decoder reachable through MCI: stage
-  C's run 3.
+  C's run 3. **It does not** (D407, the owner's first play, 2026-11-07: no
+  picture; `iccvid.dll` is in `SysWOW64` alone, and MCI pumps the clip to its
+  end drawing nothing). Fixed by DIV-0205: the game's own decoders
+  ([`replacing-mci.md`](replacing-mci.md) 8), on both widths.
 - The pace cost of `Img()` as a native pointer with a run-time base on
   x86-64: stage C's run 5.
 - Whether anything in `src/game` depends on `__stdcall` / `__cdecl` beyond

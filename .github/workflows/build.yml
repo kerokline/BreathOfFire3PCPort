@@ -1,12 +1,10 @@
 # Build bof3x.dll, bof3x.exe and bof3x-launcher.exe on every push to main and every pull
 # request, with the project's one supported toolchain (docs/SCAFFOLDING.md
 # section 4): llvm-mingw, pinned to the release the build is verified with,
-# in both widths - the i686 job is the player's build and must pass; the
-# x86_64 job (docs/x64-build-round.md 3 "XA4") compiles the same source with
-# the x86_64 preset and keeps its compile and link logs as an artefact. Until
-# the round's stage C links and runs the 64-bit executable, its compile and
-# link steps are non-blocking (continue-on-error below): the compile log is
-# the asm policy's second opinion (XA3), not a gate. Cross-compiled on Linux:
+# in both widths. The i686 job is the player's build; the x86_64 job
+# (docs/x64-build-round.md 3 "XA4") is the developer's 64-bit build, the same
+# source with the x86_64 preset. Both must pass: each links its three
+# binaries, checks their imports and uploads them. Cross-compiled on Linux:
 # the toolchain is the same, and the runner is faster to start.
 #
 # The build reads no game data (CMakeLists.txt), so a hosted runner is enough.
@@ -123,17 +121,16 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  # The 64-bit build (docs/x64-build-round.md 3 "XA4"): the same toolchain
-  # tarball (its x86_64-w64-mingw32-* drivers sit beside the i686 ones, so the
-  # cache key is the i686 job's), the x86_64 preset. Three steps after the
-  # configure, so the log tells a file that does not compile from a link that
-  # does not resolve: the objects alone (CMakeLists.txt's bof3x_compile target,
-  # -k 0 so the log is whole), then the link. Both non-blocking until stage C;
-  # the configure is not, since it fetches and configures SDL3 for the width.
-  # The summary step counts the compile errors by file into the job summary.
-  # Stage C: drop the two continue-on-error lines, add the import check.
+  # The 64-bit build (docs/x64-build-round.md 3 "XA4"; stage D made it a
+  # gate): the same toolchain tarball (its x86_64-w64-mingw32-* drivers sit
+  # beside the i686 ones, so the cache key is the i686 job's), the x86_64
+  # preset. It builds bof3x.dll without the hosted mode and the fuzz,
+  # bof3x.exe as a PE32+ (tools/make_exe.py --width 64) and the player's
+  # launcher; no bof3x-launcher-dev.exe (CMakeLists.txt, BOF3X_HOSTED_BUILD).
+  # The release carries it as a second zip beside the 32-bit one, which stays
+  # the player's default (release.yml).
   x86_64:
-    name: x86_64 (llvm-mingw; compile log, link non-blocking until stage C)
+    name: x86_64 (llvm-mingw)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -155,8 +152,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP"
-          gh release download "$LLVM_MINGW_TAG" -R mstorsjo/llvm-mingw \
-            -p "llvm-mingw-${LLVM_MINGW_TAG}-${LLVM_MINGW_CRT}-ubuntu-*-x86_64.tar.xz"
+          gh release download "$LLVM_MINGW_TAG" -R mstorsjo/llvm-mingw             -p "llvm-mingw-${LLVM_MINGW_TAG}-${LLVM_MINGW_CRT}-ubuntu-*-x86_64.tar.xz"
           ls -l llvm-mingw-*.tar.xz
           sha256sum llvm-mingw-*.tar.xz
           mkdir llvm-mingw
@@ -171,54 +167,50 @@ jobs:
           ninja --version
           python --version
 
-      # -ferror-limit=0: clang stops a file after 20 errors, and the
-      # generated header's static_asserts alone are 19 of them until stage
-      # B3 (docs/x64-build-round.md 4), which would hide every file's own
-      # errors from the log. Dropped with the continue-on-error lines.
       - name: Configure
-        run: cmake --preset x86_64 -DCMAKE_CXX_FLAGS=-ferror-limit=0
+        run: cmake --preset x86_64
 
-      - name: Compile
-        id: compile
-        continue-on-error: true
+      - name: Build
+        run: cmake --build build-x86_64
+
+      # The i686 job's check for the 64-bit files: the DLL and the launcher
+      # import system DLLs only (-static), bof3x.exe exactly KERNEL32.dll and
+      # bof3x.dll. llvm-readobj prints "Format: COFF-x86-64" and "Arch:
+      # x86_64" for a PE32+ (measured 2026-11-07 on build-x86_64/bof3x.exe;
+      # the i686 job's files say "Arch: i386"), and the check fails if any of
+      # the three is not that: a 32-bit file in the 64-bit tree would mean
+      # the preset took the wrong drivers.
+      - name: Check imports
         run: |
-          set -uo pipefail
-          cmake --build build-x86_64 --target bof3x_compile -- -k 0 2>&1 | tee build-x86_64/compile.log
-          exit "${PIPESTATUS[0]}"
+          set -euo pipefail
+          readobj="$LLVM_MINGW_ROOT/bin/llvm-readobj"
+          fail=0
+          for f in build-x86_64/bof3x.dll build-x86_64/bof3x-launcher.exe build-x86_64/bof3x.exe; do
+            echo "== $f"
+            "$readobj" --file-headers "$f" | grep -E '^\s*(Format|Arch):' | tee headers.txt
+            if ! grep -qE '^\s*Arch: x86_64$' headers.txt; then
+              echo "::error file=CMakePresets.json::$f is not an x86_64 image (above)"
+              fail=1
+            fi
+            "$readobj" --coff-imports "$f" | sed -n 's/^ *Name: \(.*\.dll\)$/\1/Ip' | sort -uf | tee imports.txt
+            if [ "$f" = build-x86_64/bof3x.exe ]; then
+              if [ "$(tr 'A-Z' 'a-z' < imports.txt | tr '\n' ' ')" != "bof3x.dll kernel32.dll " ]; then
+                echo "::error file=tools/make_exe.py::$f must import KERNEL32.dll and bof3x.dll alone (above)"
+                fail=1
+              fi
+            elif grep -iE '^(lib.*|sdl3|bof3x)\.dll$' imports.txt; then
+              echo "::error file=CMakeLists.txt::$f imports a non-system DLL (above); it must link -static"
+              fail=1
+            fi
+          done
+          exit $fail
 
-      - name: Link
-        id: link
-        continue-on-error: true
-        run: |
-          set -uo pipefail
-          ninja -C build-x86_64 -k 0 2>&1 | tee build-x86_64/link.log
-          exit "${PIPESTATUS[0]}"
-
-      - name: Summary
-        run: |
-          set -uo pipefail
-          {
-            echo "## x86_64: compile ${{ steps.compile.outcome }}, link ${{ steps.link.outcome }}"
-            echo
-            echo "Compile errors by file (clang's \`file:line:col: error\` lines, build-x86_64/compile.log):"
-            echo
-            echo '```'
-            grep -oE '^[^: ]+\.(cpp|cc|c|h|hpp|rc):[0-9]+:[0-9]+: (fatal )?error' build-x86_64/compile.log \
-              | sed -E 's/:[0-9]+:[0-9]+: (fatal )?error$//' | sort | uniq -c | sort -rn || echo "none"
-            echo '```'
-            echo
-            echo "Link errors (build-x86_64/link.log): $(grep -cE 'ld\.lld: error|undefined symbol' build-x86_64/link.log || true)"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      # The logs always; the binaries when the link got that far. No game
-      # data is in the build tree.
+      # Our own binaries, as the i686 job's. No game data is in the build tree.
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: bof3x-x86_64-${{ github.sha }}
           path: |
-            build-x86_64/compile.log
-            build-x86_64/link.log
             build-x86_64/bof3x.dll
             build-x86_64/bof3x-launcher.exe
             build-x86_64/bof3x.exe

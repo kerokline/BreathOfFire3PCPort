@@ -283,6 +283,10 @@ set(_dll_sources
   src/audio/song.cpp
   src/audio/mp3.cpp
   src/audio/sound_sdl.cpp
+  src/video/avi_reader.cpp
+  src/video/cinepak.cpp
+  src/video/msvideo1.cpp
+  src/video/movie.cpp
   src/game/d3d_draw_fuzz.cpp
   src/game/d3d_list.cpp
   src/game/d3d_list_fuzz.cpp
@@ -909,6 +913,13 @@ function(bof3x_add_launcher target output hosted)
   set_target_properties(${target} PROPERTIES OUTPUT_NAME "${output}")
 endfunction()
 bof3x_add_launcher(bof3x_launcher bof3x-launcher 0)
+# bof3x-fmvdump: the FMV decoders (src/video, DIV-0205) as a console tool
+# that writes an AVI's frames raw, for tools/fmv_compare.py to hold against
+# ffmpeg's decode of the same file. Not a player file.
+add_executable(bof3x_fmvdump src/video/fmv_dump.cpp src/video/avi_reader.cpp src/video/cinepak.cpp
+  src/video/msvideo1.cpp src/video/movie.cpp)
+target_include_directories(bof3x_fmvdump PRIVATE src)
+set_target_properties(bof3x_fmvdump PROPERTIES OUTPUT_NAME "bof3x-fmvdump")
 # The developer launcher starts BOF3.exe with the DLL injected, which only a
 # 32-bit process can do to a 32-bit one: the hosted build's alone.
 if(BOF3X_HOSTED_BUILD)
