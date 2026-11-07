@@ -327,18 +327,17 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - **Numbering:** ledger entries after DIV-0202, defects after D400, both checked against `main` first (the
      issue 177..179 work on `fix/issues-177-178` may take more).
 
-14b. **The source-layout round: stage A running** (launched 2026-11-07 on `source-layout/round`; SL1..SL3 in worktrees `sl1107\sl<n>`, reports `sl1107/reports`; the owner's calls answered, section 7 - per-file granularity from SL1's sheet, subsystem folders, old doc paths kept with a map, I48 as stage E). Staged as ([`source-layout-round.md`](source-layout-round.md),
-   2026-11-07, the owner's pick of the next large round; IDEAS I44's last step with I5 folded in). Our 301 game
-   files are the takeover's waves; the round recovers Capcom's translation units from the binary and moves
-   functions so each file holds whole units, every function's machine code unchanged. Measured: no seam byte
-   between objects (`0x90` filler throughout), but `.data` statics follow `.text` object order (2,690 of 2,950
-   neighbours) and 1,107 PC runs keep their PSX twins' order; only 116 of our files are one contiguous `.text`
-   run. **Stage A** (SL1 the unit table, SL2 the PlayStation side, SL3 the move tool and
-   `codegen_same.py --by-function`) changes no `src/game` file and can start beside stage D. **Stage B** (the
-   moves) waits for stage D's merge and **the owner's six calls** in the doc's section 7 (granularity,
-   directories, file names, doc citations, I48 kept apart, timing) - answered; stage B waits on the owner's read of SL1's layout sheet. Scratch measurements in
-   `C:\Users\kerok\bof3x-runs\sl1107\m`.
-
+14b. **The source-layout round: stage A done and merged on `source-layout/round`** (2026-11-07, local, unpushed;
+   [`source-layout-round.md`](source-layout-round.md) section 3's "as run" subsections; reports
+   `C:\Users\kerok\bof3x-runs\sl1107\reports`). SL1: 676 units (contiguity holds; 7,202 functions joined, 62
+   placed, 2,805 guessed), proposed as 556 files in 14 subsystem folders on the owner's sheet
+   `analysis/tu_layout_sheet.md`, with SL2's PSX units joined (59 of 488 PSX units split, 42 of them already
+   interleaved on the PC). SL2: Capcom built with `-G0`, and no Capcom file name survives in either binary. SL3:
+   `codegen_same.py --by-function`, `move_funcs.py`, `cite_lookup.py` with `tu_moves.tsv`, `game_sources.py`; its
+   dry run moved effect kind 0xA7 with i686 identical. **Before stage B:** the owner's read of the sheet; the
+   owner's word on renaming clashing file-local helpers (468 clashes; the mover refuses 164 of the 556 files today,
+   section 3 "Stage A's end"); the 64-bit gate's standing (inlining and `Low32` differ at x86-64 for a pure move);
+   stage D of the 64-bit round merged first (it edits the source list `game_sources.py adopt` replaces).
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
    (D330). Open from the `orig3` reading: which of the button round's glyph changes moves `masterAndManillo`'s pages
