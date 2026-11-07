@@ -326,7 +326,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    that play: the Capcom movie has no picture on the 64-bit build - D407, Windows ships no 64-bit Cinepak
    decompressor (`iccvid.dll` is in `SysWOW64` alone), so stage C's "plays to its end" proved the pump, not
    the picture; the fix is IDEAS I7 (a decoder of ours), a round of its own.** Still owed (owner-review):
-   whether `LOGOS.AVI` (Microsoft Video 1, which 64-bit Windows has) shows, and a look at the Sources page. **Traps paid:** a quit-ended recipe copy must lose the recipe's own `end` line or the quit never runs;
+   whether `LOGOS.AVI` (Microsoft Video 1, which 64-bit Windows has) shows; the Sources page looks right (its
+   list read from an earlier build's config; an import from the 64-bit launcher is unexercised). **Traps paid:** a quit-ended recipe copy must lose the recipe's own `end` line or the quit never runs;
    a moved run's hash wants the `0x400000` side recorded with `BOF3X_STATEHASH_FOLD=<base>`; the hosted
    `BOF3X_SHADOW='*'` suite takes about forty minutes - count its log's lines a minute apart before calling it
    hung (one run was killed half-way on a stale tail and had to be run again).
