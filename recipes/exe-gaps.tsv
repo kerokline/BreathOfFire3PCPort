@@ -90,7 +90,7 @@ psx-jp	0x663758	0x663768	gap	game-value	Equip_SlotIcons+0xF8
 psx-jp	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psx-jp	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psx-jp	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
-psx-jp	0x6671EC	0x6671F1	unread	unread	Music_LoadedTrack+0x1E30
+psx-jp	0x6671EC	0x6671F4	unread	unread	Music_LoadedTrack+0x1E30
 psx-jp	0x669CCC	0x669CD4	gap	language-zero	Encounter_SlotChance+0x1C
 psx-jp	0x669CD8	0x669CE0	language	language	AreaW0b_ItemNameKey
 psx-jp	0x669CE0	0x669CE8	language	language	BattleE1_GuestHeadOut
@@ -1240,7 +1240,7 @@ psp-jp	0x663758	0x663768	gap	game-value	Equip_SlotIcons+0xF8
 psp-jp	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psp-jp	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psp-jp	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
-psp-jp	0x6671EC	0x6671F1	unread	unread	Music_LoadedTrack+0x1E30
+psp-jp	0x6671EC	0x6671F4	unread	unread	Music_LoadedTrack+0x1E30
 psp-jp	0x669CCC	0x669CD4	gap	language-zero	Encounter_SlotChance+0x1C
 psp-jp	0x669CD8	0x669CE0	language	language	AreaW0b_ItemNameKey
 psp-jp	0x669CE0	0x669CE8	language	language	BattleE1_GuestHeadOut
@@ -1457,7 +1457,7 @@ psp-eu	0x663758	0x663768	gap	game-value	Equip_SlotIcons+0xF8
 psp-eu	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psp-eu	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psp-eu	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
-psp-eu	0x6671EC	0x6671F1	unread	unread	Music_LoadedTrack+0x1E30
+psp-eu	0x6671EC	0x6671F4	unread	unread	Music_LoadedTrack+0x1E30
 psp-eu	0x669CCC	0x669CD4	gap	language-zero	Encounter_SlotChance+0x1C
 psp-eu	0x669CD8	0x669CE0	language	language	AreaW0b_ItemNameKey
 psp-eu	0x669CE0	0x669D20	language	language	BattleE1_GuestHeadOut
