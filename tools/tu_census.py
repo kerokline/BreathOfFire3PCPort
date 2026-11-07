@@ -79,6 +79,47 @@ PSX_STEP = 0x2000                           # same file: next PSX twin within th
 LOCAL_SPAN = 12                             # a static read inside this many functions
 TSV = os.path.join(ROOT, 'analysis', 'tu_layout.tsv')
 SHEET = os.path.join(ROOT, 'analysis', 'tu_layout_sheet.md')
+PSX_TSV = os.path.join(ROOT, 'analysis', 'tu_psx.tsv')   # SL2's table (tools/tu_psx.py)
+
+
+def load_psx_units(path):
+    """SL2's PSX unit of each PC function with a twin: {pc: (psx_unit, agreement)}.
+    Empty when the table is absent (the column then stays empty)."""
+    if not path or not os.path.exists(path):
+        return {}
+    out = {}
+    with open(path, encoding='utf-8') as fh:
+        head = None
+        for line in fh:
+            if line.startswith('#') or not line.strip():
+                continue
+            cols = line.rstrip('\n').split('\t')
+            if head is None:
+                head = cols
+                continue
+            r = dict(zip(head, cols))
+            out[int(r['pc'], 16)] = (r['psx_unit'], r['agreement'])
+    return out
+
+
+def psx_checks(M, units, psx):
+    """For each of our units: the PSX units (of two or more functions) whose
+    functions this unit shares with another of our units - a cut SL2 does
+    not support. {unit index: [(psx_unit, [other unit ids])]}."""
+    where = collections.defaultdict(set)      # psx unit -> our unit indices
+    size = collections.Counter()
+    for k, u in enumerate(units):
+        for i in range(u['lo'], u['hi'] + 1):
+            p = psx.get(M.g[i]['pc'])
+            if p:
+                where[p[0]].add(k)
+                size[p[0]] += 1
+    out = collections.defaultdict(list)
+    for pu, ks in where.items():
+        if size[pu] >= 2 and len(ks) > 1:
+            for k in ks:
+                out[k].append((pu, sorted(unit_id(M, units[x]) for x in ks if x != k)))
+    return out
 CACHE = os.path.join(ROOT, 'analysis', 'tu_census_cache.json')
 COLUMNS = ['pc', 'name', 'unit', 'unit_lo', 'unit_hi', 'confidence', 'evidence',
            'impl', 'proposed_file', 'psx_unit_agreement']
@@ -798,7 +839,8 @@ def linkage(M, u, i):
     return 'uncalled'
 
 
-def rows(M, B, units, files):
+def rows(M, B, units, files, psx=None):
+    psx = psx or {}
     res = {}
     for k, u in enumerate(units):
         uid = unit_id(M, u)
@@ -820,7 +862,7 @@ def rows(M, B, units, files):
                                     unit_lo=f'{lo:#x}', unit_hi=f'{hi:#x}', confidence=how,
                                     evidence=f'{ev}; link {linkage(M, u, i)}',
                                     impl=f.get('impl', ''), proposed_file=files[k][0],
-                                    psx_unit_agreement='')
+                                    psx_unit_agreement=(':'.join(psx[f['pc']]) if f['pc'] in psx else ''))
     return res
 
 
@@ -1012,7 +1054,8 @@ def read_tsv(path):
     return out
 
 
-def write_sheet(path, M, units, names, files, groups):
+def write_sheet(path, M, units, names, files, groups, pchk=None, have_psx=False):
+    pchk = pchk or {}
     L = []
     L.append('# The source-layout round: the owner\'s layout sheet (SL1)\n')
     L.append('**Status:** PROPOSAL, written by `tools/tu_census.py` from `bof3/BOF3.exe` and '
@@ -1031,8 +1074,13 @@ def write_sheet(path, M, units, names, files, groups):
              f'{len(subs)} folders under `src/game/`: ' +
              ', '.join(f'`{s}/` {c} units' for s, c in sorted(subs.items(), key=lambda x: -x[1])) + '.\n')
     L.append('Folders: ' + '; '.join(f'`{s}/` {SUB_TEXT.get(s, s)}' for s in sorted(subs)) + '.\n')
-    L.append('| # | unit | .text range | funcs | sure j/p/g | does | PSX | file | proposal | reason |')
-    L.append('|---|---|---|---|---|---|---|---|---|---|')
+    if have_psx:
+        L.append(f'**PSX check** (SL2\'s `analysis/tu_psx.tsv`, joined by the coordinator): a PlayStation unit of '
+                 f'two or more functions whose twins this table puts in more than one unit - a cut the '
+                 f'PlayStation does not support, worth a look before the moves. {len(pchk)} of '
+                 f'{len(units)} units carry one; empty means none.\n')
+    L.append('| # | unit | .text range | funcs | sure j/p/g | does | PSX | file | proposal | reason | PSX check |')
+    L.append('|---|---|---|---|---|---|---|---|---|---|---|')
     for k, u in enumerate(units):
         lo, hi = unit_range(M, u)
         c = collections.Counter()
@@ -1042,7 +1090,8 @@ def write_sheet(path, M, units, names, files, groups):
         f = files[k]
         L.append(f"| {k + 1} | `{unit_id(M, u)}` | `0x{lo:X}..0x{hi:X}` | {u['hi'] - u['lo'] + 1} | "
                  f"{c['joined']}/{c['placed']}/{c['guessed']} | {n['desc']} | {n['image']} | "
-                 f"`{f[0][len('src/game/'):]}` | {f[1]} | {f[2]} |")
+                 f"`{f[0][len('src/game/'):]}` | {f[1]} | {f[2]} | "
+                 + '; '.join(f"`{pu}` also in {', '.join(o)}" for pu, o in pchk.get(k, [])) + ' |')
     with open(path, 'w', newline='\n', encoding='utf-8') as fh:
         fh.write('\n'.join(L) + '\n')
 
@@ -1092,6 +1141,7 @@ def main():
     ap.add_argument('--uncertain', type=int, default=0, help='print the N least certain boundaries')
     ap.add_argument('--refresh', action='store_true', help='read the binary again, not the cache')
     ap.add_argument('--check', action='store_true', help='CI: the TSV covers every impl function')
+    ap.add_argument('--psx', default=PSX_TSV, help="SL2's tu_psx.tsv, joined into the table and the sheet ('' to skip)")
     a = ap.parse_args()
     if a.check:
         return check(a.out, a.symbols)
@@ -1102,7 +1152,9 @@ def main():
     units, tally, blocked = place(M, B)
     names = unit_names(M, units)
     files, groups = proposals(M, units, names, B['hard'])
-    rowmap = rows(M, B, units, files)
+    psx = load_psx_units(a.psx)
+    rowmap = rows(M, B, units, files, psx)
+    pchk = psx_checks(M, units, psx)
     extra = []
     for f in funcs:
         if f.get('impl') and not (GAME_LO <= f['pc'] < GAME_HI):
@@ -1112,7 +1164,10 @@ def main():
     for pc in [p for p, r in rowmap.items() if not r['impl']]:
         del rowmap[pc]          # a [[func]] without impl has no row (it is in its unit's range)
     write_tsv(a.out, rowmap, extra)
-    write_sheet(a.sheet, M, units, names, files, groups)
+    write_sheet(a.sheet, M, units, names, files, groups, pchk, bool(psx))
+    if psx:
+        print(f'tu_census: PSX units joined for {sum(1 for r in rowmap.values() if r["psx_unit_agreement"])} rows; '
+              f'{len(pchk)} units share a PSX unit with another unit')
     conf = collections.Counter(r['confidence'] for r in rowmap.values())
     print(f'tu_census: {len(units)} units, {len(groups)} proposed files; rows {len(rowmap)} '
           f'({", ".join(f"{k} {v}" for k, v in conf.most_common())}) + {len(extra)} outside; '

@@ -385,6 +385,25 @@ starts are complete (a missed start merges two functions, which can only add
 a join's span, never cross-check one); and the `same bytes` aliases, which
 take the image name of the first capture with identical bytes.
 
+### The coordinator's join of SL1 and SL2 (2026-11-07, `source-layout/round`)
+
+`tu_census.py` now reads `analysis/tu_psx.tsv` (`--psx`, default on; `''`
+skips it): the table's `psx_unit_agreement` column holds SL2's
+`<image>:<unit>:<agreement>` for 5,612 rows (every row with a placed twin),
+and the sheet gained a **PSX check** column. Every other column of the table
+is byte for byte what SL1 wrote.
+
+The cross-check, measured on the joined table: of the 488 PSX units with two
+or more PC twins, **59 are put in more than one SL1 unit** (57 across two,
+2 across three; 268 twins), so 92 of the 676 units carry a note on the
+sheet. Of the 59, SL2 itself marks 42 `interleaved` (the twins are not
+contiguous on the PC: code the port placed twice or apart, such as
+`AREA033.EMI#13`'s scenes that sit in both `tu_401b80` (Area16) and
+`tu_403ce0` (WorldMap33)), and 14 `single` (a PSX data-only unit). So the
+two sides disagree in a handful of places, not as a pattern; the notes are
+the first rows to read before the moves. Not done: SL2's `psx_unit_data`
+column is not joined (it is stricter and smaller than `psx_unit`).
+
 ### SL3: the move tooling and the per-function gate
 - `codegen_same.py --by-function`: disassemble every object of both builds,
   key each function by its symbol, compare across objects; the same for
