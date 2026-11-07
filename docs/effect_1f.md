@@ -141,7 +141,7 @@ to 3, which is `ChoiceMenu_Run`.
   threshold) * points / 10` (the last by the `0x66666667` multiply; every
   value is small and not negative, so it is the plain quotient). No divide
   by 0: below a threshold of 0 cannot happen.
-- **`FieldPanel_KindTotal`**: the sum over the 32 count bytes `0x9040EC`
+- **`FieldPanel_KindTotal`**: the sum over the 32 record-size bytes `Fish_RecordSizes` (`0x9040EC`)
   that are not 0; `ax` the sum's low word.
 
 ### Game mode 8's steps (`0x52CF00`, `0x52CF30`, `0x52CF40`)

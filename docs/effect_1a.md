@@ -197,7 +197,7 @@ the label and releases.
 `0x469750`), three option boxes (`0x468AC0`, the bit `1 << +6` when the
 leader's `+3` is 3 or more), member rows (`0x469210`) and two item lists
 (`0x468C50` / `0x468F00` by `+7` bit 0) sliding in and out by `+9` (0..4);
-`_FindKind` `0x466B30` walks the 32 count bytes at `0x9040EC` to the first
+`_FindKind` `0x466B30` walks the 32 record-size bytes `Fish_RecordSizes` (`0x9040EC`) to the first
 set one; `_PanelIn` / `_Panel` / `_PanelNext` / `_PanelBack` / `_PanelOut`
 draw FE1's `FieldPanel_*` (header, kind icon, row, total, message) sliding by
 `+9`. States 13..16 of its table are E1B's.
@@ -262,7 +262,7 @@ fade's level at 0 / 0xFF and its steps' signs, kind 5's z at the target and at
 the table offset, the bounce's height at -1 / 0 / 1 after its adds, the aim's
 distance at the margin and one either side, the slides' words one step from
 their stops, kind 0xF's y one step from its ends, `+0x49` against the count,
-record 0's and record 3's state, the leader's `+2` / `+3`, the count bytes
+record 0's and record 3's state, the leader's `+2` / `+3`, the record-size bytes
 none / some / all / just one (the last half the time at 0x1F), the area 0x68.
 The current record's `+1` is kept below its span after the seed (record 0 or
 3 may be it). Args for the panel draws: small coordinates over random high

@@ -96,7 +96,8 @@ constexpr ::bof3::image::Va kSavedB{0x6BC878};        // u8 x 3: model B's colou
 constexpr ::bof3::image::Va kSavedA{0x6BC87C};        // u8 x 3: model A's
 
 // kModelFile: now Rest2b_ModelFile (symbols.toml). pointer: the two models' headers (+0, +8) and quad pointers (+4, +0xC)
-// kLevelByte: now Rest2b_SavedScaleIndex (symbols.toml). u8 (save data) the scale index is read from
+// kLevelByte: now Rest2b_SavedScaleIndex (symbols.toml). u8 (save data) the scale index is read from:
+// entry 0x15 of Fish_RecordSizes 0x9040EC, the player's record mackerel size
 // kBackdrop: now Config_Background (symbols.toml). u8: Config's Background, Menu_DrawBackdrop's kind
 // kStyle: now Config_WindowColour (symbols.toml). s8: the window style (its colour row)
 // kClutShadow: now Gfx_ClutStripSource[0x114] (symbols.toml). 0x40 bytes a style: the window colour's first word
@@ -771,8 +772,8 @@ std::int32_t Ramp(std::int32_t den, std::int32_t edge, std::int32_t num) {
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 }  // namespace
 
-// original 0x57EB20: the score. With L the scale index, g0..g3 the given
-// counts and n the rounds: A = ramp(4 L, 5 (g1 - n), 500 (g1 - n)), B =
+// original 0x57EB20: the score. With L the scale index, g1..g3 the given
+// counts (g0, the mackerel's, is not read) and n the rounds: A = ramp(4 L, 5 (g1 - n), 500 (g1 - n)), B =
 // ramp(g1, 4 g2, 400 g2), C = 25 n + 0x32 for n below 2 else 0x96 - 25 n
 // (below 0, 0), D = ramp(g2 + L, g3 - n + g1, 100 (g3 - n + g1)); each of A,
 // B, C, D at 0x9399EC.. and the score 0x9399FC = (16 D + 10 L A + (C B / 100)

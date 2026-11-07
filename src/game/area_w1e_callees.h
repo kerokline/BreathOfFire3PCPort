@@ -77,7 +77,7 @@ constexpr ::bof3::image::Va kLeaderCellZ{0x905E62};
 // kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
 constexpr ::bof3::image::Va kAreaText{0x803580};         // the area's text section
 constexpr ::bof3::image::Va kAreaTextOffset{0x803584};   // the region label at +[this] & 0xFFFF (area 45's cell; area 16's is 0x803588)
-constexpr ::bof3::image::Va kItemsHeld{0x9040EC};        // a byte per item id: 0 not yet seen
+constexpr ::bof3::image::Va kItemsHeld{0x9040EC};        // Fish_RecordSizes: a byte per fish kind, its record size; 0 never caught
 // kItemNameKey: now AreaW0b_ItemNameKey (symbols.toml). the 16-byte name the hook copies for item 0x16
 constexpr ::bof3::image::Va kTextRecords{0x904CE0};      // Text_Records: area 65's hook fills its first FIVE rows of 0x20
 constexpr ::bof3::image::Va kTextRecordsEnd{0x904D80};

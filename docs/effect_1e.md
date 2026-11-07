@@ -38,11 +38,11 @@ stated here: nothing in the code names it, and the owner has not said
 | `+6`, `+7`, `+9`, `+0xB`, `+0xC` | a yes / no choice bit, a started flag, a frame / slide count, a result code (1 or 2), the held button bits |
 | `0x7E11E1`.. (effect record 0) | `+1` its state; `+0xB` a hold; `+0xC` / `+0x10` / `+0x14` its step x / y / z; `+0x34` / `+0x38` its x / z; `+0x3E` its height |
 | records 1..6 | `+1` state bytes the stages advance or wait on; record 4 `+6` a mode; record 5 `+0xA` a counter and `+0x10` a frame; record 6 `+6` a three-way choice, `+0xB` a hold |
-| `0x939A1C` | a `Sprite_Objects` index (0xFF: none - stage 1's step 0, `0x5289C0`, writes it); that record's `+1`, `+6` (a kind), `+0x1C`, `+0x38`, `+0x9C` (a count) |
+| `0x939A1C` | a `Sprite_Objects` index (0xFF: none - stage 1's step 0, `0x5289C0`, writes it); that record's `+1`, `+6` (a kind), `+0x1C`, `+0x38`, `+0x9C` (the fish's size) |
 | `0x939A20` / `0x939A24` | pointers to a 10-byte and a 20-byte record in image tables (`0x66A4E8` / `0x66A528`, set by `0x52B250` from `0x904130` / `0x90412E`) |
-| `0x939A28` | `FieldPanel_DrawBlink`'s switch: set when a count beats the best |
+| `0x939A28` | `FieldPanel_DrawBlink`'s switch: set when the size beats the kind's record |
 | `0x6BC71C` / `0x6BC71D` | the pose before / now (0, 1, 2); `0x52B1B0` sounds when they differ |
-| `0x9040EC + kind` | the best count of each kind (a save-block byte) |
+| `0x9040EC + kind` | `Fish_RecordSizes`: the record size of each fish kind (a save-block byte; 0 never caught) |
 | `0x90412E` / `0x90412F` | an item byte `Inventory_Remove` is handed, cleared when it refuses |
 
 ### 1.1 The dispatchers and tables
@@ -90,7 +90,7 @@ mov al, [ecx + 3]; jmp [eax * 4 + T]`).
 | `LeaderPanel_S4Run` | `0x5295F0` | 0x265 | [2] | record 0's z past 0x3E8000 lands it (records set, the picked record `+1` = 6, track 0x2A, animation 0xA, `+3` = 3); else by the pad 0xC000 / 0x3000 / 0x20 the pose, record 5's frame and counter, the picked record's `+0x1C` pulled or blinked; each way `0x52B1B0` |
 | `LeaderPanel_S4Pose` | `0x529860` | 0x3B | (called) | pose 2 and the 10-byte record's `+7` while `+9`, else pose 1 and its `+4` |
 | `LeaderPanel_S4Blink` | `0x5298A0` | 0x44 | (called) | the picked record's `+0x1C` 0 or 0xFF by `Frame_Counter` & (3 >> the record's `+3`) |
-| `LeaderPanel_S4Best` | `0x5298F0` | 0x69 | [3] | record 4 at 4: the picked record's count over the kind's best replaces it (blink on); sound 0x102, `+9` = 8 |
+| `LeaderPanel_S4Best` | `0x5298F0` | 0x69 | [3] | record 4 at 4: the picked fish's size over the kind's record replaces it (blink on); sound 0x102, `+9` = 8 |
 | `LeaderPanel_S4HeaderIn` | `0x529960` | 0x8E | [4] | the header slid in; at 0 sound 0x20C or 0x20B by the kind's byte of `0x66A6AD` (36 a kind) |
 | `LeaderPanel_S4IconIn` | `0x5299F0` | 0x6A | [5] | the kind's icon slid in |
 | `LeaderPanel_S4RowIn` | `0x529A60` | 0x74 | [6] | the kind's row, count 0, rolled in |
@@ -399,7 +399,7 @@ owner's to say.
   picked record's word `+0x9C`: at 0x100 or more the step never ends (`+9`
   wraps; 0x20 sets `+9` to the word's low byte, still unequal). `S4Best`
   compares the word with a byte best and stores its low byte.
-- **L3. The best table by kind.** (D200) `0x9040EC + kind` is indexed by the sprite's
+- **L3. The record table by kind.** (D200) `Fish_RecordSizes` `0x9040EC + kind` is indexed by the sprite's
   `+6` unchecked (no table bound is known; ours indexes as the original).
 - **L4. The dispatchers** (D200) do not bound `+3` (every stage) - ours aborts past
   each table.
