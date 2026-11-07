@@ -2,16 +2,18 @@
 # lay out the player's zip with tools/make_release.py (the launcher, the DLL,
 # bof3x.exe and a bundled Python importer; no game data, which the script
 # checks), and attach it to a DRAFT pre-release. Publishing stays the owner's
-# click on GitHub (docs/releases/README.md).
+# click on GitHub (docs/releases/README.md). A second zip, -win-x64, holds
+# the 64-bit developer build of the same three binaries
+# (docs/x64-build-round.md 6); the 32-bit zip stays the player's default.
 #
 # The release notes are docs/releases/<tag>.md, written before the tag is
 # pushed; the job stops if that file is missing.
 #
-# A push to main builds the same zip as "latest" (the owner, 2026-10-15: easy
+# A push to main builds the same zips as "latest" (the owner, 2026-10-15: easy
 # to install current builds): the `latest` tag moves to that commit and the
-# published pre-release "latest" gets the new zip, always at
-# releases/download/latest/bof3x-latest-win.zip. It is never marked GitHub's
-# latest release, so a published v* release keeps that.
+# published pre-release "latest" gets the new zips, always at
+# releases/download/latest/bof3x-latest-win.zip (and -win-x64.zip). It is
+# never marked GitHub's latest release, so a published v* release keeps that.
 name: Release
 
 on:
@@ -97,6 +99,7 @@ jobs:
         run: |
           echo "LLVM_MINGW_ROOT=$RUNNER_TEMP/llvm-mingw" >> "$GITHUB_ENV"
           "$RUNNER_TEMP/llvm-mingw/bin/i686-w64-mingw32-clang++" --version
+          "$RUNNER_TEMP/llvm-mingw/bin/x86_64-w64-mingw32-clang++" --version
 
       - uses: actions/setup-python@v5
         with:
@@ -109,19 +112,28 @@ jobs:
       - name: Build
         run: cmake --build build
 
+      # The 64-bit developer build (docs/x64-build-round.md 6): the same
+      # source with the x86_64 preset, in build-x86_64. Built before the
+      # signing step so one jsign call signs both widths.
+      - name: Configure x86_64
+        run: cmake --preset x86_64 -DBOF3X_VERSION_TAG="$VERSION"
+
+      - name: Build x86_64
+        run: cmake --build build-x86_64
+
       # The importer's checks, as checks.yml runs them: the release bundles it.
       - name: The importer's recipes against fixtures/ (no game data)
         run: python tools/importer.py check
 
       # Authenticode (2026-10-16, docs/releases/README.md "Signing"): the three
-      # binaries are signed with the owner's Azure Trusted Signing identity by
-      # jsign, which signs that service's files from Linux - Microsoft's own
-      # action needs a Windows runner, and this job builds on Ubuntu. jsign
-      # reads AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET from the
-      # environment and timestamps automatically (the certificates live three
-      # days). Account, profile and endpoint are repository variables; the
-      # secrets are the App Registration's. Without the secrets (a fork) the
-      # build ships unsigned, and the log says so.
+      # binaries of each width are signed with the owner's Azure Trusted
+      # Signing identity by jsign, which signs that service's files from Linux
+      # - Microsoft's own action needs a Windows runner, and this job builds on
+      # Ubuntu. jsign reads AZURE_TENANT_ID / AZURE_CLIENT_ID /
+      # AZURE_CLIENT_SECRET from the environment and timestamps automatically
+      # (the certificates live three days). Account, profile and endpoint are
+      # repository variables; the secrets are the App Registration's. Without
+      # the secrets (a fork) the build ships unsigned, and the log says so.
       - name: Signing identity present?
         env:
           CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -155,22 +167,32 @@ jobs:
             --alg SHA-256 \
             --name "bof3x - Breath of Fire III PC" \
             --url "https://github.com/kerokline/BreathOfFire3PCPort" \
-            build/bof3x.exe build/bof3x.dll build/bof3x-launcher.exe
+            build/bof3x.exe build/bof3x.dll build/bof3x-launcher.exe \
+            build-x86_64/bof3x.exe build-x86_64/bof3x.dll build-x86_64/bof3x-launcher.exe
 
-      # The signed executable against the layout again: make_exe.py accepts
+      # The signed executables against the layout again: make_exe.py accepts
       # a certificate table that is exactly the file's trailing blob and
-      # reports it signed (docs/state3-build.md 2.1).
-      - name: Verify the signed executable's layout
+      # reports it signed (docs/state3-build.md 2.1). The 64-bit one is a
+      # PE32+ (--width 64), the same layout.
+      - name: Verify the signed executables' layout
         if: env.SIGN == '1'
         run: |
           set -euo pipefail
-          ver="$(sed -n 's/^CMAKE_PROJECT_VERSION:STATIC=//p' build/CMakeCache.txt)"
-          python tools/make_exe.py --layout src/hook/exe_layout.h --out build/bof3x.exe --dll build/bof3x.dll \
-            --version "$ver" --version-tag "$VERSION" --verify-only | tee verify.txt
-          grep -q 'signed (certificate table present)' verify.txt
+          for b in build:32 build-x86_64:64; do
+            dir="${b%:*}"; width="${b#*:}"
+            ver="$(sed -n 's/^CMAKE_PROJECT_VERSION:STATIC=//p' "$dir/CMakeCache.txt")"
+            python tools/make_exe.py --layout src/hook/exe_layout.h --out "$dir/bof3x.exe" --dll "$dir/bof3x.dll" \
+              --version "$ver" --version-tag "$VERSION" --width "$width" --verify-only | tee verify.txt
+            grep -q 'signed (certificate table present)' verify.txt
+          done
 
-      - name: Lay out the release zip
-        run: python tools/make_release.py --version "$VERSION" --build build --out "build/release/bof3x-$TAG-win.zip"
+      # Two zips: -win is the player's default (the 32-bit build), -win-x64
+      # the 64-bit developer build. Same layout, same bundled importer.
+      - name: Lay out the release zips
+        run: |
+          set -euo pipefail
+          python tools/make_release.py --version "$VERSION" --build build --out "build/release/bof3x-$TAG-win.zip"
+          python tools/make_release.py --version "$VERSION" --build build-x86_64 --out "build/release/bof3x-$TAG-win-x64.zip"
 
       # The furigana readings as the project's first mod (docs/mods.md; the
       # reading-row round): a zip of mod.toml and data/furigana/readings.toml,
@@ -195,7 +217,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh release create "$TAG" "build/release/bof3x-$TAG-win.zip" ${MOD_ZIPS:-} \
+          gh release create "$TAG" "build/release/bof3x-$TAG-win.zip" "build/release/bof3x-$TAG-win-x64.zip" ${MOD_ZIPS:-} \
             --draft --prerelease --verify-tag \
             --title "Breath of Fire III - bof3x $TAG" \
             --notes-file "docs/releases/$TAG.md"
@@ -217,12 +239,14 @@ jobs:
             echo "Replaced on every push to main: not a release, not checked by hand. For a release, take a"
             echo "\`v*\` one. The zip holds no game data: unzip it into a folder with a short path, run"
             echo "\`bof3x-launcher.exe\` and add your own copy of the game on the Sources page"
-            echo "(docs/releases/README.md; the latest release's notes say more)."
+            echo "(docs/releases/README.md; the latest release's notes say more). Take"
+            echo "\`bof3x-latest-win.zip\`: it is the 32-bit build, the default. \`bof3x-latest-win-x64.zip\`"
+            echo "is the 64-bit developer build of the same files; both use the same game copy."
           } > "$notes"
           if gh release view latest >/dev/null 2>&1; then
-            gh release upload latest "build/release/bof3x-latest-win.zip" ${MOD_ZIPS:-} --clobber
+            gh release upload latest "build/release/bof3x-latest-win.zip" "build/release/bof3x-latest-win-x64.zip" ${MOD_ZIPS:-} --clobber
             gh release edit latest --prerelease --latest=false --title "Latest build (main)" --notes-file "$notes"
           else
-            gh release create latest "build/release/bof3x-latest-win.zip" ${MOD_ZIPS:-} --prerelease --latest=false \
-              --verify-tag --title "Latest build (main)" --notes-file "$notes"
+            gh release create latest "build/release/bof3x-latest-win.zip" "build/release/bof3x-latest-win-x64.zip" ${MOD_ZIPS:-} \
+              --prerelease --latest=false --verify-tag --title "Latest build (main)" --notes-file "$notes"
           fi
