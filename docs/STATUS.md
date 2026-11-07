@@ -24,6 +24,14 @@ is DIV-0201's sound output, which nobody has listened to yet. Owed the owner: th
 look on the 64-bit build. Stage D (the audit, a check
 that hears the music, the release's second artefact) is HANDOFF item 14a.
 
+**The FMVs decoded in-process, 2026-11-07 (DIV-0205, IDEAS I7 built; `claude/dreamy-kilby-648ea8`, unpushed).**
+The owner's first play of the 64-bit build showed no Capcom movie (D407): Windows ships its Cinepak and Video 1
+decompressors for 32-bit processes only, and MCI drew nothing. `Fmv_Play` now decodes both shipped AVIs itself
+(`src/video`, written from the public format descriptions, nothing vendored), draws them into DIV-0035's
+rectangle by GDI on the wall clock and plays the PCM stream through SDL3; the modal loop, the skips and the pause
+are as before, and MCI is not called on either width. Every frame of the three movies is bit-exact against
+ffmpeg's decode; the gates pass ([`replacing-mci.md`](replacing-mci.md) 8). Not yet seen by the owner.
+
 **Horis's desert directions say east in every Western layer, 2026-11-03** (issue #184, DIV-0203, on
 `fix/issue-184-desert-directions`, unpushed). Capcom's Japanese says to turn east and keep going east when the
 Evening Star is due west, spoken (AREA193 slot 17) and in the camp's note (AREA191 / AREA192 slot 108); the US,

@@ -31,6 +31,17 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 
 ## Pick up here
 
+0. **The FMVs decoded by our own decoders (DIV-0205, 2026-11-07, IDEAS I7 built)** on `claude/dreamy-kilby-648ea8`
+   (worktree `.claude/worktrees/dreamy-kilby-648ea8`, unpushed, no PR): D407 - the 64-bit build's Capcom movie had
+   no picture, Windows' Cinepak and Video 1 decompressors being 32-bit only. `Fmv_Play` now reads the AVI itself
+   (`src/video`: the RIFF reader, a Cinepak decoder, a Microsoft Video 1 decoder, written from the public
+   descriptions), draws by `StretchDIBits` into DIV-0035's rectangle on the wall clock, plays the PCM stream
+   through an SDL3 audio stream, and calls no MCI; the pump, the skips and the pause keep their shape
+   ([`replacing-mci.md`](replacing-mci.md) 8). Bit-exact against ffmpeg on every frame of `capcom.avi`,
+   the disc-built `CAPCOM.AVI` and `logos.avi` (`tools/fmv_compare.py`, `build/bof3x-fmvdump.exe`); both widths
+   build, the suites pass, `whelpBoss` runs, the state hash as the x64 round's check. **Owed the owner:** the eye
+   and ear on both widths (a 4:3 fit without a whole multiple is the untried `HALFTONE` path); the PR word. Root
+   `C:\Users\kerok\bof3x-runs\fmv1107` (proof, grabs, the ffmpeg reference decodes - game-derived).
 0. **The mountain passes (DIV-0191, 2026-10-30 night, merged as PR #175)**: Mt. Zublo's walkway passable from
    chapter 9 and Mt. Levett's once crossed, played and approved by the owner on six builds
    ([`mountain-passes.md`](mountain-passes.md)). **Owed:** nothing of the owner's; the doc's "Left" items (a
@@ -540,6 +551,8 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
+- **In flight (2026-11-07):** `claude/dreamy-kilby-648ea8` (DIV-0205, the FMV decoders, item 0 above), committed in
+  its worktree, unpushed; its root `C:\Users\kerok\bof3x-runs\fmv1107` removable after the merge.
 - **In flight (2026-11-02):** PR #187, `x64/c1` (item 14a, stage C), with its worktree
   `C:\Users\kerok\bof3x-runs\x641101\c1`; stage D starts from its tip, or from `main` once it merges. The 64-bit
   round's root `C:\Users\kerok\bof3x-runs\x641101` holds the agents' worktrees and reports (`xa1`..`xa4`, `b1`..`b5`,

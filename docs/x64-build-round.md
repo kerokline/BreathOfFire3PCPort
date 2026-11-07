@@ -666,7 +666,8 @@ coordinator then runs:
    diff`: identical but the noise class, the Rand counts the references';
 2. the quicksave: a take and a load on the 64-bit host (works); a 32-bit
    take loaded on the 64-bit host (refused by the build id, section 0);
-3. the FMV: `capcom.avi` plays through MCI on the 64-bit host (the Cinepak
+3. the FMV (D407, 2026-11-07: this run saw the clip run, not a picture; see
+   the assumptions list): `capcom.avi` plays through MCI on the 64-bit host (the Cinepak
    re-encode is the ledger's; a 64-bit `iccvid` is Windows' own, to be seen
    not assumed), and the two other AVIs;
 4. the launcher: launches the 64-bit executable from the Sources page as it
@@ -932,7 +933,10 @@ behaviour needs no ledger entry; anything it does change does.
 - The 64-bit frames' depth on the task stacks: a stackwatch run on the
   64-bit host, stage C.
 - That Windows ships a 64-bit Cinepak decoder reachable through MCI: stage
-  C's run 3.
+  C's run 3. **It does not** (D407, the owner's first play, 2026-11-07: no
+  picture; `iccvid.dll` is in `SysWOW64` alone, and MCI pumps the clip to its
+  end drawing nothing). Fixed by DIV-0205: the game's own decoders
+  ([`replacing-mci.md`](replacing-mci.md) 8), on both widths.
 - The pace cost of `Img()` as a native pointer with a run-time base on
   x86-64: stage C's run 5.
 - Whether anything in `src/game` depends on `__stdcall` / `__cdecl` beyond

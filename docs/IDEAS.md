@@ -51,7 +51,7 @@ rule ([`README.md`](README.md)) here too.
 | I4 | Stacktrace-driven "who called this" work-queue harvester | tooling | LOW | **first-call tracer built 2026-09-19** — [`call-trace.md`](call-trace.md) |
 | I5 | Recover Capcom's `.c` file boundaries from global blocks | tooling | MEDIUM | **folded into I44** 2026-10-21 (the owner): a later step of the typed-source work, as a source-layout pass, not an idea of its own |
 | I6 | Demo/attract playback as determinism oracle | tooling | MEDIUM | **built 2026-09-19** (external sampler) — [`attract-mode.md`](attract-mode.md) §6 |
-| I7 | Replace MCI/VFW with a bundled video decoder | platform | LOW | **overtaken 2026-09-23**: the owner chose MCI into the window (DIV-0035); `Fmv_Play` is ours. Stays on the list |
+| I7 | Replace MCI/VFW with a bundled video decoder | platform | LOW | **built 2026-11-07** as DIV-0205: our own AVI, Cinepak and Video 1 decoders, for the 64-bit build (D407); earlier overtaken 2026-09-23 by MCI into the window (DIV-0035) |
 | I8 | Replace the DirectDraw / `IDirect3D3` presentation layer | platform | LOW | **built 2026-09-23** (DIV-0031) — [`render-backend.md`](render-backend.md) |
 | I9 | Integer-scale the picture and extend the view into the remainder | game behaviour | LOW | **integer scaling built** (DIV-0036, DIV-0042); the wide view built as two fixed presets, 426 x 240 and 560 x 240 (DIV-0041, amended 2026-10-13: [`ultrawide-frame.md`](ultrawide-frame.md)), not the `W / k` rule |
 | I10 | Uses for the call-trace data (seven, ranked) | tooling | MIXED | item 1 **passed 2026-09-19** — [`call-trace.md`](call-trace.md) §7; item 2 (the work queue) **built** — §9 there |
@@ -293,6 +293,18 @@ _(open when written) - overtaken 2026-09-23: the owner chose MCI into the
 window over a bundled decoder (DIV-0035, [`window-modes.md`](window-modes.md)
 §3); `Fmv_Play` `0x59E360` is ours and the exclusive mode-set is gone. The
 idea stays on the list._
+
+**Built 2026-11-07 as DIV-0205.** The 64-bit build (the x64 round) showed no
+Capcom movie: Windows has no 64-bit Cinepak or Video 1 decompressor (D407),
+which the "no re-encode can fix it" case above did not foresee. Not the
+licensing table's codecs: the two shipped files are read as they are, by an
+AVI reader, a Cinepak decoder and a Microsoft Video 1 decoder written from
+the public descriptions (`src/video`), bit-exact against ffmpeg on every
+frame of all three movies; the PCM stream through an SDL3 audio stream; the
+frames into DIV-0035's rectangle by GDI, paced on the wall clock. The modal
+loop, the skips and the pause kept their shape. [`replacing-mci.md`](replacing-mci.md)
+"As built". The §6 argument stood until the width changed; the §7 questions
+are answered there.
 
 ## I8 — Replace the DirectDraw / `IDirect3D3` presentation layer
 
