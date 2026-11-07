@@ -11035,9 +11035,30 @@ designed in rather than bolted on.
   Sound after a quick-load: the music resumes at the sample heard at the take
   (for an MP3 on a track that rewinds, the start of its 26 ms frame), at the
   take's volume and fade; looping sound effects and a playing voice stream
-  resume at their positions; a one-shot sound effect playing at the take is
-  not resumed. The first frame shown after F7 is the picture from before the
+  resume at their positions, the voice stream started after the music (the
+  amendment below); a one-shot sound effect playing at the take is not
+  resumed. The first frame shown after F7 is the picture from before the
   load (one frame).
+
+  - **Amended 2026-11-07 - the voice stream after the music** (the owner's
+    ear on the 64-bit build, [`known-defects.md`](known-defects.md) D406):
+    the SOUND participant's rebuild played the voice stream
+    (`SndStream_Play`, then its position) before it called `Music_Start` for
+    the song, whose skip (`ResumeSkip`, DIV-0092's mechanism) decodes the MP3
+    from its top to the sample heard before the ring's first half is written
+    and played. The voice had the decode's length alone. Measured on
+    `quick_combat` (battle track 151 at sample 696,960, 15.8 s into the MP3;
+    Rei's Pilfer line playing at the take): `Music_Start` took 8 to 11 ms in
+    five runs, 32-bit and 64-bit alike (about 0.6 ms a second of song), and
+    the SDL3 mixer first mixed the voice one device pass - 441 frames,
+    10.0 ms - before the song. Now the voice stream is played and positioned
+    after the music stream has started, in the same restore: both widths
+    first mix the two in the same device pass. A stopped voice stream is still
+    stopped, a one-shot cut, as before. The restore's log line carries the
+    voice stream's state and what `Music_Start` took; under `BOF3X_MUSIC_LOG`
+    the voice stream's play and each buffer's first mix are logged too. The
+    ear's "moment" is longer than the 10 ms measured; what else the owner heard
+    is open in D406.
 
   F6's and F7's confirmation lines ("Quicksave OK", "Quickload", a refusal)
   reach the log only while our back buffer is in use, as F12's "Save OK"

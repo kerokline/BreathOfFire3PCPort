@@ -16,6 +16,7 @@
 
 #include <malloc.h>
 
+#include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -1618,13 +1619,16 @@ void FadePerFrame_Inject() {
 //   0x5A69E0's buffer); the channels pointed at the new buffers of the entries
 //   they named, and the looping voices that played at the take played again
 //   at their frequency and position (a one-shot cut by a restore is not a
-//   defect, the round doc says); the last stream's file and a voice stream
-//   playing from it put back; Music_File read again for its track
-//   (Music_LoadFile); the music stream started again (Music_Start) and moved
-//   to the sample heard at the take (ResumeSkip, DIV-0092's own mechanism),
-//   its volume set from the span's Music_Volume, stopped again if it was not
-//   playing; then our statics: DIV-0092's position, DIV-0028's fade frame and
-//   unseen stop, DIV-0132's duck, DIV-0129's missing stream.
+//   defect, the round doc says); the last stream's file put back; Music_File
+//   read again for its track (Music_LoadFile); the music stream started again
+//   (Music_Start) and moved to the sample heard at the take (ResumeSkip,
+//   DIV-0092's own mechanism), its volume set from the span's Music_Volume,
+//   stopped again if it was not playing; then a voice stream playing from the
+//   last stream's file at the take put back at its position - after the
+//   music, whose skip decodes to the heard sample before its first half plays
+//   (D406: played first, the voice had the decode's length alone); then our
+//   statics: DIV-0092's position, DIV-0028's fade frame and unseen stop,
+//   DIV-0132's duck, DIV-0129's missing stream.
 //
 // What is rebuilt rather than copied: the decoder (decoded again from the
 // top), the synth (FastForward), the ring and Music_Staging (refilled), the
@@ -1942,6 +1946,7 @@ void SnapRestore(bof3::SnapshotReader& r) {
         ++restarted;
     }
     // The last stream's file, and the voice stream playing from it.
+    const char* voice_state = "none";
     const std::uint32_t stream_bytes = r.Get<std::uint32_t>();
     if (stream_bytes) {
         void* const block = g.malloc(stream_bytes);
@@ -1949,20 +1954,12 @@ void SnapRestore(bof3::SnapshotReader& r) {
         r.Get(block, stream_bytes);
         SaveMenu_StreamData = Address(block);
     }
-    {
-        const unsigned char has = r.Get<unsigned char>();
-        const unsigned char playing = r.Get<unsigned char>();
-        const std::uint32_t position = r.Get<std::uint32_t>();
-        if (has && SaveMenu_StreamKind != 0 && SaveMenu_StreamData != 0) {
-            g_snap.stream_play(At(SaveMenu_StreamData));
-            if (void* const voice = SndStream_Buffer) {
-                if (playing) Method<ComValue>(voice, kSetCurrentPosition)(voice, position);
-                else Method<ComCall>(voice, kStop)(voice);
-            }
-        } else if (has && playing) {
-            bof3::Log("quicksave   SOUND: the voice stream at the take played an earlier file than the last stream's: cut");
-        }
-    }
+    // The voice stream's words. It is played below, after the music stream
+    // has started: Music_Start's skip decodes the song from its top to the
+    // sample heard, and a voice played before it had that long alone (D406).
+    const unsigned char voice_has = r.Get<unsigned char>();
+    const unsigned char voice_playing = r.Get<unsigned char>();
+    const std::uint32_t voice_position = r.Get<std::uint32_t>();
     // Music_File, read again.
     const unsigned char file = r.Get<unsigned char>();
     const std::int32_t file_size = r.Get<std::int32_t>();
@@ -1987,13 +1984,17 @@ void SnapRestore(bof3::SnapshotReader& r) {
     std::vector<unsigned char> data(data_bytes);
     if (data_bytes) r.Get(data.data(), data_bytes);
     g_restore_skip.reached = 0;
+    unsigned start_ms = 0;  // what Music_Start took: the skip's decode to the sample heard (D406's measure)
     if (kind != kMusicNone) {
         if (kind == kMusicTrack && !file) bof3::Fatal("quicksave SOUND: the take's stream is a track with no Music_File");
         g_resume.pending = false;  // the record's comes back below; the rebuild's skip is its own
         g_restore_skip.armed = true;
         g_restore_skip.sample = folded;
+        const auto start_at = std::chrono::steady_clock::now();
         if (kind == kMusicTrack) g.music_start(Music_File, static_cast<unsigned>(Music_FileSize), loops);
         else g.music_start(data.data(), data_bytes, loops);
+        start_ms = static_cast<unsigned>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_at).count());
         g_restore_skip.armed = false;  // Music_Start without a device does nothing
         if (Music_Buffer) {
             SetVolumeBits(Dword(Address(&Music_Volume)));
@@ -2007,6 +2008,20 @@ void SnapRestore(bof3::SnapshotReader& r) {
         Music_Finished = finished;
         Music_Loops = loops;
     }
+    // The voice stream playing from the last stream's file, after the music
+    // stream: made again by SndStream_Play at its position, stopped if it had
+    // stopped; one that played an earlier file than the last stream's is cut.
+    if (voice_has && SaveMenu_StreamKind != 0 && SaveMenu_StreamData != 0) {
+        voice_state = voice_playing ? "playing again at its position" : "stopped";
+        g_snap.stream_play(At(SaveMenu_StreamData));
+        if (void* const voice = SndStream_Buffer) {
+            if (voice_playing) Method<ComValue>(voice, kSetCurrentPosition)(voice, voice_position);
+            else Method<ComCall>(voice, kStop)(voice);
+        }
+    } else if (voice_has && voice_playing) {
+        voice_state = "cut";
+        bof3::Log("quicksave   SOUND: the voice stream at the take played an earlier file than the last stream's: cut");
+    }
     // Our statics.
     g_resume = r.Get<Resume>();
     sound::g_fade_frame = r.Get<std::uint32_t>();
@@ -2014,11 +2029,11 @@ void SnapRestore(bof3::SnapshotReader& r) {
     sound::g_unducked = r.Get<float>();
     save_menu::SetStreamMissing(r.Get<unsigned char>() != 0);
     std::memcpy(At(scratch_at), scratch, scratch_end - scratch_at);
-    bof3::Log("quicksave   SOUND restored: %u banks rebuilt, %u looping voices restarted, music %s%s at sample %u "
-              "(asked %u, heard %u%s)",
-              banks, restarted, kind == kMusicNone ? "none" : kind == kMusicTrack ? "track" : "stream",
+    bof3::Log("quicksave   SOUND restored: %u banks rebuilt, %u looping voices restarted, voice stream %s, music %s%s "
+              "at sample %u (asked %u, heard %u%s; its start took %u ms)",
+              banks, restarted, voice_state, kind == kMusicNone ? "none" : kind == kMusicTrack ? "track" : "stream",
               kind == kMusicNone || playing ? "" : " (stopped)", g_restore_skip.reached, folded, heard,
-              trusted || kind == kMusicNone ? "" : ", untrusted");
+              trusted || kind == kMusicNone ? "" : ", untrusted", start_ms);
 }
 
 }  // namespace
@@ -2374,9 +2389,17 @@ std::vector<unsigned char> Payload(unsigned seed, unsigned voices) {
     return p;
 }
 
+struct LoadCall { unsigned track; bool file_null; };
+std::vector<LoadCall> g_loads;
+struct StartCall { const void* file; unsigned size; int loops; bool armed; std::uint32_t sample; };
+std::vector<StartCall> g_starts;
+
 FakeBuf* EntryBuffer(unsigned b, unsigned e) { return static_cast<FakeBuf*>(static_cast<void*>(At(Dword(EntryAt(b, e) + 4)))); }
 
+std::size_t g_stream_plays, g_starts_before_stream;  // TsStreamPlay's count, and g_starts.size() at its last call
 void __cdecl TsStreamPlay(const unsigned char* wave) {
+    ++g_stream_plays;
+    g_starts_before_stream = g_starts.size();
     g_snap.stream_stop();
     FakeBuf* const f = static_cast<FakeBuf*>(FakeCreate(wave));
     SndStream_Buffer = f;
@@ -2482,10 +2505,6 @@ void Banks() {
 
 // --- the music ---------------------------------------------------------------
 
-struct LoadCall { unsigned track; bool file_null; };
-std::vector<LoadCall> g_loads;
-struct StartCall { const void* file; unsigned size; int loops; bool armed; std::uint32_t sample; };
-std::vector<StartCall> g_starts;
 int __cdecl TmLoad(unsigned track) {
     g_loads.push_back({track, Music_File == nullptr});
     unsigned char* const f = static_cast<unsigned char*>(std::malloc(1000));
@@ -2527,6 +2546,17 @@ void Music(bool playing) {
     g_loads.clear();
     g_resume = Resume{};
     g_resume.remembered = true, g_resume.track = 91, g_resume.sample = 12345;
+    // a voice stream playing beside the music (D406: it comes back after the music's start)
+    const std::vector<unsigned char> voice = Payload(17, 1);
+    const std::size_t voice_bytes = voice.size() - 0x380;
+    void* const stream = std::malloc(voice_bytes);
+    std::memcpy(stream, voice.data() + 0x380, voice_bytes);
+    SaveMenu_StreamData = Address(stream);
+    SaveMenu_StreamKind = 1;
+    FakeBuf* const voice_buffer = static_cast<FakeBuf*>(FakeCreate(static_cast<const unsigned char*>(stream)));
+    voice_buffer->playing = true, voice_buffer->position = 0x90;
+    SndStream_Buffer = voice_buffer;
+    g_stream_plays = 0;
     const std::uint32_t heard = 3 * kHalfSamples + 0x200, want = heard - heard % kFrameSamples;
     const std::vector<unsigned char> record = TestSave();
     {
@@ -2568,8 +2598,18 @@ void Music(bool playing) {
                   "music %s: the volume from the span, DIV-0092's position back, the old buffer released, %s",
                   playing ? "playing" : "stopped", playing ? "not stopped" : "stopped once");
     Check(volume && resume && old->releases == 1 && Music_Buffer != old && g_stops == (playing ? 0 : 1), what);
-    SnapDiscard();  // let go of the test's stream (Music_Release on the stand-in) and file
+    FakeBuf* const v = static_cast<FakeBuf*>(SndStream_Buffer);
+    std::snprintf(what, sizeof what,
+                  "music %s: the voice stream played again at its position once, after the music's start (D406)",
+                  playing ? "playing" : "stopped");
+    Check(g_stream_plays == 1 && g_starts_before_stream == 1 && v && v != voice_buffer && v->playing &&
+              v->position == 0x90 && v->hash == voice_buffer->hash,
+          what);
+    SnapDiscard();  // let go of the test's streams (Music_Release on the stand-in), voice and file
     Music_Buffer = nullptr, Music_Data = nullptr, Music_File = nullptr;
+    SndStream_Buffer = nullptr;
+    SaveMenu_StreamData = 0;
+    SaveMenu_StreamKind = 0;
     g_discarded = false;
 }
 

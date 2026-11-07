@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-07: the 64-bit build round's stages A..C merged as PRs #183 and #187, **stage D open as PR #207**, item 14a; the source-layout round's stage A done, stage B at the owner's read of the sheet, item 14b; DIV-0202 the logo movie as PR #186; `main` at PR #206; the exe-gap round merged as PR #176, issues 177..179 as PRs #181 / #182)
+**Status:** IN PROGRESS (2026-11-07: D406 fixed - a quick-load's voice stream is played after the song's start, DIV-0145's amendment, the 10 ms head start measured and removed on both widths, the owner's listen owed; the 64-bit build round's stages A..C merged as PRs #183 and #187, **stage D open as PR #207**, item 14a; the source-layout round's stage A done, stage B at the owner's read of the sheet, item 14b; DIV-0202 the logo movie as PR #186; `main` at PR #206; the exe-gap round merged as PR #176, issues 177..179 as PRs #181 / #182)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -322,7 +322,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      call is unexercised until the next push to `main`.
    **The owner's listens, 2026-11-07, on the 64-bit build:** the inn's night, the combat loop and the voices all
    sound right (the first play of the 64-bit build), so the 546 ms figure is the dump's model, not the ear's; one observation became D406 (a quick-load during a battle
-   voice plays the voice before the song returns: the rebuild's order, a DIV-0145 amendment to make). **Seen on
+   voice played the voice before the song returned: the rebuild's order, measured at 10 ms on both widths and fixed by DIV-0145's amendment the same day; the owner's listen owed). **Seen on
    that play: the Capcom movie has no picture on the 64-bit build - D407, Windows ships no 64-bit Cinepak
    decompressor (`iccvid.dll` is in `SysWOW64` alone), so stage C's "plays to its end" proved the pump, not
    the picture; the fix is IDEAS I7 (a decoder of ours), a round of its own.** Still owed (owner-review):

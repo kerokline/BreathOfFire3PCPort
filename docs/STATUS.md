@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-11-03)
+**Status:** IN PROGRESS (2026-11-07: D406, the quick-load's voice stream played before the song, measured at 10 ms and removed by DIV-0145's amendment, both widths; 2026-11-03)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -28,7 +28,7 @@ launcher copy (combat identical on every tick), the last two routes' stackwatch 
 the ten routes pass it on the 64-bit host, stage C's pre-fix log fails it);
 the `x86_64` CI job is a gate and the release carries `bof3x-<tag>-win-x64.zip` beside the 32-bit zip. No DIV
 entry: the 64-bit build adds no behaviour. **What the player sees:** the 32-bit build stays the default; its one
-change is DIV-0201's sound output, whose music the owner approved by ear on 2026-11-07. The owner's ear, 2026-11-07, on the 64-bit build (its first play): the inn's night, the combat loop and the voices all sound right, so the WAV pair's 546 ms offset of the song under SDL3 is the dump's model, not the ear's; a quick-load during a battle voice plays the voice before the song returns (D406, ours, open). **The one 64-bit defect seen: the Capcom movie plays with no picture (D407) - Windows has no 64-bit Cinepak decompressor, so the 64-bit build needs IDEAS I7's own decoder before it can be more than a developer build.** The Sources page looks right. Owed the owner (owner-review): whether the logos movie shows.
+change is DIV-0201's sound output, whose music the owner approved by ear on 2026-11-07. The owner's ear, 2026-11-07, on the 64-bit build (its first play): the inn's night, the combat loop and the voices all sound right, so the WAV pair's 546 ms offset of the song under SDL3 is the dump's model, not the ear's; a quick-load during a battle voice played the voice before the song returned (D406, ours: a 10 ms head start measured on both widths and removed by DIV-0145's amendment the same day; the owner's listen after it owed). **The one 64-bit defect seen: the Capcom movie plays with no picture (D407) - Windows has no 64-bit Cinepak decompressor, so the 64-bit build needs IDEAS I7's own decoder before it can be more than a developer build.** The Sources page looks right. Owed the owner (owner-review): whether the logos movie shows.
 
 **Horis's desert directions say east in every Western layer, 2026-11-03** (issue #184, DIV-0203, on
 `fix/issue-184-desert-directions`, unpushed). Capcom's Japanese says to turn east and keep going east when the

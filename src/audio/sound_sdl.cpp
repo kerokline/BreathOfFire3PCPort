@@ -198,6 +198,7 @@ struct Buffer {
     float gain_l, gain_r;
     unsigned notify_count;
     Notification notifies[kMaxNotify];
+    bool fresh;            // played and not yet mixed: the music log's "first mixed" line (MusicLog)
 };
 
 struct Device {
@@ -218,6 +219,18 @@ bool g_audio_up = false;   // SDL_InitSubSystem(AUDIO) succeeded
 bool g_on = false;         // the slot bound to Create
 bool g_patched = false;    // the PatchBytes made (its OFF answer logged); the self-test skips it
 std::uint64_t g_frames_out = 0;   // frames the device took
+
+// BOF3X_MUSIC_LOG=1 (sound.cpp's switch, read here apart): a line at each
+// secondary buffer's Play and at its first mix after it, with the device's
+// frame count - where a sound starts as the device hears it, against where
+// the game asked (known-defects.md D406). Off by default; no behaviour.
+bool MusicLog() {
+    static const bool on = [] {
+        const char* v = std::getenv("BOF3X_MUSIC_LOG");
+        return v && v[0] && v[0] != '0';
+    }();
+    return on;
+}
 
 Buffer* Self(void* p) { return static_cast<Buffer*>(p); }
 Buffer* OfNotify(void* p) {
@@ -287,6 +300,12 @@ inline int Sample(const Buffer* b, std::uint32_t frame, unsigned ch) {
 void MixInto(Buffer* b, std::int32_t* acc, unsigned n) {
     const std::uint32_t total = FramesOf(b);
     if (total == 0 || !b->data) return;
+    if (b->fresh) {
+        b->fresh = false;
+        if (MusicLog())
+            Log("sound_sdl   buffer %p first mixed at device frame %llu, from its frame %u of %u (%u Hz)", static_cast<void*>(b),
+                static_cast<unsigned long long>(g_frames_out), static_cast<unsigned>(b->pos >> 32), total, EffectiveRate(b));
+    }
     const std::uint64_t end = static_cast<std::uint64_t>(total) << 32;
     const std::uint64_t start = b->pos;
     std::uint64_t pos = b->pos;
@@ -437,6 +456,7 @@ Buffer* Take() {
             b.notify_vtable = g_notify_vtable;
             b.live = true;
             b.refs = 1;
+            b.fresh = false;
             if (++g_live > g_live_max) g_live_max = g_live;
             ++g_made;
             return &b;
@@ -700,6 +720,11 @@ long __stdcall BufPlay(void* self, std::uint32_t, std::uint32_t, std::uint32_t f
     }
     if (FramesOf(b) == 0) return kInvalidCall;
     b->playing = true;
+    b->fresh = true;
+    if (MusicLog())
+        Log("sound_sdl   buffer %p Play at device frame %llu, from its frame %u of %u (%u Hz%s)", static_cast<void*>(b),
+            static_cast<unsigned long long>(g_frames_out), static_cast<unsigned>(b->pos >> 32), FramesOf(b), EffectiveRate(b),
+            b->looping ? ", looping" : "");
     // A notification at the position played from fires now: the ring's
     // offset-0 event at Music_Start, which fills the second half.
     const std::uint32_t frame = static_cast<std::uint32_t>(b->pos >> 32);
