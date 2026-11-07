@@ -88,7 +88,6 @@ psx-jp	0x62ED80	1	data
 psx-jp	0x62EFA0	1	data
 psx-jp	0x62F5A8	1	data
 psx-jp	0x62FCA0	1	data
-psx-jp	0x631790	1	data
 psx-jp	0x6372D4	1	data
 psx-jp	0x637308	1	data
 psx-jp	0x6383E0	1	data
@@ -205,7 +204,6 @@ psx-us	0x62ED80	1	data
 psx-us	0x62EFA0	1	data
 psx-us	0x62F5A8	1	data
 psx-us	0x62FCA0	1	data
-psx-us	0x631790	1	data
 psx-us	0x6372D4	1	data
 psx-us	0x637308	1	data
 psx-us	0x6383E0	1	data
@@ -322,7 +320,6 @@ psx-eu-en	0x62ED80	1	data
 psx-eu-en	0x62EFA0	1	data
 psx-eu-en	0x62F5A8	1	data
 psx-eu-en	0x62FCA0	1	data
-psx-eu-en	0x631790	1	data
 psx-eu-en	0x6372D4	1	data
 psx-eu-en	0x637308	1	data
 psx-eu-en	0x6383E0	1	data
@@ -441,7 +438,6 @@ psx-fr	0x62ED80	1	data
 psx-fr	0x62EFA0	1	data
 psx-fr	0x62F5A8	1	data
 psx-fr	0x62FCA0	1	data
-psx-fr	0x631790	1	data
 psx-fr	0x6372D4	1	data
 psx-fr	0x637308	1	data
 psx-fr	0x6383E0	1	data
@@ -560,7 +556,6 @@ psx-de	0x62ED80	1	data
 psx-de	0x62EFA0	1	data
 psx-de	0x62F5A8	1	data
 psx-de	0x62FCA0	1	data
-psx-de	0x631790	1	data
 psx-de	0x6372D4	1	data
 psx-de	0x637308	1	data
 psx-de	0x6383E0	1	data
@@ -669,7 +664,6 @@ psp-jp	0x626708	1	data
 psp-jp	0x627B04	1	data
 psp-jp	0x627B10	1	data
 psp-jp	0x627B28	1	data
-psp-jp	0x62AF80	1	data
 psp-jp	0x62DE80	1	data
 psp-jp	0x62EBF4	1	data
 psp-jp	0x62EC00	1	data
@@ -711,12 +705,9 @@ psp-jp	0x647BD0	1	data
 psp-jp	0x647F20	1	data
 psp-jp	0x648D80	1	data
 psp-jp	0x649CC8	1	data
-psp-jp	0x649D78	6	data
 psp-jp	0x64B27C	1	data
 psp-jp	0x6676DC	1	data
 psp-jp	0x6677AC	1	data
-psp-jp	0x6698A0	1	data
-psp-jp	0x6698A8	1	data
 psp-eu	0x5DDEFC	1	data
 psp-eu	0x5DDF10	2	data
 psp-eu	0x5DDF28	1	data
@@ -771,6 +762,9 @@ psp-eu	0x611C40	1	data
 psp-eu	0x611E78	1	data
 psp-eu	0x612834	1	data
 psp-eu	0x61288C	1	data
+psp-eu	0x6130B4	1	data
+psp-eu	0x6130C0	1	data
+psp-eu	0x6130D8	1	data
 psp-eu	0x614590	1	data
 psp-eu	0x614750	1	data
 psp-eu	0x614E80	1	data
@@ -786,7 +780,9 @@ psp-eu	0x623650	1	data
 psp-eu	0x624744	1	data
 psp-eu	0x6265A8	1	data
 psp-eu	0x626708	1	data
-psp-eu	0x62AF80	1	data
+psp-eu	0x627B04	1	data
+psp-eu	0x627B10	1	data
+psp-eu	0x627B28	1	data
 psp-eu	0x62DE80	1	data
 psp-eu	0x62EBF4	1	data
 psp-eu	0x62EC00	1	data
@@ -827,8 +823,5 @@ psp-eu	0x647BD0	1	data
 psp-eu	0x647F20	1	data
 psp-eu	0x648D80	1	data
 psp-eu	0x649CC8	1	data
-psp-eu	0x649D78	6	data
 psp-eu	0x64B27C	1	data
 psp-eu	0x6676DC	1	data
-psp-eu	0x6698A0	1	data
-psp-eu	0x6698A8	1	data

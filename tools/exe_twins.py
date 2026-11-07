@@ -14,7 +14,10 @@ by the result:
 A word of the PC's that points into the PC image is a wildcard (the other
 build's pointer is its own address); everything else must be equal. Runs: a
 16-byte key every 16 bytes of .data, a seed where its hits fall at no more
-than eight addresses, extended both ways while the bytes agree. A table is
+than eight addresses, extended both ways while the bytes agree, and its ends
+cut back where only wildcards and a chance byte hold them (`trim`: a PC
+pointer table over the other build's code agrees with it word for word, so
+one byte before it that agrees by chance would anchor the lot). A table is
 where the run holding its first byte puts it; a table no run reaches is
 searched for alone (its wildcard-free head), several equal places decided by
 the neighbours' displacement, their file, or the file its name names. A
@@ -206,11 +209,69 @@ def masks(read, lo, hi):
 SEED_STEP, SEED_MAX_HITS = 16, 8
 
 
+def trim(data, wild, a, b, other, space):
+    """[a, b) without the ends only wildcards and chance hold.
+
+    A run is extended while the bytes agree, and a PC pointer word agrees with
+    anything, so where the PC holds a pointer table over the other build's
+    code the run walks across it and stops at the first plain byte that
+    differs - one byte before it that agrees by chance (most often a zero)
+    then anchors the whole stretch. From each end: the outermost island (the
+    plain bytes up to the next wildcard) is weak when it is shorter than a
+    word (the extension stopped inside that word) or holds only zeros. A
+    weak island goes, with the wildcard stretch beyond it, when the other
+    build's words under that stretch read as code from the outside in: each
+    word scores +1 when it is neither a number below 2**24 nor an address in
+    the build's own space (`space`, where its sources load), -1 when it is
+    such an address, 0 when it is a number, and the stretch goes when some
+    prefix of it scores above 0. A pointer table the other build holds as
+    pointers (a delay slot's zero byte before a table, a table at a run's
+    end) stays. An island with a non-zero byte that is a word or longer
+    always stays, and so does one that reaches the run's other end - so the
+    16-byte seed, interior pointer tables, and every non-zero byte that a
+    whole word of agreement holds are never cut. `other(x)`: the other
+    build's word under the PC word at offset x (None past its file)."""
+    def code(lo, hi, step):
+        best = score = 0
+        for x in (range(lo, hi, 4) if step > 0 else range(hi - 4, lo - 4, -4)):
+            w = other(x)
+            score += 0 if w is None or w < 1 << 24 else -1 if space[0] <= w < space[1] else 1
+            best = max(best, score)
+        return best > 0
+
+    while a < b and wild[a]:                          # a run neither starts nor ends on a wildcard
+        a += 1
+    while True:
+        e = a
+        while e < b and not wild[e]:
+            e += 1
+        f = e
+        while f < b and wild[f]:
+            f += 1
+        if e >= b or f >= b or (e - a >= 4 and any(data[a:e])) or not code(e, f, 1):
+            break
+        a = f
+    while b > a and wild[b - 1]:
+        b -= 1
+    while True:
+        e = b
+        while e > a and not wild[e - 1]:
+            e -= 1
+        f = e
+        while f > a and wild[f - 1]:
+            f -= 1
+        if e <= a or f <= a or (b - e >= 4 and any(data[e:b])) or not code(f, e, -1):
+            break
+        b = f
+    return a, b
+
+
 def runs(pc, wild, srcs):
     """Every stretch of the PC's initialised data that a source holds verbatim
     (pointer words wild): seeded by 16-byte keys every 16 bytes that occur at
     most SEED_MAX_HITS times in the build, extended both ways while the bytes
-    agree. [(pc0, pc1, source index, address of pc0)], longest first."""
+    agree, and the ends that only wildcards and chance hold cut off (`trim`).
+    [(pc0, pc1, source index, address of pc0)], longest first."""
     import ahocorasick
     lo, data = pc
     auto, keys = ahocorasick.Automaton(), collections.defaultdict(list)
@@ -244,6 +305,11 @@ def runs(pc, wild, srcs):
             for o in keys[ks]:
                 seeds.append((o, si, at, len(group), others))
     seeds.sort()
+    # The other build's own address space, for trim: where its sources load
+    # in main RAM (the PSP's ELF, at 0, is left out: its words below 2**24
+    # read as numbers there anyway).
+    ram = [(base, base + len(blob)) for _, _, base, blob in srcs if base >= 0x80000000]
+    space = (min(x for x, _ in ram), max(y for _, y in ram))
     found, covered = [], set()
     for o, si, at, copies, others in seeds:
         delta = (si, at - o)
@@ -256,10 +322,8 @@ def runs(pc, wild, srcs):
         b = o
         while b < len(data) and at + (b - o) < len(blob) and (wild[b] or data[b] == blob[at + (b - o)]):
             b += 1
-        while a < b and wild[a]:                      # a run neither starts nor ends on a wildcard
-            a += 1
-        while b > a and wild[b - 1]:
-            b -= 1
+        a, b = trim(data, wild, a, b, lambda x: struct.unpack_from("<I", blob, at + x - o)[0]
+                    if 0 <= at + x - o <= len(blob) - 4 else None, space)
         for q in range(a // SEED_STEP, b // SEED_STEP + 1):
             covered.add((delta, q))
         # The group's other files, kept where they hold the whole run too:

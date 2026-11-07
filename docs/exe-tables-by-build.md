@@ -90,6 +90,16 @@ python tools/exe_twins.py survey --game <dir with BOF3.exe> --disc <cue or iso> 
   is its own). `.rdata` is not surveyed: it is the compiler's constants and
   the import table, and an arithmetic sequence there matched a spell file by
   chance in the first pass.
+- **Trimmed ends** (2026-11-06, section 2.4). A run's ends are cut back
+  where only wildcards and chance hold them: from each end, a weak outer
+  island (the plain bytes up to the next wildcard, shorter than a word or
+  all zero) goes with the wildcard stretch beyond it when the other build's
+  words under that stretch read as code from the outside in (a word scores
+  +1 when it is neither a number below 2^24 nor an address where the build's
+  sources load, -1 when it is such an address, 0 when a number; the stretch
+  goes when a prefix scores above 0). Before, only wildcards at the very
+  ends were cut, so one byte that agreed by chance before a PC pointer table
+  laid over the other build's code kept the whole table in the run.
 - **Pass 2**, for tables no run reaches: the table's wildcard-free head
   searched alone; where several places hold it equally, the place the nearest
   located neighbour in the PC's `.data` predicts (same file, same
@@ -131,6 +141,98 @@ it only replaces the name order between equals. Columns: `pc`, `pc_end`, `file`,
 `neighbour`, `search+neighbour`, `neighbour-file`, `name`). `tables.py check`
 validates each file: a known build, segments in order, inside the data, not
 overlapping, `agree` no more than the span.
+
+### 2.4 The run trim (2026-11-06)
+
+**The fault.** `runs()` extends a seed both ways while the bytes agree, and a
+PC pointer word agrees with anything. Where the PC holds a pointer table and
+the other build holds code at that displacement, the extension walks across
+the table and stops at the first plain byte that differs. The only trim cut
+wildcards at the very ends, so one byte that agreed by chance before the
+table (most often a zero) kept the table, and the code under it, in the run.
+Measured against the public US decomposition's code/data split
+(`config/**/splat.yaml`): `AREA030.EMI#4 @0x801E1987` kept 845 head bytes
+over four PSX functions (844 wild, one chance byte); `BOSS055.EMI#16
+@0x800C3497` 61 over `func_800C3284`'s tail; `MAGIC102.EMI#3 @0x801F0C7F` 21
+over `BMagic_Effect`'s tail; a segment of `AREA170.EMI#13 @0x801F578D` was 80
+wild bytes of 81.
+
+**Rules measured and rejected** (US survey, scratch `D:\bof3x-runs\trim1106`):
+
+- *Peel an outer island with fewer than N non-zero bytes* (N = 2, 4, 8). It
+  fixes the four, but real tables start and end with such islands (a zero
+  word, a short count, then a pointer): at N = 4, 36 table rows change place
+  or length, `Char_ExpTable` among them, and the `AreaNN_Weights` rows lose
+  64 of their 72 placed bytes - real non-zero values gone from the map.
+- *N = 1 (all-zero islands) or shorter than a word*, on the PC's bytes
+  alone. It still moves 30 of 92 runs that start on a function's delay-slot
+  `nop` (`jr ra` before it) and are followed by a real pointer table, and
+  cuts a real 800-byte pointer table at the boot EXE's `0x8017F971`. On the
+  PC's side `MAGIC102`'s head (one zero byte, 20 wildcard bytes) and
+  `AREA112.EMI`'s delay-slot edge (the same shape) are identical; only the
+  other build's words under the wildcards tell code from a table.
+- A typed wildcard everywhere (a PC pointer matches only a pointer or zero)
+  was rejected before this: 6,614 of 16,113 wild words sit over non-pointer
+  words inside real data. The trim reads the other build's words only at a
+  run's two ends, and only where the island is weak.
+
+**The rule** (`exe_twins.trim`, section 2.1). A strong island (a word or
+longer with a non-zero byte) always stays, so the 16-byte seed, interior
+pointer tables and every non-zero byte a whole word of agreement holds are
+never cut. A run still never starts or ends on a wildcard.
+
+**Effect on the US survey.** The four cases: `BOSS055` now starts at PSX
+`0x800C34D4` (PC `0x64DCAC`), `MAGIC102` at `0x801F0C94` (PC `0x65B7B0`),
+the `AREA170` segment is gone, and `AREA030`'s 2,721-byte segment is now 246
+bytes from PC `0x660340` (its head and the pointer stretch after it are
+wildcards only). `AREA000.EMI#13`'s two segments are unchanged, and none of
+the 92 delay-slot runs moves. No table row of the survey changes verdict or
+place on any build.
+
+**Effect on the maps** (only the rule's effect applied to the committed
+maps: today's survey mapped with the old and the new code, the difference
+applied, as in `install-gap-labels.md` 9.2, because a full re-run also
+brings the pass-2 drift HANDOFF names):
+
+| Build | segments | removed | shortened or moved | bytes no longer placed (plain / non-zero plain) |
+|---|---|---:|---:|---:|
+| `psx-us` | 642 to 637 | 5 | 23 | 3,537 (5 / 2) |
+| `psx-eu-en` | 641 to 635 | 6 | 24 | 3,566 (6 / 2) |
+| `psx-fr` | 635 to 630 | 6 | 21 | 3,537 (5 / 2) |
+| `psx-de` | 639 to 633 | 6 | 22 | 3,537 (5 / 2) |
+| `psx-jp` | 613 to 608 | 6 | 23 | 3,557 (13 / 2) |
+| `psp-eu` | 4,102 to 4,101 | 11 | 34 | 3,565 (17 / 0) |
+| `psp-jp` | 4,096 to 4,095 | 10 | 32 | 3,556 (16 / 0) |
+
+Almost every byte no longer placed is a PC pointer word, which the image
+never takes from the map. Run segments with no non-zero plain byte: 18 to 14
+(US); those left are 1- to 8-byte leftovers of the longest-run partition in
+`segments`, zeros or pointer words over the disc's pointers.
+
+**Effect on the disc-built image** (the recipe chain of
+`install-gap-labels.md` 9.2 over the seven discs, against a control chain on
+unchanged `main` that reproduced every committed image hash):
+
+- The five PSX images are byte for byte unchanged.
+- `psp-eu` and `psp-jp` change in 2 bytes each: the top byte of
+  `0x5E08C4` (`Area07_Handlers`) and of `0x5EB748` (`Area25_Handlers`),
+  number words the PC holds as zero there. Before, a junk tail of a
+  `BOOT.BIN` segment placed a non-zero ELF byte (`placed_differ`); now the
+  area's own EMI places the PC's value. Both words leave `exe-layout.tsv`'s
+  `number` rows (372 to 370).
+- No non-zero PC value is lost: `none_pc_nonzero` is unchanged on every
+  build; `none_pc_zero` rises by 2 to 9 bytes a build (zeros now unplaced,
+  zero in the image as before). `exe-places.tsv` refills most of what the
+  map stopped placing (`placed_by_pointer` -280 a PSX build, +309 a PSP
+  build), and the rebuild now reads 18 to 30 more pointer words exactly
+  (`rebuild_refused` -1 a PSX build, -9 and -3 on the PSPs).
+- `exe-imm.tsv`: the area 188 `immref` row at `0x654AF8` now reaches
+  `0x654AFC`, the byte `AREA170`'s junk head held; `exe-gaps.tsv`: the
+  `Music_LoadedTrack+0x1E30` `unread` row widens by 3 bytes on three builds.
+
+Not a divergence: the PSP images move toward the PC's own bytes, by a tool
+fix in what the map places, as 9.2's placement fix was recorded. A
+PSP-built install built before this goes stale (`exe`) by its image hash.
 
 ### 2.3 The catalogue: `tools/tables.py locate`
 
