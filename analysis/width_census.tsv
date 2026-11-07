@@ -5912,14 +5912,13 @@ site	src/game/fishing_text.cpp	239	fmt_place	word	live	(unsigned)*entry	%08X	bof
 site	src/game/fishing_text.cpp	239	fmt_place	word	live	(unsigned)shipped[i]	%08X	bof3::Fatal("fishing %s: 0x%08X holds 0x%08X, expected 0x%08X", what, (unsigned)(at + stride * i),
 site	src/game/fishing_text.cpp	244	narrow_call	image_local	live	buffer	Addr	*entry = Addr(buffer);
 site	src/game/fishing_text.cpp	494	low32	object_ours	live	&g_label_sigma	Low32	bof3::PatchBytes(" ", Low32(&g_label_sigma),
-site	src/game/fmv_play.cpp	60	uintptr	-	live	std::uintptr_t	-	const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/fmv_play.cpp	60	widen	param	live	address	const char*	const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/fmv_play.cpp	99	long	ul	live	unsigned long	-	filename, static_cast<unsigned long>(first), static_cast<unsigned long>(root), File_CdRoot(), why);
-site	src/game/fmv_play.cpp	99	long	ul	live	unsigned long	-	filename, static_cast<unsigned long>(first), static_cast<unsigned long>(root), File_CdRoot(), why);
-site	src/game/fmv_play.cpp	169	handle_array	none	live	nullptr	MsgWaitForMultipleObjects	MsgWaitForMultipleObjects(0, nullptr, FALSE, 16, QS_ALLINPUT);
-site	src/game/fmv_play.cpp	190	long	l	live	long	-	extern " " long __stdcall Fmv_WndProc(void* hwnd_, unsigned msg, unsigned wparam, long lparam) {
-site	src/game/fmv_play.cpp	190	long	l	live	long	-	extern " " long __stdcall Fmv_WndProc(void* hwnd_, unsigned msg, unsigned wparam, long lparam) {
-site	src/game/fmv_play.cpp	215	long	l	live	long	-	return static_cast<long>(DefWindowProcA(hwnd, msg, wparam, static_cast<LPARAM>(lparam)));
+site	src/game/fmv_play.cpp	112	long	l	live	long	-	std::snprintf(why, why_n, " ", static_cast<long long>(n.QuadPart));
+site	src/game/fmv_play.cpp	118	long	l	live	long	-	std::snprintf(why, why_n, " ", static_cast<long long>(n.QuadPart));
+site	src/game/fmv_play.cpp	364	handle_array	none	live	nullptr	MsgWaitForMultipleObjects	MsgWaitForMultipleObjects(0, nullptr, FALSE, wait, QS_ALLINPUT);
+site	src/game/fmv_play.cpp	395	long	l	live	long	-	extern " " long __stdcall Fmv_WndProc(void* hwnd_, unsigned msg, unsigned wparam, long lparam) {
+site	src/game/fmv_play.cpp	395	long	l	live	long	-	extern " " long __stdcall Fmv_WndProc(void* hwnd_, unsigned msg, unsigned wparam, long lparam) {
+site	src/game/fmv_play.cpp	424	long	l	live	long	-	return static_cast<long>(DefWindowProcA(hwnd, msg, wparam, static_cast<LPARAM>(lparam)));
+site	src/game/fmv_play.cpp	429	long	l	live	long	-	return static_cast<long>(DefWindowProcA(hwnd, msg, wparam, static_cast<LPARAM>(lparam)));
 site	src/game/frame_callees.cpp	26	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
 site	src/game/frame_callees.cpp	29	long	ul	live	unsigned long	-	Fn Handler(unsigned long entry) { return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(entry)); }
 site	src/game/frame_callees.cpp	29	uintptr	-	live	std::uintptr_t	-	Fn Handler(unsigned long entry) { return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(entry)); }
@@ -12836,6 +12835,7 @@ site	src/render/render_shim.cpp	1025	long	l	live	long	-	long __stdcall Material_
 site	src/render/render_shim.cpp	1026	long	l	live	long	-	if (!handle) return static_cast<long>(kInvalidParams);
 site	src/render/render_shim.cpp	1128	ptr_overlay	unread	live	Alloc(sizeof(Surface))	Surface	s = static_cast<Surface*>(Alloc(sizeof(Surface)));
 site	src/render/satpixie.cpp	232	long	ul	live	unsigned long	-	if (FAILED(hr)) bof3::Fatal(" ", what, static_cast<unsigned long>(hr));
+site	src/video/fmv_dump.cpp	36	long	l	live	long	-	const long size = std::ftell(in);
 site	symbols.toml	607	ptr_member	ours_crt	live	File_Slots	void * [16]	0x7de3e4
 site	symbols.toml	790	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
 site	symbols.toml	797	long	ctype:unsigned long	live	unsigned long	-	ctype = "unsigned long"
@@ -16465,10 +16465,7 @@ file	src/game/fishing_text.cpp	live	narrow_call	image_local	2
 file	src/game/fishing_text.cpp	live	uintptr	-	3
 file	src/game/fishing_text.cpp	live	widen	param	3
 file	src/game/fmv_play.cpp	live	handle_array	none	1
-file	src/game/fmv_play.cpp	live	long	l	3
-file	src/game/fmv_play.cpp	live	long	ul	2
-file	src/game/fmv_play.cpp	live	uintptr	-	1
-file	src/game/fmv_play.cpp	live	widen	param	1
+file	src/game/fmv_play.cpp	live	long	l	6
 file	src/game/frame_callees.cpp	live	asm	other	1
 file	src/game/frame_callees.cpp	live	long	l	9
 file	src/game/frame_callees.cpp	live	long	ul	5
@@ -18379,6 +18376,7 @@ file	src/render/render_shim.cpp	live	low32	unread	4
 file	src/render/render_shim.cpp	live	ptr_overlay	object_ours	1
 file	src/render/render_shim.cpp	live	ptr_overlay	unread	14
 file	src/render/satpixie.cpp	live	long	ul	1
+file	src/video/fmv_dump.cpp	live	long	l	1
 file	symbols.toml	live	long	ctype:long	42
 file	symbols.toml	live	long	ctype:unsigned long	1745
 file	symbols.toml	live	long	ctype:unsigned long *	1
@@ -18459,9 +18457,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_call_windows	14
 #count narrow_call_windows_live	8
 #count narrow_call_windows_live_files	2
-#count widen	983
-#count widen_live	673
-#count widen_live_files	296
+#count widen	982
+#count widen_live	672
+#count widen_live_files	295
 #count widen_fuzz	310
 #count widen_fuzz_files	147
 #count widen_code_place	25
@@ -18473,15 +18471,15 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count widen_other	131
 #count widen_other_live	117
 #count widen_other_live_files	58
-#count widen_param	554
-#count widen_param_live	272
-#count widen_param_live_files	147
+#count widen_param	553
+#count widen_param_live	271
+#count widen_param_live_files	146
 #count widen_word_read	192
 #count widen_word_read_live	183
 #count widen_word_read_live_files	143
-#count long	6981
-#count long_live	6236
-#count long_live_files	328
+#count long	6983
+#count long_live	6238
+#count long_live_files	329
 #count long_fuzz	745
 #count long_fuzz_files	79
 #count long_ctype:long	42
@@ -18493,12 +18491,12 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_ctype:unsigned long *	1
 #count long_ctype:unsigned long *_live	1
 #count long_ctype:unsigned long *_live_files	1
-#count long_l	3712
-#count long_l_live	3128
-#count long_l_live_files	264
-#count long_ul	1481
-#count long_ul_live	1320
-#count long_ul_live_files	215
+#count long_l	3716
+#count long_l_live	3132
+#count long_l_live_files	265
+#count long_ul	1479
+#count long_ul_live	1318
+#count long_ul_live_files	214
 #count asm	312
 #count asm_live	191
 #count asm_live_files	69
@@ -18567,14 +18565,14 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count sizeof_ptr_-	12
 #count sizeof_ptr_-_live	12
 #count sizeof_ptr_-_live_files	7
-#count uintptr	1490
-#count uintptr_live	824
-#count uintptr_live_files	309
+#count uintptr	1489
+#count uintptr_live	823
+#count uintptr_live_files	308
 #count uintptr_fuzz	666
 #count uintptr_fuzz_files	249
-#count uintptr_-	1490
-#count uintptr_-_live	824
-#count uintptr_-_live_files	309
+#count uintptr_-	1489
+#count uintptr_-_live	823
+#count uintptr_-_live_files	308
 #count fmt_place	468
 #count fmt_place_live	398
 #count fmt_place_live_files	56
@@ -18708,9 +18706,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count width_if_logic_live_files	14
 #count asm_live_x87_only_files	32
 #count widen_live_fnptr	238
-#count long_src	5193
-#count long_src_game	4688
-#count long_src_game_ul	1287
+#count long_src	5195
+#count long_src_game	4689
+#count long_src_game_ul	1285
 #count long_ctype	1788
 #count callconv_CALLBACK	18
 #count callconv_CALLBACK_fuzz	1
@@ -18726,8 +18724,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count img_place_Code	605
 #count img_place_Code_fuzz	6
 #count img_place_Code_live	599
-#count img_place_Img	14981
+#count img_place_Img	14973
 #count img_place_Img_fuzz	1070
-#count img_place_Img_live	13911
+#count img_place_Img_live	13903
 #count img_place_VaOf	53
 #count img_place_VaOf_live	53
