@@ -737,8 +737,8 @@ at a time with the gate after each, C, D, E. Every commit `git commit -s`. The
 round branch `source-layout/round` off `main` at launch; one harness root
 for the round under `C:\Users\kerok\bof3x-runs`. **Numbering:** no DIV or D
 number is expected; if one is needed, check `main` at the time (on
-`39d88ef9` the next free are DIV-0205 and D406, which stage D of the 64-bit
-round may take first).
+`39d88ef9` the ledger ended at DIV-0204 and the defects at D405; stage D of
+the 64-bit round took D406 and D407 on 2026-11-07).
 
 ## 9. Not in this round
 
