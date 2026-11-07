@@ -594,10 +594,10 @@ proposed files** (the rest would move as they are):
 
 The full list: `C:\Users\kerok\bof3x-runs\sl1107\m\check_full2.txt`.
 
-**What stage B needs first** (the owner's, section 7a): the renames, the
-64-bit gate's standing (SL3's dry run showed inlining and `Low32`'s file and
-line differing at x86-64 for a pure move; i686 identical), and the owner's
-read of the layout sheet.
+**What stage B needs first:** the renames and the 64-bit gate are answered
+(section 7a: renames allowed with each reason recorded, as step B0; the
+x86-64 gate takes a named exception class); still owed, the owner's read of
+the layout sheet and stage D of the 64-bit round merged.
 
 ## 4. Stage B: the moves (after stage D of the 64-bit round merges, and section 7)
 
@@ -687,6 +687,38 @@ is expected; the doc says so.
    changes `tools/` and `analysis/` only). Stage B after stage D's merge and
    the owner's reading of the sheet; on 2026-11-07 no open PR and no unmerged
    local branch touched `src/game`.
+
+### 7a. Answered by the owner after stage A (2026-11-07)
+
+7. **Renames of file-local helpers: allowed, each with its reason
+   written down.** The owner: as long as the reasons are documented, so that a
+   rename is easy to revisit if it turns out wrong. So stage B opens with a
+   rename step (B0) before any move:
+   - one commit per source file (or per clash family), message naming each
+     rename `old -> new` and why (the clash it removes: the two sources, the
+     target file they meet in);
+   - every rename also a row in `analysis/tu_renames.tsv`: source file, old
+     name, new name, kind (helper, constant, variable), reason, the target file,
+     the commit - kept beside `tu_moves.tsv` and never pruned, the record to
+     revisit from;
+   - the gate is `codegen_same.py --by-function --anonymous-locals` on i686
+     (the code identical, helpers matched by body), and the 64-bit gate under
+     call 8;
+   - a rename only removes a clash `move_funcs.py --check` reports; no
+     rename for taste. The 107 shared-state cases and the 52 macro-made
+     functions are not renames and are decided one by one, each with its
+     reason in the same table (`kind` = `state` / `macro`).
+8. **The 64-bit gate: an exception class, not advisory.** The i686 gate stays
+   exact. On x86-64 a function may differ only in a named class, listed in
+   `analysis/tu_gate_exceptions.tsv` (symbol, class, reason, the commit that
+   moved it), and anything outside a class is a stop as on i686. The classes
+   SL3's dry run showed:
+   - `inline`: the compiler inlined (or stopped inlining) a moved or copied
+     helper because its callers in the file changed;
+   - `low32-site`: `Low32()`'s failure message names the new file and line.
+   A new class needs the coordinator's entry in this doc with its first case.
+   `codegen_same.py` gains `--exceptions FILE` to apply the list (stage B's
+   first tooling change, with B0).
 
 ## 8. Ownership, merge order, numbering
 

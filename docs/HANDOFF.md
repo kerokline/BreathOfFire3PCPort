@@ -334,10 +334,11 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    `analysis/tu_layout_sheet.md`, with SL2's PSX units joined (59 of 488 PSX units split, 42 of them already
    interleaved on the PC). SL2: Capcom built with `-G0`, and no Capcom file name survives in either binary. SL3:
    `codegen_same.py --by-function`, `move_funcs.py`, `cite_lookup.py` with `tu_moves.tsv`, `game_sources.py`; its
-   dry run moved effect kind 0xA7 with i686 identical. **Before stage B:** the owner's read of the sheet; the
-   owner's word on renaming clashing file-local helpers (468 clashes; the mover refuses 164 of the 556 files today,
-   section 3 "Stage A's end"); the 64-bit gate's standing (inlining and `Low32` differ at x86-64 for a pure move);
-   stage D of the 64-bit round merged first (it edits the source list `game_sources.py adopt` replaces).
+   dry run moved effect kind 0xA7 with i686 identical. **Answered 2026-11-07** (section 7a): renames of clashing file-local helpers
+   allowed with each reason recorded (step B0, `analysis/tu_renames.tsv`; 468 clashes, the mover refuses 164 of the
+   556 files today, section 3 "Stage A's end"); the x86-64 gate takes a named exception class
+   (`analysis/tu_gate_exceptions.tsv`: `inline`, `low32-site`), i686 stays exact. **Before stage B:** the owner's
+   read of the sheet; stage D of the 64-bit round merged first (it edits the source list `game_sources.py adopt` replaces).
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
    (D330). Open from the `orig3` reading: which of the button round's glyph changes moves `masterAndManillo`'s pages
