@@ -8,7 +8,7 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**The 64-bit build round, 2026-11-01..02: stages A and B merged as PR #183, stage C open as PR #187, stage D
+**The 64-bit build round, 2026-11-01..02: stages A and B merged as PR #183, stage C as PR #187, stage D
 next** ([`x64-build-round.md`](x64-build-round.md); the owner's calls of 2026-11-01: the narrow image - the
 image's words stay 32 bits inside a 64-bit process, so saves, quicksave and the state-hash references are
 unchanged - x86-64 Windows alone, a developer build beside the 32-bit player's default, SDL3). Stage A

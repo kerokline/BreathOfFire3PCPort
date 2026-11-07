@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-02: the 64-bit build round's stages A and B merged as PR #183, stage C open as PR #187, **stage D next**, item 14a; DIV-0202 the logo movie as PR #186; `main` at PR #186; the exe-gap round merged as PR #176, issues 177..179 as PRs #181 / #182)
+**Status:** IN PROGRESS (2026-11-07: the 64-bit build round's stages A..C merged as PRs #183 and #187, **stage D next**, item 14a; DIV-0202 the logo movie as PR #186; `main` at PR #186; the exe-gap round merged as PR #176, issues 177..179 as PRs #181 / #182)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -21,7 +21,7 @@ sweep and its fix wave, the two staged rounds, the away day (PR #158), D42's dia
 (PRs #166, #167), the relocatable-image round (PR #168), the enemy-information cheat (PR #169), the pool fold (PR #170), and after alpha.6 issue #141's model box (PR #171), the no-fail minigames cheat (PR #172), the item sort (PR #173), the dock's legend (PR #174), the mountain passes (PR #175), the exe-gap round (PR #176),
 issues 177..179 (PRs #181, #182), the 64-bit build round's stages A and B (PR #183) and DIV-0202 (PR #186)
 ([`STATUS.md`](STATUS.md) lists them with their PRs). Every branch the earlier versions of this file called
-unpushed is merged; the open work is below. **One PR is open:** #187, stage C of the 64-bit round (item 14a).
+unpushed is merged; the open work is below. **No PR is open** (2026-11-07; stage C of the 64-bit round merged as PR #187 on 2026-11-02).
 `v0.1.0-alpha.6` is the
 release cut from an earlier state ([`releases/v0.1.0-alpha.6.md`](releases/v0.1.0-alpha.6.md), a draft until the owner
 publishes it). Owed throughout:
@@ -296,8 +296,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 
 14a. **The 64-bit build round: stages A..C done, stage D next** ([`x64-build-round.md`](x64-build-round.md);
    the owner's four calls of 2026-11-01 in its section 7: the narrow image, x86-64 Windows alone, a developer
-   build and a second release artefact, SDL3). Stages A and B merged as PR #183 (2026-11-02). **Stage C is PR
-   #187** (`x64/c1`, tip `7206055c`, `main` merged in): `cmake --preset x86_64 && cmake --build build-x86_64`
+   build and a second release artefact, SDL3). Stages A and B merged as PR #183 (2026-11-02). **Stage C merged as
+   PR #187** (2026-11-02, `x64/c1` tip `7206055c`): `cmake --preset x86_64 && cmake --build build-x86_64`
    links a 64-bit `bof3x.exe`, `bof3x.dll` and launcher that play every route. Its proof (section 5, "the
    coordinator's part", root `C:\Users\kerok\bof3x-runs\x641101\proof`): the ten routes against the 32-bit host
    identical or run noise only, each noise page shown by a repeat of one width; the quicksave equal in process
@@ -307,11 +307,17 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    a native handle array, so 64-bit music stopped after its first quarter second - and no hash saw it.
    **Owed the owner, before or beside stage D:** a listen to DIV-0201's SDL3 sound output on the 32-bit default
    (its verification lists what to hear), a listen to the 64-bit build's music, the FMVs' picture, the
-   Sources page opened in the 64-bit launcher (the builds in `proof\L64f`, from before `main` was merged).
+   Sources page opened in the 64-bit launcher (the builds in `proof\L64f` predate `main`'s merge into stage C:
+   build fresh from `main` for these). No file was generated for the DIV-0201 listen: it is play, with
+   `off=SoundSdl` beside it for the A/B; the `tools/wav_dump.py` pair of one route under both switches is a
+   coordinator's run not yet done (add it to stage D's runs).
    **Stage D, the coordinator's (section 6, no agent has started it):**
-   - **The audit.** Re-run XA1's census on the tip: every width `#if` in a game file is listed - one is known,
-     `src/game/sound.cpp`'s `Music_Pump` (kept by width because the sound fuzz's stub records the array's
-     address; a width-free copy gave 5 mismatches). Every `Low32()` that fires in no run but could. The ledger:
+   - **The audit.** Re-run XA1's census on the tip: every width `#if` in a game file is listed. On `main`
+     `39d88ef9` (2026-11-07) there are 16 in 10 files under `src/game`; the one sampled
+     (`battle_misc.cpp:169`, `Battle_StatusTint`) is an i686/x86_64 asm pair that
+     [`x64-asm-policy.md`](x64-asm-policy.md) allows. Sort each into an asm pair by the policy or a logic fork;
+     the one logic fork known is `src/game/sound.cpp`'s `Music_Pump` (kept by width because the sound fuzz's
+     stub records the array's address; a width-free copy gave 5 mismatches). Every `Low32()` that fires in no run but could. The ledger:
      nothing stage C changed is player-visible on the 32-bit default, so no DIV is expected; say so in the doc.
    - **Census rows the defect asks for:** an image slot array handed to an API as a native array (the class
      `Music_Pump` was; the only handle array found), and a pointer-overlay class for C1's 23 `pointer-field`
@@ -324,8 +330,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - **Docs and release:** STATUS, this item, [`SCAFFOLDING.md`](SCAFFOLDING.md) 4 (the presets), the round
      doc's "as run" for stage D, and `release.yml`'s second artefact (the 64-bit exe, DLL and launcher, signed
      as the first). The 32-bit build stays the player's default (the owner's call 3).
-   - **Numbering:** ledger entries after DIV-0202, defects after D400, both checked against `main` first (the
-     issue 177..179 work on `fix/issues-177-178` may take more).
+   - **Numbering:** on `main` `39d88ef9` (2026-11-07) the ledger ends at DIV-0204 and the defects at D405,
+     so the next free numbers are DIV-0205 and D406; check against `main` again at the start.
 
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
@@ -540,14 +546,14 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **In flight (2026-11-02):** PR #187, `x64/c1` (item 14a, stage C), with its worktree
-  `C:\Users\kerok\bof3x-runs\x641101\c1`; stage D starts from its tip, or from `main` once it merges. The 64-bit
+- **Next (2026-11-07):** stage D of the 64-bit round (item 14a) starts from `main`; PR #187 (`x64/c1`, stage
+  C) merged on 2026-11-02, so its worktree `C:\Users\kerok\bof3x-runs\x641101\c1` is removable. The 64-bit
   round's root `C:\Users\kerok\bof3x-runs\x641101` holds the agents' worktrees and reports (`xa1`..`xa4`, `b1`..`b5`,
   `round`, `c1`) and the proof (`proof\`: the run scripts with their `.out`, the launcher folders `L64`, `L32`,
   `L64f`, `Lmix`, the quit-ended recipe copies in `stackq\`); keep `proof\` until stage D's runs are done.
   `fix/issues-177-178` in the main checkout is another session's (issues 177..179), uncommitted work on it.
 - **Merged, still to remove:** the `x64/xa1`..`xa4`, `x64/b1`..`b5` and `x64/round` branches and their worktrees
-  (PR #183), `fix/retire-logos-import` and its worktree `C:\Users\kerok\bof3x-runs\logos1102\wt` (PR #186),
+  (PR #183), `x64/c1` and its worktree (PR #187), `fix/retire-logos-import` and its worktree `C:\Users\kerok\bof3x-runs\logos1102\wt` (PR #186),
   `exe-gap/round` and its groups with `C:\Users\kerok\bof3x-runs\eg1031\wt_<group>` (PR #176),
   `docs/x64-refresh`; the worktree `C:\Users\kerok\bof3x-runs\spm1030\wt` (`loc/ship-parts-menu`, PR #174)
   and the branches `cheat/no-fail-minigames`, `fix/mountain-passes`, `loc/ship-parts-menu`, `sort/items-by-id`,

@@ -819,8 +819,11 @@ at their own last step before the appended quit, so they were not measured.
 ## 6. Stage D: audit and docs
 
 A read-only audit of every width-conditional line in `src/` (the list is
-XA1's census re-run on the round's tip: the count of `#if` by width in a
-game file should be zero), of every `Low32()` that fires in no run but
+XA1's census re-run on the round's tip: every `#if` by width in a game file
+is either an i686/x86_64 asm pair that [`x64-asm-policy.md`](x64-asm-policy.md)
+allows or a logic fork the audit names and explains - on `main` `39d88ef9`,
+2026-11-07, there are 16 in 10 files under `src/game`, and the one logic fork
+known is `sound.cpp`'s `Music_Pump`, HANDOFF item 14a), of every `Low32()` that fires in no run but
 could, and of the ledger: a 64-bit build that behaves as the 32-bit one
 needs no DIV entry; anything stage C changed for the player (a refused
 quicksave, a `Fatal` on low memory, a sound the shim changed) gets one.
