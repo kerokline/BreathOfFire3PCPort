@@ -35,6 +35,13 @@ not changed by this; the 64-bit one is `build-x86_64\` of a source build or the 
   entry's verification): a battle's voices at their cue frequencies, DIV-0171's pan, the fades of DIV-0028 /
   DIV-0143, the quicksave across a sound.
 
+**Answered 2026-11-07 (the owner, in chat):** nothing unusual at the inn's night, the combat loop sounds right,
+the voices sound fine. One observation: a quicksave loaded during a combat voice plays the voice first and the
+song comes in after it, where in play the voice sounds over the song - "not that distracting", and the owner
+unsure whether it is intended. It is not: recorded as D406 (the rebuild restarts the voice stream before the
+song's `Music_Start` and its decode to the heard sample). The 546 ms figure stays the dump's model's, not the
+ear's. Still open: a look at the 64-bit build's two FMVs and its Sources page, if the play was on the 32-bit one.
+
 ## 2026-11-03, issue #184's desert directions
 
 - **The German wording of DIV-0203** (`fix/issue-184-desert-directions`): the turn word is now Osten, and the

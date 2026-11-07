@@ -311,7 +311,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      forward `BOF3X_IMAGEBASE` to), combat identical on every tick with `BOF3X_STATEHASH_FOLD`; the stackwatch
      on `field_menu` and `menu_screens` agrees with the other eight (slice 0 `0x5508` of `0x8000`); the WAV pair
      of `shop` under DIV-0201 and `BOF3X_OFF=SoundSdl`: **the song lies 546 ms later in the SDL3 dump**, the
-     effects in place, cause not settled - the owner's ear (owner-review, 2026-11-07).
+     effects in place; the owner's ear hears nothing late (2026-11-07), so the figure is the dump's model.
    - **The ear beside the hash:** `tools/music_heard.py <copy>/bof3x.log` after a route run with `--env
      BOF3X_MUSIC_LOG=1` ("How to run things"); `Sound_Tick` logs a `ring` line every 60 frames under the
      switch. Fails on the defect's shape (a track playing with no advance of the heard sample); the ten routes
@@ -320,9 +320,10 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      both widths, signs six binaries in one jsign call and attaches `bof3x-<tag>-win-x64.zip` beside the 32-bit
      zip, which stays the player's default ([`releases/README.md`](releases/README.md)). The six-file jsign
      call is unexercised until the next push to `main`.
-   **Owed the owner** (owner-review, 2026-11-07): play on the 64-bit build (the music past its first quarter
-   second, a battle's voices, the FMVs' picture, the Sources page), the 546 ms listen, the rest of DIV-0201's
-   list. **Traps paid:** a quit-ended recipe copy must lose the recipe's own `end` line or the quit never runs;
+   **The owner's listens, 2026-11-07:** the inn's night, the combat loop and the voices all sound right, so the
+   546 ms figure is the dump's model, not the ear's; one observation became D406 (a quick-load during a battle
+   voice plays the voice before the song returns: the rebuild's order, a DIV-0145 amendment to make). Still
+   owed (owner-review): a look at the 64-bit build's two FMVs and its Sources page. **Traps paid:** a quit-ended recipe copy must lose the recipe's own `end` line or the quit never runs;
    a moved run's hash wants the `0x400000` side recorded with `BOF3X_STATEHASH_FOLD=<base>`; the hosted
    `BOF3X_SHADOW='*'` suite takes about forty minutes - count its log's lines a minute apart before calling it
    hung (one run was killed half-way on a stale tail and had to be run again).

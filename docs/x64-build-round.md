@@ -940,8 +940,12 @@ one in a live file. What they say on the tip:
   the computed one). Not settled: whether the ear hears the song that much
   later against a cue (the inn's night, DIV-0169, is a scene with one), or
   whether the dump's model of the computed cursor places the ring's halves
-  later than the device plays them. **The owner's listen** (owner-review);
-  the figure is in `proof\wav_diff_shop.tsv` and the two dumps under `wav\`.
+  later than the device plays them. **The owner's listen, 2026-11-07:**
+  nothing unusual at the inn's night, the combat loop and the voices sound
+  right - the figure is the dump's model, not the ear's. It is in
+  `proof\wav_diff_shop.tsv` and the two dumps under `wav\`. The one thing the
+  owner heard, a quick-load during a battle voice bringing the voice back
+  before the song, is the rebuild's order, not the output layer's: D406.
 
 **3. The CI and the release** (`x64/d-ci`): the `x86_64` job of
 `build.yml` is a gate like the `i686` one - configure, build, the same

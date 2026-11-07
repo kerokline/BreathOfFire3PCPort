@@ -28,9 +28,7 @@ launcher copy (combat identical on every tick), the last two routes' stackwatch 
 the ten routes pass it on the 64-bit host, stage C's pre-fix log fails it);
 the `x86_64` CI job is a gate and the release carries `bof3x-<tag>-win-x64.zip` beside the 32-bit zip. No DIV
 entry: the 64-bit build adds no behaviour. **What the player sees:** the 32-bit build stays the default; its one
-change is DIV-0201's sound output, whose music the owner approved by ear on 2026-11-07. Owed the owner
-(owner-review, 2026-11-07): a listen and a look on the 64-bit build, and the ear on the WAV pair's finding - in
-the dump the song lies 546 ms later under SDL3 than under DirectSound, cause not settled.
+change is DIV-0201's sound output, whose music the owner approved by ear on 2026-11-07. The owner's ear, 2026-11-07: the inn's night, the combat loop and the voices all sound right, so the WAV pair's 546 ms offset of the song under SDL3 is the dump's model, not the ear's; a quick-load during a battle voice plays the voice before the song returns (D406, ours, open). Owed the owner (owner-review): a look at the 64-bit build's FMVs and Sources page.
 
 **Horis's desert directions say east in every Western layer, 2026-11-03** (issue #184, DIV-0203, on
 `fix/issue-184-desert-directions`, unpushed). Capcom's Japanese says to turn east and keep going east when the
