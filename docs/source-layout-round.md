@@ -1,10 +1,11 @@
 # The source-layout round: staging (IDEAS I44's last step, I5 folded in)
 
-**Status:** DRAFT (staged 2026-11-07 on `docs/source-layout-staging` off
-`main` `39d88ef9`, the owner's pick of the next large round the same
-morning; nothing launched. Stage A needs no `src/game` change and can run
-beside the 64-bit round's stage D; stage B waits for stage D's merge and the
-owner's calls in section 7.)
+**Status:** IN PROGRESS (stage A launched 2026-11-07 on `source-layout/round`
+off `main` `39d88ef9`, worktrees under `C:\Users\kerok\bof3x-runs\sl1107`; the
+owner's calls answered the same day, section 7. Staged 2026-11-07 on
+`docs/source-layout-staging`, the owner's pick of the next large round. Stage
+A needs no `src/game` change and runs beside the 64-bit round's stage D;
+stage B waits for stage D's merge and the owner's reading of SL1's sheet.)
 
 The typed-data round named every data access, the relocatable-image round
 removed every fixed address, and the 64-bit round builds the same source at
@@ -70,8 +71,9 @@ from. The round's target, under the owner's call 1 (section 7):
 
 What the round does **not** do: rename functions, change a body, change a
 signature, touch the image's layout, change the hosted build's clone fuzz
-beyond where its files live, retire the typed-data round's comments (I48;
-section 7 call 5), widen anything (I53).
+beyond where its files live, widen anything (I53). The typed-data round's
+comments are retired after the moves, as stage E (section 5a), never inside
+a move.
 
 Units that hold only the porting house's code (the Direct3D replay, the
 DirectInput and DirectSound layer, `WinMain`) were replaced by ours long ago;
@@ -140,8 +142,15 @@ Agents run no game.
   game's range, and how that compares with the Rich records;
 - every boundary that two signals disagree on, listed.
 
-Output: the TSV, the counts in this doc's section 3 "as run", and a sheet of
-the 50 least certain boundaries for the owner's or the coordinator's read.
+Output: the TSV, the counts in this doc's section 3 "as run", a sheet of
+the 50 least certain boundaries for the coordinator's read, and **the owner's
+layout sheet** (section 7, calls 1..3): one row per unit with its range,
+function count, a one-line description of what it does, its PSX overlay,
+the proposed subsystem folder and file name, and a proposal - stand alone, or
+join the named neighbour units in one file - with the reason. The owner's
+examples set the tone: enemy groups apart from area data, bosses and fonts
+together. Written as `analysis/tu_layout_sheet.md` (addresses, our names and
+counts only; no game bytes).
 Also a `--check` mode for CI: the table covers every `impl` function, and
 (after stage B) every function's `impl` is its row's file.
 
@@ -176,10 +185,15 @@ file names this round can find.
   list. Decide how the source list is kept so that two groups' moves merge
   **without a hand-resolved conflict** (a generated `cmake/game_sources.cmake`
   from the table is one way). Idempotent: run twice, no change.
-- `tools/cite_move.py`: rewrite `docs/` citations of a moved function -
-  `src/game/old.cpp:123` to the new path and line at the round's tip, by
-  the function the old line was in. A citation of a line that is not inside a
-  function (an include, a file comment) is listed, not guessed.
+- `analysis/tu_moves.tsv` and `tools/cite_lookup.py` (the owner's call 4:
+  the docs keep their old paths, and the map traces them): the map has one row
+  per moved function - old path, old first and last line at `main` before the
+  moves, new path, function name, `pc`, unit id. `cite_lookup.py
+  src/game/old.cpp:123` answers with the function that held that line and
+  where it lives now; `--scan docs/` lists every citation it cannot resolve
+  (a line outside any function: an include, a file comment). The map is also
+  the bridge to other decompilations and wikis, so it keys on `pc` as well as
+  on our names. SL3 writes the tool and the map's format; stage B fills it.
 - A dry run on one small range (two wave files that a unit crosses) in the
   agent's worktree, the gate passing, then reverted: the tools' proof. The
   dry run's diff stays in the report, not on the branch.
@@ -211,8 +225,11 @@ Each group's report: the files made, emptied and deleted; the functions whose
 
 ## 5. Stage C: what follows the moves (one agent, after B)
 
-- `cite_move.py` over `docs/` (and `CLAUDE.md`, `CONTRIBUTING.md`, the
-  `recipes/` comments), with the unresolved list read by hand.
+- `tu_moves.tsv` complete; `cite_lookup.py --scan` over `docs/`,
+  `CLAUDE.md`, `CONTRIBUTING.md` and the `recipes/` comments, with the
+  unresolved list read by hand. The docs' paths are **not** rewritten (call
+  4); [`docs/README.md`](README.md) says once that a `src/game/` path in a
+  doc written before this round resolves through the map.
 - The fuzz files: one per new file, named after it; the hosted build's fuzz
   table regenerated.
 - `tu_census.py --check` in `checks.yml`: a function's `impl` is its unit's
@@ -224,6 +241,15 @@ Each group's report: the files made, emptied and deleted; the functions whose
   where its functions now live.
 - [`SCAFFOLDING.md`](SCAFFOLDING.md) and [`docs/README.md`](README.md): the
   new tree's shape, where a new function of ours goes.
+
+## 5a. Stage E: the comment clean-up (I48), at the end (the owner's call 5)
+
+After stage D's proof, on the new layout, so it runs once: the typed-data
+round's retire notes (`// kX: now Name[i].field (symbols.toml).`), comments
+that name a wave file or a group that no longer exists, and stale
+`_callees.h` remnants. Its own commits, gated by `codegen_same.py` (comments
+only, so every object identical), never mixed into a move commit. The brief
+is [`IDEAS.md`](IDEAS.md) I48.
 
 ## 6. Stage D: the proof and docs (the coordinator)
 
@@ -238,31 +264,28 @@ is expected; the doc says so.
 
 ## 7. For the owner
 
-1. **Granularity.** (a) One file per recovered unit - the most faithful;
-   probably several hundred files where we have 301 (SL1's count decides).
-   (b) Units are hard edges, but adjacent small units of one subsystem may
-   share a file. Proposed: (a), since a unit that is too small to stand alone
-   is itself a fact about Capcom's tree.
-2. **Directories.** `src/game/` flat, or `src/game/<subsystem>/` (`battle/`,
-   `field/`, `effect/`, `menu/`, `text/`, `area/`, `boss/`, `system/`).
-   Proposed: subsystems, since several hundred files flat is hard to walk.
-3. **File names.** Capcom's are lost except where SL2 finds one. Ours,
-   descriptive, from the unit's contents and the PSX overlay it maps to
-   (`area030.cpp`, `battle_damage.cpp`). Proposed: SL1 proposes a name per
-   unit, the owner reads the list before stage B.
-4. **Doc citations.** (a) Rewrite every `src/game/...` citation in place to
-   the new path and line (`cite_move.py`), with `analysis/tu_moves.tsv` as the
-   old-to-new map. (b) Leave old docs pointing at the old paths and keep the
-   map. Proposed: (a), with the map kept; the takeover rounds' docs are read
-   for their evidence and a dead path costs every reader.
-5. **I48's comment clean-up.** Every line of `src/game` is touched by a move
-   anyway. Proposed: **not** folded in - a pure move is reviewable by its
-   gate alone, an edit mixed into it is not. I48 as its own small round after
-   this one, on the new layout.
-6. **When.** Stage A now, beside the 64-bit round's stage D (it changes
-   `tools/` and `analysis/` only; SL3's `codegen_same.py` mode is additive).
-   Stage B after stage D's merge, with no other `src/game` branch open: on
-   2026-11-07 no open PR and no unmerged local branch touches `src/game`.
+**Answered by the owner on 2026-11-07**, when stage A was launched:
+
+1. **Granularity: decided file by file.** Some units are better apart (the
+   owner's example: enemy groups apart from area data), others better
+   together (bosses, fonts). So SL1 proposes, unit by unit, whether it stands
+   alone or joins its neighbours in one file, with a reason, and **the owner
+   decides each row** on that sheet before stage B. A unit is never split
+   across files, whatever the call.
+2. **Subsystem folders**, `src/game/<subsystem>/`, not one large folder. SL1
+   proposes the subsystem set with the file names.
+3. **File names as proposed:** SL1 names each file from its contents and its
+   PSX overlay; the owner reads the list with call 1's sheet.
+4. **The docs keep their old paths, with a map** (`analysis/tu_moves.tsv`,
+   `tools/cite_lookup.py`), so a citation still traces to other
+   decompilations and wikis by the names and addresses it was written with.
+   No doc is rewritten for a move.
+5. **The comment clean-up (I48) at the end of this round**, as stage E
+   (section 5a), after the proof, so it runs once on the final layout.
+6. **Stage A launched 2026-11-07** beside the 64-bit round's stage D (it
+   changes `tools/` and `analysis/` only). Stage B after stage D's merge and
+   the owner's reading of the sheet; on 2026-11-07 no open PR and no unmerged
+   local branch touched `src/game`.
 
 ## 8. Ownership, merge order, numbering
 
@@ -270,14 +293,14 @@ is expected; the doc says so.
 |---|---|
 | `tools/tu_census.py`, `analysis/tu_layout.tsv` | SL1 |
 | `analysis/tu_psx.tsv`, the agreement column's input | SL2 |
-| `tools/codegen_same.py` (the new mode), `tools/move_funcs.py`, `tools/cite_move.py`, the build's source-list shape | SL3 |
+| `tools/codegen_same.py` (the new mode), `tools/move_funcs.py`, `tools/cite_lookup.py`, the `tu_moves.tsv` format, the build's source-list shape | SL3 |
 | each `.text` range's files | its stage B group |
 | `docs/`, the fuzz table, `checks.yml` | stage C |
 | `STATUS.md`, `HANDOFF.md`, the proof | the coordinator |
 
 Merge order: SL1, SL2, SL3 (any order, no shared files), the coordinator's
 join of SL2's column into the table, the owner's read (section 7), B1..B5 one
-at a time with the gate after each, C, D. Every commit `git commit -s`. The
+at a time with the gate after each, C, D, E. Every commit `git commit -s`. The
 round branch `source-layout/round` off `main` at launch; one harness root
 for the round under `C:\Users\kerok\bof3x-runs`. **Numbering:** no DIV or D
 number is expected; if one is needed, check `main` at the time (on
@@ -287,7 +310,7 @@ round may take first).
 ## 9. Not in this round
 
 Renaming functions or globals; changing any body; the image layout; the wide
-image (I53); I48; `src/render`, `src/input`, `src/hook`, `src/launcher`
+image (I53); `src/render`, `src/input`, `src/hook`, `src/launcher`
 beyond what a moved `_Inject()` line needs; the runtime's and the decoder's
 ranges.
 
