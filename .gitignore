@@ -83,6 +83,12 @@ layout.bin
 # and the sibling's PSX images (tools/tu_psx.py, the source-layout round's SL2).
 !/analysis/tu_psx.tsv
 !/analysis/tu_psx_ranges.tsv
+# ...and the translation-unit table and the owner's layout sheet: addresses,
+# our names and counts from symbols.toml and the binary's layout, no byte of
+# the game (tools/tu_census.py, the source-layout round's SL1; its --check
+# reads the table). Its cache, tu_census_cache.json, stays ignored.
+!/analysis/tu_layout.tsv
+!/analysis/tu_layout_sheet.md
 
 # Symbol/name data IS tracked — it is our own work product, not game data.
 !/names/

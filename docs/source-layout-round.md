@@ -154,6 +154,74 @@ counts only; no game bytes).
 Also a `--check` mode for CI: the table covers every `impl` function, and
 (after stage B) every function's `impl` is its row's file.
 
+### SL1 as run (2026-11-07, branch `source-layout/sl1`, report `sl1107\reports\sl1.md`)
+
+Built `tools/tu_census.py` (writes the table and the sheet; `--report`
+prints every measurement below, `--uncertain N` the N least certain
+boundaries, `--check` is the CI check and reads only `symbols.toml` and the
+table), `analysis/tu_layout.tsv` (10,088 rows: the 10,069 `impl` functions
+in `0x401000..0x5AB7E0` and the 19 runtime functions as `outside`; an empty
+`psx_unit_agreement` column for SL2) and `analysis/tu_layout_sheet.md` (one
+row per unit). The binary's facts are cached in `analysis/` (ignored).
+
+- **The contiguity test passes, with one qualification.** PSX-adjacent
+  twins of one image (5,222 pairs, step under `0x2000`): 4,891 are close
+  forward on the PC (3,838 the very next function), 83 close backward
+  (1.7%: 31 by one function, 34 by two to eight, 18 by nine to forty), 248
+  far (other units, placed in another order by the other linker). Of the 83,
+  57 fall inside one unit of the final table: **small reorderings inside a
+  unit** (a draw callback before its task on one side and after it on the
+  other, `Gpu_Set*` from the PSX library's one-function objects, copied
+  helpers paired to a copy). None interleaves two units, so contiguity holds
+  and the table rests on it; "functions in Capcom's order" can only mean the
+  PC's order for those 57.
+- **`.bss` and COMMON.** By named variable, first reader in `.text`: `.bss`
+  below `0x6CA000` follows object order (378 variables, LIS 301; the last
+  object-ordered static `0x6C9F50`, the next read address `0x6D0000`);
+  from `0x6CA000` it does not (1,326 variables, LIS 128): the COMMON symbols
+  and the port's large blocks. Their rule is **not** found: neighbours share
+  subsystems (`D3d_*`, `Snd_*`/`Music_*`, `Gte_*` runs from `0x7C9F44`) but
+  neither text order nor size orders them. Only the lower part is used.
+  `.data`: 2,808 variables, LIS 2,273; `.rdata`: 70, LIS 47.
+- **Switch tables**: 424 dispatches through a `.text` table, none outside
+  its function's extent.
+- **Joins**: 4,910 PSX order spans, 359 `.data` and 190 `.bss` local
+  statics; 2,703 segments (588 of two or more holding 7,956 functions).
+  559 hard cuts (PSX image changes and steps back). Statics against PSX on
+  36 boundaries (17 kept joined, 19 cut).
+- **Calibration** (fires inside a PSX-joined run / across a PSX image cut,
+  397 and 318 samples): `.data` order 23 / 3, `.bss` order 4 / 0, local
+  code-pointer table 53 / 4, only callers 69 / 2, any call 112 / 15, same
+  name prefix 303 / 25; code-pointer cells in order 99 / 156, so unused.
+- **Units: 676**, at least 560 (559 disjoint hard cuts). Through the passes:
+  2,703 after the joins, 2,238 after placing, 841 after name prefixes and
+  calls, 676 after one- and two-function stragglers. The Rich header's C
+  records are 712 (build 8799), 117 (8797) and 1 (8168): the count sits
+  under the 712, but it moves with the guessed passes, and which record is
+  the game's is still not established. Sizes: 68 of one function, 128 of
+  two to four, 249 of five to 14, 200 of 15 to 49, 31 of 50 or more.
+- **Rows**: 7,202 `joined`, 62 `placed`, 2,805 `guessed` (a row is as sure
+  as the weakest step that put it in its unit). Of the local statics, all
+  190 `.bss` ones and 386 of 436 `.data` ones are read inside one unit.
+- **Least certain boundaries** (`--uncertain`): 36 statics against PSX, 29
+  placing signals refused by a PSX cut, 28 guesses refused, 202 PSX cuts
+  whose place in a twinless run is a guess, 39 boundaries with no evidence
+  either way, 1,952 guessed joins. The 50 first are in the report.
+- **The sheet** proposes 556 files in 14 folders (`area/` 174 units,
+  `magic/` 142, `effect/` 134, `boss/` 60, `scenario/` 51 and nine more):
+  509 units stand alone; the bosses join in runs (the owner's example), and
+  units that share a name stem or are one function beside a neighbour of
+  the same folder are proposed together. Areas never join another area.
+- **Seen, not followed up**: the 15 game functions whose start is not on 16
+  bytes are all in `0x5A9907..0x5AA79C` (`Task_*`, `Tex_Convert*`,
+  `Font_UnpackGlyph`, `Cell_Unpack*`, `Gfx_MoveCells`, `Gfx_PackRgb`), which
+  fits hand-written assembly (the Rich header has 26 objects of record 14);
+  the reading of the record numbers is not verified.
+- **Not verified**: that the guessed boundaries are Capcom's (2,805 rows);
+  the COMMON rule; which Rich record is the game's; that a PSX twin's overlay
+  is right where a helper was copied into several overlays (36 twins left
+  out; the disagreements list more).
+
 ### SL2: the PlayStation side
 The PSX binary is the second observation of the same tree
 ([`SHARED_SOURCE.md`](SHARED_SOURCE.md) 1, 2). From the sibling
