@@ -95,6 +95,13 @@ bool MusicLogOn() {
     return on;
 }
 
+// Under the same switch, once every 60 logic frames while a track's stream
+// is live: the sample heard against the samples written (RingLog, below).
+// Held off (1) while the injection-time self-tests run, and for the whole of
+// a BOF3X_SELFTEST_ONLY run: the stand-in buffers answer no
+// GetCurrentPosition, and the fuzz counts every call.
+std::uint8_t g_ring_log_hold = 0;
+
 }  // namespace sound
 
 #define MUSIC_LOG(...)     do { if (sound::MusicLogOn()) bof3::Log("music_log   f%u " __VA_ARGS__); } while (0)
@@ -453,9 +460,14 @@ void UnduckMusic(int frames) {
 // step keyed on the float frame deadline at 0x6BC628 instead, which DIV-0047's
 // WinMain (2026-09-24) never writes: every fade took one step and stalled, so
 // a stopping fade never stopped the music (known-defects.md D241).
+namespace sound {
+void RingLog();
+}
+
 extern "C" void __cdecl Sound_Tick(void) {
     g.music_pump();
     sound_in::JingleFrame();  // DIV-0177: once a logic frame, the jingle's end and its song's resume
+    if (sound::MusicLogOn()) sound::RingLog();  // the music log's ear: no behaviour
     if (Music_FadeCount == 0) return;
     if (sound::g_fade_per_frame) {
         if (sound::g_stop_unseen) {
@@ -1126,6 +1138,36 @@ bool HeardFolded(void* buffer, std::uint32_t size, std::uint32_t* heard_out, std
 }
 
 }  // namespace
+
+namespace sound {
+
+// BOF3X_MUSIC_LOG=1's periodic line, from Sound_Tick: once in every 60 logic
+// frames (the first tick whose frame falls in a new sixty) while a track
+// stream is live - the track, the stream sample under the play cursor (`-`
+// when the cursor is in a half not yet written), the samples written into
+// the ring, and whether the buffer plays. The same text on both widths;
+// tools/music_heard.py reads it: a track `playing` whose heard sample does
+// not move is the 64-bit round's silent stream (docs/x64-build-round.md 5).
+void RingLog() {
+    if (g_ring_log_hold) return;
+    const std::uint32_t frame = Frame_Counter;
+    static std::uint32_t slot = ~0u;
+    if (frame / 60 == slot) return;
+    slot = frame / 60;
+    void* const buffer = Music_Buffer;
+    const unsigned track = Music_Track;
+    if (track == 0xFF || !buffer || !g_ring.track_stream) return;
+    std::uint32_t heard = 0, folded = 0;
+    const bool trusted = HeardFolded(buffer, static_cast<std::uint32_t>(Music_FileSize), &heard, &folded);
+    const bool playing = Playing(buffer, 0);
+    char heard_text[16];
+    if (trusted) std::snprintf(heard_text, sizeof heard_text, "%u", heard);
+    else std::snprintf(heard_text, sizeof heard_text, "-");
+    bof3::Log("music_log   f%u ring track %u heard %s written %u %s", frame, track, heard_text, g_ring.written,
+              playing ? "playing" : "halted");
+}
+
+}  // namespace sound
 
 namespace music_resume {
 
@@ -1988,6 +2030,7 @@ void SelfTest();
 }
 
 void Sound_Inject() {
+    sound::g_ring_log_hold = 1;  // the self-tests below drive Sound_Tick on stand-in buffers
     if (bof3::WantsShadow("sound")) sound::SelfTest();
     BOF3_INJECT(Sound_PlayEffect);
     BOF3_INJECT(Music_LoadFile);
@@ -2018,6 +2061,9 @@ void Sound_Inject() {
     const char* const selftest_only = std::getenv("BOF3X_SELFTEST_ONLY");
     if (bof3::IsExeHost() ? selftest_only && selftest_only[0] : bof3::WantsShadow("sound")) sound_snapshot::SelfTest();
     bof3::Snapshot_Register("SOUND", &SnapSave, &SnapRestore, &SnapDiscard, &SnapCheck);
+    // The ring line's hold is lifted for play; a self-test-only run keeps it,
+    // whatever the later modules' fuzzes put in Music_Buffer.
+    if (!(selftest_only && selftest_only[0])) sound::g_ring_log_hold = 0;
     {
         // DIV-0168: after every self-test above, which ran Capcom's rule.
         const std::uint8_t was = 0, is = 1;
