@@ -172,6 +172,151 @@ Output: `analysis/tu_psx.tsv` and an agreement column SL1's table reads
 search both for `.c` and `.C` strings), record it: those are the only real
 file names this round can find.
 
+### SL2 as run (2026-11-07, branch `source-layout/sl2`, report `sl1107\reports\sl2.md`)
+
+`tools/tu_psx.py` (reads the sibling by `--sibling`, default
+`../BreathOfFire3Recomp`) writes `analysis/tu_psx.tsv` and
+`analysis/tu_psx_ranges.tsv`; `--units` writes every PSX unit, `--strings`
+runs the file-name search. Measured on the round branch's `symbols.toml` and
+the sibling's JP images (`SLPS_009.90`, `overlay_captures_all.json`,
+`emi_sections.json` with the disc). No game run, no `src/` change.
+
+**What the PSX images offer, measured.** The brief's per-file `.sdata` /
+`.sbss` blocks do not exist here: the whole boot executable has one
+gp-relative access (the `gp` set-up at `0x8014AA90`, `gp` = `0x8018BC2C`) and
+the 406 overlay images one between them, so Capcom built with `-G0` and every
+static is reached by `lui` + offset. `.text` gives no seam either: inside the
+boot executable's code functions abut with no padding (956 of 1,006
+neighbour gaps in the sibling's `functions.tsv` sizes are 0; 42 of the other
+50 are in Sony's libraries at `0x80178000` and up). What is
+left is the order of the absolute data the functions read, and on the
+overlays even that is thin: **Capcom kept most overlay variables in the boot
+image's data** (`0x80143000..0x8014A000`): `GAME.EMI#0`'s functions read 424
+boot-data addresses 1,994 times and 229 of their own 263 times; over the 333
+overlay images, 7,117 boot-data addresses against 4,645 of their own. So an
+overlay's own data orders few of its functions.
+
+**Joins** (the tool's doc has the rules): `window` (an item of the image's own
+data read only within 12 functions), `inversion` (two such items in the
+opposite order to their readers - two units never invert; a drop of more than
+12 functions is read as a section restart), `shared` (overlays: a boot-data
+item read by at most 6 neighbouring functions), and `call` (a helper called
+only by near neighbours) as a **hint column only**: on the boot image's Sony
+libraries, whose duplicated statics (`memclr`, `memclr_2`, `memclr_3`;
+`csqrt`; the `InitCARD`/`StartCARD`/`StopCARD` pairs; 11 groups by the
+sibling's names) each mark two files, call joins put two copies in one unit 5
+times in 11. The unit level (`psx_unit`: window + inversion + shared) and the
+data level (`psx_unit_data`: window + inversion) put two copies in one unit 0
+times in 11.
+
+| Measurement | Result |
+|---|---|
+| PC functions with a PSX twin (`psx`) | 5,613: image from `psx_overlay` 4,985, from it through a capture with the same bytes 20 (`MAGIC018.EMI#3` is captured as `MAGIC008.EMI#0`, `BOSS034.EMI#15` as `BATTLE.EMI#15`, and three more), boot code 221, the one overlay whose known starts hold it 337, the overlay of its PC neighbours' twins 48; **2 unplaced**: `0x4621C0` `Title_Task` (`0x801D0C04`, in no captured or surveyed code section) and `0x510630` `AreaMap_FrameAreaBD` (`0x801F2C04` starts 41 AREA images) |
+| PSX images with twins, and their functions | 334 (boot + 333 overlay images); 11,684 functions (known starts, `jal` targets and the twins) |
+| Data items read, ordering domains | 5,184 items of the images' own data in 526 domains; joins found: window 775, inversion 1,138, shared 1,398, call 1,278 (hint) |
+| Units (`psx_unit`) | 8,176; 755 of two or more functions holding 4,263; largest 30. Weakest link: shared 513, window 152, inversion 90; 7,421 of one function |
+| Data units (`psx_unit_data`) | 9,795; 308 of two or more holding 2,197; largest 30 |
+| PC rows in a unit of two or more | 2,104 of 5,613 (data level 996); 1,651 rows carry the `call_joined` hint |
+| Agreement, units of two or more with twins | 551: `same` 163, `superset` 8, `subset` 169, `subset+superset` 160 - **500 (91%) contiguous on the PC** - and `interleaved` 51 |
+| PC order as a check of the joins | twins of PSX neighbours are PC neighbours across 94.0% of window joins (418 pairs), 94.9% inversion (157), 92.6% shared (623), 86.0% call (506) - and **91.0% of open boundaries** (2,183). The PC keeps the PSX order across file edges as much as inside files, so PC adjacency cannot confirm a join; it only shows `call` is the weakest |
+| Source-file names (deliverable 2) | see below: three, all Sony's; **no Capcom file name in either binary** |
+
+**A unit is a lower bound.** An open boundary is one no join crosses; a real
+file may hold several neighbouring units, and 7,421 functions have no join at
+all (most overlay functions read no data of their own overlay). SL1 should
+read `psx_unit` as "these functions are one file", never as "this is where a
+file ends". The `interleaved` units (51) are where the PC puts a function
+twinned into another unit between a unit's twins: either a wrong join or the
+port's reorder; not separated here.
+
+**File names in the binaries.** Searched: `BOF3.exe`, the 407 PSX images, and
+all 886 files on the JP disc, for `name.c` / `.h` / `.cpp` / `.obj` / `.lib` /
+`.asm` shapes, RCS `$Id:` lines, and `assert` / `__FILE__` / `.pdb` / `RSDS` /
+`NB10` text. The PC exe has none: no hit, no debug directory, no PDB path.
+The PSX has exactly three real names, each an RCS line of **Sony's**
+libraries, in `SLPS_009.90` (and again in `LOGO/LOGO.EXE`): `intr.c` at
+`0x8014A0EC`, `bios.c` at `0x8014A39C`, `sys.c` at `0x8014A6F4` (the boot
+image's `.rdata`, below `.text` at `0x8014AA04`). The string is a file's first
+`.rdata` item, so the first item read after it names its unit: `intr.c` is
+`main:u402` (`0x8017525C..0x80175940`, `ResetCallback`..`restartIntr`, libetc),
+`bios.c` is `main:u432` (`0x801765D8..0x80177CC0`, `getintr`, the `CD_*` layer,
+libcd), `sys.c` holds `ResetGraph` `0x8017B884` (libgpu; its unit is one
+function at the data level because the 12-function inversion cap cuts it).
+None has a PC twin, so `file_name` is empty on every row. The other 66
+name-shaped hits are chance byte runs in data files (`AREA*.EMI` data
+sections, one `.STR`), none in a code image.
+
+**PC address ranges that are one PSX image's code** (deliverable 4):
+`analysis/tu_psx_ranges.tsv` has all 574 runs over 336 images (a run: PC
+functions in `pc` order whose twins are all in one image; PC functions with no
+twin between two twins stay inside). 208 images are one PC run. The images
+with 30 or more twins, their runs of three or more twins (`pc` hex, twins):
+
+| PSX image | Twins | PC ranges |
+|---|---:|---|
+| `GAME.EMI#0` | 439 | `454AD0..455450` (12), `462AE0..462BA0` (6), `469BB0..46A450` (17), `46B7A0..46D850` (10), `495800..496A00` (18), `517200..519890` (49), `51AC50..526DD0` (45), `52D8F0..5366A0` (149), `537540..537D50` (3), `56D5E0..56E6C0` (20), `573080..573560` (9), `576B50..57B780` (54), `57CF60..57DF00` (11), `589810..589970` (5), `591F30..592F00` (20), `594E00..5954B0` (8) + 3 runs of 1-2 |
+| `BATTLE.EMI#15` | 264 | `437780..437A10` (4), `447140..44A5C0` (74), `44AAD0..454590` (157), `494280..494E70` (9), `4FAFF0..4FC260` (20) |
+| `BATTLE.EMI#3` | 235 | `42E4A0..42E930` (4), `42E9A0..4376A0` (106), `441180..447110` (110), `44A5C0..44AAD0` (14) + 1 run of 1-2 |
+| `main` | 221 | `4549B0..454AB0` (5), `4976D0..498D20` (30), `516B30..5171E0` (5), `5366A0..537540` (18), `56E6C0..573080` (45), `57B780..57CEF0` (36), `588F00..589660` (8), `5903F0..591F30` (36), `595C50..596330` (7), `59E230..5B9450` (25) + 4 runs of 1-2 |
+| `AREA030.EMI#4` | 182 | `464660..469BB0` (93), `528880..52D8F0` (89) |
+| `SHOP.EMI#0` | 82 | `573560..5763F0` (21), `57F5D0..585940` (46), `59B470..59C2C0` (14) + 1 run of 1-2 |
+| `START.EMI#8` | 77 | `496CC0..4976D0` (34), `588800..588C00` (3), `589970..58FD60` (33), `59A3A0..59A9C0` (7) |
+| `SCENA08.EMI#0` | 69 | `4790F0..47A950` (6), `47BC10..47D220` (20), `47FD80..480590` (13), `519EA0..519FD0` (7), `551020..553B30` (23) |
+| `SCENA03.EMI#0` | 65 | `46A5E0..46ABB0` (7), `46F2B0..46FE60` (23), `519A00..519A60` (3), `5428C0..545010` (31) + 1 run of 1-2 |
+| `SCENA09.EMI#0` | 62 | `519FD0..51A370` (20), `553B30..558140` (40) + 1 run of 1-2 |
+| `COMMU02.EMI#8` | 58 | `45C8E0..45E6A0` (45), `45E6D0..45F1A0` (12) + 1 run of 1-2 |
+| `AREA134.EMI#13` | 55 | `41D790..41DAD0` (14), `487C10..4889E0` (41) |
+| `AREA135.EMI#14` | 54 | `41DBE0..41EFE0` (31), `47D910..47E2D0` (22) + 1 run of 1-2 |
+| `SCENA15.EMI#0` | 52 | `46DD50..46E120` (6), `489D70..48A5F0` (9), `48F070..48FC20` (12), `51AB50..51AC20` (3), `567DC0..56B2A0` (22) |
+| `AREA077.EMI#14` | 51 | `40EC90..40F140` (19), `4771B0..477B20` (9), `47AA50..47B2B0` (6), `4FD7E0..4FDF20` (17) |
+| `SCENA10.EMI#0` | 51 | `47F2B0..47FD80` (13), `51A370..51A420` (3), `51A430..51A510` (3), `558140..55BAC0` (30) + 1 run of 1-2 |
+| `SCENA17.EMI#0` | 50 | `56C130..56C3B0` (9), `56C3E0..56D510` (40) + 1 run of 1-2 |
+| `AREA098.EMI#13` | 46 | `413A00..413C80` (7), `480590..4823D0` (36) + 2 runs of 1-2 |
+| `SCENA13.EMI#0` | 46 | `485BA0..485CB0` (4), `4889E0..488F60` (12), `51A5A0..51A780` (8), `561DB0..5646A0` (21) + 1 run of 1-2 |
+| `AREA172.EMI#13` | 44 | `427BB0..428450` (19), `48CB30..48CDD0` (6), `48D070..48DDE0` (19) |
+| `SCENA00.EMI#0` | 43 | `462BF0..464660` (25), `537F20..539AD0` (17) + 1 run of 1-2 |
+| `AREA082.EMI#13` | 39 | `40F610..40F6E0` (4), `46EF70..46F2B0` (8), `471930..471D10` (7), `506BD0..507D90` (19) + 1 run of 1-2 |
+| `AREA174.EMI#13` | 37 | `428870..4291F0` (23), `4896A0..489BE0` (8), `514A70..515000` (6) |
+| `SCENA01.EMI#0` | 37 | `46D890..46DD00` (6), `5198F0..5199B0` (4), `539AD0..53DDA0` (23) + 3 runs of 1-2 |
+| `AREA173.EMI#14` | 35 | `428450..428870` (9), `513860..514880` (26) |
+| `MAGIC008.EMI#0` | 35 | `4A1980..4A1EC0` (8), `4A1F00..4A29C0` (19), `4A2AF0..4A3020` (8) |
+| `AREA067.EMI#14` | 34 | `40CA30..40CEF0` (21), `472420..4731A0` (13) |
+| `SCENA11.EMI#0` | 34 | `493430..493550` (3), `55C040..55E4E0` (28) + 2 runs of 1-2 |
+| `AREA008.EMI#13` | 33 | `4014E0..401670` (10), `47E2D0..47ECA0` (23) |
+| `AREA048.EMI#13` | 33 | `408FF0..4093F0` (10), `4710A0..471930` (8), `4FEF50..4FF970` (15) |
+| `SCENA06.EMI#0` | 33 | `519BF0..519CB0` (4), `519CE0..519DE0` (8), `54A910..54EFC0` (21) |
+| `AREA068.EMI#13` | 32 | `40CEF0..40D360` (12), `48AB30..48B200` (20) |
+| `AREA103.EMI#13` | 32 | `4144E0..4146C0` (8), `4741E0..474940` (6), `503660..504900` (18) |
+| `AREA108.EMI#14` | 32 | `4168E0..416D60` (7), `416DE0..417580` (10), `4737A0..473DD0` (6), `4823D0..4828B0` (8) + 1 run of 1-2 |
+| `AREA119.EMI#13` | 32 | `41A730..41A9D0` (10), `48DDE0..48DF90` (9), `501BA0..502810` (12) + 1 run of 1-2 |
+| `SCENA14.EMI#0` | 32 | `51A780..51AB50` (13), `5646A0..567DC0` (19) |
+| `AREA188.EMI#13` | 31 | `42A320..42A4B0` (5), `42A4C0..42A7D0` (8), `485CB0..486180` (9), `493550..493B50` (9) |
+| `SCENA05.EMI#0` | 31 | `46FEE0..470300` (4), `519AE0..519BF0` (10), `546390..54A910` (14) + 2 runs of 1-2 |
+| `SCE15EF1.EMI#0` | 31 | `48FC20..490180` (9), `490390..491AA0` (22) |
+| `AREA104.EMI#14` | 30 | `4146C0..4160E0` (27), `41C0A0..41C790` (3) |
+| `MAGIC015.EMI#0` | 30 | `49FA70..4A11E0` (28) + 2 runs of 1-2 |
+
+Every AREA and SCENA image lands in two to five PC runs: the port linked an
+overlay's files apart from each other, so **no PC range is a whole overlay**;
+the run, not the overlay, is the PC-side unit candidate. `main`'s last run
+(`0x59E230..0x5B9450`, 25 twins) holds four `Window_*` functions, then the
+port's twins of Sony library code - libgpu's primitive set-up (`Gpu_SetPoly*`,
+`Gpu_SetSprt*`...), `Math_Ratan2` (`ratan2`) - and the C runtime's `rand`
+(`Rand`, the BIOS thunk's twin), so it spans the MP3 decoder's range, which
+has no twin.
+
+**Not verified.** That `-G0` holds for every overlay (two gp-relative
+accesses in all images says it does, but an overlay could reach the boot
+image's small data some other way); that the boot image's data range
+`0x80141000..0x80196800` is all its own (the zero runs below `.text` are read
+as data by its code; part could be overlay buffers); that an `inversion` is
+never a section restart under 12 functions (small images, where a whole image
+is a few files, are where it could join two); that `shared` items are
+statics rather than externs of the boot image; that the sibling's overlay
+starts are complete (a missed start merges two functions, which can only add
+a join's span, never cross-check one); and the `same bytes` aliases, which
+take the image name of the first capture with identical bytes.
+
 ### SL3: the move tooling and the per-function gate
 - `codegen_same.py --by-function`: disassemble every object of both builds,
   key each function by its symbol, compare across objects; the same for

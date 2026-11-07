@@ -79,6 +79,10 @@ layout.bin
 # symbols.toml and exe_host.cpp (tools/width_census.py, the 64-bit build
 # round's XA1); its --check refuses a live site the list does not hold.
 !/analysis/width_census.tsv
+# ...and the PSX unit table: addresses, our names and counts from symbols.toml
+# and the sibling's PSX images (tools/tu_psx.py, the source-layout round's SL2).
+!/analysis/tu_psx.tsv
+!/analysis/tu_psx_ranges.tsv
 
 # Symbol/name data IS tracked — it is our own work product, not game data.
 !/names/
