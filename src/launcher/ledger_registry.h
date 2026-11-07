@@ -71,7 +71,7 @@ struct Entry {
     std::uint8_t languages;        // kLang* bits, or kLangAny
 };
 
-inline constexpr std::size_t kSwitchCount = 199;
+inline constexpr std::size_t kSwitchCount = 201;
 inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "Save_WriteFile", 0, 14},   // DIV-0002
     {SwitchForm::Name, "File_OpenWrite", 0, 14},   // DIV-0003
@@ -272,9 +272,11 @@ inline constexpr Switch kSwitches[kSwitchCount] = {
     {SwitchForm::Name, "DesertDirections", 0, 16},   // DIV-0203
     {SwitchForm::Ini, "ini:desert_faerie=0", 4, 13},   // DIV-0204
     {SwitchForm::Name, "Fmv_Play", 0, 8},   // DIV-0205
+    {SwitchForm::Name, "PixelRoom", 0, 9},   // DIV-0206
+    {SwitchForm::Name, "FinNight", 0, 8},   // DIV-0207
 };
 
-inline constexpr std::size_t kEntryCount = 205;
+inline constexpr std::size_t kEntryCount = 207;
 inline constexpr Entry kEntries[kEntryCount] = {
     {1, "Re-encode `capcom.avi` from Indeo 5 to Cinepak",
      Tier::Intent, State::Active, 0, 0, 0, true, Player::Never, 0, kLangAny},
@@ -686,6 +688,10 @@ inline constexpr Entry kEntries[kEntryCount] = {
      Tier::Extension, State::Active, 0, 197, 1, false, Player::Yes, 0, kLangAny},
     {205, "The FMVs decoded by our own AVI, Cinepak and Video 1 decoders, not MCI",
      Tier::Sensible, State::Active, 0, 198, 1, true, Player::Costly, 0, kLangAny},
+    {206, "The scatter-to-pixels effects have room for every pixel, instead of overwriting Sprite_Current",
+     Tier::Intent, State::Active, 0, 199, 1, true, Player::Yes, kTowardPsx, kLangAny},
+    {207, "The ending's disc holds at 1,000 and the night stays under the Fin panel",
+     Tier::Intent, State::Active, 0, 200, 1, true, Player::Yes, 0, kLangAny},
 };
 
 // The switches of one entry.

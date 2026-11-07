@@ -10063,15 +10063,10 @@ src/game/effect_3a.cpp	EffectKind61_Capture	record	At	Frame(" ") + 2	0	-	via=Fra
 src/game/effect_3a.cpp	EffectKind61_Store	record	At	f + 4	0	-	via=Frame	family	At(f + 0x4): local f: no declaration read	b1-effect
 src/game/effect_3a.cpp	EffectKind61_Store	record	At	f + 6	0	-	via=Frame	family	At(f + 0x6): local f: no declaration read	b1-effect
 src/game/effect_3a.cpp	EffectKind61_Store	global	At	EffectKind30_Shards_addr	0	0x92bf80	-	ptr	a pointer form: the address is handed on as a pointer, not read or written here (rule 4) (EffectKind30_Shards_addr - -)	c4-tc
-src/game/effect_3a.cpp	EffectKind61_Scatter	record	SW	f + 6	0	-	via=Frame	family	SW(f + 0x6): local f: no declaration read	b1-effect
 src/game/effect_3a.cpp	EffectKind61_Scatter	record	SW	f + 4	0	-	via=Frame	family	SW(f + 0x4): local f: no declaration read	b1-effect
-src/game/effect_3a.cpp	EffectKind61_Scatter	record	SW	f + 6	1	-	via=Frame	family	SW(f + 0x6): local f: no declaration read	b1-effect
-src/game/effect_3a.cpp	EffectKind61_Scatter	record	SW	f + 4	1	-	via=Frame	family	SW(f + 0x4): local f: no declaration read	b1-effect
-src/game/effect_3a.cpp	EffectKind61_Scatter	record	SW	f + 6	2	-	via=Frame	family	SW(f + 0x6): local f: no declaration read	b1-effect
-src/game/effect_3a.cpp	EffectKind61_Scatter	record	SW	f + 4	2	-	via=Frame	family	SW(f + 0x4): local f: no declaration read	b1-effect
+src/game/effect_3a.cpp	EffectKind61_Scatter	record	SW	f + 6	0	-	via=Frame	family	SW(f + 0x6): local f: no declaration read	b1-effect
 src/game/effect_3a.cpp	EffectKind61_Scatter	record	SetWord	p + 2	0	-	via=Particle	family	SetWord(p + 0x2): local p = Particle(count)	b1-effect
 src/game/effect_3a.cpp	EffectKind61_Scatter	record	SW	f + 2	0	-	via=Frame	family	SW(f + 0x2): local f: no declaration read	b1-effect
-src/game/effect_3a.cpp	EffectKind61_Scatter	record	SW	f + 6	3	-	via=Frame	family	SW(f + 0x6): local f: no declaration read	b1-effect
 src/game/effect_3a.cpp	EffectKind61_Twinkle	record	Word	p + 2	0	-	via=Particle	family	Word(p + 0x2): local p = Particle(i & 0xFFFFu)	b1-effect
 src/game/effect_3a.cpp	EffectKind61_Twinkle	record	Word	p + 2	1	-	via=Particle	family	Word(p + 0x2): local p = Particle(i & 0xFFFFu)	b1-effect
 src/game/effect_3a.cpp	EffectKind62_Rays	global	At	at::kMessageWord	0	0x7dee48	-	no-entry	at::kMessageWord 0x7dee48 -	b0
@@ -23162,10 +23157,9 @@ src/game/rest_3f.cpp	S	record	UL	from + i	0	-	-	computed	- (UL(from + i))	b1-res
 src/game/rest_3f.cpp	S	record	SetUL	to + i	0	-	-	computed	- (SetUL(to + i))	b1-rest
 src/game/rest_3f.cpp	PixRecord	global	-	at::kPixTable	0	0x655208	-	no-entry	at::kPixTable 0x655208 -	b0
 src/game/rest_3f.cpp	PixRecord	global	-	at::kPixTable	1	0x655208	-	no-entry	at::kPixTable 0x655208 -	b0
-src/game/rest_3f.cpp	Particle	global	P	at::kParticles	0	0x931980	-	no-entry	at::kParticles 0x931980 -	b0
-src/game/rest_3f.cpp	Particle	record	SetUL	e + i	0	-	base=Effect_Objects	computed	base=Effect_Objects (SetUL(e + i))	b1-rest
-src/game/rest_3f.cpp	Particle	record	UL	from + i	0	-	via=P	computed	via=P (UL(from + i))	b1-rest
-src/game/rest_3f.cpp	ReadBack	global	-	at::kParticles	0	0x931980	-	no-entry	at::kParticles 0x931980 -	b0
+src/game/rest_3f.cpp	alignas	global	-	at::kParticles	0	0x931980	-	no-entry	at::kParticles 0x931980 - (Particles(): the original's pool when DIV-0206's room is off)	b0
+src/game/rest_3f.cpp	CaptureSprite	record	SetUL	e + i	0	-	base=Effect_Objects	computed	base=Effect_Objects (SetUL(e + i))	b1-rest
+src/game/rest_3f.cpp	CaptureSprite	record	UL	from + i	0	-	via=P	computed	via=P (UL(from + i))	b1-rest
 src/game/rest_3f.cpp	SplitPixels	record	Long	sprite + 0x34	0	-	via=P	no-struct	Long(sprite + 0x34): via=P, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_3f.cpp	SplitPixels	record	Long	sprite + 0x38	0	-	via=P	no-struct	Long(sprite + 0x38): via=P, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest
 src/game/rest_3f.cpp	SplitPixels	record	Long	sprite + 0x3C	0	-	via=P	no-struct	Long(sprite + 0x3C): via=P, not one of records.h's nine families (a .data table, a character or community record, a packet or an effect sub-pool)	b1-rest

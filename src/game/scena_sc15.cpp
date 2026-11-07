@@ -1810,6 +1810,19 @@ void Rgb(unsigned char* p, unsigned off, unsigned char c) {
 // Part 1's and part 3's steps end by drawing these.
 void Fade(unsigned on, unsigned level) { SH_CALL(Scena17_DrawFade)(on, level); }
 void Rays(unsigned radius, unsigned level) { SH_CALL(Scena17_DrawRays)(radius, level); }
+// DIVERGENCE DIV-0207 (the owner, 2026-11-07): the ending's disc stops growing
+// at kFinRadius and the darkness outside it stays at level 0xFF - the camp
+// scenes' night - under the Fin panel, instead of Capcom's growth to 1,200
+// and the level lightened to 0x80 over step 6. Draw-only: the steps, their
+// counts and the script are the original's. Armed after the self-test
+// (PatchBytes "FinNight"); BOF3X_ORIGINAL=FinNight (or BOF3X_OFF) gives the
+// original's disc back.
+unsigned char g_fin_night = 0;
+constexpr unsigned kFinRadius = 1000;
+void FinRays(unsigned radius, unsigned level) {
+    if (g_fin_night == 0) { Rays(radius, level); return; }
+    Rays(radius > kFinRadius ? kFinRadius : radius, 0xFF);
+}
 void Panel(unsigned level) { SH_CALL(Scena17_DrawPanel)(0xE0, 0xBE, level, 1); }
 // The ground elevation under the kind-2 sprite handed to MapView_SetElevation.
 void ElevationToView() {
@@ -2218,10 +2231,10 @@ SC15_EXPORT void __cdecl Scena17_Outro05(void) {
         const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
         Step(0);
         MoveScript_Var7 = static_cast<unsigned char>(run + 1);
-        Rays(0x4B0, 0xFF);
+        FinRays(0x4B0, 0xFF);
         return;
     }
-    Rays((v + 0x32u) * 10u, 0xFF);
+    FinRays((v + 0x32u) * 10u, 0xFF);
 }
 
 // original 0x56C900: step 6: 0x8034E5 up by 2; at 0x7F or more the next step,
@@ -2234,10 +2247,10 @@ SC15_EXPORT void __cdecl Scena17_Outro06(void) {
         const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
         Step(0);
         MoveScript_Var7 = static_cast<unsigned char>(run + 1);
-        Rays(0x4B0, 0x80);
+        FinRays(0x4B0, 0x80);
         return;
     }
-    Rays(0x4B0, static_cast<unsigned char>(0xFF - v));
+    FinRays(0x4B0, static_cast<unsigned char>(0xFF - v));
 }
 
 // original 0x56C950: step 7: 0x8034E5 counted up; at 0x80 or more counter 3
@@ -2258,7 +2271,7 @@ SC15_EXPORT void __cdecl Scena17_Outro07(void) {
     } else {
         Panel(v);
     }
-    Rays(0x4B0, 0x80);
+    FinRays(0x4B0, 0x80);
 }
 
 // original 0x56C9F0: step 8: Input_Pressed bit 0x20 sets the skip flag; once
@@ -2272,7 +2285,7 @@ SC15_EXPORT void __cdecl Scena17_Outro08(void) {
         if (B(::bof3::Img(kCounter3)) != 0) Step(0x1E);
         else RunUp();
     }
-    Rays(0x4B0, 0x80);
+    FinRays(0x4B0, 0x80);
     Panel(0x80);
 }
 
@@ -2285,7 +2298,7 @@ SC15_EXPORT void __cdecl Scena17_Outro09(void) {
         Transition(0xD);
         RunUp();
     }
-    Rays(0x4B0, 0x80);
+    FinRays(0x4B0, 0x80);
     Panel(0x80);
 }
 
@@ -2303,7 +2316,7 @@ SC15_EXPORT void __cdecl Scena17_Outro10(void) {
         Field_Request = 2;
         MoveScript_Var7 = run;
     }
-    Rays(0x4B0, 0x80);
+    FinRays(0x4B0, 0x80);
     Panel(0x80);
 }
 
@@ -2380,6 +2393,29 @@ SC15_EXPORT void __cdecl Scena17_DrawFade(unsigned on, unsigned level) {
     p[0x15] = 0;
     Rgb(p, 4, c);
     Commit(2, 0x1C);
+    // DIV-0127 (amended 2026-11-07): with the fade off the copy is drawn
+    // opaque over the 320 columns and nothing else is meant to show - the
+    // field pass is off through the copy's hold, and the one frame step 3
+    // turns it on before step 4's dark tile covers it, the live field flashed
+    // in the wide bands beside the copy (the owner's "flicker"; measured at
+    // 21:9, one frame at full brightness before the bands' fade from black).
+    // Two opaque black tiles over the bands keep them black until the fade,
+    // which then brings them up with the field. Nothing narrow or in a fuzz
+    // (Widescreen_Fill() is 0 there).
+    if (a == 0 && Widescreen_Fill() != 0) {
+        const float cols = static_cast<float>(Widescreen_Fill());
+        for (int side = 0; side < 2; ++side) {
+            p = Packet();
+            SH_CALL(Gpu_SetTile)(p);
+            Rgb(p, 4, 0);
+            auto* const tile = rv::As<records::GpuTile>(p);   // a TILE: Gpu_SetTile's packet
+            rv::Store<float>(tile->x, side == 0 ? -cols : 320.0f);
+            rv::Store<float>(tile->y, 0.0f);
+            rv::Store<float>(tile->w, cols);
+            rv::Store<float>(tile->h, 240.0f);
+            Commit(2, 0x1C);
+        }
+    }
 }
 
 // original 0x56CCF0: a disc of 32 rays around the kind-2 sprite: the GTE
@@ -2416,6 +2452,13 @@ SC15_EXPORT void __cdecl Scena17_DrawRays(unsigned radius, unsigned level) {
     Commit(2, 0xC);
     const int32_t r = static_cast<int32_t>(radius & 0xFFFFu);
     const unsigned char c = static_cast<unsigned char>(level);
+    // DIV-0127 (amended 2026-11-07): the outer quads ran to 1600, which fills
+    // the 320-wide picture; under the wide picture they stop short of the
+    // band corners, so the rim grows by 10 a column a side (1600 x the fill's
+    // width over 320: 2130 at 16:9, 2800 at 21:9). 1600 narrow and in every
+    // fuzz (Widescreen_Fill() is 0 there); the disc's radius, the logic, is
+    // Capcom's.
+    const int32_t outer = 1600 + 10 * static_cast<int32_t>(Widescreen_Fill());
     unsigned char* const v = At(::bof3::Img(Prim_VertexScratch_addr));
     auto* const sv = rv::As<records::SVector>(v);   // Prim_VertexScratch: four SVECTORs (records_gpu.h SVector)
     long depth, flags;
@@ -2445,11 +2488,11 @@ SC15_EXPORT void __cdecl Scena17_DrawRays(unsigned radius, unsigned level) {
         rv::Store<unsigned>(sv[0].x, 0);
         rv::Store<unsigned>(sv[0].y, 0);
         rv::Store<unsigned>(sv[0].z, 0);
-        rv::Store<unsigned>(sv[1].x, Scaled(SH_CALL(Math_Cos)(a), 1600));
-        rv::Store<unsigned>(sv[1].y, Scaled(SH_CALL(Math_Sin)(a), 1600));
+        rv::Store<unsigned>(sv[1].x, Scaled(SH_CALL(Math_Cos)(a), outer));
+        rv::Store<unsigned>(sv[1].y, Scaled(SH_CALL(Math_Sin)(a), outer));
         rv::Store<unsigned>(sv[1].z, 0);
-        rv::Store<unsigned>(sv[2].x, Scaled(SH_CALL(Math_Cos)(a + 0x80), 1600));
-        const unsigned s4 = Scaled(SH_CALL(Math_Sin)(a + 0x80), 1600);
+        rv::Store<unsigned>(sv[2].x, Scaled(SH_CALL(Math_Cos)(a + 0x80), outer));
+        const unsigned s4 = Scaled(SH_CALL(Math_Sin)(a + 0x80), outer);
         rv::Store<unsigned>(sv[2].z, 0);
         unsigned char* const quad = Packet();
         rv::Store<unsigned>(sv[2].y, s4);
@@ -2737,6 +2780,12 @@ void ScenaSc15_RollApply(unsigned tag, const unsigned char* payload, unsigned si
 
 void ScenaSc15_Inject() {
     if (bof3::WantsShadow("scena_sc15")) scena_sc15::SelfTest();
+    {   // DIV-0207: armed after the self-test, which compared Capcom's disc.
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("FinNight", Low32(&g_fin_night), &was, &is, 1);
+        bof3::Log("DIV-0207    the ending's disc held at %u, the night kept under the Fin panel: %s", kFinRadius,
+                  g_fin_night ? "on" : "OFF (BOF3X_ORIGINAL=FinNight)");
+    }
     BOF3_INJECT(Scena15_RecordWord);
     BOF3_INJECT(Scena15_Frame);
     BOF3_INJECT(Scena15_EnterArea);

@@ -132,7 +132,29 @@ U PixRecord(const char* who) {
                     who, (unsigned)Rest3f_PixIndex_addr, k, at::kPixRecords, (unsigned)at::kPixTable.v);
     return ::bof3::Img(at::kPixTable.v) + 8 * k;
 }
-unsigned char* Particle(unsigned i) { return P(::bof3::Img(at::kParticles.v) + i * at::kPartStride); }
+// DIVERGENCE DIV-0206 (D217's shape, docs/rest_3f.md section 7): kinds 0xA1 and
+// 0xA3's particles. The original writes one 0x14-byte particle per opaque
+// pixel of the captured rectangle at 0x931980 with no bound; Sprite_Current
+// (0x937F88) lies 1,306 particles in, and capture record 1 is 0x60 x 0x78
+// (11,520). Seen 2026-11-07 on the owner's myriaFightAndEnding route: in
+// Myria's chamber Garr and Rei, with more than 1,306 opaque pixels, vanished
+// and came back in a blink where Nina and Momo scattered and gathered. Ours:
+// once g_pixel_room is armed (after the self-test, PatchBytes "PixelRoom",
+// the switch shared with kind 0x61's room in effect_3a.cpp) the particles go
+// to a room of ours that holds the rectangle's every pixel; the cursor, the
+// count, the fields, the flight and the draw are the original's. The three
+// cursor cells and the particles are named by these ten functions only (the
+// doc's raw scan). BOF3X_ORIGINAL=PixelRoom (or BOF3X_OFF) leaves them at
+// 0x931980, the overrun with them.
+unsigned char g_pixel_room = 0;
+alignas(4) unsigned char g_pixels[at::kPartRoom * at::kPartStride];
+U Particles() { return g_pixel_room ? Low32(g_pixels) : ::bof3::Img(at::kParticles.v); }
+unsigned char* Particle(unsigned i) {
+    if (g_pixel_room && i >= at::kPartRoom)
+        bof3::Fatal("EffectKindA1: particle %u, past the room of %u (a capture larger than 0x60 x 0x78)", i,
+                    at::kPartRoom);
+    return P(Particles() + i * at::kPartStride);
+}
 constexpr unsigned kEffectRecords = 20;   // Effect_Objects, 20 of 0x80
 
 // State 0 of kinds 0xA1 (0x490A80) and 0xA3 (0x491310, once the count is
@@ -203,7 +225,7 @@ void ReadBack(const char* who) {
     SH_AT(void (__cdecl*)(const short*, unsigned char*), at::kStoreImage.v)(rect, EffectKind30_Shards);
     unsigned char* const s = S();
     Rest3f_PixCursor = Low32(EffectKind30_Shards);
-    Rest3f_PartCursor = ::bof3::Img(at::kParticles.v);
+    Rest3f_PartCursor = Particles();   // DIV-0206: the room's start when armed
     Rest3f_PartCount = 0;
     s[9] = 0;
     NextState();
@@ -244,6 +266,9 @@ void SplitPixels(const char* who) {
                 unsigned char* const pixel = P(Rest3f_PixCursor);
                 const U v = Word(pixel);
                 if (v != 0) {
+                    if (g_pixel_room && Rest3f_PartCount >= at::kPartRoom)
+                        bof3::Fatal("%s: particle %u, past the room of %u (DIV-0206)", who, (unsigned)Rest3f_PartCount,
+                                    at::kPartRoom);
                     SetWord(P(Rest3f_PartCursor) + 2, v);
                     StF(P(Rest3f_PartCursor) + 4, F(o) - I(static_cast<U>(SW(P(rec)))) + I(column));
                     StF(P(Rest3f_PartCursor) + 8, F(o + 4) - I(static_cast<U>(SW(P(rec + 2)))) + I(row));
@@ -259,7 +284,13 @@ void SplitPixels(const char* who) {
     }
     s[9] = static_cast<unsigned char>(s[9] + 1);
     unsigned char* const t = S();
-    if (t[9] == 2) t[1] = static_cast<unsigned char>(t[1] + 1);
+    if (t[9] == 2) {
+        // DIV-0206: the count on every capture, so a sprite that overran the
+        // original's room (1,306 before Sprite_Current) is in the log.
+        bof3::Log("kind 0x%02X: capture %d x %d, %u particles%s", (unsigned)t[5], (int)SW(P(rec + 4)),
+                  (int)SW(P(rec + 6)), (unsigned)Rest3f_PartCount, Rest3f_PartCount > 1306 ? " (past the original's room)" : "");
+        t[1] = static_cast<unsigned char>(t[1] + 1);
+    }
 }
 
 // The shuffle both aims share: every sixteenth particle, sixteen swaps of two
@@ -1507,6 +1538,12 @@ extern "C" void __cdecl EffectKindAB_Drops(void) {
 
 void Rest3F_Inject() {
     if (bof3::WantsShadow("rest_3f")) rest_3f::SelfTest();
+    // DIV-0206: armed after the self-test, which compares ours with Capcom's at
+    // 0x931980.
+    static const std::uint8_t pixel_was = 0, pixel_is = 1;
+    bof3::PatchBytes("PixelRoom", Low32(&g_pixel_room), &pixel_was, &pixel_is, 1);
+    bof3::Log("DIV-0206    kinds 0xA1 / 0xA3's particles in a room of %u (the original's holds 1,306): %s", at::kPartRoom,
+              g_pixel_room ? "on" : "OFF (BOF3X_ORIGINAL=PixelRoom)");
     BOF3_INJECT(EffectKind60_Start);
     BOF3_INJECT(EffectKind60_SlideBoth);
     BOF3_INJECT(EffectKind60_SlideEnd);

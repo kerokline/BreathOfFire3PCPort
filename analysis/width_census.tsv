@@ -3659,13 +3659,14 @@ site	src/game/effect_3a.cpp	96	long	l	live	long	-	const unsigned char* Bytes(con
 site	src/game/effect_3a.cpp	107	narrow_call	image_local	live	table	AddressOf	who, state, entries, (unsigned)AddressOf(table));
 site	src/game/effect_3a.cpp	108	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<scenario_harness::Handler>(static_cast<std::uintptr_t>(UL(static_cast<const unsigned char*>(table) + 4 * state)))();
 site	src/game/effect_3a.cpp	108	widen	word_read	live	UL(static_cast<const unsigned char*>(table) + 4 * state)	scenario_harness::Handler [fn]	reinterpret_cast<scenario_harness::Handler>(static_cast<std::uintptr_t>(UL(static_cast<const unsigned char*>(table) + 4 * state)))();
-site	src/game/effect_3a.cpp	196	long	l	live	long	-	extern " " void __cdecl EffectKind60_DrawLine(const long* from, const long* to) {
-site	src/game/effect_3a.cpp	196	long	l	live	long	-	extern " " void __cdecl EffectKind60_DrawLine(const long* from, const long* to) {
-site	src/game/effect_3a.cpp	613	long	l	live	long	-	extern " " unsigned char __cdecl EffectKind62_DrawRing(const long* point, int inner, int outer) {
-site	src/game/effect_3a.cpp	828	long	l	live	long	-	extern " " void __cdecl EffectKind64_DrawGlow(const long* point, unsigned size, unsigned colour) {
-site	src/game/effect_3a.cpp	881	long	l	live	long	-	extern " " void __cdecl EffectKind64_DrawTrail(const long* from, const long* to, unsigned shade) {
-site	src/game/effect_3a.cpp	881	long	l	live	long	-	extern " " void __cdecl EffectKind64_DrawTrail(const long* from, const long* to, unsigned shade) {
-site	src/game/effect_3a.cpp	1208	uintptr	-	live	std::uintptr_t	-	static_cast<std::uintptr_t>(::bof3::CodePlace(UL(reinterpret_cast<const unsigned char*>(EffectKind68_MoteStates) + 4 * state))))(mote);
+site	src/game/effect_3a.cpp	219	long	l	live	long	-	extern " " void __cdecl EffectKind60_DrawLine(const long* from, const long* to) {
+site	src/game/effect_3a.cpp	219	long	l	live	long	-	extern " " void __cdecl EffectKind60_DrawLine(const long* from, const long* to) {
+site	src/game/effect_3a.cpp	640	long	l	live	long	-	extern " " unsigned char __cdecl EffectKind62_DrawRing(const long* point, int inner, int outer) {
+site	src/game/effect_3a.cpp	855	long	l	live	long	-	extern " " void __cdecl EffectKind64_DrawGlow(const long* point, unsigned size, unsigned colour) {
+site	src/game/effect_3a.cpp	908	long	l	live	long	-	extern " " void __cdecl EffectKind64_DrawTrail(const long* from, const long* to, unsigned shade) {
+site	src/game/effect_3a.cpp	908	long	l	live	long	-	extern " " void __cdecl EffectKind64_DrawTrail(const long* from, const long* to, unsigned shade) {
+site	src/game/effect_3a.cpp	1235	uintptr	-	live	std::uintptr_t	-	static_cast<std::uintptr_t>(::bof3::CodePlace(UL(reinterpret_cast<const unsigned char*>(EffectKind68_MoteStates) + 4 * state))))(mote);
+site	src/game/effect_3a.cpp	1371	narrow_call	object_ours	live	&g_pixel_room	AddressOf	bof3::PatchBytes(" ", AddressOf(&g_pixel_room), &pixel_was, &pixel_is, 1);
 site	src/game/effect_3a_fuzz.cpp	157	narrow	helper_def	fuzz	p	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/effect_3a_fuzz.cpp	157	uintptr	-	fuzz	std::uintptr_t	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/effect_3a_fuzz.cpp	158	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(f)	Key	template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
@@ -3886,23 +3887,23 @@ site	src/game/effect_4b.cpp	590	long	l	live	long	-	const int angle = SH_CALL(Eff
 site	src/game/effect_4b.cpp	591	long	l	live	long	-	reinterpret_cast<const long*>(s + 0xC));
 site	src/game/effect_4b.cpp	603	narrow_call	image	live	EffectKind89_States	AddressOf	Dispatch(" ", AddressOf(EffectKind89_States), EffectKind89_States_count);
 site	src/game/effect_4b.cpp	677	narrow_call	image	live	EffectKind9D_States	AddressOf	Dispatch(" ", AddressOf(EffectKind9D_States), EffectKind9D_States_count);
-site	src/game/effect_4b.cpp	851	long	ul	live	unsigned long	-	extern " " void __cdecl EffectKind9D_DrawPulse(unsigned long x, unsigned long y) {
-site	src/game/effect_4b.cpp	851	long	ul	live	unsigned long	-	extern " " void __cdecl EffectKind9D_DrawPulse(unsigned long x, unsigned long y) {
-site	src/game/effect_4b.cpp	860	long	ul	live	unsigned long	-	extern " " void __cdecl EffectKind9D_DrawGlow(unsigned long x, unsigned long y) {
-site	src/game/effect_4b.cpp	860	long	ul	live	unsigned long	-	extern " " void __cdecl EffectKind9D_DrawGlow(unsigned long x, unsigned long y) {
-site	src/game/effect_4b.cpp	884	long	l	live	long	-	long depth;
-site	src/game/effect_4b.cpp	885	long	l	live	long	-	const long r = SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(out), &depth);
-site	src/game/effect_4b.cpp	885	long	ul	live	unsigned long	-	const long r = SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(out), &depth);
-site	src/game/effect_4b.cpp	899	narrow_call	image	live	EffectKind9F_States	AddressOf	Dispatch(" ", AddressOf(EffectKind9F_States), EffectKind9F_States_count);
-site	src/game/effect_4b.cpp	980	narrow_call	image	live	EffectKindA4_States	AddressOf	Dispatch(" ", AddressOf(EffectKindA4_States), EffectKindA4_States_count);
-site	src/game/effect_4b.cpp	1043	narrow_call	image	live	EffectKind8A_States	AddressOf	Dispatch(" ", AddressOf(EffectKind8A_States), EffectKind8A_States_count);
-site	src/game/effect_4b.cpp	1071	long	l	live	long	-	SH_CALL(EffectKind8A_DrawSegment)(reinterpret_cast<const long*>(s + 0xC), reinterpret_cast<const long*>(s + 0x18));
-site	src/game/effect_4b.cpp	1071	long	l	live	long	-	SH_CALL(EffectKind8A_DrawSegment)(reinterpret_cast<const long*>(s + 0xC), reinterpret_cast<const long*>(s + 0x18));
-site	src/game/effect_4b.cpp	1105	long	l	live	long	-	extern " " void __cdecl EffectKind8A_DrawSegment(const long* a, const long* b) {
-site	src/game/effect_4b.cpp	1105	long	l	live	long	-	extern " " void __cdecl EffectKind8A_DrawSegment(const long* a, const long* b) {
-site	src/game/effect_4b.cpp	1202	narrow_call	image	live	EffectKind8B_States	AddressOf	Dispatch(" ", AddressOf(EffectKind8B_States), EffectKind8B_States_count);
-site	src/game/effect_4b.cpp	1272	narrow_call	image	live	EffectKind8C_States	AddressOf	Dispatch(" ", AddressOf(EffectKind8C_States), EffectKind8C_States_count);
-site	src/game/effect_4b.cpp	1511	low32	object_ours	live	&g_hologram_clear	Low32	bof3::PatchBytes(" ", Low32(&g_hologram_clear), was, is, 4);
+site	src/game/effect_4b.cpp	854	long	ul	live	unsigned long	-	extern " " void __cdecl EffectKind9D_DrawPulse(unsigned long x, unsigned long y) {
+site	src/game/effect_4b.cpp	854	long	ul	live	unsigned long	-	extern " " void __cdecl EffectKind9D_DrawPulse(unsigned long x, unsigned long y) {
+site	src/game/effect_4b.cpp	863	long	ul	live	unsigned long	-	extern " " void __cdecl EffectKind9D_DrawGlow(unsigned long x, unsigned long y) {
+site	src/game/effect_4b.cpp	863	long	ul	live	unsigned long	-	extern " " void __cdecl EffectKind9D_DrawGlow(unsigned long x, unsigned long y) {
+site	src/game/effect_4b.cpp	887	long	l	live	long	-	long depth;
+site	src/game/effect_4b.cpp	888	long	l	live	long	-	const long r = SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(out), &depth);
+site	src/game/effect_4b.cpp	888	long	ul	live	unsigned long	-	const long r = SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(out), &depth);
+site	src/game/effect_4b.cpp	902	narrow_call	image	live	EffectKind9F_States	AddressOf	Dispatch(" ", AddressOf(EffectKind9F_States), EffectKind9F_States_count);
+site	src/game/effect_4b.cpp	983	narrow_call	image	live	EffectKindA4_States	AddressOf	Dispatch(" ", AddressOf(EffectKindA4_States), EffectKindA4_States_count);
+site	src/game/effect_4b.cpp	1046	narrow_call	image	live	EffectKind8A_States	AddressOf	Dispatch(" ", AddressOf(EffectKind8A_States), EffectKind8A_States_count);
+site	src/game/effect_4b.cpp	1074	long	l	live	long	-	SH_CALL(EffectKind8A_DrawSegment)(reinterpret_cast<const long*>(s + 0xC), reinterpret_cast<const long*>(s + 0x18));
+site	src/game/effect_4b.cpp	1074	long	l	live	long	-	SH_CALL(EffectKind8A_DrawSegment)(reinterpret_cast<const long*>(s + 0xC), reinterpret_cast<const long*>(s + 0x18));
+site	src/game/effect_4b.cpp	1108	long	l	live	long	-	extern " " void __cdecl EffectKind8A_DrawSegment(const long* a, const long* b) {
+site	src/game/effect_4b.cpp	1108	long	l	live	long	-	extern " " void __cdecl EffectKind8A_DrawSegment(const long* a, const long* b) {
+site	src/game/effect_4b.cpp	1205	narrow_call	image	live	EffectKind8B_States	AddressOf	Dispatch(" ", AddressOf(EffectKind8B_States), EffectKind8B_States_count);
+site	src/game/effect_4b.cpp	1275	narrow_call	image	live	EffectKind8C_States	AddressOf	Dispatch(" ", AddressOf(EffectKind8C_States), EffectKind8C_States_count);
+site	src/game/effect_4b.cpp	1514	low32	object_ours	live	&g_hologram_clear	Low32	bof3::PatchBytes(" ", Low32(&g_hologram_clear), was, is, 4);
 site	src/game/effect_4b_fuzz.cpp	197	narrow	helper_def	fuzz	p	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/effect_4b_fuzz.cpp	197	uintptr	-	fuzz	std::uintptr_t	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/effect_4b_fuzz.cpp	198	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(f)	Key	template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
@@ -9550,60 +9551,62 @@ site	src/game/rest_3f.cpp	76	widen	param	live	a	unsigned char*	unsigned char* P(
 site	src/game/rest_3f.cpp	86	asm	x87	live	flds %1	flds	__asm__("flds %1" : "=t"(r) : "m"(*static_cast<const float*>(p)));
 site	src/game/rest_3f.cpp	95	long	l	live	long	-	long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
 site	src/game/rest_3f.cpp	95	long	l	live	long	-	long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
-site	src/game/rest_3f.cpp	205	low32	image	live	EffectKind30_Shards	Low32	Rest3f_PixCursor = Low32(EffectKind30_Shards);
-site	src/game/rest_3f.cpp	221	long	l	live	long	-	alignas(4) long q[3];
-site	src/game/rest_3f.cpp	385	long	l	live	long	-	extern " " void __cdecl EffectKind5F_DrawLineDisc(const long* point, unsigned unused, unsigned wobble, unsigned dy) {
-site	src/game/rest_3f.cpp	388	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(point[0]), static_cast<unsigned long>(point[1]),
-site	src/game/rest_3f.cpp	388	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(point[0]), static_cast<unsigned long>(point[1]),
-site	src/game/rest_3f.cpp	424	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(point[0]), static_cast<unsigned long>(point[1]),
-site	src/game/rest_3f.cpp	424	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(point[0]), static_cast<unsigned long>(point[1]),
-site	src/game/rest_3f.cpp	463	long	l	live	long	-	long depth;
-site	src/game/rest_3f.cpp	464	long	ul	live	unsigned long	-	SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(p + 8), &depth);
-site	src/game/rest_3f.cpp	477	long	ul	live	unsigned long	-	SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(p + 0x18), &depth);
-site	src/game/rest_3f.cpp	506	long	l	live	long	-	extern " " void __cdecl EffectKind9C_DrawTrail(const long* from, const long* to, unsigned shade) {
-site	src/game/rest_3f.cpp	506	long	l	live	long	-	extern " " void __cdecl EffectKind9C_DrawTrail(const long* from, const long* to, unsigned shade) {
-site	src/game/rest_3f.cpp	579	long	l	live	long	-	alignas(4) long q[3] = {static_cast<long>(f * dx + fx), static_cast<long>(f * dy + fy), static_cast<long>(f * dz + fz)};
-site	src/game/rest_3f.cpp	579	long	l	live	long	-	alignas(4) long q[3] = {static_cast<long>(f * dx + fx), static_cast<long>(f * dy + fy), static_cast<long>(f * dz + fz)};
-site	src/game/rest_3f.cpp	579	long	l	live	long	-	alignas(4) long q[3] = {static_cast<long>(f * dx + fx), static_cast<long>(f * dy + fy), static_cast<long>(f * dz + fz)};
-site	src/game/rest_3f.cpp	579	long	l	live	long	-	alignas(4) long q[3] = {static_cast<long>(f * dx + fx), static_cast<long>(f * dy + fy), static_cast<long>(f * dz + fz)};
-site	src/game/rest_3f.cpp	593	long	l	live	long	-	q[0] = static_cast<long>(static_cast<U>(q[0]) + dx * 8);
-site	src/game/rest_3f.cpp	594	long	l	live	long	-	q[1] = static_cast<long>(static_cast<U>(q[1]) + dy * 8);
-site	src/game/rest_3f.cpp	595	long	l	live	long	-	q[2] = static_cast<long>(static_cast<U>(q[2]) + dz * 8);
-site	src/game/rest_3f.cpp	610	long	l	live	long	-	extern " " void __cdecl EffectKind9E_DrawOutline(const long* a, const long* b) {
-site	src/game/rest_3f.cpp	610	long	l	live	long	-	extern " " void __cdecl EffectKind9E_DrawOutline(const long* a, const long* b) {
-site	src/game/rest_3f.cpp	611	long	l	live	long	-	alignas(4) long q[3];
-site	src/game/rest_3f.cpp	613	long	l	live	long	-	q[0] = static_cast<long>(static_cast<U>(a[0]) + static_cast<U>(b[0]));
-site	src/game/rest_3f.cpp	614	long	l	live	long	-	q[1] = static_cast<long>(static_cast<U>(b[1]) + static_cast<U>(a[1]));
-site	src/game/rest_3f.cpp	615	long	l	live	long	-	q[2] = static_cast<long>(static_cast<U>(b[2]) + static_cast<U>(a[2]));
-site	src/game/rest_3f.cpp	618	long	l	live	long	-	q[0] = static_cast<long>(static_cast<U>(a[0]) - static_cast<U>(b[0]));
-site	src/game/rest_3f.cpp	619	long	l	live	long	-	q[1] = static_cast<long>(static_cast<U>(b[1]) + static_cast<U>(a[1]));
-site	src/game/rest_3f.cpp	621	long	l	live	long	-	q[0] = static_cast<long>(static_cast<U>(a[0]) + static_cast<U>(b[0]));
-site	src/game/rest_3f.cpp	622	long	l	live	long	-	q[1] = static_cast<long>(static_cast<U>(a[1]) - static_cast<U>(b[1]));
-site	src/game/rest_3f.cpp	624	long	l	live	long	-	q[2] = static_cast<long>(static_cast<U>(b[2]) + static_cast<U>(a[2]));
-site	src/game/rest_3f.cpp	627	long	l	live	long	-	q[0] = static_cast<long>(static_cast<U>(a[0]) + static_cast<U>(b[0]));
-site	src/game/rest_3f.cpp	628	long	l	live	long	-	q[1] = static_cast<long>(static_cast<U>(a[1]) - static_cast<U>(b[1]));
-site	src/game/rest_3f.cpp	630	long	l	live	long	-	q[0] = static_cast<long>(static_cast<U>(a[0]) - static_cast<U>(b[0]));
-site	src/game/rest_3f.cpp	631	long	l	live	long	-	q[1] = static_cast<long>(static_cast<U>(b[1]) + static_cast<U>(a[1]));
-site	src/game/rest_3f.cpp	633	long	l	live	long	-	q[2] = static_cast<long>(static_cast<U>(a[2]) - static_cast<U>(b[2]));
-site	src/game/rest_3f.cpp	635	long	l	live	long	-	q[1] = static_cast<long>(static_cast<U>(a[1]) - static_cast<U>(b[1]));
-site	src/game/rest_3f.cpp	636	long	l	live	long	-	q[0] = static_cast<long>(static_cast<U>(a[0]) - static_cast<U>(b[0]));
-site	src/game/rest_3f.cpp	637	long	l	live	long	-	q[2] = static_cast<long>(static_cast<U>(a[2]) - static_cast<U>(b[2]));
-site	src/game/rest_3f.cpp	649	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(a[0]), static_cast<unsigned long>(a[1]), 0, 0x38);
-site	src/game/rest_3f.cpp	649	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(a[0]), static_cast<unsigned long>(a[1]), 0, 0x38);
-site	src/game/rest_3f.cpp	658	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(a[0]), static_cast<unsigned long>(a[1]), 0, 0x20);
-site	src/game/rest_3f.cpp	658	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(a[0]), static_cast<unsigned long>(a[1]), 0, 0x20);
-site	src/game/rest_3f.cpp	756	long	l	live	long	-	SH_CALL(EffectKind9E_DrawWall)(Point(s + 0x34), reinterpret_cast<const long*>(At(::bof3::Img(Rest3f_9EWall_addr))));
-site	src/game/rest_3f.cpp	934	long	l	live	long	-	extern " " unsigned char __cdecl EffectKindA2_DrawRing(const long* point, long inner, long outer) {
-site	src/game/rest_3f.cpp	934	long	l	live	long	-	extern " " unsigned char __cdecl EffectKindA2_DrawRing(const long* point, long inner, long outer) {
-site	src/game/rest_3f.cpp	934	long	l	live	long	-	extern " " unsigned char __cdecl EffectKindA2_DrawRing(const long* point, long inner, long outer) {
-site	src/game/rest_3f.cpp	938	long	l	live	long	-	alignas(4) long q[3];
-site	src/game/rest_3f.cpp	940	long	l	live	long	-	q[0] = static_cast<long>((static_cast<U>(inner) << 4) + static_cast<U>(point[0]));
-site	src/game/rest_3f.cpp	944	long	l	live	long	-	q[0] = static_cast<long>((static_cast<U>(outer) << 4) + static_cast<U>(point[0]));
-site	src/game/rest_3f.cpp	956	long	l	live	long	-	q[0] = static_cast<long>(Sar(c1 * static_cast<U>(inner), 8) + static_cast<U>(point[0]));
-site	src/game/rest_3f.cpp	958	long	l	live	long	-	q[1] = static_cast<long>(Sar(s1 * static_cast<U>(inner), 8) + static_cast<U>(point[1]));
-site	src/game/rest_3f.cpp	961	long	l	live	long	-	q[0] = static_cast<long>(Sar(c2 * static_cast<U>(outer), 8) + static_cast<U>(point[0]));
-site	src/game/rest_3f.cpp	963	long	l	live	long	-	q[1] = static_cast<long>(Sar(s2 * static_cast<U>(outer), 8) + static_cast<U>(point[1]));
-site	src/game/rest_3f.cpp	1058	long	l	live	long	-	extern " " void __cdecl EffectKindA7_DrawGlow(const long* point, unsigned size, unsigned colour) {
+site	src/game/rest_3f.cpp	151	low32	object_ours	live	g_pixels	Low32	U Particles() { return g_pixel_room ? Low32(g_pixels) : ::bof3::Img(at::kParticles.v); }
+site	src/game/rest_3f.cpp	227	low32	image	live	EffectKind30_Shards	Low32	Rest3f_PixCursor = Low32(EffectKind30_Shards);
+site	src/game/rest_3f.cpp	243	long	l	live	long	-	alignas(4) long q[3];
+site	src/game/rest_3f.cpp	416	long	l	live	long	-	extern " " void __cdecl EffectKind5F_DrawLineDisc(const long* point, unsigned unused, unsigned wobble, unsigned dy) {
+site	src/game/rest_3f.cpp	419	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(point[0]), static_cast<unsigned long>(point[1]),
+site	src/game/rest_3f.cpp	419	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(point[0]), static_cast<unsigned long>(point[1]),
+site	src/game/rest_3f.cpp	455	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(point[0]), static_cast<unsigned long>(point[1]),
+site	src/game/rest_3f.cpp	455	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(point[0]), static_cast<unsigned long>(point[1]),
+site	src/game/rest_3f.cpp	494	long	l	live	long	-	long depth;
+site	src/game/rest_3f.cpp	495	long	ul	live	unsigned long	-	SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(p + 8), &depth);
+site	src/game/rest_3f.cpp	508	long	ul	live	unsigned long	-	SH_CALL(Gte_RotTransPers)(reinterpret_cast<short*>(Prim_VertexScratch), reinterpret_cast<unsigned long*>(p + 0x18), &depth);
+site	src/game/rest_3f.cpp	537	long	l	live	long	-	extern " " void __cdecl EffectKind9C_DrawTrail(const long* from, const long* to, unsigned shade) {
+site	src/game/rest_3f.cpp	537	long	l	live	long	-	extern " " void __cdecl EffectKind9C_DrawTrail(const long* from, const long* to, unsigned shade) {
+site	src/game/rest_3f.cpp	610	long	l	live	long	-	alignas(4) long q[3] = {static_cast<long>(f * dx + fx), static_cast<long>(f * dy + fy), static_cast<long>(f * dz + fz)};
+site	src/game/rest_3f.cpp	610	long	l	live	long	-	alignas(4) long q[3] = {static_cast<long>(f * dx + fx), static_cast<long>(f * dy + fy), static_cast<long>(f * dz + fz)};
+site	src/game/rest_3f.cpp	610	long	l	live	long	-	alignas(4) long q[3] = {static_cast<long>(f * dx + fx), static_cast<long>(f * dy + fy), static_cast<long>(f * dz + fz)};
+site	src/game/rest_3f.cpp	610	long	l	live	long	-	alignas(4) long q[3] = {static_cast<long>(f * dx + fx), static_cast<long>(f * dy + fy), static_cast<long>(f * dz + fz)};
+site	src/game/rest_3f.cpp	624	long	l	live	long	-	q[0] = static_cast<long>(static_cast<U>(q[0]) + dx * 8);
+site	src/game/rest_3f.cpp	625	long	l	live	long	-	q[1] = static_cast<long>(static_cast<U>(q[1]) + dy * 8);
+site	src/game/rest_3f.cpp	626	long	l	live	long	-	q[2] = static_cast<long>(static_cast<U>(q[2]) + dz * 8);
+site	src/game/rest_3f.cpp	641	long	l	live	long	-	extern " " void __cdecl EffectKind9E_DrawOutline(const long* a, const long* b) {
+site	src/game/rest_3f.cpp	641	long	l	live	long	-	extern " " void __cdecl EffectKind9E_DrawOutline(const long* a, const long* b) {
+site	src/game/rest_3f.cpp	642	long	l	live	long	-	alignas(4) long q[3];
+site	src/game/rest_3f.cpp	644	long	l	live	long	-	q[0] = static_cast<long>(static_cast<U>(a[0]) + static_cast<U>(b[0]));
+site	src/game/rest_3f.cpp	645	long	l	live	long	-	q[1] = static_cast<long>(static_cast<U>(b[1]) + static_cast<U>(a[1]));
+site	src/game/rest_3f.cpp	646	long	l	live	long	-	q[2] = static_cast<long>(static_cast<U>(b[2]) + static_cast<U>(a[2]));
+site	src/game/rest_3f.cpp	649	long	l	live	long	-	q[0] = static_cast<long>(static_cast<U>(a[0]) - static_cast<U>(b[0]));
+site	src/game/rest_3f.cpp	650	long	l	live	long	-	q[1] = static_cast<long>(static_cast<U>(b[1]) + static_cast<U>(a[1]));
+site	src/game/rest_3f.cpp	652	long	l	live	long	-	q[0] = static_cast<long>(static_cast<U>(a[0]) + static_cast<U>(b[0]));
+site	src/game/rest_3f.cpp	653	long	l	live	long	-	q[1] = static_cast<long>(static_cast<U>(a[1]) - static_cast<U>(b[1]));
+site	src/game/rest_3f.cpp	655	long	l	live	long	-	q[2] = static_cast<long>(static_cast<U>(b[2]) + static_cast<U>(a[2]));
+site	src/game/rest_3f.cpp	658	long	l	live	long	-	q[0] = static_cast<long>(static_cast<U>(a[0]) + static_cast<U>(b[0]));
+site	src/game/rest_3f.cpp	659	long	l	live	long	-	q[1] = static_cast<long>(static_cast<U>(a[1]) - static_cast<U>(b[1]));
+site	src/game/rest_3f.cpp	661	long	l	live	long	-	q[0] = static_cast<long>(static_cast<U>(a[0]) - static_cast<U>(b[0]));
+site	src/game/rest_3f.cpp	662	long	l	live	long	-	q[1] = static_cast<long>(static_cast<U>(b[1]) + static_cast<U>(a[1]));
+site	src/game/rest_3f.cpp	664	long	l	live	long	-	q[2] = static_cast<long>(static_cast<U>(a[2]) - static_cast<U>(b[2]));
+site	src/game/rest_3f.cpp	666	long	l	live	long	-	q[1] = static_cast<long>(static_cast<U>(a[1]) - static_cast<U>(b[1]));
+site	src/game/rest_3f.cpp	667	long	l	live	long	-	q[0] = static_cast<long>(static_cast<U>(a[0]) - static_cast<U>(b[0]));
+site	src/game/rest_3f.cpp	668	long	l	live	long	-	q[2] = static_cast<long>(static_cast<U>(a[2]) - static_cast<U>(b[2]));
+site	src/game/rest_3f.cpp	680	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(a[0]), static_cast<unsigned long>(a[1]), 0, 0x38);
+site	src/game/rest_3f.cpp	680	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(a[0]), static_cast<unsigned long>(a[1]), 0, 0x38);
+site	src/game/rest_3f.cpp	689	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(a[0]), static_cast<unsigned long>(a[1]), 0, 0x20);
+site	src/game/rest_3f.cpp	689	long	ul	live	unsigned long	-	SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(a[0]), static_cast<unsigned long>(a[1]), 0, 0x20);
+site	src/game/rest_3f.cpp	787	long	l	live	long	-	SH_CALL(EffectKind9E_DrawWall)(Point(s + 0x34), reinterpret_cast<const long*>(At(::bof3::Img(Rest3f_9EWall_addr))));
+site	src/game/rest_3f.cpp	965	long	l	live	long	-	extern " " unsigned char __cdecl EffectKindA2_DrawRing(const long* point, long inner, long outer) {
+site	src/game/rest_3f.cpp	965	long	l	live	long	-	extern " " unsigned char __cdecl EffectKindA2_DrawRing(const long* point, long inner, long outer) {
+site	src/game/rest_3f.cpp	965	long	l	live	long	-	extern " " unsigned char __cdecl EffectKindA2_DrawRing(const long* point, long inner, long outer) {
+site	src/game/rest_3f.cpp	969	long	l	live	long	-	alignas(4) long q[3];
+site	src/game/rest_3f.cpp	971	long	l	live	long	-	q[0] = static_cast<long>((static_cast<U>(inner) << 4) + static_cast<U>(point[0]));
+site	src/game/rest_3f.cpp	975	long	l	live	long	-	q[0] = static_cast<long>((static_cast<U>(outer) << 4) + static_cast<U>(point[0]));
+site	src/game/rest_3f.cpp	987	long	l	live	long	-	q[0] = static_cast<long>(Sar(c1 * static_cast<U>(inner), 8) + static_cast<U>(point[0]));
+site	src/game/rest_3f.cpp	989	long	l	live	long	-	q[1] = static_cast<long>(Sar(s1 * static_cast<U>(inner), 8) + static_cast<U>(point[1]));
+site	src/game/rest_3f.cpp	992	long	l	live	long	-	q[0] = static_cast<long>(Sar(c2 * static_cast<U>(outer), 8) + static_cast<U>(point[0]));
+site	src/game/rest_3f.cpp	994	long	l	live	long	-	q[1] = static_cast<long>(Sar(s2 * static_cast<U>(outer), 8) + static_cast<U>(point[1]));
+site	src/game/rest_3f.cpp	1089	long	l	live	long	-	extern " " void __cdecl EffectKindA7_DrawGlow(const long* point, unsigned size, unsigned colour) {
+site	src/game/rest_3f.cpp	1544	low32	object_ours	live	&g_pixel_room	Low32	bof3::PatchBytes(" ", Low32(&g_pixel_room), &pixel_was, &pixel_is, 1);
 site	src/game/rest_3f_fuzz.cpp	170	narrow	helper_def	fuzz	p	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/rest_3f_fuzz.cpp	170	uintptr	-	fuzz	std::uintptr_t	-	U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/rest_3f_fuzz.cpp	171	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(f)	Key	template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
@@ -10087,24 +10090,25 @@ site	src/game/scena_sc15.cpp	1705	long	l	live	long	-	SC15_EXPORT unsigned char _
 site	src/game/scena_sc15.cpp	1705	long	l	live	long	-	SC15_EXPORT unsigned char __cdecl Scena15_StepHook(long x, long z) {
 site	src/game/scena_sc15.cpp	1737	long	l	live	long	-	SC15_EXPORT unsigned char __cdecl Scena15_ArriveHook(long x, long z) {
 site	src/game/scena_sc15.cpp	1737	long	l	live	long	-	SC15_EXPORT unsigned char __cdecl Scena15_ArriveHook(long x, long z) {
-site	src/game/scena_sc15.cpp	1816	long	l	live	long	-	const long z = Field_Kind2Z;
-site	src/game/scena_sc15.cpp	1817	long	l	live	long	-	const long x = Field_Kind2X;
-site	src/game/scena_sc15.cpp	2020	long	l	live	long	-	const long z = Field_Kind2Z;
-site	src/game/scena_sc15.cpp	2022	long	l	live	long	-	const long e = SH_CALL(AreaMap_Elevation)(0x260000, z);
-site	src/game/scena_sc15.cpp	2320	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
-site	src/game/scena_sc15.cpp	2320	widen	code_place	live	::bof3::Code(kBootTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
-site	src/game/scena_sc15.cpp	2328	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kEndTask.v))));
-site	src/game/scena_sc15.cpp	2328	widen	code_place	live	::bof3::Code(kEndTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kEndTask.v))));
-site	src/game/scena_sc15.cpp	2398	long	l	live	long	-	struct { short m[9]; short pad; long t[3]; } mat;
-site	src/game/scena_sc15.cpp	2399	long	l	live	long	-	long flag;
-site	src/game/scena_sc15.cpp	2407	long	l	live	long	-	const long e = SH_CALL(AreaMap_Elevation)(x, z);
-site	src/game/scena_sc15.cpp	2413	long	ul	live	unsigned long	-	SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&mat));
-site	src/game/scena_sc15.cpp	2414	long	ul	live	unsigned long	-	SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&mat));
-site	src/game/scena_sc15.cpp	2421	long	l	live	long	-	long depth, flags;
-site	src/game/scena_sc15.cpp	2536	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(entry)));
-site	src/game/scena_sc15.cpp	2536	widen	param	live	entry	const unsigned char*	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(entry)));
-site	src/game/scena_sc15.cpp	2682	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
-site	src/game/scena_sc15.cpp	2682	widen	code_place	live	::bof3::Code(kBootTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
+site	src/game/scena_sc15.cpp	1829	long	l	live	long	-	const long z = Field_Kind2Z;
+site	src/game/scena_sc15.cpp	1830	long	l	live	long	-	const long x = Field_Kind2X;
+site	src/game/scena_sc15.cpp	2033	long	l	live	long	-	const long z = Field_Kind2Z;
+site	src/game/scena_sc15.cpp	2035	long	l	live	long	-	const long e = SH_CALL(AreaMap_Elevation)(0x260000, z);
+site	src/game/scena_sc15.cpp	2333	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
+site	src/game/scena_sc15.cpp	2333	widen	code_place	live	::bof3::Code(kBootTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
+site	src/game/scena_sc15.cpp	2341	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kEndTask.v))));
+site	src/game/scena_sc15.cpp	2341	widen	code_place	live	::bof3::Code(kEndTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kEndTask.v))));
+site	src/game/scena_sc15.cpp	2433	long	l	live	long	-	struct { short m[9]; short pad; long t[3]; } mat;
+site	src/game/scena_sc15.cpp	2434	long	l	live	long	-	long flag;
+site	src/game/scena_sc15.cpp	2442	long	l	live	long	-	const long e = SH_CALL(AreaMap_Elevation)(x, z);
+site	src/game/scena_sc15.cpp	2448	long	ul	live	unsigned long	-	SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&mat));
+site	src/game/scena_sc15.cpp	2449	long	ul	live	unsigned long	-	SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&mat));
+site	src/game/scena_sc15.cpp	2463	long	l	live	long	-	long depth, flags;
+site	src/game/scena_sc15.cpp	2578	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(entry)));
+site	src/game/scena_sc15.cpp	2578	widen	param	live	entry	const unsigned char*	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(entry)));
+site	src/game/scena_sc15.cpp	2724	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
+site	src/game/scena_sc15.cpp	2724	widen	code_place	live	::bof3::Code(kBootTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
+site	src/game/scena_sc15.cpp	2784	low32	object_ours	live	&g_fin_night	Low32	bof3::PatchBytes(" ", Low32(&g_fin_night), &was, &is, 1);
 site	src/game/scena_sc15_fuzz.cpp	43	narrow	image_local	fuzz	p	-	template <typename T> std::uint32_t KeyOf(T p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/scena_sc15_fuzz.cpp	43	uintptr	-	fuzz	std::uintptr_t	-	template <typename T> std::uint32_t KeyOf(T p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/scena_sc15_fuzz.cpp	93	narrow	func_ours	fuzz	f	-	return reinterpret_cast<F>(const_cast<void*>(sh::StandIn(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(f)))));
@@ -11060,46 +11064,46 @@ site	src/game/sprite_draw.cpp	26	widen	param	live	w	T	return reinterpret_cast<T>
 site	src/game/sprite_draw.cpp	35	low32	image_local	live	v	Low32	const std::uint32_t w = Low32(v);
 site	src/game/sprite_draw.cpp	56	long	ul	live	unsigned long	-	extern " " unsigned long __cdecl SpriteCell_Add(unsigned x, unsigned y, unsigned flags, unsigned u, unsigned v,
 site	src/game/sprite_draw.cpp	58	long	ul	live	unsigned long	-	const unsigned long index = SpriteCell_Count;
-site	src/game/sprite_draw.cpp	230	long	l	live	long	-	sx = static_cast<float>(static_cast<double>(Get<long>(object, 0x40)) * (1.0 / 65536));
-site	src/game/sprite_draw.cpp	231	long	l	live	long	-	sy = static_cast<float>(static_cast<double>(Get<long>(object, 0x44)) * (1.0 / 65536));
-site	src/game/sprite_draw.cpp	285	long	l	live	long	-	const long depth = Get<long>(object, 0x60);
-site	src/game/sprite_draw.cpp	285	long	l	live	long	-	const long depth = Get<long>(object, 0x60);
-site	src/game/sprite_draw.cpp	287	long	l	live	long	-	Put<long>(object, 0x40, 0);
-site	src/game/sprite_draw.cpp	288	long	l	live	long	-	Put<long>(object, 0x44, 0);
-site	src/game/sprite_draw.cpp	291	long	l	live	long	-	const long scale = (0x4650000L / depth) & ~0xFFL;
-site	src/game/sprite_draw.cpp	292	long	l	live	long	-	Put<long>(object, 0x40, scale);
-site	src/game/sprite_draw.cpp	293	long	l	live	long	-	Put<long>(object, 0x44, scale);
-site	src/game/sprite_draw.cpp	312	long	l	live	long	-	scale_x = static_cast<float>(static_cast<double>(Get<long>(object, 0x40)) * (1.0 / 65536));
-site	src/game/sprite_draw.cpp	313	long	l	live	long	-	scale_y = static_cast<float>(static_cast<double>(Get<long>(object, 0x44)) * (1.0 / 65536));
-site	src/game/sprite_draw.cpp	320	long	ul	live	unsigned long	-	const unsigned long index = SpriteCell_Add(
-site	src/game/sprite_draw.cpp	358	long	ul	live	unsigned long	-	unsigned long count;
-site	src/game/sprite_draw.cpp	360	long	ul	live	unsigned long	-	unsigned long slot_word, tail_word;
-site	src/game/sprite_draw.cpp	367	long	ul	live	unsigned long	-	unsigned long* slot;
-site	src/game/sprite_draw.cpp	368	long	ul	live	unsigned long	-	unsigned long* tail;
-site	src/game/sprite_draw.cpp	401	long	ul	live	unsigned long	-	at.slot = reinterpret_cast<unsigned long*>(&Gfx_OtPointers[object[0x29]]);
-site	src/game/sprite_draw.cpp	402	long	ul	live	unsigned long	-	at.tail = *at.slot ? reinterpret_cast<unsigned long*>(*at.slot) : nullptr;
-site	src/game/sprite_draw.cpp	459	asm	cw	live	fnstcw %0	fnstcw	__asm__("fnstcw %0" : "=m"(cw));
-site	src/game/sprite_draw.cpp	462	asm	cw	live	fldcw %0	fldcw	void SetControlWord(unsigned short cw) { __asm__("fldcw %0" : : "m"(cw)); }
-site	src/game/sprite_draw.cpp	469	long	ul	live	unsigned long	-	unsigned long g_tails[8];
-site	src/game/sprite_draw.cpp	475	long	ul	live	unsigned long	-	unsigned long cell_count;
-site	src/game/sprite_draw.cpp	477	long	ul	live	unsigned long	-	unsigned long* ot[8];
-site	src/game/sprite_draw.cpp	478	long	ul	live	unsigned long	-	unsigned long tails[8];
-site	src/game/sprite_draw.cpp	512	long	ul	live	unsigned long	-	using AddFn = unsigned long (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned);
-site	src/game/sprite_draw.cpp	542	long	l	live	long	-	static const long kDepth[] = {0, 1, -1, 0x4650000, 0x4650001, 0x7FFFFFFF, static_cast<long>(0x80000000u)};
-site	src/game/sprite_draw.cpp	542	long	l	live	long	-	static const long kDepth[] = {0, 1, -1, 0x4650000, 0x4650001, 0x7FFFFFFF, static_cast<long>(0x80000000u)};
-site	src/game/sprite_draw.cpp	543	long	l	live	long	-	const long depth = next() % 3 == 0 ? kDepth[next() % 7] : static_cast<long>(next() % 0x4000) - 0x800;
-site	src/game/sprite_draw.cpp	543	long	l	live	long	-	const long depth = next() % 3 == 0 ? kDepth[next() % 7] : static_cast<long>(next() % 0x4000) - 0x800;
-site	src/game/sprite_draw.cpp	544	long	l	live	long	-	Put<long>(object, 0x60, depth);
-site	src/game/sprite_draw.cpp	574	low32	pool	live	input.packet_next	Low32	if (limit <= Low32(input.packet_next) + kPrimBytes)
-site	src/game/sprite_draw.cpp	617	long	l	live	long	-	Put<long>(object, 0x60, static_cast<long>(next() % 0x4000) + 1);
-site	src/game/sprite_draw.cpp	617	long	l	live	long	-	Put<long>(object, 0x60, static_cast<long>(next() % 0x4000) + 1);
-site	src/game/sprite_draw.cpp	685	long	ul	live	unsigned long	-	const unsigned long count = next() % kMaxCount;
-site	src/game/sprite_draw.cpp	686	long	ul	live	unsigned long	-	unsigned long result[2];
-site	src/game/sprite_draw.cpp	688	long	ul	live	unsigned long	-	unsigned long counts[2];
-site	src/game/sprite_draw.cpp	739	long	ul	live	unsigned long	-	const unsigned long saved_count = SpriteCell_Count;
-site	src/game/sprite_draw.cpp	808	long	l	live	long	-	Put<long>(object, 0x40, cs.scale << 16);
-site	src/game/sprite_draw.cpp	809	long	l	live	long	-	Put<long>(object, 0x44, cs.scale << 16);
-site	src/game/sprite_draw.cpp	879	low32	object_ours	live	&g_sprite_capture	Low32	Low32(&g_sprite_capture), was, is, 4);
+site	src/game/sprite_draw.cpp	245	long	l	live	long	-	sx = static_cast<float>(static_cast<double>(Get<long>(object, 0x40)) * (1.0 / 65536));
+site	src/game/sprite_draw.cpp	246	long	l	live	long	-	sy = static_cast<float>(static_cast<double>(Get<long>(object, 0x44)) * (1.0 / 65536));
+site	src/game/sprite_draw.cpp	310	long	l	live	long	-	const long depth = Get<long>(object, 0x60);
+site	src/game/sprite_draw.cpp	310	long	l	live	long	-	const long depth = Get<long>(object, 0x60);
+site	src/game/sprite_draw.cpp	312	long	l	live	long	-	Put<long>(object, 0x40, 0);
+site	src/game/sprite_draw.cpp	313	long	l	live	long	-	Put<long>(object, 0x44, 0);
+site	src/game/sprite_draw.cpp	316	long	l	live	long	-	const long scale = (0x4650000L / depth) & ~0xFFL;
+site	src/game/sprite_draw.cpp	317	long	l	live	long	-	Put<long>(object, 0x40, scale);
+site	src/game/sprite_draw.cpp	318	long	l	live	long	-	Put<long>(object, 0x44, scale);
+site	src/game/sprite_draw.cpp	342	long	l	live	long	-	scale_x = static_cast<float>(static_cast<double>(Get<long>(object, 0x40)) * (1.0 / 65536));
+site	src/game/sprite_draw.cpp	343	long	l	live	long	-	scale_y = static_cast<float>(static_cast<double>(Get<long>(object, 0x44)) * (1.0 / 65536));
+site	src/game/sprite_draw.cpp	350	long	ul	live	unsigned long	-	const unsigned long index = SpriteCell_Add(
+site	src/game/sprite_draw.cpp	388	long	ul	live	unsigned long	-	unsigned long count;
+site	src/game/sprite_draw.cpp	390	long	ul	live	unsigned long	-	unsigned long slot_word, tail_word;
+site	src/game/sprite_draw.cpp	397	long	ul	live	unsigned long	-	unsigned long* slot;
+site	src/game/sprite_draw.cpp	398	long	ul	live	unsigned long	-	unsigned long* tail;
+site	src/game/sprite_draw.cpp	431	long	ul	live	unsigned long	-	at.slot = reinterpret_cast<unsigned long*>(&Gfx_OtPointers[object[0x29]]);
+site	src/game/sprite_draw.cpp	432	long	ul	live	unsigned long	-	at.tail = *at.slot ? reinterpret_cast<unsigned long*>(*at.slot) : nullptr;
+site	src/game/sprite_draw.cpp	489	asm	cw	live	fnstcw %0	fnstcw	__asm__("fnstcw %0" : "=m"(cw));
+site	src/game/sprite_draw.cpp	492	asm	cw	live	fldcw %0	fldcw	void SetControlWord(unsigned short cw) { __asm__("fldcw %0" : : "m"(cw)); }
+site	src/game/sprite_draw.cpp	499	long	ul	live	unsigned long	-	unsigned long g_tails[8];
+site	src/game/sprite_draw.cpp	505	long	ul	live	unsigned long	-	unsigned long cell_count;
+site	src/game/sprite_draw.cpp	507	long	ul	live	unsigned long	-	unsigned long* ot[8];
+site	src/game/sprite_draw.cpp	508	long	ul	live	unsigned long	-	unsigned long tails[8];
+site	src/game/sprite_draw.cpp	542	long	ul	live	unsigned long	-	using AddFn = unsigned long (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned);
+site	src/game/sprite_draw.cpp	572	long	l	live	long	-	static const long kDepth[] = {0, 1, -1, 0x4650000, 0x4650001, 0x7FFFFFFF, static_cast<long>(0x80000000u)};
+site	src/game/sprite_draw.cpp	572	long	l	live	long	-	static const long kDepth[] = {0, 1, -1, 0x4650000, 0x4650001, 0x7FFFFFFF, static_cast<long>(0x80000000u)};
+site	src/game/sprite_draw.cpp	573	long	l	live	long	-	const long depth = next() % 3 == 0 ? kDepth[next() % 7] : static_cast<long>(next() % 0x4000) - 0x800;
+site	src/game/sprite_draw.cpp	573	long	l	live	long	-	const long depth = next() % 3 == 0 ? kDepth[next() % 7] : static_cast<long>(next() % 0x4000) - 0x800;
+site	src/game/sprite_draw.cpp	574	long	l	live	long	-	Put<long>(object, 0x60, depth);
+site	src/game/sprite_draw.cpp	604	low32	pool	live	input.packet_next	Low32	if (limit <= Low32(input.packet_next) + kPrimBytes)
+site	src/game/sprite_draw.cpp	647	long	l	live	long	-	Put<long>(object, 0x60, static_cast<long>(next() % 0x4000) + 1);
+site	src/game/sprite_draw.cpp	647	long	l	live	long	-	Put<long>(object, 0x60, static_cast<long>(next() % 0x4000) + 1);
+site	src/game/sprite_draw.cpp	715	long	ul	live	unsigned long	-	const unsigned long count = next() % kMaxCount;
+site	src/game/sprite_draw.cpp	716	long	ul	live	unsigned long	-	unsigned long result[2];
+site	src/game/sprite_draw.cpp	718	long	ul	live	unsigned long	-	unsigned long counts[2];
+site	src/game/sprite_draw.cpp	769	long	ul	live	unsigned long	-	const unsigned long saved_count = SpriteCell_Count;
+site	src/game/sprite_draw.cpp	838	long	l	live	long	-	Put<long>(object, 0x40, cs.scale << 16);
+site	src/game/sprite_draw.cpp	839	long	l	live	long	-	Put<long>(object, 0x44, cs.scale << 16);
+site	src/game/sprite_draw.cpp	909	low32	object_ours	live	&g_sprite_capture	Low32	Low32(&g_sprite_capture), was, is, 4);
 site	src/game/sprite_find.cpp	35	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
 site	src/game/sprite_find.cpp	35	widen	param	live	w	T	return reinterpret_cast<T>(static_cast<std::uintptr_t>(w));
 site	src/game/sprite_find.cpp	44	low32	image_local	live	v	Low32	const std::uint32_t w = Low32(v);
@@ -15899,6 +15903,7 @@ file	src/game/effect_3a.cpp	live	asm	x87	1
 file	src/game/effect_3a.cpp	live	long	l	9
 file	src/game/effect_3a.cpp	live	low32	helper_def	1
 file	src/game/effect_3a.cpp	live	narrow_call	image_local	1
+file	src/game/effect_3a.cpp	live	narrow_call	object_ours	1
 file	src/game/effect_3a.cpp	live	uintptr	-	2
 file	src/game/effect_3a.cpp	live	widen	word_read	1
 file	src/game/effect_3a_fuzz.cpp	fuzz	asm	fs	1
@@ -17527,6 +17532,7 @@ file	src/game/rest_3f.cpp	live	asm	x87	1
 file	src/game/rest_3f.cpp	live	long	l	45
 file	src/game/rest_3f.cpp	live	long	ul	10
 file	src/game/rest_3f.cpp	live	low32	image	1
+file	src/game/rest_3f.cpp	live	low32	object_ours	2
 file	src/game/rest_3f.cpp	live	uintptr	-	1
 file	src/game/rest_3f.cpp	live	widen	param	1
 file	src/game/rest_3f_fuzz.cpp	fuzz	asm	fs	1
@@ -17710,7 +17716,7 @@ file	src/game/scena_sc13_fuzz.cpp	fuzz	widen	param	1
 file	src/game/scena_sc15.cpp	live	long	l	25
 file	src/game/scena_sc15.cpp	live	long	ul	3
 file	src/game/scena_sc15.cpp	live	low32	image_local	1
-file	src/game/scena_sc15.cpp	live	low32	object_ours	1
+file	src/game/scena_sc15.cpp	live	low32	object_ours	2
 file	src/game/scena_sc15.cpp	live	uintptr	-	7
 file	src/game/scena_sc15.cpp	live	widen	code_place	4
 file	src/game/scena_sc15.cpp	live	widen	other	2
@@ -18389,8 +18395,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	14735
-#count sites_live	10518
+#count sites	14739
+#count sites_live	10522
 #count sites_fuzz	4217
 #count fuzz_files	250
 #count narrow	356
@@ -18425,8 +18431,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_windows	4
 #count narrow_windows_live	2
 #count narrow_windows_live_files	2
-#count narrow_call	3290
-#count narrow_call_live	1461
+#count narrow_call	3291
+#count narrow_call_live	1462
 #count narrow_call_live_files	164
 #count narrow_call_fuzz	1829
 #count narrow_call_fuzz_files	234
@@ -18445,9 +18451,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_call_image_local	1169
 #count narrow_call_image_local_live	512
 #count narrow_call_image_local_live_files	113
-#count narrow_call_object_ours	524
-#count narrow_call_object_ours_live	64
-#count narrow_call_object_ours_live_files	15
+#count narrow_call_object_ours	525
+#count narrow_call_object_ours_live	65
+#count narrow_call_object_ours_live_files	16
 #count narrow_call_pool	79
 #count narrow_call_pool_live	13
 #count narrow_call_pool_live_files	5
@@ -18627,8 +18633,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_member_windows_object	10
 #count ptr_member_windows_object_live	10
 #count ptr_member_windows_object_live_files	1
-#count low32	474
-#count low32_live	466
+#count low32	477
+#count low32_live	469
 #count low32_live_files	283
 #count low32_fuzz	8
 #count low32_fuzz_files	1
@@ -18647,9 +18653,9 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count low32_image_local	101
 #count low32_image_local_live	101
 #count low32_image_local_live_files	60
-#count low32_object_ours	81
-#count low32_object_ours_live	81
-#count low32_object_ours_live_files	64
+#count low32_object_ours	84
+#count low32_object_ours_live	84
+#count low32_object_ours_live_files	65
 #count low32_pool	18
 #count low32_pool_live	18
 #count low32_pool_live_files	14
@@ -18724,8 +18730,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count img_place_Code	605
 #count img_place_Code_fuzz	6
 #count img_place_Code_live	599
-#count img_place_Img	14973
+#count img_place_Img	14972
 #count img_place_Img_fuzz	1070
-#count img_place_Img_live	13903
+#count img_place_Img_live	13902
 #count img_place_VaOf	53
 #count img_place_VaOf_live	53

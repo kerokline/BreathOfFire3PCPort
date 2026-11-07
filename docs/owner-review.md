@@ -13,6 +13,24 @@ Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
 
+## 2026-11-07 evening, the ending scenes (`fix/ending-scenes-1107`)
+
+Your four reports off `myriaFightAndEnding`, each built and verified by shots in the harness; owed your eye in
+play (at 21:9, the width the reports came from):
+
+- **The *Fin* disc (1), then your call on the sheet (DIV-0207 `FinNight`):** the darkness reaches the band
+  corners through the outro, and the disc now stops at 1,000 map units with the night kept at full outside it
+  under the panel - no lightening of the desert, the map's edge wedge covered. The radius is one constant
+  (`kFinRadius`, `scena_sc15.cpp`): say "tighter" or "wider" with the sheet's frame and it moves.
+- **The desert's start (2):** the first wide frame no longer flashes sand in the bands; the bands come up from
+  black with the fade as before. The 320-wide hold before the fade stays pillarboxed (nothing is drawn there on
+  any machine) - say if that hold wants bars that match the letterbox's look.
+- **Myria's chamber (3, 4):** Rei and Garr scatter and Garr gathers whole, as the PlayStation. The one-frame
+  white silhouettes when Peco gives the others back are untouched (a white-flash effect of the scene's own, by
+  the code; the same before). Say if that frame reads wrong against the PlayStation.
+- **`PixelRoom`:** a new ledger switch (`BOF3X_OFF=PixelRoom` for the original's pools); on by default, a
+  Player switch like `AshRoom`.
+
 ## 2026-11-07, the 64-bit round's stage D
 
 From [`x64-build-round.md`](x64-build-round.md) 6 "as run". The 32-bit build in `game\` is the default and is

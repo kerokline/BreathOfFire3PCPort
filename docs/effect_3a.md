@@ -357,6 +357,10 @@ own steps:
   reach it. Whether a member's captured sprite has more than 2,048 opaque
   pixels in its 64 x 64 is not measured. E2C's kind 0x6B has the same shape
   ([`effect_2c.md`](effect_2c.md) section 7). Ours writes as the original.
+  **Given a room by DIV-0206 (2026-11-07)** with kinds 0xA1 / 0xA3's pool
+  (this kind made no capture on the owner's Myria route): the particles go
+  to a room of ours for all 4,096 (`BOF3X_OFF=PixelRoom` for the original),
+  the count logged on every capture.
 - **The particles' `+0xC` is never written.** (D214) `EffectKind61_Scatter` writes
   `+2`, `+4`, `+8`; `EffectKind61_Twinkle` copies `+4..+0xF` into the
   `TILE_1`, so the tile's depth is whatever the buffer held there (an earlier

@@ -8,6 +8,16 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The ending scenes, 2026-11-07 evening** (`fix/ending-scenes-1107`, PR #209; HANDOFF item 0): the owner's
+four reports off their `myriaFightAndEnding` route - the *Fin* disc's rim short of the 21:9 corners, the bands'
+one-frame flash before the desert's fade, and Garr and Rei blinking in Myria's chamber where Nina and Momo
+scattered. DIV-0127 amended twice (the rim, the bands), DIV-0142 amended (the frame upload queue drained
+before a capture composes: the two sprites' frames are uploaded on demand into the capture page) and DIV-0206
+new (the pixel-particle pools given rooms, `PixelRoom`: Rei 1,651 and Garr 3,458 particles against the
+original's 1,306 before `Sprite_Current`, D217's shape), then DIV-0207 `FinNight` at the owner's word off the
+sheet: the disc held at 1,000 and the night kept under the *Fin* panel. Verified by shots in the harness;
+**played and approved by the owner** (the night, the disappear and reappear effect).
+
 **The 64-bit build round, 2026-11-01..07: stages A and B merged as PR #183, stage C as PR #187, stage D built
 on `x64/stage-d` (2026-11-07, unpushed, PR at the owner's word)** ([`x64-build-round.md`](x64-build-round.md); the owner's calls of 2026-11-01: the narrow image - the
 image's words stay 32 bits inside a 64-bit process, so saves, quicksave and the state-hash references are

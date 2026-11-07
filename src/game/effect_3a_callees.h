@@ -27,6 +27,7 @@ constexpr ::bof3::image::CodeVa kShardDraw{bof3::addr::EffectKindB9_DrawShard}; 
 // kind 0x61: the read-back pixels (w x h u16) here, the particles after them
 constexpr ::bof3::image::Va kParticles{0x92DF80};     // kind 0x61's particles, 0x14 each, w x h at most (no bound)
 constexpr std::uint32_t kParticleStride = 0x14;
+constexpr std::uint32_t kParticleRoom = 0x40 * 0x40;   // DIV-0206: the second frame's every pixel, ours
 // kind 0x62: 24 rays of 0x38
 constexpr unsigned kRays = 0x18;
 constexpr std::uint32_t kRayStride = 0x38;

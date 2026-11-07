@@ -178,8 +178,23 @@ void Capture(unsigned char* object) {
     Put<short>(object, 0x30, static_cast<short>(y + 0x10 + 240 * (Gfx_BufferIndex ^ 1)));
     const unsigned char* frame = Get<const unsigned char*>(object, 0x54) + Get<std::uint16_t>(object, 0x5A);
     const unsigned count = frame[0];
-    if (count == 0) return;
+    if (count == 0) {
+        if (g_capture_logged < 64 && ++g_capture_logged)
+            bof3::Log("DIV-0142    capture %u: object at (%d, %d), a frame of no pieces (anim %u, frame +0x%X)", g_capture_logged, x, y,
+                      (unsigned)object[8], (unsigned)Get<std::uint16_t>(object, 0x5A));
+        return;
+    }
 
+    // DIV-0142 (amended 2026-11-07, the owner's Myria chamber report): a sprite
+    // whose frames are uploaded on demand (+0x24 bit 0: Garr, Rei) has this
+    // frame's image queued by Sprite_SetFrameQueueUpload, for the page the
+    // capture record names - the capture page itself, rows 0x180 up. The PSX
+    // drains the queue before it draws the ordering table, so the GPU draws
+    // the capture from the uploaded frame; ours composes here, in the logic,
+    // before the frame's flush, and read the cleared page: 0 texels, and the
+    // member vanished in a blink where the others scattered (kinds 0xA1 /
+    // 0xA3). The queue is drained now, in its order, as the frame's end would.
+    if (Gfx_UploadQueueCount != 0) Gfx_FlushUploadQueue();
     unsigned short clut;
     Sprite_ClutWord(&clut);
     const std::uint16_t* vram = Gfx_VramShadow;
@@ -272,10 +287,20 @@ void Capture(unsigned char* object) {
         std::memset(&g_canvas[r + kCanvasOrigin][left + kCanvasOrigin], 0, static_cast<size_t>(right - left) * 2);
     const short rect[4] = {kCapX, kCapY, kCapW, kCapH};
     Gfx_InvalidateTextures(rect, 0);
-    if (g_capture_logged < 64 && ++g_capture_logged)
-        bof3::Log("DIV-0142    capture %u: object at (%d, %d), %u pieces, scale %.3f x %.3f%s%s, shade %02X %02X %02X, into VRAM (0x%X, 0x%X), %u texels non-zero",
+    // One line per distinct capture (a sprite captured again at the same point
+    // with the same picture is not repeated: the hologram's 60 a scene), the
+    // first 64 distinct ones.
+    struct Seen { short x, y; unsigned count, written, clut; };
+    static Seen seen[8] = {};
+    static unsigned seen_next = 0;
+    bool same = false;
+    for (const Seen& e : seen)
+        if (e.x == x && e.y == y && e.count == count && e.written == written && e.clut == clut) same = true;
+    if (!same) seen[seen_next++ & 7] = Seen{x, y, count, written, clut};
+    if (!same && g_capture_logged < 64 && ++g_capture_logged)
+        bof3::Log("DIV-0142    capture %u: object at (%d, %d), %u pieces, scale %.3f x %.3f%s%s, shade %02X %02X %02X, into VRAM (0x%X, 0x%X), %u texels non-zero (clut 0x%04X, tpage byte %02X, v base %02X, anim %u)",
                   g_capture_logged, x, y, count, sx, sy, mirror ? ", mirrored" : "", semi ? ", blended" : "", shade[0], shade[1],
-                  shade[2], kCapX + x, kCapY + y, written);
+                  shade[2], kCapX + x, kCapY + y, written, clut, object[0x25], object[0x26], (unsigned)object[8]);
 }
 
 void Draw() {
@@ -302,7 +327,12 @@ void Draw() {
     if (wide_staging::Hide(object)) return;   // DIV-0124: 21:9, past the 16:9 view in a scene - draw-only, after bit 7
     const unsigned char* frame = Get<const unsigned char*>(object, 0x54) + Get<std::uint16_t>(object, 0x5A);
     const unsigned count = frame[0];
-    if (count == 0) return;
+    if (count == 0) {
+        if (g_capture_logged < 64 && ++g_capture_logged)
+            bof3::Log("DIV-0142    capture %u: object at (%d, %d), a frame of no pieces (anim %u, frame +0x%X)", g_capture_logged, x, y,
+                      (unsigned)object[8], (unsigned)Get<std::uint16_t>(object, 0x5A));
+        return;
+    }
 
     unsigned char* const prim = Gfx_PacketNext;
     Gpu_SetCode84(prim);
