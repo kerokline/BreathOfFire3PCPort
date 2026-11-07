@@ -41,7 +41,10 @@ song comes in after it, where in play the voice sounds over the song - "not that
 unsure whether it is intended. It is not: recorded as D406 (the rebuild restarts the voice stream before the
 song's `Music_Start` and its decode to the heard sample). The 546 ms figure stays the dump's model's, not the
 ear's. The play was on the 64-bit build (the owner, same day): **the 64-bit build has been played, its music,
-voices and inn heard right.** Still open: a word on its two FMVs' picture and its Sources page, if you looked.
+voices and inn heard right.** The FMV "looks odd - the music is playing and the video is not": **D407**, Windows
+has no 64-bit Cinepak decompressor, so `CAPCOM.AVI` draws nothing on the 64-bit build (the 32-bit build is not
+affected). One question back: does the second movie, the publishers' logos, show its picture on the 64-bit
+build? Its codec (Microsoft Video 1) is there in 64 bits, so it should. Still open: the Sources page.
 
 ## 2026-11-03, issue #184's desert directions
 

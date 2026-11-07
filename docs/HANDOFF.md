@@ -322,8 +322,11 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      call is unexercised until the next push to `main`.
    **The owner's listens, 2026-11-07, on the 64-bit build:** the inn's night, the combat loop and the voices all
    sound right (the first play of the 64-bit build), so the 546 ms figure is the dump's model, not the ear's; one observation became D406 (a quick-load during a battle
-   voice plays the voice before the song returns: the rebuild's order, a DIV-0145 amendment to make). Still
-   owed (owner-review): a word on the 64-bit build's two FMVs' picture and its Sources page. **Traps paid:** a quit-ended recipe copy must lose the recipe's own `end` line or the quit never runs;
+   voice plays the voice before the song returns: the rebuild's order, a DIV-0145 amendment to make). **Seen on
+   that play: the Capcom movie has no picture on the 64-bit build - D407, Windows ships no 64-bit Cinepak
+   decompressor (`iccvid.dll` is in `SysWOW64` alone), so stage C's "plays to its end" proved the pump, not
+   the picture; the fix is IDEAS I7 (a decoder of ours), a round of its own.** Still owed (owner-review):
+   whether `LOGOS.AVI` (Microsoft Video 1, which 64-bit Windows has) shows, and a look at the Sources page. **Traps paid:** a quit-ended recipe copy must lose the recipe's own `end` line or the quit never runs;
    a moved run's hash wants the `0x400000` side recorded with `BOF3X_STATEHASH_FOLD=<base>`; the hosted
    `BOF3X_SHADOW='*'` suite takes about forty minutes - count its log's lines a minute apart before calling it
    hung (one run was killed half-way on a stale tail and had to be run again).

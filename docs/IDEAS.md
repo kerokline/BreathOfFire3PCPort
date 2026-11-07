@@ -51,7 +51,7 @@ rule ([`README.md`](README.md)) here too.
 | I4 | Stacktrace-driven "who called this" work-queue harvester | tooling | LOW | **first-call tracer built 2026-09-19** — [`call-trace.md`](call-trace.md) |
 | I5 | Recover Capcom's `.c` file boundaries from global blocks | tooling | MEDIUM | **folded into I44** 2026-10-21 (the owner): a later step of the typed-source work, as a source-layout pass, not an idea of its own |
 | I6 | Demo/attract playback as determinism oracle | tooling | MEDIUM | **built 2026-09-19** (external sampler) — [`attract-mode.md`](attract-mode.md) §6 |
-| I7 | Replace MCI/VFW with a bundled video decoder | platform | LOW | **overtaken 2026-09-23**: the owner chose MCI into the window (DIV-0035); `Fmv_Play` is ours. Stays on the list |
+| I7 | Replace MCI/VFW with a bundled video decoder | platform | LOW | **overtaken 2026-09-23**: the owner chose MCI into the window (DIV-0035); `Fmv_Play` is ours. **Back 2026-11-07:** the 64-bit build has no Cinepak decompressor to call (D407), so the movie draws nothing there; a decoder of ours (Cinepak and Microsoft Video 1, from the format descriptions) is the fix |
 | I8 | Replace the DirectDraw / `IDirect3D3` presentation layer | platform | LOW | **built 2026-09-23** (DIV-0031) — [`render-backend.md`](render-backend.md) |
 | I9 | Integer-scale the picture and extend the view into the remainder | game behaviour | LOW | **integer scaling built** (DIV-0036, DIV-0042); the wide view built as two fixed presets, 426 x 240 and 560 x 240 (DIV-0041, amended 2026-10-13: [`ultrawide-frame.md`](ultrawide-frame.md)), not the `W / k` rule |
 | I10 | Uses for the call-trace data (seven, ranked) | tooling | MIXED | item 1 **passed 2026-09-19** — [`call-trace.md`](call-trace.md) §7; item 2 (the work queue) **built** — §9 there |
@@ -293,6 +293,14 @@ _(open when written) - overtaken 2026-09-23: the owner chose MCI into the
 window over a bundled decoder (DIV-0035, [`window-modes.md`](window-modes.md)
 §3); `Fmv_Play` `0x59E360` is ours and the exclusive mode-set is gone. The
 idea stays on the list._
+
+_Back 2026-11-07: the 64-bit build (the x64 round, PR #207) plays
+`capcom.avi` through MCI with no picture, because Windows ships `iccvid.dll`
+only for 32-bit processes (D407 in [`known-defects.md`](known-defects.md)).
+The two movies are Cinepak and Microsoft Video 1, both small codecs with
+public format descriptions and no patent cost; a decoder of ours for both,
+drawing through our renderer, is the fix - and the first step is
+[`replacing-mci.md`](replacing-mci.md) 3's contract, which still holds._
 
 ## I8 — Replace the DirectDraw / `IDirect3D3` presentation layer
 
