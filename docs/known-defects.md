@@ -10739,8 +10739,9 @@ rectangle its quad reads.
 
 **Seen:** the owner, 2026-11-07, a quicksave loaded during a battle voice:
 the voice plays alone, and the song comes in after it has started, where in
-play the voice sounds over the song. "Not that distracting." The build's
-width was not stated.
+play the voice sounds over the song. "Not that distracting." On the 64-bit
+build (`build-x86_64\`'s three files); the restore's code is the same in
+both widths.
 
 **Established from the code, not yet measured:** the SOUND participant's
 rebuild (`sound.cpp`, the restore below `RestoreSkip`) restarts the voice

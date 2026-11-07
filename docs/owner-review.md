@@ -40,7 +40,8 @@ the voices sound fine. One observation: a quicksave loaded during a combat voice
 song comes in after it, where in play the voice sounds over the song - "not that distracting", and the owner
 unsure whether it is intended. It is not: recorded as D406 (the rebuild restarts the voice stream before the
 song's `Music_Start` and its decode to the heard sample). The 546 ms figure stays the dump's model's, not the
-ear's. Still open: a look at the 64-bit build's two FMVs and its Sources page, if the play was on the 32-bit one.
+ear's. The play was on the 64-bit build (the owner, same day): **the 64-bit build has been played, its music,
+voices and inn heard right.** Still open: a word on its two FMVs' picture and its Sources page, if you looked.
 
 ## 2026-11-03, issue #184's desert directions
 
