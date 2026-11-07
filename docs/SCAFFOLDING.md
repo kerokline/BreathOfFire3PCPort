@@ -264,9 +264,13 @@ alone - `bof3x.dll` without the fuzz files, `bof3x.exe` as a PE32+
 that loads into `BOF3.exe`: the hosted mode, the shadow fuzz and
 `bof3x-launcher-dev.exe` are the `i686` build's for ever (`CMakeLists.txt`,
 `BOF3X_HOSTED_BUILD`). The `i686` build is unchanged by the switch
-(`tools/codegen_same.py` against the build before it: `0 differ`). CI runs
-the `x86_64` preset as a second job whose compile and link steps are
-non-blocking until the round's stage C links and runs it.
+(`tools/codegen_same.py` against the build before it: `0 differ`). Since the
+round's stage D (2026-11-07) CI runs the `x86_64` preset as a second job
+that must pass like the `i686` one - the same link, import check and
+artefact upload - and the release carries it as a second zip,
+`bof3x-<tag>-win-x64.zip`, the developer's build; the `i686` zip,
+`bof3x-<tag>-win.zip`, stays the player's default
+([`releases/README.md`](releases/README.md)).
 
 Log: `build/bof3x.log`, next to the DLL, rewritten each run.
 
