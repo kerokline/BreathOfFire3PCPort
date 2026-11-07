@@ -322,18 +322,21 @@ extern "C" void __cdecl EffectKind61_Scatter(void) {
     const U f = Frame("EffectKind61_Scatter");
     U count = 0;
     Effect3a_ParticleCount = 0;
-    if (SW(f + 6) <= 0) {
+    // The frame's w and h once: the table 0x654948 is read and never written,
+    // so the original's re-reads see the same words.
+    const std::int32_t fw = SW(f + 4), fh = SW(f + 6);
+    if (fh <= 0) {
         NextState();
         return;
     }
-    if (SW(f + 6) > 0xFF || SW(f + 4) > 0xFF)
+    if (fh > 0xFF || fw > 0xFF)
         bof3::Fatal("EffectKind61_Scatter: the frame is %d x %d - the original's row and column bytes never reach past "
                     "0xFF, it never ends (docs/effect_3a.md section 6)",
-                    (int)SW(f + 4), (int)SW(f + 6));
+                    (int)fw, (int)fh);
     U pixel = ::bof3::Img(EffectKind30_Shards_addr);
     unsigned char row = 0;
     do {
-        const std::int32_t width = SW(f + 4);
+        const std::int32_t width = fw;
         if (width > 0) {
             unsigned char column = 0;
             do {
@@ -351,11 +354,11 @@ extern "C" void __cdecl EffectKind61_Scatter(void) {
             Effect3a_ParticleCount = count;
         }
         ++row;
-    } while (static_cast<std::int32_t>(row) < SW(f + 6));
+    } while (static_cast<std::int32_t>(row) < fh);
     // DIV-0206: the count on every capture, so a frame that overran the
     // original's room (2,048) is in the log.
-    bof3::Log("kind 0x61: member %u, frame %d x %d, %u particles, %s", static_cast<unsigned>(s[7]), (int)SW(f + 4),
-              (int)SW(f + 6), count, s[6] == 0 ? "in" : "out");
+    bof3::Log("kind 0x61: member %u, frame %d x %d, %u particles, %s", static_cast<unsigned>(s[7]), (int)fw, (int)fh,
+              count, s[6] == 0 ? "in" : "out");
     NextState();
 }
 

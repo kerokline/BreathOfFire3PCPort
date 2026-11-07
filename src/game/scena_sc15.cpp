@@ -2408,10 +2408,11 @@ SC15_EXPORT void __cdecl Scena17_DrawFade(unsigned on, unsigned level) {
             p = Packet();
             SH_CALL(Gpu_SetTile)(p);
             Rgb(p, 4, 0);
-            SetL(p + 8, std::bit_cast<std::uint32_t>(side == 0 ? -cols : 320.0f));
-            SetL(p + 0xC, 0);
-            SetL(p + 0x14, std::bit_cast<std::uint32_t>(cols));
-            SetL(p + 0x18, 0x43700000);   // 240.0f
+            auto* const tile = rv::As<records::GpuTile>(p);   // a TILE: Gpu_SetTile's packet
+            rv::Store<float>(tile->x, side == 0 ? -cols : 320.0f);
+            rv::Store<float>(tile->y, 0.0f);
+            rv::Store<float>(tile->w, cols);
+            rv::Store<float>(tile->h, 240.0f);
             Commit(2, 0x1C);
         }
     }
