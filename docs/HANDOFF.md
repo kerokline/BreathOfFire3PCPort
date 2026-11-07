@@ -46,8 +46,11 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    `Sprite_Current` (DIV-0206, switch `PixelRoom`, rooms for kinds 0xA1 / 0xA3 and 0x61 - D217 closed for
    the three). Self-tests of `sprite_draw`, `rest_3f`, `effect_3a`, `scena_sc15`, `mode_flow`, `gfx_flush`:
    0 mismatches; `ledger_check`, `ledger_switches --check`, `ledger_registry --check`, `width_census --check`
-   clean. **Owed the owner:** the play of the four (section in [`owner-review.md`](owner-review.md)), and the
-   word on the PR. The route is long: the shots of the scenes are in the root (`shots_v4`, `shots_e2`, `shots_o`).
+   clean. Then, off the outro sheet, **DIV-0207 `FinNight`**: the disc held at 1,000 and the darkness kept at
+   0xFF under the *Fin* panel (the owner's "same night look as the campfire scenes"; Capcom's lightens the
+   desert to 0x80; the 4:3 picture framed that much less desert, the owner's point).
+   **Owed the owner:** the play of the four and the night (section in [`owner-review.md`](owner-review.md)),
+   and the word on the PR. The route is long: the shots of the scenes are in the root (`shots_v4`, `shots_e2`, `shots_o`).
 0. **The FMVs decoded by our own decoders (DIV-0205, 2026-11-07, IDEAS I7 built)** on `claude/dreamy-kilby-648ea8`
    (folded into PR #207, `x64/stage-d`, 2026-11-07): D407 - the 64-bit build's Capcom movie had
    no picture, Windows' Cinepak decompressor being 32-bit only (Video 1's is in both widths). `Fmv_Play` now reads the AVI itself

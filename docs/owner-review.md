@@ -18,11 +18,10 @@ where the reading behind it is. Nothing here is a divergence until it is in
 Your four reports off `myriaFightAndEnding`, each built and verified by shots in the harness; owed your eye in
 play (at 21:9, the width the reports came from):
 
-- **The *Fin* disc (1):** the darkness now reaches the band corners through the whole outro - the disc growing
-  from nothing, holding at 500 and 1,200, lightening under the panel. Look for any seam where the rim quads meet
-  the corners while the disc grows. Seen in the harness and left: a small black wedge in the top-left corner at
-  21:9 once the disc lightens - the desert map's edge past the wide picture (area 199 is not on the pillarbox
-  list); say if it wants covering.
+- **The *Fin* disc (1), then your call on the sheet (DIV-0207 `FinNight`):** the darkness reaches the band
+  corners through the outro, and the disc now stops at 1,000 map units with the night kept at full outside it
+  under the panel - no lightening of the desert, the map's edge wedge covered. The radius is one constant
+  (`kFinRadius`, `scena_sc15.cpp`): say "tighter" or "wider" with the sheet's frame and it moves.
 - **The desert's start (2):** the first wide frame no longer flashes sand in the bands; the bands come up from
   black with the fade as before. The 320-wide hold before the fade stays pillarboxed (nothing is drawn there on
   any machine) - say if that hold wants bars that match the letterbox's look.

@@ -1810,6 +1810,19 @@ void Rgb(unsigned char* p, unsigned off, unsigned char c) {
 // Part 1's and part 3's steps end by drawing these.
 void Fade(unsigned on, unsigned level) { SH_CALL(Scena17_DrawFade)(on, level); }
 void Rays(unsigned radius, unsigned level) { SH_CALL(Scena17_DrawRays)(radius, level); }
+// DIVERGENCE DIV-0207 (the owner, 2026-11-07): the ending's disc stops growing
+// at kFinRadius and the darkness outside it stays at level 0xFF - the camp
+// scenes' night - under the Fin panel, instead of Capcom's growth to 1,200
+// and the level lightened to 0x80 over step 6. Draw-only: the steps, their
+// counts and the script are the original's. Armed after the self-test
+// (PatchBytes "FinNight"); BOF3X_ORIGINAL=FinNight (or BOF3X_OFF) gives the
+// original's disc back.
+unsigned char g_fin_night = 0;
+constexpr unsigned kFinRadius = 1000;
+void FinRays(unsigned radius, unsigned level) {
+    if (g_fin_night == 0) { Rays(radius, level); return; }
+    Rays(radius > kFinRadius ? kFinRadius : radius, 0xFF);
+}
 void Panel(unsigned level) { SH_CALL(Scena17_DrawPanel)(0xE0, 0xBE, level, 1); }
 // The ground elevation under the kind-2 sprite handed to MapView_SetElevation.
 void ElevationToView() {
@@ -2218,10 +2231,10 @@ SC15_EXPORT void __cdecl Scena17_Outro05(void) {
         const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
         Step(0);
         MoveScript_Var7 = static_cast<unsigned char>(run + 1);
-        Rays(0x4B0, 0xFF);
+        FinRays(0x4B0, 0xFF);
         return;
     }
-    Rays((v + 0x32u) * 10u, 0xFF);
+    FinRays((v + 0x32u) * 10u, 0xFF);
 }
 
 // original 0x56C900: step 6: 0x8034E5 up by 2; at 0x7F or more the next step,
@@ -2234,10 +2247,10 @@ SC15_EXPORT void __cdecl Scena17_Outro06(void) {
         const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
         Step(0);
         MoveScript_Var7 = static_cast<unsigned char>(run + 1);
-        Rays(0x4B0, 0x80);
+        FinRays(0x4B0, 0x80);
         return;
     }
-    Rays(0x4B0, static_cast<unsigned char>(0xFF - v));
+    FinRays(0x4B0, static_cast<unsigned char>(0xFF - v));
 }
 
 // original 0x56C950: step 7: 0x8034E5 counted up; at 0x80 or more counter 3
@@ -2258,7 +2271,7 @@ SC15_EXPORT void __cdecl Scena17_Outro07(void) {
     } else {
         Panel(v);
     }
-    Rays(0x4B0, 0x80);
+    FinRays(0x4B0, 0x80);
 }
 
 // original 0x56C9F0: step 8: Input_Pressed bit 0x20 sets the skip flag; once
@@ -2272,7 +2285,7 @@ SC15_EXPORT void __cdecl Scena17_Outro08(void) {
         if (B(::bof3::Img(kCounter3)) != 0) Step(0x1E);
         else RunUp();
     }
-    Rays(0x4B0, 0x80);
+    FinRays(0x4B0, 0x80);
     Panel(0x80);
 }
 
@@ -2285,7 +2298,7 @@ SC15_EXPORT void __cdecl Scena17_Outro09(void) {
         Transition(0xD);
         RunUp();
     }
-    Rays(0x4B0, 0x80);
+    FinRays(0x4B0, 0x80);
     Panel(0x80);
 }
 
@@ -2303,7 +2316,7 @@ SC15_EXPORT void __cdecl Scena17_Outro10(void) {
         Field_Request = 2;
         MoveScript_Var7 = run;
     }
-    Rays(0x4B0, 0x80);
+    FinRays(0x4B0, 0x80);
     Panel(0x80);
 }
 
@@ -2766,6 +2779,12 @@ void ScenaSc15_RollApply(unsigned tag, const unsigned char* payload, unsigned si
 
 void ScenaSc15_Inject() {
     if (bof3::WantsShadow("scena_sc15")) scena_sc15::SelfTest();
+    {   // DIV-0207: armed after the self-test, which compared Capcom's disc.
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("FinNight", Low32(&g_fin_night), &was, &is, 1);
+        bof3::Log("DIV-0207    the ending's disc held at %u, the night kept under the Fin panel: %s", kFinRadius,
+                  g_fin_night ? "on" : "OFF (BOF3X_ORIGINAL=FinNight)");
+    }
     BOF3_INJECT(Scena15_RecordWord);
     BOF3_INJECT(Scena15_Frame);
     BOF3_INJECT(Scena15_EnterArea);

@@ -14,8 +14,9 @@ one-frame flash before the desert's fade, and Garr and Rei blinking in Myria's c
 scattered. DIV-0127 amended twice (the rim, the bands), DIV-0142 amended (the frame upload queue drained
 before a capture composes: the two sprites' frames are uploaded on demand into the capture page) and DIV-0206
 new (the pixel-particle pools given rooms, `PixelRoom`: Rei 1,651 and Garr 3,458 particles against the
-original's 1,306 before `Sprite_Current`, D217's shape). Verified by shots in the harness; **owed the owner's
-play**.
+original's 1,306 before `Sprite_Current`, D217's shape), then DIV-0207 `FinNight` at the owner's word off the
+sheet: the disc held at 1,000 and the night kept under the *Fin* panel. Verified by shots in the harness;
+**owed the owner's play**.
 
 **The 64-bit build round, 2026-11-01..07: stages A and B merged as PR #183, stage C as PR #187, stage D built
 on `x64/stage-d` (2026-11-07, unpushed, PR at the owner's word)** ([`x64-build-round.md`](x64-build-round.md); the owner's calls of 2026-11-01: the narrow image - the

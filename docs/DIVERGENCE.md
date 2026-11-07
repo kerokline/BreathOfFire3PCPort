@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 206 entries, DIV-0001..0206, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 207 entries, DIV-0001..0207, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -15248,5 +15248,50 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** yes - BOF3X_OFF=PixelRoom (ini off=)
 - **Toward:** psx - the PlayStation's rooms hold every member's particles
+- **Languages:** any
+- **State:** active
+
+### The ending's disc holds at 1,000 and the night stays under the Fin panel
+
+- **ID:** DIV-0207
+- **Date:** 2026-11-07
+- **Subsystem:** chapter 17's outro, `Scena17_Outro05`..`Scena17_Outro10`
+  `0x56C8A0..0x56CAC0` (ours, `src/game/scena_sc15.cpp`), the disc of
+  `Scena17_DrawRays` `0x56CCF0`
+- **Tier:** Intent - the owner's look
+- **Original behaviour:** after the staff roll the darkness around the party
+  opens as a disc: nothing to 500 over 50 frames (step 2), held (steps 3 and
+  4), 500 to 1,200 by 20 a frame (step 5), then the level outside the rim
+  lightened from 0xFF to 0x80 over 64 frames (step 6) and held there under
+  the *Fin* panel (steps 7..10): the whole desert lit, dim at the corners.
+- **New behaviour:** the disc stops at 1,000 map units and the level outside
+  it stays 0xFF through the panel: the party in a pool of light, the desert
+  dark around it, as the camp scenes' night. Step 5's growth runs to 1,000
+  and holds; step 6 draws the disc at 1,000 and 0xFF while its count runs
+  as before; steps 7..10 draw it so under the panel. Draw-only: every step,
+  count, load and the skip are Capcom's. Armed after `scena_sc15`'s
+  self-test (`PatchBytes "FinNight"`), which compares Capcom's draw.
+- **Rationale:** the owner, 2026-11-07, off the harness sheet of the outro
+  at 21:9 ("end the growth at around frame 10,675 ... the same night look as
+  the campfire scenes, and avoid extending past the renderable desert
+  area"): the lit desert at 21:9 reaches the map's edge at the top-left
+  corner (DIV-0127's amendment of the day), which the night covers. The
+  owner's point from a PlayStation capture of the scene: the 4:3 picture
+  shows that much less desert around the sprout, so a disc held closer at
+  21:9 stays near what the original framed.
+- **Also in the PSX version?** No - the PlayStation grows the disc to 1,200
+  and lightens it; this is the owner's choice.
+- **Verification:** the chapter-17 save played at real time through the roll
+  at 21:9, a shot every 15 frames (`D:/bof3x-runs/end1107/shots_p2`): the
+  disc grows to its hold by recipe frame 10,675 and stays there through the
+  panel's fade-in (10,765..10,870) and hold; the desert outside stays black,
+  the map's edge with it; the *Fin* panel draws bright over the dark. The
+  `scena_sc15` self-test compares Capcom's draw before the switch is armed.
+- **Reversible?** `BOF3X_ORIGINAL=FinNight` (Capcom's growth and lightening).
+  A player turns it off with `BOF3X_OFF=FinNight` (the ini's `off=`).
+- **Switch:** FinNight
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=FinNight (ini off=)
+- **Toward:** none - the PlayStation lights the desert; the night is the owner's
 - **Languages:** any
 - **State:** active
