@@ -38,93 +38,97 @@ site	src/audio/sound_sdl.cpp	120	uintptr	-	live	std::uintptr_t	-	T* Widen(std::u
 site	src/audio/sound_sdl.cpp	120	widen	param	live	place	T*	T* Widen(std::uint32_t place) { return reinterpret_cast<T*>(static_cast<std::uintptr_t>(place)); }
 site	src/audio/sound_sdl.cpp	136	low32	unread	live	object	Low32	const std::uint32_t word = Low32(object);
 site	src/audio/sound_sdl.cpp	197	long	l	live	long	-	long volume, pan;
-site	src/audio/sound_sdl.cpp	222	ptr_overlay	unread	live	p	Buffer	Buffer* Self(void* p) { return static_cast<Buffer*>(p); }
-site	src/audio/sound_sdl.cpp	224	ptr_overlay	unread	live	static_cast<unsigned char*>(p) - offsetof(Buffer, notify_vtable)	Buffer	return reinterpret_cast<Buffer*>(static_cast<unsigned char*>(p) - offsetof(Buffer, notify_vtable));
-site	src/audio/sound_sdl.cpp	230	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t at = reinterpret_cast<std::uintptr_t>(b), lo = reinterpret_cast<std::uintptr_t>(g_pool);
-site	src/audio/sound_sdl.cpp	230	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t at = reinterpret_cast<std::uintptr_t>(b), lo = reinterpret_cast<std::uintptr_t>(g_pool);
-site	src/audio/sound_sdl.cpp	230	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t at = reinterpret_cast<std::uintptr_t>(b), lo = reinterpret_cast<std::uintptr_t>(g_pool);
-site	src/audio/sound_sdl.cpp	232	fmt_place	pointer	live	static_cast<const void*>(b)	%p	Fatal("sound_sdl: %s on %p, which is no buffer of ours", method, static_cast<const void*>(b));
-site	src/audio/sound_sdl.cpp	233	fmt_place	pointer	live	static_cast<const void*>(b)	%p	if (!b->live) Fatal("sound_sdl: %s on buffer %p after its last Release", method, static_cast<const void*>(b));
-site	src/audio/sound_sdl.cpp	236	fmt_place	pointer	live	d	%p	if (d != &g_device) Fatal("sound_sdl: %s on %p, which is not our device", method, d);
-site	src/audio/sound_sdl.cpp	247	long	l	live	long	-	float Gain(long hundredths) {
-site	src/audio/sound_sdl.cpp	406	long	l	live	long	-	long __stdcall DevQueryInterface(void* self, const void*, void**) {
-site	src/audio/sound_sdl.cpp	410	long	ul	live	unsigned long	-	unsigned long __stdcall DevAddRef(void* self) {
-site	src/audio/sound_sdl.cpp	415	long	ul	live	unsigned long	-	unsigned long __stdcall DevRelease(void* self) {
-site	src/audio/sound_sdl.cpp	425	long	l	live	long	-	g_made, g_live_max, g_live, static_cast<unsigned long long>(g_frames_out),
-site	src/audio/sound_sdl.cpp	455	long	l	live	long	-	long __stdcall DevCreateSoundBuffer(void* self, const void* desc, void** out, void* outer) {
-site	src/audio/sound_sdl.cpp	501	long	l	live	long	-	long __stdcall DevGetCaps(void* self, void*) {
-site	src/audio/sound_sdl.cpp	505	long	l	live	long	-	long __stdcall DevDuplicateSoundBuffer(void* self, void*, void**) {
-site	src/audio/sound_sdl.cpp	509	long	l	live	long	-	long __stdcall DevSetCooperativeLevel(void* self, void* hwnd, std::uint32_t level) {
-site	src/audio/sound_sdl.cpp	521	long	l	live	long	-	long __stdcall DevCompact(void* self) {
-site	src/audio/sound_sdl.cpp	525	long	l	live	long	-	long __stdcall DevGetSpeakerConfig(void* self, std::uint32_t*) {
-site	src/audio/sound_sdl.cpp	529	long	l	live	long	-	long __stdcall DevSetSpeakerConfig(void* self, std::uint32_t) {
-site	src/audio/sound_sdl.cpp	533	long	l	live	long	-	long __stdcall DevInitialize(void* self, const void*) {
-site	src/audio/sound_sdl.cpp	540	long	l	live	long	-	long __stdcall Create(const void* guid, void** out, void* outer) {
-site	src/audio/sound_sdl.cpp	562	long	l	live	long	-	long __stdcall BufQueryInterface(void* self, const void* iid, void** out) {
-site	src/audio/sound_sdl.cpp	584	long	ul	live	unsigned long	-	unsigned long __stdcall BufAddRef(void* self) {
-site	src/audio/sound_sdl.cpp	590	long	ul	live	unsigned long	-	unsigned long __stdcall BufRelease(void* self) {
-site	src/audio/sound_sdl.cpp	598	long	l	live	long	-	long __stdcall BufGetCaps(void* self, void* caps) {
-site	src/audio/sound_sdl.cpp	607	long	l	live	long	-	long __stdcall BufGetCurrentPosition(void* self, std::uint32_t* play, std::uint32_t* write) {
-site	src/audio/sound_sdl.cpp	621	long	l	live	long	-	long __stdcall BufGetFormat(void* self, void* format, std::uint32_t size, std::uint32_t* written) {
-site	src/audio/sound_sdl.cpp	635	long	l	live	long	-	long __stdcall BufGetVolume(void* self, long* v) {
-site	src/audio/sound_sdl.cpp	635	long	l	live	long	-	long __stdcall BufGetVolume(void* self, long* v) {
-site	src/audio/sound_sdl.cpp	643	long	l	live	long	-	long __stdcall BufGetPan(void* self, long* v) {
-site	src/audio/sound_sdl.cpp	643	long	l	live	long	-	long __stdcall BufGetPan(void* self, long* v) {
-site	src/audio/sound_sdl.cpp	651	long	l	live	long	-	long __stdcall BufGetFrequency(void* self, std::uint32_t* v) {
-site	src/audio/sound_sdl.cpp	659	long	l	live	long	-	long __stdcall BufGetStatus(void* self, std::uint32_t* s) {
-site	src/audio/sound_sdl.cpp	667	long	l	live	long	-	long __stdcall BufInitialize(void* self, void*, const void*) {
-site	src/audio/sound_sdl.cpp	672	long	l	live	long	-	long __stdcall BufLock(void* self, std::uint32_t offset, std::uint32_t bytes, void** first, std::uint32_t* first_bytes,
-site	src/audio/sound_sdl.cpp	692	long	l	live	long	-	long __stdcall BufPlay(void* self, std::uint32_t, std::uint32_t, std::uint32_t flags) {
-site	src/audio/sound_sdl.cpp	710	long	l	live	long	-	long __stdcall BufSetCurrentPosition(void* self, std::uint32_t bytes) {
-site	src/audio/sound_sdl.cpp	719	long	l	live	long	-	long __stdcall BufSetFormat(void* self, const void* format) {
-site	src/audio/sound_sdl.cpp	735	long	l	live	long	-	long __stdcall BufSetVolume(void* self, long v) {
-site	src/audio/sound_sdl.cpp	735	long	l	live	long	-	long __stdcall BufSetVolume(void* self, long v) {
-site	src/audio/sound_sdl.cpp	744	long	l	live	long	-	long __stdcall BufSetPan(void* self, long v) {
-site	src/audio/sound_sdl.cpp	744	long	l	live	long	-	long __stdcall BufSetPan(void* self, long v) {
-site	src/audio/sound_sdl.cpp	753	long	l	live	long	-	long __stdcall BufSetFrequency(void* self, std::uint32_t v) {
-site	src/audio/sound_sdl.cpp	763	long	l	live	long	-	long __stdcall BufStop(void* self) {
-site	src/audio/sound_sdl.cpp	770	long	l	live	long	-	long __stdcall BufUnlock(void* self, void* first, std::uint32_t first_bytes, void* second, std::uint32_t second_bytes) {
-site	src/audio/sound_sdl.cpp	780	long	l	live	long	-	long __stdcall BufRestore(void* self) {
-site	src/audio/sound_sdl.cpp	788	long	l	live	long	-	long __stdcall NotQueryInterface(void* self, const void* iid, void** out) {
-site	src/audio/sound_sdl.cpp	793	long	ul	live	unsigned long	-	unsigned long __stdcall NotAddRef(void* self) {
-site	src/audio/sound_sdl.cpp	798	long	ul	live	unsigned long	-	unsigned long __stdcall NotRelease(void* self) {
-site	src/audio/sound_sdl.cpp	806	long	ul	live	unsigned long	-	unsigned long offset;
-site	src/audio/sound_sdl.cpp	809	long	l	live	long	-	long __stdcall NotSetNotificationPositions(void* self, std::uint32_t count, const Position* positions) {
-site	src/audio/sound_sdl.cpp	909	long	l	live	long	-	using MCall = long(__stdcall*)(void*);
-site	src/audio/sound_sdl.cpp	910	long	l	live	long	-	using MStatus = long(__stdcall*)(void*, std::uint32_t*);
-site	src/audio/sound_sdl.cpp	911	long	l	live	long	-	using MGetLong = long(__stdcall*)(void*, long*);
-site	src/audio/sound_sdl.cpp	911	long	l	live	long	-	using MGetLong = long(__stdcall*)(void*, long*);
-site	src/audio/sound_sdl.cpp	912	long	l	live	long	-	using MPosition = long(__stdcall*)(void*, std::uint32_t*, std::uint32_t*);
-site	src/audio/sound_sdl.cpp	913	long	l	live	long	-	using MValue = long(__stdcall*)(void*, std::uint32_t);
-site	src/audio/sound_sdl.cpp	914	long	l	live	long	-	using MLong = long(__stdcall*)(void*, long);
-site	src/audio/sound_sdl.cpp	914	long	l	live	long	-	using MLong = long(__stdcall*)(void*, long);
-site	src/audio/sound_sdl.cpp	915	long	l	live	long	-	using MPlay = long(__stdcall*)(void*, std::uint32_t, std::uint32_t, std::uint32_t);
-site	src/audio/sound_sdl.cpp	916	long	l	live	long	-	using MLock = long(__stdcall*)(void*, std::uint32_t, std::uint32_t, void**, std::uint32_t*, void**, std::uint32_t*, std::uint32_t);
-site	src/audio/sound_sdl.cpp	917	long	l	live	long	-	using MUnlock = long(__stdcall*)(void*, void*, std::uint32_t, void*, std::uint32_t);
-site	src/audio/sound_sdl.cpp	918	long	l	live	long	-	using MCreate = long(__stdcall*)(void*, const void*, void**, void*);
-site	src/audio/sound_sdl.cpp	919	long	l	live	long	-	using MQuery = long(__stdcall*)(void*, const void*, void**);
-site	src/audio/sound_sdl.cpp	920	long	l	live	long	-	using MPositions = long(__stdcall*)(void*, std::uint32_t, const Position*);
-site	src/audio/sound_sdl.cpp	921	long	l	live	long	-	using MFormat = long(__stdcall*)(void*, const void*);
-site	src/audio/sound_sdl.cpp	922	long	l	live	long	-	using MCooperate = long(__stdcall*)(void*, void*, std::uint32_t);
-site	src/audio/sound_sdl.cpp	950	fmt_place	word	live	kIidNotifyVa	%08X	"the game's IID_IDirectSoundNotify at 0x%08X is not the one QueryInterface answers", kIidNotifyVa);
-site	src/audio/sound_sdl.cpp	956	low32	object_ours	live	&g_device	Low32	SDL_CHECK(slot_words[0] == Low32(&g_device) && slot_words[1] == 0xCAFEF00Du, " ");
-site	src/audio/sound_sdl.cpp	974	long	l	live	long	-	SDL_CHECK(Method<long(__stdcall*)(void*, void*, std::uint32_t, std::uint32_t*)>(primary, 0x14)(primary, back, kFormatSize, &written) == kOk &&
-site	src/audio/sound_sdl.cpp	991	low32	unread	live	fmt_mono	Low32	const TestDesc sdesc = MakeDesc(0x180E2, 800, Low32(fmt_mono));
-site	src/audio/sound_sdl.cpp	1052	long	l	live	long	-	long got = 1;
-site	src/audio/sound_sdl.cpp	1088	low32	unread	live	fmt_ring	Low32	const TestDesc rdesc = MakeDesc(0x181E0, 4000, Low32(fmt_ring));
-site	src/audio/sound_sdl.cpp	1128	low32	unread	live	fmt_8	Low32	const TestDesc d8 = MakeDesc(0x180E2, 4, Low32(fmt_8));
-site	src/audio/sound_sdl.cpp	1139	low32	unread	live	fmt_mono	Low32	const TestDesc dl = MakeDesc(0x180E2, 8, Low32(fmt_mono));
-site	src/audio/sound_sdl.cpp	1209	sizeof_ptr	-	live	sizeof(void*)	-	static_assert(sizeof(Position) == 2 * sizeof(void*), " ");
-site	src/audio/sound_sdl.cpp	1224	low32	func_ours	live	&Create	Low32	const std::uint32_t create = Low32(&Create);
-site	src/audio/sound_sdl.cpp	1228	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (before == 0) Fatal("sound_sdl: the import slot 0x%08X is empty: SoundSdl_Start before it is bound", (unsigned)kSlotVa);
-site	src/audio/sound_sdl.cpp	1230	sizeof_ptr	-	live	sizeof(void*)	-	if (!g_on && sizeof(void*) == 8) {
-site	src/audio/sound_sdl.cpp	1237	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (!VirtualProtect(slot, 4, PAGE_READWRITE, &old)) Fatal("sound_sdl: VirtualProtect(0x%08X) failed, error %lu", (unsigned)kSlotVa, GetLastError());
-site	src/audio/sound_sdl.cpp	1244	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (g_on && after != create) Fatal("sound_sdl: the import slot 0x%08X reads 0x%08X after the patch, not our Create 0x%08X", (unsigned)kSlotVa, after, create);
-site	src/audio/sound_sdl.cpp	1244	fmt_place	word	live	after	%08X	if (g_on && after != create) Fatal("sound_sdl: the import slot 0x%08X reads 0x%08X after the patch, not our Create 0x%08X", (unsigned)kSlotVa, after, create);
-site	src/audio/sound_sdl.cpp	1244	fmt_place	word	live	create	%08X	if (g_on && after != create) Fatal("sound_sdl: the import slot 0x%08X reads 0x%08X after the patch, not our Create 0x%08X", (unsigned)kSlotVa, after, create);
-site	src/audio/sound_sdl.cpp	1245	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (!g_on && after != before) Fatal("sound_sdl: the import slot 0x%08X changed under a switch that is off", (unsigned)kSlotVa);
-site	src/audio/sound_sdl.cpp	1246	fmt_place	word	live	(unsigned)kSlotVa	%08X	Log("DIV-0201 sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
-site	src/audio/sound_sdl.cpp	1246	fmt_place	word	live	after	%08X	Log("DIV-0201 sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
+site	src/audio/sound_sdl.cpp	235	ptr_overlay	unread	live	p	Buffer	Buffer* Self(void* p) { return static_cast<Buffer*>(p); }
+site	src/audio/sound_sdl.cpp	237	ptr_overlay	unread	live	static_cast<unsigned char*>(p) - offsetof(Buffer, notify_vtable)	Buffer	return reinterpret_cast<Buffer*>(static_cast<unsigned char*>(p) - offsetof(Buffer, notify_vtable));
+site	src/audio/sound_sdl.cpp	243	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t at = reinterpret_cast<std::uintptr_t>(b), lo = reinterpret_cast<std::uintptr_t>(g_pool);
+site	src/audio/sound_sdl.cpp	243	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t at = reinterpret_cast<std::uintptr_t>(b), lo = reinterpret_cast<std::uintptr_t>(g_pool);
+site	src/audio/sound_sdl.cpp	243	uintptr	-	live	std::uintptr_t	-	const std::uintptr_t at = reinterpret_cast<std::uintptr_t>(b), lo = reinterpret_cast<std::uintptr_t>(g_pool);
+site	src/audio/sound_sdl.cpp	245	fmt_place	pointer	live	static_cast<const void*>(b)	%p	Fatal("sound_sdl: %s on %p, which is no buffer of ours", method, static_cast<const void*>(b));
+site	src/audio/sound_sdl.cpp	246	fmt_place	pointer	live	static_cast<const void*>(b)	%p	if (!b->live) Fatal("sound_sdl: %s on buffer %p after its last Release", method, static_cast<const void*>(b));
+site	src/audio/sound_sdl.cpp	249	fmt_place	pointer	live	d	%p	if (d != &g_device) Fatal("sound_sdl: %s on %p, which is not our device", method, d);
+site	src/audio/sound_sdl.cpp	260	long	l	live	long	-	float Gain(long hundredths) {
+site	src/audio/sound_sdl.cpp	306	fmt_place	pointer	live	static_cast<void*>(b)	%p	Log("sound_sdl buffer %p first mixed at device frame %llu, from its frame %u of %u (%u Hz)", static_cast<void*>(b),
+site	src/audio/sound_sdl.cpp	307	long	l	live	long	-	static_cast<unsigned long long>(g_frames_out), static_cast<unsigned>(b->pos >> 32), total, EffectiveRate(b));
+site	src/audio/sound_sdl.cpp	425	long	l	live	long	-	long __stdcall DevQueryInterface(void* self, const void*, void**) {
+site	src/audio/sound_sdl.cpp	429	long	ul	live	unsigned long	-	unsigned long __stdcall DevAddRef(void* self) {
+site	src/audio/sound_sdl.cpp	434	long	ul	live	unsigned long	-	unsigned long __stdcall DevRelease(void* self) {
+site	src/audio/sound_sdl.cpp	444	long	l	live	long	-	g_made, g_live_max, g_live, static_cast<unsigned long long>(g_frames_out),
+site	src/audio/sound_sdl.cpp	475	long	l	live	long	-	long __stdcall DevCreateSoundBuffer(void* self, const void* desc, void** out, void* outer) {
+site	src/audio/sound_sdl.cpp	521	long	l	live	long	-	long __stdcall DevGetCaps(void* self, void*) {
+site	src/audio/sound_sdl.cpp	525	long	l	live	long	-	long __stdcall DevDuplicateSoundBuffer(void* self, void*, void**) {
+site	src/audio/sound_sdl.cpp	529	long	l	live	long	-	long __stdcall DevSetCooperativeLevel(void* self, void* hwnd, std::uint32_t level) {
+site	src/audio/sound_sdl.cpp	541	long	l	live	long	-	long __stdcall DevCompact(void* self) {
+site	src/audio/sound_sdl.cpp	545	long	l	live	long	-	long __stdcall DevGetSpeakerConfig(void* self, std::uint32_t*) {
+site	src/audio/sound_sdl.cpp	549	long	l	live	long	-	long __stdcall DevSetSpeakerConfig(void* self, std::uint32_t) {
+site	src/audio/sound_sdl.cpp	553	long	l	live	long	-	long __stdcall DevInitialize(void* self, const void*) {
+site	src/audio/sound_sdl.cpp	560	long	l	live	long	-	long __stdcall Create(const void* guid, void** out, void* outer) {
+site	src/audio/sound_sdl.cpp	582	long	l	live	long	-	long __stdcall BufQueryInterface(void* self, const void* iid, void** out) {
+site	src/audio/sound_sdl.cpp	604	long	ul	live	unsigned long	-	unsigned long __stdcall BufAddRef(void* self) {
+site	src/audio/sound_sdl.cpp	610	long	ul	live	unsigned long	-	unsigned long __stdcall BufRelease(void* self) {
+site	src/audio/sound_sdl.cpp	618	long	l	live	long	-	long __stdcall BufGetCaps(void* self, void* caps) {
+site	src/audio/sound_sdl.cpp	627	long	l	live	long	-	long __stdcall BufGetCurrentPosition(void* self, std::uint32_t* play, std::uint32_t* write) {
+site	src/audio/sound_sdl.cpp	641	long	l	live	long	-	long __stdcall BufGetFormat(void* self, void* format, std::uint32_t size, std::uint32_t* written) {
+site	src/audio/sound_sdl.cpp	655	long	l	live	long	-	long __stdcall BufGetVolume(void* self, long* v) {
+site	src/audio/sound_sdl.cpp	655	long	l	live	long	-	long __stdcall BufGetVolume(void* self, long* v) {
+site	src/audio/sound_sdl.cpp	663	long	l	live	long	-	long __stdcall BufGetPan(void* self, long* v) {
+site	src/audio/sound_sdl.cpp	663	long	l	live	long	-	long __stdcall BufGetPan(void* self, long* v) {
+site	src/audio/sound_sdl.cpp	671	long	l	live	long	-	long __stdcall BufGetFrequency(void* self, std::uint32_t* v) {
+site	src/audio/sound_sdl.cpp	679	long	l	live	long	-	long __stdcall BufGetStatus(void* self, std::uint32_t* s) {
+site	src/audio/sound_sdl.cpp	687	long	l	live	long	-	long __stdcall BufInitialize(void* self, void*, const void*) {
+site	src/audio/sound_sdl.cpp	692	long	l	live	long	-	long __stdcall BufLock(void* self, std::uint32_t offset, std::uint32_t bytes, void** first, std::uint32_t* first_bytes,
+site	src/audio/sound_sdl.cpp	712	long	l	live	long	-	long __stdcall BufPlay(void* self, std::uint32_t, std::uint32_t, std::uint32_t flags) {
+site	src/audio/sound_sdl.cpp	725	fmt_place	pointer	live	static_cast<void*>(b)	%p	Log("sound_sdl buffer %p Play at device frame %llu, from its frame %u of %u (%u Hz%s)", static_cast<void*>(b),
+site	src/audio/sound_sdl.cpp	726	long	l	live	long	-	static_cast<unsigned long long>(g_frames_out), static_cast<unsigned>(b->pos >> 32), FramesOf(b), EffectiveRate(b),
+site	src/audio/sound_sdl.cpp	735	long	l	live	long	-	long __stdcall BufSetCurrentPosition(void* self, std::uint32_t bytes) {
+site	src/audio/sound_sdl.cpp	744	long	l	live	long	-	long __stdcall BufSetFormat(void* self, const void* format) {
+site	src/audio/sound_sdl.cpp	760	long	l	live	long	-	long __stdcall BufSetVolume(void* self, long v) {
+site	src/audio/sound_sdl.cpp	760	long	l	live	long	-	long __stdcall BufSetVolume(void* self, long v) {
+site	src/audio/sound_sdl.cpp	769	long	l	live	long	-	long __stdcall BufSetPan(void* self, long v) {
+site	src/audio/sound_sdl.cpp	769	long	l	live	long	-	long __stdcall BufSetPan(void* self, long v) {
+site	src/audio/sound_sdl.cpp	778	long	l	live	long	-	long __stdcall BufSetFrequency(void* self, std::uint32_t v) {
+site	src/audio/sound_sdl.cpp	788	long	l	live	long	-	long __stdcall BufStop(void* self) {
+site	src/audio/sound_sdl.cpp	795	long	l	live	long	-	long __stdcall BufUnlock(void* self, void* first, std::uint32_t first_bytes, void* second, std::uint32_t second_bytes) {
+site	src/audio/sound_sdl.cpp	805	long	l	live	long	-	long __stdcall BufRestore(void* self) {
+site	src/audio/sound_sdl.cpp	813	long	l	live	long	-	long __stdcall NotQueryInterface(void* self, const void* iid, void** out) {
+site	src/audio/sound_sdl.cpp	818	long	ul	live	unsigned long	-	unsigned long __stdcall NotAddRef(void* self) {
+site	src/audio/sound_sdl.cpp	823	long	ul	live	unsigned long	-	unsigned long __stdcall NotRelease(void* self) {
+site	src/audio/sound_sdl.cpp	831	long	ul	live	unsigned long	-	unsigned long offset;
+site	src/audio/sound_sdl.cpp	834	long	l	live	long	-	long __stdcall NotSetNotificationPositions(void* self, std::uint32_t count, const Position* positions) {
+site	src/audio/sound_sdl.cpp	934	long	l	live	long	-	using MCall = long(__stdcall*)(void*);
+site	src/audio/sound_sdl.cpp	935	long	l	live	long	-	using MStatus = long(__stdcall*)(void*, std::uint32_t*);
+site	src/audio/sound_sdl.cpp	936	long	l	live	long	-	using MGetLong = long(__stdcall*)(void*, long*);
+site	src/audio/sound_sdl.cpp	936	long	l	live	long	-	using MGetLong = long(__stdcall*)(void*, long*);
+site	src/audio/sound_sdl.cpp	937	long	l	live	long	-	using MPosition = long(__stdcall*)(void*, std::uint32_t*, std::uint32_t*);
+site	src/audio/sound_sdl.cpp	938	long	l	live	long	-	using MValue = long(__stdcall*)(void*, std::uint32_t);
+site	src/audio/sound_sdl.cpp	939	long	l	live	long	-	using MLong = long(__stdcall*)(void*, long);
+site	src/audio/sound_sdl.cpp	939	long	l	live	long	-	using MLong = long(__stdcall*)(void*, long);
+site	src/audio/sound_sdl.cpp	940	long	l	live	long	-	using MPlay = long(__stdcall*)(void*, std::uint32_t, std::uint32_t, std::uint32_t);
+site	src/audio/sound_sdl.cpp	941	long	l	live	long	-	using MLock = long(__stdcall*)(void*, std::uint32_t, std::uint32_t, void**, std::uint32_t*, void**, std::uint32_t*, std::uint32_t);
+site	src/audio/sound_sdl.cpp	942	long	l	live	long	-	using MUnlock = long(__stdcall*)(void*, void*, std::uint32_t, void*, std::uint32_t);
+site	src/audio/sound_sdl.cpp	943	long	l	live	long	-	using MCreate = long(__stdcall*)(void*, const void*, void**, void*);
+site	src/audio/sound_sdl.cpp	944	long	l	live	long	-	using MQuery = long(__stdcall*)(void*, const void*, void**);
+site	src/audio/sound_sdl.cpp	945	long	l	live	long	-	using MPositions = long(__stdcall*)(void*, std::uint32_t, const Position*);
+site	src/audio/sound_sdl.cpp	946	long	l	live	long	-	using MFormat = long(__stdcall*)(void*, const void*);
+site	src/audio/sound_sdl.cpp	947	long	l	live	long	-	using MCooperate = long(__stdcall*)(void*, void*, std::uint32_t);
+site	src/audio/sound_sdl.cpp	975	fmt_place	word	live	kIidNotifyVa	%08X	"the game's IID_IDirectSoundNotify at 0x%08X is not the one QueryInterface answers", kIidNotifyVa);
+site	src/audio/sound_sdl.cpp	981	low32	object_ours	live	&g_device	Low32	SDL_CHECK(slot_words[0] == Low32(&g_device) && slot_words[1] == 0xCAFEF00Du, " ");
+site	src/audio/sound_sdl.cpp	999	long	l	live	long	-	SDL_CHECK(Method<long(__stdcall*)(void*, void*, std::uint32_t, std::uint32_t*)>(primary, 0x14)(primary, back, kFormatSize, &written) == kOk &&
+site	src/audio/sound_sdl.cpp	1016	low32	unread	live	fmt_mono	Low32	const TestDesc sdesc = MakeDesc(0x180E2, 800, Low32(fmt_mono));
+site	src/audio/sound_sdl.cpp	1077	long	l	live	long	-	long got = 1;
+site	src/audio/sound_sdl.cpp	1113	low32	unread	live	fmt_ring	Low32	const TestDesc rdesc = MakeDesc(0x181E0, 4000, Low32(fmt_ring));
+site	src/audio/sound_sdl.cpp	1153	low32	unread	live	fmt_8	Low32	const TestDesc d8 = MakeDesc(0x180E2, 4, Low32(fmt_8));
+site	src/audio/sound_sdl.cpp	1164	low32	unread	live	fmt_mono	Low32	const TestDesc dl = MakeDesc(0x180E2, 8, Low32(fmt_mono));
+site	src/audio/sound_sdl.cpp	1234	sizeof_ptr	-	live	sizeof(void*)	-	static_assert(sizeof(Position) == 2 * sizeof(void*), " ");
+site	src/audio/sound_sdl.cpp	1249	low32	func_ours	live	&Create	Low32	const std::uint32_t create = Low32(&Create);
+site	src/audio/sound_sdl.cpp	1253	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (before == 0) Fatal("sound_sdl: the import slot 0x%08X is empty: SoundSdl_Start before it is bound", (unsigned)kSlotVa);
+site	src/audio/sound_sdl.cpp	1255	sizeof_ptr	-	live	sizeof(void*)	-	if (!g_on && sizeof(void*) == 8) {
+site	src/audio/sound_sdl.cpp	1262	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (!VirtualProtect(slot, 4, PAGE_READWRITE, &old)) Fatal("sound_sdl: VirtualProtect(0x%08X) failed, error %lu", (unsigned)kSlotVa, GetLastError());
+site	src/audio/sound_sdl.cpp	1269	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (g_on && after != create) Fatal("sound_sdl: the import slot 0x%08X reads 0x%08X after the patch, not our Create 0x%08X", (unsigned)kSlotVa, after, create);
+site	src/audio/sound_sdl.cpp	1269	fmt_place	word	live	after	%08X	if (g_on && after != create) Fatal("sound_sdl: the import slot 0x%08X reads 0x%08X after the patch, not our Create 0x%08X", (unsigned)kSlotVa, after, create);
+site	src/audio/sound_sdl.cpp	1269	fmt_place	word	live	create	%08X	if (g_on && after != create) Fatal("sound_sdl: the import slot 0x%08X reads 0x%08X after the patch, not our Create 0x%08X", (unsigned)kSlotVa, after, create);
+site	src/audio/sound_sdl.cpp	1270	fmt_place	word	live	(unsigned)kSlotVa	%08X	if (!g_on && after != before) Fatal("sound_sdl: the import slot 0x%08X changed under a switch that is off", (unsigned)kSlotVa);
+site	src/audio/sound_sdl.cpp	1271	fmt_place	word	live	(unsigned)kSlotVa	%08X	Log("DIV-0201 sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
+site	src/audio/sound_sdl.cpp	1271	fmt_place	word	live	after	%08X	Log("DIV-0201 sound output: %s (the DirectSoundCreate slot 0x%08X holds 0x%08X; SDL %d.%d.%d)",
 site	src/common/asm_name.h	20	asm	other	live	(empty)	-	#define BOF3_ASM_NAME(name) __asm__(BOF3_SYM(name))
 site	src/common/image_base.h	67	width_if	logic	live	-	#if defined(__i386__)	#if defined(__i386__)
 site	src/common/image_base.h	69	asm	fs	live	movl %%fs:0x30, %0	movl	asm("movl %%fs:0x30, %0\n\t"
@@ -1287,48 +1291,50 @@ site	src/game/battle_fx_tasks_fuzz.cpp	523	narrow_call	image_local	fuzz	reinterp
 site	src/game/battle_fx_tasks_fuzz.cpp	538	narrow_call	image_local	fuzz	reinterpret_cast<const void*>(kOriginals.fx[i])	Address	if (Address(reinterpret_cast<const void*>(kOriginals.fx[i])) != kFxImm[i].value)
 site	src/game/battle_fx_tasks_fuzz.cpp	541	narrow_call	image_local	fuzz	reinterpret_cast<const void*>(kOriginals.magic_fx[i])	Address	if (Address(reinterpret_cast<const void*>(kOriginals.magic_fx[i])) != kMagicImm[i].value)
 site	src/game/battle_fx_tasks_fuzz.cpp	547	narrow_call	func_ours	fuzz	reinterpret_cast<const void*>(s.ours[i])	Address	if (Address(reinterpret_cast<const void*>(s.ours[i])) != s.imms[i].value)
-site	src/game/battle_items.cpp	44	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/battle_items.cpp	44	widen	param	live	address	T	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
-site	src/game/battle_items.cpp	62	long	l	live	long	-	As<long (__cdecl*)(const short*, float*, long*, long*)>(&Gte_RotTransPers),
-site	src/game/battle_items.cpp	62	long	l	live	long	-	As<long (__cdecl*)(const short*, float*, long*, long*)>(&Gte_RotTransPers),
-site	src/game/battle_items.cpp	62	long	l	live	long	-	As<long (__cdecl*)(const short*, float*, long*, long*)>(&Gte_RotTransPers),
-site	src/game/battle_items.cpp	63	long	l	live	long	-	As<long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*, long*)>(&Gte_RotTransPers3),
-site	src/game/battle_items.cpp	63	long	l	live	long	-	As<long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*, long*)>(&Gte_RotTransPers3),
-site	src/game/battle_items.cpp	63	long	l	live	long	-	As<long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*, long*)>(&Gte_RotTransPers3),
-site	src/game/battle_items.cpp	64	long	l	live	long	-	As<long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, long*,
-site	src/game/battle_items.cpp	64	long	l	live	long	-	As<long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, long*,
-site	src/game/battle_items.cpp	65	long	l	live	long	-	long*)>(&Gte_RotTransPers4),
-site	src/game/battle_items.cpp	70	long	l	live	long	-	As<void (__cdecl*)(const short*, long*, long*)>(&Gte_RotTrans),
-site	src/game/battle_items.cpp	70	long	l	live	long	-	As<void (__cdecl*)(const short*, long*, long*)>(&Gte_RotTrans),
-site	src/game/battle_items.cpp	142	low32	image_local	live	actor	Low32	std::uint32_t v = Low32(actor);
-site	src/game/battle_items.cpp	143	asm	other	live	movb 8(%1), %b0	addb movb	__asm__ volatile("movb 8(%1), %b0\n\taddb %b2, %b0" : "+q"(v) : "r"(actor), "q"(offset) : "memory", "cc");
-site	src/game/battle_items.cpp	157	long	l	live	long	-	constexpr long kBufferLost = static_cast<long>(0x88780096u);
-site	src/game/battle_items.cpp	157	long	l	live	long	-	constexpr long kBufferLost = static_cast<long>(0x88780096u);
-site	src/game/battle_items.cpp	196	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(Long(At(::bof3::Img(at::kSparkleTypes.v) + 4 * type))))();
-site	src/game/battle_items.cpp	498	long	l	live	long	-	long depth, flag;
-site	src/game/battle_items.cpp	529	long	l	live	long	-	long t[3];
-site	src/game/battle_items.cpp	532	long	l	live	long	-	long flag;
-site	src/game/battle_items.cpp	536	long	ul	live	unsigned long	-	g.set_rot(reinterpret_cast<const unsigned long*>(&m));
-site	src/game/battle_items.cpp	537	long	ul	live	unsigned long	-	g.set_trans(reinterpret_cast<const unsigned long*>(&m));
-site	src/game/battle_items.cpp	617	long	l	live	long	-	long depth, flag;
-site	src/game/battle_items.cpp	691	long	l	live	long	-	long depth, flag;
-site	src/game/battle_items.cpp	729	uintptr	-	live	std::uintptr_t	-	const auto* const cue = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::int32_t>(enemy_rec->cue_table)));
-site	src/game/battle_items.cpp	729	widen	other	live	static_cast<std::int32_t>(enemy_rec->cue_table)	const unsigned char*	const auto* const cue = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::int32_t>(enemy_rec->cue_table)));
-site	src/game/battle_items.cpp	765	long	l	live	long	-	Method<long (__stdcall*)(void*, unsigned long)>(buffer, 0x34)(buffer, 0);
-site	src/game/battle_items.cpp	765	long	ul	live	unsigned long	-	Method<long (__stdcall*)(void*, unsigned long)>(buffer, 0x34)(buffer, 0);
-site	src/game/battle_items.cpp	767	long	l	live	long	-	if (Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0) != kBufferLost)
-site	src/game/battle_items.cpp	767	long	ul	live	unsigned long	-	if (Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0) != kBufferLost)
-site	src/game/battle_items.cpp	767	long	ul	live	unsigned long	-	if (Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0) != kBufferLost)
-site	src/game/battle_items.cpp	767	long	ul	live	unsigned long	-	if (Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0) != kBufferLost)
-site	src/game/battle_items.cpp	773	long	l	live	long	-	Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0);
-site	src/game/battle_items.cpp	773	long	ul	live	unsigned long	-	Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0);
-site	src/game/battle_items.cpp	773	long	ul	live	unsigned long	-	Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0);
-site	src/game/battle_items.cpp	773	long	ul	live	unsigned long	-	Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0);
-site	src/game/battle_items.cpp	782	long	ul	live	unsigned long	-	unsigned long status = 0;
-site	src/game/battle_items.cpp	783	long	l	live	long	-	Method<long (__stdcall*)(void*, unsigned long*)>(b, 0x24)(b, &status);
-site	src/game/battle_items.cpp	783	long	ul	live	unsigned long	-	Method<long (__stdcall*)(void*, unsigned long*)>(b, 0x24)(b, &status);
-site	src/game/battle_items.cpp	786	long	l	live	long	-	Method<long (__stdcall*)(void*)>(b, 0x48)(b);
-site	src/game/battle_items.cpp	789	long	ul	live	unsigned long	-	Method<unsigned long (__stdcall*)(void*)>(b, 8)(b);
+site	src/game/battle_items.cpp	45	uintptr	-	live	std::uintptr_t	-	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/battle_items.cpp	45	widen	param	live	address	T	template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+site	src/game/battle_items.cpp	63	long	l	live	long	-	As<long (__cdecl*)(const short*, float*, long*, long*)>(&Gte_RotTransPers),
+site	src/game/battle_items.cpp	63	long	l	live	long	-	As<long (__cdecl*)(const short*, float*, long*, long*)>(&Gte_RotTransPers),
+site	src/game/battle_items.cpp	63	long	l	live	long	-	As<long (__cdecl*)(const short*, float*, long*, long*)>(&Gte_RotTransPers),
+site	src/game/battle_items.cpp	64	long	l	live	long	-	As<long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*, long*)>(&Gte_RotTransPers3),
+site	src/game/battle_items.cpp	64	long	l	live	long	-	As<long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*, long*)>(&Gte_RotTransPers3),
+site	src/game/battle_items.cpp	64	long	l	live	long	-	As<long (__cdecl*)(const short*, const short*, const short*, float*, float*, float*, long*, long*)>(&Gte_RotTransPers3),
+site	src/game/battle_items.cpp	65	long	l	live	long	-	As<long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, long*,
+site	src/game/battle_items.cpp	65	long	l	live	long	-	As<long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*, long*,
+site	src/game/battle_items.cpp	66	long	l	live	long	-	long*)>(&Gte_RotTransPers4),
+site	src/game/battle_items.cpp	71	long	l	live	long	-	As<void (__cdecl*)(const short*, long*, long*)>(&Gte_RotTrans),
+site	src/game/battle_items.cpp	71	long	l	live	long	-	As<void (__cdecl*)(const short*, long*, long*)>(&Gte_RotTrans),
+site	src/game/battle_items.cpp	143	low32	image_local	live	actor	Low32	std::uint32_t v = Low32(actor);
+site	src/game/battle_items.cpp	144	asm	other	live	movb 8(%1), %b0	addb movb	__asm__ volatile("movb 8(%1), %b0\n\taddb %b2, %b0" : "+q"(v) : "r"(actor), "q"(offset) : "memory", "cc");
+site	src/game/battle_items.cpp	158	long	l	live	long	-	constexpr long kBufferLost = static_cast<long>(0x88780096u);
+site	src/game/battle_items.cpp	158	long	l	live	long	-	constexpr long kBufferLost = static_cast<long>(0x88780096u);
+site	src/game/battle_items.cpp	197	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(Long(At(::bof3::Img(at::kSparkleTypes.v) + 4 * type))))();
+site	src/game/battle_items.cpp	499	long	l	live	long	-	long depth, flag;
+site	src/game/battle_items.cpp	530	long	l	live	long	-	long t[3];
+site	src/game/battle_items.cpp	533	long	l	live	long	-	long flag;
+site	src/game/battle_items.cpp	537	long	ul	live	unsigned long	-	g.set_rot(reinterpret_cast<const unsigned long*>(&m));
+site	src/game/battle_items.cpp	538	long	ul	live	unsigned long	-	g.set_trans(reinterpret_cast<const unsigned long*>(&m));
+site	src/game/battle_items.cpp	618	long	l	live	long	-	long depth, flag;
+site	src/game/battle_items.cpp	692	long	l	live	long	-	long depth, flag;
+site	src/game/battle_items.cpp	730	uintptr	-	live	std::uintptr_t	-	const auto* const cue = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::int32_t>(enemy_rec->cue_table)));
+site	src/game/battle_items.cpp	730	widen	other	live	static_cast<std::int32_t>(enemy_rec->cue_table)	const unsigned char*	const auto* const cue = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::int32_t>(enemy_rec->cue_table)));
+site	src/game/battle_items.cpp	762	fmt_place	narrowed	live	__builtin_return_address(0)	%p	bof3::Log("music_log f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
+site	src/game/battle_items.cpp	762	fmt_place	pointer	live	static_cast<const void*>(wave)	%p	bof3::Log("music_log f%u SndStream_Play(%p) from %p", Frame_Counter, static_cast<const void*>(wave),
+site	src/game/battle_items.cpp	769	long	l	live	long	-	Method<long (__stdcall*)(void*, unsigned long)>(buffer, 0x34)(buffer, 0);
+site	src/game/battle_items.cpp	769	long	ul	live	unsigned long	-	Method<long (__stdcall*)(void*, unsigned long)>(buffer, 0x34)(buffer, 0);
+site	src/game/battle_items.cpp	771	long	l	live	long	-	if (Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0) != kBufferLost)
+site	src/game/battle_items.cpp	771	long	ul	live	unsigned long	-	if (Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0) != kBufferLost)
+site	src/game/battle_items.cpp	771	long	ul	live	unsigned long	-	if (Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0) != kBufferLost)
+site	src/game/battle_items.cpp	771	long	ul	live	unsigned long	-	if (Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0) != kBufferLost)
+site	src/game/battle_items.cpp	777	long	l	live	long	-	Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0);
+site	src/game/battle_items.cpp	777	long	ul	live	unsigned long	-	Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0);
+site	src/game/battle_items.cpp	777	long	ul	live	unsigned long	-	Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0);
+site	src/game/battle_items.cpp	777	long	ul	live	unsigned long	-	Method<long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long)>(b, 0x30)(b, 0, 0, 0);
+site	src/game/battle_items.cpp	786	long	ul	live	unsigned long	-	unsigned long status = 0;
+site	src/game/battle_items.cpp	787	long	l	live	long	-	Method<long (__stdcall*)(void*, unsigned long*)>(b, 0x24)(b, &status);
+site	src/game/battle_items.cpp	787	long	ul	live	unsigned long	-	Method<long (__stdcall*)(void*, unsigned long*)>(b, 0x24)(b, &status);
+site	src/game/battle_items.cpp	790	long	l	live	long	-	Method<long (__stdcall*)(void*)>(b, 0x48)(b);
+site	src/game/battle_items.cpp	793	long	ul	live	unsigned long	-	Method<unsigned long (__stdcall*)(void*)>(b, 8)(b);
 site	src/game/battle_items_callees.h	92	long	ul	live	unsigned long	-	void (__cdecl* set_draw_mode)(unsigned char*, int, int, unsigned, unsigned long);
 site	src/game/battle_items_callees.h	106	long	l	live	long	-	long (__cdecl* rtp)(const short*, float*, long*, long*);
 site	src/game/battle_items_callees.h	106	long	l	live	long	-	long (__cdecl* rtp)(const short*, float*, long*, long*);
@@ -10579,128 +10585,131 @@ site	src/game/shoulder_glyphs.cpp	347	uintptr	-	live	std::uintptr_t	-	auto entry
 site	src/game/shoulder_glyphs.cpp	347	widen	img_place	live	::bof3::Img(0x66A2FCu) + 4u * k	void*	auto entry = [](int k) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Img(0x66A2FCu) + 4u * k)); };
 site	src/game/shoulder_glyphs.cpp	349	low32	image_local	live	s	Low32	const auto at = Low32(s);
 site	src/game/shoulder_glyphs.cpp	431	low32	object_ours	live	&g_on	Low32	bof3::PatchBytes(" ", Low32(&g_on), &was, &is, 1);
-site	src/game/sound.cpp	47	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/sound.cpp	47	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-site	src/game/sound.cpp	55	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
-site	src/game/sound.cpp	62	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
-site	src/game/sound.cpp	62	widen	param	live	word	Fn [fn]	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
-site	src/game/sound.cpp	131	long	ul	live	unsigned long	-	bool Playing(void* buffer, unsigned long status) {
-site	src/game/sound.cpp	157	narrow_call	image	live	Sound_Banks	Address	std::uint32_t cue = Address(Sound_Banks) + base + (cue_id & 0xFF) * 16;
-site	src/game/sound.cpp	175	narrow_call	image	live	Sound_Banks	Address	const std::uint32_t entry = Address(Sound_Banks) + base + kVoices + voice * 8;
-site	src/game/sound.cpp	206	widen	img_place	live	::bof3::Img(kLoopingName.v)	const char*	g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
-site	src/game/sound.cpp	207	widen	img_place	live	::bof3::Img(kOnceName.v)	const char*	g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
-site	src/game/sound.cpp	281	fmt_place	pointer	live	Music_LoadedTrack	%p	MUSIC_LOG("Music_Play(%u, %d) track %u loaded %d from %p", Frame_Counter, track, frames, (unsigned)Music_Track, Music_LoadedTrack, __builtin_return_address(0));
-site	src/game/sound.cpp	288	narrow_call	image	live	&Music_Volume	Address	SetDword(Address(&Music_Volume), 0);
-site	src/game/sound.cpp	329	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOutStop(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/sound.cpp	333	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
-site	src/game/sound.cpp	351	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeIn(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/sound.cpp	353	asm	x87	live	flds %[full]	fidivl flds fstps fsubs	__asm__ volatile(
-site	src/game/sound.cpp	359	uintptr	-	live	std::uintptr_t	-	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
-site	src/game/sound.cpp	359	widen	param	live	k127At	const float*	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
-site	src/game/sound.cpp	369	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOut(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/sound.cpp	372	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
-site	src/game/sound.cpp	406	narrow_call	image	live	&Music_Volume	Address	SetVolumeBits(Dword(Address(&Music_Volume)));
-site	src/game/sound.cpp	469	asm	x87	live	flds %[step]	fadds flds fstps	__asm__ volatile(
-site	src/game/sound.cpp	476	narrow_call	image	live	&Music_Volume	Address	SetVolumeBits(Dword(Address(&Music_Volume)));
-site	src/game/sound.cpp	502	narrow_call	image	live	Snd_WaveFormat	Address	const std::uint32_t format = Address(Snd_WaveFormat);
-site	src/game/sound.cpp	503	narrow_call	image_local	live	wave	Address	for (unsigned i = 0; i < 16; i += 4) SetDword(format + i, Dword(Address(wave) + 0x14 + i));
-site	src/game/sound.cpp	507	narrow_call	image	live	Snd_BufferDesc	Address	const std::uint32_t desc = Address(Snd_BufferDesc);
-site	src/game/sound.cpp	527	narrow_call	image_local	live	wave	Address	const std::uint32_t base = Address(wave);
-site	src/game/sound.cpp	548	long	l	live	long	-	extern " " long __cdecl SndBuf_Write(void* buffer, const void* src, unsigned offset, unsigned size) {
-site	src/game/sound.cpp	550	long	ul	live	unsigned long	-	unsigned long first_bytes = Address(buffer);
-site	src/game/sound.cpp	550	narrow_call	image_local	live	buffer	Address	unsigned long first_bytes = Address(buffer);
-site	src/game/sound.cpp	551	uintptr	-	live	std::uintptr_t	-	void* second = reinterpret_cast<void*>(static_cast<std::uintptr_t>(offset));
-site	src/game/sound.cpp	551	widen	param	live	offset	void*	void* second = reinterpret_cast<void*>(static_cast<std::uintptr_t>(offset));
-site	src/game/sound.cpp	552	long	ul	live	unsigned long	-	unsigned long second_bytes = size;
-site	src/game/sound.cpp	553	long	l	live	long	-	long result = Method<ComLock>(buffer, kLock)(buffer, offset, size, &first, &first_bytes, &second, &second_bytes, 0);
-site	src/game/sound.cpp	574	long	ul	live	unsigned long	-	const unsigned long loops = (sample & 0x80000000u) ? 1 : 0;
-site	src/game/sound.cpp	588	narrow_call	image_local	live	buffer	Address	if (Playing(buffer, Address(buffer))) Method<ComCall>(buffer, kStop)(buffer);
-site	src/game/sound.cpp	594	narrow_call	image_local	live	buffer	Address	if (Playing(buffer, Address(buffer))) Method<ComCall>(buffer, kStop)(buffer);
-site	src/game/sound.cpp	632	narrow_call	image	live	Music_Decoder	Address	decoder = Address(Music_Decoder);
-site	src/game/sound.cpp	643	narrow_call	image	live	Music_Decoder	Address	std::uint32_t decoder = Address(Music_Decoder);
-site	src/game/sound.cpp	683	narrow_call	image	live	Music_Decoder	Address	decoder = Address(Music_Decoder);
-site	src/game/sound.cpp	810	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/sound.cpp	810	fmt_place	pointer	live	Frame_Counter	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/sound.cpp	872	widen	img_place	live	::bof3::Img(kMemoryName.v)	const char*	g.sprintf(name, reinterpret_cast<const char*>(::bof3::Img(kMemoryName.v)), size, file);
-site	src/game/sound.cpp	882	long	l	live	long	-	extern " " long __cdecl Music_SetNotify(void* buffer) {
-site	src/game/sound.cpp	889	long	ul	live	unsigned long	-	struct Position { unsigned long offset; void* event; };
-site	src/game/sound.cpp	902	narrow_call	image	live	Snd_WaveFormat	Address	const std::uint32_t format = Address(Snd_WaveFormat);
-site	src/game/sound.cpp	910	narrow_call	image	live	Snd_BufferDesc	Address	const std::uint32_t desc = Address(Snd_BufferDesc);
-site	src/game/sound.cpp	937	narrow_call	image	live	Music_Decoder	Address	std::uint32_t decoder = Address(Music_Decoder);
-site	src/game/sound.cpp	945	narrow_call	image_local	live	dst	Address	const int result = g.mp3_decode(At(decoder), At(filled + Address(dst)));
-site	src/game/sound.cpp	946	narrow_call	image	live	Music_Decoder	Address	decoder = Address(Music_Decoder);
-site	src/game/sound.cpp	950	narrow_call	image_local	live	dst	Address	std::memset(At(Address(dst) + filled), 0, static_cast<std::uint32_t>(size) - filled);
-site	src/game/sound.cpp	955	narrow_call	image	live	Music_Decoder	Address	decoder = Address(Music_Decoder);
-site	src/game/sound.cpp	975	long	ul	live	unsigned long	-	Method<ComValue>(buffer, kSetVolume)(buffer, static_cast<unsigned long>(music_seq::Level(volume)));
-site	src/game/sound.cpp	980	asm	x87	live	flds %[volume]	fistpll fldcw flds fmuls fnstcw fsubs movw orb	__asm__ volatile(
-site	src/game/sound.cpp	993	uintptr	-	live	std::uintptr_t	-	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
-site	src/game/sound.cpp	993	widen	param	live	kInverse127At	const float*	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
-site	src/game/sound.cpp	994	uintptr	-	live	std::uintptr_t	-	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
-site	src/game/sound.cpp	994	widen	param	live	k10000At	const float*	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
-site	src/game/sound.cpp	996	long	ul	live	unsigned long	-	Method<ComValue>(buffer, kSetVolume)(buffer, static_cast<unsigned long>(static_cast<std::uint64_t>(level)));
-site	src/game/sound.cpp	1004	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Stop track %u from %p", Frame_Counter, (unsigned)Music_Track, __builtin_return_address(0));
-site	src/game/sound.cpp	1062	width_if	logic	live	Music_Pump	#if defined(__i386__)	#if defined(__i386__)
-site	src/game/sound.cpp	1063	handle_array	slot_i686	live	Music_Events	g.msg_wait	const unsigned signalled = g.msg_wait(2, Music_Events, 0, 0, 0xFF);
-site	src/game/sound.cpp	1070	handle_array	native	live	events	g.msg_wait	const unsigned signalled = g.msg_wait(2, events, 0, 0, 0xFF);
-site	src/game/sound.cpp	1112	long	ul	live	unsigned long	-	unsigned long play = 0, cursor_w = 0;
-site	src/game/sound.cpp	1397	long	l	live	long	-	long __stdcall RtPosition(void*, unsigned long* play, unsigned long* cursor_w) {
-site	src/game/sound.cpp	1397	long	ul	live	unsigned long	-	long __stdcall RtPosition(void*, unsigned long* play, unsigned long* cursor_w) {
-site	src/game/sound.cpp	1397	long	ul	live	unsigned long	-	long __stdcall RtPosition(void*, unsigned long* play, unsigned long* cursor_w) {
-site	src/game/sound.cpp	1402	long	l	live	long	-	long __stdcall RtUnexpected(void*) { bof3::Fatal(" "); }
-site	src/game/sound.cpp	1547	narrow_call	object_ours	live	&sound::g_fade_per_frame	Address	bof3::PatchBytes(" ", Address(&sound::g_fade_per_frame), was, is, 4);
-site	src/game/sound.cpp	1611	widen	img_place	live	::bof3::Img(kLoopingName.v)	const char*	g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
-site	src/game/sound.cpp	1612	widen	img_place	live	::bof3::Img(kOnceName.v)	const char*	g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
-site	src/game/sound.cpp	1640	narrow_call	image	live	Sound_Banks	Address	std::uint32_t BankRecord(unsigned b) { return Address(Sound_Banks) + b * kBankBytes; }
-site	src/game/sound.cpp	1683	long	ul	live	unsigned long	-	unsigned long frequency = 0, position = 0, write = 0;
-site	src/game/sound.cpp	1693	fmt_place	word	live	buffer	%08X	bof3::Log("quicksave SOUND: channel %u names buffer %08X, which no bank's entry holds: silent after a restore",
-site	src/game/sound.cpp	1715	long	ul	live	unsigned long	-	unsigned long position = 0, write = 0;
-site	src/game/sound.cpp	1839	narrow_call	image	live	Music_Events	Address	const std::uint32_t scratch_at = Address(Snd_BufferDesc), scratch_end = Address(Music_Events);
-site	src/game/sound.cpp	1839	narrow_call	image	live	Snd_BufferDesc	Address	const std::uint32_t scratch_at = Address(Snd_BufferDesc), scratch_end = Address(Music_Events);
-site	src/game/sound.cpp	1860	fmt_place	word	live	Bank(record)->data	%08X	bof3::Fatal("quicksave SOUND: bank %u's data word is %08X in the span, %08X in the record", b + 1,
-site	src/game/sound.cpp	1860	fmt_place	word	live	old	%08X	bof3::Fatal("quicksave SOUND: bank %u's data word is %08X in the span, %08X in the record", b + 1,
-site	src/game/sound.cpp	1867	narrow_call	image_local	live	block	Address	Bank(record)->data = Address(block);
-site	src/game/sound.cpp	1872	fmt_place	word	live	old	%08X	bof3::Fatal("quicksave SOUND: bank %u entry %u's sample %08X lies outside its data %08X+%u", b + 1, e,
-site	src/game/sound.cpp	1872	fmt_place	word	live	sample	%08X	bof3::Fatal("quicksave SOUND: bank %u entry %u's sample %08X lies outside its data %08X+%u", b + 1, e,
-site	src/game/sound.cpp	1874	narrow_call	image_local	live	block	Address	const std::uint32_t moved = Address(block) + (sample - old);
-site	src/game/sound.cpp	1876	narrow_call	object_ours	live	g_snap.from_wave(At(moved))	Address	SetDword(EntryAt(b, e) + 4, Address(g_snap.from_wave(At(moved))));
-site	src/game/sound.cpp	1908	narrow_call	image_local	live	block	Address	SaveMenu_StreamData = Address(block);
-site	src/game/sound.cpp	1932	fmt_place	pointer	live	Music_File.Native()	%p	bof3::Fatal("quicksave SOUND: track %d read again is not the take's (file %p, %d bytes looping %d, track %d; "
-site	src/game/sound.cpp	1957	narrow_call	image	live	&Music_Volume	Address	SetVolumeBits(Dword(Address(&Music_Volume)));
-site	src/game/sound.cpp	2024	narrow_call	object_ours	live	&sound::g_play_refuses_none	Address	bof3::PatchBytes(" ", Address(&sound::g_play_refuses_none), &was, &is, 1);
-site	src/game/sound.cpp	2060	long	ul	live	unsigned long	-	unsigned long frequency, position, play_flags;
-site	src/game/sound.cpp	2069	ptr_overlay	image_local	live	p	FakeBuf	FakeBuf* Self(void* p) { return static_cast<FakeBuf*>(p); }
-site	src/game/sound.cpp	2070	long	l	live	long	-	long __stdcall FkUnexpected(void*) { bof3::Fatal(" "); }
-site	src/game/sound.cpp	2071	long	l	live	long	-	long __stdcall FkRelease(void* p) { return ++Self(p)->releases, 0; }
-site	src/game/sound.cpp	2072	long	l	live	long	-	long __stdcall FkPosition(void* p, unsigned long* play, unsigned long* write) {
-site	src/game/sound.cpp	2072	long	ul	live	unsigned long	-	long __stdcall FkPosition(void* p, unsigned long* play, unsigned long* write) {
-site	src/game/sound.cpp	2072	long	ul	live	unsigned long	-	long __stdcall FkPosition(void* p, unsigned long* play, unsigned long* write) {
-site	src/game/sound.cpp	2077	long	l	live	long	-	long __stdcall FkFrequency(void* p, unsigned long* f) { return *f = Self(p)->frequency, 0; }
-site	src/game/sound.cpp	2077	long	ul	live	unsigned long	-	long __stdcall FkFrequency(void* p, unsigned long* f) { return *f = Self(p)->frequency, 0; }
-site	src/game/sound.cpp	2078	long	l	live	long	-	long __stdcall FkStatus(void* p, unsigned long* s) { return *s = Self(p)->playing ? 1 : 0, 0; }
-site	src/game/sound.cpp	2078	long	ul	live	unsigned long	-	long __stdcall FkStatus(void* p, unsigned long* s) { return *s = Self(p)->playing ? 1 : 0, 0; }
-site	src/game/sound.cpp	2079	long	l	live	long	-	long __stdcall FkPlay(void* p, unsigned long, unsigned long, unsigned long flags) {
-site	src/game/sound.cpp	2079	long	ul	live	unsigned long	-	long __stdcall FkPlay(void* p, unsigned long, unsigned long, unsigned long flags) {
-site	src/game/sound.cpp	2079	long	ul	live	unsigned long	-	long __stdcall FkPlay(void* p, unsigned long, unsigned long, unsigned long flags) {
-site	src/game/sound.cpp	2079	long	ul	live	unsigned long	-	long __stdcall FkPlay(void* p, unsigned long, unsigned long, unsigned long flags) {
-site	src/game/sound.cpp	2085	long	l	live	long	-	long __stdcall FkSetPosition(void* p, unsigned long v) { return Self(p)->position = v, 0; }
-site	src/game/sound.cpp	2085	long	ul	live	unsigned long	-	long __stdcall FkSetPosition(void* p, unsigned long v) { return Self(p)->position = v, 0; }
-site	src/game/sound.cpp	2086	long	l	live	long	-	long __stdcall FkSetFrequency(void* p, unsigned long v) { return Self(p)->frequency = v, 0; }
-site	src/game/sound.cpp	2086	long	ul	live	unsigned long	-	long __stdcall FkSetFrequency(void* p, unsigned long v) { return Self(p)->frequency = v, 0; }
-site	src/game/sound.cpp	2087	long	l	live	long	-	long __stdcall FkSetVolume(void*, unsigned long) { return 0; }
-site	src/game/sound.cpp	2087	long	ul	live	unsigned long	-	long __stdcall FkSetVolume(void*, unsigned long) { return 0; }
-site	src/game/sound.cpp	2088	long	l	live	long	-	long __stdcall FkStop(void* p) { return Self(p)->playing = false, 0; }
-site	src/game/sound.cpp	2331	ptr_overlay	image_local	live	static_cast<void*>(At(Dword(EntryAt(b, e) + 4)))	FakeBuf	FakeBuf* EntryBuffer(unsigned b, unsigned e) { return static_cast<FakeBuf*>(static_cast<void*>(At(Dword(EntryAt(b, e) + 4)))); }
-site	src/game/sound.cpp	2335	ptr_overlay	image_local	live	FakeCreate(wave)	FakeBuf	FakeBuf* const f = static_cast<FakeBuf*>(FakeCreate(wave));
-site	src/game/sound.cpp	2349	narrow_call	image_local	live	loop_a	Address	Sound_Channels[5] = Address(loop_a);
-site	src/game/sound.cpp	2350	narrow_call	image_local	live	loop_b	Address	Sound_Channels[9] = Address(loop_b);
-site	src/game/sound.cpp	2351	narrow_call	image_local	live	quiet	Address	Sound_Channels[7] = Address(quiet);
-site	src/game/sound.cpp	2360	narrow_call	crt	live	stream	Address	SaveMenu_StreamData = Address(stream);
-site	src/game/sound.cpp	2362	ptr_overlay	crt	live	FakeCreate(static_cast<const unsigned char*>(stream))	FakeBuf	FakeBuf* const voice_buffer = static_cast<FakeBuf*>(FakeCreate(static_cast<const unsigned char*>(stream)));
-site	src/game/sound.cpp	2414	narrow_call	image_local	live	a	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
-site	src/game/sound.cpp	2414	narrow_call	image_local	live	b	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
-site	src/game/sound.cpp	2414	narrow_call	image_local	live	q	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
-site	src/game/sound.cpp	2422	ptr_overlay	image	live	SndStream_Buffer	FakeBuf	FakeBuf* const v = static_cast<FakeBuf*>(SndStream_Buffer);
-site	src/game/sound.cpp	2469	ptr_overlay	image_local	live	FakeCreate(nullptr)	FakeBuf	FakeBuf* const old = static_cast<FakeBuf*>(FakeCreate(nullptr));
+site	src/game/sound.cpp	48	uintptr	-	live	std::uintptr_t	-	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/sound.cpp	48	widen	param	live	address	unsigned char*	unsigned char* At(std::uint32_t address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
+site	src/game/sound.cpp	56	low32	helper_def	live	p	Low32	std::uint32_t Address(const volatile void* p) { return Low32(p); }
+site	src/game/sound.cpp	63	uintptr	-	live	std::uintptr_t	-	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
+site	src/game/sound.cpp	63	widen	param	live	word	Fn [fn]	return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(word));
+site	src/game/sound.cpp	139	long	ul	live	unsigned long	-	bool Playing(void* buffer, unsigned long status) {
+site	src/game/sound.cpp	165	narrow_call	image	live	Sound_Banks	Address	std::uint32_t cue = Address(Sound_Banks) + base + (cue_id & 0xFF) * 16;
+site	src/game/sound.cpp	183	narrow_call	image	live	Sound_Banks	Address	const std::uint32_t entry = Address(Sound_Banks) + base + kVoices + voice * 8;
+site	src/game/sound.cpp	214	widen	img_place	live	::bof3::Img(kLoopingName.v)	const char*	g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
+site	src/game/sound.cpp	215	widen	img_place	live	::bof3::Img(kOnceName.v)	const char*	g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
+site	src/game/sound.cpp	289	fmt_place	pointer	live	Music_LoadedTrack	%p	MUSIC_LOG("Music_Play(%u, %d) track %u loaded %d from %p", Frame_Counter, track, frames, (unsigned)Music_Track, Music_LoadedTrack, __builtin_return_address(0));
+site	src/game/sound.cpp	296	narrow_call	image	live	&Music_Volume	Address	SetDword(Address(&Music_Volume), 0);
+site	src/game/sound.cpp	337	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOutStop(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/sound.cpp	341	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
+site	src/game/sound.cpp	359	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeIn(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/sound.cpp	361	asm	x87	live	flds %[full]	fidivl flds fstps fsubs	__asm__ volatile(
+site	src/game/sound.cpp	367	uintptr	-	live	std::uintptr_t	-	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
+site	src/game/sound.cpp	367	widen	param	live	k127At	const float*	: [full] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] " "(Music_Volume), [n] " "(frames)
+site	src/game/sound.cpp	377	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_FadeOut(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/sound.cpp	380	asm	x87	live	fildll %[n]	fchs fdivrs fildll fstps	__asm__ volatile(
+site	src/game/sound.cpp	414	narrow_call	image	live	&Music_Volume	Address	SetVolumeBits(Dword(Address(&Music_Volume)));
+site	src/game/sound.cpp	482	asm	x87	live	flds %[step]	fadds flds fstps	__asm__ volatile(
+site	src/game/sound.cpp	489	narrow_call	image	live	&Music_Volume	Address	SetVolumeBits(Dword(Address(&Music_Volume)));
+site	src/game/sound.cpp	515	narrow_call	image	live	Snd_WaveFormat	Address	const std::uint32_t format = Address(Snd_WaveFormat);
+site	src/game/sound.cpp	516	narrow_call	image_local	live	wave	Address	for (unsigned i = 0; i < 16; i += 4) SetDword(format + i, Dword(Address(wave) + 0x14 + i));
+site	src/game/sound.cpp	520	narrow_call	image	live	Snd_BufferDesc	Address	const std::uint32_t desc = Address(Snd_BufferDesc);
+site	src/game/sound.cpp	540	narrow_call	image_local	live	wave	Address	const std::uint32_t base = Address(wave);
+site	src/game/sound.cpp	561	long	l	live	long	-	extern " " long __cdecl SndBuf_Write(void* buffer, const void* src, unsigned offset, unsigned size) {
+site	src/game/sound.cpp	563	long	ul	live	unsigned long	-	unsigned long first_bytes = Address(buffer);
+site	src/game/sound.cpp	563	narrow_call	image_local	live	buffer	Address	unsigned long first_bytes = Address(buffer);
+site	src/game/sound.cpp	564	uintptr	-	live	std::uintptr_t	-	void* second = reinterpret_cast<void*>(static_cast<std::uintptr_t>(offset));
+site	src/game/sound.cpp	564	widen	param	live	offset	void*	void* second = reinterpret_cast<void*>(static_cast<std::uintptr_t>(offset));
+site	src/game/sound.cpp	565	long	ul	live	unsigned long	-	unsigned long second_bytes = size;
+site	src/game/sound.cpp	566	long	l	live	long	-	long result = Method<ComLock>(buffer, kLock)(buffer, offset, size, &first, &first_bytes, &second, &second_bytes, 0);
+site	src/game/sound.cpp	587	long	ul	live	unsigned long	-	const unsigned long loops = (sample & 0x80000000u) ? 1 : 0;
+site	src/game/sound.cpp	601	narrow_call	image_local	live	buffer	Address	if (Playing(buffer, Address(buffer))) Method<ComCall>(buffer, kStop)(buffer);
+site	src/game/sound.cpp	607	narrow_call	image_local	live	buffer	Address	if (Playing(buffer, Address(buffer))) Method<ComCall>(buffer, kStop)(buffer);
+site	src/game/sound.cpp	645	narrow_call	image	live	Music_Decoder	Address	decoder = Address(Music_Decoder);
+site	src/game/sound.cpp	656	narrow_call	image	live	Music_Decoder	Address	std::uint32_t decoder = Address(Music_Decoder);
+site	src/game/sound.cpp	696	narrow_call	image	live	Music_Decoder	Address	decoder = Address(Music_Decoder);
+site	src/game/sound.cpp	823	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/sound.cpp	823	fmt_place	pointer	live	Frame_Counter	%p	MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/sound.cpp	885	widen	img_place	live	::bof3::Img(kMemoryName.v)	const char*	g.sprintf(name, reinterpret_cast<const char*>(::bof3::Img(kMemoryName.v)), size, file);
+site	src/game/sound.cpp	895	long	l	live	long	-	extern " " long __cdecl Music_SetNotify(void* buffer) {
+site	src/game/sound.cpp	902	long	ul	live	unsigned long	-	struct Position { unsigned long offset; void* event; };
+site	src/game/sound.cpp	915	narrow_call	image	live	Snd_WaveFormat	Address	const std::uint32_t format = Address(Snd_WaveFormat);
+site	src/game/sound.cpp	923	narrow_call	image	live	Snd_BufferDesc	Address	const std::uint32_t desc = Address(Snd_BufferDesc);
+site	src/game/sound.cpp	950	narrow_call	image	live	Music_Decoder	Address	std::uint32_t decoder = Address(Music_Decoder);
+site	src/game/sound.cpp	958	narrow_call	image_local	live	dst	Address	const int result = g.mp3_decode(At(decoder), At(filled + Address(dst)));
+site	src/game/sound.cpp	959	narrow_call	image	live	Music_Decoder	Address	decoder = Address(Music_Decoder);
+site	src/game/sound.cpp	963	narrow_call	image_local	live	dst	Address	std::memset(At(Address(dst) + filled), 0, static_cast<std::uint32_t>(size) - filled);
+site	src/game/sound.cpp	968	narrow_call	image	live	Music_Decoder	Address	decoder = Address(Music_Decoder);
+site	src/game/sound.cpp	988	long	ul	live	unsigned long	-	Method<ComValue>(buffer, kSetVolume)(buffer, static_cast<unsigned long>(music_seq::Level(volume)));
+site	src/game/sound.cpp	993	asm	x87	live	flds %[volume]	fistpll fldcw flds fmuls fnstcw fsubs movw orb	__asm__ volatile(
+site	src/game/sound.cpp	1006	uintptr	-	live	std::uintptr_t	-	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
+site	src/game/sound.cpp	1006	widen	param	live	kInverse127At	const float*	: [volume] " "(volume), [inverse] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
+site	src/game/sound.cpp	1007	uintptr	-	live	std::uintptr_t	-	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
+site	src/game/sound.cpp	1007	widen	param	live	k10000At	const float*	[scale] " "(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
+site	src/game/sound.cpp	1009	long	ul	live	unsigned long	-	Method<ComValue>(buffer, kSetVolume)(buffer, static_cast<unsigned long>(static_cast<std::uint64_t>(level)));
+site	src/game/sound.cpp	1017	fmt_place	pointer	live	(unsigned)Music_Track	%p	MUSIC_LOG("Music_Stop track %u from %p", Frame_Counter, (unsigned)Music_Track, __builtin_return_address(0));
+site	src/game/sound.cpp	1075	width_if	logic	live	Music_Pump	#if defined(__i386__)	#if defined(__i386__)
+site	src/game/sound.cpp	1076	handle_array	slot_i686	live	Music_Events	g.msg_wait	const unsigned signalled = g.msg_wait(2, Music_Events, 0, 0, 0xFF);
+site	src/game/sound.cpp	1083	handle_array	native	live	events	g.msg_wait	const unsigned signalled = g.msg_wait(2, events, 0, 0, 0xFF);
+site	src/game/sound.cpp	1125	long	ul	live	unsigned long	-	unsigned long play = 0, cursor_w = 0;
+site	src/game/sound.cpp	1440	long	l	live	long	-	long __stdcall RtPosition(void*, unsigned long* play, unsigned long* cursor_w) {
+site	src/game/sound.cpp	1440	long	ul	live	unsigned long	-	long __stdcall RtPosition(void*, unsigned long* play, unsigned long* cursor_w) {
+site	src/game/sound.cpp	1440	long	ul	live	unsigned long	-	long __stdcall RtPosition(void*, unsigned long* play, unsigned long* cursor_w) {
+site	src/game/sound.cpp	1445	long	l	live	long	-	long __stdcall RtUnexpected(void*) { bof3::Fatal(" "); }
+site	src/game/sound.cpp	1590	narrow_call	object_ours	live	&sound::g_fade_per_frame	Address	bof3::PatchBytes(" ", Address(&sound::g_fade_per_frame), was, is, 4);
+site	src/game/sound.cpp	1657	widen	img_place	live	::bof3::Img(kLoopingName.v)	const char*	g.sprintf(looping, reinterpret_cast<const char*>(::bof3::Img(kLoopingName.v)), track);
+site	src/game/sound.cpp	1658	widen	img_place	live	::bof3::Img(kOnceName.v)	const char*	g.sprintf(once, reinterpret_cast<const char*>(::bof3::Img(kOnceName.v)), track);
+site	src/game/sound.cpp	1686	narrow_call	image	live	Sound_Banks	Address	std::uint32_t BankRecord(unsigned b) { return Address(Sound_Banks) + b * kBankBytes; }
+site	src/game/sound.cpp	1729	long	ul	live	unsigned long	-	unsigned long frequency = 0, position = 0, write = 0;
+site	src/game/sound.cpp	1739	fmt_place	word	live	buffer	%08X	bof3::Log("quicksave SOUND: channel %u names buffer %08X, which no bank's entry holds: silent after a restore",
+site	src/game/sound.cpp	1761	long	ul	live	unsigned long	-	unsigned long position = 0, write = 0;
+site	src/game/sound.cpp	1885	narrow_call	image	live	Music_Events	Address	const std::uint32_t scratch_at = Address(Snd_BufferDesc), scratch_end = Address(Music_Events);
+site	src/game/sound.cpp	1885	narrow_call	image	live	Snd_BufferDesc	Address	const std::uint32_t scratch_at = Address(Snd_BufferDesc), scratch_end = Address(Music_Events);
+site	src/game/sound.cpp	1906	fmt_place	word	live	Bank(record)->data	%08X	bof3::Fatal("quicksave SOUND: bank %u's data word is %08X in the span, %08X in the record", b + 1,
+site	src/game/sound.cpp	1906	fmt_place	word	live	old	%08X	bof3::Fatal("quicksave SOUND: bank %u's data word is %08X in the span, %08X in the record", b + 1,
+site	src/game/sound.cpp	1913	narrow_call	image_local	live	block	Address	Bank(record)->data = Address(block);
+site	src/game/sound.cpp	1918	fmt_place	word	live	old	%08X	bof3::Fatal("quicksave SOUND: bank %u entry %u's sample %08X lies outside its data %08X+%u", b + 1, e,
+site	src/game/sound.cpp	1918	fmt_place	word	live	sample	%08X	bof3::Fatal("quicksave SOUND: bank %u entry %u's sample %08X lies outside its data %08X+%u", b + 1, e,
+site	src/game/sound.cpp	1920	narrow_call	image_local	live	block	Address	const std::uint32_t moved = Address(block) + (sample - old);
+site	src/game/sound.cpp	1922	narrow_call	object_ours	live	g_snap.from_wave(At(moved))	Address	SetDword(EntryAt(b, e) + 4, Address(g_snap.from_wave(At(moved))));
+site	src/game/sound.cpp	1955	narrow_call	image_local	live	block	Address	SaveMenu_StreamData = Address(block);
+site	src/game/sound.cpp	1971	fmt_place	pointer	live	Music_File.Native()	%p	bof3::Fatal("quicksave SOUND: track %d read again is not the take's (file %p, %d bytes looping %d, track %d; "
+site	src/game/sound.cpp	2000	narrow_call	image	live	&Music_Volume	Address	SetVolumeBits(Dword(Address(&Music_Volume)));
+site	src/game/sound.cpp	2085	narrow_call	object_ours	live	&sound::g_play_refuses_none	Address	bof3::PatchBytes(" ", Address(&sound::g_play_refuses_none), &was, &is, 1);
+site	src/game/sound.cpp	2121	long	ul	live	unsigned long	-	unsigned long frequency, position, play_flags;
+site	src/game/sound.cpp	2130	ptr_overlay	image_local	live	p	FakeBuf	FakeBuf* Self(void* p) { return static_cast<FakeBuf*>(p); }
+site	src/game/sound.cpp	2131	long	l	live	long	-	long __stdcall FkUnexpected(void*) { bof3::Fatal(" "); }
+site	src/game/sound.cpp	2132	long	l	live	long	-	long __stdcall FkRelease(void* p) { return ++Self(p)->releases, 0; }
+site	src/game/sound.cpp	2133	long	l	live	long	-	long __stdcall FkPosition(void* p, unsigned long* play, unsigned long* write) {
+site	src/game/sound.cpp	2133	long	ul	live	unsigned long	-	long __stdcall FkPosition(void* p, unsigned long* play, unsigned long* write) {
+site	src/game/sound.cpp	2133	long	ul	live	unsigned long	-	long __stdcall FkPosition(void* p, unsigned long* play, unsigned long* write) {
+site	src/game/sound.cpp	2138	long	l	live	long	-	long __stdcall FkFrequency(void* p, unsigned long* f) { return *f = Self(p)->frequency, 0; }
+site	src/game/sound.cpp	2138	long	ul	live	unsigned long	-	long __stdcall FkFrequency(void* p, unsigned long* f) { return *f = Self(p)->frequency, 0; }
+site	src/game/sound.cpp	2139	long	l	live	long	-	long __stdcall FkStatus(void* p, unsigned long* s) { return *s = Self(p)->playing ? 1 : 0, 0; }
+site	src/game/sound.cpp	2139	long	ul	live	unsigned long	-	long __stdcall FkStatus(void* p, unsigned long* s) { return *s = Self(p)->playing ? 1 : 0, 0; }
+site	src/game/sound.cpp	2140	long	l	live	long	-	long __stdcall FkPlay(void* p, unsigned long, unsigned long, unsigned long flags) {
+site	src/game/sound.cpp	2140	long	ul	live	unsigned long	-	long __stdcall FkPlay(void* p, unsigned long, unsigned long, unsigned long flags) {
+site	src/game/sound.cpp	2140	long	ul	live	unsigned long	-	long __stdcall FkPlay(void* p, unsigned long, unsigned long, unsigned long flags) {
+site	src/game/sound.cpp	2140	long	ul	live	unsigned long	-	long __stdcall FkPlay(void* p, unsigned long, unsigned long, unsigned long flags) {
+site	src/game/sound.cpp	2146	long	l	live	long	-	long __stdcall FkSetPosition(void* p, unsigned long v) { return Self(p)->position = v, 0; }
+site	src/game/sound.cpp	2146	long	ul	live	unsigned long	-	long __stdcall FkSetPosition(void* p, unsigned long v) { return Self(p)->position = v, 0; }
+site	src/game/sound.cpp	2147	long	l	live	long	-	long __stdcall FkSetFrequency(void* p, unsigned long v) { return Self(p)->frequency = v, 0; }
+site	src/game/sound.cpp	2147	long	ul	live	unsigned long	-	long __stdcall FkSetFrequency(void* p, unsigned long v) { return Self(p)->frequency = v, 0; }
+site	src/game/sound.cpp	2148	long	l	live	long	-	long __stdcall FkSetVolume(void*, unsigned long) { return 0; }
+site	src/game/sound.cpp	2148	long	ul	live	unsigned long	-	long __stdcall FkSetVolume(void*, unsigned long) { return 0; }
+site	src/game/sound.cpp	2149	long	l	live	long	-	long __stdcall FkStop(void* p) { return Self(p)->playing = false, 0; }
+site	src/game/sound.cpp	2397	ptr_overlay	image_local	live	static_cast<void*>(At(Dword(EntryAt(b, e) + 4)))	FakeBuf	FakeBuf* EntryBuffer(unsigned b, unsigned e) { return static_cast<FakeBuf*>(static_cast<void*>(At(Dword(EntryAt(b, e) + 4)))); }
+site	src/game/sound.cpp	2404	ptr_overlay	image_local	live	FakeCreate(wave)	FakeBuf	FakeBuf* const f = static_cast<FakeBuf*>(FakeCreate(wave));
+site	src/game/sound.cpp	2418	narrow_call	image_local	live	loop_a	Address	Sound_Channels[5] = Address(loop_a);
+site	src/game/sound.cpp	2419	narrow_call	image_local	live	loop_b	Address	Sound_Channels[9] = Address(loop_b);
+site	src/game/sound.cpp	2420	narrow_call	image_local	live	quiet	Address	Sound_Channels[7] = Address(quiet);
+site	src/game/sound.cpp	2429	narrow_call	crt	live	stream	Address	SaveMenu_StreamData = Address(stream);
+site	src/game/sound.cpp	2431	ptr_overlay	crt	live	FakeCreate(static_cast<const unsigned char*>(stream))	FakeBuf	FakeBuf* const voice_buffer = static_cast<FakeBuf*>(FakeCreate(static_cast<const unsigned char*>(stream)));
+site	src/game/sound.cpp	2483	narrow_call	image_local	live	a	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
+site	src/game/sound.cpp	2483	narrow_call	image_local	live	b	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
+site	src/game/sound.cpp	2483	narrow_call	image_local	live	q	Address	bool channels = Sound_Channels[5] == Address(a) && Sound_Channels[9] == Address(b) && Sound_Channels[7] == Address(q);
+site	src/game/sound.cpp	2491	ptr_overlay	image	live	SndStream_Buffer	FakeBuf	FakeBuf* const v = static_cast<FakeBuf*>(SndStream_Buffer);
+site	src/game/sound.cpp	2534	ptr_overlay	image_local	live	FakeCreate(nullptr)	FakeBuf	FakeBuf* const old = static_cast<FakeBuf*>(FakeCreate(nullptr));
+site	src/game/sound.cpp	2554	narrow_call	crt	live	stream	Address	SaveMenu_StreamData = Address(stream);
+site	src/game/sound.cpp	2556	ptr_overlay	crt	live	FakeCreate(static_cast<const unsigned char*>(stream))	FakeBuf	FakeBuf* const voice_buffer = static_cast<FakeBuf*>(FakeCreate(static_cast<const unsigned char*>(stream)));
+site	src/game/sound.cpp	2601	ptr_overlay	image	live	SndStream_Buffer	FakeBuf	FakeBuf* const v = static_cast<FakeBuf*>(SndStream_Buffer);
 site	src/game/sound_callees.h	56	long	l	live	long	-	constexpr long kBufferLost = static_cast<long>(0x88780096u);
 site	src/game/sound_callees.h	56	long	l	live	long	-	constexpr long kBufferLost = static_cast<long>(0x88780096u);
 site	src/game/sound_callees.h	58	long	l	live	long	-	using ComCall = long (__stdcall*)(void*);
@@ -14737,9 +14746,9 @@ file	src/audio/mp3.cpp	live	uintptr	-	7
 file	src/audio/mp3.cpp	live	widen	param	3
 file	src/audio/mp3.cpp	live	width_if	logic	1
 file	src/audio/seq.cpp	live	long	l	1
-file	src/audio/sound_sdl.cpp	live	fmt_place	pointer	3
+file	src/audio/sound_sdl.cpp	live	fmt_place	pointer	5
 file	src/audio/sound_sdl.cpp	live	fmt_place	word	9
-file	src/audio/sound_sdl.cpp	live	long	l	70
+file	src/audio/sound_sdl.cpp	live	long	l	72
 file	src/audio/sound_sdl.cpp	live	long	ul	7
 file	src/audio/sound_sdl.cpp	live	low32	func_ours	1
 file	src/audio/sound_sdl.cpp	live	low32	object_ours	1
@@ -15232,6 +15241,8 @@ file	src/game/battle_fx_tasks_fuzz.cpp	fuzz	narrow_call	image	6
 file	src/game/battle_fx_tasks_fuzz.cpp	fuzz	narrow_call	image_local	9
 file	src/game/battle_fx_tasks_fuzz.cpp	fuzz	uintptr	-	1
 file	src/game/battle_items.cpp	live	asm	other	1
+file	src/game/battle_items.cpp	live	fmt_place	narrowed	1
+file	src/game/battle_items.cpp	live	fmt_place	pointer	1
 file	src/game/battle_items.cpp	live	long	l	23
 file	src/game/battle_items.cpp	live	long	ul	12
 file	src/game/battle_items.cpp	live	low32	image_local	1
@@ -17900,12 +17911,12 @@ file	src/game/sound.cpp	live	handle_array	slot_i686	1
 file	src/game/sound.cpp	live	long	l	15
 file	src/game/sound.cpp	live	long	ul	23
 file	src/game/sound.cpp	live	low32	helper_def	1
-file	src/game/sound.cpp	live	narrow_call	crt	1
+file	src/game/sound.cpp	live	narrow_call	crt	2
 file	src/game/sound.cpp	live	narrow_call	image	19
 file	src/game/sound.cpp	live	narrow_call	image_local	16
 file	src/game/sound.cpp	live	narrow_call	object_ours	3
-file	src/game/sound.cpp	live	ptr_overlay	crt	1
-file	src/game/sound.cpp	live	ptr_overlay	image	1
+file	src/game/sound.cpp	live	ptr_overlay	crt	2
+file	src/game/sound.cpp	live	ptr_overlay	image	2
 file	src/game/sound.cpp	live	ptr_overlay	image_local	4
 file	src/game/sound.cpp	live	uintptr	-	6
 file	src/game/sound.cpp	live	widen	img_place	5
@@ -18380,8 +18391,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	14726
-#count sites_live	10509
+#count sites	14735
+#count sites_live	10518
 #count sites_fuzz	4217
 #count fuzz_files	250
 #count narrow	356
@@ -18416,13 +18427,13 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count narrow_windows	4
 #count narrow_windows_live	2
 #count narrow_windows_live_files	2
-#count narrow_call	3289
-#count narrow_call_live	1460
+#count narrow_call	3290
+#count narrow_call_live	1461
 #count narrow_call_live_files	164
 #count narrow_call_fuzz	1829
 #count narrow_call_fuzz_files	234
-#count narrow_call_crt	1
-#count narrow_call_crt_live	1
+#count narrow_call_crt	2
+#count narrow_call_crt_live	2
 #count narrow_call_crt_live_files	1
 #count narrow_call_func_ours	236
 #count narrow_call_func_ours_live	41
@@ -18468,8 +18479,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count widen_word_read	192
 #count widen_word_read_live	183
 #count widen_word_read_live_files	143
-#count long	6979
-#count long_live	6234
+#count long	6981
+#count long_live	6236
 #count long_live_files	328
 #count long_fuzz	745
 #count long_fuzz_files	79
@@ -18482,8 +18493,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count long_ctype:unsigned long *	1
 #count long_ctype:unsigned long *_live	1
 #count long_ctype:unsigned long *_live_files	1
-#count long_l	3710
-#count long_l_live	3126
+#count long_l	3712
+#count long_l_live	3128
 #count long_l_live_files	264
 #count long_ul	1481
 #count long_ul_live	1320
@@ -18564,17 +18575,17 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count uintptr_-	1490
 #count uintptr_-_live	824
 #count uintptr_-_live_files	309
-#count fmt_place	464
-#count fmt_place_live	394
-#count fmt_place_live_files	55
+#count fmt_place	468
+#count fmt_place_live	398
+#count fmt_place_live_files	56
 #count fmt_place_fuzz	70
 #count fmt_place_fuzz_files	35
-#count fmt_place_narrowed	23
-#count fmt_place_narrowed_live	16
-#count fmt_place_narrowed_live_files	6
-#count fmt_place_pointer	104
-#count fmt_place_pointer_live	89
-#count fmt_place_pointer_live_files	27
+#count fmt_place_narrowed	24
+#count fmt_place_narrowed_live	17
+#count fmt_place_narrowed_live_files	7
+#count fmt_place_pointer	107
+#count fmt_place_pointer_live	92
+#count fmt_place_pointer_live_files	28
 #count fmt_place_word	337
 #count fmt_place_word_live	289
 #count fmt_place_word_live_files	47
@@ -18664,16 +18675,16 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count handle_array_slot_i686	1
 #count handle_array_slot_i686_live	1
 #count handle_array_slot_i686_live_files	1
-#count ptr_overlay	38
-#count ptr_overlay_live	38
+#count ptr_overlay	40
+#count ptr_overlay_live	40
 #count ptr_overlay_live_files	10
 #count ptr_overlay_fuzz	0
 #count ptr_overlay_fuzz_files	0
-#count ptr_overlay_crt	1
-#count ptr_overlay_crt_live	1
+#count ptr_overlay_crt	2
+#count ptr_overlay_crt_live	2
 #count ptr_overlay_crt_live_files	1
-#count ptr_overlay_image	3
-#count ptr_overlay_image_live	3
+#count ptr_overlay_image	4
+#count ptr_overlay_image_live	4
 #count ptr_overlay_image_live_files	2
 #count ptr_overlay_image_local	5
 #count ptr_overlay_image_local_live	5
@@ -18697,7 +18708,7 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count width_if_logic_live_files	14
 #count asm_live_x87_only_files	32
 #count widen_live_fnptr	238
-#count long_src	5191
+#count long_src	5193
 #count long_src_game	4688
 #count long_src_game_ul	1287
 #count long_ctype	1788
