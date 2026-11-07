@@ -305,8 +305,10 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    exe; the stackwatch's deepest slice-0 write `0x5628` of `0x8000`, so `kSlice64` holds. **One defect found
    and fixed** (in #183, `0bdc1f3e`): `Music_Pump` handed two 32-bit slots to `MsgWaitForMultipleObjects` as
    a native handle array, so 64-bit music stopped after its first quarter second - and no hash saw it.
-   **Owed the owner, before or beside stage D:** a listen to DIV-0201's SDL3 sound output on the 32-bit default
-   (its verification lists what to hear), a listen to the 64-bit build's music, the FMVs' picture, the
+   **The owner approved DIV-0201's music by ear on 2026-11-07** (the 32-bit default in `game\`, SDL3 since
+   PR #183; the ledger entry's verification). **Still owed the owner, before or beside stage D:** the rest of
+   DIV-0201's list if they want it (a battle's voices, pan and fades, the quicksave across a sound, the A/B with
+   `off=SoundSdl`), a listen to the 64-bit build's music, the FMVs' picture, the
    Sources page opened in the 64-bit launcher (the builds in `proof\L64f` predate `main`'s merge into stage C:
    build fresh from `main` for these). No file was generated for the DIV-0201 listen: it is play, with
    `off=SoundSdl` beside it for the A/B; the `tools/wav_dump.py` pair of one route under both switches is a

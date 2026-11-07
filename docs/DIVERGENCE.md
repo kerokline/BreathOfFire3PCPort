@@ -14685,8 +14685,8 @@ designed in rather than bolted on.
   rather than a stream per buffer, because the play-cursor semantics
   (position in bytes, notifications at positions, `GetCurrentPosition` while
   playing) are ours to compute exactly; SDL3's per-stream resampler would
-  hide the cursor. Not heard by the owner: the listen is theirs (the
-  verification below says what to listen for).
+  hide the cursor. The owner approved the music by ear on 2026-11-07
+  (verification below); the rest of the listen is theirs.
 - **Also in the PSX version?** Not applicable: the PlayStation's SPU plays
   its voices and the port's DirectSound layer is the port's own; the new
   behaviour is the port's sound through another output.
@@ -14704,7 +14704,13 @@ designed in rather than bolted on.
   closed once; the hosted suite `'*'` with the switch on and with
   `BOF3X_OFF=SoundSdl`, and the exe host's self-test, exit 0; the i686 gate
   `0 differ` on every object but the file added and the WAV dump's.
-  **For the owner's ear** (nobody has listened): a music track through its
+  **Heard by the owner, 2026-11-07:** the music, through days of play on the
+  32-bit default in their `game\` folder (its `bof3x.dll` of 2026-11-06, the
+  log's `patch ON SoundSdl` and `sound output: SDL3 ... SDL 3.4.16`): "all
+  sounded great", approved. The owner said that of the music only; the rest of
+  the list below was not named, and the A/B beside `BOF3X_OFF=SoundSdl` and
+  the 64-bit build were not part of it.
+  **For the owner's ear** (as staged): a music track through its
   loop point (the ring's halves, DIV-0081's rows), a battle's voices (many
   static buffers at once, at their cue frequencies), DIV-0171's pan and the
   fades of DIV-0028 / DIV-0143 (the volume law), the inn's jingle through
