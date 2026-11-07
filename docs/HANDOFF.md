@@ -327,7 +327,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    - **Numbering:** ledger entries after DIV-0202, defects after D400, both checked against `main` first (the
      issue 177..179 work on `fix/issues-177-178` may take more).
 
-14b. **The source-layout round is staged, not launched** ([`source-layout-round.md`](source-layout-round.md),
+14b. **The source-layout round: stage A running** (launched 2026-11-07 on `source-layout/round`; SL1..SL3 in worktrees `sl1107\sl<n>`, reports `sl1107/reports`; the owner's calls answered, section 7 - per-file granularity from SL1's sheet, subsystem folders, old doc paths kept with a map, I48 as stage E). Staged as ([`source-layout-round.md`](source-layout-round.md),
    2026-11-07, the owner's pick of the next large round; IDEAS I44's last step with I5 folded in). Our 301 game
    files are the takeover's waves; the round recovers Capcom's translation units from the binary and moves
    functions so each file holds whole units, every function's machine code unchanged. Measured: no seam byte
@@ -336,7 +336,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    run. **Stage A** (SL1 the unit table, SL2 the PlayStation side, SL3 the move tool and
    `codegen_same.py --by-function`) changes no `src/game` file and can start beside stage D. **Stage B** (the
    moves) waits for stage D's merge and **the owner's six calls** in the doc's section 7 (granularity,
-   directories, file names, doc citations, I48 kept apart, timing). Scratch measurements in
+   directories, file names, doc citations, I48 kept apart, timing) - answered; stage B waits on the owner's read of SL1's layout sheet. Scratch measurements in
    `C:\Users\kerok\bof3x-runs\sl1107\m`.
 
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
