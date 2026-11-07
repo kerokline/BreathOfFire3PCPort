@@ -201,7 +201,7 @@ cleanup with DIV-0149 and DIV-0150; then PR #105 regenerated the recipes;
 wide modes the field's draw walks the PSP's 33 x 58 view ring - Capcom's 28 x 56 kept at every width for the logic,
 a draw-only rim beside it, `BOF3X_WIDE_RING=0` the reversal (IDEAS I37, [`wide-ring.md`](wide-ring.md)); effect kind
 0xD's slide and area 172's shade are drawn mapped onto the wide picture, their logic untouched (I38,
-[`wide-sweeps.md`](wide-sweeps.md)); areas 31, 90 and 198 are pillarboxed, the owner's list
+[`wide-sweeps.md`](wide-sweeps.md)); areas 31 and 90 are pillarboxed, the owner's list (198 taken out 2026-11-07)
 ([`narrow-pillarbox.md`](narrow-pillarbox.md)) - all three DIV-0041 amendments; area 175's table faerie is drawn over
 its table (DIV-0151, D300, [`faerie-fix.md`](faerie-fix.md)); Garr is drawn under the camp's fire in two more camps
 (DIV-0071's third amendment, D301, [`garr-fire.md`](garr-fire.md)). D292 narrows to kind 0x8D's first frames (the
