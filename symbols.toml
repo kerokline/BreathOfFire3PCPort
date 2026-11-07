@@ -93094,7 +93094,7 @@ ret = "unsigned short"
 params = "void"
 impl = "src/game/effect_1f.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52CED0..0x52CEFB (0x2C bytes): the sum of FieldPanel_KindPoints(i, count) over the 32 count bytes 0x9040EC that are not 0; ax the sum's low word. Called by FieldPanel_DrawTotal (FE1). PSX twin 0x801E0BC4 (call-anchored). docs/effect_1f.md."
+evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52CED0..0x52CEFB (0x2C bytes): the sum of FieldPanel_KindPoints(i, count) over the 32 record-size bytes Fish_RecordSizes 0x9040EC that are not 0; ax the sum's low word. Called by FieldPanel_DrawTotal (FE1). PSX twin 0x801E0BC4 (call-anchored). docs/effect_1f.md."
 
 [[func]]
 pc = 0x52CF00
@@ -95779,7 +95779,7 @@ ret = "void"
 params = "void"
 impl = "src/game/effect_1a.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466B30..0x466BD6 (0xA7 bytes), cdecl: words +0x3E, +0x3C 0; +0x3E walks 0..0x1F to the first set count byte 0x9040EC[+0x3E], +0x3C 1 when none; 0x469750 at 0x12, 0x468AC0 with the option bit; +9 4, +1 up. Reached by EffectKind1A_States[6]. PSX twin 0x801D48A0 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466B30..0x466BD6 (0xA7 bytes), cdecl: words +0x3E, +0x3C 0; +0x3E walks 0..0x1F to the first set record-size byte Fish_RecordSizes[+0x3E], +0x3C 1 when none; 0x469750 at 0x12, 0x468AC0 with the option bit; +9 4, +1 up. Reached by EffectKind1A_States[6]. PSX twin 0x801D48A0 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
 
 [[func]]
 pc = 0x466BE0
@@ -95792,7 +95792,7 @@ ret = "void"
 params = "void"
 impl = "src/game/effect_1a.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466BE0..0x466D22 (0x143 bytes), cdecl: +9 down; FieldPanel_DrawHeader(-80 * +9, 0x4E); FieldPanel_DrawKindIcon(48 * +9 + 0x80, 0x5B, +0x3E or 0xFF by 0x9040EC) and FieldPanel_DrawKindRow(the kind, its count, +9) or (0xFF, 0, +9); FieldPanel_DrawTotal(0xB0, 30 * +9 + 0x9C); FieldPanel_DrawMessage(8, 30 * +9 + 0x94, 0xFFFF); 0x469750 at 0x12, 0x468AC0; +1 up at +9 0. Reached by EffectKind1A_States[7]. PSX twin 0x801D49A0 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466BE0..0x466D22 (0x143 bytes), cdecl: +9 down; FieldPanel_DrawHeader(-80 * +9, 0x4E); FieldPanel_DrawKindIcon(48 * +9 + 0x80, 0x5B, +0x3E or 0xFF by Fish_RecordSizes) and FieldPanel_DrawKindRow(the kind, its count, +9) or (0xFF, 0, +9); FieldPanel_DrawTotal(0xB0, 30 * +9 + 0x9C); FieldPanel_DrawMessage(8, 30 * +9 + 0x94, 0xFFFF); 0x469750 at 0x12, 0x468AC0; +1 up at +9 0. Reached by EffectKind1A_States[7]. PSX twin 0x801D49A0 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
 
 [[func]]
 pc = 0x466D30
@@ -119078,6 +119078,15 @@ count = 828
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R1G): 23 rows of 36 bytes (Fish_Spawn's 23 kinds), read in place by the kind byte +6 unbounded: +0..+0xF four tiers of chances, +0x10 / +0x12 banks, +0x14.. levels by the 20-byte record's nibble, +0x1A..+0x20 levels, sizes and flags. docs/rest_1g.md."
 
+[[data]]
+pc = 0x9040EC
+name = "Fish_RecordSizes"
+ctype = "unsigned char"
+count = 32
+status = "evidence"
+evidence = "disasm 2026-11-06, LeaderPanel_S4Best 0x5298F0..0x529958: with the hooked fish's Sprite_Objects record (index 0x939A1C, stride 0xA4), movzx dx, byte [kind + 0x9040EC] (kind the record's +6, 0x7DEE86) against the size word +0x9C (0x7DEF1C, Fish_Spawn's size); when the size is greater its low byte is stored at 0x9040EC + kind and 0x939A28 = 1 (FieldPanel_DrawBlink). Readers: the fishing screen's kind panels (0x466B30 family, effect_1a), FieldPanel_KindTotal 0x52CED0 (the sum over the non-zero bytes), the world-map fishing-spot signs (0x401B80 and the area_w* hooks: 0 shows '????????', else the name of item kind + 0x38), and Shisu_ScaleIndex 0x57EAE0 by its fixed entry 0x15 (0x904101, Rest2b_SavedScaleIndex)."
+note = "One byte per fish kind (23 used of 32): the largest size caught, 0 never caught. Save data. Formerly described as count bytes in docs/effect_1a.md, effect_1e.md, effect_1f.md."
+
 # --- round fourteen group R1F (docs/rest_1f.md) ---
 
 [[func]]
@@ -136090,7 +136099,7 @@ name = "Rest2b_SavedScaleIndex"
 ctype = "unsigned char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x904101] at 0x57eae0. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2b::kLevelByte."
-note = "rest_2b.cpp: the byte of the save data the figure scale index is read from."
+note = "rest_2b.cpp: the byte of the save data the figure scale index is read from. It is entry 0x15 of Fish_RecordSizes (0x9040EC + kind 0x15; kind + 0x38 = item 0x4D, the mackerel): the player's record mackerel size (2026-11-06)."
 
 [[data]]
 pc = 0x939892

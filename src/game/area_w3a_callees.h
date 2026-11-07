@@ -60,7 +60,7 @@ constexpr ::bof3::image::Va kButtonMap0{0x903580};       // the field's button m
 // kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). word 6, the second's
 // kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
 constexpr ::bof3::image::Va kAreaText{0x803580};         // the area's text section; area 115 reads its label offset from its first dword
-constexpr ::bof3::image::Va kItemsHeld{0x9040EC};        // a byte per item id: 0 not yet seen
+constexpr ::bof3::image::Va kItemsHeld{0x9040EC};        // Fish_RecordSizes: a byte per fish kind, its record size; 0 never caught
 // kItemNameKey: now AreaW0b_ItemNameKey (symbols.toml). the 16-byte name the hook copies for item 0x16
 constexpr ::bof3::image::Va kTextRecords{0x904CE0};      // Text_Records: the place hook fills rows of 0x20 from here
 constexpr ::bof3::image::Va kFlag3A79{0x903A79};         // the record +4 state: 9 releases the effect

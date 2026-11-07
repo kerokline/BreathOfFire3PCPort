@@ -13765,9 +13765,12 @@ designed in rather than bolted on.
   `docs/rest_3g.md`; `Shisu_*` in `src/game/rest_2b.cpp`; the owner's
   recording of the day, `tools/recipes/shisuMinigame.txt`) cannot be lost so much as scored
   low, so the owner's call is the score itself, not a failure condition: the
-  best prize always. `Shisu_Score` `0x57EB20` scores the four counts given
-  (`0x9399E4..7`), the kneads (`Rest2b_Rounds`) and the scale index
-  (`Shisu_ScaleIndex`, from the byte `0x904101`) into `0x9399FC`;
+  best prize always. `Shisu_Score` `0x57EB20` scores three of the four counts given
+  (`0x9399E5..7`; the first, the mackerel's at `0x9399E4`, is used up but
+  not scored, as on the PlayStation; corrected 2026-11-06), the kneads
+  (`Rest2b_Rounds`) and the scale index (`Shisu_ScaleIndex`, from the byte
+  `0x904101`, the mackerel's entry of `Fish_RecordSizes`: the player's
+  record mackerel) into `0x9399FC`;
   `Shisu_Result` `0x57E160` ranks it: 0x32 or less the counter `0x90384B` 1,
   else 2 and the rank `0x903F6A` 0 (below 0x5A), 1 (0x78), 2 (0x96), 3
   (0xAA), 4 (0xB4) or 5, which `Area130_TailGiveItem` `0x41D0E0` turns into

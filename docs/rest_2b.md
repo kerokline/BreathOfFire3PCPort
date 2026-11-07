@@ -79,7 +79,7 @@ change lets `'*'` pass. **One latent defect is a ledger entry, DIV-0073**
 | `Shisu_CountItems` | `0x57E9A0` | 0x44 | `Shisu_Begin` | four `Inventory_Count`s into `0x9399E0..E3` |
 | `Shisu_SetupWindows` | `0x57E9F0` | 0xC4 | `Shisu_OpenFade` | `WindowRecords` 0..3's bytes and words |
 | `Shisu_CloseWindows` | `0x57EAC0` | 0x19 | `Shisu_CloseFade` | window 0 off, 1..3's +3 = 1 |
-| `Shisu_ScaleIndex` | `0x57EAE0` | 0x37 | `Shisu_Begin` | the byte `0x904101` to 9..`0x10` (al) |
+| `Shisu_ScaleIndex` | `0x57EAE0` | 0x37 | `Shisu_Begin` | the byte `0x904101` (the record mackerel size, `Fish_RecordSizes` entry `0x15`) to 9..`0x10` (al) |
 | `Shisu_Score` | `0x57EB20` | 0x19F | `Shisu_Result` | four terms and the score `0x9399FC` |
 | `Shisu_InitModels` | `0x57ECC0` | 0x108 | `Shisu_Begin` | both models at the kind-2 sprite's place, B 0x200 below the ground, A 0x200 above |
 | `Shisu_ModelBDispatch` | `0x57EDD0` | 0xE | the three pick states | jmp through `Shisu_ModelBStates` by `0x939961` |
