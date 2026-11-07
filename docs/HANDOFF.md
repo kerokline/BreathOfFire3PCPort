@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-02: the 64-bit build round's stages A and B merged as PR #183, stage C open as PR #187, **stage D next**, item 14a; DIV-0202 the logo movie as PR #186; `main` at PR #186; the exe-gap round merged as PR #176, issues 177..179 as PRs #181 / #182)
+**Status:** IN PROGRESS (2026-11-07: D406 fixed - a quick-load's voice stream is played after the song's start, DIV-0145's amendment, the 10 ms head start measured and removed on both widths, the owner's listen owed; the 64-bit build round's stages A..C merged as PRs #183 and #187, **stage D open as PR #207**, item 14a; the source-layout round's stage A done, stage B at the owner's read of the sheet, item 14b; DIV-0202 the logo movie as PR #186; `main` at PR #206; the exe-gap round merged as PR #176, issues 177..179 as PRs #181 / #182)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -14,14 +14,14 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
-**`origin/main` is `d827571e`** (PR #186, 2026-11-02; `v0.1.0-alpha.6` was cut at `b7bd1d29`, after PR #170): since the reading-row round (PR #106) it took the faster
+**`origin/main` is `39d88ef9`** (PR #206, 2026-11-07; `v0.1.0-alpha.6` was cut at `b7bd1d29`, after PR #170): since the reading-row round (PR #106) it took the faster
 text, the bit-15 round, the PlayStation verdict pass and twin-diff, fix wave 1023, the sound-layer round, the
 issue fixes of 2026-10-24..26, build-difference prevention (the data diff and the every-door sweep), the spell
 sweep and its fix wave, the two staged rounds, the away day (PR #158), D42's dial (PR #159), the boss sweep (PR #161), the ledger-fields round (PRs #162, #164), D397 and issue #163
 (PRs #166, #167), the relocatable-image round (PR #168), the enemy-information cheat (PR #169), the pool fold (PR #170), and after alpha.6 issue #141's model box (PR #171), the no-fail minigames cheat (PR #172), the item sort (PR #173), the dock's legend (PR #174), the mountain passes (PR #175), the exe-gap round (PR #176),
 issues 177..179 (PRs #181, #182), the 64-bit build round's stages A and B (PR #183) and DIV-0202 (PR #186)
 ([`STATUS.md`](STATUS.md) lists them with their PRs). Every branch the earlier versions of this file called
-unpushed is merged; the open work is below. **One PR is open:** #187, stage C of the 64-bit round (item 14a).
+unpushed is merged; the open work is below. **No PR is open** (2026-11-07; stage C of the 64-bit round merged as PR #187 on 2026-11-02).
 `v0.1.0-alpha.6` is the
 release cut from an earlier state ([`releases/v0.1.0-alpha.6.md`](releases/v0.1.0-alpha.6.md), a draft until the owner
 publishes it). Owed throughout:
@@ -305,39 +305,58 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    fresh `cn_<route>_orig4` re-record with the current saves (the references carry the standing SunderLoop and
    slot-6 signature).
 
-14a. **The 64-bit build round: stages A..C done, stage D next** ([`x64-build-round.md`](x64-build-round.md);
-   the owner's four calls of 2026-11-01 in its section 7: the narrow image, x86-64 Windows alone, a developer
-   build and a second release artefact, SDL3). Stages A and B merged as PR #183 (2026-11-02). **Stage C is PR
-   #187** (`x64/c1`, tip `7206055c`, `main` merged in): `cmake --preset x86_64 && cmake --build build-x86_64`
-   links a 64-bit `bof3x.exe`, `bof3x.dll` and launcher that play every route. Its proof (section 5, "the
-   coordinator's part", root `C:\Users\kerok\bof3x-runs\x641101\proof`): the ten routes against the 32-bit host
-   identical or run noise only, each noise page shown by a repeat of one width; the quicksave equal in process
-   and across processes, a take of the other width refused; both AVIs play; the 32-bit launcher starts the 64-bit
-   exe; the stackwatch's deepest slice-0 write `0x5628` of `0x8000`, so `kSlice64` holds. **One defect found
-   and fixed** (in #183, `0bdc1f3e`): `Music_Pump` handed two 32-bit slots to `MsgWaitForMultipleObjects` as
-   a native handle array, so 64-bit music stopped after its first quarter second - and no hash saw it.
-   **Owed the owner, before or beside stage D:** a listen to DIV-0201's SDL3 sound output on the 32-bit default
-   (its verification lists what to hear), a listen to the 64-bit build's music, the FMVs' picture, the
-   Sources page opened in the 64-bit launcher (the builds in `proof\L64f`, from before `main` was merged).
-   **Stage D, the coordinator's (section 6, no agent has started it):**
-   - **The audit.** Re-run XA1's census on the tip: every width `#if` in a game file is listed - one is known,
-     `src/game/sound.cpp`'s `Music_Pump` (kept by width because the sound fuzz's stub records the array's
-     address; a width-free copy gave 5 mismatches). Every `Low32()` that fires in no run but could. The ledger:
-     nothing stage C changed is player-visible on the 32-bit default, so no DIV is expected; say so in the doc.
-   - **Census rows the defect asks for:** an image slot array handed to an API as a native array (the class
-     `Music_Pump` was; the only handle array found), and a pointer-overlay class for C1's 23 `pointer-field`
-     rows in `analysis/typed_left.tsv` (source `x64-c1`).
-   - **A check that hears the music:** the ring's words are in the skip list and only shop waits on a stream's
-     end, so add the heard sample (`BOF3X_MUSIC_LOG=1`) or an equivalent to a route check.
-   - **Not run yet:** the moved base (`BOF3X_IMAGEBASE`, the developer launcher's fence) on the 64-bit host;
-     field_menu and menu_screens' stackwatch (their recipes end before the appended quit - the copies in
-     `proof\stackq`); the slice-use difference between widths, read and explained.
-   - **Docs and release:** STATUS, this item, [`SCAFFOLDING.md`](SCAFFOLDING.md) 4 (the presets), the round
-     doc's "as run" for stage D, and `release.yml`'s second artefact (the 64-bit exe, DLL and launcher, signed
-     as the first). The 32-bit build stays the player's default (the owner's call 3).
-   - **Numbering:** ledger entries after DIV-0202, defects after D400, both checked against `main` first (the
-     issue 177..179 work on `fix/issues-177-178` may take more).
+14a. **The 64-bit build round: stages A..D done, stage D on `x64/stage-d` (2026-11-07, unpushed; PR at the
+   owner's word)** ([`x64-build-round.md`](x64-build-round.md); the owner's four calls of 2026-11-01 in its
+   section 7: the narrow image, x86-64 Windows alone, a developer build and a second release artefact, SDL3).
+   Stages A and B merged as PR #183, stage C as PR #187 (2026-11-02): `cmake --preset x86_64 && cmake --build
+   build-x86_64` links a 64-bit `bof3x.exe`, `bof3x.dll` and launcher that play every route; stage C's proof is
+   section 5 (root `C:\Users\kerok\bof3x-runs\x641101\proof`), its one defect `Music_Pump`'s handle array,
+   fixed in #183. **Stage D is section 6 "as run"** (root `C:\Users\kerok\bof3x-runs\x641107`; worktrees
+   `wt_ci`, `wt_music` and the branches `x64/d-ci`, `x64/d-music` merged into it, removable):
+   - **The audit is a command now:** `tools/width_census.py --list width_if|low32|handle_array|ptr_overlay`
+     (`analysis/width_census.tsv`, `--check` in CI). On the tip: 16 width `#if` blocks in 10 game files, 15 asm
+     pairs by [`x64-asm-policy.md`](x64-asm-policy.md) 8 and `Music_Pump`'s logic fork; no `Low32()` narrows an
+     address the design places above 4 GB (the classes outside the design read one by one, section 6); the
+     handle-array class has three rows, the pointer-overlay class none over the image. No DIV entry.
+   - **The runs:** the moved base through the mixed copy (the 64-bit launcher has no developer launcher to
+     forward `BOF3X_IMAGEBASE` to), combat identical on every tick with `BOF3X_STATEHASH_FOLD`; the stackwatch
+     on `field_menu` and `menu_screens` agrees with the other eight (slice 0 `0x5508` of `0x8000`); the WAV pair
+     of `shop` under DIV-0201 and `BOF3X_OFF=SoundSdl`: **the song lies 546 ms later in the SDL3 dump**, the
+     effects in place; the owner's ear hears nothing late (2026-11-07), so the figure is the dump's model.
+   - **The ear beside the hash:** `tools/music_heard.py <copy>/bof3x.log` after a route run with `--env
+     BOF3X_MUSIC_LOG=1` ("How to run things"); `Sound_Tick` logs a `ring` line every 60 frames under the
+     switch. Fails on the defect's shape (a track playing with no advance of the heard sample); the ten routes
+     on the 64-bit exe host pass it, `shop` on the 32-bit one too, and stage C's pre-fix `shop` log fails it.
+   - **CI and release:** the `x86_64` job of `build.yml` is a gate with the import check; `release.yml` builds
+     both widths, signs six binaries in one jsign call and attaches `bof3x-<tag>-win-x64.zip` beside the 32-bit
+     zip, which stays the player's default ([`releases/README.md`](releases/README.md)). The six-file jsign
+     call is unexercised until the next push to `main`.
+   **The owner's listens, 2026-11-07, on the 64-bit build:** the inn's night, the combat loop and the voices all
+   sound right (the first play of the 64-bit build), so the 546 ms figure is the dump's model, not the ear's; one observation became D406 (a quick-load during a battle
+   voice played the voice before the song returned: the rebuild's order, measured at 10 ms on both widths and fixed by DIV-0145's amendment the same day; the owner's listen owed). **Seen on
+   that play: the Capcom movie has no picture on the 64-bit build - D407, Windows ships no 64-bit Cinepak
+   decompressor (`iccvid.dll` is in `SysWOW64` alone), so stage C's "plays to its end" proved the pump, not
+   the picture; the fix is IDEAS I7 (a decoder of ours), a round of its own.** Still owed (owner-review):
+   whether `LOGOS.AVI` (Microsoft Video 1, which 64-bit Windows has) shows; the Sources page looks right (its
+   list read from an earlier build's config; an import from the 64-bit launcher is unexercised). **Traps paid:** a quit-ended recipe copy must lose the recipe's own `end` line or the quit never runs;
+   a moved run's hash wants the `0x400000` side recorded with `BOF3X_STATEHASH_FOLD=<base>`; the hosted
+   `BOF3X_SHADOW='*'` suite takes about forty minutes - count its log's lines a minute apart before calling it
+   hung (one run was killed half-way on a stale tail and had to be run again).
+   **After this round:** IDEAS I53 (the wide image, one struct at a time, gated by the hash) and I5's
+   translation-unit layout, at the owner's word; the first non-x86 target is a round of its own (section 9).
 
+14b. **The source-layout round: stage A done and merged on `source-layout/round`** (2026-11-07, local, unpushed;
+   [`source-layout-round.md`](source-layout-round.md) section 3's "as run" subsections; reports
+   `C:\Users\kerok\bof3x-runs\sl1107\reports`). SL1: 676 units (contiguity holds; 7,202 functions joined, 62
+   placed, 2,805 guessed), proposed as 556 files in 14 subsystem folders on the owner's sheet
+   `analysis/tu_layout_sheet.md`, with SL2's PSX units joined (59 of 488 PSX units split, 42 of them already
+   interleaved on the PC). SL2: Capcom built with `-G0`, and no Capcom file name survives in either binary. SL3:
+   `codegen_same.py --by-function`, `move_funcs.py`, `cite_lookup.py` with `tu_moves.tsv`, `game_sources.py`; its
+   dry run moved effect kind 0xA7 with i686 identical. **Answered 2026-11-07** (section 7a): renames of clashing file-local helpers
+   allowed with each reason recorded (step B0, `analysis/tu_renames.tsv`; 468 clashes, the mover refuses 164 of the
+   556 files today, section 3 "Stage A's end"); the x86-64 gate takes a named exception class
+   (`analysis/tu_gate_exceptions.tsv`: `inline`, `low32-site`), i686 stays exact. **Before stage B:** the owner's
+   read of the sheet; stage D of the 64-bit round merged first (it edits the source list `game_sources.py adopt` replaces).
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
    (D330). Open from the `orig3` reading: which of the button round's glyph changes moves `masterAndManillo`'s pages
@@ -501,6 +520,10 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   `<dir>\<n>_<label>.wav` (`BOF3X_WAV_LABEL`, default the recipe's name); `input_run.py --wav <dir> [--wav-label L]`
   sets both; `tools/wav_diff.py` lines two dumps up. The recipe step `music TRACK [FRAMES]` plays a track
   (instrumentation, like `poke`). The dump is at 44.1 kHz, not the device's format.
+- **The ear beside the hash:** a route run with `--env BOF3X_MUSIC_LOG=1`, then `python tools/music_heard.py
+  <copy>/bof3x.log` - exit 0 when every track's heard sample advances while it plays, 1 on a stall (the 64-bit
+  round's `Music_Pump` defect, which no hash saw), 2 when the log has no ring lines (the switch unset, or no
+  music played). The ring's words are in the hash skip list, so this is the one check that hears the music.
 - **Which files a route loads:** `BOF3X_DATLOG=1` logs one line per file `LoadDatFile` walks, overlays included
   ([`asset-loading-path.md`](asset-loading-path.md) 5).
 - **A recipe's save:** `input_run.py` (and `abc_run.py run`) take `--save NAME` (that `tools/recipe_saves` save in
@@ -558,9 +581,15 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   round's root `C:\Users\kerok\bof3x-runs\x641101` holds the agents' worktrees and reports (`xa1`..`xa4`, `b1`..`b5`,
   `round`, `c1`) and the proof (`proof\`: the run scripts with their `.out`, the launcher folders `L64`, `L32`,
   `L64f`, `Lmix`, the quit-ended recipe copies in `stackq\`); keep `proof\` until stage D's runs are done.
+- **Built, unpushed (2026-11-07):** `x64/stage-d` (item 14a, stage D of the 64-bit round; PR at the owner's word),
+  in the main checkout. Its root `C:\Users\kerok\bof3x-runs\x641107` holds the launcher copies (`L32`, `L64`,
+  `Lmix`), the game copy, the proof (`proof\`: the run scripts' `.out`, the hashes under `sh\`, the WAV pair under
+  `wav\`) and the two agents' worktrees `wt_ci`, `wt_music` (merged; removable with the branches `x64/d-ci`,
+  `x64/d-music`). The 64-bit round's earlier root `C:\Users\kerok\bof3x-runs\x641101` (stages A..C: the agents'
+  worktrees `xa1`..`xa4`, `b1`..`b5`, `round`, `c1` and the proof) is removable with the `x64/xa*`, `x64/b*`,
+  `x64/round` and `x64/c1` branches, all merged.
   `fix/issues-177-178` in the main checkout is another session's (issues 177..179), uncommitted work on it.
-- **Merged, still to remove:** the `x64/xa1`..`xa4`, `x64/b1`..`b5` and `x64/round` branches and their worktrees
-  (PR #183), `fix/retire-logos-import` and its worktree `C:\Users\kerok\bof3x-runs\logos1102\wt` (PR #186),
+- **Merged, still to remove:** `fix/retire-logos-import` and its worktree `C:\Users\kerok\bof3x-runs\logos1102\wt` (PR #186),
   `exe-gap/round` and its groups with `C:\Users\kerok\bof3x-runs\eg1031\wt_<group>` (PR #176),
   `docs/x64-refresh`; the worktree `C:\Users\kerok\bof3x-runs\spm1030\wt` (`loc/ship-parts-menu`, PR #174)
   and the branches `cheat/no-fail-minigames`, `fix/mountain-passes`, `loc/ship-parts-menu`, `sort/items-by-id`,

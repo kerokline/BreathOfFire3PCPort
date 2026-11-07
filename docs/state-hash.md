@@ -106,6 +106,20 @@ all. Everything the game's logic keeps - the arena at `0x803580`, the sprite
 and effect objects, the party and battle records, the scenario flags, the
 VRAM shadow, the task records but their stack pointers - is hashed.
 
+**The ear beside the hash.** Because the music ring is skipped, a stream
+that stops being fed is invisible to the hash: the 64-bit round's
+`Music_Pump` handed two 32-bit slots to a native handle array and the music
+ended after its first quarter second with every check green
+([`x64-build-round.md`](x64-build-round.md) section 5). Under
+`BOF3X_MUSIC_LOG=1` the DLL now writes, once in every 60 logic frames while a
+track's stream is live, `music_log   fN ring track T heard H written W
+playing|halted` (`sound.cpp` `RingLog`, from `Sound_Tick`), and
+[`tools/music_heard.py`](../tools/music_heard.py) reads a run's log and
+fails when a track is `playing` across 120 frames of those lines with no
+advance in `H`. A route run with `--env BOF3X_MUSIC_LOG=1` on
+`tools/input_run.py`, then the tool on the launcher copy's `bof3x.log`, is
+the music's check; a hash pass alone is not.
+
 **What the hash does not see at all:** anything outside `.data` - the stack
 in use, the heap (`LoadDatFile`'s buffers live in the arena, which is
 `.data`), our own DLL's statics (but the text one of Capcom's pointer slots

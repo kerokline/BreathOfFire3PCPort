@@ -5,7 +5,12 @@
                                  [--downloads DIR] [--stage DIR]
 
 docs/releases/README.md says how a release is cut; docs/install-sources.md
-section 2 is the layout this writes, which the launcher relies on:
+section 2 is the layout this writes, which the launcher relies on. Two
+widths make two zips from the same layout: --build build (the i686 preset,
+the player's default, -win.zip) and --build build-x86_64 (the x86_64 preset,
+the 64-bit developer build, -win-x64.zip; docs/x64-build-round.md 6). The
+width is read from the build's bof3x.exe; only the README's last paragraph
+differs, and the bundled importer is the same amd64 Python either way:
 
     bof3x-launcher.exe  bof3x.dll  bof3x.exe  music-names.tsv
     README.txt  LICENSE  THIRD_PARTY.md  THIRD_PARTY_RUNTIME.txt
@@ -210,6 +215,14 @@ audio and movie sectors).
 This is an alpha: much has been watched, not all of it played through. See
 the release notes for what is known. Licences: LICENSE (this project),
 THIRD_PARTY.md and THIRD_PARTY_RUNTIME.txt (what it bundles).
+{width_note}"""
+
+# Appended to the README of the -win-x64 zip alone; the -win zip's README is
+# unchanged. The player is told which zip is the default in one sentence.
+WIDTH_NOTE_64 = """
+This zip is the 64-bit build (bof3x-*-win-x64.zip), made for developers. The
+32-bit zip (bof3x-*-win.zip) is the default. Both need the same copy of the
+game.
 """
 
 RUNTIME_NOTES = """Third-party software in runtime\\ (the bundled importer)
@@ -235,6 +248,25 @@ runtime\\python\\Lib\\site-packages\\ (installed from PyPI wheels, unmodified)
 runtime\\tools\\, runtime\\fixtures*, runtime\\recipes\\ ... are this project's own
 files (LICENSE). They hold names, sizes and hashes, never game data.
 """
+
+
+def exe_width(p):
+    """32 or 64 from bof3x.exe's optional-header magic (0x10B PE32, 0x20B
+    PE32+; tools/make_exe.py writes the one its --width names)."""
+    with open(p, "rb") as f:
+        head = f.read(0x40)
+        if head[:2] != b"MZ" or len(head) < 0x40:
+            raise SystemExit("%s: not a PE file" % p)
+        f.seek(int.from_bytes(head[0x3C:0x40], "little"))
+        pe = f.read(0x1A)
+    if pe[:4] != b"PE\0\0":
+        raise SystemExit("%s: not a PE file" % p)
+    magic = int.from_bytes(pe[0x18:0x1A], "little")
+    if magic == 0x10B:
+        return 32
+    if magic == 0x20B:
+        return 64
+    raise SystemExit("%s: optional-header magic %#x is neither PE32 nor PE32+" % (p, magic))
 
 
 def scan(stage):
@@ -264,11 +296,16 @@ def main():
                     help="where the pinned downloads are kept between runs")
     ap.add_argument("--stage", help="lay the release out here and keep it (default a temporary folder)")
     a = ap.parse_args()
-    out = os.path.abspath(a.out or os.path.join(ROOT, "build", "release", "bof3x-%s-win.zip" % a.version))
     missing = [f for f in BUILD_FILES if not os.path.isfile(os.path.join(a.build, f))]
     if missing:
-        raise SystemExit("%s lacks %s: build first (cmake --preset i686 && cmake --build build)"
-                         % (a.build, ", ".join(missing)))
+        # The advice names the preset whose binaryDir this is (CMakePresets.json).
+        folder = os.path.basename(os.path.normpath(a.build))
+        preset = "x86_64" if folder == "build-x86_64" else "i686"
+        raise SystemExit("%s lacks %s: build first (cmake --preset %s && cmake --build %s)"
+                         % (a.build, ", ".join(missing), preset, folder if preset == "x86_64" else "build"))
+    width = exe_width(os.path.join(a.build, "bof3x.exe"))
+    out = os.path.abspath(a.out or os.path.join(ROOT, "build", "release",
+                                                "bof3x-%s-win%s.zip" % (a.version, "-x64" if width == 64 else "")))
     tools, third = reached_tools()
     bundled = {PROVIDES[k] for k in third if k in PROVIDES}
     unknown = sorted(k for k in third if k not in PROVIDES and k not in NOT_BUNDLED)
@@ -315,7 +352,7 @@ def main():
             os.makedirs(os.path.dirname(t), exist_ok=True)
             (shutil.copytree if os.path.isdir(s) else shutil.copy2)(s, t)
         with open(os.path.join(stage, "README.txt"), "w", encoding="utf-8", newline="\r\n") as f:
-            f.write(README.format(version=a.version))
+            f.write(README.format(version=a.version, width_note=WIDTH_NOTE_64 if width == 64 else ""))
         with open(os.path.join(stage, "THIRD_PARTY_RUNTIME.txt"), "w", encoding="utf-8", newline="\r\n") as f:
             f.write(RUNTIME_NOTES.format(py=PYTHON_VERSION, pth=PTH,
                                          wheels="\n".join("  %s (%s)" % (w[0], w[1]) for w in WHEELS)))
@@ -334,7 +371,7 @@ def main():
     finally:
         if tmp:
             shutil.rmtree(tmp, ignore_errors=True)
-    print("%s: %d files, %.1f MB" % (out, len(files), os.path.getsize(out) / 1e6))
+    print("%s: %d files, %.1f MB, the %d-bit build from %s" % (out, len(files), os.path.getsize(out) / 1e6, width, a.build))
     print("  python %s (%s: %s), %s" % (PYTHON_VERSION, PTH, ", ".join(l for l in pth if l.strip() and not l.startswith("#")),
                                          ", ".join(w[0] for w in WHEELS)))
     print("  runtime/tools: %d files (%s)" % (len(tools), " ".join(tools)))

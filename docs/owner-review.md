@@ -13,6 +13,42 @@ Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
 
+## 2026-11-07, the 64-bit round's stage D
+
+From [`x64-build-round.md`](x64-build-round.md) 6 "as run". The 32-bit build in `game\` is the default and is
+not changed by this; the 64-bit one is `build-x86_64\` of a source build or the release's `bof3x-<tag>-win-x64.zip`
+(the same three files, the same game folder).
+
+- **The 64-bit build, played** (nobody has): from a folder holding the 64-bit `bof3x-launcher.exe`, `bof3x.dll`
+  and `bof3x.exe`, a few minutes of play with the sound on. To listen for: the music keeps going past its first
+  quarter second (stage C's defect, fixed in PR #183 - the ten routes hear it now by `tools/music_heard.py`, but
+  no ear has), a battle's voices, the inn's jingle and the song's return. To look at: the two FMVs' picture at
+  the start (they play to their ends in every run; the picture is unseen), and the Sources page opened from the
+  64-bit launcher (it runs the importer as a child; nothing width-specific was found, nothing was seen).
+- **The song's place under SDL3 against DirectSound** (DIV-0201; the WAV pair of `shop.txt`): in the dump the
+  town's song lies 546 ms later under SDL3 than under DirectSound, the effects where they were. Whether the ear
+  hears it: the inn's night (DIV-0169, any inn): the song must stop dead as the screen starts to fade and come
+  back as the morning message opens, under both `game\` as it is (SDL3) and with `off=SoundSdl` in `bof3x.ini`;
+  and a fight's first note against the battle swirl. If one of the two sounds late, say which; if neither does,
+  the figure is the dump's model, not the ear's, and the doc says so.
+- **The rest of DIV-0201's list**, if you want it beyond the music you approved on 2026-11-07 (the ledger
+  entry's verification): a battle's voices at their cue frequencies, DIV-0171's pan, the fades of DIV-0028 /
+  DIV-0143, the quicksave across a sound.
+
+**Answered 2026-11-07 (the owner, in chat):** nothing unusual at the inn's night, the combat loop sounds right,
+the voices sound fine. One observation: a quicksave loaded during a combat voice plays the voice first and the
+song comes in after it, where in play the voice sounds over the song - "not that distracting", and the owner
+unsure whether it is intended. It is not: recorded as D406 (the rebuild restarts the voice stream before the
+song's `Music_Start` and its decode to the heard sample). The 546 ms figure stays the dump's model's, not the
+ear's. The play was on the 64-bit build (the owner, same day): **the 64-bit build has been played, its music,
+voices and inn heard right.** The FMV "looks odd - the music is playing and the video is not": **D407**, Windows
+has no 64-bit Cinepak decompressor, so `CAPCOM.AVI` draws nothing on the 64-bit build (the 32-bit build is not
+affected). One question back: does the second movie, the publishers' logos, show its picture on the 64-bit
+build? Its codec (Microsoft Video 1) is there in 64 bits, so it should. **The Sources page looks right** (the
+owner, same day), read from a config a previous build had filled; the importer is a Python child, so what the
+64-bit launcher adds is the reading, the child's start and its pipe - one import run from the 64-bit launcher
+would cover the last two, if you care to.
+
 ## 2026-11-03, issue #184's desert directions
 
 - **The German wording of DIV-0203** (`fix/issue-184-desert-directions`): the turn word is now Osten, and the

@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-11-03)
+**Status:** IN PROGRESS (2026-11-07: D406, the quick-load's voice stream played before the song, measured at 10 ms and removed by DIV-0145's amendment, both widths; 2026-11-03)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -8,8 +8,8 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**The 64-bit build round, 2026-11-01..02: stages A and B merged as PR #183, stage C open as PR #187, stage D
-next** ([`x64-build-round.md`](x64-build-round.md); the owner's calls of 2026-11-01: the narrow image - the
+**The 64-bit build round, 2026-11-01..07: stages A and B merged as PR #183, stage C as PR #187, stage D built
+on `x64/stage-d` (2026-11-07, unpushed, PR at the owner's word)** ([`x64-build-round.md`](x64-build-round.md); the owner's calls of 2026-11-01: the narrow image - the
 image's words stay 32 bits inside a 64-bit process, so saves, quicksave and the state-hash references are
 unchanged - x86-64 Windows alone, a developer build beside the 32-bit player's default, SDL3). Stage A
 measured and designed (the width census, the low-memory design, the asm policy, the `x86_64` preset); stage B
@@ -19,10 +19,16 @@ the original). **Stage C links and runs the 64-bit build:** the ten routes match
 runs of one width also differ on; the quicksave holds and refuses the other width's take; both AVIs play; the
 task-stack slice size holds (`0x5628` of `0x8000` at the deepest). It found one defect, fixed in #183: the 64-bit
 music stopped after a quarter second (`Music_Pump` handed 32-bit handle slots to an API that reads 8-byte
-handles), which no state hash saw. **What the player sees:** the 32-bit build stays the default; its one change
-is DIV-0201's sound output, which nobody has listened to yet. Owed the owner: that listen, and a listen and a
-look on the 64-bit build. Stage D (the audit, a check
-that hears the music, the release's second artefact) is HANDOFF item 14a.
+handles), which no state hash saw. **Stage D audited and closed the round** (section 6 "as run"): every width
+`#if` in a game file is an asm pair the policy allows but `Music_Pump`'s, no `Low32()` narrows an address the
+design places above 4 GB, and the two census rows the defect asked for exist (`tools/width_census.py`'s
+`width_if`, `low32`, `handle_array`, `ptr_overlay`); the moved base runs on the 64-bit host through the mixed
+launcher copy (combat identical on every tick), the last two routes' stackwatch agrees with the other eight,
+`tools/music_heard.py` reads a `BOF3X_MUSIC_LOG=1` run and fails on a stalled ring (the ear the hash lacks;
+the ten routes pass it on the 64-bit host, stage C's pre-fix log fails it);
+the `x86_64` CI job is a gate and the release carries `bof3x-<tag>-win-x64.zip` beside the 32-bit zip. No DIV
+entry: the 64-bit build adds no behaviour. **What the player sees:** the 32-bit build stays the default; its one
+change is DIV-0201's sound output, whose music the owner approved by ear on 2026-11-07. The owner's ear, 2026-11-07, on the 64-bit build (its first play): the inn's night, the combat loop and the voices all sound right, so the WAV pair's 546 ms offset of the song under SDL3 is the dump's model, not the ear's; a quick-load during a battle voice played the voice before the song returned (D406, ours: a 10 ms head start measured on both widths and removed by DIV-0145's amendment the same day; the owner's listen after it owed). **The one 64-bit defect seen: the Capcom movie plays with no picture (D407) - Windows has no 64-bit Cinepak decompressor, so the 64-bit build needs IDEAS I7's own decoder before it can be more than a developer build.** The Sources page looks right. Owed the owner (owner-review): whether the logos movie shows.
 
 **The FMVs decoded in-process, 2026-11-07 (DIV-0205, IDEAS I7 built; `claude/dreamy-kilby-648ea8`, unpushed).**
 The owner's first play of the 64-bit build showed no Capcom movie (D407): Windows ships its Cinepak and Video 1

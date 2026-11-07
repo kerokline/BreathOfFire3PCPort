@@ -11041,9 +11041,30 @@ designed in rather than bolted on.
   Sound after a quick-load: the music resumes at the sample heard at the take
   (for an MP3 on a track that rewinds, the start of its 26 ms frame), at the
   take's volume and fade; looping sound effects and a playing voice stream
-  resume at their positions; a one-shot sound effect playing at the take is
-  not resumed. The first frame shown after F7 is the picture from before the
+  resume at their positions, the voice stream started after the music (the
+  amendment below); a one-shot sound effect playing at the take is not
+  resumed. The first frame shown after F7 is the picture from before the
   load (one frame).
+
+  - **Amended 2026-11-07 - the voice stream after the music** (the owner's
+    ear on the 64-bit build, [`known-defects.md`](known-defects.md) D406):
+    the SOUND participant's rebuild played the voice stream
+    (`SndStream_Play`, then its position) before it called `Music_Start` for
+    the song, whose skip (`ResumeSkip`, DIV-0092's mechanism) decodes the MP3
+    from its top to the sample heard before the ring's first half is written
+    and played. The voice had the decode's length alone. Measured on
+    `quick_combat` (battle track 151 at sample 696,960, 15.8 s into the MP3;
+    Rei's Pilfer line playing at the take): `Music_Start` took 8 to 11 ms in
+    five runs, 32-bit and 64-bit alike (about 0.6 ms a second of song), and
+    the SDL3 mixer first mixed the voice one device pass - 441 frames,
+    10.0 ms - before the song. Now the voice stream is played and positioned
+    after the music stream has started, in the same restore: both widths
+    first mix the two in the same device pass. A stopped voice stream is still
+    stopped, a one-shot cut, as before. The restore's log line carries the
+    voice stream's state and what `Music_Start` took; under `BOF3X_MUSIC_LOG`
+    the voice stream's play and each buffer's first mix are logged too. The
+    ear's "moment" is longer than the 10 ms measured; what else the owner heard
+    is open in D406.
 
   F6's and F7's confirmation lines ("Quicksave OK", "Quickload", a refusal)
   reach the log only while our back buffer is in use, as F12's "Save OK"
@@ -14691,8 +14712,8 @@ designed in rather than bolted on.
   rather than a stream per buffer, because the play-cursor semantics
   (position in bytes, notifications at positions, `GetCurrentPosition` while
   playing) are ours to compute exactly; SDL3's per-stream resampler would
-  hide the cursor. Not heard by the owner: the listen is theirs (the
-  verification below says what to listen for).
+  hide the cursor. The owner approved the music by ear on 2026-11-07
+  (verification below); the rest of the listen is theirs.
 - **Also in the PSX version?** Not applicable: the PlayStation's SPU plays
   its voices and the port's DirectSound layer is the port's own; the new
   behaviour is the port's sound through another output.
@@ -14710,7 +14731,13 @@ designed in rather than bolted on.
   closed once; the hosted suite `'*'` with the switch on and with
   `BOF3X_OFF=SoundSdl`, and the exe host's self-test, exit 0; the i686 gate
   `0 differ` on every object but the file added and the WAV dump's.
-  **For the owner's ear** (nobody has listened): a music track through its
+  **Heard by the owner, 2026-11-07:** the music, through days of play on the
+  32-bit default in their `game\` folder (its `bof3x.dll` of 2026-11-06, the
+  log's `patch ON SoundSdl` and `sound output: SDL3 ... SDL 3.4.16`): "all
+  sounded great", approved. The owner said that of the music only; the rest of
+  the list below was not named, and the A/B beside `BOF3X_OFF=SoundSdl` and
+  the 64-bit build were not part of it.
+  **For the owner's ear** (as staged): a music track through its
   loop point (the ring's halves, DIV-0081's rows), a battle's voices (many
   static buffers at once, at their cue frequencies), DIV-0171's pan and the
   fades of DIV-0028 / DIV-0143 (the volume law), the inn's jingle through
