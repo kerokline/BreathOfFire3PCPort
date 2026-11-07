@@ -10090,24 +10090,25 @@ site	src/game/scena_sc15.cpp	1705	long	l	live	long	-	SC15_EXPORT unsigned char _
 site	src/game/scena_sc15.cpp	1705	long	l	live	long	-	SC15_EXPORT unsigned char __cdecl Scena15_StepHook(long x, long z) {
 site	src/game/scena_sc15.cpp	1737	long	l	live	long	-	SC15_EXPORT unsigned char __cdecl Scena15_ArriveHook(long x, long z) {
 site	src/game/scena_sc15.cpp	1737	long	l	live	long	-	SC15_EXPORT unsigned char __cdecl Scena15_ArriveHook(long x, long z) {
-site	src/game/scena_sc15.cpp	1816	long	l	live	long	-	const long z = Field_Kind2Z;
-site	src/game/scena_sc15.cpp	1817	long	l	live	long	-	const long x = Field_Kind2X;
-site	src/game/scena_sc15.cpp	2020	long	l	live	long	-	const long z = Field_Kind2Z;
-site	src/game/scena_sc15.cpp	2022	long	l	live	long	-	const long e = SH_CALL(AreaMap_Elevation)(0x260000, z);
-site	src/game/scena_sc15.cpp	2320	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
-site	src/game/scena_sc15.cpp	2320	widen	code_place	live	::bof3::Code(kBootTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
-site	src/game/scena_sc15.cpp	2328	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kEndTask.v))));
-site	src/game/scena_sc15.cpp	2328	widen	code_place	live	::bof3::Code(kEndTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kEndTask.v))));
-site	src/game/scena_sc15.cpp	2420	long	l	live	long	-	struct { short m[9]; short pad; long t[3]; } mat;
-site	src/game/scena_sc15.cpp	2421	long	l	live	long	-	long flag;
-site	src/game/scena_sc15.cpp	2429	long	l	live	long	-	const long e = SH_CALL(AreaMap_Elevation)(x, z);
-site	src/game/scena_sc15.cpp	2435	long	ul	live	unsigned long	-	SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&mat));
-site	src/game/scena_sc15.cpp	2436	long	ul	live	unsigned long	-	SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&mat));
-site	src/game/scena_sc15.cpp	2450	long	l	live	long	-	long depth, flags;
-site	src/game/scena_sc15.cpp	2565	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(entry)));
-site	src/game/scena_sc15.cpp	2565	widen	param	live	entry	const unsigned char*	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(entry)));
-site	src/game/scena_sc15.cpp	2711	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
-site	src/game/scena_sc15.cpp	2711	widen	code_place	live	::bof3::Code(kBootTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
+site	src/game/scena_sc15.cpp	1829	long	l	live	long	-	const long z = Field_Kind2Z;
+site	src/game/scena_sc15.cpp	1830	long	l	live	long	-	const long x = Field_Kind2X;
+site	src/game/scena_sc15.cpp	2033	long	l	live	long	-	const long z = Field_Kind2Z;
+site	src/game/scena_sc15.cpp	2035	long	l	live	long	-	const long e = SH_CALL(AreaMap_Elevation)(0x260000, z);
+site	src/game/scena_sc15.cpp	2333	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
+site	src/game/scena_sc15.cpp	2333	widen	code_place	live	::bof3::Code(kBootTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
+site	src/game/scena_sc15.cpp	2341	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kEndTask.v))));
+site	src/game/scena_sc15.cpp	2341	widen	code_place	live	::bof3::Code(kEndTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kEndTask.v))));
+site	src/game/scena_sc15.cpp	2433	long	l	live	long	-	struct { short m[9]; short pad; long t[3]; } mat;
+site	src/game/scena_sc15.cpp	2434	long	l	live	long	-	long flag;
+site	src/game/scena_sc15.cpp	2442	long	l	live	long	-	const long e = SH_CALL(AreaMap_Elevation)(x, z);
+site	src/game/scena_sc15.cpp	2448	long	ul	live	unsigned long	-	SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&mat));
+site	src/game/scena_sc15.cpp	2449	long	ul	live	unsigned long	-	SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&mat));
+site	src/game/scena_sc15.cpp	2463	long	l	live	long	-	long depth, flags;
+site	src/game/scena_sc15.cpp	2578	uintptr	-	live	std::uintptr_t	-	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(entry)));
+site	src/game/scena_sc15.cpp	2578	widen	param	live	entry	const unsigned char*	reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(entry)));
+site	src/game/scena_sc15.cpp	2724	uintptr	-	live	std::uintptr_t	-	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
+site	src/game/scena_sc15.cpp	2724	widen	code_place	live	::bof3::Code(kBootTask.v)	void*	SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(::bof3::Code(kBootTask.v))));
+site	src/game/scena_sc15.cpp	2784	low32	object_ours	live	&g_fin_night	Low32	bof3::PatchBytes(" ", Low32(&g_fin_night), &was, &is, 1);
 site	src/game/scena_sc15_fuzz.cpp	43	narrow	image_local	fuzz	p	-	template <typename T> std::uint32_t KeyOf(T p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/scena_sc15_fuzz.cpp	43	uintptr	-	fuzz	std::uintptr_t	-	template <typename T> std::uint32_t KeyOf(T p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 site	src/game/scena_sc15_fuzz.cpp	93	narrow	func_ours	fuzz	f	-	return reinterpret_cast<F>(const_cast<void*>(sh::StandIn(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(f)))));
@@ -17715,7 +17716,7 @@ file	src/game/scena_sc13_fuzz.cpp	fuzz	widen	param	1
 file	src/game/scena_sc15.cpp	live	long	l	25
 file	src/game/scena_sc15.cpp	live	long	ul	3
 file	src/game/scena_sc15.cpp	live	low32	image_local	1
-file	src/game/scena_sc15.cpp	live	low32	object_ours	1
+file	src/game/scena_sc15.cpp	live	low32	object_ours	2
 file	src/game/scena_sc15.cpp	live	uintptr	-	7
 file	src/game/scena_sc15.cpp	live	widen	code_place	4
 file	src/game/scena_sc15.cpp	live	widen	other	2
@@ -18394,8 +18395,8 @@ file	symbols.toml	live	ptr_member	ours_render	11
 file	symbols.toml	live	ptr_member	windows_function	14
 file	symbols.toml	live	ptr_member	windows_handle	3
 file	symbols.toml	live	ptr_member	windows_object	10
-#count sites	14738
-#count sites_live	10521
+#count sites	14739
+#count sites_live	10522
 #count sites_fuzz	4217
 #count fuzz_files	250
 #count narrow	356
@@ -18632,8 +18633,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count ptr_member_windows_object	10
 #count ptr_member_windows_object_live	10
 #count ptr_member_windows_object_live_files	1
-#count low32	476
-#count low32_live	468
+#count low32	477
+#count low32_live	469
 #count low32_live_files	283
 #count low32_fuzz	8
 #count low32_fuzz_files	1
@@ -18652,8 +18653,8 @@ file	symbols.toml	live	ptr_member	windows_object	10
 #count low32_image_local	101
 #count low32_image_local_live	101
 #count low32_image_local_live_files	60
-#count low32_object_ours	83
-#count low32_object_ours_live	83
+#count low32_object_ours	84
+#count low32_object_ours_live	84
 #count low32_object_ours_live_files	65
 #count low32_pool	18
 #count low32_pool_live	18
