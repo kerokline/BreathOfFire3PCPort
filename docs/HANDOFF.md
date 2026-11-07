@@ -32,7 +32,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 ## Pick up here
 
 0. **The ending scenes, the owner's four of 2026-11-07, on `fix/ending-scenes-1107`** (built, verified in the
-   harness root `D:/bof3x-runs/end1107`, unpushed, PR at the owner's word), from their new route
+   harness root `D:/bof3x-runs/end1107`, PR #209 open 2026-11-07 night, Auto-fix on), from their new route
    `tools/recipes/myriaFightAndEnding.txt` (its save `myriaFightAndEnding.DAT`; it saves over slot 0 near its end
    on purpose, the clear-save path - replay with `--slot0-hold`; past the staff roll it waits on the song's
    stream, so at `--speed 8` the roll and the *Fin* disc fall off the recorded frames): (1) the *Fin* disc's
