@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 204 entries, DIV-0001..0204, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 205 entries, DIV-0001..0205, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -298,7 +298,9 @@ designed in rather than bolted on.
   [`media-stack-survey.md`](media-stack-survey.md) §2.
 - **New behaviour:** `capcom.avi` is the same video re-encoded to Cinepak
   (`cvid`), whose decoder `iccvid.dll` is registered as `vidc.cvid` and still
-  ships with Windows. The audio stream is copied, not re-encoded, so it is
+  ships with Windows - for 32-bit processes; since DIV-0205 (2026-11-07) the
+  game decodes the file itself and needs no decompressor of Windows' on
+  either width. The file stays Cinepak: it is what the decoder reads. The audio stream is copied, not re-encoded, so it is
   bit-identical. Playback path, command sequence and timing are unchanged —
   **no code changes.** Verified playing through the same harness.
 - **Rationale:** the alternative is a black-box error caption where the Capcom
@@ -2335,7 +2337,10 @@ designed in rather than bolted on.
   MCI draws into whatever window it is given. This is the first of the two
   ways [`display-overhaul.md`](display-overhaul.md) §4a offered, chosen by
   the owner 2026-09-23 over I7's bundled decoder, which stays on the list.
-  The video is still Cinepak through `mciavi32` (DIV-0001).
+  The video is still Cinepak through `mciavi32` (DIV-0001). **Amended
+  2026-11-07:** DIV-0205 - the open, the play, the pump's end and the pause
+  and resume are ours, not MCI's; the rectangle and everything else here
+  stand.
 - **Also in the PSX version?** No: the PlayStation streams its movies
   through the CD subsystem.
 - **Verification:** [`window-modes.md`](window-modes.md) §4.
@@ -7741,7 +7746,8 @@ designed in rather than bolted on.
 - **ID:** DIV-0099
 - **Date:** 2026-10-12
 - **Subsystem:** FMV (`tools/importer.py` "the disc's movie": `fmv_build` /
-  `fmv_verify` / `fmv_install`; played by `Fmv_Play` through MCI as before;
+  `fmv_verify` / `fmv_install`; played by `Fmv_Play` through MCI as before,
+  by our own decoder since DIV-0205;
   [`fmv-import.md`](fmv-import.md))
 - **Tier:** Sensible - the movie Capcom made, from the player's disc.
 - **Original behaviour:** the PC port plays `CAPCOM.AVI` from its install
@@ -11051,9 +11057,30 @@ designed in rather than bolted on.
   Sound after a quick-load: the music resumes at the sample heard at the take
   (for an MP3 on a track that rewinds, the start of its 26 ms frame), at the
   take's volume and fade; looping sound effects and a playing voice stream
-  resume at their positions; a one-shot sound effect playing at the take is
-  not resumed. The first frame shown after F7 is the picture from before the
+  resume at their positions, the voice stream started after the music (the
+  amendment below); a one-shot sound effect playing at the take is not
+  resumed. The first frame shown after F7 is the picture from before the
   load (one frame).
+
+  - **Amended 2026-11-07 - the voice stream after the music** (the owner's
+    ear on the 64-bit build, [`known-defects.md`](known-defects.md) D406):
+    the SOUND participant's rebuild played the voice stream
+    (`SndStream_Play`, then its position) before it called `Music_Start` for
+    the song, whose skip (`ResumeSkip`, DIV-0092's mechanism) decodes the MP3
+    from its top to the sample heard before the ring's first half is written
+    and played. The voice had the decode's length alone. Measured on
+    `quick_combat` (battle track 151 at sample 696,960, 15.8 s into the MP3;
+    Rei's Pilfer line playing at the take): `Music_Start` took 8 to 11 ms in
+    five runs, 32-bit and 64-bit alike (about 0.6 ms a second of song), and
+    the SDL3 mixer first mixed the voice one device pass - 441 frames,
+    10.0 ms - before the song. Now the voice stream is played and positioned
+    after the music stream has started, in the same restore: both widths
+    first mix the two in the same device pass. A stopped voice stream is still
+    stopped, a one-shot cut, as before. The restore's log line carries the
+    voice stream's state and what `Music_Start` took; under `BOF3X_MUSIC_LOG`
+    the voice stream's play and each buffer's first mix are logged too. The
+    ear's "moment" is longer than the 10 ms measured; what else the owner heard
+    is open in D406.
 
   F6's and F7's confirmation lines ("Quicksave OK", "Quickload", a refusal)
   reach the log only while our back buffer is in use, as F12's "Save OK"
@@ -14701,8 +14728,8 @@ designed in rather than bolted on.
   rather than a stream per buffer, because the play-cursor semantics
   (position in bytes, notifications at positions, `GetCurrentPosition` while
   playing) are ours to compute exactly; SDL3's per-stream resampler would
-  hide the cursor. Not heard by the owner: the listen is theirs (the
-  verification below says what to listen for).
+  hide the cursor. The owner approved the music by ear on 2026-11-07
+  (verification below); the rest of the listen is theirs.
 - **Also in the PSX version?** Not applicable: the PlayStation's SPU plays
   its voices and the port's DirectSound layer is the port's own; the new
   behaviour is the port's sound through another output.
@@ -14720,7 +14747,13 @@ designed in rather than bolted on.
   closed once; the hosted suite `'*'` with the switch on and with
   `BOF3X_OFF=SoundSdl`, and the exe host's self-test, exit 0; the i686 gate
   `0 differ` on every object but the file added and the WAV dump's.
-  **For the owner's ear** (nobody has listened): a music track through its
+  **Heard by the owner, 2026-11-07:** the music, through days of play on the
+  32-bit default in their `game\` folder (its `bof3x.dll` of 2026-11-06, the
+  log's `patch ON SoundSdl` and `sound output: SDL3 ... SDL 3.4.16`): "all
+  sounded great", approved. The owner said that of the music only; the rest of
+  the list below was not named, and the A/B beside `BOF3X_OFF=SoundSdl` and
+  the 64-bit build were not part of it.
+  **For the owner's ear** (as staged): a music track through its
   loop point (the ring's halves, DIV-0081's rows), a battle's voices (many
   static buffers at once, at their cue frequencies), DIV-0171's pan and the
   fades of DIV-0028 / DIV-0143 (the volume law), the inn's jingle through
@@ -14966,5 +14999,106 @@ designed in rather than bolted on.
 - **Default:** off
 - **Player:** yes - a launcher key (`src/launcher/config.cpp`)
 - **Toward:** none - an option of this project
+- **Languages:** any
+- **State:** active
+
+### The FMVs decoded by our own AVI, Cinepak and Video 1 decoders, not MCI
+
+- **ID:** DIV-0205
+- **Date:** 2026-11-07
+- **Subsystem:** platform (`Fmv_Play` `0x59E360` and `Fmv_WndProc`
+  `0x59E570`, ours since DIV-0035, `src/game/fmv_play.cpp`; the decoders
+  `src/video/avi_reader.cpp`, `cinepak.cpp`, `msvideo1.cpp`, `movie.cpp`;
+  [`replacing-mci.md`](replacing-mci.md) "As built")
+- **Tier:** Sensible - the picture the 64-bit build cannot otherwise show,
+  and one fewer OS multimedia stack.
+- **Original behaviour:** `Fmv_Play` plays each movie through MCI: `open
+  avivideo!%s alias vfw` (then `%s%s` under the CD root), `window vfw handle
+  %d`, `put vfw destination ...`, `play vfw window from 0 notify`, a blocking
+  message pump until `MM_MCINOTIFY` or `Fmv_WndProc`'s skip, `stop vfw wait`,
+  `close vfw wait`; `pause vfw` / `resume vfw` on `WM_ACTIVATEAPP`
+  ([`replacing-mci.md`](replacing-mci.md) 2, disassembled 2026-09-19). MCI's
+  AVI player decompresses through Video for Windows: `iccvid.dll` for
+  Cinepak (`capcom.avi` since DIV-0001; the disc's conversion, DIV-0099) and
+  `msvidc32.dll` for Microsoft Video 1 (`logos.avi`, `MSVC` / `CRAM`, 16-bit,
+  640 x 480, 120 chunks at 14.984 a second of which 60 are empty repeats).
+  **Windows ships the Cinepak decompressor for 32-bit processes only** (D407:
+  `iccvid.dll` in `SysWOW64` alone, `msvidc32.dll` in both system folders, so
+  a 64-bit `ICOpen` of `MSVC` opens; in the 64-bit build `ICOpen` of `cvid` returns null and
+  MCI pumps the clip to its end drawing nothing - the owner's first play of
+  the 64-bit build, 2026-11-07). The audio stream (PCM 22.05 kHz stereo in
+  the PC's file, 44.1 kHz in the disc's) went through MCI's `waveOut`.
+- **New behaviour:** no MCI call. `Fmv_Play` reads the file whole - the name
+  as given, then under the CD root, the original's two opens - and parses it
+  with an AVI reader of ours (`hdrl` / `strl` / `strh` / `strf`, the `movi`
+  list walked, `rec ` lists included, `idx1` counted when present), decodes
+  the video stream with a Cinepak decoder (strips, V1 / V4 codebooks full
+  and partial, colour and greyscale, intra, inter and all-V1 vector chunks,
+  the codebooks inherited strip to strip and frame to frame) or a Microsoft
+  Video 1 decoder (4 x 4 blocks, the 8-bit palettised and 16-bit RGB 5-5-5
+  forms, one-, two- and eight-colour blocks, skip codes, the early end) -
+  each written from the public descriptions of the formats, nothing vendored
+  (rule 5, [`LICENSING.md`](LICENSING.md) 4; both formats are from 1991-92
+  and carry no live patent) - and draws each frame into DIV-0035's
+  rectangle by `StretchDIBits` (a whole multiple copies pixels; a 4:3 fit
+  averages them) on the wall clock at `strh`'s `dwRate / dwScale` (15 a
+  second for `capcom.avi`, 30 for the disc's, 14.984 for `logos.avi`): the
+  frame due now is drawn, every frame up to it decoded (each is coded over
+  the last). An empty chunk repeats the frame. The PCM stream, when the file
+  has one (8- or 16-bit, 1 or 2 channels), is put whole into an SDL3 audio
+  stream of its own (DIV-0201's library; the game's sound output does not
+  exist yet - both movies play before `Display_Setup` and `Game_Init`) and
+  started with the clock. The movie ends when the longer of the two streams
+  has run (7.53 s for the PC's `capcom.avi`: the audio is 0.06 s longer than
+  its 112 frames; 8.01 s for `logos.avi`). A decode fault holds the last
+  good frame to the end and is logged; it is not fatal. `WM_ACTIVATEAPP`'s
+  pause and resume stop and start the clock and the audio stream in place
+  of the MCI strings (DIV-0049's rule unchanged: nothing under DIV-0033's
+  background mode); `WM_PAINT` draws the current frame again, which MCI's
+  window did for itself. The subclass, the modal pump, the skip on a key, a
+  click or the pad (DIV-0066), the `WM_QUIT` put back, the restore of the
+  window procedure, and the quiet return on a file that cannot be opened or
+  read (`LogNotOpened`: a disc-only install's missing AVIs) are as before.
+  The renderer (`src/render`) is not used: it does not exist when the movies
+  play, and MCI's own draw was GDI's too. The log says `DIV-0205 NAME:
+  CODEC W x H, N frames at R/S a second (T s)` and the PCM stream's shape.
+  The whole file in memory (4.6 MB and 3.9 MB; the disc's 7.5 MB) for the
+  length of the movie, freed after.
+- **Rationale:** D407 - the 64-bit build (the x64 round, PR #207) showed no
+  Capcom logo, and no 64-bit Cinepak decompressor exists to give it one
+  (Video 1's exists; `logos.avi` leaves MCI with it so both movies go one way). Decoding in-process also drops the last Video for Windows / MCI
+  dependency ([`replacing-mci.md`](replacing-mci.md) 6: "worth doing
+  eventually"), which DIV-0001 already had to work around once (Indeo gone
+  from Windows). The owner's choice of 2026-09-23 (MCI into the window,
+  DIV-0035) was taken when MCI worked everywhere the game ran; the 64-bit
+  build changed that.
+- **Also in the PSX version?** No: the PlayStation streams its movies through
+  the MDEC. The pictures are the files' own, as MCI showed them.
+- **Verification:** the decoders against ffmpeg 9.0.1's decode of the same
+  files outside the tree (`tools/fmv_compare.py`, `build/bof3x-fmvdump.exe`,
+  2026-11-07; `-fps_mode passthrough`, rgb24 for Cinepak and the stream's
+  own rgb555le for Video 1): `capcom.avi` (DIV-0001's) 112 of 112 frames
+  bit-exact and the 664,440 PCM bytes identical; the disc-built
+  `CAPCOM.AVI` (DIV-0099's, 231 frames at 30 a second, 44.1 kHz) 231 of 231
+  bit-exact and the 1,345,344 PCM bytes identical; `logos.avi` 60 of 60 coded
+  frames bit-exact and every one of its 60 empty chunks a repeat. The first
+  Cinepak build differed by one in the green channel of about 5 % of the
+  pixels (the chroma halved by an arithmetic shift; the reference truncates
+  toward zero) - a decode-level check finds what a screen grab would not.
+  Builds on both widths; the hosted suite with `BOF3X_SHADOW='*'` and the
+  exe host's self-test on both widths exit 0; `whelpBoss.txt` to its end
+  through both movies on the 64-bit exe host and the hosted 32-bit build; a
+  screen grab of the 64-bit build playing the Capcom logo; `statehash.py
+  check` of the route against the `orig4` pair shows the 64-bit round's
+  eleven signature pages and the sound layer's heap-pointer page, which
+  Capcom's MCI player on the same build shows too - the figures in
+  [`replacing-mci.md`](replacing-mci.md) 8. **Not yet played by the
+  owner.**
+- **Reversible?** `BOF3X_ORIGINAL=Fmv_Play` runs Capcom's player, MCI and
+  all (32-bit only; on the 64-bit build that is D407's silent clip).
+- **Switch:** Fmv_Play
+- **Default:** on
+- **Player:** costly - an `Inject` name only (`src/game/fmv_play.cpp`)
+- **Toward:** none - the PlayStation streams its movies through the MDEC (above)
 - **Languages:** any
 - **State:** active

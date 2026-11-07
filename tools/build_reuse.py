@@ -84,10 +84,11 @@ MEMOS = [("cache_inventory", "_psp_table", None), ("exe_tables", "_PC_POINTER_BY
          ("region_diff", "_CODE_MEMO", dict), ("vag", "_CACHE", dict)]
 # Run-time-written globals of tools that are no memo of a build step: loc_build.py
 # runs in a process of its own for each step; the others are not the setup's
-# (mem_dump's _move is the open game process's image move, proc_image.py).
+# (mem_dump's _move is the open game process's image move, proc_image.py;
+# move_funcs's _eol is the checkout's line ending, the source mover's).
 LINT_EXEMPT = {"loc_build", "attract_run", "band_rows", "close_probe", "input_run", "magic_rows", "scenario_rows",
                "statehash", "build_reuse", "data_census", "quicksave_check", "quicksave_census", "quicksave_frames",
-               "mem_dump"}
+               "mem_dump", "move_funcs"}
 
 _MON_ID = 4                     # a sys.monitoring tool id no debugger, coverage or profiler takes
 _CO_FUNCTION = 0x0001 | 0x0002  # CO_OPTIMIZED | CO_NEWLOCALS: a function's body, not a module's or class's

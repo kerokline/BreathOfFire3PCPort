@@ -883,10 +883,8 @@ registry's entry, one loop): SP-G may want the same for its surfaces.
      its frequency and play position (`GetFrequency` / `GetCurrentPosition`
      at the take). **A one-shot voice playing at the take is cut**, as the
      round doc allows;
-  3. **the last stream's file** from the record, and a voice stream
-     (`SndStream_Buffer`, kind > 0) playing from it at the take made again by
-     `SndStream_Play` at its position (stopped if it had stopped: the inn's
-     and the camp's waits read it through `Sound_StreamDone`);
+  3. **the last stream's file** from the record (the voice stream's words -
+     had one, playing, position - read here and acted on in step 5a);
   4. **`Music_File`** read again: `Music_LoadFile(Music_LoadedTrack)` (the
      cache's song under DIV-0087), refused with a Fatal unless size, loop
      flag and track come back as the span had them;
@@ -901,6 +899,13 @@ registry's entry, one loop): SP-G may want the same for its surfaces.
      once-only stream that had played past its end gets zeros in both halves
      and `Music_Finished` set, so the pump stops it at its next notification
      as it would have; a stream that was stopped is stopped again;
+  5a. **the voice stream** (`SndStream_Buffer`, kind > 0) that played from
+     the last stream's file at the take, made again by `SndStream_Play` at
+     its position (stopped if it had stopped: the inn's and the camp's waits
+     read it through `Sound_StreamDone`) - **after the music stream**, since
+     2026-11-07 (D406, DIV-0145's amendment): `Music_Start`'s skip decodes
+     the song from its top to the heard sample before the ring's first half
+     plays, and a voice played before it had that long alone;
   6. **our statics**: DIV-0092's position (`g_resume`: remembered and
      pending), DIV-0028's `g_fade_frame` and `g_stop_unseen`, DIV-0132's
      `g_unducked`, DIV-0129's `g_stream_missing`;
@@ -1041,8 +1046,11 @@ Run folders, logs, dumps and crash dumps: `C:\Users\kerok\q_spa\runs\`
   rewinding track resumes at the start of the frame holding the heard
   sample (26 ms at most early, DIV-0092's fold).
 - **Not measured:** the cross-process form; an install with DIV-0087's
-  cache (the synth's `FastForward` path is DIV-0092's, tested there);
-  a quick-load during a voice stream (no route holds one).
+  cache (the synth's `FastForward` path is DIV-0092's, tested there).
+  A quick-load during a voice stream: `quick_combat`'s take holds one (Rei's
+  Pilfer line, `SndStream_Play` at frame 882, the music log's line since
+  2026-11-07); D406 ([`known-defects.md`](known-defects.md)) has its
+  measurement.
 
 ### 10.7 Ledger: an addendum to draft A (taken into DIV-0145)
 
