@@ -34,4 +34,9 @@ void KeyOffEffectVoices();
 // byte is 0xFF. 0 at build; sound_fuzz.cpp sets it for its own check only.
 extern std::uint8_t g_play_refuses_none;
 
+// BOF3X_MUSIC_LOG=1's ring line (sound.cpp RingLog, from Sound_Tick): held
+// off while Sound_Inject's self-tests drive Sound_Tick on stand-in buffers,
+// and for the whole of a BOF3X_SELFTEST_ONLY run.
+extern std::uint8_t g_ring_log_hold;
+
 }  // namespace sound
