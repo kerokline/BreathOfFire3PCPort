@@ -10735,6 +10735,14 @@ Kind 0x9D is placed by areas 173 and 174 only (`area_w4c.cpp`).
 **Fixed 2026-11-03:** DIV-0142's amendment - kind 0x9D's start clears the
 rectangle its quad reads.
 
+**Reopened and fixed again 2026-11-07:** the owner, in play: a stripe at the
+hologram's right edge that came and went as the camera turned. The clear was
+24 x 48, but the quad's far corners (u + 0xC, v + 0xB) make it 25 x 49 texels
+with both edges, and the PC's draw samples the far column and row at some
+sub-pixel positions. The owner's live game in area 174 held title art in
+both: column 0x358 (8 texels) and row 0x1B0 (13). The clear is 25 x 49 now
+(DIV-0142's amendment of 2026-11-07).
+
 ## D406 — A quick-load taken while a battle voice plays brings the voice back first and the music a moment after (ours, DIV-0145's rebuild; seen by the owner 2026-11-07 on the 64-bit build; the measured head start removed 2026-11-07 by DIV-0145's amendment)
 
 **Seen:** the owner, 2026-11-07, on the 64-bit build (`build-x86_64`'s three

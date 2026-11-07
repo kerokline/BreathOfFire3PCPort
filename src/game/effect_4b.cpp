@@ -682,9 +682,12 @@ extern "C" void __cdecl EffectKind9D_Run(void) {
 // record's, its point +0x34.. the record's point; the colour +0x5D..+0x5F 0;
 // +6 0 - the pulse at once (EffectKind9D_Pulse) and +1 = 1; else +1 = 2.
 //
-// DIV-0142's amendment (issue #191): first, the 24 x 48 rectangle the quad
-// reads (page (0x340, 0x100), u +0x2E - 0xC, v +0x30 - 0x25, as Kind9DQuad
-// takes them) is cleared. The PlayStation's page is empty there in areas 173
+// DIV-0142's amendment (issue #191): first, the rectangle the quad reads
+// (page (0x340, 0x100), u +0x2E - 0xC, v +0x30 - 0x25, as Kind9DQuad takes
+// them) is cleared - 25 x 49, both far edges included: the quad's far corners
+// are u +0xC and v +0xB, a column and a row the PlayStation never samples but
+// the PC's D3D draw does at some sub-pixel positions (2026-11-07, a stripe at
+// the right that came and went as the camera turned). The PlayStation's page is empty there in areas 173
 // and 174 (a Mednafen VRAM dump, 2026-11-03); the PC's START.DAT leaves its
 // title art at (0x350..0x3BF, 0x160..0x1BF), which the hologram drew as a box.
 extern "C" void __cdecl EffectKind9D_Start(void) {
@@ -692,7 +695,7 @@ extern "C" void __cdecl EffectKind9D_Start(void) {
     if (request == 3 || request == 1) return;
     if (g_hologram_clear != 0)
         SpriteCapture_ClearSlot(0x340 + static_cast<unsigned char>(S()[0x2E] - 0xC),
-                                0x100 + static_cast<unsigned char>(S()[0x30] - 0x25), 0x18, 0x30);
+                                0x100 + static_cast<unsigned char>(S()[0x30] - 0x25), 0x19, 0x31);
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
     unsigned char* const o = Sprite(s[0xB], "EffectKind9D_Start");

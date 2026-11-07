@@ -11,6 +11,10 @@ runs: `C:\Users\kerok\bof3x-runs\r_ring\PB` (`tools/map_extent.py`,
 **Folded 2026-10-21 (group END):** section 8 is DIV-0041's 2026-10-21
 pillarbox amendment (areas 31, 90 and 198, as PX redrafted it; menus in a
 framed area stay framed, the owner's call).
+**Amended 2026-11-07:** area 198 (Myria's chamber) taken off the list on the
+owner's play of the scenes before and after her fight - "this scene should be
+full". The list is **31 and 90**; DIV-0041's amendment of that date. The text
+below keeps the three-area record as it was built.
 
 ## 0. The answer
 

@@ -159,23 +159,24 @@ void SelfTest() {
         expect(Framed(r.widest, 53), r.at53, "framed at 16:9");
         expect(Framed(r.widest, 120), r.at120, "framed at 21:9");
     }
-    // The list: exactly 31, 90 and 198 of every area word (0xFFFF, no area, too).
+    // The list: exactly 31 and 90 of every area word (0xFFFF, no area, too).
     {
         unsigned listed = 0;
         for (unsigned a = 0; a <= 0xFFFF; ++a)
             if (Listed(a)) {
                 ++listed;
-                Check(a == 31 || a == 90 || a == 198, "an area listed", a, 0);
+                Check(a == 31 || a == 90, "an area listed", a, 0);
             }
-        expect(listed, 3, "areas listed");
+        expect(listed, 2, "areas listed");
     }
-    // The rule by area, at section 1's measurements: the three listed areas
+    // The rule by area, at section 1's measurements: the two listed areas
     // framed at their measured class; the eight taken out on the owner's look
-    // at the sheets (2026-10-21) and an ordinary area (2, 30 columns) unframed.
+    // at the sheets (2026-10-21), 198 taken out in play (2026-11-07) and an
+    // ordinary area (2, 30 columns) unframed.
     struct AreaRow {
         unsigned area, widest, at0, at53, at120;
     };
-    const AreaRow areas[] = {{31, 8, 0, 0, 0},       {198, 5, 0, 0, 0},      {90, 15, 0, 53, 53},    {186, 8, 0, 53, 120},
+    const AreaRow areas[] = {{31, 8, 0, 0, 0},       {198, 5, 0, 53, 120},   {90, 15, 0, 53, 53},    {186, 8, 0, 53, 120},
                              {149, 7, 0, 53, 120},   {98, 16, 0, 53, 120},   {53, 15, 0, 53, 120},   {153, 15, 0, 53, 120},
                              {154, 15, 0, 53, 120},  {192, 15, 0, 53, 120},  {194, 15, 0, 53, 120},  {2, 30, 0, 53, 120}};
     for (const AreaRow& r : areas) {
@@ -275,7 +276,7 @@ void Inject() {
     g_on = !(n == 1 && text[0] == '0');
     g_trusted = false;
     g_epoch_area = Game_AreaNumber;
-    bof3::Log("pillarbox   DIV-0041 (PB, PX): areas 31, 90 and 198 framed %s; %u columns a side",
+    bof3::Log("pillarbox   DIV-0041 (PB, PX): areas 31 and 90 framed %s; %u columns a side",
               g_on ? "on" : "off (BOF3X_PILLARBOX=0)", Widescreen_Live());
 }
 

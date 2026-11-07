@@ -3325,6 +3325,13 @@ designed in rather than bolted on.
   90); captures of 31, 90 and 198 framed and 149, 154 and 186 unframed at
   16:9 and 21:9 (PX). **Owed:** the owner's play of the three framed areas
   (the three-area build not yet seen). **Reversible:** `BOF3X_PILLARBOX=0`.
+  **Amended 2026-11-07: area 198 taken off the list.** The owner, playing
+  through Myria's scenes before and after the fight in area 198: the
+  chamber should be full, not pillarboxed. `pillarbox.h` `Listed` is now 31
+  and 90; area 198 draws the full wide picture, and its red full-frame
+  fills and bars (kinds 0xAC, 0xAA, 0xA8, 0xB0, `Widescreen_FillX` ..
+  `FillRight`) now run the picture's full width, not to a 320 frame. The
+  self-test's list check is 2 areas, and 198's row is unframed (0, 53, 120).
 - **Switch:** ini:wide=0
 - **Default:** off - `wide=0` is the launcher's default (`src/launcher/config.h`)
 - **Player:** yes
@@ -10861,6 +10868,15 @@ designed in rather than bolted on.
       `effect_4b`'s fuzz run before the clear is armed; the exe host's
       start-up self-tests: exit 0. `ledger_check` and `ledger_switches --check`:
       0 errors.
+    - **Amended 2026-11-07** (the owner, in play at the hologram): a stripe
+      still showed at the figure's right edge, coming and going as the camera
+      turned. The quad's far corners are u `+0x2E` + 0xC and v `+0x30` + 0xB,
+      so it spans 25 x 49 texels counting both edges; the PlayStation never
+      samples the far column and row, but the PC's D3D draw does at some
+      sub-pixel positions. The clear was 24 x 48. Read from the owner's
+      running game in area 174: the capture fills x 0x340..0x357 exactly
+      (641 texels), and column 0x358 held 8 title-art texels (0x948C) and row
+      0x1B0 held 13, neither cleared. The clear is now 25 x 49.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteCapture` (Capcom's draw), or
   `BOF3X_ORIGINAL=Sprite_Draw`.
   A player turns it off with `BOF3X_OFF=SpriteCapture` (the ini's `off=`).
