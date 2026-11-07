@@ -1,0 +1,305 @@
+# The source-layout round: staging (IDEAS I44's last step, I5 folded in)
+
+**Status:** DRAFT (staged 2026-11-07 on `docs/source-layout-staging` off
+`main` `39d88ef9`, the owner's pick of the next large round the same
+morning; nothing launched. Stage A needs no `src/game` change and can run
+beside the 64-bit round's stage D; stage B waits for stage D's merge and the
+owner's calls in section 7.)
+
+The typed-data round named every data access, the relocatable-image round
+removed every fixed address, and the 64-bit round builds the same source at
+two widths. What is still not Capcom's shape is **where the code lives**: our
+301 game files are the takeover's waves (`area_w1c.cpp`, `rest_3d.cpp`,
+`effect_engine_b.cpp`), cut by address range and by the order the rounds
+reached them, not by the source files Capcom compiled. The owner folded I5
+into I44 on 2026-10-21 as "a source-layout pass after stage 3 - which of our
+files should be split or joined to match", and ordered it after the 64-bit
+round ([`x64-build-round.md`](x64-build-round.md) 9).
+
+This round recovers Capcom's translation-unit boundaries from the binary and
+moves our functions so that each of our files holds whole translation units.
+**It changes no function's body.** The proof is that every function compiles
+to the same machine code it did before, wherever it now lives, and the state
+hash on the ten routes.
+
+## 0. What the binary and our tree say today, measured 2026-11-07
+
+Scripts in `C:\Users\kerok\bof3x-runs\sl1107\m` (scratch; `gaps.py`,
+`psxruns.py`, `xref.py`, `order.py`, `cluster.py`), over `bof3/BOF3.exe` and
+`symbols.toml` at `main` `39d88ef9`. Stage A's SL1 replaces them with a
+committed tool; these numbers size the round and nothing more.
+
+| Measurement | Result | What it means |
+|---|---|---|
+| Functions in `.text` (`symbols.toml` `[[func]]`) | 10,100; 10,088 with `impl` | the whole game, the runtime's called entries |
+| Start alignment | 10,070 of 10,100 on 16 bytes | MSVC6's per-function alignment |
+| Filler before a start | `0x90` before 9,467 of 10,099; code before 486; `0x00` 143 (the high byte of a `ret n`) ; `0xCC` 3 | **no linker seam byte**: an object's edge looks like a function's edge. The boundaries must come from order, not from padding |
+| PC runs whose PSX twins are in the same order (same overlay, next PSX address within `0x2000`) | 1,956 runs over the 5,613 paired functions; 1,107 of two or more, 299 of five or more, the longest 34 | both compilers emit a file's functions in source order; a run is inside one file, and a break in PSX order where PC order continues is a boundary candidate |
+| Of those runs (three or more), how many of **our** files each spans | one file 580, two 85, three 25, four to seven 11 | 121 runs of Capcom's order are cut across our files today |
+| `.data` (initialised) statics read by functions at most 12 apart, in address order: is the next one's reader later in `.text`? | 2,690 of 2,950 neighbours yes; longest increasing run 2,427 of 2,951 | **the linker laid `.data` in the same object order as `.text`**: a static's place in `.data` says which object it came from |
+| The same for `.rdata` | 218 of 239; LIS 175 of 240 | the same, fewer anchors |
+| The same for `.bss` | 904 of 1,290; LIS 308 of 1,291 | weak: uninitialised globals are partly COMMON symbols, which the linker places by its own rule; `.bss` file statics still follow object order. SL1 separates the two |
+| Our files that are one contiguous `.text` run | 116 of 301; 1,201 contiguous pieces in all | most of our files interleave with others in Capcom's order |
+| Candidate units from PSX order and shared `.data`/`.rdata` statics alone (functions joined when they share a run or a local static) | 1,127 joined segments of two or more holding 5,243 functions; 4,857 functions with no join yet | the joins are the sure part; the rest is placing each boundary inside the gaps, which `.data` order (above) and the call graph (a `static` function is called only inside its file) decide |
+| Rich header (`tools/pe_rich.py`) | 1,009 object contributions, 110 import thunks, 16 unmarked; the largest record 712 from one tool build | [`SHARED_SOURCE.md`](SHARED_SOURCE.md) 2's ~883 objects, the runtime's and the libraries' among them. Which record is the game's is **not** established |
+| Our side of a move | 343 game `.cpp` (254 `*_fuzz.cpp`), 313 files with an `_Inject()`; 600 `src/game/` lines in `CMakeLists.txt`; 1,178 `src/game/...` citations in `docs/`, 85 with a line number; 424 `static` / `inline` definitions in `src/game` | what a function's move drags with it |
+
+The game's own code is `0x401000..0x5AB7E0`; the MP3 decoder
+(`0x5AB7E0..0x5B8DA0`) and the C runtime (`0x5B9380..0x5C3660`) are out of
+scope: the first is replaced (DIV-0091), the second is Microsoft's and was
+replaced at its boundary ([`platform-layers-plan.md`](platform-layers-plan.md)
+2.3, 2.4).
+
+## 1. What "matching Capcom's files" means here
+
+A **unit** is one object file of the 2001 link, recovered as a contiguous
+`.text` range plus the `.data`, `.rdata` and `.bss` ranges its statics came
+from. The round's target, under the owner's call 1 (section 7):
+
+- every function of ours lives in the file of its unit, and no unit is split
+  across two of our files;
+- a file holds one unit (or, if the owner chooses, adjacent units of one
+  subsystem - never parts of two);
+- functions inside a file are in Capcom's order, so a reader walking a file
+  walks the binary;
+- a file's statics are the unit's statics - the typed `GameData` member stays
+  the place (the image is not moved; this round changes only which source
+  file names it);
+- the fuzz files, the `_callees.h` headers and the `_Inject()` registrations
+  follow their functions; nothing is left in a file named for a wave.
+
+What the round does **not** do: rename functions, change a body, change a
+signature, touch the image's layout, change the hosted build's clone fuzz
+beyond where its files live, retire the typed-data round's comments (I48;
+section 7 call 5), widen anything (I53).
+
+Units that hold only the porting house's code (the Direct3D replay, the
+DirectInput and DirectSound layer, `WinMain`) were replaced by ours long ago;
+where our replacement already lives under `src/render`, `src/input` or
+`src/hook`, it stays there. The round lays out `src/game`.
+
+## 2. The method: a unit table, then pure moves, then the gate
+
+1. **The unit table** (stage A): `analysis/tu_layout.tsv`, one row per
+   function - `pc`, name, unit id, the unit's `.text` range, a confidence
+   (`joined` by a PSX run or a shared static; `placed` by `.data` order or
+   the call graph; `guessed` by neighbourhood alone), the evidence column, and
+   the proposed file. Committed with its tool and a CI check that the table
+   covers every `[[func]]` with an `impl`. It holds addresses and our names,
+   like `analysis/data_census.tsv`; no byte of the game.
+2. **The owner reads the proposed layout** (between stages A and B): the
+   unit count, the file names, the directory shape, the `guessed` rows.
+3. **The moves** (stage B): `tools/move_funcs.py` moves a function's
+   definition, its file-statics and helpers, its `_Inject()` lines, its fuzz
+   cases and its callees-header constants, and rewrites `symbols.toml`'s
+   `impl` and the build's source list. No hand edits of bodies. Each group
+   moves one `.text` range.
+4. **The gate after every merge:** `codegen_same.py --by-function` (SL3) on
+   the i686 build: every function's disassembly identical to `main`'s,
+   matched by symbol, whatever object now holds it; the initialised data the
+   same by symbol. Then the hosted `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`
+   suite and the exe host's self-tests. The x86_64 preset builds.
+5. **The proof** (stage D): the ten routes on the exe host against the
+   current references, the state hash identical but for the run noise its
+   repeats show.
+
+Why per function and not per object: today's `codegen_same.py` compares
+object by object, and every move changes two objects. The one real risk of a
+move is **inlining**: a `static` helper the compiler inlined into a caller in
+one file is no longer visible to a caller moved to another, and that caller's
+code changes. The move tool keeps a `static` helper with all its callers
+(Capcom's own `static`s are inside one unit by definition, so a correct table
+never separates them); where our wave files made a helper shared that Capcom's
+units do not share, it goes to a header as `inline` and the gate decides. A
+differing function is a stop, not a waiver: it is moved back or explained in
+the round's exception list with the reason and a fuzz or route that runs it.
+
+## 3. Stage A: the table and the tools (three groups, in parallel, no `src/game` change)
+
+Each group an Opus agent in its own worktree under
+`C:\Users\kerok\bof3x-runs\sl<mmdd>`, reset onto the round branch's tip.
+Agents run no game.
+
+### SL1: the unit table from the PC binary
+`tools/tu_census.py` and `analysis/tu_layout.tsv`, from `bof3/BOF3.exe` and
+`symbols.toml`:
+
+- the joins of section 0 (PSX order runs; a `.data` / `.rdata` static read
+  only inside a short `.text` window), with each join's evidence;
+- `.data` and `.rdata` order as a monotone alignment against `.text` order:
+  find where the alignment steps, and place the boundary between the two
+  readers that step. Separate `.bss` file statics from COMMON symbols (a
+  COMMON symbol is read from several units and sorted by the linker's rule -
+  measure the rule before relying on it);
+- the call graph: a function called only from inside one candidate unit is a
+  `static` candidate there; a function called from many units is `extern`;
+  string literals and float constants in `.rdata` read by one window;
+- the switch tables in `.text` (`analysis/pc_jumptables.json`) as part of
+  their function, so a table never reads as a boundary;
+- the Rich count as a bound: report how many units the table finds in the
+  game's range, and how that compares with the Rich records;
+- every boundary that two signals disagree on, listed.
+
+Output: the TSV, the counts in this doc's section 3 "as run", and a sheet of
+the 50 least certain boundaries for the owner's or the coordinator's read.
+Also a `--check` mode for CI: the table covers every `impl` function, and
+(after stage B) every function's `impl` is its row's file.
+
+### SL2: the PlayStation side
+The PSX binary is the second observation of the same tree
+([`SHARED_SOURCE.md`](SHARED_SOURCE.md) 1, 2). From the sibling
+(`../BreathOfFire3Recomp`, read only): the main executable's and each
+overlay's function order and their `.data` / `.sdata` / `.sbss` layout (the
+gp-relative blocks are per file on Psy-Q), giving PSX units the same way SL1
+gives PC ones. Then the agreement: each PC unit against the PSX unit of its
+twins - same set of functions, a superset (the port added code), split or
+joined. An overlay (`AREA030.EMI`, `BATTLE.EMI`) is a separately linked
+image, so its boundaries are independent of the main executable's: list
+which PC units are one overlay's code.
+
+Output: `analysis/tu_psx.tsv` and an agreement column SL1's table reads
+(merged by the coordinator after both). Where the PSX says a unit has a name
+(an overlay's file name, a debug string naming a `.c` file in either binary -
+search both for `.c` and `.C` strings), record it: those are the only real
+file names this round can find.
+
+### SL3: the move tooling and the per-function gate
+- `codegen_same.py --by-function`: disassemble every object of both builds,
+  key each function by its symbol, compare across objects; the same for
+  initialised data by symbol. A symbol present on one side only is a
+  difference. Kept beside the object mode, which the other rounds use.
+- `tools/move_funcs.py`: given `tu_layout.tsv`'s file column, move each
+  function's definition (with its leading comment block), its file-statics
+  and `static` helpers, its `_Inject()` registration lines, its fuzz cases,
+  and the callees-header constants it uses; write the new files' includes;
+  rewrite `symbols.toml` `impl`; regenerate the build's `src/game` source
+  list. Decide how the source list is kept so that two groups' moves merge
+  **without a hand-resolved conflict** (a generated `cmake/game_sources.cmake`
+  from the table is one way). Idempotent: run twice, no change.
+- `tools/cite_move.py`: rewrite `docs/` citations of a moved function -
+  `src/game/old.cpp:123` to the new path and line at the round's tip, by
+  the function the old line was in. A citation of a line that is not inside a
+  function (an include, a file comment) is listed, not guessed.
+- A dry run on one small range (two wave files that a unit crosses) in the
+  agent's worktree, the gate passing, then reverted: the tools' proof. The
+  dry run's diff stays in the report, not on the branch.
+
+## 4. Stage B: the moves (after stage D of the 64-bit round merges, and section 7)
+
+Groups by `.text` range so that no two touch one unit; the boundaries are
+SL1's, rounded to unit edges. A first cut, to be redrawn from the table:
+
+| Group | Range (cut to SL1's nearest unit edge) | What lives there |
+|---|---|---|
+| B1 | `0x401000..0x42E400` | read from the table |
+| B2 | `0x42E400..0x4551A0` | the battle engine ([`takeover-queue-round7.md`](takeover-queue-round7.md)) |
+| B3 | `0x4551A0..0x4A0000` | read from the table |
+| B4 | `0x4A0000..0x540000` | read from the table |
+| B5 | `0x540000..0x5AB7E0` | read from the table |
+
+Only B2's range is a documented subsystem; the other cuts are by size
+(about 0x2D000..0x6B000 bytes each) and are redrawn when the table exists.
+
+Moves are mechanical, so the groups may run in parallel; they merge one at a
+time with the gate after each (section 2.4), because a merge is where a
+shared helper shows. If SL3's source list cannot merge cleanly, run them one
+after another instead.
+
+Each group's report: the files made, emptied and deleted; the functions whose
+`static` helper became a header `inline`, and the gate's verdict on each; the
+`guessed` rows it placed and how.
+
+## 5. Stage C: what follows the moves (one agent, after B)
+
+- `cite_move.py` over `docs/` (and `CLAUDE.md`, `CONTRIBUTING.md`, the
+  `recipes/` comments), with the unresolved list read by hand.
+- The fuzz files: one per new file, named after it; the hosted build's fuzz
+  table regenerated.
+- `tu_census.py --check` in `checks.yml`: a function's `impl` is its unit's
+  file. A function of ours that is not Capcom's (a helper we added) is listed
+  in the table as `ours` and may live where its author puts it.
+- `docs/source-layout.md`: the table's reader - units by subsystem, each with
+  its range, its file, its PSX twin unit and its confidence. The group docs
+  of the takeover rounds keep their history; a line at the top of each says
+  where its functions now live.
+- [`SCAFFOLDING.md`](SCAFFOLDING.md) and [`docs/README.md`](README.md): the
+  new tree's shape, where a new function of ours goes.
+
+## 6. Stage D: the proof and docs (the coordinator)
+
+The gate on the tip at both widths; the hosted self-tests with
+`BOF3X_SHADOW='*'` (the relocatable-image round's lesson: a move changes
+static-initialisation order across files, which only the shadow suite saw
+last time); the ten routes on the exe host at the image's default base and
+at `BOF3X_IMAGEBASE=0xA00000`, the state hash against the current references;
+the 64-bit build's routes beside them. STATUS, HANDOFF, IDEAS I44's outcome,
+this doc's "as run". **The ledger:** nothing a player sees changes, so no DIV
+is expected; the doc says so.
+
+## 7. For the owner
+
+1. **Granularity.** (a) One file per recovered unit - the most faithful;
+   probably several hundred files where we have 301 (SL1's count decides).
+   (b) Units are hard edges, but adjacent small units of one subsystem may
+   share a file. Proposed: (a), since a unit that is too small to stand alone
+   is itself a fact about Capcom's tree.
+2. **Directories.** `src/game/` flat, or `src/game/<subsystem>/` (`battle/`,
+   `field/`, `effect/`, `menu/`, `text/`, `area/`, `boss/`, `system/`).
+   Proposed: subsystems, since several hundred files flat is hard to walk.
+3. **File names.** Capcom's are lost except where SL2 finds one. Ours,
+   descriptive, from the unit's contents and the PSX overlay it maps to
+   (`area030.cpp`, `battle_damage.cpp`). Proposed: SL1 proposes a name per
+   unit, the owner reads the list before stage B.
+4. **Doc citations.** (a) Rewrite every `src/game/...` citation in place to
+   the new path and line (`cite_move.py`), with `analysis/tu_moves.tsv` as the
+   old-to-new map. (b) Leave old docs pointing at the old paths and keep the
+   map. Proposed: (a), with the map kept; the takeover rounds' docs are read
+   for their evidence and a dead path costs every reader.
+5. **I48's comment clean-up.** Every line of `src/game` is touched by a move
+   anyway. Proposed: **not** folded in - a pure move is reviewable by its
+   gate alone, an edit mixed into it is not. I48 as its own small round after
+   this one, on the new layout.
+6. **When.** Stage A now, beside the 64-bit round's stage D (it changes
+   `tools/` and `analysis/` only; SL3's `codegen_same.py` mode is additive).
+   Stage B after stage D's merge, with no other `src/game` branch open: on
+   2026-11-07 no open PR and no unmerged local branch touches `src/game`.
+
+## 8. Ownership, merge order, numbering
+
+| File or area | Owner |
+|---|---|
+| `tools/tu_census.py`, `analysis/tu_layout.tsv` | SL1 |
+| `analysis/tu_psx.tsv`, the agreement column's input | SL2 |
+| `tools/codegen_same.py` (the new mode), `tools/move_funcs.py`, `tools/cite_move.py`, the build's source-list shape | SL3 |
+| each `.text` range's files | its stage B group |
+| `docs/`, the fuzz table, `checks.yml` | stage C |
+| `STATUS.md`, `HANDOFF.md`, the proof | the coordinator |
+
+Merge order: SL1, SL2, SL3 (any order, no shared files), the coordinator's
+join of SL2's column into the table, the owner's read (section 7), B1..B5 one
+at a time with the gate after each, C, D. Every commit `git commit -s`. The
+round branch `source-layout/round` off `main` at launch; one harness root
+for the round under `C:\Users\kerok\bof3x-runs`. **Numbering:** no DIV or D
+number is expected; if one is needed, check `main` at the time (on
+`39d88ef9` the next free are DIV-0205 and D406, which stage D of the 64-bit
+round may take first).
+
+## 9. Not in this round
+
+Renaming functions or globals; changing any body; the image layout; the wide
+image (I53); I48; `src/render`, `src/input`, `src/hook`, `src/launcher`
+beyond what a moved `_Inject()` line needs; the runtime's and the decoder's
+ranges.
+
+## 10. Not verified
+
+- That MSVC6 emitted a unit's functions in source order with nothing between
+  them (the usual behaviour without `/Gy`; with `/Gy` and `/OPT:REF` the
+  linker may drop or reorder COMDATs). SL1 checks it against the PSX runs:
+  if PC order breaks inside a PSX run in a way that is not a boundary, the
+  assumption fails and the table's `placed` rows lose their basis.
+- The COMMON-symbol rule for `.bss`.
+- Which Rich record is the game's, and so the expected unit count.
+- That moves leave every function's code the same: the 424 `static` /
+  `inline` definitions are where it can fail, and SL3's dry run is the first
+  measurement.

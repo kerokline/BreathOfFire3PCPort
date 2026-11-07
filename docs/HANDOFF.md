@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-11-02: the 64-bit build round's stages A and B merged as PR #183, stage C open as PR #187, **stage D next**, item 14a; DIV-0202 the logo movie as PR #186; `main` at PR #186; the exe-gap round merged as PR #176, issues 177..179 as PRs #181 / #182)
+**Status:** IN PROGRESS (2026-11-02: the 64-bit build round's stages A and B merged as PR #183, stage C open as PR #187, **stage D next**, item 14a; the source-layout round staged, item 14b; DIV-0202 the logo movie as PR #186; `main` at PR #186; the exe-gap round merged as PR #176, issues 177..179 as PRs #181 / #182)
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
 than restating it**.
@@ -326,6 +326,18 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
      as the first). The 32-bit build stays the player's default (the owner's call 3).
    - **Numbering:** ledger entries after DIV-0202, defects after D400, both checked against `main` first (the
      issue 177..179 work on `fix/issues-177-178` may take more).
+
+14b. **The source-layout round is staged, not launched** ([`source-layout-round.md`](source-layout-round.md),
+   2026-11-07, the owner's pick of the next large round; IDEAS I44's last step with I5 folded in). Our 301 game
+   files are the takeover's waves; the round recovers Capcom's translation units from the binary and moves
+   functions so each file holds whole units, every function's machine code unchanged. Measured: no seam byte
+   between objects (`0x90` filler throughout), but `.data` statics follow `.text` object order (2,690 of 2,950
+   neighbours) and 1,107 PC runs keep their PSX twins' order; only 116 of our files are one contiguous `.text`
+   run. **Stage A** (SL1 the unit table, SL2 the PlayStation side, SL3 the move tool and
+   `codegen_same.py --by-function`) changes no `src/game` file and can start beside stage D. **Stage B** (the
+   moves) waits for stage D's merge and **the owner's six calls** in the doc's section 7 (granularity,
+   directories, file names, doc citations, I48 kept apart, timing). Scratch measurements in
+   `C:\Users\kerok\bof3x-runs\sl1107\m`.
 
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
