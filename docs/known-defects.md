@@ -6074,7 +6074,7 @@ play ever puts a point on the eye's plane is not established.
 **Status:** latent; ours aborts where the original would end the process,
 and wraps as it does.
 
-## D217 — Kinds 0x61 and 0x6B make a particle of every opaque pixel, with no bound: past 2,048 (0x61) or 1,881 (0x6B) they overwrite `Sprite_Current` (0x61 latent; 0x6B seen 2026-10-29, issue #163, fixed by DIV-0186)
+## D217 — Kinds 0x61 and 0x6B make a particle of every opaque pixel, with no bound: past 2,048 (0x61) or 1,881 (0x6B) they overwrite `Sprite_Current` (0x6B seen 2026-10-29, issue #163, fixed by DIV-0186; kinds 0xA1 / 0xA3's twin pool seen past 1,306 on 2026-11-07 with Rei and Garr in Myria's chamber, fixed with 0x61's by DIV-0206)
 
 **Seen:** not seen in play; found by reading the code while taking it over,
 2026-09-29 (E2C, [`effect_2c.md`](effect_2c.md) §7) and 2026-10-03 (E3A,
@@ -6105,6 +6105,19 @@ say otherwise).
 more than 2,048 opaque pixels in its 64 x 64 is not measured; E2C - chapter
 10's run 13 captures sprite record 2, its pixel count is the sprite's, not
 measured.
+
+**Measured 2026-11-07 (the same shape in kinds 0xA1 / 0xA3):** the owner's
+`myriaFightAndEnding` route - in Myria's chamber (`Scena15_Run4`) Garr and
+Rei vanished and returned in a blink where Nina and Momo scattered and
+gathered. That was not this defect: their captures composed 0 texels (the
+frame upload queue read before its drain, DIV-0142's amendment of that day).
+Once the captures compose, the counts on the route are Rei 1,651, Garr 3,458
+and 2,441 (kinds 0xA1 / 0xA3, whose pool at `0x931980` reaches
+`Sprite_Current` after 1,306, [`rest_3f.md`](rest_3f.md) section 7) - this
+defect, reached by two more sprites than the Gaist; kind 0x61 made no capture
+on the route. **Fixed by DIV-0206:** the particles of kinds 0xA1 / 0xA3 and
+0x61 in rooms of ours for every pixel (`BOF3X_OFF=PixelRoom` for the
+original), the count logged on every capture.
 
 **Status:** kind 0x61 latent, faithful; kind 0x6B seen in play 2026-10-29
 (issue #163, below) and fixed by DIV-0186.

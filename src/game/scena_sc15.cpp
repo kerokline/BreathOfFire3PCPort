@@ -2380,6 +2380,28 @@ SC15_EXPORT void __cdecl Scena17_DrawFade(unsigned on, unsigned level) {
     p[0x15] = 0;
     Rgb(p, 4, c);
     Commit(2, 0x1C);
+    // DIV-0127 (amended 2026-11-07): with the fade off the copy is drawn
+    // opaque over the 320 columns and nothing else is meant to show - the
+    // field pass is off through the copy's hold, and the one frame step 3
+    // turns it on before step 4's dark tile covers it, the live field flashed
+    // in the wide bands beside the copy (the owner's "flicker"; measured at
+    // 21:9, one frame at full brightness before the bands' fade from black).
+    // Two opaque black tiles over the bands keep them black until the fade,
+    // which then brings them up with the field. Nothing narrow or in a fuzz
+    // (Widescreen_Fill() is 0 there).
+    if (a == 0 && Widescreen_Fill() != 0) {
+        const float cols = static_cast<float>(Widescreen_Fill());
+        for (int side = 0; side < 2; ++side) {
+            p = Packet();
+            SH_CALL(Gpu_SetTile)(p);
+            Rgb(p, 4, 0);
+            SetL(p + 8, std::bit_cast<std::uint32_t>(side == 0 ? -cols : 320.0f));
+            SetL(p + 0xC, 0);
+            SetL(p + 0x14, std::bit_cast<std::uint32_t>(cols));
+            SetL(p + 0x18, 0x43700000);   // 240.0f
+            Commit(2, 0x1C);
+        }
+    }
 }
 
 // original 0x56CCF0: a disc of 32 rays around the kind-2 sprite: the GTE
@@ -2416,6 +2438,13 @@ SC15_EXPORT void __cdecl Scena17_DrawRays(unsigned radius, unsigned level) {
     Commit(2, 0xC);
     const int32_t r = static_cast<int32_t>(radius & 0xFFFFu);
     const unsigned char c = static_cast<unsigned char>(level);
+    // DIV-0127 (amended 2026-11-07): the outer quads ran to 1600, which fills
+    // the 320-wide picture; under the wide picture they stop short of the
+    // band corners, so the rim grows by 10 a column a side (1600 x the fill's
+    // width over 320: 2130 at 16:9, 2800 at 21:9). 1600 narrow and in every
+    // fuzz (Widescreen_Fill() is 0 there); the disc's radius, the logic, is
+    // Capcom's.
+    const int32_t outer = 1600 + 10 * static_cast<int32_t>(Widescreen_Fill());
     unsigned char* const v = At(::bof3::Img(Prim_VertexScratch_addr));
     auto* const sv = rv::As<records::SVector>(v);   // Prim_VertexScratch: four SVECTORs (records_gpu.h SVector)
     long depth, flags;
@@ -2445,11 +2474,11 @@ SC15_EXPORT void __cdecl Scena17_DrawRays(unsigned radius, unsigned level) {
         rv::Store<unsigned>(sv[0].x, 0);
         rv::Store<unsigned>(sv[0].y, 0);
         rv::Store<unsigned>(sv[0].z, 0);
-        rv::Store<unsigned>(sv[1].x, Scaled(SH_CALL(Math_Cos)(a), 1600));
-        rv::Store<unsigned>(sv[1].y, Scaled(SH_CALL(Math_Sin)(a), 1600));
+        rv::Store<unsigned>(sv[1].x, Scaled(SH_CALL(Math_Cos)(a), outer));
+        rv::Store<unsigned>(sv[1].y, Scaled(SH_CALL(Math_Sin)(a), outer));
         rv::Store<unsigned>(sv[1].z, 0);
-        rv::Store<unsigned>(sv[2].x, Scaled(SH_CALL(Math_Cos)(a + 0x80), 1600));
-        const unsigned s4 = Scaled(SH_CALL(Math_Sin)(a + 0x80), 1600);
+        rv::Store<unsigned>(sv[2].x, Scaled(SH_CALL(Math_Cos)(a + 0x80), outer));
+        const unsigned s4 = Scaled(SH_CALL(Math_Sin)(a + 0x80), outer);
         rv::Store<unsigned>(sv[2].z, 0);
         unsigned char* const quad = Packet();
         rv::Store<unsigned>(sv[2].y, s4);

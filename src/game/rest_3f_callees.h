@@ -51,6 +51,7 @@ constexpr std::uint32_t kPixCellsSize = 0xC;
 // +0x10 / +0x11 the step (s8 each).
 constexpr ::bof3::image::Va kParticles{0x931980};
 constexpr std::uint32_t kPartStride = 0x14;
+constexpr std::uint32_t kPartRoom = 0x60 * 0x78;   // DIV-0206: capture record 1's every pixel, ours
 // The VRAM rectangle the capture draws into and reads back: (0x340, 0x100).
 constexpr int kCaptureX = 0x340;
 constexpr int kCaptureY = 0x100;

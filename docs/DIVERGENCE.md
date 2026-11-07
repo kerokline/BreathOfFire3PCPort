@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 205 entries, DIV-0001..0205, DIV-0037 and DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 206 entries, DIV-0001..0206, DIV-0037 and DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -9886,6 +9886,52 @@ designed in rather than bolted on.
   draw: the seam and the 320-wide pictures), `BOF3X_ORIGINAL=Scena17_DrawLetterbox`
   (the 320-wide bands). Narrow play without the wide picture loses only the
   seam.
+
+  **Amended 2026-11-07: the *Fin* disc's rim reaches the band corners.**
+  *Original behaviour:* the ending's last scene darkens the picture around
+  the party with `Scena17_DrawRays` `0x56CCF0` (ours, `scena_sc15.cpp`): 32
+  Gouraud triangles from the centre to a radius the script grows (0 to 500,
+  then 1,200, then the level lightens to 0x80 under the *Fin* panel), and 32
+  flat quads from that rim out to 1,600 map units, all subtractive. 1,600
+  fills the 320-wide picture at the scene's camera; under the wide picture
+  the far side of the quads falls short of the top band corners, which show
+  the lit sand (the owner's capture at 21:9, 2026-11-07). *New behaviour:*
+  the outer rim is 1,600 + 10 x the fill's columns a side (`Widescreen_Fill()`:
+  2,130 at 16:9, 2,800 at 21:9, 1,600 x the fill's width over 320); the disc's
+  radius, the step's timing and the triangles are Capcom's, and 1,600 narrow
+  and in every fuzz. *Why:* the owner, 2026-11-07 ("black out the area
+  outside the circle"). *Verification:* the chapter-17 save (`ending17`'s) played at real time
+  through the roll to the outro at 21:9 with a shot every 15 frames
+  (`D:/bof3x-runs/end1107/shots_p`): the darkness reaches every corner of the
+  wide picture through the disc's growth (recipe frames 10,420..10,630 at
+  500, 10,645..10,690 growing to 1,200) and its lightening under the *Fin*
+  panel (10,705 on); the owner's capture of the same scene before the change
+  showed lit sand in both top corners. The black wedge at the top-left corner
+  from 10,690 on is the desert map's own edge past the picture, drawn so
+  before this change and unrelated to the disc. **Reversible:**
+  `BOF3X_ORIGINAL=Scena17_DrawRays` (Capcom's 1,600).
+
+  **Amended 2026-11-07: the bands stay black until the desert fades in.**
+  *Original behaviour:* chapter 17's intro holds a copy of one field frame
+  (`Scena17_EnterArea`'s DR_MOVE to (0x2C0, 0)) on the screen through the
+  music load, drawn by `Scena17_DrawFade` as two opaque 320-wide sprites
+  with the field pass off, then step 3 turns the pass on and step 4 fades
+  the copy out over the live field under a darkening tile. Under the wide
+  picture the copy covers the 320 columns only, so the bands are black
+  through the hold; on step 3's one frame the live field is drawn in the
+  bands beside the opaque copy before step 4's tile covers it: a one-frame
+  flash of lit sand at the picture's sides, then the bands fading up from
+  black with the field (the owner's "pillarboxes flicker before fading";
+  measured on the chapter-17 save at 21:9, shots every two frames: recipe
+  frame 188 the bands at brightness 105 of 255, frame 190 at 1, then up to
+  106 by 316). *New behaviour:* with the fade off (`on` 0) and the wide
+  picture, `Scena17_DrawFade` draws two opaque black tiles over the bands,
+  so the frame that turns the field on shows black bands, and step 4's fade
+  brings them up with the field as before. Nothing narrow or in a fuzz. *Why:*
+  the owner, 2026-11-07. *Verification:* the same shots after the change -
+  no frame between 150 and 330 with the bands above the fade's curve (frame
+  194 at 4, up to 106 by 316, as before; frame 188 black). **Reversible:**
+  `BOF3X_ORIGINAL=Scena17_DrawFade`.
 - **Switch:** EffectKind18Sub61_DrawOverlay, Scena17_DrawLetterbox
 - **Default:** on
 - **Player:** costly - two detour names only
@@ -10877,6 +10923,36 @@ designed in rather than bolted on.
       running game in area 174: the capture fills x 0x340..0x357 exactly
       (641 texels), and column 0x358 held 8 title-art texels (0x948C) and row
       0x1B0 held 13, neither cleared. The clear is now 25 x 49.
+    - **Amended 2026-11-07, later (the owner's Myria chamber report): the
+      frame upload queue is drained before the capture composes.** In
+      Myria's chamber before her fight (`Scena15_Run4`, effect kinds 0xA1 /
+      0xA3) Garr and Rei vanished and came back in a blink where Nina and
+      Momo scattered into pixels and gathered. Their sprites carry `+0x24`
+      bit 0: the frames are uploaded to VRAM on demand
+      (`Sprite_SetFrameQueueUpload`, [`sprite-pose.md`](sprite-pose.md)),
+      and the capture state sets the borrowed record's page to the capture
+      page itself (`Gpu_GetTPage(0, 0, 0x340, 0x100)`, row 0x80), so the
+      animation it sets queues the frame's image for VRAM (0x340, 0x180). The
+      PlayStation drains that queue at the frame's end, before the ordering
+      table is drawn, so the GPU draws the capture from the uploaded frame.
+      Ours composed the capture in the logic, at `Sprite_Draw`, from the
+      shadow as it was - the page just cleared - and wrote 0 texels, which the
+      effect turned into 0 particles and a hidden sprite (the owner's
+      `myriaFightAndEnding` route, the DIV-0142 capture log: Nina 876 and
+      Momo 1,108 texels from their own pages, Garr and Rei 0 from page 0x1D
+      row 0x80; the DIV-0206 count log the same). *New behaviour:*
+      `Capture` drains `Gfx_UploadQueueCount` through `Gfx_FlushUploadQueue`
+      first, in the queue's order - the same uploads the frame's end would
+      make, made before this compose. Nothing a state hash reads (the queue
+      is not in its ranges). *Verification:* the route replayed at 21:9 with
+      shots every 15 frames through the scene (`D:/bof3x-runs/end1107`, `shots_v` before and `shots_v4` after): before, Rei and Garr
+      vanished between two shots and Garr came back the same way; after,
+      Rei scatters at recipe frames 9,600..9,660, Garr scatters at
+      10,755..10,860 and gathers out of his particles at 10,950..11,010, as
+      Nina and Momo did on both runs. The capture log after: Rei 1,651
+      texels, Garr 3,470 and 2,441 (page 0x1D, row 0x80, anim 7), Nina 876
+      and Momo 1,108 unchanged. With DIV-0206's rooms, since those counts
+      pass the original's 1,306.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteCapture` (Capcom's draw), or
   `BOF3X_ORIGINAL=Sprite_Draw`.
   A player turns it off with `BOF3X_OFF=SpriteCapture` (the ini's `off=`).
@@ -15100,5 +15176,77 @@ designed in rather than bolted on.
 - **Default:** on
 - **Player:** costly - an `Inject` name only (`src/game/fmv_play.cpp`)
 - **Toward:** none - the PlayStation streams its movies through the MDEC (above)
+- **Languages:** any
+- **State:** active
+
+### The scatter-to-pixels effects have room for every pixel, instead of overwriting Sprite_Current
+
+- **ID:** DIV-0206
+- **Date:** 2026-11-07
+- **Subsystem:** effects - the three kinds that draw a sprite into VRAM,
+  read it back and turn every opaque pixel into a 0x14-byte particle that
+  blinks and flies: **kinds 0xA1 and 0xA3** (`EffectKindA1_ReadBack`
+  `0x490BB0`, `_SplitPixels` `0x490C50`, `_AimPixels` `0x490E20`,
+  `_MovePixels` `0x490FA0` and kind 0xA3's twins `0x491410..0x4917C0`; ours,
+  `src/game/rest_3f.cpp`; [`rest_3f.md`](rest_3f.md) 1.4 and 7) - Myria's
+  chamber before her fight, the members taken and given back
+  (`Scena15_Run4`); and **kind 0x61** (`EffectKind61_Scatter` `0x4807A0`,
+  `_Arm` `0x480910`, `_Twinkle` `0x480A50`; ours, `src/game/effect_3a.cpp`;
+  [`effect_3a.md`](effect_3a.md) 7), the same shape in chapter 10's run 2. D217
+  ([`known-defects.md`](known-defects.md)).
+- **Tier:** Intent - a port repair, DIV-0186's twin.
+- **Original behaviour:** the split writes one particle per opaque pixel of
+  the captured rectangle with no bound. Kinds 0xA1 / 0xA3 write from
+  `0x931980`, where `Sprite_Current` (`0x937F88`) lies 1,306 particles in and
+  capture record 1 is 0x60 x 0x78 (11,520 pixels); kind 0x61 from `0x92DF80`,
+  where the room before `Gfx_CurrentEnv` (`0x937F84`) holds 2,048 and its
+  second frame is 64 x 64 (4,096). Past the room the particles' floats land
+  on `Gfx_CurrentEnv`, `Sprite_Current` and `Frame_Counter`. Found while
+  reading the owner's Myria chamber report of 2026-11-07 (Garr and Rei in a
+  blink where Nina and Momo scattered); that blink turned out to be the
+  capture's (DIV-0142's amendment of the same day): their captures composed
+  0 texels, so no particle was made. Once they compose, Rei's capture holds
+  1,651 opaque pixels and Garr's 3,458 and 2,441 (the counts below), past
+  the 1,306 the original's layout holds before `Sprite_Current`: the overrun
+  the Gaist's ash crashed on (DIV-0186), reached here by two more sprites.
+- **New behaviour:** each kind's particles go to a room of ours that holds
+  its rectangle's every pixel (11,520 for 0xA1 / 0xA3, 230,400 bytes; 4,096
+  for 0x61, 81,920 bytes; both in the dll), so every member scatters and
+  gathers whole. The cursor, the count, the particle order and fields, the
+  flight and the draw are the original's; only the array's address moves.
+  Armed after each module's self-test (`PatchBytes "PixelRoom"` in
+  `rest_3f.cpp` and `effect_3a.cpp`, one switch), which still compare ours
+  with Capcom's at the original addresses. Nothing else names either array
+  (`rest_3f.md` 1.4's raw scan; `0x92DF80` in the bodies of `0x4807A0` and
+  `0x480910` only), and the capture records and frames that size them are
+  read and never written; a capture past a room aborts loudly rather than
+  overrun. One log line a module at start-up, `DIV-0206`, says on or OFF, and
+  one per capture gives the kind, the rectangle and the count.
+- **Rationale:** room for every pixel is what the code assumed, and the
+  PlayStation's layout gives it; the PlayStation scatters Rei and gathers
+  Garr whole (the owner's video). DIV-0186 is the same repair for the
+  Gaist's ash (kind 0x6B).
+- **Also in the PSX version?** The same code without a bound, in rooms that
+  hold it (DIV-0186's reading of the PSX layout: the Gaist's particles run to
+  the per-frame staging area with room to spare; these kinds have the same
+  shape). Not sampled live.
+- **Verification:** the owner's `myriaFightAndEnding` route replayed at 21:9
+  with the count log (`D:/bof3x-runs/end1107/run_v4.log`), once DIV-0142's
+  amendment let the captures compose: kind 0xA1 Rei 1,651, Momo 1,108, Nina
+  876; kind 0xA3 Garr 3,458 then 2,441 - three of the five past the
+  original's 1,306, so without the room the particles of Rei's and Garr's
+  captures would have run over `Sprite_Current` (on the first runs, with 0
+  texels composed, no capture reached it). Kind 0x61 made no capture on the
+  route. Shots every 15 frames show Rei and Garr scattering and Garr
+  gathering whole (`shots_v4`). The start-up fuzzes of `rest_3f` and
+  `effect_3a` compare ours with Capcom's at the original addresses before the
+  rooms are armed.
+- **Reversible?** `BOF3X_ORIGINAL=PixelRoom` leaves the particles at
+  `0x931980` and `0x92DF80`, the overrun with them. A player turns it off
+  with `BOF3X_OFF=PixelRoom` (the ini's `off=`).
+- **Switch:** PixelRoom
+- **Default:** on
+- **Player:** yes - BOF3X_OFF=PixelRoom (ini off=)
+- **Toward:** psx - the PlayStation's rooms hold every member's particles
 - **Languages:** any
 - **State:** active

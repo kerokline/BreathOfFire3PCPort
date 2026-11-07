@@ -31,6 +31,23 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 
 ## Pick up here
 
+0. **The ending scenes, the owner's four of 2026-11-07, on `fix/ending-scenes-1107`** (built, verified in the
+   harness root `D:/bof3x-runs/end1107`, unpushed, PR at the owner's word), from their new route
+   `tools/recipes/myriaFightAndEnding.txt` (its save `myriaFightAndEnding.DAT`; it saves over slot 0 near its end
+   on purpose, the clear-save path - replay with `--slot0-hold`; past the staff roll it waits on the song's
+   stream, so at `--speed 8` the roll and the *Fin* disc fall off the recorded frames): (1) the *Fin* disc's
+   outer rim grows with the wide picture, 1,600 + 10 a column (DIV-0127 amended); (2) the ending's first wide
+   frame no longer flashes the live sand in the bands beside the 320-wide frame copy - black tiles over the
+   bands while the fade is off (DIV-0127 amended; measured on `ending17`'s save: frame 188 at brightness 105
+   before, black after); (3) and (4) Rei and Garr scatter into pixels and Garr gathers back in Myria's chamber,
+   as Nina and Momo did and as the PlayStation does: two faults - the capture of a sprite whose frames are
+   uploaded on demand composed before the frame's upload queue drained (DIV-0142 amended: the queue drained
+   first), and then their 1,651 / 3,458 / 2,441 particles past the 1,306 the original's pool holds before
+   `Sprite_Current` (DIV-0206, switch `PixelRoom`, rooms for kinds 0xA1 / 0xA3 and 0x61 - D217 closed for
+   the three). Self-tests of `sprite_draw`, `rest_3f`, `effect_3a`, `scena_sc15`, `mode_flow`, `gfx_flush`:
+   0 mismatches; `ledger_check`, `ledger_switches --check`, `ledger_registry --check`, `width_census --check`
+   clean. **Owed the owner:** the play of the four (section in [`owner-review.md`](owner-review.md)), and the
+   word on the PR. The route is long: the shots of the scenes are in the root (`shots_v4`, `shots_e2`, `shots_o`).
 0. **The FMVs decoded by our own decoders (DIV-0205, 2026-11-07, IDEAS I7 built)** on `claude/dreamy-kilby-648ea8`
    (folded into PR #207, `x64/stage-d`, 2026-11-07): D407 - the 64-bit build's Capcom movie had
    no picture, Windows' Cinepak decompressor being 32-bit only (Video 1's is in both widths). `Fmv_Play` now reads the AVI itself

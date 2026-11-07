@@ -471,7 +471,15 @@ equivalent mutant was met. Of note: 43 (`+0x2A` cleared on the borrowed record i
   particles in. A sprite with more than 1,306 pixels not 0 in that rectangle
   overwrites `Sprite_Current` and what lies before it. How many pixels a real
   sprite gives is not measured (no route reaches these kinds); ours writes
-  where the original writes.
+  where the original writes. **Reached 2026-11-07, given a room by
+  DIV-0206**: the owner's `myriaFightAndEnding` route reaches these kinds in
+  Myria's chamber (`Scena15_Run4`). The blink Garr and Rei showed there was
+  first the capture's (DIV-0142's amendment: the frame upload queue drained
+  before the compose); with the captures composing, their counts are Rei
+  1,651 and Garr 3,458 then 2,441, past the 1,306 before `Sprite_Current`
+  (Nina 876, Momo 1,108 under it). The particles now go to a room of ours for all 11,520
+  (`BOF3X_OFF=PixelRoom` for the original), the count logged on every
+  capture (`SplitPixels`' second frame).
 - **The split's row loop can run forever**: the row is a byte, the bound
   `(h / 2) * (+9 + 1)` an int, so when the bound exceeds 255 the row wraps
   before reaching it. In play `+9` is 0 and 1 only (the read-back sets 0, the

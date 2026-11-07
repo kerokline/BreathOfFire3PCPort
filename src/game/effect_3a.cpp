@@ -167,7 +167,30 @@ unsigned char* NewRecord(const char* who, unsigned index) {
 unsigned char* Ray(unsigned i) { return EffectKind30_Shards + i * at::kRayStride; }
 unsigned char* Spark(unsigned i) { return EffectKind30_Shards + i * at::kSparkStride; }
 unsigned char* Mote(unsigned i) { return EffectKind30_Shards + i * at::kMoteStride; }
-unsigned char* Particle(U i) { return At(::bof3::Img(at::kParticles.v) + i * at::kParticleStride); }
+// DIVERGENCE DIV-0206 (D217): kind 0x61's particles. The original writes one
+// 0x14-byte particle per opaque pixel of the member's read-back at 0x92DF80
+// with no bound; the room before Gfx_CurrentEnv (0x937F84) holds 2,048, and
+// the second frame (64 x 64) can make 4,096. The 2,049th lands on 0x937F80:
+// its floats over Gfx_CurrentEnv and Sprite_Current, then Frame_Counter. Ours:
+// once g_pixel_room is armed (after the self-test, PatchBytes "PixelRoom") the
+// particles go to a room of ours that holds a frame's every pixel, so the whole
+// member scatters and gathers; the count, the order, the fields and the draw
+// are the original's. Nothing but these three states names the array (a raw
+// scan of the image: 0x92DF80 at 0x4807A0's and 0x480910's bodies only), and
+// the frames 0x654948 that size them are read and never written.
+// BOF3X_ORIGINAL=PixelRoom (or BOF3X_OFF) leaves them at 0x92DF80, the overrun
+// with them.
+unsigned char g_pixel_room = 0;
+alignas(4) unsigned char g_pixels[at::kParticleRoom * at::kParticleStride];
+unsigned char* Particle(U i) {
+    if (g_pixel_room) {
+        if (i >= at::kParticleRoom)
+            bof3::Fatal("EffectKind61: particle %u, past the room of %u (a frame larger than 64 x 64)", i,
+                        at::kParticleRoom);
+        return g_pixels + i * at::kParticleStride;
+    }
+    return At(::bof3::Img(at::kParticles.v) + i * at::kParticleStride);
+}
 
 // The shade a wall gets from kind 0x68's frame word (`lea eax, [eax * 4 -
 // 0x168]` on the whole register, compared as a word): the low byte below 0x100
@@ -329,6 +352,10 @@ extern "C" void __cdecl EffectKind61_Scatter(void) {
         }
         ++row;
     } while (static_cast<std::int32_t>(row) < SW(f + 6));
+    // DIV-0206: the count on every capture, so a frame that overran the
+    // original's room (2,048) is in the log.
+    bof3::Log("kind 0x61: member %u, frame %d x %d, %u particles, %s", static_cast<unsigned>(s[7]), (int)SW(f + 4),
+              (int)SW(f + 6), count, s[6] == 0 ? "in" : "out");
     NextState();
 }
 
@@ -1338,6 +1365,12 @@ extern "C" void __cdecl EffectKind68_DrawWall(unsigned shade) {
 
 void Effect3A_Inject() {
     if (bof3::WantsShadow("effect_3a")) effect_3a::SelfTest();
+    // DIV-0206: armed after the self-test, which compares ours with Capcom's at
+    // 0x92DF80.
+    static const std::uint8_t pixel_was = 0, pixel_is = 1;
+    bof3::PatchBytes("PixelRoom", AddressOf(&g_pixel_room), &pixel_was, &pixel_is, 1);
+    bof3::Log("DIV-0206    kind 0x61's particles in a room of %u (the original's holds 2,048): %s", at::kParticleRoom,
+              g_pixel_room ? "on" : "OFF (BOF3X_ORIGINAL=PixelRoom)");
     BOF3_INJECT(EffectKind60_Run);
     BOF3_INJECT(EffectKind60_DrawLine);
     BOF3_INJECT(EffectKind61_Run);
