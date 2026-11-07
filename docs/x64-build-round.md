@@ -831,6 +831,157 @@ quicksave, a `Fatal` on low memory, a sound the shim changed) gets one.
 presets), `release.yml` (the second artefact, signed as the first), this
 doc's "as run" sections.
 
+### Stage D as run (2026-11-07, branch `x64/stage-d` off `main` `39d88ef9`; root `C:\Users\kerok\bof3x-runs\x641107`)
+
+The coordinator's session, with two Opus agents for the contained parts
+(the CI and release workflows on `x64/d-ci`, the music-hearing check on
+`x64/d-music`, both merged into the branch). Every run on fresh builds of
+the branch tip, both widths (`L32`, `L64` under the root; `Lmix` is the
+32-bit launcher pair beside the 64-bit exe, DLL and moved exe), on a copy
+of the round's game folder, `--no-front`, hands off.
+
+**1. The audit, as a command.** `tools/width_census.py` has four classes
+for it since this day (its docstring says what each row is): `width_if`,
+`low32`, `handle_array` and `ptr_overlay`; `--list <class>` prints the rows,
+`analysis/width_census.tsv` holds them, and `--check` in CI refuses a new
+one in a live file. What they say on the tip:
+
+- **Every width `#if` in a game file is an asm pair the policy allows, but
+  one.** 16 blocks in 10 files under `src/game`: fifteen `asm_pair` rows -
+  the two call tables (`Scenario_CallA`, `Scenario_CallB`; policy 8 unit 3),
+  the six ecx entries (`Music_IsPlaying`, `LoadMenu_Error`,
+  `ScenaCall_SaveAndLeave`, `Scena15_LeaveAllParty7`, `Music_Halt`,
+  `SndStream_IsPlaying`; unit 4), the three callee-table jumps
+  (`Sound_StopMusic`, `Sound_ResumeAll`, `Sound_MusicPlaying`; unit 5), the
+  two eax thunks (`Battle_StatusTint`, `ScriptFlags_Clear40`; unit 6),
+  `Cfg_Load`'s frame (unit 7) and `task_switch.h`'s two includes (unit 2,
+  the named exception) - and one `logic` row, `Music_Pump` (section 5's
+  defect: the x86-64 half copies the two slots into a native handle array;
+  the i686 half keeps Capcom's call so the sound fuzz's stand-in sees the
+  image's array). The 30 other blocks are in `src/hook`, `src/audio` and
+  `src/common` (the width's `CONTEXT` fields, the detour's `jmp`, the crash
+  report's registers, `ImageBase()`, the decoder's stack switch), logic by
+  nature and outside the rule.
+- **No `Low32()` narrows an address the design places above 4 GB.** 466
+  live calls: 175 are the one-line helpers (`Key`, `Addr`, `AddressOf`...),
+  whose 1,460 callers the census now lists as `narrow_call` rows; the rest
+  by class - image_local 101, object_ours 81, func_ours 35, image 28, pool
+  18, windows 12, unread 15, crt 1 (`--counts`). The rows outside the classes
+  the low-memory design keeps below 4 GB by placement (design doc 2) were
+  read one by one: the TEB's `StackBase` / `StackLimit` (the harnesses; the
+  main thread's stack, placed low), `VirtualQuery` results walking below
+  16 MB or the main stack (`draw_pool.cpp`, `stackwatch.cpp`, `exe_host.cpp`,
+  `snapshot.cpp`), our DLL's own base and tables (`statehash.cpp`,
+  `crash.cpp`'s `ImageRange` for the DLL and the main module only,
+  `rdata_consts.cpp`'s DirectInput table), the hosted-only tracer and
+  `Crt_GetPtd` (32-bit for ever), the game's heap blocks (`mp3.cpp`,
+  `display_env.cpp`: `Crt_malloc`, whose `LowBlock` is the chokepoint), the
+  render shim's and the SDL layer's objects (`HeapAlloc` of the process heap,
+  a static pool), the WAV dump's own hook, and `Slot32`'s store (every slot,
+  the trap by design). **Where a Fatal could still fire, in a run no route
+  has made:** a process-heap block (the render shim's surfaces and pixels,
+  the game's `Crt_malloc`) once the low 4 GB has filled - the probe's first
+  block above it came after 2.75 GB of allocation (design doc 2) - and our
+  DLL if the loader ever relocated it, which `bind.cpp` refuses at load.
+  Nothing else narrows a native address.
+- **The two rows the defect asked for.** `handle_array`: three sites in
+  the tree - `fmv_play.cpp`'s wait with no array, `Music_Pump`'s two (the
+  native copy on x86-64, the image slots on the i686 branch alone,
+  `slot_i686`). `ptr_overlay`: 38 live rows, 10 in game files, none over
+  the image's bytes - the render shim's `Surface` over a slot's `.Native()`
+  (our object, whose address the slot holds narrowed), and the self-tests'
+  `FakeObject` / `FakeBuf` stand-ins of ours; the rest are launcher dialog
+  states and render objects. C1's 23 `pointer-field` rows stay as they were
+  rewritten (a 32-bit word read, then `At()`).
+- **The ledger.** Nothing stage C or D changed is player-visible on the
+  32-bit default, and the 64-bit build adds no behaviour of its own: a
+  quicksave of the other width is refused by the build id, the quicksave
+  round's rule for any other build (DIV-0145's take and load, "another
+  build" in the overlay); `BOF3X_ORIGINAL` and `BOF3X_SHADOW` are refused with the exe
+  host's existing message; the sound output is DIV-0201's on both widths.
+  **No DIV entry** for this round beyond DIV-0201, and no defect number.
+
+**2. The runs not made in stage C.**
+
+- **The moved base on the 64-bit host.** The 64-bit player's launcher
+  forwards `BOF3X_IMAGEBASE` to `bof3x-launcher-dev.exe`, which that build
+  does not make (CMakeLists.txt, `BOF3X_HOSTED_BUILD`), so it stops with the
+  "developer launcher's" message. The run is the mixed copy: the 32-bit
+  developer launcher beside the 64-bit `bof3x.exe`, `bof3x.dll` and
+  `bof3x-A00000.exe` (`build-x86_64` writes the moved one too). Its fence
+  reads the child's `SizeOfImage` at the same header offset in a PE32+ as in
+  a PE32, and reserved `0x58F000` bytes of `0x400000..0x98F000` with nothing
+  already held; the engine's own fence agreed. The exe host's self-test at
+  `0xA00000` passed (`host: ... the image at 0xA00000, moved from 0x400000`),
+  and `combat` hashed at `0xA00000` against `combat` at `0x400000` recorded
+  with `BOF3X_STATEHASH_FOLD=0xA00000` is **identical on all 2,561 ticks**
+  (`proof\diff_combat_moved.txt`). Trap: without the fold on the `0x400000`
+  side the diff refuses the pair, and `statehash.py check` against the
+  `orig4` pairs refuses a moved run for the same reason.
+- **The stackwatch on `field_menu` and `menu_screens`** (`L64`): slice 0's
+  deepest write `0x5508` of `0x8000` on both, slice 1 `0x54F8`, slices 2
+  and 3 never committed - the same figures as the other eight routes, and
+  below `cutsceneAndNue`'s `0x5628`; `kSlice64` holds on all ten. Trap paid:
+  the stage C copies in `proof\stackq` ended with the recipe's own `end`
+  line before the appended F9 / quit lines, so the quit never ran and no
+  exit line was written; the `end` removed, both quit and log.
+- **The WAV pair under both sound switches** (`L32`, `shop.txt`, `--wav`,
+  `tools/wav_diff.py`): the dump under DIV-0201 (SDL3) against the dump
+  under `BOF3X_OFF=SoundSdl` (DirectSound) is identical for the first ten
+  seconds and differs in 96 of 106 one-second windows from `10.0 s`, where
+  the town's song starts (`Music_Start` at f320); the levels match within a
+  few dB throughout. A cross-correlation of the two dumps (3 s windows at
+  15, 40 and 70 s) finds the same lag in each: **the song lies 546 ms
+  (24,084 samples) later in the SDL3 dump than in the DirectSound one**,
+  with the effects, which are frame-timed, where they were; after that
+  alignment the residual is 7..8 dB under the level. The music logs agree
+  but for the inn's resume sample (`3,200,256` under SDL3, `3,197,952` under
+  DirectSound: one 2,304-sample fold apart, DirectSound's cursor against
+  the computed one). Not settled: whether the ear hears the song that much
+  later against a cue (the inn's night, DIV-0169, is a scene with one), or
+  whether the dump's model of the computed cursor places the ring's halves
+  later than the device plays them. **The owner's listen** (owner-review);
+  the figure is in `proof\wav_diff_shop.tsv` and the two dumps under `wav\`.
+
+**3. The CI and the release** (`x64/d-ci`): the `x86_64` job of
+`build.yml` is a gate like the `i686` one - configure, build, the same
+import check (`Arch: x86_64`, system DLLs only; `bof3x.exe` imports
+`bof3x.dll` and `KERNEL32.dll` alone), the three binaries uploaded as
+`bof3x-x86_64-<sha>`. `release.yml` builds both widths in its one job,
+signs all six binaries in the one jsign call, verifies the 64-bit exe's
+layout with `make_exe.py --width 64`, and attaches a second zip,
+`bof3x-<tag>-win-x64.zip`, to the draft and to `latest` beside the 32-bit
+one, whose name and place do not change; `make_release.py` reads the exe's
+width and says so in the zip's README. A dry run of the 64-bit zip from
+this day's build listed 1,203 files, no game data. The jsign call with six
+files is unexercised until the next push to `main`
+([`releases/README.md`](releases/README.md)).
+
+**4. The ear beside the hash** (`x64/d-music`): `Sound_Tick` writes a
+`music_log ... ring track <t> heard <sample> written <samples> playing|halted`
+line once in every 60 frames under `BOF3X_MUSIC_LOG=1`, held during a
+self-test-only run so the hosted suite's logs stay as they were, and
+`tools/music_heard.py <log>` fails (exit 1) on the stage C defect's shape, a
+track playing with no advance of the heard sample, and with exit 2 when the
+log has no ring line at all. On the merged tip, rebuilt in both widths, the
+ten routes on the 64-bit exe host with the switch pass the check one by one
+(`proof\heard_<route>_x64.txt`: `whelpBoss` 164 ring lines over 6 tracks,
+`cutsceneAndNue` 116 over 5, `caughFish` 62 over 6, `combat` 40 over 4,
+`dragonTransform` 67 over 4, `masterAndManillo` 89 over 6, `field_menu` 20
+over 2, `menu_screens` 25 over 2, `shop` 46 over 2,
+`worldMapAndAreaTransition` 33 over 5), `shop` on the 32-bit exe host
+passes alike (46 over 2), and stage C's `shop_x64m.log` from before the
+`Music_Pump` fix exits 2, as the log of a build without the ring line must
+(`run_d3.out`). The i686 gate on the same tip: the hosted suite with
+`BOF3X_SHADOW='*'` exits 0 plain and under the music log, the exe host's
+self-test exits 0 in both widths.
+
+Trap paid (the coordinator's, not the agent's): the hosted `'*'` suite
+takes about forty minutes and its log grows by hundreds of lines a minute
+the whole way; a run judged hung from one tail and a stale mtime was
+killed mid-way and had to be run again. Count the log's lines twice a
+minute apart before calling a `'*'` run hung.
+
 ## 7. For the owner
 
 **Answered by the owner on 2026-11-01**, after a read of the narrow and wide

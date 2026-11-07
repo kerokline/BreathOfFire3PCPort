@@ -8,8 +8,8 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**The 64-bit build round, 2026-11-01..02: stages A and B merged as PR #183, stage C as PR #187, stage D
-next** ([`x64-build-round.md`](x64-build-round.md); the owner's calls of 2026-11-01: the narrow image - the
+**The 64-bit build round, 2026-11-01..07: stages A and B merged as PR #183, stage C as PR #187, stage D built
+on `x64/stage-d` (2026-11-07, unpushed, PR at the owner's word)** ([`x64-build-round.md`](x64-build-round.md); the owner's calls of 2026-11-01: the narrow image - the
 image's words stay 32 bits inside a 64-bit process, so saves, quicksave and the state-hash references are
 unchanged - x86-64 Windows alone, a developer build beside the 32-bit player's default, SDL3). Stage A
 measured and designed (the width census, the low-memory design, the asm policy, the `x86_64` preset); stage B
@@ -19,10 +19,18 @@ the original). **Stage C links and runs the 64-bit build:** the ten routes match
 runs of one width also differ on; the quicksave holds and refuses the other width's take; both AVIs play; the
 task-stack slice size holds (`0x5628` of `0x8000` at the deepest). It found one defect, fixed in #183: the 64-bit
 music stopped after a quarter second (`Music_Pump` handed 32-bit handle slots to an API that reads 8-byte
-handles), which no state hash saw. **What the player sees:** the 32-bit build stays the default; its one change
-is DIV-0201's sound output, which nobody has listened to yet. Owed the owner: that listen, and a listen and a
-look on the 64-bit build. Stage D (the audit, a check
-that hears the music, the release's second artefact) is HANDOFF item 14a.
+handles), which no state hash saw. **Stage D audited and closed the round** (section 6 "as run"): every width
+`#if` in a game file is an asm pair the policy allows but `Music_Pump`'s, no `Low32()` narrows an address the
+design places above 4 GB, and the two census rows the defect asked for exist (`tools/width_census.py`'s
+`width_if`, `low32`, `handle_array`, `ptr_overlay`); the moved base runs on the 64-bit host through the mixed
+launcher copy (combat identical on every tick), the last two routes' stackwatch agrees with the other eight,
+`tools/music_heard.py` reads a `BOF3X_MUSIC_LOG=1` run and fails on a stalled ring (the ear the hash lacks;
+the ten routes pass it on the 64-bit host, stage C's pre-fix log fails it);
+the `x86_64` CI job is a gate and the release carries `bof3x-<tag>-win-x64.zip` beside the 32-bit zip. No DIV
+entry: the 64-bit build adds no behaviour. **What the player sees:** the 32-bit build stays the default; its one
+change is DIV-0201's sound output, whose music the owner approved by ear on 2026-11-07. Owed the owner
+(owner-review, 2026-11-07): a listen and a look on the 64-bit build, and the ear on the WAV pair's finding - in
+the dump the song lies 546 ms later under SDL3 than under DirectSound, cause not settled.
 
 **Horis's desert directions say east in every Western layer, 2026-11-03** (issue #184, DIV-0203, on
 `fix/issue-184-desert-directions`, unpushed). Capcom's Japanese says to turn east and keep going east when the
