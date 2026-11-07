@@ -572,6 +572,33 @@ brief), so the moved `_Inject()` order is untested in a process; the
 twice, the same 30 rows); the `adopt` step against the list as stage D of
 the 64-bit round leaves it.
 
+### Stage A's end: the mover against SL1's whole table (the coordinator, 2026-11-07)
+
+Two fixes to `move_funcs.py` on the round branch: it reads SL1's header, which
+`tu_census.py` writes as a comment line (`#pc<TAB>name...`), and it keeps
+**overloads** (`L(uint32_t)` beside `L(const unsigned char*)` in one source)
+together instead of refusing them as a clash - 135 of the first run's 607
+clash refusals were overloads.
+
+`python tools/move_funcs.py analysis/tu_layout.tsv --check` then refuses the
+whole layout, nothing written, with 648 problems touching **164 of the 556
+proposed files** (the rest would move as they are):
+
+| Refusal | Count | What it needs |
+|---|---:|---|
+| a file-local helper name from two sources with different bodies (`At`, `L`, `Long`, `UL`, `Message`, ...) | 468 | a rename before the move (SL3's point: a body edit, so the owner's word; machine code identical, gated by `--anonymous-locals`) |
+| file-static state or a function with a `static` local reached from more than one proposed file | 107 | a hand decision each: the unit table is wrong there, or the state becomes one shared definition |
+| a function `cpp_items.py` cannot cut (made by a macro) | 52 | expand the macro in place first, or move the macro with its users |
+| a global named from a file that would not hold it | 18 | the global moves with its unit, or an `extern` declaration |
+| other (a file-local function in the table, no `BOF3_INJECT` line for a function the host binds elsewhere) | 3 | table rows to correct |
+
+The full list: `C:\Users\kerok\bof3x-runs\sl1107\m\check_full2.txt`.
+
+**What stage B needs first** (the owner's, section 7a): the renames, the
+64-bit gate's standing (SL3's dry run showed inlining and `Low32`'s file and
+line differing at x86-64 for a pure move; i686 identical), and the owner's
+read of the layout sheet.
+
 ## 4. Stage B: the moves (after stage D of the 64-bit round merges, and section 7)
 
 Groups by `.text` range so that no two touch one unit; the boundaries are

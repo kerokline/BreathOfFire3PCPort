@@ -222,7 +222,16 @@ def load_symbols() -> dict[str, dict]:
 
 def load_table(path: Path, column: str | None, syms: dict[str, dict], pick) -> list[Move]:
     with open(path, encoding="utf-8", newline="") as f:
-        rows = list(csv.DictReader((l for l in f if not l.startswith("#")), delimiter="\t"))
+        lines = list(f)
+    # SL1's tu_layout.tsv writes its header as a comment, `#pc<TAB>name...`: when the
+    # first plain line is not a header, take the `#` line with a tab and a `name` column.
+    body = [l for l in lines if not l.startswith("#")]
+    if body and "name" not in body[0].rstrip("\r\n").split("\t"):
+        head = next((l[1:] for l in lines if l.startswith("#") and "\t" in l
+                     and "name" in l[1:].rstrip("\r\n").split("\t")), None)
+        if head is not None:
+            body.insert(0, head)
+    rows = list(csv.DictReader(body, delimiter="\t"))
     if not rows:
         sys.exit(f"move_funcs: {path} has no rows")
     cols = rows[0].keys()
@@ -657,7 +666,10 @@ def main() -> int:
         if (ROOT / t).exists():
             problems.append(f"{t} exists: adding to an existing file is not built yet; move into a new file")
             continue
-        seen: dict[str, tuple[str, str]] = {}
+        # seen: (scope, name) -> every (source, body, how) providing it. Two items of
+        # one name from ONE source are overloads (they compiled together there) and
+        # both stay; from two sources they clash unless the bodies are the same.
+        seen: dict[tuple[str, str], list[tuple[str, str, str]]] = {}
         provided = list(e["locals"])
         if a.shared == "header":       # what the _local.h headers bring is in the file too
             provided = [(s, it, "header") for s in sorted(e["shared_from"]) for it in plans[s].shared] + provided
@@ -666,19 +678,22 @@ def main() -> int:
             body = code_tokens(it)       # the same code with other comments or spacing is the same item
             scope = "::".join(n for n in it.ns if n)
             keys = [(scope, n) for n in it.names]
-            clash = [k for k in keys if k in seen and seen[k][1] != body]
-            if clash:
-                problems.append(f"{t}: {', '.join('::'.join(filter(None, k)) for k in clash)} from {s} (line "
-                                f"{it.code_line}) differs from the one from {seen[clash[0]][0]}; rename by hand or "
-                                f"keep the two apart")
-                continue
-            if keys and all(k in seen for k in keys):
-                if how == "header" and any(seen[k][2] == "header" for k in keys):
+            if keys and all(any(b == body for _, b, _ in seen.get(k, ())) for k in keys):
+                if how == "header" and any(h == "header" for k in keys for _, _, h in seen[k]):
                     problems.append(f"{t}: {'/'.join(it.names)} would come twice through the _local.h headers; "
                                     f"use --shared copy")
                 continue            # the same item from another source: once
+            clash = [k for k in keys
+                     if any(src != s for src, _, _ in seen.get(k, ()))
+                     and not any(b == body for _, b, _ in seen[k])]
+            if clash:
+                other = next(src for src, _, _ in seen[clash[0]] if src != s)
+                problems.append(f"{t}: {', '.join('::'.join(filter(None, k)) for k in clash)} from {s} (line "
+                                f"{it.code_line}) differs from the one from {other}; rename by hand or "
+                                f"keep the two apart")
+                continue
             for k in keys:
-                seen[k] = (s, body, how)
+                seen.setdefault(k, []).append((s, body, how))
             if how != "header":
                 kept.append((s, it, how))
         e["locals"] = kept
