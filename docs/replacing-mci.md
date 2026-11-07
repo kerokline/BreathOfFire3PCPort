@@ -17,8 +17,9 @@ the program) no longer happens.
 The decoder costed here is still not built; I7 stays on the list.
 
 **Built (2026-11-07):** section 8. The 64-bit build showed no movie (D407):
-Windows' Cinepak and Video 1 decompressors are 32-bit only, so the decoder
-that was "worth doing eventually" became the only way to a picture there.
+Windows' Cinepak decompressor is 32-bit only (Video 1's is not), so the
+decoder that was "worth doing eventually" became the only way to a picture
+there.
 
 Named `replacing-mci.md` rather than `replacingMCI.md` to match the repo's
 kebab-case convention for investigation notes ([`README.md`](README.md)).

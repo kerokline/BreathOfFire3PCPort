@@ -44,8 +44,10 @@ ear's. The play was on the 64-bit build (the owner, same day): **the 64-bit buil
 voices and inn heard right.** The FMV "looks odd - the music is playing and the video is not": **D407**, Windows
 has no 64-bit Cinepak decompressor, so `CAPCOM.AVI` draws nothing on the 64-bit build (the 32-bit build is not
 affected). **Fixed the same day by DIV-0205**: the game decodes both movies itself on both widths
-([`replacing-mci.md`](replacing-mci.md) 8) - the owner's eye and ear on it owed. (The question about the second
-movie is moot: Windows' Video 1 decompressor is 32-bit only too, `msvidc32.dll` in `SysWOW64` alone.) **The Sources page looks right** (the
+([`replacing-mci.md`](replacing-mci.md) 8). **Confirmed by the owner the same evening** on the 64-bit build
+copied into `game\`: the Capcom movie shows. (The question about the second movie is moot now that both go
+through our decoder; for the record, Windows' Video 1 decompressor is in both system folders and a 64-bit
+`ICOpen('MSVC')` opens - the ledger entry's first wording had it 32-bit only.) **The Sources page looks right** (the
 owner, same day), read from a config a previous build had filled; the importer is a Python child, so what the
 64-bit launcher adds is the reading, the child's start and its pipe - one import run from the 64-bit launcher
 would cover the last two, if you care to.

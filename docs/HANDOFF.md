@@ -33,7 +33,7 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 
 0. **The FMVs decoded by our own decoders (DIV-0205, 2026-11-07, IDEAS I7 built)** on `claude/dreamy-kilby-648ea8`
    (folded into PR #207, `x64/stage-d`, 2026-11-07): D407 - the 64-bit build's Capcom movie had
-   no picture, Windows' Cinepak and Video 1 decompressors being 32-bit only. `Fmv_Play` now reads the AVI itself
+   no picture, Windows' Cinepak decompressor being 32-bit only (Video 1's is in both widths). `Fmv_Play` now reads the AVI itself
    (`src/video`: the RIFF reader, a Cinepak decoder, a Microsoft Video 1 decoder, written from the public
    descriptions), draws by `StretchDIBits` into DIV-0035's rectangle on the wall clock, plays the PCM stream
    through an SDL3 audio stream, and calls no MCI; the pump, the skips and the pause keep their shape

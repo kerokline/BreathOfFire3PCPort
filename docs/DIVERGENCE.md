@@ -15006,8 +15006,9 @@ designed in rather than bolted on.
   Cinepak (`capcom.avi` since DIV-0001; the disc's conversion, DIV-0099) and
   `msvidc32.dll` for Microsoft Video 1 (`logos.avi`, `MSVC` / `CRAM`, 16-bit,
   640 x 480, 120 chunks at 14.984 a second of which 60 are empty repeats).
-  **Windows ships both decompressors for 32-bit processes only** (D407: in
-  `SysWOW64` alone; in the 64-bit build `ICOpen` of `cvid` returns null and
+  **Windows ships the Cinepak decompressor for 32-bit processes only** (D407:
+  `iccvid.dll` in `SysWOW64` alone, `msvidc32.dll` in both system folders, so
+  a 64-bit `ICOpen` of `MSVC` opens; in the 64-bit build `ICOpen` of `cvid` returns null and
   MCI pumps the clip to its end drawing nothing - the owner's first play of
   the 64-bit build, 2026-11-07). The audio stream (PCM 22.05 kHz stereo in
   the PC's file, 44.1 kHz in the disc's) went through MCI's `waveOut`.
@@ -15048,8 +15049,8 @@ designed in rather than bolted on.
   The whole file in memory (4.6 MB and 3.9 MB; the disc's 7.5 MB) for the
   length of the movie, freed after.
 - **Rationale:** D407 - the 64-bit build (the x64 round, PR #207) showed no
-  Capcom logo, and no 64-bit Cinepak or Video 1 decompressor exists to give
-  it one. Decoding in-process also drops the last Video for Windows / MCI
+  Capcom logo, and no 64-bit Cinepak decompressor exists to give it one
+  (Video 1's exists; `logos.avi` leaves MCI with it so both movies go one way). Decoding in-process also drops the last Video for Windows / MCI
   dependency ([`replacing-mci.md`](replacing-mci.md) 6: "worth doing
   eventually"), which DIV-0001 already had to work around once (Indeo gone
   from Windows). The owner's choice of 2026-09-23 (MCI into the window,

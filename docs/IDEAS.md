@@ -303,7 +303,7 @@ drawing through our renderer, is the fix - and the first step is
 [`replacing-mci.md`](replacing-mci.md) 3's contract, which still holds._
 
 **Built 2026-11-07 as DIV-0205.** The 64-bit build (the x64 round) showed no
-Capcom movie: Windows has no 64-bit Cinepak or Video 1 decompressor (D407),
+Capcom movie: Windows has no 64-bit Cinepak decompressor (D407),
 which the "no re-encode can fix it" case above did not foresee. Not the
 licensing table's codecs: the two shipped files are read as they are, by an
 AVI reader, a Cinepak decoder and a Microsoft Video 1 decoder written from
