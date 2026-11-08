@@ -61,14 +61,14 @@ constexpr int kDepths = 0x38;
 // kFxRowSource: now Gfx_ClutStripSource[0x200] (symbols.toml).
 constexpr ::bof3::image::Va kEnemyFxSizeB{0x8C5653};   // + 0x8C * the enemy's type: FxSize's byte + 1
 
-short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
+short S16MagicLib(const unsigned char* p) { return static_cast<short>(Word(p)); }
 std::int32_t I32(std::uint32_t v) { return static_cast<std::int32_t>(v); }
 std::uint32_t U32(const unsigned char* p) { return static_cast<std::uint32_t>(Long(p)); }
 void PutFloat(unsigned char* p, int v) {
     const float f = static_cast<float>(v);
     std::memcpy(p, &f, sizeof f);
 }
-void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
+void BumpMagicLib(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 std::uint32_t Addr(const void* p) { return Low32(p); }
 
 unsigned char* PartyRecord(unsigned i) { return Mem(::bof3::Img(ObjTrio_addr) + i * at::kPartyStride); }
@@ -95,7 +95,7 @@ void PopupSettle() {
     rv::Current<records::BattleTask>()->step_z = -14;
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 1;
-    Bump(Sprite_Current[1]);
+    BumpMagicLib(Sprite_Current[1]);
 }
 
 void CopyPosition(const unsigned char* from) {
@@ -110,14 +110,14 @@ void CopyPosition(const unsigned char* from) {
 void PopupQuad(const unsigned char* uv, int d, int w, unsigned char shade) {
     unsigned char* const p = Gfx_PacketNext;
     MH_CALL(Gpu_SetPolyFT4)(p);
-    PutFloat(p + 0x08, S16(Sprite_Current + 0x2E) + d);
-    PutFloat(p + 0x0C, S16(Sprite_Current + 0x30) + d);
-    PutFloat(p + 0x18, S16(Sprite_Current + 0x2E) + w);
-    PutFloat(p + 0x1C, S16(Sprite_Current + 0x30) + d);
-    PutFloat(p + 0x28, S16(Sprite_Current + 0x2E) + d);
-    PutFloat(p + 0x2C, S16(Sprite_Current + 0x30) + Sprite_Current[0xA] + d);
-    PutFloat(p + 0x38, S16(Sprite_Current + 0x2E) + w);
-    PutFloat(p + 0x3C, S16(Sprite_Current + 0x30) + Sprite_Current[0xA] + d);
+    PutFloat(p + 0x08, S16MagicLib(Sprite_Current + 0x2E) + d);
+    PutFloat(p + 0x0C, S16MagicLib(Sprite_Current + 0x30) + d);
+    PutFloat(p + 0x18, S16MagicLib(Sprite_Current + 0x2E) + w);
+    PutFloat(p + 0x1C, S16MagicLib(Sprite_Current + 0x30) + d);
+    PutFloat(p + 0x28, S16MagicLib(Sprite_Current + 0x2E) + d);
+    PutFloat(p + 0x2C, S16MagicLib(Sprite_Current + 0x30) + Sprite_Current[0xA] + d);
+    PutFloat(p + 0x38, S16MagicLib(Sprite_Current + 0x2E) + w);
+    PutFloat(p + 0x3C, S16MagicLib(Sprite_Current + 0x30) + Sprite_Current[0xA] + d);
     rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 0, 0x380, 0x100));
     rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0x10, 0x1FA));
     p[0x14] = uv[0];
@@ -211,13 +211,13 @@ MLIB_EXPORT void __cdecl BuffPopup_Start(void) {
 MLIB_EXPORT void __cdecl BuffPopup_Rise(void) {
     unsigned char* const t = Sprite_Current;
     records::BattleTask* const tt = rv::As<records::BattleTask>(t);
-    if (t[0xA] < 8) Bump(t[0xA]);
+    if (t[0xA] < 8) BumpMagicLib(t[0xA]);
     tt->step_z = tt->step_z + 2;
     rv::Store<unsigned>(tt->screen_y, static_cast<std::uint16_t>(tt->screen_y) + static_cast<std::uint16_t>(tt->step_z));
-    Bump(t[9]);
+    BumpMagicLib(t[9]);
     if (t[9] == 0xC) {
         tt->step_z = -6;
-        Bump(t[1]);
+        BumpMagicLib(t[1]);
     }
 }
 
@@ -228,14 +228,14 @@ MLIB_EXPORT void __cdecl BuffPopup_Fall(void) {
     records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     tt->step_z = tt->step_z + 2;
     rv::Store<unsigned>(tt->screen_y, static_cast<std::uint16_t>(tt->screen_y) + static_cast<std::uint16_t>(tt->step_z));
-    Bump(t[9]);
-    if (t[9] == 0x10) Bump(t[1]);
+    BumpMagicLib(t[9]);
+    if (t[9] == 0x10) BumpMagicLib(t[1]);
 }
 
 // original 0x4FB230: the hold. +9 up; at 28 the owner's +0xB (its count of
 // live children) down and the slot freed (a tail jmp).
 MLIB_EXPORT void __cdecl BuffPopup_End(void) {
-    Bump(Sprite_Current[9]);
+    BumpMagicLib(Sprite_Current[9]);
     if (Sprite_Current[9] != 0x1C) return;
     unsigned char* const owner = Pointer(::bof3::Img(BattleE2_Owner_addr));
     owner[0xB] = static_cast<unsigned char>(owner[0xB] - 1);
@@ -367,7 +367,7 @@ MLIB_EXPORT void __cdecl MagicFx_LinkByDepth(unsigned x, unsigned z, int* keys, 
 MLIB_EXPORT void __cdecl MagicFx_StepToward(const unsigned char* to, int speed) {
     const unsigned char* const sc = Sprite_Current;
     const long in[3] = {I32(U32(to + 0x34) - U32(sc + 0x34)) >> 9, I32(U32(to + 0x38) - U32(sc + 0x38)) >> 9,
-                        (static_cast<int>(S16(to + 0x3E)) - S16(sc + 0x3E)) >> 1};
+                        (static_cast<int>(S16MagicLib(to + 0x3E)) - S16MagicLib(sc + 0x3E)) >> 1};
     StepAlong(in, speed);
 }
 
@@ -380,7 +380,7 @@ MLIB_EXPORT void __cdecl MagicFx_StepTowardPoint(unsigned x, unsigned z, unsigne
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
     const long in[3] = {I32(x - static_cast<std::uint32_t>((tsc->x >> 9) - 0x4000)),
                         I32(z - static_cast<std::uint32_t>((tsc->z >> 9) - 0x4000)),
-                        I32(y - static_cast<std::uint32_t>(S16(sc + 0x3E) >> 1))};
+                        I32(y - static_cast<std::uint32_t>(S16MagicLib(sc + 0x3E) >> 1))};
     StepAlong(in, speed);
 }
 
@@ -490,7 +490,7 @@ MLIB_EXPORT void __cdecl MagicFx_CenterOnSide(void) {
         const unsigned char* const r = ActorRecord(actor);
         sx += static_cast<std::uint32_t>(rv::As<records::SpriteHead>(r)->x >> 9);
         sz += static_cast<std::uint32_t>(rv::As<records::SpriteHead>(r)->z >> 9);
-        sy += static_cast<std::uint32_t>(static_cast<int>(S16(r + 0x3E)));
+        sy += static_cast<std::uint32_t>(static_cast<int>(S16MagicLib(r + 0x3E)));
         ++n;
     }
     if (n == 0) bof3::Fatal("MagicFx_CenterOnSide: every actor of the side is out - the original divides by zero");
