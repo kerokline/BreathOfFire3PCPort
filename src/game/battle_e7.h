@@ -9,6 +9,7 @@
 #pragma once
 
 void BattleE7_Inject();
+extern unsigned char g_equip_labels_row;   // defined in battle_e7.cpp, armed by BattleE7_Inject (named here for a moved reader: source-layout B0)
 
 namespace battle_e7 {
 // BOF3X_SHADOW=battle_e7: the start-up fuzz, battle_e7_fuzz.cpp - one
