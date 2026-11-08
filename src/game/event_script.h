@@ -7,6 +7,8 @@
 // ObjTrio_SetBit40. 28 functions.
 #pragma once
 
+#include <cstdint>
+
 void EventScript_Inject();
 
 // DIV-0191 (switch MountainPasses): 1 once armed. Read by the placement
@@ -25,3 +27,7 @@ void MountainPasses_Arm();
 // beside MountainPasses_Arm.
 extern bool g_desert_faerie;
 void DesertFaerie_Arm();
+
+namespace event_script {
+extern std::uint8_t g_reach_word;   // defined in event_script.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace event_script

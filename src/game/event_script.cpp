@@ -622,7 +622,7 @@ extern "C" void __cdecl Sprite_InitFromEntry(unsigned char* entry) {
 // PatchBytes("SpriteReachWord") in EventScript_Inject, after the self-test.
 // The byte is then stored zero-extended over the whole dword +0x70, as the
 // PSX does, so +0x71..+0x73 are 0. EventObj_Reset does not clear them.
-static std::uint8_t g_reach_word = 0;
+namespace event_script { std::uint8_t g_reach_word = 0; }
 
 extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
     const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
@@ -649,7 +649,7 @@ extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
     {
         unsigned char* const sc = Sprite_Current;
         unsigned char* const source = At(Dword(sc + 0x54));   // a 32-bit word
-        if (g_reach_word) rv::Store<std::uint32_t>(rv::As<records::SpriteHead>(sc)->reach, source[2]);
+        if (event_script::g_reach_word) rv::Store<std::uint32_t>(rv::As<records::SpriteHead>(sc)->reach, source[2]);
         else sc[0x70] = source[2];
     }
     rv::As<records::SpriteObject>(Extra(op[0xB]))->best_score = 0;
@@ -755,7 +755,7 @@ void EventScript_Inject() {
     {
         // DIV-0164: after the self-test, which compared Capcom's byte store.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("SpriteReachWord", Low32(&g_reach_word), &was, &is, 1);
+        bof3::PatchBytes("SpriteReachWord", Low32(&event_script::g_reach_word), &was, &is, 1);
         bof3::Log("DIV-0164    op Bx stores the extra object's reach byte as a whole dword +0x70 (on unless the line above says OFF)");
     }
     BOF3_INJECT(Area_RunPlacement);
