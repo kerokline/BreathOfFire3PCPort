@@ -33,7 +33,7 @@ struct PixelFormat {
 };
 static_assert(sizeof(PixelFormat) == sizeof(unsigned long) * Gfx_PixelFormat_count);
 
-const PixelFormat& Format() { return *reinterpret_cast<const PixelFormat*>(Gfx_PixelFormat); }
+const PixelFormat& FormatGfxClut() { return *reinterpret_cast<const PixelFormat*>(Gfx_PixelFormat); }
 
 std::uint16_t* ShadowCell(int x, int y) { return Gfx_VramShadow + ((y << 10) + x); }
 
@@ -63,7 +63,7 @@ extern "C" void __cdecl Gfx_ConvertRow(int x, int y, int w) {
     ClutRow& row = Rows()[y];
     if (row.pixels == nullptr) row.pixels = Crt_malloc(0x1000);
 
-    const PixelFormat& f = Format();
+    const PixelFormat& f = FormatGfxClut();
     auto* out = static_cast<std::uint8_t*>(row.pixels) + (x << (f.bytes_per_pixel >> 1));
     const std::uint16_t* src = ShadowCell(x, y);
     const bool stp = g_stp_test || render::StpTexels();   // DIV-0160
@@ -118,7 +118,7 @@ extern "C" void* __cdecl Gfx_ClutPixels(unsigned clut_id) {
     const unsigned y = clut_id >> 6;
     const unsigned x = (clut_id & 0x3F) << 4;
     if (Rows()[y].pixels == nullptr) Gfx_ConvertRow(0, static_cast<int>(y), 0x100);
-    return static_cast<std::uint8_t*>(Rows()[y].pixels) + (x << (Format().bytes_per_pixel >> 1));
+    return static_cast<std::uint8_t*>(Rows()[y].pixels) + (x << (FormatGfxClut().bytes_per_pixel >> 1));
 }
 
 // --- BOF3X_SHADOW: a start-up differential fuzz against clones -----------------
