@@ -99,7 +99,7 @@ const unsigned char* Bytes(const long* p) { return reinterpret_cast<const unsign
 // the table's `entries` handlers read in place (the fuzz swaps the cells for
 // recorders); a Fatal past them, where the original jumps through the dword
 // after - the next kind's table.
-void Dispatch(const char* who, const void* table, unsigned entries) {
+void DispatchEffect3a(const char* who, const void* table, unsigned entries) {
     const unsigned state = S()[1];
     if (state >= entries)
         bof3::Fatal("%s: state byte +1 is %u, past the %u entries of 0x%X - the original jumps through the dword after "
@@ -210,7 +210,7 @@ U WallShade(U frame) {
 // unbounded. Its states are catalog part 6 rows (EffectKind60_Start, _SlideBoth, _SlideEnd),
 // 0x492750 twice and Effect_StateRelease.
 extern "C" void __cdecl EffectKind60_Run(void) {
-    Dispatch("EffectKind60_Run", EffectKind60_States, EffectKind60_States_count);
+    DispatchEffect3a("EffectKind60_Run", EffectKind60_States, EffectKind60_States_count);
 }
 
 // original 0x4804C0: a draw mode (Gpu_GetTPage(0, 1, 0x3C0, 0x100), committed
@@ -245,7 +245,7 @@ extern "C" void __cdecl EffectKind60_DrawLine(const long* from, const long* to) 
 // original 0x480590 (hidden in 0x4804C0): jmp [EffectKind61_States + +1 * 4],
 // unbounded.
 extern "C" void __cdecl EffectKind61_Run(void) {
-    Dispatch("EffectKind61_Run", EffectKind61_States, EffectKind61_States_count);
+    DispatchEffect3a("EffectKind61_Run", EffectKind61_States, EffectKind61_States_count);
 }
 
 // original 0x4805B0 (state 0): a free record (Effect_FindFree; none: +1 up and
@@ -448,7 +448,7 @@ extern "C" void __cdecl EffectKind61_Twinkle(void) {
 // original 0x480B70 (hidden in 0x4804C0): jmp [EffectKind62_States + +1 * 4],
 // unbounded.
 extern "C" void __cdecl EffectKind62_Run(void) {
-    Dispatch("EffectKind62_Run", EffectKind62_States, EffectKind62_States_count);
+    DispatchEffect3a("EffectKind62_Run", EffectKind62_States, EffectKind62_States_count);
 }
 
 // original 0x480B90 (state 0): the rays cleared (EffectKind62_ClearRays); +9 =
@@ -698,7 +698,7 @@ extern "C" unsigned char __cdecl EffectKind62_DrawRing(const long* point, int in
 // original 0x480D40 (hidden in 0x4804C0): jmp [EffectKind64_States + +1 * 4],
 // unbounded.
 extern "C" void __cdecl EffectKind64_Run(void) {
-    Dispatch("EffectKind64_Run", EffectKind64_States, EffectKind64_States_count);
+    DispatchEffect3a("EffectKind64_Run", EffectKind64_States, EffectKind64_States_count);
 }
 
 // original 0x480D60 (state 0; also state 0 of the table 0x655320 that group
@@ -1123,7 +1123,7 @@ extern "C" void __cdecl EffectKind64_DrawShards(void) {
 // original 0x481150 (hidden in 0x4804C0): jmp [EffectKind68_States + +1 * 4],
 // unbounded.
 extern "C" void __cdecl EffectKind68_Run(void) {
-    Dispatch("EffectKind68_Run", EffectKind68_States, EffectKind68_States_count);
+    DispatchEffect3a("EffectKind68_Run", EffectKind68_States, EffectKind68_States_count);
 }
 
 // original 0x481170 (state 0): the motes cleared (EffectKind68_ClearMotes); the
