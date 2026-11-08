@@ -1059,7 +1059,7 @@ def write_sheet(path, M, units, names, files, groups, pchk=None, have_psx=False)
     L = []
     L.append('# The source-layout round: the owner\'s layout sheet (SL1)\n')
     L.append('**Status:** PROPOSAL, written by `tools/tu_census.py` from `bof3/BOF3.exe` and '
-             '`symbols.toml` (2026-11-07). The owner decides each row before stage B '
+             '`symbols.toml` (2026-11-07; split into two tables 2026-11-08). The owner decides each row before stage B '
              '([`docs/source-layout-round.md`](../docs/source-layout-round.md) 7, calls 1-3). '
              'Addresses, our names and counts only.\n')
     L.append('How to read a row: a **unit** is one object file of the 2001 link, as the table recovers it '
@@ -1079,8 +1079,7 @@ def write_sheet(path, M, units, names, files, groups, pchk=None, have_psx=False)
                  f'two or more functions whose twins this table puts in more than one unit - a cut the '
                  f'PlayStation does not support, worth a look before the moves. {len(pchk)} of '
                  f'{len(units)} units carry one; empty means none.\n')
-    L.append('| # | unit | .text range | funcs | sure j/p/g | does | PSX | file | proposal | reason | PSX check |')
-    L.append('|---|---|---|---|---|---|---|---|---|---|---|')
+    rows = []
     for k, u in enumerate(units):
         lo, hi = unit_range(M, u)
         c = collections.Counter()
@@ -1088,10 +1087,29 @@ def write_sheet(path, M, units, names, files, groups, pchk=None, have_psx=False)
             c[how] += b - a + 1
         n = names[k]
         f = files[k]
-        L.append(f"| {k + 1} | `{unit_id(M, u)}` | `0x{lo:X}..0x{hi:X}` | {u['hi'] - u['lo'] + 1} | "
-                 f"{c['joined']}/{c['placed']}/{c['guessed']} | {n['desc']} | {n['image']} | "
-                 f"`{f[0][len('src/game/'):]}` | {f[1]} | {f[2]} | "
-                 + '; '.join(f"`{pu}` also in {', '.join(o)}" for pu, o in pchk.get(k, [])) + ' |')
+        call = f[1].startswith('join') or bool(pchk.get(k))
+        rows.append((call, f"| {k + 1} | `{unit_id(M, u)}` | `0x{lo:X}..0x{hi:X}` | {u['hi'] - u['lo'] + 1} | "
+                     f"{c['joined']}/{c['placed']}/{c['guessed']} | {n['desc']} | {n['image']} | "
+                     f"`{f[0][len('src/game/'):]}` | {f[1]} | {f[2]} | "
+                     + '; '.join(f"`{pu}` also in {', '.join(o)}" for pu, o in pchk.get(k, [])) + ' |'))
+    # Two tables (the owner's ask of 2026-11-08): the rows that want a call first - a *join* (a choice
+    # between one file and several) or a PSX check (a cut the PlayStation does not support) - then the
+    # rows with one recommended layout, a *stand alone* that no neighbour and no PlayStation unit
+    # contests. The row number (#) is the unit's index in both tables, so a reference to a row holds.
+    header = ['| # | unit | .text range | funcs | sure j/p/g | does | PSX | file | proposal | reason | PSX check |',
+              '|---|---|---|---|---|---|---|---|---|---|---|']
+    want = [r for call, r in rows if call]
+    settled = [r for call, r in rows if not call]
+    joins = sum(1 for k in range(len(units)) if files[k][1].startswith('join'))
+    L.append(f'## Rows that want a call ({len(want)})\n')
+    L.append(f'A *join* proposal (a choice between one file and several), a PSX check, or both: '
+             f'{joins} join rows and {len(pchk)} rows with a PSX check.\n')
+    L.extend(header + want)
+    L.append(f'\n## Rows with one recommended layout ({len(settled)})\n')
+    L.append('A *stand alone* unit that no neighbour shares a name or folder rule with and that no '
+             'PlayStation unit contests: the tool found no alternative, so these rows need no call '
+             'unless the owner wants to make one.\n')
+    L.extend(header + settled)
     with open(path, 'w', newline='\n', encoding='utf-8') as fh:
         fh.write('\n'.join(L) + '\n')
 
