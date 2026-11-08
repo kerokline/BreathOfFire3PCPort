@@ -624,6 +624,84 @@ Each group's report: the files made, emptied and deleted; the functions whose
 `static` helper became a header `inline`, and the gate's verdict on each; the
 `guessed` rows it placed and how.
 
+### Stage B0 as run (2026-11-08, branch `source-layout/stage-b` off `main` `67c3259b`)
+
+Run while the owner was away, by their word for "the next staged round"
+with the beta cut (PR #211, `game\`) left alone: nothing of this merges to
+`main` or opens a PR until the beta is wrapped, and the moves (B1..B5) wait
+on the owner's read of the sheet, as call 1 says. What ran is the part of
+stage B that the sheet does not decide. Root `C:\Users\kerok\bof3x-runs\slb1108`:
+`base` is `main` `67c3259b` built at both widths (the gate's baseline), `wt`
+the round branch, one worktree per group, briefs in `briefs\`, reports in
+`reports\<group>.md`.
+
+**The coordinator's steps first:** the two tables of 7a with their headers,
+whitelisted in `.gitignore` (`74fca916`); `game_sources.py adopt` (`229b2838`;
+the object-mode gate at i686 `661 objects compared, 0 differ`).
+
+**The helper renames (groups r1..r4, then a cascade pass).** The 468 clash
+rows of stage A's end, split by *source* file into four groups of 117 so no
+two agents touched one file; every new name is the old name plus the
+source's stem in CamelCase (`At` in `rest_2h.cpp` -> `AtRest2h`) - each group
+chose that over a descriptive name on its own, because two groups naming
+the same job separately could clash again in the target, and the stem
+cannot. One commit per source file, the rows in `analysis/tu_renames.tsv`
+in the same commit (r1's rows landed in its last commit instead). Two forms
+the rows did not foresee: a `using move_script::At;` line cannot be renamed,
+so the uses are written in full (`move_script::At(...)`) and the `using`
+line kept as a comment (r2, r3, r4) or replaced by a same-line
+`constexpr auto& AtRest2h = move_script::At;` (r1) - no line added or
+removed anywhere, because the 64-bit `Low32()` message carries `__LINE__`.
+**Cascades:** a helper whose text matched the other source's exactly stops
+matching once a helper it calls is renamed, so new clash lines appear after
+a wave (r1 found 7 inside its own files, r2 3, r4 reported 6 in others');
+after the four merges the check listed 6, and a cascade pass in one worktree
+cleared them in two layers (9 renames: `sprite_find`'s `kObjects, kExtra`
+pair, `rest_1d`, `field_misc` twice). Merged one branch at a time
+(r2 `3149e5d9`, r4, r1, r3 `c960e11b`, the pass `f95ab5e8`), the i686 gate
+after each merge the same line: `codegen_same --by-function --anonymous-locals:
+22977 code, 11341 data, 821 bss symbols compared (24391 / 24391 function
+definitions read), 0 differ`. `move_funcs.py --check` on the tip: **0
+"differs from the one from" lines** (467 on `main`: one of the 468 rows was
+a `kObjects, kExtra` pair on one line, and one, `fmv_play.cpp`'s `Str`, had
+nothing to rename); 448 rename rows in the table (438 helpers, 8 constants,
+2 variables).
+
+**The shared state and undeclared globals (group s, decisions only).** Its
+files overlap the rename groups', so it edited no `src/` file: 135 rows of
+kind `state` (115) and `global` (20) with the decision each, and a report
+with the order to apply them (`reports\s.md` 4). **No case is (a)**: every
+refused item is the port's own state (DIV switch bytes, `BOF3X_SHADOW`
+clones, self-test stand-ins, callees seams, log switches, the data cache), so
+shared state gives no evidence that the table cut a unit and no sheet row
+needs to join. 102 promotions (83 variables to `extern` in the file's
+header, 11 `Callees g` seams through the `_callees.h` pattern, 8 functions),
+3 `static const` tables simply copied, the 16 undeclared globals already
+external and only wanting an `extern` line, the 3 others named. Found on the
+way, for the mover: `cpp_items.is_const` reads `const void* g_datlog_caller`
+as a constant (it would copy and split state unrefused); the mover copies
+each source's `using namespace <stem>;` into the target, and 54 proposed
+targets then hold two `g` seams ("reference to 'g' is ambiguous"); a
+promotion reads as DIFFER in every function that names it until the gate
+maps the reference too. PR #209 had added four state items after the stage
+A count (111 lines, not 107).
+
+**The 64-bit gate across worktrees** read thousands of differences from
+`__FILE__`'s absolute path in the `Low32()` message (measured on a tree with
+no source change: 8870 differ); `codegen_same.py` now replaces each build's
+source root (its `CMakeCache.txt`) by a placeholder (`7a66069f`, merged
+`6fc7da2d`), after which `main` against the adopted tree reads 0 differ at
+x86_64. On the renamed tree it reads **51 differ**, all one cause: the
+64-bit `Low32()` takes `__builtin_FUNCTION()`, so its message names the
+caller, and a renamed helper that calls it (`Addr` -> `AddrSaveMenu`,
+`AddressOf` -> `AddressOfRest3e`, `PtrValue` -> `PtrValueMagicS16`, ...)
+changes the string and every function that names the helper. Call 8's
+`low32-site` class is this mechanism (the message's file, line or function),
+so these rows go in `analysis/tu_gate_exceptions.tsv`.
+
+**Group t** (the tooling): its report is `reports\t.md`; what merged is listed
+at this section's end.
+
 ## 5. Stage C: what follows the moves (one agent, after B)
 
 - `tu_moves.tsv` complete; `cite_lookup.py --scan` over `docs/`,
