@@ -79,7 +79,7 @@ unsigned char* Window(unsigned slot) { return At(::bof3::Img(WindowRecords_addr)
 char* PrintBuf() { return reinterpret_cast<char*>(At(::bof3::Img(at::kPrintBuf.v))); }
 const char* Format(std::uint32_t at) { return reinterpret_cast<const char*>(At(at)); }
 
-std::int32_t S16(std::uint32_t v) { return static_cast<std::int16_t>(v); }
+std::int32_t S16BattleWindowDraw(std::uint32_t v) { return static_cast<std::int16_t>(v); }
 float F(std::int32_t v) { return static_cast<float>(v); }
 void Put(unsigned char* at, float f) { std::memcpy(at, &f, sizeof f); }
 
@@ -180,8 +180,8 @@ extern "C" void __cdecl BattleWin_DrawNumber(int x, int y, int colour, int value
             unsigned char* const p = Next();  // a SPRT: g.set_sprt below
             *c = static_cast<unsigned char>(*c - 0x30);
             rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, g.get_clut(static_cast<int>((static_cast<unsigned>(colour) & 0xFF) << 4), 0x1E0));
-            Put(p + 8, F(S16(static_cast<std::uint32_t>(px))));
-            Put(p + 0xC, F(S16(static_cast<std::uint32_t>(y))));
+            Put(p + 8, F(S16BattleWindowDraw(static_cast<std::uint32_t>(px))));
+            Put(p + 0xC, F(S16BattleWindowDraw(static_cast<std::uint32_t>(y))));
             p[4] = p[5] = p[6] = 0x80;
             p[0x15] = 0xD8;
             p[0x14] = static_cast<unsigned char>(*c * 6 - 0x50);
@@ -204,7 +204,7 @@ extern "C" void __cdecl BattleWin_DrawQuadF4(int x, int y, int shape, int shade)
     unsigned char* const p = Next();
     g.set_poly_f4(p);
     const unsigned char* const t = At(::bof3::Img(at::kQuadShapes.v) + ((static_cast<unsigned>(shape) & 0xFF) << 4));
-    const std::int32_t sx = S16(static_cast<std::uint32_t>(x)), sy = S16(static_cast<std::uint32_t>(y));
+    const std::int32_t sx = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), sy = S16BattleWindowDraw(static_cast<std::uint32_t>(y));
     Put(p + 0x08, F(Word(t + 0x0) + sx));
     Put(p + 0x0C, F(Word(t + 0x2) + sy));
     Put(p + 0x14, F(Word(t + 0x4) + sx));
@@ -227,10 +227,10 @@ extern "C" void __cdecl BattleWin_DrawTile(int x, int y, int size, int shade) {
     unsigned char* const p = Next();
     g.set_tile(p);
     const unsigned char* const t = At(::bof3::Img(at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
-    int sx = S16(static_cast<std::uint32_t>(x)), w = static_cast<int>(Word(t));
+    int sx = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), w = static_cast<int>(Word(t));
     Widescreen_BattleTile(static_cast<unsigned>(size) & 0xFF, sx, w);
     Put(p + 0x08, F(sx));
-    Put(p + 0x0C, F(S16(static_cast<std::uint32_t>(y))));
+    Put(p + 0x0C, F(S16BattleWindowDraw(static_cast<std::uint32_t>(y))));
     Put(p + 0x14, F(w));
     Put(p + 0x18, F(Word(t + 2)));
     const unsigned row = static_cast<unsigned>(shade) & 0xFF;
@@ -246,10 +246,10 @@ extern "C" void __cdecl BattleWin_DrawTileRgb(int x, int y, int size, int colour
     unsigned char* const p = Next();
     g.set_tile(p);
     const unsigned char* const t = At(::bof3::Img(at::kTileSizes.v) + ((static_cast<unsigned>(size) & 0xFF) << 2));
-    int sx = S16(static_cast<std::uint32_t>(x)), w = static_cast<int>(Word(t));
+    int sx = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), w = static_cast<int>(Word(t));
     Widescreen_BattleTile(static_cast<unsigned>(size) & 0xFF, sx, w);
     Put(p + 0x08, F(sx));
-    Put(p + 0x0C, F(S16(static_cast<std::uint32_t>(y))));
+    Put(p + 0x0C, F(S16BattleWindowDraw(static_cast<std::uint32_t>(y))));
     Put(p + 0x14, F(w));
     Put(p + 0x18, F(Word(t + 2)));
     const auto c = static_cast<std::uint32_t>(colour);
@@ -275,7 +275,7 @@ extern "C" void __cdecl BattleWin_DrawBar(int x, int y, int w, int cap, int lit)
     rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, g.get_tpage(0, 0, 0x3C0, 0));
     const bool on = (static_cast<unsigned>(lit) & 0xFF) != 0;
     rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(on ? 0xB0 : 0xE0, 0x1E0));
-    const std::int32_t left = S16(static_cast<std::uint32_t>(x)), top = S16(static_cast<std::uint32_t>(y));
+    const std::int32_t left = S16BattleWindowDraw(static_cast<std::uint32_t>(x)), top = S16BattleWindowDraw(static_cast<std::uint32_t>(y));
     const std::int32_t mid = left + static_cast<std::int32_t>(static_cast<unsigned>(w) & 0xFF);
     const std::int32_t bottom = top + 7;
     Put(p + 0x08, F(left));
@@ -347,8 +347,8 @@ extern "C" void __cdecl BattleWin_DrawCell16(int x, int y, int cell) {
     p[4] = p[5] = p[6] = 0x80;
     p[0x14] = static_cast<unsigned char>(static_cast<unsigned>(cell) << 4);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 0x10);
-    const std::int32_t xs = g_draw_signed ? S16(static_cast<std::uint32_t>(x)) : static_cast<std::int32_t>(static_cast<std::uint32_t>(x) & 0xFFFF);
-    const std::int32_t ys = g_draw_signed ? S16(static_cast<std::uint32_t>(y)) : static_cast<std::int32_t>(static_cast<std::uint32_t>(y) & 0xFFFF);
+    const std::int32_t xs = g_draw_signed ? S16BattleWindowDraw(static_cast<std::uint32_t>(x)) : static_cast<std::int32_t>(static_cast<std::uint32_t>(x) & 0xFFFF);
+    const std::int32_t ys = g_draw_signed ? S16BattleWindowDraw(static_cast<std::uint32_t>(y)) : static_cast<std::int32_t>(static_cast<std::uint32_t>(y) & 0xFFFF);
     Put(p + 0x08, F(xs));
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 8);
     Put(p + 0x0C, F(ys));
@@ -366,10 +366,10 @@ void LineBody(unsigned char* p, int x0, int y0, int x1, int y1, int r, int gr, i
     p[4] = static_cast<unsigned char>(r);
     p[5] = static_cast<unsigned char>(gr);
     p[6] = static_cast<unsigned char>(b);
-    Put(p + 0x08, F(S16(static_cast<std::uint32_t>(x0))));
-    Put(p + 0x0C, F(S16(static_cast<std::uint32_t>(y0))));
-    Put(p + 0x14, F(S16(static_cast<std::uint32_t>(x1))));
-    Put(p + 0x18, F(S16(static_cast<std::uint32_t>(y1))));
+    Put(p + 0x08, F(S16BattleWindowDraw(static_cast<std::uint32_t>(x0))));
+    Put(p + 0x0C, F(S16BattleWindowDraw(static_cast<std::uint32_t>(y0))));
+    Put(p + 0x14, F(S16BattleWindowDraw(static_cast<std::uint32_t>(x1))));
+    Put(p + 0x18, F(S16BattleWindowDraw(static_cast<std::uint32_t>(y1))));
 }
 
 // The two semi-transparent ones: draw mode page (0x3C0, 0) under `abr`, then
