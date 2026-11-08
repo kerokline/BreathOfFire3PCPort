@@ -84,11 +84,11 @@ void MemberHand(int x, int y, unsigned flag, unsigned six) {
 void EntryBox(int a, int y, unsigned c, unsigned d) { SH_AT(void (__cdecl*)(int, int, unsigned, unsigned), at::kEntryBox.v)(a, y, c, d); }
 void MemberRename() { SH_AT(void (__cdecl*)(), at::kMemberRename.v)(); }
 void SlotRename() { SH_AT(void (__cdecl*)(), at::kSlotRename.v)(); }
-
+}  // namespace
 // DIV-0075, set by Rest4D_Inject after the self-test: the two entry steps move
 // the step's step on, where the original's never does.
-unsigned char g_entry_abandons = 0;
-
+namespace rest_4d { unsigned char g_entry_abandons = 0; }
+namespace {
 // BareRet (ours, a bare ret) called with the arguments the PSX's name entry
 // took; it reads none. BareRetZero likewise with none.
 template <typename... A> void Dropped(A... a) {
@@ -826,7 +826,7 @@ extern "C" void __cdecl CommuName_SlotEntry(void) {
     SH_CALL(Menu_DrawGreyHLine)(0x4A + 12 * Rest4d_EntryColumn, 0x42, 0xC, 0);
     EntryDraws(0);
     Rest4d_EntryDone = DroppedZero();
-    if (g_entry_abandons) Rest4c_Step = static_cast<unsigned char>(Rest4c_Step + 1);       // DIV-0075
+    if (rest_4d::g_entry_abandons) Rest4c_Step = static_cast<unsigned char>(Rest4c_Step + 1);       // DIV-0075
 }
 
 // original 0x45D7C0, step 7.2: the slide one more; the cursor slot's panel at
@@ -1092,7 +1092,7 @@ extern "C" void __cdecl CommuName_MemberEntry(void) {
     SH_CALL(Menu_DrawGreyHLine)(0x5B + 12 * Rest4d_EntryColumn, 0x50, 0xC, 0);
     EntryDraws(0);
     Rest4d_EntryDone = DroppedZero();
-    if (g_entry_abandons) Rest4c_Step = static_cast<unsigned char>(Rest4c_Step + 1);       // DIV-0075
+    if (rest_4d::g_entry_abandons) Rest4c_Step = static_cast<unsigned char>(Rest4c_Step + 1);       // DIV-0075
 }
 
 // original 0x45E350, step 7.2: as the slot's, the panel at 0x20 (answered) or
@@ -1251,7 +1251,7 @@ void Rest4D_Inject() {
     {
         static const std::uint8_t was = 0, is = 1;
         bof3::PatchBytes("CommuNameEntryAbandons",
-                         Low32(&g_entry_abandons), &was, &is, 1);
+                         Low32(&rest_4d::g_entry_abandons), &was, &is, 1);
         bof3::Log("DIV-0075    the community's name entry ends unanswered where the original never leaves its step");
     }
     if (bof3::WantsShadow("rest_4d")) rest_4d::EntryAbandonTest();   // DIV-0075's row: the switch on, before the inject
