@@ -89,6 +89,17 @@ offsets as written, so a pair of trees with roots of different lengths can
 still differ there on x86_64; its per-function mode is the gate. A build of
 the same tree compares exactly as before.
 
+--anonymous-locals also knows a promotion (stage B0's shared-state cases):
+a symbol global in NEW, not a global of BASE, whose body is that of a BASE
+file-local of the same name but for its linkage (demangled by llvm-cxxfilt,
+with `static`'s `L` and `(anonymous namespace)::` dropped; or, when that
+body has one file-local of the name, but for its named namespace too). NEW is then read
+a second time with each such global known as the file-local it was, where it
+is defined and wherever another object names it, so its callers compare as
+before; it prints as `PROMOTED <name>` and is not a difference. A promoted
+symbol whose body changed is not paired: it reads as GONE `local:<hash>` and
+NEW `<name>`, and its callers as DIFFER.
+
     --exceptions FILE   (with --by-function; the round doc's 7a, the owner's call 8)
 
 FILE is analysis/tu_gate_exceptions.tsv: a header line `symbol class reason
@@ -96,7 +107,8 @@ commit` (tab-separated), `#` lines comments, one row per symbol the x86_64
 gate lets differ. A DIFFER, GONE or NEW line of a code symbol listed there
 whose class is a known one - `inline` (the compiler inlined, or stopped
 inlining, a moved or copied helper because its callers in the file changed)
-or `low32-site` (Low32()'s failure message names the new file and line) -
+or `low32-site` (Low32()'s failure message names another file, line or
+function: __FILE__, __LINE__, __builtin_FUNCTION() of a moved or renamed caller) -
 prints as `EXCEPT <class> <symbol>` and is not counted. The symbol is the
 name the line prints (for a `local:<hash>` key, any of the names it lists).
 A data, bss or inject line is never excepted. A row whose class is not a
@@ -329,11 +341,18 @@ def pooled_key(name: str) -> str:
 class Normaliser:
     """The normalised body of every symbol of one object."""
 
-    def __init__(self, obj: Coff, anonymous_locals: bool = False, roots: list[bytes] = (), pad_free: bool = False):
+    def __init__(self, obj: Coff, anonymous_locals: bool = False, roots: list[bytes] = (), pad_free: bool = False,
+                 promoted: dict[str, str] | None = None):
         self.o = obj
         self.anonymous_locals = anonymous_locals
         self.roots = list(roots)      # the build's source-root spellings (source_roots), read as one
         self.pad_free = pad_free      # the two roots differ in length: zero padding before an anchor not compared
+        # --anonymous-locals' second pass: a global of NEW that was a file-local of BASE is read as
+        # the file-local it was, where it is defined and (by its body's hash) where it is named
+        self.promoted = promoted or {}
+        for s in obj.symbols.values():
+            if s["section"] > 0 and not s["is_section"] and s["cls"] == 2 and s["name"] in self.promoted:
+                s["local"] = True
         self.cs = None
         self.by_section: dict[int, list[tuple[int, int]]] = {}
         for i, s in obj.symbols.items():
@@ -408,6 +427,8 @@ class Normaliser:
         if s["is_section"]:
             return f"{section_class(s['name'])}+?"
         name = pooled_key(s["name"])
+        if s["section"] <= 0 and s["name"] in self.promoted:     # a promoted symbol another object defines
+            return "local" if depth >= 1 else f"local#{self.promoted[s['name']]}"
         if s["section"] > 0 and s["local"]:
             if self.anonymous_locals:
                 name = "local"
@@ -505,6 +526,10 @@ class Normaliser:
         if not (sec["flags"] & SCN_CNT_CODE):
             if sec["flags"] & SCN_CNT_UNINIT or not sec["data"]:
                 return [f"zero[{end - start}]"]
+            # an initialised symbol ends at the next anchor too: what follows it unnamed but referenced
+            # (a string literal, another constant) is compared where it is referenced, so a move that
+            # takes those items to another object does not read as a change of this symbol
+            end = next((x for x in self.sorted_anchors.get(secn, []) if start < x < end), end)
             return [self.render_data(secn, start, end, depth)]
         import capstone
         raw = bytearray(sec["data"][start:end])
@@ -544,11 +569,19 @@ class Normaliser:
         return lines
 
 
-def object_symbols(path: Path, anonymous_locals: bool = False,
-                   roots: list[bytes] = (), pad_free: bool = False) -> list[tuple[str, str, list[str], bool]]:
+def promoted_hashes(path: Path, names: set[str], roots: list[bytes] = (), pad_free: bool = False) -> dict[str, str]:
+    """The hash a reference to each promoted symbol `path` defines reads as (Normaliser.local_hash)."""
+    obj = Coff(path)
+    n = Normaliser(obj, True, roots, pad_free, {x: "" for x in names})
+    return {s["name"]: n.local_hash(i) for i, s in obj.symbols.items()
+            if s["section"] > 0 and not s["is_section"] and s["cls"] == 2 and s["name"] in names}
+
+
+def object_symbols(path: Path, anonymous_locals: bool = False, roots: list[bytes] = (), pad_free: bool = False,
+                   promoted: dict[str, str] | None = None) -> list[tuple[str, str, list[str], bool]]:
     """(name, kind, normalised body, file-local) for every defined symbol of one object."""
     obj = Coff(path)
-    n = Normaliser(obj, anonymous_locals, roots, pad_free)
+    n = Normaliser(obj, anonymous_locals, roots, pad_free, promoted)
     out = []
     for i, s in obj.symbols.items():
         if s["section"] <= 0 or s["is_section"] or s["cls"] not in (2, 3):
@@ -569,7 +602,7 @@ def object_symbols(path: Path, anonymous_locals: bool = False,
 
 
 def symbol_table(objs: dict[str, Path], wanted, anonymous_locals: bool = False, roots: list[bytes] = (),
-                 pad_free: bool = False):
+                 pad_free: bool = False, promoted: dict[str, str] | None = None):
     """name -> {"kind": code | data | bss, "bodies": {hash: [objects]}}; texts by hash; functions read."""
     from concurrent.futures import ProcessPoolExecutor
     from functools import partial
@@ -578,7 +611,8 @@ def symbol_table(objs: dict[str, Path], wanted, anonymous_locals: bool = False, 
     texts: dict[str, list[str]] = {}
     nfunc = 0
     with ProcessPoolExecutor() as pool:
-        reader = partial(object_symbols, anonymous_locals=anonymous_locals, roots=roots, pad_free=pad_free)
+        reader = partial(object_symbols, anonymous_locals=anonymous_locals, roots=roots, pad_free=pad_free,
+                         promoted=promoted)
         for key, syms in zip(keys, pool.map(reader, [objs[k] for k in keys], chunksize=8)):
             for name, kind, lines, local in syms:
                 nfunc += kind == "code"
@@ -591,6 +625,71 @@ def symbol_table(objs: dict[str, Path], wanted, anonymous_locals: bool = False, 
                 e["bodies"].setdefault(h, []).append(key)
                 texts[h] = lines
     return table, texts, nfunc
+
+
+def find_cxxfilt() -> str:
+    for name in ("llvm-cxxfilt", "llvm-cxxfilt.exe"):
+        p = shutil.which(name)
+        if p:
+            return p
+    for cxx in ("i686-w64-mingw32-clang++", "x86_64-w64-mingw32-clang++", "clang++"):
+        p = shutil.which(cxx)
+        if p and Path(p).with_name("llvm-cxxfilt.exe").exists():
+            return str(Path(p).with_name("llvm-cxxfilt.exe"))
+    sys.exit("codegen_same: llvm-cxxfilt not found (it ships with the llvm-mingw toolchain)")
+
+
+def linkage_free(names: list[str], i386: bool) -> dict[str, str]:
+    """name -> its demangled spelling without what internal linkage adds: `static` (the L of
+    _ZL...) and `(anonymous namespace)::` - so a promoted symbol and the file-local it was read alike."""
+    if not names:
+        return {}
+    # i686 prefixes every C and C++ name with one underscore (llvm-cxxfilt's --strip-underscore drops
+    # it only from a name it demangles, so a promoted C-spelled variable would keep it)
+    plain = [n[1:] if i386 and n.startswith("_") else n for n in names]
+    r = subprocess.run([find_cxxfilt()], input="\n".join(plain) + "\n", capture_output=True, text=True, check=True)
+    out = r.stdout.splitlines()
+    if len(out) != len(names):
+        sys.exit("codegen_same: llvm-cxxfilt answered another number of lines than it was given")
+    return {n: d.replace("(anonymous namespace)::", "") for n, d in zip(names, out)}
+
+
+def find_promotions(base: dict, new: dict, i386: bool) -> dict[str, str]:
+    """NEW's global name -> BASE's file-local name, for a global of NEW (not a global of BASE) whose
+    body is a BASE file-local's of the same name but for its linkage (with --anonymous-locals)."""
+    cand = sorted(k for k in new if not k.startswith("local:") and k not in base)
+    if not cand:
+        return {}
+    local_names = sorted({n for k, e in base.items() if k.startswith("local:") for n in e["names"]})
+    spell = linkage_free(cand + local_names, i386)
+    by_spelling: dict[str, list[str]] = {}
+    for k, e in base.items():
+        if k.startswith("local:"):
+            for n in e["names"]:
+                by_spelling.setdefault(spell[n], []).append(k)
+    def unqualified(d: str) -> str:
+        """`ns::name(args)` -> `name(args)`: a promotion may also move the item into a named namespace."""
+        cut = d.find("(")
+        head, tail = (d, "") if cut < 0 else (d[:cut], d[cut:])
+        return head.rsplit("::", 1)[-1] + tail
+
+    by_tail: dict[str, list[str]] = {}
+    for k, e in base.items():
+        if k.startswith("local:"):
+            for n in e["names"]:
+                by_tail.setdefault(unqualified(spell[n]), []).append(k)
+    out = {}
+    for name in cand:
+        for h in new[name]["bodies"]:
+            k = f"local:{h[:12]}"
+            if k in by_spelling.get(spell[name], ()):
+                out[name] = next(n for n in sorted(base[k]["names"]) if spell[n] == spell[name])
+            elif k in by_tail.get(unqualified(spell[name]), ()):
+                # only the namespace changed: paired when that body has one file-local of that name
+                same = [n for n in sorted(base[k]["names"]) if unqualified(spell[n]) == unqualified(spell[name])]
+                if len(same) == 1 and by_tail[unqualified(spell[name])].count(k) == 1:
+                    out[name] = same[0]
+    return out
 
 
 EXCEPTION_CLASSES = ("inline", "low32-site")
@@ -664,7 +763,20 @@ def by_function(a) -> int:
         print(f"codegen_same: the source roots differ in length ({a.base}, {a.new}): the alignment "
               f"padding a path moves is not compared (the docstring's 'source root')")
     base, btext, bn = symbol_table(objects(a.base), wanted, a.anonymous_locals, broots, pad_free)
-    new, ntext, nn = symbol_table(objects(a.new), wanted, a.anonymous_locals, nroots, pad_free)
+    new_objs = objects(a.new)
+    new, ntext, nn = symbol_table(new_objs, wanted, a.anonymous_locals, nroots, pad_free)
+    promotions: dict[str, str] = {}
+    some = next((p for k, p in sorted(new_objs.items()) if wanted(k)), None)
+    if a.anonymous_locals and some is not None:
+        i386 = Coff(some).machine == IMAGE_FILE_MACHINE_I386
+        promotions = find_promotions(base, new, i386)
+    if promotions:
+        # the second pass: NEW read again with each promoted global known as the file-local it was
+        defining = sorted({k for n in promotions for v in new[n]["bodies"].values() for k in v})
+        lh: dict[str, str] = {}
+        for k in defining:
+            lh.update(promoted_hashes(new_objs[k], set(promotions), nroots, pad_free))
+        new, ntext, nn = symbol_table(new_objs, wanted, True, nroots, pad_free, lh)
     if a.show:
         for side, t, tx in (("BASE", base, btext), ("NEW", new, ntext)):
             e = t.get(a.show)
@@ -725,11 +837,18 @@ def by_function(a) -> int:
             copies += 1
             if a.verbose:
                 print(f"COPIES {name}  {nx} -> {ny} (the same bodies)")
+    promoted = 0
+    for n, was in sorted(promotions.items()):
+        key = next((k for k, e in new.items() if k.startswith("local:") and n in e["names"]), None)
+        if key and key in base and set(base[key]["bodies"]) == set(new[key]["bodies"]):
+            print(f"PROMOTED {n}  (was the file-local {was}; the same body, in {objects_of(new[key])})")
+            promoted += 1
     print(f"codegen_same --by-function: {counted['code']} code, {counted['data']} data, {counted['bss']} bss symbols "
           f"compared ({bn} / {nn} function definitions read), {bad} differ"
           + (f"; {copies} with another number of identical copies" if copies else "")
           + (f"; {injects} inject registrations changed (--inject-ok)" if injects else "")
-          + (f"; {excepts} excepted (--exceptions)" if excepts else ""))
+          + (f"; {excepts} excepted (--exceptions)" if excepts else "")
+          + (f"; {promoted} promoted to external linkage, the same body" if promoted else ""))
     for sym, x in sorted(exceptions.items()):
         if not x["used"]:
             print(f"codegen_same: unused exception {sym} ({x['class']}): it did not differ; prune the row by hand")

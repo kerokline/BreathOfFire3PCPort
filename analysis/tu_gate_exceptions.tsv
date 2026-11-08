@@ -1,6 +1,8 @@
 # The source-layout round's x86-64 gate (docs/source-layout-round.md 7a, the owner's call 8): a function may
 # differ on x86_64 only in a named class listed here; the i686 gate stays exact. Classes: inline (the compiler
 # inlined, or stopped inlining, a moved or copied helper because its callers in the file changed);
-# low32-site (Low32()'s failure message names the new file and line). A new class needs the coordinator's
+# low32-site (Low32()'s failure message names another file, line or
+# function: __FILE__, __LINE__ and the __builtin_FUNCTION() default argument, which a move or a
+# rename of the caller changes). A new class needs the coordinator's
 # entry in the round doc with its first case. Read by tools/codegen_same.py --exceptions.
 symbol	class	reason	commit

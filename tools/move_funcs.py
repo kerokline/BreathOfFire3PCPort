@@ -55,8 +55,28 @@ What one move carries, for each function F leaving source S for target T:
   `<TStem>_Inject()`, which src/hook/inject_all.cpp calls right after the
   last of its sources' `_Inject()` calls - after each source's self-test,
   which clones the originals before they are patched; T's header is included
-  after the last source header's line there;
+  after the last source header's line there. A function with no such line
+  whose bind sits elsewhere (another file's `_Inject()`, a one-line or a
+  conditional `bof3::Inject`) keeps that bind where it is, listed by
+  --check; a target whose functions are all bound elsewhere gets no
+  `_Inject()`;
 - `impl = "..."` in symbols.toml.
+
+The functions made under another name (tools/cpp_items.py says how each is
+found) move as their shape allows:
+
+- a function-like macro's invocations (`MS16_SPARKLES(071, k071)`): only
+  together - every invocation of the macro, the #define (a file-local
+  reached by them) and its `#undef` - and only when the table sends every
+  function they make to one file; otherwise refused with the line that says
+  which functions the table sends where;
+- a definition under an assembler name (`int F_Eax(...)` with
+  `extern "C" ... F_Eax(...) BOF3_ASM_NAME(F);`): the definition moves and
+  the declaration is copied (S may still name the C spelling);
+- a switch `#define X` that an included header tests to define functions
+  (task_sched.cpp's BOF3_TASK_SWITCH_FUNCTIONS): the #define line moves to
+  the top of T, before its includes, when the table sends every function
+  the header makes (that the table lists) to T; refused otherwise.
 
 What it does not move, and says so: the fuzz rows (a row is an entry of its
 group's own table type, counted by `static_assert`s and driven by the group's
@@ -69,7 +89,12 @@ with an `impl`; the group header's copies stay valid).
 Refused, before anything is written, every reason listed: a function
 tools/cpp_items.py does not find, one inside a named namespace, an `#if` or
 an `extern "C" { }` block; two different items of one name meeting in T
-(the same code under other comments is one item); shared state as above; a
+(the same code under other comments is one item); shared state as above (a
+`static const` / `static constexpr` local is a constant and copies safely; a
+pointer to const is a variable); a name that two sources' `using namespace X;`
+lines (all copied into T) would both bring into T - each group's `Callees g`,
+or file-locals of the same name inside the two namespaces - named from file
+scope by a moved function: C++ calls it ambiguous, so qualify it first; a
 moved function that names a global S defines and no included header
 declares; a target file that already exists (adding to one is not built:
 a group moves a unit's functions into its new file in one run); a source
@@ -134,7 +159,6 @@ ROOT = Path(__file__).resolve().parent.parent
 MAP_COLUMNS = ["pc", "name", "kind", "unit", "old_path", "old_first", "old_def", "old_last", "new_path", "base"]
 ALIAS_AT = re.compile(r"^\s*namespace\s+at\s*=\s*(::)?([\w:]+)\s*;", re.M)
 INJECT_LINE = re.compile(r"^[ \t]*BOF3_INJECT\((\w+)\);[ \t]*\r?\n", re.M)
-STATIC_LOCAL = re.compile(r"\bstatic\b(?!_)")
 
 
 class Refused(Exception):
@@ -268,7 +292,7 @@ class SourcePlan:
     source: str
     text: str
     items: ci.FileItems
-    funcs: dict[str, ci.Item]                     # moved function name -> its item
+    funcs: dict[str, ci.Item]                     # moved function name -> its item (one item may make several)
     target_of: dict[str, str]                     # moved function name -> target
     moved_locals: dict[str, list[ci.Item]] = field(default_factory=dict)   # target -> local items
     shared: list[ci.Item] = field(default_factory=list)                    # to <S>_local.h
@@ -277,6 +301,16 @@ class SourcePlan:
     alias_item: ci.Item | None = None
     using_dirs: list[ci.Item] = field(default_factory=list)   # `using namespace X;`: every target gets them
     inject_lines: list[str] = field(default_factory=list)
+    item_target: dict[int, str] = field(default_factory=dict)              # id(moved item) -> target
+    decls_for: dict[str, list[ci.Item]] = field(default_factory=dict)      # target -> declarations copied
+    undefs: dict[str, list[ci.Item]] = field(default_factory=dict)         # target -> `#undef M` lines moved
+    bound_elsewhere: dict[str, str] = field(default_factory=dict)          # function -> where its bind stays
+    namespace_names: dict[str, set[str]] = field(default_factory=dict)     # `using namespace X` -> X's names
+
+
+def resolve_include(inc: str) -> str | None:
+    p = ROOT / "src" / inc
+    return p.read_text(encoding="utf-8") if p.is_file() else None
 
 
 def owners_of(fi: ci.FileItems, roots: list[tuple[ci.Item, str]], local_by_name: dict[str, list[ci.Item]]):
@@ -296,15 +330,31 @@ def owners_of(fi: ci.FileItems, roots: list[tuple[ci.Item, str]], local_by_name:
     return owners
 
 
-def plan_source(source: str, moves: list[Move], problems: list[str]) -> SourcePlan | None:
+def made_names(it: ci.Item) -> list[str]:
+    """The function names an item makes: a definition's own name and its assembler name; a macro
+    invocation's expansion; a switch #define's header functions (tools/cpp_items.py)."""
+    if it.kind == "macro":
+        return list(it.names)
+    if it.kind == "pp":
+        return list(it.made)
+    if it.kind == "func":
+        return it.names[:1] + list(it.made)
+    return []
+
+
+def plan_source(source: str, moves: list[Move], problems: list[str],
+                table_target: dict[str, str] | None = None) -> SourcePlan | None:
     text = read(source)
-    fi = ci.FileItems(text)
+    fi = ci.FileItems(text, resolve_include)
     leaves = fi.leaves()
     by_name: dict[str, list[ci.Item]] = defaultdict(list)
     for it in leaves:
-        if it.kind == "func":
-            by_name[it.names[0]].append(it)
+        for n in made_names(it):
+            if it not in by_name[n]:
+                by_name[n].append(it)
     plan = SourcePlan(source, text, fi, {}, {})
+    table_target = table_target or {}
+    family_moves: dict[int, list[Move]] = defaultdict(list)
     for m in moves:
         found = by_name.get(m.name, [])
         if len(found) != 1:
@@ -314,7 +364,7 @@ def plan_source(source: str, moves: list[Move], problems: list[str]) -> SourcePl
         if any(n for n in it.ns):
             problems.append(f"{source}: {m.name} sits in namespace {'::'.join(it.ns)}; only file-scope functions move")
             continue
-        if "" in it.ns or it.is_static:
+        if it.kind == "func" and it.local:
             problems.append(f"{source}: {m.name} is file-local; it moves with its callers, not by the table")
             continue
         if it.conds:
@@ -323,17 +373,67 @@ def plan_source(source: str, moves: list[Move], problems: list[str]) -> SourcePl
         if it.linkage:
             problems.append(f"{source}: {m.name} sits inside an extern \"C\" {{ }} block")
             continue
+        if it.kind in ("macro", "pp"):
+            family_moves[id(it)].append(m)
+            continue
         plan.funcs[m.name] = it
         plan.target_of[m.name] = m.target
+        plan.item_target[id(it)] = m.target
+        # a definition under an assembler name: its `extern "C" ... BOF3_ASM_NAME(F);` declaration is
+        # copied (S keeps it too: its other code may still name the C spelling)
+        if it.made:
+            for d in leaves:
+                if d.kind == "decl" and d.asm_name in it.made and d.names[:1] == it.names[:1]:
+                    plan.decls_for.setdefault(m.target, []).append(d)
+
+    # the macro-made functions: a family moves whole or not at all
+    families: dict[str, list[ci.Item]] = defaultdict(list)       # macro name (or the switch) -> its items
+    for it in leaves:
+        if it.kind == "macro":
+            families[it.macro].append(it)
+    done_families: set[str] = set()
+    for key in {id(it): it for it in leaves if id(it) in family_moves}.values():
+        if key.kind == "macro":
+            if key.macro in done_families:
+                continue
+            done_families.add(key.macro)
+        fam = families[key.macro] if key.kind == "macro" else [key]
+        label = f"the {key.macro} invocations" if key.kind == "macro" else f"the switch {key.names[0]}"
+        where: dict[str, list[str]] = defaultdict(list)
+        for f in fam:
+            for n in made_names(f):
+                t = table_target.get(n)
+                if t is None and key.kind == "pp":
+                    continue                            # a function of the other width's header: it goes along
+                where["(not in the table)" if t is None else "(stays)" if t == source else t].append(n)
+        if len(where) != 1 or next(iter(where)) in ("(stays)", "(not in the table)"):
+            problems.append(f"{source}: {label} define {sum(len(v) for v in where.values())} functions that "
+                            f"move only together, with the macro, to one file; the table sends "
+                            + "; ".join(f"{', '.join(v)} to {t}" for t, v in sorted(where.items())))
+            continue
+        target = next(iter(where))
+        for f in fam:
+            plan.item_target[id(f)] = target
+            for n in made_names(f):
+                if key.kind == "pp" and n not in table_target:
+                    continue
+                plan.funcs[n] = f
+                plan.target_of[n] = target
+        if key.kind == "macro":
+            und = re.compile(rf"#\s*undef\s+{re.escape(key.macro)}\b")
+            plan.undefs[target] = [u for u in leaves if u.kind == "pp" and und.match(u.text.strip())]
     if not plan.funcs:
         return None
 
+    moved = {id(it) for it in plan.funcs.values()}
     m_alias = None
     local_by_name: dict[str, list[ci.Item]] = defaultdict(list)
     for it in leaves:
+        if id(it) in moved:
+            continue
         if it.kind == "pp" and it.names:                       # a #define in the .cpp is file-local
             local_by_name[it.names[0]].append(it)
-        elif it.kind != "pp" and it.local and it not in plan.funcs.values():
+        elif it.kind != "pp" and it.local:
             if it.kind == "using" and not it.names:
                 plan.using_dirs.append(it)
                 continue
@@ -342,22 +442,27 @@ def plan_source(source: str, moves: list[Move], problems: list[str]) -> SourcePl
                 if m_alias:
                     plan.alias_at, plan.alias_item = m_alias.group(2), it
                     continue                                   # each file has its own `at`
+            if it.is_var and it.is_const and not it.is_static and "" not in it.ns \
+                    and declared_in_headers(text, set(it.names)):
+                continue                                       # a header declares it extern: a global
             for n in it.names:
                 local_by_name[n].append(it)
-    # who reaches what: every moved function for its target, everything else for S
+    # who reaches what: every moved item for its target, everything else for S
     roots = []
-    moved_ids = {id(it) for it in plan.funcs.values()}
     local_ids = {id(i) for lst in local_by_name.values() for i in lst}
+    undef_ids = {id(u) for lst in plan.undefs.values() for u in lst}
     for it in leaves:
-        if id(it) in moved_ids:
-            roots.append((it, plan.target_of[it.names[0]]))
+        if id(it) in moved:
+            roots.append((it, plan.item_target[id(it)]))
         elif it.kind != "pp" and id(it) not in local_ids and it is not plan.alias_item:
             roots.append((it, source))
+    for lst in plan.decls_for.values():
+        local_ids |= {id(d) for d in lst}
     owners = owners_of(fi, roots, local_by_name)
     seen = set()
     for lst in local_by_name.values():
         for it in lst:
-            if id(it) in seen:
+            if id(it) in seen or id(it) in undef_ids:
                 continue
             seen.add(id(it))
             own = owners.get(id(it), set())
@@ -388,23 +493,79 @@ def plan_source(source: str, moves: list[Move], problems: list[str]) -> SourcePl
     needed = {u for it in plan.funcs.values() for u in it.uses & set(globals_here)}
     declared = declared_in_headers(text, needed)
     for name, it in plan.funcs.items():
+        if it.kind == "pp":
+            continue
         for u in sorted(it.uses & set(globals_here) - declared):
             problems.append(f"{source}: {name} names {u}, a global {source} defines and no header it includes "
                             f"declares; give it a declaration first")
-    # the inject lines
+    # the inject lines; a bind kept elsewhere (another file's _Inject(), a one-line or conditional
+    # bof3::Inject) stays where it is and is listed
     for m in INJECT_LINE.finditer(text):
         if m.group(1) in plan.funcs:
             plan.inject_lines.append(m.group(1))
-    missing = set(plan.funcs) - set(plan.inject_lines)
-    if missing:
-        problems.append(f"{source}: no BOF3_INJECT line for {', '.join(sorted(missing))}")
+    for name in sorted(set(plan.funcs) - set(plan.inject_lines)):
+        where = bind_site(name)
+        if where:
+            plan.bound_elsewhere[name] = where
+        else:
+            problems.append(f"{source}: no BOF3_INJECT line and no other bind for {name}")
+    # `using namespace X;` lines go to every target: the names each X defines, for the ambiguity check
+    for d in plan.using_dirs:
+        mm = re.match(r"\s*using\s+namespace\s+(::)?([\w:]+)\s*;", d.text[d.code_start - d.start:])
+        if mm:
+            plan.namespace_names[mm.group(2)] = namespace_names(text, mm.group(2))
     return plan
 
 
+_bind_cache: dict[str, str] = {}
+
+
+def bind_site(name: str) -> str:
+    """Where a function is bound, if anywhere in src/ (`BOF3_INJECT(name)` or `Inject("name"`)."""
+    if not _bind_cache:
+        rx = re.compile(r'BOF3_INJECT\((\w+)\)|Inject\(\s*"(\w+)"')
+        for p in sorted((ROOT / "src").rglob("*.cpp")):
+            for n, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+                for m in rx.finditer(line):
+                    _bind_cache.setdefault(m.group(1) or m.group(2), f"{rel(p)}:{n}")
+        _bind_cache.setdefault("", "")
+    return _bind_cache.get(name, "")
+
+
+def namespace_names(text: str, ns: str) -> set[str]:
+    """The names namespace `ns` defines at its scope in this file and in the project headers it
+    includes (one level): what `using namespace ns;` brings into a target."""
+    parts = tuple(ns.split("::"))
+    out: set[str] = set()
+    texts = [text] + [t for inc in re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.M)
+                      for t in [resolve_include(inc)] if t]
+    for t in texts:
+        try:
+            fi = ci.FileItems(t.replace("\r\n", "\n"))
+        except ValueError:
+            continue
+        for it in fi.leaves():
+            # X's own scope and the anonymous namespaces inside it: `using namespace X` brings both
+            if (it.ns[:len(parts)] == parts and not any(it.ns[len(parts):])
+                    and it.kind in ("decl", "func", "type", "alias", "typedef", "using")):
+                out.update(it.names)
+    return out
+
+
+STATIC_DECL = re.compile(r"\bstatic\b(?!_)([^;={(]*)")
+
+
 def has_static_local(it: ci.Item) -> bool:
-    """A function whose body declares a `static` (one object per copy of the function)."""
+    """A function whose body declares a `static` object that can change (one object per copy of the
+    function); a `static const` / `static constexpr` value is a constant, copied safely."""
     code = it.text[it.code_start - it.start:]
-    return bool(STATIC_LOCAL.search(code[code.find("{"):]))
+    body = code[code.find("{"):]
+    for m in STATIC_DECL.finditer(body):
+        words = [t.text for t in ci.lex(m.group(1)) if t.kind != "comment"]
+        name = words[-1] if words else None
+        if not ci.declares_constant(words, name):
+            return True
+    return False
 
 
 def code_tokens(it: ci.Item) -> str:
@@ -635,23 +796,39 @@ def main() -> int:
     for m in todo:
         by_source[m.source].append(m)
     problems: list[str] = []
-    plans = {s: plan_source(s, ms, problems) for s, ms in sorted(by_source.items())}
+    # every row of the table, picked or not: a macro family moves whole, so its plan reads them all
+    table_target = {m.name: m.target for m in load_table(a.table, a.file_column, syms, lambda m: True)}
+    plans = {s: plan_source(s, ms, problems, table_target) for s, ms in sorted(by_source.items())}
     plans = {s: p for s, p in plans.items() if p}
     move_of = {m.name: m for m in todo}
+    for s, p in plans.items():                 # a family member the pick left out moves with its family
+        for name, t in p.target_of.items():
+            if name not in move_of:
+                move_of[name] = Move(name, syms[name]["pc"] if name in syms else 0, s, t)
+    todo = list(move_of.values())
     base = git_head(sorted(plans)) if not a.check else "check"
 
     # --- assemble each target --------------------------------------------------
     targets: dict[str, dict] = {}
     for s, p in plans.items():
         for name, t in p.target_of.items():
-            e = targets.setdefault(t, {"funcs": [], "locals": [], "sources": [], "aliases": {}, "shared_from": set()})
+            e = targets.setdefault(t, {"funcs": [], "locals": [], "sources": [], "aliases": {}, "shared_from": set(),
+                                       "undefs": [], "binds": set(), "namespaces": {}})
             e["funcs"].append((move_of[name].pc, name, p.funcs[name], s))
+            if name in p.inject_lines:
+                e["binds"].add(name)
             if s not in e["sources"]:
                 e["sources"].append(s)
             if p.alias_at:
                 e["aliases"][s] = p.alias_at
+            for x, names in p.namespace_names.items():
+                e["namespaces"].setdefault(x, set()).update(names)
         for t, its in p.moved_locals.items():
             targets[t]["locals"] += [(s, it, "local") for it in its]
+        for t, its in p.decls_for.items():
+            targets[t]["locals"] += [(s, it, "copied") for it in its]
+        for t, its in p.undefs.items():
+            targets[t]["undefs"] += its
         for it in p.shared:
             for t in sorted(p.shared_users[id(it)] - {s}):
                 if a.shared == "copy":
@@ -700,6 +877,23 @@ def main() -> int:
         for pc, name, it, s in e["funcs"]:
             if ("", name) in seen:
                 problems.append(f"{t}: {name} is already defined there")
+        # every source's `using namespace X;` comes too: a name two of those namespaces define (each
+        # group's `Callees g`, say), named unqualified by a moved body, is ambiguous there
+        if len(e["namespaces"]) > 1:
+            # named from file scope (a moved function, a file-scope local): a use inside namespace X
+            # finds X's own name first
+            used = set().union(*(it.uses for _, _, it, _ in e["funcs"]),
+                               *(it.uses for _, it, _ in e["locals"] if not any(it.ns)))
+            providers: dict[str, list[str]] = defaultdict(list)
+            for x, names in sorted(e["namespaces"].items()):
+                for n in names & used:
+                    providers[n].append(x)
+            for n, xs in sorted(providers.items()):
+                if len(xs) > 1:
+                    users = sorted({name for _, name, it, _ in e["funcs"] if n in it.uses})
+                    problems.append(f"{t}: `{n}` would be ambiguous - {', '.join(f'{x}::{n}' for x in xs)} come "
+                                    f"through `using namespace` (named by {', '.join(users) or 'a moved local'}); "
+                                    f"qualify it first")
 
     if problems:
         print("move_funcs: refused, nothing written:")
@@ -716,6 +910,12 @@ def main() -> int:
         for t, its in p.moved_locals.items():
             for it in its:
                 rows.append(map_row(None, "/".join(it.names), "local", "", s, it, t, base))
+        for t, its in p.decls_for.items():
+            for it in its:
+                rows.append(map_row(None, "/".join(it.names), "copied", "", s, it, t, base))
+        for t, its in p.undefs.items():
+            for it in its:
+                rows.append(map_row(None, it.text.strip(), "local", "", s, it, t, base))
         for it in p.shared:
             if a.shared == "header":
                 rows.append(map_row(None, "/".join(it.names), "shared", "", s, it, local_header(s), base))
@@ -733,14 +933,25 @@ def main() -> int:
             if p.shared:
                 how = f"to {local_header(s)}" if a.shared == "header" else "copied, the original kept"
                 print(f"{s}: {len(p.shared)} shared items ({how}): " + ", ".join("/".join(i.names) for i in p.shared))
+            for name, where in sorted(p.bound_elsewhere.items()):
+                print(f"{s}: {name}'s bind stays at {where}")
         if a.map_only:
             save_map(a.map, merge_rows(load_map(a.map), rows))
             print(f"move_funcs: {len(rows)} map rows written to {rel(a.map)}")
         return 0
 
+    # inject_all.cpp first, so that a refusal there comes before any file is written; a target
+    # whose functions are all bound elsewhere gets no _Inject() of its own
+    inject_all = read("src/hook/inject_all.cpp")
+    for t, e in sorted(targets.items()):
+        if e["binds"]:
+            inject_all = insert_inject_all(inject_all, e["sources"], header_of(t), target_inject_name(t))
+
     # --- write the sources ------------------------------------------------------------
     for s, p in plans.items():
-        spans = [(it.start, it.end) for it in p.funcs.values()]
+        # a switch #define moves without the comment above it (at a file's top, the file's own comment)
+        spans = sorted({(switch_start(it), it.end) for it in p.funcs.values()}
+                       | {(it.start, it.end) for its in p.undefs.values() for it in its})
         spans += [(it.start, it.end) for its in p.moved_locals.values() for it in its]
         shared = p.shared if a.shared == "header" else []
         text = p.text
@@ -765,11 +976,9 @@ def main() -> int:
         write(s, text)
 
     # --- write the targets -------------------------------------------------------------
-    inject_all = read("src/hook/inject_all.cpp")
     for t, e in sorted(targets.items()):
         e["funcs"].sort()
         write_target(t, e, plans)
-        inject_all = insert_inject_all(inject_all, e["sources"], header_of(t), target_inject_name(t))
     write("src/hook/inject_all.cpp", inject_all)
 
     write("symbols.toml", rewrite_impl(read("symbols.toml"), {m.name: m.target for m in todo}))
@@ -787,6 +996,13 @@ def main() -> int:
         for f, n in fuzz:
             print(f"    {f}:{n}")
     return 0
+
+
+def switch_start(it: ci.Item) -> int:
+    """Where a moved item's text starts: a switch #define's own line, else its leading comment."""
+    if it.kind == "pp":
+        return it.text.rfind("\n", 0, it.code_start - it.start) + 1 + it.start
+    return it.start
 
 
 def target_inject_name(t: str) -> str:
@@ -838,6 +1054,12 @@ def write_target(t: str, e: dict, plans: dict[str, SourcePlan]) -> None:
         incs.append(f'#include "{include_name(callees)}"')
     src_names = ", ".join(Path(s).name for s in e["sources"])
     out = [f"// Moved here by tools/move_funcs.py from {src_names} (docs/source-layout-round.md).\n"]
+    # a moved switch #define (it makes functions an included header defines) comes before the includes
+    switches = []
+    for _, _, it, _ in e["funcs"]:
+        if it.kind == "pp" and it not in switches:
+            switches.append(it)
+    out += [it.text[switch_start(it) - it.start:].rstrip("\n") + "\n" for it in switches]
     out += [l + "\n" for l in sort_includes(incs, f'#include "{include_name(th)}"')]
     out.append("\n")
     if aliases:
@@ -854,14 +1076,22 @@ def write_target(t: str, e: dict, plans: dict[str, SourcePlan]) -> None:
                 dirs.append(it)
     out.append(block(dirs, True))
     out.append(block([it for _, it, _ in e["locals"]], True))
-    out.append(block([it for _, _, it, _ in e["funcs"]], True))
-    out.append(f"void {inject}() {{\n")
-    for _, name, _, _ in e["funcs"]:
-        out.append(f"    BOF3_INJECT({name});\n")
-    out.append("}\n")
-    write(t, re.sub(r"\n{3,}", "\n\n", "".join(out)))
+    items: list[ci.Item] = []                  # one item may make several functions (a macro invocation)
+    for _, _, it, _ in e["funcs"]:
+        if it.kind != "pp" and it not in items:
+            items.append(it)
+    out.append(block(items, True))
+    out.append(block(e["undefs"], True))
+    if e["binds"]:                             # a bind kept elsewhere stays there
+        out.append(f"void {inject}() {{\n")
+        for _, name, _, _ in e["funcs"]:
+            if name in e["binds"]:
+                out.append(f"    BOF3_INJECT({name});\n")
+        out.append("}\n")
+    write(t, re.sub(r"\n{3,}", "\n\n", "".join(out)).rstrip("\n") + "\n")
     write(th, f"// tools/move_funcs.py (docs/source-layout-round.md). The functions of {Path(t).name} are declared\n"
-              f"// by symbols.gen.h (each has an `impl` in symbols.toml).\n#pragma once\n\nvoid {inject}();\n")
+              f"// by symbols.gen.h (each has an `impl` in symbols.toml).\n#pragma once\n"
+              + (f"\nvoid {inject}();\n" if e["binds"] else ""))
 
 
 def fuzz_rows(names: set[str]) -> list[tuple[str, int]]:
