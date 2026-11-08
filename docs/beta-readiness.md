@@ -9,7 +9,7 @@ the work to do before the tag. It **points at evidence rather than restating it*
 [`releases/README.md`](releases/README.md), unchanged.
 
 The releases so far: `v0.1.0-alpha.5` is the last *published* release (2026-10-22). `v0.1.0-alpha.6` was tagged
-at `b7bd1d29` on 2026-10-29 and is still a draft. The beta is therefore the first public release since alpha.5
+at `b7bd1d29` on 2026-10-29, stayed a draft and was deleted on 2026-11-08 (the tag stays). The beta is therefore the first public release since alpha.5
 and carries everything alpha.6's notes list plus what landed after it (the mountain passes, the exe-gap round,
 issues 177..191, the 64-bit round, the FMV decoders, the ending scenes; [`STATUS.md`](STATUS.md) lists each with
 its PR). `main` at the time of writing is PR #209's merge, `67c3259b`.
@@ -128,8 +128,8 @@ In order. Items 2 and 3 are the owner's; 4..8 an agent can do and the owner read
    beta is cut and what it holds, HANDOFF's item 0 is "the beta's first reports".
 
 Then the routine: commit the notes on `main` (signed off), tag `v0.1.0-beta.1`, read the draft, publish.
-`v0.1.0-alpha.6`'s draft can be deleted or published first; a published alpha.6 keeps the history linear, a
-deleted one keeps the releases page short. The owner's call; nothing in the workflow depends on it.
+`v0.1.0-alpha.6`'s draft was deleted on 2026-11-08 at the owner's word ("we never used it"); the tag stays at
+`b7bd1d29` because the docs cite it. Nothing in the workflow depends on it.
 
 ## 5. What a beta should promise and not promise
 

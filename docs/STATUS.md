@@ -11,7 +11,7 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 **The beta, `v0.1.0-beta.1`, is being cut on 2026-11-08 from `main` `67c3259b`** (the PR #209 merge; the
 checklist is [`beta-readiness.md`](beta-readiness.md), the notes [`releases/v0.1.0-beta.1.md`](releases/v0.1.0-beta.1.md),
 the routine [`releases/README.md`](releases/README.md)). It is the first public release since `v0.1.0-alpha.5`
-(2026-10-22; alpha.6 was tagged at `b7bd1d29` on 2026-10-29 and stayed a draft) and holds alpha.6's list and
+(2026-10-22; alpha.6 was tagged at `b7bd1d29` on 2026-10-29, stayed a draft and was deleted on 2026-11-08, the tag kept) and holds alpha.6's list and
 everything merged after it: issue #141's model box (PR #171), the no-fail minigames cheat (PRs #172, #198), the
 item sort (PR #173), the dock's legend (PR #174), the mountain passes (PR #175), the exe-gap round (PR #176),
 issues 177..179 (PRs #181, #182), the 64-bit build round (PRs #183, #187, #207), DIV-0202 (PR #186), issue #185
@@ -25,8 +25,8 @@ three presets other than Recommended, the 32-bit build's movies through our deco
 D406's quick-load listen and DIV-0203's German - the notes say exactly that. **The one open crash report is
 issue #190** (the dragon gene window; not reproduced in many tries; left open by the owner to gather data).
 **The tag is not made yet:** the owner still runs beta-readiness section 4's items 2 (one start of the 32-bit zip
-for the movies) and 3 (the alpha.5 upgrade path), then commits the notes on `main`, tags and publishes; alpha.6's
-draft is published or deleted first, the owner's call.
+for the movies) and 3 (the alpha.5 upgrade path), then commits the notes on `main`, tags and publishes. Alpha.6's
+draft was deleted on 2026-11-08; the beta readiness work is PR #211, held open through the checks.
 
 **The ending scenes, 2026-11-07 evening** (merged as PR #209 the same night, `main` `67c3259b`): the owner's
 four reports off their `myriaFightAndEnding` route - the *Fin* disc's rim short of the 21:9 corners, the bands'

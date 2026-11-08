@@ -14,7 +14,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the game's own code is all ours since PR #43).
-**`origin/main` is `67c3259b`** (PR #209, 2026-11-07 night; `v0.1.0-alpha.6` was cut at `b7bd1d29`, after PR #170, and stayed a draft; **`v0.1.0-beta.1` is being cut from this commit**, item 0): since the reading-row round (PR #106) it took the faster
+**`origin/main` is `67c3259b`** (PR #209, 2026-11-07 night; `v0.1.0-alpha.6` was cut at `b7bd1d29`, after PR #170, stayed a draft and was deleted on 2026-11-08, its tag kept; **`v0.1.0-beta.1` is being cut from this commit**, item 0): since the reading-row round (PR #106) it took the faster
 text, the bit-15 round, the PlayStation verdict pass and twin-diff, fix wave 1023, the sound-layer round, the
 issue fixes of 2026-10-24..26, build-difference prevention (the data diff and the every-door sweep), the spell
 sweep and its fix wave, the two staged rounds, the away day (PR #158), D42's dial (PR #159), the boss sweep (PR #161), the ledger-fields round (PRs #162, #164), D397 and issue #163
@@ -23,8 +23,8 @@ issues 177..179 (PRs #181, #182), the 64-bit build round (PRs #183, #187, #207, 
 last), DIV-0202 (PR #186), issue #185 (PR #188), issues 184 and 189 (PR #193), issue #191 (PR #194), the desert
 faerie entrance DIV-0204 (PR #202) and the ending scenes (PR #209)
 ([`STATUS.md`](STATUS.md) lists them with their PRs). Every branch the earlier versions of this file called
-unpushed is merged; the open work is below. **No PR is open** (2026-11-08) but the beta-readiness docs PR to
-come, which carries the beta's notes, the README line, the bug-report template and this rewrite (item 0).
+unpushed is merged; the open work is below. **One PR is open** (2026-11-08), the beta-readiness docs PR to
+come, which carries the beta's notes, the README line, the bug-report template and this rewrite (item 0) - opened as PR #211 on 2026-11-08.
 Owed throughout:
 the owner's play, eye and ear ([`owner-review.md`](owner-review.md), item 13). Layers built before DIV-0148 carry
 no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fishing tag 3: rebuild a language
@@ -40,8 +40,8 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    path over a copy of a real alpha.5 folder (the launcher names the stale pieces and offers the rebuild; a
    disc-built image built by an older release is refused until rebuilt, DIV-0101's strict mode; the saves load;
    the Jukebox's names show). Then the routine ([`releases/README.md`](releases/README.md)): commit the notes on
-   `main` signed off, tag `v0.1.0-beta.1`, read the draft, publish; `v0.1.0-alpha.6`'s draft published or deleted
-   first, the owner's call, nothing in the workflow depends on it. **When a player files a report:** the
+   `main` signed off, tag `v0.1.0-beta.1`, read the draft, publish (`v0.1.0-alpha.6`'s draft deleted on 2026-11-08, its tag
+   kept). The beta readiness work is **PR #211**, open and held through the owner's checks. **When a player files a report:** the
    template `.github/ISSUE_TEMPLATE/bug-report.md` asks for the release's name (the launcher shows no version:
    the zip's name, or the exe's Properties > Details > Product version, stamped by `src/version.rc`), the Sources
    page's list and the language, the preset, what was done and seen, and the `CRASH n:` block from `bof3x.log`;
