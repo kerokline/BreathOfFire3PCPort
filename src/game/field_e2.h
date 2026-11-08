@@ -5,6 +5,7 @@
 #pragma once
 
 void FieldE2_Inject();
+extern unsigned char g_trade_confirm_layout;   // defined in field_e2.cpp, armed by FieldE2_Inject (named here for a moved reader: source-layout B0)
 
 namespace field_e2 {
 // BOF3X_SHADOW=field_e2: the start-up fuzz, field_e2_fuzz.cpp. Clones every
