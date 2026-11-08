@@ -30,7 +30,7 @@ using sound::ComCreate;
 using sound::ComPlay;
 using sound::ComStatus;
 using sound::ComValue;
-using sound::Method;
+// sound::Method is named in full below (source-layout B0, analysis/tu_renames.tsv).
 
 namespace sound_rest {
 namespace {
@@ -45,7 +45,7 @@ std::uint32_t Dword(std::uint32_t address) {
 void SetDword(std::uint32_t address, std::uint32_t v) { std::memcpy(At(address), &v, sizeof v); }
 void SetWord(std::uint32_t address, std::uint16_t v) { std::memcpy(At(address), &v, sizeof v); }
 
-void Release(void* object) { Method<ComCall>(object, sound::kRelease)(object); }
+void Release(void* object) { sound::Method<ComCall>(object, sound::kRelease)(object); }
 
 }  // namespace
 
@@ -153,7 +153,7 @@ extern "C" void __cdecl SndBuf_SetVolume(void* buffer, int level) {
         : [level] "m"(level), [inverse] "m"(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
           [scale] "m"(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
         : "eax", "st");
-    Method<ComValue>(buffer, sound::kSetVolume)(buffer, static_cast<unsigned long>(static_cast<std::uint64_t>(value)));
+    sound::Method<ComValue>(buffer, sound::kSetVolume)(buffer, static_cast<unsigned long>(static_cast<std::uint64_t>(value)));
 }
 
 // original 0x5A6FF0 (Music_Stop 0x5A7050 byte for byte): the music stopped if
@@ -167,10 +167,10 @@ extern "C" int __cdecl SoundRest_HaltBody(std::uint32_t ecx) {
     void* const buffer = Music_Buffer;
     if (buffer == nullptr) return 0;
     unsigned long status = ecx;
-    const long got = Method<ComStatus>(buffer, sound::kGetStatus)(buffer, &status);
+    const long got = sound::Method<ComStatus>(buffer, sound::kGetStatus)(buffer, &status);
     if ((status & 1) == 0) return static_cast<int>(got);
     void* const playing = Music_Buffer;
-    return static_cast<int>(Method<ComCall>(playing, sound::kStop)(playing));
+    return static_cast<int>(sound::Method<ComCall>(playing, sound::kStop)(playing));
 }
 
 // original 0x5A7080: the music played again, looping, from where it stopped
@@ -185,7 +185,7 @@ extern "C" int __cdecl Music_Resume(void) {
     if (sound_in::JingleResume()) return 0;  // DIV-0177
     void* const buffer = Music_Buffer;
     if (buffer == nullptr) return 0;
-    return static_cast<int>(Method<ComPlay>(buffer, sound::kPlay)(buffer, 0, 0, kLooping));
+    return static_cast<int>(sound::Method<ComPlay>(buffer, sound::kPlay)(buffer, 0, 0, kLooping));
 }
 
 // original 0x5A7200 (Music_IsPlaying 0x5A7020 on the other buffer): 1 if the
@@ -196,7 +196,7 @@ extern "C" int __cdecl SoundRest_StreamPlayingBody(std::uint32_t ecx) {
     void* const buffer = SndStream_Buffer;
     if (buffer == nullptr) return 0;
     unsigned long status = ecx;
-    Method<ComStatus>(buffer, sound::kGetStatus)(buffer, &status);
+    sound::Method<ComStatus>(buffer, sound::kGetStatus)(buffer, &status);
     return (status & 1) ? 1 : 0;
 }
 
@@ -257,7 +257,7 @@ extern "C" int __cdecl Snd_Init(void* hwnd) {
         return kNoDevice;
     }
     void* device = Snd_Device;
-    if (Method<ComCooperate>(device, kSetCooperativeLevel)(device, hwnd, kExclusive) != 0) {
+    if (sound::Method<ComCooperate>(device, kSetCooperativeLevel)(device, hwnd, kExclusive) != 0) {
         Release(Snd_Device);
         Snd_Device = nullptr;
         return kNoCooperation;
@@ -270,7 +270,7 @@ extern "C" int __cdecl Snd_Init(void* hwnd) {
     SetDword(desc + 0x0C, 0);                // dwReserved
     SetDword(desc + 0x10, 0);                // lpwfxFormat
     device = Snd_Device;
-    if (Method<ComCreate>(device, sound::kCreateSoundBuffer)(device, At(desc), reinterpret_cast<void**>(&Snd_Primary), nullptr) != 0) {
+    if (sound::Method<ComCreate>(device, sound::kCreateSoundBuffer)(device, At(desc), reinterpret_cast<void**>(&Snd_Primary), nullptr) != 0) {
         Release(Snd_Device);
         Snd_Device = nullptr;
         return kNoPrimary;
@@ -284,7 +284,7 @@ extern "C" int __cdecl Snd_Init(void* hwnd) {
     SetWord(format + 0x0E, 8);        // wBitsPerSample
     SetWord(format + 0x10, 0);        // cbSize
     void* const primary = Snd_Primary;
-    if (Method<ComFormat>(primary, kSetFormat)(primary, At(format)) != 0) {
+    if (sound::Method<ComFormat>(primary, kSetFormat)(primary, At(format)) != 0) {
         Release(Snd_Device);
         void* const made = Snd_Primary;
         Snd_Device = nullptr;
