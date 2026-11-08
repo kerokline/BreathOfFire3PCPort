@@ -70,6 +70,22 @@ a commit that renames such a helper so that two files' helpers of one name
 can share a target file. Every function still compares by its own name, so
 a renamed helper whose code is the same passes, and one whose code changed
 reads as a GONE / NEW pair `local:<hash>` with its names.
+
+    --exceptions FILE   (with --by-function; the round doc's 7a, the owner's call 8)
+
+FILE is analysis/tu_gate_exceptions.tsv: a header line `symbol class reason
+commit` (tab-separated), `#` lines comments, one row per symbol the x86_64
+gate lets differ. A DIFFER, GONE or NEW line of a code symbol listed there
+whose class is a known one - `inline` (the compiler inlined, or stopped
+inlining, a moved or copied helper because its callers in the file changed)
+or `low32-site` (Low32()'s failure message names the new file and line) -
+prints as `EXCEPT <class> <symbol>` and is not counted. The symbol is the
+name the line prints (for a `local:<hash>` key, any of the names it lists).
+A data, bss or inject line is never excepted. A row whose class is not a
+known one, a row without a symbol and a class, or a file without the
+header, is an error: the line is printed and the exit is 2, before anything
+is compared. A listed symbol that did not differ is reported on an `unused
+exception` line (not an error: a stale row, to prune by hand).
 """
 
 from __future__ import annotations
@@ -463,6 +479,53 @@ def symbol_table(objs: dict[str, Path], wanted, anonymous_locals: bool = False):
     return table, texts, nfunc
 
 
+EXCEPTION_CLASSES = ("inline", "low32-site")
+
+
+def load_exceptions(path: Path) -> dict[str, dict]:
+    """symbol -> {"class", "line", "used"}; an unknown class or a malformed line exits 2."""
+    out: dict[str, dict] = {}
+    header = False
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError as e:
+        print(f"codegen_same: --exceptions {path}: {e}")
+        sys.exit(2)
+    for n, line in enumerate(lines, 1):
+        if not line.strip() or line.startswith("#"):
+            continue
+        f = [x.strip() for x in line.split("\t")]
+        if not header:
+            if f[:4] != ["symbol", "class", "reason", "commit"]:
+                print(f"codegen_same: {path}:{n}: the header must be symbol, class, reason, commit: {line}")
+                sys.exit(2)
+            header = True
+            continue
+        if len(f) < 2 or not f[0] or not f[1]:
+            print(f"codegen_same: {path}:{n}: a row needs a symbol and a class: {line}")
+            sys.exit(2)
+        if f[1] not in EXCEPTION_CLASSES:
+            print(f"codegen_same: {path}:{n}: class {f[1]!r} is not one of {', '.join(EXCEPTION_CLASSES)} "
+                  f"(a new class needs the coordinator's entry in docs/source-layout-round.md 7a): {line}")
+            sys.exit(2)
+        out[f[0]] = {"class": f[1], "line": line, "used": False}
+    if not header:
+        print(f"codegen_same: {path}: no header line (symbol, class, reason, commit)")
+        sys.exit(2)
+    return out
+
+
+def excepted(exceptions: dict, key: str, e: dict) -> str | None:
+    """The class that excepts this code symbol's line, or None."""
+    if not exceptions or e["kind"] != "code":
+        return None
+    for n in [key] + sorted(e["names"]):
+        if n in exceptions:
+            exceptions[n]["used"] = True
+            return exceptions[n]["class"]
+    return None
+
+
 def named(key: str, e: dict) -> str:
     return f"; named {', '.join(sorted(e['names']))}" if key.startswith("local:") else ""
 
@@ -480,6 +543,7 @@ def by_function(a) -> int:
     def wanted(k: str) -> bool:
         return not a.only or any(fnmatch.fnmatch(k, g) for g in a.only)
 
+    exceptions = load_exceptions(a.exceptions) if a.exceptions else {}
     base, btext, bn = symbol_table(objects(a.base), wanted, a.anonymous_locals)
     new, ntext, nn = symbol_table(objects(a.new), wanted, a.anonymous_locals)
     if a.show:
@@ -492,7 +556,7 @@ def by_function(a) -> int:
                 print(f"--- {side}: {a.show} in {', '.join(where)}")
                 print("\n".join(tx[h]))
         return 0
-    bad = copies = injects = 0
+    bad = copies = injects = excepts = 0
     counted = {"code": 0, "data": 0, "bss": 0}
     for name in sorted(set(base) | set(new)):
         x, y = base.get(name), new.get(name)
@@ -502,10 +566,20 @@ def by_function(a) -> int:
             injects += 1
             continue
         if y is None:
+            cls = excepted(exceptions, name, x)
+            if cls:
+                print(f"EXCEPT {cls} {name}  (GONE; {x['kind']}, in {objects_of(x)}{named(name, x)}; not counted)")
+                excepts += 1
+                continue
             print(f"GONE   {name}  ({x['kind']}, in {objects_of(x)}{named(name, x)})")
             bad += 1
             continue
         if x is None:
+            cls = excepted(exceptions, name, y)
+            if cls:
+                print(f"EXCEPT {cls} {name}  (NEW; {y['kind']}, in {objects_of(y)}{named(name, y)}; not counted)")
+                excepts += 1
+                continue
             print(f"NEW    {name}  ({y['kind']}, in {objects_of(y)}{named(name, y)})")
             bad += 1
             continue
@@ -518,6 +592,11 @@ def by_function(a) -> int:
                 i = next((j for j, (u, v) in enumerate(zip(p, q)) if u != v), min(len(p), len(q)))
                 first = (f"  first at instruction {i}: {p[i] if i < len(p) else '<end>'!r}"
                          f" -> {q[i] if i < len(q) else '<end>'!r}")
+            cls = excepted(exceptions, name, y)
+            if cls:
+                print(f"EXCEPT {cls} {name}  (DIFFER; base {objects_of(x)}; new {objects_of(y)}){first}; not counted")
+                excepts += 1
+                continue
             print(f"{tag} {name}  (base {objects_of(x)}; new {objects_of(y)}){first}")
             bad += 1
             continue
@@ -530,7 +609,11 @@ def by_function(a) -> int:
     print(f"codegen_same --by-function: {counted['code']} code, {counted['data']} data, {counted['bss']} bss symbols "
           f"compared ({bn} / {nn} function definitions read), {bad} differ"
           + (f"; {copies} with another number of identical copies" if copies else "")
-          + (f"; {injects} inject registrations changed (--inject-ok)" if injects else ""))
+          + (f"; {injects} inject registrations changed (--inject-ok)" if injects else "")
+          + (f"; {excepts} excepted (--exceptions)" if excepts else ""))
+    for sym, x in sorted(exceptions.items()):
+        if not x["used"]:
+            print(f"codegen_same: unused exception {sym} ({x['class']}): it did not differ; prune the row by hand")
     if bn == 0 or nn == 0:
         print("codegen_same: nothing compared (no function in one of the builds)")
         return 2
@@ -553,7 +636,12 @@ def main() -> int:
                     help="with --by-function: list a changed *_Inject() / bof3::InjectAll as INJECT, not a difference")
     ap.add_argument("--anonymous-locals", action="store_true",
                     help="with --by-function: a file-local symbol is known by its body, not its name")
+    ap.add_argument("--exceptions", type=Path, metavar="FILE",
+                    help="with --by-function: analysis/tu_gate_exceptions.tsv; a listed code symbol of a known "
+                         "class prints as EXCEPT and is not counted")
     a = ap.parse_args()
+    if a.exceptions and not a.by_function:
+        ap.error("--exceptions belongs to --by-function")
     if a.by_function:
         if a.allow_new or a.allow_gone or a.code_only:
             ap.error("--allow-new, --allow-gone and --code-only belong to the object mode")
