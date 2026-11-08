@@ -1,0 +1,5 @@
+# The source-layout round, step B0 (docs/source-layout-round.md 7a, the owner's call 7): every rename of a
+# file-local helper made so that two sources' helpers of one name can share a target file, with its reason,
+# and the hand decisions on shared state and macro-made functions. Never pruned: the record to revisit from.
+# kind: helper | constant | variable | state | macro | global.  commit: filled by tools/tu_renames.py --fill.
+source_file	old_name	new_name	kind	reason	target_file	other_source	commit

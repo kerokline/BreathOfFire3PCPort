@@ -90,6 +90,11 @@ layout.bin
 !/analysis/tu_layout.tsv
 !/analysis/tu_layout_sheet.md
 
+# The source-layout round's stage B tables (docs/source-layout-round.md 7a):
+# every helper rename with its reason, and the x86-64 gate's named exceptions.
+!/analysis/tu_renames.tsv
+!/analysis/tu_gate_exceptions.tsv
+
 # Symbol/name data IS tracked — it is our own work product, not game data.
 !/names/
 !/symbols.toml
