@@ -31,6 +31,14 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
 
 ## Pick up here
 
+0. **The beta cut, `v0.1.0-beta.1`** ([`beta-readiness.md`](beta-readiness.md), drafted 2026-11-07 evening at the
+   owner's word after the two full clears: the owner on the PC install under the furigana row, ScrubOasis on a
+   PSX-US + PSP-EU install; a third player on PSX-FR in progress). Its section 4 is the order: the owner's two
+   answer (which cheats and the Preset page were used in play), one start of the 32-bit zip
+   for the movies, the alpha.5 upgrade path, then the notes, the README line, a bug-report issue template, the
+   owner-review sweep, and STATUS / HANDOFF rewritten for the cut. Issue #190 stays open by the owner's decision
+   (not reproduced in many tries; gathering data). DIV-0203 is on `main` already (PR #193), not a branch to merge.
+
 0. **The ending scenes, the owner's four of 2026-11-07, on `fix/ending-scenes-1107`** (built, verified in the
    harness root `D:/bof3x-runs/end1107`, PR #209 open 2026-11-07 night, Auto-fix on), from their new route
    `tools/recipes/myriaFightAndEnding.txt` (its save `myriaFightAndEnding.DAT`; it saves over slot 0 near its end

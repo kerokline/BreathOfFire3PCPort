@@ -72,7 +72,7 @@ would cover the last two, if you care to.
 
 ## 2026-11-03, issue #184's desert directions
 
-- **The German wording of DIV-0203** (`fix/issue-184-desert-directions`): the turn word is now Osten, and the
+- **The German wording of DIV-0203** (on `main` since PR #193, 2026-11-03; a rebuilt `de-DE` layer carries it): the turn word is now Osten, and the
   keep-going word, which the disc hyphenates over a line break ("We-" / "sten"), is Osten whole at the start of
   the next line, the break moved before it so no line grows (the sentences are in the session's report, not here:
   CLAUDE.md rule 1). Rebuild the `de-DE` layer, ask Horis about directions in the Desert of Death and read the

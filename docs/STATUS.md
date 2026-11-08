@@ -48,8 +48,8 @@ rectangle by GDI on the wall clock and plays the PCM stream through SDL3; the mo
 are as before, and MCI is not called on either width. Every frame of the three movies is bit-exact against
 ffmpeg's decode; the gates pass ([`replacing-mci.md`](replacing-mci.md) 8). Not yet seen by the owner.
 
-**Horis's desert directions say east in every Western layer, 2026-11-03** (issue #184, DIV-0203, on
-`fix/issue-184-desert-directions`, unpushed). Capcom's Japanese says to turn east and keep going east when the
+**Horis's desert directions say east in every Western layer, 2026-11-03** (issue #184, DIV-0203, merged as
+PR #193 with issue #189's fade on 2026-11-03; STATUS called it unpushed until 2026-11-07). Capcom's Japanese says to turn east and keep going east when the
 Evening Star is due west, spoken (AREA193 slot 17) and in the camp's note (AREA191 / AREA192 slot 108); the US,
 European, PSP-EU, French and German discs each got some of those words wrong, and disagree among themselves.
 `tools/loc_build.py` now corrects them in the layer it builds, by a rule table that names each message by
