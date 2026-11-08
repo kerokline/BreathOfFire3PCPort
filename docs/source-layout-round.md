@@ -929,6 +929,21 @@ is expected; the doc says so.
    `field_4`): the PlayStation decompilation's unit boundary falls inside
    ours at `Field_ActionState`. A per-class answer is enough ("joins stand as
    proposed", "bosses one file each") and is recorded here.
+   **Answered in part on 2026-11-08:** the "a one-function unit" joins stand
+   as proposed (28 rows); the "one area" joins stand as proposed (32 rows:
+   one area's field scripts in one file). **The bosses are not decided.** The
+   owner asked whether the boss units are alike enough to join or whether the
+   join was forced from their remark: it was the remark. `tu_census.py`
+   joins any two neighbouring `boss/` units on that rule alone and measures
+   no likeness. The evidence runs the other way: the 59 boss units of
+   `0x437CD0..0x440830` are named one or two bosses each, and where a unit
+   has PlayStation twins they sit in that boss's own overlay (`BOSS012`,
+   `BOSS018`, `BOSS029`, `BOSS034`, `BOSS035`); no unit has twins in two
+   overlays and no two neighbours share one. So one file per unit (stand
+   alone, as the second table treats everything else) is what the binary
+   supports; the 2-file join is a convenience only. Still open: the bosses,
+   the 22 "the same names" rows, the 37 PSX flags that are one overlay's own
+   code, row 585.
 10. **The gate for shared state** (group a's three classes, section 4): a
    promotion that changes the object is refused today. Do classes 2 (data
    layout) and 3 (an x86_64 indirect call through a now-external pointer)
