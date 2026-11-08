@@ -578,11 +578,18 @@ def declared_in_headers(text: str, names: set[str]) -> set[str]:
     if not names:
         return set()
     found = set()
-    for inc in re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.M):
+    # the project headers it includes, and theirs (a seam's <stem>_callees.h comes through <stem>.h)
+    todo, seen = re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.M), set()
+    while todo:
+        inc = todo.pop(0)
+        if inc in seen:
+            continue
+        seen.add(inc)
         p = ROOT / "src" / inc
         if not p.exists():
             continue
         h = p.read_text(encoding="utf-8")
+        todo += re.findall(r'^\s*#\s*include\s+"([^"]+)"', h, re.M)
         for n in names - found:
             if re.search(rf"\bextern\b[^;]*\b{re.escape(n)}\b", h):
                 found.add(n)
