@@ -53,22 +53,22 @@ U TableAt(const unsigned long* table) { return Low32(table); }
 // (docs/rest_1b.md section 6). While the fuzz runs, the entries are its
 // recorders.
 using Handler = void (__cdecl*)();
-Handler CodeAt(U table, unsigned count, unsigned index, const char* who) {
+Handler CodeAtRest1b(U table, unsigned count, unsigned index, const char* who) {
     const U cell = table + 4u * index;
     if (index >= count)
         bof3::Fatal("%s: index %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index,
                     count, static_cast<unsigned>(::bof3::VaOf(table)), static_cast<unsigned>(::bof3::VaOf(cell)));
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(cell)))));
 }
-void ByForm(U table, unsigned count, const char* who) { CodeAt(table, count, rv::As<records::PartyMember>(S())->column, who)(); }
-void ByState(U table, unsigned count, const char* who) { CodeAt(table, count, S()[2], who)(); }
-void ByStep(U table, unsigned count, const char* who) { CodeAt(table, count, S()[3], who)(); }
+void ByForm(U table, unsigned count, const char* who) { CodeAtRest1b(table, count, rv::As<records::PartyMember>(S())->column, who)(); }
+void ByState(U table, unsigned count, const char* who) { CodeAtRest1b(table, count, S()[2], who)(); }
+void ByStep(U table, unsigned count, const char* who) { CodeAtRest1b(table, count, S()[3], who)(); }
 
 // Field_DirectionSteps' row for a direction, read in place with the direction
 // unmasked (`shl eax, 3` on the zero-extended byte): a byte above 7 reads the
 // .data after the table, as the originals do.
-U StepX(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4))); }
+U StepXRest1b(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8))); }
+U StepZRest1b(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4))); }
 
 // The animation offset of a direction as the originals compute it: (d - 1) / 2
 // as a signed division (cdq, sub, sar), so direction 0 gives 0.
@@ -92,7 +92,7 @@ unsigned char* EffectAt(unsigned index, const char* who) {
 // the byte signed (movsx; jge), so 0x80..0xFE index before Sprite_Objects;
 // else unsigned (jae), so 0x22..0xFE index past Sprite_ObjectsExtra. Sprite_ObjectAt
 // answers 0..0x21 or 0xFF, so neither is reached: ours aborts there.
-void MarkObject(unsigned char found, bool is_signed, const char* who) {
+void MarkObjectRest1b(unsigned char found, bool is_signed, const char* who) {
     const int i = is_signed ? static_cast<signed char>(found) : static_cast<int>(found);
     if (i < 0 || i >= static_cast<int>(kObjectsAll))
         bof3::Fatal("%s: Sprite_ObjectAt's answer 0x%X is past the 34 objects; the original marks it unchecked", who,
@@ -119,10 +119,10 @@ template <typename P> void TurnUntil(P probe) {
 // step in direction d (3 or 5; rows read by address, the direction pushed as
 // an immediate); a steep slope there (the scratch flag set, the low word above
 // 0x40 signed) and the ground above the sprite's height word: +0x2B = 0.
-void ProbeSide(unsigned d) {
+void ProbeSideRest1b(unsigned d) {
     const unsigned char* s = S();
-    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
-    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1b(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1b(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
     if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
@@ -135,16 +135,16 @@ void Begin() {
     TurnUntil([] { return SH_CALL(PartyAction_TargetAhead)(); });
     const unsigned char* const s = S();
     const unsigned d = s[8];
-    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
-    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest1b(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest1b(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
     if (SharedScratch.b_00 != 0 && static_cast<short>(slope) > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(S()[8]) + 0x46));
         ++S()[2];
     } else {
         S()[0x2B] = 1;
-        ProbeSide(3);
-        ProbeSide(5);
+        ProbeSideRest1b(3);
+        ProbeSideRest1b(5);
         FormSound(S());
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(S()[8]) + 0x42));
         S()[0xA] = 5;
@@ -157,10 +157,10 @@ void Begin() {
 struct Ahead {
     U x, z;
 };
-Ahead TwoAhead() {
+Ahead TwoAheadRest1b() {
     const unsigned char* const s = S();
     const unsigned d = s[8];
-    return {static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d), static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZ(d)};
+    return {static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest1b(d), static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZRest1b(d)};
 }
 
 // The cell handler on the point's cell; when it answers 0, on the cell one on
@@ -179,9 +179,9 @@ template <typename C> void Cells(const Ahead& p, C cell) {
 template <typename C> void Resolve(C cell, const char* who) {
     --S()[0xA];
     if (S()[0xA] == 0) {
-        const Ahead p = TwoAhead();
+        const Ahead p = TwoAheadRest1b();
         const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(p.x), static_cast<long>(p.z), 0);
-        if (found != 0xFF) MarkObject(found, true, who);
+        if (found != 0xFF) MarkObjectRest1b(found, true, who);
         Cells(p, cell);
         ++S()[2];
     }
@@ -194,7 +194,7 @@ template <typename C> void Resolve(C cell, const char* who) {
 // & 3 is 0) and Effect_SpawnAtCell(1), +0xB = 1; 0xF8 - Effect_SpawnAtCell(0),
 // item 0x56's name into Text_Records, Inventory_Add: taken, a sound and message
 // 2, else message 3; Field_Request = 2, +0xB = 1. Both clear the cell; 1.
-unsigned char CellPickup(unsigned x, unsigned z) {
+unsigned char CellPickupRest1b(unsigned x, unsigned z) {
     const unsigned char cell = SH_CALL(AreaMap_ByteAt)(static_cast<short>(x), static_cast<short>(z));
     if (cell == 0xF2) {
         if (SH_CALL(Effect_FindFree)() != 0xFF) {
@@ -249,10 +249,10 @@ void Form1Begin(const char* who) {
         ++S()[2];
         return;
     }
-    const Ahead p = TwoAhead();
+    const Ahead p = TwoAheadRest1b();
     if ((Field_State[0x138] & 1) == 0) {
         const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(p.x), static_cast<long>(p.z), 1);
-        if (found != 0xFF) MarkObject(found, false, who);
+        if (found != 0xFF) MarkObjectRest1b(found, false, who);
     }
     Field_State[0x137] = 0;
 }
@@ -284,10 +284,10 @@ template <typename C> void Hit(C cell, bool sounds_first, const char* who) {
                 }
                 ++S()[3];
             } else {
-                const Ahead p = TwoAhead();
+                const Ahead p = TwoAheadRest1b();
                 const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(p.x), static_cast<long>(p.z), 0);
                 if (found != 0xFF) {
-                    MarkObject(found, true, who);
+                    MarkObjectRest1b(found, true, who);
                     SH_CALL(Sound_PlayEffect)(0x10B);
                 }
                 Cells(p, cell);
@@ -393,8 +393,8 @@ extern "C" void __cdecl PartyAction4_Form0Resolve(void) {
 }
 
 // original 0x51DAA0 (0x11F bytes) / 0x51E1B0 (0x11F bytes).
-extern "C" unsigned char __cdecl PartyAction3_CellPickup(unsigned x, unsigned z) { return CellPickup(x, z); }
-extern "C" unsigned char __cdecl PartyAction4_CellPickup(unsigned x, unsigned z) { return CellPickup(x, z); }
+extern "C" unsigned char __cdecl PartyAction3_CellPickup(unsigned x, unsigned z) { return CellPickupRest1b(x, z); }
+extern "C" unsigned char __cdecl PartyAction4_CellPickup(unsigned x, unsigned z) { return CellPickupRest1b(x, z); }
 
 // original 0x51DC00 (0x166 bytes), set 3's form 1, state 0; 0x51E310 (0x166
 // bytes), set 4's. PartyAction_Kind30Ahead's index (0..19, or 0xFF) handed to

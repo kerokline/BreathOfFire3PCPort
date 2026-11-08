@@ -34,13 +34,13 @@ const Callees kOriginals = {
     Gpu_SetPolyFT4, Gpu_SetShadeTex, Gte_RotTransPers4, Gfx_CommitPrim,
     Area_TestCondition,
 };
-Callees g = kOriginals;
+Callees map_layers::g = kOriginals;
 
 }  // namespace map_layers
 
 namespace {
 
-using map_layers::g;
+// map_layers::g: named in full below (source-layout B0, a clash on g)
 
 bool g_side_zero_release;   // BOF3X_SIDE_ZERO=1 (MapLayers_Inject)
 
@@ -112,7 +112,7 @@ unsigned long AsLong(const void* p) { return static_cast<unsigned long>(Address(
 // overshoots, and the hold stays on until a frame lands on it exactly.
 extern "C" void __cdecl AreaMap_Frame(void) {
     if (Game_AreaNumber == 0xBD) {
-        g.frame_bd();
+        map_layers::g.frame_bd();
         return;
     }
     std::uint32_t focus_x = static_cast<std::uint32_t>(MapView_FocusX);
@@ -155,30 +155,30 @@ extern "C" void __cdecl AreaMap_Frame(void) {
     // The fine scroll: a whole column or two rows at 0x200 either way.
     bool shifted = false;
     if (static_cast<short>(MapView_ScrollX) >= 0x200) {
-        g.column_next();
+        map_layers::g.column_next();
         MapView_ScrollX = static_cast<unsigned short>(MapView_ScrollX - 0x200);
         MapView_Redraw = 2;
         shifted = true;
     }
     if (static_cast<short>(MapView_ScrollX) <= -0x200) {
-        g.column_prev();
+        map_layers::g.column_prev();
         MapView_ScrollX = static_cast<unsigned short>(MapView_ScrollX + 0x200);
         MapView_Redraw = 2;
         shifted = true;
     }
     if (static_cast<short>(MapView_ElevationOffset) >= 0x200) {
-        g.rows_next();
+        map_layers::g.rows_next();
         MapView_ElevationOffset = static_cast<unsigned short>(MapView_ElevationOffset - 0x200);
         MapView_Redraw = 2;
         shifted = true;
     }
     if (static_cast<short>(MapView_ElevationOffset) <= -0x200) {
-        g.rows_prev();
+        map_layers::g.rows_prev();
         MapView_ElevationOffset = static_cast<unsigned short>(MapView_ElevationOffset + 0x200);
         MapView_Redraw = 2;
-        g.place_runs();
+        map_layers::g.place_runs();
     } else if (shifted) {
-        g.place_runs();
+        map_layers::g.place_runs();
     }
 
     // The camera: redraw everything when an angle moved.
@@ -190,23 +190,23 @@ extern "C" void __cdecl AreaMap_Frame(void) {
         SetDword(drawn, angles_xy);
         SetDword(drawn + 4, angles_z);
     }
-    g.rot_matrix(Camera_Angles, Camera_Matrix);
+    map_layers::g.rot_matrix(Camera_Angles, Camera_Matrix);
     short focus[3];
     focus[0] = static_cast<short>(static_cast<std::uint32_t>(MapView_FocusX) >> 1);
     focus[1] = static_cast<short>(static_cast<std::uint32_t>(MapView_FocusZ) >> 1);
     focus[2] = static_cast<short>(static_cast<std::uint32_t>(MapView_Elevation) >> 1);
     long moved[3];
-    g.apply_matrix(Camera_Matrix, focus, moved);
+    map_layers::g.apply_matrix(Camera_Matrix, focus, moved);
     auto* const translation = reinterpret_cast<unsigned char*>(Camera_Matrix) + 0x14;
     SetDword(translation, static_cast<std::uint32_t>(moved[0]) + static_cast<std::uint32_t>(static_cast<int>(Camera_ShiftX)));
     SetDword(translation + 4,
              static_cast<std::uint32_t>(moved[1]) + static_cast<std::uint32_t>(static_cast<int>(Camera_ShiftY)));
     SetDword(translation + 8, static_cast<std::uint32_t>(moved[2]) +
                                   static_cast<std::uint32_t>(static_cast<int>(Camera_Distance)) + 0x1194u);
-    g.set_rot(reinterpret_cast<const unsigned long*>(Camera_Matrix));
-    g.set_trans(reinterpret_cast<const unsigned long*>(Camera_Matrix));
+    map_layers::g.set_rot(reinterpret_cast<const unsigned long*>(Camera_Matrix));
+    map_layers::g.set_trans(reinterpret_cast<const unsigned long*>(Camera_Matrix));
     if (MapView_Redraw != 0) {
-        g.build();
+        map_layers::g.build();
         --MapView_Redraw;
     }
 }
@@ -264,7 +264,7 @@ std::uint32_t SideSub(const unsigned char* cell, unsigned shift) {
 // grown ring -1..0x37).
 void BuildCell(unsigned char* cell, int layer, int threshold) {
     if (cell[0] == 0 || cell[1] == 0) {
-        g.release_cell(cell);
+        map_layers::g.release_cell(cell);
         MapView_BuildFlags |= 1;
         return;
     }
@@ -274,15 +274,15 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
     unsigned char* corner = Corners() + (cell[1] * Width() + cell[0]) * 4u;
     MapView_CornerPtr = corner;
     s[2] = Height(corner[0]);
-    g.load_vertex(reinterpret_cast<const unsigned long*>(s));
-    g.rtps();
-    g.store_xy(reinterpret_cast<unsigned long*>(MapView_ScreenXY));
+    map_layers::g.load_vertex(reinterpret_cast<const unsigned long*>(s));
+    map_layers::g.rtps();
+    map_layers::g.store_xy(reinterpret_cast<unsigned long*>(MapView_ScreenXY));
     const float sx = MapView_ScreenXY[0], sy = MapView_ScreenXY[1];
     // x87 fcomp as the original has it: an unordered x or y is culled too.
     // The x bounds are -50 / 370 unless the view is wide (DIV-0041,
     // src/game/widescreen.cpp, which sets them after every start-up fuzz).
     if (!(sx >= Widescreen_TerrainLo) || !(sx <= Widescreen_TerrainHi) || !(sy >= -200.0f) || !(sy <= 290.0f)) {
-        g.release_cell(cell);
+        map_layers::g.release_cell(cell);
         return;
     }
 
@@ -292,11 +292,11 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
         item = Item(index);
         const unsigned pending = Word(item + 0x36);
         if (pending != 0) {
-            g.cell_textures(cell[0], cell[1], item, pending - 1);
+            map_layers::g.cell_textures(cell[0], cell[1], item, pending - 1);
             SetWord(item + 0x36, 0);
         }
     } else {
-        const unsigned short got = g.alloc();
+        const unsigned short got = map_layers::g.alloc();
         SetWord(cell + 2, got);
         index = got;
         if (got != 0 && (Word(Item(got) + 0x7E) != 0 || Word(Item(got) + 0x8E) != 0)) {
@@ -327,12 +327,12 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
         // A side item for each neighbour whose near corners stand lower -
         // the next cell's (+0x7E), the one below's (+0x8E).
         if (S8(corner[6]) < S8(corner[3]) || S8(corner[4]) < S8(corner[1])) {
-            SetWord(item + 0x7E, g.alloc());
+            SetWord(item + 0x7E, map_layers::g.alloc());
             corner = MapView_CornerPtr;
         }
         const unsigned char* const below = corner + Width() * 4u;
-        if (S8(below[1]) < S8(corner[3]) || S8(below[0]) < S8(corner[2])) SetWord(item + 0x8E, g.alloc());
-        const unsigned flags = g.cell_textures(cell[0], cell[1], item, Gfx_BufferIndex);
+        if (S8(below[1]) < S8(corner[3]) || S8(below[0]) < S8(corner[2])) SetWord(item + 0x8E, map_layers::g.alloc());
+        const unsigned flags = map_layers::g.cell_textures(cell[0], cell[1], item, Gfx_BufferIndex);
         SetWord(cell + 2, Word(cell + 2) | flags);
         SetWord(item + 0x36, Gfx_BufferIndex == 0 ? 2 : 1);
     }
@@ -352,20 +352,20 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
     s[10] = Height(corner[2]);
     s[13] = static_cast<short>(y + 0x80);
     s[14] = Height(corner[3]);
-    g.load_vertices3(reinterpret_cast<const unsigned long*>(s + 4));
+    map_layers::g.load_vertices3(reinterpret_cast<const unsigned long*>(s + 4));
     unsigned char* const quad = Quad(index, Gfx_BufferIndex);
-    g.rtpt();
+    map_layers::g.rtpt();
 
     const unsigned word = Word(cell + 2);
     if (word & 0x8000u) {
         if (word & 0x4000u) {   // list 0 of the layer before (layer 0 for the first)
             // DIV-0041's grown ring: the first is layer -1, as the PSP's.
             const int before = map_rim::Active() ? (layer >= 0 ? layer - 1 : -1) : (layer != 0 ? layer - 1 : 0);
-            g.link(reinterpret_cast<unsigned long*>(LastOf(before, Gfx_BufferIndex)),
+            map_layers::g.link(reinterpret_cast<unsigned long*>(LastOf(before, Gfx_BufferIndex)),
                    AsLong(item + Gfx_BufferIndex * 0x48u));
             LastOf(before, Gfx_BufferIndex) = AsLong(item + Gfx_BufferIndex * 0x48u);
         } else {                // list 1 of this layer
-            g.link(reinterpret_cast<unsigned long*>(LastOf(layer, 2u + Gfx_BufferIndex)),
+            map_layers::g.link(reinterpret_cast<unsigned long*>(LastOf(layer, 2u + Gfx_BufferIndex)),
                    AsLong(item + Gfx_BufferIndex * 0x48u));
             LastOf(layer, 2u + Gfx_BufferIndex) = AsLong(item + Gfx_BufferIndex * 0x48u);
         }
@@ -402,15 +402,15 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
             ++g_table_adds;
         }
     } else {                    // list 0 of this layer
-        g.link(reinterpret_cast<unsigned long*>(LastOf(layer, Gfx_BufferIndex)), AsLong(item + Gfx_BufferIndex * 0x48u));
+        map_layers::g.link(reinterpret_cast<unsigned long*>(LastOf(layer, Gfx_BufferIndex)), AsLong(item + Gfx_BufferIndex * 0x48u));
         LastOf(layer, Gfx_BufferIndex) = AsLong(item + Gfx_BufferIndex * 0x48u);
     }
     {
         unsigned char* const mine = item + Gfx_BufferIndex * 0x48u;
-        g.store_xy3(reinterpret_cast<unsigned long*>(mine + 0x18), reinterpret_cast<unsigned long*>(mine + 0x28),
+        map_layers::g.store_xy3(reinterpret_cast<unsigned long*>(mine + 0x18), reinterpret_cast<unsigned long*>(mine + 0x28),
                     reinterpret_cast<unsigned long*>(mine + 0x38));
     }
-    g.depths4(item + Gfx_BufferIndex * 0x48u);
+    map_layers::g.depths4(item + Gfx_BufferIndex * 0x48u);
 
     // The side triangles: the next cell's edge (+0x7E) and the one below's
     // (+0x8E), each from two corners of the neighbour and the quad's own
@@ -437,13 +437,13 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
         s[4] = sx0;
         s[5] = static_cast<short>(sy0 + 0x80);
         s[6] = Height(next[2]);
-        g.load_vertices3(reinterpret_cast<const unsigned long*>(s));
-        g.link(reinterpret_cast<unsigned long*>(LastOf(layer, SideSub(cell, 12))), AsLong(side));
-        g.rtpt();
+        map_layers::g.load_vertices3(reinterpret_cast<const unsigned long*>(s));
+        map_layers::g.link(reinterpret_cast<unsigned long*>(LastOf(layer, SideSub(cell, 12))), AsLong(side));
+        map_layers::g.rtpt();
         LastOf(layer, SideSub(cell, 12)) = AsLong(side);
-        g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x38), reinterpret_cast<unsigned long*>(side + 0x28),
+        map_layers::g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x38), reinterpret_cast<unsigned long*>(side + 0x28),
                     reinterpret_cast<unsigned long*>(MapView_ScreenXY));
-        g.depth_f3(reinterpret_cast<float*>(side + 0x40), reinterpret_cast<float*>(side + 0x30), &unused);
+        map_layers::g.depth_f3(reinterpret_cast<float*>(side + 0x40), reinterpret_cast<float*>(side + 0x30), &unused);
     }
     const unsigned below_item = Word(item + 0x8E);
     if (below_item != 0) {
@@ -460,13 +460,13 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
         s[5] = sy0;
         s[4] = static_cast<short>(s[0] + 0x80);
         s[6] = Height(under[1]);
-        g.load_vertices3(reinterpret_cast<const unsigned long*>(s));
-        g.link(reinterpret_cast<unsigned long*>(LastOf(layer, SideSub(cell, 11))), AsLong(side));
-        g.rtpt();
+        map_layers::g.load_vertices3(reinterpret_cast<const unsigned long*>(s));
+        map_layers::g.link(reinterpret_cast<unsigned long*>(LastOf(layer, SideSub(cell, 11))), AsLong(side));
+        map_layers::g.rtpt();
         LastOf(layer, SideSub(cell, 11)) = AsLong(side);
-        g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x28), reinterpret_cast<unsigned long*>(side + 0x38),
+        map_layers::g.store_xy3(reinterpret_cast<unsigned long*>(side + 0x28), reinterpret_cast<unsigned long*>(side + 0x38),
                     reinterpret_cast<unsigned long*>(MapView_ScreenXY));
-        g.depth_f3(reinterpret_cast<float*>(side + 0x30), reinterpret_cast<float*>(side + 0x40), &unused);
+        map_layers::g.depth_f3(reinterpret_cast<float*>(side + 0x30), reinterpret_cast<float*>(side + 0x40), &unused);
     }
 }
 
@@ -493,7 +493,7 @@ void BuildCell(unsigned char* cell, int layer, int threshold) {
 //     released by no one.
 extern "C" void __cdecl MapView_Build(void) {
     map_rim::NoteOwnView(false);   // the ring's view again (issue 185)
-    g.layers_reset();
+    map_layers::g.layers_reset();
     const int origin_y = MapView_Origin[1], origin_x = MapView_Origin[0];
     const int kind2_z = static_cast<short>(static_cast<std::uint32_t>(Field_Kind2Z) >> 16);
     const int kind2_x = static_cast<short>(static_cast<std::uint32_t>(Field_Kind2X) >> 16);
@@ -519,7 +519,7 @@ extern "C" void __cdecl MapView_Build(void) {
             for (int grown_column = walk; grown_column < map_rim::kColumns - walk; ++grown_column)
                 BuildCell(map_rim::Cell(grown_row, grown_column), grown_row - 1, threshold);
         map_rim::ExtraTableSort();
-        g.sort();
+        map_layers::g.sort();
         map_rim::NoteBuildPeaks(g_table_adds);
         return;
     }
@@ -536,7 +536,7 @@ extern "C" void __cdecl MapView_Build(void) {
             ++k;
         }
     }
-    g.sort();
+    map_layers::g.sort();
 }
 
 // original 0x56F9B0: a map cell's textures (PSX FUN_80154D50) - for its draw
@@ -563,7 +563,7 @@ extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigne
     std::uint32_t top = Dword(texture);
     FaerieRing_CellWord(x, y, &top);
     unsigned flags = ((static_cast<std::int32_t>(top) >> 15) & 0x8000) | (top & 0x4000u);
-    g.set_texture(top, item + buffer * 0x48u, 1);
+    map_layers::g.set_texture(top, item + buffer * 0x48u, 1);
     texture += 4;
     const unsigned below = Word(item + 0x8E);
     if (below != 0) {
@@ -574,14 +574,14 @@ extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigne
             // (known-defects.md D239) - kept for the next reading of them.
             if (draw_order::Tagging())
                 bof3::Log("map_layers: cell %u,%u: the below side's texture word is 0, released", x, y);
-            g.release(static_cast<unsigned short>(below));
+            map_layers::g.release(static_cast<unsigned short>(below));
             SetWord(item + 0x8E, 0);
             texture += 4;
         } else {
             if (draw_order::Tagging())
                 bof3::Log("map_layers: cell %u,%u: below side item %u texture word %08X (cell's %08X)", x, y, below,
                           Dword(texture), Dword(texture - 4));
-            g.set_texture(Dword(texture), Quad(below, buffer), 1);
+            map_layers::g.set_texture(Dword(texture), Quad(below, buffer), 1);
             flags |= (static_cast<std::int32_t>(Dword(texture)) >> 18) & 0x1000;
             texture += 4;
         }
@@ -609,11 +609,11 @@ extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigne
         if (draw_order::Tagging())
             bof3::Log("map_layers: cell %u,%u: next side item %u texture word %08X", x, y, next, Dword(texture));
         if (Dword(texture) == 0) {
-            g.release(static_cast<unsigned short>(next));
+            map_layers::g.release(static_cast<unsigned short>(next));
             SetWord(item + 0x7E, 0);
             return flags;
         }
-        g.set_texture(Dword(texture), Quad(next, buffer), 1);
+        map_layers::g.set_texture(Dword(texture), Quad(next, buffer), 1);
         flags |= (static_cast<std::int32_t>(Dword(texture)) >> 17) & 0x2000;
     }
     return flags;
@@ -648,8 +648,8 @@ extern "C" void __cdecl MapCell_DrawWalls(const unsigned char* record, unsigned 
     const unsigned long* texture = MapCell_WallTextures + t;
     for (; count > 0; --count, ++t, ++texture) {
         unsigned char* const prim = Gfx_PacketNext;
-        g.set_poly_ft4(prim);
-        g.set_shade_tex(prim, 0);
+        map_layers::g.set_poly_ft4(prim);
+        map_layers::g.set_shade_tex(prim, 0);
         const std::uint32_t odd = t & 1u;
         v[1][0] = v[3][0] = static_cast<short>(x0 + ((~t & 1u) << 7));
         v[1][1] = v[3][1] = static_cast<short>(y0 + (odd << 7));
@@ -678,11 +678,11 @@ extern "C" void __cdecl MapCell_DrawWalls(const unsigned char* record, unsigned 
         v[0][2] = static_cast<short>(h1 - 0x80);
         v[1][2] = static_cast<short>(h2 - 0x80);
         long depth;
-        g.rot_trans_pers4(v[0], v[1], v[2], v[3], reinterpret_cast<float*>(prim + 8), reinterpret_cast<float*>(prim + 0x18),
+        map_layers::g.rot_trans_pers4(v[0], v[1], v[2], v[3], reinterpret_cast<float*>(prim + 8), reinterpret_cast<float*>(prim + 0x18),
                           reinterpret_cast<float*>(prim + 0x28), reinterpret_cast<float*>(prim + 0x38), &depth);
-        g.depths4(prim);
-        g.set_texture(*texture, prim, 1);
-        g.commit(Draw_OtSlot, 0x48);
+        map_layers::g.depths4(prim);
+        map_layers::g.set_texture(*texture, prim, 1);
+        map_layers::g.commit(Draw_OtSlot, 0x48);
     }
 }
 
@@ -699,7 +699,7 @@ extern "C" void __cdecl MapCell_DrawWalls(const unsigned char* record, unsigned 
 extern "C" void __cdecl AreaMap_ClutCycle(const unsigned char* entry) {
     const unsigned frame = Frame_Counter % (Dword(entry) & 0xFFFFu) + 1;
     const unsigned char* p = entry + 4;
-    if (g.test(Word(p)) == 0) return;
+    if (map_layers::g.test(Word(p)) == 0) return;
     for (;;) {
         p += 4;
         const auto at = static_cast<int>(Dword(p) >> 24);

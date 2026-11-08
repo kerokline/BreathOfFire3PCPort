@@ -92,9 +92,9 @@ using U = std::uint32_t;
 
 unsigned char* Sc() { return Sprite_Current; }
 U ScKey() { return Low32(Sprite_Current.Native()); }
-unsigned char& B(U a) { return *At(a); }
+unsigned char& BEffect1b(U a) { return *At(a); }
 unsigned char Style() { return static_cast<unsigned char>(Config_WindowColour); }
-const unsigned char* Text(U a) { return At(a); }
+const unsigned char* TextEffect1b(U a) { return At(a); }
 char* Print() { return reinterpret_cast<char*>(At(::bof3::Img(at::kPrint.v))); }
 // A float stored as the originals' fild / fstp store it: every value here is a
 // whole number well inside a float's 24 bits, so exact.
@@ -123,7 +123,7 @@ unsigned char ByteOf(U table, unsigned bytes, int index, const char* who) {
     if (index < -4 || (index >= 0 && static_cast<unsigned>(index) >= bytes))
         bof3::Fatal("%s: byte %d of the %u-byte table 0x%X (the original reads past it)", who, index, bytes,
                     (unsigned)::bof3::VaOf(table));
-    return B(static_cast<U>(static_cast<std::int32_t>(table) + index));
+    return BEffect1b(static_cast<U>(static_cast<std::int32_t>(table) + index));
 }
 std::uint16_t WordOf(U table, unsigned count, unsigned index, const char* who) {
     if (index >= count)
@@ -134,7 +134,7 @@ std::uint16_t WordOf(U table, unsigned count, unsigned index, const char* who) {
 // The record Effect_FindFree answered, written without the original checking
 // the answer (0xFF, none free, would write 0x7E91E0.., past the pool): ours
 // aborts on any index outside the 20.
-unsigned char* Spawned(unsigned char k, const char* who) {
+unsigned char* SpawnedEffect1b(unsigned char k, const char* who) {
     if (k >= at::kEffectCount)
         bof3::Fatal("%s: Effect_FindFree answered %u, and the original writes that record unchecked (past the pool)",
                     who, (unsigned)k);
@@ -142,7 +142,7 @@ unsigned char* Spawned(unsigned char k, const char* who) {
 }
 // A kind-0x1A record in state 0x10, as five of the states spawn it.
 unsigned char* SpawnMark(unsigned char k, const char* who) {
-    unsigned char* const r = Spawned(k, who);
+    unsigned char* const r = SpawnedEffect1b(k, who);
     r[0] = 1;
     r[5] = 0x1A;
     r[1] = 0x10;
@@ -153,7 +153,7 @@ unsigned char Category(unsigned char id, const char* who) {
     if (id >= at::kAccessoryCount)
         bof3::Fatal("%s: accessory id %u past the %u records (the original reads past NameTable_Accessories)", who,
                     (unsigned)id, at::kAccessoryCount);
-    return B(::bof3::Img(at::kAccessoryCategory.v) + at::kAccessoryStride * id);
+    return BEffect1b(::bof3::Img(at::kAccessoryCategory.v) + at::kAccessoryStride * id);
 }
 const unsigned char* AccessoryName(unsigned char id) {
     return At(::bof3::Img(bof3::addr::NameTable_Accessories) + at::kAccessoryStride * id);
@@ -165,8 +165,8 @@ int NameCount() { return static_cast<int>(FishingText_NameCount()); }
 const unsigned char* Pool(unsigned id) { return At(::bof3::Img(at::kPools.v) + Word(At(::bof3::Img(at::kPools.v) + 2 * id))); }
 
 // --- the callees by address (E1F's, E1A's, E1G's) ------------------------------------
-void DrawMode(unsigned id, unsigned slot) { SH_AT(void (__cdecl*)(unsigned, unsigned), at::kDrawMode.v)(id, slot); }
-void DrawSprite(unsigned id, unsigned slot, int x, int y) {
+void DrawModeEffect1b(unsigned id, unsigned slot) { SH_AT(void (__cdecl*)(unsigned, unsigned), at::kDrawMode.v)(id, slot); }
+void DrawSpriteEffect1b(unsigned id, unsigned slot, int x, int y) {
     SH_AT(unsigned char* (__cdecl*)(unsigned, unsigned, int, int), at::kDrawSprite.v)(id, slot, x, y);
 }
 void Call3(U address, U a, U b, U c) { SH_WORD(void (__cdecl*)(U, U, U), address)(a, b, c); }
@@ -405,10 +405,10 @@ extern "C" void __cdecl EffectKind0F_Child1Meter() {
         SH_CALL(Sprite_ScriptTick)();
     }
     SH_CALL(Sprite_QueueOverlay)();
-    DrawMode(0, 1);
-    DrawSprite(0x15, 1, 0x32, 0x7A);
-    DrawSprite(0x16, 1, 0xBC, 0x7A);
-    DrawSprite(0x10, 1, 0x36, 0x80);
+    DrawModeEffect1b(0, 1);
+    DrawSpriteEffect1b(0x15, 1, 0x32, 0x7A);
+    DrawSpriteEffect1b(0x16, 1, 0xBC, 0x7A);
+    DrawSpriteEffect1b(0x10, 1, 0x36, 0x80);
     s = Sc();
     const unsigned char mode = at_(3 * s[0xA] - 1);
     if (mode == 0) {
@@ -427,7 +427,7 @@ extern "C" void __cdecl EffectKind0F_Child1Meter() {
     }
     Call4(at::kE1aBarG4.v, 0x39, 0x97, Word(Sc() + 0xC), 1);
     SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Boss26Fx_CountFormat), static_cast<unsigned>(Sc()[6]));
-    SH_CALL(Text_DrawFont12)(0xAA, 0x94, 0, Text(::bof3::Img(at::kPrint.v)));
+    SH_CALL(Text_DrawFont12)(0xAA, 0x94, 0, TextEffect1b(::bof3::Img(at::kPrint.v)));
     SH_CALL(Sprite_QueueOverlay)();
 }
 
@@ -487,8 +487,8 @@ extern "C" void __cdecl EffectKind0F_Child2Gauge() {
     }
     Call3(at::kE1aGaugeA.v, 0xE4, 0x68, 1);
     Call3(at::kE1aGaugeB.v, 0xE4, 0x78, 1);
-    DrawMode(0, 1);
-    DrawSprite(0x14, 1, 0xDC, 0x60);
+    DrawModeEffect1b(0, 1);
+    DrawSpriteEffect1b(0x14, 1, 0xDC, 0x60);
     s = Sc();
     if (at_(3 * s[0xA] - 1) != 0) Call3(at::kE1aGaugeMark.v, 0xF4, ((ScKey() & 0xFFFF0000u) | s[6]) + 0x68u, 1);
 }
@@ -574,17 +574,17 @@ extern "C" void __cdecl EffectKind0F_Child3Grid() {
                 if (s[9] % 12u < 10 && col == column) {
                     const U text = static_cast<U>(Long(At(::bof3::Img(at::kGridText.v) + 8u * mark)));
                     DrawAt(static_cast<int>(12 * col + 0x84), static_cast<int>(13 * row + 0x9B),
-                           static_cast<unsigned char>(mark << 1), 1, Text(text));
+                           static_cast<unsigned char>(mark << 1), 1, TextEffect1b(text));
                 } else {
                     const U text = static_cast<U>(Long(At(::bof3::Img(at::kGridText.v) + 4u * mark)));
                     const auto colour = static_cast<std::uint16_t>(static_cast<signed char>(mark) * 3);
                     SH_CALL(Text_DrawSmall)(static_cast<int>(12 * col + 0x86), static_cast<int>(13 * row + 0x9E),
-                                            (text & 0xFFFF0000u) | colour, 1, Text(text));
+                                            (text & 0xFFFF0000u) | colour, 1, TextEffect1b(text));
                 }
             } else {
                 const U text = static_cast<U>(Long(At(::bof3::Img(at::kGridText.v) + 4u * mark)));
                 SH_CALL(Text_DrawSmall)(static_cast<int>(12 * col + 0x86), static_cast<int>(13 * row + 0x9E),
-                                        static_cast<unsigned char>(7 - mark), 1, Text(text));
+                                        static_cast<unsigned char>(7 - mark), 1, TextEffect1b(text));
             }
         }
     }
@@ -672,10 +672,10 @@ extern "C" void __cdecl EffectKind0F_Child4Move() {
 // and marker 0x465D90(y, 0xB3, down 0 ? 0 : 1, 1).
 extern "C" void __cdecl EffectKind0F_DrawCursorPanel(unsigned down) {
     SH_CALL(Sprite_QueueOverlay)();
-    DrawMode(0, 1);
-    DrawSprite(0x15, 1, 0x32, 0x96);
-    DrawSprite(0x16, 1, 0xBC, 0x96);
-    DrawSprite(0x11, 1, 0x36, 0x9C);
+    DrawModeEffect1b(0, 1);
+    DrawSpriteEffect1b(0x15, 1, 0x32, 0x96);
+    DrawSpriteEffect1b(0x16, 1, 0xBC, 0x96);
+    DrawSpriteEffect1b(0x11, 1, 0x36, 0x9C);
     unsigned char* s = Sc();
     std::int32_t v = static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c);
     rv::Store<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c, v < 0x39 ? 0x39 : (v > 0x79 ? 0x79 : v));
@@ -743,7 +743,7 @@ extern "C" void __cdecl EffectKind0F_Child5Move() {
         }
     }
     SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Boss26Fx_CountFormat), static_cast<unsigned>(Sc()[0xB]));
-    SH_CALL(Text_DrawFont12)(0xA9, 0xB0, (Frame_Counter & 4) != 0 ? 2 : 0, Text(::bof3::Img(at::kPrint.v)));
+    SH_CALL(Text_DrawFont12)(0xA9, 0xB0, (Frame_Counter & 4) != 0 ? 2 : 0, TextEffect1b(::bof3::Img(at::kPrint.v)));
 }
 
 // --- the panels ---------------------------------------------------------------------
@@ -832,8 +832,8 @@ extern "C" void __cdecl EffectKind0F_DrawMessageList(int x, int y) {
     SH_CALL(Menu_DrawBox)(x, y + 0x94, 0xF2, 0xB, 0x30, Style());
     DrawAt(x + 0x3D, y + 6, 0, 0xFF, Pool(WordOf(::bof3::Img(EffectKind0F_RuleTitleIds_addr), at::kTitleCount, rv::As<records::EffectObject>(Sc())->height_frac, kWho)));
     SH_CALL(EffectKind0F_DrawListFrame)(x, y);
-    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(::bof3::Img(EffectKind0F_PageFormat_addr))), rv::As<records::EffectObject>(Sc())->height_frac + 1u);
-    SH_CALL(Text_DrawFont8)(x + 0xCA, y + 0x92, 0, Text(::bof3::Img(at::kPrint.v)));
+    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(TextEffect1b(::bof3::Img(EffectKind0F_PageFormat_addr))), rv::As<records::EffectObject>(Sc())->height_frac + 1u);
+    SH_CALL(Text_DrawFont8)(x + 0xCA, y + 0x92, 0, TextEffect1b(::bof3::Img(at::kPrint.v)));
 }
 
 // original 0x468840 (x, y; PSX 0x801D77CC): the draw mode (9, 1); the top edge (sprite 0x25, 23
@@ -841,19 +841,19 @@ extern "C" void __cdecl EffectKind0F_DrawMessageList(int x, int y) {
 // edges 0 and 1), the bottom edge (0x2A, 23 of 0x2B from x + 8, 0x2C, three
 // 0x2D, 0x2E, 0x2F) at y + 0x90.
 extern "C" void __cdecl EffectKind0F_DrawListFrame(int x, int y) {
-    DrawMode(9, 1);
-    DrawSprite(0x25, 1, x, y);
-    for (int i = 0; i < 0x17; ++i) DrawSprite(0x26, 1, x + 8 * i + 0x20, y);
-    DrawSprite(0x27, 1, x + 0xD8, y);
-    DrawSprite(0x28, 1, x + 0xF0, y);
+    DrawModeEffect1b(9, 1);
+    DrawSpriteEffect1b(0x25, 1, x, y);
+    for (int i = 0; i < 0x17; ++i) DrawSpriteEffect1b(0x26, 1, x + 8 * i + 0x20, y);
+    DrawSpriteEffect1b(0x27, 1, x + 0xD8, y);
+    DrawSpriteEffect1b(0x28, 1, x + 0xF0, y);
     SH_CALL(Panel_DrawEdgeQuad)(x, y + 0x18, 0x78, 0);
     SH_CALL(Panel_DrawEdgeQuad)(x + 0xF0, y + 0x18, 0x78, 1);
-    DrawSprite(0x2A, 1, x, y + 0x90);
-    for (int i = 0; i < 0x17; ++i) DrawSprite(0x2B, 1, x + 8 * i + 8, y + 0x90);
-    DrawSprite(0x2C, 1, x + 0xC0, y + 0x90);
-    for (int i = 0; i < 3; ++i) DrawSprite(0x2D, 1, x + 8 * i + 0xC8, y + 0x90);
-    DrawSprite(0x2E, 1, x + 0xE0, y + 0x90);
-    DrawSprite(0x2F, 1, x + 0xE7, y + 0x90);
+    DrawSpriteEffect1b(0x2A, 1, x, y + 0x90);
+    for (int i = 0; i < 0x17; ++i) DrawSpriteEffect1b(0x2B, 1, x + 8 * i + 8, y + 0x90);
+    DrawSpriteEffect1b(0x2C, 1, x + 0xC0, y + 0x90);
+    for (int i = 0; i < 3; ++i) DrawSpriteEffect1b(0x2D, 1, x + 8 * i + 0xC8, y + 0x90);
+    DrawSpriteEffect1b(0x2E, 1, x + 0xE0, y + 0x90);
+    DrawSpriteEffect1b(0x2F, 1, x + 0xE7, y + 0x90);
 }
 
 // original 0x468950 (x, y, height, which): a POLY_FT4 at the packet cursor (the
@@ -899,13 +899,13 @@ extern "C" void __cdecl Panel_DrawEdgeQuad(int x, int y, unsigned height, unsign
 // 0x45), two characters. (A first character of 0x20 is written back as 0x20:
 // the original's store changes nothing.)
 extern "C" void __cdecl EffectKind0F_DrawCountHeader() {
-    DrawMode(0, 1);
-    DrawSprite(0x12, 1, 0xF0, 0x42);
-    SH_CALL(Text_DrawFont12)(0x119, 0x45, 0, Text(::bof3::Img(EffectKind0F_CountLabel_addr)));
+    DrawModeEffect1b(0, 1);
+    DrawSpriteEffect1b(0x12, 1, 0xF0, 0x42);
+    SH_CALL(Text_DrawFont12)(0x119, 0x45, 0, TextEffect1b(::bof3::Img(EffectKind0F_CountLabel_addr)));
     SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Boss26Fx_CountFormat),
                          static_cast<int>(static_cast<short>(rv::As<records::EffectObject>(Sc())->height_whole)) + 1);
-    if (B(::bof3::Img(at::kPrint.v)) == 0x20) B(::bof3::Img(at::kPrint.v)) = 0x20;
-    DrawAt(0xF7, 0x45, 0, 2, Text(::bof3::Img(at::kPrint.v)));
+    if (BEffect1b(::bof3::Img(at::kPrint.v)) == 0x20) BEffect1b(::bof3::Img(at::kPrint.v)) = 0x20;
+    DrawAt(0xF7, 0x45, 0, 2, TextEffect1b(::bof3::Img(at::kPrint.v)));
 }
 
 // original 0x468AC0 (x, y, bits): three toggle boxes at x + 0x30 i, each lit by
@@ -928,10 +928,10 @@ extern "C" void __cdecl EffectKind0F_DrawToggles(int x, int y, unsigned bits) {
             // DIVERGENCE DIV-0069: under a Latin overlay the label whole, centred
             // in its box (x + 0x30 i + 2, 0x28 wide) by its real width - the US
             // module's x + 6 + 0x30 i for its four letters.
-            const int width = static_cast<int>(TextAdvance_Width(Text(text)));
-            DrawAt(x + 0x30 * i + 0x16 - width / 2, y + 4, colour, 0xFF, Text(text));
+            const int width = static_cast<int>(TextAdvance_Width(TextEffect1b(text)));
+            DrawAt(x + 0x30 * i + 0x16 - width / 2, y + 4, colour, 0xFF, TextEffect1b(text));
         } else {
-            DrawAt(x + kX[i], y + 4, colour, kCount[i], Text(text));
+            DrawAt(x + kX[i], y + 4, colour, kCount[i], TextEffect1b(text));
         }
     }
 }
@@ -941,12 +941,12 @@ extern "C" void __cdecl EffectKind0F_DrawToggles(int x, int y, unsigned bits) {
 // 0x1F from x + 8 and (lit + 8) * 4 at x + 0x28, all byte ids.
 extern "C" void __cdecl EffectKind0F_DrawToggle(int x, int y, unsigned lit) {
     SH_CALL(Menu_DrawBox)(x + 2, y + 2, 0x28, 0x10, 0, Style());
-    DrawMode(8, 1);
+    DrawModeEffect1b(8, 1);
     const auto l4 = static_cast<unsigned char>(lit << 2);
-    DrawSprite(static_cast<unsigned char>(l4 + 0x1D), 1, x, y);
-    DrawSprite(static_cast<unsigned char>(l4 + 0x1E), 1, x, y + 0x10);
-    for (int i = 0; i < 4; ++i) DrawSprite(static_cast<unsigned char>(l4 + 0x1F), 1, x + 8 * i + 8, y + 0x10);
-    DrawSprite(static_cast<unsigned char>((lit + 8) << 2), 1, x + 0x28, y + 0x10);
+    DrawSpriteEffect1b(static_cast<unsigned char>(l4 + 0x1D), 1, x, y);
+    DrawSpriteEffect1b(static_cast<unsigned char>(l4 + 0x1E), 1, x, y + 0x10);
+    for (int i = 0; i < 4; ++i) DrawSpriteEffect1b(static_cast<unsigned char>(l4 + 0x1F), 1, x + 8 * i + 8, y + 0x10);
+    DrawSpriteEffect1b(static_cast<unsigned char>((lit + 8) << 2), 1, x + 0x28, y + 0x10);
 }
 
 // D286 (DIV-0069's tag 3, docs/install-gap-labels.md): heading `i` drawn
@@ -962,7 +962,7 @@ static void DrawHeading(unsigned i, int x, int y, int count, U label) {
         DrawAt(x + 6 * count - width / 2, y, 0, 0xFF, word);
         return;
     }
-    DrawAt(x, y, 0, count, Text(label));
+    DrawAt(x, y, 0, count, TextEffect1b(label));
 }
 
 // original 0x468C50 (x, y): the window (x, y + 1, 0x8B, 0x9E); every accessory of
@@ -977,26 +977,26 @@ extern "C" void __cdecl EffectKind0F_DrawItemsB(int x, int y) {
     SH_CALL(Menu_DrawBox)(x, y + 1, 0x8B, 0x9E, 0xF0, Style());
     unsigned drawn = 0;
     for (unsigned n = 0; n < 0x80; ++n) {
-        if (Category(B(::bof3::Img(at::kItemIds.v) + n), kWho) != 0xB) continue;
+        if (Category(BEffect1b(::bof3::Img(at::kItemIds.v) + n), kWho) != 0xB) continue;
         unsigned char* s = Sc();
         if (static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c) == static_cast<std::int32_t>(drawn)) rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, n);
         s = Sc();
         const int row = y + 13 * static_cast<int>(drawn);
         if (ObjTrio[0].state4 == 2 && (s[7] & 1) == 0 && static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c) == static_cast<std::int32_t>(drawn)) {
-            DrawAt(x + 5, row + 0x19, 7, NameCount(), AccessoryName(B(::bof3::Img(at::kItemIds.v) + n)));
-            DrawAt(x + 5, row + 0x17, 0, NameCount(), AccessoryName(B(::bof3::Img(at::kItemIds.v) + n)));
-            const unsigned char count = B(::bof3::Img(at::kItemCounts.v) + n);
+            DrawAt(x + 5, row + 0x19, 7, NameCount(), AccessoryName(BEffect1b(::bof3::Img(at::kItemIds.v) + n)));
+            DrawAt(x + 5, row + 0x17, 0, NameCount(), AccessoryName(BEffect1b(::bof3::Img(at::kItemIds.v) + n)));
+            const unsigned char count = BEffect1b(::bof3::Img(at::kItemCounts.v) + n);
             if (count > 1) {
-                SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(::bof3::Img(at::kCountFormat.v))), static_cast<unsigned>(count));
-                SH_CALL(Text_DrawFont8)(x + 0x68, row + 0x1D, 7, Text(::bof3::Img(at::kPrint.v)));
-                SH_CALL(Text_DrawFont8)(x + 0x68, row + 0x1B, 0, Text(::bof3::Img(at::kPrint.v)));
+                SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(TextEffect1b(::bof3::Img(at::kCountFormat.v))), static_cast<unsigned>(count));
+                SH_CALL(Text_DrawFont8)(x + 0x68, row + 0x1D, 7, TextEffect1b(::bof3::Img(at::kPrint.v)));
+                SH_CALL(Text_DrawFont8)(x + 0x68, row + 0x1B, 0, TextEffect1b(::bof3::Img(at::kPrint.v)));
             }
         } else {
-            DrawAt(x + 5, row + 0x19, 0, NameCount(), AccessoryName(B(::bof3::Img(at::kItemIds.v) + n)));
-            const unsigned char count = B(::bof3::Img(at::kItemCounts.v) + n);
+            DrawAt(x + 5, row + 0x19, 0, NameCount(), AccessoryName(BEffect1b(::bof3::Img(at::kItemIds.v) + n)));
+            const unsigned char count = BEffect1b(::bof3::Img(at::kItemCounts.v) + n);
             if (count > 1) {
-                SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(::bof3::Img(at::kCountFormat.v))), static_cast<unsigned>(count));
-                SH_CALL(Text_DrawFont8)(x + 0x68, row + 0x1D, 0, Text(::bof3::Img(at::kPrint.v)));
+                SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(TextEffect1b(::bof3::Img(at::kCountFormat.v))), static_cast<unsigned>(count));
+                SH_CALL(Text_DrawFont8)(x + 0x68, row + 0x1D, 0, TextEffect1b(::bof3::Img(at::kPrint.v)));
             }
         }
         ++drawn;
@@ -1066,26 +1066,26 @@ extern "C" void __cdecl EffectKind0F_DrawItemsA(int x, int y) {
     unsigned drawn = 0;
     std::int32_t seen = 0;
     for (unsigned n = 0; n < 0x80; ++n) {
-        const unsigned char id = B(::bof3::Img(at::kItemIds.v) + n);
+        const unsigned char id = BEffect1b(::bof3::Img(at::kItemIds.v) + n);
         if (Category(id, kWho) != 0xA) continue;
         if (seen >= static_cast<std::int32_t>(top) && drawn < count) {
             s = Sc();
             const int row = y + 13 * static_cast<int>(drawn) + offset;
             if (ObjTrio[0].state4 == 2 && (s[7] & 1) != 0 && static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10) == static_cast<std::int32_t>(drawn)) {
                 DrawAt(x + 5, row, 7, NameCount(), AccessoryName(id));
-                DrawAt(x + 5, row - 2, 0, NameCount(), AccessoryName(B(::bof3::Img(at::kItemIds.v) + n)));
-                const unsigned char c = B(::bof3::Img(at::kItemCounts.v) + n);
+                DrawAt(x + 5, row - 2, 0, NameCount(), AccessoryName(BEffect1b(::bof3::Img(at::kItemIds.v) + n)));
+                const unsigned char c = BEffect1b(::bof3::Img(at::kItemCounts.v) + n);
                 if (c > 1) {
-                    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(::bof3::Img(at::kCountFormat.v))), static_cast<unsigned>(c));
-                    SH_CALL(Text_DrawFont8)(x + 0x68, row + 4, 7, Text(::bof3::Img(at::kPrint.v)));
-                    SH_CALL(Text_DrawFont8)(x + 0x68, row + 2, 0, Text(::bof3::Img(at::kPrint.v)));
+                    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(TextEffect1b(::bof3::Img(at::kCountFormat.v))), static_cast<unsigned>(c));
+                    SH_CALL(Text_DrawFont8)(x + 0x68, row + 4, 7, TextEffect1b(::bof3::Img(at::kPrint.v)));
+                    SH_CALL(Text_DrawFont8)(x + 0x68, row + 2, 0, TextEffect1b(::bof3::Img(at::kPrint.v)));
                 }
             } else {
                 DrawAt(x + 5, row, 0, NameCount(), AccessoryName(id));
-                const unsigned char c = B(::bof3::Img(at::kItemCounts.v) + n);
+                const unsigned char c = BEffect1b(::bof3::Img(at::kItemCounts.v) + n);
                 if (c > 1) {
-                    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(::bof3::Img(at::kCountFormat.v))), static_cast<unsigned>(c));
-                    SH_CALL(Text_DrawFont8)(x + 0x68, row + 4, 0, Text(::bof3::Img(at::kPrint.v)));
+                    SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(TextEffect1b(::bof3::Img(at::kCountFormat.v))), static_cast<unsigned>(c));
+                    SH_CALL(Text_DrawFont8)(x + 0x68, row + 4, 0, TextEffect1b(::bof3::Img(at::kPrint.v)));
                 }
             }
             s = Sc();
@@ -1102,7 +1102,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsA(int x, int y) {
     SH_CALL(EffectKind0F_DrawItemFrame)(x, y);
     int total = 0;
     for (unsigned n = 0; n < 0x80; ++n)
-        if (Category(B(::bof3::Img(at::kItemIds.v) + n), kWho) == 0xA) ++total;
+        if (Category(BEffect1b(::bof3::Img(at::kItemIds.v) + n), kWho) == 0xA) ++total;
     unsigned char height, mark;
     if (total <= 9) {
         height = 0x72;
@@ -1132,20 +1132,20 @@ extern "C" void __cdecl EffectKind0F_DrawEquipped(int x, int y) {
     const U ix = static_cast<U>(x) + 0x10u;
     auto icon = [ix](int iy, unsigned char item, U flag) { Call5(at::kE1gItemIcon.v, ix, static_cast<U>(iy), item, 3, flag); };
     if ((bits & 0x80) != 0) {
-        icon(y + 0x1C, B(::bof3::Img(at::kEquipA.v)), 0);
-        DrawAt(x + 0x1C, y + 0x1A, 0, NameCount(), AccessoryName(B(::bof3::Img(at::kEquipA.v))));
+        icon(y + 0x1C, BEffect1b(::bof3::Img(at::kEquipA.v)), 0);
+        DrawAt(x + 0x1C, y + 0x1A, 0, NameCount(), AccessoryName(BEffect1b(::bof3::Img(at::kEquipA.v))));
         icon(y + 0x2C, CharStats_ExtraItem, 0);
         DrawAt(x + 0x1C, y + 0x2A, 0, NameCount(), AccessoryName(CharStats_ExtraItem));
     } else if ((bits & 1) == 0) {
-        icon(y + 0x1C, B(::bof3::Img(at::kEquipA.v)), 1);
-        DrawAt(x + 0x1C, y + 0x1A, 7, NameCount(), AccessoryName(B(::bof3::Img(at::kEquipA.v))));
-        icon(y + 0x1A, B(::bof3::Img(at::kEquipA.v)), 0);
-        DrawAt(x + 0x1C, y + 0x18, Sc()[7], NameCount(), AccessoryName(B(::bof3::Img(at::kEquipA.v))));
+        icon(y + 0x1C, BEffect1b(::bof3::Img(at::kEquipA.v)), 1);
+        DrawAt(x + 0x1C, y + 0x1A, 7, NameCount(), AccessoryName(BEffect1b(::bof3::Img(at::kEquipA.v))));
+        icon(y + 0x1A, BEffect1b(::bof3::Img(at::kEquipA.v)), 0);
+        DrawAt(x + 0x1C, y + 0x18, Sc()[7], NameCount(), AccessoryName(BEffect1b(::bof3::Img(at::kEquipA.v))));
         icon(y + 0x2C, CharStats_ExtraItem, 0);
         DrawAt(x + 0x1C, y + 0x2A, 0, NameCount(), AccessoryName(CharStats_ExtraItem));
     } else {
-        icon(y + 0x1C, B(::bof3::Img(at::kEquipA.v)), 0);
-        DrawAt(x + 0x1C, y + 0x1A, 0, NameCount(), AccessoryName(B(::bof3::Img(at::kEquipA.v))));
+        icon(y + 0x1C, BEffect1b(::bof3::Img(at::kEquipA.v)), 0);
+        DrawAt(x + 0x1C, y + 0x1A, 0, NameCount(), AccessoryName(BEffect1b(::bof3::Img(at::kEquipA.v))));
         icon(y + 0x2C, CharStats_ExtraItem, 1);
         DrawAt(x + 0x1C, y + 0x2A, 7, NameCount(), AccessoryName(CharStats_ExtraItem));
         icon(y + 0x2A, CharStats_ExtraItem, 0);
@@ -1164,25 +1164,25 @@ extern "C" void __cdecl EffectKind0F_DrawEquipped(int x, int y) {
 extern "C" void __cdecl EffectKind0F_DrawTwinFrame(int x, int y) {
     SH_CALL(Menu_DrawBox)(x, y + 2, 0x8A, 0x3A, 0x80, Style());
     SH_CALL(Menu_DrawBox)(x, y + 0x42, 0x8A, 0x5C, 0x80, Style());
-    DrawMode(9, 1);
-    DrawSprite(0x25, 1, x, y);
-    for (int i = 0; i < 10; ++i) DrawSprite(0x26, 1, x + 8 * i + 0x20, y);
-    DrawSprite(0x27, 1, x + 0x70, y);
-    DrawSprite(0x28, 1, x + 0x88, y);
+    DrawModeEffect1b(9, 1);
+    DrawSpriteEffect1b(0x25, 1, x, y);
+    for (int i = 0; i < 10; ++i) DrawSpriteEffect1b(0x26, 1, x + 8 * i + 0x20, y);
+    DrawSpriteEffect1b(0x27, 1, x + 0x70, y);
+    DrawSpriteEffect1b(0x28, 1, x + 0x88, y);
     SH_CALL(Panel_DrawEdgeQuad)(x, y + 0x18, 0x1E, 0);
     SH_CALL(Panel_DrawEdgeQuad)(x + 0x88, y + 0x18, 0x1E, 1);
-    DrawSprite(0x3C, 1, x, y + 0x36);
-    for (int i = 0; i < 16; ++i) DrawSprite(0x3D, 1, x + 8 * i + 8, y + 0x36);
-    DrawSprite(0x3E, 1, x + 0x88, y + 0x36);
-    DrawSprite(0x25, 1, x, y + 0x40);
-    for (int i = 0; i < 10; ++i) DrawSprite(0x26, 1, x + 8 * i + 0x20, y + 0x40);
-    DrawSprite(0x27, 1, x + 0x70, y + 0x40);
-    DrawSprite(0x28, 1, x + 0x88, y + 0x40);
+    DrawSpriteEffect1b(0x3C, 1, x, y + 0x36);
+    for (int i = 0; i < 16; ++i) DrawSpriteEffect1b(0x3D, 1, x + 8 * i + 8, y + 0x36);
+    DrawSpriteEffect1b(0x3E, 1, x + 0x88, y + 0x36);
+    DrawSpriteEffect1b(0x25, 1, x, y + 0x40);
+    for (int i = 0; i < 10; ++i) DrawSpriteEffect1b(0x26, 1, x + 8 * i + 0x20, y + 0x40);
+    DrawSpriteEffect1b(0x27, 1, x + 0x70, y + 0x40);
+    DrawSpriteEffect1b(0x28, 1, x + 0x88, y + 0x40);
     SH_CALL(Panel_DrawEdgeQuad)(x, y + 0x58, 0x40, 0);
     SH_CALL(Panel_DrawEdgeQuad)(x + 0x88, y + 0x58, 0x40, 1);
-    DrawSprite(0x3C, 1, x, y + 0x98);
-    for (int i = 0; i < 16; ++i) DrawSprite(0x3D, 1, x + 8 * i + 8, y + 0x98);
-    DrawSprite(0x3E, 1, x + 0x88, y + 0x98);
+    DrawSpriteEffect1b(0x3C, 1, x, y + 0x98);
+    for (int i = 0; i < 16; ++i) DrawSpriteEffect1b(0x3D, 1, x + 8 * i + 8, y + 0x98);
+    DrawSpriteEffect1b(0x3E, 1, x + 0x88, y + 0x98);
 }
 
 // original 0x469630 (x, y): the window (x, y + 2, 0x8B, 0x14); the draw mode (9,
@@ -1192,20 +1192,20 @@ extern "C" void __cdecl EffectKind0F_DrawTwinFrame(int x, int y) {
 // fifteen of 0x2B from x + 8) at y + 0x90 and 0x45 at (x + 0x80, y + 0x88).
 extern "C" void __cdecl EffectKind0F_DrawItemFrame(int x, int y) {
     SH_CALL(Menu_DrawBox)(x, y + 2, 0x8B, 0x14, 0, Style());
-    DrawMode(9, 1);
-    DrawSprite(0x3F, 1, x, y);
-    DrawSprite(0x40, 1, x + 8, y);
-    DrawSprite(0x41, 1, x + 0x10, y);
-    for (int i = 0; i < 8; ++i) DrawSprite(0x26, 1, x + 8 * i + 0x28, y);
-    DrawSprite(0x42, 1, x + 0x68, y);
-    DrawSprite(0x43, 1, x + 0x78, y);
-    DrawSprite(0x44, 1, x + 0x80, y);
+    DrawModeEffect1b(9, 1);
+    DrawSpriteEffect1b(0x3F, 1, x, y);
+    DrawSpriteEffect1b(0x40, 1, x + 8, y);
+    DrawSpriteEffect1b(0x41, 1, x + 0x10, y);
+    for (int i = 0; i < 8; ++i) DrawSpriteEffect1b(0x26, 1, x + 8 * i + 0x28, y);
+    DrawSpriteEffect1b(0x42, 1, x + 0x68, y);
+    DrawSpriteEffect1b(0x43, 1, x + 0x78, y);
+    DrawSpriteEffect1b(0x44, 1, x + 0x80, y);
     SH_CALL(Panel_DrawEdgeQuad)(x, y + 0x18, 0x78, 0);
-    DrawSprite(0x46, 1, x + 0x80, y + 0x18);
+    DrawSpriteEffect1b(0x46, 1, x + 0x80, y + 0x18);
     SH_CALL(Panel_DrawEdgeQuad)(x + 0x80, y + 0x28, 0x68, 4);
-    DrawSprite(0x2A, 1, x, y + 0x90);
-    for (int i = 0; i < 15; ++i) DrawSprite(0x2B, 1, x + 8 * i + 8, y + 0x90);
-    DrawSprite(0x45, 1, x + 0x80, y + 0x88);
+    DrawSpriteEffect1b(0x2A, 1, x, y + 0x90);
+    for (int i = 0; i < 15; ++i) DrawSpriteEffect1b(0x2B, 1, x + 8 * i + 8, y + 0x90);
+    DrawSpriteEffect1b(0x45, 1, x + 0x80, y + 0x88);
 }
 
 // --- the window (FE2's trade screen and the kinds' panels) --------------------------
@@ -1241,7 +1241,7 @@ void Shade(unsigned char* p, const Colour& c) {
 // before its Gpu_Set* call, as the original keeps it.
 extern "C" void __cdecl Panel_DrawWindowBevel(int x, int y, int w, int h) {
     const Colour c = StyleColour();
-    DrawMode(6, 2);
+    DrawModeEffect1b(6, 2);
     const int X = x & 0xFFFF, Y = y & 0xFFFF, W = w & 0xFFFF, H = h & 0xFFFF;
     unsigned char* p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyF4)(p);
@@ -1288,7 +1288,7 @@ extern "C" void __cdecl Panel_DrawWindowBevel(int x, int y, int w, int h) {
 extern "C" void __cdecl Panel_DrawWindowEdges(int x, int y, int w, int h, unsigned colour) {
     const Colour c = StyleColour();
     const bool lit = (colour & 0xFF) != 0;
-    DrawMode(lit ? 7 : 6, 2);
+    DrawModeEffect1b(lit ? 7 : 6, 2);
     const int X = x & 0xFFFF, Y = y & 0xFFFF, W = w & 0xFFFF, H = h & 0xFFFF;
     unsigned char* p = Gfx_PacketNext;
     SH_CALL(Gpu_SetLineF3)(p);
@@ -1301,7 +1301,7 @@ extern "C" void __cdecl Panel_DrawWindowEdges(int x, int y, int w, int h, unsign
     Shade(p, c);
     SH_CALL(Gpu_SetSemiTrans)(p, 1);
     SH_CALL(Gfx_CommitPrim)(2, 0x2C);
-    DrawMode(lit ? 6 : 7, 2);
+    DrawModeEffect1b(lit ? 6 : 7, 2);
     p = Gfx_PacketNext;
     SH_CALL(Gpu_SetLineF3)(p);
     F(p + 8, X);

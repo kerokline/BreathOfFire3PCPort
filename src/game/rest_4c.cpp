@@ -44,7 +44,7 @@ using move_script::SetWord;
 using move_script::Word;
 using Handler = void (__cdecl*)();
 
-unsigned char& B(U address) { return At(address)[0]; }
+unsigned char& BRest4c(U address) { return At(address)[0]; }
 signed char S8(U address) { return static_cast<signed char>(At(address)[0]); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
@@ -55,13 +55,13 @@ void PutFloat(unsigned char* p, unsigned offset, int v) {
 }
 void PutWord(unsigned char* p, unsigned offset, unsigned v) { SetWord(p + offset, v); }
 // A word argument read as movsx word.
-int S16(U v) { return static_cast<std::int16_t>(v & 0xFFFF); }
+int S16Rest4c(U v) { return static_cast<std::int16_t>(v & 0xFFFF); }
 
 // jmp [table + 4 * byte]: the table's `entries` handlers, read in place (the
 // fuzz swaps the cells for recorders); a Fatal past them, where the original
 // jumps through the dword after.
 void Dispatch(const char* who, const unsigned long* table, unsigned entries, U byte_address) {
-    const unsigned index = B(byte_address);
+    const unsigned index = BRest4c(byte_address);
     if (index >= entries)
         bof3::Fatal("%s: the byte 0x%X is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_4c.md section 7)",
@@ -179,8 +179,8 @@ extern "C" void __cdecl Commu_DrawCard(int x, int y, unsigned digit) {
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetSprt)(p);
     p[4] = p[5] = p[6] = 0x80;
-    PutFloat(p, 8, S16(static_cast<U>(x)));
-    PutFloat(p, 0xC, S16(static_cast<U>(y)));
+    PutFloat(p, 8, S16Rest4c(static_cast<U>(x)));
+    PutFloat(p, 0xC, S16Rest4c(static_cast<U>(y)));
     PutWord(p, 0x18, 0x20);
     PutWord(p, 0x1A, 0x28);
     const auto d = static_cast<unsigned char>(digit);
@@ -202,7 +202,7 @@ extern "C" void __cdecl Commu_DrawCard(int x, int y, unsigned digit) {
 extern "C" void __cdecl Commu_DrawUnderline(int x, int y) {
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetLineF2)(p);
-    const int x0 = S16(static_cast<U>(x)), y0 = S16(static_cast<U>(y));
+    const int x0 = S16Rest4c(static_cast<U>(x)), y0 = S16Rest4c(static_cast<U>(y));
     PutFloat(p, 8, x0);
     PutFloat(p, 0x14, x0 + 0xC);
     p[4] = p[5] = p[6] = 0x80;
@@ -221,8 +221,8 @@ extern "C" void __cdecl Commu_DrawPiece(int x, int y, unsigned piece) {
     const unsigned i = piece & 0xFF;
     Room("Commu_DrawPiece (0x45B400)", "the piece", static_cast<int>(i), 0, at::kPiecesCount - 1);
     const unsigned char* const e = At(::bof3::Img(at::kPieces.v) + 4 * i);
-    PutFloat(p, 8, S16(static_cast<U>(x)));
-    PutFloat(p, 0xC, S16(static_cast<U>(y)));
+    PutFloat(p, 8, S16Rest4c(static_cast<U>(x)));
+    PutFloat(p, 0xC, S16Rest4c(static_cast<U>(y)));
     PutWord(p, 0x18, e[2]);
     PutWord(p, 0x1A, e[3]);
     p[4] = p[5] = p[6] = 0x80;
@@ -319,7 +319,7 @@ extern "C" void __cdecl CommuHiLo_DrawMarker(int x, int y) {
     const auto green = static_cast<unsigned char>(((frame & 6) << 5) + 0x3F);
     unsigned char* const p = Gfx_PacketNext;
     SH_AT(void (__cdecl*)(unsigned char*), at::kSetPolyF3.v)(p);
-    const int x0 = S16(static_cast<U>(x)), y0 = S16(static_cast<U>(y));
+    const int x0 = S16Rest4c(static_cast<U>(x)), y0 = S16Rest4c(static_cast<U>(y));
     PutFloat(p, 8, x0);
     p[5] = green;
     PutFloat(p, 0xC, y0);
@@ -346,11 +346,11 @@ extern "C" void __cdecl CommuHiLo_DrawRow(unsigned count, unsigned shown, unsign
         int y = 0x6C;
         if (i <= k && k != 0 && i != 0) {
             Room("CommuHiLo_DrawRow (0x45AFF0)", "the pick", i, 1, 8);
-            y = B(::bof3::Img(at::kPicks.v) + i) != 0 ? 0x74 : 0x64;
+            y = BRest4c(::bof3::Img(at::kPicks.v) + i) != 0 ? 0x74 : 0x64;
         }
         if (i < m) {
             Room("CommuHiLo_DrawRow (0x45AFF0)", "the value", i, 0, 8);
-            Card(0x10 + 32 * i, y, B(::bof3::Img(at::kCards.v) + i));
+            Card(0x10 + 32 * i, y, BRest4c(::bof3::Img(at::kCards.v) + i));
         } else {
             Card(0x10 + 32 * i, y, 0xFF);
         }
@@ -361,15 +361,15 @@ extern "C" void __cdecl CommuHiLo_DrawRow(unsigned count, unsigned shown, unsign
 // 1..9 - each Commu_RandDigit(9) (its al) drawn again while an earlier value
 // has it.
 extern "C" void __cdecl CommuHiLo_Shuffle(void) {
-    B(::bof3::Img(at::kCards.v)) = static_cast<unsigned char>(SH_CALL(Commu_RandDigit)(9));
+    BRest4c(::bof3::Img(at::kCards.v)) = static_cast<unsigned char>(SH_CALL(Commu_RandDigit)(9));
     for (int i = 1; i < 9; ++i) {
         unsigned char v;
         int j;
         do {
             v = static_cast<unsigned char>(SH_CALL(Commu_RandDigit)(9));
-            for (j = 0; j < i && B(::bof3::Img(at::kCards.v) + j) != v; ++j) {}
+            for (j = 0; j < i && BRest4c(::bof3::Img(at::kCards.v) + j) != v; ++j) {}
         } while (j != i);
-        B(::bof3::Img(at::kCards.v) + i) = v;
+        BRest4c(::bof3::Img(at::kCards.v) + i) = v;
     }
 }
 
@@ -525,7 +525,7 @@ extern "C" void __cdecl CommuHiLo_BetDispatch(void) {
 // underline at (0xBA - 12 * cursor, 0x99). The cursor indexes the three digits:
 // ours aborts outside 0..2 where it does.
 extern "C" void __cdecl CommuHiLo_BetInput(void) {
-    const int low = static_cast<signed char>(B(::bof3::Img(at::kBet.v)));
+    const int low = static_cast<signed char>(BRest4c(::bof3::Img(at::kBet.v)));
     at::kDigits.b_02 = static_cast<unsigned char>(low / 100);
     const int rest = static_cast<signed char>(static_cast<unsigned char>(low % 100));
     at::kDigits.b_01 = static_cast<unsigned char>(rest / 10);
@@ -710,7 +710,7 @@ extern "C" void __cdecl CommuHiLo_DealCards(void) {
 // 0x6C): value i + 1.
 static void ShownValues() {
     for (int i = 0; i < 8; ++i)
-        if (Rest4c_Cursor & (1 << i)) Card(32 * i + 0x30, 0x6C, B(::bof3::Img(at::kCards.v) + 1 + i));
+        if (Rest4c_Cursor & (1 << i)) Card(32 * i + 0x30, 0x6C, BRest4c(::bof3::Img(at::kCards.v) + 1 + i));
 }
 
 // original 0x45A590 (0x7B bytes): CommuHiLo_DealSteps[2] - the row (9, 1, 0),
@@ -807,7 +807,7 @@ extern "C" void __cdecl CommuHiLo_Pick(void) {
                 if (static_cast<signed char>(n) < 8) {
                     const int i = static_cast<signed char>(n);
                     Room("CommuHiLo_Pick (0x45A770)", "the pick count 0x675F8C", i, 0, 7);
-                    B(::bof3::Img(at::kPicks.v) + 1 + i) = cursor;
+                    BRest4c(::bof3::Img(at::kPicks.v) + 1 + i) = cursor;
                     Rest4c_Count = static_cast<unsigned char>(n + 1);
                     Sound(0x103);
                     if (static_cast<unsigned char>(Rest4c_Count) == 8) {
@@ -874,8 +874,8 @@ extern "C" void __cdecl CommuHiLo_Reveal(void) {
     if (n == 0) {
         const int t = Rest4c_Turn;
         Room("CommuHiLo_Reveal (0x45AA40)", "the turn 0x675F8E", t, 1, 8);
-        const unsigned char higher = B(::bof3::Img(at::kCards.v) + t - 1) >= B(::bof3::Img(at::kCards.v) + t) ? 1 : 0;
-        if (B(::bof3::Img(at::kPicks.v) + t) == higher) {
+        const unsigned char higher = BRest4c(::bof3::Img(at::kCards.v) + t - 1) >= BRest4c(::bof3::Img(at::kCards.v) + t) ? 1 : 0;
+        if (BRest4c(::bof3::Img(at::kPicks.v) + t) == higher) {
             Sound(0x104);
             const auto turn = static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Turn) + 1);
             const unsigned char count = static_cast<unsigned char>(Rest4c_Count);
@@ -931,7 +931,7 @@ extern "C" void __cdecl CommuHiLo_Payout(void) {
         int i = 0;
         do {
             Room("CommuHiLo_Payout (0x45AB90)", "the value", i, 0, 8);
-            const unsigned char v = B(::bof3::Img(at::kCards.v) + i);
+            const unsigned char v = BRest4c(::bof3::Img(at::kCards.v) + i);
             Card(32 * i + 0x10, 0x28 * Rest4d_Count + 0x6C, v);
             ++i;
         } while (i <= Rest4c_Count);
@@ -1149,10 +1149,10 @@ extern "C" void __cdecl CommuHitBlow_Start(void) {
     Party_Zenny = zenny - 500u;
     for (int i = 0; i < 3;) {
         const auto v = static_cast<unsigned char>(SH_CALL(Commu_RandDigit)(9));
-        B(::bof3::Img(at::kCards.v) + i) = v;
+        BRest4c(::bof3::Img(at::kCards.v) + i) = v;
         if (i != 0) {
             int j = 0;
-            while (j < i && B(::bof3::Img(at::kCards.v) + j) != v) ++j;
+            while (j < i && BRest4c(::bof3::Img(at::kCards.v) + j) != v) ++j;
             if (j != i) continue;
         }
         ++i;
@@ -1234,13 +1234,13 @@ extern "C" void __cdecl CommuHitBlow_Input(void) {
             Room("CommuHitBlow_Input (0x45BBD0)", "the cursor 0x675F8D", static_cast<signed char>(cursor), 0, 2);
         }
         if (pressed & 0x4000) {
-            const auto d = static_cast<unsigned char>(B(::bof3::Img(at::kCards.v) + index) - 1);
-            B(::bof3::Img(at::kCards.v) + index) = d;
-            if (static_cast<signed char>(d) < 1) B(::bof3::Img(at::kCards.v) + index) = 9;
+            const auto d = static_cast<unsigned char>(BRest4c(::bof3::Img(at::kCards.v) + index) - 1);
+            BRest4c(::bof3::Img(at::kCards.v) + index) = d;
+            if (static_cast<signed char>(d) < 1) BRest4c(::bof3::Img(at::kCards.v) + index) = 9;
         } else if (pressed & 0x1000) {
-            const auto d = static_cast<unsigned char>(B(::bof3::Img(at::kCards.v) + index) + 1);
-            B(::bof3::Img(at::kCards.v) + index) = d;
-            if (d > 9) B(::bof3::Img(at::kCards.v) + index) = 1;
+            const auto d = static_cast<unsigned char>(BRest4c(::bof3::Img(at::kCards.v) + index) + 1);
+            BRest4c(::bof3::Img(at::kCards.v) + index) = d;
+            if (d > 9) BRest4c(::bof3::Img(at::kCards.v) + index) = 1;
         } else if (pressed & 0x2000) {
             const auto c = static_cast<unsigned char>(cursor + 1);
             Rest4c_Cursor = c;
@@ -1274,10 +1274,10 @@ extern "C" void __cdecl CommuHitBlow_Score(void) {
     unsigned char* const rec = At(::bof3::Img(at::kRecords.v) + 5 * r);
     unsigned char hits = 0, blows = 0;
     for (int j = 0; j < 3; ++j)
-        if (B(::bof3::Img(at::kCards.v) + j) == rec[j]) ++hits;
+        if (BRest4c(::bof3::Img(at::kCards.v) + j) == rec[j]) ++hits;
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
-            if (i != j && rec[i] == B(::bof3::Img(at::kCards.v) + j)) ++blows;
+            if (i != j && rec[i] == BRest4c(::bof3::Img(at::kCards.v) + j)) ++blows;
     rec[3] = hits;
     rec[4] = blows;
     char* const text_a = reinterpret_cast<char*>(At(::bof3::Img(bof3::addr::Text_Records)));
@@ -1301,8 +1301,8 @@ extern "C" void __cdecl CommuHitBlow_Score(void) {
         }
         const int prize = Rest4c_Count * 3 + static_cast<signed char>(rank);
         Room("CommuHitBlow_Score (0x45BD20)", "the prize", prize, 0, at::kPrizesCount - 1);
-        const unsigned item = B(::bof3::Img(at::kPrizes.v) + 2 * prize);
-        const unsigned category = B(::bof3::Img(at::kPrizes.v) + 2 * prize + 1);
+        const unsigned item = BRest4c(::bof3::Img(at::kPrizes.v) + 2 * prize);
+        const unsigned category = BRest4c(::bof3::Img(at::kPrizes.v) + 2 * prize + 1);
         const unsigned char* const name = SH_CALL(Item_NamePtr)(category, item);
         std::memcpy(At(::bof3::Img(at::kTextB.v)), name, 16);
         Message(0x82);
@@ -1372,8 +1372,8 @@ extern "C" void __cdecl CommuHitBlow_Prize(void) {
     if (Request() != 2) {
         const int prize = Rest4c_Count * 3 + Rest4c_Cursor;
         Room("CommuHitBlow_Prize (0x45C020)", "the prize", prize, 0, at::kPrizesCount - 1);
-        const unsigned item = B(::bof3::Img(at::kPrizes.v) + 2 * prize);
-        const unsigned category = B(::bof3::Img(at::kPrizes.v) + 2 * prize + 1);
+        const unsigned item = BRest4c(::bof3::Img(at::kPrizes.v) + 2 * prize);
+        const unsigned category = BRest4c(::bof3::Img(at::kPrizes.v) + 2 * prize + 1);
         const unsigned char added = SH_CALL(Inventory_Add)(category, item, 1);
         if (added == 0) {
             Message(0x83);
@@ -1424,15 +1424,15 @@ extern "C" void __cdecl CommuHitBlow_End(void) {
         Rest4d_Count = n;
         Room("CommuHitBlow_End (0x45C0C0)", "the row", r, 0, 7);
         const U rec = ::bof3::Img(at::kRecords.v) + 5 * r;
-        Card(0xA8 - 16 * n, 0x78 - 0xE * n, B(rec + 2));
+        Card(0xA8 - 16 * n, 0x78 - 0xE * n, BRest4c(rec + 2));
         int m = Rest4d_Count;
-        Card(8 * (0x11 - m), 0x78 - 0xE * m, B(rec + 1));
-        const unsigned char first = B(rec);
+        Card(8 * (0x11 - m), 0x78 - 0xE * m, BRest4c(rec + 1));
+        const unsigned char first = BRest4c(rec);
         m = Rest4d_Count;
         Card(0x68, 0x78 - 0xE * m, first);
-        Card(0xA8 - 16 * Rest4d_Count, 0x40, B(::bof3::Img(at::kCards.v) + 2));
-        Card(8 * (0x11 - Rest4d_Count), 0x40, B(::bof3::Img(at::kCards.v) + 1));
-        Card(0x68, 0x40, B(::bof3::Img(at::kCards.v)));
+        Card(0xA8 - 16 * Rest4d_Count, 0x40, BRest4c(::bof3::Img(at::kCards.v) + 2));
+        Card(8 * (0x11 - Rest4d_Count), 0x40, BRest4c(::bof3::Img(at::kCards.v) + 1));
+        Card(0x68, 0x40, BRest4c(::bof3::Img(at::kCards.v)));
         GuessPanel(0x10, 0x18, 1);
         HitBlowBoxes();
         if (Rest4d_Count != 4) return;
@@ -1442,7 +1442,7 @@ extern "C" void __cdecl CommuHitBlow_End(void) {
         } else {
             Sound(0x102);
             Rest4d_Count = 0;
-            B(::bof3::Img(at::kStep.v)) = 2;
+            BRest4c(::bof3::Img(at::kStep.v)) = 2;
         }
         return;
     }

@@ -65,36 +65,36 @@ template <typename T> U AddressOf(T* p) { return Low32(p); }
 // dispatcher's own caller left at [esp + 4] (BattleEnemy_RunAll pushes
 // nothing; an entry that reads it - Port_DroppedCall's byte, a hook's word -
 // reads that word), its eax the dispatcher's answer.
-using Entry = U (__cdecl*)(U);
-Entry EntryAt(U table, unsigned index) {
-    return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))));
+using EntryBossSh = U (__cdecl*)(U);
+EntryBossSh EntryAtBossSh(U table, unsigned index) {
+    return reinterpret_cast<EntryBossSh>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))));
 }
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, a
 // Fatal past them (the original jumps through the dword after).
-U Dispatch(const char* who, U table, unsigned entries, unsigned at, U through) {
+U DispatchBossSh(const char* who, U table, unsigned entries, unsigned at, U through) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/boss_sh.md section 6)",
                     who, at, state, entries, (unsigned)table);
-    return EntryAt(table, state)(through);   // the entry as read: the fuzz swaps the table's cells for its recorders
+    return EntryAtBossSh(table, state)(through);   // the entry as read: the fuzz swaps the table's cells for its recorders
 }
 
 // An enemy's +0xF4 hook: mov eax, [esp + 4]; and eax, 0xFF; jmp [table + 4 *
 // eax] - three entries (the words 0, 1, 2 the action pick, the hit and
 // BattleEnemy_RunAll pass), the entry gets the word whole, a Fatal past them.
-U HookDispatch(const char* who, U table, U word) {
+U HookDispatchBossSh(const char* who, U table, U word) {
     const unsigned index = word & 0xFF;
     if (index >= 3)
         bof3::Fatal("%s: the hook's word is 0x%X, past the 3 entries of 0x%X - the original jumps through the dword after "
                     "(docs/boss_sh.md section 6)",
                     who, (unsigned)word, (unsigned)table);
-    return EntryAt(table, index)(word);
+    return EntryAtBossSh(table, index)(word);
 }
 
 // The three hooks a set-up stores (BattleHook_End / _Exit / _Event).
-void StoreHooks(U end, U exit, U event) {
+void StoreHooksBossSh(U end, U exit, U event) {
     BattleHook_End = S(end);
     BattleHook_Exit = S(exit);
     BattleHook_Event = S(event);
@@ -105,7 +105,7 @@ void StoreHooks(U end, U exit, U event) {
 // sound words), 0x939AD8 read for each store; then 0x939AD8 read once more and
 // its dword +0x114 |= 8; Sprite_Current +1 = 2; a tail jump to
 // Sprite_ScriptTick, whose al is the answer.
-unsigned char Enter(U fc, U hook, U f8) {
+unsigned char EnterBossSh(U fc, U hook, U f8) {
     rv::As<records::BattleEnemy>(Enemy())->anim_table = S(fc);
     rv::As<records::BattleEnemy>(Enemy())->event_hook = S(hook);
     rv::As<records::BattleEnemy>(Enemy())->cue_table = S(f8);
@@ -153,18 +153,18 @@ void EndWithStep(unsigned char step) {
 // original 0x43DEF0: BossKind_Table[48]: jmp [BossSample3_States + 4 * +1] (12:
 // its entrance, then the generic enemy states).
 extern "C" unsigned long __cdecl BossSample3_Dispatch(unsigned long through) {
-    return Dispatch("BossSample3_Dispatch", AddressOf(BossSample3_States), 12, 1, through);
+    return DispatchBossSh("BossSample3_Dispatch", AddressOf(BossSample3_States), 12, 1, through);
 }
 
 // original 0x43DF10: state 0 - kind 40's (Mikba's) byte tables 0x64D6CC /
 // 0x64D6D8 and its own hook BossSample3_Hook.
 extern "C" unsigned char __cdecl BossSample3_Enter(void) {
-    return Enter(::bof3::Img(BossMikba_Anims_addr), ::bof3::Code(bof3::addr::BossSample3_Hook), ::bof3::Img(BossMikba_Sounds_addr));
+    return EnterBossSh(::bof3::Img(BossMikba_Anims_addr), ::bof3::Code(bof3::addr::BossSample3_Hook), ::bof3::Img(BossMikba_Sounds_addr));
 }
 
 // original 0x43DF70: the +0xF4 hook through BossSample3_Hooks (3, all BareRet).
 extern "C" unsigned long __cdecl BossSample3_Hook(unsigned long word) {
-    return HookDispatch("BossSample3_Hook", AddressOf(BossSample3_Hooks), word);
+    return HookDispatchBossSh("BossSample3_Hook", AddressOf(BossSample3_Hooks), word);
 }
 
 // original 0x43DF80: Boss_SetupTable[34]. The byte 0x669730 read once; each
@@ -175,7 +175,7 @@ extern "C" void __cdecl Boss34_Setup(void) {
     const unsigned char id = Character_IndexById[4];
     for (unsigned m = 0; m <= 2; ++m)
         if (At(::bof3::Img(ObjTrio_addr) + 0x148 + m * at::kPartyStride)[0] == id) BossSh_Picked = static_cast<unsigned char>(m);
-    StoreHooks(::bof3::Code(bof3::addr::Boss34_End), ::bof3::Code(bof3::addr::Boss34_Exit), ::bof3::Code(bof3::addr::Boss34_Event));
+    StoreHooksBossSh(::bof3::Code(bof3::addr::Boss34_End), ::bof3::Code(bof3::addr::Boss34_Exit), ::bof3::Code(bof3::addr::Boss34_Event));
 }
 
 // original 0x43DFD0: the event hook, by the code's low byte; al 0 on every
@@ -274,7 +274,7 @@ extern "C" void __cdecl Boss34_Exit(void) {
 // original 0x43E270: Boss_SetupTable[41]. The hooks: end BossHook_EndPickWay
 // (BH's), exit BareRet, event BareRetZero.
 extern "C" void __cdecl Boss41_Setup(void) {
-    StoreHooks(::bof3::Code(bof3::addr::BossHook_EndPickWay), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero));
+    StoreHooksBossSh(::bof3::Code(bof3::addr::BossHook_EndPickWay), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // ===========================================================================
@@ -283,19 +283,19 @@ extern "C" void __cdecl Boss41_Setup(void) {
 
 // original 0x43E540: BossKind_Table[41]: jmp [BossGaist_States + 4 * +1] (12).
 extern "C" unsigned long __cdecl BossGaist_Dispatch(unsigned long through) {
-    return Dispatch("BossGaist_Dispatch", AddressOf(BossGaist_States), 12, 1, through);
+    return DispatchBossSh("BossGaist_Dispatch", AddressOf(BossGaist_States), 12, 1, through);
 }
 
 // original 0x43E560: state 0 - BossGaist_Anims / BossGaist_Sounds and the hook
 // BossGaist_Hook.
 extern "C" unsigned char __cdecl BossGaist_Enter(void) {
-    return Enter(AddressOf(BossGaist_Anims), ::bof3::Code(bof3::addr::BossGaist_Hook), AddressOf(BossGaist_Sounds));
+    return EnterBossSh(AddressOf(BossGaist_Anims), ::bof3::Code(bof3::addr::BossGaist_Hook), AddressOf(BossGaist_Sounds));
 }
 
 // original 0x43E5C0: the +0xF4 hook through BossGaist_Hooks (BareRet, BareRet,
 // BossGaist_HookClearBit1).
 extern "C" unsigned long __cdecl BossGaist_Hook(unsigned long word) {
-    return HookDispatch("BossGaist_Hook", AddressOf(BossGaist_Hooks), word);
+    return HookDispatchBossSh("BossGaist_Hook", AddressOf(BossGaist_Hooks), word);
 }
 
 // original 0x43E5D0: hook entry 2 (BattleEnemy_RunAll's call): with the round
@@ -310,19 +310,19 @@ extern "C" void __cdecl BossGaist_HookClearBit1(unsigned) {
 
 // original 0x43E600: BossKind_Table[42]: jmp [BossTorch_States + 4 * +1] (12).
 extern "C" unsigned long __cdecl BossTorch_Dispatch(unsigned long through) {
-    return Dispatch("BossTorch_Dispatch", AddressOf(BossTorch_States), 12, 1, through);
+    return DispatchBossSh("BossTorch_Dispatch", AddressOf(BossTorch_States), 12, 1, through);
 }
 
 // original 0x43E620: state 0 - +0xFC 0x675F0C (twelve bytes of .data nothing
 // in the exe writes), +0xF8 0x64D7A0 (0xFFFF words), the hook BossTorch_Hook.
 extern "C" unsigned char __cdecl BossTorch_Enter(void) {
-    return Enter(::bof3::Img(at::kTorchAnims.v), ::bof3::Code(bof3::addr::BossTorch_Hook), ::bof3::Img(BossTorch_Sounds_addr));
+    return EnterBossSh(::bof3::Img(at::kTorchAnims.v), ::bof3::Code(bof3::addr::BossTorch_Hook), ::bof3::Img(BossTorch_Sounds_addr));
 }
 
 // original 0x43E680: the +0xF4 hook through BossTorch_Hooks
 // (BossTorch_HookTarget3, BareRet, BareRet).
 extern "C" unsigned long __cdecl BossTorch_Hook(unsigned long word) {
-    return HookDispatch("BossTorch_Hook", AddressOf(BossTorch_Hooks), word);
+    return HookDispatchBossSh("BossTorch_Hook", AddressOf(BossTorch_Hooks), word);
 }
 
 // original 0x43E690: hook entry 0 (the action pick's call): the target
@@ -331,25 +331,25 @@ extern "C" void __cdecl BossTorch_HookTarget3(unsigned) { B(::bof3::Img(at::kTar
 
 // original 0x43E6A0: BossKind_Table[54]: jmp [BossSample9_States + 4 * +1] (12).
 extern "C" unsigned long __cdecl BossSample9_Dispatch(unsigned long through) {
-    return Dispatch("BossSample9_Dispatch", AddressOf(BossSample9_States), 12, 1, through);
+    return DispatchBossSh("BossSample9_Dispatch", AddressOf(BossSample9_States), 12, 1, through);
 }
 
 // original 0x43E6C0: state 0 - Gaist's byte tables and its own hook
 // BossSample9_Hook.
 extern "C" unsigned char __cdecl BossSample9_Enter(void) {
-    return Enter(AddressOf(BossGaist_Anims), ::bof3::Code(bof3::addr::BossSample9_Hook), AddressOf(BossGaist_Sounds));
+    return EnterBossSh(AddressOf(BossGaist_Anims), ::bof3::Code(bof3::addr::BossSample9_Hook), AddressOf(BossGaist_Sounds));
 }
 
 // original 0x43E720: the +0xF4 hook through BossSample9_Hooks (3, all BareRet).
 extern "C" unsigned long __cdecl BossSample9_Hook(unsigned long word) {
-    return HookDispatch("BossSample9_Hook", AddressOf(BossSample9_Hooks), word);
+    return HookDispatchBossSh("BossSample9_Hook", AddressOf(BossSample9_Hooks), word);
 }
 
 // original 0x43E730: Boss_SetupTable[35]. The hooks: end Boss35_End, exit
 // BossHook_ExitTransition4 (0x43E790, set-up 26's too - group BSE's), event
 // Boss35_Event.
 extern "C" void __cdecl Boss35_Setup(void) {
-    StoreHooks(::bof3::Code(bof3::addr::Boss35_End), ::bof3::Code(at::kExitTransition4.v), ::bof3::Code(bof3::addr::Boss35_Event));
+    StoreHooksBossSh(::bof3::Code(bof3::addr::Boss35_End), ::bof3::Code(at::kExitTransition4.v), ::bof3::Code(bof3::addr::Boss35_Event));
 }
 
 // original 0x43E750: the event hook: code 0 (the low byte) and
@@ -367,7 +367,7 @@ extern "C" void __cdecl Boss35_End(void) { EndWithStep(0x15); }
 // original 0x43E7A0: Boss_SetupTable[47]. As set-up 41: BossHook_EndPickWay,
 // BareRet, BareRetZero.
 extern "C" void __cdecl Boss47_Setup(void) {
-    StoreHooks(::bof3::Code(bof3::addr::BossHook_EndPickWay), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero));
+    StoreHooksBossSh(::bof3::Code(bof3::addr::BossHook_EndPickWay), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // ===========================================================================
@@ -379,19 +379,19 @@ extern "C" void __cdecl Boss47_Setup(void) {
 // the entrance, the generic states, BossAngler_AdvanceDispatch at 4 and
 // BossAngler_RetreatDispatch at 5).
 extern "C" unsigned long __cdecl BossAngler_Dispatch(unsigned long through) {
-    return Dispatch("BossAngler_Dispatch", AddressOf(BossAngler_States), 12, 1, through);
+    return DispatchBossSh("BossAngler_Dispatch", AddressOf(BossAngler_States), 12, 1, through);
 }
 
 // original 0x43E7E0: state 0 - BossAngler_Anims / BossAngler_Sounds and the
 // hook BossAngler_Hook.
 extern "C" unsigned char __cdecl BossAngler_Enter(void) {
-    return Enter(AddressOf(BossAngler_Anims), ::bof3::Code(bof3::addr::BossAngler_Hook), AddressOf(BossAngler_Sounds));
+    return EnterBossSh(AddressOf(BossAngler_Anims), ::bof3::Code(bof3::addr::BossAngler_Hook), AddressOf(BossAngler_Sounds));
 }
 
 // original 0x43E840: state 4 (kinds 43 and 50): jmp [BossAngler_AdvanceSteps +
 // 4 * +2] (2).
 extern "C" unsigned long __cdecl BossAngler_AdvanceDispatch(unsigned long through) {
-    return Dispatch("BossAngler_AdvanceDispatch", AddressOf(BossAngler_AdvanceSteps), 2, 2, through);
+    return DispatchBossSh("BossAngler_AdvanceDispatch", AddressOf(BossAngler_AdvanceSteps), 2, 2, through);
 }
 
 // original 0x43E860: state 4 step 0. Sprite_Current +9 = the byte +0x8A of the
@@ -445,7 +445,7 @@ extern "C" unsigned char __cdecl BossAngler_Advance(void) {
 // original 0x43E950: state 5 (kinds 43 and 50): jmp [BossAngler_RetreatSteps +
 // 4 * +2] (2).
 extern "C" unsigned long __cdecl BossAngler_RetreatDispatch(unsigned long through) {
-    return Dispatch("BossAngler_RetreatDispatch", AddressOf(BossAngler_RetreatSteps), 2, 2, through);
+    return DispatchBossSh("BossAngler_RetreatDispatch", AddressOf(BossAngler_RetreatSteps), 2, 2, through);
 }
 
 // original 0x43E970: state 5 step 0. The dword +0x34 -= the dword +0xC; when it
@@ -473,7 +473,7 @@ extern "C" void __cdecl BossAngler_RetreatEnd(void) {
 // original 0x43E9C0: the +0xF4 hook through BossAngler_Hooks (BareRet, BareRet,
 // BossAngler_HookSpawnFx).
 extern "C" unsigned long __cdecl BossAngler_Hook(unsigned long word) {
-    return HookDispatch("BossAngler_Hook", AddressOf(BossAngler_Hooks), word);
+    return HookDispatchBossSh("BossAngler_Hook", AddressOf(BossAngler_Hooks), word);
 }
 
 // original 0x43E9D0: hook entry 2 of kinds 43 and 50 (BattleEnemy_RunAll's
@@ -511,25 +511,25 @@ extern "C" void __cdecl BossAngler_HookSpawnFx(unsigned) {
 // original 0x43EA70: BossKind_Table[50]: jmp [BossSample5_States + 4 * +1]
 // (12: its entrance, the Angler's states 4 and 5).
 extern "C" unsigned long __cdecl BossSample5_Dispatch(unsigned long through) {
-    return Dispatch("BossSample5_Dispatch", AddressOf(BossSample5_States), 12, 1, through);
+    return DispatchBossSh("BossSample5_Dispatch", AddressOf(BossSample5_States), 12, 1, through);
 }
 
 // original 0x43EA90: state 0 - the Angler's byte tables and its own hook
 // BossSample5_Hook.
 extern "C" unsigned char __cdecl BossSample5_Enter(void) {
-    return Enter(AddressOf(BossAngler_Anims), ::bof3::Code(bof3::addr::BossSample5_Hook), AddressOf(BossAngler_Sounds));
+    return EnterBossSh(AddressOf(BossAngler_Anims), ::bof3::Code(bof3::addr::BossSample5_Hook), AddressOf(BossAngler_Sounds));
 }
 
 // original 0x43EAF0: the +0xF4 hook through BossSample5_Hooks (BareRet,
 // BareRet, BossAngler_HookSpawnFx).
 extern "C" unsigned long __cdecl BossSample5_Hook(unsigned long word) {
-    return HookDispatch("BossSample5_Hook", AddressOf(BossSample5_Hooks), word);
+    return HookDispatchBossSh("BossSample5_Hook", AddressOf(BossSample5_Hooks), word);
 }
 
 // original 0x43EB00: Boss_SetupTable[36]. The hooks: end Boss36_End, exit
 // BareRet, event BareRetZero.
 extern "C" void __cdecl Boss36_Setup(void) {
-    StoreHooks(::bof3::Code(bof3::addr::Boss36_End), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero));
+    StoreHooksBossSh(::bof3::Code(bof3::addr::Boss36_End), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43EB20: the end hook: won - chapter step 8, step 1; else step 2.
@@ -538,14 +538,14 @@ extern "C" void __cdecl Boss36_End(void) { EndWithStep(8); }
 // original 0x43EB40: Boss_SetupTable[43]. As set-up 41: BossHook_EndPickWay,
 // BareRet, BareRetZero.
 extern "C" void __cdecl Boss43_Setup(void) {
-    StoreHooks(::bof3::Code(bof3::addr::BossHook_EndPickWay), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero));
+    StoreHooksBossSh(::bof3::Code(bof3::addr::BossHook_EndPickWay), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero));
 }
 
 // original 0x43EB80: the kind-3 dispatcher's slot 3 (BattleBossFx_Dispatch by
 // the slot's +5): jmp [BossAnglerFx_States + 4 * +1] - one entry,
 // BossAnglerFx_Run.
 extern "C" unsigned long __cdecl BossAnglerFx_Dispatch(unsigned long through) {
-    return Dispatch("BossAnglerFx_Dispatch", AddressOf(BossAnglerFx_States), 1, 1, through);
+    return DispatchBossSh("BossAnglerFx_Dispatch", AddressOf(BossAnglerFx_States), 1, 1, through);
 }
 
 // original 0x43EBA0: by Sprite_Current +2 through a three-entry table built on
@@ -594,18 +594,18 @@ extern "C" void __cdecl BattleFx_ScriptUntilDone(void) {
 
 // original 0x43EC30: BossKind_Table[44]: jmp [BossElder_States + 4 * +1] (12).
 extern "C" unsigned long __cdecl BossElder_Dispatch(unsigned long through) {
-    return Dispatch("BossElder_Dispatch", AddressOf(BossElder_States), 12, 1, through);
+    return DispatchBossSh("BossElder_Dispatch", AddressOf(BossElder_States), 12, 1, through);
 }
 
 // original 0x43EC50: state 0 - BossElder_Anims / BossElder_Sounds and the hook
 // BossElder_Hook.
 extern "C" unsigned char __cdecl BossElder_Enter(void) {
-    return Enter(AddressOf(BossElder_Anims), ::bof3::Code(bof3::addr::BossElder_Hook), AddressOf(BossElder_Sounds));
+    return EnterBossSh(AddressOf(BossElder_Anims), ::bof3::Code(bof3::addr::BossElder_Hook), AddressOf(BossElder_Sounds));
 }
 
 // original 0x43ECB0: the +0xF4 hook through BossElder_Hooks (3, all BareRet).
 extern "C" unsigned long __cdecl BossElder_Hook(unsigned long word) {
-    return HookDispatch("BossElder_Hook", AddressOf(BossElder_Hooks), word);
+    return HookDispatchBossSh("BossElder_Hook", AddressOf(BossElder_Hooks), word);
 }
 
 void BossSh_Inject() {

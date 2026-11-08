@@ -38,13 +38,13 @@ namespace {
 using U = std::uint32_t;
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
-void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
+void PutLongDisplaySetup(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
 void PutWord(U address, U v) {
     const std::uint16_t w = static_cast<std::uint16_t>(v);
     std::memcpy(At(address), &w, sizeof w);
 }
-void PutFloat(U address, float v) { std::memcpy(At(address), &v, sizeof v); }
-void PutPtr(U address, const void* p) { PutLong(address, Low32(p)); }
+void PutFloatDisplaySetup(U address, float v) { std::memcpy(At(address), &v, sizeof v); }
+void PutPtr(U address, const void* p) { PutLongDisplaySetup(address, Low32(p)); }
 void Zero(U address, U bytes) { std::memset(At(address), 0, bytes); }
 
 // --- the globals (display-setup.md section 3) -------------------------------------
@@ -138,20 +138,20 @@ void FillFormat(U record, const Format& f, U rank) {
     At(record)[1] = (f.rmask == 0x1F || f.rmask == 0xFF) ? 1 : 0;
     At(record)[2] = static_cast<unsigned char>(f.bpp);
     At(record)[3] = static_cast<unsigned char>(f.bpp / 8);
-    PutLong(record + 0x04, 23 - TopBit(f.rmask));
-    PutLong(record + 0x08, 23 - TopBit(f.gmask));
-    PutLong(record + 0x0C, 23 - TopBit(f.bmask));
-    PutLong(record + 0x10, f.rmask);
-    PutLong(record + 0x14, f.gmask);
-    PutLong(record + 0x18, f.bmask);
-    PutLong(record + 0x1C, f.amask);
-    PutLong(record + 0x20, 0x20);                        // dwSize
-    PutLong(record + 0x24, 0x40 | (f.amask ? 1 : 0));   // DDPF_RGB | DDPF_ALPHAPIXELS
-    PutLong(record + 0x2C, f.bpp);
-    PutLong(record + 0x30, f.rmask);
-    PutLong(record + 0x34, f.gmask);
-    PutLong(record + 0x38, f.bmask);
-    PutLong(record + 0x3C, f.amask);
+    PutLongDisplaySetup(record + 0x04, 23 - TopBit(f.rmask));
+    PutLongDisplaySetup(record + 0x08, 23 - TopBit(f.gmask));
+    PutLongDisplaySetup(record + 0x0C, 23 - TopBit(f.bmask));
+    PutLongDisplaySetup(record + 0x10, f.rmask);
+    PutLongDisplaySetup(record + 0x14, f.gmask);
+    PutLongDisplaySetup(record + 0x18, f.bmask);
+    PutLongDisplaySetup(record + 0x1C, f.amask);
+    PutLongDisplaySetup(record + 0x20, 0x20);                        // dwSize
+    PutLongDisplaySetup(record + 0x24, 0x40 | (f.amask ? 1 : 0));   // DDPF_RGB | DDPF_ALPHAPIXELS
+    PutLongDisplaySetup(record + 0x2C, f.bpp);
+    PutLongDisplaySetup(record + 0x30, f.rmask);
+    PutLongDisplaySetup(record + 0x34, f.gmask);
+    PutLongDisplaySetup(record + 0x38, f.bmask);
+    PutLongDisplaySetup(record + 0x3C, f.amask);
 }
 
 bool g_backend_up;
@@ -174,8 +174,8 @@ void Rescale(U k) {
     const U width = render::TargetWidth(), height = render::TargetHeight();
     Gfx_ScreenRect[2] = width;
     Gfx_ScreenRect[3] = height;
-    PutFloat(::bof3::Img(D3d_ScaleX_addr), static_cast<float>(k));
-    PutFloat(::bof3::Img(D3d_ScaleY_addr), static_cast<float>(k));
+    PutFloatDisplaySetup(::bof3::Img(D3d_ScaleX_addr), static_cast<float>(k));
+    PutFloatDisplaySetup(::bof3::Img(D3d_ScaleY_addr), static_cast<float>(k));
     SprtDraw_SetScale(k);
     auto* primary = static_cast<render::Surface*>(DDraw_Primary.Native());   // the slots' 32-bit words
     auto* back = static_cast<render::Surface*>(DDraw_BackBuffer.Native());
@@ -239,23 +239,23 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     Zero(::bof3::Img(D3d_CaptureReady_addr), kAfterDrawBytes);
     Zero(::bof3::Img(D3d_CellTexCache_addr), kCellCacheBytes);
     Zero(::bof3::Img(Gfx_PixelFormat_addr), 3 * kPixelFormatRecord);
-    PutLong(::bof3::Img(kRenderFlags.v), 0);
+    PutLongDisplaySetup(::bof3::Img(kRenderFlags.v), 0);
     Display_ZeroedUnread = 0;
     D3d_ShadeModeCache = 0;
 
     // 2.3 the texture coordinates: i / 256 + 0.002 in double, stored as float
-    for (U i = 0; i < 256; ++i) PutFloat(::bof3::Img(D3d_TexCoords_addr) + i * 4, static_cast<float>(i * 0.00390625 + 0.0020000000949949026));
+    for (U i = 0; i < 256; ++i) PutFloatDisplaySetup(::bof3::Img(D3d_TexCoords_addr) + i * 4, static_cast<float>(i * 0.00390625 + 0.0020000000949949026));
 
     // 2.4 the device records: 0 the original's synthetic software renderer (kept
     // so that F7's name overlay reads it), 1 this backend. No enumeration.
     if (static_cast<std::int32_t>(Display_DeviceCountLess1) < 1) {
         Zero(::bof3::Img(kDeviceRecords.v), 2 * kDeviceRecord);
         Zero(::bof3::Img(kModeLists.v), kModeListsBytes);
-        PutLong(::bof3::Img(kDeviceRecords.v) + 0, 1);
-        PutLong(::bof3::Img(kDeviceRecords.v) + 4, 1);
+        PutLongDisplaySetup(::bof3::Img(kDeviceRecords.v) + 0, 1);
+        PutLongDisplaySetup(::bof3::Img(kDeviceRecords.v) + 4, 1);
         std::memcpy(At(::bof3::Img(kDeviceRecords.v) + 0x18), "Software Render", 16);
-        PutLong(::bof3::Img(kDeviceRecords.v) + kDeviceRecord + 0, 1);
-        PutLong(::bof3::Img(kDeviceRecords.v) + kDeviceRecord + 4, 1);
+        PutLongDisplaySetup(::bof3::Img(kDeviceRecords.v) + kDeviceRecord + 0, 1);
+        PutLongDisplaySetup(::bof3::Img(kDeviceRecords.v) + kDeviceRecord + 4, 1);
         std::memcpy(At(::bof3::Img(kDeviceRecords.v) + kDeviceRecord + 0x18), "Direct3D 11 (bof3x)", 20);
         Display_DeviceCountLess1 = 1;
     }
@@ -263,7 +263,7 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     // and takes record 0 as the software renderer. Here every index is the
     // hardware path (DIV-0031); the wrap is kept for F7's cycling.
     if (*device < 0 || *device > 1) *device = 0;
-    PutLong(::bof3::Img(kRenderFlags.v), 2);   // bit 1: the device allows windowed
+    PutLongDisplaySetup(::bof3::Img(kRenderFlags.v), 2);   // bit 1: the device allows windowed
 
     // 2.6 the mode and the scale: the logical picture is the target's size
     const render::Options options = ReadOptions(hwnd, *fullscreen != 0);
@@ -280,15 +280,15 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     // The game's scale is k, the view's - not the target's width over 320,
     // which a wide target (DIV-0041) would make 1.33k: the game keeps
     // drawing a 320-wide view and the backend shifts it into the target.
-    PutFloat(::bof3::Img(D3d_ScaleX_addr), static_cast<float>(g_scale));
-    PutFloat(::bof3::Img(D3d_ScaleY_addr), static_cast<float>(g_scale));
+    PutFloatDisplaySetup(::bof3::Img(D3d_ScaleX_addr), static_cast<float>(g_scale));
+    PutFloatDisplaySetup(::bof3::Img(D3d_ScaleY_addr), static_cast<float>(g_scale));
     SprtDraw_SetScale(g_scale);   // DIV-0010's far edge follows the scale (display-overhaul.md 4b)
     Zero(::bof3::Img(D3d_DeviceDesc_addr), kDeviceDescBytes);
-    PutLong(::bof3::Img(kDeviceDesc.v) + kDescTextureCaps, kTextureCaps);
-    PutLong(::bof3::Img(kDeviceDesc.v) + kDescMinW, kMinTexture);
-    PutLong(::bof3::Img(kDeviceDesc.v) + kDescMinH, kMinTexture);
-    PutLong(::bof3::Img(kDeviceDesc.v) + kDescMaxW, kMaxTexture);
-    PutLong(::bof3::Img(kDeviceDesc.v) + kDescMaxH, kMaxTexture);
+    PutLongDisplaySetup(::bof3::Img(kDeviceDesc.v) + kDescTextureCaps, kTextureCaps);
+    PutLongDisplaySetup(::bof3::Img(kDeviceDesc.v) + kDescMinW, kMinTexture);
+    PutLongDisplaySetup(::bof3::Img(kDeviceDesc.v) + kDescMinH, kMinTexture);
+    PutLongDisplaySetup(::bof3::Img(kDeviceDesc.v) + kDescMaxW, kMaxTexture);
+    PutLongDisplaySetup(::bof3::Img(kDeviceDesc.v) + kDescMaxH, kMaxTexture);
 
     // 2.7 the windowed path, always: DirectDraw, primary, back buffer, no
     // clipper, Gfx_RenderFlags bit 0x200. The window rect stays 0x5A5130's.

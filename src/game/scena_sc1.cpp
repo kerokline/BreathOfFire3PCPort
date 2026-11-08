@@ -58,7 +58,7 @@ using scenario_harness::Handler;
 
 unsigned Step() { return MoveScript_PartyRecords[0x65]; }
 void SetStep(unsigned v) { MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(v); }
-void SetRun(unsigned v) { MoveScript_Var7 = static_cast<signed char>(v); }
+void SetRunScenaSc1(unsigned v) { MoveScript_Var7 = static_cast<signed char>(v); }
 unsigned char& Counter(unsigned i) { return At(::bof3::Img(at::kCounters) + i)[0]; }
 unsigned Timer() { return Word(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66)); }
 void SetTimer(unsigned v) { SetWord(At(::bof3::Img(MoveScript_PartyRecords_addr) + 0x66), v); }
@@ -81,8 +81,8 @@ int LeaderLong(unsigned off) { return Long(Leader() + off); }
 
 // The flag bits: the dword 0x929ED0 read afresh at each call.
 unsigned char* Bank() { return reinterpret_cast<unsigned char*>(Chapter_FlagRow); }
-bool Flag(unsigned n) { return SH_CALL(Flags_Test)(Bank(), n) != 0; }
-void SetFlag(unsigned n) { SH_CALL(Flags_Set)(Bank(), n); }
+bool FlagScenaSc1(unsigned n) { return SH_CALL(Flags_Test)(Bank(), n) != 0; }
+void SetFlagScenaSc1(unsigned n) { SH_CALL(Flags_Set)(Bank(), n); }
 void ClearFlag(unsigned n) { SH_CALL(Flags_Clear)(Bank(), n); }
 
 // The calls every scene makes.
@@ -157,7 +157,7 @@ void TwoEffects() {
 void Done(unsigned first) {
     for (unsigned i = first; i < 4; ++i) Counter(i) = 0;
     SetStep(0);
-    SetRun(0);
+    SetRunScenaSc1(0);
 }
 
 // Game_Mode 7 with the object 0xFE: the shop (docs/mode_states.md section 1).
@@ -181,7 +181,7 @@ bool Zoom(int delta, unsigned frames, bool pass_flags = false) {
     return n >= frames;
 }
 
-Handler Entry(std::uint32_t table, unsigned index) {
+Handler EntryScenaSc1(std::uint32_t table, unsigned index) {
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(table + 4u * index)))));
 }
 
@@ -206,7 +206,7 @@ extern "C" void __cdecl Scena01_Run(void) {
     const int run = MoveScript_Var7;
     if (run < 0 || run >= static_cast<int>(at::kRunCount))
         bof3::Fatal("Scena01_Run: run %d past Scena01_Runs (%u entries)", run, at::kRunCount);
-    Entry(::bof3::Img(Scena01_Runs_addr), static_cast<unsigned>(run))();
+    EntryScenaSc1(::bof3::Img(Scena01_Runs_addr), static_cast<unsigned>(run))();
 }
 
 // original 0x53A2C0: run 1, three steps: on counter 0 = 1 the change to area
@@ -229,12 +229,12 @@ extern "C" void __cdecl Scena01_Scene01(void) {
         return;
     case 2:
         if (Counter(0) != 0x1E) return;
-        SetFlag(0);
+        SetFlagScenaSc1(0);
         Counter(0) = 0;
         Counter(1) = 0;
         Counter(2) = 0;
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         ChangeArea(0xA, 0x2B0000, 0x200000, 3);
         return;
     default:
@@ -304,7 +304,7 @@ extern "C" void __cdecl Scena01_Scene02(void) {
         return;
     case 0xB:
         if (Counter(0) != 1 || Field_Kind2Hold != 0) return;
-        SetFlag(1);
+        SetFlagScenaSc1(1);
         Clear40();
         ScriptOr(0x60);
         Done(0);
@@ -350,10 +350,10 @@ extern "C" void __cdecl Scena01_Scene03(void) {
         return;
     case 4:
         if (Counter(0) != 0x2A || Field_Kind2Hold != 0) return;
-        SetFlag(2);
+        SetFlagScenaSc1(2);
         Clear40();
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         return;
     case 0xA:
         DropIn(1);
@@ -421,7 +421,7 @@ extern "C" void __cdecl Scena01_Scene03(void) {
         return;
     case 0x16:
         if (Counter(0) != 0x22) return;
-        SetFlag(3);
+        SetFlagScenaSc1(3);
         ScriptXor(8);
         Clear40();
         Done(1);
@@ -457,7 +457,7 @@ extern "C" void __cdecl Scena01_Scene05(void) {
         Counter(3) = 0;
         Clear40();
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         return;
     case 2:
         if (MessageUp()) return;
@@ -478,10 +478,10 @@ extern "C" void __cdecl Scena01_Scene05(void) {
         return;
     case 0xC:
         if (Counter(0) != 0x16) return;
-        SetFlag(4);
+        SetFlagScenaSc1(4);
         Counter(1) = 1;
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         Counter(2) = 2;
         Clear40();
         Field_ScriptFlags = static_cast<unsigned short>((Field_ScriptFlags ^ 8) | 0x80);
@@ -509,10 +509,10 @@ extern "C" void __cdecl Scena01_Scene06(void) {
         Set40();
         Counter(0) = 5;
         SetStep(1);
-        SetRun(6);
+        SetRunScenaSc1(6);
         return;
     case 1:
-        SetFlag(6);
+        SetFlagScenaSc1(6);
         SetStep(2);
         DropIn(2);
         Counter(3) = 0;
@@ -525,7 +525,7 @@ extern "C" void __cdecl Scena01_Scene06(void) {
     case 3:
         if (Counter(0) != 0x23) return;
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         Counter(1) = 3;
         Counter(2) = 3;
         Counter(0) = 0;
@@ -556,7 +556,7 @@ extern "C" void __cdecl Scena01_Scene06(void) {
         Draw_PassFlags = 0;
         At(::bof3::Img(CharacterRecords_addr) + 0xb + member * 0xA4)[0] &= 0xFE;
         SH_CALL(Scenario_CallB)(0);
-        SetFlag(5);
+        SetFlagScenaSc1(5);
         ChangeArea(8, 0x320000, 0x120000, 0x84);
         return;
     }
@@ -631,14 +631,14 @@ extern "C" void __cdecl Scena01_Scene06(void) {
     case 0x1A:
         if (Counter(0) != 0xF || Field_Kind2Hold != 0) return;
         ScriptXor(0x10);
-        SetFlag(7);
+        SetFlagScenaSc1(7);
         Clear40();
         Counter(1) = 0;
         Counter(2) = 0;
         Counter(3) = 0;
         SetStep(0);
         SetTimer(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         return;
     default:
         return;
@@ -724,7 +724,7 @@ extern "C" void __cdecl Scena01_Scene08(void) {
         Field_StatusBits = static_cast<unsigned char>(Field_StatusBits | 1);
         Counter(2) = 3;
         SetStep(0xE);
-        SetFlag(9);
+        SetFlagScenaSc1(9);
         ChangeArea(0x17, 0x480000, 0x60000, 0x87);
         return;
     case 0xE:
@@ -768,7 +768,7 @@ extern "C" void __cdecl Scena01_Scene08(void) {
         Counter(2) = 7;
         Counter(3) = 0;
         SetStep(0);
-        SetRun(8);
+        SetRunScenaSc1(8);
         return;
     case 0x37:
         if (Counter(0) != 0x1F) return;
@@ -800,10 +800,10 @@ extern "C" void __cdecl Scena01_Scene08(void) {
         Counter(1) = 0;
         Counter(2) = 0;
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         SetTimer(0);
         Clear40();
-        SetFlag(0xA);
+        SetFlagScenaSc1(0xA);
         return;
     default:
         return;
@@ -836,7 +836,7 @@ void Scene09Exit() {
     const int z = LeaderLong(0x34);
     if (z < 0x3E0000 || z > 0x3F8000) return;
     SetStep(0);
-    SetRun(0xA);
+    SetRunScenaSc1(0xA);
     Set40();
     ChangeArea(0x16, 0x540000, 0xA0000, 0x8C);
 }
@@ -866,7 +866,7 @@ extern "C" void __cdecl Scena01_Scene09(void) {
         if (MessageUp()) return;
         ScriptXor(0x100);
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         Counter(0) = 0;
         return;
     case 3: {
@@ -887,7 +887,7 @@ extern "C" void __cdecl Scena01_Scene09(void) {
         Scene09Gate(0, 0);
         ScriptXor(0x100);
         SetStep(6);
-        SetFlag(0xC);
+        SetFlagScenaSc1(0xC);
         return;
     case 8:
         if (Counter(0) != 7) return;
@@ -903,12 +903,12 @@ extern "C" void __cdecl Scena01_Scene09(void) {
         if (Counter(0) == 0x1E) {
             DropIn(2);
             SetStep(0xC);
-            SetFlag(0xF);
+            SetFlagScenaSc1(0xF);
         }
         if (Counter(0) != 0x32) return;
         DropIn(4);
         SetStep(0xE);
-        SetFlag(0xF);
+        SetFlagScenaSc1(0xF);
         return;
     case 0xC:
         if (Counter(0) != 0x21) return;
@@ -927,9 +927,9 @@ extern "C" void __cdecl Scena01_Scene09(void) {
         Scene09Door();
         return;
     case 0x11:
-        if (!Flag(0x12)) return;
+        if (!FlagScenaSc1(0x12)) return;
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         return;
     case 0x12:
         OpenMessage(0xC);
@@ -941,7 +941,7 @@ extern "C" void __cdecl Scena01_Scene09(void) {
         return;
     case 0x14:
         if (Counter(0) == 0x3C) {
-            SetFlag(0x10);
+            SetFlagScenaSc1(0x10);
             DropIn(5);
             SetStep(0x15);
         }
@@ -962,10 +962,10 @@ extern "C" void __cdecl Scena01_Scene09(void) {
         return;
     case 0x18: {
         if (Counter(0) != 4) return;
-        const bool seen = Flag(0x1D);
+        const bool seen = FlagScenaSc1(0x1D);
         SetStep(0x19);
         if (!seen) {
-            SetFlag(0x1D);
+            SetFlagScenaSc1(0x1D);
             ChangeArea(0x16, 0x3D0000, 0x470000, 0x87);
         } else {
             ChangeArea(0x16, 0x3D0000, 0x470000, 0x8E);
@@ -1031,7 +1031,7 @@ extern "C" void __cdecl Scena01_Scene09(void) {
         return;
     case 0x25:
         if (Counter(0) != 0x6D) return;
-        SetFlag(0x12);
+        SetFlagScenaSc1(0x12);
         ClearFlag(0x3F);
         DropIn(0xA);
         SetStep(0x26);
@@ -1047,7 +1047,7 @@ extern "C" void __cdecl Scena01_Scene09(void) {
         Clear40();
         SetStep(0x2D);   // ebx, the switch's bound, in the original
         Counter(1) = 0;
-        SetRun(9);
+        SetRunScenaSc1(9);
         return;
     case 0x28:
         SetStep(0x29);
@@ -1056,7 +1056,7 @@ extern "C" void __cdecl Scena01_Scene09(void) {
     case 0x29:
         Clear40();
         SetStep(0x2D);   // ebx
-        SetRun(9);
+        SetRunScenaSc1(9);
         return;
     case 0x2D:
         Scene09Exit();
@@ -1088,7 +1088,7 @@ extern "C" void __cdecl Scena01_Scene0A(void) {
             SetStep(0x1B);
             Counter(1) = 0;
             Counter(2) = 0;
-            SetRun(9);
+            SetRunScenaSc1(9);
             return;
         }
         SetStep(3);
@@ -1109,11 +1109,11 @@ extern "C" void __cdecl Scena01_Scene0A(void) {
         Sound(0x206);
         Counter(2) = 5;
         unsigned flags = 0x84;
-        if (!Flag(0x12)) {
+        if (!FlagScenaSc1(0x12)) {
             SetStep(0xC);
             Counter(2) = 6;
         } else {
-            const bool second = Flag(0x14);
+            const bool second = FlagScenaSc1(0x14);
             Counter(2) = 6;
             if (!second) {
                 SetStep(0x1E);
@@ -1135,7 +1135,7 @@ extern "C" void __cdecl Scena01_Scene0A(void) {
         Counter(1) = 0;
         Counter(2) = 0;
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         return;
     case 0x14:
         Kind2(6);
@@ -1152,7 +1152,7 @@ extern "C" void __cdecl Scena01_Scene0A(void) {
         Counter(1) = 0;
         Counter(2) = 0;
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         ChangeArea(5, 0x300000, 0x10000, 0);
         SetAreaByte(0xFF);
         return;
@@ -1165,7 +1165,7 @@ extern "C" void __cdecl Scena01_Scene0A(void) {
         Counter(1) = 0;
         Counter(2) = 0;
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         ChangeArea(5, 0x300000, 0x10000, 0);
         SetAreaByte(0xFF);
         return;
@@ -1183,7 +1183,7 @@ extern "C" void __cdecl Scena01_Scene0B(void) {
     switch (Step()) {
     case 0:
         SetStep(1);
-        SetFlag(0x19);
+        SetFlagScenaSc1(0x19);
         ChangeArea(7, 0x20000, 0x140000, 0x80);
         return;
     case 1:
@@ -1204,7 +1204,7 @@ extern "C" void __cdecl Scena01_Scene0B(void) {
         return;
     case 4:
         if (Counter(0) != 0x12) return;
-        SetFlag(0x1A);
+        SetFlagScenaSc1(0x1A);
         Clear40();
         Done(1);
         return;
@@ -1216,7 +1216,7 @@ extern "C" void __cdecl Scena01_Scene0B(void) {
         if (MessageUp()) return;
         Clear40();
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         return;
     case 0xF:
         if (MessageUp()) return;
@@ -1231,7 +1231,7 @@ extern "C" void __cdecl Scena01_Scene0B(void) {
     case 0x11:
         Counter(2) = 0;
         SetStep(0x12);
-        SetFlag(0x1B);
+        SetFlagScenaSc1(0x1B);
         ChangeArea(0xE, 0xF0000, 0x1F0000, 0x80);
         return;
     case 0x12:
@@ -1246,7 +1246,7 @@ extern "C" void __cdecl Scena01_Scene0B(void) {
     case 0x13:
         if (Counter(0) != 0x19 || Field_Kind2Hold != 0) return;
         ScriptXor(8);
-        SetFlag(0x1C);
+        SetFlagScenaSc1(0x1C);
         ScriptXor(0x60);
         Clear40();
         Done(1);
@@ -1312,14 +1312,14 @@ extern "C" void __cdecl Scena01_Scene0C(void) {
         if (MessageUp()) return;
         Counter(2) = 2;
         SetStep(9);
-        SetFlag(0x15);
+        SetFlagScenaSc1(0x15);
         ChangeArea(5, 0x540000, 0x250000, 0x81);
         return;
     case 9:
         if (Counter(0) != 0x14) return;
         Counter(2) = 3;
         SetStep(0xA);
-        SetFlag(0x16);
+        SetFlagScenaSc1(0x16);
         ChangeArea(5, 0x100000, 0xD0000, 0x82);
         return;
     case 0xA:
@@ -1343,8 +1343,8 @@ void Scene0DEnd(bool all, unsigned n) {
     Counter(3) = 0;
     Clear40();
     SetStep(0);
-    SetRun(0);
-    SetFlag(n);
+    SetRunScenaSc1(0);
+    SetFlagScenaSc1(n);
 }
 // Steps 0xF and 0x12: on counter 3 = 0x14 or 0x19 and bit 1 of the choice
 // bits, the end with flag 0x3C or 0x3D. Counter 3 is read once for the first
@@ -1404,7 +1404,7 @@ extern "C" void __cdecl Scena01_Scene0D(void) {
         Counter(0) = 0;
         Counter(2) = 2;
         SetStep(6);
-        SetFlag(0x3A);
+        SetFlagScenaSc1(0x3A);
         ChangeArea(0, 0x150000, 0x130000, 0x81);
         return;
     case 6:
@@ -1414,8 +1414,8 @@ extern "C" void __cdecl Scena01_Scene0D(void) {
         Counter(3) = 0;
         Clear40();
         SetStep(0);
-        SetRun(0);
-        SetFlag(0x3B);
+        SetRunScenaSc1(0);
+        SetFlagScenaSc1(0x3B);
         return;
     case 0xA:
         if (Counter(0) != 0xB) return;
@@ -1489,7 +1489,7 @@ extern "C" void __cdecl Scena01_Scene0E(void) {
         if (MessageUp()) return;
         Counter(2) = 1;
         SetStep(4);
-        SetFlag(0x3E);
+        SetFlagScenaSc1(0x3E);
         ChangeArea(0xD, 0x80000, 0x530000, 0x81);
         return;
     case 4:
@@ -1523,7 +1523,7 @@ extern "C" void __cdecl Scena01_Scene0E(void) {
     case 9:
         if (Counter(0) != 0x14) return;
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         Draw_PassFlags = 0;
         ChangeArea(0xF, 0x360000, 0x500000, 0);
         SH_AT(cl::VoidFn, cl::kStatusBit80.v)();
@@ -1556,7 +1556,7 @@ extern "C" void __cdecl Scena01_Scene0F(void) {
         Counter(1) = 0;
         Counter(2) = 0;
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         return;
     }
     case 1:
@@ -1584,7 +1584,7 @@ extern "C" void __cdecl Scena01_Scene0F(void) {
         if (MessageUp()) return;
         Clear40();
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         return;
     default:
         return;
@@ -1601,7 +1601,7 @@ void EndAfter65() {   // counter 0 = 0x65 (read afresh): the end, counters 0..2
     Counter(2) = 0;
     Clear40();
     SetStep(0);
-    SetRun(0);
+    SetRunScenaSc1(0);
 }
 void EndAll() {   // counters 0..3, then the end
     Counter(0) = 0;
@@ -1610,7 +1610,7 @@ void EndAll() {   // counters 0..3, then the end
     Counter(3) = 0;
     Clear40();
     SetStep(0);
-    SetRun(0);
+    SetRunScenaSc1(0);
 }
 // The party restored and the music out, then step `next`.
 void RestoreAndFade(unsigned next) {
@@ -1664,7 +1664,7 @@ extern "C" void __cdecl Scena01_Scene11(void) {
             Counter(2) = 0;
             Clear40();
             SetStep(0);
-            SetRun(0);
+            SetRunScenaSc1(0);
         }
         return;
     case 3:
@@ -1711,7 +1711,7 @@ extern "C" void __cdecl Scena01_Scene11(void) {
         Counter(2) = 0;
         Clear40();
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         return;
     default:
         return;
@@ -1735,7 +1735,7 @@ extern "C" void __cdecl Scena01_Scene12(void) {
         Counter(1) = 0;
         Counter(2) = 0;
         SetStep(0x2D);
-        SetRun(9);
+        SetRunScenaSc1(9);
         return;
     default:
         return;
@@ -1755,7 +1755,7 @@ extern "C" void __cdecl Scena01_Scene14(void) {
         Counter(1) = 0;
         Counter(2) = 0;
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         return;
     default:
         return;
@@ -1773,7 +1773,7 @@ extern "C" void __cdecl Scena01_Scene15(void) {
         if (MessageUp()) return;
         Clear40();
         SetStep(0);
-        SetRun(6);
+        SetRunScenaSc1(6);
         return;
     default:
         return;
@@ -1791,7 +1791,7 @@ extern "C" void __cdecl Scena01_Scene16(void) {
         if (MessageUp()) return;
         Clear40();
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         return;
     default:
         return;
@@ -1839,7 +1839,7 @@ extern "C" void __cdecl Scena01_Scene17(void) {
             Counter(2) = 0;
             Clear40();
             SetStep(0);
-            SetRun(0);
+            SetRunScenaSc1(0);
         }
         return;
     case 3:
@@ -1850,7 +1850,7 @@ extern "C" void __cdecl Scena01_Scene17(void) {
         Counter(3) = 0;
         Clear40();
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         return;
     case 5:
         if (Counter(0) == 0x64) {
@@ -1891,7 +1891,7 @@ extern "C" void __cdecl Scena01_Scene17(void) {
         Counter(3) = 0;
         Clear40();
         SetStep(0);
-        SetRun(0);
+        SetRunScenaSc1(0);
         return;
     default:
         return;
@@ -1947,7 +1947,7 @@ void ObjectScene(unsigned step, unsigned run) {
     Counter(1) = 0;
     Counter(2) = 0;
     SetStep(step);
-    SetRun(run);
+    SetRunScenaSc1(run);
 }
 // The object handlers 6..9's turn: the object's state 4, its +0x87 0 and
 // +0x83 `pose`; Sprite_Current turned to the leader's facing ^ 4 - the
@@ -1966,12 +1966,12 @@ void Turn() {
 // original 0x53D490: object handler 1: once (flag 0x14), counter 0 = 0, run
 // 0x12 from step 0.
 extern "C" void __cdecl Scena01_Object01(unsigned char*, unsigned char*) {
-    if (Flag(0x14)) return;
+    if (FlagScenaSc1(0x14)) return;
     Counter(0) = 0;
     Set40();
     SetStep(0);
-    SetRun(0x12);
-    SetFlag(0x14);
+    SetRunScenaSc1(0x12);
+    SetFlagScenaSc1(0x14);
 }
 // original 0x53D4D0: object handler 2: run 0x17 from step 0.
 extern "C" void __cdecl Scena01_Object02(unsigned char*, unsigned char*) { ObjectScene(0, 0x17); }
@@ -1996,7 +1996,7 @@ extern "C" void __cdecl Scena01_Object06(unsigned char* object, unsigned char*) 
     object[0x83] = 0xA;
     Turn();
     SetStep(0xA);
-    SetRun(0xD);
+    SetRunScenaSc1(0xD);
 }
 // original 0x53D5D0: object handler 7: the object's state 4, +0x87 0, +0x83
 // 0xA (+0x8A kept); the turn; the counters cleared; run 0xD at step 0xD.
@@ -2011,7 +2011,7 @@ extern "C" void __cdecl Scena01_Object07(unsigned char* object, unsigned char*) 
     Counter(2) = 0;
     Counter(3) = 0;
     SetStep(0xD);
-    SetRun(0xD);
+    SetRunScenaSc1(0xD);
 }
 // original 0x53D650: object handler 8: the object's state 4, +0x8A 0, +0x87
 // 0, +0x83 0xB; the turn; the counters cleared; run 0xD at step 0x10.
@@ -2027,7 +2027,7 @@ extern "C" void __cdecl Scena01_Object08(unsigned char* object, unsigned char*) 
     Counter(2) = 0;
     Counter(3) = 0;
     SetStep(0x10);
-    SetRun(0xD);
+    SetRunScenaSc1(0xD);
 }
 // original 0x53D6E0: object handler 9: as 8, but only counter 3 cleared.
 extern "C" void __cdecl Scena01_Object09(unsigned char* object, unsigned char*) {
@@ -2039,7 +2039,7 @@ extern "C" void __cdecl Scena01_Object09(unsigned char* object, unsigned char*) 
     Turn();
     Counter(3) = 0;
     SetStep(0x10);
-    SetRun(0xD);
+    SetRunScenaSc1(0xD);
 }
 // original 0x53D760 / 0x53D770 / 0x53D780 / 0x53D790: object handlers 0xA..0xD:
 // counter 0 = 0x64, 0x66, 0x67, 0x68 (the waits of runs 0x11, 0x17 and 9).
@@ -2056,7 +2056,7 @@ extern "C" void __cdecl Scena01_Object0E(unsigned char*, unsigned char*) {
     Counter(1) = 0;
     Counter(2) = 0;
     Counter(3) = 0;
-    SetRun(9);
+    SetRunScenaSc1(9);
 }
 // original 0x53D7D0: object handler 0xF: run 0x11 from step 0.
 extern "C" void __cdecl Scena01_Object0F(unsigned char*, unsigned char*) { ObjectScene(0, 0x11); }
@@ -2067,7 +2067,7 @@ extern "C" void __cdecl Scena01_Object10(unsigned char*, unsigned char*) { Objec
 extern "C" void __cdecl Scena01_Object11(unsigned char*, unsigned char*) {
     Set40();
     SetStep(0xF);
-    SetRun(0xB);
+    SetRunScenaSc1(0xB);
 }
 
 // original 0x53DD20: slot 4 of chapter 1's vtable, the cell hook (x, z; al):
@@ -2087,10 +2087,10 @@ extern "C" unsigned char __cdecl Scena01_CellHook(int x, int z) {
 // original 0x53DD50: both of Scena01_CellHandlers' entries: with flag 3 set
 // and flag 4 clear, run 5 from step 0 and 1; else 0xFF.
 extern "C" unsigned char __cdecl Scena01_Cell(int, int) {
-    if (!Flag(3) || Flag(4)) return 0xFF;
+    if (!FlagScenaSc1(3) || FlagScenaSc1(4)) return 0xFF;
     Set40();
     SetStep(0);
-    SetRun(5);
+    SetRunScenaSc1(5);
     return 1;
 }
 

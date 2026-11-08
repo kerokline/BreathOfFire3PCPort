@@ -67,33 +67,33 @@ template <typename T> U AddressOf(T* p) { return Low32(p); }
 
 // A table entry as the original's jmp reaches it: the word its caller left on
 // the stack, eax back.
-using Entry = unsigned long (__cdecl*)(unsigned);
-unsigned long CallEntry(U table, unsigned index, unsigned word) {
+using EntryBossSi = unsigned long (__cdecl*)(unsigned);
+unsigned long CallEntryBossSi(U table, unsigned index, unsigned word) {
     // the entry as read: the fuzz swaps the table's cells for its recorders
-    return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))))(word);
+    return reinterpret_cast<EntryBossSi>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))))(word);
 }
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, a
 // Fatal past them (the original jumps through the dword after).
-unsigned long Dispatch(const char* who, U table, unsigned entries, unsigned at, unsigned word) {
+unsigned long DispatchBossSi(const char* who, U table, unsigned entries, unsigned at, unsigned word) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/boss_si.md section 6)",
                     who, at, state, entries, (unsigned)table);
-    return CallEntry(table, state, word);
+    return CallEntryBossSi(table, state, word);
 }
 
 // mov eax, [esp + 4]; and eax, 0xFF; jmp [table + 4 * eax]: an enemy's +0xF4
 // hook by its word's low byte (3 entries in every table of the group), the
 // word itself left for the entry.
-unsigned long HookDispatch(const char* who, U table, unsigned word) {
+unsigned long HookDispatchBossSi(const char* who, U table, unsigned word) {
     const unsigned index = word & 0xFF;
     if (index >= 3)
         bof3::Fatal("%s: hook word %u is past the 3 entries of 0x%X - the original jumps through the dword after "
                     "(docs/boss_si.md section 6)",
                     who, index, (unsigned)table);
-    return CallEntry(table, index, word);
+    return CallEntryBossSi(table, index, word);
 }
 
 // A kind's state 0, the part every kind of the group shares: 0x939AD8's (read
@@ -108,27 +108,27 @@ void EnterStores(U fc, U hook, U f8) {
     Sprite_Current[1] = 2;
 }
 // ... and a tail jump to Sprite_ScriptTick, whose al is the answer.
-unsigned char Enter(U fc, U hook, U f8) {
+unsigned char EnterBossSi(U fc, U hook, U f8) {
     EnterStores(fc, hook, f8);
     return BH_CALL(Sprite_ScriptTick)();
 }
 
 // The three hooks a set-up stores (BattleHook_End / _Exit / _Event).
-void Setup(U end, U exit, U event) {
+void SetupBossSi(U end, U exit, U event) {
     BattleHook_End = S(end);
     BattleHook_Exit = S(exit);
     BattleHook_Event = S(event);
 }
 // The set-ups whose end is BH's BossHook_EndPickWay (fights 40, 42, 44, 45 -
 // four copies of one body): exit BareRet, event BareRetZero.
-void SetupPickWay() { Setup(::bof3::Code(bof3::addr::BossHook_EndPickWay), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero)); }
+void SetupPickWay() { SetupBossSi(::bof3::Code(bof3::addr::BossHook_EndPickWay), ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero)); }
 // The set-ups with an end of their own: exit BareRet, event BareRetZero.
-void SetupOwnEnd(U end) { Setup(end, ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero)); }
+void SetupOwnEnd(U end) { SetupBossSi(end, ::bof3::Code(bof3::addr::BareRet), ::bof3::Code(bof3::addr::BareRetZero)); }
 
 // An end hook of five copies (fights 37, 49, 51, 53): with 0x904AE8 bit 1 (the
 // win) the chapter's step 0x8034E5 = step and a tail jump to 0x446DE0 (the end
 // phase, step 1); otherwise a tail jump to 0x446E00 (step 2).
-void EndStep(unsigned step) {
+void EndStepBossSi(unsigned step) {
     if (Battle_EndFlags & 2) {
         MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(step);
         BH_AT(Handler, at::kEndWin.v)();
@@ -149,7 +149,7 @@ extern "C" void __cdecl Boss37_Setup(void) { SetupOwnEnd(::bof3::Code(bof3::addr
 
 // original 0x43ECE0: the end hook: won, the chapter's step 0x1C and step 1;
 // otherwise step 2.
-extern "C" void __cdecl Boss37_End(void) { EndStep(0x1C); }
+extern "C" void __cdecl Boss37_End(void) { EndStepBossSi(0x1C); }
 
 // ===========================================================================
 // Kind 45 (Ammonite, area 134) and kind 51 (Sample 6, area 162); set-ups 38
@@ -159,7 +159,7 @@ extern "C" void __cdecl Boss37_End(void) { EndStep(0x1C); }
 // original 0x43ED00: BossKind_Table[45]. jmp [BossAmmonite_Steps + 4 *
 // Sprite_Current +1] (12: its entry, then the generic enemy states).
 extern "C" unsigned long __cdecl BossAmmonite_Dispatch(unsigned word) {
-    return Dispatch("BossAmmonite_Dispatch", AddressOf(BossAmmonite_Steps), 12, 1, word);
+    return DispatchBossSi("BossAmmonite_Dispatch", AddressOf(BossAmmonite_Steps), 12, 1, word);
 }
 
 // original 0x43ED20: state 0. The stores (BossAmmonite_Anims,
@@ -182,23 +182,23 @@ extern "C" void __cdecl BossAmmonite_Enter(void) {
 // original 0x43EDB0: the +0xF4 hook: by the word's low byte through
 // BossAmmonite_Hooks (3, all BareRet).
 extern "C" unsigned long __cdecl BossAmmonite_Hook(unsigned word) {
-    return HookDispatch("BossAmmonite_Hook", AddressOf(BossAmmonite_Hooks), word);
+    return HookDispatchBossSi("BossAmmonite_Hook", AddressOf(BossAmmonite_Hooks), word);
 }
 
 // original 0x43EDC0: BossKind_Table[51]: BossSample6_Steps (12) by +1.
 extern "C" unsigned long __cdecl BossSample6_Dispatch(unsigned word) {
-    return Dispatch("BossSample6_Dispatch", AddressOf(BossSample6_Steps), 12, 1, word);
+    return DispatchBossSi("BossSample6_Dispatch", AddressOf(BossSample6_Steps), 12, 1, word);
 }
 
 // original 0x43EDE0: state 0: kind 45's two byte tables, its own hook; a tail
 // jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossSample6_Enter(void) {
-    return Enter(AddressOf(BossAmmonite_Anims), ::bof3::Code(bof3::addr::BossSample6_Hook), AddressOf(BossAmmonite_Cues));
+    return EnterBossSi(AddressOf(BossAmmonite_Anims), ::bof3::Code(bof3::addr::BossSample6_Hook), AddressOf(BossAmmonite_Cues));
 }
 
 // original 0x43EE40: the +0xF4 hook: BossSample6_Hooks (3, all BareRet).
 extern "C" unsigned long __cdecl BossSample6_Hook(unsigned word) {
-    return HookDispatch("BossSample6_Hook", AddressOf(BossSample6_Hooks), word);
+    return HookDispatchBossSi("BossSample6_Hook", AddressOf(BossSample6_Hooks), word);
 }
 
 // original 0x43EE50: Boss_SetupTable[38]. End Boss38_End, exit BareRet, event
@@ -247,34 +247,34 @@ extern "C" void __cdecl Boss44_Setup(void) { SetupPickWay(); }
 
 // original 0x43EF20: BossKind_Table[47]: BossSample2_Steps (12) by +1.
 extern "C" unsigned long __cdecl BossSample2_Dispatch(unsigned word) {
-    return Dispatch("BossSample2_Dispatch", AddressOf(BossSample2_Steps), 12, 1, word);
+    return DispatchBossSi("BossSample2_Dispatch", AddressOf(BossSample2_Steps), 12, 1, word);
 }
 
 // original 0x43EF40: state 0: BossSample2_Anims, BossSample2_Hook,
 // BossSample2_Cues; a tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossSample2_Enter(void) {
-    return Enter(AddressOf(BossSample2_Anims), ::bof3::Code(bof3::addr::BossSample2_Hook), AddressOf(BossSample2_Cues));
+    return EnterBossSi(AddressOf(BossSample2_Anims), ::bof3::Code(bof3::addr::BossSample2_Hook), AddressOf(BossSample2_Cues));
 }
 
 // original 0x43EFA0: the +0xF4 hook: BossSample2_Hooks (3, all BareRet).
 extern "C" unsigned long __cdecl BossSample2_Hook(unsigned word) {
-    return HookDispatch("BossSample2_Hook", AddressOf(BossSample2_Hooks), word);
+    return HookDispatchBossSi("BossSample2_Hook", AddressOf(BossSample2_Hooks), word);
 }
 
 // original 0x43EFB0: BossKind_Table[60]: BossHugeSlug_Steps (12) by +1.
 extern "C" unsigned long __cdecl BossHugeSlug_Dispatch(unsigned word) {
-    return Dispatch("BossHugeSlug_Dispatch", AddressOf(BossHugeSlug_Steps), 12, 1, word);
+    return DispatchBossSi("BossHugeSlug_Dispatch", AddressOf(BossHugeSlug_Steps), 12, 1, word);
 }
 
 // original 0x43EFD0: state 0: kind 47's two byte tables, its own hook; a tail
 // jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossHugeSlug_Enter(void) {
-    return Enter(AddressOf(BossSample2_Anims), ::bof3::Code(bof3::addr::BossHugeSlug_Hook), AddressOf(BossSample2_Cues));
+    return EnterBossSi(AddressOf(BossSample2_Anims), ::bof3::Code(bof3::addr::BossHugeSlug_Hook), AddressOf(BossSample2_Cues));
 }
 
 // original 0x43F030: the +0xF4 hook: BossHugeSlug_Hooks (3, all BareRet).
 extern "C" unsigned long __cdecl BossHugeSlug_Hook(unsigned word) {
-    return HookDispatch("BossHugeSlug_Hook", AddressOf(BossHugeSlug_Hooks), word);
+    return HookDispatchBossSi("BossHugeSlug_Hook", AddressOf(BossHugeSlug_Hooks), word);
 }
 
 // original 0x43F040: Boss_SetupTable[40]. End BossHook_EndPickWay, exit
@@ -287,7 +287,7 @@ extern "C" void __cdecl Boss53_Setup(void) { SetupOwnEnd(::bof3::Code(bof3::addr
 
 // original 0x43F080: the end hook: won, the chapter's step 0x26 and step 1;
 // otherwise step 2.
-extern "C" void __cdecl Boss53_End(void) { EndStep(0x26); }
+extern "C" void __cdecl Boss53_End(void) { EndStepBossSi(0x26); }
 
 // ===========================================================================
 // Kind 49 (Sample 4, area 161); set-up 42 (BOSS042, row 7)
@@ -295,18 +295,18 @@ extern "C" void __cdecl Boss53_End(void) { EndStep(0x26); }
 
 // original 0x43F0A0: BossKind_Table[49]: BossSample4_Steps (12) by +1.
 extern "C" unsigned long __cdecl BossSample4_Dispatch(unsigned word) {
-    return Dispatch("BossSample4_Dispatch", AddressOf(BossSample4_Steps), 12, 1, word);
+    return DispatchBossSi("BossSample4_Dispatch", AddressOf(BossSample4_Steps), 12, 1, word);
 }
 
 // original 0x43F0C0: state 0: BossSample4_Anims, BossSample4_Hook,
 // BossSample4_Cues; a tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossSample4_Enter(void) {
-    return Enter(AddressOf(BossSample4_Anims), ::bof3::Code(bof3::addr::BossSample4_Hook), AddressOf(BossSample4_Cues));
+    return EnterBossSi(AddressOf(BossSample4_Anims), ::bof3::Code(bof3::addr::BossSample4_Hook), AddressOf(BossSample4_Cues));
 }
 
 // original 0x43F120: the +0xF4 hook: BossSample4_Hooks (3, all BareRet).
 extern "C" unsigned long __cdecl BossSample4_Hook(unsigned word) {
-    return HookDispatch("BossSample4_Hook", AddressOf(BossSample4_Hooks), word);
+    return HookDispatchBossSi("BossSample4_Hook", AddressOf(BossSample4_Hooks), word);
 }
 
 // original 0x43F130: Boss_SetupTable[42]. End BossHook_EndPickWay, exit
@@ -320,34 +320,34 @@ extern "C" void __cdecl Boss42_Setup(void) { SetupPickWay(); }
 
 // original 0x43F150: BossKind_Table[52]: BossSample7_Steps (12) by +1.
 extern "C" unsigned long __cdecl BossSample7_Dispatch(unsigned word) {
-    return Dispatch("BossSample7_Dispatch", AddressOf(BossSample7_Steps), 12, 1, word);
+    return DispatchBossSi("BossSample7_Dispatch", AddressOf(BossSample7_Steps), 12, 1, word);
 }
 
 // original 0x43F170: state 0: BossSample7_Anims, BossSample7_Hook,
 // BossSample7_Cues; a tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossSample7_Enter(void) {
-    return Enter(AddressOf(BossSample7_Anims), ::bof3::Code(bof3::addr::BossSample7_Hook), AddressOf(BossSample7_Cues));
+    return EnterBossSi(AddressOf(BossSample7_Anims), ::bof3::Code(bof3::addr::BossSample7_Hook), AddressOf(BossSample7_Cues));
 }
 
 // original 0x43F1D0: the +0xF4 hook: BossSample7_Hooks (3, all BareRet).
 extern "C" unsigned long __cdecl BossSample7_Hook(unsigned word) {
-    return HookDispatch("BossSample7_Hook", AddressOf(BossSample7_Hooks), word);
+    return HookDispatchBossSi("BossSample7_Hook", AddressOf(BossSample7_Hooks), word);
 }
 
 // original 0x43F1E0: BossKind_Table[56]: BossManmo_Steps (12) by +1.
 extern "C" unsigned long __cdecl BossManmo_Dispatch(unsigned word) {
-    return Dispatch("BossManmo_Dispatch", AddressOf(BossManmo_Steps), 12, 1, word);
+    return DispatchBossSi("BossManmo_Dispatch", AddressOf(BossManmo_Steps), 12, 1, word);
 }
 
 // original 0x43F200: state 0: kind 52's two byte tables, its own hook; a tail
 // jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossManmo_Enter(void) {
-    return Enter(AddressOf(BossSample7_Anims), ::bof3::Code(bof3::addr::BossManmo_Hook), AddressOf(BossSample7_Cues));
+    return EnterBossSi(AddressOf(BossSample7_Anims), ::bof3::Code(bof3::addr::BossManmo_Hook), AddressOf(BossSample7_Cues));
 }
 
 // original 0x43F260: the +0xF4 hook: BossManmo_Hooks (3, all BareRet).
 extern "C" unsigned long __cdecl BossManmo_Hook(unsigned word) {
-    return HookDispatch("BossManmo_Hook", AddressOf(BossManmo_Hooks), word);
+    return HookDispatchBossSi("BossManmo_Hook", AddressOf(BossManmo_Hooks), word);
 }
 
 // original 0x43F270: Boss_SetupTable[45]. End BossHook_EndPickWay, exit
@@ -360,7 +360,7 @@ extern "C" void __cdecl Boss49_Setup(void) { SetupOwnEnd(::bof3::Code(bof3::addr
 
 // original 0x43F2B0: the end hook: won, the chapter's step 0xA and step 1;
 // otherwise step 2.
-extern "C" void __cdecl Boss49_End(void) { EndStep(0xA); }
+extern "C" void __cdecl Boss49_End(void) { EndStepBossSi(0xA); }
 
 // ===========================================================================
 // Kind 57 (Chimera, area 197); set-up 50 (BOSS050, row 7)
@@ -368,18 +368,18 @@ extern "C" void __cdecl Boss49_End(void) { EndStep(0xA); }
 
 // original 0x43F2D0: BossKind_Table[57]: BossChimera_Steps (12) by +1.
 extern "C" unsigned long __cdecl BossChimera_Dispatch(unsigned word) {
-    return Dispatch("BossChimera_Dispatch", AddressOf(BossChimera_Steps), 12, 1, word);
+    return DispatchBossSi("BossChimera_Dispatch", AddressOf(BossChimera_Steps), 12, 1, word);
 }
 
 // original 0x43F2F0: state 0: BossChimera_Anims, BossChimera_Hook,
 // BossChimera_Cues; a tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossChimera_Enter(void) {
-    return Enter(AddressOf(BossChimera_Anims), ::bof3::Code(bof3::addr::BossChimera_Hook), AddressOf(BossChimera_Cues));
+    return EnterBossSi(AddressOf(BossChimera_Anims), ::bof3::Code(bof3::addr::BossChimera_Hook), AddressOf(BossChimera_Cues));
 }
 
 // original 0x43F350: the +0xF4 hook: BossChimera_Hooks (3, all BareRet).
 extern "C" unsigned long __cdecl BossChimera_Hook(unsigned word) {
-    return HookDispatch("BossChimera_Hook", AddressOf(BossChimera_Hooks), word);
+    return HookDispatchBossSi("BossChimera_Hook", AddressOf(BossChimera_Hooks), word);
 }
 
 // original 0x43F360: Boss_SetupTable[50]. End Boss50_End, exit BareRet, event
@@ -407,20 +407,20 @@ extern "C" void __cdecl Boss50_End(void) {
 // at 0, BossArwan_State4Dispatch at 4, BossArwan_State5Await at 5, the generic
 // states elsewhere).
 extern "C" unsigned long __cdecl BossArwan_Dispatch(unsigned word) {
-    return Dispatch("BossArwan_Dispatch", AddressOf(BossArwan_Steps), 12, 1, word);
+    return DispatchBossSi("BossArwan_Dispatch", AddressOf(BossArwan_Steps), 12, 1, word);
 }
 
 // original 0x43F4A0: state 0: BossArwan_Anims, BossArwan_Hook, BossArwan_Cues;
 // a tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossArwan_Enter(void) {
-    return Enter(AddressOf(BossArwan_Anims), ::bof3::Code(bof3::addr::BossArwan_Hook), AddressOf(BossArwan_Cues));
+    return EnterBossSi(AddressOf(BossArwan_Anims), ::bof3::Code(bof3::addr::BossArwan_Hook), AddressOf(BossArwan_Cues));
 }
 
 // original 0x43F500: state 4 (the generic table's turn start EnemyOp_TurnStart 0x4365D0): jmp
 // [BossArwan_State4Steps + 4 * Sprite_Current +2] (2: BossArwan_State4Fx,
 // BareRet).
 extern "C" unsigned long __cdecl BossArwan_State4Dispatch(unsigned word) {
-    return Dispatch("BossArwan_State4Dispatch", AddressOf(BossArwan_State4Steps), 2, 2, word);
+    return DispatchBossSi("BossArwan_State4Dispatch", AddressOf(BossArwan_State4Steps), 2, 2, word);
 }
 
 // original 0x43F520: state 4 step 0. Sprite_Current +9 = the +0x8A byte of the
@@ -453,7 +453,7 @@ extern "C" void __cdecl BossArwan_State5Await(void) {
 
 // original 0x43F5A0: the +0xF4 hook: BossArwan_Hooks (3, all BareRet).
 extern "C" unsigned long __cdecl BossArwan_Hook(unsigned word) {
-    return HookDispatch("BossArwan_Hook", AddressOf(BossArwan_Hooks), word);
+    return HookDispatchBossSi("BossArwan_Hook", AddressOf(BossArwan_Hooks), word);
 }
 
 // original 0x43F5B0: Boss_SetupTable[51]. End Boss51_End, exit BareRet, event
@@ -462,7 +462,7 @@ extern "C" void __cdecl Boss51_Setup(void) { SetupOwnEnd(::bof3::Code(bof3::addr
 
 // original 0x43F5D0: the end hook: won, the chapter's step 0xF and step 1;
 // otherwise step 2.
-extern "C" void __cdecl Boss51_End(void) { EndStep(0xF); }
+extern "C" void __cdecl Boss51_End(void) { EndStepBossSi(0xF); }
 
 // original 0x43F5F0: the kind-3 dispatcher's slot 7 (BattleBossFx_Dispatch),
 // run by BattleTask_RunAll with Sprite_Current the task slot: call [esp + 4 *

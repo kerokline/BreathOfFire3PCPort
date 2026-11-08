@@ -69,11 +69,11 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
-U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
-U UL(U a) { return UL(At(a)); }
+U ULEffect2g(const unsigned char* p) { return static_cast<U>(Long(p)); }
+U ULEffect2g(U a) { return ULEffect2g(At(a)); }
 U W(U a) { return Word(At(a)); }
 unsigned char& B(U a) { return *At(a); }
-std::int32_t S16(U v) { return static_cast<std::int16_t>(v & 0xFFFFu); }
+std::int32_t S16Effect2g(U v) { return static_cast<std::int16_t>(v & 0xFFFFu); }
 std::int32_t S8(unsigned char v) { return static_cast<signed char>(v); }
 U AddressOf(const void* p) { return Low32(p); }
 void StoreFloat(unsigned char* p, std::int32_t v) {
@@ -93,7 +93,7 @@ void Dispatch(const char* who, U table, unsigned entries, unsigned byte) {
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/effect_2g.md section 6)",
                     who, byte, state, entries, (unsigned)table);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(UL(table + 4 * state)))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(ULEffect2g(table + 4 * state)))();
 }
 
 // Sprite_Objects record `index` (the effect record's +0xB), as the originals
@@ -123,9 +123,9 @@ bool Over() { return (B(::bof3::Img(at::kScore.v)) & 0x80) == 0x80; }
 // masks them so).
 void Outline(unsigned b) {
     const U w = 25u * b, h = 6u * b;
-    const U qy = static_cast<U>((0x30 - S16(h)) / 2);
+    const U qy = static_cast<U>((0x30 - S16Effect2g(h)) / 2);
     const U y = (qy & 0xFFFF0000u) | ((qy + W(::bof3::Img(at::kKind66Rect.v) + 2)) & 0xFFFFu);
-    const U x = static_cast<U>((0xC8 - S16(w)) / 2) + UL(::bof3::Img(at::kKind66Rect.v));
+    const U x = static_cast<U>((0xC8 - S16Effect2g(w)) / 2) + ULEffect2g(::bof3::Img(at::kKind66Rect.v));
     SH_CALL(Window_DrawOutline)(static_cast<int>(x), static_cast<int>(y), static_cast<int>(w), static_cast<int>(h));
 }
 
@@ -235,8 +235,8 @@ extern "C" void __cdecl EffectKind66_DrawPiece(unsigned piece, unsigned place) {
                     "0x654770 (docs/effect_2g.md section 6)",
                     t, r);
     const U place_at = ::bof3::Img(at::kKind66Places.v) + 8 * r;
-    const std::int32_t x = S16(W(place_at)), y = S16(W(place_at + 2));
-    const std::int32_t w = S16(W(place_at + 4)), h = S16(W(place_at + 6));
+    const std::int32_t x = S16Effect2g(W(place_at)), y = S16Effect2g(W(place_at + 2));
+    const std::int32_t w = S16Effect2g(W(place_at + 4)), h = S16Effect2g(W(place_at + 6));
     StoreFloat(p + 8, x);
     StoreFloat(p + 0xC, y);
     StoreFloat(p + 0x18, x + w);
@@ -874,16 +874,16 @@ extern "C" void __cdecl EffectKind57_DrawRing(void) {
         const U ox = static_cast<U>(static_cast<std::int32_t>(x2) >> 12) + 0xA0u;
         const U y2 = static_cast<U>(SH_CALL(Math_Sin)(a)) * 180u;
         const U oy = static_cast<U>(static_cast<std::int32_t>(y2) >> 12) + 0x78u;
-        inner_x = static_cast<float>(S16(ix));
+        inner_x = static_cast<float>(S16Effect2g(ix));
         std::memcpy(p + 0x28, &inner_x, 4);
-        inner_y = static_cast<float>(S16(iy));
+        inner_y = static_cast<float>(S16Effect2g(iy));
         std::memcpy(p + 0x2C, &inner_y, 4);
-        outer_x = static_cast<float>(S16(ox));
+        outer_x = static_cast<float>(S16Effect2g(ox));
         std::memcpy(p + 0x38, &outer_x, 4);
         p[4] = 0;
         p[5] = 0;
         p[6] = 0;
-        outer_y = static_cast<float>(S16(oy));
+        outer_y = static_cast<float>(S16Effect2g(oy));
         std::memcpy(p + 0x3C, &outer_y, 4);
         p[0x14] = 0xFF;
         p[0x15] = 0xFF;
@@ -917,7 +917,7 @@ extern "C" void __cdecl EffectKind5A_Place(void) {
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
     const long ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
-    rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<U>(S16(static_cast<U>(ground))) << 16);
+    rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<U>(S16Effect2g(static_cast<U>(ground))) << 16);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 
@@ -1011,7 +1011,7 @@ extern "C" void __cdecl EffectKind5B_DrawBeam(unsigned length, unsigned abr) {
     s = S();
     const long ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) - d), rv::As<records::EffectObject>(s)->z);
     unsigned char* const p = Gfx_PacketNext;
-    const U low = (static_cast<U>(S16(static_cast<U>(ground))) << 16) + 0xE00000u;
+    const U low = (static_cast<U>(S16Effect2g(static_cast<U>(ground))) << 16) + 0xE00000u;
     SH_CALL(Gpu_SetPolyFT4)(p);
     long point[3];
     s = S();

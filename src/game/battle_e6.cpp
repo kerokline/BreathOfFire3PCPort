@@ -50,10 +50,10 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-U L(const unsigned char* p) { return static_cast<U>(Long(p)); }
+U LBattleE6(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t S8(unsigned char v) { return static_cast<std::int8_t>(v); }
-std::int32_t S16(unsigned v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); }
+std::int32_t S16BattleE6(unsigned v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); }
 U Addr(const void* p) { return Low32(p); }
 float F(const unsigned char* p) {
     float f;
@@ -64,7 +64,7 @@ void SetF(unsigned char* p, float f) { std::memcpy(p, &f, sizeof f); }
 
 // The party's records and the enemies' objects as the originals index them:
 // unchecked (an actor past 2 reaches past the three members, as there).
-unsigned char* Party(unsigned member) { return At(::bof3::Img(ObjTrio_addr) + (member & 0xFFu) * at::kPartyStride); }
+unsigned char* PartyBattleE6(unsigned member) { return At(::bof3::Img(ObjTrio_addr) + (member & 0xFFu) * at::kPartyStride); }
 unsigned char* Enemy(unsigned index) { return At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemyStride); }
 unsigned Actor() { return B(::bof3::Img(at::kActor.v)); }
 unsigned char* Owner() { return At(BattleE2_Owner); }
@@ -83,7 +83,7 @@ U CellHeight(std::int32_t x, std::int32_t z) { return BH_AT(U (__cdecl*)(std::in
 void BackUpParty() {
     const unsigned n = B(::bof3::Img(at::kPartyCount.v));
     if (n == 0) return;
-    for (U i = 0; i < n * at::kPartyStride; i += 4) SetL(At(::bof3::Img(at::kPartyBackup.v) + i), L(At(::bof3::Img(ObjTrio_addr) + i)));
+    for (U i = 0; i < n * at::kPartyStride; i += 4) SetL(At(::bof3::Img(at::kPartyBackup.v) + i), LBattleE6(At(::bof3::Img(ObjTrio_addr) + i)));
 }
 
 // The first stat of a form (the u16 at +0xC0, +0xA0 and +0x98): `percent` of
@@ -93,8 +93,8 @@ void BackUpParty() {
 void FirstStat(unsigned char* member, const unsigned char* character, std::uint16_t value) {
     auto* const member_rec = rv::As<records::PartyMember>(member);
     SetWord(At(::bof3::Img(at::kStatDeltas.v)), value);
-    const std::int32_t cut = (static_cast<std::int32_t>(character[0x1E]) * S16(value) + 5) / 10;
-    const auto stat = static_cast<std::uint16_t>(L(At(::bof3::Img(at::kStatDeltas.v))) - static_cast<U>(cut));
+    const std::int32_t cut = (static_cast<std::int32_t>(character[0x1E]) * S16BattleE6(value) + 5) / 10;
+    const auto stat = static_cast<std::uint16_t>(LBattleE6(At(::bof3::Img(at::kStatDeltas.v))) - static_cast<U>(cut));
     const std::uint16_t next = Word(member + 0xC4);
     SetWord(member + 0xC0, stat);
     member_rec->max_hp = stat;
@@ -138,7 +138,7 @@ void TaskDispatch(const char* who, U table, unsigned entries) {
         bof3::Fatal("%s: the task's state +1 is %u, past the %u entries of 0x%X - the original calls through the dword after "
                     "(docs/battle_e6.md section 7)",
                     who, state, entries, (unsigned)table);
-    reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(L(At(table + 4 * state))))();   // as read (the fuzz swaps the cells)
+    reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(LBattleE6(At(table + 4 * state))))();   // as read (the fuzz swaps the cells)
     if (Sprite_Current[0] != 0) BH_CALL(Sprite_UpdateScreen)();
 }
 
@@ -159,7 +159,7 @@ static_assert(sizeof(Matrix) == 0x20, "a PSX MATRIX");
 // A BMAGIC vertex from a record dword: x = x0 + 2 * its byte 3, z = z0 + 2 *
 // its byte 2 (16 bits), y = the cell height there + its low word.
 SVec CellVertex(U x0, U z0, const unsigned char* at) {
-    const U d = L(at);
+    const U d = LBattleE6(at);
     SVec v{};
     v.x = static_cast<std::int16_t>(x0 + 2 * static_cast<U>(S8(static_cast<unsigned char>(d >> 24))));
     v.y = static_cast<std::int16_t>(z0 + 2 * static_cast<U>(S8(static_cast<unsigned char>(d >> 16))));
@@ -216,7 +216,7 @@ extern "C" void __cdecl DragonHistory_Leave(void) {
 // 0x1F), 0x904B89 = the code; Battle_RecalcStats(the actor read again).
 extern "C" void __cdecl DragonForm_Transform(void) {
     {
-        unsigned char* const member = Party(Actor());
+        unsigned char* const member = PartyBattleE6(Actor());
         auto* const member_rec = rv::As<records::PartyMember>(member);
         const unsigned who = Actor();
         SetL(member + 0x138, 0);
@@ -225,7 +225,7 @@ extern "C" void __cdecl DragonForm_Transform(void) {
         member_rec->flags_134 = static_cast<U>(member_rec->flags_134) & 0xFFFB84FFu;
         BH_CALL(Battle_RecalcStats)(who);
     }
-    auto* const member_rec = rv::As<records::PartyMember>(Party(Actor()));
+    auto* const member_rec = rv::As<records::PartyMember>(PartyBattleE6(Actor()));
     BattleE6_FormCode = 0;
     BattleE6_FormGroupWork = 0;
     member_rec->flags_134 = static_cast<U>(member_rec->flags_134) | 2;
@@ -235,10 +235,10 @@ extern "C" void __cdecl DragonForm_Transform(void) {
         form = static_cast<unsigned char>(form + 4);
         BattleE6_FormCode = form;
         if (form == 8) {
-            auto* const member_rec = rv::As<records::PartyMember>(Party(Actor()));
+            auto* const member_rec = rv::As<records::PartyMember>(PartyBattleE6(Actor()));
             member_rec->flags_134 = static_cast<U>(member_rec->flags_134) | 0x10000;
         } else if (form == 7 || form == 4) {
-            auto* const member_rec = rv::As<records::PartyMember>(Party(Actor()));
+            auto* const member_rec = rv::As<records::PartyMember>(PartyBattleE6(Actor()));
             member_rec->flags_134 = static_cast<U>(member_rec->flags_134) | 0x20000;
         }
     } else {
@@ -319,7 +319,7 @@ extern "C" unsigned char __cdecl DragonForm_TryPartyRecipe(void) {
 // DragonForm_SetMixBytes(sums 0..4), DragonForm_MixAbilities.
 extern "C" void __cdecl DragonForm_Mix(unsigned) {
     BackUpParty();
-    unsigned char* const member = Party(Actor());
+    unsigned char* const member = PartyBattleE6(Actor());
     auto* const member_rec = rv::As<records::PartyMember>(member);
     const unsigned char* const character = At(::bof3::Img(CharacterRecords_addr) + member_rec->char_index * at::kCharStride);
     static_assert(at::kCharStride == sizeof(records::CharRecord));
@@ -363,7 +363,7 @@ extern "C" void __cdecl DragonForm_Mix(unsigned) {
         const unsigned column = At(::bof3::Img(at::kShiftColumns.v))[BattleE6_FormCode * 5];
         const auto sum = static_cast<std::uint16_t>(S8(shift) + static_cast<std::int32_t>(column));
         std::uint16_t value = 1;
-        if (S16(sum) > 0) value = static_cast<std::uint16_t>(Percent9999(rv::As<records::CharRecord>(character)->base.max_hp, S16(sum) * 10));
+        if (S16BattleE6(sum) > 0) value = static_cast<std::uint16_t>(Percent9999(rv::As<records::CharRecord>(character)->base.max_hp, S16BattleE6(sum) * 10));
         FirstStat(member, character, value);
     }
     // the other four: 0 below 1; the old value's cell takes the change
@@ -374,7 +374,7 @@ extern "C" void __cdecl DragonForm_Mix(unsigned) {
         const unsigned column = At(::bof3::Img(at::kShiftColumns.v))[BattleE6_FormCode * 5 + 1 + n];
         const auto sum = static_cast<std::uint16_t>(S8(shift) + static_cast<std::int32_t>(column));
         std::uint16_t value = 0;
-        if (S16(sum) > 0) value = static_cast<std::uint16_t>(Percent999(Word(member + field), S16(sum) * 10));
+        if (S16BattleE6(sum) > 0) value = static_cast<std::uint16_t>(Percent999(Word(member + field), S16BattleE6(sum) * 10));
         SetWord(At(deltas[n]), static_cast<std::uint16_t>(value - Word(At(deltas[n]))));
         const std::uint16_t next = n < 3 ? Word(member + field + 2) : 0;
         SetWord(member + field, value);
@@ -419,7 +419,7 @@ void MixByte(unsigned char* record, unsigned at, U cell, unsigned char v) {
 // 4 through 0x64EEBE, 2, sum 3 through 0x64EEB9 twice - each by the sum + 2
 // held to 0..4. Answers 0.
 extern "C" unsigned char __cdecl DragonForm_SetMixBytes(unsigned s0, unsigned s1, unsigned s2, unsigned s3, unsigned s4) {
-    unsigned char* const record = Party(Actor());
+    unsigned char* const record = PartyBattleE6(Actor());
     MixByte(record, 0x4F, ::bof3::Img(at::kStatDeltas.v) + 0xA, At(::bof3::Img(at::kMixBytesA.v))[Clamp4(s0)]);
     MixByte(record, 0x50, ::bof3::Img(at::kStatDeltas.v) + 0xB, At(::bof3::Img(at::kMixBytesA.v))[Clamp4(s1)]);
     MixByte(record, 0x51, ::bof3::Img(at::kStatDeltas.v) + 0xC, At(::bof3::Img(at::kMixBytesA.v))[Clamp4(s2)]);
@@ -438,7 +438,7 @@ extern "C" unsigned char __cdecl DragonForm_SetMixBytes(unsigned s0, unsigned s1
 // DragonForm_AddAbilityRow by the sums - 0 (and 5, 14 by sums 9 and 3), 1
 // (6), 2 (7), 3 (8), 4 (9), 12, 11, 13 - then 0xD9 and zeros.
 extern "C" void __cdecl DragonForm_MixAbilities(void) {
-    unsigned char* const list = Party(Actor()) + 0xF4;
+    unsigned char* const list = PartyBattleE6(Actor()) + 0xF4;
     unsigned char count = 0;
     for (unsigned j = 0; j < 3; ++j) {
         const unsigned char ability = At(::bof3::Img(at::kFormAbilities.v))[BattleE6_FormCode * 3u + j];
@@ -478,7 +478,7 @@ extern "C" void __cdecl DragonForm_MixAbilities(void) {
 // the actor's list at `count` (a 0 ends the row; one already there skipped;
 // at 9 the answer is 9), the new count the answer.
 extern "C" unsigned char __cdecl DragonForm_AddAbilityRow(unsigned row, unsigned count) {
-    unsigned char* const list = Party(Actor()) + 0xF4;
+    unsigned char* const list = PartyBattleE6(Actor()) + 0xF4;
     const unsigned base = (row & 0xFF) * 3;
     auto n = static_cast<unsigned char>(count);
     for (unsigned k = 0; k < 3; ++k) {
@@ -505,7 +505,7 @@ extern "C" unsigned char __cdecl DragonForm_AddAbilityRow(unsigned row, unsigned
 // then 0xD9 and zeros.
 extern "C" void __cdecl DragonForm_ApplyRecipe(unsigned recipe) {
     BackUpParty();
-    unsigned char* const member = Party(Actor());
+    unsigned char* const member = PartyBattleE6(Actor());
     auto* const member_rec = rv::As<records::PartyMember>(member);
     const unsigned r = recipe & 0xFF;
     const unsigned char* const row = At(::bof3::Img(at::kRecipeStats.v) + r * 14);
@@ -550,7 +550,7 @@ extern "C" unsigned char __cdecl DragonForm_PartyRecipe(void) {
     for (unsigned m = 0; m < 3; ++m) {
         if (B(::bof3::Img(at::kActor.v)) == m) continue;
         if (BH_CALL(Battle_ActorIsOut)(m) != 0) continue;
-        found[n++] = rv::As<records::PartyMember>(Party(m))->char_id;
+        found[n++] = rv::As<records::PartyMember>(PartyBattleE6(m))->char_id;
     }
     if (n < 2) return 0;   // DIV-0063: no pair to try
     unsigned char key = found[0], other = found[1];
@@ -671,7 +671,7 @@ extern "C" unsigned char __cdecl BattleFxDash_Advance(void) {
         unsigned char* const s = Sprite_Current;
         unsigned char* const t = At(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride);
         auto* const task_rec = rv::As<records::BattleTask>(t);
-        for (U i = 0; i < 0x80; i += 4) SetL(t + i, L(s + i));
+        for (U i = 0; i < 0x80; i += 4) SetL(t + i, LBattleE6(s + i));
         task_rec->flags &= 0xBF;
         task_rec->runner = 0;
         task_rec->kind = 0x12;
@@ -686,8 +686,8 @@ extern "C" unsigned char __cdecl BattleFxDash_Advance(void) {
     const unsigned target = B(::bof3::Img(at::kTarget.v));
     int near;
     if (target <= 2) {
-        BH_CALL(MagicFx_StepToward)(Party(target), 0x50);
-        near = BH_CALL(MagicFx_NearSprite3D)(Party(B(::bof3::Img(at::kTarget.v))), 0x10000);
+        BH_CALL(MagicFx_StepToward)(PartyBattleE6(target), 0x50);
+        near = BH_CALL(MagicFx_NearSprite3D)(PartyBattleE6(B(::bof3::Img(at::kTarget.v))), 0x10000);
     } else {
         BH_CALL(MagicFx_StepToward)(Enemy(target - 3), 0x50);
         near = BH_CALL(MagicFx_NearSprite3D)(Enemy(B(::bof3::Img(at::kTarget.v)) - 3u), 0x10000);
@@ -707,11 +707,11 @@ extern "C" unsigned char __cdecl BattleFxDash_Advance(void) {
 extern "C" unsigned char __cdecl BattleFxDash_Return(void) {
     const unsigned char ticked = BH_CALL(BattleObj_ScriptTickOnce)();
     if (ticked == 0) return ticked;
-    rv::Store<U>(rv::Current<records::BattleTask>()->step_x, Sixteenth(static_cast<U>(rv::As<records::PartyMember>(Party(Actor()))->x), static_cast<U>(rv::Current<records::BattleTask>()->x)));
-    rv::Store<U>(rv::Current<records::BattleTask>()->step_z, Sixteenth(static_cast<U>(rv::As<records::PartyMember>(Party(Actor()))->z), static_cast<U>(rv::Current<records::BattleTask>()->z)));
+    rv::Store<U>(rv::Current<records::BattleTask>()->step_x, Sixteenth(static_cast<U>(rv::As<records::PartyMember>(PartyBattleE6(Actor()))->x), static_cast<U>(rv::Current<records::BattleTask>()->x)));
+    rv::Store<U>(rv::Current<records::BattleTask>()->step_z, Sixteenth(static_cast<U>(rv::As<records::PartyMember>(PartyBattleE6(Actor()))->z), static_cast<U>(rv::Current<records::BattleTask>()->z)));
     rv::Store<U>(rv::Current<records::BattleTask>()->step_y, 0x40);
     rv::Store<U>(rv::Current<records::BattleTask>()->work_20, 0xFFFFFFF8u);
-    rv::Store<U>(rv::Current<records::BattleTask>()->work_18, Sixteenth(static_cast<U>(rv::As<records::PartyMember>(Party(Actor()))->height), static_cast<U>(rv::Current<records::BattleTask>()->height)));
+    rv::Store<U>(rv::Current<records::BattleTask>()->work_18, Sixteenth(static_cast<U>(rv::As<records::PartyMember>(PartyBattleE6(Actor()))->height), static_cast<U>(rv::Current<records::BattleTask>()->height)));
     rv::Current<records::BattleTask>()->state = static_cast<unsigned char>(rv::Current<records::BattleTask>()->state + 1);
     return BH_CALL(BattleObj_ScriptTickOnce)();
 }
@@ -745,7 +745,7 @@ extern "C" unsigned char __cdecl BattleFxDash_Arc(void) {
 // given pose +8 + 4 as Sprite_Current, which is put back; a tail jump to
 // BattleTask_FreeCurrent.
 extern "C" void __cdecl BattleFxDash_Land(void) {
-    auto* const member_rec = rv::As<records::PartyMember>(Party(Actor()));
+    auto* const member_rec = rv::As<records::PartyMember>(PartyBattleE6(Actor()));
     unsigned char* const self = Sprite_Current;
     member_rec->flags &= 0xBF;
     unsigned char* const owner = Owner();
@@ -844,7 +844,7 @@ extern "C" void __cdecl Battle_RecalcStats(unsigned actor) {
 // 0x16 (0x904B89) +0xBB and +0xBA up 0x1E each and through 0x446F80(v, 100);
 // bit 11 zeroes +0xB4, bit 13 +0xAF; +0xA4 and +0xA6 through 0x446F20(v, 100).
 extern "C" void __cdecl Battle_RecalcMemberStats(unsigned char* view, unsigned member) {
-    unsigned char* const r = Party(member);
+    unsigned char* const r = PartyBattleE6(member);
     auto* const member_rec = rv::As<records::PartyMember>(r);
     for (unsigned i = 0; i < 4; ++i)
         SetWord(view + 0x24 + 2 * i,
@@ -894,7 +894,7 @@ extern "C" void __cdecl Battle_RecalcMemberStats(unsigned char* view, unsigned m
 // odds unchecked: ours aborts on 0.
 extern "C" unsigned char __cdecl Battle_MemberRollByAction(unsigned member) {
     if (BH_CALL(Battle_ActorIsOut)(member) != 0) return 0;
-    unsigned char* const r = Party(member);
+    unsigned char* const r = PartyBattleE6(member);
     auto* const member_rec = rv::As<records::PartyMember>(r);
     if (!(r[0x130] & 1)) return 0;
     if (r[0x124] != B(::bof3::Img(at::kActor.v))) return 0;
@@ -916,13 +916,13 @@ extern "C" unsigned char __cdecl Battle_MemberRollByAction(unsigned member) {
 // set: 1, else 0 (the action's low byte).
 extern "C" unsigned char __cdecl Battle_ActionBitSet(unsigned action) {
     const unsigned a = action & 0xFF;
-    return (L(At(::bof3::Img(Cond_Flags_addr) + 0xf8 + (a >> 5) * 4)) >> (a & 31)) & 1 ? 1 : 0;
+    return (LBattleE6(At(::bof3::Img(Cond_Flags_addr) + 0xf8 + (a >> 5) * 4)) >> (a & 31)) & 1 ? 1 : 0;
 }
 
 // original 0x453AC0 (PSX 0x800A77E4): 1 when every one of the member's ten bytes +0xFE.. is
 // not 0, else 0.
 extern "C" unsigned char __cdecl Battle_MemberListFull(unsigned member) {
-    const unsigned char* const r = Party(member);
+    const unsigned char* const r = PartyBattleE6(member);
     for (unsigned i = 0; i < 10; ++i)
         if (r[0xFE + i] == 0) return 0;
     return 1;
@@ -942,13 +942,13 @@ extern "C" void __cdecl Battle_SetApPopup(unsigned amount, unsigned actor) {
     const unsigned who = actor & 0xFF;
     unsigned char bits;
     if (who <= 2) {
-        bits = Party(who)[0x12C];
-        task_rec->owner = Addr(Party(who));
+        bits = PartyBattleE6(who)[0x12C];
+        task_rec->owner = Addr(PartyBattleE6(who));
     } else {
         bits = rv::As<records::BattleEnemy>(Enemy(who - 3))->shown;
         task_rec->owner = Addr(Enemy(who - 3));
     }
-    const std::int32_t value = S16(amount);
+    const std::int32_t value = S16BattleE6(amount);
     if (value < 0) {
         rv::Store<U>(task_rec->value, static_cast<U>(-value));
         task_rec->clut = 1;
@@ -976,7 +976,7 @@ extern "C" void __cdecl Battle_SetApPopup(unsigned amount, unsigned actor) {
 // `object` released (Field_SlotRelease).
 extern "C" void __cdecl Field_SlotsReleaseOwner(const unsigned char* object) {
     for (unsigned i = 0; i < 8; ++i)
-        if (L(At(::bof3::Img(Field_Slots_addr) + 0xC + 0x10 * i)) == Addr(object)) BH_CALL(Field_SlotRelease)(i);
+        if (LBattleE6(At(::bof3::Img(Field_Slots_addr) + 0xC + 0x10 * i)) == Addr(object)) BH_CALL(Field_SlotRelease)(i);
 }
 
 // original 0x455290 (PSX 0x80197CF0): the first Field_Slots record without +0 bit 0 taken:
@@ -1035,9 +1035,9 @@ extern "C" void __cdecl MapCell_DrawTexQuads(const unsigned char* record, unsign
         SVec v[3];
         for (unsigned k = 0; k < 3; ++k) v[k] = CellVertex(x0, z0, p - 0xC + 4 * k);
         BH_CALL(Gte_LoadVertices3)(reinterpret_cast<const unsigned long*>(v));
-        BH_CALL(Prim_SetTexture)(L(p), prim, 1);
+        BH_CALL(Prim_SetTexture)(LBattleE6(p), prim, 1);
         BH_CALL(Gte_Rtpt)();
-        const U texture = L(p);
+        const U texture = LBattleE6(p);
         unsigned slot;
         if (texture & 0x4000) slot = texture & 0x40000000 ? 7 : 4;
         else slot = texture & 0x40000000 ? 6 : Draw_OtSlot;
@@ -1063,7 +1063,7 @@ extern "C" void __cdecl MapCell_DrawShadedQuads(const unsigned char* record, uns
         const unsigned char* vertex = record + 4;
         const unsigned char* mode = record + 0x14;
         for (U counter = 1; counter != record[2]; counter += 8, mode += 0x20) {
-            BH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, (((L(mode) >> 24) & 3) << 5) | 0x95, 0);
+            BH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, (((LBattleE6(mode) >> 24) & 3) << 5) | 0x95, 0);
             BH_CALL(Gfx_CommitPrim)(Draw_OtSlot, 0xC);
             unsigned char* const prim = Gfx_PacketNext;
             BH_CALL(Gpu_SetPolyG4)(prim);
@@ -1075,9 +1075,9 @@ extern "C" void __cdecl MapCell_DrawShadedQuads(const unsigned char* record, uns
                                                         &depth, &flag);
             BH_CALL(Gte_StoreDepthF4)(reinterpret_cast<float*>(prim + 0x20), reinterpret_cast<float*>(prim + 0x30),
                                       reinterpret_cast<float*>(prim + 0x40), reinterpret_cast<float*>(prim + 0x10));
-            BH_CALL(Gpu_SetSemiTrans)(prim, L(vertex) >> 31);
+            BH_CALL(Gpu_SetSemiTrans)(prim, LBattleE6(vertex) >> 31);
             for (unsigned k = 0; k < 4; ++k) {
-                const U colour = L(vertex);
+                const U colour = LBattleE6(vertex);
                 prim[4 + 0x10 * k] = static_cast<unsigned char>(colour >> 16);
                 prim[5 + 0x10 * k] = static_cast<unsigned char>(colour >> 8);
                 prim[6 + 0x10 * k] = static_cast<unsigned char>(colour);
@@ -1100,13 +1100,13 @@ extern "C" void __cdecl MapCell_DrawShadedQuads(const unsigned char* record, uns
 // 0), its sixth dword the texture, committed 0x48 to Draw_OtSlot; popped.
 extern "C" void __cdecl MapCell_DrawSpinQuads(const unsigned char* record, unsigned b1, unsigned b0) {
     if (BH_CALL(Area_TestCondition)(Word(record)) == 0) return;
-    const U d1 = L(record + 4);
+    const U d1 = LBattleE6(record + 4);
     SVec centre{};
     centre.x = static_cast<std::int16_t>((static_cast<U>(S8(static_cast<unsigned char>(d1 >> 24))) + ((b1 - 0x80) << 6)) << 1);
     centre.y = static_cast<std::int16_t>((static_cast<U>(S8(static_cast<unsigned char>(d1 >> 16))) + ((b0 - 0x80) << 6)) << 1);
     centre.z = static_cast<std::int16_t>(CellHeight(centre.x, centre.y) + Word(record + 4));
     const U t = Frame_Counter & 0xFFF;
-    const U d2 = L(record + 8);
+    const U d2 = LBattleE6(record + 8);
     const U spin[3] = {((d2 >> 20) & 0x3FF) * t * 4, ((d2 >> 10) & 0x3FF) * t * 4, (d2 & 0x3FF) * t * 4};
     if (record[2] == 3) return;
     CheckEntries("MapCell_DrawSpinQuads", record, 3, 6);
@@ -1114,7 +1114,7 @@ extern "C" void __cdecl MapCell_DrawSpinQuads(const unsigned char* record, unsig
     U counter = 3;
     do {
         BH_CALL(Gte_PushMatrix)();
-        const U e = L(p);
+        const U e = LBattleE6(p);
         const std::int16_t angles[4] = {static_cast<std::int16_t>((spin[0] + ((e >> 20) & 0x3FF) * 4) & 0xFFF),
                                         static_cast<std::int16_t>((spin[1] + ((e >> 10) & 0x3FF) * 4) & 0xFFF),
                                         static_cast<std::int16_t>((spin[2] + (e & 0x3FF) * 4) & 0xFFF), 0};
@@ -1129,7 +1129,7 @@ extern "C" void __cdecl MapCell_DrawSpinQuads(const unsigned char* record, unsig
         BH_CALL(Gpu_SetShadeTex)(prim, 0);
         SVec q[4];
         for (unsigned k = 0; k < 4; ++k) {
-            const U v = L(p + 4 + 4 * k);
+            const U v = LBattleE6(p + 4 + 4 * k);
             q[k].x = Field10((v >> 20) & 0xFFFF);
             q[k].y = Field10((v >> 10) & 0x3FF);
             q[k].z = Field10(v & 0x3FF);
@@ -1140,7 +1140,7 @@ extern "C" void __cdecl MapCell_DrawSpinQuads(const unsigned char* record, unsig
                                                     &depth, &flag);
         BH_CALL(Gte_StoreDepthF4)(reinterpret_cast<float*>(prim + 0x20), reinterpret_cast<float*>(prim + 0x30),
                                   reinterpret_cast<float*>(prim + 0x40), reinterpret_cast<float*>(prim + 0x10));
-        BH_CALL(Prim_SetTexture)(L(p + 0x14), prim, 1);
+        BH_CALL(Prim_SetTexture)(LBattleE6(p + 0x14), prim, 1);
         BH_CALL(Gfx_CommitPrim)(Draw_OtSlot, 0x48);
         counter += 6;
         p += 0x18;
@@ -1160,11 +1160,11 @@ extern "C" void __cdecl MapCell_DrawSpinQuads(const unsigned char* record, unsig
 extern "C" void __cdecl MapCell_DrawGroundSprite(const unsigned char* record, unsigned b1, unsigned b0) {
     if (BH_CALL(Area_TestCondition)(Word(record)) == 0) return;
     unsigned char* const point = At(::bof3::Img(Prim_VertexScratch_addr));
-    SetWord(point, (static_cast<U>(S8(static_cast<unsigned char>(L(record + 4) >> 24))) + ((b1 - 0x80) << 6)) << 1);
-    SetWord(point + 2, (static_cast<U>(S8(static_cast<unsigned char>(L(record + 4) >> 16))) + ((b0 - 0x80) << 6)) << 1);
-    const long height = BH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<U>(S16(Word(point)) + 0x4000) << 9),
-                                                   static_cast<long>(static_cast<U>(S16(Word(point + 2)) + 0x4000) << 9));
-    SetWord(point + 4, static_cast<U>(-(S16(static_cast<U>(height)) / 2)));
+    SetWord(point, (static_cast<U>(S8(static_cast<unsigned char>(LBattleE6(record + 4) >> 24))) + ((b1 - 0x80) << 6)) << 1);
+    SetWord(point + 2, (static_cast<U>(S8(static_cast<unsigned char>(LBattleE6(record + 4) >> 16))) + ((b0 - 0x80) << 6)) << 1);
+    const long height = BH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<U>(S16BattleE6(Word(point)) + 0x4000) << 9),
+                                                   static_cast<long>(static_cast<U>(S16BattleE6(Word(point + 2)) + 0x4000) << 9));
+    SetWord(point + 4, static_cast<U>(-(S16BattleE6(static_cast<U>(height)) / 2)));
     long p = 0;
     unsigned char* const screen = At(::bof3::Img(MapView_ScreenXY_addr));
     const long z = BH_AT(Pers, bof3::addr::Gte_RotTransPers)(point, screen, &p);
@@ -1192,16 +1192,16 @@ extern "C" void __cdecl MapCell_DrawGroundSprite(const unsigned char* record, un
     double x = static_cast<double>(F(screen)) - static_cast<double>(S8(corners[0]) * 1125 / zz);
     SetF(prim + 0x28, static_cast<float>(x));
     SetF(prim + 8, static_cast<float>(x));
-    x += static_cast<double>(S8(static_cast<unsigned char>(L(corners) >> 8)) * 1125 / zz);
+    x += static_cast<double>(S8(static_cast<unsigned char>(LBattleE6(corners) >> 8)) * 1125 / zz);
     SetF(prim + 0x38, static_cast<float>(x));
     SetF(prim + 0x18, static_cast<float>(x));
-    double y = static_cast<double>(F(screen + 4)) - static_cast<double>(S8(static_cast<unsigned char>(L(corners) >> 16)) * 1125 / zz);
+    double y = static_cast<double>(F(screen + 4)) - static_cast<double>(S8(static_cast<unsigned char>(LBattleE6(corners) >> 16)) * 1125 / zz);
     SetF(prim + 0x1C, static_cast<float>(y));
     SetF(prim + 0xC, static_cast<float>(y));
-    y += static_cast<double>(S8(static_cast<unsigned char>(L(corners) >> 24)) * 1125 / zz);
+    y += static_cast<double>(S8(static_cast<unsigned char>(LBattleE6(corners) >> 24)) * 1125 / zz);
     SetF(prim + 0x3C, static_cast<float>(y));
     SetF(prim + 0x2C, static_cast<float>(y));
-    BH_CALL(Prim_SetTexture)(L(record + (head + 2 * frame) * 4 + 0xC), prim, 1);
+    BH_CALL(Prim_SetTexture)(LBattleE6(record + (head + 2 * frame) * 4 + 0xC), prim, 1);
     BH_CALL(Gfx_CommitPrim)(Draw_OtSlot, 0x48);
 }
 

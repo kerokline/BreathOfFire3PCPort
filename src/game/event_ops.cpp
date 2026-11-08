@@ -105,7 +105,7 @@ using namespace event_ops;
 
 namespace {
 
-std::uint32_t Address(const void* p) { return Low32(p); }
+std::uint32_t AddressEventOps(const void* p) { return Low32(p); }
 unsigned char& Byte(std::uint32_t a) { return *At(a); }
 
 // Field_ScriptFlags' two bytes and Field_ScriptFlags2's, as the original
@@ -157,7 +157,7 @@ short Whole(std::uint32_t v) { return static_cast<short>(v >> 16); }
 // `(p & 0xFFFFFF00) | p[8]`, to `p[8]` alone - a miscompile the start-up
 // fuzz caught (docs/event-ops.md section 8).
 std::uint32_t DirectionInPointer(const unsigned char* sc) {
-    std::uint32_t v = Address(sc);
+    std::uint32_t v = AddressEventOps(sc);
     __asm__ volatile("movb 8(%1), %b0" : "+q"(v) : "r"(sc) : "memory");
     return v;
 }
@@ -474,7 +474,7 @@ extern "C" unsigned char __cdecl Field_LeaderStepTick(void) {
     g.leader_move();
     unsigned char* const fs = Field_State;
     if (fs[0x128] >= 4) return g.script_tick();
-    return static_cast<unsigned char>(Address(fs));
+    return static_cast<unsigned char>(AddressEventOps(fs));
 }
 
 // original 0x52E510: the step target's cell, words 0x903854 / 0x903856 - the
