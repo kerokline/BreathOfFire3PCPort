@@ -36,19 +36,19 @@ namespace {
 
 namespace at = rest_2c::at;
 using U = std::uint32_t;
-using move_script::At;
+constexpr auto& AtRest2c = move_script::At;
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-unsigned char& B(U address) { return *At(address); }
-U L(U address) { return static_cast<U>(Long(At(address))); }
-void PutL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
-void PutW(U address, unsigned v) { SetWord(At(address), v); }
+unsigned char& BRest2c(U address) { return *AtRest2c(address); }
+U LRest2c(U address) { return static_cast<U>(Long(AtRest2c(address))); }
+void PutL(U address, U v) { SetLong(AtRest2c(address), static_cast<std::int32_t>(v)); }
+void PutW(U address, unsigned v) { SetWord(AtRest2c(address), v); }
 float F(U address) {
     float v;
-    std::memcpy(&v, At(address), sizeof v);
+    std::memcpy(&v, AtRest2c(address), sizeof v);
     return v;
 }
 void PutF(unsigned char* at, float v) { std::memcpy(at, &v, sizeof v); }
@@ -70,7 +70,7 @@ void Jump(U table, unsigned count, unsigned index, const char* who) {
     if (index >= count)
         bof3::Fatal("%s: state %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index, count,
                     static_cast<unsigned>(::bof3::VaOf(table)), static_cast<unsigned>(::bof3::VaOf(table + 4 * index)));
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(table + 4 * index)))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(LRest2c(table + 4 * index)))();
 }
 
 // The screen title's box the inn and save states draw first: (0x14, 0x12),
@@ -80,7 +80,7 @@ void Jump(U table, unsigned count, unsigned index, const char* who) {
 void TitleBox(int y) { SH_CALL(Menu_DrawTitleBox)(0x14, y, 0x118, 0x13, static_cast<unsigned char>(Config_WindowColour)); }
 
 // System message `id` at (0x1C, 0x16), colour 0, to its end.
-void Message(unsigned id) {
+void MessageRest2c(unsigned id) {
     const unsigned char* const text = SH_CALL(Msg_SystemPtr)(id);
     SH_CALL(Text_DrawAt)(0x1C, 0x16, 0, 0xFF, text);
 }
@@ -99,7 +99,7 @@ U SummaryOf(U slot, const char* who) {
 // The seven dwords Save_BuildBlock filled at 0x904680 into the slot's summary.
 void CopySummary(U slot, const char* who) {
     const U to = SummaryOf(slot, who);
-    for (U i = 0; i < 7; ++i) PutL(to + 4 * i, L(::bof3::Img(at::kSummary.v) + 4 * i));
+    for (U i = 0; i < 7; ++i) PutL(to + 4 * i, LRest2c(::bof3::Img(at::kSummary.v) + 4 * i));
 }
 
 // The window record n's byte / word at +off.
@@ -117,7 +117,7 @@ unsigned char FormOf(unsigned char id) {
 // A master's script message: the u16 at 0x6644E8 + 2 * master (read in place
 // for any master byte, as the original reads it) plus k, as a word.
 unsigned MasterMessage(unsigned char master, unsigned k) {
-    return static_cast<std::uint16_t>(Word(At(::bof3::Img(at::kMasterMessages.v) + 2u * master)) + k);
+    return static_cast<std::uint16_t>(Word(AtRest2c(::bof3::Img(at::kMasterMessages.v) + 2u * master)) + k);
 }
 
 }  // namespace
@@ -136,21 +136,21 @@ unsigned MasterMessage(unsigned char master, unsigned k) {
 // 0xFF less it is above t, else 0xFF; the third as the first. Each is a byte
 // operation (imul's low byte added).
 extern "C" void __cdecl MasterFigure_DrawFaded(void) {
-    const unsigned char r = Rest2c_FigureRgb, g = B(::bof3::Img(at::kFigureRgb.v) + 1), b = B(::bof3::Img(at::kFigureRgb.v) + 2);
-    Rest2c_FigureScale = L(::bof3::Img(at::kScaleTable.v) + 4u * Rest2c_FigureScaleIndex);
+    const unsigned char r = Rest2c_FigureRgb, g = BRest2c(::bof3::Img(at::kFigureRgb.v) + 1), b = BRest2c(::bof3::Img(at::kFigureRgb.v) + 2);
+    Rest2c_FigureScale = LRest2c(::bof3::Img(at::kScaleTable.v) + 4u * Rest2c_FigureScaleIndex);
     const unsigned char step = Rest2c_FigureFade;
     const int t = 3 * step;
     const auto down = static_cast<unsigned char>(step * 0xFDu);   // imul 0xFD's low byte
     Rest2c_FigureRgb = static_cast<int>(r) > t ? static_cast<unsigned char>(r + down) : 0;
-    B(::bof3::Img(at::kFigureRgb.v) + 1) = 0xFF - static_cast<int>(B(::bof3::Img(at::kFigureRgb.v) + 1)) > t
-                                ? static_cast<unsigned char>(B(::bof3::Img(at::kFigureRgb.v) + 1) + static_cast<unsigned char>(step * 3u))
+    BRest2c(::bof3::Img(at::kFigureRgb.v) + 1) = 0xFF - static_cast<int>(BRest2c(::bof3::Img(at::kFigureRgb.v) + 1)) > t
+                                ? static_cast<unsigned char>(BRest2c(::bof3::Img(at::kFigureRgb.v) + 1) + static_cast<unsigned char>(step * 3u))
                                 : 0xFF;
-    B(::bof3::Img(at::kFigureRgb.v) + 2) = static_cast<int>(B(::bof3::Img(at::kFigureRgb.v) + 2)) > t ? static_cast<unsigned char>(B(::bof3::Img(at::kFigureRgb.v) + 2) + down)
+    BRest2c(::bof3::Img(at::kFigureRgb.v) + 2) = static_cast<int>(BRest2c(::bof3::Img(at::kFigureRgb.v) + 2)) > t ? static_cast<unsigned char>(BRest2c(::bof3::Img(at::kFigureRgb.v) + 2) + down)
                                                                          : 0;
     SH_AT(void (__cdecl*)(U), at::kFigureDraw.v)(::bof3::Img(at::kFigure.v));
     Rest2c_FigureRgb = r;
-    B(::bof3::Img(at::kFigureRgb.v) + 1) = g;
-    B(::bof3::Img(at::kFigureRgb.v) + 2) = b;
+    BRest2c(::bof3::Img(at::kFigureRgb.v) + 1) = g;
+    BRest2c(::bof3::Img(at::kFigureRgb.v) + 2) = b;
 }
 
 // original 0x57F420, MasterFigure_States[2]: the angle +0x6C, when its low
@@ -212,7 +212,7 @@ extern "C" void __cdecl InnPrompt_NotEnough(void) {
     SH_CALL(SaveMenu_DrawChoices)(0x6E, 0x4C);
     TitleBox(0x12);
     if (ModeStates_ShopObject != 0xFF) SH_CALL(Menu_DrawMoneyBox)(0x62, 0x28, 0, Party_Zenny);
-    Message(0xA2);
+    MessageRest2c(0xA2);
     if (Input_Pressed != 0) --FieldS_Step;
 }
 
@@ -224,15 +224,15 @@ extern "C" void __cdecl InnPrompt_NotEnough(void) {
 // summary (the slot read again) and 0x6BC881 = 2.
 extern "C" void __cdecl FieldSave_Write(void) {
     TitleBox(0x12);
-    Message(0x99);
+    MessageRest2c(0x99);
     SH_CALL(SaveMenu_DrawSlots)(0x20, 0x30, 0);
     SH_CALL(Save_BuildBlock)();
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kPath.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kPathFormat.v))), Rest2c_Slot);
-    const int written = SH_CALL(Save_WriteFile)(reinterpret_cast<const char*>(At(::bof3::Img(at::kPath.v))), at::kSaveSize);
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(at::kPathFormat.v))), Rest2c_Slot);
+    const int written = SH_CALL(Save_WriteFile)(reinterpret_cast<const char*>(AtRest2c(::bof3::Img(at::kPath.v))), at::kSaveSize);
     if (written == -1) return;
     const U slot = Rest2c_Slot;
     const auto step = static_cast<unsigned char>(FieldS_Step + 1);
-    B(::bof3::Img(at::kTimer.v)) = 0x1E;
+    BRest2c(::bof3::Img(at::kTimer.v)) = 0x1E;
     FieldS_Step = step;
     CopySummary(slot, "FieldSave_Write");
     ShopStates_Choice = 2;
@@ -245,15 +245,15 @@ extern "C" void __cdecl FieldSave_Write(void) {
 // up (read after the sound).
 extern "C" void __cdecl FieldSave_Written(void) {
     TitleBox(0x12);
-    Message(0x8F);
+    MessageRest2c(0x8F);
     SH_CALL(SaveMenu_DrawSlots)(0x20, 0x30, 0);
     Rest2c_SaveBack = 1;
     if (Input_Pressed == 0) {
-        const auto timer = static_cast<unsigned char>(B(::bof3::Img(at::kTimer.v)) - 1);
-        B(::bof3::Img(at::kTimer.v)) = timer;
+        const auto timer = static_cast<unsigned char>(BRest2c(::bof3::Img(at::kTimer.v)) - 1);
+        BRest2c(::bof3::Img(at::kTimer.v)) = timer;
         if (timer != 0) return;
     }
-    B(::bof3::Img(at::kTimer.v)) = 0;
+    BRest2c(::bof3::Img(at::kTimer.v)) = 0;
     SH_CALL(Sound_PlayEffect)(0x104);
     ++FieldS_Step;
 }
@@ -264,9 +264,9 @@ extern "C" void __cdecl FieldSave_Written(void) {
 // the step back to 3 (the save menu) and the sub-state 0.
 extern "C" void __cdecl FieldSave_PromptAnswer(void) {
     TitleBox(0x12);
-    if ((B(::bof3::Img(at::kMsgFlags.v)) & 2) == 0) return;
+    if ((BRest2c(::bof3::Img(at::kMsgFlags.v)) & 2) == 0) return;
     if (static_cast<unsigned char>(FieldS_Answer) == 0) {
-        B(::bof3::Img(at::kTimer.v)) = 0;
+        BRest2c(::bof3::Img(at::kTimer.v)) = 0;
         ++FieldS_State;
         return;
     }
@@ -281,10 +281,10 @@ extern "C" void __cdecl FieldSave_PromptAnswer(void) {
 // Field_InputFlags 0x40 or area 0xBC, 0x85 or 0xC1 (Inn_Begin's test) the
 // object 0x929F0C back from 0x929F0F.
 extern "C" void __cdecl Inn_TitleOut(void) {
-    const int y = 0x12 - 20 * static_cast<int>(B(::bof3::Img(at::kTimer.v)));
+    const int y = 0x12 - 20 * static_cast<int>(BRest2c(::bof3::Img(at::kTimer.v)));
     TitleBox(y);
-    const auto timer = static_cast<unsigned char>(B(::bof3::Img(at::kTimer.v)) + 1);
-    B(::bof3::Img(at::kTimer.v)) = timer;
+    const auto timer = static_cast<unsigned char>(BRest2c(::bof3::Img(at::kTimer.v)) + 1);
+    BRest2c(::bof3::Img(at::kTimer.v)) = timer;
     if (timer != 5) return;
     BattleE1_Mode = 1;
     FieldS_State = 0;
@@ -305,7 +305,7 @@ extern "C" void __cdecl Rest_LoadJingle(void) {
     SH_CALL(Menu_DrawBlackScreen)();
     SH_CALL(Sound_LoadStream)(0);
     const auto state = static_cast<unsigned char>(FieldS_State + 1);
-    B(::bof3::Img(at::kTimer.v)) = 0x96;
+    BRest2c(::bof3::Img(at::kTimer.v)) = 0x96;
     FieldS_State = state;
 }
 
@@ -314,9 +314,9 @@ extern "C" void __cdecl Rest_LoadJingle(void) {
 // Transition_Start(1).
 extern "C" void __cdecl Rest_WaitJingle(void) {
     SH_CALL(Menu_DrawBlackScreen)();
-    const unsigned char timer = B(::bof3::Img(at::kTimer.v));
+    const unsigned char timer = BRest2c(::bof3::Img(at::kTimer.v));
     if (timer != 0) {
-        B(::bof3::Img(at::kTimer.v)) = static_cast<unsigned char>(timer - 1);
+        BRest2c(::bof3::Img(at::kTimer.v)) = static_cast<unsigned char>(timer - 1);
         if (timer - 1 != 0) return;
     }
     if (SH_CALL(Sound_StreamDone)() == 0) return;
@@ -341,7 +341,7 @@ extern "C" void __cdecl Rest_End(void) {
 // original 0x580610, Rest_States[6] (Rest_Begin's, with its message 0xEF):
 // once the message is done (0x7DEE44 bit 1), mode 1 and the state 0.
 extern "C" void __cdecl Rest_EndAfterMessage(void) {
-    if ((B(::bof3::Img(at::kMsgFlags.v)) & 2) == 0) return;
+    if ((BRest2c(::bof3::Img(at::kMsgFlags.v)) & 2) == 0) return;
     BattleE1_Mode = 1;
     FieldS_State = 0;
 }
@@ -370,45 +370,45 @@ extern "C" void __cdecl Rest_EndAfterMessage(void) {
 // the self-test, which compares Capcom's mix.
 unsigned char g_summary_record0 = 0;
 extern "C" void __cdecl Save_BuildBlock(void) {
-    PutL(::bof3::Img(at::kBlock.v), L(::bof3::Img(0x8034E0)));
-    PutL(::bof3::Img(at::kBlock.v) + 4, L(::bof3::Img(0x8034E4)));
-    PutL(::bof3::Img(at::kBlock.v) + 0xC, L(::bof3::Img(0x8034EC)));
-    const U counters = L(::bof3::Img(0x903848));
-    PutL(::bof3::Img(at::kBlock.v) + 8, L(::bof3::Img(0x8034E8)));
-    B(::bof3::Img(0x903A00)) = static_cast<unsigned char>(counters);
-    B(::bof3::Img(0x903A01)) = static_cast<unsigned char>(counters >> 8);
-    B(::bof3::Img(0x903A02)) = B(::bof3::Img(0x90384A));
-    PutL(::bof3::Img(0x903A08), L(::bof3::Img(0x802D74)));
-    PutL(::bof3::Img(0x903A0C), L(::bof3::Img(0x802D78)));
-    B(::bof3::Img(0x903A07)) = ObjTrio[0].direction;
-    SaveMenu_SavedButtons = L(::bof3::Img(0x903580));
-    PutL(::bof3::Img(0x9046A4), L(::bof3::Img(0x903588)));
-    B(::bof3::Img(0x903A03)) = B(::bof3::Img(0x90384B));
-    PutL(::bof3::Img(0x9046A8), L(::bof3::Img(0x90358C)));
+    PutL(::bof3::Img(at::kBlock.v), LRest2c(::bof3::Img(0x8034E0)));
+    PutL(::bof3::Img(at::kBlock.v) + 4, LRest2c(::bof3::Img(0x8034E4)));
+    PutL(::bof3::Img(at::kBlock.v) + 0xC, LRest2c(::bof3::Img(0x8034EC)));
+    const U counters = LRest2c(::bof3::Img(0x903848));
+    PutL(::bof3::Img(at::kBlock.v) + 8, LRest2c(::bof3::Img(0x8034E8)));
+    BRest2c(::bof3::Img(0x903A00)) = static_cast<unsigned char>(counters);
+    BRest2c(::bof3::Img(0x903A01)) = static_cast<unsigned char>(counters >> 8);
+    BRest2c(::bof3::Img(0x903A02)) = BRest2c(::bof3::Img(0x90384A));
+    PutL(::bof3::Img(0x903A08), LRest2c(::bof3::Img(0x802D74)));
+    PutL(::bof3::Img(0x903A0C), LRest2c(::bof3::Img(0x802D78)));
+    BRest2c(::bof3::Img(0x903A07)) = ObjTrio[0].direction;
+    SaveMenu_SavedButtons = LRest2c(::bof3::Img(0x903580));
+    PutL(::bof3::Img(0x9046A4), LRest2c(::bof3::Img(0x903588)));
+    BRest2c(::bof3::Img(0x903A03)) = BRest2c(::bof3::Img(0x90384B));
+    PutL(::bof3::Img(0x9046A8), LRest2c(::bof3::Img(0x90358C)));
     FieldModes_Pending = Game_AreaNumber;
-    PutL(::bof3::Img(0x9046A0), L(::bof3::Img(0x903584)));
-    const unsigned record = B(::bof3::Img(at::kMemberRecord.v) + Cond_Flags[0xd2]);
+    PutL(::bof3::Img(0x9046A0), LRest2c(::bof3::Img(0x903584)));
+    const unsigned record = BRest2c(::bof3::Img(at::kMemberRecord.v) + Cond_Flags[0xd2]);
     PutW(::bof3::Img(0x9046AC), Field_CancelButtons);
     PutW(::bof3::Img(0x903A50), 0);
     const U name = ::bof3::Img(CharacterRecords_addr) + (g_summary_record0 ? 0u : record) * at::kRecordStride; // DIV-0076
-    SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(::bof3::Img(at::kSummary.v))), reinterpret_cast<const char*>(At(name)), 5);
-    SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(::bof3::Img(0x904696))), reinterpret_cast<const char*>(At(name + 5)), 4);
-    for (unsigned i = 0; i < 3; ++i) B(::bof3::Img(at::kPartyList.v) + 0x623 + i) = FormOf(B(::bof3::Img(at::kPartyList.v) + i));
-    B(::bof3::Img(0x904688)) = B(::bof3::Img(0x903A7A));
-    PutL(::bof3::Img(0x90468C), L(::bof3::Img(0x9040C8)));
-    B(::bof3::Img(0x904689)) = static_cast<unsigned char>(Config_WindowColour);
-    B(::bof3::Img(0x90468A)) = Config_Background;
-    PutL(::bof3::Img(0x904690), L(::bof3::Img(0x903A7C)));
-    const unsigned char flag = SH_CALL(Flags_Test)(At(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x92);
-    B(::bof3::Img(0x904694)) = flag;
-    SaveMenu_ScriptFlagsSaved = B(::bof3::Img(0x9039A2));
+    SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(at::kSummary.v))), reinterpret_cast<const char*>(AtRest2c(name)), 5);
+    SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(0x904696))), reinterpret_cast<const char*>(AtRest2c(name + 5)), 4);
+    for (unsigned i = 0; i < 3; ++i) BRest2c(::bof3::Img(at::kPartyList.v) + 0x623 + i) = FormOf(BRest2c(::bof3::Img(at::kPartyList.v) + i));
+    BRest2c(::bof3::Img(0x904688)) = BRest2c(::bof3::Img(0x903A7A));
+    PutL(::bof3::Img(0x90468C), LRest2c(::bof3::Img(0x9040C8)));
+    BRest2c(::bof3::Img(0x904689)) = static_cast<unsigned char>(Config_WindowColour);
+    BRest2c(::bof3::Img(0x90468A)) = Config_Background;
+    PutL(::bof3::Img(0x904690), LRest2c(::bof3::Img(0x903A7C)));
+    const unsigned char flag = SH_CALL(Flags_Test)(AtRest2c(::bof3::Img(Cond_Flags_addr) + 0xa0), 0x92);
+    BRest2c(::bof3::Img(0x904694)) = flag;
+    SaveMenu_ScriptFlagsSaved = BRest2c(::bof3::Img(0x9039A2));
     U sum = 0;
     for (U i = 0; i < at::kBlockBytes; ++i) {
-        const unsigned char v = B(::bof3::Img(at::kBlock.v) + i);
-        B(::bof3::Img(at::kStaging.v) + i) = v;
+        const unsigned char v = BRest2c(::bof3::Img(at::kBlock.v) + i);
+        BRest2c(::bof3::Img(at::kStaging.v) + i) = v;
         sum += v;
     }
-    std::memset(At(::bof3::Img(Save_Staging_addr) + at::kBlockBytes), 0, at::kStagingClear);
+    std::memset(AtRest2c(::bof3::Img(Save_Staging_addr) + at::kBlockBytes), 0, at::kStagingClear);
     PutW(::bof3::Img(at::kChecksum.v), sum);
     CopySummary(Rest2c_Slot, "Save_BuildBlock");
 }
@@ -419,10 +419,10 @@ extern "C" void __cdecl Save_BuildBlock(void) {
 // Save_WriteFile answered -1, the slot's summary.
 extern "C" void __cdecl Save_QuickWrite(void) {
     Rest2c_Slot = 0;
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kPath.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kPathFormat.v))), 0u);
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(at::kPathFormat.v))), 0u);
     SH_CALL(Save_BuildBlock)();
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kPath.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kPathFormat.v))), Rest2c_Slot);
-    const int written = SH_CALL(Save_WriteFile)(reinterpret_cast<const char*>(At(::bof3::Img(at::kPath.v))), at::kSaveSize);
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(AtRest2c(::bof3::Img(at::kPath.v))), reinterpret_cast<const char*>(AtRest2c(::bof3::Img(at::kPathFormat.v))), Rest2c_Slot);
+    const int written = SH_CALL(Save_WriteFile)(reinterpret_cast<const char*>(AtRest2c(::bof3::Img(at::kPath.v))), at::kSaveSize);
     if (written == -1) return;
     CopySummary(Rest2c_Slot, "Save_QuickWrite");
 }
@@ -452,36 +452,36 @@ extern "C" void __cdecl ShopSell_SellStep(void) { Jump(::bof3::Img(ShopSell_Sell
 // 9, +0xA..+0xD 0, 0, 0, 0xFF, +8 3, +9 0, the words +0x10 and +0x12 0;
 // 0x6BC8AA = 1, 0x6BC8A4 = 0; the state two on, the step 0.
 extern "C" void __cdecl ShopSell_Open(void) {
-    B(Win(0, 0)) = 1;
-    B(Win(1, 2)) = 1;
-    B(Win(1, 0)) = 1;
-    B(Win(7, 0)) = 1;
+    BRest2c(Win(0, 0)) = 1;
+    BRest2c(Win(1, 2)) = 1;
+    BRest2c(Win(1, 0)) = 1;
+    BRest2c(Win(7, 0)) = 1;
     ShopStates2_SellFlag = 1;
     const auto state = static_cast<unsigned char>(FieldS_State + 2);
-    B(Win(0, 3)) = 2;
-    B(Win(1, 3)) = 2;
-    B(Win(7, 3)) = 2;
-    B(Win(0, 1)) = 7;
-    B(Win(0, 2)) = 0;
+    BRest2c(Win(0, 3)) = 2;
+    BRest2c(Win(1, 3)) = 2;
+    BRest2c(Win(7, 3)) = 2;
+    BRest2c(Win(0, 1)) = 7;
+    BRest2c(Win(0, 2)) = 0;
     PutW(Win(0, 4), 0x14);
     PutW(Win(0, 6), 0xFFEC);
     PutW(Win(0, 0x10), 0);
-    B(Win(1, 1)) = 7;
+    BRest2c(Win(1, 1)) = 7;
     PutW(Win(1, 4), 0x68);
     PutW(Win(1, 6), 0xFFEC);
-    B(Win(21, 1)) = 7;
-    B(Win(21, 2)) = 3;
-    B(Win(21, 0)) = 0;
+    BRest2c(Win(21, 1)) = 7;
+    BRest2c(Win(21, 2)) = 3;
+    BRest2c(Win(21, 0)) = 0;
     PutW(Win(7, 4), 0x140);
     PutW(Win(7, 6), 0x3E);
-    B(Win(7, 1)) = 7;
-    B(Win(7, 2)) = 9;
-    B(Win(7, 0xA)) = 0;
-    B(Win(7, 0xB)) = 0;
-    B(Win(7, 0xC)) = 0;
-    B(Win(7, 0xD)) = 0xFF;
-    B(Win(7, 8)) = 3;
-    B(Win(7, 9)) = 0;
+    BRest2c(Win(7, 1)) = 7;
+    BRest2c(Win(7, 2)) = 9;
+    BRest2c(Win(7, 0xA)) = 0;
+    BRest2c(Win(7, 0xB)) = 0;
+    BRest2c(Win(7, 0xC)) = 0;
+    BRest2c(Win(7, 0xD)) = 0xFF;
+    BRest2c(Win(7, 8)) = 3;
+    BRest2c(Win(7, 9)) = 0;
     PutW(Win(7, 0x10), 0);
     PutW(Win(7, 0x12), 0);
     Rest2c_SellFlag = 0;
@@ -492,20 +492,20 @@ extern "C" void __cdecl ShopSell_Open(void) {
 // original 0x582FB0, ShopSell_States[1]: windows 0, 1 and 7's +3 = 1 (out),
 // the hand off; the timer 5, the state two on (to 3), the step 0.
 extern "C" void __cdecl ShopSell_Leave(void) {
-    B(Win(0, 3)) = 1;
-    B(Win(1, 3)) = 1;
-    B(Win(7, 3)) = 1;
+    BRest2c(Win(0, 3)) = 1;
+    BRest2c(Win(1, 3)) = 1;
+    BRest2c(Win(7, 3)) = 1;
     const auto state = static_cast<unsigned char>(FieldS_State + 2);
-    B(Win(21, 0)) = 0;
-    B(::bof3::Img(at::kTimer.v)) = 5;
+    BRest2c(Win(21, 0)) = 0;
+    BRest2c(::bof3::Img(at::kTimer.v)) = 5;
     FieldS_State = state;
     FieldS_Step = 0;
 }
 
 // original 0x583000, ShopSell_States[3]: the timer down; at 0, mode 1.
 extern "C" void __cdecl ShopSell_LeaveWait(void) {
-    const auto timer = static_cast<unsigned char>(B(::bof3::Img(at::kTimer.v)) - 1);
-    B(::bof3::Img(at::kTimer.v)) = timer;
+    const auto timer = static_cast<unsigned char>(BRest2c(::bof3::Img(at::kTimer.v)) - 1);
+    BRest2c(::bof3::Img(at::kTimer.v)) = timer;
     if (timer == 0) BattleE1_Mode = 1;
 }
 
@@ -530,7 +530,7 @@ extern "C" void __cdecl ShopBrowse_CloseStep(void) { Jump(::bof3::Img(ShopBrowse
 extern "C" void __cdecl ShopBrowse_Open(void) {
     SH_CALL(ShopBrowse_InitWindows)();
     const auto step = static_cast<unsigned char>(FieldS_Step + 1);
-    B(::bof3::Img(at::kTimer.v)) = 6;
+    BRest2c(::bof3::Img(at::kTimer.v)) = 6;
     FieldS_Step = step;
     SH_CALL(Sound_PlayEffect)(0x102);
 }
@@ -538,8 +538,8 @@ extern "C" void __cdecl ShopBrowse_Open(void) {
 // original 0x5833A0, open step 1: the timer down; at 0 the step 0 and the
 // state up.
 extern "C" void __cdecl ShopBrowse_OpenWait(void) {
-    const auto timer = static_cast<unsigned char>(B(::bof3::Img(at::kTimer.v)) - 1);
-    B(::bof3::Img(at::kTimer.v)) = timer;
+    const auto timer = static_cast<unsigned char>(BRest2c(::bof3::Img(at::kTimer.v)) - 1);
+    BRest2c(::bof3::Img(at::kTimer.v)) = timer;
     if (timer != 0) return;
     const auto state = static_cast<unsigned char>(FieldS_State + 1);
     FieldS_Step = 0;
@@ -564,57 +564,57 @@ extern "C" void __cdecl ShopBrowse_OpenWait(void) {
 // entry 0x107. Else a cancel button: 0x106, 0x102, the hand off, windows 0
 // and 1 +3 = 1, the timer 0xA, the state up (read before) and the step 0.
 extern "C" void __cdecl ShopBrowse_Choose(void) {
-    PutW(Win(21, 4), L(Win(1, 4)) + 4);
-    B(Win(8, 0xA)) = 0;
-    const unsigned rows = static_cast<unsigned>(B(Win(1, 0xB))) - B(Win(1, 0xA)) + 2;
+    PutW(Win(21, 4), LRest2c(Win(1, 4)) + 4);
+    BRest2c(Win(8, 0xA)) = 0;
+    const unsigned rows = static_cast<unsigned>(BRest2c(Win(1, 0xB))) - BRest2c(Win(1, 0xA)) + 2;
     PutW(Win(0, 0x10), 0x32);
-    B(Win(21, 0)) = 1;
-    PutW(Win(21, 6), (rows * 13 + Word(At(Win(1, 6)))) & 0xFFFF);
+    BRest2c(Win(21, 0)) = 1;
+    PutW(Win(21, 6), (rows * 13 + Word(AtRest2c(Win(1, 6)))) & 0xFFFF);
     const unsigned keys = SH_CALL(Input_AutoRepeat)(Input_Pressed & Sigma(0xF00C));
-    unsigned char cursor = B(Win(1, 0xB));
+    unsigned char cursor = BRest2c(Win(1, 0xB));
     const unsigned char kept = cursor;
     if (keys & 0x1000) {
         if (cursor > 0) {
             --cursor;
-            B(Win(1, 0xB)) = cursor;
+            BRest2c(Win(1, 0xB)) = cursor;
         }
-        if (cursor < B(Win(1, 0xA))) B(Win(1, 8)) = 0xF0;
+        if (cursor < BRest2c(Win(1, 0xA))) BRest2c(Win(1, 8)) = 0xF0;
     } else if (keys & 0x4000) {
         if (cursor < 0x10) {
             ++cursor;
-            B(Win(1, 0xB)) = cursor;
+            BRest2c(Win(1, 0xB)) = cursor;
         }
-        if (static_cast<int>(cursor) >= static_cast<int>(B(Win(1, 0xA))) + 9) B(Win(1, 8)) = 0x10;
+        if (static_cast<int>(cursor) >= static_cast<int>(BRest2c(Win(1, 0xA))) + 9) BRest2c(Win(1, 8)) = 0x10;
     } else if (keys & Sigma(0x0004)) {
-        const unsigned char first = B(Win(1, 0xA));
+        const unsigned char first = BRest2c(Win(1, 0xA));
         if (first == 0) {
             cursor = 0;
-            B(Win(1, 0xB)) = cursor;
+            BRest2c(Win(1, 0xB)) = cursor;
         } else if (first < 9) {
             cursor = static_cast<unsigned char>(cursor - first);
-            B(Win(1, 0xA)) = 0;
-            B(Win(1, 0xB)) = cursor;
+            BRest2c(Win(1, 0xA)) = 0;
+            BRest2c(Win(1, 0xB)) = cursor;
         } else {
             cursor = static_cast<unsigned char>(cursor - 9);
-            B(Win(1, 0xB)) = cursor;
-            B(Win(1, 0xA)) = static_cast<unsigned char>(first - 9);
+            BRest2c(Win(1, 0xB)) = cursor;
+            BRest2c(Win(1, 0xA)) = static_cast<unsigned char>(first - 9);
         }
     } else if (keys & Sigma(0x0008)) {
-        const unsigned char first = B(Win(1, 0xA));
+        const unsigned char first = BRest2c(Win(1, 0xA));
         if (first == 8) {
             cursor = 0x10;
-            B(Win(1, 0xB)) = cursor;
+            BRest2c(Win(1, 0xB)) = cursor;
         } else {
-            B(Win(1, 0xA)) = 8;
+            BRest2c(Win(1, 0xA)) = 8;
             cursor = static_cast<unsigned char>(cursor + static_cast<unsigned char>(8 - first));
-            B(Win(1, 0xB)) = cursor;
+            BRest2c(Win(1, 0xB)) = cursor;
         }
     }
     if (kept != cursor) SH_CALL(Sound_PlayEffect)(0x100);
-    if (B(Win(1, 8)) != 0) return;
+    if (BRest2c(Win(1, 8)) != 0) return;
     const unsigned pressed = Input_Pressed;
     if (Field_ConfirmButtons & pressed) {
-        if (B(Win(1, 0xD)) == 0xFF) {
+        if (BRest2c(Win(1, 0xD)) == 0xFF) {
             SH_CALL(Sound_PlayEffect)(0x107);
             return;
         }
@@ -622,9 +622,9 @@ extern "C" void __cdecl ShopBrowse_Choose(void) {
         SH_CALL(Sound_PlayEffect)(0x102);
         SH_CALL(ShopBrowse_OpenDetail)();
         const auto step = static_cast<unsigned char>(FieldS_Step + 1);
-        B(Win(21, 0)) = 0;
-        B(Win(1, 3)) = 3;
-        B(::bof3::Img(at::kTimer.v)) = 8;
+        BRest2c(Win(21, 0)) = 0;
+        BRest2c(Win(1, 3)) = 3;
+        BRest2c(::bof3::Img(at::kTimer.v)) = 8;
         FieldS_Step = step;
         return;
     }
@@ -632,10 +632,10 @@ extern "C" void __cdecl ShopBrowse_Choose(void) {
     SH_CALL(Sound_PlayEffect)(0x106);
     SH_CALL(Sound_PlayEffect)(0x102);
     const auto state = static_cast<unsigned char>(FieldS_State + 1);
-    B(Win(21, 0)) = 0;
-    B(Win(0, 3)) = 1;
-    B(Win(1, 3)) = 1;
-    B(::bof3::Img(at::kTimer.v)) = 0xA;
+    BRest2c(Win(21, 0)) = 0;
+    BRest2c(Win(0, 3)) = 1;
+    BRest2c(Win(1, 3)) = 1;
+    BRest2c(::bof3::Img(at::kTimer.v)) = 0xA;
     FieldS_State = state;
     FieldS_Step = 0;
 }
@@ -646,31 +646,31 @@ extern "C" void __cdecl ShopBrowse_Choose(void) {
 // At 0, a cancel button: 0x106, 0x102, windows 2 and 3 +3 = 1, window 1 +3 =
 // 2 and +0xC = 0x7F, the timer 8, the step up (read before the stores).
 extern "C" void __cdecl ShopBrowse_Detail(void) {
-    PutW(Win(0, 0x10), (B(Win(1, 0xD)) + 0x122u) & 0xFFFF);
-    const unsigned char cursor = B(Win(1, 0xB));
-    const unsigned char timer = B(::bof3::Img(at::kTimer.v));
-    B(Win(1, 0xC)) = cursor;
+    PutW(Win(0, 0x10), (BRest2c(Win(1, 0xD)) + 0x122u) & 0xFFFF);
+    const unsigned char cursor = BRest2c(Win(1, 0xB));
+    const unsigned char timer = BRest2c(::bof3::Img(at::kTimer.v));
+    BRest2c(Win(1, 0xC)) = cursor;
     if (timer != 0) {
-        B(::bof3::Img(at::kTimer.v)) = static_cast<unsigned char>(timer - 1);
+        BRest2c(::bof3::Img(at::kTimer.v)) = static_cast<unsigned char>(timer - 1);
         return;
     }
     if ((Field_CancelButtons & Input_Pressed) == 0) return;
     SH_CALL(Sound_PlayEffect)(0x106);
     SH_CALL(Sound_PlayEffect)(0x102);
-    B(Win(2, 3)) = 1;
-    B(Win(3, 3)) = 1;
+    BRest2c(Win(2, 3)) = 1;
+    BRest2c(Win(3, 3)) = 1;
     const auto step = static_cast<unsigned char>(FieldS_Step + 1);
-    B(Win(1, 3)) = 2;
-    B(Win(1, 0xC)) = 0x7F;
-    B(::bof3::Img(at::kTimer.v)) = 8;
+    BRest2c(Win(1, 3)) = 2;
+    BRest2c(Win(1, 0xC)) = 0x7F;
+    BRest2c(::bof3::Img(at::kTimer.v)) = 8;
     FieldS_Step = step;
 }
 
 // original 0x583680, choose step 2: the timer down; at 0 the step two back
 // (to the list).
 extern "C" void __cdecl ShopBrowse_DetailClose(void) {
-    const auto timer = static_cast<unsigned char>(B(::bof3::Img(at::kTimer.v)) - 1);
-    B(::bof3::Img(at::kTimer.v)) = timer;
+    const auto timer = static_cast<unsigned char>(BRest2c(::bof3::Img(at::kTimer.v)) - 1);
+    BRest2c(::bof3::Img(at::kTimer.v)) = timer;
     if (timer == 0) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 0xFE);
 }
 
@@ -716,7 +716,7 @@ extern "C" void __cdecl MasterTalk_PickStep(void) { Jump(::bof3::Img(MasterTalk_
 // 0x904657 by the master 0x9039F5) set - mode 5; else master 9 - script
 // message 0x2E, Field_Request 2, mode 6; else mode 1.
 extern "C" void __cdecl MasterTalk_Begin(void) {
-    if (SH_CALL(Flags_Test)(At(::bof3::Img(at::kIntroFlags.v)), AreaW0c_TailSub) != 0) {
+    if (SH_CALL(Flags_Test)(AtRest2c(::bof3::Img(at::kIntroFlags.v)), AreaW0c_TailSub) != 0) {
         AreaW0c_AnswerMark = 5;
         return;
     }
@@ -732,7 +732,7 @@ extern "C" void __cdecl MasterTalk_Begin(void) {
 // original 0x5866E0, intro step 0: Flags_Set(0x904654, master), the master's
 // message (its base, the master read again), Field_Request 2, the step up.
 extern "C" void __cdecl MasterTalk_IntroSay(void) {
-    SH_CALL(Flags_Set)(At(::bof3::Img(at::kMetFlags.v)), AreaW0c_TailSub);
+    SH_CALL(Flags_Set)(AtRest2c(::bof3::Img(at::kMetFlags.v)), AreaW0c_TailSub);
     SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(MasterMessage(AreaW0c_TailSub, 0)));
     const auto step = static_cast<unsigned char>(AreaW3f_AnswerMarkD1 + 1);
     Field_Request = 2;
@@ -743,7 +743,7 @@ extern "C" void __cdecl MasterTalk_IntroSay(void) {
 // closed): Flags_Set(0x904657, master), mode 3, the step 0.
 extern "C" void __cdecl MasterTalk_IntroWait(void) {
     if (Field_Request == 2) return;
-    SH_CALL(Flags_Set)(At(::bof3::Img(at::kIntroFlags.v)), AreaW0c_TailSub);
+    SH_CALL(Flags_Set)(AtRest2c(::bof3::Img(at::kIntroFlags.v)), AreaW0c_TailSub);
     AreaW0c_AnswerMark = 3;
     AreaW3f_AnswerMarkD1 = 0;
 }
@@ -766,8 +766,8 @@ unsigned FirstMember(unsigned char master, bool equal) {
     const int count = Field_MemberCount;
     int i = 0;
     for (; i < count; ++i) {
-        const unsigned record = B(::bof3::Img(at::kMembers.v) + static_cast<U>(i) * at::kObjStride);
-        const bool same = B(::bof3::Img(at::kRecords.v) + 0x1F + record * at::kRecordStride) == master;
+        const unsigned record = BRest2c(::bof3::Img(at::kMembers.v) + static_cast<U>(i) * at::kObjStride);
+        const bool same = BRest2c(::bof3::Img(at::kRecords.v) + 0x1F + record * at::kRecordStride) == master;
         if (same == equal) break;
     }
     return static_cast<unsigned>(i);
@@ -849,7 +849,7 @@ namespace {
 // Menu_DrawPanelBox(0x14, 0x10 - 10 * slide, 0x118, 0x13, the window colour).
 void Panels() {
     for (unsigned slot = 0; slot < Field_MemberCount; ++slot) {
-        const unsigned char* const member = At(::bof3::Img(ObjTrio_addr) + 0x148 + slot * at::kObjStride);
+        const unsigned char* const member = AtRest2c(::bof3::Img(ObjTrio_addr) + 0x148 + slot * at::kObjStride);
         const int y = static_cast<int>(54 * slot + 0x3E);
         SH_CALL(MasterPanel_DrawMember)(0x11 - 36 * Rest2c_TalkSlide, y, member[0], slot);
         SH_CALL(MasterPanel_DrawStats)(0x89 + 40 * Rest2c_TalkSlide, y, member[0]);
@@ -898,9 +898,9 @@ extern "C" void __cdecl MasterTalk_PickAsk(void) {
 extern "C" void __cdecl MasterPanel_DrawStats(int x, int y, unsigned record) {
     SH_CALL(Menu_DrawBox)(x + 5, y + 3, 0x94, 0x2D, 0, static_cast<unsigned char>(Config_WindowColour));
     const U r = ::bof3::Img(CharacterRecords_addr) + (record & 0xFF) * at::kRecordStride;
-    char* const buffer = reinterpret_cast<char*>(At(::bof3::Img(at::kPath.v)));
+    char* const buffer = reinterpret_cast<char*>(AtRest2c(::bof3::Img(at::kPath.v)));
     const auto* const text = reinterpret_cast<const unsigned char*>(buffer);
-    const auto* const format = reinterpret_cast<const char*>(At(::bof3::Img(at::kFmtNumber.v)));
+    const auto* const format = reinterpret_cast<const char*>(AtRest2c(::bof3::Img(at::kFmtNumber.v)));
     struct Stat { int lx, ly, nx, ny; U label, word; };
     const Stat stats[4] = {
         {x + 0xB, y + 8, x + 0x30, y + 0xA, ::bof3::Img(at::kStatLabels.v), 0x24},
@@ -909,20 +909,20 @@ extern "C" void __cdecl MasterPanel_DrawStats(int x, int y, unsigned record) {
         {x + 0x53, y + 0x15, x + 0x78, y + 0x17, ::bof3::Img(at::kStatLabels.v) + 0x18, 0x28},
     };
     for (const Stat& s : stats) {
-        SH_CALL(Text_DrawAt)(s.lx, s.ly, 0, 0xFF, At(s.label));
-        SH_CALL(Crt_sprintf)(buffer, format, static_cast<unsigned>(Word(At(r + s.word))));
+        SH_CALL(Text_DrawAt)(s.lx, s.ly, 0, 0xFF, AtRest2c(s.label));
+        SH_CALL(Crt_sprintf)(buffer, format, static_cast<unsigned>(Word(AtRest2c(r + s.word))));
         SH_CALL(Text_DrawFont8)(s.nx, s.ny, 0, text);
     }
-    const unsigned char master = B(r + 0x1F);
+    const unsigned char master = BRest2c(r + 0x1F);
     if (master != 0xFF) {
         const unsigned char* const name = SH_CALL(Msg_SystemPtr)(master + 0x111u);
         SH_CALL(TextRecord_Set)(0, 8, name);
         const unsigned char* const line = SH_CALL(Msg_SystemPtr)(0x34);
         SH_CALL(Text_DrawAt)(x + 0xB, y + 0x22, 0, 0xFF, line);
     }
-    SH_CALL(Menu_DrawPieces)(x, y, At(::bof3::Img(at::kStatsPieces.v)), 0);
-    for (int k = 0; k < 16; ++k) SH_CALL(Menu_DrawPieces)(x + 8 * k, y, At(::bof3::Img(at::kStatsRow.v)), 0);
-    SH_CALL(Menu_DrawPieces)(x, y, At(::bof3::Img(at::kStatsEnd.v)), 0);
+    SH_CALL(Menu_DrawPieces)(x, y, AtRest2c(::bof3::Img(at::kStatsPieces.v)), 0);
+    for (int k = 0; k < 16; ++k) SH_CALL(Menu_DrawPieces)(x + 8 * k, y, AtRest2c(::bof3::Img(at::kStatsRow.v)), 0);
+    SH_CALL(Menu_DrawPieces)(x, y, AtRest2c(::bof3::Img(at::kStatsEnd.v)), 0);
 }
 
 // original 0x585DC0: the member panel of record r (its byte) in party slot s:
@@ -942,38 +942,38 @@ extern "C" void __cdecl MasterPanel_DrawStats(int x, int y, unsigned record) {
 extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, unsigned slot) {
     SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x7D, 0x30, 0, static_cast<unsigned char>(Config_WindowColour));
     const U r = ::bof3::Img(CharacterRecords_addr) + (record & 0xFF) * at::kRecordStride;
-    const unsigned char id = rv::As<records::CharRecord>(At(r))->char_id;
-    const unsigned shade = (B(r + 0x10) >> 6) & 2;
+    const unsigned char id = rv::As<records::CharRecord>(AtRest2c(r))->char_id;
+    const unsigned shade = (BRest2c(r + 0x10) >> 6) & 2;
     SH_CALL(MasterPanel_DrawFace)(x + 0x56, y + 2, id, shade);
-    SH_CALL(Text_DrawAt)(x + 0x14, y + 3, 0, 5, At(r));
-    char* const buffer = reinterpret_cast<char*>(At(::bof3::Img(at::kPath.v)));
+    SH_CALL(Text_DrawAt)(x + 0x14, y + 3, 0, 5, AtRest2c(r));
+    char* const buffer = reinterpret_cast<char*>(AtRest2c(::bof3::Img(at::kPath.v)));
     const auto* const text = reinterpret_cast<const unsigned char*>(buffer);
-    SH_CALL(Crt_sprintf)(buffer, reinterpret_cast<const char*>(At(::bof3::Img(at::kFmtNumber.v))), static_cast<unsigned>(B(r + 0xA)));
+    SH_CALL(Crt_sprintf)(buffer, reinterpret_cast<const char*>(AtRest2c(::bof3::Img(at::kFmtNumber.v))), static_cast<unsigned>(BRest2c(r + 0xA)));
     SH_CALL(Text_DrawFont8)(x + 0x16, y + 0x17, 0, text);
-    const unsigned status = Word(At(r + 0x10));
+    const unsigned status = Word(AtRest2c(r + 0x10));
     U words = 0;
-    if (status & 0x80) words = (status & 0x20) && (B(::bof3::Img(at::kFrameCounter.v)) & 0x20) == 0 ? ::bof3::Img(at::kStatusB.v) : ::bof3::Img(at::kStatusA.v);
+    if (status & 0x80) words = (status & 0x20) && (BRest2c(::bof3::Img(at::kFrameCounter.v)) & 0x20) == 0 ? ::bof3::Img(at::kStatusB.v) : ::bof3::Img(at::kStatusA.v);
     else if (status & 0x20) words = ::bof3::Img(at::kStatusB.v);
-    if (words != 0) SH_CALL(Text_DrawSmall)(x + 0x2E, y + 0x17, 1, 0x10, At(words));
-    const auto* const left = reinterpret_cast<const char*>(At(::bof3::Img(at::kFmtLeft.v)));
-    const auto* const right = reinterpret_cast<const char*>(At(::bof3::Img(at::kFmtRight.v)));
-    int colour = (B(r + 0x11) & 0x20) ? 4 : 0;
-    const unsigned hp = rv::As<records::CharRecord>(At(r))->hp;
+    if (words != 0) SH_CALL(Text_DrawSmall)(x + 0x2E, y + 0x17, 1, 0x10, AtRest2c(words));
+    const auto* const left = reinterpret_cast<const char*>(AtRest2c(::bof3::Img(at::kFmtLeft.v)));
+    const auto* const right = reinterpret_cast<const char*>(AtRest2c(::bof3::Img(at::kFmtRight.v)));
+    int colour = (BRest2c(r + 0x11) & 0x20) ? 4 : 0;
+    const unsigned hp = rv::As<records::CharRecord>(AtRest2c(r))->hp;
     if (hp <= 1) colour = 2;
     SH_CALL(Crt_sprintf)(buffer, left, hp);
     SH_CALL(Text_DrawFont8)(x + 0x16, y + 0x1F, colour, text);
-    SH_CALL(Crt_sprintf)(buffer, right, static_cast<unsigned>(Word(At(r + 0x20))));
+    SH_CALL(Crt_sprintf)(buffer, right, static_cast<unsigned>(Word(AtRest2c(r + 0x20))));
     SH_CALL(Text_DrawFont8)(x + 0x16, y + 0x1F, 0, text);
-    const unsigned ap = rv::As<records::CharRecord>(At(r))->ap;
-    colour = ap <= static_cast<unsigned>(Word(At(r + 0x22)) >> 2) ? 4 : 0;
+    const unsigned ap = rv::As<records::CharRecord>(AtRest2c(r))->ap;
+    colour = ap <= static_cast<unsigned>(Word(AtRest2c(r + 0x22)) >> 2) ? 4 : 0;
     if (ap == 0) colour = 2;
     SH_CALL(Crt_sprintf)(buffer, left, ap);
     SH_CALL(Text_DrawFont8)(x + 0x16, y + 0x27, colour, text);
-    SH_CALL(Crt_sprintf)(buffer, right, static_cast<unsigned>(Word(At(r + 0x22))));
+    SH_CALL(Crt_sprintf)(buffer, right, static_cast<unsigned>(Word(AtRest2c(r + 0x22))));
     SH_CALL(Text_DrawFont8)(x + 0x16, y + 0x27, 0, text);
-    SH_CALL(Menu_DrawPieces)(x, y, At(::bof3::Img(at::kMemberPieces.v)), 0);
-    const U exp = static_cast<U>(rv::As<records::CharRecord>(At(r))->exp);
-    const unsigned level = B(r + 0xA);
+    SH_CALL(Menu_DrawPieces)(x, y, AtRest2c(::bof3::Img(at::kMemberPieces.v)), 0);
+    const U exp = static_cast<U>(rv::As<records::CharRecord>(AtRest2c(r))->exp);
+    const unsigned level = BRest2c(r + 0xA);
     SH_CALL(MasterPanel_DrawExpBar)(x + 0x14, y + 0x12, record, level, exp);
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext.Native(), 0, 0, 0xF, 0);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
@@ -1025,7 +1025,7 @@ extern "C" int __cdecl MasterPanel_ExpForLevel(unsigned record, unsigned level) 
     if (n > 0x63) return -1;
     U sum = 0;
     const U row = ::bof3::Img(at::kExpTable.v) + (record & 0xFF) * 0x318u;
-    for (unsigned i = 0; i < n; ++i) sum += Word(At(row + 8 * i));
+    for (unsigned i = 0; i < n; ++i) sum += Word(AtRest2c(row + 8 * i));
     return static_cast<int>(sum);
 }
 
@@ -1169,9 +1169,9 @@ extern "C" void __cdecl MasterPanel_DrawFace(int x, int y, unsigned id, unsigned
     }
     PutF(p + 8, static_cast<float>(static_cast<int>(static_cast<U>(x) & 0xFFFF)));
     PutF(p + 0xC, static_cast<float>(static_cast<int>(static_cast<U>(y) & 0xFFFF)));
-    p[0x14] = B(entry);
-    p[0x15] = B(entry + 1);
-    const unsigned clut = (((B(entry + 3) + 0x1E0u) << 6) | (B(entry + 2) >> 4)) & 0xFFFF;
+    p[0x14] = BRest2c(entry);
+    p[0x15] = BRest2c(entry + 1);
+    const unsigned clut = (((BRest2c(entry + 3) + 0x1E0u) << 6) | (BRest2c(entry + 2) >> 4)) & 0xFFFF;
     PutW(Key(p + 0x18), 0x28);
     PutW(Key(p + 0x1A), 0x30);
     PutW(Key(p + 0x16), clut);
