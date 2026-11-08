@@ -87,8 +87,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 std::uint32_t Addr(const void* p) { return Low32(p); }
-unsigned char* Ptr(std::uint32_t at) { return At(static_cast<std::uint32_t>(Long(At(at)))); }
-unsigned char* Current() { return Ptr(::bof3::Img(at::kCurrent.v)); }
+unsigned char* PtrBattleWindows(std::uint32_t at) { return At(static_cast<std::uint32_t>(Long(At(at)))); }
+unsigned char* CurrentBattleWindows() { return PtrBattleWindows(::bof3::Img(at::kCurrent.v)); }
 unsigned char* FieldState() { return Field_State; }
 unsigned char* Sprite() { return Sprite_Current; }
 
@@ -127,7 +127,7 @@ unsigned Darker(unsigned c) {
 }
 
 // A party member's battle object (ObjTrio, stride 0x14C) and its words.
-unsigned char* Member(unsigned i) { return At(::bof3::Img(ObjTrio_addr) + at::kObjectStride * i); }
+unsigned char* MemberBattleWindows(unsigned i) { return At(::bof3::Img(ObjTrio_addr) + at::kObjectStride * i); }
 
 // A status colour from the member's +0x90 flags: 2 when bit 14 (grey),
 // else what the caller derives.
@@ -156,12 +156,12 @@ extern "C" unsigned __cdecl BattleObj_RunState() {
 // so the answer is its eax).
 extern "C" unsigned __cdecl BattleParty_RunStates() {
     for (unsigned i = 0; i < 2; ++i) {
-        Field_State = Member(i);
-        Sprite_Current = Member(i);
+        Field_State = MemberBattleWindows(i);
+        Sprite_Current = MemberBattleWindows(i);
         g.run_state();
     }
-    Field_State = Member(2);
-    Sprite_Current = Member(2);
+    Field_State = MemberBattleWindows(2);
+    Sprite_Current = MemberBattleWindows(2);
     return g.run_state();
 }
 
@@ -169,7 +169,7 @@ extern "C" unsigned __cdecl BattleParty_RunStates() {
 // and its screen slot updated when +0 has bit 0 and not bit 6.
 extern "C" void __cdecl BattleParty_UpdateScreens() {
     for (unsigned i = 0; i < 3; ++i) {
-        unsigned char* const o = Member(i);
+        unsigned char* const o = MemberBattleWindows(i);
         auto* const member_rec = rv::As<records::PartyMember>(o);
         Field_State = o;
         Sprite_Current = o;
@@ -270,7 +270,7 @@ extern "C" void __cdecl BattleWin_DrawPartyStatus(int x, int y) {
         const unsigned char* const bars = At(::bof3::Img(WindowRecords_addr) + 0x1df + 36 * i);
         const unsigned char b1 = bars[2], b0 = bars[0];
         g.draw_bar(xs, y + 0xE, b0, b1, 0);
-        unsigned char* const m = Member(i);
+        unsigned char* const m = MemberBattleWindows(i);
         auto* const member_rec = rv::As<records::PartyMember>(m);
         if (member_rec->max_ap != 0) {
             g.line_semi1(xs, y + 0xE, bars[1] + slot + 0x14, y + 0xE, 0x64, 0, 0xC8);
@@ -493,7 +493,7 @@ void TargetFrame(int x, int y) {
 // An enemy's gauge, or 0x444340 of 0xFFFF (its ":" glyph, no number) when +0xF is not 1.
 void EnemyGauge(int x, int y, std::uint32_t enemy) {
     if (At(enemy + 0xF)[0] == 1) {
-        const unsigned char* const w = Current();
+        const unsigned char* const w = CurrentBattleWindows();
         g.draw_bar(x + 6, y + 0xA, w[0xB], w[0xD], 1);
     } else {
         g.draw_value(x + 0x24, y + 0xC, 0, 0xFFFF);
@@ -565,7 +565,7 @@ extern "C" void __cdecl BattleWin_DrawTargetMember(int x, int y, unsigned m) {
     g.draw_tile(x, y + 2, 8, 0);
     g.draw_edge(x, y, 2, 0);
     g.draw_edge(x, y + 0x13, 3, 0);
-    unsigned char* const o = Member(m & 0xFF);
+    unsigned char* const o = MemberBattleWindows(m & 0xFF);
     auto* const member_rec = rv::As<records::PartyMember>(o);
     g.tiny_font(x + 4, y + 2, StatusColourName(member_rec->status), 5, o + 0x80);
     const unsigned colour = StatusColourHp(member_rec->status);
@@ -591,21 +591,21 @@ extern "C" void __cdecl BattleWin_DrawTargetMember(int x, int y, unsigned m) {
 // original 0x5979E0: the current window record's +0xF set and its state +3
 // stepped on.
 extern "C" void __cdecl Window_FlagAndAdvance() {
-    Current()[0xF] = 1;
-    ++rv::As<records::WindowRecord>(Current())->state;
+    CurrentBattleWindows()[0xF] = 1;
+    ++rv::As<records::WindowRecord>(CurrentBattleWindows())->state;
 }
 
 // original 0x597A00: the current window record's position +4 / +6 put back
 // from +0x10 / +0x12, +0xF cleared, its state +3 stepped back.
 extern "C" void __cdecl Window_RestoreAndBack() {
-    unsigned char* w = Current();
+    unsigned char* w = CurrentBattleWindows();
     records::WindowRecord* win = rv::As<records::WindowRecord>(w);
     win->x = rv::As<records::BattleWindow>(w)->home_x;
-    w = Current();
+    w = CurrentBattleWindows();
     win = rv::As<records::WindowRecord>(w);
     win->y = rv::As<records::BattleWindow>(w)->home_y;
-    Current()[0xF] = 0;
-    --rv::As<records::WindowRecord>(Current())->state;
+    CurrentBattleWindows()[0xF] = 0;
+    --rv::As<records::WindowRecord>(CurrentBattleWindows())->state;
 }
 
 // original 0x597A30: a window kind's handler by the byte its eighth argument
@@ -636,11 +636,11 @@ extern "C" __attribute__((disable_tail_calls, noinline)) unsigned __cdecl Window
 // through Text_DrawAt at (+4 + 4, +6 + 3), to its end. The record and the
 // index are read after the box.
 extern "C" void __cdecl BattleWin_DrawMessage() {
-    const records::WindowRecord* win = rv::As<records::WindowRecord>(Current());
+    const records::WindowRecord* win = rv::As<records::WindowRecord>(CurrentBattleWindows());
     g.message_box(win->x, win->y);
     const unsigned index = BattleWindows_MsgHead;
     const auto* const text = At(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kMsgRing.v) + 8 * index))));
-    win = rv::As<records::WindowRecord>(Current());
+    win = rv::As<records::WindowRecord>(CurrentBattleWindows());
     g.text_draw_at(static_cast<std::uint16_t>(win->x + 4), static_cast<std::uint16_t>(win->y + 3), 0, 0xFF,
                    text);
 }
