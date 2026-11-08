@@ -60,17 +60,17 @@ using move_script::Word;
 using Handler = scenario_harness::Handler;
 
 unsigned char* S() { return Sprite_Current; }
-U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
-U UL(U a) { return UL(At(a)); }
-void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
-void SetUL(U a, U v) { SetUL(At(a), v); }
+U ULRest3g(const unsigned char* p) { return static_cast<U>(Long(p)); }
+U ULRest3g(U a) { return ULRest3g(At(a)); }
+void SetULRest3g(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
+void SetULRest3g(U a, U v) { SetULRest3g(At(a), v); }
 std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
-std::int32_t S8(unsigned char b) { return static_cast<signed char>(b); }
+std::int32_t S8Rest3g(unsigned char b) { return static_cast<signed char>(b); }
 U AddressOf(const void* p) { return Low32(p); }
 unsigned char* Vertices() { return reinterpret_cast<unsigned char*>(Prim_VertexScratch); }
 // sar on the 32 bits.
-U Sar(U v, unsigned n) { return static_cast<U>(I(v) >> n); }
+U SarRest3g(U v, unsigned n) { return static_cast<U>(I(v) >> n); }
 float Fl(U a) {
     float f;
     std::memcpy(&f, At(a), sizeof f);
@@ -79,7 +79,7 @@ float Fl(U a) {
 // The CRT's _ftol 0x5B9550 on the value x87 holds: truncation through a 64-bit
 // fistp, whose NaN and out-of-range answer is the integer indefinite
 // 0x8000000000000000 (its low dword 0); the callers keep eax or its low word.
-U Ftol(long double v) {
+U FtolRest3g(long double v) {
     if (!(v > -9.2233720368547758e18L && v < 9.2233720368547758e18L)) return 0;
     return static_cast<U>(static_cast<std::uint64_t>(static_cast<std::int64_t>(v)));
 }
@@ -97,13 +97,13 @@ void FpuCopy(void* to, const void* from) {
 // `entries` steps read in place (the fuzz swaps the cells for recorders); a
 // Fatal past them, where the original jumps through the dword after - the next
 // mode's table or data.
-void StepDispatch(const char* who, U table, unsigned entries) {
+void StepDispatchRest3g(const char* who, U table, unsigned entries) {
     const unsigned step = Game_Step;
     if (step >= entries)
         bof3::Fatal("%s: Game_Step is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_3g.md section 7)",
                     who, step, entries, (unsigned)table);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(UL(table + 4 * step)))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(ULRest3g(table + 4 * step)))();
 }
 
 // The two framed waits of the mode steps: while the wait word is not 0, a frame
@@ -118,7 +118,7 @@ void LoadingFrame() { SH_CALL(Field_LoadingFrame)(); }
 void Mode8Frame() { SH_CALL(GameMode8_WaitFrame)(); }
 // call File_LoadDone; test eax, eax; jne done; loop: [frame;] Task_Sleep(1);
 // File_LoadDone; test; je loop.
-void WaitLoad(void (*frame)()) {
+void WaitLoadRest3g(void (*frame)()) {
     if (SH_CALL(File_LoadDone)() != 0) return;
     do {
         if (frame) frame();
@@ -146,7 +146,7 @@ extern "C" void __cdecl EffectKindAC_Start(void) {
 extern "C" void __cdecl EffectKindAC_FadeIn(void) {
     {
         const unsigned char* const s = S();
-        const U product = static_cast<U>(S8(s[9]) * -0x20) & 0xFFFFu;
+        const U product = static_cast<U>(S8Rest3g(s[9]) * -0x20) & 0xFFFFu;
         SH_AT(void(__cdecl*)(U), at::kFadeDraw.v)((AddressOf(s) & 0xFFFF0000u) | product);
     }
     S()[9] = static_cast<unsigned char>(S()[9] - 1);
@@ -185,7 +185,7 @@ extern "C" void __cdecl EffectKindAD_Start(void) {
     rv::As<records::EffectObject>(s)->height = static_cast<U>(static_cast<std::int16_t>(h)) << 16;
     rv::As<records::EffectWork>(s)->work_0c = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x);
     rv::As<records::EffectWork>(s)->work_10 = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z);
-    SetUL(s + 0x14, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
+    SetULRest3g(s + 0x14, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
     s[0x5D] = 0;
     s[0x5E] = 0x80;
     s[9] = 0x20;
@@ -261,11 +261,11 @@ extern "C" void __cdecl EffectKindBA_Line(void) {
     const int sin1 = SH_CALL(Math_Sin)(static_cast<std::int32_t>(rv::As<records::EffectObject>(S())->angle[2]));
     const U three_sin = static_cast<U>(sin1) * 3u;
     const int cos1 = SH_CALL(Math_Cos)(static_cast<std::int32_t>(rv::As<records::EffectObject>(S())->angle[2]));
-    const U d1 = Sar(((three_sin - static_cast<U>(cos1)) * 3u) << 13, 12);
+    const U d1 = SarRest3g(((three_sin - static_cast<U>(cos1)) * 3u) << 13, 12);
     const int cos2 = SH_CALL(Math_Cos)(static_cast<std::int32_t>(rv::As<records::EffectObject>(S())->angle[2]));
     const U three_cos = static_cast<U>(cos2) * 3u;
     const int sin2 = SH_CALL(Math_Sin)(static_cast<std::int32_t>(rv::As<records::EffectObject>(S())->angle[2]));
-    const U d2 = Sar(((0u - static_cast<U>(sin2) - three_cos) * 3u) << 13, 12);
+    const U d2 = SarRest3g(((0u - static_cast<U>(sin2) - three_cos) * 3u) << 13, 12);
     {
         unsigned char* const s = S();
         rv::As<records::EffectObject>(s)->x = static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].x) + d1;
@@ -273,7 +273,7 @@ extern "C" void __cdecl EffectKindBA_Line(void) {
         rv::As<records::EffectObject>(s)->height = static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].height) + 0x1000000u;
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].x) - (static_cast<U>(S16(s + 0x2E)) << 15) + d1);
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].z) + d2);
-        SetUL(s + 0x14, static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].height) + 0x1000000u);
+        SetULRest3g(s + 0x14, static_cast<std::uint32_t>(Sprite_ObjectsExtra[1].height) + 0x1000000u);
         SH_CALL(EffectKindBA_DrawLine)(reinterpret_cast<const long*>(s + 0x34), reinterpret_cast<const long*>(s + 0xC),
                                        0x40);
     }
@@ -296,7 +296,7 @@ extern "C" int __cdecl Screen_TriangleWinding(const float* a, const float* b, co
                               (static_cast<long double>(b[0]) - static_cast<long double>(a[0]));
     const long double second = (static_cast<long double>(b[1]) - static_cast<long double>(a[1])) *
                                (static_cast<long double>(c[0]) - static_cast<long double>(b[0]));
-    return static_cast<int>(Ftol(first - second));
+    return static_cast<int>(FtolRest3g(first - second));
 }
 
 // ===========================================================================
@@ -353,7 +353,7 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
                     "(docs/rest_3g.md section 7)",
                     n, at::kEnemyCount);
     unsigned char* const e = At(::bof3::Img(Battle_Enemies_addr) + at::kEnemyStride * n);
-    for (unsigned i = 0; i < 0x80; i += 4) SetUL(e + i, UL(actor + i));
+    for (unsigned i = 0; i < 0x80; i += 4) SetULRest3g(e + i, ULRest3g(actor + i));
     Sprite_Current = e;
     unsigned char* const s = S();
     s[1] = 0;
@@ -401,7 +401,7 @@ extern "C" void __cdecl BattleEnemy_ClearStates(void) {
 // original 0x496430 (GameMode_Handlers[8]): jmp [GameMode8_Steps + Game_Step *
 // 4], unchecked.
 extern "C" void __cdecl GameMode8_Run(void) {
-    StepDispatch("GameMode8_Run", AddressOf(GameMode8_Steps), GameMode8_Steps_count);
+    StepDispatchRest3g("GameMode8_Run", AddressOf(GameMode8_Steps), GameMode8_Steps_count);
 }
 
 // original 0x496440 (GameMode8_Steps[0]; PSX 0x801994E8): the dword 0x904144 up; Fish_Spawn;
@@ -457,13 +457,13 @@ extern "C" void __cdecl GameMode8_Leave(void) {
         AreaW0b_PartySet = b;
         SH_CALL(Snd_LoadBankFile)((b & 0x7Fu) + 0x2C2u);
     }
-    WaitLoad(&Mode8Frame);
+    WaitLoadRest3g(&Mode8Frame);
     if (MusicChanges()) SH_CALL(Music_FadeOut)(0x10);
     SH_CALL(Transition_Start)(0);
     WaitWord(&Mode8Frame);
     {
-        const U z = UL(::bof3::Img(at::kReturnZ.v));
-        const U x = UL(::bof3::Img(at::kReturnX.v));
+        const U z = ULRest3g(::bof3::Img(at::kReturnZ.v));
+        const U x = ULRest3g(::bof3::Img(at::kReturnX.v));
         const unsigned area = AreaW2c_LastArea;
         SH_CALL(Field_ChangeArea)(area, I(x), I(z), 4);
     }
@@ -475,7 +475,7 @@ extern "C" void __cdecl GameMode8_Leave(void) {
 // original 0x4965C0 (GameMode_Handlers[9]): jmp [GameMode9_Steps + Game_Step *
 // 4], unchecked.
 extern "C" void __cdecl GameMode9_Run(void) {
-    StepDispatch("GameMode9_Run", AddressOf(GameMode9_Steps), GameMode9_Steps_count);
+    StepDispatchRest3g("GameMode9_Run", AddressOf(GameMode9_Steps), GameMode9_Steps_count);
 }
 
 namespace {
@@ -489,7 +489,7 @@ void MenuModeEnter(int file) {
     SH_CALL(Task_Sleep)(1);
     SH_CALL(Task_Sleep)(1);
     SH_CALL(LoadDatFile)(file);
-    WaitLoad(nullptr);
+    WaitLoadRest3g(nullptr);
     SH_CALL(Gfx_ClutStripCopyRow)(1);
     SH_CALL(Gfx_ClutStripCopyRow)(2);
     Game_Step = static_cast<unsigned short>(Game_Step + 1);
@@ -519,7 +519,7 @@ extern "C" void __cdecl GameMode9_Leave(void) {
 // original 0x4966E0 (GameMode_Handlers[10]): jmp [GameMode10_Steps + Game_Step
 // * 4], unchecked.
 extern "C" void __cdecl GameMode10_Run(void) {
-    StepDispatch("GameMode10_Run", AddressOf(GameMode10_Steps), GameMode10_Steps_count);
+    StepDispatchRest3g("GameMode10_Run", AddressOf(GameMode10_Steps), GameMode10_Steps_count);
 }
 
 // original 0x4966F0 (GameMode10_Steps[0]; PSX 0x80199940): the file 0x31A.
@@ -528,7 +528,7 @@ extern "C" void __cdecl GameMode10_Enter(void) { MenuModeEnter(0x31A); }
 // original 0x496780 (GameMode_Handlers[11]): jmp [GameMode11_Steps + Game_Step
 // * 4], unchecked.
 extern "C" void __cdecl GameMode11_Run(void) {
-    StepDispatch("GameMode11_Run", AddressOf(GameMode11_Steps), GameMode11_Steps_count);
+    StepDispatchRest3g("GameMode11_Run", AddressOf(GameMode11_Steps), GameMode11_Steps_count);
 }
 
 // original 0x496790 (GameMode11_Steps[0]; PSX 0x80199B00): Mode11_ObjectFrame, Mode11_FieldFrame;
@@ -567,8 +567,8 @@ extern "C" void __cdecl GameMode11_LookEnd(void) {
 // b odd a even -(s8 [i+0x10] + s8 [i+1]) << 3; b even a odd -(s8 [i+0x10] + s8
 // [i+0xF]) << 3; both odd -s8 [i+0x10] << 4.
 extern "C" unsigned __cdecl Quake_VertexLift(long x, long z) {
-    const U fx = Sar(static_cast<U>(x) + 0x4000u, 6) - (static_cast<std::uint32_t>(MagicS23_QuakeX) << 1);
-    const U fz = Sar(static_cast<U>(z) + 0x4000u, 6) - (static_cast<std::uint32_t>(MagicS23_QuakeY) << 1);
+    const U fx = SarRest3g(static_cast<U>(x) + 0x4000u, 6) - (static_cast<std::uint32_t>(MagicS23_QuakeX) << 1);
+    const U fz = SarRest3g(static_cast<U>(z) + 0x4000u, 6) - (static_cast<std::uint32_t>(MagicS23_QuakeY) << 1);
     U a, b;   // eax and esi
     if (MagicS23_QuakeFacing & 1) {
         b = fz;
@@ -578,8 +578,8 @@ extern "C" unsigned __cdecl Quake_VertexLift(long x, long z) {
         a = fz;
     }
     if (I(a) >= 0x20 || I(b) >= 0x1C || I(a) < 0 || I(b) < 0) return a & 0xFFFF0000u;
-    const U i = (Sar(a, 1) * 15u) + Sar(b, 1);
-    auto t = [&](U offset) { return static_cast<U>(S8(At(::bof3::Img(at::kQuakeLast.v) + offset + i)[0])); };
+    const U i = (SarRest3g(a, 1) * 15u) + SarRest3g(b, 1);
+    auto t = [&](U offset) { return static_cast<U>(S8Rest3g(At(::bof3::Img(at::kQuakeLast.v) + offset + i)[0])); };
     if (((a | b) & 1) == 0) return (0u - (t(1) + t(0xF))) << 3;
     if ((b & 1) != 0 && (a & 1) == 0) return (0u - (t(0x10) + t(1))) << 3;
     if ((b & 1) == 0 && (a & 1) != 0) return (0u - (t(0x10) + t(0xF))) << 3;
@@ -687,7 +687,7 @@ extern "C" void __cdecl EffectKind18Sub41_DrawRings(int size) {
         if (I(c) > 0xFF) c = 0xFF;
         const U c8 = I(c) < 0 ? 0u : c;
         const unsigned char half = static_cast<unsigned char>(c8 >> 1);
-        const U big = Sar(r << 12, 10);
+        const U big = SarRest3g(r << 12, 10);
         // the straight line across
         {
             unsigned char* const p = Gfx_PacketNext;
@@ -716,19 +716,19 @@ extern "C" void __cdecl EffectKind18Sub41_DrawRings(int size) {
                 for (unsigned k = 0; k < 2; ++k) {
                     if (k == 1) angle += 0x40;
                     const int s = SH_CALL(Math_Sin)(static_cast<int>(angle));
-                    const U dx = Sar(static_cast<U>(s) * r, 10);
-                    SetWord(v, Ftol(static_cast<long double>(I(dx)) + static_cast<long double>(Fl(AddressOf(MapView_ScreenXY)))));
+                    const U dx = SarRest3g(static_cast<U>(s) * r, 10);
+                    SetWord(v, FtolRest3g(static_cast<long double>(I(dx)) + static_cast<long double>(Fl(AddressOf(MapView_ScreenXY)))));
                     const int co = SH_CALL(Math_Cos)(static_cast<int>(angle));
-                    const U dy = Sar(static_cast<U>(co) * r, 10);
+                    const U dy = SarRest3g(static_cast<U>(co) * r, 10);
                     SetWord(v + 2,
-                            Ftol(static_cast<long double>(I(dy)) + static_cast<long double>(Fl(AddressOf(MapView_ScreenXY) + 4))));
+                            FtolRest3g(static_cast<long double>(I(dy)) + static_cast<long double>(Fl(AddressOf(MapView_ScreenXY) + 4))));
                     end(p, k == 0 ? 8 : 0x14, k == 0 ? 0x10 : 0x1C);
                 }
                 SH_CALL(Gfx_CommitPrim)(5, 0x20);
             }
         };
-        SetUL(AddressOf(MapView_ScreenXY), 0xC6590000u);       // -13888.0
-        SetUL(AddressOf(MapView_ScreenXY) + 4, 0xC6330000u);   // -11456.0
+        SetULRest3g(AddressOf(MapView_ScreenXY), 0xC6590000u);       // -13888.0
+        SetULRest3g(AddressOf(MapView_ScreenXY) + 4, 0xC6330000u);   // -11456.0
         chords(0, 0x400);
         // the straight line down
         {
@@ -746,8 +746,8 @@ extern "C" void __cdecl EffectKind18Sub41_DrawRings(int size) {
             end(p, 0x14, 0x1C);
             SH_CALL(Gfx_CommitPrim)(5, 0x20);
         }
-        SetUL(AddressOf(MapView_ScreenXY), 0xC6590000u);       // -13888.0
-        SetUL(AddressOf(MapView_ScreenXY) + 4, 0xC6370000u);   // -11712.0
+        SetULRest3g(AddressOf(MapView_ScreenXY), 0xC6590000u);       // -13888.0
+        SetULRest3g(AddressOf(MapView_ScreenXY) + 4, 0xC6370000u);   // -11712.0
         chords(0x400, 0x800);
         radius_arg -= 0x10;
         colour += 0x10;
@@ -769,16 +769,16 @@ extern "C" void __cdecl EffectKind18Sub41_DrawRings(int size) {
 // Camera_ShiftY and Camera_Distance + 0x1194, as the translation; the matrix
 // set; with MapView_Redraw, AreaMapBD_BuildView and MapView_Redraw down.
 extern "C" void __cdecl AreaMap_FrameAreaBD(void) {
-    MapView_FocusX = static_cast<long>(Sar(0x800000u - static_cast<U>(Field_Kind2X), 8));
-    MapView_FocusZ = static_cast<long>(Sar(0x800000u - static_cast<U>(Field_Kind2Z), 8));
+    MapView_FocusX = static_cast<long>(SarRest3g(0x800000u - static_cast<U>(Field_Kind2X), 8));
+    MapView_FocusZ = static_cast<long>(SarRest3g(0x800000u - static_cast<U>(Field_Kind2Z), 8));
     {
         unsigned char* const angles = reinterpret_cast<unsigned char*>(Camera_Angles);
         unsigned char* const drawn = reinterpret_cast<unsigned char*>(Camera_AnglesDrawn);
-        const U first = UL(angles), second = UL(angles + 4);
+        const U first = ULRest3g(angles), second = ULRest3g(angles + 4);
         if (Word(angles) != Word(drawn) || Word(angles + 2) != Word(drawn + 2) || (second & 0xFFFFu) != Word(drawn + 4)) {
             MapView_Redraw = 3;
-            SetUL(drawn, first);
-            SetUL(drawn + 4, second);
+            SetULRest3g(drawn, first);
+            SetULRest3g(drawn + 4, second);
         }
     }
     SH_CALL(Gte_RotMatrix)(Camera_Angles, Camera_Matrix);
@@ -789,9 +789,9 @@ extern "C" void __cdecl AreaMap_FrameAreaBD(void) {
     long moved[3];
     SH_CALL(Gte_ApplyMatrix)(Camera_Matrix, vector, moved);
     unsigned char* const matrix = reinterpret_cast<unsigned char*>(Camera_Matrix);
-    SetUL(matrix + 0x14, static_cast<U>(static_cast<int>(Camera_ShiftX)) + static_cast<U>(moved[0]));
-    SetUL(matrix + 0x18, static_cast<U>(static_cast<int>(Camera_ShiftY)) + static_cast<U>(moved[1]));
-    SetUL(matrix + 0x1C, static_cast<U>(static_cast<int>(Camera_Distance)) + static_cast<U>(moved[2]) + 0x1194u);
+    SetULRest3g(matrix + 0x14, static_cast<U>(static_cast<int>(Camera_ShiftX)) + static_cast<U>(moved[0]));
+    SetULRest3g(matrix + 0x18, static_cast<U>(static_cast<int>(Camera_ShiftY)) + static_cast<U>(moved[1]));
+    SetULRest3g(matrix + 0x1C, static_cast<U>(static_cast<int>(Camera_Distance)) + static_cast<U>(moved[2]) + 0x1194u);
     SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(Camera_Matrix));
     SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(Camera_Matrix));
     if (MapView_Redraw == 0) return;
@@ -840,18 +840,18 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
         for (unsigned n = 0; n < 0x38; ++n, layer += 0x30) {
             unsigned char* list = layer;
             for (unsigned k = 0; k < 2; ++k, list += 0x10) {
-                SetUL(list, 0);
-                SetUL(list + 4, AddressOf(list));
+                SetULRest3g(list, 0);
+                SetULRest3g(list + 4, AddressOf(list));
             }
         }
     }
-    const U octant = Sar(static_cast<U>(Cond_AngleFB) + 0x100u, 9) & 7u;
+    const U octant = SarRest3g(static_cast<U>(Cond_AngleFB) + 0x100u, 9) & 7u;
     const U fx = ((static_cast<U>(MapView_FocusX) >> 8) - 0x80u) & 0xFFu;
     const U fz = ((static_cast<U>(MapView_FocusZ) >> 8) - 0x80u) & 0xFFu;
     const unsigned char* const rec = At(::bof3::Img(at::kOctants.v) + octant * 6);
     const U even = (~octant) & 1u;   // not eax; and eax, 1
-    const U x0 = static_cast<U>(S8(rec[0])) - fx + 0x100u;
-    const U z0 = static_cast<U>(S8(rec[3])) - fz + 0x100u;
+    const U x0 = static_cast<U>(S8Rest3g(rec[0])) - fx + 0x100u;
+    const U z0 = static_cast<U>(S8Rest3g(rec[3])) - fz + 0x100u;
     const U rows = 0x38u - even * 12u, columns = even * 12u + 0x1Cu;
     at::kOriginX = x0;
     MapView_Origin[0] = static_cast<short>(x0);
@@ -865,11 +865,11 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
         U col_bound = row == 0 ? columns : static_cast<std::uint32_t>(at::kColumns);
         for (U col = 0; I(col) < I(col_bound); ++col, col_bound = static_cast<std::uint32_t>(at::kColumns)) {
             if (DrawItemPool_Top >= draw_pool::Count()) continue;   // at::kTopBoundAt: 0x400, DIV-0062's 0x800
-            const U a = static_cast<U>(S8(rec[2])) * row;
-            const U x = static_cast<U>(I(a) / 2) + static_cast<U>(S8(rec[1])) * col + static_cast<std::uint32_t>(static_cast<std::int16_t>(at::kOriginX));
-            const U b = static_cast<U>(S8(rec[5])) * (row + 1u);
-            const U z = static_cast<U>(I(b) / 2) + static_cast<U>(S8(rec[4])) * col + static_cast<std::uint32_t>(static_cast<std::int16_t>(at::kOriginZ));
-            const unsigned char block = At(::bof3::Img(at::kBlocks.v) + ((Sar(x, 4) & 0xFu) | (z & 0xF0u)))[0];
+            const U a = static_cast<U>(S8Rest3g(rec[2])) * row;
+            const U x = static_cast<U>(I(a) / 2) + static_cast<U>(S8Rest3g(rec[1])) * col + static_cast<std::uint32_t>(static_cast<std::int16_t>(at::kOriginX));
+            const U b = static_cast<U>(S8Rest3g(rec[5])) * (row + 1u);
+            const U z = static_cast<U>(I(b) / 2) + static_cast<U>(S8Rest3g(rec[4])) * col + static_cast<std::uint32_t>(static_cast<std::int16_t>(at::kOriginZ));
+            const unsigned char block = At(::bof3::Img(at::kBlocks.v) + ((SarRest3g(x, 4) & 0xFu) | (z & 0xF0u)))[0];
             const U map_row = (block & 0xF0u) | (z & 0xFu);
             const U map_col = ((block & 0xFu) << 4) | (x & 0xFu);
             const U cell = map_row * at::kMapWidth + map_col;
@@ -878,7 +878,7 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
             rv::As<records::SVector>(v)->x = (x << 7) - 0x4040u;
             unsigned char* corner = reinterpret_cast<unsigned char*>(&AreaMap_Corners) + cell * 4;
             MapView_CornerPtr = corner;
-            rv::As<records::SVector>(v)->z = (0u - static_cast<U>(S8(corner[0]))) << 4;
+            rv::As<records::SVector>(v)->z = (0u - static_cast<U>(S8Rest3g(corner[0]))) << 4;
             SH_CALL(Gte_LoadVertex)(reinterpret_cast<const unsigned long*>(Prim_VertexScratch));
             SH_CALL(Gte_Rtps)();
             SH_CALL(Gte_StoreScreenXY)(reinterpret_cast<unsigned long*>(MapView_ScreenXY));
@@ -899,37 +899,37 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
                 const U offset = Word(AreaMap_Header + 2);
                 unsigned char* const quad = item + Gfx_BufferIndex * 0x48u;
                 const U tile = Word(AreaMap_Header + (cell + offset * 2u) * 2u);
-                const U header = UL(AreaMap_Header);
+                const U header = ULRest3g(AreaMap_Header);
                 const U product = ((header >> 8) & 0xFFu) * (header & 0xFFu) + 1u;
                 const U index = static_cast<U>(I(product) / 2) + offset + tile;
-                SH_CALL(AreaMapBD_CellTexture)(static_cast<unsigned long>(UL(AreaMap_Header + index * 4u)), quad);
+                SH_CALL(AreaMapBD_CellTexture)(static_cast<unsigned long>(ULRest3g(AreaMap_Header + index * 4u)), quad);
             }
             FpuCopy(item + Gfx_BufferIndex * 0x48u + 8, MapView_ScreenXY);
             FpuCopy(item + Gfx_BufferIndex * 0x48u + 0xC, MapView_ScreenXY + 1);
             {
-                const U xy = UL(v);
+                const U xy = ULRest3g(v);
                 const U y = static_cast<std::uint16_t>(rv::As<records::SVector>(v)->y);
                 corner = MapView_CornerPtr;
                 const U x1 = xy + 0x80u;
                 rv::As<records::SVector>(v)[1].x = x1;
                 rv::As<records::SVector>(v)[1].y = y;
-                rv::As<records::SVector>(v)[1].z = (0u - static_cast<U>(S8(static_cast<unsigned char>(UL(corner) >> 8))) ) << 4;
+                rv::As<records::SVector>(v)[1].z = (0u - static_cast<U>(S8Rest3g(static_cast<unsigned char>(ULRest3g(corner) >> 8))) ) << 4;
                 const U y1 = y + 0x80u;
                 rv::As<records::SVector>(v)[2].x = static_cast<std::uint16_t>(rv::As<records::SVector>(v)->x);
                 rv::As<records::SVector>(v)[2].y = y1;
                 rv::As<records::SVector>(v)[3].x = x1;
-                rv::As<records::SVector>(v)[2].z = (0u - static_cast<U>(S8(static_cast<unsigned char>(UL(corner) >> 16))) ) << 4;
+                rv::As<records::SVector>(v)[2].z = (0u - static_cast<U>(S8Rest3g(static_cast<unsigned char>(ULRest3g(corner) >> 16))) ) << 4;
                 rv::As<records::SVector>(v)[3].y = y1;
-                rv::As<records::SVector>(v)[3].z = (0u - static_cast<U>(S8(static_cast<unsigned char>(UL(corner) >> 24))) ) << 4;
+                rv::As<records::SVector>(v)[3].z = (0u - static_cast<U>(S8Rest3g(static_cast<unsigned char>(ULRest3g(corner) >> 24))) ) << 4;
             }
             SH_CALL(Gte_LoadVertices3)(reinterpret_cast<const unsigned long*>(v + 8));
             SH_CALL(Gte_Rtpt)();
             {
                 const U last = ::bof3::Img(at::kLayerLast.v) + (Gfx_BufferIndex - row * 6u) * 8u;
                 unsigned char* const quad = item + Gfx_BufferIndex * 0x48u;
-                SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(last))), AddressOf(quad));
+                SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(ULRest3g(last))), AddressOf(quad));
             }
-            SetUL(::bof3::Img(at::kLayerLast.v) + (Gfx_BufferIndex - row * 6u) * 8u, AddressOf(item + Gfx_BufferIndex * 0x48u));
+            SetULRest3g(::bof3::Img(at::kLayerLast.v) + (Gfx_BufferIndex - row * 6u) * 8u, AddressOf(item + Gfx_BufferIndex * 0x48u));
             {
                 unsigned char* const quad = item + Gfx_BufferIndex * 0x48u;
                 SH_CALL(Gte_StoreScreenXY3)(reinterpret_cast<unsigned long*>(quad + 0x18), reinterpret_cast<unsigned long*>(quad + 0x28),
@@ -952,7 +952,7 @@ extern "C" void __cdecl AreaMapBD_CellTexture(unsigned long texture, unsigned ch
     quad[4] = 0x80;
     const U t = static_cast<U>(texture);
     SetWord(quad + 0x26, 0x95);
-    SetWord(quad + 0x16, ((Sar(t, 24) & 0xFu) + 0x1E3u) << 6);
+    SetWord(quad + 0x16, ((SarRest3g(t, 24) & 0xFu) + 0x1E3u) << 6);
     const unsigned char v0 = static_cast<unsigned char>(t & 0xF0u);
     const unsigned char u0 = static_cast<unsigned char>((t & 0xFu) << 4);
     quad[0x15] = v0;
