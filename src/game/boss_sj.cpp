@@ -51,7 +51,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 using HookFn = void (__cdecl*)(unsigned);
-using Forward = U (__cdecl*)(U);
+using ForwardBossSj = U (__cdecl*)(U);
 using RoundHighFn = U (__cdecl*)(U, U);
 
 unsigned char& B(U address) { return At(address)[0]; }
@@ -68,14 +68,14 @@ template <typename T> U AddressOf(T* p) { return Low32(p); }
 // leaves the caller's stack word in place and answers what the entry
 // answers, so ours hands the word on and answers the entry's eax
 // (docs/boss_sc.md section 1.2).
-U Dispatch(const char* who, U table, unsigned entries, unsigned at, U through) {
+U DispatchBossSj(const char* who, U table, unsigned entries, unsigned at, U through) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/boss_sj.md section 6)",
                     who, at, state, entries, (unsigned)table);
     // the entry as read: the fuzz swaps the table's cells for its recorders
-    return reinterpret_cast<Forward>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * state)))))(through);
+    return reinterpret_cast<ForwardBossSj>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * state)))))(through);
 }
 
 // An effect task's dispatcher: the same jmp by +1 through a table of the
@@ -124,7 +124,7 @@ void StoreHooks(U end, U exit, U event) {
 // animation bytes), +0xF4 (its hook) and +0xF8 (its sound words), then its
 // +0x114 |= 8 - 0x939AD8 read for each; Sprite_Current +1 = 2; a tail jump to
 // Sprite_ScriptTick, whose al is the answer.
-unsigned char Enter(U fc, U f4, U f8) {
+unsigned char EnterBossSj(U fc, U f4, U f8) {
     rv::As<records::BattleEnemy>(Enemy())->anim_table = S(fc);
     rv::As<records::BattleEnemy>(Enemy())->event_hook = S(f4);
     rv::As<records::BattleEnemy>(Enemy())->cue_table = S(f8);
@@ -245,19 +245,19 @@ void Drift(bool scaled, unsigned axis, unsigned scale_at, unsigned word_at) {
 // Sprite_Current +1] (12: its entry, the generic enemy states, its act table
 // at 6).
 extern "C" unsigned long __cdecl BossDLord_Dispatch(unsigned long through) {
-    return Dispatch("BossDLord_Dispatch", AddressOf(BossDLord_States), 12, 1, through);
+    return DispatchBossSj("BossDLord_Dispatch", AddressOf(BossDLord_States), 12, 1, through);
 }
 
 // original 0x43F7C0: state 0 (BossDLord_Anims, _Hook, _Sounds; +0x114 |= 8;
 // +1 = 2; tail Sprite_ScriptTick).
 extern "C" unsigned char __cdecl BossDLord_Enter(void) {
-    return Enter(AddressOf(BossDLord_Anims), ::bof3::Code(bof3::addr::BossDLord_Hook), AddressOf(BossDLord_Sounds));
+    return EnterBossSj(AddressOf(BossDLord_Anims), ::bof3::Code(bof3::addr::BossDLord_Hook), AddressOf(BossDLord_Sounds));
 }
 
 // original 0x43F820: state 6: jmp [BossDLord_ActSubs + 4 * +2] (6: the
 // generic act table with BossDLord_Death at 4).
 extern "C" unsigned long __cdecl BossDLord_ActDispatch(unsigned long through) {
-    return Dispatch("BossDLord_ActDispatch", AddressOf(BossDLord_ActSubs), 6, 2, through);
+    return DispatchBossSj("BossDLord_ActDispatch", AddressOf(BossDLord_ActSubs), 6, 2, through);
 }
 
 // original 0x43F840: BossDLord_ActSubs 4, the death: Sprite_EnsureAnimation(3),
@@ -393,13 +393,13 @@ extern "C" void __cdecl BossDLordFx_Count(void) {
 
 // original 0x43FBB0: BossKind_Table[61]. jmp [BossShroom_States + 4 * +1] (12).
 extern "C" unsigned long __cdecl BossShroom_Dispatch(unsigned long through) {
-    return Dispatch("BossShroom_Dispatch", AddressOf(BossShroom_States), 12, 1, through);
+    return DispatchBossSj("BossShroom_Dispatch", AddressOf(BossShroom_States), 12, 1, through);
 }
 
 // original 0x43FBD0: state 0 (BossShroom_Anims, _Hook, _Sounds; +0x114 |= 8;
 // +1 = 2; tail Sprite_ScriptTick).
 extern "C" unsigned char __cdecl BossShroom_Enter(void) {
-    return Enter(AddressOf(BossShroom_Anims), ::bof3::Code(bof3::addr::BossShroom_Hook), AddressOf(BossShroom_Sounds));
+    return EnterBossSj(AddressOf(BossShroom_Anims), ::bof3::Code(bof3::addr::BossShroom_Hook), AddressOf(BossShroom_Sounds));
 }
 
 // original 0x43FC30: the +0xF4 hook: BossShroom_Hooks (3, BareRet each).
