@@ -57,17 +57,17 @@ using namespace enemy_ai_ops;
 namespace {
 
 // A pointer the original keeps in a dword, read afresh.
-unsigned char* PtrAt(std::uint32_t address) {
+unsigned char* PtrAtEnemyAiOps(std::uint32_t address) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(address)))));
 }
-unsigned char* PtrIn(const unsigned char* p) {
+unsigned char* PtrInEnemyAiOps(const unsigned char* p) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(p))));
 }
 void SetPtrAt(std::uint32_t address, const unsigned char* p) {
     SetLong(At(address), static_cast<std::int32_t>(Low32(p)));
 }
-std::uint32_t ULong(const unsigned char* p) { return static_cast<std::uint32_t>(Long(p)); }
-void SetULong(unsigned char* p, std::uint32_t v) { SetLong(p, static_cast<std::int32_t>(v)); }
+std::uint32_t ULongEnemyAiOps(const unsigned char* p) { return static_cast<std::uint32_t>(Long(p)); }
+void SetULongEnemyAiOps(unsigned char* p, std::uint32_t v) { SetLong(p, static_cast<std::int32_t>(v)); }
 
 // 0x939AD8 and Sprite_Current, each re-read wherever the original re-reads it.
 unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy.Native()); }
@@ -77,12 +77,12 @@ unsigned char* Sc() { return Sprite_Current; }
 // The op tables: entry `index` of the code pointers at `table`. As the
 // originals have it, the index is not checked - it is one of the object's
 // step bytes, and a step past a table's end runs the next table's entries.
-Handler Entry(std::uint32_t table, unsigned index) {
+Handler EntryEnemyAiOps(std::uint32_t table, unsigned index) {
     return reinterpret_cast<const ::bof3::CodeSlot<Handler>*>(static_cast<std::uintptr_t>(table))[index];   // 32-bit code words
 }
 
 // The 24-byte ability record's flag bytes, by the word 0x904B80 read afresh.
-unsigned char AbilityByte(std::uint32_t flags) { return At(flags + Word(At(::bof3::Img(at::kMagicId.v))) * 24u)[0]; }
+unsigned char AbilityByteEnemyAiOps(std::uint32_t flags) { return At(flags + Word(At(::bof3::Img(at::kMagicId.v))) * 24u)[0]; }
 
 // The enemy's +0xF4 hook.
 using HookFn = void (__cdecl*)(int);
@@ -95,28 +95,28 @@ using HookFn = void (__cdecl*)(int);
 
 // original 0x4360F0 (PSX 0x801E3140): state 0 of the enemy state table
 // 0x64B084 - a tail jump through EnemyOp_Steps 0x64B1A0 by Sprite_Current +1.
-extern "C" void __cdecl EnemyOp_StepDispatch(void) { Entry(::bof3::Img(EnemyOp_Steps_addr), rv::As<records::BattleEnemy>(Sc())->state)(); }
+extern "C" void __cdecl EnemyOp_StepDispatch(void) { EntryEnemyAiOps(::bof3::Img(EnemyOp_Steps_addr), rv::As<records::BattleEnemy>(Sc())->state)(); }
 
 // original 0x436170 (PSX 0x801E3224): step 1, the entrance - through
 // EnemyOp_EnterSubs 0x64B1D4 by +2 (0x436190, EnemyOp_SlideDispatch 0x436270).
-extern "C" void __cdecl EnemyOp_EnterDispatch(void) { Entry(::bof3::Img(EnemyOp_EnterSubs_addr), rv::As<records::BattleEnemy>(Sc())->step)(); }
+extern "C" void __cdecl EnemyOp_EnterDispatch(void) { EntryEnemyAiOps(::bof3::Img(EnemyOp_EnterSubs_addr), rv::As<records::BattleEnemy>(Sc())->step)(); }
 
 // original 0x436190 (PSX 0x801E3268): the entrance's first part, the
 // scale-in - through EnemyOp_ScaleInSubs 0x64B1DC by +3 (0x4361B0, 0x436210).
-extern "C" void __cdecl EnemyOp_ScaleInDispatch(void) { Entry(::bof3::Img(EnemyOp_ScaleInSubs_addr), rv::As<records::BattleEnemy>(Sc())->state3)(); }
+extern "C" void __cdecl EnemyOp_ScaleInDispatch(void) { EntryEnemyAiOps(::bof3::Img(EnemyOp_ScaleInSubs_addr), rv::As<records::BattleEnemy>(Sc())->state3)(); }
 
 // original 0x4366E0 (PSX 0x801E3AE0): step 6 - through EnemyOp_ActSubs
 // 0x64B1FC by +2 (0x436700, 0x436720, 0x436700, EnemyOp_Act3Dispatch 0x436BC0,
 // 0x436D90, EnemyOp_Act5Dispatch 0x436F00).
-extern "C" void __cdecl EnemyOp_ActDispatch(void) { Entry(::bof3::Img(EnemyOp_ActSubs_addr), rv::As<records::BattleEnemy>(Sc())->step)(); }
+extern "C" void __cdecl EnemyOp_ActDispatch(void) { EntryEnemyAiOps(::bof3::Img(EnemyOp_ActSubs_addr), rv::As<records::BattleEnemy>(Sc())->step)(); }
 
 // original 0x436720 (PSX 0x801E3B48): the hit taken - through
 // EnemyOp_HitSubs 0x64B214 by +3 (0x436740, 0x436A00, 0x436A20).
-extern "C" void __cdecl EnemyOp_HitDispatch(void) { Entry(::bof3::Img(EnemyOp_HitSubs_addr), rv::As<records::BattleEnemy>(Sc())->state3)(); }
+extern "C" void __cdecl EnemyOp_HitDispatch(void) { EntryEnemyAiOps(::bof3::Img(EnemyOp_HitSubs_addr), rv::As<records::BattleEnemy>(Sc())->state3)(); }
 
 // original 0x436D90 (PSX 0x801E46B8): the death - through EnemyOp_DeathSubs
 // 0x64B234 by +3 (0x436DB0, 0x436E00, 0x436E40, 0x436EC0).
-extern "C" void __cdecl EnemyOp_DeathDispatch(void) { Entry(::bof3::Img(EnemyOp_DeathSubs_addr), rv::As<records::BattleEnemy>(Sc())->state3)(); }
+extern "C" void __cdecl EnemyOp_DeathDispatch(void) { EntryEnemyAiOps(::bof3::Img(EnemyOp_DeathSubs_addr), rv::As<records::BattleEnemy>(Sc())->state3)(); }
 
 // ===========================================================================
 // The entrance and the idle loop
@@ -197,7 +197,7 @@ extern "C" void __cdecl EnemyOp_Idle(void) {
 // the call; the actor byte and the slot's byte are re-read at each use (a
 // slot past the 48 is not refused - the actor byte is 3..10 for an enemy).
 extern "C" void __cdecl EnemyOp_Wait(void) {
-    Entry(::bof3::Img(EnemyOp_WaitSubs_addr), rv::As<records::BattleEnemy>(Sc())->step)();
+    EntryEnemyAiOps(::bof3::Img(EnemyOp_WaitSubs_addr), rv::As<records::BattleEnemy>(Sc())->step)();
     unsigned char* const e = Enemy();
     auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
     if ((e[0x92] & 0x20) != 0) {
@@ -217,7 +217,7 @@ extern "C" void __cdecl EnemyOp_Wait(void) {
         const unsigned field = (mode == 1 || mode == 3) ? 0x34u : 0x38u;
         unsigned char* const t = slot();
         const std::int32_t bob = static_cast<signed char>(t[9]);
-        SetULong(s + field, static_cast<std::uint32_t>(bob << 9) + ULong(t + field));
+        SetULongEnemyAiOps(s + field, static_cast<std::uint32_t>(bob << 9) + ULongEnemyAiOps(t + field));
     }
     if ((rv::As<records::BattleEnemy>(Enemy())->flags_110 & 0x1000) == 0) g.script_tick();
 }
@@ -229,7 +229,7 @@ extern "C" void __cdecl EnemyOp_Wait(void) {
 // +2 = 1.
 extern "C" void __cdecl EnemyOp_HighlightOn(void) {
     if (BattleE4_Picking == 0) return;
-    const unsigned char target = PtrAt(::bof3::Img(at::kCommandSource.v))[0];
+    const unsigned char target = PtrAtEnemyAiOps(::bof3::Img(at::kCommandSource.v))[0];
     unsigned char* const s = Sc();
     auto* const enemy_s = rv::As<records::BattleEnemy>(s);
     if (target != enemy_s->actor && (target & 0x40) == 0) return;
@@ -254,7 +254,7 @@ extern "C" void __cdecl EnemyOp_HighlightPulse(void) {
     At(::bof3::Img(MoveScript_TintRecords_addr) + s[7] * at::kTintSize + 3)[0] = pulse;
     At(::bof3::Img(MoveScript_TintRecords_addr) + s[7] * at::kTintSize + 2)[0] = pulse;
     if (BattleE4_Picking != 0) {
-        const unsigned char target = PtrAt(::bof3::Img(at::kCommandSource.v))[0];
+        const unsigned char target = PtrAtEnemyAiOps(::bof3::Img(at::kCommandSource.v))[0];
         if (target == enemy_s->actor) return;
         if ((target & 0x40) != 0) return;
     }
@@ -315,9 +315,9 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
     BattleE3_HitSprite = s;
     At(::bof3::Img(at::kResultTarget.v))[0] = actor;
     SetPtrAt(::bof3::Img(at::kResult.v), e + 0x104);
-    rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(::bof3::Img(at::kResult.v)))->hp_change, 0);
-    rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(::bof3::Img(at::kResult.v)))->ap_change, 0);
-    PtrAt(::bof3::Img(at::kResult.v))[8] = 0;
+    rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAtEnemyAiOps(::bof3::Img(at::kResult.v)))->hp_change, 0);
+    rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAtEnemyAiOps(::bof3::Img(at::kResult.v)))->ap_change, 0);
+    PtrAtEnemyAiOps(::bof3::Img(at::kResult.v))[8] = 0;
     e = Enemy();
     enemy_rec = rv::As<records::BattleEnemy>(e);
     for (unsigned i = 0; i < 32; i += 4) SetLong(At(::bof3::Img(at::kStatBlock.v) + i), Long(e + 0xB0 + i));
@@ -326,7 +326,7 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
         const unsigned target = At(::bof3::Img(at::kTarget.v))[0];
         const unsigned attacker = At(::bof3::Img(at::kActor.v))[0];
         const short delta = g.apply_damage(attacker, target);
-        rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(::bof3::Img(at::kResult.v)))->hp_change, static_cast<std::uint16_t>(delta));
+        rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAtEnemyAiOps(::bof3::Img(at::kResult.v)))->hp_change, static_cast<std::uint16_t>(delta));
         e = Enemy();
         enemy_rec = rv::As<records::BattleEnemy>(e);
     } else if (kind > 3 && kind <= 5) {
@@ -335,7 +335,7 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
         enemy_rec = rv::As<records::BattleEnemy>(e);
     }
     if (EventBattle_Id != 0) {
-        reinterpret_cast<HookFn>(PtrIn(e + 0xF4))(1);
+        reinterpret_cast<HookFn>(PtrInEnemyAiOps(e + 0xF4))(1);
         e = Enemy();
         enemy_rec = rv::As<records::BattleEnemy>(e);
     }
@@ -356,7 +356,7 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
             e = Enemy();
             enemy_rec = rv::As<records::BattleEnemy>(e);
         }
-        if (At(::bof3::Img(at::kActionKind.v))[0] == 4 && (AbilityByte(::bof3::Img(at::kAbilityFlags8.v)) & 4) == 0) {
+        if (At(::bof3::Img(at::kActionKind.v))[0] == 4 && (AbilityByteEnemyAiOps(::bof3::Img(at::kAbilityFlags8.v)) & 4) == 0) {
             g.set_animation(4);
             e = Enemy();
             enemy_rec = rv::As<records::BattleEnemy>(e);
@@ -385,18 +385,18 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
             e = Enemy();
             enemy_rec = rv::As<records::BattleEnemy>(e);
         } else if (EventBattle_Id != 0) {
-            g.play_cue(Word(PtrIn(e + 0xF8) + 4));
+            g.play_cue(Word(PtrInEnemyAiOps(e + 0xF8) + 4));
             e = Enemy();
             enemy_rec = rv::As<records::BattleEnemy>(e);
         }
     }
     if (static_cast<short>(enemy_rec->hp_change) < 0 || static_cast<short>(enemy_rec->ap_change) < 0) g.play_effect(0x206);
-    if ((ULong(At(::bof3::Img(at::kRoundFlags.v))) & 0x2000) == 0) {
+    if ((ULongEnemyAiOps(At(::bof3::Img(at::kRoundFlags.v))) & 0x2000) == 0) {
         if (At(::bof3::Img(at::kActionKind.v))[0] == 1) {
             g.hit_sound();
             g.hit_popup();
         }
-        if (At(::bof3::Img(at::kActionKind.v))[0] == 4 && (AbilityByte(::bof3::Img(at::kAbilityFlagsD.v)) & 8) != 0) {
+        if (At(::bof3::Img(at::kActionKind.v))[0] == 4 && (AbilityByteEnemyAiOps(::bof3::Img(at::kAbilityFlagsD.v)) & 8) != 0) {
             g.hit_sound();
             g.hit_popup();
         }
@@ -444,8 +444,8 @@ extern "C" void __cdecl EnemyOp_HitEnd(void) {
     } else if ((At(::bof3::Img(at::kTarget.v))[0] & 0xC0) == 0) {
         if (At(::bof3::Img(at::kActionKind.v))[0] == 1 && g.chance70() != 0)
             At(::bof3::Img(at::kRoundFlags.v))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kRoundFlags.v))[0] | 0x40);
-        if (At(::bof3::Img(at::kActionKind.v))[0] == 4 && (AbilityByte(::bof3::Img(at::kAbilityFlagsD.v)) & 8) != 0 && g.chance70() != 0 &&
-            (AbilityByte(::bof3::Img(at::kAbilityFlags8.v)) & 0x10) == 0)
+        if (At(::bof3::Img(at::kActionKind.v))[0] == 4 && (AbilityByteEnemyAiOps(::bof3::Img(at::kAbilityFlagsD.v)) & 8) != 0 && g.chance70() != 0 &&
+            (AbilityByteEnemyAiOps(::bof3::Img(at::kAbilityFlags8.v)) & 0x10) == 0)
             At(::bof3::Img(at::kRoundFlags.v))[0] = static_cast<unsigned char>(At(::bof3::Img(at::kRoundFlags.v))[0] | 0x40);
     }
     g.clear_actor_bit(rv::As<records::BattleEnemy>(Sc())->actor);
@@ -493,7 +493,7 @@ extern "C" void __cdecl EnemyOp_DeathSwell(void) {
 // 0xFF, 0xFF, 0); the speed +0x10 = 0 and its step +0x1C = -0x2000; +3 = 3.
 extern "C" void __cdecl EnemyOp_DeathFlash(void) {
     g.play_effect(0x204);
-    if (EventBattle_Id != 0) g.play_cue(Word(PtrIn(Enemy() + 0xF8) + 6));
+    if (EventBattle_Id != 0) g.play_cue(Word(PtrInEnemyAiOps(Enemy() + 0xF8) + 6));
     g.release_tint(Sc());
     g.set_tint(Sc(), 0xFF, 0xFF, 0xFF, 0);
     rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->step_z, 0);
