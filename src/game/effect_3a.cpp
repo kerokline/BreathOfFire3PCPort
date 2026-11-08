@@ -180,10 +180,10 @@ unsigned char* Mote(unsigned i) { return EffectKind30_Shards + i * at::kMoteStri
 // the frames 0x654948 that size them are read and never written.
 // BOF3X_ORIGINAL=PixelRoom (or BOF3X_OFF) leaves them at 0x92DF80, the overrun
 // with them.
-unsigned char g_pixel_room = 0;
+}  namespace effect_3a { unsigned char g_pixel_room = 0; }  namespace {
 alignas(4) unsigned char g_pixels[at::kParticleRoom * at::kParticleStride];
 unsigned char* Particle(U i) {
-    if (g_pixel_room) {
+    if (effect_3a::g_pixel_room) {
         if (i >= at::kParticleRoom)
             bof3::Fatal("EffectKind61: particle %u, past the room of %u (a frame larger than 64 x 64)", i,
                         at::kParticleRoom);
@@ -1371,9 +1371,9 @@ void Effect3A_Inject() {
     // DIV-0206: armed after the self-test, which compares ours with Capcom's at
     // 0x92DF80.
     static const std::uint8_t pixel_was = 0, pixel_is = 1;
-    bof3::PatchBytes("PixelRoom", AddressOf(&g_pixel_room), &pixel_was, &pixel_is, 1);
+    bof3::PatchBytes("PixelRoom", AddressOf(&effect_3a::g_pixel_room), &pixel_was, &pixel_is, 1);
     bof3::Log("DIV-0206    kind 0x61's particles in a room of %u (the original's holds 2,048): %s", at::kParticleRoom,
-              g_pixel_room ? "on" : "OFF (BOF3X_ORIGINAL=PixelRoom)");
+              effect_3a::g_pixel_room ? "on" : "OFF (BOF3X_ORIGINAL=PixelRoom)");
     BOF3_INJECT(EffectKind60_Run);
     BOF3_INJECT(EffectKind60_DrawLine);
     BOF3_INJECT(EffectKind61_Run);
