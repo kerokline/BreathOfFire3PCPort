@@ -55,7 +55,7 @@
 namespace {
 
 namespace at = field_o::at;
-using move_script::At;
+constexpr auto& AtFieldO = move_script::At;
 using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
@@ -63,14 +63,14 @@ using move_script::Word;
 using U = std::uint32_t;
 
 U Key(const void* p) { return Low32(p); }
-unsigned char* Ptr(U a) { return At(a); }
-unsigned char* PtrAt(const unsigned char* cell) { return At(static_cast<U>(Long(cell))); }
-const char* Str(U a) { return reinterpret_cast<const char*>(At(a)); }
-const unsigned char* Text(U a) { return At(a); }
-unsigned char* Buf() { return At(::bof3::Img(at::kTextScratch)); }
-char* CBuf() { return reinterpret_cast<char*>(At(::bof3::Img(at::kTextScratch))); }
+unsigned char* Ptr(U a) { return AtFieldO(a); }
+unsigned char* PtrAt(const unsigned char* cell) { return AtFieldO(static_cast<U>(Long(cell))); }
+const char* Str(U a) { return reinterpret_cast<const char*>(AtFieldO(a)); }
+const unsigned char* Text(U a) { return AtFieldO(a); }
+unsigned char* Buf() { return AtFieldO(::bof3::Img(at::kTextScratch)); }
+char* CBuf() { return reinterpret_cast<char*>(AtFieldO(::bof3::Img(at::kTextScratch))); }
 
-unsigned char* Record(unsigned id) { return At(::bof3::Img(CharacterRecords_addr) + (id & 0xFF) * at::kRecordStride); }
+unsigned char* Record(unsigned id) { return AtFieldO(::bof3::Img(CharacterRecords_addr) + (id & 0xFF) * at::kRecordStride); }
 unsigned char Style() { return static_cast<unsigned char>(Config_WindowColour); }
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fam() { return Field_ActiveMember; }
@@ -92,7 +92,7 @@ std::int32_t Idiv(std::int32_t dividend, std::int32_t divisor, const char* who) 
 // fuzz runs, the table holds the harness's recorders, which live outside .text.
 U CodeAt(U table, unsigned index, const char* who) {
     const U cell = table + 4u * index;
-    const U entry = static_cast<U>(Long(At(cell)));
+    const U entry = static_cast<U>(Long(AtFieldO(cell)));
     // A code word: hosted a VA in BOF3.exe's .text, in bof3x.exe a function of ours
     // the bind table names (common/image_base.h IsCodeWord); not the trap, not data.
     if (!scenario_harness::g_active && !::bof3::IsCodeWord(entry))
@@ -104,18 +104,18 @@ U CodeAt(U table, unsigned index, const char* who) {
 // The event ops' count and bank words (event_script.cpp's terms): the word at
 // SharedScratch is the next Sprite_Objects entry a placement fills, the word
 // after it the animation bank a placement passes on.
-short Count() {
+short CountFieldO() {
     short v;
-    std::memcpy(&v, At(::bof3::Img(SharedScratch_addr)), sizeof v);
+    std::memcpy(&v, AtFieldO(::bof3::Img(SharedScratch_addr)), sizeof v);
     return v;
 }
-unsigned short Bank() { return SharedScratch.w_02; }
+unsigned short BankFieldO() { return SharedScratch.w_02; }
 void SetBank(unsigned v) { SharedScratch.w_02 = v; }
-void BumpCount() { SharedScratch.w_00 = static_cast<unsigned>(Count() + 1); }
-unsigned char* Object(int n) { return rv::Bytes(&Sprite_Objects[n]); }
+void BumpCount() { SharedScratch.w_00 = static_cast<unsigned>(CountFieldO() + 1); }
+unsigned char* ObjectFieldO(int n) { return rv::Bytes(&Sprite_Objects[n]); }
 
 // A placement's x or z: the whole part and the half (0x8000) when `half` is not 0.
-std::int32_t Coordinate(unsigned char half, unsigned char whole) {
+std::int32_t CoordinateFieldO(unsigned char half, unsigned char whole) {
     return static_cast<std::int32_t>((half ? 0x8000u : 0u) | static_cast<U>(whole) << 16);
 }
 // A float from a whole number, as `fild dword` / `fstp dword` store it.
@@ -252,15 +252,15 @@ extern "C" void __cdecl Menu_DrawIconWheel(int x, int y, unsigned kind, unsigned
     const unsigned char count = kb == 0 ? 1 : kb <= 3 ? 2 : 3;
     for (unsigned i = 0; i < 3; ++i) {
         std::int32_t ox, oz;
-        Turn(angle, Long(At(::bof3::Img(at::kWheelTriangle) + 8 * i)), Long(At(::bof3::Img(at::kWheelTriangle) + 8 * i + 4)), ox, oz);
-        SetLong(At(::bof3::Img(at::kWheelFrame) + 8 * i), ox);
-        SetLong(At(::bof3::Img(at::kWheelFrame) + 8 * i + 4), oz);
+        Turn(angle, Long(AtFieldO(::bof3::Img(at::kWheelTriangle) + 8 * i)), Long(AtFieldO(::bof3::Img(at::kWheelTriangle) + 8 * i + 4)), ox, oz);
+        SetLong(AtFieldO(::bof3::Img(at::kWheelFrame) + 8 * i), ox);
+        SetLong(AtFieldO(::bof3::Img(at::kWheelFrame) + 8 * i + 4), oz);
     }
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyG3)(prim);
     const std::int32_t bx = static_cast<std::int32_t>(static_cast<U>(x) & 0xFFFF);
     const std::int32_t by = static_cast<std::int32_t>(static_cast<U>(y) & 0xFFFF);
-    const unsigned char* const f = At(::bof3::Img(at::kWheelFrame));
+    const unsigned char* const f = AtFieldO(::bof3::Img(at::kWheelFrame));
     PutFloat(prim + 8, bx + Long(f) + 0x26);
     PutFloat(prim + 0xC, by + Long(f + 4) + 0x17);
     PutFloat(prim + 0x18, bx + Long(f + 8) + 0x26);
@@ -283,15 +283,15 @@ extern "C" void __cdecl Menu_DrawIconWheel(int x, int y, unsigned kind, unsigned
         } else {
             colour[j] = 0x70;
         }
-        const unsigned char* const spot = At(::bof3::Img(at::kWheelIcons) + k * 28 + 4 * j);
+        const unsigned char* const spot = AtFieldO(::bof3::Img(at::kWheelIcons) + k * 28 + 4 * j);
         std::int32_t ox, oz;
         Turn(angle, S16(Word(spot)), S16(Word(spot + 2)), ox, oz);
-        SetLong(At(::bof3::Img(at::kWheelSpots) + 8 * j), ox);
-        SetLong(At(::bof3::Img(at::kWheelSpots) + 8 * j + 4), oz);
+        SetLong(AtFieldO(::bof3::Img(at::kWheelSpots) + 8 * j), ox);
+        SetLong(AtFieldO(::bof3::Img(at::kWheelSpots) + 8 * j + 4), oz);
     }
     for (unsigned i = 0; static_cast<int>(i) < count - 1; ++i) {
         for (unsigned j = 0; static_cast<int>(j) < count - static_cast<int>(i) - 1; ++j) {
-            unsigned char* const a = At(::bof3::Img(at::kWheelSpots) + 8 * j);
+            unsigned char* const a = AtFieldO(::bof3::Img(at::kWheelSpots) + 8 * j);
             if (Long(a + 4) <= Long(a + 0xC)) continue;
             const std::int32_t x0 = Long(a), z0 = Long(a + 4);
             SetLong(a, Long(a + 8));
@@ -308,7 +308,7 @@ extern "C" void __cdecl Menu_DrawIconWheel(int x, int y, unsigned kind, unsigned
     }
     for (unsigned j = 0; j < count; ++j) {
         const unsigned clut = SH_CALL(Gpu_GetClut)(0x10, 0x1E0);
-        const unsigned char* const spot = At(::bof3::Img(at::kWheelSpots) + 8 * j);
+        const unsigned char* const spot = AtFieldO(::bof3::Img(at::kWheelSpots) + 8 * j);
         const auto sx = static_cast<unsigned>(static_cast<std::uint16_t>(Word(spot) + static_cast<unsigned>(x)) + 0x23u);
         const auto sy = static_cast<unsigned>(static_cast<std::uint16_t>(Word(spot + 4) + static_cast<unsigned>(y)) + 0xFu);
         SH_CALL(Menu_DrawCell8)(sx, sy, static_cast<unsigned char>(order[j] + 3), 0x1E, clut, colour[j]);
@@ -382,20 +382,20 @@ extern "C" void __cdecl Menu_DrawEquipCompare(unsigned record, int x, int y, con
         }
     }
     const unsigned char* names[6] = {
-        At(::bof3::Img(bof3::addr::NameTable_Weapons) + rec[0x12] * 28u), At(::bof3::Img(bof3::addr::NameTable_Armour) + rec[0x13] * 26u),
-        At(::bof3::Img(bof3::addr::NameTable_Armour) + rec[0x14] * 26u),  At(::bof3::Img(bof3::addr::NameTable_Armour) + rec[0x15] * 26u),
-        At(::bof3::Img(bof3::addr::NameTable_Accessories) + rec[0x16] * 24u), At(::bof3::Img(bof3::addr::NameTable_Accessories) + rec[0x17] * 24u),
+        AtFieldO(::bof3::Img(bof3::addr::NameTable_Weapons) + rec[0x12] * 28u), AtFieldO(::bof3::Img(bof3::addr::NameTable_Armour) + rec[0x13] * 26u),
+        AtFieldO(::bof3::Img(bof3::addr::NameTable_Armour) + rec[0x14] * 26u),  AtFieldO(::bof3::Img(bof3::addr::NameTable_Armour) + rec[0x15] * 26u),
+        AtFieldO(::bof3::Img(bof3::addr::NameTable_Accessories) + rec[0x16] * 24u), AtFieldO(::bof3::Img(bof3::addr::NameTable_Accessories) + rec[0x17] * 24u),
     };
     for (unsigned b = 0; b < 6; ++b) {
         const int row = y + 13 * static_cast<int>(b);
-        const unsigned char icon = At(::bof3::Img(at::kEquipIcons))[b];
+        const unsigned char icon = AtFieldO(::bof3::Img(at::kEquipIcons))[b];
         const unsigned char* const name = names[b];
         const bool raised = b == panel[0xB] || b == panel[0xA];
         if (raised) {
             const unsigned char under = b == panel[0xB] ? 2 : 0;
             SH_CALL(Menu_DrawIcon8)(x + 6, row + 0x57, icon, 1);
             SH_CALL(Text_DrawAt)(x + 0x11, row + 0x55, 7, SH_CALL(Text_CharCount)(name), name);
-            SH_CALL(Menu_DrawIcon8)(x + 6, row + 0x55, At(::bof3::Img(at::kEquipIcons))[b], 0);
+            SH_CALL(Menu_DrawIcon8)(x + 6, row + 0x55, AtFieldO(::bof3::Img(at::kEquipIcons))[b], 0);
             SH_CALL(Text_DrawAt)(x + 0x11, row + 0x53, under, SH_CALL(Text_CharCount)(name), name);
         } else {
             SH_CALL(Menu_DrawIcon8)(x + 6, row + 0x57, icon, 0);
@@ -434,7 +434,7 @@ int PanelY(const unsigned char* panel) { return static_cast<int>(Word(panel + 6)
 // The member id of the menu's shown party slot: Character_IndexById by the
 // party list's byte at the slot (the slot a signed byte).
 unsigned char ShownMember() {
-    const unsigned char id = At(::bof3::Img(Cond_Flags_addr) + 0xd2 + BattleActorCopies_ItemActor)[0];
+    const unsigned char id = AtFieldO(::bof3::Img(Cond_Flags_addr) + 0xd2 + BattleActorCopies_ItemActor)[0];
     return Character_IndexById[id];
 }
 // A title of a table of pointers, centred on 13 six-unit columns - or, under
@@ -474,7 +474,7 @@ extern "C" void __cdecl Menu_DrawAbilityPanel(unsigned char* panel) {
         unsigned char colour = dim ? 7 : 0;
         if (b == panel[0xD]) colour = 2;
         const unsigned char kind = SH_CALL(Skill_FlagIndex)(list[0]);
-        const unsigned char* const rec = At(::bof3::Img(bof3::addr::Ability_Records) + list[0] * 24u);
+        const unsigned char* const rec = AtFieldO(::bof3::Img(bof3::addr::Ability_Records) + list[0] * 24u);
         const unsigned char cost = SH_CALL(Skill_ApCost)(ShownMember(), list[0], 0);
         if (b != panel[0xD] && b != panel[0xC]) {
             SH_CALL(Menu_DrawSkillRow)(PanelX(panel) + 7, row, colour, kind, rec, cost, dim);
@@ -483,7 +483,7 @@ extern "C" void __cdecl Menu_DrawAbilityPanel(unsigned char* panel) {
         if (colour != 7) SH_CALL(Menu_DrawSkillRow)(PanelX(panel) + 7, row, 7, kind, rec, cost, 1);
         SH_CALL(Menu_DrawSkillRow)(PanelX(panel) + 7, row - 2, colour, kind, rec, cost, dim);
     }
-    const char* const title = Str(static_cast<U>(Long(At(::bof3::Img(at::kAbilityTitles) + panel[0xB] * 4u))));
+    const char* const title = Str(static_cast<U>(Long(AtFieldO(::bof3::Img(at::kAbilityTitles) + panel[0xB] * 4u))));
     const int ty = PanelY(panel) + 7;
     SH_CALL(Text_DrawAt)(Centred(PanelX(panel), static_cast<unsigned>(std::strlen(title)),
                                  reinterpret_cast<const unsigned char*>(title)),
@@ -530,31 +530,31 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
     default: panel[8] = 1; break;
     }
     const unsigned cat = panel[8];
-    const unsigned char* ids = At(static_cast<U>(Long(At(::bof3::Img(bof3::addr::Inventory_IdLists) + 4 * cat))));
-    const unsigned char* counts = At(static_cast<U>(Long(At(::bof3::Img(bof3::addr::Inventory_CountLists) + 4 * cat))));
+    const unsigned char* ids = AtFieldO(static_cast<U>(Long(AtFieldO(::bof3::Img(bof3::addr::Inventory_IdLists) + 4 * cat))));
+    const unsigned char* counts = AtFieldO(static_cast<U>(Long(AtFieldO(::bof3::Img(bof3::addr::Inventory_CountLists) + 4 * cat))));
     unsigned char kept = 0, total = 0;
     for (unsigned n = 0; n < 0x80; ++n, ++ids, ++counts) {
-        const unsigned char member = Character_IndexById[At(::bof3::Img(Cond_Flags_addr) + 0xd2 + panel[0xC])[0]];
+        const unsigned char member = Character_IndexById[AtFieldO(::bof3::Img(Cond_Flags_addr) + 0xd2 + panel[0xC])[0]];
         if (!SH_CALL(Item_CanUse)(4, member, panel[8], ids[0])) continue;
         if (panel[8] == 2) {
             const U kindv = SH_CALL(Item_IconKind)(2, ids[0]) & 0xFF;
             if (static_cast<U>(panel[9]) - 1u != kindv - 2u) continue;
         }
-        At(::bof3::Img(at::kListIds))[kept] = ids[0];
-        At(::bof3::Img(at::kListCounts))[kept] = counts[0];
+        AtFieldO(::bof3::Img(at::kListIds))[kept] = ids[0];
+        AtFieldO(::bof3::Img(at::kListCounts))[kept] = counts[0];
         ++total;
         ++kept;
     }
     if (kept < 0x80) {
-        std::memset(At(::bof3::Img(at::kListCounts) + kept), 0, 0x80u - kept);
-        std::memset(At(::bof3::Img(at::kListIds) + kept), 0, 0x80u - kept);
+        std::memset(AtFieldO(::bof3::Img(at::kListCounts) + kept), 0, 0x80u - kept);
+        std::memset(AtFieldO(::bof3::Img(at::kListIds) + kept), 0, 0x80u - kept);
     }
-    panel[0xD] = At(::bof3::Img(at::kListIds))[panel[0xB]];
+    panel[0xD] = AtFieldO(::bof3::Img(at::kListIds))[panel[0xB]];
     SH_CALL(Menu_DrawBox)(PanelX(panel) + 3, PanelY(panel) + 3, 0x99, 0x9A, 0, Style());
     unsigned char offset = 0, moving = 0;
     const unsigned char start = SH_CALL(Menu_ListScroll)(panel + 0xA, &offset, &moving, panel + 0x10);
     int row = PanelY(panel) + Sb(offset) + 0x1A;
-    const unsigned char* item = At(::bof3::Img(at::kListIds) + start);
+    const unsigned char* item = AtFieldO(::bof3::Img(at::kListIds) + start);
     const std::int32_t to_counts = static_cast<std::int32_t>(at::kListCounts - at::kListIds);
     for (unsigned j = 0; static_cast<int>(j) < moving + 9; ++j, ++item, row += 0xD) {
         const unsigned char id = item[0];
@@ -569,7 +569,7 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
     SH_CALL(Menu_DrawBox)(PanelX(panel) + 3, PanelY(panel) + 3, 0x99, 0x14, 0, Style());
     SH_CALL(Menu_DrawBox)(PanelX(panel) + 3, PanelY(panel) + 0x92, 0x99, 8, 0, Style());
     const unsigned category = panel[8];
-    const unsigned char* const title = Text(static_cast<U>(Long(At(::bof3::Img(at::kItemTitles) + category * 4u))));
+    const unsigned char* const title = Text(static_cast<U>(Long(AtFieldO(::bof3::Img(at::kItemTitles) + category * 4u))));
     const int ty = PanelY(panel) + 7;
     SH_CALL(Text_DrawAt)(Centred(PanelX(panel), SH_CALL(Text_CharCount)(title), title), ty, 0, 0x10, title);
     Sprintf(::bof3::Img(at::kFmtCount), static_cast<unsigned>(total), 0x80u);
@@ -591,7 +591,7 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
     SH_CALL(Menu_DrawPiece)(PanelX(panel) + 0x88, PanelY(panel) + 0x90, 0x1D, 1);
     SH_CALL(Menu_DrawPiece)(PanelX(panel) + 8, PanelY(panel), 0x32, 1);
     SH_CALL(Menu_DrawPiece)(PanelX(panel) + 0x90, PanelY(panel), 0x33, 1);
-    SH_CALL(Menu_DrawScrollBar)(At(::bof3::Img(at::kListIds)), panel[0xA], PanelX(panel) + 0x90, PanelY(panel) + 0x18, 9, 0x80, 0x74);
+    SH_CALL(Menu_DrawScrollBar)(AtFieldO(::bof3::Img(at::kListIds)), panel[0xA], PanelX(panel) + 0x90, PanelY(panel) + 0x18, 9, 0x80, 0x74);
 }
 
 // original 0x576960: a save or load slot (SaveMenu_DrawSlots 0x588D6B; the
@@ -677,8 +677,8 @@ extern "C" int __cdecl MoveCmd_OpF9(unsigned char toward, unsigned char shift) {
     const unsigned char speed = Field_MoveSpeeds[rv::As<records::SpriteObject>(Fam())->speed];
     records::SpriteHead* sc = rv::As<records::SpriteHead>(Sc());
     const unsigned dir = rv::Bytes(sc)[8] & 7u;
-    const auto vx = static_cast<std::int32_t>(static_cast<U>(Long(At(::bof3::Img(MoveCmd_F9Steps_addr) + 8 * dir))) * speed);
-    const auto vz = static_cast<std::int32_t>(static_cast<U>(Long(At(::bof3::Img(MoveCmd_F9Steps_addr) + 8 * dir + 4))) * speed);
+    const auto vx = static_cast<std::int32_t>(static_cast<U>(Long(AtFieldO(::bof3::Img(MoveCmd_F9Steps_addr) + 8 * dir))) * speed);
+    const auto vz = static_cast<std::int32_t>(static_cast<U>(Long(AtFieldO(::bof3::Img(MoveCmd_F9Steps_addr) + 8 * dir + 4))) * speed);
     const long ground = SH_CALL(AreaMap_Elevation)(sc->x, sc->z);
     rv::Store<unsigned>(rv::As<records::SpriteHead>(Sc())->height_whole, static_cast<U>(ground));
     sc = rv::As<records::SpriteHead>(Sc());
@@ -1059,7 +1059,7 @@ namespace {
 // EventOp_3x / 4x / 7x / 6x / Ax's shared start: Sprite_Current and
 // Field_ActiveMember the next Sprite_Objects entry.
 unsigned char* Claim() {
-    unsigned char* const o = Object(Count());
+    unsigned char* const o = ObjectFieldO(CountFieldO());
     Sprite_Current = o;
     Field_ActiveMember = o;
     return o;
@@ -1068,10 +1068,10 @@ unsigned char* Claim() {
 // read again each time, as EventOp_1x's.
 void PlaceXZ(std::int32_t x, std::int32_t z) {
     rv::As<records::SpriteObject>(Sc())->x = x;
-    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_x, rv::As<records::SpriteObject>(Sc())->x);
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(ObjectFieldO(CountFieldO()))->target_x, rv::As<records::SpriteObject>(Sc())->x);
     rv::As<records::SpriteObject>(Sc())->z = z;
-    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_z, rv::As<records::SpriteObject>(Sc())->z);
-    rv::As<records::SpriteObject>(Object(Count()))->best_score = 0;
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(ObjectFieldO(CountFieldO()))->target_z, rv::As<records::SpriteObject>(Sc())->z);
+    rv::As<records::SpriteObject>(ObjectFieldO(CountFieldO()))->best_score = 0;
 }
 void Ground() {
     records::SpriteObject* const sc = rv::As<records::SpriteObject>(Sc());
@@ -1093,20 +1093,20 @@ void Colour(unsigned char v) {
 // +0x88, op[0x10] +0x83, op[0x11] the dword +0x70; op[0]'s nibbles +6 / +8.
 // As the original has it: nothing past the count's test of 30 checks it.
 extern "C" void __cdecl EventOp_3x(const unsigned char* op) {
-    if (Count() >= 30) return;
+    if (CountFieldO() >= 30) return;
     Claim();
     SetBank(static_cast<unsigned>(op[1]) << 8 | op[2]);
     SH_CALL(EventObj_Reset)();
-    SH_CALL(Sprite_SetAnimationBank)(Bank());
+    SH_CALL(Sprite_SetAnimationBank)(BankFieldO());
     rv::As<records::SpriteObject>(Sc())->flags = 1;
-    PlaceXZ(Coordinate(op[6], op[7]), Coordinate(op[8], op[9]));
+    PlaceXZ(CoordinateFieldO(op[6], op[7]), CoordinateFieldO(op[8], op[9]));
     Ground();
     rv::As<records::SpriteObject>(Sc())->type = op[0] >> 4;
     rv::As<records::SpriteObject>(Sc())->direction = op[0] & 0xF;
     rv::As<records::SpriteObject>(Sc())->state = op[0xA];
     Sc()[2] = op[0xC];
     rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Sc())->reach, op[0x11]);
-    records::SpriteObject* const n = rv::As<records::SpriteObject>(Object(Count()));
+    records::SpriteObject* const n = rv::As<records::SpriteObject>(ObjectFieldO(CountFieldO()));
     n->half_w = op[4];
     n->half_d = op[5];
     n->trigger_word = static_cast<unsigned>(op[0xE]) << 8 | op[0xF];
@@ -1124,19 +1124,19 @@ extern "C" void __cdecl EventOp_3x(const unsigned char* op) {
 // original 0x57A990: op 4x, 17 bytes (handler 4) - op 3x's layout without
 // +0x83 and +0x70: op[0x10] is object +0xA0 (not 0x7F).
 extern "C" void __cdecl EventOp_4x(const unsigned char* op) {
-    if (Count() >= 30) return;
+    if (CountFieldO() >= 30) return;
     Claim();
     SetBank(static_cast<unsigned>(op[1]) << 8 | op[2]);
     SH_CALL(EventObj_Reset)();
-    SH_CALL(Sprite_SetAnimationBank)(Bank());
+    SH_CALL(Sprite_SetAnimationBank)(BankFieldO());
     rv::As<records::SpriteObject>(Sc())->flags = 1;
-    PlaceXZ(Coordinate(op[6], op[7]), Coordinate(op[8], op[9]));
+    PlaceXZ(CoordinateFieldO(op[6], op[7]), CoordinateFieldO(op[8], op[9]));
     Ground();
     rv::As<records::SpriteObject>(Sc())->state = op[0xA];
     Sc()[2] = op[0xC];
     rv::As<records::SpriteObject>(Sc())->direction = op[0] & 0xF;
     rv::As<records::SpriteObject>(Sc())->type = op[0] >> 4;
-    records::SpriteObject* const n = rv::As<records::SpriteObject>(Object(Count()));
+    records::SpriteObject* const n = rv::As<records::SpriteObject>(ObjectFieldO(CountFieldO()));
     n->half_w = op[4];
     n->half_d = op[5];
     n->trigger_word = static_cast<unsigned>(op[0xE]) << 8 | op[0xF];
@@ -1155,19 +1155,19 @@ extern "C" void __cdecl EventOp_4x(const unsigned char* op) {
 // +0x84, op[0xB] +2, op[0xC] the flags, op[0xD]:op[0xE] +0x88, op[0xF] +0x83,
 // op[0x10] +0x9E; +0x5C 2.
 extern "C" void __cdecl EventOp_7x(const unsigned char* op) {
-    if (Count() >= 30) return;
+    if (CountFieldO() >= 30) return;
     Claim();
     SetBank(static_cast<unsigned>(op[1]) << 8 | op[2]);
     SH_CALL(EventObj_Reset)();
-    SH_CALL(Sprite_SetAnimationBank)(Bank());
+    SH_CALL(Sprite_SetAnimationBank)(BankFieldO());
     rv::As<records::SpriteObject>(Sc())->flags = 1;
-    PlaceXZ(Coordinate(op[5], op[6]), Coordinate(op[7], op[8]));
+    PlaceXZ(CoordinateFieldO(op[5], op[6]), CoordinateFieldO(op[7], op[8]));
     Ground();
     rv::As<records::SpriteObject>(Sc())->state = op[9];
     Sc()[2] = op[0xB];
     rv::As<records::SpriteObject>(Sc())->direction = op[0] & 0xF;
     rv::As<records::SpriteObject>(Sc())->type = op[0] >> 4;
-    records::SpriteObject* const n = rv::As<records::SpriteObject>(Object(Count()));
+    records::SpriteObject* const n = rv::As<records::SpriteObject>(ObjectFieldO(CountFieldO()));
     n->half_w = op[3];
     n->half_d = op[4];
     n->trigger_word = static_cast<unsigned>(op[0xD]) << 8 | op[0xE];
@@ -1189,18 +1189,18 @@ extern "C" void __cdecl EventOp_7x(const unsigned char* op) {
 // op[9] +0x84, op[0xA] +2, op[0xB] the flags, op[0xC]:op[0xD] +0x88, op[0xE]
 // +0x83; +0x5C 2.
 extern "C" void __cdecl EventOp_6x(const unsigned char* op) {
-    if (Count() >= 30) return;
+    if (CountFieldO() >= 30) return;
     Claim();
     SH_CALL(EventObj_Reset)();
     SH_CALL(Field_MemberSprite)(op[1], op[0xF]);
     rv::As<records::SpriteObject>(Sc())->flags = 1;
-    PlaceXZ(Coordinate(op[4], op[5]), Coordinate(op[6], op[7]));
+    PlaceXZ(CoordinateFieldO(op[4], op[5]), CoordinateFieldO(op[6], op[7]));
     Ground();
     rv::As<records::SpriteObject>(Sc())->state = op[8];
     Sc()[2] = op[0xA];
     rv::As<records::SpriteObject>(Sc())->direction = op[0] & 0xF;
     rv::As<records::SpriteObject>(Sc())->type = op[0] >> 4;
-    records::SpriteObject* const n = rv::As<records::SpriteObject>(Object(Count()));
+    records::SpriteObject* const n = rv::As<records::SpriteObject>(ObjectFieldO(CountFieldO()));
     n->half_w = op[2];
     n->half_d = op[3];
     n->trigger_word = static_cast<unsigned>(op[0xC]) << 8 | op[0xD];
@@ -1223,7 +1223,7 @@ extern "C" void __cdecl EventOp_6x(const unsigned char* op) {
 // right and below it, where x / z has a half) set to 0x10.
 // As the original has it: the descriptor is Game_AreaNumber's unchecked.
 extern "C" void __cdecl EventOp_Ax(const unsigned char* op) {
-    if (Count() >= 30) return;
+    if (CountFieldO() >= 30) return;
     const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
     const unsigned char* const entry = PtrAt(descriptor + 8) + op[9] * 8u;
     records::SpriteObject* const o = rv::As<records::SpriteObject>(Claim());
@@ -1231,8 +1231,8 @@ extern "C" void __cdecl EventOp_Ax(const unsigned char* op) {
     SH_CALL(EventObj_Reset)();
     SH_CALL(Sprite_InitFromEntry)(const_cast<unsigned char*>(entry));
     SH_CALL(PartyRecord_Clear)(4);
-    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Sc())->x, Coordinate(op[1], op[2]));
-    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Sc())->z, Coordinate(op[3], op[4]));
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Sc())->x, CoordinateFieldO(op[1], op[2]));
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Sc())->z, CoordinateFieldO(op[3], op[4]));
     Ground();
     rv::As<records::SpriteObject>(Sc())->state = op[5];
     Sc()[2] = op[7];
@@ -1244,7 +1244,7 @@ extern "C" void __cdecl EventOp_Ax(const unsigned char* op) {
         unsigned char* const sc = Sc();
         sc[0x70] = PtrAt(sc + 0x54)[2];
     }
-    records::SpriteObject* const n = rv::As<records::SpriteObject>(Object(Count()));
+    records::SpriteObject* const n = rv::As<records::SpriteObject>(ObjectFieldO(CountFieldO()));
     n->best_score = 0;
     n->target_z = 0;
     n->target_x = 0;
@@ -1255,7 +1255,7 @@ extern "C" void __cdecl EventOp_Ax(const unsigned char* op) {
     SH_CALL(EventObj_SetFlags)(op + 8);
     Colour(0x80);
     rv::As<records::SpriteObject>(Sc())->draw_mode = 2;
-    if (rv::As<records::SpriteObject>(Object(Count()))->speed == 0) {
+    if (rv::As<records::SpriteObject>(ObjectFieldO(CountFieldO()))->speed == 0) {
         unsigned char* sc = Sc();
         SH_CALL(AreaMap_SetByte)(rv::As<records::SpriteObject>(sc)->x_whole, rv::As<records::SpriteObject>(sc)->z_whole, 0x10);
         sc = Sc();
@@ -1280,11 +1280,11 @@ extern "C" void __cdecl EventOp_Ax(const unsigned char* op) {
 // original 0x57C1A0 (PSX 0x8015C034): condition 1 - Game_AreaNumber (a word) equals the operand.
 extern "C" unsigned char __cdecl EventCond_Area(const unsigned char** at) { return Game_AreaNumber == **at; }
 // original 0x57C3E0 (PSX 0x8015C37C): condition 3 - the script counter 0x903848 equals it.
-extern "C" unsigned char __cdecl EventCond_Counter0(const unsigned char** at) { return At(::bof3::Img(0x903848))[0] == **at; }
+extern "C" unsigned char __cdecl EventCond_Counter0(const unsigned char** at) { return AtFieldO(::bof3::Img(0x903848))[0] == **at; }
 // original 0x57C400 (PSX 0x8015C3A4) / 0x57C420 / 0x57C440: conditions 4..6 - counters 1..3.
-extern "C" unsigned char __cdecl EventCond_Counter1(const unsigned char** at) { return At(::bof3::Img(0x903849))[0] == **at; }
-extern "C" unsigned char __cdecl EventCond_Counter2(const unsigned char** at) { return At(::bof3::Img(0x90384A))[0] == **at; }
-extern "C" unsigned char __cdecl EventCond_Counter3(const unsigned char** at) { return At(::bof3::Img(0x90384B))[0] == **at; }
+extern "C" unsigned char __cdecl EventCond_Counter1(const unsigned char** at) { return AtFieldO(::bof3::Img(0x903849))[0] == **at; }
+extern "C" unsigned char __cdecl EventCond_Counter2(const unsigned char** at) { return AtFieldO(::bof3::Img(0x90384A))[0] == **at; }
+extern "C" unsigned char __cdecl EventCond_Counter3(const unsigned char** at) { return AtFieldO(::bof3::Img(0x90384B))[0] == **at; }
 // original 0x57C1F0 (PSX 0x8015C098): condition 7 - MoveScript_Var7 (the chapter's run byte) equals it.
 extern "C" unsigned char __cdecl EventCond_Run(const unsigned char** at) {
     return static_cast<unsigned char>(MoveScript_Var7) == **at;
@@ -1301,7 +1301,7 @@ extern "C" unsigned char __cdecl EventCond_LeaderId(const unsigned char** at) { 
 // original 0x57C270 (PSX 0x8015C154): condition 12 - story flag `operand` (Flags_Test of
 // 0x904030); the answer is Flags_Test's eax.
 extern "C" unsigned char __cdecl EventCond_StoryFlag(const unsigned char** at) {
-    return SH_CALL(Flags_Test)(At(::bof3::Img(0x904030)), **at);
+    return SH_CALL(Flags_Test)(AtFieldO(::bof3::Img(0x904030)), **at);
 }
 // original 0x57C290 (PSX 0x8015C188): condition 13 - KeyItem_Has(operand).
 extern "C" unsigned char __cdecl EventCond_KeyItem(const unsigned char** at) { return SH_CALL(KeyItem_Has)(**at); }
@@ -1314,7 +1314,7 @@ extern "C" unsigned char __cdecl EventCond_ChapterAtMost(const unsigned char** a
 extern "C" unsigned char __cdecl EventCond_RecordBit0(const unsigned char** at) { return Record(**at)[0xB] & 1; }
 // original 0x57C2F0 (PSX 0x8015C22C): condition 16 - bit `operand` of the gene flags 0x904650
 // (Flags_Test; the dword's 18 bits, battle_e5.md).
-extern "C" unsigned char __cdecl EventCond_Gene(const unsigned char** at) { return SH_CALL(Flags_Test)(At(::bof3::Img(Gene_Bits_addr)), **at); }
+extern "C" unsigned char __cdecl EventCond_Gene(const unsigned char** at) { return SH_CALL(Flags_Test)(AtFieldO(::bof3::Img(Gene_Bits_addr)), **at); }
 
 // original 0x57C7E0 (MoveScript_Flow 0x57701D, Scena03_Scene5 0x5438DC; PSX 0x8015CAA8): bit 6
 // of the three party objects' first byte cleared - ObjTrio_SetBit40's inverse.
