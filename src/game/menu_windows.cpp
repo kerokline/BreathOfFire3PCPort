@@ -354,7 +354,7 @@ extern "C" void __cdecl Window_Kind2List() {
 // vertex halfwords and the GPU clips. With g_signed_xy (1 through
 // PatchBytes("MenuSignedXY") in MenuWindows_Inject, after the self-test) x
 // and y are sign-extended words; w and h stay unsigned, as on both.
-static std::uint8_t g_signed_xy = 0;
+namespace menu_windows { std::uint8_t g_signed_xy = 0; }
 
 extern "C" void __cdecl Menu_DrawBox(int x, int y, int w, int h, int flags, int colour) {
     const auto kind = static_cast<unsigned char>(flags & 0xF);
@@ -370,8 +370,8 @@ extern "C" void __cdecl Menu_DrawBox(int x, int y, int w, int h, int flags, int 
         clut_x += 0x10;
     }
     p[6] = p[5] = p[4] = shade;
-    const std::int32_t xs = g_signed_xy ? S16MenuWindows(static_cast<std::uint32_t>(x)) : U16(static_cast<std::uint32_t>(x));
-    const std::int32_t ys = g_signed_xy ? S16MenuWindows(static_cast<std::uint32_t>(y)) : U16(static_cast<std::uint32_t>(y));
+    const std::int32_t xs = menu_windows::g_signed_xy ? S16MenuWindows(static_cast<std::uint32_t>(x)) : U16(static_cast<std::uint32_t>(x));
+    const std::int32_t ys = menu_windows::g_signed_xy ? S16MenuWindows(static_cast<std::uint32_t>(y)) : U16(static_cast<std::uint32_t>(y));
     const auto xb = static_cast<unsigned char>(x), yb = static_cast<unsigned char>(y);
     p[0x14] = xb;
     p[0x15] = yb;
@@ -687,8 +687,8 @@ extern "C" void __cdecl Menu_DrawIcon8(int x, int y, int icon, int dim) {
     g.set_sprt8(p);
     const unsigned char shade = (dim & 0xFF) ? 0x40 : 0x80;
     p[4] = p[5] = p[6] = shade;
-    Put(p + 8, F(g_signed_xy ? S16MenuWindows(static_cast<std::uint32_t>(x)) : U16(static_cast<std::uint32_t>(x))));
-    Put(p + 0xC, F(g_signed_xy ? S16MenuWindows(static_cast<std::uint32_t>(y)) : U16(static_cast<std::uint32_t>(y))));
+    Put(p + 8, F(menu_windows::g_signed_xy ? S16MenuWindows(static_cast<std::uint32_t>(x)) : U16(static_cast<std::uint32_t>(x))));
+    Put(p + 0xC, F(menu_windows::g_signed_xy ? S16MenuWindows(static_cast<std::uint32_t>(y)) : U16(static_cast<std::uint32_t>(y))));
     p[0x15] = 0xF8;
     p[0x14] = static_cast<unsigned char>((icon + 7) << 3);
     const unsigned i = static_cast<unsigned>(icon) & 0xFF;
@@ -1672,7 +1672,7 @@ void MenuWindows_Inject() {
     {
         // DIV-0165: after the self-test, which compared Capcom's unsigned words.
         const std::uint8_t was = 0, is = 1;
-        bof3::PatchBytes("MenuSignedXY", Low32(&g_signed_xy), &was, &is, 1);
+        bof3::PatchBytes("MenuSignedXY", Low32(&menu_windows::g_signed_xy), &was, &is, 1);
         bof3::Log("DIV-0165    Menu_DrawBox and Menu_DrawIcon8 take x and y as signed words (on unless the line above says OFF)");
     }
 
