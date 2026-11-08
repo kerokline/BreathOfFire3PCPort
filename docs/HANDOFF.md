@@ -366,18 +366,25 @@ no staff roll and the tooling install's `en-US` overlay predates DIV-0069's fish
    **After this round:** IDEAS I53 (the wide image, one struct at a time, gated by the hash) and I5's
    translation-unit layout, at the owner's word; the first non-x86 target is a round of its own (section 9).
 
-14b. **The source-layout round: stage A done and merged on `source-layout/round`** (2026-11-07, local, unpushed;
-   [`source-layout-round.md`](source-layout-round.md) section 3's "as run" subsections; reports
-   `C:\Users\kerok\bof3x-runs\sl1107\reports`). SL1: 676 units (contiguity holds; 7,202 functions joined, 62
-   placed, 2,805 guessed), proposed as 556 files in 14 subsystem folders on the owner's sheet
-   `analysis/tu_layout_sheet.md`, with SL2's PSX units joined (59 of 488 PSX units split, 42 of them already
-   interleaved on the PC). SL2: Capcom built with `-G0`, and no Capcom file name survives in either binary. SL3:
-   `codegen_same.py --by-function`, `move_funcs.py`, `cite_lookup.py` with `tu_moves.tsv`, `game_sources.py`; its
-   dry run moved effect kind 0xA7 with i686 identical. **Answered 2026-11-07** (section 7a): renames of clashing file-local helpers
-   allowed with each reason recorded (step B0, `analysis/tu_renames.tsv`; 468 clashes, the mover refuses 164 of the
-   556 files today, section 3 "Stage A's end"); the x86-64 gate takes a named exception class
-   (`analysis/tu_gate_exceptions.tsv`: `inline`, `low32-site`), i686 stays exact. **Before stage B:** the owner's
-   read of the sheet; stage D of the 64-bit round merged first (it edits the source list `game_sources.py adopt` replaces).
+14b. **The source-layout round: stage A in `main` (PR #207), stage B0 run 2026-11-08 on `source-layout/stage-b`**
+   (off `main` `67c3259b`, local, unpushed, no PR while the beta is cut; root `C:\Users\kerok\bof3x-runs\slb1108`,
+   its `base` the gate's baseline, reports in `reports\`; [`source-layout-round.md`](source-layout-round.md)
+   section 4 "Stage B0 as run", the owner's open calls in 7b). Done there: the generated source list adopted; the
+   468 helper clashes renamed (stem-suffix names, 457 rows in `analysis/tu_renames.tsv`, `tu_renames.py --check`
+   0 problems; `move_funcs.py --check` reports no clash); `codegen_same.py --exceptions` with 39 `low32-site`
+   rows (the 64-bit `Low32()` names its caller), the source-root placeholder (a worktree's `__FILE__` path read
+   as 8,870 differences before), `PROMOTED`, the macro-made functions in the mover; group s's 135 state and
+   global decisions, applied where the code stays identical (23 declarations, 39 promotions, 1 seam) and 62
+   blocked with their first difference; both self-test suites pass; the sheet in two tables (212 rows that want a
+   call, 457 settled) and 28 PlayStation twin claims re-pointed (`symbols.toml`, 669 units, no proposed file
+   changed). **Gate on the tip:** i686 `--by-function --anonymous-locals` 0 differ; x86_64 with `--exceptions` 0
+   differ. **The owner's, before B1..B5** (7b): the sheet's 212 rows (a per-class answer is enough); the gate
+   classes for shared state (62 rows); the qualification pass for 50 ambiguous targets; row 585's extent. **Traps
+   paid:** the x86_64 compare across two worktrees needs the placeholder (it is in); a rename must not change a
+   file's line count; a `using ns::X;` line cannot be renamed (write the uses in full, keep the line as a comment);
+   a helper that matched its twin exactly stops matching once a helper it calls is renamed (cascades: run
+   `--check` again after a wave); the exe host refuses `BOF3X_SHADOW`; `tu_layout.tsv` legitimately changes when a
+   twin claim is corrected. Worktrees `slb1108\r1..r4, c, t, s, a, p` are removable after the merge into `main`.
 15. **The state hash's route pairs are `cn_<route>_orig4` / `_orig4b`** (2026-10-23 at `main` `b13eb30a`,
    [`state-hash.md`](state-hash.md) 6); the `orig3` pairs of 2026-10-20 went stale at the reading-row round's tip
    (D330). Open from the `orig3` reading: which of the button round's glyph changes moves `masterAndManillo`'s pages

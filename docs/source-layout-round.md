@@ -1,11 +1,14 @@
 # The source-layout round: staging (IDEAS I44's last step, I5 folded in)
 
-**Status:** IN PROGRESS (stage A launched 2026-11-07 on `source-layout/round`
-off `main` `39d88ef9`, worktrees under `C:\Users\kerok\bof3x-runs\sl1107`; the
-owner's calls answered the same day, section 7. Staged 2026-11-07 on
-`docs/source-layout-staging`, the owner's pick of the next large round. Stage
-A needs no `src/game` change and runs beside the 64-bit round's stage D;
-stage B waits for stage D's merge and the owner's reading of SL1's sheet.)
+**Status:** IN PROGRESS (stage A merged with PR #207 on 2026-11-07; **stage B0
+run 2026-11-08** on `source-layout/stage-b` off `main` `67c3259b`, root
+`C:\Users\kerok\bof3x-runs\slb1108`, section 4 "Stage B0 as run": the 468
+helper clashes renamed, the mover reports none, 39 `low32-site` rows, group
+s's decisions applied where the code stays identical and 62 blocked on
+measured gate classes, the sheet in two tables and its PSX flags read against
+the PlayStation side. Not merged to `main` and no PR while the beta is being
+cut. The moves B1..B5 wait on the owner's read of the sheet's 212 rows and
+the calls in 7b.)
 
 The typed-data round named every data access, the relocatable-image round
 removed every fixed address, and the 64-bit round builds the same source at
@@ -739,11 +742,85 @@ unit with an effect unit through a recurring `u000`, which reads as an
 overlay's common helper rather than a cut (a guess, being checked against the
 PlayStation decompilation's duplicate-function list).
 
-**Left in B0:** group a (applying group s's 135 decisions, running), the
-qualification pass for the 50 ambiguous targets (the owner's word), the
-`SparkleDispatch` difference, `Gfx_DrawOTag` (differs on i686 when moved to
-`platform/d3d.cpp`: a copied helper inlined, so it cannot leave
-`d3d_list.cpp` as the table has it - a sheet row for the owner).
+**Group a** (group s's decisions applied, merged after `1365570a`; `reports\a.md`):
+what keeps every function's code identical went in - the 16 `extern`
+declarations plus 7 undeclared globals the check found after group t
+(`psx_gte`, `rest_2h` x2, `sound` x3, `world_map`), the `gfx_frame` inject
+split, 39 of the 83 variable promotions, 1 of the 11 `Callees g` seams
+(`frame_callees`, its struct in a new `frame_callees_callees.h`), and group
+t's three late items (`g_icons`, `g_ja_icons`, `rest_3e::dock::g_on`). Gates at
+its tip: i686 `0 differ; 43 promoted to external linkage, the same body`;
+x86_64 with `--exceptions` `0 differ; 39 excepted; 43 promoted`;
+`tu_renames --check: 593 rows, 0 problems`; both self-test suites pass on its
+build (hosted 32,265 lines, exe host 10,356, no FATAL, every MISMATCHES 0).
+**62 rows are blocked** - the source left alone, each row's reason starting
+`BLOCKED (group a, B0, ...)` with the first difference - in three measured
+classes, each a real code change a promotion makes:
+1. i686: the optimiser folds or shrinks an internal global and cannot once it
+   is external (first case `win_main`'s `g_background`: `_Game_WinMain` stores
+   `1` -> `0`, `WinMain_InputAllowed` `movzx` -> `mov al, 1`; also `msg_pool`'s
+   `g_pool`, `map_layers`' `g_side_dup`);
+2. the section's data layout changes, so neighbouring file-locals change
+   extent (first case `msgbox`'s `ruby::g_hidden`; `dat_load`'s 11 and
+   `sound`'s 4 are here);
+3. x86_64 only, i686 identical: an internal function pointer folded to a
+   direct call goes through the pointer once external (first case
+   `Text_DrawImmediate`: `call Text_DrawAt` -> `call qword ptr [rip] g_draw_at`).
+44 variables fall in these; 10 seams (5 class 3; `title_states`, whose
+pooled `_GLOBAL__sub_I_*` initialiser an exception row cannot name for one
+file; 4 whose structs use the `.cpp`'s own aliases and do not compile as
+written); and all 8 function promotions (i686 gets an out-of-line copy and
+the callers change - `Sprite_Draw` no longer inlines `Draw` - and the i686
+gate has no `inline` class by call 8). Ten `=` rows that relied on those
+functions keep their refusal. **The same differences come back in B1..B5
+the moment a reader moves out of the file**, whatever B0 does: so the owner's
+call is whether classes 2 and 3 become x86_64 gate classes, and whether class
+1 and the function promotions are acceptable on i686 (the gate would then
+need a class there too, against call 8's "i686 stays exact"). The apply
+scripts (`a_scratch\promote.py`, `promote_fn.py`, `seam.py`, `movetype.py`)
+re-apply any blocked row once its class is accepted. Tool fixes on the way:
+`codegen_same`'s promotion pairing picks the file-local of the same object
+(two one-byte `g_faerie_name_end`s pooled under one body); `tu_renames
+--check` reads `<stem>_callees.h` too; `move_funcs` follows nested project
+includes for a declaration. `move_funcs.py --check` on the tip: file-static
+state 107 -> 64, static local 5 -> 5, undeclared global 26 -> 0, the sparkle
+family 1, the ambiguous `using` names 289 lines in 50 targets (untouched).
+
+**The PlayStation side of the sheet's flags** (the owner's ask of 2026-11-08;
+the read is private scratch, `reports\frost_psx.md`, the method ours:
+`tu_psx.py`'s loader and `mask_words` over all 407 JP images): the US
+decompilation's dedupe is a hashing tool plus a shared-header convention that
+saves no list and sees 24 images, so the measurement was redone here. Of the
+92 flags then: 45 rows are common code duplicated across overlays (not a
+cut; what recurs is the overlay entry dispatcher, `u000` being merely each
+image's first unit), 4 common by near-copies only, **37 one overlay's own
+code** (the real cut questions: window and inversion joins in `GAME.EMI`,
+`main` and `BATTLE.EMI`, and area overlays that link their effect-kind code
+beside the area script, which the PC moved into `effect/` units), 4 two PC
+functions twinned to one PSX function, 2 a bug of ours (the check joined
+`Title_Task` and `AreaMap_FrameAreaBD` on an empty unit key; fixed
+`f47eacfc`, with the unit size counted in PlayStation functions, not PC
+copies). **28 twin claims re-pointed** (`1365570a`, `symbols.toml`): 18 twins
+that pointed at another overlay's copy while their own overlay holds one
+(Area16's and Area151's frame and box helpers, `Area75_DrawWindow`,
+`Area121_RingRise`, `Magic117_Brighten`, `Area188_ShiftCameraDown2`) plus 10
+companions at the same constant shift, each confirmed by masked words (5
+raw-exact, the rest 1..5 words apart); areas 75, 121, 188 and Magic117 each
+became one unit again, 11 flagged rows cleared, no proposed file changed,
+669 units. `Area130_ChoiceTailState2` stays on `AREA033`: `AREA130` holds no
+copy, the body is the world-map areas' shared choice helper, so row 29 keeps
+its flag until the census treats such shared code as common. On the 47
+joins the decompilation's unit table agrees with five and objects to one:
+row 585, `tu_52d8f0` in `field_4`, whose boundary it puts inside ours at
+`Field_ActionState` (a one-function unit there) - the owner's. The sheet now
+reads **212 rows that want a call, 457 with one recommended layout**.
+
+**Left in B0, for the owner** (section 7b collects the questions): the 62
+blocked promotion rows (the gate classes above); the qualification pass for
+the 50 ambiguous targets (a body edit); row 585's extent; the sheet's 212
+rows; the `SparkleDispatch` difference and `Gfx_DrawOTag` (differs on i686
+when moved to `platform/d3d.cpp`: a copied helper inlined, so it cannot leave
+`d3d_list.cpp` as the table has it - a sheet row).
 
 ## 5. Stage C: what follows the moves (one agent, after B)
 
@@ -840,6 +917,33 @@ is expected; the doc says so.
    A new class needs the coordinator's entry in this doc with its first case.
    `codegen_same.py` gains `--exceptions FILE` to apply the list (stage B's
    first tooling change, with B0).
+
+### 7b. Open after stage B0 (2026-11-08), the owner's
+
+9. **The sheet's 212 rows that want a call** (`analysis/tu_layout_sheet.md`,
+   first table; the second table's 457 rows have one recommended layout).
+   The join classes: 2 boss files (one file per boss instead?), 17 "one
+   area", 15 "the same names", 13 "a one-function unit, nothing separates it
+   from its neighbour". The PSX flags: 37 rows are one overlay's own code and
+   worth the look; the common-code ones are not a cut. Row 585 (`tu_52d8f0`,
+   `field_4`): the PlayStation decompilation's unit boundary falls inside
+   ours at `Field_ActionState`. A per-class answer is enough ("joins stand as
+   proposed", "bosses one file each") and is recorded here.
+10. **The gate for shared state** (group a's three classes, section 4): a
+   promotion that changes the object is refused today. Do classes 2 (data
+   layout) and 3 (an x86_64 indirect call through a now-external pointer)
+   become x86_64 exception classes, and are class 1 (i686 folding of an
+   internal global) and the 8 function promotions (an out-of-line copy on
+   i686) acceptable - which means a named class on i686 too, against call
+   8's "i686 stays exact"? The same differences return in B1..B5 as soon as
+   a reader of the state moves out of its file.
+11. **The qualification pass:** 289 names in 50 proposed targets that two
+   sources' `using namespace <stem>;` lines would make ambiguous (`g` seams
+   mostly) want writing as `<stem>::g` in the moved bodies - a body edit by
+   section 1's rule, so the owner's word.
+12. **The commit trailer:** the groups' commits carry `Co-Authored-By: Claude
+   Opus 5.5` (the model that did the work), the coordinator's `Claude Fable
+   5.1`; both are signed off. Left as they are unless the owner wants one.
 
 ## 8. Ownership, merge order, numbering
 
