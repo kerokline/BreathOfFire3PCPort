@@ -152,7 +152,7 @@ constexpr DWORD kBorderlessStyle = WS_POPUP;
 
 bool g_background = true;     // DIV-0033 on; BOF3X_BACKGROUND=0 turns it off
 bool g_foreground = true;     // the last WM_ACTIVATEAPP's word
-bool g_loop_ours = false;     // set by Game_WinMain: WinMain_InputAllowed answers true until then
+}  namespace win_main { bool g_loop_ours = false; }  namespace {     // set by Game_WinMain: WinMain_InputAllowed answers true until then
 RECT g_windowed_rect = {};    // the last windowed placement, for F8 back from borderless
 bool g_have_windowed_rect = false;
 
@@ -302,7 +302,7 @@ void PadReset_Frame() {
 
 }  // namespace
 
-bool WinMain_InputAllowed() { return !g_loop_ours || !g_background || g_foreground; }
+bool WinMain_InputAllowed() { return !win_main::g_loop_ours || !g_background || g_foreground; }
 bool WinMain_Background() { return g_background; }
 
 // F11: the last frame presented, written beside the DLL as
@@ -536,7 +536,7 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
 extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /*cmdline*/, int /*show*/) {
     HINSTANCE hinstance = static_cast<HINSTANCE>(hinstance_);
     mp3dec::CompareAtStart();  // DIV-0091: BOF3X_MP3_COMPARE - the runtime's heap exists from here
-    g_loop_ours = true;
+    win_main::g_loop_ours = true;
     {
         char text[32];
         if (GetEnvironmentVariableA("BOF3X_BACKGROUND", text, sizeof text) > 0 && text[0] == '0') g_background = false;
