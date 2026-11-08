@@ -68,7 +68,7 @@ using Handler = scenario_harness::Handler;
 U VW(unsigned v, unsigned k) { return Word(At(::bof3::Img(Prim_VertexScratch_addr) + 8 * v + 2 * k)); }
 I VS(unsigned v, unsigned k) { return static_cast<std::int16_t>(VW(v, k)); }
 void SetV(unsigned v, unsigned k, U value) { SetWord(At(::bof3::Img(Prim_VertexScratch_addr) + 8 * v + 2 * k), value); }
-const short* Vertex(unsigned v) { return reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 8 * v)); }
+const short* VertexEffect5b(unsigned v) { return reinterpret_cast<const short*>(At(::bof3::Img(Prim_VertexScratch_addr) + 8 * v)); }
 
 // cdq; xor eax, edx; sub eax, edx (INT_MIN stays itself)
 I Abs(I v) {
@@ -88,7 +88,7 @@ I Halve(I v) { return static_cast<I>(static_cast<U>(v) - static_cast<U>(v >> 31)
 // the table's `entries` handlers read in place (the fuzz swaps the cells for
 // recorders); a Fatal past them, where the original jumps through the dword
 // after - the next table, a data dword or a null.
-void Dispatch(const char* who, U table, unsigned entries) {
+void DispatchEffect5b(const char* who, U table, unsigned entries) {
     const unsigned sub = Sprite_Current[2];
     if (sub >= entries)
         bof3::Fatal("%s: sub-state byte +2 is %u, past the %u entries of 0x%X - the original jumps through the dword "
@@ -196,9 +196,9 @@ unsigned char* Row9() { return At(::bof3::Img(Cond_Flags_addr) + 0x48); }
 
 // The four-vertex projection every quad here makes of Prim_VertexScratch into a
 // primitive whose vertices are `stride` apart from +8 (0x10 textured, 0xC flat).
-void Project4(unsigned char* prim, unsigned stride) {
+void Project4Effect5b(unsigned char* prim, unsigned stride) {
     long p;
-    SH_CALL(Gte_RotTransPers4)(Vertex(0), Vertex(1), Vertex(2), Vertex(3), reinterpret_cast<float*>(prim + 8),
+    SH_CALL(Gte_RotTransPers4)(VertexEffect5b(0), VertexEffect5b(1), VertexEffect5b(2), VertexEffect5b(3), reinterpret_cast<float*>(prim + 8),
                                reinterpret_cast<float*>(prim + 8 + stride), reinterpret_cast<float*>(prim + 8 + 2 * stride),
                                reinterpret_cast<float*>(prim + 8 + 3 * stride), &p);
 }
@@ -296,7 +296,7 @@ void Gate0FPrepare(const char* who, bool sub4F);
 // original 0x4FF320 (EffectKind18_States[13], hidden in E5A's 0x4FF150): jmp
 // [EffectKind18Sub0D_States + +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub0D_Run(void) {
-    Dispatch("EffectKind18Sub0D_Run", AddressOf(EffectKind18Sub0D_States), EffectKind18Sub0D_States_count);
+    DispatchEffect5b("EffectKind18Sub0D_Run", AddressOf(EffectKind18Sub0D_States), EffectKind18Sub0D_States_count);
 }
 
 // original 0x4FF340 (state 0): +9 0; column 0 with story flag 0xD set: frame 3
@@ -411,7 +411,7 @@ extern "C" void __cdecl EffectKind18Sub0D_DrawGlow(int column) {
     const U x = static_cast<U>(gx) << 16;
     const U z = static_cast<U>(gz) << 16;
     long p;
-    const long depth = SH_CALL(Gte_RotTransPers)(Vertex(0), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &p);
+    const long depth = SH_CALL(Gte_RotTransPers)(VertexEffect5b(0), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &p);
     const unsigned char* const sx = At(::bof3::Img(0x903820));
     const unsigned char* const sy = At(::bof3::Img(0x903824));
     const float fill = static_cast<float>(Widescreen_Fill());   // DIV-0041 (UC2): x out by the columns
@@ -485,7 +485,7 @@ extern "C" void __cdecl EffectKind18Sub0D_DrawGlow(int column) {
 // original 0x4FF970 (EffectKind18_States[11], hidden in 0x4FF610): jmp
 // [EffectKind18Sub0B_States + +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub0B_Run(void) {
-    Dispatch("EffectKind18Sub0B_Run", AddressOf(EffectKind18Sub0B_States), EffectKind18Sub0B_States_count);
+    DispatchEffect5b("EffectKind18Sub0B_Run", AddressOf(EffectKind18Sub0B_States), EffectKind18Sub0B_States_count);
 }
 
 // original 0x4FF990 (state 0): story flag 0x11 set: sound 0x202, the height
@@ -551,7 +551,7 @@ extern "C" void __cdecl EffectKind18Sub0B_DrawTiles(int height, unsigned long co
         SetV(0, 1, z - 0x40C0);
         SetV(1, 2, y);
         SetV(0, 2, y);
-        Project4(prim, 0x10);
+        Project4Effect5b(prim, 0x10);
         SH_CALL(Gte_PrimDepths4_10)(prim);
         SH_CALL(Prim_SetTexture)(texture, prim, 1);
         SH_CALL(MapView_LinkPrimAt)(static_cast<U>(B(t - 1)) << 16, static_cast<U>(B(t)) << 16, B(t + 1), 0x48);
@@ -571,7 +571,7 @@ unsigned Sub0CFlag(const char* who) {
 // original 0x4FFBB0 (EffectKind18_States[12], hidden in 0x4FFA90): jmp
 // [EffectKind18Sub0C_States + +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub0C_Run(void) {
-    Dispatch("EffectKind18Sub0C_Run", AddressOf(EffectKind18Sub0C_States), EffectKind18Sub0C_States_count);
+    DispatchEffect5b("EffectKind18Sub0C_Run", AddressOf(EffectKind18Sub0C_States), EffectKind18Sub0C_States_count);
 }
 
 // original 0x4FFBD0 (state 0): +9 0; the column's story flag (_Flags[+0x36])
@@ -648,7 +648,7 @@ extern "C" void __cdecl EffectKind18Sub0C_MoveFrame(unsigned frame) {
 // original 0x4FFE40 (EffectKind18_States[14], hidden in 0x4FFDD0): jmp
 // [EffectKind18Sub0E_States + +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub0E_Run(void) {
-    Dispatch("EffectKind18Sub0E_Run", AddressOf(EffectKind18Sub0E_States), EffectKind18Sub0E_States_count);
+    DispatchEffect5b("EffectKind18Sub0E_Run", AddressOf(EffectKind18Sub0E_States), EffectKind18Sub0E_States_count);
 }
 
 // original 0x4FFE60 (state 0): the lowering +0x30 0; row 9's flag 0xC clear: the
@@ -765,7 +765,7 @@ extern "C" void __cdecl EffectKind18Sub0E_DrawGate(void) {
     SetV(1, 2, static_cast<U>(0x40 - Half(e3)));
     const long e4 = SH_CALL(AreaMap_Elevation)(static_cast<long>(x1), static_cast<long>(z1));
     SetV(3, 2, static_cast<U>(0x180 - Half(e4)));
-    Project4(prim, 0x10);
+    Project4Effect5b(prim, 0x10);
     SH_CALL(Gte_PrimDepths4_10)(prim);
     SH_CALL(Prim_SetTexture)(0x25500123, prim, 1);
     SH_CALL(Gfx_CommitPrim)(6, 0x48);
@@ -782,7 +782,7 @@ unsigned Sub13(const char* who, U array) { return Byte(who, array, at::kSub13Cou
 // original 0x500300 (EffectKind18_States[19], hidden in 0x500160): jmp
 // [EffectKind18Sub13_States + +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub13_Run(void) {
-    Dispatch("EffectKind18Sub13_Run", AddressOf(EffectKind18Sub13_States), EffectKind18Sub13_States_count);
+    DispatchEffect5b("EffectKind18Sub13_Run", AddressOf(EffectKind18Sub13_States), EffectKind18Sub13_States_count);
 }
 
 // original 0x500320 (state 0): +0xB = the byte +0x36 (the variant); the point
@@ -863,7 +863,7 @@ extern "C" void __cdecl EffectKind18Sub13_Rise(void) {
     prim[6] = grey;
     prim[5] = grey;
     prim[4] = grey;
-    Project4(prim, 0xC);
+    Project4Effect5b(prim, 0xC);
     SH_CALL(Gte_PrimDepths4_0C)(prim);
     s = S();
     SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 1, 0x38);
@@ -904,7 +904,7 @@ extern "C" void __cdecl EffectKind18Sub13_DrawPanel(unsigned long texture, int h
     unsigned char* const prim = Prim();
     SH_CALL(Gpu_SetPolyFT4)(prim);
     SH_CALL(Gpu_SetShadeTex)(prim, 0);
-    Project4(prim, 0x10);
+    Project4Effect5b(prim, 0x10);
     SH_CALL(Gte_PrimDepths4_10)(prim);
     SH_CALL(Prim_SetTexture)(static_cast<U>(texture) + 0x275000F3u, prim, 1);
     const unsigned char* const r = S();
@@ -941,7 +941,7 @@ extern "C" void __cdecl EffectKind18Sub13_DrawLine(void) {
     const U lift2 = (Frame_Counter % 0x30u) * 2 + 4;
     SetV(1, 2, lift2 - static_cast<U>(h2));
     long p;
-    SH_CALL(Gte_RotTransPers3)(Vertex(0), Vertex(1), Vertex(2), reinterpret_cast<float*>(prim + 8),
+    SH_CALL(Gte_RotTransPers3)(VertexEffect5b(0), VertexEffect5b(1), VertexEffect5b(2), reinterpret_cast<float*>(prim + 8),
                                reinterpret_cast<float*>(prim + 0x14), MapView_ScreenXY, &p);
     float depth;
     SH_CALL(Gte_StoreDepthF3)(reinterpret_cast<float*>(prim + 0x10), reinterpret_cast<float*>(prim + 0x1C), &depth);
@@ -988,7 +988,7 @@ void Gate0FPrepare(const char* who, bool sub4F) {
 // original 0x500930 (EffectKind18_States[15], hidden in 0x5007B0): jmp
 // [EffectKind18Sub0F_States + +2 * 4], unbounded.
 extern "C" void __cdecl EffectKind18Sub0F_Run(void) {
-    Dispatch("EffectKind18Sub0F_Run", AddressOf(EffectKind18Sub0F_States), EffectKind18Sub0F_States_count);
+    DispatchEffect5b("EffectKind18Sub0F_Run", AddressOf(EffectKind18Sub0F_States), EffectKind18Sub0F_States_count);
 }
 
 // original 0x500950 (state 0): the set-up (Gate0FPrepare); row 9's flag +0xB
@@ -1133,7 +1133,7 @@ extern "C" void __cdecl EffectKind18Sub0F_DrawGate(int ground) {
         SetV(3, 2, rv::As<records::EffectWork>(s)->work_32);
         SetV(2, 2, rv::As<records::EffectWork>(s)->work_32);
     }
-    Project4(prim, 0x10);
+    Project4Effect5b(prim, 0x10);
     SH_CALL(Gte_PrimDepths4_10)(prim);
     const unsigned char* const r = S();
     const U texture = ((static_cast<U>(r[8]) * 41u) << 16 | static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(r)->work_2e)))) | 0x26500000u;
@@ -1145,7 +1145,7 @@ extern "C" void __cdecl EffectKind18Sub0F_DrawGate(int ground) {
 // [EffectKind18Sub4F_States + +2 * 4], unbounded. Its entries 2 and 4 are
 // sub-kind 0x0F's _Lower and _Raise.
 extern "C" void __cdecl EffectKind18Sub4F_Run(void) {
-    Dispatch("EffectKind18Sub4F_Run", AddressOf(EffectKind18Sub4F_States), EffectKind18Sub4F_States_count);
+    DispatchEffect5b("EffectKind18Sub4F_Run", AddressOf(EffectKind18Sub4F_States), EffectKind18Sub4F_States_count);
 }
 
 // original 0x5011C0 (state 0): the set-up (+0xA = 8 - the variant); the gate's
