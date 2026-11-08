@@ -79,20 +79,20 @@ using namespace inventory_ops;
 
 namespace {
 
-using move_script::At;
-using move_script::Long;
+// move_script::At is named in full here (step B0, analysis/tu_renames.tsv)
+// move_script::Long is named in full here (step B0, analysis/tu_renames.tsv)
 using move_script::SetLong;
-using move_script::SetWord;
-using move_script::Word;
+// move_script::SetWord is named in full here (step B0, analysis/tu_renames.tsv)
+// move_script::Word is named in full here (step B0, analysis/tu_renames.tsv)
 
 using i32 = std::int32_t;
 using u32 = std::uint32_t;
 
-unsigned char* PosX(u32 m) { return At(::bof3::Img(at::kMemberPos.v) + 8 * m); }
-unsigned char* PosZ(u32 m) { return At(::bof3::Img(at::kMemberPos.v) + 8 * m + 4); }
-unsigned char* Member(u32 m) { return At(::bof3::Img(at::kMembers.v) + 4 * m); }   // +0 placed, +1 wide
-unsigned char* Enemy(u32 k) { return At(::bof3::Img(Encounter_Slots_addr) + at::kEnemyStride * k); }
-unsigned char* Kind(u32 kind) { return At(::bof3::Img(at::kKinds.v) + at::kKindStride * kind); }
+unsigned char* PosX(u32 m) { return move_script::At(::bof3::Img(at::kMemberPos.v) + 8 * m); }
+unsigned char* PosZ(u32 m) { return move_script::At(::bof3::Img(at::kMemberPos.v) + 8 * m + 4); }
+unsigned char* Member(u32 m) { return move_script::At(::bof3::Img(at::kMembers.v) + 4 * m); }   // +0 placed, +1 wide
+unsigned char* Enemy(u32 k) { return move_script::At(::bof3::Img(Encounter_Slots_addr) + at::kEnemyStride * k); }
+unsigned char* Kind(u32 kind) { return move_script::At(::bof3::Img(at::kKinds.v) + at::kKindStride * kind); }
 unsigned char* Obj(u32 i) { return rv::Bytes(ObjTrio) + at::kObjStride * i; }
 
 // The record views (game/record_views.h): rv::Current<T>() reads
@@ -100,7 +100,7 @@ unsigned char* Obj(u32 i) { return rv::Bytes(ObjTrio) + at::kObjStride * i; }
 // rv::As<records::PartyMember>(p) is given party members (ObjTrio,
 // Field_State), rv::As<records::EffectObject>(p) effect objects
 // (Effect_Objects).
-unsigned char& Byte(u32 address) { return *At(address); }
+unsigned char& ByteInventoryOps(u32 address) { return *move_script::At(address); }
 
 i32 CentreX() { return static_cast<std::int32_t>(BossSi_CentreX); }
 i32 CentreZ() { return static_cast<std::int32_t>(BossSi_CentreZ); }
@@ -109,7 +109,7 @@ u32 Cell(i32 v) { return static_cast<u32>(v >> 16); }
 // A shift of a value the original holds as a 32-bit register.
 i32 Shl(i32 v, unsigned n) { return static_cast<i32>(static_cast<u32>(v) << n); }
 i32 Neg(i32 v) { return static_cast<i32>(0u - static_cast<u32>(v)); }
-i32 Add(i32 a, i32 b) { return static_cast<i32>(static_cast<u32>(a) + static_cast<u32>(b)); }
+i32 AddInventoryOps(i32 a, i32 b) { return static_cast<i32>(static_cast<u32>(a) + static_cast<u32>(b)); }
 i32 Sub(i32 a, i32 b) { return static_cast<i32>(static_cast<u32>(a) - static_cast<u32>(b)); }
 
 }  // namespace
@@ -128,7 +128,7 @@ extern "C" unsigned char __cdecl AreaMap_CellNibble(unsigned x, unsigned z) {
     if (static_cast<std::uint16_t>(x) >= w) return 0;
     if (static_cast<std::uint16_t>(z) >= d) return 0;
     const auto i = static_cast<std::uint16_t>(w * z + x);
-    const unsigned char b = At(::bof3::Img(at::kCellMap.v))[i >> 1];
+    const unsigned char b = move_script::At(::bof3::Img(at::kCellMap.v))[i >> 1];
     return (i & 1) ? static_cast<unsigned char>(b & 0xF) : static_cast<unsigned char>(b >> 4);
 }
 
@@ -261,7 +261,7 @@ extern "C" unsigned char __cdecl Encounter_CellFits(long x, long z, unsigned siz
 // (x1, z1), 16.16, are apart: |dx| or |dz| (32-bit differences) at least
 // ((size0 + 1) + (size1 + 1)) * 0x8000, the sizes' low bytes.
 extern "C" unsigned char __cdecl Encounter_Apart(long x0, long z0, long x1, long z1, unsigned size0, unsigned size1) {
-    const i32 sum = Add(Shl(static_cast<i32>((size1 & 0xFF) + 1), 15), Shl(static_cast<i32>((size0 & 0xFF) + 1), 15));
+    const i32 sum = AddInventoryOps(Shl(static_cast<i32>((size1 & 0xFF) + 1), 15), Shl(static_cast<i32>((size0 & 0xFF) + 1), 15));
     i32 dx = Sub(x0, x1);
     if (dx <= 0) dx = Sub(x1, x0);
     if (dx >= sum) return 1;
@@ -315,7 +315,7 @@ extern "C" unsigned char __cdecl Encounter_OnScreen(long x, long z, unsigned siz
     i32 b = a;
     float sxy[2];
     for (unsigned char t = 0; t < 4; ++t) {
-        const i32 pz = Add(b, z), px = Add(a, x);
+        const i32 pz = AddInventoryOps(b, z), px = AddInventoryOps(a, x);
         const i32 y = Shl(static_cast<std::int16_t>(g.elevation(px, pz)), 16);
         g.project(px, pz, y, reinterpret_cast<unsigned long*>(sxy));
         if (sxy[0] >= 320.0f) return 0;
@@ -332,7 +332,7 @@ extern "C" unsigned char __cdecl Encounter_OnScreen(long x, long z, unsigned siz
         a = b;
         b = na;
     }
-    const i32 pz = Add(b, z), px = Add(a, x);
+    const i32 pz = AddInventoryOps(b, z), px = AddInventoryOps(a, x);
     const i32 y = Shl(static_cast<std::int16_t>(g.elevation(px, pz)), 16);
     g.project(px, pz, y, reinterpret_cast<unsigned long*>(sxy));
     return static_cast<double>(sxy[1]) - static_cast<double>(margin & 0xFF) >= 8.0;
@@ -349,13 +349,13 @@ extern "C" unsigned char __cdecl Encounter_OnScreen(long x, long z, unsigned siz
 extern "C" unsigned char __cdecl Encounter_MemberClear(unsigned member) {
     const u32 m = member & 0xFF;
     const unsigned char wide = Member(m)[1];
-    const i32 x = Long(PosX(m)), z = Long(PosZ(m));
+    const i32 x = move_script::Long(PosX(m)), z = move_script::Long(PosZ(m));
     for (unsigned char k = 0; k < 3; ++k) {
         if (k == static_cast<unsigned char>(member)) continue;
         if (Member(k)[0] == 0) continue;
-        if (!g.apart(x, z, Long(PosX(k)), Long(PosZ(k)), wide, Member(k)[1])) return 0;
+        if (!g.apart(x, z, move_script::Long(PosX(k)), move_script::Long(PosZ(k)), wide, Member(k)[1])) return 0;
     }
-    return g.path_clear(Cell(CentreX()), Cell(CentreZ()), Cell(Long(PosX(m))), Cell(Long(PosZ(m)))) != 0;
+    return g.path_clear(Cell(CentreX()), Cell(CentreZ()), Cell(move_script::Long(PosX(m))), Cell(move_script::Long(PosZ(m)))) != 0;
 }
 
 // original 0x5924E0 (PSX 0x801C79C0): member m's spot on the ground -
@@ -365,10 +365,10 @@ extern "C" unsigned char __cdecl Encounter_MemberClear(unsigned member) {
 extern "C" unsigned char __cdecl Encounter_MemberStands(unsigned member) {
     const u32 m = member & 0xFF;
     const unsigned wide = Member(m)[1];
-    const long e = g.elevation(Long(PosX(m)), Long(PosZ(m)));
+    const long e = g.elevation(move_script::Long(PosX(m)), move_script::Long(PosZ(m)));
     rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, Shl(static_cast<std::int16_t>(e), 16));
-    if (!g.cell_fits(Long(PosX(m)), Long(PosZ(m)), wide)) return 0;
-    return g.object_at(Long(PosX(m)), Long(PosZ(m)), wide) == 0xFF;
+    if (!g.cell_fits(move_script::Long(PosX(m)), move_script::Long(PosZ(m)), wide)) return 0;
+    return g.object_at(move_script::Long(PosX(m)), move_script::Long(PosZ(m)), wide) == 0xFF;
 }
 
 // original 0x5922A0 (PSX 0x801C7650): member m's spot. The offset (x, z) from
@@ -385,7 +385,7 @@ extern "C" unsigned char __cdecl Encounter_MemberStands(unsigned member) {
 extern "C" unsigned char __cdecl Encounter_PlaceMember(unsigned formation, unsigned member, unsigned last, unsigned facing) {
     const u32 f = formation & 0xFF, m = member & 0xFF, l = last & 0xFF;
     const u32 index = (l * l + f) * 3 + m;
-    i32 dx = Long(At(::bof3::Img(at::kPartyOffsets.v) + 8 * index)), dz = Long(At(::bof3::Img(at::kPartyOffsets.v) + 8 * index + 4));
+    i32 dx = move_script::Long(move_script::At(::bof3::Img(at::kPartyOffsets.v) + 8 * index)), dz = move_script::Long(move_script::At(::bof3::Img(at::kPartyOffsets.v) + 8 * index + 4));
     const auto sign = [](i32 v) { return v > 0 ? 1 : v < 0 ? -1 : 0; };
     i32 sx = Shl(sign(Neg(dx)), 15), sz = Shl(sign(Neg(dz)), 15);
     for (auto c = static_cast<unsigned char>(facing); c != 2; c = static_cast<unsigned char>((c + 1) & 3)) {
@@ -398,15 +398,15 @@ extern "C" unsigned char __cdecl Encounter_PlaceMember(unsigned formation, unsig
     }
     const auto r = static_cast<unsigned char>(g.rand() & 1);
     for (unsigned char pass = 0; pass < 2; ++pass) {
-        SetLong(PosX(m), Add(CentreX(), dx));
-        SetLong(PosZ(m), Add(CentreZ(), dz));
+        SetLong(PosX(m), AddInventoryOps(CentreX(), dx));
+        SetLong(PosZ(m), AddInventoryOps(CentreZ(), dz));
         for (unsigned char t = 0; t < 8; ++t) {
             if (g.member_clear(member) && g.member_stands(member)) {
                 Member(m)[0] = 1;
                 return 1;
             }
-            if ((r ^ pass) != 0) SetLong(PosX(m), Add(Long(PosX(m)), sx));
-            else SetLong(PosZ(m), Add(Long(PosZ(m)), sz));
+            if ((r ^ pass) != 0) SetLong(PosX(m), AddInventoryOps(move_script::Long(PosX(m)), sx));
+            else SetLong(PosZ(m), AddInventoryOps(move_script::Long(PosZ(m)), sz));
         }
     }
     return 0;
@@ -426,7 +426,7 @@ extern "C" unsigned char __cdecl Encounter_PlaceMember(unsigned formation, unsig
 extern "C" unsigned char __cdecl Encounter_PlaceParty(void) {
     const unsigned char formation = Cond_Flags[0xd0];
     const auto n = static_cast<unsigned char>(g.party_count(1));
-    unsigned char* const order = At(::bof3::Img(at::kOrder.v));
+    unsigned char* const order = move_script::At(::bof3::Img(at::kOrder.v));
     for (unsigned char i = 0; i < 3; ++i) {
         order[i] = i;
         Member(i)[0] = 0;
@@ -449,8 +449,8 @@ extern "C" unsigned char __cdecl Encounter_PlaceParty(void) {
         if (swapped) {
             i32 x = 0, z = 0;
             for (unsigned char k = 0; k < 6; ++k) {
-                x = Add(Long(At(::bof3::Img(at::kRecentre.v) + 8 * k)), CentreX());
-                z = Add(Long(At(::bof3::Img(at::kRecentre.v) + 8 * k + 4)), CentreZ());
+                x = AddInventoryOps(move_script::Long(move_script::At(::bof3::Img(at::kRecentre.v) + 8 * k)), CentreX());
+                z = AddInventoryOps(move_script::Long(move_script::At(::bof3::Img(at::kRecentre.v) + 8 * k + 4)), CentreZ());
                 if (g.cell_fits(x, z, 1) && g.path_clear(Cell(CentreZ()), Cell(CentreZ()), Cell(x), Cell(z))) break;
             }
             BossSi_CentreX = x;
@@ -495,9 +495,9 @@ extern "C" unsigned char __cdecl Encounter_PlaceEnemies(void) {
         unsigned char* const kind = Kind(e[1]);
         const u32 c = FieldHidden_EnemyCount;
         const i32 triangle = static_cast<i32>((c - 1) * c) >> 1;   // lea eax, [ecx - 1]; imul eax, ecx; sar eax, 1
-        const auto index = static_cast<std::int16_t>(Add(triangle, FieldHidden_Placed));
-        i32 ox = Add(Long(At(::bof3::Img(at::kEnemyOffsets.v) + 8 * index)), 0x50000);
-        i32 oz = Long(At(::bof3::Img(at::kEnemyOffsets.v) + 8 * index + 4));
+        const auto index = static_cast<std::int16_t>(AddInventoryOps(triangle, FieldHidden_Placed));
+        i32 ox = AddInventoryOps(move_script::Long(move_script::At(::bof3::Img(at::kEnemyOffsets.v) + 8 * index)), 0x50000);
+        i32 oz = move_script::Long(move_script::At(::bof3::Img(at::kEnemyOffsets.v) + 8 * index + 4));
         for (auto f = FieldHidden_Facing; f != 0; f = static_cast<unsigned char>((f + 1) & 3)) {
             const i32 t = ox;
             ox = oz;
@@ -505,10 +505,10 @@ extern "C" unsigned char __cdecl Encounter_PlaceEnemies(void) {
         }
         std::uint16_t t = 0;
         for (;;) {
-            const auto* const j = reinterpret_cast<const signed char*>(At(::bof3::Img(at::kJitter.v) + 2 * static_cast<std::int16_t>(t)));
-            const i32 x = Add(Add(Shl(j[0], 15), CentreX()), ox);
+            const auto* const j = reinterpret_cast<const signed char*>(move_script::At(::bof3::Img(at::kJitter.v) + 2 * static_cast<std::int16_t>(t)));
+            const i32 x = AddInventoryOps(AddInventoryOps(Shl(j[0], 15), CentreX()), ox);
             rv::Store<std::int32_t>(rv::As<records::EncounterSlot>(e)->x, x);
-            const i32 z = Add(Add(Shl(j[1], 15), CentreZ()), oz);
+            const i32 z = AddInventoryOps(AddInventoryOps(Shl(j[1], 15), CentreZ()), oz);
             rv::Store<std::int32_t>(rv::As<records::EncounterSlot>(e)->z, z);
             if (g.cell_fits(x, z, kind[0x86]) && g.enemy_clear(i, rv::As<records::EncounterSlot>(e)->x, rv::As<records::EncounterSlot>(e)->z, kind[0x86])) {
                 ++FieldHidden_Placed;
@@ -535,8 +535,8 @@ extern "C" unsigned char __cdecl Encounter_EnemiesReachable(void) {
         if (static_cast<unsigned char>(g.party_count(1)) != 0) {
             std::uint16_t m = 0;
             for (;;) {
-                if (g.path_clear(Cell(Long(PosX(static_cast<std::int16_t>(m)))), Cell(Long(PosZ(static_cast<std::int16_t>(m)))),
-                                 Word(e + 6), Word(e + 0xA))) {
+                if (g.path_clear(Cell(move_script::Long(PosX(static_cast<std::int16_t>(m)))), Cell(move_script::Long(PosZ(static_cast<std::int16_t>(m)))),
+                                 move_script::Word(e + 6), move_script::Word(e + 0xA))) {
                     ++FieldHidden_Placed;
                     reached = 1;
                     break;
@@ -567,12 +567,12 @@ extern "C" void __cdecl Encounter_AimCamera(unsigned facing) {
         unsigned char* const e = Enemy(k);
         if (e[0] == 0) continue;
         const long h = g.elevation(rv::As<records::EncounterSlot>(e)->x, rv::As<records::EncounterSlot>(e)->z);
-        ModeRest_ElevationBase = Add(static_cast<std::int32_t>(ModeRest_ElevationBase), static_cast<std::int16_t>(h));
+        ModeRest_ElevationBase = AddInventoryOps(static_cast<std::int32_t>(ModeRest_ElevationBase), static_cast<std::int16_t>(h));
         ++n;
     }
     for (unsigned char m = 0; m < static_cast<unsigned char>(g.party_count(1)); ++m) {
-        const long h = g.elevation(Long(PosX(m)), Long(PosZ(m)));
-        ModeRest_ElevationBase = Add(static_cast<std::int32_t>(ModeRest_ElevationBase), static_cast<std::int16_t>(h));
+        const long h = g.elevation(move_script::Long(PosX(m)), move_script::Long(PosZ(m)));
+        ModeRest_ElevationBase = AddInventoryOps(static_cast<std::int32_t>(ModeRest_ElevationBase), static_cast<std::int16_t>(h));
         ++n;
     }
     ModeRest_ElevationBase = static_cast<i32>(static_cast<u32>(static_cast<std::int32_t>(ModeRest_ElevationBase) / n) & 0xFFFFFFE0u);
@@ -583,16 +583,16 @@ extern "C" void __cdecl Encounter_AimCamera(unsigned facing) {
     } matrix;
     g.rot_matrix(Camera_Angles, matrix.m);
     const u32 f = facing & 0xFF;
-    const auto* const offset = reinterpret_cast<const std::int16_t*>(At(::bof3::Img(at::kCameraOffsets.v) + 4 * f));
+    const auto* const offset = reinterpret_cast<const std::int16_t*>(move_script::At(::bof3::Img(at::kCameraOffsets.v) + 4 * f));
     short v[3];
     v[2] = static_cast<short>(static_cast<std::int32_t>(ModeRest_ElevationBase) >> 1);
-    v[0] = static_cast<short>(Sub(0x4000, Add(Shl(offset[0], 16), CentreX()) >> 9));
-    v[1] = static_cast<short>(Sub(0x4000, Add(Shl(offset[1], 16), CentreZ()) >> 9));
+    v[0] = static_cast<short>(Sub(0x4000, AddInventoryOps(Shl(offset[0], 16), CentreX()) >> 9));
+    v[1] = static_cast<short>(Sub(0x4000, AddInventoryOps(Shl(offset[1], 16), CentreZ()) >> 9));
     long out[3];
     g.apply_matrix(matrix.m, v, out);
-    matrix.t[0] = Add(Camera_ShiftX, out[0]);
-    matrix.t[1] = Add(Camera_ShiftY, out[1]);
-    matrix.t[2] = Add(Add(Camera_Distance, out[2]), 0x1194);
+    matrix.t[0] = AddInventoryOps(Camera_ShiftX, out[0]);
+    matrix.t[1] = AddInventoryOps(Camera_ShiftY, out[1]);
+    matrix.t[2] = AddInventoryOps(AddInventoryOps(Camera_Distance, out[2]), 0x1194);
     g.rot_matrix(Camera_Angles, matrix.m);
     g.set_rot_matrix(reinterpret_cast<const unsigned long*>(&matrix));
     g.set_trans_matrix(reinterpret_cast<const unsigned long*>(&matrix));
@@ -653,7 +653,7 @@ extern "C" void __cdecl Encounter_RollInitiative(void) {
             continue;
         }
         const u32 record = Character_IndexById[Cond_Flags[0xd2 + i]];
-        if (At(::bof3::Img(CharacterRecords_addr) + record * at::kRecordSize)[0x38] < r) continue;
+        if (move_script::At(::bof3::Img(CharacterRecords_addr) + record * at::kRecordSize)[0x38] < r) continue;
         const unsigned char e = g.effect_free();
         if (e != 0xFF) {
             unsigned char* const fx = rv::Bytes(Effect_Objects) + (static_cast<u32>(e) << 7);
@@ -664,8 +664,8 @@ extern "C" void __cdecl Encounter_RollInitiative(void) {
             rv::As<records::EffectObject>(fx)->screen_y = static_cast<std::uint16_t>(rv::As<records::PartyMember>(obj)->screen_y);
             const u32 id = obj[0x89];
             Obj(0)[0xB] = e;
-            rv::As<records::EffectObject>(fx)->step_x = At(::bof3::Img(at::kAlertOffsets.v))[2 * id];
-            rv::As<records::EffectObject>(fx)->step_z = At(::bof3::Img(at::kAlertOffsets.v))[2 * id + 1];
+            rv::As<records::EffectObject>(fx)->step_x = move_script::At(::bof3::Img(at::kAlertOffsets.v))[2 * id];
+            rv::As<records::EffectObject>(fx)->step_z = move_script::At(::bof3::Img(at::kAlertOffsets.v))[2 * id + 1];
         }
         ++count;
     }
@@ -678,7 +678,7 @@ extern "C" void __cdecl Encounter_RollInitiative(void) {
 extern "C" void __cdecl Encounter_PartyTurnSense(void) {
     for (u32 i = 0; i < Field_MemberCount; ++i) {
         Sprite_Current = Obj(i);
-        const unsigned char s = g.turn_sense(At(::bof3::Img(at::kFaceTable.v))[Byte(::bof3::Img(at::kBattleFacing.v))]);
+        const unsigned char s = g.turn_sense(move_script::At(::bof3::Img(at::kFaceTable.v))[ByteInventoryOps(::bof3::Img(at::kBattleFacing.v))]);
         Sprite_Current[0xB] = s;
     }
 }
@@ -704,21 +704,21 @@ extern "C" unsigned char __cdecl Encounter_PartyTurn(void) {
             Field_State = obj;
             Sprite_Current = obj;
             const u32 record = obj[0x148];
-            if (Word(At(::bof3::Img(CharacterRecords_addr) + record * at::kRecordSize + 0x10)) & 0x4000) {
-                g.set_anim_from(obj[0x4B], 0, At(::bof3::Img(at::kAnimBuffer.v)), 0xA00);
+            if (move_script::Word(move_script::At(::bof3::Img(CharacterRecords_addr) + record * at::kRecordSize + 0x10)) & 0x4000) {
+                g.set_anim_from(obj[0x4B], 0, move_script::At(::bof3::Img(at::kAnimBuffer.v)), 0xA00);
                 Sprite_Current[0xB] = 0;
                 continue;
             }
-            const unsigned char target = At(::bof3::Img(at::kFaceTable.v))[Byte(::bof3::Img(at::kBattleFacing.v))];
+            const unsigned char target = move_script::At(::bof3::Img(at::kFaceTable.v))[ByteInventoryOps(::bof3::Img(at::kBattleFacing.v))];
             const unsigned char d = obj[8], turn = obj[0xB];
             if (d == target) {
                 if (turn != 0) {
-                    g.set_anim_from(d, 0, At(::bof3::Img(at::kAnimBuffer.v)), 0xA00);
+                    g.set_anim_from(d, 0, move_script::At(::bof3::Img(at::kAnimBuffer.v)), 0xA00);
                     Sprite_Current[0xB] = 0;
                 }
             } else {
                 obj[8] = static_cast<unsigned char>((d + turn) & 7);
-                g.set_anim_from(Sprite_Current[8], 0, At(::bof3::Img(at::kAnimBuffer.v)), 0xA00);
+                g.set_anim_from(Sprite_Current[8], 0, move_script::At(::bof3::Img(at::kAnimBuffer.v)), 0xA00);
             }
             g.script_tick();
         }
@@ -731,7 +731,7 @@ extern "C" unsigned char __cdecl Encounter_PartyTurn(void) {
         Sprite_Current = obj;
         for (u32 w = 0; w < 32; ++w) {
             const u32 o = (static_cast<u32>(obj[5]) << 5) + w;
-            SetWord(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1ec0 + 2 * o), Word(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + 2 * o)));
+            move_script::SetWord(move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1ec0 + 2 * o), move_script::Word(move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1e00 + 2 * o)));
         }
         g.shade_begin();
         Sprite_Current[0xB] = 0;
@@ -757,10 +757,10 @@ extern "C" unsigned char __cdecl Encounter_PartyTurn(void) {
 // one read.
 extern "C" unsigned char __cdecl Encounter_PartyToPlaces(void) {
     if (EventBattle_Flags & 4) return 1;
-    const u32 f = Byte(::bof3::Img(at::kBattleFacing.v));
-    const auto* const step = reinterpret_cast<const signed char*>(At(::bof3::Img(at::kSideSteps.v) + 2 * f));
-    BossSi_CentreX = Add(Shl(step[0], 16), Field_Kind2X);
-    BossSi_CentreZ = Add(Shl(step[1], 16), Field_Kind2Z);
+    const u32 f = ByteInventoryOps(::bof3::Img(at::kBattleFacing.v));
+    const auto* const step = reinterpret_cast<const signed char*>(move_script::At(::bof3::Img(at::kSideSteps.v) + 2 * f));
+    BossSi_CentreX = AddInventoryOps(Shl(step[0], 16), Field_Kind2X);
+    BossSi_CentreZ = AddInventoryOps(Shl(step[1], 16), Field_Kind2Z);
     u32 n = Field_MemberCount;
     if (n != 0) {
         for (u32 i = 0; i < n; ++i, n = Field_MemberCount) {
@@ -776,8 +776,8 @@ extern "C" unsigned char __cdecl Encounter_PartyToPlaces(void) {
                     while (k < 3 && Cond_Flags[0xd5 + k] != id) ++k;
                     fs[0x138] = static_cast<unsigned char>(fs[0x138] & 0xFE);
                     Sprite_Current[0x29] = Draw_OtSlot;
-                    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Long(PosX(k)));
-                    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(PosZ(k)));
+                    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, move_script::Long(PosX(k)));
+                    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, move_script::Long(PosZ(k)));
                     const long ground = g.ground_at(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
                     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
                     Sprite_Current[0x48] = 0;
@@ -788,7 +788,7 @@ extern "C" unsigned char __cdecl Encounter_PartyToPlaces(void) {
                     unsigned char* const sc = Sprite_Current;
                     for (u32 w = 0; w < 32; ++w) {
                         const u32 o = (static_cast<u32>(sc[5]) << 5) + w;
-                        SetWord(At(::bof3::Img(Gfx_ClutStrip_addr) + 0x1e00 + 2 * o), Word(At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1ec0 + 2 * o)));
+                        move_script::SetWord(move_script::At(::bof3::Img(Gfx_ClutStrip_addr) + 0x1e00 + 2 * o), move_script::Word(move_script::At(::bof3::Img(Gfx_ClutStripSource_addr) + 0x1ec0 + 2 * o)));
                     }
                     Gfx_ClutStripDirty = 1;
                     sc[0] = static_cast<unsigned char>(sc[0] & 0xDF);
@@ -821,16 +821,16 @@ extern "C" void __cdecl Encounter_PartyAtPlaces(void) {
         unsigned char* const obj = Obj(i);
         Field_State = obj;
         Sprite_Current = obj;
-        rv::As<records::PartyMember>(obj)->x = Long(PosX(i));
-        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(PosZ(i)));
+        rv::As<records::PartyMember>(obj)->x = move_script::Long(PosX(i));
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, move_script::Long(PosZ(i)));
         const long ground = g.ground_at(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
         rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
         Sprite_Current[0xB] = 0;
         const u32 record = Field_State[0x148];
-        if (At(::bof3::Img(CharacterRecords_addr) + record * at::kRecordSize + 0x11)[0] & 0x40)
-            g.set_animation(static_cast<unsigned char>(Byte(::bof3::Img(at::kBattleFacing.v)) + 0x1C));
+        if (move_script::At(::bof3::Img(CharacterRecords_addr) + record * at::kRecordSize + 0x11)[0] & 0x40)
+            g.set_animation(static_cast<unsigned char>(ByteInventoryOps(::bof3::Img(at::kBattleFacing.v)) + 0x1C));
         else
-            g.set_animation(Byte(::bof3::Img(at::kBattleFacing.v)));
+            g.set_animation(ByteInventoryOps(::bof3::Img(at::kBattleFacing.v)));
     }
 }
 
