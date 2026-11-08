@@ -77,13 +77,13 @@ unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
 std::uint32_t Dword(std::uint32_t address) { return static_cast<std::uint32_t>(Long(At(address))); }
 void SetDword(std::uint32_t address, std::uint32_t v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
 void Advance(std::uint32_t address) { Byte(address) = static_cast<unsigned char>(Byte(address) + 1); }
-unsigned char* Member(unsigned slot) { return At(::bof3::Img(at::kMembers.v) + (slot & 0xFF) * at::kMemberSize); }
+unsigned char* MemberBattleResult(unsigned slot) { return At(::bof3::Img(at::kMembers.v) + (slot & 0xFF) * at::kMemberSize); }
 unsigned char* WindowSlot(unsigned slot) { return At(::bof3::Img(WindowRecords_addr) + slot * at::kWindowSize); }
 // The record the window task is running, re-read wherever the original reads it.
 unsigned char* CurrentWindow() { return At(BattleWinStates_Current); }
-// Member() is +0x80 into the member record (0x802DC0); the record, and its
+// MemberBattleResult() is +0x80 into the member record (0x802DC0); the record, and its
 // typed view, starts 0x80 before.
-char* Text(std::uint32_t address) { return reinterpret_cast<char*>(At(address)); }
+char* TextBattleResult(std::uint32_t address) { return reinterpret_cast<char*>(At(address)); }
 const char* Format(std::uint32_t address) { return reinterpret_cast<const char*>(At(address)); }
 
 // The tick step of an amount: 1 below 30, else amount / 30 - kept as a word,
@@ -123,7 +123,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_SplitEx
         if (n != 0) share = (Battle_ExpTotal + n - 1) / n;
     }
     Battle_ExpTotal = share;
-    g.crt_sprintf(Text(::bof3::Img(at::kText0.v)), Format(::bof3::Img(at::kFormatD.v)), share);
+    g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText0.v)), Format(::bof3::Img(at::kFormatD.v)), share);
     const unsigned char* const msg = g.msg_system(5);
     const unsigned set = AreaW0b_PartySet & 0x7Fu;
     SetDword(::bof3::Img(at::kMsgCurrent.v), Low32(msg));
@@ -220,7 +220,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_LevelUp
 // on is 0x4469D0's whole answer (a byte, zero-extended by the callee).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_FindLevelUp(void) {
     while (BossSb_Countdown < Byte(::bof3::Img(at::kPartyCount.v))) {
-        const unsigned index = g.roster_index(rv::As<records::PartyMember>(Member(BossSb_Countdown) - 0x80)->char_id);
+        const unsigned index = g.roster_index(rv::As<records::PartyMember>(MemberBattleResult(BossSb_Countdown) - 0x80)->char_id);
         const auto next = static_cast<unsigned char>(BossSb_Countdown + 1);
         BattleE1_Roster = static_cast<unsigned char>(index);
         BossSb_Countdown = next;
@@ -275,8 +275,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_Setup(v
     if (Input_Held == 0) return;
 
     for (unsigned char slot = 0; slot < Byte(::bof3::Img(at::kPartyCount.v)); ++slot) {
-        const unsigned index = g.roster_index(rv::As<records::PartyMember>(Member(slot) - 0x80)->char_id);
-        if ((g.level_up_pending(index, 0) & 0xFFFF) != 0) g.level_up(g.roster_index(rv::As<records::PartyMember>(Member(slot) - 0x80)->char_id));
+        const unsigned index = g.roster_index(rv::As<records::PartyMember>(MemberBattleResult(slot) - 0x80)->char_id);
+        if ((g.level_up_pending(index, 0) & 0xFFFF) != 0) g.level_up(g.roster_index(rv::As<records::PartyMember>(MemberBattleResult(slot) - 0x80)->char_id));
     }
     if (g.zenny_bonus() != 0) BattleFlow_ZennyTotal = BattleFlow_ZennyTotal + (BattleFlow_ZennyTotal >> 1);
 
@@ -285,7 +285,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_Setup(v
     const std::uint32_t zenny = BattleFlow_ZennyTotal;
     rv::As<records::WindowRecord>(WindowSlot(1))->kind = 5;
     rv::As<records::WindowRecord>(WindowSlot(1))->state = 0;
-    g.crt_sprintf(Text(::bof3::Img(at::kText0.v)), Format(::bof3::Img(at::kFormatD.v)), zenny);
+    g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText0.v)), Format(::bof3::Img(at::kFormatD.v)), zenny);
     const unsigned char* const msg = g.msg_system(6);
     const std::uint32_t total = BattleFlow_ZennyTotal;
     SetDword(::bof3::Img(at::kMsgCurrent.v), Low32(msg));
@@ -433,7 +433,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_Draw
     const int x_msg = us ? 0x82 : 0x55, x_level = us ? 0x114 : 0x85, x_exp = us ? 0x36 : 0xE3;
     unsigned char y = 0x2C;
     for (unsigned char slot = 0; slot < Byte(::bof3::Img(at::kPartyCount.v)); ++slot, y = static_cast<unsigned char>(y + 0x10)) {
-        unsigned char* const m = Member(slot);
+        unsigned char* const m = MemberBattleResult(slot);
         auto* const member_rec = rv::As<records::PartyMember>(m - 0x80);
         g.text_draw_at(0x19, y, 0, 5, m);
         const unsigned level = member_rec->level;
@@ -441,9 +441,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_Draw
             g.text_draw_at(x_msg, y, 0, 0xFF, g.msg_system(0x41));
             continue;
         }
-        g.crt_sprintf(Text(::bof3::Img(at::kText2.v)), Format(::bof3::Img(Boss26Fx_CountFormat_addr)), level + 1);
+        g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText2.v)), Format(::bof3::Img(Boss26Fx_CountFormat_addr)), level + 1);
         g.text_draw_font12(x_level, y, 0, At(::bof3::Img(at::kText2.v)));
-        g.crt_sprintf(Text(::bof3::Img(at::kText2.v)), Format(::bof3::Img(at::kFormat6d.v)), g.exp_to_next(slot));
+        g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText2.v)), Format(::bof3::Img(at::kFormat6d.v)), g.exp_to_next(slot));
         g.text_draw_font12(x_exp, y, 0, At(::bof3::Img(at::kText2.v)));
         g.text_draw_at(x_msg, y, 0, 0xFF, g.msg_system(0x15));
     }
@@ -472,7 +472,7 @@ extern "C" void __cdecl BattleResultWin_NextStep(void) {
 // As the original has it: the zenny is read after the box.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_DrawZenny(void) {
     g.draw_medium_box(0x6E, 0x28);
-    g.crt_sprintf(Text(::bof3::Img(at::kText2.v)), Format(::bof3::Img(at::kFormat7d.v)), Party_Zenny);
+    g.crt_sprintf(TextBattleResult(::bof3::Img(at::kText2.v)), Format(::bof3::Img(at::kFormat7d.v)), Party_Zenny);
     g.text_draw_font12(0x70, 0x2A, 0, At(::bof3::Img(at::kText2.v)));
     g.text_draw_at(0xC4, 0x2A, 0, 0xFF, At(::bof3::Img(at::kZennyUnit.v)));
 }
