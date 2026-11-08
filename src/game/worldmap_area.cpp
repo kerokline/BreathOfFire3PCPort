@@ -110,10 +110,10 @@ unsigned char* Cur() { return Sprite_Current; }
 
 // Cur() is the effect record being run (every Cur() reader here is an effect
 // kind's handler), typed as rv::As<records::EffectObject>(Cur()).
-std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
+std::int32_t S16WorldmapArea(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 // A handler read from a .data table in place, as the originals' `call` /
 // `jmp [index * 4 + table]` do: the index is not checked.
-Handler Entry(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(address))))); }
+Handler EntryWorldmapArea(U address) { return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(address))))); }
 
 // The region box's leave test the HUD machine's states share (0x404274 ..
 // 0x404297 and its copies): the map's mode byte set while the object's +0xB
@@ -251,7 +251,7 @@ extern "C" void __cdecl WorldMap33_PlateRun(void) {
     else if ((Field_ScriptFlags2 & 0x1000) != 0) kind = 4;
     else kind = 0;
     Cur()[0xB] = kind;
-    Entry(::bof3::Img(WorldMap33_PlateStates_addr) + rv::As<records::EffectObject>(Cur())->state * 4u)();
+    EntryWorldmapArea(::bof3::Img(WorldMap33_PlateStates_addr) + rv::As<records::EffectObject>(Cur())->state * 4u)();
 }
 
 // original 0x403EE0 (WorldMap33_PlateStates 1): +7 = +0xB (the kind shown).
@@ -359,7 +359,7 @@ extern "C" void __cdecl WorldMap33_PlateShrink(void) {
 
 // original 0x404130: WorldMapHud_States 0x5EF5F0 by +1 - WorldMapHud_Start
 // (shared), WorldMapHud_Frame.
-extern "C" void __cdecl WorldMapHud_Run(void) { Entry(::bof3::Img(WorldMapHud_States_addr) + rv::As<records::EffectObject>(Cur())->state * 4u)(); }
+extern "C" void __cdecl WorldMapHud_Run(void) { EntryWorldmapArea(::bof3::Img(WorldMapHud_States_addr) + rv::As<records::EffectObject>(Cur())->state * 4u)(); }
 
 // original 0x419110 (WorldMapHud_States 0; the same entry in the eleven
 // world-map copies' tables): +9 = 0, +0xB = 0, +1 + 1.
@@ -389,7 +389,7 @@ extern "C" void __cdecl WorldMap_FrameWait(void) {
 
 // original 0x404230: WorldMapHud_BoxStates 0x5EF608 by +3 - WorldMapHud_BoxWait
 // (shared), _BoxSlideIn, _BoxHold, _BoxSlideOut.
-extern "C" void __cdecl WorldMapHud_BoxStep(void) { Entry(::bof3::Img(WorldMapHud_BoxStates_addr) + Cur()[3] * 4u)(); }
+extern "C" void __cdecl WorldMapHud_BoxStep(void) { EntryWorldmapArea(::bof3::Img(WorldMapHud_BoxStates_addr) + Cur()[3] * 4u)(); }
 
 // original 0x414BB0 (WorldMapHud_BoxStates 0; the same entry in eleven
 // tables): unless the box leaves (BoxLeaves above), its y +0x30 = 0xF0 and +3
@@ -503,14 +503,14 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
     const std::int32_t e = b - 2;
     o->z = static_cast<std::int32_t>(static_cast<U>(o->z) + (static_cast<U>(b) << 10));
     o = rv::As<records::EffectObject>(Cur());
-    if (S16(rv::Bytes(o) + 0x3A) > AreaMap_Header[1] + 8) {
+    if (S16WorldmapArea(rv::Bytes(o) + 0x3A) > AreaMap_Header[1] + 8) {
         o->z_whole = 0xFFF8;
         o = rv::As<records::EffectObject>(Cur());
     }
-    std::int32_t dx = S16(At(::bof3::Img(at::kLeaderCellX))) - S16(rv::Bytes(o) + 0x36);
+    std::int32_t dx = S16WorldmapArea(At(::bof3::Img(at::kLeaderCellX))) - S16WorldmapArea(rv::Bytes(o) + 0x36);
     if (dx < 0) dx = -dx;
     if (dx > 0x19) {
-        std::int32_t dz = S16(At(::bof3::Img(at::kLeaderCellZ))) - S16(rv::Bytes(o) + 0x3A);
+        std::int32_t dz = S16WorldmapArea(At(::bof3::Img(at::kLeaderCellZ))) - S16WorldmapArea(rv::Bytes(o) + 0x3A);
         if (dz < 0) dz = -dz;
         if (dz > 0x19) return;
     }
@@ -551,7 +551,7 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
     for (std::int32_t j = 0; j < rows; ++j) {
         for (std::int32_t i = 0; i < columns; ++i) {
             o = rv::As<records::EffectObject>(Cur());
-            unsigned char* const item = g.item_half_at(S16(rv::Bytes(o) + 0x36) + i + e - 2, S16(rv::Bytes(o) + 0x3A) + j + e - 2);
+            unsigned char* const item = g.item_half_at(S16WorldmapArea(rv::Bytes(o) + 0x36) + i + e - 2, S16WorldmapArea(rv::Bytes(o) + 0x3A) + j + e - 2);
             if (item == nullptr) continue;
             unsigned char* const q = Gfx_PacketNext;
             g.set_poly_ft4(q);
@@ -578,8 +578,8 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
             q[0x44] = static_cast<unsigned char>((ui + 1) * m + ubase);
             q[0x45] = static_cast<unsigned char>((uj + 1) * m - scroll + vbase);
             o = rv::As<records::EffectObject>(Cur());
-            const U x = static_cast<U>(S16(rv::Bytes(o) + 0x36) + i + e - 2) << 16;
-            const U z = static_cast<U>(S16(rv::Bytes(o) + 0x3A) + j + e - 2) << 16;
+            const U x = static_cast<U>(S16WorldmapArea(rv::Bytes(o) + 0x36) + i + e - 2) << 16;
+            const U z = static_cast<U>(S16WorldmapArea(rv::Bytes(o) + 0x3A) + j + e - 2) << 16;
             g.link_prim_at(x, z, 1, 0x48);
         }
     }
@@ -611,7 +611,7 @@ namespace {
 // 104) holds nulls at +4, +8 and +0x14.
 Handler RecordEntry(U slot) {
     const U index = g.record_index() & 0xFF;
-    return Entry(::bof3::Img(WorldMap_Records_addr) + index * at::kRecordSize + slot);
+    return EntryWorldmapArea(::bof3::Img(WorldMap_Records_addr) + index * at::kRecordSize + slot);
 }
 }  // namespace
 
@@ -633,7 +633,7 @@ extern "C" void __cdecl WorldMap_RecordHook10(void) { RecordEntry(0x10)(); }
 
 // original 0x469BB0 (Effect_KindHandlers 0x06): EffectKind06_States 0x653EC8
 // by +1 - _Start, _Tick, _End.
-extern "C" void __cdecl EffectKind06_Run(void) { Entry(::bof3::Img(EffectKind06_States_addr) + rv::As<records::EffectObject>(Cur())->state * 4u)(); }
+extern "C" void __cdecl EffectKind06_Run(void) { EntryWorldmapArea(::bof3::Img(EffectKind06_States_addr) + rv::As<records::EffectObject>(Cur())->state * 4u)(); }
 
 // original 0x469BD0 (EffectKind06_States 0 and 0x653EF4's entry 0; PSX
 // 0x8019B404): Sprite_SetAnimationBank(0x18); +0x48 = 0; the word +0x2E +=
@@ -672,7 +672,7 @@ extern "C" void __cdecl EffectKind06_Start(void) {
 // original 0x469CB0 (EffectKind06_States 1; PSX 0x8019B544): EffectKind06_Ticks
 // 0x653EDC by the variant +6 - _Blink for 0, 1, 2 and 4, 0x469D40 for 3,
 // 0x469D10 for 5 (EffectKind06_Fade, EffectKind06_PlayOnce: field_c1.cpp).
-extern "C" void __cdecl EffectKind06_Tick(void) { Entry(::bof3::Img(EffectKind06_Ticks_addr) + rv::As<records::EffectObject>(Cur())->param * 4u)(); }
+extern "C" void __cdecl EffectKind06_Tick(void) { EntryWorldmapArea(::bof3::Img(EffectKind06_Ticks_addr) + rv::As<records::EffectObject>(Cur())->param * 4u)(); }
 
 // original 0x469CD0 (PSX 0x8019B588): +9 - 1; at 0 +1 + 1 and nothing more.
 // Otherwise Sprite_ScriptTick, and - only while bit 2 of +9 is set, so it
@@ -703,7 +703,7 @@ extern "C" void __cdecl EffectKind06_End(void) {
 
 // original 0x46D830 (Effect_KindHandlers 0x18): EffectKind18_States 0x65406C
 // by +1.
-extern "C" void __cdecl EffectKind18_Run(void) { Entry(::bof3::Img(EffectKind18_States_addr) + rv::As<records::EffectObject>(Cur())->state * 4u)(); }
+extern "C" void __cdecl EffectKind18_Run(void) { EntryWorldmapArea(::bof3::Img(EffectKind18_States_addr) + rv::As<records::EffectObject>(Cur())->state * 4u)(); }
 
 // original 0x46D850 (EffectKind18_States 0): +1 = +0xB (the effect's sub-kind
 // is its next state), +2 = +3 = +4 = +9 = 0.
