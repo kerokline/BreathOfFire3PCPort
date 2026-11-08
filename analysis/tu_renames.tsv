@@ -3,3 +3,4 @@
 # and the hand decisions on shared state and macro-made functions. Never pruned: the record to revisit from.
 # kind: helper | constant | variable | state | macro | global.  commit: filled by tools/tu_renames.py --fill.
 source_file	old_name	new_name	kind	reason	target_file	other_source	commit
+src/game/area_w3d.cpp	EffectAt	EffectAtAreaW3d	helper	move_funcs.py --check: differs from area_w3c.cpp's EffectAt in src/game/area/area_134.cpp; the file-local EffectAt (line 70) renamed with the source's stem (its counterpart does the same job under the same name, so a name from the body alone would clash again)	src/game/area/area_134.cpp	src/game/area_w3c.cpp	

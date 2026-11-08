@@ -67,7 +67,7 @@ unsigned char* ObjectAt(const char* who, unsigned index) {
 // Effect record `slot` (Effect_Objects, 20 of 0x80 bytes). Choice 2 stores
 // Effect_FindFree's "none", 0xFF, as the slot the tail later writes through,
 // unchecked: past the 20 records ours aborts.
-unsigned char* EffectAt(const char* who, unsigned slot) {
+unsigned char* EffectAtAreaW3d(const char* who, unsigned slot) {
     if (slot >= at::kEffectCount)
         bof3::Fatal("%s: the effect slot %u is past the 20 effect records (the original writes 0x%X, past "
                     "Effect_Objects)",
@@ -176,7 +176,7 @@ extern "C" void __cdecl Area135_ChoiceStartTail14(void) {
         const unsigned char slot = AH_CALL(Effect_FindFree)();
         B(::bof3::Img(AreaW3d_EffectSlot_addr)) = slot;
         if (slot != 0xFF) {
-            unsigned char* const e = EffectAt("Area135_ChoiceStartTail14", B(::bof3::Img(AreaW3d_EffectSlot_addr)));
+            unsigned char* const e = EffectAtAreaW3d("Area135_ChoiceStartTail14", B(::bof3::Img(AreaW3d_EffectSlot_addr)));
             e[0] = 1;
             e[5] = 0x66;
             e[6] = which;
@@ -640,14 +640,14 @@ extern "C" void __cdecl Area135_Tail18(void) {
         const unsigned slot = B(::bof3::Img(AreaW3d_EffectSlot_addr));
         const unsigned divisor = Speed8();
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x16;
-        EffectAt(kWho, slot)[1] = 2;
+        EffectAtAreaW3d(kWho, slot)[1] = 2;
         SetWord(Mem(::bof3::Img(MoveScript_F3Divisor_addr)), divisor);
         return;
     }
     case 0x16:   // the button held: message 0x8C, the effect's state 3, sound 0x209, counter 3 = 0xA
         if (!(B(::bof3::Img(Input_Held_addr)) & Sigma(0x20))) return;
         AH_CALL(Area135_OpenMessage)(0x8C);
-        EffectAt(kWho, B(::bof3::Img(AreaW3d_EffectSlot_addr)))[1] = 3;
+        EffectAtAreaW3d(kWho, B(::bof3::Img(AreaW3d_EffectSlot_addr)))[1] = 3;
         AH_CALL(Sound_PlayEffect)(0x209);
         B(::bof3::Img(at::kCounter3.v)) = 0xA;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x17;
@@ -659,7 +659,7 @@ extern "C" void __cdecl Area135_Tail18(void) {
         {
             const unsigned slot = B(::bof3::Img(AreaW3d_EffectSlot_addr));
             B(::bof3::Img(AreaW0c_TailState_addr)) = 0x18;
-            EffectAt(kWho, slot)[1] = 2;
+            EffectAtAreaW3d(kWho, slot)[1] = 2;
         }
         return;
     case 0x18:   // a press
@@ -668,7 +668,7 @@ extern "C" void __cdecl Area135_Tail18(void) {
     case 0x19:   // the button held: message 0x8E, the effect's state 3, sound 0x209, counter 3 = 0xC
         if (!(B(::bof3::Img(Input_Held_addr)) & Sigma(0x20))) return;
         AH_CALL(Area135_OpenMessage)(0x8E);
-        EffectAt(kWho, B(::bof3::Img(AreaW3d_EffectSlot_addr)))[1] = 3;
+        EffectAtAreaW3d(kWho, B(::bof3::Img(AreaW3d_EffectSlot_addr)))[1] = 3;
         AH_CALL(Sound_PlayEffect)(0x209);
         B(::bof3::Img(at::kCounter3.v)) = 0xC;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x1A;
@@ -677,7 +677,7 @@ extern "C" void __cdecl Area135_Tail18(void) {
         AH_CALL(Area135_Kind2ToObject0)(0);
         if (B(::bof3::Img(at::kCounter3.v)) != 0xD) return;
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x1B;
-        EffectAt(kWho, B(::bof3::Img(AreaW3d_EffectSlot_addr)))[1] = 4;
+        EffectAtAreaW3d(kWho, B(::bof3::Img(AreaW3d_EffectSlot_addr)))[1] = 4;
         return;
     case 0x1B: {   // counter 3 at 0x10: the object in the sub byte set going (none: message 0x8F)
         AH_CALL(Area135_Kind2ToObject0)(0);
@@ -726,7 +726,7 @@ extern "C" void __cdecl Area135_Tail18(void) {
         SetD(::bof3::Img(Field_Kind2Z_addr), z);
         SetWord(Mem(::bof3::Img(MoveScript_F3Divisor_addr)), divisor);
         B(::bof3::Img(AreaW0c_TailState_addr)) = 0x1F;
-        EffectAt(kWho, slot)[1] = 5;
+        EffectAtAreaW3d(kWho, slot)[1] = 5;
         return;
     }
     case 0x1F:   // the glide done: disarmed, counter 3 and the sub byte 0
@@ -789,7 +789,7 @@ extern "C" void __cdecl Area135_Init(void) {
     if (zone != 0) return;
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot != 0xFF) {
-        unsigned char* const e = EffectAt("Area135_Init", slot);
+        unsigned char* const e = EffectAtAreaW3d("Area135_Init", slot);
         e[0] = 1;
         e[5] = 0x53;
         rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->work_18, 0);
