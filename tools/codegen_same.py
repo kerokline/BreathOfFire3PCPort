@@ -70,6 +70,40 @@ a commit that renames such a helper so that two files' helpers of one name
 can share a target file. Every function still compares by its own name, so
 a renamed helper whose code is the same passes, and one whose code changed
 reads as a GONE / NEW pair `local:<hash>` with its names.
+
+The source root (both modes). A `__FILE__` string holds the absolute path
+of the tree that was built (x86_64's Low32() message, a static local's
+path), so two worktrees' builds differ there although nothing changed. Each
+build directory's root is read from its CMakeCache.txt
+(CMAKE_HOME_DIRECTORY, else bof3x_SOURCE_DIR) and every spelling of it -
+`/` or `\\`, the drive letter in either case - is replaced by one
+placeholder in every initialised byte compared (the object mode's data
+dumps; the per-function mode's data symbols and section-relative items).
+When the two roots differ in length, what follows a path in its section
+also moves and its alignment padding changes, so in the per-function mode
+(said on a first line) the zeros that end each run between two data anchors
+are not compared, and, after a section's first path only, neither is the
+length of a zero run that follows a printable byte (a string's NUL and its
+padding) nor the offset of a relocation there. The object mode compares
+offsets as written, so a pair of trees with roots of different lengths can
+still differ there on x86_64; its per-function mode is the gate. A build of
+the same tree compares exactly as before.
+
+    --exceptions FILE   (with --by-function; the round doc's 7a, the owner's call 8)
+
+FILE is analysis/tu_gate_exceptions.tsv: a header line `symbol class reason
+commit` (tab-separated), `#` lines comments, one row per symbol the x86_64
+gate lets differ. A DIFFER, GONE or NEW line of a code symbol listed there
+whose class is a known one - `inline` (the compiler inlined, or stopped
+inlining, a moved or copied helper because its callers in the file changed)
+or `low32-site` (Low32()'s failure message names the new file and line) -
+prints as `EXCEPT <class> <symbol>` and is not counted. The symbol is the
+name the line prints (for a `local:<hash>` key, any of the names it lists).
+A data, bss or inject line is never excepted. A row whose class is not a
+known one, a row without a symbol and a class, or a file without the
+header, is an error: the line is printed and the exit is 2, before anything
+is compared. A listed symbol that did not differ is reported on an `unused
+exception` line (not an error: a stale row, to prune by hand).
 """
 
 from __future__ import annotations
@@ -127,13 +161,62 @@ def data_sections(objdump: str, path: Path) -> list[str]:
     return names
 
 
-def data_dump(objdump: str, path: Path) -> list[str]:
+SOURCE_ROOT = b"<source-root>"
+
+
+def source_roots(build: Path) -> list[bytes]:
+    """The spellings of a build's source root that `__FILE__` strings carry (x86_64's Low32() message,
+    a static local's path, ...): from CMakeCache.txt's CMAKE_HOME_DIRECTORY or bof3x_SOURCE_DIR, with
+    `/` and `\\`, the drive letter in either case, longest first. Empty when the cache names none."""
+    cache = build / "CMakeCache.txt"
+    roots: set[str] = set()
+    if cache.exists():
+        for line in cache.read_text(encoding="utf-8", errors="replace").splitlines():
+            m = re.match(r"(CMAKE_HOME_DIRECTORY|bof3x_SOURCE_DIR):[A-Z]+=(.+)$", line.strip())
+            if m and m.group(2).strip():
+                roots.add(m.group(2).strip().rstrip("/\\"))
+    out: set[bytes] = set()
+    for r in roots:
+        for s in (r.replace("\\", "/"), r.replace("/", "\\")):
+            for v in (s, s[:1].lower() + s[1:], s[:1].upper() + s[1:]):
+                out.add(v.encode("utf-8"))
+    return sorted(out, key=len, reverse=True)
+
+
+def unroot(data: bytes, roots: list[bytes]) -> bytes:
+    """`data` with every spelling of the build's source root replaced by one placeholder."""
+    for r in roots:
+        if r in data:
+            data = data.replace(r, SOURCE_ROOT)
+    return data
+
+
+def data_dump(objdump: str, path: Path, roots: list[bytes] = ()) -> list[str]:
     names = data_sections(objdump, path)
     if not names:
         return []
     r = subprocess.run([objdump, "-s", "-r"] + ["--section=" + n for n in names] + [str(path)],
                        capture_output=True, text=True, check=True)
-    return [l for l in r.stdout.splitlines() if l.strip() and "file format" not in l]
+    lines = [l for l in r.stdout.splitlines() if l.strip() and "file format" not in l]
+    if not roots:
+        return lines
+    # each section's contents read back to bytes, the source root replaced, one hex line a section
+    out: list[str] = []
+    buf: bytearray | None = None
+    for l in lines + ["<end>"]:
+        hexrow = buf is not None and re.match(r" [0-9a-f]{4,} ", l)
+        if hexrow:
+            groups = l[1:].split(" ", 1)[1][:35].split()
+            buf += bytes.fromhex("".join(groups))
+            continue
+        if buf is not None:
+            out.append(" " + unroot(bytes(buf), roots).hex())
+            buf = None
+        if l.startswith("Contents of section"):
+            buf = bytearray()
+        if l != "<end>":
+            out.append(l)
+    return out
 
 
 def first_section(lines: list[str], index: int) -> str:
@@ -246,9 +329,11 @@ def pooled_key(name: str) -> str:
 class Normaliser:
     """The normalised body of every symbol of one object."""
 
-    def __init__(self, obj: Coff, anonymous_locals: bool = False):
+    def __init__(self, obj: Coff, anonymous_locals: bool = False, roots: list[bytes] = (), pad_free: bool = False):
         self.o = obj
         self.anonymous_locals = anonymous_locals
+        self.roots = list(roots)      # the build's source-root spellings (source_roots), read as one
+        self.pad_free = pad_free      # the two roots differ in length: zero padding before an anchor not compared
         self.cs = None
         self.by_section: dict[int, list[tuple[int, int]]] = {}
         for i, s in obj.symbols.items():
@@ -267,6 +352,7 @@ class Normaliser:
                         self.anchors.setdefault(t["section"], set()).add(a)
         self.sorted_anchors = {n: sorted(v) for n, v in self.anchors.items()}
         self.local_hash_cache: dict[int, str] = {}
+        self.root_at: dict[int, int | None] = {}
 
     def width(self, typ: int) -> int:
         w = RELOC_WIDTH[self.o.machine].get(typ)
@@ -350,6 +436,14 @@ class Normaliser:
         return f"r{typ:X}:" + self.symref(symi, depth), False
 
     def render_data(self, secn: int, start: int, end: int, depth: int) -> str:
+        if self.pad_free:
+            # a path of another length moves what follows it in its section, so the alignment padding of
+            # the items after it changes: each run between two anchors read alone (render_run)
+            cuts = [start] + [x for x in self.sorted_anchors.get(secn, []) if start < x < end] + [end]
+            return "|".join(self.render_run(secn, a, b, depth, True) for a, b in zip(cuts, cuts[1:]))
+        return self.render_run(secn, start, end, depth, False)
+
+    def render_run(self, secn: int, start: int, end: int, depth: int, strip: bool) -> str:
         sec = self.o.sections[secn - 1]
         data = bytearray(sec["data"][start:end])
         notes = []
@@ -358,8 +452,42 @@ class Normaliser:
             if layout:
                 w = self.width(typ)
                 data[off - start:off - start + w] = bytes(w)
-            notes.append(f"{off - start:X}={d}")
-        return data.hex() + (" " + ",".join(notes) if notes else "")
+            notes.append((off, d))
+        if not strip:
+            return (unroot(bytes(data), self.roots).hex()
+                    + (" " + ",".join(f"{o - start:X}={d}" for o, d in notes) if notes else ""))
+        # The roots differ in length, so what follows a path in its section sits elsewhere and its
+        # alignment padding changes. Not compared: the zeros that end the run (the padding before the next
+        # anchor) and, past the section's first path, the length of a zero run that follows a printable
+        # byte (a string's NUL and the padding after it), shown as `~`; a relocation's offset there is
+        # not compared either (its order and target are).
+        fr = self.first_root(secn)
+        parts: list[str] = []
+        i, n = 0, len(data)
+        chunk = bytearray()
+        while i < n:
+            if (data[i] == 0 and fr is not None and start + i >= fr and i > 0
+                    and 0x20 <= data[i - 1] < 0x7F):
+                j = i
+                while j < n and data[j] == 0:
+                    j += 1
+                parts.append(unroot(bytes(chunk), self.roots).hex() + "~")
+                chunk = bytearray()
+                i = j
+                continue
+            chunk.append(data[i])
+            i += 1
+        parts.append(unroot(bytes(chunk).rstrip(b"\x00"), self.roots).hex())
+        return "".join(parts) + (" " + ",".join(
+            (f"{o - start:X}" if fr is None or o < fr else "*") + f"={d}" for o, d in notes) if notes else "")
+
+    def first_root(self, secn: int):
+        """The offset of the first source-root spelling in a section's bytes, or None."""
+        if secn not in self.root_at:
+            data = self.o.sections[secn - 1]["data"]
+            hits = [k for k in (data.find(r) for r in self.roots) if k >= 0]
+            self.root_at[secn] = min(hits) if hits else None
+        return self.root_at[secn]
 
     def disassembler(self):
         if self.cs is None:
@@ -416,10 +544,11 @@ class Normaliser:
         return lines
 
 
-def object_symbols(path: Path, anonymous_locals: bool = False) -> list[tuple[str, str, list[str], bool]]:
+def object_symbols(path: Path, anonymous_locals: bool = False,
+                   roots: list[bytes] = (), pad_free: bool = False) -> list[tuple[str, str, list[str], bool]]:
     """(name, kind, normalised body, file-local) for every defined symbol of one object."""
     obj = Coff(path)
-    n = Normaliser(obj, anonymous_locals)
+    n = Normaliser(obj, anonymous_locals, roots, pad_free)
     out = []
     for i, s in obj.symbols.items():
         if s["section"] <= 0 or s["is_section"] or s["cls"] not in (2, 3):
@@ -439,7 +568,8 @@ def object_symbols(path: Path, anonymous_locals: bool = False) -> list[tuple[str
     return out
 
 
-def symbol_table(objs: dict[str, Path], wanted, anonymous_locals: bool = False):
+def symbol_table(objs: dict[str, Path], wanted, anonymous_locals: bool = False, roots: list[bytes] = (),
+                 pad_free: bool = False):
     """name -> {"kind": code | data | bss, "bodies": {hash: [objects]}}; texts by hash; functions read."""
     from concurrent.futures import ProcessPoolExecutor
     from functools import partial
@@ -448,7 +578,7 @@ def symbol_table(objs: dict[str, Path], wanted, anonymous_locals: bool = False):
     texts: dict[str, list[str]] = {}
     nfunc = 0
     with ProcessPoolExecutor() as pool:
-        reader = partial(object_symbols, anonymous_locals=anonymous_locals)
+        reader = partial(object_symbols, anonymous_locals=anonymous_locals, roots=roots, pad_free=pad_free)
         for key, syms in zip(keys, pool.map(reader, [objs[k] for k in keys], chunksize=8)):
             for name, kind, lines, local in syms:
                 nfunc += kind == "code"
@@ -461,6 +591,53 @@ def symbol_table(objs: dict[str, Path], wanted, anonymous_locals: bool = False):
                 e["bodies"].setdefault(h, []).append(key)
                 texts[h] = lines
     return table, texts, nfunc
+
+
+EXCEPTION_CLASSES = ("inline", "low32-site")
+
+
+def load_exceptions(path: Path) -> dict[str, dict]:
+    """symbol -> {"class", "line", "used"}; an unknown class or a malformed line exits 2."""
+    out: dict[str, dict] = {}
+    header = False
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError as e:
+        print(f"codegen_same: --exceptions {path}: {e}")
+        sys.exit(2)
+    for n, line in enumerate(lines, 1):
+        if not line.strip() or line.startswith("#"):
+            continue
+        f = [x.strip() for x in line.split("\t")]
+        if not header:
+            if f[:4] != ["symbol", "class", "reason", "commit"]:
+                print(f"codegen_same: {path}:{n}: the header must be symbol, class, reason, commit: {line}")
+                sys.exit(2)
+            header = True
+            continue
+        if len(f) < 2 or not f[0] or not f[1]:
+            print(f"codegen_same: {path}:{n}: a row needs a symbol and a class: {line}")
+            sys.exit(2)
+        if f[1] not in EXCEPTION_CLASSES:
+            print(f"codegen_same: {path}:{n}: class {f[1]!r} is not one of {', '.join(EXCEPTION_CLASSES)} "
+                  f"(a new class needs the coordinator's entry in docs/source-layout-round.md 7a): {line}")
+            sys.exit(2)
+        out[f[0]] = {"class": f[1], "line": line, "used": False}
+    if not header:
+        print(f"codegen_same: {path}: no header line (symbol, class, reason, commit)")
+        sys.exit(2)
+    return out
+
+
+def excepted(exceptions: dict, key: str, e: dict) -> str | None:
+    """The class that excepts this code symbol's line, or None."""
+    if not exceptions or e["kind"] != "code":
+        return None
+    for n in [key] + sorted(e["names"]):
+        if n in exceptions:
+            exceptions[n]["used"] = True
+            return exceptions[n]["class"]
+    return None
 
 
 def named(key: str, e: dict) -> str:
@@ -480,8 +657,14 @@ def by_function(a) -> int:
     def wanted(k: str) -> bool:
         return not a.only or any(fnmatch.fnmatch(k, g) for g in a.only)
 
-    base, btext, bn = symbol_table(objects(a.base), wanted, a.anonymous_locals)
-    new, ntext, nn = symbol_table(objects(a.new), wanted, a.anonymous_locals)
+    exceptions = load_exceptions(a.exceptions) if a.exceptions else {}
+    broots, nroots = source_roots(a.base), source_roots(a.new)
+    pad_free = {len(r) for r in broots} != {len(r) for r in nroots}
+    if pad_free:
+        print(f"codegen_same: the source roots differ in length ({a.base}, {a.new}): the alignment "
+              f"padding a path moves is not compared (the docstring's 'source root')")
+    base, btext, bn = symbol_table(objects(a.base), wanted, a.anonymous_locals, broots, pad_free)
+    new, ntext, nn = symbol_table(objects(a.new), wanted, a.anonymous_locals, nroots, pad_free)
     if a.show:
         for side, t, tx in (("BASE", base, btext), ("NEW", new, ntext)):
             e = t.get(a.show)
@@ -492,7 +675,7 @@ def by_function(a) -> int:
                 print(f"--- {side}: {a.show} in {', '.join(where)}")
                 print("\n".join(tx[h]))
         return 0
-    bad = copies = injects = 0
+    bad = copies = injects = excepts = 0
     counted = {"code": 0, "data": 0, "bss": 0}
     for name in sorted(set(base) | set(new)):
         x, y = base.get(name), new.get(name)
@@ -502,10 +685,20 @@ def by_function(a) -> int:
             injects += 1
             continue
         if y is None:
+            cls = excepted(exceptions, name, x)
+            if cls:
+                print(f"EXCEPT {cls} {name}  (GONE; {x['kind']}, in {objects_of(x)}{named(name, x)}; not counted)")
+                excepts += 1
+                continue
             print(f"GONE   {name}  ({x['kind']}, in {objects_of(x)}{named(name, x)})")
             bad += 1
             continue
         if x is None:
+            cls = excepted(exceptions, name, y)
+            if cls:
+                print(f"EXCEPT {cls} {name}  (NEW; {y['kind']}, in {objects_of(y)}{named(name, y)}; not counted)")
+                excepts += 1
+                continue
             print(f"NEW    {name}  ({y['kind']}, in {objects_of(y)}{named(name, y)})")
             bad += 1
             continue
@@ -518,6 +711,11 @@ def by_function(a) -> int:
                 i = next((j for j, (u, v) in enumerate(zip(p, q)) if u != v), min(len(p), len(q)))
                 first = (f"  first at instruction {i}: {p[i] if i < len(p) else '<end>'!r}"
                          f" -> {q[i] if i < len(q) else '<end>'!r}")
+            cls = excepted(exceptions, name, y)
+            if cls:
+                print(f"EXCEPT {cls} {name}  (DIFFER; base {objects_of(x)}; new {objects_of(y)}){first}; not counted")
+                excepts += 1
+                continue
             print(f"{tag} {name}  (base {objects_of(x)}; new {objects_of(y)}){first}")
             bad += 1
             continue
@@ -530,7 +728,11 @@ def by_function(a) -> int:
     print(f"codegen_same --by-function: {counted['code']} code, {counted['data']} data, {counted['bss']} bss symbols "
           f"compared ({bn} / {nn} function definitions read), {bad} differ"
           + (f"; {copies} with another number of identical copies" if copies else "")
-          + (f"; {injects} inject registrations changed (--inject-ok)" if injects else ""))
+          + (f"; {injects} inject registrations changed (--inject-ok)" if injects else "")
+          + (f"; {excepts} excepted (--exceptions)" if excepts else ""))
+    for sym, x in sorted(exceptions.items()):
+        if not x["used"]:
+            print(f"codegen_same: unused exception {sym} ({x['class']}): it did not differ; prune the row by hand")
     if bn == 0 or nn == 0:
         print("codegen_same: nothing compared (no function in one of the builds)")
         return 2
@@ -553,7 +755,12 @@ def main() -> int:
                     help="with --by-function: list a changed *_Inject() / bof3::InjectAll as INJECT, not a difference")
     ap.add_argument("--anonymous-locals", action="store_true",
                     help="with --by-function: a file-local symbol is known by its body, not its name")
+    ap.add_argument("--exceptions", type=Path, metavar="FILE",
+                    help="with --by-function: analysis/tu_gate_exceptions.tsv; a listed code symbol of a known "
+                         "class prints as EXCEPT and is not counted")
     a = ap.parse_args()
+    if a.exceptions and not a.by_function:
+        ap.error("--exceptions belongs to --by-function")
     if a.by_function:
         if a.allow_new or a.allow_gone or a.code_only:
             ap.error("--allow-new, --allow-gone and --code-only belong to the object mode")
@@ -565,6 +772,7 @@ def main() -> int:
             print(f"codegen_same: {d} has no CMakeFiles: not a build directory")
             return 2
     base, new = objects(a.base), objects(a.new)
+    broots, nroots = source_roots(a.base), source_roots(a.new)
 
     def wanted(k: str) -> bool:
         return not a.only or any(fnmatch.fnmatch(k, g) for g in a.only)
@@ -591,7 +799,7 @@ def main() -> int:
             continue
         if a.code_only:
             continue
-        x, y = data_dump(objdump, base[k]), data_dump(objdump, new[k])
+        x, y = data_dump(objdump, base[k], broots), data_dump(objdump, new[k], nroots)
         if x != y:
             i = next((j for j, (p, q) in enumerate(zip(x, y)) if p != q), min(len(x), len(y)))
             print(f"DATA   {k}  first in {first_section(y if i < len(y) else x, i)}")
