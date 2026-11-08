@@ -38,7 +38,8 @@ exactly these tab-separated columns:
   or `static` item, a using-declaration, an alias, a #define; a namespace's
   global of that name may stay) and new_name is defined there, both by
   tools/cpp_items.py's names of the file's items (a prototype is not a
-  definition). A new_name spelled `ns::name` is a using-declaration dropped
+  definition; a struct a B0 seam promotion moved to the source's own
+  <stem>_callees.h is looked for there too). A new_name spelled `ns::name` is a using-declaration dropped
   and its uses named in full: only the old name is looked for. Where
   source_file has been moved away, new_name must be defined in one of the
   files the map moved its items into (the old name is not looked for: a
@@ -189,7 +190,10 @@ def check(path: Path) -> int:
                 if r["old_name"] in defined_names(src, local_only=True):
                     bad.append(f"{r['old_name']} is still defined in {src}")
                 # `ns::name`: a using-declaration dropped and its uses named in full; defined elsewhere
-                if "::" not in r["new_name"] and r["new_name"] not in defined_names(src):
+                # a seam's struct promoted in B0 lives in the source's own <stem>_callees.h
+                seam = src[:-len(".cpp")] + "_callees.h" if src.endswith(".cpp") else ""
+                if "::" not in r["new_name"] and r["new_name"] not in defined_names(src) and not (
+                        seam and (ROOT / seam).is_file() and r["new_name"] in defined_names(seam)):
                     bad.append(f"{r['new_name']} is not defined in {src}")
             else:
                 homes = sorted(p for p in moves.get(src, ()) if p and (ROOT / p).is_file())
