@@ -71,7 +71,7 @@ void AddLong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(stati
 // read (the fuzz swaps the cells for recorders); a Fatal past them (the
 // original jumps through whatever follows). The handler's eax passes through
 // the jmp; EnemyRunAll does not read it.
-U Dispatch(const char* who, U table, unsigned entries, unsigned at) {
+U DispatchBossSa(const char* who, U table, unsigned entries, unsigned at) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
@@ -171,7 +171,7 @@ void SetHooks(U end, U exit, U event) {
 // ============================================================================
 
 // original 0x437A10: BossKind_Table[6]: jmp [BossGary_Steps + 4 * +1] (12).
-extern "C" U __cdecl BossGary_Dispatch(void) { return Dispatch("BossGary_Dispatch", AddressOf(BossGary_Steps), 12, 1); }
+extern "C" U __cdecl BossGary_Dispatch(void) { return DispatchBossSa("BossGary_Dispatch", AddressOf(BossGary_Steps), 12, 1); }
 
 // original 0x437A30: BossGary_Steps 0 - +0xFC BossGary_Anims, +0xF4
 // BossGary_Hook, +0xF8 BossGary_Cues, +1 = 2, Sprite_ScriptTick.
@@ -181,10 +181,10 @@ extern "C" unsigned char __cdecl BossGary_Enter(void) {
 }
 
 // original 0x437A70: BossGary_Steps 6 - jmp [BossGary_ActSubs + 4 * +2] (6).
-extern "C" U __cdecl BossGary_ActDispatch(void) { return Dispatch("BossGary_ActDispatch", AddressOf(BossGary_ActSubs), 6, 2); }
+extern "C" U __cdecl BossGary_ActDispatch(void) { return DispatchBossSa("BossGary_ActDispatch", AddressOf(BossGary_ActSubs), 6, 2); }
 
 // original 0x437A90: BossGary_Steps 11 - jmp [BossGary_EndSteps + 4 * +2] (3).
-extern "C" U __cdecl BossGary_EndDispatch(void) { return Dispatch("BossGary_EndDispatch", AddressOf(BossGary_EndSteps), 3, 2); }
+extern "C" U __cdecl BossGary_EndDispatch(void) { return DispatchBossSa("BossGary_EndDispatch", AddressOf(BossGary_EndSteps), 3, 2); }
 
 // original 0x437AB0: BossGary_EndSteps 0 - BattleEnemy_SetAnimation(4),
 // MoveCmd_TestFB(0x63, 0x14) (its answer not read), Sprite_Current (read
@@ -218,7 +218,7 @@ extern "C" U __cdecl BossGary_Hook(unsigned word) { return HookDispatch("BossGar
 // ============================================================================
 
 // original 0x437B70: BossKind_Table[7]: jmp [BossMogu_Steps + 4 * +1] (12).
-extern "C" U __cdecl BossMogu_Dispatch(void) { return Dispatch("BossMogu_Dispatch", AddressOf(BossMogu_Steps), 12, 1); }
+extern "C" U __cdecl BossMogu_Dispatch(void) { return DispatchBossSa("BossMogu_Dispatch", AddressOf(BossMogu_Steps), 12, 1); }
 
 // original 0x437B90: BossMogu_Steps 0 - +0xFC BossMogu_Anims, +0xF4
 // BossMogu_Hook, +0xF8 BossMogu_Cues, +1 = 2, Sprite_ScriptTick.
@@ -228,10 +228,10 @@ extern "C" unsigned char __cdecl BossMogu_Enter(void) {
 }
 
 // original 0x437BD0: BossMogu_Steps 6 - jmp [BossMogu_ActSubs + 4 * +2] (6).
-extern "C" U __cdecl BossMogu_ActDispatch(void) { return Dispatch("BossMogu_ActDispatch", AddressOf(BossMogu_ActSubs), 6, 2); }
+extern "C" U __cdecl BossMogu_ActDispatch(void) { return DispatchBossSa("BossMogu_ActDispatch", AddressOf(BossMogu_ActSubs), 6, 2); }
 
 // original 0x437BF0: BossMogu_Steps 11 - jmp [BossMogu_EndSteps + 4 * +2] (3).
-extern "C" U __cdecl BossMogu_EndDispatch(void) { return Dispatch("BossMogu_EndDispatch", AddressOf(BossMogu_EndSteps), 3, 2); }
+extern "C" U __cdecl BossMogu_EndDispatch(void) { return DispatchBossSa("BossMogu_EndDispatch", AddressOf(BossMogu_EndSteps), 3, 2); }
 
 // original 0x437C10: BossMogu_EndSteps 0 - BattleEnemy_SetAnimation(4), the
 // count 0x904B7E = 0x3C, Sprite_Current (read after the call) +2 up by one.
@@ -349,7 +349,7 @@ extern "C" void __cdecl Boss01_Exit(void) {
 // ============================================================================
 
 // original 0x437EE0: BossKind_Table[1]: jmp [BossNue_Steps + 4 * +1] (12).
-extern "C" U __cdecl BossNue_Dispatch(void) { return Dispatch("BossNue_Dispatch", AddressOf(BossNue_Steps), 12, 1); }
+extern "C" U __cdecl BossNue_Dispatch(void) { return DispatchBossSa("BossNue_Dispatch", AddressOf(BossNue_Steps), 12, 1); }
 
 // original 0x437F00: BossNue_Steps 0 - +0xFC BossNue_Anims, +0xF4
 // BossNue_Hook, +0xF8 BossNue_Cues, +1 = 2, Sprite_ScriptTick.
@@ -359,7 +359,7 @@ extern "C" unsigned char __cdecl BossNue_Enter(void) {
 }
 
 // original 0x437F40: BossNue_Steps 9 - jmp [BossNue_EndSteps + 4 * +2] (2).
-extern "C" U __cdecl BossNue_EndDispatch(void) { return Dispatch("BossNue_EndDispatch", AddressOf(BossNue_EndSteps), 2, 2); }
+extern "C" U __cdecl BossNue_EndDispatch(void) { return DispatchBossSa("BossNue_EndDispatch", AddressOf(BossNue_EndSteps), 2, 2); }
 
 // original 0x437F60: BossNue_EndSteps 0 - Sprite_SetAnimation(6),
 // Sprite_Current (read after the call) +2 up by one.
@@ -407,7 +407,7 @@ extern "C" void __cdecl BossNue_HookHit(unsigned) {
 // ============================================================================
 
 // original 0x438070: BossKind_Table[2]: jmp [BossNue2_Steps + 4 * +1] (12).
-extern "C" U __cdecl BossNue2_Dispatch(void) { return Dispatch("BossNue2_Dispatch", AddressOf(BossNue2_Steps), 12, 1); }
+extern "C" U __cdecl BossNue2_Dispatch(void) { return DispatchBossSa("BossNue2_Dispatch", AddressOf(BossNue2_Steps), 12, 1); }
 
 // original 0x438090: BossNue2_Steps 0 - +0xFC BossNue_Anims, +0xF4
 // BossNue2_Hook, +0xF8 BossNue_Cues (kind 1's two tables), +1 = 2,
@@ -418,7 +418,7 @@ extern "C" unsigned char __cdecl BossNue2_Enter(void) {
 }
 
 // original 0x4380D0: BossNue2_Steps 6 - jmp [BossNue2_ActSubs + 4 * +2] (6).
-extern "C" U __cdecl BossNue2_ActDispatch(void) { return Dispatch("BossNue2_ActDispatch", AddressOf(BossNue2_ActSubs), 6, 2); }
+extern "C" U __cdecl BossNue2_ActDispatch(void) { return DispatchBossSa("BossNue2_ActDispatch", AddressOf(BossNue2_ActSubs), 6, 2); }
 
 // original 0x4380F0: kind 2's +0xF4 hook - jmp [BossNue2_Hooks + 4 * (word &
 // 0xFF)] (3, all BareRet).
@@ -430,7 +430,7 @@ extern "C" U __cdecl BossNue2_Hook(unsigned word) { return HookDispatch("BossNue
 
 // original 0x438100: BossKind_Table[46]: jmp [BossSample1_Steps + 4 * +1] (12).
 extern "C" U __cdecl BossSample1_Dispatch(void) {
-    return Dispatch("BossSample1_Dispatch", AddressOf(BossSample1_Steps), 12, 1);
+    return DispatchBossSa("BossSample1_Dispatch", AddressOf(BossSample1_Steps), 12, 1);
 }
 
 // original 0x438120: BossSample1_Steps 0 - +0xFC BossNue_Anims, +0xF4
@@ -495,7 +495,7 @@ extern "C" void __cdecl Boss39_Setup(void) { SetHooks(::bof3::Code(at::kEndPickW
 
 // original 0x43D3D0: BossKind_Table[39]: jmp [BossWeretigr_Steps + 4 * +1] (12).
 extern "C" U __cdecl BossWeretigr_Dispatch(void) {
-    return Dispatch("BossWeretigr_Dispatch", AddressOf(BossWeretigr_Steps), 12, 1);
+    return DispatchBossSa("BossWeretigr_Dispatch", AddressOf(BossWeretigr_Steps), 12, 1);
 }
 
 // original 0x43D3F0: BossWeretigr_Steps 0 - +0xFC BossWeretigr_Anims, +0xF4
@@ -508,7 +508,7 @@ extern "C" unsigned char __cdecl BossWeretigr_Enter(void) {
 // original 0x43D430: BossWeretigr_Steps 4 - jmp [BossWeretigr_State4Steps + 4
 // * +2] (5).
 extern "C" U __cdecl BossWeretigr_State4Dispatch(void) {
-    return Dispatch("BossWeretigr_State4Dispatch", AddressOf(BossWeretigr_State4Steps), 5, 2);
+    return DispatchBossSa("BossWeretigr_State4Dispatch", AddressOf(BossWeretigr_State4Steps), 5, 2);
 }
 
 // original 0x43D450: BossWeretigr_State4Steps 0 - a slot n = BattleTask_Create(3,
