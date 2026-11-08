@@ -48,7 +48,7 @@ namespace {
 
 namespace at = battle_e5::at;
 using U = std::uint32_t;
-using S32 = std::int32_t;
+using S32BattleE5 = std::int32_t;
 using move_script::At;
 using move_script::Long;
 using move_script::SetLong;
@@ -59,9 +59,9 @@ unsigned char& B(U address) { return At(address)[0]; }
 std::uint16_t W(U address) { return Word(At(address)); }
 void SetW(U address, unsigned v) { SetWord(At(address), v); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
-S32 S16(std::uint16_t v) { return static_cast<std::int16_t>(v); }
+S32BattleE5 S16BattleE5(std::uint16_t v) { return static_cast<std::int16_t>(v); }
 unsigned char* Ptr(U cell) { return At(L(cell)); }
-unsigned char* Party(unsigned member) { return At(::bof3::Img(ObjTrio_addr) + member * at::kPartyStride); }
+unsigned char* PartyBattleE5(unsigned member) { return At(::bof3::Img(ObjTrio_addr) + member * at::kPartyStride); }
 unsigned char* EnemyObj(unsigned n) { return At(::bof3::Img(Battle_Enemies_addr) + n * at::kEnemyStride); }
 
 // The callees nobody owns yet, by address (battle_e5_callees.h).
@@ -77,7 +77,7 @@ using U3 = U (__cdecl*)(U, U, U);
 // (a * 1000) / 10000 as the original computes it: the product and the
 // thousandfold in 32 bits (wrapping), then a signed division truncated
 // toward 0 (imul 0x68DB8BAD, sar 12, + the sign bit).
-S32 Tenth(U a) { return static_cast<S32>(a * 1000u) / 10000; }
+S32BattleE5 Tenth(U a) { return static_cast<S32BattleE5>(a * 1000u) / 10000; }
 
 // A scaled word capped: stored when the result (as unsigned) is at most
 // `cap`, else `cap` (cmp edx, cap; ja).
@@ -132,7 +132,7 @@ extern "C" unsigned char __cdecl EnemyAI_CondElement(unsigned mask) {
         return (W(::bof3::Img(at::kAbilityRows.v) + ability * 24) & mask & 0xFFFF) != 0;
     }
     if (kind != 1 || actor > 2 || (mask & 0x100) != 0) return 0;
-    const unsigned weapon = rv::As<records::PartyMember>(Party(actor))->weapon;
+    const unsigned weapon = rv::As<records::PartyMember>(PartyBattleE5(actor))->weapon;
     return (B(::bof3::Img(at::kWeaponElement.v) + weapon * 28) & mask & 0xFF) != 0;
 }
 
@@ -268,7 +268,7 @@ extern "C" void __cdecl EnemyAI_DedupMessages(void) {
         kept[k++] = L(entry);
     }
     BattleE5_EnemyMessageCount = static_cast<unsigned char>(k);
-    for (unsigned i = 0; i < k; ++i) SetLong(At(::bof3::Img(at::kEnemyMessages.v) + 4 * i), static_cast<S32>(kept[i]));
+    for (unsigned i = 0; i < k; ++i) SetLong(At(::bof3::Img(at::kEnemyMessages.v) + 4 * i), static_cast<S32BattleE5>(kept[i]));
 }
 
 // ===========================================================================
@@ -278,7 +278,7 @@ extern "C" void __cdecl EnemyAI_DedupMessages(void) {
 namespace {
 
 U Key(const unsigned char* p) { return Low32(p); }
-unsigned char* Result() { return Ptr(::bof3::Img(at::kResult.v)); }
+unsigned char* ResultBattleE5() { return Ptr(::bof3::Img(at::kResult.v)); }
 
 // The drains' shared body (0x44C3D0 HP: the result's word +4, the party's
 // +0x98 / +0xA0, the enemy's +0xA4 / +0xB0, flag 4, Battle_SetDamagePopup;
@@ -304,11 +304,11 @@ struct Drain {
 void DrainTarget(const Drain& d) {
     const unsigned t = B(::bof3::Img(at::kTarget.v));
     if (t <= 2) {
-        unsigned char* const p = Party(t);
-        SetWord(Result() + d.at, (L(Key(p) + 0x130) & 0x10000) ? 0u : Word(p + d.party_stat) / 5u);
+        unsigned char* const p = PartyBattleE5(t);
+        SetWord(ResultBattleE5() + d.at, (L(Key(p) + 0x130) & 0x10000) ? 0u : Word(p + d.party_stat) / 5u);
     } else {
         unsigned char* const e = EnemyObj(t - 3);
-        SetWord(Result() + d.at, (L(Key(e) + 0x110) & 0x10000) ? 0u : Word(e + d.enemy_stat) / 5u);
+        SetWord(ResultBattleE5() + d.at, (L(Key(e) + 0x110) & 0x10000) ? 0u : Word(e + d.enemy_stat) / 5u);
     }
 }
 
@@ -317,13 +317,13 @@ void DrainActor(const Drain& d) {
     unsigned char* stat;
     U max_at;
     if (a <= 2) {
-        stat = Party(a) + d.party_stat;
-        max_at = Key(Party(a)) + d.party_max;
+        stat = PartyBattleE5(a) + d.party_stat;
+        max_at = Key(PartyBattleE5(a)) + d.party_max;
     } else {
         stat = EnemyObj(a - 3) + d.enemy_stat;
         max_at = Key(EnemyObj(a - 3)) + d.enemy_max;
     }
-    if (static_cast<S32>(Word(stat)) + S16(Word(Result() + d.at)) > static_cast<S32>(W(max_at)))
+    if (static_cast<S32BattleE5>(Word(stat)) + S16BattleE5(Word(ResultBattleE5() + d.at)) > static_cast<S32BattleE5>(W(max_at)))
         Ptr(::bof3::Img(at::kActingSprite2.v))[8] = static_cast<unsigned char>(Ptr(::bof3::Img(at::kActingSprite2.v))[8] | d.flag);
     const U result = BattleDamage_Result;
     const U change = BH_AT(U3, at::kStatAdd.v)(Key(stat), (result & 0xFFFF0000u) | W(max_at), Word(At(result) + d.at));
@@ -343,7 +343,7 @@ constexpr Drain kDrainAp = {6, 0x9A, 0xA2, 0xA6, 0xB2, 8, 2, true};
 // by it (Drain above).
 extern "C" void __cdecl Effect_DrainHp(void) {
     if (BH_AT(U2, at::kResisted.v)(B(::bof3::Img(at::kActor.v)), B(::bof3::Img(at::kTarget.v))) & 0xFF) {
-        Result()[8] = 1;
+        ResultBattleE5()[8] = 1;
         return;
     }
     DrainTarget(kDrainHp);
@@ -356,12 +356,12 @@ extern "C" void __cdecl Effect_DrainHp(void) {
 // HP drain on AP, with the result's +8 = 2 as well and the pop-up 0x453EB0.
 extern "C" void __cdecl Effect_DrainAp(void) {
     if (BH_AT(U2, at::kResisted.v)(B(::bof3::Img(at::kActor.v)), B(::bof3::Img(at::kTarget.v))) & 0xFF) {
-        Result()[8] = 2;
+        ResultBattleE5()[8] = 2;
         return;
     }
     DrainTarget(kDrainAp);
     Ptr(::bof3::Img(at::kActingSprite2.v))[8] = kDrainAp.mark;
-    Result()[8] = kDrainAp.mark;
+    ResultBattleE5()[8] = kDrainAp.mark;
     DrainActor(kDrainAp);
 }
 
@@ -375,10 +375,10 @@ extern "C" void __cdecl Effect_QuarterAttack(void) {
         const unsigned actor = B(::bof3::Img(at::kActor.v));
         B(::bof3::Img(at::kFlags.v)) = static_cast<unsigned char>(B(::bof3::Img(at::kFlags.v)) | 0x80);
         const short delta = BH_CALL(Battle_CalcDamage)(actor, target, 0xFFFF);
-        rv::Store<unsigned>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(delta));
+        rv::Store<unsigned>(rv::As<records::ActionRecord>(ResultBattleE5())->hp_change, static_cast<std::uint16_t>(delta));
         return;
     }
-    Result()[8] = 1;
+    ResultBattleE5()[8] = 1;
     BH_CALL(Battle_SetDamagePopup)(0, B(::bof3::Img(at::kTarget.v)));
     BH_AT(Void0, at::kMissTail.v)();
 }
@@ -403,11 +403,11 @@ extern "C" void __cdecl BattleForm_ApplyStats(void) {
     const std::uint16_t ee0 = W(::bof3::Img(0x939EE0));
     const std::uint16_t ee4 = W(::bof3::Img(0x939EE4));
     for (unsigned m = 0; m < 3; ++m) {
-        unsigned char* const c = Party(m) + 0x9E;
+        unsigned char* const c = PartyBattleE5(m) + 0x9E;
         auto* const member_rec = rv::As<records::PartyMember>(c - 0x9E);
         if ((c[0x96] & 2) == 0) continue;
-        const S32 product = static_cast<S32>(static_cast<U>(c[0]) * static_cast<U>(S16(ee0)) + 5u);
-        const std::uint16_t hp = static_cast<std::uint16_t>(S16(ee0) - product / 10);
+        const S32BattleE5 product = static_cast<S32BattleE5>(static_cast<U>(c[0]) * static_cast<U>(S16BattleE5(ee0)) + 5u);
+        const std::uint16_t hp = static_cast<std::uint16_t>(S16BattleE5(ee0) - product / 10);
         rv::Store<unsigned>(member_rec->base_max_hp, hp);
         member_rec->max_hp = hp;
         rv::Store<unsigned>(member_rec->base_atk, member_rec->base_atk + W(::bof3::Img(0x939EE2)));
@@ -461,12 +461,12 @@ const unsigned char* Line(unsigned id) { return BH_CALL(Msg_SystemPtr)(id); }
 // The message window's last line (0x93C2C4 + ((0x93C2A1 - 1) & 15) * 8),
 // the count read after the Msg_SystemPtr call that made the text.
 void ShowLine(const unsigned char* text) {
-    SetLong(At(::bof3::Img(at::kMsgText.v) + ((BattleActorCopies_QueueWrite - 1u) & 0xF) * 8), static_cast<S32>(Key(text)));
+    SetLong(At(::bof3::Img(at::kMsgText.v) + ((BattleActorCopies_QueueWrite - 1u) & 0xF) * 8), static_cast<S32BattleE5>(Key(text)));
 }
 unsigned char* Member() { return reinterpret_cast<unsigned char*>(BattleE4_MenuActor.Native()); }
 void MarkMember() {
     auto* const member_rec = rv::As<records::PartyMember>(Member());
-    member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
+    member_rec->flags_134 = static_cast<S32BattleE5>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
 }
 U Pressed() { return Input_Pressed; }
 bool Cancel(U pressed) { return (Field_CancelButtons & pressed & 0xFFFF) != 0; }
@@ -476,7 +476,7 @@ void CloseList(U window) { B(window + 3) = 2; }
 
 // A list's slot: 4 bytes at `table` + 4 * (the cursor's two signed words,
 // summed: +0x12 and +0x10 of its window record).
-U SlotOf(U table, U window) { return table + 4u * static_cast<U>(S16(W(window + 0x12)) + S16(W(window + 0x10))); }
+U SlotOf(U table, U window) { return table + 4u * static_cast<U>(S16BattleE5(W(window + 0x12)) + S16BattleE5(W(window + 0x10))); }
 
 // A list's cursor move (the four copies at 0x450412, 0x450C64, 0x45105F,
 // 0x45137E): a = the window's +0x12, b = its +0x10, by the repeat keys -
@@ -486,33 +486,33 @@ U SlotOf(U table, U window) { return table + 4u * static_cast<U>(S16(W(window + 
 //   0x0008  a `a_max` -> b = 2; else a + 3, or `a_max` when a + b + 3 runs past it;
 // the first that holds, then 0x101 when a + b (signed) is not the old sum
 // (the old one as an unsigned 16-bit value, as the original compares them).
-void MoveCursor(U window, U keys, S32 sum_max, S32 a_max) {
+void MoveCursor(U window, U keys, S32BattleE5 sum_max, S32BattleE5 a_max) {
     const U wa = window + 0x12, wb = window + 0x10;
     std::uint16_t a = W(wa), b = W(wb);
     const U before = static_cast<std::uint16_t>(a + b);
     if (keys & 0x1000) {
-        if (S16(a) + S16(b) > 0) {
+        if (S16BattleE5(a) + S16BattleE5(b) > 0) {
             if (b == 0) SetW(wa, a = static_cast<std::uint16_t>(a - 1));
-            else if (S16(b) > 0) SetW(wb, b = static_cast<std::uint16_t>(b - 1));
+            else if (S16BattleE5(b) > 0) SetW(wb, b = static_cast<std::uint16_t>(b - 1));
         }
     } else if (keys & Sigma(4)) {
-        if (S16(a) >= 3) SetW(wa, a = static_cast<std::uint16_t>(a - 3));
+        if (S16BattleE5(a) >= 3) SetW(wa, a = static_cast<std::uint16_t>(a - 3));
         else if (a == 0) SetW(wb, b = 0);
         else SetW(wa, a = 0);
     } else if (keys & 0x4000) {
-        if (S16(a) + S16(b) < sum_max) {
+        if (S16BattleE5(a) + S16BattleE5(b) < sum_max) {
             if (b == 2) SetW(wa, a = static_cast<std::uint16_t>(a + 1));
-            else if (S16(b) < 2) SetW(wb, b = static_cast<std::uint16_t>(b + 1));
+            else if (S16BattleE5(b) < 2) SetW(wb, b = static_cast<std::uint16_t>(b + 1));
         }
     } else if (keys & Sigma(8)) {
-        if (S16(a) == a_max) {
+        if (S16BattleE5(a) == a_max) {
             SetW(wb, b = 2);
         } else {
-            a = S16(a) + S16(b) + 3 > a_max ? static_cast<std::uint16_t>(a_max) : static_cast<std::uint16_t>(a + 3);
+            a = S16BattleE5(a) + S16BattleE5(b) + 3 > a_max ? static_cast<std::uint16_t>(a_max) : static_cast<std::uint16_t>(a + 3);
             SetW(wa, a);
         }
     }
-    if (static_cast<U>(S16(a) + S16(b)) != before) Sound(0x101);
+    if (static_cast<U>(S16BattleE5(a) + S16BattleE5(b)) != before) Sound(0x101);
 }
 
 // A list's slot priced (0x450510, 0x450D60): 0 for an empty slot (+3 0xFF);
@@ -807,7 +807,7 @@ extern "C" void __cdecl DragonCmd_SlotsConfirm(void) {
     BH_AT(Void0, at::kDragonTask.v)();
     auto* const member_rec = rv::As<records::PartyMember>(Member());
     B(::bof3::Img(at::kWin18.v) + 3) = 2;
-    member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
+    member_rec->flags_134 = static_cast<S32BattleE5>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
     NextStep();
 }
 
@@ -961,7 +961,7 @@ extern "C" void __cdecl DragonCmd_GenesConfirm(void) {
     Sound(0x104);
     auto* const member_rec = rv::As<records::PartyMember>(Member());
     B(::bof3::Img(at::kWin21.v) + 3) = 2;
-    member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
+    member_rec->flags_134 = static_cast<S32BattleE5>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
     NextStep();
 }
 
@@ -1070,7 +1070,7 @@ extern "C" void __cdecl DragonCmd_Slots2Confirm(void) {
     Sound(0x104);
     auto* const member_rec = rv::As<records::PartyMember>(Member());
     B(::bof3::Img(at::kWin19.v) + 3) = 2;
-    member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
+    member_rec->flags_134 = static_cast<S32BattleE5>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
     NextStep();
 }
 
