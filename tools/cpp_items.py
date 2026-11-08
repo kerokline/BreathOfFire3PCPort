@@ -151,6 +151,26 @@ def lex(src: str) -> list[Tok]:
     return toks
 
 
+# Qualifiers whose `Q::name` never names a file-local of one of our .cpp files: the standard
+# library, the callees-constant alias, and the generated symbol namespaces.
+QUALIFIERS_NOT_OURS = {"std", "at", "bof3", "addr", "chrono", "filesystem"}
+
+
+def declares_constant(words: list[str], name: str | None) -> bool:
+    """A declaration (its token texts) whose object cannot change: `constexpr`, a reference, or
+    `const` on the declared object itself - `const int x`, `T* const p` - and not on what a pointer
+    points at: `const void* p` is a variable (state)."""
+    head = words[:words.index(name)] if name in words else words
+    if "constexpr" in head or "constinit" in head and "const" in head:
+        return True
+    if "&" in head or "&&" in head:
+        return True
+    stars = [k for k, w in enumerate(head) if w == "*"]
+    if stars:
+        return "const" in head[stars[-1] + 1:]
+    return "const" in head
+
+
 @dataclass
 class Item:
     kind: str                     # func, decl, namespace, linkage, pp, using, alias, typedef, type
@@ -169,14 +189,25 @@ class Item:
     is_static: bool = False
     is_const: bool = False        # a variable declared const / constexpr (a value, not state)
     is_var: bool = False
+    is_extern: bool = False       # declared `extern` (a declaration of a global, or a C-linkage one)
+    c_linkage: bool = False       # `extern "C"` on the item itself or a block around it
+    made: list[str] = field(default_factory=list)  # the functions it makes under other names (below)
+    macro: str = ""               # kind macro: the function-like macro this invocation expands
+    asm_name: str = ""            # a declaration's assembler name (BOF3_ASM_NAME(x) / __asm__("x"))
     children: list["Item"] = field(default_factory=list)
     text: str = ""
 
     @property
     def local(self) -> bool:
-        """File-local: inside an anonymous namespace, or `static` at namespace scope, or a type,
-        alias, typedef or using that a .cpp defines for itself."""
-        return "" in self.ns or self.is_static or self.kind in ("using", "alias", "typedef", "type")
+        """File-local: inside an anonymous namespace (unless declared `extern "C"`, which keeps its
+        external linkage there), or `static` at namespace scope, or a type, alias, typedef or using
+        that a .cpp defines for itself, or a namespace-scope `const` / `constexpr` variable not
+        declared `extern` (internal linkage in C++; tools/move_funcs.py also asks whether an included
+        header declares it extern, which gives it external linkage)."""
+        if self.c_linkage:
+            return self.is_static
+        return ("" in self.ns or self.is_static or self.kind in ("using", "alias", "typedef", "type")
+                or (self.is_var and self.is_const and not self.is_extern))
 
 
 def _line_start(src: str, off: int) -> int:
@@ -191,14 +222,120 @@ def _line_end(src: str, off: int) -> int:
 class FileItems:
     """Every top-level item of one file."""
 
-    def __init__(self, src: str):
+    def __init__(self, src: str, resolve=None):
+        """`resolve`, when given, maps an include spelling ("game/x.h") to that header's text or None:
+        it lets a switch `#define` know the functions an included header defines under it (below)."""
         self.src = src
         self.toks = lex(src)
         self.items: list[Item] = []
         self.pragma_stack: list[str] = []
         self.cond_stack: list[str] = []
+        self.fmacros: dict[str, tuple[list[str], str]] = {}   # function-like #defines seen so far
         self.pos = 0
         self._scope(self.items, (), False, top=True)
+        self._link_asm_names()
+        if resolve is not None:
+            self._link_switches(resolve)
+
+    # ---- functions made under another name -----------------------------------
+    # Three shapes in our tree make a function the scanner does not see by its symbol name:
+    #  - a function-like macro invoked at file scope (`MS16_SPARKLES(071, k071)`): an item of kind
+    #    `macro` whose names are the functions its expansion defines (the macro's body read from the
+    #    #define above it in the same file, its arguments substituted, `#` and `##` applied);
+    #  - a definition under an assembler name (`extern "C" int F_Eax(...) BOF3_ASM_NAME(F);` and
+    #    `int F_Eax(...) { ... }`): the declaration's asm_name is F, and the definition's `made` is [F];
+    #  - a switch `#define X` that an included header tests (`#ifdef X`) to define functions
+    #    (task_sched.cpp's BOF3_TASK_SWITCH_FUNCTIONS): the define's `made` lists them (with `resolve`).
+    def _link_asm_names(self) -> None:
+        decls = {it.names[0]: it.asm_name for it in self.leaves()
+                 if it.kind == "decl" and it.asm_name and it.names}
+        for it in self.leaves():
+            if it.kind == "func" and it.names and it.names[0] in decls:
+                it.made = [decls[it.names[0]]]
+
+    def _link_switches(self, resolve) -> None:
+        includes = [m.group(1) for it in self.leaves() if it.kind == "pp"
+                    for m in [re.match(r'#\s*include\s+"([^"]+)"', it.text.strip())] if m]
+        switches = [it for it in self.leaves() if it.kind == "pp" and it.names
+                    and re.fullmatch(r"#\s*define\s+\w+", re.sub(r"//.*|/\*.*?\*/", "", it.text).strip())]
+        if not switches:
+            return
+        seen: set[str] = set()
+        headers: list[FileItems] = []
+        todo = list(includes)
+        while todo:
+            inc = todo.pop(0)
+            if inc in seen:
+                continue
+            seen.add(inc)
+            text = resolve(inc)
+            if text is None:
+                continue
+            h = FileItems(text.replace("\r\n", "\n"))
+            headers.append(h)
+            todo += [m.group(1) for it in h.leaves() if it.kind == "pp"
+                     for m in [re.match(r'#\s*include\s+"([^"]+)"', it.text.strip())] if m]
+        for sw in switches:
+            name = sw.names[0]
+            test = re.compile(rf"^(ifdef\s+{name}\b|if\s+defined\s*\(?\s*{name}\b)")
+            for h in headers:
+                for it in h.functions():
+                    if any(test.match(c) for c in it.conds) and it.names[0] not in sw.made:
+                        sw.made.append(it.names[0])
+
+    def _expand(self, macro: str, args: list[str]) -> str:
+        params, body = self.fmacros[macro]
+        out: list[str] = []
+        btoks = [t for t in lex(" " + body) if t.kind != "comment"]
+        k = 0
+        while k < len(btoks):
+            t = btoks[k]
+            if t.text == "#" and k + 1 < len(btoks) and btoks[k + 1].text in params:
+                out.append('"' + args[params.index(btoks[k + 1].text)].replace('"', '\\"') + '"')
+                k += 2
+                continue
+            if t.kind == "id" and t.text in params:
+                i = params.index(t.text)
+                out.append(args[i] if i < len(args) else "")
+            else:
+                out.append(t.text)
+            k += 1
+        return re.sub(r"\s*##\s*", "", " ".join(out))
+
+    def _macro_call(self, out: list[Item], ns, linkage) -> bool:
+        """A file-scope invocation of a function-like macro this file defines: one item."""
+        toks = self.toks
+        i0 = self.pos
+        if not (toks[i0].kind == "id" and toks[i0].text in self.fmacros
+                and i0 + 1 < len(toks) and toks[i0 + 1].text == "("):
+            return False
+        close = self._match(i0 + 1, "(", ")")
+        args: list[str] = []
+        depth, cur = 0, []
+        for t in toks[i0 + 2:close]:
+            if t.kind == "comment":
+                continue
+            if t.text in "([{":
+                depth += 1
+            elif t.text in ")]}":
+                depth -= 1
+            if t.text == "," and depth == 0:
+                args.append(" ".join(cur))
+                cur = []
+                continue
+            cur.append(t.text)
+        args.append(" ".join(cur))
+        last = close + 1 if close + 1 < len(toks) and toks[close + 1].text == ";" else close
+        it = self._make("macro", i0, last, ns, linkage)
+        it.macro = toks[i0].text
+        expanded = FileItems(self._expand(it.macro, args))
+        it.names = [f.names[0] for f in expanded.functions()]
+        it.uses = (set().union(*(f.uses for f in expanded.leaves())) if expanded.leaves() else set())
+        it.uses = (it.uses | {it.macro} | {u for a in args for u in IDENT.findall(a)}) - set(it.names)
+        it.c_linkage = linkage
+        out.append(it)
+        self.pos = last + 1
+        return True
 
     # ---- the scanner -------------------------------------------------------
     def _leading(self, first_code: int) -> int:
@@ -253,6 +390,11 @@ class FileItems:
             if m:
                 it.names = [m.group(0)]
             it.uses = set(IDENT.findall(d[6:])) - set(it.names)
+            fm = re.match(r"define\s+(\w+)\(([^)]*)\)(.*)", re.sub(r"\\\r?\n", " ", d), re.S)
+            if fm:                                   # a function-like macro: its parameters and body
+                params = [p.strip() for p in fm.group(2).split(",") if p.strip()]
+                self.fmacros[fm.group(1)] = (params, fm.group(3))
+                it.uses -= set(params)
         if word in ("if", "ifdef", "ifndef"):
             self.cond_stack.append(d)
         elif word == "endif":
@@ -341,6 +483,8 @@ class FileItems:
             self.pos = close + 1
             out.append(holder)
             return
+        if self._macro_call(out, ns, linkage):
+            return
         # anything else runs to a ';' at depth 0, or is a function body
         i = i0
         depth = 0
@@ -413,22 +557,27 @@ class FileItems:
 
     def _uses(self, i0: int, i1: int) -> set[str]:
         out = set()
-        prev = None
+        prev = prev2 = None
         for t in self.toks[i0:i1 + 1]:
             if t.kind == "comment":
                 continue
             if t.kind == "pp":
                 out.update(IDENT.findall(t.text))
-                prev = None
+                prev = prev2 = None
                 continue
             if t.kind == "id" and t.text not in KEYWORDS and not (prev is not None and prev.text in (".", "->", "::")):
                 out.add(t.text)
+            elif (t.kind == "id" and prev is not None and prev.text == "::" and prev2 is not None
+                  and prev2.kind == "id" and prev2.text not in QUALIFIERS_NOT_OURS):
+                out.add(t.text)          # `sound::Helper`: a file-local of a named namespace, named in full
+            prev2 = prev
             prev = t
         return out
 
     def _fill_func(self, it: Item, i0: int, brace: int, close: int) -> None:
         ts = self._significant(i0, brace)
         it.is_static = any(t.text == "static" for t in ts[:3])
+        it.c_linkage = it.linkage or (len(ts) > 1 and ts[0].text == "extern" and ts[1].text == '"C"')
         depth = 0
         name = None
         for k, t in enumerate(ts):
@@ -524,8 +673,15 @@ class FileItems:
         it.names = names
         heads = [t.text for t in ts[:6]]
         it.is_static = "static" in heads
-        it.is_const = "constexpr" in heads or "const" in heads
+        it.is_const = declares_constant([t.text for t in ts], names[0] if names else None)
+        it.is_extern = "extern" in heads
+        it.c_linkage = linkage or (len(ts) > 1 and ts[0].text == "extern" and ts[1].text == '"C"')
         it.is_var = kind == "decl" and not self._is_prototype(ts)
+        for k in range(len(ts) - 2):
+            if ts[k].text in ("BOF3_ASM_NAME", "__asm__", "asm", "__asm") and ts[k + 1].text == "(":
+                arg = ts[k + 2]
+                it.asm_name = arg.text.strip('"') if arg.kind == "str" else arg.text
+                break
         it.uses = self._uses(i0, semi) - set(names)
         out.append(it)
 
