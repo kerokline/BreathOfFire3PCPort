@@ -43,3 +43,7 @@ bool ButtonText_Cue(const std::uint8_t* p, button_text::Icon& out);
 // self-test (BOF3X_SHADOW=button_text), the layer and the port's stand-ins
 // read, the switch ButtonText.
 void ButtonText_Arm();
+
+namespace text_draw {
+extern unsigned g_glyph_limit;   // defined in text_draw.cpp (source-layout B0: promoted for a moved reader)
+}  // namespace text_draw

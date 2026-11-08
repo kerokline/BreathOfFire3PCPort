@@ -22,7 +22,7 @@ namespace {
 // text_draw.h. Starts at the original's value, so a run with no overlay
 // never sees a different number.
 constexpr unsigned kOriginalGlyphLimit = 0xA00;
-unsigned g_glyph_limit = kOriginalGlyphLimit;
+}  namespace text_draw { unsigned g_glyph_limit = kOriginalGlyphLimit; }  namespace {
 unsigned g_glyph_count = 0;   // the loaded table's glyphs, as TextDraw_SetGlyphCount was last told
 constexpr int kCell = 12;
 constexpr int kRecordBytes = 0x20;
@@ -198,7 +198,7 @@ void SelfTest(void* clone) {
         if (r == 4) { out[0] = 0x20; return 1; }
         if (r < 8) {
             static const unsigned kSeeds[] = {0x000, 0x001, 0x0FF, 0x100, 0x992, 0x993, 0x9FF, 0xA00};
-            unsigned g = (next() & 1) ? kSeeds[next() % 8] : next() % (g_glyph_limit + 1);
+            unsigned g = (next() & 1) ? kSeeds[next() % 8] : next() % (text_draw::g_glyph_limit + 1);
             // A zero second byte is left in: the glyph is drawn and the loop's
             // look-ahead then ends the string, the same on both sides. (Forcing
             // it non-zero once turned the seed 0xA00 into 0xA01 - the trap.)
@@ -393,14 +393,14 @@ extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsi
                 index = static_cast<std::uint16_t>(first[0] - 0x26);
             }
             if (c & 0x80) ++text;
-            if (index > g_glyph_limit) GlyphTrap();
+            if (index > text_draw::g_glyph_limit) GlyphTrap();
             std::uint32_t pa, pb;
             if (TextPair_Of(index, &pa, &pb)) {
                 // DIV-0057: a pair code is its two glyphs, the second one the
                 // first's advance on. It counts as two characters, but draws
                 // whole even when one is left (the message box asks for 1).
                 const auto a = static_cast<std::uint16_t>(pa), b = static_cast<std::uint16_t>(pb);
-                if (a > g_glyph_limit || b > g_glyph_limit) GlyphTrap();
+                if (a > text_draw::g_glyph_limit || b > text_draw::g_glyph_limit) GlyphTrap();
                 std::memcpy(Gfx_PacketNext + 0x16, &a, sizeof a);
                 g_emit(static_cast<std::uint16_t>(Text_PenX), static_cast<std::uint16_t>(Text_PenY), kCell,
                        kCell - v, u, v, static_cast<int>(clut));
@@ -423,7 +423,7 @@ extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsi
 
 void TextDraw_SetGlyphCount(unsigned glyphs) {
     g_glyph_count = glyphs;
-    g_glyph_limit = glyphs > kOriginalGlyphLimit + 1 ? glyphs - 1 : kOriginalGlyphLimit;
+    text_draw::g_glyph_limit = glyphs > kOriginalGlyphLimit + 1 ? glyphs - 1 : kOriginalGlyphLimit;
 }
 
 unsigned TextDraw_GlyphCount() { return g_glyph_count; }
@@ -530,8 +530,8 @@ void ButtonTextSelfTest() {
     g_emit = &RecordEmit;
     // A layer's table holds DIV-0051's L1 / R1 at 0xA69 / 0xA6A; the shipped
     // one, loaded at a self-test, stops at 0x992 and the guard would trap.
-    const unsigned saved_limit = g_glyph_limit;
-    g_glyph_limit = 0xFFF;
+    const unsigned saved_limit = text_draw::g_glyph_limit;
+    text_draw::g_glyph_limit = 0xFFF;
     Game_AreaNumber = 30;
     g_bt.sigma = &TestSigma;
 
@@ -663,7 +663,7 @@ void ButtonTextSelfTest() {
     Game_AreaNumber = saved_area;
     std::memcpy(tail, saved_pool, sizeof saved_pool);
     g_emit = Text_EmitGlyph;
-    g_glyph_limit = saved_limit;
+    text_draw::g_glyph_limit = saved_limit;
     Gfx_PacketNext = saved_packet;
     Text_PenX = saved_pen[0];
     Text_PenY = saved_pen[1];
