@@ -1,6 +1,6 @@
 # Beta readiness - what stands between `main` and `v0.1.0-beta.1`
 
-**Status:** DRAFT (2026-11-07 evening; written at the owner's word after the first two full clears, to be picked up on 2026-11-08)
+**Status:** DRAFT (2026-11-07 evening; written at the owner's word after the first two full clears; 2026-11-08 morning: items 4..8 drafted on `docs/beta-readiness-1107` while the owner was away - the notes, the README line, the templates, the strike sheet [`owner-review-sweep-1108.md`](owner-review-sweep-1108.md), STATUS / HANDOFF - and three errors in this checklist corrected in place, each marked; the zip's `README.txt` now says beta when the tag does, `tools/make_release.py`)
 
 The owner finished the game and validated the clear save on 2026-11-07; ScrubOasis did the same on a separate
 build. The owner's judgment: the builds are stable enough to call the next release a beta. This document is the
@@ -57,10 +57,10 @@ What the clears do **not** establish, and the notes must keep saying:
   `CRASH n:` lines from `bof3x.log` and the install and language, not the `.dmp` (game data).
 - **Issue #109, the randomizer**: a feature request, not a release item.
 - **Open D-numbers a player can meet** ([`known-defects.md`](known-defects.md) status line): D328 the furigana
-  readings unproofread; D350 and D352 the Scena16 caption wait and the window reset's five fields (held for
-  timing); D343 the inn night's pause-and-resume against the PlayStation (open); D296 slide-ins seen in the
+  readings unproofread; D350 the Scena16 caption wait (held for timing, never seen); D296 slide-ins seen in the
   21:9 band and D295 the band's patch cells (the owner: leave for now); D297 the four CPU readers of the grab.
-  None is a crash; each is a known-issues line or nothing.
+  None is a crash; each is a known-issues line or nothing. (The first draft listed D352 and D343 here; their
+  headings say fixed, by DIV-0175 and DIV-0169 - corrected 2026-11-08.)
 - **Harness-only**: D396 (the fuzz under a preset), D276, D329 / D330 (tooling). Not release items.
 - **D407 fixed, D406 fixed, the owner's listen on D406 owed** (a quick-load during a battle voice): a
   known-issues line if not heard before the cut.
@@ -86,8 +86,10 @@ In order. Items 2 and 3 are the owner's; 4..8 an agent can do and the owner read
 3. **The upgrade path**: unzip the draft over a copy of a real alpha.5 folder (the owner's own, copied aside, or
    ScrubOasis's shape, a disc-built one is the stronger test). Expect: the launcher names the stale pieces and
    offers the rebuild; a disc-built image built by an older release is refused until rebuilt (DIV-0101's
-   strict mode, `BOF3X_EXEIMAGE_STRICT=0` the override); the saves and quicksaves are kept and load; the
-   Jukebox's names still show. A clean-folder install is already step 4 of the release routine.
+   strict mode, `BOF3X_EXEIMAGE_STRICT=0` the override); the game's own saves are kept and load; the quicksave
+   files are kept but the new build **refuses** them, naming the other build in the overlay and the log
+   (DIV-0145, [`quicksave.md`](quicksave.md) "A load checks everything"; the x64 round's stage C proof shows
+   the refusal) - a "load as a plain save" fallback is designed, not built; the Jukebox's names still show. A clean-folder install is already step 4 of the release routine.
 4. **The release notes**, `docs/releases/v0.1.0-beta.1.md`, in alpha.6's shape, rewritten rather than appended:
    - the first paragraph says *beta*, and in one sentence what the word means here: two full clears by hand,
      every scripted route hashing against its reference, the crashes found in play since alpha.5 fixed, the
@@ -102,15 +104,18 @@ In order. Items 2 and 3 are the owner's; 4..8 an agent can do and the owner read
    - "Known issues" is section 2 plus the carried lines (furigana does not build from the zip and is
      unproofread; the launcher smoothed at 125 % and 150 % display scaling; `.chd` / `.cso` and 2048-byte
      PlayStation `.iso` images unread; the first setup's minutes and ~1 GB);
-   - a line on saves: the game's own save files and the quicksaves carry forward through every beta, and a
-     quicksave refuses the other width's take (the x64 round's stage C measurement).
+   - a line on saves: the game's own save files carry forward through every beta; a quicksave belongs to the
+     build that made it, a newer build (or the other width) refuses it and says so, so make a game save before
+     upgrading (DIV-0145; the x64 round's stage C measurement). The first draft said the quicksaves carry
+     forward - they do not (corrected 2026-11-08).
    The workflow refuses to run without the file (`release.yml`, "Release notes exist").
 5. **The README's status line** (line 68 of [`../README.md`](../README.md), "There is an alpha build"): say
    beta, and point at the releases page; the two sentences after it ("the goal is to sunset it eventually")
    are the owner's to keep or drop.
 6. **A bug-report issue template** (`.github/ISSUE_TEMPLATE/bug-report.md`; the repo has a PR template only):
-   the version as the launcher shows it, the sources on the Sources page and the language, the preset, what was
-   done and what was seen, the `CRASH n:` block from `bof3x.log` if any, and in bold: **do not attach the
+   the release's name (the launcher shows no version; the zip's name, or `bof3x-launcher.exe`'s Properties >
+   Details > Product version, which `src/version.rc` stamps from the tag), the sources on the Sources page and
+   the language, the preset, what was done and what was seen, the `CRASH n:` block from `bof3x.log` if any, and in bold: **do not attach the
    `bof3x.crash-*.dmp` files** (they hold the game's data, [`crash-reporter.md`](crash-reporter.md) 3). In
    ASD-STE100, as the launcher's text is (CLAUDE.md). A second template for a feature request is optional.
 7. **The owner-review sweep** ([`owner-review.md`](owner-review.md), 96 KB): strike what the two clears cover
