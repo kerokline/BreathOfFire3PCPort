@@ -138,21 +138,21 @@ inline float X87Div(float a, float b) {
 }
 
 // D3d_Device, read afresh before every COM call as the original does.
-void** Device() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(AtFieldMisc(::bof3::Img(D3d_Device_addr))))); }
+void** DeviceFieldMisc() { return reinterpret_cast<void**>(static_cast<std::uintptr_t>(*reinterpret_cast<const volatile std::uint32_t*>(AtFieldMisc(::bof3::Img(D3d_Device_addr))))); }
 void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 using Com3 = long(__stdcall*)(void*, U, U);
 using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
-long SetTexture(U stage, U texture) {
-    void** device = Device();
+long SetTextureFieldMisc(U stage, U texture) {
+    void** device = DeviceFieldMisc();
     return reinterpret_cast<Com3>(Method(device, 0x98))(device, stage, texture);
 }
 // DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
-long DrawVertices(U type, U count) {
-    void** device = Device();
+long DrawVerticesFieldMisc(U type, U count) {
+    void** device = DeviceFieldMisc();
     return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, ::bof3::Img(D3d_Vertices_addr), count, 0);
 }
-unsigned char* Vertex(U i) { return AtFieldMisc(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
-U DrawMode() { return LongFieldMisc(AtFieldMisc(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF; }
+unsigned char* VertexFieldMisc(U i) { return AtFieldMisc(::bof3::Img(D3d_Vertices_addr) + i * 0x20); }
+U DrawModeFieldMisc() { return LongFieldMisc(AtFieldMisc(::bof3::Img(Gfx_DrawTpage_addr))) & 0xFFFF; }
 // sx, sy = the scales times the corner's float x, y; sz its z as it is (a mov);
 // rhw = 0.1 / z. Diffuse as given; specular, tu and tv are not written.
 void PutFlatCorner(unsigned char* out, const unsigned char* xyz, U diffuse) {
@@ -513,14 +513,14 @@ extern "C" long __cdecl Gfx_ClutAdjust(int columns, int rows, int red, int green
 // 0xC bytes from +8 (float x, y, z), one colour from +4..+6.
 extern "C" long __cdecl D3d_DrawPolyF4(const unsigned char* prim) {
     unsigned long diffuse;
-    g.prim_color(prim[4], prim[5], prim[6], prim[7], DrawMode(), &diffuse, nullptr);
-    for (U i = 0; i < 4; ++i) PutFlatCorner(Vertex(i), prim + 8 + i * 0xC, static_cast<U>(diffuse));
-    SetTexture(0, 0);
+    g.prim_color(prim[4], prim[5], prim[6], prim[7], DrawModeFieldMisc(), &diffuse, nullptr);
+    for (U i = 0; i < 4; ++i) PutFlatCorner(VertexFieldMisc(i), prim + 8 + i * 0xC, static_cast<U>(diffuse));
+    SetTextureFieldMisc(0, 0);
     g.ret_only(0);
     g.ret_only(0);
-    g.set_blend(prim[7], DrawMode());
+    g.set_blend(prim[7], DrawModeFieldMisc());
     g.set_shade(1);   // flat
-    return DrawVertices(5, 4);   // TRIANGLESTRIP
+    return DrawVerticesFieldMisc(5, 4);   // TRIANGLESTRIP
 }
 
 // original 0x5A1290, code 0x38 (Gpu_SetPolyG4): a Gouraud quad, four corners of
@@ -530,15 +530,15 @@ extern "C" long __cdecl D3d_DrawPolyG4(const unsigned char* prim) {
     unsigned long diffuse[4];
     for (U i = 0; i < 4; ++i) {
         const unsigned char* rgb = prim + 4 + i * 0x10;
-        g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], DrawMode(), &diffuse[i], nullptr);
+        g.prim_color(rgb[0], rgb[1], rgb[2], prim[7], DrawModeFieldMisc(), &diffuse[i], nullptr);
     }
-    for (U i = 0; i < 4; ++i) PutFlatCorner(Vertex(i), prim + 8 + i * 0x10, static_cast<U>(diffuse[i]));
-    SetTexture(0, 0);
+    for (U i = 0; i < 4; ++i) PutFlatCorner(VertexFieldMisc(i), prim + 8 + i * 0x10, static_cast<U>(diffuse[i]));
+    SetTextureFieldMisc(0, 0);
     g.ret_only(0);
     g.ret_only(0);
-    g.set_blend(prim[7], DrawMode());
+    g.set_blend(prim[7], DrawModeFieldMisc());
     g.set_shade(2);   // Gouraud
-    return DrawVertices(5, 4);
+    return DrawVerticesFieldMisc(5, 4);
 }
 
 // original 0x5A1A00, code 0x48 (Gpu_SetLineF3): a flat two-segment polyline,
@@ -546,14 +546,14 @@ extern "C" long __cdecl D3d_DrawPolyG4(const unsigned char* prim) {
 // the other lines' do.
 extern "C" long __cdecl D3d_DrawLineF3(const unsigned char* prim) {
     unsigned long diffuse;
-    g.prim_color(prim[4], prim[5], prim[6], prim[7], DrawMode(), &diffuse, nullptr);
-    for (U i = 0; i < 3; ++i) PutFlatCorner(Vertex(i), prim + 8 + i * 0xC, static_cast<U>(diffuse));
-    SetTexture(0, 0);
+    g.prim_color(prim[4], prim[5], prim[6], prim[7], DrawModeFieldMisc(), &diffuse, nullptr);
+    for (U i = 0; i < 3; ++i) PutFlatCorner(VertexFieldMisc(i), prim + 8 + i * 0xC, static_cast<U>(diffuse));
+    SetTextureFieldMisc(0, 0);
     g.ret_only(0);
     g.ret_only(1);
-    g.set_blend(prim[7], DrawMode());
+    g.set_blend(prim[7], DrawModeFieldMisc());
     g.set_shade(1);
-    return d3d_lines::g_wide ? d3d_lines::DrawWide(3) : DrawVertices(3, 3);   // LINESTRIP; DIV-0079 the quads
+    return d3d_lines::g_wide ? d3d_lines::DrawWide(3) : DrawVerticesFieldMisc(3, 3);   // LINESTRIP; DIV-0079 the quads
 }
 
 // --- the libgpu setters ------------------------------------------------------------
