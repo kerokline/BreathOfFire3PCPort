@@ -52,3 +52,7 @@ void Start(int x, int y, bool withheld);
 void Arm();
 
 }  // namespace world_map_legend
+
+namespace world_map_dial {
+extern unsigned char g_dial_semi;   // defined in world_map.cpp (named here for a moved reader: source-layout B0)
+}  // namespace world_map_dial
