@@ -81,7 +81,7 @@ unsigned char SlotByte(const unsigned char& argument) { return *reinterpret_cast
 // (Cond_AngleFB's low half), and their copies Light_AnglesCopy[0] / [2].
 constexpr std::uint32_t kYaw = 0x929EC8, kPitch = 0x929ECC, kYawCopy = 0x7E0680, kPitchCopy = 0x7E0684;
 short Signed16(std::uint32_t address) { return static_cast<short>(Word(At(address))); }
-void AddWord(std::uint32_t address, int delta) { SetWord(At(address), Word(At(address)) + static_cast<unsigned>(delta)); }
+void AddWordModeStates(std::uint32_t address, int delta) { SetWord(At(address), Word(At(address)) + static_cast<unsigned>(delta)); }
 
 // The field's load wait: File_LoadDone asked first, then a frame's sleep and
 // the question again until it answers non-zero.
@@ -150,20 +150,20 @@ extern "C" void __cdecl Look_PadControl(void) {
     }
     const unsigned buttons = (held >> 8) & 0xFF;
     if ((buttons & 0x40) != 0 && Camera_Angles[0] > static_cast<short>(0xFD56)) {
-        AddWord(::bof3::Img(kYaw), -0x16);
-        AddWord(::bof3::Img(kYawCopy), -0x16);
+        AddWordModeStates(::bof3::Img(kYaw), -0x16);
+        AddWordModeStates(::bof3::Img(kYawCopy), -0x16);
     }
     if ((buttons & 0x10) != 0 && Camera_Angles[0] < static_cast<short>(0xFE39)) {
-        AddWord(::bof3::Img(kYaw), 0x16);
-        AddWord(::bof3::Img(kYawCopy), 0x16);
+        AddWordModeStates(::bof3::Img(kYaw), 0x16);
+        AddWordModeStates(::bof3::Img(kYawCopy), 0x16);
     }
     if ((buttons & 0x20) != 0 && Signed16(::bof3::Img(kPitch)) < 0x355) {
-        AddWord(::bof3::Img(kPitch), 0x16);
-        AddWord(::bof3::Img(kPitchCopy), 0x16);
+        AddWordModeStates(::bof3::Img(kPitch), 0x16);
+        AddWordModeStates(::bof3::Img(kPitchCopy), 0x16);
     }
     if ((buttons & 0x80) != 0 && Signed16(::bof3::Img(kPitch)) > 0xAA) {
-        AddWord(::bof3::Img(kPitch), -0x16);
-        AddWord(::bof3::Img(kPitchCopy), -0x16);
+        AddWordModeStates(::bof3::Img(kPitch), -0x16);
+        AddWordModeStates(::bof3::Img(kPitchCopy), -0x16);
     }
 }
 
@@ -178,8 +178,8 @@ extern "C" void __cdecl Look_PadControl(void) {
 // it lies.
 extern "C" void __cdecl Look_Return(void) {
     if (Camera_Angles[0] > static_cast<short>(0xFD56)) {
-        AddWord(::bof3::Img(kYaw), -0x16);
-        AddWord(::bof3::Img(kYawCopy), -0x16);
+        AddWordModeStates(::bof3::Img(kYaw), -0x16);
+        AddWordModeStates(::bof3::Img(kYawCopy), -0x16);
     } else {
         Camera_Angles[0] = 0xFD56;
         Light_AnglesCopy[0] = 0xFD56;
@@ -192,7 +192,7 @@ extern "C" void __cdecl Look_Return(void) {
             Light_AnglesCopy[2] = 0x200;
             return;
         }
-        AddWord(::bof3::Img(kPitchCopy), -0x16);
+        AddWordModeStates(::bof3::Img(kPitchCopy), -0x16);
         SetWord(At(::bof3::Img(Cond_AngleFB_addr)), static_cast<unsigned>(pitch - 0x16));
         return;
     }
@@ -201,7 +201,7 @@ extern "C" void __cdecl Look_Return(void) {
         Light_AnglesCopy[2] = 0x200;
         return;
     }
-    AddWord(::bof3::Img(kPitchCopy), 0x16);
+    AddWordModeStates(::bof3::Img(kPitchCopy), 0x16);
     SetWord(At(::bof3::Img(Cond_AngleFB_addr)), static_cast<unsigned>(pitch + 0x16));
 }
 
