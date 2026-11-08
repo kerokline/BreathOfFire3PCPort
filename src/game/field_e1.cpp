@@ -63,22 +63,22 @@
 namespace {
 
 namespace at = field_e1::at;
-using move_script::At;
-using move_script::Long;
+// move_script::At: named in full below (source-layout B0, a clash on At)
+// move_script::Long: named in full below (source-layout B0, a clash on Long)
 using move_script::SetLong;
-using move_script::SetWord;
-using move_script::Word;
+// move_script::SetWord: named in full below (source-layout B0, a clash on SetWord)
+// move_script::Word: named in full below (source-layout B0, a clash on Word)
 
-unsigned char& B(std::uint32_t a) { return *At(a); }
-std::uint16_t W(std::uint32_t a) { return Word(At(a)); }
-void SetW(std::uint32_t a, unsigned v) { SetWord(At(a), v); }
-std::int32_t L(std::uint32_t a) { return Long(At(a)); }
-std::uint32_t Key(const void* p) { return Low32(p); }
+unsigned char& BFieldE1(std::uint32_t a) { return *move_script::At(a); }
+std::uint16_t W(std::uint32_t a) { return move_script::Word(move_script::At(a)); }
+void SetW(std::uint32_t a, unsigned v) { move_script::SetWord(move_script::At(a), v); }
+std::int32_t L(std::uint32_t a) { return move_script::Long(move_script::At(a)); }
+std::uint32_t KeyFieldE1(const void* p) { return Low32(p); }
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fs() { return Field_State; }
-unsigned char* Member(unsigned i) { return rv::Bytes(ObjTrio) + i * at::kObjStride; }
-unsigned char* Object(unsigned i) { return rv::Bytes(&Sprite_Objects[i]); }
+unsigned char* MemberFieldE1(unsigned i) { return rv::Bytes(ObjTrio) + i * at::kObjStride; }
+unsigned char* ObjectFieldE1(unsigned i) { return rv::Bytes(&Sprite_Objects[i]); }
 
 // The record views (game/record_views.h): in the leader states Sprite_Current
 // is an ObjTrio record, and Field_State always is.
@@ -107,8 +107,8 @@ void DrawQuad(int x, int y, unsigned height, unsigned which) {
 void Fe2(std::uint32_t address) { SH_WORD(Void0, address)(); }
 unsigned char Fe2Al(std::uint32_t address) { return SH_WORD(Byte0, address)(); }
 
-void Text(int x, int y, int colour, int count, std::uint32_t text) {
-    SH_CALL(Text_DrawAt)(x, y, colour, count, At(text));
+void TextFieldE1(int x, int y, int colour, int count, std::uint32_t text) {
+    SH_CALL(Text_DrawAt)(x, y, colour, count, move_script::At(text));
 }
 // A script-pool message: MessagePools + its u16 offset.
 std::uint32_t PoolText(std::uint32_t offset_cell) { return ::bof3::Img(at::kPools) + W(offset_cell); }
@@ -129,7 +129,7 @@ Handler CodeAt(std::uint32_t table, unsigned index, const char* who) {
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(entry));
 }
 
-bool ScriptFlag8() { return ((B(::bof3::Img(at::kFlags2Lo)) | B(::bof3::Img(at::kFlagsLo))) & 8) != 0; }
+bool ScriptFlag8() { return ((BFieldE1(::bof3::Img(at::kFlags2Lo)) | BFieldE1(::bof3::Img(at::kFlagsLo))) & 8) != 0; }
 
 }  // namespace
 
@@ -152,7 +152,7 @@ extern "C" void __cdecl FieldPanel_DrawKindIcon(int x, int y, unsigned kind) {
     unsigned char* const p = DrawSprite(2, 1, x, y);
     const auto k = static_cast<unsigned char>(kind);
     if (k == 0xFF) return;
-    SetWord(p + 0x16, ((static_cast<unsigned>(k >> 4) + 0x1EB) << 6) | (k & 0xFu));
+    move_script::SetWord(p + 0x16, ((static_cast<unsigned>(k >> 4) + 0x1EB) << 6) | (k & 0xFu));
     p[0x14] = static_cast<unsigned char>((k & 3u) << 6);
     p[0x15] = static_cast<unsigned char>((k >> 2) * 0x28u);
 }
@@ -171,23 +171,23 @@ extern "C" void __cdecl FieldPanel_DrawKindRow(unsigned kind, unsigned count, un
     DrawSprite(3, 1, 0x68, 0x42 - r * 20);
     DrawSprite(4, 1, 0x20 - r * 25, 0x70);
     DrawSprite(5, 1, 0xE0 + r * 25, 0x70);
-    unsigned char* const name = At(::bof3::Img(scenario_harness::at::kTextBuffer));
+    unsigned char* const name = move_script::At(::bof3::Img(scenario_harness::at::kTextBuffer));
     if (k == 0x16) {
-        std::memcpy(name, At(::bof3::Img(AreaW0b_ItemNameKey_addr)), 16);
+        std::memcpy(name, move_script::At(::bof3::Img(AreaW0b_ItemNameKey_addr)), 16);
     } else if (k == 0xFF) {
         std::memset(name, '?', 8);
         name[8] = 0;
     } else {
-        std::memcpy(name, At(::bof3::Img(at::kKindNames) + k * 22u), 16);
+        std::memcpy(name, move_script::At(::bof3::Img(at::kKindNames) + k * 22u), 16);
     }
-    Text(0x70, 0x45 - r * 20, 0, 0xF, Key(name));
+    TextFieldE1(0x70, 0x45 - r * 20, 0, 0xF, KeyFieldE1(name));
     if (k == 0xFF) return;
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(name), reinterpret_cast<const char*>(At(::bof3::Img(at::kCountFormat))),
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(name), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kCountFormat))),
                          static_cast<unsigned>(static_cast<unsigned char>(count)));
-    Text(0x27 - r * 25, 0x73, 0, 3, Key(name));
+    TextFieldE1(0x27 - r * 25, 0x73, 0, 3, KeyFieldE1(name));
     const unsigned points = KindPoints(kind, static_cast<unsigned char>(count)) & 0xFFFFu;
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(name), reinterpret_cast<const char*>(At(::bof3::Img(at::kCountFormat))), points);
-    Text(r * 25 + 0xE7, 0x73, 0, 3, Key(name));
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(name), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kCountFormat))), points);
+    TextFieldE1(r * 25 + 0xE7, 0x73, 0, 3, KeyFieldE1(name));
 }
 
 // original 0x52D320: the draw mode (3, 1); sprites 6 at (x, y) and 7 at
@@ -225,10 +225,10 @@ extern "C" void __cdecl FieldPanel_DrawTotal(int x, int y) {
         DrawSprite(0x48, 1, shifted + 0x1D, y + 0x21);
         if (r[3] != 0) DrawSprite(0x48, 1, shifted + 0x24, y + 0x21);
     }
-    unsigned char* const text = At(::bof3::Img(scenario_harness::at::kTextBuffer));
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(text), reinterpret_cast<const char*>(At(::bof3::Img(at::kTotalFormat))),
+    unsigned char* const text = move_script::At(::bof3::Img(scenario_harness::at::kTextBuffer));
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(text), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kTotalFormat))),
                          static_cast<unsigned>(total));
-    Text(x + 0x3D, y + 9, 0, 5, Key(text));
+    TextFieldE1(x + 0x3D, y + 9, 0, 5, KeyFieldE1(text));
 }
 
 // original 0x52D560 (PSX 0x801E1684): the draw mode (3, 1), sprite 0xC at (x, y); unless the
@@ -238,7 +238,7 @@ extern "C" void __cdecl FieldPanel_DrawMessage(int x, int y, unsigned id) {
     DrawSprite(0xC, 1, x, y);
     const auto message = static_cast<std::uint16_t>(id);
     if (message == 0xFFFF) return;
-    Text(x + 0xA, y + 8, 0, 0xFF, PoolText(::bof3::Img(at::kPools) + message * 2u));
+    TextFieldE1(x + 0xA, y + 8, 0, 0xFF, PoolText(::bof3::Img(at::kPools) + message * 2u));
 }
 
 // original 0x52D5C0 (PSX 0x801E1734): the draw mode (4, 2); a tile at the packet cursor - its
@@ -284,9 +284,9 @@ void Frame(int x, int y, unsigned across, int top_end, int right, unsigned side,
 extern "C" void __cdecl FieldPanel_DrawBox3(int x, int y) {
     SH_CALL(Menu_DrawBox)(x, y + 1, 0x64, 0x38, 0x80, static_cast<unsigned char>(Config_WindowColour));
     Frame(x, y, 8, 0x48, 0x60, 0x20, 0x38, 0xB);
-    Text(x + 0x28, y + 6, 0, 0xFF, PoolText(::bof3::Img(at::kPools) + 0x7A));
-    Text(x + 6, y + 0x19, 0, 0xFF, PoolText(::bof3::Img(at::kPools) + 0x7C));
-    Text(x + 6, y + 0x29, 0, 0xFF, PoolText(::bof3::Img(at::kPools) + 0x7E));
+    TextFieldE1(x + 0x28, y + 6, 0, 0xFF, PoolText(::bof3::Img(at::kPools) + 0x7A));
+    TextFieldE1(x + 6, y + 0x19, 0, 0xFF, PoolText(::bof3::Img(at::kPools) + 0x7C));
+    TextFieldE1(x + 6, y + 0x29, 0, 0xFF, PoolText(::bof3::Img(at::kPools) + 0x7E));
 }
 
 // original 0x52D750: Menu_DrawBox(x, y + 1, 0xB3, 0x42, 0x80, the style); the
@@ -295,8 +295,8 @@ extern "C" void __cdecl FieldPanel_DrawBox3(int x, int y) {
 extern "C" void __cdecl FieldPanel_DrawBox2(int x, int y) {
     SH_CALL(Menu_DrawBox)(x, y + 1, 0xB3, 0x42, 0x80, static_cast<unsigned char>(Config_WindowColour));
     Frame(x, y, 0xF, 0x98, 0xB0, 0x28, 0x40, 0x15);
-    Text(x + 0x32, y + 6, 0, 0xFF, PoolText(::bof3::Img(at::kPools) + 0x78));
-    Text(x + 6, y + 0x19, 0, 0xFF, PoolText(::bof3::Img(at::kPools) + 0x82));
+    TextFieldE1(x + 0x32, y + 6, 0, 0xFF, PoolText(::bof3::Img(at::kPools) + 0x78));
+    TextFieldE1(x + 6, y + 0x19, 0, 0xFF, PoolText(::bof3::Img(at::kPools) + 0x82));
 }
 
 // original 0x52D880: for each id 0x38..0x4D, the slots of the consumables'
@@ -306,7 +306,7 @@ extern "C" unsigned char __cdecl Inventory_Holds38To4DAt99(void) {
     int n = 0;
     for (unsigned id = 0x38; id < 0x4E; ++id)
         for (unsigned i = 0; i < 0x80; ++i)
-            if (B(::bof3::Img(at::kItemIds) + i) == id && B(::bof3::Img(at::kItemCounts) + i) == 0x63) ++n;
+            if (BFieldE1(::bof3::Img(at::kItemIds) + i) == id && BFieldE1(::bof3::Img(at::kItemCounts) + i) == 0x63) ++n;
     return n >= 0x16 ? 1 : 0;
 }
 
@@ -392,7 +392,7 @@ extern "C" void __cdecl Field_PassageTrigger(void) {
     std::memset(object, 0, sizeof object);
     const unsigned char* const fs = Fs();
     object[0x86] = fs[0x12A];
-    SetWord(object + 0x88, Word(fs + 0x12C));
+    move_script::SetWord(object + 0x88, move_script::Word(fs + 0x12C));
     if (object[0x86] != 0xFF) SH_AT(void (__cdecl*)(unsigned char*), at::kObjectTrigger.v)(object);
     rv::As<records::PartyMember>(Sc())->step = 2;
 }
@@ -485,7 +485,7 @@ extern "C" void __cdecl Field_ContentState(void) {
 // The field object Field_State +0x139 names (Sprite_Objects, the byte whole
 // and unchecked), read again at every use as the original reads it.
 namespace {
-unsigned char* ContentObject() { return Object(Fs()[0x139]); }
+unsigned char* ContentObject() { return ObjectFieldE1(Fs()[0x139]); }
 }  // namespace
 
 // original 0x52FBD0: content step 0 - the object's flag (+5, in the bank
@@ -500,7 +500,7 @@ unsigned char* ContentObject() { return Object(Fs()[0x139]); }
 // Inventory_Add as dwords whose upper bytes are the frame's (both read the low
 // byte only).
 extern "C" void __cdecl Field_ContentTake(void) {
-    if (SH_CALL(Flags_Test)(At(::bof3::Img(at::kObjectFlags)), ContentObject()[5])) {
+    if (SH_CALL(Flags_Test)(move_script::At(::bof3::Img(at::kObjectFlags)), ContentObject()[5])) {
         SH_CALL(Msg_OpenSystem)(1);
     } else {
         const unsigned char* const o = ContentObject();
@@ -509,14 +509,14 @@ extern "C" void __cdecl Field_ContentTake(void) {
         if (category == 0xFF) {
             SH_CALL(Field_GiveZenny)(item * 40u);
             const unsigned char flag = ContentObject()[5];
-            if (flag != 0xFF) SH_CALL(Flags_Set)(At(::bof3::Img(at::kObjectFlags)), flag);
+            if (flag != 0xFF) SH_CALL(Flags_Set)(move_script::At(::bof3::Img(at::kObjectFlags)), flag);
             FieldE1_ContentCount = static_cast<std::int32_t>(FieldE1_ContentCount) + 1;
         } else {
             const unsigned char* const name = SH_CALL(Item_NamePtr)(category, item);
-            std::memcpy(At(::bof3::Img(bof3::addr::Text_Records)), name, 16);
+            std::memcpy(move_script::At(::bof3::Img(bof3::addr::Text_Records)), name, 16);
             if (SH_CALL(Inventory_Add)(category, item, 1)) {
                 const unsigned char flag = ContentObject()[5];
-                if (flag != 0xFF) SH_CALL(Flags_Set)(At(::bof3::Img(at::kObjectFlags)), flag);
+                if (flag != 0xFF) SH_CALL(Flags_Set)(move_script::At(::bof3::Img(at::kObjectFlags)), flag);
                 SH_CALL(Sound_PlayEffect)(0x106);
                 SH_CALL(Msg_OpenSystem)(2);
                 FieldE1_ContentCount = static_cast<std::int32_t>(FieldE1_ContentCount) + 1;
@@ -583,7 +583,7 @@ extern "C" void __cdecl Field_AreaRunState(void) {
 // message 5; Field_Request 2; Zenny_Add(amount, 0).
 extern "C" void __cdecl Field_GiveZenny(unsigned amount) {
     SH_CALL(Sound_PlayEffect)(0x106);
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(bof3::addr::Text_Records))), reinterpret_cast<const char*>(At(::bof3::Img(at::kZennyFormat))),
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(move_script::At(::bof3::Img(bof3::addr::Text_Records))), reinterpret_cast<const char*>(move_script::At(::bof3::Img(at::kZennyFormat))),
                          amount);
     SH_CALL(Msg_OpenSystem)(5);
     Field_Request = 2;
@@ -595,7 +595,7 @@ extern "C" void __cdecl Field_GiveZenny(unsigned amount) {
 namespace {
 // The cell step of a direction (0x66971C, a whole byte unchecked): 1 reads as 2.
 int DirStep(unsigned direction, unsigned which) {
-    const auto v = static_cast<signed char>(B(::bof3::Img(at::kDirPairs) + direction * 2u + which));
+    const auto v = static_cast<signed char>(BFieldE1(::bof3::Img(at::kDirPairs) + direction * 2u + which));
     return v == 1 ? 2 : v;
 }
 std::uint16_t CellX() { return at::kCellX; }
@@ -773,9 +773,9 @@ extern "C" unsigned char __cdecl Field_GatewayExit(void) {
     if (Game_AreaNumber == 0xBD) {
         const std::uint32_t r = ::bof3::Img(at::kGateway189) + (Cond_ByteFF == 0 ? 3u : 0u);
         AreaEntry_PendingFlags = 4;
-        AreaW0b_Place = B(r);
-        at::kExitX = static_cast<std::int32_t>(static_cast<std::uint32_t>(B(r + 1)) << 16);
-        SetLong(At(::bof3::Img(AreaEntry_PendingZ_addr)), static_cast<std::int32_t>(static_cast<std::uint32_t>(B(r + 2)) << 16));
+        AreaW0b_Place = BFieldE1(r);
+        at::kExitX = static_cast<std::int32_t>(static_cast<std::uint32_t>(BFieldE1(r + 1)) << 16);
+        SetLong(move_script::At(::bof3::Img(AreaEntry_PendingZ_addr)), static_cast<std::int32_t>(static_cast<std::uint32_t>(BFieldE1(r + 2)) << 16));
         return 1;
     }
     if (SH_CALL(Field_CellHasEvent)(ObjTrio[0].x_whole, ObjTrio[0].z_whole)) return 0;
@@ -786,7 +786,7 @@ extern "C" unsigned char __cdecl Field_GatewayExit(void) {
         AreaW0b_Place = W(r + 2);
         AreaEntry_PendingFlags = 4;
         AreaEntry_PendingZ = static_cast<std::int32_t>(static_cast<std::uint32_t>(W(r + 6)) << 16);
-        SetLong(At(::bof3::Img(at::kExitX_addr)), static_cast<std::int32_t>(static_cast<std::uint32_t>(W(r + 4)) << 16));
+        SetLong(move_script::At(::bof3::Img(at::kExitX_addr)), static_cast<std::int32_t>(static_cast<std::uint32_t>(W(r + 4)) << 16));
         return 1;
     }
     return 0;
@@ -806,14 +806,14 @@ extern "C" unsigned char __cdecl Field_GatewayExit(void) {
 extern "C" void __cdecl Party_PlaceAtSlots(void) {
     const unsigned n = Field_MemberCount;
     for (unsigned i = 0; i < n; ++i) {
-        rv::Store<std::int32_t>(rv::As<records::PartyMember>(Member(i))->x, L(::bof3::Img(at::kSlotPositions) + 8 * i));
-        rv::As<records::PartyMember>(Member(i))->z = L(::bof3::Img(at::kSlotPositions) + 8 * i + 4);
+        rv::Store<std::int32_t>(rv::As<records::PartyMember>(MemberFieldE1(i))->x, L(::bof3::Img(at::kSlotPositions) + 8 * i));
+        rv::As<records::PartyMember>(MemberFieldE1(i))->z = L(::bof3::Img(at::kSlotPositions) + 8 * i + 4);
     }
     unsigned k = 0;
-    while (k < n && rv::As<records::PartyMember>(Member(k))->char_id != Cond_Flags[0xd2]) ++k;
+    while (k < n && rv::As<records::PartyMember>(MemberFieldE1(k))->char_id != Cond_Flags[0xd2]) ++k;
     if (EventBattle_Flags & 2) return;
     MoveScript_F3Divisor = 0x20;
-    const std::int32_t x = rv::As<records::PartyMember>(Member(k))->x, z = rv::As<records::PartyMember>(Member(k))->z;
+    const std::int32_t x = rv::As<records::PartyMember>(MemberFieldE1(k))->x, z = rv::As<records::PartyMember>(MemberFieldE1(k))->z;
     const std::int32_t dx = Abs32(static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2X) - static_cast<std::uint32_t>(x)));
     Field_Kind2X = x;
     const std::int32_t dz = Abs32(static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2Z) - static_cast<std::uint32_t>(z)));
@@ -835,8 +835,8 @@ extern "C" void __cdecl Party_ScriptTicks(void) {
     if (Field_MemberCount == 0) return;
     unsigned i = 0;
     do {
-        Field_State = Member(i);
-        Sprite_Current = Member(i);
+        Field_State = MemberFieldE1(i);
+        Sprite_Current = MemberFieldE1(i);
         SH_CALL(Sprite_ScriptTick)();
     } while (++i < Field_MemberCount);
 }
@@ -846,7 +846,7 @@ namespace {
 // `n` (n when none holds it).
 unsigned ListSlot(unsigned char id, unsigned n) {
     unsigned c = 0;
-    while (c < n && B(::bof3::Img(at::kSecondList) + c) != id) ++c;
+    while (c < n && BFieldE1(::bof3::Img(at::kSecondList) + c) != id) ++c;
     return c;
 }
 }  // namespace
@@ -864,12 +864,12 @@ extern "C" void __cdecl Party_PlacesByList(void) {
     unsigned char count = Field_MemberCount;
     const unsigned n = count;
     if (n > 0) {
-        for (unsigned i = 0; i < n; ++i) SetLong(At(::bof3::Img(at::kCellX_addr) + 4 * i), rv::As<records::PartyMember>(Member(i))->x);
-        for (unsigned j = 0; j < n; ++j) rv::As<records::PartyMember>(Member(j))->x = L(::bof3::Img(at::kCellX_addr) + 4 * ListSlot(rv::As<records::PartyMember>(Member(j))->char_id, n));
-        for (unsigned i = 0; i < n; ++i) SetLong(At(::bof3::Img(at::kCellX_addr) + 4 * i), rv::As<records::PartyMember>(Member(i))->z);
+        for (unsigned i = 0; i < n; ++i) SetLong(move_script::At(::bof3::Img(at::kCellX_addr) + 4 * i), rv::As<records::PartyMember>(MemberFieldE1(i))->x);
+        for (unsigned j = 0; j < n; ++j) rv::As<records::PartyMember>(MemberFieldE1(j))->x = L(::bof3::Img(at::kCellX_addr) + 4 * ListSlot(rv::As<records::PartyMember>(MemberFieldE1(j))->char_id, n));
+        for (unsigned i = 0; i < n; ++i) SetLong(move_script::At(::bof3::Img(at::kCellX_addr) + 4 * i), rv::As<records::PartyMember>(MemberFieldE1(i))->z);
         unsigned members = n;
         for (unsigned j = 0; j < members; ++j) {
-            records::PartyMember* const m = rv::As<records::PartyMember>(Member(j));
+            records::PartyMember* const m = rv::As<records::PartyMember>(MemberFieldE1(j));
             const std::int32_t z = L(::bof3::Img(at::kCellX_addr) + 4 * ListSlot(m->char_id, members));
             m->z = z;
             const long ground = SH_CALL(MapView_GroundAt)(m->x, z);
@@ -886,10 +886,10 @@ extern "C" void __cdecl Party_PlacesByList(void) {
     if (count == 0) return;
     unsigned i = 0;
     do {
-        records::PartyMember* const m = rv::As<records::PartyMember>(Member(i));
+        records::PartyMember* const m = rv::As<records::PartyMember>(MemberFieldE1(i));
         Field_State = rv::Bytes(m);
         Sprite_Current = rv::Bytes(m);
-        m->direction = B(::bof3::Img(at::kFormationAnims) + B(::bof3::Img(at::kFormation)));
+        m->direction = BFieldE1(::bof3::Img(at::kFormationAnims) + BFieldE1(::bof3::Img(at::kFormation)));
         rv::As<records::PartyMember>(Sc())->ot_slot = 6;
         if (rv::Bytes(m) != rv::Bytes(ObjTrio)) {
             Sc()[7] = 0;
@@ -924,7 +924,7 @@ extern "C" void __cdecl Field_LeaderPlaceOffset(long x, long z, unsigned directi
     }
     leader->direction = static_cast<unsigned char>(direction);
     for (unsigned c = 1; c < n; ++c) {
-        if (Member(c)[0x70] != 0) {
+        if (MemberFieldE1(c)[0x70] != 0) {
             leader->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(leader->x) + ox);
             leader->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(leader->z) + oz);
             return;
@@ -937,7 +937,7 @@ extern "C" void __cdecl Field_LeaderPlaceOffset(long x, long z, unsigned directi
 // original 0x5338B0 (PSX 0x801C1CD4): pending jump 1 - the member at 0x904EF2 released with
 // kind 2 when its facing +8 is 5 or 3, else kind 3.
 extern "C" void __cdecl Field_PendingJumpTurn(void) {
-    const unsigned char f = Member(EventLeader_PendingCount)[8];
+    const unsigned char f = MemberFieldE1(EventLeader_PendingCount)[8];
     SH_CALL(Field_PendingRelease)(f == 5 || f == 3 ? 2 : 3);
 }
 
@@ -973,7 +973,7 @@ extern "C" unsigned char __cdecl Field_PendingNext(void) {
     const unsigned char n = EventLeader_PendingCount;
     const unsigned char count = Field_MemberCount;
     if (n != 0) {
-        if (Member(n - 1u)[1] != 1) return 0;
+        if (MemberFieldE1(n - 1u)[1] != 1) return 0;
         if (n == 1) {
             Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFFF7);
             if (count == n) {
@@ -986,8 +986,8 @@ extern "C" unsigned char __cdecl Field_PendingNext(void) {
     }
     const auto next = static_cast<unsigned char>(n + 1);
     EventLeader_PendingCount = next;
-    Sprite_Current = Member(n);
-    Field_State = Member(n);
+    Sprite_Current = MemberFieldE1(n);
+    Field_State = MemberFieldE1(n);
     if (count != 1 && next == count) {
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFDE7);
         EventLeader_PendingFlag = 0;
@@ -1008,21 +1008,21 @@ extern "C" unsigned char __cdecl Field_PendingRelease(unsigned kind) {
     const unsigned char n = EventLeader_PendingCount;
     const std::uint32_t flags = Field_ScriptFlags;
     const auto bit = [](unsigned s) { return 1u << (s & 31); };
-    if (n != 0 && !(flags & bit(n)) && !(flags & bit(n - 1u)) && Member(n - 1u)[1] != 1) return 0;
+    if (n != 0 && !(flags & bit(n)) && !(flags & bit(n - 1u)) && MemberFieldE1(n - 1u)[1] != 1) return 0;
     const std::uint32_t below = flags & bit(static_cast<unsigned>(n) - 1u);
     if (below != 0 && n == 2 && ObjTrio[0].state != 1) return 0;
     if (n != 0) {
-        if (!(flags & bit(n)) && below == 0 && Member(n - 1u)[1] != 1) return 0;
+        if (!(flags & bit(n)) && below == 0 && MemberFieldE1(n - 1u)[1] != 1) return 0;
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & ~bit(n));
     }
     if (!(flags & bit(n))) {
-        records::PartyMember* const m = rv::As<records::PartyMember>(Member(n));
+        records::PartyMember* const m = rv::As<records::PartyMember>(MemberFieldE1(n));
         m->flags = static_cast<unsigned char>(m->flags & 0xBF);
         const std::uint32_t r = ::bof3::Img(at::kPendingStates) + (kind & 0xFFu) * 4;
-        m->state = B(r);
-        m->step = B(r + 1);
-        m->state3 = B(r + 2);
-        m->state4 = B(r + 3);
+        m->state = BFieldE1(r);
+        m->step = BFieldE1(r + 1);
+        m->state3 = BFieldE1(r + 2);
+        m->state4 = BFieldE1(r + 3);
         rv::Bytes(m)[0x138] = static_cast<unsigned char>(rv::Bytes(m)[0x138] & 0xFD);
     }
     const auto next = static_cast<unsigned char>(n + 1);
