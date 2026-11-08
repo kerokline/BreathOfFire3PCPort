@@ -864,7 +864,7 @@ def rows(M, B, units, files, psx=None):
                                     unit_lo=f'{lo:#x}', unit_hi=f'{hi:#x}', confidence=how,
                                     evidence=f'{ev}; link {linkage(M, u, i)}',
                                     impl=f.get('impl', ''), proposed_file=files[k][0],
-                                    psx_unit_agreement=(':'.join(psx[f['pc']]) if f['pc'] in psx else ''))
+                                    psx_unit_agreement=(':'.join(psx[f['pc']][:2]) if f['pc'] in psx else ''))
     return res
 
 
