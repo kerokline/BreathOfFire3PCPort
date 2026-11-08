@@ -6,3 +6,4 @@
 #pragma once
 
 void MenuLists_Inject();
+extern unsigned char g_title_centre;   // defined in menu_lists.cpp, armed by MenuLists_Inject (named here for a moved reader: source-layout B0)
