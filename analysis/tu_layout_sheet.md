@@ -4,15 +4,15 @@
 
 How to read a row: a **unit** is one object file of the 2001 link, as the table recovers it (`analysis/tu_layout.tsv` holds each function's row and evidence). **Does** is read from our function names: the three commonest name prefixes and their counts. **PSX** is the overlay of its PlayStation twins, where they have one. **Proposal** is to keep the unit in a file of its own (*stand alone*) or to put it in one file with the named neighbours (*join*); a unit is never split. **Sure** is how many of its functions are `joined` / `placed` / `guessed`.
 
-669 units in `0x401000..0x5AB7E0`, proposed as 556 files in 14 folders under `src/game/`: `area/` 169 units, `magic/` 140 units, `effect/` 134 units, `boss/` 60 units, `scenario/` 51 units, `field/` 33 units, `battle/` 29 units, `menu/` 15 units, `platform/` 13 units, `shop/` 8 units, `community/` 7 units, `core/` 5 units, `text/` 4 units, `minigame/` 1 units.
+669 units in `0x401000..0x5AB7E0`, proposed as 613 files in 14 folders under `src/game/`: `area/` 169 units, `magic/` 140 units, `effect/` 134 units, `boss/` 60 units, `scenario/` 51 units, `field/` 33 units, `battle/` 29 units, `menu/` 15 units, `platform/` 13 units, `shop/` 8 units, `community/` 7 units, `core/` 5 units, `text/` 4 units, `minigame/` 1 units.
 
 Folders: `area/` field scripts and hooks of the areas; `battle/` the battle engine; `boss/` boss scripts; `community/` the faerie village; `core/` game modes, title and transitions; `effect/` field effect kinds; `field/` the field: party, leader, events and movement; `magic/` spell and ability effects; `menu/` menus and windows; `minigame/` minigames; `platform/` the porting house's platform layer; `scenario/` scenario scenes; `shop/` shops and the inn; `text/` message boxes and text.
 
 **PSX check** (SL2's `analysis/tu_psx.tsv`, joined by the coordinator): a PlayStation unit of two or more functions whose twins this table puts in more than one unit - a cut the PlayStation does not support, worth a look before the moves. 77 of 669 units carry one; empty means none.
 
-## Rows that want a call (212)
+## Rows that want a call (153)
 
-A *join* proposal (a choice between one file and several), a PSX check, or both: 157 join rows and 77 rows with a PSX check.
+A *join* proposal (a choice between one file and several), a PSX check, or both: 98 join rows and 77 rows with a PSX check.
 
 | # | unit | .text range | funcs | sure j/p/g | does | PSX | file | proposal | reason | PSX check |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -66,65 +66,6 @@ A *join* proposal (a choice between one file and several), a PSX check, or both:
 | 178 | `tu_437820` | `0x437820..0x4378B0` | 1 | 0/0/1 | the battle engine: NewGame_* 1 | - | `battle/battle.cpp` | join with tu_437780, tu_4378b0 | a one-function unit, nothing separates it from its neighbour |  |
 | 179 | `tu_4378b0` | `0x4378B0..0x4378D0` | 1 | 0/0/1 | the battle engine: BattleMagicRow_* 1 | - | `battle/battle.cpp` | join with tu_437780, tu_437820 | a one-function unit, nothing separates it from its neighbour |  |
 | 181 | `tu_437930` | `0x437930..0x437A10` | 2 | 2/0/0 | the battle engine: Battle_* 1, Magic_* 1 | - | `battle/battle_2.cpp` | stand alone | its own file: no neighbour shares its names or folder rule | `BATTLE.EMI#15:u371` also in tu_437780, tu_494280 |
-| 184 | `tu_437cd0` | `0x437CD0..0x437EE0` | 4 | 0/0/4 | boss scripts: Boss01_* 4 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 185 | `tu_437ee0` | `0x437EE0..0x438190` | 15 | 13/0/2 | boss scripts: BossNue_* 8, BossNue2_* 4, BossSample1_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 186 | `tu_438190` | `0x438190..0x438290` | 6 | 0/0/6 | boss scripts: Boss02_* 3, Boss03_* 2, Boss39_* 1 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 187 | `tu_438290` | `0x438290..0x438430` | 7 | 0/0/7 | boss scripts: BossEngineer_* 7 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 188 | `tu_438430` | `0x438430..0x438B30` | 11 | 0/0/11 | boss scripts: Boss04_* 4, Boss05_* 4, Boss06_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 189 | `tu_438b30` | `0x438B30..0x438BA0` | 3 | 0/0/3 | boss scripts: BossWorker_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 190 | `tu_438ba0` | `0x438BA0..0x438C30` | 4 | 0/0/4 | boss scripts: BossOperator_* 4 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 191 | `tu_438c30` | `0x438C30..0x438E50` | 4 | 0/0/4 | boss scripts: Boss07_* 4 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 192 | `tu_438e50` | `0x438E50..0x4390F0` | 10 | 0/0/10 | boss scripts: BossTorast_* 10 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 193 | `tu_4390f0` | `0x4390F0..0x439160` | 3 | 0/0/3 | boss scripts: BossKassen_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 194 | `tu_439160` | `0x439160..0x4391D0` | 3 | 0/0/3 | boss scripts: BossGaltel_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 195 | `tu_4391d0` | `0x4391D0..0x439240` | 3 | 0/0/3 | boss scripts: BossDoksen_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 196 | `tu_439240` | `0x439240..0x4396B0` | 13 | 0/0/13 | boss scripts: Boss08_* 3, Boss09_* 3, Boss10_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 197 | `tu_4396b0` | `0x4396B0..0x439B10` | 13 | 8/0/5 | boss scripts: BossAmalgam_* 11, Boss12_* 2 | BOSS012.EMI#16 | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 198 | `tu_439b10` | `0x439B10..0x439C60` | 5 | 0/0/5 | boss scripts: BossBalio_* 5 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 199 | `tu_439c60` | `0x439C60..0x439E00` | 5 | 0/0/5 | boss scripts: BossSunder_* 5 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 200 | `tu_439e00` | `0x439E00..0x43B650` | 90 | 0/0/90 | boss scripts: BossNina_* 8, BossDodai_* 8, BossEmitai_* 5 | BOSS018.EMI#16 | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 201 | `tu_43b650` | `0x43B650..0x43B710` | 3 | 0/0/3 | boss scripts: BossBully_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 202 | `tu_43b710` | `0x43B710..0x43B770` | 3 | 0/0/3 | boss scripts: Boss23_* 1, Boss21_* 1, BossHook_* 1 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 203 | `tu_43b770` | `0x43B770..0x43B870` | 6 | 4/0/2 | boss scripts: BossStallion_* 3, BossSample10_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 204 | `tu_43b870` | `0x43B870..0x43B8F0` | 4 | 0/0/4 | boss scripts: Boss24_* 3, Boss48_* 1 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 205 | `tu_43b8f0` | `0x43B8F0..0x43BC90` | 13 | 8/0/5 | boss scripts: BossBeyd_* 7, BossBeyd2_* 6 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 206 | `tu_43bc90` | `0x43BC90..0x43BEA0` | 11 | 0/0/11 | boss scripts: BossZig_* 11 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 207 | `tu_43bea0` | `0x43BEA0..0x43C740` | 11 | 3/0/8 | boss scripts: Boss25_* 4, Boss27_* 4, Boss26_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 208 | `tu_43c740` | `0x43C740..0x43C9D0` | 12 | 0/0/12 | boss scripts: BossGazer_* 9, Boss26Fx_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 209 | `tu_43c9d0` | `0x43C9D0..0x43CA20` | 3 | 0/0/3 | boss scripts: Boss28_* 2, BareRetZero_* 1 | SCENA16.EMI#0 | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 210 | `tu_43ca20` | `0x43CA20..0x43CDE0` | 9 | 0/0/9 | boss scripts: BossGazerFx_* 9 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 211 | `tu_43cde0` | `0x43CDE0..0x43CEA0` | 5 | 2/0/3 | boss scripts: BossDolphin_* 3, Boss29_* 2 | BOSS029.EMI#16 | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 212 | `tu_43cea0` | `0x43CEA0..0x43CFD0` | 8 | 0/0/8 | boss scripts: BossGisshan_* 3, BossScylla_* 3, Boss30_* 2 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 213 | `tu_43cfd0` | `0x43CFD0..0x43D0C0` | 5 | 0/0/5 | boss scripts: BossGarr2_* 5 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 214 | `tu_43d0c0` | `0x43D0C0..0x43D140` | 3 | 0/0/3 | boss scripts: Boss31_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 215 | `tu_43d140` | `0x43D140..0x43D250` | 5 | 0/0/5 | boss scripts: BossDZombie_* 5 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 216 | `tu_43d250` | `0x43D250..0x43D3D0` | 3 | 0/0/3 | boss scripts: Boss32_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 217 | `tu_43d3d0` | `0x43D3D0..0x43D6D0` | 12 | 0/0/12 | boss scripts: BossWeretigr_* 10, Boss33_* 2 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 218 | `tu_43d6d0` | `0x43D6D0..0x43DBF0` | 12 | 0/0/12 | boss scripts: BossWeretigrFx_* 12 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 219 | `tu_43dbf0` | `0x43DBF0..0x43E540` | 20 | 19/0/1 | boss scripts: BossMikba_* 12, Boss34_* 4, BossSample3_* 3 | BOSS034.EMI#16 | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 220 | `tu_43e540` | `0x43E540..0x43E730` | 11 | 10/0/1 | boss scripts: BossGaist_* 4, BossTorch_* 4, BossSample9_* 3 | BOSS035.EMI#16 | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 221 | `tu_43e730` | `0x43E730..0x43E7C0` | 5 | 0/0/5 | boss scripts: Boss35_* 3, BossHook_* 1, Boss47_* 1 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 222 | `tu_43e7c0` | `0x43E7C0..0x43EB00` | 13 | 11/0/2 | boss scripts: BossAngler_* 10, BossSample5_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 223 | `tu_43eb00` | `0x43EB00..0x43EB80` | 4 | 0/0/4 | boss scripts: Boss36_* 2, Boss43_* 1, BossHook_* 1 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 224 | `tu_43eb80` | `0x43EB80..0x43EC30` | 4 | 0/0/4 | boss scripts: BossAnglerFx_* 3, BattleFx_* 1 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 225 | `tu_43ec30` | `0x43EC30..0x43ED00` | 5 | 0/0/5 | boss scripts: BossElder_* 3, Boss37_* 2 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 226 | `tu_43ed00` | `0x43ED00..0x43EE50` | 6 | 4/0/2 | boss scripts: BossAmmonite_* 3, BossSample6_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 227 | `tu_43ee50` | `0x43EE50..0x43EF20` | 3 | 0/0/3 | boss scripts: Boss38_* 2, Boss44_* 1 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 228 | `tu_43ef20` | `0x43EF20..0x43F040` | 6 | 4/0/2 | boss scripts: BossSample2_* 3, BossHugeSlug_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 229 | `tu_43f040` | `0x43F040..0x43F0A0` | 3 | 0/0/3 | boss scripts: Boss53_* 2, Boss40_* 1 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 230 | `tu_43f0a0` | `0x43F0A0..0x43F2D0` | 13 | 4/0/9 | boss scripts: BossSample4_* 3, BossSample7_* 3, BossManmo_* 3 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 231 | `tu_43f2d0` | `0x43F2D0..0x43F3B0` | 5 | 0/0/5 | boss scripts: BossChimera_* 3, Boss50_* 2 | - | `boss/boss_01.cpp` | join with 47 units (tu_437cd0 .. tu_43f2d0) | bosses together (the owner's example) |  |
-| 233 | `tu_43f480` | `0x43F480..0x43F5F0` | 8 | 0/0/8 | boss scripts: BossArwan_* 6, Boss51_* 2 | - | `boss/boss_arwan.cpp` | join with 10 units (tu_43f480 .. tu_440830) | bosses together (the owner's example) |  |
-| 234 | `tu_43f5f0` | `0x43F5F0..0x43F7A0` | 4 | 0/0/4 | boss scripts: BossArwanFx_* 4 | - | `boss/boss_arwan.cpp` | join with 10 units (tu_43f480 .. tu_440830) | bosses together (the owner's example) |  |
-| 235 | `tu_43f7a0` | `0x43F7A0..0x43F950` | 6 | 0/0/6 | boss scripts: BossDLord_* 6 | - | `boss/boss_arwan.cpp` | join with 10 units (tu_43f480 .. tu_440830) | bosses together (the owner's example) |  |
-| 236 | `tu_43f950` | `0x43F950..0x43FAC0` | 3 | 0/0/3 | boss scripts: Boss52_* 3 | - | `boss/boss_arwan.cpp` | join with 10 units (tu_43f480 .. tu_440830) | bosses together (the owner's example) |  |
-| 237 | `tu_43fac0` | `0x43FAC0..0x43FBB0` | 4 | 0/0/4 | boss scripts: BossDLordFx_* 4 | - | `boss/boss_arwan.cpp` | join with 10 units (tu_43f480 .. tu_440830) | bosses together (the owner's example) |  |
-| 238 | `tu_43fbb0` | `0x43FBB0..0x43FC80` | 5 | 0/0/5 | boss scripts: BossShroom_* 3, Boss54_* 2 | - | `boss/boss_arwan.cpp` | join with 10 units (tu_43f480 .. tu_440830) | bosses together (the owner's example) |  |
-| 239 | `tu_43fc80` | `0x43FC80..0x43FE90` | 7 | 0/0/7 | boss scripts: HeadCracker_* 6, MagicFx_* 1 | MAGIC001.EMI#0 | `boss/boss_arwan.cpp` | join with 10 units (tu_43f480 .. tu_440830) | bosses together (the owner's example) |  |
-| 240 | `tu_43fe90` | `0x43FE90..0x440080` | 5 | 0/0/5 | boss scripts: HeadCrackerRock_* 5 | - | `boss/boss_arwan.cpp` | join with 10 units (tu_43f480 .. tu_440830) | bosses together (the owner's example) |  |
-| 241 | `tu_440080` | `0x440080..0x4406E0` | 27 | 0/0/27 | boss scripts: BossMyria_* 27 | - | `boss/boss_arwan.cpp` | join with 10 units (tu_43f480 .. tu_440830) | bosses together (the owner's example) |  |
-| 242 | `tu_4406e0` | `0x4406E0..0x440830` | 3 | 0/0/3 | boss scripts: Boss55_* 2, BossHook_* 1 | - | `boss/boss_arwan.cpp` | join with 10 units (tu_43f480 .. tu_440830) | bosses together (the owner's example) |  |
-| 243 | `tu_440830` | `0x440830..0x4410B0` | 25 | 0/0/25 | boss scripts: BossMyriaFx_* 24, Fixed_* 1 | - | `boss/boss_arwan.cpp` | join with 10 units (tu_43f480 .. tu_440830) | bosses together (the owner's example) |  |
 | 258 | `tu_45e6a0` | `0x45E6A0..0x45E6B0` | 1 | 0/0/1 | the faerie village: Commu_* 1 | COMMU03.EMI#6 | `community/commu.cpp` | join with tu_45e6b0 | a one-function unit, nothing separates it from its neighbour | `COMMU03.EMI#6:u000` also in tu_45f750 |
 | 259 | `tu_45e6b0` | `0x45E6B0..0x45F750` | 20 | 11/0/9 | the faerie village: CommuName_* 8, CommuMember_* 6, CommuEntry_* 3 | COMMU02.EMI#8 | `community/commu.cpp` | join with tu_45e6a0 | a one-function unit, nothing separates it from its neighbour |  |
 | 260 | `tu_45f750` | `0x45F750..0x45FE60` | 16 | 10/0/6 | the faerie village: CommuMusic_* 13, CommuItem_* 3 | COMMU03.EMI#6 | `community/commu_music.cpp` | stand alone | its own file: no neighbour shares its names or folder rule | `COMMU03.EMI#6:u000` also in tu_45e6a0 |
@@ -229,7 +170,7 @@ A *join* proposal (a choice between one file and several), a PSX check, or both:
 | 666 | `tu_5a9a59` | `0x5A9A59..0x5A9E1E` | 3 | 0/0/3 | message boxes and text: Tex_* 3 | - | `text/tex.cpp` | join with tu_5a9e1e | a one-function unit, nothing separates it from its neighbour |  |
 | 667 | `tu_5a9e1e` | `0x5A9E1E..0x5AA03E` | 1 | 0/0/1 | message boxes and text: Font_* 1 | - | `text/tex.cpp` | join with tu_5a9a59 | a one-function unit, nothing separates it from its neighbour |  |
 
-## Rows with one recommended layout (457)
+## Rows with one recommended layout (516)
 
 A *stand alone* unit that no neighbour shares a name or folder rule with and that no PlayStation unit contests: the tool found no alternative, so these rows need no call unless the owner wants to make one.
 
@@ -368,7 +309,66 @@ A *stand alone* unit that no neighbour shares a name or folder rule with and tha
 | 180 | `tu_4378d0` | `0x4378D0..0x437930` | 2 | 0/0/2 | spell and ability effects: MagicHold_* 2 | - | `magic/magic_hold.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
 | 182 | `tu_437a10` | `0x437A10..0x437CC0` | 15 | 0/0/15 | boss scripts: BossGary_* 7, BossMogu_* 7, BossOp_* 1 | - | `boss/boss_gary.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
 | 183 | `tu_437cc0` | `0x437CC0..0x437CD0` | 1 | 0/0/1 | field scripts and hooks of the areas: BareRet_* 1 | AREA028.EMI#13 | `area/bare_ret.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 184 | `tu_437cd0` | `0x437CD0..0x437EE0` | 4 | 0/0/4 | boss scripts: Boss01_* 4 | - | `boss/boss_01.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 185 | `tu_437ee0` | `0x437EE0..0x438190` | 15 | 13/0/2 | boss scripts: BossNue_* 8, BossNue2_* 4, BossSample1_* 3 | - | `boss/boss_nue.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 186 | `tu_438190` | `0x438190..0x438290` | 6 | 0/0/6 | boss scripts: Boss02_* 3, Boss03_* 2, Boss39_* 1 | - | `boss/boss_02.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 187 | `tu_438290` | `0x438290..0x438430` | 7 | 0/0/7 | boss scripts: BossEngineer_* 7 | - | `boss/boss_engineer.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 188 | `tu_438430` | `0x438430..0x438B30` | 11 | 0/0/11 | boss scripts: Boss04_* 4, Boss05_* 4, Boss06_* 3 | - | `boss/boss_04.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 189 | `tu_438b30` | `0x438B30..0x438BA0` | 3 | 0/0/3 | boss scripts: BossWorker_* 3 | - | `boss/boss_worker.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 190 | `tu_438ba0` | `0x438BA0..0x438C30` | 4 | 0/0/4 | boss scripts: BossOperator_* 4 | - | `boss/boss_operator.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 191 | `tu_438c30` | `0x438C30..0x438E50` | 4 | 0/0/4 | boss scripts: Boss07_* 4 | - | `boss/boss_07.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 192 | `tu_438e50` | `0x438E50..0x4390F0` | 10 | 0/0/10 | boss scripts: BossTorast_* 10 | - | `boss/boss_torast.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 193 | `tu_4390f0` | `0x4390F0..0x439160` | 3 | 0/0/3 | boss scripts: BossKassen_* 3 | - | `boss/boss_kassen.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 194 | `tu_439160` | `0x439160..0x4391D0` | 3 | 0/0/3 | boss scripts: BossGaltel_* 3 | - | `boss/boss_galtel.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 195 | `tu_4391d0` | `0x4391D0..0x439240` | 3 | 0/0/3 | boss scripts: BossDoksen_* 3 | - | `boss/boss_doksen.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 196 | `tu_439240` | `0x439240..0x4396B0` | 13 | 0/0/13 | boss scripts: Boss08_* 3, Boss09_* 3, Boss10_* 3 | - | `boss/boss_08.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 197 | `tu_4396b0` | `0x4396B0..0x439B10` | 13 | 8/0/5 | boss scripts: BossAmalgam_* 11, Boss12_* 2 | BOSS012.EMI#16 | `boss/boss_amalgam.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 198 | `tu_439b10` | `0x439B10..0x439C60` | 5 | 0/0/5 | boss scripts: BossBalio_* 5 | - | `boss/boss_balio.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 199 | `tu_439c60` | `0x439C60..0x439E00` | 5 | 0/0/5 | boss scripts: BossSunder_* 5 | - | `boss/boss_sunder.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 200 | `tu_439e00` | `0x439E00..0x43B650` | 90 | 0/0/90 | boss scripts: BossNina_* 8, BossDodai_* 8, BossEmitai_* 5 | BOSS018.EMI#16 | `boss/boss_nina.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 201 | `tu_43b650` | `0x43B650..0x43B710` | 3 | 0/0/3 | boss scripts: BossBully_* 3 | - | `boss/boss_bully.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 202 | `tu_43b710` | `0x43B710..0x43B770` | 3 | 0/0/3 | boss scripts: Boss23_* 1, Boss21_* 1, BossHook_* 1 | - | `boss/boss_23.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 203 | `tu_43b770` | `0x43B770..0x43B870` | 6 | 4/0/2 | boss scripts: BossStallion_* 3, BossSample10_* 3 | - | `boss/boss_stallion.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 204 | `tu_43b870` | `0x43B870..0x43B8F0` | 4 | 0/0/4 | boss scripts: Boss24_* 3, Boss48_* 1 | - | `boss/boss_24.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 205 | `tu_43b8f0` | `0x43B8F0..0x43BC90` | 13 | 8/0/5 | boss scripts: BossBeyd_* 7, BossBeyd2_* 6 | - | `boss/boss_beyd.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 206 | `tu_43bc90` | `0x43BC90..0x43BEA0` | 11 | 0/0/11 | boss scripts: BossZig_* 11 | - | `boss/boss_zig.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 207 | `tu_43bea0` | `0x43BEA0..0x43C740` | 11 | 3/0/8 | boss scripts: Boss25_* 4, Boss27_* 4, Boss26_* 3 | - | `boss/boss_25.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 208 | `tu_43c740` | `0x43C740..0x43C9D0` | 12 | 0/0/12 | boss scripts: BossGazer_* 9, Boss26Fx_* 3 | - | `boss/boss_gazer.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 209 | `tu_43c9d0` | `0x43C9D0..0x43CA20` | 3 | 0/0/3 | boss scripts: Boss28_* 2, BareRetZero_* 1 | SCENA16.EMI#0 | `boss/boss_28.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 210 | `tu_43ca20` | `0x43CA20..0x43CDE0` | 9 | 0/0/9 | boss scripts: BossGazerFx_* 9 | - | `boss/boss_gazer_fx.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 211 | `tu_43cde0` | `0x43CDE0..0x43CEA0` | 5 | 2/0/3 | boss scripts: BossDolphin_* 3, Boss29_* 2 | BOSS029.EMI#16 | `boss/boss_dolphin.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 212 | `tu_43cea0` | `0x43CEA0..0x43CFD0` | 8 | 0/0/8 | boss scripts: BossGisshan_* 3, BossScylla_* 3, Boss30_* 2 | - | `boss/boss_gisshan.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 213 | `tu_43cfd0` | `0x43CFD0..0x43D0C0` | 5 | 0/0/5 | boss scripts: BossGarr2_* 5 | - | `boss/boss_garr_2.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 214 | `tu_43d0c0` | `0x43D0C0..0x43D140` | 3 | 0/0/3 | boss scripts: Boss31_* 3 | - | `boss/boss_31.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 215 | `tu_43d140` | `0x43D140..0x43D250` | 5 | 0/0/5 | boss scripts: BossDZombie_* 5 | - | `boss/boss_d_zombie.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 216 | `tu_43d250` | `0x43D250..0x43D3D0` | 3 | 0/0/3 | boss scripts: Boss32_* 3 | - | `boss/boss_32.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 217 | `tu_43d3d0` | `0x43D3D0..0x43D6D0` | 12 | 0/0/12 | boss scripts: BossWeretigr_* 10, Boss33_* 2 | - | `boss/boss_weretigr.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 218 | `tu_43d6d0` | `0x43D6D0..0x43DBF0` | 12 | 0/0/12 | boss scripts: BossWeretigrFx_* 12 | - | `boss/boss_weretigr_fx.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 219 | `tu_43dbf0` | `0x43DBF0..0x43E540` | 20 | 19/0/1 | boss scripts: BossMikba_* 12, Boss34_* 4, BossSample3_* 3 | BOSS034.EMI#16 | `boss/boss_mikba.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 220 | `tu_43e540` | `0x43E540..0x43E730` | 11 | 10/0/1 | boss scripts: BossGaist_* 4, BossTorch_* 4, BossSample9_* 3 | BOSS035.EMI#16 | `boss/boss_gaist.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 221 | `tu_43e730` | `0x43E730..0x43E7C0` | 5 | 0/0/5 | boss scripts: Boss35_* 3, BossHook_* 1, Boss47_* 1 | - | `boss/boss_35.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 222 | `tu_43e7c0` | `0x43E7C0..0x43EB00` | 13 | 11/0/2 | boss scripts: BossAngler_* 10, BossSample5_* 3 | - | `boss/boss_angler.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 223 | `tu_43eb00` | `0x43EB00..0x43EB80` | 4 | 0/0/4 | boss scripts: Boss36_* 2, Boss43_* 1, BossHook_* 1 | - | `boss/boss_36.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 224 | `tu_43eb80` | `0x43EB80..0x43EC30` | 4 | 0/0/4 | boss scripts: BossAnglerFx_* 3, BattleFx_* 1 | - | `boss/boss_angler_fx.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 225 | `tu_43ec30` | `0x43EC30..0x43ED00` | 5 | 0/0/5 | boss scripts: BossElder_* 3, Boss37_* 2 | - | `boss/boss_elder.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 226 | `tu_43ed00` | `0x43ED00..0x43EE50` | 6 | 4/0/2 | boss scripts: BossAmmonite_* 3, BossSample6_* 3 | - | `boss/boss_ammonite.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 227 | `tu_43ee50` | `0x43EE50..0x43EF20` | 3 | 0/0/3 | boss scripts: Boss38_* 2, Boss44_* 1 | - | `boss/boss_38.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 228 | `tu_43ef20` | `0x43EF20..0x43F040` | 6 | 4/0/2 | boss scripts: BossSample2_* 3, BossHugeSlug_* 3 | - | `boss/boss_sample_2.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 229 | `tu_43f040` | `0x43F040..0x43F0A0` | 3 | 0/0/3 | boss scripts: Boss53_* 2, Boss40_* 1 | - | `boss/boss_53.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 230 | `tu_43f0a0` | `0x43F0A0..0x43F2D0` | 13 | 4/0/9 | boss scripts: BossSample4_* 3, BossSample7_* 3, BossManmo_* 3 | - | `boss/boss_sample_4.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 231 | `tu_43f2d0` | `0x43F2D0..0x43F3B0` | 5 | 0/0/5 | boss scripts: BossChimera_* 3, Boss50_* 2 | - | `boss/boss_chimera.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
 | 232 | `tu_43f3b0` | `0x43F3B0..0x43F480` | 4 | 0/0/4 | spell and ability effects: Paralyzer_* 2, MagicFx_* 2 | MAGIC015.EMI#0 | `magic/paralyzer.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 233 | `tu_43f480` | `0x43F480..0x43F5F0` | 8 | 0/0/8 | boss scripts: BossArwan_* 6, Boss51_* 2 | - | `boss/boss_arwan.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 234 | `tu_43f5f0` | `0x43F5F0..0x43F7A0` | 4 | 0/0/4 | boss scripts: BossArwanFx_* 4 | - | `boss/boss_arwan_fx.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 235 | `tu_43f7a0` | `0x43F7A0..0x43F950` | 6 | 0/0/6 | boss scripts: BossDLord_* 6 | - | `boss/boss_d_lord.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 236 | `tu_43f950` | `0x43F950..0x43FAC0` | 3 | 0/0/3 | boss scripts: Boss52_* 3 | - | `boss/boss_52.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 237 | `tu_43fac0` | `0x43FAC0..0x43FBB0` | 4 | 0/0/4 | boss scripts: BossDLordFx_* 4 | - | `boss/boss_d_lord_fx.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 238 | `tu_43fbb0` | `0x43FBB0..0x43FC80` | 5 | 0/0/5 | boss scripts: BossShroom_* 3, Boss54_* 2 | - | `boss/boss_shroom.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 239 | `tu_43fc80` | `0x43FC80..0x43FE90` | 7 | 0/0/7 | boss scripts: HeadCracker_* 6, MagicFx_* 1 | MAGIC001.EMI#0 | `boss/head_cracker.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 240 | `tu_43fe90` | `0x43FE90..0x440080` | 5 | 0/0/5 | boss scripts: HeadCrackerRock_* 5 | - | `boss/head_cracker_rock.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 241 | `tu_440080` | `0x440080..0x4406E0` | 27 | 0/0/27 | boss scripts: BossMyria_* 27 | - | `boss/boss_myria.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 242 | `tu_4406e0` | `0x4406E0..0x440830` | 3 | 0/0/3 | boss scripts: Boss55_* 2, BossHook_* 1 | - | `boss/boss_55.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
+| 243 | `tu_440830` | `0x440830..0x4410B0` | 25 | 0/0/25 | boss scripts: BossMyriaFx_* 24, Fixed_* 1 | - | `boss/boss_myria_fx.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
 | 244 | `tu_4410b0` | `0x4410B0..0x441100` | 1 | 0/0/1 | the field: party, leader, events and movement: Field_* 1 | GAME.EMI#0 | `field/field.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
 | 245 | `tu_441100` | `0x441100..0x442FA0` | 62 | 55/0/7 | the battle engine: BattleObj_* 58, BattleParty_* 4 | BATTLE.EMI#3 | `battle/battle_obj.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |
 | 246 | `tu_442fa0` | `0x442FA0..0x447140` | 83 | 81/0/2 | the battle engine: Battle_* 45, BattleWin_* 26, BattleEnd_* 3 | BATTLE.EMI#3 | `battle/battle_3.cpp` | stand alone | its own file: no neighbour shares its names or folder rule |  |

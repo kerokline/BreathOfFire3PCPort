@@ -1805,427 +1805,427 @@
 0x437cf0	Boss01_Event	tu_437cd0	0x437cd0	0x437ee0	guessed	called only from Boss01_Setup..; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
 0x437de0	Boss01_End	tu_437cd0	0x437cd0	0x437ee0	guessed	called only from Boss01_Setup..; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
 0x437e10	Boss01_Exit	tu_437cd0	0x437cd0	0x437ee0	guessed	called only from Boss01_Setup..; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x437ee0	BossNue_Dispatch	tu_437ee0	0x437ee0	0x438190	guessed	data order: 0x64c870 < 0x64c890; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x437f00	BossNue_Enter	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x437f40	BossNue_EndDispatch	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x437f60	BossNue_EndPose	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x437f80	BossNue_EndMove	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x437ff0	BossNue_Hook	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x438000	BossNue_HookPick	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link extern	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x438030	BossNue_HookHit	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x438070	BossNue2_Dispatch	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x438090	BossNue2_Enter	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x4380d0	BossNue2_ActDispatch	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x4380f0	BossNue2_Hook	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x438100	BossSample1_Dispatch	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x438120	BossSample1_Enter	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x438180	BossSample1_Hook	tu_437ee0	0x437ee0	0x438190	guessed	called only from BossNue_Dispatch..; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x438190	Boss02_Setup	tu_438190	0x438190	0x438290	guessed	alone; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x4381b0	Boss02_Event	tu_438190	0x438190	0x438290	guessed	called only from Boss02_Setup..; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x4381e0	Boss02_End	tu_438190	0x438190	0x438290	guessed	called only from Boss02_Setup..; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x438210	Boss03_Setup	tu_438190	0x438190	0x438290	guessed	name stem Boss; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x438230	Boss03_End	tu_438190	0x438190	0x438290	guessed	name stem Boss; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x438270	Boss39_Setup	tu_438190	0x438190	0x438290	guessed	name stem Boss; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x438290	BossEngineer_Dispatch	tu_438290	0x438290	0x438430	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x4382b0	BossEngineer_Enter	tu_438290	0x438290	0x438430	guessed	data order: 0x64c964 < 0x64c984; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x4382f0	BossEngineer_ActDispatch	tu_438290	0x438290	0x438430	guessed	name prefix BossEngineer; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438310	BossEngineer_HitDispatch	tu_438290	0x438290	0x438430	guessed	name prefix BossEngineer; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438330	BossEngineer_HitStart	tu_438290	0x438290	0x438430	guessed	name prefix BossEngineer; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438350	BossEngineer_HitStep	tu_438290	0x438290	0x438430	guessed	name prefix BossEngineer; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438420	BossEngineer_Hook	tu_438290	0x438290	0x438430	guessed	name prefix BossEngineer; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438430	Boss04_Setup	tu_438430	0x438430	0x438b30	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438450	Boss04_Event	tu_438430	0x438430	0x438b30	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438560	Boss04_Exit	tu_438430	0x438430	0x438b30	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438650	Boss05_Setup	tu_438430	0x438430	0x438b30	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438670	Boss05_Event	tu_438430	0x438430	0x438b30	guessed	called only from Boss05_Setup..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438780	Boss05_End	tu_438430	0x438430	0x438b30	guessed	called only from Boss05_Setup..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x4387c0	Boss05_Exit	tu_438430	0x438430	0x438b30	guessed	called only from Boss05_Setup..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x4388b0	Boss06_Setup	tu_438430	0x438430	0x438b30	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x4388d0	Boss06_Event	tu_438430	0x438430	0x438b30	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x4389e0	Boss04_End	tu_438430	0x438430	0x438b30	guessed	name prefix Boss04; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438a20	Boss06_Exit	tu_438430	0x438430	0x438b30	guessed	name prefix Boss06; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438b30	BossWorker_Dispatch	tu_438b30	0x438b30	0x438ba0	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438b50	BossWorker_Enter	tu_438b30	0x438b30	0x438ba0	guessed	data order: 0x64c9e4 < 0x64ca0c; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438b90	BossWorker_Hook	tu_438b30	0x438b30	0x438ba0	guessed	called only from BossWorker_Dispatch..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438ba0	BossOperator_Dispatch	tu_438ba0	0x438ba0	0x438c30	guessed	name prefix BossOperator; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438bc0	BossOperator_Enter	tu_438ba0	0x438ba0	0x438c30	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438c10	BossOperator_Hook	tu_438ba0	0x438ba0	0x438c30	guessed	called only from BossOperator_Enter..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438c20	BossOperator_HookHit	tu_438ba0	0x438ba0	0x438c30	guessed	name prefix BossOperator; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438c30	Boss07_Setup	tu_438c30	0x438c30	0x438e50	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438c50	Boss07_Event	tu_438c30	0x438c30	0x438e50	guessed	called only from Boss07_Setup..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438dd0	Boss07_End	tu_438c30	0x438c30	0x438e50	guessed	called only from Boss07_Setup..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438e30	Boss07_Exit	tu_438c30	0x438c30	0x438e50	guessed	name prefix Boss07; link extern	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438e50	BossTorast_Dispatch	tu_438e50	0x438e50	0x4390f0	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438e70	BossTorast_Enter	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x438eb0	BossTorast_ActDispatch	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	
-0x438ed0	BossTorast_DeathDispatch	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	
-0x438ef0	BossTorast_DeathFxDispatch	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	
-0x438f10	BossTorast_DeathFxStart	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	
-0x438f40	BossTorast_DeathFxFlash	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	
-0x438fd0	BossTorast_DeathFxRingGrow	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	
-0x439030	BossTorast_DeathFxRingShrink	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	
-0x4390e0	BossTorast_Hook	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x4390f0	BossKassen_Dispatch	tu_4390f0	0x4390f0	0x439160	guessed	name prefix BossKassen; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x439110	BossKassen_Enter	tu_4390f0	0x4390f0	0x439160	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x439150	BossKassen_Hook	tu_4390f0	0x4390f0	0x439160	guessed	called only from BossKassen_Enter..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x439160	BossGaltel_Dispatch	tu_439160	0x439160	0x4391d0	guessed	name prefix BossGaltel; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x439180	BossGaltel_Enter	tu_439160	0x439160	0x4391d0	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x4391c0	BossGaltel_Hook	tu_439160	0x439160	0x4391d0	guessed	called only from BossGaltel_Enter..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x4391d0	BossDoksen_Dispatch	tu_4391d0	0x4391d0	0x439240	guessed	name prefix BossDoksen; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x4391f0	BossDoksen_Enter	tu_4391d0	0x4391d0	0x439240	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x439230	BossDoksen_Hook	tu_4391d0	0x4391d0	0x439240	guessed	called only from BossDoksen_Enter..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x439240	Boss08_Setup	tu_439240	0x439240	0x4396b0	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x439260	Boss08_End	tu_439240	0x439240	0x4396b0	guessed	called only from Boss08_Setup..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x439280	Boss08_Exit	tu_439240	0x439240	0x4396b0	guessed	called only from Boss08_Setup..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x4392d0	Boss09_Setup	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x4392f0	Boss09_End	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x439310	Boss09_Exit	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x439370	Boss10_Setup	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x439390	Boss10_End	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x4393b0	Boss10_Exit	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x439410	Boss11_Setup	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439430	Boss11_End	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439450	Boss11_Exit	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x4394a0	BossTorast_DrawRing	tu_439240	0x439240	0x4396b0	guessed	name head Boss; link extern	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	
-0x4396b0	BossAmalgam_Dispatch	tu_4396b0	0x4396b0	0x439b10	guessed	name prefix BossAmalgam; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x4396d0	BossAmalgam_Enter	tu_4396b0	0x4396b0	0x439b10	guessed	name prefix BossAmalgam; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439730	BossAmalgam_ActDispatch	tu_4396b0	0x4396b0	0x439b10	guessed	name prefix BossAmalgam; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439750	BossAmalgam_DeathDispatch	tu_4396b0	0x4396b0	0x439b10	guessed	name prefix BossAmalgam; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439770	BossAmalgam_DeathTick	tu_4396b0	0x4396b0	0x439b10	guessed	name prefix BossAmalgam; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439790	BossAmalgam_DeathStart	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1978>0x800c1a24; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	BOSS012.EMI#16:u004:single
-0x439830	BossAmalgam_DeathMelt	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1a24>0x800c1b18; psx BOSS012.EMI#16 0x800c1978>0x800c1a24; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	BOSS012.EMI#16:u005:single
-0x439870	BossAmalgam_DeathEnd	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1a24>0x800c1b18; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x4398d0	BossAmalgam_Hook	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1b18>0x800c1ba8; psx BOSS012.EMI#16 0x800c1a24>0x800c1b18; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	BOSS012.EMI#16:u007:single
-0x4398e0	Boss12_Setup	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1b18>0x800c1ba8; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439900	Boss12_End	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1ba8>0x800c1c08; psx BOSS012.EMI#16 0x800c1b18>0x800c1ba8; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	BOSS012.EMI#16:u012:single
-0x439930	BossAmalgam_DrawSprite	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1c08>0x800c1cd8; psx BOSS012.EMI#16 0x800c1ba8>0x800c1c08; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	BOSS012.EMI#16:u013:same
-0x4399e0	BossAmalgam_DrawStreak	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1c08>0x800c1cd8; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	BOSS012.EMI#16:u013:same
-0x439b10	BossBalio_Dispatch	tu_439b10	0x439b10	0x439c60	guessed	alone; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439b30	BossBalio_Enter	tu_439b10	0x439b10	0x439c60	guessed	data order: 0x64cc88 < 0x64ccd0; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439bc0	BossBalio_Hook	tu_439b10	0x439b10	0x439c60	guessed	called only from BossBalio_Dispatch..; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439bd0	BossBalio_HookAct	tu_439b10	0x439b10	0x439c60	guessed	name prefix BossBalio; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439c40	BossBalio_HookHit	tu_439b10	0x439b10	0x439c60	guessed	name prefix BossBalio; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439c60	BossSunder_Dispatch	tu_439c60	0x439c60	0x439e00	guessed	alone; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439c80	BossSunder_Enter	tu_439c60	0x439c60	0x439e00	guessed	data order: 0x64cc94 < 0x64cd0c; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439d10	BossSunder_Hook	tu_439c60	0x439c60	0x439e00	guessed	called only from BossSunder_Dispatch..; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439d20	BossSunder_HookAct	tu_439c60	0x439c60	0x439e00	guessed	name prefix BossSunder; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439db0	BossSunder_HookHit	tu_439c60	0x439c60	0x439e00	guessed	name prefix BossSunder; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439e00	BossNina_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439e20	BossNina_Enter	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439e70	BossNina_WalkDispatch	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439e90	BossNina_WalkStart	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439ec0	BossNina_WalkStep	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439ee0	BossNina_Hook	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439ef0	BossNina_HookAct	tu_439e00	0x439e00	0x43b650	guessed	data 0x675f00; segment; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439f50	BossNina_HookHit	tu_439e00	0x439e00	0x43b650	guessed	data 0x675f00; data 0x64ccac; segment; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x439fe0	Boss13_Setup	tu_439e00	0x439e00	0x43b650	guessed	data 0x675f00; data 0x64ccac; segment; name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x43a000	Boss13_End	tu_439e00	0x439e00	0x43b650	guessed	data 0x675f00; data 0x64ccac; segment; name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_01.cpp	
-0x43a030	Boss16_Setup	tu_439e00	0x439e00	0x43b650	guessed	data 0x675f00; data 0x64ccac; segment; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a060	Boss16_Event	tu_439e00	0x439e00	0x43b650	guessed	data 0x675f00; segment; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a190	Boss16_End	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a230	Boss16_Exit	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a360	BossRocky_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a380	BossRocky_Enter	tu_439e00	0x439e00	0x43b650	guessed	data 0x64cd90; segment; data order: 0x64cd90 < 0x675f00; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a3c0	BossRocky_Hook	tu_439e00	0x439e00	0x43b650	guessed	data 0x64cd90; segment; data order: 0x64cd90 < 0x675f00; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a3d0	BossSample8_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	data 0x64cd90; segment; data order: 0x64cd90 < 0x675f00; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a3f0	BossSample8_Enter	tu_439e00	0x439e00	0x43b650	guessed	data 0x64cd90; segment; data order: 0x64cd90 < 0x675f00; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a450	BossSample8_Hook	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a460	Boss14_Setup	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a480	Boss14_End	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a4a0	BossHook_ExitClearActor0	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link extern	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	
-0x43a4b0	Boss46_Setup	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a4d0	BossPooch_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a4f0	BossPooch_Enter	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a530	BossPooch_Hook	tu_439e00	0x439e00	0x43b650	guessed	data 0x64ce68; segment; name stem Boss; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a540	Boss15_Setup	tu_439e00	0x439e00	0x43b650	guessed	data 0x64ce68; segment; name stem Boss; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a560	Boss15_End	tu_439e00	0x439e00	0x43b650	guessed	data 0x64ce68; segment; name stem Boss; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a580	Boss15_Exit	tu_439e00	0x439e00	0x43b650	guessed	data 0x64ce68; segment; name stem Boss; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_01.cpp	
-0x43a590	BossMutant_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	data 0x64ce68; segment; name stem Boss; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43a5b0	BossMutant_Enter	tu_439e00	0x439e00	0x43b650	guessed	data 0x64ce68; segment; name stem Boss; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43a5f0	BossMutant_ActDispatch	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43a610	BossMutant_Hook	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43a620	Boss17_Setup	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43a640	Boss17_End	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43a660	BossClaw_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43a680	BossClaw_Enter	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1890>0x800c1adc; segment; data order: 0x64cf40 < 0x64cfa8; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	BOSS018.EMI#16:u000:single
-0x43a720	BossOp_EnterTick	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1890>0x800c1adc; segment; data order: 0x64cf40 < 0x64cfa8; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	BOSS018.EMI#16:u008:single
-0x43a740	BossClaw_Hook	tu_439e00	0x439e00	0x43b650	guessed	calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43a750	BossHook_RetargetMember0	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c19b4>0x800c19e8; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	BOSS018.EMI#16:u003:single
-0x43a770	BossCawer_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c19e8>0x800c1a2c; psx BOSS018.EMI#16 0x800c19b4>0x800c19e8; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	BOSS018.EMI#16:u006:single
-0x43a790	BossCawer_Enter	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1a2c>0x800c1b84; psx BOSS018.EMI#16 0x800c19e8>0x800c1a2c; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	BOSS018.EMI#16:u007:single
-0x43a830	BossCawer_Hook	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1a2c>0x800c1b84; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43a840	BossPatrio_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1b84>0x800c1bc8; psx BOSS018.EMI#16 0x800c1a2c>0x800c1b84; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	BOSS018.EMI#16:u013:single
-0x43a860	BossPatrio_Enter	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1bc8>0x800c1c6c; psx BOSS018.EMI#16 0x800c1b84>0x800c1bc8; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	BOSS018.EMI#16:u014:single
-0x43a8f0	BossPatrio_Hook	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1c6c>0x800c1cd8; psx BOSS018.EMI#16 0x800c1bc8>0x800c1c6c; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	BOSS018.EMI#16:u015:single
-0x43a900	BossDodai_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1cd8>0x800c1dc4; data 0x64cf40; psx BOSS018.EMI#16 0x800c1c6c>0x800c1cd8; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	BOSS018.EMI#16:u019:same
-0x43a990	BossDodai_Enter	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1dc4>0x800c1f28; psx BOSS018.EMI#16 0x800c1cd8>0x800c1dc4; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	BOSS018.EMI#16:u019:same
-0x43aa50	BossDodai_ActDispatch	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1dc4>0x800c1f28; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43aa70	BossDodai_Death	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1f28>0x800c2074; psx BOSS018.EMI#16 0x800c1dc4>0x800c1f28; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	BOSS018.EMI#16:u021:single
-0x43ab00	BossDodai_HitPoseDispatch	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1f28>0x800c2074; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43ab20	BossDodai_HitShake	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1f28>0x800c2074; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43ab40	BossDodai_Hook	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c2074>0x800c20bc; psx BOSS018.EMI#16 0x800c1f28>0x800c2074; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	BOSS018.EMI#16:u026:single
-0x43ab50	BossHook_ActKindNone	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c2074>0x800c20bc; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43ab60	BossDodai_HitSound	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c2074>0x800c20bc; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	BOSS018.EMI#16:u028:single
-0x43aba0	Boss18_Setup	tu_439e00	0x439e00	0x43b650	guessed	alone; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43abc0	Boss18_Event	tu_439e00	0x439e00	0x43b650	guessed	called only from Boss18_Setup..; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43ac50	Boss18_End	tu_439e00	0x439e00	0x43b650	guessed	called only from Boss18_Setup..; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43ad10	Boss18_Exit	tu_439e00	0x439e00	0x43b650	guessed	called only from Boss18_Setup..; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43ad60	Boss19_Setup	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43ad80	Boss19_Event	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43ae10	Boss19_End	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43aed0	Boss19_Exit	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43af20	Boss20_Setup	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43af40	Boss20_Event	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43afd0	Boss20_End	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b080	Boss20_Exit	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b0d0	BossMap_SetCorners	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	
-0x43b130	Boss_SetByLeaderId	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	
-0x43b180	BossMap_UpdateFromEnemies	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	
-0x43b280	BossEmitai_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b2a0	BossEmitai_Enter	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b2e0	BossEmitai_ActDispatch	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b300	BossEmitai_Death	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b360	BossEmitai_Hook	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b370	BossGolem_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b390	BossGolem_Enter	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b3d0	BossGolem_Hook	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d14c; segment; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b3e0	Boss21_Setup	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d14c; segment; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b400	Boss21_Event	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d14c; segment; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b480	Boss21_Exit	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d14c; segment; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b4b0	BossGarr_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d14c; segment; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b4d0	BossGarr_Enter	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d14c; segment; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b530	BossGarr_ActDispatch	tu_439e00	0x439e00	0x43b650	guessed	name prefix BossGarr; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b550	BossOp_Death	tu_439e00	0x439e00	0x43b650	guessed	name prefix BossOp; link static?	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	
-0x43b5a0	BossGarr_Hook	tu_439e00	0x439e00	0x43b650	guessed	name prefix BossGarr; link static?	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b5b0	Boss22_Setup	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b5d0	Boss22_End	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b610	Boss22_Exit	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b650	BossBully_Dispatch	tu_43b650	0x43b650	0x43b710	guessed	alone; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b670	BossBully_Enter	tu_43b650	0x43b650	0x43b710	guessed	data order: 0x64d1c0 < 0x64d1f0; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b700	BossBully_Hook	tu_43b650	0x43b650	0x43b710	guessed	called only from BossBully_Dispatch..; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b710	Boss23_Setup	tu_43b710	0x43b710	0x43b770	guessed	alone; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b730	Boss21_End	tu_43b710	0x43b710	0x43b770	guessed	name stem Boss; link extern	src/game/boss_sd.cpp	src/game/boss/boss_01.cpp	
-0x43b750	BossHook_ExitClearActors012	tu_43b710	0x43b710	0x43b770	guessed	calls Boss23_Setup > BossHook_ExitClearActors012; link extern	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b770	BossStallion_Dispatch	tu_43b770	0x43b770	0x43b870	guessed	data order: 0x64d22c < 0x64d240; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b790	BossStallion_Enter	tu_43b770	0x43b770	0x43b870	joined	data 0x64d22c; data 0x64d238; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b7d0	BossStallion_Hook	tu_43b770	0x43b770	0x43b870	joined	data 0x64d22c; data 0x64d238; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b7e0	BossSample10_Dispatch	tu_43b770	0x43b770	0x43b870	joined	data 0x64d22c; data 0x64d238; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b800	BossSample10_Enter	tu_43b770	0x43b770	0x43b870	joined	data 0x64d22c; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b860	BossSample10_Hook	tu_43b770	0x43b770	0x43b870	guessed	called only from BossStallion_Dispatch..; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b870	Boss24_Setup	tu_43b870	0x43b870	0x43b8f0	guessed	alone; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b890	Boss24_End	tu_43b870	0x43b870	0x43b8f0	guessed	called only from Boss24_Setup..; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b8c0	Boss24_Exit	tu_43b870	0x43b870	0x43b8f0	guessed	called only from Boss24_Setup..; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b8d0	Boss48_Setup	tu_43b870	0x43b870	0x43b8f0	guessed	name stem Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b8f0	BossBeyd_Dispatch	tu_43b8f0	0x43b8f0	0x43bc90	guessed	data order: 0x64d2b8 < 0x64d2e0; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43b910	BossBeyd_Enter	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; data 0x64d2d0; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43ba10	BossBeyd_ActDispatch	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; data 0x64d2d0; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43ba30	BossBeyd_Death	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; data 0x64d2d0; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43ba90	BossBeyd_Hook	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; data 0x64d2d0; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43baa0	BossBeyd_HookPick	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; data 0x64d2d0; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bad0	BossBeyd_HookTick	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; data 0x64d2d0; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bb00	BossBeyd2_Dispatch	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; data 0x64d2d0; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bb20	BossBeyd2_Enter	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bc00	BossBeyd2_ActDispatch	tu_43b8f0	0x43b8f0	0x43bc90	guessed	name prefix BossBeyd2; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bc20	BossBeyd2_Death	tu_43b8f0	0x43b8f0	0x43bc90	guessed	name prefix BossBeyd2; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bc70	BossBeyd2_Hook	tu_43b8f0	0x43b8f0	0x43bc90	guessed	name prefix BossBeyd2; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bc80	BossBeyd2_HookTarget4	tu_43b8f0	0x43b8f0	0x43bc90	guessed	name prefix BossBeyd2; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bc90	BossZig_Dispatch	tu_43bc90	0x43bc90	0x43bea0	guessed	alone; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bcb0	BossZig_Enter	tu_43bc90	0x43bc90	0x43bea0	guessed	data order: 0x64d2c4 < 0x64d388; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bd00	BossZig_Idle	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bd40	BossZig_Step5Dispatch	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bd60	BossZig_Step5Count	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bda0	BossZig_Step5Fire	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bdf0	BossZig_ActDispatch	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43be10	BossZig_Death	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43be60	BossZig_Hook	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43be70	BossZig_HookPick	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43be90	BossZig_HookHit	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bea0	Boss25_Setup	tu_43bea0	0x43bea0	0x43c740	joined	data 0x675f05; data 0x675f04; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43bf00	Boss25_Event	tu_43bea0	0x43bea0	0x43c740	joined	data 0x675f05; data 0x675f04; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43c180	Boss25_End	tu_43bea0	0x43bea0	0x43c740	joined	data 0x675f05; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43c1b0	Boss25_Exit	tu_43bea0	0x43bea0	0x43c740	guessed	called only from Boss25_Setup..; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43c200	Boss26_Setup	tu_43bea0	0x43bea0	0x43c740	guessed	name stem Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43c230	Boss26_Event	tu_43bea0	0x43bea0	0x43c740	guessed	name stem Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43c370	Boss26_End	tu_43bea0	0x43bea0	0x43c740	guessed	name stem Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43c480	Boss27_Setup	tu_43bea0	0x43bea0	0x43c740	guessed	name stem Boss; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c4a0	Boss27_Event	tu_43bea0	0x43bea0	0x43c740	guessed	name stem Boss; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c5c0	Boss27_End	tu_43bea0	0x43bea0	0x43c740	guessed	name stem Boss; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c6f0	Boss27_Exit	tu_43bea0	0x43bea0	0x43c740	guessed	name stem Boss; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c740	Boss26Fx_Dispatch	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link extern	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c760	Boss26Fx_Wait	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c780	Boss26Fx_DrawCount	tu_43c740	0x43c740	0x43c9d0	guessed	alone; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c810	BossGazer_Dispatch	tu_43c740	0x43c740	0x43c9d0	guessed	data order: 0x64d404 < 0x669d24; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c830	BossGazer_Enter	tu_43c740	0x43c740	0x43c9d0	guessed	data order: 0x64d3f0 < 0x669d24; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c870	BossGazer_State4Dispatch	tu_43c740	0x43c740	0x43c9d0	guessed	data order: 0x64d434 < 0x669d24; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c890	BossGazer_State4Start	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c8d0	BossGazer_State4Wait	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c950	BossGazer_State5Dispatch	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c970	BossGazer_State5Start	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c9a0	BossGazer_State5Close	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c9c0	BossGazer_Hook	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c9d0	Boss28_Setup	tu_43c9d0	0x43c9d0	0x43ca20	guessed	alone; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43c9f0	BareRetZero	tu_43c9d0	0x43c9d0	0x43ca20	guessed	calls Boss28_Setup > BareRetZero; link extern	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	SCENA16.EMI#0:u034:single
-0x43ca00	Boss28_End	tu_43c9d0	0x43c9d0	0x43ca20	guessed	name prefix Boss28; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43ca20	BossGazerFx_Dispatch	tu_43ca20	0x43ca20	0x43cde0	guessed	alone; link extern	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43ca40	BossGazerFx_BounceDispatch	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43ca70	BossGazerFx_BounceStart	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43cb50	BossGazerFx_Bounce	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43cc00	BossGazerFx_BounceBack	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43cc90	BossGazerFx_Leave	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43cd00	BossGazerFx_MarkDispatch	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43cd30	BossGazerFx_MarkStart	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43cdc0	BossGazerFx_MarkWait	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_01.cpp	
-0x43cde0	BossDolphin_Dispatch	tu_43cde0	0x43cde0	0x43cea0	joined	psx BOSS029.EMI#16 0x800c1804>0x800c1848; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	BOSS029.EMI#16:u000:same
-0x43ce00	BossDolphin_Enter	tu_43cde0	0x43cde0	0x43cea0	joined	psx BOSS029.EMI#16 0x800c1804>0x800c1848; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	BOSS029.EMI#16:u000:same
-0x43ce40	BossDolphin_Hook	tu_43cde0	0x43cde0	0x43cea0	guessed	called only from BossDolphin_Dispatch..; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43ce50	Boss29_Setup	tu_43cde0	0x43cde0	0x43cea0	guessed	name head Boss; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43ce70	Boss29_End	tu_43cde0	0x43cde0	0x43cea0	guessed	name head Boss; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43cea0	BossGisshan_Dispatch	tu_43cea0	0x43cea0	0x43cfd0	guessed	alone; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43cec0	BossGisshan_Enter	tu_43cea0	0x43cea0	0x43cfd0	guessed	data order: 0x64d4c8 < 0x64d4f0; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43cf00	BossGisshan_Hook	tu_43cea0	0x43cea0	0x43cfd0	guessed	called only from BossGisshan_Dispatch..; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43cf10	BossScylla_Dispatch	tu_43cea0	0x43cea0	0x43cfd0	guessed	data order: 0x64d4d4 < 0x64d520; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43cf30	BossScylla_Enter	tu_43cea0	0x43cea0	0x43cfd0	guessed	data order: 0x64d4d4 < 0x64d520; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43cf70	BossScylla_Hook	tu_43cea0	0x43cea0	0x43cfd0	guessed	data order: 0x64d4d4 < 0x64d520; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43cf80	Boss30_Setup	tu_43cea0	0x43cea0	0x43cfd0	guessed	name head Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43cfa0	Boss30_End	tu_43cea0	0x43cea0	0x43cfd0	guessed	name head Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43cfd0	BossGarr2_Dispatch	tu_43cfd0	0x43cfd0	0x43d0c0	guessed	alone; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43cff0	BossGarr2_Enter	tu_43cfd0	0x43cfd0	0x43d0c0	guessed	data order: 0x64d568 < 0x64d57c; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d030	BossGarr2_ActDispatch	tu_43cfd0	0x43cfd0	0x43d0c0	guessed	name prefix BossGarr2; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d050	BossGarr2_Death	tu_43cfd0	0x43cfd0	0x43d0c0	guessed	name prefix BossGarr2; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d0b0	BossGarr2_Hook	tu_43cfd0	0x43cfd0	0x43d0c0	guessed	name prefix BossGarr2; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d0c0	Boss31_Setup	tu_43d0c0	0x43d0c0	0x43d140	guessed	alone; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d0e0	Boss31_End	tu_43d0c0	0x43d0c0	0x43d140	guessed	called only from Boss31_Setup..; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d110	Boss31_Exit	tu_43d0c0	0x43d0c0	0x43d140	guessed	called only from Boss31_Setup..; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d140	BossDZombie_Dispatch	tu_43d140	0x43d140	0x43d250	guessed	alone; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d160	BossDZombie_Enter	tu_43d140	0x43d140	0x43d250	guessed	data order: 0x64d5d0 < 0x64d5e4; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d1c0	BossDZombie_ActDispatch	tu_43d140	0x43d140	0x43d250	guessed	name prefix BossDZombie; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d1e0	BossDZombie_Death	tu_43d140	0x43d140	0x43d250	guessed	name prefix BossDZombie; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d240	BossDZombie_Hook	tu_43d140	0x43d140	0x43d250	guessed	name prefix BossDZombie; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d250	Boss32_Setup	tu_43d250	0x43d250	0x43d3d0	guessed	alone; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d270	Boss32_End	tu_43d250	0x43d250	0x43d3d0	guessed	called only from Boss32_Setup..; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d3a0	Boss32_Exit	tu_43d250	0x43d250	0x43d3d0	guessed	called only from Boss32_Setup..; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d3d0	BossWeretigr_Dispatch	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	alone; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x43d3f0	BossWeretigr_Enter	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	data order: 0x64d638 < 0x64d650; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x43d430	BossWeretigr_State4Dispatch	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x43d450	BossWeretigr_State4Fx	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x43d500	BossWeretigr_State4Cue	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x43d560	BossWeretigr_State4End	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x43d580	BossWeretigr_EndPose	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x43d5a0	BossWeretigr_EndMove	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x43d630	BossWeretigr_Hook	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x43d640	BossWeretigr_HookPick	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_01.cpp	
-0x43d670	Boss33_Setup	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name head Boss; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d690	Boss33_End	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name head Boss; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d6d0	BossWeretigrFx_Task	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	alone; link extern	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d6f0	BossWeretigrFx_Main	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d720	BossWeretigrFx_Begin	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d750	BossWeretigrFx_AwaitPose	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d770	BossWeretigrFx_Rise	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d830	BossWeretigrFx_Strike	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43d990	BossWeretigrFx_Leap	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43da60	BossWeretigrFx_Fly	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43dac0	BossWeretigrFx_Finish	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43db10	BossWeretigrFx_Trail	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43db40	BossWeretigrFx_TrailBegin	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43dba0	BossWeretigrFx_TrailFade	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43dbf0	BossMikba_Dispatch	tu_43dbf0	0x43dbf0	0x43e540	guessed	data order: 0x64d6cc < 0x64d6e0; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43dc10	BossMikba_Enter	tu_43dbf0	0x43dbf0	0x43e540	joined	data 0x64d6cc; data 0x64d6d8; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43dc50	BossMikba_ActDispatch	tu_43dbf0	0x43dbf0	0x43e540	joined	data 0x64d6cc; data 0x64d6d8; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43dc70	BossMikba_DeathDispatch	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c18fc>0x800c1940; data 0x64d6cc; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	BOSS034.EMI#16:u002:single
-0x43dc90	BossMikba_DeathWait	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1940>0x800c199c; data 0x64d6cc; psx BOSS034.EMI#16 0x800c18fc>0x800c1940; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	BOSS034.EMI#16:u003:single
-0x43dcc0	BossMikba_DeathFlash	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c199c>0x800c1a78; data 0x64d6cc; psx BOSS034.EMI#16 0x800c1940>0x800c199c; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	BOSS034.EMI#16:u004:single
-0x43dd30	BossMikba_DeathOpen	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1a78>0x800c1c44; data 0x64d6cc; psx BOSS034.EMI#16 0x800c199c>0x800c1a78; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	BOSS034.EMI#16:u005:single
-0x43dde0	BossMikba_DeathSpread	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1a78>0x800c1c44; data 0x64d6cc; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43de60	BossMikba_DeathLoad	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1c44>0x800c1cbc; data 0x64d6cc; psx BOSS034.EMI#16 0x800c1a78>0x800c1c44; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	BOSS034.EMI#16:u007:single
-0x43dea0	BossMikba_DeathEnd	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; data 0x64d6cc; psx BOSS034.EMI#16 0x800c1c44>0x800c1cbc; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	BOSS034.EMI#16:u008:single
-0x43dee0	BossMikba_Hook	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; data 0x64d6cc; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	
-0x43def0	BossSample3_Dispatch	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; data 0x64d6cc; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43df10	BossSample3_Enter	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43df70	BossSample3_Hook	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43df80	Boss34_Setup	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43dfd0	Boss34_Event	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e0c0	Boss34_End	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e210	Boss34_Exit	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c22b4>0x800c23b8; psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	BOSS034.EMI#16:u019:subset
-0x43e270	Boss41_Setup	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c22b4>0x800c23b8; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e290	BossMikba_DrawQuad	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c22b4>0x800c23b8; link static?	src/game/boss_sg.cpp	src/game/boss/boss_01.cpp	BOSS034.EMI#16:u020:single
-0x43e540	BossGaist_Dispatch	tu_43e540	0x43e540	0x43e730	joined	psx BOSS035.EMI#16 0x800c181c>0x800c1860; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	BOSS035.EMI#16:u000:subset
-0x43e560	BossGaist_Enter	tu_43e540	0x43e540	0x43e730	joined	psx BOSS035.EMI#16 0x800c1860>0x800c18c4; data 0x64d78c; psx BOSS035.EMI#16 0x800c181c>0x800c1860; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	BOSS035.EMI#16:u000:subset
-0x43e5c0	BossGaist_Hook	tu_43e540	0x43e540	0x43e730	joined	psx BOSS035.EMI#16 0x800c18c4>0x800c190c; data 0x64d78c; psx BOSS035.EMI#16 0x800c1860>0x800c18c4; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	BOSS035.EMI#16:u000:subset
-0x43e5d0	BossGaist_HookClearBit1	tu_43e540	0x43e540	0x43e730	joined	psx BOSS035.EMI#16 0x800c190c>0x800c1950; data 0x64d78c; psx BOSS035.EMI#16 0x800c18c4>0x800c190c; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	BOSS035.EMI#16:u000:subset
-0x43e600	BossTorch_Dispatch	tu_43e540	0x43e540	0x43e730	joined	psx BOSS035.EMI#16 0x800c1950>0x800c1994; data 0x64d78c; psx BOSS035.EMI#16 0x800c190c>0x800c1950; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	BOSS035.EMI#16:u000:subset
-0x43e620	BossTorch_Enter	tu_43e540	0x43e540	0x43e730	joined	data 0x64d78c; data 0x64d798; psx BOSS035.EMI#16 0x800c1950>0x800c1994; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	BOSS035.EMI#16:u000:subset
-0x43e680	BossTorch_Hook	tu_43e540	0x43e540	0x43e730	joined	data 0x64d78c; data 0x64d798; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e690	BossTorch_HookTarget3	tu_43e540	0x43e540	0x43e730	joined	data 0x64d78c; data 0x64d798; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e6a0	BossSample9_Dispatch	tu_43e540	0x43e540	0x43e730	joined	data 0x64d78c; data 0x64d798; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e6c0	BossSample9_Enter	tu_43e540	0x43e540	0x43e730	joined	data 0x64d78c; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e720	BossSample9_Hook	tu_43e540	0x43e540	0x43e730	guessed	called only from BossGaist_Dispatch..; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e730	Boss35_Setup	tu_43e730	0x43e730	0x43e7c0	guessed	alone; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e750	Boss35_Event	tu_43e730	0x43e730	0x43e7c0	guessed	called only from Boss35_Setup..; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e770	Boss35_End	tu_43e730	0x43e730	0x43e7c0	guessed	called only from Boss35_Setup..; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e790	BossHook_ExitTransition4	tu_43e730	0x43e730	0x43e7c0	guessed	calls Boss35_Setup > BossHook_ExitTransition4; link extern	src/game/boss_se.cpp	src/game/boss/boss_01.cpp	
-0x43e7a0	Boss47_Setup	tu_43e730	0x43e730	0x43e7c0	guessed	name stem Boss; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e7c0	BossAngler_Dispatch	tu_43e7c0	0x43e7c0	0x43eb00	guessed	data order: 0x64d85c < 0x64d870; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e7e0	BossAngler_Enter	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e840	BossAngler_AdvanceDispatch	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e860	BossAngler_AdvanceStart	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e8c0	BossAngler_Advance	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e950	BossAngler_RetreatDispatch	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e970	BossAngler_Retreat	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e9a0	BossAngler_RetreatEnd	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e9c0	BossAngler_Hook	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43e9d0	BossAngler_HookSpawnFx	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43ea70	BossSample5_Dispatch	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43ea90	BossSample5_Enter	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43eaf0	BossSample5_Hook	tu_43e7c0	0x43e7c0	0x43eb00	guessed	called only from BossAngler_Dispatch..; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43eb00	Boss36_Setup	tu_43eb00	0x43eb00	0x43eb80	guessed	alone; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43eb20	Boss36_End	tu_43eb00	0x43eb00	0x43eb80	guessed	called only from Boss36_Setup..; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43eb40	Boss43_Setup	tu_43eb00	0x43eb00	0x43eb80	guessed	name stem Boss; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43eb60	BossHook_EndPickWay	tu_43eb00	0x43eb00	0x43eb80	guessed	calls Boss43_Setup > BossHook_EndPickWay; link extern	src/game/boss_h.cpp	src/game/boss/boss_01.cpp	
-0x43eb80	BossAnglerFx_Dispatch	tu_43eb80	0x43eb80	0x43ec30	guessed	name prefix BossAnglerFx; link extern	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43eba0	BossAnglerFx_Run	tu_43eb80	0x43eb80	0x43ec30	guessed	alone; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43ebd0	BossAnglerFx_Start	tu_43eb80	0x43eb80	0x43ec30	guessed	called only from BossAnglerFx_Run..; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43ec10	BattleFx_ScriptUntilDone	tu_43eb80	0x43eb80	0x43ec30	guessed	calls BossAnglerFx_Run > BattleFx_ScriptUntilDone; link extern	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43ec30	BossElder_Dispatch	tu_43ec30	0x43ec30	0x43ed00	guessed	alone; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43ec50	BossElder_Enter	tu_43ec30	0x43ec30	0x43ed00	guessed	data order: 0x64d8fc < 0x64d910; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43ecb0	BossElder_Hook	tu_43ec30	0x43ec30	0x43ed00	guessed	called only from BossElder_Dispatch..; link static?	src/game/boss_sh.cpp	src/game/boss/boss_01.cpp	
-0x43ecc0	Boss37_Setup	tu_43ec30	0x43ec30	0x43ed00	guessed	name head Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43ece0	Boss37_End	tu_43ec30	0x43ec30	0x43ed00	guessed	name head Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43ed00	BossAmmonite_Dispatch	tu_43ed00	0x43ed00	0x43ee50	guessed	data order: 0x64d94c < 0x64d960; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43ed20	BossAmmonite_Enter	tu_43ed00	0x43ed00	0x43ee50	joined	data 0x64d94c; data 0x64d958; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43edb0	BossAmmonite_Hook	tu_43ed00	0x43ed00	0x43ee50	joined	data 0x64d94c; data 0x64d958; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43edc0	BossSample6_Dispatch	tu_43ed00	0x43ed00	0x43ee50	joined	data 0x64d94c; data 0x64d958; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43ede0	BossSample6_Enter	tu_43ed00	0x43ed00	0x43ee50	joined	data 0x64d94c; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43ee40	BossSample6_Hook	tu_43ed00	0x43ed00	0x43ee50	guessed	called only from BossAmmonite_Dispatch..; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43ee50	Boss38_Setup	tu_43ee50	0x43ee50	0x43ef20	guessed	alone; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43eed0	Boss38_End	tu_43ee50	0x43ee50	0x43ef20	guessed	called only from Boss38_Setup..; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43ef00	Boss44_Setup	tu_43ee50	0x43ee50	0x43ef20	guessed	name stem Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43ef20	BossSample2_Dispatch	tu_43ef20	0x43ef20	0x43f040	guessed	data order: 0x64d9d8 < 0x64d9ec; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43ef40	BossSample2_Enter	tu_43ef20	0x43ef20	0x43f040	joined	data 0x64d9d8; data 0x64d9e4; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43efa0	BossSample2_Hook	tu_43ef20	0x43ef20	0x43f040	joined	data 0x64d9d8; data 0x64d9e4; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43efb0	BossHugeSlug_Dispatch	tu_43ef20	0x43ef20	0x43f040	joined	data 0x64d9d8; data 0x64d9e4; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43efd0	BossHugeSlug_Enter	tu_43ef20	0x43ef20	0x43f040	joined	data 0x64d9d8; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f030	BossHugeSlug_Hook	tu_43ef20	0x43ef20	0x43f040	guessed	called only from BossSample2_Dispatch..; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f040	Boss40_Setup	tu_43f040	0x43f040	0x43f0a0	guessed	name stem Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f060	Boss53_Setup	tu_43f040	0x43f040	0x43f0a0	guessed	alone; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f080	Boss53_End	tu_43f040	0x43f040	0x43f0a0	guessed	called only from Boss53_Setup..; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f0a0	BossSample4_Dispatch	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	name stem BossSample; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f0c0	BossSample4_Enter	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	name stem BossSample; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f120	BossSample4_Hook	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	name stem BossSample; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f130	Boss42_Setup	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	name stem BossSample; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f150	BossSample7_Dispatch	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	data order: 0x64dab4 < 0x64dac8; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f170	BossSample7_Enter	tu_43f0a0	0x43f0a0	0x43f2d0	joined	data 0x64dab4; data 0x64dac0; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f1d0	BossSample7_Hook	tu_43f0a0	0x43f0a0	0x43f2d0	joined	data 0x64dab4; data 0x64dac0; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f1e0	BossManmo_Dispatch	tu_43f0a0	0x43f0a0	0x43f2d0	joined	data 0x64dab4; data 0x64dac0; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f200	BossManmo_Enter	tu_43f0a0	0x43f0a0	0x43f2d0	joined	data 0x64dab4; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f260	BossManmo_Hook	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	called only from BossSample7_Dispatch..; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f270	Boss45_Setup	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	name stem Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f290	Boss49_Setup	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	name stem Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f2b0	Boss49_End	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	name stem Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f2d0	BossChimera_Dispatch	tu_43f2d0	0x43f2d0	0x43f3b0	guessed	alone; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f2f0	BossChimera_Enter	tu_43f2d0	0x43f2d0	0x43f3b0	guessed	data order: 0x64db40 < 0x64db58; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f350	BossChimera_Hook	tu_43f2d0	0x43f2d0	0x43f3b0	guessed	called only from BossChimera_Dispatch..; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f360	Boss50_Setup	tu_43f2d0	0x43f2d0	0x43f3b0	guessed	name head Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
-0x43f380	Boss50_End	tu_43f2d0	0x43f2d0	0x43f3b0	guessed	name head Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_01.cpp	
+0x437ee0	BossNue_Dispatch	tu_437ee0	0x437ee0	0x438190	guessed	data order: 0x64c870 < 0x64c890; link static?	src/game/boss_sa.cpp	src/game/boss/boss_nue.cpp	
+0x437f00	BossNue_Enter	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link static?	src/game/boss_sa.cpp	src/game/boss/boss_nue.cpp	
+0x437f40	BossNue_EndDispatch	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link static?	src/game/boss_sa.cpp	src/game/boss/boss_nue.cpp	
+0x437f60	BossNue_EndPose	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link static?	src/game/boss_sa.cpp	src/game/boss/boss_nue.cpp	
+0x437f80	BossNue_EndMove	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link static?	src/game/boss_sa.cpp	src/game/boss/boss_nue.cpp	
+0x437ff0	BossNue_Hook	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link static?	src/game/boss_sa.cpp	src/game/boss/boss_nue.cpp	
+0x438000	BossNue_HookPick	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link extern	src/game/boss_sa.cpp	src/game/boss/boss_nue.cpp	
+0x438030	BossNue_HookHit	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link static?	src/game/boss_sa.cpp	src/game/boss/boss_nue.cpp	
+0x438070	BossNue2_Dispatch	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; data 0x64c880; link static?	src/game/boss_sa.cpp	src/game/boss/boss_nue.cpp	
+0x438090	BossNue2_Enter	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; link static?	src/game/boss_sa.cpp	src/game/boss/boss_nue.cpp	
+0x4380d0	BossNue2_ActDispatch	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; link static?	src/game/boss_sa.cpp	src/game/boss/boss_nue.cpp	
+0x4380f0	BossNue2_Hook	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; link static?	src/game/boss_sa.cpp	src/game/boss/boss_nue.cpp	
+0x438100	BossSample1_Dispatch	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; link static?	src/game/boss_sa.cpp	src/game/boss/boss_nue.cpp	
+0x438120	BossSample1_Enter	tu_437ee0	0x437ee0	0x438190	joined	data 0x64c870; link static?	src/game/boss_sa.cpp	src/game/boss/boss_nue.cpp	
+0x438180	BossSample1_Hook	tu_437ee0	0x437ee0	0x438190	guessed	called only from BossNue_Dispatch..; link static?	src/game/boss_sa.cpp	src/game/boss/boss_nue.cpp	
+0x438190	Boss02_Setup	tu_438190	0x438190	0x438290	guessed	alone; link static?	src/game/boss_sa.cpp	src/game/boss/boss_02.cpp	
+0x4381b0	Boss02_Event	tu_438190	0x438190	0x438290	guessed	called only from Boss02_Setup..; link static?	src/game/boss_sa.cpp	src/game/boss/boss_02.cpp	
+0x4381e0	Boss02_End	tu_438190	0x438190	0x438290	guessed	called only from Boss02_Setup..; link static?	src/game/boss_sa.cpp	src/game/boss/boss_02.cpp	
+0x438210	Boss03_Setup	tu_438190	0x438190	0x438290	guessed	name stem Boss; link static?	src/game/boss_sa.cpp	src/game/boss/boss_02.cpp	
+0x438230	Boss03_End	tu_438190	0x438190	0x438290	guessed	name stem Boss; link static?	src/game/boss_sa.cpp	src/game/boss/boss_02.cpp	
+0x438270	Boss39_Setup	tu_438190	0x438190	0x438290	guessed	name stem Boss; link static?	src/game/boss_sa.cpp	src/game/boss/boss_02.cpp	
+0x438290	BossEngineer_Dispatch	tu_438290	0x438290	0x438430	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_engineer.cpp	
+0x4382b0	BossEngineer_Enter	tu_438290	0x438290	0x438430	guessed	data order: 0x64c964 < 0x64c984; link static?	src/game/boss_sb.cpp	src/game/boss/boss_engineer.cpp	
+0x4382f0	BossEngineer_ActDispatch	tu_438290	0x438290	0x438430	guessed	name prefix BossEngineer; link static?	src/game/boss_sb.cpp	src/game/boss/boss_engineer.cpp	
+0x438310	BossEngineer_HitDispatch	tu_438290	0x438290	0x438430	guessed	name prefix BossEngineer; link static?	src/game/boss_sb.cpp	src/game/boss/boss_engineer.cpp	
+0x438330	BossEngineer_HitStart	tu_438290	0x438290	0x438430	guessed	name prefix BossEngineer; link static?	src/game/boss_sb.cpp	src/game/boss/boss_engineer.cpp	
+0x438350	BossEngineer_HitStep	tu_438290	0x438290	0x438430	guessed	name prefix BossEngineer; link static?	src/game/boss_sb.cpp	src/game/boss/boss_engineer.cpp	
+0x438420	BossEngineer_Hook	tu_438290	0x438290	0x438430	guessed	name prefix BossEngineer; link static?	src/game/boss_sb.cpp	src/game/boss/boss_engineer.cpp	
+0x438430	Boss04_Setup	tu_438430	0x438430	0x438b30	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_04.cpp	
+0x438450	Boss04_Event	tu_438430	0x438430	0x438b30	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_04.cpp	
+0x438560	Boss04_Exit	tu_438430	0x438430	0x438b30	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_04.cpp	
+0x438650	Boss05_Setup	tu_438430	0x438430	0x438b30	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_04.cpp	
+0x438670	Boss05_Event	tu_438430	0x438430	0x438b30	guessed	called only from Boss05_Setup..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_04.cpp	
+0x438780	Boss05_End	tu_438430	0x438430	0x438b30	guessed	called only from Boss05_Setup..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_04.cpp	
+0x4387c0	Boss05_Exit	tu_438430	0x438430	0x438b30	guessed	called only from Boss05_Setup..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_04.cpp	
+0x4388b0	Boss06_Setup	tu_438430	0x438430	0x438b30	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_04.cpp	
+0x4388d0	Boss06_Event	tu_438430	0x438430	0x438b30	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_04.cpp	
+0x4389e0	Boss04_End	tu_438430	0x438430	0x438b30	guessed	name prefix Boss04; link static?	src/game/boss_sb.cpp	src/game/boss/boss_04.cpp	
+0x438a20	Boss06_Exit	tu_438430	0x438430	0x438b30	guessed	name prefix Boss06; link static?	src/game/boss_sb.cpp	src/game/boss/boss_04.cpp	
+0x438b30	BossWorker_Dispatch	tu_438b30	0x438b30	0x438ba0	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_worker.cpp	
+0x438b50	BossWorker_Enter	tu_438b30	0x438b30	0x438ba0	guessed	data order: 0x64c9e4 < 0x64ca0c; link static?	src/game/boss_sb.cpp	src/game/boss/boss_worker.cpp	
+0x438b90	BossWorker_Hook	tu_438b30	0x438b30	0x438ba0	guessed	called only from BossWorker_Dispatch..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_worker.cpp	
+0x438ba0	BossOperator_Dispatch	tu_438ba0	0x438ba0	0x438c30	guessed	name prefix BossOperator; link static?	src/game/boss_sb.cpp	src/game/boss/boss_operator.cpp	
+0x438bc0	BossOperator_Enter	tu_438ba0	0x438ba0	0x438c30	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_operator.cpp	
+0x438c10	BossOperator_Hook	tu_438ba0	0x438ba0	0x438c30	guessed	called only from BossOperator_Enter..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_operator.cpp	
+0x438c20	BossOperator_HookHit	tu_438ba0	0x438ba0	0x438c30	guessed	name prefix BossOperator; link static?	src/game/boss_sb.cpp	src/game/boss/boss_operator.cpp	
+0x438c30	Boss07_Setup	tu_438c30	0x438c30	0x438e50	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_07.cpp	
+0x438c50	Boss07_Event	tu_438c30	0x438c30	0x438e50	guessed	called only from Boss07_Setup..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_07.cpp	
+0x438dd0	Boss07_End	tu_438c30	0x438c30	0x438e50	guessed	called only from Boss07_Setup..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_07.cpp	
+0x438e30	Boss07_Exit	tu_438c30	0x438c30	0x438e50	guessed	name prefix Boss07; link extern	src/game/boss_sb.cpp	src/game/boss/boss_07.cpp	
+0x438e50	BossTorast_Dispatch	tu_438e50	0x438e50	0x4390f0	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_torast.cpp	
+0x438e70	BossTorast_Enter	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_sb.cpp	src/game/boss/boss_torast.cpp	
+0x438eb0	BossTorast_ActDispatch	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_h.cpp	src/game/boss/boss_torast.cpp	
+0x438ed0	BossTorast_DeathDispatch	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_h.cpp	src/game/boss/boss_torast.cpp	
+0x438ef0	BossTorast_DeathFxDispatch	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_h.cpp	src/game/boss/boss_torast.cpp	
+0x438f10	BossTorast_DeathFxStart	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_h.cpp	src/game/boss/boss_torast.cpp	
+0x438f40	BossTorast_DeathFxFlash	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_h.cpp	src/game/boss/boss_torast.cpp	
+0x438fd0	BossTorast_DeathFxRingGrow	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_h.cpp	src/game/boss/boss_torast.cpp	
+0x439030	BossTorast_DeathFxRingShrink	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_h.cpp	src/game/boss/boss_torast.cpp	
+0x4390e0	BossTorast_Hook	tu_438e50	0x438e50	0x4390f0	guessed	name prefix BossTorast; link static?	src/game/boss_sb.cpp	src/game/boss/boss_torast.cpp	
+0x4390f0	BossKassen_Dispatch	tu_4390f0	0x4390f0	0x439160	guessed	name prefix BossKassen; link static?	src/game/boss_sb.cpp	src/game/boss/boss_kassen.cpp	
+0x439110	BossKassen_Enter	tu_4390f0	0x4390f0	0x439160	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_kassen.cpp	
+0x439150	BossKassen_Hook	tu_4390f0	0x4390f0	0x439160	guessed	called only from BossKassen_Enter..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_kassen.cpp	
+0x439160	BossGaltel_Dispatch	tu_439160	0x439160	0x4391d0	guessed	name prefix BossGaltel; link static?	src/game/boss_sb.cpp	src/game/boss/boss_galtel.cpp	
+0x439180	BossGaltel_Enter	tu_439160	0x439160	0x4391d0	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_galtel.cpp	
+0x4391c0	BossGaltel_Hook	tu_439160	0x439160	0x4391d0	guessed	called only from BossGaltel_Enter..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_galtel.cpp	
+0x4391d0	BossDoksen_Dispatch	tu_4391d0	0x4391d0	0x439240	guessed	name prefix BossDoksen; link static?	src/game/boss_sb.cpp	src/game/boss/boss_doksen.cpp	
+0x4391f0	BossDoksen_Enter	tu_4391d0	0x4391d0	0x439240	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_doksen.cpp	
+0x439230	BossDoksen_Hook	tu_4391d0	0x4391d0	0x439240	guessed	called only from BossDoksen_Enter..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_doksen.cpp	
+0x439240	Boss08_Setup	tu_439240	0x439240	0x4396b0	guessed	alone; link static?	src/game/boss_sb.cpp	src/game/boss/boss_08.cpp	
+0x439260	Boss08_End	tu_439240	0x439240	0x4396b0	guessed	called only from Boss08_Setup..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_08.cpp	
+0x439280	Boss08_Exit	tu_439240	0x439240	0x4396b0	guessed	called only from Boss08_Setup..; link static?	src/game/boss_sb.cpp	src/game/boss/boss_08.cpp	
+0x4392d0	Boss09_Setup	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_08.cpp	
+0x4392f0	Boss09_End	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_08.cpp	
+0x439310	Boss09_Exit	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_08.cpp	
+0x439370	Boss10_Setup	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_08.cpp	
+0x439390	Boss10_End	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_08.cpp	
+0x4393b0	Boss10_Exit	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_08.cpp	
+0x439410	Boss11_Setup	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_08.cpp	
+0x439430	Boss11_End	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_08.cpp	
+0x439450	Boss11_Exit	tu_439240	0x439240	0x4396b0	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_08.cpp	
+0x4394a0	BossTorast_DrawRing	tu_439240	0x439240	0x4396b0	guessed	name head Boss; link extern	src/game/boss_h.cpp	src/game/boss/boss_08.cpp	
+0x4396b0	BossAmalgam_Dispatch	tu_4396b0	0x4396b0	0x439b10	guessed	name prefix BossAmalgam; link static?	src/game/boss_sc.cpp	src/game/boss/boss_amalgam.cpp	
+0x4396d0	BossAmalgam_Enter	tu_4396b0	0x4396b0	0x439b10	guessed	name prefix BossAmalgam; link static?	src/game/boss_sc.cpp	src/game/boss/boss_amalgam.cpp	
+0x439730	BossAmalgam_ActDispatch	tu_4396b0	0x4396b0	0x439b10	guessed	name prefix BossAmalgam; link static?	src/game/boss_sc.cpp	src/game/boss/boss_amalgam.cpp	
+0x439750	BossAmalgam_DeathDispatch	tu_4396b0	0x4396b0	0x439b10	guessed	name prefix BossAmalgam; link static?	src/game/boss_sc.cpp	src/game/boss/boss_amalgam.cpp	
+0x439770	BossAmalgam_DeathTick	tu_4396b0	0x4396b0	0x439b10	guessed	name prefix BossAmalgam; link static?	src/game/boss_sc.cpp	src/game/boss/boss_amalgam.cpp	
+0x439790	BossAmalgam_DeathStart	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1978>0x800c1a24; link static?	src/game/boss_sc.cpp	src/game/boss/boss_amalgam.cpp	BOSS012.EMI#16:u004:single
+0x439830	BossAmalgam_DeathMelt	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1a24>0x800c1b18; psx BOSS012.EMI#16 0x800c1978>0x800c1a24; link static?	src/game/boss_sc.cpp	src/game/boss/boss_amalgam.cpp	BOSS012.EMI#16:u005:single
+0x439870	BossAmalgam_DeathEnd	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1a24>0x800c1b18; link static?	src/game/boss_sc.cpp	src/game/boss/boss_amalgam.cpp	
+0x4398d0	BossAmalgam_Hook	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1b18>0x800c1ba8; psx BOSS012.EMI#16 0x800c1a24>0x800c1b18; link static?	src/game/boss_sc.cpp	src/game/boss/boss_amalgam.cpp	BOSS012.EMI#16:u007:single
+0x4398e0	Boss12_Setup	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1b18>0x800c1ba8; link static?	src/game/boss_sc.cpp	src/game/boss/boss_amalgam.cpp	
+0x439900	Boss12_End	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1ba8>0x800c1c08; psx BOSS012.EMI#16 0x800c1b18>0x800c1ba8; link static?	src/game/boss_sc.cpp	src/game/boss/boss_amalgam.cpp	BOSS012.EMI#16:u012:single
+0x439930	BossAmalgam_DrawSprite	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1c08>0x800c1cd8; psx BOSS012.EMI#16 0x800c1ba8>0x800c1c08; link static?	src/game/boss_sc.cpp	src/game/boss/boss_amalgam.cpp	BOSS012.EMI#16:u013:same
+0x4399e0	BossAmalgam_DrawStreak	tu_4396b0	0x4396b0	0x439b10	joined	psx BOSS012.EMI#16 0x800c1c08>0x800c1cd8; link static?	src/game/boss_sc.cpp	src/game/boss/boss_amalgam.cpp	BOSS012.EMI#16:u013:same
+0x439b10	BossBalio_Dispatch	tu_439b10	0x439b10	0x439c60	guessed	alone; link static?	src/game/boss_sc.cpp	src/game/boss/boss_balio.cpp	
+0x439b30	BossBalio_Enter	tu_439b10	0x439b10	0x439c60	guessed	data order: 0x64cc88 < 0x64ccd0; link static?	src/game/boss_sc.cpp	src/game/boss/boss_balio.cpp	
+0x439bc0	BossBalio_Hook	tu_439b10	0x439b10	0x439c60	guessed	called only from BossBalio_Dispatch..; link static?	src/game/boss_sc.cpp	src/game/boss/boss_balio.cpp	
+0x439bd0	BossBalio_HookAct	tu_439b10	0x439b10	0x439c60	guessed	name prefix BossBalio; link static?	src/game/boss_sc.cpp	src/game/boss/boss_balio.cpp	
+0x439c40	BossBalio_HookHit	tu_439b10	0x439b10	0x439c60	guessed	name prefix BossBalio; link static?	src/game/boss_sc.cpp	src/game/boss/boss_balio.cpp	
+0x439c60	BossSunder_Dispatch	tu_439c60	0x439c60	0x439e00	guessed	alone; link static?	src/game/boss_sc.cpp	src/game/boss/boss_sunder.cpp	
+0x439c80	BossSunder_Enter	tu_439c60	0x439c60	0x439e00	guessed	data order: 0x64cc94 < 0x64cd0c; link static?	src/game/boss_sc.cpp	src/game/boss/boss_sunder.cpp	
+0x439d10	BossSunder_Hook	tu_439c60	0x439c60	0x439e00	guessed	called only from BossSunder_Dispatch..; link static?	src/game/boss_sc.cpp	src/game/boss/boss_sunder.cpp	
+0x439d20	BossSunder_HookAct	tu_439c60	0x439c60	0x439e00	guessed	name prefix BossSunder; link static?	src/game/boss_sc.cpp	src/game/boss/boss_sunder.cpp	
+0x439db0	BossSunder_HookHit	tu_439c60	0x439c60	0x439e00	guessed	name prefix BossSunder; link static?	src/game/boss_sc.cpp	src/game/boss/boss_sunder.cpp	
+0x439e00	BossNina_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x439e20	BossNina_Enter	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x439e70	BossNina_WalkDispatch	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x439e90	BossNina_WalkStart	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x439ec0	BossNina_WalkStep	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x439ee0	BossNina_Hook	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x439ef0	BossNina_HookAct	tu_439e00	0x439e00	0x43b650	guessed	data 0x675f00; segment; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x439f50	BossNina_HookHit	tu_439e00	0x439e00	0x43b650	guessed	data 0x675f00; data 0x64ccac; segment; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x439fe0	Boss13_Setup	tu_439e00	0x439e00	0x43b650	guessed	data 0x675f00; data 0x64ccac; segment; name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_nina.cpp	
+0x43a000	Boss13_End	tu_439e00	0x439e00	0x43b650	guessed	data 0x675f00; data 0x64ccac; segment; name stem Boss; link static?	src/game/boss_sb.cpp	src/game/boss/boss_nina.cpp	
+0x43a030	Boss16_Setup	tu_439e00	0x439e00	0x43b650	guessed	data 0x675f00; data 0x64ccac; segment; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a060	Boss16_Event	tu_439e00	0x439e00	0x43b650	guessed	data 0x675f00; segment; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a190	Boss16_End	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a230	Boss16_Exit	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a360	BossRocky_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a380	BossRocky_Enter	tu_439e00	0x439e00	0x43b650	guessed	data 0x64cd90; segment; data order: 0x64cd90 < 0x675f00; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a3c0	BossRocky_Hook	tu_439e00	0x439e00	0x43b650	guessed	data 0x64cd90; segment; data order: 0x64cd90 < 0x675f00; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a3d0	BossSample8_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	data 0x64cd90; segment; data order: 0x64cd90 < 0x675f00; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a3f0	BossSample8_Enter	tu_439e00	0x439e00	0x43b650	guessed	data 0x64cd90; segment; data order: 0x64cd90 < 0x675f00; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a450	BossSample8_Hook	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a460	Boss14_Setup	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a480	Boss14_End	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a4a0	BossHook_ExitClearActor0	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link extern	src/game/boss_h.cpp	src/game/boss/boss_nina.cpp	
+0x43a4b0	Boss46_Setup	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a4d0	BossPooch_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a4f0	BossPooch_Enter	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a530	BossPooch_Hook	tu_439e00	0x439e00	0x43b650	guessed	data 0x64ce68; segment; name stem Boss; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a540	Boss15_Setup	tu_439e00	0x439e00	0x43b650	guessed	data 0x64ce68; segment; name stem Boss; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a560	Boss15_End	tu_439e00	0x439e00	0x43b650	guessed	data 0x64ce68; segment; name stem Boss; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a580	Boss15_Exit	tu_439e00	0x439e00	0x43b650	guessed	data 0x64ce68; segment; name stem Boss; name stem Boss; link static?	src/game/boss_sc.cpp	src/game/boss/boss_nina.cpp	
+0x43a590	BossMutant_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	data 0x64ce68; segment; name stem Boss; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43a5b0	BossMutant_Enter	tu_439e00	0x439e00	0x43b650	guessed	data 0x64ce68; segment; name stem Boss; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43a5f0	BossMutant_ActDispatch	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43a610	BossMutant_Hook	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43a620	Boss17_Setup	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43a640	Boss17_End	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43a660	BossClaw_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43a680	BossClaw_Enter	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1890>0x800c1adc; segment; data order: 0x64cf40 < 0x64cfa8; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	BOSS018.EMI#16:u000:single
+0x43a720	BossOp_EnterTick	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1890>0x800c1adc; segment; data order: 0x64cf40 < 0x64cfa8; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_h.cpp	src/game/boss/boss_nina.cpp	BOSS018.EMI#16:u008:single
+0x43a740	BossClaw_Hook	tu_439e00	0x439e00	0x43b650	guessed	calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43a750	BossHook_RetargetMember0	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c19b4>0x800c19e8; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_h.cpp	src/game/boss/boss_nina.cpp	BOSS018.EMI#16:u003:single
+0x43a770	BossCawer_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c19e8>0x800c1a2c; psx BOSS018.EMI#16 0x800c19b4>0x800c19e8; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	BOSS018.EMI#16:u006:single
+0x43a790	BossCawer_Enter	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1a2c>0x800c1b84; psx BOSS018.EMI#16 0x800c19e8>0x800c1a2c; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	BOSS018.EMI#16:u007:single
+0x43a830	BossCawer_Hook	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1a2c>0x800c1b84; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43a840	BossPatrio_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1b84>0x800c1bc8; psx BOSS018.EMI#16 0x800c1a2c>0x800c1b84; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	BOSS018.EMI#16:u013:single
+0x43a860	BossPatrio_Enter	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1bc8>0x800c1c6c; psx BOSS018.EMI#16 0x800c1b84>0x800c1bc8; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	BOSS018.EMI#16:u014:single
+0x43a8f0	BossPatrio_Hook	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1c6c>0x800c1cd8; psx BOSS018.EMI#16 0x800c1bc8>0x800c1c6c; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	BOSS018.EMI#16:u015:single
+0x43a900	BossDodai_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1cd8>0x800c1dc4; data 0x64cf40; psx BOSS018.EMI#16 0x800c1c6c>0x800c1cd8; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	BOSS018.EMI#16:u019:same
+0x43a990	BossDodai_Enter	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1dc4>0x800c1f28; psx BOSS018.EMI#16 0x800c1cd8>0x800c1dc4; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	BOSS018.EMI#16:u019:same
+0x43aa50	BossDodai_ActDispatch	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1dc4>0x800c1f28; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43aa70	BossDodai_Death	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1f28>0x800c2074; psx BOSS018.EMI#16 0x800c1dc4>0x800c1f28; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	BOSS018.EMI#16:u021:single
+0x43ab00	BossDodai_HitPoseDispatch	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1f28>0x800c2074; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43ab20	BossDodai_HitShake	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c1f28>0x800c2074; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43ab40	BossDodai_Hook	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c2074>0x800c20bc; psx BOSS018.EMI#16 0x800c1f28>0x800c2074; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	BOSS018.EMI#16:u026:single
+0x43ab50	BossHook_ActKindNone	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c2074>0x800c20bc; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43ab60	BossDodai_HitSound	tu_439e00	0x439e00	0x43b650	guessed	psx BOSS018.EMI#16 0x800c2074>0x800c20bc; segment; calls BossDodai_Death > BossMap_SetCorners; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	BOSS018.EMI#16:u028:single
+0x43aba0	Boss18_Setup	tu_439e00	0x439e00	0x43b650	guessed	alone; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43abc0	Boss18_Event	tu_439e00	0x439e00	0x43b650	guessed	called only from Boss18_Setup..; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43ac50	Boss18_End	tu_439e00	0x439e00	0x43b650	guessed	called only from Boss18_Setup..; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43ad10	Boss18_Exit	tu_439e00	0x439e00	0x43b650	guessed	called only from Boss18_Setup..; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43ad60	Boss19_Setup	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43ad80	Boss19_Event	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43ae10	Boss19_End	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43aed0	Boss19_Exit	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43af20	Boss20_Setup	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43af40	Boss20_Event	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43afd0	Boss20_End	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b080	Boss20_Exit	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b0d0	BossMap_SetCorners	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_h.cpp	src/game/boss/boss_nina.cpp	
+0x43b130	Boss_SetByLeaderId	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_h.cpp	src/game/boss/boss_nina.cpp	
+0x43b180	BossMap_UpdateFromEnemies	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_h.cpp	src/game/boss/boss_nina.cpp	
+0x43b280	BossEmitai_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b2a0	BossEmitai_Enter	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b2e0	BossEmitai_ActDispatch	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b300	BossEmitai_Death	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b360	BossEmitai_Hook	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b370	BossGolem_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b390	BossGolem_Enter	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d094; segment; calls Boss20_End > Boss_SetByLeaderId; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b3d0	BossGolem_Hook	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d14c; segment; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b3e0	Boss21_Setup	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d14c; segment; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b400	Boss21_Event	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d14c; segment; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b480	Boss21_Exit	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d14c; segment; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b4b0	BossGarr_Dispatch	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d14c; segment; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b4d0	BossGarr_Enter	tu_439e00	0x439e00	0x43b650	guessed	data 0x64d14c; segment; name stem Boss; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b530	BossGarr_ActDispatch	tu_439e00	0x439e00	0x43b650	guessed	name prefix BossGarr; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b550	BossOp_Death	tu_439e00	0x439e00	0x43b650	guessed	name prefix BossOp; link static?	src/game/boss_h.cpp	src/game/boss/boss_nina.cpp	
+0x43b5a0	BossGarr_Hook	tu_439e00	0x439e00	0x43b650	guessed	name prefix BossGarr; link static?	src/game/boss_sd.cpp	src/game/boss/boss_nina.cpp	
+0x43b5b0	Boss22_Setup	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_nina.cpp	
+0x43b5d0	Boss22_End	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_nina.cpp	
+0x43b610	Boss22_Exit	tu_439e00	0x439e00	0x43b650	guessed	name stem Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_nina.cpp	
+0x43b650	BossBully_Dispatch	tu_43b650	0x43b650	0x43b710	guessed	alone; link static?	src/game/boss_se.cpp	src/game/boss/boss_bully.cpp	
+0x43b670	BossBully_Enter	tu_43b650	0x43b650	0x43b710	guessed	data order: 0x64d1c0 < 0x64d1f0; link static?	src/game/boss_se.cpp	src/game/boss/boss_bully.cpp	
+0x43b700	BossBully_Hook	tu_43b650	0x43b650	0x43b710	guessed	called only from BossBully_Dispatch..; link static?	src/game/boss_se.cpp	src/game/boss/boss_bully.cpp	
+0x43b710	Boss23_Setup	tu_43b710	0x43b710	0x43b770	guessed	alone; link static?	src/game/boss_se.cpp	src/game/boss/boss_23.cpp	
+0x43b730	Boss21_End	tu_43b710	0x43b710	0x43b770	guessed	name stem Boss; link extern	src/game/boss_sd.cpp	src/game/boss/boss_23.cpp	
+0x43b750	BossHook_ExitClearActors012	tu_43b710	0x43b710	0x43b770	guessed	calls Boss23_Setup > BossHook_ExitClearActors012; link extern	src/game/boss_se.cpp	src/game/boss/boss_23.cpp	
+0x43b770	BossStallion_Dispatch	tu_43b770	0x43b770	0x43b870	guessed	data order: 0x64d22c < 0x64d240; link static?	src/game/boss_se.cpp	src/game/boss/boss_stallion.cpp	
+0x43b790	BossStallion_Enter	tu_43b770	0x43b770	0x43b870	joined	data 0x64d22c; data 0x64d238; link static?	src/game/boss_se.cpp	src/game/boss/boss_stallion.cpp	
+0x43b7d0	BossStallion_Hook	tu_43b770	0x43b770	0x43b870	joined	data 0x64d22c; data 0x64d238; link static?	src/game/boss_se.cpp	src/game/boss/boss_stallion.cpp	
+0x43b7e0	BossSample10_Dispatch	tu_43b770	0x43b770	0x43b870	joined	data 0x64d22c; data 0x64d238; link static?	src/game/boss_se.cpp	src/game/boss/boss_stallion.cpp	
+0x43b800	BossSample10_Enter	tu_43b770	0x43b770	0x43b870	joined	data 0x64d22c; link static?	src/game/boss_se.cpp	src/game/boss/boss_stallion.cpp	
+0x43b860	BossSample10_Hook	tu_43b770	0x43b770	0x43b870	guessed	called only from BossStallion_Dispatch..; link static?	src/game/boss_se.cpp	src/game/boss/boss_stallion.cpp	
+0x43b870	Boss24_Setup	tu_43b870	0x43b870	0x43b8f0	guessed	alone; link static?	src/game/boss_se.cpp	src/game/boss/boss_24.cpp	
+0x43b890	Boss24_End	tu_43b870	0x43b870	0x43b8f0	guessed	called only from Boss24_Setup..; link static?	src/game/boss_se.cpp	src/game/boss/boss_24.cpp	
+0x43b8c0	Boss24_Exit	tu_43b870	0x43b870	0x43b8f0	guessed	called only from Boss24_Setup..; link static?	src/game/boss_se.cpp	src/game/boss/boss_24.cpp	
+0x43b8d0	Boss48_Setup	tu_43b870	0x43b870	0x43b8f0	guessed	name stem Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_24.cpp	
+0x43b8f0	BossBeyd_Dispatch	tu_43b8f0	0x43b8f0	0x43bc90	guessed	data order: 0x64d2b8 < 0x64d2e0; link static?	src/game/boss_se.cpp	src/game/boss/boss_beyd.cpp	
+0x43b910	BossBeyd_Enter	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; data 0x64d2d0; link static?	src/game/boss_se.cpp	src/game/boss/boss_beyd.cpp	
+0x43ba10	BossBeyd_ActDispatch	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; data 0x64d2d0; link static?	src/game/boss_se.cpp	src/game/boss/boss_beyd.cpp	
+0x43ba30	BossBeyd_Death	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; data 0x64d2d0; link static?	src/game/boss_se.cpp	src/game/boss/boss_beyd.cpp	
+0x43ba90	BossBeyd_Hook	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; data 0x64d2d0; link static?	src/game/boss_se.cpp	src/game/boss/boss_beyd.cpp	
+0x43baa0	BossBeyd_HookPick	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; data 0x64d2d0; link static?	src/game/boss_se.cpp	src/game/boss/boss_beyd.cpp	
+0x43bad0	BossBeyd_HookTick	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; data 0x64d2d0; link static?	src/game/boss_se.cpp	src/game/boss/boss_beyd.cpp	
+0x43bb00	BossBeyd2_Dispatch	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; data 0x64d2d0; link static?	src/game/boss_se.cpp	src/game/boss/boss_beyd.cpp	
+0x43bb20	BossBeyd2_Enter	tu_43b8f0	0x43b8f0	0x43bc90	joined	data 0x64d2b8; link static?	src/game/boss_se.cpp	src/game/boss/boss_beyd.cpp	
+0x43bc00	BossBeyd2_ActDispatch	tu_43b8f0	0x43b8f0	0x43bc90	guessed	name prefix BossBeyd2; link static?	src/game/boss_se.cpp	src/game/boss/boss_beyd.cpp	
+0x43bc20	BossBeyd2_Death	tu_43b8f0	0x43b8f0	0x43bc90	guessed	name prefix BossBeyd2; link static?	src/game/boss_se.cpp	src/game/boss/boss_beyd.cpp	
+0x43bc70	BossBeyd2_Hook	tu_43b8f0	0x43b8f0	0x43bc90	guessed	name prefix BossBeyd2; link static?	src/game/boss_se.cpp	src/game/boss/boss_beyd.cpp	
+0x43bc80	BossBeyd2_HookTarget4	tu_43b8f0	0x43b8f0	0x43bc90	guessed	name prefix BossBeyd2; link static?	src/game/boss_se.cpp	src/game/boss/boss_beyd.cpp	
+0x43bc90	BossZig_Dispatch	tu_43bc90	0x43bc90	0x43bea0	guessed	alone; link static?	src/game/boss_se.cpp	src/game/boss/boss_zig.cpp	
+0x43bcb0	BossZig_Enter	tu_43bc90	0x43bc90	0x43bea0	guessed	data order: 0x64d2c4 < 0x64d388; link static?	src/game/boss_se.cpp	src/game/boss/boss_zig.cpp	
+0x43bd00	BossZig_Idle	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_zig.cpp	
+0x43bd40	BossZig_Step5Dispatch	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_zig.cpp	
+0x43bd60	BossZig_Step5Count	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_zig.cpp	
+0x43bda0	BossZig_Step5Fire	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_zig.cpp	
+0x43bdf0	BossZig_ActDispatch	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_zig.cpp	
+0x43be10	BossZig_Death	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_zig.cpp	
+0x43be60	BossZig_Hook	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_zig.cpp	
+0x43be70	BossZig_HookPick	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_zig.cpp	
+0x43be90	BossZig_HookHit	tu_43bc90	0x43bc90	0x43bea0	guessed	name prefix BossZig; link static?	src/game/boss_se.cpp	src/game/boss/boss_zig.cpp	
+0x43bea0	Boss25_Setup	tu_43bea0	0x43bea0	0x43c740	joined	data 0x675f05; data 0x675f04; link static?	src/game/boss_se.cpp	src/game/boss/boss_25.cpp	
+0x43bf00	Boss25_Event	tu_43bea0	0x43bea0	0x43c740	joined	data 0x675f05; data 0x675f04; link static?	src/game/boss_se.cpp	src/game/boss/boss_25.cpp	
+0x43c180	Boss25_End	tu_43bea0	0x43bea0	0x43c740	joined	data 0x675f05; link static?	src/game/boss_se.cpp	src/game/boss/boss_25.cpp	
+0x43c1b0	Boss25_Exit	tu_43bea0	0x43bea0	0x43c740	guessed	called only from Boss25_Setup..; link static?	src/game/boss_se.cpp	src/game/boss/boss_25.cpp	
+0x43c200	Boss26_Setup	tu_43bea0	0x43bea0	0x43c740	guessed	name stem Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_25.cpp	
+0x43c230	Boss26_Event	tu_43bea0	0x43bea0	0x43c740	guessed	name stem Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_25.cpp	
+0x43c370	Boss26_End	tu_43bea0	0x43bea0	0x43c740	guessed	name stem Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_25.cpp	
+0x43c480	Boss27_Setup	tu_43bea0	0x43bea0	0x43c740	guessed	name stem Boss; link static?	src/game/boss_sf.cpp	src/game/boss/boss_25.cpp	
+0x43c4a0	Boss27_Event	tu_43bea0	0x43bea0	0x43c740	guessed	name stem Boss; link static?	src/game/boss_sf.cpp	src/game/boss/boss_25.cpp	
+0x43c5c0	Boss27_End	tu_43bea0	0x43bea0	0x43c740	guessed	name stem Boss; link static?	src/game/boss_sf.cpp	src/game/boss/boss_25.cpp	
+0x43c6f0	Boss27_Exit	tu_43bea0	0x43bea0	0x43c740	guessed	name stem Boss; link static?	src/game/boss_sf.cpp	src/game/boss/boss_25.cpp	
+0x43c740	Boss26Fx_Dispatch	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link extern	src/game/boss_sf.cpp	src/game/boss/boss_gazer.cpp	
+0x43c760	Boss26Fx_Wait	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer.cpp	
+0x43c780	Boss26Fx_DrawCount	tu_43c740	0x43c740	0x43c9d0	guessed	alone; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer.cpp	
+0x43c810	BossGazer_Dispatch	tu_43c740	0x43c740	0x43c9d0	guessed	data order: 0x64d404 < 0x669d24; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer.cpp	
+0x43c830	BossGazer_Enter	tu_43c740	0x43c740	0x43c9d0	guessed	data order: 0x64d3f0 < 0x669d24; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer.cpp	
+0x43c870	BossGazer_State4Dispatch	tu_43c740	0x43c740	0x43c9d0	guessed	data order: 0x64d434 < 0x669d24; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer.cpp	
+0x43c890	BossGazer_State4Start	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer.cpp	
+0x43c8d0	BossGazer_State4Wait	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer.cpp	
+0x43c950	BossGazer_State5Dispatch	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer.cpp	
+0x43c970	BossGazer_State5Start	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer.cpp	
+0x43c9a0	BossGazer_State5Close	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer.cpp	
+0x43c9c0	BossGazer_Hook	tu_43c740	0x43c740	0x43c9d0	guessed	name prefix BossGazer; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer.cpp	
+0x43c9d0	Boss28_Setup	tu_43c9d0	0x43c9d0	0x43ca20	guessed	alone; link static?	src/game/boss_sf.cpp	src/game/boss/boss_28.cpp	
+0x43c9f0	BareRetZero	tu_43c9d0	0x43c9d0	0x43ca20	guessed	calls Boss28_Setup > BareRetZero; link extern	src/game/boss_h.cpp	src/game/boss/boss_28.cpp	SCENA16.EMI#0:u034:single
+0x43ca00	Boss28_End	tu_43c9d0	0x43c9d0	0x43ca20	guessed	name prefix Boss28; link static?	src/game/boss_sf.cpp	src/game/boss/boss_28.cpp	
+0x43ca20	BossGazerFx_Dispatch	tu_43ca20	0x43ca20	0x43cde0	guessed	alone; link extern	src/game/boss_sf.cpp	src/game/boss/boss_gazer_fx.cpp	
+0x43ca40	BossGazerFx_BounceDispatch	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer_fx.cpp	
+0x43ca70	BossGazerFx_BounceStart	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer_fx.cpp	
+0x43cb50	BossGazerFx_Bounce	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer_fx.cpp	
+0x43cc00	BossGazerFx_BounceBack	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer_fx.cpp	
+0x43cc90	BossGazerFx_Leave	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer_fx.cpp	
+0x43cd00	BossGazerFx_MarkDispatch	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer_fx.cpp	
+0x43cd30	BossGazerFx_MarkStart	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer_fx.cpp	
+0x43cdc0	BossGazerFx_MarkWait	tu_43ca20	0x43ca20	0x43cde0	guessed	name prefix BossGazerFx; link static?	src/game/boss_sf.cpp	src/game/boss/boss_gazer_fx.cpp	
+0x43cde0	BossDolphin_Dispatch	tu_43cde0	0x43cde0	0x43cea0	joined	psx BOSS029.EMI#16 0x800c1804>0x800c1848; link static?	src/game/boss_sg.cpp	src/game/boss/boss_dolphin.cpp	BOSS029.EMI#16:u000:same
+0x43ce00	BossDolphin_Enter	tu_43cde0	0x43cde0	0x43cea0	joined	psx BOSS029.EMI#16 0x800c1804>0x800c1848; link static?	src/game/boss_sg.cpp	src/game/boss/boss_dolphin.cpp	BOSS029.EMI#16:u000:same
+0x43ce40	BossDolphin_Hook	tu_43cde0	0x43cde0	0x43cea0	guessed	called only from BossDolphin_Dispatch..; link static?	src/game/boss_sg.cpp	src/game/boss/boss_dolphin.cpp	
+0x43ce50	Boss29_Setup	tu_43cde0	0x43cde0	0x43cea0	guessed	name head Boss; link static?	src/game/boss_sg.cpp	src/game/boss/boss_dolphin.cpp	
+0x43ce70	Boss29_End	tu_43cde0	0x43cde0	0x43cea0	guessed	name head Boss; link static?	src/game/boss_sg.cpp	src/game/boss/boss_dolphin.cpp	
+0x43cea0	BossGisshan_Dispatch	tu_43cea0	0x43cea0	0x43cfd0	guessed	alone; link static?	src/game/boss_sg.cpp	src/game/boss/boss_gisshan.cpp	
+0x43cec0	BossGisshan_Enter	tu_43cea0	0x43cea0	0x43cfd0	guessed	data order: 0x64d4c8 < 0x64d4f0; link static?	src/game/boss_sg.cpp	src/game/boss/boss_gisshan.cpp	
+0x43cf00	BossGisshan_Hook	tu_43cea0	0x43cea0	0x43cfd0	guessed	called only from BossGisshan_Dispatch..; link static?	src/game/boss_sg.cpp	src/game/boss/boss_gisshan.cpp	
+0x43cf10	BossScylla_Dispatch	tu_43cea0	0x43cea0	0x43cfd0	guessed	data order: 0x64d4d4 < 0x64d520; link static?	src/game/boss_sg.cpp	src/game/boss/boss_gisshan.cpp	
+0x43cf30	BossScylla_Enter	tu_43cea0	0x43cea0	0x43cfd0	guessed	data order: 0x64d4d4 < 0x64d520; link static?	src/game/boss_sg.cpp	src/game/boss/boss_gisshan.cpp	
+0x43cf70	BossScylla_Hook	tu_43cea0	0x43cea0	0x43cfd0	guessed	data order: 0x64d4d4 < 0x64d520; link static?	src/game/boss_sg.cpp	src/game/boss/boss_gisshan.cpp	
+0x43cf80	Boss30_Setup	tu_43cea0	0x43cea0	0x43cfd0	guessed	name head Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_gisshan.cpp	
+0x43cfa0	Boss30_End	tu_43cea0	0x43cea0	0x43cfd0	guessed	name head Boss; link static?	src/game/boss_se.cpp	src/game/boss/boss_gisshan.cpp	
+0x43cfd0	BossGarr2_Dispatch	tu_43cfd0	0x43cfd0	0x43d0c0	guessed	alone; link static?	src/game/boss_sg.cpp	src/game/boss/boss_garr_2.cpp	
+0x43cff0	BossGarr2_Enter	tu_43cfd0	0x43cfd0	0x43d0c0	guessed	data order: 0x64d568 < 0x64d57c; link static?	src/game/boss_sg.cpp	src/game/boss/boss_garr_2.cpp	
+0x43d030	BossGarr2_ActDispatch	tu_43cfd0	0x43cfd0	0x43d0c0	guessed	name prefix BossGarr2; link static?	src/game/boss_sg.cpp	src/game/boss/boss_garr_2.cpp	
+0x43d050	BossGarr2_Death	tu_43cfd0	0x43cfd0	0x43d0c0	guessed	name prefix BossGarr2; link static?	src/game/boss_sg.cpp	src/game/boss/boss_garr_2.cpp	
+0x43d0b0	BossGarr2_Hook	tu_43cfd0	0x43cfd0	0x43d0c0	guessed	name prefix BossGarr2; link static?	src/game/boss_sg.cpp	src/game/boss/boss_garr_2.cpp	
+0x43d0c0	Boss31_Setup	tu_43d0c0	0x43d0c0	0x43d140	guessed	alone; link static?	src/game/boss_sg.cpp	src/game/boss/boss_31.cpp	
+0x43d0e0	Boss31_End	tu_43d0c0	0x43d0c0	0x43d140	guessed	called only from Boss31_Setup..; link static?	src/game/boss_sg.cpp	src/game/boss/boss_31.cpp	
+0x43d110	Boss31_Exit	tu_43d0c0	0x43d0c0	0x43d140	guessed	called only from Boss31_Setup..; link static?	src/game/boss_sg.cpp	src/game/boss/boss_31.cpp	
+0x43d140	BossDZombie_Dispatch	tu_43d140	0x43d140	0x43d250	guessed	alone; link static?	src/game/boss_sg.cpp	src/game/boss/boss_d_zombie.cpp	
+0x43d160	BossDZombie_Enter	tu_43d140	0x43d140	0x43d250	guessed	data order: 0x64d5d0 < 0x64d5e4; link static?	src/game/boss_sg.cpp	src/game/boss/boss_d_zombie.cpp	
+0x43d1c0	BossDZombie_ActDispatch	tu_43d140	0x43d140	0x43d250	guessed	name prefix BossDZombie; link static?	src/game/boss_sg.cpp	src/game/boss/boss_d_zombie.cpp	
+0x43d1e0	BossDZombie_Death	tu_43d140	0x43d140	0x43d250	guessed	name prefix BossDZombie; link static?	src/game/boss_sg.cpp	src/game/boss/boss_d_zombie.cpp	
+0x43d240	BossDZombie_Hook	tu_43d140	0x43d140	0x43d250	guessed	name prefix BossDZombie; link static?	src/game/boss_sg.cpp	src/game/boss/boss_d_zombie.cpp	
+0x43d250	Boss32_Setup	tu_43d250	0x43d250	0x43d3d0	guessed	alone; link static?	src/game/boss_sg.cpp	src/game/boss/boss_32.cpp	
+0x43d270	Boss32_End	tu_43d250	0x43d250	0x43d3d0	guessed	called only from Boss32_Setup..; link static?	src/game/boss_sg.cpp	src/game/boss/boss_32.cpp	
+0x43d3a0	Boss32_Exit	tu_43d250	0x43d250	0x43d3d0	guessed	called only from Boss32_Setup..; link static?	src/game/boss_sg.cpp	src/game/boss/boss_32.cpp	
+0x43d3d0	BossWeretigr_Dispatch	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	alone; link static?	src/game/boss_sa.cpp	src/game/boss/boss_weretigr.cpp	
+0x43d3f0	BossWeretigr_Enter	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	data order: 0x64d638 < 0x64d650; link static?	src/game/boss_sa.cpp	src/game/boss/boss_weretigr.cpp	
+0x43d430	BossWeretigr_State4Dispatch	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_weretigr.cpp	
+0x43d450	BossWeretigr_State4Fx	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_weretigr.cpp	
+0x43d500	BossWeretigr_State4Cue	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_weretigr.cpp	
+0x43d560	BossWeretigr_State4End	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_weretigr.cpp	
+0x43d580	BossWeretigr_EndPose	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_weretigr.cpp	
+0x43d5a0	BossWeretigr_EndMove	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_weretigr.cpp	
+0x43d630	BossWeretigr_Hook	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_weretigr.cpp	
+0x43d640	BossWeretigr_HookPick	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name prefix BossWeretigr; link static?	src/game/boss_sa.cpp	src/game/boss/boss_weretigr.cpp	
+0x43d670	Boss33_Setup	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name head Boss; link static?	src/game/boss_sg.cpp	src/game/boss/boss_weretigr.cpp	
+0x43d690	Boss33_End	tu_43d3d0	0x43d3d0	0x43d6d0	guessed	name head Boss; link static?	src/game/boss_sg.cpp	src/game/boss/boss_weretigr.cpp	
+0x43d6d0	BossWeretigrFx_Task	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	alone; link extern	src/game/boss_sg.cpp	src/game/boss/boss_weretigr_fx.cpp	
+0x43d6f0	BossWeretigrFx_Main	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_weretigr_fx.cpp	
+0x43d720	BossWeretigrFx_Begin	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_weretigr_fx.cpp	
+0x43d750	BossWeretigrFx_AwaitPose	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_weretigr_fx.cpp	
+0x43d770	BossWeretigrFx_Rise	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_weretigr_fx.cpp	
+0x43d830	BossWeretigrFx_Strike	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_weretigr_fx.cpp	
+0x43d990	BossWeretigrFx_Leap	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_weretigr_fx.cpp	
+0x43da60	BossWeretigrFx_Fly	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_weretigr_fx.cpp	
+0x43dac0	BossWeretigrFx_Finish	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_weretigr_fx.cpp	
+0x43db10	BossWeretigrFx_Trail	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_weretigr_fx.cpp	
+0x43db40	BossWeretigrFx_TrailBegin	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_weretigr_fx.cpp	
+0x43dba0	BossWeretigrFx_TrailFade	tu_43d6d0	0x43d6d0	0x43dbf0	guessed	name prefix BossWeretigrFx; link static?	src/game/boss_sg.cpp	src/game/boss/boss_weretigr_fx.cpp	
+0x43dbf0	BossMikba_Dispatch	tu_43dbf0	0x43dbf0	0x43e540	guessed	data order: 0x64d6cc < 0x64d6e0; link static?	src/game/boss_sg.cpp	src/game/boss/boss_mikba.cpp	
+0x43dc10	BossMikba_Enter	tu_43dbf0	0x43dbf0	0x43e540	joined	data 0x64d6cc; data 0x64d6d8; link static?	src/game/boss_sg.cpp	src/game/boss/boss_mikba.cpp	
+0x43dc50	BossMikba_ActDispatch	tu_43dbf0	0x43dbf0	0x43e540	joined	data 0x64d6cc; data 0x64d6d8; link static?	src/game/boss_sg.cpp	src/game/boss/boss_mikba.cpp	
+0x43dc70	BossMikba_DeathDispatch	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c18fc>0x800c1940; data 0x64d6cc; link static?	src/game/boss_sg.cpp	src/game/boss/boss_mikba.cpp	BOSS034.EMI#16:u002:single
+0x43dc90	BossMikba_DeathWait	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1940>0x800c199c; data 0x64d6cc; psx BOSS034.EMI#16 0x800c18fc>0x800c1940; link static?	src/game/boss_sg.cpp	src/game/boss/boss_mikba.cpp	BOSS034.EMI#16:u003:single
+0x43dcc0	BossMikba_DeathFlash	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c199c>0x800c1a78; data 0x64d6cc; psx BOSS034.EMI#16 0x800c1940>0x800c199c; link static?	src/game/boss_sg.cpp	src/game/boss/boss_mikba.cpp	BOSS034.EMI#16:u004:single
+0x43dd30	BossMikba_DeathOpen	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1a78>0x800c1c44; data 0x64d6cc; psx BOSS034.EMI#16 0x800c199c>0x800c1a78; link static?	src/game/boss_sg.cpp	src/game/boss/boss_mikba.cpp	BOSS034.EMI#16:u005:single
+0x43dde0	BossMikba_DeathSpread	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1a78>0x800c1c44; data 0x64d6cc; link static?	src/game/boss_sg.cpp	src/game/boss/boss_mikba.cpp	
+0x43de60	BossMikba_DeathLoad	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1c44>0x800c1cbc; data 0x64d6cc; psx BOSS034.EMI#16 0x800c1a78>0x800c1c44; link static?	src/game/boss_sg.cpp	src/game/boss/boss_mikba.cpp	BOSS034.EMI#16:u007:single
+0x43dea0	BossMikba_DeathEnd	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; data 0x64d6cc; psx BOSS034.EMI#16 0x800c1c44>0x800c1cbc; link static?	src/game/boss_sg.cpp	src/game/boss/boss_mikba.cpp	BOSS034.EMI#16:u008:single
+0x43dee0	BossMikba_Hook	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; data 0x64d6cc; link static?	src/game/boss_sg.cpp	src/game/boss/boss_mikba.cpp	
+0x43def0	BossSample3_Dispatch	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; data 0x64d6cc; link static?	src/game/boss_sh.cpp	src/game/boss/boss_mikba.cpp	
+0x43df10	BossSample3_Enter	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; link static?	src/game/boss_sh.cpp	src/game/boss/boss_mikba.cpp	
+0x43df70	BossSample3_Hook	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; link static?	src/game/boss_sh.cpp	src/game/boss/boss_mikba.cpp	
+0x43df80	Boss34_Setup	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; link static?	src/game/boss_sh.cpp	src/game/boss/boss_mikba.cpp	
+0x43dfd0	Boss34_Event	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; link static?	src/game/boss_sh.cpp	src/game/boss/boss_mikba.cpp	
+0x43e0c0	Boss34_End	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; link static?	src/game/boss_sh.cpp	src/game/boss/boss_mikba.cpp	
+0x43e210	Boss34_Exit	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c22b4>0x800c23b8; psx BOSS034.EMI#16 0x800c1cbc>0x800c22b4; link static?	src/game/boss_sh.cpp	src/game/boss/boss_mikba.cpp	BOSS034.EMI#16:u019:subset
+0x43e270	Boss41_Setup	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c22b4>0x800c23b8; link static?	src/game/boss_sh.cpp	src/game/boss/boss_mikba.cpp	
+0x43e290	BossMikba_DrawQuad	tu_43dbf0	0x43dbf0	0x43e540	joined	psx BOSS034.EMI#16 0x800c22b4>0x800c23b8; link static?	src/game/boss_sg.cpp	src/game/boss/boss_mikba.cpp	BOSS034.EMI#16:u020:single
+0x43e540	BossGaist_Dispatch	tu_43e540	0x43e540	0x43e730	joined	psx BOSS035.EMI#16 0x800c181c>0x800c1860; link static?	src/game/boss_sh.cpp	src/game/boss/boss_gaist.cpp	BOSS035.EMI#16:u000:subset
+0x43e560	BossGaist_Enter	tu_43e540	0x43e540	0x43e730	joined	psx BOSS035.EMI#16 0x800c1860>0x800c18c4; data 0x64d78c; psx BOSS035.EMI#16 0x800c181c>0x800c1860; link static?	src/game/boss_sh.cpp	src/game/boss/boss_gaist.cpp	BOSS035.EMI#16:u000:subset
+0x43e5c0	BossGaist_Hook	tu_43e540	0x43e540	0x43e730	joined	psx BOSS035.EMI#16 0x800c18c4>0x800c190c; data 0x64d78c; psx BOSS035.EMI#16 0x800c1860>0x800c18c4; link static?	src/game/boss_sh.cpp	src/game/boss/boss_gaist.cpp	BOSS035.EMI#16:u000:subset
+0x43e5d0	BossGaist_HookClearBit1	tu_43e540	0x43e540	0x43e730	joined	psx BOSS035.EMI#16 0x800c190c>0x800c1950; data 0x64d78c; psx BOSS035.EMI#16 0x800c18c4>0x800c190c; link static?	src/game/boss_sh.cpp	src/game/boss/boss_gaist.cpp	BOSS035.EMI#16:u000:subset
+0x43e600	BossTorch_Dispatch	tu_43e540	0x43e540	0x43e730	joined	psx BOSS035.EMI#16 0x800c1950>0x800c1994; data 0x64d78c; psx BOSS035.EMI#16 0x800c190c>0x800c1950; link static?	src/game/boss_sh.cpp	src/game/boss/boss_gaist.cpp	BOSS035.EMI#16:u000:subset
+0x43e620	BossTorch_Enter	tu_43e540	0x43e540	0x43e730	joined	data 0x64d78c; data 0x64d798; psx BOSS035.EMI#16 0x800c1950>0x800c1994; link static?	src/game/boss_sh.cpp	src/game/boss/boss_gaist.cpp	BOSS035.EMI#16:u000:subset
+0x43e680	BossTorch_Hook	tu_43e540	0x43e540	0x43e730	joined	data 0x64d78c; data 0x64d798; link static?	src/game/boss_sh.cpp	src/game/boss/boss_gaist.cpp	
+0x43e690	BossTorch_HookTarget3	tu_43e540	0x43e540	0x43e730	joined	data 0x64d78c; data 0x64d798; link static?	src/game/boss_sh.cpp	src/game/boss/boss_gaist.cpp	
+0x43e6a0	BossSample9_Dispatch	tu_43e540	0x43e540	0x43e730	joined	data 0x64d78c; data 0x64d798; link static?	src/game/boss_sh.cpp	src/game/boss/boss_gaist.cpp	
+0x43e6c0	BossSample9_Enter	tu_43e540	0x43e540	0x43e730	joined	data 0x64d78c; link static?	src/game/boss_sh.cpp	src/game/boss/boss_gaist.cpp	
+0x43e720	BossSample9_Hook	tu_43e540	0x43e540	0x43e730	guessed	called only from BossGaist_Dispatch..; link static?	src/game/boss_sh.cpp	src/game/boss/boss_gaist.cpp	
+0x43e730	Boss35_Setup	tu_43e730	0x43e730	0x43e7c0	guessed	alone; link static?	src/game/boss_sh.cpp	src/game/boss/boss_35.cpp	
+0x43e750	Boss35_Event	tu_43e730	0x43e730	0x43e7c0	guessed	called only from Boss35_Setup..; link static?	src/game/boss_sh.cpp	src/game/boss/boss_35.cpp	
+0x43e770	Boss35_End	tu_43e730	0x43e730	0x43e7c0	guessed	called only from Boss35_Setup..; link static?	src/game/boss_sh.cpp	src/game/boss/boss_35.cpp	
+0x43e790	BossHook_ExitTransition4	tu_43e730	0x43e730	0x43e7c0	guessed	calls Boss35_Setup > BossHook_ExitTransition4; link extern	src/game/boss_se.cpp	src/game/boss/boss_35.cpp	
+0x43e7a0	Boss47_Setup	tu_43e730	0x43e730	0x43e7c0	guessed	name stem Boss; link static?	src/game/boss_sh.cpp	src/game/boss/boss_35.cpp	
+0x43e7c0	BossAngler_Dispatch	tu_43e7c0	0x43e7c0	0x43eb00	guessed	data order: 0x64d85c < 0x64d870; link static?	src/game/boss_sh.cpp	src/game/boss/boss_angler.cpp	
+0x43e7e0	BossAngler_Enter	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_angler.cpp	
+0x43e840	BossAngler_AdvanceDispatch	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_angler.cpp	
+0x43e860	BossAngler_AdvanceStart	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_angler.cpp	
+0x43e8c0	BossAngler_Advance	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_angler.cpp	
+0x43e950	BossAngler_RetreatDispatch	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_angler.cpp	
+0x43e970	BossAngler_Retreat	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_angler.cpp	
+0x43e9a0	BossAngler_RetreatEnd	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_angler.cpp	
+0x43e9c0	BossAngler_Hook	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_angler.cpp	
+0x43e9d0	BossAngler_HookSpawnFx	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_angler.cpp	
+0x43ea70	BossSample5_Dispatch	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; data 0x64d868; link static?	src/game/boss_sh.cpp	src/game/boss/boss_angler.cpp	
+0x43ea90	BossSample5_Enter	tu_43e7c0	0x43e7c0	0x43eb00	joined	data 0x64d85c; link static?	src/game/boss_sh.cpp	src/game/boss/boss_angler.cpp	
+0x43eaf0	BossSample5_Hook	tu_43e7c0	0x43e7c0	0x43eb00	guessed	called only from BossAngler_Dispatch..; link static?	src/game/boss_sh.cpp	src/game/boss/boss_angler.cpp	
+0x43eb00	Boss36_Setup	tu_43eb00	0x43eb00	0x43eb80	guessed	alone; link static?	src/game/boss_sh.cpp	src/game/boss/boss_36.cpp	
+0x43eb20	Boss36_End	tu_43eb00	0x43eb00	0x43eb80	guessed	called only from Boss36_Setup..; link static?	src/game/boss_sh.cpp	src/game/boss/boss_36.cpp	
+0x43eb40	Boss43_Setup	tu_43eb00	0x43eb00	0x43eb80	guessed	name stem Boss; link static?	src/game/boss_sh.cpp	src/game/boss/boss_36.cpp	
+0x43eb60	BossHook_EndPickWay	tu_43eb00	0x43eb00	0x43eb80	guessed	calls Boss43_Setup > BossHook_EndPickWay; link extern	src/game/boss_h.cpp	src/game/boss/boss_36.cpp	
+0x43eb80	BossAnglerFx_Dispatch	tu_43eb80	0x43eb80	0x43ec30	guessed	name prefix BossAnglerFx; link extern	src/game/boss_sh.cpp	src/game/boss/boss_angler_fx.cpp	
+0x43eba0	BossAnglerFx_Run	tu_43eb80	0x43eb80	0x43ec30	guessed	alone; link static?	src/game/boss_sh.cpp	src/game/boss/boss_angler_fx.cpp	
+0x43ebd0	BossAnglerFx_Start	tu_43eb80	0x43eb80	0x43ec30	guessed	called only from BossAnglerFx_Run..; link static?	src/game/boss_sh.cpp	src/game/boss/boss_angler_fx.cpp	
+0x43ec10	BattleFx_ScriptUntilDone	tu_43eb80	0x43eb80	0x43ec30	guessed	calls BossAnglerFx_Run > BattleFx_ScriptUntilDone; link extern	src/game/boss_sh.cpp	src/game/boss/boss_angler_fx.cpp	
+0x43ec30	BossElder_Dispatch	tu_43ec30	0x43ec30	0x43ed00	guessed	alone; link static?	src/game/boss_sh.cpp	src/game/boss/boss_elder.cpp	
+0x43ec50	BossElder_Enter	tu_43ec30	0x43ec30	0x43ed00	guessed	data order: 0x64d8fc < 0x64d910; link static?	src/game/boss_sh.cpp	src/game/boss/boss_elder.cpp	
+0x43ecb0	BossElder_Hook	tu_43ec30	0x43ec30	0x43ed00	guessed	called only from BossElder_Dispatch..; link static?	src/game/boss_sh.cpp	src/game/boss/boss_elder.cpp	
+0x43ecc0	Boss37_Setup	tu_43ec30	0x43ec30	0x43ed00	guessed	name head Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_elder.cpp	
+0x43ece0	Boss37_End	tu_43ec30	0x43ec30	0x43ed00	guessed	name head Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_elder.cpp	
+0x43ed00	BossAmmonite_Dispatch	tu_43ed00	0x43ed00	0x43ee50	guessed	data order: 0x64d94c < 0x64d960; link static?	src/game/boss_si.cpp	src/game/boss/boss_ammonite.cpp	
+0x43ed20	BossAmmonite_Enter	tu_43ed00	0x43ed00	0x43ee50	joined	data 0x64d94c; data 0x64d958; link static?	src/game/boss_si.cpp	src/game/boss/boss_ammonite.cpp	
+0x43edb0	BossAmmonite_Hook	tu_43ed00	0x43ed00	0x43ee50	joined	data 0x64d94c; data 0x64d958; link static?	src/game/boss_si.cpp	src/game/boss/boss_ammonite.cpp	
+0x43edc0	BossSample6_Dispatch	tu_43ed00	0x43ed00	0x43ee50	joined	data 0x64d94c; data 0x64d958; link static?	src/game/boss_si.cpp	src/game/boss/boss_ammonite.cpp	
+0x43ede0	BossSample6_Enter	tu_43ed00	0x43ed00	0x43ee50	joined	data 0x64d94c; link static?	src/game/boss_si.cpp	src/game/boss/boss_ammonite.cpp	
+0x43ee40	BossSample6_Hook	tu_43ed00	0x43ed00	0x43ee50	guessed	called only from BossAmmonite_Dispatch..; link static?	src/game/boss_si.cpp	src/game/boss/boss_ammonite.cpp	
+0x43ee50	Boss38_Setup	tu_43ee50	0x43ee50	0x43ef20	guessed	alone; link static?	src/game/boss_si.cpp	src/game/boss/boss_38.cpp	
+0x43eed0	Boss38_End	tu_43ee50	0x43ee50	0x43ef20	guessed	called only from Boss38_Setup..; link static?	src/game/boss_si.cpp	src/game/boss/boss_38.cpp	
+0x43ef00	Boss44_Setup	tu_43ee50	0x43ee50	0x43ef20	guessed	name stem Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_38.cpp	
+0x43ef20	BossSample2_Dispatch	tu_43ef20	0x43ef20	0x43f040	guessed	data order: 0x64d9d8 < 0x64d9ec; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_2.cpp	
+0x43ef40	BossSample2_Enter	tu_43ef20	0x43ef20	0x43f040	joined	data 0x64d9d8; data 0x64d9e4; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_2.cpp	
+0x43efa0	BossSample2_Hook	tu_43ef20	0x43ef20	0x43f040	joined	data 0x64d9d8; data 0x64d9e4; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_2.cpp	
+0x43efb0	BossHugeSlug_Dispatch	tu_43ef20	0x43ef20	0x43f040	joined	data 0x64d9d8; data 0x64d9e4; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_2.cpp	
+0x43efd0	BossHugeSlug_Enter	tu_43ef20	0x43ef20	0x43f040	joined	data 0x64d9d8; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_2.cpp	
+0x43f030	BossHugeSlug_Hook	tu_43ef20	0x43ef20	0x43f040	guessed	called only from BossSample2_Dispatch..; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_2.cpp	
+0x43f040	Boss40_Setup	tu_43f040	0x43f040	0x43f0a0	guessed	name stem Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_53.cpp	
+0x43f060	Boss53_Setup	tu_43f040	0x43f040	0x43f0a0	guessed	alone; link static?	src/game/boss_si.cpp	src/game/boss/boss_53.cpp	
+0x43f080	Boss53_End	tu_43f040	0x43f040	0x43f0a0	guessed	called only from Boss53_Setup..; link static?	src/game/boss_si.cpp	src/game/boss/boss_53.cpp	
+0x43f0a0	BossSample4_Dispatch	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	name stem BossSample; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_4.cpp	
+0x43f0c0	BossSample4_Enter	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	name stem BossSample; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_4.cpp	
+0x43f120	BossSample4_Hook	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	name stem BossSample; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_4.cpp	
+0x43f130	Boss42_Setup	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	name stem BossSample; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_4.cpp	
+0x43f150	BossSample7_Dispatch	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	data order: 0x64dab4 < 0x64dac8; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_4.cpp	
+0x43f170	BossSample7_Enter	tu_43f0a0	0x43f0a0	0x43f2d0	joined	data 0x64dab4; data 0x64dac0; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_4.cpp	
+0x43f1d0	BossSample7_Hook	tu_43f0a0	0x43f0a0	0x43f2d0	joined	data 0x64dab4; data 0x64dac0; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_4.cpp	
+0x43f1e0	BossManmo_Dispatch	tu_43f0a0	0x43f0a0	0x43f2d0	joined	data 0x64dab4; data 0x64dac0; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_4.cpp	
+0x43f200	BossManmo_Enter	tu_43f0a0	0x43f0a0	0x43f2d0	joined	data 0x64dab4; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_4.cpp	
+0x43f260	BossManmo_Hook	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	called only from BossSample7_Dispatch..; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_4.cpp	
+0x43f270	Boss45_Setup	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	name stem Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_4.cpp	
+0x43f290	Boss49_Setup	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	name stem Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_4.cpp	
+0x43f2b0	Boss49_End	tu_43f0a0	0x43f0a0	0x43f2d0	guessed	name stem Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_sample_4.cpp	
+0x43f2d0	BossChimera_Dispatch	tu_43f2d0	0x43f2d0	0x43f3b0	guessed	alone; link static?	src/game/boss_si.cpp	src/game/boss/boss_chimera.cpp	
+0x43f2f0	BossChimera_Enter	tu_43f2d0	0x43f2d0	0x43f3b0	guessed	data order: 0x64db40 < 0x64db58; link static?	src/game/boss_si.cpp	src/game/boss/boss_chimera.cpp	
+0x43f350	BossChimera_Hook	tu_43f2d0	0x43f2d0	0x43f3b0	guessed	called only from BossChimera_Dispatch..; link static?	src/game/boss_si.cpp	src/game/boss/boss_chimera.cpp	
+0x43f360	Boss50_Setup	tu_43f2d0	0x43f2d0	0x43f3b0	guessed	name head Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_chimera.cpp	
+0x43f380	Boss50_End	tu_43f2d0	0x43f2d0	0x43f3b0	guessed	name head Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_chimera.cpp	
 0x43f3b0	Paralyzer_Task	tu_43f3b0	0x43f3b0	0x43f480	guessed	alone; link static?	src/game/magic_engine.cpp	src/game/magic/paralyzer.cpp	
 0x43f3e0	Paralyzer_Start	tu_43f3b0	0x43f3b0	0x43f480	guessed	called only from Paralyzer_Task..; link static?	src/game/magic_engine.cpp	src/game/magic/paralyzer.cpp	
 0x43f430	MagicFx_WaitOwnerAnim	tu_43f3b0	0x43f3b0	0x43f480	guessed	calls Paralyzer_Task > MagicFx_WaitOwnerAnim; link extern	src/game/magic_engine.cpp	src/game/magic/paralyzer.cpp	
@@ -2238,95 +2238,95 @@
 0x43f5a0	BossArwan_Hook	tu_43f480	0x43f480	0x43f5f0	guessed	name prefix BossArwan; link static?	src/game/boss_si.cpp	src/game/boss/boss_arwan.cpp	
 0x43f5b0	Boss51_Setup	tu_43f480	0x43f480	0x43f5f0	guessed	name head Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_arwan.cpp	
 0x43f5d0	Boss51_End	tu_43f480	0x43f480	0x43f5f0	guessed	name head Boss; link static?	src/game/boss_si.cpp	src/game/boss/boss_arwan.cpp	
-0x43f5f0	BossArwanFx_Dispatch	tu_43f5f0	0x43f5f0	0x43f7a0	guessed	alone; link extern	src/game/boss_si.cpp	src/game/boss/boss_arwan.cpp	
-0x43f630	BossArwanFx_Start	tu_43f5f0	0x43f5f0	0x43f7a0	guessed	called only from BossArwanFx_Dispatch..; link static?	src/game/boss_si.cpp	src/game/boss/boss_arwan.cpp	
-0x43f6c0	BossArwanFx_Count	tu_43f5f0	0x43f5f0	0x43f7a0	guessed	called only from BossArwanFx_Dispatch..; link static?	src/game/boss_si.cpp	src/game/boss/boss_arwan.cpp	
-0x43f750	BossArwanFx_Finish	tu_43f5f0	0x43f5f0	0x43f7a0	guessed	called only from BossArwanFx_Dispatch..; link static?	src/game/boss_si.cpp	src/game/boss/boss_arwan.cpp	
-0x43f7a0	BossDLord_Dispatch	tu_43f7a0	0x43f7a0	0x43f950	guessed	alone; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43f7c0	BossDLord_Enter	tu_43f7a0	0x43f7a0	0x43f950	guessed	data order: 0x64dbec < 0x64dc00; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43f820	BossDLord_ActDispatch	tu_43f7a0	0x43f7a0	0x43f950	guessed	name prefix BossDLord; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43f840	BossDLord_Death	tu_43f7a0	0x43f7a0	0x43f950	guessed	name prefix BossDLord; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43f8a0	BossDLord_Hook	tu_43f7a0	0x43f7a0	0x43f950	guessed	name prefix BossDLord; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43f8b0	BossDLord_HookFx	tu_43f7a0	0x43f7a0	0x43f950	guessed	name prefix BossDLord; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43f950	Boss52_Setup	tu_43f950	0x43f950	0x43fac0	guessed	alone; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43f970	Boss52_End	tu_43f950	0x43f950	0x43fac0	guessed	called only from Boss52_Setup..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43fa90	Boss52_Exit	tu_43f950	0x43f950	0x43fac0	guessed	called only from Boss52_Setup..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43fac0	BossDLordFx_Dispatch	tu_43fac0	0x43fac0	0x43fbb0	guessed	name prefix BossDLordFx; link extern	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43fae0	BossDLordFx_StepDispatch	tu_43fac0	0x43fac0	0x43fbb0	guessed	alone; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43fb10	BossDLordFx_Start	tu_43fac0	0x43fac0	0x43fbb0	guessed	called only from BossDLordFx_StepDispatch..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43fb60	BossDLordFx_Count	tu_43fac0	0x43fac0	0x43fbb0	guessed	called only from BossDLordFx_StepDispatch..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43fbb0	BossShroom_Dispatch	tu_43fbb0	0x43fbb0	0x43fc80	guessed	alone; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43fbd0	BossShroom_Enter	tu_43fbb0	0x43fbb0	0x43fc80	guessed	data order: 0x64dc58 < 0x64dc70; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43fc30	BossShroom_Hook	tu_43fbb0	0x43fbb0	0x43fc80	guessed	called only from BossShroom_Dispatch..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43fc40	Boss54_Setup	tu_43fbb0	0x43fbb0	0x43fc80	guessed	name head Boss; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43fc60	Boss54_End	tu_43fbb0	0x43fbb0	0x43fc80	guessed	name head Boss; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x43fc80	HeadCracker_Task	tu_43fc80	0x43fc80	0x43fe90	guessed	alone; link static?	src/game/magic_engine.cpp	src/game/boss/boss_arwan.cpp	
-0x43fce0	HeadCracker_Start	tu_43fc80	0x43fc80	0x43fe90	guessed	called only from HeadCracker_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/boss_arwan.cpp	
-0x43fd20	HeadCracker_Windup	tu_43fc80	0x43fc80	0x43fe90	guessed	called only from HeadCracker_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/boss_arwan.cpp	
-0x43fd80	HeadCracker_WaitCaster	tu_43fc80	0x43fc80	0x43fe90	guessed	called only from HeadCracker_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/boss_arwan.cpp	
-0x43fdc0	HeadCracker_Drop	tu_43fc80	0x43fc80	0x43fe90	guessed	called only from HeadCracker_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/boss_arwan.cpp	
-0x43fe00	HeadCracker_WaitTarget	tu_43fc80	0x43fc80	0x43fe90	guessed	called only from HeadCracker_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/boss_arwan.cpp	
-0x43fe80	MagicFx_DoneAndFree	tu_43fc80	0x43fc80	0x43fe90	guessed	calls HeadCracker_Task > MagicFx_DoneAndFree; link extern	src/game/magic_engine.cpp	src/game/boss/boss_arwan.cpp	MAGIC001.EMI#0:u003:single
-0x43fe90	HeadCrackerRock_Task	tu_43fe90	0x43fe90	0x440080	guessed	alone; link extern	src/game/magic_engine.cpp	src/game/boss/boss_arwan.cpp	
-0x43feb0	HeadCrackerRock_Run	tu_43fe90	0x43fe90	0x440080	guessed	called only from HeadCrackerRock_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/boss_arwan.cpp	
-0x43ff00	HeadCrackerRock_Start	tu_43fe90	0x43fe90	0x440080	guessed	called only from HeadCrackerRock_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/boss_arwan.cpp	
-0x440010	HeadCrackerRock_Fall	tu_43fe90	0x43fe90	0x440080	guessed	called only from HeadCrackerRock_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/boss_arwan.cpp	
-0x440060	HeadCrackerRock_Land	tu_43fe90	0x43fe90	0x440080	guessed	called only from HeadCrackerRock_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/boss_arwan.cpp	
-0x440080	BossMyria_Dispatch	tu_440080	0x440080	0x4406e0	guessed	alone; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x4400a0	BossMyria_Enter	tu_440080	0x440080	0x4406e0	guessed	data order: 0x64dcc8 < 0x64dd44; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440140	BossMyria_IdleDispatch	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440160	BossMyria_IdleStart	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440190	BossMyria_IdleEnd	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x4401c0	BossMyria_State4Dispatch	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x4401e0	BossMyria_State4Start	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440220	BossMyria_State4Wait	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440260	BossMyria_State5Dispatch	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440280	BossMyria_State5Start	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x4402a0	BossMyria_ActDispatch	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x4402c0	BossMyria_ActPick	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440310	BossMyria_Death	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440370	BossMyria_State7Dispatch	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440390	BossMyria_State7Start	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x4404a0	BossMyria_State7Count	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x4404f0	BossMyria_State7End	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440510	BossMyria_State8Dispatch	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440540	BossMyria_State8Tick	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440550	BossMyria_State8Cost	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440590	BossMyria_State8TickUnless	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x4405b0	BossMyria_State8Clear	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x4405c0	BossMyria_State8Close	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x4405e0	BossMyria_State8Check	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440620	BossMyria_Hook	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440630	BossMyria_SpawnFxAndWait	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x440660	BossMyria_SpawnFx	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_arwan.cpp	
-0x4406e0	Boss55_Setup	tu_4406e0	0x4406e0	0x440830	guessed	alone; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440700	Boss55_End	tu_4406e0	0x4406e0	0x440830	guessed	called only from Boss55_Setup..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440820	BossHook_ExitActor0Bit40	tu_4406e0	0x4406e0	0x440830	guessed	calls Boss55_Setup > BossHook_ExitActor0Bit40; link extern	src/game/boss_h.cpp	src/game/boss/boss_arwan.cpp	
-0x440830	BossMyriaFx_Dispatch	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link extern	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440850	BossMyriaFx_State0	tu_440830	0x440830	0x4410b0	guessed	alone; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440880	BossMyriaFx_State0Enter	tu_440830	0x440830	0x4410b0	guessed	called only from BossMyriaFx_State0..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x4408c0	BossMyriaFx_State0Loop	tu_440830	0x440830	0x4410b0	guessed	called only from BossMyriaFx_State0..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440930	BossMyriaFx_State1	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440960	BossMyriaFx_State1Enter	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x4409a0	BossMyriaFx_State1Loop	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440a10	BossMyriaFx_State2	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440a40	BossMyriaFx_State2Enter	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440a80	BossMyriaFx_State2Loop	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440af0	BossMyriaFx_State3	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440b20	BossMyriaFx_State3Enter	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440bb0	BossMyriaFx_State3Wait	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440bd0	BossMyriaFx_State4	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440c00	BossMyriaFx_State4Enter	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440c90	BossMyriaFx_State4Wait	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440cc0	BossMyriaFx_State5	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440cf0	BossMyriaFx_State5Enter	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440d80	BossMyriaFx_State5Wait	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440da0	BossMyriaFx_State6	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440dd0	BossMyriaFx_State6Enter	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440e60	BossMyriaFx_State6Loop	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440ed0	BossMyriaFx_State6Wait	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x440ef0	BossMyriaFx_Follow	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_arwan.cpp	
-0x441090	Fixed_HighRoundUp	tu_440830	0x440830	0x4410b0	guessed	calls BossMyriaFx_Follow > Fixed_HighRoundUp; link extern	src/game/battle_e3.cpp	src/game/boss/boss_arwan.cpp	
+0x43f5f0	BossArwanFx_Dispatch	tu_43f5f0	0x43f5f0	0x43f7a0	guessed	alone; link extern	src/game/boss_si.cpp	src/game/boss/boss_arwan_fx.cpp	
+0x43f630	BossArwanFx_Start	tu_43f5f0	0x43f5f0	0x43f7a0	guessed	called only from BossArwanFx_Dispatch..; link static?	src/game/boss_si.cpp	src/game/boss/boss_arwan_fx.cpp	
+0x43f6c0	BossArwanFx_Count	tu_43f5f0	0x43f5f0	0x43f7a0	guessed	called only from BossArwanFx_Dispatch..; link static?	src/game/boss_si.cpp	src/game/boss/boss_arwan_fx.cpp	
+0x43f750	BossArwanFx_Finish	tu_43f5f0	0x43f5f0	0x43f7a0	guessed	called only from BossArwanFx_Dispatch..; link static?	src/game/boss_si.cpp	src/game/boss/boss_arwan_fx.cpp	
+0x43f7a0	BossDLord_Dispatch	tu_43f7a0	0x43f7a0	0x43f950	guessed	alone; link static?	src/game/boss_sj.cpp	src/game/boss/boss_d_lord.cpp	
+0x43f7c0	BossDLord_Enter	tu_43f7a0	0x43f7a0	0x43f950	guessed	data order: 0x64dbec < 0x64dc00; link static?	src/game/boss_sj.cpp	src/game/boss/boss_d_lord.cpp	
+0x43f820	BossDLord_ActDispatch	tu_43f7a0	0x43f7a0	0x43f950	guessed	name prefix BossDLord; link static?	src/game/boss_sj.cpp	src/game/boss/boss_d_lord.cpp	
+0x43f840	BossDLord_Death	tu_43f7a0	0x43f7a0	0x43f950	guessed	name prefix BossDLord; link static?	src/game/boss_sj.cpp	src/game/boss/boss_d_lord.cpp	
+0x43f8a0	BossDLord_Hook	tu_43f7a0	0x43f7a0	0x43f950	guessed	name prefix BossDLord; link static?	src/game/boss_sj.cpp	src/game/boss/boss_d_lord.cpp	
+0x43f8b0	BossDLord_HookFx	tu_43f7a0	0x43f7a0	0x43f950	guessed	name prefix BossDLord; link static?	src/game/boss_sj.cpp	src/game/boss/boss_d_lord.cpp	
+0x43f950	Boss52_Setup	tu_43f950	0x43f950	0x43fac0	guessed	alone; link static?	src/game/boss_sj.cpp	src/game/boss/boss_52.cpp	
+0x43f970	Boss52_End	tu_43f950	0x43f950	0x43fac0	guessed	called only from Boss52_Setup..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_52.cpp	
+0x43fa90	Boss52_Exit	tu_43f950	0x43f950	0x43fac0	guessed	called only from Boss52_Setup..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_52.cpp	
+0x43fac0	BossDLordFx_Dispatch	tu_43fac0	0x43fac0	0x43fbb0	guessed	name prefix BossDLordFx; link extern	src/game/boss_sj.cpp	src/game/boss/boss_d_lord_fx.cpp	
+0x43fae0	BossDLordFx_StepDispatch	tu_43fac0	0x43fac0	0x43fbb0	guessed	alone; link static?	src/game/boss_sj.cpp	src/game/boss/boss_d_lord_fx.cpp	
+0x43fb10	BossDLordFx_Start	tu_43fac0	0x43fac0	0x43fbb0	guessed	called only from BossDLordFx_StepDispatch..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_d_lord_fx.cpp	
+0x43fb60	BossDLordFx_Count	tu_43fac0	0x43fac0	0x43fbb0	guessed	called only from BossDLordFx_StepDispatch..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_d_lord_fx.cpp	
+0x43fbb0	BossShroom_Dispatch	tu_43fbb0	0x43fbb0	0x43fc80	guessed	alone; link static?	src/game/boss_sj.cpp	src/game/boss/boss_shroom.cpp	
+0x43fbd0	BossShroom_Enter	tu_43fbb0	0x43fbb0	0x43fc80	guessed	data order: 0x64dc58 < 0x64dc70; link static?	src/game/boss_sj.cpp	src/game/boss/boss_shroom.cpp	
+0x43fc30	BossShroom_Hook	tu_43fbb0	0x43fbb0	0x43fc80	guessed	called only from BossShroom_Dispatch..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_shroom.cpp	
+0x43fc40	Boss54_Setup	tu_43fbb0	0x43fbb0	0x43fc80	guessed	name head Boss; link static?	src/game/boss_sj.cpp	src/game/boss/boss_shroom.cpp	
+0x43fc60	Boss54_End	tu_43fbb0	0x43fbb0	0x43fc80	guessed	name head Boss; link static?	src/game/boss_sj.cpp	src/game/boss/boss_shroom.cpp	
+0x43fc80	HeadCracker_Task	tu_43fc80	0x43fc80	0x43fe90	guessed	alone; link static?	src/game/magic_engine.cpp	src/game/boss/head_cracker.cpp	
+0x43fce0	HeadCracker_Start	tu_43fc80	0x43fc80	0x43fe90	guessed	called only from HeadCracker_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/head_cracker.cpp	
+0x43fd20	HeadCracker_Windup	tu_43fc80	0x43fc80	0x43fe90	guessed	called only from HeadCracker_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/head_cracker.cpp	
+0x43fd80	HeadCracker_WaitCaster	tu_43fc80	0x43fc80	0x43fe90	guessed	called only from HeadCracker_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/head_cracker.cpp	
+0x43fdc0	HeadCracker_Drop	tu_43fc80	0x43fc80	0x43fe90	guessed	called only from HeadCracker_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/head_cracker.cpp	
+0x43fe00	HeadCracker_WaitTarget	tu_43fc80	0x43fc80	0x43fe90	guessed	called only from HeadCracker_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/head_cracker.cpp	
+0x43fe80	MagicFx_DoneAndFree	tu_43fc80	0x43fc80	0x43fe90	guessed	calls HeadCracker_Task > MagicFx_DoneAndFree; link extern	src/game/magic_engine.cpp	src/game/boss/head_cracker.cpp	MAGIC001.EMI#0:u003:single
+0x43fe90	HeadCrackerRock_Task	tu_43fe90	0x43fe90	0x440080	guessed	alone; link extern	src/game/magic_engine.cpp	src/game/boss/head_cracker_rock.cpp	
+0x43feb0	HeadCrackerRock_Run	tu_43fe90	0x43fe90	0x440080	guessed	called only from HeadCrackerRock_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/head_cracker_rock.cpp	
+0x43ff00	HeadCrackerRock_Start	tu_43fe90	0x43fe90	0x440080	guessed	called only from HeadCrackerRock_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/head_cracker_rock.cpp	
+0x440010	HeadCrackerRock_Fall	tu_43fe90	0x43fe90	0x440080	guessed	called only from HeadCrackerRock_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/head_cracker_rock.cpp	
+0x440060	HeadCrackerRock_Land	tu_43fe90	0x43fe90	0x440080	guessed	called only from HeadCrackerRock_Task..; link static?	src/game/magic_engine.cpp	src/game/boss/head_cracker_rock.cpp	
+0x440080	BossMyria_Dispatch	tu_440080	0x440080	0x4406e0	guessed	alone; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x4400a0	BossMyria_Enter	tu_440080	0x440080	0x4406e0	guessed	data order: 0x64dcc8 < 0x64dd44; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440140	BossMyria_IdleDispatch	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440160	BossMyria_IdleStart	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440190	BossMyria_IdleEnd	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x4401c0	BossMyria_State4Dispatch	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x4401e0	BossMyria_State4Start	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440220	BossMyria_State4Wait	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440260	BossMyria_State5Dispatch	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440280	BossMyria_State5Start	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x4402a0	BossMyria_ActDispatch	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x4402c0	BossMyria_ActPick	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440310	BossMyria_Death	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440370	BossMyria_State7Dispatch	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440390	BossMyria_State7Start	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x4404a0	BossMyria_State7Count	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x4404f0	BossMyria_State7End	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440510	BossMyria_State8Dispatch	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440540	BossMyria_State8Tick	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440550	BossMyria_State8Cost	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440590	BossMyria_State8TickUnless	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x4405b0	BossMyria_State8Clear	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x4405c0	BossMyria_State8Close	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x4405e0	BossMyria_State8Check	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440620	BossMyria_Hook	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440630	BossMyria_SpawnFxAndWait	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x440660	BossMyria_SpawnFx	tu_440080	0x440080	0x4406e0	guessed	name prefix BossMyria; link static?	src/game/boss_sf.cpp	src/game/boss/boss_myria.cpp	
+0x4406e0	Boss55_Setup	tu_4406e0	0x4406e0	0x440830	guessed	alone; link static?	src/game/boss_sj.cpp	src/game/boss/boss_55.cpp	
+0x440700	Boss55_End	tu_4406e0	0x4406e0	0x440830	guessed	called only from Boss55_Setup..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_55.cpp	
+0x440820	BossHook_ExitActor0Bit40	tu_4406e0	0x4406e0	0x440830	guessed	calls Boss55_Setup > BossHook_ExitActor0Bit40; link extern	src/game/boss_h.cpp	src/game/boss/boss_55.cpp	
+0x440830	BossMyriaFx_Dispatch	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link extern	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440850	BossMyriaFx_State0	tu_440830	0x440830	0x4410b0	guessed	alone; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440880	BossMyriaFx_State0Enter	tu_440830	0x440830	0x4410b0	guessed	called only from BossMyriaFx_State0..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x4408c0	BossMyriaFx_State0Loop	tu_440830	0x440830	0x4410b0	guessed	called only from BossMyriaFx_State0..; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440930	BossMyriaFx_State1	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440960	BossMyriaFx_State1Enter	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x4409a0	BossMyriaFx_State1Loop	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440a10	BossMyriaFx_State2	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440a40	BossMyriaFx_State2Enter	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440a80	BossMyriaFx_State2Loop	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440af0	BossMyriaFx_State3	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440b20	BossMyriaFx_State3Enter	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440bb0	BossMyriaFx_State3Wait	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440bd0	BossMyriaFx_State4	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440c00	BossMyriaFx_State4Enter	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440c90	BossMyriaFx_State4Wait	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440cc0	BossMyriaFx_State5	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440cf0	BossMyriaFx_State5Enter	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440d80	BossMyriaFx_State5Wait	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440da0	BossMyriaFx_State6	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440dd0	BossMyriaFx_State6Enter	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440e60	BossMyriaFx_State6Loop	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440ed0	BossMyriaFx_State6Wait	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x440ef0	BossMyriaFx_Follow	tu_440830	0x440830	0x4410b0	guessed	name prefix BossMyriaFx; link static?	src/game/boss_sj.cpp	src/game/boss/boss_myria_fx.cpp	
+0x441090	Fixed_HighRoundUp	tu_440830	0x440830	0x4410b0	guessed	calls BossMyriaFx_Follow > Fixed_HighRoundUp; link extern	src/game/battle_e3.cpp	src/game/boss/boss_myria_fx.cpp	
 0x4410b0	Field_StartEventBattle	tu_4410b0	0x4410b0	0x441100	guessed	alone; link extern	src/game/scena_se.cpp	src/game/field/field.cpp	GAME.EMI#0:u583:single
 0x441100	BattleParty_RunStates	tu_441100	0x441100	0x442fa0	guessed	name prefix BattleObj; link extern	src/game/battle_windows.cpp	src/game/battle/battle_obj.cpp	
 0x441140	BattleParty_UpdateScreens	tu_441100	0x441100	0x442fa0	guessed	name prefix BattleObj; link extern	src/game/battle_windows.cpp	src/game/battle/battle_obj.cpp	

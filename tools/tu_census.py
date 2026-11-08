@@ -789,8 +789,10 @@ def proposals(M, units, names, hard):
         ha = head(M.g[units[k - 1]['lo']]['name'])
         hb = head(M.g[units[k]['lo']]['name'])
         why = None
+        # boss units stand alone (the owner, 2026-11-08): the units are cut one
+        # or two bosses each and their PSX twins sit one overlay per boss
         if a['sub'] == b['sub'] == 'boss':
-            why = "bosses together (the owner's example)"
+            why = None
         elif {ha, hb} <= {'Font', 'Glyph'}:
             why = "fonts together (the owner's example)"
         elif a['sub'] == b['sub'] and a['stem'] == b['stem']:
