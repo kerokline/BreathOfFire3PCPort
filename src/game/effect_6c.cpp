@@ -85,8 +85,8 @@ using move_script::Word;
 using Handler = scenario_harness::Handler;
 
 unsigned char* S() { return Sprite_Current; }
-U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
-U UL(U a) { return UL(At(a)); }
+U ULEffect6c(const unsigned char* p) { return static_cast<U>(Long(p)); }
+U ULEffect6c(U a) { return ULEffect6c(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 void SetUL(U a, U v) { SetUL(At(a), v); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
@@ -118,7 +118,7 @@ void SetD(U a, double d) { SetD(At(a), d); }
 double Fi(U v) { return static_cast<double>(I(v)); }
 // fld dword / fstp dword: the bits kept, but a signalling NaN made quiet.
 void CopyQuiet(unsigned char* to, const unsigned char* from) {
-    U bits = UL(from);
+    U bits = ULEffect6c(from);
     if ((bits & 0x7F800000u) == 0x7F800000u && (bits & 0x007FFFFFu) != 0) bits |= 0x00400000u;
     SetUL(to, bits);
 }
@@ -146,7 +146,7 @@ void Dispatch(const char* who, U table, unsigned entries) {
         bof3::Fatal("%s: sub-state byte +2 is %u, past the %u entries of 0x%X - the original jumps through the dword "
                     "after (docs/effect_6c.md section 7)",
                     who, sub, entries, (unsigned)table);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(UL(At(table + 4 * sub))))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(ULEffect6c(At(table + 4 * sub))))();
 }
 #define E6C_TABLE(name) AddressOf(name), name##_count
 
@@ -165,7 +165,7 @@ unsigned char* Item(const char* who, U item) {
 // + 2 * base) * 2, plus base, plus (height * width + 1) / 2 - every byte and
 // word re-read where the original re-reads them.
 unsigned char* CellRecord(U x, U z, U run) {
-    const U header = UL(::bof3::Img(at::kAreaHeader.v));
+    const U header = ULEffect6c(::bof3::Img(at::kAreaHeader.v));
     const U width = header & 0xFF;
     const U base = Word(At(::bof3::Img(AreaMap_Header_addr) + 0x2));
     const U word = Word(At(::bof3::Img(AreaMap_Header_addr) + 2 * (x + width * z + 2 * base)));
@@ -193,7 +193,7 @@ extern "C" long __cdecl AreaMap_CornerHeight(long x, long z) {
     const U xi = Sar(ux + 0x8000u, 16) & 0xFF, zi = Sar(uz + 0x8000u, 16) & 0xFF;
     const U block = At(::bof3::Img(at::kBlockMap.v))[((xi >> 4) & 0xF) | (zi & 0xF0)];
     const U index = ((block & 0xF0) | (zi & 0xF)) * 0x60 + (((block & 0xF) << 4) | (xi & 0xF));
-    const U corners = UL(::bof3::Img(at::kAreaCorners.v) + 4 * index);
+    const U corners = ULEffect6c(::bof3::Img(at::kAreaCorners.v) + 4 * index);
     const std::int32_t c0 = static_cast<signed char>(corners & 0xFF);
     const std::int32_t c1 = static_cast<signed char>((corners >> 8) & 0xFF);
     const std::int32_t c2 = static_cast<signed char>((corners >> 16) & 0xFF);
@@ -229,7 +229,7 @@ extern "C" void __cdecl EffectKind18Sub44_Commit(unsigned size) {
     const U bytes = size & 0xFFu;
     const U limit = (static_cast<U>(buffer) << 16) + ::bof3::Img(at::kPoolLimit);
     if (limit <= AddressOf(next) + bytes) return;
-    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(::bof3::Img(at::kLayerTails.v) + 8 * buffer))),
+    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(ULEffect6c(::bof3::Img(at::kLayerTails.v) + 8 * buffer))),
                           AddressOf(next));
     unsigned char* const now = Gfx_PacketNext;
     SetUL(::bof3::Img(at::kLayerTails.v) + 8u * Gfx_BufferIndex, AddressOf(now));
@@ -891,9 +891,9 @@ extern "C" void __cdecl EffectKind18Sub51_Place(void) {
     S()[9] = 0;
     ForCells("EffectKind18Sub51_Place", [](U x, U z) {
         unsigned char* const record = CellRecord(x, z, 0);
-        SetUL(record, UL(record) & 0xFF07FFFFu);
+        SetUL(record, ULEffect6c(record) & 0xFF07FFFFu);
         const U item = static_cast<U>(SH_CALL(MapView_ItemAt)(I(x), I(z)));
-        if (item != 0) SH_CALL(Prim_SetTexture)(UL(record), Item("EffectKind18Sub51_Place", item), 2);
+        if (item != 0) SH_CALL(Prim_SetTexture)(ULEffect6c(record), Item("EffectKind18Sub51_Place", item), 2);
     });
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
@@ -925,7 +925,7 @@ extern "C" void __cdecl EffectKind18Sub51_Fade(void) {
     const U step = S()[9] > 0x10 ? 0x10u : S()[9];
     ForCells("EffectKind18Sub51_Fade", [step](U x, U z) {
         unsigned char* const record = CellRecord(x, z, 0);
-        SetUL(record, (UL(record) & 0xFF07FFFFu) | (step << 19));
+        SetUL(record, (ULEffect6c(record) & 0xFF07FFFFu) | (step << 19));
         const U item = static_cast<U>(SH_CALL(MapView_ItemAt)(I(x), I(z)));
         if (item == 0) return;
         const U half = Gfx_BufferIndex + item * 2;
@@ -933,7 +933,7 @@ extern "C" void __cdecl EffectKind18Sub51_Fade(void) {
             bof3::Fatal("EffectKind18Sub51_Fade: the item half %u, past the pool's %u items - the original reads past "
                         "DrawItems (docs/effect_6c.md section 7)",
                         (unsigned)half, draw_pool::Count());
-        SH_CALL(Prim_SetTexture)(UL(record), draw_pool::Items() + half * at::kItemHalf, 1);
+        SH_CALL(Prim_SetTexture)(ULEffect6c(record), draw_pool::Items() + half * at::kItemHalf, 1);
     });
     if (S()[9] > 0x11) SH_CALL(Effect_Release)();
 }
@@ -966,7 +966,7 @@ extern "C" void __cdecl EffectKind18Sub53_Run(void) {
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);
     {
         unsigned char* const s = S();
-        SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0xC);
+        SH_CALL(MapView_LinkPrimAt)(ULEffect6c(s + 0x34), ULEffect6c(s + 0x38), 1, 0xC);
     }
     S()[9] = static_cast<unsigned char>(S()[9] + 2);
     for (U k = 0, ring = 0; I(ring) < 0x100; ++k, ring += 0x10) {
@@ -982,20 +982,20 @@ extern "C" void __cdecl EffectKind18Sub53_Run(void) {
             const U cosine = static_cast<U>(SH_CALL(Math_Cos)(I(((Frame_Counter & 0xF) << 4) * static_cast<U>(spin) + angle)));
             {
                 const unsigned char* const s = S();
-                SetV(2, Sar(cosine, 6) * 3 + Sar(UL(s + 0x38), 9) - 0x4000u);
+                SetV(2, Sar(cosine, 6) * 3 + Sar(ULEffect6c(s + 0x38), 9) - 0x4000u);
                 const U lift = (static_cast<U>(s[9]) - (k << 4)) & 0xFF;
-                SetV(4, (0u - DivP2(UL(s + 0x3C), 1)) - (lift << 1));
+                SetV(4, (0u - DivP2(ULEffect6c(s + 0x3C), 1)) - (lift << 1));
             }
             long a;
             SH_CALL(Gte_RotTransPers)(Vx(0), reinterpret_cast<unsigned long*>(p + 8), &a);
             SH_CALL(Gte_StoreDepthF)(Fp(p + 0x10));
             unsigned char* const s = S();
-            SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0x14);
+            SH_CALL(MapView_LinkPrimAt)(ULEffect6c(s + 0x34), ULEffect6c(s + 0x38), 1, 0x14);
         }
     }
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xB5, 0);
     unsigned char* const s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(ULEffect6c(s + 0x34), ULEffect6c(s + 0x38), 1, 0xC);
 }
 
 // ===========================================================================
@@ -1115,8 +1115,8 @@ extern "C" void __cdecl EffectKind18Sub59_DrawRing(int glow_word) {
     const U glow = static_cast<U>(glow_word);
     {
         const unsigned char* const s = S();
-        SetD(AddressOf(MapView_ScreenXY), Fi(Sar(UL(s + 0x34), 9) - 0x4000u));
-        SetD(::bof3::Img(at::kScreenY.v), Fi(Sar(UL(s + 0x38), 9) - 0x4000u));
+        SetD(AddressOf(MapView_ScreenXY), Fi(Sar(ULEffect6c(s + 0x34), 9) - 0x4000u));
+        SetD(::bof3::Img(at::kScreenY.v), Fi(Sar(ULEffect6c(s + 0x38), 9) - 0x4000u));
     }
     for (U i = 0, angle = 0; I(angle) < 0x10000; ++i, angle += 0x1000) {
         const U b0 = DivP2(angle, 4), b1 = DivP2(angle + 0x1000u, 4);
@@ -1163,7 +1163,7 @@ extern "C" void __cdecl EffectKind18Sub59_DrawRing(int glow_word) {
             dress(p, 0xD5, 0x7940);
             {
                 unsigned char* const s = S();
-                SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), I(row), 0x54);
+                SH_CALL(MapView_LinkPrimAt)(ULEffect6c(s + 0x34), ULEffect6c(s + 0x38), I(row), 0x54);
             }
             unsigned char* const q = Gfx_PacketNext;
             SH_CALL(Gpu_SetPolyGT4)(q);
@@ -1174,16 +1174,16 @@ extern "C" void __cdecl EffectKind18Sub59_DrawRing(int glow_word) {
             // past p, and a forward copy then reads what it has written), the
             // last dword read before two uv bytes are written and stored after
             static const unsigned kPoints[] = {8, 0xC, 0x10, 0x1C, 0x20, 0x24, 0x30, 0x34, 0x38, 0x44, 0x48};
-            for (const unsigned at : kPoints) SetUL(q + at, UL(p + at));
+            for (const unsigned at : kPoints) SetUL(q + at, ULEffect6c(p + at));
             {
-                const U last = UL(p + 0x4C);
+                const U last = ULEffect6c(p + 0x4C);
                 q[0x14] = 0xB0;
                 q[0x15] = 0x20;
                 SetUL(q + 0x4C, last);
             }
             dress(q, 0xB5, 0x7900);
             unsigned char* const s = S();
-            SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), I(row), 0x54);
+            SH_CALL(MapView_LinkPrimAt)(ULEffect6c(s + 0x34), ULEffect6c(s + 0x38), I(row), 0x54);
         }
         const U half = DivP2(i, 1);
         const unsigned char bright = static_cast<unsigned char>(DivP2(glow << 7, 7));
@@ -1230,7 +1230,7 @@ extern "C" void __cdecl EffectKind18Sub59_DrawRing(int glow_word) {
             SetWord(p + 0x16, 0x78CA);
             p[6] = blue;
             unsigned char* const s = S();
-            SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), I((row + 1) & 0xFF), 0x48);
+            SH_CALL(MapView_LinkPrimAt)(ULEffect6c(s + 0x34), ULEffect6c(s + 0x38), I((row + 1) & 0xFF), 0x48);
         }
     }
 }
@@ -1430,19 +1430,19 @@ extern "C" void __cdecl EffectKind18Sub5A_SetTiles(int step_word, int bank_word)
                     I(step), I(bank), I(pick));
     {
         unsigned char* const record = CellRecord(0xD, z, 1);
-        SetUL(record, (UL(record) & 0xFFFFFF00u) | kFirst[pick]);
+        SetUL(record, (ULEffect6c(record) & 0xFFFFFF00u) | kFirst[pick]);
         const U item = static_cast<U>(SH_CALL(MapView_ItemAt)(0xD, I(z)));
         if (item != 0) {
             const U link = Word(Item("EffectKind18Sub5A_SetTiles", item) + at::kItemLink) & 0xFFF;
-            SH_CALL(Prim_SetTexture)(UL(record), Item("EffectKind18Sub5A_SetTiles", link), 2);
+            SH_CALL(Prim_SetTexture)(ULEffect6c(record), Item("EffectKind18Sub5A_SetTiles", link), 2);
         }
     }
     const U mark = kSecond[pick];
     for (U e = 0; I(e) < 8; ++e) {
         unsigned char* const record = CellRecord(e + 0xE, z, 0);
-        SetUL(record, (UL(record) & 0xFFFFFF00u) | (e + 3) | mark);
+        SetUL(record, (ULEffect6c(record) & 0xFFFFFF00u) | (e + 3) | mark);
         const U item = static_cast<U>(SH_CALL(MapView_ItemAt)(I(e + 0xE), I(z)));
-        if (item != 0) SH_CALL(Prim_SetTexture)(UL(record), Item("EffectKind18Sub5A_SetTiles", item), 2);
+        if (item != 0) SH_CALL(Prim_SetTexture)(ULEffect6c(record), Item("EffectKind18Sub5A_SetTiles", item), 2);
     }
 }
 
@@ -1485,9 +1485,9 @@ extern "C" void __cdecl EffectKind18Sub5A_Set(void) {
     SH_CALL(EffectKind18Sub5A_Move)(0xC0, 0);
     for (U e = 0; I(e) < 2; ++e) {
         unsigned char* const record = CellRecord(e + 0x11, 0x61, 0);
-        SetUL(record, (UL(record) & 0xFFFFFF00u) | (e + 0xE6));
+        SetUL(record, (ULEffect6c(record) & 0xFFFFFF00u) | (e + 0xE6));
         const U item = static_cast<U>(SH_CALL(MapView_ItemAt)(I(e + 0x11), 0x61));
-        if (item != 0) SH_CALL(Prim_SetTexture)(UL(record), Item("EffectKind18Sub5A_Set", item), 2);
+        if (item != 0) SH_CALL(Prim_SetTexture)(ULEffect6c(record), Item("EffectKind18Sub5A_Set", item), 2);
     }
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
@@ -1545,7 +1545,7 @@ extern "C" void __cdecl EffectKind18Sub5B_DrawPart(int part_word) {
         long depth;
         SH_CALL(Gte_RotTransPers4)(Vx(0), Vx(1), Vx(2), Vx(3), Fp(p + 8), Fp(p + 0x18), Fp(p + 0x28), Fp(p + 0x38), &depth);
         SH_CALL(Gte_PrimDepths4_10)(p);
-        SH_CALL(Prim_SetTexture)(UL(r + 0x10), p, 1);
+        SH_CALL(Prim_SetTexture)(ULEffect6c(r + 0x10), p, 1);
         const U x = Ftol(Fi(static_cast<U>(r[0]) << 16) + D(::bof3::Img(at::kOffsetX.v)) * D(at::kPieceScale));
         SH_CALL(MapView_LinkPrimAt)(x, static_cast<U>(r[1]) << 16, 0, 0x48);
     }

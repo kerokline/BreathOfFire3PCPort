@@ -70,7 +70,7 @@ using namespace battle_flow;
 namespace {
 
 // A pointer the original keeps in a dword of .data / .bss, read afresh.
-unsigned char* PtrAt(std::uint32_t address) {
+unsigned char* PtrAtBattleFlow(std::uint32_t address) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(address)))));
 }
 void SetPtrAt(std::uint32_t address, const unsigned char* p) {
@@ -79,7 +79,7 @@ void SetPtrAt(std::uint32_t address, const unsigned char* p) {
 // The enemy being run (0x939AD8) and the battle-task slot being run (0x93B8C4),
 // each re-read wherever the original re-reads it.
 unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_CurrentEnemy.Native()); }
-unsigned char* CurrentTask() { return PtrAt(::bof3::Img(BattleFlow_TaskCurrent_addr)); }
+unsigned char* CurrentTask() { return PtrAtBattleFlow(::bof3::Img(BattleFlow_TaskCurrent_addr)); }
 unsigned char* Task(unsigned index) { return At(::bof3::Img(BattleTask_Slots_addr) + index * at::kTaskSize); }
 unsigned char* EnemyObject(unsigned index) { return At(::bof3::Img(Battle_Enemies_addr) + index * at::kEnemySize); }
 
@@ -92,7 +92,7 @@ std::int32_t FloatOfShort(int v) { return std::bit_cast<std::int32_t>(static_cas
 // not checked (items use 0..3).
 unsigned ItemRow(unsigned id) {
     const unsigned w = id & 0xFFFF;
-    return PtrAt(::bof3::Img(at::kItemRows.v) + 4u * (w >> 8))[w & 0xFF];   // four 32-bit table places
+    return PtrAtBattleFlow(::bof3::Img(at::kItemRows.v) + 4u * (w >> 8))[w & 0xFF];   // four 32-bit table places
 }
 
 // The magic file of a row: the u16 at the head of its 8-byte record; 0xFFFF
@@ -132,7 +132,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_PhaseDispatch
     const unsigned char event = EventBattle_Id;
     std::uint32_t phase = static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kPhase.v))));
     if (event != 0 && (phase & 0xFF) != 0) {
-        reinterpret_cast<HookFn>(PtrAt(::bof3::Img(at::kEventHook.v)))(3);
+        reinterpret_cast<HookFn>(PtrAtBattleFlow(::bof3::Img(at::kEventHook.v)))(3);
         phase = static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kPhase.v))));
     }
     const unsigned index = phase & 0xFF;
@@ -261,7 +261,7 @@ extern "C" void __cdecl BattleEnemy_SetAnimation(unsigned animation) {
     const unsigned mode = Sprite_Current[8];
     if (mode > 3) return;
     const unsigned index = (animation & 0xFF) + (mode >= 2 ? 1u : 0u);
-    const auto table = [] { return PtrAt(Low32(Enemy() + 0xFC)); };
+    const auto table = [] { return PtrAtBattleFlow(Low32(Enemy() + 0xFC)); };
     g.ensure_animation(static_cast<unsigned char>(table()[index] & 0x7F));
     const bool high = (table()[index] & 0x80) != 0;
     const bool flip = (mode == 0 || mode == 2) ? high : !high;

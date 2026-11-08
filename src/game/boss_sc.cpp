@@ -63,7 +63,7 @@ unsigned char* Enemy() { return reinterpret_cast<unsigned char*>(BattleE3_Curren
 // the slot in an effect task.
 unsigned char* Packet() { return Gfx_PacketNext; }
 U L(const unsigned char* p) { return static_cast<U>(Long(p)); }
-void PutFloat(unsigned char* p, U v) {
+void PutFloatBossSc(unsigned char* p, U v) {
     const float f = static_cast<float>(static_cast<std::int32_t>(v));   // fild / fstp: nearest
     std::memcpy(p, &f, sizeof f);
 }
@@ -83,8 +83,8 @@ void StoreKindTables(U fc, U f4, U f8) {
     rv::As<records::BattleEnemy>(Enemy())->cue_table = static_cast<std::int32_t>(f8);
 }
 
-using Entry = U (__cdecl*)(U);
-Entry EntryAt(U table, unsigned index) { return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(L(At(table + 4 * index)))); }
+using EntryBossSc = U (__cdecl*)(U);
+EntryBossSc EntryAt(U table, unsigned index) { return reinterpret_cast<EntryBossSc>(static_cast<std::uintptr_t>(L(At(table + 4 * index)))); }
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, a
 // Fatal past them (the original jumps through whatever follows). The jmp
@@ -92,7 +92,7 @@ Entry EntryAt(U table, unsigned index) { return reinterpret_cast<Entry>(static_c
 // above the return address that the dispatcher saw: ours hands it on (an
 // entry that reads it - Port_DroppedCall, a bare ret with a byte - sees what
 // it sees under the original), and answers the entry's eax.
-U Dispatch(const char* who, U table, unsigned entries, unsigned at, U through) {
+U DispatchBossSc(const char* who, U table, unsigned entries, unsigned at, U through) {
     const unsigned state = Sprite_Current[at];
     if (state >= entries)
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
@@ -102,7 +102,7 @@ U Dispatch(const char* who, U table, unsigned entries, unsigned at, U through) {
 }
 
 // An enemy's +0xF4 hook table: jmp [table + 4 * (word & 0xFF)], 3 entries.
-U HookDispatch(const char* who, U table, U word) {
+U HookDispatchBossSc(const char* who, U table, U word) {
     const unsigned index = word & 0xFF;
     if (index >= 3)
         bof3::Fatal("%s: the hook's word is 0x%X, past the 3 entries of 0x%X - the original jumps through the dword after "
@@ -188,7 +188,7 @@ extern "C" void __cdecl Boss11_Exit(void) {
 
 // original 0x4396B0: BossKind_Table[12]: by +1 through BossAmalgam_Steps (12).
 extern "C" unsigned long __cdecl BossAmalgam_Dispatch(unsigned long through) {
-    return Dispatch("BossAmalgam_Dispatch", ::bof3::Img(0x64CC24), 12, 1, through);
+    return DispatchBossSc("BossAmalgam_Dispatch", ::bof3::Img(0x64CC24), 12, 1, through);
 }
 
 // original 0x4396D0: state 0: the kind's tables (+0xFC BossAmalgam_Anims,
@@ -206,13 +206,13 @@ extern "C" unsigned char __cdecl BossAmalgam_Enter(void) {
 // (6: EnemyOp_ActBegin, EnemyOp_HitDispatch, EnemyOp_ActBegin, EnemyOp_Act3Dispatch,
 // BossAmalgam_DeathDispatch, EnemyOp_Act5Dispatch - EnemyOp_ActSubs with the death at 4).
 extern "C" unsigned long __cdecl BossAmalgam_ActDispatch(unsigned long through) {
-    return Dispatch("BossAmalgam_ActDispatch", ::bof3::Img(0x64CC54), 6, 2, through);
+    return DispatchBossSc("BossAmalgam_ActDispatch", ::bof3::Img(0x64CC54), 6, 2, through);
 }
 
 // original 0x439750: BossAmalgam_ActSubs 4: by +3 through BossAmalgam_DeathSteps
 // (4: Tick, Start, Melt, End).
 extern "C" unsigned long __cdecl BossAmalgam_DeathDispatch(unsigned long through) {
-    return Dispatch("BossAmalgam_DeathDispatch", ::bof3::Img(0x64CC6C), 4, 3, through);
+    return DispatchBossSc("BossAmalgam_DeathDispatch", ::bof3::Img(0x64CC6C), 4, 3, through);
 }
 
 // original 0x439770: death step 0: Sprite_ScriptTick; when it answers al not
@@ -279,7 +279,7 @@ extern "C" void __cdecl BossAmalgam_DeathEnd(void) {
 // original 0x4398D0: the +0xF4 hook: by the word's low byte through
 // BossAmalgam_Hooks (3, all BareRet).
 extern "C" unsigned long __cdecl BossAmalgam_Hook(unsigned long word) {
-    return HookDispatch("BossAmalgam_Hook", ::bof3::Img(0x64CC7C), word);
+    return HookDispatchBossSc("BossAmalgam_Hook", ::bof3::Img(0x64CC7C), word);
 }
 
 // original 0x439930: a SPRT of the cleared VRAM rect: Gpu_GetTPage(2, 0,
@@ -295,8 +295,8 @@ extern "C" void __cdecl BossAmalgam_DrawSprite(unsigned v) {
     unsigned char* const p = Packet();
     p[4] = p[5] = p[6] = 0x80;
     const unsigned char* const s = Sprite_Current;
-    PutFloat(p + 8, static_cast<U>(rv::As<records::BattleEnemy>(s)->work_18) - 0x28);
-    PutFloat(p + 0xC, static_cast<U>(rv::As<records::BattleEnemy>(s)->work_20) + static_cast<U>(rv::As<records::BattleEnemy>(s)->work_1c) - 0x3C);
+    PutFloatBossSc(p + 8, static_cast<U>(rv::As<records::BattleEnemy>(s)->work_18) - 0x28);
+    PutFloatBossSc(p + 0xC, static_cast<U>(rv::As<records::BattleEnemy>(s)->work_20) + static_cast<U>(rv::As<records::BattleEnemy>(s)->work_1c) - 0x3C);
     p[0x14] = 0;
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 0x68);  // a SPRT: Gpu_SetSprt below
     p[0x15] = static_cast<unsigned char>(v);
@@ -324,12 +324,12 @@ extern "C" void __cdecl BossAmalgam_DrawStreak(unsigned v) {
     const unsigned char* const s = Sprite_Current;
     const U left = static_cast<U>(rv::As<records::BattleEnemy>(s)->work_18) - 0x28, right = static_cast<U>(rv::As<records::BattleEnemy>(s)->work_18) + 0x40, bottom = static_cast<U>(rv::As<records::BattleEnemy>(s)->work_20) + static_cast<U>(rv::As<records::BattleEnemy>(s)->work_1c) - 0x3C;
     rv::Store<float>(rv::As<records::GpuPolyFT4>(p)->y0, 0.0f);
-    PutFloat(p + 8, left);
+    PutFloatBossSc(p + 8, left);
     rv::Store<float>(rv::As<records::GpuPolyFT4>(p)->y1, 0.0f);
-    PutFloat(p + 0x18, right);
-    PutFloat(p + 0x28, left);
-    PutFloat(p + 0x2C, bottom);
-    PutFloat(p + 0x38, right);
+    PutFloatBossSc(p + 0x18, right);
+    PutFloatBossSc(p + 0x28, left);
+    PutFloatBossSc(p + 0x2C, bottom);
+    PutFloatBossSc(p + 0x38, right);
     const auto row = static_cast<unsigned char>(v);
     p[0x14] = 0;
     p[0x34] = 0;
@@ -337,7 +337,7 @@ extern "C" void __cdecl BossAmalgam_DrawStreak(unsigned v) {
     p[0x24] = 0x68;
     p[0x25] = row;
     p[0x35] = row;
-    PutFloat(p + 0x3C, bottom);
+    PutFloatBossSc(p + 0x3C, bottom);
     p[0x44] = 0x68;
     p[0x45] = row;
     BH_CALL(Gpu_SetPolyFT4)(p);
@@ -396,7 +396,7 @@ void HpFloor() {
 
 // original 0x439B10: BossKind_Table[13]: by +1 through BossBalio_Steps (12).
 extern "C" unsigned long __cdecl BossBalio_Dispatch(unsigned long through) {
-    return Dispatch("BossBalio_Dispatch", ::bof3::Img(0x64CCD0), 12, 1, through);
+    return DispatchBossSc("BossBalio_Dispatch", ::bof3::Img(0x64CCD0), 12, 1, through);
 }
 
 // original 0x439B30: state 0 (BalioSunderEnter above): BossBalio_Anims,
@@ -405,7 +405,7 @@ extern "C" void __cdecl BossBalio_Enter(void) { BalioSunderEnter(::bof3::Img(0x6
 
 // original 0x439BC0: the +0xF4 hook: by the word's low byte through
 // BossBalio_Hooks (3: BossBalio_HookAct, BossBalio_HookHit, BareRet).
-extern "C" unsigned long __cdecl BossBalio_Hook(unsigned long word) { return HookDispatch("BossBalio_Hook", ::bof3::Img(0x64CD00), word); }
+extern "C" unsigned long __cdecl BossBalio_Hook(unsigned long word) { return HookDispatchBossSc("BossBalio_Hook", ::bof3::Img(0x64CD00), word); }
 
 // original 0x439BD0: hook entry 0 (the action pick, 0x435BF5): in fight 16
 // (0x904AAA 0x10), by the fight's bits 0x904AAD (read once): bit 0 without
@@ -431,7 +431,7 @@ extern "C" void __cdecl BossBalio_HookHit(unsigned) { HpFloor(); }
 
 // original 0x439C60: BossKind_Table[14]: by +1 through BossSunder_Steps (12).
 extern "C" unsigned long __cdecl BossSunder_Dispatch(unsigned long through) {
-    return Dispatch("BossSunder_Dispatch", ::bof3::Img(0x64CD0C), 12, 1, through);
+    return DispatchBossSc("BossSunder_Dispatch", ::bof3::Img(0x64CD0C), 12, 1, through);
 }
 
 // original 0x439C80: state 0: BossSunder_Anims, BossSunder_Hook,
@@ -440,7 +440,7 @@ extern "C" void __cdecl BossSunder_Enter(void) { BalioSunderEnter(::bof3::Img(0x
 
 // original 0x439D10: the +0xF4 hook: through BossSunder_Hooks (3:
 // BossSunder_HookAct, BossSunder_HookHit, BareRet).
-extern "C" unsigned long __cdecl BossSunder_Hook(unsigned long word) { return HookDispatch("BossSunder_Hook", ::bof3::Img(0x64CD3C), word); }
+extern "C" unsigned long __cdecl BossSunder_Hook(unsigned long word) { return HookDispatchBossSc("BossSunder_Hook", ::bof3::Img(0x64CD3C), word); }
 
 // original 0x439D20: hook entry 0: in fight 16 with the fight's bit 0 (the
 // byte read once): without bit 2 - action 0, line 0x25, bit 2 set (read
@@ -479,7 +479,7 @@ extern "C" void __cdecl BossSunder_HookHit(unsigned) {
 
 // original 0x439E00: BossKind_Table[17]: by +1 through BossNina_Steps (12).
 extern "C" unsigned long __cdecl BossNina_Dispatch(unsigned long through) {
-    return Dispatch("BossNina_Dispatch", ::bof3::Img(0x64CD48), 12, 1, through);
+    return DispatchBossSc("BossNina_Dispatch", ::bof3::Img(0x64CD48), 12, 1, through);
 }
 
 // original 0x439E20: state 0: the tables (BossNina_Anims, BossNina_Hook,
@@ -493,7 +493,7 @@ extern "C" void __cdecl BossNina_Enter(void) {
 // original 0x439E70: BossNina_Steps 9: by +2 through BossNina_WalkSteps (3:
 // BossNina_WalkStart, BossNina_WalkStep, 0x4373C0).
 extern "C" unsigned long __cdecl BossNina_WalkDispatch(unsigned long through) {
-    return Dispatch("BossNina_WalkDispatch", ::bof3::Img(0x64CD78), 3, 2, through);
+    return DispatchBossSc("BossNina_WalkDispatch", ::bof3::Img(0x64CD78), 3, 2, through);
 }
 
 // original 0x439E90: Sprite_SetAnimationBank(0xF9); +0x24 &= 0xFE;
@@ -522,7 +522,7 @@ extern "C" unsigned __cdecl BossNina_WalkStep(void) {
 
 // original 0x439EE0: the +0xF4 hook: through BossNina_Hooks (3:
 // BossNina_HookAct, BossNina_HookHit, BareRet).
-extern "C" unsigned long __cdecl BossNina_Hook(unsigned long word) { return HookDispatch("BossNina_Hook", ::bof3::Img(0x64CD84), word); }
+extern "C" unsigned long __cdecl BossNina_Hook(unsigned long word) { return HookDispatchBossSc("BossNina_Hook", ::bof3::Img(0x64CD84), word); }
 
 // original 0x439EF0: hook entry 0: with the fight's bit 0, action 3; else
 // while the wait count 0x675F00 is not 0, action 0 and the count down; at 0,
@@ -683,7 +683,7 @@ extern "C" void __cdecl Boss16_Exit(void) {
 
 // original 0x43A360: BossKind_Table[15]: by +1 through BossRocky_Steps (12).
 extern "C" unsigned long __cdecl BossRocky_Dispatch(unsigned long through) {
-    return Dispatch("BossRocky_Dispatch", ::bof3::Img(0x64CDAC), 12, 1, through);
+    return DispatchBossSc("BossRocky_Dispatch", ::bof3::Img(0x64CDAC), 12, 1, through);
 }
 
 // original 0x43A380: state 0: the tables (BossRocky_Anims, BossRocky_Hook,
@@ -695,11 +695,11 @@ extern "C" unsigned char __cdecl BossRocky_Enter(void) {
 }
 
 // original 0x43A3C0: the +0xF4 hook: through BossRocky_Hooks (3, all BareRet).
-extern "C" unsigned long __cdecl BossRocky_Hook(unsigned long word) { return HookDispatch("BossRocky_Hook", ::bof3::Img(0x64CDDC), word); }
+extern "C" unsigned long __cdecl BossRocky_Hook(unsigned long word) { return HookDispatchBossSc("BossRocky_Hook", ::bof3::Img(0x64CDDC), word); }
 
 // original 0x43A3D0: BossKind_Table[53]: by +1 through BossSample8_Steps (12).
 extern "C" unsigned long __cdecl BossSample8_Dispatch(unsigned long through) {
-    return Dispatch("BossSample8_Dispatch", ::bof3::Img(0x64CDE8), 12, 1, through);
+    return DispatchBossSc("BossSample8_Dispatch", ::bof3::Img(0x64CDE8), 12, 1, through);
 }
 
 // original 0x43A3F0: state 0: the tables (BossRocky_Anims - Rocky's own -,
@@ -715,7 +715,7 @@ extern "C" unsigned char __cdecl BossSample8_Enter(void) {
 
 // original 0x43A450: the +0xF4 hook: through BossSample8_Hooks (3, all BareRet).
 extern "C" unsigned long __cdecl BossSample8_Hook(unsigned long word) {
-    return HookDispatch("BossSample8_Hook", ::bof3::Img(0x64CE18), word);
+    return HookDispatchBossSc("BossSample8_Hook", ::bof3::Img(0x64CE18), word);
 }
 
 // ============================================================================
@@ -743,7 +743,7 @@ extern "C" void __cdecl Boss46_Setup(void) {
 
 // original 0x43A4D0: BossKind_Table[16]: by +1 through BossPooch_Steps (12).
 extern "C" unsigned long __cdecl BossPooch_Dispatch(unsigned long through) {
-    return Dispatch("BossPooch_Dispatch", ::bof3::Img(0x64CE38), 12, 1, through);
+    return DispatchBossSc("BossPooch_Dispatch", ::bof3::Img(0x64CE38), 12, 1, through);
 }
 
 // original 0x43A4F0: state 0: the tables (BossPooch_Anims, BossPooch_Hook,
@@ -755,7 +755,7 @@ extern "C" unsigned char __cdecl BossPooch_Enter(void) {
 }
 
 // original 0x43A530: the +0xF4 hook: through BossPooch_Hooks (3, all BareRet).
-extern "C" unsigned long __cdecl BossPooch_Hook(unsigned long word) { return HookDispatch("BossPooch_Hook", ::bof3::Img(0x64CE68), word); }
+extern "C" unsigned long __cdecl BossPooch_Hook(unsigned long word) { return HookDispatchBossSc("BossPooch_Hook", ::bof3::Img(0x64CE68), word); }
 
 // original 0x43A540: Boss_SetupTable[15]: End = Boss15_End, Exit =
 // Boss15_Exit, Event = BareRetZero.

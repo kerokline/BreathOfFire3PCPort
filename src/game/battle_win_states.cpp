@@ -94,7 +94,7 @@ int S8(std::uint32_t address) { return static_cast<signed char>(At(address)[0]);
 // width (0x597320, 0x597400 - `sub eax, 3` on the zero-extended byte).
 unsigned char* Enemy(unsigned slot) { return At(::bof3::Img(Battle_Enemies_addr) + 0x80 + at::kEnemyStride * (slot - 3u)); }
 // A party member's battle object, ObjTrio 0x802D40 + 0x14C * m.
-unsigned char* Member(unsigned m) { return At(::bof3::Img(ObjTrio_addr) + at::kMemberStride * m); }
+unsigned char* MemberBattleWinStates(unsigned m) { return At(::bof3::Img(ObjTrio_addr) + at::kMemberStride * m); }
 // Enemy() is +0x80 into the enemy object (EnemyWorkingRecords); the record, and
 // its typed view, starts 0x80 before.
 
@@ -214,17 +214,17 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_MemberGaug
     if (state >= 3) PastTable("BattleWin_MemberGaugeStates", "state", state, 3);
     Run(g.member[state]);
     unsigned char* w = Current();
-    unsigned char* m = Member(w[0xA]);
+    unsigned char* m = MemberBattleWinStates(w[0xA]);
     records::PartyMember* member_rec = rv::As<records::PartyMember>(m);
     g.dispatch_kind(Addr(w + 0xB), Addr(m + 0xA0), Addr(w + 0x1C), Addr(w + 0x14), Addr(m + 0x98), Addr(w + 0xD),
                     Addr(w + 0x18), Addr(w + 8));
     w = Current();
-    m = Member(w[0xA]);
+    m = MemberBattleWinStates(w[0xA]);
     member_rec = rv::As<records::PartyMember>(m);
     g.dispatch_kind(Addr(w + 0xC), Addr(m + 0xA2), Addr(w + 0x1E), Addr(w + 0x16), Addr(m + 0x9A), Addr(w + 0xE),
                     Addr(w + 0x1A), Addr(w + 9));
     w = Current();
-    m = Member(w[0xA]);
+    m = MemberBattleWinStates(w[0xA]);
     member_rec = rv::As<records::PartyMember>(m);
     LowFlag(m + 0x90, member_rec->hp, member_rec->max_hp);
 }
@@ -448,19 +448,19 @@ extern "C" void __cdecl BattleWin_EnemyTargetFrame() {
 // not 0 - +0x16, +0x1E, +0xE 0; the state steps on.
 extern "C" void __cdecl BattleWin_MemberGaugeOpen() {
     unsigned char* w = Current();
-    records::PartyMember* member_rec = rv::As<records::PartyMember>(Member(w[0xA]));
+    records::PartyMember* member_rec = rv::As<records::PartyMember>(MemberBattleWinStates(w[0xA]));
     w[0xB] = Gauge(member_rec->hp, member_rec->max_hp, "BattleWin_MemberGaugeOpen");
     w = Current();
-    if (rv::As<records::PartyMember>(Member(w[0xA]))->hp != 0 && w[0xB] == 0) {
+    if (rv::As<records::PartyMember>(MemberBattleWinStates(w[0xA]))->hp != 0 && w[0xB] == 0) {
         w[0xB] = 1;
         w = Current();
     }
-    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->hp_shown, rv::As<records::PartyMember>(Member(w[0xA]))->hp);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->hp_shown, rv::As<records::PartyMember>(MemberBattleWinStates(w[0xA]))->hp);
     w = Current();
-    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->hp_top_shown, rv::As<records::PartyMember>(Member(w[0xA]))->max_hp);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->hp_top_shown, rv::As<records::PartyMember>(MemberBattleWinStates(w[0xA]))->max_hp);
     Current()[0xD] = 0;
     unsigned char* const v = Current();
-    member_rec = rv::As<records::PartyMember>(Member(v[0xA]));
+    member_rec = rv::As<records::PartyMember>(MemberBattleWinStates(v[0xA]));
     const unsigned top = member_rec->max_ap;
     if (top == 0) {
         v[0xC] = 0;
@@ -468,14 +468,14 @@ extern "C" void __cdecl BattleWin_MemberGaugeOpen() {
     } else {
         v[0xC] = static_cast<unsigned char>((55u * member_rec->ap) / top);
         w = Current();
-        if (rv::As<records::PartyMember>(Member(w[0xA]))->ap != 0 && w[0xC] == 0) {
+        if (rv::As<records::PartyMember>(MemberBattleWinStates(w[0xA]))->ap != 0 && w[0xC] == 0) {
             w[0xC] = 1;
             w = Current();
         }
     }
-    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->ap_shown, rv::As<records::PartyMember>(Member(w[0xA]))->ap);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->ap_shown, rv::As<records::PartyMember>(MemberBattleWinStates(w[0xA]))->ap);
     w = Current();
-    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->ap_top_shown, rv::As<records::PartyMember>(Member(w[0xA]))->max_ap);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->ap_top_shown, rv::As<records::PartyMember>(MemberBattleWinStates(w[0xA]))->max_ap);
     Current()[0xE] = 0;
     ++rv::As<records::WindowRecord>(Current())->state;
 }
@@ -504,14 +504,14 @@ extern "C" void __cdecl BattleWin_MemberGaugeWait() {
 extern "C" void __cdecl BattleWin_MemberTargetFrame() {
     unsigned char* w = Current();
     records::WindowRecord* win = rv::As<records::WindowRecord>(w);
-    const records::PartyMember* member_rec = rv::As<records::PartyMember>(Member(w[0xA]));
+    const records::PartyMember* member_rec = rv::As<records::PartyMember>(MemberBattleWinStates(w[0xA]));
     const unsigned id = member_rec->char_id, side = member_rec->direction;
     const int dx = SideDx(side);
     const std::uint32_t pair = ::bof3::Img(BattleWin_MemberTargetOffsets_addr) + 2 * (side + 4 * id);
     win->x = static_cast<unsigned>(S8(pair) + static_cast<std::uint16_t>(member_rec->screen_x) + dx);
     w = Current();
     win = rv::As<records::WindowRecord>(w);
-    member_rec = rv::As<records::PartyMember>(Member(w[0xA]));
+    member_rec = rv::As<records::PartyMember>(MemberBattleWinStates(w[0xA]));
     win->y = static_cast<unsigned>(static_cast<std::uint16_t>(member_rec->screen_y) + S8(pair + 1) + 0xC);
     if (!Choosing()) {
         Current()[0xF] = 0;

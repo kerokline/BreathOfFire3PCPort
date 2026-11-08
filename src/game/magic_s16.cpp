@@ -99,8 +99,8 @@ const Pool& k072 = kPools[1];
 const Pool& k073 = kPools[2];
 const Pool& k074 = kPools[3];
 
-void Bump(unsigned char& b, int by = 1) { b = static_cast<unsigned char>(b + by); }
-std::int32_t PtrValue(const void* p) { return static_cast<std::int32_t>(Low32(p)); }
+void BumpMagicS16(unsigned char& b, int by = 1) { b = static_cast<unsigned char>(b + by); }
+std::int32_t PtrValueMagicS16(const void* p) { return static_cast<std::int32_t>(Low32(p)); }
 unsigned char* Record(const Pool& p, unsigned index) { return Mem(p.pool + index * kSparkleStride); }
 unsigned char* Cur(const Pool& p) { return Pointer(p.current); }
 unsigned char* Owner() { return Pointer(::bof3::Img(BattleE2_Owner_addr)); }
@@ -164,7 +164,7 @@ void Update(const Pool& p, const char* who) {
 // sparkle is read again after every call, the x pointer taken before its Rand.
 void Launch(const Pool& p) {
     unsigned char* c = Cur(p);
-    Bump(c[kTimer], -1);
+    BumpMagicS16(c[kTimer], -1);
     c = Cur(p);
     if (c[kTimer] != 0) return;
     SetLong(c + 0x14, rv::As<records::SpriteHead>(Owner())->x);
@@ -206,7 +206,7 @@ void Launch(const Pool& p) {
     }
     Cur(p)[kTimer] = 0x10;
     Cur(p)[kCount] = 0;
-    Bump(Cur(p)[kPhase]);
+    BumpMagicS16(Cur(p)[kPhase]);
 }
 
 // The sway the rise and the fade share: +0xC up; x = base + sin((+0xC & 0x3F)
@@ -227,9 +227,9 @@ void Sway(const Pool& p) {
 // length +7 the phase on.
 void Rise(const Pool& p) {
     Sway(p);
-    Bump(Cur(p)[kCount]);
+    BumpMagicS16(Cur(p)[kCount]);
     unsigned char* const c = Cur(p);
-    if (c[kCount] == c[kLimit]) Bump(c[kPhase]);
+    if (c[kCount] == c[kLimit]) BumpMagicS16(c[kPhase]);
 }
 
 // original (e.g. 0x4B9DA0): the fade. The sway; the count down on every
@@ -237,10 +237,10 @@ void Rise(const Pool& p) {
 // +0xB down and the sparkle freed (a tail jmp in the original).
 void Fade(const Pool& p) {
     Sway(p);
-    if ((Frame_Counter & 3) == 0) Bump(Cur(p)[kCount], -1);
-    Bump(Cur(p)[kTimer], -1);
+    if ((Frame_Counter & 3) == 0) BumpMagicS16(Cur(p)[kCount], -1);
+    BumpMagicS16(Cur(p)[kTimer], -1);
     if (Cur(p)[kTimer] != 0) return;
-    Bump(Owner()[0xB], -1);
+    BumpMagicS16(Owner()[0xB], -1);
     MH_CALL(p.free)();
 }
 
@@ -413,7 +413,7 @@ void Walk(const Pool& p, Fn0 dispatch) {
     for (unsigned i = 0; i < p.count; ++i) {
         unsigned char* const s = Record(p, i);
         if ((s[kFlags] & 1) == 0) continue;
-        SetLong(Mem(p.current), PtrValue(s));
+        SetLong(Mem(p.current), PtrValueMagicS16(s));
         SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), Long(s + kOwnerOf));
         MH_CALL(dispatch)();
         SetLong(Mem(::bof3::Img(BattleE2_Owner_addr)), saved);
@@ -446,7 +446,7 @@ template <typename Kind> void MakeSparkles(const Pool& p, Kind kind) {
         const unsigned char a = MH_CALL(p.alloc)();
         if (a != 0xFF) {
             unsigned char* const s = Record(p, a);
-            SetLong(s + kOwnerOf, PtrValue(Sprite_Current));
+            SetLong(s + kOwnerOf, PtrValueMagicS16(Sprite_Current));
             s[kType] = 0;
             s[kPhase] = 0;
             const int r = MH_CALL(Rand)();
@@ -455,7 +455,7 @@ template <typename Kind> void MakeSparkles(const Pool& p, Kind kind) {
             s[kKind] = static_cast<unsigned char>(k);
             s[kLimit] = n;
             s[kTimer] = static_cast<unsigned char>(Mem(p.delays)[k] * static_cast<unsigned>(n >> 2) + 1);
-            Bump(Sprite_Current[0xB]);
+            BumpMagicS16(Sprite_Current[0xB]);
         }
         ++n;
     } while (n < Mem(p.counts)[kind()]);
@@ -487,7 +487,7 @@ void Spawn(const Pool& p, unsigned char kind) {
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 8;
     Sprite_Current[0xA] = 0;
-    Bump(Sprite_Current[1]);
+    BumpMagicS16(Sprite_Current[1]);
     MakeSparkles(p, [] { return static_cast<unsigned>(Sprite_Current[4]); });
     MH_CALL(Sound_PlayEffect)(0x100);
 }
@@ -502,7 +502,7 @@ void SpawnOnActors(const Pool& p, unsigned char kind, unsigned parameter) {
     ClearPool(p);
     Sprite_Current[4] = kind;
     Sprite_Current[0xB] = 0;
-    Bump(Sprite_Current[1]);
+    BumpMagicS16(Sprite_Current[1]);
     const bool enemies = (Mem(::bof3::Img(at::kTarget))[0] & 0x40) != 0;
     unsigned char delay = 1;
     unsigned char i = enemies ? 3 : 0;
@@ -511,12 +511,12 @@ void SpawnOnActors(const Pool& p, unsigned char kind, unsigned parameter) {
             const unsigned char slot = MH_CALL(BattleTask_Create)(1, parameter);
             unsigned char* const t = Mem(::bof3::Img(BattleTask_Slots_addr) + slot * at::kTaskStride);
             unsigned char* const sc = Sprite_Current;
-            SetLong(t + 0x80, PtrValue(sc));
+            SetLong(t + 0x80, PtrValueMagicS16(sc));
             t[1] = 0;
             t[4] = i;
             t[9] = delay;
             delay = static_cast<unsigned char>(delay + 0x1C);
-            Bump(sc[0xB]);
+            BumpMagicS16(sc[0xB]);
         }
         ++i;
     } while (enemies ? static_cast<unsigned char>(i - 3) < 8 : i < 3);
@@ -528,7 +528,7 @@ void SpawnOnActors(const Pool& p, unsigned char kind, unsigned parameter) {
 // (BattleActor_UpdateScreenXY), +0xB 0, +9 = 8, +0xA 0, its phase +2 on; then
 // the sparkles, their kind the parent's (the owner 0x93B940) +4.
 void ActorStart(const Pool& p) {
-    Bump(Sprite_Current[9], -1);
+    BumpMagicS16(Sprite_Current[9], -1);
     unsigned char* const sc = Sprite_Current;
     if (sc[9] != 0) return;
     const unsigned char* const rec = ActorRecord(sc[4]);
@@ -540,7 +540,7 @@ void ActorStart(const Pool& p) {
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 8;
     Sprite_Current[0xA] = 0;
-    Bump(Sprite_Current[2]);
+    BumpMagicS16(Sprite_Current[2]);
     MakeSparkles(p, [] { return static_cast<unsigned>(Owner()[4]); });
 }
 
@@ -633,7 +633,7 @@ MS16_EXPORT void __cdecl ActorFx_WaitStep4(void) {
     unsigned char* const sc = Sprite_Current;
     if (sc[0xB] > 4) return;
     sc[9] = 8;
-    Bump(Sprite_Current[2]);
+    BumpMagicS16(Sprite_Current[2]);
 }
 
 // original 0x4BBCE0: how many actors are in the reaction state 6 and not out:
@@ -671,13 +671,13 @@ MS16_EXPORT void __cdecl Magic074_ActorStart(void) { ActorStart(k074); }
 MS16_EXPORT void __cdecl ActorFx_Tint(void) {
     unsigned char* const sc = Sprite_Current;
     unsigned char* const rec = ActorRecord(sc[4]);
-    Bump(sc[9], -1);
+    BumpMagicS16(sc[9], -1);
     if (Sprite_Current[9] != 0) return;
     MH_CALL(Sprite_ReleaseTint)(rec);
     const unsigned char tint = MH_CALL(Sprite_SetTint)(rec, 0, 0, 0, 1);
     Sprite_Current[0xA] = tint;
     Sprite_Current[9] = 8;
-    Bump(Sprite_Current[2]);
+    BumpMagicS16(Sprite_Current[2]);
 }
 
 // original 0x4BC1A0 (shared by MAGIC073 and 074): the tint record +0xA's
@@ -687,12 +687,12 @@ MS16_EXPORT void __cdecl ActorFx_Tint(void) {
 MS16_EXPORT void __cdecl ActorFx_Untint(void) {
     unsigned char* const sc = Sprite_Current;
     unsigned char* const rec = ActorRecord(sc[4]);
-    for (unsigned k = 2; k <= 4; ++k) Bump(Mem(::bof3::Img(MoveScript_TintRecords_addr) + sc[0xA] * 12u + k)[0], -1);
-    Bump(sc[9], -1);
+    for (unsigned k = 2; k <= 4; ++k) BumpMagicS16(Mem(::bof3::Img(MoveScript_TintRecords_addr) + sc[0xA] * 12u + k)[0], -1);
+    BumpMagicS16(sc[9], -1);
     if (Sprite_Current[9] != 0) return;
     MH_CALL(Sprite_ReleaseTint)(rec);
     MH_CALL(BattleActor_Flash)(Sprite_Current[4]);
-    Bump(Sprite_Current[2]);
+    BumpMagicS16(Sprite_Current[2]);
 }
 
 // original 0x4BC260 (shared by MAGIC073 and 074): once the child's sparkles
@@ -700,7 +700,7 @@ MS16_EXPORT void __cdecl ActorFx_Untint(void) {
 // the child freed (a tail jmp).
 MS16_EXPORT void __cdecl ActorFx_End(void) {
     if (Sprite_Current[0xB] != 0) return;
-    Bump(Owner()[0xB], -1);
+    BumpMagicS16(Owner()[0xB], -1);
     MH_CALL(Battle_SetTargetFlag40)(Sprite_Current[4]);
     MH_CALL(BattleTask_FreeCurrent)();
 }

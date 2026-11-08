@@ -44,8 +44,8 @@ constexpr unsigned kMemberStride = 0x14C;
 // with the direction unmasked, as the originals index it (`shl eax, 3` on the
 // zero-extended byte): the table has 8 rows; a byte above 7 reads the .data
 // after it (docs/rest_0a.md section 5).
-U StepX(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4))); }
+U StepXRest0a(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8))); }
+U StepZRest0a(unsigned d) { return static_cast<U>(Long(At(::bof3::Img(Field_DirectionSteps_addr) + d * 8 + 4))); }
 
 // A 16.16 coordinate's cell, the high word, as the originals pass it to
 // AreaMap_ByteAt (a dword whose low word is the cell; the callee reads that
@@ -75,8 +75,8 @@ bool MapBlocked(unsigned char b) { return b == 0xF0 || b == 0xF1 || b == 0xF4 ||
 void TwoAhead(U& x, U& z) {
     const unsigned char* const s = Sprite_Current;
     const unsigned d = s[8];
-    x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
-    z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZ(d);
+    x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepXRest0a(d);
+    z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZRest0a(d);
 }
 
 // 0x524DA0's side probe in direction d (3 or 5): the point one step that way
@@ -85,8 +85,8 @@ void TwoAhead(U& x, U& z) {
 // height word (both s16): +0x2B = 0.
 void SideProbe(unsigned d) {
     const unsigned char* s = Sprite_Current;
-    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
-    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest0a(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest0a(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
     if (SharedScratch.b_00 == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
@@ -121,8 +121,8 @@ extern "C" unsigned char __cdecl PartyAction_TargetAhead(void) {
 extern "C" unsigned char __cdecl PartyAction_MemberBeyondEffect(unsigned index) {
     const unsigned char* const e = EffectByArgument(index, "PartyAction_MemberBeyondEffect (0x51C6A0)");
     const unsigned d = Sprite_Current[8];
-    const U x = static_cast<U>(rv::As<records::EffectObject>(e)->x) + 2u * StepX(d);
-    const U z = static_cast<U>(rv::As<records::EffectObject>(e)->z) + 2u * StepZ(d);
+    const U x = static_cast<U>(rv::As<records::EffectObject>(e)->x) + 2u * StepXRest0a(d);
+    const U z = static_cast<U>(rv::As<records::EffectObject>(e)->z) + 2u * StepZRest0a(d);
     for (unsigned m = 1; m < Field_MemberCount; ++m)
         if (SH_CALL(Sprite_PointInReach)(static_cast<int>(x), static_cast<int>(z), static_cast<short>(rv::As<records::EffectObject>(e)->height_whole), 1,
                                          Member(m)) != 0)
@@ -154,8 +154,8 @@ extern "C" unsigned char __cdecl PartyAction_Kind30Ahead(void) {
     if (state[0x89] != 2 || (state[0x138] & 1) != 0) return 0xFF;
     const unsigned char* const s = Sprite_Current;
     const unsigned d = s[8];
-    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
-    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepXRest0a(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZRest0a(d);
     for (unsigned i = 0; i < kEffectCount; ++i) {
         const unsigned char* const e = rv::Bytes(&Effect_Objects[i]);
         if (e[0] == 0 || e[5] != 0x30) continue;

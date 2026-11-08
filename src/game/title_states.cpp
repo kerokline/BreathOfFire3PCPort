@@ -66,7 +66,7 @@ bool g_psp_title = false;
 // through here all the same so that each function is tested alone.
 // Field_ModeDispatch belongs to another file and is called through its
 // address.
-struct Callees {
+struct CalleesTitleStates {
     void (__cdecl* dropped)(unsigned char);
     void (__cdecl* load_dat)(int);
     int (__cdecl* load_done)();
@@ -91,13 +91,13 @@ struct Callees {
     void (__cdecl* loading_frame)();
     void (__cdecl* mode_dispatch)();
 };
-const Callees kOriginals = {
+const CalleesTitleStates kOriginalsTitleStates = {
     Port_DroppedCall, LoadDatFile, File_LoadDone, Task_Sleep, Gfx_ClutStripRestore, Music_Play, Transition_Start,
     Title_FadeMusic, Title_StopMusic, Effect_ClearAll, Scenario_Start, Task_Create, Music_FadeOut, Music_FadeOutStop,
     Title_DrawBadge, Task_Exit, Gpu_SetDrawMode, Gfx_CommitPrim, Title_Sprite, Prim_SetShade, Scenario_Load,
     Field_LoadingFrame, reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(::bof3::Code(kModeDispatch.v))),
 };
-Callees g = kOriginals;
+CalleesTitleStates g = kOriginalsTitleStates;
 
 // Task 0's state word, +0 of its record: 0 while no task 0 runs.
 std::uint16_t TaskZeroState() { return Word(At(::bof3::Img(bof3::addr::Task_Records))); }
@@ -587,7 +587,7 @@ void __cdecl StubModeDispatch() { Record(26, static_cast<unsigned char>(Cond_Byt
 // The stand-ins take bytes as dwords and mask them: the copies push whole
 // registers.
 template <typename T> T As(const void* p) { return reinterpret_cast<T>(const_cast<void*>(p)); }
-const Callees kStubs = {
+const CalleesTitleStates kStubs = {
     As<void (__cdecl*)(unsigned char)>(reinterpret_cast<const void*>(&StubDropped)), StubLoadDat, StubLoadDone, StubSleep, StubClutRestore,
     StubMusicPlay, As<void (__cdecl*)(unsigned char)>(reinterpret_cast<const void*>(&StubTransition)), StubFadeMusic, StubStopMusic,
     StubEffectClear, StubScenarioStart, StubTaskCreate, StubMusicFadeOut, StubMusicFadeStop, StubBadge, StubTaskExit,
@@ -878,7 +878,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
                           their_out.log_n, our_out.log_n);
         }
     }
-    g = kOriginals;
+    g = kOriginalsTitleStates;
     Apply(saved);
     Gfx_PacketNext = saved_packet;
     bof3::Log("shadow      title_states self-test: %u rounds (%u per function), %u calls to the stand-ins, %u MISMATCHES; "

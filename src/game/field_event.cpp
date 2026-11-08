@@ -69,7 +69,7 @@ namespace {
 using namespace move_script;
 using field_event::g;
 namespace at = field_event::at;
-using field_event::Handler;
+using HandlerFieldEvent = field_event::Handler;
 
 constexpr unsigned kMemberBytes = 0x14C, kActorBytes = 0xA4;
 
@@ -81,7 +81,7 @@ unsigned char* Member(unsigned i) { return rv::Bytes(&ObjTrio[i]); }
 // Sprite_* helpers on any object, whose first 0x80 bytes are a sprite's.
 unsigned char* Actor(unsigned a) { return At(::bof3::Img(CharacterRecords_addr)) + a * kActorBytes; }
 void Dispatch(const std::uint32_t* table, unsigned index) {
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(table[index]))();
+    reinterpret_cast<HandlerFieldEvent>(static_cast<std::uintptr_t>(table[index]))();
 }
 // `rep movsd` of 0x29 dwords: an actor record into a member's +0x80.
 void CopyActor(unsigned char* to, const unsigned char* from) { std::memcpy(to, from, kActorBytes); }

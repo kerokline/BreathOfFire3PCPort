@@ -30,7 +30,7 @@ std::uint32_t Address(const volatile void* p) { return Low32(p); }
 // functions in for them - for the original's copies and for ours alike. Two
 // of them are ours (the motion and the settle below); the fuzz tests each of
 // the four alone.
-struct Callees {
+struct CalleesFieldObjects {
     unsigned char (__cdecl* step)(unsigned char*, const unsigned char*);
     void (__cdecl* pose_wait)(unsigned char*);
     unsigned char (__cdecl* blocked)(unsigned char*);
@@ -51,13 +51,13 @@ struct Callees {
     void (__cdecl* rot_trans)(const short*, long*);
     void (__cdecl* pop_matrix)();
 };
-const Callees kOriginals = {
+const CalleesFieldObjects kOriginalsFieldObjects = {
     MoveScript_Step, Sprite_SetPoseWait, Field_ObjectBlocked, MoveCmd_Move, Field_ObjectSettle,
     Field_ObjectMotion, AreaMap_Elevation, Party_ApplyRecord, Party_MoveMember,
     Sprite_ObjectByHandle, MoveCmd_AttachOffset, Field_ObjectUpdate, Gte_PushMatrix, Gte_RotMatrix,
     Gte_TransMatrix, Gte_SetRotMatrix, Gte_SetTransMatrix, Gte_RotTrans, Gte_PopMatrix,
 };
-Callees g = kOriginals;
+CalleesFieldObjects g = kOriginalsFieldObjects;
 
 // As MoveScript_GroupD's: Field_ActiveMember's party slot, as a byte.
 unsigned char PartySlot() {
@@ -386,7 +386,7 @@ void __cdecl StubRotTrans(const short* v, long* out) {
     Record(19, static_cast<std::uint16_t>(v[0]), static_cast<std::uint16_t>(v[1]) << 16 | static_cast<std::uint16_t>(v[2]));
     for (unsigned j = 0; j < 3; ++j) out[j] = static_cast<long>(Hash() * (j + 7));
 }
-const Callees kStubs = {StubStep, StubPoseWait, StubBlocked, StubMove, StubSettle, StubMotion, StubElevation, StubPartyApply, StubPartyMove,
+const CalleesFieldObjects kStubs = {StubStep, StubPoseWait, StubBlocked, StubMove, StubSettle, StubMotion, StubElevation, StubPartyApply, StubPartyMove,
                         StubByHandle, StubAttachOffset, StubUpdate, StubPush, StubRotMatrix, StubTransMatrix, StubSetRot, StubSetTrans,
                         StubRotTrans, StubPop};
 
@@ -560,7 +560,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
             bof3::Log("shadow      field_objects self-test MISMATCH: round %u, %s, log %u / %u", round, kClones[k].name,
                       their_out.log_n, our_out.log_n);
     }
-    g = kOriginals;
+    g = kOriginalsFieldObjects;
     Apply(saved);
     bof3::Log("shadow      field_objects self-test: %u rounds (%u per function), %u calls to the stand-ins, %u MISMATCHES; "
               "the object, sprite, Sprite_Kind2, party objects and records, scratch bytes, Field_Request and the stand-ins' "

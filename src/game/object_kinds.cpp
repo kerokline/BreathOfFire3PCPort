@@ -50,7 +50,7 @@ using PaceFn = unsigned char (__cdecl*)(unsigned char*, unsigned, unsigned);
 // recording functions in for them - for the originals' copies and for ours
 // alike. Ours among them (the pace entries, the turn, the three helpers) are
 // tested alone.
-struct Callees {
+struct CalleesObjectKinds {
     const ::bof3::CodeSlot<PaceFn>* pace;   // the table itself (32-bit code words), read at the call as the original reads it
     PaceFn pace0;         // Field_ObjectIdleLong's direct call of entry 0
     int (__cdecl* rand)();
@@ -73,7 +73,7 @@ struct Callees {
     void (__cdecl* msg_script)(unsigned short);   // Msg_OpenScript reads a word
     void (__cdecl* msg_system)(unsigned);         // Msg_OpenSystem a dword
 };
-Callees Originals() {
+CalleesObjectKinds OriginalsObjectKinds() {
     return {reinterpret_cast<const ::bof3::CodeSlot<PaceFn>*>(static_cast<std::uintptr_t>(::bof3::Img(kPaceTable))),
             Field_Pace0,
             Rand,
@@ -96,7 +96,7 @@ Callees Originals() {
             reinterpret_cast<void (__cdecl*)(unsigned short)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Msg_OpenScript))),
             reinterpret_cast<void (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(::bof3::Code(bof3::addr::Msg_OpenSystem)))};
 }
-Callees g = Originals();
+CalleesObjectKinds g = OriginalsObjectKinds();
 
 // The field object, rv::Current<records::SpriteObject>(): the handlers'
 // argument, which the loops also make Sprite_Current.
@@ -187,7 +187,7 @@ void Chase(unsigned char* object, unsigned char (__cdecl* pick)(unsigned char*),
 
 // Field_ObjectFadeOut / FadeIn's cases. The tint record is the one
 // Sprite_SetTint's result names, kept in Field_ActiveMember +0x9F.
-unsigned char* TintRecord(unsigned char index) { return MoveScript_TintRecords + index * 12u; }
+unsigned char* TintRecordObjectKinds(unsigned char index) { return MoveScript_TintRecords + index * 12u; }
 int TintSum(const unsigned char* r) {   // signed bytes, as the original's movsx
     return static_cast<signed char>(r[4]) + static_cast<signed char>(r[3]) + static_cast<signed char>(r[2]);
 }
@@ -200,11 +200,11 @@ void FadeOutStart() {
 void FadeOutStep() {
     unsigned char* const member = Field_ActiveMember;
     for (const unsigned at : {2u, 3u, 4u}) {
-        unsigned char* const r = TintRecord(member[0x9F]);   // read each time, as the original (nothing between changes it)
+        unsigned char* const r = TintRecordObjectKinds(member[0x9F]);   // read each time, as the original (nothing between changes it)
         if (r[at] != 0) --r[at];
     }
     const unsigned char index = member[0x9F];
-    if (TintSum(TintRecord(index)) != 0) return;
+    if (TintSum(TintRecordObjectKinds(index)) != 0) return;
     g.tint_release(index);
     Field_ActiveMember[0x80] &= 0xFD;   // context bit 1, which chose this pose
     rv::Current<records::SpriteObject>()->state = Sprite_Current[3];
@@ -218,11 +218,11 @@ void FadeInStart() {
 void FadeInStep() {
     unsigned char* const member = Field_ActiveMember;
     for (const unsigned at : {2u, 3u, 4u}) {
-        unsigned char* const r = TintRecord(member[0x9F]);
+        unsigned char* const r = TintRecordObjectKinds(member[0x9F]);
         if (static_cast<signed char>(r[at]) < 0x1F) ++r[at];   // signed: 0x80..0xFF climb too
     }
     const unsigned char index = member[0x9F];
-    if (TintSum(TintRecord(index)) != 0x5D) return;
+    if (TintSum(TintRecordObjectKinds(index)) != 0x5D) return;
     g.tint_release(index);
     Field_ActiveMember[0x80] &= 0xFB;   // context bit 2
     rv::Current<records::SpriteObject>()->state = Sprite_Current[3];
@@ -626,8 +626,8 @@ void __cdecl StubMsgScript(unsigned id) { Record(19, id & 0xFFFF); }
 void __cdecl StubMsgSystem(unsigned id) { Record(20, id); }
 
 template <typename T, typename F> T As(F f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
-Callees Stubs() {
-    Callees s{};
+CalleesObjectKinds Stubs() {
+    CalleesObjectKinds s{};
     s.pace = g_pace_stubs;
     s.pace0 = StubPace0;
     s.rand = StubRand;
@@ -947,7 +947,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
             bof3::Log("shadow      object_kinds self-test MISMATCH: round %u, %s, log %u / %u, result 0x%X / 0x%X", round, kClones[k].name,
                       their_out.log_n, our_out.log_n, (unsigned)their_out.result, (unsigned)our_out.result);
     }
-    g = Originals();
+    g = OriginalsObjectKinds();
     Apply(saved);
     g_current_object = saved_object;
     bof3::Log("shadow      object_kinds self-test: %u rounds (%u per function, %u functions), %u calls to the stand-ins, %u MISMATCHES; "

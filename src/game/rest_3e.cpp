@@ -62,13 +62,13 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
-U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
-U UL(U a) { return UL(At(a)); }
+U ULRest3e(const unsigned char* p) { return static_cast<U>(Long(p)); }
+U ULRest3e(U a) { return ULRest3e(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned W(U a) { return Word(At(a)); }
 unsigned char& B(U a) { return At(a)[0]; }
-U AddressOf(const void* p) { return Low32(p); }
+U AddressOfRest3e(const void* p) { return Low32(p); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // imul r32, r32: the product's low 32 bits.
@@ -76,8 +76,8 @@ U Mul(U a, U b) { return a * b; }
 // (cos or sin answered first) * the width word +0xE, zero-extended, sar 12:
 // the width read after the call, as the original reads it.
 U Turn(int answer, const unsigned char* point) { return Sar(Mul(static_cast<U>(answer), Word(point + 0xE)), 12); }
-void Copy12(unsigned char* to, const unsigned char* from) {
-    for (unsigned i = 0; i < 12; i += 4) SetUL(to + i, UL(from + i));
+void Copy12Rest3e(unsigned char* to, const unsigned char* from) {
+    for (unsigned i = 0; i < 12; i += 4) SetUL(to + i, ULRest3e(from + i));
 }
 
 // --- x87 as the original has it (effect_3a.cpp's form): `fld dword` through
@@ -113,14 +113,14 @@ void Dispatch(const char* who, const void* table, unsigned entries) {
     if (state >= entries)
         bof3::Fatal("%s: state byte +1 is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/rest_3e.md section 7)",
-                    who, state, entries, (unsigned)::bof3::VaOf(AddressOf(table)));
-    reinterpret_cast<scenario_harness::Handler>(static_cast<std::uintptr_t>(UL(static_cast<const unsigned char*>(table) + 4 * state)))();
+                    who, state, entries, (unsigned)::bof3::VaOf(AddressOfRest3e(table)));
+    reinterpret_cast<scenario_harness::Handler>(static_cast<std::uintptr_t>(ULRest3e(static_cast<const unsigned char*>(table) + 4 * state)))();
 }
 
 // The draw-mode packet the draws open with: Gpu_GetTPage(0, abr, x, y),
 // Gpu_SetDrawMode(packet, 0, dtd, the page's low word, 0 - the fifth word the
 // leftover of GetTPage's five pushes), committed to `slot` (0xC).
-void DrawMode(U abr, int x, int y, int dtd, U slot) {
+void DrawModeRest3e(U abr, int x, int y, int dtd, U slot) {
     const U tp = SH_CALL(Gpu_GetTPage)(0, abr, x, y);
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, dtd, tp & 0xFFFFu, 0);
     SH_CALL(Gfx_CommitPrim)(slot, 0xC);
@@ -226,7 +226,7 @@ extern "C" void __cdecl EffectKind1D_DrawSpeck(const unsigned char* speck) {
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetTile1)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 0);
-    Copy12(p + 8, screen);
+    Copy12Rest3e(p + 8, screen);
     const auto c = static_cast<unsigned char>((SH_CALL(Rand)() & 1) ? 0xFF : 0);
     p[6] = c;
     p[5] = c;
@@ -265,9 +265,9 @@ extern "C" void __cdecl EffectKind21_ArmPoints(unsigned char* arm) {
         v[2] = 0;
         SH_CALL(Gte_ApplyMatrixLV)(m, v, out);
         unsigned char* const q = arm + 0xC + 0x10 * i;
-        SetUL(q, UL(arm) + static_cast<U>(out[0]));
-        SetUL(q + 4, UL(arm + 4) + static_cast<U>(out[1]));
-        SetUL(q + 8, (static_cast<U>(out[2]) << 8) + UL(arm + 8));
+        SetUL(q, ULRest3e(arm) + static_cast<U>(out[0]));
+        SetUL(q + 4, ULRest3e(arm + 4) + static_cast<U>(out[1]));
+        SetUL(q + 8, (static_cast<U>(out[2]) << 8) + ULRest3e(arm + 8));
     }
 }
 
@@ -275,7 +275,7 @@ extern "C" void __cdecl EffectKind21_ArmPoints(unsigned char* arm) {
 // (Gpu_GetTPage(0, 1, 0x3C0, 0), dtd 1, slot 1); EffectGte_LoadMapCamera; the
 // triangles of points 0, 1, 2 and 0, 3, 2.
 extern "C" void __cdecl EffectKind21_DrawArm(unsigned char* arm) {
-    DrawMode(1, 0x3C0, 0, 1, 1);
+    DrawModeRest3e(1, 0x3C0, 0, 1, 1);
     SH_CALL(EffectGte_LoadMapCamera)();
     SH_CALL(EffectKind21_DrawArmTriangle)(arm, 0, 1, 2);
     SH_CALL(EffectKind21_DrawArmTriangle)(arm, 0, 3, 2);
@@ -308,7 +308,7 @@ extern "C" void __cdecl EffectKind21_DrawArmTriangle(unsigned char* arm, unsigne
 // word (+6 or +8) times the bytes +0xA, +0xB, +0xC, sar 8; committed to slot 1
 // (0x24).
 extern "C" void __cdecl EffectKind24_DrawRay(const unsigned char* ray) {
-    DrawMode(1, 0x3C0, 0, 1, 1);
+    DrawModeRest3e(1, 0x3C0, 0, 1, 1);
     const U cos4 = static_cast<U>(SH_CALL(Math_Cos)(SW(ray + 4)));
     const U sin2 = static_cast<U>(SH_CALL(Math_Sin)(SW(ray + 2)));
     U dx = Sar(Mul(cos4, sin2), 8);
@@ -415,7 +415,7 @@ extern "C" void __cdecl EffectGlowSparks_StartBurst(unsigned char* spark) {
 // EffectGlowSparks_States by its +1 (unbounded; each handed the spark) and
 // drawn (EffectGlowSparks_Draw). Answers 1 when a spark was in use, else 0.
 extern "C" unsigned char __cdecl EffectGlowSparks_Run(void) {
-    DrawMode(1, 0x3C0, 0, 1, 1);
+    DrawModeRest3e(1, 0x3C0, 0, 1, 1);
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char any = 0;
     for (unsigned i = 0; i < at::kSparks; ++i) {
@@ -427,7 +427,7 @@ extern "C" unsigned char __cdecl EffectGlowSparks_Run(void) {
                         "the original calls through the dword after (docs/rest_3e.md section 7)",
                         i, state, EffectGlowSparks_States_count);
         reinterpret_cast<void (__cdecl*)(unsigned char*)>(
-            static_cast<std::uintptr_t>(UL(reinterpret_cast<const unsigned char*>(EffectGlowSparks_States) + 4 * state)))(k);
+            static_cast<std::uintptr_t>(ULRest3e(reinterpret_cast<const unsigned char*>(EffectGlowSparks_States) + 4 * state)))(k);
         SH_CALL(EffectGlowSparks_Draw)(k);
         any = 1;
     }
@@ -453,8 +453,8 @@ extern "C" void __cdecl EffectGlowSparks_Draw(unsigned char* spark) {
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyG3)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
-        SetUL(p + 8, UL(o));
-        SetUL(p + 0xC, UL(o + 4));
+        SetUL(p + 8, ULRest3e(o));
+        SetUL(p + 0xC, ULRest3e(o + 4));
         U d = Sar(Mul(static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(angle))), radius), 12);
         StF(p + 0x18, I(static_cast<std::int32_t>(d)) + F(o));
         d = Sar(Mul(static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(angle))), radius), 12);
@@ -464,9 +464,9 @@ extern "C" void __cdecl EffectGlowSparks_Draw(unsigned char* spark) {
         StF(p + 0x28, I(static_cast<std::int32_t>(d)) + F(o));
         d = Sar(Mul(static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(angle))), radius), 12);
         StF(p + 0x2C, I(static_cast<std::int32_t>(d)) + F(o + 4));
-        SetUL(p + 0x30, UL(o + 8));
-        SetUL(p + 0x20, UL(o + 8));
-        SetUL(p + 0x10, UL(o + 8));
+        SetUL(p + 0x30, ULRest3e(o + 8));
+        SetUL(p + 0x20, ULRest3e(o + 8));
+        SetUL(p + 0x10, ULRest3e(o + 8));
         const unsigned char shade = spark[3];
         p[6] = shade;
         p[5] = shade;
@@ -500,9 +500,9 @@ extern "C" void __cdecl EffectGlowSparks_Rise(unsigned char* spark) {
         if (S()[6] == 0) SH_CALL(Sound_PlayEffect)(at::kSoundRise);
         Rest3e_RiseSounded = 1;
     }
-    const U speed = UL(spark + 8) + 0x40000u;
+    const U speed = ULRest3e(spark + 8) + 0x40000u;
     SetUL(spark + 8, speed);
-    SetUL(spark + 0x14, UL(spark + 0x14) + speed);
+    SetUL(spark + 0x14, ULRest3e(spark + 0x14) + speed);
     spark[3] = static_cast<unsigned char>(spark[3] + 6);
     spark[2] = static_cast<unsigned char>(spark[2] - 1);
     if (spark[2] == 0) spark[0] = 0;
@@ -532,7 +532,7 @@ extern "C" void __cdecl EffectGlowTrail_Update(unsigned char* trail) { EffectKin
 // The depth words of the quads are not written. The cap at point 31 at its
 // angle + 0x400 and the running shade.
 extern "C" void __cdecl EffectGlowTrail_Draw(unsigned char* trail) {
-    DrawMode(1, 0x3C0, 0, 1, 1);
+    DrawModeRest3e(1, 0x3C0, 0, 1, 1);
     unsigned char shade = 0x80;
     SH_CALL(EffectTrail_DrawCap)(trail + 0x10, Word(trail + 0x1E), (Word(trail + 0x1C) - 0x400u) & 0xFFFFu, 0x80);
     for (unsigned k = 0; k < 0x1F; ++k) {
@@ -542,14 +542,14 @@ extern "C" void __cdecl EffectGlowTrail_Draw(unsigned char* trail) {
         unsigned char* const prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyG4)(prim);
         SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        SetUL(prim + 8, UL(p));
-        SetUL(prim + 0xC, UL(p + 4));
+        SetUL(prim + 8, ULRest3e(p));
+        SetUL(prim + 0xC, ULRest3e(p + 4));
         U v = Turn(SH_CALL(Math_Cos)(static_cast<int>(Word(p + 0xC) + 0x400u)), p);
         StF(prim + 0x18, I(static_cast<std::int32_t>(v)) + F(p));
         v = Turn(SH_CALL(Math_Sin)(static_cast<int>(Word(p + 0xC) + 0x400u)), p);
         StF(prim + 0x1C, I(static_cast<std::int32_t>(v)) + F(p + 4));
-        SetUL(prim + 0x28, UL(q));
-        SetUL(prim + 0x2C, UL(q + 4));
+        SetUL(prim + 0x28, ULRest3e(q));
+        SetUL(prim + 0x2C, ULRest3e(q + 4));
         v = Turn(SH_CALL(Math_Cos)(static_cast<int>(Word(q + 0xC) + 0x400u)), q);
         StF(prim + 0x38, I(static_cast<std::int32_t>(v)) + F(q));
         v = Turn(SH_CALL(Math_Sin)(static_cast<int>(Word(q + 0xC) + 0x400u)), q);
@@ -594,7 +594,7 @@ void SpiralPoint(unsigned char* spiral, unsigned i, unsigned char dark, unsigned
     U b = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(Word(spiral + 0xD10))));
     b = Sar(Mul(b, static_cast<U>(SH_CALL(Math_Sin)(angle))), 12);
     const U c = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(Word(spiral + 0xD10))));
-    const U dot = Mul(UL(spiral + 0xD18), b) + Mul(c, UL(spiral + 0xD1C)) + Mul(a, UL(spiral + 0xD14));
+    const U dot = Mul(ULRest3e(spiral + 0xD18), b) + Mul(c, ULRest3e(spiral + 0xD1C)) + Mul(a, ULRest3e(spiral + 0xD14));
     if (static_cast<std::int32_t>(dot) <= 0) {
         *shade = dark;
     } else {
@@ -603,9 +603,9 @@ void SpiralPoint(unsigned char* spiral, unsigned i, unsigned char dark, unsigned
         *shade = static_cast<unsigned char>(((static_cast<U>(root) >> 5) & 0x78u) + 7u);
     }
     alignas(4) unsigned char pt[12];
-    SetUL(pt, (a << 5) + UL(spiral));
-    SetUL(pt + 4, (b << 5) + UL(spiral + 4));
-    SetUL(pt + 8, (c << 13) + UL(spiral + 8));
+    SetUL(pt, (a << 5) + ULRest3e(spiral));
+    SetUL(pt + 4, (b << 5) + ULRest3e(spiral + 4));
+    SetUL(pt + 8, (c << 13) + ULRest3e(spiral + 8));
     SH_CALL(EffectGte_ProjectPoint)(Point(pt), Out(screen));
 }
 }  // namespace
@@ -626,7 +626,7 @@ extern "C" void __cdecl EffectSpiral_Init(unsigned char* spiral) {
         unsigned char* const screen = spiral + 0x10 + 12 * i;
         SpiralPoint(spiral, i, 0x70, shade, screen);
         for (unsigned r = 1; r < 8; ++r) {
-            Copy12(screen + kRing * r, screen);
+            Copy12Rest3e(screen + kRing * r, screen);
             shade[0x20 * r] = *shade;
         }
     }
@@ -643,10 +643,10 @@ extern "C" void __cdecl EffectSpiral_Init(unsigned char* spiral) {
 // committed to slot 1 (0x44).
 extern "C" void __cdecl EffectSpiral_StepDraw(unsigned char* spiral) {
     for (unsigned r = 7; r != 0; --r)
-        for (unsigned i = 0; i < 0x20; ++i) Copy12(spiral + 0x10 + kRing * r + 12 * i, spiral + 0x10 + kRing * (r - 1) + 12 * i);
+        for (unsigned i = 0; i < 0x20; ++i) Copy12Rest3e(spiral + 0x10 + kRing * r + 12 * i, spiral + 0x10 + kRing * (r - 1) + 12 * i);
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned i = 0; i < 0x20; ++i) SpiralPoint(spiral, i, 7, spiral + 0xC10 + i, spiral + 0x10 + 12 * i);
-    DrawMode(1, 0x3C0, 0, 1, 1);
+    DrawModeRest3e(1, 0x3C0, 0, 1, 1);
     for (unsigned k = 1; k < 8; ++k) {
         const std::int32_t outer = static_cast<std::int32_t>(8 - k), inner = static_cast<std::int32_t>(7 - k);
         for (unsigned i = 0; i < 0x20; ++i) {
@@ -654,12 +654,12 @@ extern "C" void __cdecl EffectSpiral_StepDraw(unsigned char* spiral) {
             unsigned char* const p = Gfx_PacketNext;
             SH_CALL(Gpu_SetPolyG4)(p);
             SH_CALL(Gpu_SetSemiTrans)(p, 1);
-            Copy12(p + 8, spiral + 0x10 + kRing * (k - 1) + 12 * i);
-            Copy12(p + 0x18, spiral + 0x10 + kRing * (k - 1) + 12 * n);
+            Copy12Rest3e(p + 8, spiral + 0x10 + kRing * (k - 1) + 12 * i);
+            Copy12Rest3e(p + 0x18, spiral + 0x10 + kRing * (k - 1) + 12 * n);
             p[4] = p[5] = p[6] = static_cast<unsigned char>(spiral[0xC10 + 0x20 * (k - 1) + i] * outer / 7);
             p[0x14] = p[0x15] = p[0x16] = static_cast<unsigned char>(spiral[0xC10 + 0x20 * (k - 1) + n] * outer / 7);
-            Copy12(p + 0x28, spiral + 0x10 + kRing * k + 12 * i);
-            Copy12(p + 0x38, spiral + 0x10 + kRing * k + 12 * n);
+            Copy12Rest3e(p + 0x28, spiral + 0x10 + kRing * k + 12 * i);
+            Copy12Rest3e(p + 0x38, spiral + 0x10 + kRing * k + 12 * n);
             p[0x24] = p[0x25] = p[0x26] = static_cast<unsigned char>(spiral[0xC10 + 0x20 * k + i] * inner / 7);
             p[0x34] = p[0x35] = p[0x36] = static_cast<unsigned char>(spiral[0xC10 + 0x20 * k + i] * inner / 7);
             SH_CALL(Gfx_CommitPrim)(1, 0x44);
@@ -681,10 +681,10 @@ namespace {
 // read after its call).
 void RimPoint(const unsigned char* ring, int t, unsigned char* pt) {
     const U cos = static_cast<U>(SH_CALL(Math_Cos)(t));
-    SetUL(pt, (cos << 5) + UL(ring));
+    SetUL(pt, (cos << 5) + ULRest3e(ring));
     const U sin = static_cast<U>(SH_CALL(Math_Sin)(t));
-    SetUL(pt + 4, (sin << 5) + UL(ring + 4));
-    SetUL(pt + 8, UL(ring + 8));
+    SetUL(pt + 4, (sin << 5) + ULRest3e(ring + 4));
+    SetUL(pt + 8, ULRest3e(ring + 8));
 }
 }  // namespace
 
@@ -694,7 +694,7 @@ extern "C" void __cdecl EffectRing_Draw(const unsigned char* ring) {
     int angle = 0;
     RimPoint(ring, angle, pt);
     SH_CALL(EffectGte_ProjectPoint)(Point(pt), Out(bottom));
-    SetUL(pt + 8, UL(ring + 8) + 0x7000000u);
+    SetUL(pt + 8, ULRest3e(ring + 8) + 0x7000000u);
     SH_CALL(EffectGte_ProjectPoint)(Point(pt), Out(top));
     unsigned char s = 0x80;
     unsigned shade = Word(ring + 0x10);
@@ -705,19 +705,19 @@ extern "C" void __cdecl EffectRing_Draw(const unsigned char* ring) {
         RimPoint(ring, t, pt);
         const U tp = SH_CALL(Gpu_GetTPage)(0, 1, 0x3C0, 0);
         SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tp & 0xFFFFu, 0);
-        SH_CALL(MapView_LinkPrimAt)(UL(pt), UL(pt + 4), 0, 0xC);
+        SH_CALL(MapView_LinkPrimAt)(ULRest3e(pt), ULRest3e(pt + 4), 0, 0xC);
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyG4)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
-        Copy12(p + 8, bottom);
-        Copy12(p + 0x18, top);
+        Copy12Rest3e(p + 8, bottom);
+        Copy12Rest3e(p + 0x18, top);
         p[4] = p[5] = p[6] = static_cast<unsigned char>(shade);
         p[0x14] = p[0x15] = p[0x16] = static_cast<unsigned char>(shade);
         SH_CALL(EffectGte_ProjectPoint)(Point(pt), Out(bottom));
-        SetUL(pt + 8, UL(ring + 8) + 0x7000000u);
+        SetUL(pt + 8, ULRest3e(ring + 8) + 0x7000000u);
         SH_CALL(EffectGte_ProjectPoint)(Point(pt), Out(top));
-        Copy12(p + 0x28, bottom);
-        Copy12(p + 0x38, top);
+        Copy12Rest3e(p + 0x28, bottom);
+        Copy12Rest3e(p + 0x38, top);
         if (i >= 4 && i < 0x14)
             s = static_cast<unsigned char>(s - 4);
         else
@@ -726,7 +726,7 @@ extern "C" void __cdecl EffectRing_Draw(const unsigned char* ring) {
         if (shade > 0xFF) shade = 0xFF;
         p[0x24] = p[0x25] = p[0x26] = static_cast<unsigned char>(shade);
         p[0x34] = p[0x35] = p[0x36] = static_cast<unsigned char>(shade);
-        SH_CALL(MapView_LinkPrimAt)(UL(pt), UL(pt + 4), 0, 0x44);
+        SH_CALL(MapView_LinkPrimAt)(ULRest3e(pt), ULRest3e(pt + 4), 0, 0x44);
     }
 }
 
@@ -771,7 +771,7 @@ extern "C" void __cdecl EffectDust_Start(unsigned char* dust) {
     const U sin = static_cast<U>(SH_CALL(Math_Sin)(angle));
     const U z = Sar(Mul(sin, radius), 12) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->z);
     SetUL(dust + 8, z);
-    const U ground = static_cast<U>(static_cast<std::int16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(z)))) << 16;
+    const U ground = static_cast<U>(static_cast<std::int16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(ULRest3e(dust + 4)), static_cast<long>(z)))) << 16;
     SetUL(dust + 0x1C, ground);
     SetUL(dust + 0xC, ground);
 }
@@ -783,17 +783,17 @@ extern "C" void __cdecl EffectDust_Start(unsigned char* dust) {
 // +0x18 up 0x100000, the height +0xC up by it, the spread +0x14 up 0x2000, the
 // count +2 down, at 0 the record freed. Answers 1 when one was in use.
 extern "C" unsigned char __cdecl EffectDust_Run(void) {
-    DrawMode(1, 0x3C0, 0, 1, 1);
+    DrawModeRest3e(1, 0x3C0, 0, 1, 1);
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char any = 0;
     for (unsigned i = 0; i < at::kDustCount; ++i) {
         unsigned char* const d = Dust(i);
         if (d[0] == 0) continue;
         if (SH_CALL(EffectDust_DrawColumn)(d) != 0) SH_CALL(EffectDust_DrawFan)(d);
-        const U rise = UL(d + 0x18) + 0x100000u;
-        SetUL(d + 0x14, UL(d + 0x14) + 0x2000u);
+        const U rise = ULRest3e(d + 0x18) + 0x100000u;
+        SetUL(d + 0x14, ULRest3e(d + 0x14) + 0x2000u);
         SetUL(d + 0x18, rise);
-        SetUL(d + 0xC, UL(d + 0xC) + rise);
+        SetUL(d + 0xC, ULRest3e(d + 0xC) + rise);
         d[2] = static_cast<unsigned char>(d[2] - 1);
         if (d[2] == 0) d[0] = 0;
         any = 1;
@@ -813,21 +813,21 @@ extern "C" unsigned char __cdecl EffectDust_DrawColumn(const unsigned char* dust
     SH_CALL(Gpu_SetPolyF4)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 1);
     alignas(4) unsigned char pt[12], sc[12];
-    SetUL(pt, UL(dust + 4));
-    SetUL(pt + 4, UL(dust + 8));
-    SetUL(pt + 8, (UL(dust + 0x14) << 8) + UL(dust + 0xC));
+    SetUL(pt, ULRest3e(dust + 4));
+    SetUL(pt + 4, ULRest3e(dust + 8));
+    SetUL(pt + 8, (ULRest3e(dust + 0x14) << 8) + ULRest3e(dust + 0xC));
     SH_CALL(EffectGte_ProjectPoint)(Point(pt), Out(sc));
     const unsigned char* const k = At(at::kHalfWidth);
     StF(p + 8, F(sc) - F(k));
-    SetUL(p + 0xC, UL(sc + 4));
+    SetUL(p + 0xC, ULRest3e(sc + 4));
     StF(p + 0x14, F(sc) + F(k));
-    SetUL(p + 0x18, UL(sc + 4));
-    SetUL(p + 0x1C, UL(sc + 8));
-    SetUL(p + 0x10, UL(sc + 8));
-    SetUL(pt, UL(dust + 4));
-    SetUL(pt + 4, UL(dust + 8));
-    U low = UL(dust + 0xC) - (UL(dust + 0x14) << 8);
-    const U ground = UL(dust + 0x1C);
+    SetUL(p + 0x18, ULRest3e(sc + 4));
+    SetUL(p + 0x1C, ULRest3e(sc + 8));
+    SetUL(p + 0x10, ULRest3e(sc + 8));
+    SetUL(pt, ULRest3e(dust + 4));
+    SetUL(pt + 4, ULRest3e(dust + 8));
+    U low = ULRest3e(dust + 0xC) - (ULRest3e(dust + 0x14) << 8);
+    const U ground = ULRest3e(dust + 0x1C);
     if (static_cast<std::int32_t>(low) < static_cast<std::int32_t>(ground)) {
         low = ground;
         clamped = 1;
@@ -835,11 +835,11 @@ extern "C" unsigned char __cdecl EffectDust_DrawColumn(const unsigned char* dust
     SetUL(pt + 8, low);
     SH_CALL(EffectGte_ProjectPoint)(Point(pt), Out(sc));
     StF(p + 0x20, F(sc) - F(k));
-    SetUL(p + 0x24, UL(sc + 4));
+    SetUL(p + 0x24, ULRest3e(sc + 4));
     StF(p + 0x2C, F(sc) + F(k));
-    SetUL(p + 0x30, UL(sc + 4));
-    SetUL(p + 0x34, UL(sc + 8));
-    SetUL(p + 0x28, UL(sc + 8));
+    SetUL(p + 0x30, ULRest3e(sc + 4));
+    SetUL(p + 0x34, ULRest3e(sc + 8));
+    SetUL(p + 0x28, ULRest3e(sc + 8));
     p[4] = p[5] = p[6] = 0x40;
     SH_CALL(Gfx_CommitPrim)(1, 0x38);
     return clamped;
@@ -854,21 +854,21 @@ extern "C" unsigned char __cdecl EffectDust_DrawColumn(const unsigned char* dust
 // committed to slot 1 (0x34).
 extern "C" void __cdecl EffectDust_DrawFan(const unsigned char* dust) {
     alignas(4) unsigned char pt[12], centre[12], rim[12];
-    SetUL(pt, UL(dust + 4));
-    SetUL(pt + 4, UL(dust + 8));
+    SetUL(pt, ULRest3e(dust + 4));
+    SetUL(pt + 4, ULRest3e(dust + 8));
     SetUL(pt + 8, static_cast<U>(static_cast<std::int16_t>(
-                      SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(UL(dust + 8)))))
+                      SH_CALL(AreaMap_Elevation)(static_cast<long>(ULRest3e(dust + 4)), static_cast<long>(ULRest3e(dust + 8)))))
                       << 16);
     SH_CALL(EffectGte_ProjectPoint)(Point(pt), Out(centre));
     U angle = 0;
     // the rim point at angle t: x, z, then the height
     auto rimAt = [&](int t) {
         const U cos = static_cast<U>(SH_CALL(Math_Cos)(t));
-        SetUL(pt, UL(dust + 4) + (cos << 2));
+        SetUL(pt, ULRest3e(dust + 4) + (cos << 2));
         const U sin = static_cast<U>(SH_CALL(Math_Sin)(t));
-        SetUL(pt + 4, UL(dust + 8) + (sin << 2));
+        SetUL(pt + 4, ULRest3e(dust + 8) + (sin << 2));
         SetUL(pt + 8, static_cast<U>(static_cast<std::int16_t>(
-                          SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(UL(dust + 8)))))
+                          SH_CALL(AreaMap_Elevation)(static_cast<long>(ULRest3e(dust + 4)), static_cast<long>(ULRest3e(dust + 8)))))
                           << 16);
         SH_CALL(EffectGte_ProjectPoint)(Point(pt), Out(rim));
     };
@@ -877,11 +877,11 @@ extern "C" void __cdecl EffectDust_DrawFan(const unsigned char* dust) {
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyG3)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
-        Copy12(p + 8, centre);
+        Copy12Rest3e(p + 8, centre);
         angle += 0x100;
-        Copy12(p + 0x18, rim);
+        Copy12Rest3e(p + 0x18, rim);
         rimAt(static_cast<int>(angle & 0xFFFFu));
-        Copy12(p + 0x28, rim);
+        Copy12Rest3e(p + 0x28, rim);
         p[4] = p[5] = p[6] = 0x40;
         p[0x14] = p[0x15] = p[0x16] = 0;
         p[0x24] = p[0x25] = p[0x26] = 0;
@@ -970,12 +970,12 @@ extern "C" void __cdecl EffectKind5D_Show(void) {
     if ((S()[7] & 2) == 0) {
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, S()[6]);
         SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kText.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kStringFormat.v))), name);
-        SH_CALL(Text_DrawAt)(static_cast<int>(UL(::bof3::Img(at::kWindows.v) + 8) + 4), static_cast<int>((W(::bof3::Img(at::kWindows.v) + 0xA) + 2) & 0xFFFFu), 0, 8, At(::bof3::Img(at::kText.v)));
+        SH_CALL(Text_DrawAt)(static_cast<int>(ULRest3e(::bof3::Img(at::kWindows.v) + 8) + 4), static_cast<int>((W(::bof3::Img(at::kWindows.v) + 0xA) + 2) & 0xFFFFu), 0, 8, At(::bof3::Img(at::kText.v)));
         const unsigned count = SH_CALL(Inventory_Count)(0, S()[6], 0);
         SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kText.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kCountFormat.v))), count & 0xFFFFu);
-        SH_CALL(Text_DrawAt)(static_cast<int>(UL(::bof3::Img(at::kWindows.v) + 8) + 0x48), static_cast<int>((W(::bof3::Img(at::kWindows.v) + 0xA) + 2) & 0xFFFFu), 0, 2, At(::bof3::Img(at::kText.v)));
+        SH_CALL(Text_DrawAt)(static_cast<int>(ULRest3e(::bof3::Img(at::kWindows.v) + 8) + 0x48), static_cast<int>((W(::bof3::Img(at::kWindows.v) + 0xA) + 2) & 0xFFFFu), 0, 2, At(::bof3::Img(at::kText.v)));
     }
-    SH_CALL(EffectKind5D_DrawBoard)(static_cast<int>(UL(::bof3::Img(at::kBoard.v)) + 1), static_cast<int>((W(::bof3::Img(at::kBoard.v) + 2) + 1) & 0xFFFFu), 0x80, 0x68);
+    SH_CALL(EffectKind5D_DrawBoard)(static_cast<int>(ULRest3e(::bof3::Img(at::kBoard.v)) + 1), static_cast<int>((W(::bof3::Img(at::kBoard.v) + 2) + 1) & 0xFFFFu), 0x80, 0x68);
     unsigned char* const s = S();
     if (s[0xA] != 0) {
         s[0xA] = static_cast<unsigned char>(s[0xA] - 1);
@@ -1009,7 +1009,7 @@ extern "C" void __cdecl EffectKind5E_Start(void) {
 // at 100, Inventory_Remove(0, +6, 1), sound 0x20A - or sound 0x20D.
 extern "C" void __cdecl EffectKind5E_Pick(void) {
     SH_CALL(EffectKind5E_DrawMenu)();
-    U pressed = UL(At(AddressOf(&Input_Pressed)));
+    U pressed = ULRest3e(At(AddressOfRest3e(&Input_Pressed)));
     if (pressed & 0x5000u) {
         unsigned char* s = S();
         s[2] = static_cast<unsigned char>((pressed & 0x1000u) ? s[2] - 1 : s[2] + 1);
@@ -1018,7 +1018,7 @@ extern "C" void __cdecl EffectKind5E_Pick(void) {
         s = S();
         s[6] = static_cast<unsigned char>((s[2] & 7) + 0x4E);
         SH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(S()[6] - 0x4E));
-        pressed = UL(At(AddressOf(&Input_Pressed)));
+        pressed = ULRest3e(At(AddressOfRest3e(&Input_Pressed)));
     }
     if (pressed & Sigma(0x10)) {
         SH_CALL(Sound_PlayEffect)(0x209);
@@ -1049,7 +1049,7 @@ extern "C" void __cdecl EffectKind5E_Pick(void) {
 // 0x20C, +1 = 1.
 extern "C" void __cdecl EffectKind5E_Wait(void) {
     SH_CALL(Window_DrawFrame)(W(::bof3::Img(at::kBoard.v)), W(::bof3::Img(at::kBoard.v) + 2), B(::bof3::Img(at::kBoard.v) + 4), B(::bof3::Img(at::kBoard.v) + 6));
-    SH_CALL(EffectKind5D_DrawBoard)(static_cast<int>(UL(::bof3::Img(at::kBoard.v)) + 1), static_cast<int>((W(::bof3::Img(at::kBoard.v) + 2) + 1) & 0xFFFFu), 0x80, 0x68);
+    SH_CALL(EffectKind5D_DrawBoard)(static_cast<int>(ULRest3e(::bof3::Img(at::kBoard.v)) + 1), static_cast<int>((W(::bof3::Img(at::kBoard.v) + 2) + 1) & 0xFFFFu), 0x80, 0x68);
     unsigned char* const s = S();
     if (s[0xA] != 0) {
         s[0xA] = static_cast<unsigned char>(s[0xA] - 1);
@@ -1158,13 +1158,13 @@ extern "C" void __cdecl EffectKind5E_DrawMenu(void) {
     SH_CALL(Menu_DrawBox)(W(::bof3::Img(at::kMenuBox.v)), W(::bof3::Img(at::kMenuBox.v) + 2), W(::bof3::Img(at::kMenuBox.v) + 4), W(::bof3::Img(at::kMenuBox.v) + 6), 2, static_cast<unsigned char>(Config_WindowColour));
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(::bof3::Img(at::kText.v))), reinterpret_cast<const char*>(At(::bof3::Img(at::kStringFormat.v))), Labels_Slot(20, 0));
     const int count = Labels_Written(20) ? 0xFF : 0xF;
-    SH_CALL(Text_DrawAt)(static_cast<int>(UL(::bof3::Img(at::kMenuBox.v)) + 4), static_cast<int>((W(::bof3::Img(at::kMenuBox.v) + 2) + 2) & 0xFFFFu), 0, count, At(::bof3::Img(at::kText.v)));
+    SH_CALL(Text_DrawAt)(static_cast<int>(ULRest3e(::bof3::Img(at::kMenuBox.v)) + 4), static_cast<int>((W(::bof3::Img(at::kMenuBox.v) + 2) + 2) & 0xFFFFu), 0, count, At(::bof3::Img(at::kText.v)));
     SH_CALL(EffectKind5E_DrawList)();
     const unsigned pick = S()[2] & 7u;
     const unsigned hand = Rest3e_Hand;
     SH_CALL(Menu_DrawHand)(static_cast<int>(hand & 0xFFu), static_cast<int>(15 * pick + (hand >> 8)), 0);
     SH_CALL(EffectKind5E_DrawPanel)();
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->screen_x, Rest3e_SpriteDx + UL(::bof3::Img(at::kPanel.v)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->screen_x, Rest3e_SpriteDx + ULRest3e(::bof3::Img(at::kPanel.v)));
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->screen_y, Rest3e_SpriteDy + W(::bof3::Img(at::kPanel.v) + 2));
     SH_CALL(Window_DrawFrame)(W(::bof3::Img(at::kPanel.v)), W(::bof3::Img(at::kPanel.v) + 2), B(::bof3::Img(at::kPanel.v) + 4), B(::bof3::Img(at::kPanel.v) + 6));
     SH_CALL(Sprite_ScriptTick)();
@@ -1204,7 +1204,7 @@ unsigned ListFirstLine() {
 // colour (Text_DrawFont8). The 0x14 is ListFirstLine() above (DIV-0198).
 extern "C" void __cdecl EffectKind5E_DrawList(void) {
     SH_CALL(Menu_DrawBox)(W(::bof3::Img(at::kListBox.v)), W(::bof3::Img(at::kListBox.v) + 2), W(::bof3::Img(at::kListBox.v) + 4), W(::bof3::Img(at::kListBox.v) + 6), 0, static_cast<unsigned char>(Config_WindowColour));
-    const U x = UL(::bof3::Img(at::kListBox.v)) + 8;
+    const U x = ULRest3e(::bof3::Img(at::kListBox.v)) + 8;
     U line = W(::bof3::Img(at::kListBox.v) + 2) + ListFirstLine();
     for (unsigned item = at::kFirstItem; item < at::kFirstItem + at::kItems; ++item, line += 0xF) {
         const unsigned char* const name = SH_CALL(Item_NamePtr)(0, item);
@@ -1409,7 +1409,7 @@ void Glyph(int x, int y, Shape s) {
         SH_CALL(Text_DrawAt)(x, y, kShapeColour[s], 3, code);
         return;
     }
-    const auto* text = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(UL(::bof3::Img(kStandIns.v) + 4 * s)));
+    const auto* text = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(ULRest3e(::bof3::Img(kStandIns.v) + 4 * s)));
     SH_CALL(Text_DrawAt)(x, y, kShapeColour[s], 3, text);
 }
 
@@ -1666,7 +1666,7 @@ namespace {
 void Ring(U last) {
     SH_AT(void (__cdecl*)(const long*, unsigned, unsigned, unsigned), at::kR3FRing.v)(Point(S() + 0x34), 0x20, 8, last);
 }
-void Add(U offset, U by) { SetUL(S() + offset, UL(S() + offset) + by); }
+void Add(U offset, U by) { SetUL(S() + offset, ULRest3e(S() + offset) + by); }
 void Placed(U x, U z, U y) {
     rv::As<records::EffectObject>(S())->x = x;
     rv::As<records::EffectObject>(S())->z = z;
