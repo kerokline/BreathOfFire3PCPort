@@ -82,9 +82,9 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-unsigned char* Member(unsigned i) { return At(::bof3::Img(ObjTrio_addr) + (i & 0xFF) * at::kPartyStride); }
+unsigned char* MemberBattleTurnSteps(unsigned i) { return At(::bof3::Img(ObjTrio_addr) + (i & 0xFF) * at::kPartyStride); }
 bool Yes(unsigned al) { return (al & 0xFFu) != 0; }
-unsigned char& B(std::uint32_t address) { return *At(address); }
+unsigned char& BBattleTurnSteps(std::uint32_t address) { return *At(address); }
 // `inc byte ptr [m]` / `dec byte ptr [m]`: read, step, store, as one.
 void Inc(std::uint32_t address) { ++*At(address); }
 
@@ -92,7 +92,7 @@ void Inc(std::uint32_t address) { ++*At(address); }
 // original reads it. The index is not checked, as the original's is not: every
 // state byte of the combat route stays inside its table, and one past it
 // reads the next table's first entry, the same code either way.
-Step Entry(std::uint32_t table, unsigned index) {
+Step EntryBattleTurnSteps(std::uint32_t table, unsigned index) {
     return reinterpret_cast<Step>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(table + index * 4)))));
 }
 
@@ -107,14 +107,14 @@ Step Entry(std::uint32_t table, unsigned index) {
 // BattleRoundEnd_StatusChain, BattleRoundEnd_NextRound). A jump, as the
 // original's: the step returns to Battle_PhaseDispatch.
 extern "C" void __cdecl BattleRoundEnd_Step() {
-    [[clang::musttail]] return Entry(::bof3::Img(BattleRoundEnd_Steps_addr), BattleActions_Step)();
+    [[clang::musttail]] return EntryBattleTurnSteps(::bof3::Img(BattleRoundEnd_Steps_addr), BattleActions_Step)();
 }
 
 // original 0x4302C0: entry 0x904AA2 of BattleRoundEnd_FasterSteps (0x64AF38:
 // BattleRoundEnd_CheckFaster, BattleRoundEnd_FasterNext,
 // BattleRoundEnd_NextRound).
 extern "C" void __cdecl BattleRoundEnd_FasterStep() {
-    [[clang::musttail]] return Entry(::bof3::Img(BattleRoundEnd_FasterSteps_addr), BattleE4_Step2)();
+    [[clang::musttail]] return EntryBattleTurnSteps(::bof3::Img(BattleRoundEnd_FasterSteps_addr), BattleE4_Step2)();
 }
 
 // original 0x4302D0 (PSX 0x801D4B08, read: the same branches and the same loop
@@ -156,7 +156,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_Check
         }
     }
     const unsigned members = g_extra_round_clear ? 3 : 2, enemies = g_extra_round_clear ? 8 : 7;
-    for (unsigned i = 0; i < members; ++i) Member(i)[at::kFlags + 1] &= 0x7F;
+    for (unsigned i = 0; i < members; ++i) MemberBattleTurnSteps(i)[at::kFlags + 1] &= 0x7F;
     for (unsigned i = 0; i < enemies; ++i) At(::bof3::Img(Battle_Enemies_addr) + i * at::kEnemyStride)[at::kEFlags + 1] &= 0x7F;
     SetLong(At(::bof3::Img(at::kRounds.v)), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(::bof3::Img(at::kRounds.v)))) + 1));
     BattlePhases_B7A = 0;
@@ -228,7 +228,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_Statu
     case 10:
     case 12:
         if (BattleActions_Pending != 0) return;
-        B(::bof3::Img(at::kRoundFlags.v)) &= 0xFB;
+        BBattleTurnSteps(::bof3::Img(at::kRoundFlags.v)) &= 0xFB;
         Inc(::bof3::Img(BattleE4_Step2_addr));
         return;
     default:
@@ -259,25 +259,25 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_NextR
         if ((hook(2) & 0xFF) == 0xFF) return;
     }
     if (Battle_EndFlags != 0 && !psp_code::DuelLossGoesOn(EventBattle_Id, Battle_EndFlags)) {
-        B(::bof3::Img(at::kRoundFlags.v)) &= 0xEF;
-        for (unsigned w : {0u, 3u, 1u, 11u, 10u, 9u, 8u, 7u, 6u, 5u, 4u}) B(::bof3::Img(at::kWindows.v) + w * at::kWindowStride) = 0;
-        B(::bof3::Img(at::kPhase.v)) = 5;
+        BBattleTurnSteps(::bof3::Img(at::kRoundFlags.v)) &= 0xEF;
+        for (unsigned w : {0u, 3u, 1u, 11u, 10u, 9u, 8u, 7u, 6u, 5u, 4u}) BBattleTurnSteps(::bof3::Img(at::kWindows.v) + w * at::kWindowStride) = 0;
+        BBattleTurnSteps(::bof3::Img(at::kPhase.v)) = 5;
         BattleActions_Step = 0;
         return;
     }
-    if ((B(::bof3::Img(at::kRoundFlags.v)) & 0x10) == 0) {
+    if ((BBattleTurnSteps(::bof3::Img(at::kRoundFlags.v)) & 0x10) == 0) {
         SetLong(At(::bof3::Img(at::kCmdLong.v)), 0);
-        B(::bof3::Img(at::kCmdKind.v)) = 8;
+        BBattleTurnSteps(::bof3::Img(at::kCmdKind.v)) = 8;
         SetWord(At(::bof3::Img(at::kCmdWord.v)), 0);
-        B(::bof3::Img(at::kCmdByte.v)) = 0;
+        BBattleTurnSteps(::bof3::Img(at::kCmdByte.v)) = 0;
         g.load_dat(0x131);
     }
     g.clear_commands();
     for (unsigned i = 0; i <= 2; ++i)
-        if (!Yes(g.actor_is_out(i))) rv::As<records::PartyMember>(Member(i))->state = 2;
-    B(::bof3::Img(at::kRoundFlags.v)) &= 0xF7;
+        if (!Yes(g.actor_is_out(i))) rv::As<records::PartyMember>(MemberBattleTurnSteps(i))->state = 2;
+    BBattleTurnSteps(::bof3::Img(at::kRoundFlags.v)) &= 0xF7;
     BattlePhases_Initiative = 0;
-    B(::bof3::Img(at::kPhase.v)) = 1;
+    BBattleTurnSteps(::bof3::Img(at::kPhase.v)) = 1;
     BattleActions_Step = 0;
     BattleE4_Step2 = 0;
 }
@@ -290,13 +290,13 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_NextR
 // (0x64AF44: BattleEnd_TaskStep, BattleEnd_WinStep, BattleEnd_LossDispatch 0x431540 and BattleEnd_RestoreDispatch 0x4315B0
 // (the other way out, Capcom's), BattleEnd_ExitStep).
 extern "C" void __cdecl BattleEnd_Step() {
-    [[clang::musttail]] return Entry(::bof3::Img(BattleEnd_Steps_addr), BattleActions_Step)();
+    [[clang::musttail]] return EntryBattleTurnSteps(::bof3::Img(BattleEnd_Steps_addr), BattleActions_Step)();
 }
 
 // original 0x4311F0: entry 0x904AA2 of BattleEnd_TaskSteps (0x64AF58:
 // BattleEnd_TasksBegin, BattleEnd_StartMemberTask, BattleEnd_AwaitMemberTasks).
 extern "C" void __cdecl BattleEnd_TaskStep() {
-    [[clang::musttail]] return Entry(::bof3::Img(BattleEnd_TaskSteps_addr), BattleE4_Step2)();
+    [[clang::musttail]] return EntryBattleTurnSteps(::bof3::Img(BattleEnd_TaskSteps_addr), BattleE4_Step2)();
 }
 
 // original 0x431200: 0x802D20 and the member cursor 0x904AA5 zeroed, 0x904AA2
@@ -319,24 +319,24 @@ extern "C" void __cdecl BattleEnd_TasksBegin() {
 // so the owner then lands at 0x9423FC, past the slots.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_StartMemberTask() {
     unsigned cursor = BossSb_Countdown;
-    if (cursor < B(::bof3::Img(at::kMembers.v))) {
+    if (cursor < BBattleTurnSteps(::bof3::Img(at::kMembers.v))) {
         for (;;) {
             const unsigned out = g.actor_is_out(cursor);
             cursor = BossSb_Countdown;
-            if (!Yes(out) && (Member(cursor)[at::kFlags] & 3) != 0) {
-                Member(cursor)[at::kFlags2 + 1] |= 0x20;
+            if (!Yes(out) && (MemberBattleTurnSteps(cursor)[at::kFlags] & 3) != 0) {
+                MemberBattleTurnSteps(cursor)[at::kFlags2 + 1] |= 0x20;
                 unsigned parameter = 0xB;
-                if (rv::As<records::PartyMember>(Member(cursor))->char_id != 4) {
+                if (rv::As<records::PartyMember>(MemberBattleTurnSteps(cursor))->char_id != 4) {
                     for (unsigned k = 0; k < 3; ++k) At(::bof3::Img(at::kCopies.v) + k * at::kPartyStride)[at::kFlags] &= 0xFE;
                     parameter = 0xC;
                 }
                 const unsigned task = g.task_create(0, parameter) & 0xFF;
                 SetLong(At(::bof3::Img(BattleTask_Slots_addr) + task * at::kTaskSize + 0x80),
-                        static_cast<std::int32_t>(Low32(Member(BossSb_Countdown))));
+                        static_cast<std::int32_t>(Low32(MemberBattleTurnSteps(BossSb_Countdown))));
                 Inc(::bof3::Img(BossSb_Countdown_addr));
                 break;
             }
-            const unsigned count = B(::bof3::Img(at::kMembers.v));
+            const unsigned count = BBattleTurnSteps(::bof3::Img(at::kMembers.v));
             cursor = (cursor + 1) & 0xFF;
             BossSb_Countdown = static_cast<unsigned char>(cursor);
             if (cursor >= count) break;
@@ -359,9 +359,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_StartMembe
 // The 0x904AE8 the way out is picked from is the one read before the members
 // (bit 0 set) or re-read after them.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_AwaitMemberTasks() {
-    const unsigned count = B(::bof3::Img(at::kMembers.v));
+    const unsigned count = BBattleTurnSteps(::bof3::Img(at::kMembers.v));
     for (unsigned i = 0; i < count; ++i)
-        if (Long(Member(i) + at::kFlags2) & 0x2000) return;
+        if (Long(MemberBattleTurnSteps(i) + at::kFlags2) & 0x2000) return;
     if (BossSb_Countdown != count) {
         --*At(::bof3::Img(BattleE4_Step2_addr));
         return;
@@ -370,7 +370,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_AwaitMembe
     if ((end & 1) == 0) {
         if (count != 0) {
             for (unsigned i = 0;;) {
-                unsigned char* const m = Member(i);
+                unsigned char* const m = MemberBattleTurnSteps(i);
                 auto* const member_rec = rv::As<records::PartyMember>(m);
                 Sprite_Current = m;
                 if (m[at::kStatus + 1] & 8) {
@@ -383,7 +383,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_AwaitMembe
                 g.release_tint(m);
                 g.return_item(i);
                 i = (i + 1) & 0xFF;
-                if (i >= B(::bof3::Img(at::kMembers.v))) break;
+                if (i >= BBattleTurnSteps(::bof3::Img(at::kMembers.v))) break;
             }
             end = Battle_EndFlags;
         }
@@ -403,7 +403,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_AwaitMembe
 // original 0x4314B0: the win's dispatch - entry 0x904AA2 of BattleEnd_WinSteps
 // (0x64AF64: BattleEnd_WinBegin, BattleEnd_WinAwaitInput, BattleEnd_ResultStep).
 extern "C" void __cdecl BattleEnd_WinStep() {
-    [[clang::musttail]] return Entry(::bof3::Img(BattleEnd_WinSteps_addr), BattleE4_Step2)();
+    [[clang::musttail]] return EntryBattleTurnSteps(::bof3::Img(BattleEnd_WinSteps_addr), BattleE4_Step2)();
 }
 
 // original 0x4314C0: each of the three members present (+0 bit 0) to state 2;
@@ -413,7 +413,7 @@ extern "C" void __cdecl BattleEnd_WinStep() {
 // 0x904AA2 on.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_WinBegin() {
     for (unsigned i = 0; i < 3; ++i)
-        if (rv::As<records::PartyMember>(Member(i))->flags & 1) rv::As<records::PartyMember>(Member(i))->state = 2;
+        if (rv::As<records::PartyMember>(MemberBattleTurnSteps(i))->flags & 1) rv::As<records::PartyMember>(MemberBattleTurnSteps(i))->state = 2;
     if ((EventBattle_Flags & 0x40) == 0) {
         g.fade_out(10);
         g.music_play(0xA5, 10);
@@ -432,20 +432,20 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_WinAwaitIn
 // original 0x431910: entry 0x904AA3 of BattleEnd_ResultSteps (0x64AFA0:
 // BattleEnd_ResultPage, then group CD's 0x431B60 and 0x431D50).
 extern "C" void __cdecl BattleEnd_ResultStep() {
-    [[clang::musttail]] return Entry(::bof3::Img(BattleEnd_ResultSteps_addr), BattleE4_Step3)();
+    [[clang::musttail]] return EntryBattleTurnSteps(::bof3::Img(BattleEnd_ResultSteps_addr), BattleE4_Step3)();
 }
 
 // original 0x431920: entry (dword 0x904AA4 & 0xFF) of BattleResult_ExpSteps
 // (0x64AFAC: group CD's 0x431940, 0x431A20, 0x431A90, 0x431AB0, 0x431B30).
 extern "C" void __cdecl BattleEnd_ResultPage() {
-    [[clang::musttail]] return Entry(::bof3::Img(BattleResult_ExpSteps_addr), BattleE4_Step4)();
+    [[clang::musttail]] return EntryBattleTurnSteps(::bof3::Img(BattleResult_ExpSteps_addr), BattleE4_Step4)();
 }
 
 // original 0x431760: the exit's dispatch - entry 0x904AA2 of
 // BattleEnd_ExitSteps (0x64AF90: Battle_WriteBackParty, BattleEnd_ExitHook,
 // BattleEnd_Finish, BattleEnd_ExitAwaitFade 0x4318F0 (R3A's)).
 extern "C" void __cdecl BattleEnd_ExitStep() {
-    [[clang::musttail]] return Entry(::bof3::Img(BattleEnd_ExitSteps_addr), BattleE4_Step2)();
+    [[clang::musttail]] return EntryBattleTurnSteps(::bof3::Img(BattleEnd_ExitSteps_addr), BattleE4_Step2)();
 }
 
 // original 0x431770 (PSX Battle_WriteBackParty 0x801D71B0, the sibling's
@@ -483,9 +483,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_ExitHook()
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_Finish() {
     g.clear_enemies();
     g.task_clear_all();
-    if (B(::bof3::Img(at::kMembers.v)) != 0) {
+    if (BBattleTurnSteps(::bof3::Img(at::kMembers.v)) != 0) {
         for (unsigned i = 0;;) {
-            const unsigned char* const m = Member(i);
+            const unsigned char* const m = MemberBattleTurnSteps(i);
             auto* const member_rec = rv::AsConst<records::PartyMember>(m);
             if (m[at::kStatus + 1] & 0x40) {
                 unsigned char* const r = At(::bof3::Img(CharacterRecords_addr) + member_rec->char_index * at::kRecordStride);
@@ -499,13 +499,13 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_Finish() {
                 g.recalc_stats(r);
             }
             i = (i + 1) & 0xFF;
-            if (i >= B(::bof3::Img(at::kMembers.v))) break;
+            if (i >= BBattleTurnSteps(::bof3::Img(at::kMembers.v))) break;
         }
     }
     g.reload_party();
     Game_Step = Game_Step + 1;
     BattleMisc_BannerKinds = 0;
-    B(::bof3::Img(at::kPhase.v)) = 0;
+    BBattleTurnSteps(::bof3::Img(at::kPhase.v)) = 0;
     BattleActions_Step = 0;
     BattleE4_Step2 = 0;
     BattleE4_Step3 = 0;
