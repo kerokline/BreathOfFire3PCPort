@@ -134,7 +134,7 @@ unsigned char* Next() { return Gfx_PacketNext; }
 char* PrintBuf() { return reinterpret_cast<char*>(At(::bof3::Img(at::kPrintBuf.v))); }
 const char* Format(std::uint32_t at) { return reinterpret_cast<const char*>(At(at)); }
 
-std::int16_t S16(std::uint32_t v) { return static_cast<std::int16_t>(v); }
+std::int16_t S16MenuWindows(std::uint32_t v) { return static_cast<std::int16_t>(v); }
 std::int32_t U16(std::uint32_t v) { return static_cast<std::int32_t>(v & 0xFFFF); }
 // `fild dword` then `fstp dword`: an int rounded once to a float.
 float F(std::int32_t v) { return static_cast<float>(v); }
@@ -205,8 +205,8 @@ extern "C" void __cdecl MsgBox_DrawArrow(int x, int y) {
     g.set_sprt(p);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, g.get_clut(0xC0, 0x1E0));
     p[4] = p[5] = p[6] = 0x80;
-    Put(p + 8, F(S16(x)));
-    Put(p + 0xC, F(S16(y)));
+    Put(p + 8, F(S16MenuWindows(x)));
+    Put(p + 0xC, F(S16MenuWindows(y)));
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 8);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 8);
     p[0x14] = 0xD0;
@@ -248,8 +248,8 @@ extern "C" void __cdecl Text_DrawFont12(int x, int y, int colour, const unsigned
             p[4] = p[5] = p[6] = 0x80;
             p[0x14] = static_cast<unsigned char>((c % 21) * 12);
             p[0x15] = static_cast<unsigned char>((c / 21) * 12);
-            Put(p + 8, F(S16(pen_x)));
-            Put(p + 0xC, F(S16(static_cast<std::uint32_t>(pen_y))));
+            Put(p + 8, F(S16MenuWindows(pen_x)));
+            Put(p + 0xC, F(S16MenuWindows(static_cast<std::uint32_t>(pen_y))));
             g.set_sprt(p);
             g.set_semi(p, 1);
             g.commit(1, 0x1C);
@@ -285,8 +285,8 @@ extern "C" void __cdecl Text_DrawFont8(int x, int y, int colour, const unsigned 
             const int cell = static_cast<int>(c) - 0x20;
             p[0x14] = static_cast<unsigned char>((cell % 32) * 8);
             p[0x15] = static_cast<unsigned char>((cell / 32) * 8);
-            Put(p + 8, F(S16(pen_x)));
-            Put(p + 0xC, F(S16(static_cast<std::uint32_t>(pen_y))));
+            Put(p + 8, F(S16MenuWindows(pen_x)));
+            Put(p + 0xC, F(S16MenuWindows(static_cast<std::uint32_t>(pen_y))));
             g.set_sprt8(p);
             g.set_semi(p, 1);
             g.commit(1, 0x18);
@@ -314,8 +314,8 @@ extern "C" void __cdecl Window_Kind2List() {
         const unsigned char* const record = Ptr(::bof3::Img(at::kCurrent.v));
         const unsigned char* const xy = At(::bof3::Img(at::kSetXY.v) + set * 6);
         const auto dy = static_cast<std::uint16_t>(Word(xy + 4) * static_cast<std::uint16_t>(i));
-        const auto y = static_cast<std::uint16_t>(dy + (S16(rv::As<records::WindowRecord>(record)->y) >> 4) + Word(xy + 2));
-        const auto x = static_cast<std::uint16_t>((S16(rv::As<records::WindowRecord>(record)->x) >> 4) + Word(xy));
+        const auto y = static_cast<std::uint16_t>(dy + (S16MenuWindows(rv::As<records::WindowRecord>(record)->y) >> 4) + Word(xy + 2));
+        const auto x = static_cast<std::uint16_t>((S16MenuWindows(rv::As<records::WindowRecord>(record)->x) >> 4) + Word(xy));
         text = g.text_immediate(x, y, text);
         ++i;
         if (i > MenuWindows_ListCount) break;
@@ -370,8 +370,8 @@ extern "C" void __cdecl Menu_DrawBox(int x, int y, int w, int h, int flags, int 
         clut_x += 0x10;
     }
     p[6] = p[5] = p[4] = shade;
-    const std::int32_t xs = g_signed_xy ? S16(static_cast<std::uint32_t>(x)) : U16(static_cast<std::uint32_t>(x));
-    const std::int32_t ys = g_signed_xy ? S16(static_cast<std::uint32_t>(y)) : U16(static_cast<std::uint32_t>(y));
+    const std::int32_t xs = g_signed_xy ? S16MenuWindows(static_cast<std::uint32_t>(x)) : U16(static_cast<std::uint32_t>(x));
+    const std::int32_t ys = g_signed_xy ? S16MenuWindows(static_cast<std::uint32_t>(y)) : U16(static_cast<std::uint32_t>(y));
     const auto xb = static_cast<unsigned char>(x), yb = static_cast<unsigned char>(y);
     p[0x14] = xb;
     p[0x15] = yb;
@@ -521,8 +521,8 @@ void PieceSprite(int x, int y, unsigned u, unsigned v, unsigned w, unsigned h, u
     unsigned char* const p = Next();
     g.set_sprt(p);
     g.set_semi(p, 0);
-    Put(p + 8, F(S16(static_cast<std::uint32_t>(x))));
-    Put(p + 0xC, F(S16(static_cast<std::uint32_t>(y))));
+    Put(p + 8, F(S16MenuWindows(static_cast<std::uint32_t>(x))));
+    Put(p + 0xC, F(S16MenuWindows(static_cast<std::uint32_t>(y))));
     p[0x14] = static_cast<unsigned char>(u);
     p[0x15] = static_cast<unsigned char>(v);
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, w);
@@ -576,8 +576,8 @@ extern "C" void __cdecl Menu_DrawPiece(int x, int y, unsigned id, unsigned flags
     unsigned char* const p = Next();
     g.set_sprt(p);
     g.set_semi(p, 0);
-    Put(p + 8, F(S16(static_cast<std::uint32_t>(x))));
-    Put(p + 0xC, F(S16(static_cast<std::uint32_t>(y))));
+    Put(p + 8, F(S16MenuWindows(static_cast<std::uint32_t>(x))));
+    Put(p + 0xC, F(S16MenuWindows(static_cast<std::uint32_t>(y))));
     p[0x14] = rect[0];
     p[0x15] = rect[1];
     rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, rect[2]);
@@ -687,8 +687,8 @@ extern "C" void __cdecl Menu_DrawIcon8(int x, int y, int icon, int dim) {
     g.set_sprt8(p);
     const unsigned char shade = (dim & 0xFF) ? 0x40 : 0x80;
     p[4] = p[5] = p[6] = shade;
-    Put(p + 8, F(g_signed_xy ? S16(static_cast<std::uint32_t>(x)) : U16(static_cast<std::uint32_t>(x))));
-    Put(p + 0xC, F(g_signed_xy ? S16(static_cast<std::uint32_t>(y)) : U16(static_cast<std::uint32_t>(y))));
+    Put(p + 8, F(g_signed_xy ? S16MenuWindows(static_cast<std::uint32_t>(x)) : U16(static_cast<std::uint32_t>(x))));
+    Put(p + 0xC, F(g_signed_xy ? S16MenuWindows(static_cast<std::uint32_t>(y)) : U16(static_cast<std::uint32_t>(y))));
     p[0x15] = 0xF8;
     p[0x14] = static_cast<unsigned char>((icon + 7) << 3);
     const unsigned i = static_cast<unsigned>(icon) & 0xFF;
@@ -704,13 +704,13 @@ extern "C" void __cdecl Menu_DrawLine(int x0, int y0, int x1, int y1, int r, int
     g.commit(1, 0xC);
     unsigned char* const p = Next();
     g.set_line_f2(p);
-    Put(p + 8, F(S16(static_cast<std::uint32_t>(x0))));
-    Put(p + 0xC, F(S16(static_cast<std::uint32_t>(y0))));
+    Put(p + 8, F(S16MenuWindows(static_cast<std::uint32_t>(x0))));
+    Put(p + 0xC, F(S16MenuWindows(static_cast<std::uint32_t>(y0))));
     p[4] = static_cast<unsigned char>(r);
-    Put(p + 0x14, F(S16(static_cast<std::uint32_t>(x1))));
+    Put(p + 0x14, F(S16MenuWindows(static_cast<std::uint32_t>(x1))));
     p[5] = static_cast<unsigned char>(gr);
     p[6] = static_cast<unsigned char>(b);
-    Put(p + 0x18, F(S16(static_cast<std::uint32_t>(y1))));
+    Put(p + 0x18, F(S16MenuWindows(static_cast<std::uint32_t>(y1))));
     g.set_semi(p, 1);
     g.commit(1, 0x20);
 }
@@ -786,7 +786,7 @@ extern "C" void __cdecl Menu_DrawTitleBox(int x, int y, int w, int h, int colour
     p = Next();
     g.set_poly_ft4(p);
     g.set_semi(p, 1);
-    const std::int32_t half16 = S16(static_cast<std::uint32_t>(half));
+    const std::int32_t half16 = S16MenuWindows(static_cast<std::uint32_t>(half));
     const float fmid = F(half16 + xs + 2);
     Put(p + 0xC, fy);
     Put(p + 8, fx2);
@@ -1315,7 +1315,7 @@ extern "C" void __cdecl Menu_DrawBackdrop(unsigned kind) {
     for (int outer = 0; outer < 5 + 2 * extra; ++outer) {
         const unsigned char* pattern = At(::bof3::Img(at::kBackdropPattern.v) + At(::bof3::Img(at::kBackdropStart.v))[k]);
         for (int inner = 0; inner < 2; ++inner) {
-            const float fcolumn = F(S16(static_cast<std::uint32_t>(column)));
+            const float fcolumn = F(S16MenuWindows(static_cast<std::uint32_t>(column)));
             std::uint32_t row = 0;
             do {
                 unsigned char* const p = Next();
@@ -1323,7 +1323,7 @@ extern "C" void __cdecl Menu_DrawBackdrop(unsigned kind) {
                 g.set_semi(p, 0);
                 Put(p + 8, fcolumn);
                 rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, clut);
-                Put(p + 0xC, F(S16(row)));
+                Put(p + 0xC, F(S16MenuWindows(row)));
                 const unsigned char* const r = At(::bof3::Img(at::kBackdropRects.v) + *pattern++ * 4u);
                 p[0x14] = r[0];
                 p[0x15] = r[1];
@@ -1332,7 +1332,7 @@ extern "C" void __cdecl Menu_DrawBackdrop(unsigned kind) {
                 p[4] = p[5] = p[6] = 0x80;
                 g.commit(1, 0x1C);
                 row += r[3];
-            } while (S16(row) < 0xF0);
+            } while (S16MenuWindows(row) < 0xF0);
             column += 0x20;
         }
     }
@@ -1466,7 +1466,7 @@ extern "C" void __cdecl Menu_DrawItemRow(int x, int y, int colour, unsigned cate
 extern "C" void __cdecl Menu_DrawScrollBar(const unsigned char* items, unsigned top, int x, int y, unsigned rows,
                                            unsigned total, unsigned height) {
     const std::int32_t t = static_cast<std::int32_t>(total & 0xFF), hgt = static_cast<std::int32_t>(height & 0xFF);
-    const std::int32_t sx = S16(static_cast<std::uint32_t>(x)), sy = S16(static_cast<std::uint32_t>(y));
+    const std::int32_t sx = S16MenuWindows(static_cast<std::uint32_t>(x)), sy = S16MenuWindows(static_cast<std::uint32_t>(y));
     for (std::int32_t i = 1; i <= t; ++i) {
         if (items[i - 1] == 0) continue;
         unsigned char* const p = Next();
