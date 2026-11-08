@@ -68,13 +68,13 @@ using std::uint32_t;
 using VoidFn = void (__cdecl*)();
 using ObjectFn = void (__cdecl*)(unsigned char*, unsigned char*);
 
-unsigned char* At(uint32_t a) { return move_script::At(a); }
-unsigned char& B(uint32_t a) { return At(a)[0]; }
-std::uint16_t W(uint32_t a) { return move_script::Word(At(a)); }
-void SetW(uint32_t a, unsigned v) { move_script::SetWord(At(a), v); }
-uint32_t L(uint32_t a) { return static_cast<uint32_t>(move_script::Long(At(a))); }
+unsigned char* AtScenaSc15(uint32_t a) { return move_script::At(a); }
+unsigned char& B(uint32_t a) { return AtScenaSc15(a)[0]; }
+std::uint16_t W(uint32_t a) { return move_script::Word(AtScenaSc15(a)); }
+void SetW(uint32_t a, unsigned v) { move_script::SetWord(AtScenaSc15(a), v); }
+uint32_t L(uint32_t a) { return static_cast<uint32_t>(move_script::Long(AtScenaSc15(a))); }
 uint32_t L(const unsigned char* p) { return static_cast<uint32_t>(move_script::Long(p)); }
-void SetL(uint32_t a, uint32_t v) { move_script::SetLong(At(a), static_cast<int32_t>(v)); }
+void SetL(uint32_t a, uint32_t v) { move_script::SetLong(AtScenaSc15(a), static_cast<int32_t>(v)); }
 void SetL(unsigned char* p, uint32_t v) { move_script::SetLong(p, static_cast<int32_t>(v)); }
 std::uint16_t W(const unsigned char* p) { return move_script::Word(p); }
 void SetW(unsigned char* p, unsigned v) { move_script::SetWord(p, v); }
@@ -191,20 +191,20 @@ VoidFn Handler(uint32_t table, int index, const char* who) {
 // An object hook's handler, called (object, the flag row) as 0x56D6D0's slot 1
 // calls through a chapter's object table.
 void CallObject(uint32_t table, unsigned char* object, const char* who) {
-    unsigned char* const row = At(Chapter_FlagRow);
+    unsigned char* const row = AtScenaSc15(Chapter_FlagRow);
     reinterpret_cast<ObjectFn>(static_cast<std::uintptr_t>(CodeAt(table, object[0x86], who)))(object, row);
 }
 
 // The chapter's flag row, as the original reads it: the pointer afresh.
-unsigned char* Row() { return At(Chapter_FlagRow); }
+unsigned char* Row() { return AtScenaSc15(Chapter_FlagRow); }
 bool Test(unsigned n) { return SH_CALL(Flags_Test)(Row(), n) != 0; }
-bool TestAt(uint32_t row, unsigned n) { return SH_CALL(Flags_Test)(At(row), n) != 0; }
+bool TestAt(uint32_t row, unsigned n) { return SH_CALL(Flags_Test)(AtScenaSc15(row), n) != 0; }
 void Set(unsigned n) { SH_CALL(Flags_Set)(Row(), n); }
-void SetAt(uint32_t row, unsigned n) { SH_CALL(Flags_Set)(At(row), n); }
-void ClearAt(uint32_t row, unsigned n) { SH_CALL(Flags_Clear)(At(row), n); }
+void SetAt(uint32_t row, unsigned n) { SH_CALL(Flags_Set)(AtScenaSc15(row), n); }
+void ClearAt(uint32_t row, unsigned n) { SH_CALL(Flags_Clear)(AtScenaSc15(row), n); }
 
-unsigned char* Effect(unsigned slot) { return At(::bof3::Img(Effect_Objects_addr) + ((slot & 0xFFu) << 7)); }
-unsigned char* Sprite(unsigned k) { return At(::bof3::Img(Sprite_Objects_addr) + (k & 0xFFu) * 0xA4u); }
+unsigned char* Effect(unsigned slot) { return AtScenaSc15(::bof3::Img(Effect_Objects_addr) + ((slot & 0xFFu) << 7)); }
+unsigned char* Sprite(unsigned k) { return AtScenaSc15(::bof3::Img(Sprite_Objects_addr) + (k & 0xFFu) * 0xA4u); }
 
 // The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
 // views a
@@ -1032,12 +1032,12 @@ SC15_EXPORT void __cdecl Scena15_EventObjects(void) {
     for (unsigned i = 0; i < 3; ++i) {
         const unsigned char s = SH_AT(unsigned char (__cdecl*)(), kEventSlot.v)();
         kSlotWord = s;
-        if (s != 0xFF) SH_CALL(EventOp_0x)(At(::bof3::Img(Scena15_EventOps_addr) + 0x11u * i));
+        if (s != 0xFF) SH_CALL(EventOp_0x)(AtScenaSc15(::bof3::Img(Scena15_EventOps_addr) + 0x11u * i));
     }
     for (unsigned i = 0; i < 2; ++i) {
         const unsigned char s = SH_AT(unsigned char (__cdecl*)(), kEventSlot.v)();
         kSlotWord = s;
-        if (s != 0xFF) SH_CALL(EventOp_6x)(At(::bof3::Img(Scena15_EventOps_addr) + 0x38 + 0x10u * i));
+        if (s != 0xFF) SH_CALL(EventOp_6x)(AtScenaSc15(::bof3::Img(Scena15_EventOps_addr) + 0x38 + 0x10u * i));
     }
 }
 
@@ -1254,7 +1254,7 @@ SC15_EXPORT void __cdecl Scena15_ClutToGrey(unsigned snap) {
     const bool to_grey = static_cast<unsigned char>(snap) != 0;
     for (unsigned row = 0; row < 0x20; ++row) {
         if (row == 0xB) continue;
-        unsigned char* p = At(::bof3::Img(Gfx_ClutStrip_addr) + row * 0x200u);
+        unsigned char* p = AtScenaSc15(::bof3::Img(Gfx_ClutStrip_addr) + row * 0x200u);
         for (unsigned i = 0; i < 0x100; ++i, p += 2) {
             const uint32_t c = W(p);
             const uint32_t r = c & 0x1F, g = (c >> 5) & 0x1F, b = (c >> 10) & 0x1F, top = c & 0x8000;
@@ -2445,7 +2445,7 @@ SC15_EXPORT void __cdecl Scena17_DrawRays(unsigned radius, unsigned level) {
     SH_CALL(Gte_RotTrans)(vec, mat.t);
     (void)flag;
     SH_CALL(Gte_RotMatrix)(angles, mat.m);
-    SH_CALL(Gte_MulMatrix0)(reinterpret_cast<const short*>(At(::bof3::Img(Camera_Matrix_addr))), mat.m, mat.m);
+    SH_CALL(Gte_MulMatrix0)(reinterpret_cast<const short*>(AtScenaSc15(::bof3::Img(Camera_Matrix_addr))), mat.m, mat.m);
     SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&mat));
     SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&mat));
     SH_CALL(Gpu_SetDrawMode)(Packet(), 0, 1, 0x40, 0);
@@ -2459,7 +2459,7 @@ SC15_EXPORT void __cdecl Scena17_DrawRays(unsigned radius, unsigned level) {
     // fuzz (Widescreen_Fill() is 0 there); the disc's radius, the logic, is
     // Capcom's.
     const int32_t outer = 1600 + 10 * static_cast<int32_t>(Widescreen_Fill());
-    unsigned char* const v = At(::bof3::Img(Prim_VertexScratch_addr));
+    unsigned char* const v = AtScenaSc15(::bof3::Img(Prim_VertexScratch_addr));
     auto* const sv = rv::As<records::SVector>(v);   // Prim_VertexScratch: four SVECTORs (records_gpu.h SVector)
     long depth, flags;
     for (int32_t a = 0; a < 0x1000; a += 0x80) {
